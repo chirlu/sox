@@ -593,13 +593,6 @@ ft_t ft;
 
 static int get_format(ft_t ft, int formats, int *fmt)
 {
-    if (ft->info.size == -1) {
-        if ((formats & SND_PCM_FMT_U8) || (formats & SND_PCM_FMT_S8))
-            ft->info.size = ST_SIZE_BYTE;
-        else
-            ft->info.size = ST_SIZE_WORD;
-    }
-    
     /* Some hardware only wants to work with 8-bit or 16-bit data */
     if (ft->info.size == ST_SIZE_BYTE)
     {
@@ -619,9 +612,17 @@ static int get_format(ft_t ft, int formats, int *fmt)
     }
     else
     {
-        st_report("ALSA driver doesn't support %s.  Changing to 16-bits.", 
-                  st_sizes_str[(unsigned char)ft->info.size]);
-        ft->info.size = ST_SIZE_WORD;
+        if ((formats & SND_PCM_FMT_U16) || (formats & SND_PCM_FMT_S16))
+        {
+            st_report("Unsupport/unspecified size for ALSA driver.  Changing to 16-bits.");
+            ft->info.size = ST_SIZE_WORD;
+        }
+        else
+        {
+            st_report("Unsupported/un specified size for ALSA driver.  Changing to 8-bits.");
+            ft->info.size = ST_SIZE_BYTE;
+        }
+
     }
 
     if (ft->info.size == ST_SIZE_BYTE) {
