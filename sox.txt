@@ -1,11 +1,11 @@
 
 
 
-SOX(1)							   SOX(1)
+SoX(1)							   SoX(1)
 
 
 NAME
-       sox - SOund eXchange : universal sound sample translator
+       sox - Sound eXchange : universal sound sample translator
 
 SYNOPSIS
        sox infile outfile
@@ -61,13 +61,13 @@ OPTIONS
 
 
 
-			September 6, 1998			1
+			  March 5, 1999				1
 
 
 
 
 
-SOX(1)							   SOX(1)
+SoX(1)							   SoX(1)
 
 
 	    sox -v 0.5 file.au -r 12000 file.voc rate
@@ -127,13 +127,13 @@ SOX(1)							   SOX(1)
 
 
 
-			September 6, 1998			2
+			  March 5, 1999				2
 
 
 
 
 
-SOX(1)							   SOX(1)
+SoX(1)							   SoX(1)
 
 
 		 somewhat speed up sox when the output format has
@@ -193,13 +193,13 @@ FILE TYPES
 
 
 
-			September 6, 1998			3
+			  March 5, 1999				3
 
 
 
 
 
-SOX(1)							   SOX(1)
+SoX(1)							   SoX(1)
 
 
        .au	 SUN Microsystems AU files.  There are apparently
@@ -233,7 +233,7 @@ SOX(1)							   SOX(1)
 		 maximum  and  minimum	are 1.00 and -1.00.  This
 		 file format can be used to create data files for
 		 external programs such as FFT analyzers or graph
-		 routines.  SOX can also convert a file	 in  this
+		 routines.  SoX can also convert a file	 in  this
 		 format	 back into one of the other file formats.
 
        .gsm	 GSM 06.10 Lossy Speech Compression
@@ -259,13 +259,13 @@ SOX(1)							   SOX(1)
 
 
 
-			September 6, 1998			4
+			  March 5, 1999				4
 
 
 
 
 
-SOX(1)							   SOX(1)
+SoX(1)							   SoX(1)
 
 
 		 with an HCOM file under Unix or DOS.
@@ -325,13 +325,13 @@ SOX(1)							   SOX(1)
 
 
 
-			September 6, 1998			5
+			  March 5, 1999				5
 
 
 
 
 
-SOX(1)							   SOX(1)
+SoX(1)							   SoX(1)
 
 
        .txw	 Yamaha TX-16W sampler.
@@ -391,13 +391,13 @@ SOX(1)							   SOX(1)
 
 
 
-			September 6, 1998			6
+			  March 5, 1999				6
 
 
 
 
 
-SOX(1)							   SOX(1)
+SoX(1)							   SoX(1)
 
 
        .ub, .sb, .uw, .sw, .ul
@@ -457,13 +457,13 @@ EFFECTS
 
 
 
-			September 6, 1998			7
+			  March 5, 1999				7
 
 
 
 
 
-SOX(1)							   SOX(1)
+SoX(1)							   SoX(1)
 
 
 	      -s | -t [ delay decay speed depth -s | -t ... ]
@@ -523,13 +523,13 @@ SOX(1)							   SOX(1)
 
 
 
-			September 6, 1998			8
+			  March 5, 1999				8
 
 
 
 
 
-SOX(1)							   SOX(1)
+SoX(1)							   SoX(1)
 
 
        map	 Display a list of loops in a sample, and miscel-
@@ -589,13 +589,13 @@ SOX(1)							   SOX(1)
 
 
 
-			September 6, 1998			9
+			  March 5, 1999				9
 
 
 
 
 
-SOX(1)							   SOX(1)
+SoX(1)							   SoX(1)
 
 
 		 different  sampling  rates.   This  is	 fast but
@@ -612,11 +612,21 @@ SOX(1)							   SOX(1)
        resample [ rolloff [ beta ] ]
 		 Translate input sampling rate to output sampling
 		 rate  via  simulated  analog  filtration.   This
-		 method is slow and uses lots of RAM,  but  gives
-		 much  better results then rate (This has empiri-
-		 cally been shown  to  be  false.   The	 resample
-		 algorthym  needs to be updated from its original
-		 source).
+		 method is slower than rate, but gives much  bet-
+		 ter results.  rolloff refers to the cut-off fre-
+		 quency of the low pass filter and  is	given  in
+		 terms	of  the	 Nyquist  frequency for the lower
+		 sample rate.  rolloff therefor should	be  some-
+		 thing	between	 0. and 1., in practice 0.8-0.95.
+		 beta trades stop band rejection against  transi-
+		 tion  width  from passband to stop band.  Larger
+		 beta means a slower transition and greater stop-
+		 band rejection.  beta should be at least greater
+		 than 2.  The default is rollof 0.8,  beta  17.5,
+		 which	is  rather  conservative  with respect to
+		 aliasing.  Lower beta and higher rolloff  values
+		 preserve  more high frequency signal energy, but
+		 introduce measurable artifacts.
 
        reverb gain-out delay [ delay ... ]
 		 Add reverbation to a sound sample.   Each  delay
@@ -642,6 +652,18 @@ SOX(1)							   SOX(1)
 		 the  argument	to  the -v number which will make
 		 the sample as loud as possible without clipping.
 		 There	is  an	optional  parameter  -v that will
+
+
+
+			  March 5, 1999			       10
+
+
+
+
+
+SoX(1)							   SoX(1)
+
+
 		 print out the "Volume Adjustment:" field's value
 		 and  return.  This could be of use in scripts to
 		 auto convert the volume.  There is  an	 also  an
@@ -651,18 +673,6 @@ SOX(1)							   SOX(1)
 		 32-bit signed PCM data.  This is mainly only  of
 		 use  in tracking down endian problems that creep
 		 in to sox on cross-platform versions.
-
-
-
-
-			September 6, 1998		       10
-
-
-
-
-
-SOX(1)							   SOX(1)
-
 
        vibro speed  [ depth ]
 		 Add the world-famous  Fender  Vibro-Champ  sound
@@ -707,7 +717,17 @@ NOTICES
        support by Chris Bagwell	 (cbagwell@sprynet.com).   Please
        refer any questions regarding it to this address.  You may
        obtain  the  latest  version   at   the	 the   web   site
-       http://home.sprynet.com/sprynet/cbagwell/projects.html
+       http://home.sprynet.com/~cbagwell/projects.html
+
+
+
+			  March 5, 1999			       11
+
+
+
+
+
+SoX(1)							   SoX(1)
 
 
 
@@ -721,6 +741,52 @@ NOTICES
 
 
 
-			September 6, 1998		       11
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			  March 5, 1999			       12
 
 
