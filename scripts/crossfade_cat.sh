@@ -19,8 +19,8 @@
 #
 # Crossfaded file is created as "mix.wav".
 
-SOX=/home/cbagwell/sox/src/sox
-SOXMIX=/home/cbagwell/sox/src/soxmix
+SOX=../src/sox
+SOXMIX=../src/soxmix
 
 if [ "$3" == "" ]; then
     echo "Usage: $0 crossfade_seconds first_file second_file [ fadeout ] [ fadein ]"
