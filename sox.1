@@ -117,7 +117,7 @@ sox \- Sound eXchange : universal sound sample translator
 .br
 	stretch [ \fIfactor [ window fade shift fading ]\fB
 .br
-	swap [ \fI1 2 3 4\fB ]
+	swap [ \fI1 2\fB | \fI1 2 3 4\fB ]
 .br
 	vibro \fIspeed \fB[ \fIdepth\fB ]
 .br
@@ -918,10 +918,15 @@ to shorten, 0.8 to lengthen.  The
 ratio, in [0.0 0.5]. The amount of a fade's default depends on factor
 and shift.
 .TP 10
-swap [ \fI1 2 3 4\fB ]
-Swap channels in multi-channel sound files.  In files with more than 2
-channels you may specify the order that the channels should be rearranged
-in.
+swap [ \fI1 2\fB | \fI1 2 3 4\fB ]
+Swap channels in multi-channel sound files.  Optionally, you may
+specify the channel order you would like the output in.  This defaults
+to output channel 2 and then 1 for stereo and 2, 1, 4, 3 for quad-channels.  
+An interesting
+feature is that you may duplicate a given channel by overwriting another.
+This is done by repeating an output channel on the command line.  For example,
+swap 2 2 will overwrite channel 1 with channel 2's data; creating a stereo
+file with both channels containing the same audio data.
 .TP 10
 vibro \fIspeed \fB [ \fIdepth\fB ]
 Add the world-famous Fender Vibro-Champ sound

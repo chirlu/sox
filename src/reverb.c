@@ -127,13 +127,13 @@ char **argv;
 
 	if ( n < 3 )
 	{
-	    fail("Usage: reverb gain-out reverb-time delay [ delay ... ]");
+	    st_fail("Usage: reverb gain-out reverb-time delay [ delay ... ]");
 	    return (ST_EOF);
 	}
 
 	if ( n - 2 > MAXREVERBS )
 	{
-	    fail("reverb: to many dalays, use less than %i delays",
+	    st_fail("reverb: to many dalays, use less than %i delays",
 			MAXREVERBS);
 	    return (ST_EOF);
 	}
@@ -162,26 +162,26 @@ eff_t effp;
 
 	if ( reverb->out_gain < 0.0 )
 	{
-		fail("reverb: gain-out must be positive");
+		st_fail("reverb: gain-out must be positive");
 		return (ST_EOF);
 	}
 	if ( reverb->out_gain > 1.0 )
-		warn("reverb: warnig >>> gain-out can cause saturation of output <<<");
+		st_warn("reverb: warnig >>> gain-out can cause saturation of output <<<");
 	if ( reverb->time < 0.0 )
 	{
-		fail("reverb: reverb-time must be positive");
+		st_fail("reverb: reverb-time must be positive");
 		return (ST_EOF);
 	}
 	for(i = 0; i < reverb->numdelays; i++) {
 		reverb->samples[i] = reverb->delay[i] * effp->ininfo.rate / 1000.0;
 		if ( reverb->samples[i] < 1 )
 		{
-		    fail("reverb: delay must be positive!\n");
+		    st_fail("reverb: delay must be positive!\n");
 		    return (ST_EOF);
 		}
 		if ( reverb->samples[i] > DELAY_BUFSIZ )
 		{
-			fail("reverb: delay must be less than %g seconds!\n",
+			st_fail("reverb: delay must be less than %g seconds!\n",
 				DELAY_BUFSIZ / (float) effp->ininfo.rate );
 			return(ST_EOF);
 		}
@@ -192,7 +192,7 @@ eff_t effp;
 	}
 	if (! (reverb->reverbbuf = (float *) malloc(sizeof (float) * reverb->maxsamples)))
 	{
-		fail("reverb: Cannot malloc %d bytes!\n", 
+		st_fail("reverb: Cannot malloc %d bytes!\n", 
 			sizeof(float) * reverb->maxsamples);
 		return(ST_EOF);
 	}

@@ -144,7 +144,7 @@ ft_t ft;
 	samplesThisBlock = ImaSamplesIn(0, ft->info.channels, bytesRead, 0);
 	if (samplesThisBlock == 0) 
 	{
-	    warn ("Premature EOF on .wav input file");
+	    st_warn("Premature EOF on .wav input file");
 	    return 0;
 	}
     }
@@ -186,7 +186,7 @@ ft_t ft;
 	samplesThisBlock = AdpcmSamplesIn(0, ft->info.channels, bytesRead, 0);
 	if (samplesThisBlock == 0) 
 	{
-	    warn ("Premature EOF on .wav input file");
+	    st_warn("Premature EOF on .wav input file");
 	    return 0;
 	}
     }
@@ -194,7 +194,7 @@ ft_t ft;
     errmsg = AdpcmBlockExpandI(ft->info.channels, wav->nCoefs, wav->iCoefs, wav->packet, wav->samples, samplesThisBlock);
 
     if (errmsg)
-	warn((char*)errmsg);
+	st_warn((char*)errmsg);
 
     return samplesThisBlock;
 }
@@ -225,7 +225,7 @@ ft_t ft;
 	/* write the compressed packet */
 	if (fwrite(wav->packet, wav->blockAlign, 1, ft->fp) != 1)
 	{
-	    fail("write error");
+	    st_fail("write error");
 	    return (ST_EOF);
 	}
 	/* update lengths and samplePtr */
@@ -254,18 +254,18 @@ ft_t ft;
     wav->gsmhandle=gsm_create();
     if (!wav->gsmhandle)
     {
-	fail("cannot create GSM object");
+	st_fail("cannot create GSM object");
 	return (ST_EOF);
     }
 	
     if(gsm_option(wav->gsmhandle,GSM_OPT_WAV49,&valueP) == -1){
-	fail("error setting gsm_option for WAV49 format. Recompile gsm library with -DWAV49 option and relink sox");
+	st_fail("error setting gsm_option for WAV49 format. Recompile gsm library with -DWAV49 option and relink sox");
 	return (ST_EOF);
     }
 
     wav->gsmsample=malloc(sizeof(gsm_signal)*160*2);
     if (wav->gsmsample == NULL){
-	fail("error allocating memory for gsm buffer");
+	st_fail("error allocating memory for gsm buffer");
 	return (ST_EOF);
     }
     wav->gsmindex=0;
@@ -301,19 +301,19 @@ LONG *buf, len;
 	if (bytes <=0)
 	    return done;
 	if (bytes<65) {
-	    warn("invalid wav gsm frame size: %d bytes",bytes);
+	    st_warn("invalid wav gsm frame size: %d bytes",bytes);
 	    return done;
 	}
 	/* decode the long 33 byte half */
 	if(gsm_decode(wav->gsmhandle,frame, wav->gsmsample)<0)
 	{
-	    fail("error during gsm decode");
+	    st_fail("error during gsm decode");
 	    return 0;
 	}
 	/* decode the short 32 byte half */
 	if(gsm_decode(wav->gsmhandle,frame+33, wav->gsmsample+160)<0)
 	{
-	    fail("error during gsm decode");
+	    st_fail("error during gsm decode");
 	    return 0;
 	}
 
@@ -342,7 +342,7 @@ int pad; /* normally 0, but 1 to pad last write to even datalen */
     gsm_encode(wav->gsmhandle, wav->gsmsample+160, frame+32);
     if (fwrite(frame, 1, 65, ft->fp) != 65)
     {
-	fail("write error");
+	st_fail("write error");
 	return (ST_EOF);
     }
     wav->gsmbytecount += 65;
@@ -353,7 +353,7 @@ int pad; /* normally 0, but 1 to pad last write to even datalen */
 	/* pad output to an even number of bytes */
 	if(st_writeb(ft, 0))
 	{
-	    fail("write error");
+	    st_fail("write error");
 	    return (ST_EOF);
 	}
 	wav->gsmbytecount += 1;
@@ -417,7 +417,7 @@ static ULONG findChunk(ft_t ft, const char *Label)
     {
 	if (st_reads(ft, magic, 4) == ST_EOF)
 	{
-	    fail("WAVE file has missing %s chunk", Label);
+	    st_fail("WAVE file has missing %s chunk", Label);
 	    return 0;
 	}
 	st_readdw(ft, &len);
@@ -464,7 +464,7 @@ ft_t ft;
 
     if (st_reads(ft, magic, 4) == ST_EOF || strncmp("RIFF", magic, 4))
     {
-	fail("WAVE: RIFF header not found");
+	st_fail("WAVE: RIFF header not found");
 	return ST_EOF;
     }
 
@@ -472,7 +472,7 @@ ft_t ft;
 
     if (st_reads(ft, magic, 4) == ST_EOF || strncmp("WAVE", magic, 4))
     {
-	fail("WAVE header not found");
+	st_fail("WAVE header not found");
 	return ST_EOF;
     }
 
@@ -482,7 +482,7 @@ ft_t ft;
     
     if (wFmtSize < 16)
     {
-	fail("WAVE file fmt chunk is too short");
+	st_fail("WAVE file fmt chunk is too short");
 	return ST_EOF;
     }
 
@@ -497,14 +497,14 @@ ft_t ft;
     switch (wav->formatTag)
     {
     case WAVE_FORMAT_UNKNOWN:
-	fail("WAVE file is in unsupported Microsoft Official Unknown format.");
+	st_fail("WAVE file is in unsupported Microsoft Official Unknown format.");
 	return ST_EOF;
 	
     case WAVE_FORMAT_PCM:
 	/* Default (-1) depends on sample size.  Set that later on. */
 	if (ft->info.encoding != -1 && ft->info.encoding != ST_ENCODING_UNSIGNED &&
 	    ft->info.encoding != ST_ENCODING_SIGN2)
-	    warn("User options overriding encoding read in .wav header");
+	    st_warn("User options overriding encoding read in .wav header");
 
 	/* Needed by rawread() functions */
         rc = st_rawstartread(ft);
@@ -517,82 +517,82 @@ ft_t ft;
 	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_IMA_ADPCM)
 	    ft->info.encoding = ST_ENCODING_IMA_ADPCM;
 	else
-	    warn("User options overriding encoding read in .wav header");
+	    st_warn("User options overriding encoding read in .wav header");
 	break;
 
     case WAVE_FORMAT_ADPCM:
 	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_ADPCM)
 	    ft->info.encoding = ST_ENCODING_ADPCM;
 	else
-	    warn("User options overriding encoding read in .wav header");
+	    st_warn("User options overriding encoding read in .wav header");
 	break;
 
     case WAVE_FORMAT_IEEE_FLOAT:
-	fail("Sorry, this WAV file is in IEEE Float format.");
+	st_fail("Sorry, this WAV file is in IEEE Float format.");
 	return ST_EOF;
 	
     case WAVE_FORMAT_ALAW:
 	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_ALAW)
 	    ft->info.encoding = ST_ENCODING_ALAW;
 	else
-	    warn("User options overriding encoding read in .wav header");
+	    st_warn("User options overriding encoding read in .wav header");
 	break;
 	
     case WAVE_FORMAT_MULAW:
 	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_ULAW)
 	    ft->info.encoding = ST_ENCODING_ULAW;
 	else
-	    warn("User options overriding encoding read in .wav header");
+	    st_warn("User options overriding encoding read in .wav header");
 	break;
 	
     case WAVE_FORMAT_OKI_ADPCM:
-	fail("Sorry, this WAV file is in OKI ADPCM format.");
+	st_fail("Sorry, this WAV file is in OKI ADPCM format.");
 	return ST_EOF;
     case WAVE_FORMAT_DIGISTD:
-	fail("Sorry, this WAV file is in Digistd format.");
+	st_fail("Sorry, this WAV file is in Digistd format.");
 	return ST_EOF;
     case WAVE_FORMAT_DIGIFIX:
-	fail("Sorry, this WAV file is in Digifix format.");
+	st_fail("Sorry, this WAV file is in Digifix format.");
 	return ST_EOF;
     case WAVE_FORMAT_DOLBY_AC2:
-	fail("Sorry, this WAV file is in Dolby AC2 format.");
+	st_fail("Sorry, this WAV file is in Dolby AC2 format.");
 	return ST_EOF;
     case WAVE_FORMAT_GSM610:
 #ifdef HAVE_LIBGSM
 	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_GSM )
 	    ft->info.encoding = ST_ENCODING_GSM;
 	else
-	    warn("User options overriding encoding read in .wav header");
+	    st_warn("User options overriding encoding read in .wav header");
 	break;
 #else
-	fail("Sorry, this WAV file is in GSM6.10 format and no GSM support present, recompile sox with gsm library");
+	st_fail("Sorry, this WAV file is in GSM6.10 format and no GSM support present, recompile sox with gsm library");
 	return ST_EOF;
 #endif
     case WAVE_FORMAT_ROCKWELL_ADPCM:
-	fail("Sorry, this WAV file is in Rockwell ADPCM format.");
+	st_fail("Sorry, this WAV file is in Rockwell ADPCM format.");
 	return ST_EOF;
     case WAVE_FORMAT_ROCKWELL_DIGITALK:
-	fail("Sorry, this WAV file is in Rockwell DIGITALK format.");
+	st_fail("Sorry, this WAV file is in Rockwell DIGITALK format.");
 	return ST_EOF;
     case WAVE_FORMAT_G721_ADPCM:
-	fail("Sorry, this WAV file is in G.721 ADPCM format.");
+	st_fail("Sorry, this WAV file is in G.721 ADPCM format.");
 	return ST_EOF;
     case WAVE_FORMAT_G728_CELP:
-	fail("Sorry, this WAV file is in G.728 CELP format.");
+	st_fail("Sorry, this WAV file is in G.728 CELP format.");
 	return ST_EOF;
     case WAVE_FORMAT_MPEG:
-	fail("Sorry, this WAV file is in MPEG format.");
+	st_fail("Sorry, this WAV file is in MPEG format.");
 	return ST_EOF;
     case WAVE_FORMAT_MPEGLAYER3:
-	fail("Sorry, this WAV file is in MPEG Layer 3 format.");
+	st_fail("Sorry, this WAV file is in MPEG Layer 3 format.");
 	return ST_EOF;
     case WAVE_FORMAT_G726_ADPCM:
-	fail("Sorry, this WAV file is in G.726 ADPCM format.");
+	st_fail("Sorry, this WAV file is in G.726 ADPCM format.");
 	return ST_EOF;
     case WAVE_FORMAT_G722_ADPCM:
-	fail("Sorry, this WAV file is in G.722 ADPCM format.");
+	st_fail("Sorry, this WAV file is in G.722 ADPCM format.");
 	return ST_EOF;
-    default:	fail("WAV file has unknown format type of %x",wav->formatTag);
+    default:	st_fail("WAV file has unknown format type of %x",wav->formatTag);
 		return ST_EOF;
     }
 
@@ -600,12 +600,12 @@ ft_t ft;
     if (ft->info.channels == -1 || ft->info.channels == wChannels)
 	ft->info.channels = wChannels;
     else
-	warn("User options overriding channels read in .wav header");
+	st_warn("User options overriding channels read in .wav header");
 
     if (ft->info.rate == 0 || ft->info.rate == wSamplesPerSecond)
 	ft->info.rate = wSamplesPerSecond;
     else
-	warn("User options overriding rate read in .wav header");
+	st_warn("User options overriding rate read in .wav header");
     
 
     wav->iCoefs = NULL;
@@ -618,13 +618,13 @@ ft_t ft;
 	    st_readw(ft, &wExtSize);
 	    len -= 2;
 	} else {
-	    warn("wave header missing FmtExt chunk");
+	    st_warn("wave header missing FmtExt chunk");
 	}
     }
 
     if (wExtSize > len)
     {
-	fail("wave header error: wExtSize inconsistent with wFmtLen");
+	st_fail("wave header error: wExtSize inconsistent with wFmtLen");
 	return ST_EOF;
     }
 
@@ -634,14 +634,14 @@ ft_t ft;
     case WAVE_FORMAT_ADPCM:
 	if (wExtSize < 4)
 	{
-	    fail("format[%s]: expects wExtSize >= %d",
+	    st_fail("format[%s]: expects wExtSize >= %d",
 			wav_format_str(wav->formatTag), 4);
 	    return ST_EOF;
 	}
 
 	if (wBitsPerSample != 4)
 	{
-	    fail("Can only handle 4-bit MS ADPCM in wav files");
+	    st_fail("Can only handle 4-bit MS ADPCM in wav files");
 	    return ST_EOF;
 	}
 
@@ -649,20 +649,20 @@ ft_t ft;
 	bytesPerBlock = AdpcmBytesPerBlock(ft->info.channels, wav->samplesPerBlock);
 	if (bytesPerBlock > wav->blockAlign)
 	{
-	    fail("format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
+	    st_fail("format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
 		wav_format_str(wav->formatTag), wav->samplesPerBlock, wav->blockAlign);
 	    return ST_EOF;
 	}
 
 	st_readw(ft, &(wav->nCoefs));
 	if (wav->nCoefs < 7 || wav->nCoefs > 0x100) {
-	    fail("ADPCM file nCoefs (%.4hx) makes no sense\n", wav->nCoefs);
+	    st_fail("ADPCM file nCoefs (%.4hx) makes no sense\n", wav->nCoefs);
 	    return ST_EOF;
 	}
 	wav->packet = (unsigned char *)malloc(wav->blockAlign);
 	if (!wav->packet)
 	{
-	    fail("Unable to alloc resources");
+	    st_fail("Unable to alloc resources");
 	    return ST_EOF;
 	}
 
@@ -670,14 +670,14 @@ ft_t ft;
 
 	if (wExtSize < 4 + 4*wav->nCoefs)
 	{
-	    fail("wave header error: wExtSize(%d) too small for nCoefs(%d)", wExtSize, wav->nCoefs);
+	    st_fail("wave header error: wExtSize(%d) too small for nCoefs(%d)", wExtSize, wav->nCoefs);
 	    return ST_EOF;
 	}
 
 	wav->samples = (short *)malloc(wChannels*wav->samplesPerBlock*sizeof(short));
 	if (!wav->samples)
 	{
-	    fail("Unable to alloc resources");
+	    st_fail("Unable to alloc resources");
 	    return ST_EOF;
 	}
 
@@ -685,7 +685,7 @@ ft_t ft;
 	wav->iCoefs = (short *)malloc(wav->nCoefs * 2 * sizeof(short));
 	if (!wav->iCoefs)
 	{
-	    fail("Unable to alloc resources");
+	    st_fail("Unable to alloc resources");
 	    return ST_EOF;
 	}
 	{
@@ -696,7 +696,7 @@ ft_t ft;
 		if (i<14) errct += (wav->iCoefs[i] != iCoef[i/2][i%2]);
 		/* fprintf(stderr,"iCoefs[%2d] %4d\n",i,wav->iCoefs[i]); */
 	    }
-	    if (errct) warn("base iCoefs differ in %d/14 positions",errct);
+	    if (errct) st_warn("base iCoefs differ in %d/14 positions",errct);
 	}
 
 	bytespersample = ST_SIZE_WORD;  /* AFTER de-compression */
@@ -705,14 +705,14 @@ ft_t ft;
     case WAVE_FORMAT_IMA_ADPCM:
 	if (wExtSize < 2)
 	{
-	    fail("format[%s]: expects wExtSize >= %d",
+	    st_fail("format[%s]: expects wExtSize >= %d",
 		    wav_format_str(wav->formatTag), 2);
 	    return ST_EOF;
 	}
 
 	if (wBitsPerSample != 4)
 	{
-	    fail("Can only handle 4-bit IMA ADPCM in wav files");
+	    st_fail("Can only handle 4-bit IMA ADPCM in wav files");
 	    return ST_EOF;
 	}
 
@@ -720,7 +720,7 @@ ft_t ft;
 	bytesPerBlock = ImaBytesPerBlock(ft->info.channels, wav->samplesPerBlock);
 	if (bytesPerBlock > wav->blockAlign || wav->samplesPerBlock%8 != 1)
 	{
-	    fail("format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
+	    st_fail("format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
 		wav_format_str(wav->formatTag), wav->samplesPerBlock, wav->blockAlign);
 	    return ST_EOF;
 	}
@@ -728,7 +728,7 @@ ft_t ft;
 	wav->packet = (unsigned char *)malloc(wav->blockAlign);
 	if (!wav->packet)
 	{
-	    fail("Unable to alloc resources");
+	    st_fail("Unable to alloc resources");
 	    return ST_EOF;
 	}
 	len -= 2;
@@ -736,7 +736,7 @@ ft_t ft;
 	wav->samples = (short *)malloc(wChannels*wav->samplesPerBlock*sizeof(short));
 	if (!wav->samples)
 	{
-	    fail("Unable to alloc resources");
+	    st_fail("Unable to alloc resources");
 	    return ST_EOF;
 	}
 
@@ -748,7 +748,7 @@ ft_t ft;
     case WAVE_FORMAT_GSM610:
 	if (wExtSize < 2)
 	{
-	    fail("format[%s]: expects wExtSize >= %d",
+	    st_fail("format[%s]: expects wExtSize >= %d",
 		    wav_format_str(wav->formatTag), 2);
 	    return ST_EOF;
 	}
@@ -756,13 +756,13 @@ ft_t ft;
 	bytesPerBlock = 65;
 	if (wav->blockAlign != 65)
 	{
-	    fail("format[%s]: expects blockAlign(%d) = %d",
+	    st_fail("format[%s]: expects blockAlign(%d) = %d",
 		    wav_format_str(wav->formatTag), wav->blockAlign, 65);
 	    return ST_EOF;
 	}
 	if (wav->samplesPerBlock != 320)
 	{
-	    fail("format[%s]: expects samplesPerBlock(%d) = %d",
+	    st_fail("format[%s]: expects samplesPerBlock(%d) = %d",
 		    wav_format_str(wav->formatTag), wav->samplesPerBlock, 320);
 	    return ST_EOF;
 	}
@@ -784,7 +784,7 @@ ft_t ft;
 	if (ft->info.size == -1 || ft->info.size == ST_SIZE_BYTE)
 	    ft->info.size = ST_SIZE_BYTE;
 	else
-	    warn("User options overriding size read in .wav header");
+	    st_warn("User options overriding size read in .wav header");
 
 	/* Now we have enough information to set default encodings. */
 	if (ft->info.encoding == -1)
@@ -795,7 +795,7 @@ ft_t ft;
 	if (ft->info.size == -1 || ft->info.size == ST_SIZE_WORD)
 	    ft->info.size = ST_SIZE_WORD;
 	else
-	    warn("User options overriding size read in .wav header");
+	    st_warn("User options overriding size read in .wav header");
 
 	/* Now we have enough information to set default encodings. */
 	if (ft->info.encoding == -1)
@@ -806,7 +806,7 @@ ft_t ft;
 	if (ft->info.size == -1 || ft->info.size == ST_SIZE_DWORD)
 	    ft->info.size = ST_SIZE_DWORD;
 	else
-	    warn("User options overriding size read in .wav header");
+	    st_warn("User options overriding size read in .wav header");
 
 	/* Now we have enough information to set default encodings. */
 	if (ft->info.encoding == -1)
@@ -814,7 +814,7 @@ ft_t ft;
 	break;
 	
     default:
-	fail("Sorry, don't understand .wav size");
+	st_fail("Sorry, don't understand .wav size");
 	return ST_EOF;
     }
 
@@ -834,7 +834,7 @@ ft_t ft;
     case WAVE_FORMAT_ADPCM:
 	wav->numSamples = 
 	    AdpcmSamplesIn(wDataLength, ft->info.channels, wav->blockAlign, wav->samplesPerBlock);
-	/*report("datalen %d, numSamples %d",wDataLength, wav->numSamples);*/
+	/*st_report("datalen %d, numSamples %d",wDataLength, wav->numSamples);*/
 	wav->blockSamplesRemaining = 0;	       /* Samples left in buffer */
 	break;
 
@@ -843,7 +843,7 @@ ft_t ft;
 	   are samplesPerBlock samples to read. */
 	wav->numSamples = 
 	    ImaSamplesIn(wDataLength, ft->info.channels, wav->blockAlign, wav->samplesPerBlock);
-	/*report("datalen %d, numSamples %d",wDataLength, wav->numSamples);*/
+	/*st_report("datalen %d, numSamples %d",wDataLength, wav->numSamples);*/
 	wav->blockSamplesRemaining = 0;	       /* Samples left in buffer */
 	initImaTable();
 	break;
@@ -860,28 +860,28 @@ ft_t ft;
 
     }
 
-    report("Reading Wave file: %s format, %d channel%s, %d samp/sec",
+    st_report("Reading Wave file: %s format, %d channel%s, %d samp/sec",
 	   wav_format_str(wav->formatTag), ft->info.channels,
 	   wChannels == 1 ? "" : "s", wSamplesPerSecond);
-    report("        %d byte/sec, %d block align, %d bits/samp, %u data bytes",
+    st_report("        %d byte/sec, %d block align, %d bits/samp, %u data bytes",
 	   wAvgBytesPerSec, wav->blockAlign, wBitsPerSample, wDataLength);
 
     /* Can also report extended fmt information */
     switch (wav->formatTag)
     {
     case WAVE_FORMAT_ADPCM:
-	report("        %d Extsize, %d Samps/block, %d bytes/block %d Num Coefs",
+	st_report("        %d Extsize, %d Samps/block, %d bytes/block %d Num Coefs",
 		wExtSize,wav->samplesPerBlock,bytesPerBlock,wav->nCoefs);
 	break;
 
     case WAVE_FORMAT_IMA_ADPCM:
-	report("        %d Extsize, %d Samps/block, %d bytes/block",
+	st_report("        %d Extsize, %d Samps/block, %d bytes/block",
 		wExtSize,wav->samplesPerBlock,bytesPerBlock);
 	break;
 
 #ifdef HAVE_LIBGSM
     case WAVE_FORMAT_GSM610:
-	report("GSM .wav: %d Extsize, %d Samps/block,  %d samples",
+	st_report("GSM .wav: %d Extsize, %d Samps/block,  %d samples",
 		wExtSize,wav->samplesPerBlock,wav->numSamples);
 	break;
 #endif
@@ -972,7 +972,7 @@ LONG *buf, len;
 
 	    done = wavgsmread(ft, buf, len);
 	    if (done == 0 && wav->numSamples != 0)
-		warn("Premature EOF on .wav input file");
+		st_warn("Premature EOF on .wav input file");
 	break;
 #endif
 	default: /* assume PCM encoding */
@@ -983,7 +983,7 @@ LONG *buf, len;
 	    /* If software thinks there are more samples but I/O */
 	    /* says otherwise, let the user know about this.     */
 	    if (done == 0 && wav->numSamples != 0)
-		warn("Premature EOF on .wav input file");
+		st_warn("Premature EOF on .wav input file");
 	}
 
 	wav->numSamples -= done;
@@ -1035,7 +1035,7 @@ ft_t ft;
 	wav->numSamples = 0;
 	wav->dataLength = 0;
 	if (!ft->seekable)
-		warn("Length in output .wav header will be wrong since can't seek to fix it");
+		st_warn("Length in output .wav header will be wrong since can't seek to fix it");
 	rc = wavwritehdr(ft, 0);  /* also calculates various wav->* info */
 	if (rc != 0)
 	    return rc;
@@ -1057,7 +1057,7 @@ ft_t ft;
 	    wav->samples = (short *)malloc(sbsize*sizeof(short));
 	    if (!wav->packet || !wav->samples)
 	    {
-		fail("Unable to alloc resources");
+		st_fail("Unable to alloc resources");
 		return ST_EOF;
 	    }
 	    wav->sampleTop = wav->samples + sbsize;
@@ -1179,7 +1179,7 @@ int second_header;
 			    ft->info.encoding != ST_ENCODING_ALAW &&
 			    ft->info.encoding != ST_ENCODING_GSM)
 			{
-				warn("Do not support %s with 8-bit data.  Forcing to unsigned",st_encodings_str[ft->info.encoding]);
+				st_warn("Do not support %s with 8-bit data.  Forcing to unsigned",st_encodings_str[ft->info.encoding]);
 				ft->info.encoding = ST_ENCODING_UNSIGNED;
 			}
 			break;
@@ -1187,7 +1187,7 @@ int second_header;
 			wBitsPerSample = 16;
 			if (ft->info.encoding != ST_ENCODING_SIGN2)
 			{
-				warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[ft->info.encoding]);
+				st_warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[ft->info.encoding]);
 				ft->info.encoding = ST_ENCODING_SIGN2;
 			}
 			break;
@@ -1195,13 +1195,13 @@ int second_header;
 			wBitsPerSample = 32;
 			if (ft->info.encoding != ST_ENCODING_SIGN2)
 			{
-				warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[ft->info.encoding]);
+				st_warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[ft->info.encoding]);
 				ft->info.encoding = ST_ENCODING_SIGN2;
 			}
 
 			break;
 		default:
-			warn("Do not support %s in WAV files.  Forcing to Signed Words.",st_sizes_str[ft->info.size]);
+			st_warn("Do not support %s in WAV files.  Forcing to Signed Words.",st_sizes_str[ft->info.size]);
 			ft->info.encoding = ST_ENCODING_SIGN2;
 			ft->info.size = ST_SIZE_WORD;
 			wBitsPerSample = 16;
@@ -1238,7 +1238,7 @@ int second_header;
 		case ST_ENCODING_IMA_ADPCM:
 			if (wChannels>16)
 			{
-			    fail("Channels(%d) must be <= 16\n",wChannels);
+			    st_fail("Channels(%d) must be <= 16\n",wChannels);
 			    return ST_EOF;
 			}
 			wFormatTag = WAVE_FORMAT_IMA_ADPCM;
@@ -1250,7 +1250,7 @@ int second_header;
 		case ST_ENCODING_ADPCM:
 			if (wChannels>16)
 			{
-			    fail("Channels(%d) must be <= 16\n",wChannels);
+			    st_fail("Channels(%d) must be <= 16\n",wChannels);
 			    return ST_EOF;
 			}
 			wFormatTag = WAVE_FORMAT_ADPCM;
@@ -1263,7 +1263,7 @@ int second_header;
 #ifdef HAVE_LIBGSM
 		    if (wChannels!=1)
 		    {
-			fail("Channels(%d) must be == 1\n",wChannels);
+			st_fail("Channels(%d) must be == 1\n",wChannels);
 			return ST_EOF;
 		    }
 		    wFormatTag = WAVE_FORMAT_GSM610;
@@ -1273,7 +1273,7 @@ int second_header;
 		    wExtSize=2;        /* length of format extension */
 		    wSamplesPerBlock = 320;
 #else
-		    fail("sorry, no GSM6.10 support, recompile sox with gsm library");
+		    st_fail("sorry, no GSM6.10 support, recompile sox with gsm library");
 		    return ST_EOF;
 #endif
 		    break;
@@ -1371,20 +1371,20 @@ int second_header;
 	st_writedw(ft, wDataLength);		/* data chunk size */
 
 	if (!second_header) {
-		report("Writing Wave file: %s format, %d channel%s, %d samp/sec",
+		st_report("Writing Wave file: %s format, %d channel%s, %d samp/sec",
 	        	wav_format_str(wFormatTag), wChannels,
 	        	wChannels == 1 ? "" : "s", wSamplesPerSecond);
-		report("        %d byte/sec, %d block align, %d bits/samp",
+		st_report("        %d byte/sec, %d block align, %d bits/samp",
 	                wAvgBytesPerSec, wBlockAlign, wBitsPerSample);
 	} else {
-		report("Finished writing Wave file, %u data bytes %u samples\n",
+		st_report("Finished writing Wave file, %u data bytes %u samples\n",
 			wDataLength,wav->numSamples);
 #ifdef HAVE_LIBGSM
 		if (wFormatTag == WAVE_FORMAT_GSM610){
-		    report("GSM6.10 format: %u blocks %u padded samples %u padded data bytes\n",
+		    st_report("GSM6.10 format: %u blocks %u padded samples %u padded data bytes\n",
 			blocksWritten, wSamplesWritten, wDataLength);
 		    if (wav->gsmbytecount != wDataLength)
-			warn("help ! internal inconsistency - data_written %u gsmbytecount %u",
+			st_warn("help ! internal inconsistency - data_written %u gsmbytecount %u",
 				wDataLength, wav->gsmbytecount);
 
 		}
@@ -1470,7 +1470,7 @@ ft_t ft;
 
 	if (fseek(ft->fp, 0L, SEEK_SET) != 0)
 	{
-		fail("Sorry, can't rewind output file to rewrite .wav header.");
+		st_fail("Sorry, can't rewind output file to rewrite .wav header.");
 		return ST_EOF;
 	}
 	wavwritehdr(ft, 1);

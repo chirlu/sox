@@ -86,7 +86,7 @@ ft_t ft;
   st_reads(ft, avr->magic, 4);
 
   if (strncmp (avr->magic, AVR_MAGIC, 4)) {
-    fail ("AVR: unknown header");
+    st_fail("AVR: unknown header");
     return(ST_EOF);
   }
 
@@ -108,7 +108,7 @@ ft_t ft;
     ft->info.size = ST_SIZE_WORD;
   }
   else {
-    fail ("AVR: unsupported sample resolution");
+    st_fail("AVR: unsupported sample resolution");
     return(0);
   }
 
@@ -169,7 +169,7 @@ ft_t ft;
   }
 
   if (!ft->seekable) {
-    fail ("AVR: file is not seekable");
+    st_fail("AVR: file is not seekable");
     return(ST_EOF);
   }
 
@@ -198,7 +198,7 @@ ft_t ft;
     st_writew (ft, 0xffff);
   }
   else {
-    fail ("AVR: number of channels not supported");
+    st_fail("AVR: number of channels not supported");
     return(0);
   }
 
@@ -210,7 +210,7 @@ ft_t ft;
     st_writew (ft, 16);
   }
   else {
-    fail ("AVR: unsupported sample resolution");
+    st_fail("AVR: unsupported sample resolution");
     return(ST_EOF);
   }
 
@@ -222,7 +222,7 @@ ft_t ft;
     st_writew (ft, 0);
   }
   else {
-    fail ("AVR: unsupported encoding");
+    st_fail("AVR: unsupported encoding");
     return(ST_EOF);
   }
 

@@ -60,7 +60,7 @@ char **argv;
 {
 	if (n)
 	{
-		fail("Rate effect takes no options.");
+		st_fail("Rate effect takes no options.");
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -77,13 +77,13 @@ eff_t effp;
 
 	if (effp->ininfo.rate >= 65535 || effp->outinfo.rate >= 65535)
 	{
-	    fail("rate effect can only handle rates <= 65535");
+	    st_fail("rate effect can only handle rates <= 65535");
 	    return (ST_EOF);
 	}
 	if (effp->ininfo.size == ST_SIZE_DWORD ||
 	    effp->ininfo.size == ST_SIZE_FLOAT)
 	{
-	    warn("rate effect reduces data to 16 bits");
+	    st_warn("rate effect reduces data to 16 bits");
 	}
 
         rate->opos_frac=0;
@@ -245,7 +245,7 @@ char **argv;
 {
 	if (n)
 	{
-		fail("Rate effect takes no options.");
+		st_fail("Rate effect takes no options.");
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);

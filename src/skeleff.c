@@ -35,7 +35,7 @@ char **argv;
     {
 	if (n != 1)
 	{
-	    fail("Usage: skeleff [option]");
+	    st_fail("Usage: skeleff [option]");
 	    return (ST_EOF);
 	}
     }
@@ -51,7 +51,7 @@ eff_t effp;
 {
     if (effp->outinfo.channels == 1)
     {
-	fail("Can't run skeleff on mono data.");
+	st_fail("Can't run skeleff on mono data.");
 	return (ST_EOF);
     }
     return (ST_SUCCESS);

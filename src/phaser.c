@@ -89,7 +89,7 @@ char **argv;
 
 	if (!((n == 5) || (n == 6)))
 	{
-	    fail("Usage: phaser gain-in gain-out delay decay speed [ -s | -t ]");
+	    st_fail("Usage: phaser gain-in gain-out delay decay speed [ -s | -t ]");
 	    return (ST_EOF);
 	}
 
@@ -106,7 +106,7 @@ char **argv;
 			phaser->modulation = MOD_TRIANGLE;
 		else
 		{
-	    		fail("Usage: phaser gain-in gain-out delay decay speed [ -s | -t ]");
+	    		st_fail("Usage: phaser gain-in gain-out delay decay speed [ -s | -t ]");
 			return (ST_EOF);
 		}
 	}
@@ -126,46 +126,46 @@ eff_t effp;
 
 	if ( phaser->delay < 0.0 )
 	{
-	    fail("phaser: delay must be positive!\n");
+	    st_fail("phaser: delay must be positive!\n");
 	    return (ST_EOF);
 	}
 	if ( phaser->delay > 5.0 )
 	{
-	    fail("phaser: delay must be less than 5.0 msec!\n");
+	    st_fail("phaser: delay must be less than 5.0 msec!\n");
 	    return (ST_EOF);
 	}
 	if ( phaser->speed < 0.1 )
 	{
-	    fail("phaser: speed must be more than 0.1 Hz!\n");
+	    st_fail("phaser: speed must be more than 0.1 Hz!\n");
 	    return (ST_EOF);
 	}
 	if ( phaser->speed > 2.0 )
 	{
-	    fail("phaser: speed must be less than 2.0 Hz!\n");
+	    st_fail("phaser: speed must be less than 2.0 Hz!\n");
 	    return (ST_EOF);
 	}
 	if ( phaser->decay < 0.0 )
 	{
-	    fail("phaser: decay must be positive!\n" );
+	    st_fail("phaser: decay must be positive!\n" );
 	    return (ST_EOF);
 	}
 	if ( phaser->decay >= 1.0 )
 	{
-	    fail("phaser: decay must be less that 1.0!\n" );
+	    st_fail("phaser: decay must be less that 1.0!\n" );
 	    return (ST_EOF);
 	}
 	/* Be nice and check the hint with warning, if... */
 	if ( phaser->in_gain > ( 1.0 - phaser->decay * phaser->decay ) )
-		warn("phaser: warning >>> gain-in can cause saturation or clipping of output <<<");
+		st_warn("phaser: warning >>> gain-in can cause saturation or clipping of output <<<");
 	if ( phaser->in_gain / ( 1.0 - phaser->decay ) > 1.0 / phaser->out_gain )
-		warn("phaser: warning >>> gain-out can cause saturation or clipping of output <<<");
+		st_warn("phaser: warning >>> gain-out can cause saturation or clipping of output <<<");
 
 	phaser->length = effp->ininfo.rate / phaser->speed;
 
 	if (! (phaser->phaserbuf = 
 		(double *) malloc(sizeof (double) * phaser->maxsamples)))
 	{
-		fail("phaser: Cannot malloc %d bytes!\n", 
+		st_fail("phaser: Cannot malloc %d bytes!\n", 
 			sizeof(double) * phaser->maxsamples);
 		return (ST_EOF);
 	}
@@ -174,7 +174,7 @@ eff_t effp;
 	if (! (phaser->lookup_tab = 
 		(int *) malloc(sizeof (int) * phaser->length)))
 	{
-		fail("phaser: Cannot malloc %d bytes!\n", 
+		st_fail("phaser: Cannot malloc %d bytes!\n", 
 			sizeof(int) * phaser->length);
 		return (ST_EOF);
 	}

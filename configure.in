@@ -63,7 +63,7 @@ case "$target" in
 		CFLAGS="$CFLAGS -D_HPUX_SOURCE"
 		;;
 
-	*next*|*rhapsody* )
+	*next*|*rhapsody*|*apple*darwin* )
 		CFLAGS="$CFLAGS -DNeXT"
 		;;
 

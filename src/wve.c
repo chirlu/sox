@@ -52,11 +52,11 @@ ft_t ft;
 	/* Check the magic word (null-terminated) */
         st_reads(ft, magic, 16);
 	if (strncmp(magic, PSION_MAGIC, 15)==0) {
-		report("Found Psion magic word");
+		st_report("Found Psion magic word");
 	}
 	else
 	{
-		fail("Psion header doesn't start with magic word\nTry the '.al' file type with '-t al -r 8000 filename'");
+		st_fail("Psion header doesn't start with magic word\nTry the '.al' file type with '-t al -r 8000 filename'");
 		return (ST_EOF);
 	}
 
@@ -70,15 +70,15 @@ ft_t ft;
 		 * it doesn't hurt.
 		 */
 		ft->swap = ft->swap ? 0 : 1;
-		report("Found inverted PSION magic word.  Swapping bytes.");
+		st_report("Found inverted PSION magic word.  Swapping bytes.");
 	}
 	else if (version == PSION_VERSION)
 	{
-	    report("Found PSION magic word");
+	    st_report("Found PSION magic word");
 	}
 	else
 	{
-	    fail("Wrong version in Psion header");
+	    st_fail("Wrong version in Psion header");
 	    return(ST_EOF);
 	}
 
@@ -166,14 +166,13 @@ ft_t ft;
 {
 	if (!ft->seekable)
 	{
-	    warn("Header will be have invalid file length since file is not seekable");
+	    st_warn("Header will be have invalid file length since file is not seekable");
 	    return ST_SUCCESS;
 	}
 
 	if (fseek(ft->fp, 0L, 0) != 0)
 	{
-		fail("Can't rewind output file to rewrite Psion header.");
-		return(ST_EOF);
+		st_fail("Can't rewind output file to rewrite Psion header.");		return(ST_EOF);
 	}
 	wvewriteheader(ft);
 

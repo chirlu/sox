@@ -24,12 +24,12 @@ ft_t ft;
 	char header[132];
 	if (!ft->seekable)
 	{
-		fail("Type AUTO input must be a file, not a pipe");
+		st_fail("Type AUTO input must be a file, not a pipe");
 		return(ST_EOF);
 	}
 	if (fread(header, 1, sizeof(header), ft->fp) != sizeof(header))
 	{
-		fail("Type AUTO detects short file");
+		st_fail("Type AUTO detects short file");
 		return(ST_EOF);
 	}
 	fseek(ft->fp, 0L - sizeof header, 1); /* Seek back */
@@ -77,7 +77,7 @@ ft_t ft;
                 ft->info.size = ST_SIZE_BYTE;
                 ft->info.encoding = ST_ENCODING_UNSIGNED;
                 }
-	report("Type AUTO changed to %s", type);
+	st_report("Type AUTO changed to %s", type);
 	ft->filetype = type;
 	st_gettype(ft); /* Change ft->h to the new format */
 	(* ft->h->startread)(ft);
@@ -87,6 +87,6 @@ ft_t ft;
 int st_autostartwrite(ft) 
 ft_t ft;
 {
-	fail("Type AUTO can only be used for input!");
+	st_fail("Type AUTO can only be used for input!");
 	return(ST_EOF);
 }

@@ -88,7 +88,7 @@ char **argv;
 
 	if (!((n == 5) || (n == 6)))
 	{
-	    fail("Usage: flanger gain-in gain-out delay decay speed [ -s | -t ]");
+	    st_fail("Usage: flanger gain-in gain-out delay decay speed [ -s | -t ]");
 	    return (ST_EOF);
 	}
 
@@ -105,7 +105,7 @@ char **argv;
 			flanger->modulation = MOD_TRIANGLE;
 		else
 		{
-	    		fail("Usage: flanger gain-in gain-out delay decay speed [ -s | -t ]");
+	    		st_fail("Usage: flanger gain-in gain-out delay decay speed [ -s | -t ]");
 			return (ST_EOF);
 		}
 	}
@@ -125,59 +125,59 @@ eff_t effp;
 
 	if ( flanger->in_gain < 0.0 )
 	{
-	    fail("flanger: gain-in must be positive!\n");
+	    st_fail("flanger: gain-in must be positive!\n");
 	    return (ST_EOF);
 	}
 	if ( flanger->in_gain > 1.0 )
 	{
-	    fail("flanger: gain-in must be less than 1.0!\n");
+	    st_fail("flanger: gain-in must be less than 1.0!\n");
 	    return (ST_EOF);
 	}
 	if ( flanger->out_gain < 0.0 )
 	{
-	    fail("flanger: gain-out must be positive!\n");
+	    st_fail("flanger: gain-out must be positive!\n");
 	    return (ST_EOF);
 	}
 	if ( flanger->delay < 0.0 )
 	{
-	    fail("flanger: delay must be positive!\n");
+	    st_fail("flanger: delay must be positive!\n");
 	    return (ST_EOF);
 	}
 	if ( flanger->delay > 5.0 )
 	{
-	    fail("flanger: delay must be less than 5.0 msec!\n");
+	    st_fail("flanger: delay must be less than 5.0 msec!\n");
 	    return (ST_EOF);
 	}
 	if ( flanger->speed < 0.1 )
 	{
-	    fail("flanger: speed must be more than 0.1 Hz!\n");
+	    st_fail("flanger: speed must be more than 0.1 Hz!\n");
 	    return (ST_EOF);
 	}
 	if ( flanger->speed > 2.0 )
 	{
-	    fail("flanger: speed must be less than 2.0 Hz!\n");
+	    st_fail("flanger: speed must be less than 2.0 Hz!\n");
 	    return (ST_EOF);
 	}
 	if ( flanger->decay < 0.0 )
 	{
-	    fail("flanger: decay must be positive!\n" );
+	    st_fail("flanger: decay must be positive!\n" );
 	    return (ST_EOF);
 	}
 	if ( flanger->decay > 1.0 )
 	{
-	    fail("flanger: decay must be less that 1.0!\n" );
+	    st_fail("flanger: decay must be less that 1.0!\n" );
 	    return (ST_EOF);
 	}
 	/* Be nice and check the hint with warning, if... */
 	if ( flanger->in_gain * ( 1.0 + flanger->decay ) > 1.0 / flanger->out_gain )
-		warn("flanger: warning >>> gain-out can cause saturation or clipping of output <<<");
+		st_warn("flanger: warning >>> gain-out can cause saturation or clipping of output <<<");
 
 	flanger->length = effp->ininfo.rate / flanger->speed;
 
 	if (! (flanger->flangerbuf = 
 		(double *) malloc(sizeof (double) * flanger->maxsamples)))
 	{
-		fail("flanger: Cannot malloc %d bytes!\n", 
+		st_fail("flanger: Cannot malloc %d bytes!\n", 
 			sizeof(double) * flanger->maxsamples);
 		return (ST_EOF);
 	}
@@ -186,7 +186,7 @@ eff_t effp;
 	if (! (flanger->lookup_tab = 
 		(int *) malloc(sizeof (int) * flanger->length)))
 	{
-		fail("flanger: Cannot malloc %d bytes!\n", 
+		st_fail("flanger: Cannot malloc %d bytes!\n", 
 			sizeof(int) * flanger->length);
 		return(ST_EOF);
 	}

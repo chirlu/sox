@@ -40,7 +40,7 @@ char **argv;
 {
 	if (n)
 	{
-		fail("Silence effect takes no options.");
+		st_fail("Silence effect takes no options.");
 		return (ST_EOF);
 	}
 }

@@ -120,12 +120,12 @@ char **argv;
 {
      if (n)
      {
-          fail("Deemphasis filtering effect takes no options.\n");
+          st_fail("Deemphasis filtering effect takes no options.\n");
 	  return (ST_EOF);
      }
      if (sizeof(double)*ST_MAX_PRIVSIZE < sizeof(struct deemphstuff))
      {
-          fail("Internal error: PRIVSIZE too small.\n");
+          st_fail("Internal error: PRIVSIZE too small.\n");
 	  return (ST_EOF);
      }
      return (ST_SUCCESS);
@@ -143,7 +143,7 @@ eff_t effp;
          || effp->ininfo.rate != 44100
          || effp->ininfo.size != ST_SIZE_WORD)
      {
-          fail("The deemphasis effect works only with audio cd like samples.\nThe input format however has %d Hz sample rate and %d-byte%s signed linearly coded samples.",
+          st_fail("The deemphasis effect works only with audio cd like samples.\nThe input format however has %d Hz sample rate and %d-byte%s signed linearly coded samples.",
             effp->ininfo.rate, effp->ininfo.size,
             effp->ininfo.encoding != ST_ENCODING_SIGN2 ? ", but not" : "");
 	  return (ST_EOF);

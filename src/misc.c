@@ -89,7 +89,7 @@ char *c;
 {
 	if (fwrite(c, 1, strlen(c), ft->fp) != strlen(c))
 	{
-		fail(writerr);
+		st_fail(writerr);
 		return(ST_EOF);
 	}
 	return(ST_SUCCESS);
@@ -116,7 +116,7 @@ unsigned char uc;
 {
 	if (fwrite(&uc, 1, 1, ft->fp) != 1)
 	{
-		fail(writerr);
+		st_fail(writerr);
 		return(ST_EOF);
 	}
 	return(ST_SUCCESS);
@@ -147,7 +147,7 @@ unsigned short us;
 		us = st_swapw(us);
 	if (fwrite(&us, 2, 1, ft->fp) != 1)
 	{
-		fail(writerr);
+		st_fail(writerr);
 		return (ST_EOF);
 	}
 	return(ST_SUCCESS);
@@ -178,7 +178,7 @@ ULONG ul;
 		ul = st_swapl(ul);
 	if (fwrite(&ul, 4, 1, ft->fp) != 1)
 	{
-		fail(writerr);
+		st_fail(writerr);
 		return (ST_EOF);
 	}
 	return(ST_SUCCESS);
@@ -211,7 +211,7 @@ float f;
 		t = st_swapf(t);
 	if (fwrite(&t, sizeof(float), 1, ft->fp) != 1)
 	{
-		fail(writerr);
+		st_fail(writerr);
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -242,7 +242,7 @@ double d;
 		d = st_swapd(d);
 	if (fwrite(&d, sizeof(double), 1, ft->fp) != 1)
 	{
-		fail(writerr);
+		st_fail(writerr);
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);

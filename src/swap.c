@@ -34,10 +34,15 @@ char **argv;
     swap->order[0] = swap->order[1] = swap->order[2] = swap->order[3] = 0;
     if (n)
     {
-	if (n != 4)
+	if (n != 2 && n != 4)
 	{
-	    fail("Usage: swap [1 2 3 4]");
+	    st_fail("Usage: swap [1 2 | 1 2 3 4]");
 	    return (ST_EOF);
+	}
+	else if (n == 2)
+	{
+	    sscanf(argv[0],"%d",&swap->order[0]);
+	    sscanf(argv[1],"%d",&swap->order[1]);
 	}
 	else
 	{
@@ -46,6 +51,27 @@ char **argv;
 	    sscanf(argv[2],"%d",&swap->order[2]);
 	    sscanf(argv[3],"%d",&swap->order[3]);
 	}
+
+	/* Some basic error checking */
+	if (swap->order[0] < 1 || swap->order[0] > 4)
+	    swap->order[0] = 1;
+	if (swap->order[1] < 1 || swap->order[1] > 4)
+	    swap->order[1] = 1;
+
+	/* If 2 and 3 weren't specified, this logic still forces
+	 * it to equal 0 (our default)
+	 */
+	if (swap->order[2] < 1 || swap->order[2] > 4)
+	    swap->order[2] = 1;
+	if (swap->order[3] < 1 || swap->order[3] > 4)
+	    swap->order[3] = 1;
+
+	/* Convert to array offsets */
+	swap->order[0]--;
+	swap->order[1]--;
+        swap->order[2]--;
+	swap->order[3]--;
+
     }
     return (ST_SUCCESS);
 }
@@ -57,11 +83,42 @@ char **argv;
 int st_swap_start(effp)
 eff_t effp;
 {
+    swap_t swap = (swap_t) effp->priv;
+
     if (effp->outinfo.channels == 1)
     {
-	fail("Can't swap channels on mono data.");
+	st_fail("Can't swap channels on mono data.");
 	return (ST_EOF);
     }
+
+    if (effp->outinfo.channels == 2)
+    {
+	if (swap->order[2] || swap->order[3])
+        {
+	    st_fail("invalid swap channel options used");
+        }
+	if (swap->order[0] != 0 && swap->order[0] != 1)
+	    st_fail("invalid swap channel options used");
+	if (swap->order[1] != 0 && swap->order[1] != 1)
+	    st_fail("invalid swap channel options used");
+    }
+
+    if (effp->outinfo.channels == 4)
+    {
+	if (!swap->order[2] && !swap->order[3])
+	    st_fail("invalid swap channel options used");
+    }
+
+    /* If nothing set then default to the following order */
+    if (!swap->order[0] && !swap->order[1] &&
+        !swap->order[2] && !swap->order[3])
+    {
+        swap->order[0] = 1;
+        swap->order[1] = 0;
+        swap->order[2] = 3;
+        swap->order[3] = 2;
+    }
+
     return (ST_SUCCESS);
 }
 
@@ -87,8 +144,8 @@ int *isamp, *osamp;
 	len = ((*isamp > *osamp) ? *osamp : *isamp) / 2;
 	for(done = 0; done < len; done++)
 	{
-	    obuf[0] = ibuf[1];
-	    obuf[1] = ibuf[0];
+	    obuf[0] = ibuf[swap->order[0]];
+	    obuf[1] = ibuf[swap->order[1]];
 	    /* Advance buffer by 2 samples */
 	    ibuf += 2;
 	    obuf += 2;
@@ -100,15 +157,6 @@ int *isamp, *osamp;
 	break;
 	
     case 4:
-	/* If nothing set then default to the following order */
-	if (!swap->order[0] && !swap->order[1] &&
-	    !swap->order[2] && !swap->order[3])
-	{
-	    swap->order[0] = 1;
-	    swap->order[1] = 0;
-	    swap->order[2] = 3;
-	    swap->order[3] = 2;
-	}
 	/* Length to process will be buffer length / 4 since we
 	 * work with four samples at a time.
 	 */

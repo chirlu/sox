@@ -42,7 +42,7 @@ char **argv;
 {
 	if (n)
 	{
-		fail("Reverse effect takes no options.");
+		st_fail("Reverse effect takes no options.");
 		return (ST_EOF);
 	}
 	return(ST_SUCCESS);
@@ -59,7 +59,7 @@ eff_t effp;
 	reverse->fp = tmpfile();
 	if (reverse->fp == NULL)
 	{
-		fail("Reverse effect can't create temporary file\n");
+		st_fail("Reverse effect can't create temporary file\n");
 		return (ST_EOF);
 	}
 	reverse->phase = WRITING;
@@ -80,13 +80,13 @@ LONG *isamp, *osamp;
 
 	if (reverse->phase != WRITING)
 	{
-		fail("Internal error: reverse_flow called in wrong phase");
+		st_fail("Internal error: reverse_flow called in wrong phase");
 		return(ST_EOF);
 	}
 	if (fwrite((char *)ibuf, sizeof(LONG), *isamp, reverse->fp)
 	    != *isamp)
 	{
-		fail("Reverse effect write error on temporary file\n");
+		st_fail("Reverse effect write error on temporary file\n");
 		return(ST_EOF);
 	}
 	*osamp = 0;
@@ -113,7 +113,7 @@ LONG *osamp;
 		reverse->pos = ftell(reverse->fp);
 		if (reverse->pos % sizeof(LONG) != 0)
 		{
-			fail("Reverse effect finds odd temporary file\n");
+			st_fail("Reverse effect finds odd temporary file\n");
 			return(ST_EOF);
 		}
 		reverse->phase = READING;
@@ -128,7 +128,7 @@ LONG *osamp;
 	fseek(reverse->fp, reverse->pos, SEEK_SET);
 	if (fread((char *)obuf, sizeof(LONG), len, reverse->fp) != len)
 	{
-		fail("Reverse effect read error from temporary file\n");
+		st_fail("Reverse effect read error from temporary file\n");
 		return(ST_EOF);
 	}
 	for (i = 0, j = len-1; i < j; i++, j--) {

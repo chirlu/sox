@@ -60,13 +60,13 @@ ft_t ft;
 	/* read FORM chunk */
 	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "FORM", 4) != 0)
 	{
-		st_fail(ft, ST_EHDR, "Header did not begin with magic word 'FORM'");
+		st_fail_errno(ft, ST_EHDR, "Header did not begin with magic word 'FORM'");
 		return(ST_EOF);
 	}
 	st_readdw(ft, &totalsize);
 	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "8SVX", 4) != 0)
 	{
-		st_fail(ft, ST_EHDR, "'FORM' chunk does not specify '8SVX' as type");
+		st_fail_errno(ft, ST_EHDR, "'FORM' chunk does not specify '8SVX' as type");
 		return(ST_EOF);
 	}
 
@@ -76,7 +76,7 @@ ft_t ft;
 			st_readdw(ft, &chunksize);
 			if (chunksize != 20)
 			{
-				st_fail(ft, ST_EHDR, "VHDR chunk has bad size");
+				st_fail_errno(ft, ST_EHDR, "VHDR chunk has bad size");
 				return(ST_EOF);
 			}
 			fseek(ft->fp,12,SEEK_CUR);
@@ -85,7 +85,7 @@ ft_t ft;
 			fread(buf,1,1,ft->fp);
 			if (buf[0] != 0)
 			{
-				st_fail(ft, ST_EFMT, "Unsupported data compression");
+				st_fail_errno(ft, ST_EFMT, "Unsupported data compression");
 				return(ST_EOF);
 			}
 			fseek(ft->fp,4,SEEK_CUR);
@@ -99,17 +99,17 @@ ft_t ft;
 			chunk_buf = (char *) malloc(chunksize + 2);
 			if (chunk_buf == 0)
 			{
-			    st_fail(ft, ST_ENOMEM, "Unable to alloc memory");
+			    st_fail_errno(ft, ST_ENOMEM, "Unable to alloc memory");
 			    return(ST_EOF);
 			}
 			if (fread(chunk_buf,1,(size_t)chunksize,ft->fp) 
 					!= chunksize)
 			{
-				st_fail(ft, ST_EHDR, "Couldn't read all of header");
+				st_fail_errno(ft, ST_EHDR, "Couldn't read all of header");
 				return(ST_EOF);
 			}
 			chunk_buf[chunksize] = '\0';
-			report ("%s",chunk_buf);
+			st_report("%s",chunk_buf);
 			free(chunk_buf);
 
 			continue;
@@ -122,17 +122,17 @@ ft_t ft;
 			chunk_buf = (char *) malloc(chunksize + 1);
 			if (chunk_buf == 0)
 			{
-			    st_fail(ft, ST_ENOMEM, "Unable to alloc memory");
+			    st_fail_errno(ft, ST_ENOMEM, "Unable to alloc memory");
 			    return(ST_EOF);
 			}
 			if (fread (chunk_buf,1,(size_t)chunksize,ft->fp) 
 					!= chunksize)
 			{
-				st_fail(ft, ST_EHDR, "Couldn't read all of header");
+				st_fail_errno(ft, ST_EHDR, "Couldn't read all of header");
 				return(ST_EOF);
 			}
 			chunk_buf[chunksize] = '\0';
-			report ("%s",chunk_buf);
+			st_report("%s",chunk_buf);
 			free(chunk_buf);
 
 			continue;
@@ -142,7 +142,7 @@ ft_t ft;
 			st_readdw(ft, &chunksize);
 			if (chunksize != 4) 
 			{
-				st_fail(ft, ST_EHDR, "Couldn't read all of header");
+				st_fail_errno(ft, ST_EHDR, "Couldn't read all of header");
 				return(ST_EOF);
 			}
 			st_readdw(ft, &channels);
@@ -165,12 +165,12 @@ ft_t ft;
 
 	if (rate == 0)
 	{
-		st_fail(ft, ST_ERATE, "Invalid sample rate");
+		st_fail_errno(ft, ST_ERATE, "Invalid sample rate");
 		return(ST_EOF);
 	}
 	if (strncmp(buf,"BODY",4) != 0)
 	{
-		st_fail(ft, ST_EHDR, "BODY chunk not found");
+		st_fail_errno(ft, ST_EHDR, "BODY chunk not found");
 		return(ST_EOF);
 	}
 	st_readdw(ft, &(p->nsamples));
@@ -187,7 +187,7 @@ ft_t ft;
 	for (i = 1; i < channels; i++) {
 		if ((p->ch[i] = fopen(ft->filename, READBINARY)) == NULL)
 		{
-			st_fail(ft,errno,"Can't open channel file '%s'",
+			st_fail_errno(ft,errno,"Can't open channel file '%s'",
 				ft->filename);
 			return(ST_EOF);
 		}
@@ -195,12 +195,12 @@ ft_t ft;
 		/* position channel files */
 		if (fseek(p->ch[i],chan1_pos,SEEK_SET))
 		{
-		    st_fail (ft,errno,"Can't position channel %d",i);
+		    st_fail_errno (ft,errno,"Can't position channel %d",i);
 		    return(ST_EOF);
 		}
 		if (fseek(p->ch[i],p->nsamples/channels*i,SEEK_CUR))
 		{
-		    st_fail (ft,errno,"Can't seek channel %d",i);
+		    st_fail_errno (ft,errno,"Can't seek channel %d",i);
 		    return(ST_EOF);
 		}
 	}
@@ -277,7 +277,7 @@ ft_t ft;
 	for (i = 1; i < ft->info.channels; i++) {
 		if ((p->ch[i] = tmpfile()) == NULL)
 		{
-			st_fail(ft,errno,"Can't open channel output file");
+			st_fail_errno(ft,errno,"Can't open channel output file");
 			return(ST_EOF);
 		}
 	}
@@ -336,7 +336,7 @@ ft_t ft;
 	for (i = 1; i < ft->info.channels; i++) {
 		if (fseek (p->ch[i], 0L, 0))
 		{
-			st_fail (ft,errno,"Can't rewind channel output file %d",i);
+			st_fail_errno (ft,errno,"Can't rewind channel output file %d",i);
 			return(ST_EOF);
 		}
 		while (!feof(p->ch[i])) {
@@ -353,7 +353,7 @@ ft_t ft;
 	/* fixup file sizes in header */
 	if (fseek(ft->fp, 0L, 0) != 0)
 	{
-		st_fail(ft,errno,"can't rewind output file to rewrite 8SVX header");
+		st_fail_errno(ft,errno,"can't rewind output file to rewrite 8SVX header");
 		return(ST_EOF);
 	}
 	svxwriteheader(ft, p->nsamples);

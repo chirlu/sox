@@ -55,7 +55,7 @@ SFHEADER *sfhead;
 		case SF_COMMENT:
 			if((commentbuf = (char *) malloc(bsize + 1)) != NULL) {
 				memcpy(commentbuf, sfcharp, bsize);
-				report("IRCAM comment: %s", sfcharp);
+				st_report("IRCAM comment: %s", sfcharp);
 				commentbuf[bsize] = '\0';
 				if((newline = strchr(commentbuf, '\n')) != NULL)
 					*newline = '\0';
@@ -89,7 +89,7 @@ ft_t ft;
 	
 	if (fread(&sfhead, 1, sizeof(sfhead), ft->fp) != sizeof(sfhead))
 	{
-		fail("unexpected EOF in SF header");
+		st_fail("unexpected EOF in SF header");
 		return(ST_EOF);
 	}
 	memcpy(&sf->info, &sfhead.sfinfo, sizeof(struct sfinfo));
@@ -100,7 +100,7 @@ ft_t ft;
 	}
 	if ((sfmagic1(&sfhead) != SF_MAGIC1) ||
 	    (sfmagic2(&sfhead) != SF_MAGIC2))
-		fail(
+		st_fail(
 "SF %s file: can't read, it is byte-swapped or it is not an IRCAM SoundFile", 
 			ft->filename);
 
@@ -120,7 +120,7 @@ ft_t ft;
 			ft->info.encoding = ST_ENCODING_SIGN2;
 			break;
 		default:
-			fail("Soundfile input: unknown format 0x%x\n",
+			st_fail("Soundfile input: unknown format 0x%x\n",
 				sf->info.sf_packmode);
 			return(ST_EOF);
 	}

@@ -45,14 +45,14 @@ char **argv;
   butterworth_t butterworth = (butterworth_t)effp->priv;
 
   if (n != 1) {
-    fail("Usage: highpass FREQUENCY");
+    st_fail("Usage: highpass FREQUENCY");
     return (ST_EOF);
   }
 
   st_butterworth_start (effp);
 
   if (!(sscanf (argv [0], "%lf", &butterworth->frequency))) {
-    fail("highpass: illegal frequency");
+    st_fail("highpass: illegal frequency");
     return (ST_EOF);
   }
   return (ST_SUCCESS);

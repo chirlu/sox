@@ -39,7 +39,7 @@ ft_t ft;
 	ft->file.buf = malloc(BUFSIZ);
 	if (!ft->file.buf)
 	{
-	    fail("Unable to alloc resources");
+	    st_fail("Unable to alloc resources");
 	    return(ST_EOF);
 	}
 	ft->file.size = BUFSIZ;
@@ -56,7 +56,7 @@ ft_t ft;
 	ft->file.buf = malloc(BUFSIZ);
 	if (!ft->file.buf)
 	{
-	    fail("Unable to alloc resources");
+	    st_fail("Unable to alloc resources");
 	    return(ST_EOF);
 	}
 	ft->file.size = BUFSIZ;
@@ -241,10 +241,10 @@ LONG *buf, nsamp;
 				}
 				return done;
 			case ST_ENCODING_ULAW:
-				fail("No U-Law support for shorts");
+				st_fail("No U-Law support for shorts");
 				return 0;
 			case ST_ENCODING_ALAW:
-				fail("No A-Law support for shorts");
+				st_fail("No A-Law support for shorts");
 				return 0;
 		    }
 		    break;
@@ -276,7 +276,7 @@ LONG *buf, nsamp;
 		default:
 			break;
 	}
-	fail("Sorry, don't have code to read %s, %s",
+	st_fail("Sorry, don't have code to read %s, %s",
 		st_encodings_str[ft->info.encoding], st_sizes_str[ft->info.size]);
 	return(0);
 }
@@ -294,7 +294,7 @@ ft_t ft;
 {
 	if (fwrite(ft->file.buf, 1, ft->file.pos, ft->fp) != ft->file.pos)
 	{
-		fail("Error writing data to file");
+		st_fail("Error writing data to file");
 	}
 	ft->file.pos = 0;
 }
@@ -454,10 +454,10 @@ LONG *buf, nsamp;
 				}
 				return done;
 			case ST_ENCODING_ULAW:
-				fail("No U-Law support for shorts");
+				st_fail("No U-Law support for shorts");
 				return 0;
 			case ST_ENCODING_ALAW:
-				fail("No A-Law support for shorts");
+				st_fail("No A-Law support for shorts");
 				return 0;
 		    }
 		    break;
@@ -486,7 +486,7 @@ LONG *buf, nsamp;
 		default:
 			break;
 	}
-	fail("Sorry, don't have code to write %s, %s",
+	st_fail("Sorry, don't have code to write %s, %s",
 		st_encodings_str[ft->info.encoding], st_sizes_str[ft->info.size]);
 	return 0;
 }

@@ -44,19 +44,19 @@ char **argv;
   butterworth_t butterworth = (butterworth_t)effp->priv;
 
   if (n != 2) {
-    fail("Usage: bandreject FREQUENCY BANDWIDTH");
+    st_fail("Usage: bandreject FREQUENCY BANDWIDTH");
     return (ST_EOF);
   }
 
   st_butterworth_start (effp);
 
   if (!(sscanf (argv [0], "%lf", &butterworth->frequency))) {
-    fail("bandreject: illegal frequency");
+    st_fail("bandreject: illegal frequency");
     return (ST_EOF);
   }
 
   if (!(sscanf (argv [1], "%lf", &butterworth->bandwidth))) {
-   fail("bandreject: illegal bandwidth");
+   st_fail("bandreject: illegal bandwidth");
    return (ST_EOF);
   }
   return (ST_SUCCESS);

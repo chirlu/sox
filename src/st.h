@@ -330,10 +330,10 @@ float  	       st_swapf(P1(float f));			/* Swap float */
 double 	       st_swapd(P1(double d));			/* Swap double */
 
 /* util.c */
-void report(P2(const char *, ...));
-void warn(P2(const char *, ...));
-void fail(P2(const char *, ...))NORET;
-void st_fail(P4(ft_t, int, const char *, ...));
+void st_report(P2(const char *, ...));
+void st_warn(P2(const char *, ...));
+void st_fail(P2(const char *, ...))NORET;
+void st_fail_errno(P4(ft_t, int, const char *, ...));
 
 void st_geteffect(P1(eff_t));
 void st_gettype(P1(ft_t));

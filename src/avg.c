@@ -51,7 +51,7 @@ char **argv;
 			avg->mix = MIX_RIGHT;
 		else
 		{
-			fail("Usage: avg [ -l | -r ]");
+			st_fail("Usage: avg [ -l | -r ]");
 			return (ST_EOF);
 		}
 	}
@@ -68,7 +68,7 @@ eff_t effp;
         if ((effp->ininfo.channels == effp->outinfo.channels) ||
 	    effp->outinfo.channels == -1)
 	{
-	    fail("Output must have different number of channels to use avg effect");
+	    st_fail("Output must have different number of channels to use avg effect");
 	    return(ST_EOF);
 	}
 
@@ -103,7 +103,7 @@ eff_t effp;
 	default:
 		break;
 	}	
-	fail("Can't average %d channels into %d channels",
+	st_fail("Can't average %d channels into %d channels",
 		effp->ininfo.channels, effp->outinfo.channels);
 	return (ST_EOF);
 }

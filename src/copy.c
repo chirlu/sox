@@ -23,7 +23,7 @@ char **argv;
 {
 	if (n)
 	{
-		fail("Copy effect takes no options.");
+		st_fail("Copy effect takes no options.");
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);

@@ -128,7 +128,7 @@ char **argv;
 	if (! strcmp(ifile, "-"))
 		ft->fp = stdin;
 	else if ((ft->fp = fopen(ifile, READBINARY)) == NULL)
-		fail("Can't open input file '%s': %s", 
+		st_fail("Can't open input file '%s': %s", 
 			ifile, strerror(errno));
 	ft->filename = ifile;
 #if	defined(DUMB_FILESYSTEM)
@@ -187,7 +187,7 @@ char **argv;
 
 	/* Check global arguments */
 	if (informat.info.dovol && informat.info.vol == 0.0)
-		fail("Volume must be non-zero"); /* negative volume is phase-reversal */
+		st_fail("Volume must be non-zero"); /* negative volume is phase-reversal */
 	
 	/* If file types have not been set with -t, set from file names. */
 	if (! informat.filetype) {
@@ -254,7 +254,7 @@ char **argv;
 			str = optarg;
 			/* FIXME: allow "A-B" "-B" "A-" "A,B" also maybe lists of ranges */
 			if ( 2 != sscanf(str, "%lu-%lu", &ft->info.x0, &ft->info.x1))
-				fail("eXtract range '%s' is not valid", optarg);
+				st_fail("eXtract range '%s' is not valid", optarg);
 			if (ft->info.x1==0) ft->info.x1 -= 1; /* MAXULONG */
 			break;
 
@@ -268,13 +268,13 @@ char **argv;
 			if ((! sscanf(str, "%lu", &ft->info.rate)) ||
 					(ft->info.rate <= 0))
 #endif
-				fail("-r must be given a positive integer");
+				st_fail("-r must be given a positive integer");
 			break;
 		case 'v':
 			if (!ft || ft->info.dovol) usage("-v");
 			str = optarg;
 			if (! sscanf(str, "%lf", &ft->info.vol)) /* neg volume is ok */
-				fail("Volume value '%s' is not a number", optarg);
+				st_fail("Volume value '%s' is not a number", optarg);
 			ft->info.dovol = 1;
 			break;
 
@@ -282,13 +282,13 @@ char **argv;
 			if (! ft) usage("-c");
 			str = optarg;
 			if (! sscanf(str, "%d", &ft->info.channels))
-				fail("-c must be given a number");
+				st_fail("-c must be given a number");
 			break;
 		case 'B':
 			if (! ft) usage("-B");
 			str = optarg;
 			if (! sscanf(str, "%hu", &ft->info.bs) || ft->info.bs<=0) /* blocksize */
-				fail("-B must be given a positive number");
+				st_fail("-B must be given a positive number");
 			break;
 		case 'b':
 			if (! ft) usage("-b");
@@ -407,21 +407,21 @@ static void process(P0) {
     /* Read and write starters can change their formats. */
     if ((* informat.h->startread)(&informat) == ST_EOF)
     {
-        fail(informat.st_errstr);
+        st_fail(informat.st_errstr);
     }
     st_checkformat(&informat);
     
     if (informat.info.dovol)
-	report("Volume factor: %f\n", informat.info.vol);
+	st_report("Volume factor: %f\n", informat.info.vol);
     if (informat.info.x0 || informat.info.x1 != MAXULONG)
-	report("Extract samples %lu <= x < %lu\n", informat.info.x0, informat.info.x0);
+	st_report("Extract samples %lu <= x < %lu\n", informat.info.x0, informat.info.x0);
     
-    report("Input file: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
+    st_report("Input file: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
 	   informat.info.rate, st_sizes_str[informat.info.size], 
 	   st_encodings_str[informat.info.encoding], informat.info.channels, 
 	   (informat.info.channels > 1) ? "channels" : "channel");
     if (informat.comment)
-	report("Input file: comment \"%s\"\n", informat.comment);
+	st_report("Input file: comment \"%s\"\n", informat.comment);
 	
     /* need to check EFF_REPORT */
     if (writing) {
@@ -438,7 +438,7 @@ static void process(P0) {
 	    /* to be Full Buffering. */
 	    if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
 	    {
-	        fail("Can't set write buffer");
+	        st_fail("Can't set write buffer");
 	    }
 	 }
          else {
@@ -446,14 +446,14 @@ static void process(P0) {
 	     ft->fp = fopen(ofile, WRITEBINARY);
 
 	     if (ft->fp == NULL)
-	         fail("Can't open output file '%s': %s", 
+	         st_fail("Can't open output file '%s': %s", 
 		      ofile, strerror(errno));
 
 	     /* stdout tends to be line-buffered.  Override this */
 	     /* to be Full Buffering. */
 	     if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
 	     {
-	         fail("Can't set write buffer");
+	         st_fail("Can't set write buffer");
 	     }
 
         } /* end of else != stdout */
@@ -466,16 +466,16 @@ static void process(P0) {
 	st_copyformat(&informat, &outformat);
 	if ((* outformat.h->startwrite)(&outformat) == ST_EOF)
 	{
-	    fail(outformat.st_errstr);
+	    st_fail(outformat.st_errstr);
 	}
 	st_checkformat(&outformat);
 	st_cmpformats(&informat, &outformat);
-	report("Output file: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
+	st_report("Output file: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
 	       outformat.info.rate, st_sizes_str[outformat.info.size], 
 	       st_encodings_str[outformat.info.encoding], outformat.info.channels, 
 	       (outformat.info.channels > 1) ? "channels" : "channel");
 	if (outformat.comment)
-	    report("Output file: comment \"%s\"\n", outformat.comment);
+	    st_report("Output file: comment \"%s\"\n", outformat.comment);
     }
 
     /* Very Important: 
@@ -552,7 +552,7 @@ static void process(P0) {
 	    }
 
 	    if (outformat.st_errno)
-		fail(outformat.st_errstr);
+		st_fail(outformat.st_errstr);
 
 	    /* if stuff still in pipeline, set up to flow effects again */
 	    havedata = 0;
@@ -566,7 +566,7 @@ static void process(P0) {
     }
 
     if (informat.st_errno)
-	fail(informat.st_errstr);
+	st_fail(informat.st_errstr);
 
     /* Drain the effects out first to last, 
      * pushing residue through subsequent effects */
@@ -600,13 +600,13 @@ static void process(P0) {
     }
 
     if ((* informat.h->stopread)(&informat) == ST_EOF)
-	fail(informat.st_errstr);
+	st_fail(informat.st_errstr);
     fclose(informat.fp);
 
     if (writing)
     {
         if ((* outformat.h->stopwrite)(&outformat) == ST_EOF)
-	    fail(outformat.st_errstr);
+	    st_fail(outformat.st_errstr);
     }
     if (writing)
         fclose(outformat.fp);
@@ -672,7 +672,7 @@ int e;
 	done = idonel + idoner + odonel + odoner;
     } 
     if (done == 0) 
-	fail("Effect took & gave no samples!");
+	st_fail("Effect took & gave no samples!");
     return 1;
 }
 
@@ -910,7 +910,7 @@ eff_t effp;
 /* Guido Van Rossum fix */
 static void statistics(P0) {
 	if (informat.info.dovol && clipped > 0)
-		report("Volume change clipped %d samples", clipped);
+		st_report("Volume change clipped %d samples", clipped);
 }
 
 static LONG volumechange(buf, ct, vol)

@@ -63,7 +63,7 @@ int w; /* w != 0 is write */
 	p->channels = ft->info.channels;
 	if (p->channels > MAXCHANS || p->channels <= 0)
 	{
-		fail("gsm: channels(%d) must be in 1-16", ft->info.channels);
+		st_fail("gsm: channels(%d) must be in 1-16", ft->info.channels);
 		return(ST_EOF);
 	}
 
@@ -71,7 +71,7 @@ int w; /* w != 0 is write */
 		p->handle[ch] = gsm_create();
 		if (!p->handle[ch])
 		{
-			fail("unable to create GSM stream");
+			st_fail("unable to create GSM stream");
 			return (ST_EOF);
 		}
 	}
@@ -130,7 +130,7 @@ long *buf, samp;
 			gbuff = p->sampleTop;
 			if (gsm_decode(p->handle[ch], p->frames + ch*FRAMESIZE, gbuff) < 0)
 			{
-				fail("error during GSM decode");
+				st_fail("error during GSM decode");
 				return (0);
 			}
 			
@@ -172,7 +172,7 @@ ft_t ft;
 		r = fwrite(p->frames, FRAMESIZE, 1, ft->fp);
 		if (r != 1)
 		{
-			fail("write error");
+			st_fail("write error");
 			return(ST_EOF);
 		}
 	}

@@ -121,7 +121,7 @@ int st_speed_getopts(effp, n, argv)
     if (n && (!sscanf(argv[0], SPEED_FLOAT_SCAN, &speed->factor) ||
 	      speed->factor<=ZERO))
     {
-	fail(SPEED_USAGE);
+	st_fail(SPEED_USAGE);
 	return ST_EOF;
     }
 
@@ -155,7 +155,7 @@ int st_speed_start(effp)
     speed->frac = ZERO;
 
     if (!speed->ibuf) {
-	fail("malloc failed");
+	st_fail("malloc failed");
 	return ST_EOF;
     }
 
@@ -287,7 +287,7 @@ int st_speed_stop(effp)
     speed_t speed = (speed_t) effp->priv;
 
     if (speed->clipped) 
-	warn("SPEED: %d values clipped...", speed->clipped);
+	st_warn("SPEED: %d values clipped...", speed->clipped);
 
     free(speed->ibuf);
     

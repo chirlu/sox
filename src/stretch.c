@@ -140,13 +140,13 @@ char **argv;
 
     if (n>0 && !sscanf(argv[0], STRETCH_FLOAT_SCAN, &stretch->factor))
     {
-	fail(STRETCH_USAGE "\n\terror while parsing factor");
+	st_fail(STRETCH_USAGE "\n\terror while parsing factor");
 	return ST_EOF;
     }
 
     if (n>1 && !sscanf(argv[1], STRETCH_FLOAT_SCAN, &stretch->window))
     {
-	fail(STRETCH_USAGE "\n\terror while parsing window size");
+	st_fail(STRETCH_USAGE "\n\terror while parsing window size");
 	return ST_EOF;
     }
 
@@ -159,7 +159,7 @@ char **argv;
 	    stretch->fade = st_linear_fading;
 	    break;
 	default:
-	    fail(STRETCH_USAGE "\n\terror while parsing fade type");
+	    st_fail(STRETCH_USAGE "\n\terror while parsing fade type");
 	    return ST_EOF;
 	}
     }
@@ -170,13 +170,13 @@ char **argv;
  
     if (n>3 && !sscanf(argv[3], STRETCH_FLOAT_SCAN, &stretch->shift))
     {
-	fail(STRETCH_USAGE "\n\terror while parsing shift ratio");
+	st_fail(STRETCH_USAGE "\n\terror while parsing shift ratio");
 	return ST_EOF;
     }
 
     if (stretch->shift > ONE || stretch->shift <= ZERO)
     {
-	fail(STRETCH_USAGE "\n\terror with shift ratio value");
+	st_fail(STRETCH_USAGE "\n\terror with shift ratio value");
 	return ST_EOF;
     }
 
@@ -191,13 +191,13 @@ char **argv;
 
     if (n>4 && !sscanf(argv[4], STRETCH_FLOAT_SCAN, &stretch->fading))
     {
-	fail(STRETCH_USAGE "\n\terror while parsing fading ratio");
+	st_fail(STRETCH_USAGE "\n\terror while parsing fading ratio");
 	return ST_EOF;
     }
 
     if (stretch->fading > HALF || stretch->fading < ZERO)
     {
-	fail(STRETCH_USAGE "\n\terror with fading ratio value");
+	st_fail(STRETCH_USAGE "\n\terror with fading ratio value");
 	return ST_EOF;
     }
 
@@ -216,14 +216,14 @@ eff_t effp;
     /* not necessary. taken care by effect processing? */
     if (effp->outinfo.channels != effp->ininfo.channels)
     {
-	fail("STRETCH cannot handle different channels (in=%d, out=%d)"
+	st_fail("STRETCH cannot handle different channels (in=%d, out=%d)"
 	     " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
 	return ST_EOF;
     }
 
     if (effp->outinfo.rate != effp->ininfo.rate)
     {
-	fail("STRETCH cannot handle different rates (in=%ld, out=%ld)"
+	st_fail("STRETCH cannot handle different rates (in=%ld, out=%ld)"
 	     " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
 	return ST_EOF;
     }
@@ -261,7 +261,7 @@ eff_t effp;
 	
     if (!stretch->ibuf || !stretch->obuf || !stretch->fbuf) 
     {
-	fail("some malloc failed");
+	st_fail("some malloc failed");
 	return ST_EOF;
     }
 
@@ -434,7 +434,7 @@ eff_t effp;
     free(stretch->fbuf);
 
     if (stretch->clipped)
-	warn("STRETCH clipped %d values...", stretch->clipped);
+	st_warn("STRETCH clipped %d values...", stretch->clipped);
 
     return ST_SUCCESS;
 }

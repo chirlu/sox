@@ -47,7 +47,7 @@ ft_t ft;
       sscanf(inpstr," %c",&sc);
       if (sc != ';') 
       {
-	  fail("Cannot determine sample rate.");
+	  st_fail("Cannot determine sample rate.");
 	  return (ST_EOF);
       }
 #ifdef __alpha__
@@ -74,8 +74,8 @@ ft_t ft;
 
    if (ft->info.channels > 1)
    {
-        report("Can only create .dat files with one channel.");
-	report("Forcing output to 1 channel.");
+        st_report("Can only create .dat files with one channel.");
+	st_report("Forcing output to 1 channel.");
 	ft->info.channels = 1;
    }
    
@@ -116,7 +116,7 @@ LONG *buf, nsamp;
         retc = sscanf(inpstr,"%*s %lg",&sampval);
         if (retc != 1) 
 	{
-	    fail("Unable to read sample.");
+	    st_fail("Unable to read sample.");
 	    return (0);
 	}
         *buf++ = roundoff(sampval * 2.147483648e9);

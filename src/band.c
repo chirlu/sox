@@ -74,13 +74,13 @@ char **argv;
 	}
 	if ((n < 1) || !sscanf(argv[0], "%f", &band->center))
 	{
-		fail("Usage: band [ -n ] center [ width ]");
+		st_fail("Usage: band [ -n ] center [ width ]");
 		return (ST_EOF);
 	}
 	band->width = band->center / 2;
 	if ((n >= 2) && !sscanf(argv[1], "%f", &band->width))
 	{
-		fail("Usage: band [ -n ] center [ width ]");
+		st_fail("Usage: band [ -n ] center [ width ]");
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -95,7 +95,7 @@ eff_t effp;
 	band_t band = (band_t) effp->priv;
 	if (band->center > effp->ininfo.rate/2)
 	{
-		fail("Band: center must be < minimum data rate/2\n");
+		st_fail("Band: center must be < minimum data rate/2\n");
 		return (ST_EOF);
 	}
 

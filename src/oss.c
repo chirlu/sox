@@ -54,8 +54,8 @@ ft_t ft;
 	if (ft->info.encoding == -1)
 	    ft->info.encoding = ST_ENCODING_UNSIGNED;
 	if (ft->info.encoding != ST_ENCODING_UNSIGNED) {
-	    report("OSS driver only supports unsigned with bytes");
-	    report("Forcing to unsigned");
+	    st_report("OSS driver only supports unsigned with bytes");
+	    st_report("Forcing to unsigned");
 	    ft->info.encoding = ST_ENCODING_UNSIGNED;
 	}
     }
@@ -64,16 +64,16 @@ ft_t ft;
 	if (ft->info.encoding == -1)
 	    ft->info.encoding = ST_ENCODING_SIGN2;
 	if (ft->info.encoding != ST_ENCODING_SIGN2) {
-	    report("OSS driver only supports signed with words");
-	    report("Forcing to signed linear");
+	    st_report("OSS driver only supports signed with words");
+	    st_report("Forcing to signed linear");
 	    ft->info.encoding = ST_ENCODING_SIGN2;
 	}
     }
     else {
         ft->info.size = ST_SIZE_WORD;
 	ft->info.encoding = ST_ENCODING_SIGN2;
-	report("OSS driver only supports bytes and words");
-	report("Forcing to signed linear word");
+	st_report("OSS driver only supports bytes and words");
+	st_report("Forcing to signed linear word");
     }
 
     if (ft->info.channels == -1) ft->info.channels = 1;
@@ -81,13 +81,13 @@ ft_t ft;
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_RESET, 0) < 0)
     {
-	fail("Unable to reset OSS driver.  Possibly accessing an invalid file/device");
+	st_fail("Unable to reset OSS driver.  Possibly accessing an invalid file/device");
 	return(ST_EOF);
     }
     ft->file.size = 0;
     ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &ft->file.size);
     if (ft->file.size < 4 || ft->file.size > 65536) {
-	    fail("Invalid audio buffer size %d", ft->file.size);
+	    st_fail("Invalid audio buffer size %d", ft->file.size);
 	    return (ST_EOF);
     }
     ft->file.count = 0;
@@ -95,12 +95,12 @@ ft_t ft;
     ft->file.eof = 0;
 
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
-	fail("Unable to allocate input/output buffer of size %d", ft->file.size);
+	st_fail("Unable to allocate input/output buffer of size %d", ft->file.size);
 	return (ST_EOF);
     }
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_SYNC, NULL) < 0) {
-	fail("Unable to sync dsp");
+	st_fail("Unable to sync dsp");
 	return (ST_EOF);
     }
 
@@ -108,7 +108,7 @@ ft_t ft;
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp) < 0 || 
 	tmp != samplesize)
     {
-	fail("Unable to set the sample size to %d", samplesize);
+	st_fail("Unable to set the sample size to %d", samplesize);
 	return (ST_EOF);
     }
 
@@ -119,7 +119,7 @@ ft_t ft;
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_STEREO, &tmp) < 0 ||
 	tmp != dsp_stereo) {
 	ft->info.channels = 1;
-	warn("Couldn't set to %s", dsp_stereo?  "stereo":"mono");
+	st_warn("Couldn't set to %s", dsp_stereo?  "stereo":"mono");
 	dsp_stereo = 0;
     }
 
@@ -136,7 +136,7 @@ ft_t ft;
 	 */
 	if (ft->info.rate - tmp > (tmp * .01) || 
 	    tmp - ft->info.rate > (tmp * .01)) {
-	    warn("Unable to set audio speed to %d (set to %d)",
+	    st_warn("Unable to set audio speed to %d (set to %d)",
 		     ft->info.rate, tmp);
 	    ft->info.rate = tmp;
 	}

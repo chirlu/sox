@@ -191,17 +191,17 @@ ft_t ft;
 
 	if (! ft->seekable)
 	{
-		fail("VOC input file must be a file, not a pipe");
+		st_fail("VOC input file must be a file, not a pipe");
 		return(ST_EOF);
 	}
 	if (fread(header, 1, 20, ft->fp) != 20)
 	{
-		fail("unexpected EOF in VOC header");
+		st_fail("unexpected EOF in VOC header");
 		return(ST_EOF);
 	}
 	if (strncmp(header, "Creative Voice File\032", 19))
 	{
-		fail("VOC file header incorrect");
+		st_fail("VOC file header incorrect");
 		return(ST_EOF);
 	}
 
@@ -216,7 +216,7 @@ ft_t ft;
 	    return rc;
 	if (v->rate == -1)
 	{
-		fail("Input .voc file had no sound!");
+		st_fail("Input .voc file had no sound!");
 		return(ST_EOF);
 	}
 
@@ -260,7 +260,7 @@ LONG *buf, len;
 			{
 			    case ST_SIZE_BYTE:
 				if (st_readb(ft, &uc) == ST_EOF) {
-				    warn("VOC input: short file");
+				    st_warn("VOC input: short file");
 				    v->rest = 0;
 				    return done;
 				}
@@ -271,7 +271,7 @@ LONG *buf, len;
 				st_readw(ft, &us);
 				if (feof(ft->fp))
 				{
-				    warn("VOC input: short file");
+				    st_warn("VOC input: short file");
 				    v->rest = 0;
 				    return done;
 				}
@@ -319,7 +319,7 @@ ft_t ft;
 
 	if (! ft->seekable)
 	{
-		fail("Output .voc file must be a file, not a pipe");
+		st_fail("Output .voc file must be a file, not a pipe");
 		return(ST_EOF);
 	}
 
@@ -420,12 +420,12 @@ ft_t ft;
 		        if (!v->extended) {
 			  if (uc == 0)
 			  {
-			    fail("File %s: Sample rate is zero?");
+			    st_fail("File %s: Sample rate is zero?");
 			    return(ST_EOF);
 			  }
 			  if ((v->rate != -1) && (uc != v->rate))
 			  {
-			    fail("File %s: sample rate codes differ: %d != %d",
+			    st_fail("File %s: sample rate codes differ: %d != %d",
 				 ft->filename,v->rate, uc);
 			    return(ST_EOF);
 			  }
@@ -436,7 +436,7 @@ ft_t ft;
 			st_readb(ft, &uc);
 			if (uc != 0)
 			{
-			  fail("File %s: only interpret 8-bit data!",
+			  st_fail("File %s: only interpret 8-bit data!",
 			       ft->filename);
 			  return(ST_EOF);
 			}
@@ -448,12 +448,12 @@ ft_t ft;
 			st_readdw(ft, &new_rate_long);
 			if (new_rate_long == 0)
 			{
-			    fail("File %s: Sample rate is zero?",ft->filename);
+			    st_fail("File %s: Sample rate is zero?",ft->filename);
 			    return(ST_EOF);
 			}
 			if ((v->rate != -1) && (new_rate_long != v->rate))
 			{
-			    fail("File %s: sample rate codes differ: %d != %d",
+			    st_fail("File %s: sample rate codes differ: %d != %d",
 				ft->filename, v->rate, new_rate_long);
 			    return(ST_EOF);
 			}
@@ -465,7 +465,7 @@ ft_t ft;
 			    case 8:	v->size = ST_SIZE_BYTE; break;
 			    case 16:	v->size = ST_SIZE_WORD; break;
 			    default:	
-					fail("Don't understand size %d", uc);
+					st_fail("Don't understand size %d", uc);
 					return(ST_EOF);
 			}
 			st_readb(ft, &(v->channels));
@@ -488,7 +488,7 @@ ft_t ft;
 			st_readb(ft, &uc);
 			if (uc == 0)
 			{
-				fail("File %s: Silence sample rate is zero");
+				st_fail("File %s: Silence sample rate is zero");
 				return(ST_EOF);
 			}
 			/* 
@@ -518,7 +518,7 @@ ft_t ft;
 			continue;	/* get next block */
 		case VOC_LOOP:
 		case VOC_LOOPEND:
-			report("File %s: skipping repeat loop");
+			st_report("File %s: skipping repeat loop");
 			for(i = 0; i < sblen; i++)
 			    st_readb(ft, (unsigned char *)&trash);
 			break;
@@ -531,12 +531,12 @@ ft_t ft;
 			st_readw(ft, &new_rate_short);
 			if (new_rate_short == 0)
 			{
-			   fail("File %s: Sample rate is zero?");
+			   st_fail("File %s: Sample rate is zero?");
 			   return(ST_EOF);
 			}
 			if ((v->rate != -1) && (new_rate_short != v->rate))
 			{
-			   fail("File %s: sample rate codes differ: %d != %d",
+			   st_fail("File %s: sample rate codes differ: %d != %d",
 					ft->filename, v->rate, new_rate_short);
 			   return(ST_EOF);
 			}
@@ -544,7 +544,7 @@ ft_t ft;
 			st_readb(ft, &uc);
 			if (uc != 0)
 			{
-				fail("File %s: only interpret 8-bit data!",
+				st_fail("File %s: only interpret 8-bit data!",
 					ft->filename);
 				return(ST_EOF);
 			}
@@ -559,7 +559,7 @@ ft_t ft;
 			/* can be grabed.				*/
 			continue;
 		default:
-			report("File %s: skipping unknown block code %d",
+			st_report("File %s: skipping unknown block code %d",
 				ft->filename, block);
 			for(i = 0; i < sblen; i++)
 			    st_readb(ft, (unsigned char *)&trash);

@@ -58,7 +58,7 @@ char **argv;
 
 			if (n <= 1) 
 			{
-			  fail("-s option: invalid argument");
+			  st_fail("-s option: invalid argument");
 			  return (ST_EOF);
 			}
 			if (!strcmp(argv[1],"rms")) {
@@ -67,7 +67,7 @@ char **argv;
 			}
 			if (!sscanf(argv[1], "%lf", &scale))
 			{
-			  fail("-s option: invalid argument");
+			  st_fail("-s option: invalid argument");
 			  return (ST_EOF);
 			}
 			stat->scale = scale;
@@ -77,7 +77,7 @@ char **argv;
 			double scale;
 			if (n <= 1 || !sscanf(argv[1], "%lf", &scale))
 			{
-			  fail("-s option expects float argument");
+			  st_fail("-s option expects float argument");
 			  return(ST_EOF);
 			}
 			stat->srms = 1;
@@ -89,7 +89,7 @@ char **argv;
 		}
 		else
 		{
-			fail("Summary effect: unknown option");
+			st_fail("Summary effect: unknown option");
 			return(ST_EOF);
 		}
 	  did2: --n; ++argv;

@@ -155,7 +155,7 @@ ft_t ft;
 	p->bytes_written = 0;
 	p->com.v_min = 1;
 	p->com.v_max = -1;
-	report("cvsd: bit rate %dbit/s, bits from %s\n", p->cvsd_rate,
+	st_report("cvsd: bit rate %dbit/s, bits from %s\n", p->cvsd_rate,
 	       p->swapbits ? "msb to lsb" : "lsb to msb");
 }
 
@@ -220,7 +220,7 @@ ft_t ft;
 		st_writeb(ft, p->bit.shreg);
 		p->bytes_written++;
 	}
-	report("cvsd: min slope %f, max slope %f\n", 
+	st_report("cvsd: min slope %f, max slope %f\n", 
 	       p->com.v_min, p->com.v_max);	
 
 	return (ST_SUCCESS);
@@ -233,7 +233,7 @@ ft_t ft;
 {
 	struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 
-	report("cvsd: min value %f, max value %f\n", 
+	st_report("cvsd: min value %f, max value %f\n", 
 	       p->com.v_min, p->com.v_max);
 
 	return(ST_SUCCESS);
@@ -263,7 +263,7 @@ LONG *buf, nsamp;
 	if (!dbg.f1) {
 		if (!(dbg.f1 = fopen("dbg1", "w")))
 		{
-			fail("debugging");
+			st_fail("debugging");
 			return (0);
 		}
 		fprintf(dbg.f1, "\"input\"\n");
@@ -271,7 +271,7 @@ LONG *buf, nsamp;
 	if (!dbg.f2) {
 		if (!(dbg.f2 = fopen("dbg2", "w")))
 		{
-			fail("debugging");
+			st_fail("debugging");
 			return (0);
 		}
 		fprintf(dbg.f2, "\"recon\"\n");
@@ -345,7 +345,7 @@ LONG *buf, nsamp;
 	if (!dbg.f1) {
 		if (!(dbg.f1 = fopen("dbg1", "w")))
 		{
-			fail("debugging");
+			st_fail("debugging");
 			return (0);
 		}
 		fprintf(dbg.f1, "\"input\"\n");
@@ -353,7 +353,7 @@ LONG *buf, nsamp;
 	if (!dbg.f2) {
 		if (!(dbg.f2 = fopen("dbg2", "w")))
 		{
-			fail("debugging");
+			st_fail("debugging");
 			return (0);
 		}
 		fprintf(dbg.f2, "\"recon\"\n");
@@ -490,7 +490,7 @@ struct dvms_header *hdr;
 
 	if (fread(hdrbuf, sizeof(hdrbuf), 1, f) != 1)
 	{
-		fail("unable to read DVMS header\n");
+		st_fail("unable to read DVMS header\n");
 		return (ST_EOF);
 	}
 	for(i = sizeof(hdrbuf), sum = 0; i > /*2*/3; i--) /* Deti bug */
@@ -515,7 +515,7 @@ struct dvms_header *hdr;
 	hdr->Crc = get16(&pch);
 	if (sum != hdr->Crc) 
 	{
-		fail("DVMS header checksum error, read %u, calculated %u\n",
+		st_fail("DVMS header checksum error, read %u, calculated %u\n",
 		     hdr->Crc, sum);
 		return (ST_EOF);
 	}
@@ -559,12 +559,12 @@ struct dvms_header *hdr;
 	put16(&pch, hdr->Crc);
 	if (fseek(f, 0, SEEK_SET) < 0)
 	{
-		fail("cannot write DVMS header, seek failed\n");
+		st_fail("cannot write DVMS header, seek failed\n");
 		return (ST_EOF);
 	}
 	if (fwrite(hdrbuf, sizeof(hdrbuf), 1, f) != 1)
 	{
-		fail("cannot write DVMS header\n");
+		st_fail("cannot write DVMS header\n");
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -611,21 +611,21 @@ ft_t ft;
 	if (rc)
 	    return rc;
 
-	report("DVMS header of source file \"%s\":");
-	report("  filename  \"%.14s\"",ft->filename);
-        report("  id        0x%x", hdr.Filename);
-	report("  state     0x%x", hdr.Id, hdr.State);
-	report("  time      %s",ctime(&hdr.Unixtime)); /* ctime generates lf */
-	report("  usender   %u", hdr.Usender);
-	report("  ureceiver %u", hdr.Ureceiver);
-	report("  length    %u", hdr.Length);
-	report("  srate     %u", hdr.Srate);
-	report("  days      %u", hdr.Days);
-	report("  custom1   %u", hdr.Custom1);
-	report("  custom2   %u", hdr.Custom2);
-	report("  info      \"%.16s\"\n", hdr.Info);
+	st_report("DVMS header of source file \"%s\":");
+	st_report("  filename  \"%.14s\"",ft->filename);
+        st_report("  id        0x%x", hdr.Filename);
+	st_report("  state     0x%x", hdr.Id, hdr.State);
+	st_report("  time      %s",ctime(&hdr.Unixtime)); /* ctime generates lf */
+	st_report("  usender   %u", hdr.Usender);
+	st_report("  ureceiver %u", hdr.Ureceiver);
+	st_report("  length    %u", hdr.Length);
+	st_report("  srate     %u", hdr.Srate);
+	st_report("  days      %u", hdr.Days);
+	st_report("  custom1   %u", hdr.Custom1);
+	st_report("  custom2   %u", hdr.Custom2);
+	st_report("  info      \"%.16s\"\n", hdr.Info);
 	ft->info.rate = (hdr.Srate < 240) ? 16000 : 32000;
-	report("DVMS rate %dbit/s using %dbit/s deviation %d%%\n", 
+	st_report("DVMS rate %dbit/s using %dbit/s deviation %d%%\n", 
 	       hdr.Srate*100, ft->info.rate, 
 	       ((ft->info.rate - hdr.Srate*100) * 100) / ft->info.rate);
 	rc = st_cvsdstartread(ft);
@@ -655,7 +655,7 @@ ft_t ft;
 	    return rc;
 
 	if (!ft->seekable)
-	       warn("Length in output .DVMS header will wrong since can't seek to fix it");
+	       st_warn("Length in output .DVMS header will wrong since can't seek to fix it");
 
 	p->swapbits = 0;
 	return(ST_SUCCESS);
@@ -672,12 +672,12 @@ ft_t ft;
 	st_cvsdstopwrite(ft);
 	if (!ft->seekable)
 	{
-	    warn("File not seekable");
+	    st_warn("File not seekable");
 	    return (ST_EOF);
 	}
 	if (fseek(ft->fp, 0L, 0) != 0)
 	{
-		fail("Can't rewind output file to rewrite DVMS header.");
+		st_fail("Can't rewind output file to rewrite DVMS header.");
 		return(ST_EOF);
 	}
 	make_dvms_hdr(ft, &hdr);

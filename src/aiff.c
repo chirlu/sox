@@ -113,13 +113,13 @@ ft_t ft;
 	/* FORM chunk */
 	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "FORM", 4) != 0)
 	{
-		fail("AIFF header does not begin with magic word 'FORM'");
+		st_fail("AIFF header does not begin with magic word 'FORM'");
 		return(ST_EOF);
 	}
 	st_readdw(ft, &totalsize);
 	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "AIFF", 4) != 0)
 	{
-		fail("AIFF 'FORM' chunk does not specify 'AIFF' as type");
+		st_fail("AIFF 'FORM' chunk does not specify 'AIFF' as type");
 		return(ST_EOF);
 	}
 
@@ -133,7 +133,7 @@ ft_t ft;
 				break;
 			else
 			{
-				fail("Missing SSND chunk in AIFF file");
+				st_fail("Missing SSND chunk in AIFF file");
 				return(ST_EOF);
 			}
 		}
@@ -142,7 +142,7 @@ ft_t ft;
 			st_readdw(ft, &chunksize);
 			if (chunksize != 18)
 			{
-				fail("AIFF COMM chunk has bad size");
+				st_fail("AIFF COMM chunk has bad size");
 				return(ST_EOF);
 			}
 			st_readw(ft, &channels);
@@ -293,7 +293,7 @@ ft_t ft;
 				break;
 			if (feof(ft->fp))
 				break;
-			report("AIFFstartread: ignoring '%s' chunk\n", buf);
+			st_report("AIFFstartread: ignoring '%s' chunk\n", buf);
 			st_readdw(ft, &chunksize);
 			if (feof(ft->fp))
 				break;
@@ -318,20 +318,20 @@ ft_t ft;
 			fseek(ft->fp, seekto, SEEK_SET);
 		else
 		{
-			fail("AIFF: no sound data on input file");
+			st_fail("AIFF: no sound data on input file");
 			return(ST_EOF);
 		}
 	}
 	/* SSND chunk just read */
 	if (blocksize != 0)
 	{
-		fail("AIFF header specifies nonzero blocksize?!?!");
+		st_fail("AIFF header specifies nonzero blocksize?!?!");
 		return(ST_EOF);
 	}
 	while ((LONG) (--offset) >= 0) {
 		if (st_readb(ft, (unsigned char *)&trash) == ST_EOF)
 		{
-			fail("unexpected EOF while skipping AIFF offset");
+			st_fail("unexpected EOF while skipping AIFF offset");
 			return(ST_EOF);
 		}
 	}
@@ -348,7 +348,7 @@ ft_t ft;
 			ft->info.size = ST_SIZE_WORD;
 			break;
 		default:
-			fail("unsupported sample size in AIFF header: %d", bits);
+			st_fail("unsupported sample size in AIFF header: %d", bits);
 			return(ST_EOF);
 			/*NOTREACHED*/
 		}
@@ -357,9 +357,9 @@ ft_t ft;
 			|| (ft->info.rate == -1)
 			|| (ft->info.encoding == -1)
 			|| (ft->info.size == -1)) {
-		  report("You must specify # channels, sample rate, signed/unsigned,\n");
-		  report("and 8/16 on the command line.");
-		  fail("Bogus AIFF file: no COMM section.");
+		  st_report("You must specify # channels, sample rate, signed/unsigned,\n");
+		  st_report("and 8/16 on the command line.");
+		  st_fail("Bogus AIFF file: no COMM section.");
 		  return(ST_EOF);
 		}
 
@@ -369,12 +369,12 @@ ft_t ft;
 
 	if (foundmark && !foundinstr)
 	{
-		fail("Bogus AIFF file: MARKers but no INSTrument.");
+		st_fail("Bogus AIFF file: MARKers but no INSTrument.");
 		return(ST_EOF);
 	}
 	if (!foundmark && foundinstr)
 	{
-		fail("Bogus AIFF file: INSTrument but no MARKers.");
+		st_fail("Bogus AIFF file: INSTrument but no MARKers.");
 		return(ST_EOF);
 	}
 	if (foundmark && foundinstr) {
@@ -459,12 +459,12 @@ ft_t ft;
   *text = (char *) malloc((size_t) chunksize + 1);
   if (*text == NULL)
   {
-    fail("AIFF: Couldn't allocate %s header", chunkDescription);
+    st_fail("AIFF: Couldn't allocate %s header", chunkDescription);
     return(ST_EOF);
   }
   if (fread(*text, 1, chunksize, ft->fp) != chunksize)
   {
-    fail("AIFF: Unexpected EOF in %s header", chunkDescription);
+    st_fail("AIFF: Unexpected EOF in %s header", chunkDescription);
     return(ST_EOF);
   }
   *(*text + chunksize) = '\0';
@@ -474,7 +474,7 @@ ft_t ft;
 		char c;
 		if (fread(&c, 1, 1, ft->fp) != 1)
 		{
-			fail("AIFF: Unexpected EOF in %s header", chunkDescription);
+			st_fail("AIFF: Unexpected EOF in %s header", chunkDescription);
 			return(ST_EOF);
 		}
 	}
@@ -516,10 +516,10 @@ ft_t ft;
 		if (feof(ft->fp))
 			break;
 		buf[4] = '\0';
-		warn("Ignoring AIFF tail chunk: '%s', %d bytes long\n", 
+		st_warn("Ignoring AIFF tail chunk: '%s', %d bytes long\n", 
 			buf, chunksize);
 		if (! strcmp(buf, "MARK") || ! strcmp(buf, "INST"))
-			warn("	You're stripping MIDI/loop info!\n");
+			st_warn("	You're stripping MIDI/loop info!\n");
 		while ((LONG) (--chunksize) >= 0) 
 		{
 			if (st_readb(ft, (unsigned char *)&trash) == ST_EOF)
@@ -568,7 +568,7 @@ ft_t ft;
 	if ((ft->info.encoding == ST_ENCODING_ULAW ||
 	     ft->info.encoding == ST_ENCODING_ALAW) && 
 	    ft->info.size == ST_SIZE_BYTE) {
-		report("expanding 8-bit u-law to 16 bits");
+		st_report("expanding 8-bit u-law to 16 bits");
 		ft->info.size = ST_SIZE_WORD;
 	}
 	ft->info.encoding = ST_ENCODING_SIGN2; /* We have a fixed encoding */
@@ -607,12 +607,12 @@ ft_t ft;
 
 	if (!ft->seekable)
 	{
-	    fail("Non-seekable file.");
+	    st_fail("Non-seekable file.");
 	    return(ST_EOF);
 	}
 	if (fseek(ft->fp, 0L, SEEK_SET) != 0)
 	{
-		fail("can't rewind output file to rewrite AIFF header");
+		st_fail("can't rewind output file to rewrite AIFF header");
 		return(ST_EOF);
 	}
 	return(aiffwriteheader(ft, p->nsamples / ft->info.channels));
@@ -640,7 +640,7 @@ LONG nframes;
 		bits = 16;
 	else
 	{
-		fail("unsupported output encoding/size for AIFF header");
+		st_fail("unsupported output encoding/size for AIFF header");
 		return(ST_EOF);
 	}
 
@@ -733,7 +733,7 @@ ft_t ft;
 	char buf[10];
 	if (fread(buf, 1, 10, ft->fp) != 10)
 	{
-		fail("EOF while reading IEEE extended number");
+		st_fail("EOF while reading IEEE extended number");
 		return(ST_EOF);
 	}
 	return ConvertFromIeeeExtended(buf);
@@ -746,7 +746,7 @@ double x;
 	char buf[10];
 	ConvertToIeeeExtended(x, buf);
 	/*
-	report("converted %g to %o %o %o %o %o %o %o %o %o %o",
+	st_report("converted %g to %o %o %o %o %o %o %o %o %o %o",
 		x,
 		buf[0], buf[1], buf[2], buf[3], buf[4],
 		buf[5], buf[6], buf[7], buf[8], buf[9]);

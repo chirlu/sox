@@ -27,7 +27,7 @@ char **argv;
 {
 	if (n)
 	{
-		fail("Map effect takes no options.");
+		st_fail("Map effect takes no options.");
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);

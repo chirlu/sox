@@ -85,27 +85,27 @@ char **argv;
 	/* fprintf(stderr,"freq: %d-%d\n", f->freq0, f->freq1);fflush(stderr); */
 	if (f->freq0 == 0 && f->freq1 == 0)
 	{
-		fail("Usage: filter low-high [ windowlength [ beta ] ]");
+		st_fail("Usage: filter low-high [ windowlength [ beta ] ]");
 		return (ST_EOF);
 	}
 
 	if ((n >= 2) && !sscanf(argv[1], "%ld", &f->Nwin))
 	{
-		fail("Usage: filter low-high [ windowlength ]");
+		st_fail("Usage: filter low-high [ windowlength ]");
 		return (ST_EOF);
 	}
 	else if (f->Nwin < 4) {
-		fail("filter: window length (%ld) <4 is too short", f->Nwin);
+		st_fail("filter: window length (%ld) <4 is too short", f->Nwin);
 		return (ST_EOF);
 	}
 
 	if ((n >= 3) && !sscanf(argv[2], "%lf", &f->beta))
 	{
-		fail("Usage: filter low-high [ windowlength [ beta ] ]");
+		st_fail("Usage: filter low-high [ windowlength [ beta ] ]");
 		return (ST_EOF);
 	}
 
-	report("filter opts: %d-%d, window-len %d, beta %f\n", f->freq0, f->freq1, f->Nwin, f->beta);
+	st_report("filter opts: %d-%d, window-len %d, beta %f\n", f->freq0, f->freq1, f->Nwin, f->beta);
 	return (ST_SUCCESS);
 }
 
@@ -128,7 +128,7 @@ eff_t effp;
 
 	if ((f->freq0 < 0) || (f->freq0 > f->freq1))
 	{
-		fail("filter: low(%d),high(%d) parameters must satisfy 0 <= low <= high <= %d",
+		st_fail("filter: low(%d),high(%d) parameters must satisfy 0 <= low <= high <= %d",
 					f->freq0, f->freq1, f->rate/2);
 		return (ST_EOF);
 	}
@@ -139,7 +139,7 @@ eff_t effp;
 		Xh0 = makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, 1, 0);
 		if (Xh0 <= 1)
 		{
-			fail("filter: Unable to make low filter\n");
+			st_fail("filter: Unable to make low filter\n");
 			return (ST_EOF);
 		}
 	} else {
@@ -151,7 +151,7 @@ eff_t effp;
 		Xh1 = makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, 1, 0);
 		if (Xh1 <= 1)
 		{
-			fail("filter: Unable to make high filter\n");
+			st_fail("filter: Unable to make high filter\n");
 			return (ST_EOF);
 		}
 	} else {
@@ -172,7 +172,7 @@ eff_t effp;
 
 	Xh -= 1;       /* Xh = 0 can only happen if filter was identity 0-Nyquist */
 	if (Xh<=0)
-		warn("filter: adjusted freq %d-%d is identity", f->freq0, f->freq1);
+		st_warn("filter: adjusted freq %d-%d is identity", f->freq0, f->freq1);
 
 	f->Nwin = 2*Xh + 1;  /* not really used afterwards */
 	f->Xh = Xh;
@@ -274,7 +274,7 @@ LONG *osamp;
 	*osamp -= osamp_res;
 	/* fprintf(stderr,"DRAIN osamp %d\n", *osamp); */
 	if (isamp_res)
-		warn("drain overran obuf by %d\n", isamp_res); fflush(stderr);
+		st_warn("drain overran obuf by %d\n", isamp_res); fflush(stderr);
 	return (ST_SUCCESS);
 }
 

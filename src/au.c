@@ -102,21 +102,21 @@ ft_t ft;
 		 * endianess.  Its not hurting though.
 		 */
 		ft->swap = ft->swap ? 0 : 1;
-		report("Found inverted DEC magic word.  Swapping bytes.");
+		st_report("Found inverted DEC magic word.  Swapping bytes.");
 	}
 	else if (magic == SUN_INV_MAGIC) {
 		ft->swap = ft->swap ? 0 : 1;
-		report("Found inverted Sun/NeXT magic word. Swapping bytes.");
+		st_report("Found inverted Sun/NeXT magic word. Swapping bytes.");
 	}
 	else if (magic == SUN_MAGIC) {
-		report("Found Sun/NeXT magic word");
+		st_report("Found Sun/NeXT magic word");
 	}
 	else if (magic == DEC_MAGIC) {
-		report("Found DEC magic word");
+		st_report("Found DEC magic word");
 	}
 	else
 	{
-		fail("Sun/NeXT/DEC header doesn't start with magic word\nTry the '.ul' file type with '-t ul -r 8000 filename'");
+		st_fail("Sun/NeXT/DEC header doesn't start with magic word\nTry the '.ul' file type with '-t ul -r 8000 filename'");
 		return(ST_EOF);
 	}
 
@@ -124,7 +124,7 @@ ft_t ft;
 	st_readdw(ft, &hdr_size);
 	if (hdr_size < SUN_HDRSIZE)
 	{
-		fail("Sun/NeXT header size too small.");
+		st_fail("Sun/NeXT header size too small.");
 		return(0);
 	}
 
@@ -178,8 +178,8 @@ ft_t ft;
 		p->dec_bits = 5;
 		break;
 	default:
-		report("encoding: 0x%lx", encoding);
-		fail("Unsupported encoding in Sun/NeXT header.\nOnly U-law, signed bytes, signed words, and ADPCM are supported.");
+		st_report("encoding: 0x%lx", encoding);
+		st_fail("Unsupported encoding in Sun/NeXT header.\nOnly U-law, signed bytes, signed words, and ADPCM are supported.");
 		return(ST_EOF);
 	}
 
@@ -199,13 +199,13 @@ ft_t ft;
 		    	st_readb(ft, &(buf[i]));
 			if (feof(ft->fp))
 			{
-				fail("Unexpected EOF in Sun/NeXT header info.");
+				st_fail("Unexpected EOF in Sun/NeXT header info.");
 				return(ST_EOF);
 			}
 		}
 		buf[i] = '\0';
 		ft->comment = buf;
-		report("Input file %s: Sun header info: %s", ft->filename, buf);
+		st_report("Input file %s: Sun header info: %s", ft->filename, buf);
 	}
 	return(ST_SUCCESS);
 }
@@ -320,7 +320,7 @@ ft_t ft;
 	{
 	  if (fseek(ft->fp, 0L, 0) != 0)
 	  {
-		fail("Can't rewind output file to rewrite Sun header.");
+		st_fail("Can't rewind output file to rewrite Sun header.");
 		return(ST_EOF);
 	  }
 	  auwriteheader(ft, p->data_size);
@@ -351,9 +351,9 @@ ULONG data_size;
 		 ft->info.size == ST_SIZE_WORD)
 		encoding = SUN_LIN_16;
 	else {
-		report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
-		report("Only U-law, A-law signed bytes, and signed words are supported.");
-		report("Defaulting to 8khz u-law\n");
+		st_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
+		st_report("Only U-law, A-law signed bytes, and signed words are supported.");
+		st_report("Defaulting to 8khz u-law\n");
 		encoding = SUN_ULAW;
 		ft->info.encoding = ST_ENCODING_ULAW;
 		ft->info.size = ST_SIZE_BYTE;

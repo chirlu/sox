@@ -128,7 +128,7 @@ int st_poly_getopts(eff_t effp, int n, char **argv)
       continue;
     }
 
-    fail("Polyphase: unknown argument (%s %s)!", argv[0], argv[1]);
+    st_fail("Polyphase: unknown argument (%s %s)!", argv[0], argv[1]);
     return (ST_EOF);
   }
   return (ST_SUCCESS);
@@ -170,11 +170,11 @@ static int prime(int n, int *q0)
 
   p = primes;
   q = q0;
-  report("factors(%d) =",n);
+  st_report("factors(%d) =",n);
   while (n > 1) {
     while ((pr = *p) && (n % pr)) p++;
     if (!pr) {
-      fail("Number %d too large of a prime.\n",n);
+      st_fail("Number %d too large of a prime.\n",n);
       pr = n;
     }
     *q++ = pr;
@@ -300,7 +300,7 @@ static void nuttall(Float *buffer, int length)
   int N1;
 
   if(buffer == NULL || length <= 0)
-    fail("Illegal buffer %p or length %d to nuttall.\n", buffer, length);
+    st_fail("Illegal buffer %p or length %d to nuttall.\n", buffer, length);
 
   /* Initial variable setups. */
   N = length;
@@ -323,7 +323,7 @@ static void hamming(Float *buffer, int length)
     int N1;
 
     if(buffer == NULL || length <= 0)
-      fail("Illegal buffer %p or length %d to hamming.\n",buffer,length);
+      st_fail("Illegal buffer %p or length %d to hamming.\n",buffer,length);
 
     N1 = length/2;
     for(j=0;j<length;j++) 
@@ -349,7 +349,7 @@ static void fir_design(Float *buffer, int length, Float cutoff)
     double sum;
 
     if(buffer == NULL || length < 0 || cutoff < 0 || cutoff > PI)
-      fail("Illegal buffer %p, length %d, or cutoff %f.\n",buffer,length,cutoff);
+      st_fail("Illegal buffer %p, length %d, or cutoff %f.\n",buffer,length,cutoff);
 
     /* Use the user-option of window type */
     if(win_type == 0) 
@@ -407,9 +407,9 @@ int st_poly_start(eff_t effp)
     rate->total = total;
     /* l1 and l2 are now lists of the up/down factors for conversion */
 
-    report("Poly:  input rate %d, output rate %d.  %d stages.",
+    st_report("Poly:  input rate %d, output rate %d.  %d stages.",
             effp->ininfo.rate, effp->outinfo.rate,total);
-    report("Poly:  window: %s  size: %d  cutoff: %f.",
+    st_report("Poly:  window: %s  size: %d  cutoff: %f.",
             (win_type == 0) ? ("nut") : ("ham"), win_width, cutoff);
 
     /* Create an array of filters and past history */
@@ -429,7 +429,7 @@ int st_poly_start(eff_t effp)
       s->size = size;
       s->hsize = f_len/s->up; /* this much of window is past-history */
       s->held = 0;
-      report("Poly:  stage %d:  Up by %d, down by %d,  i_samps %d, hsize %d",
+      st_report("Poly:  stage %d:  Up by %d, down by %d,  i_samps %d, hsize %d",
               k+1,s->up,s->down,size, s->hsize);
       s->filt_len = f_len;
       s->filt_array = (Float *) malloc(sizeof(Float) * f_len);
@@ -439,7 +439,7 @@ int st_poly_start(eff_t effp)
         s->window[j] = 0.0;
 
       uprate *= s->up;
-      report("Poly:         :  filt_len %d, cutoff freq %.1f",
+      st_report("Poly:         :  filt_len %d, cutoff freq %.1f",
               f_len, uprate*cutoff/f_cutoff);
       uprate /= s->down;
       fir_design(s->filt_array, f_len, cutoff/f_cutoff);
@@ -463,7 +463,7 @@ int st_poly_start(eff_t effp)
       s->filt_array = NULL;
       s->window = (Float *) malloc(sizeof(Float) * size);
     }
-    report("Poly:  output samples %d, oskip %d",size, rate->oskip);
+    st_report("Poly:  output samples %d, oskip %d",size, rate->oskip);
     return (ST_SUCCESS);
 }
 
@@ -500,7 +500,7 @@ static void polyphase(Float *output, polystage *s)
   /*for (mm=0; mm<s->filt_len; mm++) fprintf(stderr,"cf_%d %f\n",mm,s->filt_array[mm]);*/
   /* assumes s->size divisible by down (now true) */
   o_top = output + (s->size * up) / down;
-  /*report(" isize %d, osize %d, up %d, down %d, N %d", s->size, o_top-output, up, down, f_len);*/
+  /*st_report(" isize %d, osize %d, up %d, down %d, N %d", s->size, o_top-output, up, down, f_len);*/
   for (mm=0, o=output; o < o_top; mm+=down, o++) {
     double sum;
     const Float *p, *q;

@@ -35,7 +35,7 @@ char **argv;
 {
 	if (n)
 	{
-		fail("Mask effect takes no options.");
+		st_fail("Mask effect takes no options.");
 		return (ST_EOF);
 	}
 	/* should take # of bits */

@@ -32,7 +32,7 @@ char **argv;
 {
 	if (n)
 	{
-		fail("Split effect takes no options.");
+		st_fail("Split effect takes no options.");
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -59,7 +59,7 @@ eff_t effp;
 			}
 			break;
 	}
-	fail("Can't split %d channels into %d channels",
+	st_fail("Can't split %d channels into %d channels",
 		effp->ininfo.channels, effp->outinfo.channels);
 	return (ST_EOF);
 }

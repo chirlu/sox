@@ -306,7 +306,7 @@ char **argv;
 
     if (n && !sscanf(argv[0], PITCH_FLOAT_SCAN, &pitch->shift))
     {
-	fail(PITCH_USAGE);
+	st_fail(PITCH_USAGE);
 	return ST_EOF;
     }
 
@@ -314,7 +314,7 @@ char **argv;
     pitch->width = PITCH_DEFAULT_WIDTH;
     if (n>1 && !sscanf(argv[1], PITCH_FLOAT_SCAN, &pitch->width))
     {
-	fail(PITCH_USAGE);
+	st_fail(PITCH_USAGE);
 	return ST_EOF;
     }
 
@@ -333,7 +333,7 @@ char **argv;
 	    pitch->interopt = PITCH_INTERPOLE_CUB;
 	    break;
 	default:
-	    fail(PITCH_USAGE);
+	    st_fail(PITCH_USAGE);
 	    return ST_EOF;
 	}
     }
@@ -361,7 +361,7 @@ char **argv;
 	    pitch->fadeopt = PITCH_FADE_COS;
 	    break;
 	default:
-	    fail(PITCH_USAGE);
+	    st_fail(PITCH_USAGE);
 	    return ST_EOF;
 	}
     }
@@ -370,7 +370,7 @@ char **argv;
     if (n>4 && (!sscanf(argv[4], PITCH_FLOAT_SCAN, &pitch->coef) ||
 		pitch->coef<ZERO || pitch->coef>HALF))
     {
-	fail(PITCH_USAGE);
+	st_fail(PITCH_USAGE);
 	return ST_EOF;
     }
 
@@ -392,14 +392,14 @@ eff_t effp;
      */
     if (effp->outinfo.rate != effp->ininfo.rate)
     {
-	fail("PITCH cannot handle different rates (in=%ld, out=%ld)"
+	st_fail("PITCH cannot handle different rates (in=%ld, out=%ld)"
 	     " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
 	return ST_EOF;
     }
  
     if (effp->outinfo.channels != effp->ininfo.channels)
     {
-	fail("PITCH cannot handle different channels (in=%ld, out=%ld)"
+	st_fail("PITCH cannot handle different channels (in=%ld, out=%ld)"
 	     " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
 	return ST_EOF;
     }
@@ -434,7 +434,7 @@ eff_t effp;
 
     if (!pitch->fade || !pitch->tmp || !pitch->acc || !pitch->buf)
     {
-	fail("malloc failed in st_pitch_start");
+	st_fail("malloc failed in st_pitch_start");
 	return ST_EOF;
     }
 
@@ -487,7 +487,7 @@ eff_t effp;
     }
     else
     {
-	fail("unexpected PITCH_FADE parameter %d", pitch->fadeopt);
+	st_fail("unexpected PITCH_FADE parameter %d", pitch->fadeopt);
 	return ST_EOF;
     }
 
@@ -619,7 +619,7 @@ eff_t effp;
     free(pitch->buf);
 
     if (pitch->clipped)
-	warn("PITCH clipped %d values... adjust volume with -v option maybe?", 
+	st_warn("PITCH clipped %d values... adjust volume with -v option maybe?", 
 	     pitch->clipped);
 
     return ST_SUCCESS;

@@ -67,7 +67,7 @@ ft_t ft;
 
 	if (fread(buf, 1, 2, ft->fp) != 2)
 	{
-		fail("SND: unexpected EOF");
+		st_fail("SND: unexpected EOF");
 		return(ST_EOF);
 	}
 	if (strncmp(buf,"\0\0",2) == 0)
@@ -76,7 +76,7 @@ ft_t ft;
 	st_readw(ft, &rate);
 	if (rate < 4000 || rate > 25000 )
 	{
-		fail ("SND: sample rate out of range");
+		st_fail("SND: sample rate out of range");
 		return(ST_EOF);
 	}
 	fseek(ft->fp,4,SEEK_CUR);
@@ -87,7 +87,7 @@ ft_t ft;
 	fread(&buf[2], 1, 6, ft->fp);
 	if (strncmp(buf,"SOUND",5))
 	{
-		fail ("SND: unrecognized SND format");
+		st_fail("SND: unrecognized SND format");
 		return(ST_EOF);
 	}
 	fseek(ft->fp,12,SEEK_CUR);
@@ -95,10 +95,10 @@ ft_t ft;
 	fseek(ft->fp,6,SEEK_CUR);
 	if (st_reads(ft, buf, 96) == ST_EOF)
 	{
-		fail ("SND: unexpected EOF in SND header");
+		st_fail("SND: unexpected EOF in SND header");
 		return(ST_EOF);
 	}
-	report ("%s",buf);
+	st_report("%s",buf);
 	}
 
 ft->info.channels = 1;
@@ -212,7 +212,7 @@ ft_t ft;
 
 	/* fixup file sizes in header */
 	if (fseek(ft->fp, 0L, 0) != 0)
-		fail("can't rewind output file to rewrite SND header");
+		st_fail("can't rewind output file to rewrite SND header");
 	sndtwriteheader(ft, p->nsamples);
 
 	return(ST_SUCCESS);

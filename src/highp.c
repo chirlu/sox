@@ -42,7 +42,7 @@ char **argv;
 
 	if ((n < 1) || !sscanf(argv[0], "%f", &highp->center))
 	{
-		fail("Usage: highp center");
+		st_fail("Usage: highp center");
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -57,7 +57,7 @@ eff_t effp;
 	highp_t highp = (highp_t) effp->priv;
 	if (highp->center > effp->ininfo.rate*2)
 	{
-		fail("Highpass: center must be < minimum data rate*2\n");
+		st_fail("Highpass: center must be < minimum data rate*2\n");
 		return (ST_EOF);
 	}
 	

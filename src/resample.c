@@ -145,25 +145,25 @@ char **argv;
 
 	if ((n >= 1) && (sscanf(argv[0], "%lf", &r->rolloff) != 1))
 	{
-	  fail("Usage: resample [ rolloff [ beta ] ]");
+	  st_fail("Usage: resample [ rolloff [ beta ] ]");
 	  return (ST_EOF);
 	}
 	else if ((r->rolloff <= 0.01) || (r->rolloff >= 1.0))
 	{
-	  fail("resample: rolloff factor (%f) no good, should be 0.01<x<1.0", r->rolloff);
+	  st_fail("resample: rolloff factor (%f) no good, should be 0.01<x<1.0", r->rolloff);
 	  return(ST_EOF);
 	}
 
 	if ((n >= 2) && !sscanf(argv[1], "%lf", &r->beta))
 	{
-	  fail("Usage: resample [ rolloff [ beta ] ]");
+	  st_fail("Usage: resample [ rolloff [ beta ] ]");
 	  return (ST_EOF);
 	}
 	else if (r->beta <= 2.0) {
 	  r->beta = 0;
-		report("resample opts: Nuttall window, cutoff %f\n", r->rolloff);
+		st_report("resample opts: Nuttall window, cutoff %f\n", r->rolloff);
 	} else {
-		report("resample opts: Kaiser window, cutoff %f, beta %f\n", r->rolloff, r->beta);
+		st_report("resample opts: Kaiser window, cutoff %f, beta %f\n", r->rolloff, r->beta);
 	}
 	return (ST_SUCCESS);
 }
@@ -194,9 +194,9 @@ eff_t effp;
 
 	/* Check for illegal constants */
 # if 0
-	if (Lp >= 16) fail("Error: Lp>=16");
-	if (Nb+Nhg+NLpScl >= 32) fail("Error: Nb+Nhg+NLpScl>=32");
-	if (Nh+Nb > 32) fail("Error: Nh+Nb>32");
+	if (Lp >= 16) st_fail("Error: Lp>=16");
+	if (Nb+Nhg+NLpScl >= 32) st_fail("Error: Nb+Nhg+NLpScl>=32");
+	if (Nh+Nb > 32) st_fail("Error: Nh+Nb>32");
 # endif
 
 	/* Nwing: # of filter coeffs in right wing */
@@ -208,15 +208,15 @@ eff_t effp;
 	i = makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq, 1);
 	if (i <= 0)
 	{
-		fail("resample: Unable to make filter\n");
+		st_fail("resample: Unable to make filter\n");
 		return (ST_EOF);
 	}
 
-	/*report("Nmult: %ld, Nwing: %ld, Nq: %ld\n",r->Nmult,r->Nwing,r->Nq);*/
+	/*st_report("Nmult: %ld, Nwing: %ld, Nq: %ld\n",r->Nmult,r->Nwing,r->Nq);*/
 
 	if (r->quadr < 0) { /* exact coeff's method */
 		r->Xh = r->Nwing/r->b;
-	  report("resample: rate ratio %ld:%ld, coeff interpolation not needed\n", r->a, r->b);
+	  st_report("resample: rate ratio %ld:%ld, coeff interpolation not needed\n", r->a, r->b);
 	} else {
 	  r->dhb = Np;  /* Fixed-point Filter sampling-time-increment */
 	  if (r->Factor<1.0) r->dhb = r->Factor*Np + 0.5;
@@ -240,13 +240,13 @@ eff_t effp;
 	i = BUFFSIZE - 2*Xoff;
 	if (i < r->Factor + 1.0/r->Factor)      /* Check input buffer size */
 	{
-		fail("Factor is too small or large for BUFFSIZE");
+		st_fail("Factor is too small or large for BUFFSIZE");
 		return (ST_EOF);
 	}
 	
 	r->Xsize = 2*Xoff + i/(1.0+r->Factor);
 	r->Ysize = BUFFSIZE - r->Xsize;
-	/* report("Xsize %d, Ysize %d, Xoff %d",r->Xsize,r->Ysize,r->Xoff); */
+	/* st_report("Xsize %d, Ysize %d, Xoff %d",r->Xsize,r->Ysize,r->Xoff); */
 
 	r->X = (Float *) malloc(sizeof(Float) * (BUFFSIZE));
 	r->Y = r->X + r->Xsize;
@@ -282,7 +282,7 @@ LONG *isamp, *osamp;
 	Nx = Nproc - r->Xread; /* space for right-wing future-data */
 	if (Nx <= 0)
 	{
-		fail("Nx not positive: %d", Nx);
+		st_fail("Nx not positive: %d", Nx);
 		return (ST_EOF);
 	}
 	if (Nx > *isamp)
@@ -396,7 +396,7 @@ LONG *osamp;
 	*osamp -= osamp_res;
 	/* fprintf(stderr,"DRAIN osamp %d\n", *osamp); */
 	if (isamp_res)
-		warn("drain overran obuf by %d\n", isamp_res); fflush(stderr);
+		st_warn("drain overran obuf by %d\n", isamp_res); fflush(stderr);
 	return (ST_SUCCESS);
 }
 
@@ -616,7 +616,7 @@ double Froll, Beta;
       for (i=Dh; i<Mwing; i+=Dh)
          DCgain += ImpR[i];
       DCgain = 2*DCgain + ImpR[0];    /* DC gain of real coefficients */
-      /*report("DCgain err=%.12f",DCgain-1.0);*/
+      /*st_report("DCgain err=%.12f",DCgain-1.0);*/
   
       DCgain = 1.0/DCgain;
       for (i=0; i<Mwing; i++)

@@ -77,7 +77,7 @@ ft_t ft;
 	/* read FORM chunk */
 	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "FORM", 4) != 0)
 	{
-		fail("MAUD: header does not begin with magic word 'FORM'");
+		st_fail("MAUD: header does not begin with magic word 'FORM'");
 		return (ST_EOF);
 	}
 	
@@ -85,7 +85,7 @@ ft_t ft;
 	
 	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "MAUD", 4) != 0)
 	{
-		fail("MAUD: 'FORM' chunk does not specify 'MAUD' as type");
+		st_fail("MAUD: 'FORM' chunk does not specify 'MAUD' as type");
 		return(ST_EOF);
 	}
 	
@@ -95,7 +95,7 @@ ft_t ft;
 		
 		/*
 		buf[4] = 0;
-		report("chunk %s",buf);
+		st_report("chunk %s",buf);
 		*/
 		
 		if (strncmp(buf,"MHDR",4) == 0) {
@@ -103,7 +103,7 @@ ft_t ft;
 			st_readdw(ft, &chunksize);
 			if (chunksize != 8*4) 
 			{
-			    fail ("MAUD: MHDR chunk has bad size");
+			    st_fail("MAUD: MHDR chunk has bad size");
 			    return(0);
 			}
 			
@@ -122,7 +122,7 @@ ft_t ft;
 			st_readw(ft, &denom);       /* clock devide           */
 			if (denom == 0) 
 			{
-			    fail("MAUD: frequency denominator == 0, failed");
+			    st_fail("MAUD: frequency denominator == 0, failed");
 			    return (ST_EOF);
 			}
 			
@@ -137,14 +137,14 @@ ft_t ft;
 				ft->info.channels = 2;
 				break;
 			default:
-				fail("MAUD: unsupported number of channels in file");
+				st_fail("MAUD: unsupported number of channels in file");
 				return (ST_EOF);
 			}
 			
 			st_readw(ft, &chaninf); /* number of channels (mono: 1, stereo: 2, ...) */
 			if (chaninf != ft->info.channels) 
 			{
-			    fail("MAUD: unsupported number of channels in file");
+			    st_fail("MAUD: unsupported number of channels in file");
 			    return(ST_EOF);
 			}
 			
@@ -172,7 +172,7 @@ ft_t ft;
 			}
 			else 
 			{
-				fail("MAUD: unsupported compression type detected");
+				st_fail("MAUD: unsupported compression type detected");
 				return(ST_EOF);
 			}
 			
@@ -188,17 +188,17 @@ ft_t ft;
 			chunk_buf = (char *) malloc(chunksize + 1);
 			if (!chunk_buf)
 			{
-			    fail("Couldn't alloc resources");
+			    st_fail("Couldn't alloc resources");
 			    return(ST_EOF);
 			}
 			if (fread(chunk_buf,1,(int)chunksize,ft->fp) 
 					!= chunksize)
 			{
-				fail("MAUD: Unexpected EOF in ANNO header");
+				st_fail("MAUD: Unexpected EOF in ANNO header");
 				return(ST_EOF);
 			}
 			chunk_buf[chunksize] = '\0';
-			report ("%s",chunk_buf);
+			st_report("%s",chunk_buf);
 			free(chunk_buf);
 			
 			continue;
@@ -215,7 +215,7 @@ ft_t ft;
 	
 	if (strncmp(buf,"MDAT",4) != 0) 
 	{
-	    fail("MAUD: MDAT chunk not found");
+	    st_fail("MAUD: MDAT chunk not found");
 	    return(ST_EOF);
 	}
 	st_readdw(ft, &(p->nsamples));
@@ -273,12 +273,12 @@ ft_t ft;
 	/* If you have to seek around the output file */
 	if (! ft->seekable) 
 	{
-	    fail("Output .maud file must be a file, not a pipe");
+	    st_fail("Output .maud file must be a file, not a pipe");
 	    return (ST_EOF);
 	}
 	
 	if (ft->info.channels != 1 && ft->info.channels != 2) {
-		fail("MAUD: unsupported number of channels, unable to store");
+		st_fail("MAUD: unsupported number of channels, unable to store");
 		return(ST_EOF);
 	}
 	if (ft->info.size == ST_SIZE_WORD) ft->info.encoding = ST_ENCODING_SIGN2;
@@ -319,7 +319,7 @@ ft_t ft;
 	
 	if (fseek(ft->fp, 0L, 0) != 0) 
 	{
-	    fail("can't rewind output file to rewrite MAUD header");
+	    st_fail("can't rewind output file to rewrite MAUD header");
 	    return(ST_EOF);
 	}
 	

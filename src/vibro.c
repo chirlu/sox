@@ -52,13 +52,13 @@ char **argv;
 	if ((n == 0) || !sscanf(argv[0], "%f", &vibro->speed) ||
 		((n == 2) && !sscanf(argv[1], "%f", &vibro->depth)))
 	{
-		fail("Usage: vibro speed [ depth ]");
+		st_fail("Usage: vibro speed [ depth ]");
 		return (ST_EOF);
 	}
 	if ((vibro->speed <= 0.001) || (vibro->speed > 30.0) || 
 			(vibro->depth < 0.0) || (vibro->depth > 1.0))
 	{
-		fail("Vibro: speed must be < 30.0, 0.0 < depth < 1.0");
+		st_fail("Vibro: speed must be < 30.0, 0.0 < depth < 1.0");
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -94,7 +94,7 @@ eff_t effp;
 	vibro->length = effp->ininfo.rate / vibro->speed;
 	if (! (vibro->sinetab = (short*) malloc(vibro->length * sizeof(short))))
 	{
-		fail("Vibro: Cannot malloc %d bytes",
+		st_fail("Vibro: Cannot malloc %d bytes",
 			vibro->length * sizeof(short));
 		return (ST_EOF);
 	}

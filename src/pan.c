@@ -73,7 +73,7 @@ char **argv;
     if (n && (!sscanf(argv[0], PAN_FLOAT_SCAN, &pan->dir) || 
 	      pan->dir < MONE || pan->dir > ONE))
     {
-	fail(PAN_USAGE);
+	st_fail(PAN_USAGE);
 	return ST_EOF;
     }
 
@@ -87,11 +87,11 @@ int st_pan_start(effp)
 eff_t effp;
 {
     if (effp->outinfo.channels==1)
-	warn("PAN onto a mono channel...");
+	st_warn("PAN onto a mono channel...");
 
     if (effp->outinfo.rate != effp->ininfo.rate)
     {
-	fail("PAN cannot handle different rates (in=%ld, out=%ld)"
+	st_fail("PAN cannot handle different rates (in=%ld, out=%ld)"
 	     " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
 	return ST_EOF;
     }
@@ -125,7 +125,7 @@ static LONG clip(pan_t pan, PAN_FLOAT value)
 #endif
 
 #define UNEXPECTED_CHANNELS \
-    fail("unexpected number of channels (in=%d, out=%d)", ich, och); \
+    st_fail("unexpected number of channels (in=%d, out=%d)", ich, och); \
     return ST_EOF
 
 /*
@@ -405,7 +405,7 @@ eff_t effp;
 {
     pan_t pan = (pan_t) effp->priv;
     if (pan->clipped) {
-	warn("PAN clipped %d values, maybe adjust volume?",
+	st_warn("PAN clipped %d values, maybe adjust volume?",
 	     pan->clipped);
     }
     return ST_SUCCESS;

@@ -90,7 +90,7 @@ int st_txwstartread(ft)
   /* If you need to seek around the input file. */
   if (! ft->seekable)
   {
-    fail("txw input file must be a file, not a pipe");
+    st_fail("txw input file must be a file, not a pipe");
     return(ST_EOF);
   }
 
@@ -124,10 +124,10 @@ int st_txwstartread(ft)
    */
 
   /* Check to make sure we got a good filetype ID from file */
-  report("Found header filetype %s",filetype);
+  st_report("Found header filetype %s",filetype);
   if(strcmp(filetype,"LM8953"))
   {
-    fail("Invalid filetype ID in input file header, != LM8953");
+    st_fail("Invalid filetype ID in input file header, != LM8953");
     return(ST_EOF);
   }
   /*
@@ -167,11 +167,11 @@ int st_txwstartread(ft)
       break;
     }
     if ( blewIt ) {
-      report("Invalid sample rate identifier found %d", (int)sample_rate);
+      st_report("Invalid sample rate identifier found %d", (int)sample_rate);
       ft->info.rate = 33000;
     }
   }
-  report("Sample rate = %ld",ft->info.rate);
+  st_report("Sample rate = %ld",ft->info.rate);
 
   ft->info.channels = 1 ; /* not sure about stereo sample data yet ??? */
   ft->info.size = ST_SIZE_WORD; /* this is close enough */
@@ -254,20 +254,20 @@ ft_t ft;
 {
   struct WaveHeader_ WH;
 
-  report("tx16w selected output");
+  st_report("tx16w selected output");
 
   if (ft->info.channels != 1)
-      report("tx16w is overriding output format to 1 channel.");
+      st_report("tx16w is overriding output format to 1 channel.");
   ft->info.channels = 1 ; /* not sure about stereo sample data yet ??? */
   if (ft->info.size != ST_SIZE_WORD || ft->info.encoding != ST_ENCODING_SIGN2)
-      report("tx16w is overriding output format to size Signed Word format.");
+      st_report("tx16w is overriding output format to size Signed Word format.");
   ft->info.size = ST_SIZE_WORD; /* this is close enough */
   ft->info.encoding = ST_ENCODING_SIGN2;
   
   /* If you have to seek around the output file */
   if (! ft->seekable)
   {
-      fail("Output .txw file must be a file, not a pipe");
+      st_fail("Output .txw file must be a file, not a pipe");
       return(ST_EOF);
   }
 
@@ -314,7 +314,7 @@ ft_t ft;
     /* If file header needs fixing up, for example it needs the */
     /* the number of samples in a field, seek back and write them here. */
     
-    report("tx16w:output finished");
+    st_report("tx16w:output finished");
     
     strncpy(WH.filetype,"LM8953",6);
     for (i=0;i<10;i++) WH.nulls[i]=0;

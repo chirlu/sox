@@ -51,7 +51,7 @@ char **argv;
     
     if (n && (!sscanf(argv[0], VOL_FLOAT_SCAN, &vol->gain)))
     {
-	fail(VOL_USAGE);
+	st_fail(VOL_USAGE);
 	return ST_EOF;
     }
 
@@ -91,13 +91,13 @@ eff_t effp;
     
     if (effp->outinfo.channels != effp->ininfo.channels)
     {
-	warn("VOL cannot handle different channels (in=%d, out=%d)"
+	st_warn("VOL cannot handle different channels (in=%d, out=%d)"
 	     " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
     }
 
     if (effp->outinfo.rate != effp->ininfo.rate)
     {
-	fail("VOL cannot handle different rates (in=%ld, out=%ld)"
+	st_fail("VOL cannot handle different rates (in=%ld, out=%ld)"
 	     " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
 	return ST_EOF;
     }
@@ -165,7 +165,7 @@ eff_t effp;
     vol_t vol = (vol_t) effp->priv;
     if (vol->clipped) 
     {
-	warn("VOL clipped %d values, amplitude gain=%f too high...", 
+	st_warn("VOL clipped %d values, amplitude gain=%f too high...", 
 	     vol->clipped, vol->gain);
     }
     return ST_SUCCESS;

@@ -81,25 +81,25 @@ eff_t effp;
 
 	if (effp->outinfo.channels != 1)  /* must be one output channel */
 	{
-	   fail("Can't pick with other than 1 output channel."); 
+	   st_fail("Can't pick with other than 1 output channel."); 
 	   return (ST_EOF);
 	}
 	if (effp->ininfo.channels != 2 && effp->ininfo.channels != 4)
 	{
-	        fail("Can't pick with other than 2 or 4 input channels.");
+	        st_fail("Can't pick with other than 2 or 4 input channels.");
 		return (ST_EOF);
 	}
         if (effp->ininfo.channels == 2) {  /* check for valid option */
 	   if (pick->chan == -1 || pick->chan == CHAN_3 || pick->chan == CHAN_4)
 	   {
-   	      fail("Must specify channel to pick: '-l', '-r', '-1', or '-2'.");
+   	      st_fail("Must specify channel to pick: '-l', '-r', '-1', or '-2'.");
 	      return (ST_EOF);
 	   }
 	}
 	else  /* must be 4 channels; check for valid option */
 	   if (pick->chan == -1)
 	   {
-	      fail("Must specify channel to pick: '-1', '-2', '-3', or '-4'.");
+	      st_fail("Must specify channel to pick: '-1', '-2', '-3', or '-4'.");
 	      return (ST_EOF);
 	   }
 	return (ST_SUCCESS);

@@ -81,7 +81,7 @@ char **argv;
 
 	if ((n < 4) || (n % 2))
 	{
-	    fail("Usage: echos gain-in gain-out delay decay [ delay decay ... ]");
+	    st_fail("Usage: echos gain-in gain-out delay decay [ delay decay ... ]");
 	    return (ST_EOF);
 	}
 
@@ -95,7 +95,7 @@ char **argv;
 		echos->num_delays++;
 		if ( echos->num_delays > MAX_ECHOS )
 		{
-			fail("echos: to many delays, use less than %i delays",
+			st_fail("echos: to many delays, use less than %i delays",
 				MAX_ECHOS);
 			return (ST_EOF);
 		}
@@ -117,40 +117,40 @@ eff_t effp;
 
 	if ( echos->in_gain < 0.0 )
 	{
-		fail("echos: gain-in must be positive!\n");
+		st_fail("echos: gain-in must be positive!\n");
 		return (ST_EOF);
 	}
 	if ( echos->in_gain > 1.0 )
 	{
-		fail("echos: gain-in must be less than 1.0!\n");
+		st_fail("echos: gain-in must be less than 1.0!\n");
 		return (ST_EOF);
 	}
 	if ( echos->out_gain < 0.0 )
 	{
-		fail("echos: gain-in must be positive!\n");
+		st_fail("echos: gain-in must be positive!\n");
 		return (ST_EOF);
 	}
 	for ( i = 0; i < echos->num_delays; i++ ) {
 		echos->samples[i] = echos->delay[i] * effp->ininfo.rate / 1000.0;
 		if ( echos->samples[i] < 1 )
 		{
-		    fail("echos: delay must be positive!\n");
+		    st_fail("echos: delay must be positive!\n");
 		    return (ST_EOF);
 		}
 		if ( echos->samples[i] > DELAY_BUFSIZ )
 		{
-			fail("echos: delay must be less than %g seconds!\n",
+			st_fail("echos: delay must be less than %g seconds!\n",
 				DELAY_BUFSIZ / (float) effp->ininfo.rate );
 			return (ST_EOF);
 		}
 		if ( echos->decay[i] < 0.0 )
 		{
-		    fail("echos: decay must be positive!\n" );
+		    st_fail("echos: decay must be positive!\n" );
 		    return (ST_EOF);
 		}
 		if ( echos->decay[i] > 1.0 )
 		{
-		    fail("echos: decay must be less than 1.0!\n" );
+		    st_fail("echos: decay must be less than 1.0!\n" );
 		    return (ST_EOF);
 		}
 		echos->counter[i] = 0;
@@ -159,7 +159,7 @@ eff_t effp;
 	}
 	if (! (echos->delay_buf = (double *) malloc(sizeof (double) * echos->sumsamples)))
 	{
-		fail("echos: Cannot malloc %d bytes!\n", 
+		st_fail("echos: Cannot malloc %d bytes!\n", 
 			sizeof(double) * echos->sumsamples);
 		return(ST_EOF);
 	}
@@ -170,7 +170,7 @@ eff_t effp;
 	for ( i = 0; i < echos->num_delays; i++ ) 
 		sum_in_volume += echos->decay[i];
 	if ( sum_in_volume * echos->in_gain > 1.0 / echos->out_gain )
-		warn("echos: warning >>> gain-out can cause saturation of output <<<");
+		st_warn("echos: warning >>> gain-out can cause saturation of output <<<");
 	return (ST_SUCCESS);
 }
 

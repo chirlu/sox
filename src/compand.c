@@ -47,7 +47,7 @@ char **argv;
 
     if (n < 2 || n > 4)
     {
-      fail("Wrong number of arguments for the compander effect\n"
+      st_fail("Wrong number of arguments for the compander effect\n"
 	   "Use: {<attack_time>,<decay_time>}+ {<dB_in>,<db_out>}+ "
 	   "[<dB_postamp>]\n"
 	   "where {}+ means `one or more in a comma-separated, "
@@ -68,7 +68,7 @@ char **argv;
       if (commas % 2 == 0) /* There must be an even number of
 			      attack/decay parameters */
       {
-	fail("compander: Odd number of attack & decay rate parameters");
+	st_fail("compander: Odd number of attack & decay rate parameters");
 	return (ST_EOF);
       }
 
@@ -78,7 +78,7 @@ char **argv;
 	  (l->volume     = malloc(sizeof(double) * rates)) == NULL ||
 	  (l->lastSamp   = calloc(rates, sizeof(LONG)))    == NULL)
       {
-	fail("Out of memory");
+	st_fail("Out of memory");
 	return (ST_EOF);
       }
       l->expectedChannels = rates;
@@ -101,7 +101,7 @@ char **argv;
       if (commas % 2 == 0) /* There must be an even number of
 			      transfer parameters */
       {
-	fail("compander: Odd number of transfer function parameters\n"
+	st_fail("compander: Odd number of transfer function parameters\n"
 	     "Each input value in dB must have a corresponding output value");
 	return (ST_EOF);
       }
@@ -110,7 +110,7 @@ char **argv;
       if ((l->transferIns  = malloc(sizeof(double) * tfers)) == NULL ||
 	  (l->transferOuts = malloc(sizeof(double) * tfers)) == NULL)
       {
-	fail("Out of memory");
+	st_fail("Out of memory");
 	return (ST_EOF);
       }
       l->transferPoints = tfers;
@@ -120,13 +120,13 @@ char **argv;
       do {
 	if (!strcmp(s, "-inf"))
 	{
-	  fail("Input signals of zero level must always generate zero output");
+	  st_fail("Input signals of zero level must always generate zero output");
 	  return (ST_EOF);
 	}
 	l->transferIns[i]  = pow(10.0, atof(s)/20.0);
 	if (l->transferIns[i] > 1.0)
 	{
-	  fail("dB values are relative to maximum input, and, ipso facto, "
+	  st_fail("dB values are relative to maximum input, and, ipso facto, "
 	       "cannot exceed 0");
 	  return (ST_EOF);
 	}
@@ -134,7 +134,7 @@ char **argv;
 	  --(l->transferPoints);
 	if (i > 0 && l->transferIns[i] <= l->transferIns[i-1])
 	{
-	  fail("Transfer function points don't have strictly ascending "
+	  st_fail("Transfer function points don't have strictly ascending "
 	       "input amplitude");
 	  return (ST_EOF);
 	}

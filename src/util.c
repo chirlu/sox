@@ -38,7 +38,7 @@ int verbose = 0;	/* be noisy on stderr */
 char *myname = 0;
 
 void
-report(const char *fmt, ...) 
+st_report(const char *fmt, ...) 
 {
 	va_list args;
 
@@ -54,7 +54,7 @@ report(const char *fmt, ...)
 
 
 void
-warn(const char *fmt, ...) 
+st_warn(const char *fmt, ...) 
 {
 	va_list args;
 
@@ -67,7 +67,7 @@ warn(const char *fmt, ...)
 }
 
 void
-fail(const char *fmt, ...) 
+st_fail(const char *fmt, ...) 
 {
 	va_list args;
 	extern void cleanup();
@@ -87,7 +87,7 @@ fail(const char *fmt, ...)
  * go over the array limit ourself!
  */
 void
-st_fail(ft_t ft, int errno, const char *fmt, ...)
+st_fail_errno(ft_t ft, int errno, const char *fmt, ...)
 {
 	va_list args;
 
@@ -117,7 +117,7 @@ ft_t formp;
 	int i;
 
 	if (! formp->filetype)
-fail("Must give file type for %s file, either as suffix or with -t option",
+st_fail("Must give file type for %s file, either as suffix or with -t option",
 formp->filename);
 	for(i = 0; st_formats[i].names; i++) {
 		for(list = st_formats[i].names; *list; list++) {
@@ -133,16 +133,16 @@ formp->filename);
 	}
 	if (! strcmpcase(formp->filetype, "snd")) {
 		verbose = 1;
-		report("File type '%s' is used to name several different formats.", formp->filetype);
-		report("If the file came from a Macintosh, it is probably");
-		report("a .ub file with a sample rate of 11025 (or possibly 5012 or 22050).");
-		report("Use the sequence '-t .ub -r 11025 file.snd'");
-		report("If it came from a PC, it's probably a Soundtool file.");
-		report("Use the sequence '-t .sndt file.snd'");
-		report("If it came from a NeXT, it's probably a .au file.");
-		fail("Use the sequence '-t .au file.snd'\n");
+		st_report("File type '%s' is used to name several different formats.", formp->filetype);
+		st_report("If the file came from a Macintosh, it is probably");
+		st_report("a .ub file with a sample rate of 11025 (or possibly 5012 or 22050).");
+		st_report("Use the sequence '-t .ub -r 11025 file.snd'");
+		st_report("If it came from a PC, it's probably a Soundtool file.");
+		st_report("Use the sequence '-t .sndt file.snd'");
+		st_report("If it came from a NeXT, it's probably a .au file.");
+		st_fail("Use the sequence '-t .au file.snd'\n");
 	}
-	fail("File type '%s' of %s file is not known!",
+	st_fail("File type '%s' of %s file is not known!",
 		formp->filetype, formp->filename);
 }
 
@@ -170,7 +170,7 @@ eff_t effp;
 	for (i = 1; st_effects[i].name; i++)
 		fprintf(stderr, "%s ", st_effects[i].name);
 	fprintf(stderr, "\n");
-	fail("Effect '%s' is not known!", effp->name);
+	st_fail("Effect '%s' is not known!", effp->name);
 }
 
 /*
@@ -228,18 +228,18 @@ void st_checkformat(ft)
 ft_t ft;
 {
 	if (ft->info.rate == 0)
-		fail("Sampling rate for %s file was not given\n", ft->filename);
+		st_fail("Sampling rate for %s file was not given\n", ft->filename);
 	if ((ft->info.rate < 100) || (ft->info.rate > 999999L))
-		fail("Sampling rate %lu for %s file is bogus\n", 
+		st_fail("Sampling rate %lu for %s file is bogus\n", 
 			ft->info.rate, ft->filename);
 	if (ft->info.size == -1)
-		fail("Data size was not given for %s file\nUse one of -b/-w/-l/-f/-d/-D", ft->filename);
+		st_fail("Data size was not given for %s file\nUse one of -b/-w/-l/-f/-d/-D", ft->filename);
 	if (ft->info.encoding == -1 && ft->info.size != ST_SIZE_FLOAT)
-		fail("Data encoding was not given for %s file\nUse one of -s/-u/-U/-A", ft->filename);
+		st_fail("Data encoding was not given for %s file\nUse one of -s/-u/-U/-A", ft->filename);
 	/* it's so common, might as well default */
 	if (ft->info.channels == -1)
 		ft->info.channels = 1;
-	/*	fail("Number of output channels was not given for %s file",
+	/*	st_fail("Number of output channels was not given for %s file",
 			ft->filename); */
 }
 

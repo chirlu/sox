@@ -91,7 +91,7 @@ char **argv;
 
 	if ((n < 4) || (n % 2))
 	{
-	    fail("Usage: echo gain-in gain-out delay decay [ delay decay ... ]");
+	    st_fail("Usage: echo gain-in gain-out delay decay [ delay decay ... ]");
 	    return (ST_EOF);
 	}
 
@@ -100,7 +100,7 @@ char **argv;
 	sscanf(argv[i++], "%f", &echo->out_gain);
 	while (i < n) {
 		if ( echo->num_delays >= MAX_ECHOS )
-			fail("echo: to many delays, use less than %i delays",
+			st_fail("echo: to many delays, use less than %i delays",
 				MAX_ECHOS);
 		/* Linux bug and it's cleaner. */
 		sscanf(argv[i++], "%f", &echo->delay[echo->num_delays]);
@@ -124,40 +124,40 @@ eff_t effp;
 	echo->maxsamples = 0L;
 	if ( echo->in_gain < 0.0 )
 	{
-		fail("echo: gain-in must be positive!\n");
+		st_fail("echo: gain-in must be positive!\n");
 		return (ST_EOF);
 	}
 	if ( echo->in_gain > 1.0 )
 	{
-		fail("echo: gain-in must be less than 1.0!\n");
+		st_fail("echo: gain-in must be less than 1.0!\n");
 		return (ST_EOF);
 	}
 	if ( echo->out_gain < 0.0 )
 	{
-		fail("echo: gain-in must be positive!\n");
+		st_fail("echo: gain-in must be positive!\n");
 		return (ST_EOF);
 	}
 	for ( i = 0; i < echo->num_delays; i++ ) {
 		echo->samples[i] = echo->delay[i] * effp->ininfo.rate / 1000.0;
 		if ( echo->samples[i] < 1 )
 		{
-		    fail("echo: delay must be positive!\n");
+		    st_fail("echo: delay must be positive!\n");
 		    return (ST_EOF);
 		}
 		if ( echo->samples[i] > DELAY_BUFSIZ )
 		{
-			fail("echo: delay must be less than %g seconds!\n",
+			st_fail("echo: delay must be less than %g seconds!\n",
 				DELAY_BUFSIZ / (float) effp->ininfo.rate );
 			return (ST_EOF);
 		}
 		if ( echo->decay[i] < 0.0 )
 		{
-		    fail("echo: decay must be positive!\n" );
+		    st_fail("echo: decay must be positive!\n" );
 		    return (ST_EOF);
 		}
 		if ( echo->decay[i] > 1.0 )
 		{
-		    fail("echo: decay must be less than 1.0!\n" );
+		    st_fail("echo: decay must be less than 1.0!\n" );
 		    return (ST_EOF);
 		}
 		if ( echo->samples[i] > echo->maxsamples )
@@ -165,7 +165,7 @@ eff_t effp;
 	}
 	if (! (echo->delay_buf = (double *) malloc(sizeof (double) * echo->maxsamples)))
 	{
-		fail("echo: Cannot malloc %d bytes!\n", 
+		st_fail("echo: Cannot malloc %d bytes!\n", 
 			sizeof(long) * echo->maxsamples);
 		return (ST_EOF);
 	}
@@ -176,7 +176,7 @@ eff_t effp;
 	for ( i = 0; i < echo->num_delays; i++ ) 
 		sum_in_volume += echo->decay[i];
 	if ( sum_in_volume * echo->in_gain > 1.0 / echo->out_gain )
-		warn("echo: warning >>> gain-out can cause saturation of output <<<");
+		st_warn("echo: warning >>> gain-out can cause saturation of output <<<");
 	echo->counter = 0;
 	echo->fade_out = echo->maxsamples;
 	return (ST_SUCCESS);
