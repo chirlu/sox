@@ -1,7 +1,7 @@
 @echo off
 
-rem	Test script for sox under DOS derived from tests.sh. This should
-rem	run without core-dumping or printing any error messages.
+rem     Test script for sox under DOS derived from tests.sh. This should
+rem     run without core-dumping or printing any error messages.
 
 set file=monkey
 

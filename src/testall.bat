@@ -1,6 +1,6 @@
 @echo off
 
-rem	First create a working copy of t.bat. Note optional cls and pause.
+rem     First create a working copy of t.bat. Note optional cls and pause.
 
 echo @echo off >t.bat
 echo set format=%%1 >>t.bat
@@ -23,9 +23,9 @@ echo set format=>>t.bat
 echo set opts=>>t.bat
 echo pause >>t.bat
 
-rem	Now set up any global effects and call the batch file. Note that
-rem	this needs extra work to cope with DOS's limitation of 3-character
-rem	extensions on the filename.
+rem     Now set up any global effects and call the batch file. Note that
+rem     this needs extra work to cope with DOS's limitation of 3-character
+rem     extensions on the filename.
 
 set effect=%1 %2 %3 %4 %5 %6 %7 %8 %9
 
