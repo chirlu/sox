@@ -14,6 +14,8 @@ sox-12.17.6
     block when there wasn't.
   o Restructured directory layout so that source code is in
     a seperate directory.
+  o Benedikt Zeyen found a bug in synth effect when generating
+    brown noise that could cause clipping.
    
 
 sox-12.17.5
