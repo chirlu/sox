@@ -280,6 +280,8 @@ ft_t ft;
 
 #endif /* End API */
 
+#define EMSGFMT "ALSA driver does not support %s %s output"
+
 static int get_format(ft, formats, fmt)
 ft_t ft;
 int formats, *fmt;
@@ -314,12 +316,12 @@ int formats, *fmt;
 		*fmt = SND_PCM_SFMT_U8;
 		break;
 	    default:
-		st_fail_errno(ft,ST_EFMT,"Hardware does not support %s output", st_encodings_str[ft->info.encoding]);
+		st_fail_errno(ft,ST_EFMT,EMSGFMT,st_encodings_str[(unsigned char)ft->info.encoding],"byte");
 		return ST_EOF;
 		break;
 	}
     }
-    else {
+    else if (ft->info.size == ST_SIZE_WORD) {
 	switch (ft->info.encoding)
 	{
 	    case ST_ENCODING_SIGN2:
@@ -337,10 +339,14 @@ int formats, *fmt;
 		*fmt = SND_PCM_SFMT_U16_LE;
 		break;
 	    default:
-		st_fail_errno(ft,ST_EFMT,"Hardware does not support %s output", st_encodings_str[ft->info.encoding]);
+		st_fail_errno(ft,ST_EFMT,EMSGFMT,st_encodings_str[(unsigned char)ft->info.encoding],"word");
 		return ST_EOF;
 		break;
 	}
+    }
+    else {
+	st_fail_errno(ft,ST_EFMT,EMSGFMT,st_encodings_str[(unsigned char)ft->info.encoding],st_sizes_str[(unsigned char)ft->info.size]);
+	return ST_EOF;
     }
     return 0;
 }
