@@ -146,21 +146,31 @@ int st_mp3startread(ft_t ft)
         mad_stream_buffer(p->Stream,p->InputBuffer,ReadSize);
         p->Stream->error = 0;
 
+        /* Find a valid frame before starting up.  This makes sure
+         * that we have a valid MP3 and also skips past ID3v2 tags
+         * at the beginning of the audio file.
+         */
+        /* FIXME: Doesn't this throw away the first frame of audio
+         * when there is no ID3v2 at the beginning?
+         */
         while(mad_frame_decode(p->Frame,p->Stream)) {
             int tagsize;
-            if ((p->Stream->bufend - p->Stream->this_frame) < (INPUT_BUFFER_SIZE - ST_BUFSIZ)){
+            if ((p->Stream->bufend - p->Stream->this_frame) == 0) {
 
               /* we assume that, if the first frame fails, the file is not an MP3 file */
               
               st_fail_errno(ft,ST_EOF,"The file is not an MP3 file or it is corrupted");
               return ST_EOF;
             }
-            /* Walk threw the stream one byte at a time (tagsize=1)
+
+            /* Skip pas this frame, based on tag size.  If invalid
+             * tag then Walk threw the stream one byte at a time (tagsize=1)
              * until we find a valid frame.  Previous if() will
              * abort once we got a certain distance.
              */
             if ((tagsize=tagtype(p->Stream->this_frame, p->Stream->bufend - p->Stream->this_frame)) == 0)
                 tagsize = 1; /* Walk through the stream. */
+
             /* ID3v2 tags can be any size.  That means they can
              * span a buffer larger then INPUT_BUFFER_SIZE.  That
              * means that we really need a loop to continue reading
