@@ -48,14 +48,6 @@ extern int optind;
 #endif
 #endif
 
-#if defined(VMS)
-#define LASTCHAR	']'
-#elif defined(DOS) || defined(WIN32)
-#define LASTCHAR	'\\'
-#else
-#define LASTCHAR        '/'
-#endif
-
 /*
  * SOX main program.
  *
@@ -78,6 +70,10 @@ static LONG obufr[BUFSIZ/2];
 
 /* local forward declarations */
 static void doopts(ft_t, int, char **);
+static void copy_input(ft_t);
+static void open_input(ft_t);
+static void copy_output(ft_t);
+static void open_output(ft_t);
 static void usage(char *) NORET;
 static int filetype(int);
 static void process(void);
@@ -88,7 +84,12 @@ static int flow_effect_out(void);
 static int flow_effect(int);
 static int drain_effect(int);
 
-static ft_t informat = 0, outformat = 0;
+#define MAX_INPUT_FILES 1
+#define REQUIRED_INPUT_FILES 1
+static ft_t informat[MAX_INPUT_FILES] = { 0 };
+static int input_count = 0;
+
+static ft_t outformat = 0;
 
 /* We parse effects into a temporary effects table and then place into
  * the real effects table.  This makes it easier to reorder some effects
@@ -121,9 +122,9 @@ int main(argc, argv)
 int argc;
 char **argv;
 {
-
         int argc_effect;
 	ft_t ft;
+	int parsing_output = 0;
 
 	myname = argv[0];
 
@@ -132,15 +133,49 @@ char **argv;
 	{
 	
 	    /* 
-	     * Its possible to not specify the output filename by using "-e" option.
-	     * This allows effects to be ran on data but no output file to be
-	     * written.  This loop basically ingores the "-e" option for input files.
+	     * Its possible to not specify the output filename by using 
+	     * "-e" option. This allows effects to be ran on data but 
+	     * no output file to be written.
 	     */
 	    if (strcmp(argv[optind], "-e"))
-		writing = 1;
-	    else {
-		writing = 0;
-		optind++;  /* Move passed -e */
+	    {
+		/* No -e option appears to be set.  Attempt to see if
+		 * this is the last filename or not.  If we see no more
+		 * options or an effect name then we assume this is
+		 * the last filename.
+		 */
+		if (optind == (argc-1) || 
+		    st_checkeffect(argv[optind+1]) == ST_SUCCESS ||
+		    input_count >= MAX_INPUT_FILES)
+		{
+		    parsing_output = 1;
+		}
+
+		if (parsing_output)
+		    writing = 1;
+	    }
+	    else 
+	    {
+		/* -e option found.  Make sure this was done on the
+		 * output side.  Should be no more parameters or
+		 * a valid effects name.
+		 */
+		if (optind == (argc-1) || 
+		    st_checkeffect(argv[optind+1]) == ST_SUCCESS ||
+		    input_count >= MAX_INPUT_FILES)
+		{
+		    parsing_output = 1;
+		}
+
+		if (parsing_output)
+		{
+		    writing = 0;
+		    optind++;  /* Move passed -e */
+		}
+		else
+		{
+		    usage("Can only specify \"-e\" for output filenames");
+		}
 	    }
 
 	    ft = (ft_t)malloc(sizeof(struct st_soundstream));
@@ -148,59 +183,51 @@ char **argv;
 
 	    doopts(ft, argc, argv);
 
-	    if (optind < argc && writing)
+	    /* See if we have all the input filenames we need.  
+	     * If not, then parse this as input filenames.
+	     *
+	     * If we have enough but haven't reached the max #
+	     * of inputs, then only treat this as an input filename
+	     * if it looks like we have more filenames left.
+	     */
+	    if (input_count < REQUIRED_INPUT_FILES ||
+		(input_count < MAX_INPUT_FILES &&
+		 optind < argc && 
+		 st_checkeffect(argv[optind]) != ST_SUCCESS))
 	    {
 		ft->filename = argv[optind];
 		optind++;
+
+		copy_input(ft);
+		open_input(ft);
 	    }
 	    else
 	    {
-		ft->filename = 0;
-	    }
-
-	    /* 
-	     * Determine if we will need to loop around again.  If we don't
-	     * then we know we just grabbed the output file information.
-	     */
-	    /* FIXME: When this file handles multiple input filenames,
-	     * remove the check for !informat.  Instead store next empty
-	     * slot in array of input filename.
-	     */
-	    if (!informat && optind < argc && 
-		st_checkeffect(argv[optind]) != ST_SUCCESS)
-	    {
-		informat = ft;
-
-		if (! strcmp(informat->filename, "-"))
-		    informat->fp = stdin;
-		else if ((informat->fp = fopen(informat->filename, READBINARY)) == NULL)
-		    st_fail("Can't open input file '%s': %s", 
-			    informat->filename, strerror(errno));
-#if	defined(DUMB_FILESYSTEM)
-		informat->seekable = 0;
-#else
-		informat->seekable  = (filetype(fileno(informat->fp)) == S_IFREG);
-#endif
-	    }
-	    else
-	    {
-		outformat = ft;
-		if (writing)
+		if (optind < argc && writing)
 		{
-		    /* Hold off on opening file until the very last minute.
-		     * This allows us to verify header in input files are
-		     * what they should be and parse effect command lines.
-		     * That way if anything is found invalid, we will abort
-		     * without truncating any existing file that has the same
-		     * output filename.
-		     */
+		    ft->filename = argv[optind];
+		    optind++;
 		}
+		else
+		{
+		    ft->filename = 0;
+		}
+
+		copy_output(ft);
+		/* Hold off on opening file until the very last minute.
+		 * This allows us to verify header in input files are
+		 * what they should be and parse effect command lines.
+		 * That way if anything is found invalid, we will abort
+		 * without truncating any existing file that has the same
+		 * output filename.
+		 */
 	    }
 	}
 
-	/* Make sure we got all required filenames */
-	if (!informat || !informat->filename)
-	    usage("No input file?");
+	/* Make sure we got at least the required # of input filename */
+	if (!informat[REQUIRED_INPUT_FILES-1] || 
+	    !informat[REQUIRED_INPUT_FILES-1]->filename)
+	    usage("Not enough input files not specified");
 
 	if (!outformat || (!outformat->filename && writing))
 	    usage("No output file?");
@@ -241,41 +268,121 @@ char **argv;
 	    nuser_effects++;
 	}
 
-	/* Check global arguments */
+	if (dovolume)
+	    st_report("Volume factor: %f\n", volume);
 
-	/* negative volume is phase-reversal */
 	if (dovolume && volume < 0.0)
 	    st_report("Volume adjustment is negative.  This will result in a phase change\n");
-
-	/* If file types have not been set with -t, set from file names. */
-	if (! informat->filetype) {
-		if ((informat->filetype = strrchr(informat->filename, LASTCHAR)) != NULL)
-			informat->filetype++;
-		else
-			informat->filetype = informat->filename;
-		if ((informat->filetype = strrchr(informat->filetype, '.')) != NULL)
-			informat->filetype++;
-		else /* Default to "auto" */
-			informat->filetype = "auto";
-	}
-	if (writing && ! outformat->filetype) {
-		if ((outformat->filetype = strrchr(outformat->filename, LASTCHAR)) != NULL)
-			outformat->filetype++;
-		else
-			outformat->filetype = outformat->filename;
-		if ((outformat->filetype = strrchr(outformat->filetype, '.')) != NULL)
-			outformat->filetype++;
-	}
-	/* Default the input comment to the filename. 
-	 * The output comment will be assigned when the informat 
-	 * structure is copied to the outformat. 
-	 * FIXME: Should be a memory copy, not a pointer asignment.
-	 */
-	informat->comment = informat->filename;
-
+ 
 	process();
 	statistics();
 	return(0);
+}
+
+static void copy_input(ft_t ft)
+{
+    informat[input_count] = ft;
+
+    /* If filetype has not been set by command line options then
+     * attempt to get it from filename extension.
+     */
+    if (!ft->filetype) 
+    {
+	if ((ft->filetype = strrchr(ft->filename, '.')) != NULL)
+	    ft->filetype++;
+	else /* Default to "auto" */
+	    ft->filetype = "auto";
+    }
+
+    /* See if we understand this type of file */
+    if( st_gettype(ft) )
+	st_fail("Unknown input file format for '%s'.  Use -t option to override",ft->filename);	
+
+    /* Default the input comment to the filename if not set from
+     * command line.
+     * FIXME: Should be a memory copy, not a pointer asignment.
+     */
+    if (!ft->comment)
+    	ft->comment = ft->filename;
+
+    input_count++;
+}
+
+static void open_input(ft_t ft)
+{
+    /* Open file handler based on input name.  Used stdin file handler
+     * if the filename is "="
+     */
+    if (! strcmp(ft->filename, "-"))
+	ft->fp = stdin;
+    else if ((ft->fp = fopen(ft->filename, READBINARY)) == NULL)
+	st_fail("Can't open input file '%s': %s", ft->filename, 
+		strerror(errno));
+
+    /* See if this file is seekable or not */
+#if	defined(DUMB_FILESYSTEM)
+    ft->seekable = 0;
+#else
+    ft->seekable = (filetype(fileno(ft->fp)) == S_IFREG);
+#endif
+}
+
+static void copy_output(ft_t ft)
+{
+    outformat = ft;
+
+    if (writing && !ft->filetype) {
+	if ((ft->filetype = strrchr(ft->filename, '.')) != NULL)
+	    ft->filetype++;
+	else
+	    ft->filetype = ft->filename;
+    }
+
+    if ( st_gettype(ft) )
+	st_fail("Unknown output file format for '%s'.  Use -t option to override",ft->filename);
+}
+
+static void open_output(ft_t ft)
+{
+    if (writing) {
+	/*
+	 * There are two choices here:
+	 *	1) stomp the old file - normal shell "> file" behavior
+	 *	2) fail if the old file already exists - csh mode
+	 */
+	if (! strcmp(ft->filename, "-"))
+	{
+	    ft->fp = stdout;
+
+	    /* stdout tends to be line-buffered.  Override this */
+	    /* to be Full Buffering. */
+	    if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
+	    {
+		st_fail("Can't set write buffer");
+	    }
+	}
+	else {
+
+	    ft->fp = fopen(ft->filename, WRITEBINARY);
+
+	    if (ft->fp == NULL)
+		st_fail("Can't open output file '%s': %s", 
+			ft->filename, strerror(errno));
+
+	    /* stdout tends to be line-buffered.  Override this */
+	    /* to be Full Buffering. */
+	    if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
+	    {
+		st_fail("Can't set write buffer");
+	    }
+
+	} /* end of else != stdout */
+#if	defined(DUMB_FILESYSTEM)
+	ft->seekable = 0;
+#else
+	ft->seekable  = (filetype(fileno(ft->fp)) == S_IFREG);
+#endif
+    }
 }
 
 #ifdef HAVE_GETOPT_H
@@ -407,79 +514,43 @@ static void doopts(ft_t ft, int argc, char **argv)
 static void process(void) {
     int e, f, flowstatus;
 
-    if( st_gettype(informat) )
-		st_fail("Unknown input file format for '%s'.  Use -t option to override",informat->filename);	
-    if (writing)
-	if ( st_gettype(outformat) )
-		st_fail("Unknown output file format for '%s'.  Use -t option to override",outformat->filename);
-    
+   
     /* Read and write starters can change their formats. */
-    if ((* informat->h->startread)(informat) == ST_EOF)
+    if ((* informat[0]->h->startread)(informat[0]) == ST_EOF)
     {
-        st_fail(informat->st_errstr);
+        st_fail(informat[0]->st_errstr);
     }
 
-    /* Go a head and assume 1 channel audio if nothing is detected. */
-    if (informat->info.channels == -1)
-	informat->info.channels = 1;
+    /* Go a head and assume 1 channel audio if nothing is detected. 
+     * This is because libst usually doesn't set this for mono file
+     * formats (for historical reasons).
+     */
+    if (informat[0]->info.channels == -1)
+	informat[0]->info.channels = 1;
 
-    if ( st_checkformat(informat) )
+    if ( st_checkformat(informat[0]) )
 		st_fail("bad input format");
     
-    if (dovolume)
-	st_report("Volume factor: %f\n", volume);
-    
+   
     st_report("Input file: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
-	   informat->info.rate, st_sizes_str[informat->info.size], 
-	   st_encodings_str[informat->info.encoding], informat->info.channels, 
-	   (informat->info.channels > 1) ? "channels" : "channel");
-    if (informat->comment)
-	st_report("Input file: comment \"%s\"\n", informat->comment);
-	
-    if (writing) {
-        /*
-         * There are two choices here:
-	 *	1) stomp the old file - normal shell "> file" behavior
-	 *	2) fail if the old file already exists - csh mode
-	 */
-	 if (! strcmp(outformat->filename, "-"))
-	 {
-	    outformat->fp = stdout;
+	   informat[0]->info.rate, st_sizes_str[informat[0]->info.size], 
+	   st_encodings_str[informat[0]->info.encoding], informat[0]->info.channels, 
+	   (informat[0]->info.channels > 1) ? "channels" : "channel");
 
-	    /* stdout tends to be line-buffered.  Override this */
-	    /* to be Full Buffering. */
-	    if (setvbuf (outformat->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
-	    {
-	        st_fail("Can't set write buffer");
-	    }
-	 }
-         else {
+    if (informat[0]->comment)
+	st_report("Input file: comment \"%s\"\n", informat[0]->comment);
 
-	     outformat->fp = fopen(outformat->filename, WRITEBINARY);
+    if (writing)
+    {
+	open_output(outformat);
 
-	     if (outformat->fp == NULL)
-	         st_fail("Can't open output file '%s': %s", 
-		      outformat->filename, strerror(errno));
+	st_copyformat(informat[0], outformat);
 
-	     /* stdout tends to be line-buffered.  Override this */
-	     /* to be Full Buffering. */
-	     if (setvbuf (outformat->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
-	     {
-	         st_fail("Can't set write buffer");
-	     }
-
-        } /* end of else != stdout */
-#if	defined(DUMB_FILESYSTEM)
-	outformat->seekable = 0;
-#else
-	outformat->seekable  = (filetype(fileno(outformat->fp)) == S_IFREG);
-#endif
-
-	st_copyformat(informat, outformat);
-	if ((* outformat->h->startwrite)(outformat) == ST_EOF)
+	if ((*outformat->h->startwrite)(outformat) == ST_EOF)
 	{
 	    st_fail(outformat->st_errstr);
 	}
+
 	if (st_checkformat(outformat))
 		st_fail("bad output format");
 
@@ -487,6 +558,7 @@ static void process(void) {
 	       outformat->info.rate, st_sizes_str[outformat->info.size], 
 	       st_encodings_str[outformat->info.encoding], outformat->info.channels, 
 	       (outformat->info.channels > 1) ? "channels" : "channel");
+
 	if (outformat->comment)
 	    st_report("Output file: comment \"%s\"\n", outformat->comment);
     }
@@ -524,12 +596,12 @@ static void process(void) {
      * Just like errno, we must set st_errno to known values before
      * calling I/O operations.
      */
-    informat->st_errno = 0;
+    informat[0]->st_errno = 0;
     outformat->st_errno = 0;
 
     /* Run input data through effects and get more until olen == 0 */
     do {
-        efftab[0].olen = (*informat->h->read)(informat, 
+        efftab[0].olen = (*informat[0]->h->read)(informat[0], 
                                               efftab[0].obuf, (LONG) BUFSIZ);
         efftab[0].odone = 0;
 
@@ -553,8 +625,8 @@ static void process(void) {
 
     } while (1); /* break; efftab[0].olen == 0 */
 
-    if (informat->st_errno)
-	st_fail(informat->st_errstr);
+    if (informat[0]->st_errno)
+	st_fail(informat[0]->st_errstr);
 
     /* Drain the effects out first to last, 
      * pushing residue through subsequent effects */
@@ -587,9 +659,9 @@ static void process(void) {
 	    (* efftabR[e].h->stop)(&efftabR[e]);
     }
 
-    if ((* informat->h->stopread)(informat) == ST_EOF)
-	st_fail(informat->st_errstr);
-    fclose(informat->fp);
+    if ((* informat[0]->h->stopread)(informat[0]) == ST_EOF)
+	st_fail(informat[0]->st_errstr);
+    fclose(informat[0]->fp);
 
     if (writing)
     {
@@ -761,8 +833,8 @@ checkeffect()
 	int needchan = 0, needrate = 0, haschan = 0, hasrate = 0;
 	int effects_mask = 0;
 
-	needrate = (informat->info.rate != outformat->info.rate);
-	needchan = (informat->info.channels != outformat->info.channels);
+	needrate = (informat[0]->info.rate != outformat->info.rate);
+	needchan = (informat[0]->info.channels != outformat->info.channels);
 
 	for (i = 0; i < nuser_effects; i++)
 	{
@@ -804,7 +876,7 @@ checkeffect()
 	 * after the avg effect.
 	 */
         if (needchan && !(haschan) &&
-	    (informat->info.channels > outformat->info.channels))
+	    (informat[0]->info.channels > outformat->info.channels))
         {
 	    /* Find effect and update initial pointers */
 	    st_geteffect(&efftab[neffects], "avg");
@@ -814,7 +886,7 @@ checkeffect()
 					    (char **)0);
 
 	    /* Copy format info to effect table */
-	    effects_mask = st_updateeffect(&efftab[neffects], informat, 
+	    effects_mask = st_updateeffect(&efftab[neffects], informat[0], 
 		                           outformat, effects_mask);
 
 	    neffects++;
@@ -824,7 +896,7 @@ checkeffect()
 	 * after the resample effect.
 	 */
 	if (needrate && !(hasrate) &&
-	    (informat->info.rate > outformat->info.rate))
+	    (informat[0]->info.rate > outformat->info.rate))
 	{
 	    if (soxpreview)
 	        st_geteffect(&efftab[neffects], "rate");
@@ -836,7 +908,7 @@ checkeffect()
 					    (char **)0);
 
 	    /* Copy format info to effect table */
-	    effects_mask = st_updateeffect(&efftab[neffects], informat, 
+	    effects_mask = st_updateeffect(&efftab[neffects], informat[0], 
 		                           outformat, effects_mask);
 
 	    /* Rate can't handle multiple channels so be sure and
@@ -858,7 +930,7 @@ checkeffect()
 		   sizeof(struct st_effect));
 
 	    /* Copy format info to effect table */
-	    effects_mask = st_updateeffect(&efftab[neffects], informat, 
+	    effects_mask = st_updateeffect(&efftab[neffects], informat[0], 
 		                           outformat, effects_mask);
 
 	    /* If this effect can't handle multiple channels then
@@ -890,7 +962,7 @@ checkeffect()
 					    (char **)0);
 
 	    /* Copy format info to effect table */
-	    effects_mask = st_updateeffect(&efftab[neffects], informat, 
+	    effects_mask = st_updateeffect(&efftab[neffects], informat[0], 
 		                           outformat, effects_mask);
 
 	    /* Rate can't handle multiple channels so be sure and
@@ -917,7 +989,7 @@ checkeffect()
 					    (char **)0);
 
 	    /* Copy format info to effect table */
-	    effects_mask = st_updateeffect(&efftab[neffects], informat, 
+	    effects_mask = st_updateeffect(&efftab[neffects], informat[0], 
 		                           outformat, effects_mask);
 
 	    neffects++;
@@ -1001,8 +1073,8 @@ char *opt;
 /* called from util.c:fail */
 void cleanup(void) {
 	/* Close the input file and outputfile before exiting*/
-	if (informat && informat->fp)
-		fclose(informat->fp);
+	if (informat[0] && informat[0]->fp)
+		fclose(informat[0]->fp);
 	if (outformat && outformat->fp) {
 		fclose(outformat->fp);
 		/* remove the output file because we failed, if it's ours. */
