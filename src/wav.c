@@ -452,6 +452,9 @@ ft_t ft;
     ULONG    data_length;	    /* length of sound data in bytes */
     ULONG    bytespersample;	    /* bytes per sample (per channel */
 
+    /* This is needed for rawread() */
+    rawstartread(ft);
+
     endptr = (char *) &littlendian;
     if (!*endptr) ft->swap = ft->swap ? 0 : 1;
 
@@ -796,6 +799,9 @@ ft_t ft;
     if (wav->packet) free(wav->packet);
     if (wav->samples[0]) free(wav->samples[0]);
     if (wav->samples[1]) free(wav->samples[1]);
+
+    /* Needed for rawread() */
+    rawstopread(ft);
 }
 
 void wavstartwrite(ft) 
@@ -829,6 +835,9 @@ ft_t ft;
         unsigned short wBitsPerSample;          /* bits per sample */
         ULONG  data_length;             	/* length of sound data in bytes */
 	ULONG  bytespersample; 			/* bytes per sample (per channel) */
+
+	/* Needed for rawwrite() */
+	rawstartwrite(ft);
 
 	switch (ft->info.size)
 	{
@@ -945,6 +954,9 @@ ft_t ft;
 		fail("Sorry, can't rewind output file to rewrite .wav header.");
 	((wav_t) ft->priv)->second_header = 1;
 	wavwritehdr(ft);
+
+	/* Needed for rawwrite() */
+	rawstopwrite(ft);
 }
 
 /*

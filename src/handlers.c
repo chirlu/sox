@@ -322,7 +322,7 @@ EXPORT format_t formats[] = {
 		alstartread, rawread, rawstopread, 	   /* a-law byte raw */
 		alstartwrite, rawwrite, rawstopwrite},	
 	{aunames, FILE_STEREO,
-		austartread, auread, nothing,	       /* SPARC .AU w/header */
+		austartread, auread, rawstopread,      /* SPARC .AU w/header */
 		austartwrite, auwrite, austopwrite},	
 	{autonames, FILE_STEREO,
 		autostartread, nothing_success, nothing,/* Guess from header */
@@ -369,16 +369,16 @@ EXPORT format_t formats[] = {
 		sbstartread, rawread, rawstopread, 	  /* signed byte raw */
 		sbstartwrite, rawwrite, rawstopwrite},	
 	{sfnames, FILE_STEREO,
-		sfstartread, rawread, nothing, 	         /* IRCAM Sound File */
-		sfstartwrite, rawwrite, nothing},	    /* Relies on raw */
+		sfstartread, rawread, rawstopread,       /* IRCAM Sound File */
+		sfstartwrite, rawwrite, rawstopwrite},
 	{smpnames, FILE_STEREO | FILE_LOOPS,
 		smpstartread, smpread, nothing,	       /* SampleVision sound */
 		smpstartwrite, smpwrite, smpstopwrite},	     /* Turtle Beach */
 	{sndrnames, FILE_STEREO,
-		sndtstartread, rawread, nothing,       /* Sounder Sound File */
-		sndrstartwrite, rawwrite, nothing},
+		sndtstartread, rawread, rawstopread,   /* Sounder Sound File */
+		sndrstartwrite, rawwrite, rawstopwrite},
 	{sndtnames, FILE_STEREO,
-		sndtstartread, rawread, nothing,       /* Sndtool Sound File */
+		sndtstartread, rawread, rawstopread,   /* Sndtool Sound File */
 		sndtstartwrite, sndtwrite, sndtstopwrite},
 #if	defined(SUNAUDIO_PLAYER)
 	/* Sun /dev/audio player. */
@@ -411,7 +411,7 @@ EXPORT format_t formats[] = {
 		wavstartread, wavread, nothing, 	   /* Microsoft .wav */
 		wavstartwrite, wavwrite, wavstopwrite},	
 	{wvenames, 0,
-		wvestartread, wveread, nothing,                /* Psion .wve */
+		wvestartread, wveread, rawstopread,            /* Psion .wve */
 		wvestartwrite, wvewrite, wvestopwrite},
 	{0, 0,
 	 0, 0, 0, 0, 0, 0}

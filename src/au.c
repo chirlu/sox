@@ -80,6 +80,9 @@ ft_t ft;
 	int littlendian = 1;
 	char *endptr;
 
+	/* Needed for rawread() */
+	rawstartread(ft);
+
 	endptr = (char *) &littlendian;
 	/* AU is in big endian format.  Swap whats read
 	 * in onlittle endian machines.
@@ -214,8 +217,8 @@ ft_t ft;
 	int littlendian = 1;
 	char *endptr;
 
-	p->data_size = 0;
-	auwriteheader(ft, SUN_UNSPEC);
+	/* Needed because of rawwrite(); */
+	rawstartread(ft);
 
 	endptr = (char *) &littlendian;
 	/* AU is in big endian format.  Swap whats read in
@@ -225,6 +228,9 @@ ft_t ft;
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}
+
+	p->data_size = 0;
+	auwriteheader(ft, SUN_UNSPEC);
 }
 
 /*
@@ -287,11 +293,15 @@ void austopwrite(ft)
 ft_t ft;
 {
 	struct aupriv *p = (struct aupriv *) ft->priv;
+
 	if (!ft->seekable)
 		return;
 	if (fseek(ft->fp, 0L, 0) != 0)
 		fail("Can't rewind output file to rewrite Sun header.");
 	auwriteheader(ft, p->data_size);
+
+	/* Needed because of rawwrite() */
+	rawstopwrite(ft);
 }
 
 void auwriteheader(ft, data_size)

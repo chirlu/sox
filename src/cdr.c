@@ -49,6 +49,9 @@ ft_t ft;
 	int     littlendian = 1;
 	char    *endptr;
 
+	/* Needed because of rawread() */
+	rawstartread(ft);
+
 	endptr = (char *) &littlendian;
 	/* CDR is in Big Endian format.  Swap whats read in on */
         /* Little Endian machines.                             */
@@ -86,6 +89,8 @@ LONG *buf, len;
 void cdrstopread(ft) 
 ft_t ft;
 {
+	/* Needed because of rawread() */
+	rawstopread(ft);
 }
 
 void cdrstartwrite(ft) 
@@ -103,6 +108,9 @@ ft_t ft;
 	{
 	    ft->swap = ft->swap ? 0 : 1;
 	}
+
+	/* Needed because of rawwrite() */
+	rawstartwrite(ft);
 
 	cdr->samples = 0;
 
@@ -137,13 +145,14 @@ ft_t ft;
 
 	zero = 0;
 
-	if (padsamps == SECTORSIZE) {
-		return;
+	if (padsamps != SECTORSIZE) 
+	{
+		while (padsamps > 0) {
+			wshort(ft, zero);
+			padsamps--;
+		}
 	}
 
-	while (padsamps > 0) {
-		wshort(ft, zero);
-		padsamps--;
-	}
+	rawstopwrite(ft);
 }
 

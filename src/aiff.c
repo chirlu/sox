@@ -90,6 +90,8 @@ ft_t ft;
 	char *copyright;
 	char *nametext;
 
+	/* Needed because of rawread() */
+	rawstartread(ft);
 
 	/* AIFF is in Big Endian format.  Swap whats read in on Little */
 	/* Endian machines.                                            */
@@ -419,22 +421,31 @@ ft_t ft;
 	ULONG chunksize;
 
 	if (!ft->seekable)
-	    while (! feof(ft->fp)) {
+	{
+	    while (! feof(ft->fp)) 
+	    {
 		if (fread(buf, 1, 4, ft->fp) != 4)
-			return;
+			break;
 
 		chunksize = rlong(ft);
 		if (feof(ft->fp))
-			return;
+			break;
 		buf[4] = '\0';
 		warn("Ignoring AIFF tail chunk: '%s', %d bytes long\n", 
 			buf, chunksize);
 		if (! strcmp(buf, "MARK") || ! strcmp(buf, "INST"))
 			warn("	You're stripping MIDI/loop info!\n");
 		while ((LONG) (--chunksize) >= 0) 
+		{
 			if (getc(ft->fp) == EOF)
-				return;
+				break;
+		}
+	    }
 	}
+
+	/* Needed because of rawwrite() */
+	rawstopread(ft);
+
 	return;
 }
 
@@ -454,6 +465,9 @@ ft_t ft;
 	struct aiffpriv *p = (struct aiffpriv *) ft->priv;
 	int littlendian;
 	char *endptr;
+
+	/* Needed because rawwrite() */
+	rawstartwrite(ft);
 
 	/* AIFF is in Big Endian format.  Swap whats read in on Little */
 	/* Endian machines.                                            */
@@ -493,11 +507,15 @@ aiffstopwrite(ft)
 ft_t ft;
 {
 	struct aiffpriv *p = (struct aiffpriv *) ft->priv;
+
 	if (!ft->seekable)
 		return;
 	if (fseek(ft->fp, 0L, SEEK_SET) != 0)
 		fail("can't rewind output file to rewrite AIFF header");
 	aiffwriteheader(ft, p->nsamples / ft->info.channels);
+
+	/* Needed because of rawwrite() */
+	rawstopwrite(ft);
 }
 
 void aiffwriteheader(ft, nframes)

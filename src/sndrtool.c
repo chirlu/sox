@@ -34,6 +34,9 @@ LONG rate;
 	int littlendian = 1;
 	char *endptr;
 
+	/* Needed for rawread() */
+	rawstartread(ft);
+
 	endptr = (char *) &littlendian;
 	/* sndt is in little endian format so 
 	 * swap bytes on big endian machines.
@@ -92,6 +95,9 @@ struct sndpriv *p = (struct sndpriv *) ft->priv;
 
 	int littlendian = 1;
 	char *endptr;
+
+	/* Needed for rawwrite() */
+	rawstopwrite(ft);
 
 	endptr = (char *) &littlendian;
 	/* sndt is in little endian format so
@@ -154,6 +160,9 @@ struct sndpriv *p = (struct sndpriv *) ft->priv;
 if (fseek(ft->fp, 0L, 0) != 0)
 	fail("can't rewind output file to rewrite SND header");
 sndtwriteheader(ft, p->nsamples);
+
+	/* Needed for rawwrite() */
+	rawstopwrite(ft);
 }
 
 /*======================================================================*/

@@ -83,6 +83,9 @@ ft_t ft;
 {
 	sf_t sf = (sf_t) ft->priv;
 	SFHEADER sfhead;
+
+	/* Needed for rawread() */
+	rawstartread(ft);
 	
 	if (fread(&sfhead, 1, sizeof(SFHEADER), ft->fp) != sizeof(SFHEADER))
 		fail("unexpected EOF in SF header");
@@ -145,6 +148,9 @@ ft_t ft;
 	char *sfcharp;
 	int littlendian = 1;
 	char *endptr;
+
+	/* Needed for rawwrite() */
+	rawstartwrite(ft);
 
 #ifdef	IRCAM
 	sf->info.magic_union._magic_bytes.sf_magic1 = SF_MAGIC1;

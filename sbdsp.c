@@ -55,6 +55,9 @@ ft_t ft;
 	int off = 0;
 #endif
 
+	/* The following is needed to init block reads */
+	rawstartread(ft);
+
 	/* If you need to seek around the input file. */
 	if (0 && ! ft->seekable)
 		fail("SKEL input file must be a file, not a pipe");
@@ -102,6 +105,8 @@ LONG *buf, len;
 sbdspstopread(ft) 
 ft_t ft;
 {
+	rawstopread(ft);
+
 #ifdef SBLAST
 	ioctl(fileno(ft->fp), DSP_IOCTL_FLUSH, 0);
 #endif
@@ -114,6 +119,8 @@ ft_t ft;
 #ifdef	SBLAST
 	int on = 1;
 #endif
+
+	rawstartwrite(ft);
 
 	/* If you have to seek around the output file */
 	if (0 && ! ft->seekable)
@@ -148,6 +155,9 @@ LONG *buf, len;
 sbdspstopwrite(ft) 
 ft_t ft;
 {
+	/* This is needed to flush out block writes */
+	rawstopwrite(ft);
+
 	/* All samples are already written out. */
 	/* If file header needs fixing up, for example it needs the */
  	/* the number of samples in a field, seek back and write them here. */

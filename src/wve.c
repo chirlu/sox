@@ -33,6 +33,9 @@ ft_t ft;
 	int littlendian = 1;
 	char *endptr;
 
+	/* Needed for rawread() */
+	rawstartread(ft);
+
 	endptr = (char *) &littlendian;
 	/* WVE is in big endian format.  Swap whats read in
 	 * on little endian machines.
@@ -110,6 +113,9 @@ ft_t ft;
 	int littlendian = 1;
 	char *endptr;
 
+	/* Needed for rawwrite() */
+	rawstartwrite(ft);
+
 	endptr = (char *) &littlendian;
 	/* wve is in big endian format.  Swap whats read in
 	 * on little endian machines.
@@ -152,9 +158,13 @@ ft_t ft;
 {
 	if (!ft->seekable)
 		return;
+
 	if (fseek(ft->fp, 0L, 0) != 0)
 		fail("Can't rewind output file to rewrite Psion header.");
 	wvewriteheader(ft);
+
+	/* Needed for rawwrite() */
+	rawstopwrite(ft);
 }
 
 void wvewriteheader(ft)
