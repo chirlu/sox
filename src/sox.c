@@ -952,7 +952,7 @@ static int flow_effect_out(void)
        * show no more data.
        */
       havedata = 0;
-      for(e = neffects - 2; e > input_eff; e--)
+      for(e = neffects - 2; e >= input_eff; e--)
           if (efftab[e].odone < efftab[e].olen) {
               havedata = 1;
               break;

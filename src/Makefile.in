@@ -144,4 +144,4 @@ clean:
 distclean:
 	$(RM) *~ *.o *.raw *.sf core sox soxmix libst.a play libst-config
 	cd gsm && $(RM) *~ *.o core libgsm.a Makefile
-	$(RM) stconfig.h ststdint.h
+	$(RM) stconfig.h ststdint.h Makefile
