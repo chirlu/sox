@@ -123,13 +123,23 @@ the
 .B rate
 \fIsound effect\fR loop.
 .PP
-File type options:
+Format options:
+.PP
+Format options effect the file that they immediately percede.  If
+they are placed before the input file name then they effect the input
+data.  If they are placed before the output file name then they will
+effect the output data.  It is also possible to read a given file in
+and output it in any supported data format by specifying output format
+options.
 .TP 10
 \fB-t\fI filetype
 gives the type of the sound sample file.
 .TP 10
 \fB-r \fIrate\fR
-Give sample rate in Hertz of file.
+Give sample rate in Hertz of file.  If the input and output files have
+different rates then a sample rate change effect must be ran.  If a
+sample rate changing effect is not specified then a default one will be
+used with its default parameters.
 .TP 10
 \fB-s/-u/-U/-A/-a/-g\fR
 The sample data is signed linear (2's complement),
@@ -156,11 +166,14 @@ than yours and must
 be swapped according to the word-size given above.
 Only 16-bit and 32-bit integer data may be swapped.
 Machine-format floating-point data is not portable.
-IEEE floats are a fixed, portable format. ???
+IEEE floats are a fixed, portable format.
 .TP 10
 \fB-c \fIchannels\fR
 The number of sound channels in the data file.
-This may be 1, 2, or 4; for mono, stereo, or quad sound data.
+This may be 1, 2, or 4; for mono, stereo, or quad sound data.  If an
+input and output file have a different number of channels then the
+average effect must be used.  If it is not specified on the command line
+it will be invoked with default parameters.
 .PP
 General options:
 .TP 10
@@ -466,10 +479,12 @@ in a pipeline.
 avg [ \fI-l\fR | \fI-r\fR ]
 Reduce the number of channels by averaging the samples,
 or duplicate channels to increase the number of channels.
-Valid combinations are 1 - 2, 1 - 4, 2 - 4, 4 - 2, 4 - 1,
-2 - 1. The \fI-l\fR or \fI-r\fR option is not really averaging but
-either duplicates or leaves just the left or right channel, depending
-on if your increasing or decreasing the number of output channels.
+This effect is automatically used when the number of input
+samples differ then the number of output channels.  When reducing
+the number of channels it is possible to manually specify the
+avg effect and use the \fI-l\fR and \fI-r\fR options to select only
+the left or right channel for the output instead of averaging the
+two channels.
 .TP 10
 band \fB[ \fI-n \fB] \fIcenter \fB[ \fIwidth\fB ]
 Apply a band-pass filter.
