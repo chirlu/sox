@@ -87,15 +87,18 @@ AC_TYPE_SIZE_T
 
 if test "$enable_old_rate" = yes
 then
-	CFLAGS="$CFLAGS -DUSE_OLD_RATE"
+    AC_DEFINE([USE_OLD_RATE], 1, 
+              [Define if you want to use old rate routines])
 fi
 if test "$enable_fast_ulaw" = yes
 then
-	CFLAGS="$CFLAGS -DFAST_ULAW_CONVERSION"
+    AC_DEFINE([FAST_ULAW_CONVERSION], 1, 
+              [Define if you want to use fast ULAW conversions])
 fi
 if test "$enable_fast_alaw" = yes
 then
-	CFLAGS="$CFLAGS -DFAST_ALAW_CONVERSION"
+    AC_DEFINE([FAST_ALAW_CONVERSION], 1, 
+              [Define if you want to use fast ALAW conversions])
 fi
 
 dnl Checks for header files.
@@ -135,7 +138,7 @@ then
         AC_CHECK_LIB(vorbis, vorbis_analysis_init,
                      LIBS="$LIBS -logg -lvorbis -lvorbisfile -lvorbisenc"
                      AC_DEFINE([HAVE_LIBVORBIS], 1, 
-		               [Define if you have Ogg Vorbis Library install]),
+		               [Define if you have Ogg Vorbis Library installed]),
 	             enable_ogg_vorbis=no)
     fi
 fi
@@ -193,19 +196,28 @@ snd_pcm_capture_info_t c_info;
 
     if test "$alsa_type" = alsa9
     then
-	CFLAGS="$CFLAGS -DALSA_PLAYER -DUSE_ALSA9"
+        AC_DEFINE([HAVE_ALSA], 1, 
+                  [Define if you have ALSA installed])
+        AC_DEFINE([HAVE_ALSA9], 1, 
+                  [Define if you have ALSA 0.9 installed])
 	NEED_ALSA=1
 	PLAY_SUPPORT=1
 	AC_MSG_RESULT([0.9.X])
     elif test "$alsa_type" = alsa5
     then
-	CFLAGS="$CFLAGS -DALSA_PLAYER -DUSE_ALSA5"
+        AC_DEFINE([HAVE_ALSA], 1, 
+                  [Define if you have ALSA installed])
+        AC_DEFINE([HAVE_ALSA5], 1, 
+                  [Define if you have ALSA 0.5 installed])
 	NEED_ALSA=1
 	PLAY_SUPPORT=1
 	AC_MSG_RESULT([0.5.X])
     elif test "$alsa_type" = alsa4
     then
-	CFLAGS="$CFLAGS -DALSA_PLAYER -DUSE_ALSA4"
+        AC_DEFINE([HAVE_ALSA], 1, 
+                  [Define if you have ALSA installed])
+        AC_DEFINE([HAVE_ALSA4], 1, 
+                  [Define if you have ALSA 0.4 installed])
 	NEED_ALSA=1
 	PLAY_SUPPORT=1
 	AC_MSG_RESULT([0.4.X])
@@ -221,7 +233,8 @@ then
 
     if test "$found_oss_dsp" = yes
     then
-	CFLAGS="$CFLAGS -DOSS_PLAYER"
+        AC_DEFINE([HAVE_OSS], 1, 
+                  [Define if you have OSS installed])
 	NEED_OSS=1
 	PLAY_SUPPORT=1
     else
@@ -234,8 +247,9 @@ then
     AC_CHECK_HEADERS(sys/audioio.h sun/audioio.h, found_sun_audio=yes)
 
     if test "$found_sun_audio" = yes
-then
-	CFLAGS="$CFLAGS -DSUNAUDIO_PLAYER"
+    then
+        AC_DEFINE([HAVE_SUNAUDIO], 1, 
+                  [Define if you have Sun /dev/audio installed])
 	NEED_SUNAU=1
 	PLAY_SUPPORT=1
     else
@@ -245,8 +259,8 @@ fi
 
 if test "$enable_gsm" = yes
 then
-	CFLAGS="$CFLAGS -DENABLE_GSM"
-	LIBS="$LIBS -lgsm"
+        AC_DEFINE([ENABLE_GSM], 1, 
+                  [Define if you want to use internal GSM library])
 	GSM_SUPPORT=1
 fi
 
@@ -262,7 +276,8 @@ dnl Generate output files...
 AC_CONFIG_HEADER(stconfig.h)
 AC_CREATE_STDINT_H(ststdint.h)
 
-AC_CONFIG_FILES([libst-config play Makefile gsm/Makefile])
+AC_CONFIG_FILES([libst-config Makefile gsm/Makefile])
+AC_CONFIG_FILES([play], [chmod +x play])
 
 AC_OUTPUT()
 

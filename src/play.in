@@ -18,6 +18,10 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
 
+# Look for sox in install directory first and then in current direction
+# if not found.
+PATH=$bindir:.
+
 program_name=`basename $0`
 program_version="2.0"
 
@@ -207,8 +211,8 @@ if [ "$program_name" = "rec" ]; then
     else
       echo "Send break (control-c) to end recording"
     fi
-    $bindir/sox $volume $arch_defines $fopts $device $fopts2 "$filename" $effects 
+    sox $volume $arch_defines $fopts $device $fopts2 "$filename" $effects 
 
 else
-    $bindir/sox $volume $fopts $fopts2 "$filename" $arch_defines $device $effects
+    sox $volume $fopts $fopts2 "$filename" $arch_defines $device $effects
 fi

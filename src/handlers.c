@@ -29,7 +29,7 @@ static char *alnames[] = {
         (char *) 0
 };
 
-#if     defined(ALSA_PLAYER)
+#if     defined(HAVE_ALSA)
 /* /dev/snd/pcmXX */
 static char *alsanames[] = {
         "alsa",
@@ -124,7 +124,7 @@ static char *nulnames[] = {
         (char *) 0,
 };
 
-#if     defined(OSS_PLAYER)
+#if     defined(HAVE_OSS)
 /* OSS /dev/dsp player */
 static char *ossdspnames[] = {
         "ossdsp",
@@ -179,7 +179,7 @@ static char *spherenames[] = {
         (char *) 0
 };
 
-#if     defined(SUNAUDIO_PLAYER)
+#if     defined(HAVE_SUNAUDIO)
 /* Sun /dev/audio player */
 static char *sunnames[] = {
         "sunau",
@@ -256,7 +256,7 @@ st_format_t st_formats[] = {
     {alnames, ST_FILE_STEREO,
         st_alstartread, st_rawread, st_rawstopread,
         st_alstartwrite, st_rawwrite, st_rawstopwrite, st_format_nothing_seek},
-#ifdef ALSA_PLAYER
+#ifdef HAVE_ALSA
     {alsanames, ST_FILE_STEREO,
         st_alsastartread, st_alsaread, st_rawstopread,
         st_alsastartwrite, st_alsawrite, st_alsastopwrite,
@@ -314,7 +314,7 @@ st_format_t st_formats[] = {
     {nulnames, ST_FILE_STEREO,
         st_nulstartread, st_nulread, st_nulstopread,
         st_nulstartwrite, st_nulwrite, st_nulstopwrite, st_format_nothing_seek},
-#ifdef OSS_PLAYER
+#ifdef HAVE_OSS
     {ossdspnames, ST_FILE_STEREO,
         st_ossdspstartread, st_rawread, st_rawstopread,
         st_ossdspstartwrite, st_rawwrite, st_rawstopwrite, st_format_nothing_seek},
@@ -344,7 +344,7 @@ st_format_t st_formats[] = {
         st_spherestartread, st_sphereread, st_rawstopread,
         st_spherestartwrite, st_spherewrite, st_spherestopwrite,
         st_format_nothing_seek},
-#ifdef SUNAUDIO_PLAYER
+#ifdef HAVE_SUNAUDIO
     {sunnames, ST_FILE_STEREO,
         st_sunstartread, st_rawread, st_rawstopread,
         st_sunstartwrite, st_rawwrite, st_rawstopwrite, st_format_nothing_seek},

@@ -25,17 +25,19 @@ RM	= rm -f
 LN_S    = @LN_S@
 
 # Build macros.
+GSM_LIB_0 =
+GSM_LIB_1 = -lgsm
+GSM_SUPPORT  = @GSM_SUPPORT@
 
-CFLAGS	= @CFLAGS@ -I. -I$(srcdir)
-LDFLAGS	= -L. @LDFLAGS@
-LIBS	= -lst -Lgsm @LIBS@
+CFLAGS	= @CFLAGS@ -I$(srcdir)
+LDFLAGS	= -L. -L./gsm @LDFLAGS@
+LIBS	= -lst $(GSM_LIB_$(GSM_SUPPORT)) @LIBS@
 
 # Other macros.
 
 NEED_OSS     = @NEED_OSS@
 NEED_SUNAU   = @NEED_SUNAU@
 NEED_ALSA    = @NEED_ALSA@
-GSM_SUPPORT  = @GSM_SUPPORT@
 PLAY_SUPPORT = @PLAY_SUPPORT@
 
 # Objects.

@@ -3251,15 +3251,27 @@ fi
 
 if test "$enable_old_rate" = yes
 then
-	CFLAGS="$CFLAGS -DUSE_OLD_RATE"
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_OLD_RATE 1
+_ACEOF
+
 fi
 if test "$enable_fast_ulaw" = yes
 then
-	CFLAGS="$CFLAGS -DFAST_ULAW_CONVERSION"
+
+cat >>confdefs.h <<\_ACEOF
+#define FAST_ULAW_CONVERSION 1
+_ACEOF
+
 fi
 if test "$enable_fast_alaw" = yes
 then
-	CFLAGS="$CFLAGS -DFAST_ALAW_CONVERSION"
+
+cat >>confdefs.h <<\_ACEOF
+#define FAST_ALAW_CONVERSION 1
+_ACEOF
+
 fi
 
 echo "$as_me:$LINENO: checking for ANSI C header files" >&5
@@ -4577,21 +4589,48 @@ rm -f conftest.$ac_objext conftest.$ac_ext
 
     if test "$alsa_type" = alsa9
     then
-	CFLAGS="$CFLAGS -DALSA_PLAYER -DUSE_ALSA9"
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_ALSA 1
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_ALSA9 1
+_ACEOF
+
 	NEED_ALSA=1
 	PLAY_SUPPORT=1
 	echo "$as_me:$LINENO: result: 0.9.X" >&5
 echo "${ECHO_T}0.9.X" >&6
     elif test "$alsa_type" = alsa5
     then
-	CFLAGS="$CFLAGS -DALSA_PLAYER -DUSE_ALSA5"
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_ALSA 1
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_ALSA5 1
+_ACEOF
+
 	NEED_ALSA=1
 	PLAY_SUPPORT=1
 	echo "$as_me:$LINENO: result: 0.5.X" >&5
 echo "${ECHO_T}0.5.X" >&6
     elif test "$alsa_type" = alsa4
     then
-	CFLAGS="$CFLAGS -DALSA_PLAYER -DUSE_ALSA4"
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_ALSA 1
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_ALSA4 1
+_ACEOF
+
 	NEED_ALSA=1
 	PLAY_SUPPORT=1
 	echo "$as_me:$LINENO: result: 0.4.X" >&5
@@ -4723,7 +4762,11 @@ done
 
     if test "$found_oss_dsp" = yes
     then
-	CFLAGS="$CFLAGS -DOSS_PLAYER"
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_OSS 1
+_ACEOF
+
 	NEED_OSS=1
 	PLAY_SUPPORT=1
     else
@@ -4850,8 +4893,12 @@ done
 
 
     if test "$found_sun_audio" = yes
-then
-	CFLAGS="$CFLAGS -DSUNAUDIO_PLAYER"
+    then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_SUNAUDIO 1
+_ACEOF
+
 	NEED_SUNAU=1
 	PLAY_SUPPORT=1
     else
@@ -4861,8 +4908,11 @@ fi
 
 if test "$enable_gsm" = yes
 then
-	CFLAGS="$CFLAGS -DENABLE_GSM"
-	LIBS="$LIBS -lgsm"
+
+cat >>confdefs.h <<\_ACEOF
+#define ENABLE_GSM 1
+_ACEOF
+
 	GSM_SUPPORT=1
 fi
 
@@ -5946,7 +5996,9 @@ echo "${ECHO_T}... DONE $ac_stdint_h" >&6
 EOF
 
 
-ac_config_files="$ac_config_files libst-config play Makefile gsm/Makefile"
+ac_config_files="$ac_config_files libst-config Makefile gsm/Makefile"
+
+ac_config_files="$ac_config_files play"
 
 
 cat >confcache <<\_ACEOF
@@ -6421,9 +6473,9 @@ do
   case "$ac_config_target" in
   # Handling of arguments.
   "libst-config" ) CONFIG_FILES="$CONFIG_FILES libst-config" ;;
-  "play" ) CONFIG_FILES="$CONFIG_FILES play" ;;
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "gsm/Makefile" ) CONFIG_FILES="$CONFIG_FILES gsm/Makefile" ;;
+  "play" ) CONFIG_FILES="$CONFIG_FILES play" ;;
   "stconfig.h" ) CONFIG_HEADERS="$CONFIG_HEADERS stconfig.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
@@ -6735,6 +6787,10 @@ s,@INSTALL@,$ac_INSTALL,;t t
     rm -f $tmp/out
   fi
 
+  # Run the commands associated with the file.
+  case $ac_file in
+    play ) chmod +x play ;;
+  esac
 done
 _ACEOF
 cat >>$CONFIG_STATUS <<\_ACEOF

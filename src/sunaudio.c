@@ -17,7 +17,7 @@
 
 #include "st_i.h"
 
-#if     defined(SUNAUDIO_PLAYER)
+#if     defined(HAVE_SUNAUDIO)
 
 #include <sys/ioctl.h>
 #if defined(__SVR4) || defined(__NetBSD__)

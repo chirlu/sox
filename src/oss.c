@@ -27,7 +27,7 @@
 
 #include "st_i.h"
 
-#if	defined(OSS_PLAYER)
+#if	defined(HAVE_OSS)
 
 #include <unistd.h>
 #include <stdlib.h>

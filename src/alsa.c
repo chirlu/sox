@@ -15,7 +15,7 @@
 
 #include "st_i.h"
 
-#if defined(ALSA_PLAYER)
+#if defined(HAVE_ALSA)
 
 #include <string.h>
 #include <fcntl.h>
@@ -26,7 +26,7 @@
 
 static int get_format(ft_t ft, int formats, int *fmt);
 
-#if USE_ALSA9
+#if HAVE_ALSA9
 
 #include <limits.h>
 #include <sound/asound.h>
@@ -309,11 +309,11 @@ ft_t ft;
     return(st_rawstopwrite(ft));
 }
 
-#else /* ! USE_ALSA9 */
+#else /* ! HAVE_ALSA9 */
 
 #include <linux/asound.h>
 
-#if USE_ALSA4 /* Start 0.4.x API */
+#if HAVE_ALSA4 /* Start 0.4.x API */
 
 int st_alsastartread(ft)
 ft_t ft;
@@ -438,7 +438,7 @@ ft_t ft;
     return(st_rawstopwrite(ft));
 }
 
-#elif USE_ALSA5 /* Start 0.5.x API */
+#elif HAVE_ALSA5 /* Start 0.5.x API */
 
 int st_alsastartread(ft)
 ft_t ft;
@@ -572,9 +572,9 @@ ft_t ft;
     return(st_rawstopwrite(ft));
 }
 
-#endif /* USE_ALSA4/5 */
+#endif /* HAVE_ALSA4/5 */
 
-#endif /* USE_ALSA9 */
+#endif /* HAVE_ALSA9 */
 
 #define EMSGFMT "ALSA driver does not support %s %s output"
 
@@ -653,7 +653,7 @@ st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 
     len = st_rawread(ft, buf, nsamp);
 
-#if USE_ALSA9
+#if HAVE_ALSA9
     /* ALSA 0.9 and above require that we detects underruns and
      * reset the driver if it occurs.
      */
@@ -686,7 +686,7 @@ st_ssize_t st_alsawrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 
     len = st_rawwrite(ft, buf, nsamp);
 
-#if USE_ALSA9
+#if HAVE_ALSA9
     /* ALSA 0.9 and above require that we detects overruns and
      * reset the driver if it occurs.
      */
@@ -712,4 +712,4 @@ st_ssize_t st_alsawrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
     return len;
 }
 
-#endif /* ALSA_PLAYER */
+#endif /* HAVE_ALSA */

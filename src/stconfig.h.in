@@ -1,91 +1,136 @@
 /* stconfig.h.in.  Generated from configure.in by autoheader.  */
 
-/* Define if you have the <byteswap.h> header file. */
+/* Define if you want to use internal GSM library */
+#undef ENABLE_GSM
+
+/* Define if you want to use fast ALAW conversions */
+#undef FAST_ALAW_CONVERSION
+
+/* Define if you want to use fast ULAW conversions */
+#undef FAST_ULAW_CONVERSION
+
+/* Define if you have ALSA installed */
+#undef HAVE_ALSA
+
+/* Define if you have ALSA 0.4 installed */
+#undef HAVE_ALSA4
+
+/* Define if you have ALSA 0.5 installed */
+#undef HAVE_ALSA5
+
+/* Define if you have ALSA 0.9 installed */
+#undef HAVE_ALSA9
+
+/* Define to 1 if you have the <byteswap.h> header file. */
 #undef HAVE_BYTESWAP_H
 
-/* Define if you have the <errno.h> header file. */
+/* Define to 1 if you have the <errno.h> header file. */
 #undef HAVE_ERRNO_H
 
-/* Define if you have the <fcntl.h> header file. */
+/* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 
-/* Define if you have the `getopt' function. */
+/* Define to 1 if you have the `getopt' function. */
 #undef HAVE_GETOPT
 
-/* Define if you have the <getopt.h> header file. */
+/* Define to 1 if you have the <getopt.h> header file. */
 #undef HAVE_GETOPT_H
 
-/* Define if you have the <inttypes.h> header file. */
+/* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define if you have the `m' library (-lm). */
+/* Define if you have LAME (LAME Ain't an MP3 Encoder) library installed */
+#undef HAVE_LAME
+
+/* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
 /* Define if you have MAD (MP3 Audio Decoder) Library installed */
 #undef HAVE_LIBMAD
 
-/* Define if you have LAME (LAME Ain't an MP3 Encoder) Library installed */
-#undef HAVE_LAME
-
 /* Define if you have Ogg Vorbis Library installed */
 #undef HAVE_LIBVORBIS
 
-/* Define if you have the <limits.h> header file. */
+/* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
-/* Define if you have the <linux/asound.h> header file. */
+/* Define to 1 if you have the <linux/asound.h> header file. */
 #undef HAVE_LINUX_ASOUND_H
 
-/* Define if you have the <machine/soundcard.h> header file. */
+/* Define to 1 if you have the <machine/soundcard.h> header file. */
 #undef HAVE_MACHINE_SOUNDCARD_H
 
-/* Define if you have the <malloc.h> header file. */
+/* Define to 1 if you have the <malloc.h> header file. */
 #undef HAVE_MALLOC_H
 
-/* Define if you have the `memmove' function. */
+/* Define to 1 if you have the `memmove' function. */
 #undef HAVE_MEMMOVE
 
-/* Define if you have the <memory.h> header file. */
+/* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
-/* Define if you have the `rand' function. */
+/* Define if you have OSS installed */
+#undef HAVE_OSS
+
+/* Define to 1 if you have the `rand' function. */
 #undef HAVE_RAND
 
-/* Define if you have the <stdint.h> header file. */
+/* Define to 1 if you have the <sound/asound.h> header file. */
+#undef HAVE_SOUND_ASOUND_H
+
+/* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
-/* Define if you have the <stdlib.h> header file. */
+/* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
 
-/* Define if you have the `strcasecmp' function. */
+/* Define to 1 if you have the `strcasecmp' function. */
 #undef HAVE_STRCASECMP
 
-/* Define if you have the `strerror' function. */
+/* Define to 1 if you have the `strerror' function. */
 #undef HAVE_STRERROR
 
-/* Define if you have the <strings.h> header file. */
+/* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
 
-/* Define if you have the <string.h> header file. */
+/* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
-/* Define if you have the <sun/audioio.h> header file. */
+/* Define if you have Sun /dev/audio installed */
+#undef HAVE_SUNAUDIO
+
+/* Define to 1 if you have the <sun/audioio.h> header file. */
 #undef HAVE_SUN_AUDIOIO_H
 
-/* Define if you have the <sys/audioio.h> header file. */
+/* Define to 1 if you have the <sys/audioio.h> header file. */
 #undef HAVE_SYS_AUDIOIO_H
 
-/* Define if you have the <sys/soundcard.h> header file. */
+/* Define to 1 if you have the <sys/soundcard.h> header file. */
 #undef HAVE_SYS_SOUNDCARD_H
 
-/* Define if you have the <sys/stat.h> header file. */
+/* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
 
-/* Define if you have the <sys/types.h> header file. */
+/* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
-/* Define if you have the <unistd.h> header file. */
+/* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
 
 /* The number of bytes in type char */
 #undef SIZEOF_CHAR
@@ -102,11 +147,14 @@
 /* The number of bytes in type void* */
 #undef SIZEOF_VOIDP
 
-/* Define if you have the ANSI C header files. */
+/* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Define if your processor stores words with the most significant byte first
-   (like Motorola and SPARC, unlike Intel and VAX). */
+/* Define if you want to use old rate routines */
+#undef USE_OLD_RATE
+
+/* Define to 1 if your processor stores words with the most significant byte
+   first (like Motorola and SPARC, unlike Intel and VAX). */
 #undef WORDS_BIGENDIAN
 
 /* Define to empty if `const' does not conform to ANSI C. */

@@ -157,7 +157,7 @@ int st_aiffseek(ft_t ft, st_size_t offset);
 int st_alstartread(ft_t ft);
 int st_alstartwrite(ft_t ft);
 
-#ifdef ALSA_PLAYER
+#ifdef HAVE_ALSA
 int st_alsastartread(ft_t ft);
 st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_alsastartwrite(ft_t ft);
@@ -246,7 +246,7 @@ int st_nulstartwrite(ft_t ft);
 st_ssize_t st_nulwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_nulstopwrite(ft_t ft);
 
-#ifdef OSS_PLAYER
+#ifdef HAVE_OSS
 int st_ossdspstartread(ft_t ft);
 int st_ossdspstartwrite(ft_t ft);
 #endif
@@ -295,7 +295,7 @@ int st_spherestartwrite(ft_t ft);
 st_ssize_t st_spherewrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_spherestopwrite(ft_t ft);
 
-#ifdef SUNAUDIO_PLAYER
+#ifdef HAVE_SUNAUDIO
 int st_sunstartread(ft_t ft);
 int st_sunstartwrite(ft_t ft);
 #endif
