@@ -630,6 +630,10 @@ extern int st_vol_start();
 extern int st_vol_flow();
 extern int st_vol_stop();
 
+extern int st_trim_getopts(); 
+extern int st_trim_start();
+extern int st_trim_flow();
+extern int st_trim_stop();
 
 /*
  * ST_EFF_CHAN means that the number of channels can change.
@@ -747,6 +751,11 @@ st_effect_t st_effects[] = {
 	{"vol", ST_EFF_MCHAN, 
 		st_vol_getopts, st_vol_start, st_vol_flow, 
 		st_null_drain, st_vol_stop},
+        {"trim", ST_EFF_MCHAN, 
+                st_trim_getopts, st_trim_start, st_trim_flow, 
+                st_null_drain, st_nothing},
+
 	{0, 0, 0, 0, 0, 0, 0}
 };
+
 

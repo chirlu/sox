@@ -79,6 +79,7 @@ sox-12.17
     256.
   o Matthias Nutt helped add support for specifying multiple effects
     to SoX on the command line.
+  o Curt Zirzow added a trim effect to trim off audio data.
 
 sox-12.16
 ---------

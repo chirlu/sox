@@ -112,6 +112,8 @@ sox \- Sound eXchange : universal sound sample translator
 .br
     \fBswap\fR [ \fI1 2\fR | \fI1 2 3 4\fR ]
 .br
+    \fBtrim\fR \fIstart\fR [ \fIlength\fR ]
+.br
     \fBvibro\fR \fIspeed\fR [ \fIdepth\fR ]
 .br
     \fBvol\fR \fIgain\fR [ \fItype\fR ]
@@ -1000,6 +1002,17 @@ feature is that you may duplicate a given channel by overwriting another.
 This is done by repeating an output channel on the command line.  For example,
 swap 2 2 will overwrite channel 1 with channel 2's data; creating a stereo
 file with both channels containing the same audio data.
+.TP 10
+trim \fIstart\fR [ \fIlength\fR ]
+Trim can trim off unwanted audio data from the beginning and end of the
+audio file.  Audio samples are not sent to the output stream until
+the \fIstart\fR location is reached.  \fIstart\fR is an integer number that
+tells the exact sample number to start at.
+.br
+The optional \fIlength\fR parameter tells the number of samples to output
+after the \fIstart\fR sample and is used to trim off the back side of the
+audio data.  Using a value of 0 for the \fIstart\fR parameter will allow
+trimming off the back side only.
 .TP 10
 vibro \fIspeed \fB [ \fIdepth\fB ]
 Add the world-famous Fender Vibro-Champ sound

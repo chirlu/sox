@@ -1,4 +1,4 @@
-/*
+/*)
  * Sox - The Swiss Army Knife of Audio Manipulation.
  *
  * This is the main function for the command line sox program.
@@ -11,12 +11,6 @@
  * the consequences of using this software.
  *
  * Change History:
- *
- * Nov. 1, 1999 - Stan Brooks (stabro@megsinet.com)
- *   Added -X input option, to extract range of samples.
- *   Moved volume and dovolume from static variables into ft->info...
- *   TODO: This should allow a way (kluge) of specifying multiple
- *   inputs to be mixed together.
  *
  * June 1, 1998 - Chris Bagwell (cbagwell@sprynet.com)
  *   Added patch to get volume working again.  Based on patch sent from
@@ -73,10 +67,11 @@ extern int optind;
  * Rewrite for multiple effects: Aug 24, 1994.
  */
 
+static int dovolume = 0;        /* User wants volume change */
+static double volume = 1.0;     /* Linear volume change */
 static int clipped = 0;		/* Volume change clipping errors */
-static int writing = 0;	/* are we writing to a file? */
+static int writing = 0;	        /* are we writing to a file? */
 static int soxpreview = 0;	/* preview mode */
-
 
 static LONG ibufl[BUFSIZ/2];	/* Left/right interleave buffers */
 static LONG ibufr[BUFSIZ/2];	
@@ -237,11 +232,11 @@ char **argv;
 	}
 
 	/* Check global arguments */
-	if (informat.info.dovol && informat.info.vol == 0.0)
+	if (dovolume && volume == 0.0)
 		st_fail("Volume must be non-zero");
 
 	/* negative volume is phase-reversal */
-	if (informat.info.vol < 0.0)
+	if (volume < 0.0)
 	    st_report("Volume adjustment is negative.  This will result in a phase change\n");
 
 	/* If file types have not been set with -t, set from file names. */
@@ -275,9 +270,9 @@ char **argv;
 }
 
 #ifdef HAVE_GETOPT_H
-static char *getoptstr = "+r:v:t:c:B:X:phsuUAaigbwlfdDxV";
+static char *getoptstr = "+r:v:t:c:phsuUAaigbwlfdDxV";
 #else
-static char *getoptstr = "r:v:t:c:B:X:phsuUAaigbwlfdDxV";
+static char *getoptstr = "r:v:t:c:phsuUAaigbwlfdDxV";
 #endif
 
 static void doopts(argc, argv)
@@ -304,15 +299,6 @@ char **argv;
 				ft->filetype++;
 			break;
 
-		case 'X':  /* extract a subinterval of samples as input */
-			if (! ft) usage("-X");
-			str = optarg;
-			/* FIXME: allow "A-B" "-B" "A-" "A,B" also maybe lists of ranges */
-			if ( 2 != sscanf(str, "%lu-%lu", &ft->info.x0, &ft->info.x1))
-				st_fail("eXtract range '%s' is not valid", optarg);
-			if (ft->info.x1==0) ft->info.x1 -= 1; /* MAXULONG */
-			break;
-
 		case 'r':
 			if (! ft) usage("-r");
 			str = optarg;
@@ -326,11 +312,12 @@ char **argv;
 				st_fail("-r must be given a positive integer");
 			break;
 		case 'v':
-			if (!ft || ft->info.dovol) usage("-v");
+			if (!ft || dovolume) usage("-v");
 			str = optarg;
-			if (! sscanf(str, "%lf", &ft->info.vol)) /* neg volume is ok */
-				st_fail("Volume value '%s' is not a number", optarg);
-			ft->info.dovol = 1;
+			if (! sscanf(str, "%lf", &volume))
+			    st_fail("Volume value '%s' is not a number", 
+				    optarg);
+			dovolume = 1;
 			break;
 
 		case 'c':
@@ -338,12 +325,6 @@ char **argv;
 			str = optarg;
 			if (! sscanf(str, "%d", &ft->info.channels))
 				st_fail("-c must be given a number");
-			break;
-		case 'B':
-			if (! ft) usage("-B");
-			str = optarg;
-			if (! sscanf(str, "%hu", &ft->info.bs) || ft->info.bs<=0) /* blocksize */
-				st_fail("-B must be given a positive number");
 			break;
 		case 'b':
 			if (! ft) usage("-b");
@@ -409,19 +390,6 @@ char **argv;
 			break;
 		}
 	}
-
-	/* SJB: fix the -X extract interval for # channels...
-	 * this is not perfect re cases where channels=-1,
-	 * and also indicates that info.x0, info.x1, info.x
-	 * SHOULD be (long long) instead of (ULONG), for large files
-	 */
-	if (ft->info.channels > 1) {
-		if (ft->info.x0 != 0)
-			ft->info.x0 *= ft->info.channels;
-		if (ft->info.x1 != MAXULONG && ft->info.x1 < MAXULONG/ft->info.channels)
-			ft->info.x1 *= ft->info.channels;
-	}
-
 }
 
 static void init(P0) {
@@ -431,12 +399,6 @@ static void init(P0) {
 	informat.info.size      = outformat.info.size  = -1;
 	informat.info.encoding  = outformat.info.encoding = -1;
 	informat.info.channels  = outformat.info.channels = -1;
-	informat.info.bs        = outformat.info.bs    = 0;
-	informat.info.dovol     = outformat.info.dovol = 0;
-	informat.info.vol       = outformat.info.vol   = 1.0;
-	informat.info.x         = outformat.info.x  = 0;
-	informat.info.x0        = outformat.info.x0 = 0;
-	informat.info.x1        = outformat.info.x1 = -1;
 	informat.comment   = outformat.comment = NULL;
 	informat.swap      = 0;
 	informat.filetype  = outformat.filetype  = (char *) 0;
@@ -465,10 +427,8 @@ static void process(P0) {
     }
     st_checkformat(&informat);
     
-    if (informat.info.dovol)
-	st_report("Volume factor: %f\n", informat.info.vol);
-    if (informat.info.x0 || informat.info.x1 != MAXULONG)
-	st_report("Extract samples %lu <= x < %lu\n", informat.info.x0, informat.info.x0);
+    if (dovolume)
+	st_report("Volume factor: %f\n", volume);
     
     st_report("Input file: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
 	   informat.info.rate, st_sizes_str[informat.info.size], 
@@ -560,27 +520,26 @@ static void process(P0) {
     }
 
 
-    /* Run input data through effects and get more until olen == 0 */
+    /* 
+     * Just like errno, we must set st_errno to known values before
+     * calling I/O operations.
+     */
     informat.st_errno = 0;
     outformat.st_errno = 0;
-    while (informat.info.x < informat.info.x1) {
-	ULONG ct, r;
 
-	/* Read (extracted) chunk of input data. */
-	ct = (informat.info.x < informat.info.x0)?
-	  (informat.info.x0 - informat.info.x) : (informat.info.x1 - informat.info.x);
-	if (ct > BUFSIZ) ct = BUFSIZ;
-	r = (*informat.h->read)(&informat, efftab[0].obuf, ct);
-	if (!r) break;
-	informat.info.x += r;
-	if (informat.info.x <= informat.info.x0) continue;
-	efftab[0].olen = r;
-	efftab[0].odone = 0;
+    /* Prime while() loop by reading initial chunk of input data. */
+    efftab[0].olen = (*informat.h->read)(&informat, 
+                                         efftab[0].obuf, (LONG) BUFSIZ);
+    efftab[0].odone = 0;
 
-	/* Change the volume of this initial input data if needed. */
-	if (informat.info.dovol)
-	    clipped += volumechange(efftab[0].obuf, efftab[0].olen, informat.info.vol);
+    /* Change the volume of this initial input data if needed. */
+    if (dovolume)
+	clipped += volumechange(efftab[0].obuf, efftab[0].olen,
+		                volume);
 
+    /* Run input data through effects and get more until olen == 0 */
+    while (efftab[0].olen > 0)
+    {
 	/* mark chain as empty */
 	for(e = 1; e < neffects; e++)
 	    efftab[e].odone = efftab[e].olen = 0;
@@ -595,8 +554,10 @@ static void process(P0) {
 		    break;
 
 	    /* If outputing and output data was generated then write it */
-	    if (writing&&(efftab[neffects-1].olen>efftab[neffects-1].odone)) {
-		w = (* outformat.h->write)(&outformat, efftab[neffects-1].obuf, 
+	    if (writing&&(efftab[neffects-1].olen>efftab[neffects-1].odone)) 
+	    {
+		w = (* outformat.h->write)(&outformat, 
+			                   efftab[neffects-1].obuf, 
 				           (LONG) efftab[neffects-1].olen);
 	        efftab[neffects-1].odone = efftab[neffects-1].olen;
 	    }
@@ -613,6 +574,15 @@ static void process(P0) {
 		}
 	} while (havedata);
 
+        /* Read another chunk of input data. */
+        efftab[0].olen = (*informat.h->read)(&informat, 
+                                             efftab[0].obuf, (LONG) BUFSIZ);
+        efftab[0].odone = 0;
+
+        /* Change volume of these samples if needed. */
+        if (dovolume)
+	    clipped += volumechange(efftab[0].obuf, efftab[0].olen,
+		                    volume);
     }
 
     if (informat.st_errno)
@@ -937,7 +907,7 @@ checkeffect()
 }
 
 static void statistics(P0) {
-	if (informat.info.dovol && clipped > 0)
+	if (dovolume && clipped > 0)
 		st_report("Volume change clipped %d samples", clipped);
 }
 

@@ -67,6 +67,7 @@ The sound effects include:
   o Convert from mono to stereo
   o Swap stereo channels
   o Display general stats on a sound sample
+  o Trim audio data from beginning and end of file.
   o Add the world-famous Fender Vibro-Champ effect
   o Adjust volume of samples
 

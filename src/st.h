@@ -92,12 +92,6 @@ struct  st_signalinfo {
 	int		size;		/* word length of data */
 	int		encoding;	/* format of sample numbers */
 	int		channels;	/* number of sound channels */
-	unsigned short	bs;		/* requested blocksize, eg for output .wav's */
-	unsigned char	dovol;		/* has volume factor */
-	double		vol;		/* volume factor */
-	ULONG		x;		/* current sample number */
-	ULONG		x0;		/* 1st sample (if source) */
-	ULONG		x1;		/* top sample (if source) */
 };
 
 /* Loop parameters */
