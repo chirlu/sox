@@ -14,11 +14,6 @@ echo .\sox monkey.voc %%opts%% %%tmp%%\monkey.%%format%% %%effect%% >>t.bat
 echo .\sox %%opts%% %%tmp%%\monkey.%%format%% %%tmp%%\monkey1.voc %%effect%% >>t.bat
 echo @echo off >>t.bat
 echo echo. >>t.bat
-echo xdir monkey.voc /c/b >>t.bat
-echo xdir %%tmp%%\monkey1.voc /c/b >>t.bat
-echo echo. >>t.bat
-echo echo The two lengths above should be the same, if the checksums differ >>t.bat
-echo echo investigate further skipping the internal checksum and rate bytes. >>t.bat
 echo set format=>>t.bat
 echo set opts=>>t.bat
 echo pause >>t.bat
