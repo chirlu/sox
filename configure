@@ -1429,16 +1429,16 @@ fi
 echo "$ac_t""$ac_cv_dev_sun_audio" 1>&6
 	if test "$ac_cv_dev_sun_audio" = yes
 	then
-		ac_safe=`echo "audioio.h" | sed 'y%./+-%__p_%'`
-echo $ac_n "checking for audioio.h""... $ac_c" 1>&6
-echo "configure:1435: checking for audioio.h" >&5
+		ac_safe=`echo "sys/audioio.h" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for sys/audioio.h""... $ac_c" 1>&6
+echo "configure:1435: checking for sys/audioio.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
 #line 1440 "configure"
 #include "confdefs.h"
-#include <audioio.h>
+#include <sys/audioio.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
 { (eval echo configure:1445: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
@@ -1460,9 +1460,45 @@ if eval "test \"`echo '$ac_cv_header_'$ac_safe`\" = yes"; then
   sun_audio=yes
 else
   echo "$ac_t""no" 1>&6
-echo "configure: warning: No audioio.h to compile with SUN /dev/audio" 1>&2
 fi
 
+		ac_safe=`echo "sun/audioio.h" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for sun/audioio.h""... $ac_c" 1>&6
+echo "configure:1468: checking for sun/audioio.h" >&5
+if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 1473 "configure"
+#include "confdefs.h"
+#include <sun/audioio.h>
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:1478: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=yes"
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=no"
+fi
+rm -f conftest*
+fi
+if eval "test \"`echo '$ac_cv_header_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  sun_audio=yes
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+		if test "$sun_audio" = auto
+		then
+			echo "configure: warning: No audioio.h to compile with SUN /dev/audio" 1>&2
+		fi
 	fi
 fi
 if test "$sun_audio" = yes
@@ -1486,6 +1522,8 @@ then
 fi
 
 LIBS="$LIBS -L. -lst -lm"
+
+
 
 
 
@@ -1768,6 +1806,10 @@ chmod +x $CONFIG_STATUS
 rm -fr confdefs* $ac_clean_files
 test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
+
+if test ! -f tests.sh; then cp ${srcdir}/tests.sh tests.sh; fi
+if test ! -f monkey.au; then cp ${srcdir}/monkey.au monkey.au; fi
+if test ! -f monkey.voc; then cp ${srcdir}/monkey.voc monkey.voc; fi
 
 touch .depend
 
