@@ -1,0 +1,82 @@
+#!/bin/sh
+#
+# soxeffect - When this script is ran using a different name then soxeffect
+# it will run sox using that name as the effect.  It uses stdin/stdout
+# to grab data and output data.
+#
+# TODO: It would be nice to specify different output parameters then
+# the input format.
+#
+
+# Some people prefer to rename sox to something like sox.bin, then use this
+# script to always run sox, using "ln -s soxeffect sox".
+
+SOX=/usr/local/bin/sox
+# SOX=/usr/local/bin/sox.bin
+
+help()
+{
+  echo "soxeffect v1.0 - effects front end to Sox"
+  echo ""
+  echo "Usage: [effectname] [ fopts ] [effectopts]"
+  echo
+  echo "When ran as the name of an effect that Sox supports, it will take"
+  echo "audio data from stdin, apply the effect, and write the output back"
+  echo "to stdout.  This means that [ fopts ] need to be given so that"
+  echo "sox will know what format the audio data is in."
+  echo
+  echo "effectname: avg/band/chorus/copy/cut/deemph/echo/echos/flanger/highp/lowp/map/mask/phaser/pick/polyphase/rate/resample/reverb/reverse/split/stat/vibro"
+  echo
+  echo "fopts: -c channels -h -r rate -t type -v volume -s/-u/-U/-A -b/-w/-l/-f/-d/-D -x"
+  echo ""
+  echo "See sox man page for more info on required effects options."
+}
+
+NAME=$0
+case $NAME in
+	*/*)
+		NAME=`echo $NAME | sed "s'^.*/''"`
+	;;
+esac
+
+while [ $# -ne 0 ] # loop over arguments
+do case $1 in
+   -c)
+     shift
+     fopts="$fopts -c $1"
+     ;;
+   -h)
+     help;
+     exit 1;
+     ;;
+   -r)
+     shift
+     fopts="$fopts -r $1"
+     ;;
+   -t)
+     shift
+     fopts="$fopts -t $1"
+     ;;
+   -v)
+     shift
+     volume="-v $1"
+     ;;
+   -*)
+     fopts="$fopts $1"
+     ;;
+   *)
+     effectopts="$@"
+     break;
+     ;;
+   esac
+   shift
+done
+
+case $NAME in
+	*sox)
+		exec $SOX $*
+	;;
+	*avg|*band|*chorus|*copy|*cut|*deemph|*echo|*echos|*flanger|*Highp|*lowp|*map|*mask|*Phaser|*pick|*polyphase|*rate|*resample|*reverb|*reverse|*split|*stat|*vibro)
+		$SOX $volume $fopts - $fopts - $NAME $effectopts
+	;;
+esac

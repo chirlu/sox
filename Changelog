@@ -1,0 +1,169 @@
+Change History
+--------------
+
+This file contains a list of all changes starting after the release of
+sox-11gamma.
+
+sox-12.16
+---------
+
+  o Fixed a bug in .au's handling of G.723.  It wasn't using the correct
+    number of bits.
+  o Quoted $filename in play/rec scripts so that files with spaces in
+    their names can be given.
+  o Old OS/2 support didn't work.  Replaced with known working EMX
+    GCC compatible code.
+  o ADPCM WAV files were defaulting to 8-bit outputs and thus losing
+    some persision.  Now defaults to 16-bit signed uncompressed data.
+  o Fixed a couple cross-platform compiler issues.
+  o Minor correction for -r example in manual page.
+  o Renamed sox.sh to soxeffect and rewrote.  Symbolic links can be made
+    from this file to the name of a sox effect.  It will then run that
+    effect on STDIN and output the results to STDOUT.
+  o Fixed up some makefiles and 16-bit support from patches sent by
+    Mark Morgan Lloyd (markMLl.in@telemetry.co.uk).  Also added some
+    nice DOS test bat files from him as well.
+  o Cleaned up some more cross-platform compile problems.  In the process
+    got it working with Turbo C again, kinda.  It still locks DOS up at times.
+
+
+sox-12.15
+---------
+
+  o Juergen Mueller moved Sox forward quite a bit by adding all the
+    most commonly known "Guitar Effects".  He enhanced echo support,
+    added chorus, flanger, and reverb effects.  He also wrote a very
+    handy CHEAT.eft file for using various effects.
+  o Incorporated Yamaha TX-16W sampler file support provided by
+    Rob Talley (rob@aii.com) and Mark Lakata (lakata@physics.berkeley.edu).
+  o Fixed a small bug in hcom compression, dependent on sign 
+    extension.  Leigh Smith (leigh@psychokiller.dialix.oz.au).
+  o sox -h now prints out the file formats and effects supported.
+    Leigh Smith and Chris Bagwell.
+  o smp transfers comments more completely.  Leigh Smith.
+  o aiff manages markers and loops correctly and produces more 
+    verbose output.  Leigh Smith.
+  o Added polyphase resampler (kb@ece.cmu.edu).  This adds a slightly
+    different resampling algorithm to the mix.
+  o Michael Brown (mjb@pootle.demon.co.uk) sent a patch to stop crashes 
+    from happening when reading mono MS ADPCM files.
+  o Fabrice Bellard has added a less buggy 'rate' conversion.  I've left
+    the old rate code included but if all goes well this will become
+    the new 'rate'.  Please test and let me know how it works.  Resample
+    effect needs to be reworked now.
+  o Heiko Eissfeldt: Implemented a simple deemphasis effect for
+    certain audio cd samples.
+  o Matija Nalis (mnalis@public.srce.hr) sent a patch to fix volume adjustment
+    (-v) option of sox.
+  o Fixed typo in optimazation flag in unix makefile, as pointed out by
+    Manoj Kasichainula (manojk@io.com).
+  o Fixed missing ';;' in play script. cbagwell
+  o Fixed bug in determining length of IMA and MS ADPCM WAVE files. cbagwell
+  o Fixed bug in how stereo effects were drained which fixed the
+    "reverse" effect from only saving half of stereo files. cbagwell
+  o Can use "-e" without an effect again.
+  o Added -g and -a options for new style support of GSM and ADPCM.  Added
+    error checking to various formats to avoid allowing these types.
+
+sox-12.14
+---------
+
+  o Bumped major version number up and shortened name.  The shorter name
+    should help the various distributions using this package.
+  o Added support for MS ADPCM and IMA (or DVI) ADPCM for .wav files.
+    Thanks to Mark Podlipec's xanim for this code (podlipec@ici.net).
+  o Change Lance Norskog's email address to thinman@meer.net.  The old
+    one was bouncing.
+  o Added path string to play and rec strings so that it could be run by
+    users without complete paths setup (i.e. Ran by "rc" files during bootup
+    or shutdown)
+  o Fixed -e option from Richard Guenther 
+      (richard.guenther@student.uni-tuebingen.de) and fixed a small bug
+    in stat.
+  o Fixed a bug in the mask effect for ULAW/ALAW files.
+  o Fixed a bug in cdr output files that appended trash to end of file.
+  o Guenter Geiger (geiger@iem.mhsg.ac.at) made a rather large patch to
+    allow sox to work on 64-bit alphas.  It was done the easiest meathod
+    by changing all long declarations to use a macro that knows to
+    make it 32-bits.  Want to port to another 64-bit-but-not-alpha
+    machine?  Grep for "alpha" to see changes.  There are most likely
+    several bugs left for alphas.  Guenter is also supporting this
+    package for the Debian distribution.
+  o Did some major code cleanups to clear out some warning messages
+    during compile.  This is to clear up problems I'm finding under
+    both alpha and dos.  Some warning messages are actually useful
+    now (pointing out possible data loss).  Hopefully, I didn't
+    break anything.
+  o Code clean up allows me to finally compile code under Turbo C
+    again.  Too bad the EXE gets a currupted stack somewhere and locks
+    up the system.  Anyone want to try it with Borland C for me?
+    If you get a working EXE I would like to start distributing a DOS
+    package like there used to be.
+  o Speaking of cleanups, anyone want to help cleanup the makefiles for
+    various platforms?  They are quite outdated right now and it is
+    very obvious that Sox hasn't been able to compile under all the
+    platforms it once did for several releases.  Please send in 
+    the cleaned-up makefile versions along with what programs you
+    used to compile it with.
+  o There is a known bug in hcom's compress() function.  It is allocating
+    memory that can't be free'd under some OS's.  It causes a core dump.
+
+sox-11gamma-cb3
+---------------
+
+This release of sox is mainly a bugfix release.  The following things
+have changed:
+
+  o  Documentation has been updated when it was obviously wrong.
+     Much more work could be done.  Man pages were updated to
+     work correctly on Solaris and add some missing info.
+  o  Several people sent me patches to fix compiling on Solaris
+     as well as fix a few bugs.
+  o  Change USS driver's name to OSS.  Man, does that driver
+     like to change names!  This could cause problems if you
+     have made your own custom play and rec scripts.
+  o  Updated my email address.  Sorry if I haven't responded to
+     any emails as I no longer have access to my old address.
+     Please use cbagwell@sprynet.com.
+  o  Fixed unix test scripts so that they worked again.
+  o  Fixed endian bug in psion .wve code.
+  o  Replaced outdated voc info file with detailed format info
+     inside voc code.
+  o  Added new sound format, cvsd (Continuously Variable Slope Delta)
+     from Thomas Sailer (sailer@ife.ee.ethz.ch).
+
+sox-11gamma-cb2
+---------------
+
+This release of sox is based on the latest gamma version released
+plus some patches I've made to support the following new features:
+
+I would like to thank everyone that wrote me about the long
+standing bug in Sox that could DELETE your /dev/* file if the
+program was aborted for reason such as invalid audio file.  Special
+thanks for Bryan Franklin for sending in a patch when I was
+to busy to even look for it.
+
+
+  o  Better play support for 8-bit stereo voc files.  New support
+     for outputing both 8-bit and 16-bit stereo voc files.
+  o  Built-in support for playing and recording from Linux /dev/dsp.
+     This is a re-write and seperate module from the previous
+     support included inside the sbdsp module.  Also fixes a buffer
+     size bug that showed up when using newer versions of OSS.
+     This driver will work with OSS (and older versions called USS, TASD
+     and Voxware).
+  o  Support for audio playing and recording with SunOS /dev/audio.
+  o  Fixes a bug were /dev/audio or /dev/dsp could be deleted
+     when playing an invalid format audio file.
+  o  Expanded options for play and rec scripts.  You can now specify
+     sox effects after the filename and hear them in real time.
+     Please be sure that an older version of sox is not in your path
+     because these script will possibly find it first and
+     incorrectly use it.  
+  o  Setting play/record volume still requires an external program.
+     If you have one a command line program to do this (such as
+     "mixer" for Linux) then you will want to edit the play and rec
+     to use this.  The current support for it is only in example
+     form of how it can be done.
+

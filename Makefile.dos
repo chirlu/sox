@@ -1,0 +1,79 @@
+# Sound Tools Makefile - builds libst.lib and sox.exe
+#
+#   Short and Sweat makefile - cbagwell@sprynet.com 9/28/98
+#   With a little editing this makefile should compile under both
+#   pre and post Borland 3.0.
+#
+#   Also some support for MS VC based on info from Mark Morgan Lloyd
+#   <markMLl.in@telemetry.co.uk> 1/24/99
+
+# Need object files to know what libst.lib depends on.  All .c files
+# are compiled from default rules of make.
+
+FOBJ	= 8svx.obj aiff.obj au.obj auto.obj cdr.obj cvsd.obj dat.obj \
+	  g711.obj g721.obj g723_24.obj g723_40.obj g72x.obj gsm.obj \
+	  hcom.obj maud.obj oss.obj raw.obj sbdsp.obj sf.obj smp.obj \
+	  sndrtool.obj sunaudio.obj tx16w.obj voc.obj wav.obj wve.obj
+
+EOBJ	= avg.obj band.obj chorus.obj copy.obj cut.obj deemphas.obj \
+	  dyn.obj echo.obj echos.obj flanger.obj highp.obj lowp.obj \
+          map.obj mask.obj phaser.obj pick.obj polyphas.obj \
+	  rate.obj resample.obj reverb.obj reverse.obj split.obj \
+	  stat.obj vibro.obj
+
+LIBOBJS   = $(FOBJ) $(EOBJ) handlers.obj libst.obj misc.obj getopt.obj util.obj
+
+
+# The following defines tell where compiler files are kept, not where
+# things should be installed like Unix usually specifies.
+BINDIR  = d:\tc\bin
+LIBDIR  = d:\tc\lib
+INCDIR  = d:\tc\include
+
+#BINDIR	= d:\bc\bin
+#LIBDIR	= d:\bc\lib
+#INCDIR	= d:\bc\include
+
+# Use the following if you don't really need to define paths.
+#BINDIR = .
+#LIBDIR = .
+#INCDIR = .
+
+
+# Standard Borland options for Huge Memory Mode (more than 64k for both
+# code and data), Word aligned, compile to Objects only, Speed and Jump
+# optimized.
+# -v is for debuging and -N is to add stack corruption detection code.
+# both add unneeded size to code.
+#
+# Pick one of the next two defines for pre/post Borland C 3.0
+CC      = $(BINDIR)\tcc
+#CC      = $(BINDIR)\bcc
+LDD	= $(BINDIR)\tlib
+CFLAGS  = -DDOS -DNEED_GETOPT -D__STDC__=1 -a -c -mh -G -O -v -N
+LFLAGS  = -v -mh
+
+# MS VC needs the following. /AL uses large memory model.
+#CC	= cl
+#LDD	= lib
+#CFLAGS	= -DDOS -D__STDC__=1 -DNEED_GETOPT -c -O /AL /Gt8192
+#LFLAGS	= /AL /Gt8192
+
+.c.obj:
+       $(CC) $(CFLAGS) -I$(INCDIR) -L$(LIBDIR) $*.c
+       $(LDD) libst -$* +$*
+
+all: sox.exe
+
+sox.exe: sox.obj libst.lib
+        $(CC) $(LFLAGS) -L$(LIBDIR) sox.obj libst.lib
+
+libst.lib: $(LIBOBJS)
+
+sox.obj: sox.c st.h
+        $(CC) $(CFLAGS) -I$(INCDIR) -L$(LIBDIR) $*.c
+
+clean:
+        del *.obj
+        del sox.exe
+        del libst.lib

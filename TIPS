@@ -1,0 +1,145 @@
+
+SOX usage:
+	sox [options] from-file-args to-file-args [ effect [effect-args]]
+
+First off: the -V option makes SOX print out its idea of
+what it is doing.  -V is your friend.
+	
+	sox -V from-file-args to-file-args
+
+From-file-args and to-file-args are the same. 
+They are a series of options followed by a file name.
+The suffix on the file name usually is the file format type.
+The '-t xx' option overrides this and tells sox 
+the the file format is 'xx'.  The '-u/-s/-U' arguments
+say that the file is in unsigned, signed, or u-law format.
+The '-b/-w' arguments say that the file is in byte- or
+word-size (2 byte) samples.  The '-r number' argument
+says that the sample rate of the file is 'number'.
+
+The extensions ub, uw, sb, sw, and ul correspond
+to raw data files of formats unsigned byte, unsigned 
+word, signed byte, signed word, and u-law byte.
+Thus, '-t ul' is shorthand for '-t raw -U -b'.
+
+These conversions clip data and thus reduce sound quality, 
+so be careful:
+
+	Word to u-law.
+	Word to byte.
+	U-law to byte.
+	Reduction in sample rate.
+
+Any reduction in the sample data rate loses information
+and adds noise.  An increase in the data rate doesn't
+lose much information, but does add noise.  See the
+note below on low-pass filtering.
+
+To convert U-law to something else without clipping,
+you'll have to convert it to (signed or unsigned) words,
+which will double the size of the file.
+
+AUTO files:
+The 'AUTO' file type reads an unknown file and
+attempts to discern its binary format.
+
+AIFF files:
+AIFF files come with complete headers and other
+info.  They can in fact have multiple sound
+chunks and picture chunks.  SOX only reads
+the first sound chunk. 
+
+WAV files:
+WAVs use the RIFF format, which is Microsoft's
+needless imitation of AIFF.  See above comments.
+
+AIFF and RIFF files need their own librarian
+programs; SOX can only do a small fraction of
+what they need.
+
+It's best if you can copy or store files in
+AIFF or WAV format.  The sample rate and 
+binary format are marked; also comments may 
+be added to the file.
+
+SUN AU files:
+Most AU files you find are in 8khz 8-bit u-law format.
+This format was the first sound hardware SUN made available.
+Some of the files have correct headers; some do not.
+If the file has the header, this should convert it to
+another format:
+
+	sox file.au to-file-args
+
+If not, this reads a raw u-law 8khz file:
+	
+	sox -t ul -r 8000 file.au to-file-args
+
+To convert a file to an old-style SUN .au file:
+
+	sox from-file-args -r 8000 -U -b file.au
+
+AU format can have any speed and several data sizes;
+you need to specify '-r 8000 -U -b' to force SOX to
+use the old SUN format.
+
+Mac files:
+Mac files come in .snd, .aiff, and .hcom formats,
+among others; these are the most common.
+
+SND files are in unsigned byte format with no
+header.  They are either 11025, 22050, or 44100 hz.
+The speed seems to be a "resource" and doesn't
+get transported to Unix when the files are.
+Thus, you just have to know.
+
+	sox -r 11025 -t ub file.snd to-file-args
+	sox from-file-args -r 11025 -t ub file.snd
+
+PC files:
+There are several PC sound file formats. VOC is
+common; it has headers.  SND and SNDR are for
+some DOS sound package; I don't know much about them.
+WAV is the official Microsoft Windows format.
+WAV has format options for compressed sound;
+SOX doesn't implement this yet.  
+
+
+Effects:
+A sound effect may be applied to the sound sample
+while it is being copied from one file to another.
+Copy is the default effect; i.e. do nothing.
+Changing the sample rate requires the 'rate'
+effect.  This applies a simple linear interpolation
+to the sample.  This is a poor-quality sample
+changer.  After doing a rate conversion,
+you should try doing a low-pass filter to throw
+away some of the induced noise.  Pick a 'center'
+frequency about 85% of the lower of the two
+frequencies, or 42.5% of the lower of the
+two sample rates.  (The maximum frequency
+in a sample is 1/2 of the sample rate).
+
+	sox -r 8000 file.xx -r 22050 tmp.yy
+	sox tmp.yy file.yy lowp 3400
+or:
+	sox -r 44100 file.xx -r 22050 tmp.yy
+	sox tmp.yy file.yy lowp 9592
+
+Listen to both tmp.yy and file.yy and see if 
+the low-pass filter helps.  Be sure to do the
+low-pass filter before clipping the data to
+a smaller binary word size.  Say you have a 16-bit
+CD-quality (44100 hz) AIFF file that you want 
+to convert to a Mac sound resource:
+
+	sox -r 44100 file.aiff -r 11025 tmp.sw
+	sox tmp.sw -t ub file.mac lowp 9371
+
+not:
+
+	sox -r 44100 file.aiff -r 11025 tmp.ub
+	sox tmp.ub -t ub file.mac lowp 9371
+
+because you want to do the low-pass filter while 
+you still have sixteen-bit data.

@@ -1,0 +1,143 @@
+##
+## Sound Tools Makefile for AMIGA with SAS/C 6.1
+## 	builds libst.lib and sox
+##
+## This must be redone to compile with DICE, GCC, etc.
+##
+## Choose the version you wish to compile with:
+## <make-tool> -f Makefile.ami			(for basic version)
+## <make-tool> -f Makefile.ami CPU=030		(for 68030 version)
+## <make-tool> -f Makefile.ami FPU=881		(for 68881 FPU version)
+## <make-tool> -f Makefile.ami CPU=030 FPU=881	(for 030/881 version)
+##
+## Note: This makefile does not work with SAS's 'smake' utility, because
+## 'smake' is weak.  Get yourself a real 'make' tool, such as the port of
+## 'dmake'.  If you can't find one, use the commented-out section below to
+## rewrite this makefile for 'smake'.
+##
+
+FSRC	= 8svx.c aiff.c au.c auto.c cdr.c cvsd.c dat.c g711.c g721.c \
+	  g723_24.c g723_40.c g72x.c gsm.c hcom.c maud.c oss.c raw.c \
+	  sbdsp.c sf.c smp.c sndrtool.c sunaudio.c tx16w.c voc.c wav.c wve.c
+
+ESRC	= avg.c band.c chorus.c copy.c cut.c deemphas.c dyn.c echo.c echos.c \
+	  flanger.c highp.c lowp.c map.c mask.c phaser.c pick.c \
+	  polyphas.c rate.c resample.c reverb.c reverse.c split.c \
+	  stat.c vibro.c 
+
+PSRC= sox.c
+
+SOURCES   = $(PSRC) $(FSRC) $(ESRC) handlers.c libst.c misc.c getopt.c util.c
+
+HEADERS   = st.h libst.h sfheader.h version.h patchlvl.h 
+
+TESTS     = tests.sh testall.sh monkey.au monkey.voc
+
+MISC    = README INSTALL TODO TIPS CHEAT CHEAT.eft Changelog sox.1 sox.txt \
+	  libst.3 libst.txt play.1 Makefile.unx Makefile.dos Makefile.b30 \
+	  Makefile.c70 soxeffect play rec
+
+SKEL	  = skel.c skeleff.c
+
+AMIGA	  = Makefile.ami amiga.h
+
+DOS	  = tests.bat testall.bat
+
+VMS       = descrip.mms sound2au.com sound2sun.c sound2sun.opt \
+	    sox.opt tests.com vms.lis
+
+FILES     = $(MISC) $(HEADERS) $(SOURCES) $(AMIGA) $(DOS) $(VMS) \
+	    $(SKEL) $(TESTS)
+
+FOBJ	= 8svx.o aiff.o au.o auto.o cdr.o cvsd.o dat.o g711.o g721.o \
+	  g723_24.o g723_40.o g72x.o gsm.o hcom.o maud.o oss.o raw.o \
+	  sbdsp.o sf.o smp.o sndrtool.o sunaudio.o tx16w.o voc.o wav.o wve.o
+
+EOBJ	= avg.o band.o chorus.o copy.o cut.o deemphas.o dyn.o echo.o echos.o \
+	  flanger.o highp.o lowp.o map.o mask.o phaser.o pick.o \
+	  polyphas.o rate.o resample.o reverb.o reverse.o split.o \
+	  stat.o vibro.o
+
+##SOUNDLIB is defined below
+LIBOBJS   = $(FOBJ) $(EOBJ) handlers.o libst.o misc.o getopt.o util.o
+
+##
+## System dependency parameters
+##
+##
+## Amiga vars for SAS 6.1.
+## Lots of funky stuff here.  Unnecessary, but keeps it neat.
+## Also matches unix makefile more closely.
+##
+CC	= sc DEF=__STDC__ DEF=AMIGA
+##IGNore some warnings due to lack of prototyping in SOX code
+O	= IGN=85 IGN=93 IGN=100 IGN=154 IGN=161 OPTIMIZE OPTIMIZERINLINELOCAL OPTIMIZERTIME OPTIMIZERALIAS
+AR	= oml
+AR_ARGS	= a
+RM	= delete
+MATH	= 
+MATH881	= MATH=68881
+CPUF	= 
+CPUF030	= CPU=68030
+MATHLIB	= lib:scm.lib
+MATHLIB881	= lib:scm881.lib
+DEFS	= 
+DEFS881	= DEF=AMIGA_MC68881
+DEFS030	= DEF=AMIGA_MC68030
+##
+SOX	= sox$(CPU)$(FPU)
+SOUNDLIB= libst$(CPU)$(FPU).lib
+CFLAGS	+= $(O) DEF=AMIGA $(DEFS$(FPU)) $(DEFS$(CPU)) $(MATH$(FPU)) $(CPUF$(CPU))
+LIBS	= $(MATHLIB$(FPU)) lib:sc.lib lib:amiga.lib
+##
+
+###################################################
+##This is unnecessary if you have a serious 'make'.
+##If you don't, use it as a guide to building your
+##own makefile.
+###################################################
+##
+## 68000, no FPU
+#SOX	= sox
+#SOUNDLIB= libst.lib
+#MATHLIB	= lib:scm.lib
+#CFLAGS	+= $(O) DEF=AMIGA
+##
+## 68000, 68881 FPU
+#SOX	= sox881
+#SOUNDLIB= libst881.lib
+#MATHLIB	= lib:scm881.lib lib:scm.lib
+#CFLAGS	+= $(O) MATH=68881 DEF=AMIGA DEF=AMIGA_MC68881
+##
+## 68030, no FPU
+#SOX	= sox030
+#SOUNDLIB= libst030.lib
+#MATHLIB	= lib:scm.lib
+#CFLAGS	+= $(O) CPU=68030 DEF=AMIGA
+##
+## 68030, 68881 FPU
+#SOX	= sox030881
+#SOUNDLIB= libst030881.lib
+#MATHLIB	= lib:scm881.lib lib:scm.lib
+#CFLAGS	+= $(O) MATH=68881 CPU=68030 DEF=AMIGA DEF=AMIGA_MC68881
+
+##
+## start your engines
+##
+all: $(SOX)
+
+$(SOX): sox.o $(SOUNDLIB)
+	slink lib:c.o sox.o to $(SOX) lib $(SOUNDLIB) $(LIBS) SMALLCODE SMALLDATA STRIPDEBUG NOICONS
+
+$(SOUNDLIB): $(LIBOBJS)
+	$(AR) $(SOUNDLIB) $(AR_ARGS) $(LIBOBJS)
+
+sox.o:		sox.c st.h
+
+sox.txt: sox.man
+	$(RM) sox.txt
+	nroff -man sox.man > sox.txt
+	nroff -man st.man > st.txt
+
+clean:
+	$(RM) #?.o

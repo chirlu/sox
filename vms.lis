@@ -1,0 +1,65 @@
+VAX/VMS port of SOX, release 5, patchlevel 7
+
+As an important side note, the DECsound tool only recognizes DDIF and Sun .au
+format sounds (Sun .au sounds *must* be uLaw, 8000Hz sampling rate to be
+readable).
+
+The portmeister makes no representations about the suitability of this
+software for any purpose.  This software is provided "as is" without
+warranties expressed or implied.
+
+New files:
+
+	sox.opt	- linker options file
+	descrip.mms - MMS description file
+	sound2au.com - VMS DCL command file to translate a sound to a Sun .au
+	    by way of sound2sun
+	sound2sun.c - program to convert sampled audio files to uLAW format
+	    (by Rich Gopstein and Harris Corporation)
+	sound2sun.opt - options file for sound2sun
+	tests.com - VMS DCL command file equivalent of tests.sh
+
+Modified files:
+
+	st.h -
+		added VMS definitions for READBINARY and WRITEBINARY
+		changed "#ifdef SYSV" to "#if defined(SYSV) || defined(VMS)"
+		    to pick up definitions of index, rindex, and bcopy
+		added definitions of macros IMPORT and EXPORT (used on VMS
+		    for variable scope) -- collateral damage affects variables
+		    formats, informat, outformat, sizes, styles, effects
+	wav.c -
+		changed extern to IMPORT for volume, amplitude, summary, and 
+		    verbose
+	voc.c -
+		changed extern to IMPORT for summary and verbose
+	sox.c -
+		replaced "extern errno" with "#include <errno.h>"
+		replaced "extern sys_errlist[]| with "#include <perror.h>"
+		added EXPORT to verbose, summary, volume, amplitdue, 
+		    informat, outformat, and writing
+		removed unneeded extern declaration of formats[] (already
+		    defined in st.h)
+	sndrtool.c -
+		replaced "extern errno" with "#include <errno.h>"
+		replaced "extern sys_errlist[]| with "#include <perror.h>"
+	skel.c -
+		changed extern to IMPORT for volume, amplitude, summary, and 
+		    verbose
+	sf.c -
+		changed extern to IMPORT for summary and verbose
+	sbdsp.c -
+		changed extern to IMPORT for volume, amplitude, summary, and 
+		    verbose
+	raw.c -
+		changed extern to IMPORT for summary and verbose
+	misc.c -
+		moved "#include st.h" to top of file
+		added EXPORT to sizes[] and styles[]
+	handlers.c -
+		added EXPORT to effects[] and formats[]
+	echo.c -
+		changed extern to IMPORT for writing
+	8svx.c -
+		replaced "extern errno" with "#include <errno.h>"
+		replaced "extern sys_errlist[]| with "#include <perror.h>"

@@ -1,0 +1,49 @@
+.TH NAME SECTION 
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+play \- play any sound file 
+.SH SYNOPSIS
+.B play
+.I "[fopts] infile [effect]"
+.SH "DESCRIPTION"
+This manual page documents briefly the
+.BR play 
+command.
+.PP
+.B play
+is a program that allows you to play different types of sound files. It is 
+a frontend to the more general sox package. Normally the play command 
+will detect the type and other parameters of the soundfile. If it can't do 
+so, the parametes can be changed through options.
+.SH OPTIONS
+A summary of common options are included below.
+For a complete description for options and supported formats, see 
+the 
+.B sox(1) 
+man page.
+.TP
+.B \-h 
+Show summary of options.
+.TP
+.B \-r rate
+Define the samplerate of the playback.
+.TP
+.B \-v volume
+Change the playback Volume.
+.TP
+.B \-c channels
+Define the number of channels of the file.
+.TP
+.B \-d device
+Specify a different device to play the sound file to.
+.TP
+Other options and a description of effects are described in the sox man page.
+
+.SH "SEE ALSO"
+
+ sox(1)
+
+.SH AUTHOR
+This manual page was written by Guenter Geiger <geiger@iem.mhsg.ac.at>,
+for the Debian GNU/Linux system.

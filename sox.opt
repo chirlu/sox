@@ -1,0 +1,9 @@
+identification="V5.7"
+!
+! SoundTools library
+!
+soundtools.olb/library
+!
+! Basic C library stuff
+!
+sys$share:vaxcrtl/shareable

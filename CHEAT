@@ -1,0 +1,105 @@
+CHEAT SHEET
+-----------
+
+This is a cheat sheet of examples using SOX to do various common 
+sound file conversions.  The file format examples are starting
+to become dated.  Any offers to update this document to explain 
+the ends and outs of each format would be appreciated.
+
+In general, sox will attempt to take an input sound file format and
+convert it to a new file format using a similar data types and sample
+rates.  For instance "sox monkey.au monkey.wav" would try and convert
+the mono 8000Hz u-law .au file to a 8000Hz u-law .wav file.
+
+If an output format doesn't support the same data types as the input
+file then Sox will generally select a default format to save it in.
+You can select a data type of your choice using command line options.
+You can also override data type values to have a output file of
+higher or lower percision data (and thus higher or lower file size).
+
+Most file formats that contain complete headers will automatically
+convert to a similar format.  This means .wav, .aiff, and .voc files
+will readily convert to each other without the need of complex
+command lines.
+
+If you create a sound file and you can not play it, check to make
+sure your sound card to play a file using this data type.
+
+SOX is great to use along with other command line programs.  The
+currently most used example is to use mpg123 to convert mp3 files
+in to wav files.  The following command line will do this:
+
+mpg123 -b 10000 -s filename.mp3 | sox -t raw -r 44100 -s -w -c 2 - filename.wav
+
+The SUN examples below all assume you have the old SUN voice-quality 8khz 
+u-law hardware.  If you do then you will want to have all your .au
+files in this format so that you cat do thinks like
+"cat soundfile.au > /dev/audio" and you will hear a good file.
+If the .AU file doesn't have a proper header, then you'll need the second 
+command line to let sox know the values.  If the .AU has a proper
+header then you can remove the "-r 8000 -U -b" in front of 
+"file.au".
+
+SUN .au to Mac .snd:
+
+	sox file.au -r 11025 -t ub file.snd
+or:
+	sox -t ul -r 8000 file.au -r 11025 -t ub file.snd
+
+When you copy the file to the Mac, you'll have to set
+the sample rate by hand.
+
+Mac .snd to SUN .au
+
+	sox -r 11025 -t ub file.snd -r 8000 -U -b file.au
+
+The Mac file might also be at sample rates 5012, 22050, or 44100.
+
+PC .voc to SUN .au
+
+	sox file.voc -r 8000 -U -b file.au
+
+SUN .au to PC .voc 
+
+	sox file.au file.voc 
+or:
+	sox -r 8000 -t ul file.au file.voc 
+
+SUN .au to WAV - without clipping
+	
+	sox file.au -s -w file.wav
+or:
+	sox -t ul -r 8000 file.au -s -w file.wav
+
+WAV to SUN .au
+	
+	sox file.wav -r 8000 -U -b file.au
+
+WAV to VOC
+	sox file.wav -u -b file.voc
+
+VOC to WAV
+	sox file.voc file.wav
+
+Any file to SUN .au
+
+sox -t auto file.X -c 1 -t aiff - |  sox -t aiff - -r 8000 -U -b -t au file.au
+
+Just convert file format without making a disk file.
+Example: convert input stream in AIFF format to output stream in WAV format:
+
+sox -t aiff - -t wav -
+
+Some people try to put this kind of command in scripts.
+
+It is important to understand how the internals of Sox work when
+working with compressed audio, including u-law, a-law, ADPCM, or GSM.
+Sox takes ALL input data types and converts them to uncompressed
+32-bit signed data.  It will then convert this internal version into
+the requested output format.  This means unneeded noise can be introduced
+from decompressing data and then recompressing, such as would happen
+when reading u-law data and writing back out u-law data.  If possible,
+specify the output data to be uncompressed PCM.
+
+Good luck!
+

@@ -1,0 +1,5 @@
+identification="V1.0"
+!
+! Basic C library stuff
+!
+sys$share:vaxcrtl/shareable

@@ -1,0 +1,87 @@
+People are encouraged to pick some of these and implement it.  Send
+all patches to cbagwell@sprynet.com.
+
+  o Add support for writing ADPCM output in .wav files.  It really only
+    feasible to add one version of ADPCM to output.  I'm leaning towards
+    IMA since it could support streaming and be used in other formats.
+    But of course, MS is pushing very hard to make their version the
+    standard, weither inferer or not.
+
+  o Add GSM support to WAV format.
+
+  o highpass and lowpass filters don't let you specify the cut
+    of freq.  Need some improvements to these filters.
+
+  o Grab latest stand alone version of resample and replace Sox's
+    outdated version.
+
+  o Find a mantainer for each supported platform.  Try hard to shrink
+    the number of makefiles by having all systems compile using one
+    makefile.
+
+  o Change all code that sets up auto-swapping of bytes (-x option) to match
+    that of cdr.c driver.  Current method fails on certain endian machines.
+
+  o Fix for how include files are found when fseek() is used.  In most
+    configs it has to hardcode the values for things like SEEK_SET. *BAD*
+    Include files are a mess, i.e. fseek problem.  Need to resort to
+    something like autoconf to really support all these platforms.
+
+  o Create a version of OSS and Sun driver that can play and record from the
+    same device in duplex.
+
+  o Internally sox can handle multiple effects on a given sound file.
+    Add support for this from the command line.  Will probably need to
+    break out the MCHAN to MCHAN and VCHAN to distingish effects that
+    can handle Multiple channels and effects that can change the number
+    of resulting channels to Various values.
+
+  o Enhance sox for better interactive support.  This includes updating
+    effect parameters in real time and ablity to start/stop/scan
+    file handlers in real time.
+
+  o More handlers!  Everyone who adds sound hardware to a computer has 
+    the urge to come up with their own file format.
+
+  o More effects!  I don't know DSP at all.  A Pitch Shifter is high
+    on the list.
+
+  o Loop support for all formats that know about it.  WAV has
+    some support for loops ("cue-points") but no support for
+    MIDI note numbers.  Someone needs to add this in.
+
+  o Comment strings.  Some file formats have space for embedded comments.
+    These are currently thrown away.  Printing them out, carrying them
+    forward, and an to add new ones would be handy.
+
+  o Update auto file type to include detection of .wve and .smp files.
+
+  o An effect loop for mixing mono -> stereo -> quad with sound
+    placement features: differential volume, phasing, and Doppler
+    shifting when the sound moves.  Static placement would work as
+    a SOX effect loop, but dynamic placement involves some scripting
+    feature, or joystick input etc.
+
+  o This software wants to be a dataflow system with signal
+    sources, sinks, and processors.  It wants to be class-based.
+    It wants to have a scripting control language.
+    It's really a shame I hate C++.
+
+  o Keep sox from using "fail" on errors.  Sox was supposed to be
+    a sound library called "ST" but libraries shouldn't exit a program,
+    they should return error codes for users to handle.
+
+  o Enhance general robustness... For instance, malloc is called in
+    lots of places without checking its return value.
+
+SOX includes skeleton format files to assist you in supporting new 
+formats, sound effect loops, and special-purpose programs.
+The full skeleton format, skel.c, helps you write a driver 
+for a new format which has data structures.  Skeleff.c is
+a starting point for writing a sound effect loop.  Sox.c is
+a good starting point for new programs.  (Someone finally
+did this and told me what was wrong...)
+
+In handlers.c, note that many formats set up the header and then
+use the raw driver for reading and writing.  
+

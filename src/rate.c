@@ -1,0 +1,319 @@
+#ifndef USE_OLD_RATE
+/*
+ * August 21, 1998
+ * Copyright 1998 Fabrice Bellard.
+ *
+ * [Rewrote completly the code of Lance Norskog And Sundry
+ * Contributors with a more efficient algorithm.]
+ *
+ * This source code is freely redistributable and may be used for
+ * any purpose.  This copyright notice must be maintained. 
+ * Lance Norskog And Sundry Contributors are not responsible for 
+ * the consequences of using this software.  
+ */
+
+/*
+ * Sound Tools rate change effect file.
+ */
+
+#include <math.h>
+#include "st.h"
+
+/*
+ * Linear Interpolation.
+ *
+ * The use of fractional increment allows us to use no buffer. It
+ * avoid the problems at the end of the buffer we had with the old
+ * method which stored a possibly big buffer of size
+ * lcm(in_rate,out_rate).
+ *
+ * Limited to 16 bit samples and sampling frequency <= 65535 Hz. If
+ * the input & output frequencies are equal, a delay of one sample is
+ * introduced 
+ *
+ * 1 << FRAC_BITS evaluating to zero in several places.  Changed with
+ * an (unsigned long) cast to make it safe.  MarkMLl 2/1/99
+ */
+
+#define FRAC_BITS 16
+
+/* Private data */
+typedef struct ratestuff {
+        u_l opos_frac;  /* fractional position of the output stream in input stream unit */
+        u_l opos;
+
+        u_l opos_inc_frac;  /* fractional position increment in the output stream */
+        u_l opos_inc; 
+
+        u_l ipos;      /* position in the input stream (integer) */
+
+        LONG ilast; /* last sample in the input stream */
+} *rate_t;
+
+/*
+ * Process options
+ */
+void rate_getopts(effp, n, argv) 
+eff_t effp;
+int n;
+char **argv;
+{
+	if (n)
+		fail("Rate effect takes no options.");
+}
+
+/*
+ * Prepare processing.
+ */
+void rate_start(effp)
+eff_t effp;
+{
+	rate_t rate = (rate_t) effp->priv;
+        u_l incr;
+
+        rate->opos_frac=0;
+        rate->opos=0;
+
+        /* increment */
+        incr=(u_l)((double)effp->ininfo.rate / (double)effp->outinfo.rate * 
+                   (double) ((unsigned long) 1 << FRAC_BITS));
+
+        rate->opos_inc_frac = incr & (((unsigned long) 1 << FRAC_BITS)-1);
+        rate->opos_inc = incr >> FRAC_BITS;
+        
+        rate->ipos=0;
+
+	rate->ilast = 0;
+}
+
+/*
+ * Processed signed long samples from ibuf to obuf.
+ * Return number of samples processed.
+ */
+
+void rate_flow(effp, ibuf, obuf, isamp, osamp)
+eff_t effp;
+LONG *ibuf, *obuf;
+int *isamp, *osamp;
+{
+	rate_t rate = (rate_t) effp->priv;
+	LONG *istart,*iend;
+	LONG *ostart,*oend;
+	LONG ilast,icur,out;
+        u_l tmp;
+        double t;
+
+        ilast=rate->ilast;
+
+        istart = ibuf;
+        iend = ibuf + *isamp;
+        
+        ostart = obuf;
+        oend = obuf + *osamp;
+
+        while (obuf < oend) {
+
+                /* read as many input samples so that ipos > opos */
+                
+                while (rate->ipos <= rate->opos) {
+                        if (ibuf >= iend) goto the_end;
+                        ilast = *ibuf++;
+                        rate->ipos++;
+                }
+                icur = *ibuf;
+        
+                /* interpolate */
+                t=(double) rate->opos_frac / ((unsigned long) 1 << FRAC_BITS);
+                out = (double) ilast * (1.0 - t) + (double) icur * t;
+
+                /* output sample & increment position */
+                
+                *obuf++=(LONG) out;
+                
+                tmp = rate->opos_frac + rate->opos_inc_frac;
+                rate->opos = rate->opos + rate->opos_inc + (tmp >> FRAC_BITS);
+                rate->opos_frac = tmp & (((unsigned long) 1 << FRAC_BITS)-1);
+        }
+the_end:
+	*isamp = ibuf - istart;
+	*osamp = obuf - ostart;
+	rate->ilast = ilast;
+}
+
+/*
+ * Do anything required when you stop reading samples.  
+ * Don't close input file! 
+ */
+void rate_stop(effp)
+eff_t effp;
+{
+	/* nothing to do */
+}
+
+#else /* USE_OLD_RATE */
+
+/*
+ * July 5, 1991
+ * Copyright 1991 Lance Norskog And Sundry Contributors
+ * This source code is freely redistributable and may be used for
+ * any purpose.  This copyright notice must be maintained. 
+ * Lance Norskog And Sundry Contributors are not responsible for 
+ * the consequences of using this software.
+ */
+
+/*
+ * Sound Tools rate change effect file.
+ */
+
+#include <math.h>
+#include "st.h"
+
+/*
+ * Least Common Multiple Linear Interpolation 
+ *
+ * Find least common multiple of the two sample rates.
+ * Construct the signal at the LCM by interpolating successive
+ * input samples as straight lines.  Pull output samples from
+ * this line at output rate.
+ *
+ * Of course, actually calculate only the output samples.
+ *
+ * LCM must be 32 bits or less.  Two prime number sample rates
+ * between 32768 and 65535 will yield a 32-bit LCM, so this is 
+ * stretching it.
+ */
+
+/*
+ * Algorithm:
+ *  
+ *  Generate a master sample clock from the LCM of the two rates.
+ *  Interpolate linearly along it.  Count up input and output skips.
+ *
+ *  Input:   |inskip |       |       |       |       |
+ *                                                                      
+ *                                                                      
+ *                                                                      
+ *  LCM:     |   |   |   |   |   |   |   |   |   |   |
+ *                                                                      
+ *                                                                      
+ *                                                                      
+ *  Output:  |  outskip  |           |           | 
+ *
+ *                                                                      
+ */
+
+
+/* Private data for Lerp via LCM file */
+typedef struct ratestuff {
+	u_l	lcmrate;		/* least common multiple of rates */
+	u_l	inskip, outskip;	/* LCM increments for I & O rates */
+	u_l	total;
+	u_l	intot, outtot;		/* total samples in LCM basis */
+	LONG	lastsamp;		/* history */
+} *rate_t;
+
+/*
+ * Process options
+ */
+void rate_getopts(effp, n, argv) 
+eff_t effp;
+int n;
+char **argv;
+{
+	if (n)
+		fail("Rate effect takes no options.");
+}
+
+/*
+ * Prepare processing.
+ */
+void rate_start(effp)
+eff_t effp;
+{
+	rate_t rate = (rate_t) effp->priv;
+	IMPORT LONG lcm();
+	
+	rate->lcmrate = lcm((LONG)effp->ininfo.rate, (LONG)effp->outinfo.rate);
+	/* Cursory check for LCM overflow.  
+	 * If both rate are below 65k, there should be no problem.
+	 * 16 bits x 16 bits = 32 bits, which we can handle.
+	 */
+	rate->inskip = rate->lcmrate / effp->ininfo.rate;
+	rate->outskip = rate->lcmrate / effp->outinfo.rate; 
+	rate->total = rate->intot = rate->outtot = 0;
+	rate->lastsamp = 0;
+}
+
+/*
+ * Processed signed long samples from ibuf to obuf.
+ * Return number of samples processed.
+ */
+
+void rate_flow(effp, ibuf, obuf, isamp, osamp)
+eff_t effp;
+LONG *ibuf, *obuf;
+int *isamp, *osamp;
+{
+	rate_t rate = (rate_t) effp->priv;
+	int len, done;
+	LONG *istart = ibuf;
+	LONG last;
+
+	done = 0;
+	if (rate->total == 0) {
+		/* Emit first sample.  We know the fence posts meet. */
+		*obuf = *ibuf++;
+		rate->lastsamp = *obuf++ / 65536L;
+		done = 1;
+		rate->total = 1;
+		/* advance to second output */
+		rate->outtot += rate->outskip;
+		/* advance input range to span next output */
+		while ((rate->intot + rate->inskip) <= rate->outtot){
+			last = *ibuf++ / 65536L;
+			rate->intot += rate->inskip;
+		}
+	} 
+
+	/* start normal flow-through operation */
+	last = rate->lastsamp;
+		
+	/* number of output samples the input can feed */
+	len = (*isamp * rate->inskip) / rate->outskip;
+	if (len > *osamp)
+		len = *osamp;
+	for(; done < len; done++) {
+		*obuf = last;
+		*obuf += ((float)((*ibuf / 65536L)  - last)* ((float)rate->outtot -
+				rate->intot))/rate->inskip;
+		*obuf *= 65536L;
+		obuf++;
+		/* advance to next output */
+		rate->outtot += rate->outskip;
+		/* advance input range to span next output */
+		while ((rate->intot + rate->inskip) <= rate->outtot){
+			last = *ibuf++ / 65536L;
+			rate->intot += rate->inskip;
+			if (ibuf - istart == *isamp)
+				goto out;
+		}
+		/* long samples with high LCM's overrun counters! */
+		if (rate->outtot == rate->intot)
+			rate->outtot = rate->intot = 0;
+	}
+out:
+	*isamp = ibuf - istart;
+	*osamp = len;
+	rate->lastsamp = last;
+}
+
+/*
+ * Do anything required when you stop reading samples.  
+ * Don't close input file! 
+ */
+void rate_stop(effp)
+eff_t effp;
+{
+	/* nothing to do */
+}
+#endif /* USE_OLD_RATE */
