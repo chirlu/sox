@@ -59,6 +59,7 @@
 #include <math.h>
 #include <string.h>
 #include "st.h"
+#include "libst.h"
 
 #define MOD_SINE	0
 #define MOD_TRIANGLE	1
@@ -78,51 +79,6 @@ typedef struct flangerstuff {
 } *flanger_t;
 
 /* Private data for SKEL file */
-
-LONG flanger_clip24(l)
-LONG l;
-{
-	if (l >= ((LONG)1 << 24))
-		return ((LONG)1 << 24) - 1;
-	else if (l <= -((LONG)1 << 24))
-		return -((LONG)1 << 24) + 1;
-	else
-		return l;
-}
-
-/* This was very painful.  We need a sine library. */
-
-void flanger_sine(buf, len, depth)
-int *buf;
-long len;
-long depth;
-{
-	long i;
-	double val;
-
-	for (i = 0; i < len; i++) {
-		val = sin((double)i/(double)len * 2.0 * M_PI);
-		buf[i] = (int) ((1.0 + val) * depth / 2.0);
-	}
-}
-
-void flanger_triangle(buf, len, depth)
-int *buf;
-long len;
-long depth;
-{
-	long i;
-	double val;
-
-	for (i = 0; i < len / 2; i++) {
-		val = i * 2.0 / len;
-		buf[i] = (int) (val * depth);
-	}
-	for (i = len / 2; i < len ; i++) {
-		val = (len - i) * 2.0 / len;
-		buf[i] = (int) (val * depth);
-	}
-}
 
 /*
  * Process options
@@ -200,10 +156,10 @@ eff_t effp;
 			sizeof(int) * flanger->length);
 
 	if ( flanger->modulation == MOD_SINE )
-		flanger_sine(flanger->lookup_tab, flanger->length, 
+		st_sine(flanger->lookup_tab, flanger->length, 
 			flanger->maxsamples - 1);
 	else
-		flanger_triangle(flanger->lookup_tab, flanger->length, 
+		st_triangle(flanger->lookup_tab, flanger->length, 
 			flanger->maxsamples - 1);
 	flanger->counter = 0;
 	flanger->phase = 0;
@@ -237,7 +193,7 @@ int *isamp, *osamp;
 	flanger->maxsamples] * flanger->decay;
 		/* Adjust the output volume and size to 24 bit */
 		d_out = d_out * flanger->out_gain;
-		out = flanger_clip24((LONG) d_out);
+		out = st_clip24((LONG) d_out);
 		*obuf++ = out * 256;
 		/* Mix decay of delay and input */
 		flanger->flangerbuf[flanger->counter] = d_in;
@@ -272,7 +228,7 @@ int *osamp;
 	flanger->maxsamples] * flanger->decay;
 		/* Adjust the output volume and size to 24 bit */
 		d_out = d_out * flanger->out_gain;
-		out = flanger_clip24((LONG) d_out);
+		out = st_clip24((LONG) d_out);
 		*obuf++ = out * 256;
 		/* Mix decay of delay and input */
 		flanger->flangerbuf[flanger->counter] = d_in;

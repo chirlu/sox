@@ -11,12 +11,14 @@
  * Sound Tools miscellaneous stuff.
  */
 
-#include "st.h"
-#include "version.h"
-#include "patchlvl.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
+#include "st.h"
+#include "libst.h"
+#include "version.h"
+#include "patchlvl.h"
 
 char *sizes[] = {
 	"NONSENSE!",
@@ -256,11 +258,56 @@ unsigned int seed;
 #endif
 
 /* Util to set initial seed so that we are a little less non-random */
-void initrand() {
+void st_initrand() {
 	time_t t;
 
 	time(&t);
 	srand(t);
+}
+
+LONG st_clip24(l)
+LONG l;
+{
+    if (l >= ((LONG)1 << 23))
+	return ((LONG)1 << 23) - 1;
+    else if (l <= -((LONG)1 << 23))
+        return -((LONG)1 << 23) + 1;
+    else
+        return l;
+}
+
+/* This was very painful.  We need a sine library. */
+
+void st_sine(buf, len, depth)
+int *buf;
+long len;
+long depth;
+{
+	long i;
+	double val;
+
+	for (i = 0; i < len; i++) {
+		val = sin((double)i/(double)len * 2.0 * M_PI);
+		buf[i] = (int) ((1.0 + val) * depth / 2.0);
+	}
+}
+
+void st_triangle(buf, len, depth)
+int *buf;
+long len;
+long depth;
+{
+	long i;
+	double val;
+
+	for (i = 0; i < len / 2; i++) {
+		val = i * 2.0 / len;
+		buf[i] = (int) (val * depth);
+	}
+	for (i = len / 2; i < len ; i++) {
+		val = (len - i) * 2.0 / len;
+		buf[i] = (int) (val * depth);
+	}
 }
 
 char *

@@ -61,6 +61,7 @@
 #endif
 #include <math.h>
 #include "st.h"
+#include "libst.h"
 
 #define DELAY_BUFSIZ ( 50L * MAXRATE )
 #define MAX_ECHOS 7	/* 24 bit x ( 1 + MAX_ECHOS ) = */
@@ -77,20 +78,6 @@ typedef struct echostuff {
 } *echo_t;
 
 /* Private data for SKEL file */
-
-
-/* If we are not carefull with the output volume */
-LONG echo_clip24(l)
-LONG l;
-{
-	if (l >= ((LONG)1 << 24))
-		return ((LONG)1 << 24) - 1;
-	else if (l <= -((LONG)1 << 24))
-		return -((LONG)1 << 24) + 1;
-	else
-		return l;
-}
-
 
 
 /*
@@ -200,7 +187,7 @@ int *isamp, *osamp;
 		}
 		/* Adjust the output volume and size to 24 bit */
 		d_out = d_out * echo->out_gain;
-		out = echo_clip24((LONG) d_out);
+		out = st_clip24((LONG) d_out);
 		*obuf++ = out * 256;
 		/* Store input in delay buffer */
 		echo->delay_buf[echo->counter] = d_in;
@@ -236,7 +223,7 @@ int *osamp;
 		}
 		/* Adjust the output volume and size to 24 bit */
 		d_out = d_out * echo->out_gain;
-		out = echo_clip24((LONG) d_out);
+		out = st_clip24((LONG) d_out);
 		*obuf++ = out * 256;
 		/* Store input in delay buffer */
 		echo->delay_buf[echo->counter] = d_in;

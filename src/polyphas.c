@@ -385,7 +385,7 @@ void poly_start(eff_t effp)
 		int total, size, uprate;
     int k;
 
-    initrand();
+    st_initrand();
 
     rate->lcmrate = st_lcm((long)effp->ininfo.rate, (long)effp->outinfo.rate);
 

@@ -30,7 +30,7 @@
  *
  * Limited to 16 bit samples and sampling frequency <= 65535 Hz. If
  * the input & output frequencies are equal, a delay of one sample is
- * introduced 
+ * introduced.  Limited to processing 32-bit count worth of samples.
  *
  * 1 << FRAC_BITS evaluating to zero in several places.  Changed with
  * an (unsigned long) cast to make it safe.  MarkMLl 2/1/99
@@ -40,13 +40,13 @@
 
 /* Private data */
 typedef struct ratestuff {
-        u_l opos_frac;  /* fractional position of the output stream in input stream unit */
-        u_l opos;
+        ULONG opos_frac;  /* fractional position of the output stream in input stream unit */
+        ULONG opos;
 
-        u_l opos_inc_frac;  /* fractional position increment in the output stream */
-        u_l opos_inc; 
+        ULONG opos_inc_frac;  /* fractional position increment in the output stream */
+        ULONG opos_inc; 
 
-        u_l ipos;      /* position in the input stream (integer) */
+        ULONG ipos;      /* position in the input stream (integer) */
 
         LONG ilast; /* last sample in the input stream */
 } *rate_t;
@@ -70,13 +70,18 @@ void rate_start(effp)
 eff_t effp;
 {
 	rate_t rate = (rate_t) effp->priv;
-        u_l incr;
+        ULONG incr;
+
+	if (effp->ininfo.rate >= 65535 || effp->outinfo.rate >= 65535)
+	    fail("rate effect can only handle rates <= 65535");
+	if (effp->ininfo.size == DWORD || effp->ininfo.size == FLOAT)
+	    fail("rate effect does not work on data greater then 16 bits");
 
         rate->opos_frac=0;
         rate->opos=0;
 
         /* increment */
-        incr=(u_l)((double)effp->ininfo.rate / (double)effp->outinfo.rate * 
+        incr=(ULONG)((double)effp->ininfo.rate / (double)effp->outinfo.rate * 
                    (double) ((unsigned long) 1 << FRAC_BITS));
 
         rate->opos_inc_frac = incr & (((unsigned long) 1 << FRAC_BITS)-1);
@@ -101,7 +106,7 @@ int *isamp, *osamp;
 	LONG *istart,*iend;
 	LONG *ostart,*oend;
 	LONG ilast,icur,out;
-        u_l tmp;
+        ULONG tmp;
         double t;
 
         ilast=rate->ilast;
@@ -114,13 +119,18 @@ int *isamp, *osamp;
 
         while (obuf < oend) {
 
+		/* Safety catch to make sure we have input samples.  */
+                if (ibuf >= iend) goto the_end;
+
                 /* read as many input samples so that ipos > opos */
-                
+        
                 while (rate->ipos <= rate->opos) {
-                        if (ibuf >= iend) goto the_end;
                         ilast = *ibuf++;
                         rate->ipos++;
+			/* See if we finished the input buffer yet */
+                        if (ibuf >= iend) goto the_end;
                 }
+
                 icur = *ibuf;
         
                 /* interpolate */
@@ -206,10 +216,10 @@ eff_t effp;
 
 /* Private data for Lerp via LCM file */
 typedef struct ratestuff {
-	u_l	lcmrate;		/* least common multiple of rates */
-	u_l	inskip, outskip;	/* LCM increments for I & O rates */
-	u_l	total;
-	u_l	intot, outtot;		/* total samples in LCM basis */
+	ULONG	lcmrate;		/* least common multiple of rates */
+	ULONG	inskip, outskip;	/* LCM increments for I & O rates */
+	ULONG	total;
+	ULONG	intot, outtot;		/* total samples in LCM basis */
 	LONG	lastsamp;		/* history */
 } *rate_t;
 

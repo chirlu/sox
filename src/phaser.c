@@ -62,6 +62,7 @@
 #include <math.h>
 #include <string.h>
 #include "st.h"
+#include "libst.h"
 
 #define MOD_SINE	0
 #define MOD_TRIANGLE	1
@@ -79,53 +80,6 @@ typedef struct phaserstuff {
 	int	*lookup_tab;
 	long	maxsamples, fade_out;
 } *phaser_t;
-
-/* Private data for SKEL file */
-
-LONG phaser_clip24(l)
-LONG l;
-{
-	if (l >= ((LONG)1 << 24))
-		return ((LONG)1 << 24) - 1;
-	else if (l <= -((LONG)1 << 24))
-		return -((LONG)1 << 24) + 1;
-	else
-		return l;
-}
-
-/* This was very painful.  We need a sine library. */
-
-void phaser_sine(buf, len, depth)
-int *buf;
-long len;
-long depth;
-{
-	long i;
-	double val;
-
-	for (i = 0; i < len; i++) {
-		val = sin((double)i/(double)len * 2.0 * M_PI);
-		buf[i] = (int) ((1.0 + val) * depth / 2.0);
-	}
-}
-
-void phaser_triangle(buf, len, depth)
-int *buf;
-long len;
-long depth;
-{
-	long i;
-	double val;
-
-	for (i = 0; i < len / 2; i++) {
-		val = i * 2.0 / len;
-		buf[i] = (int) (val * depth);
-	}
-	for (i = len / 2; i < len ; i++) {
-		val = (len - i) * 2.0 / len;
-		buf[i] = (int) (val * depth);
-	}
-}
 
 /*
  * Process options
@@ -199,10 +153,10 @@ eff_t effp;
 			sizeof(int) * phaser->length);
 
 	if ( phaser->modulation == MOD_SINE )
-		phaser_sine(phaser->lookup_tab, phaser->length, 
+		st_sine(phaser->lookup_tab, phaser->length, 
 			phaser->maxsamples - 1);
 	else
-		phaser_triangle(phaser->lookup_tab, phaser->length, 
+		st_triangle(phaser->lookup_tab, phaser->length, 
 			phaser->maxsamples - 1);
 	phaser->counter = 0;
 	phaser->phase = 0;
@@ -236,7 +190,7 @@ int *isamp, *osamp;
 	phaser->maxsamples] * phaser->decay * -1.0;
 		/* Adjust the output volume and size to 24 bit */
 		d_out = d_in * phaser->out_gain;
-		out = phaser_clip24((LONG) d_out);
+		out = st_clip24((LONG) d_out);
 		*obuf++ = out * 256;
 		/* Mix decay of delay and input */
 		phaser->phaserbuf[phaser->counter] = d_in;
@@ -271,7 +225,7 @@ int *osamp;
 	phaser->maxsamples] * phaser->decay * -1.0;
 		/* Adjust the output volume and size to 24 bit */
 		d_out = d_in * phaser->out_gain;
-		out = phaser_clip24((LONG) d_out);
+		out = st_clip24((LONG) d_out);
 		*obuf++ = out * 256;
 		/* Mix decay of delay and input */
 		phaser->phaserbuf[phaser->counter] = d_in;

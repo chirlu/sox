@@ -51,7 +51,11 @@ LONG st_lcm(/* a, b */);
 extern int rand();
 extern void srand(/* seed */);
 #endif
-extern void initrand();
+extern void st_initrand();
+
+extern LONG st_clip24();
+extern void st_sine();
+extern void st_triangle();
 
 #ifndef HAVE_STRERROR
 char *strerror(/*errorcode*/);

@@ -98,6 +98,7 @@
 #endif
 #include <math.h>
 #include "st.h"
+#include "libst.h"
 
 #define REVERB_FADE_THRESH 10
 #define DELAY_BUFSIZ ( 50L * MAXRATE )
@@ -113,23 +114,6 @@ typedef struct reverbstuff {
 	long	samples[MAXREVERBS], maxsamples;
 	LONG	pl, ppl, pppl;
 } *reverb_t;
-
-/* Private data for SKEL file */
-
-#ifndef abs
-#define abs(a) ((a) >= 0 ? (a) : -(a))
-#endif
-
-LONG reverb_clip24(l)
-LONG l;
-{
-	if (l >= ((LONG)1 << 24))
-		return ((LONG)1 << 24) - 1;
-	else if (l <= -((LONG)1 << 24))
-		return -((LONG)1 << 24) + 1;
-	else
-		return l;
-}
 
 /*
  * Process options
@@ -232,7 +216,7 @@ int *isamp, *osamp;
 			d_in +=
 reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsamples] * reverb->decay[j];
 		d_out = d_in * reverb->out_gain;
-		out = reverb_clip24((LONG) d_out);
+		out = st_clip24((LONG) d_out);
 		*obuf++ = out * 256;
 		reverb->reverbbuf[i] = d_in;
 		i++;		/* XXX need a % maxsamples here ? */
@@ -265,10 +249,10 @@ int *osamp;
 			d_in += 
 reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsamples] * reverb->decay[j];
 		d_out = d_in * reverb->out_gain;
-		out = reverb_clip24((LONG) d_out);
+		out = st_clip24((LONG) d_out);
 		obuf[done++] = out * 256;
 		reverb->reverbbuf[i] = d_in;
-		l = reverb_clip24((LONG) d_in);
+		l = st_clip24((LONG) d_in);
 		reverb->pppl = reverb->ppl;
 		reverb->ppl = reverb->pl;
 		reverb->pl = l;

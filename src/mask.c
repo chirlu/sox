@@ -38,7 +38,7 @@ char **argv;
 		fail("Mask effect takes no options.");
 	/* should take # of bits */
 
-	initrand();
+	st_initrand();
 }
 
 /*

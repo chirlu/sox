@@ -69,6 +69,7 @@
 #include <math.h>
 #include <string.h>
 #include "st.h"
+#include "libst.h"
 
 #define MOD_SINE	0
 #define MOD_TRIANGLE	1
@@ -89,59 +90,6 @@ typedef struct chorusstuff {
 	int	depth_samples[MAX_CHORUS], samples[MAX_CHORUS];
 	int	maxsamples, fade_out;
 } *chorus_t;
-
-/* Private data for SKEL file */
-
-LONG chorus_clip24(l)
-LONG l;
-{
-	if (l >= ((LONG)1 << 24))
-		return ((LONG)1 << 24) - 1;
-	else if (l <= -((LONG)1 << 24))
-		return -((LONG)1 << 24) + 1;
-	else
-		return l;
-}
-
-/* This was very painful.  We need a sine library. */
-
-void chorus_sine(buf, len, max, depth)
-int *buf;
-long len;
-int max;
-int depth;
-{
-	long i;
-	int offset;
-	double val;
-
-	offset = max - depth;
-	for (i = 0; i < len; i++) {
-		val = sin((double)i/(double)len * 2.0 * M_PI);
-		buf[i] = offset + (int) (val * (double)depth);
-	}
-}
-
-void chorus_triangle(buf, len, max, depth)
-int *buf;
-long len;
-int max;
-int depth;
-{
-	long i;
-	int offset;
-	double val;
-
-	offset = max - 2 * depth;
-	for (i = 0; i < len / 2; i++) {
-		val = i * 2.0 / len;
-		buf[i] = offset + (int) (val * 2.0 * (double)depth);
-	}
-	for (i = len / 2; i < len ; i++) {
-		val = (len - i) * 2.0 / len;
-		buf[i] = offset + (int) (val * 2.0 * (double)depth);
-	}
-}
 
 /*
  * Process options
@@ -226,10 +174,10 @@ eff_t effp;
 			fail("chorus: Cannot malloc %d bytes!\n", 
 				sizeof(int) * chorus->length[i]);
 		if ( chorus->modulation[i] == MOD_SINE )
-			chorus_sine(chorus->lookup_tab[i], chorus->length[i], 
+			st_sine(chorus->lookup_tab[i], chorus->length[i], 
 				chorus->samples[i] - 1, chorus->depth_samples[i]);
 		else
-			chorus_triangle(chorus->lookup_tab[i], chorus->length[i], 
+			st_triangle(chorus->lookup_tab[i], chorus->length[i], 
 				chorus->samples[i] - 1, chorus->depth_samples[i]);
 		chorus->phase[i] = 0;
 
@@ -285,7 +233,7 @@ int *isamp, *osamp;
 			chorus->maxsamples] * chorus->decay[i];
 		/* Adjust the output volume and size to 24 bit */
 		d_out = d_out * chorus->out_gain;
-		out = chorus_clip24((LONG) d_out);
+		out = st_clip24((LONG) d_out);
 		*obuf++ = out * 256;
 		/* Mix decay of delay and input */
 		chorus->chorusbuf[chorus->counter] = d_in;
@@ -324,7 +272,7 @@ int *osamp;
 		chorus->maxsamples] * chorus->decay[i];
 		/* Adjust the output volume and size to 24 bit */
 		d_out = d_out * chorus->out_gain;
-		out = chorus_clip24((LONG) d_out);
+		out = st_clip24((LONG) d_out);
 		*obuf++ = out * 256;
 		/* Mix decay of delay and input */
 		chorus->chorusbuf[chorus->counter] = d_in;

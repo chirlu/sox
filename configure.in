@@ -155,7 +155,6 @@ then
 			ac_cv_dev_alsa_dsp=no,
 			ac_cv_dev_alsa_dsp=no)
 		)
-
 	if test "$ac_cv_dev_alsa_dsp" = yes
 	then
 		AC_CHECK_HEADERS(linux/asound.h, alsa_dsp=yes)
@@ -248,7 +247,7 @@ then
 		)
 	if test "$ac_cv_dev_sun_audio" = yes
 	then
-		AC_CHECK_HEADER(sys/audioio.h, sun/audioio.h, sun_audio=yes)
+		AC_CHECK_HEADERS(sys/audioio.h sun/audioio.h, sun_audio=yes)
 		if test "$sun_audio" = auto
 		then
 			AC_WARN([No audioio.h to compile with SUN /dev/audio])
