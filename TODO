@@ -24,6 +24,10 @@ all patches to cbagwell@sprynet.com.
   o Internally sox can handle multiple effects on a given sound file.
     Add support for this from the command line.
 
+  o Endian checks are probably invalid on 64-bit machines.  Need to use
+    something a more constant size the "int".  Probably should make it
+    at least a util function/macro that can be overriden at compile time.
+
   o Enhance sox for better interactive support.  This includes updating
     effect parameters in real time and ablity to start/stop/scan
     file handlers in real time.

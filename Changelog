@@ -14,6 +14,9 @@ sox-12.17
     it from deleting files when a user mistakenly types "sox *.wav".
   o Added new compander effect from Nick Bailey.  Nice general purpose
     filter.
+  o Under Solaris, SoX now checks hardware ability to play stereo/PCM
+    and forces output data to match.  Sorry, no SunOS support.  I don't
+    have access to one any more.
 
 sox-12.16
 ---------

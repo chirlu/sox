@@ -150,6 +150,16 @@ ft_t ft;
 			/* MARK chunk */
 			chunksize = rlong(ft);
 			nmarks = rshort(ft);
+
+			/* Some programs like to always have a MARK chunk
+			 * but will set number of marks to 0 and force
+			 * software to detect and ignore it.
+			 */
+			if (nmarks == 0)
+			    foundmark = 0;
+			else
+			    foundmark = 1;
+
 			chunksize -= 2;
 			for(i = 0; i < nmarks; i++) {
 				int len;
@@ -172,7 +182,6 @@ ft_t ft;
 			/* for MARK field */
 			while(chunksize-- > 0)
 				getc(ft->fp);
-			foundmark = 1;
 		}
 		else if (strncmp(buf, "INST", 4) == 0) {
 			/* INST chunk */
