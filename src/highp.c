@@ -1,14 +1,8 @@
 /*
- * July 5, 1991
- * Copyright 1991 Lance Norskog And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
- * the consequences of using this software.
- */
-
-/*
  * Sound Tools High-Pass effect file.
+ *
+ * (C) 2000 Chris Bagwell <cbagwell@sprynet.com>
+ * See License file for further copyright information.
  *
  * Algorithm:  Recursive single pole high-pass filter
  *
