@@ -1,12 +1,6 @@
 People are encouraged to pick some of these and implement it.  Send
 all patches to cbagwell@sprynet.com.
 
-  o Add support for writing ADPCM output in .wav files.  It really only
-    feasible to add one version of ADPCM to output.  I'm leaning towards
-    IMA since it could support streaming and be used in other formats.
-    But of course, MS is pushing very hard to make their version the
-    standard, weither inferer or not.
-
   o I've add the most common and public standard FormatTags to the
     .wav file detection.  A lot of them should be implemented since
     you can grab the source code from the .au handler and software

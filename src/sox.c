@@ -206,9 +206,9 @@ char **argv;
 }
 
 #ifdef HAVE_GETOPT_H
-char *getoptstr = "+r:v:t:c:phsuUAagbwlfdDxV";
+char *getoptstr = "+r:v:t:c:phsuUAaigbwlfdDxV";
 #else
-char *getoptstr = "r:v:t:c:phsuUAagbwlfdDxV";
+char *getoptstr = "r:v:t:c:phsuUAaigbwlfdDxV";
 #endif
 
 void doopts(argc, argv)
@@ -313,6 +313,10 @@ char **argv;
 		case 'a':
 			if (! ft) usage("-a");
 			ft->info.style = ADPCM;
+			break;
+		case 'i':
+			if (! ft) usage("-i");
+			ft->info.style = IMA_ADPCM;
 			break;
 		case 'g':
 			if (! ft) usage("-g");
@@ -894,7 +898,7 @@ char *opt;
 		fprintf(stderr, "Failed at: %s\n", opt);
 	else {
 	    fprintf(stderr,"gopts: -e -h -p -v volume -V\n\n");
-	    fprintf(stderr,"fopts: -r rate -c channels -s/-u/-U/-A/-a/-g -b/-w/-l/-f/-d/-D -x\n\n");
+	    fprintf(stderr,"fopts: -r rate -c channels -s/-u/-U/-A/-a/-i/-g -b/-w/-l/-f/-d/-D -x\n\n");
 	    fprintf(stderr, "effect: ");
 	    for (i = 1; effects[i].name != NULL; i++) {
 		fprintf(stderr, "%s ", effects[i].name);

@@ -12,6 +12,7 @@
  * Sound Tools masking noise effect file.
  */
 
+#include <stdlib.h>
 #include <math.h>
 #include "st.h"
 #include "libst.h"

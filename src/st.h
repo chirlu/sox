@@ -152,7 +152,8 @@ typedef struct soundstream *ft_t;
 #define	ULAW		3	/* U-law signed logs: US telephony, SPARC */
 #define ALAW		4	/* A-law signed logs: non-US telephony */
 #define ADPCM		5	/* Compressed PCM */
-#define GSM		6	/* GSM 6.10 33-byte frame lossy compression */
+#define IMA_ADPCM		6	/* Compressed PCM */
+#define GSM		7	/* GSM 6.10 33-byte frame lossy compression */
 
 /* FIXME: This shouldn't be defined inside library.  Only needed
  * by sox.c itself.  Delete from raw.c and misc.c.

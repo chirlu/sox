@@ -36,7 +36,8 @@ char *styles[] = {
 	"u-law",
 	"a-law",
 	"adpcm",
-	"gsm"
+	"ima_adpcm",
+	"gsm",
 };
 
 char readerr[] = "Premature EOF while reading sample file.";

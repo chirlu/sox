@@ -6,8 +6,9 @@ sox-11gamma.
 
 sox-12.17
 ---------
-  o Sox can now write IMA_ADPCM compressed .wav,
-	  MSADPCM writing should be available soon.
+  o Sox can now write IMA_ADPCM and ADPCM compressed .wav,
+    this is new, and relatively untested. See -i and -a format
+		flags in manpage.
   o General changes to wav.c for writing additional wav formats.
   o Speedups to adpcm read routines, new codex versions are
 	  now in ima_rw.c and adpcm.c.

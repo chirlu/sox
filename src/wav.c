@@ -8,12 +8,12 @@
  *
  * Change History:
  *
- * November  11, 1999 - Stan Brooks (stabro@megsinet.com)
- *   Mods for faster adpcm decoding and addition of ima_adpcm
- *   writing... low-level codex functions moved to external
- *   modules ima_rw.c and adpcm.c. Some general cleanup, consistent
- *   with writing *adpcm and other output formats.
- *   Headers for adpcm include the 'fact' subchunk.
+ * November  22, 1999 - Stan Brooks (stabro@megsinet.com)
+ *   Mods for faster adpcm decoding and addition of IMA_ADPCM
+ *   and ADPCM  writing... low-level codex functions moved to
+ *   external modules ima_rw.c and adpcm.c. Some general cleanup,
+ *   consistent with writing adpcm and other output formats.
+ *   Headers written for adpcm include the 'fact' subchunk.
  *
  * September 11, 1998 - Chris Bagwell (cbagwell@sprynet.com)
  *   Fixed length bug for IMA and MS ADPCM files.
@@ -26,22 +26,10 @@
  *
  * March 15, 1998 - Chris Bagwell (cbagwell@sprynet.com)
  *   Added support for Microsoft's ADPCM and IMA (or better known as
- *   DVI) ADPCM format for wav files.  Info on these formats
- *   was taken from the xanim project, written by
- *   Mark Podlipec (podlipec@ici.net).  For those pieces of code,
- *   the following copyrights notice applies:
- *
- *    XAnim Copyright (C) 1990-1997 by Mark Podlipec.
- *    All rights reserved.
- * 
- *    This software may be freely copied, modified and redistributed without
- *    fee for non-commerical purposes provided that this copyright notice is
- *    preserved intact on all copies and modified copies.
- * 
- *    There is no warranty or other guarantee of fitness of this software.
- *    It is provided solely "as is". The author(s) disclaim(s) all
- *    responsibility and liability with respect to this software's usage
- *    or its effect upon hardware or computer systems.
+ *   DVI) ADPCM format for wav files.  Thanks goes to Mark Podlipec's
+ *   XAnim code.  It gave some real life understanding of how the ADPCM
+ *   format is processed.  Actual code was implemented based off of
+ *   various sources from the net.
  *
  * NOTE: Previous maintainers weren't very good at providing contact
  * information.
@@ -97,6 +85,7 @@ typedef struct wavstuff {
     short	  *samplePtr;       /* Pointer to current samples */
     short	  *sampleTop;       /* End of samples-buffer      */
     unsigned short blockSamplesRemaining;/* Samples remaining in each channel */    
+    /* state holds step-size info for ADPCM or IMA_ADPCM writes */
     int 	   state[16];       /* last, because maybe longer */
 } *wav_t;
 
@@ -177,10 +166,10 @@ ft_t ft;
 /****************************************************************************/
 /*
  *
- * MsAdpcmReadBlock - Grab and decode complete block of samples
+ * AdpcmReadBlock - Grab and decode complete block of samples
  *
  */
-unsigned short  MsAdpcmReadBlock(ft)
+unsigned short  AdpcmReadBlock(ft)
 ft_t ft;    
 {
     wav_t	wav = (wav_t) ft->priv;
@@ -214,6 +203,32 @@ ft_t ft;
 	warn((char*)errmsg);
 
     return samplesThisBlock;
+}
+
+static void AdpcmWriteBlock(ft)
+ft_t ft;
+{
+    wav_t wav = (wav_t) ft->priv;
+    int chans, ct;
+    short *p;
+
+    chans = ft->info.channels;
+    p = wav->samplePtr;
+    ct = p - wav->samples;
+    if (ct>=chans) { 
+	/* zero-fill samples if needed to complete block */
+	for (p = wav->samplePtr; p < wav->sampleTop; p++) *p=0;
+	/* compress the samples to wav->packet */
+
+	AdpcmMashI(chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, wav->blockAlign,9);
+
+	/* write the compressed packet */
+	fwrite(wav->packet, wav->blockAlign, 1, ft->fp); /* FIXME: check return value */
+	/* update lengths and samplePtr */
+	wav->dataLength += wav->blockAlign;
+	wav->numSamples += ct/chans;
+	wav->samplePtr = wav->samples;
+    }
 }
 
 /****************************************************************************/
@@ -388,14 +403,15 @@ ft_t ft;
 
 	wExtSize = rshort(ft);
 	wav->samplesPerBlock = rshort(ft);
-	wav->bytesPerBlock = (wav->samplesPerBlock + 7)/2 * ft->info.channels;
+	wav->bytesPerBlock = ((wav->samplesPerBlock-2)*ft->info.channels + 1)/2
+		             + 7*ft->info.channels;
 	wav->nCoefs = rshort(ft);
 	if (wav->nCoefs < 7 || wav->nCoefs > 0x100) {
 	    fail("ADPCM file nCoefs (%.4hx) makes no sense\n", wav->nCoefs);
 	}
 	wav->packet = (unsigned char *)malloc(wav->blockAlign);
 	len -= 6;
-	    
+
 	wav->samples = (short *)malloc(wChannels*wav->samplesPerBlock*sizeof(short));
 
 	/* SJB: will need iCoefs later for adpcm.c */
@@ -418,7 +434,7 @@ ft_t ft;
 
 	wExtSize = rshort(ft);
 	wav->samplesPerBlock = rshort(ft);
-	wav->bytesPerBlock = (wav->samplesPerBlock + 7)/2 * ft->info.channels;
+	wav->bytesPerBlock = (wav->samplesPerBlock + 7)/2 * ft->info.channels;/* FIXME */
 	wav->packet = (unsigned char *)malloc(wav->blockAlign);
 	len -= 4;
 
@@ -479,7 +495,7 @@ ft_t ft;
 	len--;
     }
 
-    /* for ADPCM formats, there's a useless(?) 'fact' chunk before
+    /* for ADPCM formats, there's a 'fact' chunk before
      * the upcoming 'data' chunk */
 
     /* Now look for the wave data chunk */
@@ -509,9 +525,9 @@ ft_t ft;
 	wav->numSamples = (((data_length / wav->blockAlign) * wav->samplesPerBlock) * ft->info.channels);
 	/* Next, for any partial blocks, subtract overhead from it and it
 	   will leave # of samples to read. */
-	wav->numSamples += ((data_length - ((data_length/wav->blockAlign)
-					    *wav->blockAlign))
-			    - (6 * ft->info.channels)) * ft->info.channels;
+	wav->numSamples += 
+		((data_length % wav->blockAlign) - (6 * ft->info.channels)) * ft->info.channels;
+	/*report("datalen %d, numSamples %d",data_length, wav->numSamples);*/
 	wav->blockSamplesRemaining = 0;	       /* Samples left in buffer */
 	break;
 
@@ -576,7 +592,7 @@ LONG *buf, len;
 		    if (wav->formatTag == WAVE_FORMAT_IMA_ADPCM)
 			wav->blockSamplesRemaining = ImaAdpcmReadBlock(ft);
 		    else
-			wav->blockSamplesRemaining = MsAdpcmReadBlock(ft);
+			wav->blockSamplesRemaining = AdpcmReadBlock(ft);
 		    if (wav->blockSamplesRemaining == 0)
 		    {
 			/* Don't try to read any more samples */
@@ -656,7 +672,9 @@ ft_t ft;
 	wav->packet = NULL;
 	wav->samples = NULL;
 	wav->iCoefs = NULL;
-	if (wav->formatTag == WAVE_FORMAT_IMA_ADPCM) {
+	if (wav->formatTag == WAVE_FORMAT_IMA_ADPCM ||
+	   wav->formatTag == WAVE_FORMAT_ADPCM)
+	{
 	    int ch, sbsize;
 	    /* #channels already range-checked for overflow in wavwritehdr() */
 	    for (ch=0; ch<ft->info.channels; ch++)
@@ -682,13 +700,13 @@ int second_header;
 	LONG factsize = 0; /* "fact",(long)len,??? */
 
         /* wave file characteristics */
-        unsigned short wFormatTag = 0;          /* data format */
-        unsigned short wChannels;               /* number of channels */
-        ULONG  wSamplesPerSecond;       	/* samples per second per channel */
-        ULONG  wAvgBytesPerSec;        		/* estimate of bytes per second needed */
-        unsigned short wBlockAlign;             /* byte alignment of a basic sample block */
-        unsigned short wBitsPerSample;          /* bits per sample */
-        ULONG  data_length;             	/* length of sound data in bytes */
+	unsigned short wFormatTag = 0;          /* data format */
+	unsigned short wChannels;               /* number of channels */
+	ULONG  wSamplesPerSecond;       	/* samples per second per channel */
+	ULONG  wAvgBytesPerSec;        		/* estimate of bytes per second needed */
+	unsigned short wBlockAlign;             /* byte alignment of a basic sample block */
+	unsigned short wBitsPerSample;          /* bits per sample */
+	ULONG  data_length;             	/* length of sound data in bytes */
 	ULONG  bytespersample; 			/* bytes per sample (per channel) */
 
 	/* Needed for rawwrite() */
@@ -741,24 +759,40 @@ int second_header;
 		case ULAW:
 			wFormatTag = WAVE_FORMAT_MULAW;
 			break;
-		case ADPCM:
-		        warn("Experimental support writing IMA_ADPCM style.\n");
+		case IMA_ADPCM:
+			/* warn("Experimental support writing IMA_ADPCM style.\n"); */
 			wFormatTag = WAVE_FORMAT_IMA_ADPCM;
 			wBitsPerSample = 4;
 			fmtsize += 4;  /* plus ExtData */
 			factsize = 12; /* fact chunk   */
+			break;
+		case ADPCM:
+			/* warn("Experimental support writing ADPCM style.\n"); */
+			wFormatTag = WAVE_FORMAT_ADPCM;
+			wBitsPerSample = 4;
+			fmtsize += 2+4+4*7;  /* plus ExtData */
+			factsize = 12;       /* fact chunk   */
 			break;
 	}
 	wav->formatTag = wFormatTag;
 	
 	wSamplesPerSecond = ft->info.rate;
 	wChannels = ft->info.channels;
-	if (wFormatTag == WAVE_FORMAT_IMA_ADPCM) {
+	switch (wFormatTag)
+	{
+	case WAVE_FORMAT_IMA_ADPCM:
 	    if (wChannels>16)
 	    	fail("Channels(%d) must be <= 16\n",wChannels);
 	    bytespersample = 2;
 	    wBlockAlign = wChannels * 64; /* reasonable default */
-	} else {
+	    break;
+	case WAVE_FORMAT_ADPCM:
+	    if (wChannels>16)
+	    	fail("Channels(%d) must be <= 16\n",wChannels);
+	    bytespersample = 2;
+	    wBlockAlign = wChannels * 128; /* reasonable default */
+	    break;
+	default:
 	    bytespersample = (wBitsPerSample + 7)/8;
 	    wBlockAlign = wChannels * bytespersample;
 	}
@@ -767,12 +801,15 @@ int second_header;
 	if (!second_header)	/* use max length value first time */
 		data_length = 0x7fffffffL - (WHDRSIZ1+fmtsize+factsize+DATASIZ1);
 	else	/* fixup with real length */
-	{
-	    if (ft->info.style == ADPCM)
-		data_length = wav->dataLength; /* FIXME: not really */
-	    else
-		data_length = bytespersample * wav->numSamples;
-	}
+		switch(wFormatTag)
+		{
+	    	case WAVE_FORMAT_ADPCM:
+	    	case WAVE_FORMAT_IMA_ADPCM:
+		    data_length = wav->dataLength;
+		    break;
+		default:
+		    data_length = bytespersample * wav->numSamples;
+		}
 
 	/* figured out header info, so write it */
 	fputs("RIFF", ft->fp);
@@ -788,11 +825,27 @@ int second_header;
 	wshort(ft, wBitsPerSample); /* end of info common to all fmts */
 	switch (wFormatTag)
 	{
-	int nsamp;
+	int i,nsamp;
 	case WAVE_FORMAT_IMA_ADPCM:
 	    wshort(ft, 2);		/* Ext fmt data length */
 	    wav->samplesPerBlock = ((wBlockAlign - 4*wChannels)/(4*wChannels))*8 + 1;
 	    wshort(ft, wav->samplesPerBlock);
+	    fputs("fact", ft->fp);
+	    wlong(ft, factsize-8);	/* fact chunk size */
+	    /* use max nsamps value first time */
+	    nsamp = (second_header)? wav->numSamples : 0x7fffffffL;
+	    wlong(ft, nsamp);
+	    break;
+	case WAVE_FORMAT_ADPCM:
+	    wshort(ft, 4+4*7);		/* Ext fmt data length */
+	    wav->samplesPerBlock = 2*(wBlockAlign - 7*wChannels)/wChannels + 2;
+	    wshort(ft, wav->samplesPerBlock);
+	    wshort(ft, 7); /* nCoefs */
+	    for (i=0; i<7; i++) {
+	      wshort(ft, iCoef[i][0]);
+	      wshort(ft, iCoef[i][1]);
+	    }
+
 	    fputs("fact", ft->fp);
 	    wlong(ft, factsize-8);	/* fact chunk size */
 	    /* use max nsamps value first time */
@@ -824,6 +877,7 @@ LONG *buf, len;
 	switch (wav->formatTag)
 	{
 	case WAVE_FORMAT_IMA_ADPCM:
+	case WAVE_FORMAT_ADPCM:
 	    while (len>0) {
 		short *p = wav->samplePtr;
 		short *top = wav->sampleTop;
@@ -834,11 +888,16 @@ LONG *buf, len;
 		   *p++ = ((*buf++) + 0x8000) >> 16;
 
 		wav->samplePtr = p;
-		if (p == wav->sampleTop)
-		    ImaAdpcmWriteBlock(ft);
+		if (p == wav->sampleTop) {
+		    if (wav->formatTag==WAVE_FORMAT_IMA_ADPCM)
+			ImaAdpcmWriteBlock(ft);
+		    else
+			AdpcmWriteBlock(ft);
+		}
 
 	    }
 	    break;
+
 	default:
 	    wav->numSamples += len;
 	    rawwrite(ft, buf, len);
@@ -850,12 +909,17 @@ ft_t ft;
 {
 	wav_t	wav = (wav_t) ft->priv;
 	/* Call this to flush out any remaining data. */
-	if (wav->formatTag == WAVE_FORMAT_IMA_ADPCM) {
+	switch (wav->formatTag)
+	{
+	case WAVE_FORMAT_IMA_ADPCM:
 	    ImaAdpcmWriteBlock(ft);
-	} else {
+	    break;
+	case WAVE_FORMAT_ADPCM:
+	    AdpcmWriteBlock(ft);
+	    break;
+	default:
 	    rawstopwrite(ft);
 	}
-    	
 	if (wav->packet) free(wav->packet);
  	if (wav->samples) free(wav->samples);
  	if (wav->iCoefs) free(wav->iCoefs);
