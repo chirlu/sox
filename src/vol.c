@@ -21,10 +21,10 @@
 
 /* constants
  */
-#define ZERO	  ((VOL_FLOAT)(0.0e0))
+#define ZERO      ((VOL_FLOAT)(0.0e0))
 #define LOG_10_20 ((VOL_FLOAT)(0.1151292546497022842009e0))
-#define ONE	  ((VOL_FLOAT)(1.0e0))
-#define TWENTY	  ((VOL_FLOAT)(20.0e0))
+#define ONE       ((VOL_FLOAT)(1.0e0))
+#define TWENTY    ((VOL_FLOAT)(20.0e0))
 
 #define VOL_USAGE \
     "Usage: vol gain [ type [ limitergain ] ]" \
@@ -56,50 +56,50 @@ int st_vol_getopts(eff_t effp, int n, char **argv)
     
     if (n && (!sscanf(argv[0], VOL_FLOAT_SCAN, &vol->gain)))
     {
-	st_fail(VOL_USAGE);
-	return ST_EOF;
+        st_fail(VOL_USAGE);
+        return ST_EOF;
     }
 
     /* adjust gain depending on type (what a great parser;-) */
     if (n>1) 
     {
-	switch (argv[1][0]) 
-	{
-	case 'd': /* decibels to amplitude */
-	case 'D':
-	    vol->gain = exp(vol->gain*LOG_10_20);
-	    break;
-	case 'p':
-	case 'P': /* power to amplitude, keep phase change */
-	    if (vol->gain > ZERO)
-		vol->gain = sqrt(vol->gain);
-	    else
-		vol->gain = -sqrt(-vol->gain);
-	    break;
-	case 'a': /* amplitude */
-	case 'A':
-	default:
-	    break;
-	}
+        switch (argv[1][0]) 
+        {
+        case 'd': /* decibels to amplitude */
+        case 'D':
+            vol->gain = exp(vol->gain*LOG_10_20);
+            break;
+        case 'p':
+        case 'P': /* power to amplitude, keep phase change */
+            if (vol->gain > ZERO)
+                vol->gain = sqrt(vol->gain);
+            else
+                vol->gain = -sqrt(-vol->gain);
+            break;
+        case 'a': /* amplitude */
+        case 'A':
+        default:
+            break;
+        }
     }
     
 
     if (n>2)
     {
-    	if ((fabs(vol->gain) < ONE) || !sscanf(argv[2], VOL_FLOAT_SCAN, &vol->limitergain) || !((vol->limitergain > ZERO) && (vol->limitergain < ONE)))
-    	{
-  		st_fail(VOL_USAGE);
-		return ST_EOF;  		
-    	}
-    	
-    	vol->uselimiter = 1; /* ok, we'll use it */
-    	/* The following equation is derived so that there is no 
-	 * discontinuity in output amplitudes */
-    	/* and a ST_SAMPLE_MAX input always maps to a ST_SAMPLE_MAX output 
-	 * when the limiter is activated. */
-    	/* (NOTE: There **WILL** be a discontinuity in the slope 
-	 * of the output amplitudes when using the limiter.) */
-    	vol->limiterthreshhold = ST_SAMPLE_MAX * (ONE - vol->limitergain) / (fabs(vol->gain) - vol->limitergain);
+        if ((fabs(vol->gain) < ONE) || !sscanf(argv[2], VOL_FLOAT_SCAN, &vol->limitergain) || !((vol->limitergain > ZERO) && (vol->limitergain < ONE)))
+        {
+                st_fail(VOL_USAGE);
+                return ST_EOF;                  
+        }
+        
+        vol->uselimiter = 1; /* ok, we'll use it */
+        /* The following equation is derived so that there is no 
+         * discontinuity in output amplitudes */
+        /* and a ST_SAMPLE_MAX input always maps to a ST_SAMPLE_MAX output 
+         * when the limiter is activated. */
+        /* (NOTE: There **WILL** be a discontinuity in the slope 
+         * of the output amplitudes when using the limiter.) */
+        vol->limiterthreshhold = ST_SAMPLE_MAX * (ONE - vol->limitergain) / (fabs(vol->gain) - vol->limitergain);
     }
     
 
@@ -115,15 +115,15 @@ int st_vol_start(eff_t effp)
     
     if (effp->outinfo.channels != effp->ininfo.channels)
     {
-	st_warn("VOL cannot handle different channels (in=%d, out=%d)"
-	     " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
+        st_warn("VOL cannot handle different channels (in=%d, out=%d)"
+             " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
     }
 
     if (effp->outinfo.rate != effp->ininfo.rate)
     {
-	st_fail("VOL cannot handle different rates (in=%ld, out=%ld)"
-	     " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
-	return ST_EOF;
+        st_fail("VOL cannot handle different rates (in=%ld, out=%ld)"
+             " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
+        return ST_EOF;
     }
 
     vol->clipped = 0;
@@ -141,13 +141,13 @@ static st_sample_t clip(vol_t vol, const VOL_FLOAT v)
 {
     if (v > ST_SAMPLE_MAX)
     {
-	 vol->clipped++;
-	 return ST_SAMPLE_MAX;
+         vol->clipped++;
+         return ST_SAMPLE_MAX;
     }
-    else if (v < -ST_SAMPLE_MAX)
+    else if (v < ST_SAMPLE_MIN)
     {
-	vol->clipped++;
-	return -ST_SAMPLE_MAX;
+        vol->clipped++;
+        return ST_SAMPLE_MIN;
     }
     /* else */
     return (st_sample_t) v;
@@ -176,35 +176,41 @@ int st_vol_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     
     if (vol->uselimiter)
     {
-	vol->totalprocessed += len;
-	
-	for (;len>0; len--)
-	    {
-	    	sample = *ibuf++;
-	    	
-	    	if (sample > limiterthreshhold)
-	    	{
-	    		sample =  (ST_SAMPLE_MAX - vol->limitergain * (ST_SAMPLE_MAX - sample));
-	    		vol->limited++;
-	    	}
-	    	else if (sample < -limiterthreshhold)
-	    	{
-	    		sample = -(ST_SAMPLE_MAX - vol->limitergain * (ST_SAMPLE_MAX + sample));
-	    		vol->limited++;
-	    	}
-	    	else
-	    	{
-	    		sample = gain * sample;
-	    	}
+        vol->totalprocessed += len;
+        
+        for (;len>0; len--)
+            {
+                sample = *ibuf++;
+                
+                if (sample > limiterthreshhold)
+                {
+                        sample =  (ST_SAMPLE_MAX - vol->limitergain * (ST_SAMPLE_MAX - sample));
+                        vol->limited++;
+                }
+                else if (sample < -limiterthreshhold)
+                {
+                        sample = -(ST_SAMPLE_MAX - vol->limitergain * (ST_SAMPLE_MAX + sample));
+                        /* FIXME: MIN is (-MAX)-1 so need to make sure we
+                         * don't go over that.  Probably could do this
+                         * check inside the above equation but I didn't
+                         * think it thru.
+                         */
+                        if (sample < ST_SAMPLE_MIN)
+                            sample = ST_SAMPLE_MIN;
+                        vol->limited++;
+                } else
+                {
+                        sample = gain * sample;
+                }
 
-		*obuf++ = clip(vol, sample);
-	    }
+                *obuf++ = clip(vol, sample);
+            }
     }
     else
     {
-    	/* quite basic, with clipping */
-    	for (;len>0; len--)
-		*obuf++ = clip(vol, gain * *ibuf++);
+        /* quite basic, with clipping */
+        for (;len>0; len--)
+                *obuf++ = clip(vol, gain * *ibuf++);
     }
     return ST_SUCCESS;
 }
@@ -218,13 +224,13 @@ int st_vol_stop(eff_t effp)
     vol_t vol = (vol_t) effp->priv;
     if (vol->limited)
     {
-	st_warn("VOL limited %d values (%d percent).", 
-	     vol->limited, (int) (vol->limited * 100.0 / vol->totalprocessed));
+        st_warn("VOL limited %d values (%d percent).", 
+             vol->limited, (int) (vol->limited * 100.0 / vol->totalprocessed));
     }
     if (vol->clipped) 
     {
-	st_warn("VOL clipped %d values, amplitude gain=%f too high...", 
-	     vol->clipped, vol->gain);
+        st_warn("VOL clipped %d values, amplitude gain=%f too high...", 
+             vol->clipped, vol->gain);
     }
     return ST_SUCCESS;
 }
