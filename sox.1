@@ -95,6 +95,8 @@ sox \- Sound eXchange : universal sound sample translator
 .br
 	pick
 .br
+	pitch \fIshift [ width interpole fade ]\fB
+.br
 	polyphase [ \fI-w \fR< \fInut\fR / \fIham\fR > ] 
                [ \fI -width \fR< \fI long \fR / \fIshort \fR / \fI# \fR> ] 
                [ \fI-cutoff # \fR ]
@@ -107,11 +109,13 @@ sox \- Sound eXchange : universal sound sample translator
 .br
 	reverse
 .br
-	speed \ffactor\f
+	speed \fIfactor\fB
 .br
 	split
 .br
 	stat [ \fIdebug\fB | \fI-v\fB ]
+.br
+	stretch [ \fIfactor [ window fade shift fading ]\fB
 .br
 	swap [ \fI1 2 3 4\fB ]
 .br
@@ -705,6 +709,21 @@ feedback.  Gain-out is the volume of the output.
 pick
 Select the left or right channel of a stereo sample,
 or one of four channels in a quadrophonic sample.
+.TP 10
+pitch \fIshift [ width interpole fade ]\fB
+Change the pitch of file without affecting its duration by cross-fading
+shifted samples.
+.I shift
+is given in cents. Use a positive value to shift to treble, negative value to shift to bass.
+Default shift is 0.
+.I width
+of window is in ms. Default width is 20ms. Try 30ms to lower pitch,
+and 10ms to raise pitch.
+.I interpole
+option, can be "cubic" or "linear". Default is "cubic".  The
+.I fade
+option, can be "cos", "hamming", "linear" or "trapezoid".
+Default is "cos".
 .TP
 polyphase [ \fI-w \fR< \fInut\fR / \fIham\fR > ] 
 .TP
@@ -850,7 +869,7 @@ reverse
 Reverse the sound sample completely.
 Included for finding Satanic subliminals.
 .TP 10
-speed \ffactor\f
+speed \fIfactor\fB
 Speed up or down the sound, as a magnetic tape with a speed control. 
 It affects both pitch and time. A factor of 1.0 means no change, 
 and is the default. 
@@ -883,6 +902,21 @@ that will place sox into debug mode and print out a hex dump of the
 sound file from the internal buffer that is in 32-bit signed PCM data.
 This is mainly only of use in tracking down endian problems that
 creep in to sox on cross-platform versions.
+.TP 10
+stretch \fIfactor [window fade shift fading]\fB
+Time stretch file by a given factor. Change duration without affecting the pitch. 
+.I factor
+of stretching: >1.0 lengthen, <1.0 shorten duration.
+.I window
+size is in ms. Default is 20ms. The
+.I fade
+option, can be "lin".
+.I shift
+ratio, in [0.0 1.0]. Default depends on stretch factor. 1.0
+to shorten, 0.8 to lengthen.  The
+.I fading
+ratio, in [0.0 0.5]. The amount of a fade's default depends on factor
+and shift.
 .TP 10
 swap [ \fI1 2 3 4\fB ]
 Swap channels in multi-channel sound files.  In files with more than 2

@@ -12,15 +12,16 @@
 
 FOBJ	= 8svx.obj adpcm.obj aiff.obj alsa.obj au.obj auto.obj avr.obj cdr.obj \
 	  cvsd.obj dat.obj g721.obj g723_24.obj g723_40.obj g72x.obj gsm.obj \
-	  hcom.obj ima_rw.o maud.obj oss.obj raw.obj sf.obj smp.obj \
+	  hcom.obj ima_rw.obj maud.obj oss.obj raw.obj sf.obj smp.obj \
 	  sndrtool.obj sunaudio.obj tx16w.obj voc.obj wav.obj wve.obj
 
 EOBJ	= avg.obj band.obj bandpass.obj breject.obj btrworth.obj chorus.obj \
 	  compand.obj copy.obj cut.obj deemphas.obj echo.obj \
 	  echos.obj filter.obj flanger.obj highp.obj highpass.obj lowp.obj \
-          lowpass.obj map.obj mask.obj phaser.obj pick.obj pan.o \
+          lowpass.obj map.obj mask.obj phaser.obj pick.obj pitch.obj pan.obj \
 	  polyphase.obj rate.obj resample.obj reverb.obj \
-	  reverse.obj speed.obj split.obj stat.obj swap.obj vibro.obj vol.obj
+	  reverse.obj speed.obj split.obj stat.obj stretch.obj \
+	  swap.obj vibro.obj vol.obj
 
 LIBOBJS   = $(FOBJ) $(EOBJ) handlers.obj libst.obj misc.obj getopt.obj util.obj
 

@@ -552,6 +552,12 @@ extern int st_pick_start();
 extern int st_pick_flow();
 extern int st_pick_stop();
 
+extern int st_pitch_getopts();
+extern int st_pitch_start();
+extern int st_pitch_flow();
+extern int st_pitch_drain();
+extern int st_pitch_stop();
+
 extern int st_poly_getopts();
 extern int st_poly_start();
 extern int st_poly_flow();
@@ -596,6 +602,12 @@ extern int st_stat_getopts();
 extern int st_stat_start();
 extern int st_stat_flow();
 extern int st_stat_stop();
+
+extern int st_stretch_getopts();
+extern int st_stretch_start();
+extern int st_stretch_flow();
+extern int st_stretch_drain();
+extern int st_stretch_stop();
 
 extern int st_swap_getopts();
 extern int st_swap_start();
@@ -693,6 +705,9 @@ st_effect_t st_effects[] = {
 	{"pick", ST_EFF_CHAN | ST_EFF_MCHAN, 
 		st_pick_getopts, st_pick_start, st_pick_flow, 
 		st_null_drain, st_pick_stop},
+	{"pitch", 0,
+	        st_pitch_getopts, st_pitch_start, st_pitch_flow,
+	        st_pitch_drain, st_pitch_stop},
 	{"polyphase", ST_EFF_RATE,
 	        st_poly_getopts, st_poly_start, st_poly_flow,
 	        st_poly_drain, st_poly_stop},
@@ -717,6 +732,9 @@ st_effect_t st_effects[] = {
 	{"stat", ST_EFF_MCHAN | ST_EFF_REPORT | ST_EFF_RATE | ST_EFF_CHAN,
 		st_stat_getopts, st_stat_start, st_stat_flow, 
 		st_null_drain, st_stat_stop},
+	{"stretch", 0,
+	        st_stretch_getopts, st_stretch_start, st_stretch_flow,
+	        st_stretch_drain, st_stretch_stop},
 	{"swap", ST_EFF_MCHAN,
 		st_swap_getopts, st_swap_start, st_swap_flow, 
 		st_swap_drain, st_swap_stop},
