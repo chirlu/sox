@@ -29,7 +29,7 @@
 
 /* Private data for MAUD file */
 struct maudstuff { /* max. 100 bytes!!!! */
-	u_int32_t nsamples;
+	uint32_t nsamples;
 };
 
 static void maudwriteheader(ft_t);
@@ -49,12 +49,12 @@ int st_maudstartread(ft_t ft)
 	char *chunk_buf;
 	
 	unsigned short bitpersam;
-	u_int32_t nom;
+	uint32_t nom;
 	unsigned short denom;
 	unsigned short chaninf;
 	
-	u_int32_t chunksize;
-	u_int32_t trash32;
+	uint32_t chunksize;
+	uint32_t trash32;
 	int rc;
 
 	/* Needed for rawread() */

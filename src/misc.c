@@ -2,8 +2,8 @@
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Lance Norskog And Sundry Contributors are not responsible for
  * the consequences of using this software.
  */
 
@@ -30,25 +30,25 @@
 #endif
 
 const char *st_sizes_str[] = {
-	"NONSENSE!",
-	"bytes",
-	"shorts",
-	"NONSENSE",
-	"longs",
-	"32-bit floats",
-	"64-bit floats",
-	"IEEE floats",
+        "NONSENSE!",
+        "bytes",
+        "shorts",
+        "NONSENSE",
+        "longs",
+        "32-bit floats",
+        "64-bit floats",
+        "IEEE floats",
 };
 
 const char *st_encodings_str[] = {
-	"NONSENSE!",
-	"unsigned",
-	"signed (2's complement)",
-	"u-law",
-	"a-law",
-	"adpcm",
-	"ima_adpcm",
-	"gsm",
+        "NONSENSE!",
+        "unsigned",
+        "signed (2's complement)",
+        "u-law",
+        "a-law",
+        "adpcm",
+        "ima_adpcm",
+        "gsm",
 };
 
 static const char readerr[] = "Premature EOF while reading sample file.";
@@ -77,8 +77,8 @@ st_ssize_t st_write(ft_t ft, void *buf, size_t size, st_ssize_t len)
 /* Read and write known datatypes in "machine format".  Swap if indicated.
  * They all return ST_EOF on error and ST_SUCCESS on success.
  */
-/* Read n-char string (and possibly null-terminating). 
- * Stop reading and null-terminate string if either a 0 or \n is reached. 
+/* Read n-char string (and possibly null-terminating).
+ * Stop reading and null-terminate string if either a 0 or \n is reached.
  */
 int st_reads(ft_t ft, char *c, st_ssize_t len)
 {
@@ -88,19 +88,19 @@ int st_reads(ft_t ft, char *c, st_ssize_t len)
     sc = c;
     do
     {
-	if (fread(&in, 1, 1, ft->fp) != 1)
-	{
-	    *sc = 0;
-		st_fail_errno(ft,errno,readerr);
-	    return (ST_EOF);
-	}
-	if (in == 0 || in == '\n')
-	{
-	    break;
-	}
+        if (fread(&in, 1, 1, ft->fp) != 1)
+        {
+            *sc = 0;
+                st_fail_errno(ft,errno,readerr);
+            return (ST_EOF);
+        }
+        if (in == 0 || in == '\n')
+        {
+            break;
+        }
 
-	*sc = in;
-	sc++;
+        *sc = in;
+        sc++;
     } while (sc - c < len);
     *sc = 0;
     return(ST_SUCCESS);
@@ -109,159 +109,159 @@ int st_reads(ft_t ft, char *c, st_ssize_t len)
 /* Write null-terminated string (without \0). */
 int st_writes(ft_t ft, char *c)
 {
-	if (fwrite(c, 1, strlen(c), ft->fp) != strlen(c))
-	{
-		st_fail_errno(ft,errno,writerr);
-		return(ST_EOF);
-	}
-	return(ST_SUCCESS);
+        if (fwrite(c, 1, strlen(c), ft->fp) != strlen(c))
+        {
+                st_fail_errno(ft,errno,writerr);
+                return(ST_EOF);
+        }
+        return(ST_SUCCESS);
 }
 
 /* Read byte. */
-int st_readb(ft_t ft, u_int8_t *ub)
+int st_readb(ft_t ft, uint8_t *ub)
 {
-	if (fread(ub, 1, 1, ft->fp) != 1)
-	{
-		st_fail_errno(ft,errno,readerr);
-	    return(ST_EOF);
-	}
-	return ST_SUCCESS;
+        if (fread(ub, 1, 1, ft->fp) != 1)
+        {
+                st_fail_errno(ft,errno,readerr);
+            return(ST_EOF);
+        }
+        return ST_SUCCESS;
 }
 
 /* Write byte. */
-int st_writeb(ft_t ft, u_int8_t ub)
+int st_writeb(ft_t ft, uint8_t ub)
 {
-	if (fwrite(&ub, 1, 1, ft->fp) != 1)
-	{
-		st_fail_errno(ft,errno,writerr);
-		return(ST_EOF);
-	}
-	return(ST_SUCCESS);
+        if (fwrite(&ub, 1, 1, ft->fp) != 1)
+        {
+                st_fail_errno(ft,errno,writerr);
+                return(ST_EOF);
+        }
+        return(ST_SUCCESS);
 }
 
 /* Read word. */
-int st_readw(ft_t ft, u_int16_t *uw)
+int st_readw(ft_t ft, uint16_t *uw)
 {
-	if (fread(uw, 2, 1, ft->fp) != 1)
-	{
-		st_fail_errno(ft,errno,readerr);
-	    return (ST_EOF);
-	}
-	if (ft->swap)
-		*uw = st_swapw(*uw);
-	return ST_SUCCESS;
+        if (fread(uw, 2, 1, ft->fp) != 1)
+        {
+                st_fail_errno(ft,errno,readerr);
+            return (ST_EOF);
+        }
+        if (ft->swap)
+                *uw = st_swapw(*uw);
+        return ST_SUCCESS;
 }
 
 /* Write word. */
-int st_writew(ft_t ft, u_int16_t uw)
+int st_writew(ft_t ft, uint16_t uw)
 {
-	if (ft->swap)
-		uw = st_swapw(uw);
-	if (fwrite(&uw, 2, 1, ft->fp) != 1)
-	{
-		st_fail_errno(ft,errno,writerr);
-		return (ST_EOF);
-	}
-	return(ST_SUCCESS);
+        if (ft->swap)
+                uw = st_swapw(uw);
+        if (fwrite(&uw, 2, 1, ft->fp) != 1)
+        {
+                st_fail_errno(ft,errno,writerr);
+                return (ST_EOF);
+        }
+        return(ST_SUCCESS);
 }
 
 /* Read double word. */
-int st_readdw(ft_t ft, u_int32_t *udw)
+int st_readdw(ft_t ft, uint32_t *udw)
 {
-	if (fread(udw, 4, 1, ft->fp) != 1)
-	{
-		st_fail_errno(ft,errno,readerr);
-	    return (ST_EOF);
-	}
-	if (ft->swap)
-		*udw = st_swapl(*udw);
-	return ST_SUCCESS;
+        if (fread(udw, 4, 1, ft->fp) != 1)
+        {
+                st_fail_errno(ft,errno,readerr);
+            return (ST_EOF);
+        }
+        if (ft->swap)
+                *udw = st_swapdw(*udw);
+        return ST_SUCCESS;
 }
 
 /* Write double word. */
-int st_writedw(ft_t ft, u_int32_t udw)
+int st_writedw(ft_t ft, uint32_t udw)
 {
-	if (ft->swap)
-		udw = st_swapl(udw);
-	if (fwrite(&udw, 4, 1, ft->fp) != 1)
-	{
-		st_fail_errno(ft,errno,writerr);
-		return (ST_EOF);
-	}
-	return(ST_SUCCESS);
+        if (ft->swap)
+                udw = st_swapdw(udw);
+        if (fwrite(&udw, 4, 1, ft->fp) != 1)
+        {
+                st_fail_errno(ft,errno,writerr);
+                return (ST_EOF);
+        }
+        return(ST_SUCCESS);
 }
 
 /* Read float. */
 int st_readf(ft_t ft, float *f)
 {
-	if (fread(f, sizeof(float), 1, ft->fp) != 1)
-	{
-	    return(ST_EOF);
-	}
-	if (ft->swap)
-		*f = st_swapf(*f);
-	return ST_SUCCESS;
+        if (fread(f, sizeof(float), 1, ft->fp) != 1)
+        {
+            return(ST_EOF);
+        }
+        if (ft->swap)
+                *f = st_swapf(*f);
+        return ST_SUCCESS;
 }
 
 /* Write float. */
 int st_writef(ft_t ft, float f)
 {
-	float t = f;
+        float t = f;
 
-	if (ft->swap)
-		t = st_swapf(t);
-	if (fwrite(&t, sizeof(float), 1, ft->fp) != 1)
-	{
-		st_fail_errno(ft,errno,writerr);
-		return (ST_EOF);
-	}
-	return (ST_SUCCESS);
+        if (ft->swap)
+                t = st_swapf(t);
+        if (fwrite(&t, sizeof(float), 1, ft->fp) != 1)
+        {
+                st_fail_errno(ft,errno,writerr);
+                return (ST_EOF);
+        }
+        return (ST_SUCCESS);
 }
 
 /* Read double. */
 int st_readdf(ft_t ft, double *d)
 {
-	if (fread(d, sizeof(double), 1, ft->fp) != 1)
-	{
-	    return(ST_EOF);
-	}
-	if (ft->swap)
-		*d = st_swapd(*d);
-	return ST_SUCCESS;
+        if (fread(d, sizeof(double), 1, ft->fp) != 1)
+        {
+            return(ST_EOF);
+        }
+        if (ft->swap)
+                *d = st_swapd(*d);
+        return ST_SUCCESS;
 }
 
 /* Write double. */
 int st_writedf(ft_t ft, double d)
 {
-	if (ft->swap)
-		d = st_swapd(d);
-	if (fwrite(&d, sizeof(double), 1, ft->fp) != 1)
-	{
-		st_fail_errno(ft,errno,writerr);
-		return (ST_EOF);
-	}
-	return (ST_SUCCESS);
+        if (ft->swap)
+                d = st_swapd(d);
+        if (fwrite(&d, sizeof(double), 1, ft->fp) != 1)
+        {
+                st_fail_errno(ft,errno,writerr);
+                return (ST_EOF);
+        }
+        return (ST_SUCCESS);
 }
 
 /* generic swap routine. Swap l and place in to f (datatype length = n) */
 void st_swapb(char *l, char *f, int n)
-{    
+{
     register int i;
 
     for (i= 0; i< n; i++)
-	f[i]= l[n-i-1];
+        f[i]= l[n-i-1];
 }
 
 
 /* Byte swappers, use libc optimized macro's if possible */
 #ifndef HAVE_BYTESWAP_H
 
-u_int16_t st_swapw(u_int16_t uw)
+uint16_t st_swapw(uint16_t uw)
 {
     return ((uw >> 8) | (uw << 8)) & 0xffff;
 }
 
-u_int32_t st_swapdw(u_int32_t udw)
+uint32_t st_swapdw(uint32_t udw)
 {
     return (udw >> 24) | ((udw >> 8) & 0xff00) | ((udw << 8) & 0xff0000L) | (udw << 24);
 }
@@ -270,8 +270,8 @@ u_int32_t st_swapdw(u_int32_t udw)
 float st_swapf(float f)
 {
     union {
-	u_int32_t dw;
-	float f;
+        uint32_t dw;
+        float f;
     } u;
 
     u.f= f;
@@ -299,12 +299,12 @@ int st_effect_nothing(eff_t effp) { return(ST_SUCCESS); }
 int st_effect_nothing_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp) { *osamp = 0; return(ST_SUCCESS); }
 
 /* here for linear interp.  might be useful for other things */
-st_sample_t st_gcd(st_sample_t a, st_sample_t b) 
+st_sample_t st_gcd(st_sample_t a, st_sample_t b)
 {
-	if (b == 0)
-		return a;
-	else
-		return st_gcd(b, a % b);
+        if (b == 0)
+                return a;
+        else
+                return st_gcd(b, a % b);
 }
 
 st_sample_t st_lcm(st_sample_t a, st_sample_t b)
@@ -314,7 +314,7 @@ st_sample_t st_lcm(st_sample_t a, st_sample_t b)
 }
 
 #ifndef HAVE_RAND
-/* 
+/*
  * Portable random generator as defined by ANSI C Standard.
  * Don't ask me why not all C libraries include it.
  */
@@ -326,7 +326,7 @@ int rand(void) {
     return ((unsigned int)(rand_seed/65536L) % 32768L);
 }
 
-void srand(unsigned int seed) 
+void srand(unsigned int seed)
 {
     rand_seed = seed;
 }
@@ -343,7 +343,7 @@ void st_initrand(void) {
 st_sample_t st_clip24(st_sample_t l)
 {
     if (l >= ((st_sample_t)1 << 23))
-	return ((st_sample_t)1 << 23) - 1;
+        return ((st_sample_t)1 << 23) - 1;
     else if (l <= -((st_sample_t)1 << 23))
         return -((st_sample_t)1 << 23) + 1;
     else
@@ -360,8 +360,8 @@ void st_sine(int *buf, st_ssize_t len, int max, int depth)
 
     offset = max - depth;
     for (i = 0; i < len; i++) {
-	val = sin((double)i/(double)len * 2.0 * M_PI);
-	buf[i] = (int) ((1.0 + val) * depth / 2.0);
+        val = sin((double)i/(double)len * 2.0 * M_PI);
+        buf[i] = (int) ((1.0 + val) * depth / 2.0);
     }
 }
 
@@ -373,12 +373,12 @@ void st_triangle(int *buf, st_ssize_t len, int max, int depth)
 
     offset = max - 2 * depth;
     for (i = 0; i < len / 2; i++) {
-	val = i * 2.0 / len;
-	buf[i] = offset + (int) (val * 2.0 * (double)depth);
+        val = i * 2.0 / len;
+        buf[i] = offset + (int) (val * 2.0 * (double)depth);
     }
     for (i = len / 2; i < len ; i++) {
-	val = (len - i) * 2.0 / len;
-	buf[i] = offset + (int) (val * 2.0 * (double)depth);
+        val = (len - i) * 2.0 / len;
+        buf[i] = offset + (int) (val * 2.0 * (double)depth);
     }
 }
 
@@ -386,71 +386,71 @@ const char *st_version()
 {
     static char versionstr[20];
 
-    sprintf(versionstr, "Version %d.%d.%d", 
-	    (ST_LIB_VERSION_CODE & 0xff0000) >> 16, 
-	    (ST_LIB_VERSION_CODE & 0x00ff00) >> 8,
-	    (ST_LIB_VERSION_CODE & 0x0000ff));
+    sprintf(versionstr, "Version %d.%d.%d",
+            (ST_LIB_VERSION_CODE & 0xff0000) >> 16,
+            (ST_LIB_VERSION_CODE & 0x00ff00) >> 8,
+            (ST_LIB_VERSION_CODE & 0x0000ff));
     return(versionstr);
 }
 
 
-#ifndef	HAVE_STRERROR
+#ifndef HAVE_STRERROR
 /* strerror function */
 char *strerror(int errcode)
 {
-	static char  nomesg[30];
-	extern int sys_nerr;
-	extern char *sys_errlist[];
+        static char  nomesg[30];
+        extern int sys_nerr;
+        extern char *sys_errlist[];
 
-	if (errcode < sys_nerr)
-		return (sys_errlist[errcode]);
-	else
-	{
-		sprintf (nomesg, "Undocumented error %d", errcode);
-		return (nomesg);
-	}
+        if (errcode < sys_nerr)
+                return (sys_errlist[errcode]);
+        else
+        {
+                sprintf (nomesg, "Undocumented error %d", errcode);
+                return (nomesg);
+        }
 }
 #endif
 
 /* Sets file offset
- * offset in bytes 
+ * offset in bytes
  */
-int st_seek(ft_t ft, st_size_t offset, int whence) 
+int st_seek(ft_t ft, st_size_t offset, int whence)
 {
     if( ft->seekable == 0 ){
-	/* 
-	 * If a stream peel off chars else 
-	 * EPERM 	"Operation not permitted" 
-	 */
-	if(whence == SEEK_CUR ){
-	    if( offset < 0 ){
-		st_fail_errno(ft,ST_EINVAL,"Can't seek backwards in pipe");
-	    } else {
-		while ( offset > 0 && !feof(ft->fp) )
-		{
-		    getc(ft->fp);
-		    offset--;
-		}
-		if(offset)
-		    st_fail_errno(ft,ST_EOF,"offset past eof");
-		else 
-		    ft->st_errno = ST_SUCCESS;
-	    }
-	} else {
-	    st_fail_errno(ft,ST_EPERM,"File not seekable");
-	}
+        /*
+         * If a stream peel off chars else
+         * EPERM        "Operation not permitted"
+         */
+        if(whence == SEEK_CUR ){
+            if( offset < 0 ){
+                st_fail_errno(ft,ST_EINVAL,"Can't seek backwards in pipe");
+            } else {
+                while ( offset > 0 && !feof(ft->fp) )
+                {
+                    getc(ft->fp);
+                    offset--;
+                }
+                if(offset)
+                    st_fail_errno(ft,ST_EOF,"offset past eof");
+                else
+                    ft->st_errno = ST_SUCCESS;
+            }
+        } else {
+            st_fail_errno(ft,ST_EPERM,"File not seekable");
+        }
     } else {
-	if( fseek(ft->fp,offset,whence) == -1 )
-	    st_fail_errno(ft,errno,strerror(errno));
-	else
-	    ft->st_errno = ST_SUCCESS;
-    }	
+        if( fseek(ft->fp,offset,whence) == -1 )
+            st_fail_errno(ft,errno,strerror(errno));
+        else
+            ft->st_errno = ST_SUCCESS;
+    }
 
     /* Empty the st file buffer */
     if( ft->st_errno == ST_SUCCESS ){
-	ft->file.count = 0;
-	ft->file.pos = 0;
-	ft->file.eof = 0;
+        ft->file.count = 0;
+        ft->file.pos = 0;
+        ft->file.eof = 0;
     }
 
     return(ft->st_errno);

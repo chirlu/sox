@@ -118,12 +118,12 @@ int st_austartread(ft_t ft)
 	   Any extra bytes (totalling hdr_size - 24) are an
 	   "info" field of unspecified nature, usually a string.
 	   By convention the header size is a multiple of 4. */
-	u_int32_t magic;
-	u_int32_t hdr_size;
-	u_int32_t data_size;
-	u_int32_t encoding;
-	u_int32_t sample_rate;
-	u_int32_t channels;
+	uint32_t magic;
+	uint32_t hdr_size;
+	uint32_t data_size;
+	uint32_t encoding;
+	uint32_t sample_rate;
+	uint32_t channels;
 
 	register int i;
 	char *buf;

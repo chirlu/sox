@@ -421,7 +421,7 @@ int st_checkformat(ft_t ft)
                 return ST_EOF;
         }
 
-        if ((ft->info.size <= 0) || (ft->info.size > ST_SIZE_MAX))
+        if ((ft->info.size <= 0) || (ft->info.size > ST_INFO_SIZE_MAX))
         {
                 st_fail_errno(ft,ST_EFMT,"data size %i is invalid");
                 return ST_EOF;

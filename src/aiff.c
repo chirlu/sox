@@ -86,18 +86,18 @@ int st_aiffstartread(ft_t ft)
 {
 	aiff_t aiff = (aiff_t ) ft->priv;
 	char buf[5];
-	u_int32_t totalsize;
-	u_int32_t chunksize;
+	uint32_t totalsize;
+	uint32_t chunksize;
 	unsigned short channels = 0;
-	u_int32_t frames;
+	uint32_t frames;
 	unsigned short bits = 0;
 	double rate = 0.0;
-	u_int32_t offset = 0;
-	u_int32_t blocksize = 0;
+	uint32_t offset = 0;
+	uint32_t blocksize = 0;
 	int foundcomm = 0, foundmark = 0, foundinstr = 0;
 	struct mark {
 		unsigned short id;
-		u_int32_t position;
+		uint32_t position;
 		char name[40]; 
 	} marks[32];
 	unsigned short looptype;
@@ -110,9 +110,9 @@ int st_aiffstartread(ft_t ft)
 	char *copyright;
 	char *nametext;
 
-	u_int8_t trash8;
-	u_int16_t trash16;
-	u_int32_t trash32;
+	uint8_t trash8;
+	uint16_t trash16;
+	uint32_t trash32;
 
 	int rc;
 
@@ -490,7 +490,7 @@ static void reportInstrument(ft_t ft)
 /* Process a text chunk, allocate memory, display it if verbose and return */
 static int textChunk(char **text, char *chunkDescription, ft_t ft) 
 {
-  u_int32_t chunksize;
+  uint32_t chunksize;
   st_readdw(ft, &chunksize);
   /* allocate enough memory to hold the text including a terminating \0 */
   *text = (char *) malloc((size_t) chunksize + 1);
@@ -524,9 +524,9 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft)
  */
 static int commentChunk(char **text, char *chunkDescription, ft_t ft)
 {
-  u_int32_t chunksize;
+  uint32_t chunksize;
   unsigned short numComments;
-  u_int32_t timeStamp;
+  uint32_t timeStamp;
   unsigned short markerId;
   unsigned short totalCommentLength = 0;
   unsigned int commentIndex;
@@ -588,7 +588,7 @@ st_ssize_t st_aiffread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 int st_aiffstopread(ft_t ft) 
 {
 	char buf[5];
-	u_int32_t chunksize;
+	uint32_t chunksize;
 	ULONG trash;
 
 	if (!ft->seekable)

@@ -16,7 +16,7 @@
 
 typedef struct wvepriv
     {
-    u_int32_t length;
+    uint32_t length;
     short padding;
     short repeats;
 /* For seeking */

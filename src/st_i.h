@@ -14,6 +14,7 @@
  */
 
 #include "st.h"
+#include <sys/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,12 +65,12 @@ st_ssize_t st_read(ft_t ft, void *buf, size_t size, st_ssize_t len);
 st_ssize_t st_write(ft_t ft, void *buf, size_t size, st_ssize_t len);
 int st_reads(ft_t ft, char *c, st_ssize_t len);
 int st_writes(ft_t ft, char *c);
-int st_readb(ft_t ft, u_int8_t *ub);
-int st_writeb(ft_t ft, u_int8_t ub);
-int st_readw(ft_t ft, u_int16_t *uw);
-int st_writew(ft_t ft, u_int16_t uw);
-int st_readdw(ft_t ft, u_int32_t *udw);
-int st_writedw(ft_t ft, u_int32_t udw);
+int st_readb(ft_t ft, uint8_t *ub);
+int st_writeb(ft_t ft, uint8_t ub);
+int st_readw(ft_t ft, uint16_t *uw);
+int st_writew(ft_t ft, uint16_t uw);
+int st_readdw(ft_t ft, uint32_t *udw);
+int st_writedw(ft_t ft, uint32_t udw);
 int st_readf(ft_t ft, float *f);
 int st_writef(ft_t ft, float f);
 int st_readdf(ft_t ft, double *d);
@@ -80,11 +81,11 @@ st_size_t st_filelength(ft_t ft);
 /* Utilities to byte-swap values, use libc optimized macro's if possible  */
 #ifdef HAVE_BYTESWAP_H
 #define st_swapw(x) bswap_16(x)
-#define st_swapl(x) bswap_32(x)
+#define st_swapdw(x) bswap_32(x)
 #define st_swapf(x) (float)bswap_32((ULONG)(x))
 #else
-u_int16_t st_swapw(u_int16_t uw);
-u_int32_t st_swapdw(u_int32_t udw);
+uint16_t st_swapw(uint16_t uw);
+uint32_t st_swapdw(uint32_t udw);
 float st_swapf(float f);
 #endif
 double st_swapd(double d);
@@ -333,15 +334,15 @@ int st_wveseek(ft_t ft, st_size_t offset);
  */
 int st_avg_getopts(eff_t effp, int argc, char **argv);
 int st_avg_start(eff_t effp);
-int st_avg_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	        st_size_t *isamp, st_size_t *osamp);
+int st_avg_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                st_size_t *isamp, st_size_t *osamp);
 int st_avg_stop(eff_t effp);
 
 int st_band_getopts(eff_t effp, int argc, char **argv);
 int st_band_start(eff_t effp);
-int st_band_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp);
-int st_band_stop(eff_t effp); 
+int st_band_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                 st_size_t *isamp, st_size_t *osamp);
+int st_band_stop(eff_t effp);
 int st_bandpass_getopts(eff_t effp, int argc, char **argv);
 int st_bandpass_start(eff_t effp);
 
@@ -350,82 +351,82 @@ int st_bandreject_start(eff_t effp);
 
 int st_chorus_getopts(eff_t effp, int argc, char **argv);
 int st_chorus_start(eff_t effp);
-int st_chorus_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	           st_size_t *isamp, st_size_t *osamp);
+int st_chorus_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                   st_size_t *isamp, st_size_t *osamp);
 int st_chorus_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_chorus_stop(eff_t effp);
 
 int st_compand_getopts(eff_t effp, int argc, char **argv);
 int st_compand_start(eff_t effp);
-int st_compand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	            st_size_t *isamp, st_size_t *osamp);
+int st_compand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                    st_size_t *isamp, st_size_t *osamp);
 int st_compand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_compand_stop(eff_t effp);
 
-int st_copy_getopts(eff_t effp, int argc, char **argv); 
+int st_copy_getopts(eff_t effp, int argc, char **argv);
 int st_copy_start(eff_t effp);
-int st_copy_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp);
+int st_copy_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                 st_size_t *isamp, st_size_t *osamp);
 int st_copy_stop(eff_t effp);
 
 int st_dcshift_getopts(eff_t effp, int argc, char **argv);
 int st_dcshift_start(eff_t effp);
-int st_dcshift_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	            st_size_t *isamp, st_size_t *osamp);
+int st_dcshift_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                    st_size_t *isamp, st_size_t *osamp);
 int st_dcshift_stop(eff_t effp);
 
 int st_deemph_getopts(eff_t effp, int argc, char **argv);
 int st_deemph_start(eff_t effp);
 int st_deemph_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-	           st_size_t *isamp, st_size_t *osamp);
+                   st_size_t *isamp, st_size_t *osamp);
 int st_deemph_stop(eff_t effp);
 
 int st_earwax_getopts(eff_t effp, int argc, char **argv);
 int st_earwax_start(eff_t effp);
-int st_earwax_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	           st_size_t *isamp, st_size_t *osamp);
+int st_earwax_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                   st_size_t *isamp, st_size_t *osamp);
 int st_earwax_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_earwax_stop(eff_t effp);
 
 int st_echo_getopts(eff_t effp, int argc, char **argv);
 int st_echo_start(eff_t effp);
-int st_echo_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp);
+int st_echo_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                 st_size_t *isamp, st_size_t *osamp);
 int st_echo_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_echo_stop(eff_t effp);
 
 int st_echos_getopts(eff_t effp, int argc, char **argv);
 int st_echos_start(eff_t effp);
-int st_echos_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	          st_size_t *isamp, st_size_t *osamp);
+int st_echos_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                  st_size_t *isamp, st_size_t *osamp);
 int st_echos_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_echos_stop(eff_t effp);
 
 int st_fade_getopts(eff_t effp, int argc, char **argv);
 int st_fade_start(eff_t effp);
-int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp);
+int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                 st_size_t *isamp, st_size_t *osamp);
 int st_fade_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_fade_stop(eff_t effp);
 
 int st_filter_getopts(eff_t effp, int argc, char **argv);
 int st_filter_start(eff_t effp);
-int st_filter_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	           st_size_t *isamp, st_size_t *osamp);
+int st_filter_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                   st_size_t *isamp, st_size_t *osamp);
 int st_filter_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_filter_stop(eff_t effp);
 
 int st_flanger_getopts(eff_t effp, int argc, char **argv);
 int st_flanger_start(eff_t effp);
-int st_flanger_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	            st_size_t *isamp, st_size_t *osamp);
+int st_flanger_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                    st_size_t *isamp, st_size_t *osamp);
 int st_flanger_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_flanger_stop(eff_t effp);
 
 int st_highp_getopts(eff_t effp, int argc, char **argv);
 int st_highp_start(eff_t effp);
-int st_highp_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	          st_size_t *isamp, st_size_t *osamp);
+int st_highp_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                  st_size_t *isamp, st_size_t *osamp);
 int st_highp_stop(eff_t effp);
 
 int st_highpass_getopts(eff_t effp, int argc, char **argv);
@@ -433,8 +434,8 @@ int st_highpass_start(eff_t effp);
 
 int st_lowp_getopts(eff_t effp, int argc, char **argv);
 int st_lowp_start(eff_t effp);
-int st_lowp_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp);
+int st_lowp_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                 st_size_t *isamp, st_size_t *osamp);
 int st_lowp_stop(eff_t effp);
 
 int st_lowpass_getopts(eff_t effp, int argc, char **argv);
@@ -442,137 +443,137 @@ int st_lowpass_start(eff_t effp);
 
 int st_map_getopts(eff_t effp, int argc, char **argv);
 int st_map_start(eff_t effp);
-int st_map_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	        st_size_t *isamp, st_size_t *osamp);
+int st_map_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                st_size_t *isamp, st_size_t *osamp);
 
 int st_mask_getopts(eff_t effp, int argc, char **argv);
-int st_mask_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp);
+int st_mask_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                 st_size_t *isamp, st_size_t *osamp);
 
 int st_pan_getopts(eff_t effp, int argc, char **argv);
 int st_pan_start(eff_t effp);
-int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	        st_size_t *isamp, st_size_t *osamp);
+int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                st_size_t *isamp, st_size_t *osamp);
 int st_pan_stop(eff_t effp);
 
 int st_phaser_getopts(eff_t effp, int argc, char **argv);
 int st_phaser_start(eff_t effp);
-int st_phaser_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	           st_size_t *isamp, st_size_t *osamp);
+int st_phaser_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                   st_size_t *isamp, st_size_t *osamp);
 int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_phaser_stop(eff_t effp);
 
 int st_pick_getopts(eff_t effp, int argc, char **argv);
 int st_pick_start(eff_t effp);
-int st_pick_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp);
+int st_pick_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                 st_size_t *isamp, st_size_t *osamp);
 int st_pick_stop(eff_t effp);
 
 int st_pitch_getopts(eff_t effp, int argc, char **argv);
 int st_pitch_start(eff_t effp);
-int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	          st_size_t *isamp, st_size_t *osamp);
+int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                  st_size_t *isamp, st_size_t *osamp);
 int st_pitch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_pitch_stop(eff_t effp);
 
 int st_poly_getopts(eff_t effp, int argc, char **argv);
 int st_poly_start(eff_t effp);
-int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp);
+int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                 st_size_t *isamp, st_size_t *osamp);
 int st_poly_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_poly_stop(eff_t effp);
 
 int st_rate_getopts(eff_t effp, int argc, char **argv);
 int st_rate_start(eff_t effp);
-int st_rate_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp);
+int st_rate_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                 st_size_t *isamp, st_size_t *osamp);
 int st_rate_stop(eff_t effp);
 
 int st_resample_getopts(eff_t effp, int argc, char **argv);
 int st_resample_start(eff_t effp);
-int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	             st_size_t *isamp, st_size_t *osamp);
+int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                     st_size_t *isamp, st_size_t *osamp);
 int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_resample_stop(eff_t effp);
 
 int st_reverb_getopts(eff_t effp, int argc, char **argv);
 int st_reverb_start(eff_t effp);
-int st_reverb_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	           st_size_t *isamp, st_size_t *osamp);
+int st_reverb_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                   st_size_t *isamp, st_size_t *osamp);
 int st_reverb_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_reverb_stop(eff_t effp);
 
 int st_reverse_getopts(eff_t effp, int argc, char **argv);
 int st_reverse_start(eff_t effp);
 int st_reverse_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-	            st_size_t *isamp, st_size_t *osamp);
+                    st_size_t *isamp, st_size_t *osamp);
 int st_reverse_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_reverse_stop(eff_t effp);
 
 int st_silence_getopts(eff_t effp, int argc, char **argv);
 int st_silence_start(eff_t effp);
-int st_silence_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	            st_size_t *isamp, st_size_t *osamp);
+int st_silence_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                    st_size_t *isamp, st_size_t *osamp);
 int st_silence_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_silence_stop(eff_t effp);
 
 int st_speed_getopts(eff_t effp, int argc, char **argv);
 int st_speed_start(eff_t effp);
-int st_speed_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	          st_size_t *isamp, st_size_t *osamp);
+int st_speed_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                  st_size_t *isamp, st_size_t *osamp);
 int st_speed_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_speed_stop(eff_t effp);
 
 int st_split_getopts(eff_t effp, int argc, char **argv);
 int st_split_start(eff_t effp);
-int st_split_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	          st_size_t *isamp, st_size_t *osamp);
+int st_split_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                  st_size_t *isamp, st_size_t *osamp);
 int st_split_stop(eff_t effp);
 
 int st_stat_getopts(eff_t effp, int argc, char **argv);
 int st_stat_start(eff_t effp);
-int st_stat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp);
+int st_stat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                 st_size_t *isamp, st_size_t *osamp);
 int st_stat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_stat_stop(eff_t effp);
 
 int st_stretch_getopts(eff_t effp, int argc, char **argv);
 int st_stretch_start(eff_t effp);
-int st_stretch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	            st_size_t *isamp, st_size_t *osamp);
+int st_stretch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                    st_size_t *isamp, st_size_t *osamp);
 int st_stretch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_stretch_stop(eff_t effp);
 
 int st_swap_getopts(eff_t effp, int argc, char **argv);
 int st_swap_start(eff_t effp);
-int st_swap_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp);
+int st_swap_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                 st_size_t *isamp, st_size_t *osamp);
 int st_swap_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_swap_stop(eff_t effp);
 
-int st_synth_getopts(eff_t effp, int argc, char **argv); 
+int st_synth_getopts(eff_t effp, int argc, char **argv);
 int st_synth_start(eff_t effp);
-int st_synth_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	          st_size_t *isamp, st_size_t *osamp);
+int st_synth_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                  st_size_t *isamp, st_size_t *osamp);
 int st_synth_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_synth_stop(eff_t effp);
 
-int st_trim_getopts(eff_t effp, int argc, char **argv); 
+int st_trim_getopts(eff_t effp, int argc, char **argv);
 int st_trim_start(eff_t effp);
-int st_trim_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp);
+int st_trim_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                 st_size_t *isamp, st_size_t *osamp);
 int st_trim_stop(eff_t effp);
 
 int st_vibro_getopts(eff_t effp, int argc, char **argv);
 int st_vibro_start(eff_t effp);
-int st_vibro_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	          st_size_t *isamp, st_size_t *osamp);
+int st_vibro_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                  st_size_t *isamp, st_size_t *osamp);
 int st_vibro_stop(eff_t effp);
 
 int st_vol_getopts(eff_t effp, int argc, char **argv);
 int st_vol_start(eff_t effp);
-int st_vol_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	        st_size_t *isamp, st_size_t *osamp);
+int st_vol_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                st_size_t *isamp, st_size_t *osamp);
 int st_vol_stop(eff_t effp);
 
 #ifdef __cplusplus

@@ -373,8 +373,8 @@ static int getblock(ft_t ft)
         vs_t v = (vs_t) ft->priv;
         unsigned char uc, block;
         ULONG sblen;
-        u_int16_t new_rate_16;
-        u_int32_t new_rate_32;
+        uint16_t new_rate_16;
+        uint32_t new_rate_32;
         int i;
         ULONG trash;
 

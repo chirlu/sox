@@ -87,7 +87,7 @@ typedef unsigned long st_rate_t;
 
 /* Signal parameters */
 
-typedef struct  st_signalinfo 
+typedef struct  st_signalinfo
 {
     st_rate_t rate;      /* sampling rate */
     char size;           /* word length of data */
@@ -97,7 +97,7 @@ typedef struct  st_signalinfo
 
 /* Loop parameters */
 
-typedef struct  st_loopinfo 
+typedef struct  st_loopinfo
 {
     st_size_t    start;          /* first sample */
     st_size_t    length;         /* length */
@@ -109,7 +109,7 @@ typedef struct  st_loopinfo
 
 /* vague attempt at generic information for sampler-specific info */
 
-typedef struct  st_instrinfo 
+typedef struct  st_instrinfo
 {
     char MIDInote;       /* for unity pitch playback */
     char MIDIlow, MIDIhi;/* MIDI pitch-bend range */
@@ -127,7 +127,7 @@ typedef struct  st_instrinfo
  * File buffer info.  Holds info so that data can be read in blocks.
  */
 
-typedef struct st_fileinfo 
+typedef struct st_fileinfo
 {
     char          *buf;                 /* Pointer to data buffer */
     size_t        size;                 /* Size of buffer */
@@ -206,7 +206,7 @@ extern st_format_t st_formats[];
 #define ST_SIZE_32BIT   4
 #define ST_SIZE_DDWORD  8
 #define ST_SIZE_64BIT   8
-#define ST_SIZE_MAX     8
+#define ST_INFO_SIZE_MAX     8
 
 /* Style field */
 #define ST_ENCODING_UNSIGNED    1 /* unsigned linear: Sound Blaster */
@@ -217,7 +217,7 @@ extern st_format_t st_formats[];
 #define ST_ENCODING_ADPCM       6 /* Compressed PCM */
 #define ST_ENCODING_IMA_ADPCM   7 /* Compressed PCM */
 #define ST_ENCODING_GSM         8 /* GSM 6.10 33byte frame lossy compression */
-#define ST_ENCODING_MAX         8 
+#define ST_ENCODING_MAX         8
 
 /* declared in misc.c */
 extern const char *st_sizes_str[];
@@ -234,7 +234,7 @@ extern const char *st_encodings_str[];
 
 typedef struct st_effect *eff_t;
 
-typedef struct 
+typedef struct
 {
     char    *name;                  /* effect name */
     unsigned int flags;
@@ -242,12 +242,12 @@ typedef struct
     int (*getopts)(eff_t effp, int argc, char **argv);
     int (*start)(eff_t effp);
     int (*flow)(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-	        st_size_t *isamp, st_size_t *osamp);
+                st_size_t *isamp, st_size_t *osamp);
     int (*drain)(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
     int (*stop)(eff_t effp);
 } st_effect_t;
 
-struct st_effect 
+struct st_effect
 {
     char            *name;          /* effect name */
     struct st_signalinfo ininfo;    /* input signal specifications */

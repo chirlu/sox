@@ -394,10 +394,10 @@ void wavgsmstopwrite(ft_t ft)
 /* General Sox WAV file code                                                */
 /****************************************************************************/
 
-static u_int32_t findChunk(ft_t ft, const char *Label)
+static uint32_t findChunk(ft_t ft, const char *Label)
 {
     char magic[5];
-    u_int32_t len;
+    uint32_t len;
     for (;;)
     {
 	if (st_reads(ft, magic, 4) == ST_EOF)
@@ -427,23 +427,23 @@ int st_wavstartread(ft_t ft)
 {
     wav_t	wav = (wav_t) ft->priv;
     char	magic[5];
-    u_int32_t	len;
+    uint32_t	len;
     int		rc;
 
     /* wave file characteristics */
-    u_int32_t      dwRiffLength;
+    uint32_t      dwRiffLength;
     unsigned short wChannels;	    /* number of channels */
-    u_int32_t      dwSamplesPerSecond; /* samples per second per channel */
-    u_int32_t      dwAvgBytesPerSec;/* estimate of bytes per second needed */
+    uint32_t      dwSamplesPerSecond; /* samples per second per channel */
+    uint32_t      dwAvgBytesPerSec;/* estimate of bytes per second needed */
     unsigned short wBitsPerSample;  /* bits per sample */
     unsigned short wFmtSize;
     unsigned short wExtSize = 0;    /* extended field for non-PCM */
 
-    u_int32_t      dwDataLength;    /* length of sound data in bytes */
+    uint32_t      dwDataLength;    /* length of sound data in bytes */
     ULONG    bytesPerBlock = 0;
     ULONG    bytespersample;	    /* bytes per sample (per channel */
     char text[256];
-    u_int32_t      dwLoopPos;
+    uint32_t      dwLoopPos;
 
 	ft->st_errno = ST_SUCCESS;
 
@@ -1218,7 +1218,7 @@ static int wavwritehdr(ft_t ft, int second_header)
 	unsigned short wFormatTag = 0;      /* data format */
 	unsigned short wChannels;           /* number of channels */
 	ULONG  dwSamplesPerSecond;          /* samples per second per channel*/
-	u_int32_t dwAvgBytesPerSec=0;       /* estimate of bytes per second needed */
+	uint32_t dwAvgBytesPerSec=0;       /* estimate of bytes per second needed */
 	unsigned short wBlockAlign=0;       /* byte alignment of a basic sample block */
 	unsigned short wBitsPerSample=0;    /* bits per sample */
 	/* fmt chunk extension (not PCM) */
@@ -1231,7 +1231,7 @@ static int wavwritehdr(ft_t ft, int second_header)
 	ULONG wSamplesWritten=0;	/* windows doesnt seem to use this*/
 
 	/* data chunk */
-	u_int32_t  dwDataLength=0x7ffff000L;	/* length of sound data in bytes */
+	uint32_t  dwDataLength=0x7ffff000L;	/* length of sound data in bytes */
 	/* end of variables written to header */
 
 	/* internal variables, intermediate values etc */
