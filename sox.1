@@ -457,9 +457,9 @@ avg [ \fI-l\fR | \fI-r\fR ]
 Reduce the number of channels by averaging the samples,
 or duplicate channels to increase the number of channels.
 Valid combinations are 1 - 2, 1 - 4, 2 - 4, 4 - 2, 4 - 1,
-2 - 1. The \fI-l\fR or \fI-r\fR option averages from
-just left or right channels/duplicates to just the left
-or right channels.
+2 - 1. The \fI-l\fR or \fI-r\fR option is not really averaging but
+either duplicates or leaves just the left or right channel, depending
+on if your increasing or decreasing the number of output channels.
 .TP 10
 band \fB[ \fI-n \fB] \fIcenter \fB[ \fIwidth\fB ]
 Apply a band-pass filter.

@@ -243,12 +243,15 @@ man: sox.1 libst.3
 	nroff -man libst.3 | col -b > libst.txt
 
 install: sox
-	-install -c -m 755 sox play rec $(BINDIR)
-	-install -c -m 644 sox.1 play.1 $(MANDIR)/man1
+	if [ -f $(BINDIR)/rec ] ; then $(RM) $(BINDIR)/rec; fi
+	install -c -m 755 sox play $(BINDIR)
+	install -c -m 644 sox.1 play.1 $(MANDIR)/man1
+	ln -s $(BINDIR)/play $(BINDIR)/rec
+	ln -s $(MANDIR)/play.1 $(MANDIR)/rec.1
 
 install-lib: libst.a
-	-install -c -m 644 libst.a $(LIBDIR)
-	-install -c -m 644 libst.3 $(MANDIR)/man3
+	install -c -m 644 libst.a $(LIBDIR)
+	install -c -m 644 libst.3 $(MANDIR)/man3
 
 clean:
 	$(RM) *~ *.o *.raw *.sf core sox libst.a

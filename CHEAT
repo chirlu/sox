@@ -101,5 +101,10 @@ from decompressing data and then recompressing, such as would happen
 when reading u-law data and writing back out u-law data.  If possible,
 specify the output data to be uncompressed PCM.
 
+Under DOS, you can convert several using something similar to the
+following command line:
+
+FOR %X IN (*.RAW) DO sox -r 11025 -w -s -t raw $X $X.wav
+
 Good luck!
 

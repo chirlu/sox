@@ -434,25 +434,25 @@ EFFECTS
 		 samples, or duplicate channels to  increase  the
 		 number	 of channels.  Valid combinations are 1 -
 		 2, 1 - 4, 2 - 4, 4 - 2, 4 - 1, 2 - 1. The -l  or
-		 -r option averages from just left or right chan-
-		 nels/duplicates to just the left or right  chan-
-		 nels.
+		 -r  option  is	 not  really averaging but either
+		 duplicates or leaves  just  the  left	or  right
+		 channel,  depending  on  if  your  increasing or
+		 decreasing the number of output channels.
 
        band [ -n ] center [ width ]
-		 Apply	 a   band-pass	 filter.   The	frequency
+		 Apply	a  band-pass   filter.	  The	frequency
 		 response drops logarithmically around the center
-		 frequency.   The  width  gives	 the slope of the
-		 drop.	The frequencies at  center  +  width  and
-		 center	 -  width  will be half of their original
+		 frequency.  The width gives  the  slope  of  the
+		 drop.	 The  frequencies  at  center + width and
+		 center - width will be half  of  their	 original
 		 amplitudes.  Band defaults to a mode oriented to
 		 pitched signals, i.e. voice, singing, or instru-
-		 mental music.	The -n (for  noise)  option  uses
+		 mental	 music.	  The  -n (for noise) option uses
 		 the alternate mode for un-pitched signals.  Band
-		 introduces noise in the  shape	 of  the  filter,
-		 i.e.  peaking	at  the center frequency and set-
+		 introduces  noise  in	the  shape of the filter,
+		 i.e. peaking at the center  frequency	and  set-
 		 tling around it.
 
-       chorus gain-in gain-out delay decay speed deptch
 
 
 
@@ -466,60 +466,60 @@ EFFECTS
 SoX(1)							   SoX(1)
 
 
+       chorus gain-in gain-out delay decay speed deptch
+
 	      -s | -t [ delay decay speed depth -s | -t ... ]
-		 Add a chorus to a sound sample.  Each	quadtuple
-		 delay/decay/speed/depth  gives the delay in mil-
-		 liseconds and the decay  (relative  to	 gain-in)
-		 with  a  modulation  speed  in Hz using depth in
+		 Add  a chorus to a sound sample.  Each quadtuple
+		 delay/decay/speed/depth gives the delay in  mil-
+		 liseconds  and	 the  decay (relative to gain-in)
+		 with a modulation speed in  Hz	 using	depth  in
 		 milliseconds.	The modulation is either sinodial
 		 (-s) or triangular (-t).  Gain-out is the volume
 		 of the output.
 
        copy	 Copy the input file to the output file.  This is
-		 the  default  effect if both files have the same
+		 the default effect if both files have	the  same
 		 sampling rate, or the rates are "close".
 
        cut loopnumber
 		 Extract loop #N from a sample.
 
-       deemph	 Apply a treble attenuation  shelving  filter  to
+       deemph	 Apply	a  treble  attenuation shelving filter to
 		 samples  in  audio  cd	 format.   The	frequency
-		 response of pre-emphasized recordings is  recti-
-		 fied.	 The filtering is defined in the standard
+		 response  of pre-emphasized recordings is recti-
+		 fied.	The filtering is defined in the	 standard
 		 document ISO 908.
 
        echo gain-in gain-out delay decay [ delay decay ... ]
 		 Add echoing to a sound sample.	 Each delay/decay
-		 part  gives  the  delay  in milliseconds and the
+		 part gives the delay  in  milliseconds	 and  the
 		 decay (relative to gain-in) of that echo.  Gain-
 		 out is the volume of the output.
 
        echos gain-in gain-out delay decay [ delay decay ... ]
 		 Add a sequence of echos to a sound sample.  Each
 		 delay/decay part gives the delay in milliseconds
-		 and  the  decay  (relative  to	 gain-in) of that
+		 and the decay	(relative  to  gain-in)	 of  that
 		 echo.	Gain-out is the volume of the output.
 
        flanger gain-in gain-out delay decay speed -s | -t
-		 Add a flanger to a sound  sample.   Each  triple
-		 delay/decay/speed  gives  the delay in millisec-
-		 onds and the decay (relative to gain-in) with	a
+		 Add  a	 flanger  to a sound sample.  Each triple
+		 delay/decay/speed gives the delay  in	millisec-
+		 onds  and the decay (relative to gain-in) with a
 		 modulation  speed  in	Hz.   The  modulation  is
-		 either sinodial (-s) or triangular (-t).   Gain-
+		 either	 sinodial (-s) or triangular (-t).  Gain-
 		 out is the volume of the output.
 
        highp center
-		 Apply	 a   high-pass	 filter.   The	frequency
-		 response drops logarithmically with center  fre-
-		 quency	 in the middle of the drop.  The slope of
+		 Apply	a  high-pass   filter.	  The	frequency
+		 response  drops logarithmically with center fre-
+		 quency in the middle of the drop.  The slope  of
 		 the filter is quite gentle.
 
        lowp center
 		 Apply a low-pass filter.  The frequency response
-		 drops	logarithmically	 with center frequency in
+		 drops logarithmically with center  frequency  in
 		 the middle of the drop.  The slope of the filter
-		 is quite gentle.
-
 
 
 
@@ -532,28 +532,30 @@ SoX(1)							   SoX(1)
 SoX(1)							   SoX(1)
 
 
+		 is quite gentle.
+
        map	 Display a list of loops in a sample, and miscel-
 		 laneous loop info.
 
-       mask	 Add "masking  noise"  to  signal.   This  effect
-		 deliberately  adds  white  noise  to  a sound in
-		 order to mask quantization effects,  created  by
-		 the  process  of  playing a sound digitally.  It
-		 tends to mask buzzing voices, for  example.   It
-		 adds  1/2  bit of noise to the sound file at the
+       mask	 Add  "masking	noise"	to  signal.   This effect
+		 deliberately adds white  noise	 to  a	sound  in
+		 order	to  mask quantization effects, created by
+		 the process of playing a  sound  digitally.   It
+		 tends	to  mask buzzing voices, for example.  It
+		 adds 1/2 bit of noise to the sound file  at  the
 		 output bit depth.
 
        phaser gain-in gain-out delay decay speed -s | -t
-		 Add a phaser to a  sound  sample.   Each  triple
-		 delay/decay/speed  gives  the delay in millisec-
-		 onds and the decay (relative to gain-in) with	a
+		 Add  a	 phaser	 to  a sound sample.  Each triple
+		 delay/decay/speed gives the delay  in	millisec-
+		 onds  and the decay (relative to gain-in) with a
 		 modulation  speed  in	Hz.   The  modulation  is
-		 either sinodial (-s) or  triangular  (-t).   The
+		 either	 sinodial  (-s)	 or triangular (-t).  The
 		 decay should be less than 0.5 to avoid feedback.
 		 Gain-out is the volume of the output.
 
-       pick	 Select the left or right  channel  of	a  stereo
-		 sample,  or  one  of  four channels in a quadro-
+       pick	 Select	 the  left  or	right channel of a stereo
+		 sample, or one of four	 channels  in  a  quadro-
 		 phonic sample.
 
        polyphase [ -w < num / ham > ]
@@ -562,30 +564,28 @@ SoX(1)							   SoX(1)
 
 		 [ -cutoff #  ]
 		 Translate input sampling rate to output sampling
-		 rate  via  polyphase  interpolation, a DSP algo-
-		 rithm.	 This method is slow  and  uses	 lots  of
+		 rate via polyphase interpolation,  a  DSP  algo-
+		 rithm.	  This	method	is  slow and uses lots of
 		 RAM, but gives much better results then rate.
-		 -w  <	nut / ham > : select either a Nuttal (~90
-		 dB stopband) or Hamming (~43 dB  stopband)  win-
+		 -w < nut / ham > : select either a  Nuttal  (~90
+		 dB  stopband)	or Hamming (~43 dB stopband) win-
 		 dow.  Warning: Nuttall windows require 2x length
 		 than Hamming windows.	Default is nut.
-		 -width long / short / # : specify the	width  of
-		 the  filter.  long is 1024 samples; short is 128
-		 samples.  Alternatively, an exact number can  be
+		 -width	 long  / short / # : specify the width of
+		 the filter.  long is 1024 samples; short is  128
+		 samples.   Alternatively, an exact number can be
 		 used.	Default is long.
-		 -cutoff  # : specify the filter cutoff frequency
-		 in terms of fraction of  bandwidth.   If  upsam-
-		 pling,	 then this is the fraction of the orignal
+		 -cutoff # : specify the filter cutoff	frequency
+		 in  terms  of	fraction of bandwidth.	If upsam-
+		 pling, then this is the fraction of the  orignal
 		 signal that should go through.	 If downsampling,
-		 this  is  the	fraction of the signal left after
-		 downsampling.	Default is 0.95.   Remember  that
+		 this is the fraction of the  signal  left  after
+		 downsampling.	 Default  is 0.95.  Remember that
 		 this is a float.
 
 
        rate	 Translate input sampling rate to output sampling
-		 rate via linear interpolation to the Least  Com-
-		 mon Multiple of the two sampling rates.  This is
-		 the  default  effect  if  the	two  files   have
+		 rate  via  linear  interpolation  to  the  Least
 
 
 
@@ -598,60 +598,60 @@ SoX(1)							   SoX(1)
 SoX(1)							   SoX(1)
 
 
-		 different  sampling  rates.   This  is	 fast but
-		 noisy: the spectrum of the original  sound  will
-		 be  shifted  upwards and duplicated faintly when
-		 up-translating	 by  a	multiple.   Lerp-ing   is
-		 acceptable  for  cheap 8-bit sound hardware, but
-		 for CD-quality	 sound	you  should  instead  use
-		 either	 resample  or polyphase.  If you are won-
-		 dering which of Sox's rate changing  effects  to
-		 ues,  you  will want to read a detailed analysis
-		 of all of them at http://usa.ece.cmu.edu/Sox/
+		 Common Multiple of the two sampling rates.  This
+		 is the default effect if the two files have dif-
+		 ferent sampling rates.	 This is fast but  noisy:
+		 the  spectrum	of  the	 original  sound  will be
+		 shifted upwards and duplicated faintly when  up-
+		 translating  by a multiple.  Lerp-ing is accept-
+		 able for cheap 8-bit sound hardware, but for CD-
+		 quality  sound	 you  should  instead  use either
+		 resample or polyphase.	  If  you  are	wondering
+		 which of Sox's rate changing effects to ues, you
+		 will want to read a detailed analysis of all  of
+		 them at http://usa.ece.cmu.edu/Sox/
 
        resample [ rolloff [ beta ] ]
 		 Translate input sampling rate to output sampling
 		 rate  via  simulated  analog  filtration.   This
-		 method is slower than rate, but gives much  bet-
+		 method	 is slower than rate, but gives much bet-
 		 ter results.  rolloff refers to the cut-off fre-
-		 quency of the low pass filter and  is	given  in
-		 terms	of  the	 Nyquist  frequency for the lower
-		 sample rate.  rolloff therefor should	be  some-
-		 thing	between	 0. and 1., in practice 0.8-0.95.
-		 beta trades stop band rejection against  transi-
-		 tion  width  from passband to stop band.  Larger
+		 quency	 of  the  low pass filter and is given in
+		 terms of the Nyquist  frequency  for  the  lower
+		 sample	 rate.	 rolloff therefor should be some-
+		 thing between 0. and 1., in  practice	0.8-0.95.
+		 beta  trades stop band rejection against transi-
+		 tion width from passband to stop  band.   Larger
 		 beta means a slower transition and greater stop-
 		 band rejection.  beta should be at least greater
-		 than 2.  The default is rollof 0.8,  beta  17.5,
-		 which	is  rather  conservative  with respect to
-		 aliasing.  Lower beta and higher rolloff  values
-		 preserve  more high frequency signal energy, but
+		 than  2.   The default is rollof 0.8, beta 17.5,
+		 which is rather  conservative	with  respect  to
+		 aliasing.   Lower beta and higher rolloff values
+		 preserve more high frequency signal energy,  but
 		 introduce measurable artifacts.
 
        reverb gain-out delay [ delay ... ]
-		 Add reverbation to a sound sample.   Each  delay
-		 is  given  in	milliseconds  and its feedback is
-		 depending on the  reverb-time	in  milliseconds.
-		 Each  delay  should  be  in the range of half to
+		 Add  reverbation  to a sound sample.  Each delay
+		 is given in milliseconds  and	its  feedback  is
+		 depending  on	the  reverb-time in milliseconds.
+		 Each delay should be in the  range  of	 half  to
 		 quarter of reverb-time to get a realistic rever-
 		 bation.  Gain-out is the volume of the output.
 
-       reverse	 Reverse  the  sound sample completely.	 Included
+       reverse	 Reverse the sound sample  completely.	 Included
 		 for finding Satanic subliminals.
 
        split	 Turn a mono sample into a stereo sample by copy-
-		 ing  the  input  channel  to  the left and right
+		 ing the input channel	to  the	 left  and  right
 		 channels.
 
        stat [ debug | -v ]
-		 Do a statistical check on the	input  file,  and
-		 print	results on the standard error file.  stat
-		 may copy the file untouched from input	 to  out-
-		 put,  if you select an output file.  The "Volume
-		 Adjustment:" field in the statistics  gives  you
-		 the  argument	to  the -v number which will make
-		 the sample as loud as possible without clipping.
-		 There	is  an	optional  parameter  -v that will
+		 Do  a	statistical  check on the input file, and
+		 print results on the standard error file.   stat
+		 may  copy  the file untouched from input to out-
+		 put, if you select an output file.  The  "Volume
+		 Adjustment:"  field  in the statistics gives you
+		 the argument to the -v number	which  will  make
 
 
 
@@ -664,43 +664,45 @@ SoX(1)							   SoX(1)
 SoX(1)							   SoX(1)
 
 
+		 the sample as loud as possible without clipping.
+		 There is an  optional	parameter  -v  that  will
 		 print out the "Volume Adjustment:" field's value
-		 and  return.  This could be of use in scripts to
-		 auto convert the volume.  There is  an	 also  an
-		 optional  parameter  debug  that  will place sox
-		 into debug mode and print out a hex dump of  the
-		 sound	file  from the internal buffer that is in
-		 32-bit signed PCM data.  This is mainly only  of
-		 use  in tracking down endian problems that creep
+		 and return.  This could be of use in scripts  to
+		 auto  convert	the  volume.  There is an also an
+		 optional parameter debug  that	 will  place  sox
+		 into  debug mode and print out a hex dump of the
+		 sound file from the internal buffer that  is  in
+		 32-bit	 signed PCM data.  This is mainly only of
+		 use in tracking down endian problems that  creep
 		 in to sox on cross-platform versions.
 
        swap [ 1 2 3 4 ]
-		 Swap channels in multi-channel sound files.   In
-		 files	with more than 2 channels you may specify
+		 Swap  channels in multi-channel sound files.  In
+		 files with more than 2 channels you may  specify
 		 the order that the channels should be rearranged
 		 in.
 
        vibro speed  [ depth ]
-		 Add  the  world-famous	 Fender Vibro-Champ sound
+		 Add the world-famous  Fender  Vibro-Champ  sound
 		 effect to a sound sample by using a sine wave as
 		 the volume knob.  Speed gives the Hertz value of
-		 the wave.  This must be under 30.   Depth  gives
-		 the  amount  the  volume is cut into by the sine
-		 wave, ranging 0.0 to 1.0 and defaulting to  0.5.
+		 the  wave.   This must be under 30.  Depth gives
+		 the amount the volume is cut into  by	the  sine
+		 wave,	ranging 0.0 to 1.0 and defaulting to 0.5.
 
-       Sox  enforces certain effects.  If the two files have dif-
+       Sox enforces certain effects.  If the two files have  dif-
        ferent sampling rates, the requested effect must be one of
-       copy,  or rate, If the two files have different numbers of
+       copy, or rate, If the two files have different numbers  of
        channels, the avg effect must be requested.
 
 BUGS
-       The syntax is horrific.	It's very tempting to  include	a
-       default	system	that allows an effect name as the program
-       name and just pipes a sound sample from standard input  to
-       standard	 output,  but the problem of inputting the sample
+       The  syntax  is horrific.  It's very tempting to include a
+       default system that allows an effect name as  the  program
+       name  and just pipes a sound sample from standard input to
+       standard output, but the problem of inputting  the  sample
        rates makes this unworkable.
 
-       Please report any bugs found in this  version  of  sox  to
+       Please  report  any  bugs  found in this version of sox to
        Chris Bagwell (cbagwell@sprynet.com)
 
 FILES
@@ -708,16 +710,14 @@ SEE ALSO
        play(1), rec(1)
 
 NOTICES
-       The   echoplex  effect  is:  Copyright  (C)  1989  by  Jef
+       The  echoplex  effect  is:  Copyright  (C)  1989	 by   Jef
        Poskanzer.
 
        Permission to use, copy, modify, and distribute this soft-
        ware and its documentation for any purpose and without fee
-       is hereby  granted,  provided  that  the	 above	copyright
-       notice  appear  in all copies and that both that copyright
-       notice and this permission  notice  appear  in  supporting
-       documentation.	This software is provided "as is" without
-       express or implied warranty.
+       is  hereby  granted,  provided  that  the  above copyright
+       notice appear in all copies and that both  that	copyright
+       notice  and  this  permission  notice appear in supporting
 
 
 
@@ -730,14 +730,14 @@ NOTICES
 SoX(1)							   SoX(1)
 
 
-       The version of Sox that accompanies this	 manual	 page  is
-       support	by  Chris Bagwell (cbagwell@sprynet.com).  Please
+       documentation.  This software is provided "as is"  without
+       express or implied warranty.
+
+       The  version  of	 Sox that accompanies this manual page is
+       support by Chris Bagwell	 (cbagwell@sprynet.com).   Please
        refer any questions regarding it to this address.  You may
-       obtain	the   latest   version	 at   the  the	web  site
+       obtain  the  latest  version   at   the	 the   web   site
        http://home.sprynet.com/~cbagwell/sox.html
-
-
-
 
 
 

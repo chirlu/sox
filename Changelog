@@ -12,7 +12,7 @@ sox-12.16
     Got code ready to tweak speed more which also forced me to clean up
     Endian test code.
   o Fixed a bug in .au's handling of G.723.  It wasn't using the correct
-    number of bits.
+    number of bits.  Added A-law support to .au.
   o Quoted $filename in play/rec scripts so that files with spaces in
     their names can be given.
   o Old OS/2 support didn't work.  Replaced with known working EMX
@@ -30,17 +30,20 @@ sox-12.16
     effect on STDIN and output the results to STDOUT.
   o Fixed up some makefiles and 16-bit support from patches sent by
     Mark Morgan Lloyd (markMLl.in@telemetry.co.uk).  Also added some
-    nice DOS test bat files from him as well.  They only work with
-    an advanced setup like 4DOS or some such thing.
+    nice DOS test bat files from him as well.
   o Cleaned up some more cross-platform compile problems.  In the process
     got it working with Turbo C again, kinda.  It still locks DOS up at times.
   o Made AIFF handler work with invalid headers that some programs generate.
-    Also fix an Endian bug thats been there for quick a long time (when
-    ran on Intel machines).
+    Also fix an Endian bug thats been there for quite a long time (when
+    ran on Intel machines).  Made comment lengths even length to make
+    most MacOS programs happy.  cbagwell
   o Resample function was updated by Andreas Wilde 
     (andreas@eakaw2.et.tu-dresden.de) to fix problem were freqs. were
     off by a factor of 2.
   o Added an effect that swaps stereo channels.  cbagwell
+  o Combined play and rec scripts to a single program to ease mantaince.
+    Also added GNU style long-options (--help).  Carely, some options have
+    change (but more logical).
 
 sox-12.15
 ---------

@@ -40,6 +40,7 @@
 #define SUN_G721	23			/* CCITT G.721 4-bits ADPCM */
 #define SUN_G723_3	25			/* CCITT G.723 3-bits ADPCM */
 #define SUN_G723_5	26			/* CCITT G.723 5-bits ADPCM */
+#define SUN_ALAW	27			/* a-law encoding */
 /* The other formats are not supported by sox at the moment */
 
 /* Private data */
@@ -143,6 +144,9 @@ ft_t ft;
 		ft->info.style = ULAW;
 		ft->info.size = BYTE;
 		break;
+	case SUN_ALAW:
+		ft->info.style = ALAW;
+		ft->info.size = BYTE;
 	case SUN_LIN_8:
 		ft->info.style = SIGN2;
 		ft->info.size = BYTE;
@@ -318,13 +322,15 @@ ULONG data_size;
 
 	if (ft->info.style == ULAW && ft->info.size == BYTE)
 		encoding = SUN_ULAW;
+	else if (ft->info.style == ALAW && ft->info.size == BYTE)
+		encoding = SUN_ALAW;
 	else if (ft->info.style == SIGN2 && ft->info.size == BYTE)
 		encoding = SUN_LIN_8;
 	else if (ft->info.style == SIGN2 && ft->info.size == WORD)
 		encoding = SUN_LIN_16;
 	else {
 		report("Unsupported output style/size for Sun/NeXT header or .AU format not specified.");
-		report("Only U-law, signed bytes, and signed words are supported.");
+		report("Only U-law, A-law signed bytes, and signed words are supported.");
 		report("Defaulting to 8khz u-law\n");
 		encoding = SUN_ULAW;
 		ft->info.style = ULAW;

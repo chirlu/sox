@@ -530,6 +530,7 @@ LONG nframes;
 		8 /*SSND hdr*/ + 12 /*SSND chunk*/;
 	int bits = 0;
 	int i;
+	int comment_size;
 
 	hsize += 8 + 2 + 16*ft->instr.nloops;	/* MARK chunk */
 	hsize += 20;				/* INST chunk */
@@ -549,8 +550,13 @@ LONG nframes;
 	/* discouraged by Apple in preference to a COMT comments */
 	/* chunk, which holds a timestamp and marker id */
 	fputs("ANNO", ft->fp);
-	wlong(ft, (LONG) strlen(ft->comment)); /* ANNO chunk size, the No of chars */
+	/* Must put an even number of characters out.  True 68k processors OS's
+	 * seem to require this */
+	comment_size = strlen(ft->comment);
+	wlong(ft, (LONG)(((comment_size % 2) == 0) ? comment_size : comment_size + 1)); /* ANNO chunk size, the No of chars */
 	fputs(ft->comment, ft->fp);
+	if (comment_size % 2 == 1)
+		fputs(" ", ft->fp);
 
 	/* COMM chunk -- describes encoding (and #frames) */
 	fputs("COMM", ft->fp);

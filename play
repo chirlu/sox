@@ -1,6 +1,6 @@
 #!/bin/sh
-# Shell script to play sound files to unix style sound devices.
-# Should auto detect most supported systems and play the file for you.
+# Shell script to play/record sound files to/from unix style sound devices.
+# Should auto detect most supported systems.
 #
 # Originally developed by Chris Bagwell (cbagwell@sprynet.com)
 #
@@ -9,133 +9,180 @@
 #
 # Change History:
 #
-# June 1, 1998 - Chris Bagwell (cbagwell@sprynet.com)
-#
-#   Kjetil Torgrim Homme <kjetilho@ifi.uio.no> sent in a neat patch to
-#   attempt an educated guess on how to play sound on sun hardware.
-#   There is probably a better way to do it in the actual software though.
-#
-#   Use the parsed out volume flag to have sox change the volume.  Yes, its
-#   better to use the audio devices hardware mixer to adjust volume but some
-#   way is better then no way.  Its still parsed seperately so people may
-#   optionally pass the parameter to a mixer.
-#
-# September 7, 1998 - Chris Bagwell (cbagwell@sprynet.com)
-#
-#   Updated usage checking a little more so that only one filename can
-#   be given.
-#
-# January 9, 1999  - Chris Bagwell (cbagwell@sprynet.com)
-#
-#   Quoted $filename so that files with spaces in their names can
-#   be given.
-#   Arnim Rupp patch file to work with multiple sound devices via
-#   command line option.
-#
+#   Major updates have been supplied by Kjetil Torgrim Homme and 
+#   Kirk Goff.
 
-# Set up path to sox so that it can find it if user's path doesn't already
+# Set up path so that it can find Sox if user's path doesn't already
 # include it.
 PATH=$PATH:/usr/local/bin
-export PATH
+program_name=`basename $0`
+program_version="2.0"
+
+if [ -z "$1" ]; then
+    echo "\
+$program_name: too few arguments
+Try \`$program_name --help' for more information." 1>&2
+    exit 1
+fi
+
+version()
+{
+    echo "$program_name (sox) $program_version"
+    exit 0
+}
 
 help()
 {
-  echo "play v1.5 - front end to Sox"
-  echo ""
-  echo "Usage: play [ fopts ] infile [effects]"
-  echo
-  echo "fopts: -c channels -d device -h -r rate -t type -v volume -s/-u/-U/-A -b/-w/-l/-f/-d/-D -x"
-  echo
-  echo "effects: avg/band/chorus/copy/cut/deemph/echo/echos/flanger/highp/lowp/map/mask/phaser/pick/polyphase/rate/resample/reverb/reverse/split/stat/vibro"
-  echo ""
-  echo "See sox man page for more info on required effects options."
+    echo "\
+Usage: $program_name [OPTION]... FILE [EFFECT]...
+Play/record sound files to/from unix style sound devices.
+
+  -c, --channels=CHANNELS      specifies the number of sound channels in FILE
+  -d, --device=DEVICE          use DEVICE for input/output
+  -f, --format=FORMAT          specifies bit format of sample
+                               FORMAT is either s, u, U, A, a, or g
+  -r, --rate=RATE              sample rate in hertz of FILE
+  -s, --size=SIZE              interpret size of sample
+                               SIZE is either b, w, l, f, d, or D
+  -t, --type=TYPE              specifies file format of FILE
+  -v, --volume=VOLUME          change amplitude
+  -x, --xinu                   reverse bit order of sample
+                               (only works with 16-bit and 32-bit integer data)
+      --file                   next argument is FILE
+  -h, --help                   display this help and exit
+      --version                output version information and exit
+
+EFFECTs are one or more of the following:  avg, band, chorus, copy, cut, 
+deemph, echo, echos, flanger, highp, lowp, map, mask, phaser, pick, polyphase
+rate, resample, reverb, reverse, split, stat, vibro.
+
+See sox man page for detailed information on supported file types, data
+formats, and effect options."
+    exit 0
 }
 
-if [ "$1" = "" ] ; then
-  help; exit 1;
-fi
 
-while [ $# -ne 0 ] # loop over arguments
-do case $1 in
-   avg|band|chorus|copy|cut|echo|echos|flanger|highp|lowp|map|mask|phaser|pick|pred|rate|resample|reverb|reverse|split|stat|vibro)
-     effects="$@"
-     break
-     ;;
-   -c)
-     shift
-     fopts="$fopts -c $1"
-     ;;
-   -d)
-     shift
-     device="$1"
-     ;;
-   -h)
-     help;
-     exit 1;
-     ;;
-   -r)
-     shift
-     fopts="$fopts -r $1"
-     ;;
-   -t)
-     shift
-     fopts="$fopts -t $1"
-     ;;
-   -v)
-     shift
-     volume="-v $1"
-     ;;
-   -)
-     filename="-"
-     ;;
-   -*)
-     fopts="$fopts $1"
-     ;;
-   *)
-     if [ "$filename" = "" ]; then
-       filename="$1"
-     else
-       echo "Filename already give.  Ingoring extra name: $1"
-     fi
-     ;;
-   esac
-   shift
+# loop over arguments
+while [ $# -ne 0 ]; do
+    case "$1" in
+	avg|band|chorus|copy|cut|deemph|echo|echos|flanger|highp|lowp|map|mask|phaser|pick|polyphase|rate|resample|reverb|reverse|split|stat|vibro)
+	    effects="$@"
+	    break
+	    ;;
+	-c)
+	    shift
+	    fopts="$fopts -c $1"
+	    ;;
+	--channels=*)
+	    fopts="$fopts -c `echo $1 | sed 's/.*=//'`"
+	    ;;
+	-d)
+	    shift
+	    device="$1"
+	    ;;
+	--device=*)
+	    device=`echo $1 | sed 's/.*=//'`
+	    ;;
+	-f)
+	    shift
+	    fopts="$fopts -$1"
+	    ;;
+	--format=*)
+	    fopts="$fopts -`echo $1 | sed 's/.*=//'`"
+	    ;;
+	-r)
+	    shift
+	    fopts="$fopts -r $1"
+	    ;;
+	--rate=*)
+	    fopts="$fopts -r `echo $1 | sed 's/.*=//'`"
+	    ;;
+	-s)
+	    shift
+	    fopts="$fopts -$1"
+	    ;;
+	--size=*)
+	    fopts="$fopts -`echo $1 | sed 's/.*=//'`"
+	    ;;
+	-t)
+	    shift
+	    fopts="$fopts -t $1"
+	    ;;
+	--type=*)
+	    fopts="$fopts -t `echo $1 | sed 's/.*=//'`"
+	    ;;
+	-v)
+	    shift
+	    volume="-v $1"
+	    ;;
+	--volume=*)
+	    volume="-v `echo $1 | sed 's/.*=//'`"
+	    ;;
+	-x|--xinu)
+	    fopts="$fopts -x"
+	    ;;
+	--file)
+	    shift
+	    if [ -z "$filename" ]; then
+		filename="$1"
+	    else
+		echo "Filename already given.  Ignoring extra name: $1" 1>&2
+	    fi
+	    ;;
+	-h)
+	    help
+	    ;;
+	--help)
+	    help
+	    ;;
+	--version)
+	    version
+	    ;;
+	-)
+	    filename="-"
+	    ;;
+	-*)
+	    fopts="$fopts $1"
+	    ;;
+	*)
+	    if [ -z "$filename" ]; then
+		filename="$1"
+	    else
+		echo "Filename already given.  Ignoring extra name: $1" 1>&2
+	    fi
+	    
+	    ;;
+    esac
+    shift
 done
 
 arch=`uname -s`
-
 if [ "$arch" = "SunOS" ]; then
-
-  if [ "$device" = "" ]; then
-    device="/dev/audio"
-  fi
-
-  case `arch -k` in
-    sun4|sun4c|sun4d)
-      # Use below for older Sun audio hardware
-      sox $volume $fopts "$filename" -t sunau -U -c 1 $device $effects
-      ;;
-
-    *)
-      # Use below for newer Sun audio hardware that supports stereo linear
-      sox $volume $fopts "$filename" -t sunau -w -s $device $effects
-      ;;
-
-  esac
-
-else
-  if [ "$arch" = "Linux" ]; then
-
-    if [ "$device" = "" ]; then
-      device="/dev/dsp"
+    case `arch -k` in
+	# Use below for older Sun audio hardware
+	sun4|sun4c|sun4d)
+	    arch_defines="-t sunau -U -c 1"
+	    ;;
+	# Use below for newer Sun audio hardware that supports stereo linear
+	*)
+	    arch_defines="-t sunau -w -s"
+	    ;;
+    esac
+    if [ -z "$device" ]; then
+	device="/dev/audio"
     fi
+elif [ "$arch" = "Linux" ]; then
+    arch_defines="-t ossdsp"
+    if [ -z "$device" ]; then
+	device="/dev/dsp"
+    fi
+fi
 
-# Possible way to set volume
-#    if [ "$volume" != "" ] ; then
-#      mixer $volume
-#    fi
-
-    # Best to always use highest quality output for sound.
-    sox $volume $fopts "$filename" -t ossdsp -w -s $device $effects
-  fi
+# If name is "rec" then record else assume user is wanting to play
+# a sound file.
+if [ "$program_name" = "rec" ]; then
+    echo "Send break (control-c) to end recording"
+    sox $volume $arch_defines $fopts $device "$filename" $effects
+else
+    sox $volume $fopts "$filename" $arch_defines $device $effects
 fi
