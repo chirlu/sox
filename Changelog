@@ -43,6 +43,7 @@ sox-12.17.3
     left in internal buffers after changing audio format parameters.
   o Fixed problem were play script wasn't installed correctly if you
     build from another directory (pointed out by Mike Castle).
+  o Made GSM support internal to libst (no external library required).
 
 sox-12.17.2
 -----------
