@@ -13,8 +13,8 @@
  * the consequences of using this software.
  */
 
-#include "st.h"
 #include "stconfig.h"
+#include "st.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -83,6 +83,12 @@ int st_readdf(ft_t ft, double *d);
 int st_writedf(ft_t ft, double d);
 int st_seek(ft_t ft, st_size_t offset, int whence);
 st_size_t st_filelength(ft_t ft);
+int st_flush(ft_t ft);
+st_size_t st_tell(ft_t ft);
+int st_eof(ft_t ft);
+int st_error(ft_t ft);
+void st_rewind(ft_t ft);
+void st_clearerr(ft_t ft);
 
 /* Utilities to byte-swap values, use libc optimized macro's if possible  */
 #ifdef HAVE_BYTESWAP_H

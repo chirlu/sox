@@ -139,7 +139,7 @@ uninstall-lib:
 
 clean:
 	$(RM) *.o libst.a
-	cd gsm && $(RM) *.o
+	cd gsm && $(RM) *.o libgsm.a
 
 distclean:
 	$(RM) *~ *.o *.raw *.sf core sox soxmix libst.a play libst-config

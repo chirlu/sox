@@ -90,8 +90,8 @@ uninstall-lib:
 	$(RM) $(mandir)/man3/gsm_option.3
 
 clean:
-	$(RM) *.o
+	$(RM) *.o libgsm.a
 
 distclean:
-	$(RM) *~ *.o core
+	$(RM) *~ *.o core libgsm.a
 	$(RM) Makefile

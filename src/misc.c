@@ -81,6 +81,45 @@ st_ssize_t st_write(ft_t ft, void *buf, size_t size, st_ssize_t len)
     return fwrite(buf, size, len, ft->fp);
 }
 
+st_size_t st_filelength(ft_t ft)
+{
+  struct stat st;
+
+  fstat(fileno(ft->fp), &st);
+
+  return (st_size_t)st.st_size;
+}
+
+int st_flush(ft_t ft)
+{
+  return fflush(ft->fp);
+}
+
+st_size_t st_tell(ft_t ft)
+{
+  return (st_size_t)ftell(ft->fp);
+}
+
+int st_eof(ft_t ft)
+{
+  return feof(ft->fp);
+}
+
+int st_error(ft_t ft)
+{
+  return ferror(ft->fp);
+}
+ 
+void st_rewind(ft_t ft)
+{
+  rewind(ft->fp);
+}
+
+void st_clearerr(ft_t ft)
+{
+  clearerr(ft->fp);
+}
+
 /* Read and write known datatypes in "machine format".  Swap if indicated.
  * They all return ST_EOF on error and ST_SUCCESS on success.
  */
@@ -95,7 +134,7 @@ int st_reads(ft_t ft, char *c, st_ssize_t len)
     sc = c;
     do
     {
-        if (fread(&in, 1, 1, ft->fp) != 1)
+        if (st_read(ft, &in, 1, 1) != 1)
         {
             *sc = 0;
                 st_fail_errno(ft,errno,readerr);
@@ -116,7 +155,7 @@ int st_reads(ft_t ft, char *c, st_ssize_t len)
 /* Write null-terminated string (without \0). */
 int st_writes(ft_t ft, char *c)
 {
-        if (fwrite(c, 1, strlen(c), ft->fp) != strlen(c))
+        if (st_write(ft, c, 1, strlen(c)) != strlen(c))
         {
                 st_fail_errno(ft,errno,writerr);
                 return(ST_EOF);
@@ -127,7 +166,7 @@ int st_writes(ft_t ft, char *c)
 /* Read byte. */
 int st_readb(ft_t ft, uint8_t *ub)
 {
-        if (fread(ub, 1, 1, ft->fp) != 1)
+        if (st_read(ft, ub, 1, 1) != 1)
         {
                 st_fail_errno(ft,errno,readerr);
             return(ST_EOF);
@@ -138,7 +177,7 @@ int st_readb(ft_t ft, uint8_t *ub)
 /* Write byte. */
 int st_writeb(ft_t ft, uint8_t ub)
 {
-        if (fwrite(&ub, 1, 1, ft->fp) != 1)
+        if (st_write(ft, &ub, 1, 1) != 1)
         {
                 st_fail_errno(ft,errno,writerr);
                 return(ST_EOF);
@@ -149,7 +188,7 @@ int st_writeb(ft_t ft, uint8_t ub)
 /* Read word. */
 int st_readw(ft_t ft, uint16_t *uw)
 {
-        if (fread(uw, 2, 1, ft->fp) != 1)
+        if (st_read(ft, uw, 2, 1) != 1)
         {
                 st_fail_errno(ft,errno,readerr);
             return (ST_EOF);
@@ -164,7 +203,7 @@ int st_writew(ft_t ft, uint16_t uw)
 {
         if (ft->swap)
                 uw = st_swapw(uw);
-        if (fwrite(&uw, 2, 1, ft->fp) != 1)
+        if (st_write(ft, &uw, 2, 1) != 1)
         {
                 st_fail_errno(ft,errno,writerr);
                 return (ST_EOF);
@@ -175,7 +214,7 @@ int st_writew(ft_t ft, uint16_t uw)
 /* Read double word. */
 int st_readdw(ft_t ft, uint32_t *udw)
 {
-        if (fread(udw, 4, 1, ft->fp) != 1)
+        if (st_read(ft, udw, 4, 1) != 1)
         {
                 st_fail_errno(ft,errno,readerr);
             return (ST_EOF);
@@ -190,7 +229,7 @@ int st_writedw(ft_t ft, uint32_t udw)
 {
         if (ft->swap)
                 udw = st_swapdw(udw);
-        if (fwrite(&udw, 4, 1, ft->fp) != 1)
+        if (st_write(ft, &udw, 4, 1) != 1)
         {
                 st_fail_errno(ft,errno,writerr);
                 return (ST_EOF);
@@ -201,7 +240,7 @@ int st_writedw(ft_t ft, uint32_t udw)
 /* Read float. */
 int st_readf(ft_t ft, float *f)
 {
-        if (fread(f, sizeof(float), 1, ft->fp) != 1)
+        if (st_read(ft, f, sizeof(float), 1) != 1)
         {
             return(ST_EOF);
         }
@@ -217,7 +256,7 @@ int st_writef(ft_t ft, float f)
 
         if (ft->swap)
                 t = st_swapf(t);
-        if (fwrite(&t, sizeof(float), 1, ft->fp) != 1)
+        if (st_write(ft, &t, sizeof(float), 1) != 1)
         {
                 st_fail_errno(ft,errno,writerr);
                 return (ST_EOF);
@@ -228,7 +267,7 @@ int st_writef(ft_t ft, float f)
 /* Read double. */
 int st_readdf(ft_t ft, double *d)
 {
-        if (fread(d, sizeof(double), 1, ft->fp) != 1)
+        if (st_read(ft, d, sizeof(double), 1) != 1)
         {
             return(ST_EOF);
         }
@@ -242,7 +281,7 @@ int st_writedf(ft_t ft, double d)
 {
         if (ft->swap)
                 d = st_swapd(d);
-        if (fwrite(&d, sizeof(double), 1, ft->fp) != 1)
+        if (st_write(ft, &d, sizeof(double), 1) != 1)
         {
                 st_fail_errno(ft,errno,writerr);
                 return (ST_EOF);
@@ -436,12 +475,17 @@ const char *st_version()
 
 
 #ifndef HAVE_STRERROR
+#ifdef __cplusplus
+extern "C" int sys_nerr;
+extern "C" char *sys_errlist[];
+#else
+extern int sys_nerr;
+extern char *sys_errlist[];
+#endif
 /* strerror function */
 char *strerror(int errcode)
 {
         static char  nomesg[30];
-        extern int sys_nerr;
-        extern char *sys_errlist[];
 
         if (errcode < sys_nerr)
                 return (sys_errlist[errcode]);
@@ -491,14 +535,4 @@ int st_seek(ft_t ft, st_size_t offset, int whence)
     }
 
     return(ft->st_errno);
-}
-
-st_size_t st_filelength(ft_t ft)
-{
-
-    struct stat st;
-
-    fstat(fileno(ft->fp), &st);
-
-    return (st_size_t)st.st_size;
 }

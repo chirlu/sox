@@ -207,8 +207,8 @@ int st_aiffstartread(ft_t ft)
                         if (!ft->seekable)
                                 break;
                         /* else, seek to end of sound and hunt for more */
-                        seekto = ftell(ft->fp);
-                        fseek(ft->fp, chunksize, SEEK_CUR); 
+                        seekto = st_tell(ft);
+                        st_seek(ft, chunksize, SEEK_CUR); 
                 }
                 else if (strncmp(buf, "MARK", 4) == 0) {
                         /* MARK chunk */
@@ -329,12 +329,12 @@ int st_aiffstartread(ft_t ft)
                   free(copyright);
                 }
                 else {
-                        if (feof(ft->fp))
+                        if (st_eof(ft))
                                 break;
                         buf[4] = 0;
                         st_report("AIFFstartread: ignoring '%s' chunk\n", buf);
                         st_readdw(ft, &chunksize);
-                        if (feof(ft->fp))
+                        if (st_eof(ft))
                                 break;
                         /* Skip the chunk using st_readb() so we may read
                            from a pipe */
@@ -343,7 +343,7 @@ int st_aiffstartread(ft_t ft)
                                         break;
                         }
                 }
-                if (feof(ft->fp))
+                if (st_eof(ft))
                         break;
         }
 
@@ -354,7 +354,7 @@ int st_aiffstartread(ft_t ft)
         if (ft->seekable)
         {
                 if (seekto > 0)
-                        fseek(ft->fp, seekto, SEEK_SET);
+                        st_seek(ft, seekto, SEEK_SET);
                 else
                 {
                         st_fail_errno(ft,ST_EOF,"AIFF: no sound data on input file");
@@ -477,7 +477,7 @@ int st_aiffstartread(ft_t ft)
             return rc;
 
         ft->length = aiff->nsamples;    /* for seeking */
-        aiff->dataStart = ftell(ft->fp);
+        aiff->dataStart = st_tell(ft);
 
         return(ST_SUCCESS);
 }
@@ -520,7 +520,7 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft)
     st_fail_errno(ft,ST_ENOMEM,"AIFF: Couldn't allocate %s header", chunkDescription);
     return(ST_EOF);
   }
-  if (fread(*text, 1, chunksize, ft->fp) != chunksize)
+  if (st_read(ft, *text, 1, chunksize) != chunksize)
   {
     st_fail_errno(ft,ST_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
     return(ST_EOF);
@@ -530,7 +530,7 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft)
         {
                 /* Read past pad byte */
                 char c;
-                if (fread(&c, 1, 1, ft->fp) != 1)
+                if (st_read(ft, &c, 1, 1) != 1)
                 {
                 st_fail_errno(ft,ST_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
                         return(ST_EOF);
@@ -573,7 +573,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
         st_fail_errno(ft,ST_ENOMEM,"AIFF: Couldn't allocate %s header", chunkDescription);
         return(ST_EOF);
     }
-    if (fread(*text + totalCommentLength - commentLength, 1, commentLength, ft->fp) != commentLength) {
+    if (st_read(ft, *text + totalCommentLength - commentLength, 1, commentLength) != commentLength) {
         st_fail_errno(ft,ST_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
         return(ST_EOF);
     }
@@ -581,7 +581,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
     if (commentLength % 2) {
         /* Read past pad byte */
         char c;
-        if (fread(&c, 1, 1, ft->fp) != 1) {
+        if (st_read(ft, &c, 1, 1) != 1) {
             st_fail_errno(ft,ST_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
             return(ST_EOF);
         }
@@ -615,13 +615,13 @@ int st_aiffstopread(ft_t ft)
 
         if (!ft->seekable)
         {
-            while (! feof(ft->fp)) 
+            while (! st_eof(ft)) 
             {
-                if (fread(buf, 1, 4, ft->fp) != 4)
+                if (st_read(ft, buf, 1, 4) != 4)
                         break;
 
                 st_readdw(ft, &chunksize);
-                if (feof(ft->fp))
+                if (st_eof(ft))
                         break;
                 buf[4] = '\0';
                 st_warn("Ignoring AIFF tail chunk: '%s', %d bytes long\n", 
@@ -710,7 +710,7 @@ int st_aiffstopwrite(ft_t ft)
             st_fail_errno(ft,ST_EOF,"Non-seekable file.");
             return(ST_EOF);
         }
-        if (fseek(ft->fp, 0L, SEEK_SET) != 0)
+        if (st_seek(ft, 0L, SEEK_SET) != 0)
         {
                 st_fail_errno(ft,errno,"can't rewind output file to rewrite AIFF header");
                 return(ST_EOF);
@@ -857,7 +857,7 @@ static int aiffwriteheader(ft_t ft, st_size_t nframes)
 static double read_ieee_extended(ft_t ft)
 {
         char buf[10];
-        if (fread(buf, 1, 10, ft->fp) != 10)
+        if (st_read(ft, buf, 1, 10) != 10)
         {
                 st_fail_errno(ft,ST_EOF,"EOF while reading IEEE extended number");
                 return(ST_EOF);
@@ -875,7 +875,7 @@ static void write_ieee_extended(ft_t ft, double x)
                 buf[0], buf[1], buf[2], buf[3], buf[4],
                 buf[5], buf[6], buf[7], buf[8], buf[9]);
         */
-        (void) fwrite(buf, 1, 10, ft->fp);
+        (void)st_write(ft, buf, 1, 10);
 }
 
 
