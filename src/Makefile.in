@@ -96,7 +96,6 @@ libst.a: $(LIBOBJS)
 	$(RANLIB) libst.a
 
 man: sox.1 libst.3
-	$(RM) sox.txt libst.txt
 	nroff -man sox.1 | col -b > sox.txt
 	nroff -man libst.3 | col -b > libst.txt
 
@@ -108,19 +107,13 @@ install-lib: libst.a
 	-$(INSTALL) -c -m 644 libst.a $(LIBDIR)
 	-$(INSTALL) -c -m 644 libst.3 $(MANDIR)/man3
 
-dep depend:
-	$(CC) $(CFLAGS) -MM $(addprefix $(srcdir)/,$(LIBSRCS)) > .depend
-	$(CC) $(CFLAGS) -MM $(srcdir)/sox.c >> .depend
-
 clean:
 	$(RM) *.o
 
 distclean:
 	$(RM) *~ *.o *.raw *.sf core sox libst.a
-	$(RM) config.cache config.log config.status config.h Makefile .depend
+	$(RM) config.cache config.log config.status config.h Makefile
 
 tar:
 	cd $(srcdir)/..; $(RM) $(pkgname).tar
 	cd $(srcdir)/.. ; $(TAR) $(pkgname).tar $(srcdir)
-
-include .depend

@@ -22,10 +22,10 @@ echo on
 @echo off
 
 echo.
-xdir ub.raw /c/b
-xdir ub2.raw /c/b
+dir ub.raw
+dir ub2.raw
 echo.
-echo The two checksums above should be the same.
+echo The two filesizes above should be the same.
 pause
 echo.
 echo.
@@ -34,11 +34,10 @@ echo Skip checksum and rate byte. DOS isn't good at this, so just use a
 echo rough test.
 
 echo.
-xdir %file%.voc /c/b
-xdir ub2.voc /c/b
+dir %file%.voc
+dir ub2.voc
 echo.
-echo The two lengths above should be the same, if the checksums differ
-echo investigate further skipping the internal checksum and rate bytes.
+echo The two filesizes above should be the same.
 pause
 cls
 
@@ -67,25 +66,16 @@ echo on
 echo Skip comment field containing different filenames. Again, DOS sucks.
 
 echo.
-xdir ub2.sf /c/b
-xdir ub3.sf /c/b
+dir ub2.sf
+dir ub3.sf
 echo.
-echo The two lengths above should be the same, if the checksums differ
-echo investigate further skipping the internal filename comments.
+echo The two filesizes above should be the same.
 pause
 cls
 
 del ub2.sf
 del ub2.aif
 del ub3.sf
-
-rem Cmp -l of stop.raw and stop2.raw will show that most of the
-rem bytes are 1 apart.  This is quantization error.
-rem
-rem rm -f stop.raw stop2.raw stop2.au
-rem Bytes 23 - 26 are the revision level of VOC file utilities and checksum.
-rem We may use different ones than Sound Blaster utilities do.
-rem We use 0/1 for the major/minor, SB uses that on the 1.15 utility disk.
 
 set file=
 set noise=

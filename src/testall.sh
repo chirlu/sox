@@ -25,5 +25,4 @@ t sndt
 t txw
 t voc
 t wav 
-t wve
 t wve 

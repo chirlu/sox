@@ -42,6 +42,5 @@ call t.bat txw
 call t.bat voc
 call t.bat wav
 call t.bat wve
-call t.bat wve
 
 del t.bat
