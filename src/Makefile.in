@@ -72,28 +72,35 @@ libst.a: $(LIBOBJS)
 	$(AR) libst.a $(LIBOBJS)
 	$(RANLIB) libst.a
 
-man: sox.1 soxexam.1 libst.3
-	nroff -man sox.1 | col -b > sox.txt
-	nroff -man soxexam.1 | col -b > soxexam.txt
-	nroff -man libst.3 | col -b > libst.txt
+man: $(srcdir)/sox.1 $(srcdir)/soxexam.1 $(srcdir)/libst.3
+	nroff -man $(srcdir)/sox.1 | col -b > sox.txt
+	nroff -man $(srcdir)/soxexam.1 | col -b > soxexam.txt
+	nroff -man $(srcdir)/libst.3 | col -b > libst.txt
 
 PLAY_INSTALL_0    =
 PLAY_INSTALL_1    = install-play
 
 install: sox $(PLAY_INSTALL_$(PLAY_SUPPORT))
+	$(srcdir)/mkinstalldirs $(BINDIR)
+	$(srcdir)/mkinstalldirs $(MANDIR)/man1
 	$(INSTALL) -c -m 755 sox $(BINDIR)
-	$(INSTALL) -c -m 644 sox.1 $(MANDIR)/man1
-	$(INSTALL) -c -m 644 soxexam.1 $(MANDIR)/man1
+	$(INSTALL) -c -m 644 $(srcdir)/sox.1 $(MANDIR)/man1
+	$(INSTALL) -c -m 644 $(srcdir)/soxexam.1 $(MANDIR)/man1
 
 install-play:
 	if [ -f $(BINDIR)/rec ] ; then $(RM) $(BINDIR)/rec; fi
 	if [ -f $(MANDIR)/man1/rec.1 ]; then $(RM) $(MANDIR)/man1/rec.1; fi
-	$(INSTALL) -c -m 755 play $(BINDIR)
-	$(INSTALL) -c -m 644 play.1 $(MANDIR)/man1
+	$(srcdir)/mkinstalldirs $(MANDIR)/man1
+	$(srcdir)/mkinstalldirs $(BINDIR)
+	$(INSTALL) -c -m 755 $(srcdir)/play $(BINDIR)
+	$(INSTALL) -c -m 644 $(srcdir)/play.1 $(MANDIR)/man1
 	ln -s $(BINDIR)/play $(BINDIR)/rec
 	ln -s $(MANDIR)/man1/play.1 $(MANDIR)/man1/rec.1
 
 install-lib: libst.a
+	$(srcdir)/mkinstalldirs $(LIBDIR)/man1
+	$(srcdir)/mkinstalldirs $(MANDIR)/man3
+	$(srcdir)/mkinstalldirs $(INCDIR)
 	$(INSTALL) -c -m 644 libst.a $(LIBDIR)
 	$(RANLIB) $(LIBDIR)/libst.a
 	$(INSTALL) -c -m 644 libst.3 $(MANDIR)/man3
