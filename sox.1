@@ -85,7 +85,7 @@ sox \- Sound eXchange : universal sound sample translator
 .br
 	pick
 .br
-	polyphase [ \fI-w \fR< \fInum\fR / \fIham\fR > ] 
+	polyphase [ \fI-w \fR< \fInut\fR / \fIham\fR > ] 
                [ \fI -width \fR< \fI long \fR / \fIshort \fR / \fI# \fR> ] 
                [ \fI-cutoff # \fR ]
 .br
@@ -139,7 +139,7 @@ gives the type of the sound sample file.
 .TP 10
 \fB-r \fIrate\fR
 Give sample rate in Hertz of file.  To cause the output file to have
-a different sample rate then the input file, include this option
+a different sample rate than the input file, include this option
 with the appropriate rate value along with the output options.
 If the input and output files have
 different rates then a sample rate change effect must be ran.  If a
@@ -176,7 +176,7 @@ IEEE floats are a fixed, portable format.
 \fB-c \fIchannels\fR
 The number of sound channels in the data file.
 This may be 1, 2, or 4; for mono, stereo, or quad sound data.  To cause
-the output file to have a different number of channels then the input
+the output file to have a different number of channels than the input
 file, include this option with the approraite value with the output
 file options.  
 If the input and output file have a different number of channels then the
@@ -198,7 +198,7 @@ Print version number and usage information.
 \fB-p\fR
 Run in preview mode and run fast.  This will somewhat speed up
 sox when the output format has a different number of channels and
-a different rate then the input file.  The order that the effects 
+a different rate than the input file.  The order that the effects 
 are run in will be arranged for maximum speed and not quality.
 .TP 10
 \fB-v \fIvolume\fR
@@ -354,7 +354,7 @@ in mono and stereo.
 .B ossdsp
 OSS /dev/dsp device driver
 .br
-This is a psuedo-file type and can be optionally compiled into Sox.  Run
+This is a pseudo-file type and can be optionally compiled into Sox.  Run
 .B sox -h
 to see if you have support for this file type.  When this driver is used
 it allows you to open up the OSS /dev/dsp file and configure it to
@@ -383,7 +383,7 @@ the samplers themselves. Currently loop points are ignored.
 .B sunau
 Sun /dev/audio device driver
 .br
-This is a psuedo-file type and can be optionally compiled into Sox.  Run
+This is a pseudo-file type and can be optionally compiled into Sox.  Run
 .B sox -h
 to see if you have support for this file type.  When this driver is used
 it allows you to open up a Sun /dev/audio file and configure it to
@@ -488,7 +488,7 @@ avg [ \fI-l\fR | \fI-r\fR ]
 Reduce the number of channels by averaging the samples,
 or duplicate channels to increase the number of channels.
 This effect is automatically used when the number of input
-samples differ then the number of output channels.  When reducing
+samples differ from the number of output channels.  When reducing
 the number of channels it is possible to manually specify the
 avg effect and use the \fI-l\fR and \fI-r\fR options to select only
 the left or right channel for the output instead of averaging the
@@ -526,7 +526,7 @@ i.e. peaking at the
 frequency and settling around it.
 See \fBfilter\fR for a bandpass effect with steeper shoulders.
 .TP
-chorus \fIgain-in gain-out delay decay speed deptch 
+chorus \fIgain-in gain-out delay decay speed depth 
 .TP 10
        -s \fR| \fI-t [ \fIdelay decay speed depth -s \fR| \fI-t ... \fR]
 Add a chorus to a sound sample.  Each quadtuple
@@ -597,7 +597,7 @@ window length to the signal.
 
 A lowpass filter is obtained by leaving \fIlow\fR unspecified, or 0.
 A highpass filter is obtained by leaving \fIhigh\fR unspecified, or 0,
-or greater than or equal to the Nyquist freq.
+or greater than or equal to the Nyquist frequency.
 
 The \fIwindow-len\fR, if unspecified, defaults to 128.
 Longer windows give a sharper cutoff, smaller windows a more gradual cutoff.
@@ -657,31 +657,34 @@ pick
 Select the left or right channel of a stereo sample,
 or one of four channels in a quadrophonic sample.
 .TP
-polyphase [ \fI-w \fR< \fInum\fR / \fIham\fR > ] 
+polyphase [ \fI-w \fR< \fInut\fR / \fIham\fR > ] 
 .TP
           [ \fI -width \fR< \fI long \fR / \fIshort \fR / \fI# \fR> ] 
 .TP 10
           [ \fI-cutoff # \fR ]
 Translate input sampling rate to output sampling rate via polyphase
 interpolation, a DSP algorithm.  This method is slow and uses lots
-of RAM, but gives much better results then 
+of RAM, but gives much better results than 
 .B rate.
 .br
 -w < nut / ham > : select either a Nuttal (~90 dB stopband) or Hamming
-(~43 dB stopband) window.
-.B Warning:
-Nuttall windows require 2x length than Hamming windows.  Default is
+(~43 dB stopband) window.  Default is
 .I nut.
 .br
--width long / short / # : specify the width of the filter.
+-width long / short / # : specify the (approximate) width of the filter.
 .I long
 is 1024 samples;
 .I short
 is 128 samples.  Alternatively, an exact number can be used.  Default is
 .I long.
+The
+.I short
+option is
+.B not
+recommended, as it produces poor quality results.
 .br
 -cutoff # : specify the filter cutoff frequency in terms of fraction of
-bandwidth.  If upsampling, then this is the fraction of the orignal signal
+bandwidth.  If upsampling, then this is the fraction of the original signal
 that should go through.  If downsampling, this is the fraction of the
 signal left after downsampling.  Default is 0.95.  Remember that
 this is a float.
@@ -704,9 +707,9 @@ or
 .B polyphase.
 If you are wondering which of
 .B Sox's
-rate changing effects to ues, you will want to read a
+rate changing effects to use, you will want to read a
 detailed analysis of all of them at http://eakaw2.et.tu-dresden.de/~andreas/resample/resample.html
-[Nov,1999: These tests need to be updated for sox-12.18, which has bugfixes to the
+[Nov,1999: These tests need to be updated for sox-12.17, which has bugfixes to the
 resample and polyphase code.]
 .TP 10
 resample [ \fI-qs\fB | \fI-q\fB | \fI-ql\fB ] [ \fIrolloff\fB [ \fIbeta\fB ] ]\fR
@@ -718,13 +721,31 @@ but gives much better results.
 
 The \fI-qs\fR, \fI-q\fR, or \fI-ql\fR options specify increased accuracy
 at the cost of lower execution speed.  By default, linear interpolation
-is used, with a window width about 37 samples at the lower rate.
+is used, with a window width about 45 samples at the lower rate.
 This gives an accuracy of about 16 bits, but insufficient stopband rejection
-in the case that you want to have rolloff greater than about 0.85 of
+in the case that you want to have rolloff greater than about 0.80 of
 the Nyquist frequency.
 The \fI-q*\fR options use quadratic interpolation of filter
-coefficients, resulting in about 22 bits precision.
-\fI-qs\fR, \fI-q\fR, or \fI-ql\fR use window lengths of 37, 75, or 150
+coefficients, resulting in about 24 bits precision.
+.br
+Following is a table of the reasonable defaults which are built-in to sox:
+.br 
+   \fBOption  Window rolloff beta interpolation\fR
+.br 
+   \fB------  ------ ------- ---- -------------\fR
+.br
+   (none)    45    0.80    16     linear
+.br
+     -qs     45    0.80    16    quadratic
+.br
+     -q      75    0.875   16    quadratic
+.br
+     -ql    149    0.94    16    quadratic
+.br 
+   \fB------  ------ ------- ---- -------------\fR
+.br
+.br
+\fI-qs\fR, \fI-q\fR, or \fI-ql\fR use window lengths of 45, 75, or 149
 samples, respectively, at the lower sample-rate of the two files.
 This means progressively sharper stop-band rejection, at proportionally
 slower execution times.
@@ -732,14 +753,15 @@ slower execution times.
 \fIrolloff\fR refers to the cut-off frequency of the
 low pass filter and is given in terms of the
 Nyquist frequency for the lower sample rate.  rolloff therefore should
-be something between 0. and 1., in practice 0.8-0.95.  The default is 0.8.
+be something between 0. and 1., in practice 0.8-0.95.  The defaults are
+indicated above.
 
 The \fIbeta\fR parameter
 determines the type of filter window used.  Any value greater than 2.0 is
 the beta for a Kaiser window.  Beta <= 2.0 selects a Nuttall window.
 If unspecified, the default is a Kaiser window with beta 16.
 
-In the case of Kaiser window beta > 2.0, lower betas produce a somewhat
+In the case of Kaiser window (beta > 2.0), lower betas produce a somewhat
 faster transition from passband to stopband, at the cost of noticeable artifacts.
 A beta of 16 is the default, beta less than 10 is not recommended.  If you want
 a sharper cutoff, don't use low beta's, use a longer sample window.
@@ -749,17 +771,30 @@ You will probably not need to use the beta parameter at all, unless you are
 just curious about comparing the effects of Nuttall vs. Kaiser windows.
 
 This is the default effect if the two files have different sampling rates.
-Default parameters are Kaiser window of length 37, rolloff 0.80, beta 16,
-linear interpolation.  \fI-qs\fR is only slightly slower, but more accurate for
+Default parameters are, as indicated above, Kaiser window of length 45,
+rolloff 0.80, beta 16, linear interpolation.
+
+\fBNOTE: \fI-qs\fR is only slightly slower, but more accurate for
 16-bit or higher precision.
 
+\fBNOTE:\fR In many cases of up-sampling, no interpolation is needed,
+as exact filter coefficients can be computed in a reasonable amount of space.
+To be precise, this is done when
+
+.br
+           input_rate < output_rate
+.br
+                      &&
+.br
+  output_rate/gcd(input_rate,output_rate) <= 511
+.br
 .TP 10
 reverb \fIgain-out delay \fR[ \fIdelay ... \fR]
-Add reverbation to a sound sample.  Each delay is given 
+Add reverberation to a sound sample.  Each delay is given 
 in milliseconds and its feedback is depending on the
 reverb-time in milliseconds.  Each delay should be in 
 the range of half to quarter of reverb-time to get
-a realistic reverbation.  Gain-out is the volume of the
+a realistic reverberation.  Gain-out is the volume of the
 output.
 .TP 10
 reverse 

@@ -24,6 +24,7 @@
 #define memmove(dest,src,len) bcopy((src),(dest),(len))
 #endif
 
+/* this Float MUST match that in resample.h */
 #define Float double/*float*/
 
 #define ISCALE 0x10000

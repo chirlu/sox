@@ -30,9 +30,14 @@ my $effect='resample';
 #my $effect='polyphase -cutoff 0.90';
 #my $effect='filter 400-2000';
 #my $effect='filter 400-2000 1024';
+
 my ($rate0,$rate1)=(8000,22050); # sample rates
 my $p=400;  # silence before/after tonepulse
 my $env="-e4000:16000:4000"; # attack, duration, drop
+
+#my ($rate0,$rate1)=(22050,8000); # sample rates
+#my $p=1102;  # silence before/after tonepulse
+#my $env="-e11025:44100:11025"; # attack, duration, drop
 
 # parse commandline arguments
 my $updown = 0; # set to 1 for up/down rate-conversion test
@@ -72,8 +77,11 @@ print("#   produced by $ding -f0.xx -v0.5 -o$p $env -p$p d/i0.xx.$t\n");
 mkdir("d",0775);
 my $f;
 my %q;
-for ($f=0.00; $f<1.0; $f+=0.01) {
+my $nyq = ($rate0<=$rate1)? 1.0:($rate1/$rate0); 
+for ($f=0.00; $f<1.001; $f+=0.01) {
 	my @mod;
+
+	#if ($f>0.995) { $f=0.999; }
 	my $s=sprintf("%4.2f",$f);
 	#print "$ding -v0.5 -o$p $env -p$p -f$s -d1.0 d/i$s.$t\n";
 	qx{$ding -v0.5 -o$p $env -p$p -f$s -d1.0 d/i$s.$t &>/dev/null};

@@ -163,8 +163,8 @@ bigcalc(double Factor, double Freq1, const SAMPL *ibuff, int len)
 	}
 
 	c = eCenter(ibuff,len);
-	Len1 = Env.c*Factor*0.6;
-	c += Env.c*Factor*0.15;
+	Len1 = Env.c*Factor*0.6; /* 60% of original const-amplitude area */
+	c += Env.c*Factor*0.15;  /* beginning after 30% */
 	{
 		double a;
 		int b;
@@ -185,7 +185,6 @@ bigcalc(double Factor, double Freq1, const SAMPL *ibuff, int len)
 
 		s = ip[n];    /* sigval at n      */
 		
-		//if (fabs(n-Len1/2)<Len1/3) {
 		f = 1; //a(n+del,Len1);
 		u = f*x; v = f*y;
 		sx += s*u;
@@ -194,7 +193,7 @@ bigcalc(double Factor, double Freq1, const SAMPL *ibuff, int len)
 		h11 += u*u;
 		h12 += u*v;
 		h22 += v*v;
-		//}
+
 		a_post(n);
 	}
 	//fprintf(stderr,"h12 %.10f\n", (double)h12/(sqrt(h11)*sqrt(h22)));
@@ -221,7 +220,7 @@ int main(int argct, char **argv)
 	char *fnam1;
 
 	 /* Parse the options */
-	while ((optc = getopt(argct, argv, "d:o:e:p:f:h")) != -1) {
+	while ((optc = getopt(argct, argv, "d:e:f:h")) != -1) {
 		char *p;
 		switch(optc) {
 			case 'd':

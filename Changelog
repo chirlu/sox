@@ -14,6 +14,8 @@ sox-12.17
     was with 16-bit integer arithmetic.  The older version
     in sox-12.16 shifted frequencies slightly and was less
     accurate.
+  o Extensive rewrite of polyphas.c, should be faster and use
+    less memory now.  The sox-12.16 polyphase code had some bugs.
   o New effect 'filter' which is a high-quality DSP lowpass/
     highpass/bandpass filter using windowed sinc function
     methods, like polyphase and resample.

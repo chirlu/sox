@@ -42,6 +42,15 @@
 #	define MINSAMPL -0x7fffffff
 #endif
 
+struct _Env {
+	int r;    /* rise   */
+	int m;    /* middle */
+	int f;    /* fall   */
+	int e;    /* end     */
+	FLOAT v; /* volume */
+	FLOAT d; /* decay */
+} Env = {0,0,0,0,0.5,1.0};
+
 static void Usage(void)__attribute__((noreturn));
 
 static void Usage(void)
@@ -101,22 +110,13 @@ int main(int argct, char **argv)
 	int poflo,moflo;
 	FLOAT Vol0=1;
 	FLOAT Freq=0;   /* of nyquist */
-	int Offset=0;
 	int Pad=0;
-	struct _Env {
-		int r;    /* rise   */
-		int c;    /* center */
-		int f;    /* fall   */
-		FLOAT v; /* volume */
-		FLOAT d; /* decay */
-	} Env = {0,0,0,0.5,1.0};
-
 	double x=1,y=0;
 	double thx=1,thy=0;
 				
 	static inline void a_init(double frq)
 	{
-		if (frq != 0) {
+		if (0<frq && frq<1) {
 			x = 1; y = 0;
 		} else {
 			x = 0; y = 1;
@@ -125,15 +125,6 @@ int main(int argct, char **argv)
 		thy = sin(frq*M_PI);
 	}
 	
-	static inline const double a(int k, int L)
-	{
-		double a, u;
-		u = (double)k/L; /* in [0,1] */
-		a = 0.5*(1 + cos(M_PI * u));
-		//printf("a(%d,%d) = %.5f,  l=%.1f, u=%.6f\n",k,L,a,l,u); 
-		return a;
-	}
-
 	static inline void a_post(int k)
 	{
 		double x1;
@@ -146,6 +137,27 @@ int main(int argct, char **argv)
 			x *= x1;
 			y *= x1;
 		}
+	}
+
+	/* rise/fall function, monotonic [0,1] -> [1-0] */
+	static inline const double a(double s)
+	{
+		return 0.5*(1 + cos(M_PI * s));
+	}
+
+	static double env(struct _Env *Env, int k)
+	{
+		double u = 0;
+		//if (k >= Env->r && k < Env->e) {
+			if (k<Env->m) {
+				u = Env->v * a((double)(Env->m-k)/(Env->m-Env->r));
+			}else if (k<Env->f) {
+				u = Env->v;
+			}else{
+				u = Env->v * a((double)(k-Env->f)/(Env->e-Env->f));
+			}
+		//}
+		return u;
 	}
 
 	 /* Parse the options */
@@ -168,22 +180,22 @@ int main(int argct, char **argv)
 				break;
 			case 'e':
 				p = optarg;
-				Env.c  = strtol(p,&p,10);
+				Env.f  = strtol(p,&p,10);
 				if (*p++ == ':') {
-					Env.r = Env.f = Env.c;
-					Env.c = strtol(p,&p,10);
-				}
-				if (*p++ == ':') {
+					Env.m = Env.e = Env.f;
 					Env.f = strtol(p,&p,10);
 				}
-				if (*p || Env.c<=0 || Env.r<0 || Env.f<0) {
+				if (*p++ == ':') {
+					Env.e = strtol(p,&p,10);
+				}
+				if (*p || Env.f<=0 || Env.m<0 || Env.e<0) {
 					fprintf(stderr,"option -%c not valid (%s)\n", optc, optarg);
 					Usage();
 				}
 				break;
 			case 'o':
-				Offset = strtol(optarg,&p,10);
-				if (p==optarg || *p || Offset<0) {
+				Env.r = strtol(optarg,&p,10);
+				if (p==optarg || *p || Env.r<0) {
 					fprintf(stderr,"option -%c expects int value (%s)\n", optc, optarg);
 					Usage();
 				}
@@ -212,7 +224,10 @@ int main(int argct, char **argv)
 	if (Freq==0.0) Env.v *= sqrt(0.5);
 	//fprintf(stderr,"Vol0 %8.3f\n", Vol0);
 
-	len = Offset+Env.r+Env.c+Env.f+Pad;
+	Env.m += Env.r;
+	Env.f += Env.m;
+	Env.e += Env.f;
+	len = Env.e+Pad;
 	fnam1=NULL; fd1=-1;
 	//fprintf(stderr,"optind=%d argct=%d\n",optind,argct);
 	if (optind <= argct-2) {
@@ -249,22 +264,14 @@ int main(int argct, char **argv)
 		ct = len - st; if (ct>BSIZ) ct=BSIZ;
 		ReadN(fd1,ibuff,ct);
 		for (ibp=ibuff; ibp<ibuff+ct; ibp++,st++) {
-			int k;
 			double v = *ibp;
 
 			if (max<*ibp) max=*ibp;
 			else if (min>*ibp) min=*ibp;
 			v *= Vol0;
 
-			k = st-Offset;
-			if (k>=0 && k<Env.r) {
-				v += y*a(Env.r-k,Env.r)*Env.v;
-				a_post(st);
-			}else if (k-=Env.r, k>=0 && k<Env.c) {
-				v += y*Env.v;
-				a_post(st);
-			}else if (k-=Env.c, k>=0 && k<Env.f) {
-				v += y*a(k,Env.f)*Env.v;
+			if (st>=Env.r && st<Env.e) {
+				v += y*env(&Env,st);
 				a_post(st);
 			}
 
