@@ -56,7 +56,6 @@
 #include <math.h>
 #include <string.h>
 #include "st.h"
-#include "libst.h"
 
 #define MOD_SINE	0
 #define MOD_TRIANGLE	1

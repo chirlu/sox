@@ -348,6 +348,19 @@ char **argv;
 			break;
 		}
 	}
+
+	/* SJB: fix the -X extract interval for # channels...
+	 * this is not perfect re cases where channels=-1,
+	 * and also indicates that info.x0, info.x1, info.x
+	 * SHOULD be (long long) instead of (ULONG), for large files
+	 */
+	if (ft->info.channels > 1) {
+		if (ft->info.x0 != 0)
+			ft->info.x0 *= ft->info.channels;
+		if (ft->info.x1 != MAXULONG && ft->info.x1 < MAXULONG/ft->info.channels)
+			ft->info.x1 *= ft->info.channels;
+	}
+
 }
 
 static void init(P0) {

@@ -10,7 +10,7 @@ LIBS:=-lm
 all: ding model lding lmodel corr
 
 corr: corr.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $2 $<
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 
 ding: ding.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)

@@ -28,7 +28,7 @@ my $fmt='';
 
 my $rate=8000; # sample rates
 my $p=200;  # silence before/after tonepulse
-my $env="-e400:800:400"; # attack, duration, drop
+my $env="400:800:400"; # attack, duration, drop
 
 my ($ding,$model,$t,$rms,$lim)=("./ding","./model","sw",11585.2, 0.5);
 
@@ -55,7 +55,7 @@ if ($fmt eq '-t') {
 	print("by $sox -r$rate in.sw $fmt out.wav $effect\n");
 }
 print("#   with tone pulses from 0.00 to 0.99 percent of Nyquist\n");
-print("#   produced by $ding -f0.xx -v0.5 -o$p $env -p$p d/i0.xx.$t\n");
+print("#   produced by $ding -f0.xx -v0.5 -e$p:$env:$p d/i0.xx.$t\n");
 print("#   col 1 is frequency/Nyquist\n");
 print("#   col 2 is (power) dB gain\n");
 print("#   col 3 is (power) dB level of error signal\n");
@@ -71,8 +71,8 @@ for ($f=0.00; $f<1.001; $f+=0.01) {
 
 	#if ($f>0.995) { $f=0.999; }
 	my $s=sprintf("%4.2f",$f);
-	#print "$ding -v0.5 -o$p $env -p$p -f$s -d1.0 d/i$s.$t\n";
-	qx{$ding -v0.5 -o$p $env -p$p -f$s -d1.0 d/i$s.$t &>/dev/null};
+	#print "$ding -f$s -v0.5 -e$p:$env:$p -d1.0 d/i$s.$t\n";
+	qx{$ding -f$s -v0.5 -e$p:$env:$p -d1.0 d/i$s.$t &>/dev/null};
 
 	if ($fmt eq '-t') {
 		qx{$toast -l d/i$s.$t};
@@ -86,7 +86,7 @@ for ($f=0.00; $f<1.001; $f+=0.01) {
 		unlink "d/g$s.wav";
 	}
 
-	@mod = grep {/v2max/} qx{$model -f$s $env $rate d/i$s.$t 2>&1};
+	@mod = grep {/v2max/} qx{$model -f$s -e$env $rate d/i$s.$t 2>&1};
 	print STDERR "$s: ",@mod;
 	$_=shift(@mod);
 	if (m{s2max *([0-9.]+), *v2max *([0-9.]+), *rmserr *(-?[0-9.]+)}) {

@@ -149,7 +149,6 @@ LONG rawread(ft, buf, nsamp)
 ft_t ft;
 LONG *buf, nsamp;
 {
-	register LONG datum;
 	int done = 0;
 
 	switch(ft->info.size) {
@@ -158,6 +157,7 @@ LONG *buf, nsamp;
 		    {
 			case SIGN2:
 				while(done < nsamp) {
+					LONG datum;
 					datum = blockgetc(ft);
 					if (ft->file.eof)
 						return done;
@@ -168,6 +168,7 @@ LONG *buf, nsamp;
 				return done;
 			case UNSIGNED:
 				while(done < nsamp) {
+					LONG datum;
 					datum = blockgetc(ft);
 					if (ft->file.eof)
 						return done;
@@ -180,6 +181,7 @@ LONG *buf, nsamp;
 				return done;
 			case ULAW:
 				while(done < nsamp) {
+					LONG datum;
 					datum = blockgetc(ft);
 					if (ft->file.eof)
 						return done;
@@ -191,15 +193,15 @@ LONG *buf, nsamp;
 				return done;
 			case ALAW:
 				while(done < nsamp) {
-				        datum = blockgetc(ft);
-				        if (ft->file.eof)
-				                return done;
-				        datum = st_Alaw_to_linear(datum);
-				        /* scale signed up to long's range */
-				        *buf++ = LEFT(datum, 16);
-				        done++;
+					LONG datum;
+					datum = blockgetc(ft);
+					if (ft->file.eof)
+						return done;
+					datum = st_Alaw_to_linear(datum);
+					/* scale signed up to long's range */
+					*buf++ = LEFT(datum, 16);
+					done++;
 				}
-
 				return done;
 		    }
 		    break;
@@ -363,7 +365,6 @@ void rawwrite(ft, buf, nsamp)
 ft_t ft;
 LONG *buf, nsamp;
 {
-	register int datum;
 	int done = 0;
 
 	switch(ft->info.size) {
@@ -372,6 +373,7 @@ LONG *buf, nsamp;
 		    {
 			case SIGN2:
 				while(done < nsamp) {
+					int datum;
 					/* scale signed up to long's range */
 					datum = (int) RIGHT(*buf++, 24);
 					blockputc(ft, datum);
@@ -380,6 +382,7 @@ LONG *buf, nsamp;
 				return;
 			case UNSIGNED:
 				while(done < nsamp) {
+					int datum;
 					/* scale signed up to long's range */
 					datum = (int) RIGHT(*buf++, 24);
 					/* Convert to unsigned */
@@ -390,6 +393,7 @@ LONG *buf, nsamp;
 				return;
 			case ULAW:
 				while(done < nsamp) {
+					int datum;
 					/* scale signed up to long's range */
 					datum = (int) RIGHT(*buf++, 16);
 					/* round up to 12 bits of data */
@@ -401,6 +405,7 @@ LONG *buf, nsamp;
 				return;
 			case ALAW:
 				while(done < nsamp) {
+					int datum;
 					/* scale signed up to long's range */
 					datum = (int) RIGHT(*buf++, 16);
 					/* round up to 12 bits of data */
@@ -420,6 +425,7 @@ LONG *buf, nsamp;
 				return;
 			case UNSIGNED:
 				while(done < nsamp) {
+					int datum;
 					unsigned short s;
 					/* scale signed up to long's range */
 					datum = *buf++ + 0x8000; /* round for 16 bit */

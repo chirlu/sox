@@ -36,17 +36,21 @@
 #endif
 
 #define MAXLONG 0x7fffffffL
-#define MAXULONG 0xffffffff
+#define MAXULONG 0xffffffffL
 
 /* various gcc optimizations */
 #ifdef __GNUC__
 #define NORET __attribute__((noreturn))
-#define REGPARM(n) __attribute__((regparm(n)))
 #define INLINE inline
 #else
 #define NORET
-#define REGPARM(n)
 #define INLINE
+#endif
+
+#ifdef USE_REGPARM
+#define REGPARM(n) __attribute__((regparm(n)))
+#else
+#define REGPARM(n)
 #endif
 
 /*

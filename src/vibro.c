@@ -58,7 +58,7 @@ char **argv;
 }
 
 /* This was very painful.  We need a sine library. */
-
+/* SJB: this is somewhat different than st_sine()  */
 static void sine(buf, len, depth)
 short *buf;
 int len;

@@ -28,16 +28,17 @@ interpolation with Nuttall window...
 ./ltest -l resample -qs 0.80 0 >B
 gnuplot plotAB
 
-The script gtest.pl is for testing sox's adpcm and gsm wav support.
+The script wtest.pl is for testing sox's adpcm and gsm wav support.
 
 It accepts one of these options:
     -t  Use 'toast' gsm for compress/decompress
-             -a  Use sox (MS) ADPCM
-	     -i  Use sox IMA ADPCM
-	     -g  Use sox wav-gsm6.10
+    -a  Use sox (MS) ADPCM
+    -i  Use sox IMA ADPCM
+    -g  Use sox wav-gsm6.10
 If using sox, you may also append an optional effect, eg:
     ./wtest -g filter 0-3500 >A
 will apply a lowpass filter with 6dB corner at 3500 Hz before the compression phase.
+
 Then, as above, 'gnuplot plotA' will graph dB gain and dB error-level
 vs. freq for you.
 
@@ -58,10 +59,10 @@ It uses the 'ding' program to synthesize a sineusoid input file for the
 frequencies 0.00 0.01 ... 0.99 of the Nyquist frequency.  This input
 has:
      400 samples samples of silence,
-		4000 samples with smooth envelope rising to volume -v0.5
-	 16000 samples at -v0.5
-	  4000 samples with smooth envelope falling to 0,
-		 400 sample more of silence.
+    4000 samples with smooth envelope rising to volume -v0.5
+   16000 samples at -v0.5
+    4000 samples with smooth envelope falling to 0,
+     400 sample more of silence.
 
 The rising/falling envelopes are shaped like rising, falling portions
 of the (1-cos(x)) function.
@@ -76,18 +77,18 @@ model works as follows:
 
 step 1:  the entire sample file is read in, and the center-of-gravity of
          the squared samples is found.  This is the time offset which should
-				 correspond to the center of the filtered/resampled tone-pulse.
+	 correspond to the center of the filtered/resampled tone-pulse.
 
 step 2:  let N = 16000*(rate1/rate0) be the number of samples at output rate
-				 which would correspond to the 16000 sample duration at max volume.
-				 We focus on the samples between
-				     (center - 0.3*N)    and    (center + 0.9*N)
-				 where the transient effects of attack/release envelope should be
-				 small.
-				 We do a least-squares fit of a sinusoid at the adjusted frequency
-				 to this segment of 0.6*N samples, and print out the component
-				 s2max which can be explained, and also the rms level of the 'error'
-				 or unexplained part.
+	 which would correspond to the 16000 sample duration at max volume.
+	 We focus on the samples between
+         (center - 0.3*N)    and    (center + 0.9*N)
+	 where the transient effects of attack/release envelope should be
+	 small.
+	 We do a least-squares fit of a sinusoid at the adjusted frequency
+	 to this segment of 0.6*N samples, and print out the component
+	 s2max which can be explained, and also the rms level of the 'error'
+	 or unexplained part.
 
 That's pretty much it... the ltest perl-script glues it together and outputs
 adjusted data which the gnuplot will like.
