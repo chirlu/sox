@@ -58,20 +58,20 @@ ft_t ft;
 	channels = 1;
 
 	/* read FORM chunk */
-	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "FORM", 4) != 0)
+	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "FORM", 4) != 0)
 	{
 		fail("8SVX: header does not begin with magic word 'FORM'");
 		return(ST_EOF);
 	}
 	st_readdw(ft, &totalsize);
-	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "8SVX", 4) != 0)
+	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "8SVX", 4) != 0)
 	{
 		fail("8SVX: 'FORM' chunk does not specify '8SVX' as type");
 		return(ST_EOF);
 	}
 
 	/* read chunks until 'BODY' (or end) */
-	while (fread(buf,1,4,ft->fp) == 4 && strncmp(buf,"BODY",4) != 0) {
+	while (st_reads(ft, buf, 4) == ST_SUCCESS && strncmp(buf,"BODY",4) != 0) {
 		if (strncmp(buf,"VHDR",4) == 0) {
 			st_readdw(ft, &chunksize);
 			if (chunksize != 20)

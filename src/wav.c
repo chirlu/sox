@@ -411,11 +411,11 @@ static void fSkip(FILE *fp, ULONG len)
 
 static ULONG findChunk(ft_t ft, const char *Label)
 {
-    char magic[4];
+    char magic[5];
     ULONG len;
     for (;;)
     {
-	if (fread(magic, 1, 4, ft->fp) != 4)
+	if (st_reads(ft, magic, 4) == ST_EOF)
 	{
 	    fail("WAVE file has missing %s chunk", Label);
 	    return 0;
@@ -440,7 +440,7 @@ int st_wavstartread(ft)
 ft_t ft;
 {
     wav_t	wav = (wav_t) ft->priv;
-    char	magic[4];
+    char	magic[5];
     ULONG	len;
     int		littlendian = 1;
     char	*endptr;
@@ -467,7 +467,7 @@ ft_t ft;
     endptr = (char *) &littlendian;
     if (!*endptr) ft->swap = ft->swap ? 0 : 1;
 
-    if ( fread(magic, 1, 4, ft->fp) != 4 || strncmp("RIFF", magic, 4))
+    if (st_reads(ft, magic, 4) == ST_EOF || strncmp("RIFF", magic, 4))
     {
 	fail("WAVE: RIFF header not found");
 	return ST_EOF;
@@ -475,7 +475,7 @@ ft_t ft;
 
     st_readdw(ft, &wRiffLength);
 
-    if ( fread(magic, 1, 4, ft->fp) != 4 || strncmp("WAVE", magic, 4))
+    if (st_reads(ft, magic, 4) == ST_EOF || strncmp("WAVE", magic, 4))
     {
 	fail("WAVE header not found");
 	return ST_EOF;
@@ -1420,7 +1420,7 @@ int st_wavstopwrite(ft)
 ft_t ft;
 {
 	wav_t	wav = (wav_t) ft->priv;
-	int	rc;
+	int	rc = ST_SUCCESS;
 
 	/* Call this to flush out any remaining data. */
 	switch (wav->formatTag)

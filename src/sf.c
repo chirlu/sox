@@ -87,7 +87,7 @@ ft_t ft;
 	if (rc)
 	    return rc;
 	
-	if (fread(&sfhead, 1, sizeof(SFHEADER), ft->fp) != sizeof(SFHEADER))
+	if (fread(&sfhead, 1, sizeof(sfhead), ft->fp) != sizeof(sfhead))
 	{
 		fail("unexpected EOF in SF header");
 		return(ST_EOF);
@@ -187,7 +187,7 @@ ft_t ft;
 	sfcharp = (char *) sfcodep + sizeof(SFCODE);
 	while(sfcharp < (char *) &sfhead + SIZEOF_BSD_HEADER)
 		*sfcharp++ = '\0';
-	(void) fwrite(&sfhead, 1, sizeof(SFHEADER), ft->fp);
+	fwrite(&sfhead, 1, sizeof(SFHEADER), ft->fp);
 
 	return(ST_SUCCESS);
 }

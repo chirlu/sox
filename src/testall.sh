@@ -15,7 +15,6 @@ t avr
 t cdr
 t cvs
 t dat
-t vms
 t hcom -r 22050
 t maud
 t raw -r 8130 -t ub
@@ -24,6 +23,7 @@ t smp
 t sndr
 t sndt 
 t txw
+t vms
 t voc
 t wav
 t wve

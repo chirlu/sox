@@ -75,7 +75,7 @@ ft_t ft;
 	}
 	
 	/* read FORM chunk */
-	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "FORM", 4) != 0)
+	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "FORM", 4) != 0)
 	{
 		fail("MAUD: header does not begin with magic word 'FORM'");
 		return (ST_EOF);
@@ -83,7 +83,7 @@ ft_t ft;
 	
 	st_readdw(ft, &trash); /* totalsize */
 	
-	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "MAUD", 4) != 0)
+	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "MAUD", 4) != 0)
 	{
 		fail("MAUD: 'FORM' chunk does not specify 'MAUD' as type");
 		return(ST_EOF);
@@ -91,7 +91,7 @@ ft_t ft;
 	
 	/* read chunks until 'BODY' (or end) */
 	
-	while (fread(buf,1,4,ft->fp) == 4 && strncmp(buf,"MDAT",4) != 0) {
+	while (st_reads(ft, buf, 4) == ST_SUCCESS && strncmp(buf,"MDAT",4) != 0) {
 		
 		/*
 		buf[4] = 0;

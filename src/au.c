@@ -260,7 +260,7 @@ unsigned char		*code;
 	unsigned char		in_byte;
 
 	if (p->in_bits < p->dec_bits) {
-		if (fread(&in_byte, sizeof (char), 1, ft->fp) != 1) {
+	        if (st_readb(ft, &in_byte) == ST_EOF) {
 			*code = 0;
 			return (-1);
 		}

@@ -54,7 +54,7 @@ ft_t ft;
 {
 	struct readpriv *p = (struct readpriv *) ft->priv;
 	int i;
-	char buf[4];
+	char buf[5];
 	ULONG datasize, rsrcsize;
 	ULONG huffcount, checksum, compresstype, divisor;
 	unsigned short dictsize;
@@ -79,7 +79,7 @@ ft_t ft;
 	    return rc;
 
 	/* Check the file type (bytes 65-68) */
-	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "FSSD", 4) != 0)
+	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "FSSD", 4) != 0)
 	{
 		fail("Mac header type is not FSSD");
 		return (ST_EOF);
@@ -100,7 +100,7 @@ ft_t ft;
 	    return rc;
 
 	/* The data fork must contain a "HCOM" header */
-	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "HCOM", 4) != 0)
+	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "HCOM", 4) != 0)
 	{
 		fail("Mac data fork is not HCOM");
 		return (ST_EOF);
@@ -565,9 +565,9 @@ ft_t ft;
 	    return 0;
 
 	/* Write the header */
-	(void) fwrite("\000\001A", 1, 3, ft->fp); /* Dummy file name "A" */
+	fwrite("\000\001A", 1, 3, ft->fp); /* Dummy file name "A" */
 	padbytes(ft, 65-3);
-	(void) fwrite("FSSD", 1, 4, ft->fp);
+	st_writes(ft, "FSSD");
 	padbytes(ft, 83-69);
 	st_writedw(ft, (ULONG) compressed_len); /* compressed_data size */
 	st_writedw(ft, (ULONG) 0); /* rsrc size */

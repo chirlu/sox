@@ -326,7 +326,7 @@ ft_t ft;
 	v->samples = 0;
 
 	/* File format name and a ^Z (aborts printing under DOS) */
-	(void) fwrite("Creative Voice File\032\032", 1, 20, ft->fp);
+	st_writes(ft, "Creative Voice File\032");
 	st_writew(ft, 26);			/* size of header */
 	st_writew(ft, 0x10a);              /* major/minor version number */
 	st_writew(ft, 0x1129);		/* checksum of version number */

@@ -90,7 +90,7 @@ struct smptrailer *trailer;
 		ft->loops[8].count = trailer->loops[8].count;
 	}
 	for(i = 0; i < 8; i++) {	/* read the 8 markers */
-		if (fread(trailer->markers[i].name, 1, 10, ft->fp) != 10)
+	        if (fread(trailer->markers[i].name, 1, 10, ft->fp) != 10)
 		{
 		    fail("EOF in SMP");
 		    return(ST_EOF);
@@ -158,7 +158,7 @@ struct smptrailer *trailer;
 		st_writew(ft, trailer->loops[i].count);
 	}
 	for(i = 0; i < 8; i++) {	/* write the 8 markers */
-		if (fwrite(trailer->markers[i].name, 1, 10, ft->fp) != 10)
+		if (st_writes(ft, trailer->markers[i].name) == ST_EOF)
 		{
 		    fail("EOF in SMP");
 	 	    return(ST_EOF);

@@ -111,13 +111,13 @@ ft_t ft;
 	}
 
 	/* FORM chunk */
-	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "FORM", 4) != 0)
+	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "FORM", 4) != 0)
 	{
 		fail("AIFF header does not begin with magic word 'FORM'");
 		return(ST_EOF);
 	}
 	st_readdw(ft, &totalsize);
-	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "AIFF", 4) != 0)
+	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "AIFF", 4) != 0)
 	{
 		fail("AIFF 'FORM' chunk does not specify 'AIFF' as type");
 		return(ST_EOF);
@@ -127,7 +127,7 @@ ft_t ft;
 	/* Skip everything but the COMM chunk and the SSND chunk */
 	/* The SSND chunk must be the last in the file */
 	while (1) {
-		if (fread(buf, 1, 4, ft->fp) != 4)
+		if (st_reads(ft, buf, 4) == ST_EOF)
 		{
 			if (ssndsize > 0)
 				break;

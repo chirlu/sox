@@ -65,7 +65,7 @@ ft_t ft;
          and second word is between 4000 & 25000 then this is sounder sound */
         /* otherwise, its probably raw, not handled here */
 
-	if (fread(buf, 1, 2, ft->fp) != 2)
+	if (fread(buf, 1, 2, buf) != 2)
 	{
 		fail("SND: unexpected EOF");
 		return(ST_EOF);
@@ -84,7 +84,7 @@ ft_t ft;
 	else
 	{
 	/* sndtool ? */
-	fread(&buf[2],1,6,ft->fp);
+	fread(&buf[2], 1, 6, ft->fp);
 	if (strncmp(buf,"SOUND",5))
 	{
 		fail ("SND: unrecognized SND format");
@@ -93,7 +93,7 @@ ft_t ft;
 	fseek(ft->fp,12,SEEK_CUR);
 	st_readw(ft, &rate);
 	fseek(ft->fp,6,SEEK_CUR);
-	if (fread(buf,1,96,ft->fp) != 96)
+	if (st_reads(ft, buf, 96) == ST_EOF)
 	{
 		fail ("SND: unexpected EOF in SND header");
 		return(ST_EOF);

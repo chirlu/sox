@@ -29,7 +29,7 @@
 /* Taken from the Audio File Formats FAQ */
 
 typedef struct avrstuff {
-  char magic [4];      /* 2BIT */
+  char magic [5];      /* 2BIT */
   char name [8];       /* null-padded sample name */
   unsigned short mono; /* 0 = mono, 0xffff = stereo */
   unsigned short rez;  /* 8 = 8 bit, 16 = 16 bit */
@@ -83,14 +83,14 @@ ft_t ft;
   if (rc)
       return rc;
 
-  fread (avr->magic, 1, sizeof (avr->magic), ft->fp);
+  st_reads(ft, avr->magic, 4);
 
   if (strncmp (avr->magic, AVR_MAGIC, 4)) {
     fail ("AVR: unknown header");
     return(ST_EOF);
   }
 
-  fread (avr->name, 1, sizeof (avr->name), ft->fp);
+  fread(avr->name, 1, sizeof(avr->name), ft->fp);
 
   st_readw (ft, &(avr->mono));
   if (avr->mono) {
@@ -145,9 +145,9 @@ ft_t ft;
 
   st_readw (ft, &(avr->res3));
 
-  fread (avr->ext, 1, sizeof (avr->ext), ft->fp);
+  fread(avr->ext, 1, sizeof(avr->ext), ft->fp);
 
-  fread (avr->user, 1, sizeof (avr->user), ft->fp);
+  fread(avr->user, 1, sizeof(avr->user), ft->fp);
 
   return(ST_SUCCESS);
 }
@@ -178,10 +178,17 @@ ft_t ft;
       return rc;
 
   /* magic */
-  fwrite (AVR_MAGIC, 1, sizeof (avr->magic), ft->fp);
+  st_writes(ft, AVR_MAGIC);
 
   /* name */
-  fwrite ("\0\0\0\0\0\0\0\0", 1, sizeof (avr->name), ft->fp);
+  st_writeb(ft, 0);
+  st_writeb(ft, 0);
+  st_writeb(ft, 0);
+  st_writeb(ft, 0);
+  st_writeb(ft, 0);
+  st_writeb(ft, 0);
+  st_writeb(ft, 0);
+  st_writeb(ft, 0);
 
   /* mono */
   if (ft->info.channels == 1) {

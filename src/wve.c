@@ -5,6 +5,7 @@
 
 #include "st.h"
 #include "g72x.h"
+#include "string.h"
 
 /* Magic numbers used in Psion audio files */
 #define PSION_MAGIC     "ALawSoundFile**"
@@ -48,9 +49,9 @@ ft_t ft;
 		ft->swap = ft->swap ? 0 : 1;
 	}
 
-	/* Check the magic word */
-        fread(magic, 16, 1, ft->fp);
-	if (strcmp(magic, PSION_MAGIC)==0) {
+	/* Check the magic word (null-terminated) */
+        st_reads(ft, magic, 16);
+	if (strncmp(magic, PSION_MAGIC, 15)==0) {
 		report("Found Psion magic word");
 	}
 	else
@@ -193,7 +194,9 @@ ft_t ft;
     version=PSION_VERSION;
     zero=0;
 
-    fwrite(magic, sizeof(magic), 1, ft->fp);
+    st_writes(ft, magic);
+    /* Null terminate string */
+    st_writeb(ft, 0);
 
     st_writew(ft, version);
     st_writedw(ft, p->length);

@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <strings.h>
+#include <string.h>
 
 const char *st_sizes_str[] = {
 	"NONSENSE!",
@@ -51,7 +51,37 @@ static const char writerr[] = "Error writing sample file.  You are probably out 
  * They all return ST_EOF on error and ST_SUCCESS on success.
  */
 
-/* Write string. */
+/* Read n-char string (and possibly null-terminating). */
+int
+st_reads(ft, c, len)
+ft_t ft;
+char *c;
+int len;
+{
+    char *sc;
+    char in;
+
+    sc = c;
+    do
+    {
+	if (fread(&in, 1, 1, ft->fp) != 1)
+	{
+	    *sc = 0;
+	    return (ST_EOF);
+	}
+	if (in == 0)
+	{
+	    break;
+	}
+
+	*sc = in;
+	sc++;
+    } while (sc - c < len);
+    *sc = 0;
+    return(ST_SUCCESS);
+}
+
+/* Write null-terminated string (without \0). */
 int
 st_writes(ft, c)
 ft_t ft;

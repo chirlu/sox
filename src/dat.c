@@ -42,7 +42,8 @@ ft_t ft;
    char sc;
 
    while (ft->info.rate == 0) {
-      fgets(inpstr,82,ft->fp);
+      fgets(inpstr, 82, ft->fp);
+      inpstr[81] = 0;
       sscanf(inpstr," %c",&sc);
       if (sc != ';') 
       {
@@ -69,6 +70,7 @@ ft_t ft;
 {
    dat_t dat = (dat_t) ft->priv;
    double srate;
+   char s[80];
 
    if (ft->info.channels > 1)
    {
@@ -83,10 +85,11 @@ ft_t ft;
    srate = ft->info.rate;
    dat->deltat = 1.0 / srate;
 #ifdef __alpha__
-   fprintf(ft->fp,"; Sample Rate %d\015\n", ft->info.rate);
+   sprintf(s,"; Sample Rate %d\015\n", ft->info.rate);
 #else
-   fprintf(ft->fp,"; Sample Rate %ld\015\n",ft->info.rate);
+   sprintf(s,"; Sample Rate %ld\015\n",ft->info.rate);
 #endif
+   st_writes(ft, s);
 
    return (ST_SUCCESS);
 }
@@ -129,11 +132,13 @@ LONG *buf, nsamp;
     dat_t dat = (dat_t) ft->priv;
     int done = 0;
     double sampval;
+    char s[80];
 
     while(done < nsamp) {
        sampval = *buf++ ;
        sampval = sampval / 2.147483648e9;  /* normalize to approx 1.0 */
-       fprintf(ft->fp," %15.8g  %15.8g \015\n",dat->timevalue,sampval);
+       sprintf(s," %15.8g  %15.8g \015\n",dat->timevalue,sampval);
+       st_writes(ft, s);
        dat->timevalue += dat->deltat;
        done++;
        }

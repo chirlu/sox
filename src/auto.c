@@ -27,7 +27,7 @@ ft_t ft;
 		fail("Type AUTO input must be a file, not a pipe");
 		return(ST_EOF);
 	}
-	if (fread(header, 1, sizeof header, ft->fp) != sizeof header)
+	if (fread(header, 1, sizeof(header), ft->fp) != sizeof(header))
 	{
 		fail("Type AUTO detects short file");
 		return(ST_EOF);

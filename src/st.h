@@ -290,7 +290,8 @@ char *strerror(P1(int errorcode));
  * possible byte swapping.
  */
 /* declared in misc.c */
-int	st_writes(P2(ft_t ft, char *uc));
+int	st_reads(P3(ft_t ft, char *c, int len));
+int	st_writes(P2(ft_t ft, char *c));
 int	st_readb(P2(ft_t ft, unsigned char *uc));
 int	st_writeb(P2(ft_t ft, unsigned char uc));
 int	st_readw(P2(ft_t ft, unsigned short *us));
