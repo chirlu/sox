@@ -26,6 +26,7 @@
 #include <sun/audioio.h>
 #endif
 
+#include <stropts.h>
 #include <malloc.h>
 #include <unistd.h>
 #include <stdlib.h>
