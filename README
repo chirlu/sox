@@ -47,6 +47,7 @@ The sound effects include:
   o Cut out loop samples
   o Add an echo 
   o Add a sequence of echos
+  o Fade in and out
   o Apply a flanger effect
   o Apply a high-pass filter
   o Apply a low-pass filter

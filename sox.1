@@ -62,9 +62,12 @@ sox \- Sound eXchange : universal sound sample translator
 .br
     \fBdeemph\fR
 .br
-    \fBecho\fR \fIgain-in gain-out delay decay\fR [ \fIdelay decay ...\fR]
+    \fBecho\fR \fIgain-in gain-out delay decay\fR [ \fIdelay decay ...\fR ]
 .br
-    \fBechos\fR \fIgain-in gain-out delay decay\fR [ \fIdelay decay ...\fR]
+    \fBechos\fR \fIgain-in gain-out delay decay\fR [ \fIdelay decay ...\fR ]
+.br
+    \fBfade\fR [ \fItype\fR ] \fIfade-in-length\fR 
+         [ \fIstop-time\fR [ \fIfade-out-length\fR ] ]
 .br
     \fBfilter\fR [ \fIlow\fR ]-[ \fIhigh\fR ] [ \fIwindow-len\fR [ \fIbeta\fR ]]
 .br
@@ -650,6 +653,17 @@ Add a sequence of echos to a sound sample.
 Each delay/decay part gives the delay in milliseconds 
 and the decay (relative to gain-in) of that echo.
 Gain-out is the volume of the output.
+.TP
+fade [ \fItype\fR ] \fIfade-in-length\fR
+.TP 10
+     [ \fIstop-time\fR [ \fIfade-out-length\fR ] ]
+Add a fade effect to the beginning, end, or both of the audio data.  
+
+For fade-ins, this starts from the first sample and ramps the volume of the audio from 0 to full volume over \fIfade-in-length\fR seconds.  Specify 0 seconds if no fade-in is wanted.
+
+For fade-outs, the audio data will be trucated at the stop-time and the volume will be ramped from full volume down to 0 starting at \fIfade-out-length\fR seconds before the \fIstop-time\fR.  No fade-out is performed if these options are not specified.
+
+An optional \fItype\fR can be specified to change the type of envelope.  Choices are q for quarter of a sinewave, h for half a sinewave, t for linear slope, l for logarithmic, and p for inverted parabola.  The default is a linear slope.
 .TP 10
 filter [ \fIlow\fR ]-[ \fIhigh\fR ] [ \fIwindow-len\fR [ \fIbeta\fR ] ]
 Apply a Sinc-windowed lowpass, highpass, or bandpass filter of given

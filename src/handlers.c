@@ -505,6 +505,12 @@ extern int st_echos_flow();
 extern int st_echos_drain();
 extern int st_echos_stop();
 
+extern int st_fade_getopts();
+extern int st_fade_start();
+extern int st_fade_flow();
+extern int st_fade_drain();
+extern int st_fade_stop();
+
 extern int st_filter_getopts();
 extern int st_filter_start();
 extern int st_filter_flow();
@@ -679,6 +685,9 @@ st_effect_t st_effects[] = {
 	{"echos", 0, 
 		st_echos_getopts, st_echos_start, st_echos_flow,
 	        st_echos_drain, st_echos_stop},
+	{"fade", ST_EFF_MCHAN, 
+		st_fade_getopts, st_fade_start, st_fade_flow,
+	        st_fade_drain, st_fade_stop},
 	{ "filter", 0,
 	    	st_filter_getopts, st_filter_start, st_filter_flow,
 		st_filter_drain, st_filter_stop},

@@ -11,6 +11,8 @@ sox-12.18
   o Fixed a bug in the mask effect introduced in 12.17.  If the libc
     version of rand() returned more then 15-bit values then it would
     trash your data.  Reported by Friedhel Mehnert.
+  o Added a new fade in/out effect from Ari Moisio.
+  o AIFF files now ignore a MARK chunk if the loop type is NoLoop (0).
 
 sox-12.17
 ---------

@@ -225,11 +225,12 @@ ft_t ft;
 			st_readw(ft, &releaseLoopBegin);  /* begin marker */
 			st_readw(ft, &releaseLoopEnd);    /* end marker */
 
-			/* At least one known program generates an INST */
-			/* block with everything zeroed out (meaning    */
-			/* no Loops used).  In this case it should just */
-			/* be ignored.				        */
-			if (sustainLoopBegin == 0 && releaseLoopBegin == 0)
+			/* Required to ignore loops on playback if type
+			 * is 0 (NoLoop).  The other check is done for
+			 * historical reason and is probably not needed.
+			 */
+			if ((ft->loops[0].type == 0) ||
+			   (sustainLoopBegin == 0 && releaseLoopBegin == 0))
 				foundinstr = 0;
 			else
 				foundinstr = 1;
