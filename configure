@@ -2181,12 +2181,11 @@ else
 #include "confdefs.h"
 #include <sys/types.h>
 
-
 int main() {
 switch (0) case 0: case (sizeof (long) == $ac_size):;
 ; return 0; }
 EOF
-if { (eval echo configure:2190: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:2189: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   ac_cv_sizeof_long=$ac_size
 else
@@ -2209,23 +2208,22 @@ EOF
 
 
    echo $ac_n "checking size of void*""... $ac_c" 1>&6
-echo "configure:2213: checking size of void*" >&5
+echo "configure:2212: checking size of void*" >&5
 if eval "test \"`echo '$''{'ac_cv_sizeof_voidp'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   for ac_size in 4 8 1 2 16 32 ; do # List sizes in rough order of prevalence.
   cat > conftest.$ac_ext <<EOF
-#line 2219 "configure"
+#line 2218 "configure"
 #include "confdefs.h"
 #include "confdefs.h"
 #include <sys/types.h>
-
 
 int main() {
 switch (0) case 0: case (sizeof (void*) == $ac_size):;
 ; return 0; }
 EOF
-if { (eval echo configure:2229: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:2227: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   ac_cv_sizeof_voidp=$ac_size
 else
