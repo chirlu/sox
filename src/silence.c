@@ -40,8 +40,9 @@ typedef struct silencestuff
     double	trim_threshold;
     char	trim_unit; /* "d" for decibels or "%" for percent. */
     char	stop;
-    double	stop_threshold;
+    int		stop_count;
     ULONG	stop_duration;
+    double	stop_threshold;
     char	stop_unit;
     LONG	*holdoff;
     ULONG	holdoff_count;
@@ -50,33 +51,71 @@ typedef struct silencestuff
     char	crossings;
 } *silence_t;
 
+/*#define SILENCE_USAGE "Usage: silence count duration thershold [d | %%] [ -notrim ] [ count duration threshold [ d | %% ]]" */
+
+#define SILENCE_USAGE "Usage: silence count duration threshold [d | %%]"
 
 int st_silence_getopts(eff_t effp, int n, char **argv)
 {
 	silence_t	silence = (silence_t) effp->priv;
+	ULONG duration;
 
-	switch (n)
+	if (n < 3)
 	{
-		case 0:	/* No arguments, use defaults given above. */
-		break;
-
-		case 1:
-			sscanf(argv[0], "%lf", &silence->trim_threshold);
-		break;
-
-		default:
-			sscanf(argv[0], "%lf", &silence->trim_threshold);
-			sscanf(argv[1], "%c", &silence->trim_unit);
-		break;
+	    st_fail(SILENCE_USAGE);
+    	    return (ST_EOF);
 	}
-	/* silence threshold type duration count [-notrim ] [ threshold type duration count ] */
-	if ((silence->trim_unit != '%') && (silence->trim_unit != 'd'))
-		st_fail("Usage: silence [threshold [d | %%]]");
-	if ((silence->trim_unit == '%') && ((silence->trim_threshold < 0.0) || 
-		                             (silence->trim_threshold > 100.0)))
+
+	silence->trim = FALSE;
+	silence->trim_threshold = 1.0;
+	silence->trim_unit = '%';
+
+	silence->stop = TRUE;
+	if (sscanf(argv[0], "%d", &silence->stop_count) != 1)
+	{
+	    st_fail(SILENCE_USAGE);
+	    return ST_EOF;
+	}
+	if (sscanf(argv[1], "%ld", &duration) != 1)
+	{
+	    st_fail(SILENCE_USAGE);
+	    return ST_EOF;
+	}
+	silence->stop_duration = duration;
+	if (sscanf(argv[2], "%lf", &silence->stop_threshold) != 1)
+	{
+	    st_fail(SILENCE_USAGE);
+	    return ST_EOF;
+	}
+
+	if (n > 3 && strlen(argv[3]) == 1)
+	{
+	    silence->stop_unit = argv[3][0];
+	}
+
+	if (silence->stop_count != 1)
+       	{
+	    st_warn("Only support a stop count of 1 currently");
+	    st_fail(SILENCE_USAGE);
+	    return(ST_EOF);
+	}
+
+	if ((silence->stop_unit != '%') && (silence->stop_unit != 'd'))
+	{
+		st_fail(SILENCE_USAGE);
+		return(ST_EOF);
+	}
+	if ((silence->stop_unit == '%') && ((silence->stop_threshold < 0.0) || 
+					    (silence->stop_threshold > 100.0)))
+	{
 		st_fail("silence threshold should be between 0.0 and 100.0 %%");
-	if ((silence->trim_unit == 'd') && (silence->trim_threshold >= 0.0))
+		return (ST_EOF);
+	}
+	if ((silence->stop_unit == 'd') && (silence->stop_threshold >= 0.0))
+	{
 		st_fail("silence threshold should be less than 0.0 dB");
+		return(ST_EOF);
+	}
 	return(ST_SUCCESS);
 }
 
@@ -84,19 +123,11 @@ int st_silence_start(eff_t effp)
 {
 	silence_t	silence = (silence_t) effp->priv;
 
-	silence->trim = TRUE;
-	silence->trim_threshold = 1.0;
-	silence->trim_unit = '%';
+    	silence->mode = SILENCE_START;
 
-	silence->stop = TRUE;
-	silence->stop_threshold = 1.0;
-	silence->stop_duration = 1.8 * effp->ininfo.rate;
-	silence->stop_unit = '%';
 	silence->holdoff = malloc(sizeof(LONG)*silence->stop_duration);
 	silence->holdoff_count = 0;
 	silence->holdoff_offset = 0;
-
-	silence->mode = SILENCE_START;
 
 	silence->crossings = 0;
 
@@ -130,8 +161,15 @@ int st_silence_flow(eff_t effp, LONG *ibuf, LONG *obuf, LONG *isamp, LONG *osamp
     switch (silence->mode)
     {
 	case SILENCE_START:
-	    /* Fall through until start is written */
-	    silence->mode = SILENCE_TRIM;
+	    if (!silence->trim)
+	    {
+		/* If no trimming then copy over starting from here */
+		silence->mode = SILENCE_COPY;
+		goto silence_copy;
+	    }
+	    else
+		/* Fall through and trim audio */
+		silence->mode = SILENCE_TRIM;
 
         /* Reads and discards all input data until it detects a
          * sample that is above the specified threshold.  Turns on
@@ -156,6 +194,7 @@ int st_silence_flow(eff_t effp, LONG *ibuf, LONG *obuf, LONG *isamp, LONG *osamp
 		nrOfInSamplesRead += effp->ininfo.channels;
 	    }
 	    break;
+	case SILENCE_COPY:
 	    /* Attempts to copy samples into output buffer.  If not
 	     * looking for silence to terminate copy then blindly
 	     * copy data into output buffer.
@@ -172,7 +211,6 @@ int st_silence_flow(eff_t effp, LONG *ibuf, LONG *obuf, LONG *isamp, LONG *osamp
 	     * If hold off buffer is full then stop copying data and
 	     * discard data in hold off buffer.
 	     */
-	case SILENCE_COPY:
 silence_copy:
 	    nrOfTicks = min((*isamp-nrOfInSamplesRead), 
 	                    (*osamp-nrOfOutSamplesWritten)) / effp->ininfo.channels;
@@ -184,8 +222,8 @@ silence_copy:
 		    for (j = 0; j < effp->ininfo.channels; j++)
 		    {
 		        threshold |= aboveThreshold(ibuf[j], 
-				                    silence->trim_threshold, 
-			                            silence->trim_unit);
+				                    silence->stop_threshold, 
+			                            silence->stop_unit);
 		    }
 		    if (threshold && silence->holdoff_count)
 		    {
@@ -216,6 +254,10 @@ silence_copy:
 			{
 			    silence->mode = SILENCE_STOP;
 			    silence->holdoff_count = 0;
+		    	    *isamp = nrOfInSamplesRead;
+			    *osamp = nrOfOutSamplesWritten;
+			    /* Return ST_EOF to indicate no more processing */
+			    return (ST_EOF);
 			    break;
 			}
 		    }
@@ -251,6 +293,7 @@ silence_flush:
 	    }
 	    break;
 	case SILENCE_STOP:
+	    nrOfInSamplesRead = *isamp;
 	    break;
 	}
 

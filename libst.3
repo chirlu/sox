@@ -146,10 +146,9 @@ and sets the size variables to the numbers of samples
 actually processed.
 It is under no obligation to read from the input buffer or
 write to the output buffer during the same call.  If the
-call returns 0 for both input and output sizes then this will
-indicate that it no longer expects to process
-samples and the application program can start calling the drain
-operation.
+call returns ST_EOF then this should be used as an indication
+that this effect will no longer read any data and can be used
+to switch to drain mode sooner.
 .TP 20 
 drain
 is called after there are no more input data samples.
