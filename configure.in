@@ -273,11 +273,11 @@ then
 fi
 if test "$enable_fast_ulaw" = yes
 then
-	CFLAGS="$CFLAGS -DFAST_ULAW_COMPRESSION"
+	CFLAGS="$CFLAGS -DFAST_ULAW_CONVERSION"
 fi
 if test "$enable_fast_alaw" = yes
 then
-	CFLAGS="$CFLAGS -DFAST_ALAW_COMPRESSION"
+	CFLAGS="$CFLAGS -DFAST_ALAW_CONVERSION"
 fi
 
 LIBS="-L. -lst $LIBS"
