@@ -72,8 +72,8 @@ ST(3)							    ST(3)
 
        The format structure contains a list of control parameters
        for the sample: sampling rate, data  size  (bytes,  words,
-       floats, etc.), style (unsigned, signed, logarithmic), num-
-       ber of sound  channels.	 It  also  contains  other  state
+       floats,	etc.),	encoding (unsigned, signed, logarithmic),
+       number of sound channels.  It also  contains  other  state
        information:  whether  the  sample  file needs to be byte-
        swapped, whether fseek() will work, its suffix,	its  file
        stream pointer, its format pointer, and the private struc-
