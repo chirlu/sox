@@ -1,7 +1,5 @@
-
-
-
 ST(3)							    ST(3)
+
 
 
 NAME
@@ -58,18 +56,6 @@ FORMATS
        format operates from two data structures: a format  struc­
        ture, and a private structure.
 
-
-
-
-			 October 15 1996			1
-
-
-
-
-
-ST(3)							    ST(3)
-
-
        The format structure contains a list of control parameters
        for the sample: sampling rate, data  size  (bytes,  words,
        floats,	etc.),	encoding (unsigned, signed, logarithmic),
@@ -124,29 +110,23 @@ EFFECTS
        getopts		   is  called  with  a	character  string
 			   argument list for the effect.
 
-
-
-
-			 October 15 1996			2
-
-
-
-
-
-ST(3)							    ST(3)
-
-
        start		   is called with the  signal  parameters
 			   for the input and output streams.
 
        flow		   is  called  with input and output data
 			   buffers, and (by reference) the  input
-			   and	output	data sizes.  It processes
-			   the	input  buffer  into  the   output
-			   buffer, and sets the size variables to
-			   the numbers of samples  actually  pro­
-			   cessed.   It is under no obligation to
-			   fill the output buffer.
+			   and output data buffer sizes.  It pro­
+			   cesses the input buffer into the  out­
+			   put	buffer,	 and  sets the size vari­
+			   ables to the numbers of samples  actu­
+			   ally	 processed.  It is under no obli­
+			   gation to read from the  input  buffer
+			   or  write  to the output buffer during
+			   the same call.  If  the  call  returns
+			   ST_EOF  then this should be used as an
+			   indication that this	 effect	 will  no
+			   longer  read	 any data and can be used
+			   to switch to drain mode sooner.
 
        drain		   is called  after  there  are	 no  more
 			   input  data	samples.   If  the effect
@@ -190,75 +170,10 @@ BUGS
        once in a program.
 
        The program/library interface is pretty weak.  There's too
-
-
-
-			 October 15 1996			3
-
-
-
-
-
-ST(3)							    ST(3)
-
-
        much ad-hoc information which a	program	 is  supposed  to
        gather  up.   Sound  Tools  wants to be an object-oriented
        dataflow architecture.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-			 October 15 1996			4
-
-
+			 October 15 1996		    ST(3)

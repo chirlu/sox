@@ -166,7 +166,7 @@ ft_t ft;
 	}
 	else
 	{
-		st_fail_errno(ft,ST_EHDR,"Sun/NeXT/DEC header doesn't start with magic word\nTry the '.ul' file type with '-t ul -r 8000 filename'");
+		st_fail_errno(ft,ST_EHDR,"Did not detect valid Sun/NeXT/DEC magic number in header.");
 		return(ST_EOF);
 	}
 

@@ -84,8 +84,14 @@ static int flow_effect_out(void);
 static int flow_effect(int);
 static int drain_effect(int);
 
+#ifdef SOXMIX
+#define MAX_INPUT_FILES 2
+#define REQUIRED_INPUT_FILES 2
+#else
 #define MAX_INPUT_FILES 1
 #define REQUIRED_INPUT_FILES 1
+#endif
+
 static ft_t informat[MAX_INPUT_FILES] = { 0 };
 static int input_count = 0;
 
@@ -225,7 +231,8 @@ char **argv;
 	}
 
 	/* Make sure we got at least the required # of input filename */
-	if (!informat[REQUIRED_INPUT_FILES-1] || 
+	if (input_count < REQUIRED_INPUT_FILES ||
+	    !informat[REQUIRED_INPUT_FILES-1] || 
 	    !informat[REQUIRED_INPUT_FILES-1]->filename)
 	    usage("Not enough input files not specified");
 
@@ -283,20 +290,12 @@ static void copy_input(ft_t ft)
 {
     informat[input_count] = ft;
 
-    /* If filetype has not been set by command line options then
-     * attempt to get it from filename extension.
-     */
-    if (!ft->filetype) 
-    {
-	if ((ft->filetype = strrchr(ft->filename, '.')) != NULL)
-	    ft->filetype++;
-	else /* Default to "auto" */
-	    ft->filetype = "auto";
-    }
+    /* Let auto effect do the work if user is not overriding. */
+    if (!ft->filetype)
+	ft->filetype = "auto";
 
-    /* See if we understand this type of file */
-    if( st_gettype(ft) )
-	st_fail("Unknown input file format for '%s'.  Use -t option to override",ft->filename);	
+    if ( st_gettype(ft) )
+	st_fail("Unknown input file format for '%s'.  Use -t option to override",ft->filename);
 
     /* Default the input comment to the filename if not set from
      * command line.
@@ -327,15 +326,29 @@ static void open_input(ft_t ft)
 #endif
 }
 
+#if defined(DOS) || defined(WIN32)
+#define LASTCHAR '\\'
+#else
+#define LASTCHAR '/'
+#endif
+
 static void copy_output(ft_t ft)
 {
     outformat = ft;
 
     if (writing && !ft->filetype) {
-	if ((ft->filetype = strrchr(ft->filename, '.')) != NULL)
-	    ft->filetype++;
-	else
-	    ft->filetype = ft->filename;
+ 	/* Use filename extension to determine audio type. */
+
+        /* First, chop off any path portions of filename.  This
+         * prevents the next search from considering that part. */
+        if ((ft->filetype = strrchr(ft->filename, LASTCHAR)) == NULL)
+            ft->filetype = ft->filename;
+
+        /* Now look for an filename extension */
+        if ((ft->filetype = strrchr(ft->filetype, '.')) != NULL)
+            ft->filetype++;
+        else
+            ft->filetype = NULL;
     }
 
     if ( st_gettype(ft) )
@@ -506,6 +519,20 @@ static void doopts(ft_t ft, int argc, char **argv)
 	}
 }
 
+static int compare_input(ft_t ft1, ft_t ft2)
+{
+    if (ft1->info.rate != ft2->info.rate)
+	return ST_EOF;
+    if (ft1->info.size != ft2->info.size)
+	return ST_EOF;
+    if (ft1->info.encoding != ft2->info.encoding)
+	return ST_EOF;
+    if (ft1->info.channels != ft2->info.channels)
+	return ST_EOF;
+
+    return ST_SUCCESS;
+}
+
 /* 
  * Process input file -> effect table -> output file
  *	one buffer at a time
@@ -513,37 +540,60 @@ static void doopts(ft_t ft, int argc, char **argv)
 
 static void process(void) {
     int e, f, flowstatus;
-
-   
-    /* Read and write starters can change their formats. */
-    if ((* informat[0]->h->startread)(informat[0]) == ST_EOF)
+#ifdef SOXMIX
+    int s;
+    ULONG ilen[MAX_INPUT_FILES];
+    LONG *ibuf[MAX_INPUT_FILES];
+#endif
+  
+    for (f = 0; f < input_count; f++)
     {
-        st_fail(informat[0]->st_errstr);
+	/* Read and write starters can change their formats. */
+	if ((* informat[f]->h->startread)(informat[f]) != ST_SUCCESS)
+	{
+	    st_fail("Failed reading %s: %s",informat[f]->filename,
+		    informat[f]->st_errstr);
+	}
+
+	/* Go a head and assume 1 channel audio if nothing is detected. 
+	 * This is because libst usually doesn't set this for mono file
+	 * formats (for historical reasons).
+	 */
+	if (informat[f]->info.channels == -1)
+	    informat[f]->info.channels = 1;
+
+	if ( st_checkformat(informat[f]) )
+	    st_fail("bad input format for file %s",informat[f]->filename);
+
+	st_report("Input file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
+		  informat[f]->filename, informat[f]->info.rate, 
+		  st_sizes_str[informat[f]->info.size], 
+		  st_encodings_str[informat[f]->info.encoding], 
+		  informat[f]->info.channels, 
+		  (informat[f]->info.channels > 1) ? "channels" : "channel");
+
+	if (informat[f]->comment)
+	    st_report("Input file %s: comment \"%s\"\n", 
+		      informat[f]->filename, informat[f]->comment);
     }
 
-    /* Go a head and assume 1 channel audio if nothing is detected. 
-     * This is because libst usually doesn't set this for mono file
-     * formats (for historical reasons).
-     */
-    if (informat[0]->info.channels == -1)
-	informat[0]->info.channels = 1;
-
-    if ( st_checkformat(informat[0]) )
-		st_fail("bad input format");
-    
+#ifdef SOXMIX
+    for (f = 1; f < input_count; f++)
+    {
+	if (compare_input(informat[0], informat[f]) != ST_SUCCESS)
+	{
+	    st_fail("Input files must have the same rate, channels, data size, and encoding");
+	}
+    }
+#endif
    
-    st_report("Input file: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
-	   informat[0]->info.rate, st_sizes_str[informat[0]->info.size], 
-	   st_encodings_str[informat[0]->info.encoding], informat[0]->info.channels, 
-	   (informat[0]->info.channels > 1) ? "channels" : "channel");
-
-    if (informat[0]->comment)
-	st_report("Input file: comment \"%s\"\n", informat[0]->comment);
-
     if (writing)
     {
 	open_output(outformat);
 
+	/* Always use first input file as a reference for output
+	 * file format.
+	 */
 	st_copyformat(informat[0], outformat);
 
 	if ((*outformat->h->startwrite)(outformat) == ST_EOF)
@@ -554,9 +604,11 @@ static void process(void) {
 	if (st_checkformat(outformat))
 		st_fail("bad output format");
 
-	st_report("Output file: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
-	       outformat->info.rate, st_sizes_str[outformat->info.size], 
-	       st_encodings_str[outformat->info.encoding], outformat->info.channels, 
+	st_report("Output file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
+	       outformat->filename, outformat->info.rate, 
+	       st_sizes_str[outformat->info.size], 
+	       st_encodings_str[outformat->info.encoding], 
+	       outformat->info.channels, 
 	       (outformat->info.channels > 1) ? "channels" : "channel");
 
 	if (outformat->comment)
@@ -591,18 +643,76 @@ static void process(void) {
 	}
     }
 
+#ifdef SOXMIX
+    for (f = 0; f < MAX_INPUT_FILES; f++)
+    {
+	ibuf[f] = (LONG *)malloc(BUFSIZ * sizeof(LONG));
+	if (!ibuf[f])
+	{
+	    st_fail("could not allocate memory");
+	}
+    }
+#endif
 
     /* 
      * Just like errno, we must set st_errno to known values before
      * calling I/O operations.
      */
-    informat[0]->st_errno = 0;
+    for (f = 0; f < input_count; f++)
+	informat[f]->st_errno = 0;
     outformat->st_errno = 0;
 
     /* Run input data through effects and get more until olen == 0 */
     do {
+
+#ifndef SOXMIX
         efftab[0].olen = (*informat[0]->h->read)(informat[0], 
                                               efftab[0].obuf, (LONG) BUFSIZ);
+
+    	if (informat[0]->st_errno)
+	{
+	    st_warn("Error reading from %s: %s", informat[0]->filename,
+		    informat[0]->st_errstr);
+	    break;
+	}
+#else
+	for (f = 0; f < input_count; f++)
+	{
+	    ilen[f] = (*informat[f]->h->read)(informat[f],
+			                      ibuf[f], (LONG)BUFSIZ);
+	    if (informat[f]->st_errno)
+	    {
+    		st_warn("Error reading from %s: %s", informat[f]->filename,
+    			informat[0]->st_errstr);
+    		break;
+	    }
+	}
+	if (f < input_count && informat[f]->st_errno)
+	    break;
+
+	efftab[0].olen = 0;
+	for (f = 0; f < input_count; f++)
+	    if (ilen[f] > efftab[0].olen)
+		efftab[0].olen = ilen[f];
+
+	for (s = 0; s < efftab[0].olen; s++)
+	{
+	    /* Mix data together by dividing by the number
+	     * of audio files and then summing up.  This prevents
+	     * overflows.
+	     */
+	    for (f = 0; f < input_count; f++)
+	    {
+		if (f == 0)
+		    efftab[0].obuf[s] = 
+			(s<ilen[f]) ? (ibuf[f][s]/input_count) : 0;
+		else
+		    if (s < ilen[f])
+			efftab[0].obuf[s] += ibuf[f][s]/input_count;
+	    }
+	}
+#endif
+
         efftab[0].odone = 0;
 
         if (efftab[0].olen == 0)
@@ -620,13 +730,10 @@ static void process(void) {
 	flowstatus = flow_effect_out();
 
 	/* Negative flowstatus says no more output will ever be generated. */
-	if (flowstatus < 0)
+	if (flowstatus < 0 || outformat->st_errno)
 	    break;
 
     } while (1); /* break; efftab[0].olen == 0 */
-
-    if (informat[0]->st_errno)
-	st_fail(informat[0]->st_errstr);
 
     /* Drain the effects out first to last, 
      * pushing residue through subsequent effects */
@@ -659,14 +766,23 @@ static void process(void) {
 	    (* efftabR[e].h->stop)(&efftabR[e]);
     }
 
-    if ((* informat[0]->h->stopread)(informat[0]) == ST_EOF)
-	st_fail(informat[0]->st_errstr);
-    fclose(informat[0]->fp);
+    for (f = 0; f < input_count; f++)
+    {
+	/* If problems closing input file, just warn user since
+	 * we are exiting anyways.
+	 */
+	if ((* informat[f]->h->stopread)(informat[f]) == ST_EOF)
+	    st_warn(informat[f]->st_errstr);
+	fclose(informat[f]->fp);
+    }
 
     if (writing)
     {
+	/* problem closing output file, just warn user since we
+	 * are exiting anyways.
+	 */
         if ((* outformat->h->stopwrite)(outformat) == ST_EOF)
-	    st_fail(outformat->st_errstr);
+	    st_warn(outformat->st_errstr);
     }
     if (writing)
         fclose(outformat->fp);
@@ -696,7 +812,10 @@ static int flow_effect_out(void)
       }
       
       if (outformat->st_errno)
-          st_fail(outformat->st_errstr);
+      {
+          st_warn("Error writing: %s",outformat->st_errstr);
+	  break;
+      }
 
       /* If any effect will never again produce data, give up.  This
        * works because of the pull status: the effect won't be able to

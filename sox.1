@@ -287,8 +287,11 @@ Useful for figuring out exactly how
 is mangling your sound samples.
 .SH FILE TYPES
 .I SoX
-uses the file extension of the input and output file to determine what
-type of file format to use.  This can be overridden by specifying the
+attempts to determine the file type of input files automatically by looking 
+at the header of the audio file.  When it is unable to detect the file
+type or if its an output file
+then it uses the file extension of the file to determine what type of file 
+format handler to use.  This can be overridden by specifying the
 "-t" option on the command line.
 .P
 The input and output files may be read from standard in and out.  This

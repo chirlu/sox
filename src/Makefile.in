@@ -69,13 +69,16 @@ VPATH	= @srcdir@
 PLAY_0    =
 PLAY_1    = play
 
-all: sox mix $(PLAY_$(PLAY_SUPPORT))
+all: sox soxmix $(PLAY_$(PLAY_SUPPORT))
 
 sox: libst.a sox.o
 	$(CC) $(LDFLAGS) -o sox sox.o $(LIBS)
 
-mix: libst.a mix.o
-	$(CC) $(LDFLAGS) -o mix mix.o $(LIBS)
+soxmix.o:
+	$(CC) $(CFLAGS) -DSOXMIX -c -o soxmix.o sox.c
+
+soxmix: libst.a soxmix.o
+	$(CC) $(LDFLAGS) -o soxmix soxmix.o $(LIBS)
 
 play: play.in
 	$(SED) -e 's|@PREFIX@|$(BINDIR)|g' < $(srcdir)/play.in > play
