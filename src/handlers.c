@@ -690,6 +690,11 @@ extern int st_synth_flow();
 extern int st_synth_drain();
 extern int st_synth_stop();
 
+extern int st_trim_getopts(); 
+extern int st_trim_start();
+extern int st_trim_flow();
+extern int st_trim_stop();
+
 extern int st_vibro_getopts();
 extern int st_vibro_start();
 extern int st_vibro_flow();
@@ -699,11 +704,6 @@ extern int st_vol_getopts();
 extern int st_vol_start();
 extern int st_vol_flow();
 extern int st_vol_stop();
-
-extern int st_trim_getopts(); 
-extern int st_trim_start();
-extern int st_trim_flow();
-extern int st_trim_stop();
 
 /*
  * ST_EFF_CHAN means that the number of channels can change.
@@ -827,16 +827,15 @@ st_effect_t st_effects[] = {
         {"synth", ST_EFF_MCHAN, 
                 st_synth_getopts, st_synth_start, st_synth_flow, 
                 st_synth_drain, st_synth_stop},
+        {"trim", ST_EFF_MCHAN, 
+                st_trim_getopts, st_trim_start, st_trim_flow, 
+                st_null_drain, st_nothing},
 	{"vibro", 0, 
 		st_vibro_getopts, st_vibro_start, st_vibro_flow, 
 		st_null_drain, st_nothing},
 	{"vol", ST_EFF_MCHAN, 
 		st_vol_getopts, st_vol_start, st_vol_flow, 
 		st_null_drain, st_vol_stop},
-        {"trim", ST_EFF_MCHAN, 
-                st_trim_getopts, st_trim_start, st_trim_flow, 
-                st_null_drain, st_nothing},
-
 	{0, 0, 0, 0, 0, 0, 0}
 };
 
