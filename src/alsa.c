@@ -646,4 +646,69 @@ int formats, *fmt;
     return 0;
 }
 
+st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
+{
+    st_ssize_t len;
+
+    len = st_rawread(ft, buf, nsamp);
+
+#if USE_ALSA9
+    /* ALSA 0.9 and above require that we detects underruns and
+     * reset the driver if it occurs.
+     */
+    if (len != nsamp)
+    {
+	/* Reset the driver.  A future enhancement would be to
+	 * fill up the empty spots in the buffer (starting at
+	 * nsamp - len).  But I'm being lazy (cbagwell) and just
+	 * returning with a partial buffer.
+	 */
+	ioctl(fileno(ft->fp), SNDRV_PCM_IOCTL_PREPARE);
+
+	/* Raw routines use eof flag to store when we've
+	 * hit EOF or if an internal error occurs.  The
+	 * above ioctl is much like calling the stdio clearerr() function
+	 * and so we should reset libst's flag as well.  If the
+	 * error condition is still really there, it will be
+	 * detected on a future read.
+	 */
+	ft->file.eof = ST_SUCCESS;
+    }
+#endif
+
+    return len;
+}
+
+st_ssize_t st_alsawrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
+{
+    st_ssize_t len;
+
+    len = st_rawwrite(ft, buf, nsamp);
+
+#if USE_ALSA9
+    /* ALSA 0.9 and above require that we detects overruns and
+     * reset the driver if it occurs.
+     */
+    if (len != nsamp)
+    {
+	/* Reset the driver.  A future enhancement would be to
+	 * resend the remaining data (starting at (nsamp - len) in the buffer).
+	 * But since we've already lost some data, I'm being lazy
+	 * and letting a little more data be lost as well.
+	 */
+	ioctl(fileno(ft->fp), SNDRV_PCM_IOCTL_PREPARE);
+
+	/* Raw routines use eof flag to store when an internal error
+	 * the above ioctl is much like calling the stdio clearerr() function
+	 * and so we should reset libst's flag as well.  If the
+	 * error condition is still really there, it will be
+	 * detected on a future write.
+	 */
+	ft->file.eof = ST_SUCCESS;
+    }
+#endif
+
+    return len;
+}
+
 #endif /* ALSA_PLAYER */

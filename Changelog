@@ -47,6 +47,7 @@ sox-12.17.4
     a comment.  Found by Rhys Chard.
   o Change command line to compile soxmix.o slightly to try and make
     Forte compiler happy.
+  o Added support for ALSA 0.9 driver. Jimen Ching
 
 sox-12.17.3
 -----------

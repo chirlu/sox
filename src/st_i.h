@@ -159,7 +159,9 @@ int st_alstartwrite(ft_t ft);
 
 #ifdef ALSA_PLAYER
 int st_alsastartread(ft_t ft);
+st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_alsastartwrite(ft_t ft);
+st_ssize_t st_alsawrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_alsastopwrite(ft_t ft);
 #endif
 
