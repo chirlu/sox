@@ -22,18 +22,87 @@
 #include "st.h"
 #include "libst.h"
 
+#include <malloc.h>
+
 void rawstartread(ft) 
 ft_t ft;
 {
+	ft->file.buf = malloc(BUFSIZ);
+	ft->file.size = BUFSIZ;
+	ft->file.count = 0;
+	ft->file.eof = 0;
 }
 
 void rawstartwrite(ft) 
 ft_t ft;
 {
+	ft->file.buf = malloc(BUFSIZ);
+	ft->file.size = BUFSIZ;
+	ft->file.count = 0;
+	ft->file.eof = 0;
 }
 
 /* Read raw file data, and convert it to */
 /* the sox internal signed long format. */
+
+unsigned char blockgetc(ft)
+ft_t ft;
+{
+	char rval;
+
+	if (ft->file.count < 1)
+	{
+		ft->file.count = read(fileno(ft->fp), (char *)ft->file.buf, 
+				ft->file.size);
+		if (ft->file.count == 0)
+		{
+			ft->file.eof = 1;
+			return(0);
+		}
+	}
+	rval = *(ft->file.buf + (ft->file.size - ft->file.count--));
+	return (rval);
+}
+
+unsigned short blockrshort(ft)
+ft_t ft;
+{
+	unsigned short rval;
+	if (ft->file.count < 2)
+	{
+		ft->file.count = read(fileno(ft->fp), (char *)ft->file.buf,
+				ft->file.size);
+		if (ft->file.count == 0)
+		{
+			ft->file.eof = 1;
+			return(0);
+		}
+	}
+	rval = *((unsigned short *)(ft->file.buf + (ft->file.size - ft->file.count)));
+	ft->file.count -= 2;
+	return(rval);
+}
+
+float blockrfloat(ft)
+ft_t ft;
+{
+	float rval;
+
+	if (ft->file.count < sizeof(float))
+	{
+		ft->file.count = read(fileno(ft->fp), (char *)ft->file.buf,
+				ft->file.size);
+		if (ft->file.count == 0)
+		{
+			ft->file.eof = 1;
+			return(0);
+		}
+	}
+	rval = *((float *)(ft->file.buf + (ft->file.size - ft->file.count)));
+	ft->file.count -= sizeof(float);
+	return(rval);
+}
+	
 
 LONG rawread(ft, buf, nsamp) 
 ft_t ft;
@@ -48,8 +117,8 @@ LONG *buf, nsamp;
 		    {
 			case SIGN2:
 				while(done < nsamp) {
-					datum = getc(ft->fp);
-					if (feof(ft->fp))
+					datum = blockgetc(ft);
+					if (ft->file.eof)
 						return done;
 					/* scale signed up to long's range */
 					*buf++ = LEFT(datum, 24);
@@ -58,8 +127,8 @@ LONG *buf, nsamp;
 				return done;
 			case UNSIGNED:
 				while(done < nsamp) {
-					datum = getc(ft->fp);
-					if (feof(ft->fp))
+					datum = blockgetc(ft);
+					if (ft->file.eof)
 						return done;
 					/* Convert to signed */
 					datum ^= 128;
@@ -70,8 +139,8 @@ LONG *buf, nsamp;
 				return done;
 			case ULAW:
 				while(done < nsamp) {
-					datum = getc(ft->fp);
-					if (feof(ft->fp))
+					datum = blockgetc(ft);
+					if (ft->file.eof)
 						return done;
 					datum = st_ulaw_to_linear(datum);
 					/* scale signed up to long's range */
@@ -81,8 +150,8 @@ LONG *buf, nsamp;
 				return done;
 			case ALAW:
 				while(done < nsamp) {
-				        datum = getc(ft->fp);
-				        if (feof(ft->fp))
+				        datum = blockgetc(ft);
+				        if (ft->file.eof)
 				                return done;
 				        datum = st_Alaw_to_linear(datum);
 				        /* scale signed up to long's range */
@@ -98,8 +167,8 @@ LONG *buf, nsamp;
 		    {
 			case SIGN2:
 				while(done < nsamp) {
-					datum = rshort(ft);
-					if (feof(ft->fp))
+					datum = blockrshort(ft);
+					if (ft->file.eof)
 						return done;
 					/* scale signed up to long's range */
 					*buf++ = LEFT(datum, 16);
@@ -108,8 +177,8 @@ LONG *buf, nsamp;
 				return done;
 			case UNSIGNED:
 				while(done < nsamp) {
-					datum = rshort(ft);
-					if (feof(ft->fp))
+					datum = blockrshort(ft);
+					if (ft->file.eof)
 						return done;
 					/* Convert to signed */
 					datum ^= 0x8000;
@@ -128,9 +197,8 @@ LONG *buf, nsamp;
 		    break;
 		case FLOAT:
 			while(done < nsamp) {
-				datum = dovolume? volume * rfloat(ft)
-						: rfloat(ft);
-				if (feof(ft->fp))
+				datum = blockrfloat(ft);
+				if (ft->file.eof)
 					return done;
 				*buf++ = LEFT(datum, 16);
 				done++;
@@ -142,6 +210,49 @@ LONG *buf, nsamp;
 	fail("Sorry, don't have code to read %s, %s",
 		styles[ft->info.style], sizes[ft->info.size]);
 	return(0);
+}
+
+void rawstopread(ft)
+ft_t ft;
+{
+	free(ft->file.buf);
+}
+
+void blockflush(ft)
+ft_t ft;
+{
+	if (write(fileno(ft->fp), ft->file.buf, ft->file.count) != ft->file.count)
+	{
+		fail("Error writing data to file");
+	}
+	ft->file.count = 0;
+}
+
+void blockputc(ft,c)
+ft_t ft;
+int c;
+{
+	if (ft->file.count > ft->file.size-1) blockflush(ft);
+	*(ft->file.buf + ft->file.count) = c;
+	ft->file.count++;
+}
+
+void blockwshort(ft,ui)
+ft_t ft;
+unsigned short ui;
+{
+	if (ft->file.count > ft->file.size-2) blockflush(ft);
+	*((unsigned short *)(ft->file.buf + ft->file.count)) = ui;
+	ft->file.count += 2;
+}
+
+void blockwfloat(ft,f)
+ft_t ft;
+float f;
+{
+	if (ft->file.count > ft->file.size - sizeof(float)) blockflush(ft);
+	*((float *)(ft->file.buf + ft->file.count)) = f;
+	ft->file.count += sizeof(float);
 }
 
 /* Convert the sox internal signed long format */
@@ -163,7 +274,7 @@ LONG *buf, nsamp;
 				while(done < nsamp) {
 					/* scale signed up to long's range */
 					datum = (int) RIGHT(*buf++, 24);
-					putc(datum, ft->fp);
+					blockputc(ft, datum);
 					done++;
 				}
 				return;
@@ -173,7 +284,7 @@ LONG *buf, nsamp;
 					datum = (int) RIGHT(*buf++, 24);
 					/* Convert to unsigned */
 					datum ^= 128;
-					putc(datum, ft->fp);
+					blockputc(ft, datum);
 					done++;
 				}
 				return;
@@ -184,7 +295,7 @@ LONG *buf, nsamp;
 					/* round up to 12 bits of data */
 					datum += 0x8;	/* + 0b1000 */
 					datum = st_linear_to_ulaw(datum);
-					putc(datum, ft->fp);
+					blockputc(ft, datum);
 					done++;
 				}
 				return;
@@ -195,7 +306,7 @@ LONG *buf, nsamp;
 					/* round up to 12 bits of data */
 					datum += 0x8;	/* + 0b1000 */
 					datum = st_linear_to_Alaw(datum);
-					putc(datum, ft->fp);
+					blockputc(ft, datum);
 					done++;
 				}
 				return;
@@ -208,7 +319,7 @@ LONG *buf, nsamp;
 				while(done < nsamp) {
 					/* scale signed up to long's range */
 					datum = (int) RIGHT(*buf++, 16);
-					wshort(ft, datum);
+					blockwshort(ft, datum);
 					done++;
 				}
 				return;
@@ -218,7 +329,7 @@ LONG *buf, nsamp;
 					datum = (int) RIGHT(*buf++, 16);
 					/* Convert to unsigned */
 					datum ^= 0x8000;
-					wshort(ft, datum);
+					blockwshort(ft, datum);
 					done++;
 				}
 				return;
@@ -234,7 +345,7 @@ fail("No A-Law support for shorts (try -b option ?)");
 			while(done < nsamp) {
 				/* scale signed up to long's range */
 				datum = (int) RIGHT(*buf++, 16);
-			 	wfloat(ft, (double) datum);
+			 	blockwfloat(ft, (double) datum);
 				done++;
 			}
 			return;
@@ -243,6 +354,13 @@ fail("No A-Law support for shorts (try -b option ?)");
 	}
 	fail("Sorry, don't have code to write %s, %s",
 		styles[ft->info.style], sizes[ft->info.size]);
+}
+
+void rawstopwrite(ft)
+ft_t ft;
+{
+	blockflush(ft);
+	free(ft->file.buf);
 }
 
 /*
@@ -258,6 +376,7 @@ ft_t ft;
 {
 	ft->info.size = BYTE;
 	ft->info.style = SIGN2;
+	rawstartread(ft);
 	rawdefaults(ft);
 }
 
@@ -266,6 +385,7 @@ ft_t ft;
 {
 	ft->info.size = BYTE;
 	ft->info.style = SIGN2;
+	rawstartwrite(ft);
 	rawdefaults(ft);
 }
 
@@ -274,6 +394,7 @@ ft_t ft;
 {
 	ft->info.size = BYTE;
 	ft->info.style = UNSIGNED;
+	rawstartread(ft);
 	rawdefaults(ft);
 }
 
@@ -282,6 +403,7 @@ ft_t ft;
 {
 	ft->info.size = BYTE;
 	ft->info.style = UNSIGNED;
+	rawstartwrite(ft);
 	rawdefaults(ft);
 }
 
@@ -290,6 +412,7 @@ ft_t ft;
 {
 	ft->info.size = WORD;
 	ft->info.style = UNSIGNED;
+	rawstartread(ft);
 	rawdefaults(ft);
 }
 
@@ -298,6 +421,7 @@ ft_t ft;
 {
 	ft->info.size = WORD;
 	ft->info.style = UNSIGNED;
+	rawstartwrite(ft);
 	rawdefaults(ft);
 }
 
@@ -306,6 +430,7 @@ ft_t ft;
 {
 	ft->info.size = WORD;
 	ft->info.style = SIGN2;
+	rawstartread(ft);
 	rawdefaults(ft);
 }
 
@@ -314,6 +439,7 @@ ft_t ft;
 {
 	ft->info.size = WORD;
 	ft->info.style = SIGN2;
+	rawstartwrite(ft);
 	rawdefaults(ft);
 }
 
@@ -322,6 +448,7 @@ ft_t ft;
 {
 	ft->info.size = BYTE;
 	ft->info.style = ULAW;
+	rawstartread(ft);
 	rawdefaults(ft);
 }
 
@@ -330,6 +457,7 @@ ft_t ft;
 {
 	ft->info.size = BYTE;
 	ft->info.style = ULAW;
+	rawstartwrite(ft);
 	rawdefaults(ft);
 }
 
@@ -338,6 +466,7 @@ ft_t ft;
 {
 	ft->info.size = BYTE;
 	ft->info.style = ALAW;
+	rawstartread(ft);
 	rawdefaults(ft);
 }
 
@@ -346,6 +475,7 @@ ft_t ft;
 {
 	ft->info.size = BYTE;
 	ft->info.style = ALAW;
+	rawstartwrite(ft);
 	rawdefaults(ft);
 }
 

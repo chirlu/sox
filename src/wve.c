@@ -30,8 +30,19 @@ ft_t ft;
 	char magic[16];
 	short version;
 
+	int littlendian = 1;
+	char *endptr;
 
-	/* Sanity check */
+	endptr = (char *) &littlendian;
+	/* WVE is in big endian format.  Swap whats read in
+	 * on little endian machines.
+	 */
+	if (*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
+
+	/* Sanity check */ 
 	if (sizeof(struct wvepriv) > PRIVSIZE)
 		fail(
 "struct wvepriv is too big (%d); change PRIVSIZE in st.h and recompile sox",
@@ -50,12 +61,15 @@ ft_t ft;
 	/* Check for what type endian machine its read on */
 	if (version == PSION_INV_VERSION)
 	{
-	    ft->swap = 1;
-	    report("Found inverted PSION magic word");
+		/* This is probably left over from a time before
+		 * testing for endianess was standardized.  Leaving since
+		 * it doesn't hurt.
+		 */
+		ft->swap = ft->swap ? 0 : 1;
+		report("Found inverted PSION magic word.  Swapping bytes.");
 	}
 	else if (version == PSION_VERSION)
 	{
-	    ft->swap = 0;
 	    report("Found PSION magic word");
 	}
 	else
@@ -92,6 +106,18 @@ void wvestartwrite(ft)
 ft_t ft;
 {
 	struct wvepriv *p = (struct wvepriv *) ft->priv;
+
+	int littlendian = 1;
+	char *endptr;
+
+	endptr = (char *) &littlendian;
+	/* wve is in big endian format.  Swap whats read in
+	 * on little endian machines.
+	 */
+	if (*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
 
 	p->length = 0;
 	if (p->repeats == 0)
@@ -147,7 +173,7 @@ ft_t ft;
     fwrite(magic, sizeof(magic), 1, ft->fp);
 
     wshort(ft, version);
-    wblong(ft, p->length);
+    wlong(ft, p->length);
     wshort(ft, p->padding);
     wshort(ft, p->repeats);
 

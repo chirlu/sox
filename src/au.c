@@ -77,6 +77,18 @@ ft_t ft;
 	char *buf;
 	struct aupriv *p = (struct aupriv *) ft->priv;
 
+	int littlendian = 1;
+	char *endptr;
+
+	endptr = (char *) &littlendian;
+	/* AU is in big endian format.  Swap whats read
+	 * in onlittle endian machines.
+	 */
+	if (*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
+
 	/* Sanity check */
 	if (sizeof(struct aupriv) > PRIVSIZE)
 		fail(
@@ -86,19 +98,21 @@ ft_t ft;
 	/* Check the magic word */
 	magic = rlong(ft);
 	if (magic == DEC_INV_MAGIC) {
-		ft->swap = 1;
-		report("Found inverted DEC magic word");
+		/* Inverted headers are not standard.  Code was probably
+		 * left over from pre-standardize period of testing for
+		 * endianess.  Its not hurting though.
+		 */
+		ft->swap = ft->swap ? 0 : 1;
+		report("Found inverted DEC magic word.  Swapping bytes.");
 	}
 	else if (magic == SUN_INV_MAGIC) {
-		ft->swap = 1;
-		report("Found inverted Sun/NeXT magic word");
+		ft->swap = ft->swap ? 0 : 1;
+		report("Found inverted Sun/NeXT magic word. Swapping bytes.");
 	}
 	else if (magic == SUN_MAGIC) {
-		ft->swap = 0;
 		report("Found Sun/NeXT magic word");
 	}
 	else if (magic == DEC_MAGIC) {
-		ft->swap = 0;
 		report("Found DEC magic word");
 	}
 	else
@@ -197,15 +211,20 @@ void austartwrite(ft)
 ft_t ft;
 {
 	struct aupriv *p = (struct aupriv *) ft->priv;
-	int littlendian = 0;
+	int littlendian = 1;
 	char *endptr;
 
 	p->data_size = 0;
 	auwriteheader(ft, SUN_UNSPEC);
+
 	endptr = (char *) &littlendian;
-	*endptr = 1;
-	if (littlendian == 1)
-		ft->swap = 1;
+	/* AU is in big endian format.  Swap whats read in
+	 * on little endian machines.
+	 */
+	if (*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
 }
 
 /*
@@ -302,22 +321,22 @@ ULONG data_size;
 	}
 
 	magic = SUN_MAGIC;
-	wblong(ft, magic);
+	wlong(ft, magic);
 
 	if (ft->comment == NULL)
 		ft->comment = "";
 	hdr_size = SUN_HDRSIZE + strlen(ft->comment);
-	wblong(ft, hdr_size);
+	wlong(ft, hdr_size);
 
-	wblong(ft, data_size);
+	wlong(ft, data_size);
 
-	wblong(ft, encoding);
+	wlong(ft, encoding);
 
 	sample_rate = ft->info.rate;
-	wblong(ft, sample_rate);
+	wlong(ft, sample_rate);
 
 	channels = ft->info.channels;
-	wblong(ft, channels);
+	wlong(ft, channels);
 
 	fputs(ft->comment, ft->fp);
 }

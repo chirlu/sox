@@ -6,7 +6,11 @@ sox-11gamma.
 
 sox-12.16
 ---------
-
+  
+  o Changed raw data functions to perform I/O operations using block reads.
+    Should improve speeds greatly, especially when filesize is in megs.
+    Got code ready to tweak speed more which also forced me to clean up
+    Endian test code.
   o Fixed a bug in .au's handling of G.723.  It wasn't using the correct
     number of bits.
   o Quoted $filename in play/rec scripts so that files with spaces in

@@ -43,134 +43,6 @@ char writerr[] = "Error writing sample file.  You are probably out of disk space
 
 /* Utilities */
 
-/* Read short, little-endian: little end first. VAX/386 style. */
-unsigned short
-rlshort(ft)
-ft_t ft;
-{
-	unsigned char uc, uc2;
-	uc  = getc(ft->fp);
-	uc2 = getc(ft->fp);
-	return (uc2 << 8) | uc;
-}
-
-/* Read short, bigendian: big first. 68000/SPARC style. */
-unsigned short
-rbshort(ft)
-ft_t ft;
-{
-	unsigned char uc, uc2;
-	uc2 = getc(ft->fp);
-	uc  = getc(ft->fp);
-	return (uc2 << 8) | uc;
-}
-
-/* Write short, little-endian: little end first. VAX/386 style. */
-unsigned short
-#if	defined(__STDC__)
-wlshort(ft_t ft, unsigned short us)
-#else
-wlshort(ft, us)
-ft_t ft;
-unsigned short us;
-#endif
-{
-	putc(us, ft->fp);
-	putc(us >> 8, ft->fp);
-	if (ferror(ft->fp))
-		fail(writerr);
-	return(0);
-}
-
-/* Write short, big-endian: big end first. 68000/SPARC style. */
-unsigned short
-#if	defined(__STDC__)
-wbshort(ft_t ft, unsigned short us)
-#else
-wbshort(ft, us)
-ft_t ft;
-unsigned short us;
-#endif
-{
-	putc(us >> 8, ft->fp);
-	putc(us, ft->fp);
-	if (ferror(ft->fp))
-		fail(writerr);
-	return(0);
-}
-
-/* Read long, little-endian: little end first. VAX/386 style. */
-ULONG
-rllong(ft)
-ft_t ft;
-{
-	unsigned char uc, uc2, uc3, uc4;
-/*	if (feof(ft->fp))
-		fail(readerr);	*/	/* No worky! */
-	uc  = getc(ft->fp);
-	uc2 = getc(ft->fp);
-	uc3 = getc(ft->fp);
-	uc4 = getc(ft->fp);
-	return ((LONG)uc4 << 24) | ((LONG)uc3 << 16) | ((LONG)uc2 << 8) | (LONG)uc;
-}
-
-/* Read long, bigendian: big first. 68000/SPARC style. */
-ULONG
-rblong(ft)
-ft_t ft;
-{
-	unsigned char uc, uc2, uc3, uc4;
-/*	if (feof(ft->fp))
-		fail(readerr);	 */	/* No worky! */
-	uc  = getc(ft->fp);
-	uc2 = getc(ft->fp);
-	uc3 = getc(ft->fp);
-	uc4 = getc(ft->fp);
-	return ((LONG)uc << 24) | ((LONG)uc2 << 16) | ((LONG)uc3 << 8) | (LONG)uc4;
-}
-
-/* Write long, little-endian: little end first. VAX/386 style. */
-ULONG
-wllong(ft, ul)
-ft_t ft;
-ULONG ul;
-{
-char datum;
-
-	datum = (char) (ul) & 0xff;
-	putc(datum, ft->fp);
-	datum = (char) (ul >> 8) & 0xff;
-	putc(datum, ft->fp);
-	datum = (char) (ul >> 16) & 0xff;
-	putc(datum, ft->fp);
-	datum = (char) (ul >> 24) & 0xff;
-	putc(datum, ft->fp);
-	if (ferror(ft->fp))
-		fail(writerr);
-	return(0);
-}
-
-/* Write long, big-endian: big end first. 68000/SPARC style. */
-ULONG
-wblong(ft, ul)
-ft_t ft;
-ULONG ul;
-{
-char datum;
-
-	datum = (char) (ul >> 24) & 0xff;
-	putc(datum, ft->fp);
-	datum = (char) (ul >> 16) & 0xff;
-	putc(datum, ft->fp);
-	datum = (char) (ul >> 8) & 0xff;
-	putc(datum, ft->fp);
-	datum = (char) (ul) & 0xff;
-	putc(datum, ft->fp);
-	if (ferror(ft->fp))
-		fail(writerr);
-	return(0);
-}
-
 /* Read and write words and longs in "machine format".  Swap if indicated. */
 
 /* Read short. */
@@ -180,8 +52,6 @@ ft_t ft;
 {
 	unsigned short us;
 
-/*	if (feof(ft->fp))
-		fail(readerr);	  */	/* No worky! */
 	fread(&us, 2, 1, ft->fp);
 	if (ft->swap)
 		us = swapw(us);
@@ -212,8 +82,6 @@ ft_t ft;
 {
 	ULONG ul;
 
-/*	if (feof(ft->fp))
-		fail(readerr);  */		/* No worky! */
 	fread(&ul, 4, 1, ft->fp);
 	if (ft->swap)
 		ul = swapl(ul);
@@ -240,8 +108,6 @@ ft_t ft;
 {
 	float f;
 
-/*    if (feof(ft->fp))
-		fail(readerr);	*/	/* No worky! */
 	fread(&f, sizeof(float), 1, ft->fp);
 	if (ft->swap)
 		f = swapf(f);
@@ -268,8 +134,6 @@ ft_t ft;
 {
 	double d;
 
-/*    if (feof(ft->fp))
-		fail(readerr); */	  /* No worky! */
 	fread(&d, sizeof(double), 1, ft->fp);
 	if (ft->swap)
 		d = swapd(d);

@@ -177,6 +177,16 @@ ft_t ft;
 	char header[20];
 	vs_t v = (vs_t) ft->priv;
 	int sbseek;
+	int littlendian = 1;
+	char *endptr;
+
+	endptr = (char *) &littlendian;
+	/* VOC is in Little Endian format.  Swap bytes read in on */
+	/* Big Endian mahcines.				          */
+	if (!*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
 
 	if (! ft->seekable)
 		fail("VOC input file must be a file, not a pipe");
@@ -185,7 +195,7 @@ ft_t ft;
 	if (strncmp(header, "Creative Voice File\032", 19))
 		fail("VOC file header incorrect");
 
-	sbseek = rlshort(ft);
+	sbseek = rshort(ft);
 	fseek(ft->fp, sbseek, 0);
 
 	v->rate = -1;
@@ -221,30 +231,28 @@ LONG *buf, len;
 			*buf++ = 0x80000000L;
 	} else {
 		for(;v->rest && (done < len); v->rest--, done++) {
-			LONG l1, l2;
+			LONG datum;
 			switch(v->size)
 			{
 			    case BYTE:
-				if ((l1 = getc(ft->fp)) == EOF) {
-				    fail("VOC input: short file"); /* */
+				if ((datum = getc(ft->fp)) == EOF) {
+				    warn("VOC input: short file");
 				    v->rest = 0;
-				    return 0;
+				    return done;
 				}
-				l1 ^= 0x80;	/* convert to signed */
-				*buf++ = LEFT(l1, 24);
+				datum ^= 0x80;	/* convert to signed */
+				*buf++ = LEFT(datum, 24);
 				break;
 			    case WORD:
-				l1 = getc(ft->fp);
-				l2 = getc(ft->fp);
-				if (l1 == EOF || l2 == EOF)
+				datum = rshort(ft);
+				if (feof(ft->fp))
 				{
-				    fail("VOC input: short file");
+				    warn("VOC input: short file");
 				    v->rest = 0;
-				    return 0;
+				    return done;
 				}
-				l1 = (l2 << 8) | l1; /* already sign2 */
-				*buf++ = LEFT(l1, 16);
-				v->rest--;
+				*buf++ = LEFT(datum, 16);
+				v->rest--; /* Processed 2 bytes so update */
 				break;
 			}	
 		}
@@ -273,6 +281,16 @@ void vocstartwrite(ft)
 ft_t ft;
 {
 	vs_t v = (vs_t) ft->priv;
+	int littlendian = 1;
+	char *endptr;
+
+	endptr = (char *) &littlendian;
+	/* VOC is in Little Endian format.  Swap whats read */
+	/* in on Big Endian machines.			    */
+	if (!*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
 
 	if (! ft->seekable)
 		fail("Output .voc file must be a file, not a pipe");
@@ -281,9 +299,9 @@ ft_t ft;
 
 	/* File format name and a ^Z (aborts printing under DOS) */
 	(void) fwrite("Creative Voice File\032\032", 1, 20, ft->fp);
-	wlshort(ft, 26);		/* size of header */
-	wlshort(ft, 0x10a);             /* major/minor version number */
-	wlshort(ft, 0x1129);		/* checksum of version number */
+	wshort(ft, 26);			/* size of header */
+	wshort(ft, 0x10a);              /* major/minor version number */
+	wshort(ft, 0x1129);		/* checksum of version number */
 
 	if (ft->info.size == BYTE)
 	  ft->info.style = UNSIGNED;
@@ -314,7 +332,7 @@ LONG *buf, len;
 	    putc(uc, ft->fp);
 	  } else {
 		sw = (int) RIGHT(*buf++, 16);
-	    wlshort(ft,sw);
+	    wshort(ft,sw);
           }
 	}
 }
@@ -347,6 +365,11 @@ ft_t ft;
 			return;
 		if (feof(ft->fp))
 			return;
+		/* 
+		 * Size is an 24-bit value.  Currently there is no util 
+		 * func to read this so do it this cross-platform way
+		 *
+		 */
 		uc = getc(ft->fp);
 		sblen = uc;
 		uc = getc(ft->fp);
@@ -377,7 +400,7 @@ ft_t ft;
 			v->size = BYTE;
 			return;
 		case VOC_DATA_16:
-			new_rate = rllong(ft);
+			new_rate = rlong(ft);
 			if (new_rate == 0)
 			    fail("File %s: Sample rate is zero?",ft->filename);
 			if ((v->rate != -1) && (new_rate != v->rate))
@@ -393,7 +416,7 @@ ft_t ft;
 			    default:	fail("Don't understand size %d", uc);
 			}
 			v->channels = getc(ft->fp);
-			getc(ft->fp);	/* unknown1 */
+			getc(ft->fp);	/* unknown */
 			getc(ft->fp);	/* notused */
 			getc(ft->fp);	/* notused */
 			getc(ft->fp);	/* notused */
@@ -408,7 +431,7 @@ ft_t ft;
 			{
 			unsigned short period;
 
-			period = rlshort(ft);
+			period = rshort(ft);
 			uc = getc(ft->fp);
 			if (uc == 0)
 				fail("File %s: Silence sample rate is zero");
@@ -449,7 +472,7 @@ ft_t ft;
 			/* value from the extended block and not the     */
 			/* data block.					 */
 			v->extended = 1;
-			new_rate = rlshort(ft);
+			new_rate = rshort(ft);
 			if (new_rate == 0)
 			   fail("File %s: Sample rate is zero?");
 			if ((v->rate != -1) && (new_rate != v->rate))
@@ -505,7 +528,7 @@ ft_t ft;
 	      putc(0, ft->fp);                /* block length = 4 */
 	      putc(0, ft->fp);                /* block length = 4 */
 		  v->rate = 65536L - (256000000.0/(2*(float)ft->info.rate));
-	      wlshort(ft,v->rate);	/* Rate code */
+	      wshort(ft,v->rate);	/* Rate code */
 	      putc(0, ft->fp);                /* File is not packed */
 	      putc(1, ft->fp);                /* samples are in stereo */
 	    }
@@ -522,7 +545,7 @@ ft_t ft;
 	    putc(0, ft->fp);		/* block length (for now) */
 	    putc(0, ft->fp);		/* block length (for now) */
 	    v->rate = ft->info.rate;
-	    wllong(ft, v->rate);	/* Rate code */
+	    wlong(ft, v->rate);	/* Rate code */
 	    putc(16, ft->fp);		/* Sample Size */
 	    putc(ft->info.channels, ft->fp);	/* Sample Size */
 	    putc(0, ft->fp);		/* Unknown */
@@ -546,10 +569,7 @@ ft_t ft;
 	fseek(ft->fp, v->blockseek, 0);		/* seek back to block length */
 	fseek(ft->fp, 1, 1);			/* seek forward one */
 	if (v->silent) {
-		datum = (v->samples) & 0xff;
-		putc((int)datum, ft->fp);       /* low byte of length */
-		datum = (v->samples >> 8) & 0xff;
-		putc((int)datum, ft->fp);  /* high byte of length */
+		wshort(ft, v->samples);
 	} else {
 	  if (ft->info.size == BYTE) {
 	    if (ft->info.channels > 1) {

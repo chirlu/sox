@@ -143,7 +143,7 @@ ft_t ft;
 	SFHEADER sfhead;
 	SFCODE *sfcodep;
 	char *sfcharp;
-	int littlendian = 0;
+	int littlendian = 1;
 	char *endptr;
 
 #ifdef	IRCAM

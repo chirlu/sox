@@ -76,27 +76,27 @@ struct smptrailer *trailer;
 {
 	int i;
 
-	rlshort(ft);			/* read reserved word */
+	rshort(ft);			/* read reserved word */
 	for(i = 0; i < 8; i++) {	/* read the 8 loops */
-		trailer->loops[i].start = rllong(ft);
+		trailer->loops[i].start = rlong(ft);
 		ft->loops[i].start = trailer->loops[i].start;
-		trailer->loops[i].end = rllong(ft);
+		trailer->loops[i].end = rlong(ft);
 		ft->loops[i].length = 
 			trailer->loops[i].end - trailer->loops[i].start;
 		trailer->loops[i].type = getc(ft->fp);
 		ft->loops[i].type = trailer->loops[8].type;
-		trailer->loops[i].count = rlshort(ft);
+		trailer->loops[i].count = rshort(ft);
 		ft->loops[8].count = trailer->loops[8].count;
 	}
 	for(i = 0; i < 8; i++) {	/* read the 8 markers */
 		if (fread(trailer->markers[i].name, 1, 10, ft->fp) != 10)
 			return(0);
-		trailer->markers[i].position = rllong(ft);
+		trailer->markers[i].position = rlong(ft);
 	}
 	trailer->MIDInote = getc(ft->fp);
-	trailer->rate = rllong(ft);
-	trailer->SMPTEoffset = rllong(ft);
-	trailer->CycleSize = rllong(ft);
+	trailer->rate = rlong(ft);
+	trailer->SMPTEoffset = rlong(ft);
+	trailer->CycleSize = rlong(ft);
 	return(1);
 }
 
@@ -146,22 +146,22 @@ struct smptrailer *trailer;
 {
 	int i;
 
-	wlshort(ft, 0);			/* write the reserved word */
+	wshort(ft, 0);			/* write the reserved word */
 	for(i = 0; i < 8; i++) {	/* write the 8 loops */
-		wllong(ft, trailer->loops[i].start);
-		wllong(ft, trailer->loops[i].end);
+		wlong(ft, trailer->loops[i].start);
+		wlong(ft, trailer->loops[i].end);
 		putc(trailer->loops[i].type, ft->fp);
-		wlshort(ft, trailer->loops[i].count);
+		wshort(ft, trailer->loops[i].count);
 	}
 	for(i = 0; i < 8; i++) {	/* write the 8 markers */
 		if (fwrite(trailer->markers[i].name, 1, 10, ft->fp) != 10)
 			return(0);
-		wllong(ft, trailer->markers[i].position);
+		wlong(ft, trailer->markers[i].position);
 	}
 	putc(trailer->MIDInote, ft->fp);
-	wllong(ft, trailer->rate);
-	wllong(ft, trailer->SMPTEoffset);
-	wllong(ft, trailer->CycleSize);
+	wlong(ft, trailer->rate);
+	wlong(ft, trailer->SMPTEoffset);
+	wlong(ft, trailer->CycleSize);
 	return(1);
 }
 
@@ -176,12 +176,21 @@ void smpstartread(ft)
 ft_t ft;
 {
 	smp_t smp = (smp_t) ft->priv;
-	int littlendian = 0, i;
+	int littlendian = 1;
+	char *endptr;
+	int i;
 	int namelen, commentlen;
 	LONG samplestart;
-	char *endptr;
 	struct smpheader header;
 	struct smptrailer trailer;
+
+	endptr = (char *) &littlendian;
+	/* SMP is in Little Endian format.  Swap whats read in on */
+	/* Big Endian machines.			                  */
+	if (!*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
 
 	/* If you need to seek around the input file. */
 	if (! ft->seekable)
@@ -210,7 +219,7 @@ ft_t ft;
 
 	report("SampleVision file name and comments: %s", ft->comment);
 	/* Extract out the sample size (always intel format) */
-	smp->NoOfSamps = rllong(ft);
+	smp->NoOfSamps = rlong(ft);
 	/* mark the start of the sample data */
 	samplestart = ftell(ft->fp);
 
@@ -230,11 +239,6 @@ ft_t ft;
 	ft->info.style = SIGN2;
 	ft->info.channels = 1;
 
-	endptr = (char *) &littlendian;
-	*endptr = 1;
-	if (littlendian != 1)
-		ft->swap = 1;
-	
 	if (verbose) {
 		fprintf(stderr, "SampleVision trailer:\n");
 		for(i = 0; i < 8; i++) if (1 || trailer.loops[i].count) {
@@ -308,8 +312,19 @@ ft_t ft;
 void smpstartwrite(ft) 
 ft_t ft;
 {
+	int littlendian = 1;
+	char *endptr;
+
 	smp_t smp = (smp_t) ft->priv;
 	struct smpheader header;
+
+	endptr = (char *) &littlendian;
+	/* SMP is in Little Endian format.  Swap whats read in on */
+	/* Big Endian machines.			                  */
+	if (!*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
 
 	/* If you have to seek around the output file */
 	if (! ft->seekable)
@@ -328,7 +343,7 @@ ft_t ft;
 	/* Write file header */
 	if(fwrite(&header, 1, HEADERSIZE, ft->fp) != HEADERSIZE)
 		fail("SMP: Can't write header completely");
-	wllong(ft, 0);	/* write as zero length for now, update later */
+	wlong(ft, 0);	/* write as zero length for now, update later */
 	smp->NoOfSamps = 0;
 }
 
@@ -341,7 +356,7 @@ LONG *buf, len;
 
 	while(len--) {
 		datum = (int) RIGHT(*buf++, 16);
-		wlshort(ft, datum);
+		wshort(ft, datum);
 		smp->NoOfSamps++;
 	}
 	/* If you cannot write out all of the supplied samples, */
@@ -359,5 +374,5 @@ ft_t ft;
 	writetrailer(ft, &trailer);
 	if (fseek(ft->fp, 112, 0) == -1)
 		fail("SMP unable to seek back to save size");
-	wllong(ft, smp->NoOfSamps);
+	wlong(ft, smp->NoOfSamps);
 }

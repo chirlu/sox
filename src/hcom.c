@@ -64,6 +64,19 @@ ft_t ft;
 	ULONG huffcount, checksum, compresstype, divisor;
 	unsigned short dictsize;
 
+	int littlendian = 1;
+	char *endptr;
+
+
+	endptr = (char *) &littlendian;
+	/* hcom is in big endian format.  Swap whats
+	 * read in on little machine
+	 */
+	if (*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
+
 	/* Skip first 65 bytes of header */
 	skipbytes(ft, 65);
 
@@ -75,8 +88,8 @@ ft_t ft;
 	skipbytes(ft, 83-69);
 
 	/* Get essential numbers from the header */
-	datasize = rblong(ft); /* bytes 83-86 */
-	rsrcsize = rblong(ft); /* bytes 87-90 */
+	datasize = rlong(ft); /* bytes 83-86 */
+	rsrcsize = rlong(ft); /* bytes 87-90 */
 
 	/* Skip the rest of the header (total 128 bytes) */
 	skipbytes(ft, 128-91);
@@ -86,15 +99,15 @@ ft_t ft;
 		fail("Mac data fork is not HCOM");
 
 	/* Then follow various parameters */
-	huffcount = rblong(ft);
-	checksum = rblong(ft);
-	compresstype = rblong(ft);
+	huffcount = rlong(ft);
+	checksum = rlong(ft);
+	compresstype = rlong(ft);
 	if (compresstype > 1)
 		fail("Bad compression type in HCOM header");
-	divisor = rblong(ft);
+	divisor = rlong(ft);
 	if (divisor == 0 || divisor > 4)
 		fail("Bad sampling rate divisor in HCOM header");
-	dictsize = rbshort(ft);
+	dictsize = rshort(ft);
 
 	/* Translate to sox parameters */
 	ft->info.style = UNSIGNED;
@@ -109,8 +122,8 @@ ft_t ft;
 
 	/* Read dictionary */
 	for(i = 0; i < dictsize; i++) {
-		p->dictionary[i].dict_leftson = rbshort(ft);
-		p->dictionary[i].dict_rightson = rbshort(ft);
+		p->dictionary[i].dict_leftson = rshort(ft);
+		p->dictionary[i].dict_rightson = rshort(ft);
 		/*
 		report("%d %d",
 		       p->dictionary[i].dict_leftson,
@@ -165,7 +178,7 @@ LONG *buf, len;
 
 	while (p->huffcount > 0) {
 		if(p->nrbits == 0) {
-			p->current = rblong(ft);
+			p->current = rlong(ft);
 			if (feof(ft->fp))
 				fail("unexpected EOF in HCOM data");
 			p->cksum += p->current;
@@ -227,6 +240,18 @@ void hcomstartwrite(ft)
 ft_t ft;
 {
 	register struct writepriv *p = (struct writepriv *) ft->priv;
+
+	int littlendian = 1;
+	char *endptr;
+
+	endptr = (char *) &littlendian;
+	/* hcom is inbigendian format.  Swap whats
+	 * read in on little endian machines.
+	 */
+	if (*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
 
 	switch (ft->info.rate) {
 	case 22050:
@@ -475,8 +500,8 @@ ft_t ft;
 	padbytes(ft, 65-3);
 	(void) fwrite("FSSD", 1, 4, ft->fp);
 	padbytes(ft, 83-69);
-	wblong(ft, (ULONG) compressed_len); /* compressed_data size */
-	wblong(ft, (ULONG) 0); /* rsrc size */
+	wlong(ft, (ULONG) compressed_len); /* compressed_data size */
+	wlong(ft, (ULONG) 0); /* rsrc size */
 	padbytes(ft, 128 - 91);
 	if (ferror(ft->fp))
 		fail("write error in HCOM header");

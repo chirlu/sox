@@ -19,9 +19,6 @@ all patches to cbagwell@sprynet.com.
     the number of makefiles by having all systems compile using one
     makefile.
 
-  o Change all code that sets up auto-swapping of bytes (-x option) to match
-    that of cdr.c driver.  Current method fails on certain endian machines.
-
   o Fix for how include files are found when fseek() is used.  In most
     configs it has to hardcode the values for things like SEEK_SET. *BAD*
     Include files are a mess, i.e. fseek problem.  Need to resort to

@@ -453,7 +453,7 @@ ft_t ft;
     ULONG    bytespersample;	    /* bytes per sample (per channel */
 
     endptr = (char *) &littlendian;
-    if (!*endptr) ft->swap = 1;
+    if (!*endptr) ft->swap = ft->swap ? 0 : 1;
 
     /* If you need to seek around the input file. */
     if (0 && ! ft->seekable)
@@ -462,7 +462,7 @@ ft_t ft;
     if ( fread(magic, 1, 4, ft->fp) != 4 || strncmp("RIFF", magic, 4))
 	fail("WAVE: RIFF header not found");
 
-    len = rllong(ft);
+    len = rlong(ft);
 
     if ( fread(magic, 1, 4, ft->fp) != 4 || strncmp("WAVE", magic, 4))
 	fail("WAVE header not found");
@@ -472,7 +472,7 @@ ft_t ft;
     {
 	if ( fread(magic, 1, 4, ft->fp) != 4 )
 	    fail("WAVE file missing fmt spec");
-	len = rllong(ft);
+	len = rlong(ft);
 	if (strncmp("fmt ", magic, 4) == 0)
 	    break;				/* Found the format chunk */
 
@@ -487,7 +487,7 @@ ft_t ft;
     if ( len < 16 )
 	fail("WAVE file fmt chunk is too short");
 
-    wav->formatTag = rlshort(ft);
+    wav->formatTag = rshort(ft);
     len -= 2;
     switch (wav->formatTag)
     {
@@ -538,7 +538,7 @@ ft_t ft;
     default:	fail("WAV file has unknown format type");
     }
 
-    wChannels = rlshort(ft);
+    wChannels = rshort(ft);
     len -= 2;
     /* User options take precedence */
     if (ft->info.channels == -1 || ft->info.channels == wChannels)
@@ -546,19 +546,19 @@ ft_t ft;
     else
 	warn("User options overriding channels read in .wav header");
 	
-    wSamplesPerSecond = rllong(ft);
+    wSamplesPerSecond = rlong(ft);
     len -= 4;
     if (ft->info.rate == 0 || ft->info.rate == wSamplesPerSecond)
 	ft->info.rate = wSamplesPerSecond;
     else
 	warn("User options overriding rate read in .wav header");
     
-    wAvgBytesPerSec = rllong(ft);	/* Average bytes/second */
-    wav->blockAlign = rlshort(ft);	/* Block align */
+    wAvgBytesPerSec = rlong(ft);	/* Average bytes/second */
+    wav->blockAlign = rshort(ft);	/* Block align */
     len -= 6;
 
     /* bits per sample per channel */	
-    wBitsPerSample =  rlshort(ft);
+    wBitsPerSample =  rshort(ft);
     len -= 2;
 
     /* ADPCM formats have extended fmt chunk.  Check for those cases. */
@@ -567,10 +567,10 @@ ft_t ft;
 	if (wBitsPerSample != 4)
 	    fail("Can only handle 4-bit MS ADPCM in wav files");
 
-	wExtSize = rlshort(ft);
-	wav->samplesPerBlock = rlshort(ft);
+	wExtSize = rshort(ft);
+	wav->samplesPerBlock = rshort(ft);
 	wav->bytesPerBlock = (wav->samplesPerBlock + 7)/2 * ft->info.channels;
-	wNumCoefs = rlshort(ft);
+	wNumCoefs = rshort(ft);
 	wav->packet = (unsigned char *)malloc(wav->blockAlign);
 	len -= 6;
 	    
@@ -586,8 +586,8 @@ ft_t ft;
 	if (wBitsPerSample != 4)
 	    fail("Can only handle 4-bit IMA ADPCM in wav files");
 
-	wExtSize = rlshort(ft);
-	wav->samplesPerBlock = rlshort(ft);
+	wExtSize = rshort(ft);
+	wav->samplesPerBlock = rshort(ft);
 	wav->bytesPerBlock = (wav->samplesPerBlock + 7)/2 * ft->info.channels;
 	wav->packet = (unsigned char *)malloc(wav->blockAlign);
 	len -= 4;
@@ -657,7 +657,7 @@ ft_t ft;
     {
 	if ( fread(magic, 1, 4, ft->fp) != 4 )
 	    fail("WAVE file has missing data chunk");
-	len = rllong(ft);
+	len = rlong(ft);
 	if (strncmp("data", magic, 4) == 0)
 	    break;				/* Found the data chunk */
 	
@@ -806,7 +806,7 @@ ft_t ft;
 	char	*endptr;
 
 	endptr = (char *) &littlendian;
-	if (!*endptr) ft->swap = 1;
+	if (!*endptr) ft->swap = ft->swap ? 0 : 1;
 
 	wav->numSamples = 0;
 	wav->second_header = 0;
@@ -898,19 +898,19 @@ ft_t ft;
 
 	/* figured out header info, so write it */
 	fputs("RIFF", ft->fp);
-	wllong(ft, data_length + 8+16+12);	/* Waveform chunk size: FIXUP(4) */
+	wlong(ft, data_length + 8+16+12);	/* Waveform chunk size: FIXUP(4) */
 	fputs("WAVE", ft->fp);
 	fputs("fmt ", ft->fp);
-	wllong(ft, (LONG)16);		/* fmt chunk size */
-	wlshort(ft, wFormatTag);
-	wlshort(ft, wChannels);
-	wllong(ft, wSamplesPerSecond);
-	wllong(ft, wAvgBytesPerSec);
-	wlshort(ft, wBlockAlign);
-	wlshort(ft, wBitsPerSample);
+	wlong(ft, (LONG)16);		/* fmt chunk size */
+	wshort(ft, wFormatTag);
+	wshort(ft, wChannels);
+	wlong(ft, wSamplesPerSecond);
+	wlong(ft, wAvgBytesPerSec);
+	wshort(ft, wBlockAlign);
+	wshort(ft, wBitsPerSample);
 	
 	fputs("data", ft->fp);
-	wllong(ft, data_length);		/* data chunk size: FIXUP(40) */
+	wlong(ft, data_length);		/* data chunk size: FIXUP(40) */
 
 	if (!wav->second_header) {
 		report("Writing Wave file: %s format, %d channel%s, %d samp/sec",

@@ -31,7 +31,19 @@ char buf[97];
 
 LONG rate;
 
-rate = 0;
+	int littlendian = 1;
+	char *endptr;
+
+	endptr = (char *) &littlendian;
+	/* sndt is in little endian format so 
+	 * swap bytes on big endian machines.
+	 */
+	if (!*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
+
+	rate = 0;
 
 /* determine file type */
         /* if first 5 bytes == SOUND then this is probably a sndtool sound */
@@ -44,7 +56,7 @@ if (fread(buf, 1, 2, ft->fp) != 2)
 if (strncmp(buf,"\0\0",2) == 0)
 	{
 	/* sounder */
-	rate = rlshort(ft);
+	rate = rshort(ft);
 	if (rate < 4000 || rate > 25000 )
 		fail ("SND: sample rate out of range");
 	fseek(ft->fp,4,SEEK_CUR);
@@ -56,7 +68,7 @@ else
 	if (strncmp(buf,"SOUND",5))
 		fail ("SND: unrecognized SND format");
 	fseek(ft->fp,12,SEEK_CUR);
-	rate = rlshort(ft);
+	rate = rshort(ft);
 	fseek(ft->fp,6,SEEK_CUR);
 	if (fread(buf,1,96,ft->fp) != 96)
 		fail ("SND: unexpected EOF in SND header");
@@ -78,6 +90,18 @@ ft_t ft;
 {
 struct sndpriv *p = (struct sndpriv *) ft->priv;
 
+	int littlendian = 1;
+	char *endptr;
+
+	endptr = (char *) &littlendian;
+	/* sndt is in little endian format so
+	 * swap bytes on big endian machines
+	 */
+	if (!*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
+
 /* write header */
 ft->info.channels = 1;
 ft->info.style = UNSIGNED;
@@ -98,10 +122,10 @@ ft->info.style = UNSIGNED;
 ft->info.size = BYTE;
 
 /* sounder header */
-wlshort (ft,0); /* sample size code */
-wlshort (ft,(int) ft->info.rate);     /* sample rate */
-wlshort (ft,10);        /* volume */
-wlshort (ft,4); /* shift */
+wshort (ft,0); /* sample size code */
+wshort (ft,(int) ft->info.rate);     /* sample rate */
+wshort (ft,10);        /* volume */
+wshort (ft,4); /* shift */
 }
 
 /*======================================================================*/
@@ -144,14 +168,14 @@ char name_buf[97];
 /* sndtool header */
 fputs ("SOUND",ft->fp); /* magic */
 fputc (0x1a,ft->fp);
-wlshort (ft,(LONG)0);  /* hGSound */
-wllong (ft,nsamples);
-wllong (ft,(LONG)0);
-wllong (ft,nsamples);
-wlshort (ft,(int) ft->info.rate);
-wlshort (ft,0);
-wlshort (ft,10);
-wlshort (ft,4);
+wshort (ft,(LONG)0);  /* hGSound */
+wlong (ft,nsamples);
+wlong (ft,(LONG)0);
+wlong (ft,nsamples);
+wshort (ft,(int) ft->info.rate);
+wshort (ft,0);
+wshort (ft,10);
+wshort (ft,4);
 sprintf (name_buf,"%s - File created by Sound Exchange",ft->filename);
 fwrite (name_buf, 1, 96, ft->fp);
 }

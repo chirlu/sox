@@ -10,7 +10,7 @@
 /*
  * Sound Tools MAUD file format driver, by Lutz Vieweg 1993
  *
- * supports: mono and stereo, linear, a-lawa and u-law reading and writing
+ * supports: mono and stereo, linear, a-law and u-law reading and writing
  *
  */
 
@@ -42,7 +42,6 @@ ft_t ft;
 	struct maudstuff * p = (struct maudstuff *) ft->priv;
 	
 	char buf[12];
-	char *endptr;
 	char *chunk_buf;
 	
 	unsigned short bitpersam;
@@ -52,13 +51,23 @@ ft_t ft;
 	
 	ULONG chunksize;
 	
-	int littlendian = 0;
+	int littlendian = 1;
+	char *endptr;
+
+	endptr = (char *) &littlendian;
+	/* maud is in big endian format.  Swap whats read in
+	 * on little endian machines.
+	 */
+	if (*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
 	
 	/* read FORM chunk */
 	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "FORM", 4) != 0)
 		fail("MAUD: header does not begin with magic word 'FORM'");
 	
-	rblong(ft); /* totalsize */
+	rlong(ft); /* totalsize */
 	
 	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "MAUD", 4) != 0)
 		fail("MAUD: 'FORM' chunk does not specify 'MAUD' as type");
@@ -74,21 +83,21 @@ ft_t ft;
 		
 		if (strncmp(buf,"MHDR",4) == 0) {
 			
-			chunksize = rblong(ft);
+			chunksize = rlong(ft);
 			if (chunksize != 8*4) fail ("MAUD: MHDR chunk has bad size");
 			
 			/* fseek(ft->fp,12,SEEK_CUR); */
 			
-			p->nsamples = rblong(ft); /* number of samples stored in MDAT */
-			bitpersam = rbshort(ft);  /* number of bits per sample as stored in MDAT */
-			rbshort(ft);              /* number of bits per sample after decompression */
-			nom = rblong(ft);         /* clock source frequency */
-			denom = rbshort(ft);       /* clock devide           */
+			p->nsamples = rlong(ft); /* number of samples stored in MDAT */
+			bitpersam = rshort(ft);  /* number of bits per sample as stored in MDAT */
+			rshort(ft);              /* number of bits per sample after decompression */
+			nom = rlong(ft);         /* clock source frequency */
+			denom = rshort(ft);       /* clock devide           */
 			if (denom == 0) fail("MAUD: frequency denominator == 0, failed");
 			
 			ft->info.rate = nom / denom;
 			
-			chaninf = rbshort(ft); /* channel information */
+			chaninf = rshort(ft); /* channel information */
 			switch (chaninf) {
 			case 0:
 				ft->info.channels = 1;
@@ -101,14 +110,14 @@ ft_t ft;
 				break;
 			}
 			
-			chaninf = rbshort(ft); /* number of channels (mono: 1, stereo: 2, ...) */
+			chaninf = rshort(ft); /* number of channels (mono: 1, stereo: 2, ...) */
 			if (chaninf != ft->info.channels) fail("MAUD: unsupported number of channels in file");
 			
-			chaninf = rbshort(ft); /* compression type */
+			chaninf = rshort(ft); /* compression type */
 			
-			rblong(ft); /* rest of chunk, unused yet */
-			rblong(ft);
-			rblong(ft);
+			rlong(ft); /* rest of chunk, unused yet */
+			rlong(ft);
+			rlong(ft);
 			
 			if (bitpersam == 8 && chaninf == 0) {
 				ft->info.size = BYTE;
@@ -134,7 +143,7 @@ ft_t ft;
 		}
 		
 		if (strncmp(buf,"ANNO",4) == 0) {
-			chunksize = rblong(ft);
+			chunksize = rlong(ft);
 			if (chunksize & 1)
 				chunksize++;
 			chunk_buf = (char *) malloc(chunksize + 1);
@@ -149,7 +158,7 @@ ft_t ft;
 		}
 		
 		/* some other kind of chunk */
-		chunksize = rblong(ft);
+		chunksize = rlong(ft);
 		if (chunksize & 1)
 			chunksize++;
 		fseek(ft->fp,chunksize,SEEK_CUR);
@@ -158,11 +167,7 @@ ft_t ft;
 	}
 	
 	if (strncmp(buf,"MDAT",4) != 0) fail("MAUD: MDAT chunk not found");
-	p->nsamples = rblong(ft);
-	
-	endptr = (char *) &littlendian;
-	*endptr = 1;
-	if (littlendian == 1) ft->swap = 1;
+	p->nsamples = rlong(ft);
 }
 
 /*
@@ -217,7 +222,7 @@ LONG *buf, len;
 		}
 		else {
 			while(done < len) {
-				datum = rbshort(ft);
+				datum = rshort(ft);
 				if (feof(ft->fp)) return done;
 				/* scale signed up to long's range */
 				*buf++ = LEFT(datum, 16);
@@ -281,12 +286,12 @@ LONG *buf, len;
 		}
 		else {
 			while(done < len) {
-				datum = rbshort(ft);
+				datum = rshort(ft);
 				if (feof(ft->fp)) return done;
 				/* scale signed up to long's range */
 				*buf++ = LEFT(datum, 16);
 				
-				datum = rbshort(ft);
+				datum = rshort(ft);
 				if (feof(ft->fp)) return done;
 				/* scale signed up to long's range */
 				*buf++ = LEFT(datum, 16);
@@ -310,8 +315,18 @@ void maudstartwrite(ft)
 ft_t ft;
 {
 	struct maudstuff * p = (struct maudstuff *) ft->priv;
-	int littlendian = 0;
+
+	int littlendian = 1;
 	char *endptr;
+
+	endptr = (char *) &littlendian;
+	/* maud is in big endian format.  Swap whats read in
+	 * on little endian machines.
+	 */
+	if (*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
 	
 	/* If you have to seek around the output file */
 	if (! ft->seekable) fail("Output .maud file must be a file, not a pipe");
@@ -326,10 +341,6 @@ ft_t ft;
 	p->nsamples = 0x7f000000L;
 	maudwriteheader(ft);
 	p->nsamples = 0;
-	
-	endptr = (char *) &littlendian;
-	*endptr = 1;
-	if (littlendian == 1) ft->swap = 1;
 }
 
 void maudwrite(ft, buf, len) 
@@ -360,71 +371,71 @@ ft_t ft;
 	struct maudstuff * p = (struct maudstuff *) ft->priv;
 	
 	fputs ("FORM", ft->fp);
-	wblong(ft, (p->nsamples*ft->info.size) + MAUDHEADERSIZE);  /* size of file */
+	wlong(ft, (p->nsamples*ft->info.size) + MAUDHEADERSIZE);  /* size of file */
 	fputs("MAUD", ft->fp); /* File type */
 	
 	fputs ("MHDR", ft->fp);
-	wblong(ft, (LONG) 8*4); /* number of bytes to follow */
-	wblong(ft, (LONG) (p->nsamples ));  /* number of samples stored in MDAT */
+	wlong(ft, (LONG) 8*4); /* number of bytes to follow */
+	wlong(ft, (LONG) (p->nsamples ));  /* number of samples stored in MDAT */
 	
 	switch (ft->info.style) {
 		
 	case UNSIGNED:
-		wbshort(ft, (int) 8); /* number of bits per sample as stored in MDAT */
-		wbshort(ft, (int) 8); /* number of bits per sample after decompression */
+		wshort(ft, (int) 8); /* number of bits per sample as stored in MDAT */
+		wshort(ft, (int) 8); /* number of bits per sample after decompression */
 		break;
 		
 	case SIGN2:
-		wbshort(ft, (int) 16); /* number of bits per sample as stored in MDAT */
-		wbshort(ft, (int) 16); /* number of bits per sample after decompression */
+		wshort(ft, (int) 16); /* number of bits per sample as stored in MDAT */
+		wshort(ft, (int) 16); /* number of bits per sample after decompression */
 		break;
 		
 	case ALAW:
 	case ULAW:
-		wbshort(ft, (int) 8); /* number of bits per sample as stored in MDAT */
-		wbshort(ft, (int) 16); /* number of bits per sample after decompression */
+		wshort(ft, (int) 8); /* number of bits per sample as stored in MDAT */
+		wshort(ft, (int) 16); /* number of bits per sample after decompression */
 		break;
 		
 	}
 	
-	wblong(ft, (LONG) ft->info.rate); /* clock source frequency */
-	wbshort(ft, (int) 1); /* clock devide */
+	wlong(ft, (LONG) ft->info.rate); /* clock source frequency */
+	wshort(ft, (int) 1); /* clock devide */
 	
 	if (ft->info.channels == 1) {
-		wbshort(ft, (int) 0); /* channel information */
-		wbshort(ft, (int) 1); /* number of channels (mono: 1, stereo: 2, ...) */
+		wshort(ft, (int) 0); /* channel information */
+		wshort(ft, (int) 1); /* number of channels (mono: 1, stereo: 2, ...) */
 	}
 	else {
-		wbshort(ft, (int) 1);
-		wbshort(ft, (int) 2);
+		wshort(ft, (int) 1);
+		wshort(ft, (int) 2);
 	}
 	
 	switch (ft->info.style) {
 		
 	case UNSIGNED:
 	case SIGN2:
-		wbshort(ft, (int) 0); /* no compression */
+		wshort(ft, (int) 0); /* no compression */
 		break;
 		
 	case ULAW:
-		wbshort(ft, (int) 3);
+		wshort(ft, (int) 3);
 		break;
 		
 	case ALAW:
-		wbshort(ft, (int) 2);
+		wshort(ft, (int) 2);
 		break;
 		
 	}
 	
-	wblong(ft, (LONG) 0); /* reserved */
-	wblong(ft, (LONG) 0); /* reserved */
-	wblong(ft, (LONG) 0); /* reserved */
+	wlong(ft, (LONG) 0); /* reserved */
+	wlong(ft, (LONG) 0); /* reserved */
+	wlong(ft, (LONG) 0); /* reserved */
 	
 	fputs ("ANNO", ft->fp);
-	wblong(ft, (LONG) 32); /* length of block */
+	wlong(ft, (LONG) 32); /* length of block */
 	fputs ("file written by SOX MAUD-export ", ft->fp);
 	
 	fputs ("MDAT", ft->fp);
-	wblong(ft, p->nsamples * ft->info.size ); /* samples in file */
+	wlong(ft, p->nsamples * ft->info.size ); /* samples in file */
 }
 

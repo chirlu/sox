@@ -104,6 +104,18 @@ struct  instrinfo {
 #define LOOP_SUSTAIN_DECAY 64	/* AIFF style: one sustain & one decay loop */
 
 /*
+ * File buffer info.  Holds info so that data can be read in blocks.
+ */
+
+struct fileinfo {
+	char	*buf;			/* Pointer to data buffer */
+	int	size;			/* Size of buffer */
+	int	count;			/* Count read in to buffer */
+	int	eof;			/* Marker that EOF has been reached */
+};
+
+
+/*
  *  Format information for input and output files.
  */
 
@@ -121,6 +133,7 @@ struct soundstream {
 	char	*filetype;		/* type of file */
 	char	*comment;		/* comment string */
 	FILE	*fp;			/* File stream pointer */
+	struct	fileinfo file;		/* File data block */
 	format_t *h;			/* format struct for this file */
 	double	priv[PRIVSIZE/8];	/* format's private data area */
 };

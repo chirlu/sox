@@ -151,6 +151,7 @@ char *rawnames[] = {
 };
 extern void rawstartread();
 extern LONG rawread();
+extern void rawstopread();
 extern void rawstartwrite();
 extern void rawwrite();
 extern void rawstopwrite();
@@ -318,8 +319,8 @@ EXPORT format_t formats[] = {
 		aiffstartread, aiffread, aiffstopread,	   /* SGI/Apple AIFF */
 		aiffstartwrite, aiffwrite, aiffstopwrite},
 	{alnames, FILE_STEREO,
-		alstartread, rawread, nothing, 	           /* a-law byte raw */
-		alstartwrite, rawwrite, nothing},	
+		alstartread, rawread, rawstopread, 	   /* a-law byte raw */
+		alstartwrite, rawwrite, rawstopwrite},	
 	{aunames, FILE_STEREO,
 		austartread, auread, nothing,	       /* SPARC .AU w/header */
 		austartwrite, auwrite, austopwrite},	
@@ -356,8 +357,8 @@ EXPORT format_t formats[] = {
 		ossdspstartwrite, ossdspwrite, ossdspstopwrite},
 #endif
 	{rawnames, FILE_STEREO,
-		rawstartread, rawread, nothing, 	       /* Raw format */
-		rawstartwrite, rawwrite, nothing},
+		rawstartread, rawread, rawstopread, 	       /* Raw format */
+		rawstartwrite, rawwrite, rawstopwrite},
 #if	defined(BLASTER) || defined(SBLAST)
 	/* 386 Unix sound blaster player. */
 	{sbdspnames, FILE_STEREO,
@@ -365,8 +366,8 @@ EXPORT format_t formats[] = {
 		sbdspstartwrite, sbdspwrite, sbdspstopwrite},	
 #endif
 	{sbnames, FILE_STEREO,
-		sbstartread, rawread, nothing, 	          /* signed byte raw */
-		sbstartwrite, rawwrite, nothing},	
+		sbstartread, rawread, rawstopread, 	  /* signed byte raw */
+		sbstartwrite, rawwrite, rawstopwrite},	
 	{sfnames, FILE_STEREO,
 		sfstartread, rawread, nothing, 	         /* IRCAM Sound File */
 		sfstartwrite, rawwrite, nothing},	    /* Relies on raw */
@@ -389,20 +390,20 @@ EXPORT format_t formats[] = {
 		svxstartread, svxread, svxstopread,            /* Amiga 8SVX */
 		svxstartwrite, svxwrite, svxstopwrite},
 	{swnames, FILE_STEREO,
-		swstartread, rawread, nothing, 	          /* signed word raw */
-		swstartwrite, rawwrite, nothing},
+		swstartread, rawread, rawstopread,        /* signed word raw */
+		swstartwrite, rawwrite, rawstopwrite},
 	{txwnames, 0,
 	        txwstartread, txwread, txwstopread,      /* Yamaha TX16W and */
 	        txwstartwrite, txwwrite, txwstopwrite},        /* SY99 waves */
 	{ubnames, FILE_STEREO,
-		ubstartread, rawread, nothing, 	        /* unsigned byte raw */
-		ubstartwrite, rawwrite, nothing},
+		ubstartread, rawread, rawstopread, 	/* unsigned byte raw */
+		ubstartwrite, rawwrite, rawstopwrite},
 	{ulnames, FILE_STEREO,
-		ulstartread, rawread, nothing, 	           /* u-law byte raw */
-		ulstartwrite, rawwrite, nothing},	
+		ulstartread, rawread, rawstopread, 	   /* u-law byte raw */
+		ulstartwrite, rawwrite, rawstopwrite},	
 	{uwnames, FILE_STEREO,
-		uwstartread, rawread, nothing, 	        /* unsigned word raw */
-		uwstartwrite, rawwrite, nothing},	
+		uwstartread, rawread, rawstopread, 	/* unsigned word raw */
+		uwstartwrite, rawwrite, rawstopwrite},	
 	{vocnames, FILE_STEREO,
 		vocstartread, vocread, vocstopread,    /* Sound Blaster .VOC */
 		vocstartwrite, vocwrite, vocstopwrite},
