@@ -47,6 +47,7 @@ sox-12.17.3
   o Change configure script to enable ulaw/alaw lookup tables and GSM
     support by default.  Also have Makefile's make use of more configure
     prefix options to allow for customized installs.
+  o Reverted ulaw/alaw conversion routines back to Sun's versions.
 
 sox-12.17.2
 -----------

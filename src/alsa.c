@@ -17,6 +17,9 @@
 #include <fcntl.h>
 #include <linux/asound.h>
 #include <sys/ioctl.h>
+#ifdef HAVE_ERRNO_H
+#include <errno.h>
+#endif
 #include "st_i.h"
 
 static int get_format(ft_t ft, int formats, int *fmt);
