@@ -78,7 +78,7 @@ mix: libst.a mix.o
 	$(CC) $(LDFLAGS) -o mix mix.o $(LIBS)
 
 play: play.in
-	$(SED) -e 's|@PREFIX@|$(BINDIR)|g' < play.in > play
+	$(SED) -e 's|@PREFIX@|$(BINDIR)|g' < $(srcdir)/play.in > play
 
 libst.a: $(LIBOBJS)
 	$(AR) libst.a $(LIBOBJS)
