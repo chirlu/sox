@@ -256,7 +256,7 @@ ft_t ft;
     if (size < p_info.min_fragment_size) size = p_info.min_fragment_size;
     if (size > p_info.max_fragment_size) size = p_info.max_fragment_size;
     p_params.buf.block.frag_size = size;
-    p_params.buf.block.frags_max = 32;
+    p_params.buf.block.frags_max = -1; /* Little trick (playback only) */
     p_params.buf.block.frags_min = 1;
     if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_PARAMS, &p_params) < 0) {
 	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
