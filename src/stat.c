@@ -22,7 +22,7 @@
 
 /* Private data for STAT effect */
 typedef struct statstuff {
-	double	min, max;
+	double	min, max, mid;
 	double	asum;
 	double	sum1, sum2;	/* amplitudes */
 	double	dmin, dmax;
@@ -113,7 +113,7 @@ eff_t effp;
 	int i;
 	LONG  bitmask;
 
-	stat->min = stat->max = 0;
+	stat->min = stat->max = stat->mid = 0;
 	stat->asum = 0;
 	stat->sum1 = stat->sum2 = 0;
 
@@ -183,7 +183,7 @@ LONG *isamp, *osamp;
 	if (len==0) return (ST_SUCCESS);
 
 	if (stat->read == 0)	/* 1st sample */
-		stat->min = stat->max = stat->last = (*ibuf)/stat->scale;
+		stat->min = stat->max = stat->mid = stat->last = (*ibuf)/stat->scale;
 
 	if (stat->fft)
 	{
@@ -242,6 +242,7 @@ LONG *isamp, *osamp;
 			stat->min = samp;
 		else if (stat->max < samp)
 			stat->max = samp;
+		stat->mid = stat->min / 2 + stat->max / 2;
 
 		stat->sum1 += samp;
 		stat->sum2 += samp*samp;
@@ -334,6 +335,7 @@ eff_t effp;
 		f = 1.0/rms;
 		stat->max *= f;
 		stat->min *= f;
+		stat->mid *= f;
 		stat->asum *= f;
 		stat->sum1 *= f;
 		stat->sum2 *= f*f;
@@ -367,6 +369,7 @@ eff_t effp;
 		fprintf(stderr, "Scaled by:         %12.1f\n", scale);
 	fprintf(stderr, "Maximum amplitude: %12.6f\n", stat->max);
 	fprintf(stderr, "Minimum amplitude: %12.6f\n", stat->min);
+	fprintf(stderr, "Midline amplitude: %12.6f\n", stat->mid);
 	fprintf(stderr, "Mean    norm:      %12.6f\n", stat->asum/ct);
 	fprintf(stderr, "Mean    amplitude: %12.6f\n", stat->sum1/ct);
 	fprintf(stderr, "RMS     amplitude: %12.6f\n", sqrt(stat->sum2/ct));

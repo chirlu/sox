@@ -48,11 +48,11 @@ FOBJ	= 8svx.o adpcm.o aiff.o au.o auto.o avr.o cdr.o cvsd.o dat.o g721.o \
 	  wav.o wve.o
 
 EOBJ	= avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
-	  copy.o cut.o deemphas.o earwax.o echo.o echos.o fade.o filter.o \
-	  flanger.o highp.o highpass.o lowp.o lowpass.o map.o mask.o pan.o \
-	  phaser.o pick.o pitch.o polyphas.o rate.o resample.o reverb.o \
-	  reverse.o speed.o split.o stat.o stretch.o swap.o synth.o trim.o \
-	  vibro.o vol.o
+	  copy.o cut.o dcshift.o deemphas.o earwax.o echo.o echos.o \
+	  fade.o filter.o flanger.o highp.o highpass.o lowp.o lowpass.o \
+	  map.o mask.o pan.o phaser.o pick.o pitch.o polyphas.o \
+	  rate.o resample.o reverb.o reverse.o silence.o speed.o split.o \
+	  stat.o stretch.o swap.o synth.o trim.o vibro.o vol.o
 
 OSSOBJ_0    =
 OSSOBJ_1    = oss.o

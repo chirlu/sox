@@ -60,6 +60,9 @@ sox-12.17.2
   o Unified the raw reading functions.  Probably slightly faster for
     most datatypes but was done to fix recording from the OSS driver.
     Control-C stopped working somewhere during the 12.17 series.
+  o Ford Prefect added a dcshift which can shift the midline amplitude
+    towards the true center.  This will allow for a greater range
+    of volume adjustments without clipping audio data.
 
 sox-12.17.1
 -----------

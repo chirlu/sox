@@ -140,11 +140,16 @@ streams.
 .TP 20 
 flow
 is called with input and output data buffers,
-and (by reference) the input and output data sizes.
+and (by reference) the input and output data buffer sizes.
 It processes the input buffer into the output buffer,
 and sets the size variables to the numbers of samples
 actually processed.
-It is under no obligation to fill the output buffer.
+It is under no obligation to read from the input buffer or
+write to the output buffer during the same call.  If the
+call returns 0 for both input and output sizes then this will
+indicate that it no longer expects to process
+samples and the application program can start calling the drain
+operation.
 .TP 20 
 drain
 is called after there are no more input data samples.

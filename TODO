@@ -1,6 +1,8 @@
 People are encouraged to pick some of these and implement it.  Send
 all patches to cbagwell@sprynet.com.
 
+  o Add in manual page entries for silence and dcshift.
+
   o Make a global version of MIN/MAX instead of sprinkled min/max/MIN/MAX
 
   o Unify the raw writing functions to work line the raw reading functions.

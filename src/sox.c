@@ -781,7 +781,7 @@ checkeffect()
 	if (haschan > 1)
 	    st_fail("Can not specify multiple effects that modify channel #");
 	if (hasrate > 1)
-	    st_fail("Can not specify multiple effects that change sampel rate");
+	    st_fail("Can not specify multiple effects that change sample rate");
 	if (haschan && !needchan)
 	    st_fail("Can not specify channel effects when input and output channel # are equal");
 	if (hasrate && !needrate)
@@ -907,7 +907,7 @@ checkeffect()
 	    neffects++;
         }
 
-	/* If code up until know still hasn't added avg effect then
+	/* If code up until now still hasn't added avg effect then
 	 * do it now.
 	 */
 	if (needchan && !(effects_mask & ST_EFF_CHAN))

@@ -534,6 +534,11 @@ extern int st_cut_start();
 extern int st_cut_flow();
 extern int st_cut_stop();
 
+extern int st_dcshift_getopts();
+extern int st_dcshift_start();
+extern int st_dcshift_flow();
+extern int st_dcshift_stop();
+
 extern int st_deemph_getopts();
 extern int st_deemph_start();
 extern int st_deemph_flow();
@@ -649,6 +654,12 @@ extern int st_reverse_flow();
 extern int st_reverse_drain();
 extern int st_reverse_stop();
 
+extern int st_silence_getopts();
+extern int st_silence_start();
+extern int st_silence_flow();
+extern int st_silence_drain();
+extern int st_silence_stop();
+
 extern int st_speed_getopts();
 extern int st_speed_start();
 extern int st_speed_flow();
@@ -734,6 +745,9 @@ st_effect_t st_effects[] = {
 	{"cut", ST_EFF_MCHAN, 
 		st_cut_getopts, st_cut_start, st_cut_flow, 
 		st_null_drain, st_nothing},
+	{"dcshift", ST_EFF_MCHAN, 
+		st_dcshift_getopts, st_dcshift_start, st_dcshift_flow, 
+		st_null_drain, st_dcshift_stop},
 	{"deemph", ST_EFF_MCHAN,
 	        st_deemph_getopts, st_deemph_start, st_deemph_flow,
 	        st_null_drain, st_deemph_stop},
@@ -800,6 +814,9 @@ st_effect_t st_effects[] = {
 	{"reverse", 0, 
 		st_reverse_getopts, st_reverse_start, 
 		st_reverse_flow, st_reverse_drain, st_reverse_stop},
+	{"silence", 0, 
+		st_silence_getopts, st_silence_start, 
+		st_silence_flow, st_silence_drain, st_silence_stop},
 	{"speed", 0, 
 		st_speed_getopts, st_speed_start, 
 		st_speed_flow, st_speed_drain, st_speed_stop},
