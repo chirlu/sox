@@ -1417,7 +1417,7 @@ LONG *buf, len;
 		if (top>p+len) top = p+len;
 		len -= top-p; /* update residual len */
 		while (p < top)
-		   *p++ = ((*buf++) + 0x8000) >> 16;
+		   *p++ = (*buf++) >> 16;
 
 		wav->samplePtr = p;
 		if (p == wav->sampleTop)

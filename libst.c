@@ -57,6 +57,7 @@ short sample;
 
     /* Get the sample into sign-magnitude. */
     sign = (sample >> 8) & 0x80;		/* set aside the sign */
+    if (sample < -uCLIP) sample = -uCLIP; /* prevent wrap-around in next step */
     if ( sign != 0 ) sample = -sample;		/* get magnitude */
     if ( sample > uCLIP ) sample = uCLIP;		/* clip the magnitude */
 

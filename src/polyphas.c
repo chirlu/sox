@@ -31,6 +31,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include "st.h"
 
 #define Float float/*double*/
@@ -522,6 +523,17 @@ static void update_hist(Float *hist, int hist_size, int in_size)
 
 }
 
+static Float FLONG_MAX = LONG_MAX;
+
+static LONG clipfloat(Float sample)
+{
+	if (sample > FLONG_MAX)
+	return LONG_MAX;
+	if (sample < -FLONG_MAX)
+	return -LONG_MAX;
+	return sample;
+}
+
 int st_poly_flow(eff_t effp, LONG *ibuf, LONG *obuf, LONG *isamp, LONG *osamp)
 {
   poly_t rate = (poly_t) effp->priv;
@@ -598,7 +610,7 @@ int st_poly_flow(eff_t effp, LONG *ibuf, LONG *obuf, LONG *isamp, LONG *osamp)
 		if (out_size > oskip + *osamp) out_size = oskip + *osamp;
 
     for(q=obuf, k=oskip; k < out_size; k++)
-      *q++ = out_buf[k] * ISCALE; /* should clip-limit */
+      *q++ = clipfloat(out_buf[k] * ISCALE); /* should clip-limit */
 
 		*osamp = q-obuf;
 		rate->inpipe -= *osamp;

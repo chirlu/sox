@@ -185,6 +185,9 @@ by you the user.  Thank you very much for making SoX a success!
 		Chris Bagwell		cbagwell@sprynet.com
 			OSS and Sun players, bugfixes, ADPCM support,
 			patch collection and maintance.
+		Matthias Nutt
+			Multiple effects from command line.
+
 		(your name could be here, too)
 		(I've probably lost a few, and several people fixed
 		 the same bugs.)

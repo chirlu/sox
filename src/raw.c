@@ -346,31 +346,31 @@ LONG *buf, nsamp;
 #	ifdef MAXWSPEED
 			q -= 4;
 			while (p<q) {
-				p[0] = st_swapw((buf[0] + 0x8000) >> 16); /* round for 16 bit */
-				p[1] = st_swapw((buf[1] + 0x8000) >> 16); /* round for 16 bit */
-				p[2] = st_swapw((buf[2] + 0x8000) >> 16); /* round for 16 bit */
-				p[3] = st_swapw((buf[3] + 0x8000) >> 16); /* round for 16 bit */
+				p[0] = st_swapw(buf[0] >> 16); 
+				p[1] = st_swapw(buf[1] >> 16); 
+				p[2] = st_swapw(buf[2] >> 16); 
+				p[3] = st_swapw(buf[3] >> 16); 
 				p += 4; buf += 4;
 			}
 			q += 4;
 #	endif
 			while (p<q) {
-				*p++ = st_swapw(((*buf++) + 0x8000) >> 16); /* round for 16 bit */
+				*p++ = st_swapw((*buf++) >> 16); 
 			}
 		} else {
 #	ifdef MAXWSPEED
 			q -= 4;
 			while (p<q) {
-				p[0] = (buf[0] + 0x8000) >> 16; /* round for 16 bit */
-				p[1] = (buf[1] + 0x8000) >> 16; /* round for 16 bit */
-				p[2] = (buf[2] + 0x8000) >> 16; /* round for 16 bit */
-				p[3] = (buf[3] + 0x8000) >> 16; /* round for 16 bit */
+				p[0] = buf[0] >> 16; 
+				p[1] = buf[1] >> 16; 
+				p[2] = buf[2] >> 16; 
+				p[3] = buf[3] >> 16; 
 				p += 4; buf += 4;
 			}
 			q += 4;
 #	endif
 			while (p<q) {
-				*p++ = ((*buf++) + 0x8000) >> 16; /* round for 16 bit */
+				*p++ = (*buf++) >> 16; 
 			}
 		}
 	}
@@ -412,11 +412,9 @@ LONG *buf, nsamp;
 				return done;
 			case ST_ENCODING_ULAW:
 				while(done < nsamp) {
-					int datum;
+					short datum;
 					/* scale signed up to long's range */
-					datum = (int) RIGHT(*buf++, 16);
-					/* round up to 12 bits of data */
-					datum += 0x8;	/* + 0b1000 */
+					datum = (short) RIGHT(*buf++, 16);
 					datum = st_linear_to_ulaw(datum);
 					blockputc(ft, datum);
 					done++;
@@ -446,7 +444,7 @@ LONG *buf, nsamp;
 					int datum;
 					unsigned short s;
 					/* scale signed up to long's range */
-					datum = *buf++ + 0x8000; /* round for 16 bit */
+					datum = *buf++; 
 					s = RIGHT(datum, 16) ^ 0x8000;
 					/* Convert to unsigned */
 					blockw(&s, sizeof(short),ft);
