@@ -57,12 +57,14 @@ install the GSM library on your system.  More information on it
 can be obtained from http://www.cs.tu-berlin.de/~jutta/toast.html
 After installing the GSM library you must point to this file by
 commenting and modifying the appropriate section of the Makefile.
+The "configure" script should be able to detect the installation of
+the external GSM library and compile in support on its own.
 
 Optional Compile Options
 ------------------------
 
 If you're processing lots of u-law or a-law files, you should
-define FAST_ULAW_COMPRESSION and/or FAST_ALAW_COMPRESSION in your 
+define FAST_ULAW_CONVERSION and/or FAST_ALAW_CONVERSION in your 
 Makefile.  These substitute a table-based method for the standard method.
 The tables are 32K, so if you don't want them, you don't have to
 use them.  It is automatically added to your Makefile if you run

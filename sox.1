@@ -9,7 +9,7 @@
 .if t .sp .5v
 .if n .sp
 ..
-.TH SoX 1 "November 22, 1999"
+.TH SoX 1 "December 10, 1999"
 .SH NAME
 sox \- Sound eXchange : universal sound sample translator
 .SH SYNOPSIS
@@ -24,9 +24,9 @@ sox \- Sound eXchange : universal sound sample translator
 .B sox
 [\fI general options \fB ]
 [ \fIformat options \fB ]
-\fIifile\fB 
+\fIinfile\fB 
 [ \fIformat options \fB ]
-\fIofile\fB 
+\fIoutfile\fB 
 [ \fIeffect\fR [ \fIeffect options ...\fB ] ]
 .P
 \fIGeneral options:\fB
@@ -105,18 +105,53 @@ sox \- Sound eXchange : universal sound sample translator
 .br
 	vibro \fIspeed \fB[ \fIdepth\fB ]
 .SH DESCRIPTION
-.I Sox
-translates sound files from one format to another,
-possibly doing a sound effect.
+.I SoX
+is a command line program that can convert most popular audio files
+to most other popular audio file formats.  It can optionally apply a
+sound effect to the file during this translation.
+.P
+There are two types of audio files formats that
+.I SoX
+can work with.  The first are self-describing file formats.  These
+contain a header that completely describe the characteristics of
+the audio data that follows.
+.P
+The second type are headerless data, or sometimes called raw data.  A
+user must pass enough information to
+.I SoX
+on the command line so that it knows what type of data it contains.
+.P
+Audio data can usually be totally described by four characteristics:
+.TP 10
+rate
+The sample rate is in samples per second.  For example, CD sample rates are at 44100.
+.TP 10 
+data type
+What format the data is stored in.  Most popular are 8-bit or 16-bit words.
+.TP 10
+data format
+What encoding the data type uses.  Examples are u-law, ADPCM, or signed linear data.
+.TP 10
+channels
+How many channels are contained in the audio data.  Mono and Stereo are the two most common.
+.P
+Please refer to the
+.B soxexam(1)
+manual page for a long description with examples on how to use sox with
+various types of file formats.
 .SH OPTIONS
 The option syntax is a little grotty, but in essence:
+.P
 .br
 	sox file.au file.voc 
+.P
 .br
-translates a sound sample in SUN Sparc .AU format 
+translates a sound file in SUN Sparc .AU format 
 into a SoundBlaster .VOC file, while
+.P
 .br
 	sox -v 0.5 file.au -r 12000 file.voc rate
+.P
 .br
 does the same format translation but also 
 lowers the amplitude by 1/2 and changes
@@ -127,12 +162,12 @@ the
 .PP
 Format options:
 .PP
-Format options effect the file that they immediately percede.  If
+Format options effect the audio samples that they immediately percede.  If
 they are placed before the input file name then they effect the input
 data.  If they are placed before the output file name then they will
-effect the output data.  It is also possible to read a given file in
-and output it in any supported data format by specifying output format
-options.
+effect the output data.  By taking advantage of this, you can override
+a input file's currupted header or produce an output file that is totally
+different style then the input file.
 .TP 10
 \fB-t\fI filetype
 gives the type of the sound sample file.
@@ -147,7 +182,7 @@ sample rate changing effect is not specified then a default one will be
 used with its default parameters.
 .TP 10
 \fB-s/-u/-U/-A/-a/-i/-g\fR
-The sample data is signed linear (2's complement),
+The sample data format is signed linear (2's complement),
 unsigned linear, U-law (logarithmic), A-law (logarithmic),
 ADPCM, IMA_ADPCM, or GSM.
 U-law and A-law are the U.S. and international
@@ -163,7 +198,7 @@ European countries and its gaining popularity because of its
 quality.
 .TP 10
 \fB-b/-w/-l/-f/-d/-D\fR
-The sample data is in bytes, 16-bit words, 32-bit longwords,
+The sample data type is in bytes, 16-bit words, 32-bit longwords,
 32-bit floats, 64-bit double floats, or 80-bit IEEE floats.
 Floats and double floats are in native machine format.
 .TP 10
@@ -189,9 +224,10 @@ command line it will be invoked with default parameters.
 General options:
 .TP 10
 \fB-e\fR
-after the input file allows you to avoid giving
-an output file and just name an effect.
-This is mainly useful with the 
+When used after the input file (so that it applies to the output file)
+it allows you to avoid giving an output filename and will not
+produce an output file.  It will apply any specified effects
+to the input file.  This is mainly useful with the
 .B stat
 effect but can be used with others.
 .TP 10
@@ -217,48 +253,20 @@ Print a description of processing phases.
 Useful for figuring out exactly how
 .I sox
 is mangling your sound samples.
-.PP
-The input and output files may be standard input and output.
-This is specified by '-'.
-The 
-.B -t\ \fItype
-option must be given in this case,
-else 
-.I sox 
-will not know the format of the given file.
-The
-.B -t,
-.B -r,
-.B -s/-u/-U/-A,
-.B -b/-w/-l/-f/-d/-D
-and
-.B -x
-options refer to the input data when given before the
-input file name.  After, they refer to the output data.
-.PP
-If you don't give an output file name,
-.I sox
-will just read the input file.
-This is useful for validating structured file formats;
-the 
-.B stat 
-effect may also be used
-via the 
-.B -e
-option.
 .SH FILE TYPES
-.I Sox
-needs to know the formats of the input and output files.
+.I SoX
+uses the file extension of the input and output file to determine what
+type of file format to use.  This can be overriden by specifying the
+"-t" option on the command line.
+.P
+The input and output files may be read from standard in and out.  This
+is done by specifing '-' as the filename.
+.P
 File formats which have headers are checked, 
 if that header doesn't seem right,
 the program exits with an appropriate message.
-Currently, raw (no header) binary and textual data, 
-Amiga 8SVX, Apple/SGI AIFF, SPARC .AU (w/header), AVR, NeXT .SND,
-CD-R, CVSD, GSM 06.10, Mac HCOM, Sound Tools MAUD, OSS device drivers,
-Turtle Beach .SMP, Sound Blaster, Sndtool, and Sounder,
-Sun Audio device driver,
-Yamaha TX-16W Sampler, IRCAM Sound Files,  Creative Labs VOC,
-Psion .WVE, and Microsoft RIFF/WAV are supported.
+.P
+The following file formats are supported:
 .PP
 .TP 10
 .B .8svx
@@ -440,10 +448,7 @@ specified for an input file. If any are, they will
 override the file header, and you will be warned to this effect.
 You had better know what you are doing! Output format
 options will cause a format conversion, and the \fB.wav\fR
-will written appropriately.  Note that it is possible to
-write data of a type that cannot be specified by
-the \fB.wav\fR header, and you will be warned that
-you are writing a bad file !
+will written appropriately.
 Sox currently can read PCM, ULAW, ALAW, MS ADPCM, and IMA (or DVI) ADPCM.
 It can write all of these formats including
 .B (NEW!)
@@ -530,6 +535,12 @@ i.e. peaking at the
 .I center
 frequency and settling around it.
 See \fBfilter\fR for a bandpass effect with steeper shoulders.
+.TP 10
+bandpass
+Butterworth bandpass filter. Description coming soon!
+.TP 10
+bandreject
+Butterworth bandreject filter.  Description coming soon!
 .TP
 chorus \fIgain-in gain-out delay decay speed depth 
 .TP 10
@@ -628,6 +639,9 @@ frequency in the middle of the drop.
 The slope of the filter is quite gentle.
 See \fBfilter\fR for a highpass effect with sharper cutoff.
 .TP 10
+highpass
+Butterworth highpass filter.  Description comming soon!
+.TP 10
 lowp \fIcenter
 Apply a low-pass filter.
 The frequency response drops logarithmically with 
@@ -635,6 +649,9 @@ The frequency response drops logarithmically with
 frequency in the middle of the drop.
 The slope of the filter is quite gentle.
 See \fBfilter\fR for a lowpass effect with sharper cutoff.
+.TP 10
+lowpass
+Butterworth lowpass filter.  Description coming soon!
 .TP 10
 map 
 Display a list of loops in a sample,
@@ -711,7 +728,7 @@ but for CD-quality sound you should instead use either
 or
 .B polyphase.
 If you are wondering which of
-.B Sox's
+.B SoX's
 rate changing effects to use, you will want to read a
 detailed analysis of all of them at http://eakaw2.et.tu-dresden.de/~andreas/resample/resample.html
 [Nov,1999: These tests need to be updated for sox-12.17, which has bugfixes to the
@@ -864,31 +881,16 @@ the
 ." or other channel mixing
 effect must be requested.
 .SH BUGS
-The syntax is horrific.
-It's very tempting to include a default system that allows
-an effect name as the program name
-and just pipes a sound sample from standard input 
-to standard output, but the problem of inputting the
-sample rates makes this unworkable.
+The syntax is horrific.  Thats the breaks when trying to handle all things from the command line.
 .P
 Please report any bugs found in this version of sox to Chris Bagwell (cbagwell@sprynet.com)
 .SH FILES
 .SH SEE ALSO
-.BR play (1) ,
-.BR rec (1)
+.BR play (1),
+.BR rec (1),
+.BR soxexam(1)
 .SH NOTICES
-The echoplex effect is:
-Copyright (C) 1989 by Jef Poskanzer.
-
-Permission to use, copy, modify, and distribute this software and its
-documentation for any purpose and without fee is hereby granted, provided
-that the above copyright notice appear in all copies and that both that
-copyright notice and this permission notice appear in supporting
-documentation.  This software is provided "as is" without express or
-implied warranty.
-
 The version of Sox that accompanies this manual page is support by 
 Chris Bagwell (cbagwell@sprynet.com).  Please refer any questions 
 regarding it to this address.  You may obtain the latest version at the 
 the web site http://home.sprynet.com/~cbagwell/sox.html
-

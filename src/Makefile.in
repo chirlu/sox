@@ -72,8 +72,9 @@ libst.a: $(LIBOBJS)
 	$(AR) libst.a $(LIBOBJS)
 	$(RANLIB) libst.a
 
-man: sox.1 libst.3
+man: sox.1 soxexam.1 libst.3
 	nroff -man sox.1 | col -b > sox.txt
+	nroff -man soxexam.1 | col -b > soxexam.txt
 	nroff -man libst.3 | col -b > libst.txt
 
 PLAY_INSTALL_0    =
@@ -82,6 +83,7 @@ PLAY_INSTALL_1    = install-play
 install: sox $(PLAY_INSTALL_$(PLAY_SUPPORT))
 	$(INSTALL) -c -m 755 sox $(BINDIR)
 	$(INSTALL) -c -m 644 sox.1 $(MANDIR)/man1
+	$(INSTALL) -c -m 644 soxexam.1 $(MANDIR)/man1
 
 install-play:
 	if [ -f $(BINDIR)/rec ] ; then $(RM) $(BINDIR)/rec; fi

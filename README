@@ -2,7 +2,7 @@
 
 
 SoX (also known as Sound eXchange) translates sound samples between different
-file formats, and optionally performs various sound effects.  
+file formats, and optionally performs various sound effects.
 
 This release understands:
 
@@ -10,8 +10,9 @@ This release understands:
   o Raw textual data
   o Microsoft .WAV files
     o PCM, u-law, a-law
-    o MS ADPCM (Read only)
-    o IMA ADPCM (Read only)
+    o MS ADPCM
+    o IMA ADPCM
+    o GSM
   o MAUD files
   o Sound Blaster .VOC files
   o IRCAM SoundFile files
@@ -31,31 +32,28 @@ This release understands:
 The sound effects include:
 
   o Channel Averaging
-  o Band-pass filter
+  o Band-pass filters
+  o Band-reject filter
   o Chorus effect
   o Cut out loop samples
   o Add an echo 
   o Add a sequence of echos
   o Apply a flanger effect
-  o Apply a high-pass filter
-  o Apply a low-pass filter
+  o Apply a high-pass filters
+  o Apply a low-pass filters
   o Display a list of loops in a file
   o Add masking noise to a signal
   o Apply a phaser effect
   o Convert from stereo to mono
-  o Change sampling rates using several different algorithms.
+  o Change sampling rates using several different algorithms.A
+     'resample' and 'poyphase' effect use high-grade signal rate
+     changes using real signal theory!
   o Apply a reverb effect
   o Reverse the sound samples (to search for Satanic messages ;-)
   o Convert from mono to stereo
   o Swap stereo channels
   o Display general stats on a sound sample
   o Add the world-famous Fender Vibro-Champ effect
-
-Big news! Lots of new effects have been added.  This includes most the
-popular "Guitar Effects" talked about in the same named FAQ available.
-
-The 'resample' and 'polyphase' effect does high-grade signal rate
-changes using real signal theory.  Yes, it's very slow.
 
 History:
 
@@ -66,6 +64,9 @@ Bagwell (cbagwell@sprynet.com), have started maintaining it since
 1996 to the present.
 
 Caveats:
+
+Technically, SoX is made up of a sound file processing library called libst
+and SoX is a program implemented using this library.
 
 SoX is intended as the Swiss Army knife of sound processing tools.  It 
 doesn't do anything very well, but sooner or later it comes in very handy.
@@ -78,15 +79,9 @@ Unless your using a precompiled binary version, you will need to compile
 SoX as described in the INSTALL file.  Please read that file for further
 instructions.
 
-Now, read TIPS, CHEAT.eft and CHEAT.  These give a background on how
+Now, read sox.txt and soxexam.txt.  This gives a background on how
 SoX deals with sound files and how to convert this format
 to that format, and apply various effects.
-
-SoX uses file suffices to determine the nature of a sound sample file.
-If it finds the suffix in its list, it uses the appropriate read
-or write handler to deal with that file.  You may override the suffix
-by giving a different type via the '-t type' argument.  See the manual
-page for more information.
 
 SoX has an auto-detect feature that attempts to figure out
 the nature of an unmarked sound sample.  It works very well.
@@ -95,11 +90,6 @@ This feature is used if you specify '-t auto' for the file type.
 I hope to inspire the creation of a common base of sound processing
 tools for computer multimedia work, similar to the PBM toolkit for 
 image manipulation.
-
-Sound Tools may be used for any purpose.  Source distributions must
-must include the copyright notices, and (lack of) warranty information.
-Binary distributions must include acknowledgements to the creators.
-Files are copyright by their respective authors.
 
 If you have bug fixes/enhancements, please send it to me as I would like
 to coordinate the releases.  Please document your changes.  I don't 
