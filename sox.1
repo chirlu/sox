@@ -136,7 +136,10 @@ options.
 gives the type of the sound sample file.
 .TP 10
 \fB-r \fIrate\fR
-Give sample rate in Hertz of file.  If the input and output files have
+Give sample rate in Hertz of file.  To cause the output file to have
+a different sample rate then the input file, include this option
+with the appropriate rate value along with the output options.
+If the input and output files have
 different rates then a sample rate change effect must be ran.  If a
 sample rate changing effect is not specified then a default one will be
 used with its default parameters.
@@ -170,10 +173,13 @@ IEEE floats are a fixed, portable format.
 .TP 10
 \fB-c \fIchannels\fR
 The number of sound channels in the data file.
-This may be 1, 2, or 4; for mono, stereo, or quad sound data.  If an
-input and output file have a different number of channels then the
-average effect must be used.  If it is not specified on the command line
-it will be invoked with default parameters.
+This may be 1, 2, or 4; for mono, stereo, or quad sound data.  To cause
+the output file to have a different number of channels then the input
+file, include this option with the approraite value with the output
+file options.  
+If the input and output file have a different number of channels then the
+avg effect must be used.  If the avg effect is not specified on the 
+command line it will be invoked with default parameters.
 .PP
 General options:
 .TP 10
