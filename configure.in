@@ -136,10 +136,10 @@ then
     if test "$found_ogg_vorbis" = yes
     then
         AC_CHECK_LIB(vorbis, vorbis_analysis_init,
-                     LIBS="$LIBS -logg -lvorbis -lvorbisfile -lvorbisenc"
+                     LIBS="-lvorbisfile -lvorbisenc -lvorbis -logg $LIBS"
                      AC_DEFINE([HAVE_LIBVORBIS], 1, 
 		               [Define if you have Ogg Vorbis Library installed]),
-	             enable_ogg_vorbis=no)
+	             enable_ogg_vorbis=no, -logg)
     fi
 fi
 

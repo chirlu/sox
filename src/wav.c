@@ -1086,7 +1086,11 @@ int st_wavstopread(ft_t ft)
     if (wav->samples) free(wav->samples);
     if (wav->iCoefs) free(wav->iCoefs);
 
-    if (wav->comment) free(ct->comment);
+    if (ft->comment) 
+    {
+        free(ft->comment);
+        ft->comment = 0;
+    }
 
     switch (ft->info.encoding)
     {

@@ -40,6 +40,8 @@ sox-12.17.5
   o Bugfix for 8-bit voc files.  Jimen Ching
   o General warning cleanups (cbagwell)
   o Memory leaks in reading WAV files (Ufuk Kayserilioglu)
+  o Rearrange link order of ogg vorbis libraries so that they
+    can be compiled as static. (Christian Weisgerbr)
 
 sox-12.17.4
 -----------
