@@ -94,29 +94,10 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
 
     fade->out_start_str = fade->out_stop_str = 0;
 
-    for (t_argno = 1; t_argno < n && t_argno <= 3; t_argno++)
+    for (t_argno = 1; t_argno < n && t_argno < 3; t_argno++)
     {
         /* See if there is fade-in/fade-out times/curves specified. */
         if(t_argno == 1)
-        {
-            fade->out_start_str = malloc(strlen(argv[t_argno])+1);
-            fade->out_stop_str = 0;
-            if (!fade->out_start_str)
-            {
-                st_fail("Could not allocate memory");
-                return (ST_EOF);
-            }
-             strcpy(fade->out_start_str,argv[t_argno]);
-
-	     /* Do a dummy parse to see if it will fail */
-	     if (st_parsesamples(0, fade->out_start_str, 
-			 &fade->out_start, 't') != ST_SUCCESS)
-	     {
-		 st_fail(FADE_USAGE);
-		 return(ST_EOF);
-	     }
-        }
-        else
         {
             fade->out_stop_str = malloc(strlen(argv[t_argno])+1);
             if (!fade->out_stop_str)
@@ -129,6 +110,24 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
 	     /* Do a dummy parse to see if it will fail */
 	     if (st_parsesamples(0, fade->out_stop_str, 
 			 &fade->out_stop, 't') != ST_SUCCESS)
+	     {
+		 st_fail(FADE_USAGE);
+		 return(ST_EOF);
+	     }
+        }
+        else
+        {
+            fade->out_start_str = malloc(strlen(argv[t_argno])+1);
+            if (!fade->out_start_str)
+            {
+                st_fail("Could not allocate memory");
+                return (ST_EOF);
+            }
+             strcpy(fade->out_start_str,argv[t_argno]);
+
+	     /* Do a dummy parse to see if it will fail */
+	     if (st_parsesamples(0, fade->out_start_str, 
+			 &fade->out_start, 't') != ST_SUCCESS)
 	     {
 		 st_fail(FADE_USAGE);
 		 return(ST_EOF);
@@ -155,12 +154,8 @@ int st_fade_start(eff_t effp)
         st_fail(FADE_USAGE);
         return(ST_EOF);
     }
-    if (st_parsesamples(effp->ininfo.rate, fade->out_start_str,
-                        &fade->out_start, 't') != ST_SUCCESS)
-    {
-        st_fail(FADE_USAGE);
-        return(ST_EOF);
-    }
+
+    /* See if user specified a stop time */
     if (fade->out_stop_str)
     {
         if (st_parsesamples(effp->ininfo.rate, fade->out_stop_str,
@@ -170,9 +165,31 @@ int st_fade_start(eff_t effp)
             return(ST_EOF);
         }
 	fade->out_stop += fade->out_start;
+
+	/* See if user wants to fade out. */
+	if (fade->out_start_str)
+	{
+	    if (st_parsesamples(effp->ininfo.rate, fade->out_start_str,
+			&fade->out_start, 't') != ST_SUCCESS)
+	    {
+		st_fail(FADE_USAGE);
+		return(ST_EOF);
+	    }
+	    /* Fade time is relative to stop time. */
+	    fade->out_start = fade->out_stop - fade->out_start;
+
+	}
+	else
+	    /* If user doesn't want to fade out then set to stop
+	     * time.
+	     */
+	    fade->out_start = fade->out_stop;
     }
     else
-        fade->out_stop = fade->out_start;
+	/* If not specified then user doesn't wants to process all 
+	 * of file.  Use a value of zero to indicate this.
+	 */
+        fade->out_stop = 0;
 
     /* Sanity check for fade times vs total time */
     if (fade->in_stop > fade->out_start && fade->out_start != 0)
