@@ -74,6 +74,9 @@ all patches to cbagwell@users.sourceforge.net.
 
   o Add command line option to override comment string.
 
+  o WAV handler is not using world alignment for at least the
+    main data chunk (expect for GSM).
+
   o Add support for .TXT format as Cooledit supports.  Not really fit for
     graphing since it is only a stream of ascii sample values but some
     program appear to like it.  Also has a much nicer header.
