@@ -246,18 +246,10 @@ ft_t ft;
 			    st_readb(ft, (unsigned char *)&trash);
 		}
 		else if (strncmp(buf, "ANNO", 4) == 0) {
-			/* Old form of comment chunk */
-			st_readdw(ft, &chunksize);
-			/* allocate enough memory to hold the comment */
-			ft->comment = (char *) malloc((size_t) chunksize);
-			if (ft->comment == NULL)
+			rc = textChunk(&(ft->comment), "Annotation:", ft);
+			if (rc)
 			{
-			  fail("AIFF: Couldn't allocate ANNO header");
-			  return(ST_EOF);
-			}
-			if (fread(ft->comment, 1, chunksize, ft->fp) != chunksize)
-			{
-			  fail("AIFF: Unexpected EOF in ANNO header");
+				/* Fail already called in function */
 			  return(ST_EOF);
 			}
 		}
@@ -476,6 +468,16 @@ ft_t ft;
     return(ST_EOF);
   }
   *(*text + chunksize) = '\0';
+	if (chunksize % 2)
+	{
+		/* Read past pad byte */
+		char c;
+		if (fread(&c, 1, 1, ft->fp) != 1)
+		{
+			fail("AIFF: Unexpected EOF in %s header", chunkDescription);
+			return(ST_EOF);
+		}
+	}
   if(verbose) {
     printf("%-10s   \"%s\"\n", chunkDescription, *text);
   }
