@@ -24,6 +24,8 @@ sox-12.17.4
     effect.
   o Jimen Ching sent in a fix for multi-channel sound file processing
     using the avg effect.
+  o Richards Bannister added patches to clean up prototypes and filter
+    private sizes being to small.
 
 sox-12.17.3
 -----------

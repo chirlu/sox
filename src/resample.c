@@ -393,7 +393,7 @@ int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 		st_sample_t Isamp, Osamp;
 		Isamp = isamp_res;
 		Osamp = osamp_res;
-		rc = st_resample_flow(effp, NULL, Obuf, &Isamp, &Osamp);
+		rc = st_resample_flow(effp, NULL, Obuf, (st_size_t *)&Isamp, (st_size_t *)&Osamp);
 		if (rc)
 		    return rc;
 	  /* fprintf(stderr,"DRAIN isamp,osamp  (%d,%d) -> (%d,%d)\n",

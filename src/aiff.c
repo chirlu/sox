@@ -95,7 +95,7 @@ int st_aiffstartread(ft_t ft)
 	double rate = 0.0;
 	uint32_t offset = 0;
 	uint32_t blocksize = 0;
-	int foundcomm = 0, foundmark = 0, foundinstr = 0;
+	int foundcomm = 0, foundmark = 0, foundinstr = 0, is_sowt = 0;
 	struct mark {
 		unsigned short id;
 		uint32_t position;
@@ -145,7 +145,9 @@ int st_aiffstartread(ft_t ft)
 		if (st_reads(ft, buf, 4) == ST_EOF)
 		{
 			if (ssndsize > 0)
+			{
 				break;
+			}
 			else
 			{
 				st_fail_errno(ft,ST_EHDR,"Missing SSND chunk in AIFF file");
@@ -164,7 +166,13 @@ int st_aiffstartread(ft_t ft)
 			{
 			    st_reads(ft, buf, 4);
 			    chunksize -= 4;
-			    if (strncmp(buf, "NONE", 4) != 0)
+			    if (strncmp(buf, "sowt", 4) == 0)
+			    {
+			    	/* CD audio as read on Mac OS machines */
+			    	/* Need to endian swap all the data */
+			    	is_sowt = 1;
+			    }
+			    else if (strncmp(buf, "NONE", 4) != 0)
 			    {
 				buf[4] = 0;
 				st_fail_errno(ft,ST_EHDR,"Can not support AIFC files that contain compressed data: %s",buf);
@@ -213,7 +221,7 @@ int st_aiffstartread(ft_t ft)
 				st_readb(ft, &len);
 				chunksize -= len + 1;
 				for(j = 0; j < len ; j++) 
-				    st_readb(ft, &(marks[i].name[j]));
+				    st_readb(ft, (unsigned char *)&(marks[i].name[j]));
 				marks[i].name[j] = 0;
 				if ((len & 1) == 0) {
 					chunksize--;
@@ -229,10 +237,10 @@ int st_aiffstartread(ft_t ft)
 		else if (strncmp(buf, "INST", 4) == 0) {
 			/* INST chunk */
 			st_readdw(ft, &chunksize);
-			st_readb(ft, &(ft->instr.MIDInote));
+			st_readb(ft, (unsigned char *)&(ft->instr.MIDInote));
 			st_readb(ft, (unsigned char *)&trash8);
-			st_readb(ft, &(ft->instr.MIDIlow));
-			st_readb(ft, &(ft->instr.MIDIhi));
+			st_readb(ft, (unsigned char *)&(ft->instr.MIDIlow));
+			st_readb(ft, (unsigned char *)&(ft->instr.MIDIhi));
 			/* Low  velocity */
 			st_readb(ft, (unsigned char *)&trash8);
 			/* Hi  velocity */
@@ -402,6 +410,13 @@ int st_aiffstartread(ft_t ft)
 
 	aiff->nsamples = ssndsize / ft->info.size;	/* leave out channels */
 
+	/* Cope with 'sowt' CD tracks as read on Macs */
+	if (is_sowt)
+	{
+		aiff->nsamples -= 4;
+		ft->swap = ft->swap ? 0 : 1;
+	}
+	
 	if (foundmark && !foundinstr)
 	{
 	    st_report("Ignoring MARK chunk since no INSTR found.");
@@ -841,7 +856,7 @@ static double read_ieee_extended(ft_t ft)
 		st_fail_errno(ft,ST_EOF,"EOF while reading IEEE extended number");
 		return(ST_EOF);
 	}
-	return ConvertFromIeeeExtended(buf);
+	return ConvertFromIeeeExtended((unsigned char *)buf);
 }
 
 static void write_ieee_extended(ft_t ft, double x)

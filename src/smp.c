@@ -86,9 +86,9 @@ static int readtrailer(ft_t ft, struct smptrailer *trailer)
 		st_readdw(ft, &(trailer->loops[i].end));
 		ft->loops[i].length = 
 			trailer->loops[i].end - trailer->loops[i].start;
-		st_readb(ft, &(trailer->loops[i].type));
+		st_readb(ft, (unsigned char *)&(trailer->loops[i].type));
 		ft->loops[i].type = trailer->loops[i].type;
-		st_readw(ft, &(trailer->loops[i].count));
+		st_readw(ft, (unsigned short *)&(trailer->loops[i].count));
 		ft->loops[i].count = trailer->loops[i].count;
 	}
 	for(i = 0; i < 8; i++) {	/* read the 8 markers */
@@ -99,7 +99,7 @@ static int readtrailer(ft_t ft, struct smptrailer *trailer)
 		}
 		st_readdw(ft, &(trailer->markers[i].position));
 	}
-	st_readb(ft, &(trailer->MIDInote));
+	st_readb(ft, (unsigned char *)&(trailer->MIDInote));
 	st_readdw(ft, &(trailer->rate));
 	st_readdw(ft, &(trailer->SMPTEoffset));
 	st_readdw(ft, &(trailer->CycleSize));

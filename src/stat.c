@@ -429,10 +429,7 @@ int st_stat_stop(eff_t effp)
    dir =  1 gives forward transform
    dir = -1 gives reverse transform
 */
-int FFT(dir,m,re,im)
-short dir;
-long m;
-double *re,*im;
+int FFT(short dir,long m,double *re,double *im)
 {
    long n,i,i1,j,k,i2,l,l1,l2;
    double c1,c2,tre,tim,t1,t2,u1,u2,z;

@@ -14,6 +14,8 @@
 
 #include <string.h>
 
+#if defined(HAVE_LIBMAD) || defined(HAVE_LAME)
+
 #if defined(HAVE_LIBMAD)
 #include <mad.h>
 #endif
@@ -465,3 +467,4 @@ int st_mp3stopwrite(ft_t ft)
   return ST_EOF;
 }
 #endif /* HAVE_LAME */
+#endif

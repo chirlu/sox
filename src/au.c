@@ -225,7 +225,7 @@ int st_austartread(ft_t ft)
                 /* Allocate comment buffer */
 		buf = (char *) malloc(hdr_size+1);		
 		for(i = 0; i < hdr_size; i++) {
-		    	st_readb(ft, &(buf[i]));
+		    	st_readb(ft, (unsigned char *)&(buf[i]));
 			if (feof(ft->fp))
 			{
 				st_fail_errno(ft,ST_EOF,"Unexpected EOF in Sun/NeXT header info.");

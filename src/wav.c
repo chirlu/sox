@@ -690,7 +690,7 @@ int st_wavstartread(ft_t ft)
 	{
 	    int i, errct=0;
 	    for (i=0; len>=2 && i < 2*wav->nCoefs; i++) {
-		st_readw(ft, &(wav->iCoefs[i]));
+		st_readw(ft, (unsigned short *)&(wav->iCoefs[i]));
 		len -= 2;
 		if (i<14) errct += (wav->iCoefs[i] != iCoef[i/2][i%2]);
 		/* fprintf(stderr,"iCoefs[%2d] %4d\n",i,wav->iCoefs[i]); */

@@ -137,8 +137,8 @@ int st_hcomstartread(ft_t ft)
 
 	/* Read dictionary */
 	for(i = 0; i < dictsize; i++) {
-		st_readw(ft, &(p->dictionary[i].dict_leftson));
-		st_readw(ft, &(p->dictionary[i].dict_rightson));
+		st_readw(ft, (unsigned short *)&(p->dictionary[i].dict_leftson));
+		st_readw(ft, (unsigned short *)&(p->dictionary[i].dict_rightson));
 		/*
 		st_report("%d %d",
 		       p->dictionary[i].dict_leftson,
@@ -531,7 +531,7 @@ int st_hcomstopwrite(ft_t ft)
 	int rc;
 
 	/* Compress it all at once */
-	rc = compress(&compressed_data, &compressed_len, (double) ft->info.rate);
+	rc = compress(&compressed_data, (long *)&compressed_len, (double) ft->info.rate);
 	free((char *) p->data);
 
 	if (rc){

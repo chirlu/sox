@@ -387,7 +387,7 @@ st_ssize_t st_vocread(ft_t ft, st_sample_t *buf, st_ssize_t len)
                     }
                     break;
                 case ST_SIZE_WORD:
-                    st_readw(ft, &sw);
+                    st_readw(ft, (unsigned short *)&sw);
                     if (feof(ft->fp))
                         {
                             st_warn("VOC input: short file");

@@ -101,23 +101,23 @@ int st_txwstartread(ft_t ft)
   sk->rest = num_samp_bytes;	/* set how many sample bytes to read */
 
   /* first 6 bytes are file type ID LM8953 */
-  st_readb(ft, &filetype[0]);
-  st_readb(ft, &filetype[1]);
-  st_readb(ft, &filetype[2]);
-  st_readb(ft, &filetype[3]);
-  st_readb(ft, &filetype[4]);
-  st_readb(ft, &filetype[5]);
+  st_readb(ft, (unsigned char *)&filetype[0]);
+  st_readb(ft, (unsigned char *)&filetype[1]);
+  st_readb(ft, (unsigned char *)&filetype[2]);
+  st_readb(ft, (unsigned char *)&filetype[3]);
+  st_readb(ft, (unsigned char *)&filetype[4]);
+  st_readb(ft, (unsigned char *)&filetype[5]);
   filetype[6] = '\0';
   for( c = 16; c > 0 ; c-- )	/* Discard next 16 bytes */
       st_readb(ft, (unsigned char *)&trash);
-  st_readb(ft, &format);
-  st_readb(ft, &sample_rate);
+  st_readb(ft, (unsigned char *)&format);
+  st_readb(ft, (unsigned char *)&sample_rate);
   /*
    * save next 8 bytes - if sample rate is 0, then we need
    *  to look at gunk[2] and gunk[5] to get real rate
    */
   for( c = 0; c < 8; c++ )
-      st_readb(ft, &(gunk[c]));
+      st_readb(ft, (unsigned char *)&(gunk[c]));
   /*
    * We should now be pointing at start of raw sample data in file 
    */

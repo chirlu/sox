@@ -255,7 +255,7 @@ int st_filter_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 		st_sample_t Isamp, Osamp;
 		Isamp = isamp_res;
 		Osamp = osamp_res;
-		st_filter_flow(effp, NULL, Obuf, &Isamp, &Osamp);
+		st_filter_flow(effp, NULL, Obuf, (st_size_t *)&Isamp, (st_size_t *)&Osamp);
 	  /* fprintf(stderr,"DRAIN isamp,osamp  (%d,%d) -> (%d,%d)\n",
 		 * isamp_res,osamp_res,Isamp,Osamp); */
 		Obuf += Osamp;

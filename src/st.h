@@ -114,8 +114,8 @@ typedef struct st_fileinfo
  *  Format information for input and output files.
  */
 
-#define ST_MAX_FILE_PRIVSIZE 330
-#define ST_MAX_EFFECT_PRIVSIZE 330
+#define ST_MAX_FILE_PRIVSIZE	1000
+#define ST_MAX_EFFECT_PRIVSIZE 1000
 
 #define ST_MAX_NLOOPS           8
 

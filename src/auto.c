@@ -57,7 +57,9 @@ int st_autostartread(ft_t ft)
 		{
 		    if (strncmp(header + 4, "AIFF", 4) == 0)
 			type = "aiff";
-		    else if (strncmp(header + 4, "8SVX", 4) == 0)
+		    else if (strncmp(header + 4, "AIFC", 4) == 0)
+			type = "aiff";
+			else if (strncmp(header + 4, "8SVX", 4) == 0)
 			type = "8svx";
 		    else if (strncmp(header + 4, "MAUD", 4) == 0)
 			type = "maud";
@@ -118,6 +120,10 @@ int st_autostartread(ft_t ft)
 		    }
 		}
 	    }
+	    else if (strncmp(header, "Ogg", 3) == 0)
+	    {
+	    	type = "ogg";
+          }
 	} /* read 4-byte header */
 
 	/* If we didn't find type yet then start looking for file

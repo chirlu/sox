@@ -67,7 +67,7 @@ int st_wvestartread(ft_t ft)
                 return (ST_EOF);
         }
 
-        st_readw(ft, &version);
+        st_readw(ft, (unsigned short *)&version);
 
         /* Check for what type endian machine its read on */
         if (version == PSION_INV_VERSION)
@@ -91,9 +91,9 @@ int st_wvestartread(ft_t ft)
 
         st_readdw(ft, &(p->length));
 
-        st_readw(ft, &(p->padding));
+        st_readw(ft, (unsigned short *)&(p->padding));
 
-        st_readw(ft, &(p->repeats));
+        st_readw(ft, (unsigned short *)&(p->repeats));
 
         (void)st_readw(ft, (unsigned short *)&trash);
         (void)st_readw(ft, (unsigned short *)&trash);
