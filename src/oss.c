@@ -27,7 +27,6 @@
 #include <fcntl.h>
 #include <sys/soundcard.h>
 #include <sys/ioctl.h>
-#include <signal.h>
 #include "st.h"
 #include "libst.h"
 

@@ -182,6 +182,10 @@ GETOPT_DEFINES	= -DHAVE_GETOPT_H
 #  MISC DEFINES remember to include them on one line so it isn't just
 #  redefined.
 #
+# If your sysetem has unistd.h then you'll most like need to add 
+# HAVE_UNISTD_H to your misd defines.
+# MISC_DEFINES = - DHAVE_UNISTD_H
+#
 # Testing new improved rate code.  You can use the older version if ther
 # are problems.
 # MISC_DEFINES	= -DUSE_OLD_RATE

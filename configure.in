@@ -102,7 +102,7 @@ fi
 
 dnl Checks for header files.
 
-AC_CHECK_HEADERS(getopt.h)
+AC_CHECK_HEADERS(getopt.h unistd.h)
 
 dnl Checks for library functions.
 
@@ -172,7 +172,11 @@ then
 		)
 	if test "$ac_cv_dev_oss_dsp" = yes
 	then
-		oss_dsp=yes
+		AC_CHECK_HEADER(sys/soundcard.h, oss_dsp=yes)
+		if test "$oss_dsp" = auto
+		then
+			AC_WARN([No soundcard.h to compile with OSS /dev/dsp])
+		fi
 	fi
 fi
 if test "$oss_dsp" = yes

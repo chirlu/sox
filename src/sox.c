@@ -36,7 +36,7 @@
 #include <sys/types.h>		/* for fstat() */
 #include <sys/stat.h>		/* for fstat() */
 
-#ifdef unix
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>		/* for unlink() */
 #endif
 

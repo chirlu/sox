@@ -27,7 +27,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
-#include <signal.h>
 #include "st.h"
 #include "libst.h"
 
