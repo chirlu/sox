@@ -1,6 +1,6 @@
 /*
 
-    AVR file format driver for SOX
+    AVR file format driver for SoX
     Copyright (C) 1999 Jan Paul Schmidt <jps@fundament.org>
 
     This source code is free software; you can redistribute it and/or modify
@@ -270,6 +270,8 @@ ft_t ft;
   avr_t	avr = (avr_t)ft->priv;
 
   int size = avr->size / ft->info.channels;
+
+  rawstopwrite(ft);
 
   /* Fix size */
   fseek (ft->fp, 26L, SEEK_SET);

@@ -30,6 +30,17 @@
  *        cBW is the band width in Hertz        
  *        cSCL is a scale factor, use 1 for pitched sounds      
  *   use 2 for noise.           
+ *
+ *
+ * July 1, 1999 - Jan Paul Schmidt <jps@fundament.org>
+ *
+ *   This looks like the resonator band pass in SPKit. It's a
+ *   second order all-pole (IIR) band-pass filter described
+ *   at the pages 186 - 189 in
+ *     Dodge, Charles & Jerse, Thomas A. 1985: 
+ *       Computer Music -- Synthesis, Composition and Performance.
+ *       New York: Schirmer Books.  
+ *   Reference from the SPKit manual.
  */
 
 #include <math.h>

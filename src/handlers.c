@@ -8,6 +8,7 @@
  */
 
 #include "st.h"
+#include "btrworth.h"
 
 /*
  * Sound Tools file format and effect tables.
@@ -446,6 +447,12 @@ extern void band_start();
 extern void band_flow();
 extern void band_stop();
 
+extern void bandpass_getopts();
+extern void bandpass_start();
+
+extern void bandreject_getopts();
+extern void bandreject_start();
+
 extern void chorus_getopts();
 extern void chorus_start();
 extern void chorus_flow();
@@ -501,10 +508,16 @@ extern void highp_start();
 extern void highp_flow();
 extern void highp_stop();
 
+extern void highpass_getopts();
+extern void highpass_start();
+
 extern void lowp_getopts();
 extern void lowp_start();
 extern void lowp_flow();
 extern void lowp_stop();
+
+extern void lowpass_getopts();
+extern void lowpass_start();
 
 extern void map_getopts();
 extern void map_start();
@@ -590,6 +603,10 @@ EXPORT effect_t effects[] = {
 		avg_getopts, avg_start, avg_flow, null_drain, avg_stop},
 	{"band", 0, 
 		band_getopts, band_start, band_flow, null_drain, band_stop},
+	{"bandpass", 0, 
+		bandpass_getopts, bandpass_start, butterworth_flow, null_drain, nothing},
+	{"bandreject", 0, 
+		bandreject_getopts, bandreject_start, butterworth_flow, null_drain, nothing},
 	{"chorus", 0,
 	        chorus_getopts, chorus_start, chorus_flow,
 	 chorus_drain, chorus_stop},
@@ -617,8 +634,12 @@ EXPORT effect_t effects[] = {
 	        flanger_drain, flanger_stop},
 	{"highp", 0, 
 		highp_getopts, highp_start, highp_flow, null_drain,highp_stop},
+	{"highpass", 0, 
+		highpass_getopts, highpass_start, butterworth_flow, null_drain,nothing},
 	{"lowp", 0, 
 		lowp_getopts, lowp_start, lowp_flow, null_drain, lowp_stop},
+	{"lowpass", 0, 
+		lowpass_getopts, lowpass_start, butterworth_flow, null_drain, nothing},
 	{"map", EFF_REPORT, 
 		map_getopts, map_start, map_flow, null_drain, nothing},
 	{"mask", EFF_MCHAN, 
