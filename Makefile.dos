@@ -11,7 +11,7 @@
 # are compiled from default rules of make.
 
 FOBJ	= 8svx.obj aiff.obj alsa.obj au.obj auto.obj avr.obj cdr.obj cvsd.obj \
-	  dat.obj g711.obj g721.obj g723_24.obj g723_40.obj g72x.obj gsm.obj \
+	  dat.obj g721.obj g723_24.obj g723_40.obj g72x.obj gsm.obj \
 	  hcom.obj maud.obj oss.obj raw.obj sbdsp.obj sf.obj smp.obj \
 	  sndrtool.obj sunaudio.obj tx16w.obj voc.obj wav.obj wve.obj
 

@@ -16,7 +16,7 @@
 ## rewrite this makefile for 'smake'.
 ##
 
-FSRC	= 8svx.c aiff.c alsa.c au.c auto.c avr.c cdr.c cvsd.c dat.c g711.c  \
+FSRC	= 8svx.c aiff.c alsa.c au.c auto.c avr.c cdr.c cvsd.c dat.c \
 	  g721.c g723_24.c g723_40.c g72x.c gsm.c hcom.c maud.c oss.c raw.c \
 	  sbdsp.c sf.c smp.c sndrtool.c sunaudio.c tx16w.c voc.c wav.c wve.c
 
@@ -49,7 +49,7 @@ VMS       = descrip.mms sound2au.com sound2sun.c sound2sun.opt \
 FILES     = $(MISC) $(HEADERS) $(SOURCES) $(AMIGA) $(DOS) $(VMS) \
 	    $(SKEL) $(TESTS)
 
-FOBJ	= 8svx.o aiff.o alsa.o au.o auto.o avr.o cdr.o cvsd.o dat.o g711.o \
+FOBJ	= 8svx.o aiff.o alsa.o au.o auto.o avr.o cdr.o cvsd.o dat.o \
 	  g721.o g723_24.o g723_40.o g72x.o gsm.o hcom.o maud.o oss.o raw.o \
 	  sbdsp.o sf.o smp.o sndrtool.o sunaudio.o tx16w.o voc.o wav.o wve.o
 
