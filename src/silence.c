@@ -62,6 +62,12 @@ typedef struct silencestuff
     st_size_t	stop_holdoff_end;
     int		stop_found_periods;
 
+    int64_t     *window;
+    int64_t     *window_current;
+    int64_t     *window_end;
+    st_size_t   window_size;
+    double      rms_sum;
+
     /* State Machine */
     char	mode;
 } *silence_t;
@@ -242,6 +248,23 @@ int st_silence_start(eff_t effp)
 {
 	silence_t	silence = (silence_t) effp->priv;
 
+	silence->window_size = (effp->ininfo.rate / 10) * effp->ininfo.channels;
+	silence->window = (int64_t *)malloc(silence->window_size *
+		                            sizeof(int64_t));
+
+	if (!silence->window)
+	{
+	    st_fail("Unable to allocate memory");
+	    return(ST_EOF);
+	}
+
+	memset(silence->window, 0, 
+	       silence->window_size * sizeof(int64_t));
+
+	silence->window_current = silence->window;
+	silence->window_end = silence->window + silence->window_size;
+	silence->rms_sum = 0;
+
 	/* Now that we now sample rate, reparse duration. */
 	if (silence->start)
 	{
@@ -326,6 +349,30 @@ int aboveThreshold(eff_t effp, st_sample_t value, double threshold, char unit)
     return rc;
 }
 
+st_sample_t compute_rms(eff_t effp, st_sample_t sample)
+{
+    silence_t silence = (silence_t) effp->priv;
+    double new_sum;
+    st_sample_t rms;
+
+    new_sum = silence->rms_sum;
+    new_sum -= *silence->window_current;
+    new_sum += ((double)sample * (double)sample);
+
+    rms = sqrt(new_sum / silence->window_size);
+
+    return (rms);
+}
+
+void update_rms(eff_t effp, st_sample_t sample)
+{
+    silence_t silence = (silence_t) effp->priv;
+
+    silence->window_current++;
+    if (silence->window_current >= silence->window_end)
+	silence->window_current = silence->window;
+}
+
 /* Process signed long samples from ibuf to obuf. */
 /* Return number of samples processed in isamp and osamp. */
 int st_silence_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
@@ -353,7 +400,8 @@ int st_silence_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 		threshold = 0;
 		for (j = 0; j < effp->ininfo.channels; j++)
 		{
-		    threshold |= aboveThreshold(effp, ibuf[j], 
+		    threshold |= aboveThreshold(effp,
+			                        compute_rms(effp, ibuf[j]),
 			                        silence->start_threshold, 
 			                        silence->start_unit);
 		}
@@ -363,6 +411,7 @@ int st_silence_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 		    /* Add to holdoff buffer */
 		    for (j = 0; j < effp->ininfo.channels; j++)
 		    {
+			update_rms(effp, *ibuf);
 			silence->start_holdoff[
 			    silence->start_holdoff_end++] = *ibuf++;
 			nrOfInSamplesRead++;
@@ -387,6 +436,10 @@ int st_silence_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 		else /* !above Threshold */
 		{
 		    silence->start_holdoff_end = 0;
+		    for (j = 0; j < effp->ininfo.channels; j++)
+		    {
+			update_rms(effp, ibuf[j]);
+		    }
 		    ibuf += effp->ininfo.channels; 
 		    nrOfInSamplesRead += effp->ininfo.channels;
 		}
@@ -442,7 +495,8 @@ silence_copy:
 		    threshold = 1;
 		    for (j = 0; j < effp->ininfo.channels; j++)
 		    {
-			threshold &= aboveThreshold(effp, ibuf[j], 
+			threshold &= aboveThreshold(effp, 
+				                    compute_rms(effp, ibuf[j]),
 				                    silence->stop_threshold, 
 				                    silence->stop_unit);
 		    }
@@ -462,6 +516,7 @@ silence_copy:
 			/* Not holding off so copy into output buffer */
 			for (j = 0; j < effp->ininfo.channels; j++)
 			{
+			    update_rms(effp, *ibuf);
 			    *obuf++ = *ibuf++;
 			    nrOfInSamplesRead++;
 			    nrOfOutSamplesWritten++;
@@ -472,6 +527,7 @@ silence_copy:
 			/* Add to holdoff buffer */
 			for (j = 0; j < effp->ininfo.channels; j++)
 			{
+			    update_rms(effp, *ibuf);
 			    silence->stop_holdoff[
 				silence->stop_holdoff_end++] = *ibuf++;
 			    nrOfInSamplesRead++;
@@ -588,6 +644,11 @@ int st_silence_stop(eff_t effp)
 {
     silence_t silence = (silence_t) effp->priv;
 
-    free(silence->stop_holdoff);
+    if (silence->window)
+	free(silence->window);
+    if (silence->start_holdoff)
+	free(silence->start_holdoff);
+    if (silence->stop_holdoff)
+	free(silence->stop_holdoff);
     return(ST_SUCCESS);
 }

@@ -36,7 +36,8 @@ sox-12.17.3
   o Silence effect was broken on stereo files.  Also, made thresholds
     relative to original bit percision of audio data.  When 16-bit audio
     is scaled up to 32-bits, a little bit of noise starts to look like a
-    large amplitude of noise.
+    large amplitude of noise.  Also, now using RMS values to smooth out
+    clicks.  RMS rolling window size is 1/10 of sample rate.
   o Changed Floats into a type of encoding instead of a size of audio data.
   o Put a flush at the end of OSS driver so that no old data would be
     left in internal buffers after changing audio format parameters.
