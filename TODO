@@ -13,8 +13,6 @@ all patches to cbagwell@users.sourceforge.net.
     of drain (ie. can't run the "reverse" effect twice
     on the same command line and have a good output file).
 
-  o Document how to play to audio device in man pages.
-
   o Have sox.c auto remove an resample effects when rates are the same
     (allows scripts to be dumper).
 
@@ -69,12 +67,12 @@ all patches to cbagwell@users.sourceforge.net.
 
   o Make a global version of clip() instead of sprinked in all files.
 
-  o Add support to all file handlers to handle 32-bit and float
-    data types since raw functions can handle them.
+  o Fix conversions to and from st_sample_t to floats.  Currently,
+    its an approximation because it doesn't account from negative
+    side having 1 more value then positive side.  That means instead
+    of -1:1 range, its more like -0.999:1 or -1:0.9999.
 
-  o Comment strings.  Some file formats have space for embedded comments.
-    These are currently thrown away.  Printing them out, carrying them
-    forward, and an option to add new ones would be handy.
+  o Add command line option to override comment string.
 
   o Add support for .TXT format as Cooledit supports.  Not really fit for
     graphing since it is only a stream of ascii sample values but some
@@ -85,10 +83,6 @@ all patches to cbagwell@users.sourceforge.net.
     a sound library called "ST" but libraries shouldn't exit a program,
     they should return error codes for users to handle.  Initial support
     for this has been added.  Needs to be completed.
-
-  o Enhance general robustness... For instance, malloc is called in
-    lots of places without checking its return value.  See last option
-    as well.
 
 SOX includes skeleton format files to assist you in supporting new 
 formats, sound effect loops, and special-purpose programs.

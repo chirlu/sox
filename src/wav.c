@@ -518,8 +518,17 @@ int st_wavstartread(ft_t ft)
         break;
 
     case WAVE_FORMAT_IEEE_FLOAT:
-        st_fail_errno(ft,ST_EHDR,"Sorry, this WAV file is in IEEE Float format.");
-        return ST_EOF;
+        if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_FLOAT)
+            ft->info.encoding = ST_ENCODING_FLOAT;
+        else
+            st_report("User options overriding encoding read in .wav header");
+
+        /* Needed by rawread() functions */
+        rc = st_rawstartread(ft);
+        if (rc)
+            return rc;
+
+        break;
         
     case WAVE_FORMAT_ALAW:
         if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_ALAW)
@@ -829,8 +838,8 @@ int st_wavstartread(ft_t ft)
     dwDataLength = len = findChunk(ft, "data");
     /* findChunk() only returns if chunk was found */
 
-        /* Data starts here */
-        wav->dataStart = st_tell(ft);
+    /* Data starts here */
+    wav->dataStart = st_tell(ft);
 
     switch (wav->formatTag)
     {
@@ -912,60 +921,85 @@ int st_wavstartread(ft_t ft)
             ft->comment = (char*)malloc(256);
             /* Initialize comment to a NULL string */
             ft->comment[0] = 0;
-            while(!st_eof(ft)){
-                st_reads(ft,magic,4);
-                if(strncmp(magic,"INFO",4) == 0){
-                        /*Skip*/
-                } else if(strncmp(magic,"ICRD",4) == 0){
-                        st_readdw(ft,&len); 
-                        len = (len + 1) & ~1;
+            while(!st_eof(ft))
+            {
+                if (st_reads(ft,magic,4) == ST_EOF)
+                    break;
+                if (strncmp(magic,"INFO",4) == 0)
+                {
+                    /*Skip*/
+                    st_report("Chunk INFO");
+                }
+                else
+                {
+                    if (st_readdw(ft,&len) == ST_EOF)
+                        break;
+                    if (strncmp(magic,"ICRD",4) == 0)
+                    {
+                        int needs_return = 0;
+
+                        st_report("Chunk ICRD");
                         if (len > 254)
                         {
-                            fprintf(stderr, "Possible buffer overflow hack attack (ICRD)!\n");
+                            st_warn("Possible buffer overflow hack attack (ICRD)!\n");
                             break;
                         }
                         st_reads(ft,text,len);
                         if (strlen(ft->comment) + strlen(text) < 254)
                         {
+                            if (strlen(ft->comment) != 0)
+                                needs_return = 1;
+
                             strcat(ft->comment,text);
-                            strcat(ft->comment,"\n");
+
+                            if (needs_return)
+                                strcat(ft->comment,"\n");
                         }
-                } else if(strncmp(magic,"ISFT",4) == 0){
-                        st_readdw(ft,&len); 
-                        len = (len + 1) & ~1;
+                        if (strlen(text) < len)
+                           st_seek(ft, len - strlen(text), SEEK_CUR); 
+                    } 
+                    else if (strncmp(magic,"ISFT",4) == 0)
+                    {
+                        int needs_return = 0;
+
+                        st_report("Chunk ISFT");
                         if (len > 254)
                         {
-                            fprintf(stderr, "Possible buffer overflow hack attack (ISFT)!\n");
+                            st_warn("Possible buffer overflow hack attack (ISFT)!\n");
                             break;
                         }
                         st_reads(ft,text,len);
                         if (strlen(ft->comment) + strlen(text) < 254)
                         {
+                            if (strlen(ft->comment) != 0)
+                                needs_return = 1;
+
                             strcat(ft->comment,text);
-                            strcat(ft->comment,"\n");
+
+                            if (needs_return)
+                                strcat(ft->comment,"\n");
                         }
-                } else if(strncmp(magic,"cue ",4) == 0){
-                        st_readdw(ft,&len);
-                        len = (len + 1) & ~1;
+                        if (strlen(text) < len)
+                           st_seek(ft, len - strlen(text), SEEK_CUR); 
+                    } 
+                    else if (strncmp(magic,"cue ",4) == 0)
+                    {
+                        st_report("Chunk cue ");
                         st_seek(ft,len-4,SEEK_CUR);
                         st_readdw(ft,&dwLoopPos);
                         ft->loops[0].start = dwLoopPos;
-                } else if(strncmp(magic,"note",4) == 0){
-                        /*Skip*/
-                        st_readdw(ft,&len);
-                        len = (len + 1) & ~1;
-                        st_seek(ft,len-4,SEEK_CUR);
-                } else if(strncmp(magic,"adtl",4) == 0){
-                        /*Skip*/
-                } else if(strncmp(magic,"ltxt",4) == 0){
-                        st_seek(ft,4,SEEK_CUR);
+                    } 
+                    else if (strncmp(magic,"ltxt",4) == 0)
+                    {
+                        st_report("Chunk ltxt");
                         st_readdw(ft,&dwLoopPos);
                         ft->loops[0].length = dwLoopPos - ft->loops[0].start;
-                } else if(strncmp(magic,"labl",4) == 0){
-                        /*Skip*/
-                        st_readdw(ft,&len);
-                        len = (len + 1) & ~1;
-                        st_seek(ft,len-4,SEEK_CUR);
+                    } 
+                    else 
+                    {
+                        st_report("Attempting to seek beyond unsupported chunk '%c%c%c%c' of length %d bytes\n", magic[0], magic[1], magic[2], magic[3], len);
+                        st_seek(ft, len, SEEK_CUR);
+                    }
                 }
             }
         }
@@ -1058,9 +1092,11 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
                 st_warn("Premature EOF on .wav input file");
         break;
 #endif
-        default: /* assume PCM encoding */
+        default: /* assume PCM or float encoding */
+#if 0
             if (len > wav->numSamples) 
                 len = wav->numSamples;
+#endif
 
             done = st_rawread(ft, buf, len);
             /* If software thinks there are more samples but I/O */
@@ -1306,7 +1342,8 @@ static int wavwritehdr(ft_t ft, int second_header)
             break;
         case ST_SIZE_DWORD:
             wBitsPerSample = 32;
-            if (ft->info.encoding != ST_ENCODING_SIGN2)
+            if (ft->info.encoding != ST_ENCODING_SIGN2 &&
+                ft->info.encoding != ST_ENCODING_FLOAT)
             {
                 st_warn("Do not support %s with 32-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
                 ft->info.encoding = ST_ENCODING_SIGN2;
@@ -1328,6 +1365,11 @@ static int wavwritehdr(ft_t ft, int second_header)
         case ST_ENCODING_UNSIGNED:
         case ST_ENCODING_SIGN2:
             wFormatTag = WAVE_FORMAT_PCM;
+            bytespersample = (wBitsPerSample + 7)/8;
+            wBlockAlign = wChannels * bytespersample;
+            break;
+        case ST_ENCODING_FLOAT:
+            wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
             bytespersample = (wBitsPerSample + 7)/8;
             wBlockAlign = wChannels * bytespersample;
             break;

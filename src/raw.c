@@ -452,7 +452,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
             ft->file.pos = 0;
 
             ft->file.count = st_read(ft, ft->file.buf+i, 1, ft->file.size-i);
-            if (ft->file.count != ft->file.size-i)
+            if (ft->file.count != ft->file.size-i || ft->file.count == 0)
             {
                 ft->file.eof = 1;
             }

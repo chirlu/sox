@@ -194,7 +194,7 @@ various types of file formats.
 The option syntax is a little grotty, but in essence:
 .P
 .br
-	sox File.au file.wav
+	sox file.au file.wav
 .P
 .br
 translates a sound file in SUN Sparc .AU format 
@@ -374,6 +374,20 @@ AIFF files are multimedia archives and
 can have multiple audio and picture chunks.
 You may need a separate archiver to work with them.
 .TP 10
+.B .alsa
+ALSA /dev/snd/pcmCxDxp device driver
+.br
+This is a pseudo-file type and can be optionally compiled into SoX.  Run
+.B sox -h
+to see if you have support for this file type.  When this driver is used
+it allows you to open up the ALSA /dev/snd/pcmCxDxp file and configure it to
+use the same data format as passed in to \fBSoX\fR.
+It works for both playing and recording sound samples.  When playing sound
+files it attempts to set up the ALSA driver to use the same format as the
+input file.  It is suggested to always override the output values to use
+the highest quality samples your sound card can handle.  Example:
+.I sox infile -t alsa -w -s /dev/snd/pcmC0D0p
+.TP 10
 .B .au
 SUN Microsystems AU files.
 There are apparently many types of .au files;
@@ -502,7 +516,7 @@ It works for both playing and recording sound samples.  When playing sound
 files it attempts to set up the OSS driver to use the same format as the
 input file.  It is suggested to always override the output values to use
 the highest quality samples your sound card can handle.  Example:
-.I -t ossdsp -w -s /dev/dsp
+.I sox infile -t ossdsp -w -s /dev/dsp
 .TP 10
 .B .prc
 Psion record.app
@@ -558,9 +572,9 @@ It works for both playing and recording sound samples.  When playing sound
 files it attempts to set up the audio driver to use the same format as the
 input file.  It is suggested to always override the output values to use
 the highest quality samples your hardware can handle.  Example:
-.I -t sunau -w -s /dev/audio
+.I sox infile -t sunau -w -s /dev/audio
 or
-.I -t sunau -U -c 1 /dev/audio
+.I sox infile -t sunau -U -c 1 /dev/audio
 for older sun equipment.
 .TP 10
 .B .txw
