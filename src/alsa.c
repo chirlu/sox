@@ -45,7 +45,7 @@ ft_t ft;
     ft->file.size = c_info.buffer_size;
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
 	fail("unable to allocate output buffer of size %d", ft->file.size);
-	return (ST_EOF)
+	return (ST_EOF);
     }
     if (ft->info.rate < c_info.min_rate) ft->info.rate = 2 * c_info.min_rate;
     else if (ft->info.rate > c_info.max_rate) ft->info.rate = c_info.max_rate;
@@ -68,12 +68,18 @@ ft_t ft;
 	{
 	    case ST_ENCODING_SIGN2:
 		if (!(c_info.hw_formats & SND_PCM_FMT_S8))
+		{
 		    fail("ALSA driver does not support signed byte samples");
+		    return(ST_EOF);
+		}
 		fmt = SND_PCM_SFMT_S8;
 		break;
 	    case ST_ENCODING_UNSIGNED:
 		if (!(c_info.hw_formats & SND_PCM_FMT_U8))
+		{
 		    fail("ALSA driver does not support unsigned byte samples");
+		    return(ST_EOF);
+		}
 		fmt = SND_PCM_SFMT_U8;
 		break;
 	    default:
@@ -110,7 +116,7 @@ ft_t ft;
 
     size = ft->file.size;
     bps = format.rate * format.channels;
-    if (ft->info.size == WORD) bps <<= 1;
+    if (ft->info.size == ST_SIZE_WORD) bps <<= 1;
     bps >>= 2;
     while (size > bps) size >>= 1;
     if (size < 16) size = 16;
@@ -165,12 +171,18 @@ ft_t ft;
 	{
 	    case ST_ENCODING_SIGN2:
 		if (!(p_info.hw_formats & SND_PCM_FMT_S8))
+		{
 		    fail("ALSA driver does not support signed byte samples");
+		    return (ST_EOF);
+		}
 		fmt = SND_PCM_SFMT_S8;
 		break;
 	    case ST_ENCODING_UNSIGNED:
 		if (!(p_info.hw_formats & SND_PCM_FMT_U8))
+		{
 		    fail("ALSA driver does not support unsigned byte samples");
+		    return (ST_EOF);
+		}
 		fmt = SND_PCM_SFMT_U8;
 		break;
 	    default:
@@ -184,12 +196,18 @@ ft_t ft;
 	{
 	    case ST_ENCODING_SIGN2:
 		if (!(p_info.hw_formats & SND_PCM_FMT_S16_LE))
+		{
 		    fail("ALSA driver does not support signed word samples");
+		    return (ST_EOF);
+		}
 		fmt = SND_PCM_SFMT_S16_LE;
 		break;
 	    case ST_ENCODING_UNSIGNED:
 		if (!(p_info.hw_formats & SND_PCM_FMT_U16_LE))
+		{
 		    fail("ALSA driver does not support unsigned word samples");
+		    return(ST_EOF);
+		}
 		fmt = SND_PCM_SFMT_U16_LE;
 		break;
 	    default:
@@ -207,7 +225,7 @@ ft_t ft;
 
     size = ft->file.size;
     bps = format.rate * format.channels;
-    if (ft->info.size == WORD) bps <<= 1;
+    if (ft->info.size == ST_SIZE_WORD) bps <<= 1;
     bps >>= 2;
     while (size > bps) size >>= 1;
     if (size < 16) size = 16;
@@ -219,6 +237,8 @@ ft_t ft;
 
     /* Change to non-buffered I/O */
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
+
+    return(ST_SUCCESS);
 }
 
 #endif

@@ -19,7 +19,7 @@
 /* Can use faster lookup tables by using the appropriate defines. */
 /******************************************************************/
 #ifdef FAST_ULAW_CONVERSION
-extern int           ulaw_exp_table[256];
+extern const short         ulaw_exp_table[256];
 extern const unsigned char ulaw_comp_table[16384];
 #define st_ulaw_to_linear(ulawbyte)   ulaw_exp_table[ulawbyte]
 #define st_linear_to_ulaw(linearword) ulaw_comp_table[(unsigned short)linearword >> 2]
