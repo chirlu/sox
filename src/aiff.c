@@ -44,6 +44,10 @@
 #include <unistd.h>	/* For SEEK_* defines if not found in stdio */
 #endif
 
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
+
 #include "st.h"
 
 /* Private data used by writer */

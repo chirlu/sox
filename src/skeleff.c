@@ -44,7 +44,7 @@ char **argv;
  * Prepare processing.
  * Do all initializations.
  */
-skeleff_start(effp)
+void skeleff_start(effp)
 eff_t effp;
 {
     if (effp->outinfo.channels == 1)

@@ -72,7 +72,7 @@ case "$target" in
 		CFLAGS="$CFLAGS -D_HPUX_SOURCE"
 		;;
 
-	*next* )
+	*next*|*rhapsody* )
 		CFLAGS="$CFLAGS -DNeXT"
 		;;
 esac
@@ -102,7 +102,7 @@ fi
 
 dnl Checks for header files.
 
-AC_CHECK_HEADERS(getopt.h unistd.h)
+AC_CHECK_HEADERS(getopt.h unistd.h malloc.h)
 
 dnl Checks for library functions.
 
@@ -239,7 +239,15 @@ then
 	CFLAGS="$CFLAGS -DFAST_ALAW_COMPRESSION"
 fi
 
-LIBS="$LIBS -L. -lst -lm"
+LIBS="$LIBS -L. -lst"
+
+dnl Check if math library is needed.
+
+AC_CHECK_LIB(m, pow)
+if test "$ac_cv_lib_m" = yes
+then
+	LIBS="$LIBS -lm"
+fi
 
 AC_SUBST(NEED_OSS)
 AC_SUBST(NEED_SUNAU)

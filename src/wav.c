@@ -59,6 +59,9 @@
 
 #include <string.h>		/* Included for strncmp */
 #include <stdlib.h>		/* Included for malloc and free */
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 #include <stdio.h>
 
 #ifdef HAVE_UNISTD_H

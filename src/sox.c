@@ -32,6 +32,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>		/* for malloc() */
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 #include <errno.h>
 #include <sys/types.h>		/* for fstat() */
 #include <sys/stat.h>		/* for fstat() */
@@ -766,7 +769,7 @@ eff_t effp;
 			    efftabR[1].name = effp->name;
 		    efftab[1].outinfo.rate = informat.info.rate;
 		    efftab[1].outinfo.channels = informat.info.channels;
-		    efftab[2].name = "rate";
+		    efftab[2].name = "resample";
 		    efftab[3].name = "avg";
 		} else {
 		    neffects = 3;
@@ -781,7 +784,7 @@ eff_t effp;
 		    neffects = 3;
 		    efftab[1].name = effp->name;
 		    efftab[1].outinfo.rate = informat.info.rate;
-		    efftab[2].name = "rate";
+		    efftab[2].name = "resample";
 		    if (informat.info.channels == 2)
 			    efftabR[2].name = "rate";
 		} else {

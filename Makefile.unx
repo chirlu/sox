@@ -151,7 +151,7 @@ GETOPT_DEFINES	= -DHAVE_GETOPT_H
 
 # For sound support using the ALSA driver then uncomment the following line.
 #
-# PLAYER_DEFINES = - DALSA_PLAYER
+# PLAYER_DEFINES = -DALSA_PLAYER
 
 # For sound support under SunOS and Solaris then uncomment the following line.
 #
@@ -184,7 +184,11 @@ GETOPT_DEFINES	= -DHAVE_GETOPT_H
 #
 # If your sysetem has unistd.h then you'll most like need to add 
 # HAVE_UNISTD_H to your misd defines.
-# MISC_DEFINES = - DHAVE_UNISTD_H
+# MISC_DEFINES = -DHAVE_UNISTD_H
+#
+# If your system has malloc.h then you'll most likely need to add
+# HAVE_MALLOC_H to your misd defines.
+# MSIC_DEFINS = -DHAVE_UNISTD_H
 #
 # Testing new improved rate code.  You can use the older version if ther
 # are problems.
@@ -212,10 +216,14 @@ RANLIB		= ranlib
 # for those systems.
 # RANLIB    = true
 
+# Some systems (i.e. MacOsX Server) don't need a separate math library
+MATHLIB = -lm
+# MATHLIB = 
+
 ##############################################################################
 
 SOX_PRE_LIBS	= $(GSM_PRE_LIBS)
-SOX_POST_LIBS	= $(GSM_POST_LIBS) -lm
+SOX_POST_LIBS	= $(GSM_POST_LIBS) $(MATHLIB)
 SOX_INCLUDES	= $(GSM_INCLUDES)
 SOX_DEFINES	= $(GSM_DEFINES) $(PLAYER_DEFINES) \
   $(GETOPT_DEFINES) $(STRERR_DEFINES) $(MEMMOVE_DEFINES) \

@@ -26,6 +26,9 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <stdlib.h>
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 #include <fcntl.h>
 #include "st.h"
 #include "libst.h"

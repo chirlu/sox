@@ -22,6 +22,9 @@
 #include "st.h"
 #include "g72x.h"
 #include <stdlib.h>
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 
 /* Magic numbers used in Sun and NeXT audio files */
 #define SUN_MAGIC 	0x2e736e64		/* Really '.snd' */

@@ -25,6 +25,9 @@
 #endif
 #include <string.h>
 #include <stdlib.h>
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 
 /* Private data for SF file */
 typedef struct sfstuff {

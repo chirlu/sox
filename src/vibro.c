@@ -26,6 +26,9 @@
 
 #include <math.h>
 #include <stdlib.h>
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 #include "st.h"
 
 /* Private data for Vibro effect */

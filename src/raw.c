@@ -22,7 +22,11 @@
 #include "st.h"
 #include "libst.h"
 
+#ifdef HAVE_MALLOC_H
 #include <malloc.h>
+#endif
+
+#include <stdlib.h>
 
 void rawstartread(ft) 
 ft_t ft;

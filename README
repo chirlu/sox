@@ -54,8 +54,7 @@ Big news! Lots of new effects have been added.  This includes most the
 popular "Guitar Effects" talked about in the same named FAQ available.
 
 The 'resample' and 'polyphase' effect does high-grade signal rate
-changes using real signal theory.  Yes, it's very slow.  There seems
-to be a small problem with aliasing with 'resample' currently.
+changes using real signal theory.  Yes, it's very slow.
 
 History:
 

@@ -88,6 +88,8 @@ int *isamp, *osamp;
 		lowp->in1 = l;
 		*obuf++ = d * 65536L;
 	}
+	*isamp = len;
+	*osamp = len;
 }
 
 /*

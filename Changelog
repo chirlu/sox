@@ -44,6 +44,8 @@ sox-12.16
   o Combined play and rec scripts to a single program to ease mantaince.
     Also added GNU style long-options (--help).  Careful, some options have
     change (but more logical).
+  o Fixed a very old silly bug were low/high/bandpass filters would
+    add some trash data to the end of the sound file.
 
 sox-12.15
 ---------

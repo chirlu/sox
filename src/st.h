@@ -243,6 +243,14 @@ void           wfloat(P2(ft_t ft, double f));
 double         rdouble(P1(ft_t ft));
 void           wdouble(P2(ft_t ft, double d));
 
+/* raw routines are used by so many people their prototypes are defined
+ * here for convience.
+ */
+void rawstartread(P1(ft_t ft));
+void rawstartwrite(P1(ft_t ft));
+void rawstopread(P1(ft_t ft));
+void rawstopwrite(P1(ft_t ft));
+
 /* Utilities to byte-swap values */
 unsigned short swapw(P1(unsigned short us));		/* Swap short */
 ULONG  	       swapl(P1(ULONG ul));			/* Swap long */

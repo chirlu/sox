@@ -20,7 +20,9 @@
  * SBLAST patches by John T. Kohl.
  */
 
+#ifdef HAVE_MALLOC_H
 #include <malloc.h>
+#endif
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>

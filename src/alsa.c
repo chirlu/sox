@@ -13,7 +13,9 @@
  * based on info grabed from aplay.c in alsa-utils package.
  */
 
+#ifdef HAVE_MALLOC_H
 #include <malloc.h>
+#endif
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>

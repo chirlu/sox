@@ -9,7 +9,7 @@
 .if t .sp .5v
 .if n .sp
 ..
-.TH SoX 1 "March 5, 1999"
+.TH SoX 1 "June 28, 1999"
 .SH NAME
 sox \- Sound eXchange : universal sound sample translator
 .SH SYNOPSIS
@@ -501,7 +501,7 @@ The modulation is either sinodial (-s) or triangular
 copy
 Copy the input file to the output file.
 This is the default effect if both files have the same 
-sampling rate, or the rates are "close".
+sampling rate.
 .TP 10
 cut \fIloopnumber
 Extract loop #N from a sample.
@@ -607,7 +607,8 @@ Translate input sampling rate to output sampling rate
 via linear interpolation to the Least Common Multiple
 of the two sampling rates.
 This is the default effect 
-if the two files have different sampling rates.
+if the two files have different sampling rates and the preview options
+was specified.
 This is fast but noisy:
 the spectrum of the original sound will be shifted upwards
 and duplicated faintly when up-translating by a multiple.
@@ -619,7 +620,7 @@ or
 If you are wondering which of
 .B Sox's
 rate changing effects to ues, you will want to read a
-detailed analysis of all of them at http://usa.ece.cmu.edu/Sox/
+detailed analysis of all of them at http://eakaw2.et.tu-dresden.de/~andreas/resample/resample.html
 .TP 10
 resample [ \fIrolloff\fR [ \fIbeta\fR ] ]
 Translate input sampling rate to output sampling rate
@@ -637,6 +638,8 @@ should be at least greater than 2.  The default is rollof 0.8, beta 17.5,
 which is rather conservative with respect to aliasing.  Lower beta
 and higher rolloff values preserve more high frequency signal energy,
 but introduce measurable artifacts.
+This is the default effect 
+if the two files have different sampling rates.
 .TP 10
 reverb \fIgain-out delay \fR[ \fIdelay ... \fR]
 Add reverbation to a sound sample.  Each delay is given 

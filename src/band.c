@@ -114,6 +114,8 @@ int *isamp, *osamp;
 		band->out1 = d;
 		*obuf++ = d;
 	}
+	*isamp = len;
+	*osamp = len;
 }
 
 /*

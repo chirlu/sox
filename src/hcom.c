@@ -23,11 +23,9 @@
 
 #include "st.h"
 #include <string.h>
-
-#ifdef __STDC__
 #include <stdlib.h>
-#else
-IMPORT char *malloc(), *realloc();
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
 #endif
 
 /* Dictionary entry for Huffman (de)compression */

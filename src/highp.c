@@ -91,6 +91,8 @@ int *isamp, *osamp;
 		*obuf++ = d * 65536L;
 	}
 	highp->out1 = d;
+	*isamp = len;
+	*osamp = len;
 }
 
 /*

@@ -16,6 +16,9 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 #include "st.h"
 
 typedef struct _list {

@@ -61,7 +61,7 @@ OPTIONS
 
 
 
-			  March 5, 1999				1
+			  June 28, 1999				1
 
 
 
@@ -127,7 +127,7 @@ SoX(1)							   SoX(1)
 
 
 
-			  March 5, 1999				2
+			  June 28, 1999				2
 
 
 
@@ -193,7 +193,7 @@ FILE TYPES
 
 
 
-			  March 5, 1999				3
+			  June 28, 1999				3
 
 
 
@@ -259,7 +259,7 @@ SoX(1)							   SoX(1)
 
 
 
-			  March 5, 1999				4
+			  June 28, 1999				4
 
 
 
@@ -325,7 +325,7 @@ SoX(1)							   SoX(1)
 
 
 
-			  March 5, 1999				5
+			  June 28, 1999				5
 
 
 
@@ -391,7 +391,7 @@ SoX(1)							   SoX(1)
 
 
 
-			  March 5, 1999				6
+			  June 28, 1999				6
 
 
 
@@ -457,7 +457,7 @@ EFFECTS
 
 
 
-			  March 5, 1999				7
+			  June 28, 1999				7
 
 
 
@@ -479,7 +479,7 @@ SoX(1)							   SoX(1)
 
        copy	 Copy the input file to the output file.  This is
 		 the default effect if both files have	the  same
-		 sampling rate, or the rates are "close".
+		 sampling rate.
 
        cut loopnumber
 		 Extract loop #N from a sample.
@@ -523,7 +523,7 @@ SoX(1)							   SoX(1)
 
 
 
-			  March 5, 1999				8
+			  June 28, 1999				8
 
 
 
@@ -589,7 +589,7 @@ SoX(1)							   SoX(1)
 
 
 
-			  March 5, 1999				9
+			  June 28, 1999				9
 
 
 
@@ -600,16 +600,18 @@ SoX(1)							   SoX(1)
 
 		 Common Multiple of the two sampling rates.  This
 		 is the default effect if the two files have dif-
-		 ferent sampling rates.	 This is fast but  noisy:
-		 the  spectrum	of  the	 original  sound  will be
-		 shifted upwards and duplicated faintly when  up-
-		 translating  by a multiple.  Lerp-ing is accept-
-		 able for cheap 8-bit sound hardware, but for CD-
-		 quality  sound	 you  should  instead  use either
-		 resample or polyphase.	  If  you  are	wondering
-		 which of Sox's rate changing effects to ues, you
-		 will want to read a detailed analysis of all  of
-		 them at http://usa.ece.cmu.edu/Sox/
+		 ferent sampling rates and  the	 preview  options
+		 was  specified.   This	 is  fast  but noisy: the
+		 spectrum of the original sound will  be  shifted
+		 upwards and duplicated faintly when up-translat-
+		 ing by a multiple.  Lerp-ing is  acceptable  for
+		 cheap	8-bit  sound hardware, but for CD-quality
+		 sound you should instead use either resample  or
+		 polyphase.   If you are wondering which of Sox's
+		 rate changing effects to ues, you will	 want  to
+		 read  a  detailed  analysis  of  all  of them at
+		 http://eakaw2.et.tu-dresden.de/~andreas/resam-
+		 ple/resample.html
 
        resample [ rolloff [ beta ] ]
 		 Translate input sampling rate to output sampling
@@ -628,7 +630,9 @@ SoX(1)							   SoX(1)
 		 which is rather  conservative	with  respect  to
 		 aliasing.   Lower beta and higher rolloff values
 		 preserve more high frequency signal energy,  but
-		 introduce measurable artifacts.
+		 introduce  measurable	artifacts.   This  is the
+		 default effect if the two files  have	different
+		 sampling rates.
 
        reverb gain-out delay [ delay ... ]
 		 Add  reverbation  to a sound sample.  Each delay
@@ -648,14 +652,10 @@ SoX(1)							   SoX(1)
        stat [ debug | -v ]
 		 Do  a	statistical  check on the input file, and
 		 print results on the standard error file.   stat
-		 may  copy  the file untouched from input to out-
-		 put, if you select an output file.  The  "Volume
-		 Adjustment:"  field  in the statistics gives you
-		 the argument to the -v number	which  will  make
 
 
 
-			  March 5, 1999			       10
+			  June 28, 1999			       10
 
 
 
@@ -664,6 +664,10 @@ SoX(1)							   SoX(1)
 SoX(1)							   SoX(1)
 
 
+		 may  copy  the file untouched from input to out-
+		 put, if you select an output file.  The  "Volume
+		 Adjustment:"  field  in the statistics gives you
+		 the argument to the -v number	which  will  make
 		 the sample as loud as possible without clipping.
 		 There is an  optional	parameter  -v  that  will
 		 print out the "Volume Adjustment:" field's value
@@ -713,15 +717,11 @@ NOTICES
        The  echoplex  effect  is:  Copyright  (C)  1989	 by   Jef
        Poskanzer.
 
-       Permission to use, copy, modify, and distribute this soft-
-       ware and its documentation for any purpose and without fee
-       is  hereby  granted,  provided  that  the  above copyright
-       notice appear in all copies and that both  that	copyright
-       notice  and  this  permission  notice appear in supporting
+       Permission  to  use,  copy,  modify,  and  distribute this
 
 
 
-			  March 5, 1999			       11
+			  June 28, 1999			       11
 
 
 
@@ -730,6 +730,10 @@ NOTICES
 SoX(1)							   SoX(1)
 
 
+       software and its documentation for any purpose and without
+       fee  is	hereby granted, provided that the above copyright
+       notice appear in all copies and that both  that	copyright
+       notice  and  this  permission  notice appear in supporting
        documentation.  This software is provided "as is"  without
        express or implied warranty.
 
@@ -783,10 +787,6 @@ SoX(1)							   SoX(1)
 
 
 
-
-
-
-
-			  March 5, 1999			       12
+			  June 28, 1999			       12
 
 

@@ -30,6 +30,9 @@
 */
 #include <math.h>
 #include <stdlib.h>
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 #include "st.h"
 
 /* resample includes */
@@ -122,7 +125,7 @@ char **argv;
 	else if (resample->beta < 1.0)
 	        fail("resample: beta factor (%f) no good, should be >= 1.0", 
 			resample->beta);
-	fprintf(stderr, "resample opts: %f, %f\n", 
+	report("resample opts: %f, %f\n", 
 		resample->rolloff, resample->beta);
 }
 

@@ -52,7 +52,7 @@ char **argv;
  * Prepare processing.
  * Do all initializations.
  */
-swap_start(effp)
+void swap_start(effp)
 eff_t effp;
 {
     if (effp->outinfo.channels == 1)

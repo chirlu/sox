@@ -93,6 +93,9 @@
  */
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 #include <math.h>
 #include "st.h"
 
