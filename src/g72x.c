@@ -348,6 +348,7 @@ update(code_size, y, wi, fi, dq, sr, dqsez, state_ptr)
 				a2p += fa1 >> 5;
 
 			if (pk0 ^ state_ptr->pk[1])
+			{
 				/* LIMC */
 				if (a2p <= -12160)
 					a2p = -12288;
@@ -355,6 +356,7 @@ update(code_size, y, wi, fi, dq, sr, dqsez, state_ptr)
 					a2p = 12288;
 				else
 					a2p -= 0x80;
+			}
 			else if (a2p <= -12416)
 				a2p = -12288;
 			else if (a2p >= 12160)

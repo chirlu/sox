@@ -33,9 +33,10 @@
 
 unsigned char
 st_linear_to_ulaw( sample )
-int sample;
+short sample;
     {
-    static int exp_lut[256] = {0,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,
+    static const int exp_lut[256] = 
+			      {0,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,
                                4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
                                5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
                                5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
@@ -2208,7 +2209,7 @@ int ulaw_exp_table[256] = {
 
 unsigned char
 st_linear_to_Alaw( sample )
-int sample;
+short sample;
     {
     static int exp_lut[128] = {1,1,2,2,3,3,3,3,
                                4,4,4,4,4,4,4,4,

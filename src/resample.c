@@ -28,6 +28,16 @@
  * too low by 2 when downsampling.
  * Andreas Wilde, 12. Feb. 1999, andreas@eakaw2.et.tu-dresden.de
 */
+/*
+ * October 29, 1999
+ * Various changes, bugfixes(?), increased precision, by Stan Brooks.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ */
+
 #include <math.h>
 #include <stdlib.h>
 #ifdef HAVE_MALLOC_H
@@ -39,66 +49,51 @@
 #include "resdefs.h"
 #include "resampl.h"
 
-#define IBUFFSIZE 4096                         /* Input buffer size */
-#define OBUFFSIZE (IBUFFSIZE*MAXFACTOR+2)      /* Calc'd out buffer size */
+#define Float double/*float*/
+#define ISCALE 0x10000
+
+#define BUFFSIZE 8192 /*16384*/               /* Total buffer size */
+#define L64 long long
 
 /* Private data for Lerp via LCM file */
 typedef struct resamplestuff {
-   double Factor;               /* Factor = Fout/Fin sample rates */
-   double rolloff;              /* roll-off frequency */
-   double beta;                 /* passband/stopband tuning magic */
-   short InterpFilt;      	/* TRUE means interpolate filter coeffs */
-   UHWORD Oskip;		/* number of bogus output samples at start */
-   UHWORD LpScl, Nmult, Nwing;
-   HWORD *Imp;         		/* impulse [MAXNWING] Filter coefficients */
-   HWORD *ImpD;        		/* [MAXNWING] ImpD[n] = Imp[n+1]-Imp[n] */
-   /* for resample main loop */
-   UWORD Time;                  /* Current time/pos in input sample */
-   UHWORD Xp, Xoff, Xread;
-   HWORD *X, *Y; 		/* I/O buffers */
+   double Factor;     /* Factor = Fout/Fin sample rates */
+   double rolloff;    /* roll-off frequency */
+   double beta;       /* passband/stopband tuning magic */
+   int quadr;         /* non-zero to use qprodUD quadratic interpolation */
+   LONG Nmult;
+   LONG Nwing;
+   LONG Nq;
+   Float *Imp;        /* impulse [Nwing+1] Filter coefficients */
+   double Time;       /* Current time/pos in input sample */
+   LONG dhb;
+   LONG Xh;           /* number of past/future samples needed by filter  */
+	 LONG Xoff;         /* Xh plus some room for creep  */
+   LONG Xread;        /* X[Xread] is start-position to enter new samples */
+   LONG Xp;           /* X[Xp] is position to start filter application   */
+	 LONG Xsize,Ysize;  /* size (Floats) of X[],Y[]         */
+   Float *X, *Y;      /* I/O buffers */
 } *resample_t;
 
-int makeFilter(P6(HWORD Imp[],
-		  HWORD ImpD[],
-		  UHWORD *LpScl,
-		  UHWORD Nwing,
+void LpFilter(P5(double c[],
+		LONG N,
+		double frq,
+		double Beta,
+		LONG Num));
+
+int makeFilter(P5(Float Imp[],
+		  LONG Nwing,
 		  double Froll,
-		  double Beta));
-HWORD SrcUp(P10(HWORD X[],
-		HWORD Y[],
-		double Factor,
-		UWORD *Time,
-		UHWORD Nx,
-		UHWORD Nwing,
-		UHWORD LpScl,
-		HWORD Imp[],
-		HWORD ImpD[],
-		BOOL Interp));
-HWORD SrcUD(P10(HWORD X[],
-		HWORD Y[],
-		double Factor,
-		UWORD *Time,
-		UHWORD Nx,
-		UHWORD Nwing,
-		UHWORD LpScl,
-		HWORD Imp[],
-		HWORD ImpD[],
-		BOOL Interp));
-IWORD FilterUp(P7(HWORD Imp[],
-		  HWORD ImpD[],
-		  UHWORD Nwing,
-		  BOOL Interp,
-		  HWORD *Xp,
-		  HWORD Ph,
-		  HWORD Inc));
-IWORD FilterUD(P8(HWORD Imp[],
-		  HWORD ImpD[],
-		  UHWORD Nwing,
-		  BOOL Interp,
-		  HWORD *Xp,
-		  HWORD Ph,
-		  HWORD Inc,
-		  UHWORD dhb));
+		  double Beta,
+		  LONG Num));
+
+static LONG SrcUD(P2(resample_t r, LONG Nx));
+
+
+#if 0
+static u_int32_t iprodC;
+static u_int32_t iprodM;
+#endif
 
 /*
  * Process options
@@ -108,25 +103,48 @@ eff_t effp;
 int n;
 char **argv;
 {
-	resample_t resample = (resample_t) effp->priv;
+	resample_t r = (resample_t) effp->priv;
 
 	/* These defaults are conservative with respect to aliasing. */
-	resample->rolloff = 0.8;
-	resample->beta = 17.5;
+	r->rolloff = 0.8;
+	r->beta = 16; /* anything <=2 means Nutall window */
+	r->quadr = 0;
+	r->Nmult = 39;
 
 	/* This used to fail, but with sox-12.15 it works. AW */
-	if ((n >= 1) && !sscanf(argv[0], "%lf", &resample->rolloff))
-		fail("Usage: resample [ rolloff [ beta ] ]");
-	else if ((resample->rolloff < 0.01) || (resample->rolloff > 1.0))
-	    fail("resample: rolloff factor (%f) no good, should be 0.01<x<1.0", 
-			resample->rolloff);
-	if ((n >= 2) && !sscanf(argv[1], "%lf", &resample->beta))
-		fail("Usage: resample [ rolloff [ beta ] ]");
-	else if (resample->beta < 1.0)
-	        fail("resample: beta factor (%f) no good, should be >= 1.0", 
-			resample->beta);
-	report("resample opts: %f, %f\n", 
-		resample->rolloff, resample->beta);
+	if ((n >= 1)) {
+		if (!strcmp(argv[0], "-qs")) {
+			r->quadr = 1;
+			n--; argv++;
+		}
+		else if (!strcmp(argv[0], "-q")) {
+			r->rolloff = 0.9;
+			r->quadr = 1;
+			r->Nmult = 75;
+			n--; argv++;
+		}
+		else if (!strcmp(argv[0], "-ql")) {
+			r->rolloff = 0.9;
+			r->quadr = 1;
+			r->Nmult = 149;
+			n--; argv++;
+		}
+	}
+
+	if ((n >= 1) && !sscanf(argv[0], "%lf", &r->rolloff))
+	  fail("Usage: resample [ rolloff [ beta ] ]");
+	else if ((r->rolloff <= 0.01) || (r->rolloff >= 1.0))
+	  fail("resample: rolloff factor (%f) no good, should be 0.01<x<1.0", r->rolloff);
+
+	if ((n >= 2) && !sscanf(argv[1], "%lf", &r->beta))
+	  fail("Usage: resample [ rolloff [ beta ] ]");
+	else if (r->beta <= 2.0) {
+	  r->beta = 0;
+		report("resample opts: Nuttall window, cutoff %f\n", r->rolloff);
+	} else {
+		report("resample opts: Kaiser window, cutoff %f, beta %f\n", r->rolloff, r->beta);
+	}
+
 }
 
 /*
@@ -135,69 +153,63 @@ char **argv;
 void resample_start(effp)
 eff_t effp;
 {
-	resample_t resample = (resample_t) effp->priv;
+	resample_t r = (resample_t) effp->priv;
+	LONG Xoff;
 	int i;
-	
-	resample->InterpFilt = 1;	/* interpolate filter: slower */
-	resample->Factor = 
-		(double)effp->outinfo.rate / (double)effp->ininfo.rate;
-	
+
+	r->Factor = (double)effp->outinfo.rate / (double)effp->ininfo.rate;
+
+	r->Nq = Nc; /* for now */
+
 	/* Check for illegal constants */
-	if (Np >= 16)
-		fail("Error: Np>=16");
-	if (Nb+Nhg+NLpScl >= 32)
-		fail("Error: Nb+Nhg+NLpScl>=32");
-	if (Nh+Nb > 32)
-	      fail("Error: Nh+Nb>32");
+# if 0
+	if (Lp >= 16) fail("Error: Lp>=16");
+	if (Nb+Nhg+NLpScl >= 32) fail("Error: Nb+Nhg+NLpScl>=32");
+	if (Nh+Nb > 32) fail("Error: Nh+Nb>32");
+# endif
 
+	/* Nwing: # of filter coeffs in right wing */
+	r->Nwing = r->Nq * (r->Nmult/2+1) + 1;
 
-	resample->Imp = (HWORD *) malloc(sizeof(HWORD) * MAXNWING);
-	resample->ImpD = (HWORD *) malloc(sizeof(HWORD) * MAXNWING);
-	resample->X = (HWORD *) malloc(sizeof(HWORD) * IBUFFSIZE);
-	resample->Y = (HWORD *) malloc(sizeof(HWORD) * OBUFFSIZE);
-
-	/* upsampling requires smaller Nmults */
-	for(resample->Nmult = 37; resample->Nmult > 1; resample->Nmult -= 2) {
-		/* # of filter coeffs in right wing */
-		resample->Nwing = Npc*(resample->Nmult+1)/2;     
-		/* This prevents just missing last coeff */
-		/*   for integer conversion factors  */
-		resample->Nwing += Npc/2 + 1;      
-
-		/* returns error # or 0 for success */
-		if (makeFilter(resample->Imp, resample->ImpD, 
-				&resample->LpScl, resample->Nwing, 
-				resample->rolloff, resample->beta))
-				continue;
-			else
-				break;
-			
-	}
-
-	if(resample->Nmult == 1)
+	r->Imp = (Float *)malloc(sizeof(Float) * (r->Nwing+2)) + 1;
+	/* need Imp[-1] and Imp[Nwing] for quadratic interpolation */
+	/* returns error # <=0, or adjusted wing-len > 0 */
+	i = makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq);
+	if (i <= 0)
 		fail("resample: Unable to make filter\n");
 
-	if (resample->Factor < 1)
-		resample->LpScl = resample->LpScl*resample->Factor + 0.5;
-	/* Calc reach of LP filter wing & give some creeping room */
-	resample->Xoff = ((resample->Nmult+1)/2.0) * 
-		MAX(1.0,1.0/resample->Factor) + 10;
-	if (IBUFFSIZE < 2*resample->Xoff)      /* Check input buffer size */
-		fail("IBUFFSIZE (or Factor) is too small");
+	report("Nmult: %ld, Nwing: %ld, Nq: %ld\n",r->Nmult,r->Nwing,r->Nq);
 
-	/* Current "now"-sample pointer for input */
-	resample->Xp = resample->Xoff;             
+	r->dhb = Np;  /* Fixed-point Filter sampling-time-increment */
+  if (r->Factor<1.0) r->dhb = r->Factor*Np + 0.5;
+  r->Xh = (r->Nwing<<La)/r->dhb;
+	/* (Xh * dhb)>>La is max index into Imp[] */
+
+	/* reach of LP filter wings + some creeping room */
+	Xoff = r->Xh + 10;
+	r->Xoff = Xoff;
+
+	/* Current "now"-sample pointer for input to filter */
+	r->Xp = Xoff;
 	/* Position in input array to read into */
-	resample->Xread = resample->Xoff;          
+	r->Xread = Xoff;
 	/* Current-time pointer for converter */
-	resample->Time = (resample->Xoff<<Np);     
+	r->Time = Xoff;
 
-	/* Set sample drop at beginning */
-	resample->Oskip = resample->Xread * resample->Factor;
+	i = BUFFSIZE - 2*Xoff;
+	if (i < r->Factor + 1.0/r->Factor)      /* Check input buffer size */
+		fail("Factor is too small or large for BUFFSIZE");
+	
+	r->Xsize = 2*Xoff + i/(1.0+r->Factor);
+	r->Ysize = BUFFSIZE - r->Xsize;
+	report("Xsize %d, Ysize %d, Xoff %d",r->Xsize,r->Ysize,r->Xoff);
 
-	/* Need Xoff zeros at begining of sample */
-	for (i=0; i<resample->Xoff; i++)
-		resample->X[i] = 0;
+	r->X = (Float *) malloc(sizeof(Float) * (BUFFSIZE));
+	r->Y = r->X + r->Xsize;
+
+	/* Need Xoff zeros at beginning of sample */
+	for (i=0; i<Xoff; i++)
+		r->X[i] = 0;
 }
 
 /*
@@ -210,89 +222,78 @@ eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
 {
-	resample_t resample = (resample_t) effp->priv;
-	LONG i, last, creep, Nout, Nx;
-	UHWORD Nproc;
+	resample_t r = (resample_t) effp->priv;
+	LONG i, last, Nout, Nx, Nproc;
 
 	/* constrain amount we actually process */
-	Nproc = IBUFFSIZE - resample->Xp;
-	if (Nproc * resample->Factor >= OBUFFSIZE)
-		Nproc = OBUFFSIZE / resample->Factor;
-	if (Nproc * resample->Factor >= *osamp)
-		Nproc = *osamp / resample->Factor;
-	
-	Nx = Nproc - resample->Xread;
-	if (Nx <= 0)
-		fail("Nx negative: %d", Nx);
-	if (Nx > *isamp) {
-		Nx = *isamp;
-	}
-	for(i = resample->Xread; i < Nx + resample->Xread  ; i++) 
-		resample->X[i] = RIGHT(*ibuf++ + 0x8000, 16);
-	last = i;
-	Nproc = last - (resample->Xoff * 2);
-	for(; i < last + resample->Xoff  ; i++) 
-		resample->X[i] = 0;
+	//fprintf(stderr,"Xp %d, Xread %d, isamp %d, ",r->Xp, r->Xread,*isamp);
 
-	/* If we're draining out a buffer tail, 
-	 * just do it next time or in drain.
-	 */
-	if ((Nx == *isamp) && (Nx <= resample->Xoff)) {
+	Nproc = r->Xsize - r->Xp;
+
+	i = MIN(r->Ysize, *osamp);
+	if (Nproc * r->Factor >= i)
+	  Nproc = i / r->Factor;
+
+	Nx = Nproc - r->Xread; /* space for right-wing future-data */
+	if (Nx <= 0)
+		fail("Nx not positive: %d", Nx);
+	if (Nx > *isamp)
+		Nx = *isamp;
+	//fprintf(stderr,"Nx %d\n",Nx);
+
+	if (ibuf == NULL) {
+		for(i = r->Xread; i < Nx + r->Xread  ; i++) 
+			r->X[i] = 0;
+	} else {
+		for(i = r->Xread; i < Nx + r->Xread  ; i++) 
+			r->X[i] = (Float)(*ibuf++)/ISCALE;
+	}
+	last = i;
+	Nproc = last - r->Xoff - r->Xp;
+
+	if (Nproc <= 0) {
 		/* fill in starting here next time */
-		resample->Xread = last;
+		r->Xread = last;
 		/* leave *isamp alone, we consumed it */
 		*osamp = 0;
 		return;
 	}
-
-
-        /* SrcUp() is faster if we can use it */
-	if (resample->Factor > 1)       /* Resample stuff in input buffer */
-	    Nout = SrcUp(resample->X, resample->Y,
-		resample->Factor, &resample->Time, Nproc,
-		resample->Nwing, resample->LpScl,
-		resample->Imp, resample->ImpD, 
-		resample->InterpFilt);      
-	else
-            Nout = SrcUD(resample->X, resample->Y,
-		resample->Factor, &resample->Time, Nproc,
-		resample->Nwing, resample->LpScl,
-		resample->Imp, resample->ImpD,
-		resample->InterpFilt);
-
+	Nout = SrcUD(r, Nproc);
+	//fprintf(stderr,"Nproc %d --> %d\n",Nproc,Nout);
 	/* Move converter Nproc samples back in time */
-	resample->Time -= (Nproc<<Np); 
-        /* Advance by number of samples processed */
-	resample->Xp += Nproc;
+	r->Time -= Nproc;
+	/* Advance by number of samples processed */
+	r->Xp += Nproc;
 	/* Calc time accumulation in Time */
-	creep = (resample->Time>>Np) - resample->Xoff; 
-	if (creep)
 	{
-		resample->Time -= (creep<<Np);   /* Remove time accumulation */
-		resample->Xp += creep;     /* and add it to read pointer */
+	  LONG creep = r->Time - r->Xoff; 
+	  if (creep)
+	  {
+	  	  r->Time -= creep;   /* Remove time accumulation   */
+	  	  r->Xp += creep;     /* and add it to read pointer */
+	  	  /* fprintf(stderr,"Nproc %ld, creep %ld\n",Nproc,creep); */
+	  }
 	}
 
+	{
+	LONG i,k;
 	/* Copy back portion of input signal that must be re-used */
-	for (i=0; i<last - resample->Xp + resample->Xoff; i++) 
-	    resample->X[i] = resample->X[i + resample->Xp - resample->Xoff];
+	k = r->Xp - r->Xoff;
+	//fprintf(stderr,"k %d, last %d\n",k,last);
+	for (i=0; i<last - k; i++) 
+	    r->X[i] = r->X[i+k];
 
 	/* Pos in input buff to read new data into */
-	resample->Xread = i;                 
-	resample->Xp = resample->Xoff;
+	r->Xread = i;                 
+	r->Xp = r->Xoff;
 
-	/* copy to output buffer, zero-filling beginning */
-	/* zero-fill to preserve length and loop points */
-	for(i = 0; i < resample->Oskip; i++) {
-		*obuf++ = 0;
-	}
-	for(i = resample->Oskip; i < Nout + resample->Oskip; i++) {
-		*obuf++ = LEFT(resample->Y[i], 16);
-	}
+	for(i=0; i < Nout; i++)
+		*obuf++ = r->Y[i] * ISCALE;
 
 	*isamp = Nx;
 	*osamp = Nout;
 
-	resample->Oskip = 0;
+	}
 }
 
 /*
@@ -300,46 +301,33 @@ LONG *isamp, *osamp;
  */
 void resample_drain(effp, obuf, osamp)
 eff_t effp;
-ULONG *obuf;
-ULONG *osamp;
+LONG *obuf;
+LONG *osamp;
 {
-	resample_t resample = (resample_t) effp->priv;
-	LONG i, Nout;
-	UHWORD Nx;
+	resample_t r = (resample_t) effp->priv;
+	LONG i, Nout, Nx;
 	
-	Nx = resample->Xread - resample->Xoff;
-	if (Nx <= resample->Xoff * 2) {
-		/* zero-fill end */
-		for(i = 0; i < resample->Xoff; i++)
-			*obuf++ = 0;
-		*osamp = resample->Xoff;
-		return;
-	}
+	//fprintf(stderr,"Xp %d, Xread %d  <--- DRAIN\n",r->Xp, r->Xread);
+	if (r->Xsize - r->Xread < r->Xoff)
+		fail("resample_drain: Problem!\n");
 
-	if (Nx * resample->Factor >= *osamp)
+	/* fill out end with Xoff zeros */
+	for(i = 0; i < r->Xoff; i++)
+		r->X[i + r->Xread] = 0;
+
+	Nx = r->Xread - r->Xp;
+
+	if (Nx * r->Factor >= *osamp)
 		fail("resample_drain: Overran output buffer!\n");
 
-	/* fill out end with zeros */
-	for(i = 0; i < resample->Xoff; i++)
-		resample->X[i + resample->Xread] = 0;
-        /* SrcUp() is faster if we can use it */
-	if (resample->Factor >= 1)       /* Resample stuff in input buffer */
-	    Nout = SrcUp(resample->X, resample->Y,
-		resample->Factor, &resample->Time, Nx,
-		resample->Nwing, resample->LpScl,
-		resample->Imp, resample->ImpD, 
-		resample->InterpFilt);      
-	else
-            Nout = SrcUD(resample->X, resample->Y,
-		resample->Factor, &resample->Time, Nx,
-		resample->Nwing, resample->LpScl,
-		resample->Imp, resample->ImpD,
-		resample->InterpFilt);
-	
-	for(i = resample->Oskip; i < Nout; i++) {
-		*obuf++ = LEFT(resample->Y[i], 16);
-	}
-	*osamp = Nout - resample->Oskip;
+	/* Resample stuff in input buffer */
+	Nout = SrcUD(r, Nx);
+	//fprintf(stderr,"Nproc %d --> %d\n",Nx,Nout);
+
+	for(i = 0; i < Nout; i++)
+		*obuf++ = r->Y[i] * ISCALE;
+
+	*osamp = Nout;
 }
 
 /*
@@ -349,159 +337,182 @@ ULONG *osamp;
 void resample_stop(effp)
 eff_t effp;
 {
-	resample_t resample = (resample_t) effp->priv;
+	resample_t r = (resample_t) effp->priv;
 	
-	free(resample->Imp);
-	free(resample->ImpD);
-	free(resample->X);
-	free(resample->Y);
+	free(r->Imp - 1);
+	free(r->X);
+	/* free(r->Y); Y is in same block starting at X */ 
+	/*report("iC %d, iM %d, ratio %d", iprodC, iprodM, iprodM/iprodC);*/
+}
+
+/* over 90% of CPU time spent in this iprodUD() function */
+/* quadratic interpolation */
+static double qprodUD(Imp, Xp, Inc, T0, dhb, ct)
+const Float Imp[], *Xp;
+LONG Inc, dhb, ct;
+double T0;
+{
+  const double f = 1.0/(1<<La);
+  double v;
+  LONG Ho;
+
+	Ho = T0 * dhb;
+	Ho += (ct-1)*dhb; /* so Float sum starts with smallest coef's */
+	Xp += (ct-1)*Inc;
+	v = 0;
+  do {
+    Float coef;
+    LONG Hoh;
+    Hoh = Ho>>La;
+		coef = Imp[Hoh];
+    {
+      Float dm,dp,t;
+      dm = coef - Imp[Hoh-1];
+      dp = Imp[Hoh+1] - coef;
+      t =(Ho & Amask) * f;
+      coef += ((dp-dm)*t + (dp+dm))*t*0.5;
+    }
+    /* filter coef, lower La bits by quadratic interpolation */
+    v += coef * *Xp;   /* sum coeff * input sample */
+    Xp -= Inc;     /* Input signal step. NO CHECK ON ARRAY BOUNDS */
+    Ho -= dhb;     /* IR step */
+  } while(--ct);
+  return v;
+}
+
+/* linear interpolation */
+static double iprodUD(Imp, Xp, Inc, T0, dhb, ct)
+const Float Imp[], *Xp;
+LONG Inc, dhb, ct;
+double T0;
+{
+  const double f = 1.0/(1<<La);
+  double v;
+  LONG Ho;
+
+  Ho = T0 * dhb;
+	Ho += (ct-1)*dhb; /* so Float sum starts with smallest coef's */
+  Xp += (ct-1)*Inc;
+	v = 0;
+  do {
+    Float coef;
+    LONG Hoh;
+    Hoh = Ho>>La;
+    /* if (Hoh >= End) break; */
+    coef = Imp[Hoh] + (Imp[Hoh+1]-Imp[Hoh]) * (Ho & Amask) * f;
+    /* filter coef, lower La bits by linear interpolation */
+    v += coef * *Xp;   /* sum coeff * input sample */
+    Xp -= Inc;     /* Input signal step. NO CHECK ON ARRAY BOUNDS */
+    Ho -= dhb;     /* IR step */
+  } while(--ct);
+  return v;
 }
 
 /* From resample:filters.c */
-
-/* Sampling rate up-conversion only subroutine;
- * Slightly faster than down-conversion;
- */
-HWORD SrcUp(X, Y, Factor, Time, Nx, Nwing, LpScl, Imp, ImpD, Interp)
-HWORD X[], Y[];
-double Factor;
-UWORD *Time;
-UHWORD Nx, Nwing, LpScl;
-HWORD Imp[], ImpD[];
-BOOL Interp;
-{
-   HWORD *Xp, *Ystart;
-   IWORD v;
-
-   double dt;                  /* Step through input signal */ 
-   UWORD dtb;                  /* Fixed-point version of Dt */
-   UWORD endTime;              /* When Time reaches EndTime, return to user */
-
-   dt = 1.0/Factor;            /* Output sampling period */
-   dtb = dt*(1<<Np) + 0.5;     /* Fixed-point representation */
-
-   Ystart = Y;
-   endTime = *Time + (1<<Np)*(IWORD)Nx;
-   while (*Time < endTime)
-      {
-      Xp = &X[*Time>>Np];      /* Ptr to current input sample */
-      v = FilterUp(Imp, ImpD, Nwing, Interp, Xp, (HWORD)(*Time&Pmask),
-         -1);                  /* Perform left-wing inner product */
-      v += FilterUp(Imp, ImpD, Nwing, Interp, Xp+1, (HWORD)((-*Time)&Pmask),
-         1);                   /* Perform right-wing inner product */
-      v >>= Nhg;               /* Make guard bits */
-      v *= LpScl;              /* Normalize for unity filter gain */
-      *Y++ = v>>NLpScl;        /* Deposit output */
-      *Time += dtb;            /* Move to next sample by time increment */
-      }
-   return (Y - Ystart);        /* Return the number of output samples */
-}
-
-
 /* Sampling rate conversion subroutine */
 
-HWORD SrcUD(X, Y, Factor, Time, Nx, Nwing, LpScl, Imp, ImpD, Interp)
-HWORD X[], Y[];
-double Factor;
-UWORD *Time;
-UHWORD Nx, Nwing, LpScl;
-HWORD Imp[], ImpD[];
-BOOL Interp;
+static LONG SrcUD(r, Nx)
+resample_t r;
+LONG Nx;
 {
-   HWORD *Xp, *Ystart;
-   IWORD v;
-
-   double dh;                  /* Step through filter impulse response */
+   Float *Ystart, *Y;
+   double Factor;
    double dt;                  /* Step through input signal */
-   UWORD endTime;              /* When Time reaches EndTime, return to user */
-   UWORD dhb, dtb;             /* Fixed-point versions of Dh,Dt */
+   double time;
+   double (*prodUD)();
+   int n;
 
-   dt = 1.0/Factor;            /* Output sampling period */
-   dtb = dt*(1<<Np) + 0.5;     /* Fixed-point representation */
-
-   dh = MIN(Npc, Factor*Npc);  /* Filter sampling period */
-   dhb = dh*(1<<Na) + 0.5;     /* Fixed-point representation */
-
-   Ystart = Y;
-   endTime = *Time + (1<<Np)*(IWORD)Nx;
-   while (*Time < endTime)
+   prodUD = (r->quadr)? qprodUD:iprodUD; /* quadratic or linear interp */
+   Factor = r->Factor;
+   time = r->Time;
+   dt = 1.0/Factor;        /* Output sampling period */
+   /*fprintf(stderr,"Factor %f, dt %f, ",Factor,dt); */
+   /*fprintf(stderr,"Time %f, ",r->Time);*/
+	 /* (Xh * dhb)>>La is max index into Imp[] */
+	 /*fprintf(stderr,"ct=%d\n",ct);*/
+   /*fprintf(stderr,"ct=%.2f %d\n",(double)r->Nwing*Na/r->dhb, r->Xh);*/
+   Ystart = Y = r->Y;
+   n = (int)ceil((double)Nx/dt);
+   while(n--)
       {
-      Xp = &X[*Time>>Np];      /* Ptr to current input sample */
-      v = FilterUD(Imp, ImpD, Nwing, Interp, Xp, (HWORD)(*Time&Pmask),
-          -1, dhb);            /* Perform left-wing inner product */
-      v += FilterUD(Imp, ImpD, Nwing, Interp, Xp+1, (HWORD)((-*Time)&Pmask),
-           1, dhb);            /* Perform right-wing inner product */
-      v >>= Nhg;               /* Make guard bits */
-      v *= LpScl;              /* Normalize for unity filter gain */
-      *Y++ = v>>NLpScl;        /* Deposit output */
-      *Time += dtb;            /* Move to next sample by time increment */
+      Float *Xp;
+      double v;
+      double T;
+      T = time-floor(time);        /* fractional part of Time */
+			Xp = r->X + (LONG)time;      /* Ptr to current input sample */
+
+      /* Past  inner product: */
+      v = (*prodUD)(r->Imp, Xp, -1, T, r->dhb, r->Xh); /* needs Np*Nmult in 31 bits */
+      /* Future inner product: */
+      v += (*prodUD)(r->Imp, Xp+1, 1, (1.0-T), r->dhb, r->Xh); /* prefer even total */
+
+      if (Factor < 1) v *= Factor;
+      *Y++ = v;              /* Deposit output */
+      time += dt;            /* Move to next sample by time increment */
       }
+   r->Time = time;
+   /*fprintf(stderr,"Time %f\n",r->Time);*/
    return (Y - Ystart);        /* Return the number of output samples */
 }
 
-void LpFilter();
-
-int makeFilter(Imp, ImpD, LpScl, Nwing, Froll, Beta)
-HWORD Imp[], ImpD[];
-UHWORD *LpScl, Nwing;
+int makeFilter(Imp, Nwing, Froll, Beta, Num)
+Float Imp[];
+LONG Nwing, Num;
 double Froll, Beta;
 {
-   double DCgain, Scl, Maxh;
+   double DCgain;
    double *ImpR;
-   HWORD Dh;
-   LONG i, temp;
+   LONG Mwing, Dh, i;
 
    if (Nwing > MAXNWING)                      /* Check for valid parameters */
-      return(1);
+      return(-1);
    if ((Froll<=0) || (Froll>1))
-      return(2);
-   if (Beta < 1)
-      return(3);
+      return(-2);
 
-   ImpR = (double *) malloc(sizeof(double) * MAXNWING);
-   LpFilter(ImpR, (int)Nwing, Froll, Beta, Npc); /* Design a Kaiser-window */
-                                                 /* Sinc low-pass filter */
+   /* it does help accuracy a bit to have the window stop at
+    * a zero-crossing of the sinc function */
+   Mwing = floor((double)Nwing/(Num/Froll))*(Num/Froll) +0.5;
+   if (Mwing==0)
+      return(-4);
 
-   /* Compute the DC gain of the lowpass filter, and its maximum coefficient
-    * magnitude. Scale the coefficients so that the maximum coeffiecient just
-    * fits in Nh-bit fixed-point, and compute LpScl as the NLpScl-bit (signed)
-    * scale factor which when multiplied by the output of the lowpass filter
-    * gives unity gain. */
+   ImpR = (double *) malloc(sizeof(double) * Mwing);
+
+   /* Design a Nuttall or Kaiser windowed Sinc low-pass filter */
+   LpFilter(ImpR, Mwing, Froll, Beta, Num);
+
+   /* 'correct' the DC gain of the lowpass filter */
    DCgain = 0;
-   Dh = Npc;                       /* Filter sampling period for factors>=1 */
-   for (i=Dh; i<Nwing; i+=Dh)
+   Dh = Num;                  /* Filter sampling period for factors>=1 */
+   for (i=Dh; i<Mwing; i+=Dh)
       DCgain += ImpR[i];
    DCgain = 2*DCgain + ImpR[0];    /* DC gain of real coefficients */
+   report("DCgain err=%.12f",DCgain-1.0);
 
-   for (Maxh=i=0; i<Nwing; i++)
-      Maxh = MAX(Maxh, fabs(ImpR[i]));
-
-   Scl = ((1<<(Nh-1))-1)/Maxh;     /* Map largest coeff to 16-bit maximum */
-   temp = fabs((1<<(NLpScl+Nh))/(DCgain*Scl));
-   if (temp >= (1L<<16)) {
-      free(ImpR);
-      return(4);                   /* Filter scale factor overflows UHWORD */
-    }
-   *LpScl = temp;
-
-   /* Scale filter coefficients for Nh bits and convert to integer */
-   if (ImpR[0] < 0)                /* Need pos 1st value for LpScl storage */
-      Scl = -Scl;
-   for (i=0; i<Nwing; i++)         /* Scale them */
-      ImpR[i] *= Scl;
-   for (i=0; i<Nwing; i++)         /* Round them */
-      Imp[i] = ImpR[i] + 0.5;
-
-   /* ImpD makes linear interpolation of the filter coefficients faster */
-   for (i=0; i<Nwing-1; i++)
-      ImpD[i] = Imp[i+1] - Imp[i];
-   ImpD[Nwing-1] = - Imp[Nwing-1];      /* Last coeff. not interpolated */
-
+   for (i=0; i<Mwing; i++) {
+      Imp[i] = ImpR[i]/DCgain;
+   }
    free(ImpR);
-   return(0);
+   for (i=Mwing; i<=Nwing; i++) Imp[i] = 0;
+	 /* Imp[Nwing] and Imp[-1] needed for quadratic interpolation */
+   Imp[-1] = Imp[1];
+
+#  if 0
+   {
+      double v = 0;
+      int s=-1;
+      for (i=Num; i<Mwing; i+=Num, s=-s)
+      v += s*Imp[i];
+      report("NYQgain %.12f vs %.12f",Imp[0], -2*v);
+      v = -2*v - Imp[0];
+      v *= (double)Nc/(double)(2*Mwing+1);
+      for (i=0; i<Mwing; i++)
+          Imp[i] += v*cos(M_PI*i/Nc);
+
+   }
+#  endif
+   
+   return(Mwing);
 }
-
-
 
 /* LpFilter()
  *
@@ -557,123 +568,33 @@ double x;
       temp *= temp;
       u *= temp;
       sum += u;
-      } while (u >= IzeroEPSILON*sum);
+   } while (u >= IzeroEPSILON*sum);
    return(sum);
 }
 
-
 void LpFilter(c,N,frq,Beta,Num)
 double c[], frq, Beta;
-int N, Num;
+LONG N, Num;
 {
-   double IBeta, temp;
-   int i;
+   LONG i;
 
    /* Calculate filter coeffs: */
    c[0] = frq;
-   for (i=1; i<N; i++)
-      {
-      temp = PI*(double)i/(double)Num;
-      c[i] = sin(temp*frq)/temp;
+   for (i=1; i<N; i++) {
+      double x = M_PI*(double)i/(double)(Num);
+      c[i] = sin(x*frq)/x;
+   }
+  
+   if (Beta>2) { /* Apply Kaiser window to filter coeffs: */
+      double IBeta = 1.0/Izero(Beta);
+      for (i=1; i<N; i++) {
+         double x = (double)i / (double)(N);
+         c[i] *= Izero(Beta*sqrt(1.0-x*x)) * IBeta;
       }
-
-   /* Calculate and Apply Kaiser window to filter coeffs: */
-   IBeta = 1.0/Izero(Beta);
-   for (i=1; i<N; i++)
-      {
-      temp = (double)i / ((double)N * (double)1.0);
-      c[i] *= Izero(Beta*sqrt(1.0-temp*temp)) * IBeta;
+   } else { /* Apply Nuttall window: */
+      for(i = 0; i < N; i++) {
+         double x = M_PI*i / N;
+         c[i] *= 0.36335819 + 0.4891775*cos(x) + 0.1365995*cos(2*x) + 0.0106411*cos(3*x);
       }
+   }
 }
-
-
-
-
-IWORD FilterUp(Imp, ImpD, Nwing, Interp, Xp, Ph, Inc)
-HWORD Imp[], ImpD[];
-UHWORD Nwing;
-BOOL Interp;
-HWORD *Xp, Ph, Inc;
-{
-   HWORD a=0, *Hp, *Hdp=0, *End;
-   IWORD v, t;
-
-   v=0;
-   Hp = &Imp[Ph>>Na];
-   End = &Imp[Nwing];
-   if (Interp)
-      {
-      Hdp = &ImpD[Ph>>Na];
-      a = Ph & Amask;
-      }
-   /* Possible Bug: Hdp and a are not initialized if Interp == 0 */
-   if (Inc == 1)                     /* If doing right wing...              */
-      {                              /* ...drop extra coeff, so when Ph is  */
-      End--;                         /*    0.5, we don't do too many mult's */
-      if (Ph == 0)                   /* If the phase is zero...           */
-         {                           /* ...then we've already skipped the */
-         Hp += Npc;                  /*    first sample, so we must also  */
-         Hdp += Npc;                 /*    skip ahead in Imp[] and ImpD[] */
-         }
-      }
-   while (Hp < End)
-      {
-      t = *Hp;                       /* Get filter coeff */
-      if (Interp)
-         {
-         t += (((IWORD)*Hdp)*a)>>Na;  /* t is now interp'd filter coeff */
-         Hdp += Npc;                 /* Filter coeff differences step */
-	 }
-      t *= *Xp;      /* Mult coeff by input sample */
-	  if (t & (1<<(Nhxn-1)))  /* Round, if needed */
-		 t += (1<<(Nhxn-1));
-      t >>= Nhxn;    /* Leave some guard bits, but come back some */
-      v += t;        /* The filter output */
-      Hp += Npc;     /* Filter coeff step */
-      Xp += Inc;     /* Input signal step. NO CHECK ON ARRAY BOUNDS */
-      }
-   return(v);
-}
-
-
-IWORD FilterUD(Imp, ImpD, Nwing, Interp, Xp, Ph, Inc, dhb)
-HWORD Imp[], ImpD[];
-UHWORD Nwing;
-BOOL Interp;
-HWORD *Xp, Ph, Inc;
-UHWORD dhb;
-{
-   HWORD a, *Hp, *Hdp, *End;
-   IWORD v, t;
-   UWORD Ho;
-
-   v=0;
-   Ho = (Ph*(UWORD)dhb)>>Np;
-   End = &Imp[Nwing];
-   if (Inc == 1)                     /* If doing right wing...              */
-      {                              /* ...drop extra coeff, so when Ph is  */
-      End--;                         /*    0.5, we don't do too many mult's */
-      if (Ph == 0)                   /* If the phase is zero...           */
-         Ho += dhb;                  /* ...then we've already skipped the */
-      }                              /*    first sample, so we must also  */
-                                     /*    skip ahead in Imp[] and ImpD[] */
-   while ((Hp = &Imp[Ho>>Na]) < End)
-      {
-      t = *Hp;       /* Get IR sample */
-      if (Interp)
-         {
-         Hdp = &ImpD[Ho>>Na]; /* get interp (lower Na) bits from diff table */
-         a = Ho & Amask;                  /* a is logically between 0 and 1 */
-         t += (((IWORD)*Hdp)*a)>>Na;      /* t is now interp'd filter coeff */
-	 }
-      t *= *Xp;      /* Mult coeff by input sample */
-	  if (t & (1<<(Nhxn-1)))  /* Round, if needed */
-		 t += (1<<(Nhxn-1));
-      t >>= Nhxn;    /* Leave some guard bits, but come back some */
-      v += t;        /* The filter output */
-      Ho += dhb;     /* IR step */
-      Xp += Inc;     /* Input signal step. NO CHECK ON ARRAY BOUNDS */
-      }
-   return(v);
-}
-

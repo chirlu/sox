@@ -168,19 +168,6 @@ char *rawnames[] = {
 
 /* raw prototypes are defined in st.h since they are used globally. */
 
-#if	defined(BLASTER) || defined(SBLAST)
-char *sbdspnames[] = {
-	"sbdsp",
-	(char *) 0
-};
-extern void sbdspstartread();
-extern LONG sbdspread();
-extern void sbdspstopread();
-extern void sbdspstartwrite();
-extern void sbdspwrite();
-extern void sbdspstopwrite();
-#endif
-
 char *sbnames[] = {
 	"sb",
 	(char *) 0
@@ -199,6 +186,14 @@ char *smpnames[] = {
 	"smp",
 	(char *) 0,
 };
+
+char *slnames[] = {
+	"sl",
+	(char *) 0,
+};
+
+extern void slstartread();
+extern void slstartwrite();
 
 extern void smpstartread();
 extern LONG smpread();
@@ -375,18 +370,15 @@ EXPORT format_t formats[] = {
 	{rawnames, FILE_STEREO,
 		rawstartread, rawread, rawstopread, 	       /* Raw format */
 		rawstartwrite, rawwrite, rawstopwrite},
-#if	defined(BLASTER) || defined(SBLAST)
-	/* 386 Unix sound blaster player. */
-	{sbdspnames, FILE_STEREO,
-		sbdspstartread, sbdspread, sbdspstopread,      /* /dev/sbdsp */
-		sbdspstartwrite, sbdspwrite, sbdspstopwrite},	
-#endif
 	{sbnames, FILE_STEREO,
 		sbstartread, rawread, rawstopread, 	  /* signed byte raw */
 		sbstartwrite, rawwrite, rawstopwrite},	
 	{sfnames, FILE_STEREO,
 		sfstartread, rawread, rawstopread,       /* IRCAM Sound File */
 		sfstartwrite, rawwrite, rawstopwrite},
+	{ slnames, FILE_STEREO,
+	    	slstartread, rawread, rawstopread,	/* signed long raw */
+		slstartwrite, rawwrite, rawstopwrite },
 	{smpnames, FILE_STEREO | FILE_LOOPS,
 		smpstartread, smpread, nothing,	       /* SampleVision sound */
 		smpstartwrite, smpwrite, smpstopwrite},	     /* Turtle Beach */
@@ -496,6 +488,12 @@ extern void echos_start();
 extern void echos_flow();
 extern void echos_drain();
 extern void echos_stop();
+
+extern void filter_getopts();
+extern void filter_start();
+extern void filter_flow();
+extern void filter_drain();
+extern void filter_stop();
 
 extern void flanger_getopts();
 extern void flanger_start();
@@ -629,6 +627,9 @@ EXPORT effect_t effects[] = {
 	{"echos", 0, 
 		echos_getopts, echos_start, echos_flow,
 	        echos_drain, echos_stop},
+	{ "filter", 0,
+	    	filter_getopts, filter_start, filter_flow,
+		filter_drain, filter_stop},
 	{"flanger", 0,
 	        flanger_getopts, flanger_start, flanger_flow,
 	        flanger_drain, flanger_stop},

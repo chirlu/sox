@@ -1,4 +1,3 @@
-
 /*
  * July 14, 1998
  * Copyright 1998  K. Bradley, Carnegie Mellon University
@@ -7,6 +6,16 @@
  * any purpose.  This copyright notice must be maintained. 
  * Lance Norskog And Sundry Contributors are not responsible for 
  * the consequences of using this software.
+ */
+
+/*
+ * October 29, 1999
+ * Various changes, bugfixes, speedups, by Stan Brooks.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
  */
 
 /*
@@ -21,27 +30,30 @@
 #endif
 #include "st.h"
 
-typedef struct _list {
-    int number;
-    float *data_buffer;
-    struct _list *next;
-} List;
+#define Float float/*double*/
+#define ISCALE 0x10000
+#define MF 30
+
+typedef struct {
+  int up,down;    /* up/down conversion factors for this stage      */
+  int filt_len;   /* # coefficients in filter_array                 */
+  Float *filt_array; /* filter coefficients                         */
+  int held;       /* # samples held in input but not yet processed  */
+  int hsize;      /* # samples of past-history kept in lower window */
+  int size;       /* # samples current data which window can accept */
+  Float *window;  /* this is past_hist[hsize], then input[size]     */
+} polystage;
 
 typedef struct polyphase {
 
-  unsigned long	lcmrate;	   /* least common multiple of rates */
-  unsigned long inskip, outskip;   /* LCM increments for I & O rates */
-  unsigned long total;
-  unsigned long intot, outtot;	   /* total samples in terms of LCM rate */
-  long	lastsamp;
+  unsigned long lcmrate;         /* least common multiple of rates */
+  unsigned long inskip, outskip; /* LCM increments for I & O rates */
+  double Factor;                 /* out_rate/in_rate               */
+  unsigned long total;           /* number of filter stages        */
+  unsigned long oskip;           /* output samples to skip at start*/
+  double inpipe;                 /* output samples 'in the pipe'   */
+  polystage *stage[MF];          /* array of pointers to polystage structs */
 
-  float **filt_array;
-  float **past_hist;
-  float *input_buffer;
-  int *filt_len;
-
-  List *l1, *l2;
-  
 } *poly_t;
 
 /*
@@ -53,8 +65,8 @@ typedef struct polyphase {
    -w <nut / ham>        :  window type
    -width <short / long> :  window width
                             short = 128 samples
-			    long  = 1024 samples
-	  <num>	            num:  explicit number
+                            long  = 1024 samples
+   <num>                    num:  explicit number
  
    -cutoff <float>       :  frequency cutoff for base bandwidth.
                             Default = 0.95 = 95%
@@ -62,12 +74,9 @@ typedef struct polyphase {
 
 static int win_type  = 0;
 static int win_width = 1024;
-static float cutoff = 0.95;
+static Float cutoff = 0.95;
    
-void poly_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+void poly_getopts(eff_t effp, int n, char **argv) 
 {
   /* 0: nuttall
      1: hamming */
@@ -85,9 +94,9 @@ char **argv;
     /* Window type check */
     if(!strcmp(argv[0], "-w")) {
       if(!strcmp(argv[1], "ham"))
-	win_type = 1;
+        win_type = 1;
       if(!strcmp(argv[1], "nut"))
-	win_type = 0;
+        win_type = 0;
 
       argv += 2;
       n -= 2;
@@ -97,11 +106,11 @@ char **argv;
     /* Window width check */
     if(!strcmp(argv[0], "-width")) {
       if(!strcmp(argv[1], "short"))
-	win_width = 128;
+        win_width = 128;
       else if(!strcmp(argv[1], "long"))
-	win_width = 1024;
+        win_width = 1024;
       else
-	win_width = atoi(argv[1]);
+        win_width = atoi(argv[1]);
 
       argv += 2;
       n -= 2;
@@ -123,8 +132,7 @@ char **argv;
 /*
  * Prepare processing.
  */
-
-static int primes[] = {
+static const unsigned short primes[] = {
   2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37,
   41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89,
   97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151,
@@ -138,63 +146,135 @@ static int primes[] = {
   661, 673, 677, 683, 691, 701, 709, 719, 727, 733, 739, 743,
   751, 757, 761, 769, 773, 787, 797, 809, 811, 821, 823, 827,
   829, 839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911,
-  919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997
+  919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997,
+  0
 };
 
 #ifndef max
 #define max(x,y) ((x > y) ? x : y)
 #endif
 
-List *prime(number)
-int number;
+#ifndef min
+#define min(x,y) ((x < y) ? x : y)
+#endif
+
+static int prime(int n, int *q0)
 {
-    int j;
-    List *element = NULL;
+  const unsigned short *p;
+  int pr, *q;
 
-    if(number == 1)
-      return NULL;
-
-    for(j=167;j>= 0;j--) {
-	if(number % primes[j] == 0) {
-	    element = (List *) malloc(sizeof(List));
-	    element->number = primes[j];
-	    element->data_buffer = NULL;
-	    element->next = prime(number / primes[j]);
-	    break;
-	}
+  p = primes;
+  q = q0;
+  report("factors(%d) =",n);
+  while (n > 1) {
+    while ((pr = *p) && (n % pr)) p++;
+    if (!pr) {
+      fail("Number %d too large of a prime.\n",n);
+      pr = n;
     }
-
-    if(element == NULL) {
-	fail("Number %d too large of a prime.\n",number);
-    }
-
-    return element;
+    *q++ = pr;
+    n /= pr;
+  }
+  *q = 0;
+  for (pr=0; pr<q-q0; pr++) fprintf(stderr," %d",q0[pr]);
+  fprintf(stderr,"\n");
+  return (q-q0);
 }
 
-List *prime_inv(number)
-int number;
+static int permute(int *m, int *l, int ct, int ct1, int amalg)
 {
-    int j;
-    List *element = NULL;
+  int k, n;
+  int *p;
+  int *q;
 
-    if(number == 1)
-      return NULL;
-
-    for(j=0;j<168;j++) {
-	if(number % primes[j] == 0) {
-	    element = (List *) malloc(sizeof(List));
-	    element->number = primes[j];
-	    element->data_buffer = NULL;
-	    element->next = prime_inv(number / primes[j]);
-	    break;
-	}
+  p=l; q=m;
+  while (ct1>ct) { *q++=1; ct++;} 
+  while ((*q++=*p++)) ;
+  if (ct<=1) return ct;
+  
+  for (k=ct; k>1; ) {
+    int tmp, j;
+    j = random() % k;
+    k--;
+    if (j != k) {
+      tmp = m[k]; m[k]=m[j]; m[j]=tmp;
     }
-
-    if(element == NULL) {
-	fail("Number %d too large of a prime.\n",number);
+  }
+  /* now m is a 'random' permutation of l */
+  p = q = m;
+  n = *q++;
+  while ((k=*q++)) {
+    if ((n * k <= amalg) && (random() & 1)) {
+      n *= k;
+    } else {
+      *p++ = n;
+      n = k;
     }
+  }
+  if (n) *p++=n;
+  *p = 0;
+  /*for (k=0; k<p-m; k++) fprintf(stderr," %d",m[k]);*/
+  /*fprintf(stderr,"\n");*/
+  return (p-m);
+}
 
-    return element;
+static int optimize_factors(int numer, int denom, int *l1, int *l2)
+{
+  int f_min,c_min,u_min,ct1,ct2;
+  int amalg;
+  int k;
+  static int m1[MF],m2[MF];
+  static int b1[MF],b2[MF];
+
+  f_min = numer; if (f_min>denom) f_min = denom;
+  c_min = 1<<30;
+  u_min = 0;
+
+  /* Find the prime factors of numer and denom */
+  ct1 = prime(numer,l1);
+  ct2 = prime(denom,l2);
+
+  for (amalg = max(9,l2[0]); amalg<= 9+l2[ct2-1]; amalg++) {
+    for (k = 0; k<100000; k++) {
+      int u,u1,u2,j,f,cost;
+      cost = 0;
+      f = denom;
+      u = min(ct1,ct2) + 1;
+      /*fprintf(stderr,"pfacts(%d): ", numer);*/
+      u1 = permute(m1,l1,ct1,u,amalg);
+      /*fprintf(stderr,"pfacts(%d): ", denom);*/
+      u2 = permute(m2,l2,ct2,u,amalg);
+      u = max(u1,u2);
+      for (j=0; j<u; j++) {
+        if (j>=u1) m1[j]=1;
+        if (j>=u2) m2[j]=1;
+        f = (f * m1[j])/m2[j];
+        if (f < f_min) goto fail;
+        cost += f + m1[j]*m2[j];
+      }
+      if (c_min>cost) {
+        c_min = cost;
+        u_min = u;
+#       if 0
+        fprintf(stderr,"c_min %d, [%d-%d]:",c_min,numer,denom);
+        for (j=0; j<u; j++)
+          fprintf(stderr," (%d,%d)",m1[j],m2[j]);
+        fprintf(stderr,"\n");
+#       endif
+       memcpy(b1,m1,u*sizeof(int));
+       memcpy(b2,m2,u*sizeof(int));
+      }
+     fail:
+    }
+    if (u_min) break;
+  }
+  if (u_min) {
+    memcpy(l1,b1,u_min*sizeof(int));
+    memcpy(l2,b2,u_min*sizeof(int));
+  }
+  l1[u_min] = 0;
+  l2[u_min] = 0;
+  return u_min;
 }
 
 #ifndef PI
@@ -205,20 +285,18 @@ int number;
    Buffer must already be allocated to appropriate size.
    */
 
-void nuttall(buffer, length)
-float *buffer;
-int length;
+static void nuttall(Float *buffer, int length)
 {
   int j;
   double N;
-  double N1;
+  int N1;
 
-  if(buffer == NULL || length < 0)
+  if(buffer == NULL || length <= 0)
     fail("Illegal buffer %p or length %d to nuttall.\n", buffer, length);
 
   /* Initial variable setups. */
-  N = (double) length - 1.0;
-  N1 = N / 2.0;
+  N = length;
+  N1 = length/2;
 
   for(j = 0; j < length; j++) {
     buffer[j] = 0.36335819 + 
@@ -231,23 +309,22 @@ int length;
    Buffer must already be allocated to appropriate size.
 */
 
-void hamming(buffer, length)
-float *buffer;
-int length;
+static void hamming(Float *buffer, int length)
 {
     int j;
+    int N1;
 
-    if(buffer == NULL || length < 0)
+    if(buffer == NULL || length <= 0)
       fail("Illegal buffer %p or length %d to hamming.\n",buffer,length);
 
+    N1 = length/2;
     for(j=0;j<length;j++) 
-      buffer[j] = 0.5 - 0.46 * cos(2*PI*j/(length-1));
+      buffer[j] = 0.5 - 0.46 * cos(PI*j/N1);
 }
 
 /* Calculate the sinc function properly */
 
-float sinc(value)
-float value;
+static Float sinc(Float value)
 {   
     return(fabs(value) < 1E-50 ? 1.0 : sin(value) / value);
 }
@@ -258,54 +335,49 @@ float value;
 
    buffer must already be allocated.
 */
-void fir_design(buffer, length, cutoff)
-float *buffer;
-int length;
-float cutoff;
+void fir_design(Float *buffer, int length, Float cutoff)
 {
     int j;
-    float sum;
-    float *ham_win;
+    double sum;
 
     if(buffer == NULL || length < 0 || cutoff < 0 || cutoff > PI)
       fail("Illegal buffer %p, length %d, or cutoff %f.\n",buffer,length,cutoff);
 
-    /* Design Hamming window:  43 dB cutoff */
-    ham_win = (float *)malloc(sizeof(float) * length);
-
     /* Use the user-option of window type */
     if(win_type == 0) 
-      nuttall(ham_win, length);
+      nuttall(buffer, length); /* Design Nuttall window:  ** dB cutoff */
     else
-      hamming(ham_win,length);
+      hamming(buffer,length);  /* Design Hamming window:  43 dB cutoff */
 
+    /* printf("# fir_design length=%d, cutoff=%8.4f\n",length,cutoff); */
     /* Design filter:  windowed sinc function */
     sum = 0.0;
     for(j=0;j<length;j++) {
-	buffer[j] = sinc(PI*cutoff*(j-length/2)) * ham_win[j] / (2*cutoff);
-	sum += buffer[j];
+      buffer[j] *= sinc(PI*cutoff*(j-length/2)); /* center at length/2 */
+      /* printf("%.1f %.6f\n",(float)j,buffer[j]); */
+      sum += buffer[j];
     }
-
+    sum = (double)1.0/sum;
     /* Normalize buffer to have gain of 1.0: prevent roundoff error */
-    for(j=0;j<length;j++)
-      buffer[j] /= sum;
-
-    free((void *) ham_win);
+    for(j=0;j<length;j++) {
+      buffer[j] *= sum;
+    }
+    /* printf("# end\n\n"); */
 }
-    
+ 
+#define RIBLEN 2048
 
-void poly_start(effp)
-eff_t effp;
+void poly_start(eff_t effp)
 {
     poly_t rate = (poly_t) effp->priv;
-    List *t, *t2;
-    int num_l1, num_l2;
-    int j,k;
-    float f_cutoff;
+    static int l1[MF], l2[MF];
+    double skip = 0;
+		int total, size, uprate;
+    int k;
 
-    extern long lcm();
-	
-    rate->lcmrate = lcm((long)effp->ininfo.rate, (long)effp->outinfo.rate);
+    extern long st_lcm();
+
+    rate->lcmrate = st_lcm((long)effp->ininfo.rate, (long)effp->outinfo.rate);
 
     /* Cursory check for LCM overflow.  
      * If both rate are below 65k, there should be no problem.
@@ -314,155 +386,76 @@ eff_t effp;
 
     rate->inskip = rate->lcmrate / effp->ininfo.rate;
     rate->outskip = rate->lcmrate / effp->outinfo.rate; 
+    rate->Factor = (double)rate->inskip / (double)rate->outskip; 
+    rate->inpipe = 0; 
+    {
+      int f = RIBLEN/max(rate->inskip,rate->outskip);
+      if (f == 0) f = 1;
+      size = f * rate->outskip; /* reasonable input block size */
+    }
 
     /* Find the prime factors of inskip and outskip */
-    rate->l1 = prime(rate->inskip);
+    total = optimize_factors(rate->inskip, rate->outskip, l1, l2);
+    rate->total = total;
+    /* l1 and l2 are now lists of the up/down factors for conversion */
 
-    /* If we're going up, order things backwards. */
-    if(effp->ininfo.rate < effp->outinfo.rate)
-      rate->l2 = prime_inv(rate->outskip);
-    else
-      rate->l2 = prime(rate->outskip);
-    
-    /* Find how many factors there were */
-    if(rate->l1 == NULL)
-      num_l1 = 0;
-    else
-      for(num_l1=0, t = rate->l1; t != NULL; num_l1++, t=t->next);
+    report("Poly:  input rate %d, output rate %d.  %d stages.",
+            effp->ininfo.rate, effp->outinfo.rate,total);
+    report("Poly:  window: %s  size: %d  cutoff: %f.",
+            (win_type == 0) ? ("nut") : ("ham"), win_width, cutoff);
 
-    if(rate->l2 == NULL) 
-      num_l2 = 0;
-    else
-      for(num_l2=0, t = rate->l2; t != NULL; num_l2++, t=t->next);
+    /* Create an array of filters and past history */
+    uprate = effp->ininfo.rate;
+    for (k = 0; k < total; k++) {
+      int j, prod, f_cutoff, f_len;
+      polystage *s;
 
-    k = 0;
-    t = rate->l1;
+      rate->stage[k] = s = (polystage*) malloc(sizeof(polystage));
+      s->up = l1[k];
+      s->down = l2[k];
+      f_cutoff = max(s->up, s->down);
+      f_len = max(20 * f_cutoff, win_width);
+      prod = s->up * s->down;
+      if (prod > 2*f_len) prod = s->up;
+      f_len = ((f_len+prod-1)/prod) * prod; /* reduces rounding-errors in polyphase() */
+      s->size = size;
+      s->hsize = f_len/s->up; /* this much of window is past-history */
+      s->held = 0;
+      report("Poly:  stage %d:  Up by %d, down by %d,  i_samps %d, hsize %d",
+              k+1,s->up,s->down,size, s->hsize);
+      s->filt_len = f_len;
+      s->filt_array = (Float *) malloc(sizeof(Float) * f_len);
+      s->window = (Float *) malloc(sizeof(Float) * (s->hsize+size));
+      /* zero past_history section of window */
+      for(j = 0; j < s->hsize; j++)
+        s->window[j] = 0.0;
 
-    /* Compact the lists to be less than 10 */
-    while(k < num_l1 - 1) {
-	if(t->number * t->next->number < 10) {
-	    t->number = t->number * t->next->number;
-	    t2 = t->next;
-	    t->next = t->next->next;
-	    t2->next = NULL;
-	    free((void *) t2);
-	    num_l1--;
-	} else {
-	    k++;
-	    t = t->next;
-	}
+      uprate *= s->up;
+      report("Poly:         :  filt_len %d, cutoff freq %.1f",
+              f_len, uprate*cutoff/f_cutoff);
+      uprate /= s->down;
+      fir_design(s->filt_array, f_len, cutoff/f_cutoff);
+      /* s->filt_array[f_len-1]=0; */
+
+			skip *= s->up;
+			skip += f_len;
+			skip /= s->down;
+
+			size = (size * s->up) / s->down;  /* this is integer */
     }
-
-    k = 0;
-    t = rate->l2;
-
-    while(k < num_l2 - 1) {
-	if(t->number * t->next->number < 10) {
-	    t->number = t->number * t->next->number;
-	    t2 = t->next;
-	    t->next = t->next->next;
-	    t2->next = NULL;
-	    free((void *) t2);
-	    num_l2--;
-	} else {
-	    k++;
-	    t = t->next;
-	}
+    rate->oskip = skip/2;
+		{ /* bogus last stage is for output buffering */
+      polystage *s;
+      rate->stage[k] = s = (polystage*) malloc(sizeof(polystage));
+      s->up = s->down = 0;
+      s->size = size;
+      s->hsize = 0;
+      s->held = 0;
+      s->filt_len = 0;
+      s->filt_array = NULL;
+      s->window = (Float *) malloc(sizeof(Float) * size);
     }
-
-    /* l1 and l2 are now lists of the prime factors compacted,
-       meaning that they're the lists of up/down sampling we need
-       */
-
-    /* Stretch them to be the same length by padding with 1 (no-op) */
-    if(num_l1 < num_l2) {
-	t = rate->l1;
-
-	if(t == NULL) {
-	    rate->l1 = (List *)malloc(sizeof(List));
-	    rate->l1->next = NULL;
-	    rate->l1->number = 1;
-	    rate->l1->data_buffer = NULL;
-	    t = rate->l1;
-	    num_l1++;
-	}
-
-	while(t->next != NULL)
-	  t = t->next;
-
-	for(k=0;k<num_l2-num_l1;k++) {
-	    t->next = (List *) malloc(sizeof(List));
-	    t->next->number = 1;
-	    t->next->data_buffer = NULL;
-	    t = t->next;
-	}
-
-	t->next = NULL;
-	num_l1 = num_l2;
-    } else {
-	t = rate->l2;
-
-	if(t == NULL) {
-	    rate->l2 = (List *)malloc(sizeof(List));
-	    rate->l2->next = NULL;
-	    rate->l2->number = 1;
-	    rate->l2->data_buffer = NULL;
-	    t = rate->l2;
-	    num_l2++;
-	}
-	  
-	/*
-	  while(t->next != NULL)
-	  t = t->next;
-	  */
-
-	for(k=0;k<num_l1-num_l2;k++) {
-	  t = rate->l2;
-	  rate->l2 = (List *) malloc(sizeof(List));
-	  rate->l2->number = 1;
-	  rate->l2->data_buffer = NULL;
-	  rate->l2->next = t;
-	}
-
-	/* t->next = NULL; */
-	num_l2 = num_l1;
-    }
-
-    /* l1 and l2 are now the same size. */
-    rate->total = num_l1;
-
-    report("Poly:  input rate %d, output rate %d.  %d stages.",effp->ininfo.rate, effp->outinfo.rate,num_l1);
-    report("Poly:  window: %s  size: %d  cutoff: %f.", (win_type == 0) ? ("nut") : ("ham"), win_width, cutoff);
-
-    for(k=0, t=rate->l1, t2=rate->l2;k<num_l1;k++,t=t->next,t2=t2->next)
-      report("Poly:  stage %d:  Up by %d, down by %d.",k+1,t->number,t2->number);
-
-    /* We'll have an array of filters and past history */
-    rate->filt_array = (float **) malloc(sizeof(float *) * num_l1);
-    rate->past_hist = (float **) malloc(sizeof(float *) * num_l1);
-    rate->filt_len = (int *) malloc(sizeof(int) * num_l1);
-
-    for(k = 0, t = rate->l1, t2 = rate->l2; k < num_l1; k++) {
-
-      rate->filt_len[k] = max(2 * 10 * max(t->number,t2->number), win_width);
-      rate->filt_array[k] = (float *) malloc(sizeof(float) * rate->filt_len[k]);
-      rate->past_hist[k] = (float *) malloc(sizeof(float) * rate->filt_len[k]);
-      
-      t->data_buffer = (float *) malloc(sizeof(float) * 1024 * rate->inskip);
-	
-      for(j = 0; j < rate->filt_len[k]; j++)
-	rate->past_hist[k][j] = 0.0;
-
-      f_cutoff = (t->number > t2->number) ? 
-	(float) t->number : (float) t2->number;
-
-      fir_design(rate->filt_array[k], rate->filt_len[k]-1, cutoff / f_cutoff);
-
-      t = t->next;
-      t2 = t2->next;
-    }
-
-    rate->input_buffer = (float *) malloc(sizeof(float) * 2048);
+    report("Poly:  output samples %d, oskip %d",size, rate->oskip);
 }
 
 /*
@@ -470,141 +463,155 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-static float *h;
-static int M, L, N;
-
-void polyphase_init(coef, num_coef, up_rate, down_rate)
-float *coef;
-int num_coef;
-int up_rate;
-int down_rate;
+/* REMARK: putting this in a separate subroutine improves gcc's optimization */
+static double st_prod(const Float *q, int qstep, const Float *p, int n)
 {
-    h = coef;
-    M = down_rate;
-    L = up_rate;
-    N = num_coef;
+  double sum = 0;
+  const Float *p0;
+  p0 = p-n;
+  while (p>p0) {
+    sum += *p * *q;
+    q += qstep;
+    p -= 1;
+  }
+  return sum;
 }
     
-void polyphase(input, output, past, num_samples_input)
-float *input;
-float *output;
-float *past;
-int num_samples_input;
+void polyphase(Float *output, polystage *s)
 {
-    int num_output;
-    int m,n;
-    float sum;
-    float inp;
-    int base;
-    int h_base;
+  int mm;
+  int up = s->up;
+  int down = s->down;
+  int f_len = s->filt_len;
+  const Float *in;
+  Float *o; /* output pointer */
+  Float *o_top;
 
-    num_output = num_samples_input * L / M;
-
-    for(m=0;m<num_output;m++) {
-	sum = 0.0;
-	base = (int) (m*M/L);
-	h_base = (m*M) % L;
-
-	for(n=0;n<N / L;n++) {
-	    if(base - n < 0)
-	      inp = past[base - n + N];
-	    else
-	      inp = input[base - n];
-
-	    sum += h[n*L + h_base] * inp;
-	}
-
-	output[m] = sum * L * 0.95;
-    }
+  in = s->window + s->hsize;
+  /*for (mm=0; mm<s->filt_len; mm++) fprintf(stderr,"cf_%d %f\n",mm,s->filt_array[mm]);*/
+  /* assumes s->size divisible by down (now true) */
+  o_top = output + (s->size * up) / down;
+  /*report(" isize %d, osize %d, up %d, down %d, N %d", s->size, o_top-output, up, down, f_len);*/
+  for (mm=0, o=output; o < o_top; mm+=down, o++) {
+    double sum;
+    const Float *p, *q;
+    q = s->filt_array + (mm%up);   /* decimated coef pointer */
+    p  = in + (mm/up);
+    sum = st_prod(q, up, p, f_len/up);
+    *o = sum * up;
+  }
 }
 
-void poly_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-long *ibuf, *obuf;
-int *isamp, *osamp;
+static inline void update_hist(Float *hist, int hist_size, int in_size)
+{
+  Float *p, *p1, *q;
+  p = hist;
+  p1 = hist+hist_size;
+  q = hist+in_size;
+  while (p<p1)
+    *p++ = *q++;
+
+}
+
+void poly_flow(eff_t effp, long *ibuf, long *obuf, long *isamp, long *osamp)
 {
   poly_t rate = (poly_t) effp->priv;
-  float *temp_buf, *temp_buf2;
-  int j,k;
-  List *t1, *t2;
-  int in_size, out_size;
+  polystage *s0,*s1;
 
   /* Sanity check:  how much can we tolerate? */
-  in_size = *isamp;
-  out_size = in_size * rate->inskip / rate->outskip;
-  if(out_size > *osamp) {
-    in_size = *osamp * rate->outskip / rate->inskip;
-    *isamp = in_size;
-  }
-  
-  /* Check to see if we're really draining */
-  if(ibuf != NULL) {
-    for(k=0;k<*isamp;k++)
-      rate->input_buffer[k] = (float) (ibuf[k] >> 16);
-  } else {
-    for(k=0;k<*isamp;k++)
-      rate->input_buffer[k] = 0.0;
-  }      
-  
-  temp_buf = rate->input_buffer;
-  
-  t1 = rate->l1;
-  t2 = rate->l2;
-  
-  for(k=0;k<rate->total;k++,t1=t1->next,t2=t2->next) {
+  /* fprintf(stderr, "*isamp=%d *osamp=%d\n",*isamp,*osamp); fflush(stderr); */
+  s0 = rate->stage[0];            /* the first stage */
+  s1 = rate->stage[rate->total];  /* the 'last' stage is output buffer */
+  {
+    int in_size, gap, k;
     
-    polyphase_init(rate->filt_array[k], rate->filt_len[k], 
-		   t1->number,t2->number);
-    
-    out_size = (in_size) * t1->number / t2->number;
-    
-    temp_buf2 = t1->data_buffer;
-    
-    polyphase(temp_buf, temp_buf2, rate->past_hist[k], in_size);
-    
-    for(j = 0; j < rate->filt_len[k]; j++) 
-      rate->past_hist[k][j] = temp_buf[j+in_size - rate->filt_len[k]];
-    
-    in_size = out_size;
-    
-    temp_buf = temp_buf2;
-  }
-  
-  if(out_size > *osamp)
-    out_size = *osamp;
-  
-  *osamp = out_size;
-
-  if(ibuf != NULL) {
-    for(k=0;k < out_size;k++)
-      obuf[k] = ((int) temp_buf[k]) << 16;
-  } else {
-
-    /* Wait for all-zero samples to come through.
-       Should happen eventually with all-zero
-       input */
-    int found = 0;
-
-    for(k=0; k < out_size; k++) {
-      obuf[k] = ((int) temp_buf[k] << 16);
-      if(obuf[k] != 0)
-	found = 1;
+    in_size = *isamp;
+    gap = s0->size - s0->held; /* space available in this 'input' buffer */
+    if ((in_size > gap) || (ibuf==NULL)) {
+      *isamp = in_size = gap;
     }
-    if(!found)
-      *osamp = 0;
+    if (in_size > 0) {
+      Float *q;
+			q = s0->window + s0->hsize;
+      if (s0!=s1) q += s0->held;  /* the last (output) buffer doesn't shift history */
+      if (ibuf != NULL) {
+				rate->inpipe += rate->Factor * in_size;
+        for (k=0; k<in_size; k++)
+          *q++ = (Float)ibuf[k] / ISCALE;
+      } else { /* ibuf==NULL is draining */
+        for(k=0;k<in_size;k++)
+          *q++ = 0.0;
+      }
+      s0->held += in_size;
+    }
   }
+
+  if (s0->held == s0->size && s1->held == 0) {
+    int k;
+    /* input buffer full, output buffer empty, so do process */
+
+    for(k=0; k<rate->total; k++) {
+      polystage *s;
+      Float *out;
+  
+      s = rate->stage[k];
+  
+      out = rate->stage[k+1]->window + rate->stage[k+1]->hsize;
+  
+      /* fprintf(stderr, "k=%d  insize=%d\n",k,in_size); fflush(stderr); */
+      polyphase(out, s);
+   
+      /* copy input history into lower portion of rate->window[k] */
+      update_hist(s->window, s->hsize, s->size);
+      s->held = 0;
+    }
+
+    s1->held = s1->size;
+    s1->hsize = 0;
+
+  }
+
+  {
+    long *q;
+    long out_size;
+    long oskip;
+    Float *out_buf;
+    int k;
+
+    oskip = rate->oskip;
+		out_size = s1->held;
+		out_buf = s1->window + s1->hsize;
+
+    if(ibuf == NULL && out_size > ceil(rate->inpipe)) {
+      out_size = ceil(rate->inpipe);
+    }
+
+		if (out_size > oskip + *osamp) out_size = oskip + *osamp;
+
+    for(q=obuf, k=oskip; k < out_size; k++)
+      *q++ = out_buf[k] * ISCALE; /* should clip-limit */
+
+		*osamp = q-obuf;
+		rate->inpipe -= *osamp;
+		oskip -= out_size - *osamp;
+		rate->oskip = oskip;
+
+		s1->hsize += out_size;
+    s1->held -= out_size;
+    if (s1->held == 0) {
+      s1->hsize = 0;
+    }
+
+  }
+
 }
 
 /*
  * Process tail of input samples.
  */
-void poly_drain(effp, obuf, osamp)
-eff_t effp;
-long *obuf;
-long *osamp;
+void poly_drain(eff_t effp, long *obuf, long *osamp)
 {
-  long in_size = 1024;
-
+  long in_size;
   /* Call "flow" with NULL input. */
   poly_flow(effp, NULL, obuf, &in_size, osamp);
 }
@@ -613,39 +620,16 @@ long *osamp;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void poly_stop(effp)
-eff_t effp;
+void poly_stop(eff_t effp)
 {
-    List *t, *t2;
     poly_t rate = (poly_t) effp->priv;
+    polystage *s;
     int k;
 
-    /* Free lists */
-    for(t = rate->l1; t != NULL; ) {
-	t2 = t->next;
-	t->next = NULL;
-	if(t->data_buffer != NULL)
-	  free((void *) t->data_buffer);
-	free((void *) t);
-	t = t2;
+    for(k = 0; k <= rate->total; k++) {
+      s = rate->stage[k];
+      free((void *) s->window);
+      if (s->filt_array) free((void *) s->filt_array);
+      free((void *) s);
     }
-
-    for(t = rate->l2; t != NULL; ) {
-	t2 = t->next;
-	t->next = NULL;
-	if(t->data_buffer != NULL)
-	  free((void *) t->data_buffer);
-	free((void *) t);
-	t = t2;
-    }
-
-    for(k = 0; k < rate->total;k++) {
-	free((void *) rate->past_hist[k]);
-	free((void *) rate->filt_array[k]);
-    }
-
-    free((void *) rate->past_hist);
-    free((void *) rate->filt_array);
-    free((void *) rate->filt_len);
 }
-

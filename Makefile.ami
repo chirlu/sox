@@ -18,11 +18,11 @@
 
 FSRC	= 8svx.c aiff.c alsa.c au.c auto.c avr.c cdr.c cvsd.c dat.c \
 	  g721.c g723_24.c g723_40.c g72x.c gsm.c hcom.c maud.c oss.c raw.c \
-	  sbdsp.c sf.c smp.c sndrtool.c sunaudio.c tx16w.c voc.c wav.c wve.c
+	  sf.c smp.c sndrtool.c sunaudio.c tx16w.c voc.c wav.c wve.c
 
 ESRC	= avg.c band.c chorus.c compandc copy.c cut.c deemphas.c dyn.c echo.c \
-	  echos.c flanger.c highp.c lowp.c map.c mask.c phaser.c pick.c \
-	  polyphas.c rate.c resample.c reverb.c reverse.c split.c \
+	  echos.c filter.c flanger.c highp.c lowp.c map.c mask.c phaser.c \
+	  pick.c polyphas.c rate.c resample.c reverb.c reverse.c split.c \
 	  stat.c swap.c vibro.c 
 
 PSRC= sox.c
@@ -43,19 +43,16 @@ AMIGA	  = Makefile.ami amiga.h
 
 DOS	  = tests.bat testall.bat
 
-VMS       = descrip.mms sound2au.com sound2sun.c sound2sun.opt \
-	    sox.opt tests.com vms.lis
-
-FILES     = $(MISC) $(HEADERS) $(SOURCES) $(AMIGA) $(DOS) $(VMS) \
+FILES     = $(MISC) $(HEADERS) $(SOURCES) $(AMIGA) $(DOS) \
 	    $(SKEL) $(TESTS)
 
 FOBJ	= 8svx.o aiff.o alsa.o au.o auto.o avr.o cdr.o cvsd.o dat.o \
 	  g721.o g723_24.o g723_40.o g72x.o gsm.o hcom.o maud.o oss.o raw.o \
-	  sbdsp.o sf.o smp.o sndrtool.o sunaudio.o tx16w.o voc.o wav.o wve.o
+	  sf.o smp.o sndrtool.o sunaudio.o tx16w.o voc.o wav.o wve.o
 
 EOBJ	= avg.o band.o chorus.o compand.o copy.o cut.o deemphas.o dyn.o echo.o \
-	  echos.o flanger.o highp.o lowp.o map.o mask.o phaser.o pick.o \
-	  polyphas.o rate.o resample.o reverb.o reverse.o split.o \
+	  echos.o filter.o flanger.o highp.o lowp.o map.o mask.o phaser.o \
+	  pick.o polyphas.o rate.o resample.o reverb.o reverse.o split.o \
 	  stat.o swap.o vibro.o
 
 ##SOUNDLIB is defined below

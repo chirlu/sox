@@ -15,20 +15,24 @@
  * No output.
  */
 
+#include <math.h>
 #include "st.h"
+
+#define MAXLONG 0x7fffffffL
 
 /* Private data for STAT effect */
 typedef struct statstuff {
-	LONG	min, max, mean;		/* amplitudes */
-	LONG	dmin, dmax, dmean;	/* deltas */
-	LONG	last;			/* previous sample */
+	double	min, max, asum, sum1, sum2;		/* amplitudes */
+	double	dmin, dmax, dsum1, dsum2;	/* deltas */
+	double	scale;			/* scale-factor    */
+	double	last;			/* previous sample */
+	double	read;
 	int	first;
-	int	total;
 	int	volume;
-        ULONG   bin[4];
+	int	srms;
+	ULONG   bin[4];
 } *stat_t;
 
-#define	abs(val)	(((val) < 0) ? -(val) : (val))
 
 /*
  * Process options
@@ -40,15 +44,44 @@ char **argv;
 {
 	stat_t stat = (stat_t) effp->priv;
 
+	stat->scale = MAXLONG;
 	stat->volume = 0;
-	if (n)
+	stat->srms = 0;
+	while (n>0)
 	{
-		if (!(strcmp(argv[0], "-v")))
+		if (!(strcmp(argv[0], "-v"))) {
 			stat->volume = 1;
-		else if (!(strcmp(argv[0], "debug")))
+			goto did1;
+		}
+		if (!(strcmp(argv[0], "-s"))) {
+			double scale;
+
+			if (n <= 1) 
+			  fail("-s option: invalid argument");
+			if (!strcmp(argv[1],"rms")) {
+				stat->srms=1;
+				goto did2;
+			}
+			if (!sscanf(argv[1], "%lf", &scale))
+			  fail("-s option: invalid argument");
+			stat->scale = scale;
+			goto did2;
+		}
+		if (!(strcmp(argv[0], "-rms"))) {
+			double scale;
+			if (n <= 1 || !sscanf(argv[1], "%lf", &scale))
+			  fail("-s option expects float argument");
+			stat->srms = 1;
+			goto did2;
+		}
+		if (!(strcmp(argv[0], "debug"))) {
 			stat->volume = 2;
+			goto did1;
+		}
 		else
-			fail("Summary effect only allows debug or -v as options.");
+			fail("Summary effect: unknown option");
+	  did2: --n; ++argv;
+	  did1: --n; ++argv;
 	}
 }
 
@@ -59,11 +92,17 @@ void stat_start(effp)
 eff_t effp;
 {
 	stat_t stat = (stat_t) effp->priv;
-        int i;
+	int i;
 
-	stat->min = stat->dmin = 0x7fffffffL;
-	stat->max = stat->dmax = 0x80000000L;
 	stat->first = 1;
+	stat->min = stat->max = 0;
+	stat->asum = 0;
+	stat->sum1 = stat->sum2 = 0;
+
+	stat->dmin = stat->dmax = 0;
+	stat->dsum1 = stat->dsum2 = 0;
+
+	stat->read = 0;
 
 	for (i = 0; i < 4; i++)
 		stat->bin[i] = 0;
@@ -82,61 +121,53 @@ int *isamp, *osamp;
 {
 	stat_t stat = (stat_t) effp->priv;
 	int len, done;
-	LONG samp, delta;
+	double samp, delta;
 	short count;
 
 	count = 0;
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
 	for(done = 0; done < len; done++) {
 		/* work in absolute levels for both sample and delta */
-		samp = *ibuf++;
-	        *obuf++ = samp;
+		samp = (*ibuf)/stat->scale;
+    stat->bin[RIGHT(*ibuf,30)+2]++;
+		*obuf++ = *ibuf++;
 
 		if (stat->volume == 2)
 		{
-#ifdef __alpha__
-		    fprintf(stderr,"%8x ",samp);
-#else
-		    fprintf(stderr,"%8lx ",samp);
-#endif
+		    fprintf(stderr,"%f ",samp);
 		    if (count++ == 5)
 		    {
-		        fprintf(stderr,"\n");
-			count = 0;
+				fprintf(stderr,"\n");
+				count = 0;
 		    }
 		}
 
-                stat->bin[RIGHT(samp,30)+2]++;
 
-		samp = abs(samp);
-		if (samp < stat->min)
-			stat->min = samp;
-		if (samp > stat->max)
-			stat->max = samp;
 		if (stat->first) {
+			stat->min = stat->max = samp;
 			stat->first = 0;
-			stat->mean = samp;
-			stat->dmean = 0;
-		} else  {
-			/* overflow avoidance */
-			if ((stat->mean > 0x20000000L) || (samp > 0x20000000L))
-				stat->mean = stat->mean/2 + samp/2;
-			else
-				stat->mean = (stat->mean + samp)/2;
-
-			delta = abs(samp - stat->last);
-			if (delta < stat->dmin)
-				stat->dmin = delta;
-			if (delta > stat->dmax)
-				stat->dmax = delta;
-			/* overflow avoidance */
-			if ((delta > 0x20000000L) || (stat->dmean > 0x20000000L))
-				stat->dmean = stat->dmean/2 + delta/2;
-			else
-				stat->dmean = (stat->dmean + delta)/2;
 		}
+		if (stat->min > samp)
+			stat->min = samp;
+		else if (stat->max < samp)
+			stat->max = samp;
+
+		stat->sum1 += samp;
+		stat->sum2 += samp*samp;
+		stat->asum += fabs(samp);
+		
+		delta = fabs(samp - stat->last);
+		if (delta < stat->dmin)
+			stat->dmin = delta;
+		else if (delta > stat->dmax)
+			stat->dmax = delta;
+
+		stat->dsum1 += delta;
+		stat->dsum2 += delta*delta;
+
 		stat->last = samp;
 	}
+	stat->read += len;
 	/* Process all samples */
 }
 
@@ -149,39 +180,61 @@ stat_stop(effp)
 eff_t effp;
 {
 	stat_t stat = (stat_t) effp->priv;
-	double amp, range;
-        float x;
+	double amp, scale, srms, freq;
+	double x, ct;
 
-	stat->min   = RIGHT(stat->min, 16);
-	stat->max   = RIGHT(stat->max, 16);
-	stat->mean  = RIGHT(stat->mean, 16);
-	stat->dmin  = RIGHT(stat->dmin, 16);
-	stat->dmax  = RIGHT(stat->dmax, 16);
-	stat->dmean = RIGHT(stat->dmean, 16);
+	ct = stat->read;
 
-	range = 32767.0;
+	if (stat->srms) {
+		double f;
+		srms = sqrt(stat->sum2/ct);
+		f = 1.0/srms;
+		stat->max *= f;
+		stat->min *= f;
+		stat->asum *= f;
+		stat->sum1 *= f;
+		stat->sum2 *= f*f;
+		stat->dmax *= f;
+		stat->dmin *= f;
+		stat->dsum1 *= f;
+		stat->dsum2 *= f*f;
+		stat->scale *= srms;
+	}
 
-	amp = - stat->min;
+	scale = stat->scale;
+
+	amp = -stat->min;
 	if (amp < stat->max)
 		amp = stat->max;
+
 	/* Just print the volume adjustment */
-	if (stat->volume == 1) {
-		fprintf(stderr, "%.3f\n", 32767.0/amp);
+	if (stat->volume == 1 && amp > 0) {
+		fprintf(stderr, "%.3f\n", MAXLONG/(amp*scale));
 		return;
 	}
-	else if (stat->volume == 2) {
+	if (stat->volume == 2) {
 		fprintf(stderr, "\n");
 	}
 	/* print them out */
-	fprintf(stderr, "Maximum amplitude: %.3f\n", stat->max/range);
-	fprintf(stderr, "Minimum amplitude: %.3f\n", stat->min/range);
-	fprintf(stderr, "Mean    amplitude: %.3f\n", stat->mean/range);
+	fprintf(stderr, "Samples read:      %12lu\n", (unsigned long)ct);
+	if (stat->srms)
+		fprintf(stderr, "Scaled by rms:     %12.6f\n", srms);
+	else
+		fprintf(stderr, "Scaled by:         %12.1f\n", scale);
+	fprintf(stderr, "Maximum amplitude: %12.6f\n", stat->max);
+	fprintf(stderr, "Minimum amplitude: %12.6f\n", stat->min);
+	fprintf(stderr, "Mean    norm:      %12.6f\n", stat->asum/ct);
+	fprintf(stderr, "Mean    amplitude: %12.6f\n", stat->sum1/ct);
+	fprintf(stderr, "RMS     amplitude: %12.6f\n", sqrt(stat->sum2/ct));
 
-	fprintf(stderr, "Maximum delta:     %.3f\n", stat->dmax/range);
-	fprintf(stderr, "Minimum delta:     %.3f\n", stat->dmin/range);
-	fprintf(stderr, "Mean    delta:     %.3f\n", stat->dmean/range);
+	fprintf(stderr, "Maximum delta:     %12.6f\n", stat->dmax);
+	fprintf(stderr, "Minimum delta:     %12.6f\n", stat->dmin);
+	fprintf(stderr, "Mean    delta:     %12.6f\n", stat->dsum1/ct);
+	fprintf(stderr, "RMS     delta:     %12.6f\n", sqrt(stat->dsum2/ct));
+	freq = sqrt(stat->dsum2/stat->sum2)*effp->ininfo.rate/(M_PI*2);
+	fprintf(stderr, "Rough   frequency: %12d\n", (int)freq);
 
-	fprintf(stderr, "Volume adjustment: %.3f\n", 32767.0/amp);
+	if (amp>0) fprintf(stderr, "Volume adjustment: %12.3f\n", MAXLONG/(amp*scale));
 
         if (stat->bin[2] == 0 && stat->bin[3] == 0)
                 fprintf(stderr, "\nProbably text, not sound\n");
@@ -190,22 +243,36 @@ eff_t effp;
                 x = (float)(stat->bin[0] + stat->bin[3]) / (float)(stat->bin[1] + stat->bin[2]);
 
                 if (x >= 3.0)                        /* use opposite style */
+		{
                         if (effp->ininfo.style == UNSIGNED)
+			{
                                 printf ("\nTry: -t raw -b -s \n");
+			}
                         else
+			{
                                 printf ("\nTry: -t raw -b -u \n");
+			}
 
-                else if (x <= 1.0/3.0);              /* correctly decoded */
-
+		}
+                else if (x <= 1.0/3.0)
+		{ 
+		    ;;              /* correctly decoded */
+		}
                 else if (x >= 0.5 && x <= 2.0)       /* use ULAW */
+		{
                         if (effp->ininfo.style == ULAW)
+			{
                                 printf ("\nTry: -t raw -b -u \n");
+			}
                         else
+			{
                                 printf ("\nTry: -t raw -b -U \n");
-
+			}
+		}
                 else    
+		{
                         fprintf (stderr, "\nCan't guess the type\n");
+		}
         }
 
 }
-

@@ -43,11 +43,11 @@ PLAY_SUPPORT = @PLAY_SUPPORT@
 
 FSRC	= 8svx.c aiff.c au.c auto.c avr.c cdr.c cvsd.c dat.c g721.c \
 	  g723_24.c g723_40.c g72x.c gsm.c hcom.c maud.c raw.c \
-	  sbdsp.c sf.c smp.c sndrtool.c tx16w.c voc.c wav.c wve.c
+	  sf.c smp.c sndrtool.c tx16w.c voc.c wav.c wve.c
 
 ESRC	= avg.c band.c bandpass.c breject.c btrworth.c chorus.c compand.c \
-	  copy.c cut.c deemphas.c dyn.c echo.c echos.c flanger.c highp.c \
-	  highpass.c lowp.c lowpass.c map.c mask.c phaser.c pick.c \
+	  copy.c cut.c deemphas.c dyn.c echo.c echos.c filter.c flanger.c \
+	  highp.c highpass.c lowp.c lowpass.c map.c mask.c phaser.c pick.c \
 	  polyphas.c rate.c resample.c reverb.c reverse.c split.c \
 	  stat.c swap.c vibro.c 
 
@@ -65,11 +65,11 @@ LIBSRCS	= $(FSRC) $(ESRC) handlers.c libst.c misc.c util.c $(EXTRASRCS)
 
 FOBJ	= 8svx.o aiff.o au.o auto.o avr.o cdr.o cvsd.o dat.o g721.o \
 	  g723_24.o g723_40.o g72x.o gsm.o hcom.o maud.o raw.o \
-	  sbdsp.o sf.o smp.o sndrtool.o tx16w.o voc.o wav.o wve.o
+	  sf.o smp.o sndrtool.o tx16w.o voc.o wav.o wve.o
 
 EOBJ	= avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
-	  copy.o cut.o deemphas.o dyn.o echo.o echos.o flanger.o highp.o \
-	  highpass.o lowp.o lowpass.o map.o mask.o phaser.o pick.o \
+	  copy.o cut.o deemphas.o dyn.o echo.o echos.o filter.o flanger.o \
+	  highp.o highpass.o lowp.o lowpass.o map.o mask.o phaser.o pick.o \
 	  polyphas.o rate.o resample.o reverb.o reverse.o split.o \
 	  stat.o swap.o vibro.o
 

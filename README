@@ -59,7 +59,7 @@ changes using real signal theory.  Yes, it's very slow.
 
 History:
 
-This is the 12th release, Patchlevel 16 of the Sound Tools.
+This is the 12th release, Patchlevel 17 of the Sound Tools.
 SoX was originally written and maintained by Lance Norskog but
 unfortunetly he has stopped maintaining it since 1995.  I, Chris
 Bagwell (cbagwell@sprynet.com), have started maintaining it since
@@ -96,9 +96,9 @@ I hope to inspire the creation of a common base of sound processing
 tools for computer multimedia work, similar to the PBM toolkit for 
 image manipulation.
 
-Sound Tools may be used for any purpose.  Source
-distributions must include the copyright notices.  Binary
-distributions must include acknowledgements to the creators.
+Sound Tools may be used for any purpose.  Source distributions must
+must include the copyright notices, and (lack of) warranty information.
+Binary distributions must include acknowledgements to the creators.
 Files are copyright by their respective authors.
 
 If you have bug fixes/enhancements, please send it to me as I would like
@@ -180,6 +180,9 @@ by you the user.  Thank you very much for making SoX a success!
 			Libst porting bugs
 		Lauren Weinstein	lauren@vortex.com
 			DOS porting, scripts, professional use
+		Stan Brooks		stabro@megsinet.net
+			Rewrite of resample and polyphase code.
+			DSP filter effect.  Some test code/scripts.
 		Chris Bagwell		cbagwell@sprynet.com
 			OSS and Sun players, bugfixes, ADPCM support,
 			patch collection and maintance.

@@ -59,15 +59,6 @@ case "$target" in
 		CFLAGS="$CFLAGS -D_ALL_SOURCE"
 		;;
 
-	*att* )
-		dnl 386 AT&T Unix.
-		CFLAGS="$CFLAGS -DBLASTER"
-		;;
-
-	i*86-*-bsd* )
-		CFLAGS="$CFLAGS -DSBLAST"
-		;;
-
 	*hpux* )
 		CFLAGS="$CFLAGS -D_HPUX_SOURCE"
 		;;

@@ -227,19 +227,20 @@ LONG *osamp;
 }
 
 /* here for linear interp.  might be useful for other things */
-LONG gcd(a, b) 
+LONG st_gcd(a, b) 
 LONG a, b;
 {
 	if (b == 0)
 		return a;
 	else
-		return gcd(b, a % b);
+		return st_gcd(b, a % b);
 }
 
-LONG lcm(a, b)
+LONG st_lcm(a, b)
 LONG a, b;
 {
-	return (a * b) / gcd(a, b);
+    /* parenthesize this way to avoid LONG overflow in the product term */
+    return a * (b / st_gcd(a, b));
 }
 
 /* 

@@ -9,7 +9,7 @@
 .if t .sp .5v
 .if n .sp
 ..
-.TH SoX 1 "June 28, 1999"
+.TH SoX 1 "November 8, 1999"
 .SH NAME
 sox \- Sound eXchange : universal sound sample translator
 .SH SYNOPSIS
@@ -68,6 +68,8 @@ sox \- Sound eXchange : universal sound sample translator
 	echo \fIgain-in gain-out delay decay\fB [ \fIdelay decay ...\fB]
 .br
 	echos \fIgain-in gain-out delay decay\fB [ \fIdelay decay ...\fB]
+.br
+	filter \fB[ \fIlow\fB ]\fI-\fB[ \fIhigh\fB ] [ \fIwindow-len\fB [ \fIbeta\fB ]]
 .br
 	flanger \fIgain-in gain-out delay decay speed -s\fB | -fI-t\fB
 .br
@@ -456,12 +458,12 @@ and style (signed, unsigned, etc.)
 of the sample file must be given.
 The number of channels defaults to 1.
 .TP 10
-.B ".ub, .sb, .uw, .sw, .ul"
+.B ".ub, .sb, .uw, .sw, .ul, .sl"
 These are several suffices which serve as
 a shorthand for raw files with a given size and style.
-Thus, \fBub, sb, uw, sw,\fR and \fBul\fR
+Thus, \fBub, sb, uw, sw, ul\fR and \fBsl\fR
 correspond to "unsigned byte", "signed byte",
-"unsigned word", "signed word", and "ulaw" (byte).
+"unsigned word", "signed word", "ulaw" (byte), and "signed long".
 The sample rate defaults to 8000 hz if not explicitly set,
 and the number of channels (as always) defaults to 1.
 There are lots of Sparc samples floating around in u-law format
@@ -513,11 +515,16 @@ The
 .I -n
 (for noise) option uses the alternate mode
 for un-pitched signals.
+.B Warning:
+.I -n
+introduces a power-gain of about 11dB in the filter, so beware
+of output clipping.
 .B Band
 introduces noise in the shape of the filter,
 i.e. peaking at the 
 .I center
 frequency and settling around it.
+See \fBfilter\fR for a bandpass effect with steeper shoulders.
 .TP
 chorus \fIgain-in gain-out delay decay speed deptch 
 .TP 10
@@ -582,6 +589,24 @@ Each delay/decay part gives the delay in milliseconds
 and the decay (relative to gain-in) of that echo.
 Gain-out is the volume of the output.
 .TP 10
+filter [ \fIlow\fR ]-[ \fIhigh\fR ] [ \fIwindow-len\fR [ \fIbeta\fR ] ]
+Apply a Sinc-windowed lowpass, highpass, or bandpass filter of given
+window length to the signal.
+\fIlow\fR refers to the frequency of the lower 6dB corner of the filter.
+\fIhigh\fR refers to the frequency of the upper 6dB corner of the filter.
+
+A lowpass filter is obtained by leaving \fIlow\fR unspecified, or 0.
+A highpass filter is obtained by leaving \fIhigh\fR unspecified, or 0,
+or greater than or equal to the Nyquist freq.
+
+The \fIwindow-len\fR, if unspecified, defaults to 128.
+Longer windows give a sharper cutoff, smaller windows a more gradual cutoff.
+
+The \fIbeta\fR, if unspecified, defaults to 16.  This selects a Kaiser window.
+You can select a Nuttall window by specifying anything <= 2.0 here.
+For more discussion of beta, look under the \fBresample\fR effect.
+
+.TP 10
 flanger \fIgain-in gain-out delay decay speed -s \fR| \fI-t
 Add a flanger to a sound sample.  Each triple
 delay/decay/speed gives the delay in milliseconds
@@ -596,6 +621,7 @@ The frequency response drops logarithmically with
 .I center
 frequency in the middle of the drop.
 The slope of the filter is quite gentle.
+See \fBfilter\fR for a highpass effect with sharper cutoff.
 .TP 10
 lowp \fIcenter
 Apply a low-pass filter.
@@ -603,6 +629,7 @@ The frequency response drops logarithmically with
 .I center
 frequency in the middle of the drop.
 The slope of the filter is quite gentle.
+See \fBfilter\fR for a lowpass effect with sharper cutoff.
 .TP 10
 map 
 Display a list of loops in a sample,
@@ -679,25 +706,53 @@ If you are wondering which of
 .B Sox's
 rate changing effects to ues, you will want to read a
 detailed analysis of all of them at http://eakaw2.et.tu-dresden.de/~andreas/resample/resample.html
+[Nov,1999: These tests need to be updated for sox-12.18, which has bugfixes to the
+resample and polyphase code.]
 .TP 10
-resample [ \fIrolloff\fR [ \fIbeta\fR ] ]
+resample [ \fI-qs\fB | \fI-q\fB | \fI-ql\fB ] [ \fIrolloff\fB [ \fIbeta\fB ] ]\fR
 Translate input sampling rate to output sampling rate
 via simulated analog filtration.
 This method is slower than 
 .B rate,
-but gives much
-better results.  rolloff refers to the cut-off frequency of the
+but gives much better results.
+
+The \fI-qs\fR, \fI-q\fR, or \fI-ql\fR options specify increased accuracy
+at the cost of lower execution speed.  By default, linear interpolation
+is used, with a window width about 37 samples at the lower rate.
+This gives an accuracy of about 16 bits, but insufficient stopband rejection
+in the case that you want to have rolloff greater than about 0.85 of
+the Nyquist frequency.
+The \fI-q*\fR options use quadratic interpolation of filter
+coefficients, resulting in about 22 bits precision.
+\fI-qs\fR, \fI-q\fR, or \fI-ql\fR use window lengths of 37, 75, or 150
+samples, respectively, at the lower sample-rate of the two files.
+This means progressively sharper stop-band rejection, at proportionally
+slower execution times.
+
+\fIrolloff\fR refers to the cut-off frequency of the
 low pass filter and is given in terms of the
-Nyquist frequency for the lower sample rate.  rolloff therefor should
-be something between 0. and 1., in practice 0.8-0.95.  beta trades stop band
-rejection against transition width from passband to stop band.  Larger
-beta means a slower transition and greater stopband rejection.  beta
-should be at least greater than 2.  The default is rollof 0.8, beta 17.5,
-which is rather conservative with respect to aliasing.  Lower beta
-and higher rolloff values preserve more high frequency signal energy,
-but introduce measurable artifacts.
-This is the default effect 
-if the two files have different sampling rates.
+Nyquist frequency for the lower sample rate.  rolloff therefore should
+be something between 0. and 1., in practice 0.8-0.95.  The default is 0.8.
+
+The \fIbeta\fR parameter
+determines the type of filter window used.  Any value greater than 2.0 is
+the beta for a Kaiser window.  Beta <= 2.0 selects a Nuttall window.
+If unspecified, the default is a Kaiser window with beta 16.
+
+In the case of Kaiser window beta > 2.0, lower betas produce a somewhat
+faster transition from passband to stopband, at the cost of noticeable artifacts.
+A beta of 16 is the default, beta less than 10 is not recommended.  If you want
+a sharper cutoff, don't use low beta's, use a longer sample window.
+A Nuttall window is selected by specifying any 'beta' <= 2, and the
+Nuttall window has somewhat steeper cutoff than the default Kaiser window.
+You will probably not need to use the beta parameter at all, unless you are
+just curious about comparing the effects of Nuttall vs. Kaiser windows.
+
+This is the default effect if the two files have different sampling rates.
+Default parameters are Kaiser window of length 37, rolloff 0.80, beta 16,
+linear interpolation.  \fI-qs\fR is only slightly slower, but more accurate for
+16-bit or higher precision.
+
 .TP 10
 reverb \fIgain-out delay \fR[ \fIdelay ... \fR]
 Add reverbation to a sound sample.  Each delay is given 

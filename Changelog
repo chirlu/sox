@@ -6,6 +6,25 @@ sox-11gamma.
 
 sox-12.17
 ---------
+  o Fixed a segfault problem with ulaw/alaw conversion, where
+    an out-of-range index into the tables could occur.
+  o More detailed output from the stat effect.
+  o Continued rewrite of resample.c, now it is almost as
+    fast with floating arithmetic as the old (buggy) version
+    was with 16-bit integer arithmetic.  The older version
+    in sox-12.16 shifted frequencies slightly and was less
+    accurate.
+  o New effect 'filter' which is a high-quality DSP lowpass/
+    highpass/bandpass filter using windowed sinc function
+    methods, like polyphase and resample.
+  o New data file type supported, -sl or extension .sl for
+    signed 32-bit integers.  Some simplification of the raw.c
+    source.
+  o Some test programs and scripts in the test directory, for
+    making gnuplot plots of frequency response, error-levels
+    of rate-conversion and filter effects.
+  o Removed sbdsp code.  All modern unixes are support via OSS,
+    ALSA, or sun audio device interfaces.
   o Added AVR handler from Jan Paul Schmidt.
   o SoX now waits until the last possible moment before opening
     the output file.  This will allow all input and effect options

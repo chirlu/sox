@@ -556,7 +556,7 @@ void process() {
 int flow_effect(e)
 int e;
 {
-    LONG i, idone, odone, idonel, odonel, idoner, odoner;
+    LONG i, done, idone, odone, idonel, odonel, idoner, odoner;
     LONG *ibuf, *obuf;
 
     /* I have no input data ? */
@@ -575,6 +575,7 @@ int e;
 	efftab[e-1].odone += idone;
 	efftab[e].odone = 0;
 	efftab[e].olen = odone;
+	done = idone + odone;
     } else {
 	
 	/* Put stereo data in two seperate buffers and run effect
@@ -609,9 +610,10 @@ int e;
 	efftab[e-1].odone += idonel + idoner;
 	efftab[e].odone = 0;
 	efftab[e].olen = odonel + odoner;
+	done = idonel + idoner + odonel + odoner;
     } 
-    if (idone == 0) 
-	fail("Effect took no samples!");
+    if (done == 0) 
+	fail("Effect took & gave no samples!");
     return 1;
 }
 

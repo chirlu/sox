@@ -26,7 +26,12 @@
 #include <malloc.h>
 #endif
 
+#include <string.h>
 #include <stdlib.h>
+
+#ifndef HAVE_MEMMOVE
+#define memmove(dest, src, len) bcopy((src), (dest), (len))
+#endif
 
 void rawstartread(ft) 
 ft_t ft;
@@ -59,8 +64,7 @@ ft_t ft;
 	{
 		if (ft->file.eof)
 			return(0);
-		ft->file.count = fread(ft->file.buf, 1, ft->file.size,
-				ft->fp);
+		ft->file.count = fread(ft->file.buf, 1, ft->file.size, ft->fp);
 		ft->file.pos = 0;
 		if (ft->file.count == 0)
 		{
@@ -72,63 +76,49 @@ ft_t ft;
 	return (rval);
 }
 
-unsigned short blockrshort(ft)
-ft_t ft;
+static void swapn(p, n)
+char *p;
+int n;
 {
-	unsigned short rval;
-	if (ft->file.pos > ft->file.count-2)
-	{
-		if (ft->file.eof)
-			return(0);
-
-		if (ft->file.pos == ft->file.count-1)
-		{
-			*ft->file.buf = *(ft->file.buf + ft->file.pos);
-			ft->file.count = fread(ft->file.buf + 1,
-					1, ft->file.size-1,
-					ft->fp);
-		}
-		else
-		{
-			ft->file.count = fread(ft->file.buf, 1, ft->file.size,
-					ft->fp);
-		}
-		ft->file.pos = 0;
-		if (ft->file.count < 2)
-		{
-			ft->file.eof = 1;
-			return(0);
+	char *q;
+	if (n>1) {
+		q = p+n-1;
+		while (q>p) {
+			char t = *q;
+			*q-- = *p;
+			*p++ = t;
 		}
 	}
-	rval = *((unsigned short *)(ft->file.buf + ft->file.pos));
-	ft->file.pos += 2;
-	if (ft->swap)
-		rval = swapw(rval);
-	return(rval);
 }
 
-float blockrfloat(ft)
+static void blockr(p0, n, ft)
 ft_t ft;
+int n;
+void *p0;
 {
-	float rval;
-
-	if (ft->file.count < sizeof(float))
-	{
-		ft->file.count = fread(ft->file.buf, 1, ft->file.size,
-				ft->fp);
-		if (ft->file.count == 0)
-		{
-			ft->file.eof = 1;
-			return(0);
-		}
-	}
-	rval = *((float *)(ft->file.buf + (ft->file.size - ft->file.count)));
-	ft->file.count -= sizeof(float);
-	if (ft->swap)
-		rval = swapf(rval);
-	return(rval);
-}
+	int rest;
+	char *p;
+	p = p0;
 	
+	while ((rest = ft->file.count - ft->file.pos) < n)
+	{
+		if (ft->file.eof) {
+			memset(p,0,n);
+			return;
+		}
+
+		memmove(ft->file.buf, ft->file.buf+ft->file.pos, rest);
+
+		ft->file.pos = 0;
+		ft->file.count = rest;
+		ft->file.count += fread(ft->file.buf+rest, 1, ft->file.size-rest, ft->fp);
+		ft->file.eof = (ft->file.count < n);
+	}
+	memcpy(p, ft->file.buf + ft->file.pos, n);
+	ft->file.pos += n;
+	if (ft->swap)
+		swapn(p,n);
+}
 
 LONG rawread(ft, buf, nsamp) 
 ft_t ft;
@@ -193,7 +183,9 @@ LONG *buf, nsamp;
 		    {
 			case SIGN2:
 				while(done < nsamp) {
-					datum = blockrshort(ft);
+					short s;
+					blockr(&s, sizeof(short), ft);
+					datum = s;
 					if (ft->file.eof)
 						return done;
 					/* scale signed up to long's range */
@@ -203,7 +195,9 @@ LONG *buf, nsamp;
 				return done;
 			case UNSIGNED:
 				while(done < nsamp) {
-					datum = blockrshort(ft);
+					unsigned short s;
+					blockr(&s, sizeof(short), ft);
+					datum = s;
 					if (ft->file.eof)
 						return done;
 					/* Convert to signed */
@@ -221,12 +215,28 @@ LONG *buf, nsamp;
 				return done;
 		    }
 		    break;
+		case DWORD:
+		    switch(ft->info.style)
+		    {
+			case SIGN2:
+				while(done < nsamp) {
+					blockr(buf, sizeof(LONG), ft);
+					if (ft->file.eof)
+						return done;
+					/* scale signed up to long's range */
+					buf++;
+					done++;
+				}
+				return done;
+		    }
+		    break;
 		case FLOAT:
 			while(done < nsamp) {
-				datum = blockrfloat(ft);
+				float f;
+				blockr(&f, sizeof(float), ft);
 				if (ft->file.eof)
 					return done;
-				*buf++ = LEFT(datum, 16);
+				*buf++ = f * 0x10000; /* hmm... */
 				done++;
 			}
 			return done;
@@ -244,7 +254,7 @@ ft_t ft;
 	free(ft->file.buf);
 }
 
-void blockflush(ft)
+static void blockflush(ft)
 ft_t ft;
 {
 	if (fwrite(ft->file.buf, 1, ft->file.pos, ft->fp) != ft->file.pos)
@@ -263,33 +273,22 @@ int c;
 	ft->file.pos++;
 }
 
-void blockwshort(ft,ui)
+static void blockw(p0, n, ft)
+void *p0;
+int n;
 ft_t ft;
-unsigned short ui;
 {
-	if (ft->file.pos > ft->file.size-2) blockflush(ft);
+	if (ft->file.pos > ft->file.size-n) blockflush(ft);
+	memcpy(ft->file.buf + ft->file.pos, p0, n);
 	if (ft->swap)
-		ui = swapw(ui);
-	*(unsigned short *)(ft->file.buf + ft->file.pos) = ui;
-	ft->file.pos += 2;
-}
-
-void blockwfloat(ft,f)
-ft_t ft;
-float f;
-{
-	if (ft->file.pos > ft->file.size - sizeof(float)) blockflush(ft);
-	if (ft->swap)
-		f = swapf(f);
-	*(float *)(ft->file.buf + ft->file.pos) = f;
-	ft->file.pos += sizeof(float);
+		swapn(ft->file.pos, n);
+	ft->file.pos += n;
 }
 
 /* Convert the sox internal signed long format */
 /* to the raw file data, and write it. */
 
-void
-rawwrite(ft, buf, nsamp) 
+void rawwrite(ft, buf, nsamp) 
 ft_t ft;
 LONG *buf, nsamp;
 {
@@ -347,19 +346,22 @@ LONG *buf, nsamp;
 		    {
 			case SIGN2:
 				while(done < nsamp) {
+					short s;
 					/* scale signed up to long's range */
-					datum = (int) RIGHT(*buf++, 16);
-					blockwshort(ft, datum);
+					datum = *buf++ + 0x8000; /* round for 16 bit */
+					s = RIGHT(datum, 16);
+					blockw(&s, sizeof(short),ft);
 					done++;
 				}
 				return;
 			case UNSIGNED:
 				while(done < nsamp) {
+					unsigned short s;
 					/* scale signed up to long's range */
-					datum = (int) RIGHT(*buf++, 16);
+					datum = *buf++ + 0x8000; /* round for 16 bit */
+					s = RIGHT(datum, 16) ^ 0x8000;
 					/* Convert to unsigned */
-					datum ^= 0x8000;
-					blockwshort(ft, datum);
+					blockw(&s, sizeof(short),ft);
 					done++;
 				}
 				return;
@@ -371,11 +373,25 @@ fail("No A-Law support for shorts (try -b option ?)");
 				return;
 		    }
 		    break;
+		case DWORD:
+		    switch(ft->info.style)
+		    {
+			case SIGN2:
+				while(done < nsamp) {
+					/* scale signed up to long's range */
+					blockw(buf, sizeof(LONG), ft);
+					buf++;
+					done++;
+				}
+				return;
+		    }
+		    break;
 		case FLOAT:
 			while(done < nsamp) {
+				float f;
 				/* scale signed up to long's range */
-				datum = (int) RIGHT(*buf++, 16);
-			 	blockwfloat(ft, (double) datum);
+				f = (float)*buf++ / 0x10000;
+			 	blockw(&f, sizeof(float), ft);
 				done++;
 			}
 			return;
@@ -400,114 +416,46 @@ ft_t ft;
 
 void rawdefaults();
 
-/* Signed byte */
-void sbstartread(ft) 
-ft_t ft;
-{
-	ft->info.size = BYTE;
-	ft->info.style = SIGN2;
-	rawstartread(ft);
-	rawdefaults(ft);
+#define STARTREAD(NAME,SIZE,STYLE) \
+void NAME(ft) \
+ft_t ft; \
+{ \
+	ft->info.size = SIZE; \
+	ft->info.style = STYLE; \
+	rawstartread(ft); \
+	rawdefaults(ft); \
 }
 
-void sbstartwrite(ft) 
-ft_t ft;
-{
-	ft->info.size = BYTE;
-	ft->info.style = SIGN2;
-	rawstartwrite(ft);
-	rawdefaults(ft);
+#define STARTWRITE(NAME,SIZE,STYLE)\
+void NAME(ft) \
+ft_t ft; \
+{ \
+	ft->info.size = SIZE; \
+	ft->info.style = STYLE; \
+	rawstartwrite(ft); \
+	rawdefaults(ft); \
 }
 
-void ubstartread(ft) 
-ft_t ft;
-{
-	ft->info.size = BYTE;
-	ft->info.style = UNSIGNED;
-	rawstartread(ft);
-	rawdefaults(ft);
-}
+STARTREAD(sbstartread,BYTE,SIGN2) 
+STARTREAD(sbstartwrite,BYTE,SIGN2) 
 
-void ubstartwrite(ft) 
-ft_t ft;
-{
-	ft->info.size = BYTE;
-	ft->info.style = UNSIGNED;
-	rawstartwrite(ft);
-	rawdefaults(ft);
-}
+STARTREAD(ubstartread,BYTE,UNSIGNED) 
+STARTREAD(ubstartwrite,BYTE,UNSIGNED) 
 
-void uwstartread(ft) 
-ft_t ft;
-{
-	ft->info.size = WORD;
-	ft->info.style = UNSIGNED;
-	rawstartread(ft);
-	rawdefaults(ft);
-}
+STARTREAD(uwstartread,WORD,UNSIGNED) 
+STARTREAD(uwstartwrite,WORD,UNSIGNED) 
 
-void uwstartwrite(ft) 
-ft_t ft;
-{
-	ft->info.size = WORD;
-	ft->info.style = UNSIGNED;
-	rawstartwrite(ft);
-	rawdefaults(ft);
-}
+STARTREAD(swstartread,WORD,SIGN2) 
+STARTREAD(swstartwrite,WORD,SIGN2) 
 
-void swstartread(ft) 
-ft_t ft;
-{
-	ft->info.size = WORD;
-	ft->info.style = SIGN2;
-	rawstartread(ft);
-	rawdefaults(ft);
-}
+STARTREAD(slstartread,DWORD,SIGN2) 
+STARTREAD(slstartwrite,DWORD,SIGN2) 
 
-void swstartwrite(ft) 
-ft_t ft;
-{
-	ft->info.size = WORD;
-	ft->info.style = SIGN2;
-	rawstartwrite(ft);
-	rawdefaults(ft);
-}
+STARTREAD(ulstartread,BYTE,ULAW) 
+STARTREAD(ulstartwrite,BYTE,ULAW) 
 
-void ulstartread(ft) 
-ft_t ft;
-{
-	ft->info.size = BYTE;
-	ft->info.style = ULAW;
-	rawstartread(ft);
-	rawdefaults(ft);
-}
-
-void ulstartwrite(ft) 
-ft_t ft;
-{
-	ft->info.size = BYTE;
-	ft->info.style = ULAW;
-	rawstartwrite(ft);
-	rawdefaults(ft);
-}
-
-void alstartread(ft) 
-ft_t ft;
-{
-	ft->info.size = BYTE;
-	ft->info.style = ALAW;
-	rawstartread(ft);
-	rawdefaults(ft);
-}
-
-void alstartwrite(ft) 
-ft_t ft;
-{
-	ft->info.size = BYTE;
-	ft->info.style = ALAW;
-	rawstartwrite(ft);
-	rawdefaults(ft);
-}
+STARTREAD(alstartread,BYTE,ALAW) 
+STARTREAD(alstartwrite,BYTE,ALAW) 
 
 void rawdefaults(ft)
 ft_t ft;
@@ -517,5 +465,4 @@ ft_t ft;
 	if (ft->info.channels == -1)
 		ft->info.channels = 1;
 }
-
 
