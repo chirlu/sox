@@ -1,5 +1,11 @@
 #!/bin/sh
-# create WAV-Files that can be used for an audio Test CD
+# create WAV-Files that can be used to create an audio Test CD
+#
+# The intent of this Test CD is to allow you to test the reproduction
+# quality and response of an audio system by playing back audio
+# of various frequencies and power levels.  Browse through the
+# script comments to see what all audio files are created.
+#
 # all files are created in the current directory
 #
 # Command Line options:
@@ -27,7 +33,7 @@ VOL=""
 OFT=".wav"
 
 #our binary
-SOX=./sox  
+SOX=../src/sox  
 
 # filenameprefix
 if  [ "$1" = "" ] ; then

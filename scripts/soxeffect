@@ -2,17 +2,17 @@
 #
 # soxeffect - When this script is ran using a different name then soxeffect
 # it will run sox using that name as the effect.  It uses stdin/stdout
-# to grab data and output data.
+# to grab data and output data and so is mainly useful in pipes.
+# 
+# Example usage:
+#   ln -s soxeffect lowpass
+#   rec | lowpass | play
 #
 # TODO: It would be nice to specify different output parameters then
 # the input format.
 #
 
-# Some people prefer to rename sox to something like sox.bin, then use this
-# script to always run sox, using "ln -s soxeffect sox".
-
 SOX=/usr/local/bin/sox
-# SOX=/usr/local/bin/sox.bin
 
 help()
 {
