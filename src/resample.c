@@ -96,11 +96,12 @@ static void LpFilter(P5(double c[],
 		LONG Num));
 
 /* makeFilter is used by filter.c */
-int makeFilter(P5(Float Imp[],
+int makeFilter(P6(Float Imp[],
 		  LONG Nwing,
 		  double Froll,
 		  double Beta,
-		  LONG Num));
+		  LONG Num,
+			int Normalize));
 
 static LONG SrcUD(P2(resample_t r, LONG Nx));
 static LONG SrcEX(P2(resample_t r, LONG Nx));
@@ -195,7 +196,7 @@ eff_t effp;
 	r->Imp = (Float *)malloc(sizeof(Float) * (r->Nwing+2)) + 1;
 	/* need Imp[-1] and Imp[Nwing] for quadratic interpolation */
 	/* returns error # <=0, or adjusted wing-len > 0 */
-	i = makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq);
+	i = makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq, 1);
 	if (i <= 0)
 		fail("resample: Unable to make filter\n");
 
@@ -557,14 +558,14 @@ LONG Nx;
    return (Y - Ystart);        /* Return the number of output samples */
 }
 
-int makeFilter(Imp, Nwing, Froll, Beta, Num)
+int makeFilter(Imp, Nwing, Froll, Beta, Num, Normalize)
 Float Imp[];
 LONG Nwing, Num;
+int Normalize;    /* non-zero to normalize DCGain of filter */
 double Froll, Beta;
 {
-   double DCgain;
    double *ImpR;
-   LONG Mwing, Dh, i;
+   LONG Mwing, i;
 
    if (Nwing > MAXNWING)                      /* Check for valid parameters */
       return(-1);
@@ -582,20 +583,27 @@ double Froll, Beta;
    /* Design a Nuttall or Kaiser windowed Sinc low-pass filter */
    LpFilter(ImpR, Mwing, Froll, Beta, Num);
 
-   /* 'correct' the DC gain of the lowpass filter */
-   DCgain = 0;
-   Dh = Num;                  /* Filter sampling period for factors>=1 */
-   for (i=Dh; i<Mwing; i+=Dh)
-      DCgain += ImpR[i];
-   DCgain = 2*DCgain + ImpR[0];    /* DC gain of real coefficients */
-   /*report("DCgain err=%.12f",DCgain-1.0);*/
+   if (Normalize) { /* 'correct' the DC gain of the lowpass filter */
+      LONG Dh;
+      double DCgain;
+      DCgain = 0;
+      Dh = Num;                  /* Filter sampling period for factors>=1 */
+      for (i=Dh; i<Mwing; i+=Dh)
+         DCgain += ImpR[i];
+      DCgain = 2*DCgain + ImpR[0];    /* DC gain of real coefficients */
+      /*report("DCgain err=%.12f",DCgain-1.0);*/
+  
+      DCgain = 1.0/DCgain;
+      for (i=0; i<Mwing; i++)
+         Imp[i] = ImpR[i]*DCgain;
 
-   for (i=0; i<Mwing; i++) {
-      Imp[i] = ImpR[i]/DCgain;
+   } else {
+      for (i=0; i<Mwing; i++)
+         Imp[i] = ImpR[i];
    }
    free(ImpR);
    for (i=Mwing; i<=Nwing; i++) Imp[i] = 0;
-	 /* Imp[Nwing] and Imp[-1] needed for quadratic interpolation */
+   /* Imp[Mwing] and Imp[-1] needed for quadratic interpolation */
    Imp[-1] = Imp[1];
 
    return(Mwing);
