@@ -628,19 +628,17 @@ extern int st_vol_stop();
 
 
 /*
- * EFF_CHAN means that the number of channels can change.
- * EFF_RATE means that the sample rate can change.
- * The first effect which can handle a data rate change, stereo->mono, etc.
- * is the default handler for that problem.
- * 
- * EFF_MCHAN just means that the effect is coded for multiple channels.
+ * ST_EFF_CHAN means that the number of channels can change.
+ * ST_EFF_RATE means that the sample rate can change.
+ * ST_EFF_MCHAN means that the effect is coded for multiple channels.
+ *
  */
 
 st_effect_t st_effects[] = {
 	{"null", 0, 			/* stand-in, never gets called */
 		st_nothing, st_nothing, st_nothing, 
 		st_null_drain, st_nothing},
-	{"avg", ST_EFF_CHAN | ST_EFF_MCHAN, 
+	{"avg", ST_EFF_CHAN, 
 		st_avg_getopts, st_avg_start, st_avg_flow, 
 		st_null_drain, st_avg_stop},
 	{"band", 0, 
@@ -697,13 +695,13 @@ st_effect_t st_effects[] = {
 	{"mask", ST_EFF_MCHAN, 
 		st_mask_getopts, st_nothing, st_mask_flow, 
 		st_null_drain, st_nothing},
-	{"pan", ST_EFF_MCHAN|ST_EFF_CHAN, 
+	{"pan", ST_EFF_CHAN, 
 		st_pan_getopts, st_pan_start, st_pan_flow, 
 		st_null_drain, st_pan_stop},
 	{"phaser", 0,
 	        st_phaser_getopts, st_phaser_start, st_phaser_flow,
 	        st_phaser_drain, st_phaser_stop},
-	{"pick", ST_EFF_CHAN | ST_EFF_MCHAN, 
+	{"pick", ST_EFF_CHAN, 
 		st_pick_getopts, st_pick_start, st_pick_flow, 
 		st_null_drain, st_pick_stop},
 	{"pitch", 0,
@@ -727,7 +725,7 @@ st_effect_t st_effects[] = {
 	{"speed", 0, 
 		st_speed_getopts, st_speed_start, 
 		st_speed_flow, st_speed_drain, st_speed_stop},
-	{"split", ST_EFF_CHAN | ST_EFF_MCHAN, 
+	{"split", ST_EFF_CHAN, 
 		st_split_getopts, st_split_start, st_split_flow, 
 		st_null_drain, st_split_stop},
 	{"stat", ST_EFF_MCHAN | ST_EFF_REPORT,
@@ -742,7 +740,7 @@ st_effect_t st_effects[] = {
 	{"vibro", 0, 
 		st_vibro_getopts, st_vibro_start, st_vibro_flow, 
 		st_null_drain, st_nothing},
-	{"vol", 0, 
+	{"vol", ST_EFF_MCHAN, 
 		st_vol_getopts, st_vol_start, st_vol_flow, 
 		st_null_drain, st_vol_stop},
 	{0, 0, 0, 0, 0, 0, 0}
