@@ -26,7 +26,7 @@ static void svxwriteheader(P2(ft_t, LONG));
 /*                         8SVXSTARTREAD                                */
 /*======================================================================*/
 
-void svxstartread(ft)
+int st_svxstartread(ft)
 ft_t ft;
 {
 	struct svxpriv *p = (struct svxpriv *) ft->priv;
@@ -59,23 +59,35 @@ ft_t ft;
 
 	/* read FORM chunk */
 	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "FORM", 4) != 0)
+	{
 		fail("8SVX: header does not begin with magic word 'FORM'");
+		return(ST_EOF);
+	}
 	totalsize = rlong(ft);
 	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "8SVX", 4) != 0)
+	{
 		fail("8SVX: 'FORM' chunk does not specify '8SVX' as type");
+		return(ST_EOF);
+	}
 
 	/* read chunks until 'BODY' (or end) */
 	while (fread(buf,1,4,ft->fp) == 4 && strncmp(buf,"BODY",4) != 0) {
 		if (strncmp(buf,"VHDR",4) == 0) {
 			chunksize = rlong(ft);
 			if (chunksize != 20)
+			{
 				fail ("8SVX: VHDR chunk has bad size");
+				return(ST_EOF);
+			}
 			fseek(ft->fp,12,SEEK_CUR);
 			rate = rshort(ft);
 			fseek(ft->fp,1,SEEK_CUR);
 			fread(buf,1,1,ft->fp);
 			if (buf[0] != 0)
+			{
 				fail ("8SVX: unsupported data compression");
+				return(ST_EOF);
+			}
 			fseek(ft->fp,4,SEEK_CUR);
 			continue;
 		}
@@ -84,10 +96,18 @@ ft_t ft;
 			chunksize = rlong(ft);
 			if (chunksize & 1)
 				chunksize++;
-			chunk_buf = (char *) malloc(chunksize + 1);
+			chunk_buf = (char *) malloc(chunksize + 2);
+			if (chunk_buf == 0)
+			{
+			    fail("Couldn't alloc resources");
+			    return(ST_EOF);
+			}
 			if (fread(chunk_buf,1,(size_t)chunksize,ft->fp) 
 					!= chunksize)
+			{
 				fail("8SVX: Unexpected EOF in ANNO header");
+				return(ST_EOF);
+			}
 			chunk_buf[chunksize] = '\0';
 			report ("%s",chunk_buf);
 			free(chunk_buf);
@@ -100,9 +120,17 @@ ft_t ft;
 			if (chunksize & 1)
 				chunksize++;
 			chunk_buf = (char *) malloc(chunksize + 1);
+			if (chunk_buf == 0)
+			{
+			    fail("Couldn't alloc resources");
+			    return(ST_EOF);
+			}
 			if (fread (chunk_buf,1,(size_t)chunksize,ft->fp) 
 					!= chunksize)
+			{
 				fail("8SVX: Unexpected EOF in NAME header");
+				return(ST_EOF);
+			}
 			chunk_buf[chunksize] = '\0';
 			report ("%s",chunk_buf);
 			free(chunk_buf);
@@ -113,7 +141,10 @@ ft_t ft;
 		if (strncmp(buf,"CHAN",4) == 0) {
 			chunksize = rlong(ft);
 			if (chunksize != 4) 
+			{
 				fail("8SVX: Short channel chunk");
+				return(ST_EOF);
+			}
 			channels = rlong(ft);
 			channels = (channels & 0x01) + 
 					((channels & 0x02) >> 1) +
@@ -133,15 +164,21 @@ ft_t ft;
 	}
 
 	if (rate == 0)
+	{
 		fail ("8SVX: invalid rate");
+		return(ST_EOF);
+	}
 	if (strncmp(buf,"BODY",4) != 0)
+	{
 		fail ("8SVX: BODY chunk not found");
+		return(ST_EOF);
+	}
 	p->nsamples = rlong(ft);
 
 	ft->info.channels = channels;
 	ft->info.rate = rate;
-	ft->info.style = SIGN2;
-	ft->info.size = BYTE;
+	ft->info.style = ST_ENCODING_SIGN2;
+	ft->info.size = ST_SIZE_BYTE;
 
 	/* open files to channels */
 	p->ch[0] = ft->fp;
@@ -149,21 +186,31 @@ ft_t ft;
 
 	for (i = 1; i < channels; i++) {
 		if ((p->ch[i] = fopen(ft->filename, READBINARY)) == NULL)
+		{
 			fail("Can't open channel file '%s': %s",
 				ft->filename, strerror(errno));
+			return(ST_EOF);
+		}
 
 		/* position channel files */
 		if (fseek(p->ch[i],chan1_pos,SEEK_SET))
+		{
 		    fail ("Can't position channel %d: %s",i,strerror(errno));
+		    return(ST_EOF);
+		}
 		if (fseek(p->ch[i],p->nsamples/channels*i,SEEK_CUR))
+		{
 		    fail ("Can't seek channel %d: %s",i,strerror(errno));
+		    return(ST_EOF);
+		}
 	}
+	return(ST_SUCCESS);
 }
 
 /*======================================================================*/
 /*                         8SVXREAD                                     */
 /*======================================================================*/
-LONG svxread(ft, buf, nsamp) 
+LONG st_svxread(ft, buf, nsamp) 
 ft_t ft;
 LONG *buf, nsamp;
 {
@@ -189,7 +236,7 @@ LONG *buf, nsamp;
 /*======================================================================*/
 /*                         8SVXSTOPREAD                                 */
 /*======================================================================*/
-void svxstopread(ft)
+int st_svxstopread(ft)
 ft_t ft;
 {
 	int i;
@@ -200,12 +247,13 @@ ft_t ft;
 	for (i = 1; i < ft->info.channels; i++) {
 		fclose (p->ch[i]);
 	}
+	return(ST_SUCCESS);
 }
 
 /*======================================================================*/
 /*                         8SVXSTARTWRITE                               */
 /*======================================================================*/
-void svxstartwrite(ft)
+int st_svxstartwrite(ft)
 ft_t ft;
 {
 	struct svxpriv *p = (struct svxpriv *) ft->priv;
@@ -227,23 +275,27 @@ ft_t ft;
 	p->ch[0] = ft->fp;
 	for (i = 1; i < ft->info.channels; i++) {
 		if ((p->ch[i] = tmpfile()) == NULL)
+		{
 			fail("Can't open channel output file: %s",
 				strerror(errno));
+			return(ST_EOF);
+		}
 	}
 
 	/* write header (channel 0) */
-	ft->info.style = SIGN2;
-	ft->info.size = BYTE;
+	ft->info.style = ST_ENCODING_SIGN2;
+	ft->info.size = ST_SIZE_BYTE;
 
 	p->nsamples = 0;
 	svxwriteheader(ft, p->nsamples);
+	return(ST_SUCCESS);
 }
 
 /*======================================================================*/
 /*                         8SVXWRITE                                    */
 /*======================================================================*/
 
-void svxwrite(ft, buf, len)
+LONG st_svxwrite(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
@@ -262,13 +314,14 @@ LONG *buf, len;
 		}
 		done += ft->info.channels;
 	}
+	return (done);
 }
 
 /*======================================================================*/
 /*                         8SVXSTOPWRITE                                */
 /*======================================================================*/
 
-void svxstopwrite(ft)
+int st_svxstopwrite(ft)
 ft_t ft;
 {
 	struct svxpriv *p = (struct svxpriv *) ft->priv;
@@ -281,7 +334,10 @@ ft_t ft;
 	/* close temp files */
 	for (i = 1; i < ft->info.channels; i++) {
 		if (fseek (p->ch[i], 0L, 0))
+		{
 			fail ("Can't rewind channel output file %d",i);
+			return(ST_EOF);
+		}
 		while (!feof(p->ch[i])) {
 			len = fread (svxbuf, 1, 512, p->ch[i]);
 			fwrite (svxbuf, 1, len, p->ch[0]);
@@ -295,8 +351,12 @@ ft_t ft;
 
 	/* fixup file sizes in header */
 	if (fseek(ft->fp, 0L, 0) != 0)
+	{
 		fail("can't rewind output file to rewrite 8SVX header");
+		return(ST_EOF);
+	}
 	svxwriteheader(ft, p->nsamples);
+	return(ST_SUCCESS);
 }
 
 /*======================================================================*/

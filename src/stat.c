@@ -248,7 +248,7 @@ eff_t effp;
 
                 if (x >= 3.0)                        /* use opposite style */
 		{
-                        if (effp->ininfo.style == UNSIGNED)
+                        if (effp->ininfo.style == ST_ENCODING_UNSIGNED)
 			{
                                 printf ("\nTry: -t raw -b -s \n");
 			}
@@ -264,7 +264,7 @@ eff_t effp;
 		}
                 else if (x >= 0.5 && x <= 2.0)       /* use ULAW */
 		{
-                        if (effp->ininfo.style == ULAW)
+                        if (effp->ininfo.style == ST_ENCODING_ULAW)
 			{
                                 printf ("\nTry: -t raw -b -u \n");
 			}

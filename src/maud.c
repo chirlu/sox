@@ -40,7 +40,7 @@ static void maudwriteheader(P1(ft_t));
  *	size and style of samples, 
  *	mono/stereo/quad.
  */
-void maudstartread(ft) 
+int st_maudstartread(ft) 
 ft_t ft;
 {
 	struct maudstuff * p = (struct maudstuff *) ft->priv;
@@ -57,9 +57,12 @@ ft_t ft;
 
 	int littlendian = 1;
 	char *endptr;
+	int rc;
 
 	/* Needed for rawread() */
-	rawstartread(ft);
+	rc = st_rawstartread(ft);
+	if (rc)
+	    return rc;
 
 	endptr = (char *) &littlendian;
 	/* maud is in big endian format.  Swap whats read in
@@ -72,12 +75,18 @@ ft_t ft;
 	
 	/* read FORM chunk */
 	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "FORM", 4) != 0)
+	{
 		fail("MAUD: header does not begin with magic word 'FORM'");
+		return (ST_EOF);
+	}
 	
 	rlong(ft); /* totalsize */
 	
 	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "MAUD", 4) != 0)
+	{
 		fail("MAUD: 'FORM' chunk does not specify 'MAUD' as type");
+		return(ST_EOF);
+	}
 	
 	/* read chunks until 'BODY' (or end) */
 	
@@ -91,7 +100,11 @@ ft_t ft;
 		if (strncmp(buf,"MHDR",4) == 0) {
 			
 			chunksize = rlong(ft);
-			if (chunksize != 8*4) fail ("MAUD: MHDR chunk has bad size");
+			if (chunksize != 8*4) 
+			{
+			    fail ("MAUD: MHDR chunk has bad size");
+			    return(0);
+			}
 			
 			/* fseek(ft->fp,12,SEEK_CUR); */
 			
@@ -100,7 +113,11 @@ ft_t ft;
 			rshort(ft);              /* number of bits per sample after decompression */
 			nom = rlong(ft);         /* clock source frequency */
 			denom = rshort(ft);       /* clock devide           */
-			if (denom == 0) fail("MAUD: frequency denominator == 0, failed");
+			if (denom == 0) 
+			{
+			    fail("MAUD: frequency denominator == 0, failed");
+			    return (ST_EOF);
+			}
 			
 			ft->info.rate = nom / denom;
 			
@@ -114,11 +131,15 @@ ft_t ft;
 				break;
 			default:
 				fail("MAUD: unsupported number of channels in file");
-				break;
+				return (ST_EOF);
 			}
 			
 			chaninf = rshort(ft); /* number of channels (mono: 1, stereo: 2, ...) */
-			if (chaninf != ft->info.channels) fail("MAUD: unsupported number of channels in file");
+			if (chaninf != ft->info.channels) 
+			{
+			    fail("MAUD: unsupported number of channels in file");
+			    return(ST_EOF);
+			}
 			
 			chaninf = rshort(ft); /* compression type */
 			
@@ -127,22 +148,26 @@ ft_t ft;
 			rlong(ft);
 			
 			if (bitpersam == 8 && chaninf == 0) {
-				ft->info.size = BYTE;
-				ft->info.style = UNSIGNED;
+				ft->info.size = ST_SIZE_BYTE;
+				ft->info.style = ST_ENCODING_UNSIGNED;
 			}
 			else if (bitpersam == 8 && chaninf == 2) {
-				ft->info.size = BYTE;
-				ft->info.style = ALAW;
+				ft->info.size = ST_SIZE_BYTE;
+				ft->info.style = ST_ENCODING_ALAW;
 			}
 			else if (bitpersam == 8 && chaninf == 3) {
-				ft->info.size = BYTE;
-				ft->info.style = ULAW;
+				ft->info.size = ST_SIZE_BYTE;
+				ft->info.style = ST_ENCODING_ULAW;
 			}
 			else if (bitpersam == 16 && chaninf == 0) {
-				ft->info.size = WORD;
-				ft->info.style = SIGN2;
+				ft->info.size = ST_SIZE_WORD;
+				ft->info.style = ST_ENCODING_SIGN2;
 			}
-			else fail("MAUD: unsupported compression type detected");
+			else 
+			{
+				fail("MAUD: unsupported compression type detected");
+				return(ST_EOF);
+			}
 			
 			ft->comment = 0;
 			
@@ -154,9 +179,17 @@ ft_t ft;
 			if (chunksize & 1)
 				chunksize++;
 			chunk_buf = (char *) malloc(chunksize + 1);
+			if (!chunk_buf)
+			{
+			    fail("Couldn't alloc resources");
+			    return(ST_EOF);
+			}
 			if (fread(chunk_buf,1,(int)chunksize,ft->fp) 
 					!= chunksize)
+			{
 				fail("MAUD: Unexpected EOF in ANNO header");
+				return(ST_EOF);
+			}
 			chunk_buf[chunksize] = '\0';
 			report ("%s",chunk_buf);
 			free(chunk_buf);
@@ -173,8 +206,13 @@ ft_t ft;
 		
 	}
 	
-	if (strncmp(buf,"MDAT",4) != 0) fail("MAUD: MDAT chunk not found");
+	if (strncmp(buf,"MDAT",4) != 0) 
+	{
+	    fail("MAUD: MDAT chunk not found");
+	    return(ST_EOF);
+	}
 	p->nsamples = rlong(ft);
+	return(ST_SUCCESS);
 }
 
 /*
@@ -184,34 +222,37 @@ ft_t ft;
  * Return number of samples read.
  */
 
-LONG maudread(ft, buf, len) 
+LONG st_maudread(ft, buf, len) 
 ft_t ft;
 LONG *buf, len;
 {
-	return (rawread(ft, buf, len));
+	return (st_rawread(ft, buf, len));
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void maudstopread(ft) 
+int st_maudstopread(ft) 
 ft_t ft;
 {
 	/* Needed because of rawread() */
-	rawstopread(ft);
+	return st_rawstopread(ft);
 }
 
-void maudstartwrite(ft) 
+int st_maudstartwrite(ft) 
 ft_t ft;
 {
 	struct maudstuff * p = (struct maudstuff *) ft->priv;
 
 	int littlendian = 1;
 	char *endptr;
+	int rc;
 
 	/* Needed for rawwrite() */
-	rawstartwrite(ft);
+	rc = st_rawstartwrite(ft);
+	if (rc)
+	    return rc;
 
 	endptr = (char *) &littlendian;
 	/* maud is in big endian format.  Swap whats read in
@@ -223,21 +264,30 @@ ft_t ft;
 	}
 	
 	/* If you have to seek around the output file */
-	if (! ft->seekable) fail("Output .maud file must be a file, not a pipe");
+	if (! ft->seekable) 
+	{
+	    fail("Output .maud file must be a file, not a pipe");
+	    return (ST_EOF);
+	}
 	
 	if (ft->info.channels != 1 && ft->info.channels != 2) {
 		fail("MAUD: unsupported number of channels, unable to store");
+		return(ST_EOF);
 	}
-	if (ft->info.size == WORD) ft->info.style = SIGN2;
-	if (ft->info.style == ULAW || ft->info.style == ALAW) ft->info.size = BYTE;
-	if (ft->info.size == BYTE && ft->info.style == SIGN2) ft->info.style = UNSIGNED;
+	if (ft->info.size == ST_SIZE_WORD) ft->info.style = ST_ENCODING_SIGN2;
+	if (ft->info.style == ST_ENCODING_ULAW || 
+	    ft->info.style == ST_ENCODING_ALAW) ft->info.size = ST_SIZE_BYTE;
+	if (ft->info.size == ST_SIZE_BYTE && 
+	    ft->info.style == ST_ENCODING_SIGN2) 
+	    ft->info.style = ST_ENCODING_UNSIGNED;
 	
 	p->nsamples = 0x7f000000L;
 	maudwriteheader(ft);
 	p->nsamples = 0;
+	return (ST_SUCCESS);
 }
 
-void maudwrite(ft, buf, len) 
+LONG st_maudwrite(ft, buf, len) 
 ft_t ft;
 LONG *buf, len;
 {
@@ -245,20 +295,29 @@ LONG *buf, len;
 	
 	p->nsamples += len;
 	
-	rawwrite(ft, buf, len);
+	return st_rawwrite(ft, buf, len);
 }
 
-void maudstopwrite(ft) 
+int st_maudstopwrite(ft) 
 ft_t ft;
 {
+        int rc;
+
 	/* Flush out remaining samples*/
-	rawstopwrite(ft);
+	rc = st_rawstopwrite(ft);
+	if (rc)
+	    return rc;
 
 	/* All samples are already written out. */
 	
-	if (fseek(ft->fp, 0L, 0) != 0) fail("can't rewind output file to rewrite MAUD header");
+	if (fseek(ft->fp, 0L, 0) != 0) 
+	{
+	    fail("can't rewind output file to rewrite MAUD header");
+	    return(ST_EOF);
+	}
 	
 	maudwriteheader(ft);
+	return(ST_SUCCESS);
 }
 
 #define MAUDHEADERSIZE (4+(4+4+32)+(4+4+32)+(4+4))
@@ -277,18 +336,18 @@ ft_t ft;
 	
 	switch (ft->info.style) {
 		
-	case UNSIGNED:
+	case ST_ENCODING_UNSIGNED:
 		wshort(ft, (int) 8); /* number of bits per sample as stored in MDAT */
 		wshort(ft, (int) 8); /* number of bits per sample after decompression */
 		break;
 		
-	case SIGN2:
+	case ST_ENCODING_SIGN2:
 		wshort(ft, (int) 16); /* number of bits per sample as stored in MDAT */
 		wshort(ft, (int) 16); /* number of bits per sample after decompression */
 		break;
 		
-	case ALAW:
-	case ULAW:
+	case ST_ENCODING_ALAW:
+	case ST_ENCODING_ULAW:
 		wshort(ft, (int) 8); /* number of bits per sample as stored in MDAT */
 		wshort(ft, (int) 16); /* number of bits per sample after decompression */
 		break;
@@ -309,16 +368,16 @@ ft_t ft;
 	
 	switch (ft->info.style) {
 		
-	case UNSIGNED:
-	case SIGN2:
+	case ST_ENCODING_UNSIGNED:
+	case ST_ENCODING_SIGN2:
 		wshort(ft, (int) 0); /* no compression */
 		break;
 		
-	case ULAW:
+	case ST_ENCODING_ULAW:
 		wshort(ft, (int) 3);
 		break;
 		
-	case ALAW:
+	case ST_ENCODING_ALAW:
 		wshort(ft, (int) 2);
 		break;
 		
@@ -335,4 +394,3 @@ ft_t ft;
 	fputs ("MDAT", ft->fp);
 	wlong(ft, p->nsamples * ft->info.size ); /* samples in file */
 }
-

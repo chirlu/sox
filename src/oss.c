@@ -41,37 +41,37 @@
 #include "st.h"
 
 /* common r/w initialization code */
-static void ossdspinit(ft)
+static int ossdspinit(ft)
 ft_t ft;
 {
     int samplesize = 8, dsp_stereo;
     int tmp;
 
     if (ft->info.rate == 0.0) ft->info.rate = 8000;
-    if (ft->info.size == -1) ft->info.size = BYTE;
-    if (ft->info.size == BYTE) {
+    if (ft->info.size == -1) ft->info.size = ST_SIZE_BYTE;
+    if (ft->info.size == ST_SIZE_BYTE) {
 	samplesize = 8;
 	if (ft->info.style == -1)
-	    ft->info.style = UNSIGNED;
-	if (ft->info.style != UNSIGNED) {
+	    ft->info.style = ST_ENCODING_UNSIGNED;
+	if (ft->info.style != ST_ENCODING_UNSIGNED) {
 	    report("OSS driver only supports unsigned with bytes");
 	    report("Forcing to unsigned");
-	    ft->info.style = UNSIGNED;
+	    ft->info.style = ST_ENCODING_UNSIGNED;
 	}
     }
-    else if (ft->info.size == WORD) {
+    else if (ft->info.size == ST_SIZE_WORD) {
 	samplesize = 16;
 	if (ft->info.style == -1)
-	    ft->info.style = SIGN2;
-	if (ft->info.style != SIGN2) {
+	    ft->info.style = ST_ENCODING_SIGN2;
+	if (ft->info.style != ST_ENCODING_SIGN2) {
 	    report("OSS driver only supports signed with words");
 	    report("Forcing to signed linear");
-	    ft->info.style = SIGN2;
+	    ft->info.style = ST_ENCODING_SIGN2;
 	}
     }
     else {
-        ft->info.size = WORD;
-	ft->info.style = SIGN2;
+        ft->info.size = ST_SIZE_WORD;
+	ft->info.style = ST_ENCODING_SIGN2;
 	report("OSS driver only supports bytes and words");
 	report("Forcing to signed linear word");
     }
@@ -83,6 +83,7 @@ ft_t ft;
     ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &ft->file.size);
     if (ft->file.size < 4 || ft->file.size > 65536) {
 	    fail("Invalid audio buffer size %d", ft->file.size);
+	    returen (ST_EOF);
     }
     ft->file.count = 0;
     ft->file.pos = 0;
@@ -90,16 +91,19 @@ ft_t ft;
 
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
 	fail("Unable to allocate input/output buffer of size %d", ft->file.size);
+	return (ST_EOF);
     }
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_SYNC, NULL) < 0) {
 	fail("Unable to sync dsp");
+	return (ST_EOF);
     }
 
     tmp = samplesize;
     ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp);
     if (tmp != samplesize) {
 	fail("Unable to set the sample size to %d", samplesize);
+	return (ST_EOF);
     }
 
     if (ft->info.channels == 2) dsp_stereo = 1;
@@ -134,6 +138,7 @@ ft_t ft;
 
     /* Change to non-buffered I/O */
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
+    return(ST_SUCCESS);
 }
 /*
  * Do anything required before you start reading samples.
@@ -142,16 +147,18 @@ ft_t ft;
  *	size and style of samples,
  *	mono/stereo/quad.
  */
-void ossdspstartread(ft)
+int st_ossdspstartread(ft)
 ft_t ft;
 {
-    ossdspinit(ft);
+    int rc;
+    rc = ossdspinit(ft);
     sigintreg(ft);	/* Prepare to catch SIGINT */
+    return rc;
 }
 
-void ossdspstartwrite(ft)
+int st_ossdspstartwrite(ft)
 ft_t ft;
 {
-    ossdspinit(ft);
+    return ossdspinit(ft);
 }
 #endif

@@ -74,7 +74,7 @@ static LONG writedone=0;
  *	size and style of samples,
  *	mono/stereo/quad.
  */
-void txwstartread(ft)
+int st_txwstartread(ft)
      ft_t ft;
 {
   int c;
@@ -89,7 +89,10 @@ void txwstartread(ft)
   txw_t sk = (txw_t) ft->priv;
   /* If you need to seek around the input file. */
   if (! ft->seekable)
+  {
     fail("txw input file must be a file, not a pipe");
+    return(ST_EOF);
+  }
 
   /* This is dumb but portable, just count the bytes til EOF */
   while ( getc(ft->fp) != EOF ) 
@@ -123,7 +126,10 @@ void txwstartread(ft)
   /* Check to make sure we got a good filetype ID from file */
   report("Found header filetype %s",filetype);
   if(strcmp(filetype,"LM8953"))
+  {
     fail("Invalid filetype ID in input file header, != LM8953");
+    return(ST_EOF);
+  }
   /*
    * Set up the sample rate as indicated by the header
    */
@@ -168,8 +174,10 @@ void txwstartread(ft)
   report("Sample rate = %ld",ft->info.rate);
 
   ft->info.channels = 1 ; /* not sure about stereo sample data yet ??? */
-  ft->info.size = WORD; /* this is close enough */
-  ft->info.style = SIGN2;
+  ft->info.size = ST_SIZE_WORD; /* this is close enough */
+  ft->info.style = ST_ENCODING_SIGN2;
+
+  return(ST_SUCCESS);
 }
 
 /*
@@ -179,7 +187,7 @@ void txwstartread(ft)
  * Return number of samples read.
  */
 
-LONG txwread(ft, buf, len)
+LONG st_txwread(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
@@ -235,12 +243,13 @@ LONG *buf, len;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void txwstopread(ft)
+int st_txwstopread(ft)
 ft_t ft;
 {
+    return(ST_SUCCESS);
 }
 
-void txwstartwrite(ft)
+int st_txwstartwrite(ft)
 ft_t ft;
 {
   struct WaveHeader_ WH;
@@ -250,23 +259,27 @@ ft_t ft;
   if (ft->info.channels != 1)
       report("tx16w is overriding output format to 1 channel.");
   ft->info.channels = 1 ; /* not sure about stereo sample data yet ??? */
-  if (ft->info.size != WORD || ft->info.style != SIGN2)
+  if (ft->info.size != ST_SIZE_WORD || ft->info.style != ST_ENCODING_SIGN2)
       report("tx16w is overriding output format to size Signed Word format.");
-  ft->info.size = WORD; /* this is close enough */
-  ft->info.style = SIGN2;
+  ft->info.size = ST_SIZE_WORD; /* this is close enough */
+  ft->info.style = ST_ENCODING_SIGN2;
   
   /* If you have to seek around the output file */
   if (! ft->seekable)
+  {
       fail("Output .txw file must be a file, not a pipe");
+      return(ST_EOF);
+  }
 
   /* dummy numbers, just for place holder, real header is written
      at end of processing, since byte count is needed */
 
   fwrite(&WH,1,32,ft->fp);
   writedone = 32;
+  return(ST_SUCCESS);
 }
 
-void txwwrite(ft, buf, len)
+LONG st_txwwrite(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
@@ -274,7 +287,7 @@ LONG *buf, len;
         unsigned int w1,w2;
         
         tx16w_len += len;
-        if (tx16w_len > TXMAXLEN) return;
+        if (tx16w_len > TXMAXLEN) return 0;
         
         for (i=0;i<len;i+=2) {
             w1 =  *buf++ >> 20;
@@ -288,9 +301,10 @@ LONG *buf, len;
             putc((w2 >> 4) & 0xFF,ft->fp);
             writedone += 3;
         }
+	return(len);
 }
 
-void txwstopwrite(ft)
+int st_txwstopwrite(ft)
 ft_t ft;
 {
     struct WaveHeader_ WH;
@@ -299,14 +313,6 @@ ft_t ft;
     /* All samples are already written out. */
     /* If file header needs fixing up, for example it needs the */
     /* the number of samples in a field, seek back and write them here. */
-    
-    /* If your format specifies any of the following info. */
-    /*
-      ft->info.rate = 
-      ft->info.size = BYTE or WORD ...;
-      ft->info.style = UNSIGNED or SIGN2 ...;
-      ft->info.channels = 1 or 2 or 4;
-      */
     
     report("tx16w:output finished");
     
@@ -371,4 +377,6 @@ ft_t ft;
     
     rewind(ft->fp);
     fwrite(&WH,1,32,ft->fp);
+
+    return(ST_SUCCESS);
 }

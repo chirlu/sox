@@ -57,8 +57,8 @@ LONG *isamp, *osamp;
 
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
 	switch (effp->outinfo.style) {
-		case ULAW:
-		case ALAW:
+		case ST_ENCODING_ULAW:
+		case ST_ENCODING_ALAW:
 			for(done = 0; done < len; done++) {
 				tri16 = (rand() + rand()) - 32767;
 
@@ -68,7 +68,7 @@ LONG *isamp, *osamp;
 			break;
 		default:
 		switch (effp->outinfo.size) {
-			case BYTE:
+			case ST_SIZE_BYTE:
 			for(done = 0; done < len; done++) {
 				tri16 = (rand() + rand()) - 32767;
 
@@ -76,7 +76,7 @@ LONG *isamp, *osamp;
 				*obuf++ = l;
 			}
 			break;
-			case WORD:
+			case ST_SIZE_WORD:
 			for(done = 0; done < len; done++) {
 				tri16 = (rand() + rand()) - 32767;
 

@@ -21,7 +21,7 @@ struct wvepriv
 
 static void wvewriteheader(P1(ft_t ft));
 
-void wvestartread(ft) 
+int st_wvestartread(ft) 
 ft_t ft;
 {
 	struct wvepriv *p = (struct wvepriv *) ft->priv;
@@ -30,9 +30,12 @@ ft_t ft;
 
 	int littlendian = 1;
 	char *endptr;
+	int rc;
 
 	/* Needed for rawread() */
-	rawstartread(ft);
+	rc = st_rawstartread(ft);
+	if (rc)
+	    return rc;
 
 	endptr = (char *) &littlendian;
 	/* WVE is in big endian format.  Swap whats read in
@@ -43,19 +46,16 @@ ft_t ft;
 		ft->swap = ft->swap ? 0 : 1;
 	}
 
-	/* Sanity check */ 
-	if (sizeof(struct wvepriv) > PRIVSIZE)
-		fail(
-"struct wvepriv is too big (%d); change PRIVSIZE in st.h and recompile sox",
-		     sizeof(struct wvepriv));
-
 	/* Check the magic word */
         fread(magic, 16, 1, ft->fp);
 	if (strcmp(magic, PSION_MAGIC)==0) {
 		report("Found Psion magic word");
 	}
 	else
+	{
 		fail("Psion header doesn't start with magic word\nTry the '.al' file type with '-t al -r 8000 filename'");
+		return (ST_EOF);
+	}
 
         version=rshort(ft);
 
@@ -74,7 +74,10 @@ ft_t ft;
 	    report("Found PSION magic word");
 	}
 	else
+	{
 	    fail("Wrong version in Psion header");
+	    return(ST_EOF);
+	}
 
      	p->length=rlong(ft);
 
@@ -86,12 +89,13 @@ ft_t ft;
  	(void)rshort(ft);
  	(void)rshort(ft);
     
-	ft->info.style = ALAW;
-	ft->info.size = BYTE;
+	ft->info.style = ST_ENCODING_ALAW;
+	ft->info.size = ST_SIZE_BYTE;
 
 	ft->info.rate = 8000;
 
 	ft->info.channels = 1;
+	return (ST_SUCCESS);
 }
 
 /* When writing, the header is supposed to contain the number of
@@ -103,16 +107,19 @@ ft_t ft;
    if it is not, the unspecified size remains in the header
    (this is illegal). */
 
-void wvestartwrite(ft) 
+int st_wvestartwrite(ft) 
 ft_t ft;
 {
 	struct wvepriv *p = (struct wvepriv *) ft->priv;
 
 	int littlendian = 1;
 	char *endptr;
+	int rc;
 
 	/* Needed for rawwrite() */
-	rawstartwrite(ft);
+	rc = st_rawstartwrite(ft);
+	if (rc)
+	    return ST_EOF;
 
 	endptr = (char *) &littlendian;
 	/* wve is in big endian format.  Swap whats read in
@@ -127,42 +134,48 @@ ft_t ft;
 	if (p->repeats == 0)
 	    p->repeats = 1;
 
-	ft->info.style = ALAW;
-	ft->info.size = BYTE;
+	ft->info.style = ST_ENCODING_ALAW;
+	ft->info.size = ST_SIZE_BYTE;
 	ft->info.rate = 8000;
 
 	wvewriteheader(ft);
+	return ST_SUCCESS;
 }
 
-LONG wveread(ft, buf, samp)
+LONG st_wveread(ft, buf, samp)
 ft_t ft;
 LONG *buf, samp;
 {
-	return rawread(ft, buf, samp);
+	return st_rawread(ft, buf, samp);
 }
 
-void wvewrite(ft, buf, samp)
+LONG st_wvewrite(ft, buf, samp)
 ft_t ft;
 LONG *buf, samp;
 {
 	struct wvepriv *p = (struct wvepriv *) ft->priv;
 	p->length += samp * ft->info.size;
-	rawwrite(ft, buf, samp);
+	return st_rawwrite(ft, buf, samp);
 }
 
-void
-wvestopwrite(ft)
+int st_wvestopwrite(ft)
 ft_t ft;
 {
 	if (!ft->seekable)
-		return;
+	{
+	    warn("Header will be have invalid file length since file is not seekable");
+	    return ST_SUCCESS;
+	}
 
 	if (fseek(ft->fp, 0L, 0) != 0)
+	{
 		fail("Can't rewind output file to rewrite Psion header.");
+		return(ST_EOF);
+	}
 	wvewriteheader(ft);
 
 	/* Needed for rawwrite() */
-	rawstopwrite(ft);
+	return st_rawstopwrite(ft);
 }
 
 static void wvewriteheader(ft)

@@ -27,7 +27,7 @@ typedef struct dat {
 	double timevalue, deltat;
 } *dat_t;
 
-/* SJB: should this be moved to misc.c ? */
+/* FIXME: Move this to misc.c */
 static LONG roundoff(x)
 double x;
 {
@@ -35,8 +35,7 @@ double x;
     else return(x + 0.5);
 }
 
-void
-datstartread(ft)
+int st_datstartread(ft)
 ft_t ft;
 {
    char inpstr[82];
@@ -45,7 +44,11 @@ ft_t ft;
    while (ft->info.rate == 0) {
       fgets(inpstr,82,ft->fp);
       sscanf(inpstr," %c",&sc);
-      if (sc != ';') fail("Cannot determine sample rate.");
+      if (sc != ';') 
+      {
+	  fail("Cannot determine sample rate.");
+	  return (ST_EOF);
+      }
 #ifdef __alpha__
       sscanf(inpstr," ; Sample Rate %d", &ft->info.rate);
 #else
@@ -55,12 +58,13 @@ ft_t ft;
 
    /* size and style are really not necessary except to satisfy caller. */
 
-   ft->info.size = DOUBLE;
-   ft->info.style = SIGN2;
+   ft->info.size = ST_SIZE_DOUBLE;
+   ft->info.style = ST_ENCODING_SIGN2;
+
+   return (ST_SUCCESS);
 }
 
-void
-datstartwrite(ft)
+int st_datstartwrite(ft)
 ft_t ft;
 {
    dat_t dat = (dat_t) ft->priv;
@@ -73,8 +77,8 @@ ft_t ft;
 	ft->info.channels = 1;
    }
    
-   ft->info.size = DOUBLE;
-   ft->info.style = SIGN2;
+   ft->info.size = ST_SIZE_DOUBLE;
+   ft->info.style = ST_ENCODING_SIGN2;
    dat->timevalue = 0.0;
    srate = ft->info.rate;
    dat->deltat = 1.0 / srate;
@@ -83,9 +87,11 @@ ft_t ft;
 #else
    fprintf(ft->fp,"; Sample Rate %ld\015\n",ft->info.rate);
 #endif
+
+   return (ST_SUCCESS);
 }
 
-LONG datread(ft, buf, nsamp)
+LONG st_datread(ft, buf, nsamp)
 ft_t ft;
 LONG *buf, nsamp;
 {
@@ -105,15 +111,18 @@ LONG *buf, nsamp;
           }
           while(sc == ';');  /* eliminate comments */
         retc = sscanf(inpstr,"%*s %lg",&sampval);
-        if (retc != 1) fail("Unable to read sample.");
+        if (retc != 1) 
+	{
+	    fail("Unable to read sample.");
+	    return (0);
+	}
         *buf++ = roundoff(sampval * 2.147483648e9);
         ++done;
     }
 	return (done);
 }
 
-void
-datwrite(ft, buf, nsamp)
+LONG st_datwrite(ft, buf, nsamp)
 ft_t ft;
 LONG *buf, nsamp;
 {
@@ -128,6 +137,6 @@ LONG *buf, nsamp;
        dat->timevalue += dat->deltat;
        done++;
        }
-    return;
+    return done;
 }
 

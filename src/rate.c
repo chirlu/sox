@@ -73,7 +73,8 @@ eff_t effp;
 
 	if (effp->ininfo.rate >= 65535 || effp->outinfo.rate >= 65535)
 	    fail("rate effect can only handle rates <= 65535");
-	if (effp->ininfo.size == DWORD || effp->ininfo.size == FLOAT)
+	if (effp->ininfo.size == ST_SIZE_DWORD ||
+	    effp->ininfo.size == ST_SIZE_FLOAT)
 	    fail("rate effect does not work on data greater then 16 bits");
 
         rate->opos_frac=0;

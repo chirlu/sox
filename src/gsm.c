@@ -47,7 +47,7 @@ struct gsmpriv {
 	gsm		handle[MAXCHANS];
 };
 
-static void
+static int
 gsmstart_rw(ft,w) 
 ft_t ft;
 int w; /* w != 0 is write */
@@ -55,42 +55,43 @@ int w; /* w != 0 is write */
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
 	int ch;
 	
-	/* Sanity check */
-	if (sizeof(struct gsmpriv) > PRIVSIZE)
-		fail(
-"struct gsmpriv is too big (%d); change PRIVSIZE in st.h and recompile sox",
-		     sizeof(struct gsmpriv));
-
-	ft->info.style = GSM;
-	ft->info.size = BYTE;
+	ft->info.style = ST_ENCODING_GSM;
+	ft->info.size = ST_SIZE_BYTE;
 	if (!ft->info.rate)
 		ft->info.rate = 8000;
 
 	p->channels = ft->info.channels;
 	if (p->channels > MAXCHANS || p->channels <= 0)
+	{
 		fail("gsm: channels(%d) must be in 1-16", ft->info.channels);
+		return(ST_EOF);
+	}
 
 	for (ch=0; ch<p->channels; ch++) {
 		p->handle[ch] = gsm_create();
 		if (!p->handle[ch])
+		{
 			fail("unable to create GSM stream");
+			return (ST_EOF);
+		}
 	}
 	p->frames = (gsm_byte*) malloc(p->channels*FRAMESIZE);
 	p->samples = (gsm_signal*) malloc(BLOCKSIZE * (p->channels+1) * sizeof(gsm_signal));
 	p->sampleTop = p->samples + BLOCKSIZE*p->channels;
 	p->samplePtr = (w)? p->samples : p->sampleTop;
+	return (ST_SUCCESS);
 }
 
-void gsmstartread(ft) 
+int st_gsmstartread(ft) 
 ft_t ft;
 {
-	gsmstart_rw(ft,0);
+	return st_gsmstart_rw(ft,0);
 }
 
-void gsmstartwrite(ft)
+int st_gsmstartwrite(ft)
 ft_t ft;
 {
-	gsmstart_rw(ft,1);
+	return gsmstart_rw(ft,1);
 }
 
 /*
@@ -100,7 +101,7 @@ ft_t ft;
  * Return number of samples read.
  */
 
-LONG gsmread(ft, buf, samp)
+LONG st_gsmread(ft, buf, samp)
 ft_t ft;
 long *buf, samp;
 {
@@ -128,7 +129,10 @@ long *buf, samp;
 
 			gbuff = p->sampleTop;
 			if (gsm_decode(p->handle[ch], p->frames + ch*FRAMESIZE, gbuff) < 0)
+			{
 				fail("error during GSM decode");
+				return (0);
+			}
 			
 			gsp = p->samples + ch;
 			for (i=0; i<BLOCKSIZE; i++) {
@@ -141,7 +145,7 @@ long *buf, samp;
 	return done;
 }
 
-static void gsmflush(ft)
+static int gsmflush(ft)
 ft_t ft;
 {
 	int r, ch, chans;
@@ -167,18 +171,22 @@ ft_t ft;
 		gsm_encode(p->handle[ch], gbuff, p->frames);
 		r = fwrite(p->frames, FRAMESIZE, 1, ft->fp);
 		if (r != 1)
+		{
 			fail("write error");
+			return(ST_EOF);
+		}
 	}
 	p->samplePtr = p->samples;
 
-	return;
+	return (ST_SUCCESS);
 }
 
-int gsmwrite(ft, buf, samp)
+LONG st_gsmwrite(ft, buf, samp)
 ft_t ft;
 long *buf, samp;
 {
 	int done = 0;
+	int rc;
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
 
 	while (done < samp)
@@ -187,14 +195,18 @@ long *buf, samp;
 			*(p->samplePtr)++ = RIGHT(buf[done++], 16);
 
 		if (p->samplePtr == p->sampleTop)
-			gsmflush(ft);
+		{
+			if(gsmflush(ft))
+			{
+			    return 0;
+			}
+		}
 	}
 
 	return done;
 }
 
-void
-gsmstopread(ft)
+int st_gsmstopread(ft)
 ft_t ft;
 {
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
@@ -205,17 +217,22 @@ ft_t ft;
 
 	free(p->samples);
 	free(p->frames);
+	return (ST_SUCCESS);
 }
 
-void
-gsmstopwrite(ft)
+int st_gsmstopwrite(ft)
 ft_t ft;
 {
+    	int rc;
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
 
 	if (p->samplePtr > p->samples)
-		gsmflush(ft);
+	{
+		rc = gsmflush(ft);
+		if (rc)
+		    return rc;
+	}
 
-	gsmstopread(ft); /* destroy handles and free buffers */
+	return gsmstopread(ft); /* destroy handles and free buffers */
 }
 #endif /* HAVE_LIBGSM */

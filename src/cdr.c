@@ -39,15 +39,18 @@ typedef struct cdrstuff {
  *	mono/stereo/quad.
  */
 
-void cdrstartread(ft) 
+int st_cdrstartread(ft) 
 ft_t ft;
 {
 
 	int     littlendian = 1;
 	char    *endptr;
+	int rc;
 
 	/* Needed because of rawread() */
-	rawstartread(ft);
+	rc = st_rawstartread(ft);
+	if (rc)
+	    return rc;
 
 	endptr = (char *) &littlendian;
 	/* CDR is in Big Endian format.  Swap whats read in on */
@@ -58,10 +61,12 @@ ft_t ft;
 	}
 
 	ft->info.rate = 44100L;
-	ft->info.size = WORD;
-	ft->info.style = SIGN2;
+	ft->info.size = ST_SIZE_WORD;
+	ft->info.style = ST_ENCODING_SIGN2;
 	ft->info.channels = 2;
 	ft->comment = NULL;
+
+	return(ST_SUCCESS);
 }
 
 /*
@@ -71,32 +76,33 @@ ft_t ft;
  * Return number of samples read.
  */
 
-LONG cdrread(ft, buf, len) 
+LONG st_cdrread(ft, buf, len) 
 ft_t ft;
 LONG *buf, len;
 {
 
-	return rawread(ft, buf, len);
+	return st_rawread(ft, buf, len);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void cdrstopread(ft) 
+int st_cdrstopread(ft) 
 ft_t ft;
 {
 	/* Needed because of rawread() */
-	rawstopread(ft);
+	return st_rawstopread(ft);
 }
 
-void cdrstartwrite(ft) 
+int st_cdrstartwrite(ft) 
 ft_t ft;
 {
 	cdr_t cdr = (cdr_t) ft->priv;
 
 	int     littlendian = 1;
 	char    *endptr;
+	int rc;
 
 	endptr = (char *) &littlendian;
 	/* CDR is in Big Endian format.  Swap whats written out on */
@@ -107,17 +113,21 @@ ft_t ft;
 	}
 
 	/* Needed because of rawwrite() */
-	rawstartwrite(ft);
+	rc = st_rawstartwrite(ft);
+	if (rc)
+	    return rc;
 
 	cdr->samples = 0;
 
 	ft->info.rate = 44100L;
-	ft->info.size = WORD;
-	ft->info.style = SIGN2;
+	ft->info.size = ST_SIZE_WORD;
+	ft->info.style = ST_ENCODING_SIGN2;
 	ft->info.channels = 2;
+
+	return(ST_SUCCESS);
 }
 
-void cdrwrite(ft, buf, len) 
+LONG st_cdrwrite(ft, buf, len) 
 ft_t ft;
 LONG *buf, len;
 {
@@ -125,7 +135,7 @@ LONG *buf, len;
 
 	cdr->samples += len;
 
-	rawwrite(ft, buf, len);
+	return st_rawwrite(ft, buf, len);
 }
 
 /*
@@ -133,15 +143,19 @@ LONG *buf, len;
  * samples.  We write -32768 for each sample to pad it out.
  */
 
-void cdrstopwrite(ft) 
+int st_cdrstopwrite(ft) 
 ft_t ft;
 {
 	cdr_t cdr = (cdr_t) ft->priv;
 	int padsamps = SECTORSIZE - (cdr->samples % SECTORSIZE);
 	short zero;
+	int rc;
 
 	/* Flush buffer before writing anything else */
-	rawstopwrite(ft);
+	rc = st_rawstopwrite(ft);
+
+	if (rc)
+	    return rc;
 
 	zero = 0;
 
@@ -152,5 +166,6 @@ ft_t ft;
 			padsamps--;
 		}
 	}
+	return(ST_SUCCESS);
 }
 

@@ -95,14 +95,14 @@ static void checkeffect(P1(eff_t));
 static int flow_effect(P1(int));
 static int drain_effect(P1(int));
 
-static struct soundstream informat, outformat;
+static struct st_soundstream informat, outformat;
 
 static ft_t ft;
 
 #define MAXEFF 4
-static struct effect eff;
-static struct effect efftab[MAXEFF];	/* table of left/mono channel effects */
-static struct effect efftabR[MAXEFF];	/* table of right channel effects */
+static struct st_effect eff;
+static struct st_effect efftab[MAXEFF];	/* table of left/mono channel effects */
+static struct st_effect efftabR[MAXEFF];	/* table of right channel effects */
 				/* efftab[0] is the input stream */
 static int neffects;			/* # of effects */
 static char *ifile, *ofile;
@@ -292,56 +292,56 @@ char **argv;
 			break;
 		case 'b':
 			if (! ft) usage("-b");
-			ft->info.size = BYTE;
+			ft->info.size = ST_SIZE_BYTE;
 			break;
 		case 'w':
 			if (! ft) usage("-w");
-			ft->info.size = WORD;
+			ft->info.size = ST_SIZE_WORD;
 			break;
 		case 'l':
 			if (! ft) usage("-l");
-			ft->info.size = DWORD;
+			ft->info.size = ST_SIZE_DWORD;
 			break;
 		case 'f':
 			if (! ft) usage("-f");
-			ft->info.size = FLOAT;
+			ft->info.size = ST_SIZE_FLOAT;
 			break;
 		case 'd':
 			if (! ft) usage("-d");
-			ft->info.size = DOUBLE;
+			ft->info.size = ST_SIZE_DOUBLE;
 			break;
 		case 'D':
 			if (! ft) usage("-D");
-			ft->info.size = IEEE;
+			ft->info.size = ST_SIZE_IEEE;
 			break;
 
 		case 's':
 			if (! ft) usage("-s");
-			ft->info.style = SIGN2;
+			ft->info.style = ST_ENCODING_SIGN2;
 			break;
 		case 'u':
 			if (! ft) usage("-u");
-			ft->info.style = UNSIGNED;
+			ft->info.style = ST_ENCODING_UNSIGNED;
 			break;
 		case 'U':
 			if (! ft) usage("-U");
-			ft->info.style = ULAW;
+			ft->info.style = ST_ENCODING_ULAW;
 			break;
 		case 'A':
 			if (! ft) usage("-A");
-			ft->info.style = ALAW;
+			ft->info.style = ST_ENCODING_ALAW;
 			break;
 		case 'a':
 			if (! ft) usage("-a");
-			ft->info.style = ADPCM;
+			ft->info.style = ST_ENCODING_ADPCM;
 			break;
 		case 'i':
 			if (! ft) usage("-i");
-			ft->info.style = IMA_ADPCM;
+			ft->info.style = ST_ENCODING_IMA_ADPCM;
 			break;
 		case 'g':
 			if (! ft) usage("-g");
-			ft->info.style = GSM;
+			ft->info.style = ST_ENCODING_GSM;
 			break;
 		
 		case 'x':
@@ -414,8 +414,8 @@ static void process(P0) {
 	report("Extract samples %lu <= x < %lu\n", informat.info.x0, informat.info.x0);
     
     report("Input file: using sample rate %lu\n\tsize %s, style %s, %d %s",
-	   informat.info.rate, sizes[informat.info.size], 
-	   styles[informat.info.style], informat.info.channels, 
+	   informat.info.rate, st_sizes_str[informat.info.size], 
+	   st_encodings_str[informat.info.style], informat.info.channels, 
 	   (informat.info.channels > 1) ? "channels" : "channel");
     if (informat.comment)
 	report("Input file: comment \"%s\"\n", informat.comment);
@@ -465,8 +465,8 @@ static void process(P0) {
 	st_checkformat(&outformat);
 	st_cmpformats(&informat, &outformat);
 	report("Output file: using sample rate %lu\n\tsize %s, style %s, %d %s",
-	       outformat.info.rate, sizes[outformat.info.size], 
-	       styles[outformat.info.style], outformat.info.channels, 
+	       outformat.info.rate, st_sizes_str[outformat.info.size], 
+	       st_encodings_str[outformat.info.style], outformat.info.channels, 
 	       (outformat.info.channels > 1) ? "channels" : "channel");
 	if (outformat.comment)
 	    report("Output file: comment \"%s\"\n", outformat.comment);
@@ -482,7 +482,7 @@ static void process(P0) {
     eff.ininfo = informat.info;
     eff.outinfo = outformat.info;
     for(i = 0; i < 8; i++) {
-	memcpy(&eff.loops[i], &informat.loops[i], sizeof(struct loopinfo));
+	memcpy(&eff.loops[i], &informat.loops[i], sizeof(struct st_loopinfo));
     }
     eff.instr = informat.instr;
 
@@ -720,9 +720,9 @@ eff_t effp;
 
 	/* if given effect does these, we don't need to add them */
 	needrate = (informat.info.rate != outformat.info.rate) &&
-		! (effp->h->flags & EFF_RATE);
+		! (effp->h->flags & ST_EFF_RATE);
 	needchan = (informat.info.channels != outformat.info.channels) &&
-		! (effp->h->flags & EFF_MCHAN);
+		! (effp->h->flags & ST_EFF_MCHAN);
 
 	neffects = 1;
 	/* effect #0 is the input stream */
@@ -736,9 +736,9 @@ eff_t effp;
 		efftabR[i].outinfo = outformat.info;
 		for(j = 0; j < 8; j++) {
 			memcpy(&efftab[i].loops[j], 
-				&informat.loops[j], sizeof(struct loopinfo));
+				&informat.loops[j], sizeof(struct st_loopinfo));
 			memcpy(&efftabR[i].loops[j], 
-				&informat.loops[j], sizeof(struct loopinfo));
+				&informat.loops[j], sizeof(struct st_loopinfo));
 		}
 		efftab[i].instr = informat.instr;
 		efftabR[i].instr = informat.instr;
@@ -752,7 +752,7 @@ eff_t effp;
 		neffects = 2;
 		efftab[1].name = effp->name;
 		if ((informat.info.channels == 2) &&
-		   (! (effp->h->flags & EFF_MCHAN)))
+		   (! (effp->h->flags & ST_EFF_MCHAN)))
 			efftabR[1].name = effp->name;
 	}
 	else if (soxpreview) {
@@ -797,7 +797,7 @@ eff_t effp;
 		    efftab[1].name = effp->name;
 		}
 		if ((informat.info.channels == 2) &&
-		    (! (effp->h->flags & EFF_MCHAN)))
+		    (! (effp->h->flags & ST_EFF_MCHAN)))
 		        efftabR[1].name = effp->name;
 	    }
 	} else {	/* not preview mode */
@@ -824,7 +824,7 @@ eff_t effp;
 	        if (needrate) {
 		    neffects = 4;
 		    efftab[1].name = effp->name;
-		    if (! (effp->h->flags & EFF_MCHAN))
+		    if (! (effp->h->flags & ST_EFF_MCHAN))
 			    efftabR[1].name = effp->name;
 		    efftab[1].outinfo.rate = informat.info.rate;
 		    efftab[1].outinfo.channels = informat.info.channels;
@@ -833,7 +833,7 @@ eff_t effp;
 		} else {
 		    neffects = 3;
 		    efftab[1].name = effp->name;
-		    if (! (effp->h->flags & EFF_MCHAN))
+		    if (! (effp->h->flags & ST_EFF_MCHAN))
 			    efftabR[1].name = effp->name;
 		    efftab[1].outinfo.channels = informat.info.channels;
 		    efftab[2].name = "avg";
@@ -851,7 +851,7 @@ eff_t effp;
 		    efftab[1].name = effp->name;
 		}
 		if ((informat.info.channels == 2) &&
-		    (! (effp->h->flags & EFF_MCHAN)))
+		    (! (effp->h->flags & ST_EFF_MCHAN)))
 		        efftabR[1].name = effp->name;
 	    }
 	}
@@ -861,16 +861,16 @@ eff_t effp;
 		/* shallow copy of initialized effect data */
 		/* XXX this assumes that effect_getopt() doesn't malloc() */
 		if (efftab[i].name == effp->name) {
-			memcpy(&efftab[i], &eff, sizeof(struct effect));
+			memcpy(&efftab[i], &eff, sizeof(struct st_effect));
 			if (efftabR[i].name) 
-			    memcpy(&efftabR[i], &eff, sizeof(struct effect));
+			    memcpy(&efftabR[i], &eff, sizeof(struct st_effect));
 		} else {
 			/* set up & give default opts for added effects */
 			st_geteffect(&efftab[i]);
 			(* efftab[i].h->getopts)(&efftab[i],(int)0,(char **)0);
 			if (efftabR[i].name) 
 			    memcpy(&efftabR[i], &efftab[i], 
-				sizeof(struct effect));
+				sizeof(struct st_effect));
 		}
 	}
 	
@@ -940,7 +940,7 @@ char *opt;
     
 	fprintf(stderr, "%s: ", myname);
 	if (verbose || !opt)
-		fprintf(stderr, "%s\n\n", version());
+		fprintf(stderr, "%s\n\n", st_version());
 	fprintf(stderr, "Usage: %s\n\n", usagestr);
 	if (opt)
 		fprintf(stderr, "Failed at: %s\n", opt);
@@ -948,14 +948,14 @@ char *opt;
 	    fprintf(stderr,"gopts: -e -h -p -v volume -V\n\n");
 	    fprintf(stderr,"fopts: -r rate -c channels -s/-u/-U/-A/-a/-i/-g -b/-w/-l/-f/-d/-D -x\n\n");
 	    fprintf(stderr, "effect: ");
-	    for (i = 1; effects[i].name != NULL; i++) {
-		fprintf(stderr, "%s ", effects[i].name);
+	    for (i = 1; st_effects[i].name != NULL; i++) {
+		fprintf(stderr, "%s ", st_effects[i].name);
 	    }
 	    fprintf(stderr, "\n\neffopts: depends on effect\n\n");
 	    fprintf(stderr, "Supported file formats: ");
-	    for (i = 0; formats[i].names != NULL; i++) {
+	    for (i = 0; st_formats[i].names != NULL; i++) {
 		/* only print the first name */
-		fprintf(stderr, "%s ", formats[i].names[0]);
+		fprintf(stderr, "%s ", st_formats[i].names[0]);
 	    }
 	    fputc('\n', stderr);
 	}

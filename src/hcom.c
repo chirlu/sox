@@ -47,9 +47,9 @@ struct readpriv {
 	short sample;
 };
 
-static void skipbytes(P2(ft_t, int));
+static int skipbytes(P2(ft_t, int));
 
-void hcomstartread(ft)
+int st_hcomstartread(ft)
 ft_t ft;
 {
 	struct readpriv *p = (struct readpriv *) ft->priv;
@@ -61,6 +61,7 @@ ft_t ft;
 
 	int littlendian = 1;
 	char *endptr;
+	int rc;
 
 
 	endptr = (char *) &littlendian;
@@ -73,47 +74,68 @@ ft_t ft;
 	}
 
 	/* Skip first 65 bytes of header */
-	skipbytes(ft, 65);
+	rc = skipbytes(ft, 65);
+	if (rc)
+	    return rc;
 
 	/* Check the file type (bytes 65-68) */
 	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "FSSD", 4) != 0)
+	{
 		fail("Mac header type is not FSSD");
+		return (ST_EOF);
+	}
 
 	/* Skip to byte 83 */
-	skipbytes(ft, 83-69);
+	rc = skipbytes(ft, 83-69);
+	if (rc)
+	    return rc;
 
 	/* Get essential numbers from the header */
 	datasize = rlong(ft); /* bytes 83-86 */
 	rsrcsize = rlong(ft); /* bytes 87-90 */
 
 	/* Skip the rest of the header (total 128 bytes) */
-	skipbytes(ft, 128-91);
+	rc = skipbytes(ft, 128-91);
+	if (rc != 0)
+	    return rc;
 
 	/* The data fork must contain a "HCOM" header */
 	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "HCOM", 4) != 0)
+	{
 		fail("Mac data fork is not HCOM");
+		return (ST_EOF);
+	}
 
 	/* Then follow various parameters */
 	huffcount = rlong(ft);
 	checksum = rlong(ft);
 	compresstype = rlong(ft);
 	if (compresstype > 1)
+	{
 		fail("Bad compression type in HCOM header");
+		return (ST_EOF);
+	}
 	divisor = rlong(ft);
 	if (divisor == 0 || divisor > 4)
+	{
 		fail("Bad sampling rate divisor in HCOM header");
+		return (ST_EOF);
+	}
 	dictsize = rshort(ft);
 
 	/* Translate to sox parameters */
-	ft->info.style = UNSIGNED;
-	ft->info.size = BYTE;
+	ft->info.style = ST_ENCODING_UNSIGNED;
+	ft->info.size = ST_SIZE_BYTE;
 	ft->info.rate = 22050 / divisor;
 	ft->info.channels = 1;
 
 	/* Allocate memory for the dictionary */
 	p->dictionary = (dictent *) malloc(511 * sizeof(dictent));
 	if (p->dictionary == NULL)
+	{
 		fail("can't malloc memory for Huffman dictionary");
+		return (0);
+	}
 
 	/* Read dictionary */
 	for(i = 0; i < dictsize; i++) {
@@ -125,7 +147,9 @@ ft_t ft;
 		       p->dictionary[i].dict_rightson);
 		       */
 	}
-	skipbytes(ft, 1); /* skip pad byte */
+	rc = skipbytes(ft, 1); /* skip pad byte */
+	if (rc)
+	    return rc;
 
 	/* Initialized the decompression engine */
 	p->checksum = checksum;
@@ -136,19 +160,26 @@ ft_t ft;
 	p->cksum = 0;
 	p->dictentry = 0;
 	p->nrbits = -1; /* Special case to get first byte */
+
+	return (ST_SUCCESS);
 }
 
-static void skipbytes(ft, n)
+/* FIXME: Move to misc.c */
+static int skipbytes(ft, n)
 ft_t ft;
 int n;
 {
 	while (--n >= 0) {
 		if (getc(ft->fp) == EOF)
+		{
 			fail("unexpected EOF in Mac header");
+			return(ST_EOF);
+		}
 	}
+	return(ST_SUCCESS);
 }
 
-int hcomread(ft, buf, len)
+LONG st_hcomread(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
@@ -161,7 +192,10 @@ LONG *buf, len;
 			return 0; /* Don't know if this can happen... */
 		p->sample = getc(ft->fp);
 		if (p->sample == EOF)
+		{
 			fail("unexpected EOF at start of HCOM data");
+			return (0);
+		}
 		*buf++ = (p->sample - 128) * 0x1000000L;
 		p->huffcount--;
 		p->nrbits = 0;
@@ -175,7 +209,10 @@ LONG *buf, len;
 		if(p->nrbits == 0) {
 			p->current = rlong(ft);
 			if (feof(ft->fp))
+			{
 				fail("unexpected EOF in HCOM data");
+				return (0);
+			}
 			p->cksum += p->current;
 			p->nrbits = 32;
 		}
@@ -210,17 +247,24 @@ LONG *buf, len;
 	return done;
 }
 
-void hcomstopread(ft) 
+int st_hcomstopread(ft) 
 ft_t ft;
 {
 	register struct readpriv *p = (struct readpriv *) ft->priv;
 
 	if (p->huffcount != 0)
+	{
 		fail("not all HCOM data read");
+		return (ST_EOF);
+	}
 	if(p->cksum != p->checksum)
+	{
 		fail("checksum error in HCOM data");
+		return (ST_EOF);
+	}
 	free((char *)p->dictionary);
 	p->dictionary = NULL;
+	return (ST_SUCCESS);
 }
 
 struct writepriv {
@@ -231,7 +275,7 @@ struct writepriv {
 
 #define BUFINCR (10*BUFSIZ)
 
-void hcomstartwrite(ft) 
+int st_hcomstartwrite(ft) 
 ft_t ft;
 {
 	register struct writepriv *p = (struct writepriv *) ft->priv;
@@ -256,30 +300,42 @@ ft_t ft;
 		break;
 	default:
 		fail("unacceptable output rate for HCOM: try 5512, 7350, 11025 or 22050 hertz");
+		return (ST_EOF);
 	}
-	ft->info.size = BYTE;
-	ft->info.style = UNSIGNED;
+	ft->info.size = ST_SIZE_BYTE;
+	ft->info.style = ST_ENCODING_UNSIGNED;
 	ft->info.channels = 1;
 
 	p->size = BUFINCR;
 	p->pos = 0;
 	p->data = (unsigned char *) malloc(p->size);
 	if (p->data == NULL)
+	{
 		fail("can't malloc buffer for uncompressed HCOM data");
+		return (ST_EOF);
+	}
+	return (ST_SUCCESS);
 }
 
-void hcomwrite(ft, buf, len)
+LONG st_hcomwrite(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
 	register struct writepriv *p = (struct writepriv *) ft->priv;
 	LONG datum;
+	LONG save_len = len;
+
+	if (len == 0)
+	    return (0);
 
 	if (p->pos + len > p->size) {
 		p->size = ((p->pos + len) / BUFINCR + 1) * BUFINCR;
 		p->data = (unsigned char *) realloc(p->data, p->size);
 		if (p->data == NULL)
+		{
 		    fail("can't realloc buffer for uncompressed HCOM data");
+		    return (0);
+		}
 	}
 
 	while (--len >= 0) {
@@ -288,6 +344,8 @@ LONG *buf, len;
 		datum ^= 128;
 		p->data[p->pos++] = datum;
 	}
+
+	return (save_len - len);
 }
 
 /* Some global compression stuff hcom uses.  hcom currently has problems */
@@ -321,7 +379,7 @@ int e, c, s, b;
 static LONG curword;
 static int nbits;
 
-/* SJB: candidates for misc.c */
+/* FIXME: Place in misc.c */
 static void putlong(c, v)
 unsigned char *c;
 LONG v;
@@ -364,7 +422,7 @@ int i;
   }
 }
 
-static void compress(df, dl, fr)
+static int compress(df, dl, fr)
 unsigned char **df;
 LONG *dl;
 float fr;
@@ -442,7 +500,10 @@ float fr;
   report("  Original size: %6d bytes", *dl);
   report("Compressed size: %6d bytes", l);
   if((datafork = (unsigned char *)malloc((unsigned)l)) == NULL)
+  {
     fail("can't malloc buffer for compressed HCOM data");
+    return (ST_EOF);
+  }
   ddf = datafork + 22;
   for(i = 0; i < dictsize; i++) {
     putshort(ddf, dictionary[i].dict_leftson);
@@ -470,8 +531,11 @@ float fr;
   putshort(datafork + 20, dictsize);
   *df = datafork;		/* reassign passed pointer to new datafork */
   *dl = l;			/* and its compressed length */
+
+  return (ST_SUCCESS);
 }
 
+/* FIXME: Place in misc.c */
 static void padbytes(ft, n)
 ft_t ft;
 int n;
@@ -483,16 +547,20 @@ int n;
 
 /* End of hcom utility routines */
 
-void hcomstopwrite(ft) 
+int st_hcomstopwrite(ft) 
 ft_t ft;
 {
 	register struct writepriv *p = (struct writepriv *) ft->priv;
 	unsigned char *compressed_data = p->data;
 	LONG compressed_len = p->pos;
+	int rc;
 
 	/* Compress it all at once */
-	compress(&compressed_data, &compressed_len, (double) ft->info.rate);
+	rc = compress(&compressed_data, &compressed_len, (double) ft->info.rate);
 	free((char *) p->data);
+
+	if (rc)
+	    return 0;
 
 	/* Write the header */
 	(void) fwrite("\000\001A", 1, 3, ft->fp); /* Dummy file name "A" */
@@ -503,14 +571,26 @@ ft_t ft;
 	wlong(ft, (ULONG) 0); /* rsrc size */
 	padbytes(ft, 128 - 91);
 	if (ferror(ft->fp))
+	{
 		fail("write error in HCOM header");
+		return (ST_EOF);
+	}
 
 	/* Write the compressed_data fork */
 	if (fwrite((char *) compressed_data, 1, (int)compressed_len, ft->fp) != compressed_len)
+	{
 		fail("can't write compressed HCOM data");
+		rc = ST_EOF;
+	}
+	else
+	    rc = ST_SUCCESS;
 	free((char *) compressed_data);
+
+	if (rc)
+	    return rc;
 
 	/* Pad the compressed_data fork to a multiple of 128 bytes */
 	padbytes(ft, 128 - (int) (compressed_len%128));
-}
 
+	return (ST_SUCCESS);
+}

@@ -90,14 +90,17 @@ struct smptrailer *trailer;
 	}
 	for(i = 0; i < 8; i++) {	/* read the 8 markers */
 		if (fread(trailer->markers[i].name, 1, 10, ft->fp) != 10)
-			return(0);
+		{
+		    fail("EOF in SMP");
+		    return(ST_EOF);
+		}
 		trailer->markers[i].position = rlong(ft);
 	}
 	trailer->MIDInote = getc(ft->fp);
 	trailer->rate = rlong(ft);
 	trailer->SMPTEoffset = rlong(ft);
 	trailer->CycleSize = rlong(ft);
-	return(1);
+	return(ST_SUCCESS);
 }
 
 /*
@@ -155,14 +158,17 @@ struct smptrailer *trailer;
 	}
 	for(i = 0; i < 8; i++) {	/* write the 8 markers */
 		if (fwrite(trailer->markers[i].name, 1, 10, ft->fp) != 10)
-			return(0);
+		{
+		    fail("EOF in SMP");
+	 	    return(ST_EOF);
+		}
 		wlong(ft, trailer->markers[i].position);
 	}
 	putc(trailer->MIDInote, ft->fp);
 	wlong(ft, trailer->rate);
 	wlong(ft, trailer->SMPTEoffset);
 	wlong(ft, trailer->CycleSize);
-	return(1);
+	return(ST_SUCCESS);
 }
 
 /*
@@ -172,7 +178,7 @@ struct smptrailer *trailer;
  *	size and style of samples, 
  *	mono/stereo/quad.
  */
-void smpstartread(ft) 
+int st_smpstartread(ft) 
 ft_t ft;
 {
 	smp_t smp = (smp_t) ft->priv;
@@ -194,15 +200,27 @@ ft_t ft;
 
 	/* If you need to seek around the input file. */
 	if (! ft->seekable)
+	{
 		fail("SMP input file must be a file, not a pipe");
+		return(ST_EOF);
+	}
 
 	/* Read SampleVision header */
 	if (fread((char *) &header, 1, HEADERSIZE, ft->fp) != HEADERSIZE)
+	{
 		fail("unexpected EOF in SMP header");
+		return(ST_EOF);
+	}
 	if (strncmp(header.Id, SVmagic, 17) != 0)
+	{
 		fail("SMP header does not begin with magic word %s\n", SVmagic);
+		return(ST_EOF);
+	}
 	if (strncmp(header.version, SVvers, 4) != 0)
+	{
 		fail("SMP header is not version %s\n", SVvers);
+		return(ST_EOF);
+	}
 
 	/* Format the sample name and comments to a single comment */
 	/* string. We decrement the counters till we encounter non */
@@ -226,39 +244,46 @@ ft_t ft;
 	/* seek from the current position (the start of sample data) by */
 	/* NoOfSamps * 2 */
 	if (fseek(ft->fp, smp->NoOfSamps * 2L, 1) == -1)
+	{
 		fail("SMP unable to seek to trailer");
-	if (!readtrailer(ft, &trailer))
+		return(ST_EOF);
+	}
+	if (readtrailer(ft, &trailer))
+	{
 		fail("unexpected EOF in SMP trailer");
+		return(ST_EOF);
+	}
 
 	/* seek back to the beginning of the data */
 	if (fseek(ft->fp, samplestart, 0) == -1) 
+	{
 		fail("SMP unable to seek back to start of sample data");
+		return(ST_EOF);
+	}
 
 	ft->info.rate = (int) trailer.rate;
-	ft->info.size = WORD;
-	ft->info.style = SIGN2;
+	ft->info.size = ST_SIZE_WORD;
+	ft->info.style = ST_ENCODING_SIGN2;
 	ft->info.channels = 1;
 
-	if (verbose) {
-		fprintf(stderr, "SampleVision trailer:\n");
-		for(i = 0; i < 8; i++) if (1 || trailer.loops[i].count) {
+	report("SampleVision trailer:\n");
+	for(i = 0; i < 8; i++) if (1 || trailer.loops[i].count) {
 #ifdef __alpha__
-			fprintf(stderr, "Loop %d: start: %6d", i, trailer.loops[i].start);
-			fprintf(stderr, " end:   %6d", trailer.loops[i].end);
+		report("Loop %d: start: %6d", i, trailer.loops[i].start);
+		report(" end:   %6d", trailer.loops[i].end);
 #else
-			fprintf(stderr, "Loop %d: start: %6ld", i, trailer.loops[i].start);
-			fprintf(stderr, " end:   %6ld", trailer.loops[i].end);
+		report("Loop %d: start: %6ld", i, trailer.loops[i].start);
+		report(" end:   %6ld", trailer.loops[i].end);
 #endif
-			fprintf(stderr, " count: %6d", trailer.loops[i].count);
-			fprintf(stderr, " type:  ");
-			switch(trailer.loops[i].type) {
-				case 0: fprintf(stderr, "off\n"); break;
-				case 1: fprintf(stderr, "forward\n"); break;
-				case 2: fprintf(stderr, "forward/backward\n"); break;
-			}
+		report(" count: %6d", trailer.loops[i].count);
+		switch(trailer.loops[i].type) {
+		    case 0: report("type:  off\n"); break;
+		    case 1: report("type:  forward\n"); break;
+		    case 2: report("type:  forward/backward\n"); break;
 		}
-		fprintf(stderr, "MIDI Note number: %d\n\n", trailer.MIDInote);
 	}
+	report("MIDI Note number: %d\n\n", trailer.MIDInote);
+
 	ft->instr.nloops = 0;
 	for(i = 0; i < 8; i++) 
 		if (trailer.loops[i].type) 
@@ -273,9 +298,11 @@ ft_t ft;
 	ft->instr.MIDIlow = ft->instr.MIDIhi =
 		ft->instr.MIDInote = trailer.MIDInote;
 	if (ft->instr.nloops > 0)
-		ft->instr.loopmode = LOOP_8;
+		ft->instr.loopmode = ST_LOOP_8;
 	else
-		ft->instr.loopmode = LOOP_NONE;
+		ft->instr.loopmode = ST_LOOP_NONE;
+
+	return(ST_SUCCESS);
 }
 
 /*
@@ -284,7 +311,7 @@ ft_t ft;
  * Place in buf[].
  * Return number of samples read.
  */
-LONG smpread(ft, buf, len) 
+LONG st_smpread(ft, buf, len) 
 ft_t ft;
 LONG *buf, len;
 {
@@ -304,12 +331,13 @@ LONG *buf, len;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void smpstopread(ft) 
+int st_smpstopread(ft) 
 ft_t ft;
 {
+    return(ST_SUCCESS);
 }
 
-void smpstartwrite(ft) 
+int st_smpstartwrite(ft) 
 ft_t ft;
 {
 	int littlendian = 1;
@@ -328,11 +356,14 @@ ft_t ft;
 
 	/* If you have to seek around the output file */
 	if (! ft->seekable)
+	{
 		fail("Output .smp file must be a file, not a pipe");
+		return(ST_EOF);
+	}
 
 	/* If your format specifies any of the following info. */
-	ft->info.size = WORD;
-	ft->info.style = SIGN2;
+	ft->info.size = ST_SIZE_WORD;
+	ft->info.style = ST_ENCODING_SIGN2;
 	ft->info.channels = 1;
 
 	strcpy(header.Id, SVmagic);
@@ -342,28 +373,35 @@ ft_t ft;
 
 	/* Write file header */
 	if(fwrite(&header, 1, HEADERSIZE, ft->fp) != HEADERSIZE)
-		fail("SMP: Can't write header completely");
+	{
+	    fail("SMP: Can't write header completely");
+	    return(ST_EOF);
+	}
 	wlong(ft, 0);	/* write as zero length for now, update later */
 	smp->NoOfSamps = 0;
+
+	return(ST_SUCCESS);
 }
 
-void smpwrite(ft, buf, len) 
+LONG st_smpwrite(ft, buf, len) 
 ft_t ft;
 LONG *buf, len;
 {
 	smp_t smp = (smp_t) ft->priv;
 	register int datum;
+	LONG done = 0;
 
-	while(len--) {
+	while(done < len) {
 		datum = (int) RIGHT(*buf++, 16);
 		wshort(ft, datum);
 		smp->NoOfSamps++;
+		done++;
 	}
-	/* If you cannot write out all of the supplied samples, */
-	/*	fail("SMP: Can't write all samples to %s", ft->filename); */
+
+	return(done);
 }
 
-void smpstopwrite(ft) 
+int st_smpstopwrite(ft) 
 ft_t ft;
 {
 	smp_t smp = (smp_t) ft->priv;
@@ -373,6 +411,11 @@ ft_t ft;
 	settrailer(ft, &trailer, ft->info.rate);
 	writetrailer(ft, &trailer);
 	if (fseek(ft->fp, 112, 0) == -1)
+	{
 		fail("SMP unable to seek back to save size");
+		return(ST_EOF);
+	}
 	wlong(ft, smp->NoOfSamps);
+
+	return(ST_SUCCESS);
 }

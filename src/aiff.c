@@ -55,14 +55,14 @@ struct aiffpriv {
 
 /* forward declarations */
 static double read_ieee_extended(P1(ft_t));
-static void aiffwriteheader(P2(ft_t, LONG));
+static int aiffwriteheader(P2(ft_t, LONG));
 static void write_ieee_extended(P2(ft_t, double));
 static double ConvertFromIeeeExtended(P1(unsigned char*));
 static void ConvertToIeeeExtended(P2(double, char *));
-static void textChunk(P3(char **text, char *chunkDescription, ft_t ft));
+static int textChunk(P3(char **text, char *chunkDescription, ft_t ft));
 static void reportInstrument(P1(ft_t ft));
 
-void aiffstartread(ft) 
+int st_aiffstartread(ft) 
 ft_t ft;
 {
 	struct aiffpriv *p = (struct aiffpriv *) ft->priv;
@@ -91,8 +91,12 @@ ft_t ft;
 	char *copyright;
 	char *nametext;
 
-	/* Needed because of rawread() */
-	rawstartread(ft);
+	int rc;
+
+	/* Needed because of st_rawread() */
+	rc = st_rawstartread(ft);
+	if (rc)
+	    return rc;
 
 	/* AIFF is in Big Endian format.  Swap whats read in on Little */
 	/* Endian machines.                                            */
@@ -104,10 +108,16 @@ ft_t ft;
 
 	/* FORM chunk */
 	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "FORM", 4) != 0)
+	{
 		fail("AIFF header does not begin with magic word 'FORM'");
+		return(ST_EOF);
+	}
 	totalsize = rlong(ft);
 	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "AIFF", 4) != 0)
+	{
 		fail("AIFF 'FORM' chunk does not specify 'AIFF' as type");
+		return(ST_EOF);
+	}
 
 	
 	/* Skip everything but the COMM chunk and the SSND chunk */
@@ -118,13 +128,19 @@ ft_t ft;
 			if (ssndsize > 0)
 				break;
 			else
+			{
 				fail("Missing SSND chunk in AIFF file");
+				return(ST_EOF);
+			}
 		}
 		if (strncmp(buf, "COMM", 4) == 0) {
 			/* COMM chunk */
 			chunksize = rlong(ft);
 			if (chunksize != 18)
+			{
 				fail("AIFF COMM chunk has bad size");
+				return(ST_EOF);
+			}
 			channels = rshort(ft);
 			frames = rlong(ft);
 			bits = rshort(ft);
@@ -227,23 +243,44 @@ ft_t ft;
 			/* allocate enough memory to hold the comment */
 			ft->comment = (char *) malloc((size_t) chunksize);
 			if (ft->comment == NULL)
+			{
 			  fail("AIFF: Couldn't allocate ANNO header");
+			  return(ST_EOF);
+			}
 			if (fread(ft->comment, 1, chunksize, ft->fp) != chunksize)
+			{
 			  fail("AIFF: Unexpected EOF in ANNO header");
+			  return(ST_EOF);
+			}
 		}
 		else if (strncmp(buf, "AUTH", 4) == 0) {
 		  /* Author chunk */
-		  textChunk(&author, "Author:", ft);
+		  rc = textChunk(&author, "Author:", ft);
+		  if (rc)
+		  {
+		      /* Fail already called in function */
+		      return(ST_EOF);
+		  }
 		  free(author);
 		}
 		else if (strncmp(buf, "NAME", 4) == 0) {
 		  /* Name chunk */
-		  textChunk(&nametext, "Name:", ft);
+		  rc = textChunk(&nametext, "Name:", ft);
+		  if (rc)
+		  {
+		      /* Fail already called in function */
+		      return(ST_EOF);
+		  }
 		  free(nametext);
 		}
 		else if (strncmp(buf, "(c) ", 4) == 0) {
 		  /* Copyright chunk */
-		  textChunk(&copyright, "Copyright:", ft);
+		  rc = textChunk(&copyright, "Copyright:", ft);
+		  if (rc)
+		  {
+		      /* Fail already called in function */
+		      return(ST_EOF);
+		  }
 		  free(copyright);
 		}
 		else {
@@ -280,29 +317,39 @@ ft_t ft;
 		if (seekto > 0)
 			fseek(ft->fp, seekto, SEEK_SET);
 		else
+		{
 			fail("AIFF: no sound data on input file");
+			return(ST_EOF);
+		}
 	}
 	/* SSND chunk just read */
 	if (blocksize != 0)
+	{
 		fail("AIFF header specifies nonzero blocksize?!?!");
+		return(ST_EOF);
+	}
 	while ((LONG) (--offset) >= 0) {
 		if (getc(ft->fp) == EOF)
+		{
 			fail("unexpected EOF while skipping AIFF offset");
+			return(ST_EOF);
+		}
 	}
 
 	if (foundcomm) {
 		ft->info.channels = channels;
 		ft->info.rate = rate;
-		ft->info.style = SIGN2;
+		ft->info.style = ST_ENCODING_SIGN2;
 		switch (bits) {
 		case 8:
-			ft->info.size = BYTE;
+			ft->info.size = ST_SIZE_BYTE;
 			break;
 		case 16:
-			ft->info.size = WORD;
+			ft->info.size = ST_SIZE_WORD;
 			break;
 		default:
 			fail("unsupported sample size in AIFF header: %d", bits);
+			return(ST_EOF);
 			/*NOTREACHED*/
 		}
 	} else  {
@@ -313,6 +360,7 @@ ft_t ft;
 		  report("You must specify # channels, sample rate, signed/unsigned,\n");
 		  report("and 8/16 on the command line.");
 		  fail("Bogus AIFF file: no COMM section.");
+		  return(ST_EOF);
 		}
 
 	}
@@ -320,9 +368,15 @@ ft_t ft;
 	p->nsamples = ssndsize / ft->info.size;	/* leave out channels */
 
 	if (foundmark && !foundinstr)
+	{
 		fail("Bogus AIFF file: MARKers but no INSTrument.");
+		return(ST_EOF);
+	}
 	if (!foundmark && foundinstr)
+	{
 		fail("Bogus AIFF file: INSTrument but no MARKers.");
+		return(ST_EOF);
+	}
 	if (foundmark && foundinstr) {
 		int i;
 		int slbIndex = 0, sleIndex = 0;
@@ -347,7 +401,7 @@ ft_t ft;
 			    marks[sleIndex].position - marks[slbIndex].position;
 			/* really the loop count should be infinite */
 			ft->loops[0].count = 1;	
-			ft->instr.loopmode = LOOP_SUSTAIN_DECAY | ft->loops[0].type;
+			ft->instr.loopmode = ST_LOOP_SUSTAIN_DECAY | ft->loops[0].type;
 			ft->instr.nloops++;
 		}
 		if (ft->loops[1].type != 0) {
@@ -356,12 +410,14 @@ ft_t ft;
 			    marks[rleIndex].position - marks[rlbIndex].position;
 			/* really the loop count should be infinite */
 			ft->loops[1].count = 1;
-			ft->instr.loopmode = LOOP_SUSTAIN_DECAY | ft->loops[1].type;
+			ft->instr.loopmode = ST_LOOP_SUSTAIN_DECAY | ft->loops[1].type;
 			ft->instr.nloops++;
 		} 
 	}
 	if (verbose)
 	  reportInstrument(ft);
+
+	return(ST_SUCCESS);
 }
 
 /* print out the MIDI key allocations, loop points, directions etc */
@@ -379,7 +435,7 @@ ft_t ft;
 	      ft->loops[loopNum].start + ft->loops[loopNum].length);
       fprintf(stderr, " count: %6d", ft->loops[loopNum].count);
       fprintf(stderr, " type:  ");
-      switch(ft->loops[loopNum].type & ~LOOP_SUSTAIN_DECAY) {
+      switch(ft->loops[loopNum].type & ~ST_LOOP_SUSTAIN_DECAY) {
       case 0: fprintf(stderr, "off\n"); break;
       case 1: fprintf(stderr, "forward\n"); break;
       case 2: fprintf(stderr, "forward/backward\n"); break;
@@ -392,7 +448,7 @@ ft_t ft;
 }
 
 /* Process a text chunk, allocate memory, display it if verbose and return */
-static void textChunk(text, chunkDescription, ft) 
+static int textChunk(text, chunkDescription, ft) 
 char **text;
 char *chunkDescription;
 ft_t ft;
@@ -401,16 +457,23 @@ ft_t ft;
   /* allocate enough memory to hold the text including a terminating \0 */
   *text = (char *) malloc((size_t) chunksize + 1);
   if (*text == NULL)
+  {
     fail("AIFF: Couldn't allocate %s header", chunkDescription);
+    return(ST_EOF);
+  }
   if (fread(*text, 1, chunksize, ft->fp) != chunksize)
+  {
     fail("AIFF: Unexpected EOF in %s header", chunkDescription);
+    return(ST_EOF);
+  }
   *(*text + chunksize) = '\0';
   if(verbose) {
     printf("%-10s   \"%s\"\n", chunkDescription, *text);
   }
+  return(ST_SUCCESS);
 }
 
-LONG aiffread(ft, buf, len)
+LONG st_aiffread(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
@@ -419,12 +482,12 @@ LONG *buf, len;
 	/* just read what's left of SSND chunk */
 	if (len > p->nsamples)
 		len = p->nsamples;
-	rawread(ft, buf, len);
+	st_rawread(ft, buf, len);
 	p->nsamples -= len;
 	return len;
 }
 
-void aiffstopread(ft) 
+int st_aiffstopread(ft) 
 ft_t ft;
 {
 	char buf[5];
@@ -453,10 +516,8 @@ ft_t ft;
 	    }
 	}
 
-	/* Needed because of rawwrite() */
-	rawstopread(ft);
-
-	return;
+	/* Needed because of st_rawwrite() */
+	return st_rawstopread(ft);
 }
 
 /* When writing, the header is supposed to contain the number of
@@ -469,15 +530,18 @@ ft_t ft;
    Strictly spoken this is not legal, but the playaiff utility
    will still be able to play the resulting file. */
 
-void aiffstartwrite(ft)
+int st_aiffstartwrite(ft)
 ft_t ft;
 {
 	struct aiffpriv *p = (struct aiffpriv *) ft->priv;
 	int littlendian;
 	char *endptr;
+	int rc;
 
-	/* Needed because rawwrite() */
-	rawstartwrite(ft);
+	/* Needed because st_rawwrite() */
+	rc = st_rawstartwrite(ft);
+	if (rc)
+	    return rc;
 
 	/* AIFF is in Big Endian format.  Swap whats read in on Little */
 	/* Endian machines.                                            */
@@ -489,11 +553,13 @@ ft_t ft;
 	}
 
 	p->nsamples = 0;
-	if (ft->info.style == ULAW && ft->info.size == BYTE) {
+	if ((ft->info.style == ST_ENCODING_ULAW ||
+	     ft->info.style == ST_ENCODING_ALAW) && 
+	    ft->info.size == ST_SIZE_BYTE) {
 		report("expanding 8-bit u-law to 16 bits");
-		ft->info.size = WORD;
+		ft->info.size = ST_SIZE_WORD;
 	}
-	ft->info.style = SIGN2; /* We have a fixed style */
+	ft->info.style = ST_ENCODING_SIGN2; /* We have a fixed style */
 
 	/* Compute the "very large number" so that a maximum number
 	   of samples can be transmitted through a pipe without the
@@ -501,37 +567,46 @@ ft_t ft;
 	   At 48 kHz, 16 bits stereo, this gives ~3 hours of music.
 	   Sorry, the AIFF format does not provide for an "infinite"
 	   number of samples. */
-	aiffwriteheader(ft, 0x7f000000L / (ft->info.size*ft->info.channels));
+	return(aiffwriteheader(ft, 0x7f000000L / (ft->info.size*ft->info.channels)));
 }
 
-void aiffwrite(ft, buf, len)
+LONG st_aiffwrite(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
 	struct aiffpriv *p = (struct aiffpriv *) ft->priv;
 	p->nsamples += len;
-	rawwrite(ft, buf, len);
+	st_rawwrite(ft, buf, len);
+	return(len);
 }
 
-void
-aiffstopwrite(ft)
+int st_aiffstopwrite(ft)
 ft_t ft;
 {
 	struct aiffpriv *p = (struct aiffpriv *) ft->priv;
+	int rc;
 
-	/* Needed because of rawwrite().  Call now to flush
+	/* Needed because of st_rawwrite().  Call now to flush
 	 * buffer now before seeking around below.
 	 */
-	rawstopwrite(ft);
+	rc = st_rawstopwrite(ft);
+	if (rc)
+	    return rc;
 
 	if (!ft->seekable)
-		return;
+	{
+	    fail("Non-seekable file.");
+	    return(ST_EOF);
+	}
 	if (fseek(ft->fp, 0L, SEEK_SET) != 0)
+	{
 		fail("can't rewind output file to rewrite AIFF header");
-	aiffwriteheader(ft, p->nsamples / ft->info.channels);
+		return(ST_EOF);
+	}
+	return(aiffwriteheader(ft, p->nsamples / ft->info.channels));
 }
 
-static void aiffwriteheader(ft, nframes)
+static int aiffwriteheader(ft, nframes)
 ft_t ft;
 LONG nframes;
 {
@@ -545,12 +620,17 @@ LONG nframes;
 	hsize += 8 + 2 + 16*ft->instr.nloops;	/* MARK chunk */
 	hsize += 20;				/* INST chunk */
 
-	if (ft->info.style == SIGN2 && ft->info.size == BYTE)
+	if (ft->info.style == ST_ENCODING_SIGN2 && 
+	    ft->info.size == ST_SIZE_BYTE)
 		bits = 8;
-	else if (ft->info.style == SIGN2 && ft->info.size == WORD)
+	else if (ft->info.style == ST_ENCODING_SIGN2 && 
+		 ft->info.size == ST_SIZE_WORD)
 		bits = 16;
 	else
+	{
 		fail("unsupported output style/size for AIFF header");
+		return(ST_EOF);
+	}
 
 	fputs("FORM", ft->fp); /* IFF header */
 	wlong(ft, hsize + nframes * ft->info.size * ft->info.channels); /* file size */
@@ -632,6 +712,7 @@ LONG nframes;
 	wlong(ft, 8 + nframes * ft->info.channels * ft->info.size); 
 	wlong(ft, (LONG) 0); /* offset */
 	wlong(ft, (LONG) 0); /* block size */
+	return(ST_SUCCESS);
 }
 
 static double read_ieee_extended(ft)
@@ -639,7 +720,10 @@ ft_t ft;
 {
 	char buf[10];
 	if (fread(buf, 1, 10, ft->fp) != 10)
+	{
 		fail("EOF while reading IEEE extended number");
+		return(ST_EOF);
+	}
 	return ConvertFromIeeeExtended(buf);
 }
 

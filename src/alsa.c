@@ -29,7 +29,7 @@
  *	size and style of samples,
  *	mono/stereo/quad.
  */
-void alsastartread(ft)
+int st_alsastartread(ft)
 ft_t ft;
 {
     int bps, fmt, size;
@@ -45,6 +45,7 @@ ft_t ft;
     ft->file.size = c_info.buffer_size;
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
 	fail("unable to allocate output buffer of size %d", ft->file.size);
+	return (ST_EOF)
     }
     if (ft->info.rate < c_info.min_rate) ft->info.rate = 2 * c_info.min_rate;
     else if (ft->info.rate > c_info.max_rate) ft->info.rate = c_info.max_rate;
@@ -52,49 +53,51 @@ ft_t ft;
     else if (ft->info.channels > c_info.max_channels) ft->info.channels = c_info.max_channels;
     if (ft->info.size == -1) {
 	if ((c_info.hw_formats & SND_PCM_FMT_U8) || (c_info.hw_formats & SND_PCM_FMT_S8))
-	    ft->info.size = BYTE;
+	    ft->info.size = ST_SIZE_BYTE;
 	else
-	    ft->info.size = WORD;
+	    ft->info.size = ST_SIZE_WORD;
     }
     if (ft->info.style == -1) {
 	if ((c_info.hw_formats & SND_PCM_FMT_S16_LE) || (c_info.hw_formats & SND_PCM_FMT_S8))
-	    ft->info.style = SIGN2;
+	    ft->info.style = ST_ENCODING_SIGN2;
 	else
-	    ft->info.style = UNSIGNED;
+	    ft->info.style = ST_ENCODING_UNSIGNED;
     }
-    if (ft->info.size == BYTE) {
+    if (ft->info.size == ST_SIZE_BYTE) {
 	switch (ft->info.style)
 	{
-	    case SIGN2:
+	    case ST_ENCODING_SIGN2:
 		if (!(c_info.hw_formats & SND_PCM_FMT_S8))
 		    fail("ALSA driver does not support signed byte samples");
 		fmt = SND_PCM_SFMT_S8;
 		break;
-	    case UNSIGNED:
+	    case ST_ENCODING_UNSIGNED:
 		if (!(c_info.hw_formats & SND_PCM_FMT_U8))
 		    fail("ALSA driver does not support unsigned byte samples");
 		fmt = SND_PCM_SFMT_U8;
 		break;
 	    default:
 		fail("Hardware does not support %s output", styles[ft->info.style]);
+		return(ST_EOF);
 		break;
 	}
     }
     else {
 	switch (ft->info.style)
 	{
-	    case SIGN2:
+	    case ST_ENCODING_SIGN2:
 		if (!(c_info.hw_formats & SND_PCM_FMT_S16_LE))
 		    fail("ALSA driver does not support signed word samples");
 		fmt = SND_PCM_SFMT_S16_LE;
 		break;
-	    case UNSIGNED:
+	    case ST_ENCODING_UNSIGNED:
 		if (!(c_info.hw_formats & SND_PCM_FMT_U16_LE))
 		    fail("ALSA driver does not support unsigned word samples");
 		fmt = SND_PCM_SFMT_U16_LE;
 		break;
 	    default:
 		fail("Hardware does not support %s output", styles[ft->info.style]);
+		return(ST_EOF);
 		break;
 	}
     }
@@ -120,9 +123,11 @@ ft_t ft;
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
 
     sigintreg(ft);	/* Prepare to catch SIGINT */
+
+    return (ST_SUCCESS);
 }
 
-void alsastartwrite(ft)
+int st_alsastartwrite(ft)
 ft_t ft;
 {
     int bps, fmt, size;
@@ -137,6 +142,7 @@ ft_t ft;
     ft->file.size = p_info.buffer_size;
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
 	fail("unable to allocate output buffer of size %d", ft->file.size);
+	return(ST_EOF);
     }
     if (ft->info.rate < p_info.min_rate) ft->info.rate = 2 * p_info.min_rate;
     else if (ft->info.rate > p_info.max_rate) ft->info.rate = p_info.max_rate;
@@ -144,49 +150,51 @@ ft_t ft;
     else if (ft->info.channels > p_info.max_channels) ft->info.channels = p_info.max_channels;
     if (ft->info.size == -1) {
 	if ((p_info.hw_formats & SND_PCM_FMT_U8) || (p_info.hw_formats & SND_PCM_FMT_S8))
-	    ft->info.size = BYTE;
+	    ft->info.size = ST_SIZE_BYTE;
 	else
-	    ft->info.size = WORD;
+	    ft->info.size = ST_SIZE_WORD;
     }
     if (ft->info.style == -1) {
 	if ((p_info.hw_formats & SND_PCM_FMT_S16_LE) || (p_info.hw_formats & SND_PCM_FMT_S8))
-	    ft->info.style = SIGN2;
+	    ft->info.style = ST_ENCODING_SIGN2;
 	else
-	    ft->info.style = UNSIGNED;
+	    ft->info.style = ST_ENCODING_UNSIGNED;
     }
-    if (ft->info.size == BYTE) {
+    if (ft->info.size == ST_SIZE_BYTE) {
 	switch (ft->info.style)
 	{
-	    case SIGN2:
+	    case ST_ENCODING_SIGN2:
 		if (!(p_info.hw_formats & SND_PCM_FMT_S8))
 		    fail("ALSA driver does not support signed byte samples");
 		fmt = SND_PCM_SFMT_S8;
 		break;
-	    case UNSIGNED:
+	    case ST_ENCODING_UNSIGNED:
 		if (!(p_info.hw_formats & SND_PCM_FMT_U8))
 		    fail("ALSA driver does not support unsigned byte samples");
 		fmt = SND_PCM_SFMT_U8;
 		break;
 	    default:
 		fail("Hardware does not support %s output", styles[ft->info.style]);
+		return(ST_EOF);
 		break;
 	}
     }
     else {
 	switch (ft->info.style)
 	{
-	    case SIGN2:
+	    case ST_ENCODING_SIGN2:
 		if (!(p_info.hw_formats & SND_PCM_FMT_S16_LE))
 		    fail("ALSA driver does not support signed word samples");
 		fmt = SND_PCM_SFMT_S16_LE;
 		break;
-	    case UNSIGNED:
+	    case ST_ENCODING_UNSIGNED:
 		if (!(p_info.hw_formats & SND_PCM_FMT_U16_LE))
 		    fail("ALSA driver does not support unsigned word samples");
 		fmt = SND_PCM_SFMT_U16_LE;
 		break;
 	    default:
 		fail("Hardware does not support %s output", styles[ft->info.style]);
+		return(ST_EOF);
 		break;
 	}
     }

@@ -17,15 +17,21 @@
 #include "st.h"
 #include <string.h>
 
-void autostartread(ft)
+int st_autostartread(ft)
 ft_t ft;
 {
 	char *type;
 	char header[132];
 	if (!ft->seekable)
+	{
 		fail("Type AUTO input must be a file, not a pipe");
+		return(ST_EOF);
+	}
 	if (fread(header, 1, sizeof header, ft->fp) != sizeof header)
+	{
 		fail("Type AUTO detects short file");
+		return(ST_EOF);
+	}
 	fseek(ft->fp, 0L - sizeof header, 1); /* Seek back */
 	type = 0;
 	if ((strncmp(header, ".snd", 4) == 0) ||
@@ -68,17 +74,19 @@ ft_t ft;
                 printf("Trying: -t raw -r 11000 -b -u\n\n");
                 type = "raw";
                 ft->info.rate = 11000;
-                ft->info.size = BYTE;
-                ft->info.style = UNSIGNED;
+                ft->info.size = ST_SIZE_BYTE;
+                ft->info.style = ST_ENCODING_UNSIGNED;
                 }
 	report("Type AUTO changed to %s", type);
 	ft->filetype = type;
 	st_gettype(ft); /* Change ft->h to the new format */
 	(* ft->h->startread)(ft);
+	return(ST_SUCCESS);
 }
 
-void autostartwrite(ft) 
+int st_autostartwrite(ft) 
 ft_t ft;
 {
 	fail("Type AUTO can only be used for input!");
+	return(ST_EOF);
 }

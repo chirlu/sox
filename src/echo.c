@@ -59,7 +59,7 @@
 #include <math.h>
 #include "st.h"
 
-#define DELAY_BUFSIZ ( 50L * MAXRATE )
+#define DELAY_BUFSIZ ( 50L * ST_MAXRATE )
 #define MAX_ECHOS 7	/* 24 bit x ( 1 + MAX_ECHOS ) = */
 			/* 24 bit x 8 = 32 bit !!!	*/
 

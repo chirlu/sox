@@ -57,7 +57,7 @@ struct aupriv {
 
 static void auwriteheader(P2(ft_t ft, ULONG data_size));
 
-void austartread(ft) 
+int st_austartread(ft) 
 ft_t ft;
 {
 	/* The following 6 variables represent a Sun sound header on disk.
@@ -78,9 +78,12 @@ ft_t ft;
 
 	int littlendian = 1;
 	char *endptr;
+	int rc;
 
 	/* Needed for rawread() */
-	rawstartread(ft);
+	rc = st_rawstartread(ft);
+	if (rc)
+	    return rc;
 
 	endptr = (char *) &littlendian;
 	/* AU is in big endian format.  Swap whats read
@@ -90,12 +93,6 @@ ft_t ft;
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}
-
-	/* Sanity check */
-	if (sizeof(struct aupriv) > PRIVSIZE)
-		fail(
-"struct aupriv is too big (%d); change PRIVSIZE in st.h and recompile sox",
-		     sizeof(struct aupriv));
 
 	/* Check the magic word */
 	magic = rlong(ft);
@@ -118,12 +115,18 @@ ft_t ft;
 		report("Found DEC magic word");
 	}
 	else
+	{
 		fail("Sun/NeXT/DEC header doesn't start with magic word\nTry the '.ul' file type with '-t ul -r 8000 filename'");
+		return(ST_EOF);
+	}
 
 	/* Read the header size */
 	hdr_size = rlong(ft);
 	if (hdr_size < SUN_HDRSIZE)
+	{
 		fail("Sun/NeXT header size too small.");
+		return(0);
+	}
 
 	/* Read the data size; may be ~0 meaning unspecified */
 	data_size = rlong(ft);
@@ -139,37 +142,37 @@ ft_t ft;
 	p->in_bits = 0;
 	switch (encoding) {
 	case SUN_ULAW:
-		ft->info.style = ULAW;
-		ft->info.size = BYTE;
+		ft->info.style = ST_ENCODING_ULAW;
+		ft->info.size = ST_SIZE_BYTE;
 		break;
 	case SUN_ALAW:
-		ft->info.style = ALAW;
-		ft->info.size = BYTE;
+		ft->info.style = ST_ENCODING_ALAW;
+		ft->info.size = ST_SIZE_BYTE;
 	case SUN_LIN_8:
-		ft->info.style = SIGN2;
-		ft->info.size = BYTE;
+		ft->info.style = ST_ENCODING_SIGN2;
+		ft->info.size = ST_SIZE_BYTE;
 		break;
 	case SUN_LIN_16:
-		ft->info.style = SIGN2;
-		ft->info.size = WORD;
+		ft->info.style = ST_ENCODING_SIGN2;
+		ft->info.size = ST_SIZE_WORD;
 		break;
 	case SUN_G721:
-		ft->info.style = SIGN2;
-		ft->info.size = WORD;
+		ft->info.style = ST_ENCODING_SIGN2;
+		ft->info.size = ST_SIZE_WORD;
 		g72x_init_state(&p->state);
 		p->dec_routine = g721_decoder;
 		p->dec_bits = 4;
 		break;
 	case SUN_G723_3:
-		ft->info.style = SIGN2;
-		ft->info.size = WORD;
+		ft->info.style = ST_ENCODING_SIGN2;
+		ft->info.size = ST_SIZE_WORD;
 		g72x_init_state(&p->state);
 		p->dec_routine = g723_24_decoder;
 		p->dec_bits = 3;
 		break;
 	case SUN_G723_5:
-		ft->info.style = SIGN2;
-		ft->info.size = WORD;
+		ft->info.style = ST_ENCODING_SIGN2;
+		ft->info.size = ST_SIZE_WORD;
 		g72x_init_state(&p->state);
 		p->dec_routine = g723_40_decoder;
 		p->dec_bits = 5;
@@ -177,7 +180,7 @@ ft_t ft;
 	default:
 		report("encoding: 0x%lx", encoding);
 		fail("Unsupported encoding in Sun/NeXT header.\nOnly U-law, signed bytes, signed words, and ADPCM are supported.");
-		/*NOTREACHED*/
+		return(ST_EOF);
 	}
 
 	/* Read the sampling rate */
@@ -195,12 +198,16 @@ ft_t ft;
 		for(i = 0; i < hdr_size; i++) {
 			buf[i] = (char) getc(ft->fp);
 			if (feof(ft->fp))
+			{
 				fail("Unexpected EOF in Sun/NeXT header info.");
+				return(ST_EOF);
+			}
 		}
 		buf[i] = '\0';
 		ft->comment = buf;
 		report("Input file %s: Sun header info: %s", ft->filename, buf);
 	}
+	return(ST_SUCCESS);
 }
 
 /* When writing, the header is supposed to contain the number of
@@ -212,15 +219,18 @@ ft_t ft;
    if it is not, the unspecified size remains in the header
    (this is legal). */
 
-void austartwrite(ft) 
+int st_austartwrite(ft) 
 ft_t ft;
 {
 	struct aupriv *p = (struct aupriv *) ft->priv;
 	int littlendian = 1;
 	char *endptr;
+	int rc;
 
 	/* Needed because of rawwrite(); */
-	rawstartread(ft);
+	rc = st_rawstartwrite(ft);
+	if (rc)
+	    return rc;
 
 	endptr = (char *) &littlendian;
 	/* AU is in big endian format.  Swap whats read in
@@ -233,6 +243,7 @@ ft_t ft;
 
 	p->data_size = 0;
 	auwriteheader(ft, SUN_UNSPEC);
+	return(ST_SUCCESS);
 }
 
 /*
@@ -262,7 +273,7 @@ unsigned char		*code;
 	return (p->in_bits > 0);
 }
 
-LONG auread(ft, buf, samp)
+LONG st_auread(ft, buf, samp)
 ft_t ft;
 LONG *buf, samp;
 {
@@ -270,7 +281,7 @@ LONG *buf, samp;
 	unsigned char code;
 	int done;
 	if (p->dec_routine == NULL)
-		return rawread(ft, buf, samp);
+		return st_rawread(ft, buf, samp);
 	done = 0;
 	while (samp > 0 && unpack_input(ft, &code) >= 0) {
 		*buf++ = LEFT((*p->dec_routine)(code, AUDIO_ENCODING_LINEAR,
@@ -282,30 +293,39 @@ LONG *buf, samp;
 	return done;
 }
 
-void auwrite(ft, buf, samp)
+LONG st_auwrite(ft, buf, samp)
 ft_t ft;
 LONG *buf, samp;
 {
 	struct aupriv *p = (struct aupriv *) ft->priv;
 	p->data_size += samp * ft->info.size;
-	rawwrite(ft, buf, samp);
+	return(st_rawwrite(ft, buf, samp));
 }
 
-void austopwrite(ft)
+int st_austopwrite(ft)
 ft_t ft;
 {
 	struct aupriv *p = (struct aupriv *) ft->priv;
+	int rc;
 
 	/* Needed because of rawwrite(). Do now to flush
 	 * data before seeking around below.
 	 */
-	rawstopwrite(ft);
+	rc = st_rawstopwrite(ft);
+	if (rc)
+	    return rc;
 
+	/* Attempt to update header */
 	if (!ft->seekable)
-		return;
-	if (fseek(ft->fp, 0L, 0) != 0)
+	{
+	  if (fseek(ft->fp, 0L, 0) != 0)
+	  {
 		fail("Can't rewind output file to rewrite Sun header.");
-	auwriteheader(ft, p->data_size);
+		return(ST_EOF);
+	  }
+	  auwriteheader(ft, p->data_size);
+	}
+	return(ST_SUCCESS);
 }
 
 static void auwriteheader(ft, data_size)
@@ -318,21 +338,25 @@ ULONG data_size;
 	ULONG sample_rate;
 	ULONG channels;
 
-	if (ft->info.style == ULAW && ft->info.size == BYTE)
+	if (ft->info.style == ST_ENCODING_ULAW && 
+	    ft->info.size == ST_SIZE_BYTE)
 		encoding = SUN_ULAW;
-	else if (ft->info.style == ALAW && ft->info.size == BYTE)
+	else if (ft->info.style == ST_ENCODING_ALAW && 
+	         ft->info.size == ST_SIZE_BYTE)
 		encoding = SUN_ALAW;
-	else if (ft->info.style == SIGN2 && ft->info.size == BYTE)
+	else if (ft->info.style == ST_ENCODING_SIGN2 && 
+		 ft->info.size == ST_SIZE_BYTE)
 		encoding = SUN_LIN_8;
-	else if (ft->info.style == SIGN2 && ft->info.size == WORD)
+	else if (ft->info.style == ST_ENCODING_SIGN2 && 
+		 ft->info.size == ST_SIZE_WORD)
 		encoding = SUN_LIN_16;
 	else {
 		report("Unsupported output style/size for Sun/NeXT header or .AU format not specified.");
 		report("Only U-law, A-law signed bytes, and signed words are supported.");
 		report("Defaulting to 8khz u-law\n");
 		encoding = SUN_ULAW;
-		ft->info.style = ULAW;
-		ft->info.size = BYTE;
+		ft->info.style = ST_ENCODING_ULAW;
+		ft->info.size = ST_SIZE_BYTE;
 		ft->info.rate = 8000;  /* strange but true */
 	}
 

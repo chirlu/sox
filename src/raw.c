@@ -33,23 +33,37 @@
 
 static void rawdefaults(P1(ft_t ft));
 
-void rawstartread(ft) 
+int st_rawstartread(ft) 
 ft_t ft;
 {
 	ft->file.buf = malloc(BUFSIZ);
+	if (!ft->file.buf)
+	{
+	    fail("Unable to alloc resources");
+	    return(ST_EOF);
+	}
 	ft->file.size = BUFSIZ;
 	ft->file.count = 0;
 	ft->file.pos = 0;
 	ft->file.eof = 0;
+
+	return(ST_SUCCESS);
 }
 
-void rawstartwrite(ft) 
+int st_rawstartwrite(ft) 
 ft_t ft;
 {
 	ft->file.buf = malloc(BUFSIZ);
+	if (!ft->file.buf)
+	{
+	    fail("Unable to alloc resources");
+	    return(ST_EOF);
+	}
 	ft->file.size = BUFSIZ;
 	ft->file.pos = 0;
 	ft->file.eof = 0;
+
+	return(ST_SUCCESS);
 }
 
 /* Read raw file data, and convert it to */
@@ -77,6 +91,7 @@ ft_t ft;
 }
 
 /* Util to reverse the n chars starting at p. */
+/* FIXME: Move to misc.c */
 static void swapn(p, n)
 char *p;
 int n;
@@ -145,17 +160,17 @@ ft_t ft;
 	return done;
 }
 
-LONG rawread(ft, buf, nsamp) 
+LONG st_rawread(ft, buf, nsamp) 
 ft_t ft;
 LONG *buf, nsamp;
 {
 	int done = 0;
 
 	switch(ft->info.size) {
-		case BYTE:
+		case ST_SIZE_BYTE:
 		    switch(ft->info.style)
 		    {
-			case SIGN2:
+			case ST_ENCODING_SIGN2:
 				while(done < nsamp) {
 					LONG datum;
 					datum = blockgetc(ft);
@@ -166,7 +181,7 @@ LONG *buf, nsamp;
 					done++;
 				}
 				return done;
-			case UNSIGNED:
+			case ST_ENCODING_UNSIGNED:
 				while(done < nsamp) {
 					LONG datum;
 					datum = blockgetc(ft);
@@ -179,7 +194,7 @@ LONG *buf, nsamp;
 					done++;
 				}
 				return done;
-			case ULAW:
+			case ST_ENCODING_ULAW:
 				while(done < nsamp) {
 					LONG datum;
 					datum = blockgetc(ft);
@@ -191,7 +206,7 @@ LONG *buf, nsamp;
 					done++;
 				}
 				return done;
-			case ALAW:
+			case ST_ENCODING_ALAW:
 				while(done < nsamp) {
 					LONG datum;
 					datum = blockgetc(ft);
@@ -205,12 +220,12 @@ LONG *buf, nsamp;
 				return done;
 		    }
 		    break;
-		case WORD:
+		case ST_SIZE_WORD:
 		    switch(ft->info.style)
 		    {
-			case SIGN2:
+			case ST_ENCODING_SIGN2:
 				return blockr_sw(buf, nsamp, ft);
-			case UNSIGNED:
+			case ST_ENCODING_UNSIGNED:
 				while(done < nsamp) {
 					LONG x;
 					unsigned short s;
@@ -225,18 +240,18 @@ LONG *buf, nsamp;
 					done++;
 				}
 				return done;
-			case ULAW:
+			case ST_ENCODING_ULAW:
 				fail("No U-Law support for shorts");
-				return done;
-			case ALAW:
+				return 0;
+			case ST_ENCODING_ALAW:
 				fail("No A-Law support for shorts");
-				return done;
+				return 0;
 		    }
 		    break;
-		case DWORD:
+		case ST_SIZE_DWORD:
 		    switch(ft->info.style)
 		    {
-			case SIGN2:
+			case ST_ENCODING_SIGN2:
 				while(done < nsamp) {
 					blockr(buf, sizeof(LONG), ft);
 					if (ft->file.eof)
@@ -248,7 +263,7 @@ LONG *buf, nsamp;
 				return done;
 		    }
 		    break;
-		case FLOAT:
+		case ST_SIZE_FLOAT:
 			while(done < nsamp) {
 				float f;
 				blockr(&f, sizeof(float), ft);
@@ -262,14 +277,16 @@ LONG *buf, nsamp;
 			fail("Drop through in rawread!");
 	}
 	fail("Sorry, don't have code to read %s, %s",
-		styles[ft->info.style], sizes[ft->info.size]);
+		st_encodings_str[ft->info.style], st_sizes_str[ft->info.size]);
 	return(0);
 }
 
-void rawstopread(ft)
+int st_rawstopread(ft)
 ft_t ft;
 {
 	free(ft->file.buf);
+
+	return(ST_SUCCESS);
 }
 
 static void blockflush(ft)
@@ -307,11 +324,12 @@ ft_t ft;
 	ft->file.pos += n;
 }
 
-static void blockw_sw(ft, buf, nsamp)
+static LONG blockw_sw(ft, buf, nsamp)
 ft_t ft;
 LONG *buf, nsamp;
 {
 	short *top;
+	LONG save_nsamp = nsamp;
 
 	top = (short*)(ft->file.buf + ft->file.size);
 	while (nsamp) {
@@ -328,16 +346,16 @@ LONG *buf, nsamp;
 #	ifdef MAXWSPEED
 			q -= 4;
 			while (p<q) {
-				p[0] = swapw((buf[0] + 0x8000) >> 16); /* round for 16 bit */
-				p[1] = swapw((buf[1] + 0x8000) >> 16); /* round for 16 bit */
-				p[2] = swapw((buf[2] + 0x8000) >> 16); /* round for 16 bit */
-				p[3] = swapw((buf[3] + 0x8000) >> 16); /* round for 16 bit */
+				p[0] = st_swapw((buf[0] + 0x8000) >> 16); /* round for 16 bit */
+				p[1] = st_swapw((buf[1] + 0x8000) >> 16); /* round for 16 bit */
+				p[2] = st_swapw((buf[2] + 0x8000) >> 16); /* round for 16 bit */
+				p[3] = st_swapw((buf[3] + 0x8000) >> 16); /* round for 16 bit */
 				p += 4; buf += 4;
 			}
 			q += 4;
 #	endif
 			while (p<q) {
-				*p++ = swapw(((*buf++) + 0x8000) >> 16); /* round for 16 bit */
+				*p++ = st_swapw(((*buf++) + 0x8000) >> 16); /* round for 16 bit */
 			}
 		} else {
 #	ifdef MAXWSPEED
@@ -356,22 +374,23 @@ LONG *buf, nsamp;
 			}
 		}
 	}
+	return(save_nsamp - nsamp);
 }
 
 /* Convert the sox internal signed long format */
 /* to the raw file data, and write it. */
 
-void rawwrite(ft, buf, nsamp) 
+LONG st_rawwrite(ft, buf, nsamp) 
 ft_t ft;
 LONG *buf, nsamp;
 {
 	int done = 0;
 
 	switch(ft->info.size) {
-		case BYTE:
+		case ST_SIZE_BYTE:
 		    switch(ft->info.style)
 		    {
-			case SIGN2:
+			case ST_ENCODING_SIGN2:
 				while(done < nsamp) {
 					int datum;
 					/* scale signed up to long's range */
@@ -379,8 +398,8 @@ LONG *buf, nsamp;
 					blockputc(ft, datum);
 					done++;
 				}
-				return;
-			case UNSIGNED:
+				return done;
+			case ST_ENCODING_UNSIGNED:
 				while(done < nsamp) {
 					int datum;
 					/* scale signed up to long's range */
@@ -390,8 +409,8 @@ LONG *buf, nsamp;
 					blockputc(ft, datum);
 					done++;
 				}
-				return;
-			case ULAW:
+				return done;
+			case ST_ENCODING_ULAW:
 				while(done < nsamp) {
 					int datum;
 					/* scale signed up to long's range */
@@ -402,8 +421,8 @@ LONG *buf, nsamp;
 					blockputc(ft, datum);
 					done++;
 				}
-				return;
-			case ALAW:
+				return done;
+			case ST_ENCODING_ALAW:
 				while(done < nsamp) {
 					int datum;
 					/* scale signed up to long's range */
@@ -414,16 +433,15 @@ LONG *buf, nsamp;
 					blockputc(ft, datum);
 					done++;
 				}
-				return;
+				return done;
 		    }
 		    break;
-		case WORD:
+		case ST_SIZE_WORD:
 		    switch(ft->info.style)
 		    {
-			case SIGN2:
-				blockw_sw(ft,buf,nsamp);
-				return;
-			case UNSIGNED:
+			case ST_ENCODING_SIGN2:
+				return blockw_sw(ft,buf,nsamp);
+			case ST_ENCODING_UNSIGNED:
 				while(done < nsamp) {
 					int datum;
 					unsigned short s;
@@ -434,29 +452,29 @@ LONG *buf, nsamp;
 					blockw(&s, sizeof(short),ft);
 					done++;
 				}
-				return;
-			case ULAW:
+				return done;
+			case ST_ENCODING_ULAW:
 fail("No U-Law support for shorts (try -b option ?)");
-				return;
-			case ALAW:
+				return 0;
+			case ST_ENCODING_ALAW:
 fail("No A-Law support for shorts (try -b option ?)");
-				return;
+				return 0;
 		    }
 		    break;
-		case DWORD:
+		case ST_SIZE_DWORD:
 		    switch(ft->info.style)
 		    {
-			case SIGN2:
+			case ST_ENCODING_SIGN2:
 				while(done < nsamp) {
 					/* scale signed up to long's range */
 					blockw(buf, sizeof(LONG), ft);
 					buf++;
 					done++;
 				}
-				return;
+				return done;
 		    }
 		    break;
-		case FLOAT:
+		case ST_SIZE_FLOAT:
 			while(done < nsamp) {
 				float f;
 				/* scale signed up to long's range */
@@ -464,19 +482,22 @@ fail("No A-Law support for shorts (try -b option ?)");
 			 	blockw(&f, sizeof(float), ft);
 				done++;
 			}
-			return;
+			return done;
 		default:
 		    fail("Drop through in rawwrite!");
+		    return 0;
 	}
 	fail("Sorry, don't have code to write %s, %s",
-		styles[ft->info.style], sizes[ft->info.size]);
+		st_encodings_str[ft->info.style], st_sizes_str[ft->info.size]);
+	return 0;
 }
 
-void rawstopwrite(ft)
+int st_rawstopwrite(ft)
 ft_t ft;
 {
 	blockflush(ft);
 	free(ft->file.buf);
+	return(ST_SUCCESS);
 }
 
 /*
@@ -485,45 +506,45 @@ ft_t ft;
 */
 
 #define STARTREAD(NAME,SIZE,STYLE) \
-void NAME(ft) \
+int NAME(ft) \
 ft_t ft; \
 { \
 	ft->info.size = SIZE; \
 	ft->info.style = STYLE; \
-	rawstartread(ft); \
 	rawdefaults(ft); \
+	return st_rawstartread(ft); \
 }
 
 #define STARTWRITE(NAME,SIZE,STYLE)\
-void NAME(ft) \
+int NAME(ft) \
 ft_t ft; \
 { \
 	ft->info.size = SIZE; \
 	ft->info.style = STYLE; \
-	rawstartwrite(ft); \
 	rawdefaults(ft); \
+	return st_rawstartwrite(ft); \
 }
 
-STARTREAD(sbstartread,BYTE,SIGN2) 
-STARTWRITE(sbstartwrite,BYTE,SIGN2) 
+STARTREAD(st_sbstartread,ST_SIZE_BYTE,ST_ENCODING_SIGN2) 
+STARTWRITE(st_sbstartwrite,ST_SIZE_BYTE,ST_ENCODING_SIGN2) 
 
-STARTREAD(ubstartread,BYTE,UNSIGNED) 
-STARTWRITE(ubstartwrite,BYTE,UNSIGNED) 
+STARTREAD(st_ubstartread,ST_SIZE_BYTE,ST_ENCODING_UNSIGNED) 
+STARTWRITE(st_ubstartwrite,ST_SIZE_BYTE,ST_ENCODING_UNSIGNED) 
 
-STARTREAD(uwstartread,WORD,UNSIGNED) 
-STARTWRITE(uwstartwrite,WORD,UNSIGNED) 
+STARTREAD(st_uwstartread,ST_SIZE_WORD,ST_ENCODING_UNSIGNED) 
+STARTWRITE(st_uwstartwrite,ST_SIZE_WORD,ST_ENCODING_UNSIGNED) 
 
-STARTREAD(swstartread,WORD,SIGN2) 
-STARTWRITE(swstartwrite,WORD,SIGN2) 
+STARTREAD(st_swstartread,ST_SIZE_WORD,ST_ENCODING_SIGN2) 
+STARTWRITE(st_swstartwrite,ST_SIZE_WORD,ST_ENCODING_SIGN2) 
 
-STARTREAD(slstartread,DWORD,SIGN2) 
-STARTWRITE(slstartwrite,DWORD,SIGN2) 
+STARTREAD(st_slstartread,ST_SIZE_DWORD,ST_ENCODING_SIGN2) 
+STARTWRITE(st_slstartwrite,ST_SIZE_DWORD,ST_ENCODING_SIGN2) 
 
-STARTREAD(ulstartread,BYTE,ULAW) 
-STARTWRITE(ulstartwrite,BYTE,ULAW) 
+STARTREAD(st_ulstartread,ST_SIZE_BYTE,ST_ENCODING_ULAW) 
+STARTWRITE(st_ulstartwrite,ST_SIZE_BYTE,ST_ENCODING_ULAW) 
 
-STARTREAD(alstartread,BYTE,ALAW) 
-STARTWRITE(alstartwrite,BYTE,ALAW) 
+STARTREAD(st_alstartread,ST_SIZE_BYTE,ST_ENCODING_ALAW) 
+STARTWRITE(st_alstartwrite,ST_SIZE_BYTE,ST_ENCODING_ALAW) 
 
 void rawdefaults(ft)
 ft_t ft;

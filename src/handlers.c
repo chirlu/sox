@@ -16,248 +16,264 @@
 
 /* File format handlers. */
 
-char *aiffnames[] = {
+static char *aiffnames[] = {
 	"aiff",
 	"aif",
 	(char *) 0
 };
-extern void aiffstartread();
-extern LONG aiffread();
-extern void aiffstopread();
-extern void aiffstartwrite();
-extern void aiffwrite();
-extern void aiffstopwrite();
+extern int  st_aiffstartread();
+extern LONG st_aiffread();
+extern int  st_aiffstopread();
+extern int  st_aiffstartwrite();
+extern LONG st_aiffwrite();
+extern int  st_aiffstopwrite();
 
-char *alnames[] = {
+static char *alnames[] = {
 	"al",
 	(char *) 0
 };
-extern void alstartread();
-extern void alstartwrite();
+extern int st_alstartread();
+extern int st_alstartwrite();
 
 #if	defined(ALSA_PLAYER)
-char *alsanames[] = {
+static char *alsanames[] = {
 	"alsa",
 	(char *) 0
 };
-extern void alsastartread();
-extern void alsastartwrite();
+extern int st_alsastartread();
+extern int st_alsastartwrite();
 #endif
 
-char *aunames[] = {
+static char *aunames[] = {
 	"au",
 #ifdef	NeXT
 	"snd",
 #endif
 	(char *) 0
 };
-extern void austartread();
-extern LONG auread();
-extern void austartwrite();
-extern void auwrite();
-extern void austopwrite();
 
-char *autonames[] = {
+extern int  st_austartread();
+extern LONG st_auread();
+extern int  st_austartwrite();
+extern LONG st_auwrite();
+extern int  st_austopwrite();
+
+static char *autonames[] = {
 	"auto",
 	(char *) 0
 };
 
-extern void autostartread();
-extern void autostartwrite();
+extern int st_autostartread();
+extern int st_autostartwrite();
 
-char *avrnames[] = {
+static char *avrnames[] = {
 	"avr",
 	(char *) 0
 };
 
-extern void avrstartread();
-extern void avrstartwrite();
-extern void avrwrite();
-extern void avrstopwrite();
+extern int  st_avrstartread();
+extern int  st_avrstartwrite();
+extern LONG st_avrwrite();
+extern int  st_avrstopwrite();
 
-char *cdrnames[] = {
+static char *cdrnames[] = {
 	"cdr",
 	(char *) 0
 };
-extern void cdrstartread();
-extern LONG cdrread();
-extern void cdrstopread();
-extern void cdrstartwrite();
-extern void cdrwrite();
-extern void cdrstopwrite();
 
-char *cvsdnames[] = {
+extern int  st_cdrstartread();
+extern LONG st_cdrread();
+extern int  st_cdrstopread();
+extern int  st_cdrstartwrite();
+extern LONG st_cdrwrite();
+extern int  st_cdrstopwrite();
+
+static char *cvsdnames[] = {
         "cvs",
 	"cvsd",
 	(char *)0
 };
-extern void cvsdstartread();
-extern LONG cvsdread();
-extern void cvsdstopread();
-extern void cvsdstartwrite();
-extern void cvsdwrite();
-extern void cvsdstopwrite();
 
-char *datnames[] = {
+extern int  st_cvsdstartread();
+extern LONG st_cvsdread();
+extern int  st_cvsdstopread();
+extern int  st_cvsdstartwrite();
+extern LONG st_cvsdwrite();
+extern int  st_cvsdstopwrite();
+
+static char *datnames[] = {
 	"dat",
 	(char *) 0
 };
-extern void datstartread();
-extern LONG datread();
-extern void datstartwrite();
-extern void datwrite();
 
-char *dvmsnames[] = {
+extern int  st_datstartread();
+extern LONG st_datread();
+extern int  st_datstartwrite();
+extern LONG st_datwrite();
+
+static char *dvmsnames[] = {
         "vms",
 	"dvms",
 	(char *)0
 };
-extern void dvmsstartread();
-extern void dvmsstartwrite();
-extern void dvmsstopwrite();
+
+extern int st_dvmsstartread();
+extern int st_dvmsstartwrite();
+extern int st_dvmsstopwrite();
 
 #ifdef HAVE_LIBGSM
-char *gsmnames[] = {
+static char *gsmnames[] = {
         "gsm",
 	(char *) 0
 };
 
-extern void gsmstartread();
-extern LONG gsmread();
-extern void gsmstopread();
-extern void gsmstartwrite();
-extern void gsmwrite();
-extern void gsmstopwrite();
+extern int  st_gsmstartread();
+extern LONG st_gsmread();
+extern int  st_gsmstopread();
+extern int  st_gsmstartwrite();
+extern LONG st_gsmwrite();
+extern int  st_gsmstopwrite();
 #endif
 
-char *hcomnames[] = {
+static char *hcomnames[] = {
 	"hcom",
 	(char *) 0
 };
-extern void hcomstartread();
-extern LONG hcomread();
-extern void hcomstopread();
-extern void hcomstartwrite();
-extern void hcomwrite();
-extern void hcomstopwrite();
 
-char *maudnames[] = {
+extern int  st_hcomstartread();
+extern LONG st_hcomread();
+extern int  st_hcomstopread();
+extern int  st_hcomstartwrite();
+extern LONG st_hcomwrite();
+extern int  st_hcomstopwrite();
+
+static char *maudnames[] = {
         "maud",
         (char *) 0,
 };
-extern void maudstartread();
-extern LONG maudread();
-extern void maudstopread();
-extern void maudwrite();
-extern void maudstartwrite();
-extern void maudstopwrite();
+
+extern int  st_maudstartread();
+extern LONG st_maudread();
+extern int  st_maudstopread();
+extern LONG st_maudwrite();
+extern int  st_maudstartwrite();
+extern int  st_maudstopwrite();
 
 #if	defined(OSS_PLAYER)
-char *ossdspnames[] = {
+static char *ossdspnames[] = {
 	"ossdsp",
 	(char *) 0
 };
-extern void ossdspstartread();
-extern void ossdspstartwrite();
+
+extern int st_ossdspstartread();
+extern int st_ossdspstartwrite();
 #endif
 
-char *rawnames[] = {
+static char *rawnames[] = {
 	"raw",
 	(char *) 0
 };
 
 /* raw prototypes are defined in st.h since they are used globally. */
 
-char *sbnames[] = {
+static char *sbnames[] = {
 	"sb",
 	(char *) 0
 };
-extern void sbstartread();
-extern void sbstartwrite();
 
-char *sfnames[] = {
+extern int st_sbstartread();
+extern int st_sbstartwrite();
+
+static char *sfnames[] = {
 	"sf",
 	(char *) 0
 };
-extern void sfstartread();
-extern void sfstartwrite();
 
-char *smpnames[] = {
-	"smp",
-	(char *) 0,
-};
+extern int st_sfstartread();
+extern int st_sfstartwrite();
 
-char *slnames[] = {
+static char *slnames[] = {
 	"sl",
 	(char *) 0,
 };
 
-extern void slstartread();
-extern void slstartwrite();
+extern int st_slstartread();
+extern int st_slstartwrite();
 
-extern void smpstartread();
-extern LONG smpread();
-extern void smpwrite();
-extern void smpstartwrite();
-extern void smpstopwrite();
+static char *smpnames[] = {
+	"smp",
+	(char *) 0,
+};
 
-char *sndrnames[] = {
+extern int  st_smpstartread();
+extern LONG st_smpread();
+extern LONG st_smpwrite();
+extern int  st_smpstartwrite();
+extern int  st_smpstopwrite();
+
+static char *sndrnames[] = {
 	"sndr",
 	(char *) 0
 };
-extern void sndrstartwrite();
 
-char *sndtnames[] = {
+extern int st_sndrstartwrite();
+
+static char *sndtnames[] = {
 	"sndt",
 #ifdef	DOS
 	"snd",
 #endif
 	(char *) 0
 }; 
-extern void sndtstartread();
-extern void sndtstartwrite();
-extern void sndtwrite();
-extern void sndtstopwrite();
+
+extern int  st_sndtstartread();
+extern int  st_sndtstartwrite();
+extern LONG st_sndtwrite();
+extern int  st_sndtstopwrite();
 
 #if	defined(SUNAUDIO_PLAYER)
-char *sunnames[] = {
+static char *sunnames[] = {
 	"sunau",
 	(char *) 0
 };
-extern void sunstartread();
-extern void sunstartwrite();
+
+extern int st_sunstartread();
+extern int st_sunstartwrite();
 #endif
 
-char *svxnames[] = {
+static char *svxnames[] = {
 	"8svx",
 	(char *) 0
 };
-extern void svxstartread();
-extern LONG svxread();
-extern void svxstopread();
-extern void svxstartwrite();
-extern void svxwrite();
-extern void svxstopwrite();
 
-char *swnames[] = {
+extern int  st_svxstartread();
+extern LONG st_svxread();
+extern int  st_svxstopread();
+extern int  st_svxstartwrite();
+extern LONG st_svxwrite();
+extern int  st_svxstopwrite();
+
+static char *swnames[] = {
 	"sw",
 	(char *) 0
 };
-extern void swstartread();
-extern void swstartwrite();
 
-char *txwnames[] = {
+extern int st_swstartread();
+extern int st_swstartwrite();
+
+static char *txwnames[] = {
     "txw",
     (char *)0
 };
-extern void txwstartread();
-extern LONG txwread();
-extern void txwstopread();
-extern void txwstartwrite();
-extern void txwwrite();
-extern void txwstopwrite();
 
-char *ubnames[] = {
+extern int  st_txwstartread();
+extern LONG st_txwread();
+extern int  st_txwstopread();
+extern int  st_txwstartwrite();
+extern LONG st_txwwrite();
+extern int  st_txwstopwrite();
+
+static char *ubnames[] = {
 	"ub",
 	"sou",
 	"fssd",
@@ -266,168 +282,172 @@ char *ubnames[] = {
 #endif
 	(char *) 0
 };
-extern void ubstartread();
-extern void ubstartwrite();
 
-char *ulnames[] = {
+extern int st_ubstartread();
+extern int st_ubstartwrite();
+
+static char *ulnames[] = {
 	"ul",
 	(char *) 0
 };
-extern void ulstartread();
-extern void ulstartwrite();
 
-char *uwnames[] = {
+extern int st_ulstartread();
+extern int st_ulstartwrite();
+
+static char *uwnames[] = {
 	"uw",
 	(char *) 0
 };
-extern void uwstartread();
-extern void uwstartwrite();
 
-char *vocnames[] = {
+extern int st_uwstartread();
+extern int st_uwstartwrite();
+
+static char *vocnames[] = {
 	"voc",
 	(char *) 0
 };
-extern void vocstartread();
-extern LONG vocread();
-extern void vocstopread();
-extern void vocstartwrite();
-extern void vocwrite();
-extern void vocstopwrite();
 
-char *wavnames[] = {
+extern int  st_vocstartread();
+extern LONG st_vocread();
+extern int  st_vocstopread();
+extern int  st_vocstartwrite();
+extern LONG st_vocwrite();
+extern int  st_vocstopwrite();
+
+static char *wavnames[] = {
 	"wav",
 	(char *) 0
 };
-extern void wavstartread();
-extern LONG wavread();
-extern void wavstartwrite();
-extern void wavwrite();
-extern void wavstopwrite();
 
-char *wvenames[] = {
+extern int  st_wavstartread();
+extern LONG st_wavread();
+extern int  st_wavstartwrite();
+extern LONG st_wavwrite();
+extern int  st_wavstopwrite();
+
+static char *wvenames[] = {
       "wve",
       (char *) 0
 };
-extern void wvestartread();
-extern LONG wveread();
-extern void wvestartwrite();
-extern void wvewrite();
-extern void wvestopwrite();
 
-extern void nothing();
-extern LONG nothing_success();
+extern int  st_wvestartread();
+extern LONG st_wveread();
+extern int  st_wvestartwrite();
+extern LONG st_wvewrite();
+extern int  st_wvestopwrite();
 
-format_t formats[] = {
-	{aiffnames, FILE_STEREO,
-		aiffstartread, aiffread, aiffstopread,	   /* SGI/Apple AIFF */
-		aiffstartwrite, aiffwrite, aiffstopwrite},
-	{alnames, FILE_STEREO,
-		alstartread, rawread, rawstopread, 	   /* a-law byte raw */
-		alstartwrite, rawwrite, rawstopwrite},	
+extern int  st_nothing();
+extern LONG st_nothing_success();
+
+st_format_t st_formats[] = {
+	{aiffnames, ST_FILE_STEREO,		/* SGI/Apple AIFF */
+		st_aiffstartread, st_aiffread, st_aiffstopread,
+		st_aiffstartwrite, st_aiffwrite, st_aiffstopwrite},
+	{alnames, ST_FILE_STEREO,		/* a-law byte raw */
+		st_alstartread, st_rawread, st_rawstopread,
+		st_alstartwrite, st_rawwrite, st_rawstopwrite},	
 #if	defined(ALSA_PLAYER)
-	{alsanames, FILE_STEREO,
-		alsastartread, rawread, rawstopread,      /* /dev/snd/pcmXX */
-		alsastartwrite, rawwrite, rawstopwrite},
+	{alsanames, ST_FILE_STEREO,		/* /dev/snd/pcmXX */
+		st_alsastartread, st_rawread, st_rawstopread,
+		st_alsastartwrite, st_rawwrite, st_rawstopwrite},
 #endif
-	{aunames, FILE_STEREO,
-		austartread, auread, rawstopread,      /* SPARC .AU w/header */
-		austartwrite, auwrite, austopwrite},	
-	{autonames, FILE_STEREO,
-		autostartread, nothing_success, nothing,/* Guess from header */
-		autostartwrite, nothing, nothing},	 /* patched run time */
-	{avrnames, FILE_STEREO,
-		avrstartread, rawread, nothing,		/* AVR format */
-		avrstartwrite, avrwrite, avrstopwrite}, /* relies on raw */
-	{cdrnames, FILE_STEREO,
-		cdrstartread, cdrread, cdrstopread,	      /* CD-R format */
-		cdrstartwrite, cdrwrite, cdrstopwrite},
-	{cvsdnames, 0,
-	        cvsdstartread, cvsdread, cvsdstopread,	   /* Cont. Variable */
-	        cvsdstartwrite, cvsdwrite, cvsdstopwrite},    /* Slope Delta */
-	{datnames, 0,
-		datstartread, datread, nothing, 	/* Text data samples */
-		datstartwrite, datwrite, nothing},
-	{dvmsnames, 0,
-	        dvmsstartread, cvsdread, cvsdstopread,	   /* Cont. Variable */
-	        dvmsstartwrite, cvsdwrite, dvmsstopwrite},   /* Slope Delta */
+	{aunames, ST_FILE_STEREO,		/* SPARC .au w/header */
+		st_austartread, st_auread, st_rawstopread,
+		st_austartwrite, st_auwrite, st_austopwrite},	
+	{autonames, ST_FILE_STEREO,		/* Guess from header */
+		st_autostartread, st_nothing_success, st_nothing,
+		st_autostartwrite, st_nothing_success, st_nothing},
+	{avrnames, ST_FILE_STEREO,		/* AVR format */
+		st_avrstartread, st_rawread, st_nothing,	
+		st_avrstartwrite, st_avrwrite, st_avrstopwrite},
+	{cdrnames, ST_FILE_STEREO,		/* CD-R format */
+		st_cdrstartread, st_cdrread, st_cdrstopread,
+		st_cdrstartwrite, st_cdrwrite, st_cdrstopwrite},
+	{cvsdnames, 0,			/* Cont. Variable Slope Delta */
+	        st_cvsdstartread, st_cvsdread, st_cvsdstopread,
+	        st_cvsdstartwrite, st_cvsdwrite, st_cvsdstopwrite},
+	{datnames, 0,				/* Text data samples */
+		st_datstartread, st_datread, st_nothing,
+		st_datstartwrite, st_datwrite, st_nothing},
+	{dvmsnames, 0,			/* Cont. Variable Solot Delta */
+	        st_dvmsstartread, st_cvsdread, st_cvsdstopread,
+	        st_dvmsstartwrite, st_cvsdwrite, st_dvmsstopwrite},
 #ifdef HAVE_LIBGSM
-	{gsmnames, 0,
-	        gsmstartread, gsmread, gsmstopread,            /* GSM 06.10 */
-	        gsmstartwrite, gsmwrite, gsmstopwrite},
+	{gsmnames, 0,				/* GSM 06.10 */
+	        st_gsmstartread, st_gsmread, st_gsmstopread,
+	        st_gsmstartwrite, st_gsmwrite, st_gsmstopwrite},
 #endif
-	{hcomnames, 0,
-		hcomstartread, hcomread, hcomstopread,      /* Mac FSSD/HCOM */
-		hcomstartwrite, hcomwrite, hcomstopwrite},
-        {maudnames, FILE_STEREO,     			       /* Amiga MAUD */
-		maudstartread, maudread, maudstopread,
-		maudstartwrite, maudwrite, maudstopwrite},
+	{hcomnames, 0,				/* Mac FSSD/HCOM */
+		st_hcomstartread, st_hcomread, st_hcomstopread, 
+		st_hcomstartwrite, st_hcomwrite, st_hcomstopwrite},
+        {maudnames, ST_FILE_STEREO,    		/* Amiga MAUD */
+		st_maudstartread, st_maudread, st_maudstopread,
+		st_maudstartwrite, st_maudwrite, st_maudstopwrite},
 #if	defined(OSS_PLAYER)
-	/* OSS player. */
-	{ossdspnames, FILE_STEREO,
-		ossdspstartread, rawread, rawstopread, 	 /* /dev/dsp */
-		ossdspstartwrite, rawwrite, rawstopwrite},
+	{ossdspnames, ST_FILE_STEREO,		/* OSS /dev/dsp player */
+		st_ossdspstartread, st_rawread, st_rawstopread,
+		st_ossdspstartwrite, st_rawwrite, st_rawstopwrite},
 #endif
-	{rawnames, FILE_STEREO,
-		rawstartread, rawread, rawstopread, 	       /* Raw format */
-		rawstartwrite, rawwrite, rawstopwrite},
-	{sbnames, FILE_STEREO,
-		sbstartread, rawread, rawstopread, 	  /* signed byte raw */
-		sbstartwrite, rawwrite, rawstopwrite},	
-	{sfnames, FILE_STEREO,
-		sfstartread, rawread, rawstopread,       /* IRCAM Sound File */
-		sfstartwrite, rawwrite, rawstopwrite},
-	{ slnames, FILE_STEREO,
-	    	slstartread, rawread, rawstopread,	/* signed long raw */
-		slstartwrite, rawwrite, rawstopwrite },
-	{smpnames, FILE_STEREO | FILE_LOOPS,
-		smpstartread, smpread, nothing,	       /* SampleVision sound */
-		smpstartwrite, smpwrite, smpstopwrite},	     /* Turtle Beach */
-	{sndrnames, FILE_STEREO,
-		sndtstartread, rawread, rawstopread,   /* Sounder Sound File */
-		sndrstartwrite, rawwrite, rawstopwrite},
-	{sndtnames, FILE_STEREO,
-		sndtstartread, rawread, rawstopread,   /* Sndtool Sound File */
-		sndtstartwrite, sndtwrite, sndtstopwrite},
+	{rawnames, ST_FILE_STEREO,		/* Raw format */
+		st_rawstartread, st_rawread, st_rawstopread,
+		st_rawstartwrite, st_rawwrite, st_rawstopwrite},
+	{sbnames, ST_FILE_STEREO,		/* signed byte raw */
+		st_sbstartread, st_rawread, st_rawstopread,
+		st_sbstartwrite, st_rawwrite, st_rawstopwrite},	
+	{sfnames, ST_FILE_STEREO,		/* IRCAM Sound File */
+		st_sfstartread, st_rawread, st_rawstopread,
+		st_sfstartwrite, st_rawwrite, st_rawstopwrite},
+	{ slnames, ST_FILE_STEREO,		/* signed long raw */
+	    	st_slstartread, st_rawread, st_rawstopread,
+		st_slstartwrite, st_rawwrite, st_rawstopwrite },
+	{smpnames, ST_FILE_STEREO | ST_FILE_LOOPS,/* SampleVision sound */
+		st_smpstartread, st_smpread, st_nothing,
+		st_smpstartwrite, st_smpwrite, st_smpstopwrite},
+	{sndrnames, ST_FILE_STEREO,		/* Sounder Sound File */
+		st_sndtstartread, st_rawread, st_rawstopread,
+		st_sndrstartwrite, st_rawwrite, st_rawstopwrite},
+	{sndtnames, ST_FILE_STEREO,		/* Sndtool Sound File */
+		st_sndtstartread, st_rawread, st_rawstopread, 
+		st_sndtstartwrite, st_sndtwrite, st_sndtstopwrite},
 #if	defined(SUNAUDIO_PLAYER)
-	/* Sun /dev/audio player. */
-	{sunnames, FILE_STEREO,
-		sunstartread, rawread, rawstopread, 	       /* /dev/audio */
-		sunstartwrite, rawwrite, rawstopwrite},
+	{sunnames, ST_FILE_STEREO,		/* Sun /dev/audio player */
+		st_sunstartread, st_rawread, st_rawstopread,
+		st_sunstartwrite, st_rawwrite, st_rawstopwrite},
 #endif
-	{svxnames, FILE_STEREO,
-		svxstartread, svxread, svxstopread,            /* Amiga 8SVX */
-		svxstartwrite, svxwrite, svxstopwrite},
-	{swnames, FILE_STEREO,
-		swstartread, rawread, rawstopread,        /* signed word raw */
-		swstartwrite, rawwrite, rawstopwrite},
-	{txwnames, 0,
-	        txwstartread, txwread, txwstopread,      /* Yamaha TX16W and */
-	        txwstartwrite, txwwrite, txwstopwrite},        /* SY99 waves */
-	{ubnames, FILE_STEREO,
-		ubstartread, rawread, rawstopread, 	/* unsigned byte raw */
-		ubstartwrite, rawwrite, rawstopwrite},
-	{ulnames, FILE_STEREO,
-		ulstartread, rawread, rawstopread, 	   /* u-law byte raw */
-		ulstartwrite, rawwrite, rawstopwrite},	
-	{uwnames, FILE_STEREO,
-		uwstartread, rawread, rawstopread, 	/* unsigned word raw */
-		uwstartwrite, rawwrite, rawstopwrite},	
-	{vocnames, FILE_STEREO,
-		vocstartread, vocread, vocstopread,    /* Sound Blaster .VOC */
-		vocstartwrite, vocwrite, vocstopwrite},
-	{wavnames, FILE_STEREO,
-		wavstartread, wavread, nothing, 	   /* Microsoft .wav */
-		wavstartwrite, wavwrite, wavstopwrite},	
-	{wvenames, 0,
-		wvestartread, wveread, rawstopread,            /* Psion .wve */
-		wvestartwrite, wvewrite, wvestopwrite},
+	{svxnames, ST_FILE_STEREO,		/* Amiga 8SVX */
+		st_svxstartread, st_svxread, st_svxstopread,
+		st_svxstartwrite, st_svxwrite, st_svxstopwrite},
+	{swnames, ST_FILE_STEREO,		/* signed word raw */
+		st_swstartread, st_rawread, st_rawstopread,
+		st_swstartwrite, st_rawwrite, st_rawstopwrite},
+	{txwnames, 0,			/* Yamaha TX16W and SY99 waves */
+	        st_txwstartread, st_txwread, st_txwstopread, 
+	        st_txwstartwrite, st_txwwrite, st_txwstopwrite},
+	{ubnames, ST_FILE_STEREO,		/* unsigned byte raw */
+		st_ubstartread, st_rawread, st_rawstopread,
+		st_ubstartwrite, st_rawwrite, st_rawstopwrite},
+	{ulnames, ST_FILE_STEREO,		/* u-law byte raw */
+		st_ulstartread, st_rawread, st_rawstopread,
+		st_ulstartwrite, st_rawwrite, st_rawstopwrite},	
+	{uwnames, ST_FILE_STEREO,		/* unsigned word raw */
+		st_uwstartread, st_rawread, st_rawstopread,
+		st_uwstartwrite, st_rawwrite, st_rawstopwrite},	
+	{vocnames, ST_FILE_STEREO,		/* Sound Blaster .VOC */
+		st_vocstartread, st_vocread, st_vocstopread,
+		st_vocstartwrite, st_vocwrite, st_vocstopwrite},
+	{wavnames, ST_FILE_STEREO,		/* Microsoftt RIFF */
+		st_wavstartread, st_wavread, st_nothing,
+		st_wavstartwrite, st_wavwrite, st_wavstopwrite},	
+	{wvenames, 0,				/* Psion .wve */
+		st_wvestartread, st_wveread, st_rawstopread,
+		st_wvestartwrite, st_wvewrite, st_wvestopwrite},
 	{0, 0,
 	 0, 0, 0, 0, 0, 0}
 };
 
 /* Effects handlers. */
 
-extern void null_drain();		/* dummy drain routine */
+extern LONG st_null_drain();		/* dummy drain routine */
 
 extern void avg_getopts();
 extern void avg_start();
@@ -594,36 +614,45 @@ extern void vibro_stop();
  * EFF_MCHAN just means that the effect is coded for multiple channels.
  */
 
-effect_t effects[] = {
+st_effect_t st_effects[] = {
 	{"null", 0, 			/* stand-in, never gets called */
-		nothing, nothing, nothing, null_drain, nothing},
-	{"avg", EFF_CHAN | EFF_MCHAN, 
-		avg_getopts, avg_start, avg_flow, null_drain, avg_stop},
+		st_nothing, st_nothing, st_nothing, 
+		st_null_drain, st_nothing},
+	{"avg", ST_EFF_CHAN | ST_EFF_MCHAN, 
+		avg_getopts, avg_start, avg_flow, 
+		st_null_drain, avg_stop},
 	{"band", 0, 
-		band_getopts, band_start, band_flow, null_drain, band_stop},
+		band_getopts, band_start, band_flow, 
+		st_null_drain, band_stop},
 	{"bandpass", 0, 
-		bandpass_getopts, bandpass_start, butterworth_flow, null_drain, nothing},
+		bandpass_getopts, bandpass_start, butterworth_flow, 
+		st_null_drain, st_nothing},
 	{"bandreject", 0, 
-		bandreject_getopts, bandreject_start, butterworth_flow, null_drain, nothing},
+		bandreject_getopts, bandreject_start, butterworth_flow, 
+		st_null_drain, st_nothing},
 	{"chorus", 0,
 	        chorus_getopts, chorus_start, chorus_flow,
-	 chorus_drain, chorus_stop},
-	{"compand", EFF_MCHAN,
+	 	chorus_drain, chorus_stop},
+	{"compand", ST_EFF_MCHAN,
 	        compand_getopts, compand_start, compand_flow,
-		null_drain, nothing},
-	{"copy", EFF_MCHAN, 
-		copy_getopts, copy_start, copy_flow, null_drain, nothing},
-	{"cut", EFF_MCHAN, 
-		cut_getopts, cut_start, cut_flow, null_drain, nothing},
-	{"deemph", EFF_MCHAN,
+		st_null_drain, st_nothing},
+	{"copy", ST_EFF_MCHAN, 
+		copy_getopts, copy_start, copy_flow, 
+		st_null_drain, st_nothing},
+	{"cut", ST_EFF_MCHAN, 
+		cut_getopts, cut_start, cut_flow, 
+		st_null_drain, st_nothing},
+	{"deemph", ST_EFF_MCHAN,
 	        deemph_getopts, deemph_start, deemph_flow,
-	        null_drain, deemph_stop},
+	        st_null_drain, deemph_stop},
 #ifdef	USE_DYN
 	{"dyn", 0, 
-		dyn_getopts, dyn_start, dyn_flow, null_drain, dyn_stop},
+		dyn_getopts, dyn_start, dyn_flow, 
+		st_null_drain, dyn_stop},
 #endif
 	{"echo", 0, 
-		echo_getopts, echo_start, echo_flow, echo_drain, echo_stop},
+		echo_getopts, echo_start, echo_flow, 
+		echo_drain, echo_stop},
 	{"echos", 0, 
 		echos_getopts, echos_start, echos_flow,
 	        echos_drain, echos_stop},
@@ -634,28 +663,36 @@ effect_t effects[] = {
 	        flanger_getopts, flanger_start, flanger_flow,
 	        flanger_drain, flanger_stop},
 	{"highp", 0, 
-		highp_getopts, highp_start, highp_flow, null_drain,highp_stop},
+		highp_getopts, highp_start, highp_flow, 
+		st_null_drain,highp_stop},
 	{"highpass", 0, 
-		highpass_getopts, highpass_start, butterworth_flow, null_drain,nothing},
+		highpass_getopts, highpass_start, butterworth_flow, 
+		st_null_drain, st_nothing},
 	{"lowp", 0, 
-		lowp_getopts, lowp_start, lowp_flow, null_drain, lowp_stop},
+		lowp_getopts, lowp_start, lowp_flow, 
+		st_null_drain, lowp_stop},
 	{"lowpass", 0, 
-		lowpass_getopts, lowpass_start, butterworth_flow, null_drain, nothing},
-	{"map", EFF_REPORT, 
-		map_getopts, map_start, map_flow, null_drain, nothing},
-	{"mask", EFF_MCHAN, 
-		mask_getopts, nothing, mask_flow, null_drain, nothing},
+		lowpass_getopts, lowpass_start, butterworth_flow, 
+		st_null_drain, st_nothing},
+	{"map", ST_EFF_REPORT, 
+		map_getopts, map_start, map_flow, 
+		st_null_drain, st_nothing},
+	{"mask", ST_EFF_MCHAN, 
+		mask_getopts, st_nothing, mask_flow, 
+		st_null_drain, st_nothing},
 	{"phaser", 0,
 	        phaser_getopts, phaser_start, phaser_flow,
 	        phaser_drain, phaser_stop},
-	{"pick", EFF_CHAN | EFF_MCHAN, 
-		pick_getopts, pick_start, pick_flow, null_drain, pick_stop},
-	{"polyphase", EFF_RATE,
+	{"pick", ST_EFF_CHAN | ST_EFF_MCHAN, 
+		pick_getopts, pick_start, pick_flow, 
+		st_null_drain, pick_stop},
+	{"polyphase", ST_EFF_RATE,
 	        poly_getopts, poly_start, poly_flow,
 	        poly_drain, poly_stop},
-	{"rate", EFF_RATE, 
-		rate_getopts, rate_start, rate_flow, null_drain, nothing},
-	{"resample", EFF_RATE, 
+	{"rate", ST_EFF_RATE, 
+		rate_getopts, rate_start, rate_flow, 
+		st_null_drain, st_nothing},
+	{"resample", ST_EFF_RATE, 
 		resample_getopts, resample_start, resample_flow, 
 		resample_drain, resample_stop},
 	{"reverb", 0,
@@ -664,14 +701,18 @@ effect_t effects[] = {
 	{"reverse", 0, 
 		reverse_getopts, reverse_start, 
 		reverse_flow, reverse_drain, reverse_stop},
-	{"split", EFF_CHAN | EFF_MCHAN, 
-		split_getopts, split_start, split_flow, null_drain,split_stop},
-	{"stat", EFF_MCHAN | EFF_REPORT | EFF_RATE | EFF_CHAN,
-		stat_getopts, stat_start, stat_flow, null_drain, stat_stop},
-	{"swap", EFF_MCHAN,
-		swap_getopts, swap_start, swap_flow, swap_drain, swap_stop},
+	{"split", ST_EFF_CHAN | ST_EFF_MCHAN, 
+		split_getopts, split_start, split_flow, 
+		st_null_drain,split_stop},
+	{"stat", ST_EFF_MCHAN | ST_EFF_REPORT | ST_EFF_RATE | ST_EFF_CHAN,
+		stat_getopts, stat_start, stat_flow, 
+		st_null_drain, stat_stop},
+	{"swap", ST_EFF_MCHAN,
+		swap_getopts, swap_start, swap_flow, 
+		swap_drain, swap_stop},
 	{"vibro", 0, 
-		vibro_getopts, vibro_start, vibro_flow, null_drain, nothing},
+		vibro_getopts, vibro_start, vibro_flow, 
+		st_null_drain, st_nothing},
 	{0, 0, 0, 0, 0, 0, 0}
 };
 

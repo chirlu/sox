@@ -25,5 +25,5 @@ t sndr
 t sndt 
 t txw
 t voc
-t wav 
-t wve 
+t wav
+t wve

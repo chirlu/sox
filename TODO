@@ -3,6 +3,9 @@ all patches to cbagwell@sprynet.com.
 
   o SJB: The old highp.c filter is IMHO broken, need to review that code.
 
+  o All comment code has a memory leak.  They must malloc memory to
+    store comment but its never free()'d.
+
   o Create a version of OSS and Sun driver that can play and record from the
     same device in duplex.
 

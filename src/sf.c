@@ -13,16 +13,13 @@
  * Derived from: Sound Tools skeleton handler file.
  */
 
-#define	IRCAM
 #include "st.h"
-#ifdef	IRCAM
 #include "sfircam.h"
+
 #ifndef SIZEOF_BSD_HEADER
 #define SIZEOF_BSD_HEADER 1024
 #endif
-#else
-#include "sfheader.h"
-#endif
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -47,8 +44,8 @@ SFHEADER *sfhead;
 	do {
 		sfcharp = (char *) sfcodep + sizeof(SFCODE);
 		if (ft->swap) {
-			sfcodep->bsize = swapl(sfcodep->bsize);
-			sfcodep->code = swapl(sfcodep->code);
+			sfcodep->bsize = st_swapl(sfcodep->bsize);
+			sfcodep->code = st_swapl(sfcodep->code);
 		}
 		bsize = sfcodep->bsize - sizeof(SFCODE);
 		switch(sfcodep->code) {
@@ -78,41 +75,34 @@ SFHEADER *sfhead;
  *	size and style of samples, 
  *	mono/stereo/quad.
  */
-void sfstartread(ft) 
+int st_sfstartread(ft) 
 ft_t ft;
 {
 	sf_t sf = (sf_t) ft->priv;
 	SFHEADER sfhead;
+	int rc;
 
 	/* Needed for rawread() */
-	rawstartread(ft);
+	rc = st_rawstartread(ft);
+	if (rc)
+	    return rc;
 	
 	if (fread(&sfhead, 1, sizeof(SFHEADER), ft->fp) != sizeof(SFHEADER))
+	{
 		fail("unexpected EOF in SF header");
+		return(ST_EOF);
+	}
 	memcpy(&sf->info, &sfhead.sfinfo, sizeof(struct sfinfo));
 	if (ft->swap) {
-#ifdef	IRCAM
-		sf->info.sf_srate = swapf(sf->info.sf_srate);
-#else
-		sf->info.sf_magic = swapl(sf->info.sf_magic);
-		sf->info.sf_srate = swapl(sf->info.sf_srate);
-#endif
-		sf->info.sf_packmode = swapl(sf->info.sf_packmode);
-		sf->info.sf_chans = swapl(sf->info.sf_chans);
+		sf->info.sf_srate = st_swapf(sf->info.sf_srate);
+		sf->info.sf_packmode = st_swapl(sf->info.sf_packmode);
+		sf->info.sf_chans = st_swapl(sf->info.sf_chans);
 	}
-#ifdef	IRCAM
 	if ((sfmagic1(&sfhead) != SF_MAGIC1) ||
 	    (sfmagic2(&sfhead) != SF_MAGIC2))
 		fail(
 "SF %s file: can't read, it is byte-swapped or it is not an IRCAM SoundFile", 
 			ft->filename);
-#else
-	if (sf->info.sf_magic != SF_MAGIC)
-		if (sf->info.sf_magic == swapl(SF_MAGIC))
-fail("SF %s file: can't read, it is probably byte-swapped");
-	        else
-fail("SF %s file: can't read, it is not an IRCAM SoundFile");
-#endif
 
 
 	/*
@@ -122,24 +112,27 @@ fail("SF %s file: can't read, it is not an IRCAM SoundFile");
 	ft->info.rate = sf->info.sf_srate;
 	switch(sf->info.sf_packmode) {
 		case SF_SHORT:
-			ft->info.size = WORD;
-			ft->info.style = SIGN2;
+			ft->info.size = ST_SIZE_WORD;
+			ft->info.style = ST_ENCODING_SIGN2;
 			break;
 		case SF_FLOAT:
-			ft->info.size = FLOAT;
-			ft->info.style = SIGN2;
+			ft->info.size = ST_SIZE_FLOAT;
+			ft->info.style = ST_ENCODING_SIGN2;
 			break;
 		default:
 			fail("Soundfile input: unknown format 0x%x\n",
 				sf->info.sf_packmode);
+			return(ST_EOF);
 	}
 	ft->info.channels = (int) sf->info.sf_chans;
 
 	/* Read codes and print as comments. */
 	readcodes(ft, &sfhead);
+
+	return(ST_SUCCESS);
 }
 
-void sfstartwrite(ft) 
+int st_sfstartwrite(ft) 
 ft_t ft;
 {
 	sf_t sf = (sf_t) ft->priv;
@@ -148,11 +141,13 @@ ft_t ft;
 	char *sfcharp;
 	int littlendian = 1;
 	char *endptr;
+	int rc;
 
 	/* Needed for rawwrite() */
-	rawstartwrite(ft);
+	rc = st_rawstartwrite(ft);
+	if (rc)
+	    return rc;
 
-#ifdef	IRCAM
 	sf->info.magic_union._magic_bytes.sf_magic1 = SF_MAGIC1;
 	sf->info.magic_union._magic_bytes.sf_magic2 = SF_MAGIC2;
 	sf->info.magic_union._magic_bytes.sf_param = 0;
@@ -164,33 +159,15 @@ ft_t ft;
 		sf->info.magic_union._magic_bytes.sf_machine = SF_VAX;
 	else
 		sf->info.magic_union._magic_bytes.sf_machine = SF_SUN;
-#else
-	sf->info.sf_magic = SF_MAGIC;
-#endif
 	sf->info.sf_srate = ft->info.rate;
-#ifdef	LATER
-	/* 
-	 * CSound sound-files have many formats. 
-	 * We stick with the IRCAM short-or-float scheme.
-	 */
-	if (ft->info.size == WORD) {
-		sf->info.sf_packmode = SF_SHORT;
-		ft->info.style = SIGN2;		/* Default to signed words */
-	} else if (ft->info.size == FLOAT)
+	if (ft->info.size == ST_SIZE_FLOAT) {
 		sf->info.sf_packmode = SF_FLOAT;
-	else
-		fail("SoundFile %s: must set output as signed shorts or floats",
-			ft->filename);
-#else
-	if (ft->info.size == FLOAT) {
-		sf->info.sf_packmode = SF_FLOAT;
-		ft->info.size = FLOAT;
 	} else {
 		sf->info.sf_packmode = SF_SHORT;
-		ft->info.size = WORD;
-		ft->info.style = SIGN2;		/* Default to signed words */
+		ft->info.size = ST_SIZE_WORD;
+		ft->info.style = ST_ENCODING_SIGN2;		/* Default to signed words */
 	}
-#endif
+
 	sf->info.sf_chans = ft->info.channels;
 
 	/* Clean out structure so unused areas will remain constain  */
@@ -211,6 +188,8 @@ ft_t ft;
 	while(sfcharp < (char *) &sfhead + SIZEOF_BSD_HEADER)
 		*sfcharp++ = '\0';
 	(void) fwrite(&sfhead, 1, sizeof(SFHEADER), ft->fp);
+
+	return(ST_SUCCESS);
 }
 
 /* Read and write are supplied by raw.c */

@@ -123,14 +123,11 @@ ft_t ft;
 {
 	struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 	
-	/* sanity check */
-	if (sizeof(struct cvsdpriv) > PRIVSIZE)
-		fail("struct cvsdpriv is too big (%d); change PRIVSIZE in st.h and recompile sox", sizeof(struct cvsdpriv));
 	p->cvsd_rate = (ft->info.rate <= 24000) ? 16000 : 32000;
 	ft->info.rate = 8000;
 	ft->info.channels = 1;
-	ft->info.size = WORD; /* make output format default to words */
-	ft->info.style = SIGN2;
+	ft->info.size = ST_SIZE_WORD; /* make output format default to words */
+	ft->info.style = ST_ENCODING_SIGN2;
 	p->swapbits = ft->swap;
 	ft->swap = 0;
 	/*
@@ -164,14 +161,15 @@ ft_t ft;
 
 /* ---------------------------------------------------------------------- */
 
-void cvsdstartread(ft) 
+int st_cvsdstartread(ft) 
 ft_t ft;
 {
 	struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 	float *fp1;
 	int i;
-	
+
 	cvsdstartcommon(ft);
+
 	p->com.mla_tc1 = 0.1 * (1 - p->com.mla_tc0);
 	p->com.phase = 0;
 	/*
@@ -184,11 +182,13 @@ ft_t ft;
 	 */
 	for(fp1 = p->c.dec.output_filter, i = DEC_FILTERLEN; i > 0; i--)
 		*fp1++ = 0;
+
+	return (ST_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
 
-void cvsdstartwrite(ft) 
+int st_cvsdstartwrite(ft) 
 ft_t ft;
 {
 	struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
@@ -196,6 +196,7 @@ ft_t ft;
 	int i;
 
 	cvsdstartcommon(ft);
+
 	p->com.mla_tc1 = 0.1 * (1 - p->com.mla_tc0);
 	p->com.phase = 4;
 	/*
@@ -204,12 +205,13 @@ ft_t ft;
 	for(fp1 = p->c.enc.input_filter, i = ENC_FILTERLEN; i > 0; i--)
 		*fp1++ = 0;
 	p->c.enc.recon_int = 0;
+
+	return(ST_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
 
-void
-cvsdstopwrite(ft)
+int st_cvsdstopwrite(ft)
 ft_t ft;
 {
 	struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
@@ -220,18 +222,21 @@ ft_t ft;
 	}
 	report("cvsd: min slope %f, max slope %f\n", 
 	       p->com.v_min, p->com.v_max);	
+
+	return (ST_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
 
-void
-cvsdstopread(ft)
+int st_cvsdstopread(ft)
 ft_t ft;
 {
 	struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 
 	report("cvsd: min value %f, max value %f\n", 
 	       p->com.v_min, p->com.v_max);
+
+	return(ST_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -246,7 +251,7 @@ static struct {
 } dbg = { NULL, NULL, 0 };
 #endif
 
-LONG cvsdread(ft, buf, nsamp) 
+LONG st_cvsdread(ft, buf, nsamp) 
 ft_t ft;
 LONG *buf, nsamp;
 {
@@ -257,12 +262,18 @@ LONG *buf, nsamp;
 #ifdef DEBUG
 	if (!dbg.f1) {
 		if (!(dbg.f1 = fopen("dbg1", "w")))
+		{
 			fail("debugging");
+			return (0);
+		}
 		fprintf(dbg.f1, "\"input\"\n");
 	}
 	if (!dbg.f2) {
 		if (!(dbg.f2 = fopen("dbg2", "w")))
+		{
 			fail("debugging");
+			return (0);
+		}
 		fprintf(dbg.f2, "\"recon\"\n");
 	}
 #endif
@@ -323,8 +334,7 @@ LONG *buf, nsamp;
 
 /* ---------------------------------------------------------------------- */
 
-void
-cvsdwrite(ft, buf, nsamp) 
+LONG st_cvsdwrite(ft, buf, nsamp) 
 ft_t ft;
 LONG *buf, nsamp;
 {
@@ -335,12 +345,18 @@ LONG *buf, nsamp;
 #ifdef DEBUG
 	if (!dbg.f1) {
 		if (!(dbg.f1 = fopen("dbg1", "w")))
+		{
 			fail("debugging");
+			return (0);
+		}
 		fprintf(dbg.f1, "\"input\"\n");
 	}
 	if (!dbg.f2) {
 		if (!(dbg.f2 = fopen("dbg2", "w")))
+		{
 			fail("debugging");
+			return (0);
+		}
 		fprintf(dbg.f2, "\"recon\"\n");
 	}
 #endif
@@ -350,7 +366,7 @@ LONG *buf, nsamp;
 		 */
 		if (p->com.phase >= 4) {
 			if (done >= nsamp)
-				return;
+				return done;
 			memmove(p->c.enc.input_filter+1, p->c.enc.input_filter,
 				sizeof(p->c.enc.input_filter)-sizeof(float));
 			p->c.enc.input_filter[0] = (*buf++) / 
@@ -426,7 +442,7 @@ struct dvms_header {
 #define DVMS_HEADER_LEN 120
 
 /* ---------------------------------------------------------------------- */
-/* SJB: should these be in misc.c instead? */
+/* FIXME: Move these to misc.c */
 static ULONG get32(p)
 unsigned char **p;
 {
@@ -464,7 +480,7 @@ unsigned val;
 
 /* ---------------------------------------------------------------------- */
 
-static void dvms_read_header(f, hdr)
+static int dvms_read_header(f, hdr)
 FILE *f;
 struct dvms_header *hdr;
 {
@@ -474,7 +490,10 @@ struct dvms_header *hdr;
 	unsigned sum;
 
 	if (fread(hdrbuf, sizeof(hdrbuf), 1, f) != 1)
+	{
 		fail("unable to read DVMS header\n");
+		return (ST_EOF);
+	}
 	for(i = sizeof(hdrbuf), sum = 0; i > /*2*/3; i--) /* Deti bug */
 		sum += *pch++;
 	pch = hdrbuf;
@@ -496,8 +515,12 @@ struct dvms_header *hdr;
 	pch += sizeof(hdr->extend);
 	hdr->Crc = get16(&pch);
 	if (sum != hdr->Crc) 
+	{
 		fail("DVMS header checksum error, read %u, calculated %u\n",
 		     hdr->Crc, sum);
+		return (ST_EOF);
+	}
+	return (ST_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -505,7 +528,7 @@ struct dvms_header *hdr;
 /*
  * note! file must be seekable
  */
-static void dvms_write_header(f, hdr)
+static int dvms_write_header(f, hdr)
 FILE *f;
 struct dvms_header *hdr;
 {
@@ -536,9 +559,16 @@ struct dvms_header *hdr;
 	hdr->Crc = sum;
 	put16(&pch, hdr->Crc);
 	if (fseek(f, 0, SEEK_SET) < 0)
+	{
 		fail("cannot write DVMS header, seek failed\n");
+		return (ST_EOF);
+	}
 	if (fwrite(hdrbuf, sizeof(hdrbuf), 1, f) != 1)
+	{
 		fail("cannot write DVMS header\n");
+		return (ST_EOF);
+	}
+	return (ST_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -571,13 +601,17 @@ struct dvms_header *hdr;
 
 /* ---------------------------------------------------------------------- */
 
-void dvmsstartread(ft) 
+int st_dvmsstartread(ft) 
 ft_t ft;
 {
 	struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 	struct dvms_header hdr;
+	int rc;
 
-	dvms_read_header(ft->fp, &hdr);
+	rc = dvms_read_header(ft->fp, &hdr);
+	if (rc)
+	    return rc;
+
 	report("DVMS header of source file \"%s\":");
 	report("  filename  \"%.14s\"",ft->filename);
         report("  id        0x%x", hdr.Filename);
@@ -595,41 +629,61 @@ ft_t ft;
 	report("DVMS rate %dbit/s using %dbit/s deviation %d%%\n", 
 	       hdr.Srate*100, ft->info.rate, 
 	       ((ft->info.rate - hdr.Srate*100) * 100) / ft->info.rate);
-	cvsdstartread(ft);
+	rc = st_cvsdstartread(ft);
+	if (rc)
+	    return rc;
+
 	p->swapbits = 0;
+	return(ST_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
 
-void dvmsstartwrite(ft) 
+int st_dvmsstartwrite(ft) 
 ft_t ft;
 {
 	struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 	struct dvms_header hdr;
+	int rc;
 	
-	cvsdstartwrite(ft);
+	rc = st_cvsdstartwrite(ft);
+	if (rc)
+	    return rc;
+
 	make_dvms_hdr(ft, &hdr);
-	dvms_write_header(ft->fp, &hdr);
+	rc = dvms_write_header(ft->fp, &hdr);
+	if (rc)
+	    return rc;
+
 	if (!ft->seekable)
 	       warn("Length in output .DVMS header will wrong since can't seek to fix it");
+
 	p->swapbits = 0;
+	return(ST_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
 
-void
-dvmsstopwrite(ft)
+int st_dvmsstopwrite(ft)
 ft_t ft;
 {
 	struct dvms_header hdr;
+	int rc;
 	
-	cvsdstopwrite(ft);
+	st_cvsdstopwrite(ft);
 	if (!ft->seekable)
-		return;
+	{
+	    warn("File not seekable");
+	    return (ST_EOF);
+	}
 	if (fseek(ft->fp, 0L, 0) != 0)
+	{
 		fail("Can't rewind output file to rewrite DVMS header.");
+		return(ST_EOF);
+	}
 	make_dvms_hdr(ft, &hdr);
-	dvms_write_header(ft->fp, &hdr);
+	rc = dvms_write_header(ft->fp, &hdr);
+	return rc;
 }
 
 /* ---------------------------------------------------------------------- */

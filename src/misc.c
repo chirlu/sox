@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-const char *sizes[] = {
+const char *st_sizes_str[] = {
 	"NONSENSE!",
 	"bytes",
 	"shorts",
@@ -30,7 +30,7 @@ const char *sizes[] = {
 	"IEEE floats"
 };
 
-const char *styles[] = {
+const char *st_encodings_str[] = {
 	"NONSENSE!",
 	"unsigned",
 	"signed (2's complement)",
@@ -57,7 +57,7 @@ ft_t ft;
 
 	fread(&us, 2, 1, ft->fp);
 	if (ft->swap)
-		us = swapw(us);
+		us = st_swapw(us);
 	return us;
 }
 
@@ -68,7 +68,7 @@ ft_t ft;
 unsigned short us;
 {
 	if (ft->swap)
-		us = swapw(us);
+		us = st_swapw(us);
 	if (fwrite(&us, 2, 1, ft->fp) != 1)
 		fail(writerr);
 	return(0);
@@ -83,7 +83,7 @@ ft_t ft;
 
 	fread(&ul, 4, 1, ft->fp);
 	if (ft->swap)
-		ul = swapl(ul);
+		ul = st_swapl(ul);
 	return ul;
 }
 
@@ -94,7 +94,7 @@ ft_t ft;
 ULONG ul;
 {
 	if (ft->swap)
-		ul = swapl(ul);
+		ul = st_swapl(ul);
 	if (fwrite(&ul, 4, 1, ft->fp) != 1)
 		fail(writerr);
 	return(0);
@@ -109,7 +109,7 @@ ft_t ft;
 
 	fread(&f, sizeof(float), 1, ft->fp);
 	if (ft->swap)
-		f = swapf(f);
+		f = st_swapf(f);
 	return f;
 }
 
@@ -121,7 +121,7 @@ float f;
 	float t = f;
 
 	if (ft->swap)
-		t = swapf(t);
+		t = st_swapf(t);
 	if (fwrite(&t, sizeof(float), 1, ft->fp) != 1)
 		fail(writerr);
 }
@@ -135,7 +135,7 @@ ft_t ft;
 
 	fread(&d, sizeof(double), 1, ft->fp);
 	if (ft->swap)
-		d = swapd(d);
+		d = st_swapd(d);
 	return d;
 }
 
@@ -146,14 +146,14 @@ ft_t ft;
 double d;
 {
 	if (ft->swap)
-		d = swapd(d);
+		d = st_swapd(d);
 	if (fwrite(&d, sizeof(double), 1, ft->fp) != 1)
 		fail(writerr);
 }
 
 /* generic swap routine */
 static void
-swapb(l, f, n)
+st_swapb(l, f, n)
 char *l, *f;
 int n;
 {    register int i;
@@ -167,14 +167,14 @@ int n;
 #ifndef HAVE_BYTESWAP_H
 
 unsigned short
-swapw(us)
+st_swapw(us)
 unsigned short us;
 {
 	return ((us >> 8) | (us << 8)) & 0xffff;
 }
 
 ULONG
-swapl(ul)
+st_swapl(ul)
 ULONG ul;
 {
 	return (ul >> 24) | ((ul >> 8) & 0xff00) | ((ul << 8) & 0xff0000L) | (ul << 24);
@@ -182,7 +182,7 @@ ULONG ul;
 
 /* return swapped 32-bit float */
 float
-swapf(float f)
+st_swapf(float f)
 {
 	union {
 	    ULONG l;
@@ -197,21 +197,21 @@ swapf(float f)
 #endif
 
 double
-swapd(df)
+st_swapd(df)
 double df;
 {
 	double sdf;
-	swapb(&df, &sdf, sizeof(double));
+	st_swapb(&df, &sdf, sizeof(double));
 	return (sdf);
 }
 
 
 /* dummy routines for do-nothing functions */
-void nothing(P0) {}
-LONG nothing_success(P0) {return(0);}
+void st_nothing(P0) {}
+LONG st_nothing_success(P0) {return(0);}
 
 /* dummy drain routine for effects */
-void null_drain(effp, obuf, osamp)
+void st_null_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
 LONG *osamp;
@@ -316,7 +316,7 @@ int depth;
 }
 
 const char *
-version()
+st_version()
 {
 	static char versionstr[20];
 	

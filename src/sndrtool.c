@@ -32,18 +32,21 @@ static void  sndtwriteheader(P2(ft_t ft,LONG nsamples));
 /*                         SNDSTARTREAD                                */
 /*======================================================================*/
 
-void sndtstartread(ft)
+int st_sndtstartread(ft)
 ft_t ft;
 {
-char buf[97];
+        char buf[97];
 
-LONG rate;
+        LONG rate;
 
 	int littlendian = 1;
 	char *endptr;
+	int rc;
 
 	/* Needed for rawread() */
-	rawstartread(ft);
+	rc = st_rawstartread(ft);
+	if (rc)
+	    return rc;
 
 	endptr = (char *) &littlendian;
 	/* sndt is in little endian format so 
@@ -56,56 +59,72 @@ LONG rate;
 
 	rate = 0;
 
-/* determine file type */
+	/* determine file type */
         /* if first 5 bytes == SOUND then this is probably a sndtool sound */
         /* if first word (16 bits) == 0 
          and second word is between 4000 & 25000 then this is sounder sound */
         /* otherwise, its probably raw, not handled here */
 
-if (fread(buf, 1, 2, ft->fp) != 2)
-	fail("SND: unexpected EOF");
-if (strncmp(buf,"\0\0",2) == 0)
+	if (fread(buf, 1, 2, ft->fp) != 2)
+	{
+		fail("SND: unexpected EOF");
+		return(ST_EOF);
+	}
+	if (strncmp(buf,"\0\0",2) == 0)
 	{
 	/* sounder */
 	rate = rshort(ft);
 	if (rate < 4000 || rate > 25000 )
+	{
 		fail ("SND: sample rate out of range");
+		return(ST_EOF);
+	}
 	fseek(ft->fp,4,SEEK_CUR);
 	}
-else
+	else
 	{
 	/* sndtool ? */
 	fread(&buf[2],1,6,ft->fp);
 	if (strncmp(buf,"SOUND",5))
+	{
 		fail ("SND: unrecognized SND format");
+		return(ST_EOF);
+	}
 	fseek(ft->fp,12,SEEK_CUR);
 	rate = rshort(ft);
 	fseek(ft->fp,6,SEEK_CUR);
 	if (fread(buf,1,96,ft->fp) != 96)
+	{
 		fail ("SND: unexpected EOF in SND header");
+		return(ST_EOF);
+	}
 	report ("%s",buf);
 	}
 
 ft->info.channels = 1;
 ft->info.rate = rate;
-ft->info.style = UNSIGNED;
-ft->info.size = BYTE;
+ft->info.style = ST_ENCODING_UNSIGNED;
+ft->info.size = ST_SIZE_BYTE;
 
+return (ST_SUCCESS);
 }
 
 /*======================================================================*/
 /*                         SNDTSTARTWRITE                               */
 /*======================================================================*/
-void sndtstartwrite(ft)
+int st_sndtstartwrite(ft)
 ft_t ft;
 {
-struct sndpriv *p = (struct sndpriv *) ft->priv;
+	struct sndpriv *p = (struct sndpriv *) ft->priv;
 
 	int littlendian = 1;
 	char *endptr;
+	int rc;
 
 	/* Needed for rawwrite() */
-	rawstartwrite(ft);
+	rc = st_rawstartwrite(ft);
+	if (rc)
+	    return rc;
 
 	endptr = (char *) &littlendian;
 	/* sndt is in little endian format so
@@ -118,23 +137,27 @@ struct sndpriv *p = (struct sndpriv *) ft->priv;
 
 /* write header */
 ft->info.channels = 1;
-ft->info.style = UNSIGNED;
-ft->info.size = BYTE;
+ft->info.style = ST_ENCODING_UNSIGNED;
+ft->info.size = ST_SIZE_BYTE;
 p->nsamples = 0;
 sndtwriteheader(ft, 0);
 
+return(ST_SUCCESS);
 }
 /*======================================================================*/
 /*                         SNDRSTARTWRITE                               */
 /*======================================================================*/
-void sndrstartwrite(ft)
+int st_sndrstartwrite(ft)
 ft_t ft;
 {
 	int littlendian = 1;
 	char *endptr;
+	int rc;
 
 	/* Needed for rawread() */
-	rawstartread(ft);
+	rc = st_rawstartread(ft);
+	if (rc)
+	    return rc;
 
 	endptr = (char *) &littlendian;
 	/* sndr is in little endian format so
@@ -147,45 +170,52 @@ ft_t ft;
 
 /* write header */
 ft->info.channels = 1;
-ft->info.style = UNSIGNED;
-ft->info.size = BYTE;
+ft->info.style = ST_ENCODING_UNSIGNED;
+ft->info.size = ST_SIZE_BYTE;
 
 /* sounder header */
 wshort (ft,0); /* sample size code */
 wshort (ft,(int) ft->info.rate);     /* sample rate */
 wshort (ft,10);        /* volume */
 wshort (ft,4); /* shift */
+
+return(ST_SUCCESS);
 }
 
 /*======================================================================*/
 /*                         SNDTWRITE                                     */
 /*======================================================================*/
 
-void sndtwrite(ft, buf, len)
+LONG st_sndtwrite(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
 	struct sndpriv *p = (struct sndpriv *) ft->priv;
 	p->nsamples += len;
-	rawwrite(ft, buf, len);
+	return st_rawwrite(ft, buf, len);
 }
 
 /*======================================================================*/
 /*                         SNDTSTOPWRITE                                */
 /*======================================================================*/
 
-void sndtstopwrite(ft)
+int st_sndtstopwrite(ft)
 ft_t ft;
 {
 	struct sndpriv *p = (struct sndpriv *) ft->priv;
+	int rc;
 
 	/* Flush remaining buffer out */
-	rawstopwrite(ft);
+	rc = st_rawstopwrite(ft);
+	if (rc)
+	    return rc;
 
 	/* fixup file sizes in header */
 	if (fseek(ft->fp, 0L, 0) != 0)
 		fail("can't rewind output file to rewrite SND header");
 	sndtwriteheader(ft, p->nsamples);
+
+	return(ST_SUCCESS);
 }
 
 /*======================================================================*/

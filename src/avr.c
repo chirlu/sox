@@ -62,13 +62,14 @@ typedef struct avrstuff {
  *	mono/stereo/quad.
  */
 
-void
-avrstartread(ft) 
+
+int st_avrstartread(ft) 
 ft_t ft;
 {
   avr_t	avr = (avr_t)ft->priv;
   int littlendian = 1;
   char *endptr;
+  int rc;
 
   /* AVR is a Big Endian format.  Swap whats read in on Little */
   /* Endian machines.					       */
@@ -78,12 +79,15 @@ ft_t ft;
 	  ft->swap = ft->swap ? 0 : 1;
   }
 
-  rawstartread (ft);
+  rc = st_rawstartread (ft);
+  if (rc)
+      return rc;
 
   fread (avr->magic, 1, sizeof (avr->magic), ft->fp);
 
   if (strncmp (avr->magic, AVR_MAGIC, 4)) {
     fail ("AVR: unknown header");
+    return(ST_EOF);
   }
 
   fread (avr->name, 1, sizeof (avr->name), ft->fp);
@@ -98,21 +102,22 @@ ft_t ft;
 
   avr->rez = rshort (ft);
   if (avr->rez == 8) {
-    ft->info.size = BYTE;
+    ft->info.size = ST_SIZE_BYTE;
   }
   else if (avr->rez == 16) {
-    ft->info.size = WORD;
+    ft->info.size = ST_SIZE_WORD;
   }
   else {
     fail ("AVR: unsupported sample resolution");
+    return(0);
   }
 
   avr->sign = rshort (ft);
   if (avr->sign) {
-    ft->info.style = SIGN2;
+    ft->info.style = ST_ENCODING_SIGN2;
   }
   else {
-    ft->info.style = UNSIGNED;
+    ft->info.style = ST_ENCODING_UNSIGNED;
   }
 
   avr->loop = rshort (ft);
@@ -143,17 +148,17 @@ ft_t ft;
   fread (avr->ext, 1, sizeof (avr->ext), ft->fp);
 
   fread (avr->user, 1, sizeof (avr->user), ft->fp);
+
+  return(ST_SUCCESS);
 }
 
-
-
-void
-avrstartwrite(ft) 
+int st_avrstartwrite(ft) 
 ft_t ft;
 {
   avr_t	avr = (avr_t)ft->priv;
   int littlendian = 1;
   char *endptr;
+  int rc;
 
   /* AVR is a Big Endian format.  Swap whats read in on Little */
   /* Endian machines.					       */
@@ -165,9 +170,12 @@ ft_t ft;
 
   if (!ft->seekable) {
     fail ("AVR: file is not seekable");
+    return(ST_EOF);
   }
 
-  rawstartwrite (ft);
+  rc = st_rawstartwrite (ft);
+  if (rc)
+      return rc;
 
   /* magic */
   fwrite (AVR_MAGIC, 1, sizeof (avr->magic), ft->fp);
@@ -184,28 +192,31 @@ ft_t ft;
   }
   else {
     fail ("AVR: number of channels not supported");
+    return(0);
   }
 
   /* rez */
-  if (ft->info.size == BYTE) {
+  if (ft->info.size == ST_SIZE_BYTE) {
     wshort (ft, 8);
   }
-  else if (ft->info.size == WORD) {
+  else if (ft->info.size == ST_SIZE_WORD) {
     wshort (ft, 16);
   }
   else {
     fail ("AVR: unsupported sample resolution");
+    return(ST_EOF);
   }
 
   /* sign */
-  if (ft->info.style == SIGN2) {
+  if (ft->info.style == ST_ENCODING_SIGN2) {
     wshort (ft, 0xffff);
   }
-  else if (ft->info.style == UNSIGNED) {
+  else if (ft->info.style == ST_ENCODING_UNSIGNED) {
     wshort (ft, 0);
   }
   else {
     fail ("AVR: unsupported style");
+    return(ST_EOF);
   }
 
   /* loop */
@@ -246,12 +257,11 @@ ft_t ft;
           "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
           "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
           "\0\0\0\0", 1, sizeof (avr->user), ft->fp);
+
+  return(ST_SUCCESS);
 }
 
-
-
-void
-avrwrite(ft, buf, nsamp) 
+LONG st_avrwrite(ft, buf, nsamp) 
 ft_t ft;
 LONG *buf, nsamp;
 {
@@ -259,20 +269,22 @@ LONG *buf, nsamp;
 
   avr->size += nsamp;
 
-  rawwrite (ft, buf, nsamp);
+  return (st_rawwrite (ft, buf, nsamp));
 }
 
 
 
-void
-avrstopwrite(ft) 
+int st_avrstopwrite(ft) 
 ft_t ft;
 {
   avr_t	avr = (avr_t)ft->priv;
+  int rc;
 
   int size = avr->size / ft->info.channels;
 
-  rawstopwrite(ft);
+  rc = st_rawstopwrite(ft);
+  if (rc)
+      return rc;
 
   /* Fix size */
   fseek (ft->fp, 26L, SEEK_SET);
@@ -281,4 +293,6 @@ ft_t ft;
   /* Fix lend */
   fseek (ft->fp, 34L, SEEK_SET);
   wlong (ft, size);
+
+  return(ST_SUCCESS);
 }

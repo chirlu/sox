@@ -167,11 +167,11 @@ typedef struct vocstuff {
 
 #define	min(a, b)	(((a) < (b)) ? (a) : (b))
 
-static void getblock(P1(ft_t));
+static int getblock(P1(ft_t));
 static void blockstart(P1(ft_t));
 static void blockstop(P1(ft_t));
 
-void vocstartread(ft) 
+int st_vocstartread(ft) 
 ft_t ft;
 {
 	char header[20];
@@ -179,6 +179,7 @@ ft_t ft;
 	int sbseek;
 	int littlendian = 1;
 	char *endptr;
+	int rc;
 
 	endptr = (char *) &littlendian;
 	/* VOC is in Little Endian format.  Swap bytes read in on */
@@ -189,11 +190,20 @@ ft_t ft;
 	}
 
 	if (! ft->seekable)
+	{
 		fail("VOC input file must be a file, not a pipe");
+		return(ST_EOF);
+	}
 	if (fread(header, 1, 20, ft->fp) != 20)
+	{
 		fail("unexpected EOF in VOC header");
+		return(ST_EOF);
+	}
 	if (strncmp(header, "Creative Voice File\032", 19))
+	{
 		fail("VOC file header incorrect");
+		return(ST_EOF);
+	}
 
 	sbseek = rshort(ft);
 	fseek(ft->fp, sbseek, 0);
@@ -201,27 +211,40 @@ ft_t ft;
 	v->rate = -1;
 	v->rest = 0;
 	v->extended = 0;
-	getblock(ft);
+	rc = getblock(ft);
+	if (rc)
+	    return rc;
 	if (v->rate == -1)
+	{
 		fail("Input .voc file had no sound!");
+		return(ST_EOF);
+	}
 
 	ft->info.size = v->size;
-	ft->info.style = UNSIGNED;
-	if (v->size == WORD)
-	    ft->info.style = SIGN2;
+	ft->info.style = ST_ENCODING_UNSIGNED;
+	if (v->size == ST_SIZE_WORD)
+	    ft->info.style = ST_ENCODING_SIGN2;
 	if (ft->info.channels == -1)
 		ft->info.channels = v->channels;
+
+	return(ST_SUCCESS);
 }
 
-LONG vocread(ft, buf, len) 
+LONG st_vocread(ft, buf, len) 
 ft_t ft;
 LONG *buf, len;
 {
 	vs_t v = (vs_t) ft->priv;
 	int done = 0;
+	int rc;
 	
 	if (v->rest == 0)
-		getblock(ft);
+	{
+		rc = getblock(ft);
+		if (rc)
+		    return 0;
+	}
+
 	if (v->rest == 0)
 		return 0;
 
@@ -234,7 +257,7 @@ LONG *buf, len;
 			LONG datum;
 			switch(v->size)
 			{
-			    case BYTE:
+			    case ST_SIZE_BYTE:
 				if ((datum = getc(ft->fp)) == EOF) {
 				    warn("VOC input: short file");
 				    v->rest = 0;
@@ -243,7 +266,7 @@ LONG *buf, len;
 				datum ^= 0x80;	/* convert to signed */
 				*buf++ = LEFT(datum, 24);
 				break;
-			    case WORD:
+			    case ST_SIZE_WORD:
 				datum = rshort(ft);
 				if (feof(ft->fp))
 				{
@@ -261,9 +284,10 @@ LONG *buf, len;
 }
 
 /* nothing to do */
-void vocstopread(ft) 
+int st_vocstopread(ft) 
 ft_t ft;
 {
+    return(ST_SUCCESS);
 }
 
 /* When saving samples in VOC format the following outline is followed:
@@ -277,7 +301,7 @@ ft_t ft;
  * which will work with the oldest software (eg. an 8-bit mono sample
  * will be able to be played with a really old SB VOC player.)
  */
-void vocstartwrite(ft) 
+int st_vocstartwrite(ft) 
 ft_t ft;
 {
 	vs_t v = (vs_t) ft->priv;
@@ -293,7 +317,10 @@ ft_t ft;
 	}
 
 	if (! ft->seekable)
+	{
 		fail("Output .voc file must be a file, not a pipe");
+		return(ST_EOF);
+	}
 
 	v->samples = 0;
 
@@ -303,21 +330,24 @@ ft_t ft;
 	wshort(ft, 0x10a);              /* major/minor version number */
 	wshort(ft, 0x1129);		/* checksum of version number */
 
-	if (ft->info.size == BYTE)
-	  ft->info.style = UNSIGNED;
+	if (ft->info.size == ST_SIZE_BYTE)
+	  ft->info.style = ST_ENCODING_UNSIGNED;
 	else
-	  ft->info.style = SIGN2;
+	  ft->info.style = ST_ENCODING_SIGN2;
 	if (ft->info.channels == -1)
 		ft->info.channels = 1;
+
+	return(ST_SUCCESS);
 }
 
-void vocwrite(ft, buf, len) 
+LONG st_vocwrite(ft, buf, len) 
 ft_t ft;
 LONG *buf, len;
 {
 	vs_t v = (vs_t) ft->priv;
 	unsigned char uc;
 	int sw;
+	LONG done = 0;
 	
 	if (v->samples == 0) {
 	  /* No silence packing yet. */
@@ -325,8 +355,8 @@ LONG *buf, len;
 	  blockstart(ft);
 	}
 	v->samples += len;
-	while(len--) {
-	  if (ft->info.size == BYTE) {
+	while(done < len) {
+	  if (ft->info.size == ST_SIZE_BYTE) {
 	    uc = RIGHT(*buf++, 24);
 	    uc ^= 0x80;
 	    putc(uc, ft->fp);
@@ -334,19 +364,22 @@ LONG *buf, len;
 		sw = (int) RIGHT(*buf++, 16);
 	    wshort(ft,sw);
           }
+	  done++;
 	}
+	return done;
 }
 
-void vocstopwrite(ft) 
+int st_vocstopwrite(ft) 
 ft_t ft;
 {
 	blockstop(ft);
+	return(ST_SUCCESS);
 }
 
 /* Voc-file handlers */
 
 /* Read next block header, save info, leave position at start of data */
-static void
+static int
 getblock(ft)
 ft_t ft;
 {
@@ -359,12 +392,12 @@ ft_t ft;
 	v->silent = 0;
 	while (v->rest == 0) {
 		if (feof(ft->fp))
-			return;
+			return ST_SUCCESS;
 		block = getc(ft->fp);
 		if (block == VOC_TERM)
-			return;
+			return ST_SUCCESS;
 		if (feof(ft->fp))
-			return;
+			return ST_SUCCESS;
 		/* 
 		 * Size is an 24-bit value.  Currently there is no util 
 		 * func to read this so do it this cross-platform way
@@ -383,37 +416,54 @@ ft_t ft;
 			/* block, the DATA blocks rate value is invalid */
 		        if (!v->extended) {
 			  if (uc == 0)
+			  {
 			    fail("File %s: Sample rate is zero?");
+			    return(ST_EOF);
+			  }
 			  if ((v->rate != -1) && (uc != v->rate))
+			  {
 			    fail("File %s: sample rate codes differ: %d != %d",
 				 ft->filename,v->rate, uc);
+			    return(ST_EOF);
+			  }
 			  v->rate = uc;
 			  ft->info.rate = 1000000.0/(256 - v->rate);
 			  v->channels = 1;
 			}
 			uc = getc(ft->fp);
 			if (uc != 0)
+			{
 			  fail("File %s: only interpret 8-bit data!",
 			       ft->filename);
+			  return(ST_EOF);
+			}
 			v->extended = 0;
 			v->rest = sblen - 2;
-			v->size = BYTE;
-			return;
+			v->size = ST_SIZE_BYTE;
+			return (ST_SUCCESS);
 		case VOC_DATA_16:
 			new_rate = rlong(ft);
 			if (new_rate == 0)
+			{
 			    fail("File %s: Sample rate is zero?",ft->filename);
+			    return(ST_EOF);
+			}
 			if ((v->rate != -1) && (new_rate != v->rate))
+			{
 			    fail("File %s: sample rate codes differ: %d != %d",
 				ft->filename, v->rate, new_rate);
+			    return(ST_EOF);
+			}
 			v->rate = new_rate;
 			ft->info.rate = new_rate;
 			uc = getc(ft->fp);
 			switch (uc)
 			{
-			    case 8:	v->size = BYTE; break;
-			    case 16:	v->size = WORD; break;
-			    default:	fail("Don't understand size %d", uc);
+			    case 8:	v->size = ST_SIZE_BYTE; break;
+			    case 16:	v->size = ST_SIZE_WORD; break;
+			    default:	
+					fail("Don't understand size %d", uc);
+					return(ST_EOF);
 			}
 			v->channels = getc(ft->fp);
 			getc(ft->fp);	/* unknown */
@@ -423,10 +473,10 @@ ft_t ft;
 			getc(ft->fp);	/* notused */
 			getc(ft->fp);	/* notused */
 			v->rest = sblen - 12;
-			return;
+			return (ST_SUCCESS);
 		case VOC_CONT: 
 			v->rest = sblen;
-			return;
+			return (ST_SUCCESS);
 		case VOC_SILENCE: 
 			{
 			unsigned short period;
@@ -434,7 +484,10 @@ ft_t ft;
 			period = rshort(ft);
 			uc = getc(ft->fp);
 			if (uc == 0)
+			{
 				fail("File %s: Silence sample rate is zero");
+				return(ST_EOF);
+			}
 			/* 
 			 * Some silence-packed files have gratuitously
 			 * different sample rate codes in silence.
@@ -446,7 +499,7 @@ ft_t ft;
 				v->rate = uc;
 			v->rest = period;
 			v->silent = 1;
-			return;
+			return (ST_SUCCESS);
 			}
 		case VOC_MARKER:
 			uc = getc(ft->fp);
@@ -474,15 +527,24 @@ ft_t ft;
 			v->extended = 1;
 			new_rate = rshort(ft);
 			if (new_rate == 0)
+			{
 			   fail("File %s: Sample rate is zero?");
+			   return(ST_EOF);
+			}
 			if ((v->rate != -1) && (new_rate != v->rate))
+			{
 			   fail("File %s: sample rate codes differ: %d != %d",
 					ft->filename, v->rate, new_rate);
+			   return(ST_EOF);
+			}
 			v->rate = new_rate;
 			uc = getc(ft->fp);
 			if (uc != 0)
+			{
 				fail("File %s: only interpret 8-bit data!",
 					ft->filename);
+				return(ST_EOF);
+			}
 			uc = getc(ft->fp);
 			if (uc)
 				ft->info.channels = 2;  /* Stereo */
@@ -500,6 +562,7 @@ ft_t ft;
 				getc(ft->fp);
 		}
 	}
+	return ST_SUCCESS;
 }
 
 /* Start an output block. */
@@ -515,7 +578,7 @@ ft_t ft;
 		putc(0, ft->fp);		/* Period length */
 		putc((int) v->rate, ft->fp);		/* Rate code */
 	} else {
-	  if (ft->info.size == BYTE) {
+	  if (ft->info.size == ST_SIZE_BYTE) {
 	    /* 8-bit sample section.  By always setting the correct     */
 	    /* rate value in the DATA block (even when its preceeded    */
 	    /* by an EXTENDED block) old software can still play stereo */
@@ -571,7 +634,7 @@ ft_t ft;
 	if (v->silent) {
 		wshort(ft, v->samples);
 	} else {
-	  if (ft->info.size == BYTE) {
+	  if (ft->info.size == ST_SIZE_BYTE) {
 	    if (ft->info.channels > 1) {
 	      fseek(ft->fp, 8, 1); /* forward 7 + 1 for new block header */
 	    }

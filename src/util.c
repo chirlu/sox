@@ -102,8 +102,8 @@ ft_t formp;
 	if (! formp->filetype)
 fail("Must give file type for %s file, either as suffix or with -t option",
 formp->filename);
-	for(i = 0; formats[i].names; i++) {
-		for(list = formats[i].names; *list; list++) {
+	for(i = 0; st_formats[i].names; i++) {
+		for(list = st_formats[i].names; *list; list++) {
 			char *s1 = *list, *s2 = formp->filetype;
 			if (! strcmpcase(s1, s2))
 				break;	/* not a match */
@@ -111,7 +111,7 @@ formp->filename);
 		if (! *list)
 			continue;
 		/* Found it! */
-		formp->h = &formats[i];
+		formp->h = &st_formats[i];
 		return;
 	}
 	if (! strcmpcase(formp->filetype, "snd")) {
@@ -138,20 +138,20 @@ eff_t effp;
 {
 	int i;
 
-	for(i = 0; effects[i].name; i++) {
-		char *s1 = effects[i].name, *s2 = effp->name;
+	for(i = 0; st_effects[i].name; i++) {
+		char *s1 = st_effects[i].name, *s2 = effp->name;
 		while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
 			s1++, s2++;
 		if (*s1 || *s2)
 			continue;	/* not a match */
 		/* Found it! */
-		effp->h = &effects[i];
+		effp->h = &st_effects[i];
 		return;
 	}
 	/* Guido Van Rossum fix */
 	fprintf(stderr, "%s: Known effects: ",myname);
-	for (i = 1; effects[i].name; i++)
-		fprintf(stderr, "%s ", effects[i].name);
+	for (i = 1; st_effects[i].name; i++)
+		fprintf(stderr, "%s ", st_effects[i].name);
 	fprintf(stderr, "\n");
 	fail("Effect '%s' is not known!", effp->name);
 }
@@ -191,7 +191,7 @@ ft_t ft, ft2;
 	 * it's in samples, so # channels don't matter
 	 */
 	factor = (double) ft2->info.rate / (double) ft->info.rate;
-	for(i = 0; i < NLOOPS; i++) {
+	for(i = 0; i < ST_MAX_NLOOPS; i++) {
 		ft2->loops[i].start = ft->loops[i].start * factor;
 		ft2->loops[i].length = ft->loops[i].length * factor;
 		ft2->loops[i].count = ft->loops[i].count;
@@ -217,7 +217,7 @@ ft_t ft;
 			ft->info.rate, ft->filename);
 	if (ft->info.size == -1)
 		fail("Data size was not given for %s file\nUse one of -b/-w/-l/-f/-d/-D", ft->filename);
-	if (ft->info.style == -1 && ft->info.size != FLOAT)
+	if (ft->info.style == -1 && ft->info.size != ST_SIZE_FLOAT)
 		fail("Data style was not given for %s file\nUse one of -s/-u/-U/-A", ft->filename);
 	/* it's so common, might as well default */
 	if (ft->info.channels == -1)
