@@ -229,6 +229,13 @@ st_ssize_t st_maudwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_maudstartwrite(ft_t ft);
 int st_maudstopwrite(ft_t ft);
 
+int st_mp3startread(ft_t ft);
+st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len);
+int st_mp3stopread(ft_t ft);
+st_ssize_t st_mp3write(ft_t ft, st_sample_t *buf, st_ssize_t len);
+int st_mp3startwrite(ft_t ft);
+int st_mp3stopwrite(ft_t ft);
+
 int st_nulstartread(ft_t ft);
 st_ssize_t st_nulread(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_nulstopread(ft_t ft);

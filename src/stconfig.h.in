@@ -21,6 +21,12 @@
 /* Define if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
+/* Define if you have MAD (MP3 Audio Decoder) Library installed */
+#undef HAVE_LIBMAD
+
+/* Define if you have LAME (LAME Ain't an MP3 Encoder) Library installed */
+#undef HAVE_LAME
+
 /* Define if you have Ogg Vorbis Library installed */
 #undef HAVE_LIBVORBIS
 

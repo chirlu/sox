@@ -111,6 +111,12 @@ static char *maudnames[] = {
         (char *) 0,
 };
 
+/* MP3 */
+static char *mp3names[] = {
+        "mp3",
+        (char *) 0,
+};
+
 static char *nulnames[] = {
         "nul",
         (char *) 0,
@@ -293,6 +299,9 @@ st_format_t st_formats[] = {
     {maudnames, ST_FILE_STEREO,
 	st_maudstartread, st_maudread, st_maudstopread,
 	st_maudstartwrite, st_maudwrite, st_maudstopwrite, st_format_nothing_seek},
+    {mp3names, ST_FILE_STEREO,
+	st_mp3startread, st_mp3read, st_mp3stopread,
+	st_mp3startwrite, st_mp3write, st_mp3stopwrite, st_format_nothing_seek},
     {nulnames, ST_FILE_STEREO,
 	st_nulstartread, st_nulread, st_nulstopread,
 	st_nulstartwrite, st_nulwrite, st_nulstopwrite, st_format_nothing_seek},

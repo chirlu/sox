@@ -49,6 +49,26 @@ AC_ARG_WITH(ogg_vorbisinc,
 	[ogg_vorbisinc="$withval"],
 	[ogg_vorbisinc=auto])
 
+AC_ARG_WITH(madlib,
+	[  --with-madlib    Location of MAD (MP3 Audio Decoder) libraries (=dir)],
+	[madlib="$withval"],
+	[madlib=auto])
+
+AC_ARG_WITH(madinc,
+	[  --with-madinc    Location of MAD (MP3 Audio Decoder) headers (=dir)],
+	[madinc="$withval"],
+	[madinc=auto])
+
+AC_ARG_WITH(lamelib,
+	[  --with-lamelib    Location of LAME (LAME Ain't an MP3 Encoder) libraries (=dir)],
+	[lamelib="$withval"],
+	[lamelib=auto])
+
+AC_ARG_WITH(lameinc,
+	[  --with-lameinc    Location of LAME (LAME Ain't an MP3 Encoder) headers (=dir)],
+	[lameinc="$withval"],
+	[lameinc=auto])
+
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_RANLIB
@@ -128,6 +148,66 @@ then
   AC_CHECK_LIB(vorbis, vorbis_analysis_init,
                LIBS="$LIBS -logg -lvorbis -lvorbisfile -lvorbisenc"
                AC_DEFINE([HAVE_LIBVORBIS], 1, [Define if you have Ogg Vorbis Library installed]))
+fi
+CPPFLAGS="$ac_save_CPPFLAGS"
+
+dnl Test for MAD libraries.
+
+if test "madlib" != auto  && test "madlib" != no
+then
+  LIBS="$LIBS -L$madlib"
+fi
+
+dnl Need to tell preprocess where to look for MAD include files
+dnl when they are not in system directories.  Because of this make
+dnl a backup copy of the CPPFLAGS.
+ac_save_CPPFLAGS="$CPPFLAGS"
+
+if test "madinc" != auto && test "madinc" != no
+then
+  CFLAGS="$CFLAGS -I$madinc"
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  if test \! -z "$madinc" ; then
+    CPPFLAGS="$CPPFLAGS -I$madinc"
+  fi
+fi
+
+AC_CHECK_HEADER(mad.h, madinc=yes, madinc=no)
+if test "$madinc" = yes
+then
+  AC_CHECK_LIB(mad, mad_stream_buffer,
+               LIBS="$LIBS -lmad"
+               AC_DEFINE([HAVE_LIBMAD], 1, [Define if you have MAD (MP3 Audio Decoder) Library installed]))
+fi
+CPPFLAGS="$ac_save_CPPFLAGS"
+
+dnl Test for LAME library.
+
+if test "lamelib" != auto  && test "lamelib" != no
+then
+  LIBS="$LIBS -L$lamelib"
+fi
+
+dnl Need to tell preprocess where to look for LAME include files
+dnl when they are not in system directories.  Because of this make
+dnl a backup copy of the CPPFLAGS.
+ac_save_CPPFLAGS="$CPPFLAGS"
+
+if test "lameinc" != auto && test "lameinc" != no
+then
+  CFLAGS="$CFLAGS -I$lameinc"
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  if test \! -z "$lameinc" ; then
+    CPPFLAGS="$CPPFLAGS -I$madinc"
+  fi
+fi
+
+AC_CHECK_HEADER(lame/lame.h, lameinc=yes, lameinc=no)
+if test "$lameinc" = yes
+then
+  AC_CHECK_LIB(mp3lame, lame_init,
+               LIBS="$LIBS -lmp3lame"
+               AC_DEFINE([HAVE_LAME], 1, [Define if you have LAME (LAME Ain't an MP3 Encoder) library installed]))
 fi
 CPPFLAGS="$ac_save_CPPFLAGS"
 

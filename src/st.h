@@ -192,7 +192,8 @@ extern st_format_t st_formats[];
 #define ST_ENCODING_GSM         8 /* GSM 6.10 33byte frame lossy compression */
 #define ST_ENCODING_INV_ULAW    9 /* Inversed bit-order u-law */
 #define ST_ENCODING_INV_ALAW    10/* Inversed bit-order A-law */
-#define ST_ENCODING_MAX         10 
+#define ST_ENCODING_MP3         11/* MP3 compression */
+#define ST_ENCODING_MAX         11 
 
 /* declared in misc.c */
 extern const char *st_sizes_str[];

@@ -7,6 +7,8 @@ sox-11gamma.
 sox-12.17.4
 -----------
   o Updated config.sub to detect latest supported OS's.
+  o Fabrizio Gennari added support for reading and writing
+    MP3 files using the external libraries libmad and libmp3lame.
 
 sox-12.17.3
 -----------

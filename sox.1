@@ -429,6 +429,18 @@ with the "Toccata" sound-card on the Amiga.
 Allows 8bit linear, 16bit linear, A-Law, u-law
 in mono and stereo.
 .TP 10
+.B .mp3
+MP3 Compressed Audio
+.br
+MP3 audio files come from the MPEG standards for audio and video compression.  They are a lossy compression format that achieves good compression rates with a minimum amount of quality loss.  Also see Ogg Vorbis for a similar format.
+MP3 support in
+.B SoX
+is optional and requires access to either or both the external 
+libmad and libmp3lame libraries.  To
+see if there is support for Mp3 run \fBsox -h\fR
+and look for it under the list of supported file formats as "mp3".
+
+.TP 10
 .B .nul
 Null file handler.  This is a fake file hander that act as if its reading
 a stream of 0's from a while or fake writing output to a file.  This

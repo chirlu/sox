@@ -21,7 +21,7 @@ SRCDIR	= sox-12.17.3
 
 FOBJ	= 8svx.o adpcm.o aiff.o alsa.o au.o auto.o avr.o cdr.o cvsd.o dat.o \
 	  g711.o g721.o g723_16.o g723_24.o g723_40.o g72x.o gsm.o hcom.o \
-	  ima_rw.o maud.o nulfile.o oss.o raw.o sf.o smp.o sndrtool.o \
+	  ima_rw.o maud.o mp3.o nulfile.o oss.o raw.o sf.o smp.o sndrtool.o \
 	  sphere.o sunaudio.o tx16w.o voc.o vorbis.o wav.o wve.o
 
 EOBJ    = avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
@@ -96,12 +96,15 @@ MATHLIB = -lm
 # MATHLIB = 
 
 # If your linking Ogg Vorbis support, uncomment the following
-VORBISLIB = -logg -lvorbis -lvorbisfile -lvorbisenc
+#VORBISLIB = -logg -lvorbis -lvorbisfile -lvorbisenc
+
+# If your linking MP3 support, uncomment the following
+#MP3LIB = -lmad -lmp3lame
 
 ##############################################################################
 
 SOX_PRE_LIBS    = -L./gsm
-SOX_POST_LIBS	= -lgsm $(VORBISLIB) $(MATHLIB)
+SOX_POST_LIBS	= -lgsm $(VORBISLIB) $(MP3LIB) $(MATHLIB)
 SOX_INCLUDES    =
 SOX_DEFINES	= -DGSM_SUPPORT $(DOS_DEFINES)
 

@@ -46,7 +46,7 @@ PLAY_SUPPORT = @PLAY_SUPPORT@
 
 FOBJ	= 8svx.o adpcm.o aiff.o au.o auto.o avr.o cdr.o \
 	  cvsd.o dat.o g711.o g721.o g723_16.o g723_24.o g723_40.o \
-	  g72x.o gsm.o hcom.o ima_rw.o maud.o nulfile.o raw.o sf.o \
+	  g72x.o gsm.o hcom.o ima_rw.o maud.o mp3.o nulfile.o raw.o sf.o \
 	  smp.o sndrtool.o sphere.o tx16w.o voc.o vorbis.o \
 	  wav.o wve.o
 
