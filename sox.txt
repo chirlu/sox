@@ -499,25 +499,36 @@ EFFECTS
 		 the  avg  effect  and use the -l, -r, -f, -b, -1, -2, -3, -4,
 		 options to select only the left,  right,  front,  back	 chan-
 		 nel(s)	 or specific channel for the output instead of averag-
-		 ing the channels.  The -l, -r, -f, and	 -b  options  will  do
-		 averaging  in	quad-channel files so select the exact channel
-		 to prevent this.
+		 ing the channels.  The -l, and -r options will	 do  averaging
+		 in  quad-channel files so select the exact channel to prevent
+		 this.
 
 		 The avg effect can also be invoked with up to 16  double-pre-
-		 cision	 numbers,  which  specify the proportion of each input
-		 channel that is to be mixed into  each	 output	 channel.   In
-		 two-channel  mode, 4 numbers are given: l->l, l->r, r->l, and
-		 r->r, respectively.  In four-channel mode, the first  4  num-
-		 bers  give the proportions for the left-front output channel,
-		 as follows: lf->lf, rf->lf, lb->lf, and rb->rf.  The  next  4
-		 give the right-front output in the same order, then left-back
-		 and right-back.
+		 cision	 numbers,  which  specify the proportion (0.0 = 0% and
+		 1.0 = 100%) of each input channel that is to  be  mixed  into
+		 each  output  channel.	  In  two-channel  mode, 4 numbers are
+		 given: l->l, l->r, r->l, and r->r,  respectively.   In	 four-
+		 channel  mode,	 the  first 4 numbers give the proportions for
+		 the left-front output channel, as  follows:  lf->lf,  rf->lf,
+		 lb->lf,  and  rb->rf.	The next 4 give the right-front output
+		 in the same order, then left-back and right-back.
 
 		 It is also possible to use the 16 numbers to expand or reduce
-		 the  channel  count;  just  specify  0	 for  unused channels.
-		 Finally, if fewer than 4 numbers are given,  certain  special
-		 abbreviations	may  be	 invoked;  see	the  source  code  for
-		 details.
+		 the channel count; just specify 0 for unused channels.
+
+		 Finally, certain reduced combination of numbers can be speci-
+		 fied for certain input/output channel combinations.
+
+
+		 In Ch	Out Ch Num Mappings
+		 _____	______ ___ _____________________________
+		   2	  1	2   l->l, r->l
+		   2	  2	1   adjust balance
+		   4	  1	4   lf->l, rf->l, lb->l, rb-l
+		   4	  2	2   lf->l&rf->r, lb->l&rb->r
+		   4	  4	1   adjust balance
+		   4	  4	2   front balance, back balance
+
 
        band [ -n ] center [ width ]
 		 Apply a band-pass filter.  The frequency response drops loga-
@@ -646,10 +657,10 @@ EFFECTS
 		 hh:mm:ss.frac	format.	 To specify using sample counts, spec-
 		 ify the number of samples and append the letter  ’s’  to  the
 		 sample count (for example 8000s).
-		 An optional type can be specified to change the type of enve-
-		 lope.	Choices are q for quarter of a sinewave, h for half  a
-		 sinewave,  t  for  linear slope, l for logarithmic, and p for
-		 inverted parabola.  The default is a linear slope.
+		 An  optional  type  can  be  specified	 to change the type of
+		 envelope.  Choices are q for quarter of  a  sinewave,	h  for
+		 half a sinewave, t for linear slope, l for logarithmic, and p
+		 for inverted parabola.	 The default is a linear slope.
 
        filter [ low ]-[ high ] [ window-len [ beta ] ]
 		 Apply a Sinc-windowed lowpass, highpass, or  bandpass	filter

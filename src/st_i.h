@@ -279,6 +279,7 @@ int st_slstartwrite(ft_t ft);
 
 int st_smpstartread(ft_t ft);
 st_ssize_t st_smpread(ft_t ft, st_sample_t *buf, st_ssize_t len);
+int st_smpstopread(ft_t ft);
 int st_smpstartwrite(ft_t ft);
 st_ssize_t st_smpwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_smpstopwrite(ft_t ft);

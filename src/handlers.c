@@ -340,7 +340,7 @@ st_format_t st_formats[] = {
         st_slstartread, st_rawread, st_rawstopread,
         st_slstartwrite, st_rawwrite, st_rawstopwrite, st_format_nothing_seek},
     {smpnames, ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK,
-        st_smpstartread, st_smpread, st_format_nothing,
+        st_smpstartread, st_smpread, st_smpstopread,
         st_smpstartwrite, st_smpwrite, st_smpstopwrite, st_smpseek},
     {sndtnames, ST_FILE_STEREO | ST_FILE_SEEK,
         st_sndtstartread, st_rawread, st_rawstopread,

@@ -1086,9 +1086,11 @@ int st_wavstopread(ft_t ft)
     if (wav->samples) free(wav->samples);
     if (wav->iCoefs) free(wav->iCoefs);
 
+    if (wav->comment) free(ct->comment);
+
     switch (ft->info.encoding)
     {
-#ifdef ENABLEGSM
+#ifdef ENABLE_GSM
     case ST_ENCODING_GSM:
         wavgsmdestroy(ft);
         break;
@@ -1300,7 +1302,7 @@ static int wavwritehdr(ft_t ft, int second_header)
             wBitsPerSample = 32;
             if (ft->info.encoding != ST_ENCODING_SIGN2)
             {
-                st_warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
+                st_warn("Do not support %s with 32-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
                 ft->info.encoding = ST_ENCODING_SIGN2;
             }
 

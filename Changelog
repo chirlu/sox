@@ -39,6 +39,7 @@ sox-12.17.5
     chunks that are unknown.
   o Bugfix for 8-bit voc files.  Jimen Ching
   o General warning cleanups (cbagwell)
+  o Memory leaks in reading WAV files (Ufuk Kayserilioglu)
 
 sox-12.17.4
 -----------
