@@ -183,18 +183,15 @@ int st_smpstartread(ft)
 ft_t ft;
 {
 	smp_t smp = (smp_t) ft->priv;
-	int littlendian = 1;
-	char *endptr;
 	int i;
 	int namelen, commentlen;
 	LONG samplestart;
 	struct smpheader header;
 	struct smptrailer trailer;
 
-	endptr = (char *) &littlendian;
 	/* SMP is in Little Endian format.  Swap whats read in on */
 	/* Big Endian machines.			                  */
-	if (!*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}
@@ -341,16 +338,12 @@ ft_t ft;
 int st_smpstartwrite(ft) 
 ft_t ft;
 {
-	int littlendian = 1;
-	char *endptr;
-
 	smp_t smp = (smp_t) ft->priv;
 	struct smpheader header;
 
-	endptr = (char *) &littlendian;
 	/* SMP is in Little Endian format.  Swap whats read in on */
 	/* Big Endian machines.			                  */
-	if (!*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}

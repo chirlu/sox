@@ -139,8 +139,6 @@ ft_t ft;
 	SFHEADER sfhead;
 	SFCODE *sfcodep;
 	char *sfcharp;
-	int littlendian = 1;
-	char *endptr;
 	int rc;
 
 	/* Needed for rawwrite() */
@@ -151,14 +149,13 @@ ft_t ft;
 	sf->info.magic_union._magic_bytes.sf_magic1 = SF_MAGIC1;
 	sf->info.magic_union._magic_bytes.sf_magic2 = SF_MAGIC2;
 	sf->info.magic_union._magic_bytes.sf_param = 0;
-	/* computer musicians can't code worth a damn */
-	/* you don't see this kind of junk in any other format */
-	endptr = (char *) &littlendian;
-	*endptr = 1;
-	if (littlendian == 1)
-		sf->info.magic_union._magic_bytes.sf_machine = SF_VAX;
+
+	/* This file handler can handle both big and little endian data */
+	if (ST_IS_LITTLEENDIAN)
+	    sf->info.magic_union._magic_bytes.sf_machine = SF_VAX;
 	else
-		sf->info.magic_union._magic_bytes.sf_machine = SF_SUN;
+	    sf->info.magic_union._magic_bytes.sf_machine = SF_SUN;
+
 	sf->info.sf_srate = ft->info.rate;
 	if (ft->info.size == ST_SIZE_FLOAT) {
 		sf->info.sf_packmode = SF_FLOAT;

@@ -5,9 +5,8 @@
  * any purpose.  This copyright notice must be maintained.
  * Chris Bagwell And Sundry Contributors are not
  * responsible for the consequences of using this software.
- */
-
-/* Direct to Open Sound System (OSS) sound driver
+ *
+ * Direct to Open Sound System (OSS) sound driver
  * OSS is a popular unix sound driver for Intel x86 unices (eg. Linux)
  * and several other unixes (such as SunOS/Solaris).
  * This driver is compatible with OSS original source that was called
@@ -44,12 +43,13 @@
 static int ossdspinit(ft)
 ft_t ft;
 {
-    int samplesize = 8, dsp_stereo;
-    int tmp;
+    int sampletype, samplesize, dsp_stereo;
+    int tmp, rc;
 
     if (ft->info.rate == 0.0) ft->info.rate = 8000;
     if (ft->info.size == -1) ft->info.size = ST_SIZE_BYTE;
     if (ft->info.size == ST_SIZE_BYTE) {
+	sampletype = AFMT_U8;
 	samplesize = 8;
 	if (ft->info.encoding == -1)
 	    ft->info.encoding = ST_ENCODING_UNSIGNED;
@@ -60,6 +60,10 @@ ft_t ft;
 	}
     }
     else if (ft->info.size == ST_SIZE_WORD) {
+	if (ST_IS_BIGENDIAN)
+	    sampletype = AFMT_S16_BE;
+	else
+	    sampletype = AFMT_S16_LE;
 	samplesize = 16;
 	if (ft->info.encoding == -1)
 	    ft->info.encoding = ST_ENCODING_SIGN2;
@@ -90,12 +94,86 @@ ft_t ft;
 	return (ST_EOF);
     }
 
+#ifdef SNDCTL_DSP_SETFMT
+    tmp = sampletype;
+    rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp);
+
+    /* If we are unable to set format type, then we should try a few
+     * other format that we can handle.
+     */
+    if (rc < 0)
+    {
+	/* If using 16-bits, the sound card may just prefer to use
+	 * an endian format different then the machine type.
+	 * Try swaping data endian.
+	 */
+	if (sampletype == AFMT_S16_LE || sampletype == AFMT_S16_BE)
+	{
+	    if (sampletype == AFMT_S16_LE)
+		sampletype = AFMT_S16_BE;
+	    else
+		sampletype = AFMT_S16_LE;
+
+            rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp);
+	    if (rc < 0)
+	    {
+		/* Must not like 16-bits, try 8-bits */
+                ft->info.size = ST_SIZE_WORD;
+	        ft->info.encoding = ST_ENCODING_SIGN2;
+	        st_report("OSS driver doesn't like signed words");
+	        st_report("Forcing to unsigned bytes");
+	        sampletype = AFMT_U8;
+                rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp);
+	    }
+	    else
+		/* That was successful so store that we need to swap */
+		ft->swap = ft->swap ? 0 : 1;
+
+	}
+	else
+	{
+            ft->info.size = ST_SIZE_WORD;
+	    ft->info.encoding = ST_ENCODING_SIGNED2;
+	    st_report("OSS driver doesn't like unsigned bytes");
+	    st_report("Forcing to signed words");
+            if (ST_IS_BIGENDIAN)
+		sampletype = AFMT_S16_BE;
+	    else
+	        sampletype = AFMT_S16_LE;
+
+            rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp);
+
+	    /* If it doesn't like that, try swaping endians */
+	    if (sampletype == AFMT_S16_LE || sampletype == AFMT_S16_BE)
+	    {
+	        if (sampletype == AFMT_S16_LE)
+		    sampletype = AFMT_S16_BE;
+	        else
+		    sampletype = AFMT_S16_LE;
+
+                rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp);
+		if (rc >= 0)
+		    /* That was successful so store that we need to swap */
+		    ft->swap = ft->swap ? 0 : 1;
+	    }
+
+	}
+	/* Give up and exit */
+	if (rc < 0)
+	{
+	    st_fail("Unable to set the sample size to %d", samplesize);
+	    return (ST_EOF);
+	}
+    }
+#else
+    /* Odd dumb interface */
     tmp = samplesize;
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp) < 0)
     {
 	st_fail("Unable to set the sample size to %d", samplesize);
 	return (ST_EOF);
     }
+#endif
 
     if (tmp != samplesize)
     {

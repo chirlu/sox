@@ -27,6 +27,9 @@ sox-12.17.2
     dropped under heavy CPU loads.  Moved GETBLKSIZE operation
     until after setting up the format (SBLive! was modify the block size
     after changing formats).
+  o With help from David Blythe, updated OSS drivers to use newer format
+    interface.  OSS driver will now attempt to detect a valid endian type
+    to use with sound card.
 
 sox-12.17.1
 -----------

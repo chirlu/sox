@@ -142,8 +142,6 @@ return(ST_SUCCESS);
 int st_sndrstartwrite(ft)
 ft_t ft;
 {
-	int littlendian = 1;
-	char *endptr;
 	int rc;
 
 	/* Needed for rawread() */
@@ -151,11 +149,10 @@ ft_t ft;
 	if (rc)
 	    return rc;
 
-	endptr = (char *) &littlendian;
 	/* sndr is in little endian format so
 	 * swap bytes on big endian machines
 	 */
-	if (!*endptr)
+	if (ST_IS_BIGENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}
