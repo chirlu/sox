@@ -304,7 +304,7 @@ double st_swapd(double df)
 /* dummy format routines for do-nothing functions */
 int st_format_nothing(ft_t ft) { return(ST_SUCCESS); }
 st_ssize_t st_format_nothing_io(ft_t ft, st_sample_t *buf, st_ssize_t len) { return(0); }
-int st_format_nothing_seek(ft_t ft, st_size_t offset) { return(ST_SUCCESS); }
+int st_format_nothing_seek(ft_t ft, st_size_t offset) { st_fail_errno(ft, ST_ENOTSUP, "operation not supported"); return(ST_EOF); }
 
 /* dummy effect routine for do-nothing functions */
 int st_effect_nothing(eff_t effp) { return(ST_SUCCESS); }
