@@ -58,6 +58,8 @@ sox-12.17
   o Fixed array overrun bug in rate effect as pointed out by Ian
     Donaldson.
   o Fixed clip24() range as pointed out by Ted Powell.
+  o Fixed possible segfault in echos effect, as pointed out by Zinx
+    Verituse.
 
 sox-12.16
 ---------
