@@ -5,6 +5,7 @@
 # Paths
 
 VPATH = @srcdir@
+builddir= @builddir@
 srcdir = @srcdir@
 prefix = @prefix@
 exec_prefix = @exec_prefix@
@@ -29,7 +30,7 @@ GSM_LIB_0 =
 GSM_LIB_1 = -lgsm
 GSM_SUPPORT  = @GSM_SUPPORT@
 
-CFLAGS	= @CFLAGS@ -I$(srcdir)
+CFLAGS	= @CFLAGS@ -I$(srcdir) -I$(builddir)
 LDFLAGS	= -L. -L./gsm @LDFLAGS@
 LIBS	= -lst $(GSM_LIB_$(GSM_SUPPORT)) @LIBS@
 
