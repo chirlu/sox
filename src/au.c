@@ -57,6 +57,47 @@ struct aupriv {
 
 static void auwriteheader(P2(ft_t ft, ULONG data_size));
 
+int st_auencodingandsize(sun_encoding, encoding, size)
+int sun_encoding;
+int *encoding;
+int *size;
+{
+    switch (sun_encoding) {
+    case SUN_ULAW:
+            *encoding = ST_ENCODING_ULAW;
+            *size = ST_SIZE_BYTE;
+            break;
+    case SUN_ALAW:
+            *encoding = ST_ENCODING_ALAW;
+            *size = ST_SIZE_BYTE;
+    case SUN_LIN_8:
+            *encoding = ST_ENCODING_SIGN2;
+            *size = ST_SIZE_BYTE;
+            break;
+    case SUN_LIN_16:
+            *encoding = ST_ENCODING_SIGN2;
+            *size = ST_SIZE_WORD;
+            break;
+    case SUN_G721:
+            *encoding = ST_ENCODING_SIGN2;
+            *size = ST_SIZE_WORD;
+            break;
+    case SUN_G723_3:
+            *encoding = ST_ENCODING_SIGN2;
+            *size = ST_SIZE_WORD;
+            break;
+    case SUN_G723_5:
+            *encoding = ST_ENCODING_SIGN2;
+            *size = ST_SIZE_WORD;
+            break;
+    default:
+            st_report("encoding: 0x%lx", encoding);
+            st_fail("Unsupported encoding in Sun/NeXT header.\nOnly U-law, signed bytes, signed words, and ADPCM are supported.");
+            return(ST_EOF);
+    }
+    return(ST_SUCCESS);
+}
+
 int st_austartread(ft) 
 ft_t ft;
 {
@@ -140,47 +181,25 @@ ft_t ft;
 	p->dec_routine = NULL;
 	p->in_buffer = 0;
 	p->in_bits = 0;
+        if(st_auencodingandsize(encoding, &(ft->info.encoding),
+			     &(ft->info.size)) == ST_EOF)
+            return(ST_EOF);
 	switch (encoding) {
-	case SUN_ULAW:
-		ft->info.encoding = ST_ENCODING_ULAW;
-		ft->info.size = ST_SIZE_BYTE;
-		break;
-	case SUN_ALAW:
-		ft->info.encoding = ST_ENCODING_ALAW;
-		ft->info.size = ST_SIZE_BYTE;
-	case SUN_LIN_8:
-		ft->info.encoding = ST_ENCODING_SIGN2;
-		ft->info.size = ST_SIZE_BYTE;
-		break;
-	case SUN_LIN_16:
-		ft->info.encoding = ST_ENCODING_SIGN2;
-		ft->info.size = ST_SIZE_WORD;
-		break;
 	case SUN_G721:
-		ft->info.encoding = ST_ENCODING_SIGN2;
-		ft->info.size = ST_SIZE_WORD;
 		g72x_init_state(&p->state);
 		p->dec_routine = g721_decoder;
 		p->dec_bits = 4;
 		break;
 	case SUN_G723_3:
-		ft->info.encoding = ST_ENCODING_SIGN2;
-		ft->info.size = ST_SIZE_WORD;
 		g72x_init_state(&p->state);
 		p->dec_routine = g723_24_decoder;
 		p->dec_bits = 3;
 		break;
 	case SUN_G723_5:
-		ft->info.encoding = ST_ENCODING_SIGN2;
-		ft->info.size = ST_SIZE_WORD;
 		g72x_init_state(&p->state);
 		p->dec_routine = g723_40_decoder;
 		p->dec_bits = 5;
 		break;
-	default:
-		st_report("encoding: 0x%lx", encoding);
-		st_fail("Unsupported encoding in Sun/NeXT header.\nOnly U-law, signed bytes, signed words, and ADPCM are supported.");
-		return(ST_EOF);
 	}
 
 	/* Read the sampling rate */
@@ -328,6 +347,25 @@ ft_t ft;
 	return(ST_SUCCESS);
 }
 
+int st_ausunencoding(size, encoding)
+int size;
+int encoding;
+{
+	int sun_encoding;
+
+	if (encoding == ST_ENCODING_ULAW && size == ST_SIZE_BYTE)
+        	sun_encoding = SUN_ULAW;
+	else if (encoding == ST_ENCODING_ALAW && size == ST_SIZE_BYTE)
+	        sun_encoding = SUN_ALAW;
+	else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_BYTE)
+	        sun_encoding = SUN_LIN_8;
+	else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_WORD)
+	        sun_encoding = SUN_LIN_16;
+	else
+		sun_encoding = -1;
+	return sun_encoding;
+}
+
 static void auwriteheader(ft, data_size)
 ft_t ft;
 ULONG data_size;
@@ -338,19 +376,7 @@ ULONG data_size;
 	ULONG sample_rate;
 	ULONG channels;
 
-	if (ft->info.encoding == ST_ENCODING_ULAW && 
-	    ft->info.size == ST_SIZE_BYTE)
-		encoding = SUN_ULAW;
-	else if (ft->info.encoding == ST_ENCODING_ALAW && 
-	         ft->info.size == ST_SIZE_BYTE)
-		encoding = SUN_ALAW;
-	else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
-		 ft->info.size == ST_SIZE_BYTE)
-		encoding = SUN_LIN_8;
-	else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
-		 ft->info.size == ST_SIZE_WORD)
-		encoding = SUN_LIN_16;
-	else {
+	if((encoding = st_ausunencoding(ft->info.size, ft->info.encoding)) == -1) {
 		st_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
 		st_report("Only U-law, A-law signed bytes, and signed words are supported.");
 		st_report("Defaulting to 8khz u-law\n");
