@@ -1,6 +1,12 @@
 People are encouraged to pick some of these and implement it.  Send
 all patches to cbagwell@users.sourceforge.net.
 
+  o Add an interface to libst so that applications can query
+    what size/encoding/rate/channels a given format handles.
+    Then applications could modify parameters before an error
+    occurs.  This would allow stripping out override logic
+    in various formats.
+
   o Silence effect could clip silence from end of file.
     Easiest way is to create a tmp file and store only
     periods of silence so that it can be flowed/drained
