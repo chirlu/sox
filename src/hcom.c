@@ -24,7 +24,9 @@
 #include "st_i.h"
 #include <string.h>
 #include <stdlib.h>
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif
 
 /* Dictionary entry for Huffman (de)compression */
 typedef struct {

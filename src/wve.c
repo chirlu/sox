@@ -6,7 +6,9 @@
 #include "st_i.h"
 #include "g72x.h"
 #include <string.h>
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif
 
 /* Magic numbers used in Psion audio files */
 #define PSION_MAGIC     "ALawSoundFile**"

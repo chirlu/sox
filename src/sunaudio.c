@@ -25,8 +25,9 @@
 #else
 #include <sun/audioio.h>
 #endif
-
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif
 #include <stropts.h>
 #include <malloc.h>
 #include <unistd.h>

@@ -51,7 +51,7 @@
 
 #include "st_i.h"
 #include "g72x.h"
-#include "libst.h"
+#include "g711.h"
 
 static short qtab_721[7] = {-124, 80, 178, 246, 300, 349, 400};
 /*
@@ -89,10 +89,10 @@ int g721_encoder(int sl, int in_coding, struct g72x_state *state_ptr)
 
 	switch (in_coding) {	/* linearize input sample to 14-bit PCM */
 	case AUDIO_ENCODING_ALAW:
-		sl = st_Alaw_to_linear(sl) >> 2;
+		sl = st_alaw2linear16(sl) >> 2;
 		break;
 	case AUDIO_ENCODING_ULAW:
-		sl = st_ulaw_to_linear(sl) >> 2;
+		sl = st_ulaw2linear16(sl) >> 2;
 		break;
 	case AUDIO_ENCODING_LINEAR:
 		sl >>= 2;			/* 14-bit dynamic range */

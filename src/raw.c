@@ -20,11 +20,13 @@
  */
 
 #include "st_i.h"
-#include "libst.h"
+#include "g711.h"
 
 #include <string.h>
 #include <stdlib.h>
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif
 
 #ifndef HAVE_MEMMOVE
 #define memmove(dest, src, len) bcopy((src), (dest), (len))
@@ -35,6 +37,11 @@
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #endif
+
+#define ST_ULAW_BYTE_TO_SAMPLE(d) ((st_ulaw2linear16(d)) << 16)
+#define ST_ALAW_BYTE_TO_SAMPLE(d) ((st_alaw2linear16(d)) << 16)
+#define ST_SAMPLE_TO_ULAW_BYTE(d) (st_14linear2ulaw(((d) >> 18)))
+#define ST_SAMPLE_TO_ALAW_BYTE(d) (st_13linear2alaw(((d) >> 19)))
 
 static void rawdefaults(ft_t ft);
 

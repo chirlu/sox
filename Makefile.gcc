@@ -29,9 +29,9 @@ SRCDIR	= sox-12.17
 ##############################################################################
 
 FOBJ	= 8svx.o adpcm.o aiff.o alsa.o au.o auto.o avr.o cdr.o cvsd.o dat.o \
-	  g721.o g723_24.o g723_40.o g72x.o gsm.o hcom.o ima_rw.o maud.o \
-	  nul.o oss.o raw.o sf.o smp.o sndrtool.o sphere.o sunaudio.o \
-	  tx16w.o voc.o wav.o wve.o
+	  g721.o g723_16.o g723_24.o g723_40.o g72x.o gsm.o hcom.o \
+	  ima_rw.o maud.o nul.o oss.o raw.o sf.o smp.o sndrtool.o \
+	  sphere.o sunaudio.o tx16w.o voc.o wav.o wve.o
 
 EOBJ    = avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
           copy.o dcshift.o deemphas.o earwax.o echo.o echos.o fade.o \
@@ -41,7 +41,7 @@ EOBJ    = avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
 	  stat.o stretch.o swap.o synth.o trim.o vibro.o vol.o
 
 SOUNDLIB = libst.a
-LIBOBJS = $(FOBJ) $(EOBJ) handlers.o libst.o misc.o util.o getopt.o
+LIBOBJS = $(FOBJ) $(EOBJ) handlers.o misc.o util.o getopt.o
 
 ##############################################################################
 

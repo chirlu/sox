@@ -10,11 +10,12 @@
 # Need object files to know what libst.lib depends on.  All .c files
 # are compiled from default rules of make.
 
-FOBJ	= 8svx.obj adpcm.obj aiff.obj alsa.obj au.obj auto.obj avr.obj cdr.obj \
-	  cvsd.obj dat.obj g721.obj g723_24.obj g723_40.obj g72x.obj gsm.obj \
-	  hcom.obj ima_rw.obj maud.obj nul.obj oss.obj raw.obj sf.obj smp.obj \
-	  sndrtool.obj sphere.obj sunaudio.obj tx16w.obj voc.obj \
-	  wav.obj wve.obj
+FOBJ	= 8svx.obj adpcm.obj aiff.obj alsa.obj au.obj auto.obj \
+          avr.obj cdr.obj cvsd.obj dat.obj g721.obj g723_16.obj \
+	  g723_24.obj g723_40.obj g72x.obj gsm.obj \
+	  hcom.obj ima_rw.obj maud.obj nul.obj oss.obj raw.obj \
+	  sf.obj smp.obj sndrtool.obj sphere.obj sunaudio.obj \
+	  tx16w.obj voc.obj wav.obj wve.obj
 
 EOBJ	= avg.obj band.obj bandpass.obj breject.obj btrworth.obj chorus.obj \
 	  compand.obj copy.obj dcshift.obj deemphas.obj earwax.o \
@@ -24,7 +25,7 @@ EOBJ	= avg.obj band.obj bandpass.obj breject.obj btrworth.obj chorus.obj \
 	  reverb.obj reverse.obj silence.obj speed.obj split.obj stat.obj \
 	  stretch.obj swap.obj synth.obj trim.obj vibro.obj vol.obj
 
-LIBOBJS   = $(FOBJ) $(EOBJ) handlers.obj libst.obj misc.obj getopt.obj util.obj
+LIBOBJS   = $(FOBJ) $(EOBJ) handlers.obj misc.obj getopt.obj util.obj
 
 
 # The following defines tell where compiler files are kept, not where

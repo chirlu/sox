@@ -30,10 +30,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>             /* for malloc() */
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif
 #include <sys/types.h>          /* for fstat() */
 #include <sys/stat.h>           /* for fstat() */
-
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>             /* for unlink() */
 #endif

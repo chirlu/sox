@@ -33,8 +33,6 @@ LN_S    = @LN_S@
 CFLAGS	= @CFLAGS@ @DEFS@ -I$(srcdir)
 LDFLAGS	= -L. -Lgsm @LDFLAGS@
 LIBS	= -lst @LIBS@
-EXEEXT  = @EXEEXT@
-OBJEXT  = @OBJEXT@
 
 # Other macros.
 
@@ -46,9 +44,10 @@ PLAY_SUPPORT = @PLAY_SUPPORT@
 
 # Objects.
 
-FOBJ	= 8svx.o adpcm.o aiff.o au.o auto.o avr.o cdr.o cvsd.o dat.o g721.o \
-	  g723_24.o g723_40.o g72x.o gsm.o hcom.o ima_rw.o maud.o nul.o \
-	  raw.o sf.o smp.o sndrtool.o sphere.o tx16w.o voc.o vorbis.o \
+FOBJ	= 8svx.o adpcm.o aiff.o au.o auto.o avr.o cdr.o \
+	  cvsd.o dat.o g711.o g721.o g723_16.o g723_24.o g723_40.o \
+	  g72x.o gsm.o hcom.o ima_rw.o maud.o nul.o raw.o sf.o \
+	  smp.o sndrtool.o sphere.o tx16w.o voc.o vorbis.o \
 	  wav.o wve.o
 
 EOBJ	= avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
@@ -66,10 +65,10 @@ ALSAOBJ_0   =
 ALSAOBJ_1   = alsa.o
 EXTRAOBJS   = $(OSSOBJ_$(NEED_OSS)) $(SUNAUOBJ_$(NEED_SUNAU)) $(ALSAOBJ_$(NEED_ALSA))
 
-LIBOBJS = $(FOBJ) $(EOBJ) handlers.o libst.o misc.o util.o getopt.o $(EXTRAOBJS)
+LIBOBJS = $(FOBJ) $(EOBJ) handlers.o misc.o util.o getopt.o $(EXTRAOBJS)
 
 GSM_0     =
-GSM_1     = libgsm
+GSM_1     = gsm/libgsm.a
 PLAY_0    =
 PLAY_1    = play
 
@@ -91,7 +90,7 @@ libst.a: $(LIBOBJS)
 	$(AR) libst.a $(LIBOBJS)
 	$(RANLIB) libst.a
 
-libgsm:
+gsm/libgsm.a:
 	cd gsm && $(MAKE)
 
 man: $(srcdir)/sox.1 $(srcdir)/soxexam.1 $(srcdir)/libst.3
@@ -106,7 +105,10 @@ install: sox soxmix $(PLAY_INSTALL_$(PLAY_SUPPORT))
 	$(srcdir)/mkinstalldirs $(bindir)
 	$(srcdir)/mkinstalldirs $(mandir)/man1
 	$(INSTALL) -c -m 755 sox $(bindir)
+	$(INSTALL) -c -m 755 soxmix $(bindir)
 	$(INSTALL) -c -m 644 $(srcdir)/sox.1 $(mandir)/man1
+	if [ -f $(mandir)/man1/soxmix.1 ] ; then $(RM) $(mandir)/man1/soxmix.1; fi
+	$(LN_S) $(mandir)/man1/sox.1 $(mandir)/man1/soxmix.1
 	$(INSTALL) -c -m 644 $(srcdir)/soxexam.1 $(mandir)/man1
 
 install-play: play
@@ -120,7 +122,7 @@ install-play: play
 	$(LN_S) $(mandir)/man1/play.1 $(mandir)/man1/rec.1
 
 install-lib: libst.a
-	$(srcdir)/mkinstalldirs $(mandir)/man1
+	$(srcdir)/mkinstalldirs $(libdir)
 	$(srcdir)/mkinstalldirs $(mandir)/man3
 	$(srcdir)/mkinstalldirs $(includedir)
 	$(INSTALL) -c -m 644 libst.a $(libdir)

@@ -18,13 +18,20 @@ sox \- Sound eXchange : universal sound sample translator
 .P
 \fBsox\fR [ \fIgeneral options\fR ] [ \fIformat options\fR ] \fIinfile\fR
 .br
-    -e \fIeffect\fR [ \fIeffect options\fR ]
+    [ \fIformat options\fR ] \fIoutfile\fR
+.br
+    [ \fIeffect\fR [ \fIeffect options\fR ] ... ]
 .P
-\fBsox\fR [ \fIgeneral options\fR ] [ \fIformat options\fR ] \fIinfile\fR
+\fBsoxmix\fR \fIinfile1 infile2 outfile\fR
+.P
+\fBsoxmix\fR [ \fIgeneral options\fR ] [ \fIformat options\fR ] \fIinfile1\fR
+.br
+    [ \fIformat options\fR ] \fIinfile2\fR
 .br
     [ \fIformat options\fR ] \fIoutfile\fR
 .br
     [ \fIeffect\fR [ \fIeffect options\fR ] ... ]
+
 .P
 .B General options:
 .br
@@ -136,6 +143,13 @@ to most other popular audio file formats.  It can optionally change
 the audio sample data type and apply one or more
 sound effects to the file during this translation.
 .P
+.I soxmix
+is functionally the same as the command line program
+.I sox
+expect that it takes two files as input and mixes the audio together
+to produce a single file as output.  It has a restriction that both
+input files must be of the same data type and sample rates.
+.P
 There are two types of audio files formats that
 .I SoX
 can work with.  The first are self-describing file formats.  These
@@ -184,6 +198,12 @@ does the same format translation but also
 lowers the amplitude by 1/2, changes
 the sampling rate to 12000 hertz, and applies the \fBmask\fR sound effect
 to the audio data.
+.P
+The following will mix two sound files together to to produce a single sound
+file.
+.P
+.br
+        soxmix music.wav voice.wav mixed.wav
 .PP
 \fBFormat options:\fR
 .PP

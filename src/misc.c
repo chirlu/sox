@@ -17,8 +17,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
-
+#endif
 /* for fstat */
 #include <sys/stat.h>
 #ifdef HAVE_UNISTD_H

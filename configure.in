@@ -68,7 +68,7 @@ esac
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(getopt.h fcntl.h limits.h malloc.h unistd.h byteswap.h sys/types.h inttypes.h stdint.h string.h)
+AC_CHECK_HEADERS(getopt.h fcntl.h limits.h malloc.h unistd.h byteswap.h sys/types.h inttypes.h stdint.h string.h errno.h)
 
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = yes
@@ -81,8 +81,6 @@ AC_C_BIGENDIAN
 AC_C_CONST
 AC_C_INLINE
 AC_TYPE_SIZE_T
-AC_EXEEXT
-AC_OBJEXT
 
 dnl Checks for libraries.
 

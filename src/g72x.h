@@ -76,29 +76,37 @@ struct g72x_state {
 
 extern void g72x_init_state(struct g72x_state *);
 extern int g721_encoder(
-		int sample,
-		int in_coding,
-		struct g72x_state *state_ptr);
+	int sample,
+	int in_coding,
+	struct g72x_state *state_ptr);
 extern int g721_decoder(
-		int code,
-		int out_coding,
-		struct g72x_state *state_ptr);
+	int code,
+	int out_coding,
+	struct g72x_state *state_ptr);
+extern int g723_16_encoder(
+        int sample,
+        int in_coding,
+        struct g72x_state *state_ptr);
+extern int g723_16_decoder(
+        int code,
+        int out_coding,
+        struct g72x_state *state_ptr);
 extern int g723_24_encoder(
-		int sample,
-		int in_coding,
-		struct g72x_state *state_ptr);
+	int sample,
+	int in_coding,
+	struct g72x_state *state_ptr);
 extern int g723_24_decoder(
-		int code,
-		int out_coding,
-		struct g72x_state *state_ptr);
+	int code,
+	int out_coding,
+	struct g72x_state *state_ptr);
 extern int g723_40_encoder(
-		int sample,
-		int in_coding,
-		struct g72x_state *state_ptr);
+	int sample,
+	int in_coding,
+	struct g72x_state *state_ptr);
 extern int g723_40_decoder(
-		int code,
-		int out_coding,
-		struct g72x_state *state_ptr);
+	int code,
+	int out_coding,
+	struct g72x_state *state_ptr);
 
 int predictor_zero(struct g72x_state *state_ptr);
 int predictor_pole(struct g72x_state *state_ptr);

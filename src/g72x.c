@@ -31,7 +31,7 @@
  */
 
 #include "st_i.h"
-#include "libst.h"
+#include "g711.h"
 #include "g72x.h"
 
 static short power2[15] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80,
@@ -494,8 +494,8 @@ tandem_adjust_alaw(sr, se, y, i, sign, qtab)
 
 	if (sr <= -32768L)
 		sr = -1;
-	sp = st_linear_to_Alaw((sr >> 1) << 3);	/* short to A-law compression */
-	dx = (st_Alaw_to_linear(sp) >> 2) - se;	/* 16-bit prediction error */
+	sp = st_13linear2alaw(((sr >> 1) << 3));/* short to A-law compression */
+	dx = (st_alaw2linear16(sp) >> 2) - se;	/* 16-bit prediction error */
 	id = quantize(dx, y, qtab, sign - 1);
 
 	if (id == i) {			/* no adjustment on sp */
@@ -543,8 +543,8 @@ tandem_adjust_ulaw(sr, se, y, i, sign, qtab)
 
 	if (sr <= -32768L)
 		sr = 0;
-	sp = st_linear_to_ulaw(sr << 2);	/* short to u-law compression */
-	dx = (st_ulaw_to_linear(sp) >> 2) - se;	/* 16-bit prediction error */
+	sp = st_14linear2ulaw((sr << 2));/* short to u-law compression */
+	dx = (st_ulaw2linear16(sp) >> 2) - se;	/* 16-bit prediction error */
 	id = quantize(dx, y, qtab, sign - 1);
 	if (id == i) {
 		return (sp);

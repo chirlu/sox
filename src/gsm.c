@@ -29,7 +29,9 @@
 
 #include "st_i.h"
 #include "gsm/gsm.h"
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif
 
 #define MAXCHANS 16
 

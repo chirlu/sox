@@ -50,8 +50,6 @@ WAV49	= -DWAV49
 CFLAGS	= @CFLAGS@ @DEFS@ $(SASR) $(MULHAC) $(FAST) $(LTP_CUT) $(WAV49) -I$(top_srcdir)/gsm
 LDFLAGS	= @LDFLAGS@
 LIBS	= @LIBS@
-EXEEXT  = @EXEEXT@
-OBJEXT  = @OBJEXT@
 
 # Objects.
 

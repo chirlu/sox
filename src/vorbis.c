@@ -20,7 +20,6 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <errno.h>
 #include <string.h>
 #include "st_i.h"
 
@@ -105,14 +104,17 @@ int st_vorbisstartread(ft_t ft)
 	/* Allocate space for decoding structure */
 	vb->vf = malloc(sizeof(OggVorbis_File));
 	if (vb->vf == NULL) 
-		return (ST_ENOMEM);
+	{
+	    st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
+	    return (ST_EOF);
+	}
 
 	/* Init the decoder */
 	if (ov_open_callbacks((void *)ft->fp,vb->vf,NULL,0,callbacks) < 0)
 	{
 		st_fail_errno(ft,ST_EHDR,
 			      "Input not an Ogg Vorbis audio stream");
-		return (ST_EHDR);
+		return (ST_EOF);
 	}
 
 	/* Get info about the Ogg Vorbis stream */
@@ -139,8 +141,10 @@ int st_vorbisstartread(ft_t ft)
 		{
 			ov_clear(vb->vf);
 			free(vb->vf);
-			
-			return (ST_ENOMEM);
+
+			st_fail_errno(ft, ST_ENOMEM, 
+				      "Could not allocate memory");
+			return (ST_EOF);
 		}
 		
 		offset = 0;
@@ -161,8 +165,8 @@ int st_vorbisstartread(ft_t ft)
 	{
 		ov_clear(vb->vf);
 		free(vb->vf);
-
-		return (ST_ENOMEM);
+		st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
+		return (ST_EOF);
 	}
 	vb->start = vb->end = 0;
 
@@ -319,9 +323,11 @@ int st_vorbisstartwrite(ft_t ft)
 
 	/* Allocate memory for all of the structures */
 	ve = vb->vorbis_enc_data = malloc(sizeof(vorbis_enc_t));
-	if (ve == NULL) 
-		return (ST_ENOMEM);
-		
+	if (ve == NULL)
+	{
+	    st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
+	    return (ST_EOF);
+	}
 
 	vorbis_info_init(&ve->vi);
 
@@ -340,7 +346,11 @@ int st_vorbisstartwrite(ft_t ft)
 	ogg_stream_init(&ve->os, rand()); /* Random serial number */
 	
 	if (write_vorbis_header(ft, ve) == HEADER_ERROR)
-		return (EIO);
+	{
+    	    st_fail_errno(ft,ST_EHDR,
+			  "Error writing headre for Ogg Vorbis audio stream");
+    	    return (ST_EOF);
+	}
 	
 	return(ST_SUCCESS);	
 }
@@ -381,7 +391,7 @@ st_ssize_t st_vorbiswrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 			
 			ret = oe_write_page(&ve->og, ft->fp);
 			if(!ret)
-				return (EIO);
+				return (ST_EOF);
 
 			if(ogg_page_eos(&ve->og))
 				eos = 1;
