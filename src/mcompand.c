@@ -358,11 +358,14 @@ static int st_mcompand_getopts_1(comp_band_t l, int n, char **argv)
     return (ST_SUCCESS);
 }
 
-static int parse_subarg(char *s,char **subargv, int *subargc) {
+static int parse_subarg(char *s, char **subargv, int *subargc) {
   char **ap;
+  char *s_p;
 
+  s_p = s;
   *subargc = 0;
-  for (ap = subargv; (*ap = strsep(&s, " \t")) != NULL;) {
+  for (ap = subargv; (*ap = strtok(s_p, " \t")) != NULL;) {
+    s_p = NULL;
     if (*subargc == 5) {
       ++*subargc;
       break;
