@@ -18,6 +18,10 @@ sox-12.17.3
     instead of reading in a large buffer.
   o William Plant pointed out a bad pointer access in fade effect's
     parsing of options.
+  o Ken pointed out a problem were private data was not 8-byte aligned
+    and causing crashes on most RISC CPU's.  Fixed by going back to
+    old style of declaring private data as type "double" which usually
+    forces strictest alignment.
 
 sox-12.17.2
 -----------

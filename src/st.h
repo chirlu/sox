@@ -158,8 +158,13 @@ struct st_soundstream {
         int     st_errno;               /* Failure error codes */
         char    st_errstr[256];         /* Extend Failure text */
         st_format_t *h;                 /* format struct for this file */
-        /* FIXME: I perfer void * or char * */
-        char    priv[ST_MAX_PRIVSIZE]; /* format's private data area */
+	/* The following is a portable trick to force the buffer to be
+	 * aligned on an 8-byte bounder on platforms that are really picky
+	 * about this.  All pointer accesses to this data are always cast
+	 * to a structure so it doesn't really matter what we do declare
+	 * it as.
+	 */
+        double priv[ST_MAX_PRIVSIZE/8]; /* format's private data area */
 };
 
 extern st_format_t st_formats[];
@@ -234,10 +239,13 @@ struct st_effect {
         st_effect_t     *h;             /* effects driver */
         LONG            *obuf;          /* output buffer */
         LONG            odone, olen;    /* consumed, total length */
-        /* FIXME: I perfer void * or char *
-        * Why was this private area 8 times bigger then the soundstream one?
-        * Someone forget to divide ST_MAX_PRIVSIZE by 8 ? */
-        char            priv[ST_MAX_PRIVSIZE*8]; /* private area for effect */
+	/* The following is a portable trick to force the buffer to be
+	 * aligned on an 8-byte bounder on platforms that are really picky
+	 * about this.  All pointer accesses to this data are always cast
+	 * to a structure so it doesn't really matter what we do declare
+	 * it as.
+	 */
+        double priv[ST_MAX_PRIVSIZE/8]; /* private area for effect */
 };
 
 extern st_effect_t st_effects[]; /* declared in handlers.c */
