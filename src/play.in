@@ -14,7 +14,10 @@
 
 # Set up path so that it can find Sox if user's path doesn't already
 # include it.
-PATH=$PATH:@PREFIX@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+
 program_name=`basename $0`
 program_version="2.0"
 
@@ -204,8 +207,8 @@ if [ "$program_name" = "rec" ]; then
     else
       echo "Send break (control-c) to end recording"
     fi
-    sox $volume $arch_defines $fopts $device $fopts2 "$filename" $effects 
+    $bindir/sox $volume $arch_defines $fopts $device $fopts2 "$filename" $effects 
 
 else
-    sox $volume $fopts $fopts2 "$filename" $arch_defines $device $effects
+    $bindir/sox $volume $fopts $fopts2 "$filename" $arch_defines $device $effects
 fi
