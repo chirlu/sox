@@ -122,10 +122,12 @@ static int input_count = 0;
 #define MAX_USER_EFF 14
 
 /*
- * In efftab's, location 0 is always the input stream.
+ * efftab[0] is a dummy entry used only as an input buffer for
+ * reading input data into.
  *
  * If one was to support effects for quad-channel files, there would
- * need to be an effect tabel for each channel.
+ * need to be an effect table for each channel to handle effects
+ * that done st ST_EFF_MCHAN.
  */
 
 static struct st_effect efftab[MAX_EFF]; /* left/mono channel effects */
@@ -665,9 +667,10 @@ static void process(void) {
      */
     do {
 #ifndef SOXMIX
-        efftab[0].olen = (*file_desc[current_input]->h->read)(file_desc[current_input],
-                                                              efftab[0].obuf, 
-                                                              (st_ssize_t)ST_BUFSIZ);
+        efftab[0].olen = 
+            (*file_desc[current_input]->h->read)(file_desc[current_input],
+                                                 efftab[0].obuf, 
+                                                 (st_ssize_t)ST_BUFSIZ);
         /* FIXME: libst needs the feof() and ferror() concepts
          * to see if ST_EOF means a real failure.  Until then we
          * must treat ST_EOF as just hiting the end of the buffer.
@@ -781,11 +784,11 @@ static void process(void) {
         flowstatus = flow_effect_out();
 
         /* Negative flowstatus says no more output will ever be generated. */
-        if (flowstatus < 0 || 
+        if (flowstatus == ST_EOF || 
             (writing && file_desc[file_count-1]->st_errno))
             break;
 
-    } while (1); /* break; efftab[0].olen == 0 */
+    } while (1); 
 
 #ifdef SOXMIX
     /* Free input buffers now that they are not used */
@@ -868,15 +871,22 @@ static void process(void) {
 static int flow_effect_out(void)
 {
     int e, havedata, flowstatus = 0;
+    int input_eff = 0;
 
     do {
       /* run entire chain BACKWARDS: pull, don't push.*/
       /* this is because buffering system isn't a nice queueing system */
-      for(e = neffects - 1; e > 0; e--)
+      for(e = neffects - 1; e > input_eff; e--)
       {
-          flowstatus = flow_effect(e);
-          if (flowstatus)
-              break;
+          /* flow_effect returns ST_EOF when it will not process
+           * any more samples.  This is used to bail out early.
+           * Since we are "pulling" data, it is OK that we are not
+           * calling any more previous effects since their output
+           * would not be looked at anyways.
+           */
+          flowstatus  = flow_effect(e);
+          if (flowstatus == ST_EOF)
+              input_eff = e;
       }
 
       /* If outputing and output data was generated then write it */
@@ -904,23 +914,26 @@ static int flow_effect_out(void)
           }
       }
 
-      /* If any effect will never again produce data, give up.  This
-       * works because of the pull status: the effect won't be able to
-       * shut us down until all downstream buffers have been emptied.
-       */
-      if (flowstatus < 0)
-          break;
-
       /* if stuff still in pipeline, set up to flow effects again */
+      /* When all effects have reported ST_EOF then this check will
+       * show no more data.
+       */
       havedata = 0;
-      for(e = 0; e < neffects - 1; e++)
+      for(e = neffects - 2; e > input_eff; e--)
           if (efftab[e].odone < efftab[e].olen) {
               havedata = 1;
               break;
           }
     } while (havedata);
 
-    return flowstatus;
+    /* If input_eff isn't pointing at fake first entry then there
+     * is no need to read any more data from disk.  Return this
+     * fact to caller.
+     */
+    if (input_eff > 0)
+        return ST_EOF;
+
+    return ST_SUCCESS;
 }
 
 static int flow_effect(e)
@@ -940,7 +953,6 @@ int e;
          */
         idone = efftab[e-1].olen - efftab[e-1].odone;
         odone = ST_BUFSIZ;
-        /* FIXME: Should look at return code and abort on ST_EOF */
         effstatus = (* efftab[e].h->flow)(&efftab[e],
                                           &efftab[e-1].obuf[efftab[e-1].odone],
                                           efftab[e].obuf, &idone, &odone);
@@ -964,14 +976,13 @@ int e;
         /* left */
         idonel = (idone + 1)/2;         /* odd-length logic */
         odonel = odone/2;
-        /* FIXME: Should look at return code and abort on ST_EOF */
         effstatus = (* efftab[e].h->flow)(&efftab[e],
                                           ibufl, obufl, &idonel, &odonel);
 
         /* right */
         idoner = idone/2;               /* odd-length logic */
         odoner = odone/2;
-        /* FIXME: Should look at return code and abort on ST_EOF */
+        /* FIXME: effstatus of previous operation is lost. */
         effstatus = (* efftabR[e].h->flow)(&efftabR[e],
                                            ibufr, obufr, &idoner, &odoner);
 
@@ -989,10 +1000,10 @@ int e;
         done = idonel + idoner + odonel + odoner;
     }
     if (effstatus == ST_EOF)
-        return -1;
+        return ST_EOF;
     if (done == 0)
         st_fail("Effect took & gave no samples!");
-    return 1;
+    return ST_SUCCESS;
 }
 
 static int drain_effect(e)
@@ -1003,6 +1014,7 @@ int e;
 
     if (! efftabR[e].name) {
         efftab[e].olen = ST_BUFSIZ;
+        /* FIXME: Should look at return code and abort on ST_EOF */
         (* efftab[e].h->drain)(&efftab[e],efftab[e].obuf,
                                &efftab[e].olen);
     }
@@ -1011,6 +1023,7 @@ int e;
 
         /* left */
         olenl = olen/2;
+        /* FIXME: Should look at return code and abort on ST_EOF */
         (* efftab[e].h->drain)(&efftab[e], obufl, &olenl);
 
         /* right */

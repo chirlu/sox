@@ -43,8 +43,9 @@ sox-12.17.6
     value was treated as -MAX instead of -MAX-1.
   o Modifed sox so its OK for effects to not process any
     input or output bytes as long as they return ST_EOF.
-  o Bugfix to trim effect were bytes were left off the end
-    of the file when output length was specified.
+  o When effects output data and reported ST_EOF at the
+    same time, that buffer was discarded as well as
+    data from any chained effect.
 
 sox-12.17.5
 -----------
