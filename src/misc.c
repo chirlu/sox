@@ -442,7 +442,10 @@ st_version()
 {
 	static char versionstr[20];
 	
-	sprintf(versionstr, "Version %s", ST_LIB_VERSION);
+	sprintf(versionstr, "Version %d.%d.%d", 
+		(ST_LIB_VERSION_CODE & 0xff0000) >> 16, 
+		(ST_LIB_VERSION_CODE & 0x00ff00) >> 8,
+		(ST_LIB_VERSION_CODE & 0x0000ff));
 	return(versionstr);
 }
 

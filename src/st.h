@@ -24,10 +24,9 @@ extern "C" {
 #include <byteswap.h>
 #endif
 
-/* Warning.  The format of this version string could change in the
- * future to allow better parsing.
- */
-#define ST_LIB_VERSION "12.17.1"
+/* Release 12.17.1 of libst */
+#define ST_LIB_VERSION_CODE 0x0c1101
+#define ST_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 /* SJB: these may be changed to assist fail-recovery in libST */
 #define st_malloc malloc
