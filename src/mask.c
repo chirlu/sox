@@ -14,11 +14,9 @@
 
 #include <math.h>
 #include "st.h"
+#include "libst.h"
 
 #define HALFABIT 1.44			/* square root of 2 */
-
-void newrand15();
-ULONG rand15();
 
 /*
  * Problems:
@@ -39,7 +37,7 @@ char **argv;
 		fail("Mask effect takes no options.");
 	/* should take # of bits */
 
-	newrand15();
+	initrand();
 }
 
 /*
@@ -62,7 +60,7 @@ int *isamp, *osamp;
 		case ULAW:
 		case ALAW:
 			for(done = 0; done < len; done++) {
-				tri16 = (rand15() + rand15()) - 32767;
+				tri16 = (rand() + rand()) - 32767;
 
 				l = *ibuf++ + tri16*16*HALFABIT;  /* 2^4.5 */
 				*obuf++ = l;
@@ -72,7 +70,7 @@ int *isamp, *osamp;
 		switch (effp->outinfo.size) {
 			case BYTE:
 			for(done = 0; done < len; done++) {
-				tri16 = (rand15() + rand15()) - 32767;
+				tri16 = (rand() + rand()) - 32767;
 
 				l = *ibuf++ + tri16*256*HALFABIT;  /* 2^8.5 */
 				*obuf++ = l;
@@ -80,7 +78,7 @@ int *isamp, *osamp;
 			break;
 			case WORD:
 			for(done = 0; done < len; done++) {
-				tri16 = (rand15() + rand15()) - 32767;
+				tri16 = (rand() + rand()) - 32767;
 
 				l = *ibuf++ + tri16*HALFABIT;  /* 2^.5 */
 				*obuf++ = l;

@@ -317,7 +317,7 @@ extern void wvestopwrite();
 extern void nothing();
 extern LONG nothing_success();
 
-EXPORT format_t formats[] = {
+format_t formats[] = {
 	{aiffnames, FILE_STEREO,
 		aiffstartread, aiffread, aiffstopread,	   /* SGI/Apple AIFF */
 		aiffstartwrite, aiffwrite, aiffstopwrite},
@@ -594,7 +594,7 @@ extern void vibro_stop();
  * EFF_MCHAN just means that the effect is coded for multiple channels.
  */
 
-EXPORT effect_t effects[] = {
+effect_t effects[] = {
 	{"null", 0, 			/* stand-in, never gets called */
 		nothing, nothing, nothing, null_drain, nothing},
 	{"avg", EFF_CHAN | EFF_MCHAN, 

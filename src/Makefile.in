@@ -59,7 +59,7 @@ ALSAOBJ_0   =
 ALSAOBJ_1   = alsa.o
 EXTRAOBJS   = $(OSSOBJ_$(NEED_OSS)) $(SUNAUOBJ_$(NEED_SUNAU)) $(ALSAOBJ_$(NEED_ALSA))
 
-LIBOBJS = $(FOBJ) $(EOBJ) handlers.o libst.o misc.o util.o $(EXTRAOBJS)
+LIBOBJS = $(FOBJ) $(EOBJ) handlers.o libst.o misc.o util.o getopt.o $(EXTRAOBJS)
 
 VPATH	= @srcdir@
 

@@ -29,44 +29,29 @@
  */
 
 
-EXPORT float volume = 1.0;	/* expansion coefficient */
-EXPORT int dovolume = 0;
+float volume = 1.0;	/* expansion coefficient */
+int dovolume = 0;
 
-EXPORT float amplitude = 1.0;	/* Largest sample so far */
-
-EXPORT int writing = 0;	/* are we writing to a file? */
+int writing = 0;	/* are we writing to a file? */
 
 /* export flags */
-EXPORT int verbose = 0;	/* be noisy on stderr */
-EXPORT int summary = 0;	/* just print summary of information */
+int verbose = 0;	/* be noisy on stderr */
 
-EXPORT char *myname = 0;
+char *myname = 0;
 
-EXPORT int soxpreview = 0;	/* preview mode */
+int soxpreview = 0;	/* preview mode */
 
 
 void
-#if	defined(__STDC__)
-report(char *fmt, ...)
-#else
-report(va_alist) 
-va_dcl
-#endif
+report(char *fmt, ...) 
 {
 	va_list args;
-#if	!defined(__STDC__)
-	char *fmt;
-#endif
 
 	if (! verbose)
 		return;
+
 	fprintf(stderr, "%s: ", myname);
-#if	!defined(__STDC__)
-	va_start(args);
-	fmt = va_arg(args, char *);
-#else
 	va_start(args, fmt);
-#endif
 	vfprintf(stderr, fmt, args);
 	va_end(args);
 	fprintf(stderr, "\n");
@@ -74,52 +59,27 @@ va_dcl
 
 
 void
-#if	defined(__STDC__)
-warn(char *fmt, ...)
-#else
-warn(va_alist) 
-va_dcl
-#endif
+warn(char *fmt, ...) 
 {
 	va_list args;
-#if	!defined(__STDC__)
-	char *fmt;
-#endif
 
 	fprintf(stderr, "%s: ", myname);
-#if	!defined(__STDC__)
-	va_start(args);
-	fmt = va_arg(args, char *);
-#else
 	va_start(args, fmt);
-#endif
+
 	vfprintf(stderr, fmt, args);
 	va_end(args);
 	fprintf(stderr, "\n");
 }
 
 void
-#if	defined(__STDC__)
-fail(char *fmt, ...)
-#else
-fail(va_alist) 
-va_dcl
-#endif
+fail(char *fmt, ...) 
 {
 	va_list args;
-#if	!defined(__STDC__)
-	char *fmt;
-#endif
 	extern void cleanup();
 
 	fprintf(stderr, "%s: ", myname);
 
-#if	!defined(__STDC__)
-	va_start(args);
-	fmt = va_arg(args, char *);
-#else
 	va_start(args, fmt);
-#endif
 	vfprintf(stderr, fmt, args);
 	va_end(args);
 	fprintf(stderr, "\n");

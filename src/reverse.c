@@ -21,8 +21,6 @@
 
 #include "st.h"
 
-IMPORT FILE *tmpfile();
-
 /* Private data */
 typedef struct reversestuff {
 	FILE *fp;

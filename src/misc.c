@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <time.h>
 
-EXPORT char *sizes[] = {
+char *sizes[] = {
 	"NONSENSE!",
 	"bytes",
 	"shorts",
@@ -28,7 +28,7 @@ EXPORT char *sizes[] = {
 	"IEEE floats"
 };
 
-EXPORT char *styles[] = {
+char *styles[] = {
 	"NONSENSE!",
 	"unsigned",
 	"signed (2's complement)",
@@ -60,13 +60,9 @@ ft_t ft;
 
 /* Write short. */
 unsigned short
-#if	defined(__STDC__)
-wshort(ft_t ft, unsigned short us)
-#else
 wshort(ft, us)
 ft_t ft;
 unsigned short us;
-#endif
 {
 	if (ft->swap)
 		us = swapw(us);
@@ -167,12 +163,8 @@ int n;
 /* Byte swappers */
 
 unsigned short
-#if	defined(__STDC__)
-swapw(unsigned short us)
-#else
 swapw(us)
 unsigned short us;
-#endif
 {
 	return ((us >> 8) | (us << 8)) & 0xffff;
 }
@@ -186,19 +178,14 @@ ULONG ul;
 
 /* return swapped 32-bit float */
 float
-#if	defined(__STDC__)
-swapf(float uf)
-#else
-swapf(uf)
-float uf;
-#endif
+swapf(float f)
 {
 	union {
 	    ULONG l;
 	    float f;
 	} u;
 
-	u.f= uf;
+	u.f= f;
 	u.l= (u.l>>24) | ((u.l>>8)&0xff00) | ((u.l<<8)&0xff0000L) | (u.l<<24);
 	return u.f;
 }
@@ -243,31 +230,34 @@ LONG a, b;
     return a * (b / st_gcd(a, b));
 }
 
+/* FIXME: Need to add to autoconf to check for random */
+#ifndef HAVE_RAND
 /* 
- * Cribbed from Unix SVR3 programmer's manual 
+ * Portable random generator as defined by ANSI C Standard.
+ * Don't ask me why not all C libraries include it.
  */
 
-static ULONG rand15_seed;
+static int rand_seed;
 
-ULONG rand15() {
-	rand15_seed = (rand15_seed * 1103515245L) + 12345L;
-	return (ULONG) ((rand15_seed/65536L) % 32768L);
+int rand() {
+	rand_seed = (rand_seed * 1103515245L) + 12345L;
+	return ((rand_seed/65536L) % 32768L);
 }
 
-void srand15(seed) 
-ULONG seed;
+void srand(seed) 
+int seed;
 {
-	rand15_seed = seed;
+	rand_seed = seed;
 }
+#endif
 
-void newrand15() {
+/* Util to set initial seed so that we are a little less non-random */
+void initrand() {
 	time_t t;
 
 	time(&t);
-	srand15(t);
+	srand(t);
 }
-
-/* sine wave gen should be here, also */
 
 char *
 version()

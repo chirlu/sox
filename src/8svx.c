@@ -8,10 +8,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifdef	VMS
-#include <perror.h>
-#endif
-
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>	/* For SEEK_* defines if not found in stdio */
 #endif

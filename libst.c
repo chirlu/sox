@@ -1,10 +1,10 @@
 /* libst.c - portable sound tools library
 */
 
+#include "st.h"
 #include "libst.h"
 
 #ifndef FAST_ULAW_CONVERSION
-
 /*
 ** This routine converts from linear to ulaw.
 **

@@ -18,6 +18,7 @@
 
 #include <math.h>
 #include "st.h"
+#include "libst.h"
 
 /*
  * Linear Interpolation.
@@ -231,7 +232,6 @@ void rate_start(effp)
 eff_t effp;
 {
 	rate_t rate = (rate_t) effp->priv;
-	IMPORT LONG lcm();
 	
 	rate->lcmrate = lcm((LONG)effp->ininfo.rate, (LONG)effp->outinfo.rate);
 	/* Cursory check for LCM overflow.  

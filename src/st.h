@@ -11,30 +11,6 @@
  * the consequences of using this software.
  */
 
-/* FIXME: The following are not ST library related.  Move to a seperate
- * file that internal formats can use.
- */
-#ifdef VAXC
-#define IMPORT  globalref
-#define EXPORT  globaldef
-/*
- * use the VAX C optimized functions 
- */ 
-#define calloc  VAXC$CALLOC_OPT
-#define cfree   VAXC$CFREE_OPT
-#define free    VAXC$FREE_OPT
-#define malloc  VAXC$MALLOC_OPT
-#define realloc VAXC$REALLOC_OPT
-#else
-#define IMPORT  extern
-#define EXPORT 
-#endif
-
-
-/*
- * Sound Tools sources header file.
- */
-
 #include <stdio.h>
 
 /* FIXME: Move to seperate header */
@@ -63,7 +39,7 @@ typedef struct format {
 } format_t;
 
 /* FIXME: Does this need to be here? */ 
-IMPORT format_t formats[];
+extern format_t formats[];
 
 /* Signal parameters */
 
@@ -147,7 +123,8 @@ struct soundstream {
 };
 
 /* This shoul not be here.  Only needed in sox.c */
-IMPORT struct soundstream informat, outformat;
+extern struct soundstream informat;
+extern struct soundstream outformat;
 
 typedef struct soundstream *ft_t;
 
@@ -176,7 +153,8 @@ typedef struct soundstream *ft_t;
 /* FIXME: This shouldn't be defined inside library.  Only needed
  * by sox.c itself.  Delete from raw.c and misc.c.
  */
-IMPORT char *sizes[], *styles[];
+extern char *sizes[];
+extern char *styles[];
 
 /*
  * Handler structure for each effect.
@@ -192,7 +170,7 @@ typedef struct {
 	void	(*stop)();		/* finish up effect */
 } effect_t;
 
-IMPORT effect_t effects[];
+extern effect_t effects[];
 
 #define	EFF_CHAN	1		/* Effect can mix channels up/down */
 #define EFF_RATE	2		/* Effect can alter data rate */
@@ -267,41 +245,38 @@ ULONG  	       swapl(P1(ULONG ul));			/* Swap long */
 float  	       swapf(P1(float f));			/* Swap float */
 double 	       swapd(P1(double d));			/* Swap double */
 
-IMPORT void report(P2(char *, ...)),  warn(P2(char *, ...)),
+void report(P2(char *, ...)),  warn(P2(char *, ...)),
 	 fail(P2(char *, ...));
 
 /* util.c */
-IMPORT void geteffect(P1(eff_t));
-IMPORT void gettype(P1(ft_t));
-IMPORT void checkformat(P1(ft_t));
-IMPORT void copyformat(P2(ft_t, ft_t));
-IMPORT void cmpformats(P2(ft_t, ft_t));
+void geteffect(P1(eff_t));
+void gettype(P1(ft_t));
+void checkformat(P1(ft_t));
+void copyformat(P2(ft_t, ft_t));
+void cmpformats(P2(ft_t, ft_t));
 
 /* FIXME: Recording hacks shouldn't display a "sigint" style interface.
  * Instead we should provide a function to call when done playing/recording.
  * sox.c should be responsible for registering to sigint.
  */
-IMPORT void sigintreg(P1(ft_t));
+void sigintreg(P1(ft_t));
 
 /* FIXME: Move to sox header file. */
 typedef	unsigned int u_i;
 typedef	ULONG u_l;
 typedef	unsigned short u_s;
 
-IMPORT float volume;	/* expansion coefficient */
-IMPORT int dovolume;
+extern float volume;	/* expansion coefficient */
+extern int dovolume;
 
-IMPORT float amplitude;	/* Largest sample so far */
-
-IMPORT int writing;	/* are we writing to a file? */
+extern int writing;	/* are we writing to a file? */
 
 /* export flags */
-IMPORT int verbose;	/* be noisy on stderr */
-IMPORT int summary;	/* just print summary of information */
+extern int verbose;	/* be noisy on stderr */
 
-IMPORT char *myname;
+extern char *myname;
 
-IMPORT int soxpreview;	/* Preview mode: be fast and ugly */
+extern int soxpreview;	/* Preview mode: be fast and ugly */
 
 /* FIXME: Not externally visible currently.  Its a per-effect value. */
 #define	MAXRATE	50L * 1024			/* maximum sample rate */
@@ -314,14 +289,8 @@ IMPORT int soxpreview;	/* Preview mode: be fast and ugly */
 #define M_PI	3.14159265358979323846
 #endif
 
-/* FIXME: Move to sox.h */
-#ifdef	VMS
-#define READBINARY      "r", "mbf=16", "ctx=stm" 
-#define WRITEBINARY     "w", "ctx=stm"
-#else
 #define READBINARY	"rb"
 #define WRITEBINARY	"wb"
-#endif
 
 #define REMOVE unlink
 

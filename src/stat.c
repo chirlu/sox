@@ -180,7 +180,7 @@ stat_stop(effp)
 eff_t effp;
 {
 	stat_t stat = (stat_t) effp->priv;
-	double amp, scale, srms, freq;
+	double amp, scale, srms = 0, freq;
 	double x, ct;
 
 	ct = stat->read;

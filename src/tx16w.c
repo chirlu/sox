@@ -48,9 +48,6 @@ typedef struct txwstuff {
 	LONG	rest;			/* bytes remaining in sample file */
 } *txw_t;
 
-IMPORT float volume, amplitude;
-IMPORT int summary, verbose;
-
 struct WaveHeader_ {
   char filetype[6]; /* = "LM8953", */
   unsigned char

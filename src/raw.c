@@ -76,6 +76,7 @@ ft_t ft;
 	return (rval);
 }
 
+/* Util to swap every 2 chars up to 'n' imes. */
 static void swapn(p, n)
 char *p;
 int n;
@@ -91,6 +92,7 @@ int n;
 	}
 }
 
+/* Reads a block of 'n' characters and possibly byte swaps */
 static void blockr(p0, n, ft)
 ft_t ft;
 int n;
@@ -116,6 +118,11 @@ void *p0;
 	}
 	memcpy(p, ft->file.buf + ft->file.pos, n);
 	ft->file.pos += n;
+	/* FIXME: For speed, there should be a version of this funciton
+	 * for WORDS, LONGS, and FLOATS.  This is because swapping
+	 * bytes is an expensive operation and should be done in batch
+	 * mode.
+	 */
 	if (ft->swap)
 		swapn(p,n);
 }
@@ -280,8 +287,12 @@ ft_t ft;
 {
 	if (ft->file.pos > ft->file.size-n) blockflush(ft);
 	memcpy(ft->file.buf + ft->file.pos, p0, n);
+	/* FIXME: Should be a version for every data type.  This
+	 * is because swap is an expensive operation.  We should
+	 * only swap the buffer after its full.
+	 */
 	if (ft->swap)
-		swapn(ft->file.pos, n);
+		swapn(p0, n);
 	ft->file.pos += n;
 }
 

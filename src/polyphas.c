@@ -29,6 +29,7 @@
 #include <malloc.h>
 #endif
 #include "st.h"
+#include "libst.h"
 
 #define Float float/*double*/
 #define ISCALE 0x10000
@@ -194,7 +195,7 @@ static int permute(int *m, int *l, int ct, int ct1, int amalg)
   
   for (k=ct; k>1; ) {
     int tmp, j;
-    j = random() % k;
+    j = rand() % k;
     k--;
     if (j != k) {
       tmp = m[k]; m[k]=m[j]; m[j]=tmp;
@@ -204,7 +205,7 @@ static int permute(int *m, int *l, int ct, int ct1, int amalg)
   p = q = m;
   n = *q++;
   while ((k=*q++)) {
-    if ((n * k <= amalg) && (random() & 1)) {
+    if ((n * k <= amalg) && (rand() & 1)) {
       n *= k;
     } else {
       *p++ = n;
@@ -376,7 +377,7 @@ void poly_start(eff_t effp)
 		int total, size, uprate;
     int k;
 
-    extern long st_lcm();
+    initrand();
 
     rate->lcmrate = st_lcm((long)effp->ininfo.rate, (long)effp->outinfo.rate);
 

@@ -48,15 +48,12 @@
 #else
 #ifndef HAVE_GETOPT
 int getopt(P3(int,char **,char *));
+extern char *optarg;
+extern int optind;
 #endif
 #endif
 
-#ifdef VMS
-#include <perror.h>
-#define LASTCHAR        ']'
-#else
 #define LASTCHAR        '/'
-#endif
 
 /*
  * SOX main program.
@@ -96,8 +93,6 @@ struct effect efftabR[MAXEFF];	/* table of right channel effects */
 				/* efftab[0] is the input stream */
 int neffects;			/* # of effects */
 char *ifile, *ofile, *itype, *otype;
-IMPORT char *optarg;
-IMPORT int optind;
 
 int main(argc, argv)
 int argc;
