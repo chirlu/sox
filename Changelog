@@ -39,9 +39,8 @@ sox-12.17.6
   o Removed rounding error when changing volume of audio with
     "-v" option.  This error caused doing a "-v -1.0" twice
     to not result in the original file.
-  o Fixed bug in volume changes (both -v and "vol" effect)
-    were an overflow could occur on the negative side
-    because it wasn't accounting for MIN being (-MAX)-1.
+  o Fixed a possible overflow in lots of effects were MIN
+    value was treated as -MAX instead of -MAX-1.
 
 sox-12.17.5
 -----------
