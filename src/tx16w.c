@@ -83,7 +83,7 @@ int st_txwstartread(ft_t ft)
   st_size_t num_samp_bytes = 0;
   char gunk[8];
   int blewIt;
-  int32_t trash;
+  uint32_t trash;
 
   txw_t sk = (txw_t) ft->priv;
   /* If you need to seek around the input file. */
@@ -218,7 +218,7 @@ st_ssize_t st_txwread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 	 * deposit into the given buffer and adjust our counts respectivly.
          */
         for(done = 0; done < len; ) {
-	    if(sk->rest <= 0) break; /* Finished reading from file? */
+	    if(sk->rest < 3) break; /* Finished reading from file? */
 	    st_readb(ft, &uc1);
 	    st_readb(ft, &uc2);
 	    st_readb(ft, &uc3);
