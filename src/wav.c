@@ -873,9 +873,25 @@ ft_t ft;
 	{
 		case BYTE:
 		        wBitsPerSample = 8;
+			if (ft->info.style != UNSIGNED &&
+			    ft->info.style != ULAW &&
+			    ft->info.style != ALAW &&
+			    !wav->second_header)
+			{
+				warn("Only support unsigned, ulaw, or alaw with 8-bit data.  Forcing to unsigned");
+				ft->info.style = UNSIGNED;
+			}
 			break;
 		case WORD:
 			wBitsPerSample = 16;
+			if ((ft->info.style == UNSIGNED ||
+			     ft->info.style == ULAW ||
+			     ft->info.style == ALAW) &&
+			    !wav->second_header)
+			{
+				warn("Do not support Unsigned, ulaw, or alay with 16 bit data.  Forcing to Signed");
+				ft->info.style = SIGN2;
+			}
 			break;
 		case DWORD:
 			wBitsPerSample = 32;
@@ -889,23 +905,15 @@ ft_t ft;
 	{
 		case UNSIGNED:
 			wFormatTag = WAVE_FORMAT_PCM;
-			if (wBitsPerSample != 8 && !wav->second_header)
-				warn("Warning - writing bad .wav file using unsigned data and %d bits/sample",wBitsPerSample);
 			break;
 		case SIGN2:
 			wFormatTag = WAVE_FORMAT_PCM;
-			if (wBitsPerSample == 8 && !wav->second_header)
-				warn("Warning - writing bad .wav file using signed data and %d bits/sample",wBitsPerSample);
 			break;
 		case ALAW:
 			wFormatTag = WAVE_FORMAT_ALAW;
-			if (wBitsPerSample != 8 && !wav->second_header)
-				warn("Warning - writing bad .wav file using A-law data and %d bits/sample",wBitsPerSample);
 			break;
 		case ULAW:
 			wFormatTag = WAVE_FORMAT_MULAW;
-			if (wBitsPerSample != 8 && !wav->second_header)
-				warn("Warning - writing bad .wav file using U-law data and %d bits/sample",wBitsPerSample);
 			break;
 		case ADPCM:
 			wFormatTag = WAVE_FORMAT_PCM;
@@ -915,7 +923,6 @@ ft_t ft;
 			/* wFormatTag = WAVE_FORMAT_IMA_ADPCM;
 			   wBitsPerSample = 4;
 			if (wBitsPerSample != 4 && !wav->second_header)
-			warn("Warning - writing bad .wav file using IMA ADPCM and %d bits/sample",wBitsPerSample);
 			break; */
 	}
 	
