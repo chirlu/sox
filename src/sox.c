@@ -605,8 +605,6 @@ static int flow_effect_out(void)
     int e, havedata, flowstatus = 0;
 
     do {
-      ULONG w;
-      
       /* run entire chain BACKWARDS: pull, don't push.*/
       /* this is because buffering system isn't a nice queueing system */
       for(e = neffects - 1; e > 0; e--) 
@@ -619,7 +617,7 @@ static int flow_effect_out(void)
       /* If outputing and output data was generated then write it */
       if (writing&&(efftab[neffects-1].olen>efftab[neffects-1].odone)) 
       {
-          w = (* outformat->h->write)(outformat, 
+          (* outformat->h->write)(outformat, 
                                      efftab[neffects-1].obuf, 
                                      (LONG) efftab[neffects-1].olen);
           efftab[neffects-1].odone = efftab[neffects-1].olen;

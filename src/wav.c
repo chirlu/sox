@@ -11,7 +11,7 @@
  * November  23, 1999 - Stan Brooks (stabro@megsinet.com)
  *   Merged in gsm support patches from Stuart Daines...
  *   Since we had simultaneously made similar changes in
- *   wavwriteheader() and wavstartread(), this was some
+ *   wavwritehdr() and wavstartread(), this was some
  *   work.  Hopefully the result is cleaner than either
  *   version, and nothing broke.
  *
@@ -1120,6 +1120,18 @@ ft_t ft;
 
 	if (ST_IS_BIGENDIAN) ft->swap = ft->swap ? 0 : 1;
 
+	/* FIXME: This reserves memory but things could fail
+	 * later on and not release this memory.
+	 */
+	if (ft->info.encoding != ST_ENCODING_ADPCM &&
+	    ft->info.encoding != ST_ENCODING_IMA_ADPCM &&
+	    ft->info.encoding != ST_ENCODING_GSM)
+	{
+		rc = st_rawstartwrite(ft);
+		if (rc)
+		    return rc;
+	}
+
 	wav->numSamples = 0;
 	wav->dataLength = 0;
 	if (!ft->seekable)
@@ -1127,6 +1139,7 @@ ft_t ft;
 	rc = wavwritehdr(ft, 0);  /* also calculates various wav->* info */
 	if (rc != 0)
 	    return rc;
+
 	wav->packet = NULL;
 	wav->samples = NULL;
 	wav->iCoefs = NULL;
@@ -1253,8 +1266,6 @@ int second_header;
 	ULONG bytespersample; 		/* (uncompressed) bytes per sample (per channel) */
 	ULONG blocksWritten = 0;
 
-	int rc;
-
 	wSamplesPerSecond = ft->info.rate;
 	wChannels = ft->info.channels;
 
@@ -1310,15 +1321,6 @@ int second_header;
 			ft->info.size = ST_SIZE_WORD;
 			wBitsPerSample = 16;
 			break;
-	}
-
-	if (ft->info.encoding != ST_ENCODING_ADPCM &&
-	    ft->info.encoding != ST_ENCODING_IMA_ADPCM &&
-	    ft->info.encoding != ST_ENCODING_GSM)
-	{
-		rc = st_rawstartwrite(ft);
-		if (rc)
-		    return rc;
 	}
 
 	wSamplesPerBlock = 1;	/* common default for PCM data */
@@ -1502,7 +1504,7 @@ ft_t ft;
 LONG *buf, len;
 {
 	wav_t	wav = (wav_t) ft->priv;
-	LONG	save_len = len;
+	LONG	total_len = len;
 
 	ft->st_errno = ST_SUCCESS;
 
@@ -1524,18 +1526,20 @@ LONG *buf, len;
 		    xxxAdpcmWriteBlock(ft);
 
 	    }
-	    return save_len - len;
+	    return total_len - len;
 	    break;
 
 #ifdef HAVE_LIBGSM
 	case WAVE_FORMAT_GSM610:
+	    len = wavgsmwrite(ft, buf, len);
 	    wav->numSamples += len;
-	    return wavgsmwrite(ft, buf, len);
+	    return len;
 	    break;
 #endif
 	default:
+	    len = st_rawwrite(ft, buf, len);
 	    wav->numSamples += len; /* must later be divided by wChannels */
-	    return st_rawwrite(ft, buf, len);
+	    return len;
 	}
 }
 
@@ -1559,8 +1563,6 @@ ft_t ft;
 	    wavgsmstopwrite(ft);
 	    break;
 #endif
-	default:
-	    st_rawstopwrite(ft);
 	}
 	if (wav->packet) free(wav->packet);
  	if (wav->samples) free(wav->samples);
@@ -1582,6 +1584,14 @@ ft_t ft;
 		return ST_EOF;
 	}
 	wavwritehdr(ft, 1);
+
+	if (wav->formatTag != WAVE_FORMAT_IMA_ADPCM &&
+	    wav->formatTag != WAVE_FORMAT_ADPCM &&
+	    wav->formatTag != WAVE_FORMAT_GSM610)
+	{
+	    st_rawstopwrite(ft);
+	}
+
 	return (ST_SUCCESS);
 }
 

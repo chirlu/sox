@@ -9,6 +9,9 @@ all patches to cbagwell@sprynet.com.
     Also, add support to all file handlers to handle 32-bit and float
     data types since raw functions can handle them.
 
+  o Change read and write functions from LONG to st_size_t to get
+    the extra length support.  Make it ULONG type.
+
   o Change "float" from a data type to an encoding method.  This will
     effect command line usage but more accurately describes floats.
 
