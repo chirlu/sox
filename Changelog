@@ -60,6 +60,9 @@ sox-12.17.3
   o Added uninstall rules to Makefile.  Added new ststdint.h to define
     *int*_t typedefs.
   o Added internal strcasecmp for OS/2.
+  o Added support for swapping "bit" order (MSB becomes LSB) for raw u-law
+    and A-law data.  Some ISDN equipment prefers it this way.  Use -x flag
+    or new .la or .lu file extensions.
   o Annonymous patch submitted to fix types and spelling problems in
     various files.  Also, updated VOC files to have u-law and A-law
     support as well as able to read in VOC files using a pipe.  More

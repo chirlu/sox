@@ -93,6 +93,18 @@ static char *hcomnames[] = {
 	(char *) 0
 };
 
+/* inverse a-law byte raw */
+static char *lanames[] = {
+	"la",
+	(char *) 0
+};
+
+/* inverse u-law byte raw */
+static char *lunames[] = {
+	"lu",
+	(char *) 0
+};
+
 /* Amiga MAUD */
 static char *maudnames[] = {
         "maud",
@@ -272,6 +284,12 @@ st_format_t st_formats[] = {
     {hcomnames, 0,
 	st_hcomstartread, st_hcomread, st_hcomstopread, 
 	st_hcomstartwrite, st_hcomwrite, st_hcomstopwrite, st_format_nothing_seek},
+    {lanames, ST_FILE_STEREO,
+	st_lastartread, st_rawread, st_rawstopread,
+	st_lastartwrite, st_rawwrite, st_rawstopwrite, st_format_nothing_seek},
+    {lunames, ST_FILE_STEREO,
+	st_lustartread, st_rawread, st_rawstopread,
+	st_lustartwrite, st_rawwrite, st_rawstopwrite, st_format_nothing_seek},
     {maudnames, ST_FILE_STEREO,
 	st_maudstartread, st_maudread, st_maudstopread,
 	st_maudstartwrite, st_maudwrite, st_maudstopwrite, st_format_nothing_seek},

@@ -216,6 +216,12 @@ int st_hcomstartwrite(ft_t ft);
 st_ssize_t st_hcomwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_hcomstopwrite(ft_t ft);
 
+int st_lastartread(ft_t ft);
+int st_lastartwrite(ft_t ft);
+
+int st_lustartread(ft_t ft);
+int st_lustartwrite(ft_t ft);
+
 int st_maudstartread(ft_t ft);
 st_ssize_t st_maudread(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_maudstopread(ft_t ft);

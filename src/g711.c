@@ -104,6 +104,7 @@ unsigned char st_13linear2alaw(
 	 */
 	/* pcm_val = pcm_val >> 3; */
 
+	/* A-law using even bit inversion */
 	if (pcm_val >= 0) {
 		mask = 0xD5;		/* sign (7th) bit = 1 */
 	} else {
@@ -205,6 +206,7 @@ unsigned char st_14linear2ulaw(
 	 */
 	/* pcm_val = pcm_val >> 2; */
 
+	/* u-law inverts all bits */
 	/* Get the sign and the magnitude of the value. */
 	if (pcm_val < 0) {
 		pcm_val = -pcm_val;

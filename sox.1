@@ -236,7 +236,8 @@ ADPCM, IMA_ADPCM, GSM, or Floating-point.
 .br
 U-law (actually shorthand for mu-law) and A-law are the U.S. and
 international standards for logarithmic telephone sound compression.
-When uncompressed it has roughly the precision of 12-byte PCM audio.
+When uncompressed u-law has roughly the precision of 14-byte PCM audio
+and A-law has roughly the precision of 13-bit PCM audio.
 .br
 ADPCM is a form of sound compression that has a good
 compromise between good sound quality and fast encoding/decoding
@@ -264,6 +265,8 @@ than yours and must
 be swapped according to the word-size given above.
 Only 16-bit and 32-bit integer data may be swapped.
 Machine-format floating-point data is not portable.
+This flag is also used to invert the bit ordering of u-law
+and A-law data (MSB becomes LSB).
 .TP 10
 \fB-c \fIchannels\fR
 The number of sound channels in the data file.
@@ -577,15 +580,15 @@ and encoding (signed, unsigned, etc.)
 of the sample file must be given.
 The number of channels defaults to 1.
 .TP 10
-.B ".ub, .sb, .uw, .sw, .ul, .al, .sl"
+.B ".ub, .sb, .uw, .sw, .ul, .al, .lu, .la, .sl"
 These are several suffices which serve as
 a shorthand for raw files with a given size and encoding.
-Thus, \fBub, sb, uw, sw, ul\fR and \fBsl\fR
+Thus, \fBub, sb, uw, sw, ul, al, lu, la\fR and \fBsl\fR
 correspond to "unsigned byte", "signed byte",
 "unsigned word", "signed word", "u-law" (byte), "A-law" (byte),
-and "signed long".
+inverse bit order "u-law", inverse bit order "A-law", and "signed long".
 The sample rate defaults to 8000 hz if not explicitly set,
-and the number of channels (as always) defaults to 1.
+and the number of channels defaults to 1.
 There are lots of Sparc samples floating around in u-law format
 with no header and fixed at a sample rate of 8000 hz.
 (Certain sound management software cheerfully ignores the headers.)
