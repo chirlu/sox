@@ -14,11 +14,6 @@
 /*
  * Sound Tools stereo/quad -> mono mixdown effect file.
  * and mono/stereo -> stereo/quad channel duplication.
- *
- * TODO: The shorthand concepts of volume change and balance
- *       is not finished.  Users could change volumes of each
- *       channel though by manually specifing each channels
- *       values.
  */
 
 #include "st_i.h"
@@ -211,8 +206,22 @@ int st_avg_start(eff_t effp)
                  st_fail("Output must have different number of channels to use avg effect");
                  return(ST_EOF);
              }
-             pans[0] = 0.5;
-             pans[1] = 0.5;
+             /* When reducing channel count, need to reduce values
+              * to prevent clipping.
+              */
+             if (ochan < ichan)
+             {
+                 pans[0] = 0.5;
+                 pans[1] = 0.5;
+             }
+             /* else we are duplicating into new channels and can
+              * use full values.
+              */
+             else
+             {
+                 pans[0] = 1;
+                 pans[1] = 1;
+             }
              avg->num_pans = 2;
              avg->mix = MIX_CENTER;
              break;             /* Code below will handle this case */
@@ -368,6 +377,11 @@ int st_avg_start(eff_t effp)
              return ST_EOF;
      }
 
+     /* FIXME: If num_pans <= 0 need to clear out sources[][] array
+      * or else there will be garbage in lower array were user
+      * was storing temp data
+      */
+
      /* If the number of pans given is 4 or fewer, handle the special */
      /* cases listed in the comments above.  The code is lengthy but */
      /* straightforward. */
@@ -433,6 +447,9 @@ int st_avg_start(eff_t effp)
          }
      }
      else if (avg->num_pans == 2) {
+         /* FIXME: No catches for duplicating channels.  Perhaps
+          * it could be changed to be handled by 0 pan case above.
+          */
          if (ichan == 2 && ochan == 1) {
              avg->sources[0][0] = pans[0];
              avg->sources[1][0] = pans[1];
