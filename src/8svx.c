@@ -6,9 +6,16 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+
 #ifdef	VMS
 #include <perror.h>
 #endif
+
+#ifdef unix
+#include <unistd.h>	/* For SEEK_* defines if not found in stdio */
+#endif
+
 #include "st.h"
 
 /* Private data used by writer */
@@ -16,13 +23,6 @@ struct svxpriv {
         ULONG nsamples;
 	FILE *ch[4];
 };
-
-#ifndef SEEK_CUR
-#define SEEK_CUR        1
-#endif
-#ifndef SEEK_SET
-#define SEEK_SET        0
-#endif
 
 void svxwriteheader(P2(ft_t, LONG));
     

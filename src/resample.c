@@ -24,7 +24,10 @@
  * version of the above software!  Someone please perform this and
  * send patches to cbagwell@sprynet.com.
  */
-
+/* Fixed bug: roll off frequency was wrong, too high by 2 when upsampling,
+ * too low by 2 when downsampling.
+ * Andreas Wilde, 12. Feb. 1999, andreas@eakaw2.et.tu-dresden.de
+*/
 #include <math.h>
 #include <stdlib.h>
 #include "st.h"
@@ -33,7 +36,7 @@
 #include "resdefs.h"
 #include "resampl.h"
 
-#define IBUFFSIZE 1024                         /* Input buffer size */
+#define IBUFFSIZE 4096                         /* Input buffer size */
 #define OBUFFSIZE (IBUFFSIZE*MAXFACTOR+2)      /* Calc'd out buffer size */
 
 /* Private data for Lerp via LCM file */
@@ -104,10 +107,11 @@ char **argv;
 {
 	resample_t resample = (resample_t) effp->priv;
 
-	resample->rolloff = 0.85;
-	resample->beta = 2.120;
+	/* These defaults are conservative with respect to aliasing. */
+	resample->rolloff = 0.8;
+	resample->beta = 17.5;
 
-	/* I don't know why this fails! */
+	/* This used to fail, but with sox-12.15 it works. AW */
 	if ((n >= 1) && !sscanf(argv[0], "%lf", &resample->rolloff))
 		fail("Usage: resample [ rolloff [ beta ] ]");
 	else if ((resample->rolloff < 0.01) || (resample->rolloff > 1.0))
@@ -118,10 +122,8 @@ char **argv;
 	else if (resample->beta < 1.0)
 	        fail("resample: beta factor (%f) no good, should be >= 1.0", 
 			resample->beta);
-	/*
 	fprintf(stderr, "resample opts: %f, %f\n", 
 		resample->rolloff, resample->beta);
-	*/
 }
 
 /*
@@ -133,12 +135,6 @@ eff_t effp;
 	resample_t resample = (resample_t) effp->priv;
 	int i;
 	
-	if ((LONG)effp->ininfo.rate > (LONG)effp->outinfo.rate)
-		resample->rolloff = ((double)effp->outinfo.rate / 
-			(double)effp->ininfo.rate) * 0.97; /* empirical */
-	else
-		resample->rolloff = 0.85;
-
 	resample->InterpFilt = 1;	/* interpolate filter: slower */
 	resample->Factor = 
 		(double)effp->outinfo.rate / (double)effp->ininfo.rate;
@@ -571,11 +567,11 @@ int N, Num;
    int i;
 
    /* Calculate filter coeffs: */
-   c[0] = 2.0*frq;
+   c[0] = frq;
    for (i=1; i<N; i++)
       {
       temp = PI*(double)i/(double)Num;
-      c[i] = sin(2.0*temp*frq)/temp;
+      c[i] = sin(temp*frq)/temp;
       }
 
    /* Calculate and Apply Kaiser window to filter coeffs: */

@@ -39,10 +39,11 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#include <stdio.h>
 
-#ifndef SEEK_SET
-#define SEEK_SET 0		/* nasty nasty */
-#endif /* SEEK_SET */
+#ifdef unix
+#include <unistd.h>	/* For SEEK_* defines if not found in stdio */
+#endif
 
 #include "cvsdfilt.h"
 #include "st.h"

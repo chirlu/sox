@@ -9,7 +9,7 @@
 .if t .sp .5v
 .if n .sp
 ..
-.TH SoX 1 "September 6, 1998"
+.TH SoX 1 "March 5, 1999"
 .SH NAME
 sox \- Sound eXchange : universal sound sample translator
 .SH SYNOPSIS
@@ -622,11 +622,19 @@ detailed analysis of all of them at http://usa.ece.cmu.edu/Sox/
 resample [ \fIrolloff\fR [ \fIbeta\fR ] ]
 Translate input sampling rate to output sampling rate
 via simulated analog filtration.
-This method is slow and uses lots of RAM,
-but gives much better results then
-.B rate 
-(This has empirically been shown to be false.  The
-resample algorthym needs to be updated from its original source).
+This method is slower than 
+.B rate,
+but gives much
+better results.  rolloff refers to the cut-off frequency of the
+low pass filter and is given in terms of the
+Nyquist frequency for the lower sample rate.  rolloff therefor should
+be something between 0. and 1., in practice 0.8-0.95.  beta trades stop band
+rejection against transition width from passband to stop band.  Larger
+beta means a slower transition and greater stopband rejection.  beta
+should be at least greater than 2.  The default is rollof 0.8, beta 17.5,
+which is rather conservative with respect to aliasing.  Lower beta
+and higher rolloff values preserve more high frequency signal energy,
+but introduce measurable artifacts.
 .TP 10
 reverb \fIgain-out delay \fR[ \fIdelay ... \fR]
 Add reverbation to a sound sample.  Each delay is given 

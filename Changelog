@@ -37,6 +37,9 @@ sox-12.16
   o Made AIFF handler work with invalid headers that some programs generate.
     Also fix an Endian bug thats been there for quick a long time (when
     ran on Intel machines).
+  o Resample function was updated by Andreas Wilde 
+    (andreas@eakaw2.et.tu-dresden.de) to fix problem were freqs. were
+    off by a factor of 2.
 
 sox-12.15
 ---------

@@ -15,15 +15,6 @@ all patches to cbagwell@sprynet.com.
   o Grab latest stand alone version of resample and replace Sox's
     outdated version.
 
-  o Find a mantainer for each supported platform.  Try hard to shrink
-    the number of makefiles by having all systems compile using one
-    makefile.
-
-  o Fix for how include files are found when fseek() is used.  In most
-    configs it has to hardcode the values for things like SEEK_SET. *BAD*
-    Include files are a mess, i.e. fseek problem.  Need to resort to
-    something like autoconf to really support all these platforms.
-
   o Create a version of OSS and Sun driver that can play and record from the
     same device in duplex.
 

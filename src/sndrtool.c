@@ -9,6 +9,12 @@
 
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
+
+#ifdef unix
+#include <unistd.h>	/* For SEEK_* defines if not found in stdio */
+#endif
+
 #include "st.h"
 
 /* Private data used by writer */

@@ -21,8 +21,11 @@
 #include "libst.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
-#define SEEK_CUR 1		/* nasty nasty */
+#ifdef unix
+#include <unistd.h>	/* For SEEK_* defines if not found in stdio */
+#endif
 
 /* Private data for MAUD file */
 struct maudstuff { /* max. 100 bytes!!!! */
