@@ -23,7 +23,7 @@ typedef struct skelstuff {
  * Do anything required before you start reading samples.
  * Read file header. 
  *	Find out sampling rate, 
- *	size and style of samples, 
+ *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
 int st_skelstartread(ft) 
@@ -44,7 +44,7 @@ ft_t ft;
 	 */
 	ft->info.rate = 
 	ft->info.size = BYTE or WORD ...;
-	ft->info.style = UNSIGNED or SIGN2 ...;
+	ft->info.encoding = UNSIGNED or SIGN2 ...;
 	ft->info.channels = 1 or 2 or 4;
 	ft->comment = any comment in file header.
 	return (ST_SUCCESS);
@@ -110,7 +110,7 @@ ft_t ft;
 	/* If your format specifies any of the following info. */
 	ft->info.rate = 
 	ft->info.size = BYTE or WORD ...;
-	ft->info.style = UNSIGNED or SIGN2 ...;
+	ft->info.encoding = UNSIGNED or SIGN2 ...;
 	ft->info.channels = 1 or 2 or 4;
 	/* Write file header, if any */
 	/* Write comment field, if any */

@@ -55,7 +55,7 @@ int w; /* w != 0 is write */
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
 	int ch;
 	
-	ft->info.style = ST_ENCODING_GSM;
+	ft->info.encoding = ST_ENCODING_GSM;
 	ft->info.size = ST_SIZE_BYTE;
 	if (!ft->info.rate)
 		ft->info.rate = 8000;

@@ -26,7 +26,7 @@
  * Do anything required before you start reading samples.
  * Read file header.
  *	Find out sampling rate,
- *	size and style of samples,
+ *	size and encoding of samples,
  *	mono/stereo/quad.
  */
 int st_alsastartread(ft)
@@ -57,14 +57,14 @@ ft_t ft;
 	else
 	    ft->info.size = ST_SIZE_WORD;
     }
-    if (ft->info.style == -1) {
+    if (ft->info.encoding == -1) {
 	if ((c_info.hw_formats & SND_PCM_FMT_S16_LE) || (c_info.hw_formats & SND_PCM_FMT_S8))
-	    ft->info.style = ST_ENCODING_SIGN2;
+	    ft->info.encoding = ST_ENCODING_SIGN2;
 	else
-	    ft->info.style = ST_ENCODING_UNSIGNED;
+	    ft->info.encoding = ST_ENCODING_UNSIGNED;
     }
     if (ft->info.size == ST_SIZE_BYTE) {
-	switch (ft->info.style)
+	switch (ft->info.encoding)
 	{
 	    case ST_ENCODING_SIGN2:
 		if (!(c_info.hw_formats & SND_PCM_FMT_S8))
@@ -83,13 +83,13 @@ ft_t ft;
 		fmt = SND_PCM_SFMT_U8;
 		break;
 	    default:
-		fail("Hardware does not support %s output", st_encodings_str[ft->info.style]);
+		fail("Hardware does not support %s output", st_encodings_str[ft->info.encoding]);
 		return(ST_EOF);
 		break;
 	}
     }
     else {
-	switch (ft->info.style)
+	switch (ft->info.encoding)
 	{
 	    case ST_ENCODING_SIGN2:
 		if (!(c_info.hw_formats & SND_PCM_FMT_S16_LE))
@@ -102,7 +102,7 @@ ft_t ft;
 		fmt = SND_PCM_SFMT_U16_LE;
 		break;
 	    default:
-		fail("Hardware does not support %s output", st_encodings_str[ft->info.style]);
+		fail("Hardware does not support %s output", st_encodings_str[ft->info.encoding]);
 		return(ST_EOF);
 		break;
 	}
@@ -160,14 +160,14 @@ ft_t ft;
 	else
 	    ft->info.size = ST_SIZE_WORD;
     }
-    if (ft->info.style == -1) {
+    if (ft->info.encoding == -1) {
 	if ((p_info.hw_formats & SND_PCM_FMT_S16_LE) || (p_info.hw_formats & SND_PCM_FMT_S8))
-	    ft->info.style = ST_ENCODING_SIGN2;
+	    ft->info.encoding = ST_ENCODING_SIGN2;
 	else
-	    ft->info.style = ST_ENCODING_UNSIGNED;
+	    ft->info.encoding = ST_ENCODING_UNSIGNED;
     }
     if (ft->info.size == ST_SIZE_BYTE) {
-	switch (ft->info.style)
+	switch (ft->info.encoding)
 	{
 	    case ST_ENCODING_SIGN2:
 		if (!(p_info.hw_formats & SND_PCM_FMT_S8))
@@ -186,13 +186,13 @@ ft_t ft;
 		fmt = SND_PCM_SFMT_U8;
 		break;
 	    default:
-		fail("Hardware does not support %s output", st_encodings_str[ft->info.style]);
+		fail("Hardware does not support %s output", st_encodings_str[ft->info.encoding]);
 		return(ST_EOF);
 		break;
 	}
     }
     else {
-	switch (ft->info.style)
+	switch (ft->info.encoding)
 	{
 	    case ST_ENCODING_SIGN2:
 		if (!(p_info.hw_formats & SND_PCM_FMT_S16_LE))
@@ -211,7 +211,7 @@ ft_t ft;
 		fmt = SND_PCM_SFMT_U16_LE;
 		break;
 	    default:
-		fail("Hardware does not support %s output", st_encodings_str[ft->info.style]);
+		fail("Hardware does not support %s output", st_encodings_str[ft->info.encoding]);
 		return(ST_EOF);
 		break;
 	}

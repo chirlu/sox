@@ -135,43 +135,43 @@ ft_t ft;
 	st_readdw(ft, &encoding);
 
 
-	/* Translate the encoding into style and size parameters */
+	/* Translate the encoding into encoding and size parameters */
 	/* (Or, for G.72x, set the decoding routine and parameters) */
 	p->dec_routine = NULL;
 	p->in_buffer = 0;
 	p->in_bits = 0;
 	switch (encoding) {
 	case SUN_ULAW:
-		ft->info.style = ST_ENCODING_ULAW;
+		ft->info.encoding = ST_ENCODING_ULAW;
 		ft->info.size = ST_SIZE_BYTE;
 		break;
 	case SUN_ALAW:
-		ft->info.style = ST_ENCODING_ALAW;
+		ft->info.encoding = ST_ENCODING_ALAW;
 		ft->info.size = ST_SIZE_BYTE;
 	case SUN_LIN_8:
-		ft->info.style = ST_ENCODING_SIGN2;
+		ft->info.encoding = ST_ENCODING_SIGN2;
 		ft->info.size = ST_SIZE_BYTE;
 		break;
 	case SUN_LIN_16:
-		ft->info.style = ST_ENCODING_SIGN2;
+		ft->info.encoding = ST_ENCODING_SIGN2;
 		ft->info.size = ST_SIZE_WORD;
 		break;
 	case SUN_G721:
-		ft->info.style = ST_ENCODING_SIGN2;
+		ft->info.encoding = ST_ENCODING_SIGN2;
 		ft->info.size = ST_SIZE_WORD;
 		g72x_init_state(&p->state);
 		p->dec_routine = g721_decoder;
 		p->dec_bits = 4;
 		break;
 	case SUN_G723_3:
-		ft->info.style = ST_ENCODING_SIGN2;
+		ft->info.encoding = ST_ENCODING_SIGN2;
 		ft->info.size = ST_SIZE_WORD;
 		g72x_init_state(&p->state);
 		p->dec_routine = g723_24_decoder;
 		p->dec_bits = 3;
 		break;
 	case SUN_G723_5:
-		ft->info.style = ST_ENCODING_SIGN2;
+		ft->info.encoding = ST_ENCODING_SIGN2;
 		ft->info.size = ST_SIZE_WORD;
 		g72x_init_state(&p->state);
 		p->dec_routine = g723_40_decoder;
@@ -338,24 +338,24 @@ ULONG data_size;
 	ULONG sample_rate;
 	ULONG channels;
 
-	if (ft->info.style == ST_ENCODING_ULAW && 
+	if (ft->info.encoding == ST_ENCODING_ULAW && 
 	    ft->info.size == ST_SIZE_BYTE)
 		encoding = SUN_ULAW;
-	else if (ft->info.style == ST_ENCODING_ALAW && 
+	else if (ft->info.encoding == ST_ENCODING_ALAW && 
 	         ft->info.size == ST_SIZE_BYTE)
 		encoding = SUN_ALAW;
-	else if (ft->info.style == ST_ENCODING_SIGN2 && 
+	else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
 		 ft->info.size == ST_SIZE_BYTE)
 		encoding = SUN_LIN_8;
-	else if (ft->info.style == ST_ENCODING_SIGN2 && 
+	else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
 		 ft->info.size == ST_SIZE_WORD)
 		encoding = SUN_LIN_16;
 	else {
-		report("Unsupported output style/size for Sun/NeXT header or .AU format not specified.");
+		report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
 		report("Only U-law, A-law signed bytes, and signed words are supported.");
 		report("Defaulting to 8khz u-law\n");
 		encoding = SUN_ULAW;
-		ft->info.style = ST_ENCODING_ULAW;
+		ft->info.encoding = ST_ENCODING_ULAW;
 		ft->info.size = ST_SIZE_BYTE;
 		ft->info.rate = 8000;  /* strange but true */
 	}

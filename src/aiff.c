@@ -347,7 +347,7 @@ ft_t ft;
 	if (foundcomm) {
 		ft->info.channels = channels;
 		ft->info.rate = rate;
-		ft->info.style = ST_ENCODING_SIGN2;
+		ft->info.encoding = ST_ENCODING_SIGN2;
 		switch (bits) {
 		case 8:
 			ft->info.size = ST_SIZE_BYTE;
@@ -363,7 +363,7 @@ ft_t ft;
 	} else  {
 		if ((ft->info.channels == -1)
 			|| (ft->info.rate == -1)
-			|| (ft->info.style == -1)
+			|| (ft->info.encoding == -1)
 			|| (ft->info.size == -1)) {
 		  report("You must specify # channels, sample rate, signed/unsigned,\n");
 		  report("and 8/16 on the command line.");
@@ -563,13 +563,13 @@ ft_t ft;
 	}
 
 	p->nsamples = 0;
-	if ((ft->info.style == ST_ENCODING_ULAW ||
-	     ft->info.style == ST_ENCODING_ALAW) && 
+	if ((ft->info.encoding == ST_ENCODING_ULAW ||
+	     ft->info.encoding == ST_ENCODING_ALAW) && 
 	    ft->info.size == ST_SIZE_BYTE) {
 		report("expanding 8-bit u-law to 16 bits");
 		ft->info.size = ST_SIZE_WORD;
 	}
-	ft->info.style = ST_ENCODING_SIGN2; /* We have a fixed style */
+	ft->info.encoding = ST_ENCODING_SIGN2; /* We have a fixed encoding */
 
 	/* Compute the "very large number" so that a maximum number
 	   of samples can be transmitted through a pipe without the
@@ -630,15 +630,15 @@ LONG nframes;
 	hsize += 8 + 2 + 16*ft->instr.nloops;	/* MARK chunk */
 	hsize += 20;				/* INST chunk */
 
-	if (ft->info.style == ST_ENCODING_SIGN2 && 
+	if (ft->info.encoding == ST_ENCODING_SIGN2 && 
 	    ft->info.size == ST_SIZE_BYTE)
 		bits = 8;
-	else if (ft->info.style == ST_ENCODING_SIGN2 && 
+	else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
 		 ft->info.size == ST_SIZE_WORD)
 		bits = 16;
 	else
 	{
-		fail("unsupported output style/size for AIFF header");
+		fail("unsupported output encoding/size for AIFF header");
 		return(ST_EOF);
 	}
 

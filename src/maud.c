@@ -37,7 +37,7 @@ static void maudwriteheader(P1(ft_t));
  * Do anything required before you start reading samples.
  * Read file header. 
  *	Find out sampling rate, 
- *	size and style of samples, 
+ *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
 int st_maudstartread(ft) 
@@ -156,19 +156,19 @@ ft_t ft;
 			
 			if (bitpersam == 8 && chaninf == 0) {
 				ft->info.size = ST_SIZE_BYTE;
-				ft->info.style = ST_ENCODING_UNSIGNED;
+				ft->info.encoding = ST_ENCODING_UNSIGNED;
 			}
 			else if (bitpersam == 8 && chaninf == 2) {
 				ft->info.size = ST_SIZE_BYTE;
-				ft->info.style = ST_ENCODING_ALAW;
+				ft->info.encoding = ST_ENCODING_ALAW;
 			}
 			else if (bitpersam == 8 && chaninf == 3) {
 				ft->info.size = ST_SIZE_BYTE;
-				ft->info.style = ST_ENCODING_ULAW;
+				ft->info.encoding = ST_ENCODING_ULAW;
 			}
 			else if (bitpersam == 16 && chaninf == 0) {
 				ft->info.size = ST_SIZE_WORD;
-				ft->info.style = ST_ENCODING_SIGN2;
+				ft->info.encoding = ST_ENCODING_SIGN2;
 			}
 			else 
 			{
@@ -281,12 +281,12 @@ ft_t ft;
 		fail("MAUD: unsupported number of channels, unable to store");
 		return(ST_EOF);
 	}
-	if (ft->info.size == ST_SIZE_WORD) ft->info.style = ST_ENCODING_SIGN2;
-	if (ft->info.style == ST_ENCODING_ULAW || 
-	    ft->info.style == ST_ENCODING_ALAW) ft->info.size = ST_SIZE_BYTE;
+	if (ft->info.size == ST_SIZE_WORD) ft->info.encoding = ST_ENCODING_SIGN2;
+	if (ft->info.encoding == ST_ENCODING_ULAW || 
+	    ft->info.encoding == ST_ENCODING_ALAW) ft->info.size = ST_SIZE_BYTE;
 	if (ft->info.size == ST_SIZE_BYTE && 
-	    ft->info.style == ST_ENCODING_SIGN2) 
-	    ft->info.style = ST_ENCODING_UNSIGNED;
+	    ft->info.encoding == ST_ENCODING_SIGN2) 
+	    ft->info.encoding = ST_ENCODING_UNSIGNED;
 	
 	p->nsamples = 0x7f000000L;
 	maudwriteheader(ft);
@@ -341,7 +341,7 @@ ft_t ft;
 	st_writedw(ft, (LONG) 8*4); /* number of bytes to follow */
 	st_writedw(ft, (LONG) (p->nsamples ));  /* number of samples stored in MDAT */
 	
-	switch (ft->info.style) {
+	switch (ft->info.encoding) {
 		
 	case ST_ENCODING_UNSIGNED:
 		st_writew(ft, (int) 8); /* number of bits per sample as stored in MDAT */
@@ -373,7 +373,7 @@ ft_t ft;
 		st_writew(ft, (int) 2);
 	}
 	
-	switch (ft->info.style) {
+	switch (ft->info.encoding) {
 		
 	case ST_ENCODING_UNSIGNED:
 	case ST_ENCODING_SIGN2:

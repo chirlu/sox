@@ -71,7 +71,7 @@ static LONG writedone=0;
  * Do anything required before you start reading samples.
  * Read file header. 
  *	Find out sampling rate, 
- *	size and style of samples,
+ *	size and encoding of samples,
  *	mono/stereo/quad.
  */
 int st_txwstartread(ft)
@@ -175,7 +175,7 @@ int st_txwstartread(ft)
 
   ft->info.channels = 1 ; /* not sure about stereo sample data yet ??? */
   ft->info.size = ST_SIZE_WORD; /* this is close enough */
-  ft->info.style = ST_ENCODING_SIGN2;
+  ft->info.encoding = ST_ENCODING_SIGN2;
 
   return(ST_SUCCESS);
 }
@@ -259,10 +259,10 @@ ft_t ft;
   if (ft->info.channels != 1)
       report("tx16w is overriding output format to 1 channel.");
   ft->info.channels = 1 ; /* not sure about stereo sample data yet ??? */
-  if (ft->info.size != ST_SIZE_WORD || ft->info.style != ST_ENCODING_SIGN2)
+  if (ft->info.size != ST_SIZE_WORD || ft->info.encoding != ST_ENCODING_SIGN2)
       report("tx16w is overriding output format to size Signed Word format.");
   ft->info.size = ST_SIZE_WORD; /* this is close enough */
-  ft->info.style = ST_ENCODING_SIGN2;
+  ft->info.encoding = ST_ENCODING_SIGN2;
   
   /* If you have to seek around the output file */
   if (! ft->seekable)

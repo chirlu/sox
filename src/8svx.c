@@ -177,7 +177,7 @@ ft_t ft;
 
 	ft->info.channels = channels;
 	ft->info.rate = rate;
-	ft->info.style = ST_ENCODING_SIGN2;
+	ft->info.encoding = ST_ENCODING_SIGN2;
 	ft->info.size = ST_SIZE_BYTE;
 
 	/* open files to channels */
@@ -284,7 +284,7 @@ ft_t ft;
 	}
 
 	/* write header (channel 0) */
-	ft->info.style = ST_ENCODING_SIGN2;
+	ft->info.encoding = ST_ENCODING_SIGN2;
 	ft->info.size = ST_SIZE_BYTE;
 
 	p->nsamples = 0;

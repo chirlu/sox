@@ -72,7 +72,7 @@ SFHEADER *sfhead;
  * Do anything required before you start reading samples.
  * Read file header. 
  *	Find out sampling rate, 
- *	size and style of samples, 
+ *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
 int st_sfstartread(ft) 
@@ -113,11 +113,11 @@ ft_t ft;
 	switch(sf->info.sf_packmode) {
 		case SF_SHORT:
 			ft->info.size = ST_SIZE_WORD;
-			ft->info.style = ST_ENCODING_SIGN2;
+			ft->info.encoding = ST_ENCODING_SIGN2;
 			break;
 		case SF_FLOAT:
 			ft->info.size = ST_SIZE_FLOAT;
-			ft->info.style = ST_ENCODING_SIGN2;
+			ft->info.encoding = ST_ENCODING_SIGN2;
 			break;
 		default:
 			fail("Soundfile input: unknown format 0x%x\n",
@@ -164,8 +164,9 @@ ft_t ft;
 		sf->info.sf_packmode = SF_FLOAT;
 	} else {
 		sf->info.sf_packmode = SF_SHORT;
+		/* Default to signed words */
 		ft->info.size = ST_SIZE_WORD;
-		ft->info.style = ST_ENCODING_SIGN2;		/* Default to signed words */
+		ft->info.encoding = ST_ENCODING_SIGN2;
 	}
 
 	sf->info.sf_chans = ft->info.channels;

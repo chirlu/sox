@@ -317,31 +317,31 @@ char **argv;
 
 		case 's':
 			if (! ft) usage("-s");
-			ft->info.style = ST_ENCODING_SIGN2;
+			ft->info.encoding = ST_ENCODING_SIGN2;
 			break;
 		case 'u':
 			if (! ft) usage("-u");
-			ft->info.style = ST_ENCODING_UNSIGNED;
+			ft->info.encoding = ST_ENCODING_UNSIGNED;
 			break;
 		case 'U':
 			if (! ft) usage("-U");
-			ft->info.style = ST_ENCODING_ULAW;
+			ft->info.encoding = ST_ENCODING_ULAW;
 			break;
 		case 'A':
 			if (! ft) usage("-A");
-			ft->info.style = ST_ENCODING_ALAW;
+			ft->info.encoding = ST_ENCODING_ALAW;
 			break;
 		case 'a':
 			if (! ft) usage("-a");
-			ft->info.style = ST_ENCODING_ADPCM;
+			ft->info.encoding = ST_ENCODING_ADPCM;
 			break;
 		case 'i':
 			if (! ft) usage("-i");
-			ft->info.style = ST_ENCODING_IMA_ADPCM;
+			ft->info.encoding = ST_ENCODING_IMA_ADPCM;
 			break;
 		case 'g':
 			if (! ft) usage("-g");
-			ft->info.style = ST_ENCODING_GSM;
+			ft->info.encoding = ST_ENCODING_GSM;
 			break;
 		
 		case 'x':
@@ -374,7 +374,7 @@ static void init(P0) {
 	/* init files */
 	informat.info.rate      = outformat.info.rate  = 0;
 	informat.info.size      = outformat.info.size  = -1;
-	informat.info.style     = outformat.info.style = -1;
+	informat.info.encoding  = outformat.info.encoding = -1;
 	informat.info.channels  = outformat.info.channels = -1;
 	informat.info.bs        = outformat.info.bs    = 0;
 	informat.info.dovol     = outformat.info.dovol = 0;
@@ -413,9 +413,9 @@ static void process(P0) {
     if (informat.info.x0 || informat.info.x1 != MAXULONG)
 	report("Extract samples %lu <= x < %lu\n", informat.info.x0, informat.info.x0);
     
-    report("Input file: using sample rate %lu\n\tsize %s, style %s, %d %s",
+    report("Input file: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
 	   informat.info.rate, st_sizes_str[informat.info.size], 
-	   st_encodings_str[informat.info.style], informat.info.channels, 
+	   st_encodings_str[informat.info.encoding], informat.info.channels, 
 	   (informat.info.channels > 1) ? "channels" : "channel");
     if (informat.comment)
 	report("Input file: comment \"%s\"\n", informat.comment);
@@ -464,9 +464,9 @@ static void process(P0) {
 	(* outformat.h->startwrite)(&outformat);
 	st_checkformat(&outformat);
 	st_cmpformats(&informat, &outformat);
-	report("Output file: using sample rate %lu\n\tsize %s, style %s, %d %s",
+	report("Output file: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
 	       outformat.info.rate, st_sizes_str[outformat.info.size], 
-	       st_encodings_str[outformat.info.style], outformat.info.channels, 
+	       st_encodings_str[outformat.info.encoding], outformat.info.channels, 
 	       (outformat.info.channels > 1) ? "channels" : "channel");
 	if (outformat.comment)
 	    report("Output file: comment \"%s\"\n", outformat.comment);

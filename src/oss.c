@@ -51,27 +51,27 @@ ft_t ft;
     if (ft->info.size == -1) ft->info.size = ST_SIZE_BYTE;
     if (ft->info.size == ST_SIZE_BYTE) {
 	samplesize = 8;
-	if (ft->info.style == -1)
-	    ft->info.style = ST_ENCODING_UNSIGNED;
-	if (ft->info.style != ST_ENCODING_UNSIGNED) {
+	if (ft->info.encoding == -1)
+	    ft->info.encoding = ST_ENCODING_UNSIGNED;
+	if (ft->info.encoding != ST_ENCODING_UNSIGNED) {
 	    report("OSS driver only supports unsigned with bytes");
 	    report("Forcing to unsigned");
-	    ft->info.style = ST_ENCODING_UNSIGNED;
+	    ft->info.encoding = ST_ENCODING_UNSIGNED;
 	}
     }
     else if (ft->info.size == ST_SIZE_WORD) {
 	samplesize = 16;
-	if (ft->info.style == -1)
-	    ft->info.style = ST_ENCODING_SIGN2;
-	if (ft->info.style != ST_ENCODING_SIGN2) {
+	if (ft->info.encoding == -1)
+	    ft->info.encoding = ST_ENCODING_SIGN2;
+	if (ft->info.encoding != ST_ENCODING_SIGN2) {
 	    report("OSS driver only supports signed with words");
 	    report("Forcing to signed linear");
-	    ft->info.style = ST_ENCODING_SIGN2;
+	    ft->info.encoding = ST_ENCODING_SIGN2;
 	}
     }
     else {
         ft->info.size = ST_SIZE_WORD;
-	ft->info.style = ST_ENCODING_SIGN2;
+	ft->info.encoding = ST_ENCODING_SIGN2;
 	report("OSS driver only supports bytes and words");
 	report("Forcing to signed linear word");
     }
@@ -150,7 +150,7 @@ ft_t ft;
  * Do anything required before you start reading samples.
  * Read file header.
  *	Find out sampling rate,
- *	size and style of samples,
+ *	size and encoding of samples,
  *	mono/stereo/quad.
  */
 int st_ossdspstartread(ft)

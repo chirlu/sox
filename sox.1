@@ -460,7 +460,7 @@ will written appropriately.
 Sox currently can read PCM, ULAW, ALAW, MS ADPCM, and IMA (or DVI) ADPCM.
 It can write all of these formats including
 .B (NEW!)
-the ADPCM styles.
+the ADPCM encoding.
 .TP 10
 .B .wve
 Psion 8-bit alaw
@@ -472,13 +472,13 @@ Psion palmtop portable computer.
 Raw files (no header).
 .br
 The sample rate, size (byte, word, etc), 
-and style (signed, unsigned, etc.)
+and encoding (signed, unsigned, etc.)
 of the sample file must be given.
 The number of channels defaults to 1.
 .TP 10
 .B ".ub, .sb, .uw, .sw, .ul, .sl"
 These are several suffices which serve as
-a shorthand for raw files with a given size and style.
+a shorthand for raw files with a given size and encoding.
 Thus, \fBub, sb, uw, sw, ul\fR and \fBsl\fR
 correspond to "unsigned byte", "signed byte",
 "unsigned word", "signed word", "ulaw" (byte), and "signed long".

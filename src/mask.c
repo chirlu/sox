@@ -60,7 +60,7 @@ LONG *isamp, *osamp;
 	LONG tri16;	/* 16 signed bits of triangular noise */
 
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
-	switch (effp->outinfo.style) {
+	switch (effp->outinfo.encoding) {
 		case ST_ENCODING_ULAW:
 		case ST_ENCODING_ALAW:
 			for(done = 0; done < len; done++) {

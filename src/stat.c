@@ -260,9 +260,9 @@ eff_t effp;
 
                 x = (float)(stat->bin[0] + stat->bin[3]) / (float)(stat->bin[1] + stat->bin[2]);
 
-                if (x >= 3.0)                        /* use opposite style */
+                if (x >= 3.0)                  /* use opposite encoding */
 		{
-                        if (effp->ininfo.style == ST_ENCODING_UNSIGNED)
+                        if (effp->ininfo.encoding == ST_ENCODING_UNSIGNED)
 			{
                                 fprintf (stderr,"\nTry: -t raw -b -s \n");
 			}
@@ -278,7 +278,7 @@ eff_t effp;
 		}
                 else if (x >= 0.5 && x <= 2.0)       /* use ULAW */
 		{
-                        if (effp->ininfo.style == ST_ENCODING_ULAW)
+                        if (effp->ininfo.encoding == ST_ENCODING_ULAW)
 			{
                                 fprintf (stderr,"\nTry: -t raw -b -u \n");
 			}

@@ -58,7 +58,7 @@ typedef struct avrstuff {
  * Do anything required before you start reading samples.
  * Read file header. 
  *	Find out sampling rate, 
- *	size and style of samples, 
+ *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
 
@@ -114,10 +114,10 @@ ft_t ft;
 
   st_readw (ft, &(avr->sign));
   if (avr->sign) {
-    ft->info.style = ST_ENCODING_SIGN2;
+    ft->info.encoding = ST_ENCODING_SIGN2;
   }
   else {
-    ft->info.style = ST_ENCODING_UNSIGNED;
+    ft->info.encoding = ST_ENCODING_UNSIGNED;
   }
 
   st_readw (ft, &(avr->loop));
@@ -215,14 +215,14 @@ ft_t ft;
   }
 
   /* sign */
-  if (ft->info.style == ST_ENCODING_SIGN2) {
+  if (ft->info.encoding == ST_ENCODING_SIGN2) {
     st_writew (ft, 0xffff);
   }
-  else if (ft->info.style == ST_ENCODING_UNSIGNED) {
+  else if (ft->info.encoding == ST_ENCODING_UNSIGNED) {
     st_writew (ft, 0);
   }
   else {
-    fail ("AVR: unsupported style");
+    fail ("AVR: unsupported encoding");
     return(ST_EOF);
   }
 

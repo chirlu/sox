@@ -92,7 +92,7 @@ ft_t ft;
   	(void)st_readw(ft, (unsigned short *)&trash);
 	(void)st_readw(ft, (unsigned short *)&trash);
     
-	ft->info.style = ST_ENCODING_ALAW;
+	ft->info.encoding = ST_ENCODING_ALAW;
 	ft->info.size = ST_SIZE_BYTE;
 
 	ft->info.rate = 8000;
@@ -137,7 +137,7 @@ ft_t ft;
 	if (p->repeats == 0)
 	    p->repeats = 1;
 
-	ft->info.style = ST_ENCODING_ALAW;
+	ft->info.encoding = ST_ENCODING_ALAW;
 	ft->info.size = ST_SIZE_BYTE;
 	ft->info.rate = 8000;
 

@@ -127,7 +127,7 @@ ft_t ft;
 	ft->info.rate = 8000;
 	ft->info.channels = 1;
 	ft->info.size = ST_SIZE_WORD; /* make output format default to words */
-	ft->info.style = ST_ENCODING_SIGN2;
+	ft->info.encoding = ST_ENCODING_SIGN2;
 	p->swapbits = ft->swap;
 	ft->swap = 0;
 	/*

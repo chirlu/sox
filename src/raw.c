@@ -168,7 +168,7 @@ LONG *buf, nsamp;
 
 	switch(ft->info.size) {
 		case ST_SIZE_BYTE:
-		    switch(ft->info.style)
+		    switch(ft->info.encoding)
 		    {
 			case ST_ENCODING_SIGN2:
 				while(done < nsamp) {
@@ -221,7 +221,7 @@ LONG *buf, nsamp;
 		    }
 		    break;
 		case ST_SIZE_WORD:
-		    switch(ft->info.style)
+		    switch(ft->info.encoding)
 		    {
 			case ST_ENCODING_SIGN2:
 				return blockr_sw(buf, nsamp, ft);
@@ -249,7 +249,7 @@ LONG *buf, nsamp;
 		    }
 		    break;
 		case ST_SIZE_DWORD:
-		    switch(ft->info.style)
+		    switch(ft->info.encoding)
 		    {
 			case ST_ENCODING_SIGN2:
 				while(done < nsamp) {
@@ -277,7 +277,7 @@ LONG *buf, nsamp;
 			break;
 	}
 	fail("Sorry, don't have code to read %s, %s",
-		st_encodings_str[ft->info.style], st_sizes_str[ft->info.size]);
+		st_encodings_str[ft->info.encoding], st_sizes_str[ft->info.size]);
 	return(0);
 }
 
@@ -388,7 +388,7 @@ LONG *buf, nsamp;
 
 	switch(ft->info.size) {
 		case ST_SIZE_BYTE:
-		    switch(ft->info.style)
+		    switch(ft->info.encoding)
 		    {
 			case ST_ENCODING_SIGN2:
 				while(done < nsamp) {
@@ -437,7 +437,7 @@ LONG *buf, nsamp;
 		    }
 		    break;
 		case ST_SIZE_WORD:
-		    switch(ft->info.style)
+		    switch(ft->info.encoding)
 		    {
 			case ST_ENCODING_SIGN2:
 				return blockw_sw(ft,buf,nsamp);
@@ -462,7 +462,7 @@ LONG *buf, nsamp;
 		    }
 		    break;
 		case ST_SIZE_DWORD:
-		    switch(ft->info.style)
+		    switch(ft->info.encoding)
 		    {
 			case ST_ENCODING_SIGN2:
 				while(done < nsamp) {
@@ -487,7 +487,7 @@ LONG *buf, nsamp;
 			break;
 	}
 	fail("Sorry, don't have code to write %s, %s",
-		st_encodings_str[ft->info.style], st_sizes_str[ft->info.size]);
+		st_encodings_str[ft->info.encoding], st_sizes_str[ft->info.size]);
 	return 0;
 }
 
@@ -509,7 +509,7 @@ int NAME(ft) \
 ft_t ft; \
 { \
 	ft->info.size = SIZE; \
-	ft->info.style = STYLE; \
+	ft->info.encoding = STYLE; \
 	rawdefaults(ft); \
 	return st_rawstartread(ft); \
 }
@@ -519,7 +519,7 @@ int NAME(ft) \
 ft_t ft; \
 { \
 	ft->info.size = SIZE; \
-	ft->info.style = STYLE; \
+	ft->info.encoding = STYLE; \
 	rawdefaults(ft); \
 	return st_rawstartwrite(ft); \
 }

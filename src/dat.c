@@ -57,10 +57,10 @@ ft_t ft;
 #endif
       }
 
-   /* size and style are really not necessary except to satisfy caller. */
+   /* size and encoding are really not necessary except to satisfy caller. */
 
    ft->info.size = ST_SIZE_DOUBLE;
-   ft->info.style = ST_ENCODING_SIGN2;
+   ft->info.encoding = ST_ENCODING_SIGN2;
 
    return (ST_SUCCESS);
 }
@@ -80,7 +80,7 @@ ft_t ft;
    }
    
    ft->info.size = ST_SIZE_DOUBLE;
-   ft->info.style = ST_ENCODING_SIGN2;
+   ft->info.encoding = ST_ENCODING_SIGN2;
    dat->timevalue = 0.0;
    srate = ft->info.rate;
    dat->deltat = 1.0 / srate;

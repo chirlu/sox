@@ -176,7 +176,7 @@ struct smptrailer *trailer;
  * Do anything required before you start reading samples.
  * Read file header. 
  *	Find out sampling rate, 
- *	size and style of samples, 
+ *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
 int st_smpstartread(ft) 
@@ -264,7 +264,7 @@ ft_t ft;
 
 	ft->info.rate = (int) trailer.rate;
 	ft->info.size = ST_SIZE_WORD;
-	ft->info.style = ST_ENCODING_SIGN2;
+	ft->info.encoding = ST_ENCODING_SIGN2;
 	ft->info.channels = 1;
 
 	report("SampleVision trailer:\n");
@@ -364,7 +364,7 @@ ft_t ft;
 
 	/* If your format specifies any of the following info. */
 	ft->info.size = ST_SIZE_WORD;
-	ft->info.style = ST_ENCODING_SIGN2;
+	ft->info.encoding = ST_ENCODING_SIGN2;
 	ft->info.channels = 1;
 
 	strcpy(header.Id, SVmagic);

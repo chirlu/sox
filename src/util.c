@@ -174,8 +174,8 @@ ft_t ft, ft2;
 		ft2->info.size = ft->info.size;
 		noise = 1;
 	}
-	if (ft2->info.style == -1) {
-		ft2->info.style = ft->info.style;
+	if (ft2->info.encoding == -1) {
+		ft2->info.encoding = ft->info.encoding;
 		noise = 1;
 	}
 	if (ft2->info.channels == -1) {
@@ -217,8 +217,8 @@ ft_t ft;
 			ft->info.rate, ft->filename);
 	if (ft->info.size == -1)
 		fail("Data size was not given for %s file\nUse one of -b/-w/-l/-f/-d/-D", ft->filename);
-	if (ft->info.style == -1 && ft->info.size != ST_SIZE_FLOAT)
-		fail("Data style was not given for %s file\nUse one of -s/-u/-U/-A", ft->filename);
+	if (ft->info.encoding == -1 && ft->info.size != ST_SIZE_FLOAT)
+		fail("Data encoding was not given for %s file\nUse one of -s/-u/-U/-A", ft->filename);
 	/* it's so common, might as well default */
 	if (ft->info.channels == -1)
 		ft->info.channels = 1;

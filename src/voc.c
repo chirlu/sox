@@ -221,9 +221,9 @@ ft_t ft;
 	}
 
 	ft->info.size = v->size;
-	ft->info.style = ST_ENCODING_UNSIGNED;
+	ft->info.encoding = ST_ENCODING_UNSIGNED;
 	if (v->size == ST_SIZE_WORD)
-	    ft->info.style = ST_ENCODING_SIGN2;
+	    ft->info.encoding = ST_ENCODING_SIGN2;
 	if (ft->info.channels == -1)
 		ft->info.channels = v->channels;
 
@@ -332,9 +332,9 @@ ft_t ft;
 	st_writew(ft, 0x1129);		/* checksum of version number */
 
 	if (ft->info.size == ST_SIZE_BYTE)
-	  ft->info.style = ST_ENCODING_UNSIGNED;
+	  ft->info.encoding = ST_ENCODING_UNSIGNED;
 	else
-	  ft->info.style = ST_ENCODING_SIGN2;
+	  ft->info.encoding = ST_ENCODING_SIGN2;
 	if (ft->info.channels == -1)
 		ft->info.channels = 1;
 

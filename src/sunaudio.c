@@ -33,7 +33,7 @@
  * Do anything required before you start reading samples.
  * Read file header.
  *	Find out sampling rate,
- *	size and style of samples,
+ *	size and encoding of samples,
  *	mono/stereo/quad.
  */
 int st_sunstartread(ft)
@@ -58,7 +58,7 @@ ft_t ft;
 
     if (ft->info.rate == 0.0) ft->info.rate = 8000;
     if (ft->info.size == -1) ft->info.size = ST_SIZE_BYTE;
-    if (ft->info.style == -1) ft->info.style = ST_ENCODING_ULAW;
+    if (ft->info.encoding == -1) ft->info.encoding = ST_ENCODING_ULAW;
 
 #ifdef __SVR4
     /* Read in old values, change to what we need and then send back */
@@ -78,30 +78,30 @@ ft_t ft;
     {
 	if (ft->info.size == ST_SIZE_BYTE)
 	{
-	    if (ft->info.style != ST_ENCODING_ULAW && 
-		ft->info.style != ST_ENCODING_ALAW)
+	    if (ft->info.encoding != ST_ENCODING_ULAW && 
+		ft->info.encoding != ST_ENCODING_ALAW)
 	    {
 		report("Warning: Detected simple hardware.  Forcing output to ULAW");
-		ft->info.style = ST_ENCODING_ULAW;
+		ft->info.encoding = ST_ENCODING_ULAW;
 	    }
 	}
 	else if (ft->info.size == ST_SIZE_WORD)
 	{
 	    report("Warning: Detected simple hardware.  Forcing output to ULAW");
 	    ft->info.size = ST_SIZE_BYTE;
-	    ft->info.style = ST_ENCODING_ULAW;
+	    ft->info.encoding = ST_ENCODING_ULAW;
 	}
     }
    
     if (ft->info.size == ST_SIZE_BYTE) {
 	samplesize = 8;
-	if (ft->info.style != ST_ENCODING_ULAW &&
-	    ft->info.style != ST_ENCODING_ALAW &&
-	    ft->info.style != ST_ENCODING_SIGN2) {
+	if (ft->info.encoding != ST_ENCODING_ULAW &&
+	    ft->info.encoding != ST_ENCODING_ALAW &&
+	    ft->info.encoding != ST_ENCODING_SIGN2) {
 	    fail("Sun Audio driver only supports ULAW, ALAW, and Signed Linear for bytes.");
 	}
-	if ((ft->info.style == ST_ENCODING_ULAW || 
-	     ft->info.style == ST_ENCODING_ALAW) && ft->info.channels == 2)
+	if ((ft->info.encoding == ST_ENCODING_ULAW || 
+	     ft->info.encoding == ST_ENCODING_ALAW) && ft->info.channels == 2)
 	{
 	    report("Warning: only support mono for ULAW and ALAW data.  Forcing to mono");
 	    ft->info.channels = 2;
@@ -109,7 +109,7 @@ ft_t ft;
     }
     else if (ft->info.size == ST_SIZE_WORD) {
 	samplesize = 16;
-	if (ft->info.style != ST_ENCODING_SIGN2) {
+	if (ft->info.encoding != ST_ENCODING_SIGN2) {
 	    fail("Sun Audio driver only supports Signed Linear for words.");
 	    return(ST_EOF);
 	}
@@ -137,9 +137,9 @@ ft_t ft;
     audio_if.record.precision = samplesize;
     audio_if.record.channels = ft->info.channels;
     audio_if.record.sample_rate = ft->info.rate;
-    if (ft->info.style == ST_ENCODING_ULAW)
+    if (ft->info.encoding == ST_ENCODING_ULAW)
 	encoding = AUDIO_ENCODING_ULAW;
-    else if (ft->info.style == ST_ENCODING_ALAW)
+    else if (ft->info.encoding == ST_ENCODING_ALAW)
 	encoding = AUDIO_ENCODING_ALAW;
     else
 	encoding = AUDIO_ENCODING_LINEAR;
@@ -159,7 +159,7 @@ ft_t ft;
 	return(ST_EOF);
     }
     if (audio_if.record.encoding != encoding) {
-	fail("Unable to initialize style for /dev/audio");
+	fail("Unable to initialize encoding for /dev/audio");
 	return(ST_EOF);
     }
     /* Change to non-buffered I/O*/
@@ -206,36 +206,36 @@ ft_t ft;
     {
 	if (ft->info.size == ST_SIZE_BYTE)
 	{
-	    if (ft->info.style != ST_ENCODING_ULAW && 
-		ft->info.style != ST_ENCODING_ALAW)
+	    if (ft->info.encoding != ST_ENCODING_ULAW && 
+		ft->info.encoding != ST_ENCODING_ALAW)
 	    {
 		report("Warning: Detected simple hardware.  Forcing output to ULAW");
-		ft->info.style = ST_ENCODING_ULAW;
+		ft->info.encoding = ST_ENCODING_ULAW;
 	    }
 	}
 	else if (ft->info.size == ST_SIZE_WORD)
 	{
 	    report("Warning: Detected simple hardware.  Forcing output to ULAW");
 	    ft->info.size = ST_SIZE_BYTE;
-	    ft->info.style = ST_ENCODING_ULAW;
+	    ft->info.encoding = ST_ENCODING_ULAW;
 	}
     }
  
     if (ft->info.rate == 0.0) ft->info.rate = 8000;
     if (ft->info.size == -1) ft->info.size = ST_SIZE_BYTE;
-    if (ft->info.style == -1) ft->info.style = ST_ENCODING_ULAW;
+    if (ft->info.encoding == -1) ft->info.encoding = ST_ENCODING_ULAW;
 
     if (ft->info.size == ST_SIZE_BYTE) {
 	samplesize = 8;
-	if (ft->info.style != ST_ENCODING_ULAW &&
-	    ft->info.style != ST_ENCODING_ALAW &&
-	    ft->info.style != ST_ENCODING_SIGN2) {
+	if (ft->info.encoding != ST_ENCODING_ULAW &&
+	    ft->info.encoding != ST_ENCODING_ALAW &&
+	    ft->info.encoding != ST_ENCODING_SIGN2) {
 	    report("Sun Audio driver only supports ULAW, ALAW, and Signed Linear for bytes.");
 	    report("Forcing to ULAW");
-	    ft->info.style = ST_ENCODING_ULAW;
+	    ft->info.encoding = ST_ENCODING_ULAW;
 	}
-	if ((ft->info.style == ST_ENCODING_ULAW || 
-	     ft->info.style == ST_ENCODING_ALAW) && ft->info.channels == 2)
+	if ((ft->info.encoding == ST_ENCODING_ULAW || 
+	     ft->info.encoding == ST_ENCODING_ALAW) && ft->info.channels == 2)
 	{
 	    report("Warning: only support mono for ULAW and ALAW data.  Forcing to mono");
 	    ft->info.channels = 2;
@@ -244,10 +244,10 @@ ft_t ft;
     }
     else if (ft->info.size == ST_SIZE_WORD) {
 	samplesize = 16;
-	if (ft->info.style != ST_ENCODING_SIGN2) {
+	if (ft->info.encoding != ST_ENCODING_SIGN2) {
 	    report("Sun Audio driver only supports Signed Linear for words.");
 	    report("Forcing to Signed Linear");
-	    ft->info.style = ST_ENCODING_SIGN2;
+	    ft->info.encoding = ST_ENCODING_SIGN2;
 	}
     }
     else {
@@ -267,9 +267,9 @@ ft_t ft;
     audio_if.play.precision = samplesize;
     audio_if.play.channels = ft->info.channels;
     audio_if.play.sample_rate = ft->info.rate;
-    if (ft->info.style == ST_ENCODING_ULAW)
+    if (ft->info.encoding == ST_ENCODING_ULAW)
 	encoding = AUDIO_ENCODING_ULAW;
-    else if (ft->info.style == ST_ENCODING_ALAW)
+    else if (ft->info.encoding == ST_ENCODING_ALAW)
 	encoding = AUDIO_ENCODING_ALAW;
     else
 	encoding = AUDIO_ENCODING_LINEAR;
@@ -289,7 +289,7 @@ ft_t ft;
 	return(ST_EOF);
     }
     if (audio_if.play.encoding != encoding) {
-	fail("Unable to initialize style for /dev/audio");
+	fail("Unable to initialize encoding for /dev/audio");
 	return(ST_EOF);
     }
     /* Change to non-buffered I/O */

@@ -173,8 +173,8 @@ eff_t effp;
 # ifdef DEBUG
   {
     printf("Starting compand effect\n");
-    printf("\nRate %ld, size %d, style %d, output gain %g.\n",
-	   effp->outinfo.rate, effp->outinfo.size, effp->outinfo.style,
+    printf("\nRate %ld, size %d, encoding %d, output gain %g.\n",
+	   effp->outinfo.rate, effp->outinfo.size, effp->outinfo.encoding,
 	   l->outgain);
     printf("%d input channel(s) expected: actually %d\n",
 	   l->expectedChannels, effp->outinfo.channels);

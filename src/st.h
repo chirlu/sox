@@ -90,7 +90,7 @@ extern "C" {
 struct  st_signalinfo {
 	LONG		rate;		/* sampling rate */
 	int		size;		/* word length of data */
-	int		style;		/* format of sample numbers */
+	int		encoding;	/* format of sample numbers */
 	int		channels;	/* number of sound channels */
 	unsigned short	bs;		/* requested blocksize, eg for output .wav's */
 	unsigned char	dovol;		/* has volume factor */

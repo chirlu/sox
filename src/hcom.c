@@ -124,7 +124,7 @@ ft_t ft;
 	st_readw(ft, &dictsize);
 
 	/* Translate to sox parameters */
-	ft->info.style = ST_ENCODING_UNSIGNED;
+	ft->info.encoding = ST_ENCODING_UNSIGNED;
 	ft->info.size = ST_SIZE_BYTE;
 	ft->info.rate = 22050 / divisor;
 	ft->info.channels = 1;
@@ -305,7 +305,7 @@ ft_t ft;
 		return (ST_EOF);
 	}
 	ft->info.size = ST_SIZE_BYTE;
-	ft->info.style = ST_ENCODING_UNSIGNED;
+	ft->info.encoding = ST_ENCODING_UNSIGNED;
 	ft->info.channels = 1;
 
 	p->size = BUFINCR;

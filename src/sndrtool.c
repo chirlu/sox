@@ -103,7 +103,7 @@ ft_t ft;
 
 ft->info.channels = 1;
 ft->info.rate = rate;
-ft->info.style = ST_ENCODING_UNSIGNED;
+ft->info.encoding = ST_ENCODING_UNSIGNED;
 ft->info.size = ST_SIZE_BYTE;
 
 return (ST_SUCCESS);
@@ -137,7 +137,7 @@ ft_t ft;
 
 /* write header */
 ft->info.channels = 1;
-ft->info.style = ST_ENCODING_UNSIGNED;
+ft->info.encoding = ST_ENCODING_UNSIGNED;
 ft->info.size = ST_SIZE_BYTE;
 p->nsamples = 0;
 sndtwriteheader(ft, 0);
@@ -170,7 +170,7 @@ ft_t ft;
 
 /* write header */
 ft->info.channels = 1;
-ft->info.style = ST_ENCODING_UNSIGNED;
+ft->info.encoding = ST_ENCODING_UNSIGNED;
 ft->info.size = ST_SIZE_BYTE;
 
 /* sounder header */

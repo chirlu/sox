@@ -139,13 +139,13 @@ int st_deemph_start(effp)
 eff_t effp;
 {
      /* check the input format */
-     if (effp->ininfo.style != ST_ENCODING_SIGN2
+     if (effp->ininfo.encoding != ST_ENCODING_SIGN2
          || effp->ininfo.rate != 44100
          || effp->ininfo.size != ST_SIZE_WORD)
      {
           fail("The deemphasis effect works only with audio cd like samples.\nThe input format however has %d Hz sample rate and %d-byte%s signed linearly coded samples.",
             effp->ininfo.rate, effp->ininfo.size,
-            effp->ininfo.style != ST_ENCODING_SIGN2 ? ", but not" : "");
+            effp->ininfo.encoding != ST_ENCODING_SIGN2 ? ", but not" : "");
 	  return (ST_EOF);
      }
      else

@@ -75,7 +75,7 @@ ft_t ft;
                 type = "raw";
                 ft->info.rate = 11000;
                 ft->info.size = ST_SIZE_BYTE;
-                ft->info.style = ST_ENCODING_UNSIGNED;
+                ft->info.encoding = ST_ENCODING_UNSIGNED;
                 }
 	report("Type AUTO changed to %s", type);
 	ft->filetype = type;

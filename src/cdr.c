@@ -35,7 +35,7 @@ typedef struct cdrstuff {
  * Do anything required before you start reading samples.
  * Read file header. 
  *	Find out sampling rate, 
- *	size and style of samples, 
+ *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
 
@@ -62,7 +62,7 @@ ft_t ft;
 
 	ft->info.rate = 44100L;
 	ft->info.size = ST_SIZE_WORD;
-	ft->info.style = ST_ENCODING_SIGN2;
+	ft->info.encoding = ST_ENCODING_SIGN2;
 	ft->info.channels = 2;
 	ft->comment = NULL;
 
@@ -121,7 +121,7 @@ ft_t ft;
 
 	ft->info.rate = 44100L;
 	ft->info.size = ST_SIZE_WORD;
-	ft->info.style = ST_ENCODING_SIGN2;
+	ft->info.encoding = ST_ENCODING_SIGN2;
 	ft->info.channels = 2;
 
 	return(ST_SUCCESS);

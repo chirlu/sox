@@ -433,7 +433,7 @@ static ULONG findChunk(ft_t ft, const char *Label)
  * Do anything required before you start reading samples.
  * Read file header. 
  *	Find out sampling rate, 
- *	size and style of samples, 
+ *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
 int st_wavstartread(ft) 
@@ -507,23 +507,23 @@ ft_t ft;
 	
     case WAVE_FORMAT_PCM:
 	/* Default (-1) depends on sample size.  Set that later on. */
-	if (ft->info.style != -1 && ft->info.style != ST_ENCODING_UNSIGNED &&
-	    ft->info.style != ST_ENCODING_SIGN2)
-	    warn("User options overriding style read in .wav header");
+	if (ft->info.encoding != -1 && ft->info.encoding != ST_ENCODING_UNSIGNED &&
+	    ft->info.encoding != ST_ENCODING_SIGN2)
+	    warn("User options overriding encoding read in .wav header");
 	break;
 	
     case WAVE_FORMAT_IMA_ADPCM:
-	if (ft->info.style == -1 || ft->info.style == ST_ENCODING_IMA_ADPCM)
-	    ft->info.style = ST_ENCODING_IMA_ADPCM;
+	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_IMA_ADPCM)
+	    ft->info.encoding = ST_ENCODING_IMA_ADPCM;
 	else
-	    warn("User options overriding style read in .wav header");
+	    warn("User options overriding encoding read in .wav header");
 	break;
 
     case WAVE_FORMAT_ADPCM:
-	if (ft->info.style == -1 || ft->info.style == ST_ENCODING_ADPCM)
-	    ft->info.style = ST_ENCODING_ADPCM;
+	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_ADPCM)
+	    ft->info.encoding = ST_ENCODING_ADPCM;
 	else
-	    warn("User options overriding style read in .wav header");
+	    warn("User options overriding encoding read in .wav header");
 	break;
 
     case WAVE_FORMAT_IEEE_FLOAT:
@@ -531,17 +531,17 @@ ft_t ft;
 	return ST_EOF;
 	
     case WAVE_FORMAT_ALAW:
-	if (ft->info.style == -1 || ft->info.style == ST_ENCODING_ALAW)
-	    ft->info.style = ST_ENCODING_ALAW;
+	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_ALAW)
+	    ft->info.encoding = ST_ENCODING_ALAW;
 	else
-	    warn("User options overriding style read in .wav header");
+	    warn("User options overriding encoding read in .wav header");
 	break;
 	
     case WAVE_FORMAT_MULAW:
-	if (ft->info.style == -1 || ft->info.style == ST_ENCODING_ULAW)
-	    ft->info.style = ST_ENCODING_ULAW;
+	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_ULAW)
+	    ft->info.encoding = ST_ENCODING_ULAW;
 	else
-	    warn("User options overriding style read in .wav header");
+	    warn("User options overriding encoding read in .wav header");
 	break;
 	
     case WAVE_FORMAT_OKI_ADPCM:
@@ -558,10 +558,10 @@ ft_t ft;
 	return ST_EOF;
     case WAVE_FORMAT_GSM610:
 #ifdef HAVE_LIBGSM
-	if (ft->info.style == -1 || ft->info.style == ST_ENCODING_GSM )
-	    ft->info.style = ST_ENCODING_GSM;
+	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_GSM )
+	    ft->info.encoding = ST_ENCODING_GSM;
 	else
-	    warn("User options overriding style read in .wav header");
+	    warn("User options overriding encoding read in .wav header");
 	break;
 #else
 	fail("Sorry, this WAV file is in GSM6.10 format and no GSM support present, recompile sox with gsm library");
@@ -785,9 +785,9 @@ ft_t ft;
 	else
 	    warn("User options overriding size read in .wav header");
 
-	/* Now we have enough information to set default styles. */
-	if (ft->info.style == -1)
-	    ft->info.style = ST_ENCODING_UNSIGNED;
+	/* Now we have enough information to set default encodings. */
+	if (ft->info.encoding == -1)
+	    ft->info.encoding = ST_ENCODING_UNSIGNED;
 	break;
 	
     case ST_SIZE_WORD:
@@ -796,9 +796,9 @@ ft_t ft;
 	else
 	    warn("User options overriding size read in .wav header");
 
-	/* Now we have enough information to set default styles. */
-	if (ft->info.style == -1)
-	    ft->info.style = ST_ENCODING_SIGN2;
+	/* Now we have enough information to set default encodings. */
+	if (ft->info.encoding == -1)
+	    ft->info.encoding = ST_ENCODING_SIGN2;
 	break;
 	
     case ST_SIZE_DWORD:
@@ -807,9 +807,9 @@ ft_t ft;
 	else
 	    warn("User options overriding size read in .wav header");
 
-	/* Now we have enough information to set default styles. */
-	if (ft->info.style == -1)
-	    ft->info.style = ST_ENCODING_SIGN2;
+	/* Now we have enough information to set default encodings. */
+	if (ft->info.encoding == -1)
+	    ft->info.encoding = ST_ENCODING_SIGN2;
 	break;
 	
     default:
@@ -907,9 +907,9 @@ LONG *buf, len;
 	
 	if (len > wav->numSamples) len = wav->numSamples;
 
-	/* If file is in ADPCM style then read in multiple blocks else */
+	/* If file is in ADPCM encoding then read in multiple blocks else */
 	/* read as much as possible and return quickly. */
-	switch (ft->info.style)
+	switch (ft->info.encoding)
 	{
 	case ST_ENCODING_IMA_ADPCM:
 	case ST_ENCODING_ADPCM:
@@ -959,7 +959,7 @@ LONG *buf, len;
 		warn("Premature EOF on .wav input file");
 	break;
 #endif
-	default: /* assume PCM style */
+	default: /* assume PCM encoding */
 	    done = st_rawread(ft, buf, len);
 	    /* If software thinks there are more samples but I/O */
 	    /* says otherwise, let the user know about this.     */
@@ -985,7 +985,7 @@ ft_t ft;
     if (wav->samples) free(wav->samples);
     if (wav->iCoefs) free(wav->iCoefs);
 
-    switch (ft->info.style)
+    switch (ft->info.encoding)
     {
 #ifdef HAVE_LIBGSM
     case ST_ENCODING_GSM:
@@ -1154,43 +1154,43 @@ int second_header;
 	{
 		case ST_SIZE_BYTE:
 		        wBitsPerSample = 8;
-			if (ft->info.style != ST_ENCODING_UNSIGNED &&
-			    ft->info.style != ST_ENCODING_ULAW &&
-			    ft->info.style != ST_ENCODING_ALAW &&
-			    ft->info.style != ST_ENCODING_GSM)
+			if (ft->info.encoding != ST_ENCODING_UNSIGNED &&
+			    ft->info.encoding != ST_ENCODING_ULAW &&
+			    ft->info.encoding != ST_ENCODING_ALAW &&
+			    ft->info.encoding != ST_ENCODING_GSM)
 			{
-				warn("Do not support %s with 8-bit data.  Forcing to unsigned",st_encodings_str[ft->info.style]);
-				ft->info.style = ST_ENCODING_UNSIGNED;
+				warn("Do not support %s with 8-bit data.  Forcing to unsigned",st_encodings_str[ft->info.encoding]);
+				ft->info.encoding = ST_ENCODING_UNSIGNED;
 			}
 			break;
 		case ST_SIZE_WORD:
 			wBitsPerSample = 16;
-			if (ft->info.style != ST_ENCODING_SIGN2)
+			if (ft->info.encoding != ST_ENCODING_SIGN2)
 			{
-				warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[ft->info.style]);
-				ft->info.style = ST_ENCODING_SIGN2;
+				warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[ft->info.encoding]);
+				ft->info.encoding = ST_ENCODING_SIGN2;
 			}
 			break;
 		case ST_SIZE_DWORD:
 			wBitsPerSample = 32;
-			if (ft->info.style != ST_ENCODING_SIGN2)
+			if (ft->info.encoding != ST_ENCODING_SIGN2)
 			{
-				warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[ft->info.style]);
-				ft->info.style = ST_ENCODING_SIGN2;
+				warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[ft->info.encoding]);
+				ft->info.encoding = ST_ENCODING_SIGN2;
 			}
 
 			break;
 		default:
 			warn("Do not support %s in WAV files.  Forcing to Signed Words.",st_sizes_str[ft->info.size]);
-			ft->info.style = ST_ENCODING_SIGN2;
+			ft->info.encoding = ST_ENCODING_SIGN2;
 			ft->info.size = ST_SIZE_WORD;
 			wBitsPerSample = 16;
 			break;
 	}
 
-	if (ft->info.style != ST_ENCODING_ADPCM &&
-	    ft->info.style != ST_ENCODING_IMA_ADPCM &&
-	    ft->info.style != ST_ENCODING_GSM)
+	if (ft->info.encoding != ST_ENCODING_ADPCM &&
+	    ft->info.encoding != ST_ENCODING_IMA_ADPCM &&
+	    ft->info.encoding != ST_ENCODING_GSM)
 	{
 		rc = st_rawstartwrite(ft);
 		if (rc)
@@ -1199,7 +1199,7 @@ int second_header;
 
 	wSamplesPerBlock = 1;	/* common default for PCM data */
 
-	switch (ft->info.style)
+	switch (ft->info.encoding)
 	{
 		case ST_ENCODING_UNSIGNED:
 		case ST_ENCODING_SIGN2:
@@ -1228,7 +1228,6 @@ int second_header;
 			wSamplesPerBlock = ImaSamplesIn(0, wChannels, wBlockAlign, 0);
 			break;
 		case ST_ENCODING_ADPCM:
-			/* warn("Experimental support writing ADPCM style.\n"); */
 			if (wChannels>16)
 			{
 			    fail("Channels(%d) must be <= 16\n",wChannels);
