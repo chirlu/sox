@@ -104,25 +104,22 @@ fi
 
 dnl Test for GSM library.
 
-if test "$gsmlib" = auto
+if test "$gsmlib" != auto  && test "$gsmlib" != no
 then
-  AC_CHECK_LIB(gsm, gsm_create)
-  if test "$ac_cv_lib_gsm_gsm_create" = yes
-  then
-    gsmlib=yes
-  fi
-else
-  if test "$gsmlib" != no
-  then
-    LIBS="$LIBS -L$gsmlib -lgsm"
-    CFLAGS="$CFLAGS -DHAVE_LIBGSM"
-    gsmlib=yes
-  fi
+  LIBS="$LIBS -L$gsmlib"
 fi
 
-if test "$gsminc" != auto && "$gsminc" != no
+if test "$gsminc" != auto && test "$gsminc" != no
 then
   CFLAGS="$CFLAGS -I$gsminc"
+fi
+
+AC_CHECK_HEADER(gsm.h, gsminc=yes, gsminc=no)
+if test "$gsminc" != yes
+then
+  AC_WARN([Can not find gsm.h header file])
+else
+  AC_CHECK_LIB(gsm, gsm_create)
 fi
 
 dnl Checks for header files.
