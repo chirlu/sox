@@ -71,7 +71,7 @@ if ($ratechange==0) {
 	}
 }
 print("#   with tone pulses from 0.00 to 0.99 percent of Nyquist\n");
-print("#   produced by $ding -f0.xx -v0.5 -o$p -e$p:$env:$p d/i0.xx.$t\n");
+print("#   produced by $ding -f0.xx -v0.5 -e$p:$env:$p d/i0.xx.$t\n");
 
 # generate the test data
 mkdir("d",0775);
@@ -83,10 +83,10 @@ for ($f=0.00; $f<1.001; $f+=0.01) {
 
 	#if ($f>0.995) { $f=0.999; }
 	my $s=sprintf("%4.2f",$f);
-	#print "$ding -v0.5 -e$p:$env:$p -f$s -d1.0 d/i$s.$t\n";
-	qx{$ding -v0.5 -e$p:$env:$p -f$s -d1.0 d/i$s.$t &>/dev/null};
+	#print "$ding -f$s -v0.5 -d1.0 -e$p:$env:$p d/i$s.$t\n";
+	qx{$ding -f$s -v0.5 -d1.0 -e$p:$env:$p d/i$s.$t &>/dev/null};
 	if ($ratechange==0) {
-		qx{$sox -r$rate0 d/i$s.$t -r$rate0 d/j$s.$t $effect 2>/dev/null};
+		qx{$sox -r$rate0 d/i$s.$t -r$rate0 d/j$s.$t $effect} ;
 		@mod = grep {/v2max/} qx{$model -f$s -e$env $rate0 d/j$s.$t 2>&1};
 	} else {
 		qx{$sox -r$rate0 d/i$s.$t -r$rate1 d/u$s.$t $effect 2>/dev/null};

@@ -77,18 +77,18 @@ model works as follows:
 
 step 1:  the entire sample file is read in, and the center-of-gravity of
          the squared samples is found.  This is the time offset which should
-	 correspond to the center of the filtered/resampled tone-pulse.
+         correspond to the center of the filtered/resampled tone-pulse.
 
 step 2:  let N = 16000*(rate1/rate0) be the number of samples at output rate
-	 which would correspond to the 16000 sample duration at max volume.
-	 We focus on the samples between
-         (center - 0.3*N)    and    (center + 0.9*N)
-	 where the transient effects of attack/release envelope should be
-	 small.
-	 We do a least-squares fit of a sinusoid at the adjusted frequency
-	 to this segment of 0.6*N samples, and print out the component
-	 s2max which can be explained, and also the rms level of the 'error'
-	 or unexplained part.
+         which would correspond to the 16000 sample duration at max volume.
+         We focus on the samples between
+             (center - 0.3*N)    and    (center + 0.9*N)
+         where the transient effects of attack/release envelope should be
+         small.
+         We do a least-squares fit of a sinusoid at the adjusted frequency
+         to this segment of 0.6*N samples, and print out the component
+         s2max which can be explained, and also the rms level of the 'error'
+         or unexplained part.
 
 That's pretty much it... the ltest perl-script glues it together and outputs
 adjusted data which the gnuplot will like.
