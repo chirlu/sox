@@ -536,6 +536,12 @@ ft_t ft;
 	    ft->info.encoding = ST_ENCODING_ALAW;
 	else
 	    st_warn("User options overriding encoding read in .wav header");
+
+	/* Needed by rawread() functions */
+        rc = st_rawstartread(ft);
+        if (rc)
+	    return rc;
+
 	break;
 	
     case WAVE_FORMAT_MULAW:
@@ -543,6 +549,12 @@ ft_t ft;
 	    ft->info.encoding = ST_ENCODING_ULAW;
 	else
 	    st_warn("User options overriding encoding read in .wav header");
+
+	/* Needed by rawread() functions */
+        rc = st_rawstartread(ft);
+        if (rc)
+	    return rc;
+
 	break;
 	
     case WAVE_FORMAT_OKI_ADPCM:
