@@ -103,7 +103,7 @@ char **argv;
       l->transferIns[tfers-1] = 1.0; l->transferOuts[tfers-1] = 1.0;
       s = strtok(argv[1], ","); i = 1;
       do {
-	if (!strcasecmp(s, "-inf"))
+	if (!strcmp(s, "-inf"))
 	  fail("Input signals of zero level must always generate zero output");
 	l->transferIns[i]  = pow(10.0, atof(s)/20.0);
 	if (l->transferIns[i] > 1.0)
@@ -115,7 +115,7 @@ char **argv;
 	  fail("Transfer function points don't have strictly ascending "
 	       "input amplitude");
 	s = strtok(NULL, ",");
-	l->transferOuts[i] = strcasecmp(s, "-inf") ?
+	l->transferOuts[i] = strcmp(s, "-inf") ?
 	                       pow(10.0, atof(s)/20.0) : 0;
 	s = strtok(NULL, ",");
 	++i;

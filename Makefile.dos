@@ -15,9 +15,10 @@ FOBJ	= 8svx.obj aiff.obj alsa.obj au.obj auto.obj avr.obj cdr.obj cvsd.obj \
 	  hcom.obj maud.obj oss.obj raw.obj sf.obj smp.obj \
 	  sndrtool.obj sunaudio.obj tx16w.obj voc.obj wav.obj wve.obj
 
-EOBJ	= avg.obj band.obj chorus.obj compand.obj copy.obj cut.obj \
-	  deemphas.obj dyn.obj echo.obj echos.obj filter.obj flanger.obj \
-          highp.obj lowp.obj map.obj mask.obj phaser.obj pick.obj polyphas.obj \
+EOBJ	= avg.obj band.obj bandpass.obj breject.obj btrworth.obj chorus.obj \
+	  compand.obj copy.obj cut.obj deemphas.obj dyn.obj echo.obj \
+	  echos.obj filter.obj flanger.obj highp.obj highpass.obj lowp.obj \
+          lowpass.obj map.obj mask.obj phaser.obj pick.obj polyphas.obj \
 	  rate.obj resample.obj reverb.obj reverse.obj split.obj \
 	  stat.obj swap.obj vibro.obj
 
@@ -27,9 +28,9 @@ LIBOBJS   = $(FOBJ) $(EOBJ) handlers.obj libst.obj misc.obj getopt.obj util.obj
 # The following defines tell where compiler files are kept, not where
 # things should be installed like Unix usually specifies.  If your using
 # Microsoft Compilers then you don't need these.
-BINDIR  = d:\tc\bin
-LIBDIR  = d:\tc\lib
-INCDIR  = d:\tc\include
+BINDIR  = c:\tc
+LIBDIR  = c:\tc\lib
+INCDIR  = c:\tc\include
 
 #BINDIR	= d:\bc\bin
 #LIBDIR	= d:\bc\lib
@@ -45,7 +46,7 @@ INCDIR  = d:\tc\include
 CC      = $(BINDIR)\tcc
 #CC      = $(BINDIR)\bcc
 LDD	= $(BINDIR)\tlib
-CFLAGS  = -DDOS -DHAVE_GETOPT -D__STDC__=1 -a -c -mh -G -O -v -N
+CFLAGS  = -DDOS -DHAVE_MEMMOVE -D__STDC__=1 -a -c -mh -G -O -v -N
 LFLAGS  = -v -mh
 
 .c.obj:
@@ -55,7 +56,7 @@ LFLAGS  = -v -mh
 # MS VC needs the following. /AL uses large memory model.
 #CC	= cl
 #LDD	= lib
-#CFLAGS	= -DDOS -D__STDC__=1 -DHAVE_GETOPT -c -O /AL /Gt8192
+#CFLAGS	= -DDOS -DHAVE_MEMMOVE -D__STDC__=1 -c -O /AL /Gt8192
 #LFLAGS	= /AL /Gt8192
 
 # When using MS VC, comment out above rule for .c.obj and use this as well
