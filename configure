@@ -3856,7 +3856,7 @@ fi
 if test $ac_cv_header_vorbis_codec_h = yes; then
   found_ogg_vorbis=yes
 else
-  found_ogg_vorbis=no
+  enable_ogg_vorbis=no
 fi
 
 
@@ -4038,7 +4038,7 @@ fi
 if test $ac_cv_header_mad_h = yes; then
   found_mad=yes
 else
-  found_mad=no
+  enable_mad=no
 fi
 
 
@@ -4220,7 +4220,7 @@ fi
 if test $ac_cv_header_lame_lame_h = yes; then
   found_lame=yes
 else
-  found_lame=no
+  enable_lame=no
 fi
 
 

@@ -129,7 +129,7 @@ dnl Test for Ogg Vorbis libraries.
 
 if test "$enable_ogg_vorbis" = yes
 then
-    AC_CHECK_HEADER(vorbis/codec.h, found_ogg_vorbis=yes, found_ogg_vorbis=no)
+    AC_CHECK_HEADER(vorbis/codec.h, found_ogg_vorbis=yes, enable_ogg_vorbis=no)
     if test "$found_ogg_vorbis" = yes
     then
         AC_CHECK_LIB(vorbis, vorbis_analysis_init,
@@ -144,7 +144,7 @@ dnl Test for MAD libraries.
 
 if test "$enable_mad" = yes
 then
-    AC_CHECK_HEADER(mad.h, found_mad=yes, found_mad=no)
+    AC_CHECK_HEADER(mad.h, found_mad=yes, enable_mad=no)
     if test "$found_mad" = yes
     then
         AC_CHECK_LIB(mad, mad_stream_buffer,
@@ -159,7 +159,7 @@ dnl Test for LAME library.
 
 if test "$enable_lame" = yes
 then
-    AC_CHECK_HEADER(lame/lame.h, found_lame=yes, found_lame=no)
+    AC_CHECK_HEADER(lame/lame.h, found_lame=yes, enable_lame=no)
     if test "$found_lame" = yes
     then
         AC_CHECK_LIB(mp3lame, lame_init,
