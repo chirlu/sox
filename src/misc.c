@@ -35,7 +35,7 @@ const char *st_sizes_str[] = {
         "NONSENSE!",
         "bytes",
         "shorts",
-        "NONSENSE",
+        "24 bits",
         "longs",
         "NONSENSE",
         "NONSENSE",
@@ -287,6 +287,11 @@ float st_swapf(float f)
 }
 
 #endif
+
+uint32_t st_swap24(uint32_t udw)
+{
+    return (udw >> 16) | (udw & 0xff00) | ((udw << 16) & 0xff0000L);
+}
 
 double st_swapd(double df)
 {

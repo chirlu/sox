@@ -90,6 +90,7 @@ uint16_t st_swapw(uint16_t uw);
 uint32_t st_swapdw(uint32_t udw);
 float st_swapf(float f);
 #endif
+uint32_t st_swap24(uint32_t udw);
 double st_swapd(double d);
 
 /* util.c */
