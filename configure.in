@@ -79,7 +79,11 @@ NEED_SUNAU=0
 NEED_ALSA=0
 PLAY_SUPPORT=0
 
-CFLAGS="$CFLAGS -Wall"
+dnl Extra CFLAGS if we have gcc
+if test "$GCC" = yes
+then
+    CFLAGS="$CFLAGS -Wall"
+fi
 
 dnl Checks for libraries.
 
