@@ -593,6 +593,9 @@ ft_t ft;
 
 static int get_format(ft_t ft, int formats, int *fmt)
 {
+    if (ft->info.size == -1)
+        ft->info.size = ST_SIZE_WORD;
+
     /* Some hardware only wants to work with 8-bit or 16-bit data */
     if (ft->info.size == ST_SIZE_BYTE)
     {
@@ -614,18 +617,20 @@ static int get_format(ft_t ft, int formats, int *fmt)
     {
         if ((formats & SND_PCM_FMT_U16) || (formats & SND_PCM_FMT_S16))
         {
-            st_report("Unsupport/unspecified size for ALSA driver.  Changing to 16-bits.");
+            st_report("ALSA driver doesn't supported %s samples.  Changing to words.", st_sizes_str[(unsigned char)ft->info.size]);
             ft->info.size = ST_SIZE_WORD;
         }
         else
         {
-            st_report("Unsupported/un specified size for ALSA driver.  Changing to 8-bits.");
+            st_report("ALSA driver doesn't supported %s samples.  Changing to bytes.", st_sizes_str[(unsigned char)ft->info.size]);
             ft->info.size = ST_SIZE_BYTE;
         }
 
     }
 
     if (ft->info.size == ST_SIZE_BYTE) {
+        if (ft->info.encoding == -1)
+            ft->info.encoding = ST_ENCODING_UNSIGNED;
         switch (ft->info.encoding)
         {
             case ST_ENCODING_SIGN2:
@@ -675,6 +680,8 @@ static int get_format(ft_t ft, int formats, int *fmt)
         }
     }
     else if (ft->info.size == ST_SIZE_WORD) {
+        if (ft->info.encoding == -1)
+            ft->info.encoding = ST_ENCODING_SIGN2;
         switch (ft->info.encoding)
         {
             case ST_ENCODING_SIGN2:
@@ -714,7 +721,7 @@ static int get_format(ft_t ft, int formats, int *fmt)
         }
     }
     else {
-        st_fail_errno(ft,ST_EFMT,EMSGFMT,st_encodings_str[(unsigned char)ft->info.encoding],st_sizes_str[(unsigned char)ft->info.size]);
+        st_fail_errno(ft,ST_EFMT,EMSGFMT,st_encodings_str[(unsigned char)ft->info.encoding], st_sizes_str[(unsigned char)ft->info.size]);
         return ST_EOF;
     }
     return 0;
