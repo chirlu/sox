@@ -85,7 +85,7 @@ int w; /* w != 0 is write */
 int st_gsmstartread(ft) 
 ft_t ft;
 {
-	return st_gsmstart_rw(ft,0);
+	return gsmstart_rw(ft,0);
 }
 
 int st_gsmstartwrite(ft)
@@ -186,7 +186,6 @@ ft_t ft;
 long *buf, samp;
 {
 	int done = 0;
-	int rc;
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
 
 	while (done < samp)
@@ -233,6 +232,6 @@ ft_t ft;
 		    return rc;
 	}
 
-	return gsmstopread(ft); /* destroy handles and free buffers */
+	return st_gsmstopread(ft); /* destroy handles and free buffers */
 }
 #endif /* HAVE_LIBGSM */

@@ -989,7 +989,7 @@ ft_t ft;
     {
 #ifdef HAVE_LIBGSM
     case ST_ENCODING_GSM:
-	rc = wavgsmdestroy(ft);
+	wavgsmdestroy(ft);
 	break;
 #endif
     case ST_ENCODING_IMA_ADPCM:
@@ -1431,7 +1431,7 @@ ft_t ft;
 	    break;
 #ifdef HAVE_LIBGSM
 	case WAVE_FORMAT_GSM610:
-	    rc = wavgsmstopwrite(ft);
+	    wavgsmstopwrite(ft);
 	    break;
 #endif
 	default:
