@@ -2,6 +2,13 @@
 # create WAV-Files that can be used for an audio Test CD
 # all files are created in the current directory
 #
+# Command Line options:
+#   testcd.sh filename_prefix audio_length
+#
+#   filename_prefix is what each soundfile starts with.  Defaults to
+#   using testcd as the prefix.
+#   audio_length is the length of audio data in seconds.  Defaults to 30
+#   seconds.
 # 
 # length of sample file in seconds
 
@@ -63,7 +70,7 @@ echo "" >$LST
 
 
 #
-# ok, lets start with the actual createion of the files
+# ok, lets start with the actual creation of the files
 #
 
 #
@@ -191,7 +198,7 @@ echo -e "\n--- offset test, 1KHz tone with 1HZ 10% offset"
 newname offset $LENGTH
 $SOX $SOXOPT $NAME synth $LEN square 1 vol 0.1  synth sine mix 1000 $FADE $VOL
 newname offset1 $LENGTH
-$SOX $SOXOPT $NAME synth $LEN square 1 0 0 square 1 vol 0.1 0 25 $FADE
+$SOX $SOXOPT $NAME synth $LEN square 1 0 0 square 1 vol 0.1 $FADE
 
 
 
