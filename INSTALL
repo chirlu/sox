@@ -2,7 +2,7 @@ SoX: Sound eXchange Installation
 
 This distribution will compile and run on most Unix systems.
 It was originally developed on a Unix/386 machine running AT&T V.3.2
-but it currently developed under Linux.  With little work it should
+but its currently developed under Linux.  With little work it should
 work with most SVR4 systems, BSD-derived Unix's and DOS systems that
 use the GNU tool set.
 
@@ -10,7 +10,7 @@ Compiling
 ---------
 
 The perfered method for compiling sox is to use the "configure" scripts
-compatible with most unix systems that contain "/bin/sh" or equivelent
+compatible with most unix systems that contain "/bin/sh" or equivalent
 (even the Win95/NT Cygwin setup will work with this).
 
 To compile SoX on these platforms run the following commands:
@@ -19,9 +19,10 @@ To compile SoX on these platforms run the following commands:
     make
     make install
 
-You should then have a working version of sox in sox directory.
-If your actively developing SoX, you may optionally wish to run 
-"make depend" after configure to create a detailed dependiency list.
+You should then have a working version of sox in the directory.  There
+are several optional parameters that you may pass to the configure
+script to customize SoX for your applications.  Run "./configure --help"
+for a complete list of options.
 
 If your system works with the "configure" script then you may skip
 to the Testing section.
@@ -31,7 +32,7 @@ several canned "Makefile"'s that you can use.  The following systems
 have a canned Makefile:
 
     AMIGA      Makefile.ami (hasn't been verified lately)
-    DOS        Makefile.dos (Borland and Turbo C, almost Microsoft C++)
+    DOS        Makefile.dos (Borland and Turbo C)
 	    or Makefile.unx (using GCC compatible compiler)
     OS/2       Makefile.unx (using EMX GCC compiler)
     OS9        Makefile.os9
@@ -44,7 +45,7 @@ You can run the makefile on most systems by using the following
 command line:
 
 make -f Makefile.name      or
-make -fmakefile.name
+make -fMakefile.name
 
 Before compiling with a canned Makefile you will need to edit the 
 Makefile and uncomment the compiler define section related to your 
@@ -52,8 +53,7 @@ operating system and possibly comment out any previous system defines.
 
 There are a few additional defines available for your operating 
 system to add things such as sound playing support.  This is 
-generally documented in the Makefiles.  Look at Makefile.unx for
-the most complete set of optional defines that Sox supports.
+generally documented in the Makefiles
 
 There is optional GSM support as a data type but you must first
 install the GSM library on your system.  More information on it
