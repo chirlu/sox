@@ -15,6 +15,21 @@
  * files.  Added support for saving stereo files and 16-bit files.
  * Added VOC format info from audio format FAQ so I don't have to keep
  * looking around for it.
+ *
+ * February 5, 2001
+ * For sox-12-17 by Annonymous (see notes ANN)
+ * Added comments and notes for each procedure.
+ * Fixed so this now works with pipes, input does not have to
+ * be seekable anymore (in st_vocstartread() )
+ * Added support for uLAW and aLaw (aLaw not tested).
+ * Fixed support of multi-part VOC files, and files with
+ * block 9 but no audio in the block....
+ * The following need to be tested:  16-bit, 2 channel, and aLaw.
+ *
+ * December 10, 2001
+ * For sox-12-17-3 by Annonymous (see notes ANN)
+ * Patch for sox-12-17 merged with sox-12-17-3-pre3 code.
+ *
  */
 
 /*
@@ -67,6 +82,8 @@ DATA BLOCK:
       06     Repeat          2                   Count# (2 bytes)
       07     End repeat      0                   (NONE)
       08     Extended        4                   ***
+      09     New Header      16                  see below
+
 
       *Sound Info Format:       **Silence Info Format:
        ---------------------      ----------------------------
@@ -112,7 +129,7 @@ BLOCK 8 - digitized sound attribute extension, must preceed block 1.
         Data is stored left, right
 
 BLOCK 9 - data block that supersedes blocks 1 and 8.
-          Used for stereo, 16 bit.
+          Used for stereo, 16 bit (and uLaw, aLaw).
 
         BYTE bBlockID;          // = 9
         BYTE nBlockLen[3];      // length 12 plus length of sound
@@ -136,22 +153,27 @@ BLOCK 9 - data block that supersedes blocks 1 and 8.
 
         Data is stored left, right
 
+        ANN:  Multi-byte quantities are in Intel byte order (Little Endian).
+
 ------------------------------------------------------------------------*/
 
 #include "st_i.h"
+#include "g711.h"
 #include <string.h>
 
 /* Private data for VOC file */
 typedef struct vocstuff {
-        long rest;                      /* bytes remaining in current block */
-        long rate;                      /* rate code (byte) of this chunk */
-        int             silent;         /* sound or silence? */
-        long    srate;                  /* rate code (byte) of silence */
-        long    blockseek;              /* start of current output block */
-        long    samples;                /* number of samples output */
-        int             size;           /* word length of data */
-        unsigned char   channels;       /* number of sound channels */
-        int     extended;       /* Has an extended block been read? */
+    long           rest;        /* bytes remaining in current block */
+    long           rate;        /* rate code (byte) of this chunk */
+    int            silent;      /* sound or silence? */
+    long           srate;       /* rate code (byte) of silence */
+    long           blockseek;   /* start of current output block */
+    long           samples;     /* number of samples output */
+    uint16_t       format;      /* VOC audio format */
+    int            size;        /* word length of data */
+    unsigned char  channels;    /* number of sound channels */
+    long           total_size;  /* total size of all audio in file */
+    int            extended;    /* Has an extended block been read? */
 } *vs_t;
 
 #define VOC_TERM        0
@@ -165,18 +187,40 @@ typedef struct vocstuff {
 #define VOC_EXTENDED    8
 #define VOC_DATA_16     9
 
+/* ANN:  Format encoding types */
+#define VOC_FMT_LIN8U          0   /* 8 bit unsigned linear PCM */
+#define VOC_FMT_CRLADPCM4      1   /* Creative 8-bit to 4-bit ADPCM */
+#define VOC_FMT_CRLADPCM3      2   /* Creative 8-bit to 3-bit ADPCM */
+#define VOC_FMT_CRLADPCM2      3   /* Creative 8-bit to 2-bit ADPCM */
+#define VOC_FMT_LIN16          4   /* 16-bit signed PCM */
+#define VOC_FMT_ALAW           6   /* CCITT a-Law 8-bit PCM */
+#define VOC_FMT_MU255          7   /* CCITT u-Law 8-bit PCM */
+#define VOC_FMT_CRLADPCM4A 0x200   /* Creative 16-bit to 4-bit ADPCM */
+
 #define min(a, b)       (((a) < (b)) ? (a) : (b))
 
+/* Prototypes for internal functions */
 static int getblock(ft_t);
 static void blockstart(ft_t);
 static void blockstop(ft_t);
 
-int st_vocstartread(ft_t ft) 
+/* Conversion macros (from raw.c) */
+#define ST_ALAW_BYTE_TO_SAMPLE(d) ((st_sample_t)(st_alaw2linear16(d)) << 16)
+#define ST_ULAW_BYTE_TO_SAMPLE(d) ((st_sample_t)(st_ulaw2linear16(d)) << 16)
+
+/* public VOC functions for SOX */
+/*-----------------------------------------------------------------
+ * st_vocstartread() -- start reading a VOC file
+ *-----------------------------------------------------------------*/
+int st_vocstartread(ft_t ft)
 {
+        int rtn = ST_SUCCESS;
         char header[20];
         vs_t v = (vs_t) ft->priv;
         unsigned short sbseek;
         int rc;
+        int ii;  /* for getting rid of lseek */
+        unsigned char uc;
 
         /* VOC is in Little Endian format.  Swap bytes read in on */
         /* Big Endian mahcines.                                   */
@@ -185,12 +229,6 @@ int st_vocstartread(ft_t ft)
                 ft->swap = ft->swap ? 0 : 1;
         }
 
-
-        if (! ft->seekable)
-        {
-                st_fail_errno(ft,ST_EOF,"VOC input file must be a file, not a pipe");
-                return(ST_EOF);
-        }
 
         if (fread(header, 1, 20, ft->fp) != 20)
         {
@@ -203,39 +241,92 @@ int st_vocstartread(ft_t ft)
                 return(ST_EOF);
         }
 
+        /* read the offset to data, from start of file */
+        /* after this read we have read 20 bytes of header + 2 */
         st_readw(ft, &sbseek);
-        fseek(ft->fp, sbseek, 0);
+
+        /* ANN:  read to skip the header, instead of lseek */
+        /* this should allow use with pipes.... */
+        for (ii=22; ii<sbseek; ii++)
+            st_readb(ft, &uc);
 
         v->rate = -1;
         v->rest = 0;
+        v->total_size = 0;  /* ANN added */
         v->extended = 0;
+
+        /* read until we get the format information.... */
         rc = getblock(ft);
         if (rc)
             return rc;
+
+        /* get rate of data */
         if (v->rate == -1)
         {
                 st_fail_errno(ft,ST_EOF,"Input .voc file had no sound!");
                 return(ST_EOF);
         }
 
+        /* setup word length of data */
         ft->info.size = v->size;
-        ft->info.encoding = ST_ENCODING_UNSIGNED;
-        if (v->size == ST_SIZE_WORD)
+
+        /* ANN:  Check VOC format and map to the proper ST format value */
+        switch (v->format) {
+        case VOC_FMT_LIN8U:      /*     0    8 bit unsigned linear PCM */
+            ft->info.encoding = ST_ENCODING_UNSIGNED;
+            break;
+        case VOC_FMT_CRLADPCM4:  /*     1    Creative 8-bit to 4-bit ADPCM */
+            st_warn ("Unsupported VOC format CRLADPCM4 %d", v->format);
+            rtn=ST_EOF;
+            break;
+        case VOC_FMT_CRLADPCM3:  /*     2    Creative 8-bit to 3-bit ADPCM */
+            st_warn ("Unsupported VOC format CRLADPCM3 %d", v->format);
+            rtn=ST_EOF;
+            break;
+        case VOC_FMT_CRLADPCM2:  /*     3    Creative 8-bit to 2-bit ADPCM */
+            st_warn ("Unsupported VOC format CRLADPCM2 %d", v->format);
+            rtn=ST_EOF;
+            break;
+        case VOC_FMT_LIN16:      /*     4    16-bit signed PCM */
             ft->info.encoding = ST_ENCODING_SIGN2;
+            break;
+        case VOC_FMT_ALAW:       /*     6    CCITT a-Law 8-bit PCM */
+            ft->info.encoding = ST_ENCODING_ALAW;
+            break;
+        case VOC_FMT_MU255:      /*     7    CCITT u-Law 8-bit PCM */
+            ft->info.encoding = ST_ENCODING_ULAW;
+            break;
+        case VOC_FMT_CRLADPCM4A: /*0x200    Creative 16-bit to 4-bit ADPCM */
+            printf ("Unsupported VOC format CRLADPCM4A %d", v->format);
+            rtn=ST_EOF;
+            break;
+        default:
+            printf ("Unknown VOC format %d", v->format);
+            rtn=ST_EOF;
+            break;
+        }
+
+        /* setup number of channels */
         if (ft->info.channels == -1)
                 ft->info.channels = v->channels;
 
         return(ST_SUCCESS);
 }
 
-st_ssize_t st_vocread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+/*-----------------------------------------------------------------
+ * st_vocread() -- read data from a VOC file
+ * ANN:  Major changes here to support multi-part files and files
+ *       that do not have audio in block 9's.
+ *-----------------------------------------------------------------*/
+st_ssize_t st_vocread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
         vs_t v = (vs_t) ft->priv;
         int done = 0;
-        int rc;
+        int rc = 0;
         int16_t sw;
-        unsigned char uc;
+        unsigned char  uc;
 
+        /* handle getting another cont. buffer */
         if (v->rest == 0)
         {
                 rc = getblock(ft);
@@ -243,44 +334,83 @@ st_ssize_t st_vocread(ft_t ft, st_sample_t *buf, st_ssize_t len)
                     return 0;
         }
 
+        /* if no more data, return 0, i.e., done */
         if (v->rest == 0)
                 return 0;
 
+        /* if silence, fill it in with 0's */
         if (v->silent) {
                 /* Fill in silence */
                 for(;v->rest && (done < len); v->rest--, done++)
                         *buf++ = 0x80000000L;
-        } else {
-                for(;v->rest && (done < len); v->rest--, done++) {
-                        switch(v->size)
-                        {
-                            case ST_SIZE_BYTE:
-                                if (st_readb(ft, &uc) == ST_EOF) {
-                                    st_warn("VOC input: short file");
-                                    v->rest = 0;
-                                    return done;
-                                }
-                                *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(uc);
-                                break;
-                            case ST_SIZE_WORD:
-                                st_readw(ft, &sw);
-                                if (feof(ft->fp))
-                                {
-                                    st_warn("VOC input: short file");
-                                    v->rest = 0;
-                                    return done;
-                                }
-                                *buf++ = ST_SIGNED_WORD_TO_SAMPLE(sw);
-                                v->rest--; /* Processed 2 bytes so update */
-                                break;
-                        }
-                }
         }
+        /* else, not silence, read the block */
+        else {
+            /* read len samples of audio from the file */
+
+            /* for(;v->rest && (done < len); v->rest--, done++) { */
+            for(; (done < len); done++) {
+
+                /* IF no more in this block, get another */
+                if (v->rest == 0) {
+
+                    /* DO until we have either EOF or a block with data */
+                    while (v->rest == 0) {
+                        rc = getblock(ft);
+                        if (rc)
+                            break;
+                    }
+                    /* ENDDO ... */
+
+                    /* IF EOF, break out, no more data, next will return 0 */
+                    if (rc)
+                        break;
+                }
+                /* ENDIF no more data in block */
+
+                /* Read the data in the file */
+                switch(v->size) {
+                case ST_SIZE_BYTE:
+                    if (st_readb(ft, &uc) == ST_EOF) {
+                        st_warn("VOC input: short file");
+                        v->rest = 0;
+                        return done;
+                    }
+                    /* IF uLaw,alaw, expand to linear, else convert??? */
+                    /* ANN:  added uLaw and aLaw support */
+                    if (v->format == VOC_FMT_MU255) {
+                        *buf++ =  ST_ULAW_BYTE_TO_SAMPLE(uc);
+                    } else if (v->format == VOC_FMT_ALAW) {
+                        *buf++ =  ST_ALAW_BYTE_TO_SAMPLE(uc);
+                    } else {
+                        *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(uc);
+                    }
+                    break;
+                case ST_SIZE_WORD:
+                    st_readw(ft, &sw);
+                    if (feof(ft->fp))
+                        {
+                            st_warn("VOC input: short file");
+                            v->rest = 0;
+                            return done;
+                        }
+                    *buf++ = ST_SIGNED_WORD_TO_SAMPLE(sw);
+                    v->rest--; /* Processed 2 bytes so update */
+                    break;
+                }
+                /* decrement count of processed bytes */
+                v->rest--; /* Processed 2 bytes so update */
+            }
+        }
+        v->total_size+=done;
         return done;
 }
 
-/* nothing to do */
-int st_vocstopread(ft_t ft) 
+/*-----------------------------------------------------------------
+ * st_vocstartread() -- start reading a VOC file
+ * nothing to do
+ *-----------------------------------------------------------------*/
+int st_vocstopread(ft_t ft)
 {
     return(ST_SUCCESS);
 }
@@ -292,11 +422,13 @@ int st_vocstopread(ft_t ft)
  * If a 16-bit sample (either stereo or mono) then save with a
  * VOC_DATA_16 header.
  *
+ * ANN:  Not supported:  uLaw and aLaw output VOC files....
+ *
  * This approach will cause the output to be an its most basic format
  * which will work with the oldest software (eg. an 8-bit mono sample
  * will be able to be played with a really old SB VOC player.)
  */
-int st_vocstartwrite(ft_t ft) 
+int st_vocstartwrite(ft_t ft)
 {
         vs_t v = (vs_t) ft->priv;
 
@@ -309,7 +441,8 @@ int st_vocstartwrite(ft_t ft)
 
         if (! ft->seekable)
         {
-                st_fail_errno(ft,ST_EOF,"Output .voc file must be a file, not a pipe");
+                st_fail_errno(ft,ST_EOF,
+                              "Output .voc file must be a file, not a pipe");
                 return(ST_EOF);
         }
 
@@ -331,7 +464,10 @@ int st_vocstartwrite(ft_t ft)
         return(ST_SUCCESS);
 }
 
-st_ssize_t st_vocwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+/*-----------------------------------------------------------------
+ * st_vocstartread() -- start reading a VOC file
+ *-----------------------------------------------------------------*/
+st_ssize_t st_vocwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
         vs_t v = (vs_t) ft->priv;
         unsigned char uc;
@@ -357,15 +493,23 @@ st_ssize_t st_vocwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
         return done;
 }
 
-int st_vocstopwrite(ft_t ft) 
+/*-----------------------------------------------------------------
+ * st_vocstopwrite() -- stop writing a VOC file
+ *-----------------------------------------------------------------*/
+int st_vocstopwrite(ft_t ft)
 {
         blockstop(ft);
         return(ST_SUCCESS);
 }
 
-/* Voc-file handlers */
+/*-----------------------------------------------------------------
+ * Voc-file handlers (static, private to this module)
+ *-----------------------------------------------------------------*/
 
-/* Read next block header, save info, leave position at start of data */
+/*-----------------------------------------------------------------
+ * getblock() -- Read next block header, save info,
+ *               leave position at start of dat
+ *-----------------------------------------------------------------*/
 static int getblock(ft_t ft)
 {
         vs_t v = (vs_t) ft->priv;
@@ -377,14 +521,23 @@ static int getblock(ft_t ft)
         uint32_t trash;
 
         v->silent = 0;
+        /* DO while we have no audio to read */
         while (v->rest == 0) {
+                /* IF EOF, return EOF
+                 * ANN:  was returning SUCCESS */
                 if (feof(ft->fp))
-                        return ST_SUCCESS;
+                        return ST_EOF;
+
+                /* IF TERM block (end of file), return EOF
+                 * ANN:  was returning SUCCESS */
                 st_readb(ft, &block);
                 if (block == VOC_TERM)
-                        return ST_SUCCESS;
+                        return ST_EOF;
+
+                /* IF EOF after reading block type, return EOF
+                 * ANN:  was returning SUCCESS */
                 if (feof(ft->fp))
-                        return ST_SUCCESS;
+                        return ST_EOF;
                 /*
                  * Size is an 24-bit value.  Currently there is no util
                  * func to read this so do it this cross-platform way
@@ -396,6 +549,9 @@ static int getblock(ft_t ft)
                 sblen |= ((uint32_t) uc) << 8;
                 st_readb(ft, &uc);
                 sblen |= ((uint32_t) uc) << 16;
+
+                /* Based on VOC block type, process the block */
+                /* audio may be in one or multiple blocks */
                 switch(block) {
                 case VOC_DATA:
                         st_readb(ft, &uc);
@@ -404,12 +560,14 @@ static int getblock(ft_t ft)
                         if (!v->extended) {
                           if (uc == 0)
                           {
-                            st_fail_errno(ft,ST_EFMT,"File %s: Sample rate is zero?");
+                            st_fail_errno(ft,ST_EFMT,
+                              "File %s: Sample rate is zero?");
                             return(ST_EOF);
                           }
                           if ((v->rate != -1) && (uc != v->rate))
                           {
-                            st_fail_errno(ft,ST_EFMT,"File %s: sample rate codes differ: %d != %d",
+                            st_fail_errno(ft,ST_EFMT,
+                              "File %s: sample rate codes differ: %d != %d",
                                  ft->filename,v->rate, uc);
                             return(ST_EOF);
                           }
@@ -420,7 +578,8 @@ static int getblock(ft_t ft)
                         st_readb(ft, &uc);
                         if (uc != 0)
                         {
-                          st_fail_errno(ft,ST_EFMT,"File %s: only interpret 8-bit data!",
+                          st_fail_errno(ft,ST_EFMT,
+                            "File %s: only interpret 8-bit data!",
                                ft->filename);
                           return(ST_EOF);
                         }
@@ -432,12 +591,14 @@ static int getblock(ft_t ft)
                         st_readdw(ft, &new_rate_32);
                         if (new_rate_32 == 0)
                         {
-                            st_fail_errno(ft,ST_EFMT,"File %s: Sample rate is zero?",ft->filename);
+                            st_fail_errno(ft,ST_EFMT,
+                              "File %s: Sample rate is zero?",ft->filename);
                             return(ST_EOF);
                         }
                         if ((v->rate != -1) && (new_rate_32 != v->rate))
                         {
-                            st_fail_errno(ft,ST_EFMT,"File %s: sample rate codes differ: %d != %d",
+                            st_fail_errno(ft,ST_EFMT,
+                              "File %s: sample rate codes differ: %d != %d",
                                 ft->filename, v->rate, new_rate_32);
                             return(ST_EOF);
                         }
@@ -449,12 +610,12 @@ static int getblock(ft_t ft)
                             case 8:     v->size = ST_SIZE_BYTE; break;
                             case 16:    v->size = ST_SIZE_WORD; break;
                             default:
-                                        st_fail_errno(ft,ST_EFMT,"Don't understand size %d", uc);
-                                        return(ST_EOF);
+                                st_fail_errno(ft,ST_EFMT,
+                                              "Don't understand size %d", uc);
+                                return(ST_EOF);
                         }
                         st_readb(ft, &(v->channels));
-                        st_readb(ft, (unsigned char *)&trash); /* unknown */
-                        st_readb(ft, (unsigned char *)&trash); /* notused */
+                        st_readw(ft, &(v->format));  /* ANN: added format */
                         st_readb(ft, (unsigned char *)&trash); /* notused */
                         st_readb(ft, (unsigned char *)&trash); /* notused */
                         st_readb(ft, (unsigned char *)&trash); /* notused */
@@ -472,7 +633,8 @@ static int getblock(ft_t ft)
                         st_readb(ft, &uc);
                         if (uc == 0)
                         {
-                                st_fail_errno(ft,ST_EFMT,"File %s: Silence sample rate is zero");
+                                st_fail_errno(ft,ST_EFMT,
+                                  "File %s: Silence sample rate is zero");
                                 return(ST_EOF);
                         }
                         /*
@@ -494,10 +656,21 @@ static int getblock(ft_t ft)
                         /* Falling! Falling! */
                 case VOC_TEXT:
                         {
-                        int i;
-                        /* Could add to comment in SF? */
-                        for(i = 0; i < sblen; i++)
-                            st_readb(ft, (unsigned char *)&trash);
+                            int i;
+                            /* Could add to comment in SF? */
+                            for(i = 0; i < sblen; i++) {
+                                st_readb(ft, (unsigned char *)&trash);
+                                /* uncomment lines below to display text */
+                                /* Note, if this is uncommented, studio */
+                                /* will not be able to read the VOC file */
+                                /* ANN:  added verbose dump of text info */
+                                /* */
+                                if (verbose) {
+                                    if ((trash != '\0') && (trash != '\r'))
+                                        putc (trash, stderr);
+                                }
+                                /* */
+                            }
                         }
                         continue;       /* get next block */
                 case VOC_LOOP:
@@ -515,12 +688,14 @@ static int getblock(ft_t ft)
                         st_readw(ft, &new_rate_16);
                         if (new_rate_16 == 0)
                         {
-                           st_fail_errno(ft,ST_EFMT,"File %s: Sample rate is zero?");
+                           st_fail_errno(ft,ST_EFMT,
+                             "File %s: Sample rate is zero?");
                            return(ST_EOF);
                         }
                         if ((v->rate != -1) && (new_rate_16 != v->rate))
                         {
-                           st_fail_errno(ft,ST_EFMT,"File %s: sample rate codes differ: %d != %d",
+                           st_fail_errno(ft,ST_EFMT,
+                             "File %s: sample rate codes differ: %d != %d",
                                         ft->filename, v->rate, new_rate_16);
                            return(ST_EOF);
                         }
@@ -528,7 +703,8 @@ static int getblock(ft_t ft)
                         st_readb(ft, &uc);
                         if (uc != 0)
                         {
-                                st_fail_errno(ft,ST_EFMT,"File %s: only interpret 8-bit data!",
+                                st_fail_errno(ft,ST_EFMT,
+                                  "File %s: only interpret 8-bit data!",
                                         ft->filename);
                                 return(ST_EOF);
                         }
@@ -537,7 +713,8 @@ static int getblock(ft_t ft)
                                 ft->info.channels = 2;  /* Stereo */
                         /* Needed number of channels before finishing
                            compute for rate */
-                        ft->info.rate = (256000000L/(65536L - v->rate))/ft->info.channels;
+                        ft->info.rate = (256000000L/(65536L - v->rate))/
+                            ft->info.channels;
                         /* An extended block must be followed by a data */
                         /* block to be valid so loop back to top so it  */
                         /* can be grabed.                               */
@@ -552,7 +729,9 @@ static int getblock(ft_t ft)
         return ST_SUCCESS;
 }
 
-/* Start an output block. */
+/*-----------------------------------------------------------------
+ * vlockstart() -- start an output block
+ *-----------------------------------------------------------------*/
 static void blockstart(ft_t ft)
 {
         vs_t v = (vs_t) ft->priv;
@@ -606,8 +785,11 @@ static void blockstart(ft_t ft)
         }
 }
 
-/* End the current data or silence block. */
-static void blockstop(ft_t ft) 
+/*-----------------------------------------------------------------
+ * blockstop() -- stop an output block
+ * End the current data or silence block.
+ *-----------------------------------------------------------------*/
+static void blockstop(ft_t ft)
 {
         vs_t v = (vs_t) ft->priv;
         st_sample_t datum;

@@ -9,7 +9,7 @@
 .if t .sp .5v
 .if n .sp
 ..
-.TH SoX 1 "July 24, 2000"
+.TH SoX 1 "December 11, 2001"
 .SH NAME
 sox \- Sound eXchange : universal sound sample translator
 .SH SYNOPSIS
@@ -156,7 +156,7 @@ can work with.  The first are self-describing file formats.  These
 contain a header that completely describe the characteristics of
 the audio data that follows.
 .P
-The second type are headerless data, or sometimes called raw data.  A
+The second type are header-less data, or sometimes called raw data.  A
 user must pass enough information to
 .I SoX
 on the command line so that it knows what type of data it contains.
@@ -178,13 +178,13 @@ How many channels are contained in the audio data.  Mono and Stereo are the two 
 .P
 Please refer to the
 .B soxexam(1)
-manual page for a long description with examples on how to use sox with
+manual page for a long description with examples on how to use SoX with
 various types of file formats.
 .SH OPTIONS
 The option syntax is a little grotty, but in essence:
 .P
 .br
-	sox file.au file.wav
+	sox File.au file.wav
 .P
 .br
 translates a sound file in SUN Sparc .AU format 
@@ -207,12 +207,12 @@ file.
 .PP
 \fBFormat options:\fR
 .PP
-Format options effect the audio samples that they immediately preceed.  If
+Format options effect the audio samples that they immediately precede.  If
 they are placed before the input file name then they effect the input
 data.  If they are placed before the output file name then they will
 effect the output data.  By taking advantage of this, you can override
 a input file's corrupted header or produce an output file that is totally
-different style then the input file.  It is also how sox is informed about
+different style then the input file.  It is also how SoX is informed about
 the format of raw input data.
 .TP 10
 \fB-t \fIfiletype\fR
@@ -227,11 +227,11 @@ of the output options.
 If the input and output files have
 different rates then a sample rate change effect must be ran.  If a
 sample rate changing effect is not specified then a default one will internally
-be ran by sox using its default parameters.
+be ran by SoX using its default parameters.
 .TP 10
 \fB-s/-u/-U/-A/-a/-i/-g/-f\fR
 The sample data encoding is signed linear (2's complement),
-unsigned linear, U-law (logarithmic), A-law (logarithmic),
+unsigned linear, u-law (logarithmic), A-law (logarithmic),
 ADPCM, IMA_ADPCM, GSM, or Floating-point.
 .br
 U-law (actually shorthand for mu-law) and A-law are the U.S. and
@@ -246,7 +246,7 @@ the precision of 16-bit PCM audio.  Popular version of ADPCM include
 G.726, MS ADPCM, and IMA ADPCM.  The \fB-a\fR flag has different meanings
 in different file handlers.  In \fB.wav\fR files it represents MS ADPCM
 files, in all others it means G.726 ADPCM.
-IMA ADPCM is a specific form of adpcm compression, slightly simpler
+IMA ADPCM is a specific form of ADPCM compression, slightly simpler
 and slightly lower fidelity than Microsoft's flavor of ADPCM.
 IMA ADPCM is also called DVI ADPCM.
 .br
@@ -288,7 +288,7 @@ Print version number and usage information.
 .TP 10
 \fB-p\fR
 Run in preview mode and run fast.  This will somewhat speed up
-sox when the output format has a different number of channels and
+SoX when the output format has a different number of channels and
 a different rate than the input file.  Currently, this defaults to
 using the \fBrate\fR effect instead of the \fBresample\fR effect for sample
 rate changes.
@@ -297,7 +297,7 @@ rate changes.
 Change amplitude (floating point); 
 less than 1.0 decreases, greater than 1.0 increases.  May use a negative
 number to invert the phase of the audio data.  It is interesting to note
-that we percieve volume
+that we perceive volume
 logarithmically but this adjusts the amplitude linearly.
 .br
 Note: see the \fBstat\fR effect for information on finding the maximum
@@ -307,7 +307,7 @@ be clipped.
 \fB-V\fR
 Print a description of processing phases.
 Useful for figuring out exactly how
-.I sox
+.I SoX
 is mangling your sound samples.
 .SH FILE TYPES
 .I SoX
@@ -398,7 +398,7 @@ multiple times.  This format is used by some voice mail applications.
 It is rather CPU intensive.
 .br
 GSM in
-.B sox
+.B SoX
 is optional and requires access to an external GSM library.  To see
 if there is support for gsm run \fBsox -h\fR
 and look for it under the list of supported file formats.
@@ -431,15 +431,15 @@ but would like to specify a filename for consistency.
 .B .ogg
 Ogg Vorbis Compressed Audio.
 .br
-Ogg Vorbis is a open, patent-free codec designed for compressing music
+Ogg Vorbis is a open, patent-free CODEC designed for compressing music
 and streaming audio.  It is similar to MP3, VQF, AAC, and other lossy
 formats.  
-.B sox
+.B SoX
 can decode all types of Ogg Vorbis files, but can only encode at 128 kbps.
 Decoding is somewhat CPU intensive and encoding is very CPU intensive.
 .br
 Ogg Vorbis in
-.B sox
+.B SoX
 is optional and requires access to external Ogg Vorbis libraries.  To
 see if there is support for Ogg Vorbis run \fBsox -h\fR
 and look for it under the list of supported file formats as "vorbis".
@@ -447,11 +447,11 @@ and look for it under the list of supported file formats as "vorbis".
 .B ossdsp
 OSS /dev/dsp device driver
 .br
-This is a pseudo-file type and can be optionally compiled into Sox.  Run
+This is a pseudo-file type and can be optionally compiled into SoX.  Run
 .B sox -h
 to see if you have support for this file type.  When this driver is used
 it allows you to open up the OSS /dev/dsp file and configure it to
-use the same data format as passed in to /fBSoX.
+use the same data format as passed in to \fBSoX\fR.
 It works for both playing and recording sound samples.  When playing sound
 files it attempts to set up the OSS driver to use the same format as the
 input file.  It is suggested to always override the output values to use
@@ -469,9 +469,9 @@ such as the CSound package, and the MixView sound sample editor.
 SPHERE (SPeech HEader Resources) is a file format defined by NIST
 (National Institute of Standards and Technology) and is used with
 speech audio.  SoX can read these files when they contain
-ulaw and PCM data.  It will ignore any header information that
+u-law and PCM data.  It will ignore any header information that
 says the data is compressed using \fIshorten\fR compression and
-will treat the data as either ulaw or PCM.  This will allow SoX
+will treat the data as either u-law or PCM.  This will allow SoX
 and the command line \fIshorten\fR program to be ran together using
 pipes to uncompress the data and then pass the result to SoX for processing.
 .TP 10
@@ -496,12 +496,12 @@ This is an older DOS file format.
 .B sunau
 Sun /dev/audio device driver
 .br
-This is a pseudo-file type and can be optionally compiled into Sox.  Run
+This is a pseudo-file type and can be optionally compiled into SoX.  Run
 .B sox -h
 to see if you have support for this file type.  When this driver is used
 it allows you to open up a Sun /dev/audio file and configure it to
 use the same data type as passed in to
-.B Sox.
+.B SoX.
 It works for both playing and recording sound samples.  When playing sound
 files it attempts to set up the audio driver to use the same format as the
 input file.  It is suggested to always override the output values to use
@@ -534,6 +534,8 @@ On input, the silence parts are filled out, loops are rejected,
 and sample data with a new sample rate is rejected.
 Silence with a different sample rate is generated appropriately.
 On output, silence is not detected, nor are impossible sample rates.
+Note, this version now supports playing VOC files with multiple
+blocks and supports playing files containing u-law and A-law samples.
 .TP 10
 .B vorbis
 See
@@ -556,15 +558,15 @@ override the file header, and you will be warned to this effect.
 You had better know what you are doing! Output format
 options will cause a format conversion, and the \fB.wav\fR
 will written appropriately.
-Sox currently can read PCM, ULAW, ALAW, MS ADPCM, and IMA (or DVI) ADPCM.
+SoX currently can read PCM, ULAW, ALAW, MS ADPCM, and IMA (or DVI) ADPCM.
 It can write all of these formats including
 .B (NEW!)
 the ADPCM encoding.
 .TP 10
 .B .wve
-Psion 8-bit alaw
+Psion 8-bit A-law
 .br
-These are 8-bit a-law 8khz sound files used on the
+These are 8-bit A-law 8khz sound files used on the
 Psion palmtop portable computer.
 .TP 10
 .B .raw
@@ -580,7 +582,7 @@ These are several suffices which serve as
 a shorthand for raw files with a given size and encoding.
 Thus, \fBub, sb, uw, sw, ul\fR and \fBsl\fR
 correspond to "unsigned byte", "signed byte",
-"unsigned word", "signed word", "ulaw" (byte), "alaw" (byte),
+"unsigned word", "signed word", "u-law" (byte), "A-law" (byte),
 and "signed long".
 The sample rate defaults to 8000 hz if not explicitly set,
 and the number of channels (as always) defaults to 1.
@@ -675,7 +677,7 @@ Add a chorus to a sound sample.  Each quadtuple
 delay/decay/speed/depth gives the delay in milliseconds
 and the decay (relative to gain-in) with a modulation
 speed in Hz using depth in milliseconds.
-The modulation is either sinodial (-s) or triangular
+The modulation is either sinusoidal (-s) or triangular
 (-t).  Gain-out is the volume of the output.
 .TP
 compand \fIattack1,decay1\fR[,\fIattack2,decay2\fR...]
@@ -699,7 +701,7 @@ volume.  The points \fI-inf,-inf\fR and \fI0,0\fR are assumed; the
 latter may be overridden, but the former may not.
 
 The third
-(optional) parameter is a postprocessing gain in dB which is applied
+(optional) parameter is a post-processing gain in dB which is applied
 after the compression has taken place; the fourth (optional) parameter
 is an initial volume to be assumed for each channel when the effect
 starts.  This permits the user to supply a nominal level initially, so
@@ -721,7 +723,7 @@ This is the default effect if both files have the same
 sampling rate.
 .TP 10
 dcshift \fIshift\fR [ \fIlimitergain\fR ]
-DC Shift the audio data, with basic linear amplitudate formula.
+DC Shift the audio data, with basic linear amplitude formula.
 This is most useful if your audio data tends to not be centered around
 a value of 0.  Shifting it back will allow you to get the most volume
 adjustments without clipping audio data.
@@ -814,7 +816,7 @@ The slope of the filter is quite gentle.
 See \fBfilter\fR for a highpass effect with sharper cutoff.
 .TP 10
 highpass \fIfrequency\fB
-Butterworth highpass filter.  Description comming soon!
+Butterworth highpass filter.  Description coming soon!
 .TP 10
 lowp \fIfrequency\fR
 Apply a single pole recursive low-pass filter.
@@ -864,7 +866,7 @@ feedback.  Gain-out is the volume of the output.
 .TP 10
 pick [ \fI-1\fR | \fI-2\fR | \fI-3\fR | \fI-4\fR | \fI-l\fR | \fI-r\fR ]
 Select the left or right channel of a stereo sample,
-or one of four channels in a quadrophonic sample. The \fI-l\fR and \fI-r\fR
+or one of four channels in a quadraphonic sample. The \fI-l\fR and \fI-r\fR
 options represent either the left or right channel.  It is required that
 you use the \fB-c 1\fR command line option in order to force the output file to
 contain only 1 channel.
@@ -962,7 +964,7 @@ The \fI-qs\fR, \fI-q\fR, or \fI-ql\fR options specify increased accuracy
 at the cost of lower execution speed.  It is optional to specify
 rolloff and beta parameters when using the \fI-q*\fR options.
 
-Following is a table of the reasonable defaults which are built-in to sox:
+Following is a table of the reasonable defaults which are built-in to SoX:
 
 .br 
    \fBOption  Window rolloff beta interpolation\fR
@@ -1065,7 +1067,7 @@ Removes silence from the beginning or end of a sound file.  Silence is anything 
 .br
 When trimming silence from the beginning of a sound file, you specify a duration of audio that is above a given silence threshold before audio data is processed.  You can also specify the count of periods of none silence you want to detect before processing audio data.  Specify a period of 0 if you do not want to trim data from the front of the sound file.
 .br
-When optionally trimming silence form the end of a sound file, you specify the duration of audio that must be below a given threshold before stopping to process audio data.  A count of periods that occur below the threshold may also be speficied.  If this options are not specified then data is not trimmed from the end of the audio file.
+When optionally trimming silence form the end of a sound file, you specify the duration of audio that must be below a given threshold before stopping to process audio data.  A count of periods that occur below the threshold may also be specified.  If this options are not specified then data is not trimmed from the end of the audio file.
 .br
 Duration counts may be in the format of time, hh:mm:ss.frac, or in the exact count of samples.
 .br
@@ -1120,7 +1122,7 @@ There is also an optional parameter
 that will print out a hex dump of the
 sound file from the internal buffer that is in 32-bit signed PCM data.
 This is mainly only of use in tracking down endian problems that
-creep in to sox on cross-platform versions.
+creep in to SoX on cross-platform versions.
 
 .TP 10
 stretch \fIfactor [window fade shift fading]\fB
@@ -1235,14 +1237,18 @@ limited.
 .SH BUGS
 The syntax is horrific.  Thats the breaks when trying to handle all things from the command line.
 .P
-Please report any bugs found in this version of sox to Chris Bagwell (cbagwell@sprynet.com)
+Please report any bugs found in this version of SoX to Chris Bagwell (cbagwell@sprynet.com)
 .SH FILES
 .SH SEE ALSO
 .BR play (1),
 .BR rec (1),
 .BR soxexam(1)
 .SH NOTICES
-The version of Sox that accompanies this manual page is support by 
+The version of SoX that accompanies this manual page is support by 
 Chris Bagwell (cbagwell@users.sourceforge.net).  Please refer any questions 
 regarding it to this address.  You may obtain the latest version at the 
 the web site http://sox.sourceforge.net/
+.SH AUTHOR
+Chris Bagwell (cbagwell@users.sourceforge.net).  
+.P
+Updates by Anonymous

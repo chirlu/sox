@@ -1,4 +1,4 @@
-.TH NAME SECTION 
+.TH play 1 "December 11, 2001"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
 .\" other parms are allowed: see man(7), man(1)
 .SH NAME
@@ -12,42 +12,44 @@ rec  \- record audio to any sound file format
 .B rec
 .I "[fopts] outfile [effect]"
 .SH "DESCRIPTION"
-This manual page documents briefly the
+This manual page briefly documents the
 .B play and rec
-command.
+commands.
 .PP
 .B play
 and
 .B rec
-are programs that allows you to play and record different types of sound files. It is 
-a frontend to the more general sox package. Normally the play command 
-will detect the type and other parameters of the soundfile. If it can't do 
+are programs that allow you to play and record different types of sound files 
+from the command line.  They are front ends to the more general 
+.B sox(1) 
+package.  Normally, the play command will automatically detect the 
+type and other parameters of the soundfile. If it can't do 
 so, the parameters can be changed through options.
 .SH OPTIONS
 A summary of common options are included below.
-For a complete description of options and thier values, see 
+For a complete description of options and their values, see 
 the 
 .B sox(1) 
 man page.
 .TP
 .B \-c [channels], \-\-channels=[channels]
-Define the number of channels of the file.
+Define the number of channels in the file.
 .TP
 .B \-d [device], \-\-device=[device]
 Specify a different device to play the sound file to.
 .TP
 .B \-f [format], \-\-format=[format]
-Specifies bit format of sample. One of s, u, U, A, a, or g.
+Specify bit format of the sample. One of s, u, U, A, a, or g.
 .TP
 .B \-r [rate], \-\-rate=[rate]
-Define the samplerate of the audio data.
+Specify the sample rate of the audio data (samples per second).
 .TP
 .B \-s [size], \-\-size=[size]
-interpret size of sample.  One of b, w, l, f, d, or D.
+Specify the width of each sample.  One of b, w, l, f, d, or D.
 .TP
 .B \-t [type], \-\-type=[type]
-Specifies audio file format to use.  Useful if it can not be determined
-on its own.
+Specify audio file format to use.  Useful if it can not be 
+automatically determined.
 .TP
 .B \-v [volume], \-\-volume=[volume]
 Change the audio volume
@@ -62,12 +64,17 @@ Show summary of options.
 Show version of play/rec.
 
 .TP
-Description of effects are described in the sox man page.
+Description of effects are described in the 
+.B sox(1) 
+man page.
 
 .SH "SEE ALSO"
 
  sox(1)
+ soxexam(1)
 
 .SH AUTHOR
 This manual page was written by Guenter Geiger <geiger@iem.mhsg.ac.at>,
-for the Debian GNU/Linux system.
+for the Debian GNU/Linux system.  
+.P
+Updates by Anonymous.

@@ -1,4 +1,4 @@
-SoX: Sound eXchange
+Sox: Sound eXchange
 -------------------
 
 SoX (also known as Sound eXchange) translates sound files between different
@@ -14,13 +14,13 @@ This release understands:
   o Amiga 8svx files
   o Apple/SGI AIFF files
   o SUN .au style files
-    o PCM, u-law, a-law
+    o PCM, u-law, A-law
     o G7xx ADPCM files (read only)
     o mutant DEC .au files
     o NeXT .snd files
   o AVR files
   o CD-R (music CD format)
-  o CVS and VMS files (continous variable slope)
+  o CVS and VMS files (continuous variable slope)
   o GSM files.
   o Macintosh HCOM files
   o Amiga MAUD files
@@ -31,12 +31,12 @@ This release understands:
   o Yamaha TX-16W sampler files.
   o Sound Blaster .VOC files
   o Microsoft .WAV files
-    o PCM, u-law, a-law
+    o PCM, u-law, A-law
     o MS ADPCM, IMA ADPCM
     o GSM
   o Psion (palmtop) A-law WVE files
-  o Pseudo-file fomats that allow direct playing/recording
-    from some audio devices under unix.
+  o Pseudo-file formats that allow direct playing/recording
+    from some audio devices under UNIX.
   o Pseudo-nul file that reads and writes from/to nowhere
 
 The sound effects include:
@@ -60,7 +60,7 @@ The sound effects include:
   o Apply a phaser effect
   o Convert from stereo to mono
   o Change sampling rates using several different algorithms. A
-     'resample' and 'poyphase' effect use high-grade signal rate
+     'resample' and 'polyphase' effect use high-grade signal rate
      changes using real signal theory!
   o Apply a reverb effect
   o Reverse the sound samples (to search for Satanic messages ;-)
@@ -80,11 +80,11 @@ History:
 
 This is release 12.17.3 of SoX and its companion library Sound Tools.
 SoX was originally written and maintained by Lance Norskog but is
-currently mantained by Chris Bagwell (cbagwell@users.sourceforge.net).
+currently maintained by Chris Bagwell (cbagwell@users.sourceforge.net).
 
 Installing:
 
-Unless your using a precompiled binary version, you will need to compile
+Unless your using a pre-compiled binary version, you will need to compile
 SoX as described in the INSTALL file.  Please read that file for further
 instructions.
 
@@ -94,7 +94,7 @@ what command line options are available to convert a sound file to
 another file format and how to apply sound effects.
 
 SoX has an auto-detect feature that attempts to figure out
-the nature of an sound file.  It does this by looking for 'magic values'
+the nature of a sound file.  It does this by looking for 'magic values'
 in the header of the audio file.  If it is unable to detect the format
 of the sound file then the user must use command line options to
 inform SoX.
