@@ -952,7 +952,7 @@ EFFECTS
 		 When trimming silence from the beginning of a sound file, you
 		 specify  a  duration  of  audio that is above a given silence
 		 threshold before audio data is processed.  You can also spec-
-		 ify  the  count of periods of none silence you want to detect
+		 ify  the  count of periods of none-silence you want to detect
 		 before processing audio data.	Specify a period of 0  if  you
 		 do not want to trim data from the front of the sound file.
 		 When  optionally  trimming  silence  form  the end of a sound
@@ -960,7 +960,11 @@ EFFECTS
 		 given	threshold  before  stopping  to process audio data.  A
 		 count of periods that occur below the threshold may  also  be
 		 specified.   If  this	options are not specified then data is
-		 not trimmed from the end of the audio file.
+		 not trimmed from the end of the audio file.  If below_periods
+		 is  negative,	it  is treated as a positive value and is also
+		 used to indicate the  effect  should  restart	processing  as
+		 specified by the above_periods, making it suitable for remov-
+		 ing periods of silence in the middle of a sound file.
 		 Duration counts may be in the format of time,	hh:mm:ss.frac,
 		 or in the exact count of samples.
 		 Threshold may be suffixed with d, or % to indicated the value

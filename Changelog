@@ -51,6 +51,9 @@ sox-12.17.6
     processing large files.
   o Daniel Pouzzner implemented a multi-band compander (using
     the butterworth filters to split the audio into bands).
+  o Donnie Smith updated the silence effect so that its possible
+    to remove silence from the middle of a sound file by
+    using a negative value for stop_periods.
 
 sox-12.17.5
 -----------

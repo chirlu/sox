@@ -1,6 +1,7 @@
 /* Silence effect for SoX
  * by Heikki Leinonen (heilei@iki.fi) 25.03.2001
  * Major Modifications by Chris Bagwell 06.08.2001
+ * Minor addition by Donnie Smith 13.08.2003
  *
  * This effect can delete samples from the start of a sound file
  * until it sees a specified count of samples exceed a given threshold 
@@ -8,6 +9,7 @@
  * This effect can also delete samples from the end of a sound file
  * when it sees a specified count of samples below a given threshold
  * (all channels).
+ * It may also be used to delete samples anywhere in a sound file.
  * Theshold's can be given as either a percentage or in decibels.
  */
 
@@ -44,6 +46,7 @@ typedef struct silencestuff
     st_size_t   start_duration;
     double      start_threshold;
     char        start_unit; /* "d" for decibels or "%" for percent. */
+    int         restart;
 
     st_sample_t *start_holdoff;
     st_size_t   start_holdoff_offset;
@@ -159,9 +162,13 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
         }
         if (silence->stop_periods < 0)
         {
+            silence->stop_periods = -silence->stop_periods;
+            silence->restart = 1;
             st_fail("Periods must not be greater then zero");
             return(ST_EOF);
         }
+        else
+            silence->restart = 0;
         silence->stop = TRUE;
         argv++;
         n--;
@@ -549,13 +556,21 @@ silence_copy:
                             if (++silence->stop_found_periods >= 
                                     silence->stop_periods)
                             {
-                                silence->mode = SILENCE_STOP;
                                 silence->stop_holdoff_offset = 0;
                                 silence->stop_holdoff_end = 0;
-                                *isamp = nrOfInSamplesRead;
-                                *osamp = nrOfOutSamplesWritten;
-                                /* Return ST_EOF since no more processing */
-                                return (ST_EOF);
+                                if (!silence->restart)
+                                {
+                                    silence->mode = SILENCE_STOP;
+                                    *isamp = nrOfInSamplesRead;
+                                    *osamp = nrOfOutSamplesWritten;
+                                    /* Return ST_EOF since no more processing */
+                                    return (ST_EOF);
+                                }
+                                else
+                                {
+                                    silence->mode = SILENCE_TRIM;
+                                    return (ST_SUCCESS);
+                                }
                             }
                             else
                             {
