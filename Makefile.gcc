@@ -1,37 +1,28 @@
 #
 # Sound Tools Makefile
 #
-# 	builds libst.a and sox
+# 	builds libst.a, sox, soxmix, and play
 #
-# Updated on 02/24/97 - by Chris Bagwell (cbagwell@sprynet.com)
-#   Inhanced Makefile to install software and documented a little better.
-#
-# Updated on 05 May 1998 by Chris Bagwell (cbagwell@sprynet.com)
-#   Made some changes for various platforms based on others sugestions
-#   and made my home system (Linux) the default. ;-)
-#
-# July 19, 1998 - Chris Bagwell (cbagwell@sprynet.com)
-#   Redid makefile so that libraries could be optionally linked in.
-#   Also made each specific portion of system specifics a seperate
-#   line to comment/uncomment so that it will be easier to see how
-#   to compiler on a wider array of systems (he says with a grin).
+# To use this Makefile, first copy stconfig.h.in to stconfig.h and modify
+# that file to reflect your environment.  This will should also be modified
+# to reflect your build environment.
 #   
 
 # These things are site dependant so you may want to change.
 PREFIX	= /usr/local
-BINDIR  = $(PREFIX)/bin
-LIBDIR	= $(PREFIX)/lib
-MANDIR  = $(PREFIX)/man
-INCDIR	= $(PREFIX)/include
+bindir  = $(PREFIX)/bin
+libdir	= $(PREFIX)/lib
+mandir  = $(PREFIX)/man
+incdir	= $(PREFIX)/include
 
-SRCDIR	= sox-12.17
+SRCDIR	= sox-12.17.3
 
 ##############################################################################
 
 FOBJ	= 8svx.o adpcm.o aiff.o alsa.o au.o auto.o avr.o cdr.o cvsd.o dat.o \
-	  g721.o g723_16.o g723_24.o g723_40.o g72x.o gsm.o hcom.o \
+	  g711.o g721.o g723_16.o g723_24.o g723_40.o g72x.o gsm.o hcom.o \
 	  ima_rw.o maud.o nulfile.o oss.o raw.o sf.o smp.o sndrtool.o \
-	  sphere.o sunaudio.o tx16w.o voc.o wav.o wve.o
+	  sphere.o sunaudio.o tx16w.o voc.o vorbis.o wav.o wve.o
 
 EOBJ    = avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
           copy.o dcshift.o deemphas.o earwax.o echo.o echos.o fade.o \
@@ -52,6 +43,9 @@ LIBOBJS = $(FOBJ) $(EOBJ) handlers.o misc.o util.o getopt.o
 
 # Default way to delete files.
 RM	    = rm -f
+
+# Default way to provide symbolic links from one file to another
+LN_S	    = ln -s
 
 # Chose the best compiler you got from the following:
 #
@@ -74,83 +68,11 @@ CC		= gcc -g -Wall
 # first.
 O		= -O2
 
-# getopt() support is defined here.  If you have a built-in
-# getopt() that is compatible with SVR5 then you don't need to
-# do anything special.
-#
-# If you don't have any getopt() function then use the following
-# define to use Sox's builtin version
-# GETOPT_DEFINES	= -DHAVE_GETOPT
-#
-# If your system has the more advanced version of getopt() that
-# also has its own getopt.h file (Such as the case with GNU libc 2.0)
-# then uncomment the following line.  Don't uncomment anything if
-# its in stdlib.h.
-GETOPT_DEFINES	= -DHAVE_GETOPT_H
-
-# If your system has bswap_16(), bswap_32() in byteswap.h
-# (Such as the case with GNU libc 2.1)
-# then uncomment the following line to use these fast versions.
-BYTESWAP_DEFINES	= -DHAVE_BYTESWAP_H
-
-# If your system has rand() then uncomment the following line.
-RAND_DEFINES	= -DHAVE_RAND
-
-# Uncomment the following if your system does not have a built in
-# strerror().  This includes SunOS.
-#
-# STRERR_DEFINES	= -DHAVE_STRERROR
-
-# Uncomment the following if your system does not have a built in
-# MEMMOVE function.  Sox will attempt to use bcopy instead.
-# SunOS has this problem.
-#
-# MEMMOVE_DEFINES	= -DHAVE_MEMMOVE
-
-# For sound support on machines that include the OSS sound driver
-# (such as Linux) then uncomment the following line.
-#
-# PLAYER_DEFINES = -DOSS_PLAYER
-
-# For sound support using the ALSA driver then uncomment the following line.
-#
-# PLAYER_DEFINES = -DALSA_PLAYER
-
-# For sound support under SunOS and Solaris then uncomment the following line.
-#
-# PLAYER_DEFINES = -DSUNAUDIO_PLAYER
-
 # Uncomment the following lines if your compiling under DOS or Windows.
 # defines .snd to mean a DOS soundtool file (starts with SOUND)
 #
 # DOS_DEFINES	= -DDOS
 # RM		= del /q
-
-# MISC DEFINES - The catch all for things that make even less sense
-#  then normal under unix.  If you need more than one of the following
-#  MISC DEFINES remember to include them on one line so it isn't just
-#  redefined.
-#
-# If your sysetem has unistd.h then you'll most like need to add 
-# HAVE_UNISTD_H to your misd defines.
-# MISC_DEFINES_UNI = -DHAVE_UNISTD_H
-#
-# If your system has malloc.h then you'll most likely need to add
-# HAVE_MALLOC_H to your misd defines.
-# MSIC_DEFINES_MALLOC = -DHAVE_UNISTD_H
-#
-# Testing new improved rate code.  You can use the older version if ther
-# are problems.
-# MISC_DEFINES_OLDRATE	= -DUSE_OLD_RATE
-#
-# For an extra 32k memory, you can include u-law/a-law lookup
-# tables to speed compressiong/decompression of this type data.
-# MISC_DEFINES_COMP = -DFAST_ULAW_COMPRESSION -DFAST_ALAW_COMPRESSION 
-
-MISC_DEFINES = $(MISC_DEFINES_UNI) \
-	$(MISC_DEFINES_MALLOC) \
-	$(MISC_DEFINES_OLDRATE)\
-	$(MISC_DEFINES_COMP)
 
 ##############################################################################
 
@@ -173,57 +95,70 @@ RANLIB		= ranlib
 MATHLIB = -lm
 # MATHLIB = 
 
+# If your linking Ogg Vorbis support, uncomment the following
+VORBISLIB = -logg -lvorbis -lvorbisfile -lvorbisenc
+
 ##############################################################################
 
-SOX_PRE_LIBS    =
-SOX_POST_LIBS	= $(MATHLIB)
+SOX_PRE_LIBS    = -L./gsm
+SOX_POST_LIBS	= -lgsm $(VORBISLIB) $(MATHLIB)
 SOX_INCLUDES    =
-SOX_DEFINES	= $(PLAYER_DEFINES) \
-  $(GETOPT_DEFINES) $(BYTESWAP_DEFINES) $(RAND_DEFINES) $(STRERR_DEFINES) \
-	$(MEMMOVE_DEFINES) $(DOS_DEFINES) $(NEXT_DEFINES) $(MISC_DEFINES)
+SOX_DEFINES	= -DGSM_SUPPORT $(DOS_DEFINES)
 
 CFLAGS  = $O $(SOX_DEFINES) $(SOX_INCLUDES)
 
 all: sox soxmix
 
-sox: sox.o $(SOUNDLIB)
+sox: sox.o $(SOUNDLIB) gsm/libgsm.a
 	$(CC) $(CFLAGS) -o sox sox.o $(SOUNDLIB) $(SOX_PRE_LIBS) $(SOX_POST_LIBS)
 
 soxmix.o: sox.c
 	$(CC) $(CLAGS) -DSOXMIX -c -o soxmix.o sox.c
 
-soxmix: soxmix.o $(SOUNDLIB)
+soxmix: soxmix.o $(SOUNDLIB) gsm/libgsm.a
 	$(CC) $(CFLAGS) -o soxmix soxmix.o $(SOUNDLIB) $(SOX_PRE_LIBS) $(SOX_POST_LIBS)
+
+play: play.in
+	$(SED) -e 's|@PREFIX@|$(bindir)|g' < $(srcdir)/play.in > play
 
 $(SOUNDLIB): $(LIBOBJS)
 	$(RM) $(SOUNDLIB)
 	$(AR) $(SOUNDLIB) $(LIBOBJS)
 	$(RANLIB) $(SOUNDLIB)
 
+gsm/libgsm.a:
+	cd gsm && $(MAKE)
+
 sox.o:		sox.c st.h
 
-$(LIBOBJS):	st.h
+$(LIBOBJS):	st.h st_i.h
 
-man: sox.1 libst.3
-	$(RM) sox.txt libst.txt
+man: sox.1 soxexam.1 libst.3
 	nroff -man sox.1 | col -b > sox.txt
 	nroff -man soxexam.1 | col -b > soxexam.txt
 	nroff -man libst.3 | col -b > libst.txt
 
-install: sox
-	if [ -f $(BINDIR)/rec ] ; then $(RM) $(BINDIR)/rec ; fi
-	if [ -f $(MANDIR)/man1/rec.1 ] ; then $(RM) $(MANDIR)/man1/rec.1 ; fi
-	sed -e 's|@PREFIX@|$(BINDIR)|g' < play.in > play
-	install -c -m 755 sox play $(BINDIR)
-	install -c -m 644 sox.1 soxexam.1 play.1 $(MANDIR)/man1
-	ln -s $(BINDIR)/play $(BINDIR)/rec
-	ln -s $(MANDIR)/man1/play.1 $(MANDIR)/man1/rec.1
+install: sox soxmix
+	$(INSTALL) -c -m 755 sox $(bindir)
+	$(INSTALL) -c -m 755 sox play $(bindir)
+	$(INSTALL) -c -m 644 sox.1 $(mandir)/man1
+	if [ -f $(mandir)/man1/soxmmix.1 ] ; then $(RM) $(mandir)/man1/soxmix.1; fi
+	$(LN_S) $(mandir)/man1/sox.1 $(mandir)/man1/soxmix.1
+	$(INSTALL) -c -m 644 soxexam.1 $(mandir)/man1
+
+install-play: play
+	if [ -f $(bindir)/rec ] ; then $(RM) $(bindir)/rec ; fi
+	if [ -f $(mandir)/man1/rec.1 ] ; then $(RM) $(mandir)/man1/rec.1 ; fi
+	install -c -m 755 play $(bindir)
+	install -c -m 644 play.1 $(mandir)/man1
+	$(LN_S) $(bindir)/play $(bindir)/rec
+	$(LN_S) $(mandir)/man1/play.1 $(mandir)/man1/rec.1
 
 install-lib: libst.a
-	install -c -m 644 libst.a $(LIBDIR)
-	install -c -m 644 libst.3 $(MANDIR)/man3
-	install -c -m 644 st.h $(INCDIR)
-	install -c -m 644 ststdint.h $(INCDIR)
+	install -c -m 644 libst.a $(libdir)
+	install -c -m 644 libst.3 $(mandir)/man3
+	install -c -m 644 st.h $(incdir)
+	install -c -m 644 ststdint.h $(incdir)
 
 clean:
 	$(RM) *~ *.o *.raw *.sf core sox soxmix libst.a

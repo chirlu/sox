@@ -25,7 +25,7 @@ script to customize SoX for your applications.  Run "./configure --help"
 for a complete list of options.
 
 If your system works with the "configure" script then you may skip
-to the Testing section.
+to the Optional Compiling section.
 
 If your system does not work with the configure scripts then there are
 several canned "Makefile"'s that you can use.  The following systems
@@ -35,41 +35,34 @@ have a canned Makefile:
     WIN95/NT   Makefile.dos (Needs modifying for Visual C++)
     OS/2       Makefile.gcc (using EMX GCC compiler)
 
-You can run the makefile on most systems by using the following
-command line:
+To using a canned Makefile, a few steps need to be completed.  First up,
+you need to make a copy of stconfig.h.in and call it stconfig.h.  Modify
+this file to reflect your environment.  
 
-make -f Makefile.name      or
-make -fMakefile.name
+After that, copy either Makefile.dos or Makefile.gcc to a file
+called Makefile.  This needs to be done in both the main sox directory 
+and the ./gsm directory.  This file also needs to be modified to reflect
+your environment.
 
-Before compiling with a canned Makefile you will need to edit the 
-Makefile and uncomment the compiler define section related to your 
-operating system and possibly comment out any previous system defines.
+Optional Compile Features
+-------------------------
 
-There are a few additional defines available for your operating 
-system to add things such as sound playing support.  This is 
-generally documented in the Makefiles
+A GSM library is included with SoX.  More information on this library
+can be obtained from http://www.cs.tu-berlin.de/~jutta/toast.html.
+If this library fails to compile on your system, you can specify
+--disable-gsm to prevent it from being compiled in.
 
-Optional Libraries
-------------------
+SoX can make use of Ogg Vorbis librarys to play and record Ogg
+Vorbis files.  If this library is installed in a non-standard location
+in your system then you can use --with-ogg-vorbislib=path and
+--with-ogg-vorbisinc=path to allow configure to find this library.
 
-There is optional GSM support as a data type but you must first
-install the GSM library on your system.  More information on it
-can be obtained from http://www.cs.tu-berlin.de/~jutta/toast.html
-After installing the GSM library you must point to this file by
-commenting and modifying the appropriate section of the Makefile.
-The "configure" script should be able to detect the installation of
-the external GSM library and compile in support on its own.
-
-Optional Compile Options
-------------------------
-
-If you're processing lots of u-law or a-law files, you should
-define FAST_ULAW_CONVERSION and/or FAST_ALAW_CONVERSION in your 
-Makefile.  These substitute a table-based method for the standard method.
-The tables are 32K, so if you don't want them, you don't have to
-use them.  It is automatically added to your Makefile if you run
-the configure script with the --enable-fast-ulaw or --enable-fast-alaw
-options.
+If you're not processing lots of u-law or a-law files and would
+like to save around 64K of memory when SoX is executed then you
+can use runtime routines to perform u-law/a-law conversions.
+This is slower then the default lookup tables but results in the
+same answers.  To save this memory, specify --disable-fast-ulaw and
+--disable-fast-alaw.
 
 Testing
 -------
@@ -92,6 +85,6 @@ shell script if your running under a unix varient to exercise
 various test scenarios.  It should print nothing out.  You can also
 run tests.bat under DOS for similar tests. 
 
-After that, "testall.sh" ("testall.bat for DOS) tests most of the 
-implemented file handlers to make sure that some portability issue 
-haven't popped up
+After that, "tests.sh" and "testall.sh" ("tests.bat" and "testall.bat" 
+for DOS) tests most of the  implemented file handlers to make sure 
+that some portability issue haven't popped up

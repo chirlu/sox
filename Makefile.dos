@@ -6,16 +6,18 @@
 #
 #   Also some support for MS VC based on info from Mark Morgan Lloyd
 #   <markMLl.in@telemetry.co.uk> 1/24/99
-
+#
+#   NOTE: This Makefile does not support compiling GSM currently.
+#
 # Need object files to know what libst.lib depends on.  All .c files
 # are compiled from default rules of make.
 
 FOBJ	= 8svx.obj adpcm.obj aiff.obj alsa.obj au.obj auto.obj \
-          avr.obj cdr.obj cvsd.obj dat.obj g721.obj g723_16.obj \
+          avr.obj cdr.obj cvsd.obj dat.obj g711.obj g721.obj g723_16.obj \
 	  g723_24.obj g723_40.obj g72x.obj gsm.obj \
 	  hcom.obj ima_rw.obj maud.obj nulfile.obj oss.obj raw.obj \
 	  sf.obj smp.obj sndrtool.obj sphere.obj sunaudio.obj \
-	  tx16w.obj voc.obj wav.obj wve.obj
+	  tx16w.obj voc.obj vorbis.obj wav.obj wve.obj
 
 EOBJ	= avg.obj band.obj bandpass.obj breject.obj btrworth.obj chorus.obj \
 	  compand.obj copy.obj dcshift.obj deemphas.obj earwax.o \
@@ -49,7 +51,7 @@ INCDIR  = c:\tc\include
 CC      = $(BINDIR)\tcc
 #CC      = $(BINDIR)\bcc
 LDD	= $(BINDIR)\tlib
-CFLAGS  = -DDOS -DHAVE_MEMMOVE -D__STDC__=1 -a -c -mh -G -O -v -N
+CFLAGS  = -DDOS -D__STDC__=1 -a -c -mh -G -O -v -N
 LFLAGS  = -v -mh
 
 .c.obj:
@@ -59,7 +61,7 @@ LFLAGS  = -v -mh
 # MS VC needs the following. /AL uses large memory model.
 #CC	= cl
 #LDD	= lib
-#CFLAGS	= -DDOS -DHAVE_MEMMOVE -D__STDC__=1 -c -O /AL /Gt8192
+#CFLAGS	= -DDOS -D__STDC__=1 -c -O /AL /Gt8192
 #LFLAGS	= /AL /Gt8192
 
 # When using MS VC, comment out above rule for .c.obj and use this as well
@@ -70,21 +72,21 @@ LFLAGS  = -v -mh
 all: sox.exe soxmix.exe
 
 sox.exe: sox.obj libst.lib
-        $(CC) $(LFLAGS) -L$(LIBDIR) sox.obj libst.lib
+	$(CC) $(LFLAGS) -L$(LIBDIR) sox.obj libst.lib
 
 soxmix.exe: soxmix.obj libst.lib
-        $(CC) $(LFLAGS) -L$(LIBDIR) soxmix.obj libst.lib
+	$(CC) $(LFLAGS) -L$(LIBDIR) soxmix.obj libst.lib
 
 libst.lib: $(LIBOBJS)
 
 sox.obj: sox.c st.h
-        $(CC) $(CFLAGS) -I$(INCDIR) -L$(LIBDIR) $*.c
+	$(CC) $(CFLAGS) -I$(INCDIR) -L$(LIBDIR) $*.c
 
 soxmix.obj: sox.c st.h
-        $(CC) $(CFLAGS) -DSOXMIX -I$(INCDIR) -L$(LIBDIR) sox.c
+	$(CC) $(CFLAGS) -DSOXMIX -I$(INCDIR) -L$(LIBDIR) sox.c
 
 clean:
-        del *.obj
-        del sox.exe
+	del *.obj
+	del sox.exe
 	del soxmix.exe
-        del libst.lib
+	del libst.lib

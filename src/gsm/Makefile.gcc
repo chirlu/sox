@@ -1,0 +1,95 @@
+#
+# Makefile.in
+#
+# Processed by configure into a Makefile.  We assume the environment in
+# which we are running is a POSIX'y environment.  Thus, all of the standard
+# POSIX tools are available.
+#   
+
+
+srcdir = .
+top_srcdir = ..
+prefix = /usr/local
+exec_prefix = ${prefix}
+libdir = ${exec_prefix}/lib
+mandir = ${prefix}/man
+
+# Shell commands.
+
+CC	= gcc
+RANLIB  = ranlib
+AR      = ar r
+RM	= rm -f
+
+SASR	= -DSASR
+######### Define SASR if >> is a signed arithmetic shift (-1 >> 1 == -1)
+
+MULHACK = -DUSE_FLOAT_MUL
+######### Define this if your host multiplies floats faster than integers,
+######### e.g. on a SPARCstation.
+
+FAST	= -DFAST
+######### Define together with USE_FLOAT_MUL to enable the GSM library's
+######### approximation option for incorrect, but good-enough results.
+
+# LTP_CUT	= -DLTP_CUT
+LTP_CUT	=
+######### Define to enable the GSM library's long-term correlation 
+######### approximation option---faster, but worse; works for
+######### both integer and floating point multiplications.
+######### This flag is still in the experimental stage.
+
+WAV49	= -DWAV49
+#WAV49	=
+######### Define to enable the GSM library's option to pack GSM frames 
+######### in the style used by the WAV #49 format.  If you want to write
+######### a tool that produces .WAV files which contain GSM-encoded data,
+######### define this, and read about the GSM_OPT_WAV49 option in the
+######### manual page on gsm_option(3).
+
+# Build macros.
+
+CFLAGS	= -g -O2 -Wall -DOSS_PLAYER -DFAST_ULAW_CONVERSION -DFAST_ALAW_CONVERSION -DENABLE_GSM -DHAVE_CONFIG_H $(SASR) $(MULHAC) $(FAST) $(LTP_CUT) $(WAV49) -I$(top_srcdir)/gsm
+LDFLAGS	= 
+LIBS	= -lm  -logg -lvorbis -lvorbisfile -lvorbisenc -lgsm
+
+# Objects.
+
+GSM_OBJECTS =	add.o		\
+		code.o		\
+		decode.o	\
+		long_term.o     \
+		lpc.o		\
+		preprocess.o	\
+		rpe.o		\
+		gsm_destroy.o	\
+		gsm_decode.o	\
+		gsm_encode.o	\
+		gsm_create.o	\
+		gsm_option.o    \
+		short_term.o    \
+		table.o
+
+
+LIBOBJS = $(GSM_OBJECTS)
+
+all: libgsm.a
+
+libgsm.a: $(LIBOBJS)
+	$(AR) libgsm.a $(LIBOBJS)
+	$(RANLIB) libgsm.a
+
+install-lib: libgsm.a
+	$(top_srcdir)/mkinstalldirs $(libdir)
+	$(top_srcdir)/mkinstalldirs $(mandir)/man3
+	$(INSTALL) -c -m 644 libgsm.a $(libdir)
+	$(RANLIB) $(libdir)/libgsm.a
+	$(INSTALL) -c -m 644 gsm.3 $(mandir)/man3
+	$(INSTALL) -c -m 644 gsm_option.3 $(mandir)/man3
+
+clean:
+	$(RM) *.o
+
+distclean:
+	$(RM) *~ *.o core
+	$(RM) Makefile

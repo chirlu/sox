@@ -1,7 +1,7 @@
 People are encouraged to pick some of these and implement it.  Send
 all patches to cbagwell@users.sourceforge.net.
 
-  o Get nul effect and oss driver compiling under latest cygwin.
+  o Still passing some options using CFLAGS instead of stconfig.h.
 
   o Several files are using hard-coded #'s instead of ST_SAMPLE_MIN/MAX.
     Change these.

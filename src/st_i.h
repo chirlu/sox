@@ -45,6 +45,10 @@ void st_triangle(int *buf, st_ssize_t len, int max, int depth);
 st_sample_t st_gcd(st_sample_t a, st_sample_t b) REGPARM(2);
 st_sample_t st_lcm(st_sample_t a, st_sample_t b) REGPARM(2);
 
+#ifndef HAVE_STRCASECMP
+int strcasecmp(const char *s1, const char *s2);
+#endif
+
 #ifndef HAVE_RAND
 int rand(void);
 void srand(unsigned int seed);

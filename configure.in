@@ -127,13 +127,13 @@ if test "$ogg_vorbisinc" = yes
 then
   AC_CHECK_LIB(vorbis, vorbis_analysis_init,
                LIBS="$LIBS -logg -lvorbis -lvorbisfile -lvorbisenc"
-               AC_DEFINE(HAVE_LIBVORBIS))
+               AC_DEFINE([HAVE_LIBVORBIS], 1, [Define if you have Ogg Vorbis Library installed]))
 fi
 CPPFLAGS="$ac_save_CPPFLAGS"
 
 dnl Checks for library functions.
 
-AC_CHECK_FUNCS(getopt strerror memmove rand)
+AC_CHECK_FUNCS(getopt strerror memmove rand strcasecmp)
 
 dnl Checks for system services.
 

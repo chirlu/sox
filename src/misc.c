@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <ctype.h>
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
@@ -315,6 +316,21 @@ st_sample_t st_lcm(st_sample_t a, st_sample_t b)
     /* parenthesize this way to avoid st_sample_t overflow in product term */
     return a * (b / st_gcd(a, b));
 }
+
+#ifndef HAVE_STRCASECMP
+/*
+ * Portable strcasecmp() function
+ */
+int strcasecmp(const char *s1, const char *s2)
+{
+    for (; toupper(*s1) == toupper(*s2); ++s1, ++s2)
+    {
+	if (*s1 == '\0')
+	    return(0);
+    }
+    return ((*(unsigned char *)s1 < *(unsigned char *)s2) ? -1 : +1);
+}
+#endif
 
 #ifndef HAVE_RAND
 /*

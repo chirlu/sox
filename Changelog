@@ -59,6 +59,7 @@ sox-12.17.3
   o Reading Ogg Vorbis files could get confused of when EOF was reached.
   o Added uninstall rules to Makefile.  Added new ststdint.h to define
     *int*_t typedefs.
+  o Added internal strcasecmp for OS/2.
 
 sox-12.17.2
 -----------

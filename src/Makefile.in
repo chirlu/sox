@@ -160,6 +160,7 @@ distclean:
 	$(RM) *~ *.o *.raw *.sf core sox soxmix libst.a play
 	cd gsm && $(RM) *~ *.o core libgsm.a Makefile
 	$(RM) config.cache config.log config.status config.h Makefile
+	$(RM) -r autom4te.cache
 	$(RM) stconfig.h ststdint.h
 
 tar:
