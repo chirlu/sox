@@ -341,16 +341,16 @@ static void init() {
 static void process() {
     LONG result, i, *ibuf, *mbuf, *obuf, ilen=0, mlen=0, olen=0;
 
-    if ( st_gettype(&informat) )
-	st_fail("bad input format");
-    
-    if ( st_gettype(&mixformat) )
-	st_fail("bad input format");
+    if( st_gettype(&informat) )
+                st_fail("Unknown input file format for '%s'.  Use -t option to override",informat.filename);
+
+    if( st_gettype(&mixformat) )
+                st_fail("Unknown input file format for '%s'.  Use -t option to override",mixformat.filename);
 
     if (writing)
-	if (st_gettype(&outformat))
-	    st_fail("bad output format");
-    
+        if ( st_gettype(&outformat) )
+                st_fail("Unknown output file format for '%s'.  Use -t option to override",outformat.filename);
+
     /* Read and write starters can change their formats. */
     if ((* informat.h->startread)(&informat) == ST_EOF)
     {

@@ -162,7 +162,12 @@ char **argv;
 	     * Determine if we will need to loop around again.  If we don't
 	     * then we know we just grabbed the output file information.
 	     */
-	    if (optind < argc && st_checkeffect(argv[optind]) != ST_SUCCESS)
+	    /* FIXME: When this file handles multiple input filenames,
+	     * remove the check for !informat.  Instead store next empty
+	     * slot in array of input filename.
+	     */
+	    if (!informat && optind < argc && 
+		st_checkeffect(argv[optind]) != ST_SUCCESS)
 	    {
 		informat = ft;
 
@@ -403,10 +408,10 @@ static void process(void) {
     int e, f, flowstatus;
 
     if( st_gettype(informat) )
-		st_fail("bad input format");	
+		st_fail("Unknown input file format for '%s'.  Use -t option to override",informat->filename);	
     if (writing)
 	if ( st_gettype(outformat) )
-		st_fail("bad output format");	
+		st_fail("Unknown output file format for '%s'.  Use -t option to override",outformat->filename);
     
     /* Read and write starters can change their formats. */
     if ((* informat->h->startread)(informat) == ST_EOF)
