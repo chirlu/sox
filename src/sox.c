@@ -43,7 +43,9 @@
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #else
+#ifndef HAVE_GETOPT
 int getopt(P3(int,char **,char *));
+#endif
 #endif
 
 #ifdef VMS
