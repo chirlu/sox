@@ -376,6 +376,8 @@ int st_aiffstartread(ft_t ft)
         if (foundcomm) {
                 ft->info.channels = channels;
                 ft->info.rate = rate;
+                if (ft->info.encoding != -1 && ft->info.encoding != ST_ENCODING_SIGN2)
+                    st_report("AIFF only supports signed data.  Forcing to signed.");
                 ft->info.encoding = ST_ENCODING_SIGN2;
                 if (bits <= 8)
                 {
@@ -671,9 +673,12 @@ int st_aiffstartwrite(ft_t ft)
         if ((ft->info.encoding == ST_ENCODING_ULAW ||
              ft->info.encoding == ST_ENCODING_ALAW) && 
             ft->info.size == ST_SIZE_BYTE) {
-                st_report("expanding 8-bit u-law to 16 bits");
+                st_report("expanding 8-bit u-law to signed 16 bits");
+                ft->info.encoding = ST_ENCODING_SIGN2;
                 ft->info.size = ST_SIZE_WORD;
         }
+        if (ft->info.encoding != -1 && ft->info.encoding != ST_ENCODING_SIGN2)
+            st_report("AIFF only supports signed data.  Forcing to signed.");
         ft->info.encoding = ST_ENCODING_SIGN2; /* We have a fixed encoding */
 
         /* Compute the "very large number" so that a maximum number
@@ -741,6 +746,9 @@ static int aiffwriteheader(ft_t ft, st_size_t nframes)
         else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
                  ft->info.size == ST_SIZE_WORD)
                 bits = 16;
+        else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
+                 ft->info.size == ST_SIZE_DWORD)
+                bits = 32;
         else
         {
                 st_fail_errno(ft,ST_EFMT,"unsupported output encoding/size for AIFF header");
@@ -1052,4 +1060,3 @@ static double ConvertFromIeeeExtended(unsigned char *bytes)
     else
         return f;
 }
-
