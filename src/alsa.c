@@ -21,7 +21,7 @@
 
 static int get_format(P3(ft_t ft, int formats, int *fmt));
 
-#if 0 /* Start old API */
+#ifdef USE_OLD_API /* Start 0.4.x API */
 
 /*
  * Do anything required before you start reading samples.
@@ -128,7 +128,7 @@ ft_t ft;
     return(ST_SUCCESS);
 }
 
-#else /* Start new API */
+#else /* Start 0.5.x API */
 
 int st_alsastartread(ft)
 ft_t ft;

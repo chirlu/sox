@@ -133,7 +133,18 @@ fi
 
 if test "$alsa_dsp" = yes
 then
+	AC_MSG_CHECKING([for ALSA ioctl API])
+	AC_TRY_COMPILE(
+[
+#include <linux/asound.h>
+],
+[
+snd_pcm_capture_info_t c_info;
+],
+		alsa_api_ver=oldapi,alsa_api_ver=newapi)
+	AC_MSG_RESULT($alsa_api_ver)
 	CFLAGS="$CFLAGS -DALSA_PLAYER"
+	if test "$alsa_api_ver" = oldapi; then CFLAGS="$CFLAGS -DUSE_OLD_API"; fi
 	NEED_ALSA=1
 	PLAY_SUPPORT=1
 fi
