@@ -3,7 +3,7 @@ dnl
 dnl configure.in
 dnl
 
-AC_REVISION([configure.in 1.0])
+AC_REVISION([configure.in 1.1])
 AC_INIT(sox.c)
 dnl AC_CONFIG_HEADER(config.h)
 

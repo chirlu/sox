@@ -16,6 +16,7 @@ CC	= @CC@
 RANLIB	= @RANLIB@
 INSTALL	= @INSTALL@
 AR	= ar r
+SED	= @SED@
 TAR	= tar
 RM	= rm -f
 
