@@ -26,7 +26,7 @@
 #define MIN(s1,s2) ((s1)<(s2)?(s1):(s2))
 #endif
 
-#define INPUT_BUFFER_SIZE	(5*8192)
+#define INPUT_BUFFER_SIZE	(5*ST_BUFSIZ)
 
 /* Private data */
 struct mp3priv {
@@ -35,13 +35,13 @@ struct mp3priv {
 	struct mad_frame	*Frame;
 	struct mad_synth	*Synth;
 	mad_timer_t		*Timer;
-        unsigned char		*InputBuffer;
-        st_ssize_t              cursamp;
+	unsigned char		*InputBuffer;
+	st_ssize_t		cursamp;
 	unsigned long		FrameCount;
-        int                     eof;
+	int			eof;
 #endif /*HAVE_LIBMAD*/
 #if defined(HAVE_LAME)
-        lame_global_flags       *gfp;
+	lame_global_flags	*gfp;
 #endif /*HAVE_LAME*/
 };
 
@@ -55,9 +55,8 @@ struct mp3priv {
 
 int tagtype(const unsigned char *data, int length)
 {
-  if (length >= 3 &&
-      data[0] == 'T' && data[1] == 'A' && data[2] == 'G')
-    return 128; /* ID3V1 */
+  if (length >= 3 && data[0] == 'T' && data[1] == 'A' && data[2] == 'G')
+	return 128; /* ID3V1 */
 
   if (length >= 10 &&
       (data[0] == 'I' && data[1] == 'D' && data[2] == '3') &&
@@ -90,24 +89,34 @@ int st_mp3startread(ft_t ft)
 	p->Frame=malloc(sizeof(struct mad_frame));
 	if (p->Frame == NULL){
 	  st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
+	  free(p->Stream);
 	  return ST_EOF;
 	}
 	
 	p->Synth=malloc(sizeof(struct mad_synth));
 	if (p->Synth == NULL){
 	  st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
+	  free(p->Stream);
+	  free(p->Frame);
 	  return ST_EOF;
 	}
 	
 	p->Timer=malloc(sizeof(mad_timer_t));
 	if (p->Timer == NULL){
 	  st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
+	  free(p->Stream);
+	  free(p->Frame);
+	  free(p->Synth);
 	  return ST_EOF;
 	}
 	
 	p->InputBuffer=malloc(INPUT_BUFFER_SIZE);
 	if (p->InputBuffer == NULL){
 	  st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
+	  free(p->Stream);
+	  free(p->Frame);
+	  free(p->Synth);
+	  free(p->Timer);
 	  return ST_EOF;
 	}
 	
@@ -182,6 +191,7 @@ st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
   struct mp3priv *p = (struct mp3priv *) ft->priv;
   st_ssize_t donow,i,done=0;
+  mad_fixed_t sample;
   int chan;
 
   do{
@@ -189,8 +199,12 @@ st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len)
     i=0;
     while(i<donow){
       for(chan=0;chan<ft->info.channels;chan++){
-
-	*buf++=(st_sample_t)p->Synth->pcm.samples[chan][p->cursamp]<<(8*sizeof(st_sample_t)-1-MAD_F_FRACBITS);
+	sample=p->Synth->pcm.samples[chan][p->cursamp];
+	if (sample < -MAD_F_ONE)
+	  sample=-MAD_F_ONE;
+	else if (sample >= MAD_F_ONE)
+	  sample=MAD_F_ONE-1;
+	*buf++=(st_sample_t)(sample<<(32-1-MAD_F_FRACBITS));
 	i++;
       }
       p->cursamp++;
@@ -238,20 +252,23 @@ st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len)
 	  int tagsize;
 	  if ( (tagsize=tagtype(p->Stream->this_frame, p->Stream->bufend - p->Stream->this_frame)) == 0){
 	    if (!p->eof)
-	      st_warn("recoverable frame level error (%s)\n");
+	      st_warn("recoverable frame level error (%s).\n",
+		      mad_stream_errorstr(p->Stream));
 	  }
 	  else mad_stream_skip(p->Stream,tagsize);
 	  continue;
       	}
       else
-	if(p->Stream->error==MAD_ERROR_BUFLEN)
-	  continue;
-	else
-	  {
-	    st_warn("unrecoverable frame level error (%s).\n",
-		    mad_stream_errorstr(p->Stream));
-	    return done;
-	  }
+	{
+	  if(p->Stream->error==MAD_ERROR_BUFLEN)
+	    continue;
+	  else
+	    {
+	      st_warn("unrecoverable frame level error (%s).\n",
+		      mad_stream_errorstr(p->Stream));
+	      return done;
+	    }
+	}
     }
     p->FrameCount++;
     mad_timer_add(p->Timer,p->Frame->header.duration);
