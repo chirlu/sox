@@ -20,7 +20,6 @@ t maud
 t raw -r 8130 -t ub
 t sf 
 t smp
-t sndr
 t sndt 
 t txw
 t vms

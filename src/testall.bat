@@ -37,7 +37,6 @@ call t.bat maud
 call t.bat raw -r 8130 -t ub
 call t.bat sf
 call t.bat smp
-call t.bat sndr
 call t.bat sndt
 call t.bat txw
 call t.bat voc
