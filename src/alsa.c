@@ -79,17 +79,17 @@ struct alsa_info *a_info;
 struct sndrv_pcm_hw_params *params;
 {
     unsigned int i;
-    unsigned int *msk;
+    struct sndrv_mask *msk;
     struct sndrv_interval *intr;
 
     memset(params, '\0', sizeof(struct sndrv_pcm_hw_params));
-    for (i = 0; i <= SNDRV_PCM_HW_PARAM_LAST; ++i)
+    for (i = 0; i <= SNDRV_PCM_HW_PARAM_LAST_INTERVAL; ++i)
     {
 	if (i >= SNDRV_PCM_HW_PARAM_FIRST_MASK &&
 	    i <= SNDRV_PCM_HW_PARAM_LAST_MASK)
 	{
 	    msk = alsa_params_masks(params, i);
-	    *msk = ~0UL;
+	    memset(msk->bits, 0xff, sizeof(msk->bits));
 	}
 	else
 	{
@@ -107,7 +107,8 @@ struct sndrv_pcm_hw_params *params;
     if (ioctl(fd, SNDRV_PCM_IOCTL_HW_REFINE, params) < 0) {
 	return -1;
     }
-    a_info->formats = *alsa_params_masks(params, SNDRV_PCM_HW_PARAM_FORMAT);
+    msk = alsa_params_masks(params, SNDRV_PCM_HW_PARAM_FORMAT);
+    a_info->formats = msk->bits[0]; /* Only care about first 32 bits. */
     a_info->min_buffer_size = alsa_params_intervals(params, SNDRV_PCM_HW_PARAM_BUFFER_BYTES)->min;
     a_info->max_buffer_size = alsa_params_intervals(params, SNDRV_PCM_HW_PARAM_BUFFER_BYTES)->max;
     a_info->min_channels = alsa_params_intervals(params, SNDRV_PCM_HW_PARAM_CHANNELS)->min;
@@ -128,18 +129,18 @@ struct sndrv_pcm_hw_params *params;
 struct alsa_setup *setup;
 {
     int i;
-    unsigned int *msk;
+    struct sndrv_mask *msk;
     struct sndrv_interval *intr;
 
     i = SNDRV_PCM_HW_PARAM_ACCESS;
     msk = alsa_params_masks(params, i);
-    *msk &= 1 << SNDRV_PCM_ACCESS_RW_INTERLEAVED;
+    msk->bits[0] &= 1 << SNDRV_PCM_ACCESS_RW_INTERLEAVED; /* Only care about first 32 bits. */
     params->cmask = 1 << i;
     params->rmask = 1 << i;
 
     i = SNDRV_PCM_HW_PARAM_FORMAT;
     msk = alsa_params_masks(params, i);
-    *msk &= 1 << setup->format;
+    msk->bits[0] &= 1 << setup->format; /* Only care about first 32 bits. */
     params->cmask = 1 << i;
     params->rmask = 1 << i;
 
