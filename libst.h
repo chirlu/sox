@@ -10,10 +10,6 @@
 ** implied warranty.
 */
 
-#define MINLIN -32768
-#define MAXLIN 32767
-#define LINCLIP(x) do { if ( x < MINLIN ) x = MINLIN ; else if ( x > MAXLIN ) x = MAXLIN; } while ( 0 )
-
 /* These do not round data.  Caller must round appropriately. */
 
 #ifdef FAST_ULAW_CONVERSION
@@ -34,8 +30,4 @@ extern unsigned char Alaw_comp_table[16384];
 #else
 unsigned char st_linear_to_Alaw( /* int sample */ );
 int st_Alaw_to_linear( /* unsigned char ulawbyte */ );
-#endif
-
-#ifdef	USG
-#define	setbuffer(x,y,z)
 #endif
