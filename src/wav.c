@@ -403,17 +403,23 @@ static st_ssize_t findChunk(ft_t ft, const char *Label)
     {
         if (st_reads(ft, magic, 4) == ST_EOF)
         {
-            st_fail_errno(ft,ST_EHDR,"WAVE file has missing %s chunk", Label);
+            st_fail_errno(ft, ST_EHDR, "WAVE file has missing %s chunk", 
+                          Label);
             return ST_EOF;
         }
         st_readdw(ft, &tmp_len);
         len = tmp_len;
-        st_report("Chunk %s",magic);
-        if (strncmp(Label, magic, 4) == 0)
-            break;              /* Found the data chunk */
+        st_report("WAV Chunk %s", magic);
 
-        
-        st_seek(ft, len, SEEK_CUR);     /* skip to next chunk */
+        if (strncmp(Label, magic, 4) == 0)
+            break; /* Found the data chunk */
+
+        /* skip to next chunk */
+        if (st_seek(ft, len, SEEK_CUR) != ST_SUCCESS)
+        {
+            st_fail_errno(ft,ST_EHDR, "WAV chunk appears to have invalid size %d.", len);
+            return ST_EOF;
+        }
     }
     return len;
 }
@@ -835,7 +841,11 @@ int st_wavstartread(ft_t ft)
 
     /* Now look for the wave data chunk */
     dwDataLength = len = findChunk(ft, "data");
-    /* findChunk() only returns if chunk was found */
+    if (len == ST_EOF)
+    {
+        st_fail_errno(ft, ST_EOF, "Could not find data chunk.");
+        return ST_EOF;
+    }
 
     /* Data starts here */
     wav->dataStart = st_tell(ft);
@@ -916,8 +926,9 @@ int st_wavstartread(ft_t ft)
          * doubt any machine writing Cool Edit Chunks writes them at an odd 
          * offset */
         len = (len + 1) & ~1;
-        st_seek(ft, len, SEEK_CUR);
-        if( findChunk(ft, "LIST") != ST_EOF){
+        if (st_seek(ft, len, SEEK_CUR) == ST_SUCCESS &&
+            findChunk(ft, "LIST") != ST_EOF)
+        {
             wav->found_cooledit = 1;
             ft->comment = (char*)malloc(256);
             /* Initialize comment to a NULL string */

@@ -63,7 +63,7 @@ The sound effects include:
   o Multi-band compander
   o Pan sound between channels
   o Apply a phaser effect
-  o Change the pitch of a sound file without effecting its speed
+  o Change the pitch of a sound file without affecting its speed
   o Repeat audio data
   o Change sampling rates using several different algorithms. A
      'resample' and 'polyphase' effect use high-grade signal rate
@@ -74,7 +74,7 @@ The sound effects include:
   o Change the speed of samples being played (like speeding up the motor
     on a tape recorder)
   o Display general stats on a sound sample
-  o Stretch/shorten the duration of a sound file (without effecting pitch).
+  o Stretch/shorten the duration of a sound file (without affecting pitch).
   o Swap stereo channels
   o Create sounds with a simple synthesizer.
   o Trim audio data from beginning and end of file.

@@ -53,11 +53,24 @@ can be obtained from http://www.cs.tu-berlin.de/~jutta/toast.html.
 If this library fails to compile on your system, you can specify
 --disable-gsm to prevent it from being compiled in.
 
-SoX can make use of Ogg Vorbis libraries to play and record Ogg
-Vorbis files.  If this library is installed in a non-standard location
-in your system then you can use the CPPFLAGS and LDFLAGS variables
-to allow configure to find this library.  For examle,
-"./configure CPPFLAGS=-I/home/sox/include LDFLAGS=-L/home/sox/lib".
+SoX can make use of Ogg Vorbis libraries to read and write Ogg
+Vorbis files.  Normally, the configure script will auto detect
+this library and enable support for Ogg Vorbis.  Ogg Vorbis library 
+can be obtained from http://www.vorbis.com
+
+SoX can make use of MP3 libraries to read and write MP3 files.
+Normally, the configure script will auto detect these libraries and
+enable support for MP3.  SoX requires libmad for reading MP3 files
+and lame for writing MP3 files.  Libmad can be obtained from
+http://www.underbit.com/products/mad/ and lame can be obtained from
+http://mitiok.cjb.net/
+
+If any libraries are installed in a non-standard locations in your 
+system then you can use the CPPFLAGS and LDFLAGS variables to allow 
+configure to find 
+them.  For example:
+
+./configure CPPFLAGS="-I/home/sox/include -I/usr/local/multimedia/include" LDFLAGS="-L/home/sox/lib -L/usr/local/multimedia/lib"
 
 If you're not processing lots of u-law or A-law files and would
 like to save around 64K of memory when SoX is executed then you
