@@ -80,8 +80,3 @@ $(srcdir)/configure: configure.in aclocal.m4
 
 config.status: configure
 	./config.status --recheck
-
-# Not all platforms use CPPFLAGS concept by default so define custom
-# rule for .c.o to make sure its used.
-.c.o:
-	${CC} ${CFLAGS} ${CPPFLAGS} -c $<

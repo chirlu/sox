@@ -145,3 +145,8 @@ distclean:
 	$(RM) *~ *.o *.raw *.sf core sox soxmix libst.a play libst-config
 	cd gsm && $(RM) *~ *.o core libgsm.a Makefile
 	$(RM) stconfig.h ststdint.h Makefile
+
+# Not all platforms use CPPFLAGS concept by default so define custom
+# rule for .c.o to make sure its used.
+.c.o:
+	${CC} ${CFLAGS} ${CPPFLAGS} -c $<
