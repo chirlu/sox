@@ -20,7 +20,7 @@ bindir=@bindir@
 
 # Look for sox in install directory first and then in current direction
 # if not found.
-PATH=$bindir:.
+PATH="$bindir:.:$PATH"
 
 program_name=`basename $0`
 program_version="2.0"
