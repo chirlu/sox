@@ -1243,7 +1243,7 @@ static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct,
                 y = ST_SAMPLE_MAX;
                 clips++;
             }
-            *p++ = y + 0.5;
+            *p++ = y;
         }
         return clips;
 }

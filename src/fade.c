@@ -295,14 +295,14 @@ int st_fade_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     len = *osamp;
     *osamp = 0;
 
-    if (fade->out_stop != 0 && fade->samplesdone < fade->out_stop &&
+    if (fade->do_out && fade->samplesdone < fade->out_stop &&
         !(fade->endpadwarned))
     { /* Warning about padding silence into end of sample */
         st_warn("Fade: warning: End time passed end-of-file. Padding with silence");
         fade->endpadwarned = 1;
     } /* endif endpadwarned */
 
-    for (;len && (fade->out_stop != 0 &&
+    for (;len && (fade->do_out &&
                   fade->samplesdone < fade->out_stop); len--)
     {
         *obuf = 0;
