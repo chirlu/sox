@@ -277,6 +277,11 @@ void st_f64_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
 /* Reads a buffer of different data types into SoX's internal buffer
  * format.
  */
+/* FIXME:  This function adds buffering on top of stdio's buffering.
+ * Mixing st_readbuf's and freads or fgetc or even SoX's other util
+ * functions will cause a loss of data!  Need to have sox implement
+ * a consistent buffering protocol.
+ */
 ULONG st_readbuf(LONG *p, int n, int size, int encoding, ft_t ft)
 {
     ULONG len, done = 0;
@@ -370,7 +375,7 @@ ULONG st_readbuf(LONG *p, int n, int size, int encoding, ft_t ft)
 	    }
 	}
 
-        len = MIN(n,(ft->file.count-ft->file.pos)/size);
+        len = MIN(n - done,(ft->file.count-ft->file.pos)/size);
         if (len)
         {
 	    copy_buf(p + done, ft->file.buf + ft->file.pos, len, ft->swap);
