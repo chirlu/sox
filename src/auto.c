@@ -71,6 +71,10 @@ ft_t ft;
 	    {
 		type = "hcom";
 	    }
+	    else if (strncmp(header, "SOUND SAMPLE DATA", 17) == 0)
+	    {
+		type = "smp";
+	    }
 	    else if (strncmp(header, "SOUND", 5) == 0) 
 	    {
 		type = "sndt";

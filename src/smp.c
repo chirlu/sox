@@ -205,7 +205,7 @@ ft_t ft;
 
 	/* SMP is in Little Endian format.  Swap whats read in on */
 	/* Big Endian machines.			                  */
-	if (ST_IS_LITTLEENDIAN)
+	if (ST_IS_BIGENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}
@@ -359,7 +359,7 @@ ft_t ft;
 
 	/* SMP is in Little Endian format.  Swap whats read in on */
 	/* Big Endian machines.			                  */
-	if (ST_IS_LITTLEENDIAN)
+	if (ST_IS_BIGENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}
