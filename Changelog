@@ -7,8 +7,8 @@ sox-11gamma.
 sox-12.17.4
 -----------
   o Peter Nyhlen fixed a problem with reading Comments in Ogg Vorbis files.
-  o Added install target to allow installing libgsm from main Makefile
-    (Leigh Smith).
+  o Added install target to allow installing libgsm from main Makefile.
+    Leigh Smith.
   o Minor updates to sox.c to free unused memory and close all input
     files during failures.
   o Pieter Krul added a patch that makes play script look at AUDIODEV
@@ -28,6 +28,10 @@ sox-12.17.4
     private sizes being to small.
   o Jimen Ching adds -d option to specify 64bit data size and changed
     Ulaw/Alaw encoding to default to 8bit data size if not specified.
+  o David Singer pointed out that a MS program creates AIFF files
+    with an invalid length of 0 in its header.  Changed SoX to warn the
+    user but continue instead of aborting since SoX can still read
+    the file just fine.
   o Bert van Leeuwen added a file handler for Psion record.app used
     for System/Alarms in some Psion devices.
 

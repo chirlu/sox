@@ -356,10 +356,8 @@ int st_aiffstartread(ft_t ft)
 	}
 	/* SSND chunk just read */
 	if (blocksize != 0)
-	{
-		st_fail_errno(ft,ST_EHDR,"AIFF header specifies nonzero blocksize?!?!");
-		return(ST_EOF);
-	}
+	    st_warn("AIFF header has invalid blocksize.  Ignoring but expect a premature EOF");
+
 	while (offset-- > 0) {
 		if (st_readb(ft, (unsigned char *)&trash8) == ST_EOF)
 		{

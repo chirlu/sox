@@ -218,7 +218,7 @@ int st_avg_start(eff_t effp)
              break;
          case MIX_FRONT:
              if (ichan < 4) {
-                 st_fail("Input must have at four channels to use avg -f");
+                 st_fail("Input must have at least four channels to use avg -f");
                  return(ST_EOF);
              }
              pans[0] = 1.0;
@@ -227,7 +227,7 @@ int st_avg_start(eff_t effp)
              break;
          case MIX_BACK:
              if (ichan < 4) {
-                 st_fail("Input must have at four channels to use avg -b");
+                 st_fail("Input must have at least four channels to use avg -b");
                  return(ST_EOF);
              }
              pans[0] = 0.0;
@@ -300,7 +300,6 @@ int st_avg_start(eff_t effp)
      else if (avg->num_pans == 2) {
          if (ichan == 2 && ochan == 1) {
              avg->sources[0][0] = pans[0];
-             avg->sources[0][1] = 0.0;
              avg->sources[1][0] = pans[1];
          }
          else if (ichan == 4 && ochan == 2) {
@@ -324,16 +323,11 @@ int st_avg_start(eff_t effp)
              /* Shorthand for 2-channel case */
              avg->sources[0][0] = pans[0];
              avg->sources[0][1] = pans[1];
-             avg->sources[0][2] = 0.0;
-             avg->sources[0][3] = 0.0;
              avg->sources[1][0] = pans[2];
              avg->sources[1][1] = pans[3];
          }
          else if (ichan == 4 && ochan == 1) {
              avg->sources[0][0] = pans[0];
-             avg->sources[0][1] = 0.0;
-             avg->sources[0][2] = 0.0;
-             avg->sources[0][3] = 0.0;
              avg->sources[1][0] = pans[1];
              avg->sources[2][0] = pans[2];
              avg->sources[3][0] = pans[3];

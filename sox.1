@@ -40,7 +40,7 @@ sox \- Sound eXchange : universal sound sample translator
 .B Format options:
 .br
     [ -t \fIfiletype\fR ] [ -r \fIrate\fR ] [ -s/-u/-U/-A/-a/-i/-g/-f ]
-    [ -b/-w/-l ]
+    [ -b/-w/-l/-d ]
     [ -c \fIchannels\fR ] [ -x ] [ -e ]
 .P
 .B Effects:
@@ -262,8 +262,9 @@ GSM is a standard used for telephone sound compression in
 European countries and its gaining popularity because of its
 quality.  It usually is CPU intensive to work with GSM audio data.
 .TP 10
-\fB-b/-w/-l\fR
-The sample data size is in bytes, 16-bit words, or 32-bit long words.
+\fB-b/-w/-l/-d\fR
+The sample data size is in bytes, 16-bit words, 32-bit long words, 
+or 64-bit double long (long long) words.
 .TP 10
 \fB-x\fR
 The sample data is in XINU format; that is,
