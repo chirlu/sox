@@ -26,7 +26,7 @@ extern "C" {
 #include <sys/types.h>
 #endif
 #ifdef HAVE_INTTYPES_H
-#include <inttypes.h> 
+#include <inttypes.h>
 #else
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
@@ -74,7 +74,7 @@ typedef uint32_t st_rate_t;
 
 /* FIXME:  Remove from usage by libst */
 #define LONG    int32_t
-#define ULONG   u_int32_t
+#define ULONG   uint32_t
 
 /* FIXME: Get rid of this and usage of LONG_MAX */
 #define MAXLONG 0x7fffffffL
