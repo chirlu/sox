@@ -35,7 +35,7 @@ install: $(PLAY_INSTALL_$(PLAY_SUPPORT))
 	$(srcdir)/mkinstalldirs $(mandir)/man1
 	$(INSTALL) -c -m 644 $(srcdir)/sox.1 $(mandir)/man1
 	if [ -f $(mandir)/man1/soxmix.1 ] ; then $(RM) $(mandir)/man1/soxmix.1; fi
-	cd $(mandir)/man && $(LN_S) sox.1 soxmix.1
+	cd $(mandir)/man1 && $(LN_S) sox.1 soxmix.1
 	$(INSTALL) -c -m 644 $(srcdir)/soxexam.1 $(mandir)/man1
 
 install-play:

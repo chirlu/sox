@@ -233,10 +233,11 @@ ft_t ft;
         st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
         return(ST_EOF);
     }
-    if (ft->info.rate < a_info.min_rate) ft->info.rate = 2 * a_info.min_rate;
+    if (ft->info.rate < a_info.min_rate) ft->info.rate = a_info.min_rate;
     else if (ft->info.rate > a_info.max_rate) ft->info.rate = a_info.max_rate;
     if (ft->info.channels == -1) ft->info.channels = a_info.min_channels;
     else if (ft->info.channels > a_info.max_channels) ft->info.channels = a_info.max_channels;
+    else if (ft->info.channels < a_info.min_channels) ft->info.channels = a_info.min_channels;
     if (get_format(ft, a_info.formats, &fmt) < 0)
         return (ST_EOF);
 
@@ -282,10 +283,11 @@ ft_t ft;
         st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
         return(ST_EOF);
     }
-    if (ft->info.rate < a_info.min_rate) ft->info.rate = 2 * a_info.min_rate;
+    if (ft->info.rate < a_info.min_rate) ft->info.rate = a_info.min_rate;
     else if (ft->info.rate > a_info.max_rate) ft->info.rate = a_info.max_rate;
     if (ft->info.channels == -1) ft->info.channels = a_info.min_channels;
     else if (ft->info.channels > a_info.max_channels) ft->info.channels = a_info.max_channels;
+    else if (ft->info.channels < a_info.min_channels) ft->info.channels = a_info.min_channels;
     if (get_format(ft, a_info.formats, &fmt) < 0)
         return (ST_EOF);
 
@@ -586,9 +588,7 @@ ft_t ft;
 
 #define EMSGFMT "ALSA driver does not support %s %s output"
 
-static int get_format(ft, formats, fmt)
-ft_t ft;
-int formats, *fmt;
+static int get_format(ft_t ft, int formats, int *fmt)
 {
     if (ft->info.size == -1) {
         if ((formats & SND_PCM_FMT_U8) || (formats & SND_PCM_FMT_S8))
@@ -596,13 +596,61 @@ int formats, *fmt;
         else
             ft->info.size = ST_SIZE_WORD;
     }
-    if (ft->info.encoding == -1) {
-        if ((formats & SND_PCM_FMT_S16) || (formats & SND_PCM_FMT_S8))
-            ft->info.encoding = ST_ENCODING_SIGN2;
-        else
-            ft->info.encoding = ST_ENCODING_UNSIGNED;
+    if (ft->info.size != ST_SIZE_BYTE && ft->info.size != ST_SIZE_WORD)
+    {
+        st_report("ALSA drive doesn't support %s.  Changin to 16-bits.", 
+                  st_sizes_str[(unsigned char)ft->info.encoding]);
+        ft->info.size = ST_SIZE_WORD;
+    }
+    
+    /* Some hardware only wants to work with 8-bit or 16-bit data */
+    if (ft->info.size == ST_SIZE_BYTE)
+    {
+        if (!(formats & SND_PCM_FMT_U8) && !(formats & SND_PCM_FMT_S8))
+        {
+            st_report("ALSA driver doesn't supported byte samples.  Changing to words.");
+            ft->info.size = ST_SIZE_WORD;
+        }
+    }
+    else if (ft->info.size == ST_SIZE_WORD)
+    {
+        if (!(formats & SND_PCM_FMT_U16) && !(formats & SND_PCM_FMT_S16))
+        {
+            st_report("ALSA driver doesn't supported word samples.  Changing to bytes.");
+            ft->info.size = ST_SIZE_BYTE;
+        }
     }
     if (ft->info.size == ST_SIZE_BYTE) {
+        switch (ft->info.encoding)
+        {
+            case ST_ENCODING_SIGN2:
+                if (!(formats & SND_PCM_FMT_S8))
+                {
+                    st_report("ALSA driver doesn't supported signed byte samples.  Changing to unsigned bytes.");
+                    ft->info.encoding = ST_ENCODING_SIGN2;
+                }
+                break;
+            case ST_ENCODING_UNSIGNED:
+                if (!(formats & SND_PCM_FMT_U8))
+                {
+                    st_report("ALSA driver doesn't supported unsigned byte samples.  Changing to signed bytes.");
+                    ft->info.encoding = ST_ENCODING_UNSIGNED;
+                }
+                break;
+            default:
+                if (formats & SND_PCM_FMT_S8)
+                {
+                    st_report("ALSA drive doesn't support %s %s.  Changing to signed bytes.", 
+                            st_encodings_str[(unsigned char)ft->info.encoding], "byte");
+                    ft->info.encoding = ST_ENCODING_SIGN2;
+                }
+                else
+                {
+                    st_report("ALSA drive doesn't support %s %s.  Changing to unsigned bytes.", 
+                              st_encodings_str[(unsigned char)ft->info.encoding], "byte");
+                    ft->info.encoding = ST_ENCODING_UNSIGNED;
+                }
+        }
         switch (ft->info.encoding)
         {
             case ST_ENCODING_SIGN2:
@@ -619,13 +667,29 @@ int formats, *fmt;
                 }
                 *fmt = SND_PCM_SFMT_U8;
                 break;
-            default:
-                st_fail_errno(ft,ST_EFMT,EMSGFMT,st_encodings_str[(unsigned char)ft->info.encoding],"byte");
-                return ST_EOF;
-                break;
         }
     }
     else if (ft->info.size == ST_SIZE_WORD) {
+        switch (ft->info.encoding)
+        {
+            case ST_ENCODING_SIGN2:
+                if (!(formats & SND_PCM_FMT_S16)) {
+                    st_report("ALSA driver does not support signed word samples.  Changing to unsigned words.");
+                    ft->info.encoding = ST_ENCODING_UNSIGNED;
+                }
+                break;
+            case ST_ENCODING_UNSIGNED:
+                if (!(formats & SND_PCM_FMT_U16)) {
+                    st_report("ALSA driver does not support unsigned word samples.  Changing to signed words.");
+                    ft->info.encoding = ST_ENCODING_SIGN2;
+                }
+                break;
+            default:
+                st_report("ALSA drive doesn't support %s %s.  Changin to signed words.", 
+                        st_encodings_str[(unsigned char)ft->info.encoding], "byte");
+                ft->info.encoding = ST_ENCODING_SIGN2;
+                break;
+        }
         switch (ft->info.encoding)
         {
             case ST_ENCODING_SIGN2:
@@ -641,10 +705,6 @@ int formats, *fmt;
                     return ST_EOF;
                 }
                 *fmt = SND_PCM_SFMT_U16_LE;
-                break;
-            default:
-                st_fail_errno(ft,ST_EFMT,EMSGFMT,st_encodings_str[(unsigned char)ft->info.encoding],"word");
-                return ST_EOF;
                 break;
         }
     }
