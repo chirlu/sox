@@ -96,6 +96,7 @@ static ft_t informat[MAX_INPUT_FILES] = { 0 };
 static int input_count = 0;
 
 static ft_t outformat = 0;
+static int output_count = 0;
 
 /* We parse effects into a temporary effects table and then place into
  * the real effects table.  This makes it easier to reorder some effects
@@ -135,7 +136,8 @@ char **argv;
 	myname = argv[0];
 
 	/* Loop over arguments and filenames, stop when an effect name is found */
-	while (optind < argc && st_checkeffect(argv[optind]) != ST_SUCCESS)
+	while (optind < argc && output_count < 1 &&
+	       st_checkeffect(argv[optind]) != ST_SUCCESS)
 	{
 	
 	    /* 
@@ -150,9 +152,10 @@ char **argv;
 		 * options or an effect name then we assume this is
 		 * the last filename.
 		 */
-		if (optind == (argc-1) || 
-		    st_checkeffect(argv[optind+1]) == ST_SUCCESS ||
-		    input_count >= MAX_INPUT_FILES)
+		if (input_count >= REQUIRED_INPUT_FILES &&
+		    (optind == (argc-1) || 
+		     st_checkeffect(argv[optind+1]) == ST_SUCCESS ||
+		     input_count >= MAX_INPUT_FILES))
 		{
 		    parsing_output = 1;
 		}
@@ -166,9 +169,10 @@ char **argv;
 		 * output side.  Should be no more parameters or
 		 * a valid effects name.
 		 */
-		if (optind == (argc-1) || 
-		    st_checkeffect(argv[optind+1]) == ST_SUCCESS ||
-		    input_count >= MAX_INPUT_FILES)
+		if (input_count >= REQUIRED_INPUT_FILES &&
+		    (optind == (argc-1) || 
+		     st_checkeffect(argv[optind+1]) == ST_SUCCESS ||
+		     input_count >= MAX_INPUT_FILES))
 		{
 		    parsing_output = 1;
 		}
@@ -196,16 +200,16 @@ char **argv;
 	     * of inputs, then only treat this as an input filename
 	     * if it looks like we have more filenames left.
 	     */
-	    if (input_count < REQUIRED_INPUT_FILES ||
-		(input_count < MAX_INPUT_FILES &&
-		 optind < argc && 
-		 st_checkeffect(argv[optind]) != ST_SUCCESS))
+	    if (!parsing_output)
 	    {
-		ft->filename = argv[optind];
-		optind++;
+		if (optind < argc)
+		{
+		    ft->filename = argv[optind];
+		    optind++;
 
-		copy_input(ft);
-		open_input(ft);
+		    copy_input(ft);
+		    open_input(ft);
+		}
 	    }
 	    else
 	    {
@@ -234,7 +238,7 @@ char **argv;
 	if (input_count < REQUIRED_INPUT_FILES ||
 	    !informat[REQUIRED_INPUT_FILES-1] || 
 	    !informat[REQUIRED_INPUT_FILES-1]->filename)
-	    usage("Not enough input files not specified");
+	    usage("Not enough input files specified");
 
 	if (!outformat || (!outformat->filename && writing))
 	    usage("No output file?");
@@ -246,7 +250,7 @@ char **argv;
         {
 	    if (nuser_effects >= MAX_USER_EFF)
 	    {
-	        st_fail("Sorry, too many effects specified.\n");
+	        st_fail("To many effects specified.\n");
 	    }
 
 	    argc_effect = st_geteffect_opt(&user_efftab[nuser_effects], 
@@ -258,7 +262,7 @@ char **argv;
 	        fprintf(stderr, "%s: Known effects: ",myname);
 	        for (i1 = 1; st_effects[i1].name; i1++)
 	            fprintf(stderr, "%s ", st_effects[i1].name);
-	        fprintf(stderr, "\n");
+	        fprintf(stderr, "\n\n");
 	        st_fail("Effect '%s' is not known!", argv[optind]);
 	    }
 
@@ -336,7 +340,7 @@ static void copy_output(ft_t ft)
 {
     outformat = ft;
 
-    if (writing && !ft->filetype) {
+    if (writing && !ft->filetype && ft->filename) {
  	/* Use filename extension to determine audio type. */
 
         /* First, chop off any path portions of filename.  This
@@ -351,12 +355,14 @@ static void copy_output(ft_t ft)
             ft->filetype = NULL;
     }
 
-    if (writing)
+    if (writing && ft->filename)
     {
 	if ( st_gettype(ft) )
 	    st_fail("Unknown output file format for '%s'.  Use -t option to override",ft->filename);
 
     }
+
+    output_count++;
 }
 
 static void open_output(ft_t ft)
@@ -1175,7 +1181,7 @@ char *opt;
 		fprintf(stderr, "%s\n\n", st_version());
 	fprintf(stderr, "Usage: %s\n\n", usagestr);
 	if (opt)
-		fprintf(stderr, "Failed at: %s\n", opt);
+		fprintf(stderr, "Failed: %s\n", opt);
 	else {
 	    fprintf(stderr,"gopts: -e -h -p -v volume -V\n\n");
 	    fprintf(stderr,"fopts: -r rate -c channels -s/-u/-U/-A/-a/-i/-g -b/-w/-l/-f/-d/-D -x\n\n");

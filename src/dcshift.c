@@ -38,13 +38,11 @@ char *dcshift_usage = "Usage: dcshift shift [ limitergain ]\n"
 
 typedef struct {
     DCSHIFT_FLOAT dcshift; /* DC shift. */
-
     int uselimiter; /* boolean: are we using the limiter? */
     DCSHIFT_FLOAT limiterthreshhold;
     DCSHIFT_FLOAT limitergain; /* limiter gain. */
     int limited; /* number of limited values to report. */
     int totalprocessed;
-
     int clipped;    /* number of clipped values to report. */
 } * dcs_t;
 
