@@ -40,6 +40,7 @@ sox-12.16
   o Resample function was updated by Andreas Wilde 
     (andreas@eakaw2.et.tu-dresden.de) to fix problem were freqs. were
     off by a factor of 2.
+  o Added an effect that swaps stereo channels.  cbagwell
 
 sox-12.15
 ---------

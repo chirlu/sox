@@ -95,6 +95,8 @@ sox \- Sound eXchange : universal sound sample translator
 .br
 	stat [ \fIdebug\fB | \fI-v\fB ]
 .br
+	swap [ 1 2 3 4 ]
+.br
 	vibro \fIspeed \fB[ \fIdepth\fB ]
 .SH DESCRIPTION
 .I Sox
@@ -673,6 +675,11 @@ that will place sox into debug mode and print out a hex dump of the
 sound file from the internal buffer that is in 32-bit signed PCM data.
 This is mainly only of use in tracking down endian problems that
 creep in to sox on cross-platform versions.
+.TP 10
+swap [1 2 3 4]
+Swap channels in multi-channel sound files.  In files with more than 2
+channels you may specify the order that the channels should be rearranged
+in.
 .TP 10
 vibro \fIspeed \fB [ \fIdepth\fB ]
 Add the world-famous Fender Vibro-Champ sound
