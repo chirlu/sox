@@ -227,6 +227,8 @@ AC_SUBST(NEED_SUNAU)
 AC_SUBST(NEED_ALSA)
 AC_OUTPUT([Makefile])
 
+touch .depend
+
 echo
 echo "Configure finished.  Do 'make depend; make' to compile SOX."
 echo

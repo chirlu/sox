@@ -14,7 +14,7 @@ srcdir = @srcdir@
 CC	= @CC@
 RANLIB	= @RANLIB@
 INSTALL	= @INSTALL@
-AR	= ar rcs
+AR	= ar r
 TAR	= tar
 RM	= rm -f
 
@@ -118,6 +118,4 @@ tar:
 	cd $(srcdir)/..; $(RM) $(pkgname).tar
 	cd $(srcdir)/.. ; $(TAR) $(pkgname).tar $(srcdir)
 
-ifeq (.depend,$(wildcard .depend))
 include .depend
-endif

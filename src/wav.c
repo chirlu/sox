@@ -535,7 +535,7 @@ ft_t ft;
 	fail("Sorry, this WAV file is in IBM A-law format.");
     case IBM_FORMAT_ADPCM:
 	fail("Sorry, this WAV file is in IBM ADPCM format.");
-    default:	fail("WAV file has unknown format type");
+    default:	fail("WAV file has unknown format type of %x",wav->formatTag);
     }
 
     wChannels = rshort(ft);
