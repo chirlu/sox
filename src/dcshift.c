@@ -30,12 +30,9 @@
 #define ONE	  ((DCSHIFT_FLOAT)(1.0e0))
 #define TWENTY	  ((DCSHIFT_FLOAT)(20.0e0))
 
-#define DCSHIFT_USAGE "Usage: dcshift shift [ limitergain ]"
-// The following is dieing on a solaris gcc 2.8.1 compiler!?!!
-#if 0
-#define DCSHIFT_USAGE2 " The peak limiter has a gain much less than 1.0 (ie 0.05 or 0.02) which is only"
-#define DCSHIFT_USAGE3 " used on peaks to prevent clipping. (default is no limiter)"
-#endif
+#define DCSHIFT_USAGE "Usage: dcshift shift [ limitergain ]\n" \
+"The peak limiter has a gain much less than 1.0 (ie 0.05 or 0.02) which is only\n" \
+"used on peaks to prevent clipping. (default is no limiter)"
 
 typedef struct {
     DCSHIFT_FLOAT dcshift; /* DC shift. */
@@ -60,7 +57,13 @@ char **argv;
     dcs_t dcs = (dcs_t) effp->priv; 
     dcs->dcshift = ONE; /* default is no change */
     dcs->uselimiter = 0; /* default is no limiter */
-    
+  
+    if (n < 1)
+    {
+	st_fail(DCSHIFT_USAGE);
+	return ST_EOF;
+    }
+
     if (n && (!sscanf(argv[0], DCSHIFT_FLOAT_SCAN, &dcs->dcshift)))
     {
 	st_fail(DCSHIFT_USAGE);

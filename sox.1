@@ -58,7 +58,7 @@ sox \- Sound eXchange : universal sound sample translator
 .br
     \fBcopy\fR
 .br
-    \fBcut\fR
+    \fBdcshift\fR \fIshift\fR [ \fIlimitergain\fR ]
 .br
     \fBdeemph\fR
 .br
@@ -404,6 +404,13 @@ with the "Toccata" sound-card on the Amiga.
 Allows 8bit linear, 16bit linear, A-Law, u-law
 in mono and stereo.
 .TP 10
+.B .nul
+Null file handler.  This is a fake file hander that act as if its reading
+a stream of 0's from a while or fake writing output to a file.  This
+is not a very useful file handler in most cases.  It might be useful in
+some scripts were you do not want to read or write from a real file
+but would like to specify a filename for consistency.
+.TP 10
 .B .ogg
 Ogg Vorbis Compressed Audio.
 .br
@@ -696,8 +703,16 @@ Copy the input file to the output file.
 This is the default effect if both files have the same 
 sampling rate.
 .TP 10
-cut \fIloopnumber
-Extract loop #N from a sample.
+dcshift \fIshift\fR [ \fIlimitergain\fR ]
+DC Shift the audio data, with basic linear amplitudate formula.
+This is most useful if your audio data tends to not be centered around
+a value of 0.  Shifting it back will allow you to get the most volume
+adjustments without clipping audio data.
+.br
+The first option is the \fIdcshift\fR value.  It is a floating point number that
+indicates the amount to shift.
+.br
+An option limtergain value can be specified as well.  It should have a value much less then 1.0 and is used only on peaks to prevent clipping.
 .TP 10
 deemph
 Apply a treble attenuation shelving filter to samples in
@@ -1211,6 +1226,6 @@ Please report any bugs found in this version of sox to Chris Bagwell (cbagwell@s
 .BR soxexam(1)
 .SH NOTICES
 The version of Sox that accompanies this manual page is support by 
-Chris Bagwell (cbagwell@sprynet.com).  Please refer any questions 
+Chris Bagwell (cbagwell@users.sourceforge.net).  Please refer any questions 
 regarding it to this address.  You may obtain the latest version at the 
-the web site http://home.sprynet.com/~cbagwell/sox.html
+the web site http://sox.sourceforge.net/

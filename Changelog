@@ -48,7 +48,7 @@ sox-12.17.2
     to create a test sound CD for testing audio equipment.
   o Ben Last added a new program that uses libst and will merge two
     seperate audio files into a single file with multiple channels.
-    Written for sox 12.16 so doesn't work with 12.17.2 yet.
+    This was merged into the standard sox.c file by cbagwell.
   o Andreas Menke fixed some problems with the speed effect and
     how effects were drained.  Also improved the usage of printf()'s
     to use stderr.

@@ -45,7 +45,7 @@ The sound effects include:
   o Band-pass filters
   o Band-reject filter
   o Chorus effect
-  o Cut out loop samples
+  o DCShift audio.  Useful to get the best volume adjustments.
   o Move sound stage of CD audio to in front of you (for headphone use)
   o Add an echo 
   o Add a sequence of echos
@@ -64,6 +64,7 @@ The sound effects include:
      changes using real signal theory!
   o Apply a reverb effect
   o Reverse the sound samples (to search for Satanic messages ;-)
+  o Trim off silence from the beginning of end of a file.
   o Change the speed of samples being played (like speeding up the motor
     on a tape recorder)
   o Convert from mono to stereo
@@ -80,7 +81,7 @@ History:
 This is release 12.17, Patchlevel 2 of the Sound Tools.
 SoX was originally written and maintained by Lance Norskog but
 unfortunetly he has stopped maintaining it since 1995.  I, Chris
-Bagwell (cbagwell@sprynet.com), have started maintaining it since
+Bagwell (cbagwell@users.sourceforge.net), have started maintaining it since
 1996 to the present.
 
 Caveats:

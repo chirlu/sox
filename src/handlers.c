@@ -529,11 +529,6 @@ extern int st_copy_start();
 extern int st_copy_flow();
 extern int st_copy_stop();
 
-extern int st_cut_getopts();
-extern int st_cut_start();
-extern int st_cut_flow();
-extern int st_cut_stop();
-
 extern int st_dcshift_getopts();
 extern int st_dcshift_start();
 extern int st_dcshift_flow();
@@ -741,9 +736,6 @@ st_effect_t st_effects[] = {
 		st_compand_drain, st_compand_stop},
 	{"copy", ST_EFF_MCHAN, 
 		st_copy_getopts, st_copy_start, st_copy_flow, 
-		st_null_drain, st_nothing},
-	{"cut", ST_EFF_MCHAN, 
-		st_cut_getopts, st_cut_start, st_cut_flow, 
 		st_null_drain, st_nothing},
 	{"dcshift", ST_EFF_MCHAN, 
 		st_dcshift_getopts, st_dcshift_start, st_dcshift_flow, 

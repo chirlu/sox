@@ -523,6 +523,7 @@ static void doopts(ft_t ft, int argc, char **argv)
 	}
 }
 
+#ifdef SOXMIX
 static int compare_input(ft_t ft1, ft_t ft2)
 {
     if (ft1->info.rate != ft2->info.rate)
@@ -536,6 +537,7 @@ static int compare_input(ft_t ft1, ft_t ft2)
 
     return ST_SUCCESS;
 }
+#endif
 
 /* 
  * Process input file -> effect table -> output file
