@@ -599,12 +599,6 @@ static int get_format(ft_t ft, int formats, int *fmt)
         else
             ft->info.size = ST_SIZE_WORD;
     }
-    if (ft->info.size != ST_SIZE_BYTE && ft->info.size != ST_SIZE_WORD)
-    {
-        st_report("ALSA drive doesn't support %s.  Changin to 16-bits.", 
-                  st_sizes_str[(unsigned char)ft->info.encoding]);
-        ft->info.size = ST_SIZE_WORD;
-    }
     
     /* Some hardware only wants to work with 8-bit or 16-bit data */
     if (ft->info.size == ST_SIZE_BYTE)
@@ -623,6 +617,13 @@ static int get_format(ft_t ft, int formats, int *fmt)
             ft->info.size = ST_SIZE_BYTE;
         }
     }
+    else
+    {
+        st_report("ALSA driver doesn't support %s.  Changing to 16-bits.", 
+                  st_sizes_str[(unsigned char)ft->info.size]);
+        ft->info.size = ST_SIZE_WORD;
+    }
+
     if (ft->info.size == ST_SIZE_BYTE) {
         switch (ft->info.encoding)
         {
@@ -630,26 +631,26 @@ static int get_format(ft_t ft, int formats, int *fmt)
                 if (!(formats & SND_PCM_FMT_S8))
                 {
                     st_report("ALSA driver doesn't supported signed byte samples.  Changing to unsigned bytes.");
-                    ft->info.encoding = ST_ENCODING_SIGN2;
+                    ft->info.encoding = ST_ENCODING_UNSIGNED;
                 }
                 break;
             case ST_ENCODING_UNSIGNED:
                 if (!(formats & SND_PCM_FMT_U8))
                 {
                     st_report("ALSA driver doesn't supported unsigned byte samples.  Changing to signed bytes.");
-                    ft->info.encoding = ST_ENCODING_UNSIGNED;
+                    ft->info.encoding = ST_ENCODING_SIGN2;
                 }
                 break;
             default:
                 if (formats & SND_PCM_FMT_S8)
                 {
-                    st_report("ALSA drive doesn't support %s %s.  Changing to signed bytes.", 
+                    st_report("ALSA driver doesn't support %s %s.  Changing to signed bytes.", 
                             st_encodings_str[(unsigned char)ft->info.encoding], "byte");
                     ft->info.encoding = ST_ENCODING_SIGN2;
                 }
                 else
                 {
-                    st_report("ALSA drive doesn't support %s %s.  Changing to unsigned bytes.", 
+                    st_report("ALSA driver doesn't support %s %s.  Changing to unsigned bytes.", 
                               st_encodings_str[(unsigned char)ft->info.encoding], "byte");
                     ft->info.encoding = ST_ENCODING_UNSIGNED;
                 }
@@ -688,8 +689,8 @@ static int get_format(ft_t ft, int formats, int *fmt)
                 }
                 break;
             default:
-                st_report("ALSA drive doesn't support %s %s.  Changin to signed words.", 
-                        st_encodings_str[(unsigned char)ft->info.encoding], "byte");
+                st_report("ALSA driver doesn't support %s %s.  Changing to signed words.", 
+                        st_encodings_str[(unsigned char)ft->info.encoding], "word");
                 ft->info.encoding = ST_ENCODING_SIGN2;
                 break;
         }
