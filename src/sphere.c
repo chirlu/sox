@@ -33,19 +33,19 @@ int st_spherestartread(ft_t ft)
 {
 	sphere_t sphere = (sphere_t) ft->priv;
 	int rc;
-	char buf[256];
+	char *buf;
 	char fldname[64], fldtype[16], fldsval[128];
 	int i;
 	int header_size, bytes_read;
 	long rate;
-	
+
 	/* Needed for rawread() */
 	rc = st_rawstartread(ft);
 	if (rc)
 	    return rc;
 
 	/* Magic header */
-	if (st_reads(ft, buf, 8) == ST_EOF || strncmp(buf, "NIST_1A", 7) != 0)
+	if (st_reads(ft, fldname, 8) == ST_EOF || strncmp(fldname, "NIST_1A", 7) != 0)
 	{
 	    st_fail_errno(ft,ST_EHDR,"Sphere header does not begin with magic mord 'NIST_1A'");
 	    return(ST_EOF);
@@ -57,14 +57,22 @@ int st_spherestartread(ft_t ft)
 	    return(ST_EOF);
 	}
 
+	/* Determine header size, and allocate a buffer large enough to hold it. */
 	sscanf(fldsval, "%d", &header_size);
+	buf = (char *)malloc(header_size);
+	if (buf == NULL)
+	{
+	    st_fail_errno(ft,ST_ENOMEM,"Unable to allocate memory");
+	    return(ST_ENOMEM);
+	}
 
 	/* Skip what we have read so far */
 	header_size -= 16;
 
-	if (st_reads(ft, buf, 255) == ST_EOF)
+	if (st_reads(ft, buf, header_size) == ST_EOF)
 	{
 	    st_fail_errno(ft,ST_EHDR,"Error reading Sphere header");
+	    free(buf);
 	    return(ST_EOF);
 	}
 
@@ -122,9 +130,10 @@ int st_spherestartread(ft_t ft)
 		}
 	    }
 
-	    if (st_reads(ft, buf, 255) == ST_EOF)
+	    if (st_reads(ft, buf, header_size) == ST_EOF)
 	    {
 	        st_fail_errno(ft,ST_EHDR,"Error reading Sphere header");
+		free(buf);
 	        return(ST_EOF);
 	    }
 
@@ -148,9 +157,10 @@ int st_spherestartread(ft_t ft)
 
 	while (header_size)
 	{
-	    bytes_read = st_read(ft, buf, ST_SIZE_BYTE, (header_size > 256) ? 256 : header_size);
+	    bytes_read = st_read(ft, buf, ST_SIZE_BYTE, header_size);
 	    if (bytes_read == 0)
 	    {
+		free(buf);
 		return(ST_EOF);
 	    }
 	    header_size -= bytes_read;
@@ -168,10 +178,12 @@ int st_spherestartread(ft_t ft)
 	if (!strcmp(sphere->shorten_check,"ajkg"))
 	{
 	    st_fail_errno(ft,ST_EFMT,"File uses shorten compression, can not handle this.\n");
+	    free(buf);
 	    return(ST_EOF);
 	}
 #endif
 
+	free(buf);
 	return (ST_SUCCESS);
 }
 

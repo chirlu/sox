@@ -26,6 +26,15 @@ sox-12.17.5
     machines.
   o Tony Seebregts added a file handler for headerless Dialogic/OKI ADPCM
     files (VOX files).
+  o Jan Paul Schmidt added a repeat effect to do loops the brute force way.
+    This is also good for file format that don't support loops as well.
+  o Fix for OSS driver in rate tolerance calcs that were off because
+    of type conversion problems.  Guenter Geiger.
+  o Allow reading sphere files with headers greater then 256 bytes.  Jimen
+    Ching.
+  o Fix for vorbis were comments are displayed in KEY=value format always.
+    Stop printing some info to stdout in case output is a pipe. Guenter
+    Geiger.
 
 sox-12.17.4
 -----------

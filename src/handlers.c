@@ -236,6 +236,11 @@ static char *vorbisnames[] = {
 };
 #endif
 
+static char *voxnames[] = {
+        "vox",
+        (char *) 0
+};
+
 /* Microsoftt RIFF */
 static char *wavnames[] = {
         "wav",
@@ -376,7 +381,7 @@ st_format_t st_formats[] = {
         st_vorbisstartwrite, st_vorbiswrite, st_vorbisstopwrite,
         st_format_nothing_seek},
 #endif
-    {vorbisnames, 0,
+    {voxnames, 0,
         st_voxstartread, st_voxread, st_voxstopread,
         st_voxstartwrite, st_voxwrite, st_voxstopwrite,
         st_format_nothing_seek},
