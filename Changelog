@@ -48,6 +48,8 @@ sox-12.16
     add some trash data to the end of the sound file.
   o "avg" effect wouldn't give error message when you tried to average
     x number of channels in to the same number of channels.
+  o Fixed core dump when writting AIFF files with no comments.
+    (Olaf Pueschel)
 
 sox-12.15
 ---------
