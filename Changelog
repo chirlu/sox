@@ -13,6 +13,8 @@ sox-12.17.7
   o Update to ALSA driver to do a better job of detecting
     unsupported sample rate/size/encoding and change to
     a supported one.
+  o Fix bug in alsa writing were last last partial buffer
+    wasn't being flushed.
   o Guentcho Skordev pointed out ogg vorbis files were using
     the same value for serial numbers each time.
 

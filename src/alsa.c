@@ -315,8 +315,11 @@ ft_t ft;
 int st_alsastopwrite(ft)
 ft_t ft;
 {
+    int rc;
+
+    rc = st_rawstopwrite(ft);
     ioctl(fileno(ft->fp), SNDRV_PCM_IOCTL_DRAIN);
-    return(st_rawstopwrite(ft));
+    return(rc);
 }
 
 #else /* ! HAVE_ALSA9 */
