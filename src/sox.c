@@ -58,8 +58,6 @@ extern int optind;
  * Rewrite for multiple effects: Aug 24, 1994.
  */
 
-static int dovolume = 0;        /* User wants volume change */
-static double volume = 1.0;     /* Linear volume change */
 static int clipped = 0;         /* Volume change clipping errors */
 static int writing = 1;         /* are we writing to a file? assume yes. */
 static int soxpreview = 0;      /* preview mode */
@@ -76,6 +74,7 @@ typedef struct file_options
     st_signalinfo_t info;
     char swap;
     double volume;
+    char uservolume;
     char *comment;
 } file_options_t;
 
@@ -149,6 +148,11 @@ int main(int argc, char **argv)
      */
     while (optind < argc && st_checkeffect(argv[optind]) != ST_SUCCESS)
     {
+        if (file_count >= MAX_FILES)
+        {
+            st_fail("to many filenames. max of %d input files and 1 output files\n", MAX_INPUT_FILES);
+        }
+
         /*
          * Its possible to not specify the output filename by using
          * "-e" option. This allows effects to be ran on data but
@@ -172,7 +176,6 @@ int main(int argc, char **argv)
         }
         else
         {
-            /* FIXME: Afterwards, set volume option to 1 / # inputs */
             fo = calloc(sizeof(file_options_t), 1);
             fo->info.size = -1;
             fo->info.encoding = -1;
@@ -205,6 +208,15 @@ int main(int argc, char **argv)
 
     for (i = 0; i < input_count; i++)
     {
+#ifdef SOXMIX
+        /* When mixing audio, default to input side volume
+         * adjustments that will make sure no clipping will
+         * occur.  Users most likely won't be happy with
+         * this and will want to override it.
+         */
+        if (!file_opts[i]->uservolume)
+            file_opts[i]->volume = 1 / input_count;
+#endif
         copy_input(i);
         open_input(file_desc[i]);
     }
@@ -428,6 +440,7 @@ static void doopts(file_options_t *fo, int argc, char **argv)
                 if (!sscanf(str, "%lf", &fo->volume))
                     st_fail("Volume value '%s' is not a number",
                             optarg);
+                fo->uservolume = 1;
                 if (fo->volume < 0.0)
                     st_report("Volume adjustment is negative.  This will result in a phase change\n");
                 break;
@@ -722,11 +735,6 @@ static void process(void) {
         if (efftab[0].olen == 0)
             break;
 
-        /* Change the volume of this initial input data if needed. */
-        if (writing && file_opts[file_count-1]->volume != 1.0)
-            clipped += volumechange(efftab[0].obuf, efftab[0].olen,
-                                    volume);
-
         /* mark chain as empty */
         for(e = 1; e < neffects; e++)
             efftab[e].odone = efftab[e].olen = 0;
@@ -757,6 +765,12 @@ static void process(void) {
 
             if (drain_effect(f) == 0)
                 break;          /* out of while (1) */
+
+            /* Change the volume of this output data if needed. */
+            if (writing && file_opts[file_count-1]->volume != 1.0)
+                clipped += volumechange(efftab[neffects-1].obuf, 
+                                        efftab[neffects-1].olen,
+                                        file_opts[file_count-1]->volume);
 
             /* FIXME: Need to look at return code and abort on failure */
             if (writing && efftab[neffects-1].olen > 0)
@@ -829,6 +843,13 @@ static int flow_effect_out(void)
       /* If outputing and output data was generated then write it */
       if (writing && (efftab[neffects-1].olen>efftab[neffects-1].odone))
       {
+          /* Change the volume of this output data if needed. */
+          if (writing && file_opts[file_count-1]->volume != 1.0)
+              clipped += volumechange(efftab[neffects-1].obuf, 
+                                      efftab[neffects-1].olen,
+                                      file_opts[file_count-1]->volume);
+
+
           /* FIXME: Should look at return code and abort
            * on ST_EOF
            */
@@ -1160,7 +1181,7 @@ checkeffect()
 }
 
 static void statistics(void) {
-        if (dovolume && clipped > 0)
+        if (clipped > 0)
                 st_report("Volume change clipped %d samples", clipped);
 }
 
