@@ -1,14 +1,7 @@
 People are encouraged to pick some of these and implement it.  Send
 all patches to cbagwell@sprynet.com.
 
-  o I've add the most common and public standard FormatTags to the
-    .wav file detection.  A lot of them should be implemented since
-    you can grab the source code from the .au handler and software
-    is avaliable from public sources for the rest.
-
-  o highpass and lowpass filters don't let you specify the cut
-    of freq.  Need some improvements to these filters.
-    SJB: The old highp.c filter is IMHO broken, need to review that code.
+  o SJB: The old highp.c filter is IMHO broken, need to review that code.
 
   o Create a version of OSS and Sun driver that can play and record from the
     same device in duplex.

@@ -50,10 +50,14 @@ sox \- Sound eXchange : universal sound sample translator
 .br
 	band \fB[ \fI-n \fB] \fIcenter \fB[ \fIwidth\fB ]
 .br
+	bandpass \fIfrequency bandwidth\fB
+.br
+	bandreject \fIfrequency bandwidth\fB
+.br
  	check 
 .br
 	chorus \fIgain-in gain out delay decay speed depth
-		-s\fB | \fI-t\fB [ \fIdelay decay speed depth -s\fB | -fI-t\fB ]
+		-s\fB | \fI-t\fB [ \fIdelay decay speed depth -s\fB | \fI-t\fB ]
 .br
 	compand \fIattack1,decay1\fB[,\fIattack2,decay2\fB...]
              \fIin-dB1,out-dB1\fB[,\fIin-dB2,out-dB2\fB...]
@@ -71,11 +75,15 @@ sox \- Sound eXchange : universal sound sample translator
 .br
 	filter \fB[ \fIlow\fB ]\fI-\fB[ \fIhigh\fB ] [ \fIwindow-len\fB [ \fIbeta\fB ]]
 .br
-	flanger \fIgain-in gain-out delay decay speed -s\fB | -fI-t\fB
+	flanger \fIgain-in gain-out delay decay speed -s\fB | \fI-t\fB
 .br
 	highp \fIcenter\fB
 .br
+	highpass \fIfrequency\fB
+.br
 	lowp \fIcenter\fB
+.br
+	lowpass \fIfrequency\fB
 .br
 	map
 .br
@@ -536,10 +544,10 @@ i.e. peaking at the
 frequency and settling around it.
 See \fBfilter\fR for a bandpass effect with steeper shoulders.
 .TP 10
-bandpass
+bandpass \fIfrequency bandwidth\fB
 Butterworth bandpass filter. Description coming soon!
 .TP 10
-bandreject
+bandreject \fIfrequency bandwidth\fB
 Butterworth bandreject filter.  Description coming soon!
 .TP
 chorus \fIgain-in gain-out delay decay speed depth 
@@ -639,7 +647,7 @@ frequency in the middle of the drop.
 The slope of the filter is quite gentle.
 See \fBfilter\fR for a highpass effect with sharper cutoff.
 .TP 10
-highpass
+highpass \fIfrequency\fB
 Butterworth highpass filter.  Description comming soon!
 .TP 10
 lowp \fIcenter
@@ -650,7 +658,7 @@ frequency in the middle of the drop.
 The slope of the filter is quite gentle.
 See \fBfilter\fR for a lowpass effect with sharper cutoff.
 .TP 10
-lowpass
+lowpass \fIfrequency\fB
 Butterworth lowpass filter.  Description coming soon!
 .TP 10
 map 
