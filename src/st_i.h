@@ -49,6 +49,10 @@ st_sample_t st_lcm(st_sample_t a, st_sample_t b) REGPARM(2);
 int strcasecmp(const char *s1, const char *s2);
 #endif
 
+#ifndef HAVE_STRDUP
+char *strdup(const char *s);
+#endif
+
 #ifndef HAVE_RAND
 int rand(void);
 void srand(unsigned int seed);

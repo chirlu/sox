@@ -334,66 +334,49 @@ int st_updateeffect(eff_t effp, ft_t in, ft_t out, int effect_mask)
  * File format routines
  */
 
-void st_initformat(ft_t ft)
+ft_t st_initformat(void)
 {
-    ft->filename = 0;
-    ft->filetype = 0;
-    ft->fp = 0;
+    ft_t ft;
 
-    ft->info.rate = 0;
+    ft = (ft_t)calloc(sizeof(struct st_soundstream), 1);
+
     ft->info.size = -1;
     ft->info.encoding = -1;
     ft->info.channels = -1;
 
-    ft->comment = 0;
-    ft->swap = 0;
-
-    /* FIXME: This should zero out the reset of the structures */
+    return ft;
 }
 
 void st_copyformat(ft_t ft, ft_t ft2)
 {
-        int noise = 0, i;
-        double factor;
+    int i;
+    double factor;
 
-        if (ft2->info.rate == 0) {
-                ft2->info.rate = ft->info.rate;
-                noise = 1;
-        }
-        if (ft2->info.size == -1) {
-                ft2->info.size = ft->info.size;
-                noise = 1;
-        }
-        if (ft2->info.encoding == -1) {
-                ft2->info.encoding = ft->info.encoding;
-                noise = 1;
-        }
-        if (ft2->info.channels == -1) {
-                ft2->info.channels = ft->info.channels;
-                noise = 1;
-        }
+    if (ft2->info.rate == 0)
+        ft2->info.rate = ft->info.rate;
+    if (ft2->info.size == -1)
+        ft2->info.size = ft->info.size;
+    if (ft2->info.encoding == -1)
+        ft2->info.encoding = ft->info.encoding;
+    if (ft2->info.channels == -1)
+        ft2->info.channels = ft->info.channels;
 
-        /* FIXME: Do not copy pointers!  This should be at least
-         * a malloc+strcpy.
-         */
-        if (ft2->comment == NULL) {
-                ft2->comment = ft->comment;
-                noise = 1;
-        }
+    if (ft2->comment == NULL && ft->comment != NULL)
+        ft2->comment = strdup(ft->comment);
 
-        /*
-         * copy loop info, resizing appropriately
-         * it's in samples, so # channels don't matter
-         */
-        factor = (double) ft2->info.rate / (double) ft->info.rate;
-        for(i = 0; i < ST_MAX_NLOOPS; i++) {
-                ft2->loops[i].start = ft->loops[i].start * factor;
-                ft2->loops[i].length = ft->loops[i].length * factor;
-                ft2->loops[i].count = ft->loops[i].count;
-                ft2->loops[i].type = ft->loops[i].type;
-        }
-        /* leave SMPTE # alone since it's absolute */
-        ft2->instr = ft->instr;
+    /*
+     * copy loop info, resizing appropriately
+     * it's in samples, so # channels don't matter
+     */
+    factor = (double) ft2->info.rate / (double) ft->info.rate;
+    for(i = 0; i < ST_MAX_NLOOPS; i++) {
+        ft2->loops[i].start = ft->loops[i].start * factor;
+        ft2->loops[i].length = ft->loops[i].length * factor;
+        ft2->loops[i].count = ft->loops[i].count;
+        ft2->loops[i].type = ft->loops[i].type;
+    }
+    /* leave SMPTE # alone since it's absolute */
+    ft2->instr = ft->instr;
 }
 
 /* check that all settings have been given */

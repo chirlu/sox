@@ -340,6 +340,20 @@ int strcasecmp(const char *s1, const char *s2)
 }
 #endif
 
+#ifndef HAVE_STRDUP
+/*
+ * Portable strdup() function
+ */
+char *strdup(const char *s)
+{
+    char *dups;
+
+    dups = (char *)malloc(strlen(s+1));
+    strcpy(dups, s);
+    return s;
+}
+#endif
+
 #ifndef HAVE_RAND
 /*
  * Portable random generator as defined by ANSI C Standard.

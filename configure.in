@@ -126,7 +126,7 @@ PLAY_SUPPORT=0
 
 dnl Checks for library functions.
 
-AC_CHECK_FUNCS(getopt strerror memmove rand strcasecmp)
+AC_CHECK_FUNCS(getopt strerror memmove rand strcasecmp strdup)
 
 dnl Test for Ogg Vorbis libraries.
 

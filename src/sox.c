@@ -190,8 +190,7 @@ char **argv;
                 }
             }
 
-            ft = (ft_t)malloc(sizeof(struct st_soundstream));
-            st_initformat(ft);
+            ft = st_initformat();
 
             doopts(ft, argc, argv);
 
@@ -206,7 +205,7 @@ char **argv;
             {
                 if (optind < argc)
                 {
-                    ft->filename = argv[optind];
+                    ft->filename = strdup(argv[optind]);
                     optind++;
 
                     copy_input(ft);
@@ -217,7 +216,7 @@ char **argv;
             {
                 if (optind < argc && writing)
                 {
-                    ft->filename = argv[optind];
+                    ft->filename = strdup(argv[optind]);
                     optind++;
                 }
                 else
@@ -314,10 +313,9 @@ static void copy_input(ft_t ft)
 
     /* Default the input comment to the filename if not set from
      * command line.
-     * FIXME: Should be a memory copy, not a pointer asignment.
      */
     if (!ft->comment)
-        ft->comment = ft->filename;
+        ft->comment = strdup(ft->filename);
 
     input_count++;
 }

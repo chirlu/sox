@@ -251,7 +251,7 @@ int st_geteffect(eff_t, char *);
 int st_checkeffect(char *);
 int st_updateeffect(eff_t, ft_t, ft_t, int);
 int st_gettype(ft_t);
-void st_initformat(ft_t ft);
+ft_t st_initformat(void);
 void st_copyformat(ft_t, ft_t);
 int st_checkformat(ft_t);
 int st_parsesamples(st_rate_t rate, char *str, st_size_t *samples, char def);
