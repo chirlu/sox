@@ -136,6 +136,9 @@ ft_t ft;
 	}
 	ft->info.channels = (int) sf->info.sf_chans;
 
+	if (ft->info.channels == -1)
+	    ft->info.channels = 1;
+
 	/* Read codes and print as comments. */
 	readcodes(ft, &sfhead);
 

@@ -250,6 +250,29 @@ int st_geteffect(eff_t effp, char *effect_name)
 	return (ST_EOF);
 }
 
+/*
+ * Check that we have a known effect name.  Return ST_SUCESS if found, else
+ * return ST_EOF.
+ */
+
+int st_checkeffect(char *effect_name)
+{
+	int i;
+
+	for(i = 0; st_effects[i].name; i++) {
+		char *s1 = st_effects[i].name, *s2 = effect_name;
+
+		while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
+			s1++, s2++;
+		if (*s1 || *s2)
+			continue;	/* not a match */
+
+		return ST_SUCCESS;
+	}
+
+	return (ST_EOF);
+}
+
 /* 
  * Copy input and output signal info into effect structures.
  * Must pass in a bitmask containing info of wheither ST_EFF_CHAN

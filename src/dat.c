@@ -57,7 +57,8 @@ ft_t ft;
 #endif
       }
 
-   /* size and encoding are really not necessary except to satisfy caller. */
+   if (ft->info.channels == -1)
+       ft->info.channels = 1;
 
    ft->info.size = ST_SIZE_DOUBLE;
    ft->info.encoding = ST_ENCODING_SIGN2;

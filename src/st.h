@@ -332,6 +332,7 @@ int st_is_littleendian(void);
 
 int st_geteffect_opt(eff_t, int, char **);
 int st_geteffect(eff_t, char *);
+int st_checkeffect(char *);
 int st_updateeffect(eff_t, ft_t, ft_t, int);
 int st_gettype(ft_t);
 void st_initformat(ft_t ft);
