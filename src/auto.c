@@ -27,8 +27,9 @@ int st_autostartread(ft)
 ft_t ft;
 {
     char *type;
-    char header[132];
+    char header[20];
     int rc;
+    int loop;
 
     type = 0;
 
@@ -37,11 +38,13 @@ ft_t ft;
      */
     if (ft->seekable)
     {
-	if (fread(header, 1, sizeof(header), ft->fp) == sizeof(header))
+	/* Most files only have 4-byte magic headers at first of
+	 * file.  So we start checking for those filetypes first.
+	 */
+	memset(header,0,4);
+	if (fread(header, 1, 4, ft->fp) == 4)
 	{
-
-	    fseek(ft->fp, 0L - sizeof header, 1); /* Seek back */
-	    type = 0;
+	    /* Look for .snd or dns. header of AU files */
 	    if ((strncmp(header, ".snd", 4) == 0) ||
 		    (strncmp(header, "dns.", 4) == 0) ||
 		    ((header[0] == '\0') && (strncmp(header+1, "ds.", 3) == 0))) 
@@ -50,45 +53,91 @@ ft_t ft;
 	    }
 	    else if (strncmp(header, "FORM", 4) == 0) 
 	    {
-		if (strncmp(header + 8, "AIFF", 4) == 0)
-		    type = "aiff";
-		else if (strncmp(header + 8, "8SVX", 4) == 0)
-		    type = "8svx";
-		else if (strncmp(header + 8, "MAUD", 4) == 0)
-		    type = "maud";
+		/* Need to read more data to see what type of FORM file */
+		if (fread(header, 1, 8, ft->fp) == 8)
+		{
+		    if (strncmp(header + 4, "AIFF", 4) == 0)
+			type = "aiff";
+		    else if (strncmp(header + 4, "8SVX", 4) == 0)
+			type = "8svx";
+		    else if (strncmp(header + 4, "MAUD", 4) == 0)
+			type = "maud";
+		}
 	    }
-	    else if (strncmp(header, "RIFF", 4) == 0 &&
-		    strncmp(header + 8, "WAVE", 4) == 0) 
+	    else if (strncmp(header, "RIFF", 4) == 0)
 	    {
-		type = "wav";
+		if (fread(header, 1, 8, ft->fp) == 8)
+		{
+		    if (strncmp(header + 4, "WAVE", 4) == 0)
+			type = "wav";
+		}
 	    }
-	    else if (strncmp(header, "Creative Voice File", 19) == 0) 
+	    else if (strncmp(header, "Crea", 4) == 0) 
 	    {
-		type = "voc";
+		if (fread(header, 1, 15, ft->fp) == 15)
+		{
+		    if (strncmp(header, "tive Voice File", 15) == 0) 
+			type = "voc";
+		}
 	    }
-	    else if (strncmp(header+65, "FSSD", 4) == 0 &&
-		    strncmp(header+128, "HCOM", 4) == 0) 
+	    else if (strncmp(header, "SOUN", 4) == 0)
 	    {
-		type = "hcom";
-	    }
-	    else if (strncmp(header, "SOUND SAMPLE DATA", 17) == 0)
-	    {
-		type = "smp";
-	    }
-	    else if (strncmp(header, "SOUND", 5) == 0) 
-	    {
-		type = "sndt";
+		/* Check for SOUND magic header */
+		if (fread(header, 1, 1, ft->fp) == 1 && *header == 'D')
+		{
+		    /* Once we've found SOUND see if its smp or sndt */
+		    if (fread(header, 1, 13, ft->fp) == 13)
+		    {
+			if (strncmp(header, "D SAMPLE DATA", 13) == 0)
+    			    type = "smp";
+			else
+			    type = "sndt";
+		    }
+		    else
+			type = "sndt";
+		}
 	    }
 	    else if (strncmp(header, "2BIT", 4) == 0) 
 	    {
 		type = "avr";
 	    }
-	    else if (strncmp(header, "NIST_1A", 4) == 0) 
+	    else if (strncmp(header, "NIST", 4) == 0) 
 	    {
-		type = "sph";
+		if (fread(header, 1, 3, ft->fp) == 3)
+		{
+		    if (strncmp(header, "_1A", 3) == 0) 
+			type = "sph";
+		}
+	    }
+	} /* read 4-byte header */
+
+	/* If we didn't find type yet then start looking for file
+	 * formats that the magic header is deeper in the file.
+	 */
+	if (type == 0)
+	{
+	    loop = 61;
+	    while (loop--)
+	    {
+		if (fread(header, 1, 1, ft->fp) != 1)
+		    loop = 0;
+	    }
+	    if (fread(header, 1, 4, ft->fp) == 4 && 
+		strncmp(header, "FSSD", 4) == 0)
+	    {
+		loop = 63;
+		while (loop--)
+		{
+		    if (fread(header, 1, 1, ft->fp) != 1)
+			loop = 0;
+		}
+		if (fread(header, 1, 4, ft->fp) == 0 && 
+		    strncmp(header, "HCOM", 4) == 0)
+		    type = "hcom";
 	    }
 	}
-    }
+	rewind(ft->fp);
+    } /* if (seekable) */
 
     if (type == 0)
     {

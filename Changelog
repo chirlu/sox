@@ -12,7 +12,12 @@ sox-12.17.3
     settings.  This is because it can start buffering data as soon
     as the device is open and the buffered data can be in a
     wrong format.
-  o trim wasn't accounting for # of channels.
+  o trim wasn't accounting for # of channels and was generally broken.
+  o auto effect wasn't rewinding the file if the file was less then
+    132 bytes.  Changed auto parsing of header to be incremental
+    instead of reading in a large buffer.
+  o William Plant pointed out a bad pointer access in fade effect's
+    parsing of options.
 
 sox-12.17.2
 -----------

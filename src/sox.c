@@ -575,7 +575,7 @@ static void process(void) {
             informat[f]->info.channels = 1;
 
         if ( st_checkformat(informat[f]) )
-            st_fail("bad input format for file %s",informat[f]->filename);
+            st_fail("bad input format for file %s: %s",informat[f]->filename,informat[f]->st_errstr);
 
         st_report("Input file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
                   informat[f]->filename, informat[f]->info.rate,
@@ -614,7 +614,7 @@ static void process(void) {
         }
 
         if (st_checkformat(outformat))
-                st_fail("bad output format");
+                st_fail("bad output format: %s",outformat->st_errstr);
 
         st_report("Output file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
                outformat->filename, outformat->info.rate,

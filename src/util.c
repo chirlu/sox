@@ -418,32 +418,32 @@ int st_checkformat(ft_t ft)
 
         if (ft->info.rate == 0)
         {
-                st_fail_errno(ft,ST_EFMT,"Sampling rate for %s file was not given\n", ft->filename);
+                st_fail_errno(ft,ST_EFMT,"sampling rate was not specified");
                 return ST_EOF;
         }
 
         if (ft->info.size == -1)
         {
-                st_fail_errno(ft,ST_EFMT,"Data size was not given for %s file\nUse one of -b/-w/-l/-f/-d/-D", ft->filename);
+                st_fail_errno(ft,ST_EFMT,"data size was not specified");
                 return ST_EOF;
         }
 
         if (ft->info.encoding == -1 && ft->info.size != ST_SIZE_FLOAT)
         {
-                st_fail_errno(ft,ST_EFMT,"Data encoding was not given for %s file\nUse one of -s/-u/-U/-A", ft->filename);
+                st_fail_errno(ft,ST_EFMT,"data encoding was not specified");
                 return ST_EOF;
         }
 
         if ((ft->info.size <= 0) || (ft->info.size > ST_SIZE_MAX))
         {
-                st_fail_errno(ft,ST_EFMT,"Data size %i for %s file is bogus\n", ft->info.size, ft->filename);
+                st_fail_errno(ft,ST_EFMT,"data size %i is invalid");
                 return ST_EOF;
         }
 
         /* anyway to check length on st_encoding_str[] ? */
         if (ft->info.encoding <= 0  || ft->info.encoding > ST_ENCODING_MAX)
         {
-                st_fail_errno(ft,ST_EFMT,"Data encoding %i for %s file is bogus\n", ft->info.encoding, ft->filename);
+                st_fail_errno(ft,ST_EFMT,"data encoding %i is invalid");
                 return ST_EOF;
         }
 

@@ -186,14 +186,11 @@ LONG *isamp, *osamp;
     if (trim->trimmed || start_trim ) {
 
 	if (trim->length && ( (trim->trimmed+done) > trim->length)) {
-	    /* Remove extra processing from input count */
-	    *isamp -= ((trim->trimmed+done) - trim->length) - 1;
-	    /* Set done to be only enough samples to fulfill
-	     * this copy request.
-	     * Need to subtract one since length will always be at
-	     * least 1 below trimmed+done.
+	    /* Compute the amount of unprocessed data left in this
+	     * buffer and remove from isamp count and amount done.
 	     */
-	    done -= ((trim->trimmed+done) - trim->length) - 1;
+	    *isamp -= ((trim->trimmed+done) - trim->length);
+	    done -= ((trim->trimmed+done) - trim->length);
 	    *osamp = done;
 	    trim->done = 1;
 	}

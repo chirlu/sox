@@ -49,7 +49,7 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
 {
 
     fade_t fade = (fade_t) effp->priv;
-    char t_char;
+    char t_char[2];
     int t_argno;
 
     if (n < 1 || n > 4)
@@ -62,10 +62,10 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
      * string off for later computations.
      */
 
-    if (sscanf(argv[0], "%1[qhltp]", &t_char))
+    if (sscanf(argv[0], "%1[qhltp]", t_char))
     {
-        fade->in_fadetype = t_char;
-        fade->out_fadetype = t_char;
+        fade->in_fadetype = *t_char;
+        fade->out_fadetype = *t_char;
 
         argv++;
         n--;
