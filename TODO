@@ -97,4 +97,3 @@ did this and told me what was wrong...)
 
 In handlers.c, note that many formats set up the header and then
 use the raw driver for reading and writing.  
-
