@@ -1,14 +1,11 @@
 /*
  * July 5, 1991
- * Copyright 1991 Lance Norskog And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained.
- * Lance Norskog And Sundry Contributors are not responsible for
- * the consequences of using this software.
+ *
+ * Deemphases Filter
  *
  * Fixed deemphasis filter for processing pre-emphasized audio cd samples
  * 09/02/98 (c) Heiko Eiﬂfeldt
- * License: GPL (Gnu Public License)
+ * License: LGPL (Lesser Gnu Public License)
  *
  * This implements the inverse filter of the optional pre-emphasis stage as
  * defined by ISO 908 (describing the audio cd format).
