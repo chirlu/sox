@@ -35,7 +35,7 @@ unsigned char
 st_linear_to_ulaw( sample )
 short sample;
     {
-    static const int exp_lut[256] = 
+    static const unsigned char exp_lut[256] = 
 			      {0,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,
                                4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
                                5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
@@ -107,7 +107,7 @@ unsigned char ulawbyte;
 
 #else
 
-unsigned char ulaw_comp_table[16384] = {
+const unsigned char ulaw_comp_table[16384] = {
 	0xff,0xfe,0xfe,0xfd,0xfd,0xfc,0xfc,0xfb,
 	0xfb,0xfa,0xfa,0xf9,0xf9,0xf8,0xf8,0xf7,
 	0xf7,0xf6,0xf6,0xf5,0xf5,0xf4,0xf4,0xf3,
@@ -2157,7 +2157,7 @@ unsigned char ulaw_comp_table[16384] = {
 	0x77,0x77,0x78,0x78,0x79,0x79,0x7a,0x7a,
 	0x7b,0x7b,0x7c,0x7c,0x7d,0x7d,0x7e,0x7e};
 
-int ulaw_exp_table[256] = {
+const short ulaw_exp_table[256] = {
 	 -32124,-31100,-30076,-29052,-28028,-27004,-25980,-24956,
 	 -23932,-22908,-21884,-20860,-19836,-18812,-17788,-16764,
 	 -15996,-15484,-14972,-14460,-13948,-13436,-12924,-12412,
@@ -2211,7 +2211,8 @@ unsigned char
 st_linear_to_Alaw( sample )
 short sample;
     {
-    static int exp_lut[128] = {1,1,2,2,3,3,3,3,
+    static const unsigned char exp_lut[128] =
+                              {1,1,2,2,3,3,3,3,
                                4,4,4,4,4,4,4,4,
                                5,5,5,5,5,5,5,5,
                                5,5,5,5,5,5,5,5,
@@ -2275,7 +2276,7 @@ unsigned char Alawbyte;
 
 #else 
 
-unsigned char Alaw_comp_table[16384] = {
+unsigned const char Alaw_comp_table[16384] = {
 	 0xD5,0xD5,0xD5,0xD5,0xD4,0xD4,0xD4,0xD4,
 	 0xD7,0xD7,0xD7,0xD7,0xD6,0xD6,0xD6,0xD6,
 	 0xD1,0xD1,0xD1,0xD1,0xD0,0xD0,0xD0,0xD0,
@@ -4325,7 +4326,7 @@ unsigned char Alaw_comp_table[16384] = {
 	 0x51,0x56,0x56,0x56,0x56,0x57,0x57,0x57,
 	 0x57,0x54,0x54,0x54,0x54,0x55,0x55,0x55};
 
-int Alaw_exp_table[256] = {
+const short Alaw_exp_table[256] = {
 	  -5504, -5248, -6016, -5760, -4480, -4224, -4992, -4736,
 	  -7552, -7296, -8064, -7808, -6528, -6272, -7040, -6784,
 	  -2752, -2624, -3008, -2880, -2240, -2112, -2496, -2368,

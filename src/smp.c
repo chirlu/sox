@@ -103,7 +103,7 @@ struct smptrailer *trailer;
 /*
  * set the trailer data - loops and markers, to reasonably benign values
  */
-void settrailer(ft, trailer, rate)
+static void settrailer(ft, trailer, rate)
 ft_t ft;
 struct smptrailer *trailer;
 unsigned int rate;

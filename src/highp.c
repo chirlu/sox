@@ -19,6 +19,7 @@
  * 	A = 2.0 * pi * center
  * 	B = exp(-A / frequency)
  */
+/* SJB: Note: highp filter is currently broken, see test gnuplot graphs */
 
 #include <math.h>
 #include "st.h"

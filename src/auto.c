@@ -17,8 +17,6 @@
 #include "st.h"
 #include <string.h>
 
-void gettype();
-
 void autostartread(ft)
 ft_t ft;
 {

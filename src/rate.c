@@ -18,7 +18,6 @@
 
 #include <math.h>
 #include "st.h"
-#include "libst.h"
 
 /*
  * Linear Interpolation.

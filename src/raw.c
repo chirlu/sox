@@ -20,11 +20,6 @@
  */
 
 #include "st.h"
-#include "libst.h"
-
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 
 #include <string.h>
 #include <stdlib.h>
@@ -34,6 +29,8 @@
 #endif
 
 #define MAXWSPEED 1
+
+static void rawdefaults(P1(ft_t ft));
 
 void rawstartread(ft) 
 ft_t ft;
@@ -57,7 +54,7 @@ ft_t ft;
 /* Read raw file data, and convert it to */
 /* the sox internal signed long format. */
 
-unsigned char blockgetc(ft)
+static unsigned char blockgetc(ft)
 ft_t ft;
 {
 	char rval;
@@ -78,7 +75,7 @@ ft_t ft;
 	return (rval);
 }
 
-/* Util to swap every 2 chars up to 'n' imes. */
+/* Util to reverse the n chars starting at p. */
 static void swapn(p, n)
 char *p;
 int n;
@@ -282,7 +279,7 @@ ft_t ft;
 	ft->file.pos = 0;
 }
 
-void blockputc(ft,c)
+static void blockputc(ft,c)
 ft_t ft;
 int c;
 {
@@ -479,8 +476,6 @@ ft_t ft;
 * Set parameters to the fixed parameters known for this format,
 * and change format to raw format.
 */
-
-void rawdefaults();
 
 #define STARTREAD(NAME,SIZE,STYLE) \
 void NAME(ft) \

@@ -35,7 +35,6 @@
 #endif
 #include <sys/ioctl.h>
 #include "st.h"
-#include "libst.h"
 
 /*
  * Do anything required before you start reading samples.

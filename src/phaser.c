@@ -56,9 +56,6 @@
  */
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 #include <math.h>
 #include <string.h>
 #include "st.h"
@@ -154,9 +151,11 @@ eff_t effp;
 
 	if ( phaser->modulation == MOD_SINE )
 		st_sine(phaser->lookup_tab, phaser->length, 
+			phaser->maxsamples - 1,
 			phaser->maxsamples - 1);
 	else
 		st_triangle(phaser->lookup_tab, phaser->length, 
+			(phaser->maxsamples - 1) * 2,
 			phaser->maxsamples - 1);
 	phaser->counter = 0;
 	phaser->phase = 0;

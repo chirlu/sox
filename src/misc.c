@@ -11,16 +11,15 @@
  * Sound Tools miscellaneous stuff.
  */
 
+#include "st.h"
+#include "version.h"
+#include "patchlvl.h"
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <math.h>
-#include "st.h"
-#include "libst.h"
-#include "version.h"
-#include "patchlvl.h"
 
-char *sizes[] = {
+const char *sizes[] = {
 	"NONSENSE!",
 	"bytes",
 	"shorts",
@@ -31,7 +30,7 @@ char *sizes[] = {
 	"IEEE floats"
 };
 
-char *styles[] = {
+const char *styles[] = {
 	"NONSENSE!",
 	"unsigned",
 	"signed (2's complement)",
@@ -42,8 +41,8 @@ char *styles[] = {
 	"gsm",
 };
 
-char readerr[] = "Premature EOF while reading sample file.";
-char writerr[] = "Error writing sample file.  You are probably out of disk space.";
+static const char readerr[] = "Premature EOF while reading sample file.";
+static const char writerr[] = "Error writing sample file.  You are probably out of disk space.";
 
 /* Utilities */
 
@@ -208,8 +207,8 @@ double df;
 
 
 /* dummy routines for do-nothing functions */
-void nothing() {}
-LONG nothing_success() {return(0);}
+void nothing(P0) {}
+LONG nothing_success(P0) {return(0);}
 
 /* dummy drain routine for effects */
 void null_drain(effp, obuf, osamp)
@@ -258,7 +257,7 @@ unsigned int seed;
 #endif
 
 /* Util to set initial seed so that we are a little less non-random */
-void st_initrand() {
+void st_initrand(P0) {
 	time_t t;
 
 	time(&t);
@@ -278,39 +277,45 @@ LONG l;
 
 /* This was very painful.  We need a sine library. */
 
-void st_sine(buf, len, depth)
+void st_sine(buf, len, max, depth)
 int *buf;
-long len;
-long depth;
+LONG len;
+int max;
+int depth;
 {
 	long i;
+	int offset;
 	double val;
 
+	offset = max - depth;
 	for (i = 0; i < len; i++) {
 		val = sin((double)i/(double)len * 2.0 * M_PI);
 		buf[i] = (int) ((1.0 + val) * depth / 2.0);
 	}
 }
 
-void st_triangle(buf, len, depth)
+void st_triangle(buf, len, max, depth)
 int *buf;
-long len;
-long depth;
+LONG len;
+int max;
+int depth;
 {
-	long i;
+	LONG i;
+	int offset;
 	double val;
 
+	offset = max - 2 * depth;
 	for (i = 0; i < len / 2; i++) {
 		val = i * 2.0 / len;
-		buf[i] = (int) (val * depth);
+		buf[i] = offset + (int) (val * 2.0 * (double)depth);
 	}
 	for (i = len / 2; i < len ; i++) {
 		val = (len - i) * 2.0 / len;
-		buf[i] = (int) (val * depth);
+		buf[i] = offset + (int) (val * 2.0 * (double)depth);
 	}
 }
 
-char *
+const char *
 version()
 {
 	static char versionstr[20];

@@ -18,7 +18,6 @@
  */
 
 #include "st.h"
-#include "libst.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -32,7 +31,7 @@ struct maudstuff { /* max. 100 bytes!!!! */
 	ULONG nsamples;
 };
 
-void maudwriteheader(P1(ft_t));
+static void maudwriteheader(P1(ft_t));
 
 /*
  * Do anything required before you start reading samples.
@@ -263,7 +262,7 @@ ft_t ft;
 }
 
 #define MAUDHEADERSIZE (4+(4+4+32)+(4+4+32)+(4+4))
-void maudwriteheader(ft)
+static void maudwriteheader(ft)
 ft_t ft;
 {
 	struct maudstuff * p = (struct maudstuff *) ft->priv;

@@ -37,12 +37,19 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
+/*
+ * SJB: [11/25/99]
+ * TODO: another idea for improvement...
+ * note that upsampling usually doesn't require interpolation,
+ * therefore is faster and more accurate than downsampling.
+ * Downsampling by an integer factor is also simple, since
+ * it just involves decimation if the input is already 
+ * lowpass-filtered to the output Nyquist freqency.
+ * Get the idea? :)
+ */
 
 #include <math.h>
 #include <stdlib.h>
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 #include "st.h"
 
 /* resample includes */
@@ -82,12 +89,13 @@ typedef struct resamplestuff {
    Float *X, *Y;      /* I/O buffers */
 } *resample_t;
 
-void LpFilter(P5(double c[],
+static void LpFilter(P5(double c[],
 		LONG N,
 		double frq,
 		double Beta,
 		LONG Num));
 
+/* makeFilter is used by filter.c */
 int makeFilter(P5(Float Imp[],
 		  LONG Nwing,
 		  double Froll,
@@ -633,7 +641,7 @@ double Froll, Beta;
 
 #define IzeroEPSILON 1E-21               /* Max error acceptable in Izero */
 
-double Izero(x)
+static double Izero(x)
 double x;
 {
    double sum, u, halfx, temp;
@@ -651,7 +659,7 @@ double x;
    return(sum);
 }
 
-void LpFilter(c,N,frq,Beta,Num)
+static void LpFilter(c,N,frq,Beta,Num)
 double c[], frq, Beta;
 LONG N, Num;
 {

@@ -56,12 +56,8 @@
  */
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 #include <math.h>
 #include "st.h"
-#include "libst.h"
 
 #define DELAY_BUFSIZ ( 50L * MAXRATE )
 #define MAX_ECHOS 7	/* 24 bit x ( 1 + MAX_ECHOS ) = */

@@ -12,12 +12,20 @@
  */
 
 #include <stdio.h>
-
+#include <stdlib.h>
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 #ifdef HAVE_BYTESWAP_H
 #include <byteswap.h>
 #endif
 
-/* FIXME: Move to seperate header */
+
+/* SJB: these may be changed to assist fail-recovery in libST */
+#define st_malloc malloc
+#define st_free free
+
+/* FIXME: Move to separate header */
 #ifdef __alpha__
 #include <sys/types.h>   /* To get defines for 32-bit integers */
 #define	LONG	int32_t
@@ -27,11 +35,17 @@
 #define ULONG	unsigned long
 #endif
 
+#define MAXLONG 0x7fffffffL
+#define MAXULONG 0xffffffff
+
+/* various gcc optimizations */
 #ifdef __GNUC__
 #define NORET __attribute__((noreturn))
+#define REGPARM(n) __attribute__((regparm(n)))
 #define INLINE inline
 #else
 #define NORET
+#define REGPARM(n)
 #define INLINE
 #endif
 
@@ -61,6 +75,12 @@ struct  signalinfo {
 	int		size;		/* word length of data */
 	int		style;		/* format of sample numbers */
 	int		channels;	/* number of sound channels */
+	unsigned short	bs;		/* requested blocksize, eg for output .wav's */
+	unsigned char	dovol;		/* has volume factor */
+	double		vol;		/* volume factor */
+	ULONG		x;		/* current sample number */
+	ULONG		x0;		/* 1st sample (if source) */
+	ULONG		x1;		/* top sample (if source) */
 };
 
 /* Loop parameters */
@@ -134,10 +154,6 @@ struct soundstream {
 	double	priv[PRIVSIZE/8];	/* format's private data area */
 };
 
-/* This shoul not be here.  Only needed in sox.c */
-extern struct soundstream informat;
-extern struct soundstream outformat;
-
 typedef struct soundstream *ft_t;
 
 /* FIXME: Prefix all #defines with ST_ */
@@ -146,7 +162,7 @@ typedef struct soundstream *ft_t;
 #define FILE_LOOPS	2	/* does file format support loops? */
 #define FILE_INSTR	4	/* does file format support instrument specificications? */
 
-/* Size field */
+/* Size field */ /* SJB: note that the 1st 3 are sometimes used as sizeof(type) */
 #define	BYTE	1
 #define	WORD	2
 #define	DWORD	4
@@ -166,8 +182,9 @@ typedef struct soundstream *ft_t;
 /* FIXME: This shouldn't be defined inside library.  Only needed
  * by sox.c itself.  Delete from raw.c and misc.c.
  */
-extern char *sizes[];
-extern char *styles[];
+/* declared in misc.c */
+extern const char *sizes[];
+extern const char *styles[];
 
 /*
  * Handler structure for each effect.
@@ -183,7 +200,7 @@ typedef struct {
 	void	(*stop)();		/* finish up effect */
 } effect_t;
 
-extern effect_t effects[];
+extern effect_t effects[]; /* declared in handlers.c */
 
 #define	EFF_CHAN	1		/* Effect can mix channels up/down */
 #define EFF_RATE	2		/* Effect can alter data rate */
@@ -206,6 +223,7 @@ typedef struct effect *eff_t;
 
 /* FIXME: Move to internal st header */
 #if	defined(__STDC__)
+#define	P0 void
 #define	P1(a) a
 #define	P2(a,b) a, b
 #define	P3(a,b,c) a, b, c
@@ -217,6 +235,7 @@ typedef struct effect *eff_t;
 #define	P9(a,b,c,d,e,f,g,h,i) a, b, c, d, e, f, g, h, i
 #define	P10(a,b,c,d,e,f,g,h,i,j) a, b, c, d, e, f, g, h, i, j
 #else
+#define	P0
 #define	P1(a)
 #define	P2(a,b)
 #define	P3(a,b,c)
@@ -229,9 +248,31 @@ typedef struct effect *eff_t;
 #define	P10(a,b,c,d,e,f,g,h,i,j)
 #endif
 
+/* declared in misc.c */
+extern LONG st_clip24(P1(LONG)) REGPARM(1);
+extern void st_sine(P4(int *, LONG, int, int));
+extern void st_triangle(P4(int *, LONG, int, int));
+
+extern LONG st_gcd(P2(LONG,LONG)) REGPARM(2);
+extern LONG st_lcm(P2(LONG,LONG)) REGPARM(2);
+/****************************************************/
+/* Prototypes for internal cross-platform functions */
+/****************************************************/
+/* SJB: shouldn't these be elsewhere, exported from misc.c */
+#ifndef HAVE_RAND
+extern int rand(P0);
+extern void srand(P1(ULONG seed));
+#endif
+extern void st_initrand(P0);
+
+#ifndef HAVE_STRERROR
+char *strerror(P1(int errorcode));
+#endif
+
 /* Read and write basic data types from "ft" stream.  Uses ft->swap for
  * possible byte swapping.
  */
+/* declared in misc.c */
 unsigned short rshort(P1(ft_t ft));			
 unsigned short wshort(P2(ft_t ft, unsigned short us));
 ULONG          rlong(P1(ft_t ft));		
@@ -245,6 +286,7 @@ void           wdouble(P2(ft_t ft, double d));
  * here for convience.  This wont last for long so application software
  * shouldn't make use of it.
  */
+/* declared in raw.c */
 void rawstartread(P1(ft_t ft));
 void rawstartwrite(P1(ft_t ft));
 void rawstopread(P1(ft_t ft));
@@ -265,9 +307,9 @@ float  	       swapf(P1(float f));			/* Swap float */
 double 	       swapd(P1(double d));			/* Swap double */
 
 /* util.c */
-void report(P2(char *, ...));
-void warn(P2(char *, ...));
-void fail(P2(char *, ...))NORET;
+void report(P2(const char *, ...));
+void warn(P2(const char *, ...));
+void fail(P2(const char *, ...))NORET;
 
 void geteffect(P1(eff_t));
 void gettype(P1(ft_t));
@@ -281,22 +323,10 @@ void cmpformats(P2(ft_t, ft_t));
  */
 void sigintreg(P1(ft_t));
 
-/* FIXME: Move to sox header file. */
-typedef	unsigned int u_i;
-typedef	ULONG u_l;
-typedef	unsigned short u_s;
-
-extern float volume;	/* expansion coefficient */
-extern int dovolume;
-
-extern int writing;	/* are we writing to a file? */
-
 /* export flags */
+/* FIXME: these declared in util.c, inappropriate for lib */
 extern int verbose;	/* be noisy on stderr */
-
 extern char *myname;
-
-extern int soxpreview;	/* Preview mode: be fast and ugly */
 
 /* FIXME: Not externally visible currently.  Its a per-effect value. */
 #define	MAXRATE	50L * 1024			/* maximum sample rate */
@@ -314,6 +344,6 @@ extern int soxpreview;	/* Preview mode: be fast and ugly */
 
 #define REMOVE unlink
 
-char *version();			/* return version number */
+const char *version(P0);			/* return version number */
 
 #endif

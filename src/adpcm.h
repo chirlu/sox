@@ -8,12 +8,15 @@
 #define LONG long
 #endif
 /* FIXME: This breaks on Alphas! */
+/* SJB: Not really, because when used with sox, LONG and ULONG are
+ *      already defined before adpcm.h is included
+ */
 #ifndef ULONG
-#define ULONG u_long
+#define ULONG unsigned long
 #endif
 
 /* default coef sets */
-extern short iCoef[7][2];
+extern const short iCoef[7][2];
 
 /* AdpcmBlockExpandI() outputs interleaved samples into one output buffer */
 extern const char *AdpcmBlockExpandI(

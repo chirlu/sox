@@ -28,7 +28,7 @@ my $fmt='';
 
 my $rate=8000; # sample rates
 my $p=200;  # silence before/after tonepulse
-my $env="-e2000:8000:2000"; # attack, duration, drop
+my $env="-e400:800:400"; # attack, duration, drop
 
 my ($ding,$model,$t,$rms,$lim)=("./ding","./model","sw",11585.2, 0.5);
 
@@ -78,9 +78,11 @@ for ($f=0.00; $f<1.001; $f+=0.01) {
 		qx{$toast -l d/i$s.$t};
 		qx{$toast -dl d/i$s.$t.gsm};
 	}else{
+		qx{cp d/i$s.$t d/a$s.$t 2>/dev/null};
 		qx{$sox -r$rate d/i$s.$t -g d/g$s.wav $effect 2>/dev/null};
 		unlink "d/i$s.$t";
 		qx{$sox d/g$s.wav d/i$s.$t 2>/dev/null};
+		qx{cp d/i$s.$t d/b$s.$t 2>/dev/null};
 		unlink "d/g$s.wav";
 	}
 

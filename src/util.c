@@ -28,22 +28,15 @@
  * and utility routines for other main programs to use.
  */
 
-
-float volume = 1.0;	/* expansion coefficient */
-int dovolume = 0;
-
-int writing = 0;	/* are we writing to a file? */
-
 /* export flags */
 int verbose = 0;	/* be noisy on stderr */
 
 char *myname = 0;
 
-int soxpreview = 0;	/* preview mode */
 
 
 void
-report(char *fmt, ...) 
+report(const char *fmt, ...) 
 {
 	va_list args;
 
@@ -59,7 +52,7 @@ report(char *fmt, ...)
 
 
 void
-warn(char *fmt, ...) 
+warn(const char *fmt, ...) 
 {
 	va_list args;
 
@@ -72,7 +65,7 @@ warn(char *fmt, ...)
 }
 
 void
-fail(char *fmt, ...) 
+fail(const char *fmt, ...) 
 {
 	va_list args;
 	extern void cleanup();

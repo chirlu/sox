@@ -39,9 +39,6 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 
 #include "st.h"
 
@@ -69,6 +66,7 @@ typedef struct filterstuff {
 	Float *X, *Y;									/* I/O buffers */
 } *filter_t;
 
+/* makeFilter() declared in resample.c */
 extern int 
 makeFilter(P5(Float Fp[], LONG Nwing, double Froll, double Beta, LONG Num));
 

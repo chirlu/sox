@@ -21,19 +21,19 @@
  */
 
 #include "st.h"
-#include "libst.h"
 
 /* Private data for dat file */
 typedef struct dat {
 	double timevalue, deltat;
 } *dat_t;
 
-LONG roundoff(x)
+/* SJB: should this be moved to misc.c ? */
+static LONG roundoff(x)
 double x;
 {
     if (x < 0.0) return(x - 0.5);
     else return(x + 0.5);
-    }
+}
 
 void
 datstartread(ft)

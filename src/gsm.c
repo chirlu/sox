@@ -22,24 +22,39 @@
  * July 19, 1998 - Chris Bagwell (cbagwell@sprynet.com)
  *   Added GSM support to SOX from patches floating around with the help
  *   of Dima Barsky (ess2db@ee.surrey.ac.uk).
+ *
+ * Nov. 26, 1999 - Stan Brooks (stabro@megsinet.com)
+ *   Rewritten to support multiple channels
  */
 
 #include "st.h"
 #include "gsm.h"
 
+#define MAXCHANS 16
+
+/* sizeof(gsm_frame) */
+#define FRAMESIZE 33
+/* samples per gsm_frame */
+#define BLOCKSIZE 160
+
 /* Private data */
 struct gsmpriv {
-	gsm		handle;
-	gsm_signal	sample[160];
-	int		index;
+	int		channels;
+	gsm_signal	*samples;
+	gsm_signal	*samplePtr;
+	gsm_signal	*sampleTop;
+	gsm_byte *frames;
+	gsm		handle[MAXCHANS];
 };
 
-void
-gsmstartread(ft) 
+static void
+gsmstart_rw(ft,w) 
 ft_t ft;
+int w; /* w != 0 is write */
 {
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
-
+	int ch;
+	
 	/* Sanity check */
 	if (sizeof(struct gsmpriv) > PRIVSIZE)
 		fail(
@@ -50,26 +65,32 @@ ft_t ft;
 	ft->info.size = BYTE;
 	if (!ft->info.rate)
 		ft->info.rate = 8000;
-	p->handle = gsm_create();
-	if (!p->handle)
-		fail("unable to create GSM stream");
-	p->index = 0;
+
+	p->channels = ft->info.channels;
+	if (p->channels > MAXCHANS || p->channels <= 0)
+		fail("gsm: channels(%d) must be in 1-16", ft->info.channels);
+
+	for (ch=0; ch<p->channels; ch++) {
+		p->handle[ch] = gsm_create();
+		if (!p->handle[ch])
+			fail("unable to create GSM stream");
+	}
+	p->frames = (gsm_byte*) malloc(p->channels*FRAMESIZE);
+	p->samples = (gsm_signal*) malloc(BLOCKSIZE * (p->channels+1) * sizeof(gsm_signal));
+	p->sampleTop = p->samples + BLOCKSIZE*p->channels;
+	p->samplePtr = (w)? p->samples : p->sampleTop;
 }
 
-void
-gsmstartwrite(ft)
+void gsmstartread(ft) 
 ft_t ft;
 {
-	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
+	gsmstart_rw(ft,0);
+}
 
-	ft->info.style = GSM;
-	ft->info.size = BYTE;
-	if (!ft->info.rate)
-		ft->info.rate = 8000;
-	p->handle = gsm_create();
-	if (!p->handle)
-		fail("unable to create GSM stream");
-	p->index = 0;
+void gsmstartwrite(ft)
+ft_t ft;
+{
+	gsmstart_rw(ft,1);
 }
 
 /*
@@ -79,55 +100,94 @@ ft_t ft;
  * Return number of samples read.
  */
 
-LONG
-gsmread(ft, buf, samp)
+LONG gsmread(ft, buf, samp)
 ft_t ft;
 long *buf, samp;
 {
-	int bytes;
 	int done = 0;
-	gsm_frame	frame;
+	int r, ch, chans;
+	gsm_signal *gbuff;
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
 
-	while (p->index && (p->index < 160) && (done < samp))
-		buf[done++] = LEFT(p->sample[p->index++], 16);
+	chans = p->channels;
 
 	while (done < samp)
 	{
-		p->index = 0;
-		bytes = fread( frame, 1, sizeof(frame), ft->fp );
-		if (bytes <= 0)
-			return done;
-		if (bytes < sizeof(frame))
-			fail("invalid frame size: %d bytes", bytes);
-		if (gsm_decode(p->handle, frame, p->sample) < 0)
-			fail("error during GSM decode");
-		while ((p->index < 160) && (done < samp))
-			buf[done++] = LEFT(p->sample[p->index++], 16);
+		while (p->samplePtr < p->sampleTop && done < samp)
+			buf[done++] = LEFT(*(p->samplePtr)++, 16);
+
+		if (done>=samp) break;
+
+		r = fread(p->frames, p->channels*FRAMESIZE, 1, ft->fp);
+		if (r != 1) break;
+
+		p->samplePtr = p->samples;
+		for (ch=0; ch<chans; ch++) {
+			int i;
+			gsm_signal *gsp;
+
+			gbuff = p->sampleTop;
+			if (gsm_decode(p->handle[ch], p->frames + ch*FRAMESIZE, gbuff) < 0)
+				fail("error during GSM decode");
+			
+			gsp = p->samples + ch;
+			for (i=0; i<BLOCKSIZE; i++) {
+				*gsp = *gbuff++;
+				gsp += chans;
+			}
+		}
 	}
 
 	return done;
 }
 
-int
-gsmwrite(ft, buf, samp)
+static void gsmflush(ft)
+ft_t ft;
+{
+	int r, ch, chans;
+	gsm_signal *gbuff;
+	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
+
+	chans = p->channels;
+
+	/* zero-fill samples as needed */
+	while (p->samplePtr < p->sampleTop)
+		*(p->samplePtr)++ = 0;
+	
+	gbuff = p->sampleTop;
+	for (ch=0; ch<chans; ch++) {
+		int i;
+		gsm_signal *gsp;
+
+		gsp = p->samples + ch;
+		for (i=0; i<BLOCKSIZE; i++) {
+			gbuff[i] = *gsp;
+			gsp += chans;
+		}
+		gsm_encode(p->handle[ch], gbuff, p->frames);
+		r = fwrite(p->frames, FRAMESIZE, 1, ft->fp);
+		if (r != 1)
+			fail("write error");
+	}
+	p->samplePtr = p->samples;
+
+	return;
+}
+
+int gsmwrite(ft, buf, samp)
 ft_t ft;
 long *buf, samp;
 {
 	int done = 0;
-	gsm_frame	frame;
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
 
 	while (done < samp)
 	{
-		while ((p->index < 160) && (done < samp))
-			p->sample[p->index++] = RIGHT(buf[done++], 16);
-		if (p->index < 160)
-			return done;
-		gsm_encode(p->handle, p->sample, frame);
-		if (fwrite(frame, 1, sizeof(frame), ft->fp) != sizeof(frame))
-			fail("write error");
-		p->index = 0;
+		while ((p->samplePtr < p->sampleTop) && (done < samp))
+			*(p->samplePtr)++ = RIGHT(buf[done++], 16);
+
+		if (p->samplePtr == p->sampleTop)
+			gsmflush(ft);
 	}
 
 	return done;
@@ -138,25 +198,24 @@ gsmstopread(ft)
 ft_t ft;
 {
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
+	int ch;
 
-	gsm_destroy(p->handle);
+	for (ch=0; ch<p->channels; ch++)
+		gsm_destroy(p->handle[ch]);
+
+	free(p->samples);
+	free(p->frames);
 }
 
 void
 gsmstopwrite(ft)
 ft_t ft;
 {
-	gsm_frame	frame;
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
 
-	if (p->index)
-	{
-		while (p->index < 160)
-			p->sample[p->index++] = 0;
-		gsm_encode(p->handle, p->sample, frame);
-		if (fwrite(frame, 1, sizeof(frame), ft->fp) != sizeof(frame))
-			fail("write error");
-	}
-	gsm_destroy(p->handle);
+	if (p->samplePtr > p->samples)
+		gsmflush(ft);
+
+	gsmstopread(ft); /* destroy handles and free buffers */
 }
 #endif /* HAVE_LIBGSM */

@@ -22,9 +22,6 @@
 #include "st.h"
 #include "g72x.h"
 #include <stdlib.h>
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 
 /* Magic numbers used in Sun and NeXT audio files */
 #define SUN_MAGIC 	0x2e736e64		/* Really '.snd' */
@@ -58,7 +55,7 @@ struct aupriv {
 	int in_bits;
 };
 
-void auwriteheader(P2(ft_t ft, ULONG data_size));
+static void auwriteheader(P2(ft_t ft, ULONG data_size));
 
 void austartread(ft) 
 ft_t ft;
@@ -243,7 +240,7 @@ ft_t ft;
  * Returns 1 if there is residual input, returns -1 if eof, else returns 0.
  * (Adapted from Sun's decode.c.)
  */
-int
+static int
 unpack_input(ft, code)
 ft_t			ft;
 unsigned char		*code;
@@ -311,7 +308,7 @@ ft_t ft;
 	auwriteheader(ft, p->data_size);
 }
 
-void auwriteheader(ft, data_size)
+static void auwriteheader(ft, data_size)
 ft_t ft;
 ULONG data_size;
 {

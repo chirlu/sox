@@ -63,13 +63,9 @@
  */
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 #include <math.h>
 #include <string.h>
 #include "st.h"
-#include "libst.h"
 
 #define MOD_SINE	0
 #define MOD_TRIANGLE	1
@@ -175,10 +171,12 @@ eff_t effp;
 				sizeof(int) * chorus->length[i]);
 		if ( chorus->modulation[i] == MOD_SINE )
 			st_sine(chorus->lookup_tab[i], chorus->length[i], 
-				chorus->samples[i] - 1, chorus->depth_samples[i]);
+				chorus->depth_samples[i] - 1,
+				chorus->depth_samples[i]);
 		else
 			st_triangle(chorus->lookup_tab[i], chorus->length[i], 
-				chorus->samples[i] - 1, chorus->depth_samples[i]);
+				chorus->samples[i] - 1,
+				chorus->depth_samples[i]);
 		chorus->phase[i] = 0;
 
 		if ( chorus->samples[i] > chorus->maxsamples )

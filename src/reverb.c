@@ -93,12 +93,8 @@
  */
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 #include <math.h>
 #include "st.h"
-#include "libst.h"
 
 #define REVERB_FADE_THRESH 10
 #define DELAY_BUFSIZ ( 50L * MAXRATE )

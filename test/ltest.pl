@@ -33,7 +33,7 @@ my $effect='resample';
 
 my ($rate0,$rate1)=(8000,22050); # sample rates
 my $p=400;  # silence before/after tonepulse
-my $env="-e4000:16000:4000"; # attack, duration, drop
+my $env="4000:16000:4000"; # attack, duration, drop
 
 #my ($rate0,$rate1)=(22050,8000); # sample rates
 #my $p=1102;  # silence before/after tonepulse
@@ -71,7 +71,7 @@ if ($ratechange==0) {
 	}
 }
 print("#   with tone pulses from 0.00 to 0.99 percent of Nyquist\n");
-print("#   produced by $ding -f0.xx -v0.5 -o$p $env -p$p d/i0.xx.$t\n");
+print("#   produced by $ding -f0.xx -v0.5 -o$p -e$p:$env:$p d/i0.xx.$t\n");
 
 # generate the test data
 mkdir("d",0775);
@@ -83,18 +83,18 @@ for ($f=0.00; $f<1.001; $f+=0.01) {
 
 	#if ($f>0.995) { $f=0.999; }
 	my $s=sprintf("%4.2f",$f);
-	#print "$ding -v0.5 -o$p $env -p$p -f$s -d1.0 d/i$s.$t\n";
-	qx{$ding -v0.5 -o$p $env -p$p -f$s -d1.0 d/i$s.$t &>/dev/null};
+	#print "$ding -v0.5 -e$p:$env:$p -f$s -d1.0 d/i$s.$t\n";
+	qx{$ding -v0.5 -e$p:$env:$p -f$s -d1.0 d/i$s.$t &>/dev/null};
 	if ($ratechange==0) {
 		qx{$sox -r$rate0 d/i$s.$t -r$rate0 d/j$s.$t $effect 2>/dev/null};
-		@mod = grep {/v2max/} qx{$model -f$s $env $rate0 d/j$s.$t 2>&1};
+		@mod = grep {/v2max/} qx{$model -f$s -e$env $rate0 d/j$s.$t 2>&1};
 	} else {
 		qx{$sox -r$rate0 d/i$s.$t -r$rate1 d/u$s.$t $effect 2>/dev/null};
 		if ($updown) {
 			qx{$sox -r$rate1 d/u$s.$t -r$rate0 d/o$s.$t $effect 2>/dev/null};
-			@mod = grep {/v2max/} qx{$model -f$s $env $rate0:$rate0 d/o$s.$t 2>&1};
+			@mod = grep {/v2max/} qx{$model -f$s -e$env $rate0:$rate0 d/o$s.$t 2>&1};
 		}else{
-			@mod = grep {/v2max/} qx{$model -f$s $env $rate0:$rate1 d/u$s.$t 2>&1};
+			@mod = grep {/v2max/} qx{$model -f$s -e$env $rate0:$rate1 d/u$s.$t 2>&1};
 		}
 	}
 	print STDERR "$s: ",@mod;

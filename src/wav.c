@@ -61,9 +61,6 @@
 
 #include <string.h>		/* Included for strncmp */
 #include <stdlib.h>		/* Included for malloc and free */
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 #include <stdio.h>
 
 #ifdef HAVE_UNISTD_H
@@ -83,7 +80,8 @@
 
 /* Private data for .wav file */
 typedef struct wavstuff {
-    LONG	   numSamples;
+    LONG	   numSamples;     /* reading: starts at total count and decremented  */
+    		                   /* writing: starts at 0 and counts samples written */
     LONG	   dataLength;     /* needed for ADPCM writing */
     unsigned short formatTag;	   /* What type of encoding file is using */
     unsigned short samplesPerBlock;
@@ -101,10 +99,10 @@ typedef struct wavstuff {
 
     /* following used by GSM 6.10 wav */
 #ifdef HAVE_LIBGSM
-    gsm  gsmhandle;
-    gsm_signal *gsmsample;
-    int  gsmindex;
-    int gsmbytecount;
+    gsm		   gsmhandle;
+    gsm_signal	   *gsmsample;
+    int		   gsmindex;
+    int		   gsmbytecount;    /* counts bytes written to data block */
 #endif
 } *wav_t;
 
@@ -116,9 +114,7 @@ typedef struct wavstuff {
 
 static char *wav_format_str();
 
-LONG rawread(P3(ft_t, LONG *, LONG));
-void rawwrite(P3(ft_t, LONG *, LONG));
-void wavwritehdr(P2(ft_t, int));
+static void wavwritehdr(P2(ft_t, int));
 
 
 /****************************************************************************/
@@ -282,7 +278,7 @@ LONG *buf, len;
     wav_t	wav = (wav_t) ft->priv;
     int done=0;
     int bytes;
-    gsm_frame	frame;
+    gsm_byte	frame[65];
 
   /* copy out any samples left from the last call */
     while(wav->gsmindex && (wav->gsmindex<160*2) && (done < len))
@@ -291,24 +287,19 @@ LONG *buf, len;
   /* read and decode loop, possibly leaving some samples in wav->gsmsample */
     while (done < len) {
 	wav->gsmindex=0;
-	/*read the long 33 byte half */
-	bytes = fread(frame,1,sizeof(frame),ft->fp);   
+	bytes = fread(frame,1,65,ft->fp);   
 	if (bytes <=0)
 	    return done;
-	if (bytes<sizeof(frame))
-	    fail("invalid wav gsm frame size: %d bytes",bytes);
+	if (bytes<65) {
+	    warn("invalid wav gsm frame size: %d bytes",bytes);
+	    return done;
+	}
+	/* decode the long 33 byte half */
 	if(gsm_decode(wav->gsmhandle,frame, wav->gsmsample)<0)
 	    fail("error during gsm decode");
-
-	/*read the short 32 byte half */
-	bytes = fread(frame,1,sizeof(frame)-1,ft->fp);   
-	if (bytes <=0)
-	    return done;
-	if (bytes<sizeof(frame)-1)
-	    fail("invalid wav gsm frame size: %d bytes",bytes);
-	if(gsm_decode(wav->gsmhandle,frame, &(wav->gsmsample[160]))<0)
+	/* decode the short 32 byte half */
+	if(gsm_decode(wav->gsmhandle,frame+33, wav->gsmsample+160)<0)
 	    fail("error during gsm decode");
-
 
 	while ((wav->gsmindex <160*2) && (done < len)){
 	    buf[done++]=LEFT(wav->gsmsample[(wav->gsmindex)++],16);
@@ -318,35 +309,50 @@ LONG *buf, len;
     return done;
 }
 
+static void wavgsmflush(ft, pad)
+ft_t ft;
+int pad; /* normally 0, but 1 to pad last write to even datalen */
+{
+    gsm_byte	frame[65];
+    wav_t	wav = (wav_t) ft->priv;
+
+    /* zero fill as needed */
+    while(wav->gsmindex<160*2)
+	wav->gsmsample[wav->gsmindex++]=0;
+
+    /*encode the even half short (32 byte) frame */
+    gsm_encode(wav->gsmhandle, wav->gsmsample, frame);
+    /*encode the odd half long (33 byte) frame */
+    gsm_encode(wav->gsmhandle, wav->gsmsample+160, frame+32);
+    if (fwrite(frame, 1, 65, ft->fp) != 65)
+	fail("write error");
+    wav->gsmbytecount += 65;
+
+    wav->gsmindex = 0;
+
+    if (pad & wav->gsmbytecount){
+	/* pad output to an even number of bytes */
+	if(fputc(0,ft->fp))
+	    fail("write error");
+	wav->gsmbytecount += 1;
+    }
+}
+
 void wavgsmwrite(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
     wav_t	wav = (wav_t) ft->priv;
-
     int done = 0;
-    gsm_frame	frame;
 
     while (done < len) {
-	while ((wav->gsmindex < 160*2) && (done < len)){
+	while ((wav->gsmindex < 160*2) && (done < len))
 	    wav->gsmsample[(wav->gsmindex)++] = RIGHT(buf[done++], 16);
-	}
-	if (wav->gsmindex < 160*2){
-	    return;
-	}
 
-	/*encode the even half and write short (32 byte) frame */
-	gsm_encode(wav->gsmhandle, wav->gsmsample, frame);
-	if (fwrite(frame, 1, sizeof(frame)-1, ft->fp) != sizeof(frame)-1)
-	    fail("write error");
-	wav->gsmbytecount += sizeof(frame)-1;
+	if (wav->gsmindex < 160*2)
+	    break;
 
-	/*encode the odd half and write long (33 byte) frame */
-	gsm_encode(wav->gsmhandle, &(wav->gsmsample[160]), frame);
-	if (fwrite(frame, 1, sizeof(frame), ft->fp) != sizeof(frame))
-	    fail("write error");
-	wav->gsmbytecount += sizeof(frame);
-	wav->gsmindex = 0;
+	wavgsmflush(ft, 0);
     }     
 
 }
@@ -354,32 +360,11 @@ LONG *buf, len;
 void wavgsmstopwrite(ft)
 ft_t ft;
 {
-    gsm_frame frame;
     wav_t	wav = (wav_t) ft->priv;
-    if (wav->gsmindex){
-	while(wav->gsmindex<160*2){
-	    wav->gsmsample[wav->gsmindex++]=0;
-	}
 
-	/*encode the even half and write short (32 byte) frame */
-	gsm_encode(wav->gsmhandle, wav->gsmsample, frame);
-	if (fwrite(frame, 1, sizeof(frame)-1, ft->fp) != sizeof(frame)-1)
-	    fail("write error");
-	wav->gsmbytecount += sizeof(frame)-1;
-	
-	/*encode the odd half and write long (33 byte) frame */
-	gsm_encode(wav->gsmhandle, &(wav->gsmsample[160]), frame);
-	if (fwrite(frame, 1, sizeof(frame), ft->fp) != sizeof(frame))
-	    fail("write error");
-	wav->gsmbytecount += sizeof(frame);
+    if (wav->gsmindex)
+	wavgsmflush(ft, 1);
 
-	/* pad output to an even number of bytes */
-	if (wav->gsmbytecount & 0x1){
-	    if(fputc(0,ft->fp))
-		fail("write error");
-	    wav->gsmbytecount += 1;
-	}
-    }      
     wavgsmdestroy(ft);
 }
 #endif        /*ifdef out gsm code */
@@ -848,9 +833,8 @@ LONG *buf, len;
 		    top = p+ct;
 		    /* Output is already signed */
 		    while (p<top)
-		    {
 			*buf++ = LEFT((*p++), 16);
-		    }
+
 		    wav->samplePtr = p;
 		}
 	    }
@@ -863,7 +847,7 @@ LONG *buf, len;
 		warn("Premature EOF on .wav input file");
 	break;
 #endif
-	default: /* not ADPCM style */
+	default: /* assume PCM style */
 	    done = rawread(ft, buf, len);
 	    /* If software thinks there are more samples but I/O */
 	    /* says otherwise, let the user know about this.     */
@@ -1007,7 +991,7 @@ wDataLength     -   (data chunk header) the number of (valid) data bytes written
 
 */
 
-void wavwritehdr(ft, second_header) 
+static void wavwritehdr(ft, second_header) 
 ft_t ft;
 int second_header;
 {

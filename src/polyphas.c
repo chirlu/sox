@@ -31,11 +31,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 #include "st.h"
-#include "libst.h"
 
 #define Float float/*double*/
 #define ISCALE 0x10000
@@ -345,7 +341,7 @@ static Float sinc(Float value)
 
    buffer must already be allocated.
 */
-void fir_design(Float *buffer, int length, Float cutoff)
+static void fir_design(Float *buffer, int length, Float cutoff)
 {
     int j;
     double sum;

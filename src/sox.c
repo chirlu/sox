@@ -12,6 +12,12 @@
  *
  * Change History:
  *
+ * Nov. 1, 1999 - Stan Brooks (stabro@megsinet.com)
+ *   Added -X input option, to extract range of samples.
+ *   Moved volume and dovolume from static variables into ft->info...
+ *   TODO: This should allow a way (kluge) of specifying multiple
+ *   inputs to be mixed together.
+ *
  * June 1, 1998 - Chris Bagwell (cbagwell@sprynet.com)
  *   Added patch to get volume working again.  Based on patch sent from
  *   Matija Nalis <mnalis@public.srce.hr>.
@@ -32,9 +38,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>		/* for malloc() */
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 #include <errno.h>
 #include <sys/types.h>		/* for fstat() */
 #include <sys/stat.h>		/* for fstat() */
@@ -64,35 +67,39 @@ extern int optind;
  * Rewrite for multiple effects: Aug 24, 1994.
  */
 
-int clipped = 0;		/* Volume change clipping errors */
+static int clipped = 0;		/* Volume change clipping errors */
+static int writing = 0;	/* are we writing to a file? */
+static int soxpreview = 0;	/* preview mode */
+
 
 static LONG ibufl[BUFSIZ/2];	/* Left/right interleave buffers */
 static LONG ibufr[BUFSIZ/2];	
 static LONG obufl[BUFSIZ/2];
 static LONG obufr[BUFSIZ/2];
 
-void init();
-void doopts(P2(int, char **));
-void usage(P1(char *));
-int filetype(P1(int));
-void process();
-void statistics();
-LONG volumechange();
-void checkeffect(P1(eff_t));
-int flow_effect(P1(int));
-int drain_effect(P1(int));
+/* local forward declarations */
+static void init(P0);
+static void doopts(P2(int, char **));
+static void usage(P1(char *))NORET;
+static int filetype(P1(int));
+static void process(P0);
+static void statistics(P0);
+static LONG volumechange(P3(LONG *buf, LONG ct, double vol));
+static void checkeffect(P1(eff_t));
+static int flow_effect(P1(int));
+static int drain_effect(P1(int));
 
-struct soundstream informat, outformat;
+static struct soundstream informat, outformat;
 
-ft_t ft;
+static ft_t ft;
 
 #define MAXEFF 4
-struct effect eff;
-struct effect efftab[MAXEFF];	/* table of left/mono channel effects */
-struct effect efftabR[MAXEFF];	/* table of right channel effects */
+static struct effect eff;
+static struct effect efftab[MAXEFF];	/* table of left/mono channel effects */
+static struct effect efftabR[MAXEFF];	/* table of right channel effects */
 				/* efftab[0] is the input stream */
-int neffects;			/* # of effects */
-char *ifile, *ofile, *itype, *otype;
+static int neffects;			/* # of effects */
+static char *ifile, *ofile;
 
 int main(argc, argv)
 int argc;
@@ -105,6 +112,7 @@ char **argv;
 
 	/* Get input format options */
 	ft = &informat;
+	clipped = 0;
 	doopts(argc, argv);
 	/* Get input file */
 	if (optind >= argc)
@@ -172,8 +180,8 @@ char **argv;
 	}
 
 	/* Check global arguments */
-	if (volume <= 0.0)
-		fail("Volume must be greater than 0.0");
+	if (informat.info.dovol && informat.info.vol == 0.0)
+		fail("Volume must be non-zero"); /* negative volume is phase-reversal */
 	
 	/* If file types have not been set with -t, set from file names. */
 	if (! informat.filetype) {
@@ -206,12 +214,12 @@ char **argv;
 }
 
 #ifdef HAVE_GETOPT_H
-char *getoptstr = "+r:v:t:c:phsuUAaigbwlfdDxV";
+static char *getoptstr = "+r:v:t:c:B:X:phsuUAaigbwlfdDxV";
 #else
-char *getoptstr = "r:v:t:c:phsuUAaigbwlfdDxV";
+static char *getoptstr = "r:v:t:c:B:X:phsuUAaigbwlfdDxV";
 #endif
 
-void doopts(argc, argv)
+static void doopts(argc, argv)
 int argc;
 char **argv;
 {
@@ -234,13 +242,16 @@ char **argv;
 			if (ft->filetype[0] == '.')
 				ft->filetype++;
 			break;
-#if 0
+
 		case 'X':  /* extract a subinterval of samples as input */
 			if (! ft) usage("-X");
-			ft->fileextract++;
-			ft->filetype = optarg;
+			str = optarg;
+			/* FIXME: allow "A-B" "-B" "A-" "A,B" also maybe lists of ranges */
+			if ( 2 != sscanf(str, "%lu-%lu", &ft->info.x0, &ft->info.x1))
+				fail("eXtract range '%s' is not valid", optarg);
+			if (ft->info.x1==0) ft->info.x1 -= 1; /* MAXULONG */
 			break;
-#endif
+
 		case 'r':
 			if (! ft) usage("-r");
 			str = optarg;
@@ -254,13 +265,11 @@ char **argv;
 				fail("-r must be given a positive integer");
 			break;
 		case 'v':
-			if (! ft) usage("-v");
+			if (!ft || ft->info.dovol) usage("-v");
 			str = optarg;
-			if ((! sscanf(str, "%e", &volume)) ||
-					(volume <= 0))
-				fail("Volume value '%s' is not a number",
-					optarg);
-			dovolume = 1;
+			if (! sscanf(str, "%lf", &ft->info.vol)) /* neg volume is ok */
+				fail("Volume value '%s' is not a number", optarg);
+			ft->info.dovol = 1;
 			break;
 
 		case 'c':
@@ -268,6 +277,12 @@ char **argv;
 			str = optarg;
 			if (! sscanf(str, "%d", &ft->info.channels))
 				fail("-c must be given a number");
+			break;
+		case 'B':
+			if (! ft) usage("-B");
+			str = optarg;
+			if (! sscanf(str, "%hu", &ft->info.bs) || ft->info.bs<=0) /* blocksize */
+				fail("-B must be given a positive number");
 			break;
 		case 'b':
 			if (! ft) usage("-b");
@@ -335,13 +350,19 @@ char **argv;
 	}
 }
 
-void init() {
+static void init(P0) {
 
 	/* init files */
 	informat.info.rate      = outformat.info.rate  = 0;
 	informat.info.size      = outformat.info.size  = -1;
 	informat.info.style     = outformat.info.style = -1;
 	informat.info.channels  = outformat.info.channels = -1;
+	informat.info.bs        = outformat.info.bs    = 0;
+	informat.info.dovol     = outformat.info.dovol = 0;
+	informat.info.vol       = outformat.info.vol   = 1.0;
+	informat.info.x         = outformat.info.x  = 0;
+	informat.info.x0        = outformat.info.x0 = 0;
+	informat.info.x1        = outformat.info.x1 = -1;
 	informat.comment   = outformat.comment = NULL;
 	informat.swap      = 0;
 	informat.filetype  = outformat.filetype  = (char *) 0;
@@ -356,7 +377,7 @@ void init() {
  *	one buffer at a time
  */
 
-void process() {
+static void process(P0) {
     LONG i;
     int e, f, havedata;
 
@@ -368,8 +389,10 @@ void process() {
     (* informat.h->startread)(&informat);
     checkformat(&informat);
     
-    if (dovolume)
-	report("Volume factor: %f\n", volume);
+    if (informat.info.dovol)
+	report("Volume factor: %f\n", informat.info.vol);
+    if (informat.info.x0 || informat.info.x1 != MAXULONG)
+	report("Extract samples %lu <= x < %lu\n", informat.info.x0, informat.info.x0);
     
     report("Input file: using sample rate %lu\n\tsize %s, style %s, %d %s",
 	   informat.info.rate, sizes[informat.info.size], 
@@ -461,18 +484,25 @@ void process() {
 	    efftabR[e].obuf = (LONG *) malloc(BUFSIZ * sizeof(LONG));
     }
 
-    /* Read initial chunk of input data. */
-    efftab[0].olen = (*informat.h->read)(&informat, 
-					 efftab[0].obuf, (LONG) BUFSIZ);
-    efftab[0].odone = 0;
-
-    /* Change the volume of this initial input data if needed. */
-    if (dovolume)
-	for (i = 0; i < efftab[0].olen; i++)
-	    efftab[0].obuf[i] = volumechange(efftab[0].obuf[i]);
 
     /* Run input data through effects and get more until olen == 0 */
-    while (efftab[0].olen > 0) {
+    while (informat.info.x < informat.info.x1) {
+	ULONG ct, r;
+
+	/* Read (extracted) chunk of input data. */
+	ct = (informat.info.x < informat.info.x0)?
+	  (informat.info.x0 - informat.info.x) : (informat.info.x1 - informat.info.x);
+	if (ct > BUFSIZ) ct = BUFSIZ;
+	r = (*informat.h->read)(&informat, efftab[0].obuf, ct);
+	if (!r) break;
+	informat.info.x += r;
+	if (informat.info.x <= informat.info.x0) continue;
+	efftab[0].olen = r;
+	efftab[0].odone = 0;
+
+	/* Change the volume of this initial input data if needed. */
+	if (informat.info.dovol)
+	    clipped += volumechange(efftab[0].obuf, efftab[0].olen, informat.info.vol);
 
 	/* mark chain as empty */
 	for(e = 1; e < neffects; e++)
@@ -502,15 +532,6 @@ void process() {
 		}
 	} while (havedata);
 
-	/* Read another chunk of input data. */
-	efftab[0].olen = (*informat.h->read)(&informat, 
-		efftab[0].obuf, (LONG) BUFSIZ);
-	efftab[0].odone = 0;
-
-	/* Change volume of these samples if needed. */
-	if (dovolume)
-	    for (i = 0; i < efftab[0].olen; i++)
-		efftab[0].obuf[i] = volumechange(efftab[0].obuf[i]);
     }
 
     /* Drain the effects out first to last, 
@@ -553,7 +574,7 @@ void process() {
         fclose(outformat.fp);
 }
 
-int flow_effect(e)
+static int flow_effect(e)
 int e;
 {
     LONG i, done, idone, odone, idonel, odonel, idoner, odoner;
@@ -617,7 +638,7 @@ int e;
     return 1;
 }
 
-int drain_effect(e)
+static int drain_effect(e)
 int e;
 {
     LONG i, olen, olenl, olenr;
@@ -671,7 +692,7 @@ int e;
  * Smart ruleset for multiple effects in sequence.
  * 	Puts user-specified effect in right place.
  */
-void
+static void
 checkeffect(effp)
 eff_t effp;
 {
@@ -849,30 +870,38 @@ eff_t effp;
 }
 
 /* Guido Van Rossum fix */
-void statistics() {
-	if (dovolume && clipped > 0)
+static void statistics(P0) {
+	if (informat.info.dovol && clipped > 0)
 		report("Volume change clipped %d samples", clipped);
 }
 
-LONG volumechange(y)
-LONG y;
+static LONG volumechange(buf, ct, vol)
+LONG *buf;
+LONG ct;
+double vol;
 {
-	double y1;
+	double y;
+	LONG *p,*top;
+	LONG clips=0;
 
-	y1 = y * volume;
-	if (y1 < -2147483647.0) {
-		y1 = -2147483647.0;
-		clipped++;
+	p = buf;
+	top = buf+ct;
+	while (p < top) {
+	    y = vol * *p;
+	    if (y < -2147483647.0) {
+		y = -2147483647.0;
+		clips++;
+	    }
+	    else if (y > 2147483647.0) {
+		y = 2147483647.0;
+		clips++;
+	    }
+	    *p++ = y + 0.5;
 	}
-	else if (y1 > 2147483647.0) {
-		y1 = 2147483647.0;
-		clipped++;
-	}
-
-	return y1;
+	return clips;
 }
 
-int filetype(fd)
+static int filetype(fd)
 int fd;
 {
 	struct stat st;
@@ -882,10 +911,10 @@ int fd;
 	return st.st_mode & S_IFMT;
 }
 
-char *usagestr = 
+static char *usagestr = 
 "[ gopts ] [ fopts ] ifile [ fopts ] ofile [ effect [ effopts ] ]";
 
-void usage(opt)
+static void usage(opt)
 char *opt;
 {
     int i;
@@ -916,7 +945,7 @@ char *opt;
 
 
 /* called from util.c:fail */
-void cleanup() {
+void cleanup(P0) {
 	/* Close the input file and outputfile before exiting*/
 	if (informat.fp)
 		fclose(informat.fp);

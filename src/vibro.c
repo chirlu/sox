@@ -26,9 +26,6 @@
 
 #include <math.h>
 #include <stdlib.h>
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 #include "st.h"
 
 /* Private data for Vibro effect */
@@ -62,7 +59,7 @@ char **argv;
 
 /* This was very painful.  We need a sine library. */
 
-void sine(buf, len, depth)
+static void sine(buf, len, depth)
 short *buf;
 int len;
 float depth;

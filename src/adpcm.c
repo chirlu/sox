@@ -51,7 +51,8 @@ typedef struct MsState {
 /* these are step-size adjust factors, where
  * 1.0 is scaled to 0x100
  */
-static LONG stepAdjustTable[] = {
+static const
+LONG stepAdjustTable[] = {
 	230, 230, 230, 230, 307, 409, 512, 614,
 	768, 614, 512, 409, 307, 230, 230, 230
 };
@@ -60,7 +61,7 @@ static LONG stepAdjustTable[] = {
    appear in the actual WAVE file.  They should be read in
    in case a sound program added extras to the list. */
 
-short iCoef[7][2] = {
+const short iCoef[7][2] = {
 			{ 256,   0},
 			{ 512,-256},
 			{   0,   0},

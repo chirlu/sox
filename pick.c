@@ -16,7 +16,6 @@
  */
 
 #include "st.h"
-#include "libst.h"
 
 /* Private data for SKEL file */
 typedef struct pickstuff {

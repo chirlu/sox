@@ -60,9 +60,10 @@ struct WaveHeader_ {
     unused[2];       /* set these to null, to be on the safe side */
 } ;
 
-static unsigned char magic1[4] = {0, 0x06, 0x10, 0xF6};
-static unsigned char magic2[4] = {0, 0x52, 0x00, 0x52};
+static const unsigned char magic1[4] = {0, 0x06, 0x10, 0xF6};
+static const unsigned char magic2[4] = {0, 0x52, 0x00, 0x52};
 
+/* SJB: dangerous static variables */
 static LONG tx16w_len=0;
 static LONG writedone=0;
 

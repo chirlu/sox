@@ -12,20 +12,16 @@
 #include <unistd.h>	/* For SEEK_* defines if not found in stdio */
 #endif
 
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
-
 #include "st.h"
 
 /* Private data used by writer */
 struct svxpriv {
-        ULONG nsamples;
+	ULONG nsamples;
 	FILE *ch[4];
 };
 
-void svxwriteheader(P2(ft_t, LONG));
-    
+static void svxwriteheader(P2(ft_t, LONG));
+
 /*======================================================================*/
 /*                         8SVXSTARTREAD                                */
 /*======================================================================*/
@@ -307,7 +303,7 @@ ft_t ft;
 /*                         8SVXWRITEHEADER                              */
 /*======================================================================*/
 #define SVXHEADERSIZE 100
-void svxwriteheader(ft,nsamples)
+static void svxwriteheader(ft,nsamples)
 ft_t ft;
 LONG nsamples;
 {

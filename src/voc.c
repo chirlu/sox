@@ -167,9 +167,9 @@ typedef struct vocstuff {
 
 #define	min(a, b)	(((a) < (b)) ? (a) : (b))
 
-void getblock();
-void blockstart(P1(ft_t));
-void blockstop(P1(ft_t));
+static void getblock(P1(ft_t));
+static void blockstart(P1(ft_t));
+static void blockstop(P1(ft_t));
 
 void vocstartread(ft) 
 ft_t ft;
@@ -346,7 +346,7 @@ ft_t ft;
 /* Voc-file handlers */
 
 /* Read next block header, save info, leave position at start of data */
-void
+static void
 getblock(ft)
 ft_t ft;
 {
@@ -503,7 +503,7 @@ ft_t ft;
 }
 
 /* Start an output block. */
-void blockstart(ft)
+static void blockstart(ft)
 ft_t ft;
 {
 	vs_t v = (vs_t) ft->priv;
@@ -559,7 +559,7 @@ ft_t ft;
 }
 
 /* End the current data or silence block. */
-void blockstop(ft) 
+static void blockstop(ft) 
 ft_t ft;
 {
 	vs_t v = (vs_t) ft->priv;

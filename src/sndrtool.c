@@ -26,8 +26,7 @@ struct sndpriv {
 #define	SEEK_CUR	1
 #endif
 
-void  sndtwriteheader(P2(ft_t ft,LONG nsamples));
-void rawwrite(P3(ft_t, LONG *, LONG));
+static void  sndtwriteheader(P2(ft_t ft,LONG nsamples));
 
 /*======================================================================*/
 /*                         SNDSTARTREAD                                */
@@ -192,7 +191,7 @@ ft_t ft;
 /*======================================================================*/
 /*                         SNDTWRITEHEADER                              */
 /*======================================================================*/
-void sndtwriteheader(ft,nsamples)
+static void sndtwriteheader(ft,nsamples)
 ft_t ft;
 LONG nsamples;
 {
@@ -213,5 +212,4 @@ memset (name_buf, 0, 96);
 sprintf (name_buf,"%s - File created by Sound Exchange",ft->filename);
 fwrite (name_buf, 1, 96, ft->fp);
 }
-
 

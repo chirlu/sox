@@ -24,9 +24,6 @@
 #include "st.h"
 #include <string.h>
 #include <stdlib.h>
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 
 /* Dictionary entry for Huffman (de)compression */
 typedef struct {
@@ -50,7 +47,7 @@ struct readpriv {
 	short sample;
 };
 
-void skipbytes(P2(ft_t, int));
+static void skipbytes(P2(ft_t, int));
 
 void hcomstartread(ft)
 ft_t ft;
@@ -141,7 +138,7 @@ ft_t ft;
 	p->nrbits = -1; /* Special case to get first byte */
 }
 
-void skipbytes(ft, n)
+static void skipbytes(ft, n)
 ft_t ft;
 int n;
 {
@@ -301,13 +298,15 @@ LONG *buf, len;
    passed around in a structure instead. Use static so we don't
    polute global name space. */
 
+/* SJB: FIXME: dangerous static variables, need to analyse code */
+
 static dictent dictionary[511];
 static dictent *de;
 static LONG codes[256];
 static LONG codesize[256];
 static LONG checksum;
 
-void makecodes(e, c, s, b)
+static void makecodes(e, c, s, b)
 int e, c, s, b;
 {
   if(dictionary[e].dict_leftson < 0) {
@@ -322,7 +321,8 @@ int e, c, s, b;
 static LONG curword;
 static int nbits;
 
-void putlong(c, v)
+/* SJB: candidates for misc.c */
+static void putlong(c, v)
 unsigned char *c;
 LONG v;
 {
@@ -332,7 +332,7 @@ LONG v;
   *c++ = v & 0xff;
 }
 
-void putshort(c, v)
+static void putshort(c, v)
 unsigned char *c;
 short v;
 {
@@ -341,7 +341,7 @@ short v;
 }
 
 
-void putcode(c, df)
+static void putcode(c, df)
 unsigned char c;
 unsigned char ** df;
 {
@@ -364,7 +364,7 @@ int i;
   }
 }
 
-void compress(df, dl, fr)
+static void compress(df, dl, fr)
 unsigned char **df;
 LONG *dl;
 float fr;
@@ -472,7 +472,7 @@ float fr;
   *dl = l;			/* and its compressed length */
 }
 
-void padbytes(ft, n)
+static void padbytes(ft, n)
 ft_t ft;
 int n;
 {

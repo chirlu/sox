@@ -22,6 +22,9 @@
 #	define SAMPL short
 #endif
 /* FIXME: This breaks on Alphas! */
+/* SJB: Not really, because when used with sox, LONG and ULONG are
+ *      already defined before adpcm.h is included
+ */
 #ifndef ULONG
 #	define ULONG unsigned long
 #endif

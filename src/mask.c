@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include "st.h"
-#include "libst.h"
 
 #define HALFABIT 1.44			/* square root of 2 */
 

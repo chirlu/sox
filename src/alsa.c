@@ -13,9 +13,6 @@
  * based on info grabed from aplay.c in alsa-utils package.
  */
 
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,21 +21,6 @@
 #include <linux/asound.h>
 #include <sys/ioctl.h>
 #include "st.h"
-#include "libst.h"
-
-char *get_style(style)
-int style;
-{
-    switch(style)
-    {
-	case UNSIGNED: return "UNSIGNED";
-	case SIGN2: return "SIGNED LINEAR 2's Comp";
-	case ULAW: return "uLaw";
-	case ALAW: return "aLaw";
-	case ADPCM: return "ADPCM";
-	default: return "unknown";
-    }
-}
 
 /*
  * Do anything required before you start reading samples.
@@ -94,7 +76,7 @@ ft_t ft;
 		fmt = SND_PCM_SFMT_U8;
 		break;
 	    default:
-		fail("Hardware does not support %s output", get_style(ft->info.style));
+		fail("Hardware does not support %s output", styles[ft->info.style]);
 		break;
 	}
     }
@@ -112,7 +94,7 @@ ft_t ft;
 		fmt = SND_PCM_SFMT_U16_LE;
 		break;
 	    default:
-		fail("Hardware does not support %s output", get_style(ft->info.style));
+		fail("Hardware does not support %s output", styles[ft->info.style]);
 		break;
 	}
     }
@@ -186,7 +168,7 @@ ft_t ft;
 		fmt = SND_PCM_SFMT_U8;
 		break;
 	    default:
-		fail("Hardware does not support %s output", get_style(ft->info.style));
+		fail("Hardware does not support %s output", styles[ft->info.style]);
 		break;
 	}
     }
@@ -204,7 +186,7 @@ ft_t ft;
 		fmt = SND_PCM_SFMT_U16_LE;
 		break;
 	    default:
-		fail("Hardware does not support %s output", get_style(ft->info.style));
+		fail("Hardware does not support %s output", styles[ft->info.style]);
 		break;
 	}
     }

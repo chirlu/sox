@@ -18,8 +18,6 @@
 #include <math.h>
 #include "st.h"
 
-#define MAXLONG 0x7fffffffL
-
 /* Private data for STAT effect */
 typedef struct statstuff {
 	double	min, max;

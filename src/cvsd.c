@@ -47,7 +47,6 @@
 
 #include "cvsdfilt.h"
 #include "st.h"
-#include "libst.h"
 
 /* ---------------------------------------------------------------------- */
 
@@ -97,7 +96,7 @@ struct cvsdpriv {
 
 /* ---------------------------------------------------------------------- */
 
-float float_conv(fp1, fp2, n)
+static float float_conv(fp1, fp2, n)
 float *fp1;
 float *fp2;
 int n;
@@ -428,7 +427,7 @@ struct dvms_header {
 #define DVMS_HEADER_LEN 120
 
 /* ---------------------------------------------------------------------- */
-
+/* SJB: should these be in misc.c instead? */
 static ULONG get32(p)
 unsigned char **p;
 {

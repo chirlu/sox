@@ -25,9 +25,6 @@
 #endif
 #include <string.h>
 #include <stdlib.h>
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
 
 /* Private data for SF file */
 typedef struct sfstuff {
@@ -38,7 +35,7 @@ typedef struct sfstuff {
  * Read the codes from the sound file, allocate space for the comment and
  * assign its pointer to the comment field in ft.
  */
-void readcodes(ft, sfhead)
+static void readcodes(ft, sfhead)
 ft_t ft;
 SFHEADER *sfhead;
 {

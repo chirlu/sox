@@ -33,6 +33,8 @@
  *   for endianness was being performed AFTER reading the header instead
  *   of before reading it.
  *
+ * Nov 25, 1999 - internal functions made static
+ *
  */
 
 #include <math.h>
@@ -44,10 +46,6 @@
 #include <unistd.h>	/* For SEEK_* defines if not found in stdio */
 #endif
 
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
-
 #include "st.h"
 
 /* Private data used by writer */
@@ -55,13 +53,14 @@ struct aiffpriv {
 	ULONG nsamples;	/* number of 1-channel samples read or written */
 };
 
-double read_ieee_extended();
-void aiffwriteheader(P2(ft_t, LONG));
-void write_ieee_extended(P2(ft_t, double));
-double ConvertFromIeeeExtended();
-void ConvertToIeeeExtended(P2(double, char *));
-void textChunk(P3(char **text, char *chunkDescription, ft_t ft));
-void reportInstrument(P1(ft_t ft));
+/* forward declarations */
+static double read_ieee_extended(P1(ft_t));
+static void aiffwriteheader(P2(ft_t, LONG));
+static void write_ieee_extended(P2(ft_t, double));
+static double ConvertFromIeeeExtended(P1(unsigned char*));
+static void ConvertToIeeeExtended(P2(double, char *));
+static void textChunk(P3(char **text, char *chunkDescription, ft_t ft));
+static void reportInstrument(P1(ft_t ft));
 
 void aiffstartread(ft) 
 ft_t ft;
@@ -366,7 +365,7 @@ ft_t ft;
 }
 
 /* print out the MIDI key allocations, loop points, directions etc */
-void reportInstrument(ft)
+static void reportInstrument(ft)
 ft_t ft;
 {
   int loopNum;
@@ -393,7 +392,7 @@ ft_t ft;
 }
 
 /* Process a text chunk, allocate memory, display it if verbose and return */
-void textChunk(text, chunkDescription, ft) 
+static void textChunk(text, chunkDescription, ft) 
 char **text;
 char *chunkDescription;
 ft_t ft;
@@ -532,7 +531,7 @@ ft_t ft;
 	aiffwriteheader(ft, p->nsamples / ft->info.channels);
 }
 
-void aiffwriteheader(ft, nframes)
+static void aiffwriteheader(ft, nframes)
 ft_t ft;
 LONG nframes;
 {
@@ -635,7 +634,7 @@ LONG nframes;
 	wlong(ft, (LONG) 0); /* block size */
 }
 
-double read_ieee_extended(ft)
+static double read_ieee_extended(ft)
 ft_t ft;
 {
 	char buf[10];
@@ -644,7 +643,7 @@ ft_t ft;
 	return ConvertFromIeeeExtended(buf);
 }
 
-void write_ieee_extended(ft, x)
+static void write_ieee_extended(ft, x)
 ft_t ft;
 double x;
 {
@@ -701,7 +700,7 @@ double x;
 
 # define FloatToUnsigned(f)      ((ULONG)(((LONG)(f - 2147483648.0)) + 2147483647L) + 1)
 
-void ConvertToIeeeExtended(num, bytes)
+static void ConvertToIeeeExtended(num, bytes)
 double num;
 char *bytes;
 {
@@ -800,7 +799,7 @@ char *bytes;
  * Extended precision IEEE floating-point conversion routine.
  ****************************************************************/
 
-double ConvertFromIeeeExtended(bytes)
+static double ConvertFromIeeeExtended(bytes)
 unsigned char *bytes;	/* LCN */
 {
     double    f;
