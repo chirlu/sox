@@ -100,6 +100,10 @@ sox \- Sound eXchange : universal sound sample translator
 .br
              [ \fIgain\fR [ \fIinitial-volume\fR [ \fIdelay\fR ] ] ]" xover_freq
 .br
+    \fBnoiseprof\fR [\fIprofile-file\fR]
+.br
+    \fBnoisered\fR \fIprofile-file\fR [threshold]
+.br
     \fBpan\fR \fIdirection\fR
 .br
     \fBphaser\fR \fIgain-in gain-out delay decay speed\fR < -s | -t >
@@ -937,6 +941,26 @@ mcompand "\fIattack1,decay1\fR[,\fIattack2,decay2\fR...]
 Multi-band compander is similar to the single band compander but
 the audio file is first divided up into bands and then the compander
 is ran on each band.  See the \fBcompand\fR effect for definition of its options.  Compand options are specified between double quotes and the crossover frequency for that band is specefied seperately with \fIxover_fre\fR.  This can be repeated multiple times to create multiple bands.
+.TP
+noiseprof [\fIprofile-file\fR]
+.TP 10
+noisered \fIprofile-file\fR [\fIthreshold\fR]
+Noise reduction filter with profiling. This filter is moderately effective at
+removing consistent background noise such as hiss or hum. To use it, first run
+the \fBnoiseprof\fR effect on a section of silence
+(that is, a section which contains
+nothing but noise). The \fBnoiseprof\fR effect will print a noise profile
+to \fIprofile-fire-fR, or to stdout if no \fIprofile-file\fR is specified.
+If there is sound output on stdout then the profile will next be directed to
+stderr.
+
+To actually remove the noise, run SoX again with the \fInoisered\fR filter. The
+filter needs one argument, \fIprofile-file\fR, which contains the noise profile
+from noiseprof. \fIthershold\fR specifies how much noise should be removed, and
+may be between 0 and 1 with a default of 0.5. Higher values will remove more
+noise but present a greater possibility of distorting the desired audio signal.
+Experiment with different threshold values to find the optimal one for your
+sample.
 .TP 10
 pan \fIdirection\fB
 Pan the sound of an audio file from one channel to another.  This is done by

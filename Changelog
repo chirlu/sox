@@ -27,6 +27,10 @@ sox-12.17.7
     rule includes CPPFLAGS (FreeBSD).
   o Under linux, add include path to /lib/modules/* so that ALSA
     include files can be auto detected.
+  o Ian Turner added an effect to remove noise from an audio
+    file by first profiling silent periods of the audio
+    to determine what the noise is (like background hiss on
+    cassette tapes).
 
 sox-12.17.6
 -----------

@@ -80,6 +80,7 @@ The sound effects include:
   o Trim audio data from beginning and end of file.
   o Add the world-famous Fender Vibro-Champ effect
   o Adjust volume of samples
+  o Noise elimination using frequency profiling
 
 History:
 

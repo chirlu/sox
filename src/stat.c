@@ -161,7 +161,7 @@ int st_stat_start(eff_t effp)
  * Return number of samples processed.
  */
 
-extern int FFT(short dir,long m,double *x,double *y);
+static int FFT(short dir,long m,double *x,double *y);
 
 int st_stat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                  st_size_t *isamp, st_size_t *osamp)
@@ -430,7 +430,7 @@ int st_stat_stop(eff_t effp)
    dir =  1 gives forward transform
    dir = -1 gives reverse transform
 */
-int FFT(short dir,long m,double *re,double *im)
+static int FFT(short dir,long m,double *re,double *im)
 {
    long n,i,i1,j,k,i2,l,l1,l2;
    double c1,c2,tre,tim,t1,t2,u1,u2,z;

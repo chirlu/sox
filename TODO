@@ -1,6 +1,19 @@
 People are encouraged to pick some of these and implement it.  Send
 all patches to cbagwell@users.sourceforge.net.
 
+  o Remove FFT code from stat effect and use new FFT.c code.
+    Ideally, FFT needs to become LGPL license instead of
+    GPL so that it can be used as apart of LGPL libst.
+
+  o Modify noiseprof and noisered so that they can read
+    and write from stdin/out.  This would allow to run
+    them in scripts without intermediate files required.
+
+  o Several effects have to process a "window" of data at
+    one time and sox doesn't always pass that amount in.
+    Make some common routines to buffer up a window of data
+    instead of requiring each effect to reimplement this.
+
   o VOX format says its reading/writing SIGN2 data when its
     really OKI ADPCM.
 

@@ -57,6 +57,8 @@ SYNOPSIS
 	   mcompand "attack1,decay1[,attack2,decay2...]
 		    in-dB1,out-dB1[,in-dB2,out-dB2...]
 		    [ gain [ initial-volume [ delay ] ] ]" xover_freq
+	   noiseprof [profile-file]
+	   noisered profile-file [threshold]
 	   pan direction
 	   phaser gain-in gain-out delay decay speed < -s | -t >
 	   pick [ -1 | -2 | -3 | -4 | -l | -r | -f | -b ]
@@ -195,9 +197,9 @@ OPTIONS
 		 ADPCM, IMA_ADPCM, GSM, or Floating-point.
 		 U-law	(actually shorthand for mu-law) and A-law are the U.S.
 		 and international standards for logarithmic  telephone	 sound
-		 compression.	 When	uncompressed  u-law  has  roughly  the
-		 precision of 14-bit PCM audio and A-law has roughly the  pre-
-		 cision of 13-bit PCM audio.
+		 compression.	When uncompressed u-law has roughly the preci-
+		 sion of 14-bit PCM audio and A-law has roughly the  precision
+		 of 13-bit PCM audio.
 		 A-law	and  u-law  data is sometimes encoded using a reversed
 		 bit-ordering (ie. MSB becomes LSB).  Internally,  SoX	under-
 		 stands	 how to work with this encoding but there is currently
@@ -538,10 +540,10 @@ EFFECTS
 		 in  quad-channel files so select the exact channel to prevent
 		 this.
 
-		 The avg effect can also be invoked  with  up  to  16  double-
-		 precision  numbers,  seperated	 by  commas, which specify the
-		 proportion (0.0 = 0% and 1.0 = 100%) of  each	input  channel
-		 that is to be mixed into each output channel.	In two-channel
+		 The avg effect can also be invoked with up to 16  double-pre-
+		 cision	 numbers,  seperated by commas, which specify the pro-
+		 portion (0.0 = 0% and 1.0 = 100%) of each input channel  that
+		 is  to	 be  mixed  into  each output channel.	In two-channel
 		 mode, 4 numbers  are  given:  l->l,  l->r,  r->l,  and	 r->r,
 		 respectively.	In four-channel mode, the first 4 numbers give
 		 the proportions for the left-front output  channel,  as  fol-
@@ -765,6 +767,27 @@ EFFECTS
 		 between double quotes and the crossover  frequency  for  that
 		 band  is  specefied  seperately  with xover_fre.  This can be
 		 repeated multiple times to create multiple bands.
+
+       noiseprof [profile-file]
+
+       noisered profile-file [threshold]
+		 Noise reduction filter with profiling. This filter is	moder-
+		 ately	effective at removing consistent background noise such
+		 as hiss or hum. To use it, first run the noiseprof effect  on
+		 a section of silence (that is, a section which contains noth-
+		 ing but noise). The noiseprof effect will print a noise  pro-
+		 file  to  profile-fire-fR, or to stdout if no profile-file is
+		 specified.  If there is sound output on stdout then the  pro-
+		 file will next be directed to stderr.
+
+		 To actually remove the noise, run SoX again with the noisered
+		 filter. The filter needs one  argument,  profile-file,	 which
+		 contains  the	noise profile from noiseprof. thershold speci-
+		 fies how much noise should be removed, and may be  between  0
+		 and  1	 with a default of 0.5. Higher values will remove more
+		 noise but present a greater  possibility  of  distorting  the
+		 desired  audio	 signal.   Experiment with different threshold
+		 values to find the optimal one for your sample.
 
        pan direction
 		 Pan the sound of an audio file from one channel  to  another.

@@ -508,6 +508,21 @@ To raise the pitch of a sample 1 while note (100 cents):
 .P
 
 .P
+.B Reducing noise in a recording
+.P
+First find a period of silence in your recording, such as the beginning or
+end of a piece. If the first 1.5 seconds of the recording are silent, do
+.P
+.BR
+        sox file.wav -t nul /dev/null trim 0 1.5 noiseprof /tmp/profile
+.P
+Next, use the noisered effect to actually reduce the noise:
+.P
+.BR
+        play file.wav noisered /tmp/profile
+.P
+
+.P
 .B Other effects (copy, rate, avg, stat, vibro, lowp, highp, band, reverb)
 .P
 The other effects are simple to use. However, an "easy to use manual" should

@@ -442,23 +442,39 @@ EFFECTS
 
 
 
+       Reducing noise in a recording
+
+       First find a period of silence in your recording, such as the beginning
+       or  end	of  a  piece.  If  the	first 1.5 seconds of the recording are
+       silent, do
+
+
+	       sox file.wav -t nul /dev/null trim 0 1.5 noiseprof /tmp/profile
+
+       Next, use the noisered effect to actually reduce the noise:
+
+
+	       play file.wav noisered /tmp/profile
+
+
+
        Other effects (copy, rate, avg, stat, vibro, lowp, highp, band, reverb)
 
-       The  other  effects are simple to use. However, an "easy to use manual"
+       The other effects are simple to use. However, an "easy to  use  manual"
        should be given here.
 
        More effects (to do !)
 
-       There are a lot of effects around like noise gates,  compressors,  waw-
-       waw,  stereo  effects and so on. They should be implemented, making SoX
-       more useful in sound mixing techniques coming  together	with  a	 great
+       There  are  a lot of effects around like noise gates, compressors, waw-
+       waw, stereo effects and so on. They should be implemented,  making  SoX
+       more  useful  in	 sound	mixing techniques coming together with a great
        variety of different sound effects.
 
-       Combining  effects  by  using them in parallel or serially on different
-       channels needs some easy mechanism which is stable  for	use  in	 real-
+       Combining effects by using them in parallel or  serially	 on  different
+       channels	 needs	some  easy  mechanism which is stable for use in real-
        time.
 
-       Really  missing	are  the  the  changing	 of  the parameters and start-
+       Really missing are the  the  changing  of  the  parameters  and	start-
        ing/stopping of effects while playing samples in real-time!
 
        Good luck and have fun with all the effects!

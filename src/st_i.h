@@ -499,6 +499,20 @@ int st_mcompand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 int st_mcompand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_mcompand_stop(eff_t effp);
 
+int st_noiseprof_getopts(eff_t effp, int argc, char **argv);
+int st_noiseprof_start(eff_t effp);
+int st_noiseprof_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                     st_size_t *isamp, st_size_t *osamp);
+int st_noiseprof_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
+int st_noiseprof_stop(eff_t effp);
+
+int st_noisered_getopts(eff_t effp, int argc, char **argv);
+int st_noisered_start(eff_t effp);
+int st_noisered_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                     st_size_t *isamp, st_size_t *osamp);
+int st_noisered_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
+int st_noisered_stop(eff_t effp);
+
 int st_pan_getopts(eff_t effp, int argc, char **argv);
 int st_pan_start(eff_t effp);
 int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
