@@ -64,10 +64,10 @@ static int clipped = 0;         /* Volume change clipping errors */
 static int writing = 0;         /* are we writing to a file? */
 static int soxpreview = 0;      /* preview mode */
 
-static st_sample_t ibufl[BUFSIZ/2];    /* Left/right interleave buffers */
-static st_sample_t ibufr[BUFSIZ/2];
-static st_sample_t obufl[BUFSIZ/2];
-static st_sample_t obufr[BUFSIZ/2];
+static st_sample_t ibufl[ST_BUFSIZ/2];    /* Left/right interleave buffers */
+static st_sample_t ibufr[ST_BUFSIZ/2];
+static st_sample_t obufl[ST_BUFSIZ/2];
+static st_sample_t obufr[ST_BUFSIZ/2];
 
 /* local forward declarations */
 static void doopts(ft_t, int, char **);
@@ -382,7 +382,7 @@ static void open_output(ft_t ft)
 
             /* stdout tends to be line-buffered.  Override this */
             /* to be Full Buffering. */
-            if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
+            if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*ST_BUFSIZ))
             {
                 st_fail("Can't set write buffer");
             }
@@ -397,7 +397,7 @@ static void open_output(ft_t ft)
 
             /* stdout tends to be line-buffered.  Override this */
             /* to be Full Buffering. */
-            if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
+            if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*ST_BUFSIZ))
             {
                 st_fail("Can't set write buffer");
             }
@@ -630,14 +630,15 @@ static void process(void) {
     /* Reserve an output buffer for all effects */
     for(e = 0; e < neffects; e++)
     {
-        efftab[e].obuf = (st_sample_t *) malloc(BUFSIZ * sizeof(st_sample_t));
+        efftab[e].obuf = (st_sample_t *) malloc(ST_BUFSIZ * 
+		                                sizeof(st_sample_t));
         if (efftab[e].obuf == NULL)
         {
             st_fail("could not allocate memory");
         }
         if (efftabR[e].name)
         {
-            efftabR[e].obuf = (st_sample_t *) malloc(BUFSIZ * 
+            efftabR[e].obuf = (st_sample_t *) malloc(ST_BUFSIZ * 
 		                                     sizeof(st_sample_t));
             if (efftabR[e].obuf == NULL)
             {
@@ -649,7 +650,7 @@ static void process(void) {
 #ifdef SOXMIX
     for (f = 0; f < MAX_INPUT_FILES; f++)
     {
-        ibuf[f] = (st_sample_t *)malloc(BUFSIZ * sizeof(st_sample_t));
+        ibuf[f] = (st_sample_t *)malloc(ST_BUFSIZ * sizeof(st_sample_t));
         if (!ibuf[f])
         {
             st_fail("could not allocate memory");
@@ -671,13 +672,13 @@ static void process(void) {
 #ifndef SOXMIX
         efftab[0].olen = (*informat[0]->h->read)(informat[0],
                                                  efftab[0].obuf, 
-						 (st_ssize_t)BUFSIZ);
+						 (st_ssize_t)ST_BUFSIZ);
 #else
         for (f = 0; f < input_count; f++)
         {
             ilen[f] = (*informat[f]->h->read)(informat[f],
                                               ibuf[f], 
-					      (st_ssize_t)BUFSIZ);
+					      (st_ssize_t)ST_BUFSIZ);
         }
 
         efftab[0].olen = 0;
@@ -746,7 +747,7 @@ static void process(void) {
                 (* outformat->h->write)(outformat, efftab[neffects-1].obuf,
                                        (st_ssize_t) efftab[neffects-1].olen);
 
-            if (efftab[f].olen != BUFSIZ)
+            if (efftab[f].olen != ST_BUFSIZ)
                 break;
         }
     }
@@ -849,7 +850,7 @@ int e;
          * run effect over entire buffer.
          */
         idone = efftab[e-1].olen - efftab[e-1].odone;
-        odone = BUFSIZ;
+        odone = ST_BUFSIZ;
         effstatus = (* efftab[e].h->flow)(&efftab[e],
                                           &efftab[e-1].obuf[efftab[e-1].odone],
                                           efftab[e].obuf, &idone, &odone);
@@ -863,7 +864,7 @@ int e;
          * on each of them.
          */
         idone = efftab[e-1].olen - efftab[e-1].odone;
-        odone = BUFSIZ;
+        odone = ST_BUFSIZ;
         ibuf = &efftab[e-1].obuf[efftab[e-1].odone];
         for(i = 0; i < idone; i += 2) {
             ibufl[i/2] = *ibuf++;
@@ -909,12 +910,12 @@ int e;
     st_sample_t *obuf;
 
     if (! efftabR[e].name) {
-        efftab[e].olen = BUFSIZ;
+        efftab[e].olen = ST_BUFSIZ;
         (* efftab[e].h->drain)(&efftab[e],efftab[e].obuf,
                                &efftab[e].olen);
     }
     else {
-        olen = BUFSIZ;
+        olen = ST_BUFSIZ;
 
         /* left */
         olenl = olen/2;

@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/*$Header: /cvsroot/sox/sox/src/gsm/Attic/gsm.h,v 1.1 2001/11/14 03:31:26 cbagwell Exp $*/
+/*$Header: /cvsroot/sox/sox/src/gsm/Attic/gsm.h,v 1.2 2001/11/29 02:24:19 cbagwell Exp $*/
 
 #ifndef	GSM_H
 #define	GSM_H
@@ -57,14 +57,10 @@ typedef gsm_byte 		gsm_frame[33];		/* 33 * 8 bits	 */
 extern gsm  gsm_create 	GSM_P((void));
 extern void gsm_destroy GSM_P((gsm));	
 
-extern int  gsm_print   GSM_P((FILE *, gsm, gsm_byte  *));
 extern int  gsm_option  GSM_P((gsm, int, int *));
 
 extern void gsm_encode  GSM_P((gsm, gsm_signal *, gsm_byte  *));
 extern int  gsm_decode  GSM_P((gsm, gsm_byte   *, gsm_signal *));
-
-extern int  gsm_explode GSM_P((gsm, gsm_byte   *, gsm_signal *));
-extern void gsm_implode GSM_P((gsm, gsm_signal *, gsm_byte   *));
 
 #undef	GSM_P
 

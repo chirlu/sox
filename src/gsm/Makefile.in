@@ -8,9 +8,11 @@
 
 VPATH = @srcdir@
 srcdir = @srcdir@
+top_srcdir = @top_srcdir@
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 libdir = @libdir@
+mandir = @mandir@
 
 # Shell commands.
 
@@ -76,6 +78,14 @@ all: libgsm.a
 libgsm.a: $(LIBOBJS)
 	$(AR) libgsm.a $(LIBOBJS)
 	$(RANLIB) libgsm.a
+
+install-lib: libgsm.a
+	$(top_srcdir)/mkinstalldirs $(libdir)
+	$(top_srcdir)/mkinstalldirs $(mandir)/man3
+	$(INSTALL) -c -m 644 libgsm.a $(libdir)
+	$(RANLIB) $(libdir)/libgsm.a
+	$(INSTALL) -c -m 644 gsm.3 $(mandir)/man3
+	$(INSTALL) -c -m 644 gsm_option.3 $(mandir)/man3
 
 clean:
 	$(RM) *.o

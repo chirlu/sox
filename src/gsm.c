@@ -114,7 +114,8 @@ st_ssize_t st_gsmread(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 	while (done < samp)
 	{
 		while (p->samplePtr < p->sampleTop && done < samp)
-			buf[done++] = LEFT(*(p->samplePtr)++, 16);
+			buf[done++] = 
+			    ST_SIGNED_WORD_TO_SAMPLE(*(p->samplePtr)++);
 
 		if (done>=samp) break;
 
@@ -187,7 +188,8 @@ st_ssize_t st_gsmwrite(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 	while (done < samp)
 	{
 		while ((p->samplePtr < p->sampleTop) && (done < samp))
-			*(p->samplePtr)++ = RIGHT(buf[done++], 16);
+			*(p->samplePtr)++ = 
+			    ST_SAMPLE_TO_SIGNED_WORD(buf[done++]);
 
 		if (p->samplePtr == p->sampleTop)
 		{

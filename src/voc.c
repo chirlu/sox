@@ -233,7 +233,7 @@ st_ssize_t st_vocread(ft_t ft, st_sample_t *buf, st_ssize_t len)
         vs_t v = (vs_t) ft->priv;
         int done = 0;
         int rc;
-        unsigned short us;
+        int16_t sw;
         unsigned char uc;
 
         if (v->rest == 0)
@@ -260,18 +260,17 @@ st_ssize_t st_vocread(ft_t ft, st_sample_t *buf, st_ssize_t len)
                                     v->rest = 0;
                                     return done;
                                 }
-                                uc ^= 0x80;     /* convert to signed */
-                                *buf++ = LEFT(uc, 24);
+                                *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(uc);
                                 break;
                             case ST_SIZE_WORD:
-                                st_readw(ft, &us);
+                                st_readw(ft, &sw);
                                 if (feof(ft->fp))
                                 {
                                     st_warn("VOC input: short file");
                                     v->rest = 0;
                                     return done;
                                 }
-                                *buf++ = LEFT(us, 16);
+                                *buf++ = ST_SIGNED_WORD_TO_SAMPLE(sw);
                                 v->rest--; /* Processed 2 bytes so update */
                                 break;
                         }
@@ -336,7 +335,7 @@ st_ssize_t st_vocwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
         vs_t v = (vs_t) ft->priv;
         unsigned char uc;
-        int sw;
+        int16_t sw;
         st_ssize_t done = 0;
 
         if (v->samples == 0) {
@@ -347,11 +346,10 @@ st_ssize_t st_vocwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
         v->samples += len;
         while(done < len) {
           if (ft->info.size == ST_SIZE_BYTE) {
-            uc = RIGHT(*buf++, 24);
-            uc ^= 0x80;
+            uc = ST_SAMPLE_TO_UNSIGNED_BYTE(*buf++);
             st_writeb(ft, uc);
           } else {
-                sw = (int) RIGHT(*buf++, 16);
+            sw = (int) ST_SAMPLE_TO_SIGNED_WORD(*buf++);
             st_writew(ft,sw);
           }
           done++;

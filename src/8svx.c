@@ -229,7 +229,7 @@ st_ssize_t st_svxread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 			if (feof(p->ch[i]))
 				return done;
 			/* scale signed up to long's range */
-			*buf++ = LEFT(datum, 24);
+			*buf++ = ST_SIGNED_BYTE_TO_SAMPLE(datum);
 		}
 		done += ft->info.channels;
 	}
@@ -303,7 +303,7 @@ st_ssize_t st_svxwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 
 	while(done < len) {
 		for (i = 0; i < ft->info.channels; i++) {
-			datum = RIGHT(*buf++, 24);
+			datum = ST_SAMPLE_TO_SIGNED_BYTE(*buf++);
 			/* FIXME: Needs to pass ft struct and not FILE */
 			putc(datum, p->ch[i]);
 		}

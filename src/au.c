@@ -321,9 +321,9 @@ st_ssize_t st_auread(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 		return st_rawread(ft, buf, samp);
 	done = 0;
 	while (samp > 0 && unpack_input(ft, &code) >= 0) {
-		*buf++ = LEFT((*p->dec_routine)(code, AUDIO_ENCODING_LINEAR,
-						&p->state),
-			      16);
+		*buf++ = ST_SIGNED_WORD_TO_SAMPLE(
+			(*p->dec_routine)(code, AUDIO_ENCODING_LINEAR,
+	  				  &p->state));
 		samp--;
 		done++;
 	}

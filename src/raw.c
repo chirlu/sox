@@ -65,13 +65,13 @@ int st_rawseek(ft_t ft, st_size_t offset)
 
 int st_rawstartread(ft_t ft)
 {
-    ft->file.buf = malloc(BUFSIZ);
+    ft->file.buf = malloc(ST_BUFSIZ);
     if (!ft->file.buf)
     {
         st_fail_errno(ft,ST_ENOMEM,"Unable to alloc resources");
         return(ST_EOF);
     }
-    ft->file.size = BUFSIZ;
+    ft->file.size = ST_BUFSIZ;
     ft->file.count = 0;
     ft->file.pos = 0;
     ft->file.eof = 0;
@@ -81,13 +81,13 @@ int st_rawstartread(ft_t ft)
 
 int st_rawstartwrite(ft_t ft)
 {
-    ft->file.buf = malloc(BUFSIZ);
+    ft->file.buf = malloc(ST_BUFSIZ);
     if (!ft->file.buf)
     {
         st_fail_errno(ft,ST_ENOMEM,"Unable to alloc resources");
         return(ST_EOF);
     }
-    ft->file.size = BUFSIZ;
+    ft->file.size = ST_BUFSIZ;
     ft->file.pos = 0;
     ft->file.eof = 0;
 

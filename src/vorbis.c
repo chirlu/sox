@@ -237,8 +237,8 @@ st_ssize_t st_vorbisread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 			}
 		}
 
-		l = LEFT(vb->buf[vb->start+1],24) 
-			| (0xffffff &  LEFT(vb->buf[vb->start], 16));
+		l = (vb->buf[vb->start+1]<<24) 
+			| (0xffffff &  (vb->buf[vb->start]<<16));
 		*(buf + i) = l;
 		vb->start += 2;
 	}

@@ -13,6 +13,10 @@ sox-12.17.3
     as the device is open and the buffered data can be in a
     wrong format.
   o trim wasn't accounting for # of channels and was generally broken.
+  o Jeff Bonggren fixed trim bugs were it was failing when triming
+    data that equaled to BUFSIZ.  Also, trim now immediately returns
+    ST_EOF when its done instead of requiring an extra call that
+    returns no data.
   o auto effect wasn't rewinding the file if the file was less then
     132 bytes.  Changed auto parsing of header to be incremental
     instead of reading in a large buffer.

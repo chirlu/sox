@@ -32,7 +32,6 @@ typedef struct
     /* internal stuff */
     st_size_t index;
     st_size_t trimmed;
-    int done;
 } * trim_t;
 
 /*
@@ -116,7 +115,6 @@ int st_trim_start(eff_t effp)
     /* Account for # of channels */
     trim->length *= effp->ininfo.channels;
 
-    trim->done = 0;
     trim->index = 0;
     trim->trimmed = 0;
 
@@ -132,68 +130,61 @@ int st_trim_start(eff_t effp)
 int st_trim_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
                  st_size_t *isamp, st_size_t *osamp)
 {
-    int done;
-    int offset;
+    int finished = 0;
     int start_trim = 0;
+    int offset = 0;
+    int done;
 
     trim_t trim = (trim_t) effp->priv;
 
     /* Compute the most samples we can process this time */
     done = ((*isamp < *osamp) ? *isamp : *osamp);
 
-    /* Always report that we've read everything for default case */
-    *isamp = done;
-
-    /* Don't bother doing work if we are done */
-    if (trim->done) {
-	*osamp = 0;
-	return (ST_EOF);
-    }
-
-    /* Default to assuming we will read all input data possible */
-    trim->index += done;
-    offset = 0;
-
     /* Quick check to see if we are trimming off the back side yet.
      * If so then we can skip trimming from the front side.
      */
-    if (! trim->trimmed) {
-	if (trim->start > trim->index) {
+    if (!trim->trimmed) {
+	if ((trim->index+done) <= trim->start) {
 	    /* If we haven't read more then "start" samples, return that
 	     * we've read all this buffer without outputing anything
 	     */
 	    *osamp = 0;
+	    *isamp = done;
+	    trim->index += done;
 	    return (ST_SUCCESS);
 	} else {
 	    start_trim = 1;
 	    /* We've read at least "start" samples.  Now find
-	     * out if we've read to much and if so compute a location
-	     * to start copying data from.  Also use this going forward
-	     * as the amount of data read during trimmed check.
+	     * out where our target data begins and subtract that
+	     * from the total to be copied this round.
 	     */
-	    offset = done - (trim->index - trim->start);
-	    done = trim->index - trim->start;
+	    offset = trim->start - trim->index;
+	    done -= offset;
 	}
     } /* !trimmed */
 
-    if (trim->trimmed || start_trim ) {
-
-	if (trim->length && ( (trim->trimmed+done) > trim->length)) {
-	    /* Compute the amount of unprocessed data left in this
-	     * buffer and remove from isamp count and amount done.
+    if (trim->trimmed || start_trim) {
+	if (trim->length && ((trim->trimmed+done) >= trim->length)) {
+	    /* Since we know the end is in this block, we set done
+	     * to the desired length less the amount already read.
 	     */
-	    *isamp -= ((trim->trimmed+done) - trim->length);
-	    done -= ((trim->trimmed+done) - trim->length);
-	    *osamp = done;
-	    trim->done = 1;
+	    done = trim->length - trim->trimmed;
+	    finished = 1;
 	}
 
 	trim->trimmed += done;
     }
 
     memcpy(obuf, ibuf+offset, done * sizeof(st_sample_t));
+
     *osamp = done;
-    return (ST_SUCCESS);
+    *isamp = offset + done;
+    trim->index += done;
+
+    if (finished)
+	return (ST_EOF);
+    else
+	return (ST_SUCCESS);
 }
 
 /*

@@ -109,9 +109,6 @@ int st_is_littleendian(void);
  */
 #define ST_MAXRATE      50L * 1024 /* maximum sample rate in library */
 
-#define RIGHT(datum, bits)      ((datum) >> bits)
-#define LEFT(datum, bits)       ((datum) << bits)
-
 #ifndef M_PI
 #define M_PI    3.14159265358979323846
 #endif
@@ -123,6 +120,12 @@ int st_is_littleendian(void);
 #define ST_INT16_MAX (32676)
 #define ST_INT32_MAX (2147483647)
 #define ST_INT64_MAX (9223372036854775807)
+
+/* The following is used at times in libst when alloc()ing buffers
+ * to perform file I/O.  It can be useful to pass in similar sized
+ * data to get max performance.
+ */
+#define ST_BUFSIZ 8192
 
 /*=============================================================================
  * File Handlers

@@ -217,7 +217,7 @@ int st_stat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 /* work in scaled levels for both sample and delta */
                 lsamp = *ibuf++;
                 samp = (double)lsamp/stat->scale;
-                stat->bin[RIGHT(lsamp,30)+2]++;
+                stat->bin[(lsamp>>30)+2]++;
                 *obuf++ = lsamp;
 
 

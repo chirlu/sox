@@ -3,6 +3,9 @@ all patches to cbagwell@users.sourceforge.net.
 
   o Get nul effect and oss driver compiling under latest cygwin.
 
+  o Several files are using hard-coded #'s instead of ST_SAMPLE_MIN/MAX.
+    Change these.
+
   o Make a global version of MIN/MAX instead of sprinkled min/max/MIN/MAX
 
   o Make a global version of clip() instead of sprinked in all files.

@@ -327,7 +327,7 @@ st_ssize_t st_smpread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 	for(; done < len && smp->NoOfSamps; done++, smp->NoOfSamps--) {
 		st_readw(ft, &datum);
 		/* scale signed up to long's range */
-		*buf++ = LEFT(datum, 16);
+		*buf++ = ST_SIGNED_WORD_TO_SAMPLE(datum);
 	}
 	return done;
 }
@@ -389,7 +389,7 @@ st_ssize_t st_smpwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 	st_ssize_t done = 0;
 
 	while(done < len) {
-		datum = (int) RIGHT(*buf++, 16);
+		datum = (int) ST_SAMPLE_TO_SIGNED_WORD(*buf++);
 		st_writew(ft, datum);
 		smp->NoOfSamps++;
 		done++;
