@@ -14,19 +14,21 @@
 sox \- Sound eXchange : universal sound sample translator
 .SH SYNOPSIS
 .P
-\fBsox\fR \fIinfile outfile\fR
+\fBsox\fR \fIinfile1\fR [ \fIinfile2\fR ... ] \fIoutfile\fR
 .P
-\fBsox\fR [ \fIgeneral options\fR ] [ \fIformat options\fR ] \fIinfile\fR
+\fBsox\fR [ \fIgeneral options\fR ] [ \fIformat options\fR ] \fIinfile1\fR
 .br
-    [ \fIformat options\fR ] \fIoutfile\fR
+    [ [ \fIformat options\fR ] \fIinfile2\fR ... ] [ \fIformat options\fR ] \fIoutfile\fR
 .br
     [ \fIeffect\fR [ \fIeffect options\fR ] ... ]
 .P
-\fBsoxmix\fR \fIinfile1 infile2 outfile\fR
+\fBsoxmix\fR \fIinfile1 infile2\fR [ \fIinfile3\fR ... ] outfile\fR
 .P
 \fBsoxmix\fR [ \fIgeneral options\fR ] [ \fIformat options\fR ] \fIinfile1\fR
 .br
     [ \fIformat options\fR ] \fIinfile2\fR
+.br
+    [ [ \fIformat options\fR ] \fIinfile3\fR ... ]
 .br
     [ \fIformat options\fR ] \fIoutfile\fR
 .br
@@ -35,12 +37,12 @@ sox \- Sound eXchange : universal sound sample translator
 .P
 .B General options:
 .br
-    [ -h ] [ -p ] [ -v \fIvolume\fR ] [ -V ]
+    [ -h ] [ -p ] [ -V ]
 .P
 .B Format options:
 .br
     [ -t \fIfiletype\fR ] [ -r \fIrate\fR ] [ -s/-u/-U/-A/-a/-i/-g/-f ]
-    [ -b/-w/-l/-d ]
+    [ -b/-w/-l/-d ] [ -v \fIvolume\fR ]
     [ -c \fIchannels\fR ] [ -x ] [ -e ]
 .P
 .B Effects:
@@ -139,16 +141,20 @@ sox \- Sound eXchange : universal sound sample translator
 is a command line program that can convert most popular audio files
 to most other popular audio file formats.  It can optionally change
 the audio sample data type and apply one or more
-sound effects to the file during this translation.
+sound effects to the file during this translation.  
+.P
+If more then one input file is specified then they are concatenated into the
+output file.  In this case, it has a restriction that all input files
+must be of the same data type and sample rates.
 .P
 .I soxmix
 is functionally the same as the command line program
 .I sox
-expect that it takes two files as input and mixes the audio together
-to produce a single file as output.  It has a restriction that both
+expect that it takes two or more files as input and mixes the audio together
+to produce a single file as output.  It has a restriction that all
 input files must be of the same data type and sample rates.
 .P
-There are two types of audio files formats that
+There are two types of audio file formats that
 .I SoX
 can work with.  The first are self-describing file formats.  These
 contain a header that completely describe the characteristics of
@@ -227,6 +233,32 @@ different rates then a sample rate change effect must be ran.  If a
 sample rate changing effect is not specified then a default one will internally
 be ran by SoX using its default parameters.
 .TP 10
+\fB-v \fIvolume\fR
+Change amplitude (floating point); 
+less than 1.0 decreases, greater than 1.0 increases.  May use a negative
+number to invert the phase of the audio data.  It is interesting to note
+that we perceive volume
+logarithmically but this adjusts the amplitude linearly.
+.br
+As with other format options, the volume option effects the
+file its specified with.  This is useful whe processing mutiple
+input files as the volume adjustment can be specified for each
+input file or just once to adjust the output file.  This can be
+compared to an audio mixer were you can control the volume of
+each input as well as a master volume (output side).
+.br
+\fIsoxmix\fR defaults the value of the -v option for each input
+file to 1/input_file_count.  This means if your mixing two
+input files together then each input file's volume is adjusted
+by 0.5.  This is done to prevent clipping of audio data during
+the mixing operation. 
+Users will most likely not be happy with this large of a volume adjustment
+and can specify the -v option to override this default value.
+.br
+Note: For the non-mixing case, see the \fBstat\fR effect for information on 
+finding the maximum volume adjustment that can be done with this option 
+without causing audio data to be clipped.
+.TP 10
 \fB-s/-u/-U/-A/-a/-i/-g/-f\fR
 The sample data encoding is signed linear (2's complement),
 unsigned linear, u-law (logarithmic), A-law (logarithmic),
@@ -299,17 +331,6 @@ SoX when the output format has a different number of channels and
 a different rate than the input file.  Currently, this defaults to
 using the \fBrate\fR effect instead of the \fBresample\fR effect for sample
 rate changes.
-.TP 10
-\fB-v \fIvolume\fR
-Change amplitude (floating point); 
-less than 1.0 decreases, greater than 1.0 increases.  May use a negative
-number to invert the phase of the audio data.  It is interesting to note
-that we perceive volume
-logarithmically but this adjusts the amplitude linearly.
-.br
-Note: see the \fBstat\fR effect for information on finding the maximum
-value that can be used with this option without causing audio data be
-be clipped.
 .TP 10
 \fB-V\fR
 Print a description of processing phases.

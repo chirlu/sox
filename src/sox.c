@@ -94,7 +94,7 @@ static int flow_effect_out(void);
 static int flow_effect(int);
 static int drain_effect(int);
 
-#define MAX_INPUT_FILES 2
+#define MAX_INPUT_FILES 32
 #define MAX_FILES MAX_INPUT_FILES + 1
 #ifdef SOXMIX
 #define REQUIRED_INPUT_FILES 2
@@ -681,6 +681,14 @@ static void process(void) {
             }
             efftab[0].olen = 0;
         }
+
+        /* Adjust input side volume based on value specified
+         * by user for this file.
+         */
+        if (file_opts[current_input]->volume != 1.0)
+            clipped += volumechange(efftab[0].obuf, 
+                                    efftab[0].olen,
+                                    file_opts[current_input]->volume);
 #else
         for (f = 0; f < input_count; f++)
         {
@@ -693,11 +701,16 @@ static void process(void) {
              */
             if (ilen[f] == ST_EOF)
                 ilen[f] = 0;
+
+            /* Adjust input side volume based on value specified
+             * by user for this file.
+             */
+            if (file_opts[f]->volume != 1.0)
+                clipped += volumechange(ibuf[f], 
+                                        ilen[f],
+                                        file_opts[f]->volume);
         }
 
-        /* FIXME: Run threw input data and change its volume
-         * based on value in in_file_opts[x]->volume
-         */
         /* FIXME: Should report if the size of the reads are not
          * the same.
          */
@@ -708,18 +721,36 @@ static void process(void) {
 
         for (s = 0; s < efftab[0].olen; s++)
         {
-            /* Mix data together by dividing by the number
-             * of audio files and then summing up.  This prevents
-             * overflows.
+            /* Mix data together by summing samples together.
+             * It is assumed that input side volume adjustments
+             * will take care of any possible overflow.
+             * By default, SoX sets the volume adjustment
+             * to 1/input_count but the user can override this.
+             * They probably will and some clipping will probably
+             * occur because of this.
              */
             for (f = 0; f < input_count; f++)
             {
                 if (f == 0)
                     efftab[0].obuf[s] =
-                        (s<(st_size_t)ilen[f]) ? (ibuf[f][s]/input_count) : 0;
+                        (s<(st_size_t)ilen[f]) ? ibuf[f][s] : 0;
                 else
                     if (s < (st_size_t)ilen[f])
-                        efftab[0].obuf[s] += ibuf[f][s]/input_count;
+                    {
+                        double sample;
+                        sample = efftab[0].obuf[s] + ibuf[f][s];
+                        if (sample < ST_SAMPLE_MIN)
+                        {
+                            sample = ST_SAMPLE_MIN;
+                            clipped++;
+                        }
+                        else if (sample > ST_SAMPLE_MAX)
+                        {
+                            sample = ST_SAMPLE_MAX;
+                            clipped++;
+                        }
+                        efftab[0].obuf[s] = sample;
+                    }
             }
         }
 #endif
@@ -1196,12 +1227,12 @@ static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct,
         top = buf+ct;
         while (p < top) {
             y = vol * *p;
-            if (y < -2147483647.0) {
-                y = -2147483647.0;
+            if (y < ST_SAMPLE_MIN) {
+                y = ST_SAMPLE_MIN;
                 clips++;
             }
-            else if (y > 2147483647.0) {
-                y = 2147483647.0;
+            else if (y > ST_SAMPLE_MAX) {
+                y = ST_SAMPLE_MAX;
                 clips++;
             }
             *p++ = y + 0.5;

@@ -27,6 +27,11 @@ sox-12.17.6
     cause SoX to stick in a loop forever.  Now, it will
     abort on IDv3 tags larger then 100k.  Could still be
     improved to handle any size.
+  o Changed volume option (-v) so that it tracks the file
+    it was specified.  This means that when specified with
+    the input file, it changes volume before effects engine
+    and when specified with output file, its done after effects
+    engine.
 
 sox-12.17.5
 -----------
