@@ -47,7 +47,7 @@ struct readpriv {
 	short sample;
 };
 
-static int skipbytes(P2(ft_t, int));
+static int skipbytes(ft_t, int);
 
 int st_hcomstartread(ft)
 ft_t ft;

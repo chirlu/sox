@@ -73,7 +73,7 @@ char **argv;
 			avg->mix = MIX_FRONT;
 		else if (!strcmp(argv[0], "-b"))
 			avg->mix = MIX_BACK;
-		else if (argv[0][0] == '-' && !isdigit(argv[0][1])
+		else if (argv[0][0] == '-' && !isdigit((int)argv[0][1])
 		    && argv[0][1] != '.') {
 			st_fail("Usage: avg [ -l | -r | -f | -b | n,n,n...,n ]");
 			return (ST_EOF);

@@ -114,7 +114,7 @@ typedef struct wavstuff {
 
 static char *wav_format_str();
 
-static int wavwritehdr(P2(ft_t, int));
+static int wavwritehdr(ft_t, int);
 
 
 /****************************************************************************/

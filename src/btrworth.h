@@ -31,9 +31,9 @@
 
  */
 
-int st_butterworth_start (P1 (eff_t effp));
-int st_butterworth_flow (P5 (eff_t effp, LONG *ibuf, LONG *obuf,
-                             LONG *isamp, LONG *osamp));
+int st_butterworth_start (eff_t effp);
+int st_butterworth_flow (eff_t effp, LONG *ibuf, LONG *obuf,
+                         LONG *isamp, LONG *osamp);
 
 typedef struct butterworth {
   double x [2];

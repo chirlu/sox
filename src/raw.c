@@ -31,7 +31,7 @@
 
 #define MAXWSPEED 1
 
-static void rawdefaults(P1(ft_t ft));
+static void rawdefaults(ft_t ft);
 
 int st_rawstartread(ft) 
 ft_t ft;

@@ -31,7 +31,7 @@ struct maudstuff { /* max. 100 bytes!!!! */
 	ULONG nsamples;
 };
 
-static void maudwriteheader(P1(ft_t));
+static void maudwriteheader(ft_t);
 
 /*
  * Do anything required before you start reading samples.

@@ -211,6 +211,7 @@ man: sox.1 libst.3
 install: sox
 	if [ -f $(BINDIR)/rec ] ; then $(RM) $(BINDIR)/rec ; fi
 	if [ -f $(MANDIR)/man1/rec.1 ] ; then $(RM) $(MANDIR)/man1/rec.1 ; fi
+	sed -e 's|@PREFIX@|$(BINDIR)|g' < play.in > play
 	install -c -m 755 sox play $(BINDIR)
 	install -c -m 644 sox.1 soxexam.1 play.1 $(MANDIR)/man1
 	ln -s $(BINDIR)/play $(BINDIR)/rec

@@ -52,9 +52,9 @@ typedef struct filterstuff {
 
 /* makeFilter() declared in resample.c */
 extern int 
-makeFilter(P6(Float Fp[], LONG Nwing, double Froll, double Beta, LONG Num, int Normalize));
+makeFilter(Float Fp[], LONG Nwing, double Froll, double Beta, LONG Num, int Normalize);
 
-static void FiltWin(P2(filter_t f, LONG Nx));
+static void FiltWin(filter_t f, LONG Nx);
 
 /*
  * Process options

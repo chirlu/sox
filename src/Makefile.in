@@ -64,10 +64,16 @@ LIBOBJS = $(FOBJ) $(EOBJ) handlers.o libst.o misc.o util.o getopt.o $(EXTRAOBJS)
 
 VPATH	= @srcdir@
 
-all: sox
+PLAY_0    =
+PLAY_1    = play
+
+all: sox $(PLAY_$(PLAY_SUPPORT))
 
 sox: libst.a sox.o
 	$(CC) $(LDFLAGS) -o sox sox.o $(LIBS)
+
+play: play.in
+	$(SED) -e 's|@PREFIX@|$(BINDIR)|g' < play.in > play
 
 libst.a: $(LIBOBJS)
 	$(AR) libst.a $(LIBOBJS)
@@ -111,7 +117,7 @@ clean:
 	$(RM) *.o
 
 distclean:
-	$(RM) *~ *.o *.raw *.sf core sox libst.a
+	$(RM) *~ *.o *.raw *.sf core sox libst.a play
 	$(RM) config.cache config.log config.status config.h Makefile
 
 tar:

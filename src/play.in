@@ -14,7 +14,7 @@
 
 # Set up path so that it can find Sox if user's path doesn't already
 # include it.
-PATH=$PATH:/usr/local/bin
+PATH=$PATH:@PREFIX@
 program_name=`basename $0`
 program_version="2.0"
 

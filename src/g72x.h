@@ -74,60 +74,60 @@ struct g72x_state {
 
 /* External function definitions. */
 
-extern void g72x_init_state(P1(struct g72x_state *));
-extern int g721_encoder(P3(
+extern void g72x_init_state(struct g72x_state *);
+extern int g721_encoder(
 		int sample,
 		int in_coding,
-		struct g72x_state *state_ptr));
-extern int g721_decoder(P3(
+		struct g72x_state *state_ptr);
+extern int g721_decoder(
 		int code,
 		int out_coding,
-		struct g72x_state *state_ptr));
-extern int g723_24_encoder(P3(
+		struct g72x_state *state_ptr);
+extern int g723_24_encoder(
 		int sample,
 		int in_coding,
-		struct g72x_state *state_ptr));
-extern int g723_24_decoder(P3(
+		struct g72x_state *state_ptr);
+extern int g723_24_decoder(
 		int code,
 		int out_coding,
-		struct g72x_state *state_ptr));
-extern int g723_40_encoder(P3(
+		struct g72x_state *state_ptr);
+extern int g723_40_encoder(
 		int sample,
 		int in_coding,
-		struct g72x_state *state_ptr));
-extern int g723_40_decoder(P3(
+		struct g72x_state *state_ptr);
+extern int g723_40_decoder(
 		int code,
 		int out_coding,
-		struct g72x_state *state_ptr));
+		struct g72x_state *state_ptr);
 
-int predictor_zero(P1(struct g72x_state *state_ptr));
-int predictor_pole(P1(struct g72x_state *state_ptr));
-int step_size(P1(struct g72x_state *state_ptr));
-int quantize(P4(int d,
-		int y,
-		short *table,
-		int size));
-int reconstruct(P3(int sign,
-		   int dqln,
-		   int y));
-void update(P8(int code_size,
-	       int y,
-	       int wi,
-	       int fi,
-	       int dq,
-	       int sr,
-	       int dqsez,
-	       struct g72x_state *state_ptr));
-int tandem_adjust_alaw(P6(int sr,
-			  int se,
-			  int y,
-			  int i,
-			  int sign,
-			  short *qtab));
-int tandem_adjust_ulaw(P6(int sr,
-			  int se,
-			  int y,
-			  int i,
-			  int sign,
-			  short *qtab));
+int predictor_zero(struct g72x_state *state_ptr);
+int predictor_pole(struct g72x_state *state_ptr);
+int step_size(struct g72x_state *state_ptr);
+int quantize(int d,
+	     int y,
+	     short *table,
+	     int size);
+int reconstruct(int sign,
+		int dqln,
+		int y);
+void update(int code_size,
+	    int y,
+	    int wi,
+	    int fi,
+	    int dq,
+	    int sr,
+	    int dqsez,
+	    struct g72x_state *state_ptr);
+int tandem_adjust_alaw(int sr,
+		       int se,
+		       int y,
+		       int i,
+		       int sign,
+		       short *qtab);
+int tandem_adjust_ulaw(int sr,
+		       int se,
+		       int y,
+		       int i,
+		       int sign,
+		       short *qtab);
 #endif /* !_G72X_H */

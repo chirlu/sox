@@ -20,7 +20,7 @@ struct wvepriv
     short repeats;
     };
 
-static void wvewriteheader(P1(ft_t ft));
+static void wvewriteheader(ft_t ft);
 
 int st_wvestartread(ft) 
 ft_t ft;

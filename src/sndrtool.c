@@ -26,7 +26,7 @@ struct sndpriv {
 #define	SEEK_CUR	1
 #endif
 
-static void  sndtwriteheader(P2(ft_t ft,LONG nsamples));
+static void  sndtwriteheader(ft_t ft,LONG nsamples);
 
 /*======================================================================*/
 /*                         SNDSTARTREAD                                */

@@ -93,22 +93,22 @@ typedef struct resamplestuff {
    Float *X, *Y;      /* I/O buffers */
 } *resample_t;
 
-static void LpFilter(P5(double c[],
-		LONG N,
-		double frq,
-		double Beta,
-		LONG Num));
+static void LpFilter(double c[],
+		     LONG N,
+		     double frq,
+		     double Beta,
+		     LONG Num);
 
 /* makeFilter is used by filter.c */
-int makeFilter(P6(Float Imp[],
-		  LONG Nwing,
-		  double Froll,
-		  double Beta,
-		  LONG Num,
-			int Normalize));
+int makeFilter(Float Imp[],
+	       LONG Nwing,
+	       double Froll,
+	       double Beta,
+	       LONG Num,
+	       int Normalize);
 
-static LONG SrcUD(P2(resample_t r, LONG Nx));
-static LONG SrcEX(P2(resample_t r, LONG Nx));
+static LONG SrcUD(resample_t r, LONG Nx);
+static LONG SrcEX(resample_t r, LONG Nx);
 
 
 /*
@@ -181,7 +181,7 @@ eff_t effp;
 	resample_t r = (resample_t) effp->priv;
 	LONG Xoff, gcdrate;
 	int i;
-	extern LONG st_gcd(P2(LONG a,LONG b));
+	extern LONG st_gcd(LONG a,LONG b);
 
 	r->Factor = (double)effp->outinfo.rate / (double)effp->ininfo.rate;
 

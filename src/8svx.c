@@ -20,7 +20,7 @@ struct svxpriv {
 	FILE *ch[4];
 };
 
-static void svxwriteheader(P2(ft_t, LONG));
+static void svxwriteheader(ft_t, LONG);
 
 /*======================================================================*/
 /*                         8SVXSTARTREAD                                */

@@ -19,7 +19,7 @@
 #include <sys/ioctl.h>
 #include "st.h"
 
-static int get_format(P3(ft_t ft, int formats, int *fmt));
+static int get_format(ft_t ft, int formats, int *fmt);
 
 #ifdef USE_OLD_API /* Start 0.4.x API */
 

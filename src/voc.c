@@ -167,9 +167,9 @@ typedef struct vocstuff {
 
 #define	min(a, b)	(((a) < (b)) ? (a) : (b))
 
-static int getblock(P1(ft_t));
-static void blockstart(P1(ft_t));
-static void blockstop(P1(ft_t));
+static int getblock(ft_t);
+static void blockstart(ft_t);
+static void blockstop(ft_t);
 
 int st_vocstartread(ft) 
 ft_t ft;

@@ -1,4 +1,4 @@
-/*)
+/*
  * Sox - The Swiss Army Knife of Audio Manipulation.
  *
  * This is the main function for the command line sox program.
@@ -42,7 +42,7 @@
 #include <getopt.h>
 #else
 #ifndef HAVE_GETOPT
-int getopt(P3(int,char **,char *));
+int getopt(int,char **,char *);
 extern char *optarg;
 extern int optind;
 #endif
@@ -77,16 +77,16 @@ static LONG obufl[BUFSIZ/2];
 static LONG obufr[BUFSIZ/2];
 
 /* local forward declarations */
-static void init(P0);
-static void doopts(P2(int, char **));
-static void usage(P1(char *))NORET;
-static int filetype(P1(int));
-static void process(P0);
-static void statistics(P0);
-static LONG volumechange(P3(LONG *buf, LONG ct, double vol));
-static void checkeffect(P0);
-static int flow_effect(P1(int));
-static int drain_effect(P1(int));
+static void init(void);
+static void doopts(int, char **);
+static void usage(char *) NORET;
+static int filetype(int);
+static void process(void);
+static void statistics(void);
+static LONG volumechange(LONG *buf, LONG ct, double vol);
+static void checkeffect(void);
+static int flow_effect(int);
+static int drain_effect(int);
 
 static struct st_soundstream informat, outformat;
 
@@ -390,7 +390,7 @@ char **argv;
 	}
 }
 
-static void init(P0) {
+static void init(void) {
 
 	/* init files */
 	informat.info.rate      = outformat.info.rate  = 0;
@@ -411,7 +411,7 @@ static void init(P0) {
  *	one buffer at a time
  */
 
-static void process(P0) {
+static void process(void) {
     int e, f, havedata, flowstatus;
 
     st_gettype(&informat);
@@ -923,7 +923,7 @@ checkeffect()
 	}
 }
 
-static void statistics(P0) {
+static void statistics(void) {
 	if (dovolume && clipped > 0)
 		st_report("Volume change clipped %d samples", clipped);
 }
@@ -998,7 +998,7 @@ char *opt;
 
 
 /* called from util.c:fail */
-void cleanup(P0) {
+void cleanup(void) {
 	/* Close the input file and outputfile before exiting*/
 	if (informat.fp)
 		fclose(informat.fp);

@@ -56,7 +56,7 @@ struct aupriv {
 	int in_bits;
 };
 
-static void auwriteheader(P2(ft_t ft, ULONG data_size));
+static void auwriteheader(ft_t ft, ULONG data_size);
 
 int st_auencodingandsize(sun_encoding, encoding, size)
 int sun_encoding;

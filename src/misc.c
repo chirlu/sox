@@ -329,8 +329,8 @@ double df;
 
 
 /* dummy routines for do-nothing functions */
-void st_nothing(P0) {}
-LONG st_nothing_success(P0) {return(0);}
+void st_nothing(void) {}
+LONG st_nothing_success(void) {return(0);}
 
 /* dummy drain routine for effects */
 void st_null_drain(effp, obuf, osamp)
@@ -379,7 +379,7 @@ unsigned int seed;
 #endif
 
 /* Util to set initial seed so that we are a little less non-random */
-void st_initrand(P0) {
+void st_initrand(void) {
 	time_t t;
 
 	time(&t);

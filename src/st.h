@@ -24,8 +24,8 @@ extern "C" {
 #include <byteswap.h>
 #endif
 
-/* Release 12.17.1 of libst */
-#define ST_LIB_VERSION_CODE 0x0c1101
+/* Release 12.17.2 of libst */
+#define ST_LIB_VERSION_CODE 0x0c1102
 #define ST_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 /* SJB: these may be changed to assist fail-recovery in libST */
@@ -58,33 +58,6 @@ extern "C" {
 #define REGPARM(n) __attribute__((regparm(n)))
 #else
 #define REGPARM(n)
-#endif
-
-/* FIXME: Move to internal st header */
-#if	defined(__STDC__) || defined(__cplusplus)
-#define	P0 void
-#define	P1(a) a
-#define	P2(a,b) a, b
-#define	P3(a,b,c) a, b, c
-#define	P4(a,b,c,d) a, b, c, d
-#define	P5(a,b,c,d,e) a, b, c, d, e
-#define	P6(a,b,c,d,e,f) a, b, c, d, e, f
-#define	P7(a,b,c,d,e,f,g) a, b, c, d, e, f, g
-#define	P8(a,b,c,d,e,f,g,h) a, b, c, d, e, f, g, h
-#define	P9(a,b,c,d,e,f,g,h,i) a, b, c, d, e, f, g, h, i
-#define	P10(a,b,c,d,e,f,g,h,i,j) a, b, c, d, e, f, g, h, i, j
-#else
-#define	P0
-#define	P1(a)
-#define	P2(a,b)
-#define	P3(a,b,c)
-#define	P4(a,b,c,d)
-#define	P5(a,b,c,d,e)
-#define	P6(a,b,c,d,e,f)
-#define	P7(a,b,c,d,e,f,g)
-#define	P8(a,b,c,d,e,f,g,h)
-#define	P9(a,b,c,d,e,f,g,h,i)
-#define	P10(a,b,c,d,e,f,g,h,i,j)
 #endif
 
 /* Signal parameters */
@@ -161,12 +134,12 @@ typedef struct st_soundstream *ft_t;
 typedef struct st_format {
 	char	**names;	/* file type names */
 	int	flags;		/* details about file type */
-	int	(*startread)(P1(ft_t ft));			
-	LONG	(*read)(P3(ft_t ft, LONG *buf, LONG len));			
-	int	(*stopread)(P1(ft_t ft));		
-	int	(*startwrite)(P1(ft_t ft));			
-	LONG	(*write)(P3(ft_t ft, LONG *buf, LONG len));
-	int	(*stopwrite)(P1(ft_t ft));		
+	int	(*startread)(ft_t ft);			
+	LONG	(*read)(ft_t ft, LONG *buf, LONG len);
+	int	(*stopread)(ft_t ft);
+	int	(*startwrite)(ft_t ft);
+	LONG	(*write)(ft_t ft, LONG *buf, LONG len);
+	int	(*stopwrite)(ft_t ft);
 } st_format_t;
 
 struct st_soundstream {
@@ -234,15 +207,15 @@ typedef struct {
 	char	*name;			/* effect name */
 	int	flags;			/* this and that */
 					/* process arguments */
-	int	(*getopts)(P3(eff_t effp, int argc, char **argv));
+	int	(*getopts)(eff_t effp, int argc, char **argv);
 					/* start off effect */
-	int	(*start)(P1(eff_t effp));
+	int	(*start)(eff_t effp);
 					/* do a buffer */
-	int	(*flow)(P5(eff_t effp, LONG *ibuf, LONG *obuf,
-			   LONG *isamp, LONG *osamp));
+	int	(*flow)(eff_t effp, LONG *ibuf, LONG *obuf,
+			LONG *isamp, LONG *osamp);
 					/* drain out at end */
-	int	(*drain)(P3(eff_t effp, LONG *obuf, LONG *osamp));
-	int	(*stop)(P1(eff_t effp));/* finish up effect */
+	int	(*drain)(eff_t effp, LONG *obuf, LONG *osamp);
+	int	(*stop)(eff_t effp);    /* finish up effect */
 } st_effect_t;
 
 struct st_effect {
@@ -261,12 +234,12 @@ struct st_effect {
 extern st_effect_t st_effects[]; /* declared in handlers.c */
 
 /* declared in misc.c */
-extern LONG st_clip24(P1(LONG)) REGPARM(1);
-extern void st_sine(P4(int *, LONG, int, int));
-extern void st_triangle(P4(int *, LONG, int, int));
+extern LONG st_clip24(LONG) REGPARM(1);
+extern void st_sine(int *, LONG, int, int);
+extern void st_triangle(int *, LONG, int, int);
 
-extern LONG st_gcd(P2(LONG,LONG)) REGPARM(2);
-extern LONG st_lcm(P2(LONG,LONG)) REGPARM(2);
+extern LONG st_gcd(LONG,LONG) REGPARM(2);
+extern LONG st_lcm(LONG,LONG) REGPARM(2);
 
 /****************************************************/
 /* Prototypes for internal cross-platform functions */
@@ -276,45 +249,45 @@ extern LONG st_lcm(P2(LONG,LONG)) REGPARM(2);
  * these type functions.
  */
 #ifndef HAVE_RAND
-extern int rand(P0);
-extern void srand(P1(unsigned int seed));
+extern int rand(void);
+extern void srand(unsigned int seed);
 #endif
-extern void st_initrand(P0);
+extern void st_initrand(void);
 
 #ifndef HAVE_STRERROR
-char *strerror(P1(int errorcode));
+char *strerror(int errorcode);
 #endif
 
 /* Read and write basic data types from "ft" stream.  Uses ft->swap for
  * possible byte swapping.
  */
 /* declared in misc.c */
-LONG	st_read(P4(ft_t ft, void *buf, int size, LONG len));
-LONG	st_write(P4(ft_t ft, void *buf, int size, LONG len));
-int	st_reads(P3(ft_t ft, char *c, int len));
-int	st_writes(P2(ft_t ft, char *c));
-int	st_readb(P2(ft_t ft, unsigned char *uc));
-int	st_writeb(P2(ft_t ft, unsigned char uc));
-int	st_readw(P2(ft_t ft, unsigned short *us));
-int	st_writew(P2(ft_t ft, unsigned short us));
-int	st_readdw(P2(ft_t ft, ULONG *ul));		
-int	st_writedw(P2(ft_t ft, ULONG ul));
-int	st_readf(P2(ft_t ft, float *f));
-int	st_writef(P2(ft_t ft, double f));
-int	st_readdf(P2(ft_t ft, double *d));
-int	st_writedf(P2(ft_t ft, double d));
+LONG	st_read(ft_t ft, void *buf, int size, LONG len);
+LONG	st_write(ft_t ft, void *buf, int size, LONG len);
+int	st_reads(ft_t ft, char *c, int len);
+int	st_writes(ft_t ft, char *c);
+int	st_readb(ft_t ft, unsigned char *uc);
+int	st_writeb(ft_t ft, unsigned char uc);
+int	st_readw(ft_t ft, unsigned short *us);
+int	st_writew(ft_t ft, unsigned short us);
+int	st_readdw(ft_t ft, ULONG *ul);		
+int	st_writedw(ft_t ft, ULONG ul);
+int	st_readf(ft_t ft, float *f);
+int	st_writef(ft_t ft, double f);
+int	st_readdf(ft_t ft, double *d);
+int	st_writedf(ft_t ft, double d);
 
 /* FIXME: raw routines are used by so many formats their prototypes are defined
  * here for convience.  This wont last for long so application software
  * shouldn't make use of it.
  */
 /* declared in raw.c */
-int st_rawstartread(P1(ft_t ft));
-int st_rawstartwrite(P1(ft_t ft));
-int st_rawstopread(P1(ft_t ft));
-int st_rawstopwrite(P1(ft_t ft));
-LONG st_rawread(P3(ft_t ft, LONG *buf, LONG nsamp));
-LONG st_rawwrite(P3(ft_t ft, LONG *buf, LONG nsamp));
+int st_rawstartread(ft_t ft);
+int st_rawstartwrite(ft_t ft);
+int st_rawstopread(ft_t ft);
+int st_rawstopwrite(ft_t ft);
+LONG st_rawread(ft_t ft, LONG *buf, LONG nsamp);
+LONG st_rawwrite(ft_t ft, LONG *buf, LONG nsamp);
 
 /* Utilities to byte-swap values, use libc optimized macro's if possible  */
 #ifdef HAVE_BYTESWAP_H
@@ -322,17 +295,17 @@ LONG st_rawwrite(P3(ft_t ft, LONG *buf, LONG nsamp));
 #define st_swapl(x) bswap_32(x)
 #define st_swapf(x) (float)bswap_32((ULONG)(x))
 #else
-unsigned short st_swapw(P1(unsigned short us));		/* Swap short */
-ULONG  	       st_swapl(P1(ULONG ul));			/* Swap long */
-float  	       st_swapf(P1(float f));			/* Swap float */
+unsigned short st_swapw(unsigned short us);		/* Swap short */
+ULONG  	       st_swapl(ULONG ul);			/* Swap long */
+float  	       st_swapf(float f);			/* Swap float */
 #endif
-double 	       st_swapd(P1(double d));			/* Swap double */
+double 	       st_swapd(double d);			/* Swap double */
 
 /* util.c */
-void st_report(P2(const char *, ...));
-void st_warn(P2(const char *, ...));
-void st_fail(P2(const char *, ...))NORET;
-void st_fail_errno(P4(ft_t, int, const char *, ...));
+void st_report(const char *, ...);
+void st_warn(const char *, ...);
+void st_fail(const char *, ...) NORET;
+void st_fail_errno(ft_t, int, const char *, ...);
 
 int st_is_bigendian(void);
 int st_is_littleendian(void);
@@ -345,20 +318,20 @@ int st_is_littleendian(void);
 #define ST_IS_LITTLEENDIAN st_is_littleendian()
 #endif
 
-int st_geteffect_opt(P3(eff_t, int, char **));
-int st_geteffect(P2(eff_t, char *));
-int st_updateeffect(P4(eff_t, ft_t, ft_t, int));
-void st_gettype(P1(ft_t));
-void st_checkformat(P1(ft_t));
-void st_copyformat(P2(ft_t, ft_t));
-void st_cmpformats(P2(ft_t, ft_t));
-double st_parsetime(P1(char *));
+int st_geteffect_opt(eff_t, int, char **);
+int st_geteffect(eff_t, char *);
+int st_updateeffect(eff_t, ft_t, ft_t, int);
+void st_gettype(ft_t);
+void st_checkformat(ft_t);
+void st_copyformat(ft_t, ft_t);
+void st_cmpformats(ft_t, ft_t);
+double st_parsetime(char *);
 
 /* FIXME: Recording hacks shouldn't display a "sigint" style interface.
  * Instead we should provide a function to call when done playing/recording.
  * sox.c should be responsible for registering to sigint.
  */
-void sigintreg(P1(ft_t));
+void sigintreg(ft_t);
 
 /* export flags */
 /* FIXME: these declared in util.c, inappropriate for lib */
@@ -390,7 +363,7 @@ extern char *myname;
 #define ST_EOF (-1)
 #define ST_SUCCESS (0)
 
-const char *st_version(P0);			/* return version number */
+const char *st_version(void);			/* return version number */
 
 /* ST specific error codes.  The rest directly map from errno. */
 #define ST_EHDR 2000		/* Invalid Audio Header */

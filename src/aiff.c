@@ -58,14 +58,14 @@ struct aiffpriv {
 };
 
 /* forward declarations */
-static double read_ieee_extended(P1(ft_t));
-static int aiffwriteheader(P2(ft_t, LONG));
-static void write_ieee_extended(P2(ft_t, double));
-static double ConvertFromIeeeExtended(P1(unsigned char*));
-static void ConvertToIeeeExtended(P2(double, char *));
-static int textChunk(P3(char **text, char *chunkDescription, ft_t ft));
-static int commentChunk(P3(char **text, char *chunkDescription, ft_t ft));
-static void reportInstrument(P1(ft_t ft));
+static double read_ieee_extended(ft_t);
+static int aiffwriteheader(ft_t, LONG);
+static void write_ieee_extended(ft_t, double);
+static double ConvertFromIeeeExtended(unsigned char*);
+static void ConvertToIeeeExtended(double, char *);
+static int textChunk(char **text, char *chunkDescription, ft_t ft);
+static int commentChunk(char **text, char *chunkDescription, ft_t ft);
+static void reportInstrument(ft_t ft);
 
 int st_aiffstartread(ft) 
 ft_t ft;

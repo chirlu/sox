@@ -20,6 +20,9 @@ sox-12.17.2
   o Jimen Ching updated ALSA configure support to auto-detect 4.x or 5.x API
     and compile correctly under those two.  All other versions are unsupported.
   o Merged in the NetBSD package changes into CVS finally.
+  o Removed broken support for non-ANSI compilers.
+  o Makefile now places the correct path to SoX in the play/rec scripts
+    based on configuration script values.
 
 sox-12.17.1
 -----------
