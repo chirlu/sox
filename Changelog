@@ -31,6 +31,9 @@ sox-12.17.1
   o Added new "earwax" effect from Edward Beingessner.  It is meant to
     be used for CD audio played through headphones.  It will move the
     sound stage from left/right to in front of you.
+  o Trim effect did not compute locations as was documented in the
+    man pages.  Changed effect so that it computed the time the
+    same way that the fade effect does.
 
 sox-12.17
 ---------

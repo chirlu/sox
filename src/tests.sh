@@ -15,7 +15,7 @@ rm -f out.raw out2.raw in.raw
 ./sox $noise -t raw -r 8196 -u -b -c 1 ub.raw -r 8196 -s -b sb.raw
 ./sox $noise -t raw -r 8196 -s -b -c 1 sb.raw -r 8196 -u -b ub2.raw
 ./sox $noise -r 8196 -u -b -c 1 ub2.raw -r 8196 ub2.voc 
-echo Comparing ub.raw o ub2.raw
+echo Comparing ub.raw to ub2.raw
 cmp -l ub.raw ub2.raw
 # skip checksum and rate byte
 echo Comparing $file.voc to ub2.voc, ignoring Comment field

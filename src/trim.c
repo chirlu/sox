@@ -13,6 +13,10 @@
 
 #include "st.h"
 
+/* Time resolutin one millisecond */
+#define TIMERES 1000
+
+#define TRIM_USAGE "Trim usage: trim start [length]"
 
 typedef struct
 {
@@ -37,18 +41,35 @@ int n;
 char **argv;
 {
         trim_t trim = (trim_t) effp->priv;
+	double time;
 
         trim->start = 0;
         trim->length = 0;
 
         switch (n) {
-                case 2:
-                        trim->length = atol(argv[1]);
+            case 2:
+			if (sscanf(argv[1], "%lf", &time) == 1)
+			{
+                            trim->length = time * TIMERES;
+			}
+			else
+			{
+			    st_fail(TRIM_USAGE);
+			    return(ST_EOF);
+			}
             case 1:
-                        trim->start = atol(argv[0]);
+			if (sscanf(argv[0], "%lf", &time) == 1)
+			{
+                            trim->start = time * TIMERES;
+			}
+			else
+			{
+			    st_fail(TRIM_USAGE);
+			    return(ST_EOF);
+			}
                         break;
                 default:
-                        st_fail("Trim usage: trim start [length]");
+                        st_fail(TRIM_USAGE);
                         return ST_EOF;
                         break;
 
@@ -65,13 +86,13 @@ eff_t effp;
         trim_t trim = (trim_t) effp->priv;
 
 
-        trim->start = (LONG)(effp->ininfo.channels * effp->ininfo.rate *  (0.001e0) * trim->start);
+        trim->start = effp->ininfo.channels * effp->ininfo.rate * trim->start / TIMERES;
         if (trim->start < 0) 
         {
                 st_fail("trim: start must be positive");
         }
 
-		trim->length = (LONG)(effp->ininfo.channels * effp->ininfo.rate * (0.001e0) * trim->length);
+	trim->length = effp->ininfo.channels * effp->ininfo.rate * trim->length / TIMERES;
         if (trim->length < 0) 
         {
                 st_fail("trim: start must be positive");
@@ -126,7 +147,6 @@ LONG *isamp, *osamp;
 	if (trim->trimmed || start_trim ) {
 
 		if (trim->length && ( (trim->trimmed+done) > trim->length)) {
-			fprintf(stderr, "passed done\n");
 			done = trim->length - trim->trimmed ;
 			*osamp = done;
 			trim->done = 1;

@@ -90,7 +90,7 @@ ft_t ft;
 		    ft->info.encoding = ST_ENCODING_ULAW;
 		}
 	    }
-	    if (strncmp(buf, "sample_rate", 11) == 0 &&
+	    if (strncmp(buf, "sample_rate ", 12) == 0 &&
 		ft->info.rate == 0)
 	    {
 #ifdef __alpha__
