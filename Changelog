@@ -32,6 +32,10 @@ sox-12.17
   o New effect 'filter' which is a high-quality DSP lowpass/
     highpass/bandpass filter using windowed sinc function
     methods, like polyphase and resample.
+  o Jan Paul Schmidt added new low/high/bandpass and bandlimit
+    filters to sox.  They have much better results then the old
+    versions of low/high/bandpass.  The new effects are all
+    Butterworth filters.
   o New data file type supported, -sl or extension .sl for
     signed 32-bit integers.  Some simplification of the raw.c
     source.
