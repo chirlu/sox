@@ -136,7 +136,6 @@ char **argv;
 
 	/* Get input format options */
 	ft = &informat;
-	clipped = 0;
 	doopts(argc, argv);
 	/* Get input file */
 	if (optind >= argc)
@@ -230,11 +229,9 @@ char **argv;
 	}
 
 	/* Check global arguments */
-	if (dovolume && volume == 0.0)
-		st_fail("Volume must be non-zero");
 
 	/* negative volume is phase-reversal */
-	if (volume < 0.0)
+	if (dovolume && volume < 0.0)
 	    st_report("Volume adjustment is negative.  This will result in a phase change\n");
 
 	/* If file types have not been set with -t, set from file names. */
@@ -259,6 +256,7 @@ char **argv;
 	/* Default the input comment to the filename. 
 	 * The output comment will be assigned when the informat 
 	 * structure is copied to the outformat. 
+	 * FIXME: Should be a memory copy, not a pointer asignment.
 	 */
 	informat.comment = informat.filename;
 

@@ -386,12 +386,11 @@ char **argv;
 		    if(n > argn){
 			/* got here by 'break', scan parms for next chan */
 		    }else{
-			
 			break;
 		    }
 		}
 	    }
-	}
+	} /* if n > argn */
     }/* for .. */
 
     /* make some intelligent parameter initialization for channels
@@ -401,7 +400,7 @@ char **argv;
      * - if parm for 2 channels were given, copy to channel 1->3, 2->4
      * - if parm for 3 channels were given, copy 2->4
      */
-    if(c == 0){
+    if(c == 0 || c >= MAXCHAN){
 	for(c=1;c<MAXCHAN;c++)
 	    parmcopy(synth,0,c);
     }else if(c == 1){
@@ -444,9 +443,6 @@ eff_t effp;
 	synth->h[i]=0.0;
     }
 
-    
-    
-    
     /* parameter adjustment for all channels */
     for(c=0;c<MAXCHAN;c++){
 	/* adjust parameter 0 - 100% to 0..1 */
@@ -454,8 +450,6 @@ eff_t effp;
 	    synth->par[c][i] /= 100.0;
 	}
     
-    
-
 	/* give parameters nice defaults for the different 'type' */
     
 	switch(synth->type[c]){
@@ -511,18 +505,6 @@ eff_t effp;
 	    default:
 		break;
 	}
-	
-	
-#if 0
-	st_warn("synth: type=%d, mix=%d, time=%lf, f1=%lf, f2=%lf",
-		synth->type[c], synth->mix[c], 
-		synth->time, synth->freq[c], synth->freq2[c]);
-	st_warn("synth: p0=%f, p1=%f, p2=%f, p3=%f, p4=%f",synth->par[c][0],
-		synth->par[c][1],synth->par[c][2],synth->par[c][3],synth->par[c][4]);
-	st_warn("synth: inchan =%d, rate=%d",
-		(int)effp->ininfo.channels,synth->rate
-	    );
-#endif
     }
     return (ST_SUCCESS);
 }
@@ -562,7 +544,6 @@ static LONG do_synth(LONG iv, synth_t synth, int c){
     sd = fmod(sd+synth->par[c][1],1.0); /* phase einbauen */
 
 
-// sd = fmod( (synth->samples_done - synth->h[c])/om + synth->par[c][1],1.0);
     switch(synth->type[c]){
 	case SYNTH_SINE:
 	    r = sin(2.0 * M_PI * sd);

@@ -17,10 +17,6 @@
  *   mix functionality.
  */ 
 
-/* FIXME: Quickly ported from 12.16 to 12.17.2... Make sure all st_*
- * functions are checking return values!
- */
-
 #include "st.h"
 #include <stdio.h>
 #include <string.h>
@@ -62,16 +58,13 @@ static double volume = 1.0;	/* Linear volume change */
 static int clipped = 0;		/* Volume change clipping errors */
 static int writing = 0;		/* are we writing to a file? */
 
-void init();
-void doopts(int, char **);
-void usage(char *);
-int filetype(int);
-void process();
-void statistics();
-LONG volumechange();
-void checkeffect(eff_t);
-int flow_effect(int);
-int drain_effect(int);
+static void init();
+static void doopts(int, char **);
+static void usage(char *);
+static int filetype(int);
+static void process();
+static void statistics();
+static LONG volumechange();
 
 struct st_soundstream informat, mixformat, outformat;
 
@@ -86,6 +79,7 @@ int argc;
 char **argv;
 {
 	myname = argv[0];
+
 	init();
 	
 	ifile = mfile = ofile = NULL;
@@ -104,6 +98,12 @@ char **argv;
 		st_fail("Can't open input file '%s': %s", 
 			ifile, strerror(errno));
 	ft->filename = ifile;
+#if	defined(DUMB_FILESYSTEM)
+	ft->seekable = 0;
+#else
+	ft->seekable = (filetype(fileno(informat.fp)) == S_IFREG);
+#endif
+
 	optind++;
 
 	/* Get mix format options */
@@ -120,11 +120,18 @@ char **argv;
 		st_fail("Can't open mix file '%s': %s", 
 			mfile, strerror(errno));
 	ft->filename = mfile;
+#if	defined(DUMB_FILESYSTEM)
+	ft->seekable = 0;
+#else
+	ft->seekable = (filetype(fileno(informat.fp)) == S_IFREG);
+#endif
+
 	optind++;
 
 	/* Get output format options */
 	ft = &outformat;
 	doopts(argc, argv);
+
 	writing = 1;
 	if (writing) {
 	    /* Get output file */
@@ -132,53 +139,26 @@ char **argv;
 		usage("No output file?");
 	    ofile = argv[optind];
 	    ft->filename = ofile;
-	    /*
-	     * There are two choices here:
-	     *	1) stomp the old file - normal shell "> file" behavior
-	     *	2) fail if the old file already exists - csh mode
-	     */
-	    if (! strcmp(ofile, "-"))
-	    {
-		ft->fp = stdout;
 
-		/* stdout tends to be line-buffered.  Override this */
-		/* to be Full Buffering. */
-		if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
-		    st_fail("Can't set write buffer");
-	    }
-	    else {
-
-		ft->fp = fopen(ofile, WRITEBINARY);
-
-		if (ft->fp == NULL)
-		    st_fail("Can't open output file '%s': %s", 
-			 ofile, strerror(errno));
-
-		/* stdout tends to be line-buffered.  Override this */
-		/* to be Full Buffering. */
-		if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
-		    st_fail("Can't set write buffer");
-
-	    } /* end of else != stdout */
-	    
 	    /* Move past filename */
 	    optind++;
+
+	    /* Hold off on opening file until the very last minute.
+	     * This allows us to verify header in input files are
+	     * what they should be and parse effect command lines.
+	     * That way if anything is found invalid, we will abort
+	     * without truncating any existing file that has the same
+	     * output filename.
+	     */
+
 	} /* end if writing */
 
 	/* Check global arguments */
-	if (volume <= 0.0)
-		st_fail("Volume must be greater than 0.0");
-	
-#if	defined(DUMB_FILESYSETM)
-	informat.seekable  = 0;
-	mixformat.seekable  = 0;
-	outformat.seekable = 0;
-#else
-	informat.seekable  = (filetype(fileno(informat.fp)) == S_IFREG);
-	mixformat.seekable  = (filetype(fileno(mixformat.fp)) == S_IFREG);
-	outformat.seekable = (filetype(fileno(outformat.fp)) == S_IFREG); 
-#endif
 
+	/* negative volume is phase-reversal */
+	if (dovolume && volume < 0.0)
+	    st_report("Volume adjustment is negative.  This will result in a phase change\n");
+	
 	/* If file types have not been set with -t, set from file names. */
 	if (! informat.filetype) {
 		if ((informat.filetype = strrchr(ifile, LASTCHAR)) != NULL)
@@ -221,12 +201,12 @@ char **argv;
 }
 
 #ifdef HAVE_GETOPT_H
-char *getoptstr = "+r:v:t:c:phsuUAagbwlfdDxV";
+char *getoptstr = "+r:v:t:c:hsuUAagbwlfdDxV";
 #else
-char *getoptstr = "r:v:t:c:phsuUAagbwlfdDxV";
+char *getoptstr = "r:v:t:c:hsuUAagbwlfdDxV";
 #endif
 
-void doopts(int argc, char **argv)
+static void doopts(int argc, char **argv)
 {
 	int c;
 	char *str;
@@ -317,6 +297,10 @@ void doopts(int argc, char **argv)
 			if (! ft) usage("-a");
 			ft->info.encoding = ST_ENCODING_ADPCM;
 			break;
+		case 'i':
+			if (! ft) usage("-i");
+			ft->info.encoding = ST_ENCODING_IMA_ADPCM;
+			break;
 		case 'g':
 			if (! ft) usage("-g");
 			ft->info.encoding = ST_ENCODING_GSM;
@@ -334,7 +318,7 @@ void doopts(int argc, char **argv)
 	}
 }
 
-void init() {
+static void init() {
 
     /* init files */
     st_initformat(&informat);
@@ -354,20 +338,33 @@ void init() {
  *	one buffer at a time
  */
 
-void process() {
+static void process() {
     LONG result, i, *ibuf, *mbuf, *obuf, ilen=0, mlen=0, olen=0;
 
-    st_gettype(&informat);
-    st_gettype(&mixformat);
+    if ( st_gettype(&informat) )
+	st_fail("bad input format");
+    
+    if ( st_gettype(&mixformat) )
+	st_fail("bad input format");
+
     if (writing)
-	st_gettype(&outformat);
+	if (st_gettype(&outformat))
+	    st_fail("bad output format");
     
     /* Read and write starters can change their formats. */
-    (* informat.h->startread)(&informat);
+    if ((* informat.h->startread)(&informat) == ST_EOF)
+    {
+	st_fail(informat.st_errstr);
+    }
+
     if (st_checkformat(&informat))
 	st_fail("bad input format");
     
-    (* mixformat.h->startread)(&mixformat);
+    if ((* mixformat.h->startread)(&mixformat) == ST_EOF)
+    {
+	st_fail(mixformat.st_errstr);
+    }
+
     if (st_checkformat(&mixformat))
 	st_fail("bad input format");
     
@@ -388,22 +385,65 @@ void process() {
     if (mixformat.comment)
 	st_report("Mix file: comment \"%s\"\n", mixformat.comment);
 
-/*
-	Expect the formats of the input and mix files to be compatible.
-	Although it's true that I could fix it up on the fly, it's easier
-	for me to tell the user to use sox to fix it first and it's also
-	more reliable; better to use the code that Chris, Lance & Co have
-	written well than for me to rewrite the same stuff badly!
-
-	Sample rates are a cause for failure.
-*/
+    /* Expect the formats to have the same sample rate.  Although its
+     * possible to auto-convert the sample rate of one file to match
+     * the other using the rate effect, its easier to tell the user
+     * to figure it out and run sox on the input file seperately to
+     * correct it before hand.
+     */
     if(informat.info.rate != mixformat.info.rate)
         st_fail("fail: Input and mix files have different sample rates.\nUse sox to resample one of them.\n");
 
     /* need to check EFF_REPORT */
     if (writing) {
+        /*
+         * There are two choices here:
+	 *	1) stomp the old file - normal shell "> file" behavior
+	 *	2) fail if the old file already exists - csh mode
+	 */
+	 if (! strcmp(ofile, "-"))
+	 {
+	    ft->fp = stdout;
+
+	    /* stdout tends to be line-buffered.  Override this */
+	    /* to be Full Buffering. */
+	    if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
+	    {
+	        st_fail("Can't set write buffer");
+	    }
+	 }
+         else {
+
+	     ft->fp = fopen(ofile, WRITEBINARY);
+
+	     if (ft->fp == NULL)
+	         st_fail("Can't open output file '%s': %s", 
+		      ofile, strerror(errno));
+
+	     /* stdout tends to be line-buffered.  Override this */
+	     /* to be Full Buffering. */
+	     if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
+	     {
+	         st_fail("Can't set write buffer");
+	     }
+
+        } /* end of else != stdout */
+#if	defined(DUMB_FILESYSTEM)
+	outformat.seekable = 0;
+#else
+	outformat.seekable  = (filetype(fileno(outformat.fp)) == S_IFREG);
+#endif
+
+	/* FIXME: We are defaulting to using the first file's format
+	 * for the output file. Should compare the two inputs and
+	 * warn user that the output file will use the first input
+	 * file's values.
+	 */
 	st_copyformat(&informat, &outformat);
-	(* outformat.h->startwrite)(&outformat);
+	if ((* outformat.h->startwrite)(&outformat) == ST_EOF)
+	{
+	    st_fail(outformat.st_errstr);
+	}
 
 	if (st_checkformat(&outformat))
 	    st_fail("bad output format");
@@ -431,16 +471,14 @@ void process() {
     /* Do the input file first */
     ilen = (*informat.h->read)(&informat, ibuf, (LONG) BUFSIZ);
     /* Change the volume of this data if needed. */
-    if(dovolume && ilen)
-	for (i = 0; i < ilen; i++)
-	    ibuf[i] = volumechange(ibuf[i]);
+    if(dovolume)
+	clipped += volumechange(ibuf, ilen, volume);
 
     /* Now do the mixfile */
     mlen = (*mixformat.h->read)(&mixformat, mbuf, (LONG) BUFSIZ);
     /* Change the volume of this data if needed. */
-    if(dovolume && mlen)
-	for (i = 0; i < mlen; i++)
-	    mbuf[i] = volumechange(mbuf[i]);
+    if(dovolume)
+	clipped += volumechange(mbuf, mlen, volume);
 
     /* mix until both input files are done */
     while (ilen || mlen) {
@@ -462,57 +500,69 @@ void process() {
 		ibuf, (LONG) BUFSIZ);
 
 	/* Change volume of these samples if needed. */
-	if(dovolume && ilen)
-	    for (i = 0; i < ilen; i++)
-		ibuf[i] = volumechange(ibuf[i]);
+	if(dovolume)
+	    clipped += volumechange(ibuf, ilen, volume);
 
 	/* Read another chunk of mix data. */
 	mlen = (*mixformat.h->read)(&mixformat, 
 		mbuf, (LONG) BUFSIZ);
 
 	/* Change volume of these samples if needed. */
-	if(dovolume && mlen)
-	    for (i = 0; i < mlen; i++)
-		mbuf[i] = volumechange(mbuf[i]);
+	if(dovolume)
+	    clipped += volumechange(ibuf, ilen, volume);
     }
 
-    (* informat.h->stopread)(&informat);
+    /* If closing fails then just warn user instead of exiting.
+     * This is because we are basically done with the files anyways.
+     */
+    if ((* informat.h->stopread)(&informat) == ST_EOF)
+	st_warn(informat.st_errstr);
     fclose(informat.fp);
 
-    (* mixformat.h->stopread)(&mixformat);
+    if ((* mixformat.h->stopread)(&mixformat) == ST_EOF)
+	st_warn(mixformat.st_errstr);
     fclose(mixformat.fp);
 
     if (writing)
-        (* outformat.h->stopwrite)(&outformat);
+        if ((* outformat.h->stopwrite)(&outformat) == ST_EOF)
+	    st_warn(outformat.st_errstr);
     if (writing)
         fclose(outformat.fp);
 }
 
 /* Guido Van Rossum fix */
-void statistics() {
+static void statistics() {
 	if (dovolume && clipped > 0)
 		st_report("Volume change clipped %d samples", clipped);
 }
 
-LONG volumechange(y)
-LONG y;
+static LONG volumechange(buf, ct, vol)
+LONG *buf;
+LONG ct;
+double vol;
 {
-	double y1;
+	double y;
+	LONG *p,*top;
+	LONG clips=0;
 
-	y1 = y * volume;
-	if (y1 < -2147483647.0) {
-		y1 = -2147483647.0;
-		clipped++;
+	p = buf;
+	top = buf+ct;
+	while (p < top) {
+	    y = vol * *p;
+	    if (y < -2147483647.0) {
+		y = -2147483647.0;
+		clips++;
+	    }
+	    else if (y > 2147483647.0) {
+		y = 2147483647.0;
+		clips++;
+	    }
+	    *p++ = y + 0.5;
 	}
-	else if (y1 > 2147483647.0) {
-		y1 = 2147483647.0;
-		clipped++;
-	}
-
-	return y1;
+	return clips;
 }
 
-int filetype(fd)
+static int filetype(fd)
 int fd;
 {
 	struct stat st;
@@ -522,10 +572,10 @@ int fd;
 	return st.st_mode & S_IFMT;
 }
 
-char *usagestr = 
+static char *usagestr = 
 "[ gopts ] [ fopts ] ifile [ fopts ] mixfile [ fopts ] ofile";
 
-void usage(opt)
+static void usage(opt)
 char *opt;
 {
     int i;
