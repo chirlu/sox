@@ -31,14 +31,9 @@ If your system does not work with the configure scripts then there are
 several canned "Makefile"'s that you can use.  The following systems
 have a canned Makefile:
 
-    AMIGA      Makefile.ami (hasn't been verified lately)
-    DOS        Makefile.dos (Borland and Turbo C)
-	    or Makefile.unx (using GCC compatible compiler)
-    OS/2       Makefile.unx (using EMX GCC compiler)
-    OS9        Makefile.os9
-    UNIX       Makefile.unx (or most platforms using GCC compatible compiler)
-    WIN95/NT   Makefile.unx (using Cynus GCC for Win32)
-            or Makefile.dos (with a little modifying for Visual C++)
+    DOS        Makefile.dos (Borland or Turbo C)
+    WIN95/NT   Makefile.dos (Needs modifying for Visual C++)
+    OS/2       Makefile.gcc (using EMX GCC compiler)
 
 You can run the makefile on most systems by using the following
 command line:

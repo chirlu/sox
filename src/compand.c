@@ -187,7 +187,7 @@ eff_t effp;
  * value, the attack rate and decay rate
  */
 
-static inline void doVolume(double *v, double samp, compand_t l, int chan)
+static void doVolume(double *v, double samp, compand_t l, int chan)
 {
   double s = samp/(~((LONG)1<<31));
   double delta = s - *v;

@@ -67,11 +67,6 @@ int getopt(P3(int,char **,char *));
  * Rewrite for multiple effects: Aug 24, 1994.
  */
 
-#ifdef AMIGA
-/* This is the Amiga version string */
-char amiversion[AmiVerSize]=AmiVerChars;      
-#endif /* AMIGA */
-
 int clipped = 0;		/* Volume change clipping errors */
 
 static LONG ibufl[BUFSIZ/2];	/* Left/right interleave buffers */

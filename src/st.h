@@ -1,15 +1,19 @@
 #ifndef ST_H
 #define ST_H
-
 /*
- * July 5, 1991
- * Copyright 1991 Lance Norskog And Sundry Contributors
+ * Sound Tools Library - October 11, 1999
+ *
+ * Copyright 1999 Chris Bagwell
+ *
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
+ * Chris Bagwell And Sundry Contributors are not responsible for 
  * the consequences of using this software.
  */
 
+/* FIXME: The following are not ST library related.  Move to a seperate
+ * file that internal formats can use.
+ */
 #ifdef VAXC
 #define IMPORT  globalref
 #define EXPORT  globaldef
@@ -33,6 +37,7 @@
 
 #include <stdio.h>
 
+/* FIXME: Move to seperate header */
 #ifdef __alpha__
 #include <sys/types.h>   /* To get defines for 32-bit integers */
 #define	LONG	int32_t
@@ -41,10 +46,6 @@
 #define	LONG	long
 #define ULONG	unsigned long
 #endif
-
-#ifdef AMIGA
-#include "amiga.h"
-#endif /* AMIGA */
 
 /*
  * Handler structure for each format.
@@ -61,10 +62,12 @@ typedef struct format {
 	void	(*stopwrite)();		
 } format_t;
 
+/* FIXME: Does this need to be here? */ 
 IMPORT format_t formats[];
 
 /* Signal parameters */
 
+/* FIXME: Change to typedef */
 struct  signalinfo {
 	LONG		rate;		/* sampling rate */
 	int		size;		/* word length of data */
@@ -74,6 +77,7 @@ struct  signalinfo {
 
 /* Loop parameters */
 
+/* FIXME: Change to typedef */
 struct  loopinfo {
 	int		start;		/* first sample */
 	int		length;		/* length */
@@ -85,6 +89,7 @@ struct  loopinfo {
 
 /* vague attempt at generic information for sampler-specific info */
 
+/* FIXME: Change to typedef */
 struct  instrinfo {
 	char 		MIDInote;	/* for unity pitch playback */
 	char		MIDIlow, MIDIhi;/* MIDI pitch-bend range */
@@ -107,6 +112,7 @@ struct  instrinfo {
  * File buffer info.  Holds info so that data can be read in blocks.
  */
 
+/* FIXME: Change to typedef */
 struct fileinfo {
 	char	*buf;			/* Pointer to data buffer */
 	int	size;			/* Size of buffer */
@@ -136,12 +142,16 @@ struct soundstream {
 	FILE	*fp;			/* File stream pointer */
 	struct	fileinfo file;		/* File data block */
 	format_t *h;			/* format struct for this file */
+	/* FIXME: I perfer void * or char * */
 	double	priv[PRIVSIZE/8];	/* format's private data area */
 };
 
+/* This shoul not be here.  Only needed in sox.c */
 IMPORT struct soundstream informat, outformat;
+
 typedef struct soundstream *ft_t;
 
+/* FIXME: Prefix all #defines with ST_ */
 /* flags field */
 #define FILE_STEREO	1	/* does file format support stereo? */
 #define FILE_LOOPS	2	/* does file format support loops? */
@@ -163,6 +173,9 @@ typedef struct soundstream *ft_t;
 #define ADPCM		5	/* Compressed PCM */
 #define GSM		6	/* GSM 6.10 33-byte frame lossy compression */
 
+/* FIXME: This shouldn't be defined inside library.  Only needed
+ * by sox.c itself.  Delete from raw.c and misc.c.
+ */
 IMPORT char *sizes[], *styles[];
 
 /*
@@ -200,6 +213,7 @@ struct effect {
 
 typedef struct effect *eff_t;
 
+/* FIXME: Move to internal st header */
 #if	defined(__STDC__)
 #define	P1(a) a
 #define	P2(a,b) a, b
@@ -224,27 +238,21 @@ typedef struct effect *eff_t;
 #define	P10(a,b,c,d,e,f,g,h,i,j)
 #endif
 
-/* Utilities to read and write shorts and longs little-endian and big-endian */
-unsigned short rlshort(P1(ft_t ft));			/* short little-end */
-unsigned short rbshort(P1(ft_t ft));			/* short big-end    */
-unsigned short wlshort(P2(ft_t ft, unsigned short us));	/* short little-end */
-unsigned short wbshort(P2(ft_t ft, unsigned short us));	/* short big-end    */
-ULONG rllong(P1(ft_t ft));			/* long little-end  */
-ULONG rblong(P1(ft_t ft));			/* long big-end     */
-ULONG wllong(P2(ft_t ft, ULONG ul));		/* long little-end  */
-ULONG wblong(P2(ft_t ft, ULONG ul));		/* long big-end     */
-/* Read and write words and longs in "machine format".  Swap if indicated.  */
+/* Read and write basic data types from "ft" stream.  Uses ft->swap for
+ * possible byte swapping.
+ */
 unsigned short rshort(P1(ft_t ft));			
 unsigned short wshort(P2(ft_t ft, unsigned short us));
-ULONG rlong(P1(ft_t ft));		
-ULONG wlong(P2(ft_t ft, ULONG ul));
+ULONG          rlong(P1(ft_t ft));		
+ULONG          wlong(P2(ft_t ft, ULONG ul));
 float          rfloat(P1(ft_t ft));
 void           wfloat(P2(ft_t ft, double f));
 double         rdouble(P1(ft_t ft));
 void           wdouble(P2(ft_t ft, double d));
 
-/* raw routines are used by so many people their prototypes are defined
- * here for convience.
+/* FIXME: raw routines are used by so many formats their prototypes are defined
+ * here for convience.  This wont last for long so application software
+ * shouldn't make use of it.
  */
 void rawstartread(P1(ft_t ft));
 void rawstartwrite(P1(ft_t ft));
@@ -268,8 +276,14 @@ IMPORT void gettype(P1(ft_t));
 IMPORT void checkformat(P1(ft_t));
 IMPORT void copyformat(P2(ft_t, ft_t));
 IMPORT void cmpformats(P2(ft_t, ft_t));
+
+/* FIXME: Recording hacks shouldn't display a "sigint" style interface.
+ * Instead we should provide a function to call when done playing/recording.
+ * sox.c should be responsible for registering to sigint.
+ */
 IMPORT void sigintreg(P1(ft_t));
 
+/* FIXME: Move to sox header file. */
 typedef	unsigned int u_i;
 typedef	ULONG u_l;
 typedef	unsigned short u_s;
@@ -289,8 +303,10 @@ IMPORT char *myname;
 
 IMPORT int soxpreview;	/* Preview mode: be fast and ugly */
 
+/* FIXME: Not externally visible currently.  Its a per-effect value. */
 #define	MAXRATE	50L * 1024			/* maximum sample rate */
 
+/* FIXME: Move to internal st header */
 #define RIGHT(datum, bits)	((datum) >> bits)
 #define LEFT(datum, bits)	((datum) << bits)
 
@@ -298,6 +314,7 @@ IMPORT int soxpreview;	/* Preview mode: be fast and ugly */
 #define M_PI	3.14159265358979323846
 #endif
 
+/* FIXME: Move to sox.h */
 #ifdef	VMS
 #define READBINARY      "r", "mbf=16", "ctx=stm" 
 #define WRITEBINARY     "w", "ctx=stm"

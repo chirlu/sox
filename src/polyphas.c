@@ -265,6 +265,7 @@ static int optimize_factors(int numer, int denom, int *l1, int *l2)
        memcpy(b2,m2,u*sizeof(int));
       }
      fail:
+      	;;
     }
     if (u_min) break;
   }
@@ -502,7 +503,7 @@ void polyphase(Float *output, polystage *s)
   }
 }
 
-static inline void update_hist(Float *hist, int hist_size, int in_size)
+static void update_hist(Float *hist, int hist_size, int in_size)
 {
   Float *p, *p1, *q;
   p = hist;

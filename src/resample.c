@@ -226,7 +226,7 @@ LONG *isamp, *osamp;
 	LONG i, last, Nout, Nx, Nproc;
 
 	/* constrain amount we actually process */
-	//fprintf(stderr,"Xp %d, Xread %d, isamp %d, ",r->Xp, r->Xread,*isamp);
+	/*fprintf(stderr,"Xp %d, Xread %d, isamp %d, ",r->Xp, r->Xread,*isamp); */
 
 	Nproc = r->Xsize - r->Xp;
 
@@ -239,7 +239,7 @@ LONG *isamp, *osamp;
 		fail("Nx not positive: %d", Nx);
 	if (Nx > *isamp)
 		Nx = *isamp;
-	//fprintf(stderr,"Nx %d\n",Nx);
+	/*fprintf(stderr,"Nx %d\n",Nx);*/
 
 	if (ibuf == NULL) {
 		for(i = r->Xread; i < Nx + r->Xread  ; i++) 
@@ -259,7 +259,7 @@ LONG *isamp, *osamp;
 		return;
 	}
 	Nout = SrcUD(r, Nproc);
-	//fprintf(stderr,"Nproc %d --> %d\n",Nproc,Nout);
+	/*fprintf(stderr,"Nproc %d --> %d\n",Nproc,Nout);*/
 	/* Move converter Nproc samples back in time */
 	r->Time -= Nproc;
 	/* Advance by number of samples processed */
@@ -279,7 +279,7 @@ LONG *isamp, *osamp;
 	LONG i,k;
 	/* Copy back portion of input signal that must be re-used */
 	k = r->Xp - r->Xoff;
-	//fprintf(stderr,"k %d, last %d\n",k,last);
+	/*fprintf(stderr,"k %d, last %d\n",k,last);*/
 	for (i=0; i<last - k; i++) 
 	    r->X[i] = r->X[i+k];
 
@@ -307,7 +307,7 @@ LONG *osamp;
 	resample_t r = (resample_t) effp->priv;
 	LONG i, Nout, Nx;
 	
-	//fprintf(stderr,"Xp %d, Xread %d  <--- DRAIN\n",r->Xp, r->Xread);
+	/*fprintf(stderr,"Xp %d, Xread %d  <--- DRAIN\n",r->Xp, r->Xread);*/
 	if (r->Xsize - r->Xread < r->Xoff)
 		fail("resample_drain: Problem!\n");
 
@@ -322,7 +322,7 @@ LONG *osamp;
 
 	/* Resample stuff in input buffer */
 	Nout = SrcUD(r, Nx);
-	//fprintf(stderr,"Nproc %d --> %d\n",Nx,Nout);
+	/*fprintf(stderr,"Nproc %d --> %d\n",Nx,Nout);*/
 
 	for(i = 0; i < Nout; i++)
 		*obuf++ = r->Y[i] * ISCALE;
