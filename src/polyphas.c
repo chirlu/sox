@@ -50,11 +50,11 @@ typedef struct {
 
 typedef struct polyphase {
 
-  st_rate_t lcmrate;   		 /* least common multiple of rates */
-  st_rate_t inskip, outskip;	 /* LCM increments for I & O rates */
+  st_rate_t lcmrate;             /* least common multiple of rates */
+  st_rate_t inskip, outskip;     /* LCM increments for I & O rates */
   double Factor;                 /* out_rate/in_rate               */
-  ulong total;          	 /* number of filter stages        */
-  st_size_t oskip;   	         /* output samples to skip at start*/
+  unsigned long total;           /* number of filter stages        */
+  st_size_t oskip;               /* output samples to skip at start*/
   double inpipe;                 /* output samples 'in the pipe'   */
   polystage *stage[MF];          /* array of pointers to polystage structs */
 
@@ -64,14 +64,14 @@ typedef struct polyphase {
  * Process options
  */
 
-/* Options:  
+/* Options:
 
    -w <nut / ham>        :  window type
    -width <short / long> :  window width
                             short = 128 samples
                             long  = 1024 samples
    <num>                    num:  explicit number
- 
+
    -cutoff <float>       :  frequency cutoff for base bandwidth.
                             Default = 0.95 = 95%
 */
@@ -79,8 +79,8 @@ typedef struct polyphase {
 static int win_type  = 0;
 static int win_width = 1024;
 static Float cutoff = 0.95;
-   
-int st_poly_getopts(eff_t effp, int n, char **argv) 
+
+int st_poly_getopts(eff_t effp, int n, char **argv)
 {
   /* 0: nuttall
      1: hamming */
@@ -194,10 +194,10 @@ static int permute(int *m, int *l, int ct, int ct1, int amalg)
   int *q;
 
   p=l; q=m;
-  while (ct1>ct) { *q++=1; ct++;} 
+  while (ct1>ct) { *q++=1; ct++;}
   while ((*q++=*p++)) ;
   if (ct<=1) return ct;
-  
+
   for (k=ct; k>1; ) {
     int tmp;
     unsigned long j;
@@ -278,7 +278,7 @@ static int optimize_factors(int numer, int denom, int *l1, int *l2)
        memcpy(b2,m2,u*sizeof(int));
       }
      fail:
-      	;;
+        ;;
     }
     if (u_min) break;
   }
@@ -313,9 +313,9 @@ static void nuttall(Float *buffer, int length)
   N1 = length/2;
 
   for(j = 0; j < length; j++) {
-    buffer[j] = 0.36335819 + 
+    buffer[j] = 0.36335819 +
       0.4891775 * cos(2*PI*1*(j - N1) / N) +
-      0.1365995 * cos(2*PI*2*(j - N1) / N) + 
+      0.1365995 * cos(2*PI*2*(j - N1) / N) +
       0.0106411 * cos(2*PI*3*(j - N1) / N);
   }
 }
@@ -332,14 +332,14 @@ static void hamming(Float *buffer, int length)
       st_fail("Illegal buffer %p or length %d to hamming.\n",buffer,length);
 
     N1 = length/2;
-    for(j=0;j<length;j++) 
+    for(j=0;j<length;j++)
       buffer[j] = 0.5 - 0.46 * cos(PI*j/N1);
 }
 
 /* Calculate the sinc function properly */
 
 static Float sinc(Float value)
-{   
+{
     return(fabs(value) < 1E-50 ? 1.0 : sin(value) / value);
 }
 
@@ -358,7 +358,7 @@ static void fir_design(Float *buffer, int length, Float cutoff)
       st_fail("Illegal buffer %p, length %d, or cutoff %f.\n",buffer,length,cutoff);
 
     /* Use the user-option of window type */
-    if(win_type == 0) 
+    if(win_type == 0)
       nuttall(buffer, length); /* Design Nuttall window:  ** dB cutoff */
     else
       hamming(buffer,length);  /* Design Hamming window:  43 dB cutoff */
@@ -378,7 +378,7 @@ static void fir_design(Float *buffer, int length, Float cutoff)
     }
     /* st_report("# end\n\n"); */
 }
- 
+
 #define RIBLEN 2048
 
 int st_poly_start(eff_t effp)
@@ -391,24 +391,24 @@ int st_poly_start(eff_t effp)
 
     if (effp->ininfo.rate == effp->outinfo.rate)
     {
-	st_fail("Input and Output rate must not be the same to use polyphase effect");
-	return(ST_EOF);
+        st_fail("Input and Output rate must not be the same to use polyphase effect");
+        return(ST_EOF);
     }
 
     st_initrand();
 
-    rate->lcmrate = st_lcm((st_sample_t)effp->ininfo.rate, 
-	                   (st_sample_t)effp->outinfo.rate);
+    rate->lcmrate = st_lcm((st_sample_t)effp->ininfo.rate,
+                           (st_sample_t)effp->outinfo.rate);
 
-    /* Cursory check for LCM overflow.  
+    /* Cursory check for LCM overflow.
      * If both rate are below 65k, there should be no problem.
      * 16 bits x 16 bits = 32 bits, which we can handle.
      */
 
     rate->inskip = rate->lcmrate / effp->ininfo.rate;
-    rate->outskip = rate->lcmrate / effp->outinfo.rate; 
-    rate->Factor = (double)rate->inskip / (double)rate->outskip; 
-    rate->inpipe = 0; 
+    rate->outskip = rate->lcmrate / effp->outinfo.rate;
+    rate->Factor = (double)rate->inskip / (double)rate->outskip;
+    rate->inpipe = 0;
     {
       int f = RIBLEN/max(rate->inskip,rate->outskip);
       if (f == 0) f = 1;
@@ -458,14 +458,14 @@ int st_poly_start(eff_t effp)
       fir_design(s->filt_array, f_len, cutoff/f_cutoff);
       /* s->filt_array[f_len-1]=0; */
 
-			skip *= s->up;
-			skip += f_len;
-			skip /= s->down;
+                        skip *= s->up;
+                        skip += f_len;
+                        skip /= s->down;
 
-			size = (size * s->up) / s->down;  /* this is integer */
+                        size = (size * s->up) / s->down;  /* this is integer */
     }
     rate->oskip = skip/2;
-		{ /* bogus last stage is for output buffering */
+                { /* bogus last stage is for output buffering */
       polystage *s;
       rate->stage[k] = s = (polystage*) malloc(sizeof(polystage));
       s->up = s->down = 0;
@@ -498,7 +498,7 @@ static double st_prod(const Float *q, int qstep, const Float *p, int n)
   }
   return sum;
 }
-    
+
 static void polyphase(Float *output, polystage *s)
 {
   int mm;
@@ -537,15 +537,15 @@ static void update_hist(Float *hist, int hist_size, int in_size)
 
 static st_sample_t clipfloat(Float sample)
 {
-	if (sample > ST_SAMPLE_MAX)
-	return ST_SAMPLE_MAX;
-	if (sample < -ST_SAMPLE_MAX)
-	return -ST_SAMPLE_MAX;
-	return sample;
+        if (sample > ST_SAMPLE_MAX)
+        return ST_SAMPLE_MAX;
+        if (sample < -ST_SAMPLE_MAX)
+        return -ST_SAMPLE_MAX;
+        return sample;
 }
 
-int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp)
+int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                 st_size_t *isamp, st_size_t *osamp)
 {
   poly_t rate = (poly_t) effp->priv;
   polystage *s0,*s1;
@@ -556,7 +556,7 @@ int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
   s1 = rate->stage[rate->total];  /* the 'last' stage is output buffer */
   {
     int in_size, gap, k;
-    
+
     in_size = *isamp;
     gap = s0->size - s0->held; /* space available in this 'input' buffer */
     if ((in_size > gap) || (ibuf==NULL)) {
@@ -564,10 +564,10 @@ int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     }
     if (in_size > 0) {
       Float *q;
-			q = s0->window + s0->hsize;
+                        q = s0->window + s0->hsize;
       if (s0!=s1) q += s0->held;  /* the last (output) buffer doesn't shift history */
       if (ibuf != NULL) {
-				rate->inpipe += rate->Factor * in_size;
+                                rate->inpipe += rate->Factor * in_size;
         for (k=0; k<in_size; k++)
           *q++ = (Float)ibuf[k] / ISCALE;
       } else { /* ibuf==NULL is draining */
@@ -585,14 +585,14 @@ int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     for(k=0; k<rate->total; k++) {
       polystage *s;
       Float *out;
-  
+
       s = rate->stage[k];
-  
+
       out = rate->stage[k+1]->window + rate->stage[k+1]->hsize;
-  
+
       /* st_report("k=%d  insize=%d\n",k,in_size); fflush(stderr); */
       polyphase(out, s);
-   
+
       /* copy input history into lower portion of rate->window[k] */
       update_hist(s->window, s->hsize, s->size);
       s->held = 0;
@@ -611,24 +611,24 @@ int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     int k;
 
     oskip = rate->oskip;
-		out_size = s1->held;
-		out_buf = s1->window + s1->hsize;
+                out_size = s1->held;
+                out_buf = s1->window + s1->hsize;
 
     if(ibuf == NULL && out_size > ceil(rate->inpipe)) {
       out_size = ceil(rate->inpipe);
     }
 
-		if (out_size > oskip + *osamp) out_size = oskip + *osamp;
+                if (out_size > oskip + *osamp) out_size = oskip + *osamp;
 
     for(q=obuf, k=oskip; k < out_size; k++)
       *q++ = clipfloat(out_buf[k] * ISCALE); /* should clip-limit */
 
-		*osamp = q-obuf;
-		rate->inpipe -= *osamp;
-		oskip -= out_size - *osamp;
-		rate->oskip = oskip;
+                *osamp = q-obuf;
+                rate->inpipe -= *osamp;
+                oskip -= out_size - *osamp;
+                rate->oskip = oskip;
 
-		s1->hsize += out_size;
+                s1->hsize += out_size;
     s1->held -= out_size;
     if (s1->held == 0) {
       s1->hsize = 0;
@@ -651,8 +651,8 @@ int st_poly_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 }
 
 /*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
+ * Do anything required when you stop reading samples.
+ * Don't close input file!
  */
 int st_poly_stop(eff_t effp)
 {

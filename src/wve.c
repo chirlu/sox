@@ -14,7 +14,7 @@
 #define PSION_MAGIC     "ALawSoundFile**"
 #define PSION_VERSION   ((short)3856)
 #define PSION_INV_VERSION   ((short)4111)
-#define PSION_HDRSIZE	32
+#define PSION_HDRSIZE   32
 
 typedef struct wvepriv
     {
@@ -22,98 +22,98 @@ typedef struct wvepriv
     short padding;
     short repeats;
 /* For seeking */
-	st_size_t dataStart;
+        st_size_t dataStart;
     } *wve_t;
 
 static void wvewriteheader(ft_t ft);
 
-int st_wveseek(ft_t ft, st_size_t offset) 
+int st_wveseek(ft_t ft, st_size_t offset)
 {
-	wve_t wve = (wve_t ) ft->priv;
+        wve_t wve = (wve_t ) ft->priv;
 
-	return st_seek(ft,offset*ft->info.size + wve->dataStart,SEEK_SET);
+        return st_seek(ft,offset*ft->info.size + wve->dataStart,SEEK_SET);
 }
 
-int st_wvestartread(ft_t ft) 
+int st_wvestartread(ft_t ft)
 {
-	wve_t p = (wve_t ) ft->priv;
-	char magic[16];
-	short version;
-	int rc;
+        wve_t p = (wve_t ) ft->priv;
+        char magic[16];
+        short version;
+        int rc;
 
-	uint32_t trash;
+        uint32_t trash;
 
-	/* Needed for rawread() */
-	rc = st_rawstartread(ft);
-	if (rc)
-	    return rc;
+        /* Needed for rawread() */
+        rc = st_rawstartread(ft);
+        if (rc)
+            return rc;
 
-	/* WVE is in big endian format.  Swap whats read in
-	 * on little endian machines.
-	 */
-	if (ST_IS_LITTLEENDIAN)
-	{
-		ft->swap = ft->swap ? 0 : 1;
-	}
+        /* WVE is in big endian format.  Swap whats read in
+         * on little endian machines.
+         */
+        if (ST_IS_LITTLEENDIAN)
+        {
+                ft->swap = ft->swap ? 0 : 1;
+        }
 
-	/* Check the magic word (null-terminated) */
+        /* Check the magic word (null-terminated) */
         st_reads(ft, magic, 16);
-	if (strncmp(magic, PSION_MAGIC, 15)==0) {
-		st_report("Found Psion magic word");
-	}
-	else
-	{
-		st_fail_errno(ft,ST_EHDR,"Psion header doesn't start with magic word\nTry the '.al' file type with '-t al -r 8000 filename'");
-		return (ST_EOF);
-	}
+        if (strncmp(magic, PSION_MAGIC, 15)==0) {
+                st_report("Found Psion magic word");
+        }
+        else
+        {
+                st_fail_errno(ft,ST_EHDR,"Psion header doesn't start with magic word\nTry the '.al' file type with '-t al -r 8000 filename'");
+                return (ST_EOF);
+        }
 
         st_readw(ft, &version);
 
-	/* Check for what type endian machine its read on */
-	if (version == PSION_INV_VERSION)
-	{
-		/* This is probably left over from a time before
-		 * testing for endianess was standardized.  Leaving since
-		 * it doesn't hurt.
-		 */
-		ft->swap = ft->swap ? 0 : 1;
-		st_report("Found inverted PSION magic word.  Swapping bytes.");
-	}
-	else if (version == PSION_VERSION)
-	{
-	    st_report("Found PSION magic word");
-	}
-	else
-	{
-	    st_fail_errno(ft,ST_EHDR,"Wrong version in Psion header");
-	    return(ST_EOF);
-	}
+        /* Check for what type endian machine its read on */
+        if (version == PSION_INV_VERSION)
+        {
+                /* This is probably left over from a time before
+                 * testing for endianess was standardized.  Leaving since
+                 * it doesn't hurt.
+                 */
+                ft->swap = ft->swap ? 0 : 1;
+                st_report("Found inverted PSION magic word.  Swapping bytes.");
+        }
+        else if (version == PSION_VERSION)
+        {
+            st_report("Found PSION magic word");
+        }
+        else
+        {
+            st_fail_errno(ft,ST_EHDR,"Wrong version in Psion header");
+            return(ST_EOF);
+        }
 
-     	st_readdw(ft, &(p->length));
+        st_readdw(ft, &(p->length));
 
-	st_readw(ft, &(p->padding));
+        st_readw(ft, &(p->padding));
 
-	st_readw(ft, &(p->repeats));
+        st_readw(ft, &(p->repeats));
 
- 	(void)st_readw(ft, (unsigned short *)&trash);
-  	(void)st_readw(ft, (unsigned short *)&trash);
-	(void)st_readw(ft, (unsigned short *)&trash);
-    
-	ft->info.encoding = ST_ENCODING_ALAW;
-	ft->info.size = ST_SIZE_BYTE;
+        (void)st_readw(ft, (unsigned short *)&trash);
+        (void)st_readw(ft, (unsigned short *)&trash);
+        (void)st_readw(ft, (unsigned short *)&trash);
 
-	if (ft->info.rate != 0)
-	    st_report("WVE must use 8000 sample rate.  Overriding");
-	ft->info.rate = 8000;
+        ft->info.encoding = ST_ENCODING_ALAW;
+        ft->info.size = ST_SIZE_BYTE;
 
-	if (ft->info.channels != -1 && ft->info.channels != 1)
-	    st_report("WVE must only supports 1 channel.  Overriding");
-	ft->info.channels = 1;
+        if (ft->info.rate != 0)
+            st_report("WVE must use 8000 sample rate.  Overriding");
+        ft->info.rate = 8000;
 
-	p->dataStart = ftell(ft->fp);
-	ft->length = p->length/ft->info.size;
+        if (ft->info.channels != -1 && ft->info.channels != 1)
+            st_report("WVE must only supports 1 channel.  Overriding");
+        ft->info.channels = 1;
 
-	return (ST_SUCCESS);
+        p->dataStart = ftell(ft->fp);
+        ft->length = p->length/ft->info.size;
+
+        return (ST_SUCCESS);
 }
 
 /* When writing, the header is supposed to contain the number of
@@ -125,71 +125,72 @@ int st_wvestartread(ft_t ft)
    if it is not, the unspecified size remains in the header
    (this is illegal). */
 
-int st_wvestartwrite(ft_t ft) 
+int st_wvestartwrite(ft_t ft)
 {
-	wve_t p = (wve_t ) ft->priv;
-	int rc;
+        wve_t p = (wve_t ) ft->priv;
+        int rc;
 
-	/* Needed for rawwrite() */
-	rc = st_rawstartwrite(ft);
-	if (rc)
-	    return ST_EOF;
+        /* Needed for rawwrite() */
+        rc = st_rawstartwrite(ft);
+        if (rc)
+            return ST_EOF;
 
-	/* wve is in big endian format.  Swap whats read in
-	 * on little endian machines.
-	 */
-	if (ST_IS_LITTLEENDIAN)
-	{
-		ft->swap = ft->swap ? 0 : 1;
-	}
+        /* wve is in big endian format.  Swap whats read in
+         * on little endian machines.
+         */
+        if (ST_IS_LITTLEENDIAN)
+        {
+                ft->swap = ft->swap ? 0 : 1;
+        }
 
-	p->length = 0;
-	if (p->repeats == 0)
-	    p->repeats = 1;
+        p->length = 0;
+        if (p->repeats == 0)
+            p->repeats = 1;
 
-	if (ft->info.rate != 0)
-	    st_report("WVE must use 8000 sample rate.  Overriding");
+        if (ft->info.rate != 0)
+            st_report("WVE must use 8000 sample rate.  Overriding");
 
-	if (ft->info.channels != -1 && ft->info.channels != 1)
-	    st_report("WVE must only supports 1 channel.  Overriding");
+        if (ft->info.channels != -1 && ft->info.channels != 1)
+            st_report("WVE must only supports 1 channel.  Overriding");
 
-	ft->info.encoding = ST_ENCODING_ALAW;
-	ft->info.size = ST_SIZE_BYTE;
-	ft->info.rate = 8000;
+        ft->info.encoding = ST_ENCODING_ALAW;
+        ft->info.size = ST_SIZE_BYTE;
+        ft->info.rate = 8000;
 
-	wvewriteheader(ft);
-	return ST_SUCCESS;
+        wvewriteheader(ft);
+        return ST_SUCCESS;
 }
 
 st_ssize_t st_wveread(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 {
-	return st_rawread(ft, buf, samp);
+        return st_rawread(ft, buf, samp);
 }
 
 st_ssize_t st_wvewrite(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 {
-	wve_t p = (wve_t ) ft->priv;
-	p->length += samp * ft->info.size;
-	return st_rawwrite(ft, buf, samp);
+        wve_t p = (wve_t ) ft->priv;
+        p->length += samp * ft->info.size;
+        return st_rawwrite(ft, buf, samp);
 }
 
 int st_wvestopwrite(ft_t ft)
 {
-	if (!ft->seekable)
-	{
-	    st_warn("Header will be have invalid file length since file is not seekable");
-	    return ST_SUCCESS;
-	}
 
-	if (fseek(ft->fp, 0L, 0) != 0)
-	{
-		st_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
-		return(ST_EOF);
-	}
-	wvewriteheader(ft);
+        /* Call before seeking to flush buffer */
+        return st_rawstopwrite(ft);
 
-	/* Needed for rawwrite() */
-	return st_rawstopwrite(ft);
+        if (!ft->seekable)
+        {
+            st_warn("Header will be have invalid file length since file is not seekable");
+            return ST_SUCCESS;
+        }
+
+        if (fseek(ft->fp, 0L, 0) != 0)
+        {
+                st_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
+                return(ST_EOF);
+        }
+        wvewriteheader(ft);
 }
 
 static void wvewriteheader(ft_t ft)

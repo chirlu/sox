@@ -48,14 +48,14 @@ static void rawdefaults(ft_t ft);
 int st_rawseek(ft_t ft, st_size_t offset)
 {
     switch(ft->info.size) {
-	case ST_SIZE_BYTE:
-	case ST_SIZE_WORD:
-	case ST_SIZE_DWORD:
-	case ST_SIZE_DDWORD:
-	    break;
-	default:
-	    st_fail_errno(ft,ST_ENOTSUP,"Can't seek this data size");
-	    return(ft->st_errno);
+        case ST_SIZE_BYTE:
+        case ST_SIZE_WORD:
+        case ST_SIZE_DWORD:
+        case ST_SIZE_DDWORD:
+            break;
+        default:
+            st_fail_errno(ft,ST_ENOTSUP,"Can't seek this data size");
+            return(ft->st_errno);
     }
 
     ft->st_errno = st_seek(ft,offset*ft->info.size,SEEK_SET);
@@ -68,8 +68,8 @@ int st_rawstartread(ft_t ft)
     ft->file.buf = malloc(BUFSIZ);
     if (!ft->file.buf)
     {
-	st_fail_errno(ft,ST_ENOMEM,"Unable to alloc resources");
-	return(ST_EOF);
+        st_fail_errno(ft,ST_ENOMEM,"Unable to alloc resources");
+        return(ST_EOF);
     }
     ft->file.size = BUFSIZ;
     ft->file.count = 0;
@@ -84,8 +84,8 @@ int st_rawstartwrite(ft_t ft)
     ft->file.buf = malloc(BUFSIZ);
     if (!ft->file.buf)
     {
-	st_fail_errno(ft,ST_ENOMEM,"Unable to alloc resources");
-	return(ST_EOF);
+        st_fail_errno(ft,ST_ENOMEM,"Unable to alloc resources");
+        return(ST_EOF);
     }
     ft->file.size = BUFSIZ;
     ft->file.pos = 0;
@@ -98,13 +98,13 @@ void st_ub_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
-	uint8_t datum;
+        uint8_t datum;
 
-	datum = *((unsigned char *)buf2);
-	buf2++;
+        datum = *((unsigned char *)buf2);
+        buf2++;
 
-	*buf1++ = ST_UNSIGNED_BYTE_TO_SAMPLE(datum);
-	len--;
+        *buf1++ = ST_UNSIGNED_BYTE_TO_SAMPLE(datum);
+        len--;
     }
 }
 
@@ -122,8 +122,8 @@ void st_sb_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_ulaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, 
-	              char swap)
+void st_ulaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
+                      char swap)
 {
     while (len)
     {
@@ -137,8 +137,8 @@ void st_ulaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
     }
 }
 
-void st_alaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, 
-	              char swap)
+void st_alaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
+                      char swap)
 {
     while (len)
     {
@@ -311,7 +311,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                     break;
                 case ST_ENCODING_FLOAT:
                     read_buf = st_f32_read_buf;
-		    break;
+                    break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
                     return(0);
@@ -391,8 +391,8 @@ void st_ub_write_buf(char* buf1, st_sample_t *buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
-	*(uint8_t *)buf1++ = ST_SAMPLE_TO_UNSIGNED_BYTE(*buf2++);
-	len--;
+        *(uint8_t *)buf1++ = ST_SAMPLE_TO_UNSIGNED_BYTE(*buf2++);
+        len--;
     }
 }
 
@@ -400,28 +400,28 @@ void st_sb_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
-	*(int8_t *)buf1++ = ST_SAMPLE_TO_SIGNED_BYTE(*buf2++);
-	len--;
+        *(int8_t *)buf1++ = ST_SAMPLE_TO_SIGNED_BYTE(*buf2++);
+        len--;
     }
 }
 
-void st_ulaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, 
-    	               char swap)
+void st_ulaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
+                       char swap)
 {
     while (len)
     {
-	*(uint8_t *)buf1++ = ST_SAMPLE_TO_ULAW_BYTE(*buf2++);
-	len--;
+        *(uint8_t *)buf1++ = ST_SAMPLE_TO_ULAW_BYTE(*buf2++);
+        len--;
     }
 }
 
-void st_alaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, 
-	               char swap)
+void st_alaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
+                       char swap)
 {
     while (len)
     {
-	*(uint8_t *)buf1++ = ST_SAMPLE_TO_ALAW_BYTE(*buf2++);
-	len--;
+        *(uint8_t *)buf1++ = ST_SAMPLE_TO_ALAW_BYTE(*buf2++);
+        len--;
     }
 }
 
@@ -431,7 +431,7 @@ void st_uw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
     {
         uint16_t datum;
 
-	datum = ST_SAMPLE_TO_UNSIGNED_WORD(*buf2++);
+        datum = ST_SAMPLE_TO_UNSIGNED_WORD(*buf2++);
         if (swap)
             datum = st_swapw(datum);
         *(uint16_t *)buf1 = datum;
@@ -447,7 +447,7 @@ void st_sw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
     {
         int16_t datum;
 
-	datum = ST_SAMPLE_TO_SIGNED_WORD(*buf2++);
+        datum = ST_SAMPLE_TO_SIGNED_WORD(*buf2++);
         if (swap)
             datum = st_swapw(datum);
         *(int16_t *)buf1 = datum;
@@ -463,7 +463,7 @@ void st_udw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
     {
         uint32_t datum;
 
-	datum = ST_SAMPLE_TO_UNSIGNED_DWORD(*buf2++);
+        datum = ST_SAMPLE_TO_UNSIGNED_DWORD(*buf2++);
         if (swap)
             datum = st_swapdw(datum);
         *(uint32_t *)buf1 = datum;
@@ -479,7 +479,7 @@ void st_dw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
     {
         int32_t datum;
 
-	datum = ST_SAMPLE_TO_SIGNED_DWORD(*buf2++);
+        datum = ST_SAMPLE_TO_SIGNED_DWORD(*buf2++);
         if (swap)
             datum = st_swapdw(datum);
         *(int32_t *)buf1 = datum;
@@ -495,7 +495,7 @@ void st_f32_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
     {
         float datum;
 
-	datum = ST_SAMPLE_TO_FLOAT_DWORD(*buf2++);
+        datum = ST_SAMPLE_TO_FLOAT_DWORD(*buf2++);
         if (swap)
             datum = st_swapf(datum);
         *(float *)buf1 = datum;
@@ -511,7 +511,7 @@ void st_f64_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
     {
         double datum;
 
-	datum = ST_SAMPLE_TO_FLOAT_DDWORD(*buf2++);
+        datum = ST_SAMPLE_TO_FLOAT_DDWORD(*buf2++);
         if (swap)
             datum = st_swapf(datum);
         *(double *)buf1 = datum;
@@ -527,7 +527,7 @@ static void writeflush(ft_t ft)
 {
         if (fwrite(ft->file.buf, 1, ft->file.pos, ft->fp) != ft->file.pos)
         {
-	    ft->file.eof = ST_EOF;
+            ft->file.eof = ST_EOF;
         }
         ft->file.pos = 0;
 }
@@ -593,7 +593,7 @@ st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                     break;
                 case ST_ENCODING_FLOAT:
                     write_buf = st_f32_write_buf;
-		    break;
+                    break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
                     return(0);
@@ -618,15 +618,15 @@ st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 
     while (done < nsamp && !ft->file.eof)
     {
-	if (ft->file.pos > (ft->file.size-ft->info.size))
-	{
-	    writeflush(ft);
-	}
+        if (ft->file.pos > (ft->file.size-ft->info.size))
+        {
+            writeflush(ft);
+        }
 
-    	len = MIN(nsamp,(ft->file.size-ft->file.pos)/ft->info.size);
+        len = MIN(nsamp-done,(ft->file.size-ft->file.pos)/ft->info.size);
         if (len)
         {
-    	    write_buf(ft->file.buf + ft->file.pos, buf+done, len, ft->swap);
+            write_buf(ft->file.buf + ft->file.pos, buf+done, len, ft->swap);
             ft->file.pos += (len*ft->info.size);
             done += len;
         }
