@@ -171,21 +171,21 @@ distclean:
 	$(RM) stconfig.h ststdint.h
 
 # Rules to automatically rerun configure tools as needed.
-$(srcdir)/configure: configure.in aclocal.m4
-	cd $(srcdir) && autoconf
+#$(srcdir)/configure: configure.in aclocal.m4
+#	cd $(srcdir) && autoconf
 
-stconfig.h: stconfig.h.in config.status
-	./config.status stconfig.h
+#stconfig.h: stconfig.h.in config.status
+#	./config.status stconfig.h
 
-Makefile: Makefile.in config.status
-	./config.status Makefile
+#Makefile: Makefile.in config.status
+#	./config.status Makefile
 
-gsm/Makefile: gsm/Makefile.in config.status
-	./config.status gsm/Makefile
+#gsm/Makefile: gsm/Makefile.in config.status
+#	./config.status gsm/Makefile
 
-libst-config: libst-config.in config.status
-	./config.status libst-config
+#libst-config: libst-config.in config.status
+#	./config.status libst-config
 
-config.status: configure
-	./config.status --recheck
+#config.status: configure
+#	./config.status --recheck
 
