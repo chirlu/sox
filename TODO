@@ -1,6 +1,15 @@
 People are encouraged to pick some of these and implement it.  Send
 all patches to cbagwell@sprynet.com.
 
+  o Make a global version of MIN/MAX instead of sprinkled min/max/MIN/MAX
+
+  o Unify the raw writing functions to work line the raw reading functions.
+    Also, add support to all file handlers to handle 32-bit and float
+    data types since raw functions can handle them.
+
+  o Change "float" from a data type to an encoding method.  This will
+    effect command line usage but more accurately describes floats.
+
   o All comment code has a memory leak.  They must malloc memory to
     store comment but its never free()'d.
 

@@ -450,9 +450,9 @@ int st_checkformat(ft_t ft)
 	return ST_SUCCESS;
 }
 
-static ft_t ft_queue[2];
+static ft_t ft_queue[2] = {0, 0};
 
-void sigint(int s)
+static void sigint(int s)
 {
     if (s == SIGINT) {
 	if (ft_queue[0])

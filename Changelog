@@ -54,6 +54,9 @@ sox-12.17.2
   o Added support for reading non-standard bit size data from AIFF files.
   o Ignore unmatched MARK/INSTR chunks in AIFF files now instead of quiting.
   o Fixed ALAW encoding bug in .au files as pointed out by Bruce Forsberg.
+  o Unified the raw reading functions.  Probably slightly faster for
+    most datatypes but was done to fix recording from the OSS driver.
+    Control-C stopped working somewhere during the 12.17 series.
 
 sox-12.17.1
 -----------

@@ -31,6 +31,10 @@
 
 #define MAXWSPEED 1
 
+#ifndef MIN
+#define MIN(a,b) ((a)<(b)?(a):(b))
+#endif
+
 static void rawdefaults(ft_t ft);
 
 
@@ -96,30 +100,6 @@ ft_t ft;
 	return(ST_SUCCESS);
 }
 
-/* Read raw file data, and convert it to */
-/* the sox internal signed long format. */
-
-static unsigned char blockgetc(ft)
-ft_t ft;
-{
-	char rval;
-
-	if (ft->file.pos == ft->file.count)
-	{
-		if (ft->file.eof)
-			return(0);
-		ft->file.count = fread(ft->file.buf, 1, ft->file.size, ft->fp);
-		ft->file.pos = 0;
-		if (ft->file.count == 0)
-		{
-			ft->file.eof = 1;
-			return(0);
-		}
-	}
-	rval = *(ft->file.buf + ft->file.pos++);
-	return (rval);
-}
-
 /* Util to reverse the n chars starting at p. */
 /* FIXME: Move to misc.c */
 static void swapn(p, n)
@@ -137,182 +117,277 @@ int n;
 	}
 }
 
-/* Reads a block of 'n' characters and possibly byte swaps */
-static void blockr(p0, n, ft)
-ft_t ft;
-int n;
-void *p0;
+void st_ub_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
 {
-	int rest;
-	char *p;
-	p = p0;
-	
-	while ((rest = ft->file.count - ft->file.pos) < n)
-	{
-		if (ft->file.eof) {
-			memset(p,0,n);
-			return;
-		}
+    while (len)
+    {
+	unsigned char datum;
 
-		memmove(ft->file.buf, ft->file.buf+ft->file.pos, rest);
+	datum = *((unsigned char *)buf2);
+        buf2++;
+	datum ^= 0x80;
 
-		ft->file.pos = 0;
-		ft->file.count = rest;
-		ft->file.count += fread(ft->file.buf+rest, 1, ft->file.size-rest, ft->fp);
-		ft->file.eof = (ft->file.count < n);
-	}
-	memcpy(p, ft->file.buf + ft->file.pos, n);
-	ft->file.pos += n;
-	/* FIXME: For speed, there should be a version of this funciton
-	 * for WORDS, LONGS, and FLOATS.  This is because swapping
-	 * bytes is an expensive operation and should be done in batch
-	 * mode.
-	 */
-	if (ft->swap)
-		swapn(p,n);
+	*buf1++ = LEFT(datum,24);
+	len--;
+    }
 }
 
-static int blockr_sw(p0, n, ft)
-LONG *p0,n;
-ft_t ft;
+void st_sb_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
 {
-    LONG x, done;
-		short s;
+    while (len)
+    {
+	unsigned char datum;
 
-		for (done=0; done < n;) {
-			blockr(&s, sizeof(short), ft);
-			x = s;
-			if (ft->file.eof) break;
-			/* scale signed up to long's range */
-			*p0++ = LEFT(x, 16);
-			done++;
-		}
-	return done;
+	datum = *((unsigned char *)buf2);
+        buf2++;
+
+	*buf1++ = LEFT(datum,24);
+	len--;
+    }
+}
+
+void st_ulaw_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
+{
+    while (len)
+    {
+	unsigned char datum;
+
+	datum = *((unsigned char *)buf2);
+        buf2++;
+
+	*buf1++ = LEFT(st_ulaw_to_linear(datum),16);
+	len--;
+    }
+}
+
+void st_alaw_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
+{
+    while (len)
+    {
+	unsigned char datum;
+
+	datum = *((unsigned char *)buf2);
+        buf2++;
+
+	*buf1++ = LEFT(st_Alaw_to_linear(datum),16);
+	len--;
+    }
+}
+
+void st_uw_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
+{
+    while (len)
+    {
+	unsigned short datum;
+
+	datum = *((unsigned short *)buf2);
+        buf2++; buf2++;
+	if (swap)
+	    datum = st_swapw(datum);
+	datum ^= 0x8000;
+
+	*buf1++ = LEFT(datum,16);
+	len--;
+    }
+}
+
+void st_sw_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
+{
+    while (len)
+    {
+	unsigned short datum;
+
+	datum = *((unsigned short *)buf2);
+        buf2++; buf2++;
+	if (swap)
+	    datum = st_swapw(datum);
+
+	*buf1++ = LEFT(datum,16);
+	len--;
+    }
+}
+
+void st_ul_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
+{
+    while (len)
+    {
+	ULONG datum;
+
+	datum = *((ULONG *)buf2);
+        buf2++; buf2++; buf2++; buf2++;
+	if (swap)
+	    datum = st_swapl(datum);
+
+	datum ^= 0x80000000L;
+
+	*buf1++ = datum;
+	len--;
+    }
+}
+
+void st_sl_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
+{
+    while (len)
+    {
+	ULONG datum;
+
+	datum = *((ULONG *)buf2);
+        buf2++; buf2++; buf2++; buf2++;
+	if (swap)
+	    datum = st_swapl(datum);
+
+	*buf1++ = datum;
+	len--;
+    }
+}
+
+void st_f32_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
+{
+    while (len)
+    {
+	float datum;
+
+	datum = *((float *)buf2);
+        buf2++; buf2++; buf2++; buf2++;
+	if (swap)
+	    datum = st_swapf(datum);
+
+	*buf1++ = datum;
+	len--;
+    }
+}
+
+void st_f64_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
+{
+    while (len)
+    {
+	double datum;
+
+	datum = *((double *)buf2);
+        buf2++; buf2++; buf2++; buf2++;
+        buf2++; buf2++; buf2++; buf2++;
+	if (swap)
+	    datum = st_swapd(datum);
+
+	*buf1++ = datum;
+	len--;
+    }
+}
+
+/* Reads a buffer of different data types into SoX's internal buffer
+ * format.
+ */
+ULONG st_readbuf(LONG *p, int n, int size, int encoding, ft_t ft)
+{
+    ULONG len, done = 0;
+    void (*copy_buf)(LONG *, char *, ULONG, char) = 0;
+
+    switch(size) {
+	case ST_SIZE_BYTE:
+	    switch(encoding)
+	    {
+		case ST_ENCODING_SIGN2:
+		    copy_buf = st_sb_copy_buf;
+		    break;
+		case ST_ENCODING_UNSIGNED:
+		    copy_buf = st_ub_copy_buf;
+		    break;
+		case ST_ENCODING_ULAW:
+		    copy_buf = st_ulaw_copy_buf;
+		    break;
+		case ST_ENCODING_ALAW:
+		    copy_buf = st_alaw_copy_buf;
+		    break;
+		default:
+		    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size.");
+		    return(0);
+	    }
+	    break;
+
+	case ST_SIZE_WORD:
+	    switch(encoding)
+	    {
+		case ST_ENCODING_SIGN2:
+		    copy_buf = st_sw_copy_buf;
+		    break;
+		case ST_ENCODING_UNSIGNED:
+		    copy_buf = st_uw_copy_buf;
+		    break;
+		default:
+		    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size.");
+		    return(0);
+	    }
+	    break;
+
+	case ST_SIZE_DWORD:
+	    switch(encoding)
+	    {
+		case ST_ENCODING_SIGN2:
+		    copy_buf = st_sl_copy_buf;
+		    break;
+		case ST_ENCODING_UNSIGNED:
+		    copy_buf = st_ul_copy_buf;
+		    break;
+		default:
+		    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size.");
+		    return(0);
+	    }
+	    break;
+
+	case ST_SIZE_FLOAT:
+	    copy_buf = st_f32_copy_buf;
+	    size = 4;
+	    break;
+
+	case ST_SIZE_DOUBLE:
+	    copy_buf = st_f64_copy_buf;
+	    size = 8;
+	    break;
+
+	default:
+	    st_fail_errno(ft,ST_EFMT,"Do not support this data size for this handler");
+	    return (0);
+    }
+
+    
+    len = MIN(n,(ft->file.count-ft->file.pos)/size);
+    if (len)
+    {
+	copy_buf(p + done, ft->file.buf + ft->file.pos, len, ft->swap);
+        ft->file.pos += (len*size);
+	done += len;
+    }
+
+    while (done < n)
+    {
+	if (!ft->file.eof && ft->file.pos == ft->file.count)
+	{
+	    ft->file.count = fread(ft->file.buf, 1, ft->file.size, ft->fp);
+	    ft->file.pos = 0;
+	    if (ft->file.count == 0)
+	    {
+		ft->file.eof = 1;
+	    }
+	}
+
+        len = MIN(n,(ft->file.count-ft->file.pos)/size);
+        if (len)
+        {
+	    copy_buf(p + done, ft->file.buf + ft->file.pos, len, ft->swap);
+            ft->file.pos += (len*size);
+	    done += len;
+        }
+	if (ft->file.eof)
+	    break;
+    }
+    return done;
 }
 
 LONG st_rawread(ft, buf, nsamp) 
 ft_t ft;
 LONG *buf, nsamp;
 {
-	int done = 0;
-
-	switch(ft->info.size) {
-		case ST_SIZE_BYTE:
-		    switch(ft->info.encoding)
-		    {
-			case ST_ENCODING_SIGN2:
-				while(done < nsamp) {
-					LONG datum;
-					datum = blockgetc(ft);
-					if (ft->file.eof)
-						return done;
-					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 24);
-					done++;
-				}
-				return done;
-			case ST_ENCODING_UNSIGNED:
-				while(done < nsamp) {
-					LONG datum;
-					datum = blockgetc(ft);
-					if (ft->file.eof)
-						return done;
-					/* Convert to signed */
-					datum ^= 128;
-					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 24);
-					done++;
-				}
-				return done;
-			case ST_ENCODING_ULAW:
-				while(done < nsamp) {
-					LONG datum;
-					datum = blockgetc(ft);
-					if (ft->file.eof)
-						return done;
-					datum = st_ulaw_to_linear(datum);
-					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 16);
-					done++;
-				}
-				return done;
-			case ST_ENCODING_ALAW:
-				while(done < nsamp) {
-					LONG datum;
-					datum = blockgetc(ft);
-					if (ft->file.eof)
-						return done;
-					datum = st_Alaw_to_linear(datum);
-					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 16);
-					done++;
-				}
-				return done;
-		    }
-		    break;
-		case ST_SIZE_WORD:
-		    switch(ft->info.encoding)
-		    {
-			case ST_ENCODING_SIGN2:
-				return blockr_sw(buf, nsamp, ft);
-			case ST_ENCODING_UNSIGNED:
-				while(done < nsamp) {
-					LONG x;
-					unsigned short s;
-					blockr(&s, sizeof(short), ft);
-					x = s;
-					if (ft->file.eof)
-						return done;
-					/* Convert to signed */
-					x ^= 0x8000;
-					/* scale signed up to long's range */
-					*buf++ = LEFT(x, 16);
-					done++;
-				}
-				return done;
-			case ST_ENCODING_ULAW:
-				st_fail_errno(ft,ST_EFMT,"No U-Law support for shorts");
-				return 0;
-			case ST_ENCODING_ALAW:
-				st_fail_errno(ft,ST_EFMT,"No A-Law support for shorts");
-				return 0;
-		    }
-		    break;
-		case ST_SIZE_DWORD:
-		    switch(ft->info.encoding)
-		    {
-			case ST_ENCODING_SIGN2:
-				while(done < nsamp) {
-					blockr(buf, sizeof(LONG), ft);
-					if (ft->file.eof)
-						return done;
-					/* scale signed up to long's range */
-					buf++;
-					done++;
-				}
-				return done;
-		    }
-		    break;
-		case ST_SIZE_FLOAT:
-			while(done < nsamp) {
-				float f;
-				blockr(&f, sizeof(float), ft);
-				if (ft->file.eof)
-					return done;
-				*buf++ = f * 0x10000; /* hmm... */
-				done++;
-			}
-			return done;
-		default:
-			break;
-	}
-/* Someone could send a really bad ft. i.e. ft->info.encoding = -145677 
- * i should know I've done this.  It will segment fault st_fail_errno.
- */
-
-	st_fail_errno(ft,ST_EFMT,"Sorry, don't have code to read %s, %s",
-		st_encodings_str[ft->info.encoding], st_sizes_str[ft->info.size]);
-	return(0);
+    return st_readbuf(buf, nsamp, ft->info.size, ft->info.encoding, ft);
 }
 
 int st_rawstopread(ft)
