@@ -1035,7 +1035,9 @@ trim \fIstart\fR [ \fIlength\fR ]
 Trim can trim off unwanted audio data from the beginning and end of the
 audio file.  Audio samples are not sent to the output stream until
 the \fIstart\fR location is reached.  \fIstart\fR is a floating point number
-that tells the number of seconds to wait before starting.
+that tells the number of seconds to wait before starting.  If you know the
+sample number you would like to start at then the seconds can be obtained
+by multiply (sample # * sample rate).
 .br
 The optional \fIlength\fR parameter tells the number of samples to output
 after the \fIstart\fR sample and is used to trim off the back side of the
