@@ -1,9 +1,11 @@
 People are encouraged to pick some of these and implement it.  Send
 all patches to cbagwell@users.sourceforge.net.
 
+  o Add new PRC format in to auto.c
+
   o Still passing some options using CFLAGS instead of stconfig.h.
 
-  o Lots of effects are sing "double" to prevent overflow of
+  o Lots of effects are using "double" to prevent overflow of
     st_sample_t math.  With ststdint.h we now have a portable way
     of detecting uin64_t...  Use that when possible to speed up
     math (won't have to convert back and forth from int to float).

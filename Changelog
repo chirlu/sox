@@ -28,6 +28,8 @@ sox-12.17.4
     private sizes being to small.
   o Jimen Ching adds -d option to specify 64bit data size and changed
     Ulaw/Alaw encoding to default to 8bit data size if not specified.
+  o Bert van Leeuwen added a file handler for Psion record.app used
+    for System/Alarms in some Psion devices.
 
 sox-12.17.3
 -----------

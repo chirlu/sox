@@ -15,8 +15,8 @@
 FOBJ	= 8svx.obj adpcm.obj aiff.obj alsa.obj au.obj auto.obj \
           avr.obj cdr.obj cvsd.obj dat.obj g711.obj g721.obj g723_16.obj \
 	  g723_24.obj g723_40.obj g72x.obj gsm.obj \
-	  hcom.obj ima_rw.obj maud.obj mp3.obj nulfile.obj oss.obj raw.obj \
-	  sf.obj smp.obj sndrtool.obj sphere.obj sunaudio.obj \
+	  hcom.obj ima_rw.obj maud.obj mp3.obj nulfile.obj oss.obj prc.obj \
+	  raw.obj sf.obj smp.obj sndrtool.obj sphere.obj sunaudio.obj \
 	  tx16w.obj voc.obj vorbis.obj wav.obj wve.obj
 
 EOBJ	= avg.obj band.obj bandpass.obj breject.obj btrworth.obj chorus.obj \

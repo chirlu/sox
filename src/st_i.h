@@ -248,6 +248,13 @@ int st_ossdspstartread(ft_t ft);
 int st_ossdspstartwrite(ft_t ft);
 #endif
 
+int st_prcstartread(ft_t ft);
+st_ssize_t st_prcread(ft_t ft, st_sample_t *buf, st_ssize_t len);
+int st_prcstartwrite(ft_t ft);
+st_ssize_t st_prcwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
+int st_prcstopwrite(ft_t ft);
+int st_prcseek(ft_t ft, st_size_t offset);
+
 int st_rawstartread(ft_t ft);
 st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp);
 int st_rawstopread(ft_t ft);

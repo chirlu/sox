@@ -17,6 +17,7 @@ t cvs
 t dat
 t hcom -r 22050
 t maud
+t prc
 t sf 
 t smp
 t sndt 

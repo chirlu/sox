@@ -132,6 +132,12 @@ static char *ossdspnames[] = {
 };
 #endif
 
+/* Psion .prc */
+static char *prcnames[] = {
+      "prc",
+      (char *) 0
+};
+
 static char *rawnames[] = {
         "raw",
         (char *) 0
@@ -242,7 +248,6 @@ static char *wvenames[] = {
       (char *) 0
 };
 
-
 st_format_t st_formats[] = {
     {aiffnames,
         ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK,
@@ -314,6 +319,9 @@ st_format_t st_formats[] = {
         st_ossdspstartread, st_rawread, st_rawstopread,
         st_ossdspstartwrite, st_rawwrite, st_rawstopwrite, st_format_nothing_seek},
 #endif
+    {prcnames, ST_FILE_SEEK,
+	st_prcstartread, st_prcread, st_rawstopread,
+	st_prcstartwrite, st_prcwrite, st_prcstopwrite, st_prcseek},
     {rawnames, ST_FILE_STEREO | ST_FILE_SEEK,
         st_rawstartread, st_rawread, st_rawstopread,
         st_rawstartwrite, st_rawwrite, st_rawstopwrite, st_rawseek},
