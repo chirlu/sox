@@ -353,8 +353,18 @@ int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 	r->Xread = i;                 
 	r->Xp = r->Xoff;
 
-	for(i=0; i < Nout; i++)
-		*obuf++ = r->Y[i] * ISCALE;
+	for(i=0; i < Nout; i++) { 
+		// orig: *obuf++ = r->Y[i] * ISCALE;
+		Float ftemp = r->Y[i] * ISCALE;
+
+		if (ftemp >= ST_SAMPLE_MAX)
+			*obuf = ST_SAMPLE_MAX;
+		else if (ftemp <= ST_SAMPLE_MIN)
+			*obuf = ST_SAMPLE_MIN;
+		else
+			*obuf = ftemp;
+		obuf++;
+        }
 
 	*isamp = Nx;
 	*osamp = Nout;

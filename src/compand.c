@@ -60,6 +60,7 @@ typedef struct {
   st_ssize_t delay_buf_size;/* Size of delay_buf in samples */
   st_ssize_t delay_buf_ptr; /* Index into delay_buf */
   st_ssize_t delay_buf_cnt; /* No. of active entries in delay_buf */
+  short int delay_buf_full; /* Shows buffer situation (important for st_compand_drain) */
 } *compand_t;
 
 /*
@@ -247,6 +248,7 @@ int st_compand_start(eff_t effp)
     l->delay_buf[i] = 0;
   l->delay_buf_ptr = 0;
   l->delay_buf_cnt = 0;
+  l->delay_buf_full= 0;
 
   return (ST_SUCCESS);
 }
@@ -258,7 +260,7 @@ int st_compand_start(eff_t effp)
 
 static void doVolume(double *v, double samp, compand_t l, int chan)
 {
-  double s = samp/(~((st_sample_t)1<<31));
+  double s = samp/ST_SAMPLE_MAX;
   double delta = s - *v;
 
   if (delta > 0.0) /* increase volume according to attack rate */
@@ -277,9 +279,10 @@ int st_compand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
   compand_t l = (compand_t) effp->priv;
   int len =  (*isamp > *osamp) ? *osamp : *isamp;
   int filechans = effp->outinfo.channels;
-  int done;
+  int idone,odone;
+  int64_t checkbuf; //if st_sample_t of type int32_t
 
-  for (done = 0; done < len; ibuf += filechans) {
+  for (idone = 0,odone = 0; idone < len; ibuf += filechans) {
     int chan;
 
     /* Maintain the volume fields by simulating a leaky pump circuit */
@@ -302,7 +305,7 @@ int st_compand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     /* Volume memory is updated: perform compand */
 
     for (chan = 0; chan < filechans; ++chan) {
-      double v = l->expectedChannels > 1 ? 
+      double v = l->expectedChannels > 1 ?
 	l->volume[chan] : l->volume[0];
       double outv;
       int piece;
@@ -313,31 +316,58 @@ int st_compand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 	if (v >= l->transferIns[piece - 1] &&
 	    v < l->transferIns[piece])
 	  break;
-      
+
       outv = l->transferOuts[piece-1] +
 	(l->transferOuts[piece] - l->transferOuts[piece-1]) *
 	(v - l->transferIns[piece-1]) /
 	(l->transferIns[piece] - l->transferIns[piece-1]);
 
       if (l->delay_buf_size <= 0)
-        obuf[done++] = ibuf[chan]*(outv/v)*l->outgain;
-      else {
+      {
+        checkbuf = ibuf[chan]*(outv/v)*l->outgain;
+        if(checkbuf > ST_SAMPLE_MAX)
+         obuf[odone] = ST_SAMPLE_MAX;
+        else if(checkbuf < ST_SAMPLE_MIN)
+         obuf[odone] = ST_SAMPLE_MIN;
+        else
+         obuf[odone] = checkbuf;
+
+        idone++;
+        odone++;
+      }
+      else
+      {
 	if (l->delay_buf_cnt >= l->delay_buf_size)
-	    obuf[done++] = l->delay_buf[l->delay_buf_ptr]*(outv/v)*l->outgain;
+        {
+            l->delay_buf_full=1; //delay buffer is now definetly full
+	    checkbuf = l->delay_buf[l->delay_buf_ptr]*(outv/v)*l->outgain;
+            if(checkbuf > ST_SAMPLE_MAX)
+             obuf[odone] = ST_SAMPLE_MAX;
+            else if(checkbuf < ST_SAMPLE_MIN)
+             obuf[odone] = ST_SAMPLE_MIN;
+            else
+             obuf[odone] = checkbuf;
+
+            odone++;
+            idone++;
+        }
 	else
+        {
 	    l->delay_buf_cnt++;
+            idone++; //no "odone++" because we did not fill obuf[...]
+        }
         l->delay_buf[l->delay_buf_ptr++] = ibuf[chan];
         l->delay_buf_ptr %= l->delay_buf_size;
       }
     }
   }
 
-  *isamp = done; *osamp = done;
+  *isamp = idone; *osamp = odone;
   return (ST_SUCCESS);
 }
 
 /*
- * Drain out compander delay lines. 
+ * Drain out compander delay lines.
  */
 int st_compand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
@@ -347,6 +377,7 @@ int st_compand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
   /*
    * Drain out delay samples.  Note that this loop does all channels.
    */
+  if(l->delay_buf_full==0) l->delay_buf_ptr=0;
   for (done = 0;  done < *osamp  &&  l->delay_buf_cnt > 0;  done++) {
     obuf[done] = l->delay_buf[l->delay_buf_ptr++];
     l->delay_buf_ptr %= l->delay_buf_size;
