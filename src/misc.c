@@ -30,7 +30,8 @@ const char *st_sizes_str[] = {
 	"longs",
 	"32-bit floats",
 	"64-bit floats",
-	"IEEE floats"
+	"IEEE floats",
+	"12-bit shorts"
 };
 
 const char *st_encodings_str[] = {

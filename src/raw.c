@@ -43,16 +43,19 @@ LONG offset;
 	switch(ft->info.size) {
 		case ST_SIZE_BYTE:
 			sample_size = 1;
-		break;
+		        break;
+		case ST_SIZE_12BIT:
+			sample_size = sizeof(short);
+			break;
 		case ST_SIZE_WORD:
 			sample_size = sizeof(short);
-		break;
+		        break;
 		case ST_SIZE_DWORD:
 			sample_size = sizeof(LONG);
-		break;
+		        break;
 		case ST_SIZE_FLOAT:
 			sample_size = sizeof(float);
-		break;
+		        break;
 		default:
 			st_fail_errno(ft,ST_ENOTSUP,"Can't seek this data size");
 			return(ft->st_errno);
@@ -172,6 +175,24 @@ void *p0;
 		swapn(p,n);
 }
 
+static int blockr_s12bit(p0, n, ft)
+LONG *p0,n;
+ft_t ft;
+{
+    LONG x, done;
+		short s;
+
+		for (done=0; done < n;) {
+			blockr(&s, sizeof(short), ft);
+			x = s;
+			if (ft->file.eof) break;
+			/* scale signed up to long's range */
+			*p0++ = LEFT(x, 20);
+			done++;
+		}
+	return done;
+}
+
 static int blockr_sw(p0, n, ft)
 LONG *p0,n;
 ft_t ft;
@@ -278,6 +299,35 @@ LONG *buf, nsamp;
 				return 0;
 		    }
 		    break;
+		case ST_SIZE_12BIT:
+		    switch(ft->info.encoding)
+		    {
+			case ST_ENCODING_SIGN2:
+				return blockr_s12bit(buf, nsamp, ft);
+			case ST_ENCODING_UNSIGNED:
+				while(done < nsamp) {
+					LONG x;
+					unsigned short s;
+					blockr(&s, sizeof(short), ft);
+					x = s;
+					if (ft->file.eof)
+						return done;
+					/* Convert to signed */
+					x ^= 0x8000;
+					/* scale signed up to long's range */
+					*buf++ = LEFT(x, 20);
+					done++;
+				}
+				return done;
+			case ST_ENCODING_ULAW:
+				st_fail_errno(ft,ST_EFMT,"No U-Law support for shorts");
+				return 0;
+			case ST_ENCODING_ALAW:
+				st_fail_errno(ft,ST_EFMT,"No A-Law support for shorts");
+				return 0;
+		    }
+		    break;
+
 		case ST_SIZE_DWORD:
 		    switch(ft->info.encoding)
 		    {

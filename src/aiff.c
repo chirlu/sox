@@ -246,15 +246,7 @@ ft_t ft;
 			st_readw(ft, &releaseLoopBegin);  /* begin marker */
 			st_readw(ft, &releaseLoopEnd);    /* end marker */
 
-			/* Required to ignore loops on playback if type
-			 * is 0 (NoLoop).  The other check is done for
-			 * historical reason and is probably not needed.
-			 */
-			if ((ft->loops[0].type == 0) ||
-			   (sustainLoopBegin == 0 && releaseLoopBegin == 0))
-				foundinstr = 0;
-			else
-				foundinstr = 1;
+			foundinstr = 1;
 		}
 		else if (strncmp(buf, "APPL", 4) == 0) {
 			st_readdw(ft, &chunksize);
@@ -375,6 +367,9 @@ ft_t ft;
 		case 8:
 			ft->info.size = ST_SIZE_BYTE;
 			break;
+		case 12:
+			ft->info.size = ST_SIZE_12BIT;
+			break;
 		case 16:
 			ft->info.size = ST_SIZE_WORD;
 			break;
@@ -403,7 +398,11 @@ ft_t ft;
 		st_fail_errno(ft,ST_EFMT,"Bogus AIFF file: MARKers but no INSTrument.");
 		return(ST_EOF);
 	}
-	if (!foundmark && foundinstr)
+	/* Check for INST chunk found but no MARK chunk.  One case that is OK is
+	 * if the INST chunk is of type NOLOOP which means its not much of an instrument
+	 * anyways.
+	 */
+	if (!foundmark && foundinstr && ft->loops[0].type != 0)
 	{
 		st_fail_errno(ft,ST_EFMT,"Bogus AIFF file: INSTrument but no MARKers.");
 		return(ST_EOF);

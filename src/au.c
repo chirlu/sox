@@ -402,6 +402,7 @@ ULONG data_size;
 	ULONG sample_rate;
 	ULONG channels;
 	int   x;
+	int   comment_size;
 
 	if((encoding = st_ausunencoding(ft->info.size, ft->info.encoding)) == -1) {
 		st_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
@@ -422,9 +423,13 @@ ULONG data_size;
 	if (ft->comment == NULL)
 		ft->comment = "SOX";
 
-	hdr_size = SUN_HDRSIZE + strlen(ft->comment) + 1; /*+1 = null-term. */
-	if (strlen(ft->comment) < 3)
-	    hdr_size += 3 - strlen(ft->comment);
+	hdr_size = SUN_HDRSIZE;
+
+	comment_size = strlen(ft->comment) + 1; /*+1 = null-term. */
+	if (comment_size < 4)
+	    comment_size = 4; /* minimum size */
+
+	hdr_size += comment_size;
 
 	st_writedw(ft, hdr_size);
 

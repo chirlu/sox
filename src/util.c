@@ -436,14 +436,14 @@ int st_checkformat(ft_t ft)
 
 	if ((ft->info.size <= 0) || (ft->info.size > ST_SIZE_MAX))
 	{
-		st_fail_errno(ft,ST_EFMT,"Data size %i for %s file is bogus\n", ft->filename,ft->info.size);
+		st_fail_errno(ft,ST_EFMT,"Data size %i for %s file is bogus\n", ft->info.size, ft->filename);
 		return ST_EOF;
 	}
 
 	/* anyway to check length on st_encoding_str[] ? */ 
 	if (ft->info.encoding <= 0  || ft->info.encoding > ST_ENCODING_MAX)
 	{
-		st_fail_errno(ft,ST_EFMT,"Data encoding %i for %s file is bogus\n", ft->filename,ft->info.encoding);
+		st_fail_errno(ft,ST_EFMT,"Data encoding %i for %s file is bogus\n", ft->info.encoding, ft->filename);
 		return ST_EOF;
 	}
 
