@@ -273,12 +273,13 @@ AC_SUBST(PLAY_SUPPORT)
 dnl Generate output files...
 
 AC_CONFIG_HEADER(src/stconfig.h)
-AC_CREATE_STDINT_H(src/ststdint.h)
 
 AC_CONFIG_FILES([Makefile src/libst-config src/Makefile src/gsm/Makefile])
 AC_CONFIG_FILES([src/play], [chmod +x src/play])
 
 AC_OUTPUT()
+
+AC_CREATE_STDINT_H(src/ststdint.h)
 
 if test ! -f tests.sh; then cp ${srcdir}/tests.sh tests.sh; fi
 if test ! -f testall.sh; then cp ${srcdir}/testall.sh testall.sh; fi
