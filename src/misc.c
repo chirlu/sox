@@ -414,7 +414,7 @@ version()
 }
 
 
-#ifdef	HAVE_STRERROR
+#ifndef	HAVE_STRERROR
 /* strerror function */
 char *strerror(errcode)
 int errcode;
