@@ -50,7 +50,7 @@
 
 /* ---------------------------------------------------------------------- */
 
-#ifdef NEED_MEMMOVE
+#ifndef HAVE_MEMMOVE
 #define memmove(dest,src,len) (bcopy((src),(dest),(len)))
 #endif
 

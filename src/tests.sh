@@ -1,7 +1,10 @@
 #!/bin/sh
-# test files
+#
 # SOX Test script.  This should run without core-dumping or printing any
-# messages.
+# messages from the compare program.
+#
+# This script is manual just quick sanity check of SOX.
+
 file=monkey
 
 # verbose options
@@ -12,8 +15,10 @@ rm -f out.raw out2.raw in.raw
 ./sox $noise -t raw -r 8196 -u -b -c 1 ub.raw -r 8196 -s -b sb.raw
 ./sox $noise -t raw -r 8196 -s -b -c 1 sb.raw -r 8196 -u -b ub2.raw
 ./sox $noise -r 8196 -u -b -c 1 ub2.raw -r 8196 ub2.voc 
+echo Comparing ub.raw o ub2.raw
 cmp -l ub.raw ub2.raw
 # skip checksum and rate byte
+echo Comparing $file.voc to ub2.voc, ignoring Comment field
 cmp -l $file.voc ub2.voc | grep -v '^    2[3456]' | grep -v '^    31'
 rm -f ub.raw sb.raw ub2.raw ub2.voc
 ./sox $noise $file.au -u -r 8192 -u -b ub.raw
@@ -23,7 +28,7 @@ rm -f ub.raw sb.raw ub2.raw ub2.voc
 rm -f ub.raw ub.au ub2.raw ub.sf 
 ./sox $noise ub2.sf ub2.aiff
 ./sox $noise ub2.aiff ub3.sf
-# skip comment field containing differnt filenames
+echo Comparing ub2.sf to ub3.sf, ignoring Comment field
 cmp -l ub2.sf ub3.sf | grep -v '^    2[3456789]'
 rm -f ub2.sf ub2.aiff ub3.sf
 #

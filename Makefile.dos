@@ -50,13 +50,13 @@ INCDIR  = d:\tc\include
 CC      = $(BINDIR)\tcc
 #CC      = $(BINDIR)\bcc
 LDD	= $(BINDIR)\tlib
-CFLAGS  = -DDOS -DNEED_GETOPT -D__STDC__=1 -a -c -mh -G -O -v -N
+CFLAGS  = -DDOS -DHAVE_GETOPT -D__STDC__=1 -a -c -mh -G -O -v -N
 LFLAGS  = -v -mh
 
 # MS VC needs the following. /AL uses large memory model.
 #CC	= cl
 #LDD	= lib
-#CFLAGS	= -DDOS -D__STDC__=1 -DNEED_GETOPT -c -O /AL /Gt8192
+#CFLAGS	= -DDOS -D__STDC__=1 -DHAVE_GETOPT -c -O /AL /Gt8192
 #LFLAGS	= /AL /Gt8192
 
 .c.obj:

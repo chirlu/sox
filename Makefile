@@ -117,50 +117,50 @@ CC		= gcc -g -Wall
 #
 # If you don't have any getopt() function then use the following
 # define to use Sox's builtin version
-# GETOPT_DEFINES	= -DNEED_GETOPT
+# GETOPT_DEFINES	= -DHAVE_GETOPT
 #
 # If your system has the more advanced version of getopt() that
 # also has its own getopt.h file (Such as the case with GNU libc 2.0)
 # then uncomment the following line.  Don't uncomment anything if
 # its in stdlib.h.
-GETOPT_DEFINES	= -DHAS_GETOPT_H
+GETOPT_DEFINES	= -DHAVE_GETOPT_H
 
 # Uncomment the following if your system does not have a built in
 # strerror().  This includes SunOS.
 #
-# STRERR_DEFINES	= -DNEED_STRERROR
+# STRERR_DEFINES	= -DHAVE_STRERROR
 
 # Uncomment the following if your system does not have a built in
 # MEMMOVE function.  Sox will attempt to use bcopy instead.
 # SunOS has this problem.
 #
-# MEMMOVE_DEFINES	= -DNEED_MEMMOVE
+# MEMMOVE_DEFINES	= -DHAVE_MEMMOVE
 
 # If you have the GSM 6.10 libraries installed then uncomment the follow
 # 4 lines, and change to reflect your installation paths.
 #
-GSM_PRE_LIBS	= -L/usr/local/lib
-GSM_POST_LIBS	= -lgsm
-GSM_INCLUDES	= -I/usr/local/include/
-GSM_DEFINES	= -DHAS_GSM
+#GSM_PRE_LIBS	= -L/usr/local/lib
+#GSM_POST_LIBS	= -lgsm
+#GSM_INCLUDES	= -I/usr/local/include/
+#GSM_DEFINES	= -DHAS_GSM
 
 # For sound support on machines that include the OSS sound driver
 # (such as Linux) then uncomment the following line.
 #
-OSS_DEFINES	= -DOSS_PLAYER
+#PLAYER_DEFINES	= -DOSS_PLAYER
 
 # For sound support under SunOS and Solaris then uncomment the following line.
 #
-# SUNAUDIO_DEFINES = -DSUNAUDIO_PLAYER
+# PLAYER_DEFINES = -DSUNAUDIO_PLAYER
 
 # For sound support on 386 AT&T Unix then uncomment the following line
 #
-# BLASTER_DEFINES = -DBLASTER
+# PLAYER_DEFINES = -DBLASTER
 
 # For sound support on Intel BSD-derived Unix's using Steve Haenichen's SBLAST
 # driver uncomment the following line.
 #
-# SBLAST_DEFINES = -DSBLAST
+# PLAYER_DEFINES = -DSBLAST
 
 # Uncomment the following lines if your compiling under DOS or Windows.
 # defines .snd to mean a DOS soundtool file (starts with SOUND)
@@ -172,12 +172,6 @@ OSS_DEFINES	= -DOSS_PLAYER
 # defines .snd to mean a NeXT sound format file only.
 #
 # NEXT_DEFINES	= -DNeXT
-
-# Uncomment the following line if compling under MacIntosh
-# defines .snd to mean a Mac-style headerless unsigned byte
-#  	sample, probably at 11050 hertz.  You'll have to set 
-#	the speed on the command line.
-# MAC_DEFINES	= -DMAC
 
 # MISC DEFINES - The catch all for things that make even less sense
 #  then normal under unix.  If you need more than one of the following
@@ -215,9 +209,9 @@ RANLIB		= ranlib
 SOX_PRE_LIBS	= $(GSM_PRE_LIBS)
 SOX_POST_LIBS	= $(GSM_POST_LIBS) -lm
 SOX_INCLUDES	= $(GSM_INCLUDES)
-SOX_DEFINES	= $(GSM_DEFINES) $(OSS_DEFINES) $(SUNAUDIO_DEFINES) \
-  $(BLASTER) $(GETOPT_DEFINES) $(STRERR_DEFINES) $(MEMMOVE_DEFINES) \
-  $(NEXT_DEFINES) $(MAC_DEFINES) $(MISC_DEFINES)
+SOX_DEFINES	= $(GSM_DEFINES) $(PLAYER_DEFINES) \
+  $(GETOPT_DEFINES) $(STRERR_DEFINES) $(MEMMOVE_DEFINES) \
+  $(DOS_DEFINES) $(NEXT_DEFINES) $(MISC_DEFINES)
 
 CFLAGS  = $O $(SOX_DEFINES) $(SOX_INCLUDES)
 

@@ -40,8 +40,10 @@
 #include <unistd.h>		/* for unlink() */
 #endif
 
-#ifdef HAS_GETOPT_H
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#else
+int getopt(P3(int,char **,char *));
 #endif
 
 #ifdef VMS
@@ -80,9 +82,6 @@ void process();
 void statistics();
 LONG volumechange();
 void checkeffect(P1(eff_t));
-#ifdef NEED_GETOPT
-int getopt(P3(int,char **,char *));
-#endif
 int flow_effect(P1(int));
 int drain_effect(P1(int));
 
@@ -232,7 +231,7 @@ char **argv;
 	return(0);
 }
 
-#ifdef HAS_GETOPT_H
+#ifdef HAVE_GETOPT_H
 char *getoptstr = "+r:v:t:c:phsuUAagbwlfdDxV";
 #else
 char *getoptstr = "r:v:t:c:phsuUAagbwlfdDxV";

@@ -22,7 +22,8 @@ sox-12.16
     effect on STDIN and output the results to STDOUT.
   o Fixed up some makefiles and 16-bit support from patches sent by
     Mark Morgan Lloyd (markMLl.in@telemetry.co.uk).  Also added some
-    nice DOS test bat files from him as well.
+    nice DOS test bat files from him as well.  They only work with
+    an advanced setup like 4DOS or some such thing.
   o Cleaned up some more cross-platform compile problems.  In the process
     got it working with Turbo C again, kinda.  It still locks DOS up at times.
 

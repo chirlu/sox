@@ -46,7 +46,7 @@ compatible to Henry's version.
 
 int ansi_c_needs_something_here_too;
 
-#ifdef NEED_GETOPT
+#ifndef HAVE_GETOPT
 #include <stdio.h>
 
 #include <string.h>

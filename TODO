@@ -8,7 +8,7 @@ all patches to cbagwell@sprynet.com.
     standard, weither inferer or not.
 
   o Add GSM support to WAV format.
-
+ 
   o highpass and lowpass filters don't let you specify the cut
     of freq.  Need some improvements to these filters.
 

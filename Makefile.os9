@@ -8,7 +8,7 @@
 # Boisy G. Pitre (boisy@microware.com)
 
 RDIR	=	RELS
-CFLAGS	=	-ai -DOS9 -DNEED_GETOPT	# use strict ANSI mode, shared libraries
+CFLAGS	=	-ai -DOS9 -DHAVE_GETOPT	# use strict ANSI mode, shared libraries
 LFLAGS	=	$(CFLAGS) -l=/dd/lib/sys_clib.l
 CC		=	cc
 
