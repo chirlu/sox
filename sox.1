@@ -116,7 +116,7 @@ sox \- Sound eXchange : universal sound sample translator
 .br
     \fBvibro\fR \fIspeed\fR [ \fIdepth\fR ]
 .br
-    \fBvol\fR \fIgain\fR [ \fItype\fR ]
+    \fBvol\fR \fIgain\fR [ \fItype\fR [ \fIlimitergain\fR ] ] 
 .SH DESCRIPTION
 .I SoX
 is a command line program that can convert most popular audio files
@@ -1026,10 +1026,13 @@ gives the amount the volume is cut into
 by the sine wave,
 ranging 0.0 to 1.0 and defaulting to 0.5.
 .TP 10
-vol \fIgain \fB [ \fItype\fB ]
+vol \fIgain\fR [ \fItype\fB [ \fIlimitergain\fR ] ]
 The vol effect is much like the command line option -v.  It allows you to
 adjust the volume of an input file and allows you to specify the adjustment
-in relation to amplitude, power, or dB.  When type is 
+in relation to amplitude, power, or dB.  If \fItype\fR is not specified then
+it defaults to \fIamplitude\fR.
+.br 
+When type is 
 .I amplitude
 then a linear change of the amplitude is performed based on the gain.  Therefore,
 a value of 1.0 will keep the volume the same, 0.0 to < 1.0 will cause the
@@ -1043,8 +1046,15 @@ then a value of 1.0 also means no change in volume.
 .br
 When type is 
 .I dB
-the amplitude is change logarithmically.
+the amplitude is changed logarithmically.
 0.0 is constant while +6 doubles the amplitude.
+.br
+An optional \fIlimitergain\fR value can be specified and should be a
+value much less
+then 1.0 (ie 0.05 or 0.02) and is used only on peaks to prevent clipping.
+Not specifying this parameter will cause no limiter to be used.  In verbose
+mode, this effect will display the percentage of audio data that needed to be
+limited.
 .SH BUGS
 The syntax is horrific.  Thats the breaks when trying to handle all things from the command line.
 .P

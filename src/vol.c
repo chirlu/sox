@@ -28,12 +28,21 @@
 #define TWENTY	  ((VOL_FLOAT)(20.0e0))
 
 #define VOL_USAGE \
-    "Usage: vol gain type" \
+    "Usage: vol gain [ type [ limitergain ] ]" \
     " (default type=amplitude: 1.0 is constant, <0.0 change phase;" \
-    " type=power 1.0 is constant; type=dB: 0.0 is constant, +6 doubles ampl.)"
+    " type=power 1.0 is constant; type=dB: 0.0 is constant, +6 doubles ampl.)" \
+    " The peak limiter has a gain much less than 1.0 (ie 0.05 or 0.02) which is only" \
+    " used on peaks to prevent clipping. (default is no limiter)"
 
 typedef struct {
     VOL_FLOAT gain; /* amplitude gain. */
+    
+    int uselimiter; /* boolean: are we using the limiter? */
+    VOL_FLOAT limiterthreshhold;
+    VOL_FLOAT limitergain; /* limiter gain. */
+    int limited; /* number of limited values to report. */
+    int totalprocessed;
+    
     int clipped;    /* number of clipped values to report. */
 } * vol_t;
 
@@ -46,8 +55,8 @@ int n;
 char **argv;
 {
     vol_t vol = (vol_t) effp->priv; 
-    
     vol->gain = ONE; /* default is no change */
+    vol->uselimiter = 0; /* default is no limiter */
     
     if (n && (!sscanf(argv[0], VOL_FLOAT_SCAN, &vol->gain)))
     {
@@ -77,6 +86,23 @@ char **argv;
 	    break;
 	}
     }
+    
+
+    if (n>2)
+    {
+    	if ((fabs(vol->gain) < ONE) || !sscanf(argv[2], VOL_FLOAT_SCAN, &vol->limitergain) || !((vol->limitergain > ZERO) && (vol->limitergain < ONE)))
+    	{
+  		st_fail(VOL_USAGE);
+		return ST_EOF;  		
+    	}
+    	
+    	vol->uselimiter = 1; /* ok, we'll use it */
+    	/* The following equation is derived so that there is no discontinuity in output amplitudes */
+    	/* and a LONG_MAX input always maps to a LONG_MAX output when the limiter is activated. */
+    	/* (NOTE: There **WILL** be a discontinuity in the slope of the output amplitudes when using the limiter.) */
+    	vol->limiterthreshhold = LONG_MAX * (ONE - vol->limitergain) / (fabs(vol->gain) - vol->limitergain);
+    }
+    
 
     return ST_SUCCESS;
 }
@@ -103,6 +129,8 @@ eff_t effp;
     }
 
     vol->clipped = 0;
+    vol->limited = 0;
+    vol->totalprocessed = 0;
 
     return ST_SUCCESS;
 }
@@ -141,6 +169,8 @@ LONG *isamp, *osamp;
 {
     vol_t vol = (vol_t) effp->priv;
     register VOL_FLOAT gain = vol->gain;
+    register VOL_FLOAT limiterthreshhold = vol->limiterthreshhold;
+    register VOL_FLOAT sample;
     register LONG len;
     
     len = MIN(*osamp, *isamp);
@@ -148,10 +178,38 @@ LONG *isamp, *osamp;
     /* report back dealt with amount. */
     *isamp = len; *osamp = len;
     
-    /* quite basic, with clipping */
-    for (;len>0; len--)
-	*obuf++ = clip(vol, gain * *ibuf++);
+    if (vol->uselimiter)
+    {
+	vol->totalprocessed += len;
+	
+	for (;len>0; len--)
+	    {
+	    	sample = *ibuf++;
+	    	
+	    	if (sample > limiterthreshhold)
+	    	{
+	    		sample =  (LONG_MAX - vol->limitergain * (LONG_MAX - sample));
+	    		vol->limited++;
+	    	}
+	    	else if (sample < -limiterthreshhold)
+	    	{
+	    		sample = -(LONG_MAX - vol->limitergain * (LONG_MAX + sample));
+	    		vol->limited++;
+	    	}
+	    	else
+	    	{
+	    		sample = gain * sample;
+	    	}
 
+		*obuf++ = clip(vol, sample);
+	    }
+    }
+    else
+    {
+    	/* quite basic, with clipping */
+    	for (;len>0; len--)
+		*obuf++ = clip(vol, gain * *ibuf++);
+    }
     return ST_SUCCESS;
 }
 
@@ -163,6 +221,11 @@ int st_vol_stop(effp)
 eff_t effp;
 {
     vol_t vol = (vol_t) effp->priv;
+    if (vol->limited)
+    {
+	st_warn("VOL limited %d values (%d percent).", 
+	     vol->limited, (int) (vol->limited * 100.0 / vol->totalprocessed));
+    }
     if (vol->clipped) 
     {
 	st_warn("VOL clipped %d values, amplitude gain=%f too high...", 
