@@ -364,9 +364,9 @@ LONG *isamp, *osamp;
 	
 	ichan = effp->ininfo.channels;
 	ochan = effp->outinfo.channels;
-	len = *isamp;
-	if (len > *osamp)
-		len = *osamp;
+	len = *isamp / ichan;
+	if (len > *osamp / ochan)
+		len = *osamp / ochan;
 	for (done = 0; done < len; done++, ibuf += ichan, obuf += ochan) {
 		for (j = 0; j < ochan; j++) {
 			samp = 0.0;
@@ -379,8 +379,8 @@ LONG *isamp, *osamp;
 			obuf[j] = samp;
 		}
 	}
-	*isamp = len;
-	*osamp = len;
+	*isamp = len * ichan;
+	*osamp = len * ochan;
 	return (ST_SUCCESS);
 }
 
