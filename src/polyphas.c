@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <string.h>
 #include "st.h"
 
 #define Float float/*double*/

@@ -38,7 +38,7 @@ typedef struct avrstuff {
   unsigned short midi; /* 0xffff = no MIDI note assigned,
 			  0xffXX = single key note assignment
 			  0xLLHH = key split, low/hi note */
-  ULONG int rate;	       /* sample frequency in hertz */
+  ULONG rate;	       /* sample frequency in hertz */
   ULONG size;	       /* sample length in bytes or words (see rez) */
   ULONG lbeg;	       /* offset to start of loop in bytes or words.
 			  set to zero if unused. */

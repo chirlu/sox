@@ -12,6 +12,7 @@
  */
 
 #include "st.h"
+#include <string.h>
 
 /* Time resolutin one millisecond */
 #define TIMERES 1000

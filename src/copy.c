@@ -12,6 +12,7 @@
  */
 
 #include "st.h"
+#include "string.h" /* memcpy() */
 
 /*
  * Process options

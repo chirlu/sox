@@ -23,6 +23,7 @@
 
 #include <stdlib.h> /* malloc and free */
 #include <limits.h> /* LONG_MAX */
+#include <string.h> /* memcpy() */
 
 #ifndef MIN
 #define MIN(s1,s2) ((s1)<(s2)?(s1):(s2))

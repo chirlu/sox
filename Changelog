@@ -17,6 +17,9 @@ sox-12.17.2
     were used.
   o Geoff Kuenning updated play/rec/soxeffect scripts to handle all effects
     added since 12.17. Spell-checked soxexam.1 file.
+  o Jimen Ching updated ALSA configure support to auto-detect 4.x or 5.x API
+    and compile correctly under those two.  All other versions are unsupported.
+  o Merged in the NetBSD package changes into CVS finally.
 
 sox-12.17.1
 -----------

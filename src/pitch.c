@@ -38,6 +38,7 @@
 #include "st.h"
 
 #include <stdlib.h> /* malloc(), free() */
+#include <string.h> /* memcpy() */
 
 #include <math.h>   /* cos(), pow() */
 #include <limits.h> /* LONG_MAX */

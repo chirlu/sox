@@ -53,6 +53,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include "st.h"
 
 /* resample includes */
@@ -180,11 +181,11 @@ eff_t effp;
 	resample_t r = (resample_t) effp->priv;
 	LONG Xoff, gcdrate;
 	int i;
-	extern long st_gcd(P2(long a,long b));
+	extern LONG st_gcd(P2(LONG a,LONG b));
 
 	r->Factor = (double)effp->outinfo.rate / (double)effp->ininfo.rate;
 
-	gcdrate = st_gcd((long)effp->ininfo.rate, (long)effp->outinfo.rate);
+	gcdrate = st_gcd((LONG)effp->ininfo.rate, (LONG)effp->outinfo.rate);
 	r->a = effp->ininfo.rate / gcdrate;
 	r->b = effp->outinfo.rate / gcdrate;
 

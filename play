@@ -180,6 +180,12 @@ case $arch in
 	device="/dev/dsp"
     fi
     ;;
+  NetBSD)
+    arch_defines="-t sunau"
+    if [ -z "$device" ]; then
+        device="/dev/audio"
+    fi
+    ;;
 esac
 
 # If name is "rec" then record else assume user is wanting to play

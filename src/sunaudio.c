@@ -17,7 +17,10 @@
  */
 
 #include <sys/ioctl.h>
-#ifdef __SVR4
+#if defined(__SVR4) || define(__NeBSD__)
+#ifdef __NetBSD__
+#include <sys/types.h>  /* This should be in audioio.h itself but its not */
+#endif
 #include <sys/audioio.h>
 #else
 #include <sun/audioio.h>
