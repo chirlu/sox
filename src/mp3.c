@@ -28,7 +28,7 @@
 #define MIN(s1,s2) ((s1)<(s2)?(s1):(s2))
 #endif
 
-#define INPUT_BUFFER_SIZE       (100 * 1024)
+#define INPUT_BUFFER_SIZE       (ST_BUFSIZ)
 
 /* Private data */
 struct mp3priv {
@@ -132,7 +132,7 @@ int st_mp3startread(ft_t ft)
 
         /* We need to decode the first frame,
          * so we know the output format */
-
+more_data:
         ReadSize=st_read(ft, p->InputBuffer, 1, INPUT_BUFFER_SIZE);
         if(ReadSize<=0)
         {
@@ -150,40 +150,56 @@ int st_mp3startread(ft_t ft)
          * that we have a valid MP3 and also skips past ID3v2 tags
          * at the beginning of the audio file.
          */
-        /* FIXME: Doesn't this throw away the first frame of audio
-         * when there is no ID3v2 at the beginning?
-         */
         while(mad_frame_decode(p->Frame,p->Stream)) {
             int tagsize;
-            if ((p->Stream->bufend - p->Stream->this_frame) == 0) {
+            size_t remaining;
 
-              /* we assume that, if the first frame fails, the file is not an MP3 file */
-              
-              st_fail_errno(ft,ST_EOF,"The file is not an MP3 file or it is corrupted");
-              return ST_EOF;
+            remaining = p->Stream->bufend - p->Stream->this_frame;
+            if (remaining <= 8) {
+                /* Read another buffer full of data. */
+                memmove(p->InputBuffer, p->Stream->this_frame, remaining);
+
+                ReadSize=st_read(ft, p->InputBuffer+remaining, 1, INPUT_BUFFER_SIZE-remaining);
+                if (ReadSize <= 0) {
+                  st_fail_errno(ft,ST_EOF,"The file is not an MP3 file or it is corrupted");
+                  return ST_EOF;
+                }
+
+                remaining+=ReadSize;
+                mad_stream_buffer(p->Stream, p->InputBuffer, remaining);
+                p->Stream->error = 0;
             }
 
-            /* Skip pas this frame, based on tag size.  If invalid
+            /* Skip past this frame, based on tag size.  If invalid
              * tag then Walk threw the stream one byte at a time (tagsize=1)
              * until we find a valid frame.  Previous if() will
              * abort once we got a certain distance.
              */
-            if ((tagsize=tagtype(p->Stream->this_frame, p->Stream->bufend - p->Stream->this_frame)) == 0)
+            if ((tagsize=tagtype(p->Stream->this_frame, remaining)) == 0)
                 tagsize = 1; /* Walk through the stream. */
 
             /* ID3v2 tags can be any size.  That means they can
              * span a buffer larger then INPUT_BUFFER_SIZE.  That
              * means that we really need a loop to continue reading
              * more data.
-             * For now, I'm just making the input buffer pretty
-             * large to handle most cases and hope someone else
-             * write more robust code later!
              */
-            if (tagsize > (p->Stream->bufend - p->Stream->this_frame))
+            if (tagsize > remaining)
             {
-                st_fail_errno(ft, ST_EOF, "Found ID3 tag that is larger then initial buffer. Can't handle this right now\n", (p->Stream->bufend - p->Stream->this_frame));
-                return ST_EOF;
+                /* Discard the remaining data and read the rest of the tag
+                 * data from the file and start over.
+                 */
+                tagsize -= remaining;
+                while (tagsize > 0)
+                {
+                    if (tagsize < INPUT_BUFFER_SIZE)
+                        ReadSize=st_read(ft, p->InputBuffer, 1, tagsize);
+                    else
+                        ReadSize=st_read(ft, p->InputBuffer, 1, INPUT_BUFFER_SIZE);
+                    tagsize -= ReadSize;
+                }
+                goto more_data;
             }
+
             mad_stream_skip(p->Stream, tagsize);
         }
 
