@@ -48,6 +48,7 @@ dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_RANLIB
 AC_PROG_INSTALL
+AC_PROG_CPP
 
 dnl Set host type
 
@@ -106,7 +107,7 @@ dnl Test for GSM library.
 if test "$gsmlib" = auto
 then
   AC_CHECK_LIB(gsm, gsm_create)
-  if test "$ac_cv_lib_gsm" = yes
+  if test "$ac_cv_lib_gsm_gsm_create" = yes
   then
     gsmlib=yes
   fi
@@ -119,22 +120,24 @@ else
   fi
 fi
 
-if test "$gsmlib" = yes
+if test "$gsminc" != auto && "$gsminc" != no
 then
-	if test "$gsminc" = auto
-	then
-	  AC_CHECK_HEADERS(gsm.h, gsminc=yes)
-	else
-	  if test "$gsmlib" != no
-	  then
-		CFLAGS="$CFLAGS -I$gsminc"
-	  fi
-	fi
+  CFLAGS="$CFLAGS -I$gsminc"
 fi
 
 dnl Checks for header files.
 
 AC_CHECK_HEADERS(getopt.h unistd.h malloc.h)
+
+if test "$ac_cv_lib_gsm_gsm_create" = yes
+then
+  AC_CHECK_HEADER(gsm.h, gsminc=yes)
+  if test "$gsminc" != yes
+  then
+    AC_WARN([Can not find gsm.h header file])
+  fi
+fi
+
 
 dnl Checks for library functions.
 
