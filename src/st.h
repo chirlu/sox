@@ -290,14 +290,17 @@ char *strerror(P1(int errorcode));
  * possible byte swapping.
  */
 /* declared in misc.c */
-unsigned short rshort(P1(ft_t ft));			
-unsigned short wshort(P2(ft_t ft, unsigned short us));
-ULONG          rlong(P1(ft_t ft));		
-ULONG          wlong(P2(ft_t ft, ULONG ul));
-float          rfloat(P1(ft_t ft));
-void           wfloat(P2(ft_t ft, double f));
-double         rdouble(P1(ft_t ft));
-void           wdouble(P2(ft_t ft, double d));
+int	st_writes(P2(ft_t ft, char *uc));
+int	st_readb(P2(ft_t ft, unsigned char *uc));
+int	st_writeb(P2(ft_t ft, unsigned char uc));
+int	st_readw(P2(ft_t ft, unsigned short *us));
+int	st_writew(P2(ft_t ft, unsigned short us));
+int	st_readdw(P2(ft_t ft, ULONG *ul));		
+int	st_writedw(P2(ft_t ft, ULONG ul));
+int	st_readf(P2(ft_t ft, float *f));
+int	st_writef(P2(ft_t ft, double f));
+int	st_readdf(P2(ft_t ft, double *d));
+int	st_writedf(P2(ft_t ft, double d));
 
 /* FIXME: raw routines are used by so many formats their prototypes are defined
  * here for convience.  This wont last for long so application software

@@ -128,7 +128,7 @@ LONG *buf, len;
 	int done = 0;
 
 	while(len--)
-		putc((*buf++ >> 24) ^ 0x80, ft->fp);
+	    st_writeb(ft, (*buf++ >> 24) ^ 0x80);
 	/* If you cannot write out all of the supplied samples, */
 	/*	fail("SKEL: Can't write all samples to %s", ft->filename); */
 	/*      return (ST_EOF); */

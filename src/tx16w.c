@@ -82,9 +82,9 @@ int st_txwstartread(ft)
   char format;
   char sample_rate;
   LONG num_samp_bytes = 0;
-  char dummy;
   char gunk[8];
   int blewIt;
+  ULONG trash;
 
   txw_t sk = (txw_t) ft->priv;
   /* If you need to seek around the input file. */
@@ -95,30 +95,30 @@ int st_txwstartread(ft)
   }
 
   /* This is dumb but portable, just count the bytes til EOF */
-  while ( getc(ft->fp) != EOF ) 
+  while (st_readb(ft, (unsigned char *)&trash) != ST_EOF)
     num_samp_bytes++; 
   num_samp_bytes -= 32;		/* calculate num samples by sub header size */
   fseek(ft->fp,0L,0);		/* rewind file */
   sk->rest = num_samp_bytes;	/* set how many sample bytes to read */
 
   /* first 6 bytes are file type ID LM8953 */
-  filetype[0] = getc(ft->fp);
-  filetype[1] = getc(ft->fp);
-  filetype[2] = getc(ft->fp);
-  filetype[3] = getc(ft->fp);
-  filetype[4] = getc(ft->fp);
-  filetype[5] = getc(ft->fp);
+  st_readb(ft, &filetype[0]);
+  st_readb(ft, &filetype[1]);
+  st_readb(ft, &filetype[2]);
+  st_readb(ft, &filetype[3]);
+  st_readb(ft, &filetype[4]);
+  st_readb(ft, &filetype[5]);
   filetype[6] = '\0';
   for( c = 16; c > 0 ; c-- )	/* Discard next 16 bytes */
-    dummy = getc(ft->fp);	/* they have no meaning here */
-  format = getc(ft->fp);
-  sample_rate = getc(ft->fp);
+      st_readb(ft, (unsigned char *)&trash);
+  st_readb(ft, &format);
+  st_readb(ft, &sample_rate);
   /*
    * save next 8 bytes - if sample rate is 0, then we need
    *  to look at gunk[2] and gunk[5] to get real rate
    */
   for( c = 0; c < 8; c++ )
-    gunk[c] = getc(ft->fp);
+      st_readb(ft, &(gunk[c]));
   /*
    * We should now be pointing at start of raw sample data in file 
    */
@@ -222,9 +222,9 @@ LONG *buf, len;
          */
         for(done = 0; done < len; ) {
 	    if(sk->rest <= 0) break; /* Finished reading from file? */
-	    uc1 = (unsigned char)getc(ft->fp); /* read the three bytes */
-	    uc2 = (unsigned char)getc(ft->fp);
-	    uc3 = (unsigned char)getc(ft->fp);
+	    st_readb(ft, &uc1);
+	    st_readb(ft, &uc2);
+	    st_readb(ft, &uc3);
 	    sk->rest -= 3; /* adjust remaining for bytes we just read */
 	    s1 = (unsigned short) (uc1 << 4) | (((uc2 >> 4) & 017));
 	    s2 = (unsigned short) (uc3 << 4) | (( uc2 & 017 ));
@@ -296,9 +296,9 @@ LONG *buf, len;
             else {
                 w2 =  *buf++ >> 20;
             }
-            putc((w1 >> 4) & 0xFF,ft->fp);
-            putc((((w1 & 0x0F) << 4) | (w2 & 0x0F)) & 0xFF,ft->fp);
-            putc((w2 >> 4) & 0xFF,ft->fp);
+            st_writeb(ft, (w1 >> 4) & 0xFF);
+            st_writeb(ft, (((w1 & 0x0F) << 4) | (w2 & 0x0F)) & 0xFF);
+            st_writeb(ft, (w2 >> 4) & 0xFF);
             writedone += 3;
         }
 	return(len);
@@ -351,9 +351,9 @@ ft_t ft;
         AttackLength                       = 0x40;
         LoopLength                         = 0x40;
         for(i=tx16w_len;i<0x80;i++) {
-            putc(0,ft->fp);
-            putc(0,ft->fp);
-            putc(0,ft->fp);
+            st_writeb(ft, 0);
+            st_writeb(ft, 0);
+            st_writeb(ft, 0);
             writedone += 3;
         }
     }
@@ -361,7 +361,7 @@ ft_t ft;
     /* Fill up to 256 byte blocks; the TX16W seems to like that */
 
     while ((writedone % 0x100) != 0) {
-        putc(0,ft->fp);
+        st_writeb(ft, 0);
         writedone++;
     }
 

@@ -145,12 +145,12 @@ BLOCK 9 - data block that supersedes blocks 1 and 8.
 typedef struct vocstuff {
 	LONG	rest;			/* bytes remaining in current block */
 	LONG	rate;			/* rate code (byte) of this chunk */
-	int		silent;			/* sound or silence? */
+	int		silent;		/* sound or silence? */
 	LONG	srate;			/* rate code (byte) of silence */
 	LONG	blockseek;		/* start of current output block */
 	LONG	samples;		/* number of samples output */
-	int		size;			/* word length of data */
-	int		channels;		/* number of sound channels */
+	int		size;		/* word length of data */
+	unsigned char	channels;	/* number of sound channels */
 	int     extended;       /* Has an extended block been read? */
 } *vs_t;
 
@@ -176,7 +176,7 @@ ft_t ft;
 {
 	char header[20];
 	vs_t v = (vs_t) ft->priv;
-	int sbseek;
+	unsigned short sbseek;
 	int littlendian = 1;
 	char *endptr;
 	int rc;
@@ -205,7 +205,7 @@ ft_t ft;
 		return(ST_EOF);
 	}
 
-	sbseek = rshort(ft);
+	st_readw(ft, &sbseek);
 	fseek(ft->fp, sbseek, 0);
 
 	v->rate = -1;
@@ -237,6 +237,8 @@ LONG *buf, len;
 	vs_t v = (vs_t) ft->priv;
 	int done = 0;
 	int rc;
+	unsigned short us;
+	unsigned char uc;
 	
 	if (v->rest == 0)
 	{
@@ -254,27 +256,26 @@ LONG *buf, len;
 			*buf++ = 0x80000000L;
 	} else {
 		for(;v->rest && (done < len); v->rest--, done++) {
-			LONG datum;
 			switch(v->size)
 			{
 			    case ST_SIZE_BYTE:
-				if ((datum = getc(ft->fp)) == EOF) {
+				if (st_readb(ft, &uc) == ST_EOF) {
 				    warn("VOC input: short file");
 				    v->rest = 0;
 				    return done;
 				}
-				datum ^= 0x80;	/* convert to signed */
-				*buf++ = LEFT(datum, 24);
+				uc ^= 0x80;	/* convert to signed */
+				*buf++ = LEFT(uc, 24);
 				break;
 			    case ST_SIZE_WORD:
-				datum = rshort(ft);
+				st_readw(ft, &us);
 				if (feof(ft->fp))
 				{
 				    warn("VOC input: short file");
 				    v->rest = 0;
 				    return done;
 				}
-				*buf++ = LEFT(datum, 16);
+				*buf++ = LEFT(us, 16);
 				v->rest--; /* Processed 2 bytes so update */
 				break;
 			}	
@@ -326,9 +327,9 @@ ft_t ft;
 
 	/* File format name and a ^Z (aborts printing under DOS) */
 	(void) fwrite("Creative Voice File\032\032", 1, 20, ft->fp);
-	wshort(ft, 26);			/* size of header */
-	wshort(ft, 0x10a);              /* major/minor version number */
-	wshort(ft, 0x1129);		/* checksum of version number */
+	st_writew(ft, 26);			/* size of header */
+	st_writew(ft, 0x10a);              /* major/minor version number */
+	st_writew(ft, 0x1129);		/* checksum of version number */
 
 	if (ft->info.size == ST_SIZE_BYTE)
 	  ft->info.style = ST_ENCODING_UNSIGNED;
@@ -359,10 +360,10 @@ LONG *buf, len;
 	  if (ft->info.size == ST_SIZE_BYTE) {
 	    uc = RIGHT(*buf++, 24);
 	    uc ^= 0x80;
-	    putc(uc, ft->fp);
+	    st_writeb(ft, uc);
 	  } else {
 		sw = (int) RIGHT(*buf++, 16);
-	    wshort(ft,sw);
+	    st_writew(ft,sw);
           }
 	  done++;
 	}
@@ -386,14 +387,16 @@ ft_t ft;
 	vs_t v = (vs_t) ft->priv;
 	unsigned char uc, block;
 	ULONG sblen;
-	LONG new_rate;
+	unsigned short new_rate_short;
+	ULONG new_rate_long;
 	int i;
+	ULONG trash;
 
 	v->silent = 0;
 	while (v->rest == 0) {
 		if (feof(ft->fp))
 			return ST_SUCCESS;
-		block = getc(ft->fp);
+		st_readb(ft, &block);
 		if (block == VOC_TERM)
 			return ST_SUCCESS;
 		if (feof(ft->fp))
@@ -403,15 +406,15 @@ ft_t ft;
 		 * func to read this so do it this cross-platform way
 		 *
 		 */
-		uc = getc(ft->fp);
+		st_readb(ft, &uc);
 		sblen = uc;
-		uc = getc(ft->fp);
+		st_readb(ft, &uc);
 		sblen |= ((LONG) uc) << 8;
-		uc = getc(ft->fp);
+		st_readb(ft, &uc);
 		sblen |= ((LONG) uc) << 16;
 		switch(block) {
 		case VOC_DATA: 
-		        uc = getc(ft->fp);
+			st_readb(ft, &uc);
 			/* When DATA block preceeded by an EXTENDED     */
 			/* block, the DATA blocks rate value is invalid */
 		        if (!v->extended) {
@@ -430,7 +433,7 @@ ft_t ft;
 			  ft->info.rate = 1000000.0/(256 - v->rate);
 			  v->channels = 1;
 			}
-			uc = getc(ft->fp);
+			st_readb(ft, &uc);
 			if (uc != 0)
 			{
 			  fail("File %s: only interpret 8-bit data!",
@@ -442,21 +445,21 @@ ft_t ft;
 			v->size = ST_SIZE_BYTE;
 			return (ST_SUCCESS);
 		case VOC_DATA_16:
-			new_rate = rlong(ft);
-			if (new_rate == 0)
+			st_readdw(ft, &new_rate_long);
+			if (new_rate_long == 0)
 			{
 			    fail("File %s: Sample rate is zero?",ft->filename);
 			    return(ST_EOF);
 			}
-			if ((v->rate != -1) && (new_rate != v->rate))
+			if ((v->rate != -1) && (new_rate_long != v->rate))
 			{
 			    fail("File %s: sample rate codes differ: %d != %d",
-				ft->filename, v->rate, new_rate);
+				ft->filename, v->rate, new_rate_long);
 			    return(ST_EOF);
 			}
-			v->rate = new_rate;
-			ft->info.rate = new_rate;
-			uc = getc(ft->fp);
+			v->rate = new_rate_long;
+			ft->info.rate = new_rate_long;
+			st_readb(ft, &uc);
 			switch (uc)
 			{
 			    case 8:	v->size = ST_SIZE_BYTE; break;
@@ -465,13 +468,13 @@ ft_t ft;
 					fail("Don't understand size %d", uc);
 					return(ST_EOF);
 			}
-			v->channels = getc(ft->fp);
-			getc(ft->fp);	/* unknown */
-			getc(ft->fp);	/* notused */
-			getc(ft->fp);	/* notused */
-			getc(ft->fp);	/* notused */
-			getc(ft->fp);	/* notused */
-			getc(ft->fp);	/* notused */
+			st_readb(ft, &(v->channels));
+			st_readb(ft, (unsigned char *)&trash); /* unknown */
+			st_readb(ft, (unsigned char *)&trash); /* notused */
+			st_readb(ft, (unsigned char *)&trash); /* notused */
+			st_readb(ft, (unsigned char *)&trash); /* notused */
+			st_readb(ft, (unsigned char *)&trash); /* notused */
+			st_readb(ft, (unsigned char *)&trash); /* notused */
 			v->rest = sblen - 12;
 			return (ST_SUCCESS);
 		case VOC_CONT: 
@@ -481,8 +484,8 @@ ft_t ft;
 			{
 			unsigned short period;
 
-			period = rshort(ft);
-			uc = getc(ft->fp);
+			st_readw(ft, &period);
+			st_readb(ft, &uc);
 			if (uc == 0)
 			{
 				fail("File %s: Silence sample rate is zero");
@@ -502,22 +505,22 @@ ft_t ft;
 			return (ST_SUCCESS);
 			}
 		case VOC_MARKER:
-			uc = getc(ft->fp);
-			uc = getc(ft->fp);
+			st_readb(ft, &uc);
+			st_readb(ft, &uc);
 			/* Falling! Falling! */
 		case VOC_TEXT:
 			{
 			int i;
 			/* Could add to comment in SF? */
 			for(i = 0; i < sblen; i++)
-				getc(ft->fp);
+			    st_readb(ft, (unsigned char *)&trash);
 			}
 			continue;	/* get next block */
 		case VOC_LOOP:
 		case VOC_LOOPEND:
 			report("File %s: skipping repeat loop");
 			for(i = 0; i < sblen; i++)
-				getc(ft->fp);
+			    st_readb(ft, (unsigned char *)&trash);
 			break;
 		case VOC_EXTENDED:
 			/* An Extended block is followed by a data block */
@@ -525,27 +528,27 @@ ft_t ft;
 			/* value from the extended block and not the     */
 			/* data block.					 */
 			v->extended = 1;
-			new_rate = rshort(ft);
-			if (new_rate == 0)
+			st_readw(ft, &new_rate_short);
+			if (new_rate_short == 0)
 			{
 			   fail("File %s: Sample rate is zero?");
 			   return(ST_EOF);
 			}
-			if ((v->rate != -1) && (new_rate != v->rate))
+			if ((v->rate != -1) && (new_rate_short != v->rate))
 			{
 			   fail("File %s: sample rate codes differ: %d != %d",
-					ft->filename, v->rate, new_rate);
+					ft->filename, v->rate, new_rate_short);
 			   return(ST_EOF);
 			}
-			v->rate = new_rate;
-			uc = getc(ft->fp);
+			v->rate = new_rate_short;
+			st_readb(ft, &uc);
 			if (uc != 0)
 			{
 				fail("File %s: only interpret 8-bit data!",
 					ft->filename);
 				return(ST_EOF);
 			}
-			uc = getc(ft->fp);
+			st_readb(ft, &uc);
 			if (uc)
 				ft->info.channels = 2;  /* Stereo */
 			/* Needed number of channels before finishing
@@ -559,7 +562,7 @@ ft_t ft;
 			report("File %s: skipping unknown block code %d",
 				ft->filename, block);
 			for(i = 0; i < sblen; i++)
-				getc(ft->fp);
+			    st_readb(ft, (unsigned char *)&trash);
 		}
 	}
 	return ST_SUCCESS;
@@ -573,10 +576,10 @@ ft_t ft;
 
 	v->blockseek = ftell(ft->fp);
 	if (v->silent) {
-		putc(VOC_SILENCE, ft->fp);	/* Silence block code */
-		putc(0, ft->fp);		/* Period length */
-		putc(0, ft->fp);		/* Period length */
-		putc((int) v->rate, ft->fp);		/* Rate code */
+		st_writeb(ft, VOC_SILENCE);	/* Silence block code */
+		st_writeb(ft, 0);		/* Period length */
+		st_writeb(ft, 0);		/* Period length */
+		st_writeb(ft, v->rate);		/* Rate code */
 	} else {
 	  if (ft->info.size == ST_SIZE_BYTE) {
 	    /* 8-bit sample section.  By always setting the correct     */
@@ -586,37 +589,37 @@ ft_t ft;
 	    /* Prehaps the rate should be doubled though to make up for */
 	    /* double amount of samples for a given time????            */
 	    if (ft->info.channels > 1) {
-	      putc(VOC_EXTENDED, ft->fp);	/* Voice Extended block code */
-	      putc(4, ft->fp);                /* block length = 4 */
-	      putc(0, ft->fp);                /* block length = 4 */
-	      putc(0, ft->fp);                /* block length = 4 */
+	      st_writeb(ft, VOC_EXTENDED);	/* Voice Extended block code */
+	      st_writeb(ft, 4);                /* block length = 4 */
+	      st_writeb(ft, 0);                /* block length = 4 */
+	      st_writeb(ft, 0);                /* block length = 4 */
 		  v->rate = 65536L - (256000000.0/(2*(float)ft->info.rate));
-	      wshort(ft,v->rate);	/* Rate code */
-	      putc(0, ft->fp);                /* File is not packed */
-	      putc(1, ft->fp);                /* samples are in stereo */
+	      st_writew(ft,v->rate);	/* Rate code */
+	      st_writeb(ft, 0);         /* File is not packed */
+	      st_writeb(ft, 1);         /* samples are in stereo */
 	    }
-	    putc(VOC_DATA, ft->fp);		/* Voice Data block code */
-	    putc(0, ft->fp);		/* block length (for now) */
-	    putc(0, ft->fp);		/* block length (for now) */
-	    putc(0, ft->fp);		/* block length (for now) */
+	    st_writeb(ft, VOC_DATA);	/* Voice Data block code */
+	    st_writeb(ft, 0);		/* block length (for now) */
+	    st_writeb(ft, 0);		/* block length (for now) */
+	    st_writeb(ft, 0);		/* block length (for now) */
 	    v->rate = 256 - (1000000.0/(float)ft->info.rate);
-	    putc((int) v->rate, ft->fp);/* Rate code */
-	    putc(0, ft->fp);		/* 8-bit raw data */
+	    st_writeb(ft, (int) v->rate);/* Rate code */
+	    st_writeb(ft, 0);		/* 8-bit raw data */
 	} else {
-	    putc(VOC_DATA_16, ft->fp);		/* Voice Data block code */
-	    putc(0, ft->fp);		/* block length (for now) */
-	    putc(0, ft->fp);		/* block length (for now) */
-	    putc(0, ft->fp);		/* block length (for now) */
+	    st_writeb(ft, VOC_DATA_16); /* Voice Data block code */
+	    st_writeb(ft, 0);		/* block length (for now) */
+	    st_writeb(ft, 0);		/* block length (for now) */
+	    st_writeb(ft, 0);		/* block length (for now) */
 	    v->rate = ft->info.rate;
-	    wlong(ft, v->rate);	/* Rate code */
-	    putc(16, ft->fp);		/* Sample Size */
-	    putc(ft->info.channels, ft->fp);	/* Sample Size */
-	    putc(0, ft->fp);		/* Unknown */
-	    putc(0, ft->fp);		/* Unused */
-	    putc(0, ft->fp);		/* Unused */
-	    putc(0, ft->fp);		/* Unused */
-	    putc(0, ft->fp);		/* Unused */
-	    putc(0, ft->fp);		/* Unused */
+	    st_writedw(ft, v->rate);	/* Rate code */
+	    st_writeb(ft, 16);		/* Sample Size */
+	    st_writeb(ft, ft->info.channels);	/* Sample Size */
+	    st_writeb(ft, 0);		/* Unknown */
+	    st_writeb(ft, 0);		/* Unused */
+	    st_writeb(ft, 0);		/* Unused */
+	    st_writeb(ft, 0);		/* Unused */
+	    st_writeb(ft, 0);		/* Unused */
+	    st_writeb(ft, 0);		/* Unused */
 	  }
 	}
 }
@@ -628,11 +631,11 @@ ft_t ft;
 	vs_t v = (vs_t) ft->priv;
 	LONG datum;
 
-	putc(0, ft->fp);			/* End of file block code */
+	st_writeb(ft, 0);			/* End of file block code */
 	fseek(ft->fp, v->blockseek, 0);		/* seek back to block length */
 	fseek(ft->fp, 1, 1);			/* seek forward one */
 	if (v->silent) {
-		wshort(ft, v->samples);
+		st_writew(ft, v->samples);
 	} else {
 	  if (ft->info.size == ST_SIZE_BYTE) {
 	    if (ft->info.channels > 1) {
@@ -641,11 +644,11 @@ ft_t ft;
 	  }
 	        v->samples += 2;		/* adjustment: SBDK pp. 3-5 */
 		datum = (v->samples) & 0xff;
-		putc((int)datum, ft->fp);       /* low byte of length */
+		st_writeb(ft, (int)datum);       /* low byte of length */
 		datum = (v->samples >> 8) & 0xff;
-		putc((int)datum, ft->fp);  /* middle byte of length */
+		st_writeb(ft, (int)datum);  /* middle byte of length */
 		datum = (v->samples >> 16) & 0xff;
-		putc((int)datum, ft->fp); /* high byte of length */
+		st_writeb(ft, (int)datum); /* high byte of length */
 	}
 }
 

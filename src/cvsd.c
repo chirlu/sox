@@ -84,7 +84,7 @@ struct cvsdpriv {
 		struct cvsd_encode_state enc;
 	} c;
 	struct {
-		unsigned shreg;
+		unsigned char shreg;
 		unsigned mask;
 		unsigned cnt;
 	} bit;
@@ -217,7 +217,7 @@ ft_t ft;
 	struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 
 	if (p->bit.cnt) {
-		putc(p->bit.shreg, ft->fp);
+		st_writeb(ft, p->bit.shreg);
 		p->bytes_written++;
 	}
 	report("cvsd: min slope %f, max slope %f\n", 
@@ -279,8 +279,7 @@ LONG *buf, nsamp;
 #endif
 	while (done < nsamp) {
 		if (!p->bit.cnt) {
-			p->bit.shreg = getc(ft->fp);
-			if (feof(ft->fp))
+		    	if (st_readb(ft, &(p->bit.shreg)) == ST_EOF)
 				return done;
 			p->bit.cnt = 8;
 			p->bit.mask = p->swapbits ? 0x80 : 1;
@@ -398,7 +397,7 @@ LONG *buf, nsamp;
 		} else
 			p->c.enc.recon_int -= p->com.mla_int;
 		if ((++(p->bit.cnt)) >= 8) {
-			putc(p->bit.shreg, ft->fp);
+		        st_writeb(ft, p->bit.shreg);
 			p->bytes_written++;
 			p->bit.shreg = p->bit.cnt = 0;
 			p->bit.mask = p->swapbits ? 0x80 : 1;

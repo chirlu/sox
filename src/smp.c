@@ -36,7 +36,7 @@ struct smpheader {
 struct loop {
 	ULONG start; /* Sample count into sample data, not byte count */
 	ULONG end;   /* end point */
-	char type;	     /* 0 = loop off, 1 = forward, 2 = forw/back */
+	char type;   /* 0 = loop off, 1 = forward, 2 = forw/back */
 	short count;	     /* No of times to loop */
 };
 
@@ -75,17 +75,18 @@ ft_t ft;
 struct smptrailer *trailer;
 {
 	int i;
+	ULONG trash;
 
-	rshort(ft);			/* read reserved word */
+	st_readw(ft, (unsigned short *)&trash);	/* read reserved word */
 	for(i = 0; i < 8; i++) {	/* read the 8 loops */
-		trailer->loops[i].start = rlong(ft);
+		st_readdw(ft, &(trailer->loops[i].start));
 		ft->loops[i].start = trailer->loops[i].start;
-		trailer->loops[i].end = rlong(ft);
+		st_readdw(ft, &(trailer->loops[i].end));
 		ft->loops[i].length = 
 			trailer->loops[i].end - trailer->loops[i].start;
-		trailer->loops[i].type = getc(ft->fp);
+		st_readb(ft, &(trailer->loops[i].type));
 		ft->loops[i].type = trailer->loops[8].type;
-		trailer->loops[i].count = rshort(ft);
+		st_readw(ft, &(trailer->loops[i].count));
 		ft->loops[8].count = trailer->loops[8].count;
 	}
 	for(i = 0; i < 8; i++) {	/* read the 8 markers */
@@ -94,12 +95,12 @@ struct smptrailer *trailer;
 		    fail("EOF in SMP");
 		    return(ST_EOF);
 		}
-		trailer->markers[i].position = rlong(ft);
+		st_readdw(ft, &(trailer->markers[i].position));
 	}
-	trailer->MIDInote = getc(ft->fp);
-	trailer->rate = rlong(ft);
-	trailer->SMPTEoffset = rlong(ft);
-	trailer->CycleSize = rlong(ft);
+	st_readb(ft, &(trailer->MIDInote));
+	st_readdw(ft, &(trailer->rate));
+	st_readdw(ft, &(trailer->SMPTEoffset));
+	st_readdw(ft, &(trailer->CycleSize));
 	return(ST_SUCCESS);
 }
 
@@ -149,12 +150,12 @@ struct smptrailer *trailer;
 {
 	int i;
 
-	wshort(ft, 0);			/* write the reserved word */
+	st_writew(ft, 0);			/* write the reserved word */
 	for(i = 0; i < 8; i++) {	/* write the 8 loops */
-		wlong(ft, trailer->loops[i].start);
-		wlong(ft, trailer->loops[i].end);
-		putc(trailer->loops[i].type, ft->fp);
-		wshort(ft, trailer->loops[i].count);
+		st_writedw(ft, trailer->loops[i].start);
+		st_writedw(ft, trailer->loops[i].end);
+		st_writeb(ft, trailer->loops[i].type);
+		st_writew(ft, trailer->loops[i].count);
 	}
 	for(i = 0; i < 8; i++) {	/* write the 8 markers */
 		if (fwrite(trailer->markers[i].name, 1, 10, ft->fp) != 10)
@@ -162,12 +163,12 @@ struct smptrailer *trailer;
 		    fail("EOF in SMP");
 	 	    return(ST_EOF);
 		}
-		wlong(ft, trailer->markers[i].position);
+		st_writedw(ft, trailer->markers[i].position);
 	}
-	putc(trailer->MIDInote, ft->fp);
-	wlong(ft, trailer->rate);
-	wlong(ft, trailer->SMPTEoffset);
-	wlong(ft, trailer->CycleSize);
+	st_writeb(ft, trailer->MIDInote);
+	st_writedw(ft, trailer->rate);
+	st_writedw(ft, trailer->SMPTEoffset);
+	st_writedw(ft, trailer->CycleSize);
 	return(ST_SUCCESS);
 }
 
@@ -237,7 +238,7 @@ ft_t ft;
 
 	report("SampleVision file name and comments: %s", ft->comment);
 	/* Extract out the sample size (always intel format) */
-	smp->NoOfSamps = rlong(ft);
+	st_readdw(ft, &(smp->NoOfSamps));
 	/* mark the start of the sample data */
 	samplestart = ftell(ft->fp);
 
@@ -316,11 +317,11 @@ ft_t ft;
 LONG *buf, len;
 {
 	smp_t smp = (smp_t) ft->priv;
-	LONG datum;
+	unsigned short datum;
 	int done = 0;
 	
 	for(; done < len && smp->NoOfSamps; done++, smp->NoOfSamps--) {
-		datum = rshort(ft);
+		st_readw(ft, &datum);
 		/* scale signed up to long's range */
 		*buf++ = LEFT(datum, 16);
 	}
@@ -377,7 +378,7 @@ ft_t ft;
 	    fail("SMP: Can't write header completely");
 	    return(ST_EOF);
 	}
-	wlong(ft, 0);	/* write as zero length for now, update later */
+	st_writedw(ft, 0);	/* write as zero length for now, update later */
 	smp->NoOfSamps = 0;
 
 	return(ST_SUCCESS);
@@ -393,7 +394,7 @@ LONG *buf, len;
 
 	while(done < len) {
 		datum = (int) RIGHT(*buf++, 16);
-		wshort(ft, datum);
+		st_writew(ft, datum);
 		smp->NoOfSamps++;
 		done++;
 	}
@@ -415,7 +416,7 @@ ft_t ft;
 		fail("SMP unable to seek back to save size");
 		return(ST_EOF);
 	}
-	wlong(ft, smp->NoOfSamps);
+	st_writedw(ft, smp->NoOfSamps);
 
 	return(ST_SUCCESS);
 }

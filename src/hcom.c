@@ -91,8 +91,8 @@ ft_t ft;
 	    return rc;
 
 	/* Get essential numbers from the header */
-	datasize = rlong(ft); /* bytes 83-86 */
-	rsrcsize = rlong(ft); /* bytes 87-90 */
+	st_readdw(ft, &datasize); /* bytes 83-86 */
+	st_readdw(ft, &rsrcsize); /* bytes 87-90 */
 
 	/* Skip the rest of the header (total 128 bytes) */
 	rc = skipbytes(ft, 128-91);
@@ -107,21 +107,21 @@ ft_t ft;
 	}
 
 	/* Then follow various parameters */
-	huffcount = rlong(ft);
-	checksum = rlong(ft);
-	compresstype = rlong(ft);
+	st_readdw(ft, &huffcount);
+	st_readdw(ft, &checksum);
+	st_readdw(ft, &compresstype);
 	if (compresstype > 1)
 	{
 		fail("Bad compression type in HCOM header");
 		return (ST_EOF);
 	}
-	divisor = rlong(ft);
+	st_readdw(ft, &divisor);
 	if (divisor == 0 || divisor > 4)
 	{
 		fail("Bad sampling rate divisor in HCOM header");
 		return (ST_EOF);
 	}
-	dictsize = rshort(ft);
+	st_readw(ft, &dictsize);
 
 	/* Translate to sox parameters */
 	ft->info.style = ST_ENCODING_UNSIGNED;
@@ -139,8 +139,8 @@ ft_t ft;
 
 	/* Read dictionary */
 	for(i = 0; i < dictsize; i++) {
-		p->dictionary[i].dict_leftson = rshort(ft);
-		p->dictionary[i].dict_rightson = rshort(ft);
+		st_readw(ft, &(p->dictionary[i].dict_leftson));
+		st_readw(ft, &(p->dictionary[i].dict_rightson));
 		/*
 		report("%d %d",
 		       p->dictionary[i].dict_leftson,
@@ -169,8 +169,9 @@ static int skipbytes(ft, n)
 ft_t ft;
 int n;
 {
+    unsigned char trash;
 	while (--n >= 0) {
-		if (getc(ft->fp) == EOF)
+	    	if (st_readb(ft, &trash) == ST_EOF)
 		{
 			fail("unexpected EOF in Mac header");
 			return(ST_EOF);
@@ -185,17 +186,18 @@ LONG *buf, len;
 {
 	register struct readpriv *p = (struct readpriv *) ft->priv;
 	int done = 0;
+	unsigned char sample_rate;
 
 	if (p->nrbits < 0) {
 		/* The first byte is special */
 		if (p->huffcount == 0)
 			return 0; /* Don't know if this can happen... */
-		p->sample = getc(ft->fp);
-		if (p->sample == EOF)
+		if (st_readb(ft, &sample_rate) == ST_EOF)
 		{
 			fail("unexpected EOF at start of HCOM data");
 			return (0);
 		}
+		p->sample = sample_rate;
 		*buf++ = (p->sample - 128) * 0x1000000L;
 		p->huffcount--;
 		p->nrbits = 0;
@@ -207,7 +209,7 @@ LONG *buf, len;
 
 	while (p->huffcount > 0) {
 		if(p->nrbits == 0) {
-			p->current = rlong(ft);
+			st_readdw(ft, &(p->current));
 			if (feof(ft->fp))
 			{
 				fail("unexpected EOF in HCOM data");
@@ -541,7 +543,7 @@ ft_t ft;
 int n;
 {
 	while (--n >= 0)
-		putc('\0', ft->fp);
+	    st_writeb(ft, '\0');
 }
 
 
@@ -567,8 +569,8 @@ ft_t ft;
 	padbytes(ft, 65-3);
 	(void) fwrite("FSSD", 1, 4, ft->fp);
 	padbytes(ft, 83-69);
-	wlong(ft, (ULONG) compressed_len); /* compressed_data size */
-	wlong(ft, (ULONG) 0); /* rsrc size */
+	st_writedw(ft, (ULONG) compressed_len); /* compressed_data size */
+	st_writedw(ft, (ULONG) 0); /* rsrc size */
 	padbytes(ft, 128 - 91);
 	if (ferror(ft->fp))
 	{

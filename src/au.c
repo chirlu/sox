@@ -95,7 +95,7 @@ ft_t ft;
 	}
 
 	/* Check the magic word */
-	magic = rlong(ft);
+	st_readdw(ft, &magic);
 	if (magic == DEC_INV_MAGIC) {
 		/* Inverted headers are not standard.  Code was probably
 		 * left over from pre-standardize period of testing for
@@ -121,7 +121,7 @@ ft_t ft;
 	}
 
 	/* Read the header size */
-	hdr_size = rlong(ft);
+	st_readdw(ft, &hdr_size);
 	if (hdr_size < SUN_HDRSIZE)
 	{
 		fail("Sun/NeXT header size too small.");
@@ -129,10 +129,10 @@ ft_t ft;
 	}
 
 	/* Read the data size; may be ~0 meaning unspecified */
-	data_size = rlong(ft);
+	st_readdw(ft, &data_size);
 
 	/* Read the encoding; there are some more possibilities */
-	encoding = rlong(ft);
+	st_readdw(ft, &encoding);
 
 
 	/* Translate the encoding into style and size parameters */
@@ -184,11 +184,11 @@ ft_t ft;
 	}
 
 	/* Read the sampling rate */
-	sample_rate = rlong(ft);
+	st_readdw(ft, &sample_rate);
 	ft->info.rate = sample_rate;
 
 	/* Read the number of channels */
-	channels = rlong(ft);
+	st_readdw(ft, &channels);
 	ft->info.channels = (int) channels;
 
 	/* Skip the info string in header; print it if verbose */
@@ -196,7 +196,7 @@ ft_t ft;
 	if (hdr_size > 0) {
 		buf = (char *) malloc(hdr_size + 1);
 		for(i = 0; i < hdr_size; i++) {
-			buf[i] = (char) getc(ft->fp);
+		    	st_readb(ft, &(buf[i]));
 			if (feof(ft->fp))
 			{
 				fail("Unexpected EOF in Sun/NeXT header info.");
@@ -361,23 +361,23 @@ ULONG data_size;
 	}
 
 	magic = SUN_MAGIC;
-	wlong(ft, magic);
+	st_writedw(ft, magic);
 
 	if (ft->comment == NULL)
 		ft->comment = "";
 	hdr_size = SUN_HDRSIZE + strlen(ft->comment);
-	wlong(ft, hdr_size);
+	st_writedw(ft, hdr_size);
 
-	wlong(ft, data_size);
+	st_writedw(ft, data_size);
 
-	wlong(ft, encoding);
+	st_writedw(ft, encoding);
 
 	sample_rate = ft->info.rate;
-	wlong(ft, sample_rate);
+	st_writedw(ft, sample_rate);
 
 	channels = ft->info.channels;
-	wlong(ft, channels);
+	st_writedw(ft, channels);
 
-	fputs(ft->comment, ft->fp);
+	st_writes(ft, ft->comment);
 }
 

@@ -162,7 +162,7 @@ ft_t ft;
 	if (padsamps != SECTORSIZE) 
 	{
 		while (padsamps > 0) {
-			wshort(ft, zero);
+			st_writew(ft, zero);
 			padsamps--;
 		}
 	}

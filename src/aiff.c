@@ -69,9 +69,9 @@ ft_t ft;
 	char buf[5];
 	ULONG totalsize;
 	LONG chunksize;
-	int channels = 0;
+	unsigned short channels = 0;
 	ULONG frames;
-	int bits = 0;
+	unsigned short bits = 0;
 	double rate = 0.0;
 	ULONG offset = 0;
 	ULONG blocksize = 0;
@@ -79,17 +79,21 @@ ft_t ft;
 	char *endptr;
 	int foundcomm = 0, foundmark = 0, foundinstr = 0;
 	struct mark {
-		int id, position;
+		unsigned short id;
+		ULONG position;
 		char name[40]; 
 	} marks[32];
+	unsigned short looptype;
 	int i, j;
-	LONG nmarks = 0;
-	LONG sustainLoopBegin = 0, sustainLoopEnd = 0,
-	     releaseLoopBegin = 0, releaseLoopEnd = 0;
+	unsigned short nmarks = 0;
+	unsigned short sustainLoopBegin = 0, sustainLoopEnd = 0,
+	     	       releaseLoopBegin = 0, releaseLoopEnd = 0;
 	LONG seekto = 0L, ssndsize = 0L;
 	char *author;
 	char *copyright;
 	char *nametext;
+
+	ULONG trash;
 
 	int rc;
 
@@ -112,7 +116,7 @@ ft_t ft;
 		fail("AIFF header does not begin with magic word 'FORM'");
 		return(ST_EOF);
 	}
-	totalsize = rlong(ft);
+	st_readdw(ft, &totalsize);
 	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "AIFF", 4) != 0)
 	{
 		fail("AIFF 'FORM' chunk does not specify 'AIFF' as type");
@@ -135,23 +139,23 @@ ft_t ft;
 		}
 		if (strncmp(buf, "COMM", 4) == 0) {
 			/* COMM chunk */
-			chunksize = rlong(ft);
+			st_readdw(ft, &chunksize);
 			if (chunksize != 18)
 			{
 				fail("AIFF COMM chunk has bad size");
 				return(ST_EOF);
 			}
-			channels = rshort(ft);
-			frames = rlong(ft);
-			bits = rshort(ft);
+			st_readw(ft, &channels);
+			st_readdw(ft, &frames);
+			st_readw(ft, &bits);
 			rate = read_ieee_extended(ft);
 			foundcomm = 1;
 		}
 		else if (strncmp(buf, "SSND", 4) == 0) {
 			/* SSND chunk */
-			chunksize = rlong(ft);
-			offset = rlong(ft);
-			blocksize = rlong(ft);
+			st_readdw(ft, &chunksize);
+			st_readdw(ft, &offset);
+			st_readdw(ft, &blocksize);
 			chunksize -= 8;
 			ssndsize = chunksize;
 			/* if can't seek, just do sound now */
@@ -163,8 +167,8 @@ ft_t ft;
 		}
 		else if (strncmp(buf, "MARK", 4) == 0) {
 			/* MARK chunk */
-			chunksize = rlong(ft);
-			nmarks = rshort(ft);
+			st_readdw(ft, &chunksize);
+			st_readw(ft, &nmarks);
 
 			/* Some programs like to always have a MARK chunk
 			 * but will set number of marks to 0 and force
@@ -177,43 +181,47 @@ ft_t ft;
 
 			chunksize -= 2;
 			for(i = 0; i < nmarks; i++) {
-				int len;
+				unsigned char len;
 
-				marks[i].id = rshort(ft);
-				marks[i].position = rlong(ft);
+				st_readw(ft, &(marks[i].id));
+				st_readdw(ft, &(marks[i].position));
 				chunksize -= 6;
-				len = getc(ft->fp);
+				st_readb(ft, &len);
 				chunksize -= len + 1;
 				for(j = 0; j < len ; j++) 
-					marks[i].name[j] = getc(ft->fp);
+				    st_readb(ft, &(marks[i].name[j]));
 				marks[i].name[j] = 0;
 				if ((len & 1) == 0) {
 					chunksize--;
-					getc(ft->fp);
+					st_readb(ft, (unsigned char *)&trash);
 				}
 			}
 			/* HA HA!  Sound Designer (and others) makes */
 			/* bogus files. It spits out bogus chunksize */
 			/* for MARK field */
 			while(chunksize-- > 0)
-				getc(ft->fp);
+			    st_readb(ft, (unsigned char *)&trash);
 		}
 		else if (strncmp(buf, "INST", 4) == 0) {
 			/* INST chunk */
-			chunksize = rlong(ft);
-			ft->instr.MIDInote = getc(ft->fp);
-			getc(ft->fp);				/* detune */
-			ft->instr.MIDIlow = getc(ft->fp);
-			ft->instr.MIDIhi = getc(ft->fp);
-			getc(ft->fp);			/* low velocity */
-			getc(ft->fp);			/* hi  velocity */
-			rshort(ft);				/* gain */
-			ft->loops[0].type = rshort(ft); /* sustain loop */
-			sustainLoopBegin = rshort(ft);	 /* begin marker */
-			sustainLoopEnd = rshort(ft);    /* end marker */
-			ft->loops[1].type = rshort(ft); /* release loop */
-			releaseLoopBegin = rshort(ft);  /* begin marker */
-			releaseLoopEnd = rshort(ft);    /* end marker */
+			st_readdw(ft, &chunksize);
+			st_readb(ft, &(ft->instr.MIDInote));
+			st_readb(ft, (unsigned char *)&trash);
+			st_readb(ft, &(ft->instr.MIDIlow));
+			st_readb(ft, &(ft->instr.MIDIhi));
+			/* Low  velocity */
+			st_readb(ft, (unsigned char *)&trash);
+			/* Hi  velocity */
+			st_readb(ft, (unsigned char *)&trash);
+			st_readw(ft, (unsigned short *)&trash);	/* gain */
+			st_readw(ft, &looptype); /* sustain loop */
+			ft->loops[0].type = looptype;
+			st_readw(ft, &sustainLoopBegin); /* begin marker */
+			st_readw(ft, &sustainLoopEnd);    /* end marker */
+			st_readw(ft, &looptype); /* release loop */
+			ft->loops[1].type = looptype;
+			st_readw(ft, &releaseLoopBegin);  /* begin marker */
+			st_readw(ft, &releaseLoopEnd);    /* end marker */
 
 			/* At least one known program generates an INST */
 			/* block with everything zeroed out (meaning    */
@@ -225,21 +233,21 @@ ft_t ft;
 				foundinstr = 1;
 		}
 		else if (strncmp(buf, "APPL", 4) == 0) {
-			chunksize = rlong(ft);
+			st_readdw(ft, &chunksize);
 			while(chunksize-- > 0)
-				getc(ft->fp);
+			    st_readb(ft, (unsigned char *)&trash);
 		}
 		else if (strncmp(buf, "ALCH", 4) == 0) {
 			/* I think this is bogus and gets grabbed by APPL */
 			/* INST chunk */
-			rlong(ft);		/* ENVS - jeez! */
-			chunksize = rlong(ft);
+			st_readdw(ft, &trash);		/* ENVS - jeez! */
+			st_readdw(ft, &chunksize);
 			while(chunksize-- > 0)
-				getc(ft->fp);
+			    st_readb(ft, (unsigned char *)&trash);
 		}
 		else if (strncmp(buf, "ANNO", 4) == 0) {
 			/* Old form of comment chunk */
-			chunksize = rlong(ft);
+			st_readdw(ft, &chunksize);
 			/* allocate enough memory to hold the comment */
 			ft->comment = (char *) malloc((size_t) chunksize);
 			if (ft->comment == NULL)
@@ -294,13 +302,13 @@ ft_t ft;
 			if (feof(ft->fp))
 				break;
 			report("AIFFstartread: ignoring '%s' chunk\n", buf);
-			chunksize = rlong(ft);
+			st_readdw(ft, &chunksize);
 			if (feof(ft->fp))
 				break;
-			/* Skip the chunk using getc() so we may read
+			/* Skip the chunk using st_readb() so we may read
 			   from a pipe */
 			while (chunksize-- > 0) {
-				if (getc(ft->fp) == EOF)
+			    if (st_readb(ft, (unsigned char *)&trash) == ST_EOF)
 					break;
 			}
 		}
@@ -329,7 +337,7 @@ ft_t ft;
 		return(ST_EOF);
 	}
 	while ((LONG) (--offset) >= 0) {
-		if (getc(ft->fp) == EOF)
+		if (st_readb(ft, (unsigned char *)&trash) == ST_EOF)
 		{
 			fail("unexpected EOF while skipping AIFF offset");
 			return(ST_EOF);
@@ -453,7 +461,8 @@ char **text;
 char *chunkDescription;
 ft_t ft;
 {
-  LONG chunksize = rlong(ft);
+  LONG chunksize;
+  st_readdw(ft, &chunksize);
   /* allocate enough memory to hold the text including a terminating \0 */
   *text = (char *) malloc((size_t) chunksize + 1);
   if (*text == NULL)
@@ -492,6 +501,7 @@ ft_t ft;
 {
 	char buf[5];
 	ULONG chunksize;
+	ULONG trash;
 
 	if (!ft->seekable)
 	{
@@ -500,7 +510,7 @@ ft_t ft;
 		if (fread(buf, 1, 4, ft->fp) != 4)
 			break;
 
-		chunksize = rlong(ft);
+		st_readdw(ft, &chunksize);
 		if (feof(ft->fp))
 			break;
 		buf[4] = '\0';
@@ -510,7 +520,7 @@ ft_t ft;
 			warn("	You're stripping MIDI/loop info!\n");
 		while ((LONG) (--chunksize) >= 0) 
 		{
-			if (getc(ft->fp) == EOF)
+			if (st_readb(ft, (unsigned char *)&trash) == ST_EOF)
 				break;
 		}
 	    }
@@ -632,86 +642,86 @@ LONG nframes;
 		return(ST_EOF);
 	}
 
-	fputs("FORM", ft->fp); /* IFF header */
-	wlong(ft, hsize + nframes * ft->info.size * ft->info.channels); /* file size */
-	fputs("AIFF", ft->fp); /* File type */
+	st_writes(ft, "FORM"); /* IFF header */
+	st_writedw(ft, hsize + nframes * ft->info.size * ft->info.channels); /* file size */
+	st_writes(ft, "AIFF"); /* File type */
 
 	/* ANNO chunk -- holds comments text, however this is */
 	/* discouraged by Apple in preference to a COMT comments */
 	/* chunk, which holds a timestamp and marker id */
 	if (ft->comment)
 	{
-	  fputs("ANNO", ft->fp);
+	  st_writes(ft, "ANNO");
 	  /* Must put an even number of characters out.  True 68k processors
 	   * OS's seem to require this 
 	   */
 	  comment_size = strlen(ft->comment);
-	  wlong(ft, (LONG)(((comment_size % 2) == 0) ? comment_size : comment_size + 1)); /* ANNO chunk size, the No of chars */
-	  fputs(ft->comment, ft->fp);
+	  st_writedw(ft, (LONG)(((comment_size % 2) == 0) ? comment_size : comment_size + 1)); /* ANNO chunk size, the No of chars */
+	  st_writes(ft, ft->comment);
 	  if (comment_size % 2 == 1)
-		fputs(" ", ft->fp);
+		st_writes(ft, " ");
 	}
 
 	/* COMM chunk -- describes encoding (and #frames) */
-	fputs("COMM", ft->fp);
-	wlong(ft, (LONG) 18); /* COMM chunk size */
-	wshort(ft, ft->info.channels); /* nchannels */
-	wlong(ft, nframes); /* number of frames */
-	wshort(ft, bits); /* sample width, in bits */
+	st_writes(ft, "COMM");
+	st_writedw(ft, (LONG) 18); /* COMM chunk size */
+	st_writew(ft, ft->info.channels); /* nchannels */
+	st_writedw(ft, nframes); /* number of frames */
+	st_writew(ft, bits); /* sample width, in bits */
 	write_ieee_extended(ft, (double)ft->info.rate);
 
 	/* MARK chunk -- set markers */
 	if (ft->instr.nloops) {
-		fputs("MARK", ft->fp);
+		st_writes(ft, "MARK");
 		if (ft->instr.nloops > 2)
 			ft->instr.nloops = 2;
-		wlong(ft, 2 + 16*ft->instr.nloops);
-		wshort(ft, ft->instr.nloops);
+		st_writedw(ft, 2 + 16*ft->instr.nloops);
+		st_writew(ft, ft->instr.nloops);
 
 		for(i = 0; i < ft->instr.nloops; i++) {
-			wshort(ft, i + 1);
-			wlong(ft, ft->loops[i].start);
-			fputc(0, ft->fp);
-			fputc(0, ft->fp);
-			wshort(ft, i*2 + 1);
-			wlong(ft, ft->loops[i].start + ft->loops[i].length);
-			fputc(0, ft->fp);
-			fputc(0, ft->fp);
+			st_writew(ft, i + 1);
+			st_writedw(ft, ft->loops[i].start);
+			st_writeb(ft, 0);
+			st_writeb(ft, 0);
+			st_writew(ft, i*2 + 1);
+			st_writedw(ft, ft->loops[i].start + ft->loops[i].length);
+			st_writeb(ft, 0);
+			st_writeb(ft, 0);
 			}
 
-		fputs("INST", ft->fp);
-		wlong(ft, 20);
+		st_writes(ft, "INST");
+		st_writedw(ft, 20);
 		/* random MIDI shit that we default on */
-		fputc(ft->instr.MIDInote, ft->fp);
-		fputc(0, ft->fp);			/* detune */
-		fputc(ft->instr.MIDIlow, ft->fp);
-		fputc(ft->instr.MIDIhi, ft->fp);
-		fputc(1, ft->fp);			/* low velocity */
-		fputc(127, ft->fp);			/* hi  velocity */
-		wshort(ft, 0);				/* gain */
+		st_writeb(ft, ft->instr.MIDInote);
+		st_writeb(ft, 0);			/* detune */
+		st_writeb(ft, ft->instr.MIDIlow);
+		st_writeb(ft, ft->instr.MIDIhi);
+		st_writeb(ft, 1);			/* low velocity */
+		st_writeb(ft, 127);			/* hi  velocity */
+		st_writew(ft, 0);				/* gain */
 
 		/* sustain loop */
-		wshort(ft, ft->loops[0].type);
-		wshort(ft, 1);				/* marker 1 */
-		wshort(ft, 3);				/* marker 3 */
+		st_writew(ft, ft->loops[0].type);
+		st_writew(ft, 1);				/* marker 1 */
+		st_writew(ft, 3);				/* marker 3 */
 		/* release loop, if there */
 		if (ft->instr.nloops == 2) {
-			wshort(ft, ft->loops[1].type);
-			wshort(ft, 2);			/* marker 2 */
-			wshort(ft, 4);			/* marker 4 */
+			st_writew(ft, ft->loops[1].type);
+			st_writew(ft, 2);			/* marker 2 */
+			st_writew(ft, 4);			/* marker 4 */
 		} else {
-			wshort(ft, 0);			/* no release loop */
-			wshort(ft, 0);
-			wshort(ft, 0);
+			st_writew(ft, 0);			/* no release loop */
+			st_writew(ft, 0);
+			st_writew(ft, 0);
 		}
 	}
 
 	/* SSND chunk -- describes data */
-	fputs("SSND", ft->fp);
+	st_writes(ft, "SSND");
 	/* chunk size */
-	wlong(ft, 8 + nframes * ft->info.channels * ft->info.size); 
-	wlong(ft, (LONG) 0); /* offset */
-	wlong(ft, (LONG) 0); /* block size */
+	st_writedw(ft, 8 + nframes * ft->info.channels * ft->info.size); 
+	st_writedw(ft, (LONG) 0); /* offset */
+	st_writedw(ft, (LONG) 0); /* block size */
 	return(ST_SUCCESS);
 }
 

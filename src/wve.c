@@ -1,4 +1,4 @@
-/*
+/*;
  * Psion wve format, based on the au format file. Hacked by
  * Richard Caley (R.Caley@ed.ac.uk)
  */
@@ -14,7 +14,7 @@
 
 struct wvepriv
     {
-    unsigned int length;
+    ULONG length;
     short padding;
     short repeats;
     };
@@ -31,6 +31,8 @@ ft_t ft;
 	int littlendian = 1;
 	char *endptr;
 	int rc;
+
+	ULONG trash;
 
 	/* Needed for rawread() */
 	rc = st_rawstartread(ft);
@@ -57,7 +59,7 @@ ft_t ft;
 		return (ST_EOF);
 	}
 
-        version=rshort(ft);
+        st_readw(ft, &version);
 
 	/* Check for what type endian machine its read on */
 	if (version == PSION_INV_VERSION)
@@ -79,15 +81,15 @@ ft_t ft;
 	    return(ST_EOF);
 	}
 
-     	p->length=rlong(ft);
+     	st_readdw(ft, &(p->length));
 
-	p->padding=rshort(ft);
+	st_readw(ft, &(p->padding));
 
-	p->repeats=rshort(ft);
+	st_readw(ft, &(p->repeats));
 
- 	(void)rshort(ft);
- 	(void)rshort(ft);
- 	(void)rshort(ft);
+ 	(void)st_readw(ft, (unsigned short *)&trash);
+  	(void)st_readw(ft, (unsigned short *)&trash);
+	(void)st_readw(ft, (unsigned short *)&trash);
     
 	ft->info.style = ST_ENCODING_ALAW;
 	ft->info.size = ST_SIZE_BYTE;
@@ -193,13 +195,13 @@ ft_t ft;
 
     fwrite(magic, sizeof(magic), 1, ft->fp);
 
-    wshort(ft, version);
-    wlong(ft, p->length);
-    wshort(ft, p->padding);
-    wshort(ft, p->repeats);
+    st_writew(ft, version);
+    st_writedw(ft, p->length);
+    st_writew(ft, p->padding);
+    st_writew(ft, p->repeats);
 
-    wshort(ft, zero);
-    wshort(ft, zero);
-    wshort(ft, zero);
+    st_writew(ft, zero);
+    st_writew(ft, zero);
+    st_writew(ft, zero);
 }
 

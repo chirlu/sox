@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <strings.h>
 
 const char *st_sizes_str[] = {
 	"NONSENSE!",
@@ -46,75 +47,131 @@ static const char writerr[] = "Error writing sample file.  You are probably out 
 
 /* Utilities */
 
-/* Read and write words and longs in "machine format".  Swap if indicated. */
+/* Read and write known datatypes in "machine format".  Swap if indicated.
+ * They all return ST_EOF on error and ST_SUCCESS on success.
+ */
 
-/* Read short. */
-unsigned short
-rshort(ft)
+/* Write string. */
+int
+st_writes(ft, c)
 ft_t ft;
+char *c;
 {
-	unsigned short us;
-
-	fread(&us, 2, 1, ft->fp);
-	if (ft->swap)
-		us = st_swapw(us);
-	return us;
+	if (fwrite(c, 1, strlen(c), ft->fp) != strlen(c))
+	{
+		fail(writerr);
+		return(ST_EOF);
+	}
+	return(ST_SUCCESS);
 }
 
-/* Write short. */
-unsigned short
-wshort(ft, us)
+/* Read word. */
+int
+st_readb(ft, uc)
+ft_t ft;
+unsigned char *uc;
+{
+	if (fread(uc, 1, 1, ft->fp) != 1)
+	{
+	    return(ST_EOF);
+	}
+	return ST_SUCCESS;
+}
+
+/* Write word. */
+int
+st_writeb(ft, uc)
+ft_t ft;
+unsigned char uc;
+{
+	if (fwrite(&uc, 1, 1, ft->fp) != 1)
+	{
+		fail(writerr);
+		return(ST_EOF);
+	}
+	return(ST_SUCCESS);
+}
+
+/* Read word. */
+int
+st_readw(ft, us)
+ft_t ft;
+unsigned short *us;
+{
+	if (fread(us, 2, 1, ft->fp) != 1)
+	{
+	    return (ST_EOF);
+	}
+	if (ft->swap)
+		*us = st_swapw(*us);
+	return ST_SUCCESS;
+}
+
+/* Write word. */
+int
+st_writew(ft, us)
 ft_t ft;
 unsigned short us;
 {
 	if (ft->swap)
 		us = st_swapw(us);
 	if (fwrite(&us, 2, 1, ft->fp) != 1)
+	{
 		fail(writerr);
-	return(0);
+		return (ST_EOF);
+	}
+	return(ST_SUCCESS);
 }
 
-/* Read long. */
-ULONG
-rlong(ft)
+/* Read double word. */
+int
+st_readdw(ft, ul)
 ft_t ft;
+ULONG *ul;
 {
-	ULONG ul;
-
-	fread(&ul, 4, 1, ft->fp);
+	if (fread(ul, 4, 1, ft->fp) != 1)
+	{
+	    return (ST_EOF);
+	}
 	if (ft->swap)
-		ul = st_swapl(ul);
-	return ul;
+		*ul = st_swapl(*ul);
+	return ST_SUCCESS;
 }
 
-/* Write long. */
-ULONG
-wlong(ft, ul)
+/* Write double word. */
+int
+st_writedw(ft, ul)
 ft_t ft;
 ULONG ul;
 {
 	if (ft->swap)
 		ul = st_swapl(ul);
 	if (fwrite(&ul, 4, 1, ft->fp) != 1)
+	{
 		fail(writerr);
-	return(0);
+		return (ST_EOF);
+	}
+	return(ST_SUCCESS);
 }
 
 /* Read float. */
-float
-rfloat(ft)
+int
+st_readf(ft, f)
 ft_t ft;
+float *f;
 {
-	float f;
-
-	fread(&f, sizeof(float), 1, ft->fp);
+	if (fread(f, sizeof(float), 1, ft->fp) != 1)
+	{
+	    return(ST_EOF);
+	}
 	if (ft->swap)
-		f = st_swapf(f);
-	return f;
+		*f = st_swapf(*f);
+	return ST_SUCCESS;
 }
 
-void
-wfloat(ft, f)
+/* Write float. */
+int
+st_writef(ft, f)
 ft_t ft;
 float f;
 {
@@ -123,35 +180,45 @@ float f;
 	if (ft->swap)
 		t = st_swapf(t);
 	if (fwrite(&t, sizeof(float), 1, ft->fp) != 1)
+	{
 		fail(writerr);
+		return (ST_EOF);
+	}
+	return (ST_SUCCESS);
 }
 
 /* Read double. */
-double
-rdouble(ft)
+int
+st_readdf(ft, d)
 ft_t ft;
+double *d;
 {
-	double d;
-
-	fread(&d, sizeof(double), 1, ft->fp);
+	if (fread(d, sizeof(double), 1, ft->fp) != 1)
+	{
+	    return(ST_EOF);
+	}
 	if (ft->swap)
-		d = st_swapd(d);
-	return d;
+		*d = st_swapd(*d);
+	return ST_SUCCESS;
 }
 
 /* Write double. */
-void
-wdouble(ft, d)
+int
+st_writedf(ft, d)
 ft_t ft;
 double d;
 {
 	if (ft->swap)
 		d = st_swapd(d);
 	if (fwrite(&d, sizeof(double), 1, ft->fp) != 1)
+	{
 		fail(writerr);
+		return (ST_EOF);
+	}
+	return (ST_SUCCESS);
 }
 
-/* generic swap routine */
+/* generic swap routine. Swap l and place in to f (datatype length = n) */
 static void
 st_swapb(l, f, n)
 char *l, *f;

@@ -92,7 +92,7 @@ ft_t ft;
 
   fread (avr->name, 1, sizeof (avr->name), ft->fp);
 
-  avr->mono = rshort (ft);
+  st_readw (ft, &(avr->mono));
   if (avr->mono) {
     ft->info.channels = 2;
   }
@@ -100,7 +100,7 @@ ft_t ft;
     ft->info.channels = 1;
   }
 
-  avr->rez = rshort (ft);
+  st_readw (ft, &(avr->rez));
   if (avr->rez == 8) {
     ft->info.size = ST_SIZE_BYTE;
   }
@@ -112,7 +112,7 @@ ft_t ft;
     return(0);
   }
 
-  avr->sign = rshort (ft);
+  st_readw (ft, &(avr->sign));
   if (avr->sign) {
     ft->info.style = ST_ENCODING_SIGN2;
   }
@@ -120,11 +120,11 @@ ft_t ft;
     ft->info.style = ST_ENCODING_UNSIGNED;
   }
 
-  avr->loop = rshort (ft);
+  st_readw (ft, &(avr->loop));
 
-  avr->midi = rshort (ft);
+  st_readw (ft, &(avr->midi));
 
-  avr->rate = rlong (ft);
+  st_readdw (ft, &(avr->rate));
   /*
    * No support for AVRs created by ST-Replay,
    * Replay Proffesional and PRO-Series 12.
@@ -133,17 +133,17 @@ ft_t ft;
    */
   ft->info.rate = (avr->rate & 0x00ffffff);
 
-  avr->size = rlong (ft);
+  st_readdw (ft, &(avr->size));
 
-  avr->lbeg = rlong (ft);
+  st_readdw (ft, &(avr->lbeg));
 
-  avr->lend = rlong (ft);
+  st_readdw (ft, &(avr->lend));
 
-  avr->res1 = rshort (ft);
+  st_readw (ft, &(avr->res1));
 
-  avr->res2 = rshort (ft);
+  st_readw (ft, &(avr->res2));
 
-  avr->res3 = rshort (ft);
+  st_readw (ft, &(avr->res3));
 
   fread (avr->ext, 1, sizeof (avr->ext), ft->fp);
 
@@ -185,10 +185,10 @@ ft_t ft;
 
   /* mono */
   if (ft->info.channels == 1) {
-    wshort (ft, 0);
+    st_writew (ft, 0);
   }
   else if (ft->info.channels == 2) {
-    wshort (ft, 0xffff);
+    st_writew (ft, 0xffff);
   }
   else {
     fail ("AVR: number of channels not supported");
@@ -197,10 +197,10 @@ ft_t ft;
 
   /* rez */
   if (ft->info.size == ST_SIZE_BYTE) {
-    wshort (ft, 8);
+    st_writew (ft, 8);
   }
   else if (ft->info.size == ST_SIZE_WORD) {
-    wshort (ft, 16);
+    st_writew (ft, 16);
   }
   else {
     fail ("AVR: unsupported sample resolution");
@@ -209,10 +209,10 @@ ft_t ft;
 
   /* sign */
   if (ft->info.style == ST_ENCODING_SIGN2) {
-    wshort (ft, 0xffff);
+    st_writew (ft, 0xffff);
   }
   else if (ft->info.style == ST_ENCODING_UNSIGNED) {
-    wshort (ft, 0);
+    st_writew (ft, 0);
   }
   else {
     fail ("AVR: unsupported style");
@@ -220,33 +220,33 @@ ft_t ft;
   }
 
   /* loop */
-  wshort (ft, 0xffff);
+  st_writew (ft, 0xffff);
 
   /* midi */
-  wshort (ft, 0xffff);
+  st_writew (ft, 0xffff);
 
   /* rate */
-  wlong (ft, ft->info.rate);
+  st_writedw (ft, ft->info.rate);
 
   /* size */
   /* Don't know the size yet. */
-  wlong (ft, 0);
+  st_writedw (ft, 0);
 
   /* lbeg */
-  wlong (ft, 0);
+  st_writedw (ft, 0);
 
   /* lend */
   /* Don't know the size yet, so we can't set lend, either. */
-  wlong (ft, 0);
+  st_writedw (ft, 0);
 
   /* res1 */
-  wshort (ft, 0);
+  st_writew (ft, 0);
 
   /* res2 */
-  wshort (ft, 0);
+  st_writew (ft, 0);
 
   /* res3 */
-  wshort (ft, 0);
+  st_writew (ft, 0);
 
   /* ext */
   fwrite ("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 1, sizeof (avr->ext),
@@ -288,11 +288,11 @@ ft_t ft;
 
   /* Fix size */
   fseek (ft->fp, 26L, SEEK_SET);
-  wlong (ft, size);
+  st_writedw (ft, size);
 
   /* Fix lend */
   fseek (ft->fp, 34L, SEEK_SET);
-  wlong (ft, size);
+  st_writedw (ft, size);
 
   return(ST_SUCCESS);
 }

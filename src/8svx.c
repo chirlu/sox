@@ -37,8 +37,8 @@ ft_t ft;
 	ULONG totalsize;
 	ULONG chunksize;
 
-	int channels;
-	LONG rate;
+	ULONG channels;
+	unsigned short rate;
 	int i;
 	int littlendian = 1;
 	char *endptr;
@@ -63,7 +63,7 @@ ft_t ft;
 		fail("8SVX: header does not begin with magic word 'FORM'");
 		return(ST_EOF);
 	}
-	totalsize = rlong(ft);
+	st_readdw(ft, &totalsize);
 	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "8SVX", 4) != 0)
 	{
 		fail("8SVX: 'FORM' chunk does not specify '8SVX' as type");
@@ -73,14 +73,14 @@ ft_t ft;
 	/* read chunks until 'BODY' (or end) */
 	while (fread(buf,1,4,ft->fp) == 4 && strncmp(buf,"BODY",4) != 0) {
 		if (strncmp(buf,"VHDR",4) == 0) {
-			chunksize = rlong(ft);
+			st_readdw(ft, &chunksize);
 			if (chunksize != 20)
 			{
 				fail ("8SVX: VHDR chunk has bad size");
 				return(ST_EOF);
 			}
 			fseek(ft->fp,12,SEEK_CUR);
-			rate = rshort(ft);
+			st_readw(ft, &rate);
 			fseek(ft->fp,1,SEEK_CUR);
 			fread(buf,1,1,ft->fp);
 			if (buf[0] != 0)
@@ -93,7 +93,7 @@ ft_t ft;
 		}
 
 		if (strncmp(buf,"ANNO",4) == 0) {
-			chunksize = rlong(ft);
+			st_readdw(ft, &chunksize);
 			if (chunksize & 1)
 				chunksize++;
 			chunk_buf = (char *) malloc(chunksize + 2);
@@ -116,7 +116,7 @@ ft_t ft;
 		}
 
 		if (strncmp(buf,"NAME",4) == 0) {
-			chunksize = rlong(ft);
+			st_readdw(ft, &chunksize);
 			if (chunksize & 1)
 				chunksize++;
 			chunk_buf = (char *) malloc(chunksize + 1);
@@ -139,13 +139,13 @@ ft_t ft;
 		}
 
 		if (strncmp(buf,"CHAN",4) == 0) {
-			chunksize = rlong(ft);
+			st_readdw(ft, &chunksize);
 			if (chunksize != 4) 
 			{
 				fail("8SVX: Short channel chunk");
 				return(ST_EOF);
 			}
-			channels = rlong(ft);
+			st_readdw(ft, &channels);
 			channels = (channels & 0x01) + 
 					((channels & 0x02) >> 1) +
 				   	((channels & 0x04) >> 2) + 
@@ -155,7 +155,7 @@ ft_t ft;
 		}
 
 		/* some other kind of chunk */
-		chunksize = rlong(ft);
+		st_readdw(ft, &chunksize);
 		if (chunksize & 1)
 			chunksize++;
 		fseek(ft->fp,chunksize,SEEK_CUR);
@@ -173,7 +173,7 @@ ft_t ft;
 		fail ("8SVX: BODY chunk not found");
 		return(ST_EOF);
 	}
-	p->nsamples = rlong(ft);
+	st_readdw(ft, &(p->nsamples));
 
 	ft->info.channels = channels;
 	ft->info.rate = rate;
@@ -214,7 +214,7 @@ LONG st_svxread(ft, buf, nsamp)
 ft_t ft;
 LONG *buf, nsamp;
 {
-	ULONG datum;
+	unsigned char datum;
 	int done = 0;
 	int i;
 
@@ -222,7 +222,8 @@ LONG *buf, nsamp;
 
 	while (done < nsamp) {
 		for (i = 0; i < ft->info.channels; i++) {
-			datum = getc(p->ch[i]);
+		    	/* FIXME: don't pass FILE pointers! */
+		    	datum = getc(p->ch[i]);
 			if (feof(p->ch[i]))
 				return done;
 			/* scale signed up to long's range */
@@ -301,7 +302,7 @@ LONG *buf, len;
 {
 	struct svxpriv *p = (struct svxpriv *) ft->priv;
 
-	LONG datum;
+	unsigned char datum;
 	int done = 0;
 	int i;
 
@@ -310,7 +311,8 @@ LONG *buf, len;
 	while(done < len) {
 		for (i = 0; i < ft->info.channels; i++) {
 			datum = RIGHT(*buf++, 24);
-			putc((int)datum, p->ch[i]);
+			/* FIXME: Needs to pass ft struct and not FILE */
+			putc(datum, p->ch[i]);
 		}
 		done += ft->info.channels;
 	}
@@ -347,7 +349,7 @@ ft_t ft;
 
 	/* add a pad byte if BODY size is odd */
 	if(p->nsamples % 2 != 0)
-		fputc('\0', ft->fp);
+	    st_writeb(ft, '\0');
 
 	/* fixup file sizes in header */
 	if (fseek(ft->fp, 0L, 0) != 0)
@@ -372,29 +374,29 @@ LONG nsamples;
 	/* FORM size must be even */
 	if(formsize % 2 != 0) formsize++;
 
-	fputs ("FORM", ft->fp);
-	wlong(ft, formsize);  /* size of file */
-	fputs("8SVX", ft->fp); /* File type */
+	st_writes(ft, "FORM");
+	st_writedw(ft, formsize);  /* size of file */
+	st_writes(ft, "8SVX"); /* File type */
 
-	fputs ("VHDR", ft->fp);
-	wlong(ft, (LONG) 20); /* number of bytes to follow */
-	wlong(ft, nsamples);  /* samples, 1-shot */
-	wlong(ft, (LONG) 0);  /* samples, repeat */
-	wlong(ft, (LONG) 0);  /* samples per repeat cycle */
-	wshort(ft, (int) ft->info.rate); /* samples per second */
-	fputc(1,ft->fp); /* number of octaves */
-	fputc(0,ft->fp); /* data compression (none) */
-	wshort(ft,1); wshort(ft,0); /* volume */
+	st_writes(ft, "VHDR");
+	st_writedw(ft, (LONG) 20); /* number of bytes to follow */
+	st_writedw(ft, nsamples);  /* samples, 1-shot */
+	st_writedw(ft, (LONG) 0);  /* samples, repeat */
+	st_writedw(ft, (LONG) 0);  /* samples per repeat cycle */
+	st_writew(ft, (int) ft->info.rate); /* samples per second */
+	st_writeb(ft,1); /* number of octabes */
+	st_writeb(ft,0); /* data compression (none) */
+	st_writew(ft,1); st_writew(ft,0); /* volume */
 
-	fputs ("ANNO", ft->fp);
-	wlong(ft, (LONG) 32); /* length of block */
-	fputs ("File created by Sound Exchange  ", ft->fp);
+	st_writes(ft, "ANNO");
+	st_writedw(ft, (LONG) 32); /* length of block */
+	st_writes(ft, "File created by Sound Exchange  ");
 
-	fputs ("CHAN", ft->fp);
-	wlong(ft, (LONG) 4);
-	wlong(ft, (ft->info.channels == 2) ? (LONG) 6 :
+	st_writes(ft, "CHAN");
+	st_writedw(ft, (LONG) 4);
+	st_writedw(ft, (ft->info.channels == 2) ? (LONG) 6 :
 		   (ft->info.channels == 4) ? (LONG) 15 : (LONG) 2);
 
-	fputs ("BODY", ft->fp);
-	wlong(ft, nsamples); /* samples in file */
+	st_writes(ft, "BODY");
+	st_writedw(ft, nsamples); /* samples in file */
 }

@@ -37,7 +37,7 @@ ft_t ft;
 {
         char buf[97];
 
-        LONG rate;
+        unsigned short rate;
 
 	int littlendian = 1;
 	char *endptr;
@@ -73,7 +73,7 @@ ft_t ft;
 	if (strncmp(buf,"\0\0",2) == 0)
 	{
 	/* sounder */
-	rate = rshort(ft);
+	st_readw(ft, &rate);
 	if (rate < 4000 || rate > 25000 )
 	{
 		fail ("SND: sample rate out of range");
@@ -91,7 +91,7 @@ ft_t ft;
 		return(ST_EOF);
 	}
 	fseek(ft->fp,12,SEEK_CUR);
-	rate = rshort(ft);
+	st_readw(ft, &rate);
 	fseek(ft->fp,6,SEEK_CUR);
 	if (fread(buf,1,96,ft->fp) != 96)
 	{
@@ -174,10 +174,10 @@ ft->info.style = ST_ENCODING_UNSIGNED;
 ft->info.size = ST_SIZE_BYTE;
 
 /* sounder header */
-wshort (ft,0); /* sample size code */
-wshort (ft,(int) ft->info.rate);     /* sample rate */
-wshort (ft,10);        /* volume */
-wshort (ft,4); /* shift */
+st_writew (ft,0); /* sample size code */
+st_writew (ft,(int) ft->info.rate);     /* sample rate */
+st_writew (ft,10);        /* volume */
+st_writew (ft,4); /* shift */
 
 return(ST_SUCCESS);
 }
@@ -228,16 +228,16 @@ LONG nsamples;
 char name_buf[97];
 
 /* sndtool header */
-fputs ("SOUND",ft->fp); /* magic */
-fputc (0x1a,ft->fp);
-wshort (ft,(LONG)0);  /* hGSound */
-wlong (ft,nsamples);
-wlong (ft,(LONG)0);
-wlong (ft,nsamples);
-wshort (ft,(int) ft->info.rate);
-wshort (ft,0);
-wshort (ft,10);
-wshort (ft,4);
+st_writes(ft, "SOUND"); /* magic */
+st_writeb(ft, 0x1a);
+st_writew (ft,(LONG)0);  /* hGSound */
+st_writedw (ft,nsamples);
+st_writedw (ft,(LONG)0);
+st_writedw (ft,nsamples);
+st_writew (ft,(int) ft->info.rate);
+st_writew (ft,0);
+st_writew (ft,10);
+st_writew (ft,4);
 memset (name_buf, 0, 96);
 sprintf (name_buf,"%s - File created by Sound Exchange",ft->filename);
 fwrite (name_buf, 1, 96, ft->fp);
