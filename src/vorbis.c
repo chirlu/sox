@@ -1,4 +1,3 @@
-#if defined(HAVE_LIBVORBIS)
 /*
  * Ogg Vorbis sound format driver
  * Copyright 2001, Stan Seibert <indigo@aztec.asu.edu>
@@ -17,11 +16,12 @@
  * Lance Norskog And Sundry Contributors are not responsible for 
  * the consequences of using this software.
  */
+#include "st_i.h"
 
+#if defined(HAVE_LIBVORBIS)
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#include "st_i.h"
 
 #include <ogg/ogg.h>
 #include <vorbis/codec.h>
@@ -229,11 +229,12 @@ st_ssize_t st_vorbisread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 		{
 			if (vb->eof)
 				break;
-			else
+			ret = refill_buffer(vb);
+			if (ret == BUF_EOF || ret == BUF_ERROR)
 			{
-				ret = refill_buffer(vb);
-				if (ret == BUF_EOF || ret == BUF_ERROR)
-					vb->eof = 1;
+			    vb->eof = 1;
+			    if (vb->end == 0)
+				break;
 			}
 		}
 
