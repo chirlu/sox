@@ -433,7 +433,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
             ft->file.pos = 0;
 
             ft->file.count = fread(ft->file.buf+i, 1, ft->file.size-i, ft->fp) ;
-            if (ft->file.count == 0)
+            if (ft->file.count != ft->file.size-i)
             {
                 ft->file.eof = 1;
             }
