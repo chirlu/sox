@@ -139,31 +139,55 @@ LONG *isamp, *osamp;
 
     trim_t trim = (trim_t) effp->priv;
 
+    /* Compute the most samples we can process this time */
     done = ((*isamp < *osamp) ? *isamp : *osamp);
-    *isamp = done; /* always read this much */
 
+    /* Always report that we've read everything for default case */
+    *isamp = done;
+
+    /* Don't bother doing work if we are done */
     if (trim->done) {
 	*osamp = 0;
 	return (ST_EOF);
     }
 
+    /* Default to assuming we will read all input data possible */
     trim->index += done;
     offset = 0;
+
+    /* Quick check to see if we are trimming off the back side yet.
+     * If so then we can skip trimming from the front side.
+     */
     if (! trim->trimmed) {
 	if (trim->start > trim->index) {
+	    /* If we haven't read more then "start" samples, return that
+	     * we've read all this buffer without outputing anything
+	     */
 	    *osamp = 0;
 	    return (ST_SUCCESS);
 	} else {
 	    start_trim = 1;
-	    offset =  (trim->start==0? 0: trim->index - trim->start);
-	    done -= offset; /* adjust done */
+	    /* We've read at least "start" samples.  Now find
+	     * out if we've read to much and if so compute a location
+	     * to start copying data from.  Also use this going forward
+	     * as the amount of data read during trimmed check.
+	     */
+	    offset = done - (trim->index - trim->start);
+	    done = trim->index - trim->start;
 	}
-    }
+    } /* !trimmed */
 
     if (trim->trimmed || start_trim ) {
 
 	if (trim->length && ( (trim->trimmed+done) > trim->length)) {
-	    done = trim->length - trim->trimmed ;
+	    /* Remove extra processing from input count */
+	    *isamp -= ((trim->trimmed+done) - trim->length) - 1;
+	    /* Set done to be only enough samples to fulfill
+	     * this copy request.
+	     * Need to subtract one since length will always be at
+	     * least 1 below trimmed+done.
+	     */
+	    done -= ((trim->trimmed+done) - trim->length) - 1;
 	    *osamp = done;
 	    trim->done = 1;
 	}
