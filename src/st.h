@@ -111,6 +111,7 @@ struct fileinfo {
 	char	*buf;			/* Pointer to data buffer */
 	int	size;			/* Size of buffer */
 	int	count;			/* Count read in to buffer */
+	int	pos;			/* Position in buffer */
 	int	eof;			/* Marker that EOF has been reached */
 };
 

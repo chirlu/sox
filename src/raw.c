@@ -30,6 +30,7 @@ ft_t ft;
 	ft->file.buf = malloc(BUFSIZ);
 	ft->file.size = BUFSIZ;
 	ft->file.count = 0;
+	ft->file.pos = 0;
 	ft->file.eof = 0;
 }
 
@@ -38,7 +39,7 @@ ft_t ft;
 {
 	ft->file.buf = malloc(BUFSIZ);
 	ft->file.size = BUFSIZ;
-	ft->file.count = 0;
+	ft->file.pos = 0;
 	ft->file.eof = 0;
 }
 
@@ -50,17 +51,20 @@ ft_t ft;
 {
 	char rval;
 
-	if (ft->file.count < 1)
+	if (ft->file.pos == ft->file.count)
 	{
+		if (ft->file.eof)
+			return(0);
 		ft->file.count = read(fileno(ft->fp), (char *)ft->file.buf, 
 				ft->file.size);
+		ft->file.pos = 0;
 		if (ft->file.count == 0)
 		{
 			ft->file.eof = 1;
 			return(0);
 		}
 	}
-	rval = *(ft->file.buf + (ft->file.size - ft->file.count--));
+	rval = *(ft->file.buf + ft->file.pos++);
 	return (rval);
 }
 
@@ -68,18 +72,35 @@ unsigned short blockrshort(ft)
 ft_t ft;
 {
 	unsigned short rval;
-	if (ft->file.count < 2)
+	if (ft->file.pos > ft->file.count-2)
 	{
-		ft->file.count = read(fileno(ft->fp), (char *)ft->file.buf,
-				ft->file.size);
-		if (ft->file.count == 0)
+		if (ft->file.eof)
+			return(0);
+
+		if (ft->file.pos == ft->file.count-1)
+		{
+			*ft->file.buf = *(ft->file.buf + ft->file.pos);
+			ft->file.count = read(fileno(ft->fp), 
+					(char *)(ft->file.buf + 1),
+					ft->file.size-1) + 1;
+		}
+		else
+		{
+			ft->file.count = read(fileno(ft->fp),
+						(char *)ft->file.buf,
+						ft->file.size);
+		}
+		ft->file.pos = 0;
+		if (ft->file.count < 2)
 		{
 			ft->file.eof = 1;
 			return(0);
 		}
 	}
-	rval = *((unsigned short *)(ft->file.buf + (ft->file.size - ft->file.count)));
-	ft->file.count -= 2;
+	rval = *((unsigned short *)(ft->file.buf + ft->file.pos));
+	ft->file.pos += 2;
+	if (ft->swap)
+		rval = swapw(rval);
 	return(rval);
 }
 
@@ -100,6 +121,8 @@ ft_t ft;
 	}
 	rval = *((float *)(ft->file.buf + (ft->file.size - ft->file.count)));
 	ft->file.count -= sizeof(float);
+	if (ft->swap)
+		rval = swapf(rval);
 	return(rval);
 }
 	
@@ -221,38 +244,42 @@ ft_t ft;
 void blockflush(ft)
 ft_t ft;
 {
-	if (write(fileno(ft->fp), ft->file.buf, ft->file.count) != ft->file.count)
+	if (write(fileno(ft->fp), ft->file.buf, ft->file.pos) != ft->file.pos)
 	{
 		fail("Error writing data to file");
 	}
-	ft->file.count = 0;
+	ft->file.pos = 0;
 }
 
 void blockputc(ft,c)
 ft_t ft;
 int c;
 {
-	if (ft->file.count > ft->file.size-1) blockflush(ft);
-	*(ft->file.buf + ft->file.count) = c;
-	ft->file.count++;
+	if (ft->file.pos == ft->file.size) blockflush(ft);
+	*(ft->file.buf + ft->file.pos) = c;
+	ft->file.pos++;
 }
 
 void blockwshort(ft,ui)
 ft_t ft;
 unsigned short ui;
 {
-	if (ft->file.count > ft->file.size-2) blockflush(ft);
-	*((unsigned short *)(ft->file.buf + ft->file.count)) = ui;
-	ft->file.count += 2;
+	if (ft->file.pos > ft->file.size-2) blockflush(ft);
+	if (ft->swap)
+		ui = swapw(ui);
+	*(unsigned short *)(ft->file.buf + ft->file.pos) = ui;
+	ft->file.pos += 2;
 }
 
 void blockwfloat(ft,f)
 ft_t ft;
 float f;
 {
-	if (ft->file.count > ft->file.size - sizeof(float)) blockflush(ft);
-	*((float *)(ft->file.buf + ft->file.count)) = f;
-	ft->file.count += sizeof(float);
+	if (ft->file.pos > ft->file.size - sizeof(float)) blockflush(ft);
+	if (ft->swap)
+		f = swapf(f);
+	*(float *)(ft->file.buf + ft->file.pos) = f;
+	ft->file.pos += sizeof(float);
 }
 
 /* Convert the sox internal signed long format */
