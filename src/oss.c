@@ -43,12 +43,11 @@
 static int ossdspinit(ft)
 ft_t ft;
 {
-    int sampletype=AFMT_U8, samplesize=8, dsp_stereo;
+    int sampletype, samplesize, dsp_stereo;
     int tmp, rc;
 
     if (ft->info.rate == 0.0) ft->info.rate = 8000;
     if (ft->info.size == -1) ft->info.size = ST_SIZE_BYTE;
-
     if (ft->info.size == ST_SIZE_BYTE) {
 	sampletype = AFMT_U8;
 	samplesize = 8;
@@ -61,10 +60,7 @@ ft_t ft;
 	}
     }
     else if (ft->info.size == ST_SIZE_WORD) {
-	if (ST_IS_BIGENDIAN)
-	    sampletype = AFMT_S16_BE;
-	else
-	    sampletype = AFMT_S16_LE;
+	sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
 	samplesize = 16;
 	if (ft->info.encoding == -1)
 	    ft->info.encoding = ST_ENCODING_SIGN2;
@@ -75,6 +71,8 @@ ft_t ft;
 	}
     }
     else {
+	sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
+	samplesize = 16;
         ft->info.size = ST_SIZE_WORD;
 	ft->info.encoding = ST_ENCODING_SIGN2;
 	st_report("OSS driver only supports bytes and words");
@@ -95,101 +93,51 @@ ft_t ft;
 	return (ST_EOF);
     }
 
-#ifdef SNDCTL_DSP_SETFMT
-    tmp = sampletype;
-    rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp);
-
-    /* If we are unable to set format type, then we should try a few
-     * other format that we can handle.
+    /* Query the supported formats and find the best match
      */
-    if (rc < 0)
-    {
-	/* If using 16-bits, the sound card may just prefer to use
-	 * an endian format different then the machine type.
-	 * Try swaping data endian.
-	 */
-	if (sampletype == AFMT_S16_LE || sampletype == AFMT_S16_BE)
+    rc = ioctl(fileno(ft->fp), SNDCTL_DSP_GETFMTS, &tmp);
+    if (rc == 0) {
+    	if ((tmp & sampletype) == 0)
 	{
-	    if (sampletype == AFMT_S16_LE)
-		sampletype = AFMT_S16_BE;
-	    else
-		sampletype = AFMT_S16_LE;
-
-            rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp);
-	    if (rc < 0)
+	    /* is 16-bit supported? */
+	    if (samplesize == 16 && (tmp & (AFMT_S16_LE|AFMT_S16_BE)) == 0)
 	    {
 		/* Must not like 16-bits, try 8-bits */
-                ft->info.size = ST_SIZE_WORD;
-	        ft->info.encoding = ST_ENCODING_SIGN2;
-	        st_report("OSS driver doesn't like signed words");
-	        st_report("Forcing to unsigned bytes");
-	        sampletype = AFMT_U8;
-                rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp);
+		ft->info.size = ST_SIZE_BYTE;
+		ft->info.encoding = ST_ENCODING_UNSIGNED;
+		st_report("OSS driver doesn't like signed words");
+		st_report("Forcing to unsigned bytes");
+		tmp = sampletype = AFMT_U8;
+		samplesize = 8;
 	    }
-	    else
-		/* That was successful so store that we need to swap */
-		ft->swap = ft->swap ? 0 : 1;
-
-	}
-	else
-	{
-            ft->info.size = ST_SIZE_WORD;
-	    ft->info.encoding = ST_ENCODING_SIGN2;
-	    st_report("OSS driver doesn't like unsigned bytes");
-	    st_report("Forcing to signed words");
-            if (ST_IS_BIGENDIAN)
-		sampletype = AFMT_S16_BE;
-	    else
-	        sampletype = AFMT_S16_LE;
-
-            rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp);
-
-	    /* If it doesn't like that, try swaping endians */
-	    if (sampletype == AFMT_S16_LE || sampletype == AFMT_S16_BE)
+	    /* is 8-bit supported */
+	    else if (samplesize == 8 && (tmp & AFMT_U8) == 0)
 	    {
-	        if (sampletype == AFMT_S16_LE)
-		    sampletype = AFMT_S16_BE;
-	        else
-		    sampletype = AFMT_S16_LE;
-
-                rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp);
-		if (rc >= 0)
-		    /* That was successful so store that we need to swap */
-		    ft->swap = ft->swap ? 0 : 1;
+		ft->info.size = ST_SIZE_WORD;
+		ft->info.encoding = ST_ENCODING_SIGN2;
+		st_report("OSS driver doesn't like unsigned bytes");
+		st_report("Forcing to signed words");
+		sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
+		samplesize = 16;
 	    }
-
+	    /* determine which 16-bit format to use */
+	    if (samplesize == 16)
+	    {
+	    	if ((tmp & sampletype) == 0)
+		{
+		    sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
+		    ft->swap = ft->swap ? 0 : 1;
+		}
+	    }
 	}
-	/* Give up and exit */
-	if (rc < 0)
-	{
-	    st_fail("Unable to set the sample size to %d", samplesize);
-	    return (ST_EOF);
-	}
+	tmp = sampletype;
+	rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SETFMT, &tmp);
     }
-#else
-    /* Odd dumb interface */
-    tmp = samplesize;
-    if (ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp) < 0)
+    /* Give up and exit */
+    if (rc < 0 || tmp != sampletype)
     {
 	st_fail("Unable to set the sample size to %d", samplesize);
 	return (ST_EOF);
-    }
-#endif
-
-    if (tmp != samplesize)
-    {
-	if (tmp == 16)
-	{
-	    st_warn("Sound card appears to only support singled word samples.  Overriding format");
-	    ft->info.size = ST_SIZE_WORD;
-	    ft->info.encoding = ST_ENCODING_SIGN2;
-	}
-	else if (tmp == 8)
-	{
-	    st_warn("Sound card appears to only support unsigned byte samples. Overriding format");
-	    ft->info.size = ST_SIZE_BYTE;
-	    ft->info.encoding = ST_ENCODING_UNSIGNED;
-	}
     }
 
     if (ft->info.channels == 2) dsp_stereo = 1;
