@@ -22,6 +22,8 @@ sox-12.17.3
     and causing crashes on most RISC CPU's.  Fixed by going back to
     old style of declaring private data as type "double" which usually
     forces strictest alignment.
+  o ima_rw was miscompiling on alpha's because of a header ordering
+    problem.
 
 sox-12.17.2
 -----------

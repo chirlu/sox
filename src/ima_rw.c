@@ -23,9 +23,8 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "ima_rw.h"
 #include "st.h"
-
+#include "ima_rw.h"
 /*
  *
  * Lookup tables for IMA ADPCM format

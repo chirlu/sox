@@ -1,18 +1,10 @@
 /*
  * adpcm.h
  */
+#include "st.h"
+
 #ifndef SAMPL
 #define SAMPL short
-#endif
-#ifndef LONG
-#define LONG long
-#endif
-/* FIXME: This breaks on Alphas! */
-/* SJB: Not really, because when used with sox, LONG and ULONG are
- *      already defined before adpcm.h is included
- */
-#ifndef ULONG
-#define ULONG unsigned long
 #endif
 
 /* default coef sets */

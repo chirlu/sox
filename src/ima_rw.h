@@ -18,15 +18,11 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  
 */
+
+#include "st.h"
+
 #ifndef SAMPL
 #	define SAMPL short
-#endif
-/* FIXME: This breaks on Alphas! */
-/* SJB: Not really, because when used with sox, LONG and ULONG are
- *      already defined before adpcm.h is included
- */
-#ifndef ULONG
-#	define ULONG unsigned long
 #endif
 
 /* #undef STRICT_IMA makes code a bit faster, but not
