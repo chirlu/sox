@@ -11,7 +11,6 @@
 #include "st_i.h"
 
 #include <math.h>   /* exp(), sqrt() */
-#include <limits.h> /* LONG_MAX */
 
 /* type used for computations. 
  */
@@ -94,10 +93,13 @@ int st_vol_getopts(eff_t effp, int n, char **argv)
     	}
     	
     	vol->uselimiter = 1; /* ok, we'll use it */
-    	/* The following equation is derived so that there is no discontinuity in output amplitudes */
-    	/* and a LONG_MAX input always maps to a LONG_MAX output when the limiter is activated. */
-    	/* (NOTE: There **WILL** be a discontinuity in the slope of the output amplitudes when using the limiter.) */
-    	vol->limiterthreshhold = LONG_MAX * (ONE - vol->limitergain) / (fabs(vol->gain) - vol->limitergain);
+    	/* The following equation is derived so that there is no 
+	 * discontinuity in output amplitudes */
+    	/* and a ST_SAMPLE_MAX input always maps to a ST_SAMPLE_MAX output 
+	 * when the limiter is activated. */
+    	/* (NOTE: There **WILL** be a discontinuity in the slope 
+	 * of the output amplitudes when using the limiter.) */
+    	vol->limiterthreshhold = ST_SAMPLE_MAX * (ONE - vol->limitergain) / (fabs(vol->gain) - vol->limitergain);
     }
     
 
@@ -135,20 +137,20 @@ int st_vol_start(eff_t effp)
  * this could be a function on its own, with clip count and report
  * handled by eff_t and caller.
  */
-static LONG clip(vol_t vol, const VOL_FLOAT v)
+static st_sample_t clip(vol_t vol, const VOL_FLOAT v)
 {
-    if (v > LONG_MAX)
+    if (v > ST_SAMPLE_MAX)
     {
 	 vol->clipped++;
-	 return LONG_MAX;
+	 return ST_SAMPLE_MAX;
     }
-    else if (v < -LONG_MAX)
+    else if (v < -ST_SAMPLE_MAX)
     {
 	vol->clipped++;
-	return -LONG_MAX;
+	return -ST_SAMPLE_MAX;
     }
     /* else */
-    return (LONG) v;
+    return (st_sample_t) v;
 }
 
 #ifndef MIN
@@ -165,7 +167,7 @@ int st_vol_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     register VOL_FLOAT gain = vol->gain;
     register VOL_FLOAT limiterthreshhold = vol->limiterthreshhold;
     register VOL_FLOAT sample;
-    register LONG len;
+    register st_size_t len;
     
     len = MIN(*osamp, *isamp);
 
@@ -182,12 +184,12 @@ int st_vol_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 	    	
 	    	if (sample > limiterthreshhold)
 	    	{
-	    		sample =  (LONG_MAX - vol->limitergain * (LONG_MAX - sample));
+	    		sample =  (ST_SAMPLE_MAX - vol->limitergain * (ST_SAMPLE_MAX - sample));
 	    		vol->limited++;
 	    	}
 	    	else if (sample < -limiterthreshhold)
 	    	{
-	    		sample = -(LONG_MAX - vol->limitergain * (LONG_MAX + sample));
+	    		sample = -(ST_SAMPLE_MAX - vol->limitergain * (ST_SAMPLE_MAX + sample));
 	    		vol->limited++;
 	    	}
 	    	else

@@ -26,12 +26,12 @@ typedef struct
     char *length_str;
 
     /* options converted to values */
-    ULONG start;
-    ULONG length;
+    st_size_t start;
+    st_size_t length;
 
     /* internal stuff */
-    ULONG index;
-    ULONG trimmed;
+    st_size_t index;
+    st_size_t trimmed;
     int done;
 } * trim_t;
 
@@ -191,7 +191,7 @@ int st_trim_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 	trim->trimmed += done;
     }
 
-    memcpy(obuf, ibuf+offset, done * sizeof(LONG));
+    memcpy(obuf, ibuf+offset, done * sizeof(st_sample_t));
     *osamp = done;
     return (ST_SUCCESS);
 }

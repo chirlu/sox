@@ -30,7 +30,7 @@
 
 /* Dictionary entry for Huffman (de)compression */
 typedef struct {
-	LONG frequ;
+	long frequ;
 	short dict_leftson;
 	short dict_rightson;
 } dictent;
@@ -39,11 +39,11 @@ typedef struct {
 struct readpriv {
 	/* Static data from the header */
 	dictent *dictionary;
-	LONG checksum;
+	int32_t checksum;
 	int deltacompression;
 	/* Engine state */
-	LONG huffcount;
-	LONG cksum;
+	long huffcount;
+	long cksum;
 	int dictentry;
 	int nrbits;
 	uint32_t current;
@@ -310,8 +310,8 @@ int st_hcomstartwrite(ft_t ft)
 st_ssize_t st_hcomwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
 	register struct writepriv *p = (struct writepriv *) ft->priv;
-	LONG datum;
-	LONG save_len = len;
+	st_sample_t datum;
+	st_ssize_t save_len = len;
 
 	if (len == 0)
 	    return (0);
@@ -348,9 +348,9 @@ st_ssize_t st_hcomwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 
 static dictent dictionary[511];
 static dictent *de;
-static LONG codes[256];
-static LONG codesize[256];
-static LONG checksum;
+static long codes[256];
+static long codesize[256];
+static int32_t checksum;
 
 static void makecodes(int e, int c, int s, int b)
 {
@@ -363,11 +363,11 @@ static void makecodes(int e, int c, int s, int b)
   }
 }
 
-static LONG curword;
 static int nbits;
+static int32_t curword;
 
 /* FIXME: Place in misc.c */
-static void putlong(unsigned char *c, LONG v)
+static void putlong(unsigned char *c, int32_t v)
 {
   *c++ = (v >> 24) & 0xff;
   *c++ = (v >> 16) & 0xff;
@@ -384,8 +384,9 @@ static void putshort(unsigned char *c, short v)
 
 static void putcode(unsigned char c, unsigned char **df)
 {
-LONG code, size;
+long code, size;
 int i;
+
   code = codes[c];
   size = codesize[c];
   for(i = 0; i < size; i++) {
@@ -403,9 +404,9 @@ int i;
   }
 }
 
-static int compress(unsigned char **df, LONG *dl, float fr)
+static int compress(unsigned char **df, int32_t *dl, float fr)
 {
-  LONG samplerate;
+  int32_t samplerate;
   unsigned char *datafork = *df;
   unsigned char *ddf;
   short dictsize;
@@ -503,7 +504,7 @@ static int compress(unsigned char **df, LONG *dl, float fr)
   putlong(datafork + 4, *dl);
   putlong(datafork + 8, checksum);
   putlong(datafork + 12, 1L);
-  samplerate = 22050 / (LONG)fr;
+  samplerate = 22050 / (int32_t)fr;
   putlong(datafork + 16, samplerate);
   putshort(datafork + 20, dictsize);
   *df = datafork;		/* reassign passed pointer to new datafork */
@@ -526,7 +527,7 @@ int st_hcomstopwrite(ft_t ft)
 {
 	register struct writepriv *p = (struct writepriv *) ft->priv;
 	unsigned char *compressed_data = p->data;
-	LONG compressed_len = p->pos;
+	uint32_t compressed_len = p->pos;
 	int rc;
 
 	/* Compress it all at once */
@@ -543,8 +544,8 @@ int st_hcomstopwrite(ft_t ft)
 	padbytes(ft, 65-3);
 	st_writes(ft, "FSSD");
 	padbytes(ft, 83-69);
-	st_writedw(ft, (ULONG) compressed_len); /* compressed_data size */
-	st_writedw(ft, (ULONG) 0); /* rsrc size */
+	st_writedw(ft, (uint32_t) compressed_len); /* compressed_data size */
+	st_writedw(ft, (uint32_t) 0); /* rsrc size */
 	padbytes(ft, 128 - 91);
 	if (ferror(ft->fp))
 	{

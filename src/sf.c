@@ -27,7 +27,7 @@
 typedef struct sfstuff {
         struct sfinfo info;
         /* needed for seek */
-        LONG dataStart;
+        st_size_t dataStart;
 } *sf_t;
 
 /*

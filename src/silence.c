@@ -292,7 +292,7 @@ int st_silence_start(eff_t effp)
 	else
 	    silence->mode = SILENCE_COPY;
 
-	silence->start_holdoff = malloc(sizeof(LONG)*silence->start_duration);
+	silence->start_holdoff = malloc(sizeof(st_sample_t)*silence->start_duration);
 	if (!silence->start_holdoff)
 	{
 	    st_fail("Could not allocate memory");
@@ -302,7 +302,7 @@ int st_silence_start(eff_t effp)
 	silence->start_holdoff_end = 0;
 	silence->start_found_periods = 0;
 
-	silence->stop_holdoff = malloc(sizeof(LONG)*silence->stop_duration);
+	silence->stop_holdoff = malloc(sizeof(st_sample_t)*silence->stop_duration);
 	if (!silence->stop_holdoff)
 	{
 	    st_fail("Could not allocate memory");
@@ -380,7 +380,7 @@ int st_silence_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 {
     silence_t silence = (silence_t) effp->priv;
     int	threshold, i, j;
-    ULONG nrOfTicks, nrOfInSamplesRead, nrOfOutSamplesWritten;
+    st_size_t nrOfTicks, nrOfInSamplesRead, nrOfOutSamplesWritten;
 
     nrOfInSamplesRead = 0;
     nrOfOutSamplesWritten = 0;
@@ -611,7 +611,7 @@ int st_silence_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     silence_t silence = (silence_t) effp->priv;
     int i;
-    LONG nrOfTicks, nrOfOutSamplesWritten = 0;
+    st_size_t nrOfTicks, nrOfOutSamplesWritten = 0;
 
     /* Only if in flush mode will there be possible samples to write
      * out during drain() call.

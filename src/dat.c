@@ -28,7 +28,7 @@ typedef struct dat {
 } *dat_t;
 
 /* FIXME: Move this to misc.c */
-static LONG roundoff(double x)
+static st_sample_t roundoff(double x)
 {
     if (x < 0.0) return(x - 0.5);
     else return(x + 0.5);

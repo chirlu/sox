@@ -29,16 +29,16 @@ typedef struct statstuff {
 	double	dsum1, dsum2;	/* deltas */
 	double	scale;		/* scale-factor    */
 	double	last;		/* previous sample */
-	ULONG	read;		/* samples processed */
+	st_size_t read;		/* samples processed */
 	int	volume;
 	int	srms;
 	int	fft;
-	ULONG   bin[4];
+	ulong   bin[4];
 	double  *re;
 	double  *im;
-	ULONG   fft_bits;
-	ULONG   fft_size;
-	ULONG   fft_offset;
+	ulong   fft_bits;
+	ulong   fft_size;
+	ulong   fft_offset;
 } *stat_t;
 
 
@@ -49,7 +49,7 @@ int st_stat_getopts(eff_t effp, int n, char **argv)
 {
 	stat_t stat = (stat_t) effp->priv;
 
-	stat->scale = MAXLONG;
+	stat->scale = ST_SAMPLE_MAX;
 	stat->volume = 0;
 	stat->srms = 0;
 	stat->fft = 0;
@@ -107,7 +107,7 @@ int st_stat_start(eff_t effp)
 {
 	stat_t stat = (stat_t) effp->priv;
 	int i;
-	LONG  bitmask;
+	ulong  bitmask;
 
 	stat->min = stat->max = stat->mid = 0;
 	stat->asum = 0;
@@ -344,7 +344,7 @@ int st_stat_stop(eff_t effp)
 
 	/* Just print the volume adjustment */
 	if (stat->volume == 1 && amp > 0) {
-		fprintf(stderr, "%.3f\n", MAXLONG/(amp*scale));
+		fprintf(stderr, "%.3f\n", ST_SAMPLE_MAX/(amp*scale));
 		return (ST_SUCCESS);
 	}
 	if (stat->volume == 2) {
@@ -371,7 +371,7 @@ int st_stat_stop(eff_t effp)
 	freq = sqrt(stat->dsum2/stat->sum2)*effp->ininfo.rate/(M_PI*2);
 	fprintf(stderr, "Rough   frequency: %12d\n", (int)freq);
 
-	if (amp>0) fprintf(stderr, "Volume adjustment: %12.3f\n", MAXLONG/(amp*scale));
+	if (amp>0) fprintf(stderr, "Volume adjustment: %12.3f\n", ST_SAMPLE_MAX/(amp*scale));
 
         if (stat->bin[2] == 0 && stat->bin[3] == 0)
                 fprintf(stderr, "\nProbably text, not sound\n");

@@ -59,18 +59,8 @@ int st_skelstartread(ft_t ft)
 st_ssize_t st_skelread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	skel_t sk = (skel_t) ft->priv;
-	int abs;
-	float amp;
 	int done = 0;
-	
-	char c;
-	unsigned char uc;
-	short s;
-	unsigned short us;
-	LONG l;
-	ULONG ul;
-	float f;
-	double d;
+	st_sample_t l;
 
 	for(; done < len; done++) {
 		if no more samples

@@ -61,7 +61,7 @@ typedef struct echosstuff {
 	double	*delay_buf;
 	float	in_gain, out_gain;
 	float	delay[MAX_ECHOS], decay[MAX_ECHOS];
-	LONG	samples[MAX_ECHOS], pointer[MAX_ECHOS], sumsamples;
+	st_ssize_t samples[MAX_ECHOS], pointer[MAX_ECHOS], sumsamples;
 } *echos_t;
 
 /* Private data for SKEL file */
@@ -182,7 +182,7 @@ int st_echos_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 	int j;
 	
 	double d_in, d_out;
-	LONG out;
+	st_sample_t out;
 
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
 	for(done = 0; done < len; done++) {
@@ -195,7 +195,7 @@ int st_echos_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 		}
 		/* Adjust the output volume and size to 24 bit */
 		d_out = d_out * echos->out_gain;
-		out = st_clip24((LONG) d_out);
+		out = st_clip24((st_sample_t) d_out);
 		*obuf++ = out * 256;
 		/* Mix decay of delays and input */
 		for ( j = 0; j < echos->num_delays; j++ ) {
@@ -221,7 +221,7 @@ int st_echos_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
 	echos_t echos = (echos_t) effp->priv;
 	double d_in, d_out;
-	LONG out;
+	st_sample_t out;
 	int j;
 	long done;
 
@@ -235,7 +235,7 @@ int st_echos_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 		}
 		/* Adjust the output volume and size to 24 bit */
 		d_out = d_out * echos->out_gain;
-		out = st_clip24((LONG) d_out);
+		out = st_clip24((st_sample_t) d_out);
 		*obuf++ = out * 256;
 		/* Mix decay of delays and input */
 		for ( j = 0; j < echos->num_delays; j++ ) {

@@ -335,14 +335,14 @@ void ImaBlockMashI(
  *  samplesPerBlock which would go into a block of size blockAlign
  *  Yes, it is confusing.
  */
-ULONG ImaSamplesIn(
-  ULONG dataLen,
+st_size_t ImaSamplesIn(
+  st_size_t dataLen,
   unsigned short chans,
   unsigned short blockAlign,
   unsigned short samplesPerBlock
 )
 {
-  ULONG m, n;
+  st_size_t m, n;
 
   if (samplesPerBlock) {
     n = (dataLen / blockAlign) * samplesPerBlock;
@@ -363,22 +363,22 @@ ULONG ImaSamplesIn(
 }
 
 /*
- * ULONG ImaBytesPerBlock(chans, samplesPerBlock)
+ * st_size_t ImaBytesPerBlock(chans, samplesPerBlock)
  *   return minimum blocksize which would be required
  *   to encode number of chans with given samplesPerBlock
  */
-ULONG ImaBytesPerBlock(
+st_size_t ImaBytesPerBlock(
   unsigned short chans,
   unsigned short samplesPerBlock
 )
 {
-  ULONG n;
+  st_size_t n;
   /* per channel, ima has blocks of len 4, the 1st has 1st sample, the others
    * up to 8 samples per block,
    * so number of later blocks is (nsamp-1 + 7)/8, total blocks/chan is
    * (nsamp-1+7)/8 + 1 = (nsamp+14)/8
    */
-  n = ((ULONG)samplesPerBlock + 14)/8 * 4 * chans;
+  n = ((st_size_t)samplesPerBlock + 14)/8 * 4 * chans;
   return n;
 }
 

@@ -32,44 +32,45 @@
 /* A stereo fir filter. One side filters as if the signal was from
    30 degrees from the ear, the other as if 330 degrees. */
 /*                           30   330  */
-static const LONG filt[]    ={4,  -6,
-			      4,  -11,
-			      -1, -5,
-			      3,  3,
-			      -2, 5,
-			      -5, 0,
-			      9,  1,
-			      6,  3,
-			      -4, -1,
-			      -5, -3, 
-			      -2, -5,
-			      -7,  1,
-			      6,   -7,
-			      30,  -29,
-			      12,  -3,
-			      -11,  4,
-			      -3,   7,
-			      -20,  23,
-			      2,    0,
-			      1,    -6,
-			      -14,  -5,
-			      15,   -18,
-			      6,    7,
-			      15,   -10,
-			      -14,  22,
-			      -7,   -2,
-			      -4,   9,
-			      6,    -12,
-			      6,    -6,
-			      0,    -11,
-			      0,    -5, 
-			      4,     0};   
+static const st_sample_t filt[]    =
+{   4,  -6,
+    4,  -11,
+    -1,  -5,
+    3,   3,
+    -2,   5,
+    -5, 0,
+    9,  1,
+    6,  3,
+    -4, -1,
+    -5, -3, 
+    -2, -5,
+    -7,  1,
+    6,   -7,
+    30,  -29,
+    12,  -3,
+    -11,  4,
+    -3,   7,
+    -20,  23,
+    2,    0,
+    1,    -6,
+    -14,  -5,
+    15,   -18,
+    6,    7,
+    15,   -10,
+    -14,  22,
+    -7,   -2,
+    -4,   9,
+    6,    -12,
+    6,    -6,
+    0,    -11,
+    0,    -5, 
+    4,     0};   
 
 /* 32 tap stereo FIR filter needs 64 taps */
 #define EARWAX_NUMTAPS  64
 
 typedef struct earwaxstuff {
-  LONG *tap; /* taps are z^-1 delays for the FIR filter */
+  st_sample_t *tap; /* taps are z^-1 delays for the FIR filter */
 } *earwax_t;
 
 /*
@@ -102,10 +103,10 @@ int st_earwax_start(eff_t effp)
   }
 
   /* allocate tap memory */
-  earwax->tap = (LONG*)malloc( sizeof(LONG) * EARWAX_NUMTAPS );
+  earwax->tap = (st_sample_t*)malloc( sizeof(st_sample_t) * EARWAX_NUMTAPS );
   if( !earwax->tap ){
     st_fail("earwax: Cannot malloc %d bytes!\n", 
-	    sizeof(LONG) * EARWAX_NUMTAPS );
+	    sizeof(st_sample_t) * EARWAX_NUMTAPS );
     return (ST_EOF);
   }
 
@@ -128,7 +129,7 @@ int st_earwax_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
   earwax_t earwax = (earwax_t) effp->priv;
   int len, done;
   int i;
-  LONG output;
+  st_sample_t output;
 
   len = ((*isamp > *osamp) ? *osamp : *isamp);
 
@@ -158,7 +159,7 @@ int st_earwax_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int i,j;
-  LONG output;  
+  st_sample_t output;  
 
   for(i = EARWAX_NUMTAPS-1; i >= 0; i--){
     output = 0;

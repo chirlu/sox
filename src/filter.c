@@ -39,22 +39,22 @@
 
 /* Private data for Lerp via LCM file */
 typedef struct filterstuff {
-	LONG rate;
-	LONG freq0;										/* low  corner freq */
-	LONG freq1;										/* high corner freq */
-	double beta;   								/* >2 is kaiser window beta, <=2 selects nuttall window */
-	LONG Nwin;
-	Float *Fp;										/* [Xh+1] Filter coefficients */
-	LONG Xh;											/* number of past/future samples needed by filter  */
-	LONG Xt;											/* target to enter new data into X */
-	Float *X, *Y;									/* I/O buffers */
+	st_rate_t rate;
+	st_sample_t freq0;/* low  corner freq */
+	st_sample_t freq1;/* high corner freq */
+	double beta;/* >2 is kaiser window beta, <=2 selects nuttall window */
+	long Nwin;
+	Float *Fp;/* [Xh+1] Filter coefficients */
+	long Xh;/* number of past/future samples needed by filter  */
+	long Xt;/* target to enter new data into X */
+	Float *X, *Y;/* I/O buffers */
 } *filter_t;
 
 /* makeFilter() declared in resample.c */
 extern int 
-makeFilter(Float Fp[], LONG Nwing, double Froll, double Beta, LONG Num, int Normalize);
+makeFilter(Float Fp[], long Nwing, double Froll, double Beta, long Num, int Normalize);
 
-static void FiltWin(filter_t f, LONG Nx);
+static void FiltWin(filter_t f, long Nx);
 
 /*
  * Process options
@@ -86,7 +86,7 @@ int st_filter_getopts(eff_t effp, int n, char **argv)
 		return (ST_EOF);
 	}
 
-	if ((n >= 2) && !sscanf(argv[1], "%d", &f->Nwin))
+	if ((n >= 2) && !sscanf(argv[1], "%ld", &f->Nwin))
 	{
 		st_fail("Usage: filter low-high [ windowlength ]");
 		return (ST_EOF);
@@ -113,7 +113,7 @@ int st_filter_start(eff_t effp)
 {
 	filter_t f = (filter_t) effp->priv;
 	Float *Fp0, *Fp1;
-	LONG Xh0, Xh1, Xh;
+	long Xh0, Xh1, Xh;
 	int i;
 
 	f->rate = effp->ininfo.rate;
@@ -191,7 +191,7 @@ int st_filter_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                    st_size_t *isamp, st_size_t *osamp)
 {
 	filter_t f = (filter_t) effp->priv;
-	LONG i, Nx, Nproc;
+	long i, Nx, Nproc;
 
 	/* constrain amount we actually process */
 	/* fprintf(stderr,"Xh %d, Xt %d, isamp %d, ",f->Xh, f->Xt, *isamp);fflush(stderr); */
@@ -242,7 +242,8 @@ int st_filter_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 int st_filter_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
 	filter_t f = (filter_t) effp->priv;
-	LONG isamp_res, *Obuf, osamp_res;
+	long isamp_res, osamp_res;
+	st_sample_t *Obuf;
 
 	/* fprintf(stderr,"Xh %d, Xt %d  <--- DRAIN\n",f->Xh, f->Xt); */
 
@@ -251,7 +252,7 @@ int st_filter_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 	osamp_res = *osamp;
 	Obuf = obuf;
 	while (isamp_res>0 && osamp_res>0) {
-		LONG Isamp, Osamp;
+		st_sample_t Isamp, Osamp;
 		Isamp = isamp_res;
 		Osamp = osamp_res;
 		st_filter_flow(effp, NULL, Obuf, &Isamp, &Osamp);
@@ -281,7 +282,7 @@ int st_filter_stop(eff_t effp)
 	return (ST_SUCCESS);
 }
 
-static double jprod(const Float *Fp, const Float *Xp, LONG ct)
+static double jprod(const Float *Fp, const Float *Xp, long ct)
 {
 	const Float *fp, *xp, *xq;
 	double v = 0;
@@ -297,7 +298,7 @@ static double jprod(const Float *Fp, const Float *Xp, LONG ct)
 	return v;
 }
 
-static void FiltWin(filter_t f, LONG Nx)
+static void FiltWin(filter_t f, long Nx)
 {
 	Float *Y;
 	Float *X, *Xend;

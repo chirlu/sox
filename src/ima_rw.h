@@ -77,19 +77,19 @@ extern void ImaBlockMashI(
  *  samplesPerBlock which would go into a block of size blockAlign
  *  Yes, it is confusing usage.
  */
-extern ULONG ImaSamplesIn(
-	ULONG dataLen,
+extern st_size_t ImaSamplesIn(
+	st_size_t dataLen,
 	unsigned short chans,
 	unsigned short blockAlign,
 	unsigned short samplesPerBlock
 );
 
 /*
- * ULONG ImaBytesPerBlock(chans, samplesPerBlock)
+ * st_size_t ImaBytesPerBlock(chans, samplesPerBlock)
  *   return minimum blocksize which would be required
  *   to encode number of chans with given samplesPerBlock
  */
-extern ULONG ImaBytesPerBlock(
+extern st_size_t ImaBytesPerBlock(
 	unsigned short chans,
 	unsigned short samplesPerBlock
 );

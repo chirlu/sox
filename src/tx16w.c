@@ -45,7 +45,7 @@
 
 /* Private data for TX16 file */
 typedef struct txwstuff {
-	LONG	rest;			/* bytes remaining in sample file */
+	st_size_t rest;			/* bytes remaining in sample file */
 } *txw_t;
 
 struct WaveHeader_ {
@@ -64,8 +64,8 @@ static const unsigned char magic1[4] = {0, 0x06, 0x10, 0xF6};
 static const unsigned char magic2[4] = {0, 0x52, 0x00, 0x52};
 
 /* SJB: dangerous static variables */
-static LONG tx16w_len=0;
-static LONG writedone=0;
+static st_size_t tx16w_len=0;
+static st_size_t writedone=0;
 
 /*
  * Do anything required before you start reading samples.
@@ -80,10 +80,10 @@ int st_txwstartread(ft_t ft)
   char filetype[7];
   char format;
   char sample_rate;
-  LONG num_samp_bytes = 0;
+  st_size_t num_samp_bytes = 0;
   char gunk[8];
   int blewIt;
-  ULONG trash;
+  int32_t trash;
 
   txw_t sk = (txw_t) ft->priv;
   /* If you need to seek around the input file. */
@@ -181,7 +181,7 @@ int st_txwstartread(ft_t ft)
 
 /*
  * Read up to len samples from file.
- * Convert to signed LONGs.
+ * Convert to st_sample_ts.
  * Place in buf[].
  * Return number of samples read.
  */
@@ -211,9 +211,9 @@ st_ssize_t st_txwread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 	 * two unsigned short samples. 
 	 * TCC 3.0 appeared to do unwanted things, so we really specify
 	 *  exactly what we want to happen.
-	 * Convert unsigned short to LONG then shift up the result
+	 * Convert unsigned short to st_sample_t then shift up the result
 	 *  so that the 12-bit sample lives in the most significant
-	 *  12-bits of the LONG.
+	 *  12-bits of the st_sample_t.
 	 * This gets our two samples into the internal format which we
 	 * deposit into the given buffer and adjust our counts respectivly.
          */
@@ -225,10 +225,10 @@ st_ssize_t st_txwread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 	    sk->rest -= 3; /* adjust remaining for bytes we just read */
 	    s1 = (unsigned short) (uc1 << 4) | (((uc2 >> 4) & 017));
 	    s2 = (unsigned short) (uc3 << 4) | (( uc2 & 017 ));
-	    *buf = (LONG) s1;
+	    *buf = (st_sample_t) s1;
             *buf = (*buf << 20);
 	    buf++; /* sample one is done */
-	    *buf = (LONG) s2;
+	    *buf = (st_sample_t) s2;
             *buf = (*buf << 20);
 	    buf++; /* sample two is done */
 	    done += 2; /* adjust converted & stored sample count */

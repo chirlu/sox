@@ -262,9 +262,7 @@ ft_t ft;
   return(ST_SUCCESS);
 }
 
-LONG st_avrwrite(ft, buf, nsamp) 
-ft_t ft;
-LONG *buf, nsamp;
+st_ssize_t st_avrwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp) 
 {
   avr_t	avr = (avr_t)ft->priv;
 
@@ -273,10 +271,7 @@ LONG *buf, nsamp;
   return (st_rawwrite (ft, buf, nsamp));
 }
 
-
-
-int st_avrstopwrite(ft) 
-ft_t ft;
+int st_avrstopwrite(ft_t ft) 
 {
   avr_t	avr = (avr_t)ft->priv;
   int rc;

@@ -84,7 +84,7 @@ int st_highp_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 	highp_t highp = (highp_t) effp->priv;
 	int len, done;
 	double d;
-	LONG l;
+	st_sample_t l;
 
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
 

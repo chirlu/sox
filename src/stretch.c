@@ -22,7 +22,6 @@
 #include "st_i.h"
 
 #include <stdlib.h> /* malloc and free */
-#include <limits.h> /* LONG_MAX */
 #include <string.h> /* memcpy() */
 
 #ifndef MIN
@@ -80,7 +79,7 @@ typedef struct
 
     int size;               /* buffer size */
     int index;              /* next available element */
-    LONG * ibuf;            /* input buffer */
+    st_sample_t *ibuf;      /* input buffer */
     int ishift;             /* input shift */
 
     int oindex;             /* next evailable element */
@@ -106,21 +105,21 @@ static void debug(stretch_t s, char * where)
 
 /* clip amplitudes and count number of clipped values.
  */
-static LONG clip(stretch_t stretch, STRETCH_FLOAT v)
+static st_sample_t clip(stretch_t stretch, STRETCH_FLOAT v)
 {
-    if (v < -LONG_MAX)
+    if (v < -ST_SAMPLE_MAX)
     {
 	stretch->clipped++;
-	return -LONG_MAX;
+	return -ST_SAMPLE_MAX;
     }
-    else if (v > LONG_MAX)
+    else if (v > ST_SAMPLE_MAX)
     {
 	stretch->clipped++;
-	return LONG_MAX;
+	return ST_SAMPLE_MAX;
     }
     else
     {
-	return (LONG) v;
+	return (st_sample_t) v;
     }
 }
 
@@ -231,7 +230,8 @@ int st_stretch_start(eff_t effp)
     stretch->size = (int)(effp->outinfo.rate * ONETHOUSANDS * stretch->window);
     /* start in the middle of an input to avoid initial fading... */
     stretch->index = stretch->size/2;
-    stretch->ibuf  = (LONG *) malloc(stretch->size * sizeof(LONG));
+    stretch->ibuf  = (st_sample_t *) malloc(stretch->size * 
+	                                    sizeof(st_sample_t));
 
     /* the shift ratio deal with the longest of ishift/oshift
        hence ishift<=size and oshift<=size. should be asserted.
@@ -328,7 +328,7 @@ int st_stretch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 				      stretch->size-stretch->index);
 
 	    memcpy(stretch->ibuf+stretch->index, 
-		   ibuf+iindex, tocopy*sizeof(LONG));
+		   ibuf+iindex, tocopy*sizeof(st_sample_t));
 
 	    iindex += tocopy;
 	    stretch->index += tocopy; 

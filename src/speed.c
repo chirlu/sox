@@ -13,7 +13,6 @@
 
 #include "st_i.h"
 
-#include <limits.h> /* LONG_MAX */
 #include <math.h> /* pow */
 #include <string.h>
 
@@ -54,7 +53,7 @@ typedef struct
 
     int compression;      /* integer compression of the signal. */
     int index;            /* how much of the input buffer is filled */
-    LONG * ibuf;          /* small internal input buffer for compression */
+    st_sample_t *ibuf;    /* small internal input buffer for compression */
 
     SPEED_FLOAT cbuf[4];  /* computation buffer for interpolation */
     SPEED_FLOAT frac;     /* current index position in cbuf */
@@ -94,20 +93,20 @@ static SPEED_FLOAT cub(
 }
 
 /* clip if necessary, and report. */
-static LONG clip(speed_t speed, SPEED_FLOAT v)
+static st_sample_t clip(speed_t speed, SPEED_FLOAT v)
 {
-    if (v < -LONG_MAX)
+    if (v < -ST_SAMPLE_MAX)
     {
 	speed->clipped++;
-	return -LONG_MAX;
+	return -ST_SAMPLE_MAX;
     }
-    else if (v > LONG_MAX)
+    else if (v > ST_SAMPLE_MAX)
     {
 	speed->clipped++;
-	return LONG_MAX;
+	return ST_SAMPLE_MAX;
     }
     else
-	return (LONG) v;
+	return (st_sample_t) v;
 }
 
 /* get options. */
@@ -157,7 +156,8 @@ int st_speed_start(eff_t effp)
 	speed->rate = speed->factor;
     }
 
-    speed->ibuf   = (LONG*) malloc(speed->compression*sizeof(LONG));
+    speed->ibuf   = (st_sample_t *) malloc(speed->compression*
+	                                   sizeof(st_sample_t));
     speed->index  = 0;
 
     speed->state = sp_input;

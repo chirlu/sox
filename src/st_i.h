@@ -37,12 +37,12 @@ extern "C" {
 #endif
 
 /* declared in misc.c */
-LONG st_clip24(LONG) REGPARM(1);
-void st_sine(int *, LONG, int, int);
-void st_triangle(int *, LONG, int, int);
+st_sample_t st_clip24(st_sample_t) REGPARM(1);
+void st_sine(int *buf, st_ssize_t len, int max, int depth);
+void st_triangle(int *buf, st_ssize_t len, int max, int depth);
 
-LONG st_gcd(LONG,LONG) REGPARM(2);
-LONG st_lcm(LONG,LONG) REGPARM(2);
+st_sample_t st_gcd(st_sample_t a, st_sample_t b) REGPARM(2);
+st_sample_t st_lcm(st_sample_t a, st_sample_t b) REGPARM(2);
 
 #ifndef HAVE_RAND
 int rand(void);
@@ -79,7 +79,7 @@ st_size_t st_filelength(ft_t ft);
 #ifdef HAVE_BYTESWAP_H
 #define st_swapw(x) bswap_16(x)
 #define st_swapdw(x) bswap_32(x)
-#define st_swapf(x) (float)bswap_32((ULONG)(x))
+#define st_swapf(x) (float)bswap_32((uint32_t)(x))
 #else
 uint16_t st_swapw(uint16_t uw);
 uint32_t st_swapdw(uint32_t udw);

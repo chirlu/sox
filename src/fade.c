@@ -27,7 +27,7 @@
 /* Private data for fade file */
 typedef struct fadestuff
 { /* These are measured as samples */
-    ULONG in_start,  in_stop, out_start, out_stop, samplesdone;
+    st_size_t in_start,  in_stop, out_start, out_stop, samplesdone;
     char *in_stop_str, *out_start_str, *out_stop_str;
     char in_fadetype, out_fadetype;
     int endpadwarned;
@@ -36,7 +36,7 @@ typedef struct fadestuff
 #define FADE_USAGE "Usage: fade [ type ] fade-in-length [ stop-time [ fade-out-length ] ]\nTimes in seconds.\nFade type one of q, h, t, l or p.\n"
 
 /* prototypes */
-static double fade_gain(ULONG index, ULONG range, char fadetype);
+static double fade_gain(st_size_t index, st_size_t range, char fadetype);
 
 /*
  * Process options
@@ -216,7 +216,7 @@ int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     fade_t fade = (fade_t) effp->priv;
     /* len is total samples, chcnt counts channels */
     int len = 0, chcnt = 0, t_output = 0;
-    LONG t_ibuf;
+    st_sample_t t_ibuf;
 
     len = ((*isamp > *osamp) ? *osamp : *isamp);
 
@@ -337,7 +337,7 @@ int st_fade_stop(eff_t effp)
 /* Function returns gain value 0.0 - 1.0 according index / range ratio
 * and -1.0 if  type is invalid
 * todo: to optimize performance calculate gain every now and then and interpolate */
-static double fade_gain(ULONG index, ULONG range, char type)
+static double fade_gain(st_size_t index, st_size_t range, char type)
 {
     double retval = 0.0, findex = 0.0;
 

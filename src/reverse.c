@@ -23,7 +23,7 @@
 /* Private data */
 typedef struct reversestuff {
 	FILE *fp;
-	LONG pos;
+	st_size_t pos;
 	int phase;
 } *reverse_t;
 
@@ -75,7 +75,7 @@ int st_reverse_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 		st_fail("Internal error: reverse_flow called in wrong phase");
 		return(ST_EOF);
 	}
-	if (fwrite((char *)ibuf, sizeof(LONG), *isamp, reverse->fp)
+	if (fwrite((char *)ibuf, sizeof(st_sample_t), *isamp, reverse->fp)
 	    != *isamp)
 	{
 		st_fail("Reverse effect write error on temporary file\n");
@@ -94,13 +94,13 @@ int st_reverse_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 	reverse_t reverse = (reverse_t) effp->priv;
 	int len, nbytes;
 	register int i, j;
-	LONG temp;
+	st_sample_t temp;
 
 	if (reverse->phase == WRITING) {
 		fflush(reverse->fp);
 		fseek(reverse->fp, 0L, SEEK_END);
 		reverse->pos = ftell(reverse->fp);
-		if (reverse->pos % sizeof(LONG) != 0)
+		if (reverse->pos % sizeof(st_sample_t) != 0)
 		{
 			st_fail("Reverse effect finds odd temporary file\n");
 			return(ST_EOF);
@@ -108,14 +108,14 @@ int st_reverse_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 		reverse->phase = READING;
 	}
 	len = *osamp;
-	nbytes = len * sizeof(LONG);
+	nbytes = len * sizeof(st_sample_t);
 	if (reverse->pos < nbytes) {
 		nbytes = reverse->pos;
-		len = nbytes / sizeof(LONG);
+		len = nbytes / sizeof(st_sample_t);
 	}
 	reverse->pos -= nbytes;
 	fseek(reverse->fp, reverse->pos, SEEK_SET);
-	if (fread((char *)obuf, sizeof(LONG), len, reverse->fp) != len)
+	if (fread((char *)obuf, sizeof(st_sample_t), len, reverse->fp) != len)
 	{
 		st_fail("Reverse effect read error from temporary file\n");
 		return(ST_EOF);

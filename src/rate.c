@@ -39,15 +39,15 @@
 
 /* Private data */
 typedef struct ratestuff {
-        ULONG opos_frac;  /* fractional position of the output stream in input stream unit */
-        ULONG opos;
+        unsigned long opos_frac;  /* fractional position of the output stream in input stream unit */
+        unsigned long opos;
 
-        ULONG opos_inc_frac;  /* fractional position increment in the output stream */
-        ULONG opos_inc; 
+        unsigned long opos_inc_frac;  /* fractional position increment in the output stream */
+        unsigned long opos_inc; 
 
-        ULONG ipos;      /* position in the input stream (integer) */
+        unsigned long ipos;      /* position in the input stream (integer) */
 
-        LONG ilast; /* last sample in the input stream */
+        st_sample_t ilast; /* last sample in the input stream */
 } *rate_t;
 
 /*
@@ -69,7 +69,7 @@ int st_rate_getopts(eff_t effp, int n, char **argv)
 int st_rate_start(eff_t effp)
 {
 	rate_t rate = (rate_t) effp->priv;
-        ULONG incr;
+        unsigned long incr;
 
 	if (effp->ininfo.rate == effp->outinfo.rate)
 	{
@@ -92,7 +92,7 @@ int st_rate_start(eff_t effp)
         rate->opos=0;
 
         /* increment */
-        incr=(ULONG)((double)effp->ininfo.rate / (double)effp->outinfo.rate * 
+        incr=(unsigned long)((double)effp->ininfo.rate / (double)effp->outinfo.rate * 
                    (double) ((unsigned long) 1 << FRAC_BITS));
 
         rate->opos_inc_frac = incr & (((unsigned long) 1 << FRAC_BITS)-1);
@@ -112,10 +112,10 @@ int st_rate_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                  st_size_t *isamp, st_size_t *osamp)
 {
 	rate_t rate = (rate_t) effp->priv;
-	LONG *istart,*iend;
-	LONG *ostart,*oend;
-	LONG ilast,icur,out;
-        ULONG tmp;
+	st_sample_t *istart,*iend;
+	st_sample_t *ostart,*oend;
+	st_sample_t ilast,icur,out;
+        unsigned long tmp;
         double t;
 
         ilast=rate->ilast;
@@ -148,7 +148,7 @@ int st_rate_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
                 /* output sample & increment position */
                 
-                *obuf++=(LONG) out;
+                *obuf++=(st_sample_t) out;
                 
                 tmp = rate->opos_frac + rate->opos_inc_frac;
                 rate->opos = rate->opos + rate->opos_inc + (tmp >> FRAC_BITS);
@@ -226,11 +226,11 @@ int st_rate_stop(eff_t effp)
 
 /* Private data for Lerp via LCM file */
 typedef struct ratestuff {
-	ULONG	lcmrate;		/* least common multiple of rates */
-	ULONG	inskip, outskip;	/* LCM increments for I & O rates */
-	ULONG	total;
-	ULONG	intot, outtot;		/* total samples in LCM basis */
-	LONG	lastsamp;		/* history */
+	st_rate_t lcmrate;		/* least common multiple of rates */
+	unsigned long inskip, outskip;	/* LCM increments for I & O rates */
+	unsigned long total;
+	unsigned long intot, outtot;	/* total samples in LCM basis */
+	st_sample_t lastsamp;		/* history */
 } *rate_t;
 
 /*
@@ -253,7 +253,7 @@ int st_rate_start(eff_t effp)
 {
 	rate_t rate = (rate_t) effp->priv;
 	
-	rate->lcmrate = lcm((LONG)effp->ininfo.rate, (LONG)effp->outinfo.rate);
+	rate->lcmrate = st_lcm((st_sample_t)effp->ininfo.rate, (st_sample_t)effp->outinfo.rate);
 	/* Cursory check for LCM overflow.  
 	 * If both rate are below 65k, there should be no problem.
 	 * 16 bits x 16 bits = 32 bits, which we can handle.
@@ -274,8 +274,8 @@ int st_rate_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 {
 	rate_t rate = (rate_t) effp->priv;
 	int len, done;
-	LONG *istart = ibuf;
-	LONG last;
+	st_sample_t *istart = ibuf;
+	st_sample_t last;
 
 	done = 0;
 	if (rate->total == 0) {

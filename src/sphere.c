@@ -18,8 +18,8 @@
 
 /* Private data for SKEL file */
 typedef struct spherestuff {
-	char	shorten_check[4];
-	ULONG   numSamples;
+	char	  shorten_check[4];
+	st_size_t numSamples;
 } *sphere_t;
 
 /*

@@ -18,9 +18,6 @@
 
 #include "st_i.h"
 
-/* should be taken care in st.h? */
-#include <limits.h> /* LONG_MAX */
-
 /* type for computations.
    float mantissa is okay for 8 or 16 bits signals.
    maybe a little bit short for 24 bits.
@@ -100,20 +97,20 @@ int st_pan_start(eff_t effp)
  * Okay, it might be quite slow to have such a function for so small
  * a task. Hopefully the function can be inlined by the compiler?
  */
-static LONG clip(pan_t pan, PAN_FLOAT value)
+static st_sample_t clip(pan_t pan, PAN_FLOAT value)
 {
-    if (value < -LONG_MAX) 
+    if (value < -ST_SAMPLE_MAX) 
     {
 	pan->clipped++;
-	return -LONG_MAX;
+	return -ST_SAMPLE_MAX;
     }
-    else if (value > LONG_MAX) 
+    else if (value > ST_SAMPLE_MAX) 
     {
 	pan->clipped++;
-	return LONG_MAX;
+	return ST_SAMPLE_MAX;
     } /* else */
 
-    return (LONG) value;
+    return (st_sample_t) value;
 }
 
 #ifndef MIN
@@ -131,7 +128,7 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 st_size_t *isamp, st_size_t *osamp)
 {
     pan_t pan = (pan_t) effp->priv;
-    register LONG len;
+    register st_size_t len;
     register int done, ich, och;
     register PAN_FLOAT left, right, dir, hdir;
     

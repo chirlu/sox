@@ -103,8 +103,8 @@ pause -1 "Hit return to continue"
 
 /* Private data for deemph file */
 typedef struct deemphstuff {
-     LONG lastin;
-     double    lastout;
+     st_sample_t lastin;
+     double      lastout;
 } *deemph_t;
 
 /*

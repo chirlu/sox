@@ -56,10 +56,10 @@ typedef struct {
   double *volume;       /* Current "volume" of each channel */
   double outgain;       /* Post processor gain */
   double delay;		/* Delay to apply before companding */
-  LONG   *delay_buf;	/* Old samples, used for delay processing */
-  LONG	 delay_buf_size; /* Size of delay_buf in samples */
-  LONG	 delay_buf_ptr; /* Index into delay_buf */
-  LONG	 delay_buf_cnt;	/* No. of active entries in delay_buf */
+  st_sample_t *delay_buf;   /* Old samples, used for delay processing */
+  st_ssize_t delay_buf_size;/* Size of delay_buf in samples */
+  st_ssize_t delay_buf_ptr; /* Index into delay_buf */
+  st_ssize_t delay_buf_cnt; /* No. of active entries in delay_buf */
 } *compand_t;
 
 /*
@@ -258,7 +258,7 @@ int st_compand_start(eff_t effp)
 
 static void doVolume(double *v, double samp, compand_t l, int chan)
 {
-  double s = samp/(~((LONG)1<<31));
+  double s = samp/(~((st_sample_t)1<<31));
   double delta = s - *v;
 
   if (delta > 0.0) /* increase volume according to attack rate */

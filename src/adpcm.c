@@ -38,7 +38,7 @@
 #include "adpcm.h"
 
 typedef struct MsState {
-	LONG  step;	/* step size */
+	st_sample_t  step;	/* step size */
 	short iCoef[2];
 } MsState_t;
 
@@ -52,7 +52,7 @@ typedef struct MsState {
  * 1.0 is scaled to 0x100
  */
 static const
-LONG stepAdjustTable[] = {
+st_sample_t stepAdjustTable[] = {
 	230, 230, 230, 230, 307, 409, 512, 614,
 	768, 614, 512, 409, 307, 230, 230, 230
 };
@@ -71,25 +71,17 @@ const short iCoef[7][2] = {
 			{ 392,-232}
 };
 
-#if 0
-static LONG AdpcmDecode(LONG, MsState_t*, LONG, LONG)__attribute__((regparm(3)));
-#endif
-
-#ifdef __GNUC__
-inline
-#endif
-static LONG AdpcmDecode(c, state, sample1, sample2)
-LONG c, sample1, sample2;
-MsState_t *state;
+inline static st_sample_t AdpcmDecode(st_sample_t c, MsState_t *state, 
+	                              st_sample_t sample1, st_sample_t sample2)
 {
-	LONG vlin;
-	LONG sample;
-	LONG step;
+	st_sample_t vlin;
+	st_sample_t sample;
+	st_sample_t step;
 
 	/** Compute next step value **/
 	step = state->step;
 	{
-		LONG nstep;
+		st_sample_t nstep;
 		nstep = (stepAdjustTable[c] * step) >> 8;
 		state->step = (nstep < 16)? 16:nstep;
 	}
@@ -402,14 +394,14 @@ void AdpcmBlockMashI(
  *  samplesPerBlock which would go into a block of size blockAlign
  *  Yes, it is confusing usage.
  */
-ULONG AdpcmSamplesIn(
-	ULONG dataLen,
+st_size_t AdpcmSamplesIn(
+	st_size_t dataLen,
 	unsigned short chans,
 	unsigned short blockAlign,
 	unsigned short samplesPerBlock
 )
 {
-	ULONG m, n;
+	st_size_t m, n;
 
 	if (samplesPerBlock) {
 		n = (dataLen / blockAlign) * samplesPerBlock;
@@ -428,15 +420,15 @@ ULONG AdpcmSamplesIn(
 	/* wSamplesPerBlock = 2*(wBlockAlign - 7*wChannels)/wChannels + 2; */
 }
 
-ULONG AdpcmBytesPerBlock(
+st_size_t AdpcmBytesPerBlock(
 	unsigned short chans,
 	unsigned short samplesPerBlock
 )
 {
-	ULONG n;
+	st_size_t n;
 	n = 7*chans;  /* header */ 
 	if (samplesPerBlock > 2)
-		n += (((ULONG)samplesPerBlock-2)*chans + 1)/2;
+		n += (((st_size_t)samplesPerBlock-2)*chans + 1)/2;
 	return n;
 }
 

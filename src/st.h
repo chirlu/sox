@@ -73,14 +73,6 @@ typedef uint32_t st_rate_t;
 #define ST_SSIZE_MAX 0x7fffffffL
 #define ST_SSIZE_MIN (-ST_SSIZE_MAX - 1L)
 
-/* FIXME:  Remove from usage by libst */
-#define LONG    int32_t
-#define ULONG   uint32_t
-
-/* FIXME: Get rid of this and usage of LONG_MAX */
-#define MAXLONG 0x7fffffffL
-#define MAXULONG 0xffffffffL
-
 /* Signal parameters */
 
 typedef struct  st_signalinfo

@@ -76,12 +76,12 @@ typedef struct chorusstuff {
 	int	num_chorus;
 	int	modulation[MAX_CHORUS];
 	int	counter;			
-	LONG	phase[MAX_CHORUS];
+	long	phase[MAX_CHORUS];
 	float	*chorusbuf;
 	float	in_gain, out_gain;
 	float	delay[MAX_CHORUS], decay[MAX_CHORUS];
 	float	speed[MAX_CHORUS], depth[MAX_CHORUS];
-	LONG	length[MAX_CHORUS];
+	long	length[MAX_CHORUS];
 	int	*lookup_tab[MAX_CHORUS];
 	int	depth_samples[MAX_CHORUS], samples[MAX_CHORUS];
 	int	maxsamples, fade_out;
@@ -260,7 +260,7 @@ int st_chorus_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 	int i;
 	
 	float d_in, d_out;
-	LONG out;
+	st_sample_t out;
 
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
 	for(done = 0; done < len; done++) {
@@ -274,7 +274,7 @@ int st_chorus_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 			chorus->maxsamples] * chorus->decay[i];
 		/* Adjust the output volume and size to 24 bit */
 		d_out = d_out * chorus->out_gain;
-		out = st_clip24((LONG) d_out);
+		out = st_clip24((st_sample_t) d_out);
 		*obuf++ = out * 256;
 		/* Mix decay of delay and input */
 		chorus->chorusbuf[chorus->counter] = d_in;
@@ -298,7 +298,7 @@ int st_chorus_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 	int i;
 	
 	float d_in, d_out;
-	LONG out;
+	st_sample_t out;
 
 	done = 0;
 	while ( ( done < *osamp ) && ( done < chorus->fade_out ) ) {
@@ -311,7 +311,7 @@ int st_chorus_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 		chorus->maxsamples] * chorus->decay[i];
 		/* Adjust the output volume and size to 24 bit */
 		d_out = d_out * chorus->out_gain;
-		out = st_clip24((LONG) d_out);
+		out = st_clip24((st_sample_t) d_out);
 		*obuf++ = out * 256;
 		/* Mix decay of delay and input */
 		chorus->chorusbuf[chorus->counter] = d_in;

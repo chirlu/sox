@@ -41,7 +41,6 @@
 #include <string.h> /* memcpy() */
 
 #include <math.h>   /* cos(), pow() */
-#include <limits.h> /* LONG_MAX */
 
 #ifndef MIN
 #define MIN(a,b) (((a)<(b))?(a):(b))
@@ -132,9 +131,9 @@ typedef struct
 
     int iacc;            /* part of acc already output */
 
-    LONG size;           /* size of buffer for processing chunks. */
+    st_size_t size;      /* size of buffer for processing chunks. */
     int index;           /* index of next empty input item. */
-    LONG * buf;          /* bufferize input */
+    st_sample_t *buf;    /* bufferize input */
 
     pitch_state_t state; /* buffer management status. */
 
@@ -202,7 +201,7 @@ static PITCH_FLOAT cub(
  */
 static void interpolation(
   pitch_t pitch,
-  LONG * ibuf, int ilen, 
+  st_sample_t *ibuf, int ilen, 
   PITCH_FLOAT * out, int olen,
   PITCH_FLOAT rate) /* signed */
 {
@@ -276,20 +275,20 @@ static void process_intput_buffer(pitch_t pitch)
 	pitch->acc[i] += pitch->fade[pitch->step-i-1]*pitch->tmp[i];
 }
 
-static LONG clip(pitch_t pitch, PITCH_FLOAT v)
+static st_sample_t clip(pitch_t pitch, PITCH_FLOAT v)
 {
-    if (v < -LONG_MAX)
+    if (v < -ST_SAMPLE_MAX)
     {
 	pitch->clipped++;
-	return -LONG_MAX;
+	return -ST_SAMPLE_MAX;
     }
-    else if (v > LONG_MAX)
+    else if (v > ST_SAMPLE_MAX)
     {
 	pitch->clipped++;
-	return LONG_MAX;
+	return ST_SAMPLE_MAX;
     }
     else
-	return (LONG) v;
+	return (st_sample_t) v;
 }
 
 /*
@@ -427,7 +426,7 @@ int st_pitch_start(eff_t effp)
     pitch->fade = (PITCH_FLOAT *) malloc(pitch->step*sizeof(PITCH_FLOAT));
     pitch->tmp  = (PITCH_FLOAT *) malloc(pitch->step*sizeof(PITCH_FLOAT));
     pitch->acc  = (PITCH_FLOAT *) malloc(pitch->step*sizeof(PITCH_FLOAT));
-    pitch->buf  = (LONG *) malloc(pitch->size*sizeof(LONG));
+    pitch->buf  = (st_sample_t *) malloc(pitch->size*sizeof(st_sample_t));
 
     if (!pitch->fade || !pitch->tmp || !pitch->acc || !pitch->buf)
     {
@@ -519,7 +518,7 @@ int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 	{
 	    register int tocopy = MIN(pitch->size-pitch->index, len);
 
-	    memcpy(pitch->buf+pitch->index, ibuf+iindex, tocopy*sizeof(LONG));
+	    memcpy(pitch->buf+pitch->index, ibuf+iindex, tocopy*sizeof(st_sample_t));
 
 	    len -= tocopy;
 	    pitch->index += tocopy;

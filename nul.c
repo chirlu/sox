@@ -69,7 +69,7 @@ st_ssize_t st_nulread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
 	nul_t sk = (nul_t) ft->priv;
 	int done = 0;
-	LONG l;
+	st_sample_t l;
 	for(; done < len; done++) {
 	    if (ft->file.eof)
 		break;

@@ -49,8 +49,8 @@ int st_mask_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 {
 	int len, done;
 	
-	LONG l;
-	LONG tri16;	/* 16 signed bits of triangular noise */
+	st_sample_t l;
+	st_sample_t tri16;	/* 16 signed bits of triangular noise */
 
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
 	switch (effp->outinfo.encoding) {

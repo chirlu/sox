@@ -50,9 +50,9 @@
 /* Private data */
 typedef struct aupriv {
 	/* For writer: size in bytes */
-	ULONG data_size;
+	st_size_t data_size;
 	/* For seeking */
-	LONG dataStart;
+	st_size_t dataStart;
 	/* For G72x decoding: */
 	struct g72x_state state;
 	int (*dec_routine)();
@@ -61,7 +61,7 @@ typedef struct aupriv {
 	int in_bits;
 } *au_t;
 
-static void auwriteheader(ft_t ft, ULONG data_size);
+static void auwriteheader(ft_t ft, st_size_t data_size);
 
 static int st_auencodingandsize(int sun_encoding, char *encoding, char *size)
 {
@@ -381,11 +381,11 @@ static int st_ausunencoding(int size, int encoding)
 
 static void auwriteheader(ft_t ft, st_size_t data_size)
 {
-	ULONG magic;
-	ULONG hdr_size;
-	ULONG encoding;
-	ULONG sample_rate;
-	ULONG channels;
+	uint32_t magic;
+	uint32_t hdr_size;
+	uint32_t encoding;
+	uint32_t sample_rate;
+	uint32_t channels;
 	int   x;
 	int   comment_size;
 

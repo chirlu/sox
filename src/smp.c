@@ -63,7 +63,7 @@ struct smptrailer {
 /* Private data for SMP file */
 typedef struct smpstuff {
   uint32_t NoOfSamps;		/* Sample data count in words */
-  LONG dataStart;
+  st_size_t dataStart;
   /* comment memory resides in private data because it's small */
   char comment[COMMENTLEN + NAMELEN + 3];
 } *smp_t;
@@ -77,7 +77,7 @@ char *SVmagic = "SOUND SAMPLE DATA ", *SVvers = "2.1 ";
 static int readtrailer(ft_t ft, struct smptrailer *trailer)
 {
 	int i;
-	ULONG trash;
+	int32_t trash;
 
 	st_readw(ft, (unsigned short *)&trash);	/* read reserved word */
 	for(i = 0; i < 8; i++) {	/* read the 8 loops */
@@ -109,7 +109,7 @@ static int readtrailer(ft_t ft, struct smptrailer *trailer)
 /*
  * set the trailer data - loops and markers, to reasonably benign values
  */
-static void settrailer(ft_t ft, struct smptrailer *trailer, ULONG rate)
+static void settrailer(ft_t ft, struct smptrailer *trailer, st_rate_t rate)
 {
 	int i;
 
@@ -192,7 +192,7 @@ int st_smpstartread(ft_t ft)
 	smp_t smp = (smp_t) ft->priv;
 	int i;
 	int namelen, commentlen;
-	LONG samplestart;
+	long samplestart;
 	struct smpheader header;
 	struct smptrailer trailer;
 
@@ -386,7 +386,7 @@ st_ssize_t st_smpwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
 	smp_t smp = (smp_t) ft->priv;
 	register int datum;
-	LONG done = 0;
+	st_ssize_t done = 0;
 
 	while(done < len) {
 		datum = (int) RIGHT(*buf++, 16);

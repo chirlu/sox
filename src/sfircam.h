@@ -24,19 +24,19 @@
 #define SF_NEXT 4
 #ifdef vax
 #define SF_MACHINE SF_VAX
-#define SF_MAGIC ((LONG)(SF_MAGIC1 | SF_MAGIC2 << 8 | SF_MACHINE << 16))
+#define SF_MAGIC ((uint32_t)(SF_MAGIC1 | SF_MAGIC2 << 8 | SF_MACHINE << 16))
 #endif
 #ifdef sun
 #define SF_MACHINE SF_SUN
-#define SF_MAGIC ((LONG)(SF_MAGIC1 << 24 | SF_MAGIC2 << 16 | SF_MACHINE << 8))
+#define SF_MAGIC ((uint32_t)(SF_MAGIC1 << 24 | SF_MAGIC2 << 16 | SF_MACHINE << 8))
 #endif
 #ifdef mips
 #define SF_MACHINE SF_MIPS
-#define SF_MAGIC ((LONG)(SF_MAGIC1 | SF_MAGIC2 << 8 | SF_MACHINE << 16))
+#define SF_MAGIC ((uint32_t)(SF_MAGIC1 | SF_MAGIC2 << 8 | SF_MACHINE << 16))
 #endif
 #ifdef NeXT
 #define SF_MACHINE SF_NEXT
-#define SF_MAGIC ((LONG)(SF_MAGIC1 << 24 | SF_MAGIC2 << 16 | SF_MACHINE << 8))
+#define SF_MAGIC ((uint32_t)(SF_MAGIC1 << 24 | SF_MAGIC2 << 16 | SF_MACHINE << 8))
 #endif
 
 
@@ -54,12 +54,12 @@
  *
  * Possible values of sf_packmode:
  */
-#define SF_CHAR  ((LONG) sizeof(char))
-#define SF_ALAW  ((LONG) sizeof(char) | 0x10000)
-#define SF_ULAW  ((LONG) sizeof(char) | 0x20000)
-#define SF_SHORT ((LONG) sizeof(short))
-#define SF_LONG  ((LONG) sizeof(LONG) | 0x40000)
-#define SF_FLOAT ((LONG) sizeof(float))
+#define SF_CHAR  ((uint32_t) sizeof(char))
+#define SF_ALAW  ((uint32_t) sizeof(char) | 0x10000)
+#define SF_ULAW  ((uint32_t) sizeof(char) | 0x20000)
+#define SF_SHORT ((uint32_t) sizeof(short))
+#define SF_LONG  ((uint32_t) sizeof(long) | 0x40000)
+#define SF_FLOAT ((uint32_t) sizeof(float))
 
 /* For marking data after fixed section of soundfile header -- see man (3carl)
  * sfcodes and defintions of SFCODE and related structures, below.
@@ -89,11 +89,11 @@ typedef union sfheader {
 				unsigned char sf_machine; /* 3 */
 				unsigned char sf_param;	  /* 4 */
 				} _magic_bytes;
-			LONG sf_magic;			  /* magic as a 4-byte long */
+			uint32_t sf_magic;			  /* magic as a 4-byte long */
 			} magic_union;
 		float	  sf_srate;
-		LONG	  sf_chans;
-		LONG	  sf_packmode;
+		uint32_t	  sf_chans;
+		uint32_t	  sf_packmode;
 		char	  sf_codes;
 	} sfinfo;
 	char	filler[SIZEOF_HEADER];
@@ -117,8 +117,8 @@ typedef struct sfcode {
 
 typedef struct Sfmaxamp {
 	float	value[SF_MAXCHAN];
-	LONG	samploc[SF_MAXCHAN];
-	LONG	timetag;
+	uint32_t samploc[SF_MAXCHAN];
+	uint32_t timetag;
 } SFMAXAMP;
 
 typedef struct sfcomment {

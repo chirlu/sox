@@ -323,8 +323,8 @@ static void maudwriteheader(ft_t ft)
 	st_writes(ft, "MAUD"); /* File type */
 	
 	st_writes(ft, "MHDR");
-	st_writedw(ft, (LONG) 8*4); /* number of bytes to follow */
-	st_writedw(ft, (LONG) (p->nsamples ));  /* number of samples stored in MDAT */
+	st_writedw(ft,  8*4); /* number of bytes to follow */
+	st_writedw(ft, p->nsamples);  /* number of samples stored in MDAT */
 	
 	switch (ft->info.encoding) {
 		
@@ -346,7 +346,7 @@ static void maudwriteheader(ft_t ft)
 		
 	}
 	
-	st_writedw(ft, (LONG) ft->info.rate); /* clock source frequency */
+	st_writedw(ft, ft->info.rate); /* clock source frequency */
 	st_writew(ft, (int) 1); /* clock devide */
 	
 	if (ft->info.channels == 1) {
@@ -375,12 +375,12 @@ static void maudwriteheader(ft_t ft)
 		
 	}
 	
-	st_writedw(ft, (LONG) 0); /* reserved */
-	st_writedw(ft, (LONG) 0); /* reserved */
-	st_writedw(ft, (LONG) 0); /* reserved */
+	st_writedw(ft, 0); /* reserved */
+	st_writedw(ft, 0); /* reserved */
+	st_writedw(ft, 0); /* reserved */
 	
 	st_writes(ft, "ANNO");
-	st_writedw(ft, (LONG) 30); /* length of block */
+	st_writedw(ft, 30); /* length of block */
 	st_writes(ft, "file create by Sound eXchange ");
 	
 	st_writes(ft, "MDAT");

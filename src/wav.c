@@ -80,13 +80,13 @@
 
 /* Private data for .wav file */
 typedef struct wavstuff {
-    LONG	   numSamples;     /* samples/channel reading: starts at total count and decremented  */
+    st_size_t	   numSamples;     /* samples/channel reading: starts at total count and decremented  */
     		                   /* writing: starts at 0 and counts samples written */
-    ULONG	   dataLength;     /* needed for ADPCM writing */
+    st_size_t	   dataLength;     /* needed for ADPCM writing */
     unsigned short formatTag;	   /* What type of encoding file is using */
     unsigned short samplesPerBlock;
     unsigned short blockAlign;
-    LONG dataStart;  /* need to for seeking */
+    st_size_t dataStart;  /* need to for seeking */
     
     /* following used by *ADPCM wav files */
     unsigned short nCoefs;	    /* ADPCM: number of coef sets */
@@ -435,13 +435,13 @@ int st_wavstartread(ft_t ft)
     unsigned short wChannels;	    /* number of channels */
     uint32_t      dwSamplesPerSecond; /* samples per second per channel */
     uint32_t      dwAvgBytesPerSec;/* estimate of bytes per second needed */
-    unsigned short wBitsPerSample;  /* bits per sample */
-    unsigned short wFmtSize;
-    unsigned short wExtSize = 0;    /* extended field for non-PCM */
+    uint16_t wBitsPerSample;  /* bits per sample */
+    uint32_t wFmtSize;
+    uint16_t wExtSize = 0;    /* extended field for non-PCM */
 
     uint32_t      dwDataLength;    /* length of sound data in bytes */
-    ULONG    bytesPerBlock = 0;
-    ULONG    bytespersample;	    /* bytes per sample (per channel */
+    st_size_t    bytesPerBlock = 0;
+    int    bytespersample;	    /* bytes per sample (per channel */
     char text[256];
     uint32_t      dwLoopPos;
 
@@ -629,7 +629,6 @@ int st_wavstartread(ft_t ft)
 
     switch (wav->formatTag)
     {
-    /* ULONG max_spb; */
     case WAVE_FORMAT_ADPCM:
 	if (wExtSize < 4)
 	{
@@ -966,7 +965,7 @@ int st_wavstartread(ft_t ft)
 st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	wav_t	wav = (wav_t) ft->priv;
-	LONG	done;
+	st_ssize_t done;
 
 	ft->st_errno = ST_SUCCESS;
 	
@@ -1001,7 +1000,7 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 		    wav->samplePtr = wav->samples;
 		}
 
-		/* Copy interleaved data into buf, converting short to LONG */
+		/* Copy interleaved data into buf, converting to st_sample_t */
 		{
 		    short *p, *top;
 		    int ct;
@@ -1175,8 +1174,8 @@ non-PCM formats must write an extended format chunk and a fact chunk:
 ULAW, ALAW formats:
 36 - 37    wExtSize = 0  the length of the format extension
 38 - 41    'fact'
-42 - 45    wFactSize = 4  length of the fact chunk minus 8 byte header
-46 - 49    wSamplesWritten   actual number of samples written out
+42 - 45    dwFactSize = 4  length of the fact chunk minus 8 byte header
+46 - 49    dwSamplesWritten   actual number of samples written out
 50 - 53    'data'
 54 - 57     dwDataLength  length of data chunk minus 8 byte header
 58 - (dwDataLength + 57)  the data
@@ -1186,8 +1185,8 @@ GSM6.10  format:
 36 - 37    wExtSize = 2 the length in bytes of the format-dependent extension
 38 - 39    320           number of samples per  block 
 40 - 43    'fact'
-44 - 47    wFactSize = 4  length of the fact chunk minus 8 byte header
-48 - 51    wSamplesWritten   actual number of samples written out
+44 - 47    dwFactSize = 4  length of the fact chunk minus 8 byte header
+48 - 51    dwSamplesWritten   actual number of samples written out
 52 - 55    'data'
 56 - 59     dwDataLength  length of data chunk minus 8 byte header
 60 - (dwDataLength + 59)  the data
@@ -1200,7 +1199,7 @@ samples wav->numSamples in a way that is non-trivial for the blocked
 and padded compressed formats:
 
 wRiffLength -      (riff header) the length of the file, minus 8 
-wSamplesWritten  -  (fact header) the number of samples written (after padding
+dwSamplesWritten - (fact header) the number of samples written (after padding
                    to a complete block eg for GSM)
 dwDataLength     - (data chunk header) the number of (valid) data bytes written
 
@@ -1208,273 +1207,273 @@ dwDataLength     - (data chunk header) the number of (valid) data bytes written
 
 static int wavwritehdr(ft_t ft, int second_header) 
 {
-	wav_t	wav = (wav_t) ft->priv;
+    wav_t	wav = (wav_t) ft->priv;
 
-	/* variables written to wav file header */
-	/* RIFF header */    
-	ULONG wRiffLength ;                 /* length of file after 8 byte riff header */
-	/* fmt chunk */
-	ULONG wFmtSize = 16;                /* size field of the fmt chunk */
-	unsigned short wFormatTag = 0;      /* data format */
-	unsigned short wChannels;           /* number of channels */
-	ULONG  dwSamplesPerSecond;          /* samples per second per channel*/
-	uint32_t dwAvgBytesPerSec=0;       /* estimate of bytes per second needed */
-	unsigned short wBlockAlign=0;       /* byte alignment of a basic sample block */
-	unsigned short wBitsPerSample=0;    /* bits per sample */
-	/* fmt chunk extension (not PCM) */
-	unsigned short wExtSize=0;          /* extra bytes in the format extension */
-	unsigned short wSamplesPerBlock;    /* samples per channel per block */
-	/* wSamplesPerBlock and other things may go into format extension */
+    /* variables written to wav file header */
+    /* RIFF header */    
+    uint32_t wRiffLength ;  /* length of file after 8 byte riff header */
+    /* fmt chunk */
+    uint16_t wFmtSize = 16;       /* size field of the fmt chunk */
+    uint16_t wFormatTag = 0;      /* data format */
+    uint16_t wChannels;           /* number of channels */
+    uint32_t dwSamplesPerSecond;  /* samples per second per channel*/
+    uint32_t dwAvgBytesPerSec=0;  /* estimate of bytes per second needed */
+    uint16_t wBlockAlign=0;       /* byte alignment of a basic sample block */
+    uint16_t wBitsPerSample=0;    /* bits per sample */
+    /* fmt chunk extension (not PCM) */
+    uint16_t wExtSize=0;          /* extra bytes in the format extension */
+    uint16_t wSamplesPerBlock;    /* samples per channel per block */
+    /* wSamplesPerBlock and other things may go into format extension */
 
-	/* fact chunk (not PCM) */
-	ULONG wFactSize=4;		/* length of the fact chunk */
-	ULONG wSamplesWritten=0;	/* windows doesnt seem to use this*/
+    /* fact chunk (not PCM) */
+    uint32_t dwFactSize=4;	  /* length of the fact chunk */
+    uint32_t dwSamplesWritten=0;  /* windows doesnt seem to use this*/
 
-	/* data chunk */
-	uint32_t  dwDataLength=0x7ffff000L;	/* length of sound data in bytes */
-	/* end of variables written to header */
+    /* data chunk */
+    uint32_t  dwDataLength=0x7ffff000L;	/* length of sound data in bytes */
+    /* end of variables written to header */
 
-	/* internal variables, intermediate values etc */
-	ULONG bytespersample; 		/* (uncompressed) bytes per sample (per channel) */
-	ULONG blocksWritten = 0;
+    /* internal variables, intermediate values etc */
+    int bytespersample; /* (uncompressed) bytes per sample (per channel) */
+    long blocksWritten = 0;
 
-	dwSamplesPerSecond = ft->info.rate;
-	wChannels = ft->info.channels;
+    dwSamplesPerSecond = ft->info.rate;
+    wChannels = ft->info.channels;
 
-	/* Check to see if encoding is ADPCM or not.  If ADPCM
-	 * possibly override the size to be bytes.  It isn't needed
-	 * by this routine will look nicer (and more correct)
-	 * on verbose output.
-	 */
-	if ((ft->info.encoding == ST_ENCODING_ADPCM ||
-	     ft->info.encoding == ST_ENCODING_IMA_ADPCM ||
-	     ft->info.encoding == ST_ENCODING_GSM) &&
-	    ft->info.size != ST_SIZE_BYTE)
-	{
-	    st_warn("Overriding output size to bytes for compressed data.");
-	    ft->info.size = ST_SIZE_BYTE;
-	}
+    /* Check to see if encoding is ADPCM or not.  If ADPCM
+     * possibly override the size to be bytes.  It isn't needed
+     * by this routine will look nicer (and more correct)
+     * on verbose output.
+     */
+    if ((ft->info.encoding == ST_ENCODING_ADPCM ||
+	 ft->info.encoding == ST_ENCODING_IMA_ADPCM ||
+	 ft->info.encoding == ST_ENCODING_GSM) &&
+	 ft->info.size != ST_SIZE_BYTE)
+    {
+	st_warn("Overriding output size to bytes for compressed data.");
+	ft->info.size = ST_SIZE_BYTE;
+    }
 
-	switch (ft->info.size)
-	{
-		case ST_SIZE_BYTE:
-		        wBitsPerSample = 8;
-			if (ft->info.encoding != ST_ENCODING_UNSIGNED &&
-			    ft->info.encoding != ST_ENCODING_ULAW &&
-			    ft->info.encoding != ST_ENCODING_ALAW &&
-			    ft->info.encoding != ST_ENCODING_GSM &&
-			    ft->info.encoding != ST_ENCODING_ADPCM &&
-			    ft->info.encoding != ST_ENCODING_IMA_ADPCM)
-			{
-				st_warn("Do not support %s with 8-bit data.  Forcing to unsigned",st_encodings_str[(unsigned char)ft->info.encoding]);
-				ft->info.encoding = ST_ENCODING_UNSIGNED;
-			}
-			break;
-		case ST_SIZE_WORD:
-			wBitsPerSample = 16;
-			if (ft->info.encoding != ST_ENCODING_SIGN2)
-			{
-				st_warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
-				ft->info.encoding = ST_ENCODING_SIGN2;
-			}
-			break;
-		case ST_SIZE_DWORD:
-			wBitsPerSample = 32;
-			if (ft->info.encoding != ST_ENCODING_SIGN2)
-			{
-				st_warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
-				ft->info.encoding = ST_ENCODING_SIGN2;
-			}
-
-			break;
-		default:
-			st_warn("Do not support %s in WAV files.  Forcing to Signed Words.",st_sizes_str[(unsigned char)ft->info.size]);
-			ft->info.encoding = ST_ENCODING_SIGN2;
-			ft->info.size = ST_SIZE_WORD;
-			wBitsPerSample = 16;
-			break;
-	}
-
-	wSamplesPerBlock = 1;	/* common default for PCM data */
-
-	switch (ft->info.encoding)
-	{
-		case ST_ENCODING_UNSIGNED:
-		case ST_ENCODING_SIGN2:
-			wFormatTag = WAVE_FORMAT_PCM;
-	    		bytespersample = (wBitsPerSample + 7)/8;
-	    		wBlockAlign = wChannels * bytespersample;
-			break;
-		case ST_ENCODING_ALAW:
-			wFormatTag = WAVE_FORMAT_ALAW;
-	    		wBlockAlign = wChannels;
-			break;
-		case ST_ENCODING_ULAW:
-			wFormatTag = WAVE_FORMAT_MULAW;
-	    		wBlockAlign = wChannels;
-			break;
-		case ST_ENCODING_IMA_ADPCM:
-			if (wChannels>16)
-			{
-			    st_fail_errno(ft,ST_EOF,"Channels(%d) must be <= 16\n",wChannels);
-			    return ST_EOF;
-			}
-			wFormatTag = WAVE_FORMAT_IMA_ADPCM;
-			wBlockAlign = wChannels * 256; /* reasonable default */
-			wBitsPerSample = 4;
-	    		wExtSize = 2;
-			wSamplesPerBlock = ImaSamplesIn(0, wChannels, wBlockAlign, 0);
-			break;
-		case ST_ENCODING_ADPCM:
-			if (wChannels>16)
-			{
-			    st_fail_errno(ft,ST_EOF,"Channels(%d) must be <= 16\n",wChannels);
-			    return ST_EOF;
-			}
-			wFormatTag = WAVE_FORMAT_ADPCM;
-			wBlockAlign = wChannels * 128; /* reasonable default */
-			wBitsPerSample = 4;
-	    		wExtSize = 4+4*7;      /* Ext fmt data length */
-			wSamplesPerBlock = AdpcmSamplesIn(0, wChannels, wBlockAlign, 0);
-			break;
-		case ST_ENCODING_GSM:
-#ifdef ENABLE_GSM
-		    if (wChannels!=1)
-		    {
-			st_warn("Overriding GSM audio from %d channel to 1\n",wChannels);
-			wChannels = ft->info.channels = 1;
-		    }
-		    wFormatTag = WAVE_FORMAT_GSM610;
-		    /* dwAvgBytesPerSec = 1625*(dwSamplesPerSecond/8000.)+0.5; */
-		    wBlockAlign=65;
-		    wBitsPerSample=0;  /* not representable as int   */
-		    wExtSize=2;        /* length of format extension */
-		    wSamplesPerBlock = 320;
-#else
-		    st_fail_errno(ft,ST_EOF,"sorry, no GSM6.10 support, recompile sox with gsm library");
-		    return ST_EOF;
-#endif
-		    break;
-	}
-	wav->formatTag = wFormatTag;
-	wav->blockAlign = wBlockAlign;
-	wav->samplesPerBlock = wSamplesPerBlock;
-
-	if (!second_header) { 	/* adjust for blockAlign */
-	    blocksWritten = dwDataLength/wBlockAlign;
-	    dwDataLength = blocksWritten * wBlockAlign;
-	    wSamplesWritten = blocksWritten * wSamplesPerBlock;
-	} else { 	/* fixup with real length */
-	    wSamplesWritten = wav->numSamples;
-	    switch(wFormatTag)
-		{
-	    	case WAVE_FORMAT_ADPCM:
-	    	case WAVE_FORMAT_IMA_ADPCM:
-		    dwDataLength = wav->dataLength;
-		    break;
-#ifdef ENABLE_GSM
-		case WAVE_FORMAT_GSM610:
-		    /* intentional case fallthrough! */
-#endif
-		default:
-		    wSamplesWritten /= wChannels; /* because how rawwrite()'s work */
-		    blocksWritten = (wSamplesWritten+wSamplesPerBlock-1)/wSamplesPerBlock;
-		    dwDataLength = blocksWritten * wBlockAlign;
-		}
-	}
-
-#ifdef ENABLE_GSM
-	if (wFormatTag == WAVE_FORMAT_GSM610)
-	    dwDataLength = (dwDataLength+1) & ~1; /*round up to even */
-#endif
-
-	if (wFormatTag != WAVE_FORMAT_PCM)
-	    wFmtSize += 2+wExtSize; /* plus ExtData */
-
-	wRiffLength = 4 + (8+wFmtSize) + (8+dwDataLength); 
-	if (wFormatTag != WAVE_FORMAT_PCM) /* PCM omits the "fact" chunk */
-	    wRiffLength += (8+wFactSize);
-	
-	/* dwAvgBytesPerSec <-- this is BEFORE compression, isn't it? guess not. */
-	dwAvgBytesPerSec = (double)wBlockAlign*ft->info.rate / (double)wSamplesPerBlock + 0.5;
-
-	/* figured out header info, so write it */
-	st_writes(ft, "RIFF");
-	st_writedw(ft, wRiffLength);
-	st_writes(ft, "WAVE");
-	st_writes(ft, "fmt ");
-	st_writedw(ft, wFmtSize);
-	st_writew(ft, wFormatTag);
-	st_writew(ft, wChannels);
-	st_writedw(ft, dwSamplesPerSecond);
-	st_writedw(ft, dwAvgBytesPerSec);
-	st_writew(ft, wBlockAlign);
-	st_writew(ft, wBitsPerSample); /* end info common to all fmts */
-
-	/* if not PCM, we need to write out wExtSize even if wExtSize=0 */
-	if (wFormatTag != WAVE_FORMAT_PCM)
-	    st_writew(ft,wExtSize);
-
-	switch (wFormatTag)
-	{
-	int i;
-	case WAVE_FORMAT_IMA_ADPCM:
-	    st_writew(ft, wSamplesPerBlock);
-	    break;
-	case WAVE_FORMAT_ADPCM:
-	    st_writew(ft, wSamplesPerBlock);
-	    st_writew(ft, 7); /* nCoefs */
-	    for (i=0; i<7; i++) {
-	      st_writew(ft, iCoef[i][0]);
-	      st_writew(ft, iCoef[i][1]);
+    switch (ft->info.size)
+    {
+	case ST_SIZE_BYTE:
+	    wBitsPerSample = 8;
+	    if (ft->info.encoding != ST_ENCODING_UNSIGNED &&
+		    ft->info.encoding != ST_ENCODING_ULAW &&
+		    ft->info.encoding != ST_ENCODING_ALAW &&
+		    ft->info.encoding != ST_ENCODING_GSM &&
+		    ft->info.encoding != ST_ENCODING_ADPCM &&
+		    ft->info.encoding != ST_ENCODING_IMA_ADPCM)
+	    {
+		st_warn("Do not support %s with 8-bit data.  Forcing to unsigned",st_encodings_str[(unsigned char)ft->info.encoding]);
+		ft->info.encoding = ST_ENCODING_UNSIGNED;
 	    }
 	    break;
+	case ST_SIZE_WORD:
+	    wBitsPerSample = 16;
+	    if (ft->info.encoding != ST_ENCODING_SIGN2)
+	    {
+		st_warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
+		ft->info.encoding = ST_ENCODING_SIGN2;
+	    }
+	    break;
+	case ST_SIZE_DWORD:
+	    wBitsPerSample = 32;
+	    if (ft->info.encoding != ST_ENCODING_SIGN2)
+	    {
+		st_warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
+		ft->info.encoding = ST_ENCODING_SIGN2;
+	    }
+
+	    break;
+	default:
+	    st_warn("Do not support %s in WAV files.  Forcing to Signed Words.",st_sizes_str[(unsigned char)ft->info.size]);
+	    ft->info.encoding = ST_ENCODING_SIGN2;
+	    ft->info.size = ST_SIZE_WORD;
+	    wBitsPerSample = 16;
+	    break;
+    }
+
+    wSamplesPerBlock = 1;	/* common default for PCM data */
+
+    switch (ft->info.encoding)
+    {
+	case ST_ENCODING_UNSIGNED:
+	case ST_ENCODING_SIGN2:
+	    wFormatTag = WAVE_FORMAT_PCM;
+	    bytespersample = (wBitsPerSample + 7)/8;
+	    wBlockAlign = wChannels * bytespersample;
+	    break;
+	case ST_ENCODING_ALAW:
+	    wFormatTag = WAVE_FORMAT_ALAW;
+	    wBlockAlign = wChannels;
+	    break;
+	case ST_ENCODING_ULAW:
+	    wFormatTag = WAVE_FORMAT_MULAW;
+	    wBlockAlign = wChannels;
+	    break;
+	case ST_ENCODING_IMA_ADPCM:
+	    if (wChannels>16)
+	    {
+		st_fail_errno(ft,ST_EOF,"Channels(%d) must be <= 16\n",wChannels);
+		return ST_EOF;
+	    }
+	    wFormatTag = WAVE_FORMAT_IMA_ADPCM;
+	    wBlockAlign = wChannels * 256; /* reasonable default */
+	    wBitsPerSample = 4;
+	    wExtSize = 2;
+	    wSamplesPerBlock = ImaSamplesIn(0, wChannels, wBlockAlign, 0);
+	    break;
+	case ST_ENCODING_ADPCM:
+	    if (wChannels>16)
+	    {
+		st_fail_errno(ft,ST_EOF,"Channels(%d) must be <= 16\n",wChannels);
+		return ST_EOF;
+	    }
+	    wFormatTag = WAVE_FORMAT_ADPCM;
+	    wBlockAlign = wChannels * 128; /* reasonable default */
+	    wBitsPerSample = 4;
+	    wExtSize = 4+4*7;      /* Ext fmt data length */
+	    wSamplesPerBlock = AdpcmSamplesIn(0, wChannels, wBlockAlign, 0);
+	    break;
+	case ST_ENCODING_GSM:
+#ifdef ENABLE_GSM
+	    if (wChannels!=1)
+	    {
+		st_warn("Overriding GSM audio from %d channel to 1\n",wChannels);
+		wChannels = ft->info.channels = 1;
+	    }
+	    wFormatTag = WAVE_FORMAT_GSM610;
+	    /* dwAvgBytesPerSec = 1625*(dwSamplesPerSecond/8000.)+0.5; */
+	    wBlockAlign=65;
+	    wBitsPerSample=0;  /* not representable as int   */
+	    wExtSize=2;        /* length of format extension */
+	    wSamplesPerBlock = 320;
+#else
+	    st_fail_errno(ft,ST_EOF,"sorry, no GSM6.10 support, recompile sox with gsm library");
+	    return ST_EOF;
+#endif
+	    break;
+    }
+    wav->formatTag = wFormatTag;
+    wav->blockAlign = wBlockAlign;
+    wav->samplesPerBlock = wSamplesPerBlock;
+
+    if (!second_header) { 	/* adjust for blockAlign */
+	blocksWritten = dwDataLength/wBlockAlign;
+	dwDataLength = blocksWritten * wBlockAlign;
+	dwSamplesWritten = blocksWritten * wSamplesPerBlock;
+    } else { 	/* fixup with real length */
+	dwSamplesWritten = wav->numSamples;
+	switch(wFormatTag)
+	{
+	    case WAVE_FORMAT_ADPCM:
+	    case WAVE_FORMAT_IMA_ADPCM:
+		dwDataLength = wav->dataLength;
+		break;
+#ifdef ENABLE_GSM
+	    case WAVE_FORMAT_GSM610:
+		/* intentional case fallthrough! */
+#endif
+	    default:
+		dwSamplesWritten /= wChannels; /* because how rawwrite()'s work */
+		blocksWritten = (dwSamplesWritten+wSamplesPerBlock-1)/wSamplesPerBlock;
+		dwDataLength = blocksWritten * wBlockAlign;
+	}
+    }
+
+#ifdef ENABLE_GSM
+    if (wFormatTag == WAVE_FORMAT_GSM610)
+	dwDataLength = (dwDataLength+1) & ~1; /*round up to even */
+#endif
+
+    if (wFormatTag != WAVE_FORMAT_PCM)
+	wFmtSize += 2+wExtSize; /* plus ExtData */
+
+    wRiffLength = 4 + (8+wFmtSize) + (8+dwDataLength); 
+    if (wFormatTag != WAVE_FORMAT_PCM) /* PCM omits the "fact" chunk */
+	wRiffLength += (8+dwFactSize);
+
+    /* dwAvgBytesPerSec <-- this is BEFORE compression, isn't it? guess not. */
+    dwAvgBytesPerSec = (double)wBlockAlign*ft->info.rate / (double)wSamplesPerBlock + 0.5;
+
+    /* figured out header info, so write it */
+    st_writes(ft, "RIFF");
+    st_writedw(ft, wRiffLength);
+    st_writes(ft, "WAVE");
+    st_writes(ft, "fmt ");
+    st_writedw(ft, wFmtSize);
+    st_writew(ft, wFormatTag);
+    st_writew(ft, wChannels);
+    st_writedw(ft, dwSamplesPerSecond);
+    st_writedw(ft, dwAvgBytesPerSec);
+    st_writew(ft, wBlockAlign);
+    st_writew(ft, wBitsPerSample); /* end info common to all fmts */
+
+    /* if not PCM, we need to write out wExtSize even if wExtSize=0 */
+    if (wFormatTag != WAVE_FORMAT_PCM)
+	st_writew(ft,wExtSize);
+
+    switch (wFormatTag)
+    {
+	int i;
+	case WAVE_FORMAT_IMA_ADPCM:
+	st_writew(ft, wSamplesPerBlock);
+	break;
+	case WAVE_FORMAT_ADPCM:
+	st_writew(ft, wSamplesPerBlock);
+	st_writew(ft, 7); /* nCoefs */
+	for (i=0; i<7; i++) {
+	    st_writew(ft, iCoef[i][0]);
+	    st_writew(ft, iCoef[i][1]);
+	}
+	break;
 #ifdef ENABLE_GSM
 	case WAVE_FORMAT_GSM610:
-	    st_writew(ft, wSamplesPerBlock);
-	    break;
+	st_writew(ft, wSamplesPerBlock);
+	break;
 #endif
 	default:
-	    break;
-	}
+	break;
+    }
 
-	/* if not PCM, write the 'fact' chunk */
-	if (wFormatTag != WAVE_FORMAT_PCM){
-	    st_writes(ft, "fact");
-	    st_writedw(ft,wFactSize); 
-	    st_writedw(ft,wSamplesWritten);
-	}
+    /* if not PCM, write the 'fact' chunk */
+    if (wFormatTag != WAVE_FORMAT_PCM){
+	st_writes(ft, "fact");
+	st_writedw(ft,dwFactSize); 
+	st_writedw(ft,dwSamplesWritten);
+    }
 
-	st_writes(ft, "data");
-	st_writedw(ft, dwDataLength);		/* data chunk size */
+    st_writes(ft, "data");
+    st_writedw(ft, dwDataLength);		/* data chunk size */
 
-	if (!second_header) {
-		st_report("Writing Wave file: %s format, %d channel%s, %d samp/sec",
-	        	wav_format_str(wFormatTag), wChannels,
-	        	wChannels == 1 ? "" : "s", dwSamplesPerSecond);
-		st_report("        %d byte/sec, %d block align, %d bits/samp",
-	                dwAvgBytesPerSec, wBlockAlign, wBitsPerSample);
-	} else {
-		st_report("Finished writing Wave file, %u data bytes %u samples\n",
-			dwDataLength,wav->numSamples);
+    if (!second_header) {
+	st_report("Writing Wave file: %s format, %d channel%s, %d samp/sec",
+		wav_format_str(wFormatTag), wChannels,
+		wChannels == 1 ? "" : "s", dwSamplesPerSecond);
+	st_report("        %d byte/sec, %d block align, %d bits/samp",
+		dwAvgBytesPerSec, wBlockAlign, wBitsPerSample);
+    } else {
+	st_report("Finished writing Wave file, %u data bytes %u samples\n",
+		dwDataLength,wav->numSamples);
 #ifdef ENABLE_GSM
-		if (wFormatTag == WAVE_FORMAT_GSM610){
-		    st_report("GSM6.10 format: %u blocks %u padded samples %u padded data bytes\n",
-			blocksWritten, wSamplesWritten, dwDataLength);
-		    if (wav->gsmbytecount != dwDataLength)
-			st_warn("help ! internal inconsistency - data_written %u gsmbytecount %u",
-				dwDataLength, wav->gsmbytecount);
+	if (wFormatTag == WAVE_FORMAT_GSM610){
+	    st_report("GSM6.10 format: %u blocks %u padded samples %u padded data bytes\n",
+		    blocksWritten, dwSamplesWritten, dwDataLength);
+	    if (wav->gsmbytecount != dwDataLength)
+		st_warn("help ! internal inconsistency - data_written %u gsmbytecount %u",
+			dwDataLength, wav->gsmbytecount);
 
-		}
-#endif
 	}
-	return ST_SUCCESS;
+#endif
+    }
+    return ST_SUCCESS;
 }
 
 st_ssize_t st_wavwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	wav_t	wav = (wav_t) ft->priv;
-	LONG	total_len = len;
+	st_ssize_t total_len = len;
 
 	ft->st_errno = ST_SUCCESS;
 

@@ -143,12 +143,12 @@ BLOCK 9 - data block that supersedes blocks 1 and 8.
 
 /* Private data for VOC file */
 typedef struct vocstuff {
-        LONG    rest;                   /* bytes remaining in current block */
-        LONG    rate;                   /* rate code (byte) of this chunk */
+        long rest;                      /* bytes remaining in current block */
+        long rate;                      /* rate code (byte) of this chunk */
         int             silent;         /* sound or silence? */
-        LONG    srate;                  /* rate code (byte) of silence */
-        LONG    blockseek;              /* start of current output block */
-        LONG    samples;                /* number of samples output */
+        long    srate;                  /* rate code (byte) of silence */
+        long    blockseek;              /* start of current output block */
+        long    samples;                /* number of samples output */
         int             size;           /* word length of data */
         unsigned char   channels;       /* number of sound channels */
         int     extended;       /* Has an extended block been read? */
@@ -337,7 +337,7 @@ st_ssize_t st_vocwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
         vs_t v = (vs_t) ft->priv;
         unsigned char uc;
         int sw;
-        LONG done = 0;
+        st_ssize_t done = 0;
 
         if (v->samples == 0) {
           /* No silence packing yet. */
@@ -372,11 +372,11 @@ static int getblock(ft_t ft)
 {
         vs_t v = (vs_t) ft->priv;
         unsigned char uc, block;
-        ULONG sblen;
+        uint32_t sblen;
         uint16_t new_rate_16;
         uint32_t new_rate_32;
         int i;
-        ULONG trash;
+        uint32_t trash;
 
         v->silent = 0;
         while (v->rest == 0) {
@@ -395,9 +395,9 @@ static int getblock(ft_t ft)
                 st_readb(ft, &uc);
                 sblen = uc;
                 st_readb(ft, &uc);
-                sblen |= ((LONG) uc) << 8;
+                sblen |= ((uint32_t) uc) << 8;
                 st_readb(ft, &uc);
-                sblen |= ((LONG) uc) << 16;
+                sblen |= ((uint32_t) uc) << 16;
                 switch(block) {
                 case VOC_DATA:
                         st_readb(ft, &uc);
@@ -612,7 +612,7 @@ static void blockstart(ft_t ft)
 static void blockstop(ft_t ft) 
 {
         vs_t v = (vs_t) ft->priv;
-        LONG datum;
+        st_sample_t datum;
 
         st_writeb(ft, 0);                       /* End of file block code */
         fseek(ft->fp, v->blockseek, 0);         /* seek back to block length */

@@ -312,7 +312,7 @@ st_sample_t st_gcd(st_sample_t a, st_sample_t b)
 
 st_sample_t st_lcm(st_sample_t a, st_sample_t b)
 {
-    /* parenthesize this way to avoid LONG overflow in the product term */
+    /* parenthesize this way to avoid st_sample_t overflow in product term */
     return a * (b / st_gcd(a, b));
 }
 
@@ -466,5 +466,5 @@ st_size_t st_filelength(ft_t ft)
 
     fstat(fileno(ft->fp), &st);
 
-    return (LONG)st.st_size;
+    return (st_size_t)st.st_size;
 }

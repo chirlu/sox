@@ -54,7 +54,7 @@
  *    the input array (X), and to the right, it is interpreted as a number
  *    between 0 and 1 sample of the input X.  The default value of 23 is
  *    about right.  There is a constraint that the filter window must be
- *    "addressable" in a LONG int, more precisely, if Nmult is the number
+ *    "addressable" in a int32_t, more precisely, if Nmult is the number
  *    of sinc zero-crossings in the right wing of the filter window, then
  *    (Nwing<<Lp) must be expressible in 31 bits.
  *

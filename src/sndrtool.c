@@ -21,15 +21,15 @@
 
 /* Private data used by writer */
 typedef struct sndpriv {
-        ULONG nsamples;
-		LONG dataStart;
+        st_size_t nsamples;
+	st_size_t dataStart;
 } *snd_t;
 
 #ifndef	SEEK_CUR
 #define	SEEK_CUR	1
 #endif
 
-static void  sndtwriteheader(ft_t ft,LONG nsamples);
+static void  sndtwriteheader(ft_t ft, st_size_t nsamples);
 
 int st_sndseek(ft_t ft, st_size_t offset) 
 {
@@ -224,16 +224,16 @@ int st_sndtstopwrite(ft_t ft)
 /*======================================================================*/
 /*                         SNDTWRITEHEADER                              */
 /*======================================================================*/
-static void sndtwriteheader(ft_t ft, st_ssize_t nsamples)
+static void sndtwriteheader(ft_t ft, st_size_t nsamples)
 {
 char name_buf[97];
 
 /* sndtool header */
 st_writes(ft, "SOUND"); /* magic */
 st_writeb(ft, 0x1a);
-st_writew (ft,(LONG)0);  /* hGSound */
+st_writew (ft,0);  /* hGSound */
 st_writedw (ft,nsamples);
-st_writedw (ft,(LONG)0);
+st_writedw (ft,0);
 st_writedw (ft,nsamples);
 st_writew (ft,(int) ft->info.rate);
 st_writew (ft,0);

@@ -14,7 +14,6 @@
 #include "st_i.h"
 
 #include <math.h>   /* exp(), sqrt() */
-#include <limits.h> /* LONG_MAX */
 
 /* type used for computations.
  */
@@ -76,10 +75,13 @@ int st_dcshift_getopts(eff_t effp, int n, char **argv)
         }
 
         dcs->uselimiter = 1; /* ok, we'll use it */
-        /* The following equation is derived so that there is no discontinuity in output amplitudes */
-        /* and a LONG_MAX input always maps to a LONG_MAX output when the limiter is activated. */
-        /* (NOTE: There **WILL** be a discontinuity in the slope of the output amplitudes when using the limiter.) */
-        dcs->limiterthreshhold = LONG_MAX * (ONE - (fabs(dcs->dcshift) - dcs->limitergain));
+        /* The following equation is derived so that there is no 
+	 * discontinuity in output amplitudes */
+        /* and a ST_SAMPLE_MAX input always maps to a ST_SAMPLE_MAX output 
+	 * when the limiter is activated. */
+        /* (NOTE: There **WILL** be a discontinuity in the slope of the 
+	 * output amplitudes when using the limiter.) */
+        dcs->limiterthreshhold = ST_SAMPLE_MAX * (ONE - (fabs(dcs->dcshift) - dcs->limitergain));
     }
 
     return ST_SUCCESS;
@@ -116,20 +118,20 @@ int st_dcshift_start(eff_t effp)
  * this could be a function on its own, with clip count and report
  * handled by eff_t and caller.
  */
-static LONG clip(dcs_t dcs, const DCSHIFT_FLOAT v)
+static st_sample_t clip(dcs_t dcs, const DCSHIFT_FLOAT v)
 {
-    if (v > LONG_MAX)
+    if (v > ST_SAMPLE_MAX)
     {
          dcs->clipped++;
-         return LONG_MAX;
+         return ST_SAMPLE_MAX;
     }
-    else if (v < -LONG_MAX)
+    else if (v < -ST_SAMPLE_MAX)
     {
         dcs->clipped++;
-        return -LONG_MAX;
+        return -ST_SAMPLE_MAX;
     }
     /* else */
-    return (LONG) v;
+    return (st_sample_t) v;
 }
 
 #ifndef MIN
@@ -147,7 +149,7 @@ int st_dcshift_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     register DCSHIFT_FLOAT limitergain = dcs->limitergain;
     register DCSHIFT_FLOAT limiterthreshhold = dcs->limiterthreshhold;
     register DCSHIFT_FLOAT sample;
-    register LONG len;
+    register st_size_t len;
 
     len = MIN(*osamp, *isamp);
 
@@ -164,17 +166,17 @@ int st_dcshift_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
                 if (sample > limiterthreshhold && dcshift > 0)
                 {
-                        sample =  (sample - limiterthreshhold) * limitergain / (LONG_MAX - limiterthreshhold) + limiterthreshhold + dcshift;
+                        sample =  (sample - limiterthreshhold) * limitergain / (ST_SAMPLE_MAX - limiterthreshhold) + limiterthreshhold + dcshift;
                         dcs->limited++;
                 }
                 else if (sample < -limiterthreshhold && dcshift < 0)
                 {
-                        sample =  (sample + limiterthreshhold) * limitergain / (LONG_MAX - limiterthreshhold) - limiterthreshhold + dcshift;
+                        sample =  (sample + limiterthreshhold) * limitergain / (ST_SAMPLE_MAX - limiterthreshhold) - limiterthreshhold + dcshift;
                         dcs->limited++;
                 }
                 else
                 {
-                        sample = dcshift * LONG_MAX + sample;
+                        sample = dcshift * ST_SAMPLE_MAX + sample;
                 }
 
                 *obuf++ = clip(dcs, sample);
@@ -184,7 +186,7 @@ int st_dcshift_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     {
         /* quite basic, with clipping */
         for (;len>0; len--)
-                *obuf++ = clip(dcs, dcshift * LONG_MAX + *ibuf++);
+                *obuf++ = clip(dcs, dcshift * ST_SAMPLE_MAX + *ibuf++);
     }
     return ST_SUCCESS;
 }

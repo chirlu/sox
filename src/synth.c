@@ -12,7 +12,6 @@
 
 #include <signal.h>
 #include <string.h>
-#include <limits.h>
 #include <math.h>
 #include <ctype.h>
 #include "st_i.h"
@@ -161,10 +160,10 @@ typedef struct synthstuff {
     double par[MAXCHAN][5];
 
     /* internal stuff */
-    LONG max;
-    ULONG samples_done;
+    st_sample_t max;
+    st_size_t samples_done;
     int rate;
-    ULONG length; /* length in number of samples */
+    st_size_t length; /* length in number of samples */
     double h[MAXCHAN]; /* store values necessary for  creation */
     PinkNoise pinkn[MAXCHAN];
 } *synth_t;
@@ -243,7 +242,7 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
     /* set default parameters */
     synth->length = 0; /* use length of input file */
     synth->length_str = 0;
-    synth->max = LONG_MAX;
+    synth->max = ST_SAMPLE_MAX;
     for(c=0;c<MAXCHAN;c++){
 	synth->freq[c] = 440.0;
 	synth->freq2[c] = 440.0;
@@ -515,8 +514,8 @@ int st_synth_start(eff_t effp)
 
 
 
-static LONG do_synth(LONG iv, synth_t synth, int c){
-    LONG ov=iv;
+static st_sample_t do_synth(st_sample_t iv, synth_t synth, int c){
+    st_sample_t ov=iv;
     double r=0.0; /* -1 .. +1 */
     double f;
     double om;
@@ -674,7 +673,7 @@ static LONG do_synth(LONG iv, synth_t synth, int c){
 	    ov = iv/2 + r*synth->max/2;
 	    break;
 	case SYNTH_AMOD:
-	    ov = (LONG)(0.5*(r+1.0)*(double)iv);
+	    ov = (st_sample_t)(0.5*(r+1.0)*(double)iv);
 	    break;
 	case SYNTH_FMOD:
 	    ov = iv * r ;

@@ -109,7 +109,7 @@ int st_vibro_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 	register int counter, tablen;
 	int len, done;
 	short *sinetab;
-	LONG l;
+	st_sample_t l;
 
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
 

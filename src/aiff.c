@@ -56,14 +56,14 @@
 
 /* Private data used by writer */
 typedef struct aiffpriv {
-	ULONG nsamples;	/* number of 1-channel samples read or written */
-					/*Decrements for read increments for write */
-    LONG dataStart;  /* need to for seeking */
+    st_size_t nsamples;  /* number of 1-channel samples read or written */
+			 /* Decrements for read increments for write */
+    st_size_t dataStart; /* need to for seeking */
 } *aiff_t;
 
 /* forward declarations */
 static double read_ieee_extended(ft_t);
-static int aiffwriteheader(ft_t, LONG);
+static int aiffwriteheader(ft_t, st_size_t);
 static void write_ieee_extended(ft_t, double);
 static double ConvertFromIeeeExtended(unsigned char*);
 static void ConvertToIeeeExtended(double, char *);
@@ -71,7 +71,7 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft);
 static int commentChunk(char **text, char *chunkDescription, ft_t ft);
 static void reportInstrument(ft_t ft);
 
-int st_aiffseek(ft_t ft,st_size_t offset) 
+int st_aiffseek(ft_t ft, st_size_t offset) 
 {
 	aiff_t aiff = (aiff_t ) ft->priv;
 
@@ -106,7 +106,7 @@ int st_aiffstartread(ft_t ft)
 	unsigned short nmarks = 0;
 	unsigned short sustainLoopBegin = 0, sustainLoopEnd = 0,
 	     	       releaseLoopBegin = 0, releaseLoopEnd = 0;
-	LONG seekto = 0L, ssndsize = 0L;
+	st_size_t seekto = 0L, ssndsize = 0L;
 	char *author;
 	char *copyright;
 	char *nametext;
@@ -352,7 +352,7 @@ int st_aiffstartread(ft_t ft)
 		st_fail_errno(ft,ST_EHDR,"AIFF header specifies nonzero blocksize?!?!");
 		return(ST_EOF);
 	}
-	while ((LONG) (--offset) >= 0) {
+	while (offset-- > 0) {
 		if (st_readb(ft, (unsigned char *)&trash8) == ST_EOF)
 		{
 			st_fail_errno(ft,errno,"unexpected EOF while skipping AIFF offset");
@@ -574,7 +574,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
 st_ssize_t st_aiffread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
 	aiff_t aiff = (aiff_t ) ft->priv;
-	LONG done;
+	st_ssize_t done;
 
 	/* just read what's left of SSND chunk */
 	if (len > aiff->nsamples)
@@ -590,7 +590,7 @@ int st_aiffstopread(ft_t ft)
 {
 	char buf[5];
 	uint32_t chunksize;
-	ULONG trash;
+	uint32_t trash;
 
 	if (!ft->seekable)
 	{
@@ -607,7 +607,7 @@ int st_aiffstopread(ft_t ft)
 			buf, chunksize);
 		if (! strcmp(buf, "MARK") || ! strcmp(buf, "INST"))
 			st_warn("	You're stripping MIDI/loop info!\n");
-		while ((LONG) (--chunksize) >= 0) 
+		while (chunksize-- > 0) 
 		{
 			if (st_readb(ft, (unsigned char *)&trash) == ST_EOF)
 				break;
@@ -697,7 +697,7 @@ int st_aiffstopwrite(ft_t ft)
 	return(aiffwriteheader(ft, aiff->nsamples / ft->info.channels));
 }
 
-static int aiffwriteheader(ft_t ft, LONG nframes)
+static int aiffwriteheader(ft_t ft, st_size_t nframes)
 {
 	int hsize =
 		8 /*COMM hdr*/ + 18 /*COMM chunk*/ +
@@ -706,7 +706,7 @@ static int aiffwriteheader(ft_t ft, LONG nframes)
 	int i;
 	int padded_comment_size = 0;
 	int comment_size = 0;
-	LONG comment_chunk_size = 0L;
+	st_size_t comment_chunk_size = 0L;
 
 	/* MARK and INST chunks */
 	if (ft->instr.nloops) {
@@ -737,7 +737,7 @@ static int aiffwriteheader(ft_t ft, LONG nframes)
 	  padded_comment_size = ((comment_size % 2) == 0) ?
 				comment_size : comment_size + 1;
 	  /* one comment, timestamp, marker ID and text count */
-	  comment_chunk_size = (LONG) (2 + 4 + 2 + 2 + padded_comment_size);
+	  comment_chunk_size = (2L + 4 + 2 + 2 + padded_comment_size);
 	  hsize += 8 /* COMT hdr */ + comment_chunk_size; 
 	}
 
@@ -757,7 +757,7 @@ static int aiffwriteheader(ft_t ft, LONG nframes)
 
 	  /* time stamp of comment, Unix knows of time from 1/1/1970,
 	     Apple knows time from 1/1/1904 */
-	  st_writedw(ft, (LONG) ((LONG) time(NULL)) + 2082844800L);
+	  st_writedw(ft, ((int32_t) time(NULL)) + 2082844800L);
 
 	  /* A marker ID of 0 indicates the comment is not associated
 	     with a marker */
@@ -772,7 +772,7 @@ static int aiffwriteheader(ft_t ft, LONG nframes)
 
 	/* COMM chunk -- describes encoding (and #frames) */
 	st_writes(ft, "COMM");
-	st_writedw(ft, (LONG) 18); /* COMM chunk size */
+	st_writedw(ft, 18); /* COMM chunk size */
 	st_writew(ft, ft->info.channels); /* nchannels */
 	st_writedw(ft, nframes); /* number of frames */
 	st_writew(ft, bits); /* sample width, in bits */
@@ -828,8 +828,8 @@ static int aiffwriteheader(ft_t ft, LONG nframes)
 	st_writes(ft, "SSND");
 	/* chunk size */
 	st_writedw(ft, 8 + nframes * ft->info.channels * ft->info.size); 
-	st_writedw(ft, (LONG) 0); /* offset */
-	st_writedw(ft, (LONG) 0); /* block size */
+	st_writedw(ft, 0); /* offset */
+	st_writedw(ft, 0); /* block size */
 	return(ST_SUCCESS);
 }
 
@@ -897,14 +897,14 @@ static void write_ieee_extended(ft_t ft, double x)
 # define HUGE_VAL HUGE
 #endif /*HUGE_VAL*/
 
-# define FloatToUnsigned(f)      ((ULONG)(((LONG)(f - 2147483648.0)) + 2147483647L) + 1)
+# define FloatToUnsigned(f) ((uint32_t)(((int32_t)(f - 2147483648.0)) + 2147483647L) + 1)
 
 static void ConvertToIeeeExtended(double num, char *bytes)
 {
     int    sign;
     int expon;
     double fMant, fsMant;
-    ULONG hiMant, loMant;
+    uint32_t hiMant, loMant;
 
     if (num < 0) {
         sign = 0x8000;
@@ -990,7 +990,7 @@ static void ConvertToIeeeExtended(double num, char *bytes)
 # define HUGE_VAL HUGE
 #endif /*HUGE_VAL*/
 
-# define UnsignedToFloat(u)         (((double)((LONG)(u - 2147483647L - 1))) + 2147483648.0)
+# define UnsignedToFloat(u)         (((double)((int32_t)(u - 2147483647L - 1))) + 2147483648.0)
 
 /****************************************************************
  * Extended precision IEEE floating-point conversion routine.
@@ -1000,17 +1000,17 @@ static double ConvertFromIeeeExtended(unsigned char *bytes)
 {
     double    f;
     int    expon;
-    ULONG hiMant, loMant;
+    uint32_t hiMant, loMant;
     
     expon = ((bytes[0] & 0x7F) << 8) | (bytes[1] & 0xFF);
-    hiMant    =    ((ULONG)(bytes[2] & 0xFF) << 24)
-            |    ((ULONG)(bytes[3] & 0xFF) << 16)
-            |    ((ULONG)(bytes[4] & 0xFF) << 8)
-            |    ((ULONG)(bytes[5] & 0xFF));
-    loMant    =    ((ULONG)(bytes[6] & 0xFF) << 24)
-            |    ((ULONG)(bytes[7] & 0xFF) << 16)
-            |    ((ULONG)(bytes[8] & 0xFF) << 8)
-            |    ((ULONG)(bytes[9] & 0xFF));
+    hiMant    =    ((uint32_t)(bytes[2] & 0xFF) << 24)
+            |    ((uint32_t)(bytes[3] & 0xFF) << 16)
+            |    ((uint32_t)(bytes[4] & 0xFF) << 8)
+            |    ((uint32_t)(bytes[5] & 0xFF));
+    loMant    =    ((uint32_t)(bytes[6] & 0xFF) << 24)
+            |    ((uint32_t)(bytes[7] & 0xFF) << 16)
+            |    ((uint32_t)(bytes[8] & 0xFF) << 8)
+            |    ((uint32_t)(bytes[9] & 0xFF));
 
     if (expon == 0 && hiMant == 0 && loMant == 0) {
         f = 0;

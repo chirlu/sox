@@ -22,7 +22,7 @@ typedef struct wvepriv
     short padding;
     short repeats;
 /* For seeking */
-	LONG dataStart;
+	st_size_t dataStart;
     } *wve_t;
 
 static void wvewriteheader(ft_t ft);
@@ -41,7 +41,7 @@ int st_wvestartread(ft_t ft)
 	short version;
 	int rc;
 
-	ULONG trash;
+	uint32_t trash;
 
 	/* Needed for rawread() */
 	rc = st_rawstartread(ft);

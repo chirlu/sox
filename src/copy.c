@@ -49,7 +49,7 @@ int st_copy_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 	int done;
 	
 	done = ((*isamp < *osamp) ? *isamp : *osamp);
-	memcpy(obuf, ibuf, done * sizeof(LONG));
+	memcpy(obuf, ibuf, done * sizeof(st_sample_t));
 	*isamp = *osamp = done;
 	return (ST_SUCCESS);
 }

@@ -40,19 +40,19 @@ extern void AdpcmBlockMashI(
  *  samplesPerBlock which would go into a block of size blockAlign
  *  Yes, it is confusing usage.
  */
-extern ULONG AdpcmSamplesIn(
-	ULONG dataLen,
+extern st_size_t AdpcmSamplesIn(
+	st_size_t dataLen,
 	unsigned short chans,
 	unsigned short blockAlign,
 	unsigned short samplesPerBlock
 );
 
 /*
- * ULONG AdpcmBytesPerBlock(chans, samplesPerBlock)
+ * st_size_t AdpcmBytesPerBlock(chans, samplesPerBlock)
  *   return minimum blocksize which would be required
  *   to encode number of chans with given samplesPerBlock
  */
-extern ULONG AdpcmBytesPerBlock(
+extern st_size_t AdpcmBytesPerBlock(
 	unsigned short chans,
 	unsigned short samplesPerBlock
 );

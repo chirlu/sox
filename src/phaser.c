@@ -71,9 +71,9 @@ typedef struct phaserstuff {
 	float	in_gain, out_gain;
 	float	delay, decay;
 	float	speed;
-	LONG    length;
+	st_size_t length;
 	int	*lookup_tab;
-	LONG	maxsamples, fade_out;
+	st_size_t maxsamples, fade_out;
 } *phaser_t;
 
 /*
@@ -199,7 +199,7 @@ int st_phaser_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 	int len, done;
 	
 	double d_in, d_out;
-	LONG out;
+	st_sample_t out;
 
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
 	for(done = 0; done < len; done++) {
@@ -212,7 +212,7 @@ int st_phaser_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 	phaser->maxsamples] * phaser->decay * -1.0;
 		/* Adjust the output volume and size to 24 bit */
 		d_out = d_in * phaser->out_gain;
-		out = st_clip24((LONG) d_out);
+		out = st_clip24((st_sample_t) d_out);
 		*obuf++ = out * 256;
 		/* Mix decay of delay and input */
 		phaser->phaserbuf[phaser->counter] = d_in;
@@ -233,7 +233,7 @@ int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 	int done;
 	
 	double d_in, d_out;
-	LONG out;
+	st_sample_t out;
 
 	done = 0;
 	while ( ( done < *osamp ) && ( done < phaser->fade_out ) ) {
@@ -245,7 +245,7 @@ int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 	phaser->maxsamples] * phaser->decay * -1.0;
 		/* Adjust the output volume and size to 24 bit */
 		d_out = d_in * phaser->out_gain;
-		out = st_clip24((LONG) d_out);
+		out = st_clip24((st_sample_t) d_out);
 		*obuf++ = out * 256;
 		/* Mix decay of delay and input */
 		phaser->phaserbuf[phaser->counter] = d_in;

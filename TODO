@@ -5,6 +5,8 @@ all patches to cbagwell@users.sourceforge.net.
 
   o Make a global version of MIN/MAX instead of sprinkled min/max/MIN/MAX
 
+  o Make a global version of clip() instead of sprinked in all files.
+
   o Add support to all file handlers to handle 32-bit and float
     data types since raw functions can handle them.
 

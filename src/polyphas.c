@@ -31,7 +31,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
 #include <string.h>
 #include "st_i.h"
 
@@ -51,11 +50,11 @@ typedef struct {
 
 typedef struct polyphase {
 
-  ULONG lcmrate;       		 /* least common multiple of rates */
-  ULONG inskip, outskip;	 /* LCM increments for I & O rates */
+  st_rate_t lcmrate;   		 /* least common multiple of rates */
+  st_rate_t inskip, outskip;	 /* LCM increments for I & O rates */
   double Factor;                 /* out_rate/in_rate               */
-  ULONG total;          	 /* number of filter stages        */
-  ULONG oskip;   	         /* output samples to skip at start*/
+  ulong total;          	 /* number of filter stages        */
+  st_size_t oskip;   	         /* output samples to skip at start*/
   double inpipe;                 /* output samples 'in the pipe'   */
   polystage *stage[MF];          /* array of pointers to polystage structs */
 
@@ -201,8 +200,8 @@ static int permute(int *m, int *l, int ct, int ct1, int amalg)
   
   for (k=ct; k>1; ) {
     int tmp;
-    ULONG j;
-    j = (ULONG)(rand()%32768L) + ((ULONG)(rand()%32768L)<<13); /* reasonably big */
+    unsigned long j;
+    j = (rand()%32768L) + ((rand()%32768L)<<13); /* reasonably big */
     j = j % k; /* non-negative! */
     k--;
     if (j != k) {
@@ -387,7 +386,7 @@ int st_poly_start(eff_t effp)
     poly_t rate = (poly_t) effp->priv;
     static int l1[MF], l2[MF];
     double skip = 0;
-		int total, size, uprate;
+    int total, size, uprate;
     int k;
 
     if (effp->ininfo.rate == effp->outinfo.rate)
@@ -398,7 +397,8 @@ int st_poly_start(eff_t effp)
 
     st_initrand();
 
-    rate->lcmrate = st_lcm((LONG)effp->ininfo.rate, (LONG)effp->outinfo.rate);
+    rate->lcmrate = st_lcm((st_sample_t)effp->ininfo.rate, 
+	                   (st_sample_t)effp->outinfo.rate);
 
     /* Cursory check for LCM overflow.  
      * If both rate are below 65k, there should be no problem.
@@ -535,14 +535,12 @@ static void update_hist(Float *hist, int hist_size, int in_size)
 
 }
 
-static Float FLONG_MAX = LONG_MAX;
-
-static LONG clipfloat(Float sample)
+static st_sample_t clipfloat(Float sample)
 {
-	if (sample > FLONG_MAX)
-	return LONG_MAX;
-	if (sample < -FLONG_MAX)
-	return -LONG_MAX;
+	if (sample > ST_SAMPLE_MAX)
+	return ST_SAMPLE_MAX;
+	if (sample < -ST_SAMPLE_MAX)
+	return -ST_SAMPLE_MAX;
 	return sample;
 }
 
@@ -606,9 +604,9 @@ int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
   }
 
   {
-    LONG *q;
-    LONG out_size;
-    LONG oskip;
+    st_sample_t *q;
+    st_size_t out_size;
+    st_size_t oskip;
     Float *out_buf;
     int k;
 
@@ -646,7 +644,7 @@ int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
  */
 int st_poly_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
-  LONG in_size;
+  st_size_t in_size;
   /* Call "flow" with NULL input. */
   st_poly_flow(effp, NULL, obuf, &in_size, osamp);
   return (ST_SUCCESS);

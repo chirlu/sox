@@ -28,7 +28,7 @@
 
 /* Private data for SKEL file */
 typedef struct cdrstuff {
-	LONG	samples;	/* number of samples written */
+	st_size_t samples;	/* number of samples written */
 } *cdr_t;
 
 /*

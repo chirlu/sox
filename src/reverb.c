@@ -107,7 +107,7 @@ typedef struct reverbstuff {
 	float	in_gain, out_gain, time;
 	float	delay[MAXREVERBS], decay[MAXREVERBS];
 	long	samples[MAXREVERBS], maxsamples;
-	LONG	pl, ppl, pppl;
+	st_sample_t pl, ppl, pppl;
 } *reverb_t;
 
 /*
@@ -214,7 +214,7 @@ int st_reverb_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 	int i, j;
 	
 	float d_in, d_out;
-	LONG out;
+	st_sample_t out;
 
 	i = reverb->counter;
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
@@ -227,7 +227,7 @@ int st_reverb_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 			d_in +=
 reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsamples] * reverb->decay[j];
 		d_out = d_in * reverb->out_gain;
-		out = st_clip24((LONG) d_out);
+		out = st_clip24((st_sample_t) d_out);
 		*obuf++ = out * 256;
 		reverb->reverbbuf[i] = d_in;
 		i++;		/* XXX need a % maxsamples here ? */
@@ -245,7 +245,7 @@ int st_reverb_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
 	reverb_t reverb = (reverb_t) effp->priv;
 	float d_in, d_out;
-	LONG out, l;
+	st_sample_t out, l;
 	int i, j, done;
 
 	i = reverb->counter;
@@ -258,10 +258,10 @@ int st_reverb_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 			d_in += 
 reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsamples] * reverb->decay[j];
 		d_out = d_in * reverb->out_gain;
-		out = st_clip24((LONG) d_out);
+		out = st_clip24((st_sample_t) d_out);
 		obuf[done++] = out * 256;
 		reverb->reverbbuf[i] = d_in;
-		l = st_clip24((LONG) d_in);
+		l = st_clip24((st_sample_t) d_in);
 		reverb->pppl = reverb->ppl;
 		reverb->ppl = reverb->pl;
 		reverb->pl = l;

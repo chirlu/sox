@@ -221,7 +221,7 @@ st_ssize_t st_vorbisread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 	vorbis_t vb = (vorbis_t) ft->priv;
 	int i;
 	int ret;
-	LONG l;
+	st_sample_t l;
 
 
 	for(i = 0; i < len; i++) {
@@ -359,9 +359,9 @@ st_ssize_t st_vorbiswrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
 	vorbis_t vb = (vorbis_t) ft->priv;
 	vorbis_enc_t *ve = vb->vorbis_enc_data;
-	LONG samples = len / ft->info.channels;	
+	st_ssize_t samples = len / ft->info.channels;	
 	float **buffer = vorbis_analysis_buffer(&ve->vd, samples);
-	LONG i, j;
+	st_ssize_t i, j;
 	int ret;
 	int eos = 0;
 

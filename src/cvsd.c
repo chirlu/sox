@@ -34,7 +34,6 @@
 
 /* ---------------------------------------------------------------------- */
 
-#include <limits.h>
 #include <math.h>
 #include <string.h>
 #include <time.h>
@@ -315,7 +314,7 @@ st_ssize_t st_cvsdread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 				p->com.v_max = oval;
 			if (oval < p->com.v_min)
 				p->com.v_min = oval;
-			*buf++ = (oval * ((float)LONG_MAX));
+			*buf++ = (oval * ((float)ST_SAMPLE_MAX));
 			done++;
 		}
 		p->com.phase &= 3;
@@ -359,7 +358,7 @@ st_ssize_t st_cvsdwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 			memmove(p->c.enc.input_filter+1, p->c.enc.input_filter,
 				sizeof(p->c.enc.input_filter)-sizeof(float));
 			p->c.enc.input_filter[0] = (*buf++) / 
-				((float)LONG_MAX);
+				((float)ST_SAMPLE_MAX);
 			done++;
 		}
 		p->com.phase &= 3;
@@ -418,7 +417,7 @@ struct dvms_header {
 	time_t        Unixtime;
 	unsigned      Usender;
 	unsigned      Ureceiver;
-	ULONG	      Length;
+	st_size_t     Length;
 	unsigned      Srate;
 	unsigned      Days;
 	unsigned      Custom1;
@@ -432,22 +431,22 @@ struct dvms_header {
 
 /* ---------------------------------------------------------------------- */
 /* FIXME: Move these to misc.c */
-static ULONG get32(unsigned char **p)
+static uint32_t get32(unsigned char **p)
 {
-	ULONG val = (((*p)[3]) << 24) | (((*p)[2]) << 16) | 
+	uint32_t val = (((*p)[3]) << 24) | (((*p)[2]) << 16) | 
 		(((*p)[1]) << 8) | (**p);
 	(*p) += 4;
 	return val;
 }
 
-static unsigned get16(unsigned char **p)
+static uint16_t get16(unsigned char **p)
 {
 	unsigned val = (((*p)[1]) << 8) | (**p);
 	(*p) += 2;
 	return val;
 }
 
-static void put32(unsigned char **p, ULONG val)
+static void put32(unsigned char **p, uint32_t val)
 {
 	*(*p)++ = val & 0xff;
 	*(*p)++ = (val >> 8) & 0xff;
@@ -455,7 +454,7 @@ static void put32(unsigned char **p, ULONG val)
 	*(*p)++ = (val >> 24) & 0xff;
 }
 
-static void put16(unsigned char **p, unsigned val)
+static void put16(unsigned char **p, int16_t val)
 {
 	*(*p)++ = val & 0xff;
 	*(*p)++ = (val >> 8) & 0xff;

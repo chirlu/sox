@@ -359,7 +359,7 @@ int st_svxstopwrite(ft_t ft)
 #define SVXHEADERSIZE 100
 static void svxwriteheader(ft_t ft, st_ssize_t nsamples)
 {
-	LONG formsize =  nsamples + SVXHEADERSIZE - 8;
+	int32_t formsize =  nsamples + SVXHEADERSIZE - 8;
 
 	/* FORM size must be even */
 	if(formsize % 2 != 0) formsize++;
@@ -369,23 +369,23 @@ static void svxwriteheader(ft_t ft, st_ssize_t nsamples)
 	st_writes(ft, "8SVX"); /* File type */
 
 	st_writes(ft, "VHDR");
-	st_writedw(ft, (LONG) 20); /* number of bytes to follow */
+	st_writedw(ft, 20); /* number of bytes to follow */
 	st_writedw(ft, nsamples);  /* samples, 1-shot */
-	st_writedw(ft, (LONG) 0);  /* samples, repeat */
-	st_writedw(ft, (LONG) 0);  /* samples per repeat cycle */
+	st_writedw(ft, 0);  /* samples, repeat */
+	st_writedw(ft, 0);  /* samples per repeat cycle */
 	st_writew(ft, (int) ft->info.rate); /* samples per second */
 	st_writeb(ft,1); /* number of octabes */
 	st_writeb(ft,0); /* data compression (none) */
 	st_writew(ft,1); st_writew(ft,0); /* volume */
 
 	st_writes(ft, "ANNO");
-	st_writedw(ft, (LONG) 32); /* length of block */
+	st_writedw(ft, 32); /* length of block */
 	st_writes(ft, "File created by Sound Exchange  ");
 
 	st_writes(ft, "CHAN");
-	st_writedw(ft, (LONG) 4);
-	st_writedw(ft, (ft->info.channels == 2) ? (LONG) 6 :
-		   (ft->info.channels == 4) ? (LONG) 15 : (LONG) 2);
+	st_writedw(ft, 4);
+	st_writedw(ft, (ft->info.channels == 2) ? 6 :
+		   (ft->info.channels == 4) ? 15 : 2);
 
 	st_writes(ft, "BODY");
 	st_writedw(ft, nsamples); /* samples in file */

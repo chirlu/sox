@@ -64,10 +64,10 @@ static int clipped = 0;         /* Volume change clipping errors */
 static int writing = 0;         /* are we writing to a file? */
 static int soxpreview = 0;      /* preview mode */
 
-static LONG ibufl[BUFSIZ/2];    /* Left/right interleave buffers */
-static LONG ibufr[BUFSIZ/2];
-static LONG obufl[BUFSIZ/2];
-static LONG obufr[BUFSIZ/2];
+static st_sample_t ibufl[BUFSIZ/2];    /* Left/right interleave buffers */
+static st_sample_t ibufr[BUFSIZ/2];
+static st_sample_t obufl[BUFSIZ/2];
+static st_sample_t obufr[BUFSIZ/2];
 
 /* local forward declarations */
 static void doopts(ft_t, int, char **);
@@ -79,7 +79,7 @@ static void usage(char *) NORET;
 static int filetype(int);
 static void process(void);
 static void statistics(void);
-static LONG volumechange(LONG *buf, LONG ct, double vol);
+static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct, double vol);
 static void checkeffect(void);
 static int flow_effect_out(void);
 static int flow_effect(int);
@@ -544,8 +544,8 @@ static void process(void) {
     int e, f, flowstatus;
 #ifdef SOXMIX
     int s;
-    ULONG ilen[MAX_INPUT_FILES];
-    LONG *ibuf[MAX_INPUT_FILES];
+    st_ssize_t ilen[MAX_INPUT_FILES];
+    st_sample_t *ibuf[MAX_INPUT_FILES];
 #endif
 
     for (f = 0; f < input_count; f++)
@@ -744,7 +744,7 @@ static void process(void) {
 
             if (writing&&efftab[neffects-1].olen > 0)
                 (* outformat->h->write)(outformat, efftab[neffects-1].obuf,
-                                       (LONG) efftab[neffects-1].olen);
+                                       (st_ssize_t) efftab[neffects-1].olen);
 
             if (efftab[f].olen != BUFSIZ)
                 break;
@@ -836,7 +836,7 @@ static int flow_effect_out(void)
 static int flow_effect(e)
 int e;
 {
-    st_size_t i, done, idone, odone, idonel, odonel, idoner, odoner;
+    st_ssize_t i, done, idone, odone, idonel, odonel, idoner, odoner;
     st_sample_t *ibuf, *obuf;
     int effstatus;
 
@@ -905,8 +905,8 @@ int e;
 static int drain_effect(e)
 int e;
 {
-    LONG i, olen, olenl, olenr;
-    LONG *obuf;
+    st_ssize_t i, olen, olenl, olenr;
+    st_sample_t *obuf;
 
     if (! efftabR[e].name) {
         efftab[e].olen = BUFSIZ;
@@ -1113,14 +1113,12 @@ static void statistics(void) {
                 st_report("Volume change clipped %d samples", clipped);
 }
 
-static LONG volumechange(buf, ct, vol)
-LONG *buf;
-LONG ct;
-double vol;
+static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct, 
+	                        double vol)
 {
         double y;
-        LONG *p,*top;
-        LONG clips=0;
+        st_sample_t *p,*top;
+        st_ssize_t clips=0;
 
         p = buf;
         top = buf+ct;
