@@ -63,6 +63,7 @@ AC_CANONICAL_SYSTEM
 case "$target" in
 	*cygwin* )
 		CFLAGS="$CFLAGS -mno-cygwin"
+		CPPFLAGS="$CFLAGS -mno-cygwin"
 		LDFLAGS="$LDFLAGS -mno-cygwin"
 esac
 
