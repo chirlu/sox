@@ -11,6 +11,7 @@ sox-12.17.8
   o Stuart Brady added support for reading and writing RIFX files (big
     endian RIFF/WAV files).  Also added support for auto detecting
     DEC-style ".sd\0" files.
+  o Gene Mar found typo in polyphase nuttall calculation.
 
 sox-12.17.7
 -----------

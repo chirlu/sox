@@ -313,7 +313,7 @@ static void nuttall(Float *buffer, int length)
   N1 = length/2;
 
   for(j = 0; j < length; j++) {
-    buffer[j] = 0.36335819 +
+    buffer[j] = 0.3635819 +
       0.4891775 * cos(2*PI*1*(j - N1) / N) +
       0.1365995 * cos(2*PI*2*(j - N1) / N) +
       0.0106411 * cos(2*PI*3*(j - N1) / N);

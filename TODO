@@ -1,6 +1,14 @@
 People are encouraged to pick some of these and implement it.  Send
 all patches to cbagwell@users.sourceforge.net.
 
+  o Make "mix" an alias of "avg" since thats closer to what it
+    really is.  For 2->2 mixes, make a 2 option L->L and R->R
+    shortcut.  Similar 4 option for 4->4.
+
+  o In avg effect, going from 1->2 should have a 2 number shortcut
+    so that you don't have to put 100% in each channel.  Similar
+    for 2->4.
+
   o Remove FFT code from stat effect and use new FFT.c code.
     Ideally, FFT needs to become LGPL license instead of
     GPL so that it can be used as apart of LGPL libst.
