@@ -8,8 +8,6 @@
  */
 
 #include "st.h"
-#include "version.h"
-#include "patchlvl.h"
 #include <string.h>
 #include <ctype.h>
 #include <signal.h>

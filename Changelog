@@ -18,6 +18,12 @@ sox-12.17.1
     Antti Honkela).
   o Added small work around to let compile with cygwin's gcc 95.2
     which also now allows to compile with GSM support under windows.
+  o Removed accessing of sound devices in tests for sound support and
+    instead just look for needed header files.  This allows the sound
+    support to be detected even if the device is currently busy or when
+    compiled on a box that doesn't have a sound card but the OS supports
+    it (which is the enviornment of most distributions creating new
+    binaries).
 
 sox-12.17
 ---------
