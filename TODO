@@ -7,7 +7,13 @@ all patches to cbagwell@sprynet.com.
     But of course, MS is pushing very hard to make their version the
     standard, weither inferer or not.
 
-  o Add GSM support to WAV format.
+  o I've add the most common and public standard FormatTags to the
+    .wav file detection.  A lot of them should be implemented since
+    you can grab the source code from the .au handler and software
+    is avaliable from public sources for the rest.
+
+  o Add GSM support to WAV format.  Goes with the above but used
+    most often.
  
   o highpass and lowpass filters don't let you specify the cut
     of freq.  Need some improvements to these filters.

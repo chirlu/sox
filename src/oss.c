@@ -111,6 +111,9 @@ ft_t ft;
 	ft->info.rate = tmp;
     }
 
+    /* Change to unbuffered mode*/
+    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
+
     sigintreg(ft);	/* Prepare to catch SIGINT */
 }
 
@@ -194,6 +197,9 @@ ft_t ft;
 		     ft->info.rate, tmp);
 	ft->info.rate = tmp;
     }
+
+    /* Change to non-buffered I/O */
+    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
 }
 
 #endif

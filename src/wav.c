@@ -51,10 +51,20 @@
  * User options should override file header - we assumed user knows what
  * they are doing if they specify options.
  * Enhancements and clean up by Graeme W. Gill, 93/5/17
+ *
+ * Info for format tags can be found at:
+ *   http://www.microsoft.com/asf/resources/draft-ietf-fleischman-codec-subtree-01.txt
+ *
  */
 
 #include <string.h>		/* Included for strncmp */
 #include <stdlib.h>		/* Included for malloc and free */
+#include <stdio.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>		/* For SEEK_* defines if not found in stdio */
+#endif
+
 #include "st.h"
 #include "wav.h"
 
@@ -511,6 +521,9 @@ ft_t ft;
 	else
 	    warn("User options overriding style read in .wav header");
 	break;
+
+    case WAVE_FORMAT_IEEE_FLOAT:
+	fail("Sorry, this WAV file is in IEEE Float format.");
 	
     case WAVE_FORMAT_ALAW:
 	if (ft->info.style == -1 || ft->info.style == ALAW)
@@ -532,12 +545,26 @@ ft_t ft;
 	fail("Sorry, this WAV file is in Digistd format.");
     case WAVE_FORMAT_DIGIFIX:
 	fail("Sorry, this WAV file is in Digifix format.");
-    case IBM_FORMAT_MULAW:
-	fail("Sorry, this WAV file is in IBM U-law format.");
-    case IBM_FORMAT_ALAW:
-	fail("Sorry, this WAV file is in IBM A-law format.");
-    case IBM_FORMAT_ADPCM:
-	fail("Sorry, this WAV file is in IBM ADPCM format.");
+    case WAVE_FORMAT_DOLBY_AC2:
+	fail("Sorry, this WAV file is in Dolby AC2 format.");
+    case WAVE_FORMAT_GSM610:
+	fail("Sorry, this WAV file is in GSM 6.10 format.");
+    case WAVE_FORMAT_ROCKWELL_ADPCM:
+	fail("Sorry, this WAV file is in Rockwell ADPCM format.");
+    case WAVE_FORMAT_ROCKWELL_DIGITALK:
+	fail("Sorry, this WAV file is in Rockwell DIGITALK format.");
+    case WAVE_FORMAT_G721_ADPCM:
+	fail("Sorry, this WAV file is in G.721 ADPCM format.");
+    case WAVE_FORMAT_G728_CELP:
+	fail("Sorry, this WAV file is in G.728 CELP format.");
+    case WAVE_FORMAT_MPEG:
+	fail("Sorry, this WAV file is in MPEG format.");
+    case WAVE_FORMAT_MPEGLAYER3:
+	fail("Sorry, this WAV file is in MPEG Layer 3 format.");
+    case WAVE_FORMAT_G726_ADPCM:
+	fail("Sorry, this WAV file is in G.726 ADPCM format.");
+    case WAVE_FORMAT_G722_ADPCM:
+	fail("Sorry, this WAV file is in G.722 ADPCM format.");
     default:	fail("WAV file has unknown format type of %x",wav->formatTag);
     }
 
@@ -953,7 +980,7 @@ ft_t ft;
  	/* the number of samples in a field, seek back and write them here. */
 	if (!ft->seekable)
 		return;
-	if (fseek(ft->fp, 0L, 0) != 0)
+	if (fseek(ft->fp, 0L, SEEK_SET) != 0)
 		fail("Sorry, can't rewind output file to rewrite .wav header.");
 	((wav_t) ft->priv)->second_header = 1;
 	wavwritehdr(ft);
@@ -974,6 +1001,8 @@ unsigned wFormatTag;
 			return "Microsoft PCM";
 		case WAVE_FORMAT_ADPCM:
 			return "Microsoft ADPCM";
+	        case WAVE_FORMAT_IEEE_FLOAT:
+		       return "IEEE Float";
 		case WAVE_FORMAT_ALAW:
 			return "Microsoft A-law";
 		case WAVE_FORMAT_MULAW:
@@ -986,12 +1015,26 @@ unsigned wFormatTag;
 			return "Digistd format.";
 		case WAVE_FORMAT_DIGIFIX:
 			return "Digifix format.";
-		case IBM_FORMAT_MULAW:
-			return "IBM U-law format.";
-		case IBM_FORMAT_ALAW:
-			return "IBM A-law";
-                case IBM_FORMAT_ADPCM:
-                	return "IBM ADPCM";
+		case WAVE_FORMAT_DOLBY_AC2:
+			return "Dolby AC2";
+		case WAVE_FORMAT_GSM610:
+			return "GSM 6.10";
+		case WAVE_FORMAT_ROCKWELL_ADPCM:
+			return "Rockwell ADPCM";
+		case WAVE_FORMAT_ROCKWELL_DIGITALK:
+			return "Rockwell DIGITALK";
+		case WAVE_FORMAT_G721_ADPCM:
+			return "G.721 ADPCM";
+		case WAVE_FORMAT_G728_CELP:
+			return "G.728 CELP";
+		case WAVE_FORMAT_MPEG:
+			return "MPEG";
+		case WAVE_FORMAT_MPEGLAYER3:
+			return "MPEG Layer 3";
+		case WAVE_FORMAT_G726_ADPCM:
+			return "G.726 ADPCM";
+		case WAVE_FORMAT_G722_ADPCM:
+			return "G.722 ADPCM";
 		default:
 			return "Unknown";
 	}

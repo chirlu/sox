@@ -131,6 +131,9 @@ ft_t ft;
     r_params.fragments_min = 1;
     ioctl(fileno(ft->fp), SND_PCM_IOCTL_RECORD_PARAMS, &r_params);
 
+    /* Change to non-buffered I/O */
+    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
+
     sigintreg(ft);	/* Prepare to catch SIGINT */
 }
 
@@ -221,7 +224,8 @@ ft_t ft;
     p_params.fragments_room = 1;
     ioctl(fileno(ft->fp), SND_PCM_IOCTL_PLAYBACK_PARAMS, &p_params);
 
-    sigintreg(ft);
+    /* Change to non-buffered I/O */
+    setvbuf(ft->fp, NULL, _IONBUF, sizeof(char) * ft->file.size);
 }
 
 #endif

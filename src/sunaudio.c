@@ -113,6 +113,8 @@ ft_t ft;
     if (audio_if.record.encoding != encoding) {
 	fail("Unable to initialize style for /dev/audio");
     }
+    /* Change to non-buffered I/O*/
+    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
     sigintreg(ft);	/* Prepare to catch SIGINT */
 }
 
@@ -191,7 +193,8 @@ ft_t ft;
     if (audio_if.play.encoding != encoding) {
 	fail("Unable to initialize style for /dev/audio");
     }
-    sigintreg(ft);
+    /* Change to non-buffered I/O */
+    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
 }
 
 #endif
