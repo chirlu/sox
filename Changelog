@@ -32,6 +32,10 @@ sox-12.17.6
     the input file, it changes volume before effects engine
     and when specified with output file, its done after effects
     engine.
+  o Added crossfade_cat.sh script that will concatenate to
+    audio files and do a crossfade between them.
+  o Fixed bug in fade effect were it was impossible to do a
+    fadeout starting from the beginning of the audio file.
 
 sox-12.17.5
 -----------

@@ -840,8 +840,9 @@ For fade-ins, this starts from the first sample and ramps the volume of the audi
 
 For fade-outs, the audio data will be truncated at the stop-time and
 the volume will be ramped from full volume down to 0 starting at
-\fIfade-out-length\fR seconds before the \fIstop-time\fR.  No fade-out
-is performed if these options are not specified.
+\fIfade-out-length\fR seconds before the \fIstop-time\fR.  If fade-out-length
+is not specified, it defaults to the same value as fade-in-length.
+No fade-out is performed if the stop-time is not specified.
 .br
 All times can be specified in either periods of time or sample counts.
 To specify time periods use the format hh:mm:ss.frac format.  To specify

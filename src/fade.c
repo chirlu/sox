@@ -30,10 +30,11 @@ typedef struct fadestuff
     st_size_t in_start,  in_stop, out_start, out_stop, samplesdone;
     char *in_stop_str, *out_start_str, *out_stop_str;
     char in_fadetype, out_fadetype;
+    char do_out;
     int endpadwarned;
 } *fade_t;
 
-#define FADE_USAGE "Usage: fade [ type ] fade-in-length [ stop-time [ fade-out-length ] ]\nTimes in seconds.\nFade type one of q, h, t, l or p.\n"
+#define FADE_USAGE "Usage: fade [ type ] fade-in-length [ stop-time [ fade-out-length ] ]\nTimes is hh:mm:ss.fac format.\nFade type one of q, h, t, l or p.\n"
 
 /* prototypes */
 static double fade_gain(st_size_t index, st_size_t range, char fadetype);
@@ -86,10 +87,10 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
     strcpy(fade->in_stop_str,argv[0]);
     /* Do a dummy parse to see if it will fail */
     if (st_parsesamples(0, fade->in_stop_str, &fade->in_stop, 't') !=
-	    ST_SUCCESS)
+            ST_SUCCESS)
     {
-	st_fail(FADE_USAGE);
-	return(ST_EOF);
+        st_fail(FADE_USAGE);
+        return(ST_EOF);
     }
 
     fade->out_start_str = fade->out_stop_str = 0;
@@ -107,13 +108,13 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
             }
              strcpy(fade->out_stop_str,argv[t_argno]);
 
-	     /* Do a dummy parse to see if it will fail */
-	     if (st_parsesamples(0, fade->out_stop_str, 
-			 &fade->out_stop, 't') != ST_SUCCESS)
-	     {
-		 st_fail(FADE_USAGE);
-		 return(ST_EOF);
-	     }
+             /* Do a dummy parse to see if it will fail */
+             if (st_parsesamples(0, fade->out_stop_str, 
+                         &fade->out_stop, 't') != ST_SUCCESS)
+             {
+                 st_fail(FADE_USAGE);
+                 return(ST_EOF);
+             }
         }
         else
         {
@@ -125,13 +126,13 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
             }
              strcpy(fade->out_start_str,argv[t_argno]);
 
-	     /* Do a dummy parse to see if it will fail */
-	     if (st_parsesamples(0, fade->out_start_str, 
-			 &fade->out_start, 't') != ST_SUCCESS)
-	     {
-		 st_fail(FADE_USAGE);
-		 return(ST_EOF);
-	     }
+             /* Do a dummy parse to see if it will fail */
+             if (st_parsesamples(0, fade->out_start_str, 
+                         &fade->out_start, 't') != ST_SUCCESS)
+             {
+                 st_fail(FADE_USAGE);
+                 return(ST_EOF);
+             }
         }
     } /* End for(t_argno) */
 
@@ -155,40 +156,41 @@ int st_fade_start(eff_t effp)
         return(ST_EOF);
     }
 
+    fade->do_out = 0;
     /* See if user specified a stop time */
     if (fade->out_stop_str)
     {
+        fade->do_out = 1;
         if (st_parsesamples(effp->ininfo.rate, fade->out_stop_str,
                             &fade->out_stop, 't') != ST_SUCCESS)
         {
             st_fail(FADE_USAGE);
             return(ST_EOF);
         }
-	fade->out_stop += fade->out_start;
 
-	/* See if user wants to fade out. */
-	if (fade->out_start_str)
-	{
-	    if (st_parsesamples(effp->ininfo.rate, fade->out_start_str,
-			&fade->out_start, 't') != ST_SUCCESS)
-	    {
-		st_fail(FADE_USAGE);
-		return(ST_EOF);
-	    }
-	    /* Fade time is relative to stop time. */
-	    fade->out_start = fade->out_stop - fade->out_start;
+        /* See if user wants to fade out. */
+        if (fade->out_start_str)
+        {
+            if (st_parsesamples(effp->ininfo.rate, fade->out_start_str,
+                        &fade->out_start, 't') != ST_SUCCESS)
+            {
+                st_fail(FADE_USAGE);
+                return(ST_EOF);
+            }
+            /* Fade time is relative to stop time. */
+            fade->out_start = fade->out_stop - fade->out_start;
 
-	}
-	else
-	    /* If user doesn't want to fade out then set to stop
-	     * time.
-	     */
-	    fade->out_start = fade->out_stop;
+        }
+        else
+            /* If no start time specified, assume everything
+             * after fadein.
+             */
+            fade->out_start = fade->in_stop;
     }
     else
-	/* If not specified then user doesn't wants to process all 
-	 * of file.  Use a value of zero to indicate this.
-	 */
+        /* If not specified then user doesn't wants to process all 
+         * of file.  Use a value of zero to indicate this.
+         */
         fade->out_stop = 0;
 
     /* Sanity check for fade times vs total time */
@@ -211,7 +213,7 @@ int st_fade_start(eff_t effp)
  * Return number of samples processed.
  */
 int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp)
+                 st_size_t *isamp, st_size_t *osamp)
 {
     fade_t fade = (fade_t) effp->priv;
     /* len is total samples, chcnt counts channels */
@@ -239,12 +241,12 @@ int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             } /* endif fade-in */
 
             if (fade->samplesdone >= fade->in_stop &&
-                (fade->out_start == 0 || fade->samplesdone < fade->out_start))
+                (!fade->do_out || fade->samplesdone < fade->out_start))
             { /* steady gain phase */
                 *obuf = t_ibuf;
             } /* endif  steady phase */
 
-            if (fade->out_start != 0 && fade->samplesdone >= fade->out_start)
+            if (fade->do_out && fade->samplesdone >= fade->out_start)
             { /* fade-out phase, decrease gain */
                 *obuf = t_ibuf *
                     fade_gain(fade->out_stop - fade->samplesdone,

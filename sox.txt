@@ -668,8 +668,10 @@ EFFECTS
 
 		 For  fade-outs, the audio data will be truncated at the stop-
 		 time and the volume will be ramped from full volume down to 0
-		 starting at fade-out-length seconds before the stop-time.  No
-		 fade-out is performed if these options are not specified.
+		 starting at fade-out-length seconds before the stop-time.  If
+		 fade-out-length is not specified, it  defaults	 to  the  same
+		 value	as  fade-in-length.   No  fade-out is performed if the
+		 stop-time is not specified.
 		 All times can be specified in either periods of time or  sam-
 		 ple   counts.	  To  specify  time  periods  use  the	format
 		 hh:mm:ss.frac format.	To specify using sample counts,	 spec-
