@@ -35,6 +35,7 @@
 #include <sys/types.h>
 #include <math.h>
 #include <stdio.h>
+#include "stconfig.h"
 #include "adpcm.h"
 
 typedef struct MsState {
