@@ -183,7 +183,7 @@ static int ossdspinit(ft_t ft)
     ft->file.pos = 0;
     ft->file.eof = 0;
 
-    if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
+    if ((ft->file.buf = (char *)malloc(ft->file.size)) == NULL) {
         st_fail_errno(ft,ST_EOF,"Unable to allocate input/output buffer of size %d", ft->file.size);
         return (ST_EOF);
     }

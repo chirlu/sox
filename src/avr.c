@@ -36,19 +36,19 @@ typedef struct avrstuff {
   unsigned short sign; /* 0 = unsigned, 0xffff = signed */
   unsigned short loop; /* 0 = no loop, 0xffff = looping sample */
   unsigned short midi; /* 0xffff = no MIDI note assigned,
-			  0xffXX = single key note assignment
-			  0xLLHH = key split, low/hi note */
+                          0xffXX = single key note assignment
+                          0xLLHH = key split, low/hi note */
   uint32_t rate;       /* sample frequency in hertz */
   uint32_t size;       /* sample length in bytes or words (see rez) */
   uint32_t lbeg;       /* offset to start of loop in bytes or words.
-			  set to zero if unused. */
+                          set to zero if unused. */
   uint32_t lend;       /* offset to end of loop in bytes or words.
-			  set to sample length if unused. */
+                          set to sample length if unused. */
   unsigned short res1; /* Reserved, MIDI keyboard split */
   unsigned short res2; /* Reserved, sample compression */
   unsigned short res3; /* Reserved */
-  char ext[20];	       /* Additional filename space, used
-			  if (name[7] != 0) */
+  char ext[20];        /* Additional filename space, used
+                          if (name[7] != 0) */
   char user[64];       /* User defined. Typically ASCII message. */
 } *avr_t;
 
@@ -57,23 +57,22 @@ typedef struct avrstuff {
 /*
  * Do anything required before you start reading samples.
  * Read file header. 
- *	Find out sampling rate, 
- *	size and encoding of samples, 
- *	mono/stereo/quad.
+ *      Find out sampling rate, 
+ *      size and encoding of samples, 
+ *      mono/stereo/quad.
  */
 
 
-int st_avrstartread(ft) 
-ft_t ft;
+int st_avrstartread(ft_t ft) 
 {
-  avr_t	avr = (avr_t)ft->priv;
+  avr_t avr = (avr_t)ft->priv;
   int rc;
 
   /* AVR is a Big Endian format.  Swap whats read in on Little */
-  /* Endian machines.					       */
+  /* Endian machines.                                          */
   if (ST_IS_LITTLEENDIAN)
   {
-	  ft->swap = ft->swap ? 0 : 1;
+          ft->swap = ft->swap ? 0 : 1;
   }
 
   st_reads(ft, avr->magic, 4);
@@ -83,7 +82,7 @@ ft_t ft;
     return(ST_EOF);
   }
 
-  fread(avr->name, 1, sizeof(avr->name), ft->fp);
+  st_read(ft, avr->name, 1, sizeof(avr->name));
 
   st_readw (ft, &(avr->mono));
   if (avr->mono) {
@@ -138,9 +137,9 @@ ft_t ft;
 
   st_readw (ft, &(avr->res3));
 
-  fread(avr->ext, 1, sizeof(avr->ext), ft->fp);
+  st_read(ft, avr->ext, 1, sizeof(avr->ext));
 
-  fread(avr->user, 1, sizeof(avr->user), ft->fp);
+  st_read(ft, avr->user, 1, sizeof(avr->user));
 
   rc = st_rawstartread (ft);
   if (rc)
@@ -149,17 +148,16 @@ ft_t ft;
   return(ST_SUCCESS);
 }
 
-int st_avrstartwrite(ft) 
-ft_t ft;
+int st_avrstartwrite(ft_t ft) 
 {
-  avr_t	avr = (avr_t)ft->priv;
+  avr_t avr = (avr_t)ft->priv;
   int rc;
 
   /* AVR is a Big Endian format.  Swap whats read in on Little */
-  /* Endian machines.					       */
+  /* Endian machines.                                          */
   if (ST_IS_LITTLEENDIAN)
   {
-	  ft->swap = ft->swap ? 0 : 1;
+          ft->swap = ft->swap ? 0 : 1;
   }
 
   if (!ft->seekable) {
@@ -250,21 +248,21 @@ ft_t ft;
   st_writew (ft, 0);
 
   /* ext */
-  fwrite ("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 1, sizeof (avr->ext),
-          ft->fp);
+  st_write(ft, (void *)"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 1, sizeof(avr->ext));
 
   /* user */
-  fwrite ("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
-          "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
-          "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
-          "\0\0\0\0", 1, sizeof (avr->user), ft->fp);
+  st_write(ft, 
+           (void *)"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+           "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+           "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+           "\0\0\0\0", 1, sizeof (avr->user));
 
   return(ST_SUCCESS);
 }
 
 st_ssize_t st_avrwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp) 
 {
-  avr_t	avr = (avr_t)ft->priv;
+  avr_t avr = (avr_t)ft->priv;
 
   avr->size += nsamp;
 
@@ -273,7 +271,7 @@ st_ssize_t st_avrwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 
 int st_avrstopwrite(ft_t ft) 
 {
-  avr_t	avr = (avr_t)ft->priv;
+  avr_t avr = (avr_t)ft->priv;
   int rc;
 
   int size = avr->size / ft->info.channels;
@@ -283,11 +281,11 @@ int st_avrstopwrite(ft_t ft)
       return rc;
 
   /* Fix size */
-  fseek (ft->fp, 26L, SEEK_SET);
+  st_seek(ft, 26L, SEEK_SET);
   st_writedw (ft, size);
 
   /* Fix lend */
-  fseek (ft->fp, 34L, SEEK_SET);
+  st_seek(ft, 34L, SEEK_SET);
   st_writedw (ft, size);
 
   return(ST_SUCCESS);

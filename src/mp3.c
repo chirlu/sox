@@ -82,20 +82,20 @@ int st_mp3startread(ft_t ft)
         struct mp3priv *p = (struct mp3priv *) ft->priv;
         size_t ReadSize;
 
-        p->Stream=malloc(sizeof(struct mad_stream));
+        p->Stream=(struct mad_stream *)malloc(sizeof(struct mad_stream));
         if (p->Stream == NULL){
           st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
           return ST_EOF;
         }
         
-        p->Frame=malloc(sizeof(struct mad_frame));
+        p->Frame=(struct mad_frame *)malloc(sizeof(struct mad_frame));
         if (p->Frame == NULL){
           st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
           free(p->Stream);
           return ST_EOF;
         }
         
-        p->Synth=malloc(sizeof(struct mad_synth));
+        p->Synth=(struct mad_synth *)malloc(sizeof(struct mad_synth));
         if (p->Synth == NULL){
           st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
           free(p->Stream);
@@ -103,7 +103,7 @@ int st_mp3startread(ft_t ft)
           return ST_EOF;
         }
         
-        p->Timer=malloc(sizeof(mad_timer_t));
+        p->Timer=(mad_timer_t *)malloc(sizeof(mad_timer_t));
         if (p->Timer == NULL){
           st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
           free(p->Stream);
@@ -112,7 +112,7 @@ int st_mp3startread(ft_t ft)
           return ST_EOF;
         }
         
-        p->InputBuffer=malloc(INPUT_BUFFER_SIZE);
+        p->InputBuffer=(unsigned char *)malloc(INPUT_BUFFER_SIZE);
         if (p->InputBuffer == NULL){
           st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
           free(p->Stream);
@@ -133,18 +133,18 @@ int st_mp3startread(ft_t ft)
         /* We need to decode the first frame,
          * so we know the output format */
 
-        ReadSize=fread(p->InputBuffer,1,INPUT_BUFFER_SIZE,ft->fp);
+        ReadSize=st_read(ft, p->InputBuffer, 1, INPUT_BUFFER_SIZE);
         if(ReadSize<=0)
         {
-                if(ferror(ft->fp))
+                if(st_error(ft))
                         st_fail_errno(ft,ST_EOF,"read error on bitstream");
-                if(feof(ft->fp))
+                if(st_eof(ft))
                         st_fail_errno(ft,ST_EOF,"end of input stream");
                 return(ST_EOF);
         }
         
         mad_stream_buffer(p->Stream,p->InputBuffer,ReadSize);
-        p->Stream->error = 0;
+        p->Stream->error = (mad_error)0;
 
         while(mad_frame_decode(p->Frame,p->Stream)) {
             int tagsize;
@@ -256,7 +256,8 @@ st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len)
         Remaining=p->Stream->bufend - p->Stream->next_frame;
         memmove(p->InputBuffer,p->Stream->next_frame,Remaining);
 
-        ReadSize=fread(p->InputBuffer+Remaining,1,INPUT_BUFFER_SIZE-Remaining,ft->fp);
+        ReadSize=st_read(ft, p->InputBuffer+Remaining, 1, 
+                         INPUT_BUFFER_SIZE-Remaining);
         if(ReadSize == 0){
           p->eof=1;
           memset(p->InputBuffer+Remaining,0,MAD_BUFFER_GUARD);
@@ -264,7 +265,7 @@ st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len)
         }
 
         mad_stream_buffer(p->Stream,p->InputBuffer,ReadSize+Remaining);
-        p->Stream->error=0;
+        p->Stream->error = (mad_error)0;
       }
 
     if(mad_frame_decode(p->Frame,p->Stream)){
@@ -417,7 +418,7 @@ st_ssize_t st_mp3write(ft_t ft, st_sample_t *buf, st_ssize_t samp)
   }
 
   mp3buffer_size=1.25*nsamples + 7200;
-  if ( (mp3buffer=malloc(mp3buffer_size)) == NULL){
+  if ( (mp3buffer=(char *)malloc(mp3buffer_size)) == NULL){
     st_fail_errno(ft,ST_ENOMEM,"Memory allocation failed");
     goto end2;
   }
@@ -426,13 +427,13 @@ st_ssize_t st_mp3write(ft_t ft, st_sample_t *buf, st_ssize_t samp)
                                            buffer_l,
                                            buffer_r,
                                            nsamples,
-                                           mp3buffer,
+                                           (unsigned char *)mp3buffer,
                                            mp3buffer_size)) < 0){
     st_fail_errno(ft,ST_EOF,"Encoding failed");
     goto end;
   }
 
-  if (fwrite(mp3buffer, 1, written, ft->fp) < written){
+  if (st_write(ft, mp3buffer, 1, written) < written){
      st_fail_errno(ft,ST_EOF,"File write failed");
      goto end;
   }
@@ -456,10 +457,10 @@ int st_mp3stopwrite(ft_t ft)
   char mp3buffer[7200];
   int written;
   
-  if ( (written=lame_encode_flush(p->gfp, mp3buffer, 7200)) <0){
+  if ( (written=lame_encode_flush(p->gfp, (unsigned char *)mp3buffer, 7200)) <0){
     st_fail_errno(ft,ST_EOF,"Encoding failed");
   }
-  else if (fwrite(mp3buffer, 1, written, ft->fp) < written){
+  else if (st_write(ft, mp3buffer, 1, written) < written){
     st_fail_errno(ft,ST_EOF,"File write failed");
   }
 

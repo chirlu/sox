@@ -102,7 +102,7 @@ int st_sfstartread(ft_t ft)
         int rc;
         int samplesize = 0;
 
-        if (fread(&sfhead, 1, sizeof(sfhead), ft->fp) != sizeof(sfhead))
+        if (st_read(ft, &sfhead, 1, sizeof(sfhead)) != sizeof(sfhead))
         {
                 st_fail("unexpected EOF in SF header");
                 return(ST_EOF);
@@ -155,7 +155,7 @@ int st_sfstartread(ft_t ft)
 /* Need length for seeking */
         if(ft->seekable){
                 ft->length = st_filelength(ft)/samplesize;
-                sf->dataStart = ftell(ft->fp);
+                sf->dataStart = st_tell(ft);
         } else {
                 ft->length = 0;
         }
@@ -216,7 +216,7 @@ int st_sfstartwrite(ft_t ft)
         sfcharp = (char *) sfcodep + sizeof(SFCODE);
         while(sfcharp < (char *) &sfhead + SIZEOF_BSD_HEADER)
                 *sfcharp++ = '\0';
-        fwrite(&sfhead, 1, sizeof(SFHEADER), ft->fp);
+        st_write(ft, &sfhead, 1, sizeof(SFHEADER));
 
         return(ST_SUCCESS);
 }

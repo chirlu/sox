@@ -132,7 +132,7 @@ int st_speed_getopts(eff_t effp, int n, char **argv)
     }
     else if (cent != 0) /* CONST==2**(1/1200) */
     {
-        speed->factor = pow(1.00057778950655, speed->factor);
+        speed->factor = pow((double)1.00057778950655, speed->factor);
         /* fprintf(stderr, "Speed factor: %f\n", speed->factor);*/
     }
 

@@ -84,7 +84,7 @@ int st_sndtstartread(ft_t ft)
          and second word is between 4000 & 25000 then this is sounder sound */
         /* otherwise, its probably raw, not handled here */
 
-        if (fread(buf, 1, 2, ft->fp) != 2)
+        if (st_read(ft, buf, 1, 2) != 2)
         {
                 st_fail_errno(ft,errno,"SND: unexpected EOF");
                 return(ST_EOF);
@@ -98,20 +98,20 @@ int st_sndtstartread(ft_t ft)
                 st_fail_errno(ft,ST_EFMT,"SND: sample rate out of range");
                 return(ST_EOF);
         }
-        fseek(ft->fp,4,SEEK_CUR);
+        st_seek(ft, 4, SEEK_CUR);
         }
         else
         {
         /* sndtool ? */
-        fread(&buf[2], 1, 6, ft->fp);
+        st_read(ft, &buf[2], 1, 6);
         if (strncmp(buf,"SOUND",5))
         {
                 st_fail_errno(ft,ST_EFMT,"SND: unrecognized SND format");
                 return(ST_EOF);
         }
-        fseek(ft->fp,12,SEEK_CUR);
+        st_seek(ft, 12, SEEK_CUR);
         st_readw(ft, &rate);
-        fseek(ft->fp,6,SEEK_CUR);
+        st_seek(ft, 6, SEEK_CUR);
         if (st_reads(ft, buf, 96) == ST_EOF)
         {
                 st_fail_errno(ft,ST_EHDR,"SND: unexpected EOF in SND header");
@@ -120,15 +120,15 @@ int st_sndtstartread(ft_t ft)
         st_report("%s",buf);
         }
 
-ft->info.channels = 1;
-ft->info.rate = rate;
-ft->info.encoding = ST_ENCODING_UNSIGNED;
-ft->info.size = ST_SIZE_BYTE;
+        ft->info.channels = 1;
+        ft->info.rate = rate;
+        ft->info.encoding = ST_ENCODING_UNSIGNED;
+        ft->info.size = ST_SIZE_BYTE;
 
-snd->dataStart = ftell(ft->fp);
-ft->length = st_filelength(ft) - snd->dataStart;
+        snd->dataStart = st_tell(ft);
+        ft->length = st_filelength(ft) - snd->dataStart;
 
-return (ST_SUCCESS);
+        return (ST_SUCCESS);
 }
 
 /*======================================================================*/
@@ -222,7 +222,7 @@ int st_sndtstopwrite(ft_t ft)
             return rc;
 
         /* fixup file sizes in header */
-        if (fseek(ft->fp, 0L, 0) != 0){
+        if (st_seek(ft, 0L, 0) != 0){
                 st_fail_errno(ft,errno,"can't rewind output file to rewrite SND header");
                 return ST_EOF;
         }
@@ -238,21 +238,21 @@ int st_sndtstopwrite(ft_t ft)
 /*======================================================================*/
 static void sndtwriteheader(ft_t ft, st_size_t nsamples)
 {
-char name_buf[97];
+    char name_buf[97];
 
-/* sndtool header */
-st_writes(ft, "SOUND"); /* magic */
-st_writeb(ft, 0x1a);
-st_writew (ft,0);  /* hGSound */
-st_writedw (ft,nsamples);
-st_writedw (ft,0);
-st_writedw (ft,nsamples);
-st_writew (ft,(int) ft->info.rate);
-st_writew (ft,0);
-st_writew (ft,10);
-st_writew (ft,4);
-memset (name_buf, 0, 96);
-sprintf (name_buf,"%.62s - File created by Sound Exchange",ft->filename);
-fwrite (name_buf, 1, 96, ft->fp);
+    /* sndtool header */
+    st_writes(ft, "SOUND"); /* magic */
+    st_writeb(ft, 0x1a);
+    st_writew (ft,0);  /* hGSound */
+    st_writedw (ft,nsamples);
+    st_writedw (ft,0);
+    st_writedw (ft,nsamples);
+    st_writew (ft,(int) ft->info.rate);
+    st_writew (ft,0);
+    st_writew (ft,10);
+    st_writew (ft,4);
+    memset (name_buf, 0, 96);
+    sprintf (name_buf,"%.62s - File created by Sound Exchange",ft->filename);
+    st_write(ft, name_buf, 1, 96);
 }
 

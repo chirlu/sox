@@ -1,11 +1,11 @@
-/*				SFHEADER.H				*/
+/*                              SFHEADER.H                              */
 
 /* definitions and structures needed for manipulating soundfiles.
  */
 
 #define SIZEOF_HEADER 1024
-#define SF_BUFSIZE	(16*1024) /* used only in play */
-#define SF_MAXCHAN	4
+#define SF_BUFSIZE      (16*1024) /* used only in play */
+#define SF_MAXCHAN      4
 #define MAXCOMM 512
 #define MINCOMM 256
 
@@ -80,23 +80,25 @@
  * sf_magic is for backward compatibility; it should be SF_MAGIC as defined
  * above.
  */
+struct sfinfo {
+    union magic_union {
+        struct {
+            unsigned char sf_magic1;  /* byte 1 of magic */
+            unsigned char sf_magic2;  /* 2 */
+            unsigned char sf_machine; /* 3 */
+            unsigned char sf_param;   /* 4 */
+        } _magic_bytes;
+        uint32_t sf_magic;            /* magic as a 4-byte long */
+    } magic_union;
+    float     sf_srate;
+    uint32_t          sf_chans;
+    uint32_t          sf_packmode;
+    char      sf_codes;
+};
+
 typedef union sfheader {
-	struct sfinfo {
-		union magic_union {
-			struct {
-				unsigned char sf_magic1;  /* byte 1 of magic */
-				unsigned char sf_magic2;  /* 2 */
-				unsigned char sf_machine; /* 3 */
-				unsigned char sf_param;	  /* 4 */
-				} _magic_bytes;
-			uint32_t sf_magic;			  /* magic as a 4-byte long */
-			} magic_union;
-		float	  sf_srate;
-		uint32_t	  sf_chans;
-		uint32_t	  sf_packmode;
-		char	  sf_codes;
-	} sfinfo;
-	char	filler[SIZEOF_HEADER];
+        struct sfinfo sfinfo;
+        char    filler[SIZEOF_HEADER];
 } SFHEADER;
 
 /*
@@ -107,18 +109,18 @@ typedef union sfheader {
  * or to retreive such information. See man sfcodes.
  *
  * 10/90 pw
- *	These routines are now part of libcarl/sfcodes.c
+ *      These routines are now part of libcarl/sfcodes.c
  */
 
 typedef struct sfcode {
-	short	code;
-	short	bsize;
+        short   code;
+        short   bsize;
 } SFCODE;
 
 typedef struct Sfmaxamp {
-	float	value[SF_MAXCHAN];
-	uint32_t samploc[SF_MAXCHAN];
-	uint32_t timetag;
+        float   value[SF_MAXCHAN];
+        uint32_t samploc[SF_MAXCHAN];
+        uint32_t timetag;
 } SFMAXAMP;
 
 typedef struct sfcomment {
@@ -127,12 +129,12 @@ typedef struct sfcomment {
 
 typedef struct {                  /* this code written by pvanal */
         short   frameSize;
-	short   frameIncr;
+        short   frameIncr;
 } SFPVDATA;
 
 typedef struct {                  /*     ditto                    */
         short   encoding;
-	short   grouping;
+        short   grouping;
 } SFAUDIOENCOD;
 
 /*
@@ -165,21 +167,21 @@ typedef struct {                  /*     ditto                    */
  */
 /* True if soundfile and good arch */
 #define ismagic(x) ((sfmagic1(x) == SF_MAGIC1) && \
-	(sfmagic2(x) == SF_MAGIC2) && \
-	(sfmachine(x) == SF_MACHINE))
+        (sfmagic2(x) == SF_MAGIC2) && \
+        (sfmachine(x) == SF_MACHINE))
 
 /* True if soundfile */
 #define isforeignmagic(x) ((sfmagic1(x) == SF_MAGIC1) && \
-	(sfmagic2(x) == SF_MAGIC2))
+        (sfmagic2(x) == SF_MAGIC2))
 
 /* True if soundfile */
 #define issoundfile(x)  ((sfmagic1(x) == SF_MAGIC1) && \
-	(sfmagic2(x) == SF_MAGIC2))
+        (sfmagic2(x) == SF_MAGIC2))
 
 /* True if soundfile and foreign arch */
 #define isforeignsoundfile(x) ((sfmagic1(x) == SF_MAGIC1) && \
-	(sfmagic2(x) == SF_MAGIC2) && \
-	(sfmachine(x) != SF_MACHINE))
+        (sfmagic2(x) == SF_MAGIC2) && \
+        (sfmachine(x) != SF_MACHINE))
 
 /* True if foreign arch */
 #define isforeign(x) (sfmachine(x) != SF_MACHINE)
@@ -191,16 +193,16 @@ typedef struct {                  /*     ditto                    */
  */
 
 #define readopensf(name,fd,sfh,sfst,prog,result) \
-	result = (fd = openrosf(name, &sfh, &sfst, prog)) < 0 ? fd : 0;
+        result = (fd = openrosf(name, &sfh, &sfst, prog)) < 0 ? fd : 0;
 
 #define freadopensf(name,fp,sfh,sfst,prog,result) \
-	result = fopenrosf(name, &fp, &sfh, &sfst, prog);
+        result = fopenrosf(name, &fp, &sfh, &sfst, prog);
 
 #define wropensf(name,fd,sfh,prog,result) \
-	result = (fd = openwosf(name, &sfh, prog)) < 0 ? fd : 0;
+        result = (fd = openwosf(name, &sfh, prog)) < 0 ? fd : 0;
 
 #define rdwropensf(name,fd,sfh,sfst,prog,result) \
-	result = (fd = openrwsf(name, &sfh, &sfst, prog)) < 0 ? fd : 0;
+        result = (fd = openrwsf(name, &sfh, &sfst, prog)) < 0 ? fd : 0;
 
 
 /*

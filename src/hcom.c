@@ -204,7 +204,7 @@ st_ssize_t st_hcomread(ft_t ft, st_sample_t *buf, st_ssize_t len)
         while (p->huffcount > 0) {
                 if(p->nrbits == 0) {
                         st_readdw(ft, &(p->current));
-                        if (feof(ft->fp))
+                        if (st_eof(ft))
                         {
                                 st_fail_errno(ft,ST_EOF,"unexpected EOF in HCOM data");
                                 return (0);
@@ -531,7 +531,7 @@ int st_hcomstopwrite(ft_t ft)
         int rc;
 
         /* Compress it all at once */
-        rc = compress(&compressed_data, (uint32_t *)&compressed_len, (double) ft->info.rate);
+        rc = compress(&compressed_data, (int32_t *)&compressed_len, (double) ft->info.rate);
         free((char *) p->data);
 
         if (rc){
@@ -540,21 +540,21 @@ int st_hcomstopwrite(ft_t ft)
         }
 
         /* Write the header */
-        fwrite("\000\001A", 1, 3, ft->fp); /* Dummy file name "A" */
+        st_write(ft, (void *)"\000\001A", 1, 3); /* Dummy file name "A" */
         padbytes(ft, 65-3);
         st_writes(ft, "FSSD");
         padbytes(ft, 83-69);
         st_writedw(ft, (uint32_t) compressed_len); /* compressed_data size */
         st_writedw(ft, (uint32_t) 0); /* rsrc size */
         padbytes(ft, 128 - 91);
-        if (ferror(ft->fp))
+        if (st_error(ft))
         {
                 st_fail_errno(ft,errno,"write error in HCOM header");
                 return (ST_EOF);
         }
 
         /* Write the compressed_data fork */
-        if (fwrite((char *) compressed_data, 1, (int)compressed_len, ft->fp) != compressed_len)
+        if (st_write(ft, compressed_data, 1, (int)compressed_len) != compressed_len)
         {
                 st_fail_errno(ft,errno,"can't write compressed HCOM data");
                 rc = ST_EOF;

@@ -113,7 +113,7 @@ typedef struct wavstuff {
 #endif
 */
 
-static char *wav_format_str();
+static char *wav_format_str(unsigned wFormatTag);
 
 static int wavwritehdr(ft_t, int);
 
@@ -134,7 +134,7 @@ unsigned short  ImaAdpcmReadBlock(ft_t ft)
     int samplesThisBlock;
 
     /* Pull in the packet and check the header */
-    bytesRead = fread(wav->packet,1,wav->blockAlign,ft->fp);
+    bytesRead = st_read(ft, wav->packet, 1, wav->blockAlign);
     samplesThisBlock = wav->samplesPerBlock;
     if (bytesRead < wav->blockAlign) 
     { 
@@ -175,7 +175,7 @@ unsigned short  AdpcmReadBlock(ft_t ft)
     const char *errmsg;
 
     /* Pull in the packet and check the header */
-    bytesRead = fread(wav->packet,1,wav->blockAlign,ft->fp);
+    bytesRead = st_read(ft, wav->packet, 1, wav->blockAlign);
     samplesThisBlock = wav->samplesPerBlock;
     if (bytesRead < wav->blockAlign) 
     {
@@ -221,7 +221,7 @@ static int xxxAdpcmWriteBlock(ft_t ft)
             ImaBlockMashI(chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, 9);
         }
         /* write the compressed packet */
-        if (fwrite(wav->packet, wav->blockAlign, 1, ft->fp) != 1)
+        if (st_write(ft, wav->packet, wav->blockAlign, 1) != 1)
         {
             st_fail_errno(ft,ST_EOF,"write error");
             return (ST_EOF);
@@ -260,7 +260,7 @@ int wavgsminit(ft_t ft)
         return (ST_EOF);
     }
 
-    wav->gsmsample=malloc(sizeof(gsm_signal)*160*2);
+    wav->gsmsample=(gsm_signal*)malloc(sizeof(gsm_signal)*160*2);
     if (wav->gsmsample == NULL){
         st_fail_errno(ft,ST_ENOMEM,"error allocating memory for gsm buffer");
         return (ST_EOF);
@@ -293,7 +293,7 @@ st_ssize_t wavgsmread(ft_t ft, st_sample_t *buf, st_ssize_t len)
   /* read and decode loop, possibly leaving some samples in wav->gsmsample */
     while (done < len) {
         wav->gsmindex=0;
-        bytes = fread(frame,1,65,ft->fp);   
+        bytes = st_read(ft, frame, 1, 65);   
         if (bytes <=0)
             return done;
         if (bytes<65) {
@@ -334,7 +334,7 @@ static int wavgsmflush(ft_t ft, int pad)
     gsm_encode(wav->gsmhandle, wav->gsmsample, frame);
     /*encode the odd half long (33 byte) frame */
     gsm_encode(wav->gsmhandle, wav->gsmsample+160, frame+32);
-    if (fwrite(frame, 1, 65, ft->fp) != 65)
+    if (st_write(ft, frame, 1, 65) != 65)
     {
         st_fail_errno(ft,ST_EOF,"write error");
         return (ST_EOF);
@@ -399,6 +399,7 @@ static st_ssize_t findChunk(ft_t ft, const char *Label)
 {
     char magic[5];
     st_ssize_t len;
+    uint32_t tmp_len;
     for (;;)
     {
         if (st_reads(ft, magic, 4) == ST_EOF)
@@ -406,7 +407,8 @@ static st_ssize_t findChunk(ft_t ft, const char *Label)
             st_fail_errno(ft,ST_EHDR,"WAVE file has missing %s chunk", Label);
             return ST_EOF;
         }
-        st_readdw(ft, &len);
+        st_readdw(ft, &tmp_len);
+        len = tmp_len;
         st_report("Chunk %s",magic);
         if (strncmp(Label, magic, 4) == 0)
             break;              /* Found the data chunk */
@@ -828,7 +830,7 @@ int st_wavstartread(ft_t ft)
     /* findChunk() only returns if chunk was found */
 
         /* Data starts here */
-        wav->dataStart = ftell(ft->fp);
+        wav->dataStart = st_tell(ft);
 
     switch (wav->formatTag)
     {
@@ -910,7 +912,7 @@ int st_wavstartread(ft_t ft)
             ft->comment = (char*)malloc(256);
             /* Initialize comment to a NULL string */
             ft->comment[0] = 0;
-            while(!feof(ft->fp)){
+            while(!st_eof(ft)){
                 st_reads(ft,magic,4);
                 if(strncmp(magic,"INFO",4) == 0){
                         /*Skip*/
@@ -967,7 +969,7 @@ int st_wavstartread(ft_t ft)
                 }
             }
         }
-        clearerr(ft->fp);
+        st_clearerr(ft);
         st_seek(ft,wav->dataStart,SEEK_SET);
     }   
     return ST_SUCCESS;
@@ -1575,7 +1577,7 @@ int st_wavstopwrite(ft_t ft)
         if (!ft->seekable)
                 return ST_EOF;
 
-        if (fseek(ft->fp, 0L, SEEK_SET) != 0)
+        if (st_seek(ft, 0L, SEEK_SET) != 0)
         {
                 st_fail_errno(ft,ST_EOF,"Can't rewind output file to rewrite .wav header.");
                 return ST_EOF;

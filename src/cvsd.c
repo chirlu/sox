@@ -463,14 +463,14 @@ static void put16(unsigned char **p, int16_t val)
 
 /* ---------------------------------------------------------------------- */
 
-static int dvms_read_header(FILE *f, struct dvms_header *hdr)
+static int dvms_read_header(ft_t ft, struct dvms_header *hdr)
 {
         unsigned char hdrbuf[DVMS_HEADER_LEN];
         unsigned char *pch = hdrbuf;
         int i;
         unsigned sum;
 
-        if (fread(hdrbuf, sizeof(hdrbuf), 1, f) != 1)
+        if (st_read(ft, hdrbuf, sizeof(hdrbuf), 1) != 1)
         {
                 return (ST_EOF);
         }
@@ -508,7 +508,7 @@ static int dvms_read_header(FILE *f, struct dvms_header *hdr)
 /*
  * note! file must be seekable
  */
-static int dvms_write_header(FILE *f, struct dvms_header *hdr)
+static int dvms_write_header(ft_t ft, struct dvms_header *hdr)
 {
         unsigned char hdrbuf[DVMS_HEADER_LEN];
         unsigned char *pch = hdrbuf;
@@ -536,12 +536,12 @@ static int dvms_write_header(FILE *f, struct dvms_header *hdr)
                 sum += *pchs++;
         hdr->Crc = sum;
         put16(&pch, hdr->Crc);
-        if (fseek(f, 0, SEEK_SET) < 0)
+        if (st_seek(ft, 0, SEEK_SET) < 0)
         {
                 st_report("seek failed\n: %s",strerror(errno));
                 return (ST_EOF);
         }
-        if (fwrite(hdrbuf, sizeof(hdrbuf), 1, f) != 1)
+        if (st_write(ft, hdrbuf, sizeof(hdrbuf), 1) != 1)
         {
                 st_report("%s\n",strerror(errno));
                 return (ST_EOF);
@@ -583,7 +583,7 @@ int st_dvmsstartread(ft_t ft)
         struct dvms_header hdr;
         int rc;
 
-        rc = dvms_read_header(ft->fp, &hdr);
+        rc = dvms_read_header(ft, &hdr);
         if (rc){
             st_fail_errno(ft,ST_EHDR,"unable to read DVMS header\n");
             return rc;
@@ -627,7 +627,7 @@ int st_dvmsstartwrite(ft_t ft)
             return rc;
 
         make_dvms_hdr(ft, &hdr);
-        rc = dvms_write_header(ft->fp, &hdr);
+        rc = dvms_write_header(ft, &hdr);
         if (rc){
                 st_fail_errno(ft,rc,"cannot write DVMS header\n");
             return rc;
@@ -653,13 +653,13 @@ int st_dvmsstopwrite(ft_t ft)
             st_warn("File not seekable");
             return (ST_EOF);
         }
-        if (fseek(ft->fp, 0L, 0) != 0)
+        if (st_seek(ft, 0L, 0) != 0)
         {
                 st_fail_errno(ft,errno,"Can't rewind output file to rewrite DVMS header.");
                 return(ST_EOF);
         }
         make_dvms_hdr(ft, &hdr);
-        rc = dvms_write_header(ft->fp, &hdr);
+        rc = dvms_write_header(ft, &hdr);
         if(rc){
             st_fail_errno(ft,rc,"cannot write DVMS header\n");
             return rc;

@@ -78,7 +78,7 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
         fade->out_fadetype = 'l';
     }
 
-    fade->in_stop_str = malloc(strlen(argv[0])+1);
+    fade->in_stop_str = (char *)malloc(strlen(argv[0])+1);
     if (!fade->in_stop_str)
     {
         st_fail("Could not allocate memory");
@@ -100,7 +100,7 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
         /* See if there is fade-in/fade-out times/curves specified. */
         if(t_argno == 1)
         {
-            fade->out_stop_str = malloc(strlen(argv[t_argno])+1);
+            fade->out_stop_str = (char *)malloc(strlen(argv[t_argno])+1);
             if (!fade->out_stop_str)
             {
                 st_fail("Could not allocate memory");
@@ -118,7 +118,7 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
         }
         else
         {
-            fade->out_start_str = malloc(strlen(argv[t_argno])+1);
+            fade->out_start_str = (char *)malloc(strlen(argv[t_argno])+1);
             if (!fade->out_start_str)
             {
                 st_fail("Could not allocate memory");

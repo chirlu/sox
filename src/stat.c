@@ -143,8 +143,8 @@ int st_stat_start(eff_t effp)
                 return(ST_EOF);
             }
 
-            stat->re = malloc(sizeof(double) * stat->fft_size);
-            stat->im = malloc(sizeof(double) * stat->fft_size);
+            stat->re = (double *)malloc(sizeof(double) * stat->fft_size);
+            stat->im = (double *)malloc(sizeof(double) * stat->fft_size);
 
             if (!stat->re || !stat->im)
             {

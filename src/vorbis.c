@@ -105,7 +105,7 @@ int st_vorbisstartread(ft_t ft)
         
         
         /* Allocate space for decoding structure */
-        vb->vf = malloc(sizeof(OggVorbis_File));
+        vb->vf = (OggVorbis_File *)malloc(sizeof(OggVorbis_File));
         if (vb->vf == NULL) 
         {
             st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
@@ -140,7 +140,7 @@ int st_vorbisstartread(ft_t ft)
                 for (i = 0; i < vc->comments; i++)
                         comment_size += vc->comment_lengths[i] + 1;
 
-                if ( (ft->comment = calloc(comment_size, sizeof(char))) 
+                if ((ft->comment = (char *)calloc(comment_size, sizeof(char))) 
                      == NULL)
                 {
                         ov_clear(vb->vf);
@@ -168,7 +168,7 @@ int st_vorbisstartread(ft_t ft)
 
         /* Setup buffer */
         vb->buf_len = DEF_BUF_LEN;
-        if ( (vb->buf = calloc(vb->buf_len, sizeof(char))) == NULL )
+        if ((vb->buf = (char *)calloc(vb->buf_len, sizeof(char))) == NULL )
         {
                 ov_clear(vb->vf);
                 free(vb->vf);
@@ -270,11 +270,11 @@ int st_vorbisstopread(ft_t ft)
 
 /* Write a page of ogg data to a file.  Taken directly from encode.c in 
    oggenc.   Returns the number of bytes written. */
-int oe_write_page(ogg_page *page, FILE *fp)
+int oe_write_page(ogg_page *page, ft_t ft)
 {
         int written;
-        written = fwrite(page->header,1,page->header_len, fp);
-        written += fwrite(page->body,1,page->body_len, fp);
+        written = st_write(ft, page->header,1,page->header_len);
+        written += st_write(ft, page->body,1,page->body_len);
 
         return written;
 }
@@ -293,19 +293,19 @@ int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
         char *comment;
 
         /* Make the comment structure */
-        vc.user_comments = calloc(1, sizeof(char *));
-        vc.comment_lengths = calloc(1, sizeof(int));
+        vc.user_comments = (char **)calloc(1, sizeof(char *));
+        vc.comment_lengths = (int *)calloc(1, sizeof(int));
         vc.comments = 1;
 
         /* We check if there is a FIELD=value pair already in the comment
          * if not, add one */
         if (strchr(ft->comment,'=') == NULL) 
         {
-            comment = calloc(1,strlen(ft->comment)+strlen("COMMENT=")+1);
+            comment = (char *)calloc(1,strlen(ft->comment)+strlen("COMMENT=")+1);
             strncpy(comment,"COMMENT=",strlen("COMMENT="));
         }
         else
-            comment = calloc(1,strlen(ft->comment)+1);
+            comment = (char *)calloc(1,strlen(ft->comment)+1);
 
         strcat(comment,ft->comment);
 
@@ -326,7 +326,7 @@ int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
         while((result = ogg_stream_flush(&ve->os, &ve->og)))
         {
                 if(!result) break;
-                ret = oe_write_page(&ve->og, ft->fp);
+                ret = oe_write_page(&ve->og, ft);
                 if(!ret)
                 {
                     free(comment);
@@ -345,7 +345,7 @@ int st_vorbisstartwrite(ft_t ft)
         long rate;
 
         /* Allocate memory for all of the structures */
-        ve = vb->vorbis_enc_data = malloc(sizeof(vorbis_enc_t));
+        ve = vb->vorbis_enc_data = (vorbis_enc_t *)malloc(sizeof(vorbis_enc_t));
         if (ve == NULL)
         {
             st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
@@ -418,7 +418,7 @@ st_ssize_t st_vorbiswrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
                         int result = ogg_stream_pageout(&ve->os,&ve->og);
                         if(!result) break;
                         
-                        ret = oe_write_page(&ve->og, ft->fp);
+                        ret = oe_write_page(&ve->og, ft);
                         if(!ret)
                             return (ST_EOF);
 

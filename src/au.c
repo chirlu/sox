@@ -55,7 +55,7 @@ typedef struct aupriv {
         st_size_t dataStart;
         /* For G72x decoding: */
         struct g72x_state state;
-        int (*dec_routine)();
+        int (*dec_routine)(int i, int out_coding, struct g72x_state *state_ptr);
         int dec_bits;
         unsigned int in_buffer;
         int in_bits;
@@ -244,7 +244,7 @@ int st_austartread(ft_t ft)
                 buf = (char *) malloc(hdr_size+1);              
                 for(i = 0; i < hdr_size; i++) {
                         st_readb(ft, (unsigned char *)&(buf[i]));
-                        if (feof(ft->fp))
+                        if (st_eof(ft))
                         {
                                 st_fail_errno(ft,ST_EOF,"Unexpected EOF in Sun/NeXT header info.");
                                 return(ST_EOF);
@@ -264,7 +264,7 @@ int st_austartread(ft_t ft)
         /* Needed for seeking */
         ft->length = data_size/ft->info.size;
         if(ft->seekable)
-                p->dataStart = ftell(ft->fp);
+                p->dataStart = st_tell(ft);
 
         /* Needed for rawread() */
         rc = st_rawstartread(ft);
@@ -370,7 +370,7 @@ int st_austopwrite(ft_t ft)
         /* Attempt to update header */
         if (ft->seekable)
         {
-          if (fseek(ft->fp, 0L, 0) != 0)
+          if (st_seek(ft, 0L, 0) != 0)
           {
                 st_fail_errno(ft,errno,"Can't rewind output file to rewrite Sun header.");
                 return(ST_EOF);

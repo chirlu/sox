@@ -101,9 +101,9 @@ int st_compand_getopts(eff_t effp, int n, char **argv)
       }
 
       rates = 1 + commas/2;
-      if ((l->attackRate = malloc(sizeof(double) * rates)) == NULL ||
-          (l->decayRate  = malloc(sizeof(double) * rates)) == NULL ||
-          (l->volume     = malloc(sizeof(double) * rates)) == NULL)
+      if ((l->attackRate = (double *)malloc(sizeof(double) * rates)) == NULL ||
+          (l->decayRate  = (double *)malloc(sizeof(double) * rates)) == NULL ||
+          (l->volume     = (double *)malloc(sizeof(double) * rates)) == NULL)
       {
         st_fail("Out of memory");
         return (ST_EOF);
@@ -135,8 +135,8 @@ int st_compand_getopts(eff_t effp, int n, char **argv)
       }
 
       tfers = 3 + commas/2; /* 0, 0 at start; 1, 1 at end */
-      if ((l->transferIns  = malloc(sizeof(double) * tfers)) == NULL ||
-          (l->transferOuts = malloc(sizeof(double) * tfers)) == NULL)
+      if ((l->transferIns  = (double *)malloc(sizeof(double) * tfers)) == NULL ||
+          (l->transferOuts = (double *)malloc(sizeof(double) * tfers)) == NULL)
       {
         st_fail("Out of memory");
         return (ST_EOF);
@@ -240,7 +240,7 @@ int st_compand_start(eff_t effp)
   /* Allocate the delay buffer */
   l->delay_buf_size = l->delay * effp->outinfo.rate * effp->outinfo.channels;
   if (l->delay_buf_size > 0
-   && (l->delay_buf = malloc(sizeof(long) * l->delay_buf_size)) == NULL) {
+   && (l->delay_buf = (st_sample_t *)malloc(sizeof(long) * l->delay_buf_size)) == NULL) {
     st_fail("Out of memory");
     return (ST_EOF);
   }

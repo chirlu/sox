@@ -72,11 +72,13 @@
  *   there's a higher subsequent peak visible in the lookahead window)
  *   once it's reached.  */
 
-typedef struct butterworth_crossover {
-  struct xy {
+struct xy {
     double x [2];
     double y [2];
-  } *xy_low, *xy_high;
+} ;
+
+typedef struct butterworth_crossover {
+  struct xy *xy_low, *xy_high;
 
   double a_low[3], a_high[3];
   double b_low[2], b_high[3];
@@ -259,14 +261,14 @@ static int st_mcompand_getopts_1(comp_band_t l, int n, char **argv)
       }
 
       rates = 1 + commas/2;
-      if ((l->attackRate = malloc(sizeof(double) * rates)) == NULL ||
-          (l->decayRate  = malloc(sizeof(double) * rates)) == NULL)
+      if ((l->attackRate = (double *)malloc(sizeof(double) * rates)) == NULL ||
+          (l->decayRate  = (double *)malloc(sizeof(double) * rates)) == NULL)
       {
         st_fail("Out of memory");
         return (ST_EOF);
       }
 
-      if ((l->volume = malloc(sizeof(double) * rates)) == NULL)
+      if ((l->volume = (double *)malloc(sizeof(double) * rates)) == NULL)
       {
         st_fail("Out of memory");
         return (ST_EOF);
@@ -300,8 +302,8 @@ static int st_mcompand_getopts_1(comp_band_t l, int n, char **argv)
       }
 
       tfers = 3 + commas/2; /* 0, 0 at start; 1, 1 at end */
-      if ((l->transferIns  = malloc(sizeof(double) * tfers)) == NULL ||
-          (l->transferOuts = malloc(sizeof(double) * tfers)) == NULL)
+      if ((l->transferIns  = (double *)malloc(sizeof(double) * tfers)) == NULL ||
+          (l->transferOuts = (double *)malloc(sizeof(double) * tfers)) == NULL)
       {
         st_fail("Out of memory");
         return (ST_EOF);
@@ -469,7 +471,7 @@ int st_mcompand_start(eff_t effp)
 
     /* Allocate the delay buffer */
     if (c->delay_buf_size > 0) {
-      if ((l->delay_buf = malloc(sizeof(long) * c->delay_buf_size)) == NULL) {
+      if ((l->delay_buf = (st_sample_t *)malloc(sizeof(long) * c->delay_buf_size)) == NULL) {
         st_fail("Out of memory");
         return (ST_EOF);
       }

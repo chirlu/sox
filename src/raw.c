@@ -114,7 +114,7 @@ int st_rawseek(ft_t ft, st_size_t offset)
 
 int st_rawstartread(ft_t ft)
 {
-    ft->file.buf = malloc(ST_BUFSIZ);
+    ft->file.buf = (char *)malloc(ST_BUFSIZ);
     if (!ft->file.buf)
     {
         st_fail_errno(ft,ST_ENOMEM,"Unable to alloc resources");
@@ -130,7 +130,7 @@ int st_rawstartread(ft_t ft)
 
 int st_rawstartwrite(ft_t ft)
 {
-    ft->file.buf = malloc(ST_BUFSIZ);
+    ft->file.buf = (char *)malloc(ST_BUFSIZ);
     if (!ft->file.buf)
     {
         st_fail_errno(ft,ST_ENOMEM,"Unable to alloc resources");
@@ -451,7 +451,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
             i = ft->file.count-ft->file.pos;
             ft->file.pos = 0;
 
-            ft->file.count = fread(ft->file.buf+i, 1, ft->file.size-i, ft->fp) ;
+            ft->file.count = st_read(ft, ft->file.buf+i, 1, ft->file.size-i);
             if (ft->file.count != ft->file.size-i)
             {
                 ft->file.eof = 1;
@@ -641,7 +641,7 @@ void st_f64_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
 
 static void writeflush(ft_t ft)
 {
-        if (fwrite(ft->file.buf, 1, ft->file.pos, ft->fp) != ft->file.pos)
+        if (st_write(ft, ft->file.buf, 1, ft->file.pos) != ft->file.pos)
         {
             ft->file.eof = ST_EOF;
         }

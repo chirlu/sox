@@ -36,10 +36,7 @@
 #include "st_i.h"
 #include "btrworth.h"
 
-int st_bandreject_getopts (effp, n, argv)
-eff_t effp;
-int n;
-char **argv;
+int st_bandreject_getopts(eff_t effp, int n, char **argv)
 {
   butterworth_t butterworth = (butterworth_t)effp->priv;
 
@@ -62,8 +59,7 @@ char **argv;
   return (ST_SUCCESS);
 }
 
-int st_bandreject_start (effp)
-eff_t effp;
+int st_bandreject_start(eff_t effp)
 {
   butterworth_t butterworth = (butterworth_t) effp->priv;
   double c;

@@ -46,7 +46,7 @@ int st_trim_getopts(eff_t effp, int n, char **argv)
      */
     switch (n) {
         case 2:
-            trim->length_str = malloc(strlen(argv[1])+1);
+            trim->length_str = (char *)malloc(strlen(argv[1])+1);
             if (!trim->length_str)
             {
                 st_fail("Could not allocate memory");
@@ -61,7 +61,7 @@ int st_trim_getopts(eff_t effp, int n, char **argv)
                 return(ST_EOF);
             }
         case 1:
-            trim->start_str = malloc(strlen(argv[0])+1);
+            trim->start_str = (char *)malloc(strlen(argv[0])+1);
             if (!trim->start_str)
             {
                 st_fail("Could not allocate memory");

@@ -178,7 +178,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            fo = calloc(sizeof(file_options_t), 1);
+            fo = (file_options_t *)calloc(sizeof(file_options_t), 1);
             fo->info.size = -1;
             fo->info.encoding = -1;
             fo->info.channels = -1;
@@ -969,8 +969,7 @@ static int flow_effect_out(void)
     return ST_SUCCESS;
 }
 
-static int flow_effect(e)
-int e;
+static int flow_effect(int e)
 {
     st_ssize_t i, done, idone, odone, idonel, odonel, idoner, odoner;
     st_sample_t *ibuf, *obuf;
@@ -988,7 +987,8 @@ int e;
         odone = ST_BUFSIZ;
         effstatus = (* efftab[e].h->flow)(&efftab[e],
                                           &efftab[e-1].obuf[efftab[e-1].odone],
-                                          efftab[e].obuf, &idone, &odone);
+                                          efftab[e].obuf, (st_size_t *)&idone, 
+                                          (st_size_t *)&odone);
         efftab[e-1].odone += idone;
         efftab[e].odone = 0;
         efftab[e].olen = odone;
@@ -1010,14 +1010,16 @@ int e;
         idonel = (idone + 1)/2;         /* odd-length logic */
         odonel = odone/2;
         effstatus = (* efftab[e].h->flow)(&efftab[e],
-                                          ibufl, obufl, &idonel, &odonel);
+                                          ibufl, obufl, (st_size_t *)&idonel, 
+                                          (st_size_t *)&odonel);
 
         /* right */
         idoner = idone/2;               /* odd-length logic */
         odoner = odone/2;
         /* FIXME: effstatus of previous operation is lost. */
         effstatus = (* efftabR[e].h->flow)(&efftabR[e],
-                                           ibufr, obufr, &idoner, &odoner);
+                                           ibufr, obufr, (st_size_t *)&idoner, 
+                                           (st_size_t *)&odoner);
 
         obuf = efftab[e].obuf;
          /* This loop implies left and right effect will always output
@@ -1039,8 +1041,7 @@ int e;
     return ST_SUCCESS;
 }
 
-static int drain_effect(e)
-int e;
+static int drain_effect(int e)
 {
     st_ssize_t i, olen, olenl, olenr;
     st_sample_t *obuf;
@@ -1057,12 +1058,12 @@ int e;
         /* left */
         olenl = olen/2;
         /* FIXME: Should look at return code and abort on ST_EOF */
-        (* efftab[e].h->drain)(&efftab[e], obufl, &olenl);
+        (* efftab[e].h->drain)(&efftab[e], obufl, (st_size_t *)&olenl);
 
         /* right */
         olenr = olen/2;
         /* FIXME: Should look at return code and abort on ST_EOF */
-        (* efftab[e].h->drain)(&efftabR[e], obufr, &olenr);
+        (* efftab[e].h->drain)(&efftabR[e], obufr, (st_size_t *)&olenr);
 
         obuf = efftab[e].obuf;
         /* This loop implies left and right effect will always output
@@ -1294,8 +1295,7 @@ static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct,
         return clips;
 }
 
-static int filetype(fd)
-int fd;
+static int filetype(int fd)
 {
         struct stat st;
 
@@ -1312,8 +1312,7 @@ static char *usagestr =
 "[ gopts ] [ fopts ] ifile [ fopts ] ofile [ effect [ effopts ] ]";
 #endif
 
-static void usage(opt)
-char *opt;
+static void usage(char *opt)
 {
     int i;
 

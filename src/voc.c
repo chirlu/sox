@@ -230,7 +230,7 @@ int st_vocstartread(ft_t ft)
         }
 
 
-        if (fread(header, 1, 20, ft->fp) != 20)
+        if (st_read(ft, header, 1, 20) != 20)
         {
                 st_fail_errno(ft,ST_EHDR,"unexpected EOF in VOC header");
                 return(ST_EOF);
@@ -389,7 +389,7 @@ st_ssize_t st_vocread(ft_t ft, st_sample_t *buf, st_ssize_t len)
                     break;
                 case ST_SIZE_WORD:
                     st_readw(ft, (unsigned short *)&sw);
-                    if (feof(ft->fp))
+                    if (st_eof(ft))
                         {
                             st_warn("VOC input: short file");
                             v->rest = 0;
@@ -526,7 +526,7 @@ static int getblock(ft_t ft)
         while (v->rest == 0) {
                 /* IF EOF, return EOF
                  * ANN:  was returning SUCCESS */
-                if (feof(ft->fp))
+                if (st_eof(ft))
                         return ST_EOF;
 
                 if (st_readb(ft, &block) == ST_EOF)
@@ -538,7 +538,7 @@ static int getblock(ft_t ft)
 
                 /* IF EOF after reading block type, return EOF
                  * ANN:  was returning SUCCESS */
-                if (feof(ft->fp))
+                if (st_eof(ft))
                         return ST_EOF;
                 /*
                  * Size is an 24-bit value.  Currently there is no util
@@ -738,7 +738,7 @@ static void blockstart(ft_t ft)
 {
         vs_t v = (vs_t) ft->priv;
 
-        v->blockseek = ftell(ft->fp);
+        v->blockseek = st_tell(ft);
         if (v->silent) {
                 st_writeb(ft, VOC_SILENCE);     /* Silence block code */
                 st_writeb(ft, 0);               /* Period length */
@@ -796,15 +796,15 @@ static void blockstop(ft_t ft)
         vs_t v = (vs_t) ft->priv;
         st_sample_t datum;
 
-        st_writeb(ft, 0);                       /* End of file block code */
-        fseek(ft->fp, v->blockseek, 0);         /* seek back to block length */
-        fseek(ft->fp, 1, 1);                    /* seek forward one */
+        st_writeb(ft, 0);                     /* End of file block code */
+        st_seek(ft, v->blockseek, 0);         /* seek back to block length */
+        st_seek(ft, 1, 1);                    /* seek forward one */
         if (v->silent) {
                 st_writew(ft, v->samples);
         } else {
           if (ft->info.size == ST_SIZE_BYTE) {
             if (ft->info.channels > 1) {
-              fseek(ft->fp, 8, 1); /* forward 7 + 1 for new block header */
+              st_seek(ft, 8, 1); /* forward 7 + 1 for new block header */
             }
           }
                 v->samples += 2;                /* adjustment: SBDK pp. 3-5 */

@@ -178,7 +178,7 @@ typedef struct synthstuff {
  * calculated by freq = 440Hz * 2**(note/12)
  */
 static double calc_note_freq(double note){
-    return (440.0 * pow(2,note/12.0));
+    return (440.0 * pow(2.0,note/12.0));
 }
 
 
@@ -269,7 +269,7 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
 
     /* read length if given ( if first par starts with digit )*/
     if( isdigit((int)argv[argn][0])) {
-        synth->length_str = malloc(strlen(argv[argn])+1);
+        synth->length_str = (char *)malloc(strlen(argv[argn])+1);
         if (!synth->length_str)
         {
             st_fail("Could not allocate memeory");

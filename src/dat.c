@@ -24,7 +24,7 @@
 
 /* Private data for dat file */
 typedef struct dat {
-	double timevalue, deltat;
+        double timevalue, deltat;
 } *dat_t;
 
 /* FIXME: Move this to misc.c */
@@ -41,13 +41,13 @@ int st_datstartread(ft_t ft)
    long rate;
 
    while (ft->info.rate == 0) {
-      fgets(inpstr, 82, ft->fp);
+      st_reads(ft, inpstr, 82);
       inpstr[81] = 0;
       sscanf(inpstr," %c",&sc);
       if (sc != ';') 
       {
-	  st_fail_errno(ft,ST_EHDR,"Cannot determine sample rate.");
-	  return (ST_EOF);
+          st_fail_errno(ft,ST_EHDR,"Cannot determine sample rate.");
+          return (ST_EOF);
       }
       /* Store in system dependent long to get around cross platform
        * problems.
@@ -75,8 +75,8 @@ int st_datstartwrite(ft_t ft)
    if (ft->info.channels > 1)
    {
         st_report("Can only create .dat files with one channel.");
-	st_report("Forcing output to 1 channel.");
-	ft->info.channels = 1;
+        st_report("Forcing output to 1 channel.");
+        ft->info.channels = 1;
    }
    
    ft->info.size = ST_SIZE_64BIT;
@@ -101,23 +101,23 @@ st_ssize_t st_datread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 
     while (done < nsamp) {
         do {
-          fgets(inpstr,82,ft->fp);
-          if (feof(ft->fp)) {
-		return (done);
-	  }
+          st_reads(ft, inpstr, 82);
+          if (st_eof(ft)) {
+                return (done);
+          }
           sscanf(inpstr," %c",&sc);
           }
           while(sc == ';');  /* eliminate comments */
         retc = sscanf(inpstr,"%*s %lg",&sampval);
         if (retc != 1) 
-	{
-	    st_fail_errno(ft,ST_EOF,"Unable to read sample.");
-	    return (0);
-	}
+        {
+            st_fail_errno(ft,ST_EOF,"Unable to read sample.");
+            return (0);
+        }
         *buf++ = roundoff(sampval * 2.147483648e9);
         ++done;
     }
-	return (done);
+        return (done);
 }
 
 st_ssize_t st_datwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)

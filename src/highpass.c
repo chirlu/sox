@@ -37,10 +37,7 @@
 #include "btrworth.h"
 
 
-int st_highpass_getopts (effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_highpass_getopts(eff_t effp, int n, char **argv) 
 {
   butterworth_t butterworth = (butterworth_t)effp->priv;
 
@@ -60,8 +57,7 @@ char **argv;
 
 
 
-int st_highpass_start (effp)
-eff_t effp;
+int st_highpass_start(eff_t effp)
 {
   butterworth_t butterworth = (butterworth_t) effp->priv;
   double c;

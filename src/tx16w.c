@@ -97,7 +97,7 @@ int st_txwstartread(ft_t ft)
     while (st_readb(ft, (unsigned char *)&trash) != ST_EOF)
         num_samp_bytes++; 
     num_samp_bytes -= 32;         /* calculate num samples by sub header size */
-    fseek(ft->fp,0L,0);           /* rewind file */
+    st_seek(ft, 0L, 0);           /* rewind file */
     sk->rest = num_samp_bytes;    /* set how many sample bytes to read */
 
     /* first 6 bytes are file type ID LM8953 */
@@ -271,7 +271,7 @@ int st_txwstartwrite(ft_t ft)
     /* dummy numbers, just for place holder, real header is written
        at end of processing, since byte count is needed */
 
-    fwrite(&WH,1,32,ft->fp);
+    st_write(ft, &WH, 1, 32);
     writedone = 32;
     return(ST_SUCCESS);
 }
@@ -370,8 +370,8 @@ int st_txwstopwrite(ft_t ft)
     WH.rpt_length[2] = (0x01 & (LoopLength >> 16)) +
         magic2[WH.sample_rate];
 
-    rewind(ft->fp);
-    fwrite(&WH,1,32,ft->fp);
+    st_rewind(ft);
+    st_write(ft, &WH, 1, 32);
 
     return(ST_SUCCESS);
 }

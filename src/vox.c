@@ -110,7 +110,7 @@ int  st_voxstartread (ft_t ft)
 
            // ... setup file info
 
-       ft->file.buf = malloc (ST_BUFSIZ);
+       ft->file.buf = (char *)malloc(ST_BUFSIZ);
     
        if (!ft->file.buf)
           { st_fail_errno (ft,ST_ENOMEM,"Unable to allocate internal buffer memory");
@@ -227,7 +227,7 @@ int  st_voxstartwrite (ft_t ft)
 
            // ... setup file info
 
-       ft->file.buf = malloc (ST_BUFSIZ);
+       ft->file.buf = (char *)malloc(ST_BUFSIZ);
     
        if (!ft->file.buf)
           { st_fail_errno (ft,ST_ENOMEM,"Unable to allocate internal buffer memory");

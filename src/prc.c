@@ -112,7 +112,7 @@ int st_prcstartread(ft_t ft)
             st_report("PRC must only supports 1 channel.  Overriding");
         ft->info.channels = 1;
 
-        p->dataStart = ftell(ft->fp);
+        p->dataStart = st_tell(ft);
         ft->length = p->length/ft->info.size;
 
         return (ST_SUCCESS);
@@ -187,7 +187,7 @@ int st_prcstopwrite(ft_t ft)
             return ST_SUCCESS;
         }
 
-        if (fseek(ft->fp, 0L, 0) != 0)
+        if (st_seek(ft, 0L, 0) != 0)
         {
                 st_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
                 return(ST_EOF);
