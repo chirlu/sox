@@ -18,6 +18,10 @@
 #include <time.h>
 #include <string.h>
 
+/* for fstat */
+#include <sys/stat.h>
+#include <unistd.h>
+
 const char *st_sizes_str[] = {
 	"NONSENSE!",
 	"bytes",
@@ -92,6 +96,7 @@ int len;
 	if (fread(&in, 1, 1, ft->fp) != 1)
 	{
 	    *sc = 0;
+		st_fail_errno(ft,errno,readerr);
 	    return (ST_EOF);
 	}
 	if (in == 0 || in == '\n')
@@ -114,7 +119,7 @@ char *c;
 {
 	if (fwrite(c, 1, strlen(c), ft->fp) != strlen(c))
 	{
-		st_fail(writerr);
+		st_fail_errno(ft,errno,writerr);
 		return(ST_EOF);
 	}
 	return(ST_SUCCESS);
@@ -128,6 +133,7 @@ unsigned char *uc;
 {
 	if (fread(uc, 1, 1, ft->fp) != 1)
 	{
+		st_fail_errno(ft,errno,readerr);
 	    return(ST_EOF);
 	}
 	return ST_SUCCESS;
@@ -141,7 +147,7 @@ unsigned char uc;
 {
 	if (fwrite(&uc, 1, 1, ft->fp) != 1)
 	{
-		st_fail(writerr);
+		st_fail_errno(ft,errno,writerr);
 		return(ST_EOF);
 	}
 	return(ST_SUCCESS);
@@ -155,6 +161,7 @@ unsigned short *us;
 {
 	if (fread(us, 2, 1, ft->fp) != 1)
 	{
+		st_fail_errno(ft,errno,readerr);
 	    return (ST_EOF);
 	}
 	if (ft->swap)
@@ -172,7 +179,7 @@ unsigned short us;
 		us = st_swapw(us);
 	if (fwrite(&us, 2, 1, ft->fp) != 1)
 	{
-		st_fail(writerr);
+		st_fail_errno(ft,errno,writerr);
 		return (ST_EOF);
 	}
 	return(ST_SUCCESS);
@@ -186,6 +193,7 @@ ULONG *ul;
 {
 	if (fread(ul, 4, 1, ft->fp) != 1)
 	{
+		st_fail_errno(ft,errno,readerr);
 	    return (ST_EOF);
 	}
 	if (ft->swap)
@@ -203,7 +211,7 @@ ULONG ul;
 		ul = st_swapl(ul);
 	if (fwrite(&ul, 4, 1, ft->fp) != 1)
 	{
-		st_fail(writerr);
+		st_fail_errno(ft,errno,writerr);
 		return (ST_EOF);
 	}
 	return(ST_SUCCESS);
@@ -236,7 +244,7 @@ float f;
 		t = st_swapf(t);
 	if (fwrite(&t, sizeof(float), 1, ft->fp) != 1)
 	{
-		st_fail(writerr);
+		st_fail_errno(ft,errno,writerr);
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -267,7 +275,7 @@ double d;
 		d = st_swapd(d);
 	if (fwrite(&d, sizeof(double), 1, ft->fp) != 1)
 	{
-		st_fail(writerr);
+		st_fail_errno(ft,errno,writerr);
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -468,3 +476,61 @@ int errcode;
 	}
 }
 #endif
+
+/* Sets file offset
+ * offset in bytes 
+ */
+int st_seek(ft,offset,whence) 
+ft_t ft;
+LONG offset;
+int whence;
+{
+	if( ft->seekable == 0 ){
+/* 
+ * If a stream peel off chars else 
+ * EPERM 	"Operation not permitted" 
+ */
+		if(whence == SEEK_CUR ){
+			if( offset < 0 ){
+				st_fail_errno(ft,ST_EINVAL,"Can't seek backwards in pipe");
+			} else {
+    			while ( offset > 0 && !feof(ft->fp) )
+    			{
+					getc(ft->fp);
+					offset--;
+    			}
+				if(offset)
+					st_fail_errno(ft,ST_EOF,"offset past eof");
+				else 
+					ft->st_errno = ST_SUCCESS;
+			}
+		} else {
+			st_fail_errno(ft,ST_EPERM,"File not seekable");
+		}
+	} else {
+		if( fseek(ft->fp,offset,whence) == -1 )
+			st_fail_errno(ft,errno,strerror(errno));
+		else
+			ft->st_errno = ST_SUCCESS;
+	}	
+		 
+/* Empty the st file buffer */
+	if( ft->st_errno == ST_SUCCESS ){
+		ft->file.count = 0;
+		ft->file.pos = 0;
+		ft->file.eof = 0;
+	}
+
+	return(ft->st_errno);
+}
+
+LONG st_filelength(ft)
+ft_t ft;
+{
+	
+	struct stat st;
+
+	fstat(fileno(ft->fp), &st);
+
+	return (LONG)st.st_size;
+}

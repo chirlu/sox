@@ -6,6 +6,10 @@ sox-11gamma.
 
 sox-12.17.2
 -----------
+  o Darrick Servis has made major cleanups in the code in regards
+    to error conditions.  Helps people using libst.
+  o Darrick Servis has added added optional seek functionality sox.
+    Several formats have been modified to make use of this.
   o Geoff Kuenning rewrote the average effect into a general-purpose
     parametric mapping from N channels to M channels.
   o Geoff Kuenning added an optional delay-time parameter to the compander

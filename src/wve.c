@@ -13,19 +13,30 @@
 #define PSION_INV_VERSION   ((short)4111)
 #define PSION_HDRSIZE	32
 
-struct wvepriv
+typedef struct wvepriv
     {
     ULONG length;
     short padding;
     short repeats;
-    };
+/* For seeking */
+	LONG dataStart;
+    } *wve_t;
 
 static void wvewriteheader(ft_t ft);
+
+int st_wveseek(ft,offset) 
+ft_t ft;
+LONG offset;
+{
+	wve_t wve = (wve_t ) ft->priv;
+
+	return st_seek(ft,offset*ft->info.size + wve->dataStart,SEEK_SET);
+}
 
 int st_wvestartread(ft) 
 ft_t ft;
 {
-	struct wvepriv *p = (struct wvepriv *) ft->priv;
+	wve_t p = (wve_t ) ft->priv;
 	char magic[16];
 	short version;
 	int rc;
@@ -52,7 +63,7 @@ ft_t ft;
 	}
 	else
 	{
-		st_fail("Psion header doesn't start with magic word\nTry the '.al' file type with '-t al -r 8000 filename'");
+		st_fail_errno(ft,ST_EHDR,"Psion header doesn't start with magic word\nTry the '.al' file type with '-t al -r 8000 filename'");
 		return (ST_EOF);
 	}
 
@@ -74,7 +85,7 @@ ft_t ft;
 	}
 	else
 	{
-	    st_fail("Wrong version in Psion header");
+	    st_fail_errno(ft,ST_EHDR,"Wrong version in Psion header");
 	    return(ST_EOF);
 	}
 
@@ -94,6 +105,10 @@ ft_t ft;
 	ft->info.rate = 8000;
 
 	ft->info.channels = 1;
+
+	p->dataStart = ftell(ft->fp);
+	ft->length = p->length/ft->info.size;
+
 	return (ST_SUCCESS);
 }
 
@@ -109,7 +124,7 @@ ft_t ft;
 int st_wvestartwrite(ft) 
 ft_t ft;
 {
-	struct wvepriv *p = (struct wvepriv *) ft->priv;
+	wve_t p = (wve_t ) ft->priv;
 	int rc;
 
 	/* Needed for rawwrite() */
@@ -148,7 +163,7 @@ LONG st_wvewrite(ft, buf, samp)
 ft_t ft;
 LONG *buf, samp;
 {
-	struct wvepriv *p = (struct wvepriv *) ft->priv;
+	wve_t p = (wve_t ) ft->priv;
 	p->length += samp * ft->info.size;
 	return st_rawwrite(ft, buf, samp);
 }
@@ -164,7 +179,7 @@ ft_t ft;
 
 	if (fseek(ft->fp, 0L, 0) != 0)
 	{
-		st_fail("Can't rewind output file to rewrite Psion header.");
+		st_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
 		return(ST_EOF);
 	}
 	wvewriteheader(ft);
@@ -180,7 +195,7 @@ ft_t ft;
     char magic[16];
     short version;
     short zero;
-    struct wvepriv *p = (struct wvepriv *) ft->priv;
+    wve_t p = (wve_t ) ft->priv;
 
     strcpy(magic,PSION_MAGIC);
     version=PSION_VERSION;

@@ -27,6 +27,7 @@ extern int  st_aiffstopread();
 extern int  st_aiffstartwrite();
 extern LONG st_aiffwrite();
 extern int  st_aiffstopwrite();
+extern int  st_aiffseek();
 
 static char *alnames[] = {
 	"al",
@@ -57,6 +58,7 @@ extern LONG st_auread();
 extern int  st_austartwrite();
 extern LONG st_auwrite();
 extern int  st_austopwrite();
+extern int  st_auseek();
 
 static char *autonames[] = {
 	"auto",
@@ -191,6 +193,7 @@ static char *sfnames[] = {
 
 extern int st_sfstartread();
 extern int st_sfstartwrite();
+extern int st_sfseek();
 
 static char *slnames[] = {
 	"sl",
@@ -210,6 +213,7 @@ extern LONG st_smpread();
 extern LONG st_smpwrite();
 extern int  st_smpstartwrite();
 extern int  st_smpstopwrite();
+extern int  st_smpseek();
 
 static char *sndtnames[] = {
 	"sndt",
@@ -223,6 +227,7 @@ extern int  st_sndtstartread();
 extern int  st_sndtstartwrite();
 extern LONG st_sndtwrite();
 extern int  st_sndtstopwrite();
+extern int  st_sndseek();
 
 static char *spherenames[] = {
 	"sph",
@@ -328,6 +333,7 @@ extern LONG st_wavread();
 extern int  st_wavstartwrite();
 extern LONG st_wavwrite();
 extern int  st_wavstopwrite();
+extern int  st_wavseek();
 
 static char *wvenames[] = {
       "wve",
@@ -339,112 +345,113 @@ extern LONG st_wveread();
 extern int  st_wvestartwrite();
 extern LONG st_wvewrite();
 extern int  st_wvestopwrite();
+extern int  st_wveseek();
 
 extern int  st_nothing();
 extern LONG st_nothing_success();
 
 st_format_t st_formats[] = {
-	{aiffnames, ST_FILE_STEREO,		/* SGI/Apple AIFF */
+	{aiffnames, ST_FILE_STEREO | ST_FILE_SEEK,		/* SGI/Apple AIFF */
 		st_aiffstartread, st_aiffread, st_aiffstopread,
-		st_aiffstartwrite, st_aiffwrite, st_aiffstopwrite},
+		st_aiffstartwrite, st_aiffwrite, st_aiffstopwrite, st_aiffseek},
 	{alnames, ST_FILE_STEREO,		/* a-law byte raw */
 		st_alstartread, st_rawread, st_rawstopread,
-		st_alstartwrite, st_rawwrite, st_rawstopwrite},	
+		st_alstartwrite, st_rawwrite, st_rawstopwrite, st_nothing},	
 #if	defined(ALSA_PLAYER)
 	{alsanames, ST_FILE_STEREO,		/* /dev/snd/pcmXX */
 		st_alsastartread, st_rawread, st_rawstopread,
-		st_alsastartwrite, st_rawwrite, st_rawstopwrite},
+		st_alsastartwrite, st_rawwrite, st_rawstopwrite, st_nothing},
 #endif
-	{aunames, ST_FILE_STEREO,		/* SPARC .au w/header */
+	{aunames, ST_FILE_STEREO | ST_FILE_SEEK,		/* SPARC .au w/header */
 		st_austartread, st_auread, st_rawstopread,
-		st_austartwrite, st_auwrite, st_austopwrite},	
+		st_austartwrite, st_auwrite, st_austopwrite, st_auseek},	
 	{autonames, ST_FILE_STEREO,		/* Guess from header */
 		st_autostartread, st_nothing_success, st_nothing,
-		st_autostartwrite, st_nothing_success, st_nothing},
+		st_autostartwrite, st_nothing_success, st_nothing, st_nothing},
 	{avrnames, ST_FILE_STEREO,		/* AVR format */
 		st_avrstartread, st_rawread, st_nothing,	
-		st_avrstartwrite, st_avrwrite, st_avrstopwrite},
-	{cdrnames, ST_FILE_STEREO,		/* CD-R format */
+		st_avrstartwrite, st_avrwrite, st_avrstopwrite, st_nothing},
+	{cdrnames, ST_FILE_STEREO | ST_FILE_SEEK,		/* CD-R format */
 		st_cdrstartread, st_cdrread, st_cdrstopread,
-		st_cdrstartwrite, st_cdrwrite, st_cdrstopwrite},
+		st_cdrstartwrite, st_cdrwrite, st_cdrstopwrite, st_rawseek},
 	{cvsdnames, 0,			/* Cont. Variable Slope Delta */
 	        st_cvsdstartread, st_cvsdread, st_cvsdstopread,
-	        st_cvsdstartwrite, st_cvsdwrite, st_cvsdstopwrite},
+	        st_cvsdstartwrite, st_cvsdwrite, st_cvsdstopwrite, st_nothing},
 	{datnames, 0,				/* Text data samples */
 		st_datstartread, st_datread, st_nothing,
-		st_datstartwrite, st_datwrite, st_nothing},
+		st_datstartwrite, st_datwrite, st_nothing, st_nothing},
 	{dvmsnames, 0,			/* Cont. Variable Solot Delta */
 	        st_dvmsstartread, st_cvsdread, st_cvsdstopread,
-	        st_dvmsstartwrite, st_cvsdwrite, st_dvmsstopwrite},
+	        st_dvmsstartwrite, st_cvsdwrite, st_dvmsstopwrite, st_nothing},
 #ifdef HAVE_LIBGSM
 	{gsmnames, 0,				/* GSM 06.10 */
 	        st_gsmstartread, st_gsmread, st_gsmstopread,
-	        st_gsmstartwrite, st_gsmwrite, st_gsmstopwrite},
+	        st_gsmstartwrite, st_gsmwrite, st_gsmstopwrite, st_nothing},
 #endif
 	{hcomnames, 0,				/* Mac FSSD/HCOM */
 		st_hcomstartread, st_hcomread, st_hcomstopread, 
-		st_hcomstartwrite, st_hcomwrite, st_hcomstopwrite},
+		st_hcomstartwrite, st_hcomwrite, st_hcomstopwrite, st_nothing},
         {maudnames, ST_FILE_STEREO,    		/* Amiga MAUD */
 		st_maudstartread, st_maudread, st_maudstopread,
-		st_maudstartwrite, st_maudwrite, st_maudstopwrite},
+		st_maudstartwrite, st_maudwrite, st_maudstopwrite, st_nothing},
 #if	defined(OSS_PLAYER)
 	{ossdspnames, ST_FILE_STEREO,		/* OSS /dev/dsp player */
 		st_ossdspstartread, st_rawread, st_rawstopread,
-		st_ossdspstartwrite, st_rawwrite, st_rawstopwrite},
+		st_ossdspstartwrite, st_rawwrite, st_rawstopwrite, st_nothing},
 #endif
-	{rawnames, ST_FILE_STEREO,		/* Raw format */
+	{rawnames, ST_FILE_STEREO | ST_FILE_SEEK,		/* Raw format */
 		st_rawstartread, st_rawread, st_rawstopread,
-		st_rawstartwrite, st_rawwrite, st_rawstopwrite},
+		st_rawstartwrite, st_rawwrite, st_rawstopwrite, st_rawseek},
 	{sbnames, ST_FILE_STEREO,		/* signed byte raw */
 		st_sbstartread, st_rawread, st_rawstopread,
-		st_sbstartwrite, st_rawwrite, st_rawstopwrite},	
-	{sfnames, ST_FILE_STEREO,		/* IRCAM Sound File */
+		st_sbstartwrite, st_rawwrite, st_rawstopwrite, st_nothing},	
+	{sfnames, ST_FILE_STEREO | ST_FILE_SEEK,		/* IRCAM Sound File */
 		st_sfstartread, st_rawread, st_rawstopread,
-		st_sfstartwrite, st_rawwrite, st_rawstopwrite},
+		st_sfstartwrite, st_rawwrite, st_rawstopwrite, st_sfseek},
 	{ slnames, ST_FILE_STEREO,		/* signed long raw */
 	    	st_slstartread, st_rawread, st_rawstopread,
-		st_slstartwrite, st_rawwrite, st_rawstopwrite },
-	{smpnames, ST_FILE_STEREO | ST_FILE_LOOPS,/* SampleVision sound */
+		st_slstartwrite, st_rawwrite, st_rawstopwrite, st_nothing },
+	{smpnames, ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK,/* SampleVision sound */
 		st_smpstartread, st_smpread, st_nothing,
-		st_smpstartwrite, st_smpwrite, st_smpstopwrite},
-	{sndtnames, ST_FILE_STEREO,		/* Sndtool Sound File */
+		st_smpstartwrite, st_smpwrite, st_smpstopwrite, st_smpseek},
+	{sndtnames, ST_FILE_STEREO | ST_FILE_SEEK,		/* Sndtool Sound File */
 		st_sndtstartread, st_rawread, st_rawstopread, 
-		st_sndtstartwrite, st_sndtwrite, st_sndtstopwrite},
+		st_sndtstartwrite, st_sndtwrite, st_sndtstopwrite, st_sndseek},
 	{spherenames, ST_FILE_STEREO,		/* NIST Sphere File */
 	        st_spherestartread, st_sphereread, st_rawstopread,
-		st_spherestartwrite, st_spherewrite, st_spherestopwrite},
+		st_spherestartwrite, st_spherewrite, st_spherestopwrite, st_nothing},
 #if	defined(SUNAUDIO_PLAYER)
 	{sunnames, ST_FILE_STEREO,		/* Sun /dev/audio player */
 		st_sunstartread, st_rawread, st_rawstopread,
-		st_sunstartwrite, st_rawwrite, st_rawstopwrite},
+		st_sunstartwrite, st_rawwrite, st_rawstopwrite, st_nothing},
 #endif
 	{svxnames, ST_FILE_STEREO,		/* Amiga 8SVX */
 		st_svxstartread, st_svxread, st_svxstopread,
-		st_svxstartwrite, st_svxwrite, st_svxstopwrite},
+		st_svxstartwrite, st_svxwrite, st_svxstopwrite, st_nothing},
 	{swnames, ST_FILE_STEREO,		/* signed word raw */
 		st_swstartread, st_rawread, st_rawstopread,
-		st_swstartwrite, st_rawwrite, st_rawstopwrite},
+		st_swstartwrite, st_rawwrite, st_rawstopwrite, st_nothing},
 	{txwnames, 0,			/* Yamaha TX16W and SY99 waves */
 	        st_txwstartread, st_txwread, st_txwstopread, 
-	        st_txwstartwrite, st_txwwrite, st_txwstopwrite},
+	        st_txwstartwrite, st_txwwrite, st_txwstopwrite, st_nothing},
 	{ubnames, ST_FILE_STEREO,		/* unsigned byte raw */
 		st_ubstartread, st_rawread, st_rawstopread,
-		st_ubstartwrite, st_rawwrite, st_rawstopwrite},
+		st_ubstartwrite, st_rawwrite, st_rawstopwrite, st_nothing},
 	{ulnames, ST_FILE_STEREO,		/* u-law byte raw */
 		st_ulstartread, st_rawread, st_rawstopread,
-		st_ulstartwrite, st_rawwrite, st_rawstopwrite},	
+		st_ulstartwrite, st_rawwrite, st_rawstopwrite, st_nothing},	
 	{uwnames, ST_FILE_STEREO,		/* unsigned word raw */
 		st_uwstartread, st_rawread, st_rawstopread,
-		st_uwstartwrite, st_rawwrite, st_rawstopwrite},	
+		st_uwstartwrite, st_rawwrite, st_rawstopwrite, st_nothing},	
 	{vocnames, ST_FILE_STEREO,		/* Sound Blaster .VOC */
 		st_vocstartread, st_vocread, st_vocstopread,
-		st_vocstartwrite, st_vocwrite, st_vocstopwrite},
-	{wavnames, ST_FILE_STEREO,		/* Microsoftt RIFF */
+		st_vocstartwrite, st_vocwrite, st_vocstopwrite, st_nothing},
+	{wavnames, ST_FILE_STEREO | ST_FILE_SEEK,		/* Microsoftt RIFF */
 		st_wavstartread, st_wavread, st_nothing,
-		st_wavstartwrite, st_wavwrite, st_wavstopwrite},	
-	{wvenames, 0,				/* Psion .wve */
+		st_wavstartwrite, st_wavwrite, st_wavstopwrite, st_wavseek},	
+	{wvenames, ST_FILE_SEEK,				/* Psion .wve */
 		st_wvestartread, st_wveread, st_rawstopread,
-		st_wvestartwrite, st_wvewrite, st_wvestopwrite},
+		st_wvestartwrite, st_wvewrite, st_wvestopwrite, st_wveseek},
 	{0, 0,
 	 0, 0, 0, 0, 0, 0}
 };
@@ -660,7 +667,7 @@ st_effect_t st_effects[] = {
 	{"null", 0, 			/* stand-in, never gets called */
 		st_nothing, st_nothing, st_nothing, 
 		st_null_drain, st_nothing},
-	{"avg", ST_EFF_MCHAN, 
+	{"avg", ST_EFF_CHAN, 
 		st_avg_getopts, st_avg_start, st_avg_flow, 
 		st_null_drain, st_avg_stop},
 	{"band", 0, 

@@ -84,12 +84,12 @@ ft_t ft;
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_RESET, 0) < 0)
     {
-	st_fail("Unable to reset OSS driver.  Possibly accessing an invalid file/device");
+	st_fail_errno(ft,ST_EOF,"Unable to reset OSS driver.  Possibly accessing an invalid file/device");
 	return(ST_EOF);
     }
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_SYNC, NULL) < 0) {
-	st_fail("Unable to sync dsp");
+	st_fail_errno(ft,ST_EOF,"Unable to sync dsp");
 	return (ST_EOF);
     }
 
@@ -136,7 +136,7 @@ ft_t ft;
     /* Give up and exit */
     if (rc < 0 || tmp != sampletype)
     {
-	st_fail("Unable to set the sample size to %d", samplesize);
+	st_fail_errno(ft,ST_EOF,"Unable to set the sample size to %d", samplesize);
 	return (ST_EOF);
     }
 
@@ -181,7 +181,7 @@ ft_t ft;
     ft->file.size = 0;
     ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &ft->file.size);
     if (ft->file.size < 4 || ft->file.size > 65536) {
-	    st_fail("Invalid audio buffer size %d", ft->file.size);
+	    st_fail_errno(ft,ST_EOF,"Invalid audio buffer size %d", ft->file.size);
 	    return (ST_EOF);
     }
     ft->file.count = 0;
@@ -189,7 +189,7 @@ ft_t ft;
     ft->file.eof = 0;
 
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
-	st_fail("Unable to allocate input/output buffer of size %d", ft->file.size);
+	st_fail_errno(ft,ST_EOF,"Unable to allocate input/output buffer of size %d", ft->file.size);
 	return (ST_EOF);
     }
 

@@ -55,7 +55,7 @@ ft_t ft;
     ft->file.eof = 0;
     ft->file.size = 1024;
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
-	st_fail("unable to allocate input buffer of size %d", ft->file.size);
+	st_fail_errno(ft,ST_ENOMEM,"unable to allocate input buffer of size %d", ft->file.size);
 	return ST_EOF;
     }
 
@@ -66,7 +66,7 @@ ft_t ft;
 #ifdef __SVR4
     /* Read in old values, change to what we need and then send back */
     if (ioctl(fileno(ft->fp), AUDIO_GETDEV, &audio_dev) < 0) {
-	st_fail("Unable to get device information.");
+	st_fail_errno(ft,errno,"Unable to get device information.");
 	return(ST_EOF);
     }
     st_report("Hardware detected:  %s\n",audio_dev.name);
@@ -101,7 +101,8 @@ ft_t ft;
 	if (ft->info.encoding != ST_ENCODING_ULAW &&
 	    ft->info.encoding != ST_ENCODING_ALAW &&
 	    ft->info.encoding != ST_ENCODING_SIGN2) {
-	    st_fail("Sun Audio driver only supports ULAW, ALAW, and Signed Linear for bytes.");
+	    st_fail_errno(ft,ST_EFMT,"Sun Audio driver only supports ULAW, ALAW, and Signed Linear for bytes.");
+		return (ST_EOF);
 	}
 	if ((ft->info.encoding == ST_ENCODING_ULAW || 
 	     ft->info.encoding == ST_ENCODING_ALAW) && ft->info.channels == 2)
@@ -113,12 +114,12 @@ ft_t ft;
     else if (ft->info.size == ST_SIZE_WORD) {
 	samplesize = 16;
 	if (ft->info.encoding != ST_ENCODING_SIGN2) {
-	    st_fail("Sun Audio driver only supports Signed Linear for words.");
+	    st_fail_errno(ft,ST_EFMT,"Sun Audio driver only supports Signed Linear for words.");
 	    return(ST_EOF);
 	}
     }
     else {
-	st_fail("Sun Audio driver only supports bytes and words");
+	st_fail_errno(ft,ST_EFMT,"Sun Audio driver only supports bytes and words");
 	return(ST_EOF);
     }
 
@@ -134,7 +135,7 @@ ft_t ft;
 
     /* Read in old values, change to what we need and then send back */
     if (ioctl(fileno(ft->fp), AUDIO_GETINFO, &audio_if) < 0) {
-	st_fail("Unable to initialize /dev/audio");
+	st_fail_errno(ft,errno,"Unable to initialize /dev/audio");
 	return(ST_EOF);
     }
     audio_if.record.precision = samplesize;
@@ -150,19 +151,19 @@ ft_t ft;
     
     ioctl(fileno(ft->fp), AUDIO_SETINFO, &audio_if);
     if (audio_if.record.precision != samplesize) {
-        st_fail("Unable to initialize sample size for /dev/audio");
+        st_fail_errno(ft,errno,"Unable to initialize sample size for /dev/audio");
 	return(ST_EOF);
     }
     if (audio_if.record.channels != ft->info.channels) {
-	st_fail("Unable to initialize number of channels for /dev/audio");
+	st_fail_errno(ft,errno,"Unable to initialize number of channels for /dev/audio");
 	return(ST_EOF);
     }
     if (audio_if.record.sample_rate != ft->info.rate) {
-	st_fail("Unable to initialize rate for /dev/audio");
+	st_fail_errno(ft,errno,"Unable to initialize rate for /dev/audio");
 	return(ST_EOF);
     }
     if (audio_if.record.encoding != encoding) {
-	st_fail("Unable to initialize encoding for /dev/audio");
+	st_fail_errno(ft,errno,"Unable to initialize encoding for /dev/audio");
 	return(ST_EOF);
     }
     /* Change to non-buffered I/O*/
@@ -188,14 +189,14 @@ ft_t ft;
     ft->file.eof = 0;
     ft->file.size = 1024;
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
-	st_fail("unable to allocate output buffer of size %d", ft->file.size);
+	st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
 	return(ST_EOF);
     }
 
 #ifdef __SVR4
     /* Read in old values, change to what we need and then send back */
     if (ioctl(fileno(ft->fp), AUDIO_GETDEV, &audio_dev) < 0) {
-	st_fail("Unable to get device information.");
+	st_fail_errno(ft,errno,"Unable to get device information.");
 	return(ST_EOF);
     }
     st_report("Hardware detected:  %s\n",audio_dev.name);
@@ -264,7 +265,7 @@ ft_t ft;
 
     /* Read in old values, change to what we need and then send back */
     if (ioctl(fileno(ft->fp), AUDIO_GETINFO, &audio_if) < 0) {
-	st_fail("Unable to initialize /dev/audio");
+	st_fail_errno(ft,errno,"Unable to initialize /dev/audio");
 	return(ST_EOF);
     }
     audio_if.play.precision = samplesize;
@@ -280,19 +281,19 @@ ft_t ft;
     
     ioctl(fileno(ft->fp), AUDIO_SETINFO, &audio_if);
     if (audio_if.play.precision != samplesize) {
-	st_fail("Unable to initialize sample size for /dev/audio");
+	st_fail_errno(ft,errno,"Unable to initialize sample size for /dev/audio");
 	return(ST_EOF);
     }
     if (audio_if.play.channels != ft->info.channels) {
-	st_fail("Unable to initialize number of channels for /dev/audio");
+	st_fail_errno(ft,errno,"Unable to initialize number of channels for /dev/audio");
 	return(ST_EOF);
     }
     if (audio_if.play.sample_rate != ft->info.rate) {
-	st_fail("Unable to initialize rate for /dev/audio");
+	st_fail_errno(ft,errno,"Unable to initialize rate for /dev/audio");
 	return(ST_EOF);
     }
     if (audio_if.play.encoding != encoding) {
-	st_fail("Unable to initialize encoding for /dev/audio");
+	st_fail_errno(ft,errno,"Unable to initialize encoding for /dev/audio");
 	return(ST_EOF);
     }
     /* Change to non-buffered I/O */

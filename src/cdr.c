@@ -62,6 +62,13 @@ ft_t ft;
 	ft->info.channels = 2;
 	ft->comment = NULL;
 
+/* Need length for seeking */
+	if(ft->seekable){
+		ft->length = st_filelength(ft)/2;
+	} else {
+		ft->length = 0;
+	}
+	
 	return(ST_SUCCESS);
 }
 

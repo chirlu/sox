@@ -263,7 +263,7 @@ LONG *buf, nsamp;
 	if (!dbg.f1) {
 		if (!(dbg.f1 = fopen("dbg1", "w")))
 		{
-			st_fail("debugging");
+			st_fail_errno(ft,errno,"debugging");
 			return (0);
 		}
 		fprintf(dbg.f1, "\"input\"\n");
@@ -271,7 +271,7 @@ LONG *buf, nsamp;
 	if (!dbg.f2) {
 		if (!(dbg.f2 = fopen("dbg2", "w")))
 		{
-			st_fail("debugging");
+			st_fail_errno(ft,errno,"debugging");
 			return (0);
 		}
 		fprintf(dbg.f2, "\"recon\"\n");
@@ -345,7 +345,7 @@ LONG *buf, nsamp;
 	if (!dbg.f1) {
 		if (!(dbg.f1 = fopen("dbg1", "w")))
 		{
-			st_fail("debugging");
+			st_fail_errno(ft,errno,"debugging");
 			return (0);
 		}
 		fprintf(dbg.f1, "\"input\"\n");
@@ -353,7 +353,7 @@ LONG *buf, nsamp;
 	if (!dbg.f2) {
 		if (!(dbg.f2 = fopen("dbg2", "w")))
 		{
-			st_fail("debugging");
+			st_fail_errno(ft,errno,"debugging");
 			return (0);
 		}
 		fprintf(dbg.f2, "\"recon\"\n");
@@ -490,7 +490,6 @@ struct dvms_header *hdr;
 
 	if (fread(hdrbuf, sizeof(hdrbuf), 1, f) != 1)
 	{
-		st_fail("unable to read DVMS header\n");
 		return (ST_EOF);
 	}
 	for(i = sizeof(hdrbuf), sum = 0; i > /*2*/3; i--) /* Deti bug */
@@ -515,7 +514,7 @@ struct dvms_header *hdr;
 	hdr->Crc = get16(&pch);
 	if (sum != hdr->Crc) 
 	{
-		st_fail("DVMS header checksum error, read %u, calculated %u\n",
+		st_report("DVMS header checksum error, read %u, calculated %u\n",
 		     hdr->Crc, sum);
 		return (ST_EOF);
 	}
@@ -559,12 +558,12 @@ struct dvms_header *hdr;
 	put16(&pch, hdr->Crc);
 	if (fseek(f, 0, SEEK_SET) < 0)
 	{
-		st_fail("cannot write DVMS header, seek failed\n");
+		st_report("seek failed\n: %s",strerror(errno));
 		return (ST_EOF);
 	}
 	if (fwrite(hdrbuf, sizeof(hdrbuf), 1, f) != 1)
 	{
-		st_fail("cannot write DVMS header\n");
+		st_report("%s\n",strerror(errno));
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -608,8 +607,10 @@ ft_t ft;
 	int rc;
 
 	rc = dvms_read_header(ft->fp, &hdr);
-	if (rc)
+	if (rc){
+	    st_fail_errno(ft,ST_EHDR,"unable to read DVMS header\n");
 	    return rc;
+	}
 
 	st_report("DVMS header of source file \"%s\":");
 	st_report("  filename  \"%.14s\"",ft->filename);
@@ -651,8 +652,10 @@ ft_t ft;
 
 	make_dvms_hdr(ft, &hdr);
 	rc = dvms_write_header(ft->fp, &hdr);
-	if (rc)
+	if (rc){
+		st_fail_errno(ft,rc,"cannot write DVMS header\n");
 	    return rc;
+	}
 
 	if (!ft->seekable)
 	       st_warn("Length in output .DVMS header will wrong since can't seek to fix it");
@@ -677,11 +680,15 @@ ft_t ft;
 	}
 	if (fseek(ft->fp, 0L, 0) != 0)
 	{
-		st_fail("Can't rewind output file to rewrite DVMS header.");
+		st_fail_errno(ft,errno,"Can't rewind output file to rewrite DVMS header.");
 		return(ST_EOF);
 	}
 	make_dvms_hdr(ft, &hdr);
 	rc = dvms_write_header(ft->fp, &hdr);
+	if(rc){
+	    st_fail_errno(ft,rc,"cannot write DVMS header\n");
+	    return rc;
+	}	
 	return rc;
 }
 

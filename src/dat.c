@@ -47,7 +47,7 @@ ft_t ft;
       sscanf(inpstr," %c",&sc);
       if (sc != ';') 
       {
-	  st_fail("Cannot determine sample rate.");
+	  st_fail_errno(ft,ST_EHDR,"Cannot determine sample rate.");
 	  return (ST_EOF);
       }
 #ifdef __alpha__
@@ -116,7 +116,7 @@ LONG *buf, nsamp;
         retc = sscanf(inpstr,"%*s %lg",&sampval);
         if (retc != 1) 
 	{
-	    st_fail("Unable to read sample.");
+	    st_fail_errno(ft,ST_EOF,"Unable to read sample.");
 	    return (0);
 	}
         *buf++ = roundoff(sampval * 2.147483648e9);

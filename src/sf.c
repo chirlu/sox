@@ -26,6 +26,8 @@
 /* Private data for SF file */
 typedef struct sfstuff {
 	struct sfinfo info;
+	/* needed for seek */
+	LONG dataStart;
 } *sf_t;
 
 /*
@@ -68,6 +70,16 @@ SFHEADER *sfhead;
 		ft->comment = commentbuf;
 }
 
+int st_sfseek(ft,offset) 
+ft_t ft;
+LONG offset;
+{
+	sf_t sf = (sf_t ) ft->priv;
+
+	return st_seek(ft,offset*ft->info.size + sf->dataStart,SEEK_SET);
+
+}
+
 /*
  * Do anything required before you start reading samples.
  * Read file header. 
@@ -81,12 +93,8 @@ ft_t ft;
 	sf_t sf = (sf_t) ft->priv;
 	SFHEADER sfhead;
 	int rc;
+	int samplesize = 0;	
 
-	/* Needed for rawread() */
-	rc = st_rawstartread(ft);
-	if (rc)
-	    return rc;
-	
 	if (fread(&sfhead, 1, sizeof(sfhead), ft->fp) != sizeof(sfhead))
 	{
 		st_fail("unexpected EOF in SF header");
@@ -114,10 +122,12 @@ ft_t ft;
 		case SF_SHORT:
 			ft->info.size = ST_SIZE_WORD;
 			ft->info.encoding = ST_ENCODING_SIGN2;
+			samplesize = ft->info.size;
 			break;
 		case SF_FLOAT:
 			ft->info.size = ST_SIZE_FLOAT;
 			ft->info.encoding = ST_ENCODING_SIGN2;
+			samplesize = sizeof(float);
 			break;
 		default:
 			st_fail("Soundfile input: unknown format 0x%x\n",
@@ -129,7 +139,18 @@ ft_t ft;
 	/* Read codes and print as comments. */
 	readcodes(ft, &sfhead);
 
-	return(ST_SUCCESS);
+	/* Needed for rawread() */
+	rc = st_rawstartread(ft);
+
+/* Need length for seeking */
+	if(ft->seekable){
+		ft->length = st_filelength(ft)/samplesize;
+		sf->dataStart = ftell(ft->fp);
+	} else {
+		ft->length = 0;
+	}
+	
+	return(rc);
 }
 
 int st_sfstartwrite(ft) 

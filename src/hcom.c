@@ -77,7 +77,7 @@ ft_t ft;
 	/* Check the file type (bytes 65-68) */
 	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "FSSD", 4) != 0)
 	{
-		st_fail("Mac header type is not FSSD");
+		st_fail_errno(ft,ST_EHDR,"Mac header type is not FSSD");
 		return (ST_EOF);
 	}
 
@@ -98,7 +98,7 @@ ft_t ft;
 	/* The data fork must contain a "HCOM" header */
 	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "HCOM", 4) != 0)
 	{
-		st_fail("Mac data fork is not HCOM");
+		st_fail_errno(ft,ST_EHDR,"Mac data fork is not HCOM");
 		return (ST_EOF);
 	}
 
@@ -108,13 +108,13 @@ ft_t ft;
 	st_readdw(ft, &compresstype);
 	if (compresstype > 1)
 	{
-		st_fail("Bad compression type in HCOM header");
+		st_fail_errno(ft,ST_EHDR,"Bad compression type in HCOM header");
 		return (ST_EOF);
 	}
 	st_readdw(ft, &divisor);
 	if (divisor == 0 || divisor > 4)
 	{
-		st_fail("Bad sampling rate divisor in HCOM header");
+		st_fail_errno(ft,ST_EHDR,"Bad sampling rate divisor in HCOM header");
 		return (ST_EOF);
 	}
 	st_readw(ft, &dictsize);
@@ -129,8 +129,8 @@ ft_t ft;
 	p->dictionary = (dictent *) malloc(511 * sizeof(dictent));
 	if (p->dictionary == NULL)
 	{
-		st_fail("can't malloc memory for Huffman dictionary");
-		return (0);
+		st_fail_errno(ft,ST_ENOMEM,"can't malloc memory for Huffman dictionary");
+		return (ST_EOF);
 	}
 
 	/* Read dictionary */
@@ -169,7 +169,7 @@ int n;
 	while (--n >= 0) {
 	    	if (st_readb(ft, &trash) == ST_EOF)
 		{
-			st_fail("unexpected EOF in Mac header");
+			st_fail_errno(ft,ST_EOF,"unexpected EOF in Mac header");
 			return(ST_EOF);
 		}
 	}
@@ -190,7 +190,7 @@ LONG *buf, len;
 			return 0; /* Don't know if this can happen... */
 		if (st_readb(ft, &sample_rate) == ST_EOF)
 		{
-			st_fail("unexpected EOF at start of HCOM data");
+			st_fail_errno(ft,ST_EOF,"unexpected EOF at start of HCOM data");
 			return (0);
 		}
 		p->sample = sample_rate;
@@ -208,7 +208,7 @@ LONG *buf, len;
 			st_readdw(ft, &(p->current));
 			if (feof(ft->fp))
 			{
-				st_fail("unexpected EOF in HCOM data");
+				st_fail_errno(ft,ST_EOF,"unexpected EOF in HCOM data");
 				return (0);
 			}
 			p->cksum += p->current;
@@ -252,12 +252,12 @@ ft_t ft;
 
 	if (p->huffcount != 0)
 	{
-		st_fail("not all HCOM data read");
+		st_fail_errno(ft,ST_EFMT,"not all HCOM data read");
 		return (ST_EOF);
 	}
 	if(p->cksum != p->checksum)
 	{
-		st_fail("checksum error in HCOM data");
+		st_fail_errno(ft,ST_EFMT,"checksum error in HCOM data");
 		return (ST_EOF);
 	}
 	free((char *)p->dictionary);
@@ -293,7 +293,7 @@ ft_t ft;
 	case 22050/4:
 		break;
 	default:
-		st_fail("unacceptable output rate for HCOM: try 5512, 7350, 11025 or 22050 hertz");
+		st_fail_errno(ft,ST_EFMT,"unacceptable output rate for HCOM: try 5512, 7350, 11025 or 22050 hertz");
 		return (ST_EOF);
 	}
 	ft->info.size = ST_SIZE_BYTE;
@@ -305,7 +305,7 @@ ft_t ft;
 	p->data = (unsigned char *) malloc(p->size);
 	if (p->data == NULL)
 	{
-		st_fail("can't malloc buffer for uncompressed HCOM data");
+		st_fail_errno(ft,ST_ENOMEM,"can't malloc buffer for uncompressed HCOM data");
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -327,7 +327,7 @@ LONG *buf, len;
 		p->data = (unsigned char *) realloc(p->data, p->size);
 		if (p->data == NULL)
 		{
-		    st_fail("can't realloc buffer for uncompressed HCOM data");
+		    st_fail_errno(ft,ST_ENOMEM,"can't realloc buffer for uncompressed HCOM data");
 		    return (0);
 		}
 	}
@@ -495,8 +495,7 @@ float fr;
   st_report("Compressed size: %6d bytes", l);
   if((datafork = (unsigned char *)malloc((unsigned)l)) == NULL)
   {
-    st_fail("can't malloc buffer for compressed HCOM data");
-    return (ST_EOF);
+    return (ST_ENOMEM);
   }
   ddf = datafork + 22;
   for(i = 0; i < dictsize; i++) {
@@ -553,8 +552,10 @@ ft_t ft;
 	rc = compress(&compressed_data, &compressed_len, (double) ft->info.rate);
 	free((char *) p->data);
 
-	if (rc)
+	if (rc){
+    	st_fail_errno(ft, rc,"can't malloc buffer for compressed HCOM data");
 	    return 0;
+	}
 
 	/* Write the header */
 	fwrite("\000\001A", 1, 3, ft->fp); /* Dummy file name "A" */
@@ -566,14 +567,14 @@ ft_t ft;
 	padbytes(ft, 128 - 91);
 	if (ferror(ft->fp))
 	{
-		st_fail("write error in HCOM header");
+		st_fail_errno(ft,errno,"write error in HCOM header");
 		return (ST_EOF);
 	}
 
 	/* Write the compressed_data fork */
 	if (fwrite((char *) compressed_data, 1, (int)compressed_len, ft->fp) != compressed_len)
 	{
-		st_fail("can't write compressed HCOM data");
+		st_fail_errno(ft,errno,"can't write compressed HCOM data");
 		rc = ST_EOF;
 	}
 	else

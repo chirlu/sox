@@ -60,6 +60,7 @@ struct smptrailer {
 /* Private data for SMP file */
 typedef struct smpstuff {
   ULONG NoOfSamps;		/* Sample data count in words */
+	LONG dataStart;
   /* comment memory resides in private data because it's small */
   char comment[COMMENTLEN + NAMELEN + 3];
 } *smp_t;
@@ -92,7 +93,7 @@ struct smptrailer *trailer;
 	for(i = 0; i < 8; i++) {	/* read the 8 markers */
 	        if (fread(trailer->markers[i].name, 1, 10, ft->fp) != 10)
 		{
-		    st_fail("EOF in SMP");
+		    st_fail_errno(ft,ST_EHDR,"EOF in SMP");
 		    return(ST_EOF);
 		}
 		st_readdw(ft, &(trailer->markers[i].position));
@@ -160,7 +161,7 @@ struct smptrailer *trailer;
 	for(i = 0; i < 8; i++) {	/* write the 8 markers */
 		if (st_writes(ft, trailer->markers[i].name) == ST_EOF)
 		{
-		    st_fail("EOF in SMP");
+		    st_fail_errno(ft,ST_EHDR,"EOF in SMP");
 	 	    return(ST_EOF);
 		}
 		st_writedw(ft, trailer->markers[i].position);
@@ -172,6 +173,19 @@ struct smptrailer *trailer;
 	return(ST_SUCCESS);
 }
 
+int st_smpseek(ft,offset) 
+ft_t ft;
+LONG offset;
+{
+	smp_t smp = (smp_t) ft->priv;
+
+	ft->st_errno = st_seek(ft,offset*ft->info.size + smp->dataStart,SEEK_SET);
+
+	if( ft->st_errno == ST_SUCCESS )
+		smp->NoOfSamps = ft->length - offset;
+
+	return(ft->st_errno);
+}
 /*
  * Do anything required before you start reading samples.
  * Read file header. 
@@ -199,24 +213,24 @@ ft_t ft;
 	/* If you need to seek around the input file. */
 	if (! ft->seekable)
 	{
-		st_fail("SMP input file must be a file, not a pipe");
+		st_fail_errno(ft,ST_EOF,"SMP input file must be a file, not a pipe");
 		return(ST_EOF);
 	}
 
 	/* Read SampleVision header */
 	if (fread((char *) &header, 1, HEADERSIZE, ft->fp) != HEADERSIZE)
 	{
-		st_fail("unexpected EOF in SMP header");
+		st_fail_errno(ft,ST_EHDR,"unexpected EOF in SMP header");
 		return(ST_EOF);
 	}
 	if (strncmp(header.Id, SVmagic, 17) != 0)
 	{
-		st_fail("SMP header does not begin with magic word %s\n", SVmagic);
+		st_fail_errno(ft,ST_EHDR,"SMP header does not begin with magic word %s\n", SVmagic);
 		return(ST_EOF);
 	}
 	if (strncmp(header.version, SVvers, 4) != 0)
 	{
-		st_fail("SMP header is not version %s\n", SVvers);
+		st_fail_errno(ft,ST_EHDR,"SMP header is not version %s\n", SVvers);
 		return(ST_EOF);
 	}
 
@@ -243,19 +257,19 @@ ft_t ft;
 	/* NoOfSamps * 2 */
 	if (fseek(ft->fp, smp->NoOfSamps * 2L, 1) == -1)
 	{
-		st_fail("SMP unable to seek to trailer");
+		st_fail_errno(ft,errno,"SMP unable to seek to trailer");
 		return(ST_EOF);
 	}
 	if (readtrailer(ft, &trailer))
 	{
-		st_fail("unexpected EOF in SMP trailer");
+		st_fail_errno(ft,ST_EHDR,"unexpected EOF in SMP trailer");
 		return(ST_EOF);
 	}
 
 	/* seek back to the beginning of the data */
 	if (fseek(ft->fp, samplestart, 0) == -1) 
 	{
-		st_fail("SMP unable to seek back to start of sample data");
+		st_fail_errno(ft,errno,"SMP unable to seek back to start of sample data");
 		return(ST_EOF);
 	}
 
@@ -263,6 +277,8 @@ ft_t ft;
 	ft->info.size = ST_SIZE_WORD;
 	ft->info.encoding = ST_ENCODING_SIGN2;
 	ft->info.channels = 1;
+	smp->dataStart = samplestart;
+	ft->length = smp->NoOfSamps;
 
 	st_report("SampleVision trailer:\n");
 	for(i = 0; i < 8; i++) if (1 || trailer.loops[i].count) {
@@ -351,7 +367,7 @@ ft_t ft;
 	/* If you have to seek around the output file */
 	if (! ft->seekable)
 	{
-		st_fail("Output .smp file must be a file, not a pipe");
+		st_fail_errno(ft,ST_EOF,"Output .smp file must be a file, not a pipe");
 		return(ST_EOF);
 	}
 
@@ -368,7 +384,7 @@ ft_t ft;
 	/* Write file header */
 	if(fwrite(&header, 1, HEADERSIZE, ft->fp) != HEADERSIZE)
 	{
-	    st_fail("SMP: Can't write header completely");
+	    st_fail_errno(ft,errno,"SMP: Can't write header completely");
 	    return(ST_EOF);
 	}
 	st_writedw(ft, 0);	/* write as zero length for now, update later */
@@ -406,7 +422,7 @@ ft_t ft;
 	writetrailer(ft, &trailer);
 	if (fseek(ft->fp, 112, 0) == -1)
 	{
-		st_fail("SMP unable to seek back to save size");
+		st_fail_errno(ft,errno,"SMP unable to seek back to save size");
 		return(ST_EOF);
 	}
 	st_writedw(ft, smp->NoOfSamps);

@@ -90,7 +90,7 @@ int st_txwstartread(ft)
   /* If you need to seek around the input file. */
   if (! ft->seekable)
   {
-    st_fail("txw input file must be a file, not a pipe");
+    st_fail_errno(ft,ST_EOF,"txw input file must be a file, not a pipe");
     return(ST_EOF);
   }
 
@@ -127,7 +127,7 @@ int st_txwstartread(ft)
   st_report("Found header filetype %s",filetype);
   if(strcmp(filetype,"LM8953"))
   {
-    st_fail("Invalid filetype ID in input file header, != LM8953");
+    st_fail_errno(ft,ST_EHDR,"Invalid filetype ID in input file header, != LM8953");
     return(ST_EOF);
   }
   /*
@@ -267,7 +267,7 @@ ft_t ft;
   /* If you have to seek around the output file */
   if (! ft->seekable)
   {
-      st_fail("Output .txw file must be a file, not a pipe");
+      st_fail_errno(ft,ST_EOF,"Output .txw file must be a file, not a pipe");
       return(ST_EOF);
   }
 
@@ -331,7 +331,7 @@ ft_t ft;
     else                            WH.sample_rate = 2;
     
     if (tx16w_len >= TXMAXLEN) {
-        fprintf(stderr,"Sound too large for TX16W. Truncating, Loop Off\n");
+        st_warn("Sound too large for TX16W. Truncating, Loop Off\n");
         AttackLength       = TXMAXLEN/2;
         LoopLength         = TXMAXLEN/2;
     }

@@ -414,16 +414,19 @@ static void init(void) {
 static void process(void) {
     int e, f, havedata, flowstatus;
 
-    st_gettype(&informat);
+    if( st_gettype(&informat) )
+		st_fail("bad input format");	
     if (writing)
-	st_gettype(&outformat);
+	if ( st_gettype(&outformat) )
+		st_fail("bad output format");	
     
     /* Read and write starters can change their formats. */
     if ((* informat.h->startread)(&informat) == ST_EOF)
     {
         st_fail(informat.st_errstr);
     }
-    st_checkformat(&informat);
+    if ( st_checkformat(&informat) )
+		st_fail("bad input format");
     
     if (dovolume)
 	st_report("Volume factor: %f\n", volume);
@@ -479,7 +482,8 @@ static void process(void) {
 	{
 	    st_fail(outformat.st_errstr);
 	}
-	st_checkformat(&outformat);
+	if (st_checkformat(&outformat))
+		st_fail("bad output format");
 	st_cmpformats(&informat, &outformat);
 	st_report("Output file: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
 	       outformat.info.rate, st_sizes_str[outformat.info.size], 
@@ -528,6 +532,7 @@ static void process(void) {
     /* Prime while() loop by reading initial chunk of input data. */
     efftab[0].olen = (*informat.h->read)(&informat, 
                                          efftab[0].obuf, (LONG) BUFSIZ);
+
     efftab[0].odone = 0;
 
     /* Change the volume of this initial input data if needed. */

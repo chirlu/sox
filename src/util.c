@@ -83,6 +83,8 @@ st_fail(const char *fmt, ...)
 
 /* Warning: no error checking is done with errstr.  Be sure not to
  * go over the array limit ourself!
+ * Note:  Changing vsprintf to vsnprintf should help that but bad
+ * references to strings can still cause overflow.
  */
 void
 st_fail_errno(ft_t ft, int st_errno, const char *fmt, ...)
@@ -92,8 +94,9 @@ st_fail_errno(ft_t ft, int st_errno, const char *fmt, ...)
 	ft->st_errno = st_errno;
 
 	va_start(args, fmt);
-	vsprintf(ft->st_errstr, fmt, args);
+	vsnprintf(ft->st_errstr, 255,fmt, args);
 	va_end(args);
+	ft->st_errstr[255] = '\0';
 }
 
 int st_is_bigendian(void)
@@ -133,16 +136,18 @@ char *s1, *s2;
 /*
  * Check that we have a known format suffix string.
  */
-void
+int
 st_gettype(formp)
 ft_t formp;
 {
 	char **list;
 	int i;
 
-	if (! formp->filetype)
-st_fail("Must give file type for %s file, either as suffix or with -t option",
+	if (! formp->filetype){
+st_fail_errno(formp,ST_EFMT,"Must give file type for %s file, either as suffix or with -t option",
 formp->filename);
+		return(ST_EFMT);
+	}
 	for(i = 0; st_formats[i].names; i++) {
 		for(list = st_formats[i].names; *list; list++) {
 			char *s1 = *list, *s2 = formp->filetype;
@@ -153,7 +158,7 @@ formp->filename);
 			continue;
 		/* Found it! */
 		formp->h = &st_formats[i];
-		return;
+		return ST_SUCCESS;
 	}
 	if (! strcmpcase(formp->filetype, "snd")) {
 		verbose = 1;
@@ -164,10 +169,12 @@ formp->filename);
 		st_report("If it came from a PC, it's probably a Soundtool file.");
 		st_report("Use the sequence '-t .sndt file.snd'");
 		st_report("If it came from a NeXT, it's probably a .au file.");
-		st_fail("Use the sequence '-t .au file.snd'\n");
+		st_fail_errno(formp,ST_EFMT,"Use the sequence '-t .au file.snd'\n");
+		return ST_EFMT;
 	}
-	st_fail("File type '%s' of %s file is not known!",
+	st_fail_errno(formp,ST_EFMT,"File type '%s' of %s file is not known!",
 		formp->filetype, formp->filename);
+	return ST_EFMT;
 }
 
 /*
@@ -371,23 +378,37 @@ ft_t ft, ft2;
 }
 
 /* check that all settings have been given */
-void st_checkformat(ft) 
+int st_checkformat(ft) 
 ft_t ft;
 {
+
+	ft->st_errno = ST_SUCCESS;
+
 	if (ft->info.rate == 0)
-		st_fail("Sampling rate for %s file was not given\n", ft->filename);
+		st_fail_errno(ft,ST_EFMT,"Sampling rate for %s file was not given\n", ft->filename);
 	if ((ft->info.rate < 100) || (ft->info.rate > 999999L))
-		st_fail("Sampling rate %lu for %s file is bogus\n", 
+		st_fail_errno(ft,ST_EFMT,"Sampling rate %lu for %s file is bogus\n", 
 			ft->info.rate, ft->filename);
 	if (ft->info.size == -1)
-		st_fail("Data size was not given for %s file\nUse one of -b/-w/-l/-f/-d/-D", ft->filename);
+		st_fail_errno(ft,ST_EFMT,"Data size was not given for %s file\nUse one of -b/-w/-l/-f/-d/-D", ft->filename);
 	if (ft->info.encoding == -1 && ft->info.size != ST_SIZE_FLOAT)
-		st_fail("Data encoding was not given for %s file\nUse one of -s/-u/-U/-A", ft->filename);
+		st_fail_errno(ft,ST_EFMT,"Data encoding was not given for %s file\nUse one of -s/-u/-U/-A", ft->filename);
+/* I put these here because some modules call st_fail_errno with 
+ *	st_sizes_str[ft->info.size] etc.  I don't think the library should 
+ *	seg fault even if the app using doesn't init ft properly or overflows 
+ *	into it. 
+ *  anyway to check length on st_sizes_str[] ? */ 
+	if ((ft->info.size < 0) || (ft->info.size > 7))
+		st_fail_errno(ft,ST_EFMT,"Data size %i for %s file is bogus\n", ft->filename,ft->info.size);
+	/* anyway to check length on st_encoding_str[] ? */ 
+	if (ft->info.encoding < -1 || ft->info.encoding > 7)
+		st_fail_errno(ft,ST_EFMT,"Data encoding %i for %s file is bogus\n", ft->filename,ft->info.encoding);
 	/* it's so common, might as well default */
 	if (ft->info.channels == -1)
 		ft->info.channels = 1;
 	/*	st_fail("Number of output channels was not given for %s file",
 			ft->filename); */
+	return ft->st_errno;
 }
 
 static ft_t ft_queue[2];

@@ -18,9 +18,10 @@
 #include "st.h"
 
 /* Private data used by writer */
-struct sndpriv {
+typedef struct sndpriv {
         ULONG nsamples;
-};
+		LONG dataStart;
+} *snd_t;
 
 #ifndef	SEEK_CUR
 #define	SEEK_CUR	1
@@ -28,6 +29,15 @@ struct sndpriv {
 
 static void  sndtwriteheader(ft_t ft,LONG nsamples);
 
+int st_sndseek(ft,offset) 
+ft_t ft;
+LONG offset;
+{
+	snd_t snd = (snd_t ) ft->priv;
+
+	return st_seek(ft,offset*ft->info.size + snd->dataStart,SEEK_SET);
+
+}
 /*======================================================================*/
 /*                         SNDSTARTREAD                                */
 /*======================================================================*/
@@ -35,6 +45,8 @@ static void  sndtwriteheader(ft_t ft,LONG nsamples);
 int st_sndtstartread(ft)
 ft_t ft;
 {
+	snd_t snd = (snd_t ) ft->priv;
+
         char buf[97];
 
         unsigned short rate;
@@ -63,7 +75,7 @@ ft_t ft;
 
 	if (fread(buf, 1, 2, ft->fp) != 2)
 	{
-		st_fail("SND: unexpected EOF");
+		st_fail_errno(ft,errno,"SND: unexpected EOF");
 		return(ST_EOF);
 	}
 	if (strncmp(buf,"\0\0",2) == 0)
@@ -72,7 +84,7 @@ ft_t ft;
 	st_readw(ft, &rate);
 	if (rate < 4000 || rate > 25000 )
 	{
-		st_fail("SND: sample rate out of range");
+		st_fail_errno(ft,ST_EFMT,"SND: sample rate out of range");
 		return(ST_EOF);
 	}
 	fseek(ft->fp,4,SEEK_CUR);
@@ -83,7 +95,7 @@ ft_t ft;
 	fread(&buf[2], 1, 6, ft->fp);
 	if (strncmp(buf,"SOUND",5))
 	{
-		st_fail("SND: unrecognized SND format");
+		st_fail_errno(ft,ST_EFMT,"SND: unrecognized SND format");
 		return(ST_EOF);
 	}
 	fseek(ft->fp,12,SEEK_CUR);
@@ -91,7 +103,7 @@ ft_t ft;
 	fseek(ft->fp,6,SEEK_CUR);
 	if (st_reads(ft, buf, 96) == ST_EOF)
 	{
-		st_fail("SND: unexpected EOF in SND header");
+		st_fail_errno(ft,ST_EHDR,"SND: unexpected EOF in SND header");
 		return(ST_EOF);
 	}
 	st_report("%s",buf);
@@ -102,6 +114,9 @@ ft->info.rate = rate;
 ft->info.encoding = ST_ENCODING_UNSIGNED;
 ft->info.size = ST_SIZE_BYTE;
 
+snd->dataStart = ftell(ft->fp);
+ft->length = st_filelength(ft) - snd->dataStart;
+
 return (ST_SUCCESS);
 }
 
@@ -111,7 +126,7 @@ return (ST_SUCCESS);
 int st_sndtstartwrite(ft)
 ft_t ft;
 {
-	struct sndpriv *p = (struct sndpriv *) ft->priv;
+	snd_t p = (snd_t ) ft->priv;
 	int rc;
 
 	/* Needed for rawwrite() */
@@ -179,7 +194,7 @@ LONG st_sndtwrite(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
-	struct sndpriv *p = (struct sndpriv *) ft->priv;
+	snd_t p = (snd_t ) ft->priv;
 	p->nsamples += len;
 	return st_rawwrite(ft, buf, len);
 }
@@ -191,7 +206,7 @@ LONG *buf, len;
 int st_sndtstopwrite(ft)
 ft_t ft;
 {
-	struct sndpriv *p = (struct sndpriv *) ft->priv;
+	snd_t p = (snd_t ) ft->priv;
 	int rc;
 
 	/* Flush remaining buffer out */
@@ -200,9 +215,13 @@ ft_t ft;
 	    return rc;
 
 	/* fixup file sizes in header */
-	if (fseek(ft->fp, 0L, 0) != 0)
-		st_fail("can't rewind output file to rewrite SND header");
+	if (fseek(ft->fp, 0L, 0) != 0){
+		st_fail_errno(ft,errno,"can't rewind output file to rewrite SND header");
+		return ST_EOF;
+	}
+		
 	sndtwriteheader(ft, p->nsamples);
+		
 
 	return(ST_SUCCESS);
 }

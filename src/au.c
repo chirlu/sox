@@ -45,16 +45,18 @@
 /* The other formats are not supported by sox at the moment */
 
 /* Private data */
-struct aupriv {
-	/* For writer: */
+typedef struct aupriv {
+	/* For writer: size in bytes */
 	ULONG data_size;
+	/* For seeking */
+	LONG dataStart;
 	/* For G72x decoding: */
 	struct g72x_state state;
 	int (*dec_routine)();
 	int dec_bits;
 	unsigned int in_buffer;
 	int in_bits;
-};
+} *au_t;
 
 static void auwriteheader(ft_t ft, ULONG data_size);
 
@@ -93,10 +95,23 @@ int *size;
             break;
     default:
             st_report("encoding: 0x%lx", encoding);
-            st_fail("Unsupported encoding in Sun/NeXT header.\nOnly U-law, signed bytes, signed words, and ADPCM are supported.");
             return(ST_EOF);
     }
     return(ST_SUCCESS);
+}
+
+int st_auseek(ft,offset) 
+ft_t ft;
+LONG offset;
+{
+	au_t au = (au_t ) ft->priv;
+
+	if (au->dec_routine != NULL)
+		st_fail_errno(ft,ST_ENOTSUP,"Sorry, DEC unsupported");
+	else 
+		return st_seek(ft,offset*ft->info.size + au->dataStart,SEEK_SET);
+
+	return(ft->st_errno);
 }
 
 int st_austartread(ft) 
@@ -116,14 +131,9 @@ ft_t ft;
 
 	register int i;
 	char *buf;
-	struct aupriv *p = (struct aupriv *) ft->priv;
+	au_t p = (au_t ) ft->priv;
 
 	int rc;
-
-	/* Needed for rawread() */
-	rc = st_rawstartread(ft);
-	if (rc)
-	    return rc;
 
 	/* AU is in big endian format.  Swap whats read
 	 * in onlittle endian machines.
@@ -155,7 +165,7 @@ ft_t ft;
 	}
 	else
 	{
-		st_fail("Sun/NeXT/DEC header doesn't start with magic word\nTry the '.ul' file type with '-t ul -r 8000 filename'");
+		st_fail_errno(ft,ST_EHDR,"Sun/NeXT/DEC header doesn't start with magic word\nTry the '.ul' file type with '-t ul -r 8000 filename'");
 		return(ST_EOF);
 	}
 
@@ -163,8 +173,8 @@ ft_t ft;
 	st_readdw(ft, &hdr_size);
 	if (hdr_size < SUN_HDRSIZE)
 	{
-		st_fail("Sun/NeXT header size too small.");
-		return(0);
+		st_fail_errno(ft,ST_EHDR,"Sun/NeXT header size too small.");
+		return(ST_EOF);
 	}
 
 	/* Read the data size; may be ~0 meaning unspecified */
@@ -181,7 +191,10 @@ ft_t ft;
 	p->in_bits = 0;
         if(st_auencodingandsize(encoding, &(ft->info.encoding),
 			     &(ft->info.size)) == ST_EOF)
+	{
+            st_fail_errno(ft,ST_EFMT,"Unsupported encoding in Sun/NeXT header.\nOnly U-law, signed bytes, signed words, and ADPCM are supported.");
             return(ST_EOF);
+	}
 	switch (encoding) {
 	case SUN_G721:
 		g72x_init_state(&p->state);
@@ -217,7 +230,7 @@ ft_t ft;
 		    	st_readb(ft, &(buf[i]));
 			if (feof(ft->fp))
 			{
-				st_fail("Unexpected EOF in Sun/NeXT header info.");
+				st_fail_errno(ft,ST_EOF,"Unexpected EOF in Sun/NeXT header info.");
 				return(ST_EOF);
 			}
 		}
@@ -232,6 +245,16 @@ ft_t ft;
 		ft->comment = buf;
 		st_report("Input file %s: Sun header info: %s", ft->filename, buf);
 	}
+	/* Needed for seeking */
+	ft->length = data_size/ft->info.size;
+	if(ft->seekable)
+		p->dataStart = ftell(ft->fp);
+
+	/* Needed for rawread() */
+	rc = st_rawstartread(ft);
+	if (rc)
+	    return rc;
+
 	return(ST_SUCCESS);
 }
 
@@ -247,7 +270,7 @@ ft_t ft;
 int st_austartwrite(ft) 
 ft_t ft;
 {
-	struct aupriv *p = (struct aupriv *) ft->priv;
+	au_t p = (au_t ) ft->priv;
 	int rc;
 
 	/* Needed because of rawwrite(); */
@@ -278,7 +301,7 @@ unpack_input(ft, code)
 ft_t			ft;
 unsigned char		*code;
 {
-	struct aupriv		*p = (struct aupriv *) ft->priv;
+	au_t p = (au_t ) ft->priv;
 	unsigned char		in_byte;
 
 	if (p->in_bits < p->dec_bits) {
@@ -299,7 +322,7 @@ LONG st_auread(ft, buf, samp)
 ft_t ft;
 LONG *buf, samp;
 {
-	struct aupriv *p = (struct aupriv *) ft->priv;
+	au_t p = (au_t ) ft->priv;
 	unsigned char code;
 	int done;
 	if (p->dec_routine == NULL)
@@ -319,7 +342,7 @@ LONG st_auwrite(ft, buf, samp)
 ft_t ft;
 LONG *buf, samp;
 {
-	struct aupriv *p = (struct aupriv *) ft->priv;
+	au_t p = (au_t ) ft->priv;
 	p->data_size += samp * ft->info.size;
 	return(st_rawwrite(ft, buf, samp));
 }
@@ -327,7 +350,7 @@ LONG *buf, samp;
 int st_austopwrite(ft)
 ft_t ft;
 {
-	struct aupriv *p = (struct aupriv *) ft->priv;
+	au_t p = (au_t ) ft->priv;
 	int rc;
 
 	/* Needed because of rawwrite(). Do now to flush
@@ -342,7 +365,7 @@ ft_t ft;
 	{
 	  if (fseek(ft->fp, 0L, 0) != 0)
 	  {
-		st_fail("Can't rewind output file to rewrite Sun header.");
+		st_fail_errno(ft,errno,"Can't rewind output file to rewrite Sun header.");
 		return(ST_EOF);
 	  }
 	  auwriteheader(ft, p->data_size);

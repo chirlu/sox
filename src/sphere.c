@@ -43,14 +43,13 @@ ft_t ft;
 	/* Magic header */
 	if (st_reads(ft, buf, 8) == ST_EOF || strncmp(buf, "NIST_1A", 7) != 0)
 	{
-	    st_fail("Sphere header does not begin with magic mord 'NIST_1A'");
+	    st_fail_errno(ft,ST_EHDR,"Sphere header does not begin with magic mord 'NIST_1A'");
 	    return(ST_EOF);
 	}
 
 	if (st_reads(ft, fldsval, 8) == ST_EOF)
 	{
-	    printf("%s\n",fldsval);
-	    st_fail("Error reading Sphere header");
+	    st_fail_errno(ft,ST_EHDR,"Error reading Sphere header %s",fldsval);
 	    return(ST_EOF);
 	}
 
@@ -61,7 +60,7 @@ ft_t ft;
 
 	if (st_reads(ft, buf, 255) == ST_EOF)
 	{
-	    st_fail("Error reading Sphere header");
+	    st_fail_errno(ft,ST_EHDR,"Error reading Sphere header");
 	    return(ST_EOF);
 	}
 
@@ -122,7 +121,7 @@ ft_t ft;
 
 	    if (st_reads(ft, buf, 255) == ST_EOF)
 	    {
-	        st_fail("Error reading Sphere header");
+	        st_fail_errno(ft,ST_EHDR,"Error reading Sphere header");
 	        return(ST_EOF);
 	    }
 
@@ -165,7 +164,7 @@ ft_t ft;
 
 	if (!strcmp(sphere->shorten_check,"ajkg"))
 	{
-	    st_fail("File uses shorten compression, can not handle this.\n");
+	    st_fail_errno(ft,ST_EFMT,"File uses shorten compression, can not handle this.\n");
 	    return(ST_EOF);
 	}
 #endif
@@ -205,7 +204,7 @@ ft_t ft;
 
     if (!ft->seekable)
     {
-	st_fail("File must be seekable for sphere file output");
+	st_fail_errno(ft,ST_EOF,"File must be seekable for sphere file output");
 	return (ST_EOF);
     }
 
@@ -216,7 +215,7 @@ ft_t ft;
 	case ST_ENCODING_UNSIGNED:
 	    break;
 	default:
-	    st_fail("SPHERE format only supports ulaw and PCM data.");
+	    st_fail_errno(ft,ST_EFMT,"SPHERE format only supports ulaw and PCM data.");
 	    return(ST_EOF);
     }
 
@@ -259,7 +258,7 @@ ft_t ft;
 
     if (fseek(ft->fp, 0L, 0) != 0)
     {
-	st_fail("Could not rewird output file to rewrite sphere header.\n");
+	st_fail_errno(ft,errno,"Could not rewird output file to rewrite sphere header.\n");
 	return (ST_EOF);
     }
 

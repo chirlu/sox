@@ -15,10 +15,10 @@
 #include "st.h"
 
 /* Private data used by writer */
-struct svxpriv {
+typedef struct svxpriv {
 	ULONG nsamples;
 	FILE *ch[4];
-};
+}*svx_t;
 
 static void svxwriteheader(ft_t, LONG);
 
@@ -29,7 +29,7 @@ static void svxwriteheader(ft_t, LONG);
 int st_svxstartread(ft)
 ft_t ft;
 {
-	struct svxpriv *p = (struct svxpriv *) ft->priv;
+	svx_t p = (svx_t ) ft->priv;
 
 	char buf[12];
 	char *chunk_buf;
@@ -43,6 +43,11 @@ ft_t ft;
 
 	ULONG chan1_pos;
 
+	if (! ft->seekable)
+	{
+		st_fail_errno(ft,ST_EINVAL,"8svx input file must be a file, not a pipe");
+		return (ST_EOF);
+	}
 	/* 8svx is in big endian format. Swap whats
 	 * read in on little endian machines.
 	 */
@@ -215,7 +220,7 @@ LONG *buf, nsamp;
 	int done = 0;
 	int i;
 
-	struct svxpriv *p = (struct svxpriv *) ft->priv;
+	svx_t p = (svx_t ) ft->priv;
 
 	while (done < nsamp) {
 		for (i = 0; i < ft->info.channels; i++) {
@@ -239,7 +244,7 @@ ft_t ft;
 {
 	int i;
 
-	struct svxpriv *p = (struct svxpriv *) ft->priv;
+	svx_t p = (svx_t ) ft->priv;
 
 	/* close channel files */
 	for (i = 1; i < ft->info.channels; i++) {
@@ -254,7 +259,7 @@ ft_t ft;
 int st_svxstartwrite(ft)
 ft_t ft;
 {
-	struct svxpriv *p = (struct svxpriv *) ft->priv;
+	svx_t p = (svx_t ) ft->priv;
 	int i;
 
 	/* 8svx is in big endian format.  Swaps wahst
@@ -292,7 +297,7 @@ LONG st_svxwrite(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
-	struct svxpriv *p = (struct svxpriv *) ft->priv;
+	svx_t p = (svx_t ) ft->priv;
 
 	unsigned char datum;
 	int done = 0;
@@ -318,7 +323,7 @@ LONG *buf, len;
 int st_svxstopwrite(ft)
 ft_t ft;
 {
-	struct svxpriv *p = (struct svxpriv *) ft->priv;
+	svx_t p = (svx_t ) ft->priv;
 
 	int i;
 	int len;

@@ -186,19 +186,21 @@ ft_t ft;
 		ft->swap = ft->swap ? 0 : 1;
 	}
 
+
 	if (! ft->seekable)
 	{
-		st_fail("VOC input file must be a file, not a pipe");
+		st_fail_errno(ft,ST_EOF,"VOC input file must be a file, not a pipe");
 		return(ST_EOF);
 	}
+
 	if (fread(header, 1, 20, ft->fp) != 20)
 	{
-		st_fail("unexpected EOF in VOC header");
+		st_fail_errno(ft,ST_EHDR,"unexpected EOF in VOC header");
 		return(ST_EOF);
 	}
 	if (strncmp(header, "Creative Voice File\032", 19))
 	{
-		st_fail("VOC file header incorrect");
+		st_fail_errno(ft,ST_EHDR,"VOC file header incorrect");
 		return(ST_EOF);
 	}
 
@@ -213,7 +215,7 @@ ft_t ft;
 	    return rc;
 	if (v->rate == -1)
 	{
-		st_fail("Input .voc file had no sound!");
+		st_fail_errno(ft,ST_EOF,"Input .voc file had no sound!");
 		return(ST_EOF);
 	}
 
@@ -313,7 +315,7 @@ ft_t ft;
 
 	if (! ft->seekable)
 	{
-		st_fail("Output .voc file must be a file, not a pipe");
+		st_fail_errno(ft,ST_EOF,"Output .voc file must be a file, not a pipe");
 		return(ST_EOF);
 	}
 
@@ -414,12 +416,12 @@ ft_t ft;
 		        if (!v->extended) {
 			  if (uc == 0)
 			  {
-			    st_fail("File %s: Sample rate is zero?");
+			    st_fail_errno(ft,ST_EFMT,"File %s: Sample rate is zero?");
 			    return(ST_EOF);
 			  }
 			  if ((v->rate != -1) && (uc != v->rate))
 			  {
-			    st_fail("File %s: sample rate codes differ: %d != %d",
+			    st_fail_errno(ft,ST_EFMT,"File %s: sample rate codes differ: %d != %d",
 				 ft->filename,v->rate, uc);
 			    return(ST_EOF);
 			  }
@@ -430,7 +432,7 @@ ft_t ft;
 			st_readb(ft, &uc);
 			if (uc != 0)
 			{
-			  st_fail("File %s: only interpret 8-bit data!",
+			  st_fail_errno(ft,ST_EFMT,"File %s: only interpret 8-bit data!",
 			       ft->filename);
 			  return(ST_EOF);
 			}
@@ -442,12 +444,12 @@ ft_t ft;
 			st_readdw(ft, &new_rate_long);
 			if (new_rate_long == 0)
 			{
-			    st_fail("File %s: Sample rate is zero?",ft->filename);
+			    st_fail_errno(ft,ST_EFMT,"File %s: Sample rate is zero?",ft->filename);
 			    return(ST_EOF);
 			}
 			if ((v->rate != -1) && (new_rate_long != v->rate))
 			{
-			    st_fail("File %s: sample rate codes differ: %d != %d",
+			    st_fail_errno(ft,ST_EFMT,"File %s: sample rate codes differ: %d != %d",
 				ft->filename, v->rate, new_rate_long);
 			    return(ST_EOF);
 			}
@@ -459,7 +461,7 @@ ft_t ft;
 			    case 8:	v->size = ST_SIZE_BYTE; break;
 			    case 16:	v->size = ST_SIZE_WORD; break;
 			    default:	
-					st_fail("Don't understand size %d", uc);
+					st_fail_errno(ft,ST_EFMT,"Don't understand size %d", uc);
 					return(ST_EOF);
 			}
 			st_readb(ft, &(v->channels));
@@ -482,7 +484,7 @@ ft_t ft;
 			st_readb(ft, &uc);
 			if (uc == 0)
 			{
-				st_fail("File %s: Silence sample rate is zero");
+				st_fail_errno(ft,ST_EFMT,"File %s: Silence sample rate is zero");
 				return(ST_EOF);
 			}
 			/* 
@@ -525,12 +527,12 @@ ft_t ft;
 			st_readw(ft, &new_rate_short);
 			if (new_rate_short == 0)
 			{
-			   st_fail("File %s: Sample rate is zero?");
+			   st_fail_errno(ft,ST_EFMT,"File %s: Sample rate is zero?");
 			   return(ST_EOF);
 			}
 			if ((v->rate != -1) && (new_rate_short != v->rate))
 			{
-			   st_fail("File %s: sample rate codes differ: %d != %d",
+			   st_fail_errno(ft,ST_EFMT,"File %s: sample rate codes differ: %d != %d",
 					ft->filename, v->rate, new_rate_short);
 			   return(ST_EOF);
 			}
@@ -538,7 +540,7 @@ ft_t ft;
 			st_readb(ft, &uc);
 			if (uc != 0)
 			{
-				st_fail("File %s: only interpret 8-bit data!",
+				st_fail_errno(ft,ST_EFMT,"File %s: only interpret 8-bit data!",
 					ft->filename);
 				return(ST_EOF);
 			}

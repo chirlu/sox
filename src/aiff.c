@@ -53,9 +53,11 @@
 #include "st.h"
 
 /* Private data used by writer */
-struct aiffpriv {
+typedef struct aiffpriv {
 	ULONG nsamples;	/* number of 1-channel samples read or written */
-};
+					/*Decrements for read increments for write */
+    LONG dataStart;  /* need to for seeking */
+} *aiff_t;
 
 /* forward declarations */
 static double read_ieee_extended(ft_t);
@@ -67,10 +69,24 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft);
 static int commentChunk(char **text, char *chunkDescription, ft_t ft);
 static void reportInstrument(ft_t ft);
 
+int st_aiffseek(ft,offset) 
+ft_t ft;
+LONG offset;
+{
+	aiff_t aiff = (aiff_t ) ft->priv;
+
+	ft->st_errno = st_seek(ft,offset*ft->info.size + aiff->dataStart,SEEK_SET);
+
+	if( ft->st_errno == ST_SUCCESS )
+		aiff->nsamples = ft->length - offset;
+
+	return(ft->st_errno);
+}
+
 int st_aiffstartread(ft) 
 ft_t ft;
 {
-	struct aiffpriv *p = (struct aiffpriv *) ft->priv;
+	aiff_t aiff = (aiff_t ) ft->priv;
 	char buf[5];
 	ULONG totalsize;
 	LONG chunksize;
@@ -100,11 +116,6 @@ ft_t ft;
 
 	int rc;
 
-	/* Needed because of st_rawread() */
-	rc = st_rawstartread(ft);
-	if (rc)
-	    return rc;
-
 	/* AIFF is in Big Endian format.  Swap whats read in on Little */
 	/* Endian machines.                                            */
 	if (ST_IS_LITTLEENDIAN)
@@ -115,14 +126,14 @@ ft_t ft;
 	/* FORM chunk */
 	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "FORM", 4) != 0)
 	{
-		st_fail("AIFF header does not begin with magic word 'FORM'");
+		st_fail_errno(ft,ST_EHDR,"AIFF header does not begin with magic word 'FORM'");
 		return(ST_EOF);
 	}
 	st_readdw(ft, &totalsize);
 	if (st_reads(ft, buf, 4) == ST_EOF || (strncmp(buf, "AIFF", 4) != 0 && 
 	    strncmp(buf, "AIFC", 4) != 0))
 	{
-		st_fail("AIFF 'FORM' chunk does not specify 'AIFF' or 'AIFC' as type");
+		st_fail_errno(ft,ST_EHDR,"AIFF 'FORM' chunk does not specify 'AIFF' or 'AIFC' as type");
 		return(ST_EOF);
 	}
 
@@ -136,7 +147,7 @@ ft_t ft;
 				break;
 			else
 			{
-				st_fail("Missing SSND chunk in AIFF file");
+				st_fail_errno(ft,ST_EHDR,"Missing SSND chunk in AIFF file");
 				return(ST_EOF);
 			}
 		}
@@ -155,7 +166,7 @@ ft_t ft;
 			    if (strncmp(buf, "NONE", 4) != 0)
 			    {
 				buf[4] = 0;
-				st_fail("Can not support AIFC files that contain compressed data: %s",buf);
+				st_fail_errno(ft,ST_EHDR,"Can not support AIFC files that contain compressed data: %s",buf);
 				return(ST_EOF);
 			    }
 			}
@@ -338,20 +349,20 @@ ft_t ft;
 			fseek(ft->fp, seekto, SEEK_SET);
 		else
 		{
-			st_fail("AIFF: no sound data on input file");
+			st_fail_errno(ft,ST_EOF,"AIFF: no sound data on input file");
 			return(ST_EOF);
 		}
 	}
 	/* SSND chunk just read */
 	if (blocksize != 0)
 	{
-		st_fail("AIFF header specifies nonzero blocksize?!?!");
+		st_fail_errno(ft,ST_EHDR,"AIFF header specifies nonzero blocksize?!?!");
 		return(ST_EOF);
 	}
 	while ((LONG) (--offset) >= 0) {
 		if (st_readb(ft, (unsigned char *)&trash) == ST_EOF)
 		{
-			st_fail("unexpected EOF while skipping AIFF offset");
+			st_fail_errno(ft,errno,"unexpected EOF while skipping AIFF offset");
 			return(ST_EOF);
 		}
 	}
@@ -368,7 +379,7 @@ ft_t ft;
 			ft->info.size = ST_SIZE_WORD;
 			break;
 		default:
-			st_fail("unsupported sample size in AIFF header: %d", bits);
+			st_fail_errno(ft,ST_EFMT,"unsupported sample size in AIFF header: %d", bits);
 			return(ST_EOF);
 			/*NOTREACHED*/
 		}
@@ -379,22 +390,22 @@ ft_t ft;
 			|| (ft->info.size == -1)) {
 		  st_report("You must specify # channels, sample rate, signed/unsigned,\n");
 		  st_report("and 8/16 on the command line.");
-		  st_fail("Bogus AIFF file: no COMM section.");
+		  st_fail_errno(ft,ST_EFMT,"Bogus AIFF file: no COMM section.");
 		  return(ST_EOF);
 		}
 
 	}
 
-	p->nsamples = ssndsize / ft->info.size;	/* leave out channels */
+	aiff->nsamples = ssndsize / ft->info.size;	/* leave out channels */
 
 	if (foundmark && !foundinstr)
 	{
-		st_fail("Bogus AIFF file: MARKers but no INSTrument.");
+		st_fail_errno(ft,ST_EFMT,"Bogus AIFF file: MARKers but no INSTrument.");
 		return(ST_EOF);
 	}
 	if (!foundmark && foundinstr)
 	{
-		st_fail("Bogus AIFF file: INSTrument but no MARKers.");
+		st_fail_errno(ft,ST_EFMT,"Bogus AIFF file: INSTrument but no MARKers.");
 		return(ST_EOF);
 	}
 	if (foundmark && foundinstr) {
@@ -436,6 +447,14 @@ ft_t ft;
 	}
 	if (verbose)
 	  reportInstrument(ft);
+
+	/* Needed because of st_rawread() */
+	rc = st_rawstartread(ft);
+	if (rc)
+	    return rc;
+
+	ft->length = aiff->nsamples; 	/* for seeking */
+	aiff->dataStart = ftell(ft->fp);
 
 	return(ST_SUCCESS);
 }
@@ -479,12 +498,12 @@ ft_t ft;
   *text = (char *) malloc((size_t) chunksize + 1);
   if (*text == NULL)
   {
-    st_fail("AIFF: Couldn't allocate %s header", chunkDescription);
+    st_fail_errno(ft,ST_ENOMEM,"AIFF: Couldn't allocate %s header", chunkDescription);
     return(ST_EOF);
   }
   if (fread(*text, 1, chunksize, ft->fp) != chunksize)
   {
-    st_fail("AIFF: Unexpected EOF in %s header", chunkDescription);
+    st_fail_errno(ft,ST_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
     return(ST_EOF);
   }
   *(*text + chunksize) = '\0';
@@ -494,7 +513,7 @@ ft_t ft;
 		char c;
 		if (fread(&c, 1, 1, ft->fp) != 1)
 		{
-			st_fail("AIFF: Unexpected EOF in %s header", chunkDescription);
+    		st_fail_errno(ft,ST_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
 			return(ST_EOF);
 		}
 	}
@@ -537,11 +556,11 @@ ft_t ft;
     }
 
     if (*text == NULL) {
-	st_fail("AIFF: Couldn't allocate %s header", chunkDescription);
+	st_fail_errno(ft,ST_ENOMEM,"AIFF: Couldn't allocate %s header", chunkDescription);
 	return(ST_EOF);
     }
     if (fread(*text + totalCommentLength - commentLength, 1, commentLength, ft->fp) != commentLength) {
-	st_fail("AIFF: Unexpected EOF in %s header", chunkDescription);
+	st_fail_errno(ft,ST_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
 	return(ST_EOF);
     }
     *(*text + totalCommentLength) = '\0';
@@ -549,7 +568,7 @@ ft_t ft;
 	/* Read past pad byte */
 	char c;
 	if (fread(&c, 1, 1, ft->fp) != 1) {
-	    st_fail("AIFF: Unexpected EOF in %s header", chunkDescription);
+	    st_fail_errno(ft,ST_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
 	    return(ST_EOF);
 	}
     }
@@ -564,14 +583,17 @@ LONG st_aiffread(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
-	struct aiffpriv *p = (struct aiffpriv *) ft->priv;
+	aiff_t aiff = (aiff_t ) ft->priv;
+	LONG done;
 
 	/* just read what's left of SSND chunk */
-	if (len > p->nsamples)
-		len = p->nsamples;
-	st_rawread(ft, buf, len);
-	p->nsamples -= len;
-	return len;
+	if (len > aiff->nsamples)
+		len = aiff->nsamples;
+	done = st_rawread(ft, buf, len);
+	if (done == 0 && aiff->nsamples != 0)
+		st_warn("Premature EOF on AIFF input file");
+	aiff->nsamples -= done;
+	return done;
 }
 
 int st_aiffstopread(ft) 
@@ -621,7 +643,7 @@ ft_t ft;
 int st_aiffstartwrite(ft)
 ft_t ft;
 {
-	struct aiffpriv *p = (struct aiffpriv *) ft->priv;
+	aiff_t aiff = (aiff_t ) ft->priv;
 	int rc;
 
 	/* Needed because st_rawwrite() */
@@ -636,7 +658,7 @@ ft_t ft;
 	    ft->swap = ft->swap ? 0 : 1;
 	}
 
-	p->nsamples = 0;
+	aiff->nsamples = 0;
 	if ((ft->info.encoding == ST_ENCODING_ULAW ||
 	     ft->info.encoding == ST_ENCODING_ALAW) && 
 	    ft->info.size == ST_SIZE_BYTE) {
@@ -658,8 +680,8 @@ LONG st_aiffwrite(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
-	struct aiffpriv *p = (struct aiffpriv *) ft->priv;
-	p->nsamples += len;
+	aiff_t aiff = (aiff_t ) ft->priv;
+	aiff->nsamples += len;
 	st_rawwrite(ft, buf, len);
 	return(len);
 }
@@ -667,7 +689,7 @@ LONG *buf, len;
 int st_aiffstopwrite(ft)
 ft_t ft;
 {
-	struct aiffpriv *p = (struct aiffpriv *) ft->priv;
+	aiff_t aiff = (aiff_t ) ft->priv;
 	int rc;
 
 	/* Needed because of st_rawwrite().  Call now to flush
@@ -679,15 +701,15 @@ ft_t ft;
 
 	if (!ft->seekable)
 	{
-	    st_fail("Non-seekable file.");
+	    st_fail_errno(ft,ST_EOF,"Non-seekable file.");
 	    return(ST_EOF);
 	}
 	if (fseek(ft->fp, 0L, SEEK_SET) != 0)
 	{
-		st_fail("can't rewind output file to rewrite AIFF header");
+		st_fail_errno(ft,errno,"can't rewind output file to rewrite AIFF header");
 		return(ST_EOF);
 	}
-	return(aiffwriteheader(ft, p->nsamples / ft->info.channels));
+	return(aiffwriteheader(ft, aiff->nsamples / ft->info.channels));
 }
 
 static int aiffwriteheader(ft, nframes)
@@ -717,7 +739,7 @@ LONG nframes;
 		bits = 16;
 	else
 	{
-		st_fail("unsupported output encoding/size for AIFF header");
+		st_fail_errno(ft,ST_EFMT,"unsupported output encoding/size for AIFF header");
 		return(ST_EOF);
 	}
 
@@ -834,7 +856,7 @@ ft_t ft;
 	char buf[10];
 	if (fread(buf, 1, 10, ft->fp) != 10)
 	{
-		st_fail("EOF while reading IEEE extended number");
+		st_fail_errno(ft,ST_EOF,"EOF while reading IEEE extended number");
 		return(ST_EOF);
 	}
 	return ConvertFromIeeeExtended(buf);

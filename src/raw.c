@@ -33,13 +33,43 @@
 
 static void rawdefaults(ft_t ft);
 
+
+int st_rawseek(ft,offset) 
+ft_t ft;
+LONG offset;
+{
+	int sample_size = 0;
+
+	switch(ft->info.size) {
+		case ST_SIZE_BYTE:
+			sample_size = 1;
+		break;
+		case ST_SIZE_WORD:
+			sample_size = sizeof(short);
+		break;
+		case ST_SIZE_DWORD:
+			sample_size = sizeof(LONG);
+		break;
+		case ST_SIZE_FLOAT:
+			sample_size = sizeof(float);
+		break;
+		default:
+			st_fail_errno(ft,ST_ENOTSUP,"Can't seek this data size");
+			return(ft->st_errno);
+	}
+
+	ft->st_errno = st_seek(ft,offset*sample_size,SEEK_SET);
+
+	return(ft->st_errno);
+}
+
 int st_rawstartread(ft) 
 ft_t ft;
 {
 	ft->file.buf = malloc(BUFSIZ);
 	if (!ft->file.buf)
 	{
-	    st_fail("Unable to alloc resources");
+	    st_fail_errno(ft,ST_ENOMEM,"Unable to alloc resources");
 	    return(ST_EOF);
 	}
 	ft->file.size = BUFSIZ;
@@ -56,7 +86,7 @@ ft_t ft;
 	ft->file.buf = malloc(BUFSIZ);
 	if (!ft->file.buf)
 	{
-	    st_fail("Unable to alloc resources");
+	    st_fail_errno(ft,ST_ENOMEM,"Unable to alloc resources");
 	    return(ST_EOF);
 	}
 	ft->file.size = BUFSIZ;
@@ -241,10 +271,10 @@ LONG *buf, nsamp;
 				}
 				return done;
 			case ST_ENCODING_ULAW:
-				st_fail("No U-Law support for shorts");
+				st_fail_errno(ft,ST_EFMT,"No U-Law support for shorts");
 				return 0;
 			case ST_ENCODING_ALAW:
-				st_fail("No A-Law support for shorts");
+				st_fail_errno(ft,ST_EFMT,"No A-Law support for shorts");
 				return 0;
 		    }
 		    break;
@@ -276,7 +306,11 @@ LONG *buf, nsamp;
 		default:
 			break;
 	}
-	st_fail("Sorry, don't have code to read %s, %s",
+/* Someone could send a really bad ft. i.e. ft->info.encoding = -145677 
+ * i should know I've done this.  It will segment fault st_fail_errno.
+ */
+
+	st_fail_errno(ft,ST_EFMT,"Sorry, don't have code to read %s, %s",
 		st_encodings_str[ft->info.encoding], st_sizes_str[ft->info.size]);
 	return(0);
 }
@@ -294,7 +328,7 @@ ft_t ft;
 {
 	if (fwrite(ft->file.buf, 1, ft->file.pos, ft->fp) != ft->file.pos)
 	{
-		st_fail("Error writing data to file");
+		st_fail_errno(ft,errno,"Error writing data to file");
 	}
 	ft->file.pos = 0;
 }
@@ -452,10 +486,10 @@ LONG *buf, nsamp;
 				}
 				return done;
 			case ST_ENCODING_ULAW:
-				st_fail("No U-Law support for shorts");
+				st_fail_errno(ft,ST_EFMT,"No U-Law support for shorts");
 				return 0;
 			case ST_ENCODING_ALAW:
-				st_fail("No A-Law support for shorts");
+				st_fail_errno(ft,ST_EFMT,"No A-Law support for shorts");
 				return 0;
 		    }
 		    break;
@@ -484,7 +518,8 @@ LONG *buf, nsamp;
 		default:
 			break;
 	}
-	st_fail("Sorry, don't have code to write %s, %s",
+	/* Possible overflow */
+	st_fail_errno(ft,ST_EFMT,"Sorry, don't have code to write %s, %s",
 		st_encodings_str[ft->info.encoding], st_sizes_str[ft->info.size]);
 	return 0;
 }

@@ -22,14 +22,15 @@ ft_t ft;
 {
 	char *type;
 	char header[132];
+	int rc;
 	if (!ft->seekable)
 	{
-		st_fail("Type AUTO input must be a file, not a pipe");
+		st_fail_errno(ft,ST_EOF,"Type AUTO input must be a file, not a pipe");
 		return(ST_EOF);
 	}
 	if (fread(header, 1, sizeof(header), ft->fp) != sizeof(header))
 	{
-		st_fail("Type AUTO detects short file");
+		st_fail_errno(ft,ST_EOF,"Type AUTO detects short file");
 		return(ST_EOF);
 	}
 	fseek(ft->fp, 0L - sizeof header, 1); /* Seek back */
@@ -69,8 +70,8 @@ ft_t ft;
 	}
 
   	if (type == 0) {
-  		printf("Type AUTO doesn't recognize this header\n");
-                printf("Trying: -t raw -r 44100 -s -w\n\n");
+  		st_warn("Type AUTO doesn't recognize this header\n");
+                st_warn("Trying: -t raw -r 44100 -s -w\n\n");
                 type = "raw";
                 ft->info.rate = 44100;
                 ft->info.size = ST_SIZE_WORD;
@@ -78,7 +79,9 @@ ft_t ft;
                 }
 	st_report("Type AUTO changed to %s", type);
 	ft->filetype = type;
-	st_gettype(ft); /* Change ft->h to the new format */
+	rc = st_gettype(ft); /* Change ft->h to the new format */
+	if(rc)
+		return (rc);
 	(* ft->h->startread)(ft);
 	return(ST_SUCCESS);
 }
@@ -86,6 +89,6 @@ ft_t ft;
 int st_autostartwrite(ft) 
 ft_t ft;
 {
-	st_fail("Type AUTO can only be used for input!");
+	st_fail_errno(ft,ST_EFMT,"Type AUTO can only be used for input!");
 	return(ST_EOF);
 }

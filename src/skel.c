@@ -34,7 +34,7 @@ ft_t ft;
 	/* If you need to seek around the input file. */
 	if (! ft->seekable)
 	{
-		st_fail("SKEL input file must be a file, not a pipe");
+		st_fail_errno(ft,ST_EVALUE,"SKEL input file must be a file, not a pipe");
 		return (ST_EOF);
 	}
 
@@ -103,7 +103,7 @@ ft_t ft;
 	/* If you have to seek around the output file */
 	if (! ft->seekable)
 	{
-		st_fail("Output .skel file must be a file, not a pipe");
+		st_fail_errno(ft,ST_EVALUE,"Output .skel file must be a file, not a pipe");
 		return (ST_EOF);
 	}
 
@@ -130,7 +130,7 @@ LONG *buf, len;
 	while(len--)
 	    st_writeb(ft, (*buf++ >> 24) ^ 0x80);
 	/* If you cannot write out all of the supplied samples, */
-	/*	st_fail("SKEL: Can't write all samples to %s", ft->filename); */
+	/*	st_fail_errno(ft,ST_EVALUE,"SKEL: Can't write all samples to %s", ft->filename); */
 	/*      return (ST_EOF); */
 	return (ST_SUCCESS);
 	
