@@ -16,6 +16,8 @@ sox-12.16
   o ADPCM WAV files were defaulting to 8-bit outputs and thus losing
     some persision.  Now defaults to 16-bit signed uncompressed data.
   o Fixed a couple cross-platform compiler issues.
+  o Jimen Ching has added support for "configure" in to SOX.  Finally,
+    a good solution to cross-platform compiling!
   o Minor correction for -r example in manual page.
   o Renamed sox.sh to soxeffect and rewrote.  Symbolic links can be made
     from this file to the name of a sox effect.  It will then run that
