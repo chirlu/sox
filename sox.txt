@@ -47,6 +47,7 @@ SYNOPSIS
 	    reverse
 	    split
 	    stat [ debug | -v ]
+	    swap [ 1 2 3 4 ]
 	    vibro speed [ depth ]
 
 DESCRIPTION
@@ -57,7 +58,6 @@ OPTIONS
        The option syntax is a little grotty, but in essence:
 	    sox file.au file.voc
        translates a sound sample in SUN Sparc .AU format  into	a
-       SoundBlaster .VOC file, while
 
 
 
@@ -70,6 +70,7 @@ OPTIONS
 SoX(1)							   SoX(1)
 
 
+       SoundBlaster .VOC file, while
 	    sox -v 0.5 file.au -r 12000 file.voc rate
        does  the  same	format	translation  but  also lowers the
        amplitude by 1/2 and changes the sampling rate  from  8000
@@ -123,7 +124,6 @@ SoX(1)							   SoX(1)
 
        -h	 Print version number and usage information.
 
-       -p	 Run  in  preview  mode	 and run fast.	This will
 
 
 
@@ -136,6 +136,7 @@ SoX(1)							   SoX(1)
 SoX(1)							   SoX(1)
 
 
+       -p	 Run  in  preview  mode	 and run fast.	This will
 		 somewhat speed up sox when the output format has
 		 a  different  number of channels and a different
 		 rate then the input file.  The	 order	that  the
@@ -189,7 +190,6 @@ FILE TYPES
 		 and and can  have  multiple  audio  and  picture
 		 chunks.   You	may  need  a separate archiver to
 		 work with them.
-
 
 
 
@@ -674,27 +674,33 @@ SoX(1)							   SoX(1)
 		 use  in tracking down endian problems that creep
 		 in to sox on cross-platform versions.
 
+       swap [ 1 2 3 4 ]
+		 Swap channels in multi-channel sound files.   In
+		 files	with more than 2 channels you may specify
+		 the order that the channels should be rearranged
+		 in.
+
        vibro speed  [ depth ]
-		 Add the world-famous  Fender  Vibro-Champ  sound
+		 Add  the  world-famous	 Fender Vibro-Champ sound
 		 effect to a sound sample by using a sine wave as
 		 the volume knob.  Speed gives the Hertz value of
-		 the  wave.   This must be under 30.  Depth gives
-		 the amount the volume is cut into  by	the  sine
-		 wave,	ranging 0.0 to 1.0 and defaulting to 0.5.
+		 the wave.  This must be under 30.   Depth  gives
+		 the  amount  the  volume is cut into by the sine
+		 wave, ranging 0.0 to 1.0 and defaulting to  0.5.
 
-       Sox enforces certain effects.  If the two files have  dif-
+       Sox  enforces certain effects.  If the two files have dif-
        ferent sampling rates, the requested effect must be one of
-       copy, or rate, If the two files have different numbers  of
+       copy,  or rate, If the two files have different numbers of
        channels, the avg effect must be requested.
 
 BUGS
-       The  syntax  is horrific.  It's very tempting to include a
-       default system that allows an effect name as  the  program
-       name  and just pipes a sound sample from standard input to
-       standard output, but the problem of inputting  the  sample
+       The syntax is horrific.	It's very tempting to  include	a
+       default	system	that allows an effect name as the program
+       name and just pipes a sound sample from standard input  to
+       standard	 output,  but the problem of inputting the sample
        rates makes this unworkable.
 
-       Please  report  any  bugs  found in this version of sox to
+       Please report any bugs found in this  version  of  sox  to
        Chris Bagwell (cbagwell@sprynet.com)
 
 FILES
@@ -702,22 +708,16 @@ SEE ALSO
        play(1), rec(1)
 
 NOTICES
-       The  echoplex  effect  is:  Copyright  (C)  1989	 by   Jef
+       The   echoplex  effect  is:  Copyright  (C)  1989  by  Jef
        Poskanzer.
 
        Permission to use, copy, modify, and distribute this soft-
        ware and its documentation for any purpose and without fee
-       is  hereby  granted,  provided  that  the  above copyright
-       notice appear in all copies and that both  that	copyright
-       notice  and  this  permission  notice appear in supporting
-       documentation.  This software is provided "as is"  without
+       is hereby  granted,  provided  that  the	 above	copyright
+       notice  appear  in all copies and that both that copyright
+       notice and this permission  notice  appear  in  supporting
+       documentation.	This software is provided "as is" without
        express or implied warranty.
-
-       The  version  of	 Sox that accompanies this manual page is
-       support by Chris Bagwell	 (cbagwell@sprynet.com).   Please
-       refer any questions regarding it to this address.  You may
-       obtain  the  latest  version   at   the	 the   web   site
-       http://home.sprynet.com/~cbagwell/projects.html
 
 
 
@@ -730,11 +730,11 @@ NOTICES
 SoX(1)							   SoX(1)
 
 
-
-
-
-
-
+       The version of Sox that accompanies this	 manual	 page  is
+       support	by  Chris Bagwell (cbagwell@sprynet.com).  Please
+       refer any questions regarding it to this address.  You may
+       obtain	the   latest   version	 at   the  the	web  site
+       http://home.sprynet.com/~cbagwell/sox.html
 
 
 

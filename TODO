@@ -45,6 +45,11 @@ all patches to cbagwell@sprynet.com.
     These are currently thrown away.  Printing them out, carrying them
     forward, and an to add new ones would be handy.
 
+  o Add support for .TXT format as Cooledit supports.  Not really fit for
+    graphing since it is only a stream of ascii sample values but some
+    program appear to like it.  Also has a much nicer header.
+    http://lab.chass.utoronto.ca/damion/audio/coolwav.htm
+
   o Update auto file type to include detection of .wve and .smp files.
 
   o This software wants to be a dataflow system with signal

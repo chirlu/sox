@@ -254,7 +254,7 @@ if test ! -f monkey.au; then cp ${srcdir}/monkey.au monkey.au; fi
 if test ! -f monkey.voc; then cp ${srcdir}/monkey.voc monkey.voc; fi
 
 echo
-echo "Configure finished.  Do 'make; make install' to compile and install SOX."
+echo "Configure finished.  Do 'make; make install' to compile and install SoX."
 echo
 
 dnl Local Variables:

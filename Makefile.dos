@@ -25,7 +25,8 @@ LIBOBJS   = $(FOBJ) $(EOBJ) handlers.obj libst.obj misc.obj getopt.obj util.obj
 
 
 # The following defines tell where compiler files are kept, not where
-# things should be installed like Unix usually specifies.
+# things should be installed like Unix usually specifies.  If your using
+# Microsoft Compilers then you don't need these.
 BINDIR  = d:\tc\bin
 LIBDIR  = d:\tc\lib
 INCDIR  = d:\tc\include
@@ -47,15 +48,20 @@ LDD	= $(BINDIR)\tlib
 CFLAGS  = -DDOS -DHAVE_GETOPT -D__STDC__=1 -a -c -mh -G -O -v -N
 LFLAGS  = -v -mh
 
+.c.obj:
+	$(CC) $(CFLAGS) -I$(INCDIR) -L$(LIBDIR) $*.c
+	$(LDD) libst -$* +$*
+
 # MS VC needs the following. /AL uses large memory model.
 #CC	= cl
 #LDD	= lib
 #CFLAGS	= -DDOS -D__STDC__=1 -DHAVE_GETOPT -c -O /AL /Gt8192
 #LFLAGS	= /AL /Gt8192
 
-.c.obj:
-       $(CC) $(CFLAGS) -I$(INCDIR) -L$(LIBDIR) $*.c
-       $(LDD) libst -$* +$*
+# When using MS VC, comment out above rule for .c.obj and use this as well
+#.c.obj:
+#       $(CC) $(CFLAGS) $*.c
+#       $(LDD) libst -+$*,,
 
 all: sox.exe
 
