@@ -81,12 +81,12 @@ eff_t effp;
 
 	if (effp->outinfo.channels != 1)  /* must be one output channel */
 	{
-	   st_fail("Can't pick with other than 1 output channel."); 
+	   st_fail("Pick effect requires output to be forced to 1 channel.  Currenty it is set for %d channels.",effp->outinfo.channels); 
 	   return (ST_EOF);
 	}
 	if (effp->ininfo.channels != 2 && effp->ininfo.channels != 4)
 	{
-	        st_fail("Can't pick with other than 2 or 4 input channels.");
+	        st_fail("Pick effect can not work with mono input data.");
 		return (ST_EOF);
 	}
         if (effp->ininfo.channels == 2) {  /* check for valid option */

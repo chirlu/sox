@@ -10,24 +10,39 @@
 /*
  * Sound Tools High-Pass effect file.
  *
- * Algorithm:  1nd order filter.
- * From Fugue source code:
+ * Algorithm:  Recursive single pole high-pass filter
  *
- * 	output[N] = B * (output[N-1] - input[N-1] + input[N])
+ * Reference: The Scientist and Engineer's Guide to Digital Processing
  *
- * 	A = 2.0 * pi * center
- * 	B = exp(-A / frequency)
+ * 	output[N] = A0 * input[N] + A1 * input[N-1] + B1 * output[N-1]
+ *
+ *      X  = exp(-2.0 * pi * Fc)
+ *      A0 = (1 + X) / 2
+ *      A1 = -(1 + X) / 2
+ *      B1 = X
+ *      Fc = cutoff freq / sample rate
+ *
+ * Mimics an RC high-pass filter:
+ *
+ *        || C
+ *    ----||--------->
+ *        ||    |
+ *              <
+ *              > R
+ *              <
+ *              |
+ *              V
+ *
  */
-/* SJB: Note: highp filter is currently broken, see test gnuplot graphs */
 
 #include <math.h>
 #include "st.h"
 
 /* Private data for Highpass effect */
 typedef struct highpstuff {
-	float	center;
-	double	A, B;
-	double	in1, out1;
+	float	cutoff;
+	double	A0, A1, B1;
+	double	inm1, outm1;
 } *highp_t;
 
 /*
@@ -40,9 +55,9 @@ char **argv;
 {
 	highp_t highp = (highp_t) effp->priv;
 
-	if ((n < 1) || !sscanf(argv[0], "%f", &highp->center))
+	if ((n < 1) || !sscanf(argv[0], "%f", &highp->cutoff))
 	{
-		st_fail("Usage: highp center");
+		st_fail("Usage: highp cutoff");
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -55,16 +70,17 @@ int st_highp_start(effp)
 eff_t effp;
 {
 	highp_t highp = (highp_t) effp->priv;
-	if (highp->center > effp->ininfo.rate*2)
+	if (highp->cutoff > effp->ininfo.rate/2)
 	{
-		st_fail("Highpass: center must be < minimum data rate*2\n");
+		st_fail("Highpass: cutoff must be < sample rate / 2 (Nyquest rate)\n");
 		return (ST_EOF);
 	}
-	
-	highp->A = (M_PI * 2.0 * highp->center) / effp->ininfo.rate;
-	highp->B = exp(-highp->A / effp->ininfo.rate);
-	highp->in1 = 0.0;
-	highp->out1 = 0.0;
+
+	highp->B1 = exp((-2.0 * M_PI * (highp->cutoff / effp->ininfo.rate)));
+	highp->A0 = (1 + highp->B1) / 2;
+	highp->A1 = (-1 * (1 + highp->B1)) / 2;
+	highp->inm1 = 0.0;
+	highp->outm1 = 0.0;
 	return (ST_SUCCESS);
 }
 
@@ -84,21 +100,20 @@ LONG *isamp, *osamp;
 	LONG l;
 
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
-	d = highp->out1;
 
-	/* yeah yeah yeah registers & integer arithmetic yeah yeah yeah */
 	for(done = 0; done < len; done++) {
 		l = *ibuf++;
-		d = (highp->B * ((d - highp->in1) + (double) l)) / 65536.0;
-		d *= 0.8;
-		if (d > 32767)
-			d = 32767;
-		if (d < - 32767)
-			d = - 32767;
-		highp->in1 = l;
-		*obuf++ = d * 65536L;
+		d = highp->A0 * l + 
+		    highp->A1 * highp->inm1 + 
+		    highp->B1 * highp->outm1;
+                if (d < -2147483647L)
+                    d = -2147483647L;
+                else if (d > 2147483647L)
+                    d = 2147483647L;
+		highp->inm1 = l;
+		highp->outm1 = d;
+		*obuf++ = d;
 	}
-	highp->out1 = d;
 	*isamp = len;
 	*osamp = len;
 	return (ST_SUCCESS);

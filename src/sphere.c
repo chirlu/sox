@@ -16,6 +16,7 @@
 /* Private data for SKEL file */
 typedef struct spherestuff {
 	char	shorten_check[4];
+	ULONG   numSamples;
 } *sphere_t;
 
 /*
@@ -68,11 +69,12 @@ ft_t ft;
 
 	while (strncmp(buf, "end_head", 8) != 0)
 	{
-	    if (strncmp(buf, "sample_n_bytes", 14) == 0)
+	    if (strncmp(buf, "sample_n_bytes", 14) == 0 && ft->info.size == -1)
 	    {
 		sscanf(buf, "%s %s %d", fldname, fldtype, &ft->info.size);
 	    }
-	    if (strncmp(buf, "channel_count", 13) == 0)
+	    if (strncmp(buf, "channel_count", 13) == 0 && 
+		ft->info.channels == -1)
 	    {
 		sscanf(buf, "%s %s %d", fldname, fldtype, &ft->info.channels);
 	    }
@@ -82,12 +84,14 @@ ft_t ft;
 		/* Only bother looking for ulaw flag.  All others
 		 * should be caught below by default PCM check
 		 */
-		if (strncmp(fldsval,"ulaw",4) == 0)
+		if (ft->info.encoding == -1 && 
+		    strncmp(fldsval,"ulaw",4) == 0)
 		{
 		    ft->info.encoding = ST_ENCODING_ULAW;
 		}
 	    }
-	    if (strncmp(buf, "sample_rate", 11) == 0)
+	    if (strncmp(buf, "sample_rate", 11) == 0 &&
+		ft->info.rate == -1)
 	    {
 #ifdef __alpha__
 		sscanf(buf, "%s %s %d", fldname, fldtype, &ft->info.rate);
@@ -126,7 +130,7 @@ ft_t ft;
 	}
 
 	if (ft->info.size == -1)
-	    ft->info.size = 1;
+	    ft->info.size = ST_SIZE_BYTE;
 
 	/* sample_coding is optional and is PCM if missing.
 	 * This means encoding is signed if size = word or
@@ -151,10 +155,15 @@ ft_t ft;
 	}
 
 	sphere->shorten_check[0] = 0;
+
+	/* TODO: Check first four bytes of data to see if its shorten
+	 * compressed or not.  This data will need to be written to
+	 * buffer during first st_sphereread().
+	 */
 #if 0
 	st_reads(ft, sphere->shorten_check, 4);
 
-	if (!strcmp(sphere->shorten_check,"abcd"))
+	if (!strcmp(sphere->shorten_check,"ajkg"))
 	{
 	    st_fail("File uses shorten compression, can not handle this.\n");
 	    return(ST_EOF);
@@ -179,6 +188,9 @@ LONG *buf, len;
 
     if (sphere->shorten_check[0])
     {
+	/* TODO: put these 4 bytes into the buffer.  Requires
+	 * knowing how to process ulaw and all version of PCM data size.
+	 */
 	sphere->shorten_check[0] = 0;
     }
     return st_rawread(ft, buf, len);
@@ -189,12 +201,26 @@ ft_t ft;
 {
     int rc;
     int x;
+    sphere_t sphere = (sphere_t) ft->priv;
 
     if (!ft->seekable)
     {
 	st_fail("File must be seekable for sphere file output");
 	return (ST_EOF);
     }
+
+    switch (ft->info.encoding)
+    {
+	case ST_ENCODING_ULAW:
+	case ST_ENCODING_SIGN2:
+	case ST_ENCODING_UNSIGNED:
+	    break;
+	default:
+	    st_fail("SPHERE format only supports ulaw and PCM data.");
+	    return(ST_EOF);
+    }
+
+    sphere->numSamples = 0;
 
     /* Needed for rawwrite */
     rc = st_rawstartwrite(ft);
@@ -210,11 +236,22 @@ ft_t ft;
 	
 }
 
+LONG st_spherewrite(ft, buf, len) 
+ft_t ft;
+LONG *buf, len;
+{
+    sphere_t sphere = (sphere_t) ft->priv;
+
+    sphere->numSamples += len; /* must later be divided by channels */
+    return st_rawwrite(ft, buf, len);
+}
+
 int st_spherestopwrite(ft) 
 ft_t ft;
 {
     int rc;
     char buf[128];
+    sphere_t sphere = (sphere_t) ft->priv;
 
     rc = st_rawstopwrite(ft);
     if (rc)
@@ -229,7 +266,12 @@ ft_t ft;
     st_writes(ft, "NIST_1A\n");
     st_writes(ft, "   1024\n");
 
-    /* FIXME: Need sample_count */
+#ifdef __alpha__
+    sprintf(buf, "sample_count -i %d\n", sphere->numSamples/ft->info.channels);
+#else
+    sprintf(buf, "sample_count -i %ld\n", sphere->numSamples/ft->info.channels);
+#endif
+    st_writes(ft, buf);
 
     sprintf(buf, "sample_n_bytes -i %d\n", ft->info.size);
     st_writes(ft, buf);

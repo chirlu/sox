@@ -46,7 +46,7 @@ extern int st_alsastartwrite();
 
 static char *aunames[] = {
 	"au",
-#ifdef	NeXT
+#ifndef	DOS
 	"snd",
 #endif
 	(char *) 0
@@ -211,13 +211,6 @@ extern LONG st_smpwrite();
 extern int  st_smpstartwrite();
 extern int  st_smpstopwrite();
 
-static char *sndrnames[] = {
-	"sndr",
-	(char *) 0
-};
-
-extern int st_sndrstartwrite();
-
 static char *sndtnames[] = {
 	"sndt",
 #ifdef	DOS
@@ -239,6 +232,7 @@ static char *spherenames[] = {
 extern int  st_spherestartread();
 extern LONG st_sphereread();
 extern int  st_spherestartwrite();
+extern LONG st_spherewrite();
 extern int  st_spherestopwrite();
 
 #if	defined(SUNAUDIO_PLAYER)
@@ -413,15 +407,12 @@ st_format_t st_formats[] = {
 	{smpnames, ST_FILE_STEREO | ST_FILE_LOOPS,/* SampleVision sound */
 		st_smpstartread, st_smpread, st_nothing,
 		st_smpstartwrite, st_smpwrite, st_smpstopwrite},
-	{sndrnames, ST_FILE_STEREO,		/* Sounder Sound File */
-		st_sndtstartread, st_rawread, st_rawstopread,
-		st_sndrstartwrite, st_rawwrite, st_rawstopwrite},
 	{sndtnames, ST_FILE_STEREO,		/* Sndtool Sound File */
 		st_sndtstartread, st_rawread, st_rawstopread, 
 		st_sndtstartwrite, st_sndtwrite, st_sndtstopwrite},
 	{spherenames, ST_FILE_STEREO,		/* NIST Sphere File */
 	        st_spherestartread, st_sphereread, st_rawstopread,
-		st_spherestartwrite, st_rawwrite, st_spherestopwrite},
+		st_spherestartwrite, st_spherewrite, st_spherestopwrite},
 #if	defined(SUNAUDIO_PLAYER)
 	{sunnames, ST_FILE_STEREO,		/* Sun /dev/audio player */
 		st_sunstartread, st_rawread, st_rawstopread,

@@ -63,10 +63,6 @@ case "$target" in
 		CFLAGS="$CFLAGS -D_HPUX_SOURCE"
 		;;
 
-	*next*|*rhapsody*|*apple*darwin* )
-		CFLAGS="$CFLAGS -DNeXT"
-		;;
-
 	*cygwin* )
 		CFLAGS="$CFLAGS -mno-cygwin"
 		LDFLAGS="$LDFLAGS -mno-cygwin"

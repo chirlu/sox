@@ -64,18 +64,17 @@ ft_t ft;
 	else if (strncmp(header, "2BIT", 4) == 0) {
 		type = "avr";
 	}
-	else if (header[0] == 0 && header[1] == 0) {
-		int rate = (header[2] & 0xff) + ((header[3] & 0xff) << 8);
-		if (rate >= 4000 && rate <= 25000)
-			type = "sndr";
+	else if (strncmp(header, "NIST_1A", 4)) {
+	        type = "sph";
 	}
+
   	if (type == 0) {
   		printf("Type AUTO doesn't recognize this header\n");
-                printf("Trying: -t raw -r 11000 -b -u\n\n");
+                printf("Trying: -t raw -r 44100 -s -w\n\n");
                 type = "raw";
-                ft->info.rate = 11000;
-                ft->info.size = ST_SIZE_BYTE;
-                ft->info.encoding = ST_ENCODING_UNSIGNED;
+                ft->info.rate = 44100;
+                ft->info.size = ST_SIZE_WORD;
+                ft->info.encoding = ST_ENCODING_SIGN2;
                 }
 	st_report("Type AUTO changed to %s", type);
 	ft->filetype = type;

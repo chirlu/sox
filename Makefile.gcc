@@ -133,11 +133,6 @@ RAND_DEFINES	= -DHAVE_RAND
 # DOS_DEFINES	= -DDOS
 # RM		= del /q
 
-# Uncomment the following line if compiling under NeXT.
-# defines .snd to mean a NeXT sound format file only.
-#
-# NEXT_DEFINES	= -DNeXT
-
 # MISC DEFINES - The catch all for things that make even less sense
 #  then normal under unix.  If you need more than one of the following
 #  MISC DEFINES remember to include them on one line so it isn't just

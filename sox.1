@@ -70,11 +70,11 @@ sox \- Sound eXchange : universal sound sample translator
 .br
     \fBflanger\fR \fIgain-in gain-out delay decay speed\fR < -s | -t >
 .br
-    \fBhighp\fR \fIcenter\fR
+    \fBhighp\fR \fIfrequency\fR
 .br
     \fBhighpass\fR \fIfrequency\fR
 .br
-    \fBlowp\fR \fIcenter\fR
+    \fBlowp\fR \fIfrequency\fR
 .br
     \fBlowpass\fR \fIfrequency\fR
 .br
@@ -86,7 +86,7 @@ sox \- Sound eXchange : universal sound sample translator
 .br
     \fBphaser\fR \fIgain-in gain-out delay decay speed\fR < -s | -t >
 .br
-    \fBpick\fR
+    \fBpick\fR [ \fI-1\fR | \fI-2\fR | \fI-3\fR | \fI-4\fR | \fI-l\fR | \fI-r\fR ]
 .br
     \fBpitch\fR \fIshift\fR [ \fIwidth interpole fade\fR ]
 .br
@@ -407,6 +407,17 @@ IRCAM Sound Files.
 Sound Files are used by academic music software 
 such as the CSound package, and the MixView sound sample editor.
 .TP 10
+.B .sph
+.br
+SPHERE (SPeech HEader Resources) is a file format defined by NIST
+(National Institute of Standards and Technology) and is used with
+speech audio.  SoX can read these files when they contain
+ulaw and PCM data.  It will ignore any header information that
+says the data is compressed using \fIshorten\fR compression and
+will treat the data as either ulaw or PCM.  This will allow SoX
+and the command line \fIshorten\fR program to be ran together using
+pipes to uncompress the data and then pass the result to SoX for processing.
+.TP 10
 .B .smp
 Turtle Beach SampleVision files.
 .br
@@ -414,6 +425,16 @@ SMP files are for use with the PC-DOS package SampleVision by Turtle Beach
 Softworks. This package is for communication to several MIDI samplers. All
 sample rates are supported by the package, although not all are supported by
 the samplers themselves. Currently loop points are ignored.
+.TP 10
+.B .snd
+.br
+Under DOS this file format is the same as the \fB.sndt\fR format.  Under all
+other platforms it is the same as the \fB.au\fR format.
+.TP 10
+.B .sndt
+SoundTool files.
+.br
+This is an older DOS file format.
 .TP 10
 .B sunau
 Sun /dev/audio device driver
@@ -653,22 +674,22 @@ speed in Hz.
 The modulation is either sinodial (-s) or triangular
 (-t).  Gain-out is the volume of the output.
 .TP 10
-highp \fIcenter
-Apply a high-pass filter.
+highp \fIfrequency\fR
+Apply a single pole recursive high-pass filter.
 The frequency response drops logarithmically with 
-.I center
-frequency in the middle of the drop.
+I frequency 
+in the middle of the drop.
 The slope of the filter is quite gentle.
 See \fBfilter\fR for a highpass effect with sharper cutoff.
 .TP 10
 highpass \fIfrequency\fB
 Butterworth highpass filter.  Description comming soon!
 .TP 10
-lowp \fIcenter
-Apply a low-pass filter.
+lowp \fIfrequency\fR
+Apply a single pole recursive low-pass filter.
 The frequency response drops logarithmically with 
-.I center
-frequency in the middle of the drop.
+.I frequency 
+in the middle of the drop.
 The slope of the filter is quite gentle.
 See \fBfilter\fR for a lowpass effect with sharper cutoff.
 .TP 10
@@ -710,9 +731,12 @@ The modulation is either sinodial (-s) or triangular
 (-t).  The decay should be less than 0.5 to avoid
 feedback.  Gain-out is the volume of the output.
 .TP 10
-pick
+pick [ \fI-1\fR | \fI-2\fR | \fI-3\fR | \fI-4\fR | \fI-l\fR | \fI-r\fR ]
 Select the left or right channel of a stereo sample,
-or one of four channels in a quadrophonic sample.
+or one of four channels in a quadrophonic sample. The \fI-l\fR and \fI-r\fR
+options represent either the left or right channel.  It is required that
+you use the \fB-c 1\fR command line option in order to force the output file to
+contain only 1 channel.
 .TP 10
 pitch \fIshift [ width interpole fade ]\fB
 Change the pitch of file without affecting its duration by cross-fading

@@ -11,13 +11,27 @@
 /*
  * Sound Tools Low-Pass effect file.
  *
- * Algorithm:  1nd order filter.
- * From Fugue source code:
+ * Algorithm:  Recursive single pole lowpass filter
  *
- * 	output[N] = input[N] * A + input[N-1] * B
+ * Reference: The Scientist and Engineer's Guide to Digital Signal Processing
  *
- * 	A = 2.0 * pi * center
- * 	B = exp(-A / frequency)
+ * 	output[N] = input[N] * A + output[N-1] * B
+ *
+ * 	X = exp(-2.0 * pi * Fc)
+ * 	A = 1 - X
+ * 	B = X
+ * 	Fc = cutoff freq / sample rate
+ *
+ * Mimics an RC low-pass filter:   
+ *
+ *     ---/\/\/\/\----------->
+ *                    |
+ *                   --- C
+ *                   ---
+ *                    |
+ *                    |
+ *                    V
+ *
  */
 
 #include <math.h>
@@ -25,9 +39,9 @@
 
 /* Private data for Lowpass effect */
 typedef struct lowpstuff {
-	float	center;
+	float	cutoff;
 	double	A, B;
-	double	in1;
+	double	outm1;
 } *lowp_t;
 
 /*
@@ -40,9 +54,9 @@ char **argv;
 {
 	lowp_t lowp = (lowp_t) effp->priv;
 
-	if ((n < 1) || !sscanf(argv[0], "%f", &lowp->center))
+	if ((n < 1) || !sscanf(argv[0], "%f", &lowp->cutoff))
 	{
-		st_fail("Usage: lowp center");
+		st_fail("Usage: lowp cutoff");
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -55,15 +69,15 @@ int st_lowp_start(effp)
 eff_t effp;
 {
 	lowp_t lowp = (lowp_t) effp->priv;
-	if (lowp->center > effp->ininfo.rate*2)
+	if (lowp->cutoff > effp->ininfo.rate / 2)
 	{
-		st_fail("Lowpass: center must be < minimum data rate*2\n");
+		st_fail("Lowpass: cutoff must be < sample rate / 2 (Nyquest rate)\n");
 		return (ST_EOF);
 	}
 
-	lowp->A = (M_PI * 2.0 * lowp->center) / effp->ininfo.rate;
-	lowp->B = exp(-lowp->A / effp->ininfo.rate);
-	lowp->in1 = 0.0;
+	lowp->B = exp((-2.0 * M_PI * (lowp->cutoff / effp->ininfo.rate)));
+	lowp->A = 1 - lowp->B;
+	lowp->outm1 = 0.0;
 	return (ST_SUCCESS);
 }
 
@@ -84,17 +98,15 @@ LONG *isamp, *osamp;
 
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
 
-	/* yeah yeah yeah registers & integer arithmetic yeah yeah yeah */
 	for(done = 0; done < len; done++) {
 		l = *ibuf++;
-		d = lowp->A * (l / 65536L) + lowp->B * (lowp->in1 / 65536L);
-		d *= 0.8;
-		if (d > 32767)
-			d = 32767;
-		if (d < - 32767)
-			d = - 32767;
-		lowp->in1 = l;
-		*obuf++ = d * 65536L;
+		d = lowp->A * l + lowp->B * lowp->outm1;
+		if (d < -2147483647L)
+		    d = -2147483647L;
+		else if (d > 2147483647L)
+		    d = 2147483647L;
+		lowp->outm1 = l;
+		*obuf++ = d;
 	}
 	*isamp = len;
 	*osamp = len;

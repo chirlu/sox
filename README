@@ -2,32 +2,41 @@
 
 
 SoX (also known as Sound eXchange) translates sound samples between different
-file formats, and optionally performs various sound effects.
+file formats, and optionally applies various sound effects.
+
+SoX is intended as the Swiss Army knife of sound processing tools.  It 
+doesn't do anything very well, but sooner or later it comes in very handy.
 
 This release understands:
 
   o Raw files in various binary formats
   o Raw textual data
-  o Microsoft .WAV files
-    o PCM, u-law, a-law
-    o MS ADPCM
-    o IMA ADPCM
-    o GSM
-  o MAUD files
-  o Sound Blaster .VOC files
-  o IRCAM SoundFile files
-  o SUN .au files
+  o Amiga 8svx files
+  o Apple/SGI AIFF files
+  o SUN .au style files
     o PCM, u-law, a-law
     o G7xx ADPCM files (read only)
-  o mutant DEC .au files
-  o Apple/SGI AIFF files
-  o CD-R (music CD format)
-  o Macintosh HCOM files
-  o Sounder files
-  o NeXT .snd files
-  o Soundtool (DOS) files
-  o Psion (palmtop) A-law files
+    o mutant DEC .au files
+    o NeXT .snd files
   o AVR files
+  o CD-R (music CD format)
+  o CVS and VMS files (continous variable slope)
+  o GSM files.
+  o Macintosh HCOM files
+  o Amiga MAUD files
+  o IRCAM SoundFile files
+  o NIST SPHERE files
+  o Turtle beach SampleVision files.
+  o Soundtool (DOS) files
+  o Yamaha TX-16W sampler files.
+  o Sound Blaster .VOC files
+  o Microsoft .WAV files
+    o PCM, u-law, a-law
+    o MS ADPCM, IMA ADPCM
+    o GSM
+  o Psion (palmtop) A-law WVE files
+  o Pseudo-file fomats that allow direct playing/recording
+    from some audio devices under unix.
 
 The sound effects include:
 
@@ -73,11 +82,6 @@ Caveats:
 
 Technically, SoX is made up of a sound file processing library called libst
 and SoX is a program implemented using this library.
-
-SoX is intended as the Swiss Army knife of sound processing tools.  It 
-doesn't do anything very well, but sooner or later it comes in very handy.
-SoX is really only usable day-to-day if you hide the wacky options with 
-one-line shell scripts.
 
 Installing:
 
