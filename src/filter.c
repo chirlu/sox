@@ -42,7 +42,6 @@ typedef struct filterstuff {
 	LONG rate;
 	LONG freq0;										/* low  corner freq */
 	LONG freq1;										/* high corner freq */
-	double rolloff;								/* roll-off frequency */
 	double beta;   								/* >2 is kaiser window beta, <=2 selects nuttall window */
 	LONG Nwin;
 	Float *Fp;										/* [Xh+1] Filter coefficients */
@@ -53,7 +52,7 @@ typedef struct filterstuff {
 
 /* makeFilter() declared in resample.c */
 extern int 
-makeFilter(P5(Float Fp[], LONG Nwing, double Froll, double Beta, LONG Num));
+makeFilter(P6(Float Fp[], LONG Nwing, double Froll, double Beta, LONG Num, int Normalize));
 
 static void FiltWin(P2(filter_t f, LONG Nx));
 
@@ -74,8 +73,9 @@ char **argv;
 	if (n >= 1) {
 		char *p;
 		p = argv[0];
-		if (*p != '-')
+		if (*p != '-') {
 			f->freq1 = strtol(p, &p, 10);
+		}
 		if (*p == '-') {
 			f->freq0 = f->freq1;
 			f->freq1 = strtol(p+1, &p, 10);
@@ -95,7 +95,7 @@ char **argv;
 	if ((n >= 3) && !sscanf(argv[2], "%lf", &f->beta))
 		fail("Usage: filter low-high [ windowlength [ beta ] ]");
 
-	report("filter opts: cutoff %f, window-len %d, beta %f\n", f->rolloff, f->Nwin, f->beta);
+	report("filter opts: %d-%d, window-len %d, beta %f\n", f->freq0, f->freq1, f->Nwin, f->beta);
 }
 
 /*
@@ -111,8 +111,10 @@ eff_t effp;
 
 	f->rate = effp->ininfo.rate;
 
+	/* adjust upper frequency to Nyquist if necessary */
 	if (f->freq1 > f->rate/2 || f->freq1 <= 0)
 		f->freq1 = f->rate/2;
+
 	if ((f->freq0 < 0) || (f->freq0 > f->freq1))
 		fail("filter: low(%d),high(%d) parameters must satisfy 0 <= low <= high <= %d",
 					f->freq0, f->freq1, f->rate/2);
@@ -120,7 +122,7 @@ eff_t effp;
 	Xh = f->Nwin/2;
 	Fp0 = (Float *) malloc(sizeof(Float) * (Xh + 2)) + 1;
 	if (f->freq0 > f->rate/200) {
-		Xh0 = makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, 1);
+		Xh0 = makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, 1, 0);
 		if (Xh0 <= 1)
 			fail("filter: Unable to make low filter\n");
 	} else {
@@ -129,7 +131,7 @@ eff_t effp;
 	Fp1 = (Float *) malloc(sizeof(Float) * (Xh + 2)) + 1;
 	/* need Fp[-1] and Fp[Xh] for makeFilter */
 	if (f->freq1 < f->rate/2) {
-		Xh1 = makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, 1);
+		Xh1 = makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, 1, 0);
 		if (Xh1 <= 1)
 			fail("filter: Unable to make high filter\n");
 	} else {
@@ -137,8 +139,7 @@ eff_t effp;
 		Xh1 = 1;
 	}
 	/* now subtract Fp0[] from Fp1[] */
-	Xh = (Xh0>Xh1)?  Xh0:Xh1;
-	Xh -= 1;
+	Xh = (Xh0>Xh1)?  Xh0:Xh1; /* >=1, by above */
 	for (i=0; i<Xh; i++) {
 		Float c0,c1;
 		c0 = (i<Xh0)? Fp0[i]:0;
@@ -149,8 +150,11 @@ eff_t effp;
 	free(Fp0 - 1); /* all done with Fp0 */
 	f->Fp = Fp1;
 
-	Xh -= 1;
-	f->Nwin = 2*Xh + 1;
+	Xh -= 1;       /* Xh = 0 can only happen if filter was identity 0-Nyquist */
+	if (Xh<=0)
+		warn("filter: adjusted freq %d-%d is identity", f->freq0, f->freq1);
+
+	f->Nwin = 2*Xh + 1;  /* not really used afterwards */
 	f->Xh = Xh;
 	f->Xt = Xh;
 
@@ -207,7 +211,8 @@ LONG *isamp, *osamp;
 
 	/* Copy back portion of input signal that must be re-used */
 	Nx += f->Xt;
-	memmove(f->X, f->X + Nx - 2*f->Xh, sizeof(Float)*2*f->Xh); 
+	if (f->Xh)
+		memmove(f->X, f->X + Nx - 2*f->Xh, sizeof(Float)*2*f->Xh); 
 	f->Xt = 2*f->Xh;
 
 	for (i = 0; i < Nproc; i++)
@@ -270,13 +275,13 @@ LONG ct;
 	const Float *fp, *xp, *xq;
 	double v = 0;
 	
-	fp = Fp + ct;					/* so sum starts with smaller coef's */
+	fp = Fp + ct;				/* so sum starts with smaller coef's */
 	xp = Xp - ct;
 	xq = Xp + ct;
-	do {
+	while (fp > Fp) {   /* ct = 0 can happen */
 		v += *fp * (*xp + *xq);
-		xp++; xq--;
-	} while (--fp > Fp);
+		xp++; xq--; fp--;
+	}
 	v += *fp * *xp;
 	return v;
 }
