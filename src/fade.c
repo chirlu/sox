@@ -81,7 +81,8 @@ char **argv;
         fade->out_fadetype = 'l';
     }
 
-    if (sscanf(argv[0], "%lf", &t_double) == 1)
+    t_double = st_parsetime(argv[0]);
+    if (t_double >= 0)
     { /* got something numerical */
 	/* Don't support in_start. Its job is done by trim effect */
 	fade->in_start = 0;
@@ -97,7 +98,8 @@ char **argv;
 
     for (t_argno = 1; t_argno < n && t_argno <= 3; t_argno++)	
     { /* See if there is fade-in/fade-out times/curves specified. */
-	if (sscanf(argv[t_argno], "%lf", &t_double))
+	t_double = st_parsetime(argv[t_argno]);
+	if (t_double >= 0)
 	{
 	    if (t_argno == 1)
 	    {
@@ -137,10 +139,10 @@ eff_t effp;
     fade_t fade = (fade_t) effp->priv;
 
     /* converting time values to samples */
-    fade->in_start = fade->in_start * effp->ininfo.rate / TIMERES;
-    fade->in_stop =  fade->in_stop * effp->ininfo.rate / TIMERES;
-    fade->out_start =  fade->out_start * effp->ininfo.rate / TIMERES;
-    fade->out_stop = fade->out_stop * effp->ininfo.rate / TIMERES;
+    fade->in_start = (double)fade->in_start * effp->ininfo.rate / TIMERES;
+    fade->in_stop =  (double)fade->in_stop * effp->ininfo.rate / TIMERES;
+    fade->out_start =  (double)fade->out_start * effp->ininfo.rate / TIMERES;
+    fade->out_stop = (double)fade->out_stop * effp->ininfo.rate / TIMERES;
 
     /* If lead-in is required it is handled as negative sample numbers */
     fade->samplesdone = (fade->in_start < 0 ? fade->in_start :0);
