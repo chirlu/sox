@@ -196,7 +196,7 @@ ft_t ft;
     while ((size << 1) < bps) size <<= 1;
     if (size > ft->file.size) size = ft->file.size;
     if (size < c_info.min_fragment_size) size = c_info.min_fragment_size;
-    if (size > c_info.max_fragment_size) size = c_info.max_fragment_size;
+    else if (size > c_info.max_fragment_size) size = c_info.max_fragment_size;
     c_params.buf.block.frag_size = size;
     c_params.buf.block.frags_max = 32;
     c_params.buf.block.frags_min = 1;
@@ -259,7 +259,7 @@ ft_t ft;
     while ((size << 1) < bps) size <<= 1;
     if (size > ft->file.size) size = ft->file.size;
     if (size < p_info.min_fragment_size) size = p_info.min_fragment_size;
-    if (size > p_info.max_fragment_size) size = p_info.max_fragment_size;
+    else if (size > p_info.max_fragment_size) size = p_info.max_fragment_size;
     p_params.buf.block.frag_size = size;
     p_params.buf.block.frags_max = -1; /* Little trick (playback only) */
     p_params.buf.block.frags_min = 1;
