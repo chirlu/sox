@@ -42,7 +42,7 @@ sox-12.16
     off by a factor of 2.
   o Added an effect that swaps stereo channels.  cbagwell
   o Combined play and rec scripts to a single program to ease mantaince.
-    Also added GNU style long-options (--help).  Carely, some options have
+    Also added GNU style long-options (--help).  Careful, some options have
     change (but more logical).
 
 sox-12.15

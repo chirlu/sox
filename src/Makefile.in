@@ -101,10 +101,11 @@ man: sox.1 libst.3
 
 install: sox
 	if [ -f $(BINDIR)/rec ] ; then $(RM) $(BINDIR)/rec; fi
+        if [ -f $(MANDIR)/man1/rec.1 ]; then $(RM) $(MANDIR)/man1/rec.1; fi
 	$(INSTALL) -c -m 755 sox play $(BINDIR)
 	$(INSTALL) -c -m 644 sox.1 play.1 $(MANDIR)/man1
 	ln -s $(BINDIR)/play $(BINDIR)/rec
-	ln -s $(MANDIR)/play.1 $(MANDIR)/rec.1
+	ln -s $(MANDIR)/man1/play.1 $(MANDIR)/man1/rec.1
 
 install-lib: libst.a
 	$(INSTALL) -c -m 644 libst.a $(LIBDIR)
