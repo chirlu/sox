@@ -10,15 +10,15 @@
  *
  * added by Jimen Ching (jching@flex.com) 19990207
  * based on info grabed from aplay.c in alsa-utils package.
+ * Updated for ALSA 0.9.X API 20020824.
  */
 
 #include "st_i.h"
 
-#if	defined(ALSA_PLAYER)
+#if defined(ALSA_PLAYER)
 
 #include <string.h>
 #include <fcntl.h>
-#include <linux/asound.h>
 #include <sys/ioctl.h>
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
@@ -26,7 +26,176 @@
 
 static int get_format(ft_t ft, int formats, int *fmt);
 
-#ifdef USE_OLD_API /* Start 0.4.x API */
+#if USE_ALSA9
+
+#include <limits.h>
+#include <sound/asound.h>
+
+/* Backwards compatibility. */
+#define SND_PCM_SFMT_S8     SNDRV_PCM_FORMAT_S8
+#define SND_PCM_SFMT_U8     SNDRV_PCM_FORMAT_U8
+#define SND_PCM_SFMT_S16_LE SNDRV_PCM_FORMAT_S16
+#define SND_PCM_SFMT_U16_LE SNDRV_PCM_FORMAT_U16
+
+#define SND_PCM_FMT_S8      (1 << SNDRV_PCM_FORMAT_S8)
+#define SND_PCM_FMT_U8      (1 << SNDRV_PCM_FORMAT_U8)
+#define SND_PCM_FMT_S16     (1 << SNDRV_PCM_FORMAT_S16)
+#define SND_PCM_FMT_U16     (1 << SNDRV_PCM_FORMAT_U16)
+
+#define alsa_params_masks(p, i) \
+    (&((p)->masks[(i)-SNDRV_PCM_HW_PARAM_FIRST_MASK]))
+#define alsa_params_intervals(p, i) \
+    (&((p)->intervals[(i)-SNDRV_PCM_HW_PARAM_FIRST_INTERVAL]))
+
+struct alsa_info
+{
+    unsigned int formats;
+    unsigned int min_buffer_size;
+    unsigned int max_buffer_size;
+    unsigned int min_channels;
+    unsigned int max_channels;
+    unsigned int min_rate;
+    unsigned int max_rate;
+    unsigned int min_periods;
+    unsigned int max_periods;
+    unsigned int min_period_size;
+    unsigned int max_period_size;
+};
+
+struct alsa_setup
+{
+    int format;
+    char channels;
+    st_rate_t rate;
+    size_t buffer_size;
+    int periods;
+    size_t period_size;
+};
+
+int
+alsa_hw_info_get(fd, a_info, params)
+int fd;
+struct alsa_info *a_info;
+struct sndrv_pcm_hw_params *params;
+{
+    unsigned int i;
+    unsigned int *msk;
+    struct sndrv_interval *intr;
+
+    memset(params, '\0', sizeof(struct sndrv_pcm_hw_params));
+    for (i = 0; i <= SNDRV_PCM_HW_PARAM_LAST; ++i)
+    {
+	if (i >= SNDRV_PCM_HW_PARAM_FIRST_MASK &&
+	    i <= SNDRV_PCM_HW_PARAM_LAST_MASK)
+	{
+	    msk = alsa_params_masks(params, i);
+	    *msk = ~0UL;
+	}
+	else
+	{
+	    intr = alsa_params_intervals(params, i);
+	    intr->min = 0;
+	    intr->openmin = 0;
+	    intr->max = UINT_MAX;
+	    intr->openmax = 0;
+	    intr->integer = 0;
+	    intr->empty = 0;
+	}
+	params->cmask |= 1 << i;
+	params->rmask |= 1 << i;
+    }
+    if (ioctl(fd, SNDRV_PCM_IOCTL_HW_REFINE, params) < 0) {
+	return -1;
+    }
+    a_info->formats = *alsa_params_masks(params, SNDRV_PCM_HW_PARAM_FORMAT);
+    a_info->min_buffer_size = alsa_params_intervals(params, SNDRV_PCM_HW_PARAM_BUFFER_BYTES)->min;
+    a_info->max_buffer_size = alsa_params_intervals(params, SNDRV_PCM_HW_PARAM_BUFFER_BYTES)->max;
+    a_info->min_channels = alsa_params_intervals(params, SNDRV_PCM_HW_PARAM_CHANNELS)->min;
+    a_info->max_channels = alsa_params_intervals(params, SNDRV_PCM_HW_PARAM_CHANNELS)->max;
+    a_info->min_rate = alsa_params_intervals(params, SNDRV_PCM_HW_PARAM_RATE)->min;
+    a_info->max_rate = alsa_params_intervals(params, SNDRV_PCM_HW_PARAM_RATE)->max;
+    a_info->min_periods = alsa_params_intervals(params, SNDRV_PCM_HW_PARAM_PERIODS)->min;
+    a_info->max_periods = alsa_params_intervals(params, SNDRV_PCM_HW_PARAM_PERIODS)->max;
+    a_info->min_period_size = alsa_params_intervals(params, SNDRV_PCM_HW_PARAM_PERIOD_BYTES)->min;
+    a_info->max_period_size = alsa_params_intervals(params, SNDRV_PCM_HW_PARAM_PERIOD_BYTES)->max;
+    return 0;
+}
+
+int
+alsa_hw_info_set(fd, params, setup)
+int fd;
+struct sndrv_pcm_hw_params *params;
+struct alsa_setup *setup;
+{
+    int i;
+    unsigned int *msk;
+    struct sndrv_interval *intr;
+
+    i = SNDRV_PCM_HW_PARAM_ACCESS;
+    msk = alsa_params_masks(params, i);
+    *msk &= 1 << SNDRV_PCM_ACCESS_RW_INTERLEAVED;
+    params->cmask = 1 << i;
+    params->rmask = 1 << i;
+
+    i = SNDRV_PCM_HW_PARAM_FORMAT;
+    msk = alsa_params_masks(params, i);
+    *msk &= 1 << setup->format;
+    params->cmask = 1 << i;
+    params->rmask = 1 << i;
+
+    i = SNDRV_PCM_HW_PARAM_CHANNELS;
+    intr = alsa_params_intervals(params, i);
+    intr->empty = 0;
+    intr->min = intr->max = setup->channels;
+    intr->openmin = intr->openmax = 0;
+    intr->integer = 1;
+    params->cmask = 1 << i;
+    params->rmask = 1 << i;
+
+    i = SNDRV_PCM_HW_PARAM_RATE;
+    intr = alsa_params_intervals(params, i);
+    intr->empty = 0;
+    intr->min = intr->max = setup->rate;
+    intr->openmin = intr->openmax = 0;
+    intr->integer = 1;
+    params->cmask = 1 << i;
+    params->rmask = 1 << i;
+
+    i = SNDRV_PCM_HW_PARAM_BUFFER_BYTES;
+    intr = alsa_params_intervals(params, i);
+    intr->empty = 0;
+    intr->min = intr->max = setup->buffer_size;
+    intr->openmin = intr->openmax = 0;
+    intr->integer = 1;
+    params->cmask = 1 << i;
+    params->rmask = 1 << i;
+
+    i = SNDRV_PCM_HW_PARAM_PERIODS;
+    intr = alsa_params_intervals(params, i);
+    intr->empty = 0;
+    intr->min = intr->max = setup->periods;
+    intr->openmin = intr->openmax = 0;
+    intr->integer = 1;
+    params->cmask = 1 << i;
+    params->rmask = 1 << i;
+
+    i = SNDRV_PCM_HW_PARAM_PERIOD_BYTES;
+    intr = alsa_params_intervals(params, i);
+    intr->empty = 0;
+    intr->min = intr->max = setup->period_size;
+    intr->openmin = intr->openmax = 0;
+    intr->integer = 1;
+    params->cmask = 1 << i;
+    params->rmask = 1 << i;
+
+    if (ioctl(fd, SNDRV_PCM_IOCTL_HW_PARAMS, params) < 0) {
+	return -1;
+    }
+    if (ioctl(fd, SNDRV_PCM_IOCTL_PREPARE) < 0) {
+	return -1;
+    }
+    return 0;
+}
 
 /*
  * Do anything required before you start reading samples.
@@ -35,6 +204,116 @@ static int get_format(ft_t ft, int formats, int *fmt);
  *	size and encoding of samples,
  *	mono/stereo/quad.
  */
+int st_alsastartread(ft)
+ft_t ft;
+{
+    int fmt;
+    struct alsa_info a_info;
+    struct alsa_setup a_setup;
+    struct sndrv_pcm_hw_params params;
+
+    if (alsa_hw_info_get(fileno(ft->fp), a_info, &params) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
+    ft->file.count = 0;
+    ft->file.pos = 0;
+    ft->file.eof = 0;
+    ft->file.size = a_info.max_buffer_size;
+    if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
+	st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
+	return(ST_EOF);
+    }
+    if (ft->info.rate < a_info.min_rate) ft->info.rate = 2 * a_info.min_rate;
+    else if (ft->info.rate > a_info.max_rate) ft->info.rate = a_info.max_rate;
+    if (ft->info.channels == -1) ft->info.channels = a_info.min_channels;
+    else if (ft->info.channels > a_info.max_channels) ft->info.channels = a_info.max_channels;
+    if (get_format(ft, a_info.formats, &fmt) < 0)
+        return (ST_EOF);
+
+    a_setup.format = fmt;
+    a_setup.channels = ft->info.channels;
+    a_setup.rate = ft->info.rate;
+    a_setup.buffer_size = ft->file.size;
+    a_setup.periods = 16;
+    if (a_setup.periods < a_info.min_periods) a_setup.periods = a_info.min_periods;
+    else if (a_setup.periods > a_info.max_periods) a_setup.periods = a_info.max_periods;
+    a_setup.period_size = a_setup.buffer_size / a_setup.periods;
+    if (a_setup.period_size < a_info.min_period_size) a_setup.period_size = a_info.min_period_size;
+    else if (a_setup.period_size > a_info.max_period_size) a_setup.period_size = a_info.max_period_size;
+    if (alsa_hw_info_set(fileno(ft->fp), &params, &a_setup) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
+
+    /* Change to non-buffered I/O */
+    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
+
+    sigintreg(ft);	/* Prepare to catch SIGINT */
+
+    return (ST_SUCCESS);
+}
+
+int st_alsastartwrite(ft)
+ft_t ft;
+{
+    int fmt;
+    struct alsa_info a_info;
+    struct alsa_setup a_setup;
+    struct sndrv_pcm_hw_params params;
+
+    if (alsa_hw_info_get(fileno(ft->fp), &a_info, &params) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
+    ft->file.pos = 0;
+    ft->file.eof = 0;
+    ft->file.size = a_info.max_buffer_size;
+    if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
+	st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
+	return(ST_EOF);
+    }
+    if (ft->info.rate < a_info.min_rate) ft->info.rate = 2 * a_info.min_rate;
+    else if (ft->info.rate > a_info.max_rate) ft->info.rate = a_info.max_rate;
+    if (ft->info.channels == -1) ft->info.channels = a_info.min_channels;
+    else if (ft->info.channels > a_info.max_channels) ft->info.channels = a_info.max_channels;
+    if (get_format(ft, a_info.formats, &fmt) < 0)
+        return (ST_EOF);
+
+    a_setup.format = fmt;
+    a_setup.channels = ft->info.channels;
+    a_setup.rate = ft->info.rate;
+    a_setup.buffer_size = ft->file.size;
+    a_setup.periods = 16;
+    if (a_setup.periods < a_info.min_periods) a_setup.periods = a_info.min_periods;
+    else if (a_setup.periods > a_info.max_periods) a_setup.periods = a_info.max_periods;
+    a_setup.period_size = a_setup.buffer_size / a_setup.periods;
+    if (a_setup.period_size < a_info.min_period_size) a_setup.period_size = a_info.min_period_size;
+    else if (a_setup.period_size > a_info.max_period_size) a_setup.period_size = a_info.max_period_size;
+    if (alsa_hw_info_set(fileno(ft->fp), &params, &a_setup) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
+
+    /* Change to non-buffered I/O */
+    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
+
+    return(ST_SUCCESS);
+}
+
+int st_alsastopwrite(ft)
+ft_t ft;
+{
+    ioctl(fileno(ft->fp), SNDRV_PCM_IOCTL_DRAIN);
+    return(st_rawstopwrite(ft));
+}
+
+#else /* ! USE_ALSA9 */
+
+#include <linux/asound.h>
+
+#if USE_ALSA4 /* Start 0.4.x API */
+
 int st_alsastartread(ft)
 ft_t ft;
 {
@@ -151,7 +430,14 @@ ft_t ft;
     return(ST_SUCCESS);
 }
 
-#else /* Start 0.5.x API */
+int st_alsastopwrite(ft)
+ft_t ft;
+{
+    /* Is there a drain operation for ALSA 0.4.X? */
+    return(st_rawstopwrite(ft));
+}
+
+#elif USE_ALSA5 /* Start 0.5.x API */
 
 int st_alsastartread(ft)
 ft_t ft;
@@ -278,7 +564,16 @@ ft_t ft;
     return(ST_SUCCESS);
 }
 
-#endif /* End API */
+int st_alsastopwrite(ft)
+ft_t ft;
+{
+    ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_DRAIN);
+    return(st_rawstopwrite(ft));
+}
+
+#endif /* USE_ALSA4/5 */
+
+#endif /* USE_ALSA9 */
 
 #define EMSGFMT "ALSA driver does not support %s %s output"
 
@@ -351,4 +646,4 @@ int formats, *fmt;
     return 0;
 }
 
-#endif
+#endif /* ALSA_PLAYER */

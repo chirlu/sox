@@ -219,12 +219,13 @@ dnl Checks for system services.
 
 if test "$alsa_dsp" = auto
 then
-	AC_CHECK_HEADERS(linux/asound.h, alsa_dsp=yes)
+	AC_CHECK_HEADERS(linux/asound.h, alsa_dsp=check_ioctl)
+	AC_CHECK_HEADERS(sound/asound.h, alsa_dsp=alsa9)
 fi
 
-if test "$alsa_dsp" = yes
+AC_MSG_CHECKING([for ALSA ioctl API])
+if test "$alsa_dsp" = check_ioctl
 then
-	AC_MSG_CHECKING([for ALSA ioctl API])
 	AC_TRY_COMPILE(
 [
 #include <linux/asound.h>
@@ -232,12 +233,29 @@ then
 [
 snd_pcm_capture_info_t c_info;
 ],
-		alsa_api_ver=oldapi,alsa_api_ver=newapi)
-	AC_MSG_RESULT($alsa_api_ver)
-	CFLAGS="$CFLAGS -DALSA_PLAYER"
-	if test "$alsa_api_ver" = oldapi; then CFLAGS="$CFLAGS -DUSE_OLD_API"; fi
+		alsa_dsp=alsa4,alsa_dsp=alsa5)
+fi
+
+if test "$alsa_dsp" = alsa9
+then
+	CFLAGS="$CFLAGS -DALSA_PLAYER -DUSE_ALSA9"
 	NEED_ALSA=1
 	PLAY_SUPPORT=1
+	AC_MSG_RESULT([0.9.X])
+elif test "$alsa_dsp" = alsa5
+then
+	CFLAGS="$CFLAGS -DALSA_PLAYER -DUSE_ALSA5"
+	NEED_ALSA=1
+	PLAY_SUPPORT=1
+	AC_MSG_RESULT([0.5.X])
+elif test "$alsa_dsp" = alsa4
+then
+	CFLAGS="$CFLAGS -DALSA_PLAYER -DUSE_ALSA4"
+	NEED_ALSA=1
+	PLAY_SUPPORT=1
+	AC_MSG_RESULT([0.4.X])
+else
+	AC_MSG_RESULT([not found])
 fi
 
 if test "$oss_dsp" = auto

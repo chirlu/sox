@@ -160,6 +160,7 @@ int st_alstartwrite(ft_t ft);
 #ifdef ALSA_PLAYER
 int st_alsastartread(ft_t ft);
 int st_alsastartwrite(ft_t ft);
+int st_alsastopwrite(ft_t ft);
 #endif
 
 int st_austartread(ft_t ft);

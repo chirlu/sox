@@ -259,7 +259,7 @@ st_format_t st_formats[] = {
 #ifdef ALSA_PLAYER
     {alsanames, ST_FILE_STEREO,
         st_alsastartread, st_rawread, st_rawstopread,
-        st_alsastartwrite, st_rawwrite, st_rawstopwrite,
+        st_alsastartwrite, st_rawwrite, st_alsastopwrite,
         st_format_nothing_seek},
 #endif
     {aunames, ST_FILE_STEREO | ST_FILE_SEEK,
