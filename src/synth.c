@@ -429,6 +429,8 @@ int st_synth_start(eff_t effp)
     synth_t synth = (synth_t) effp->priv;
     char *usstr=USSTR;
 
+    st_initrand();
+
     if (synth->length_str)
     {
         if (st_parsesamples(effp->ininfo.rate, synth->length_str,

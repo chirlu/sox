@@ -367,13 +367,14 @@ int st_vorbisstartwrite(ft_t ft)
 
         vorbis_analysis_init(&ve->vd, &ve->vi);
         vorbis_block_init(&ve->vd, &ve->vb);
-        
+       
+        st_initrand();
         ogg_stream_init(&ve->os, rand()); /* Random serial number */
         
         if (write_vorbis_header(ft, ve) == HEADER_ERROR)
         {
             st_fail_errno(ft,ST_EHDR,
-                          "Error writing headre for Ogg Vorbis audio stream");
+                          "Error writing header for Ogg Vorbis audio stream");
             return (ST_EOF);
         }
         

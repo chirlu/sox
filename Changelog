@@ -10,6 +10,8 @@ sox-12.17.7
     and patches for sunaudio driver on openbsd.
   o Default volume for soxmix wrongly set to 0 instead
     of 1/#_input_files (float rounding error).
+  o Guentcho Skordev pointed out ogg vorbis files were using
+    the same value for serial numbers each time.
 
 sox-12.17.6
 -----------
