@@ -45,7 +45,7 @@
 
 /* Private data for TX16 file */
 typedef struct txwstuff {
-	st_size_t rest;			/* bytes remaining in sample file */
+        st_size_t rest;                 /* bytes remaining in sample file */
 } *txw_t;
 
 struct WaveHeader_ {
@@ -70,113 +70,113 @@ static st_size_t writedone=0;
 /*
  * Do anything required before you start reading samples.
  * Read file header. 
- *	Find out sampling rate, 
- *	size and encoding of samples,
- *	mono/stereo/quad.
+ *      Find out sampling rate, 
+ *      size and encoding of samples,
+ *      mono/stereo/quad.
  */
 int st_txwstartread(ft_t ft)
 {
-  int c;
-  char filetype[7];
-  char format;
-  char sample_rate;
-  st_size_t num_samp_bytes = 0;
-  char gunk[8];
-  int blewIt;
-  uint32_t trash;
+    int c;
+    char filetype[7];
+    char format;
+    char sample_rate;
+    st_size_t num_samp_bytes = 0;
+    char gunk[8];
+    int blewIt;
+    uint32_t trash;
 
-  txw_t sk = (txw_t) ft->priv;
-  /* If you need to seek around the input file. */
-  if (! ft->seekable)
-  {
-    st_fail_errno(ft,ST_EOF,"txw input file must be a file, not a pipe");
-    return(ST_EOF);
-  }
-
-  /* This is dumb but portable, just count the bytes til EOF */
-  while (st_readb(ft, (unsigned char *)&trash) != ST_EOF)
-    num_samp_bytes++; 
-  num_samp_bytes -= 32;		/* calculate num samples by sub header size */
-  fseek(ft->fp,0L,0);		/* rewind file */
-  sk->rest = num_samp_bytes;	/* set how many sample bytes to read */
-
-  /* first 6 bytes are file type ID LM8953 */
-  st_readb(ft, (unsigned char *)&filetype[0]);
-  st_readb(ft, (unsigned char *)&filetype[1]);
-  st_readb(ft, (unsigned char *)&filetype[2]);
-  st_readb(ft, (unsigned char *)&filetype[3]);
-  st_readb(ft, (unsigned char *)&filetype[4]);
-  st_readb(ft, (unsigned char *)&filetype[5]);
-  filetype[6] = '\0';
-  for( c = 16; c > 0 ; c-- )	/* Discard next 16 bytes */
-      st_readb(ft, (unsigned char *)&trash);
-  st_readb(ft, (unsigned char *)&format);
-  st_readb(ft, (unsigned char *)&sample_rate);
-  /*
-   * save next 8 bytes - if sample rate is 0, then we need
-   *  to look at gunk[2] and gunk[5] to get real rate
-   */
-  for( c = 0; c < 8; c++ )
-      st_readb(ft, (unsigned char *)&(gunk[c]));
-  /*
-   * We should now be pointing at start of raw sample data in file 
-   */
-
-  /* Check to make sure we got a good filetype ID from file */
-  st_report("Found header filetype %s",filetype);
-  if(strcmp(filetype,"LM8953"))
-  {
-    st_fail_errno(ft,ST_EHDR,"Invalid filetype ID in input file header, != LM8953");
-    return(ST_EOF);
-  }
-  /*
-   * Set up the sample rate as indicated by the header
-   */
-
-  switch( sample_rate ) {
-  case 1:
-    ft->info.rate = 33333;
-    break;
-  case 2:
-    ft->info.rate = 50000;
-    break;
-  case 3:
-    ft->info.rate = 16667;
-    break;
-  default:
-    blewIt = 1;
-    switch( gunk[2] & 0xFE ) {
-    case 0x06:
-      if ( (gunk[5] & 0xFE) == 0x52 ) {
-	blewIt = 0;
-	ft->info.rate = 33333;
-      }
-      break;
-    case 0x10:
-      if ( (gunk[5] & 0xFE) == 0x00 ) {
-	blewIt = 0;
-	ft->info.rate = 50000;
-      }
-      break;
-    case 0xF6:
-      if ( (gunk[5] & 0xFE) == 0x52 ) {
-	blewIt = 0;
-	ft->info.rate = 16667;
-      }
-      break;
+    txw_t sk = (txw_t) ft->priv;
+    /* If you need to seek around the input file. */
+    if (! ft->seekable)
+    {
+        st_fail_errno(ft,ST_EOF,"txw input file must be a file, not a pipe");
+        return(ST_EOF);
     }
-    if ( blewIt ) {
-      st_report("Invalid sample rate identifier found %d", (int)sample_rate);
-      ft->info.rate = 33333;
+
+    /* This is dumb but portable, just count the bytes til EOF */
+    while (st_readb(ft, (unsigned char *)&trash) != ST_EOF)
+        num_samp_bytes++; 
+    num_samp_bytes -= 32;         /* calculate num samples by sub header size */
+    fseek(ft->fp,0L,0);           /* rewind file */
+    sk->rest = num_samp_bytes;    /* set how many sample bytes to read */
+
+    /* first 6 bytes are file type ID LM8953 */
+    st_readb(ft, (unsigned char *)&filetype[0]);
+    st_readb(ft, (unsigned char *)&filetype[1]);
+    st_readb(ft, (unsigned char *)&filetype[2]);
+    st_readb(ft, (unsigned char *)&filetype[3]);
+    st_readb(ft, (unsigned char *)&filetype[4]);
+    st_readb(ft, (unsigned char *)&filetype[5]);
+    filetype[6] = '\0';
+    for( c = 16; c > 0 ; c-- )    /* Discard next 16 bytes */
+        st_readb(ft, (unsigned char *)&trash);
+    st_readb(ft, (unsigned char *)&format);
+    st_readb(ft, (unsigned char *)&sample_rate);
+    /*
+     * save next 8 bytes - if sample rate is 0, then we need
+     *  to look at gunk[2] and gunk[5] to get real rate
+     */
+    for( c = 0; c < 8; c++ )
+        st_readb(ft, (unsigned char *)&(gunk[c]));
+    /*
+     * We should now be pointing at start of raw sample data in file 
+     */
+
+    /* Check to make sure we got a good filetype ID from file */
+    st_report("Found header filetype %s",filetype);
+    if(strcmp(filetype,"LM8953"))
+    {
+        st_fail_errno(ft,ST_EHDR,"Invalid filetype ID in input file header, != LM8953");
+        return(ST_EOF);
     }
-  }
-  st_report("Sample rate = %ld",ft->info.rate);
+    /*
+     * Set up the sample rate as indicated by the header
+     */
 
-  ft->info.channels = 1 ; /* not sure about stereo sample data yet ??? */
-  ft->info.size = ST_SIZE_WORD; /* this is close enough */
-  ft->info.encoding = ST_ENCODING_SIGN2;
+    switch( sample_rate ) {
+        case 1:
+            ft->info.rate = 33333;
+            break;
+        case 2:
+            ft->info.rate = 50000;
+            break;
+        case 3:
+            ft->info.rate = 16667;
+            break;
+        default:
+            blewIt = 1;
+            switch( gunk[2] & 0xFE ) {
+                case 0x06:
+                    if ( (gunk[5] & 0xFE) == 0x52 ) {
+                        blewIt = 0;
+                        ft->info.rate = 33333;
+                    }
+                    break;
+                case 0x10:
+                    if ( (gunk[5] & 0xFE) == 0x00 ) {
+                        blewIt = 0;
+                        ft->info.rate = 50000;
+                    }
+                    break;
+                case 0xF6:
+                    if ( (gunk[5] & 0xFE) == 0x52 ) {
+                        blewIt = 0;
+                        ft->info.rate = 16667;
+                    }
+                    break;
+            }
+            if ( blewIt ) {
+                st_report("Invalid sample rate identifier found %d", (int)sample_rate);
+                ft->info.rate = 33333;
+            }
+    }
+    st_report("Sample rate = %ld",ft->info.rate);
 
-  return(ST_SUCCESS);
+    ft->info.channels = 1 ; /* not sure about stereo sample data yet ??? */
+    ft->info.size = ST_SIZE_WORD; /* this is close enough */
+    ft->info.encoding = ST_ENCODING_SIGN2;
+
+    return(ST_SUCCESS);
 }
 
 /*
@@ -189,51 +189,51 @@ int st_txwstartread(ft_t ft)
 st_ssize_t st_txwread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
     txw_t sk = (txw_t) ft->priv;
-	int done = 0;
-	unsigned char uc1,uc2,uc3;
-	unsigned short s1,s2;
+    int done = 0;
+    unsigned char uc1,uc2,uc3;
+    unsigned short s1,s2;
 
-        /*
-	 * This gets called by the top level 'process' routine.
-	 * We will essentially get called with a buffer pointer
-	 * and a max length to read. Graciously, it is always
-	 * an even amount so we don't have to worry about
-	 * hanging onto the left over odd samples since there
-	 * won't be any. Something to look out for though :-(
-	 * We return the number of samples we read.
-	 * We will get called over and over again until we return
-	 *  0 bytes read.
-	 */
+    /*
+     * This gets called by the top level 'process' routine.
+     * We will essentially get called with a buffer pointer
+     * and a max length to read. Graciously, it is always
+     * an even amount so we don't have to worry about
+     * hanging onto the left over odd samples since there
+     * won't be any. Something to look out for though :-(
+     * We return the number of samples we read.
+     * We will get called over and over again until we return
+     *  0 bytes read.
+     */
 
-	/*
-	 * This is ugly but it's readable!
-	 * Read three bytes from stream, then decompose these into
-	 * two unsigned short samples. 
-	 * TCC 3.0 appeared to do unwanted things, so we really specify
-	 *  exactly what we want to happen.
-	 * Convert unsigned short to st_sample_t then shift up the result
-	 *  so that the 12-bit sample lives in the most significant
-	 *  12-bits of the st_sample_t.
-	 * This gets our two samples into the internal format which we
-	 * deposit into the given buffer and adjust our counts respectivly.
-         */
-        for(done = 0; done < len; ) {
-	    if(sk->rest < 3) break; /* Finished reading from file? */
-	    st_readb(ft, &uc1);
-	    st_readb(ft, &uc2);
-	    st_readb(ft, &uc3);
-	    sk->rest -= 3; /* adjust remaining for bytes we just read */
-	    s1 = (unsigned short) (uc1 << 4) | (((uc2 >> 4) & 017));
-	    s2 = (unsigned short) (uc3 << 4) | (( uc2 & 017 ));
-	    *buf = (st_sample_t) s1;
-            *buf = (*buf << 20);
-	    buf++; /* sample one is done */
-	    *buf = (st_sample_t) s2;
-            *buf = (*buf << 20);
-	    buf++; /* sample two is done */
-	    done += 2; /* adjust converted & stored sample count */
-	    }
-	return done;
+    /*
+     * This is ugly but it's readable!
+     * Read three bytes from stream, then decompose these into
+     * two unsigned short samples. 
+     * TCC 3.0 appeared to do unwanted things, so we really specify
+     *  exactly what we want to happen.
+     * Convert unsigned short to st_sample_t then shift up the result
+     *  so that the 12-bit sample lives in the most significant
+     *  12-bits of the st_sample_t.
+     * This gets our two samples into the internal format which we
+     * deposit into the given buffer and adjust our counts respectivly.
+     */
+    for(done = 0; done < len; ) {
+        if(sk->rest < 3) break; /* Finished reading from file? */
+        st_readb(ft, &uc1);
+        st_readb(ft, &uc2);
+        st_readb(ft, &uc3);
+        sk->rest -= 3; /* adjust remaining for bytes we just read */
+        s1 = (unsigned short) (uc1 << 4) | (((uc2 >> 4) & 017));
+        s2 = (unsigned short) (uc3 << 4) | (( uc2 & 017 ));
+        *buf = (st_sample_t) s1;
+        *buf = (*buf << 20);
+        buf++; /* sample one is done */
+        *buf = (st_sample_t) s2;
+        *buf = (*buf << 20);
+        buf++; /* sample two is done */
+        done += 2; /* adjust converted & stored sample count */
+    }
+    return done;
 }
 
 /*
@@ -247,81 +247,84 @@ int st_txwstopread(ft_t ft)
 
 int st_txwstartwrite(ft_t ft)
 {
-  struct WaveHeader_ WH;
+    struct WaveHeader_ WH;
 
-  st_report("tx16w selected output");
+    st_report("tx16w selected output");
 
-  if (ft->info.channels != 1)
-      st_report("tx16w is overriding output format to 1 channel.");
-  ft->info.channels = 1 ; /* not sure about stereo sample data yet ??? */
-  if (ft->info.size != ST_SIZE_WORD || ft->info.encoding != ST_ENCODING_SIGN2)
-      st_report("tx16w is overriding output format to size Signed Word format.");
-  ft->info.size = ST_SIZE_WORD; /* this is close enough */
-  ft->info.encoding = ST_ENCODING_SIGN2;
-  
-  /* If you have to seek around the output file */
-  if (! ft->seekable)
-  {
-      st_fail_errno(ft,ST_EOF,"Output .txw file must be a file, not a pipe");
-      return(ST_EOF);
-  }
+    memset(&WH, 0, sizeof(struct WaveHeader_));
 
-  /* dummy numbers, just for place holder, real header is written
-     at end of processing, since byte count is needed */
+    if (ft->info.channels != 1)
+        st_report("tx16w is overriding output format to 1 channel.");
+    ft->info.channels = 1 ; /* not sure about stereo sample data yet ??? */
+    if (ft->info.size != ST_SIZE_WORD || ft->info.encoding != ST_ENCODING_SIGN2)
+        st_report("tx16w is overriding output format to size Signed Word format.");
+    ft->info.size = ST_SIZE_WORD; /* this is close enough */
+    ft->info.encoding = ST_ENCODING_SIGN2;
 
-  fwrite(&WH,1,32,ft->fp);
-  writedone = 32;
-  return(ST_SUCCESS);
+    /* If you have to seek around the output file */
+    if (! ft->seekable)
+    {
+        st_fail_errno(ft,ST_EOF,"Output .txw file must be a file, not a pipe");
+        return(ST_EOF);
+    }
+
+    /* dummy numbers, just for place holder, real header is written
+       at end of processing, since byte count is needed */
+
+    fwrite(&WH,1,32,ft->fp);
+    writedone = 32;
+    return(ST_SUCCESS);
 }
 
 st_ssize_t st_txwwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
-	int i;
-        unsigned int w1,w2;
-        
-        tx16w_len += len;
-        if (tx16w_len > TXMAXLEN) return 0;
-        
-        for (i=0;i<len;i+=2) {
-            w1 =  *buf++ >> 20;
-            if (i+1==len)
-                w2 = 0;
-            else {
-                w2 =  *buf++ >> 20;
-            }
-            st_writeb(ft, (w1 >> 4) & 0xFF);
-            st_writeb(ft, (((w1 & 0x0F) << 4) | (w2 & 0x0F)) & 0xFF);
-            st_writeb(ft, (w2 >> 4) & 0xFF);
-            writedone += 3;
+    int i;
+    unsigned int w1,w2;
+
+    tx16w_len += len;
+    if (tx16w_len > TXMAXLEN) return 0;
+
+    for (i=0;i<len;i+=2) {
+        w1 =  *buf++ >> 20;
+        if (i+1==len)
+            w2 = 0;
+        else {
+            w2 =  *buf++ >> 20;
         }
-	return(len);
+        st_writeb(ft, (w1 >> 4) & 0xFF);
+        st_writeb(ft, (((w1 & 0x0F) << 4) | (w2 & 0x0F)) & 0xFF);
+        st_writeb(ft, (w2 >> 4) & 0xFF);
+        writedone += 3;
+    }
+    return(len);
 }
 
 int st_txwstopwrite(ft_t ft)
 {
     struct WaveHeader_ WH;
     int AttackLength, LoopLength, i;
-  
+
     /* All samples are already written out. */
     /* If file header needs fixing up, for example it needs the */
     /* the number of samples in a field, seek back and write them here. */
-    
+
     st_report("tx16w:output finished");
-    
+
+    memset(&WH, 0, sizeof(struct WaveHeader_));
     strncpy(WH.filetype,"LM8953",6);
     for (i=0;i<10;i++) WH.nulls[i]=0;
     for (i=0;i<6;i++)  WH.dummy_aeg[i]=0;
     for (i=0;i<2;i++)  WH.unused[i]=0;
     for (i=0;i<2;i++)  WH.dummy_aeg[i] = 0;
     for (i=2;i<6;i++)  WH.dummy_aeg[i] = 0x7F;
-    
+
     WH.format = 0xC9;   /* loop off */
-    
+
     /* the actual sample rate is not that important ! */  
     if (ft->info.rate < 24000)      WH.sample_rate = 3;
     else if (ft->info.rate < 41000) WH.sample_rate = 1;
     else                            WH.sample_rate = 2;
-    
+
     if (tx16w_len >= TXMAXLEN) {
         st_warn("Sound too large for TX16W. Truncating, Loop Off\n");
         AttackLength       = TXMAXLEN/2;
@@ -361,12 +364,12 @@ int st_txwstopwrite(ft_t ft)
     WH.atc_length[1] = 0xFF & (AttackLength >> 8);
     WH.atc_length[2] = (0x01 & (AttackLength >> 16)) +
         magic1[WH.sample_rate];
-    
+
     WH.rpt_length[0] = 0xFF & LoopLength;
     WH.rpt_length[1] = 0xFF & (LoopLength >> 8);
     WH.rpt_length[2] = (0x01 & (LoopLength >> 16)) +
         magic2[WH.sample_rate];
-    
+
     rewind(ft->fp);
     fwrite(&WH,1,32,ft->fp);
 

@@ -529,9 +529,10 @@ static int getblock(ft_t ft)
                 if (feof(ft->fp))
                         return ST_EOF;
 
-                /* IF TERM block (end of file), return EOF
-                 * ANN:  was returning SUCCESS */
-                st_readb(ft, &block);
+                if (st_readb(ft, &block) == ST_EOF)
+                        return ST_EOF;
+
+                /* IF TERM block (end of file), return EOF */
                 if (block == VOC_TERM)
                         return ST_EOF;
 
