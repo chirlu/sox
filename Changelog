@@ -24,6 +24,8 @@ sox-12.17.3
     forces strictest alignment.
   o ima_rw was miscompiling on alpha's because of a header ordering
     problem.
+  o Erik de Castro Lopo pointed out that when writing 16-bit VOC files
+    the headers did not contain the correct length or encoding type.
 
 sox-12.17.2
 -----------
