@@ -51,6 +51,9 @@ sox-12.17
   o Under Solaris, SoX now checks hardware ability to play stereo/PCM
     and forces output data to match.  Sorry, no SunOS support.  I don't
     have access to one any more.
+  o Fixed array overrun bug in rate effect as pointed out by Ian
+    Donaldson.
+  o Fixed clip24() range as pointed out by Ted Powell.
 
 sox-12.16
 ---------
