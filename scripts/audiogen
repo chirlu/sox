@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+# usage:audiogen <rate> <channels> <filename> <length> <audio generator options>
+#
+# Example of using the "nul" file handler along with "synth" effect
+# to generate audio data.  Nul file handler pipes a stream of null
+# data non-stop.  Synth effect overrides it with its own data and
+# stops based on length parameter.
+
+if [ "$5" == "" ]; then
+    echo "usage: $0 <rate> <channels> <filename> <length> <audio generator options>"
+  echo
+  echo "See sox man page and the \"synth\" effect for further information on audio generation options."
+  exit 1
+fi
+
+rate=$1
+shift
+channels=$1
+shift
+filename=$1
+shift
+
+sox -s -w -t nul -r $rate -c $channels /dev/null $filename synth $*
