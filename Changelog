@@ -28,7 +28,9 @@ sox-12.16
     an advanced setup like 4DOS or some such thing.
   o Cleaned up some more cross-platform compile problems.  In the process
     got it working with Turbo C again, kinda.  It still locks DOS up at times.
-
+  o Made AIFF handler work with invalid headers that some programs generate.
+    Also fix an Endian bug thats been there for quick a long time (when
+    ran on Intel machines).
 
 sox-12.15
 ---------
