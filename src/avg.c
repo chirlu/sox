@@ -65,6 +65,13 @@ char **argv;
 int st_avg_start(effp)
 eff_t effp;
 {
+        if ((effp->ininfo.channels == effp->outinfo.channels) ||
+	    effp->outinfo.channels == -1)
+	{
+	    fail("Output must have different number of channels to use avg effect");
+	    return(ST_EOF);
+	}
+
 	switch (effp->outinfo.channels) 
 	{
 	case 1: switch (effp->ininfo.channels) 
