@@ -9,19 +9,11 @@ all patches to cbagwell@sprynet.com.
 
   o Add support for mixing multiple inputs from command line.
 
-  o Endian checks are probably invalid on 64-bit machines.  Need to use
-    something a more constant size the "int".  Probably should make it
-    at least a util function/macro that can be overriden at compile time.
+  o Endian checks are probably invalid on 64-bit machines.
 
   o Enhance sox for better interactive support.  This includes updating
     effect parameters in real time and ablity to start/stop/scan
     file handlers in real time.
-
-  o More handlers!  Everyone who adds sound hardware to a computer has 
-    the urge to come up with their own file format.
-
-  o More effects!  I don't know DSP at all.  A Pitch Shifter is high
-    on the list.  Spectrum analyser, etc, using FFTW lib.
 
   o Loop support for all formats that know about it.  WAV has
     some support for loops ("cue-points") but no support for
