@@ -20,8 +20,8 @@
 #if     defined(HAVE_SUNAUDIO)
 
 #include <sys/ioctl.h>
-#if defined(__SVR4) || defined(__NetBSD__)
-#ifdef __NetBSD__
+#if defined(__SVR4) || defined(__NetBSD__) || defined(__OpenBSD__)
+#if defined(__NetBSD__) || defined(__OpenBSD__)
 #include <sys/types.h>  /* This should be in audioio.h itself but its not */
 #endif
 #include <sys/audioio.h>
@@ -31,10 +31,12 @@
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
-#ifndef __NetBSD__
+#if !defined(__NetBSD__) && !defined(__OpenBSD__)
 #include <stropts.h>
 #endif
+#ifdef _HAVE_MALLOC_H
 #include <malloc.h>
+#endif
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -172,7 +174,7 @@ int st_sunstartread(ft_t ft)
         return(ST_EOF);
     }
     /* Flush any data in the buffers - its probably in the wrong format */
-#ifdef __NetBSD__
+#if defined(__NetBSD__) || defined(__OpenBSD__)
     ioctl(fileno(ft->fp), AUDIO_FLUSH);
 #else
     ioctl(fileno(ft->fp), I_FLUSH, FLUSHR);

@@ -110,7 +110,7 @@ install-play:
 	if [ -f $(bindir)/rec ] ; then $(RM) $(bindir)/rec; fi
 	$(top_srcdir)/mkinstalldirs $(bindir)
 	$(INSTALL) -c -m 755 play $(bindir)
-	$(LN_S) $(bindir)/play $(bindir)/rec
+	cd $(bindir) && $(LN_S) play rec
 
 install-lib: libst.a
 	$(top_srcdir)/mkinstalldirs $(libdir)

@@ -27,19 +27,22 @@ man: $(srcdir)/sox.1 $(srcdir)/soxexam.1 $(srcdir)/libst.3
 	nroff -man $(srcdir)/soxexam.1 | col -b > soxexam.txt
 	nroff -man $(srcdir)/libst.3 | col -b > libst.txt
 
+PLAY_INSTALL_0 =
+PLAY_INSTALL_1  = install-play
+
 install: $(PLAY_INSTALL_$(PLAY_SUPPORT))
 	cd src && $(MAKE) $@
 	$(srcdir)/mkinstalldirs $(mandir)/man1
 	$(INSTALL) -c -m 644 $(srcdir)/sox.1 $(mandir)/man1
 	if [ -f $(mandir)/man1/soxmix.1 ] ; then $(RM) $(mandir)/man1/soxmix.1; fi
-	$(LN_S) $(mandir)/man1/sox.1 $(mandir)/man1/soxmix.1
+	cd $(mandir)/man && $(LN_S) sox.1 soxmix.1
 	$(INSTALL) -c -m 644 $(srcdir)/soxexam.1 $(mandir)/man1
 
 install-play:
 	if [ -f $(mandir)/man1/rec.1 ]; then $(RM) $(mandir)/man1/rec.1; fi
 	$(srcdir)/mkinstalldirs $(mandir)/man1
 	$(INSTALL) -c -m 644 $(srcdir)/play.1 $(mandir)/man1
-	$(LN_S) $(mandir)/man1/play.1 $(mandir)/man1/rec.1
+	cd $(mandir)/man1 && $(LN_S) play.1 rec.1
 
 install-lib:
 	cd src && $(MAKE) $@

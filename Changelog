@@ -4,6 +4,11 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-12.17.7
+-----------
+  o Christian Weisgerber sent patches to man page fixes
+    and patches for sunaudio driver on openbsd.
+
 sox-12.17.6
 -----------
   o Changed comment code to always use copies of strings to
