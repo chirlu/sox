@@ -210,7 +210,8 @@ ft_t ft;
 	/* Skip the info string in header; print it if verbose */
 	hdr_size -= SUN_HDRSIZE; /* #bytes already read */
 	if (hdr_size > 0) {
-		buf = (char *) malloc(hdr_size + 1);
+                /* Allocate comment buffer */
+		buf = (char *) malloc(hdr_size+1);		
 		for(i = 0; i < hdr_size; i++) {
 		    	st_readb(ft, &(buf[i]));
 			if (feof(ft->fp))
@@ -219,7 +220,14 @@ ft_t ft;
 				return(ST_EOF);
 			}
 		}
-		buf[i] = '\0';
+		/* Buffer should already be null terminated but
+		 * just in case we malloced an extra byte and 
+		 * force the last byte to be 0 anyways.
+		 * This should help work with a greater array of
+		 * software.
+		 */
+	        buf[hdr_size] = '\0';
+
 		ft->comment = buf;
 		st_report("Input file %s: Sun header info: %s", ft->filename, buf);
 	}
@@ -369,6 +377,7 @@ ULONG data_size;
 	ULONG encoding;
 	ULONG sample_rate;
 	ULONG channels;
+	int   x;
 
 	if((encoding = st_ausunencoding(ft->info.size, ft->info.encoding)) == -1) {
 		st_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
@@ -383,9 +392,13 @@ ULONG data_size;
 	magic = SUN_MAGIC;
 	st_writedw(ft, magic);
 
+	/* Info field is at least 4 bytes. Here I force it to something
+	 * useful when there is no comments.
+	 */
 	if (ft->comment == NULL)
-		ft->comment = "";
-	hdr_size = SUN_HDRSIZE + strlen(ft->comment);
+		ft->comment = "SOX";
+
+	hdr_size = SUN_HDRSIZE + strlen(ft->comment) + 1; /*+1 = null-term. */
 	st_writedw(ft, hdr_size);
 
 	st_writedw(ft, data_size);
@@ -399,5 +412,12 @@ ULONG data_size;
 	st_writedw(ft, channels);
 
 	st_writes(ft, ft->comment);
+
+	/* Info must be 4 bytes at least and null terminated. */
+	x = strlen(ft->comment);
+	for (;x < 3; x++)
+	    st_writeb(ft, 0);
+
+	st_writeb(ft, 0);
 }
 

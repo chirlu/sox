@@ -285,7 +285,7 @@ LONG *isamp, *osamp;
 	Nx = Nproc - r->Xread; /* space for right-wing future-data */
 	if (Nx <= 0)
 	{
-		st_fail("Nx not positive: %d", Nx);
+		st_fail("resample: Can not handle this sample rate change. Nx not positive: %d", Nx);
 		return (ST_EOF);
 	}
 	if (Nx > *isamp)
