@@ -45,41 +45,41 @@ int st_trim_getopts(eff_t effp, int n, char **argv)
      * time related strings.
      */
     switch (n) {
-	case 2:
-	    trim->length_str = malloc(strlen(argv[1])+1);
-	    if (!trim->length_str)
-	    {
-		st_fail("Could not allocate memory");
-		return(ST_EOF);
-	    }
-	    strcpy(trim->length_str,argv[1]);
-	    /* Do a dummy parse to see if it will fail */
-	    if (st_parsesamples(0, trim->length_str,
-			        &trim->length, 't') != ST_SUCCESS)
-	    {
-		st_fail(TRIM_USAGE);
-		return(ST_EOF);
-	    }
-	case 1:
-	    trim->start_str = malloc(strlen(argv[0])+1);
-	    if (!trim->start_str)
-	    {
-		st_fail("Could not allocate memory");
-		return(ST_EOF);
-	    }
-	    strcpy(trim->start_str,argv[0]);
-	    /* Do a dummy parse to see if it will fail */
-	    if (st_parsesamples(0, trim->start_str,
-			        &trim->start, 't') != ST_SUCCESS)
-	    {
-		st_fail(TRIM_USAGE);
-		return(ST_EOF);
-	    }
-	    break;
-	default:
-	    st_fail(TRIM_USAGE);
-	    return ST_EOF;
-	    break;
+        case 2:
+            trim->length_str = malloc(strlen(argv[1])+1);
+            if (!trim->length_str)
+            {
+                st_fail("Could not allocate memory");
+                return(ST_EOF);
+            }
+            strcpy(trim->length_str,argv[1]);
+            /* Do a dummy parse to see if it will fail */
+            if (st_parsesamples(0, trim->length_str,
+                                &trim->length, 't') != ST_SUCCESS)
+            {
+                st_fail(TRIM_USAGE);
+                return(ST_EOF);
+            }
+        case 1:
+            trim->start_str = malloc(strlen(argv[0])+1);
+            if (!trim->start_str)
+            {
+                st_fail("Could not allocate memory");
+                return(ST_EOF);
+            }
+            strcpy(trim->start_str,argv[0]);
+            /* Do a dummy parse to see if it will fail */
+            if (st_parsesamples(0, trim->start_str,
+                                &trim->start, 't') != ST_SUCCESS)
+            {
+                st_fail(TRIM_USAGE);
+                return(ST_EOF);
+            }
+            break;
+        default:
+            st_fail(TRIM_USAGE);
+            return ST_EOF;
+            break;
 
     }
     return (ST_SUCCESS);
@@ -93,24 +93,25 @@ int st_trim_start(eff_t effp)
     trim_t trim = (trim_t) effp->priv;
 
     if (st_parsesamples(effp->ininfo.rate, trim->start_str,
-		        &trim->start, 't') != ST_SUCCESS)
+                        &trim->start, 't') != ST_SUCCESS)
     {
-	st_fail(TRIM_USAGE);
-	return(ST_EOF);
+        st_fail(TRIM_USAGE);
+        return(ST_EOF);
     }
     /* Account for # of channels */
     trim->start *= effp->ininfo.channels;
+
     if (trim->length_str)
     {
-	if (st_parsesamples(effp->ininfo.rate, trim->length_str,
-		    &trim->length, 't') != ST_SUCCESS)
-	{
-	    st_fail(TRIM_USAGE);
-	    return(ST_EOF);
-	}
+        if (st_parsesamples(effp->ininfo.rate, trim->length_str,
+                    &trim->length, 't') != ST_SUCCESS)
+        {
+            st_fail(TRIM_USAGE);
+            return(ST_EOF);
+        }
     }
     else
-	trim->length = 0;
+        trim->length = 0;
 
     /* Account for # of channels */
     trim->length *= effp->ininfo.channels;
@@ -144,35 +145,35 @@ int st_trim_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
      * If so then we can skip trimming from the front side.
      */
     if (!trim->trimmed) {
-	if ((trim->index+done) <= trim->start) {
-	    /* If we haven't read more then "start" samples, return that
-	     * we've read all this buffer without outputing anything
-	     */
-	    *osamp = 0;
-	    *isamp = done;
-	    trim->index += done;
-	    return (ST_SUCCESS);
-	} else {
-	    start_trim = 1;
-	    /* We've read at least "start" samples.  Now find
-	     * out where our target data begins and subtract that
-	     * from the total to be copied this round.
-	     */
-	    offset = trim->start - trim->index;
-	    done -= offset;
-	}
+        if ((trim->index+done) <= trim->start) {
+            /* If we haven't read more then "start" samples, return that
+             * we've read all this buffer without outputing anything
+             */
+            *osamp = 0;
+            *isamp = done;
+            trim->index += done;
+            return (ST_SUCCESS);
+        } else {
+            start_trim = 1;
+            /* We've read at least "start" samples.  Now find
+             * out where our target data begins and subtract that
+             * from the total to be copied this round.
+             */
+            offset = trim->start - trim->index;
+            done -= offset;
+        }
     } /* !trimmed */
 
     if (trim->trimmed || start_trim) {
-	if (trim->length && ((trim->trimmed+done) >= trim->length)) {
-	    /* Since we know the end is in this block, we set done
-	     * to the desired length less the amount already read.
-	     */
-	    done = trim->length - trim->trimmed;
-	    finished = 1;
-	}
+        if (trim->length && ((trim->trimmed+done) >= trim->length)) {
+            /* Since we know the end is in this block, we set done
+             * to the desired length less the amount already read.
+             */
+            done = trim->length - trim->trimmed;
+            finished = 1;
+        }
 
-	trim->trimmed += done;
+        trim->trimmed += done;
     }
 
     memcpy(obuf, ibuf+offset, done * sizeof(st_sample_t));
@@ -181,10 +182,13 @@ int st_trim_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     *isamp = offset + done;
     trim->index += done;
 
-    if (finished)
-	return (ST_EOF);
+    /* return ST_EOF when nothing consumed and we detect
+     * we are finished.
+     */
+    if (finished && !done)
+        return (ST_EOF);
     else
-	return (ST_SUCCESS);
+        return (ST_SUCCESS);
 }
 
 /*
@@ -196,9 +200,9 @@ int st_trim_stop(eff_t effp)
     trim_t trim = (trim_t) effp->priv;
 
     if (trim->start_str)
-	free(trim->start_str);
+        free(trim->start_str);
     if (trim->length_str)
-	free(trim->length_str);
+        free(trim->length_str);
 
     return (ST_SUCCESS);
 }

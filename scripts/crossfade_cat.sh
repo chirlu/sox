@@ -45,21 +45,21 @@ fi
 
 fade_first_opts=
 if [ "$fade_first" == "yes" ]; then
-    fade_first_opts="fade h 0 0:0:$fade_length"
+    fade_first_opts="fade t 0 0:0:$fade_length"
 fi
 
 fade_second_opts=
 if [ "$fade_second" == "yes" ]; then
-    fade_second_opts="fade h 0:0:$fade_length"
+    fade_second_opts="fade t 0:0:$fade_length"
 fi
 
 echo "crossfade and concatenate files"
 echo
 echo  "Finding length of $first_file..."
-first_length=`$SOX "$first_file" 2>&1 -e stat | grep Length | cut -d : -f 2 | cut -d . -f 1 | cut -f 1`
-echo "Length is $first_length"
+first_length=`$SOX "$first_file" 2>&1 -e stat | grep Length | cut -d : -f 2 | cut -f 1`
+echo "Length is $first_length seconds"
 
-trim_length=`expr $first_length - $fade_length`
+trim_length=`echo "$first_length - $fade_length" | bc`
 
 # Get crossfade section from first file and optionally do the fade out
 echo "Obtaining $fade_length seconds of fade out portion from $first_file..."
@@ -79,7 +79,7 @@ $SOX song1.wav crossfade.wav song2.wav mix.wav
 
 echo -e "Removing temporary files...\n" 
 rm fadeout.wav fadein.wav crossfade.wav song1.wav song2.wav
-mins=`expr $trim_length / 60`
-secs=`expr $trim_length % 60`
+mins=`echo "$trim_length / 60" | bc`
+secs=`echo "$trim_length % 60" | bc`
 echo "The crossfade in mix.wav occurs at around $mins mins $secs secs"
 

@@ -988,10 +988,10 @@ int e;
         efftab[e].olen = odonel + odoner;
         done = idonel + idoner + odonel + odoner;
     }
-    if (done == 0)
-        st_fail("Effect took & gave no samples!");
     if (effstatus == ST_EOF)
         return -1;
+    if (done == 0)
+        st_fail("Effect took & gave no samples!");
     return 1;
 }
 

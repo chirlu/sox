@@ -41,6 +41,10 @@ sox-12.17.6
     to not result in the original file.
   o Fixed a possible overflow in lots of effects were MIN
     value was treated as -MAX instead of -MAX-1.
+  o Modifed sox so its OK for effects to not process any
+    input or output bytes as long as they return ST_EOF.
+  o Bugfix to trim effect were bytes were left off the end
+    of the file when output length was specified.
 
 sox-12.17.5
 -----------

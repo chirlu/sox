@@ -230,8 +230,9 @@ int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         t_ibuf = (fade->samplesdone < 0 ? 0 : *ibuf);
 
         if ((fade->samplesdone >= fade->in_start) &&
-            (fade->out_stop == 0 || fade->samplesdone < fade->out_stop))
+            (!fade->do_out || fade->samplesdone < fade->out_stop))
         { /* something to generate output */
+
             if (fade->samplesdone < fade->in_stop)
             { /* fade-in phase, increase gain */
                 *obuf = t_ibuf *
@@ -239,14 +240,11 @@ int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                               fade->in_stop - fade->in_start,
                               fade->in_fadetype);
             } /* endif fade-in */
-
-            if (fade->samplesdone >= fade->in_stop &&
-                (!fade->do_out || fade->samplesdone < fade->out_start))
+            else if (!fade->do_out || fade->samplesdone < fade->out_start)
             { /* steady gain phase */
                 *obuf = t_ibuf;
             } /* endif  steady phase */
-
-            if (fade->do_out && fade->samplesdone >= fade->out_start)
+            else
             { /* fade-out phase, decrease gain */
                 *obuf = t_ibuf *
                     fade_gain(fade->out_stop - fade->samplesdone,
@@ -261,6 +259,9 @@ int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             t_output = 0;
         } /* endif something to output */
 
+        /* samplesdone < 0 means we are inventing samples right now
+         * and so not consuming (happens when in_start < 0).
+         */
         if (fade->samplesdone >= 0 )
         { /* Something to input  */
             *isamp += 1;
