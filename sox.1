@@ -55,6 +55,10 @@ sox \- Sound eXchange : universal sound sample translator
 	chorus \fIgain-in gain out delay decay speed depth
 		-s\fB | \fI-t\fB [ \fIdelay decay speed depth -s\fB | -fI-t\fB ]
 .br
+	compand \fIattack1,decay1\fB[,\fIattack2,decay2\fB...]
+             \fIin-dB1,out-dB1\fB[,\fIin-dB2,out-dB2\fB...]
+             [\fIgain\fB] [\fIinitial-volume\fB]
+.br
 	copy
 .br
 	cut
@@ -503,6 +507,33 @@ and the decay (relative to gain-in) with a modulation
 speed in Hz using depth in milliseconds.
 The modulation is either sinodial (-s) or triangular
 (-t).  Gain-out is the volume of the output.
+.TP
+compand \fIattack1,decay1\fR[,\fIattack2,decay2\fR...]
+.TP 
+        \fIin-dB1,out-dB1\fR[,\fIin-dB2,out-dB2\fR...]
+.TP 10
+        [\fIgain\fR] [\fIinitial-volume\fR]
+Compand (compress or expand) the dynamic range of a sample.  The
+attack and decay time specify the integration time over which the
+absolute value of the input signal is integrated to determine its
+volume.  Where more than one pair of attack/decay parameters are
+specified, each channel is treated separately and the number of pairs
+must agree with the number of input channels.  The second parameter is
+a list of points on the compander's transfer function specified in dB
+relative to the maximum possible signal amplitude.  The input values
+must be in a strictly increasing order but the transfer function does
+not have to be monotonically rising.  The special value \fI-inf\fR may
+be used to indicate that the input volume should be associated output
+volume.  The points \fI-inf,-inf\fR and \fI0,0\fR are assumed; the
+latter may be overridden, but the former may not.  The third
+(optional) parameter is a postprocessing gain in dB which is applied
+after the compression has taken place; the fourth (optional) parameter
+is an initial volume to be assumed for each channel when the effect
+starts.  This permits the user to supply a nominal level initially, so
+that, for example, a very large gain is not applied to initial signal
+levels before the companding action has begun to operate: it is quite
+probable that in such an event, the output would be severely clipped
+while the compander gain properly adjusts itself.
 .TP 10
 copy
 Copy the input file to the output file.

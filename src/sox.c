@@ -166,6 +166,12 @@ char **argv;
 	    }
 	    else {
 
+ 		if ((ft->fp = fopen(ofile, READBINARY)) != NULL)
+		{
+		    fclose(ft->fp);
+		    fail("File '%s' already exists.", ofile);
+		}
+
 		ft->fp = fopen(ofile, WRITEBINARY);
 
 		if (ft->fp == NULL)

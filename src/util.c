@@ -259,7 +259,7 @@ ft_t ft;
 {
 	if (ft->info.rate == 0)
 		fail("Sampling rate for %s file was not given\n", ft->filename);
-	if ((ft->info.rate < 100) || (ft->info.rate > 50000L))
+	if ((ft->info.rate < 100) || (ft->info.rate > 999999L))
 		fail("Sampling rate %lu for %s file is bogus\n", 
 			ft->info.rate, ft->filename);
 	if (ft->info.size == -1)

@@ -887,7 +887,7 @@ ft_t ft;
 			     ft->info.style == ALAW) &&
 			    !wav->second_header)
 			{
-				warn("Do not support Unsigned, ulaw, or alay with 16 bit data.  Forcing to Signed");
+				warn("Do not support Unsigned, ulaw, or alaw with 16 bit data.  Forcing to Signed");
 				ft->info.style = SIGN2;
 			}
 			break;

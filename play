@@ -106,10 +106,10 @@ while [ $# -ne 0 ]; do
 	    ;;
 	-t)
 	    shift
-	    fopts="$fopts -t $1"
+	    fopts2="$fopts -t $1"
 	    ;;
 	--type=*)
-	    fopts="$fopts -t `echo $1 | sed 's/.*=//'`"
+	    fopts2="$fopts -t `echo $1 | sed 's/.*=//'`"
 	    ;;
 	-v)
 	    shift
@@ -184,8 +184,15 @@ esac
 # If name is "rec" then record else assume user is wanting to play
 # a sound file.
 if [ "$program_name" = "rec" ]; then
-    echo "Send break (control-c) to end recording"
-    sox $volume $arch_defines $fopts $device "$filename" $effects
+
+    # Don't send data to stdout if they are reading from it.
+    if [ "$filename" = "-" ]; then
+      echo "Send break (control-c) to end recording" 1>&2
+    else
+      echo "Send break (control-c) to end recording"
+    fi
+    sox $volume $arch_defines $fopts $device $fopts2 "$filename" $effects 
+
 else
-    sox $volume $fopts "$filename" $arch_defines $device $effects
+    sox $volume $fopts $fopts2 "$filename" $arch_defines $device $effects
 fi

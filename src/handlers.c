@@ -452,6 +452,10 @@ extern void chorus_flow();
 extern void chorus_drain();
 extern void chorus_stop();
 
+extern void compand_getopts();
+extern void compand_start();
+extern void compand_flow();
+
 extern void copy_getopts();
 extern void copy_start();
 extern void copy_flow();
@@ -589,6 +593,9 @@ EXPORT effect_t effects[] = {
 	{"chorus", 0,
 	        chorus_getopts, chorus_start, chorus_flow,
 	 chorus_drain, chorus_stop},
+	{"compand", EFF_MCHAN,
+	        compand_getopts, compand_start, compand_flow,
+		null_drain, nothing},
 	{"copy", EFF_MCHAN, 
 		copy_getopts, copy_start, copy_flow, null_drain, nothing},
 	{"cut", EFF_MCHAN, 

@@ -22,10 +22,10 @@ FOBJ	= $(RDIR)/8svx.r $(RDIR)/aiff.r $(RDIR)/alsa.r $(RDIR)/au.r
 	  $(RDIR)/tx16w.r $(RDIR)/voc.r $(RDIR)/wav.r $(RDIR)/wve.r
 
 EOBJ	= $(RDIR)/avg.r $(RDIR)/band.r $(RDIR)/chorus.r \
-	  $(RDIR)/copy.r $(RDIR)/cut.r $(RDIR)/deemphas.r $(RDIR)/dyn.r \
-	  $(RDIR)/echo.r $(RDIR)/echos.r $(RDIR)/flanger.r $(RDIR)/highp.r \
-	  $(RDIR)/lowp.r $(RDIR)/map.r $(RDIR)/mask.r $(RDIR)/phaser.r \
-	  $(RDIR)/pick.r $(RDIR)/polyphas.r $(RDIR)/rate.r \
+	  $(RDIR)/copy.r $(RDIR)/comand.r $(RDIR)/cut.r $(RDIR)/deemphas.r \
+	  $(RDIR)/dyn.r $(RDIR)/echo.r $(RDIR)/echos.r $(RDIR)/flanger.r \
+	  $(RDIR)/highp.r $(RDIR)/lowp.r $(RDIR)/map.r $(RDIR)/mask.r \
+	  $(RDIR)/phaser.r $(RDIR)/pick.r $(RDIR)/polyphas.r $(RDIR)/rate.r \
 	  $(RDIR)/resample.r $(RDIR)/reverb.r $(RDIR)/reverse.r \
 	  $(RDIR)/split.r $(RDIR)/stat.r $(RDIR)/swap.r $(RDIR)/vibro.r
 
