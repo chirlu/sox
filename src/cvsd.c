@@ -34,6 +34,8 @@
 
 /* ---------------------------------------------------------------------- */
 
+#include "st_i.h"
+
 #include <math.h>
 #include <string.h>
 #include <time.h>
@@ -45,7 +47,6 @@
 #include <unistd.h>	/* For SEEK_* defines if not found in stdio */
 #endif
 
-#include "st_i.h"
 #include "cvsdfilt.h"
 
 /* ---------------------------------------------------------------------- */

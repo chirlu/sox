@@ -2,6 +2,8 @@
  * Amiga 8SVX format handler: W V Neisius, February 1992
  */
 
+#include "st_i.h"
+
 #include <math.h>
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
@@ -13,8 +15,6 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>	/* For SEEK_* defines if not found in stdio */
 #endif
-
-#include "st_i.h"
 
 /* Private data used by writer */
 typedef struct svxpriv {

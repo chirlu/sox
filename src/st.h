@@ -17,26 +17,11 @@ extern "C" {
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "ststdint.h"
 
 /* Release 12.17.3 of libst */
 #define ST_LIB_VERSION_CODE 0x0c1103
 #define ST_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
-
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#else
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#else
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-typedef u_int32_t uint32_t;
-#else
-typdef long int32_t;
-typedef unsigned long uint32_t;
-#endif
-#endif
-#endif
 
 typedef int32_t st_sample_t;
 typedef uint32_t st_size_t;

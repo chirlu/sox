@@ -223,6 +223,7 @@ install-lib: libst.a
 	install -c -m 644 libst.a $(LIBDIR)
 	install -c -m 644 libst.3 $(MANDIR)/man3
 	install -c -m 644 st.h $(INCDIR)
+	install -c -m 644 ststdint.h $(INCDIR)
 
 clean:
 	$(RM) *~ *.o *.raw *.sf core sox soxmix libst.a

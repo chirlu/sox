@@ -1,4 +1,3 @@
-#if	defined(ALSA_PLAYER)
 /*
  * Copyright 1997 Jimen Ching And Sundry Contributors
  * This source code is freely redistributable and may be used for
@@ -13,6 +12,10 @@
  * based on info grabed from aplay.c in alsa-utils package.
  */
 
+#include "st_i.h"
+
+#if	defined(ALSA_PLAYER)
+
 #include <string.h>
 #include <fcntl.h>
 #include <linux/asound.h>
@@ -20,7 +23,6 @@
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
-#include "st_i.h"
 
 static int get_format(ft_t ft, int formats, int *fmt);
 

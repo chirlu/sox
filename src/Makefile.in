@@ -129,6 +129,28 @@ install-lib: libst.a
 	$(RANLIB) $(libdir)/libst.a
 	$(INSTALL) -c -m 644 libst.3 $(mandir)/man3
 	$(INSTALL) -c -m 644 st.h $(includedir)
+	$(INSTALL) -c -m 644 ststdint.h $(includedir)
+
+PLAY_UNINSTALL_0    =
+PLAY_UNINSTALL_1    = uninstall-play
+
+uninstall: $(PLAY_UNINSTALL_$(PLAY_SUPPORT))
+	$(RM) $(bindir)/sox
+	$(RM) $(bindir)/soxmix
+	$(RM) $(mandir)/man1/sox.1
+	$(RM) $(mandir)/man1/soxmix.1
+	$(RM) $(mandir)/man1/soxexam.1
+
+uninstall-play:
+	$(RM) $(bindir)/play
+	$(RM) $(bindir)/rec
+	$(RM) $(mandir)/man1/play.1 $(mandir)/man1/rec.1
+
+uninstall-lib:
+	$(RM) $(libdir)/libst.a
+	$(RM)$(mandir)/man3/libst.3
+	$(RM) $(includedir)/st.h
+	$(RM) $(includedir)/ststdint.h
 
 clean:
 	$(RM) *.o

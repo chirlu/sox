@@ -44,14 +44,12 @@ compatible to Henry's version.
 .. cut along the dotted line .........................................
 */
 
-int ansi_c_needs_something_here_too;
+#include "st_i.h"
 
 #ifndef HAVE_GETOPT
 #include <stdio.h>
 
 #include <string.h>
-
-#include "st_i.h"
 
 /*
  * get option letter from argument vector

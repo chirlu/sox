@@ -1,4 +1,3 @@
-#if	defined(OSS_PLAYER)
 /*
  * Copyright 1997 Chris Bagwell And Sundry Contributors
  * This source code is freely redistributable and may be used for
@@ -26,6 +25,10 @@
  *
  */
 
+#include "st_i.h"
+
+#if	defined(OSS_PLAYER)
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -37,8 +40,6 @@
 #include <machine/soundcard.h>
 #endif
 #include <sys/ioctl.h>
-#include "st_i.h"
-
 /* common r/w initialization code */
 static int ossdspinit(ft_t ft)
 {

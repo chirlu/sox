@@ -11,7 +11,6 @@
  * Sound Tools skeleton file format driver.
  */
 
-#include <math.h>
 #include "st_i.h"
 
 /* Private data for SKEL file */

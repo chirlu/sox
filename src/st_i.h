@@ -14,6 +14,7 @@
  */
 
 #include "st.h"
+#include "stconfig.h"
 
 #ifdef __cplusplus
 extern "C" {

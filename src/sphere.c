@@ -9,13 +9,13 @@
  * NIST Sphere file format handler.
  */
 
+#include "st_i.h"
+
 #include <math.h>
 #include <string.h>
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
-#include "st_i.h"
-
 /* Private data for SKEL file */
 typedef struct spherestuff {
 	char	  shorten_check[4];

@@ -1,4 +1,3 @@
-#ifndef USE_OLD_RATE
 /*
  * August 21, 1998
  * Copyright 1998 Fabrice Bellard.
@@ -16,9 +15,11 @@
  * Sound Tools rate change effect file.
  */
 
-#include <math.h>
 #include "st_i.h"
 
+#ifndef USE_OLD_RATE
+
+#include <math.h>
 /*
  * Linear Interpolation.
  *
@@ -187,7 +188,6 @@ int st_rate_stop(eff_t effp)
  */
 
 #include <math.h>
-#include "st.h"
 
 /*
  * Least Common Multiple Linear Interpolation 

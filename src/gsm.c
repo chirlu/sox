@@ -1,4 +1,3 @@
-#if defined(ENABLE_GSM)
 /*
  * Copyright 1991, 1992, 1993 Guido van Rossum And Sundry Contributors.
  * This source code is freely redistributable and may be used for
@@ -28,6 +27,9 @@
  */
 
 #include "st_i.h"
+
+#if defined(ENABLE_GSM)
+
 #include "gsm/gsm.h"
 #ifdef HAVE_ERRNO_H
 #include <errno.h>

@@ -40,6 +40,8 @@
  *   chunk reading
  */
 
+#include "st_i.h"
+
 #include <math.h>
 #include <time.h>      /* for time stamping comments */
 #include <stdlib.h>
@@ -51,8 +53,6 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>	/* For SEEK_* defines if not found in stdio */
 #endif
-
-#include "st_i.h"
 
 /* Private data used by writer */
 typedef struct aiffpriv {

@@ -1,4 +1,3 @@
-#if     defined(SUNAUDIO_PLAYER)
 /*
  * Copyright 1997 Chris Bagwell And Sundry Contributors
  * This source code is freely redistributable and may be used for
@@ -15,6 +14,10 @@
  * Cleaned up changes of format somewhat in sunstartwrite on 03/31/98
  *
  */
+
+#include "st_i.h"
+
+#if     defined(SUNAUDIO_PLAYER)
 
 #include <sys/ioctl.h>
 #if defined(__SVR4) || defined(__NetBSD__)
@@ -33,8 +36,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
-#include "st_i.h"
-
 /*
  * Do anything required before you start reading samples.
  * Read file header.

@@ -7,6 +7,8 @@
  *   Forced extra comment fields to zero.
  */
 
+#include "st_i.h"
+
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -16,8 +18,6 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>	/* For SEEK_* defines if not found in stdio */
 #endif
-
-#include "st_i.h"
 
 /* Private data used by writer */
 typedef struct sndpriv {

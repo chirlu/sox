@@ -56,6 +56,9 @@ sox-12.17.3
   o Modified raw file handler to write files in the same generic buffered
     fashion that was added for reading in 12.17.2.  Seems to have
     speed up some types of writing.
+  o Reading Ogg Vorbis files could get confused of when EOF was reached.
+  o Added uninstall rules to Makefile.  Added new ststdint.h to define
+    *int*_t typedefs.
 
 sox-12.17.2
 -----------
