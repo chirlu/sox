@@ -71,8 +71,8 @@ const short iCoef[7][2] = {
                         { 392,-232}
 };
 
-inline static st_sample_t AdpcmDecode(st_sample_t c, MsState_t *state,
-                                      st_sample_t sample1, st_sample_t sample2)
+inline st_sample_t AdpcmDecode(st_sample_t c, MsState_t *state,
+                               st_sample_t sample1, st_sample_t sample2)
 {
         st_sample_t vlin;
         st_sample_t sample;
@@ -151,11 +151,11 @@ const char *AdpcmBlockExpandI(
                 ch = 0;
                 while (op < top) {
                         b = *ip++;
-			tmp = op;
+                        tmp = op;
                         *op++ = AdpcmDecode(b >> 4, state+ch, tmp[-chans], tmp[-2*chans]);
                         if (++ch == chans) ch = 0;
                         /* ch = ++ch % chans; */
-			tmp = op;
+                        tmp = op;
                         *op++ = AdpcmDecode(b&0x0f, state+ch, tmp[-chans], tmp[-2*chans]);
                         if (++ch == chans) ch = 0;
                         /* ch = ++ch % chans; */
@@ -302,7 +302,7 @@ static long ReAvgDelta(int ch, int chans, const SAMPL *ibuff, int n, int step)
 
 #endif
 
-inline static void AdpcmMashChannel(
+inline void AdpcmMashChannel(
         int ch,             /* channel number to encode, REQUIRE 0 <= ch < chans  */
         int chans,          /* total channels */
         const SAMPL *ip,    /* ip[] is interleaved input samples */
