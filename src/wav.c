@@ -1664,10 +1664,10 @@ int st_wavseek(ft_t ft, st_size_t offset)
             new_offset += wav->dataStart;
 
             ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
-    }
 
-    if( ft->st_errno == ST_SUCCESS )
-        wav->numSamples = ft->length - new_offset;
+            if( ft->st_errno == ST_SUCCESS )
+                wav->numSamples = ft->length - new_offset;
+    }
 
     return(ft->st_errno);
 }
