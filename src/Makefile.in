@@ -68,7 +68,7 @@ FOBJ	= 8svx.o aiff.o au.o auto.o avr.o cdr.o cvsd.o dat.o g711.o g721.o \
 	  sbdsp.o sf.o smp.o sndrtool.o tx16w.o voc.o wav.o wve.o
 
 EOBJ	= avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
-	  copy.o cut.o deemphas.o dyn.o echo.o echos.c flanger.o highp.o \
+	  copy.o cut.o deemphas.o dyn.o echo.o echos.o flanger.o highp.o \
 	  highpass.o lowp.o lowpass.o map.o mask.o phaser.o pick.o \
 	  polyphas.o rate.o resample.o reverb.o reverse.o split.o \
 	  stat.o swap.o vibro.o
