@@ -78,7 +78,7 @@ sox: libst.a $(GSM_$(GSM_SUPPORT)) sox.o
 	$(CC) $(LDFLAGS) -o sox sox.o $(LIBS)
 
 soxmix.o: sox.c
-	$(CC) $(CFLAGS) -DSOXMIX -c -o soxmix.o $(srcdir)/sox.c
+	$(CC) $(CFLAGS) -DSOXMIX -c $(srcdir)/sox.c -o soxmix.o
 
 soxmix: libst.a $(GSM_$(GSM_SUPPORT)) soxmix.o
 	$(CC) $(LDFLAGS) -o soxmix soxmix.o $(LIBS)

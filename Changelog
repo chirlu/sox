@@ -45,6 +45,8 @@ sox-12.17.4
     Reported by Pierre Fortin.
   o Fixed bug were memory could be trashed if a input WAV file contained
     a comment.  Found by Rhys Chard.
+  o Change command line to compile soxmix.o slightly to try and make
+    Forte compiler happy.
 
 sox-12.17.3
 -----------
