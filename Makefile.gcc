@@ -208,7 +208,7 @@ $(LIBOBJS):	st.h version.h patchlvl.h
 man: sox.1 libst.3
 	$(RM) sox.txt libst.txt
 	nroff -man sox.1 | col -b > sox.txt
-	nroff -man soxexam.1 | col -b > sox.txt
+	nroff -man soxexam.1 | col -b > soxexam.txt
 	nroff -man libst.3 | col -b > libst.txt
 
 install: sox
