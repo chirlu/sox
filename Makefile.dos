@@ -20,7 +20,7 @@ EOBJ	= avg.obj band.obj bandpass.obj breject.obj btrworth.obj chorus.obj \
 	  echos.obj filter.obj flanger.obj highp.obj highpass.obj lowp.obj \
           lowpass.obj map.obj mask.obj phaser.obj pick.obj pan.o \
 	  polyphase.obj rate.obj resample.obj reverb.obj \
-	  reverse.obj split.obj stat.obj swap.obj vibro.obj vol.obj
+	  reverse.obj speed.obj split.obj stat.obj swap.obj vibro.obj vol.obj
 
 LIBOBJS   = $(FOBJ) $(EOBJ) handlers.obj libst.obj misc.obj getopt.obj util.obj
 

@@ -66,6 +66,9 @@ sox-12.17
   o Richard Kent fixed a byte alignment problem in aiff comment code.
   o Loring Holden added support to create missing directories on install
     and support for installs from outside the source directory.
+  o Fabien COELHO added a pan and volume effect.
+  o Fabien COELHO added a speed effect to sox (like speeding up a tape
+    machine).
 
 sox-12.16
 ---------

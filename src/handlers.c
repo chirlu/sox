@@ -581,6 +581,12 @@ extern int st_reverse_flow();
 extern int st_reverse_drain();
 extern int st_reverse_stop();
 
+extern int st_speed_getopts();
+extern int st_speed_start();
+extern int st_speed_flow();
+extern int st_speed_drain();
+extern int st_speed_stop();
+
 extern int st_split_getopts();
 extern int st_split_start();
 extern int st_split_flow();
@@ -702,6 +708,9 @@ st_effect_t st_effects[] = {
 	{"reverse", 0, 
 		st_reverse_getopts, st_reverse_start, 
 		st_reverse_flow, st_reverse_drain, st_reverse_stop},
+	{"speed", 0, 
+		st_speed_getopts, st_speed_start, 
+		st_speed_flow, st_speed_drain, st_speed_stop},
 	{"split", ST_EFF_CHAN | ST_EFF_MCHAN, 
 		st_split_getopts, st_split_start, st_split_flow, 
 		st_null_drain, st_split_stop},

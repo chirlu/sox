@@ -39,8 +39,9 @@ The sound effects include:
   o Add an echo 
   o Add a sequence of echos
   o Apply a flanger effect
-  o Apply a high-pass filters
-  o Apply a low-pass filters
+  o Apply a high-pass filter
+  o Apply a low-pass filter
+  o Pan sound between channels
   o Display a list of loops in a file
   o Add masking noise to a signal
   o Apply a phaser effect
@@ -50,10 +51,13 @@ The sound effects include:
      changes using real signal theory!
   o Apply a reverb effect
   o Reverse the sound samples (to search for Satanic messages ;-)
+  o Change the speed of samples being played (like speeding up the motor
+    on a tape recorder)
   o Convert from mono to stereo
   o Swap stereo channels
   o Display general stats on a sound sample
   o Add the world-famous Fender Vibro-Champ effect
+  o Adjust volume of samples
 
 History:
 

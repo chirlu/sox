@@ -107,6 +107,8 @@ sox \- Sound eXchange : universal sound sample translator
 .br
 	reverse
 .br
+	speed \ffactor\f
+.br
 	split
 .br
 	stat [ \fIdebug\fB | \fI-v\fB ]
@@ -848,6 +850,14 @@ reverse
 Reverse the sound sample completely.
 Included for finding Satanic subliminals.
 .TP 10
+speed \ffactor\f
+Speed up or down the sound, as a magnetic tape with a speed control. 
+It affects both pitch and time. A factor of 1.0 means no change, 
+and is the default. 
+2.0 doubles speed, thus time length is cut by a half and pitch 
+is one octave higher. 
+0.5 halves speed thus time length doubles and pitch is one octave lower. 
+.TP 10
 split
 Turn a mono sample into a stereo sample by copying
 the input channel to the left and right channels.
@@ -908,7 +918,7 @@ then a value of 1.0 also means no change in volume.
 .br
 When type is 
 .I dB
-the amplitude is change logrithmically.
+the amplitude is change logarithmically.
 0.0 is constant while +6 doubles the amplitude.
 .P
 .I Sox

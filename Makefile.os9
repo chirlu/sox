@@ -30,8 +30,8 @@ EOBJ	= $(RDIR)/avg.r $(RDIR)/band.r $(RDIR)/chorus.r \
 	  $(RDIR)/pan.r $(RDIR)/phaser.r $(RDIR)/pick.r \
 	  $(RDIR)/polyphas.r $(RDIR)/rate.r \
 	  $(RDIR)/resample.r $(RDIR)/reverb.r $(RDIR)/reverse.r \
-	  $(RDIR)/split.r $(RDIR)/stat.r $(RDIR)/swap.r $(RDIR)/vibro.r \
-	  $(RDIR)/vol.r
+	  $(RDIR)/speed.r $(RDIR)/split.r $(RDIR)/stat.r $(RDIR)/swap.r \
+	  $(RDIR)/vibro.r $(RDIR)/vol.r
 
 
 LIBOBJS	=	$(FOBJ) $(EOBJ) $(RDIR)/handlers.r $(RDIR)/libst.r \

@@ -185,6 +185,7 @@ LONG *isamp, *osamp;
 		stat->last = samp;
 	}
 	stat->read += len;
+	*isamp = *osamp = len;
 	/* Process all samples */
 	return (ST_SUCCESS);
 }
