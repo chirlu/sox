@@ -459,11 +459,6 @@ ft_t ft;
     ULONG    bytesPerBlock = 0;
     ULONG    bytespersample;	    /* bytes per sample (per channel */
 
-    /* This is needed for rawread(), st_readw, etc */
-    rc = st_rawstartread(ft);
-    if (rc)
-	return rc;
-
     endptr = (char *) &littlendian;
     if (!*endptr) ft->swap = ft->swap ? 0 : 1;
 
@@ -510,6 +505,12 @@ ft_t ft;
 	if (ft->info.encoding != -1 && ft->info.encoding != ST_ENCODING_UNSIGNED &&
 	    ft->info.encoding != ST_ENCODING_SIGN2)
 	    warn("User options overriding encoding read in .wav header");
+
+	/* Needed by rawread() functions */
+        rc = st_rawstartread(ft);
+        if (rc)
+	    return rc;
+
 	break;
 	
     case WAVE_FORMAT_IMA_ADPCM:
@@ -906,14 +907,20 @@ LONG *buf, len;
 	wav_t	wav = (wav_t) ft->priv;
 	LONG	done;
 	
-	if (len > wav->numSamples) len = wav->numSamples;
-
 	/* If file is in ADPCM encoding then read in multiple blocks else */
 	/* read as much as possible and return quickly. */
 	switch (ft->info.encoding)
 	{
 	case ST_ENCODING_IMA_ADPCM:
 	case ST_ENCODING_ADPCM:
+
+	    /* FIXME: numSamples is not used consistently in
+	     * wav handler.  Sometimes it accounts for stereo,
+	     * sometimes it does not.
+	     */
+	    if (len > (wav->numSamples*ft->info.channels)) 
+	        len = (wav->numSamples*ft->info.channels);
+
 	    done = 0;
 	    while (done < len) { /* Still want data? */
 		/* See if need to read more from disk */
@@ -928,7 +935,6 @@ LONG *buf, len;
 			wav->numSamples = 0;
 			return done;
 		    }
-		    wav->blockSamplesRemaining *= ft->info.channels;
 		    wav->samplePtr = wav->samples;
 		}
 
@@ -937,11 +943,11 @@ LONG *buf, len;
 		    short *p, *top;
 		    int ct;
 		    ct = len-done;
-		    if (ct > wav->blockSamplesRemaining)
-			ct = wav->blockSamplesRemaining;
+		    if (ct > (wav->blockSamplesRemaining*ft->info.channels))
+			ct = (wav->blockSamplesRemaining*ft->info.channels);
 
 		    done += ct;
-		    wav->blockSamplesRemaining -= ct;
+		    wav->blockSamplesRemaining -= (ct/ft->info.channels);
 		    p = wav->samplePtr;
 		    top = p+ct;
 		    /* Output is already signed */
@@ -951,16 +957,28 @@ LONG *buf, len;
 		    wav->samplePtr = p;
 		}
 	    }
+	    /* "done" for ADPCM equals total data processed and not
+	     * total samples procesed.  The only way to take care of that
+	     * is to return here and not fall thru.
+	     */
+	    wav->numSamples -= (done / ft->info.channels);
+	    return done;
 	    break;
 
 #ifdef HAVE_LIBGSM
 	case ST_ENCODING_GSM:
+	    if (len > wav->numSamples) 
+	        len = wav->numSamples;
+
 	    done = wavgsmread(ft, buf, len);
 	    if (done == 0 && wav->numSamples != 0)
 		warn("Premature EOF on .wav input file");
 	break;
 #endif
 	default: /* assume PCM encoding */
+	    if (len > wav->numSamples) 
+	        len = wav->numSamples;
+
 	    done = st_rawread(ft, buf, len);
 	    /* If software thinks there are more samples but I/O */
 	    /* says otherwise, let the user know about this.     */

@@ -143,7 +143,7 @@ char **argv;
 		}
 	}
 
-	if ((n >= 1) && !sscanf(argv[0], "%lf", &r->rolloff))
+	if ((n >= 1) && (sscanf(argv[0], "%lf", &r->rolloff) != 1))
 	{
 	  fail("Usage: resample [ rolloff [ beta ] ]");
 	  return (ST_EOF);
