@@ -335,7 +335,7 @@ ft_t ft;
 	    return rc;
 
 	/* Attempt to update header */
-	if (!ft->seekable)
+	if (ft->seekable)
 	{
 	  if (fseek(ft->fp, 0L, 0) != 0)
 	  {

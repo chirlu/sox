@@ -1242,7 +1242,7 @@ int second_header;
 			    return ST_EOF;
 			}
 			wFormatTag = WAVE_FORMAT_IMA_ADPCM;
-			wBlockAlign = wChannels * 64; /* reasonable default */
+			wBlockAlign = wChannels * 256; /* reasonable default */
 			wBitsPerSample = 4;
 	    		wExtSize = 2;
 			wSamplesPerBlock = ImaSamplesIn(0, wChannels, wBlockAlign, 0);

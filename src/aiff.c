@@ -35,9 +35,13 @@
  *
  * Nov 25, 1999 - internal functions made static
  *
+ * Jul 12, 2000 - Leigh Smith <leigh@tomandandy.com>
+ *   Replaced ANNO with COMT chunk writing headers and added COMT
+ *   chunk reading
  */
 
 #include <math.h>
+#include <time.h>      /* for time stamping comments */
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -60,6 +64,7 @@ static void write_ieee_extended(P2(ft_t, double));
 static double ConvertFromIeeeExtended(P1(unsigned char*));
 static void ConvertToIeeeExtended(P2(double, char *));
 static int textChunk(P3(char **text, char *chunkDescription, ft_t ft));
+static int commentChunk(P3(char **text, char *chunkDescription, ft_t ft));
 static void reportInstrument(P1(ft_t ft));
 
 int st_aiffstartread(ft) 
@@ -226,7 +231,7 @@ ft_t ft;
 			/* At least one known program generates an INST */
 			/* block with everything zeroed out (meaning    */
 			/* no Loops used).  In this case it should just */
-			/* be ingorned.				        */
+			/* be ignored.				        */
 			if (sustainLoopBegin == 0 && releaseLoopBegin == 0)
 				foundinstr = 0;
 			else
@@ -249,9 +254,16 @@ ft_t ft;
 			rc = textChunk(&(ft->comment), "Annotation:", ft);
 			if (rc)
 			{
-				/* Fail already called in function */
+			  /* Fail already called in function */
 			  return(ST_EOF);
 			}
+		}
+		else if (strncmp(buf, "COMT", 4) == 0) {
+		  rc = commentChunk(&(ft->comment), "Comment:", ft);
+		  if (rc) {
+		    /* Fail already called in function */
+		    return(ST_EOF);
+		  }
 		}
 		else if (strncmp(buf, "AUTH", 4) == 0) {
 		  /* Author chunk */
@@ -484,6 +496,62 @@ ft_t ft;
   return(ST_SUCCESS);
 }
 
+/* Comment lengths are words, not double words, and we can have several, so
+   we use a special function, not textChunk().;
+ */
+static int commentChunk(text, chunkDescription, ft)
+char **text;
+char *chunkDescription;
+ft_t ft;
+{
+  LONG chunksize;
+  unsigned short numComments;
+  LONG timeStamp;
+  unsigned short markerId;
+  unsigned short totalCommentLength = 0;
+  unsigned int commentIndex;
+
+  st_readdw(ft, &chunksize);
+  st_readw(ft, &numComments);
+  for(commentIndex = 0; commentIndex < numComments; commentIndex++) {
+    unsigned short commentLength;
+
+    st_readdw(ft, &timeStamp);
+    st_readw(ft, &markerId);
+    st_readw(ft, &commentLength);
+    totalCommentLength += commentLength;
+    /* allocate enough memory to hold the text including a terminating \0 */
+    if(commentIndex == 0) {
+      *text = (char *) malloc((size_t) totalCommentLength + 1);
+    }
+    else {
+      realloc(*text, (size_t) totalCommentLength + 1);
+    }
+
+    if (*text == NULL) {
+	st_fail("AIFF: Couldn't allocate %s header", chunkDescription);
+	return(ST_EOF);
+    }
+    if (fread(*text + totalCommentLength - commentLength, 1, commentLength, ft->fp) != commentLength) {
+	st_fail("AIFF: Unexpected EOF in %s header", chunkDescription);
+	return(ST_EOF);
+    }
+    *(*text + totalCommentLength) = '\0';
+    if (commentLength % 2) {
+	/* Read past pad byte */
+	char c;
+	if (fread(&c, 1, 1, ft->fp) != 1) {
+	    st_fail("AIFF: Unexpected EOF in %s header", chunkDescription);
+	    return(ST_EOF);
+	}
+    }
+  }
+  if(verbose) {
+    printf("%-10s   \"%s\"\n", chunkDescription, *text);
+  }
+  return(ST_SUCCESS);
+}
+
 LONG st_aiffread(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
@@ -627,10 +695,15 @@ LONG nframes;
 		8 /*SSND hdr*/ + 12 /*SSND chunk*/;
 	int bits = 0;
 	int i;
-	int comment_size;
+	int padded_comment_size = 0;
+	int comment_size = 0;
+	LONG comment_chunk_size = 0L;
 
-	hsize += 8 + 2 + 16*ft->instr.nloops;	/* MARK chunk */
-	hsize += 20;				/* INST chunk */
+	/* MARK and INST chunks */
+	if (ft->instr.nloops) {
+	  hsize += 8 /* MARK hdr */ + 2 + 16*ft->instr.nloops;
+	  hsize += 8 /* INST hdr */ + 20; /* INST chunk */
+	}
 
 	if (ft->info.encoding == ST_ENCODING_SIGN2 && 
 	    ft->info.size == ST_SIZE_BYTE)
@@ -644,23 +717,47 @@ LONG nframes;
 		return(ST_EOF);
 	}
 
-	st_writes(ft, "FORM"); /* IFF header */
-	st_writedw(ft, hsize + nframes * ft->info.size * ft->info.channels); /* file size */
-	st_writes(ft, "AIFF"); /* File type */
-
-	/* ANNO chunk -- holds comments text, however this is */
-	/* discouraged by Apple in preference to a COMT comments */
-	/* chunk, which holds a timestamp and marker id */
+	/* COMT comment chunk -- holds comments text with a timestamp and marker id */
+	/* We calculate the comment_chunk_size if we will be writing a comment */
 	if (ft->comment)
 	{
-	  st_writes(ft, "ANNO");
-	  /* Must put an even number of characters out.  True 68k processors
-	   * OS's seem to require this 
-	   */
 	  comment_size = strlen(ft->comment);
-	  st_writedw(ft, (LONG)(((comment_size % 2) == 0) ? comment_size : comment_size + 1)); /* ANNO chunk size, the No of chars */
+	  /* Must put an even number of characters out.
+	   * True 68k processors OS's seem to require this.
+	   */
+	  padded_comment_size = ((comment_size % 2) == 0) ?
+				comment_size : comment_size + 1;
+	  /* one comment, timestamp, marker ID and text count */
+	  comment_chunk_size = (LONG) (2 + 4 + 2 + 2 + padded_comment_size);
+	  hsize += 8 /* COMT hdr */ + comment_chunk_size; 
+	}
+
+	st_writes(ft, "FORM"); /* IFF header */
+	/* file size */
+	st_writedw(ft, hsize + nframes * ft->info.size * ft->info.channels); 
+	st_writes(ft, "AIFF"); /* File type */
+
+	/* Now we write the COMT comment chunk using the precomputed sizes */
+	if (ft->comment)
+	{
+	  st_writes(ft, "COMT");
+	  st_writedw(ft, comment_chunk_size);
+
+	  /* one comment */
+	  st_writew(ft, 1);
+
+	  /* time stamp of comment, Unix knows of time from 1/1/1970,
+	     Apple knows time from 1/1/1904 */
+	  st_writedw(ft, (LONG) ((LONG) time(NULL)) + 2082844800L);
+
+	  /* A marker ID of 0 indicates the comment is not associated
+	     with a marker */
+	  st_writew(ft, 0);
+
+	  /* now write the count and the bytes of text */
+	  st_writew(ft, padded_comment_size);
 	  st_writes(ft, ft->comment);
-	  if (comment_size % 2 == 1)
+	  if (comment_size != padded_comment_size)
 		st_writes(ft, " ");
 	}
 
@@ -689,7 +786,7 @@ LONG nframes;
 			st_writedw(ft, ft->loops[i].start + ft->loops[i].length);
 			st_writeb(ft, 0);
 			st_writeb(ft, 0);
-			}
+		}
 
 		st_writes(ft, "INST");
 		st_writedw(ft, 20);

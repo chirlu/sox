@@ -70,6 +70,13 @@ sox-12.17
   o Fabien COELHO added a speed effect to sox (like speeding up a tape
     machine).  Also added pitch which changes pitch without effecting
     duration and stretch which stretch time without effecting pitch.
+  o Leigh Smit updated aiff support to use the COMT check when writing
+    comments instead of the ANNO.  It is the prefered method from Apple
+    and newer programs are starting to require it.  Also fixed some bugs
+    in how we compute the length of various chunks in output files.
+  o Changed the default block alignement for IMA ADPCM WAV files to use
+    256 which is what windows programs use.  Badly written readers expect
+    256.
 
 sox-12.16
 ---------

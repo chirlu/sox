@@ -172,7 +172,8 @@ ft_t ft;
 
 	if (fseek(ft->fp, 0L, 0) != 0)
 	{
-		st_fail("Can't rewind output file to rewrite Psion header.");		return(ST_EOF);
+		st_fail("Can't rewind output file to rewrite Psion header.");
+		return(ST_EOF);
 	}
 	wvewriteheader(ft);
 

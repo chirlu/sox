@@ -95,7 +95,7 @@ char *c;
 	return(ST_SUCCESS);
 }
 
-/* Read word. */
+/* Read byte. */
 int
 st_readb(ft, uc)
 ft_t ft;
@@ -108,7 +108,7 @@ unsigned char *uc;
 	return ST_SUCCESS;
 }
 
-/* Write word. */
+/* Write byte. */
 int
 st_writeb(ft, uc)
 ft_t ft;
