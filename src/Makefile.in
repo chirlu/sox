@@ -93,6 +93,8 @@ libst.a: $(LIBOBJS)
 gsm/libgsm.a:
 	cd gsm && $(MAKE)
 
+libs: libst.a $(GSM_$(GSM_SUPPORT))
+
 man: $(srcdir)/sox.1 $(srcdir)/soxexam.1 $(srcdir)/libst.3
 	nroff -man $(srcdir)/sox.1 | col -b > sox.txt
 	nroff -man $(srcdir)/soxexam.1 | col -b > soxexam.txt
@@ -125,14 +127,21 @@ install-lib: libst.a
 	$(srcdir)/mkinstalldirs $(libdir)
 	$(srcdir)/mkinstalldirs $(mandir)/man3
 	$(srcdir)/mkinstalldirs $(includedir)
+	$(INSTALL) -c -m 755 libst-config $(bindir)
 	$(INSTALL) -c -m 644 libst.a $(libdir)
 	$(RANLIB) $(libdir)/libst.a
 	$(INSTALL) -c -m 644 $(srcdir)/libst.3 $(mandir)/man3
 	$(INSTALL) -c -m 644 $(srcdir)/st.h $(includedir)
 	$(INSTALL) -c -m 644 ststdint.h $(includedir)
 
-install-gsmlib: $(GSM_$(GSM_SUPPORT))
-	cd gsm && $(MAKE) install-lib
+GSM_INSTALL_0       =
+GSM_INSTALL_1       = install-gsmlib
+
+install-gsmlib: gsm/libgsm.a
+		$(INSTALL) -c -m 755 libst-config $(bindir) ; \
+		cd gsm && $(MAKE) install-lib
+
+install-libs: install-lib $(GSM_INSTALL_$(GSM_SUPPORT))
 
 PLAY_UNINSTALL_0    =
 PLAY_UNINSTALL_1    = uninstall-play
