@@ -686,6 +686,7 @@ static void process(void) {
     do {
 
 #ifndef SOXMIX
+        /* FIXME: Need to look at retur code and abort on failure */
         efftab[0].olen = (*informat[0]->h->read)(informat[0],
                                                  efftab[0].obuf, 
                                                  (st_ssize_t)ST_BUFSIZ);
@@ -773,6 +774,7 @@ static void process(void) {
             if (drain_effect(f) == 0)
                 break;          /* out of while (1) */
 
+            /* FIXME: Need to look at return code and abort on failure */
             if (writing&&efftab[neffects-1].olen > 0)
                 (* outformat->h->write)(outformat, efftab[neffects-1].obuf,
                                        (st_ssize_t) efftab[neffects-1].olen);

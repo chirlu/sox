@@ -5,13 +5,13 @@ t() {
 	opts="$*"
 
 	echo "Format: $format   Options: $opts"
-	/usr/local/valgrind/bin/valgrind --tool=memcheck ./sox monkey.voc $opts /tmp/monkey.$format $effect
-	/usr/local/valgrind/bin/valgrind --tool=memcheck ./sox $opts /tmp/monkey.$format /tmp/monkey1.voc  $effect
+	./sox monkey.wav $opts /tmp/monkey.$format $effect
+	./sox $opts /tmp/monkey.$format /tmp/monkey1.wav  $effect
 }
 t 8svx
 t aiff
 t au 
-t avr
+t avr -u
 t cdr
 t cvs
 t dat

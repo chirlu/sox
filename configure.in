@@ -281,10 +281,10 @@ AC_OUTPUT()
 
 AC_CREATE_STDINT_H(src/ststdint.h)
 
-if test ! -f tests.sh; then cp ${srcdir}/tests.sh tests.sh; fi
-if test ! -f testall.sh; then cp ${srcdir}/testall.sh testall.sh; fi
-if test ! -f monkey.au; then cp ${srcdir}/monkey.au monkey.au; fi
-if test ! -f monkey.voc; then cp ${srcdir}/monkey.voc monkey.voc; fi
+if test ! -f src/tests.sh; then cp ${srcdir}/src/tests.sh src/tests.sh; fi
+if test ! -f src/testall.sh; then cp ${srcdir}/src/testall.sh src/testall.sh; fi
+if test ! -f src/monkey.au; then cp ${srcdir}/src/monkey.au src/monkey.au; fi
+if test ! -f src/monkey.wav; then cp ${srcdir}/src/monkey.wav src/monkey.wav; fi
 
 echo
 echo "Old Rate enabled..................   $enable_old_rate"
