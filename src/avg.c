@@ -45,7 +45,7 @@ typedef struct avgstuff {
 #define MIX_LEFT_BACK   8
 #define MIX_RIGHT_BACK  9
 
-#define CLIP_LEVEL      ((double)(((unsigned)1 << 31) - 1))
+#define ST_AVG_USAGE "usage: avg [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]"
 
 /*
  * Process options
@@ -64,7 +64,7 @@ int st_avg_getopts(eff_t effp, int n, char **argv)
     /* Parse parameters.  Since we don't yet know the number of */
     /* input and output channels, we'll record the information for */
     /* later. */
-    if (n) {
+    if (n == 1) {
         if(!strcmp(argv[0], "-l"))
             avg->mix = MIX_LEFT;
         else if (!strcmp(argv[0], "-r"))
@@ -83,7 +83,7 @@ int st_avg_getopts(eff_t effp, int n, char **argv)
             avg->mix = MIX_RIGHT_BACK;
         else if (argv[0][0] == '-' && !isdigit((int)argv[0][1])
                 && argv[0][1] != '.') {
-            st_fail("Usage: avg [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]");
+            st_fail(ST_AVG_USAGE);
             return (ST_EOF);
         }
         else {
@@ -104,9 +104,14 @@ int st_avg_getopts(eff_t effp, int n, char **argv)
             avg->num_pans = commas + 1;
         }
     }
-    else {
+    else if (n == 0) {
         avg->mix = MIX_CENTER;
     }
+    else {
+        st_fail(ST_AVG_USAGE);
+        return ST_EOF;
+    }
+
     return (ST_SUCCESS);
 }
 
@@ -522,10 +527,10 @@ int st_avg_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             samp = 0.0;
             for (i = 0; i < ichan; i++)
                 samp += ibuf[i] * avg->sources[i][j];
-            if (samp < -CLIP_LEVEL)
-                samp = -CLIP_LEVEL;
-            else if (samp > CLIP_LEVEL)
-                samp = CLIP_LEVEL;
+            if (samp < ST_SAMPLE_MIN)
+                samp = ST_SAMPLE_MIN;
+            else if (samp > ST_SAMPLE_MAX)
+                samp = ST_SAMPLE_MAX;
             obuf[j] = samp;
         }
     }
