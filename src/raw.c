@@ -448,25 +448,25 @@ ft_t ft; \
 }
 
 STARTREAD(sbstartread,BYTE,SIGN2) 
-STARTREAD(sbstartwrite,BYTE,SIGN2) 
+STARTWRITE(sbstartwrite,BYTE,SIGN2) 
 
 STARTREAD(ubstartread,BYTE,UNSIGNED) 
-STARTREAD(ubstartwrite,BYTE,UNSIGNED) 
+STARTWRITE(ubstartwrite,BYTE,UNSIGNED) 
 
 STARTREAD(uwstartread,WORD,UNSIGNED) 
-STARTREAD(uwstartwrite,WORD,UNSIGNED) 
+STARTWRITE(uwstartwrite,WORD,UNSIGNED) 
 
 STARTREAD(swstartread,WORD,SIGN2) 
-STARTREAD(swstartwrite,WORD,SIGN2) 
+STARTWRITE(swstartwrite,WORD,SIGN2) 
 
 STARTREAD(slstartread,DWORD,SIGN2) 
-STARTREAD(slstartwrite,DWORD,SIGN2) 
+STARTWRITE(slstartwrite,DWORD,SIGN2) 
 
 STARTREAD(ulstartread,BYTE,ULAW) 
-STARTREAD(ulstartwrite,BYTE,ULAW) 
+STARTWRITE(ulstartwrite,BYTE,ULAW) 
 
 STARTREAD(alstartread,BYTE,ALAW) 
-STARTREAD(alstartwrite,BYTE,ALAW) 
+STARTWRITE(alstartwrite,BYTE,ALAW) 
 
 void rawdefaults(ft)
 ft_t ft;
