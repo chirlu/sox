@@ -6,6 +6,15 @@ sox-11gamma.
 
 sox-12.17.4
 -----------
+  o Peter Nyhlen fixed a problem with reading Comments in Ogg Vorbis files.
+  o Added install target to allow installing libgsm from main Makefile
+    (Leigh Smith).
+  o Minor updates to sox.c to free unused memory and close all input
+    files during failures.
+  o Pieter Krul added a patch that makes play script look at AUDIODEV
+    environment variable if it exists to find which device to use.
+    This allows scripts to work with Solaris SunRays and is a good idea
+    in general.
   o Updated config.sub to detect latest supported OS's.
   o Fabrizio Gennari added support for reading and writing
     MP3 files using the external libraries libmad and libmp3lame.

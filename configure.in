@@ -153,7 +153,7 @@ CPPFLAGS="$ac_save_CPPFLAGS"
 
 dnl Test for MAD libraries.
 
-if test "madlib" != auto  && test "madlib" != no
+if test "$madlib" != auto  && test "$madlib" != no
 then
   LIBS="$LIBS -L$madlib"
 fi
@@ -163,7 +163,7 @@ dnl when they are not in system directories.  Because of this make
 dnl a backup copy of the CPPFLAGS.
 ac_save_CPPFLAGS="$CPPFLAGS"
 
-if test "madinc" != auto && test "madinc" != no
+if test "$madinc" != auto && test "$madinc" != no
 then
   CFLAGS="$CFLAGS -I$madinc"
   ac_save_CPPFLAGS="$CPPFLAGS"
@@ -183,7 +183,7 @@ CPPFLAGS="$ac_save_CPPFLAGS"
 
 dnl Test for LAME library.
 
-if test "lamelib" != auto  && test "lamelib" != no
+if test "$lamelib" != auto  && test "$lamelib" != no
 then
   LIBS="$LIBS -L$lamelib"
 fi
@@ -193,12 +193,12 @@ dnl when they are not in system directories.  Because of this make
 dnl a backup copy of the CPPFLAGS.
 ac_save_CPPFLAGS="$CPPFLAGS"
 
-if test "lameinc" != auto && test "lameinc" != no
+if test "$lameinc" != auto && test "$lameinc" != no
 then
   CFLAGS="$CFLAGS -I$lameinc"
   ac_save_CPPFLAGS="$CPPFLAGS"
   if test \! -z "$lameinc" ; then
-    CPPFLAGS="$CPPFLAGS -I$madinc"
+    CPPFLAGS="$CPPFLAGS -I$lameinc"
   fi
 fi
 

@@ -133,6 +133,7 @@ int st_vorbisstartread(ft_t ft)
 	else 
 	{
 		comment_size = 0;
+
 		for (i = 0; i < vc->comments; i++)
 			comment_size += vc->comment_lengths[i] + 1;
 
@@ -150,13 +151,16 @@ int st_vorbisstartread(ft_t ft)
 		offset = 0;
 		for (i = 0; i < vc->comments; i++)
 		{
-			strncpy(ft->comment + i, vc->user_comments[i],
+			strncpy(ft->comment + offset, vc->user_comments[i],
 				vc->comment_lengths[i]);
 			offset += vc->comment_lengths[i];
 			ft->comment[offset] = '\n';
 			offset++;
 		}
-		ft->comment[offset] = 0; // End comment
+		/* On last comment, end string by overwriting last \n */
+		if (offset > 0)
+		    offset--;
+		ft->comment[offset] = 0;
 	}
 
 	/* Setup buffer */

@@ -78,7 +78,7 @@ sox: libst.a $(GSM_$(GSM_SUPPORT)) sox.o
 	$(CC) $(LDFLAGS) -o sox sox.o $(LIBS)
 
 soxmix.o: sox.c
-	$(CC) $(CFLAGS) -DSOXMIX -c -o soxmix.o $<
+	$(CC) $(CFLAGS) -DSOXMIX -c -o soxmix.o $(srcdir)/sox.c
 
 soxmix: libst.a $(GSM_$(GSM_SUPPORT)) soxmix.o
 	$(CC) $(LDFLAGS) -o soxmix soxmix.o $(LIBS)
@@ -130,6 +130,9 @@ install-lib: libst.a
 	$(INSTALL) -c -m 644 $(srcdir)/libst.3 $(mandir)/man3
 	$(INSTALL) -c -m 644 $(srcdir)/st.h $(includedir)
 	$(INSTALL) -c -m 644 ststdint.h $(includedir)
+
+install-gsmlib: $(GSM_$(GSM_SUPPORT))
+	cd gsm && $(MAKE) install-lib
 
 PLAY_UNINSTALL_0    =
 PLAY_UNINSTALL_1    = uninstall-play

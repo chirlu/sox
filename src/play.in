@@ -188,6 +188,12 @@ case $arch in
     ;;
 esac
 
+# If user sets AUDIODEV environment variable then force output device
+# to by that.  Solaris SunRay's make use of this for sure.
+if [ -n "$AUDIODEV" ]; then
+    device="$AUDIODEV"
+fi
+
 # If name is "rec" then record else assume user is wanting to play
 # a sound file.
 if [ "$program_name" = "rec" ]; then

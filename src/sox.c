@@ -93,10 +93,10 @@ static int drain_effect(int);
 #define REQUIRED_INPUT_FILES 1
 #endif
 
-static ft_t informat[MAX_INPUT_FILES] = { 0 };
+static ft_t informat[MAX_INPUT_FILES];
 static int input_count = 0;
 
-static ft_t outformat = 0;
+static ft_t outformat;
 static int output_count = 0;
 
 /* We parse effects into a temporary effects table and then place into
@@ -133,6 +133,7 @@ char **argv;
         int argc_effect;
         ft_t ft;
         int parsing_output = 0;
+	int i;
 
         myname = argv[0];
 
@@ -288,6 +289,14 @@ char **argv;
 
         process();
         statistics();
+
+	for (i = 0; i < input_count; i++)
+	{
+	    if (informat[i])
+		free(informat[i]);
+	}
+	if (outformat)
+	    free(outformat);
         return(0);
 }
 
@@ -733,6 +742,15 @@ static void process(void) {
 
     } while (1); /* break; efftab[0].olen == 0 */
 
+#ifdef SOXMIX
+    /* Free input buffers now that they are not used */
+    for (f = 0; f < MAX_INPUT_FILES; f++)
+    {
+        free(ibuf[f]);
+    }
+#endif
+
+
     /* Drain the effects out first to last,
      * pushing residue through subsequent effects */
     /* oh, what a tangled web we weave */
@@ -751,7 +769,14 @@ static void process(void) {
                 break;
         }
     }
-
+    
+    /* Free output buffers now that they won't be used */
+    for(e = 0; e < neffects; e++)
+    {
+        free(efftab[e].obuf);
+        if (efftabR[e].obuf)
+	    free(efftabR[e].obuf);
+    }
 
     /* Very Important:
      * Effect stop is called BEFORE files close.
@@ -1186,16 +1211,25 @@ char *opt;
 }
 
 
-/* called from util.c:fail */
+/* called from util.c::st_fail() */
 void cleanup(void) {
-        /* Close the input file and outputfile before exiting*/
-        if (informat[0] && informat[0]->fp)
-                fclose(informat[0]->fp);
-        if (outformat && outformat->fp) {
-                fclose(outformat->fp);
-                /* remove the output file because we failed, if it's ours. */
-                /* Don't if its not a regular file. */
-                if (filetype(fileno(outformat->fp)) == S_IFREG)
-                    unlink(outformat->filename);
-        }
+    int i;
+
+    /* Close the input file and outputfile before exiting*/
+    for (i = 0; i < input_count; i++)
+    {
+        if (informat[i] && informat[i]->fp)
+                fclose(informat[i]->fp);
+	if (informat[i])
+	    free(informat[i]);
+    }
+    if (outformat && outformat->fp) {
+	fclose(outformat->fp);
+	/* remove the output file because we failed, if it's ours. */
+	/* Don't if its not a regular file. */
+	if (filetype(fileno(outformat->fp)) == S_IFREG)
+	    unlink(outformat->filename);
+    }
+    if (outformat)
+	free(outformat);
 }
