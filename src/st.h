@@ -292,6 +292,8 @@ char *strerror(P1(int errorcode));
  * possible byte swapping.
  */
 /* declared in misc.c */
+LONG	st_read(P4(ft_t ft, void *buf, int size, LONG len));
+LONG	st_write(P4(ft_t ft, void *buf, int size, LONG len));
 int	st_reads(P3(ft_t ft, char *c, int len));
 int	st_writes(P2(ft_t ft, char *c));
 int	st_readb(P2(ft_t ft, unsigned char *uc));

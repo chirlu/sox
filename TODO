@@ -1,16 +1,11 @@
 People are encouraged to pick some of these and implement it.  Send
 all patches to cbagwell@sprynet.com.
 
-  o SJB: The old highp.c filter is IMHO broken, need to review that code.
-
   o All comment code has a memory leak.  They must malloc memory to
     store comment but its never free()'d.
 
   o Create a version of OSS and Sun driver that can play and record from the
     same device in duplex.
-
-  o Internally sox can handle multiple effects on a given sound file.
-    Add support for this from the command line.
 
   o Add support for mixing multiple inputs from command line.
 
@@ -34,7 +29,7 @@ all patches to cbagwell@sprynet.com.
 
   o Comment strings.  Some file formats have space for embedded comments.
     These are currently thrown away.  Printing them out, carrying them
-    forward, and an to add new ones would be handy.
+    forward, and an option to add new ones would be handy.
 
   o Add support for .TXT format as Cooledit supports.  Not really fit for
     graphing since it is only a stream of ascii sample values but some
@@ -43,17 +38,14 @@ all patches to cbagwell@sprynet.com.
 
   o Update auto file type to include detection of .wve and .smp files.
 
-  o This software wants to be a dataflow system with signal
-    sources, sinks, and processors.  It wants to be class-based.
-    It wants to have a scripting control language.
-    It's really a shame I hate C++.
-
   o Keep sox from using "fail" on errors.  Sox was supposed to be
     a sound library called "ST" but libraries shouldn't exit a program,
-    they should return error codes for users to handle.
+    they should return error codes for users to handle.  Initial support
+    for this has been added.  Needs to be completed.
 
   o Enhance general robustness... For instance, malloc is called in
-    lots of places without checking its return value.
+    lots of places without checking its return value.  See last option
+    as well.
 
 SOX includes skeleton format files to assist you in supporting new 
 formats, sound effect loops, and special-purpose programs.

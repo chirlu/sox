@@ -89,7 +89,7 @@ char **argv;
 		{
 			stat->fft = 1;
 		}
-		else if (!(strcmp(argv[0], "debug"))) {
+		else if (!(strcmp(argv[0], "-d"))) {
 			stat->volume = 2;
 		}
 		else

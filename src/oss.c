@@ -105,22 +105,42 @@ ft_t ft;
     }
 
     tmp = samplesize;
-    if (ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp) < 0 || 
-	tmp != samplesize)
+    if (ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp) < 0)
     {
 	st_fail("Unable to set the sample size to %d", samplesize);
 	return (ST_EOF);
+    }
+
+    if (tmp != samplesize)
+    {
+	if (tmp == 16)
+	{
+	    st_warn("Sound card appears to only support singled word samples.  Overriding format");
+	    ft->info.size = ST_SIZE_WORD;
+	    ft->info.encoding = ST_ENCODING_SIGN2;
+	}
+	else if (tmp == 8)
+	{
+	    st_warn("Sound card appears to only support unsigned byte samples. Overriding format");
+	    ft->info.size = ST_SIZE_BYTE;
+	    ft->info.encoding = ST_ENCODING_UNSIGNED;
+	}
     }
 
     if (ft->info.channels == 2) dsp_stereo = 1;
     else dsp_stereo = 0;
 
     tmp = dsp_stereo;
-    if (ioctl(fileno(ft->fp), SNDCTL_DSP_STEREO, &tmp) < 0 ||
-	tmp != dsp_stereo) {
-	ft->info.channels = 1;
+    if (ioctl(fileno(ft->fp), SNDCTL_DSP_STEREO, &tmp) < 0)
+    {
 	st_warn("Couldn't set to %s", dsp_stereo?  "stereo":"mono");
 	dsp_stereo = 0;
+    }
+
+    if (tmp != dsp_stereo)
+    {
+	st_warn("Sound card appears to only support %d channels.  Overriding format\n", tmp+1);
+	ft->info.channels = tmp + 1;
     }
 
     tmp = ft->info.rate;

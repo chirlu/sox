@@ -47,11 +47,38 @@ static const char writerr[] = "Error writing sample file.  You are probably out 
 
 /* Utilities */
 
+/* Read in a buffer of data of length len and each element is size bytes.
+ * Returns number of elements read, not bytes read.
+ */
+
+LONG st_read(ft, buf, size, len)
+ft_t ft;
+void *buf;
+int size;
+LONG len;
+{
+    return fread(buf, size, len, ft->fp);
+}
+
+/* Write a buffer of data of length len and each element is size bytes.
+ * Returns number of elements writen, not bytes writen.
+ */
+
+LONG st_write(ft, buf, size, len)
+ft_t ft;
+void *buf;
+int size;
+LONG len;
+{
+    return fwrite(buf, size, len, ft->fp);
+}
+
 /* Read and write known datatypes in "machine format".  Swap if indicated.
  * They all return ST_EOF on error and ST_SUCCESS on success.
  */
-
-/* Read n-char string (and possibly null-terminating). */
+/* Read n-char string (and possibly null-terminating). 
+ * Stop reading and null-terminate string if either a 0 or \n is reached. 
+ */
 int
 st_reads(ft, c, len)
 ft_t ft;
@@ -69,7 +96,7 @@ int len;
 	    *sc = 0;
 	    return (ST_EOF);
 	}
-	if (in == 0)
+	if (in == 0 || in == '\n')
 	{
 	    break;
 	}

@@ -231,6 +231,16 @@ extern int  st_sndtstartwrite();
 extern LONG st_sndtwrite();
 extern int  st_sndtstopwrite();
 
+static char *spherenames[] = {
+	"sph",
+	(char *) 0
+};
+
+extern int  st_spherestartread();
+extern LONG st_sphereread();
+extern int  st_spherestartwrite();
+extern int  st_spherestopwrite();
+
 #if	defined(SUNAUDIO_PLAYER)
 static char *sunnames[] = {
 	"sunau",
@@ -409,6 +419,9 @@ st_format_t st_formats[] = {
 	{sndtnames, ST_FILE_STEREO,		/* Sndtool Sound File */
 		st_sndtstartread, st_rawread, st_rawstopread, 
 		st_sndtstartwrite, st_sndtwrite, st_sndtstopwrite},
+	{spherenames, ST_FILE_STEREO,		/* NIST Sphere File */
+	        st_spherestartread, st_sphereread, st_rawstopread,
+		st_spherestartwrite, st_rawwrite, st_spherestopwrite},
 #if	defined(SUNAUDIO_PLAYER)
 	{sunnames, ST_FILE_STEREO,		/* Sun /dev/audio player */
 		st_sunstartread, st_rawread, st_rawstopread,
