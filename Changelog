@@ -15,6 +15,11 @@ sox-12.17.5
     appears to confuse some conversion programs.  Updated sox.1
     man page for typo in reverb option.
   o Andrew Church fixed problem with header of stereo 8SVX files.
+  o Jimen Ching added support to scan over garbage data at the
+    beginning of MP3 files to find valid frames.  This is useful
+    to play WAV and AIFF files that have MP3 data in them until
+    those handlers support it directly.  To play those, force
+    sox to use the mp3 handler with the "-t mp3" option.
 
 sox-12.17.4
 -----------
