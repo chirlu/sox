@@ -17,6 +17,7 @@
  */
 
 #include <math.h>
+#include <string.h>
 #include "st.h"
 
 /* Private data for STAT effect */

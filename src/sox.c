@@ -997,9 +997,9 @@ char *opt;
 /* called from util.c:fail */
 void cleanup(void) {
 	/* Close the input file and outputfile before exiting*/
-	if (informat->fp)
+	if (informat && informat->fp)
 		fclose(informat->fp);
-	if (outformat->fp) {
+	if (outformat && outformat->fp) {
 		fclose(outformat->fp);
 		/* remove the output file because we failed, if it's ours. */
 		/* Don't if its not a regular file. */

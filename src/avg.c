@@ -20,6 +20,7 @@
 
 #include "st.h"
 #include <ctype.h>
+#include <string.h>
 
 /* Private data for SKEL file */
 typedef struct avgstuff {
