@@ -48,6 +48,8 @@ sox-12.17.2
   o Corrected AU header length value when comments were less than
     4 bytes.
   o Added support for reading non-standard bit size data from AIFF files.
+  o Ignore unmatched MARK/INSTR chunks in AIFF files now instead of quiting.
+  o Fixed ALAW encoding bug in .au files as pointed out by Bruce Forsberg.
 
 sox-12.17.1
 -----------

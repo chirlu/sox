@@ -403,17 +403,13 @@ ft_t ft;
 
 	if (foundmark && !foundinstr)
 	{
-		st_fail_errno(ft,ST_EFMT,"Bogus AIFF file: MARKers but no INSTrument.");
-		return(ST_EOF);
+	    st_report("Ignoring MARK chunk since no INSTR found.");
+	    foundmark = 0;
 	}
-	/* Check for INST chunk found but no MARK chunk.  One case that is OK is
-	 * if the INST chunk is of type NOLOOP which means its not much of an instrument
-	 * anyways.
-	 */
-	if (!foundmark && foundinstr && ft->loops[0].type != 0)
+	if (!foundmark && foundinstr)
 	{
-		st_fail_errno(ft,ST_EFMT,"Bogus AIFF file: INSTrument but no MARKers.");
-		return(ST_EOF);
+	    st_report("Ignoring INSTR chunk since no MARK found.");
+	    foundinstr = 0;
 	}
 	if (foundmark && foundinstr) {
 		int i;

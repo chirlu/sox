@@ -72,7 +72,8 @@ int *size;
             break;
     case SUN_ALAW:
             *encoding = ST_ENCODING_ALAW;
-            *size = ST_SIZE_BYTE;
+	    *size = ST_SIZE_BYTE;
+	    break;
     case SUN_LIN_8:
             *encoding = ST_ENCODING_SIGN2;
             *size = ST_SIZE_BYTE;

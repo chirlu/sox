@@ -177,6 +177,7 @@ ft_t ft;
 	}
 	st_readdw(ft, &(p->nsamples));
 
+	ft->length = p->nsamples;
 	ft->info.channels = channels;
 	ft->info.rate = rate;
 	ft->info.encoding = ST_ENCODING_SIGN2;
