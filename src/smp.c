@@ -18,6 +18,7 @@
 
 #include "st.h"
 #include <string.h>
+#include <errno.h>
 
 #define NAMELEN    30		/* Size of Samplevision name */
 #define COMMENTLEN 60		/* Size of Samplevision comment, not shared */

@@ -1,7 +1,7 @@
 People are encouraged to pick some of these and implement it.  Send
 all patches to cbagwell@users.sourceforge.net.
 
-  o Add in manual page entries for silence and dcshift.
+  o Get nul effect and oss driver compiling under latest cygwin.
 
   o Make a global version of MIN/MAX instead of sprinkled min/max/MIN/MAX
 

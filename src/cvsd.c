@@ -39,6 +39,7 @@
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
+#include <errno.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>	/* For SEEK_* defines if not found in stdio */

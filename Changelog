@@ -12,6 +12,7 @@ sox-12.17.3
     settings.  This is because it can start buffering data as soon
     as the device is open and the buffered data can be in a
     wrong format.
+  o trim wasn't accounting for # of channels.
 
 sox-12.17.2
 -----------

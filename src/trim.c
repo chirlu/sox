@@ -45,9 +45,6 @@ char **argv;
 {
     trim_t trim = (trim_t) effp->priv;
 
-    trim->start = 0;
-    trim->length = 0;
-
     /* Do not know sample rate yet so hold off on completely parsing
      * time related strings.
      */
@@ -100,19 +97,28 @@ eff_t effp;
 {
     trim_t trim = (trim_t) effp->priv;
 
-
     if (st_parsesamples(effp->ininfo.rate, trim->start_str,
 		        &trim->start, 't') != ST_SUCCESS)
     {
 	st_fail(TRIM_USAGE);
 	return(ST_EOF);
     }
-    if (st_parsesamples(effp->ininfo.rate, trim->length_str,
-		        &trim->length, 't') != ST_SUCCESS)
+    /* Account for # of channels */
+    trim->start *= effp->ininfo.channels;
+    if (trim->length_str)
     {
-	st_fail(TRIM_USAGE);
-	return(ST_EOF);
+	if (st_parsesamples(effp->ininfo.rate, trim->length_str,
+		    &trim->length, 't') != ST_SUCCESS)
+	{
+	    st_fail(TRIM_USAGE);
+	    return(ST_EOF);
+	}
     }
+    else
+	trim->length = 0;
+
+    /* Account for # of channels */
+    trim->length *= effp->ininfo.channels;
 
     trim->done = 0;
     trim->index = 0;

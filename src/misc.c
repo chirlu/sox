@@ -17,10 +17,13 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <errno.h>
 
 /* for fstat */
 #include <sys/stat.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 const char *st_sizes_str[] = {
 	"NONSENSE!",

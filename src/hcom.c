@@ -24,6 +24,7 @@
 #include "st.h"
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 /* Dictionary entry for Huffman (de)compression */
 typedef struct {

@@ -29,6 +29,7 @@
 
 #include "st.h"
 #include "gsm.h"
+#include <errno.h>
 
 #define MAXCHANS 16
 

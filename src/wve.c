@@ -5,7 +5,8 @@
 
 #include "st.h"
 #include "g72x.h"
-#include "string.h"
+#include <string.h>
+#include <errno.h>
 
 /* Magic numbers used in Psion audio files */
 #define PSION_MAGIC     "ALawSoundFile**"

@@ -11,6 +11,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <errno.h>
 #include "st.h"
 
 /* Private data for SKEL file */

@@ -24,6 +24,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #ifndef HAVE_MEMMOVE
 #define memmove(dest, src, len) bcopy((src), (dest), (len))
