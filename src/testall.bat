@@ -10,9 +10,7 @@ echo. >>t.bat
 echo cls >>t.bat
 echo echo Format: %%format%%   Options: %%opts%% >>t.bat
 echo echo on >>t.bat
-echo del %%tmp%%\monkey.%%format%%
 echo .\sox monkey.voc %%opts%% %%tmp%%\monkey.%%format%% %%effect%% >>t.bat
-echo del %%tmp%%\monkey1.voc
 echo .\sox %%opts%% %%tmp%%\monkey.%%format%% %%tmp%%\monkey1.voc %%effect%% >>t.bat
 echo @echo off >>t.bat
 echo echo. >>t.bat

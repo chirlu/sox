@@ -7,6 +7,9 @@ sox-11gamma.
 sox-12.17
 ---------
   o Added AVR handler from Jan Paul Schmidt.
+  o SoX now waits until the last possible moment before opening
+    the output file.  This will allow all input and effect options
+    to be parsed for errors and abort before overwriting any file.
   o SoX will no longer write to files that exists.  This will keep
     it from deleting files when a user mistakenly types "sox *.wav".
   o Added new compander effect from Nick Bailey.  Nice general purpose

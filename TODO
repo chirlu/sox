@@ -15,9 +15,6 @@ all patches to cbagwell@sprynet.com.
   o Add GSM support to WAV format.  Goes with the above but used
     most often.
 
-  o Add option that allows one to force overwriting to an output
-    file (now that it defaults to not allowing this).
- 
   o highpass and lowpass filters don't let you specify the cut
     of freq.  Need some improvements to these filters.
 

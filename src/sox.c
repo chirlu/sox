@@ -127,6 +127,12 @@ char **argv;
 		fail("Can't open input file '%s': %s", 
 			ifile, strerror(errno));
 	ft->filename = ifile;
+#if	defined(DUMB_FILESYSTEM)
+	ft->seekable = 0;
+#else
+	ft->seekable  = (filetype(fileno(informat.fp)) == S_IFREG);
+#endif
+
 	optind++;
 
 	/* If more arguments are left then look for -e to see if */
@@ -144,50 +150,25 @@ char **argv;
 	ft = &outformat;
 	doopts(argc, argv);
 
+	/* Find and save output filename, if writing to file */
 	if (writing) {
 	    /* Get output file */
 	    if (optind >= argc)
 		usage("No output file?");
 	    ofile = argv[optind];
 	    ft->filename = ofile;
-	    /*
-	     * There are two choices here:
-	     *	1) stomp the old file - normal shell "> file" behavior
-	     *	2) fail if the old file already exists - csh mode
-	     */
-	    if (! strcmp(ofile, "-"))
-	    {
-		ft->fp = stdout;
 
-		/* stdout tends to be line-buffered.  Override this */
-		/* to be Full Buffering. */
-		if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
-		    fail("Can't set write buffer");
-	    }
-	    else {
-
- 		if ((ft->fp = fopen(ofile, READBINARY)) != NULL)
-		{
-		    fclose(ft->fp);
-		    fail("File '%s' already exists.", ofile);
-		}
-
-		ft->fp = fopen(ofile, WRITEBINARY);
-
-		if (ft->fp == NULL)
-		    fail("Can't open output file '%s': %s", 
-			 ofile, strerror(errno));
-
-		/* stdout tends to be line-buffered.  Override this */
-		/* to be Full Buffering. */
-		if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
-		    fail("Can't set write buffer");
-
-	    } /* end of else != stdout */
-	    
 	    /* Move passed filename */
 	    optind++;
-	} /* end if writing */
+
+	    /* Hold off on opening file until the very last minute.
+	     * This allows us to verify header in input files are
+	     * what they should be and parse effect command lines.
+	     * That way if anything is found invalid, we will abort
+	     * without truncating any existing file that has the same
+	     * output filename.
+	     */
+	}
 
 	/* Get effect name */
 	if (optind < argc) {
@@ -204,14 +185,6 @@ char **argv;
 	if (volume <= 0.0)
 		fail("Volume must be greater than 0.0");
 	
-#if	defined(DUMB_FILESYSETM)
-	informat.seekable  = 0;
-	outformat.seekable = 0;
-#else
-	informat.seekable  = (filetype(fileno(informat.fp)) == S_IFREG);
-	outformat.seekable = (filetype(fileno(outformat.fp)) == S_IFREG); 
-#endif
-
 	/* If file types have not been set with -t, set from file names. */
 	if (! informat.filetype) {
 		if ((informat.filetype = strrchr(ifile, LASTCHAR)) != NULL)
@@ -407,6 +380,44 @@ void process() {
 	
     /* need to check EFF_REPORT */
     if (writing) {
+        /*
+         * There are two choices here:
+	 *	1) stomp the old file - normal shell "> file" behavior
+	 *	2) fail if the old file already exists - csh mode
+	 */
+	 if (! strcmp(ofile, "-"))
+	 {
+	    ft->fp = stdout;
+
+	    /* stdout tends to be line-buffered.  Override this */
+	    /* to be Full Buffering. */
+	    if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
+	    {
+	        fail("Can't set write buffer");
+	    }
+	 }
+         else {
+
+	     ft->fp = fopen(ofile, WRITEBINARY);
+
+	     if (ft->fp == NULL)
+	         fail("Can't open output file '%s': %s", 
+		      ofile, strerror(errno));
+
+	     /* stdout tends to be line-buffered.  Override this */
+	     /* to be Full Buffering. */
+	     if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*BUFSIZ))
+	     {
+	         fail("Can't set write buffer");
+	     }
+
+        } /* end of else != stdout */
+#if	defined(DUMB_FILESYSTEM)
+	outformat.seekable = 0;
+#else
+	outformat.seekable  = (filetype(fileno(informat.fp)) == S_IFREG);
+#endif
+
 	copyformat(&informat, &outformat);
 	(* outformat.h->startwrite)(&outformat);
 	checkformat(&outformat);
