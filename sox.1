@@ -122,8 +122,6 @@ sox \- Sound eXchange : universal sound sample translator
 .br
     \fBspeed\fR [ -c ] \fIfactor\fR
 .br
-    \fBsplit\fR
-.br
     \fBstat\fR [ -s \fIn\fR ] [ -rms ] [ -v ] [ -d ]
 .br
     \fBstretch\fR [ \fIfactor\fR [ \fIwindow fade shift fading\fR ]
@@ -1132,10 +1130,6 @@ and is the default.
 is one octave higher. 
 0.5 halves speed thus time length doubles and pitch is one octave lower. 
 If the optional -c parameter is used then the factor is specified in "cents".
-.TP 10
-split
-Turn a mono sample into a stereo sample by copying
-the input channel to the left and right channels.
 .TP 10
 stat [ \fI-s n\fB ] [\fI-rms\fB ] [ \fI-v\fB ] [ \fI-d\fB ]
 Do a statistical check on the input file,

@@ -70,7 +70,6 @@ SYNOPSIS
 		   [ below_periods duration
 		     threshold[ d | % ]]
 	   speed [ -c ] factor
-	   split
 	   stat [ -s n ] [ -rms ] [ -v ] [ -d ]
 	   stretch [ factor [ window fade shift fading ]
 	   swap [ 1 2 | 1 2 3 4 ]
@@ -605,9 +604,9 @@ EFFECTS
 
        dcshift shift [ limitergain ]
 		 DC Shift the audio data, with basic linear amplitude formula.
-		 This  is  most useful if your audio data tends to not be cen-
-		 tered around a value of 0.  Shifting it back will  allow  you
-		 to  get  the  most  volume adjustments without clipping audio
+		 This  is  most	 useful	 if  your  audio  data tends to not be
+		 centered around a value of 0.	Shifting it  back  will	 allow
+		 you to get the most volume adjustments without clipping audio
 		 data.
 		 The first option is the dcshift  value.   It  is  a  floating
 		 point number that indicates the amount to shift.
@@ -657,10 +656,10 @@ EFFECTS
 		 hh:mm:ss.frac	format.	 To specify using sample counts, spec-
 		 ify the number of samples and append the letter  ’s’  to  the
 		 sample count (for example 8000s).
-		 An  optional  type  can  be  specified	 to change the type of
-		 envelope.  Choices are q for quarter of  a  sinewave,	h  for
-		 half a sinewave, t for linear slope, l for logarithmic, and p
-		 for inverted parabola.	 The default is a linear slope.
+		 An optional type can be specified to change the type of enve-
+		 lope.	Choices are q for quarter of a sinewave, h for half  a
+		 sinewave,  t  for  linear slope, l for logarithmic, and p for
+		 inverted parabola.  The default is a linear slope.
 
        filter [ low ]-[ high ] [ window-len [ beta ] ]
 		 Apply a Sinc-windowed lowpass, highpass, or  bandpass	filter
@@ -942,69 +941,66 @@ EFFECTS
 		 octave lower.	If the optional -c parameter is used then  the
 		 factor is specified in "cents".
 
-       split	 Turn  a mono sample into a stereo sample by copying the input
-		 channel to the left and right channels.
-
        stat [ -s n ] [-rms ] [ -v ] [ -d ]
-		 Do a statistical check on the input file, and	print  results
-		 on  the standard error file.  Audio data is passed unmodified
-		 from input to output file  unless  used  along	 with  the  -e
+		 Do  a	statistical check on the input file, and print results
+		 on the standard error file.  Audio data is passed  unmodified
+		 from  input  to  output  file	unless	used along with the -e
 		 option.
 
-		 The  "Volume  Adjustment:"  field in the statistics gives you
-		 the argument to the -v number which will make the  sample  as
+		 The "Volume Adjustment:" field in the	statistics  gives  you
+		 the  argument	to the -v number which will make the sample as
 		 loud as possible without clipping.
 
 		 The option -v will print out the "Volume Adjustment:" field’s
-		 value only and return.	 This could be of use  in  scripts  to
+		 value	only  and  return.  This could be of use in scripts to
 		 auto convert the volume.
 
-		 The  -s  n  option is used to scale the input data by a given
-		 factor.  The default value of n is the max value of a	signed
-		 long  variable	 (0x7fffffff).	 Internal  effects always work
-		 with signed long PCM data and so the value should  relate  to
+		 The -s n option is used to scale the input data  by  a	 given
+		 factor.   The default value of n is the max value of a signed
+		 long variable (0x7fffffff).   Internal	 effects  always  work
+		 with  signed  long PCM data and so the value should relate to
 		 this fact.
 
-		 The  -rms  option  will  convert all output average values to
+		 The -rms option will convert all  output  average  values  to
 		 root mean square format.
 
-		 There is also an optional parameter -d that will print out  a
-		 hex  dump  of the sound file from the internal buffer that is
-		 in 32-bit signed PCM data.  This is mainly  only  of  use  in
-		 tracking  down endian problems that creep in to SoX on cross-
+		 There	is also an optional parameter -d that will print out a
+		 hex dump of the sound file from the internal buffer  that  is
+		 in  32-bit  signed  PCM  data.	 This is mainly only of use in
+		 tracking down endian problems that creep in to SoX on	cross-
 		 platform versions.
 
 
        stretch factor [window fade shift fading]
-		 Time stretch file by a given factor. Change duration  without
-		 affecting  the	 pitch.	  factor of stretching: >1.0 lengthen,
-		 <1.0 shorten duration.	 window size  is  in  ms.  Default  is
-		 20ms.	The  fade  option, can be "lin".  shift ratio, in [0.0
-		 1.0]. Default depends on stretch factor. 1.0 to shorten,  0.8
+		 Time  stretch file by a given factor. Change duration without
+		 affecting the pitch.  factor of  stretching:  >1.0  lengthen,
+		 <1.0  shorten	duration.   window  size  is in ms. Default is
+		 20ms. The fade option, can be "lin".  shift  ratio,  in  [0.0
+		 1.0].	Default depends on stretch factor. 1.0 to shorten, 0.8
 		 to lengthen.  The fading ratio, in [0.0 0.5]. The amount of a
 		 fade’s default depends on factor and shift.
 
        swap [ 1 2 | 1 2 3 4 ]
-		 Swap channels in multi-channel sound files.  Optionally,  you
-		 may  specify  the channel order you would like the output in.
-		 This defaults to output channel 2 and then 1 for  stereo  and
+		 Swap  channels in multi-channel sound files.  Optionally, you
+		 may specify the channel order you would like the  output  in.
+		 This  defaults	 to output channel 2 and then 1 for stereo and
 		 2, 1, 4, 3 for quad-channels.	An interesting feature is that
-		 you may duplicate a given  channel  by	 overwriting  another.
-		 This  is  done	 by repeating an output channel on the command
-		 line.	For example, swap 2 2 will overwrite  channel  1  with
-		 channel  2’s  data; creating a stereo file with both channels
+		 you  may  duplicate  a	 given channel by overwriting another.
+		 This is done by repeating an output channel  on  the  command
+		 line.	 For  example,	swap 2 2 will overwrite channel 1 with
+		 channel 2’s data; creating a stereo file with	both  channels
 		 containing the same audio data.
 
        synth [ length ] type mix [ freq [ -freq2 ]
 
 	     [ off ] [ ph ] [ p1 ] [ p2 ] [ p3 ]
-		 The synth effect will generate various types of  audio	 data.
+		 The  synth  effect will generate various types of audio data.
 		 Although this effect is used to generate audio data, an input
-		 file must be specified.  The length of the input  audio  file
+		 file  must  be specified.  The length of the input audio file
 		 determines the length of the output audio file.
 		 <length>  length  in  sec  or	hh:mm:ss.frac,	0=inputlength,
 		 default=0
-		 <type> is sine, square,  triangle,  sawtooth,	trapetz,  exp,
+		 <type>	 is  sine,  square,  triangle, sawtooth, trapetz, exp,
 		 whitenoise, pinknoise, brownnoise, default=sine
 		 <mix> is create, mix, amod, default=create
 		 <freq> frequency at beginning in Hz, not used	for noise..
@@ -1012,66 +1008,66 @@ EFFECTS
 		 <freq/2> can be given as %%n, where ’n’ is the number of half
 		 notes in respect to A (440Hz)
 		 <off> Bias (DC-offset)	 of signal in percent, default=0
-		 <ph>  phase  shift  0..100  shift phase 0..2*Pi, not used for
+		 <ph> phase shift 0..100 shift phase  0..2*Pi,	not  used  for
 		 noise..
-		 <p1> square: Ton/Toff, triangle+trapetz:  rising  slope  time
+		 <p1>  square:	Ton/Toff,  triangle+trapetz: rising slope time
 		 (0..100)
 		 <p2> trapetz: ON time (0..100)
 		 <p3> trapetz: falling slope position (0..100)
 
        trim start [ length ]
-		 Trim  can trim off unwanted audio data from the beginning and
-		 end of the audio file.	 Audio samples are  not	 sent  to  the
+		 Trim can trim off unwanted audio data from the beginning  and
+		 end  of  the  audio  file.  Audio samples are not sent to the
 		 output stream until the start location is reached.
-		 The  optional length parameter tells the number of samples to
-		 output after the start sample and is used  to	trim  off  the
-		 back  side  of	 the  audio  data.  Using a value of 0 for the
+		 The optional length parameter tells the number of samples  to
+		 output	 after	the  start  sample and is used to trim off the
+		 back side of the audio data.  Using a	value  of  0  for  the
 		 start parameter will allow trimming off the back side only.
-		 Both options can be specified using either an amount of  time
-		 and  an  exact	 count	of samples.  The format for specifying
-		 lengths in time is hh:mm:ss.frac.  A start  value  of	1:30.5
-		 will  not  start  until 1 minute, thirty and 1/2 seconds into
-		 the audio data.  The format for specifying sample  counts  is
-		 the  number of samples with the letter ’s’ appended to it.  A
-		 value of 8000s will wait until 8000 samples are  read	before
+		 Both  options can be specified using either an amount of time
+		 and an exact count of samples.	  The  format  for  specifying
+		 lengths  in  time  is hh:mm:ss.frac.  A start value of 1:30.5
+		 will not start until 1 minute, thirty and  1/2	 seconds  into
+		 the  audio  data.  The format for specifying sample counts is
+		 the number of samples with the letter ’s’ appended to it.   A
+		 value	of  8000s will wait until 8000 samples are read before
 		 starting to process audio data.
 
        vibro speed  [ depth ]
-		 Add  the  world-famous	 Fender	 Vibro-Champ sound effect to a
-		 sound sample by using a sine wave as the volume knob.	 Speed
-		 gives	the  Hertz  value of the wave.	This must be under 30.
-		 Depth gives the amount the volume is cut  into	 by  the  sine
+		 Add the world-famous Fender Vibro-Champ  sound	 effect	 to  a
+		 sound	sample by using a sine wave as the volume knob.	 Speed
+		 gives the Hertz value of the wave.  This must	be  under  30.
+		 Depth	gives  the  amount  the volume is cut into by the sine
 		 wave, ranging 0.0 to 1.0 and defaulting to 0.5.
 
        vol gain [ type [ limitergain ] ]
-		 The  vol  effect is much like the command line option -v.  It
-		 allows you to adjust the volume of an input file  and	allows
-		 you  to  specify  the	adjustment  in	relation to amplitude,
-		 power, or dB.	If type is not specified then it  defaults  to
+		 The vol effect is much like the command line option  -v.   It
+		 allows	 you  to adjust the volume of an input file and allows
+		 you to specify	 the  adjustment  in  relation	to  amplitude,
+		 power,	 or  dB.  If type is not specified then it defaults to
 		 amplitude.
-		 When  type is amplitude then a linear change of the amplitude
-		 is performed based on the gain.  Therefore, a	value  of  1.0
-		 will  keep  the  volume the same, 0.0 to < 1.0 will cause the
-		 volume to decrease and values of > 1.0 will cause the	volume
-		 to  increase.	Beware of clipping audio data when the gain is
+		 When type is amplitude then a linear change of the  amplitude
+		 is  performed	based  on the gain.  Therefore, a value of 1.0
+		 will keep the volume the same, 0.0 to < 1.0  will  cause  the
+		 volume	 to decrease and values of > 1.0 will cause the volume
+		 to increase.  Beware of clipping audio data when the gain  is
 		 greater then 1.0.  A negative value performs the same adjust-
 		 ment while also changing the phase.
-		 When  type  is power then a value of 1.0 also means no change
+		 When type is power then a value of 1.0 also means  no	change
 		 in volume.
-		 When type is dB the  amplitude	 is  changed  logarithmically.
+		 When  type  is	 dB  the amplitude is changed logarithmically.
 		 0.0 is constant while +6 doubles the amplitude.
-		 An  optional limitergain value can be specified and should be
+		 An optional limitergain value can be specified and should  be
 		 a value much less then 1.0 (ie 0.05 or 0.02) and is used only
-		 on  peaks to prevent clipping.	 Not specifying this parameter
-		 will cause no limiter to be  used.   In  verbose  mode,  this
-		 effect	 will display the percentage of audio data that needed
+		 on peaks to prevent clipping.	Not specifying this  parameter
+		 will  cause  no  limiter  to  be used.	 In verbose mode, this
+		 effect will display the percentage of audio data that	needed
 		 to be limited.
 
 BUGS
-       The syntax is horrific.	Thats the breaks when  trying  to  handle  all
+       The  syntax  is	horrific.   Thats the breaks when trying to handle all
        things from the command line.
 
-       Please  report  any  bugs found in this version of SoX to Chris Bagwell
+       Please report any bugs found in this version of SoX  to	Chris  Bagwell
        (cbagwell@users.sourceforge.net)
 
 FILES
@@ -1079,9 +1075,9 @@ SEE ALSO
        play(1), rec(1), soxexam(1)
 
 NOTICES
-       The version of SoX that accompanies this	 manual	 page  is  support  by
+       The  version  of	 SoX  that  accompanies this manual page is support by
        Chris Bagwell (cbagwell@users.sourceforge.net).	Please refer any ques-
-       tions regarding it to this address.  You may obtain the latest  version
+       tions  regarding it to this address.  You may obtain the latest version
        at the the web site http://sox.sourceforge.net/
 
 AUTHOR
