@@ -18,6 +18,7 @@
 #endif
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <linux/asound.h>
@@ -50,31 +51,31 @@ void alsastartread(ft)
 ft_t ft;
 {
     int bps, fmt, size;
-    snd_pcm_record_info_t r_info;
+    snd_pcm_capture_info_t c_info;
     snd_pcm_format_t format;
-    snd_pcm_record_params_t r_params;
+    snd_pcm_capture_params_t c_params;
 
-    memset(&r_info, 0, sizeof(r_info));
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_RECORD_INFO, &r_info);
+    memset(&c_info, 0, sizeof(c_info));
+    ioctl(fileno(ft->fp), SND_PCM_IOCTL_CAPTURE_INFO, &c_info);
     ft->file.count = 0;
     ft->file.pos = 0;
     ft->file.eof = 0;
-    ft->file.size = r_info.buffer_size;
+    ft->file.size = c_info.buffer_size;
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
 	fail("unable to allocate output buffer of size %d", ft->file.size);
     }
-    if (ft->info.rate < r_info.min_rate) ft->info.rate = 2 * r_info.min_rate;
-    else if (ft->info.rate > r_info.max_rate) ft->info.rate = r_info.max_rate;
-    if (ft->info.channels == -1) ft->info.channels = r_info.min_channels;
-    else if (ft->info.channels > r_info.max_channels) ft->info.channels = r_info.max_channels;
+    if (ft->info.rate < c_info.min_rate) ft->info.rate = 2 * c_info.min_rate;
+    else if (ft->info.rate > c_info.max_rate) ft->info.rate = c_info.max_rate;
+    if (ft->info.channels == -1) ft->info.channels = c_info.min_channels;
+    else if (ft->info.channels > c_info.max_channels) ft->info.channels = c_info.max_channels;
     if (ft->info.size == -1) {
-	if ((r_info.hw_formats & SND_PCM_FMT_U8) || (r_info.hw_formats & SND_PCM_FMT_S8))
+	if ((c_info.hw_formats & SND_PCM_FMT_U8) || (c_info.hw_formats & SND_PCM_FMT_S8))
 	    ft->info.size = BYTE;
 	else
 	    ft->info.size = WORD;
     }
     if (ft->info.style == -1) {
-	if ((r_info.hw_formats & SND_PCM_FMT_S16_LE) || (r_info.hw_formats & SND_PCM_FMT_S8))
+	if ((c_info.hw_formats & SND_PCM_FMT_S16_LE) || (c_info.hw_formats & SND_PCM_FMT_S8))
 	    ft->info.style = SIGN2;
 	else
 	    ft->info.style = UNSIGNED;
@@ -83,12 +84,12 @@ ft_t ft;
 	switch (ft->info.style)
 	{
 	    case SIGN2:
-		if (!(r_info.hw_formats & SND_PCM_FMT_S8))
+		if (!(c_info.hw_formats & SND_PCM_FMT_S8))
 		    fail("ALSA driver does not support signed byte samples");
 		fmt = SND_PCM_SFMT_S8;
 		break;
 	    case UNSIGNED:
-		if (!(r_info.hw_formats & SND_PCM_FMT_U8))
+		if (!(c_info.hw_formats & SND_PCM_FMT_U8))
 		    fail("ALSA driver does not support unsigned byte samples");
 		fmt = SND_PCM_SFMT_U8;
 		break;
@@ -101,12 +102,12 @@ ft_t ft;
 	switch (ft->info.style)
 	{
 	    case SIGN2:
-		if (!(r_info.hw_formats & SND_PCM_FMT_S16_LE))
+		if (!(c_info.hw_formats & SND_PCM_FMT_S16_LE))
 		    fail("ALSA driver does not support signed word samples");
 		fmt = SND_PCM_SFMT_S16_LE;
 		break;
 	    case UNSIGNED:
-		if (!(r_info.hw_formats & SND_PCM_FMT_U16_LE))
+		if (!(c_info.hw_formats & SND_PCM_FMT_U16_LE))
 		    fail("ALSA driver does not support unsigned word samples");
 		fmt = SND_PCM_SFMT_U16_LE;
 		break;
@@ -120,7 +121,7 @@ ft_t ft;
     format.format = fmt;
     format.rate = ft->info.rate;
     format.channels = ft->info.channels;
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_RECORD_FORMAT, &format);
+    ioctl(fileno(ft->fp), SND_PCM_IOCTL_CAPTURE_FORMAT, &format);
 
     size = ft->file.size;
     bps = format.rate * format.channels;
@@ -128,10 +129,10 @@ ft_t ft;
     bps >>= 2;
     while (size > bps) size >>= 1;
     if (size < 16) size = 16;
-    memset(&r_params, 0, sizeof(r_params));
-    r_params.fragment_size = size;
-    r_params.fragments_min = 1;
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_RECORD_PARAMS, &r_params);
+    memset(&c_params, 0, sizeof(c_params));
+    c_params.fragment_size = size;
+    c_params.fragments_min = 1;
+    ioctl(fileno(ft->fp), SND_PCM_IOCTL_CAPTURE_PARAMS, &c_params);
 
     /* Change to non-buffered I/O */
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
