@@ -28,7 +28,7 @@
 #define MIN(s1,s2) ((s1)<(s2)?(s1):(s2))
 #endif
 
-#define INPUT_BUFFER_SIZE       (5*ST_BUFSIZ)
+#define INPUT_BUFFER_SIZE       (100 * 1024)
 
 /* Private data */
 struct mp3priv {
@@ -161,6 +161,19 @@ int st_mp3startread(ft_t ft)
              */
             if ((tagsize=tagtype(p->Stream->this_frame, p->Stream->bufend - p->Stream->this_frame)) == 0)
                 tagsize = 1; /* Walk through the stream. */
+            /* ID3v2 tags can be any size.  That means they can
+             * span a buffer larger then INPUT_BUFFER_SIZE.  That
+             * means that we really need a loop to continue reading
+             * more data.
+             * For now, I'm just making the input buffer pretty
+             * large to handle most cases and hope someone else
+             * write more robust code later!
+             */
+            if (tagsize > (p->Stream->bufend - p->Stream->this_frame))
+            {
+                st_fail_errno(ft, ST_EOF, "Found ID3 tag that is larger then initial buffer. Can't handle this right now\n", (p->Stream->bufend - p->Stream->this_frame));
+                return ST_EOF;
+            }
             mad_stream_skip(p->Stream, tagsize);
         }
 
@@ -229,16 +242,16 @@ st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len)
       {
         size_t          ReadSize, Remaining;
         
-                        /* libmad does not consume all the buffer it's given. Some
-                         * datas, part of a truncated frame, is left unused at the
-                         * end of the buffer. Those datas must be put back at the
-                         * beginning of the buffer and taken in account for
-                         * refilling the buffer. This means that the input buffer
-                         * must be large enough to hold a complete frame at the
-                         * highest observable bit-rate (currently 448 kb/s). XXX=XXX
-                         * Is 2016 bytes the size of the largest frame?
-                         * (448000*(1152/32000))/8
-                         */
+        /* libmad does not consume all the buffer it's given. Some
+         * datas, part of a truncated frame, is left unused at the
+         * end of the buffer. Those datas must be put back at the
+         * beginning of the buffer and taken in account for
+         * refilling the buffer. This means that the input buffer
+         * must be large enough to hold a complete frame at the
+         * highest observable bit-rate (currently 448 kb/s). XXX=XXX
+         * Is 2016 bytes the size of the largest frame?
+         * (448000*(1152/32000))/8
+         */
         
         Remaining=p->Stream->bufend - p->Stream->next_frame;
         memmove(p->InputBuffer,p->Stream->next_frame,Remaining);

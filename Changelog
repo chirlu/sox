@@ -23,6 +23,10 @@ sox-12.17.6
     brown noise that could cause clipping.
   o David Leverton sent another patch to prevent crashes on
     amd64's when resampling.
+  o Fixed a bug were MP3 files with large ID3v2 tags could
+    cause SoX to stick in a loop forever.  Now, it will
+    abort on IDv3 tags larger then 100k.  Could still be
+    improved to handle any size.
 
 sox-12.17.5
 -----------
