@@ -29,14 +29,19 @@ static void wvewriteheader(ft_t ft);
 
 int st_wveseek(ft_t ft, st_size_t offset)
 {
-    int new_offset, align;
+    int new_offset, channel_block, alignment;
     wve_t wve = (wve_t ) ft->priv;
 
     new_offset = offset * ft->info.size;
-    /* Make sure requests aligns to a channel offset */
-    align = new_offset % (ft->info.channels*ft->info.size);
-    if (align != 0)
-        new_offset += align;
+    /* Make sure request aligns to a channel block (ie left+right) */
+    channel_block = ft->info.channels * ft->info.size;
+    alignment = new_offset % channel_block;
+    /* Most common mistaken is to compute something like
+     * "skip everthing upto and including this sample" so
+     * advance to next sample block in this case.
+     */
+    if (alignment != 0)
+        new_offset += (channel_block - alignment);
     new_offset += wve->dataStart;
 
     return st_seek(ft, offset, SEEK_SET);

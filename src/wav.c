@@ -1639,7 +1639,7 @@ static char *wav_format_str(unsigned wFormatTag)
 int st_wavseek(ft_t ft, st_size_t offset) 
 {
     wav_t   wav = (wav_t) ft->priv;
-    int new_offset, align;
+    int new_offset, channel_block, alignment;
 
     switch (wav->formatTag)
     {
@@ -1652,10 +1652,15 @@ int st_wavseek(ft_t ft, st_size_t offset)
             break;
         default:
             new_offset = offset * ft->info.size;
-            /* Make sure requests aligns to a channel offset */
-            align = new_offset % (ft->info.channels*ft->info.size);
-            if (align != 0)
-                new_offset += align;
+            /* Make sure request aligns to a channel block (ie left+right) */
+            channel_block = ft->info.channels * ft->info.size;
+            alignment = new_offset % channel_block;
+            /* Most common mistaken is to compute something like
+             * "skip everthing upto and including this sample" so
+             * advance to next sample block in this case.
+             */
+            if (alignment != 0)
+                new_offset += (channel_block - alignment);
             new_offset += wav->dataStart;
 
             ft->st_errno = st_seek(ft, new_offset, SEEK_SET);

@@ -74,13 +74,18 @@ static void reportInstrument(ft_t ft);
 int st_aiffseek(ft_t ft, st_size_t offset) 
 {
     aiff_t aiff = (aiff_t ) ft->priv;
-    st_size_t new_offset, align;
+    st_size_t new_offset, channel_block, alignment;
 
     new_offset = offset * ft->info.size;
-    /* Make sure requests aligns to a channel offset */
-    align = new_offset % (ft->info.channels*ft->info.size);
-    if (align != 0)
-        new_offset += align;
+    /* Make sure request aligns to a channel block (ie left+right) */
+    channel_block = ft->info.channels * ft->info.size;
+    alignment = new_offset % channel_block;
+    /* Most common mistaken is to compute something like
+     * "skip everthing upto and including this sample" so
+     * advance to next sample block in this case.
+     */
+    if (alignment != 0)
+        new_offset += (channel_block - alignment);
     new_offset += aiff->dataStart;
 
     ft->st_errno = st_seek(ft, new_offset, SEEK_SET);

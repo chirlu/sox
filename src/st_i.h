@@ -595,7 +595,7 @@ int st_trim_start(eff_t effp);
 int st_trim_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                  st_size_t *isamp, st_size_t *osamp);
 int st_trim_stop(eff_t effp);
-st_size_t st_trim_get_seek(eff_t effp);
+st_size_t st_trim_get_start(eff_t effp);
 void st_trim_clear_start(eff_t effp);
 
 int st_vibro_getopts(eff_t effp, int argc, char **argv);
