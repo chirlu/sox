@@ -382,27 +382,31 @@ st_ssize_t st_vorbiswrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 	{
 		/* Do the main analysis, creating a packet */
 		vorbis_analysis(&ve->vb, &ve->op);
-		
+		vorbis_bitrate_addblock(&ve->vb);
+
 		/* Add packet to bitstream */
-		ogg_stream_packetin(&ve->os,&ve->op);
-		
-		/* If we've gone over a page boundary, we can do actual output,
-		   so do so (for however many pages are available) */
-		
-		while(!eos)
+		while (vorbis_bitrate_flushpacket(&ve->vd, &ve->op)) 
 		{
+		    ogg_stream_packetin(&ve->os,&ve->op);
+		
+    		    /* If we've gone over a page boundary, we can do actual
+		     * output, so do so (for however many pages are available) 
+		     */
+		
+    		    while(!eos)
+    		    {
 			int result = ogg_stream_pageout(&ve->os,&ve->og);
 			if(!result) break;
 			
 			ret = oe_write_page(&ve->og, ft->fp);
 			if(!ret)
-				return (ST_EOF);
+			    return (ST_EOF);
 
 			if(ogg_page_eos(&ve->og))
-				eos = 1;
+			    eos = 1;
+    		    }
 		}
 	}
- 
 
 	return (ST_SUCCESS);	
 }

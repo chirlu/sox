@@ -34,6 +34,8 @@ sox-12.17.4
     the file just fine.
   o Bert van Leeuwen added a file handler for Psion record.app used
     for System/Alarms in some Psion devices.
+  o Richard Bannister sent in a patch to make writing vorbis files
+    work with Vorbis 1.0 libraries.
 
 sox-12.17.3
 -----------
