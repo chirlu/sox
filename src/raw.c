@@ -707,6 +707,7 @@ st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                     break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
+		    return(0);
             }
             break;
 
