@@ -8,6 +8,8 @@ sox-12.17.7
 -----------
   o Christian Weisgerber sent patches to man page fixes
     and patches for sunaudio driver on openbsd.
+  o Default volume for soxmix wrongly set to 0 instead
+    of 1/#_input_files (float rounding error).
 
 sox-12.17.6
 -----------

@@ -217,7 +217,7 @@ int main(int argc, char **argv)
          * this and will want to override it.
          */
         if (!file_opts[i]->uservolume)
-            file_opts[i]->volume = 1 / input_count;
+            file_opts[i]->volume = 1.0 / input_count;
 #endif
         copy_input(i);
         open_input(file_desc[i]);

@@ -68,6 +68,7 @@ then
     echo "Conversion between unsigned bytes and float was successful"
 else
     echo "Error converting between float and unsigned bytes"
+    exit
 fi
 rm -f raw1.raw raw2.ub
 
