@@ -26,17 +26,5 @@
 #define WAVE_FORMAT_G726_ADPCM          (0x0064)
 #define WAVE_FORMAT_G722_ADPCM          (0x0065)
 
-typedef struct MsState {
-    LONG  index;	/* Index into step size table */
-    ULONG bpred;	/* Most recent sample value */
-    LONG  sample1;
-    LONG  sample2;
-} MsState_t;
-
-typedef struct ImaState {
-   int index;    	/* Index into step size table */
-   int previousValue; 	/* Most recent sample value */
-} ImaState_t;
-
-
 #endif /* WAV_H_INCLUDED */
+

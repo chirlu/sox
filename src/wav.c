@@ -8,6 +8,13 @@
  *
  * Change History:
  *
+ * November  11, 1999 - Stan Brooks (stabro@megsinet.com)
+ *   Mods for faster adpcm decoding and addition of ima_adpcm
+ *   writing... low-level codex functions moved to external
+ *   modules ima_rw.c and adpcm.c. Some general cleanup, consistent
+ *   with writing *adpcm and other output formats.
+ *   Headers for adpcm include the 'fact' subchunk.
+ *
  * September 11, 1998 - Chris Bagwell (cbagwell@sprynet.com)
  *   Fixed length bug for IMA and MS ADPCM files.
  *
@@ -70,139 +77,52 @@
 
 #include "st.h"
 #include "wav.h"
+#include "ima_rw.h"
+#include "adpcm.h"
 
 /* Private data for .wav file */
 typedef struct wavstuff {
     LONG	   numSamples;
-    int		   second_header;  /* non-zero on second header write */
+    LONG	   dataLength;     /* needed for ADPCM writing */
     unsigned short formatTag;	   /* What type of encoding file is using */
     
     /* The following are only needed for ADPCM wav files */
     unsigned short samplesPerBlock;
     unsigned short bytesPerBlock;
     unsigned short blockAlign;
-    short	  *samples[2];	    /* Left and Right sample buffers */
-    short	  *samplePtr[2];    /* Pointers to current samples */
-    unsigned short blockSamplesRemaining;/* Samples remaining in each channel */    
+    unsigned short nCoefs;	    /* ADPCM: number of coef sets */
+    short	  *iCoefs;	    /* ADPCM: coef sets           */
     unsigned char *packet;	    /* Temporary buffer for packets */
+    short	  *samples;	    /* interleaved samples buffer */
+    short	  *samplePtr;       /* Pointer to current samples */
+    short	  *sampleTop;       /* End of samples-buffer      */
+    unsigned short blockSamplesRemaining;/* Samples remaining in each channel */    
+    int 	   state[16];       /* last, because maybe longer */
 } *wav_t;
 
 static char *wav_format_str();
 
-void wavwritehdr(P1(ft_t));
-
-
-/*
- *
- * Lookup tables for MS ADPCM format
- *
- */
-
-static LONG gaiP4[]    = { 230, 230, 230, 230, 307, 409, 512, 614,
-			   768, 614, 512, 409, 307, 230, 230, 230 };
-
-/* TODO : The first 7 coef's are are always hardcode and must
-   appear in the actual WAVE file.  They should be read in
-   in case a sound program added extras to the list. */
-
-static LONG gaiCoef1[] = { 256, 512, 0, 192, 240, 460,  392 };
-static LONG gaiCoef2[] = { 0, -256,  0,  64,   0,-208, -232};
-
-/*
- *
- * Lookup tables for IMA ADPCM format
- *
- */
-static int imaIndexAdjustTable[16] = {
-   -1, -1, -1, -1,  /* +0 - +3, decrease the step size */
-    2, 4, 6, 8,     /* +4 - +7, increase the step size */
-   -1, -1, -1, -1,  /* -0 - -3, decrease the step size */
-    2, 4, 6, 8,     /* -4 - -7, increase the step size */
-};
-
-static int imaStepSizeTable[89] = {
-   7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34,
-   37, 41, 45, 50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130, 143,
-   157, 173, 190, 209, 230, 253, 279, 307, 337, 371, 408, 449, 494,
-   544, 598, 658, 724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552,
-   1707, 1878, 2066, 2272, 2499, 2749, 3024, 3327, 3660, 4026,
-   4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630, 9493, 10442,
-   11487, 12635, 13899, 15289, 16818, 18500, 20350, 22385, 24623,
-   27086, 29794, 32767
-};
+LONG rawread(P3(ft_t, LONG *, LONG));
+void rawwrite(P3(ft_t, LONG *, LONG));
+void wavwritehdr(P2(ft_t, int));
 
 /****************************************************************************/
 /* IMA ADPCM Support Functions Section                                      */
 /****************************************************************************/
-
-/*
- *
- * MsAdpcmDecode - Decode a given sample and update state tables
- *
- */
-
-short ImaAdpcmDecode(deltaCode, state) 
-unsigned char deltaCode;
-ImaState_t *state;
-{
-    /* Get the current step size */
-   int step;
-   int difference;
-
-   step = imaStepSizeTable[state->index];
-   
-   /* Construct the difference by scaling the current step size */
-   /* This is approximately: difference = (deltaCode+.5)*step/4 */
-   difference = step>>3;
-   if ( deltaCode & 1 ) difference += step>>2;
-   if ( deltaCode & 2 ) difference += step>>1;
-   if ( deltaCode & 4 ) difference += step;
-
-   if ( deltaCode & 8 ) difference = -difference;
-
-   /* Build the new sample */
-   state->previousValue += difference;
-
-   if (state->previousValue > 32767) state->previousValue = 32767;
-   else if (state->previousValue < -32768) state->previousValue = -32768;
-
-   /* Update the step for the next sample */
-   state->index += imaIndexAdjustTable[deltaCode];
-   if (state->index < 0) state->index = 0;
-   else if (state->index > 88) state->index = 88;
-
-   return state->previousValue;
-
-}
-
-/*
- *
- * ImaAdpcmNextBlock - Grab and decode complete block of samples
- *
- */
-unsigned short  ImaAdpcmNextBlock(ft)
+unsigned short  ImaAdpcmReadBlock(ft)
 ft_t ft;    
 {
     wav_t	wav = (wav_t) ft->priv;
-    
+    int bytesRead;
+    int samplesThisBlock;
+
     /* Pull in the packet and check the header */
-    unsigned short bytesRead;
-    unsigned char *bytePtr;
-
-    ImaState_t state[2];  /* One decompressor state for each channel */
-    int ch;
-    unsigned short remaining;
-    unsigned short samplesThisBlock;
-
-    int i;
-    unsigned char b;
-
     bytesRead = fread(wav->packet,1,wav->blockAlign,ft->fp);
     if (bytesRead < wav->blockAlign) 
     { 
 	/* If it looks like a valid header is around then try and */
 	/* work with partial blocks.  Specs say it should be null */
-	/* padded but I guess this is better then trailing quite. */
+	/* padded but I guess this is better then trailing quiet. */
 	if (bytesRead >= (4 * ft->info.channels))
 	{
 	    samplesThisBlock = (wav->blockAlign - (3 * ft->info.channels));
@@ -216,122 +136,57 @@ ft_t ft;
     else
 	samplesThisBlock = wav->samplesPerBlock;
     
-    bytePtr = wav->packet;
-
-    /* Read the four-byte header for each channel */
-
-    /* Reset the decompressor */
-    for(ch=0;ch < ft->info.channels; ch++) {
-       
-	/* Got this from xanim */
-
-	state[ch].previousValue = ((int)bytePtr[1]<<8) +
-	    (int)bytePtr[0];
-	if (state[ch].previousValue & 0x8000)
-	    state[ch].previousValue -= 0x10000;
-
-	if (bytePtr[2] > 88)
-	{
-	    warn("IMA ADPCM Format Error (bad index value) in wav file");
-	    state[ch].index = 88;
-	}
-	else
-	    state[ch].index = bytePtr[2];
-	
-	if (bytePtr[3])
-	    warn("IMA ADPCM Format Error (synchronization error) in wav file");
-	
-	bytePtr+=4; /* Skip this header */
-
-	wav->samplePtr[ch] = wav->samples[ch];
-	/* Decode one sample for the header */
-	*(wav->samplePtr[ch]++) = state[ch].previousValue;
-    }
-
-    /* Decompress nybbles. Remainging is bytes in block minus header  */
-    /* Subtract the one sample taken from header */
-    remaining = samplesThisBlock-1;
+    wav->samplePtr = wav->samples;
     
-    while (remaining) {
-	/* Always decode 8 samples */
-	remaining -= 8;
-	/* Decode 8 left samples */
-	for (i=0;i<4;i++) {
-	    b = *bytePtr++;
-	    *(wav->samplePtr[0]++) = ImaAdpcmDecode(b & 0x0f,&state[0]);
-	    *(wav->samplePtr[0]++) = ImaAdpcmDecode((b>>4) & 0x0f,&state[0]);
-	}
-	if (ft->info.channels < 2)
-	    continue; /* If mono, skip rest of loop */
-	/* Decode 8 right samples */
-	for (i=0;i<4;i++) {
-	    b = *bytePtr++;
-	    *(wav->samplePtr[1]++) = ImaAdpcmDecode(b & 0x0f,&state[1]);
-	    *(wav->samplePtr[1]++) = ImaAdpcmDecode((b>>4) & 0x0f,&state[1]);
-	}
-    }
+
     /* For a full block, the following should be true: */
     /* wav->samplesPerBlock = blockAlign - 8byte header + 1 sample in header */
-    return wav->samplesPerBlock;
-}     
+    ImaBlockExpandI(ft->info.channels, wav->packet, wav->samples, samplesThisBlock);
+    return samplesThisBlock;
+
+}
+
+static void ImaAdpcmWriteBlock(ft)
+ft_t ft;
+{
+    wav_t wav = (wav_t) ft->priv;
+    int chans, ch, ct;
+    short *p;
+
+    chans = ft->info.channels;
+    p = wav->samplePtr;
+    ct = p - wav->samples;
+    if (ct>=chans) { 
+	/* zero-fill samples if needed to complete block */
+	for (p = wav->samplePtr; p < wav->sampleTop; p++) *p=0;
+	/* compress the samples to wav->packet */
+	for (ch=0; ch<chans; ch++)
+	    ImaMashChannel(ch, chans, wav->samples, wav->samplesPerBlock, &wav->state[ch], wav->packet, 9);
+
+	/* write the compressed packet */
+	fwrite(wav->packet, wav->blockAlign, 1, ft->fp); /* FIXME: check return value */
+	/* update lengths and samplePtr */
+	wav->dataLength += wav->blockAlign;
+	wav->numSamples += ct/chans;
+	wav->samplePtr = wav->samples;
+    }
+}
 
 /****************************************************************************/
 /* MS ADPCM Support Functions Section                                       */
 /****************************************************************************/
-
 /*
  *
- * MsAdpcmDecode - Decode a given sample and update state tables
+ * MsAdpcmReadBlock - Grab and decode complete block of samples
  *
  */
-
-LONG MsAdpcmDecode(deltaCode, state) 
-LONG deltaCode;
-MsState_t *state;
-{
-    LONG predict;
-    LONG sample;
-    LONG idelta;
-
-    /** Compute next Adaptive Scale Factor (ASF) **/
-    idelta = state->index;
-    state->index = (gaiP4[deltaCode] * idelta) >> 8;
-    if (state->index < 16) state->index = 16;
-    if (deltaCode & 0x08) deltaCode = deltaCode - 0x10;
-    
-    /** Predict next sample **/
-    predict = ((state->sample1 * gaiCoef1[state->bpred]) + (state->sample2 * gaiCoef2[state->bpred])) >> 8;
-    /** reconstruct original PCM **/
-    sample = (deltaCode * idelta) + predict;
-    
-    if (sample > 32767) sample = 32767;
-    else if (sample < -32768) sample = -32768;
-    
-    state->sample2 = state->sample1;
-    state->sample1 = sample;
-    
-    return (sample);
-}
-    
-
-/*
- *
- * MsAdpcmNextBlock - Grab and decode complete block of samples
- *
- */
-unsigned short  MsAdpcmNextBlock(ft)
+unsigned short  MsAdpcmReadBlock(ft)
 ft_t ft;    
 {
     wav_t	wav = (wav_t) ft->priv;
-    
-    unsigned short bytesRead;
-    unsigned char *bytePtr;
-
-    MsState_t state[2];  /* One decompressor state for each channel */
-    unsigned short samplesThisBlock;
-    unsigned short remaining;
-
-    unsigned char b;
+    int bytesRead;
+    int samplesThisBlock;
+    const char *errmsg;
 
     /* Pull in the packet and check the header */
     bytesRead = fread(wav->packet,1,wav->blockAlign,ft->fp);
@@ -353,82 +208,11 @@ ft_t ft;
     else
 	samplesThisBlock = wav->samplesPerBlock;
     
-    bytePtr = wav->packet;
+    errmsg = AdpcmBlockExpandI(ft->info.channels, wav->packet, wav->samples, samplesThisBlock);
 
-    /* Read the four-byte header for each channel */
+    if (errmsg)
+	warn((char*)errmsg);
 
-    /* Reset the decompressor */
-    state[0].bpred = *bytePtr++;	/* Left */
-    if (ft->info.channels > 1)
-	state[1].bpred = *bytePtr++;	/* Right */
-    else
-	state[1].bpred = 0;
-
-    /* 7 should be variable from AVI/WAV header */
-    if (state[0].bpred >= 7)
-    {
-	warn("MSADPCM bpred %x and should be less than 7\n",state[0].bpred);
-	return(0);
-    }
-    if (state[1].bpred >= 7)
-    {
-	warn("MSADPCM bpred %x and should be less than 7\n",state[1].bpred);
-	return(0);
-    }
-	
-    state[0].index = *bytePtr++;  state[0].index |= (*bytePtr++)<<8;
-    if (state[0].index & 0x8000) state[0].index -= 0x10000;
-    if (ft->info.channels > 1)
-    {
-	state[1].index = *bytePtr++;  state[1].index |= (*bytePtr++)<<8;
-	if (state[1].index & 0x8000) state[1].index -= 0x10000;
-    }
-
-    state[0].sample1 = *bytePtr++;  state[0].sample1 |= (*bytePtr++)<<8;
-    if (state[0].sample1 & 0x8000) state[0].sample1 -= 0x10000;
-    if (ft->info.channels > 1)
-    {
-	state[1].sample1 = *bytePtr++;  state[1].sample1 |= (*bytePtr++)<<8;
-	if (state[1].sample1 & 0x8000) state[1].sample1 -= 0x10000;
-    }
-
-    state[0].sample2 = *bytePtr++;  state[0].sample2 |= (*bytePtr++)<<8;
-    if (state[0].sample2 & 0x8000) state[0].sample2 -= 0x10000;
-    if (ft->info.channels > 1)
-    {
-	state[1].sample2 = *bytePtr++;  state[1].sample2 |= (*bytePtr++)<<8;
-	if (state[1].sample2 & 0x8000) state[1].sample2 -= 0x10000;
-    }
-
-    wav->samplePtr[0] = wav->samples[0];
-    wav->samplePtr[1] = wav->samples[1];
-    
-    /* Decode two samples for the header */
-    *(wav->samplePtr[0]++) = state[0].sample2;
-    *(wav->samplePtr[0]++) = state[0].sample1;
-    if (ft->info.channels > 1)
-    {
-	*(wav->samplePtr[1]++) = state[1].sample2;
-	*(wav->samplePtr[1]++) = state[1].sample1;
-    }
-
-    /* Decompress nybbles.  Minus 2 included in header */
-    remaining = samplesThisBlock-2;
-
-    while (remaining) {
-	b = *bytePtr++;
-	*(wav->samplePtr[0]++) = MsAdpcmDecode((b>>4) & 0x0f, &state[0]);
-	remaining--;
-	if (ft->info.channels == 1)
-	{	    
-	    *(wav->samplePtr[0]++) = MsAdpcmDecode(b & 0x0f, &state[0]);
-	    remaining--;
-	}
-	else
-	{
-	    *(wav->samplePtr[1]++) = MsAdpcmDecode(b & 0x0f, &state[1]);
-	}
-    }
     return samplesThisBlock;
 }
 
@@ -458,8 +242,7 @@ ft_t ft;
     ULONG    wAvgBytesPerSec;	    /* estimate of bytes per second needed */
     unsigned short wBitsPerSample;  /* bits per sample */
     unsigned short wExtSize = 0;    /* extended field for ADPCM */
-    unsigned short wNumCoefs = 0;   /* Related to IMA ADPCM */
-	
+
     ULONG    data_length;	    /* length of sound data in bytes */
     ULONG    bytespersample;	    /* bytes per sample (per channel */
 
@@ -497,7 +280,7 @@ ft_t ft;
 	    len--;
 	}
     }
-
+    /* we only get here if we just read the magic "fmt " */
     if ( len < 16 )
 	fail("WAVE file fmt chunk is too short");
 
@@ -592,28 +375,44 @@ ft_t ft;
     wBitsPerSample =  rshort(ft);
     len -= 2;
 
+    wav->iCoefs = NULL;
+    wav->packet = NULL;
+    wav->samples = NULL;
+
     /* ADPCM formats have extended fmt chunk.  Check for those cases. */
-    if (wav->formatTag == WAVE_FORMAT_ADPCM)
+    switch (wav->formatTag)
     {
+    case WAVE_FORMAT_ADPCM:
 	if (wBitsPerSample != 4)
 	    fail("Can only handle 4-bit MS ADPCM in wav files");
 
 	wExtSize = rshort(ft);
 	wav->samplesPerBlock = rshort(ft);
 	wav->bytesPerBlock = (wav->samplesPerBlock + 7)/2 * ft->info.channels;
-	wNumCoefs = rshort(ft);
+	wav->nCoefs = rshort(ft);
+	if (wav->nCoefs < 7 || wav->nCoefs > 0x100) {
+	    fail("ADPCM file nCoefs (%.4hx) makes no sense\n", wav->nCoefs);
+	}
 	wav->packet = (unsigned char *)malloc(wav->blockAlign);
 	len -= 6;
 	    
-	wav->samples[1] = wav->samples[0] = 0;
-	/* Use ft->info.channels after this becuase wChannels is now bad */
-	while (wChannels-- > 0)
-	    wav->samples[wChannels] = (short *)malloc(wav->samplesPerBlock*sizeof(short));
-	/* Here we are setting the bytespersample AFTER de-compression */
-	bytespersample = WORD;
-    }
-    else if (wav->formatTag == WAVE_FORMAT_IMA_ADPCM)
-    {
+	wav->samples = (short *)malloc(wChannels*wav->samplesPerBlock*sizeof(short));
+
+	/* SJB: will need iCoefs later for adpcm.c */
+	wav->iCoefs = (short *)malloc(wav->nCoefs * 2 * sizeof(short));
+	{
+	    int i;
+	    for (i=0; len>=2 && i < 2*wav->nCoefs; i++) {
+		wav->iCoefs[i] = rshort(ft);
+		/* fprintf(stderr,"iCoefs[%2d] %4d\n",i,wav->iCoefs[i]); */
+		len -= 2;
+	    }
+	}
+
+	bytespersample = WORD;  /* AFTER de-compression */
+        break;
+
+    case WAVE_FORMAT_IMA_ADPCM:
 	if (wBitsPerSample != 4)
 	    fail("Can only handle 4-bit IMA ADPCM in wav files");
 
@@ -622,17 +421,14 @@ ft_t ft;
 	wav->bytesPerBlock = (wav->samplesPerBlock + 7)/2 * ft->info.channels;
 	wav->packet = (unsigned char *)malloc(wav->blockAlign);
 	len -= 4;
-	    
-	wav->samples[1] = wav->samples[0] = 0;
-	/* Use ft->info.channels after this becuase wChannels is now bad */
-	while (wChannels-- > 0)
-	    wav->samples[wChannels] = (short *)malloc(wav->samplesPerBlock*sizeof(short));
-	/* Here we are setting the bytespersample AFTER de-compression */
-	bytespersample = WORD;
-    }
-    else
-    {
+
+	wav->samples = (short *)malloc(wChannels*wav->samplesPerBlock*sizeof(short));
+
+	bytespersample = WORD;  /* AFTER de-compression */
+	break;
+    default:
       bytespersample = (wBitsPerSample + 7)/8;
+
     }
 
     switch (bytespersample)
@@ -683,6 +479,9 @@ ft_t ft;
 	len--;
     }
 
+    /* for ADPCM formats, there's a useless(?) 'fact' chunk before
+     * the upcoming 'data' chunk */
+
     /* Now look for the wave data chunk */
     for (;;)
     {
@@ -700,20 +499,23 @@ ft_t ft;
     }
     
     data_length = len;
-    if (wav->formatTag == WAVE_FORMAT_ADPCM)
+
+    switch (wav->formatTag)
     {
+
+    case WAVE_FORMAT_ADPCM:
 	/* Compute easiest part of number of samples.  For every block, there
 	   are samplesPerBlock samples to read. */
 	wav->numSamples = (((data_length / wav->blockAlign) * wav->samplesPerBlock) * ft->info.channels);
-	/* Next, for any partial blocks, substract overhead from it and it
+	/* Next, for any partial blocks, subtract overhead from it and it
 	   will leave # of samples to read. */
 	wav->numSamples += ((data_length - ((data_length/wav->blockAlign)
 					    *wav->blockAlign))
 			    - (6 * ft->info.channels)) * ft->info.channels;
 	wav->blockSamplesRemaining = 0;	       /* Samples left in buffer */
-    }
-    else if (wav->formatTag == WAVE_FORMAT_IMA_ADPCM)
-    {
+	break;
+
+    case WAVE_FORMAT_IMA_ADPCM:
 	/* Compute easiest part of number of samples.  For every block, there
 	   are samplesPerBlock samples to read. */
 	wav->numSamples = (((data_length / wav->blockAlign) * wav->samplesPerBlock) * ft->info.channels);
@@ -723,9 +525,13 @@ ft_t ft;
 					    *wav->blockAlign))
 			    - (3 * ft->info.channels)) * ft->info.channels;
 	wav->blockSamplesRemaining = 0;	       /* Samples left in buffer */
-    }
-    else
+	initImaTable();
+	break;
+
+    default:
 	wav->numSamples = data_length/ft->info.size;	/* total samples */
+
+    }
 
     report("Reading Wave file: %s format, %d channel%s, %d samp/sec",
 	   wav_format_str(wav->formatTag), ft->info.channels,
@@ -733,11 +539,13 @@ ft_t ft;
     report("        %d byte/sec, %d block align, %d bits/samp, %u data bytes",
 	   wAvgBytesPerSec, wav->blockAlign, wBitsPerSample, data_length);
 
-    /* Can also report exteded fmt information */
+    /* Can also report extended fmt information */
     if (wav->formatTag == WAVE_FORMAT_ADPCM)
-	report("        %d Extsize, %d Samps/block, %d bytes/block %d Num Coefs\n",wExtSize,wav->samplesPerBlock,wav->bytesPerBlock,wNumCoefs);
+	report("        %d Extsize, %d Samps/block, %d bytes/block %d Num Coefs\n",
+		wExtSize,wav->samplesPerBlock,wav->bytesPerBlock,wav->nCoefs);
     else if (wav->formatTag == WAVE_FORMAT_IMA_ADPCM)
-	report("        %d Extsize, %d Samps/block, %d bytes/block\n",wExtSize,wav->samplesPerBlock,wav->bytesPerBlock);
+	report("        %d Extsize, %d Samps/block, %d bytes/block\n",
+		wExtSize,wav->samplesPerBlock,wav->bytesPerBlock);
 }
 
 /*
@@ -758,59 +566,57 @@ LONG *buf, len;
 
 	/* If file is in ADPCM style then read in multiple blocks else */
 	/* read as much as possible and return quickly. */
-	if (ft->info.style == ADPCM)
+	switch (ft->info.style)
 	{
+	case ADPCM:
 	    done = 0;
 	    while (done < len) { /* Still want data? */
 		/* See if need to read more from disk */
 		if (wav->blockSamplesRemaining == 0) { 
 		    if (wav->formatTag == WAVE_FORMAT_IMA_ADPCM)
-			wav->blockSamplesRemaining = ImaAdpcmNextBlock(ft);
+			wav->blockSamplesRemaining = ImaAdpcmReadBlock(ft);
 		    else
-			wav->blockSamplesRemaining = MsAdpcmNextBlock(ft);
+			wav->blockSamplesRemaining = MsAdpcmReadBlock(ft);
 		    if (wav->blockSamplesRemaining == 0)
 		    {
 			/* Don't try to read any more samples */
 			wav->numSamples = 0;
 			return done;
 		    }
-		    wav->samplePtr[0] = wav->samples[0];
-		    wav->samplePtr[1] = wav->samples[1];
+		    wav->blockSamplesRemaining *= ft->info.channels;
+		    wav->samplePtr = wav->samples;
 		}
 
-		switch(ft->info.channels) { /* Copy data into buf */
-		case 1: /* Mono: Just copy left channel data */
-		    while ((wav->blockSamplesRemaining > 0) && (done < len))
+		/* Copy interleaved data into buf, converting short to LONG */
+		{
+		    short *p, *top;
+		    int ct;
+		    ct = len-done;
+		    if (ct > wav->blockSamplesRemaining)
+			ct = wav->blockSamplesRemaining;
+
+		    done += ct;
+		    wav->blockSamplesRemaining -= ct;
+		    p = wav->samplePtr;
+		    top = p+ct;
+		    /* Output is already signed */
+		    while (p<top)
 		    {
-			/* Output is already signed */
-			*buf++ = LEFT(*(wav->samplePtr[0]++), 16);
-			done++;
-			wav->blockSamplesRemaining--;
+			*buf++ = LEFT((*p++), 16);
 		    }
-		    break;
-		case 2: /* Stereo: Interleave samples */
-		    while ((wav->blockSamplesRemaining > 0) && (done < len))
-		    {
-			/* Output is already signed */
-			*buf++ = LEFT(*(wav->samplePtr[0]++),16); /* Left */
-			*buf++ = LEFT(*(wav->samplePtr[1]++),16); /* Right */
-			done += 2;
-			wav->blockSamplesRemaining--;
-		    }
-		    break;
-		default:
-		    fail ("Can only handle stereo or mono files");
+		    wav->samplePtr = p;
 		}
 	    }
-	}
-	else /* else not ADPCM style */
-	{
+	    break;
+
+	default: /* not ADPCM style */
 	    done = rawread(ft, buf, len);
 	    /* If software thinks there are more samples but I/O */
-	    /* says otherwise, let the user no about this.       */
+	    /* says otherwise, let the user know about this.     */
 	    if (done == 0 && wav->numSamples != 0)
 		warn("Premature EOF on .wav input file");
 	}
+
 	wav->numSamples -= done;
 	return done;
 }
@@ -825,8 +631,8 @@ ft_t ft;
     wav_t	wav = (wav_t) ft->priv;
 
     if (wav->packet) free(wav->packet);
-    if (wav->samples[0]) free(wav->samples[0]);
-    if (wav->samples[1]) free(wav->samples[1]);
+    if (wav->samples) free(wav->samples);
+    if (wav->iCoefs) free(wav->iCoefs);
 
     /* Needed for rawread() */
     rawstopread(ft);
@@ -843,29 +649,51 @@ ft_t ft;
 	if (!*endptr) ft->swap = ft->swap ? 0 : 1;
 
 	wav->numSamples = 0;
-	wav->second_header = 0;
-	if (! ft->seekable)
-		warn("Length in output .wav header will wrong since can't seek to fix it");
-	wavwritehdr(ft);
+	wav->dataLength = 0;
+	if (!ft->seekable)
+		warn("Length in output .wav header will be wrong since can't seek to fix it");
+	wavwritehdr(ft, 0);  /* also calculates various wav->* info */
+	wav->packet = NULL;
+	wav->samples = NULL;
+	wav->iCoefs = NULL;
+	if (wav->formatTag == WAVE_FORMAT_IMA_ADPCM) {
+	    int ch, sbsize;
+	    /* #channels already range-checked for overflow in wavwritehdr() */
+	    for (ch=0; ch<ft->info.channels; ch++)
+	    	wav->state[ch] = 0;
+	    sbsize = ft->info.channels * wav->samplesPerBlock;
+	    wav->packet = (unsigned char *)malloc(wav->blockAlign);
+	    wav->samples = (short *)malloc(sbsize*sizeof(short));
+	    wav->sampleTop = wav->samples + sbsize;
+	    wav->samplePtr = wav->samples;
+	    initImaTable();
+	}
 }
 
-void wavwritehdr(ft) 
+#define WHDRSIZ1 8 /* "RIFF",(long)len,"WAVE" */
+#define FMTSIZ1 24 /* "fmt ",(long)len,... fmt chunk (without any Ext data) */
+#define DATASIZ1 8 /* "data",(long)len        */
+void wavwritehdr(ft, second_header) 
 ft_t ft;
+int second_header;
 {
 	wav_t	wav = (wav_t) ft->priv;
+	LONG fmtsize = FMTSIZ1;
+	LONG factsize = 0; /* "fact",(long)len,??? */
 
         /* wave file characteristics */
         unsigned short wFormatTag = 0;          /* data format */
         unsigned short wChannels;               /* number of channels */
         ULONG  wSamplesPerSecond;       	/* samples per second per channel */
-        ULONG  wAvgBytesPerSec;        		 /* estimate of bytes per second needed */
+        ULONG  wAvgBytesPerSec;        		/* estimate of bytes per second needed */
         unsigned short wBlockAlign;             /* byte alignment of a basic sample block */
         unsigned short wBitsPerSample;          /* bits per sample */
         ULONG  data_length;             	/* length of sound data in bytes */
 	ULONG  bytespersample; 			/* bytes per sample (per channel) */
 
 	/* Needed for rawwrite() */
-	rawstartwrite(ft);
+	if (ft->info.style != ADPCM)
+		rawstartwrite(ft);
 
 	switch (ft->info.size)
 	{
@@ -874,7 +702,7 @@ ft_t ft;
 			if (ft->info.style != UNSIGNED &&
 			    ft->info.style != ULAW &&
 			    ft->info.style != ALAW &&
-			    !wav->second_header)
+			    !second_header)
 			{
 				warn("Only support unsigned, ulaw, or alaw with 8-bit data.  Forcing to unsigned");
 				ft->info.style = UNSIGNED;
@@ -885,7 +713,7 @@ ft_t ft;
 			if ((ft->info.style == UNSIGNED ||
 			     ft->info.style == ULAW ||
 			     ft->info.style == ALAW) &&
-			    !wav->second_header)
+			    !second_header)
 			{
 				warn("Do not support Unsigned, ulaw, or alaw with 16 bit data.  Forcing to Signed");
 				ft->info.style = SIGN2;
@@ -914,49 +742,70 @@ ft_t ft;
 			wFormatTag = WAVE_FORMAT_MULAW;
 			break;
 		case ADPCM:
-			wFormatTag = WAVE_FORMAT_PCM;
-		        warn("Can not support writing ADPCM style. Overriding to Signed Words\n");
-			ft->info.style = SIGN2;
-			wBitsPerSample = 16;
-			/* wFormatTag = WAVE_FORMAT_IMA_ADPCM;
-			   wBitsPerSample = 4;
-			if (wBitsPerSample != 4 && !wav->second_header)
-			break; */
+		        warn("Experimental support writing IMA_ADPCM style.\n");
+			wFormatTag = WAVE_FORMAT_IMA_ADPCM;
+			wBitsPerSample = 4;
+			fmtsize += 4;  /* plus ExtData */
+			factsize = 12; /* fact chunk   */
+			break;
 	}
-	
+	wav->formatTag = wFormatTag;
 	
 	wSamplesPerSecond = ft->info.rate;
-	bytespersample = (wBitsPerSample + 7)/8;
-	wAvgBytesPerSec = ft->info.rate * ft->info.channels * bytespersample;
 	wChannels = ft->info.channels;
-	wBlockAlign = ft->info.channels * bytespersample;
-	if (!wav->second_header)	/* use max length value first time */
-		data_length = 0x7fffffffL - (8+16+12);
+	if (wFormatTag == WAVE_FORMAT_IMA_ADPCM) {
+	    if (wChannels>16)
+	    	fail("Channels(%d) must be <= 16\n",wChannels);
+	    bytespersample = 2;
+	    wBlockAlign = wChannels * 64; /* reasonable default */
+	} else {
+	    bytespersample = (wBitsPerSample + 7)/8;
+	    wBlockAlign = wChannels * bytespersample;
+	}
+	wav->blockAlign = wBlockAlign;
+	wAvgBytesPerSec = ft->info.rate * wChannels * bytespersample;
+	if (!second_header)	/* use max length value first time */
+		data_length = 0x7fffffffL - (WHDRSIZ1+fmtsize+factsize+DATASIZ1);
 	else	/* fixup with real length */
 	{
 	    if (ft->info.style == ADPCM)
-		data_length = wav->numSamples / 2;
+		data_length = wav->dataLength; /* FIXME: not really */
 	    else
 		data_length = bytespersample * wav->numSamples;
 	}
 
 	/* figured out header info, so write it */
 	fputs("RIFF", ft->fp);
-	wlong(ft, data_length + 8+16+12);	/* Waveform chunk size: FIXUP(4) */
+	wlong(ft, data_length + WHDRSIZ1+fmtsize+factsize+DATASIZ1);/* Waveform chunk size: FIXUP(4) */
 	fputs("WAVE", ft->fp);
 	fputs("fmt ", ft->fp);
-	wlong(ft, (LONG)16);		/* fmt chunk size */
+	wlong(ft, fmtsize-8);	/* fmt chunk size */
 	wshort(ft, wFormatTag);
 	wshort(ft, wChannels);
 	wlong(ft, wSamplesPerSecond);
 	wlong(ft, wAvgBytesPerSec);
 	wshort(ft, wBlockAlign);
-	wshort(ft, wBitsPerSample);
-	
+	wshort(ft, wBitsPerSample); /* end of info common to all fmts */
+	switch (wFormatTag)
+	{
+	int nsamp;
+	case WAVE_FORMAT_IMA_ADPCM:
+	    wshort(ft, 2);		/* Ext fmt data length */
+	    wav->samplesPerBlock = ((wBlockAlign - 4*wChannels)/(4*wChannels))*8 + 1;
+	    wshort(ft, wav->samplesPerBlock);
+	    fputs("fact", ft->fp);
+	    wlong(ft, factsize-8);	/* fact chunk size */
+	    /* use max nsamps value first time */
+	    nsamp = (second_header)? wav->numSamples : 0x7fffffffL;
+	    wlong(ft, nsamp);
+	    break;
+	default:
+	}
+
 	fputs("data", ft->fp);
 	wlong(ft, data_length);		/* data chunk size: FIXUP(40) */
 
-	if (!wav->second_header) {
+	if (!second_header) {
 		report("Writing Wave file: %s format, %d channel%s, %d samp/sec",
 	        	wav_format_str(wFormatTag), wChannels,
 	        	wChannels == 1 ? "" : "s", wSamplesPerSecond);
@@ -972,16 +821,44 @@ LONG *buf, len;
 {
 	wav_t	wav = (wav_t) ft->priv;
 
-	wav->numSamples += len;
-	rawwrite(ft, buf, len);
+	switch (wav->formatTag)
+	{
+	case WAVE_FORMAT_IMA_ADPCM:
+	    while (len>0) {
+		short *p = wav->samplePtr;
+		short *top = wav->sampleTop;
+
+		if (top>p+len) top = p+len;
+		len -= top-p; /* update residual len */
+		while (p < top)
+		   *p++ = ((*buf++) + 0x8000) >> 16;
+
+		wav->samplePtr = p;
+		if (p == wav->sampleTop)
+		    ImaAdpcmWriteBlock(ft);
+
+	    }
+	    break;
+	default:
+	    wav->numSamples += len;
+	    rawwrite(ft, buf, len);
+	}
 }
 
-void
-wavstopwrite(ft) 
+void wavstopwrite(ft) 
 ft_t ft;
 {
+	wav_t	wav = (wav_t) ft->priv;
 	/* Call this to flush out any remaining data. */
-	rawstopwrite(ft);
+	if (wav->formatTag == WAVE_FORMAT_IMA_ADPCM) {
+	    ImaAdpcmWriteBlock(ft);
+	} else {
+	    rawstopwrite(ft);
+	}
+    	
+	if (wav->packet) free(wav->packet);
+ 	if (wav->samples) free(wav->samples);
+ 	if (wav->iCoefs) free(wav->iCoefs);
 
 	/* All samples are already written out. */
 	/* If file header needs fixing up, for example it needs the */
@@ -990,8 +867,7 @@ ft_t ft;
 		return;
 	if (fseek(ft->fp, 0L, SEEK_SET) != 0)
 		fail("Sorry, can't rewind output file to rewrite .wav header.");
-	((wav_t) ft->priv)->second_header = 1;
-	wavwritehdr(ft);
+	wavwritehdr(ft, 1);
 }
 
 /*

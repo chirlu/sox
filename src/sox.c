@@ -234,7 +234,13 @@ char **argv;
 			if (ft->filetype[0] == '.')
 				ft->filetype++;
 			break;
-
+#if 0
+		case 'X':  /* extract a subinterval of samples as input */
+			if (! ft) usage("-X");
+			ft->fileextract++;
+			ft->filetype = optarg;
+			break;
+#endif
 		case 'r':
 			if (! ft) usage("-r");
 			str = optarg;

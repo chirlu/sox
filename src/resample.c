@@ -48,12 +48,14 @@
 /* resample includes */
 #include "resampl.h"
 
+/* this Float MUST match that in filter.c */
 #define Float double/*float*/
 #define ISCALE 0x10000
 
+/* largest factor for which exact-coefficients upsampling will be used */
 #define NQMAX 511
-#define BUFFSIZE 8192 /*16384*/               /* Total buffer size */
-#define L64 long long
+
+#define BUFFSIZE 8192 /*16384*/  /* Total I/O buffer size */
 
 /* Private data for Lerp via LCM file */
 typedef struct resamplestuff {

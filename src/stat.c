@@ -22,12 +22,14 @@
 
 /* Private data for STAT effect */
 typedef struct statstuff {
-	double	min, max, asum, sum1, sum2;		/* amplitudes */
-	double	dmin, dmax, dsum1, dsum2;	/* deltas */
-	double	scale;			/* scale-factor    */
-	double	last;			/* previous sample */
-	double	read;
-	int	first;
+	double	min, max;
+	double	asum;
+	double	sum1, sum2;	/* amplitudes */
+	double	dmin, dmax;
+	double	dsum1, dsum2;	/* deltas */
+	double	scale;		/* scale-factor    */
+	double	last;		/* previous sample */
+	ULONG	read;		/* samples processed */
 	int	volume;
 	int	srms;
 	ULONG   bin[4];
@@ -94,7 +96,6 @@ eff_t effp;
 	stat_t stat = (stat_t) effp->priv;
 	int i;
 
-	stat->first = 1;
 	stat->min = stat->max = 0;
 	stat->asum = 0;
 	stat->sum1 = stat->sum2 = 0;
@@ -102,6 +103,7 @@ eff_t effp;
 	stat->dmin = stat->dmax = 0;
 	stat->dsum1 = stat->dsum2 = 0;
 
+	stat->last = 0;
 	stat->read = 0;
 
 	for (i = 0; i < 4; i++)
@@ -121,32 +123,35 @@ int *isamp, *osamp;
 {
 	stat_t stat = (stat_t) effp->priv;
 	int len, done;
-	double samp, delta;
 	short count;
 
 	count = 0;
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
+	if (len==0) return;
+
+	if (stat->read == 0)	/* 1st sample */
+		stat->min = stat->max = stat->last = (*ibuf)/stat->scale;
+
 	for(done = 0; done < len; done++) {
-		/* work in absolute levels for both sample and delta */
-		samp = (*ibuf)/stat->scale;
-    stat->bin[RIGHT(*ibuf,30)+2]++;
-		*obuf++ = *ibuf++;
+		long lsamp;
+		double samp, delta;
+		/* work in scaled levels for both sample and delta */
+		lsamp = *ibuf++;
+		samp = (double)lsamp/stat->scale;
+		stat->bin[RIGHT(lsamp,30)+2]++;
+		*obuf++ = lsamp;
 
 		if (stat->volume == 2)
 		{
 		    fprintf(stderr,"%f ",samp);
 		    if (count++ == 5)
 		    {
-				fprintf(stderr,"\n");
-				count = 0;
+			fprintf(stderr,"\n");
+			count = 0;
 		    }
 		}
 
-
-		if (stat->first) {
-			stat->min = stat->max = samp;
-			stat->first = 0;
-		}
+		/* update min/max */
 		if (stat->min > samp)
 			stat->min = samp;
 		else if (stat->max < samp)
@@ -180,15 +185,15 @@ stat_stop(effp)
 eff_t effp;
 {
 	stat_t stat = (stat_t) effp->priv;
-	double amp, scale, srms = 0, freq;
+	double amp, scale, rms = 0, freq;
 	double x, ct;
 
 	ct = stat->read;
 
-	if (stat->srms) {
+	if (stat->srms) {  /* adjust results to units of rms */
 		double f;
-		srms = sqrt(stat->sum2/ct);
-		f = 1.0/srms;
+		rms = sqrt(stat->sum2/ct);
+		f = 1.0/rms;
 		stat->max *= f;
 		stat->min *= f;
 		stat->asum *= f;
@@ -198,7 +203,7 @@ eff_t effp;
 		stat->dmin *= f;
 		stat->dsum1 *= f;
 		stat->dsum2 *= f*f;
-		stat->scale *= srms;
+		stat->scale *= rms;
 	}
 
 	scale = stat->scale;
@@ -215,10 +220,11 @@ eff_t effp;
 	if (stat->volume == 2) {
 		fprintf(stderr, "\n");
 	}
-	/* print them out */
-	fprintf(stderr, "Samples read:      %12lu\n", (unsigned long)ct);
+	/* print out the info */
+	fprintf(stderr, "Samples read:      %12lu\n", stat->read);
+	fprintf(stderr, "Length (seconds):  %12.6f\n", (double)stat->read/effp->ininfo.rate);
 	if (stat->srms)
-		fprintf(stderr, "Scaled by rms:     %12.6f\n", srms);
+		fprintf(stderr, "Scaled by rms:     %12.6f\n", rms);
 	else
 		fprintf(stderr, "Scaled by:         %12.1f\n", scale);
 	fprintf(stderr, "Maximum amplitude: %12.6f\n", stat->max);
@@ -229,8 +235,8 @@ eff_t effp;
 
 	fprintf(stderr, "Maximum delta:     %12.6f\n", stat->dmax);
 	fprintf(stderr, "Minimum delta:     %12.6f\n", stat->dmin);
-	fprintf(stderr, "Mean    delta:     %12.6f\n", stat->dsum1/ct);
-	fprintf(stderr, "RMS     delta:     %12.6f\n", sqrt(stat->dsum2/ct));
+	fprintf(stderr, "Mean    delta:     %12.6f\n", stat->dsum1/(ct-1));
+	fprintf(stderr, "RMS     delta:     %12.6f\n", sqrt(stat->dsum2/(ct-1)));
 	freq = sqrt(stat->dsum2/stat->sum2)*effp->ininfo.rate/(M_PI*2);
 	fprintf(stderr, "Rough   frequency: %12d\n", (int)freq);
 

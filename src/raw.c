@@ -33,6 +33,8 @@
 #define memmove(dest, src, len) bcopy((src), (dest), (len))
 #endif
 
+#define MAXWSPEED 1
+
 void rawstartread(ft) 
 ft_t ft;
 {
@@ -127,6 +129,24 @@ void *p0;
 		swapn(p,n);
 }
 
+static int blockr_sw(p0, n, ft)
+LONG *p0,n;
+ft_t ft;
+{
+    LONG x, done;
+		short s;
+
+		for (done=0; done < n;) {
+			blockr(&s, sizeof(short), ft);
+			x = s;
+			if (ft->file.eof) break;
+			/* scale signed up to long's range */
+			*p0++ = LEFT(x, 16);
+			done++;
+		}
+	return done;
+}
+
 LONG rawread(ft, buf, nsamp) 
 ft_t ft;
 LONG *buf, nsamp;
@@ -189,28 +209,19 @@ LONG *buf, nsamp;
 		    switch(ft->info.style)
 		    {
 			case SIGN2:
-				while(done < nsamp) {
-					short s;
-					blockr(&s, sizeof(short), ft);
-					datum = s;
-					if (ft->file.eof)
-						return done;
-					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 16);
-					done++;
-				}
-				return done;
+				return blockr_sw(buf, nsamp, ft);
 			case UNSIGNED:
 				while(done < nsamp) {
+					LONG x;
 					unsigned short s;
 					blockr(&s, sizeof(short), ft);
-					datum = s;
+					x = s;
 					if (ft->file.eof)
 						return done;
 					/* Convert to signed */
-					datum ^= 0x8000;
+					x ^= 0x8000;
 					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 16);
+					*buf++ = LEFT(x, 16);
 					done++;
 				}
 				return done;
@@ -296,6 +307,57 @@ ft_t ft;
 	ft->file.pos += n;
 }
 
+static void blockw_sw(ft, buf, nsamp)
+ft_t ft;
+LONG *buf, nsamp;
+{
+	short *top;
+
+	top = (short*)(ft->file.buf + ft->file.size);
+	while (nsamp) {
+		short *p, *q;
+		p = (short*)(ft->file.buf + ft->file.pos);
+		if (p >= top) {
+			blockflush(ft);
+			continue;
+		}
+		q = p+nsamp; if (q>top) q = top;
+		ft->file.pos += (q-p)*sizeof(short);
+		nsamp -= (q-p);
+		if (ft->swap) {
+#	ifdef MAXWSPEED
+			q -= 4;
+			while (p<q) {
+				p[0] = swapw((buf[0] + 0x8000) >> 16); /* round for 16 bit */
+				p[1] = swapw((buf[1] + 0x8000) >> 16); /* round for 16 bit */
+				p[2] = swapw((buf[2] + 0x8000) >> 16); /* round for 16 bit */
+				p[3] = swapw((buf[3] + 0x8000) >> 16); /* round for 16 bit */
+				p += 4; buf += 4;
+			}
+			q += 4;
+#	endif
+			while (p<q) {
+				*p++ = swapw(((*buf++) + 0x8000) >> 16); /* round for 16 bit */
+			}
+		} else {
+#	ifdef MAXWSPEED
+			q -= 4;
+			while (p<q) {
+				p[0] = (buf[0] + 0x8000) >> 16; /* round for 16 bit */
+				p[1] = (buf[1] + 0x8000) >> 16; /* round for 16 bit */
+				p[2] = (buf[2] + 0x8000) >> 16; /* round for 16 bit */
+				p[3] = (buf[3] + 0x8000) >> 16; /* round for 16 bit */
+				p += 4; buf += 4;
+			}
+			q += 4;
+#	endif
+			while (p<q) {
+				*p++ = ((*buf++) + 0x8000) >> 16; /* round for 16 bit */
+			}
+		}
+	}
+}
+
 /* Convert the sox internal signed long format */
 /* to the raw file data, and write it. */
 
@@ -356,14 +418,7 @@ LONG *buf, nsamp;
 		    switch(ft->info.style)
 		    {
 			case SIGN2:
-				while(done < nsamp) {
-					short s;
-					/* scale signed up to long's range */
-					datum = *buf++ + 0x8000; /* round for 16 bit */
-					s = RIGHT(datum, 16);
-					blockw(&s, sizeof(short),ft);
-					done++;
-				}
+				blockw_sw(ft,buf,nsamp);
 				return;
 			case UNSIGNED:
 				while(done < nsamp) {

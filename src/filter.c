@@ -3,11 +3,36 @@
  */
 
 /*
- * November 7, 1999
+ * November 18, 1999
+ * Copyright 1994 Julius O. Smith
+ * Copyright 1991 (?) Lance Norskog (?)
+ * Copyright 1999 Stan Brooks <stabro@megsinet.net>
  *
+ * -------------------------------------------------------------------
  * This source code is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * -------------------------------------------------------------------
+ *
+ * REMARKS: (Stan Brooks speaking)
+ * This code is heavily based on the resample.c code which was
+ * apparently itself a rewrite (by Lance Norskog?) of code originally
+ * by Julius O. Smith, and distributed under the GPL license...
+ * I am currently trying to contact Lance Norskog and Julius O. Smith
+ * to hopefully clear up the question of copyright, license, etc, of
+ * this code and resample.c. The LGPL license would be ideal IMHO.
+ *
+ * The following was in the README file accompanying resample-1.2 :
+ *
+ *   COPYING
+ *
+ *   This software package is Copyright 1994 by Julius O. Smith
+ *   (jos@ccrma.stanford.edu), all rights reserved.  Permission to use and copy
+ *   is granted subject to the terms of the "GNU Software General Public
+ *   License" (see ftp://prep.ai.mit.edu/pub/gnu/COPYING).  In addition, we
+ *   request that a copy of any modified files be sent by email to
+ *   jos@ccrma.stanford.edu so that we may incorporate them in the CCRMA
+ *   version.
  *
  */
 

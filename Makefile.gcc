@@ -24,12 +24,12 @@ LIBDIR	= $(PREFIX)/lib
 MANDIR  = $(PREFIX)/man
 INCDIR	= $(PREFIX)/include
 
-SRCDIR	= sox-12.16
+SRCDIR	= sox-12.17
 
 ##############################################################################
 
-FOBJ	= 8svx.o aiff.o alsa.o au.o auto.o avr.o cdr.o cvsd.o dat.o \
-	  g721.o g723_24.o g723_40.o g72x.o gsm.o hcom.o maud.o oss.o raw.o \
+FOBJ	= 8svx.o adpcm.o aiff.o alsa.o au.o auto.o avr.o cdr.o cvsd.o dat.o \
+	  g721.o g723_24.o g723_40.o g72x.o gsm.o hcom.o ima_rw.c maud.o oss.o raw.o \
 	  sf.o smp.o sndrtool.o sunaudio.o tx16w.o voc.o wav.o wve.o
 
 EOBJ    = avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
@@ -85,6 +85,14 @@ CC		= gcc -g -Wall
 # then uncomment the following line.  Don't uncomment anything if
 # its in stdlib.h.
 GETOPT_DEFINES	= -DHAVE_GETOPT_H
+
+# If your system has bswap_16(), bswap_32() in byteswap.h
+# (Such as the case with GNU libc 2.1)
+# then uncomment the following line to use these fast versions.
+BYTESWAP_DEFINES	= -DHAVE_BYTESWAP_H
+
+# If your system has rand() then uncomment the following line.
+RAND_DEFINES	= -DHAVE_RAND
 
 # Uncomment the following if your system does not have a built in
 # strerror().  This includes SunOS.
@@ -178,8 +186,8 @@ SOX_PRE_LIBS	= $(GSM_PRE_LIBS)
 SOX_POST_LIBS	= $(GSM_POST_LIBS) $(MATHLIB)
 SOX_INCLUDES	= $(GSM_INCLUDES)
 SOX_DEFINES	= $(GSM_DEFINES) $(PLAYER_DEFINES) \
-  $(GETOPT_DEFINES) $(STRERR_DEFINES) $(MEMMOVE_DEFINES) \
-  $(DOS_DEFINES) $(NEXT_DEFINES) $(MISC_DEFINES)
+  $(GETOPT_DEFINES) $(BYTESWAP_DEFINES) $(RAND_DEFINES) $(STRERR_DEFINES) \
+	$(MEMMOVE_DEFINES) $(DOS_DEFINES) $(NEXT_DEFINES) $(MISC_DEFINES)
 
 CFLAGS  = $O $(SOX_DEFINES) $(SOX_INCLUDES)
 

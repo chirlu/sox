@@ -202,7 +202,7 @@ if test "$oss_dsp" = yes
 then
 	if test "$ac_cv_dev_oss_dsp" = ""
 	then
-		AC_CHEKC_HEADERS(sys/soundcard.h machine/soundchare.h,)
+		AC_CHECK_HEADERS(sys/soundcard.h machine/soundcard.h,)
 	fi
 	CFLAGS="$CFLAGS -DOSS_PLAYER"
 	NEED_OSS=1
@@ -246,7 +246,7 @@ if test "$sun_audio" = yes
 then
 	if test "$ac_cv_dev_sun_audio" = ""
 	then
-		AC_CHEKC_HEADERS(sys/audioio.h, sun/audioio.h,)
+		AC_CHECK_HEADERS(sys/audioio.h, sun/audioio.h,)
 	fi
 	CFLAGS="$CFLAGS -DSUNAUDIO_PLAYER"
 	NEED_SUNAU=1

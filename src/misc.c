@@ -15,6 +15,7 @@
 #include "version.h"
 #include "patchlvl.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 char *sizes[] = {
@@ -170,8 +171,6 @@ unsigned short us;
 	return ((us >> 8) | (us << 8)) & 0xffff;
 }
 
-#endif
-
 ULONG
 swapl(ul)
 ULONG ul;
@@ -192,6 +191,8 @@ swapf(float f)
 	u.l= (u.l>>24) | ((u.l>>8)&0xff00) | ((u.l<<8)&0xff0000L) | (u.l<<24);
 	return u.f;
 }
+
+#endif
 
 double
 swapd(df)
