@@ -45,7 +45,7 @@ sox \- Sound eXchange : universal sound sample translator
 .P
 .B Effects:
 .br
-    \fBavg\fR [ -l | -r | -f | -b | n,n,...,n ]
+    \fBavg\fR [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,...,n ]
 .br
     \fBband\fR [ -n ] \fIcenter\fR [ \fIwidth\fR ]
 .br
@@ -98,7 +98,7 @@ sox \- Sound eXchange : universal sound sample translator
 .br
     \fBphaser\fR \fIgain-in gain-out delay decay speed\fR < -s | -t >
 .br
-    \fBpick\fR [ \fI-1\fR | \fI-2\fR | \fI-3\fR | \fI-4\fR | \fI-l\fR | \fI-r\fR ]
+    \fBpick\fR [ \fI-1\fR | \fI-2\fR | \fI-3\fR | \fI-4\fR | \fI-l\fR | \fI-r\fR | \fI-f\fR | \fI-b\fR ]
 .br
     \fBpitch\fR \fIshift\fR [ \fIwidth interpole fade\fR ]
 .br
@@ -107,6 +107,8 @@ sox \- Sound eXchange : universal sound sample translator
               [ \fI-cutoff #\fR ]
 .br
     \fBrate\fR
+.br
+    \fBrepeat\fR \fIcount\fR
 .br
     \fBresample\fR [ -qs | -q | -ql ] [ \fIrolloff\fR [ \fIbeta\fR ] ]
 .br
@@ -569,6 +571,10 @@ See
 .B .ogg
 format.
 .TP 10
+.B vox
+A headerless file of Dialogic/OKI ADPCM audio data commonly comes with the
+extension .vox.  This ADPCM data has 12-bit precision packed into only 4-bits.
+.TP 10
 .B .wav
 Microsoft .WAV RIFF files.
 .br
@@ -629,18 +635,18 @@ pipe.  This type can't be used for output files.
 Multiple effects may be applied to the audio data by specifying them
 one after another at the end of the command line.
 .TP 10
-avg [ \fI-l\fR | \fI-r\fR | \fI-f\fR | \fI-b\fR | \fIn,n,...,n\fR ]
+avg [ \fI-l\fR | \fI-r\fR | \fI-f\fR | \fI-b\fR | \fI-1\fR | \fI-2\fR | \fI-3\fR | \fI-4\fR | \fIn,n,...,n\fR ]
 Reduce the number of channels by averaging the samples,
 or duplicate channels to increase the number of channels.
 This effect is automatically used when the number of input
 channels differ from the number of output channels.  When reducing
 the number of channels it is possible to manually specify the
-avg effect and use the \fI-l\fR, \fI-r\fR, \fI-f\fR, or \fI-b\fR
-options to select only
-the left, right, front, or back channel(s) for the output instead of
-averaging the channels.
-The \fI-f\fR and \fI-b\fR options maintain left/right stereo
-separation; use the avg effect twice to select a single channel.
+avg effect and use the \fI-l\fR, \fI-r\fR, \fI-f\fR, \fI-b\fR,
+\fI-1\fR, \fI-2\fR, \fI-3\fR, \fI-4\fR, options to select only
+the left, right, front, back channel(s) or specific channel 
+for the output instead of averaging the channels.
+The \fI-l\fR, \fI-r\fR, \fI-f\fR, and \fI-b\fR options will do averaging
+in quad-channel files so select the exact channel to prevent this.
 
 The avg effect can also be invoked with up to 16 double-precision
 numbers, which specify the proportion of each input channel that is
@@ -891,12 +897,8 @@ The modulation is either sinodial (-s) or triangular
 (-t).  The decay should be less than 0.5 to avoid
 feedback.  Gain-out is the volume of the output.
 .TP 10
-pick [ \fI-1\fR | \fI-2\fR | \fI-3\fR | \fI-4\fR | \fI-l\fR | \fI-r\fR ]
-Select the left or right channel of a stereo sample,
-or one of four channels in a quadraphonic sample. The \fI-l\fR and \fI-r\fR
-options represent either the left or right channel.  It is required that
-you use the \fB-c 1\fR command line option in order to force the output file to
-contain only 1 channel.
+pick [ \fI-1\fR | \fI-2\fR | \fI-3\fR | \fI-4\fR | \fI-l\fR | \fI-r\fR | \fI-f\fR | \fI-b\fR ]
+Pick a subset of channels to be copied into the output file.  This effect is just an alias of the "avg" effect but is left here for historical reasons.
 .TP 10
 pitch \fIshift [ width interpole fade ]\fB
 Change the pitch of file without affecting its duration by cross-fading
@@ -971,6 +973,9 @@ or
 If you are wondering which rate changing effects to use, you will want to read a
 detailed analysis of all of them at http://eakaw2.et.tu-dresden.de/~wilde/resample/resample.html
 .TP 10
+repeat \fIcount\fR
+Repeats the audio data \fIcount\fR times.  Requires disk space to store the data to be repeated.
+.TP 10
 resample [ \fI-qs\fB | \fI-q\fB | \fI-ql\fB ] [ \fIrolloff\fB [ \fIbeta\fB ] ]\fR
 Translate input sampling rate to output sampling rate
 via simulated analog filtration.
@@ -1035,7 +1040,7 @@ The \fIrolloff\fR refers to how close to the Nyquist frequency this cutoff
 is, with closer being better.  When increasing the sample rate of an 
 audio file you would not expect to have any frequencies exist that are 
 past the original Nyquist frequency.  Because of resampling properties, it 
-is common to have alaising data created that is above the old 
+is common to have aliasing data created that is above the old 
 Nyquist frequency.  In that case the \fIrolloff\fR refers to how close 
 to the original Nyquist frequency to use a highpass filter to remove
 this false data, with closer also being better.

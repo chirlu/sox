@@ -61,7 +61,7 @@ Play/record sound files to/from unix style sound devices.
 
 EFFECTs are one or more of the following:  avg, band, chorus, copy, cut, 
 deemph, echo, echos, flanger, highp, lowp, map, mask, phaser, pick, polyphase
-rate, resample, reverb, reverse, split, stat, vibro.
+rate, repeat, resample, reverb, reverse, split, stat, vibro.
 
 See sox man page for detailed information on supported file types, data
 formats, and effect options."
@@ -72,7 +72,7 @@ formats, and effect options."
 # loop over arguments
 while [ $# -ne 0 ]; do
     case "$1" in
-	avg|band|bandpass|bandreject|chorus|compand|copy|cut|deemph|earwax|echo|echos|fade|filter|flanger|highp|highpass|lowp|lowpass|map|mask|pan|phaser|pick|pitch|polyphase|rate|resample|reverb|reverse|silence|speed|split|stat|stretch|swap|trim|vibro|vol)
+	avg|band|bandpass|bandreject|chorus|compand|copy|cut|deemph|earwax|echo|echos|fade|filter|flanger|highp|highpass|lowp|lowpass|map|mask|pan|phaser|pick|pitch|polyphase|rate|repeat|resample|reverb|reverse|silence|speed|split|stat|stretch|swap|trim|vibro|vol)
 	    effects="$@"
 	    break
 	    ;;

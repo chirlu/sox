@@ -25,7 +25,7 @@ help()
   echo "to stdout.  This means that [ fopts ] need to be given so that"
   echo "sox will know what format the audio data is in."
   echo
-  echo "effectname: avg/band/bandpass/bandreject/chorus/compand/copy/cut/deemph/earwax/echo/echos/fade/filter/flanger/highp/highpass/lowp/lowpass/map/mask/pan/phaser/pick/pitch/polyphase/rate/resample/reverb/reverse/speed/split/stat/stretch/swap/trim/vibro/vol"
+  echo "effectname: avg/band/bandpass/bandreject/chorus/compand/copy/cut/deemph/earwax/echo/echos/fade/filter/flanger/highp/highpass/lowp/lowpass/map/mask/pan/phaser/pick/pitch/polyphase/rate/repeat/resample/reverb/reverse/speed/split/stat/stretch/swap/trim/vibro/vol"
   echo
   echo "fopts: -c channels -h -r rate -t type -v volume -s/-u/-U/-A -b/-w/-l/-f/-d/-D -x"
   echo ""

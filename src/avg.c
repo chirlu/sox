@@ -15,7 +15,10 @@
  * Sound Tools stereo/quad -> mono mixdown effect file.
  * and mono/stereo -> stereo/quad channel duplication.
  *
- * What's in a center channel?
+ * TODO: The shorthand concepts of volume change and balance
+ *       is not finished.  Users could change volumes of each
+ *       channel though by manually specifing each channels
+ *       values.
  */
 
 #include "st_i.h"
@@ -25,24 +28,29 @@
 
 /* Private data for SKEL file */
 typedef struct avgstuff {
-	/* How to generate each output channel.  sources[i][j] */
-	/* represents the fraction of channel i that should be passed */
-	/* through to channel j on output, and so forth.  Channel 0 is */
-	/* left front, channel 1 is right front, and 2 and 3 are left */
-	/* and right rear, respectively. (GHK) */
-	double	sources[4][4];
-	int	num_pans;
-	int	mix;			/* How are we mixing it? */
+        /* How to generate each output channel.  sources[i][j] */
+        /* represents the fraction of channel i that should be passed */
+        /* through to channel j on output, and so forth.  Channel 0 is */
+        /* left front, channel 1 is right front, and 2 and 3 are left */
+        /* and right rear, respectively. (GHK) */
+        double  sources[4][4];
+        int     num_pans;
+        int     mix;                    /* How are we mixing it? */
 } *avg_t;
 
-#define MIX_CENTER	0
-#define MIX_LEFT	1
-#define MIX_RIGHT	2
-#define MIX_FRONT	3
-#define MIX_BACK	4
-#define MIX_SPECIFIED	5
+/* MIX_CENTER is shorthand to mix channels together at 50% each */
+#define MIX_CENTER      0
+#define MIX_LEFT        1
+#define MIX_RIGHT       2
+#define MIX_FRONT       3
+#define MIX_BACK        4
+#define MIX_SPECIFIED   5
+#define MIX_LEFT_FRONT  6
+#define MIX_RIGHT_FRONT 7
+#define MIX_LEFT_BACK   8
+#define MIX_RIGHT_BACK  9
 
-#define CLIP_LEVEL	((double)(((unsigned)1 << 31) - 1))
+#define CLIP_LEVEL      ((double)(((unsigned)1 << 31) - 1))
 
 /*
  * Process options
@@ -54,7 +62,7 @@ int st_avg_getopts(eff_t effp, int n, char **argv)
     int i;
 
     for (i = 0;  i < 16;  i++)
-	pans[i] = 0.0;
+        pans[i] = 0.0;
     avg->mix = MIX_CENTER;
     avg->num_pans = 0;
 
@@ -62,41 +70,47 @@ int st_avg_getopts(eff_t effp, int n, char **argv)
     /* input and output channels, we'll record the information for */
     /* later. */
     if (n) {
-	if(!strcmp(argv[0], "-l"))
-	    avg->mix = MIX_LEFT;
-	else if (!strcmp(argv[0], "-r"))
-	    avg->mix = MIX_RIGHT;
-	else if (!strcmp(argv[0], "-f"))
-	    avg->mix = MIX_FRONT;
-	else if (!strcmp(argv[0], "-b"))
-	    avg->mix = MIX_BACK;
-	else if (argv[0][0] == '-' && !isdigit((int)argv[0][1])
-		&& argv[0][1] != '.') {
-	    st_fail("Usage: avg [ -l | -r | -f | -b | n,n,n...,n ]");
-	    return (ST_EOF);
-	}
-	else {
-	    int commas;
-	    char *s;
-	    avg->mix = MIX_SPECIFIED;
-	    pans[0] = atof(argv[0]);
-	    for (s = argv[0], commas = 0; *s; ++s) {
-		if (*s == ',') {
-		    ++commas;
-		    if (commas >= 16) {
-			st_fail("avg can only take up to 16 pan values");
-			return (ST_EOF);
-		    }
-		    pans[commas] = atof(s+1);
-		}
-	    }
-	    avg->num_pans = commas + 1;
-	}
+        if(!strcmp(argv[0], "-l"))
+            avg->mix = MIX_LEFT;
+        else if (!strcmp(argv[0], "-r"))
+            avg->mix = MIX_RIGHT;
+        else if (!strcmp(argv[0], "-f"))
+            avg->mix = MIX_FRONT;
+        else if (!strcmp(argv[0], "-b"))
+            avg->mix = MIX_BACK;
+        else if (!strcmp(argv[0], "-1"))
+            avg->mix = MIX_LEFT_FRONT;
+        else if (!strcmp(argv[0], "-2"))
+            avg->mix = MIX_RIGHT_FRONT;
+        else if (!strcmp(argv[0], "-3"))
+            avg->mix = MIX_LEFT_BACK;
+        else if (!strcmp(argv[0], "-2"))
+            avg->mix = MIX_RIGHT_BACK;
+        else if (argv[0][0] == '-' && !isdigit((int)argv[0][1])
+                && argv[0][1] != '.') {
+            st_fail("Usage: avg [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]");
+            return (ST_EOF);
+        }
+        else {
+            int commas;
+            char *s;
+            avg->mix = MIX_SPECIFIED;
+            pans[0] = atof(argv[0]);
+            for (s = argv[0], commas = 0; *s; ++s) {
+                if (*s == ',') {
+                    ++commas;
+                    if (commas >= 16) {
+                        st_fail("avg can only take up to 16 pan values");
+                        return (ST_EOF);
+                    }
+                    pans[commas] = atof(s+1);
+                }
+            }
+            avg->num_pans = commas + 1;
+        }
     }
     else {
-	pans[0] = 0.5;
-	pans[1] = 0.5;
-	avg->num_pans = 2;
+        avg->mix = MIX_CENTER;
     }
     return (ST_SUCCESS);
 }
@@ -197,45 +211,161 @@ int st_avg_start(eff_t effp)
                  st_fail("Output must have different number of channels to use avg effect");
                  return(ST_EOF);
              }
-             break;		/* Code below will handle this case */
-         case MIX_LEFT:
-             if (ichan < 2) {
-                 st_fail("Input must have at least two channels to use avg -l");
-                 return(ST_EOF);
-             }
-             pans[0] = 1.0;
-             pans[1] = 0.0;
+             pans[0] = 0.5;
+             pans[1] = 0.5;
              avg->num_pans = 2;
+             avg->mix = MIX_CENTER;
+             break;             /* Code below will handle this case */
+         case MIX_LEFT:
+             if (ichan == 2 && ochan == 1)
+             {
+                 pans[0] = 1.0;
+                 pans[1] = 0.0;
+                 avg->num_pans = 2;
+             }
+             else if (ichan == 4 && ochan == 2)
+             {
+                 pans[0] = 0.5;
+                 pans[1] = 0.0;
+                 pans[2] = 0.5;
+                 pans[3] = 0.0;
+                 avg->num_pans = 4;
+             }
+             else
+             {
+                 st_fail("Can't average %d channels into %d channels",
+                         ichan, ochan);
+                 return ST_EOF;
+             }
              break;
          case MIX_RIGHT:
-             if (ichan < 2) {
-                 st_fail("Input must have at least two channels to use avg -r");
-                 return(ST_EOF);
+             if (ichan == 2 && ochan == 1)
+             {
+                 pans[0] = 0.0;
+                 pans[1] = 1.0;
+                 avg->num_pans = 2;
              }
-             pans[0] = 0.0;
-             pans[1] = 1.0;
-             avg->num_pans = 2;
+             else if (ichan == 4 && ochan == 2)
+             {
+                 pans[0] = 0.0;
+                 pans[1] = 0.5;
+                 pans[2] = 0.0;
+                 pans[3] = 0.5;
+                 avg->num_pans = 4;
+             }
+             else
+             {
+                 st_fail("Can't average %d channels into %d channels",
+                         ichan, ochan);
+                 return ST_EOF;
+             }
              break;
          case MIX_FRONT:
-             if (ichan < 4) {
-                 st_fail("Input must have at least four channels to use avg -f");
-                 return(ST_EOF);
+             if (ichan == 4 && ochan == 2)
+             {
+                 pans[0] = 1.0;
+                 pans[1] = 1.0;
+                 pans[2] = 0.0;
+                 pans[3] = 0.0;
+                 avg->num_pans = 4;
              }
-             pans[0] = 1.0;
-             pans[1] = 0.0;
-             avg->num_pans = 2;
+             else
+             {
+                 st_fail("avg: -f option requires 4 channels input and 2 channel output");
+                 return ST_EOF;
+             }
              break;
          case MIX_BACK:
-             if (ichan < 4) {
-                 st_fail("Input must have at least four channels to use avg -b");
-                 return(ST_EOF);
+             if (ichan == 4 && ochan == 2)
+             {
+                 pans[0] = 0.0;
+                 pans[1] = 0.0;
+                 pans[2] = 1.0;
+                 pans[3] = 1.0;
+                 avg->num_pans = 4;
              }
-             pans[0] = 0.0;
-             pans[1] = 1.0;
-             avg->num_pans = 2;
+             else
+             {
+                 st_fail("avg: -b option requires 4 channels input and 2 channel output");
+                 return ST_EOF;
+             }
+             break;
+         case MIX_LEFT_FRONT:
+             if (ichan == 2 && ochan == 1)
+             {
+                 pans[0] = 1.0;
+                 pans[1] = 0.0;
+                 avg->num_pans = 2;
+             }
+             else if (ichan == 4 && ochan == 1)
+             {
+                 pans[0] = 1.0;
+                 pans[1] = 0.0;
+                 pans[2] = 0.0;
+                 pans[3] = 0.0;
+                 avg->num_pans = 4;
+             }
+             else
+             {
+                 st_fail("avg: -1 option requires 4 channels input and 1 channel output");
+                 return ST_EOF;
+             }
+             break;
+         case MIX_RIGHT_FRONT:
+             if (ichan == 2 && ochan == 1)
+             {
+                 pans[0] = 0.0;
+                 pans[1] = 1.0;
+                 avg->num_pans = 2;
+             }
+             else if (ichan == 4 && ochan == 1)
+             {
+                 pans[0] = 0.0;
+                 pans[1] = 1.0;
+                 pans[2] = 0.0;
+                 pans[3] = 0.0;
+                 avg->num_pans = 4;
+             }
+             else
+             {
+                 st_fail("avg: -2 option requires 4 channels input and 1 channel output");
+                 return ST_EOF;
+             }
+             break;
+         case MIX_LEFT_BACK:
+             if (ichan == 4 && ochan == 1)
+             {
+                 pans[0] = 0.0;
+                 pans[1] = 0.0;
+                 pans[2] = 1.0;
+                 pans[3] = 0.0;
+                 avg->num_pans = 4;
+             }
+             else
+             {
+                 st_fail("avg: -3 option requires 4 channels input and 1 channel output");
+                 return ST_EOF;
+             }
+         case MIX_RIGHT_BACK:
+             if (ichan == 4 && ochan == 1)
+             {
+                 pans[0] = 0.0;
+                 pans[1] = 0.0;
+                 pans[2] = 0.0;
+                 pans[3] = 1.0;
+                 avg->num_pans = 4;
+             }
+             else
+             {
+                 st_fail("avg: -4 option requires 4 channels input and 1 channel output");
+                 return ST_EOF;
+             }
+
+         case MIX_SPECIFIED:
              break;
          default:
-             break;
+             st_fail("Unknown mix option in average effect");
+             return ST_EOF;
      }
 
      /* If the number of pans given is 4 or fewer, handle the special */
@@ -296,6 +426,11 @@ int st_avg_start(eff_t effp)
                  avg->sources[3][3] = avg->sources[1][1];
              }
          }
+         else
+         {
+             st_fail("Invalid options specified to avg while not mixing");
+             return ST_EOF;
+         }
      }
      else if (avg->num_pans == 2) {
          if (ichan == 2 && ochan == 1) {
@@ -304,7 +439,6 @@ int st_avg_start(eff_t effp)
          }
          else if (ichan == 4 && ochan == 2) {
              avg->sources[0][0] = pans[0];
-             avg->sources[0][1] = 0.0;
              avg->sources[1][1] = pans[0];
              avg->sources[2][0] = pans[1];
              avg->sources[3][1] = pans[1];
@@ -312,7 +446,6 @@ int st_avg_start(eff_t effp)
          else if (ichan == 4 && ochan == 4) {
              /* pans[0] is front -> front, pans[1] is for back */
              avg->sources[0][0] = pans[0];
-             avg->sources[0][1] = 0.0;
              avg->sources[1][1] = pans[0];
              avg->sources[2][2] = pans[1];
              avg->sources[3][3] = pans[1];
@@ -326,6 +459,12 @@ int st_avg_start(eff_t effp)
              avg->sources[1][0] = pans[2];
              avg->sources[1][1] = pans[3];
          }
+         else if (ichan == 4 && ochan == 2) {
+             avg->sources[0][0] = pans[0];
+             avg->sources[1][1] = pans[1];
+             avg->sources[2][0] = pans[2];
+             avg->sources[3][1] = pans[3];
+         }
          else if (ichan == 4 && ochan == 1) {
              avg->sources[0][0] = pans[0];
              avg->sources[1][0] = pans[1];
@@ -333,6 +472,12 @@ int st_avg_start(eff_t effp)
              avg->sources[3][0] = pans[3];
          }
      }
+     else
+     {
+         st_fail("Invalid options specified to avg while not mixing");
+         return ST_EOF;
+     }
+
      return (ST_SUCCESS);
 }
 

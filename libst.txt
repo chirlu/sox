@@ -1,179 +1,151 @@
-ST(3)							    ST(3)
+ST(3)									 ST(3)
 
 
 
 NAME
-       libst  -	 Sound	Tools  :  sound	 sample	 file and effects
-       libraries.
+       libst - Sound Tools : sound sample file and effects libraries.
 
 SYNOPSIS
        cc file.c -o file libst.a
 
 DESCRIPTION
-       Sound Tools is a library of sound sample file format read­
-       ers/writers and sound effects processors.
+       Sound Tools  is	a  library of sound sample file format readers/writers
+       and sound effects processors.
 
-       Sound  Tools  includes  skeleton	 C files to assist you in
-       writing	new  formats  and  effects.   The  full	 skeleton
-       driver,	skel.c,	 helps you write drivers for a new format
-       which has data structures.  The	simple	skeleton  drivers
-       help  you write a new driver for raw (headerless) formats,
-       or for formats which just have a simple header followed by
-       raw data.
+       Sound Tools includes skeleton C files to assist you in writing new for-
+       mats  and  effects.   The full skeleton driver, skel.c, helps you write
+       drivers for a new format which has data structures.  The simple	skele-
+       ton  drivers  help you write a new driver for raw (headerless) formats,
+       or for formats which just have a simple header followed by raw data.
 
-       Most sound sample formats are fairly simple: they are just
-       a string of bytes or words and are presumed to be  sampled
-       at  a  known  data  rate.   Most of them have a short data
-       structure at the beginning of the file.
+       Most sound sample formats are fairly simple: they are just a string  of
+       bytes  or  words	 and  are presumed to be sampled at a known data rate.
+       Most of them have a short data structure at the beginning of the	 file.
 
 INTERNALS
-       The Sound Tools formats and effects operate on an internal
-       buffer format of signed 32-bit longs.  The data processing
-       routines are called with buffers	 of  these  samples,  and
-       buffer  sizes  which  refer  to the number of samples pro­
-       cessed, not the number of bytes.	 File  readers	translate
-       the input samples to signed longs and return the number of
-       longs read.  For example, data in linear signed byte  for­
-       mat is left-shifted 24 bits.
+       The  Sound Tools formats and effects operate on an internal buffer for-
+       mat of signed 32-bit longs.  The data processing	 routines  are	called
+       with buffers of these samples, and buffer sizes which refer to the num-
+       ber of samples processed, not the number of bytes.  File readers trans-
+       late  the  input samples to signed longs and return the number of longs
+       read.  For example, data in linear signed byte format  is  left-shifted
+       24 bits.
 
-       This  does  cause  problems  in	processing the data.  For
-       example:
+       This does cause problems in processing the data.	 For example:
 	    *obuf++ = (*ibuf++ + *ibuf++)/2;
-       would not mix down left and right channels into one  mono­
-       phonic  channel, because the resulting samples would over­
-       flow 32 bits.  Instead, the ``avg'' effects must use:
+       would not mix down left and right channels into one monophonic channel,
+       because the resulting samples would overflow  32	 bits.	 Instead,  the
+       â€˜â€˜avgâ€™â€™ effects must use:
 	    *obuf++ = *ibuf++/2 + *ibuf++/2;
 
-       Stereo data is stored with the left and right speaker data
-       in  successive  samples.	  Quadraphonic	data is stored in
-       this order: left front,	right  front,  left  rear,  right
-       rear.
+       Stereo  data  is stored with the left and right speaker data in succes-
+       sive samples.  Quadraphonic data is stored in this order:  left	front,
+       right front, left rear, right rear.
 
 FORMATS
-       A format is responsible for translating between sound sam­
-       ple files and an internal buffer.  The internal buffer  is
-       store  in  signed  longs	 with a fixed sampling rate.  The
-       format operates from two data structures: a format  struc­
-       ture, and a private structure.
+       A  format is responsible for translating between sound sample files and
+       an internal buffer.  The internal buffer is store in signed longs  with
+       a fixed sampling rate.  The format operates from two data structures: a
+       format structure, and a private structure.
 
-       The format structure contains a list of control parameters
-       for the sample: sampling rate, data  size  (bytes,  words,
-       floats,	etc.),	encoding (unsigned, signed, logarithmic),
-       number of sound channels.  It also  contains  other  state
-       information:  whether  the  sample  file needs to be byte-
-       swapped, whether fseek() will work, its suffix,	its  file
-       stream pointer, its format pointer, and the private struc­
-       ture for the format .
+       The format structure contains a list of control parameters for the sam-
+       ple:  sampling  rate,  data size (bytes, words, floats, etc.), encoding
+       (unsigned, signed, logarithmic), number of  sound  channels.   It  also
+       contains	 other	state information: whether the sample file needs to be
+       byte-swapped, whether fseek() will work, its suffix,  its  file	stream
+       pointer, its format pointer, and the private structure for the format .
 
-       The private area is just a preallocated data array for the
-       format to use however it wishes.	 It should have a defined
-       data structure and cast the array to that structure.   See
-       voc.c  for  the	use of a private data area.  Voc.c has to
-       track the number of samples it writes and when  finishing,
-       seek  back  to the beginning of the file and write it out.
-       The private area is not very large.  The	 ``echo''  effect
-       has  to	malloc()  a  much  larger area for its delay line
-       buffers.
+       The private area is just a preallocated data array for  the  format  to
+       use  however  it	 wishes.   It should have a defined data structure and
+       cast the array to that structure.  See voc.c for the use of  a  private
+       data area.  Voc.c has to track the number of samples it writes and when
+       finishing, seek back to the beginning of the file  and  write  it  out.
+       The  private  area  is not very large.  The â€˜â€˜echoâ€™â€™ effect has to mal-
+       loc() a much larger area for its delay line buffers.
 
        A format has 6 routines:
 
-       startread	   Set up the format parameters, or  read
-			   in  a data header, or do what needs to
-			   be done.
+       startread	   Set up the format parameters, or  read  in  a  data
+			   header, or do what needs to be done.
 
-       read		   Given a buffer and a length:	 read  up
-			   to  that  many samples, transform them
-			   into signed long  integers,	and  copy
-			   them into the buffer.  Return the num­
-			   ber of samples actually read.
+       read		   Given  a  buffer and a length: read up to that many
+			   samples, transform them into signed long  integers,
+			   and	copy  them into the buffer.  Return the number
+			   of samples actually read.
 
        stopread		   Do what needs to be done.
 
-       startwrite	   Set up the format parameters, or write
-			   out a data header, or do what needs to
-			   be done.
+       startwrite	   Set up the format parameters, or write out  a  data
+			   header, or do what needs to be done.
 
-       write		   Given a buffer and a length: copy that
-			   many	 samples  out of the buffer, con­
-			   vert them from  signed  longs  to  the
-			   appropriate	data,  and  write them to
-			   the file.  If it can't write	 out  all
-			   the samples, fail.
+       write		   Given a buffer and a length: copy that many samples
+			   out of the buffer, convert them from	 signed	 longs
+			   to  the  appropriate	 data,	and  write them to the
+			   file.  If it canâ€™t write out all the samples, fail.
 
-       stopwrite	   Fix	up  any	 file  header, or do what
-			   needs to be done.
+       stopwrite	   Fix	up  any	 file  header,	or do what needs to be
+			   done.
 
 EFFECTS
-       An effects loop has one input and one output  stream.   It
-       has 5 routines.
+       An effects loop has one input and one output stream.   It  has  5  rou-
+       tines.
 
-       getopts		   is  called  with  a	character  string
-			   argument list for the effect.
+       getopts		   is called with a character string argument list for
+			   the effect.
 
-       start		   is called with the  signal  parameters
-			   for the input and output streams.
+       start		   is called with the signal parameters for the	 input
+			   and output streams.
 
-       flow		   is  called  with input and output data
-			   buffers, and (by reference) the  input
-			   and output data buffer sizes.  It pro­
-			   cesses the input buffer into the  out­
-			   put	buffer,	 and  sets the size vari­
-			   ables to the numbers of samples  actu­
-			   ally	 processed.  It is under no obli­
-			   gation to read from the  input  buffer
-			   or  write  to the output buffer during
-			   the same call.  If  the  call  returns
-			   ST_EOF  then this should be used as an
-			   indication that this	 effect	 will  no
-			   longer  read	 any data and can be used
-			   to switch to drain mode sooner.
+       flow		   is  called  with input and output data buffers, and
+			   (by reference) the input  and  output  data	buffer
+			   sizes.  It processes the input buffer into the out-
+			   put buffer, and sets the size variables to the num-
+			   bers of samples actually processed.	It is under no
+			   obligation to read from the input buffer  or	 write
+			   to  the output buffer during the same call.	If the
+			   call returns ST_EOF then this should be used as  an
+			   indication that this effect will no longer read any
+			   data and can	 be  used  to  switch  to  drain  mode
+			   sooner.
 
-       drain		   is called  after  there  are	 no  more
-			   input  data	samples.   If  the effect
-			   wishes to generate more  data  samples
-			   it  copies  the  generated data into a
-			   given buffer and returns the number of
-			   samples  generated.	 If  it fills the
-			   buffer, it will be called again,  etc.
-			   The	echo  effect  uses  this  to fade
-			   away.
+       drain		   is  called  after there are no more input data sam-
+			   ples.  If the effect wishes to generate  more  data
+			   samples  it	copies the generated data into a given
+			   buffer and returns the number of samples generated.
+			   If  it  fills  the buffer, it will be called again,
+			   etc.	 The echo effect uses this to fade away.
 
-       stop		   is called when there are no more input
-			   samples to process.	stop may generate
-			   output samples on its own.  See echo.c
-			   for	how to do this, and see that what
-			   it does is absolutely bogus.
+       stop		   is called when there are no more input  samples  to
+			   process.   stop  may generate output samples on its
+			   own.	 See echo.c for how to do this, and  see  that
+			   what it does is absolutely bogus.
 
 COMMENTS
-       Theoretically, formats can be used to  manipulate  several
-       files inside one program.  Multi-sample files, for example
-       the download for	 a  sampling  keyboard,	 can  be  handled
-       cleanly with this feature.
+       Theoretically,  formats	can be used to manipulate several files inside
+       one program.  Multi-sample files, for example the download for  a  sam-
+       pling keyboard, can be handled cleanly with this feature.
 
 PORTABILITY PROBLEMS
-       Many  computers	don't  supply  arithmetic shifting, so do
-       multiplies and divides instead of << and >>.  The compiler
-       will  do	 the  right  thing if the CPU supplies arithmetic
-       shifting.
+       Many  computers	donâ€™t supply arithmetic shifting, so do multiplies and
+       divides instead of << and >>.  The compiler will do the right thing  if
+       the CPU supplies arithmetic shifting.
 
-       Do all arithmetic conversions one stage at a  time.   I've
-       had too many problems with "obviously clean" combinations.
+       Do  all	arithmetic conversions one stage at a time.  Iâ€™ve had too many
+       problems with "obviously clean" combinations.
 
-       In general, don't worry	about  "efficiency".   The  sox.c
-       base translator is disk-bound on any machine (other than a
-       8088 PC with an SMD disk controller).  Just  comment  your
-       code  and  make	sure  it's clean and simple.  You'll find
-       that DSP code is extremely painful to write as it is.
+       In general, donâ€™t worry about "efficiency".  The sox.c base  translator
+       is  disk-bound  on  any	machine (other than a 8088 PC with an SMD disk
+       controller).  Just comment your code and make sure itâ€™s clean and  sim-
+       ple.  Youâ€™ll find that DSP code is extremely painful to write as it is.
 
 BUGS
-       The HCOM format is not re-entrant; it  can  only	 be  used
-       once in a program.
+       The HCOM format is not re-entrant; it can only be used once in  a  pro-
+       gram.
 
-       The program/library interface is pretty weak.  There's too
-       much ad-hoc information which a	program	 is  supposed  to
-       gather  up.   Sound  Tools  wants to be an object-oriented
-       dataflow architecture.
-
+       The  program/library interface is pretty weak.  Thereâ€™s too much ad-hoc
+       information which a program is supposed	to  gather  up.	  Sound	 Tools
+       wants to be an object-oriented dataflow architecture.
 
 
-			 October 15 1996		    ST(3)
+
+				October 15 1996				 ST(3)

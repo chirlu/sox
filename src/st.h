@@ -19,8 +19,8 @@ extern "C" {
 #include <stdlib.h>
 #include "ststdint.h"
 
-/* Release 12.17.3 of libst */
-#define ST_LIB_VERSION_CODE 0x0c1104
+/* Release 12.17.5 of libst */
+#define ST_LIB_VERSION_CODE 0x0c1105
 #define ST_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 typedef int32_t st_sample_t;
@@ -114,7 +114,7 @@ typedef struct st_fileinfo
  *  Format information for input and output files.
  */
 
-#define ST_MAX_FILE_PRIVSIZE	1000
+#define ST_MAX_FILE_PRIVSIZE    1000
 #define ST_MAX_EFFECT_PRIVSIZE 1000
 
 #define ST_MAX_NLOOPS           8

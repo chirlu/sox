@@ -343,6 +343,13 @@ st_ssize_t st_vorbiswrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_vorbisstopwrite(ft_t ft);
 #endif
 
+int st_voxstartread(ft_t ft);
+st_ssize_t st_voxread(ft_t ft, st_sample_t *buf, st_ssize_t len);
+int st_voxstopread(ft_t ft);
+int st_voxstartwrite(ft_t ft);
+st_ssize_t st_voxwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
+int st_voxstopwrite(ft_t ft);
+
 int st_wavstartread(ft_t ft);
 st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_wavstopread(ft_t ft);
@@ -512,6 +519,13 @@ int st_rate_start(eff_t effp);
 int st_rate_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                  st_size_t *isamp, st_size_t *osamp);
 int st_rate_stop(eff_t effp);
+
+int st_repeat_getopts(eff_t effp, int argc, char **argv);
+int st_repeat_start(eff_t effp);
+int st_repeat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+                     st_size_t *isamp, st_size_t *osamp);
+int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
+int st_repeat_stop(eff_t effp);
 
 int st_resample_getopts(eff_t effp, int argc, char **argv);
 int st_resample_start(eff_t effp);

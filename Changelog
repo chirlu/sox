@@ -24,6 +24,8 @@ sox-12.17.5
     buffer overflows.
   o Added patch from Redhat to allow resample to work on certain 64-bit
     machines.
+  o Tony Seebregts added a file handler for headerless Dialogic/OKI ADPCM
+    files (VOX files).
 
 sox-12.17.4
 -----------

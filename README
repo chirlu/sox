@@ -62,6 +62,7 @@ The sound effects include:
   o Pan sound between channels
   o Apply a phaser effect
   o Change the pitch of a sound file without effecting its speed
+  o Repeat audio data
   o Change sampling rates using several different algorithms. A
      'resample' and 'polyphase' effect use high-grade signal rate
      changes using real signal theory!
