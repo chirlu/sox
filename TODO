@@ -3,6 +3,11 @@ all patches to cbagwell@users.sourceforge.net.
 
   o Still passing some options using CFLAGS instead of stconfig.h.
 
+  o Lots of effects are sing "double" to prevent overflow of
+    st_sample_t math.  With ststdint.h we now have a portable way
+    of detecting uin64_t...  Use that when possible to speed up
+    math (won't have to convert back and forth from int to float).
+
   o Several files are using hard-coded #'s instead of ST_SAMPLE_MIN/MAX.
     Change these.
 
