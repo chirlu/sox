@@ -59,8 +59,6 @@ struct aupriv {
 };
 
 void auwriteheader(P2(ft_t ft, ULONG data_size));
-LONG rawread(P3(ft_t, LONG *, LONG));
-void rawwrite(P3(ft_t,LONG *, LONG));
 
 void austartread(ft) 
 ft_t ft;

@@ -31,9 +31,6 @@ typedef struct cdrstuff {
 	LONG	samples;	/* number of samples written */
 } *cdr_t;
 
-LONG rawread(P3(ft_t, LONG *, LONG));
-void rawwrite(P3(ft_t, LONG *, LONG));
-
 /*
  * Do anything required before you start reading samples.
  * Read file header. 

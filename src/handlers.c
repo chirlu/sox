@@ -58,11 +58,21 @@ extern void austopwrite();
 
 char *autonames[] = {
 	"auto",
-	(char *) 0,
+	(char *) 0
 };
 
 extern void autostartread();
 extern void autostartwrite();
+
+char *avrnames[] = {
+	"avr",
+	(char *) 0
+};
+
+extern void avrstartread();
+extern void avrstartwrite();
+extern void avrwrite();
+extern void avrstopwrite();
 
 char *cdrnames[] = {
 	"cdr",
@@ -154,12 +164,8 @@ char *rawnames[] = {
 	"raw",
 	(char *) 0
 };
-extern void rawstartread();
-extern LONG rawread();
-extern void rawstopread();
-extern void rawstartwrite();
-extern void rawwrite();
-extern void rawstopwrite();
+
+/* raw prototypes are defined in st.h since they are used globally. */
 
 #if	defined(BLASTER) || defined(SBLAST)
 char *sbdspnames[] = {
@@ -333,6 +339,9 @@ EXPORT format_t formats[] = {
 	{autonames, FILE_STEREO,
 		autostartread, nothing_success, nothing,/* Guess from header */
 		autostartwrite, nothing, nothing},	 /* patched run time */
+	{avrnames, FILE_STEREO,
+		avrstartread, rawread, nothing,		/* AVR format */
+		avrstartwrite, avrwrite, avrstopwrite}, /* relies on raw */
 	{cdrnames, FILE_STEREO,
 		cdrstartread, cdrread, cdrstopread,	      /* CD-R format */
 		cdrstartwrite, cdrwrite, cdrstopwrite},

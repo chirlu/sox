@@ -13,7 +13,7 @@ LFLAGS	=	$(CFLAGS) -l=/dd/lib/sys_clib.l
 CC		=	cc
 
 FOBJ	= $(RDIR)/8svx.r $(RDIR)/aiff.r $(RDIR)/alsa.r $(RDIR)/au.r 
-	  $(RDIR)/auto.r \
+	  $(RDIR)/auto.r $(RDIR)/avr.r \
 	  $(RDIR)/cdr.r $(RDIR)/cvsd.r $(RDIR)/dat.r $(RDIR)/g711.r \
 	  $(RDIR)/g721.r $(RDIR)/g723_24.r $(RDIR)/g723_40.r \
 	  $(RDIR)/g72x.r $(RDIR)/gsm.r $(RDIR)/hcom.r $(RDIR)/maud.r \

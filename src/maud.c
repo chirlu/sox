@@ -33,8 +33,6 @@ struct maudstuff { /* max. 100 bytes!!!! */
 };
 
 void maudwriteheader(P1(ft_t));
-LONG rawread(P3(ft_t, LONG *, LONG));
-void rawwrite(P3(ft_t, LONG *, LONG));
 
 /*
  * Do anything required before you start reading samples.

@@ -26,6 +26,7 @@ This release understands:
   o NeXT .snd files
   o Soundtool (DOS) files
   o Psion (palmtop) A-law files
+  o AVR files
 
 The sound effects include:
 

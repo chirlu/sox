@@ -89,8 +89,6 @@ typedef struct wavstuff {
 
 static char *wav_format_str();
 
-LONG rawread(P3(ft_t, LONG *, LONG));
-void rawwrite(P3(ft_t, LONG *, LONG));
 void wavwritehdr(P1(ft_t));
 
 

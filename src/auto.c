@@ -57,6 +57,9 @@ ft_t ft;
 	else if (strncmp(header, "SOUND", 5) == 0) {
 		type = "sndt";
 	}
+	else if (strncmp(header, "2BIT", 4) == 0) {
+		type = "avr";
+	}
 	else if (header[0] == 0 && header[1] == 0) {
 		int rate = (header[2] & 0xff) + ((header[3] & 0xff) << 8);
 		if (rate >= 4000 && rate <= 25000)

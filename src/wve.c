@@ -20,8 +20,6 @@ struct wvepriv
     };
 
 void wvewriteheader(P1(ft_t ft));
-LONG rawread(P3(ft_t, LONG *, LONG));
-void rawwrite(P3(ft_t, LONG *, LONG));
 
 void wvestartread(ft) 
 ft_t ft;

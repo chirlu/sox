@@ -250,6 +250,8 @@ void rawstartread(P1(ft_t ft));
 void rawstartwrite(P1(ft_t ft));
 void rawstopread(P1(ft_t ft));
 void rawstopwrite(P1(ft_t ft));
+LONG rawread(P3(ft_t ft, LONG *buf, LONG nsamp));
+void rawwrite(P3(ft_t ft, LONG *buf, LONG nsamp));
 
 /* Utilities to byte-swap values */
 unsigned short swapw(P1(unsigned short us));		/* Swap short */

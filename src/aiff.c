@@ -56,9 +56,7 @@ struct aiffpriv {
 };
 
 double read_ieee_extended();
-LONG rawread(P3(ft_t, LONG *, LONG));
 void aiffwriteheader(P2(ft_t, LONG));
-void rawwrite(P3(ft_t, LONG *, LONG));
 void write_ieee_extended(P2(ft_t, double));
 double ConvertFromIeeeExtended();
 void ConvertToIeeeExtended(P2(double, char *));
