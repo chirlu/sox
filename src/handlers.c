@@ -505,6 +505,12 @@ extern int st_echos_flow();
 extern int st_echos_drain();
 extern int st_echos_stop();
 
+extern int st_earwax_getopts();
+extern int st_earwax_start();
+extern int st_earwax_flow();
+extern int st_earwax_drain();
+extern int st_earwax_stop();
+
 extern int st_fade_getopts();
 extern int st_fade_start();
 extern int st_fade_flow();
@@ -679,6 +685,9 @@ st_effect_t st_effects[] = {
 	{"deemph", ST_EFF_MCHAN,
 	        st_deemph_getopts, st_deemph_start, st_deemph_flow,
 	        st_null_drain, st_deemph_stop},
+	{"earwax", ST_EFF_MCHAN, 
+		st_earwax_getopts, st_earwax_start, st_earwax_flow, 
+		st_earwax_drain, st_earwax_stop},
 	{"echo", 0, 
 		st_echo_getopts, st_echo_start, st_echo_flow, 
 		st_echo_drain, st_echo_stop},

@@ -28,6 +28,9 @@ sox-12.17.1
     versions.  This should allow people to work with raw CD audio data
     on Mac OSX and also gives a basis for adding future support for
     things like ADPCM processing.
+  o Added new "earwax" effect from Edward Beingessner.  It is meant to
+    be used for CD audio played through headphones.  It will move the
+    sound stage from left/right to in front of you.
 
 sox-12.17
 ---------

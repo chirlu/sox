@@ -62,6 +62,8 @@ sox \- Sound eXchange : universal sound sample translator
 .br
     \fBdeemph\fR
 .br
+    \fBearwax\fR
+.br
     \fBecho\fR \fIgain-in gain-out delay decay\fR [ \fIdelay decay ...\fR ]
 .br
     \fBechos\fR \fIgain-in gain-out delay decay\fR [ \fIdelay decay ...\fR ]
@@ -641,6 +643,17 @@ Apply a treble attenuation shelving filter to samples in
 audio cd format.  The frequency response of pre-emphasized
 recordings is rectified.  The filtering is defined in the
 standard document ISO 908.
+.TP 10
+earwax
+Makes sound easier to listen to on headphones.
+Adds audio-cues to samples in audio cd format so that
+when listened to on headphones the stereo image is
+moved from inside
+your head (standard for headphones) to outside and in front of the
+listener (standard for speakers). See 
+.br
+www.geocities.com/beinges
+for a full explanation.
 .TP 10
 echo \fIgain-in gain-out delay decay \fR[ \fIdelay decay ... \fR]
 Add echoing to a sound sample.
