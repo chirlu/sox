@@ -239,6 +239,13 @@ international standards for logarithmic telephone sound compression.
 When uncompressed u-law has roughly the precision of 14-byte PCM audio
 and A-law has roughly the precision of 13-bit PCM audio.
 .br
+A-law and u-law data is sometimes encoded using a reversed bit-ordering
+(ie. MSB becomes LSB).  Internally, SoX understands how to work with
+this encoding but there is currently no command line option to
+specify it.  If you need this support then you can use the psuedo
+file types of ".la" and ".lu" to inform sox of the encoding.  See
+supported file types for more information.
+.br
 ADPCM is a form of sound compression that has a good
 compromise between good sound quality and fast encoding/decoding
 time.  It is used for telephone sound compression and places were
@@ -265,8 +272,6 @@ than yours and must
 be swapped according to the word-size given above.
 Only 16-bit and 32-bit integer data may be swapped.
 Machine-format floating-point data is not portable.
-This flag is also used to invert the bit ordering of u-law
-and A-law data (MSB becomes LSB).
 .TP 10
 \fB-c \fIchannels\fR
 The number of sound channels in the data file.

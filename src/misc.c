@@ -40,7 +40,7 @@ const char *st_sizes_str[] = {
         "NONSENSE",
         "NONSENSE",
         "NONSENSE",
-        "long longs",
+        "long longs"
 };
 
 const char *st_encodings_str[] = {
@@ -53,6 +53,8 @@ const char *st_encodings_str[] = {
         "adpcm",
         "ima_adpcm",
         "gsm",
+	"inversed u-law",
+	"inversed A-law"
 };
 
 static const char readerr[] = "Premature EOF while reading sample file.";

@@ -35,7 +35,7 @@ have a canned Makefile:
     WIN95/NT   Makefile.dos (Needs modifying for Visual C++)
     OS/2       Makefile.gcc (using EMX GCC compiler)
 
-To using a canned Makefile, a few steps need to be completed.  First up,
+To use a canned Makefile, a few steps need to be completed.  First up,
 you need to make a copy of stconfig.h.in and call it stconfig.h.  Modify
 this file to reflect your environment.  
 
@@ -80,11 +80,8 @@ For example, this command will make a sound file with a data rate of
 	sox monkey.voc -r 12500 -s -w monkey.xxx 
 
 If monkey.xxx plays properly (it's a very short monkey screech),
-congratulations!  SoX works.  Now you should run the "tests.sh"
-shell script if your running under a UNIX variant to exercise 
-various test scenarios.  It should print nothing out.  You can also
-run tests.bat under DOS for similar tests. 
+congratulations!  SoX works.
 
-After that, "tests.sh" and "testall.sh" ("tests.bat" and "testall.bat" 
-for DOS) tests most of the  implemented file handlers to make sure 
-that some portability issue haven't popped up
+After that, running "tests.sh" and "testall.sh" ("tests.bat" and 
+"testall.bat" for DOS) tests most of the  implemented file handlers to
+make sure that some portability issue haven't popped up.

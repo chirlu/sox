@@ -181,6 +181,15 @@ OPTIONS
 		 uncompressed u-law has roughly the precision  of
 		 14-byte PCM audio and A-law has roughly the pre­
 		 cision of 13-bit PCM audio.
+		 A-law and u-law data is sometimes encoded  using
+		 a  reversed  bit-ordering (ie. MSB becomes LSB).
+		 Internally, SoX understands  how  to  work  with
+		 this  encoding but there is currently no command
+		 line option to specify it.   If  you  need  this
+		 support  then	you can use the psuedo file types
+		 of ".la" and ".lu" to inform sox of  the  encod­
+		 ing.  See supported file types for more informa­
+		 tion.
 		 ADPCM is a form of sound compression that has	a
 		 good  compromise  between good sound quality and
 		 fast encoding/decoding time.	It  is	used  for
@@ -209,9 +218,7 @@ OPTIONS
 		 order than yours and must be  swapped	according
 		 to  the  word-size given above.  Only 16-bit and
 		 32-bit integer data may  be  swapped.	 Machine-
-		 format	 floating-point	 data  is  not	portable.
-		 This flag is also used to invert the bit  order­
-		 ing of u-law and A-law data (MSB becomes LSB).
+		 format floating-point data is not portable.
 
        -c channels
 		 The  number  of sound channels in the data file.
@@ -320,11 +327,11 @@ FILE TYPES
        .dat	 Text Data files
 		 These	files contain a textual representation of
 		 the sample data.   There  is  one  line  at  the
-		 beginning that contains the sample rate.  Subse­
-		 quent lines contain two numeric data items:  the
-		 time since the beginning of the first sample and
-		 the sample value.  Values are normalized so that
-		 the  maximum  and  minimum  are  1.00 and -1.00.
+		 beginning   that   contains   the  sample  rate.
+		 Subsequent lines contain two numeric data items:
+		 the time since the beginning of the first sample
+		 and the sample value.	Values are normalized  so
+		 that the maximum and minimum are 1.00 and -1.00.
 		 This file format can  be  used	 to  create  data
 		 files	for external programs such as FFT analyz­
 		 ers or graph routines.	 SoX can also  convert	a
@@ -452,9 +459,9 @@ FILE TYPES
 
        .txw	 Yamaha TX-16W sampler.
 		 A  file  format  from a Yamaha sampling keyboard
-		 which wrote IBM-PC format 3.5"	 floppies.   Han­
-		 dles reading of files which do not have the sam­
-		 ple rate field set to one  of	the  expected  by
+		 which	wrote  IBM-PC	format	 3.5"	floppies.
+		 Handles  reading  of files which do not have the
+		 sample rate field set to one of the expected  by
 		 looking  at  some other bytes in the attack/loop
 		 length fields, and defaulting to  33kHz  if  the
 		 sample rate is still unknown.
@@ -855,11 +862,11 @@ EFFECTS
 		 dow.  Default is nut.
 
 		 -width	 long / short / # : specify the (approxi­
-		 mate)	width  of  the	filter.	  long	is   1024
-		 samples;  short  is 128 samples.  Alternatively,
-		 an exact number can be used.  Default	is  long.
-		 The  short option is not recommended, as it pro­
-		 duces poor quality results.
+		 mate) width of the filter.  long  is  1024  sam­
+		 ples;	short  is 128 samples.	Alternatively, an
+		 exact number can be used.  Default is long.  The
+		 short	option is not recommended, as it produces
+		 poor quality results.
 
 		 -cutoff # : specify the filter cutoff	frequency
 		 in  terms  of	fraction  of frequency bandwidth,

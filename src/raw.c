@@ -161,64 +161,63 @@ void st_sb_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
 void st_ulaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
                       char swap)
 {
-    if (swap)
+    while (len)
     {
-	while (len)
-	{
-	    uint8_t datum;
+	uint8_t datum;
 
-	    datum = *((uint8_t *)buf2);
-	    buf2++;
+	datum = *((uint8_t *)buf2);
+	buf2++;
 
-	    *buf1++ = ST_INVERT_ULAW_BYTE_TO_SAMPLE(datum);
-	    len--;
-	}
-    }
-    else
-    {
-	while (len)
-	{
-	    uint8_t datum;
-
-	    datum = *((uint8_t *)buf2);
-	    buf2++;
-
-	    *buf1++ = ST_ULAW_BYTE_TO_SAMPLE(datum);
-	    len--;
-	}
+	*buf1++ = ST_ULAW_BYTE_TO_SAMPLE(datum);
+	len--;
     }
 }
 
 void st_alaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
                       char swap)
 {
-    if (swap)
+    while (len)
     {
-	while (len)
-	{
-	    uint8_t datum;
+	uint8_t datum;
 
-	    datum = *((uint8_t *)buf2);
-	    buf2++;
+	datum = *((uint8_t *)buf2);
+	buf2++;
 
-	    *buf1++ = ST_INVERT_ALAW_BYTE_TO_SAMPLE(datum);
-	    len--;
-	}
-    }
-    else
-    {
-	while (len)
-	{
-	    uint8_t datum;
-
-	    datum = *((uint8_t *)buf2);
-	    buf2++;
-
-	    *buf1++ = ST_ALAW_BYTE_TO_SAMPLE(datum);
-	    len--;
-	}
+	*buf1++ = ST_ALAW_BYTE_TO_SAMPLE(datum);
+	len--;
     }
 }
+
+void st_inv_ulaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
+                          char swap)
+{
+    while (len)
+    {
+	uint8_t datum;
+
+	datum = *((uint8_t *)buf2);
+	buf2++;
+
+	*buf1++ = ST_INVERT_ULAW_BYTE_TO_SAMPLE(datum);
+	len--;
+    }
+}
+
+void st_inv_alaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
+                          char swap)
+{
+    while (len)
+    {
+	uint8_t datum;
+
+	datum = *((uint8_t *)buf2);
+	buf2++;
+
+	*buf1++ = ST_INVERT_ALAW_BYTE_TO_SAMPLE(datum);
+	len--;
+    }
+}
+
 
 void st_uw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
 {
@@ -346,6 +345,12 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                     break;
                 case ST_ENCODING_ALAW:
                     read_buf = st_alaw_read_buf;
+                    break;
+                case ST_ENCODING_INV_ULAW:
+                    read_buf = st_inv_ulaw_read_buf;
+                    break;
+                case ST_ENCODING_INV_ALAW:
+                    read_buf = st_inv_alaw_read_buf;
                     break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
@@ -476,42 +481,40 @@ void st_sb_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
 void st_ulaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
                        char swap)
 {
-    if (swap)
+    while (len)
     {
-	while (len)
-	{
-	    *(uint8_t *)buf1++ = ST_SAMPLE_TO_INVERT_ULAW_BYTE(*buf2++);
-	    len--;
-	}
-    }
-    else
-    {
-	while (len)
-	{
-	    *(uint8_t *)buf1++ = ST_SAMPLE_TO_ULAW_BYTE(*buf2++);
-	    len--;
-	}
+	*(uint8_t *)buf1++ = ST_SAMPLE_TO_ULAW_BYTE(*buf2++);
+	len--;
     }
 }
 
 void st_alaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
                        char swap)
 {
-    if (swap)
+    while (len)
     {
-	while (len)
-	{
-	    *(uint8_t *)buf1++ = ST_SAMPLE_TO_INVERT_ALAW_BYTE(*buf2++);
-	    len--;
-	}
+	*(uint8_t *)buf1++ = ST_SAMPLE_TO_ALAW_BYTE(*buf2++);
+	len--;
     }
-    else
+}
+
+void st_inv_ulaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
+                           char swap)
+{
+    while (len)
     {
-	while (len)
-	{
-	    *(uint8_t *)buf1++ = ST_SAMPLE_TO_ALAW_BYTE(*buf2++);
-	    len--;
-	}
+	*(uint8_t *)buf1++ = ST_SAMPLE_TO_INVERT_ULAW_BYTE(*buf2++);
+	len--;
+    }
+}
+
+void st_inv_alaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
+                           char swap)
+{
+    while (len)
+    {
+	*(uint8_t *)buf1++ = ST_SAMPLE_TO_INVERT_ALAW_BYTE(*buf2++);
+	len--;
     }
 }
 
@@ -651,6 +654,12 @@ st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                 case ST_ENCODING_ALAW:
                     write_buf = st_alaw_write_buf;
                     break;
+                case ST_ENCODING_INV_ULAW:
+                    write_buf = st_inv_ulaw_write_buf;
+                    break;
+                case ST_ENCODING_INV_ALAW:
+                    write_buf = st_inv_alaw_write_buf;
+                    break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
                     return(0);
@@ -775,41 +784,11 @@ STARTWRITE(st_ulstartwrite,ST_SIZE_BYTE,ST_ENCODING_ULAW)
 STARTREAD(st_alstartread,ST_SIZE_BYTE,ST_ENCODING_ALAW)
 STARTWRITE(st_alstartwrite,ST_SIZE_BYTE,ST_ENCODING_ALAW)
 
-int st_lustartread(ft_t ft)
-{
-        ft->info.size = ST_SIZE_BYTE;
-        ft->info.encoding = ST_ENCODING_ALAW;
-	ft->swap = ft->swap ? 0 : 1;
-        rawdefaults(ft);
-        return st_rawstartread(ft);
-}
+STARTREAD(st_lustartread,ST_SIZE_BYTE,ST_ENCODING_INV_ULAW)
+STARTWRITE(st_lustartwrite,ST_SIZE_BYTE,ST_ENCODING_INV_ULAW)
 
-int st_lastartread(ft_t ft)
-{
-        ft->info.size = ST_SIZE_BYTE;
-        ft->info.encoding = ST_ENCODING_ALAW;
-	ft->swap = ft->swap ? 0 : 1;
-        rawdefaults(ft);
-        return st_rawstartread(ft);
-}
-
-int st_lustartwrite(ft_t ft)
-{
-        ft->info.size = ST_SIZE_BYTE;
-        ft->info.encoding = ST_ENCODING_ALAW;
-	ft->swap = ft->swap ? 0 : 1;
-        rawdefaults(ft);
-        return st_rawstartwrite(ft);
-}
-
-int st_lastartwrite(ft_t ft)
-{
-        ft->info.size = ST_SIZE_BYTE;
-        ft->info.encoding = ST_ENCODING_ALAW;
-	ft->swap = ft->swap ? 0 : 1;
-        rawdefaults(ft);
-        return st_rawstartwrite(ft);
-}
+STARTREAD(st_lastartread,ST_SIZE_BYTE,ST_ENCODING_INV_ALAW)
+STARTWRITE(st_lastartwrite,ST_SIZE_BYTE,ST_ENCODING_INV_ALAW)
 
 void rawdefaults(ft_t ft)
 {

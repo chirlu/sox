@@ -184,13 +184,15 @@ extern st_format_t st_formats[];
 /* Style field */
 #define ST_ENCODING_UNSIGNED    1 /* unsigned linear: Sound Blaster */
 #define ST_ENCODING_SIGN2       2 /* signed linear 2's comp: Mac */
-#define ST_ENCODING_ULAW        3 /* U-law signed logs: US telephony, SPARC */
+#define ST_ENCODING_ULAW        3 /* u-law signed logs: US telephony, SPARC */
 #define ST_ENCODING_ALAW        4 /* A-law signed logs: non-US telephony */
 #define ST_ENCODING_FLOAT       5 /* 32-bit float */
 #define ST_ENCODING_ADPCM       6 /* Compressed PCM */
 #define ST_ENCODING_IMA_ADPCM   7 /* Compressed PCM */
 #define ST_ENCODING_GSM         8 /* GSM 6.10 33byte frame lossy compression */
-#define ST_ENCODING_MAX         8
+#define ST_ENCODING_INV_ULAW    9 /* Inversed bit-order u-law */
+#define ST_ENCODING_INV_ALAW    10/* Inversed bit-order A-law */
+#define ST_ENCODING_MAX         10 
 
 /* declared in misc.c */
 extern const char *st_sizes_str[];

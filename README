@@ -1,4 +1,4 @@
-Sox: Sound eXchange
+SoX: Sound eXchange
 -------------------
 
 SoX (also known as Sound eXchange) translates sound files between different
@@ -21,7 +21,7 @@ This release understands:
   o AVR files
   o CD-R (music CD format)
   o CVS and VMS files (continuous variable slope)
-  o GSM files.
+  o GSM files
   o Macintosh HCOM files
   o Amiga MAUD files
   o IRCAM SoundFile files
@@ -30,6 +30,7 @@ This release understands:
   o Soundtool (DOS) files
   o Yamaha TX-16W sampler files.
   o Sound Blaster .VOC files
+  o Ogg Vorbis files
   o Microsoft .WAV files
     o PCM, u-law, A-law
     o MS ADPCM, IMA ADPCM
@@ -41,11 +42,12 @@ This release understands:
 
 The sound effects include:
 
-  o Channel Averaging
+  o Channel averaging, duplication, and removal
   o Band-pass filters
   o Band-reject filter
   o Chorus effect
   o DCShift audio.  Useful to get the best volume adjustments.
+  o Deemphases filter
   o Move sound stage of CD audio to in front of you (for headphone use)
   o Add an echo 
   o Add a sequence of echos
@@ -53,23 +55,21 @@ The sound effects include:
   o Apply a flanger effect
   o Apply a high-pass filter
   o Apply a low-pass filter
-  o Pan sound between channels
-  o Change the pitch of a sound file
   o Display a list of loops in a file
   o Add masking noise to a signal
+  o Pan sound between channels
   o Apply a phaser effect
-  o Convert from stereo to mono
+  o Change the pitch of a sound file without effecting its speed
   o Change sampling rates using several different algorithms. A
      'resample' and 'polyphase' effect use high-grade signal rate
      changes using real signal theory!
   o Apply a reverb effect
   o Reverse the sound samples (to search for Satanic messages ;-)
-  o Trim off silence from the beginning of end of a file.
+  o Detect periods of silence and start and stop processing based on it
   o Change the speed of samples being played (like speeding up the motor
     on a tape recorder)
-  o Convert from mono to stereo
   o Display general stats on a sound sample
-  o Stretch/shorten the duration of a sound file.
+  o Stretch/shorten the duration of a sound file (without effecting pitch).
   o Swap stereo channels
   o Create sounds with a simple synthesizer.
   o Trim audio data from beginning and end of file.
@@ -104,7 +104,7 @@ tools for computer multimedia work, similar to the PBM toolkit for
 image manipulation.
 
 If you have bug fixes/enhancements, please send it to me as I would like
-to coordinate the releases.  Please document your changes.  I don't 
+to coordinate the releases.  Please document your changes.  I do not 
 possess every kind of computer currently sold, and SoX is now beyond 
 the phase where I can understand and test most of your contributions.
 

@@ -474,12 +474,6 @@ int st_phaser_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_phaser_stop(eff_t effp);
 
-int st_pick_getopts(eff_t effp, int argc, char **argv);
-int st_pick_start(eff_t effp);
-int st_pick_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                 st_size_t *isamp, st_size_t *osamp);
-int st_pick_stop(eff_t effp);
-
 int st_pitch_getopts(eff_t effp, int argc, char **argv);
 int st_pitch_start(eff_t effp);
 int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
@@ -534,12 +528,6 @@ int st_speed_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                   st_size_t *isamp, st_size_t *osamp);
 int st_speed_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_speed_stop(eff_t effp);
-
-int st_split_getopts(eff_t effp, int argc, char **argv);
-int st_split_start(eff_t effp);
-int st_split_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                  st_size_t *isamp, st_size_t *osamp);
-int st_split_stop(eff_t effp);
 
 int st_stat_getopts(eff_t effp, int argc, char **argv);
 int st_stat_start(eff_t effp);
