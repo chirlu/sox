@@ -87,11 +87,6 @@ static int ossdspinit(ft_t ft)
 	return(ST_EOF);
     }
 
-    if (ioctl(fileno(ft->fp), SNDCTL_DSP_SYNC, NULL) < 0) {
-	st_fail_errno(ft,ST_EOF,"Unable to sync dsp");
-	return (ST_EOF);
-    }
-
     /* Query the supported formats and find the best match
      */
     rc = ioctl(fileno(ft->fp), SNDCTL_DSP_GETFMTS, &tmp);
@@ -189,6 +184,11 @@ static int ossdspinit(ft_t ft)
 
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
 	st_fail_errno(ft,ST_EOF,"Unable to allocate input/output buffer of size %d", ft->file.size);
+	return (ST_EOF);
+    }
+
+    if (ioctl(fileno(ft->fp), SNDCTL_DSP_SYNC, NULL) < 0) {
+	st_fail_errno(ft,ST_EOF,"Unable to sync dsp");
 	return (ST_EOF);
     }
 

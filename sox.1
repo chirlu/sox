@@ -107,9 +107,9 @@ sox \- Sound eXchange : universal sound sample translator
 .br
     \fBreverse\fR
 .br
-    \fBsilence\fR \fIabove_periods\fR [ \fIduration threshold\fR[ \fId\fR | \fI%\fR | \fIs\fR]
+    \fBsilence\fR \fIabove_periods\fR [ \fIduration threshold\fR[ \fId\fR | \fI%\fR ]
             [ \fIbelow_periods duration 
-              threshold\fR[ \fId\fR | \fI%\fR | \fIs\fR ]]
+              threshold\fR[ \fId\fR | \fI%\fR ]]
 .br
     \fBspeed\fR [ -c ] \fIfactor\fR
 .br
@@ -234,9 +234,9 @@ GSM is a standard used for telephone sound compression in
 European countries and its gaining popularity because of its
 quality.  It usually is CPU intensive to work with GSM audio data.
 .TP 10
-\fB-b/-w/-l/-f/-d/-D\fR
+\fB-b/-w/-l/-f/-d\fR
 The sample data size is in bytes, 16-bit words, 32-bit longwords,
-32-bit floats, 64-bit double floats, or 80-bit IEEE floats.
+32-bit floats or 64-bit double floats.
 Floats and double floats are in native machine format.
 .TP 10
 \fB-x\fR
@@ -246,7 +246,6 @@ than yours and must
 be swapped according to the word-size given above.
 Only 16-bit and 32-bit integer data may be swapped.
 Machine-format floating-point data is not portable.
-IEEE floats are a fixed, portable format.
 .TP 10
 \fB-c \fIchannels\fR
 The number of sound channels in the data file.
@@ -1039,20 +1038,20 @@ reverse
 Reverse the sound sample completely.
 Included for finding Satanic subliminals.
 .TP
-\fBsilence\fR \fIabove_periods\fR [ \fIduration threshold\fR[ \fId\fR | \fI%\fR | \fIs\fR]
+\fBsilence\fR \fIabove_periods\fR [ \fIduration threshold\fR[ \fId\fR | \fI%\fR ]
 .TP
         [ \fIbelow_periods duration 
 .TP 10
-          threshold\fR[ \fId\fR | \fI%\fR | \fIs\fR ]]
+          threshold\fR[ \fId\fR | \fI%\fR ]]
 Removes silence from the beginning or end of a sound file.  Silence is anything below a specified threshold.
 .br
 When trimming silence from the beginning of a sound file, you specify a duration of audio that is above a given silence threshold before audio data is processed.  You can also specify the count of periods of none silence you want to detect before processing audio data.  Specify a period of 0 if you do not want to trim data from the front of the sound file.
 .br
 When optionally trimming silence form the end of a sound file, you specify the duration of audio that must be below a given threshold before stopping to process audio data.  A count of periods that occur below the threshold may also be speficied.  If this options are not specified then data is not trimmed from the end of the audio file.
 .br
-Duration counts may be in the format of time, hh.mm.ss.frac, or in the exact count of samples.
+Duration counts may be in the format of time, hh:mm:ss.frac, or in the exact count of samples.
 .br
-Threshold may be suffixed with d, %, or s to indicated the value is in decibels, percent, or an exact signed long interger sample value.  A value of '0s' will look for total silence.
+Threshold may be suffixed with d, or % to indicated the value is in decibels or a percentage of max value of the sample value.  A value of '0%' will look for total silence.
 .TP 10
 speed [ -c ] \fIfactor\fB
 Speed up or down the sound, as a magnetic tape with a speed control. 

@@ -82,8 +82,8 @@ int st_rate_start(eff_t effp)
 	    st_fail("rate effect can only handle rates <= 65535");
 	    return (ST_EOF);
 	}
-	if (effp->ininfo.size == ST_SIZE_DWORD ||
-	    effp->ininfo.size == ST_SIZE_FLOAT)
+	if (effp->ininfo.size == ST_SIZE_DWORD || 
+	    effp->ininfo.size == ST_SIZE_DDWORD)
 	{
 	    st_warn("rate effect reduces data to 16 bits");
 	}

@@ -120,8 +120,8 @@ int st_sfstartread(ft_t ft)
 			samplesize = ft->info.size;
 			break;
 		case SF_FLOAT:
-			ft->info.size = ST_SIZE_FLOAT;
-			ft->info.encoding = ST_ENCODING_SIGN2;
+			ft->info.size = ST_SIZE_DWORD;
+			ft->info.encoding = ST_ENCODING_FLOAT;
 			samplesize = sizeof(float);
 			break;
 		default:
@@ -175,7 +175,8 @@ int st_sfstartwrite(ft_t ft)
 	    sf->info.magic_union._magic_bytes.sf_machine = SF_SUN;
 
 	sf->info.sf_srate = ft->info.rate;
-	if (ft->info.size == ST_SIZE_FLOAT) {
+	if (ft->info.size == ST_SIZE_DWORD && 
+	    ft->info.encoding == ST_ENCODING_FLOAT) {
 		sf->info.sf_packmode = SF_FLOAT;
 	} else {
 		sf->info.sf_packmode = SF_SHORT;

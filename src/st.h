@@ -130,9 +130,9 @@ typedef struct  st_instrinfo
 typedef struct st_fileinfo 
 {
     char          *buf;                 /* Pointer to data buffer */
-    st_size_t     size;                 /* Size of buffer */
-    st_size_t     count;                /* Count read in to buffer */
-    st_size_t     pos;                  /* Position in buffer */
+    size_t        size;                 /* Size of buffer */
+    size_t        count;                /* Count read in to buffer */
+    size_t        pos;                  /* Position in buffer */
     unsigned char eof;                  /* Marker that EOF has been reached */
 } st_fileinfo_t;
 
@@ -198,29 +198,26 @@ extern st_format_t st_formats[];
 #define ST_FILE_SEEK    8  /* does file format support seeking? */
 
 /* Size field */
-/* note that the 1st 3 are sometimes used as sizeof(type) */
 #define ST_SIZE_BYTE    1
 #define ST_SIZE_8BIT    1
 #define ST_SIZE_WORD    2
 #define ST_SIZE_16BIT   2
 #define ST_SIZE_DWORD   4
 #define ST_SIZE_32BIT   4
-#define ST_SIZE_FLOAT   5
-#define ST_SIZE_DOUBLE  6
-#define ST_SIZE_IEEE    7       /* IEEE 80-bit floats. */
-
-#define ST_SIZE_MAX     7
+#define ST_SIZE_DDWORD  8
+#define ST_SIZE_64BIT   8
+#define ST_SIZE_MAX     8
 
 /* Style field */
 #define ST_ENCODING_UNSIGNED    1 /* unsigned linear: Sound Blaster */
 #define ST_ENCODING_SIGN2       2 /* signed linear 2's comp: Mac */
 #define ST_ENCODING_ULAW        3 /* U-law signed logs: US telephony, SPARC */
 #define ST_ENCODING_ALAW        4 /* A-law signed logs: non-US telephony */
-#define ST_ENCODING_ADPCM       5 /* Compressed PCM */
-#define ST_ENCODING_IMA_ADPCM   6 /* Compressed PCM */
-#define ST_ENCODING_GSM         7 /* GSM 6.10 33-byte frame lossy compression */
-
-#define ST_ENCODING_MAX         7
+#define ST_ENCODING_FLOAT       5 /* 32-bit float */
+#define ST_ENCODING_ADPCM       6 /* Compressed PCM */
+#define ST_ENCODING_IMA_ADPCM   7 /* Compressed PCM */
+#define ST_ENCODING_GSM         8 /* GSM 6.10 33byte frame lossy compression */
+#define ST_ENCODING_MAX         8 
 
 /* declared in misc.c */
 extern const char *st_sizes_str[];

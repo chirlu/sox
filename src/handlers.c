@@ -447,7 +447,7 @@ st_effect_t st_effects[] = {
 	{"reverse", 0, 
 		st_reverse_getopts, st_reverse_start, 
 		st_reverse_flow, st_reverse_drain, st_reverse_stop},
-	{"silence", 0, 
+	{"silence", ST_EFF_MCHAN, 
 		st_silence_getopts, st_silence_start, 
 		st_silence_flow, st_silence_drain, st_silence_stop},
 	{"speed", 0, 

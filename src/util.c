@@ -138,8 +138,7 @@ int st_gettype(ft_t formp)
         if (! formp->filetype){
             st_fail_errno(formp,
                           ST_EFMT,
-                          "Must give file type for %s file, either as suffix or with -t option",
-                          formp->filename);
+                          "Filetype was not specified");
                 return(ST_EFMT);
         }
         for(i = 0; st_formats[i].names; i++) {
@@ -154,20 +153,8 @@ int st_gettype(ft_t formp)
                 formp->h = &st_formats[i];
                 return ST_SUCCESS;
         }
-        if (! strcmpcase(formp->filetype, "snd")) {
-                verbose = 1;
-                st_report("File type '%s' is used to name several different formats.", formp->filetype);
-                st_report("If the file came from a Macintosh, it is probably");
-                st_report("a .ub file with a sample rate of 11025 (or possibly 5012 or 22050).");
-                st_report("Use the sequence '-t .ub -r 11025 file.snd'");
-                st_report("If it came from a PC, it's probably a Soundtool file.");
-                st_report("Use the sequence '-t .sndt file.snd'");
-                st_report("If it came from a NeXT, it's probably a .au file.");
-                st_fail_errno(formp,ST_EFMT,"Use the sequence '-t .au file.snd'\n");
-                return ST_EFMT;
-        }
-        st_fail_errno(formp,ST_EFMT,"File type '%s' of %s file is not known!",
-                formp->filetype, formp->filename);
+        st_fail_errno(formp, ST_EFMT, "File type '%s' is not known",
+                      formp->filetype);
         return ST_EFMT;
 }
 
@@ -428,7 +415,7 @@ int st_checkformat(ft_t ft)
                 return ST_EOF;
         }
 
-        if (ft->info.encoding == -1 && ft->info.size != ST_SIZE_FLOAT)
+        if (ft->info.encoding == -1)
         {
                 st_fail_errno(ft,ST_EFMT,"data encoding was not specified");
                 return ST_EOF;

@@ -59,8 +59,8 @@ int st_datstartread(ft_t ft)
    if (ft->info.channels == -1)
        ft->info.channels = 1;
 
-   ft->info.size = ST_SIZE_DOUBLE;
-   ft->info.encoding = ST_ENCODING_SIGN2;
+   ft->info.size = ST_SIZE_64BIT;
+   ft->info.encoding = ST_ENCODING_FLOAT;
 
    return (ST_SUCCESS);
 }
@@ -78,8 +78,8 @@ int st_datstartwrite(ft_t ft)
 	ft->info.channels = 1;
    }
    
-   ft->info.size = ST_SIZE_DOUBLE;
-   ft->info.encoding = ST_ENCODING_SIGN2;
+   ft->info.size = ST_SIZE_64BIT;
+   ft->info.encoding = ST_ENCODING_FLOAT;
    dat->timevalue = 0.0;
    srate = ft->info.rate;
    dat->deltat = 1.0 / srate;

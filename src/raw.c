@@ -47,13 +47,13 @@ int st_rawseek(ft_t ft, st_size_t offset)
 			sample_size = 1;
 		        break;
 		case ST_SIZE_WORD:
-			sample_size = sizeof(short);
+			sample_size = 2;
 		        break;
 		case ST_SIZE_DWORD:
-			sample_size = sizeof(LONG);
+			sample_size = 4;
 		        break;
-		case ST_SIZE_FLOAT:
-			sample_size = sizeof(float);
+		case ST_SIZE_DDWORD:
+			sample_size = 8;
 		        break;
 		default:
 			st_fail_errno(ft,ST_ENOTSUP,"Can't seek this data size");
@@ -295,7 +295,7 @@ ULONG st_readbuf(LONG *p, int n, int size, int encoding, ft_t ft)
 		    copy_buf = st_alaw_copy_buf;
 		    break;
 		default:
-		    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size.");
+		    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
 		    return(0);
 	    }
 	    break;
@@ -310,7 +310,7 @@ ULONG st_readbuf(LONG *p, int n, int size, int encoding, ft_t ft)
 		    copy_buf = st_uw_copy_buf;
 		    break;
 		default:
-		    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size.");
+		    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
 		    return(0);
 	    }
 	    break;
@@ -324,22 +324,23 @@ ULONG st_readbuf(LONG *p, int n, int size, int encoding, ft_t ft)
 		case ST_ENCODING_UNSIGNED:
 		    copy_buf = st_udw_copy_buf;
 		    break;
+		case ST_ENCODING_FLOAT:
+		    copy_buf = st_f32_copy_buf;
 		default:
-		    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size.");
+		    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
 		    return(0);
 	    }
 	    break;
 
-	case ST_SIZE_FLOAT:
-	    copy_buf = st_f32_copy_buf;
-	    /* Hack hack... Encoding should be FLOAT, not the size */
-	    size = 4;
-	    break;
-
-	case ST_SIZE_DOUBLE:
-	    copy_buf = st_f64_copy_buf;
-	    /* Hack hack... Encoding should be FLOAT, not the size */
-	    size = 8;
+	case ST_SIZE_DDWORD:
+	    switch(encoding)
+	    {
+		case ST_ENCODING_FLOAT:
+		    copy_buf = st_f64_copy_buf;
+		    break;
+		default:
+		    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
+	    }
 	    break;
 
 	default:
@@ -586,17 +587,17 @@ LONG *buf, nsamp;
 					done++;
 				}
 				return done;
+			case ST_ENCODING_FLOAT:
+				while(done < nsamp) {
+				    float f;
+				    /* scale signed up to long's range */
+				    f = (float)*buf++ / 0x10000;
+				    blockw(&f, sizeof(float), ft);
+				    done++;
+				}
+				return done;
 		    }
 		    break;
-		case ST_SIZE_FLOAT:
-			while(done < nsamp) {
-				float f;
-				/* scale signed up to long's range */
-				f = (float)*buf++ / 0x10000;
-			 	blockw(&f, sizeof(float), ft);
-				done++;
-			}
-			return done;
 		default:
 			break;
 	}

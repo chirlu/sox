@@ -299,7 +299,8 @@ static void copy_input(ft_t ft)
         ft->filetype = "auto";
 
     if ( st_gettype(ft) )
-        st_fail("Unknown input file format for '%s'.  Use -t option to override",ft->filename);
+        st_fail("Unknown input file format for '%s':  %s", 
+		ft->filename, ft->st_errstr);
 
     /* Default the input comment to the filename if not set from
      * command line.
@@ -358,7 +359,8 @@ static void copy_output(ft_t ft)
     if (writing && ft->filename)
     {
         if ( st_gettype(ft) )
-            st_fail("Unknown output file format for '%s'.  Use -t option to override",ft->filename);
+            st_fail("Unknown output file format for '%s': %s",
+		    ft->filename, ft->st_errstr);
 
     }
 
@@ -409,9 +411,9 @@ static void open_output(ft_t ft)
 }
 
 #ifdef HAVE_GETOPT_H
-static char *getoptstr = "+r:v:t:c:phsuUAaigbwlfdDxV";
+static char *getoptstr = "+r:v:t:c:phsuUAaigbwlfdxV";
 #else
-static char *getoptstr = "r:v:t:c:phsuUAaigbwlfdDxV";
+static char *getoptstr = "r:v:t:c:phsuUAaigbwlfdxV";
 #endif
 
 static void doopts(ft_t ft, int argc, char **argv)
@@ -476,19 +478,6 @@ static void doopts(ft_t ft, int argc, char **argv)
                         if (! ft) usage("-l");
                         ft->info.size = ST_SIZE_DWORD;
                         break;
-                case 'f':
-                        if (! ft) usage("-f");
-                        ft->info.size = ST_SIZE_FLOAT;
-                        break;
-                case 'd':
-                        if (! ft) usage("-d");
-                        ft->info.size = ST_SIZE_DOUBLE;
-                        break;
-                case 'D':
-                        if (! ft) usage("-D");
-                        ft->info.size = ST_SIZE_IEEE;
-                        break;
-
                 case 's':
                         if (! ft) usage("-s");
                         ft->info.encoding = ST_ENCODING_SIGN2;
@@ -504,6 +493,10 @@ static void doopts(ft_t ft, int argc, char **argv)
                 case 'A':
                         if (! ft) usage("-A");
                         ft->info.encoding = ST_ENCODING_ALAW;
+                        break;
+                case 'f':
+                        if (! ft) usage("-f");
+                        ft->info.encoding = ST_ENCODING_FLOAT;
                         break;
                 case 'a':
                         if (! ft) usage("-a");
@@ -641,14 +634,15 @@ static void process(void) {
     /* Reserve an output buffer for all effects */
     for(e = 0; e < neffects; e++)
     {
-        efftab[e].obuf = (LONG *) malloc(BUFSIZ * sizeof(LONG));
+        efftab[e].obuf = (st_sample_t *) malloc(BUFSIZ * sizeof(st_sample_t));
         if (efftab[e].obuf == NULL)
         {
             st_fail("could not allocate memory");
         }
         if (efftabR[e].name)
         {
-            efftabR[e].obuf = (LONG *) malloc(BUFSIZ * sizeof(LONG));
+            efftabR[e].obuf = (st_sample_t *) malloc(BUFSIZ * 
+		                                     sizeof(st_sample_t));
             if (efftabR[e].obuf == NULL)
             {
                 st_fail("could not allocate memory");
@@ -659,7 +653,7 @@ static void process(void) {
 #ifdef SOXMIX
     for (f = 0; f < MAX_INPUT_FILES; f++)
     {
-        ibuf[f] = (LONG *)malloc(BUFSIZ * sizeof(LONG));
+        ibuf[f] = (st_sample_t *)malloc(BUFSIZ * sizeof(st_sample_t));
         if (!ibuf[f])
         {
             st_fail("could not allocate memory");
@@ -680,12 +674,14 @@ static void process(void) {
 
 #ifndef SOXMIX
         efftab[0].olen = (*informat[0]->h->read)(informat[0],
-                                              efftab[0].obuf, (LONG) BUFSIZ);
+                                                 efftab[0].obuf, 
+						 (st_ssize_t)BUFSIZ);
 #else
         for (f = 0; f < input_count; f++)
         {
             ilen[f] = (*informat[f]->h->read)(informat[f],
-                                              ibuf[f], (LONG)BUFSIZ);
+                                              ibuf[f], 
+					      (st_ssize_t)BUFSIZ);
         }
 
         efftab[0].olen = 0;
@@ -811,8 +807,8 @@ static int flow_effect_out(void)
       if (writing&&(efftab[neffects-1].olen>efftab[neffects-1].odone))
       {
           (* outformat->h->write)(outformat,
-                                     efftab[neffects-1].obuf,
-                                     (LONG) efftab[neffects-1].olen);
+                                  efftab[neffects-1].obuf,
+                                  (st_ssize_t)efftab[neffects-1].olen);
           efftab[neffects-1].odone = efftab[neffects-1].olen;
       }
 
@@ -844,8 +840,8 @@ static int flow_effect_out(void)
 static int flow_effect(e)
 int e;
 {
-    LONG i, done, idone, odone, idonel, odonel, idoner, odoner;
-    LONG *ibuf, *obuf;
+    st_size_t i, done, idone, odone, idonel, odonel, idoner, odoner;
+    st_sample_t *ibuf, *obuf;
     int effstatus;
 
     /* I have no input data ? */
@@ -859,8 +855,8 @@ int e;
         idone = efftab[e-1].olen - efftab[e-1].odone;
         odone = BUFSIZ;
         effstatus = (* efftab[e].h->flow)(&efftab[e],
-                              &efftab[e-1].obuf[efftab[e-1].odone],
-                              efftab[e].obuf, &idone, &odone);
+                                          &efftab[e-1].obuf[efftab[e-1].odone],
+                                          efftab[e].obuf, &idone, &odone);
         efftab[e-1].odone += idone;
         efftab[e].odone = 0;
         efftab[e].olen = odone;

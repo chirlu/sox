@@ -33,6 +33,11 @@ sox-12.17.3
     when EOF was OK.
   o Change libst to use two new data types: st_sample_t and st_size_t.
     This allows for better support and maintaince on 64-bit machines.
+  o Silence effect was broken on stereo files.  Also, made thresholds
+    relative to original bit percision of audio data.  When 16-bit audio
+    is scaled up to 32-bits, a little bit of noise starts to look like a
+    large amplitude of noise.
+  o Changed Floats into a type of encoding instead of a size of audio data.
 
 sox-12.17.2
 -----------
