@@ -4,6 +4,18 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-12.17.6
+-----------
+  o Changed comment code to always use copies of strings to
+    fix bug in WAV handlering freeing argv[] memory.
+  o Use calloc() to create ft_t structures so that all
+    memory is initialized before being referenced.
+  o Fixed VOC EOF bug were it thought there was an extra
+    block when there wasn't.
+  o Restructured directory layout so that source code is in
+    a seperate directory.
+   
+
 sox-12.17.5
 -----------
   o Thomas Klausner sent in patches to compile audio drivers under

@@ -84,6 +84,11 @@ install-lib: libgsm.a
 	$(INSTALL) -c -m 644 gsm.3 $(mandir)/man3
 	$(INSTALL) -c -m 644 gsm_option.3 $(mandir)/man3
 
+uninstall-lib:
+	$(RM) $(libdir)/libgsm.a
+	$(RM) $(mandir)/man3/gsm.3
+	$(RM) $(mandir)/man3/gsm_option.3
+
 clean:
 	$(RM) *.o
 

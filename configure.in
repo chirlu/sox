@@ -3,11 +3,11 @@ dnl
 dnl configure.in
 dnl
 
-AC_REVISION(1.4)
+AC_REVISION(1.5)
 
-AC_INIT(sox, 12.17.4, cbagwell@users.sourceforge.net, "sox-12.17.4")
+AC_INIT(sox, 12.17.6, cbagwell@users.sourceforge.net, "sox-12.17.6")
 
-AC_CONFIG_SRCDIR(src/sox.c)
+AC_CONFIG_SRCDIR(sox.1)
 
 dnl Parameters to configure
 
@@ -275,7 +275,7 @@ dnl Generate output files...
 AC_CONFIG_HEADER(src/stconfig.h)
 AC_CREATE_STDINT_H(src/ststdint.h)
 
-AC_CONFIG_FILES([src/libst-config src/Makefile src/gsm/Makefile])
+AC_CONFIG_FILES([Makefile src/libst-config src/Makefile src/gsm/Makefile])
 AC_CONFIG_FILES([src/play], [chmod +x src/play])
 
 AC_OUTPUT()

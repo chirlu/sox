@@ -7,6 +7,7 @@
 VPATH = @srcdir@
 builddir= @builddir@
 srcdir = @srcdir@
+top_srcdir =@top_srcdir@
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
@@ -24,14 +25,10 @@ RM	= rm -f
 LN_S    = @LN_S@
 
 # Build macros.
-GSM_LIB_0 =
-GSM_LIB_1 = -lgsm
-GSM_SUPPORT  = @GSM_SUPPORT@
-
 CFLAGS	= @CFLAGS@ -I$(srcdir) -I$(builddir)
 CPPFLAGS = @CPPFLAGS@
-LDFLAGS	= -L. -L./gsm @LDFLAGS@
-LIBS	= -lst $(GSM_LIB_$(GSM_SUPPORT)) @LIBS@
+LDFLAGS	= -L. @LDFLAGS@
+LIBS	= -lst @LIBS@
 
 # Other macros.
 
@@ -39,6 +36,7 @@ NEED_OSS     = @NEED_OSS@
 NEED_SUNAU   = @NEED_SUNAU@
 NEED_ALSA    = @NEED_ALSA@
 PLAY_SUPPORT = @PLAY_SUPPORT@
+GSM_SUPPORT  = @GSM_SUPPORT@
 
 # Objects.
 
@@ -55,16 +53,28 @@ EOBJ	= avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
 	  rate.o repeat.o resample.o reverb.o reverse.o silence.o speed.o \
 	  stat.o stretch.o swap.o synth.o trim.o vibro.o vol.o
 
+
+GSMOBJ_0 =
+GSMOBJ_1 =  gsm/add.o gsm/code.o gsm/decode.o gsm/long_term.o gsm/lpc.o \
+	    gsm/preprocess.o gsm/rpe.o gsm/gsm_destroy.o \
+	    gsm/gsm_decode.o gsm/gsm_encode.o gsm/gsm_create.o \
+	    gsm/gsm_option.o gsm/short_term.o gsm/table.o
+
 OSSOBJ_0    =
 OSSOBJ_1    = oss.o
 SUNAUOBJ_0  =
 SUNAUOBJ_1  = sunaudio.o
 ALSAOBJ_0   =
 ALSAOBJ_1   = alsa.o
-EXTRAOBJS   = $(OSSOBJ_$(NEED_OSS)) $(SUNAUOBJ_$(NEED_SUNAU)) $(ALSAOBJ_$(NEED_ALSA))
+EXTRAOBJS   = $(OSSOBJ_$(NEED_OSS)) $(SUNAUOBJ_$(NEED_SUNAU)) $(ALSAOBJ_$(NEED_ALSA)) $(GSMOBJ_$(GSM_SUPPORT))
 
 LIBOBJS = $(FOBJ) $(EOBJ) handlers.o misc.o util.o getopt.o $(EXTRAOBJS)
 
+# Building libgsm.a is kinda a hack.  It switches to a different
+# makefile with hardcoded options.  We really want the object files
+# only so that they can be included inside libst.  This semi-fake
+# target is just an easy way to make sure that makefile builds
+# the objects instead of this makefile.
 GSM_0     =
 GSM_1     = gsm/libgsm.a
 PLAY_0    =
@@ -72,71 +82,44 @@ PLAY_1    = play
 
 all: sox soxmix $(PLAY_$(PLAY_SUPPORT))
 
-sox: libst.a $(GSM_$(GSM_SUPPORT)) sox.o
+sox: $(GSM_$(GSM_SUPPORT)) libst.a sox.o
 	$(CC) $(LDFLAGS) -o sox sox.o $(LIBS)
 
 soxmix.o: sox.c
 	$(CC) $(CFLAGS) -DSOXMIX -c $(srcdir)/sox.c -o soxmix.o
 
-soxmix: libst.a $(GSM_$(GSM_SUPPORT)) soxmix.o
+soxmix: $(GSM_$(GSM_SUPPORT)) libst.a soxmix.o
 	$(CC) $(LDFLAGS) -o soxmix soxmix.o $(LIBS)
 
 libst.a: $(LIBOBJS)
-	$(AR) libst.a $(LIBOBJS)
+	$(AR) libst.a $(LIBOBJS) 
 	$(RANLIB) libst.a
 
 gsm/libgsm.a:
 	cd gsm && $(MAKE)
 
-libs: libst.a $(GSM_$(GSM_SUPPORT))
-
-man: $(srcdir)/sox.1 $(srcdir)/soxexam.1 $(srcdir)/libst.3
-	nroff -man $(srcdir)/sox.1 | col -b > sox.txt
-	nroff -man $(srcdir)/soxexam.1 | col -b > soxexam.txt
-	nroff -man $(srcdir)/libst.3 | col -b > libst.txt
-
 PLAY_INSTALL_0    =
 PLAY_INSTALL_1    = install-play
 
 install: sox soxmix $(PLAY_INSTALL_$(PLAY_SUPPORT))
-	$(srcdir)/mkinstalldirs $(bindir)
-	$(srcdir)/mkinstalldirs $(mandir)/man1
+	$(top_srcdir)/mkinstalldirs $(bindir)
 	$(INSTALL) -c -m 755 sox $(bindir)
 	$(INSTALL) -c -m 755 soxmix $(bindir)
-	$(INSTALL) -c -m 644 $(srcdir)/sox.1 $(mandir)/man1
-	if [ -f $(mandir)/man1/soxmix.1 ] ; then $(RM) $(mandir)/man1/soxmix.1; fi
-	$(LN_S) $(mandir)/man1/sox.1 $(mandir)/man1/soxmix.1
-	$(INSTALL) -c -m 644 $(srcdir)/soxexam.1 $(mandir)/man1
 
 install-play:
 	if [ -f $(bindir)/rec ] ; then $(RM) $(bindir)/rec; fi
-	if [ -f $(mandir)/man1/rec.1 ]; then $(RM) $(mandir)/man1/rec.1; fi
-	$(srcdir)/mkinstalldirs $(mandir)/man1
-	$(srcdir)/mkinstalldirs $(bindir)
+	$(top_srcdir)/mkinstalldirs $(bindir)
 	$(INSTALL) -c -m 755 play $(bindir)
-	$(INSTALL) -c -m 644 $(srcdir)/play.1 $(mandir)/man1
 	$(LN_S) $(bindir)/play $(bindir)/rec
-	$(LN_S) $(mandir)/man1/play.1 $(mandir)/man1/rec.1
 
 install-lib: libst.a
-	$(srcdir)/mkinstalldirs $(libdir)
-	$(srcdir)/mkinstalldirs $(mandir)/man3
-	$(srcdir)/mkinstalldirs $(includedir)
+	$(top_srcdir)/mkinstalldirs $(libdir)
+	$(top_srcdir)/mkinstalldirs $(includedir)
 	$(INSTALL) -c -m 755 libst-config $(bindir)
 	$(INSTALL) -c -m 644 libst.a $(libdir)
 	$(RANLIB) $(libdir)/libst.a
-	$(INSTALL) -c -m 644 $(srcdir)/libst.3 $(mandir)/man3
 	$(INSTALL) -c -m 644 $(srcdir)/st.h $(includedir)
 	$(INSTALL) -c -m 644 ststdint.h $(includedir)
-
-GSM_INSTALL_0       =
-GSM_INSTALL_1       = install-gsmlib
-
-install-gsmlib: gsm/libgsm.a
-		$(INSTALL) -c -m 755 libst-config $(bindir) ; \
-		cd gsm && $(MAKE) install-lib
-
-install-libs: install-lib $(GSM_INSTALL_$(GSM_SUPPORT))
 
 PLAY_UNINSTALL_0    =
 PLAY_UNINSTALL_1    = uninstall-play
@@ -144,18 +127,13 @@ PLAY_UNINSTALL_1    = uninstall-play
 uninstall: $(PLAY_UNINSTALL_$(PLAY_SUPPORT))
 	$(RM) $(bindir)/sox
 	$(RM) $(bindir)/soxmix
-	$(RM) $(mandir)/man1/sox.1
-	$(RM) $(mandir)/man1/soxmix.1
-	$(RM) $(mandir)/man1/soxexam.1
 
 uninstall-play:
 	$(RM) $(bindir)/play
 	$(RM) $(bindir)/rec
-	$(RM) $(mandir)/man1/play.1 $(mandir)/man1/rec.1
 
 uninstall-lib:
 	$(RM) $(libdir)/libst.a
-	$(RM) $(mandir)/man3/libst.3
 	$(RM) $(includedir)/st.h
 	$(RM) $(includedir)/ststdint.h
 
@@ -166,26 +144,4 @@ clean:
 distclean:
 	$(RM) *~ *.o *.raw *.sf core sox soxmix libst.a play libst-config
 	cd gsm && $(RM) *~ *.o core libgsm.a Makefile
-	$(RM) config.cache config.log config.status config.h Makefile
-	$(RM) -r autom4te*.cache
 	$(RM) stconfig.h ststdint.h
-
-# Rules to automatically rerun configure tools as needed.
-#$(srcdir)/configure: configure.in aclocal.m4
-#	cd $(srcdir) && autoconf
-
-#stconfig.h: stconfig.h.in config.status
-#	./config.status stconfig.h
-
-#Makefile: Makefile.in config.status
-#	./config.status Makefile
-
-#gsm/Makefile: gsm/Makefile.in config.status
-#	./config.status gsm/Makefile
-
-#libst-config: libst-config.in config.status
-#	./config.status libst-config
-
-#config.status: configure
-#	./config.status --recheck
-

@@ -1,0 +1,79 @@
+#
+# @configure_input@
+#
+
+# Paths
+
+VPATH = @srcdir@
+builddir= @builddir@
+srcdir = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+libdir = @libdir@
+mandir = @mandir@
+includedir = @includedir@
+
+# Shell commands.
+
+INSTALL	= @INSTALL@
+LN_S    = @LN_S@
+
+all: 
+	cd src && $(MAKE) $@
+
+man: $(srcdir)/sox.1 $(srcdir)/soxexam.1 $(srcdir)/libst.3
+	nroff -man $(srcdir)/sox.1 | col -b > sox.txt
+	nroff -man $(srcdir)/soxexam.1 | col -b > soxexam.txt
+	nroff -man $(srcdir)/libst.3 | col -b > libst.txt
+
+install: $(PLAY_INSTALL_$(PLAY_SUPPORT))
+	cd src && $(MAKE) $@
+	$(srcdir)/mkinstalldirs $(mandir)/man1
+	$(INSTALL) -c -m 644 $(srcdir)/sox.1 $(mandir)/man1
+	if [ -f $(mandir)/man1/soxmix.1 ] ; then $(RM) $(mandir)/man1/soxmix.1; fi
+	$(LN_S) $(mandir)/man1/sox.1 $(mandir)/man1/soxmix.1
+	$(INSTALL) -c -m 644 $(srcdir)/soxexam.1 $(mandir)/man1
+
+install-play:
+	if [ -f $(mandir)/man1/rec.1 ]; then $(RM) $(mandir)/man1/rec.1; fi
+	$(srcdir)/mkinstalldirs $(mandir)/man1
+	$(INSTALL) -c -m 644 $(srcdir)/play.1 $(mandir)/man1
+	$(LN_S) $(mandir)/man1/play.1 $(mandir)/man1/rec.1
+
+install-lib:
+	cd src && $(MAKE) $@
+	$(srcdir)/mkinstalldirs $(mandir)/man3
+	$(INSTALL) -c -m 644 $(srcdir)/libst.3 $(mandir)/man3
+
+
+PLAY_UNINSTALL_0    =
+PLAY_UNINSTALL_1    = uninstall-play
+
+uninstall: $(PLAY_UNINSTALL_$(PLAY_SUPPORT))
+	cd src && $(MAKE) $@
+	$(RM) $(mandir)/man1/sox.1
+	$(RM) $(mandir)/man1/soxmix.1
+	$(RM) $(mandir)/man1/soxexam.1
+
+uninstall-play:
+	$(RM) $(mandir)/man1/play.1 $(mandir)/man1/rec.1
+
+uninstall-lib:
+	cd src && $(MAKE) $@
+	$(RM) $(mandir)/man3/libst.3
+
+clean:
+	cd src && $(MAKE) $@
+
+distclean:
+	cd src && $(MAKE) $@
+	$(RM) config.cache config.log config.status config.h Makefile
+	$(RM) -r autom4te*.cache
+
+# Rules to automatically rerun configure tools as needed.
+$(srcdir)/configure: configure.in aclocal.m4
+	cd $(srcdir) && autoconf
+
+config.status: configure
+	./config.status --recheck
