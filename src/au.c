@@ -423,6 +423,9 @@ ULONG data_size;
 		ft->comment = "SOX";
 
 	hdr_size = SUN_HDRSIZE + strlen(ft->comment) + 1; /*+1 = null-term. */
+	if (strlen(ft->comment) < 3)
+	    hdr_size += 3 - strlen(ft->comment);
+
 	st_writedw(ft, hdr_size);
 
 	st_writedw(ft, data_size);
