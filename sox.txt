@@ -54,6 +54,9 @@ SYNOPSIS
 	   lowp frequency
 	   lowpass frequency
 	   mask
+	   mcompand "attack1,decay1[,attack2,decay2...]
+		    in-dB1,out-dB1[,in-dB2,out-dB2...]
+		    [ gain [ initial-volume [ delay ] ] ]" xover_freq
 	   pan direction
 	   phaser gain-in gain-out delay decay speed < -s | -t >
 	   pick [ -1 | -2 | -3 | -4 | -l | -r | -f | -b ]
@@ -192,9 +195,9 @@ OPTIONS
 		 ADPCM, IMA_ADPCM, GSM, or Floating-point.
 		 U-law	(actually shorthand for mu-law) and A-law are the U.S.
 		 and international standards for logarithmic  telephone	 sound
-		 compression.	When uncompressed u-law has roughly the preci-
-		 sion of 14-bit PCM audio and A-law has roughly the  precision
-		 of 13-bit PCM audio.
+		 compression.	 When	uncompressed  u-law  has  roughly  the
+		 precision of 14-bit PCM audio and A-law has roughly the  pre-
+		 cision of 13-bit PCM audio.
 		 A-law	and  u-law  data is sometimes encoded using a reversed
 		 bit-ordering (ie. MSB becomes LSB).  Internally,  SoX	under-
 		 stands	 how to work with this encoding but there is currently
@@ -605,11 +608,11 @@ EFFECTS
 		 the fourth (optional) parameter is an initial	volume	to  be
 		 assumed  for  each channel when the effect starts.  This per-
 		 mits the user to supply a nominal level initially,  so	 that,
-		 for example, a very large gain is not applied to initial sig-
-		 nal levels before the companding action has begun to operate:
-		 it  is quite probable that in such an event, the output would
-		 be severely clipped while the compander gain properly adjusts
-		 itself.
+		 for  example,	a  very	 large	gain is not applied to initial
+		 signal levels before the companding action has begun to oper-
+		 ate:  it  is quite probable that in such an event, the output
+		 would be severely clipped while the compander	gain  properly
+		 adjusts itself.
 
 		 The  fifth  (optional)	 parameter is a delay in seconds.  The
 		 input signal is analyzed immediately to control  the  compan-
@@ -674,9 +677,9 @@ EFFECTS
 		 stop-time is not specified.
 		 All times can be specified in either periods of time or  sam-
 		 ple   counts.	  To  specify  time  periods  use  the	format
-		 hh:mm:ss.frac format.	To specify using sample counts,	 spec-
-		 ify  the  number  of samples and append the letter ’s’ to the
-		 sample count (for example 8000s).
+		 hh:mm:ss.frac	format.	  To  specify  using  sample   counts,
+		 specify  the  number  of samples and append the letter ’s’ to
+		 the sample count (for example 8000s).
 		 An optional type can be specified to change the type of enve-
 		 lope.	 Choices are q for quarter of a sinewave, h for half a
 		 sinewave, t for linear slope, l for logarithmic,  and	p  for
@@ -733,6 +736,20 @@ EFFECTS
 		 created by the process of  playing  a	sound  digitally.   It
 		 tends	to  mask buzzing voices, for example.  It adds 1/2 bit
 		 of noise to the sound file at the output bit depth.
+
+       mcompand "attack1,decay1[,attack2,decay2...]
+
+		in-dB1,out-dB1[,in-dB2,out-dB2...]
+
+		[gain [initial-volume [delay ] ] ]" xover_freq
+
+		 Multi-band compander is similar to the single band  compander
+		 but  the  audio  file is first divided up into bands and then
+		 the compander is ran on each band.  See  the  compand	effect
+		 for definition of its options.	 Compand options are specified
+		 between double quotes and the crossover  frequency  for  that
+		 band  is  specefied  seperately  with xover_fre.  This can be
+		 repeated multiple times to create multiple bands.
 
        pan direction
 		 Pan the sound of an audio file from one channel  to  another.

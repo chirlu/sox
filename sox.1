@@ -94,6 +94,12 @@ sox \- Sound eXchange : universal sound sample translator
 .br
     \fBmask\fR
 .br
+    \fBmcompand\fR "\fIattack1\fR,\fIdecay1\fR[,\fIattack2\fR,\fIdecay2\fR...]
+.br
+             \fIin-dB1\fR,\fIout-dB1\fR[,\fIin-dB2\fR,\fIout-dB2\fR...]
+.br
+             [ \fIgain\fR [ \fIinitial-volume\fR [ \fIdelay\fR ] ] ]" xover_freq
+.br
     \fBpan\fR \fIdirection\fR
 .br
     \fBphaser\fR \fIgain-in gain-out delay decay speed\fR < -s | -t >
@@ -907,6 +913,16 @@ created by the process of playing a sound digitally.
 It tends to mask buzzing voices, for example.
 It adds 1/2 bit of noise to the sound file at the
 output bit depth.
+.TP
+mcompand "\fIattack1,decay1\fR[,\fIattack2,decay2\fR...]
+.TP 
+         \fIin-dB1,out-dB1\fR[,\fIin-dB2,out-dB2\fR...]
+.TP 10
+         [\fIgain\fR [\fIinitial-volume\fR [\fIdelay\fR ] ] ]" \fIxover_freq\fR
+
+Multi-band compander is similar to the single band compander but
+the audio file is first divided up into bands and then the compander
+is ran on each band.  See the \fBcompand\fR effect for definition of its options.  Compand options are specified between double quotes and the crossover frequency for that band is specefied seperately with \fIxover_fre\fR.  This can be repeated multiple times to create multiple bands.
 .TP 10
 pan \fIdirection\fB
 Pan the sound of an audio file from one channel to another.  This is done by

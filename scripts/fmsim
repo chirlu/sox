@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# fmsim - simulates FM radio sound (or broadcast signal condition if the
+#   lowp at the end is skipped - not that the pipeline is set up with
+#   US-style 75us preemphasis).
+#
+# Thats signed 32-bit 44100Hz audio from stdin and outputs to stdout.
+
+
+../src/sox -V -t raw -r 44100 -s -w -c 2 - -t raw -r 44100 -s -l -c 2 \
+    - vol -3 db filter 8000- 32 100 mcompand ".005,.1 \
+    -47,-40,-34,-34,-17,-33 0 0 0" 100 ".003,.05 \
+    -47,-40,-34,-34,-17,-33 0 0 0" 400 ".000625,.0125 \
+    -47,-40,-34,-34,-15,-33 0 0 0" 1600 ".0001,.025 \
+    -47,-40,-34,-34,-31,-31,-0,-30 0 0 0" 6400 \
+    "0,.025 -38,-31,-28,-28,-0,-25 0 0 0" vol 27 db vol -12 \
+    db highpass 22 highpass 22 filter -17500 256 vol +12 db \
+    vol -3 db lowp 17801

@@ -28,8 +28,8 @@ FOBJ	= 8svx.o adpcm.o aiff.o alsa.o au.o auto.o avr.o cdr.o cvsd.o dat.o \
 EOBJ    = avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
           copy.o dcshift.o deemphas.o earwax.o echo.o echos.o fade.o \
 	  filter.o flanger.o highp.o highpass.o lowp.o lowpass.o \
-	  mask.o pan.o phaser.o pitch.o polyphas.o rate.o repeat.o \
-	  resample.o reverb.o reverse.o silence.o speed.o \
+	  mask.o mcompand.o pan.o phaser.o pitch.o polyphas.o rate.o \
+	  repeat.o resample.o reverb.o reverse.o silence.o speed.o \
 	  stat.o stretch.o swap.o synth.o trim.o vibro.o vol.o
 
 SOUNDLIB = libst.a

@@ -49,6 +49,8 @@ sox-12.17.6
   o Added patch from Eric Benson that attempts to do a seek()
     if the first effect is trim.  This greatly speeds up
     processing large files.
+  o Daniel Pouzzner implemented a multi-band compander (using
+    the butterworth filters to split the audio into bands).
 
 sox-12.17.5
 -----------
