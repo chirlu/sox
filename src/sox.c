@@ -311,12 +311,6 @@ static void copy_input(ft_t ft)
         st_fail("Unknown input file format for '%s':  %s", 
                 ft->filename, ft->st_errstr);
 
-    /* Default the input comment to the filename if not set from
-     * command line.
-     */
-    if (!ft->comment)
-        ft->comment = strdup(ft->filename);
-
     input_count++;
 }
 
@@ -815,6 +809,7 @@ static void process(void) {
         if ((* informat[f]->h->stopread)(informat[f]) == ST_EOF)
             st_warn(informat[f]->st_errstr);
         fclose(informat[f]->fp);
+        free(informat[f]->filename);
     }
 
     if (writing)
@@ -822,8 +817,10 @@ static void process(void) {
         /* problem closing output file, just warn user since we
          * are exiting anyways.
          */
-        if ((* outformat->h->stopwrite)(outformat) == ST_EOF)
+        if ((*outformat->h->stopwrite)(outformat) == ST_EOF)
             st_warn(outformat->st_errstr);
+        free(outformat->filename);
+        free(outformat->comment);
     }
     if (writing)
         fclose(outformat->fp);

@@ -363,6 +363,8 @@ void st_copyformat(ft_t ft, ft_t ft2)
 
     if (ft2->comment == NULL && ft->comment != NULL)
         ft2->comment = strdup(ft->comment);
+    else
+        ft2->comment = strdup("Processed by SoX");
 
     /*
      * copy loop info, resizing appropriately
