@@ -11,6 +11,9 @@ sox-12.17.5
   o Rahul Powar pointed out a memory leak in the WAV file handler.
     It wasn't calling the correct close() function when closing
     input files.
+  o Modified play.1 man page to not use multiple name lines.  This
+    appears to confuse some conversion programs.  Updated sox.1
+    man page for typo in reverb option.
 
 sox-12.17.4
 -----------
