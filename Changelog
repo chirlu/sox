@@ -23,6 +23,10 @@ sox-12.17.2
   o Removed broken support for non-ANSI compilers.
   o Makefile now places the correct path to SoX in the play/rec scripts
     based on configuration script values.
+  o Alexander Pevzner provided a fix for OSS driver for sound being
+    dropped under heavy CPU loads.  Moved GETBLKSIZE operation
+    until after setting up the format (SBLive! was modify the block size
+    after changing formats).
 
 sox-12.17.1
 -----------

@@ -84,20 +84,6 @@ ft_t ft;
 	st_fail("Unable to reset OSS driver.  Possibly accessing an invalid file/device");
 	return(ST_EOF);
     }
-    ft->file.size = 0;
-    ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &ft->file.size);
-    if (ft->file.size < 4 || ft->file.size > 65536) {
-	    st_fail("Invalid audio buffer size %d", ft->file.size);
-	    return (ST_EOF);
-    }
-    ft->file.count = 0;
-    ft->file.pos = 0;
-    ft->file.eof = 0;
-
-    if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
-	st_fail("Unable to allocate input/output buffer of size %d", ft->file.size);
-	return (ST_EOF);
-    }
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_SYNC, NULL) < 0) {
 	st_fail("Unable to sync dsp");
@@ -160,6 +146,24 @@ ft_t ft;
 		     ft->info.rate, tmp);
 	    ft->info.rate = tmp;
 	}
+    }
+
+    /* Find out block size to use last because the driver could compute
+     * its size based on specific rates/formats.
+     */
+    ft->file.size = 0;
+    ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &ft->file.size);
+    if (ft->file.size < 4 || ft->file.size > 65536) {
+	    st_fail("Invalid audio buffer size %d", ft->file.size);
+	    return (ST_EOF);
+    }
+    ft->file.count = 0;
+    ft->file.pos = 0;
+    ft->file.eof = 0;
+
+    if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
+	st_fail("Unable to allocate input/output buffer of size %d", ft->file.size);
+	return (ST_EOF);
     }
 
     /* Change to non-buffered I/O */
