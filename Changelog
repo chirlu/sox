@@ -24,6 +24,10 @@ sox-12.17.1
     compiled on a box that doesn't have a sound card but the OS supports
     it (which is the enviornment of most distributions creating new
     binaries).
+  o Added support to partially handle AIFC files but only uncompressed
+    versions.  This should allow people to work with raw CD audio data
+    on Mac OSX and also gives a basis for adding future support for
+    things like ADPCM processing.
 
 sox-12.17
 ---------

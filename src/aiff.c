@@ -119,9 +119,10 @@ ft_t ft;
 		return(ST_EOF);
 	}
 	st_readdw(ft, &totalsize);
-	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "AIFF", 4) != 0)
+	if (st_reads(ft, buf, 4) == ST_EOF || (strncmp(buf, "AIFF", 4) != 0 && 
+	    strncmp(buf, "AIFC", 4) != 0))
 	{
-		st_fail("AIFF 'FORM' chunk does not specify 'AIFF' as type");
+		st_fail("AIFF 'FORM' chunk does not specify 'AIFF' or 'AIFC' as type");
 		return(ST_EOF);
 	}
 
@@ -142,15 +143,24 @@ ft_t ft;
 		if (strncmp(buf, "COMM", 4) == 0) {
 			/* COMM chunk */
 			st_readdw(ft, &chunksize);
-			if (chunksize != 18)
-			{
-				st_fail("AIFF COMM chunk has bad size");
-				return(ST_EOF);
-			}
 			st_readw(ft, &channels);
 			st_readdw(ft, &frames);
 			st_readw(ft, &bits);
 			rate = read_ieee_extended(ft);
+			chunksize -= 18;
+			if (chunksize > 0)
+			{
+			    st_reads(ft, buf, 4);
+			    chunksize -= 4;
+			    if (strncmp(buf, "NONE", 4) != 0)
+			    {
+				buf[4] = 0;
+				st_fail("Can not support AIFC files that contain compressed data: %s",buf);
+				return(ST_EOF);
+			    }
+			}
+			while(chunksize-- > 0)
+			    st_readb(ft, (unsigned char *)&trash);
 			foundcomm = 1;
 		}
 		else if (strncmp(buf, "SSND", 4) == 0) {
