@@ -60,6 +60,9 @@ SYNOPSIS
 	   resample [ -qs | -q | -ql ] [ rolloff [ beta ] ]
 	   reverb gain-out reverb-time delay [ delay ... ]
 	   reverse
+	   silence above_periods [ duration threshold[ d | % | s]
+		   [ below_periods duration
+		     threshold[ d | % | s ]]
 	   speed [ -c ] factor
 	   split
 	   stat [ -s n ] [ -rms ] [ -v ] [ -d ]
@@ -72,40 +75,40 @@ SYNOPSIS
 	   vol gain [ type [ limitergain ] ]
 
 DESCRIPTION
-       SoX  is a command line program that can convert most popu­
-       lar audio files to most other popular audio file	 formats.
-       It  can	optionally  change the audio sample data type and
-       apply one or more sound effects to the  file  during  this
+       SoX is a command line program that can convert most  popu­
+       lar  audio files to most other popular audio file formats.
+       It can optionally change the audio sample  data	type  and
+       apply  one  or  more sound effects to the file during this
        translation.
 
-       There  are  two	types of audio files formats that SoX can
-       work with.  The first are  self-describing  file	 formats.
-       These  contain a header that completely describe the char­
+       There are two types of audio files formats  that	 SoX  can
+       work  with.   The  first are self-describing file formats.
+       These contain a header that completely describe the  char­
        acteristics of the audio data that follows.
 
-       The second type are headerless data, or	sometimes  called
-       raw  data.   A user must pass enough information to SoX on
-       the command line so that it knows what  type  of	 data  it
+       The  second  type are headerless data, or sometimes called
+       raw data.  A user must pass enough information to  SoX  on
+       the  command  line  so  that it knows what type of data it
        contains.
 
-       Audio  data can usually be totally described by four char­
+       Audio data can usually be totally described by four  char­
        acteristics:
 
-       rate	 The sample rate is in samples per  second.   For
+       rate	 The  sample  rate is in samples per second.  For
 		 example, CD sample rates are at 44100.
 
        data size The precision the data is stored in.  Most popu­
 		 lar are 8-bit bytes or 16-bit words.
 
        data encoding
-		 What encoding the data type uses.  Examples  are
+		 What  encoding the data type uses.  Examples are
 		 u-law, ADPCM, or signed linear data.
 
-       channels	 How  many  channels  are  contained in the audio
-		 data.	Mono and Stereo are the two most  common.
+       channels	 How many channels are	contained  in  the  audio
+		 data.	 Mono and Stereo are the two most common.
 
-       Please  refer  to  the  soxexam(1)  manual page for a long
-       description with examples on how to use sox  with  various
+       Please refer to the soxexam(1)  manual  page  for  a  long
+       description  with  examples on how to use sox with various
        types of file formats.
 
 OPTIONS
@@ -113,26 +116,26 @@ OPTIONS
 
 	    sox file.au file.wav
 
-       translates  a  sound  file  in SUN Sparc .AU format into a
+       translates a sound file in SUN Sparc  .AU  format  into	a
        Microsoft .WAV file, while
 
 	    sox -v 0.5 file.au -r 12000 file.wav mask
 
-       does the same  format  translation  but	also  lowers  the
-       amplitude  by  1/2,  changes  the  sampling  rate to 12000
-       hertz, and applies the mask  sound  effect  to  the  audio
+       does  the  same	format	translation  but  also lowers the
+       amplitude by 1/2,  changes  the	sampling  rate	to  12000
+       hertz,  and  applies  the  mask	sound effect to the audio
        data.
 
        Format options:
 
-       Format  options effect the audio samples that they immedi­
-       ately preceed.  If they are placed before the  input  file
-       name  then they effect the input data.  If they are placed
+       Format options effect the audio samples that they  immedi­
+       ately  preceed.	 If they are placed before the input file
+       name then they effect the input data.  If they are  placed
        before the output file name then they will effect the out­
        put data.  By taking advantage of this, you can override a
-       input file's corrupted header or produce	 an  output  file
-       that  is	 totally different style then the input file.  It
-       is also how sox is informed about the format of raw  input
+       input  file's  corrupted	 header or produce an output file
+       that is totally different style then the input  file.   It
+       is  also how sox is informed about the format of raw input
        data.
 
        -t filetype
@@ -140,75 +143,75 @@ OPTIONS
 		 when file extension is not standard or for spec­
 		 ifying the .auto file type.
 
-       -r rate	 Gives	the sample rate in Hertz of the file.  To
+       -r rate	 Gives the sample rate in Hertz of the file.   To
 		 cause the output file to have a different sample
 		 rate than the input file, include this option as
 		 a part of the output options.
-		 If the input and  output  files  have	different
-		 rates	then  a sample rate change effect must be
-		 ran.  If a sample rate changing  effect  is  not
-		 specified  then a default one will internally be
+		 If  the  input	 and  output files have different
+		 rates then a sample rate change effect	 must  be
+		 ran.	If  a  sample rate changing effect is not
+		 specified then a default one will internally  be
 		 ran by sox using its default parameters.
 
        -s/-u/-U/-A/-a/-i/-g
-		 The sample data encoding is signed  linear  (2's
-		 complement),  unsigned	 linear, U-law (logarith­
-		 mic), A-law (logarithmic), ADPCM, IMA_ADPCM,  or
+		 The  sample  data encoding is signed linear (2's
+		 complement), unsigned linear,	U-law  (logarith­
+		 mic),	A-law (logarithmic), ADPCM, IMA_ADPCM, or
 		 GSM.
-		 U-law	(actually shorthand for mu-law) and A-law
-		 are the U.S.  and  international  standards  for
-		 logarithmic  telephone	 sound compression.  When
-		 uncompressed it has  roughly  the  precision  of
+		 U-law (actually shorthand for mu-law) and  A-law
+		 are  the  U.S.	 and  international standards for
+		 logarithmic telephone sound  compression.   When
+		 uncompressed  it  has	roughly	 the precision of
 		 12-byte PCM audio.
-		 ADPCM	is  form  of sound compression that has a
-		 good compromise between good sound  quality  and
-		 fast  encoding/decoding  time.	  It  is used for
+		 ADPCM is form of sound compression  that  has	a
+		 good  compromise  between good sound quality and
+		 fast encoding/decoding time.	It  is	used  for
 		 telephone sound compression and places were full
 		 fidelity is not as important.	When uncompressed
-		 it has	 roughly  the  precision  of  16-bit  PCM
-		 audio.	  Popular version of ADPCM include G.726,
-		 MS ADPCM, and IMA ADPCM.  The -a flag	has  dif­
-		 ferent	 meanings in different file handlers.  In
-		 .wav files it represents MS ADPCM files, in  all
-		 others	 it  means  G.726  ADPCM.  IMA ADPCM is a
-		 specific form	of  adpcm  compression,	 slightly
-		 simpler   and	 slightly   lower  fidelity  than
-		 Microsoft's flavor of ADPCM.  IMA ADPCM is  also
+		 it  has  roughly  the	precision  of  16-bit PCM
+		 audio.	 Popular version of ADPCM include  G.726,
+		 MS  ADPCM,  and IMA ADPCM.  The -a flag has dif­
+		 ferent meanings in different file handlers.   In
+		 .wav  files it represents MS ADPCM files, in all
+		 others it means G.726 ADPCM.	IMA  ADPCM  is	a
+		 specific  form	 of  adpcm  compression, slightly
+		 simpler  and  slightly	  lower	  fidelity   than
+		 Microsoft's  flavor of ADPCM.	IMA ADPCM is also
 		 called DVI ADPCM.
-		 GSM  is a standard used for telephone sound com­
-		 pression in European countries and  its  gaining
-		 popularity  because  of its quality.  It usually
+		 GSM is a standard used for telephone sound  com­
+		 pression  in  European countries and its gaining
+		 popularity because of its quality.   It  usually
 		 is CPU intensive to work with GSM audio data.
 
        -b/-w/-l/-f/-d/-D
-		 The sample data size is in bytes, 16-bit  words,
-		 32-bit	 longwords,  32-bit floats, 64-bit double
-		 floats, or 80-bit IEEE floats.	 Floats and  dou­
+		 The  sample data size is in bytes, 16-bit words,
+		 32-bit longwords, 32-bit floats,  64-bit  double
+		 floats,  or 80-bit IEEE floats.  Floats and dou­
 		 ble floats are in native machine format.
 
-       -x	 The  sample  data is in XINU format; that is, it
-		 comes from a  machine	with  the  opposite  word
-		 order	than  yours and must be swapped according
-		 to the word-size given above.	Only  16-bit  and
-		 32-bit	 integer  data	may be swapped.	 Machine-
+       -x	 The sample data is in XINU format; that  is,  it
+		 comes	from  a	 machine  with	the opposite word
+		 order than yours and must be  swapped	according
+		 to  the  word-size given above.  Only 16-bit and
+		 32-bit integer data may  be  swapped.	 Machine-
 		 format	 floating-point	 data  is  not	portable.
 		 IEEE floats are a fixed, portable format.
 
        -c channels
-		 The  number  of sound channels in the data file.
-		 This may be 1, 2, or 4;  for  mono,  stereo,  or
-		 quad  sound  data.   To cause the output file to
-		 have a different number  of  channels	than  the
-		 input	file, include this option with the output
+		 The number of sound channels in the  data  file.
+		 This  may  be	1,  2, or 4; for mono, stereo, or
+		 quad sound data.  To cause the	 output	 file  to
+		 have  a  different  number  of channels than the
+		 input file, include this option with the  output
 		 file options.	If the input and output file have
-		 a  different  number  of  channels  then the avg
-		 effect must be used.  If the avg effect  is  not
+		 a different number  of	 channels  then	 the  avg
+		 effect	 must  be used.	 If the avg effect is not
 		 specified on the command line it will be invoked
 		 internally with default parameters.
 
-       -e	 When used after the input filename (so	 that  it
-		 applies  to  the  output  file) it allows you to
-		 avoid giving an output	 filename  and	will  not
+       -e	 When  used  after the input filename (so that it
+		 applies to the output file)  it  allows  you  to
+		 avoid	giving	an  output  filename and will not
 		 produce an output file.  It will apply any spec­
 		 ified effects to the input file.  This is mainly
 		 useful with the stat effect but can be used with
@@ -218,188 +221,188 @@ OPTIONS
 
        -h	 Print version number and usage information.
 
-       -p	 Run in preview mode and  run  fast.   This  will
+       -p	 Run  in  preview  mode	 and run fast.	This will
 		 somewhat speed up sox when the output format has
-		 a different number of channels and  a	different
+		 a  different  number of channels and a different
 		 rate  than  the  input	 file.	 Currently,  this
 		 defaults to using the rate effect instead of the
 		 resample effect for sample rate changes.
 
        -v volume Change amplitude (floating point); less than 1.0
-		 decreases, greater than 1.0 increases.	 May  use
-		 a  negative  number  to  invert the phase of the
-		 audio data.  It is interesting to note	 that  we
+		 decreases,  greater than 1.0 increases.  May use
+		 a negative number to invert  the  phase  of  the
+		 audio	data.	It is interesting to note that we
 		 percieve volume logarithmically but this adjusts
 		 the amplitude linearly.
-		 Note: see the stat  effect  for  information  on
-		 finding  the maximum value that can be used with
-		 this option without causing  audio  data  be  be
+		 Note:	see  the  stat	effect for information on
+		 finding the maximum value that can be used  with
+		 this  option  without	causing	 audio data be be
 		 clipped.
 
-       -V	 Print	a description of processing phases.  Use­
+       -V	 Print a description of processing phases.   Use­
 		 ful for figuring out exactly how sox is mangling
 		 your sound samples.
 
 FILE TYPES
-       SoX  attempts  to  determine  the file type of input files
-       automatically by looking at the header of the audio  file.
-       When  it	 is  unable  to detect the file type or if its an
+       SoX attempts to determine the file  type	 of  input  files
+       automatically  by looking at the header of the audio file.
+       When it is unable to detect the file type  or  if  its  an
        output file then it uses the file extension of the file to
-       determine  what	type of file format handler to use.  This
-       can be overridden by specifying the  "-t"  option  on  the
+       determine what type of file format handler to  use.   This
+       can  be	overridden  by	specifying the "-t" option on the
        command line.
 
-       The  input  and	output files may be read from standard in
-       and out.	 This is done by specifying '-' as the	filename.
+       The input and output files may be read  from  standard  in
+       and  out.  This is done by specifying '-' as the filename.
 
-       File  formats  which  have  headers  are	 checked, if that
-       header doesn't seem  right,  the	 program  exits	 with  an
+       File formats which  have	 headers  are  checked,	 if  that
+       header  doesn't	seem  right,  the  program  exits with an
        appropriate message.
 
        The following file formats are supported:
 
 
-       .8svx	 Amiga	8SVX  musical instrument description for­
+       .8svx	 Amiga 8SVX musical instrument	description  for­
 		 mat.
 
-       .aiff	 AIFF files  used  on  Apple  IIc/IIgs	and  SGI.
-		 Note:	the  AIFF  format  supports only one SSND
+       .aiff	 AIFF  files  used  on	Apple  IIc/IIgs	 and SGI.
+		 Note: the AIFF format	supports  only	one  SSND
 		 chunk.	  It  does  not	 support  multiple  sound
-		 chunks,  or the 8SVX musical instrument descrip­
+		 chunks, or the 8SVX musical instrument	 descrip­
 		 tion format.  AIFF files are multimedia archives
-		 and  can have multiple audio and picture chunks.
-		 You may need a separate archiver  to  work  with
+		 and can have multiple audio and picture  chunks.
+		 You  may  need	 a separate archiver to work with
 		 them.
 
        .au	 SUN Microsystems AU files.  There are apparently
-		 many types of .au files; DEC  has  invented  its
-		 own  with  a  different  magic	 number	 and word
+		 many  types  of  .au files; DEC has invented its
+		 own with  a  different	 magic	number	and  word
 		 order.	 The .au handler can read these files but
-		 will  not write them.	Some .au files have valid
-		 AU headers and some  do  not.	 The  latter  are
-		 probably  original  SUN  u-law	 8000 hz samples.
-		 These can be dealt with  using	 the  .ul  format
+		 will not write them.  Some .au files have  valid
+		 AU  headers  and  some	 do  not.  The latter are
+		 probably original SUN	u-law  8000  hz	 samples.
+		 These	can  be	 dealt	with using the .ul format
 		 (see below).
 
        .avr	 Audio Visual Research
-		 The  AVR  format is produced by a number of com­
+		 The AVR format is produced by a number	 of  com­
 		 mercial packages on the Mac.
 
        .cdr	 CD-R
-		 CD-R files are used in mastering music	 on  Com­
-		 pact  Disks.  The audio data on a CD-R disk is a
-		 raw audio file with a format  of  stereo  16-bit
+		 CD-R  files  are used in mastering music on Com­
+		 pact Disks.  The audio data on a CD-R disk is	a
+		 raw  audio  file  with a format of stereo 16-bit
 		 signed samples at a 44khz sample rate.	 There is
-		 a special blocking/padding oddity at the end  of
-		 the  audio file and is why it needs its own han­
+		 a  special blocking/padding oddity at the end of
+		 the audio file and is why it needs its own  han­
 		 dler.
 
        .cvs	 Continuously Variable Slope Delta modulation
-		 Used to compress speech audio	for  applications
+		 Used  to  compress speech audio for applications
 		 such as voice mail.
 
        .dat	 Text Data files
-		 These	files contain a textual representation of
-		 the sample data.   There  is  one  line  at  the
+		 These files contain a textual representation  of
+		 the  sample  data.   There  is	 one  line at the
 		 beginning that contains the sample rate.  Subse­
-		 quent lines contain two numeric data items:  the
+		 quent	lines contain two numeric data items: the
 		 time since the beginning of the first sample and
 		 the sample value.  Values are normalized so that
-		 the  maximum  and  minimum  are  1.00 and -1.00.
-		 This file format can  be  used	 to  create  data
-		 files	for external programs such as FFT analyz­
-		 ers or graph routines.	 SoX can also  convert	a
-		 file  in  this format back into one of the other
+		 the maximum and  minimum  are	1.00  and  -1.00.
+		 This  file  format  can  be  used to create data
+		 files for external programs such as FFT  analyz­
+		 ers  or  graph routines.  SoX can also convert a
+		 file in this format back into one of  the  other
 		 file formats.
 
        .gsm	 GSM 06.10 Lossy Speech Compression
-		 A standard for compressing speech which is  used
-		 in  the Global Standard for Mobil telecommunica­
-		 tions (GSM).  Its good for its purpose,  shrink­
-		 ing  audio data size, but it will introduce lots
-		 of noise when a given sound  sample  is  encoded
+		 A  standard for compressing speech which is used
+		 in the Global Standard for Mobil  telecommunica­
+		 tions	(GSM).	Its good for its purpose, shrink­
+		 ing audio data size, but it will introduce  lots
+		 of  noise  when  a given sound sample is encoded
 		 and decoded multiple times.  This format is used
-		 by some voice mail applications.  It  is  rather
+		 by  some  voice mail applications.  It is rather
 		 CPU intensive.
 		 GSM in sox is optional and requires access to an
-		 external GSM library.	To see if there	 is  sup­
-		 port  for  gsm	 run sox -h and look for it under
+		 external  GSM	library.  To see if there is sup­
+		 port for gsm run sox -h and look  for	it  under
 		 the list of supported file formats.
 
-       .hcom	 Macintosh HCOM files.	 These	are  (apparently)
-		 Mac  FSSD  files  with	 some  variant of Huffman
-		 compression.  The Macintosh has wacky file  for­
-		 mats  and this format handler apparently doesn't
-		 handle all the ones it should.	 Mac  users  will
-		 need  your  usual  arsenal of file converters to
-		 deal with an HCOM file under Unix or DOS.
+       .hcom	 Macintosh  HCOM  files.   These are (apparently)
+		 Mac FSSD files with some variant of Huffman com­
+		 pression.   The Macintosh has wacky file formats
+		 and this format handler apparently doesn't  han­
+		 dle all the ones it should.  Mac users will need
+		 your usual arsenal of file  converters	 to  deal
+		 with an HCOM file under Unix or DOS.
 
        .maud	 An Amiga format
 		 An IFF-conform sound file type, registered by MS
-		 MacroSystem  Computer GmbH, published along with
-		 the "Toccata" sound-card on the  Amiga.   Allows
-		 8bit  linear, 16bit linear, A-Law, u-law in mono
+		 MacroSystem Computer GmbH, published along  with
+		 the  "Toccata"	 sound-card on the Amiga.  Allows
+		 8bit linear, 16bit linear, A-Law, u-law in  mono
 		 and stereo.
 
        .ogg	 Ogg Vorbis Compressed Audio.
 		 Ogg Vorbis is a open, patent-free codec designed
-		 for  compressing  music and streaming audio.  It
-		 is similar to MP3, VQF,  AAC,	and  other  lossy
+		 for compressing music and streaming  audio.   It
+		 is  similar  to  MP3,	VQF, AAC, and other lossy
 		 formats.  sox can decode all types of Ogg Vorbis
-		 files, but can only encode at 128 kbps.   Decod­
-		 ing  is  somewhat  CPU intensive and encoding is
+		 files,	 but can only encode at 128 kbps.  Decod­
+		 ing is somewhat CPU intensive	and  encoding  is
 		 very CPU intensive.
-		 Ogg Vorbis  in	 sox  is  optional  and	 requires
+		 Ogg  Vorbis  in  sox  is  optional  and requires
 		 access to external Ogg Vorbis libraries.  To see
-		 if there is support for Ogg Vorbis  run  sox  -h
+		 if  there  is	support for Ogg Vorbis run sox -h
 		 and look for it under the list of supported file
 		 formats as "vorbis".
 
        ossdsp	 OSS /dev/dsp device driver
 		 This is a pseudo-file type and can be optionally
-		 compiled  into	 Sox.	Run  sox -h to see if you
-		 have support for  this	 file  type.   When  this
-		 driver	 is used it allows you to open up the OSS
-		 /dev/dsp file and configure it to use	the  same
-		 data  format  as  passed in to /fBSoX.	 It works
-		 for both playing and  recording  sound	 samples.
-		 When  playing	sound files it attempts to set up
-		 the OSS driver to use the  same  format  as  the
-		 input	file.  It is suggested to always override
-		 the output values to  use  the	 highest  quality
+		 compiled into Sox.  Run sox -h	 to  see  if  you
+		 have  support	for  this  file	 type.	When this
+		 driver is used it allows you to open up the  OSS
+		 /dev/dsp  file	 and configure it to use the same
+		 data format as passed in to  /fBSoX.	It  works
+		 for  both  playing  and recording sound samples.
+		 When playing sound files it attempts to  set  up
+		 the  OSS  driver  to  use the same format as the
+		 input file.  It is suggested to always	 override
+		 the  output  values  to  use the highest quality
 		 samples your sound card can handle.  Example: -t
 		 ossdsp -w -s /dev/dsp
 
        .sf	 IRCAM Sound Files.
-		 Sound Files are used by academic music	 software
-		 such  as  the	CSound	package,  and the MixView
+		 Sound	Files are used by academic music software
+		 such as the  CSound  package,	and  the  MixView
 		 sound sample editor.
 
        .sph
-		 SPHERE (SPeech HEader Resources) is a file  for­
+		 SPHERE	 (SPeech HEader Resources) is a file for­
 		 mat defined by NIST (National Institute of Stan­
-		 dards and Technology) and is  used  with  speech
-		 audio.	  SoX can read these files when they con­
-		 tain ulaw and PCM  data.   It	will  ignore  any
-		 header	 information  that  says the data is com­
+		 dards	and  Technology)  and is used with speech
+		 audio.	 SoX can read these files when they  con­
+		 tain  ulaw  and  PCM  data.   It will ignore any
+		 header information that says the  data	 is  com­
 		 pressed using shorten compression and will treat
 		 the data as either ulaw or PCM.  This will allow
-		 SoX and the command line shorten program  to  be
-		 ran  together using pipes to uncompress the data
-		 and then pass the result to SoX for  processing.
+		 SoX  and  the command line shorten program to be
+		 ran together using pipes to uncompress the  data
+		 and  then pass the result to SoX for processing.
 
        .smp	 Turtle Beach SampleVision files.
-		 SMP  files  are  for use with the PC-DOS package
-		 SampleVision by  Turtle  Beach	 Softworks.  This
-		 package  is  for  communication  to several MIDI
-		 samplers. All sample rates are supported by  the
-		 package,  although  not all are supported by the
-		 samplers themselves. Currently loop  points  are
+		 SMP files are for use with  the  PC-DOS  package
+		 SampleVision  by  Turtle  Beach  Softworks. This
+		 package is for	 communication	to  several  MIDI
+		 samplers.  All sample rates are supported by the
+		 package, although not all are supported  by  the
+		 samplers  themselves.	Currently loop points are
 		 ignored.
 
        .snd
-		 Under	DOS  this  file format is the same as the
-		 .sndt format.	Under all other platforms  it  is
+		 Under DOS this file format is the  same  as  the
+		 .sndt	format.	  Under all other platforms it is
 		 the same as the .au format.
 
        .sndt	 SoundTool files.
@@ -407,156 +410,156 @@ FILE TYPES
 
        sunau	 Sun /dev/audio device driver
 		 This is a pseudo-file type and can be optionally
-		 compiled into Sox.  Run sox -h	 to  see  if  you
-		 have  support	for  this  file	 type.	When this
-		 driver is used it allows you to open  up  a  Sun
+		 compiled  into	 Sox.	Run  sox -h to see if you
+		 have support for  this	 file  type.   When  this
+		 driver	 is  used  it allows you to open up a Sun
 		 /dev/audio file and configure it to use the same
-		 data type as passed in to  Sox.   It  works  for
-		 both  playing and recording sound samples.  When
-		 playing sound files it attempts to  set  up  the
+		 data  type  as	 passed	 in to Sox.  It works for
+		 both playing and recording sound samples.   When
+		 playing  sound	 files	it attempts to set up the
 		 audio driver to use the same format as the input
-		 file.	It is suggested to  always  override  the
+		 file.	 It  is	 suggested to always override the
 		 output values to use the highest quality samples
-		 your hardware can handle.  Example: -t sunau  -w
+		 your  hardware can handle.  Example: -t sunau -w
 		 -s /dev/audio or -t sunau -U -c 1 /dev/audio for
 		 older sun equipment.
 
        .txw	 Yamaha TX-16W sampler.
-		 A file format from a  Yamaha  sampling	 keyboard
-		 which	wrote  IBM-PC format 3.5" floppies.  Han­
+		 A  file  format  from a Yamaha sampling keyboard
+		 which wrote IBM-PC format 3.5"	 floppies.   Han­
 		 dles reading of files which do not have the sam­
-		 ple  rate  field  set	to one of the expected by
-		 looking at some other bytes in	 the  attack/loop
-		 length	 fields,  and  defaulting to 33kHz if the
+		 ple rate field set to one  of	the  expected  by
+		 looking  at  some other bytes in the attack/loop
+		 length fields, and defaulting to  33kHz  if  the
 		 sample rate is still unknown.
 
        .vms	 More info to come.
-		 Used to compress speech audio	for  applications
+		 Used  to  compress speech audio for applications
 		 such as voice mail.
 
        .voc	 Sound Blaster VOC files.
-		 VOC  files  are  multi-part  and contain silence
-		 parts, looping, and different sample  rates  for
-		 different  chunks.   On input, the silence parts
-		 are filled out, loops are rejected,  and  sample
-		 data	with  a	 new  sample  rate  is	rejected.
-		 Silence with a different sample rate  is  gener­
-		 ated  appropriately.	On output, silence is not
+		 VOC files are	multi-part  and	 contain  silence
+		 parts,	 looping,  and different sample rates for
+		 different chunks.  On input, the  silence  parts
+		 are  filled  out, loops are rejected, and sample
+		 data  with  a	new  sample  rate  is	rejected.
+		 Silence  with	a different sample rate is gener­
+		 ated appropriately.  On output, silence  is  not
 		 detected, nor are impossible sample rates.
 
        vorbis	 See .ogg format.
 
        .wav	 Microsoft .WAV RIFF files.
-		 These appear to be very similar  to  IFF  files,
-		 but  not  the	same.	They are the native sound
+		 These	appear	to  be very similar to IFF files,
+		 but not the same.  They  are  the  native  sound
 		 file format of Windows.  (Obviously, Windows was
-		 of  such  incredible  importance to the computer
-		 industry that it just had to have its own  sound
+		 of such incredible importance	to  the	 computer
+		 industry  that it just had to have its own sound
 		 file format.)	Normally .wav files have all for­
-		 matting information in their headers, and so  do
-		 not  need  any	 format	 options specified for an
-		 input file. If any are, they will  override  the
-		 file  header,	and  you  will	be warned to this
+		 matting  information in their headers, and so do
+		 not need any format  options  specified  for  an
+		 input	file.  If any are, they will override the
+		 file header, and you  will  be	 warned	 to  this
 		 effect.  You had better know what you are doing!
-		 Output	 format	 options will cause a format con­
-		 version,   and	   the	  .wav	  will	  written
-		 appropriately.	  Sox  currently  can  read  PCM,
-		 ULAW, ALAW, MS ADPCM, and IMA	(or  DVI)  ADPCM.
-		 It  can  write	 all  of  these formats including
-		 (NEW!)	 the ADPCM encoding.
+		 Output format options will cause a  format  con­
+		 version,  and	the  .wav  will written appropri­
+		 ately.	 Sox currently can read PCM, ULAW,  ALAW,
+		 MS  ADPCM, and IMA (or DVI) ADPCM.  It can write
+		 all of these formats including (NEW!)	the ADPCM
+		 encoding.
 
        .wve	 Psion 8-bit alaw
-		 These are 8-bit a-law 8khz sound files	 used  on
+		 These	are  8-bit a-law 8khz sound files used on
 		 the Psion palmtop portable computer.
 
        .raw	 Raw files (no header).
-		 The  sample  rate,  size  (byte, word, etc), and
+		 The sample rate, size	(byte,	word,  etc),  and
 		 encoding (signed, unsigned, etc.)  of the sample
-		 file  must  be	 given.	  The  number of channels
+		 file must be  given.	The  number  of	 channels
 		 defaults to 1.
 
        .ub, .sb, .uw, .sw, .ul, .al, .sl
-		 These are several  suffices  which  serve  as	a
-		 shorthand  for	 raw  files with a given size and
-		 encoding.  Thus, ub, sb, uw, sw, ul and sl  cor­
-		 respond   to  "unsigned  byte",  "signed  byte",
-		 "unsigned word", "signed word",  "ulaw"  (byte),
-		 "alaw"	 (byte),  and  "signed long".  The sample
-		 rate defaults to 8000 hz if not explicitly  set,
-		 and  the number of channels (as always) defaults
-		 to 1.	There are lots of Sparc samples	 floating
-		 around	 in u-law format with no header and fixed
-		 at a sample rate of  8000  hz.	  (Certain  sound
+		 These	are  several  suffices	which  serve as a
+		 shorthand for raw files with a	 given	size  and
+		 encoding.   Thus, ub, sb, uw, sw, ul and sl cor­
+		 respond  to  "unsigned	 byte",	 "signed   byte",
+		 "unsigned  word",  "signed word", "ulaw" (byte),
+		 "alaw" (byte), and "signed  long".   The  sample
+		 rate  defaults to 8000 hz if not explicitly set,
+		 and the number of channels (as always)	 defaults
+		 to  1.	 There are lots of Sparc samples floating
+		 around in u-law format with no header and  fixed
+		 at  a	sample	rate  of 8000 hz.  (Certain sound
 		 management software cheerfully ignores the head­
-		 ers.)	Similarly, most Mac sound  files  are  in
+		 ers.)	 Similarly,  most  Mac sound files are in
 		 unsigned byte format with a sample rate of 11025
 		 or 22050 hz.
 
-       .auto	 This is a ``meta-type'':  specifying  this  type
-		 for  an input file triggers some code that tries
-		 to guess the real  type  by  looking  for  magic
-		 words	in  the	 header.   If  the  type can't be
-		 guessed, the program exits with  an  error  mes­
-		 sage.	 The  input  must  be a plain file, not a
+       .auto	 This  is  a  ``meta-type'': specifying this type
+		 for an input file triggers some code that  tries
+		 to  guess  the	 real  type  by looking for magic
+		 words in the  header.	 If  the  type	can't  be
+		 guessed,  the	program	 exits with an error mes­
+		 sage.	The input must be a  plain  file,  not	a
 		 pipe.	This type can't be used for output files.
 
 EFFECTS
        Multiple effects may be applied to the audio data by spec­
-       ifying them one after another at the end	 of  the  command
+       ifying  them  one  after another at the end of the command
        line.
 
        avg [ -l | -r | -f | -b | n,n,...,n ]
-		 Reduce	 the  number of channels by averaging the
-		 samples, or duplicate channels to  increase  the
-		 number	 of  channels.	 This effect is automati­
-		 cally used when the  number  of  input	 channels
+		 Reduce the number of channels by  averaging  the
+		 samples,  or  duplicate channels to increase the
+		 number of channels.  This  effect  is	automati­
+		 cally	used  when  the	 number of input channels
 		 differ from the number of output channels.  When
-		 reducing the number of channels it  is	 possible
-		 to  manually  specify the avg effect and use the
-		 -l, -r, -f, or -b options  to	select	only  the
-		 left,	right,	front, or back channel(s) for the
-		 output instead of averaging the  channels.   The
-		 -f  and  -b  options  maintain left/right stereo
+		 reducing  the	number of channels it is possible
+		 to manually specify the avg effect and	 use  the
+		 -l,  -r,  -f,	or  -b options to select only the
+		 left, right, front, or back channel(s)	 for  the
+		 output	 instead  of averaging the channels.  The
+		 -f and -b  options  maintain  left/right  stereo
 		 separation; use the avg effect twice to select a
 		 single channel.
 
 		 The avg effect can also be invoked with up to 16
 		 double-precision numbers, which specify the pro­
-		 portion  of  each  input  channel  that is to be
-		 mixed into each output channel.  In  two-channel
+		 portion of each input	channel	 that  is  to  be
+		 mixed	into each output channel.  In two-channel
 		 mode, 4 numbers are given: l->l, l->r, r->l, and
-		 r->r, respectively.  In four-channel  mode,  the
-		 first	4  numbers  give  the proportions for the
-		 left-front output channel, as	follows:  lf->lf,
+		 r->r,	respectively.	In four-channel mode, the
+		 first 4 numbers give  the  proportions	 for  the
+		 left-front  output  channel, as follows: lf->lf,
 		 rf->lf, lb->lf, and rb->rf.  The next 4 give the
 		 right-front output in the same order, then left-
 		 back and right-back.
 
-		 It  is	 also  possible	 to use the 16 numbers to
+		 It is also possible to use  the  16  numbers  to
 		 expand or reduce the channel count; just specify
 		 0 for unused channels.	 Finally, if fewer than 4
 		 numbers are given, certain special abbreviations
 		 may be invoked; see the source code for details.
 
        band [ -n ] center [ width ]
-		 Apply	a  band-pass   filter.	  The	frequency
+		 Apply	 a   band-pass	 filter.   The	frequency
 		 response drops logarithmically around the center
-		 frequency.  The width gives  the  slope  of  the
-		 drop.	 The  frequencies  at  center + width and
-		 center - width will be half  of  their	 original
+		 frequency.   The  width  gives	 the slope of the
+		 drop.	The frequencies at  center  +  width  and
+		 center	 -  width  will be half of their original
 		 amplitudes.  Band defaults to a mode oriented to
 		 pitched signals, i.e. voice, singing, or instru­
-		 mental	 music.	  The  -n (for noise) option uses
-		 the  alternate	 mode  for  un-pitched	 signals.
-		 Warning:  -n  introduces  a  power-gain of about
-		 11dB in the filter, so beware	of  output  clip­
+		 mental music.	The -n (for  noise)  option  uses
+		 the   alternate  mode	for  un-pitched	 signals.
+		 Warning: -n introduces	 a  power-gain	of  about
+		 11dB  in  the	filter, so beware of output clip­
 		 ping.	Band introduces noise in the shape of the
 		 filter, i.e. peaking at the center frequency and
-		 settling  around  it.	See filter for a bandpass
+		 settling around it.  See filter for  a	 bandpass
 		 effect with steeper shoulders.
 
        bandpass frequency bandwidth
-		 Butterworth bandpass filter. Description  coming
+		 Butterworth  bandpass filter. Description coming
 		 soon!
 
        bandreject frequency bandwidth
@@ -566,10 +569,10 @@ EFFECTS
        chorus gain-in gain-out delay decay speed depth
 
 	      -s | -t [ delay decay speed depth -s | -t ... ]
-		 Add a chorus to a sound sample.  Each	quadtuple
-		 delay/decay/speed/depth  gives the delay in mil­
-		 liseconds and the decay  (relative  to	 gain-in)
-		 with  a  modulation  speed  in Hz using depth in
+		 Add  a chorus to a sound sample.  Each quadtuple
+		 delay/decay/speed/depth gives the delay in  mil­
+		 liseconds  and	 the  decay (relative to gain-in)
+		 with a modulation speed in  Hz	 using	depth  in
 		 milliseconds.	The modulation is either sinodial
 		 (-s) or triangular (-t).  Gain-out is the volume
 		 of the output.
@@ -579,81 +582,81 @@ EFFECTS
 	       in-dB1,out-dB1[,in-dB2,out-dB2...]
 
 	       [gain [initial-volume [delay ] ] ]
-		 Compand (compress or expand) the  dynamic  range
-		 of  a sample.	The attack and decay time specify
-		 the integration time  over  which  the	 absolute
-		 value	of  the	 input	signal	is  integrated to
+		 Compand  (compress  or expand) the dynamic range
+		 of a sample.  The attack and decay time  specify
+		 the  integration  time	 over  which the absolute
+		 value of  the	input  signal  is  integrated  to
 		 determine its volume; attacks refer to increases
-		 in  volume and decays refer to decreases.  Where
-		 more than one pair  of	 attack/decay  parameters
-		 are  specified,  each	channel	 is treated sepa­
-		 rately and the number of pairs must  agree  with
-		 the number of input channels.	The second param­
-		 eter is a list	 of  points  on	 the  compander's
-		 transfer  function  specified	in dB relative to
+		 in volume and decays refer to decreases.   Where
+		 more  than  one  pair of attack/decay parameters
+		 are specified, each  channel  is  treated  sepa­
+		 rately	 and  the number of pairs must agree with
+		 the  number  of  input	 channels.   The   second
+		 parameter is a list of points on the compander's
+		 transfer function specified in	 dB  relative  to
 		 the  maximum  possible	 signal	 amplitude.   The
-		 input	values	must  be in a strictly increasing
+		 input values must be in  a  strictly  increasing
 		 order but the transfer function does not have to
 		 be monotonically rising.  The special value -inf
-		 may be used to indicate that  the  input  volume
-		 should	 be associated output volume.  The points
+		 may  be  used	to indicate that the input volume
+		 should be associated output volume.  The  points
 		 -inf,-inf and 0,0 are assumed; the latter may be
 		 overridden, but the former may not.
 
 		 The third (optional) parameter is a postprocess­
-		 ing gain in dB which is applied after	the  com­
-		 pression  has taken place; the fourth (optional)
+		 ing  gain  in dB which is applied after the com­
+		 pression has taken place; the fourth  (optional)
 		 parameter is an initial volume to be assumed for
-		 each  channel when the effect starts.	This per­
-		 mits the user to supply  a  nominal  level  ini­
-		 tially,  so that, for example, a very large gain
-		 is not applied to initial signal  levels  before
-		 the  companding  action has begun to operate: it
-		 is quite probable that in  such  an  event,  the
-		 output	 would be severely clipped while the com­
+		 each channel when the effect starts.  This  per­
+		 mits  the  user  to  supply a nominal level ini­
+		 tially, so that, for example, a very large  gain
+		 is  not  applied to initial signal levels before
+		 the companding action has begun to  operate:  it
+		 is  quite  probable  that  in such an event, the
+		 output would be severely clipped while the  com­
 		 pander gain properly adjusts itself.
 
-		 The fifth (optional) parameter	 is  a	delay  in
-		 seconds.   The	 input signal is analyzed immedi­
+		 The  fifth  (optional)	 parameter  is a delay in
+		 seconds.  The input signal is	analyzed  immedi­
 		 ately	to  control  the  compander,  but  it  is
 		 delayed before being fed to the volume adjuster.
-		 Specifying a delay approximately  equal  to  the
-		 attack/decay	times  allows  the  compander  to
-		 effectively operate  in  a  "predictive"  rather
+		 Specifying  a	delay  approximately equal to the
+		 attack/decay  times  allows  the  compander   to
+		 effectively  operate  in  a  "predictive" rather
 		 than a reactive mode.
 
        copy	 Copy the input file to the output file.  This is
-		 the default effect if both files have	the  same
+		 the  default  effect if both files have the same
 		 sampling rate.
 
        cut loopnumber
 		 Extract loop #N from a sample.
 
-       deemph	 Apply	a  treble  attenuation shelving filter to
+       deemph	 Apply a treble attenuation  shelving  filter  to
 		 samples  in  audio  cd	 format.   The	frequency
-		 response  of pre-emphasized recordings is recti­
-		 fied.	The filtering is defined in the	 standard
+		 response of pre-emphasized recordings is  recti­
+		 fied.	 The filtering is defined in the standard
 		 document ISO 908.
 
-       earwax	 Makes	sound  easier to listen to on headphones.
+       earwax	 Makes sound easier to listen to  on  headphones.
 		 Adds audio-cues to samples in audio cd format so
-		 that  when  listened to on headphones the stereo
-		 image is moved from inside your  head	(standard
-		 for  headphones)  to outside and in front of the
+		 that when listened to on headphones  the  stereo
+		 image	is  moved from inside your head (standard
+		 for headphones) to outside and in front  of  the
 		 listener (standard for speakers). See
-		 www.geocities.com/beinges for	a  full	 explana­
+		 www.geocities.com/beinges  for	 a  full explana­
 		 tion.
 
        echo gain-in gain-out delay decay [ delay decay ... ]
 		 Add echoing to a sound sample.	 Each delay/decay
-		 part gives the delay  in  milliseconds	 and  the
+		 part  gives  the  delay  in milliseconds and the
 		 decay (relative to gain-in) of that echo.  Gain-
 		 out is the volume of the output.
 
        echos gain-in gain-out delay decay [ delay decay ... ]
 		 Add a sequence of echos to a sound sample.  Each
 		 delay/decay part gives the delay in milliseconds
-		 and the decay	(relative  to  gain-in)	 of  that
+		 and  the  decay  (relative  to	 gain-in) of that
 		 echo.	Gain-out is the volume of the output.
 
        fade [ type ] fade-in-length
@@ -662,138 +665,138 @@ EFFECTS
 		 Add a fade effect to the beginning, end, or both
 		 of the audio data.
 
-		 For fade-ins, this starts from the first  sample
+		 For  fade-ins, this starts from the first sample
 		 and ramps the volume of the audio from 0 to full
-		 volume over fade-in-length seconds.   Specify	0
+		 volume	 over  fade-in-length seconds.	Specify 0
 		 seconds if no fade-in is wanted.
 
-		 For  fade-outs, the audio data will be truncated
-		 at the stop-time and the volume will  be  ramped
+		 For fade-outs, the audio data will be	truncated
+		 at  the  stop-time and the volume will be ramped
 		 from full volume down to 0 starting at fade-out-
-		 length seconds before the stop-time.	No  fade-
+		 length	 seconds  before the stop-time.	 No fade-
 		 out is performed if these options are not speci­
 		 fied.
-		 All times can be specified in either periods  of
-		 time  or sample counts.  To specify time periods
+		 All  times can be specified in either periods of
+		 time or sample counts.	 To specify time  periods
 		 use the format hh:mm:ss.frac format.  To specify
-		 using	sample counts, specify the number of sam­
-		 ples and append the letter  's'  to  the  sample
+		 using sample counts, specify the number of  sam­
+		 ples  and  append  the	 letter 's' to the sample
 		 count (for example 8000s).
-		 An  optional type can be specified to change the
-		 type of envelope.  Choices are q for quarter  of
-		 a  sinewave, h for half a sinewave, t for linear
-		 slope, l for logarithmic,  and	 p  for	 inverted
+		 An optional type can be specified to change  the
+		 type  of envelope.  Choices are q for quarter of
+		 a sinewave, h for half a sinewave, t for  linear
+		 slope,	 l  for	 logarithmic,  and p for inverted
 		 parabola.  The default is a linear slope.
 
        filter [ low ]-[ high ] [ window-len [ beta ] ]
 		 Apply	a  Sinc-windowed  lowpass,  highpass,  or
-		 bandpass filter of given window  length  to  the
-		 signal.   low	refers	to  the	 frequency of the
-		 lower 6dB corner of the filter.  high refers  to
-		 the  frequency	 of  the  upper 6dB corner of the
+		 bandpass  filter  of  given window length to the
+		 signal.  low refers  to  the  frequency  of  the
+		 lower	6dB corner of the filter.  high refers to
+		 the frequency of the upper  6dB  corner  of  the
 		 filter.
 
-		 A lowpass filter  is  obtained	 by  leaving  low
-		 unspecified,	or   0.	  A  highpass  filter  is
-		 obtained by leaving high unspecified, or  0,  or
-		 greater  than or equal to the Nyquist frequency.
+		 A  lowpass  filter  is	 obtained  by leaving low
+		 unspecified,  or  0.	A  highpass   filter   is
+		 obtained  by  leaving high unspecified, or 0, or
+		 greater than or equal to the Nyquist  frequency.
 
 		 The window-len, if unspecified, defaults to 128.
-		 Longer	 windows  give	a sharper cutoff, smaller
+		 Longer windows give a	sharper	 cutoff,  smaller
 		 windows a more gradual cutoff.
 
-		 The beta, if unspecified, defaults to 16.   This
-		 selects  a Kaiser window.  You can select a Nut­
-		 tall window by specifying anything <= 2.0  here.
-		 For  more  discussion	of  beta,  look under the
+		 The  beta, if unspecified, defaults to 16.  This
+		 selects a Kaiser window.  You can select a  Nut­
+		 tall  window by specifying anything <= 2.0 here.
+		 For more discussion  of  beta,	 look  under  the
 		 resample effect.
 
 
        flanger gain-in gain-out delay decay speed < -s | -t >
-		 Add a flanger to a sound  sample.   Each  triple
-		 delay/decay/speed  gives  the delay in millisec­
-		 onds and the decay (relative to gain-in) with	a
+		 Add  a	 flanger  to a sound sample.  Each triple
+		 delay/decay/speed gives the delay  in	millisec­
+		 onds  and the decay (relative to gain-in) with a
 		 modulation  speed  in	Hz.   The  modulation  is
-		 either sinodial (-s) or triangular (-t).   Gain-
+		 either	 sinodial (-s) or triangular (-t).  Gain-
 		 out is the volume of the output.
 
        highp frequency
-		 Apply	a single pole recursive high-pass filter.
+		 Apply a single pole recursive high-pass  filter.
 		 The  frequency	 response  drops  logarithmically
 		 with I frequency in the middle of the drop.  The
 		 slope of the filter is quite gentle.  See filter
 		 for a highpass effect with sharper cutoff.
 
        highpass frequency
-		 Butterworth  highpass	filter.	 Description com­
+		 Butterworth highpass filter.	Description  com­
 		 ming soon!
 
        lowp frequency
-		 Apply a single pole recursive	low-pass  filter.
+		 Apply	a  single pole recursive low-pass filter.
 		 The  frequency	 response  drops  logarithmically
-		 with frequency in the middle of the  drop.   The
+		 with  frequency  in the middle of the drop.  The
 		 slope of the filter is quite gentle.  See filter
 		 for a lowpass effect with sharper cutoff.
 
        lowpass frequency
-		 Butterworth lowpass filter.  Description  coming
+		 Butterworth  lowpass filter.  Description coming
 		 soon!
 
        map	 Display a list of loops in a sample, and miscel­
 		 laneous loop info.
 
-       mask	 Add "masking  noise"  to  signal.   This  effect
-		 deliberately  adds  white  noise  to  a sound in
-		 order to mask quantization effects,  created  by
-		 the  process  of  playing a sound digitally.  It
-		 tends to mask buzzing voices, for  example.   It
-		 adds  1/2  bit of noise to the sound file at the
+       mask	 Add  "masking	noise"	to  signal.   This effect
+		 deliberately adds white  noise	 to  a	sound  in
+		 order	to  mask quantization effects, created by
+		 the process of playing a  sound  digitally.   It
+		 tends	to  mask buzzing voices, for example.  It
+		 adds 1/2 bit of noise to the sound file  at  the
 		 output bit depth.
 
        pan direction
-		 Pan the sound of an audio file from one  channel
+		 Pan  the sound of an audio file from one channel
 		 to another.  This is done by changing the volume
-		 of the input channels so that it  fades  out  on
-		 one  channel  and  fades-in  on another.  If the
-		 number of input channels is different	then  the
+		 of  the  input	 channels so that it fades out on
+		 one channel and fades-in  on  another.	  If  the
+		 number	 of  input channels is different then the
 		 number of output channels then this effect tries
-		 to intelligently handle this.	For instance,  if
+		 to  intelligently handle this.	 For instance, if
 		 the input contains 1 channel and the output con­
-		 tains 2 channels, then it will create the  miss­
-		 ing  channel  itself.	 The direction is a value
-		 from -1.0 to 1.0.  -1.0 represents far left  and
-		 1.0  represents  far  right.  Numbers in between
+		 tains	2 channels, then it will create the miss­
+		 ing channel itself.  The direction  is	 a  value
+		 from  -1.0 to 1.0.  -1.0 represents far left and
+		 1.0 represents far right.   Numbers  in  between
 		 will start the pan effect without totally muting
 		 the opposite channel.
 
        phaser gain-in gain-out delay decay speed < -s | -t >
-		 Add  a	 phaser	 to  a sound sample.  Each triple
-		 delay/decay/speed gives the delay  in	millisec­
-		 onds  and the decay (relative to gain-in) with a
+		 Add a phaser to a  sound  sample.   Each  triple
+		 delay/decay/speed  gives  the delay in millisec­
+		 onds and the decay (relative to gain-in) with	a
 		 modulation  speed  in	Hz.   The  modulation  is
-		 either	 sinodial  (-s)	 or triangular (-t).  The
+		 either sinodial (-s) or  triangular  (-t).   The
 		 decay should be less than 0.5 to avoid feedback.
 		 Gain-out is the volume of the output.
 
        pick [ -1 | -2 | -3 | -4 | -l | -r ]
-		 Select	 the  left  or	right channel of a stereo
-		 sample, or one of four	 channels  in  a  quadro­
-		 phonic	 sample.  The -l and -r options represent
-		 either	 the  left  or	right  channel.	  It   is
-		 required  that	 you  use  the	-c 1 command line
+		 Select the left or right  channel  of	a  stereo
+		 sample,  or  one  of  four channels in a quadro­
+		 phonic sample. The -l and -r  options	represent
+		 either	  the  left  or	 right	channel.   It  is
+		 required that you use	the  -c	 1  command  line
 		 option in order to force the output file to con­
 		 tain only 1 channel.
 
        pitch shift [ width interpole fade ]
-		 Change	 the  pitch of file without affecting its
+		 Change the pitch of file without  affecting  its
 		 duration by cross-fading shifted samples.  shift
 		 is given in cents. Use a positive value to shift
-		 to treble, negative  value  to	 shift	to  bass.
-		 Default  shift	 is 0.	width of window is in ms.
-		 Default width is 20ms. Try 30ms to lower  pitch,
-		 and  10ms to raise pitch.  interpole option, can
+		 to  treble,  negative	value  to  shift to bass.
+		 Default shift is 0.  width of window is  in  ms.
+		 Default  width is 20ms. Try 30ms to lower pitch,
+		 and 10ms to raise pitch.  interpole option,  can
 		 be "cubic" or "linear". Default is "cubic".  The
-		 fade  option,	can be "cos", "hamming", "linear"
+		 fade option, can be "cos",  "hamming",	 "linear"
 		 or "trapezoid".  Default is "cos".
 
        polyphase [ -w < nut / ham > ]
@@ -802,73 +805,73 @@ EFFECTS
 
 		 [ -cutoff #  ]
 		 Translate input sampling rate to output sampling
-		 rate  via  polyphase  interpolation, a DSP algo­
-		 rithm.	 This method is slow  and  uses	 lots  of
+		 rate via polyphase interpolation,  a  DSP  algo­
+		 rithm.	  This	method	is  slow and uses lots of
 		 RAM, but gives much better results than rate.
 
-		 -w  <	nut / ham > : select either a Nuttal (~90
-		 dB stopband) or Hamming (~43 dB  stopband)  win­
+		 -w < nut / ham > : select either a  Nuttal  (~90
+		 dB  stopband)	or Hamming (~43 dB stopband) win­
 		 dow.  Default is nut.
 
-		 -width	 long / short / # : specify the (approxi­
-		 mate) width of the filter.  long  is  1024  sam­
-		 ples;	short  is 128 samples.	Alternatively, an
+		 -width long / short / # : specify the	(approxi­
+		 mate)	width  of  the filter.	long is 1024 sam­
+		 ples; short is 128 samples.   Alternatively,  an
 		 exact number can be used.  Default is long.  The
-		 short	option is not recommended, as it produces
+		 short option is not recommended, as it	 produces
 		 poor quality results.
 
-		 -cutoff # : specify the filter cutoff	frequency
-		 in  terms  of	fraction  of frequency bandwidth,
-		 also know as the Nyquist frequency.  Please  see
-		 the  resample	effect for further information on
-		 Nyquist frequency.  If upsampling, then this  is
-		 the  fraction of the original signal that should
-		 go through.  If downsampling, this is the  frac­
-		 tion  of  the	signal	left  after downsampling.
+		 -cutoff  # : specify the filter cutoff frequency
+		 in terms of  fraction	of  frequency  bandwidth,
+		 also  know as the Nyquist frequency.  Please see
+		 the resample effect for further  information  on
+		 Nyquist  frequency.  If upsampling, then this is
+		 the fraction of the original signal that  should
+		 go  through.  If downsampling, this is the frac­
+		 tion of  the  signal  left  after  downsampling.
 		 Default is 0.95.  Remember that this is a float.
 
 
        rate	 Translate input sampling rate to output sampling
-		 rate via linear interpolation to the Least  Com­
+		 rate  via linear interpolation to the Least Com­
 		 mon Multiple of the two sampling rates.  This is
 		 the default effect if the two files have differ­
-		 ent  sampling	rates and the preview options was
+		 ent sampling rates and the preview  options  was
 		 specified.  This is fast but noisy: the spectrum
-		 of  the  original  sound will be shifted upwards
-		 and duplicated faintly when up-translating by	a
+		 of the original sound will  be	 shifted  upwards
+		 and  duplicated faintly when up-translating by a
 		 multiple.
 
-		 Lerp-ing  is  acceptable  for	cheap 8-bit sound
-		 hardware, but for CD-quality  sound  you  should
-		 instead  use  either  resample or polyphase.  If
+		 Lerp-ing is acceptable	 for  cheap  8-bit  sound
+		 hardware,  but	 for  CD-quality sound you should
+		 instead use either resample  or  polyphase.   If
 		 you are wondering which rate changing effects to
-		 use,  you  will want to read a detailed analysis
+		 use, you will want to read a  detailed	 analysis
 		 of  all  of  them  at	http://eakaw2.et.tu-dres­
 		 den.de/~wilde/resample/resample.html
 
        resample [ -qs | -q | -ql ] [ rolloff [ beta ] ]
 		 Translate input sampling rate to output sampling
 		 rate  via  simulated  analog  filtration.   This
-		 method	 is slower than rate, but gives much bet­
+		 method is slower than rate, but gives much  bet­
 		 ter results.
 
 		 By default, linear interpolation is used, with a
-		 window	 width	about  45 samples at the lower of
-		 the two rate.	This gives an accuracy	of  about
-		 16  bits, but insufficient stopband rejection in
-		 the case that you want to have	 rolloff  greater
+		 window width about 45 samples at  the	lower  of
+		 the  two  rate.  This gives an accuracy of about
+		 16 bits, but insufficient stopband rejection  in
+		 the  case  that you want to have rolloff greater
 		 than about 0.80 of the Nyquist frequency.
 
-		 The  -q*  options will change the default values
-		 for rolloff and beta as well  as  use	quadratic
-		 interpolation	of filter coefficients, resulting
+		 The -q* options will change the  default  values
+		 for  rolloff  and  beta as well as use quadratic
+		 interpolation of filter coefficients,	resulting
 		 in about 24 bits precision.  The -qs, -q, or -ql
-		 options  specify  increased accuracy at the cost
-		 of lower execution speed.   It	 is  optional  to
-		 specify  rolloff  and beta parameters when using
+		 options specify increased accuracy at	the  cost
+		 of  lower  execution  speed.	It is optional to
+		 specify rolloff and beta parameters  when  using
 		 the -q* options.
 
-		 Following is a table of the reasonable	 defaults
+		 Following  is a table of the reasonable defaults
 		 which are built-in to sox:
 
 		    Option  Window rolloff beta interpolation
@@ -880,78 +883,78 @@ EFFECTS
 		    ------  ------ ------- ---- -------------
 
 		 -qs, -q, or -ql use window lengths of 45, 75, or
-		 149 samples, respectively, at the lower  sample-
+		 149  samples, respectively, at the lower sample-
 		 rate of the two files.	 This means progressively
-		 sharper stop-band rejection,  at  proportionally
+		 sharper  stop-band  rejection, at proportionally
 		 slower execution times.
 
-		 rolloff  refers  to the cut-off frequency of the
-		 low pass filter and is given  in  terms  of  the
-		 Nyquist  frequency  for  the  lower sample rate.
-		 rolloff therefore should  be  something  between
+		 rolloff refers to the cut-off frequency  of  the
+		 low  pass  filter  and	 is given in terms of the
+		 Nyquist frequency for	the  lower  sample  rate.
+		 rolloff  therefore  should  be something between
 		 0.0 and 1.0, in practice 0.8-0.95.  The defaults
 		 are indicated above.
 
 		 The Nyquist frequency is equal to (sample rate /
-		 2).   Logically,  this	 is  because the A/D con­
-		 verter needs at least	2  samples  to	detect	1
-		 cycle	at  the	 Nyquist  frequency.  Frequencies
-		 higher then the Nyquist will actually appear  as
-		 lower	frequencies  to	 the A/D converter and is
+		 2).  Logically, this is  because  the	A/D  con­
+		 verter	 needs	at  least  2  samples to detect 1
+		 cycle at  the	Nyquist	 frequency.   Frequencies
+		 higher	 then the Nyquist will actually appear as
+		 lower frequencies to the A/D  converter  and  is
 		 called aliasing.  Normally, A/D converts run the
-		 signal	 through a highpass filter first to avoid
+		 signal through a highpass filter first to  avoid
 		 these problems.
 
-		 Similar problems will happen  in  software  when
-		 reducing  the sample rate of an audio file (fre­
-		 quencies above the new Nyquist frequency can  be
-		 aliased  to  lower  frequencies).   Therefore, a
-		 good resample effect will remove  all	frequency
+		 Similar  problems  will  happen in software when
+		 reducing the sample rate of an audio file  (fre­
+		 quencies  above the new Nyquist frequency can be
+		 aliased to  lower  frequencies).   Therefore,	a
+		 good  resample	 effect will remove all frequency
 		 information above the new Nyquist frequency.
 
-		 The  rolloff  refers to how close to the Nyquist
+		 The rolloff refers to how close to  the  Nyquist
 		 frequency this cutoff is, with closer being bet­
-		 ter.	When  increasing  the  sample  rate of an
+		 ter.  When increasing	the  sample  rate  of  an
 		 audio file you would not expect to have any fre­
-		 quencies   exist  that	 are  past  the	 original
-		 Nyquist frequency.  Because of resampling  prop­
-		 erties,  it is common to have alaising data cre­
-		 ated that is above the	 old  Nyquist  frequency.
-		 In  that case the rolloff refers to how close to
+		 quencies  exist  that	are  past  the	 original
+		 Nyquist  frequency.  Because of resampling prop­
+		 erties, it is common to have alaising data  cre­
+		 ated  that  is	 above the old Nyquist frequency.
+		 In that case the rolloff refers to how close  to
 		 the original Nyquist frequency to use a highpass
-		 filter	 to  remove  this false data, with closer
+		 filter to remove this false  data,  with  closer
 		 also being better.
 
 		 The beta parameter determines the type of filter
-		 window	 used.	Any value greater than 2.0 is the
+		 window used.  Any value greater than 2.0 is  the
 		 beta for a Kaiser window.  Beta <= 2.0 selects a
-		 Nuttall  window.  If unspecified, the default is
+		 Nuttall window.  If unspecified, the default  is
 		 a Kaiser window with beta 16.
 
 		 In the case of Kaiser window (beta > 2.0), lower
-		 betas	produce a somewhat faster transition from
-		 passband to stopband, at the cost of  noticeable
-		 artifacts.   A	 beta  of 16 is the default, beta
-		 less than 10 is not recommended.  If you want	a
-		 sharper  cutoff,  don't  use  low  beta's, use a
+		 betas produce a somewhat faster transition  from
+		 passband  to stopband, at the cost of noticeable
+		 artifacts.  A beta of 16 is  the  default,  beta
+		 less  than 10 is not recommended.  If you want a
+		 sharper cutoff, don't	use  low  beta's,  use	a
 		 longer	 sample	 window.   A  Nuttall  window  is
-		 selected  by specifying any 'beta' <= 2, and the
-		 Nuttall window has somewhat steeper cutoff  than
-		 the  default  Kaiser  window.	You will probably
-		 not need to  use  the	beta  parameter	 at  all,
-		 unless	 you are just curious about comparing the
+		 selected by specifying any 'beta' <= 2, and  the
+		 Nuttall  window has somewhat steeper cutoff than
+		 the default Kaiser window.   You  will	 probably
+		 not  need  to	use  the  beta	parameter at all,
+		 unless you are just curious about comparing  the
 		 effects of Nuttall vs. Kaiser windows.
 
 		 This is the default effect if the two files have
-		 different  sampling  rates.   Default parameters
+		 different sampling  rates.   Default  parameters
 		 are, as indicated above, Kaiser window of length
 		 45, rolloff 0.80, beta 16, linear interpolation.
 
-		 NOTE: -qs is  only  slightly  slower,	but  more
+		 NOTE:	-qs  is	 only  slightly	 slower, but more
 		 accurate for 16-bit or higher precision.
 
-		 NOTE:	In many cases of up-sampling, no interpo­
-		 lation is needed, as exact  filter  coefficients
+		 NOTE: In many cases of up-sampling, no	 interpo­
+		 lation	 is  needed, as exact filter coefficients
 		 can be computed in a reasonable amount of space.
 		 To be precise, this is done when
 
@@ -961,14 +964,45 @@ EFFECTS
 
        reverb gain-out delay [ delay ... ]
 		 Add reverberation to a sound sample.  Each delay
-		 is given in milliseconds  and	its  feedback  is
-		 depending  on	the  reverb-time in milliseconds.
-		 Each delay should be in the  range  of	 half  to
+		 is  given  in	milliseconds  and its feedback is
+		 depending on the  reverb-time	in  milliseconds.
+		 Each  delay  should  be  in the range of half to
 		 quarter of reverb-time to get a realistic rever­
 		 beration.  Gain-out is the volume of the output.
 
-       reverse	 Reverse  the  sound sample completely.	 Included
+       reverse	 Reverse the sound sample  completely.	 Included
 		 for finding Satanic subliminals.
+
+       silence above_periods [ duration threshold[ d | % | s]
+
+	       [ below_periods duration
+
+		 threshold[ d | % | s ]]
+		 Removes  silence  from the beginning or end of a
+		 sound file.  Silence is anything below a  speci­
+		 fied threshold.
+		 When  trimming	 silence  from the beginning of a
+		 sound file, you specify a duration of audio that
+		 is  above a given silence threshold before audio
+		 data is processed.  You  can  also  specify  the
+		 count	of  periods  of	 none silence you want to
+		 detect before processing audio data.  Specify	a
+		 period of 0 if you do not want to trim data from
+		 the front of the sound file.
+		 When optionally trimming silence form the end of
+		 a  sound file, you specify the duration of audio
+		 that must be  below  a	 given	threshold  before
+		 stopping  to  process	audio  data.   A count of
+		 periods that occur below the threshold may  also
+		 be speficied.	If this options are not specified
+		 then data is not trimmed from	the  end  of  the
+		 audio file.
+		 Duration  counts  may	be in the format of time,
+		 hh.mm.ss.frac, or in the exact count of samples.
+		 Threshold  may	 be  suffixed  with d, %, or s to
+		 indicated the value is in decibels, percent,  or
+		 an  exact  signed long interger sample value.	A
+		 value of '0s' will look for total silence.
 
        speed [ -c ] factor
 		 Speed up or down the sound, as a  magnetic  tape
@@ -1119,9 +1153,9 @@ EFFECTS
 		 changing the phase.
 		 When  type  is	 power	then  a value of 1.0 also
 		 means no change in volume.
-		 When  type  is	 dB  the  amplitude  is	  changed
-		 logarithmically.   0.0 is constant while +6 dou­
-		 bles the amplitude.
+		 When type is dB the amplitude is  changed  loga­
+		 rithmically.	0.0  is constant while +6 doubles
+		 the amplitude.
 		 An optional limitergain value can  be	specified
 		 and  should  be  a  value much less then 1.0 (ie
 		 0.05 or 0.02) and is used only on peaks to  pre­
