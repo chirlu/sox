@@ -39,7 +39,10 @@ ft_t ft;
     snd_pcm_capture_params_t c_params;
 
     memset(&c_info, 0, sizeof(c_info));
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_CAPTURE_INFO, &c_info);
+    if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CAPTURE_INFO, &c_info) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
     ft->file.count = 0;
     ft->file.pos = 0;
     ft->file.eof = 0;
@@ -59,7 +62,10 @@ ft_t ft;
     format.format = fmt;
     format.rate = ft->info.rate;
     format.channels = ft->info.channels;
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_CAPTURE_FORMAT, &format);
+    if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CAPTURE_FORMAT, &format) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
 
     size = ft->file.size;
     bps = format.rate * format.channels;
@@ -70,7 +76,10 @@ ft_t ft;
     memset(&c_params, 0, sizeof(c_params));
     c_params.fragment_size = size;
     c_params.fragments_min = 1;
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_CAPTURE_PARAMS, &c_params);
+    if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CAPTURE_PARAMS, &c_params) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
 
     /* Change to non-buffered I/O */
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
@@ -89,7 +98,10 @@ ft_t ft;
     snd_pcm_playback_params_t p_params;
 
     memset(&p_info, 0, sizeof(p_info));
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_PLAYBACK_INFO, &p_info);
+    if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_PLAYBACK_INFO, &p_info) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
     ft->file.pos = 0;
     ft->file.eof = 0;
     ft->file.size = p_info.buffer_size;
@@ -108,7 +120,10 @@ ft_t ft;
     format.format = fmt;
     format.rate = ft->info.rate;
     format.channels = ft->info.channels;
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_PLAYBACK_FORMAT, &format);
+    if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_PLAYBACK_FORMAT, &format) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
 
     size = ft->file.size;
     bps = format.rate * format.channels;
@@ -120,7 +135,10 @@ ft_t ft;
     p_params.fragment_size = size;
     p_params.fragments_max = -1;
     p_params.fragments_room = 1;
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_PLAYBACK_PARAMS, &p_params);
+    if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_PLAYBACK_PARAMS, &p_params) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
 
     /* Change to non-buffered I/O */
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
@@ -138,7 +156,10 @@ ft_t ft;
     snd_pcm_channel_params_t c_params;
 
     memset(&c_info, 0, sizeof(c_info));
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_INFO, &c_info);
+    if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_INFO, &c_info) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
     ft->file.count = 0;
     ft->file.pos = 0;
     ft->file.eof = 0;
@@ -158,6 +179,9 @@ ft_t ft;
     c_params.format.format = fmt;
     c_params.format.rate = ft->info.rate;
     c_params.format.voices = ft->info.channels;
+    c_params.format.interleave = 1;
+    c_params.channel = SND_PCM_CHANNEL_CAPTURE;
+    c_params.mode = SND_PCM_MODE_BLOCK;
     c_params.start_mode = SND_PCM_START_DATA;
     c_params.stop_mode = SND_PCM_STOP_STOP;
     bps = c_params.format.rate * c_params.format.voices;
@@ -166,12 +190,19 @@ ft_t ft;
     size = 1;
     while ((size << 1) < bps) size <<= 1;
     if (size > ft->file.size) size = ft->file.size;
-    c_params.mode = SND_PCM_MODE_BLOCK;
+    if (size < c_info.min_fragment_size) size = c_info.min_fragment_size;
+    if (size > c_info.max_fragment_size) size = c_info.max_fragment_size;
     c_params.buf.block.frag_size = size;
-    c_params.buf.block.frags_min = 32;
+    c_params.buf.block.frags_max = 32;
     c_params.buf.block.frags_min = 1;
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_PARAMS, &c_params);
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_PREPARE);
+    if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_PARAMS, &c_params) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
+    if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_PREPARE) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
 
     /* Change to non-buffered I/O */
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
@@ -189,7 +220,10 @@ ft_t ft;
     snd_pcm_channel_params_t p_params;
 
     memset(&p_info, 0, sizeof(p_info));
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_INFO, &p_info);
+    if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_INFO, &p_info) < 0)	{
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
     ft->file.pos = 0;
     ft->file.eof = 0;
     ft->file.size = p_info.buffer_size;
@@ -208,7 +242,10 @@ ft_t ft;
     p_params.format.format = fmt;
     p_params.format.rate = ft->info.rate;
     p_params.format.voices = ft->info.channels;
-    p_params.start_mode = SND_PCM_START_FULL;
+    p_params.format.interleave = 1;
+    p_params.channel = SND_PCM_CHANNEL_PLAYBACK;
+    p_params.mode = SND_PCM_MODE_BLOCK;
+    p_params.start_mode = SND_PCM_START_DATA;
     p_params.stop_mode = SND_PCM_STOP_STOP;
     bps = p_params.format.rate * p_params.format.voices;
     if (ft->info.size == ST_SIZE_WORD) bps <<= 1;
@@ -216,12 +253,19 @@ ft_t ft;
     size = 1;
     while ((size << 1) < bps) size <<= 1;
     if (size > ft->file.size) size = ft->file.size;
-    p_params.mode = SND_PCM_MODE_BLOCK;
+    if (size < p_info.min_fragment_size) size = p_info.min_fragment_size;
+    if (size > p_info.max_fragment_size) size = p_info.max_fragment_size;
     p_params.buf.block.frag_size = size;
-    p_params.buf.block.frags_max = -1; /* Little trick (playback only) */
+    p_params.buf.block.frags_max = 32;
     p_params.buf.block.frags_min = 1;
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_PARAMS, &p_params);
-    ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_PREPARE);
+    if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_PARAMS, &p_params) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
+    if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_PREPARE) < 0) {
+	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+	return(ST_EOF);
+    }
 
     /* Change to non-buffered I/O */
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
