@@ -171,14 +171,22 @@ static int writetrailer(ft_t ft, struct smptrailer *trailer)
 
 int st_smpseek(ft_t ft, st_size_t offset) 
 {
-        smp_t smp = (smp_t) ft->priv;
+    int new_offset, align;
+    smp_t smp = (smp_t) ft->priv;
 
-        ft->st_errno = st_seek(ft,offset*ft->info.size + smp->dataStart,SEEK_SET);
+    new_offset = offset * ft->info.size;
+    /* Make sure requests aligns to a channel offset */
+    align = new_offset % (ft->info.channels*ft->info.size);
+    if (align != 0)
+        new_offset += align;
+    new_offset += smp->dataStart;
 
-        if( ft->st_errno == ST_SUCCESS )
-                smp->NoOfSamps = ft->length - offset;
+    ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
 
-        return(ft->st_errno);
+    if( ft->st_errno == ST_SUCCESS )
+        smp->NoOfSamps = ft->length - new_offset;
+
+    return(ft->st_errno);
 }
 /*
  * Do anything required before you start reading samples.

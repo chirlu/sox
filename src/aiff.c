@@ -73,14 +73,22 @@ static void reportInstrument(ft_t ft);
 
 int st_aiffseek(ft_t ft, st_size_t offset) 
 {
-        aiff_t aiff = (aiff_t ) ft->priv;
+    aiff_t aiff = (aiff_t ) ft->priv;
+    st_size_t new_offset, align;
 
-        ft->st_errno = st_seek(ft,offset*ft->info.size + aiff->dataStart,SEEK_SET);
+    new_offset = offset * ft->info.size;
+    /* Make sure requests aligns to a channel offset */
+    align = new_offset % (ft->info.channels*ft->info.size);
+    if (align != 0)
+        new_offset += align;
+    new_offset += aiff->dataStart;
 
-        if( ft->st_errno == ST_SUCCESS )
-                aiff->nsamples = ft->length - offset;
+    ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
 
-        return(ft->st_errno);
+    if (ft->st_errno == ST_SUCCESS)
+        aiff->nsamples = ft->length - new_offset;
+
+    return(ft->st_errno);
 }
 
 int st_aiffstartread(ft_t ft) 

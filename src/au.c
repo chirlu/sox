@@ -103,14 +103,27 @@ static int st_auencodingandsize(int sun_encoding, char *encoding, char *size)
 
 int st_auseek(ft_t ft, st_size_t offset) 
 {
-        au_t au = (au_t ) ft->priv;
+    au_t au = (au_t ) ft->priv;
 
-        if (au->dec_routine != NULL)
-                st_fail_errno(ft,ST_ENOTSUP,"Sorry, DEC unsupported");
-        else 
-                return st_seek(ft,offset*ft->info.size + au->dataStart,SEEK_SET);
+    if (au->dec_routine != NULL)
+    {
+        st_fail_errno(ft,ST_ENOTSUP,"Sorry, DEC unsupported");
+    }
+    else 
+    {
+        st_size_t new_offset, align;
 
-        return(ft->st_errno);
+        new_offset = offset * ft->info.size;
+        /* Make sure requests aligns to a channel offset */
+        align = new_offset % (ft->info.channels*ft->info.size);
+        if (align != 0)
+            new_offset += align;
+        new_offset += au->dataStart;
+
+        ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
+    }
+
+    return(ft->st_errno);
 }
 
 int st_austartread(ft_t ft) 

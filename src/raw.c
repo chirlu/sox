@@ -83,6 +83,8 @@ static void rawdefaults(ft_t ft);
 
 int st_rawseek(ft_t ft, st_size_t offset)
 {
+    st_size_t new_offset, align;
+
     switch(ft->info.size) {
         case ST_SIZE_BYTE:
         case ST_SIZE_WORD:
@@ -94,7 +96,13 @@ int st_rawseek(ft_t ft, st_size_t offset)
             return ft->st_errno;
     }
 
-    ft->st_errno = st_seek(ft,offset*ft->info.size,SEEK_SET);
+    new_offset = offset * ft->info.size;
+    /* Make sure requests aligns to a channel offset */
+    align = new_offset % (ft->info.channels*ft->info.size);
+    if (align != 0)
+        new_offset += align;
+
+    ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
 
     return ft->st_errno;
 }

@@ -1638,23 +1638,31 @@ static char *wav_format_str(unsigned wFormatTag)
 
 int st_wavseek(ft_t ft, st_size_t offset) 
 {
-        wav_t   wav = (wav_t) ft->priv;
+    wav_t   wav = (wav_t) ft->priv;
+    int new_offset, align;
 
-        switch (wav->formatTag)
-        {
+    switch (wav->formatTag)
+    {
         case WAVE_FORMAT_IMA_ADPCM:
         case WAVE_FORMAT_ADPCM:
 #ifdef ENABLE_GSM
         case WAVE_FORMAT_GSM610:
 #endif
-                st_fail_errno(ft,ST_ENOTSUP,"Only PCM Supported");
+            st_fail_errno(ft,ST_ENOTSUP,"Only PCM Supported");
             break;
         default:
-                ft->st_errno = st_seek(ft,offset*ft->info.size + wav->dataStart, SEEK_SET);
-        }
+            new_offset = offset * ft->info.size;
+            /* Make sure requests aligns to a channel offset */
+            align = new_offset % (ft->info.channels*ft->info.size);
+            if (align != 0)
+                new_offset += align;
+            new_offset += wav->dataStart;
 
-        if( ft->st_errno == ST_SUCCESS )
-                wav->numSamples = ft->length - offset;
+            ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
+    }
 
-        return(ft->st_errno);
+    if( ft->st_errno == ST_SUCCESS )
+        wav->numSamples = ft->length - new_offset;
+
+    return(ft->st_errno);
 }

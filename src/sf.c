@@ -70,10 +70,17 @@ static void readcodes(ft_t ft, SFHEADER *sfhead)
 
 int st_sfseek(ft_t ft, st_size_t offset)
 {
-        sf_t sf = (sf_t ) ft->priv;
+    st_size_t new_offset, align;
 
-        return st_seek(ft,offset*ft->info.size + sf->dataStart,SEEK_SET);
+    sf_t sf = (sf_t ) ft->priv;
+    new_offset = offset * ft->info.size;
+    /* Make sure requests aligns to a channel offset */
+    align = new_offset % (ft->info.channels*ft->info.size);
+    if (align != 0)
+        new_offset += align;
+    new_offset += sf->dataStart;
 
+    return st_seek(ft, new_offset, SEEK_SET);
 }
 
 /*

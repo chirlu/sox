@@ -207,7 +207,14 @@ int st_trim_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
+st_size_t st_trim_get_seek(eff_t effp)
+{
+    trim_t trim = (trim_t)effp->priv;
+    return trim->start;
+}
 
-
-
-
+void st_trim_clear_start(eff_t effp)
+{
+    trim_t trim = (trim_t)effp->priv;
+    trim->start = 0;
+}

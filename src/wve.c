@@ -29,9 +29,17 @@ static void wvewriteheader(ft_t ft);
 
 int st_wveseek(ft_t ft, st_size_t offset)
 {
-        wve_t wve = (wve_t ) ft->priv;
+    int new_offset, align;
+    wve_t wve = (wve_t ) ft->priv;
 
-        return st_seek(ft,offset*ft->info.size + wve->dataStart,SEEK_SET);
+    new_offset = offset * ft->info.size;
+    /* Make sure requests aligns to a channel offset */
+    align = new_offset % (ft->info.channels*ft->info.size);
+    if (align != 0)
+        new_offset += align;
+    new_offset += wve->dataStart;
+
+    return st_seek(ft, offset, SEEK_SET);
 }
 
 int st_wvestartread(ft_t ft)

@@ -526,6 +526,59 @@ static int compare_input(ft_t ft1, ft_t ft2)
     return ST_SUCCESS;
 }
 
+void optimize_trim(void)
+{
+    int f;
+
+    /* Speed hack.  If the "trim" effect is the first effect then
+     * peak inside its "effect descriptor" and see what the
+     * start location is.  This has to be done after the start()
+     * is called to have the correct location.
+     */
+    if (neffects > 1 && strcmp(efftab[1].name, "trim") == 0)
+    {
+        int ok_to_seek = 1;
+        int seek_worked = 1;
+
+        /* Make sure all support seeking */
+        for (f = 0; f < input_count; f++)
+        {
+            if (!(file_desc[f]->h->flags & ST_FILE_SEEK) || 
+                !file_desc[f]->seekable)
+                ok_to_seek = 0;
+        }
+        if (ok_to_seek)
+        {
+            for (f = 0; f < input_count; f++)
+            {
+                if (file_desc[f]->h->seek(file_desc[f], 
+                                          st_trim_get_seek(&efftab[1])) == ST_EOF)
+                {
+                    seek_worked = 0;
+                    break;
+                }
+            }
+            /* If any seek didn't work then try our best to go back
+             * to the beginning of file and do it the slow way.
+             * This can easily happen if some input files are shorter
+             * then the rest.  Code below will fill in silence
+             * for those cases.
+             */
+            if (!seek_worked)
+            {
+                for (f = 0; f < input_count; f++)
+                {
+                    file_desc[f]->h->seek(file_desc[f], 0);
+                }
+            }
+            else
+            {
+                st_trim_clear_start(&efftab[1]);
+            }
+        }
+    }
+}
+
 /*
  * Process input file -> effect table -> output file
  *      one buffer at a time
@@ -639,6 +692,9 @@ static void process(void) {
             }
         }
     }
+
+    /* Try to save some time if first effect is "trim" by seeking */
+    optimize_trim();
 
 #ifdef SOXMIX
     for (f = 0; f < MAX_INPUT_FILES; f++)

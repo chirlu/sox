@@ -46,6 +46,9 @@ sox-12.17.6
   o When effects output data and reported ST_EOF at the
     same time, that buffer was discarded as well as
     data from any chained effect.
+  o Added patch from Eric Benson that attempts to do a seek()
+    if the first effect is trim.  This greatly speeds up
+    processing large files.
 
 sox-12.17.5
 -----------

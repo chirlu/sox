@@ -44,9 +44,17 @@ static void prcwriteheader(ft_t ft);
 
 int st_prcseek(ft_t ft, st_size_t offset)
 {
-        prc_t prc = (prc_t ) ft->priv;
+    prc_t prc = (prc_t ) ft->priv;
+    st_size_t new_offset, align;
 
-        return st_seek(ft,offset*ft->info.size + prc->dataStart,SEEK_SET);
+    new_offset = offset * ft->info.size;
+    /* Make sure requests aligns to a channel offset */
+    align = new_offset % (ft->info.channels*ft->info.size);
+    if (align != 0)
+        new_offset += align;
+    new_offset += prc->dataStart;
+
+    return st_seek(ft, new_offset, SEEK_SET);
 }
 
 int st_prcstartread(ft_t ft)
@@ -82,10 +90,10 @@ int st_prcstartread(ft_t ft)
         }
 
         st_readw(ft, &(len));
-	p->length=len;
-	st_report("Found length=%d",len);
+        p->length=len;
+        st_report("Found length=%d",len);
 
-	/* dummy read rest */
+        /* dummy read rest */
         st_read(ft, head,1,14+2+2);
 
         ft->info.encoding = ST_ENCODING_ALAW;
@@ -159,7 +167,7 @@ st_ssize_t st_prcwrite(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 {
         prc_t p = (prc_t ) ft->priv;
         p->length += samp * ft->info.size;
-	st_report("length now = %d", p->length);
+        st_report("length now = %d", p->length);
         return st_rawwrite(ft, buf, samp);
 }
 
@@ -180,7 +188,7 @@ int st_prcstopwrite(ft_t ft)
                 return(ST_EOF);
         }
         prcwriteheader(ft);
-	return ST_SUCCESS;
+        return ST_SUCCESS;
 }
 
 static void prcwriteheader(ft_t ft)

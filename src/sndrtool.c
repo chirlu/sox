@@ -16,27 +16,34 @@
 #include <errno.h>
 #endif
 #ifdef HAVE_UNISTD_H
-#include <unistd.h>	/* For SEEK_* defines if not found in stdio */
+#include <unistd.h>     /* For SEEK_* defines if not found in stdio */
 #endif
 
 /* Private data used by writer */
 typedef struct sndpriv {
         st_size_t nsamples;
-	st_size_t dataStart;
+        st_size_t dataStart;
 } *snd_t;
 
-#ifndef	SEEK_CUR
-#define	SEEK_CUR	1
+#ifndef SEEK_CUR
+#define SEEK_CUR        1
 #endif
 
 static void  sndtwriteheader(ft_t ft, st_size_t nsamples);
 
 int st_sndseek(ft_t ft, st_size_t offset) 
 {
-	snd_t snd = (snd_t ) ft->priv;
+    st_size_t new_offset, align;
+    snd_t snd = (snd_t ) ft->priv;
 
-	return st_seek(ft,offset*ft->info.size + snd->dataStart,SEEK_SET);
+    new_offset = offset * ft->info.size;
+    /* Make sure requests aligns to a channel offset */
+    align = new_offset % (ft->info.channels*ft->info.size);
+    if (align != 0)
+        new_offset += align;
+    new_offset += snd->dataStart;
 
+    return st_seek(ft, new_offset, SEEK_SET);
 }
 /*======================================================================*/
 /*                         SNDSTARTREAD                                */
@@ -44,69 +51,69 @@ int st_sndseek(ft_t ft, st_size_t offset)
 
 int st_sndtstartread(ft_t ft)
 {
-	snd_t snd = (snd_t ) ft->priv;
+        snd_t snd = (snd_t ) ft->priv;
 
         char buf[97];
 
         unsigned short rate;
-	int rc;
+        int rc;
 
-	/* Needed for rawread() */
-	rc = st_rawstartread(ft);
-	if (rc)
-	    return rc;
+        /* Needed for rawread() */
+        rc = st_rawstartread(ft);
+        if (rc)
+            return rc;
 
-	/* sndt is in little endian format so 
-	 * swap bytes on big endian machines.
-	 */
-	if (ST_IS_BIGENDIAN)
-	{
-		ft->swap = ft->swap ? 0 : 1;
-	}
+        /* sndt is in little endian format so 
+         * swap bytes on big endian machines.
+         */
+        if (ST_IS_BIGENDIAN)
+        {
+                ft->swap = ft->swap ? 0 : 1;
+        }
 
-	rate = 0;
+        rate = 0;
 
-	/* determine file type */
+        /* determine file type */
         /* if first 5 bytes == SOUND then this is probably a sndtool sound */
         /* if first word (16 bits) == 0 
          and second word is between 4000 & 25000 then this is sounder sound */
         /* otherwise, its probably raw, not handled here */
 
-	if (fread(buf, 1, 2, ft->fp) != 2)
-	{
-		st_fail_errno(ft,errno,"SND: unexpected EOF");
-		return(ST_EOF);
-	}
-	if (strncmp(buf,"\0\0",2) == 0)
-	{
-	/* sounder */
-	st_readw(ft, &rate);
-	if (rate < 4000 || rate > 25000 )
-	{
-		st_fail_errno(ft,ST_EFMT,"SND: sample rate out of range");
-		return(ST_EOF);
-	}
-	fseek(ft->fp,4,SEEK_CUR);
-	}
-	else
-	{
-	/* sndtool ? */
-	fread(&buf[2], 1, 6, ft->fp);
-	if (strncmp(buf,"SOUND",5))
-	{
-		st_fail_errno(ft,ST_EFMT,"SND: unrecognized SND format");
-		return(ST_EOF);
-	}
-	fseek(ft->fp,12,SEEK_CUR);
-	st_readw(ft, &rate);
-	fseek(ft->fp,6,SEEK_CUR);
-	if (st_reads(ft, buf, 96) == ST_EOF)
-	{
-		st_fail_errno(ft,ST_EHDR,"SND: unexpected EOF in SND header");
-		return(ST_EOF);
-	}
-	st_report("%s",buf);
-	}
+        if (fread(buf, 1, 2, ft->fp) != 2)
+        {
+                st_fail_errno(ft,errno,"SND: unexpected EOF");
+                return(ST_EOF);
+        }
+        if (strncmp(buf,"\0\0",2) == 0)
+        {
+        /* sounder */
+        st_readw(ft, &rate);
+        if (rate < 4000 || rate > 25000 )
+        {
+                st_fail_errno(ft,ST_EFMT,"SND: sample rate out of range");
+                return(ST_EOF);
+        }
+        fseek(ft->fp,4,SEEK_CUR);
+        }
+        else
+        {
+        /* sndtool ? */
+        fread(&buf[2], 1, 6, ft->fp);
+        if (strncmp(buf,"SOUND",5))
+        {
+                st_fail_errno(ft,ST_EFMT,"SND: unrecognized SND format");
+                return(ST_EOF);
+        }
+        fseek(ft->fp,12,SEEK_CUR);
+        st_readw(ft, &rate);
+        fseek(ft->fp,6,SEEK_CUR);
+        if (st_reads(ft, buf, 96) == ST_EOF)
+        {
+                st_fail_errno(ft,ST_EHDR,"SND: unexpected EOF in SND header");
+                return(ST_EOF);
+        }
+        st_report("%s",buf);
+        }
 
 ft->info.channels = 1;
 ft->info.rate = rate;
@@ -124,21 +131,21 @@ return (ST_SUCCESS);
 /*======================================================================*/
 int st_sndtstartwrite(ft_t ft)
 {
-	snd_t p = (snd_t ) ft->priv;
-	int rc;
+        snd_t p = (snd_t ) ft->priv;
+        int rc;
 
-	/* Needed for rawwrite() */
-	rc = st_rawstartwrite(ft);
-	if (rc)
-	    return rc;
+        /* Needed for rawwrite() */
+        rc = st_rawstartwrite(ft);
+        if (rc)
+            return rc;
 
-	/* sndt is in little endian format so
-	 * swap bytes on big endian machines
-	 */
-	if (ST_IS_BIGENDIAN)
-	{
-		ft->swap = ft->swap ? 0 : 1;
-	}
+        /* sndt is in little endian format so
+         * swap bytes on big endian machines
+         */
+        if (ST_IS_BIGENDIAN)
+        {
+                ft->swap = ft->swap ? 0 : 1;
+        }
 
 /* write header */
 ft->info.channels = 1;
@@ -155,20 +162,20 @@ return(ST_SUCCESS);
 /*======================================================================*/
 int st_sndrstartwrite(ft_t ft)
 {
-	int rc;
+        int rc;
 
-	/* Needed for rawread() */
-	rc = st_rawstartread(ft);
-	if (rc)
-	    return rc;
+        /* Needed for rawread() */
+        rc = st_rawstartread(ft);
+        if (rc)
+            return rc;
 
-	/* sndr is in little endian format so
-	 * swap bytes on big endian machines
-	 */
-	if (ST_IS_BIGENDIAN)
-	{
-		ft->swap = ft->swap ? 0 : 1;
-	}
+        /* sndr is in little endian format so
+         * swap bytes on big endian machines
+         */
+        if (ST_IS_BIGENDIAN)
+        {
+                ft->swap = ft->swap ? 0 : 1;
+        }
 
 /* write header */
 ft->info.channels = 1;
@@ -190,9 +197,9 @@ return(ST_SUCCESS);
 
 st_ssize_t st_sndtwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
-	snd_t p = (snd_t ) ft->priv;
-	p->nsamples += len;
-	return st_rawwrite(ft, buf, len);
+        snd_t p = (snd_t ) ft->priv;
+        p->nsamples += len;
+        return st_rawwrite(ft, buf, len);
 }
 
 /*======================================================================*/
@@ -201,24 +208,24 @@ st_ssize_t st_sndtwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 
 int st_sndtstopwrite(ft_t ft)
 {
-	snd_t p = (snd_t ) ft->priv;
-	int rc;
+        snd_t p = (snd_t ) ft->priv;
+        int rc;
 
-	/* Flush remaining buffer out */
-	rc = st_rawstopwrite(ft);
-	if (rc)
-	    return rc;
+        /* Flush remaining buffer out */
+        rc = st_rawstopwrite(ft);
+        if (rc)
+            return rc;
 
-	/* fixup file sizes in header */
-	if (fseek(ft->fp, 0L, 0) != 0){
-		st_fail_errno(ft,errno,"can't rewind output file to rewrite SND header");
-		return ST_EOF;
-	}
-		
-	sndtwriteheader(ft, p->nsamples);
-		
+        /* fixup file sizes in header */
+        if (fseek(ft->fp, 0L, 0) != 0){
+                st_fail_errno(ft,errno,"can't rewind output file to rewrite SND header");
+                return ST_EOF;
+        }
+                
+        sndtwriteheader(ft, p->nsamples);
+                
 
-	return(ST_SUCCESS);
+        return(ST_SUCCESS);
 }
 
 /*======================================================================*/
