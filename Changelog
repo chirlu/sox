@@ -26,6 +26,8 @@ sox-12.17.4
     using the avg effect.
   o Richards Bannister added patches to clean up prototypes and filter
     private sizes being to small.
+  o Jimen Ching adds -d option to specify 64bit data size and changed
+    Ulaw/Alaw encoding to default to 8bit data size if not specified.
 
 sox-12.17.3
 -----------

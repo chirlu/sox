@@ -469,7 +469,7 @@ static void doopts(ft_t ft, int argc, char **argv)
                         str = optarg;
                         if (! sscanf(str, "%d", &i))
                                 st_fail("-c must be given a number");
-			ft->info.channels = i;
+                        ft->info.channels = i;
                         break;
                 case 'b':
                         if (! ft) usage("-b");
@@ -483,6 +483,10 @@ static void doopts(ft_t ft, int argc, char **argv)
                         if (! ft) usage("-l");
                         ft->info.size = ST_SIZE_DWORD;
                         break;
+                case 'd':
+                        if (! ft) usage("-d");
+                        ft->info.size = ST_SIZE_DDWORD;
+                        break;
                 case 's':
                         if (! ft) usage("-s");
                         ft->info.encoding = ST_ENCODING_SIGN2;
@@ -494,10 +498,14 @@ static void doopts(ft_t ft, int argc, char **argv)
                 case 'U':
                         if (! ft) usage("-U");
                         ft->info.encoding = ST_ENCODING_ULAW;
+                        if (ft->info.size == -1)
+                            ft->info.size = ST_SIZE_BYTE;
                         break;
                 case 'A':
                         if (! ft) usage("-A");
                         ft->info.encoding = ST_ENCODING_ALAW;
+                        if (ft->info.size == -1)
+                            ft->info.size = ST_SIZE_BYTE;
                         break;
                 case 'f':
                         if (! ft) usage("-f");
@@ -1194,7 +1202,7 @@ char *opt;
                 fprintf(stderr, "Failed: %s\n", opt);
         else {
             fprintf(stderr,"gopts: -e -h -p -v volume -V\n\n");
-            fprintf(stderr,"fopts: -r rate -c channels -s/-u/-U/-A/-a/-i/-g/-f -b/-w/-l -x\n\n");
+            fprintf(stderr,"fopts: -r rate -c channels -s/-u/-U/-A/-a/-i/-g/-f -b/-w/-l/-d -x\n\n");
             fprintf(stderr, "effect: ");
             for (i = 0; st_effects[i].name != NULL; i++) {
                 fprintf(stderr, "%s ", st_effects[i].name);
