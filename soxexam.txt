@@ -22,7 +22,7 @@ CONVERSIONS
        data type to save it in.	 You  can  override  the  default
        data  type  selection by using command line options.  This
        is also useful for producing a output file with higher  or
-       lower percision data and/or sample rate.
+       lower precision data and/or sample rate.
 
        Most  file  formats that contain headers can automatically
        be read in.  When working  with	headerless  file  formats
@@ -35,18 +35,18 @@ CONVERSIONS
        filenames  you  will not have to specify the corrisponding
        options on the command line.
 
-       Percision
+       Precision
 
        The following data types and formats can be represented by
-       their  total  uncompressed bit percision.  When converting
+       their  total  uncompressed bit precision.  When converting
        from one data type to another care must be taken to insure
-       it  has	an  equal  or greater percision.  If not then the
+       it  has	an  equal  or greater precision.  If not then the
        audio quality will be degraded.	This is not always a  bad
        thing  when  your  working with things such as voice audio
        and are concerned about disk space  or  bandwidth  of  the
        audio data.
 
-	       Data Format    Percision
+	       Data Format    Precision
 	       ___________    _________
 	       unsigned byte	8-bit
 	       signed byte	8-bit
