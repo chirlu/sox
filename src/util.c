@@ -482,7 +482,7 @@ void sigintreg(ft_t ft)
  * # of samples.
  * Returns ST_EOF on error.
  */
-int st_parsesamples(ft_t ft, char *str, ULONG *samples, char def)
+int st_parsesamples(ULONG rate, char *str, ULONG *samples, char def)
 {
     int found_samples = 0, found_time = 0;
     int time;
@@ -523,8 +523,8 @@ int st_parsesamples(ft_t ft, char *str, ULONG *samples, char def)
             frac = time / 1000;
         }
 
-        *samples *= ft->info.rate;
-        *samples += (ft->info.rate * frac);
+        *samples *= rate;
+        *samples += (rate * frac);
         return ST_SUCCESS;
     }
     if (found_samples || (def == 's' && !found_time))

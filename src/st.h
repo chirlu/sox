@@ -6,8 +6,8 @@
  * Copyright 1999 Chris Bagwell
  *
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Chris Bagwell And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Chris Bagwell And Sundry Contributors are not responsible for
  * the consequences of using this software.
  */
 
@@ -35,11 +35,11 @@ extern "C" {
 /* FIXME: Move to separate header */
 #ifdef __alpha__
 #include <sys/types.h>   /* To get defines for 32-bit integers */
-#define	LONG	int32_t
-#define ULONG	u_int32_t
+#define LONG    int32_t
+#define ULONG   u_int32_t
 #else
-#define	LONG	long
-#define ULONG	unsigned long
+#define LONG    long
+#define ULONG   unsigned long
 #endif
 
 #define MAXLONG 0x7fffffffL
@@ -64,20 +64,20 @@ extern "C" {
 
 /* FIXME: Change to typedef */
 typedef struct  st_signalinfo {
-	LONG		rate;		/* sampling rate */
-	int		size;		/* word length of data */
-	int		encoding;	/* format of sample numbers */
-	int		channels;	/* number of sound channels */
+        LONG            rate;           /* sampling rate */
+        int             size;           /* word length of data */
+        int             encoding;       /* format of sample numbers */
+        int             channels;       /* number of sound channels */
 } st_signalinfo_t;
 
 /* Loop parameters */
 
 /* FIXME: Change to typedef */
 typedef struct  st_loopinfo {
-	int		start;		/* first sample */
-	int		length;		/* length */
-	int		count;		/* number of repeats, 0=forever */
-	int		type;		/* 0=no, 1=forward, 2=forward/back */
+        int             start;          /* first sample */
+        int             length;         /* length */
+        int             count;          /* number of repeats, 0=forever */
+        int             type;           /* 0=no, 1=forward, 2=forward/back */
 }st_loopinfo_t;
 
 /* Instrument parameters */
@@ -86,20 +86,20 @@ typedef struct  st_loopinfo {
 
 /* FIXME: Change to typedef */
 typedef struct  st_instrinfo {
-	char 		MIDInote;	/* for unity pitch playback */
-	char		MIDIlow, MIDIhi;/* MIDI pitch-bend range */
-	char		loopmode;	/* semantics of loop data */
-	char		nloops;		/* number of active loops */
-	unsigned char	smpte[4];	/* SMPTE offset (hour:min:sec:frame) */
-					/* this is a film audio thing */
+        char            MIDInote;       /* for unity pitch playback */
+        char            MIDIlow, MIDIhi;/* MIDI pitch-bend range */
+        char            loopmode;       /* semantics of loop data */
+        char            nloops;         /* number of active loops */
+        unsigned char   smpte[4];       /* SMPTE offset (hour:min:sec:frame) */
+                                        /* this is a film audio thing */
 } st_instrinfo_t;
 
 
-#define ST_MIDI_UNITY 60	/* MIDI note number to play sample at unity */
+#define ST_MIDI_UNITY 60        /* MIDI note number to play sample at unity */
 
 /* Loop modes, upper 4 bits mask the loop blass, lower 4 bits describe */
 /* the loop behaviour, ie. single shot, bidirectional etc. */
-#define ST_LOOP_NONE          0	
+#define ST_LOOP_NONE          0
 #define ST_LOOP_8             32 /* 8 loops: don't know ?? */
 #define ST_LOOP_SUSTAIN_DECAY 64 /* AIFF style: one sustain & one decay loop */
 
@@ -109,11 +109,11 @@ typedef struct  st_instrinfo {
 
 /* FIXME: Change to typedef */
 typedef struct st_fileinfo {
-	char	*buf;			/* Pointer to data buffer */
-	int	size;			/* Size of buffer */
-	int	count;			/* Count read in to buffer */
-	int	pos;			/* Position in buffer */
-	int	eof;			/* Marker that EOF has been reached */
+        char    *buf;                   /* Pointer to data buffer */
+        int     size;                   /* Size of buffer */
+        int     count;                  /* Count read in to buffer */
+        int     pos;                    /* Position in buffer */
+        int     eof;                    /* Marker that EOF has been reached */
 }st_fileinfo_t;
 
 
@@ -121,9 +121,9 @@ typedef struct st_fileinfo {
  *  Format information for input and output files.
  */
 
-#define	ST_MAX_PRIVSIZE	330
+#define ST_MAX_PRIVSIZE 330
 
-#define ST_MAX_NLOOPS		8
+#define ST_MAX_NLOOPS           8
 
 /*
  * Handler structure for each format.
@@ -132,66 +132,66 @@ typedef struct st_fileinfo {
 typedef struct st_soundstream *ft_t;
 
 typedef struct st_format {
-	char	**names;	/* file type names */
-	int	flags;		/* details about file type */
-	int	(*startread)(ft_t ft);			
-	LONG	(*read)(ft_t ft, LONG *buf, LONG len);
-	int	(*stopread)(ft_t ft);
-	int	(*startwrite)(ft_t ft);
-	LONG	(*write)(ft_t ft, LONG *buf, LONG len);
-	int	(*stopwrite)(ft_t ft);
-	int	(*seek)(ft_t ft, LONG offset);
+        char    **names;        /* file type names */
+        int     flags;          /* details about file type */
+        int     (*startread)(ft_t ft);
+        LONG    (*read)(ft_t ft, LONG *buf, LONG len);
+        int     (*stopread)(ft_t ft);
+        int     (*startwrite)(ft_t ft);
+        LONG    (*write)(ft_t ft, LONG *buf, LONG len);
+        int     (*stopwrite)(ft_t ft);
+        int     (*seek)(ft_t ft, LONG offset);
 } st_format_t;
 
 struct st_soundstream {
-	st_signalinfo_t info;	/* signal specifications */
-	st_instrinfo_t instr;	/* instrument specification */
-	st_loopinfo_t loops[ST_MAX_NLOOPS]; /* Looping specification */
-	char	swap;			/* do byte- or word-swap */
-	char	seekable;		/* can seek on this file */
-	LONG	length;			/* estimate of total samples in file - for seeking*/
-	char	*filename;		/* file name */
-	char	*filetype;		/* type of file */
-	char	*comment;		/* comment string */
-	FILE	*fp;			/* File stream pointer */
-	st_fileinfo_t file;	/* File data block */
-	int     st_errno;		/* Failure error codes */
-	char	st_errstr[256];		/* Extend Failure text */
-	st_format_t *h;			/* format struct for this file */
-	/* FIXME: I perfer void * or char * */
-	char	priv[ST_MAX_PRIVSIZE]; /* format's private data area */
+        st_signalinfo_t info;   /* signal specifications */
+        st_instrinfo_t instr;   /* instrument specification */
+        st_loopinfo_t loops[ST_MAX_NLOOPS]; /* Looping specification */
+        char    swap;                   /* do byte- or word-swap */
+        char    seekable;               /* can seek on this file */
+        LONG    length;                 /* estimate of total samples in file - for seeking*/
+        char    *filename;              /* file name */
+        char    *filetype;              /* type of file */
+        char    *comment;               /* comment string */
+        FILE    *fp;                    /* File stream pointer */
+        st_fileinfo_t file;     /* File data block */
+        int     st_errno;               /* Failure error codes */
+        char    st_errstr[256];         /* Extend Failure text */
+        st_format_t *h;                 /* format struct for this file */
+        /* FIXME: I perfer void * or char * */
+        char    priv[ST_MAX_PRIVSIZE]; /* format's private data area */
 };
 
 extern st_format_t st_formats[];
 
 /* file flags field */
-#define ST_FILE_STEREO	1	/* does file format support stereo? */
-#define ST_FILE_LOOPS	2	/* does file format support loops? */
-#define ST_FILE_INSTR	4	/* does file format support instrument specificications? */
-#define ST_FILE_SEEK	8	/* does file format support seeking? */
+#define ST_FILE_STEREO  1       /* does file format support stereo? */
+#define ST_FILE_LOOPS   2       /* does file format support loops? */
+#define ST_FILE_INSTR   4       /* does file format support instrument specificications? */
+#define ST_FILE_SEEK    8       /* does file format support seeking? */
 
-/* Size field */ 
+/* Size field */
 /* SJB: note that the 1st 3 are sometimes used as sizeof(type) */
-#define	ST_SIZE_BYTE	1
-#define ST_SIZE_8BIT	1
-#define	ST_SIZE_WORD	2
-#define ST_SIZE_16BIT	2
-#define	ST_SIZE_DWORD	4
-#define ST_SIZE_32BIT	4
-#define	ST_SIZE_FLOAT	5
-#define ST_SIZE_DOUBLE	6
-#define ST_SIZE_IEEE	7	/* IEEE 80-bit floats. */
+#define ST_SIZE_BYTE    1
+#define ST_SIZE_8BIT    1
+#define ST_SIZE_WORD    2
+#define ST_SIZE_16BIT   2
+#define ST_SIZE_DWORD   4
+#define ST_SIZE_32BIT   4
+#define ST_SIZE_FLOAT   5
+#define ST_SIZE_DOUBLE  6
+#define ST_SIZE_IEEE    7       /* IEEE 80-bit floats. */
 
 #define ST_SIZE_MAX     7
 
 /* Style field */
-#define ST_ENCODING_UNSIGNED	1 /* unsigned linear: Sound Blaster */
-#define ST_ENCODING_SIGN2	2 /* signed linear 2's comp: Mac */
-#define	ST_ENCODING_ULAW	3 /* U-law signed logs: US telephony, SPARC */
-#define ST_ENCODING_ALAW	4 /* A-law signed logs: non-US telephony */
-#define ST_ENCODING_ADPCM	5 /* Compressed PCM */
-#define ST_ENCODING_IMA_ADPCM	6 /* Compressed PCM */
-#define ST_ENCODING_GSM		7 /* GSM 6.10 33-byte frame lossy compression */
+#define ST_ENCODING_UNSIGNED    1 /* unsigned linear: Sound Blaster */
+#define ST_ENCODING_SIGN2       2 /* signed linear 2's comp: Mac */
+#define ST_ENCODING_ULAW        3 /* U-law signed logs: US telephony, SPARC */
+#define ST_ENCODING_ALAW        4 /* A-law signed logs: non-US telephony */
+#define ST_ENCODING_ADPCM       5 /* Compressed PCM */
+#define ST_ENCODING_IMA_ADPCM   6 /* Compressed PCM */
+#define ST_ENCODING_GSM         7 /* GSM 6.10 33-byte frame lossy compression */
 
 #define ST_ENCODING_MAX         7
 
@@ -199,10 +199,10 @@ extern st_format_t st_formats[];
 extern const char *st_sizes_str[];
 extern const char *st_encodings_str[];
 
-#define	ST_EFF_CHAN	1		/* Effect can mix channels up/down */
-#define ST_EFF_RATE	2		/* Effect can alter data rate */
-#define ST_EFF_MCHAN	4		/* Effect can handle multi-channel */
-#define ST_EFF_REPORT	8		/* Effect does nothing */
+#define ST_EFF_CHAN     1               /* Effect can mix channels up/down */
+#define ST_EFF_RATE     2               /* Effect can alter data rate */
+#define ST_EFF_MCHAN    4               /* Effect can handle multi-channel */
+#define ST_EFF_REPORT   8               /* Effect does nothing */
 
 /*
  * Handler structure for each effect.
@@ -211,33 +211,33 @@ extern const char *st_encodings_str[];
 typedef struct st_effect *eff_t;
 
 typedef struct {
-	char	*name;			/* effect name */
-	int	flags;			/* this and that */
-					/* process arguments */
-	int	(*getopts)(eff_t effp, int argc, char **argv);
-					/* start off effect */
-	int	(*start)(eff_t effp);
-					/* do a buffer */
-	int	(*flow)(eff_t effp, LONG *ibuf, LONG *obuf,
-			LONG *isamp, LONG *osamp);
-					/* drain out at end */
-	int	(*drain)(eff_t effp, LONG *obuf, LONG *osamp);
-	int	(*stop)(eff_t effp);    /* finish up effect */
+        char    *name;                  /* effect name */
+        int     flags;                  /* this and that */
+                                        /* process arguments */
+        int     (*getopts)(eff_t effp, int argc, char **argv);
+                                        /* start off effect */
+        int     (*start)(eff_t effp);
+                                        /* do a buffer */
+        int     (*flow)(eff_t effp, LONG *ibuf, LONG *obuf,
+                        LONG *isamp, LONG *osamp);
+                                        /* drain out at end */
+        int     (*drain)(eff_t effp, LONG *obuf, LONG *osamp);
+        int     (*stop)(eff_t effp);    /* finish up effect */
 } st_effect_t;
 
 struct st_effect {
-	char		*name;		/* effect name */
-	struct st_signalinfo ininfo;	/* input signal specifications */
-	struct st_loopinfo   loops[8];	/* input loops  specifications */
-	struct st_instrinfo  instr;	/* input instrument  specifications */
-	struct st_signalinfo outinfo;	/* output signal specifications */
-	st_effect_t 	*h;		/* effects driver */
-	LONG		*obuf;		/* output buffer */
-	LONG		odone, olen;	/* consumed, total length */
-	/* FIXME: I perfer void * or char * 
-	* Why was this private area 8 times bigger then the soundstream one?
-	* Someone forget to divide ST_MAX_PRIVSIZE by 8 ? */
-	char		priv[ST_MAX_PRIVSIZE*8]; /* private area for effect */
+        char            *name;          /* effect name */
+        struct st_signalinfo ininfo;    /* input signal specifications */
+        struct st_loopinfo   loops[8];  /* input loops  specifications */
+        struct st_instrinfo  instr;     /* input instrument  specifications */
+        struct st_signalinfo outinfo;   /* output signal specifications */
+        st_effect_t     *h;             /* effects driver */
+        LONG            *obuf;          /* output buffer */
+        LONG            odone, olen;    /* consumed, total length */
+        /* FIXME: I perfer void * or char *
+        * Why was this private area 8 times bigger then the soundstream one?
+        * Someone forget to divide ST_MAX_PRIVSIZE by 8 ? */
+        char            priv[ST_MAX_PRIVSIZE*8]; /* private area for effect */
 };
 
 extern st_effect_t st_effects[]; /* declared in handlers.c */
@@ -271,20 +271,20 @@ char *strerror(int errorcode);
  * possible byte swapping.
  */
 /* declared in misc.c */
-LONG	st_read(ft_t ft, void *buf, int size, LONG len);
-LONG	st_write(ft_t ft, void *buf, int size, LONG len);
-int	st_reads(ft_t ft, char *c, int len);
-int	st_writes(ft_t ft, char *c);
-int	st_readb(ft_t ft, unsigned char *uc);
-int	st_writeb(ft_t ft, unsigned char uc);
-int	st_readw(ft_t ft, unsigned short *us);
-int	st_writew(ft_t ft, unsigned short us);
-int	st_readdw(ft_t ft, ULONG *ul);		
-int	st_writedw(ft_t ft, ULONG ul);
-int	st_readf(ft_t ft, float *f);
-int	st_writef(ft_t ft, double f);
-int	st_readdf(ft_t ft, double *d);
-int	st_writedf(ft_t ft, double d);
+LONG    st_read(ft_t ft, void *buf, int size, LONG len);
+LONG    st_write(ft_t ft, void *buf, int size, LONG len);
+int     st_reads(ft_t ft, char *c, int len);
+int     st_writes(ft_t ft, char *c);
+int     st_readb(ft_t ft, unsigned char *uc);
+int     st_writeb(ft_t ft, unsigned char uc);
+int     st_readw(ft_t ft, unsigned short *us);
+int     st_writew(ft_t ft, unsigned short us);
+int     st_readdw(ft_t ft, ULONG *ul);
+int     st_writedw(ft_t ft, ULONG ul);
+int     st_readf(ft_t ft, float *f);
+int     st_writef(ft_t ft, double f);
+int     st_readdf(ft_t ft, double *d);
+int     st_writedf(ft_t ft, double d);
 int st_seek(ft_t ft, LONG offset, int whence);
 LONG st_filelength(ft_t ft);
 
@@ -307,11 +307,11 @@ LONG st_rawwrite(ft_t ft, LONG *buf, LONG nsamp);
 #define st_swapl(x) bswap_32(x)
 #define st_swapf(x) (float)bswap_32((ULONG)(x))
 #else
-unsigned short st_swapw(unsigned short us);		/* Swap short */
-ULONG  	       st_swapl(ULONG ul);			/* Swap long */
-float  	       st_swapf(float f);			/* Swap float */
+unsigned short st_swapw(unsigned short us);             /* Swap short */
+ULONG          st_swapl(ULONG ul);                      /* Swap long */
+float          st_swapf(float f);                       /* Swap float */
 #endif
-double 	       st_swapd(double d);			/* Swap double */
+double         st_swapd(double d);                      /* Swap double */
 
 /* util.c */
 void st_report(const char *, ...);
@@ -339,6 +339,7 @@ void st_initformat(ft_t ft);
 void st_copyformat(ft_t, ft_t);
 int st_checkformat(ft_t);
 double st_parsetime(char *);
+int st_parsesamples(ULONG rate, char *str, ULONG *samples, char def);
 
 /* FIXME: Recording hacks shouldn't display a "sigint" style interface.
  * Instead we should provide a function to call when done playing/recording.
@@ -348,21 +349,21 @@ void sigintreg(ft_t);
 
 /* export flags */
 /* FIXME: these declared in util.c, inappropriate for lib */
-extern int verbose;	/* be noisy on stderr */
+extern int verbose;     /* be noisy on stderr */
 extern char *myname;
 
 extern int errno;
 /* Warning, this is a MAX value used in the library.  Each format and
  * effect may have its own limitations of rate.
  */
-#define	ST_MAXRATE	50L * 1024 /* maximum sample rate in library */
+#define ST_MAXRATE      50L * 1024 /* maximum sample rate in library */
 
 /* FIXME: Move to internal st header */
-#define RIGHT(datum, bits)	((datum) >> bits)
-#define LEFT(datum, bits)	((datum) << bits)
+#define RIGHT(datum, bits)      ((datum) >> bits)
+#define LEFT(datum, bits)       ((datum) << bits)
 
-#ifndef	M_PI
-#define M_PI	3.14159265358979323846
+#ifndef M_PI
+#define M_PI    3.14159265358979323846
 #endif
 #ifndef M_PI_2
 #define M_PI_2  1.57079632679489661923  /* pi/2 */
@@ -370,23 +371,23 @@ extern int errno;
 
 
 /* FIXME: Move to platform header file */
-#define READBINARY	"rb"
-#define WRITEBINARY	"wb"
+#define READBINARY      "rb"
+#define WRITEBINARY     "wb"
 #define REMOVE unlink
 
 #define ST_EOF (-1)
 #define ST_SUCCESS (0)
 
-const char *st_version(void);			/* return version number */
+const char *st_version(void);                   /* return version number */
 
 /* ST specific error codes.  The rest directly map from errno. */
-#define ST_EHDR 2000		/* Invalid Audio Header */
-#define ST_EFMT 2001		/* Unsupported data format */
-#define ST_ERATE 2002		/* Unsupported rate for format */
-#define ST_ENOMEM 2003		/* Can't alloc memory */
-#define ST_EPERM 2004		/* Operation not permitted */
-#define ST_ENOTSUP 2005		/* Operation not supported */
-#define ST_EINVAL 2006		/* Invalid argument */
+#define ST_EHDR 2000            /* Invalid Audio Header */
+#define ST_EFMT 2001            /* Unsupported data format */
+#define ST_ERATE 2002           /* Unsupported rate for format */
+#define ST_ENOMEM 2003          /* Can't alloc memory */
+#define ST_EPERM 2004           /* Operation not permitted */
+#define ST_ENOTSUP 2005         /* Operation not supported */
+#define ST_EINVAL 2006          /* Invalid argument */
 
 #ifdef __cplusplus
 } /* end of extern "C" */
