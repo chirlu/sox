@@ -87,7 +87,7 @@ typedef struct wavstuff {
     unsigned short samplesPerBlock;
     unsigned short blockAlign;
     st_size_t dataStart;  /* need to for seeking */
-    int found_cooledit_list;
+    int found_cooledit;
     
     /* following used by *ADPCM wav files */
     unsigned short nCoefs;          /* ADPCM: number of coef sets */
@@ -910,7 +910,7 @@ int st_wavstartread(ft_t ft)
 
     /* Horrible way to find Cool Edit marker points. Taken from Quake source*/
     ft->loops[0].start = -1;
-    wav->found_cooledit_list = 0;
+    wav->found_cooledit = 0;
     if(ft->seekable){
         /*Got this from the quake source.  I think it 32bit aligns the chunks 
          * doubt any machine writing Cool Edit Chunks writes them at an odd 
@@ -918,7 +918,7 @@ int st_wavstartread(ft_t ft)
         len = (len + 1) & ~1;
         st_seek(ft, len, SEEK_CUR);
         if( findChunk(ft, "LIST") != ST_EOF){
-            wav->found_cooledit_list = 1;
+            wav->found_cooledit = 1;
             ft->comment = (char*)malloc(256);
             /* Initialize comment to a NULL string */
             ft->comment[0] = 0;
@@ -927,10 +927,20 @@ int st_wavstartread(ft_t ft)
                 if (st_reads(ft,magic,4) == ST_EOF)
                     break;
 
-                if (strncmp(magic,"INFO",4) == 0)
+                /* First look for type fields for LIST Chunk and
+                 * skip those if found.  Since a LIST is a list
+                 * of Chunks, treat the remaining data as Chunks
+                 * again.
+                 */
+                if (strncmp(magic, "INFO", 4) == 0)
                 {
                     /*Skip*/
-                    st_report("Chunk INFO");
+                    st_report("Type INFO");
+                }
+                else if (strncmp(magic, "adtl", 4) == 0)
+                {
+                    /* Skip */
+                    st_report("Type adtl");
                 }
                 else
                 {
@@ -986,6 +996,8 @@ int st_wavstartread(ft_t ft)
                         st_report("Chunk ltxt");
                         st_readdw(ft,&dwLoopPos);
                         ft->loops[0].length = dwLoopPos - ft->loops[0].start;
+                        if (len > 4)
+                           st_seek(ft, len - 4, SEEK_CUR); 
                     } 
                     else 
                     {
@@ -1028,7 +1040,7 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
              * sometimes it does not.
              */
             /* See reason for cooledit check in comments below */
-            if (wav->found_cooledit_list && len > (wav->numSamples*ft->info.channels)) 
+            if (wav->found_cooledit && len > (wav->numSamples*ft->info.channels)) 
                 len = (wav->numSamples*ft->info.channels);
 
             done = 0;
@@ -1078,7 +1090,7 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 #ifdef ENABLE_GSM
         case ST_ENCODING_GSM:
             /* See reason for cooledit check in comments below */
-            if (wav->found_cooledit_list && len > wav->numSamples) 
+            if (wav->found_cooledit && len > wav->numSamples) 
                 len = wav->numSamples;
 
             done = wavgsmread(ft, buf, len);
@@ -1097,7 +1109,7 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
              * greater then 2Gig and can't be represented
              * by the 32-bit size field.
              */
-            if (wav->found_cooledit_list && len > wav->numSamples) 
+            if (wav->found_cooledit && len > wav->numSamples) 
                 len = wav->numSamples;
 
             done = st_rawread(ft, buf, len);
