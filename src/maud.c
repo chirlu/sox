@@ -33,7 +33,7 @@ struct maudstuff { /* max. 100 bytes!!!! */
 };
 
 void maudwriteheader(P1(ft_t));
-void rawread(P3(ft_t, LONG *, LONG));
+LONG rawread(P3(ft_t, LONG *, LONG));
 void rawwrite(P3(ft_t, LONG *, LONG));
 
 /*
@@ -191,7 +191,7 @@ LONG maudread(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
-	rawread(ft, buf, len);
+	return (rawread(ft, buf, len));
 }
 
 /*
