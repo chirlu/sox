@@ -113,9 +113,11 @@ ft_t ft;
     ioctl (fileno(ft->fp), SNDCTL_DSP_SPEED, &tmp);
     if (ft->info.rate != tmp) {
 	if (ft->info.rate - tmp > tmp/10 || tmp - ft->info.rate > tmp/10)
+	{
 	    warn("Unable to set audio speed to %d (set to %d)",
 		     ft->info.rate, tmp);
-	ft->info.rate = tmp;
+	    ft->info.rate = tmp;
+	}
     }
 
     /* Change to unbuffered mode*/
@@ -200,9 +202,11 @@ ft_t ft;
     ioctl (fileno(ft->fp), SNDCTL_DSP_SPEED, &tmp);
     if (ft->info.rate != tmp) {
 	if (ft->info.rate - tmp > tmp/10 || tmp - ft->info.rate > tmp/10)
+	{
 	    warn("Unable to set audio speed to %d (set to %d)",
 		     ft->info.rate, tmp);
-	ft->info.rate = tmp;
+	    ft->info.rate = tmp;
+	}
     }
 
     /* Change to non-buffered I/O */
