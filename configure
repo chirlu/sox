@@ -1511,13 +1511,6 @@ test -n "$target_alias" &&
     NONENONEs,x,x, &&
   program_prefix=${target_alias}-
 
-case "$target" in
-	*cygwin* )
-		CFLAGS="$CFLAGS -mno-cygwin"
-		CPPFLAGS="$CPPFLAGS -mno-cygwin"
-		LDFLAGS="$LDFLAGS -mno-cygwin"
-esac
-
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -2852,6 +2845,13 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
+
+case "$target" in
+	*cygwin* )
+		CFLAGS="$CFLAGS -mno-cygwin"
+		CPPFLAGS="$CPPFLAGS -mno-cygwin"
+		LDFLAGS="$LDFLAGS -mno-cygwin"
+esac
 
 if test "$GCC" = yes; then
     CFLAGS="$CFLAGS -Wall"
