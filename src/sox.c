@@ -1169,7 +1169,7 @@ char *opt;
                 fprintf(stderr, "Failed: %s\n", opt);
         else {
             fprintf(stderr,"gopts: -e -h -p -v volume -V\n\n");
-            fprintf(stderr,"fopts: -r rate -c channels -s/-u/-U/-A/-a/-i/-g -b/-w/-l/-f/-d/-D -x\n\n");
+            fprintf(stderr,"fopts: -r rate -c channels -s/-u/-U/-A/-a/-i/-g/-f -b/-w/-l -x\n\n");
             fprintf(stderr, "effect: ");
             for (i = 0; st_effects[i].name != NULL; i++) {
                 fprintf(stderr, "%s ", st_effects[i].name);

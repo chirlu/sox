@@ -1,0 +1,58 @@
+#
+# Makefile.in
+#
+# Processed by configure into a Makefile.  We assume the environment in
+# which we are running is a POSIX'y environment.  Thus, all of the standard
+# POSIX tools are available.
+#   
+
+SHELL = /bin/sh
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH	= @srcdir@
+prefix = @prefix@
+
+# Shell commands.
+
+CC	= @CC@
+RANLIB  = @RANLIB@
+AR      = ar r
+RM	= rm -f
+
+# Build macros.
+
+CFLAGS	= @CFLAGS@ @DEFS@ -I$(top_srcdir)/gsm
+LDFLAGS	= @LDFLAGS@
+LIBS	= @LIBS@
+EXEEXT  = @EXEEXT@
+OBJEXT  = @OBJEXT@
+
+# Objects.
+
+GSM_OBJECTS =	add.o		\
+		code.o		\
+		decode.o	\
+		lpc.o		\
+		preprocess.o	\
+		rpe.o		\
+		gsm_destroy.o	\
+		gsm_decode.o	\
+		gsm_encode.o	\
+		gsm_create.o	\
+		short_term.o
+
+
+LIBOBJS = $(GSM_OBJECTS)
+
+all: libgsm.a
+
+libgsm.a: $(LIBOBJS)
+	$(AR) libgsm.a $(LIBOBJS)
+	$(RANLIB) libgsm.a
+
+clean:
+	$(RM) *.o
+
+distclean:
+	$(RM) *~ *.o core
+	$(RM) Makefile

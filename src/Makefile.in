@@ -20,12 +20,15 @@ AR	= ar r
 SED	= @SED@
 TAR	= tar
 RM	= rm -f
+LN_S    = @LN_S@
 
 # Build macros.
 
 CFLAGS	= @CFLAGS@ @DEFS@ -I$(srcdir)
-LDFLAGS	= @LDFLAGS@
-LIBS	= @LIBS@
+LDFLAGS	= -L. -Lgsm @LDFLAGS@
+LIBS	= -lst @LIBS@
+EXEEXT  = @EXEEXT@
+OBJEXT  = @OBJEXT@
 
 # Install directories
 
@@ -39,6 +42,7 @@ INCDIR	= $(prefix)/include
 NEED_OSS     = @NEED_OSS@
 NEED_SUNAU   = @NEED_SUNAU@
 NEED_ALSA    = @NEED_ALSA@
+GSM_SUPPORT  = @GSM_SUPPORT@
 PLAY_SUPPORT = @PLAY_SUPPORT@
 
 # Objects.
@@ -65,18 +69,20 @@ EXTRAOBJS   = $(OSSOBJ_$(NEED_OSS)) $(SUNAUOBJ_$(NEED_SUNAU)) $(ALSAOBJ_$(NEED_A
 
 LIBOBJS = $(FOBJ) $(EOBJ) handlers.o libst.o misc.o util.o getopt.o $(EXTRAOBJS)
 
+GSM_0     =
+GSM_1     = libgsm
 PLAY_0    =
 PLAY_1    = play
 
 all: sox soxmix $(PLAY_$(PLAY_SUPPORT))
 
-sox: libst.a sox.o
+sox: libst.a $(GSM_$(GSM_SUPPORT)) sox.o
 	$(CC) $(LDFLAGS) -o sox sox.o $(LIBS)
 
 soxmix.o: sox.c
 	$(CC) $(CFLAGS) -DSOXMIX -c -o soxmix.o $<
 
-soxmix: libst.a soxmix.o
+soxmix: libst.a $(GSM_$(GSM_SUPPORT)) soxmix.o
 	$(CC) $(LDFLAGS) -o soxmix soxmix.o $(LIBS)
 
 play: play.in
@@ -85,6 +91,9 @@ play: play.in
 libst.a: $(LIBOBJS)
 	$(AR) libst.a $(LIBOBJS)
 	$(RANLIB) libst.a
+
+libgsm:
+	cd gsm && $(MAKE)
 
 man: $(srcdir)/sox.1 $(srcdir)/soxexam.1 $(srcdir)/libst.3
 	nroff -man $(srcdir)/sox.1 | col -b > sox.txt
@@ -108,8 +117,8 @@ install-play:
 	$(srcdir)/mkinstalldirs $(BINDIR)
 	$(INSTALL) -c -m 755 play $(BINDIR)
 	$(INSTALL) -c -m 644 $(srcdir)/play.1 $(MANDIR)/man1
-	ln -s $(BINDIR)/play $(BINDIR)/rec
-	ln -s $(MANDIR)/man1/play.1 $(MANDIR)/man1/rec.1
+	$(LN_S) $(BINDIR)/play $(BINDIR)/rec
+	$(LN_S) $(MANDIR)/man1/play.1 $(MANDIR)/man1/rec.1
 
 install-lib: libst.a
 	$(srcdir)/mkinstalldirs $(LIBDIR)/man1
@@ -122,9 +131,11 @@ install-lib: libst.a
 
 clean:
 	$(RM) *.o
+	cd gsm && $(RM) *.o
 
 distclean:
 	$(RM) *~ *.o *.raw *.sf core sox soxmix libst.a play
+	cd gsm && $(RM) *~ *.o core libgsm.a Makefile
 	$(RM) config.cache config.log config.status config.h Makefile
 
 tar:

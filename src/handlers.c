@@ -79,7 +79,7 @@ static char *dvmsnames[] = {
 	(char *)0
 };
 
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
 /* GSM 06.10 */
 static char *gsmnames[] = {
         "gsm",
@@ -264,7 +264,7 @@ st_format_t st_formats[] = {
     {dvmsnames, 0,
 	st_dvmsstartread, st_cvsdread, st_cvsdstopread,
 	st_dvmsstartwrite, st_cvsdwrite, st_dvmsstopwrite, st_format_nothing_seek},
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
     {gsmnames, 0,
 	st_gsmstartread, st_gsmread, st_gsmstopread,
 	st_gsmstartwrite, st_gsmwrite, st_gsmstopwrite, st_format_nothing_seek},

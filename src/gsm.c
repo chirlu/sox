@@ -1,4 +1,4 @@
-#if defined(HAVE_LIBGSM)
+#if defined(ENABLE_GSM)
 /*
  * Copyright 1991, 1992, 1993 Guido van Rossum And Sundry Contributors.
  * This source code is freely redistributable and may be used for
@@ -28,7 +28,7 @@
  */
 
 #include "st_i.h"
-#include "gsm.h"
+#include "gsm/gsm.h"
 #include <errno.h>
 
 #define MAXCHANS 16
@@ -226,4 +226,4 @@ int st_gsmstopwrite(ft_t ft)
 
 	return st_gsmstopread(ft); /* destroy handles and free buffers */
 }
-#endif /* HAVE_LIBGSM */
+#endif /* ENABLE_GSM */

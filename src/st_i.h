@@ -192,7 +192,7 @@ int st_dvmsstartread(ft_t ft);
 int st_dvmsstartwrite(ft_t ft);
 int st_dvmsstopwrite(ft_t ft);
 
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
 int st_gsmstartread(ft_t ft);
 st_ssize_t st_gsmread(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_gsmstopread(ft_t ft);

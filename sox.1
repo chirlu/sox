@@ -32,8 +32,8 @@ sox \- Sound eXchange : universal sound sample translator
 .P
 .B Format options:
 .br
-    [ -t \fIfiletype\fR ] [ -r \fIrate\fR ] [ -s/-u/-U/-A/-a/-i/-g ]
-    [ -b/-w/-l/-f/-d/-D ]
+    [ -t \fIfiletype\fR ] [ -r \fIrate\fR ] [ -s/-u/-U/-A/-a/-i/-g/-f ]
+    [ -b/-w/-l ]
     [ -c \fIchannels\fR ] [ -x ] [ -e ]
 .P
 .B Effects:
@@ -209,16 +209,16 @@ different rates then a sample rate change effect must be ran.  If a
 sample rate changing effect is not specified then a default one will internally
 be ran by sox using its default parameters.
 .TP 10
-\fB-s/-u/-U/-A/-a/-i/-g\fR
+\fB-s/-u/-U/-A/-a/-i/-g/-f\fR
 The sample data encoding is signed linear (2's complement),
 unsigned linear, U-law (logarithmic), A-law (logarithmic),
-ADPCM, IMA_ADPCM, or GSM.
+ADPCM, IMA_ADPCM, GSM, or Floating-point.
 .br
 U-law (actually shorthand for mu-law) and A-law are the U.S. and
 international standards for logarithmic telephone sound compression.
 When uncompressed it has roughly the precision of 12-byte PCM audio.
 .br
-ADPCM is form of sound compression that has a good
+ADPCM is a form of sound compression that has a good
 compromise between good sound quality and fast encoding/decoding
 time.  It is used for telephone sound compression and places were
 full fidelity is not as important.  When uncompressed it has roughly
@@ -234,10 +234,8 @@ GSM is a standard used for telephone sound compression in
 European countries and its gaining popularity because of its
 quality.  It usually is CPU intensive to work with GSM audio data.
 .TP 10
-\fB-b/-w/-l/-f/-d\fR
-The sample data size is in bytes, 16-bit words, 32-bit longwords,
-32-bit floats or 64-bit double floats.
-Floats and double floats are in native machine format.
+\fB-b/-w/-l\fR
+The sample data size is in bytes, 16-bit words, or 32-bit long words.
 .TP 10
 \fB-x\fR
 The sample data is in XINU format; that is,

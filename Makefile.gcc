@@ -107,14 +107,6 @@ RAND_DEFINES	= -DHAVE_RAND
 #
 # MEMMOVE_DEFINES	= -DHAVE_MEMMOVE
 
-# If you have the GSM 6.10 libraries installed then uncomment the follow
-# 4 lines, and change to reflect your installation paths.
-#
-# GSM_PRE_LIBS	= -L/usr/local/lib
-# GSM_POST_LIBS	= -lgsm
-# GSM_INCLUDES	= -I/usr/local/include/
-# GSM_DEFINES	= -DHAVE_LIBGSM
-
 # For sound support on machines that include the OSS sound driver
 # (such as Linux) then uncomment the following line.
 #
@@ -183,10 +175,10 @@ MATHLIB = -lm
 
 ##############################################################################
 
-SOX_PRE_LIBS	= $(GSM_PRE_LIBS)
-SOX_POST_LIBS	= $(GSM_POST_LIBS) $(MATHLIB)
-SOX_INCLUDES	= $(GSM_INCLUDES)
-SOX_DEFINES	= $(GSM_DEFINES) $(PLAYER_DEFINES) \
+SOX_PRE_LIBS    =
+SOX_POST_LIBS	= $(MATHLIB)
+SOX_INCLUDES    =
+SOX_DEFINES	= $(PLAYER_DEFINES) \
   $(GETOPT_DEFINES) $(BYTESWAP_DEFINES) $(RAND_DEFINES) $(STRERR_DEFINES) \
 	$(MEMMOVE_DEFINES) $(DOS_DEFINES) $(NEXT_DEFINES) $(MISC_DEFINES)
 

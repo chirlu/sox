@@ -22,14 +22,19 @@ extern "C" {
 #define ST_LIB_VERSION_CODE 0x0c1103
 #define ST_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#else
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #else
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+typedef u_int32_t uint32_t;
+#else
+typdef long int32_t;
+typedef unsigned long uint32_t;
+#endif
 #endif
 #endif
 

@@ -71,8 +71,8 @@
 #include "wav.h"
 #include "ima_rw.h"
 #include "adpcm.h"
-#ifdef HAVE_LIBGSM
-#include "gsm.h"
+#ifdef ENABLE_GSM
+#include "gsm/gsm.h"
 #endif
 
 #undef PAD_NSAMPS
@@ -99,7 +99,7 @@ typedef struct wavstuff {
     int 	   state[16];       /* step-size info for *ADPCM writes */
 
     /* following used by GSM 6.10 wav */
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
     gsm		   gsmhandle;
     gsm_signal	   *gsmsample;
     int		   gsmindex;
@@ -241,7 +241,7 @@ static int xxxAdpcmWriteBlock(ft_t ft)
 /****************************************************************************/
 /* WAV GSM6.10 support functions                                            */
 /****************************************************************************/
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
 /* create the gsm object, malloc buffer for 160*2 samples */
 int wavgsminit(ft_t ft)
 {	
@@ -557,7 +557,7 @@ int st_wavstartread(ft_t ft)
 	st_fail_errno(ft,ST_EHDR,"Sorry, this WAV file is in Dolby AC2 format.");
 	return ST_EOF;
     case WAVE_FORMAT_GSM610:
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
 	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_GSM )
 	    ft->info.encoding = ST_ENCODING_GSM;
 	else
@@ -742,7 +742,7 @@ int st_wavstartread(ft_t ft)
 	bytespersample = ST_SIZE_WORD;  /* AFTER de-compression */
 	break;
 
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
     /* GSM formats have extended fmt chunk.  Check for those cases. */
     case WAVE_FORMAT_GSM610:
 	if (wExtSize < 2)
@@ -854,7 +854,7 @@ int st_wavstartread(ft_t ft)
 	ft->length = wav->numSamples*ft->info.channels;
 	break;
 
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
     case WAVE_FORMAT_GSM610:
 	wav->numSamples = (((dwDataLength / wav->blockAlign) * wav->samplesPerBlock) * ft->info.channels);
 	wavgsminit(ft);
@@ -887,7 +887,7 @@ int st_wavstartread(ft_t ft)
 		wExtSize,wav->samplesPerBlock,bytesPerBlock);
 	break;
 
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
     case WAVE_FORMAT_GSM610:
 	st_report("GSM .wav: %d Extsize, %d Samps/block,  %d samples",
 		wExtSize,wav->samplesPerBlock,wav->numSamples);
@@ -1028,7 +1028,7 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 	    return done;
 	    break;
 
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
 	case ST_ENCODING_GSM:
 	    if (len > wav->numSamples) 
 	        len = wav->numSamples;
@@ -1070,7 +1070,7 @@ int st_wavstopread(ft_t ft)
 
     switch (ft->info.encoding)
     {
-#ifdef HAVE_LIBGSM
+#ifdef ENABLEGSM
     case ST_ENCODING_GSM:
 	wavgsmdestroy(ft);
 	break;
@@ -1139,7 +1139,7 @@ int st_wavstartwrite(ft_t ft)
 	    wav->samplePtr = wav->samples;
 	    break;
 
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
 	case WAVE_FORMAT_GSM610:
 	    wavgsminit(ft);
 	    break;
@@ -1338,7 +1338,7 @@ static int wavwritehdr(ft_t ft, int second_header)
 			wSamplesPerBlock = AdpcmSamplesIn(0, wChannels, wBlockAlign, 0);
 			break;
 		case ST_ENCODING_GSM:
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
 		    if (wChannels!=1)
 		    {
 			st_warn("Overriding GSM audio from %d channel to 1\n",wChannels);
@@ -1372,7 +1372,7 @@ static int wavwritehdr(ft_t ft, int second_header)
 	    	case WAVE_FORMAT_IMA_ADPCM:
 		    dwDataLength = wav->dataLength;
 		    break;
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
 		case WAVE_FORMAT_GSM610:
 		    /* intentional case fallthrough! */
 #endif
@@ -1383,7 +1383,7 @@ static int wavwritehdr(ft_t ft, int second_header)
 		}
 	}
 
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
 	if (wFormatTag == WAVE_FORMAT_GSM610)
 	    dwDataLength = (dwDataLength+1) & ~1; /*round up to even */
 #endif
@@ -1429,7 +1429,7 @@ static int wavwritehdr(ft_t ft, int second_header)
 	      st_writew(ft, iCoef[i][1]);
 	    }
 	    break;
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
 	case WAVE_FORMAT_GSM610:
 	    st_writew(ft, wSamplesPerBlock);
 	    break;
@@ -1457,7 +1457,7 @@ static int wavwritehdr(ft_t ft, int second_header)
 	} else {
 		st_report("Finished writing Wave file, %u data bytes %u samples\n",
 			dwDataLength,wav->numSamples);
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
 		if (wFormatTag == WAVE_FORMAT_GSM610){
 		    st_report("GSM6.10 format: %u blocks %u padded samples %u padded data bytes\n",
 			blocksWritten, wSamplesWritten, dwDataLength);
@@ -1499,7 +1499,7 @@ st_ssize_t st_wavwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 	    return total_len - len;
 	    break;
 
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
 	case WAVE_FORMAT_GSM610:
 	    len = wavgsmwrite(ft, buf, len);
 	    wav->numSamples += len;
@@ -1527,7 +1527,7 @@ int st_wavstopwrite(ft_t ft)
 	case WAVE_FORMAT_ADPCM:
 	    xxxAdpcmWriteBlock(ft);
 	    break;
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
 	case WAVE_FORMAT_GSM610:
 	    wavgsmstopwrite(ft);
 	    break;
@@ -1620,7 +1620,7 @@ int st_wavseek(ft_t ft, st_size_t offset)
 	{
 	case WAVE_FORMAT_IMA_ADPCM:
 	case WAVE_FORMAT_ADPCM:
-#ifdef HAVE_LIBGSM
+#ifdef ENABLE_GSM
 	case WAVE_FORMAT_GSM610:
 #endif
 		st_fail_errno(ft,ST_ENOTSUP,"Only PCM Supported");

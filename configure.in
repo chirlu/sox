@@ -3,9 +3,9 @@ dnl
 dnl configure.in
 dnl
 
-AC_REVISION([configure.in 1.1])
+AC_REVISION([configure.in 1.2])
+
 AC_INIT(sox.c)
-dnl AC_CONFIG_HEADER(config.h)
 
 dnl Parameters to configure
 
@@ -18,15 +18,8 @@ AC_ARG_ENABLE(fast_ulaw,
 AC_ARG_ENABLE(fast_alaw,
 	[  --enable-fast-alaw      Use fast alaw compression (+32K memory)])
 
-AC_ARG_WITH(gsmlib,
-	[  --with-gsmlib           Location of GSM 6.10 library (=dir)],
-	[gsmlib="$withval"],
-	[gsmlib=auto])
-
-AC_ARG_WITH(gsminc,
-	[  --with-gsminc           Location of GSM 6.10 headers (=dir)],
-	[gsminc="$withval"],
-	[gsminc=auto])
+AC_ARG_ENABLE(gsm,
+	[  --enable-gsm            Enable internal GSM support])
 
 AC_ARG_WITH(alsa_dsp,
 	[  --with-alsa-dsp         Force support for /dev/snd/pcmABXY (ALSA)],
@@ -54,17 +47,14 @@ AC_ARG_WITH(ogg_vorbisinc,
 	[ogg_vorbisinc=auto])
 
 dnl Checks for programs.
-
 AC_PROG_CC
 AC_PROG_RANLIB
 AC_PROG_INSTALL
+AC_PROG_LN_S
 AC_PROG_CPP
-AC_C_INLINE
-
 AC_CHECK_PROGS(SED, sed)
 
 dnl Set host type
-
 AC_CANONICAL_SYSTEM
 
 case "$target" in
@@ -73,12 +63,9 @@ case "$target" in
 		LDFLAGS="$LDFLAGS -mno-cygwin"
 esac
 
-dnl Initial values for exported symbols.
-
-NEED_OSS=0
-NEED_SUNAU=0
-NEED_ALSA=0
-PLAY_SUPPORT=0
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(getopt.h fcntl.h limits.h malloc.h unistd.h byteswap.h sys/types.h inttypes.h stdint.h string.h)
 
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = yes
@@ -87,13 +74,16 @@ then
 fi
 
 dnl Check for system dependent features.
-
 AC_C_BIGENDIAN
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_SIZE_T
+AC_EXEEXT
+AC_OBJEXT
 
 dnl Checks for libraries.
 
 dnl Check if math library is needed.
-
 AC_CHECKING(if math library is required during link)
 AC_CHECK_FUNC(pow)
 if test "$ac_cv_func_pow" = no
@@ -101,34 +91,13 @@ then
   AC_CHECK_LIB(m, pow)
 fi
 
-dnl Test for GSM library.
+dnl Initial values for exported symbols.
 
-if test "$gsmlib" != auto  && test "$gsmlib" != no
-then
-  LIBS="$LIBS -L$gsmlib"
-fi
-
-dnl Need to tell preprocess where to look for GSM include files
-dnl when they are not in system directories.  Because of this make
-dnl a backup copy of the CPPFLAGS.
-ac_save_CPPFLAGS="$CPPFLAGS"
-
-if test "$gsminc" != auto && test "$gsminc" != no
-then
-  CFLAGS="$CFLAGS -I$gsminc"
-  ac_save_CPPFLAGS="$CPPFLAGS"
-  if test \! -z "$gsminc" ; then
-    CPPFLAGS="$CPPFLAGS -I$gsminc"
-  fi
-fi
-
-AC_CHECK_HEADER(gsm.h, gsminc=yes, gsminc=no)
-if test "$gsminc" = yes
-then
-  AC_CHECK_LIB(gsm, gsm_create)
-fi
-CPPFLAGS="$ac_save_CPPFLAGS"
-
+NEED_OSS=0
+NEED_SUNAU=0
+NEED_ALSA=0
+GSM_SUPPORT=0
+PLAY_SUPPORT=0
 
 dnl Test for Ogg Vorbis libraries.
 
@@ -159,10 +128,6 @@ then
                AC_DEFINE(HAVE_LIBVORBIS))
 fi
 CPPFLAGS="$ac_save_CPPFLAGS"
-
-dnl Checks for header files.
-
-AC_CHECK_HEADERS(getopt.h unistd.h malloc.h byteswap.h sys/types.h inttypes.h stdint.h)
 
 dnl Checks for library functions.
 
@@ -231,19 +196,25 @@ if test "$enable_fast_alaw" = yes
 then
 	CFLAGS="$CFLAGS -DFAST_ALAW_CONVERSION"
 fi
-
-LIBS="-L. -lst $LIBS"
+if test "$enable_gsm" = yes
+then
+	CFLAGS="$CFLAGS -DENABLE_GSM"
+	LIBS="$LIBS -lgsm"
+	GSM_SUPPORT=1
+fi
 
 AC_SUBST(NEED_OSS)
 AC_SUBST(NEED_SUNAU)
 AC_SUBST(NEED_ALSA)
+AC_SUBST(GSM_SUPPORT)
 AC_SUBST(PLAY_SUPPORT)
 
 dnl Generate output files...
 
-AC_OUTPUT([Makefile])
+AC_OUTPUT([Makefile gsm/Makefile])
 
 if test ! -f tests.sh; then cp ${srcdir}/tests.sh tests.sh; fi
+if test ! -f testall.sh; then cp ${srcdir}/testall.sh tests.sh; fi
 if test ! -f monkey.au; then cp ${srcdir}/monkey.au monkey.au; fi
 if test ! -f monkey.voc; then cp ${srcdir}/monkey.voc monkey.voc; fi
 

@@ -1,7 +1,7 @@
-		SoX: Sound eXchange
+SoX: Sound eXchange
+-------------------
 
-
-SoX (also known as Sound eXchange) translates sound samples between different
+SoX (also known as Sound eXchange) translates sound files between different
 file formats, and optionally applies various sound effects.
 
 SoX is intended as the Swiss Army knife of sound processing tools.  It 
@@ -59,7 +59,7 @@ The sound effects include:
   o Add masking noise to a signal
   o Apply a phaser effect
   o Convert from stereo to mono
-  o Change sampling rates using several different algorithms.A
+  o Change sampling rates using several different algorithms. A
      'resample' and 'poyphase' effect use high-grade signal rate
      changes using real signal theory!
   o Apply a reverb effect
@@ -78,16 +78,9 @@ The sound effects include:
 
 History:
 
-This is release 12.17, Patchlevel 2 of the Sound Tools.
-SoX was originally written and maintained by Lance Norskog but
-unfortunetly he has stopped maintaining it since 1995.  I, Chris
-Bagwell (cbagwell@users.sourceforge.net), have started maintaining it since
-1996 to the present.
-
-Caveats:
-
-Technically, SoX is made up of a sound file processing library called libst
-and SoX is a program implemented using this library.
+This is release 12.17.3 of SoX and its companion library Sound Tools.
+SoX was originally written and maintained by Lance Norskog but is
+currently mantained by Chris Bagwell (cbagwell@users.sourceforge.net).
 
 Installing:
 
@@ -95,13 +88,16 @@ Unless your using a precompiled binary version, you will need to compile
 SoX as described in the INSTALL file.  Please read that file for further
 instructions.
 
-Now, read sox.txt and soxexam.txt.  This gives a background on how
-SoX deals with sound files and how to convert this format
-to that format, and apply various effects.
+SoX is distributed with two text files named sox.txt and soxexam.txt.
+These files give a background on how SoX deals with sound files and
+what command line options are available to convert a sound file to
+another file format and how to apply sound effects.
 
 SoX has an auto-detect feature that attempts to figure out
-the nature of an unmarked sound sample.  It works very well.
-This feature is used if you specify '-t auto' for the file type.
+the nature of an sound file.  It does this by looking for 'magic values'
+in the header of the audio file.  If it is unable to detect the format
+of the sound file then the user must use command line options to
+inform SoX.
 
 I hope to inspire the creation of a common base of sound processing
 tools for computer multimedia work, similar to the PBM toolkit for 
