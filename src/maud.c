@@ -12,6 +12,9 @@
  *
  * supports: mono and stereo, linear, a-law and u-law reading and writing
  *
+ * March 3, 1999 - cbagwell
+ *   Changed to use rawread for reading.
+ *
  */
 
 #include "st.h"
@@ -27,6 +30,7 @@ struct maudstuff { /* max. 100 bytes!!!! */
 };
 
 void maudwriteheader(P1(ft_t));
+void rawread(P3(ft_t, LONG *, LONG));
 void rawwrite(P3(ft_t, LONG *, LONG));
 
 /*
@@ -50,9 +54,12 @@ ft_t ft;
 	unsigned short chaninf;
 	
 	ULONG chunksize;
-	
+
 	int littlendian = 1;
 	char *endptr;
+
+	/* Needed for rawread() */
+	rawstartread(ft);
 
 	endptr = (char *) &littlendian;
 	/* maud is in big endian format.  Swap whats read in
@@ -181,125 +188,7 @@ LONG maudread(ft, buf, len)
 ft_t ft;
 LONG *buf, len;
 {
-	register int datum;
-	int done = 0;
-	
-	if (ft->info.channels == 1) {
-		if (ft->info.size == BYTE) {
-			switch(ft->info.style) {
-			case UNSIGNED:
-				while(done < len) {
-					datum = getc(ft->fp);
-					if (feof(ft->fp)) return done;
-					/* Convert to signed */
-					datum ^= 128;
-					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 24);
-					done++;
-				}
-				break;
-			case ULAW:
-				/* grab table from Posk stuff */
-				while(done < len) {
-					datum = getc(ft->fp);
-					if (feof(ft->fp)) return done;
-					datum = st_ulaw_to_linear(datum);
-					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 16);
-					done++;
-				}
-				break;
-			case ALAW:
-				while(done < len) {
-					datum = st_Alaw_to_linear((unsigned char) getc(ft->fp));
-					if (feof(ft->fp)) return done;
-					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 16);
-					done++;
-				}
-				break;
-			}
-		}
-		else {
-			while(done < len) {
-				datum = rshort(ft);
-				if (feof(ft->fp)) return done;
-				/* scale signed up to long's range */
-				*buf++ = LEFT(datum, 16);
-				done++;
-			}
-		}
-	}
-	else { /* stereo */
-		if (ft->info.size == BYTE) {
-			switch(ft->info.style) {
-			case UNSIGNED:
-				while(done < len) {
-					datum = getc(ft->fp);
-					if (feof(ft->fp)) return done;
-					/* Convert to signed */
-					datum ^= 128;
-					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 24);
-					
-					datum = getc(ft->fp);
-					if (feof(ft->fp)) return done;
-					/* Convert to signed */
-					datum ^= 128;
-					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 24);
-					done += 2;
-				}
-				break;
-			case ULAW:
-				/* grab table from Posk stuff */
-				while(done < len) {
-					datum = getc(ft->fp);
-					if (feof(ft->fp)) return done;
-					datum = st_ulaw_to_linear(datum);
-					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 16);
-					
-					datum = getc(ft->fp);
-					if (feof(ft->fp)) return done;
-					datum = st_ulaw_to_linear(datum);
-					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 16);
-					done += 2;
-				}
-				break;
-			case ALAW:
-				while(done < len) {
-					datum = st_Alaw_to_linear((unsigned char) getc(ft->fp));
-					if (feof(ft->fp)) return done;
-					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 16);
-					
-					datum = st_Alaw_to_linear((unsigned char) getc(ft->fp));
-					if (feof(ft->fp)) return done;
-					/* scale signed up to long's range */
-					*buf++ = LEFT(datum, 16);
-					done += 2;
-				}
-				break;
-			}
-		}
-		else {
-			while(done < len) {
-				datum = rshort(ft);
-				if (feof(ft->fp)) return done;
-				/* scale signed up to long's range */
-				*buf++ = LEFT(datum, 16);
-				
-				datum = rshort(ft);
-				if (feof(ft->fp)) return done;
-				/* scale signed up to long's range */
-				*buf++ = LEFT(datum, 16);
-				done += 2;
-			}
-		}
-	}
-	return done;
+	rawread(ft, buf, len);
 }
 
 /*
@@ -309,6 +198,8 @@ LONG *buf, len;
 void maudstopread(ft) 
 ft_t ft;
 {
+	/* Needed because of rawread() */
+	rawstopread(ft);
 }
 
 void maudstartwrite(ft) 
@@ -318,6 +209,9 @@ ft_t ft;
 
 	int littlendian = 1;
 	char *endptr;
+
+	/* Needed for rawwrite() */
+	rawstartwrite(ft);
 
 	endptr = (char *) &littlendian;
 	/* maud is in big endian format.  Swap whats read in
@@ -357,6 +251,9 @@ LONG *buf, len;
 void maudstopwrite(ft) 
 ft_t ft;
 {
+	/* Flush out remaining samples*/
+	rawstopwrite(ft);
+
 	/* All samples are already written out. */
 	
 	if (fseek(ft->fp, 0L, 0) != 0) fail("can't rewind output file to rewrite MAUD header");

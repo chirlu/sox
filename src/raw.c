@@ -55,8 +55,8 @@ ft_t ft;
 	{
 		if (ft->file.eof)
 			return(0);
-		ft->file.count = read(fileno(ft->fp), (char *)ft->file.buf, 
-				ft->file.size);
+		ft->file.count = fread(ft->file.buf, 1, ft->file.size,
+				ft->fp);
 		ft->file.pos = 0;
 		if (ft->file.count == 0)
 		{
@@ -80,15 +80,14 @@ ft_t ft;
 		if (ft->file.pos == ft->file.count-1)
 		{
 			*ft->file.buf = *(ft->file.buf + ft->file.pos);
-			ft->file.count = read(fileno(ft->fp), 
-					(char *)(ft->file.buf + 1),
-					ft->file.size-1) + 1;
+			ft->file.count = fread(ft->file.buf + 1,
+					1, ft->file.size-1,
+					ft->fp);
 		}
 		else
 		{
-			ft->file.count = read(fileno(ft->fp),
-						(char *)ft->file.buf,
-						ft->file.size);
+			ft->file.count = fread(ft->file.buf, 1, ft->file.size,
+					ft->fp);
 		}
 		ft->file.pos = 0;
 		if (ft->file.count < 2)
@@ -111,8 +110,8 @@ ft_t ft;
 
 	if (ft->file.count < sizeof(float))
 	{
-		ft->file.count = read(fileno(ft->fp), (char *)ft->file.buf,
-				ft->file.size);
+		ft->file.count = fread(ft->file.buf, 1, ft->file.size,
+				ft->fp);
 		if (ft->file.count == 0)
 		{
 			ft->file.eof = 1;
@@ -244,7 +243,7 @@ ft_t ft;
 void blockflush(ft)
 ft_t ft;
 {
-	if (write(fileno(ft->fp), ft->file.buf, ft->file.pos) != ft->file.pos)
+	if (fwrite(ft->file.buf, 1, ft->file.pos, ft->fp) != ft->file.pos)
 	{
 		fail("Error writing data to file");
 	}

@@ -2,6 +2,9 @@
  * Sounder/Sndtool format handler: W V Neisius, February 1992
  *
  * June 28, 93: force output to mono.
+ * 
+ * March 3, 1999 - cbagwell@sprynet.com
+ *   Forced extra comment fields to zero.
  */
 
 #include <math.h>
@@ -97,7 +100,7 @@ struct sndpriv *p = (struct sndpriv *) ft->priv;
 	char *endptr;
 
 	/* Needed for rawwrite() */
-	rawstopwrite(ft);
+	rawstartwrite(ft);
 
 	endptr = (char *) &littlendian;
 	/* sndt is in little endian format so
@@ -122,6 +125,21 @@ sndtwriteheader(ft, 0);
 void sndrstartwrite(ft)
 ft_t ft;
 {
+	int littlendian = 1;
+	char *endptr;
+
+	/* Needed for rawread() */
+	rawstartread(ft);
+
+	endptr = (char *) &littlendian;
+	/* sndr is in little endian format so
+	 * swap bytes on big endian machines
+	 */
+	if (!*endptr)
+	{
+		ft->swap = ft->swap ? 0 : 1;
+	}
+
 /* write header */
 ft->info.channels = 1;
 ft->info.style = UNSIGNED;
@@ -154,15 +172,15 @@ LONG *buf, len;
 void sndtstopwrite(ft)
 ft_t ft;
 {
-struct sndpriv *p = (struct sndpriv *) ft->priv;
+	struct sndpriv *p = (struct sndpriv *) ft->priv;
 
-/* fixup file sizes in header */
-if (fseek(ft->fp, 0L, 0) != 0)
-	fail("can't rewind output file to rewrite SND header");
-sndtwriteheader(ft, p->nsamples);
-
-	/* Needed for rawwrite() */
+	/* Flush remaining buffer out */
 	rawstopwrite(ft);
+
+	/* fixup file sizes in header */
+	if (fseek(ft->fp, 0L, 0) != 0)
+		fail("can't rewind output file to rewrite SND header");
+	sndtwriteheader(ft, p->nsamples);
 }
 
 /*======================================================================*/
@@ -185,6 +203,7 @@ wshort (ft,(int) ft->info.rate);
 wshort (ft,0);
 wshort (ft,10);
 wshort (ft,4);
+memset (name_buf, 0, 96);
 sprintf (name_buf,"%s - File created by Sound Exchange",ft->filename);
 fwrite (name_buf, 1, 96, ft->fp);
 }
