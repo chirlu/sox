@@ -40,6 +40,7 @@ ft_t ft;
 {
    char inpstr[82];
    char sc;
+   long rate;
 
    while (ft->info.rate == 0) {
       fgets(inpstr, 82, ft->fp);
@@ -50,12 +51,12 @@ ft_t ft;
 	  st_fail_errno(ft,ST_EHDR,"Cannot determine sample rate.");
 	  return (ST_EOF);
       }
-#ifdef __alpha__
-      sscanf(inpstr," ; Sample Rate %d", &ft->info.rate);
-#else
-      sscanf(inpstr," ; Sample Rate %ld",&ft->info.rate);
-#endif
-      }
+      /* Store in system dependent long to get around cross platform
+       * problems.
+       */
+      sscanf(inpstr," ; Sample Rate %ld", &rate);
+      ft->info.rate = rate;
+   }
 
    if (ft->info.channels == -1)
        ft->info.channels = 1;

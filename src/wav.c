@@ -82,7 +82,7 @@
 typedef struct wavstuff {
     LONG	   numSamples;     /* samples/channel reading: starts at total count and decremented  */
     		                   /* writing: starts at 0 and counts samples written */
-    LONG	   dataLength;     /* needed for ADPCM writing */
+    ULONG	   dataLength;     /* needed for ADPCM writing */
     unsigned short formatTag;	   /* What type of encoding file is using */
     unsigned short samplesPerBlock;
     unsigned short blockAlign;
@@ -920,18 +920,18 @@ ft_t ft;
     default:
 	break;
     }
-/* Horrible way to find Cool Edit marker points. Taken from Quake source*/
-	ft->loops[0].start = -1;
-	if(ft->seekable){
-    /* Skip over data */
-/*Got this from the quake source.  I think it 32bit aligns the chunks 
- * doubt any machine writing Cool Edit Chunks writes them at an odd 
- * offset */
-	len = (len + 1) & ~1;
-    st_seek(ft, len, SEEK_CUR);
-    if( findChunk(ft, "LIST") != ST_EOF){
-	ft->comment = (char*)malloc(256);
-	while(!feof(ft->fp)){
+
+    /* Horrible way to find Cool Edit marker points. Taken from Quake source*/
+    ft->loops[0].start = -1;
+    if(ft->seekable){
+        /*Got this from the quake source.  I think it 32bit aligns the chunks 
+         * doubt any machine writing Cool Edit Chunks writes them at an odd 
+         * offset */
+        len = (len + 1) & ~1;
+        st_seek(ft, len, SEEK_CUR);
+        if( findChunk(ft, "LIST") != ST_EOF){
+	    ft->comment = (char*)malloc(256);
+	    while(!feof(ft->fp)){
 		st_reads(ft,magic,4);
 		if(strncmp(magic,"INFO",4) == 0){
 			/*Skip*/
@@ -969,11 +969,11 @@ ft_t ft;
 			len = (len + 1) & ~1;
 			st_seek(ft,len-4,SEEK_CUR);
 		}
-	}
-	}
-	clearerr(ft->fp);
-	st_seek(ft,wav->dataStart,SEEK_SET);
-	}	
+	    }
+        }
+        clearerr(ft->fp);
+        st_seek(ft,wav->dataStart,SEEK_SET);
+    }	
     return ST_SUCCESS;
 }
 

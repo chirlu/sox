@@ -14,6 +14,8 @@
 #include "st.h"
 
 #include <limits.h> /* LONG_MAX */
+#include <math.h> /* pow */
+#include <string.h>
 
 /* type used for computations.
  */
@@ -30,7 +32,7 @@
 #define ONESIXTH           ((SPEED_FLOAT)(1.0e0/6.0e0))
 #define ZERO               ((SPEED_FLOAT)(0.0e0))
 
-#define SPEED_USAGE "speed factor (default 1.0, <1 slows)"
+#define SPEED_USAGE "speed [-c] factor (default 1.0, <1 slows, -c: factor in cent)"
 
 /* automaton status
  */
@@ -115,14 +117,27 @@ int st_speed_getopts(effp, n, argv)
      char ** argv;
 {
     speed_t speed = (speed_t) effp->priv;
+    int cent = 0;
 
     speed->factor = ONE; /* default */
 
-    if (n && (!sscanf(argv[0], SPEED_FLOAT_SCAN, &speed->factor) ||
-	      speed->factor<=ZERO))
+    if (n>0 && !strcmp(argv[0], "-c"))
     {
+	cent = 1;
+	argv++; n--;
+    }
+
+    if (n && (!sscanf(argv[0], SPEED_FLOAT_SCAN, &speed->factor) ||
+	      (cent==0 && speed->factor<=ZERO)))
+    {
+	printf("n = %d cent = %d speed = %f\n",n,cent,speed->factor);
 	st_fail(SPEED_USAGE);
 	return ST_EOF;
+    }
+    else if (cent != 0) /* CONST==2**(1/1200) */
+    {
+	speed->factor = pow(1.00057778950655, speed->factor);
+	/* fprintf(stderr, "Speed factor: %f\n", speed->factor);*/
     }
 
     return ST_SUCCESS;
@@ -267,11 +282,23 @@ int st_speed_drain(effp, obuf, osamp)
     transfer(speed);
 
     /* fix up trail by emptying cbuf */
-    for (oindex=0, i=0; i<3 && oindex<*osamp; i++)
+    for (oindex=0, i=0; i<2 && oindex<*osamp;)
     {
-	oindex += compute(speed, obuf+oindex, *osamp-oindex);
-	speed->cbuf[3] = ZERO;
-	speed->icbuf = 4;
+	if (speed->state==sp_input)
+	{
+          speed->ibuf[speed->index++] = ZERO;
+          i++;
+          if (speed->index==speed->compression)
+             speed->state = sp_transfer;
+      }
+
+      /* transfer to compute buffer. */
+      if (speed->state==sp_transfer)
+          transfer(speed);
+
+      /* compute interpolation. */
+      if (speed->state==sp_compute)
+          oindex += compute(speed, obuf+oindex, *osamp-oindex);
     }
 
     *osamp = oindex; /* report how much was generated. */

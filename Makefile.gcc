@@ -38,7 +38,7 @@ EOBJ    = avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
           flanger.o highp.o highpass.o lowp.o lowpass.o map.o mask.o pan.o \
           phaser.o pick.o pitch.o polyphas.o rate.o resample.o reverb.o \
           reverse.o speed.o split.o stat.o stretch.o swap.o synth.o \
-	  trimo vibro.o vol.o
+	  trim.o vibro.o vol.o
 
 SOUNDLIB = libst.a
 LIBOBJS = $(FOBJ) $(EOBJ) handlers.o libst.o misc.o util.o getopt.o
@@ -72,7 +72,7 @@ CC		= gcc -g -Wall
 #
 # gcc's all understand this as do lots of standard compilers.  Try this one
 # first.
-# O		= -O2
+O		= -O2
 
 # getopt() support is defined here.  If you have a built-in
 # getopt() that is compatible with SVR5 then you don't need to
@@ -141,20 +141,24 @@ RAND_DEFINES	= -DHAVE_RAND
 #
 # If your sysetem has unistd.h then you'll most like need to add 
 # HAVE_UNISTD_H to your misd defines.
-# MISC_DEFINES = -DHAVE_UNISTD_H
+# MISC_DEFINES_UNI = -DHAVE_UNISTD_H
 #
 # If your system has malloc.h then you'll most likely need to add
 # HAVE_MALLOC_H to your misd defines.
-# MSIC_DEFINS = -DHAVE_UNISTD_H
+# MSIC_DEFINES_MALLOC = -DHAVE_UNISTD_H
 #
 # Testing new improved rate code.  You can use the older version if ther
 # are problems.
-# MISC_DEFINES	= -DUSE_OLD_RATE
+# MISC_DEFINES_OLDRATE	= -DUSE_OLD_RATE
 #
 # For an extra 32k memory, you can include u-law/a-law lookup
 # tables to speed compressiong/decompression of this type data.
-# MISC_DEFINES = -DFAST_ULAW_COMPRESSION -DFAST_ALAW_COMPRESSION 
+# MISC_DEFINES_COMP = -DFAST_ULAW_COMPRESSION -DFAST_ALAW_COMPRESSION 
 
+MISC_DEFINES = $(MISC_DEFINES_UNI) \
+	$(MISC_DEFINES_MALLOC) \
+	$(MISC_DEFINES_OLDRATE)\
+	$(MISC_DEFINES_COMP)
 
 ##############################################################################
 
@@ -203,7 +207,7 @@ $(SOUNDLIB): $(LIBOBJS)
 
 sox.o:		sox.c st.h
 
-$(LIBOBJS):	st.h version.h patchlvl.h
+$(LIBOBJS):	st.h
 
 man: sox.1 libst.3
 	$(RM) sox.txt libst.txt

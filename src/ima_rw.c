@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "ima_rw.h"
+#include "st.h"
 
 /*
  *
@@ -79,12 +80,11 @@ static void ImaExpandS(
 	int i, val, state;
 
 	ip = ibuff + 4*ch;     /* input pointer to 4-byte block state-initializer   */
-	/* fprintf(stderr, "IMA_ADPCM ip %p op %p\n", ip,obuff); */
 	i_inc = 4*(chans-1);   /* amount by which to incr ip after each 4-byte read */
 	val = (short)(ip[0] + (ip[1]<<8)); /* need cast for sign-extend */
 	state = ip[2];
 	if (state > ISSTMAX) {
-		fprintf(stderr, "IMA_ADPCM block ch%d initial-state (%d) out of range\n", ch, state);
+		st_warn("IMA_ADPCM block ch%d initial-state (%d) out of range\n", ch, state);
 		fflush(stderr);
 		state = 0;
 	}
@@ -94,7 +94,6 @@ static void ImaExpandS(
 	op = obuff;
 	*op = val;      /* 1st output sample for this channel */
 	op += o_inc;
-	/* fprintf(stderr, "ch%d val000 .... %.4x %2d\n", ch,val,state); */
 
 	for (i = 1; i < n; i++) {
 		int step,dp,c,cm;
@@ -133,9 +132,7 @@ static void ImaExpandS(
 		}
 		*op = val;
 		op += o_inc;
-		/* fprintf(stderr, "ch%d val%3d %.4x %.4x %2d\n", ch,i,dp,val,state); */
 	}
-	/* fprintf(stderr, " -> ip %p op %p\n", ip,op); */
 	return;
 }
 
@@ -252,7 +249,6 @@ static int ImaMashS(
 	}
 	d2 /= n; /* be sure it's non-negative */
 	if (sho) {
-		fprintf(stderr, "n %d, st %d->%d, d %.1f\n", n, *st, state, sqrt(d2));
 		fflush(stderr);
 	}
 	*st = state;
@@ -315,8 +311,6 @@ static void ImaMashChannel(
 		*st = s0;
 	}
 	d = ImaMashS(ch, chans, ip[0], ip,n,st, obuff, 0);
-	/* printf("%4d %6d %6d\n", s0-s32, d0, d32-d0); */
-	/* printf("%5d %2d\n", AvgDelta(ch,O.chans,ip,32), s0); */
 }
 
 /* mash one block.  if you want to use opt>0, 9 is a reasonable value */
@@ -449,8 +443,6 @@ static void ImaMashChannel(int ch, const SAMPL *ip, int n, int *st)
 #endif
 	*st = s0;
 	d = ImaMashS(ch, O.chans, ip[0], ip,n,st, O.packet, 0);
-	printf("%4d %6d %6d\n", s0-s32, d0, d32-d0);
-	/* printf("%5d %2d\n", AvgDelta(ch,O.chans,ip,32), s0); */
 }
 #endif
 

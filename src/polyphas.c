@@ -183,8 +183,8 @@ static int prime(int n, int *q0)
     n /= pr;
   }
   *q = 0;
-  for (pr=0; pr<q-q0; pr++) fprintf(stderr," %d",q0[pr]);
-  fprintf(stderr,"\n");
+  for (pr=0; pr<q-q0; pr++) st_report(" %d",q0[pr]);
+  st_report("\n");
   return (q-q0);
 }
 
@@ -222,8 +222,8 @@ static int permute(int *m, int *l, int ct, int ct1, int amalg)
   }
   if (n) *p++=n;
   *p = 0;
-  /*for (k=0; k<p-m; k++) fprintf(stderr," %d",m[k]);*/
-  /*fprintf(stderr,"\n");*/
+  /*for (k=0; k<p-m; k++) st_report(" %d",m[k]);*/
+  /*st_report("\n");*/
   return (p-m);
 }
 
@@ -249,9 +249,9 @@ static int optimize_factors(int numer, int denom, int *l1, int *l2)
       cost = 0;
       f = denom;
       u = min(ct1,ct2) + 1;
-      /*fprintf(stderr,"pfacts(%d): ", numer);*/
+      /*st_report("pfacts(%d): ", numer);*/
       u1 = permute(m1,l1,ct1,u,amalg);
-      /*fprintf(stderr,"pfacts(%d): ", denom);*/
+      /*st_report("pfacts(%d): ", denom);*/
       u2 = permute(m2,l2,ct2,u,amalg);
       u = max(u1,u2);
       for (j=0; j<u; j++) {
@@ -265,10 +265,10 @@ static int optimize_factors(int numer, int denom, int *l1, int *l2)
         c_min = cost;
         u_min = u;
 #       if 0
-        fprintf(stderr,"c_min %d, [%d-%d]:",c_min,numer,denom);
+        st_report("c_min %d, [%d-%d]:",c_min,numer,denom);
         for (j=0; j<u; j++)
-          fprintf(stderr," (%d,%d)",m1[j],m2[j]);
-        fprintf(stderr,"\n");
+          st_report(" (%d,%d)",m1[j],m2[j]);
+        st_report("\n");
 #       endif
        memcpy(b1,m1,u*sizeof(int));
        memcpy(b2,m2,u*sizeof(int));
@@ -359,12 +359,12 @@ static void fir_design(Float *buffer, int length, Float cutoff)
     else
       hamming(buffer,length);  /* Design Hamming window:  43 dB cutoff */
 
-    /* printf("# fir_design length=%d, cutoff=%8.4f\n",length,cutoff); */
+    /* st_report("# fir_design length=%d, cutoff=%8.4f\n",length,cutoff); */
     /* Design filter:  windowed sinc function */
     sum = 0.0;
     for(j=0;j<length;j++) {
       buffer[j] *= sinc(PI*cutoff*(j-length/2)); /* center at length/2 */
-      /* printf("%.1f %.6f\n",(float)j,buffer[j]); */
+      /* st_report("%.1f %.6f\n",(float)j,buffer[j]); */
       sum += buffer[j];
     }
     sum = (double)1.0/sum;
@@ -372,7 +372,7 @@ static void fir_design(Float *buffer, int length, Float cutoff)
     for(j=0;j<length;j++) {
       buffer[j] *= sum;
     }
-    /* printf("# end\n\n"); */
+    /* st_report("# end\n\n"); */
 }
  
 #define RIBLEN 2048
@@ -499,7 +499,7 @@ static void polyphase(Float *output, polystage *s)
   Float *o_top;
 
   in = s->window + s->hsize;
-  /*for (mm=0; mm<s->filt_len; mm++) fprintf(stderr,"cf_%d %f\n",mm,s->filt_array[mm]);*/
+  /*for (mm=0; mm<s->filt_len; mm++) st_report("cf_%d %f\n",mm,s->filt_array[mm]);*/
   /* assumes s->size divisible by down (now true) */
   o_top = output + (s->size * up) / down;
   /*st_report(" isize %d, osize %d, up %d, down %d, N %d", s->size, o_top-output, up, down, f_len);*/
@@ -541,7 +541,7 @@ int st_poly_flow(eff_t effp, LONG *ibuf, LONG *obuf, LONG *isamp, LONG *osamp)
   polystage *s0,*s1;
 
   /* Sanity check:  how much can we tolerate? */
-  /* fprintf(stderr, "*isamp=%d *osamp=%d\n",*isamp,*osamp); fflush(stderr); */
+  /* st_report("*isamp=%d *osamp=%d\n",*isamp,*osamp); fflush(stderr); */
   s0 = rate->stage[0];            /* the first stage */
   s1 = rate->stage[rate->total];  /* the 'last' stage is output buffer */
   {
@@ -580,7 +580,7 @@ int st_poly_flow(eff_t effp, LONG *ibuf, LONG *obuf, LONG *isamp, LONG *osamp)
   
       out = rate->stage[k+1]->window + rate->stage[k+1]->hsize;
   
-      /* fprintf(stderr, "k=%d  insize=%d\n",k,in_size); fflush(stderr); */
+      /* st_report("k=%d  insize=%d\n",k,in_size); fflush(stderr); */
       polyphase(out, s);
    
       /* copy input history into lower portion of rate->window[k] */

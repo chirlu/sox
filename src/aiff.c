@@ -445,8 +445,7 @@ ft_t ft;
 			ft->instr.nloops++;
 		} 
 	}
-	if (verbose)
-	  reportInstrument(ft);
+	reportInstrument(ft);
 
 	/* Needed because of st_rawread() */
 	rc = st_rawstartread(ft);
@@ -466,24 +465,24 @@ ft_t ft;
   int loopNum;
 
   if(ft->instr.nloops > 0)
-    fprintf(stderr, "AIFF Loop markers:\n");
+    st_report("AIFF Loop markers:\n");
   for(loopNum  = 0; loopNum < ft->instr.nloops; loopNum++) {
     if (ft->loops[loopNum].count) {
-      fprintf(stderr, "Loop %d: start: %6d", loopNum, ft->loops[loopNum].start);
-      fprintf(stderr, " end:   %6d", 
+      st_report("Loop %d: start: %6d", loopNum, ft->loops[loopNum].start);
+      st_report(" end:   %6d", 
 	      ft->loops[loopNum].start + ft->loops[loopNum].length);
-      fprintf(stderr, " count: %6d", ft->loops[loopNum].count);
-      fprintf(stderr, " type:  ");
+      st_report(" count: %6d", ft->loops[loopNum].count);
+      st_report(" type:  ");
       switch(ft->loops[loopNum].type & ~ST_LOOP_SUSTAIN_DECAY) {
-      case 0: fprintf(stderr, "off\n"); break;
-      case 1: fprintf(stderr, "forward\n"); break;
-      case 2: fprintf(stderr, "forward/backward\n"); break;
+      case 0: st_report("off\n"); break;
+      case 1: st_report("forward\n"); break;
+      case 2: st_report("forward/backward\n"); break;
       }
     }
   }
-  fprintf(stderr, "Unity MIDI Note: %d\n", ft->instr.MIDInote);
-  fprintf(stderr, "Low   MIDI Note: %d\n", ft->instr.MIDIlow);
-  fprintf(stderr, "High  MIDI Note: %d\n", ft->instr.MIDIhi);
+  st_report("Unity MIDI Note: %d\n", ft->instr.MIDInote);
+  st_report("Low   MIDI Note: %d\n", ft->instr.MIDIlow);
+  st_report("High  MIDI Note: %d\n", ft->instr.MIDIhi);
 }
 
 /* Process a text chunk, allocate memory, display it if verbose and return */
@@ -517,9 +516,7 @@ ft_t ft;
 			return(ST_EOF);
 		}
 	}
-  if(verbose) {
-    printf("%-10s   \"%s\"\n", chunkDescription, *text);
-  }
+  st_report("%-10s   \"%s\"\n", chunkDescription, *text);
   return(ST_SUCCESS);
 }
 
@@ -573,9 +570,7 @@ ft_t ft;
 	}
     }
   }
-  if(verbose) {
-    printf("%-10s   \"%s\"\n", chunkDescription, *text);
-  }
+  st_report("%-10s   \"%s\"\n", chunkDescription, *text);
   return(ST_SUCCESS);
 }
 

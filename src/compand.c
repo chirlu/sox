@@ -206,21 +206,21 @@ eff_t effp;
 
 # ifdef DEBUG
   {
-    printf("Starting compand effect\n");
-    printf("\nRate %ld, size %d, encoding %d, output gain %g.\n",
+    fprintf(stderr, "Starting compand effect\n");
+    fprintf(stderr, "\nRate %ld, size %d, encoding %d, output gain %g.\n",
 	   effp->outinfo.rate, effp->outinfo.size, effp->outinfo.encoding,
 	   l->outgain);
-    printf("%d input channel(s) expected: actually %d\n",
+    fprintf(stderr, "%d input channel(s) expected: actually %d\n",
 	   l->expectedChannels, effp->outinfo.channels);
-    printf("\nAttack and decay rates\n"
+    fprintf(stderr, "\nAttack and decay rates\n"
 	     "======================\n");
     for (i = 0; i < l->expectedChannels; ++i)
-      printf("Channel %d: attack = %-12g decay = %-12g\n",
+      fprintf(stderr, "Channel %d: attack = %-12g decay = %-12g\n",
 	     i, l->attackRate[i], l->decayRate[i]);
-    printf("\nTransfer function (linear values)\n"
+    fprintf(stderr, "\nTransfer function (linear values)\n"
 	     "=================  =============\n");
     for (i = 0; i < l->transferPoints; ++i)
-      printf("%12g -> %-12g\n",
+      fprintf(stderr, "%12g -> %-12g\n",
 	     l->transferIns[i], l->transferOuts[i]);
   }
 # endif

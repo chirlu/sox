@@ -84,6 +84,7 @@ static void process(void);
 static void statistics(void);
 static LONG volumechange(LONG *buf, LONG ct, double vol);
 static void checkeffect(void);
+static int flow_effect_out(void);
 static int flow_effect(int);
 static int drain_effect(int);
 
@@ -399,7 +400,7 @@ static void doopts(ft_t ft, int argc, char **argv)
  */
 
 static void process(void) {
-    int e, f, havedata, flowstatus;
+    int e, f, flowstatus;
 
     if( st_gettype(informat) )
 		st_fail("bad input format");	
@@ -521,78 +522,31 @@ static void process(void) {
     informat->st_errno = 0;
     outformat->st_errno = 0;
 
-    /* Prime while() loop by reading initial chunk of input data. */
-    efftab[0].olen = (*informat->h->read)(informat, 
-                                         efftab[0].obuf, (LONG) BUFSIZ);
-
-    efftab[0].odone = 0;
-
-    /* Change the volume of this initial input data if needed. */
-    if (dovolume)
-	clipped += volumechange(efftab[0].obuf, efftab[0].olen,
-		                volume);
-
     /* Run input data through effects and get more until olen == 0 */
-    while (efftab[0].olen > 0)
-    {
+    do {
+        efftab[0].olen = (*informat->h->read)(informat, 
+                                              efftab[0].obuf, (LONG) BUFSIZ);
+        efftab[0].odone = 0;
+
+        if (efftab[0].olen == 0)
+	    break;
+
+        /* Change the volume of this initial input data if needed. */
+        if (dovolume)
+	    clipped += volumechange(efftab[0].obuf, efftab[0].olen,
+		                    volume);
+
 	/* mark chain as empty */
 	for(e = 1; e < neffects; e++)
 	    efftab[e].odone = efftab[e].olen = 0;
 
-	flowstatus = 0;
-
-	do {
-	    ULONG w;
-
-	    /* run entire chain BACKWARDS: pull, don't push.*/
-	    /* this is because buffering system isn't a nice queueing system */
-	    for(e = neffects - 1; e > 0; e--) {
-		flowstatus = flow_effect(e);
-		if (flowstatus)
-		    break;
-	    }
-
-	    /* If outputing and output data was generated then write it */
-	    if (writing&&(efftab[neffects-1].olen>efftab[neffects-1].odone)) 
-	    {
-		w = (* outformat->h->write)(outformat, 
-			                   efftab[neffects-1].obuf, 
-				           (LONG) efftab[neffects-1].olen);
-	        efftab[neffects-1].odone = efftab[neffects-1].olen;
-	    }
-
-	    if (outformat->st_errno)
-		st_fail(outformat->st_errstr);
-
-	    /* If any effect will never again produce data, give up.  This */
-	    /* works because of the pull status: the effect won't be able to */
-	    /* shut us down until all downstream buffers have been emptied. */
-	    if (flowstatus < 0)
-		break;
-
-	    /* if stuff still in pipeline, set up to flow effects again */
-	    havedata = 0;
-	    for(e = 0; e < neffects - 1; e++)
-		if (efftab[e].odone < efftab[e].olen) {
-		    havedata = 1;
-		    break;
-		}
-	} while (havedata);
+	flowstatus = flow_effect_out();
 
 	/* Negative flowstatus says no more output will ever be generated. */
 	if (flowstatus < 0)
 	    break;
 
-        /* Read another chunk of input data. */
-        efftab[0].olen = (*informat->h->read)(informat, 
-                                             efftab[0].obuf, (LONG) BUFSIZ);
-        efftab[0].odone = 0;
-
-        /* Change volume of these samples if needed. */
-        if (dovolume)
-	    clipped += volumechange(efftab[0].obuf, efftab[0].olen,
-		                    volume);
-    }
+    } while (1); /* break; efftab[0].olen == 0 */
 
     if (informat->st_errno)
 	st_fail(informat->st_errstr);
@@ -639,6 +593,53 @@ static void process(void) {
     }
     if (writing)
         fclose(outformat->fp);
+}
+
+static int flow_effect_out(void)
+{
+    int e, havedata, flowstatus = 0;
+
+    do {
+      ULONG w;
+      
+      /* run entire chain BACKWARDS: pull, don't push.*/
+      /* this is because buffering system isn't a nice queueing system */
+      for(e = neffects - 1; e > 0; e--) 
+      {
+	  flowstatus = flow_effect(e);
+	  if (flowstatus)
+              break;
+      }
+      
+      /* If outputing and output data was generated then write it */
+      if (writing&&(efftab[neffects-1].olen>efftab[neffects-1].odone)) 
+      {
+          w = (* outformat->h->write)(outformat, 
+                                     efftab[neffects-1].obuf, 
+                                     (LONG) efftab[neffects-1].olen);
+          efftab[neffects-1].odone = efftab[neffects-1].olen;
+      }
+      
+      if (outformat->st_errno)
+          st_fail(outformat->st_errstr);
+
+      /* If any effect will never again produce data, give up.  This
+       * works because of the pull status: the effect won't be able to
+       * shut us down until all downstream buffers have been emptied.
+       */
+      if (flowstatus < 0)
+	  break;
+      
+      /* if stuff still in pipeline, set up to flow effects again */
+      havedata = 0;
+      for(e = 0; e < neffects - 1; e++)
+          if (efftab[e].odone < efftab[e].olen) {
+              havedata = 1;
+              break;
+          }
+    } while (havedata);
+
+    return flowstatus;
 }
 
 static int flow_effect(e)

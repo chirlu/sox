@@ -307,7 +307,7 @@ LONG *osamp;
 		if (x != (stat->fft_size/2) - 1)
 		    magnitude *= 2.0;
 	    }
-	    printf("%f  %f\n",ffa*x, magnitude);
+	    fprintf(stderr, "%f  %f\n",ffa*x, magnitude);
 	}
     }
 
