@@ -320,11 +320,11 @@ on the Mac.
 .B .cdr
 CD-R
 .br
-CD-R files are used in mastering music Compact Disks.
-The file format is, as you might expect, raw stereo
-raw unsigned samples at 44khz.  But, there's
-some blocking/padding oddity in the format, so it
-needs its own handler.
+CD-R files are used in mastering music on Compact Disks.
+The audio data on a CD-R disk is a raw audio file
+with a format of stereo 16-bit signed samples at a 44khz sample
+rate.  There is a special blocking/padding oddity at the end
+of the audio file and is why it needs its own handler.
 .TP 10
 .B .cvs
 Continuously Variable Slope Delta modulation
