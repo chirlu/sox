@@ -7,7 +7,10 @@ CFLAGS:=-O2 -Wall -L../
 LDFLAGS:=-s
 LIBS:=-lm
 
-all: ding model lding lmodel
+all: ding model lding lmodel corr
+
+corr: corr.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $2 $<
 
 ding: ding.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
@@ -22,5 +25,5 @@ lmodel: model.c
 	$(CC) $(CFLAGS) -DLSAMPL $(LDFLAGS) -o $@ $< $(LIBS)
 
 clean:
-	rm -f ding lding model lmodel
+	rm -f ding lding model lmodel corr *~
 

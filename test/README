@@ -28,6 +28,19 @@ interpolation with Nuttall window...
 ./ltest -l resample -qs 0.80 0 >B
 gnuplot plotAB
 
+The script gtest.pl is for testing sox's adpcm and gsm wav support.
+
+It accepts one of these options:
+    -t  Use 'toast' gsm for compress/decompress
+             -a  Use sox (MS) ADPCM
+	     -i  Use sox IMA ADPCM
+	     -g  Use sox wav-gsm6.10
+If using sox, you may also append an optional effect, eg:
+    ./wtest -g filter 0-3500 >A
+will apply a lowpass filter with 6dB corner at 3500 Hz before the compression phase.
+Then, as above, 'gnuplot plotA' will graph dB gain and dB error-level
+vs. freq for you.
+
 -------------------------------------------------------------------
 
 About ltest:
