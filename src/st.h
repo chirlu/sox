@@ -266,6 +266,7 @@ IMPORT void gettype(P1(ft_t));
 IMPORT void checkformat(P1(ft_t));
 IMPORT void copyformat(P2(ft_t, ft_t));
 IMPORT void cmpformats(P2(ft_t, ft_t));
+IMPORT void sigintreg(P1(ft_t));
 
 typedef	unsigned int u_i;
 typedef	ULONG u_l;
