@@ -225,7 +225,7 @@ ft_t ft;
     ioctl(fileno(ft->fp), SND_PCM_IOCTL_PLAYBACK_PARAMS, &p_params);
 
     /* Change to non-buffered I/O */
-    setvbuf(ft->fp, NULL, _IONBUF, sizeof(char) * ft->file.size);
+    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
 }
 
 #endif
