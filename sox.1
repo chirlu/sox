@@ -89,6 +89,8 @@ sox \- Sound eXchange : universal sound sample translator
 .br
 	mask
 .br
+	pan \fIdirection\fB
+.br
 	phaser \fIgain-in gain-out delay decay speed -s\fB | \fI-t\fB
 .br
 	pick
@@ -112,6 +114,8 @@ sox \- Sound eXchange : universal sound sample translator
 	swap [ \fI1 2 3 4\fB ]
 .br
 	vibro \fIspeed \fB[ \fIdepth\fB ]
+.br
+	vol \fIgain \fB[ \fItype\fB ]
 .SH DESCRIPTION
 .I SoX
 is a command line program that can convert most popular audio files
@@ -674,6 +678,19 @@ It tends to mask buzzing voices, for example.
 It adds 1/2 bit of noise to the sound file at the
 output bit depth.
 .TP 10
+pan \fIdirection\fB
+Pan the sound of an audio file from one channel to another.  This is done by
+changing the volume of the input channels so that it fade's out on one
+channel and fades-in on another.  If the number of input channels is
+different then the number of output channels then this effect tries to
+intellegently handle this.  For instance, if the input contains 1 channel
+and the output contains 2 channels, then it will create the missing channel
+itself.  The 
+.I direction
+is a value from -1.0 to 1.0.  -1.0 represents
+far left and 1.0 represents far right.  Numbers in between will start the
+pan effect without totally muting the opposite channel.
+.TP 10
 phaser \fIgain-in gain-out delay decay speed -s \fR| \fI-t
 Add a phaser to a sound sample.  Each triple
 delay/decay/speed gives the delay in milliseconds
@@ -738,7 +755,7 @@ or
 If you are wondering which of
 .B SoX's
 rate changing effects to use, you will want to read a
-detailed analysis of all of them at http://eakaw2.et.tu-dresden.de/~andreas/resample/resample.html
+detailed analysis of all of them at http://eakaw2.et.tu-dresden.de/~wilde/resample/resample.html
 [Nov,1999: These tests need to be updated for sox-12.17, which has bugfixes to the
 resample and polyphase code.]
 .TP 10
@@ -873,6 +890,26 @@ This must be under 30.
 gives the amount the volume is cut into
 by the sine wave,
 ranging 0.0 to 1.0 and defaulting to 0.5.
+.TP 10
+vol \fIgain \fB [ \fItype\fB ]
+The vol effect is much like the command line option -v.  It allows you to
+adjust the volume of an input file and allows you to specify the adjustment
+in relation to amplitude, power, or dB.  When type is 
+.I amplitude
+then a linear change of the amplitude is performed based on the gain.  Therefore,
+a value of 1.0 will keep the volume the same, 0.0 to < 1.0 will cause the
+volume to decrease and values of > 1.0 will cause the volume to increase.
+Beware of clipping audio data when the gain is greater then 1.0.  A negative
+value performs the same adjustment while also changing the phase.
+.br
+When type is 
+.I power
+then a value of 1.0 also means no change in volume.
+.br
+When type is 
+.I dB
+the amplitude is change logrithmically.
+0.0 is constant while +6 doubles the amplitude.
 .P
 .I Sox
 enforces certain effects.

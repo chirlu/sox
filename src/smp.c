@@ -85,9 +85,9 @@ struct smptrailer *trailer;
 		ft->loops[i].length = 
 			trailer->loops[i].end - trailer->loops[i].start;
 		st_readb(ft, &(trailer->loops[i].type));
-		ft->loops[i].type = trailer->loops[8].type;
+		ft->loops[i].type = trailer->loops[i].type;
 		st_readw(ft, &(trailer->loops[i].count));
-		ft->loops[8].count = trailer->loops[8].count;
+		ft->loops[i].count = trailer->loops[i].count;
 	}
 	for(i = 0; i < 8; i++) {	/* read the 8 markers */
 	        if (fread(trailer->markers[i].name, 1, 10, ft->fp) != 10)

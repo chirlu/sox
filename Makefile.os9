@@ -27,9 +27,11 @@ EOBJ	= $(RDIR)/avg.r $(RDIR)/band.r $(RDIR)/chorus.r \
 	  $(RDIR)/dyn.r $(RDIR)/echo.r $(RDIR)/echos.r $(RDIR)/filter.r \
 	  $(RDIR)/flanger.r \
 	  $(RDIR)/highp.r $(RDIR)/lowp.r $(RDIR)/map.r $(RDIR)/mask.r \
-	  $(RDIR)/phaser.r $(RDIR)/pick.r $(RDIR)/polyphas.r $(RDIR)/rate.r \
+	  $(RDIR)/pan.r $(RDIR)/phaser.r $(RDIR)/pick.r \
+	  $(RDIR)/polyphas.r $(RDIR)/rate.r \
 	  $(RDIR)/resample.r $(RDIR)/reverb.r $(RDIR)/reverse.r \
-	  $(RDIR)/split.r $(RDIR)/stat.r $(RDIR)/swap.r $(RDIR)/vibro.r
+	  $(RDIR)/split.r $(RDIR)/stat.r $(RDIR)/swap.r $(RDIR)/vibro.r \
+	  $(RDIR)/vol.r
 
 
 LIBOBJS	=	$(FOBJ) $(EOBJ) $(RDIR)/handlers.r $(RDIR)/libst.r \

@@ -536,6 +536,11 @@ extern int st_map_flow();
 extern int st_mask_getopts();
 extern int st_mask_flow();
 
+extern int st_pan_getopts();
+extern int st_pan_start();
+extern int st_pan_flow();
+extern int st_pan_stop();
+
 extern int st_phaser_getopts();
 extern int st_phaser_start();
 extern int st_phaser_flow();
@@ -596,6 +601,12 @@ extern int st_vibro_getopts();
 extern int st_vibro_start();
 extern int st_vibro_flow();
 extern int st_vibro_stop();
+
+extern int st_vol_getopts();
+extern int st_vol_start();
+extern int st_vol_flow();
+extern int st_vol_stop();
+
 
 /*
  * EFF_CHAN means that the number of channels can change.
@@ -667,6 +678,9 @@ st_effect_t st_effects[] = {
 	{"mask", ST_EFF_MCHAN, 
 		st_mask_getopts, st_nothing, st_mask_flow, 
 		st_null_drain, st_nothing},
+	{"pan", ST_EFF_MCHAN|ST_EFF_CHAN, 
+		st_pan_getopts, st_pan_start, st_pan_flow, 
+		st_null_drain, st_pan_stop},
 	{"phaser", 0,
 	        st_phaser_getopts, st_phaser_start, st_phaser_flow,
 	        st_phaser_drain, st_phaser_stop},
@@ -700,6 +714,9 @@ st_effect_t st_effects[] = {
 	{"vibro", 0, 
 		st_vibro_getopts, st_vibro_start, st_vibro_flow, 
 		st_null_drain, st_nothing},
+	{"vol", 0, 
+		st_vol_getopts, st_vol_start, st_vol_flow, 
+		st_null_drain, st_vol_stop},
 	{0, 0, 0, 0, 0, 0, 0}
 };
 
