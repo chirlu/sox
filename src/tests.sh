@@ -28,9 +28,9 @@ rm -f ub.raw sb.raw ub2.raw ub2.voc
 rm -f ub.raw ub.au ub2.raw ub.sf 
 ./sox $noise ub2.sf ub2.aiff
 ./sox $noise ub2.aiff ub3.sf
-echo Comparing ub2.sf to ub3.sf, ignoring Comment field
-cmp -l ub2.sf ub3.sf | grep -v '^    2[3456789]'
-#rm -f ub2.sf ub2.aiff ub3.sf
+echo Comparing ub2.sf to ub3.sf
+cmp -l ub2.sf ub3.sf
+rm -f ub2.sf ub2.aiff ub3.sf
 #
 # Cmp -l of stop.raw and stop2.raw will show that most of the 
 # bytes are 1 apart.  This is quantization error.

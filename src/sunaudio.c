@@ -166,6 +166,8 @@ ft_t ft;
 	st_fail_errno(ft,errno,"Unable to initialize encoding for /dev/audio");
 	return(ST_EOF);
     }
+    /* Flush any data in the buffers - its probably in the wrong format */
+    ioctl(fileno(ft->fp), I_FLUSH, FLUSHR);
     /* Change to non-buffered I/O*/
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
     sigintreg(ft);	/* Prepare to catch SIGINT */

@@ -4,6 +4,15 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-12.17.3
+-----------
+  o Removed check that prevented pan from being invoked when the
+    input and output channels were the same.
+  o Ciaran Anscomb added a flush to sunaudio driver after changing
+    settings.  This is because it can start buffering data as soon
+    as the device is open and the buffered data can be in a
+    wrong format.
+
 sox-12.17.2
 -----------
   o Daniel Culbert found and fixed a bug in the polyphase effect

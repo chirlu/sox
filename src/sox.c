@@ -989,11 +989,7 @@ checkeffect()
         if (haschan > 1)
             st_fail("Can not specify multiple effects that modify channel #");
         if (hasrate > 1)
-            st_fail("Can not specify multiple effects that change sample rate");
-        if (haschan && !needchan)
-            st_fail("Can not specify channel effects when input and output channel # are equal");
-        if (hasrate && !needrate)
-            st_fail("Can not specify sample rate effects when input and output rate are equal");
+            st_report("Can not specify multiple effects that change sample rate");
 
         /* If not writing output then do not worry about adding
          * channel and rate effects.  This is just to speed things

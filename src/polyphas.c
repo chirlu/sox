@@ -390,6 +390,12 @@ int st_poly_start(eff_t effp)
 		int total, size, uprate;
     int k;
 
+    if (effp->ininfo.rate == effp->outinfo.rate)
+    {
+	st_fail("Input and Output rate must not be the same to use polyphase effect");
+	return(ST_EOF);
+    }
+
     st_initrand();
 
     rate->lcmrate = st_lcm((LONG)effp->ininfo.rate, (LONG)effp->outinfo.rate);

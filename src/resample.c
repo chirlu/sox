@@ -183,6 +183,12 @@ eff_t effp;
 	int i;
 	extern LONG st_gcd(LONG a,LONG b);
 
+	if (effp->ininfo.rate == effp->outinfo.rate)
+	{
+	    st_fail("Input and Output rates must be different to use resample effect");
+	    return(ST_EOF);
+	}
+		
 	r->Factor = (double)effp->outinfo.rate / (double)effp->ininfo.rate;
 
 	gcdrate = st_gcd((LONG)effp->ininfo.rate, (LONG)effp->outinfo.rate);

@@ -75,6 +75,12 @@ eff_t effp;
 	rate_t rate = (rate_t) effp->priv;
         ULONG incr;
 
+	if (effp->ininfo.rate == effp->outinfo.rate)
+	{
+	    st_fail("Input and Output rates must be different to use rate effect");
+	    return(ST_EOF);
+	}
+
 	if (effp->ininfo.rate >= 65535 || effp->outinfo.rate >= 65535)
 	{
 	    st_fail("rate effect can only handle rates <= 65535");
