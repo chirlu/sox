@@ -473,7 +473,7 @@ static void process(P0) {
 #if	defined(DUMB_FILESYSTEM)
 	outformat.seekable = 0;
 #else
-	outformat.seekable  = (filetype(fileno(informat.fp)) == S_IFREG);
+	outformat.seekable  = (filetype(fileno(outformat.fp)) == S_IFREG);
 #endif
 
 	st_copyformat(&informat, &outformat);
