@@ -142,7 +142,7 @@ const char *AdpcmBlockExpandI(
         {
                 int ch;
                 unsigned char b;
-                short *op, *top;
+                short *op, *top, *tmp;
 
                 /* already have 1st 2 samples from block-header */
                 op = obuff + 2*chans;
@@ -151,10 +151,12 @@ const char *AdpcmBlockExpandI(
                 ch = 0;
                 while (op < top) {
                         b = *ip++;
-                        *op++ = AdpcmDecode(b >> 4, state+ch, op[-chans], op[-2*chans]);
+			tmp = op;
+                        *op++ = AdpcmDecode(b >> 4, state+ch, tmp[-chans], tmp[-2*chans]);
                         if (++ch == chans) ch = 0;
                         /* ch = ++ch % chans; */
-                        *op++ = AdpcmDecode(b&0x0f, state+ch, op[-chans], op[-2*chans]);
+			tmp = op;
+                        *op++ = AdpcmDecode(b&0x0f, state+ch, tmp[-chans], tmp[-2*chans]);
                         if (++ch == chans) ch = 0;
                         /* ch = ++ch % chans; */
                 }

@@ -165,7 +165,6 @@ st_ssize_t st_prcwrite(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 
 int st_prcstopwrite(ft_t ft)
 {
-
         /* Call before seeking to flush buffer */
         st_rawstopwrite(ft);
 
@@ -181,6 +180,7 @@ int st_prcstopwrite(ft_t ft)
                 return(ST_EOF);
         }
         prcwriteheader(ft);
+	return ST_SUCCESS;
 }
 
 static void prcwriteheader(ft_t ft)
