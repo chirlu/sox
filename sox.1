@@ -117,6 +117,9 @@ sox \- Sound eXchange : universal sound sample translator
 .br
     \fBswap\fR [ \fI1 2\fR | \fI1 2 3 4\fR ]
 .br
+    \fBsynth\fR [ \fIlength\fR ] \fItype mix\fR [ \fIfreq\fR [ \fI-freq2\fR ]
+          [ \fIoff\fR ] [ \fIph\fR ] [ \fIp1\fR ] [ \fIp2\fR ] [ \fIp3\fR ]
+.br
     \fBtrim\fR \fIstart\fR [ \fIlength\fR ]
 .br
     \fBvibro\fR \fIspeed\fR [ \fIdepth\fR ]
@@ -731,9 +734,13 @@ For fade-ins, this starts from the first sample and ramps the volume of the audi
 For fade-outs, the audio data will be truncated at the stop-time and
 the volume will be ramped from full volume down to 0 starting at
 \fIfade-out-length\fR seconds before the \fIstop-time\fR.  No fade-out
-is performed if these options are not specified.  All times can be
-specified in seconds, mm:ss.frac, or hh:mm:ss.frac format.
-
+is performed if these options are not specified.
+.br
+All times can be specified in either periods of time or sample counts.
+To specify time periods use the format hh:mm:ss.frac format.  To specify
+using sample counts, specify the number of samples and append the letter 's'
+to the sample count (for example 8000s).
+.br
 An optional \fItype\fR can be specified to change the type of envelope.  Choices are q for quarter of a sinewave, h for half a sinewave, t for linear slope, l for logarithmic, and p for inverted parabola.  The default is a linear slope.
 .TP 10
 filter [ \fIlow\fR ]-[ \fIhigh\fR ] [ \fIwindow-len\fR [ \fIbeta\fR ] ]
@@ -1089,22 +1096,49 @@ feature is that you may duplicate a given channel by overwriting another.
 This is done by repeating an output channel on the command line.  For example,
 swap 2 2 will overwrite channel 1 with channel 2's data; creating a stereo
 file with both channels containing the same audio data.
+.TP
+synth [ \fIlength\fR ] \fItype mix\fR [ \fIfreq\fR [ \fI-freq2\fR ]
+.TP 10
+      [ \fIoff\fR ] [ \fIph\fR ] [ \fIp1\fR ] [ \fIp2\fR ] [ \fIp3\fR ]
+The synth effect will generate various types of audio data.  Although
+this effect is used to generate audio data, an input file must be specified.
+The length of the input audio file determines the length of the output
+audio file.
+.br
+<length> length in sec or hh:mm:ss.frac, 0=inputlength, default=0
+.br
+<type> is sine, square, triangle, sawtooth, trapetz, exp,
+whitenoise, pinknoise, brownnoise, default=sine
+.br
+<mix> is create, mix, amod, default=create
+.br
+<freq> frequency at beginning in Hz, not used  for noise..
+.br
+<freq2> frequency at end in Hz, not used for noise..
+<freq/2> can be given as %%n, where 'n' is the number of
+half notes in respect to A (440Hz)
+.br
+<off> Bias (DC-offset)  of signal in percent, default=0
+.br
+<ph> phase shift 0..100 shift phase 0..2*Pi, not used for noise..
+.br
+<p1> square: Ton/Toff, triangle+trapetz: rising slope time (0..100)
+.br
+<p2> trapetz: ON time (0..100)
+.br
+<p3> trapetz: falling slope position (0..100)
 .TP 10
 trim \fIstart\fR [ \fIlength\fR ]
 Trim can trim off unwanted audio data from the beginning and end of the
 audio file.  Audio samples are not sent to the output stream until
-the \fIstart\fR location is reached.  \fIstart\fR is a floating point number
-that tells the number of seconds to wait before starting.  If you know the
-sample number you would like to start at then the seconds can be obtained
-by multiplying (sample # * sample rate).
+the \fIstart\fR location is reached.
 .br
 The optional \fIlength\fR parameter tells the number of samples to output
 after the \fIstart\fR sample and is used to trim off the back side of the
 audio data.  Using a value of 0 for the \fIstart\fR parameter will allow
 trimming off the back side only.
 .br
-Both \fIstart\fR and \fIlength\fR can also be specified in mm:ss.frac
-or hh:mm:ss.frac format.
+Both options can be specified using either an amount of time and an exact count of samples.  The format for specifying lengths in time is hh:mm:ss.frac.  A start value of 1:30.5 will not start until 1 minute, thirty and 1/2 seconds into the audio data.  The format for specifying sample counts is the number of samples with the letter 's' appended to it.  A value of 8000s will wait until 8000 samples are read before starting to process audio data.
 .TP 10
 vibro \fIspeed \fB [ \fIdepth\fB ]
 Add the world-famous Fender Vibro-Champ sound

@@ -65,6 +65,8 @@ SYNOPSIS
 	   stat [ -s n ] [ -rms ] [ -v ] [ -d ]
 	   stretch [ factor [ window fade shift fading ]
 	   swap [ 1 2 | 1 2 3 4 ]
+	   synth [ length ] type mix [ freq [ -freq2 ]
+		 [ off ] [ ph ] [ p1 ] [ p2 ] [ p3 ]
 	   trim start [ length ]
 	   vibro speed [ depth ]
 	   vol gain [ type [ limitergain ] ]
@@ -325,9 +327,9 @@ FILE TYPES
 		 the list of supported file formats.
 
        .hcom	 Macintosh HCOM files.	 These	are  (apparently)
-		 Mac FSSD files with some variant of Huffman com­
-		 pression.  The Macintosh has wacky file  formats
-		 and   this  format  handler  apparently  doesn't
+		 Mac  FSSD  files  with	 some  variant of Huffman
+		 compression.  The Macintosh has wacky file  for­
+		 mats  and this format handler apparently doesn't
 		 handle all the ones it should.	 Mac  users  will
 		 need  your  usual  arsenal of file converters to
 		 deal with an HCOM file under Unix or DOS.
@@ -457,11 +459,11 @@ FILE TYPES
 		 file  header,	and  you  will	be warned to this
 		 effect.  You had better know what you are doing!
 		 Output	 format	 options will cause a format con­
-		 version, and the  .wav	 will  written	appropri­
-		 ately.	  Sox currently can read PCM, ULAW, ALAW,
-		 MS ADPCM, and IMA (or DVI) ADPCM.  It can  write
-		 all of these formats including (NEW!)	the ADPCM
-		 encoding.
+		 version,   and	   the	  .wav	  will	  written
+		 appropriately.	  Sox  currently  can  read  PCM,
+		 ULAW, ALAW, MS ADPCM, and IMA	(or  DVI)  ADPCM.
+		 It  can  write	 all  of  these formats including
+		 (NEW!)	 the ADPCM encoding.
 
        .wve	 Psion 8-bit alaw
 		 These are 8-bit a-law 8khz sound files	 used  on
@@ -670,9 +672,13 @@ EFFECTS
 		 from full volume down to 0 starting at fade-out-
 		 length seconds before the stop-time.	No  fade-
 		 out is performed if these options are not speci­
-		 fied.	All times can be  specified  in	 seconds,
-		 mm:ss.frac, or hh:mm:ss.frac format.
-
+		 fied.
+		 All times can be specified in either periods  of
+		 time  or sample counts.  To specify time periods
+		 use the format hh:mm:ss.frac format.  To specify
+		 using	sample counts, specify the number of sam­
+		 ples and append the letter  's'  to  the  sample
+		 count (for example 8000s).
 		 An  optional type can be specified to change the
 		 type of envelope.  Choices are q for quarter  of
 		 a  sinewave, h for half a sinewave, t for linear
@@ -1037,23 +1043,55 @@ EFFECTS
 		 channel  2's  data;  creating a stereo file with
 		 both channels containing the same audio data.
 
+       synth [ length ] type mix [ freq [ -freq2 ]
+
+	     [ off ] [ ph ] [ p1 ] [ p2 ] [ p3 ]
+		 The synth effect will generate various types  of
+		 audio	data.	Although  this	effect is used to
+		 generate audio data, an input file must be spec­
+		 ified.	  The  length  of  the	input  audio file
+		 determines the length of the output audio  file.
+		 <length>   length   in	  sec  or  hh:mm:ss.frac,
+		 0=inputlength, default=0
+		 <type>	 is  sine,  square,  triangle,	sawtooth,
+		 trapetz, exp, whitenoise, pinknoise, brownnoise,
+		 default=sine
+		 <mix> is create, mix, amod, default=create
+		 <freq> frequency at beginning in  Hz,	not  used
+		 for noise..
+		 <freq2>  frequency  at	 end  in Hz, not used for
+		 noise..  <freq/2> can be given as %%n, where 'n'
+		 is  the  number  of  half  notes in respect to A
+		 (440Hz)
+		 <off> Bias (DC-offset)	 of  signal  in	 percent,
+		 default=0
+		 <ph> phase shift 0..100 shift phase 0..2*Pi, not
+		 used for noise..
+		 <p1> square: Ton/Toff, triangle+trapetz:  rising
+		 slope time (0..100)
+		 <p2> trapetz: ON time (0..100)
+		 <p3> trapetz: falling slope position (0..100)
+
        trim start [ length ]
-		 Trim can trim off unwanted audio data	from  the
+		 Trim  can  trim off unwanted audio data from the
 		 beginning and end of the audio file.  Audio sam­
 		 ples are not sent to the output stream until the
-		 start	location is reached.  start is a floating
-		 point number that tells the number of seconds to
-		 wait  before  starting.   If you know the sample
-		 number you would like to start at then the  sec­
-		 onds  can be obtained by multiplying (sample # *
-		 sample rate).
+		 start location is reached.
 		 The optional length parameter tells  the  number
 		 of  samples to output after the start sample and
 		 is used to trim off the back side of  the  audio
 		 data.	 Using a value of 0 for the start parame­
 		 ter will allow trimming off the back side  only.
-		 Both  start  and length can also be specified in
-		 mm:ss.frac or hh:mm:ss.frac format.
+		 Both  options	can  be specified using either an
+		 amount of time and an exact  count  of	 samples.
+		 The  format  for  specifying  lengths in time is
+		 hh:mm:ss.frac.	 A start value of 1:30.5 will not
+		 start	until  1  minute,  thirty and 1/2 seconds
+		 into the audio data.  The format for  specifying
+		 sample	 counts is the number of samples with the
+		 letter 's' appended to it.   A	 value	of  8000s
+		 will  wait  until  8000  samples are read before
+		 starting to process audio data.
 
        vibro speed  [ depth ]
 		 Add the world-famous  Fender  Vibro-Champ  sound
@@ -1081,9 +1119,9 @@ EFFECTS
 		 changing the phase.
 		 When  type  is	 power	then  a value of 1.0 also
 		 means no change in volume.
-		 When type is dB the amplitude is  changed  loga­
-		 rithmically.	0.0  is constant while +6 doubles
-		 the amplitude.
+		 When  type  is	 dB  the  amplitude  is	  changed
+		 logarithmically.   0.0 is constant while +6 dou­
+		 bles the amplitude.
 		 An optional limitergain value can  be	specified
 		 and  should  be  a  value much less then 1.0 (ie
 		 0.05 or 0.02) and is used only on peaks to  pre­
