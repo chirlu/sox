@@ -490,7 +490,7 @@ int st_parsesamples(ULONG rate, char *str, ULONG *samples, char def)
     float frac = 0;
 
     if (strchr(str, ':') || strchr(str, '.') || str[strlen(str)-1] == 't')
-        found_time = 0;
+        found_time = 1;
     else if (str[strlen(str)-1] == 's')
         found_samples = 1;
 
@@ -502,12 +502,12 @@ int st_parsesamples(ULONG rate, char *str, ULONG *samples, char def)
         {
             if (sscanf(str, "%d", &time) != 1)
                 return ST_EOF;
-            samples += time;
+            *samples += time;
 
-            while (*str != ':' && *str != '.' && str != NULL)
+            while (*str != ':' && *str != '.' && *str != 0)
                 str++;
 
-            if (*str == '.' || str == NULL)
+            if (*str == '.' || *str == 0)
                 break;
 
             /* Skip past ':' */
@@ -517,10 +517,8 @@ int st_parsesamples(ULONG rate, char *str, ULONG *samples, char def)
 
         if (*str == '.')
         {
-            str++;
-            if (sscanf(str, "%d", &time) != 1)
+            if (sscanf(str, "%f", &frac) != 1)
                 return ST_EOF;
-            frac = time / 1000;
         }
 
         *samples *= rate;
@@ -535,29 +533,4 @@ int st_parsesamples(ULONG rate, char *str, ULONG *samples, char def)
         return ST_SUCCESS;
     }
     return ST_EOF;
-}
-
-/* Parse a time specification in hh:mm:ss.frac format.  Returns -1 */
-/* on failure. */
-double st_parsetime(char *str)
-{
-    double time, moretime;
-    if (sscanf(str, "%lf", &time) != 1)
-        return -1;
-    str = strchr(str, ':');
-    if (str == NULL)
-        return time;
-    str++;                              /* Skip colon */
-    time *= 60.0;
-    if (sscanf(str, "%lf", &moretime) != 1)
-        return -1;
-    time += moretime;
-    str = strchr(str, ':');
-    if (str == NULL)
-        return time;
-    str++;                              /* Skip colon */
-    time *= 60.0;
-    if (sscanf(str, "%lf", &moretime) != 1)
-        return -1;
-    return time + moretime;
 }

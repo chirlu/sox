@@ -153,7 +153,7 @@ float GeneratePinkNoise( PinkNoise *pink )
 /* Private data for the synthesizer */
 typedef struct synthstuff {
     /* options */
-    double time; /* length in sec */
+    char *length_str;
     int type[MAXCHAN];
     int mix[MAXCHAN];
     double freq[MAXCHAN];
@@ -162,9 +162,9 @@ typedef struct synthstuff {
 
     /* internal stuff */
     LONG max;
-    LONG samples_done;
+    ULONG samples_done;
     int rate;
-    LONG length; /* length in number of samples */
+    ULONG length; /* length in number of samples */
     double h[MAXCHAN]; /* store values necessary for  creation */
     PinkNoise pinkn[MAXCHAN];
 } *synth_t;
@@ -245,7 +245,7 @@ char **argv;
 
     /* set default parameters */
     synth->length = 0; /* use length of input file */
-    synth->time = 0.0;
+    synth->length_str = 0;
     synth->max = LONG_MAX;
     for(c=0;c<MAXCHAN;c++){
 	synth->freq[c] = 440.0;
@@ -273,11 +273,19 @@ char **argv;
 
     /* read length if given ( if first par starts with digit )*/
     if( isdigit((int)argv[argn][0])) {
-	synth->time = st_parsetime(argv[argn]);
-	if (synth->time < 0.0){
-	    st_warn("synth: illegal time");
+	synth->length_str = malloc(strlen(argv[argn])+1);
+	if (!synth->length_str)
+	{
+	    st_fail("Could not allocate memeory");
+	    return(ST_EOF);
+	}
+	strcpy(synth->length_str,argv[argn]);
+	/* Do a dummy parse of to see if it will fail */
+	if (st_parsesamples(0, synth->length_str, &synth->length, 't') !=
+		ST_SUCCESS)
+	{
 	    st_fail(usstr);
-		return(ST_EOF);
+	    return (ST_EOF);
 	}
 	argn++;
     }
@@ -410,9 +418,6 @@ char **argv;
 	parmcopy(synth,1,3);
     }
 
-
-
-
     return (ST_SUCCESS);
 }
 
@@ -427,13 +432,16 @@ eff_t effp;
     int i;
     int c;
     synth_t synth = (synth_t) effp->priv;
+    char *usstr=USSTR;
 
-    /* calc length in number of samples... */
-    synth->length = (double)effp->ininfo.rate * synth->time;
-
-    if (synth->length < 0){
-	st_fail("synth: start must be positive");
-	return(ST_EOF);
+    if (synth->length_str)
+    {
+	if (st_parsesamples(effp->ininfo.rate, synth->length_str,
+		            &synth->length, 't') != ST_SUCCESS)
+	{
+	    st_fail(usstr);
+	    return(ST_EOF);
+	}
     }
 
     synth->samples_done=0;

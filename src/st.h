@@ -338,7 +338,6 @@ int st_gettype(ft_t);
 void st_initformat(ft_t ft);
 void st_copyformat(ft_t, ft_t);
 int st_checkformat(ft_t);
-double st_parsetime(char *);
 int st_parsesamples(ULONG rate, char *str, ULONG *samples, char def);
 
 /* FIXME: Recording hacks shouldn't display a "sigint" style interface.

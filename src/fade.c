@@ -21,6 +21,7 @@
 #define FADE_PAR        'p'     /* Inverted parabola. */
 
 #include <math.h>
+#include <string.h>
 #include "st.h"
 
 /* Private data for fade file */
@@ -83,6 +84,13 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
         return (ST_EOF);
     }
     strcpy(fade->in_stop_str,argv[0]);
+    /* Do a dummy parse to see if it will fail */
+    if (st_parsesamples(0, fade->in_stop_str, &fade->in_stop, 't') !=
+	    ST_SUCCESS)
+    {
+	st_fail(FADE_USAGE);
+	return(ST_EOF);
+    }
 
     fade->out_start_str = fade->out_stop_str = 0;
 
@@ -99,6 +107,14 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
                 return (ST_EOF);
             }
              strcpy(fade->out_start_str,argv[t_argno]);
+
+	     /* Do a dummy parse to see if it will fail */
+	     if (st_parsesamples(0, fade->out_start_str, 
+			 &fade->out_start, 't') != ST_SUCCESS)
+	     {
+		 st_fail(FADE_USAGE);
+		 return(ST_EOF);
+	     }
         }
         else
         {
@@ -109,6 +125,14 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
                 return (ST_EOF);
             }
              strcpy(fade->out_stop_str,argv[t_argno]);
+
+	     /* Do a dummy parse to see if it will fail */
+	     if (st_parsesamples(0, fade->out_stop_str, 
+			 &fade->out_stop, 't') != ST_SUCCESS)
+	     {
+		 st_fail(FADE_USAGE);
+		 return(ST_EOF);
+	     }
         }
     } /* End for(t_argno) */
 
@@ -145,6 +169,7 @@ int st_fade_start(eff_t effp)
             st_fail(FADE_USAGE);
             return(ST_EOF);
         }
+	fade->out_stop += fade->out_start;
     }
     else
         fade->out_stop = fade->out_start;
