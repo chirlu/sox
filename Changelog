@@ -23,7 +23,7 @@ sox-12.17.5
   o Added patch from Ulf Harnhammar to wav handler to prevent
     buffer overflows.
   o Added patch from Redhat to allow resample to work on certain 64-bit
-    machines.
+    machines (Sam Varshavchik)
   o Tony Seebregts added a file handler for headerless Dialogic/OKI ADPCM
     files (VOX files).
   o Jan Paul Schmidt added a repeat effect to do loops the brute force way.
@@ -35,6 +35,8 @@ sox-12.17.5
   o Fix for vorbis were comments are displayed in KEY=value format always.
     Stop printing some info to stdout in case output is a pipe. Guenter
     Geiger.
+  o J Robert Ray submitted fix for AIFF handler to ignore lowercase
+    chunks that are unknown.
 
 sox-12.17.4
 -----------

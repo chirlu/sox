@@ -40,6 +40,7 @@ call t.bat smp
 call t.bat sndt
 call t.bat txw
 call t.bat voc
+call t.bat vox -r 8130
 call t.bat wav
 call t.bat wve
 
