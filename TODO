@@ -25,10 +25,7 @@ all patches to cbagwell@sprynet.com.
     same device in duplex.
 
   o Internally sox can handle multiple effects on a given sound file.
-    Add support for this from the command line.  Will probably need to
-    break out the MCHAN to MCHAN and VCHAN to distingish effects that
-    can handle Multiple channels and effects that can change the number
-    of resulting channels to Various values.
+    Add support for this from the command line.
 
   o Enhance sox for better interactive support.  This includes updating
     effect parameters in real time and ablity to start/stop/scan
@@ -49,12 +46,6 @@ all patches to cbagwell@sprynet.com.
     forward, and an to add new ones would be handy.
 
   o Update auto file type to include detection of .wve and .smp files.
-
-  o An effect loop for mixing mono -> stereo -> quad with sound
-    placement features: differential volume, phasing, and Doppler
-    shifting when the sound moves.  Static placement would work as
-    a SOX effect loop, but dynamic placement involves some scripting
-    feature, or joystick input etc.
 
   o This software wants to be a dataflow system with signal
     sources, sinks, and processors.  It wants to be class-based.

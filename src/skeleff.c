@@ -1,24 +1,22 @@
-
 /*
- * July 5, 1991
- * Copyright 1991 Lance Norskog And Sundry Contributors
+ * skeleff - Skelton Effect.  Use as sample for new effects.
+ *
+ * Written by Chris Bagwell (cbagwell@sprynet.com) - March 16, 1999
+ *
+  * Copyright 1999 Chris Bagwell And Sundry Contributors
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
+ * Chris Bagwell And Sundry Contributors are not responsible for 
  * the consequences of using this software.
  */
 
-/*
- * Sound Tools skeleton effect file.
- */
 
-#include <math.h>
 #include "st.h"
 
 /* Private data for SKEL file */
-typedef struct skelstuff {
-	int	rest;			/* bytes remaining in current block */
-} *skel_t;
+typedef struct skelleffstuff {
+	int  localdata;
+} *skeleff_t;
 
 /*
  * Process options
@@ -26,24 +24,31 @@ typedef struct skelstuff {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-void skel_getopts(effp, n, argv) 
+void skeleff_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
 {
-	if (n)
-		fail("Copy effect takes no options.");
+    skeleff_t skeleff = (skeleff_t) effp->priv;
+
+    if (n)
+    {
+	if (n != 1)
+	{
+	    fail("Usage: skeleff [option]");
+	}
+    }
 }
 
 /*
  * Prepare processing.
  * Do all initializations.
  */
-skel_start(effp)
+skeleff_start(effp)
 eff_t effp;
 {
-	/* nothing to do */
-	/* stuff data into delaying effects here */
+    if (effp->outinfo.channels == 1)
+	fail("Can't run skeleff on mono data.");
 }
 
 /*
@@ -51,40 +56,43 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void skel_flow(effp, ibuf, obuf, isamp, osamp)
+void skeleff_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 int *isamp, *osamp;
 {
-	skel_t skel = (skel_t) effp->priv;
-	int len, done;
-	
-	char c;
-	unsigned char uc;
-	short s;
-	unsigned short us;
-	LONG l;
-	ULONG ul;
-	float f;
-	double d;
+    skeleff_t skeleff = (skeleff_t) effp->priv;
+    int len, done;
 
-	len = ((*isamp > *osamp) ? *osamp : *isamp);
-	for(done = 0; done < len; done++) {
-		if no more samples
-			break
-		get a sample
-		l = sample converted to signed long
-		*buf++ = l;
+    switch (effp->outinfo.channels)
+    {
+    case 2:
+	/* Length to process will be buffer length / 2 since we
+	 * work with two samples at a time.
+	 */
+	len = ((*isamp > *osamp) ? *osamp : *isamp) / 2;
+	for(done = 0; done < len; done++)
+	{
+	    obuf[0] = ibuf[0];
+	    obuf[1] = ibuf[1];
+	    /* Advance buffer by 2 samples */
+	    ibuf += 2;
+	    obuf += 2;
 	}
-	*isamp = 
-	*osamp = 
+	
+	*isamp = len * 2;
+	*osamp = len * 2;
+	
+	break;
+	
+    }
 }
 
 /*
  * Drain out remaining samples if the effect generates any.
  */
 
-void skel_drain(effp, obuf, osamp)
+void skeleff_drain(effp, obuf, osamp)
 LONG *obuf;
 int *osamp;
 {
@@ -95,10 +103,8 @@ int *osamp;
  * Do anything required when you stop reading samples.  
  *	(free allocated memory, etc.)
  */
-void skel_stop(effp)
+void skeleff_stop(effp)
 eff_t effp;
 {
 	/* nothing to do */
 }
-
-
