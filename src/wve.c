@@ -41,7 +41,7 @@ int st_wvestartread(ft_t ft)
         short version;
         int rc;
 
-        uint32_t trash;
+        uint16_t trash16;
 
         /* Needed for rawread() */
         rc = st_rawstartread(ft);
@@ -95,9 +95,9 @@ int st_wvestartread(ft_t ft)
 
         st_readw(ft, (unsigned short *)&(p->repeats));
 
-        (void)st_readw(ft, (unsigned short *)&trash);
-        (void)st_readw(ft, (unsigned short *)&trash);
-        (void)st_readw(ft, (unsigned short *)&trash);
+        (void)st_readw(ft, (unsigned short *)&trash16);
+        (void)st_readw(ft, (unsigned short *)&trash16);
+        (void)st_readw(ft, (unsigned short *)&trash16);
 
         ft->info.encoding = ST_ENCODING_ALAW;
         ft->info.size = ST_SIZE_BYTE;
