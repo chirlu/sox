@@ -94,6 +94,10 @@ static int st_auencodingandsize(int sun_encoding, char *encoding, char *size)
             *encoding = ST_ENCODING_SIGN2;
             *size = ST_SIZE_WORD;
             break;
+    case SUN_FLOAT:
+            *encoding = ST_ENCODING_FLOAT;
+            *size = ST_SIZE_32BIT;
+            break;
     default:
             st_report("encoding: 0x%lx", encoding);
             return(ST_EOF);
@@ -208,7 +212,7 @@ int st_austartread(ft_t ft)
         if(st_auencodingandsize(encoding, &(ft->info.encoding),
                              &(ft->info.size)) == ST_EOF)
         {
-            st_fail_errno(ft,ST_EFMT,"Unsupported encoding in Sun/NeXT header.\nOnly U-law, signed bytes, signed words, and ADPCM are supported.");
+            st_fail_errno(ft,ST_EFMT,"Unsupported encoding in Sun/NeXT header.\nOnly U-law, signed bytes, signed words, ADPCM, and 32-bit floats are supported.");
             return(ST_EOF);
         }
         switch (encoding) {
@@ -392,6 +396,8 @@ static int st_ausunencoding(int size, int encoding)
                 sun_encoding = SUN_LIN_8;
         else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_WORD)
                 sun_encoding = SUN_LIN_16;
+        else if (encoding == ST_ENCODING_FLOAT && size == ST_SIZE_32BIT)
+                sun_encoding = SUN_FLOAT;
         else
                 sun_encoding = -1;
         return sun_encoding;

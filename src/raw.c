@@ -301,12 +301,17 @@ void st_f32_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
     while (len)
     {
         float datum;
+        uint32_t int_datum, *ip;
 
-        datum = *((float *)buf2);
+        /* If swapping is needed, do this before converting to a float. */
+        int_datum = *((uint32_t *)buf2);
         buf2++; buf2++; buf2++; buf2++;
         if (swap)
-            datum = st_swapf(datum);
+            int_datum = st_swapdw(int_datum);
 
+        ip = &int_datum;
+        datum = *((float *)ip);
+    
         *buf1++ = ST_FLOAT_DWORD_TO_SAMPLE(datum);
         len--;
     }
@@ -317,12 +322,23 @@ void st_f64_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
     while (len)
     {
         double datum;
+        uint32_t int_datum[2], *ip;
 
-        datum = *((double *)buf2);
-        buf2++; buf2++; buf2++; buf2++;
+        /* If swapping needs to occur, do this before moving into
+         * float data.
+         */
+        int_datum[0] = *((uint32_t *)buf2);
         buf2++; buf2++; buf2++; buf2++;
         if (swap)
-            datum = st_swapd(datum);
+            int_datum[0] = st_swapdw(int_datum[0]);
+
+        int_datum[1] = *((uint32_t *)buf2);
+        buf2++; buf2++; buf2++; buf2++;
+        if (swap)
+            int_datum[1] = st_swapdw(int_datum[1]);
+
+        ip = &int_datum[0];
+        datum = *((double *)ip);
 
         *buf1++ = ST_FLOAT_DDWORD_TO_SAMPLE(datum);
         len--;

@@ -240,12 +240,16 @@ int st_writedw(ft_t ft, uint32_t udw)
 /* Read float. */
 int st_readf(ft_t ft, float *f)
 {
-        if (st_read(ft, f, sizeof(float), 1) != 1)
+        uint32_t datum, *dp;
+
+        dp = &datum;
+        if (st_read(ft, dp, sizeof(float), 1) != 1)
         {
             return(ST_EOF);
         }
         if (ft->swap)
-                *f = st_swapf(*f);
+                datum = st_swapdw(datum);
+        *f = *((float *)dp);
         return ST_SUCCESS;
 }
 
@@ -267,12 +271,20 @@ int st_writef(ft_t ft, float f)
 /* Read double. */
 int st_readdf(ft_t ft, double *d)
 {
-        if (st_read(ft, d, sizeof(double), 1) != 1)
+        uint32_t datum[2], *dp;
+
+        dp = &datum[0];
+        if (st_read(ft, dp, sizeof(double), 1) != 1)
         {
             return(ST_EOF);
         }
         if (ft->swap)
-                *d = st_swapd(*d);
+        {
+                datum[0] = st_swapd(datum[0]);
+                datum[1] = st_swapd(datum[1]);
+        }
+        *d = *((float *)dp);
+
         return ST_SUCCESS;
 }
 

@@ -54,6 +54,10 @@ sox-12.17.6
   o Donnie Smith updated the silence effect so that its possible
     to remove silence from the middle of a sound file by
     using a negative value for stop_periods.
+  o Changed float routines to only work with normalized values
+    from -1:1.
+  o Modifed .au handler to be able to read and write 32-bit
+    and 64-bit float data.  Only tested reading so far.
 
 sox-12.17.5
 -----------
