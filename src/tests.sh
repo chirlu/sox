@@ -20,6 +20,16 @@ else
 fi
 rm -f raw1.sb raw2.ub
 
+./sox $noise -r 8012 -c 1 raw1.ub raw1.sw
+./sox $noise -r 8012 -c 1 raw1.sw raw2.ub
+if cmp -s raw1.ub raw2.ub
+then
+    echo "Conversion between unsigned bytes and signed words was successful"
+else
+    echo "Error converting between signed words and unsigned bytes"
+fi
+rm -f raw1.sw raw2.ub
+
 ./sox $noise -r 8012 -c 1 raw1.ub raw1.al
 ./sox $noise -r 8012 -c 1 raw1.al raw2.ub
 if cmp -s raw1.ub raw2.ub
@@ -30,25 +40,6 @@ else
 fi
 rm -f raw1.al raw2.ub
 
-./sox $noise -r 8012 -c 1 raw1.ub raw1.ul
-./sox $noise -r 8012 -c 1 raw1.ul raw2.ub
-if cmp -s raw1.ub raw2.ub
-then
-    echo "Conversion between unsigned bytes and ulaw bytes was successful"
-else
-    echo "Error converting between ulaw and unsigned bytes"
-fi
-rm -f raw1.ul raw2.ub
-
-./sox $noise -r 8012 -c 1 raw1.ub raw1.sw
-./sox $noise -r 8012 -c 1 raw1.sw raw2.ub
-if cmp -s raw1.ub raw2.ub
-then
-    echo "Conversion between unsigned bytes and signed words was successful"
-else
-    echo "Error converting between signed words and unsigned bytes"
-fi
-rm -f raw1.sw raw2.ub
 
 ./sox $noise -r 8012 -c 1 raw1.ub raw1.uw
 ./sox $noise -r 8012 -c 1 raw1.uw raw2.ub
@@ -68,9 +59,32 @@ then
 else
     echo "Error converting between signed long and unsigned bytes"
 fi
-rm -f raw1.uw raw2.ub
+rm -f raw1.sl raw2.ub
+
+./sox $noise -r 8012 -c 1 raw1.ub -f -l raw1.raw
+./sox $noise -r 8012 -c 1 -f -l raw1.raw raw2.ub
+if cmp -s raw1.ub raw2.ub
+then
+    echo "Conversion between unsigned bytes and float was successful"
+else
+    echo "Error converting between float and unsigned bytes"
+fi
+rm -f raw1.raw raw2.ub
 
 rm -f raw1.ub
+./sox $noise monkey.au raw1.sw
+
+./sox $noise -r 8012 -c 1 raw1.sw raw1.ul
+./sox $noise -r 8012 -c 1 raw1.ul raw2.sw
+if cmp -s raw1.sw raw2.sw
+then
+    echo "Conversion between signed words and ulaw bytes was successful"
+else
+    echo "Error converting between ulaw and signed words"
+fi
+rm -f raw1.ul raw2.sw
+
+rm -f raw1.sw
 
 ./sox $noise monkey.au -u -b monkey1.wav
 

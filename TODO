@@ -5,27 +5,11 @@ all patches to cbagwell@users.sourceforge.net.
 
   o Make a global version of MIN/MAX instead of sprinkled min/max/MIN/MAX
 
-  o Unify the raw writing functions to work line the raw reading functions.
-    Also, add support to all file handlers to handle 32-bit and float
+  o Add support to all file handlers to handle 32-bit and float
     data types since raw functions can handle them.
 
   o All comment code has a memory leak.  They must malloc memory to
     store comment but its never free()'d.
-
-  o Create a version of OSS and Sun driver that can play and record from the
-    same device in duplex.
-
-  o Add support for mixing multiple inputs from command line.
-
-  o Endian checks are probably invalid on 64-bit machines.
-
-  o Enhance sox for better interactive support.  This includes updating
-    effect parameters in real time and ablity to start/stop/scan
-    file handlers in real time.
-
-  o Loop support for all formats that know about it.  WAV has
-    some support for loops ("cue-points") but no support for
-    MIDI note numbers.  Someone needs to add this in.
 
   o Comment strings.  Some file formats have space for embedded comments.
     These are currently thrown away.  Printing them out, carrying them
@@ -35,8 +19,6 @@ all patches to cbagwell@users.sourceforge.net.
     graphing since it is only a stream of ascii sample values but some
     program appear to like it.  Also has a much nicer header.
     http://lab.chass.utoronto.ca/damion/audio/coolwav.htm
-
-  o Update auto file type to include detection of .wve and .smp files.
 
   o Keep sox from using "fail" on errors.  Sox was supposed to be
     a sound library called "ST" but libraries shouldn't exit a program,

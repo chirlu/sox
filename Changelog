@@ -48,6 +48,9 @@ sox-12.17.3
     support by default.  Also have Makefile's make use of more configure
     prefix options to allow for customized installs.
   o Reverted ulaw/alaw conversion routines back to Sun's versions.
+  o Modified raw file handler to write files in the same generic buffered
+    fashion that was added for reading in 12.17.2.  Seems to have
+    speed up some types of writing.
 
 sox-12.17.2
 -----------

@@ -108,6 +108,16 @@ int st_autostartread(ft_t ft)
 			type = "sph";
 		}
 	    }
+	    else if (strncmp(header, "ALaw", 4) == 0)
+	    {
+		if (fread(header, 1, 11, ft->fp) == 11)
+		{
+		    if (strncmp(header, "SoundFile**", 11) == 0)
+		    {
+			type = "wve";
+		    }
+		}
+	    }
 	} /* read 4-byte header */
 
 	/* If we didn't find type yet then start looking for file

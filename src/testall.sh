@@ -17,11 +17,11 @@ t cvs
 t dat
 t hcom -r 22050
 t maud
-t raw -r 8130 -t ub
 t sf 
 t smp
 t sndt 
 t txw
+t ub -r 8130
 t vms
 t voc
 t wav

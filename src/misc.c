@@ -36,9 +36,10 @@ const char *st_sizes_str[] = {
         "shorts",
         "NONSENSE",
         "longs",
-        "32-bit floats",
-        "64-bit floats",
-        "IEEE floats",
+        "NONSENSE",
+        "NONSENSE",
+        "NONSENSE",
+        "long longs",
 };
 
 const char *st_encodings_str[] = {
@@ -47,6 +48,7 @@ const char *st_encodings_str[] = {
         "signed (2's complement)",
         "u-law",
         "a-law",
+	"floating point",
         "adpcm",
         "ima_adpcm",
         "gsm",
