@@ -1,0 +1,240 @@
+dnl Process this file with autoconf to produce a configure script.
+dnl
+dnl configure.in
+dnl
+
+AC_REVISION([configure.in 0.2])
+AC_INIT(sox.c)
+dnl AC_CONFIG_HEADER(config.h)
+
+dnl Initial values for exported symbols.
+
+NEED_OSS=0
+NEED_SUNAU=0
+NEED_ALSA=0
+
+dnl Parameters to configure
+
+AC_ARG_ENABLE(old_rate,
+	[  --enable-old-rate       Use old rate code],
+	[old_rate=yes])
+
+AC_ARG_ENABLE(fast_ulaw_comp,
+	[  --enable-fast-ulaw      Use fast ulaw compression (+32K memory)],
+	[fast_ulaw_comp=yes])
+
+AC_ARG_ENABLE(fast_alaw_comp,
+	[  --enable-fast-alaw      Use fast alaw compression (+32K memory)],
+	[fast_alaw_comp=yes])
+
+AC_ARG_WITH(gsm_libdir,
+	[  --with-gsmlib           Location of GSM 6.10 library (=dir)],
+	[gsm_libdir="$withval"])
+
+AC_ARG_WITH(gsm_incdir,
+	[  --with-gsminc           Location of GSM 6.10 headers (=dir)],
+	[gsm_incdir="$withval"])
+
+AC_ARG_WITH(alsa_dsp,
+	[  --with-alsa-dsp         Force support for /dev/snd/pcm00 (ALSA)],
+	[alsa_dsp=yes])
+
+AC_ARG_WITH(oss_dsp,
+	[  --with-oss-dsp          Force support for /dev/dsp (OSS)],
+	[oss_dsp=yes])
+
+AC_ARG_WITH(sun_audio,
+	[  --with-sun-audio        Force support for /dev/audio (SUN, etc)],
+	[sun_audio=yes])
+
+dnl Set host type
+
+AC_CANONICAL_SYSTEM
+
+case "$target" in
+	*aix* )
+		CFLAGS="$CFLAGS -D_ALL_SOURCE"
+		;;
+
+	*att* )
+		dnl 386 AT&T Unix.
+		CFLAGS="$CFLAGS -DBLASTER"
+		;;
+
+	i*86-*-bsd* )
+		CFLAGS="$CFLAGS -DSBLAST"
+		;;
+
+	*hpux* )
+		CFLAGS="$CFLAGS -D_HPUX_SOURCE"
+		;;
+
+	*next* )
+		CFLAGS="$CFLAGS -DNeXT"
+		;;
+esac
+
+dnl Checks for programs.
+
+AC_PROG_CC
+AC_PROG_RANLIB
+AC_PROG_INSTALL
+
+dnl Checks for libraries.
+
+dnl Test for GSM library.
+AC_CHECK_LIB(gsm, gsm_create)
+if test "$ac_cv_lib_gsm" = yes
+then
+	CFLAGS="$CFLAGS -DHAVE_GSM"
+fi
+if test "$ac_cv_lib_gsm" = no
+then
+	if test -n "$gsm_libdir"
+	then
+		CFLAGS="$CFLAGS -I$gsm_incdir -DHAVE_GSM"
+		LIBS="$LIBS -L$gsm_libdir -lgsm"
+	fi
+fi
+
+dnl Checks for header files.
+
+AC_CHECK_HEADERS(getopt.h)
+
+dnl Checks for library functions.
+
+AC_CHECK_FUNCS(getopt)
+
+AC_CHECK_FUNCS(strerror memmove)
+
+dnl Checks for system services.
+
+AC_CACHE_CHECK(
+	[whether /dev/snd/pcm00 is functional (ALSA)],
+	ac_cv_dev_alsa_dsp,
+	AC_TRY_RUN(
+		[
+		int
+		main()
+			{
+			int fd = open("/dev/snd/pcm00", 0);
+			if (fd != -1)
+				{
+				close(fd);
+				return 0;
+				}
+			return 1;
+			}
+		],
+		ac_cv_dev_alsa_dsp=yes,
+		ac_cv_dev_alsa_dsp=no,
+		ac_cv_dev_alsa_dsp=no)
+	)
+if test "$ac_cv_dev_alsa_dsp" = yes; then alsa_dsp=yes; fi
+if test "$alsa_dsp" = yes
+then
+	CFLAGS="$CFLAGS -DALSA_PLAYER"
+	NEED_ALSA=1
+	if test "$ac_cv_dev_alsa_dsp" = no
+	then
+		AC_MSG_WARN([Force support for /dev/snd/pcm00 (ALSA)])
+	fi
+fi
+
+AC_CACHE_CHECK(
+	[whether /dev/dsp is functional (OSS)],
+	ac_cv_dev_oss_dsp,
+	AC_TRY_RUN(
+		[
+		int
+		main()
+			{
+			int fd = open("/dev/dsp", 0);
+			if (fd != -1)
+				{
+				close(fd);
+				return 0;
+				}
+			return 1;
+			}
+		],
+		ac_cv_dev_oss_dsp=yes,
+		ac_cv_dev_oss_dsp=no,
+		ac_cv_dev_oss_dsp=no)
+	)
+if test "$ac_cv_dev_oss_dsp" = yes; then oss_dsp=yes; fi
+if test "$oss_dsp" = yes
+then
+	CFLAGS="$CFLAGS -DOSS_PLAYER"
+	NEED_OSS=1
+	if test "$ac_cv_dev_oss_dsp" = no
+	then
+		AC_MSG_WARN([Force support for /dev/dsp (OSS)])
+	fi
+fi
+
+AC_CACHE_CHECK(
+	[whether /dev/audio is functional (SUN, etc)],
+	ac_cv_dev_sun_audio,
+	AC_TRY_RUN(
+		[
+		int
+		main()
+			{
+			int fd = open("/dev/audio", 0);
+			if (fd != -1)
+				{
+				close(fd);
+				return 0;
+				}
+			return 1;
+			}
+		],
+		ac_cv_dev_sun_audio=yes,
+		ac_cv_dev_sun_audio=no,
+		ac_cv_dev_sun_audio=no)
+	)
+if test "$ac_cv_dev_sun_audio" = yes; then sun_audio=yes; fi
+if test "$sun_audio" = yes
+then
+	CFLAGS="$CFLAGS -DSUNAUDIO_PLAYER"
+	NEED_SUNAU=1
+	if test "$ac_cv_dev_sun_audio" = no
+	then
+		AC_MSG_WARN([Force support for /dev/audio (SUN, etc)])
+	fi
+fi
+
+dnl The end
+
+if test "$old_rate" = yes
+then
+	CFLAGS="$CFLAGS -DUSE_OLD_RATE"
+fi
+if test "$fast_ulaw_comp" = yes
+then
+	CFLAGS="$CFLAGS -DFAST_ULAW_COMPRESSION"
+fi
+if test "$fast_alaw_comp" = yes
+then
+	CFLAGS="$CFLAGS -DFAST_ALAW_COMPRESSION"
+fi
+
+LIBS="$LIBS -L. -lst -lm"
+
+AC_SUBST(NEED_OSS)
+AC_SUBST(NEED_SUNAU)
+AC_SUBST(NEED_ALSA)
+AC_LINK_FILES(tests.sh monkey.au monkey.voc, tests.sh monkey.au monkey.voc)
+AC_OUTPUT([Makefile])
+
+echo
+echo "Configure finished.  Do 'make depend; make' to compile SOX."
+echo
+
+dnl Local Variables:
+dnl comment-start: "dnl "
+dnl comment-end: ""
+dnl comment-start-skip: "\\bdnl\\b\\s *"
+dnl compile-command: "autoconf"
+dnl End:
