@@ -13,7 +13,6 @@ bindir = @bindir@
 libdir = @libdir@
 mandir = @mandir@
 includedir = @includedir@
-package_tarname = @PACKAGE_TARNAME@
 
 # Shell commands.
 
@@ -21,7 +20,6 @@ CC	= @CC@
 RANLIB	= @RANLIB@
 INSTALL	= @INSTALL@
 AR	= ar r
-TAR	= tar
 RM	= rm -f
 LN_S    = @LN_S@
 
@@ -170,10 +168,6 @@ distclean:
 	$(RM) config.cache config.log config.status config.h Makefile
 	$(RM) -r autom4te*.cache
 	$(RM) stconfig.h ststdint.h
-
-tar:
-	cd $(srcdir)/..; $(RM) $(package_tarname).tar
-	cd $(srcdir)/.. ; $(TAR) $(package_tarname).tar $(srcdir)
 
 # Rules to automatically rerun configure tools as needed.
 $(srcdir)/configure: configure.in aclocal.m4
