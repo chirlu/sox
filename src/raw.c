@@ -274,7 +274,7 @@ LONG *buf, nsamp;
 			}
 			return done;
 		default:
-			fail("Drop through in rawread!");
+			break;
 	}
 	fail("Sorry, don't have code to read %s, %s",
 		st_encodings_str[ft->info.style], st_sizes_str[ft->info.size]);
@@ -454,10 +454,10 @@ LONG *buf, nsamp;
 				}
 				return done;
 			case ST_ENCODING_ULAW:
-fail("No U-Law support for shorts (try -b option ?)");
+				fail("No U-Law support for shorts");
 				return 0;
 			case ST_ENCODING_ALAW:
-fail("No A-Law support for shorts (try -b option ?)");
+				fail("No A-Law support for shorts");
 				return 0;
 		    }
 		    break;
@@ -484,8 +484,7 @@ fail("No A-Law support for shorts (try -b option ?)");
 			}
 			return done;
 		default:
-		    fail("Drop through in rawwrite!");
-		    return 0;
+			break;
 	}
 	fail("Sorry, don't have code to write %s, %s",
 		st_encodings_str[ft->info.style], st_sizes_str[ft->info.size]);

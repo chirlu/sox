@@ -79,7 +79,12 @@ ft_t ft;
     if (ft->info.channels == -1) ft->info.channels = 1;
     else if (ft->info.channels > 2) ft->info.channels = 2;
 
-    ioctl(fileno(ft->fp), SNDCTL_DSP_RESET, 0);
+    if (ioctl(fileno(ft->fp), SNDCTL_DSP_RESET, 0) < 0)
+    {
+	fail("Unable to reset OSS driver.  Possibly accessing an invalid file/device");
+	return(ST_EOF);
+    }
+    ft->file.size = 0;
     ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &ft->file.size);
     if (ft->file.size < 4 || ft->file.size > 65536) {
 	    fail("Invalid audio buffer size %d", ft->file.size);
@@ -100,8 +105,9 @@ ft_t ft;
     }
 
     tmp = samplesize;
-    ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp);
-    if (tmp != samplesize) {
+    if (ioctl(fileno(ft->fp), SNDCTL_DSP_SAMPLESIZE, &tmp) < 0 || 
+	tmp != samplesize)
+    {
 	fail("Unable to set the sample size to %d", samplesize);
 	return (ST_EOF);
     }
@@ -110,17 +116,17 @@ ft_t ft;
     else dsp_stereo = 0;
 
     tmp = dsp_stereo;
-    ioctl(fileno(ft->fp), SNDCTL_DSP_STEREO, &tmp);
-    if (tmp != dsp_stereo) {
+    if (ioctl(fileno(ft->fp), SNDCTL_DSP_STEREO, &tmp) < 0 ||
+	tmp != dsp_stereo) {
 	ft->info.channels = 1;
 	warn("Couldn't set to %s", dsp_stereo?  "stereo":"mono");
 	dsp_stereo = 0;
     }
 
     tmp = ft->info.rate;
-    ioctl (fileno(ft->fp), SNDCTL_DSP_SPEED, &tmp);
-    if (ft->info.rate != tmp) {
-	/* If the rate the sound card is using is not within 2% of what
+    if (ioctl (fileno(ft->fp), SNDCTL_DSP_SPEED, &tmp) < 0 || 
+    	ft->info.rate != tmp) {
+	/* If the rate the sound card is using is not within 1% of what
 	 * the user specified then override the user setting.
 	 * The only reason not to always override this is because of
 	 * clock-rounding problems. Sound cards will sometimes use
@@ -128,8 +134,8 @@ ft_t ft;
 	 * this and having strange output file rates for something that
 	 * we can't hear anyways.
 	 */
-	if (ft->info.rate - tmp > (tmp * .02) || 
-	    tmp - ft->info.rate > (tmp * .02)) {
+	if (ft->info.rate - tmp > (tmp * .01) || 
+	    tmp - ft->info.rate > (tmp * .01)) {
 	    warn("Unable to set audio speed to %d (set to %d)",
 		     ft->info.rate, tmp);
 	    ft->info.rate = tmp;

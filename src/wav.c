@@ -1147,24 +1147,8 @@ int second_header;
 
 	int rc;
 
-	if (ft->info.style != ST_ENCODING_ADPCM &&
-	    ft->info.style != ST_ENCODING_IMA_ADPCM &&
-	    ft->info.style != ST_ENCODING_GSM
-	   )
-	{
-		rc = st_rawstartwrite(ft);
-		if (rc)
-		    return rc;
-	}
-
 	wSamplesPerSecond = ft->info.rate;
 	wChannels = ft->info.channels;
-
-	if (wChannels == 0 || wChannels>64) /* FIXME: arbitrary upper limit */
-	{
-	    fail("Channels(%d) out-of-range\n",wChannels);
-	    return ST_EOF;
-	}
 
 	switch (ft->info.size)
 	{
@@ -1172,33 +1156,48 @@ int second_header;
 		        wBitsPerSample = 8;
 			if (ft->info.style != ST_ENCODING_UNSIGNED &&
 			    ft->info.style != ST_ENCODING_ULAW &&
-			    ft->info.style != ST_ENCODING_ALAW)
+			    ft->info.style != ST_ENCODING_ALAW &&
+			    ft->info.style != ST_ENCODING_GSM)
 			{
-				warn("Only support unsigned, ulaw, or alaw with 8-bit data.  Forcing to unsigned");
+				warn("Do not support %s with 8-bit data.  Forcing to unsigned",st_encodings_str[ft->info.style]);
 				ft->info.style = ST_ENCODING_UNSIGNED;
 			}
 			break;
 		case ST_SIZE_WORD:
 			wBitsPerSample = 16;
-			if ((ft->info.style == ST_ENCODING_UNSIGNED ||
-			     ft->info.style == ST_ENCODING_ULAW ||
-			     ft->info.style == ST_ENCODING_ALAW) &&
-			    !second_header)
+			if (ft->info.style != ST_ENCODING_SIGN2)
 			{
-				warn("Do not support Unsigned, ulaw, or alaw with 16 bit data.  Forcing to Signed");
+				warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[ft->info.style]);
 				ft->info.style = ST_ENCODING_SIGN2;
 			}
 			break;
 		case ST_SIZE_DWORD:
 			wBitsPerSample = 32;
+			if (ft->info.style != ST_ENCODING_SIGN2)
+			{
+				warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[ft->info.style]);
+				ft->info.style = ST_ENCODING_SIGN2;
+			}
+
 			break;
 		default:
-			wBitsPerSample = 32;
+			warn("Do not support %s in WAV files.  Forcing to Signed Words.",st_sizes_str[ft->info.size]);
+			ft->info.style = ST_ENCODING_SIGN2;
+			ft->info.size = ST_SIZE_WORD;
+			wBitsPerSample = 16;
 			break;
 	}
 
-	bytespersample = ST_SIZE_WORD;	/* common default */
-	wSamplesPerBlock = 1;	/* common default */
+	if (ft->info.style != ST_ENCODING_ADPCM &&
+	    ft->info.style != ST_ENCODING_IMA_ADPCM &&
+	    ft->info.style != ST_ENCODING_GSM)
+	{
+		rc = st_rawstartwrite(ft);
+		if (rc)
+		    return rc;
+	}
+
+	wSamplesPerBlock = 1;	/* common default for PCM data */
 
 	switch (ft->info.style)
 	{
@@ -1210,12 +1209,10 @@ int second_header;
 			break;
 		case ST_ENCODING_ALAW:
 			wFormatTag = WAVE_FORMAT_ALAW;
-	    		bytespersample = ST_SIZE_BYTE;
 	    		wBlockAlign = wChannels;
 			break;
 		case ST_ENCODING_ULAW:
 			wFormatTag = WAVE_FORMAT_MULAW;
-	    		bytespersample = ST_SIZE_BYTE;
 	    		wBlockAlign = wChannels;
 			break;
 		case ST_ENCODING_IMA_ADPCM:
