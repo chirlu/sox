@@ -394,7 +394,7 @@ st_ssize_t st_vorbiswrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
         for (i = 0; i < samples; i++)
                 for (j = 0; j < ft->info.channels; j++)
                         buffer[j][i] = buf[i*ft->info.channels + j] 
-                                / 2147483648.0f;
+                                / ((float)ST_SAMPLE_MAX);
 
         vorbis_analysis_wrote(&ve->vd, samples);
         

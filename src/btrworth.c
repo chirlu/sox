@@ -48,7 +48,7 @@ int st_butterworth_start (eff_t effp)
 }
 
 int st_butterworth_flow (eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	                 st_size_t *isamp, st_size_t *osamp)
+                         st_size_t *isamp, st_size_t *osamp)
 {
   butterworth_t butterworth = (butterworth_t) effp->priv;
 
@@ -81,11 +81,11 @@ int st_butterworth_flow (eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     butterworth->y [1] = butterworth->y [0];
     butterworth->y [0] = out;
 
-    if (out < -2147483647.0) {
-      out = -2147483647.0;
+    if (out < ST_SAMPLE_MIN) {
+      out = ST_SAMPLE_MIN;
     }
-    else if (out > 2147483647.0) {
-      out = 2147483647.0;
+    else if (out > ST_SAMPLE_MAX) {
+      out = ST_SAMPLE_MAX;
     }
 
     *obuf++ = out;

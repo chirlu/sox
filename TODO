@@ -1,21 +1,19 @@
 People are encouraged to pick some of these and implement it.  Send
 all patches to cbagwell@users.sourceforge.net.
 
+  o Effects engine should not have a global "flow" period
+    followed by a global "drain" period.  Each effect should
+    track which it needs to invoke.  Until thats done you
+    won't be able to stack two effects that both make use
+    of drain (ie. can't run the "reverse" effect twice
+    on the same command line and have a good output file).
+
   o Document how to play to audio device in man pages.
-
-  o Fix comment memory leaks and other issues.
-
-  o Use valgrind and fix reported errors.
 
   o Have sox.c auto remove an resample effects when rates are the same
     (allows scripts to be dumper).
 
   o Add MP3 support to WAV handler. Can copy most work from mp3.c.
-
-  o Allow to trim beginning of audio file using file handler's
-    seek() function to speed up operation.  Not sure if
-    it should be done with command line option or intercepting
-    the "trim" effect.
 
   o Document how the synth effect is meant to be used (with nul file
     handler).
@@ -64,18 +62,12 @@ all patches to cbagwell@users.sourceforge.net.
     of detecting uint64_t...  Use that when possible to speed up
     math (won't have to convert back and forth from int to float).
 
-  o Several files are using hard-coded #'s instead of ST_SAMPLE_MIN/MAX.
-    Change these.
-
   o Make a global version of MIN/MAX instead of sprinkled min/max/MIN/MAX
 
   o Make a global version of clip() instead of sprinked in all files.
 
   o Add support to all file handlers to handle 32-bit and float
     data types since raw functions can handle them.
-
-  o All comment code has a memory leak.  They must malloc memory to
-    store comment but its never free()'d.
 
   o Comment strings.  Some file formats have space for embedded comments.
     These are currently thrown away.  Printing them out, carrying them
