@@ -19,8 +19,8 @@ extern "C" {
 #include <stdlib.h>
 #include "ststdint.h"
 
-/* Release 12.17.6 of libst */
-#define ST_LIB_VERSION_CODE 0x0c1106
+/* Release 12.17.7 of libst */
+#define ST_LIB_VERSION_CODE 0x0c1107
 #define ST_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 typedef int32_t st_sample_t;
