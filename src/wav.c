@@ -321,7 +321,7 @@ st_ssize_t wavgsmread(ft_t ft, st_sample_t *buf, st_ssize_t len)
     return done;
 }
 
-static int wavgsmflush(ft_t ft, int pad)
+static int wavgsmflush(ft_t ft)
 {
     gsm_byte    frame[65];
     wav_t       wav = (wav_t) ft->priv;
@@ -342,16 +342,6 @@ static int wavgsmflush(ft_t ft, int pad)
     wav->gsmbytecount += 65;
 
     wav->gsmindex = 0;
-
-    if (pad & wav->gsmbytecount){
-        /* pad output to an even number of bytes */
-        if(st_writeb(ft, 0))
-        {
-            st_fail_errno(ft,ST_EOF,"write error");
-            return (ST_EOF);
-        }
-        wav->gsmbytecount += 1;
-    }
     return (ST_SUCCESS);
 }
 
@@ -371,7 +361,7 @@ st_ssize_t wavgsmwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
         if (wav->gsmindex < 160*2)
             break;
 
-        rc = wavgsmflush(ft, 0);
+        rc = wavgsmflush(ft);
         if (rc)
             return 0;
     }     
@@ -383,10 +373,18 @@ void wavgsmstopwrite(ft_t ft)
 {
     wav_t       wav = (wav_t) ft->priv;
 
-        ft->st_errno = ST_SUCCESS;
+    ft->st_errno = ST_SUCCESS;
 
     if (wav->gsmindex)
-        wavgsmflush(ft, 1);
+        wavgsmflush(ft);
+
+    /* Add a pad byte if amount of written bytes is not even. */
+    if (wav->gsmbytecount && wav->gsmbytecount % 2){
+        if(st_writeb(ft, 0))
+            st_fail_errno(ft,ST_EOF,"write error");
+        else
+            wav->gsmbytecount += 1;
+    }
 
     wavgsmdestroy(ft);
 }

@@ -58,6 +58,7 @@ sox-12.17.6
     from -1:1.
   o Modifed .au handler to be able to read and write 32-bit
     and 64-bit float data.  Only tested reading so far.
+  o WAV with GSM data now always pads data to even number of bytes.
   o Added support for writing 32-bit audio to AIFF.
 
 sox-12.17.5
