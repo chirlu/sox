@@ -517,16 +517,6 @@ extern void poly_flow();
 extern void poly_drain();
 extern void poly_stop();
 
-extern void split_getopts();
-extern void split_start();
-extern void split_flow();
-extern void split_stop();
-
-extern void stat_getopts();
-extern void stat_start();
-extern void stat_flow();
-extern void stat_stop();
-
 extern void rate_getopts();
 extern void rate_start();
 extern void rate_flow();
@@ -549,6 +539,22 @@ extern void reverse_start();
 extern void reverse_flow();
 extern void reverse_drain();
 extern void reverse_stop();
+
+extern void split_getopts();
+extern void split_start();
+extern void split_flow();
+extern void split_stop();
+
+extern void stat_getopts();
+extern void stat_start();
+extern void stat_flow();
+extern void stat_stop();
+
+extern void swap_getopts();
+extern void swap_start();
+extern void swap_flow();
+extern void swap_drain();
+extern void swap_stop();
 
 extern void vibro_getopts();
 extern void vibro_start();
@@ -624,6 +630,8 @@ EXPORT effect_t effects[] = {
 		split_getopts, split_start, split_flow, null_drain,split_stop},
 	{"stat", EFF_MCHAN | EFF_REPORT | EFF_RATE | EFF_CHAN,
 		stat_getopts, stat_start, stat_flow, null_drain, stat_stop},
+	{"swap", EFF_MCHAN,
+		swap_getopts, swap_start, swap_flow, swap_drain, swap_stop},
 	{"vibro", 0, 
 		vibro_getopts, vibro_start, vibro_flow, null_drain, nothing},
 	{0, 0, 0, 0, 0, 0, 0}

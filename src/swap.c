@@ -84,6 +84,7 @@ int *isamp, *osamp;
 	    obuf[0] = ibuf[1];
 	    obuf[1] = ibuf[0];
 	    /* Advance buffer by 2 samples */
+	    ibuf += 2;
 	    obuf += 2;
 	}
 	
@@ -113,12 +114,14 @@ int *isamp, *osamp;
 	    obuf[2] = ibuf[swap->order[2]];
 	    obuf[3] = ibuf[swap->order[3]];
 	    /* Advance buffer by 2 samples */
+	    ibuf += 4;
 	    obuf += 4;
 	}
 	*isamp = len * 4;
 	*osamp = len * 4;
 	
 	break;
+    }
 }
 
 /*

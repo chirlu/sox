@@ -19,7 +19,7 @@ EOBJ	= avg.obj band.obj chorus.obj copy.obj cut.obj deemphas.obj \
 	  dyn.obj echo.obj echos.obj flanger.obj highp.obj lowp.obj \
           map.obj mask.obj phaser.obj pick.obj polyphas.obj \
 	  rate.obj resample.obj reverb.obj reverse.obj split.obj \
-	  stat.obj vibro.obj
+	  stat.obj swap.obj vibro.obj
 
 LIBOBJS   = $(FOBJ) $(EOBJ) handlers.obj libst.obj misc.obj getopt.obj util.obj
 
@@ -33,12 +33,6 @@ INCDIR  = d:\tc\include
 #BINDIR	= d:\bc\bin
 #LIBDIR	= d:\bc\lib
 #INCDIR	= d:\bc\include
-
-# Use the following if you don't really need to define paths.
-#BINDIR = .
-#LIBDIR = .
-#INCDIR = .
-
 
 # Standard Borland options for Huge Memory Mode (more than 64k for both
 # code and data), Word aligned, compile to Objects only, Speed and Jump

@@ -34,7 +34,7 @@ FSRC	= 8svx.c aiff.c alsa.c au.c auto.c cdr.c cvsd.c dat.c g711.c g721.c \
 ESRC	= avg.c band.c chorus.c copy.c cut.c deemphas.c dyn.c echo.c echos.c \
 	  flanger.c highp.c lowp.c map.c mask.c phaser.c pick.c \
 	  polyphas.c rate.c resample.c reverb.c reverse.c split.c \
-	  stat.c vibro.c 
+	  stat.c swap.c vibro.c 
 
 PSRC	= sox.c
 
@@ -75,7 +75,7 @@ FOBJ	= 8svx.o aiff.o alsa.o au.o auto.o cdr.o cvsd.o dat.o g711.o g721.o \
 EOBJ	= avg.o band.o chorus.o copy.o cut.o deemphas.o dyn.o echo.o echos.o \
 	  flanger.o highp.o lowp.o map.o mask.o phaser.o pick.o \
 	  polyphas.o rate.o resample.o reverb.o reverse.o split.o \
-	  stat.o vibro.o
+	  stat.o swap.o vibro.o
 
 SOUNDLIB = libst.a
 LIBOBJS = $(FOBJ) $(EOBJ) handlers.o libst.o misc.o util.o getopt.o
