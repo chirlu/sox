@@ -925,6 +925,7 @@ int st_wavstartread(ft_t ft)
             {
                 if (st_reads(ft,magic,4) == ST_EOF)
                     break;
+
                 if (strncmp(magic,"INFO",4) == 0)
                 {
                     /*Skip*/
@@ -936,8 +937,6 @@ int st_wavstartread(ft_t ft)
                         break;
                     if (strncmp(magic,"ICRD",4) == 0)
                     {
-                        int needs_return = 0;
-
                         st_report("Chunk ICRD");
                         if (len > 254)
                         {
@@ -947,21 +946,16 @@ int st_wavstartread(ft_t ft)
                         st_reads(ft,text,len);
                         if (strlen(ft->comment) + strlen(text) < 254)
                         {
-                            if (strlen(ft->comment) != 0)
-                                needs_return = 1;
+                            if (ft->comment[0] != 0)
+                                strcat(ft->comment,"\n");
 
                             strcat(ft->comment,text);
-
-                            if (needs_return)
-                                strcat(ft->comment,"\n");
                         }
                         if (strlen(text) < len)
                            st_seek(ft, len - strlen(text), SEEK_CUR); 
                     } 
                     else if (strncmp(magic,"ISFT",4) == 0)
                     {
-                        int needs_return = 0;
-
                         st_report("Chunk ISFT");
                         if (len > 254)
                         {
@@ -971,13 +965,10 @@ int st_wavstartread(ft_t ft)
                         st_reads(ft,text,len);
                         if (strlen(ft->comment) + strlen(text) < 254)
                         {
-                            if (strlen(ft->comment) != 0)
-                                needs_return = 1;
+                            if (ft->comment[0] != 0)
+                                strcat(ft->comment,"\n");
 
                             strcat(ft->comment,text);
-
-                            if (needs_return)
-                                strcat(ft->comment,"\n");
                         }
                         if (strlen(text) < len)
                            st_seek(ft, len - strlen(text), SEEK_CUR); 
