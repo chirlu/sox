@@ -113,7 +113,7 @@ sox \- Sound eXchange : universal sound sample translator
 .br
 	split
 .br
-	stat [ \fIdebug\fB | \fI-v\fB ]
+	stat [ \fI-s n\fB ] [\fI-rms\fB ] [ \fI-v\fB ] [ \fI-d\fB ]
 .br
 	stretch [ \fIfactor [ window fade shift fading ]\fB
 .br
@@ -901,27 +901,44 @@ split
 Turn a mono sample into a stereo sample by copying
 the input channel to the left and right channels.
 .TP 10
-stat [ debug | -v ]
+stat [ \fI-s n\fB ] [\fI-rms\fB ] [ \fI-v\fB ] [ \fI-d\fB ]
 Do a statistical check on the input file,
-and print results on the standard error file.
-.B stat
-may copy the file untouched from input to output,
-if you select an output file.  
+and print results on the standard error file.  Audio data is passed
+unmodified from input to output file unless used along with the
+.B -e
+option.
+
 The "Volume Adjustment:" field in the statistics
 gives you the argument to the
 .B -v
 .I number
 which will make the sample as loud as possible without clipping. 
-There is an optional parameter
+
+The option
 .B -v
-that will print out the "Volume Adjustment:" field's value and
+will print out the "Volume Adjustment:" field's value only and
 return.  This could be of use in scripts to auto convert the
-volume.  There is an also an optional parameter
-.B debug
-that will place sox into debug mode and print out a hex dump of the
+volume.  
+
+The
+.B -s n
+option is used to scale the input data by a given factor.  The default value
+of n is the max value of a signed long variable (0x7fffffff).  Internal effects
+always work with signed long PCM data and so the value should relate to this
+fact.
+
+The
+.B -rms
+option will convert all output average values to \fIroot mean square\fR
+format.
+
+There is also an optional parameter
+.B -d
+that will print out a hex dump of the
 sound file from the internal buffer that is in 32-bit signed PCM data.
 This is mainly only of use in tracking down endian problems that
 creep in to sox on cross-platform versions.
+
 .TP 10
 stretch \fIfactor [window fade shift fading]\fB
 Time stretch file by a given factor. Change duration without affecting the pitch. 
@@ -984,16 +1001,13 @@ the amplitude is change logarithmically.
 enforces certain effects.
 If the two files have different sampling
 rates, the requested effect must be one of
-.B copy,
+.B polyphase, rate, 
 or
-.B rate,
-." or
-." .B resample.
+.B resample.
 If the two files have different numbers of channels,
 the 
 .B avg
-." or other channel mixing
-effect must be requested.
+or other channel mixing effect must be requested.
 .SH BUGS
 The syntax is horrific.  Thats the breaks when trying to handle all things from the command line.
 .P

@@ -601,6 +601,7 @@ extern int st_split_stop();
 extern int st_stat_getopts();
 extern int st_stat_start();
 extern int st_stat_flow();
+extern int st_stat_drain();
 extern int st_stat_stop();
 
 extern int st_stretch_getopts();
@@ -731,7 +732,7 @@ st_effect_t st_effects[] = {
 		st_null_drain, st_split_stop},
 	{"stat", ST_EFF_MCHAN | ST_EFF_REPORT | ST_EFF_RATE | ST_EFF_CHAN,
 		st_stat_getopts, st_stat_start, st_stat_flow, 
-		st_null_drain, st_stat_stop},
+		st_stat_drain, st_stat_stop},
 	{"stretch", 0,
 	        st_stretch_getopts, st_stretch_start, st_stretch_flow,
 	        st_stretch_drain, st_stretch_stop},

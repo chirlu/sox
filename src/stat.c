@@ -1,4 +1,3 @@
-
 /*
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
@@ -12,7 +11,9 @@
  * Sound Tools statistics "effect" file.
  *
  * Build various statistics on file and print them.
- * No output.
+ *
+ * Output is unmodified from input.
+ *
  */
 
 #include <math.h>
@@ -30,7 +31,13 @@ typedef struct statstuff {
 	ULONG	read;		/* samples processed */
 	int	volume;
 	int	srms;
+	int	fft;
 	ULONG   bin[4];
+	double  *re;
+	double  *im;
+	ULONG   fft_bits;
+	ULONG   fft_size;
+	ULONG   fft_offset;
 } *stat_t;
 
 
@@ -47,13 +54,16 @@ char **argv;
 	stat->scale = MAXLONG;
 	stat->volume = 0;
 	stat->srms = 0;
+	stat->fft = 0;
+
 	while (n>0)
 	{
-		if (!(strcmp(argv[0], "-v"))) {
+		if (!(strcmp(argv[0], "-v"))) 
+		{
 			stat->volume = 1;
-			goto did1;
 		}
-		if (!(strcmp(argv[0], "-s"))) {
+		else if (!(strcmp(argv[0], "-s"))) 
+		{
 			double scale;
 
 			if (n <= 1) 
@@ -61,39 +71,33 @@ char **argv;
 			  st_fail("-s option: invalid argument");
 			  return (ST_EOF);
 			}
-			if (!strcmp(argv[1],"rms")) {
-				stat->srms=1;
-				goto did2;
-			}
 			if (!sscanf(argv[1], "%lf", &scale))
 			{
 			  st_fail("-s option: invalid argument");
 			  return (ST_EOF);
 			}
 			stat->scale = scale;
-			goto did2;
+
+			/* Two option argument.  Account for this */
+	                --n; ++argv;
 		}
-		if (!(strcmp(argv[0], "-rms"))) {
-			double scale;
-			if (n <= 1 || !sscanf(argv[1], "%lf", &scale))
-			{
-			  st_fail("-s option expects float argument");
-			  return(ST_EOF);
-			}
+		else if (!(strcmp(argv[0], "-rms"))) 
+		{
 			stat->srms = 1;
-			goto did2;
 		}
-		if (!(strcmp(argv[0], "debug"))) {
+		else if (!(strcmp(argv[0], "-freq"))) 
+		{
+			stat->fft = 1;
+		}
+		else if (!(strcmp(argv[0], "debug"))) {
 			stat->volume = 2;
-			goto did1;
 		}
 		else
 		{
 			st_fail("Summary effect: unknown option");
 			return(ST_EOF);
 		}
-	  did2: --n; ++argv;
-	  did1: --n; ++argv;
+	        --n; ++argv;
 	}
 	return (ST_SUCCESS);
 }
@@ -106,6 +110,7 @@ eff_t effp;
 {
 	stat_t stat = (stat_t) effp->priv;
 	int i;
+	LONG  bitmask;
 
 	stat->min = stat->max = 0;
 	stat->asum = 0;
@@ -120,6 +125,37 @@ eff_t effp;
 	for (i = 0; i < 4; i++)
 		stat->bin[i] = 0;
 
+	stat->fft_size = 4096;
+	stat->re = 0;
+	stat->im = 0;
+
+	if (stat->fft)
+	{
+	    bitmask = 0x80000000L;
+	    stat->fft_bits = 31;
+	    stat->fft_offset = 0;
+	    while (bitmask && !(stat->fft_size & bitmask))
+	    {
+		bitmask = bitmask >> 1;
+		stat->fft_bits--;
+	    }
+
+	    if (bitmask && (stat->fft_size & ~bitmask))
+	    {
+		st_fail("FFT can only use sample buffers of 2^n. Buffer size used is %ld\n",stat->fft_size);
+		return(ST_EOF);
+	    }
+
+	    stat->re = malloc(sizeof(double) * stat->fft_size);
+	    stat->im = malloc(sizeof(double) * stat->fft_size);
+
+	    if (!stat->re || !stat->im)
+	    {
+		st_fail("Unable to allocate memory for FFT buffers.\n");
+		return (ST_EOF);
+	    }
+	}
+
 	return (ST_SUCCESS);
 }
 
@@ -128,14 +164,18 @@ eff_t effp;
  * Return number of samples processed.
  */
 
+extern int FFT(short dir,long m,double *x,double *y);
+
 int st_stat_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
 {
 	stat_t stat = (stat_t) effp->priv;
-	int len, done;
+	int len, done, x, x1;
 	short count;
+        float magnitude;
+        float ffa;
 
 	count = 0;
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
@@ -143,6 +183,38 @@ LONG *isamp, *osamp;
 
 	if (stat->read == 0)	/* 1st sample */
 		stat->min = stat->max = stat->last = (*ibuf)/stat->scale;
+
+	if (stat->fft)
+	{
+            for (x = 0; x < len; x++)
+            {
+		stat->re[stat->fft_offset] = ibuf[x];
+		stat->im[stat->fft_offset++] = 0;
+
+		if (stat->fft_offset >= stat->fft_size)
+		{
+		    stat->fft_offset = 0;
+	            FFT(1,stat->fft_bits,stat->re,stat->im);
+	            ffa = (float)effp->ininfo.rate/stat->fft_size;
+	            for (x1= 0; x1 < stat->fft_size/2; x1++)
+	            {
+	                if (x1 == 0 || x1 == 1)
+	                {
+		            magnitude = 0.0; /* no DC */
+	                }
+	                else
+	                {
+		            magnitude = sqrt(stat->re[x1]*stat->re[x1] + stat->im[x1]*stat->im[x1]);
+		            if (x1 == (stat->fft_size/2) - 1)
+		                magnitude *= 2.0;
+	                }
+	                printf("%f  %f\n",ffa*x1, magnitude);
+	            }
+		}
+
+	    }
+	}
+
 
 	for(done = 0; done < len; done++) {
 		long lsamp;
@@ -153,9 +225,10 @@ LONG *isamp, *osamp;
 		stat->bin[RIGHT(lsamp,30)+2]++;
 		*obuf++ = lsamp;
 
+
 		if (stat->volume == 2)
 		{
-		    fprintf(stderr,"%f ",samp);
+		    fprintf(stderr,"%08lx ",lsamp);
 		    if (count++ == 5)
 		    {
 			fprintf(stderr,"\n");
@@ -188,6 +261,57 @@ LONG *isamp, *osamp;
 	*isamp = *osamp = len;
 	/* Process all samples */
 	return (ST_SUCCESS);
+}
+
+/*
+ * Process tail of input samples.
+ */
+int st_stat_drain(effp, obuf, osamp)
+eff_t effp;
+LONG *obuf;
+LONG *osamp;
+{
+    stat_t stat = (stat_t) effp->priv;
+    int x;
+    float magnitude;
+    float ffa;
+
+    /* When we run out of samples, then we need to pad buffer with
+     * zeros and then run FFT one last time.  Only perform this
+     * operation if there are at least 1 sample in the buffer.
+     */
+
+    if (stat->fft && stat->fft_offset)
+    {
+	/* When we run out of samples, then we need to pad buffer with
+	 * zeros and then run FFT one last time.  Only perform this
+	 * operation if there are at least 1 sample in the buffer.
+	 */
+        for (x = stat->fft_offset; x < stat->fft_size; x++)
+        {
+	    stat->re[x] = 0;
+	    stat->im[x] = 0;
+        }
+        FFT(1,stat->fft_bits,stat->re,stat->im);
+	ffa = (float)effp->ininfo.rate/stat->fft_size;
+	for (x=0; x < stat->fft_size/2; x++)
+	{
+	    if (x == 0 || x == 1)
+	    {
+		magnitude = 0.0; /* no DC */
+	    }
+	    else
+	    {
+		magnitude = sqrt(stat->re[x]*stat->re[x] + stat->im[x]*stat->im[x]);
+		if (x != (stat->fft_size/2) - 1)
+		    magnitude *= 2.0;
+	    }
+	    printf("%f  %f\n",ffa*x, magnitude);
+	}
+    }
+
+    *osamp = 0;
+    return (ST_SUCCESS);
 }
 
 /*
@@ -231,7 +355,7 @@ eff_t effp;
 		return (ST_SUCCESS);
 	}
 	if (stat->volume == 2) {
-		fprintf(stderr, "\n");
+		fprintf(stderr, "\n\n");
 	}
 	/* print out the info */
 	fprintf(stderr, "Samples read:      %12lu\n", stat->read);
@@ -293,6 +417,95 @@ eff_t effp;
                         fprintf (stderr, "\nCan't guess the type\n");
 		}
         }
+
+	/* Release FFT memory if allocated */
+	if (stat->re)
+	    free((void *)stat->re);
+	if (stat->im)
+	    free((void *)stat->im);
+
 	return (ST_SUCCESS);
 
+}
+
+
+/*
+   This computes an in-place complex-to-complex FFT 
+   x and y are the real and imaginary arrays of 2^(m-1) points.
+   dir =  1 gives forward transform
+   dir = -1 gives reverse transform 
+*/
+int FFT(dir,m,re,im)
+short dir;
+long m;
+double *re,*im;
+{
+   long n,i,i1,j,k,i2,l,l1,l2;
+   double c1,c2,tre,tim,t1,t2,u1,u2,z;
+
+   /* Calculate the number of points */
+   n = 1;
+   for (i=0;i<m;i++) 
+      n *= 2;
+
+   /* Do the bit reversal */
+   i2 = n >> 1;
+
+   j = 0;
+
+   for (i=0;i<n-1;i++) {
+      if (i < j) {
+         tre = re[i];
+         tim = im[i];
+         re[i] = re[j];
+         im[i] = im[j];
+         re[j] = tre;
+         im[j] = tim;
+      }
+      k = i2;
+      while (k <= j) {
+         j -= k;
+         k >>= 1;
+      }
+      j += k;
+   }
+
+   /* Compute the FFT */
+   c1 = -1.0; 
+   c2 = 0.0;
+   l2 = 1;
+   for (l=0;l<m;l++) {
+      l1 = l2;
+      l2 <<= 1;
+      u1 = 1.0; 
+      u2 = 0.0;
+      for (j=0;j<l1;j++) {
+         for (i=j;i<n;i+=l2) {
+            i1 = i + l1;
+            t1 = u1 * re[i1] - u2 * im[i1];
+            t2 = u1 * im[i1] + u2 * re[i1];
+            re[i1] = re[i] - t1; 
+            im[i1] = im[i] - t2;
+            re[i] += t1;
+            im[i] += t2;
+         }
+         z =  u1 * c1 - u2 * c2;
+         u2 = u1 * c2 + u2 * c1;
+         u1 = z;
+      }
+      c2 = sqrt((1.0 - c1) / 2.0);
+      if (dir == 1) 
+         c2 = -c2;
+      c1 = sqrt((1.0 + c1) / 2.0);
+   }
+
+   /* Scaling for forward transform */
+   if (dir == 1) {
+      for (i=0;i<n;i++) {
+         re[i] /= n;
+         im[i] /= n;
+      }
+   }
+
+   return ST_SUCCESS;
 }
