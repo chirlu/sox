@@ -81,16 +81,16 @@ int st_svxstartread(ft_t ft)
                                 st_fail_errno(ft, ST_EHDR, "VHDR chunk has bad size");
                                 return(ST_EOF);
                         }
-                        fseek(ft->fp,12,SEEK_CUR);
+                        st_seek(ft,12,SEEK_CUR);
                         st_readw(ft, &rate);
-                        fseek(ft->fp,1,SEEK_CUR);
-                        fread(buf,1,1,ft->fp);
+                        st_seek(ft,1,SEEK_CUR);
+                        st_read(ft, buf,1,1);
                         if (buf[0] != 0)
                         {
                                 st_fail_errno(ft, ST_EFMT, "Unsupported data compression");
                                 return(ST_EOF);
                         }
-                        fseek(ft->fp,4,SEEK_CUR);
+                        st_seek(ft,4,SEEK_CUR);
                         continue;
                 }
 
@@ -104,7 +104,7 @@ int st_svxstartread(ft_t ft)
                             st_fail_errno(ft, ST_ENOMEM, "Unable to alloc memory");
                             return(ST_EOF);
                         }
-                        if (fread(chunk_buf,1,(size_t)chunksize,ft->fp) 
+                        if (st_read(ft, chunk_buf,1,(size_t)chunksize) 
                                         != chunksize)
                         {
                                 st_fail_errno(ft, ST_EHDR, "Couldn't read all of header");
@@ -127,7 +127,7 @@ int st_svxstartread(ft_t ft)
                             st_fail_errno(ft, ST_ENOMEM, "Unable to alloc memory");
                             return(ST_EOF);
                         }
-                        if (fread (chunk_buf,1,(size_t)chunksize,ft->fp) 
+                        if (st_read(ft, chunk_buf,1,(size_t)chunksize) 
                                         != chunksize)
                         {
                                 st_fail_errno(ft, ST_EHDR, "Couldn't read all of header");
@@ -160,7 +160,7 @@ int st_svxstartread(ft_t ft)
                 st_readdw(ft, &chunksize);
                 if (chunksize & 1)
                         chunksize++;
-                fseek(ft->fp,chunksize,SEEK_CUR);
+                st_seek(ft,chunksize,SEEK_CUR);
                 continue;
 
         }
@@ -326,13 +326,13 @@ int st_svxstopwrite(ft_t ft)
         /* append all channel pieces to channel 0 */
         /* close temp files */
         for (i = 1; i < ft->info.channels; i++) {
-                if (fseek (p->ch[i], 0L, 0))
+                if (fseek(p->ch[i], 0L, 0))
                 {
                         st_fail_errno (ft,errno,"Can't rewind channel output file %d",i);
                         return(ST_EOF);
                 }
                 while (!feof(p->ch[i])) {
-                        len = fread (svxbuf, 1, 512, p->ch[i]);
+                        len = fread(svxbuf, 1, 512, p->ch[i]);
                         fwrite (svxbuf, 1, len, p->ch[0]);
                 }
                 fclose (p->ch[i]);
@@ -343,7 +343,7 @@ int st_svxstopwrite(ft_t ft)
             st_writeb(ft, '\0');
 
         /* fixup file sizes in header */
-        if (fseek(ft->fp, 0L, 0) != 0)
+        if (st_seek(ft, 0L, 0) != 0)
         {
                 st_fail_errno(ft,errno,"can't rewind output file to rewrite 8SVX header");
                 return(ST_EOF);
