@@ -175,6 +175,7 @@ extern st_format_t st_formats[];
 #define ST_SIZE_8BIT    1
 #define ST_SIZE_WORD    2
 #define ST_SIZE_16BIT   2
+#define ST_SIZE_24BIT   3
 #define ST_SIZE_DWORD   4
 #define ST_SIZE_32BIT   4
 #define ST_SIZE_DDWORD  8
