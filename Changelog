@@ -66,6 +66,9 @@ sox-12.17.2
   o Heikki Leinonen submitted a silence effect that will trim off
     silence from the beginning of a file.  cbagwell made some modifications
     to trim off front and back as well as some other tweaks.
+  o Made the "auto" effect the default file handler for input files.
+    Also have auto handler now use file extensions if it can't figure
+    it out.
 
 sox-12.17.1
 -----------
