@@ -64,7 +64,8 @@ LONG *isamp, *osamp;
 		case ST_ENCODING_ULAW:
 		case ST_ENCODING_ALAW:
 			for(done = 0; done < len; done++) {
-				tri16 = (rand() + rand()) - 32767;
+				tri16 = 
+				  ((rand()%32768L) + (rand()%32768L)) - 32767;
 
 				l = *ibuf++ + tri16*16*HALFABIT;  /* 2^4.5 */
 				*obuf++ = l;
@@ -74,7 +75,8 @@ LONG *isamp, *osamp;
 		switch (effp->outinfo.size) {
 			case ST_SIZE_BYTE:
 			for(done = 0; done < len; done++) {
-				tri16 = (rand() + rand()) - 32767;
+				tri16 = 
+				  ((rand()%32768L) + (rand()%32768L)) - 32767;
 
 				l = *ibuf++ + tri16*256*HALFABIT;  /* 2^8.5 */
 				*obuf++ = l;
@@ -82,7 +84,8 @@ LONG *isamp, *osamp;
 			break;
 			case ST_SIZE_WORD:
 			for(done = 0; done < len; done++) {
-				tri16 = (rand() + rand()) - 32767;
+				tri16 = 
+				  ((rand()%32768L) + (rand()%32768L)) - 32767;
 
 				l = *ibuf++ + tri16*HALFABIT;  /* 2^.5 */
 				*obuf++ = l;

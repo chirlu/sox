@@ -4,6 +4,14 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-12.18
+---------
+  o Andreas Kies fixed a bug were we were not detecting correctly
+    if an output file was seekable.
+  o Fixed a bug in the mask effect introduced in 12.17.  If the libc
+    version of rand() returned more then 15-bit values then it would
+    trash your data.  Reported by Friedhel Mehnert.
+
 sox-12.17
 ---------
   o Sox can now read and write w98 compatible gsm .wav files,

@@ -274,7 +274,7 @@ extern LONG st_lcm(P2(LONG,LONG)) REGPARM(2);
  */
 #ifndef HAVE_RAND
 extern int rand(P0);
-extern void srand(P1(ULONG seed));
+extern void srand(P1(unsigned int seed));
 #endif
 extern void st_initrand(P0);
 

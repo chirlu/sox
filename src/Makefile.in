@@ -50,7 +50,7 @@ EOBJ	= avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
 	  highp.o highpass.o lowp.o lowpass.o map.o mask.o pan.o \
 	  phaser.o pick.o pitch.o polyphas.o rate.o resample.o reverb.o \
 	  reverse.o speed.o split.o stat.o stretch.o swap.o trim.o \
-	  vibro.o vol.o trim.o
+	  vibro.o vol.o
 
 OSSOBJ_0    =
 OSSOBJ_1    = oss.o

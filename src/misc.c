@@ -370,7 +370,7 @@ static ULONG rand_seed = 1;
 
 int rand() {
 	rand_seed = (rand_seed * 1103515245L) + 12345L;
-	return ((ULONG)(rand_seed/65536L) % 32768L);
+	return ((unsigned int)(rand_seed/65536L) % 32768L);
 }
 
 void srand(seed) 

@@ -515,12 +515,13 @@ and encoding (signed, unsigned, etc.)
 of the sample file must be given.
 The number of channels defaults to 1.
 .TP 10
-.B ".ub, .sb, .uw, .sw, .ul, .sl"
+.B ".ub, .sb, .uw, .sw, .ul, .al, .sl"
 These are several suffices which serve as
 a shorthand for raw files with a given size and encoding.
 Thus, \fBub, sb, uw, sw, ul\fR and \fBsl\fR
 correspond to "unsigned byte", "signed byte",
-"unsigned word", "signed word", "ulaw" (byte), and "signed long".
+"unsigned word", "signed word", "ulaw" (byte), "alaw" (byte),
+and "signed long".
 The sample rate defaults to 8000 hz if not explicitly set,
 and the number of channels (as always) defaults to 1.
 There are lots of Sparc samples floating around in u-law format
