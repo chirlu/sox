@@ -12,7 +12,7 @@ SYNOPSIS
        cc file.c -o file libst.a
 
 DESCRIPTION
-       Sound Tools is a library of sound sample file format read-
+       Sound Tools is a library of sound sample file format read­
        ers/writers and sound effects processors.
 
        Sound  Tools  includes  skeleton	 C files to assist you in
@@ -32,17 +32,17 @@ INTERNALS
        The Sound Tools formats and effects operate on an internal
        buffer format of signed 32-bit longs.  The data processing
        routines are called with buffers	 of  these  samples,  and
-       buffer  sizes  which  refer  to the number of samples pro-
+       buffer  sizes  which  refer  to the number of samples pro­
        cessed, not the number of bytes.	 File  readers	translate
        the input samples to signed longs and return the number of
-       longs read.  For example, data in linear signed byte  for-
+       longs read.  For example, data in linear signed byte  for­
        mat is left-shifted 24 bits.
 
        This  does  cause  problems  in	processing the data.  For
        example:
 	    *obuf++ = (*ibuf++ + *ibuf++)/2;
-       would not mix down left and right channels into one  mono-
-       phonic  channel, because the resulting samples would over-
+       would not mix down left and right channels into one  mono­
+       phonic  channel, because the resulting samples would over­
        flow 32 bits.  Instead, the ``avg'' effects must use:
 	    *obuf++ = *ibuf++/2 + *ibuf++/2;
 
@@ -52,10 +52,10 @@ INTERNALS
        rear.
 
 FORMATS
-       A format is responsible for translating between sound sam-
+       A format is responsible for translating between sound sam­
        ple files and an internal buffer.  The internal buffer  is
        store  in  signed  longs	 with a fixed sampling rate.  The
-       format operates from two data structures: a format  struc-
+       format operates from two data structures: a format  struc­
        ture, and a private structure.
 
 
@@ -76,7 +76,7 @@ ST(3)							    ST(3)
        number of sound channels.  It also  contains  other  state
        information:  whether  the  sample  file needs to be byte-
        swapped, whether fseek() will work, its suffix,	its  file
-       stream pointer, its format pointer, and the private struc-
+       stream pointer, its format pointer, and the private struc­
        ture for the format .
 
        The private area is just a preallocated data array for the
@@ -98,7 +98,7 @@ ST(3)							    ST(3)
        read		   Given a buffer and a length:	 read  up
 			   to  that  many samples, transform them
 			   into signed long  integers,	and  copy
-			   them into the buffer.  Return the num-
+			   them into the buffer.  Return the num­
 			   ber of samples actually read.
 
        stopread		   Do what needs to be done.
@@ -108,7 +108,7 @@ ST(3)							    ST(3)
 			   be done.
 
        write		   Given a buffer and a length: copy that
-			   many	 samples  out of the buffer, con-
+			   many	 samples  out of the buffer, con­
 			   vert them from  signed  longs  to  the
 			   appropriate	data,  and  write them to
 			   the file.  If it can't write	 out  all
@@ -144,7 +144,7 @@ ST(3)							    ST(3)
 			   and	output	data sizes.  It processes
 			   the	input  buffer  into  the   output
 			   buffer, and sets the size variables to
-			   the numbers of samples  actually  pro-
+			   the numbers of samples  actually  pro­
 			   cessed.   It is under no obligation to
 			   fill the output buffer.
 

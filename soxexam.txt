@@ -26,7 +26,7 @@ CONVERSIONS
 
        Most  file  formats that contain headers can automatically
        be read in.  When working  with	headerless  file  formats
-       then  a user must manually tell sox the data type and sam-
+       then  a user must manually tell sox the data type and sam­
        ple rate using command line options.
 
        When working with headerless files (raw	files),	 you  may
@@ -113,11 +113,11 @@ SoX(1)							   SoX(1)
        or GSM.	SoX takes ALL input data types and converts  them
        to  uncompressed 32-bit signed data.  It will then convert
        this internal version into the  requested  output  format.
-       This  means  unneeded  noise can be introduced from decom-
-       pressing data and then recompressing.  If applying  multi-
-       ple  effects to audio data it is best to save the interme-
-       diate data as PCM data.	After the final	 effect	 is  per-
-       formed then you can specify it as a compressed output for-
+       This  means  unneeded  noise can be introduced from decom­
+       pressing data and then recompressing.  If applying  multi­
+       ple  effects to audio data it is best to save the interme­
+       diate data as PCM data.	After the final	 effect	 is  per­
+       formed then you can specify it as a compressed output for­
        mat.  This will keep noise introduction to a minimum.
 
        The following example is to apply various  effects  to  an
@@ -141,7 +141,7 @@ SoX(1)							   SoX(1)
 	 sox thirdfile.wav -a -b finalfile.wav mask
 
        Under a DOS shell, you can convert several audio files  to
-       an  new	output format using something similar to the fol-
+       an  new	output format using something similar to the fol­
        lowing command line:
 
 	 FOR %X IN (*.RAW) DO sox -r 11025 -w -s -t raw $X $X.wav
@@ -232,7 +232,7 @@ SoX(1)							   SoX(1)
        concert	or  ten	 people	 are playing the same rhythm with
        their drums or funky-groves, then take any  other  sample.
        (Typically,  less  then	four  different intruments and no
-       synthesizer in the sample is suitable. Likewise, the  com-
+       synthesizer in the sample is suitable. Likewise, the  com­
        bination vocal, drums, bass and guitar.)
 
        Effects:
@@ -245,14 +245,14 @@ SoX(1)							   SoX(1)
        not, turn a bit around ant try next, or climb to the  next
        mountain ).
 
-       However,	 the time difference between shouting and repeat-
-       ing is the delay (time), its loudness is the decay. Multi-
+       However,	 the time difference between shouting and repeat­
+       ing is the delay (time), its loudness is the decay. Multi­
        ple echos can have different delays and decays.
 
        Very  popular  is  using	 echos to play an instrument with
        itself together, like some guitar players ( Brain May from
        Queen ) or vocalists are doing.	For music samples of more
-       than one instrument, echo can be used to add a second sam-
+       than one instrument, echo can be used to add a second sam­
        ple shortly after the original one.
 
        This  will  sound  as  doubling	the number of instruments
@@ -314,7 +314,7 @@ SoX(1)							   SoX(1)
        can be applied to other instrument samples too.
 
        It  works like the echo effect with a short delay, but the
-       delay isn't constant.  The delay is varied  using  a  sin-
+       delay isn't constant.  The delay is varied  using  a  sin­
        odial  or  triangular  modulation.  The	modulation  depth
        defines the range the modulated delay is played before  or
        after the delay. Hence the delayed sound will sound slower
@@ -401,12 +401,12 @@ SoX(1)							   SoX(1)
 
 
        to small or to many visitors  disturb  the  reflection  of
-       sound  at the walls to make the sound played more monumen-
+       sound  at the walls to make the sound played more monumen­
        tal. You can try the reverb effect  in  your  bathroom  or
        garage  or sport halls by shouting loud some words. You'll
        hear the words reflected from the walls.
 
-       The biggest problem in using the reverb effect is the cor-
+       The biggest problem in using the reverb effect is the cor­
        rect  setting  of the (wall) delays such that the sound is
        relistic an doesn't sound like music playing in a  tin  or
        overloaded feedback distroys any illusion of any big hall.
@@ -445,8 +445,8 @@ SoX(1)							   SoX(1)
        240.0 280.0 300.0
 
        If you run out of machine power or memory,  then	 stop  as
-       much  applications  as possible ( every interupt will con-
-       sume a lot of cpu time which for	 bigger	 halls	is  abso-
+       much  applications  as possible ( every interupt will con­
+       sume a lot of cpu time which for	 bigger	 halls	is  abso­
        lutely neccessary ).
 
        Phaser
@@ -466,7 +466,7 @@ SoX(1)							   SoX(1)
 SoX(1)							   SoX(1)
 
 
-       effects ( simply change the effect name ).  The delay mod-
+       effects ( simply change the effect name ).  The delay mod­
        ulation	can be done sinodial or triangular, preferable is
        the later one for multiple instruments playing. For single
        instrument  sounds  the sinodial phaser effect will give a
@@ -500,17 +500,17 @@ SoX(1)							   SoX(1)
 
        More effects ( to do ! )
 
-       There are a lot of effects around like noise  gates,  com-
+       There are a lot of effects around like noise  gates,  com­
        pressors,  waw-waw,  stereo effects and so on. They should
-       be implemented making SOX to be more useful in sound  mix-
-       ing  technics  coming together with a great varity of dif-
+       be implemented making SOX to be more useful in sound  mix­
+       ing  technics  coming together with a great varity of dif­
        ferent sound effects.
 
        Combining effects be using then in parallel or  sequel  on
        different  channels  needs  some	 easy  mechanism which is
        real-time stable.
 
-       Really missing, is the changing of the parameters,  start-
+       Really missing, is the changing of the parameters,  start­
        ing  and stoping of effects while playing samples in real-
        time!
 
