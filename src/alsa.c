@@ -28,6 +28,14 @@ static int get_format(ft_t ft, int formats, int *fmt);
 
 #if HAVE_ALSA9
 
+/* Temporary hack until glibc and alsa kernel drivers match each other. */
+#ifndef __user
+#define __user
+#endif
+#ifndef __kernel
+#define __kernel
+#endif
+
 #include <limits.h>
 #include <sound/asound.h>
 
@@ -85,27 +93,27 @@ struct sndrv_pcm_hw_params *params;
     memset(params, '\0', sizeof(struct sndrv_pcm_hw_params));
     for (i = 0; i <= SNDRV_PCM_HW_PARAM_LAST_INTERVAL; ++i)
     {
-	if (i >= SNDRV_PCM_HW_PARAM_FIRST_MASK &&
-	    i <= SNDRV_PCM_HW_PARAM_LAST_MASK)
-	{
-	    msk = alsa_params_masks(params, i);
-	    memset(msk->bits, 0xff, sizeof(msk->bits));
-	}
-	else
-	{
-	    intr = alsa_params_intervals(params, i);
-	    intr->min = 0;
-	    intr->openmin = 0;
-	    intr->max = UINT_MAX;
-	    intr->openmax = 0;
-	    intr->integer = 0;
-	    intr->empty = 0;
-	}
-	params->cmask |= 1 << i;
-	params->rmask |= 1 << i;
+        if (i >= SNDRV_PCM_HW_PARAM_FIRST_MASK &&
+            i <= SNDRV_PCM_HW_PARAM_LAST_MASK)
+        {
+            msk = alsa_params_masks(params, i);
+            memset(msk->bits, 0xff, sizeof(msk->bits));
+        }
+        else
+        {
+            intr = alsa_params_intervals(params, i);
+            intr->min = 0;
+            intr->openmin = 0;
+            intr->max = UINT_MAX;
+            intr->openmax = 0;
+            intr->integer = 0;
+            intr->empty = 0;
+        }
+        params->cmask |= 1 << i;
+        params->rmask |= 1 << i;
     }
     if (ioctl(fd, SNDRV_PCM_IOCTL_HW_REFINE, params) < 0) {
-	return -1;
+        return -1;
     }
     msk = alsa_params_masks(params, SNDRV_PCM_HW_PARAM_FORMAT);
     a_info->formats = msk->bits[0]; /* Only care about first 32 bits. */
@@ -190,10 +198,10 @@ struct alsa_setup *setup;
     params->rmask = 1 << i;
 
     if (ioctl(fd, SNDRV_PCM_IOCTL_HW_PARAMS, params) < 0) {
-	return -1;
+        return -1;
     }
     if (ioctl(fd, SNDRV_PCM_IOCTL_PREPARE) < 0) {
-	return -1;
+        return -1;
     }
     return 0;
 }
@@ -201,9 +209,9 @@ struct alsa_setup *setup;
 /*
  * Do anything required before you start reading samples.
  * Read file header.
- *	Find out sampling rate,
- *	size and encoding of samples,
- *	mono/stereo/quad.
+ *      Find out sampling rate,
+ *      size and encoding of samples,
+ *      mono/stereo/quad.
  */
 int st_alsastartread(ft)
 ft_t ft;
@@ -214,16 +222,16 @@ ft_t ft;
     struct sndrv_pcm_hw_params params;
 
     if (alsa_hw_info_get(fileno(ft->fp), &a_info, &params) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
     ft->file.count = 0;
     ft->file.pos = 0;
     ft->file.eof = 0;
     ft->file.size = a_info.max_buffer_size;
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
-	st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
+        return(ST_EOF);
     }
     if (ft->info.rate < a_info.min_rate) ft->info.rate = 2 * a_info.min_rate;
     else if (ft->info.rate > a_info.max_rate) ft->info.rate = a_info.max_rate;
@@ -243,14 +251,14 @@ ft_t ft;
     if (a_setup.period_size < a_info.min_period_size) a_setup.period_size = a_info.min_period_size;
     else if (a_setup.period_size > a_info.max_period_size) a_setup.period_size = a_info.max_period_size;
     if (alsa_hw_info_set(fileno(ft->fp), &params, &a_setup) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
 
     /* Change to non-buffered I/O */
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
 
-    sigintreg(ft);	/* Prepare to catch SIGINT */
+    sigintreg(ft);      /* Prepare to catch SIGINT */
 
     return (ST_SUCCESS);
 }
@@ -264,15 +272,15 @@ ft_t ft;
     struct sndrv_pcm_hw_params params;
 
     if (alsa_hw_info_get(fileno(ft->fp), &a_info, &params) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
     ft->file.pos = 0;
     ft->file.eof = 0;
     ft->file.size = a_info.max_buffer_size;
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
-	st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
+        return(ST_EOF);
     }
     if (ft->info.rate < a_info.min_rate) ft->info.rate = 2 * a_info.min_rate;
     else if (ft->info.rate > a_info.max_rate) ft->info.rate = a_info.max_rate;
@@ -292,8 +300,8 @@ ft_t ft;
     if (a_setup.period_size < a_info.min_period_size) a_setup.period_size = a_info.min_period_size;
     else if (a_setup.period_size > a_info.max_period_size) a_setup.period_size = a_info.max_period_size;
     if (alsa_hw_info_set(fileno(ft->fp), &params, &a_setup) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
 
     /* Change to non-buffered I/O */
@@ -325,31 +333,31 @@ ft_t ft;
 
     memset(&c_info, 0, sizeof(c_info));
     if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CAPTURE_INFO, &c_info) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
     ft->file.count = 0;
     ft->file.pos = 0;
     ft->file.eof = 0;
     ft->file.size = c_info.buffer_size;
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
-	st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
+        return(ST_EOF);
     }
     if (ft->info.rate < c_info.min_rate) ft->info.rate = 2 * c_info.min_rate;
     else if (ft->info.rate > c_info.max_rate) ft->info.rate = c_info.max_rate;
     if (ft->info.channels == -1) ft->info.channels = c_info.min_channels;
     else if (ft->info.channels > c_info.max_channels) ft->info.channels = c_info.max_channels;
     if (get_format(ft, c_info.hw_formats, &fmt) < 0)
-	return(ST_EOF);
+        return(ST_EOF);
 
     memset(&format, 0, sizeof(format));
     format.format = fmt;
     format.rate = ft->info.rate;
     format.channels = ft->info.channels;
     if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CAPTURE_FORMAT, &format) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
 
     size = ft->file.size;
@@ -362,14 +370,14 @@ ft_t ft;
     c_params.fragment_size = size;
     c_params.fragments_min = 1;
     if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CAPTURE_PARAMS, &c_params) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
 
     /* Change to non-buffered I/O */
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
 
-    sigintreg(ft);	/* Prepare to catch SIGINT */
+    sigintreg(ft);      /* Prepare to catch SIGINT */
 
     return (ST_SUCCESS);
 }
@@ -384,30 +392,30 @@ ft_t ft;
 
     memset(&p_info, 0, sizeof(p_info));
     if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_PLAYBACK_INFO, &p_info) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
     ft->file.pos = 0;
     ft->file.eof = 0;
     ft->file.size = p_info.buffer_size;
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
-	st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
+        return(ST_EOF);
     }
     if (ft->info.rate < p_info.min_rate) ft->info.rate = 2 * p_info.min_rate;
     else if (ft->info.rate > p_info.max_rate) ft->info.rate = p_info.max_rate;
     if (ft->info.channels == -1) ft->info.channels = p_info.min_channels;
     else if (ft->info.channels > p_info.max_channels) ft->info.channels = p_info.max_channels;
     if (get_format(ft, p_info.hw_formats, &fmt) < 0)
-	return(ST_EOF);
+        return(ST_EOF);
 
     memset(&format, 0, sizeof(format));
     format.format = fmt;
     format.rate = ft->info.rate;
     format.channels = ft->info.channels;
     if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_PLAYBACK_FORMAT, &format) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
 
     size = ft->file.size;
@@ -421,8 +429,8 @@ ft_t ft;
     p_params.fragments_max = -1;
     p_params.fragments_room = 1;
     if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_PLAYBACK_PARAMS, &p_params) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
 
     /* Change to non-buffered I/O */
@@ -449,23 +457,23 @@ ft_t ft;
 
     memset(&c_info, 0, sizeof(c_info));
     if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_INFO, &c_info) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
     ft->file.count = 0;
     ft->file.pos = 0;
     ft->file.eof = 0;
     ft->file.size = c_info.buffer_size;
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
-	st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
+        return(ST_EOF);
     }
     if (ft->info.rate < c_info.min_rate) ft->info.rate = 2 * c_info.min_rate;
     else if (ft->info.rate > c_info.max_rate) ft->info.rate = c_info.max_rate;
     if (ft->info.channels == -1) ft->info.channels = c_info.min_voices;
     else if (ft->info.channels > c_info.max_voices) ft->info.channels = c_info.max_voices;
     if (get_format(ft, c_info.formats, &fmt) < 0)
-	return (ST_EOF);
+        return (ST_EOF);
 
     memset(&c_params, 0, sizeof(c_params));
     c_params.format.format = fmt;
@@ -488,18 +496,18 @@ ft_t ft;
     c_params.buf.block.frags_max = 32;
     c_params.buf.block.frags_min = 1;
     if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_PARAMS, &c_params) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
     if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_PREPARE) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
 
     /* Change to non-buffered I/O */
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
 
-    sigintreg(ft);	/* Prepare to catch SIGINT */
+    sigintreg(ft);      /* Prepare to catch SIGINT */
 
     return (ST_SUCCESS);
 }
@@ -512,23 +520,23 @@ ft_t ft;
     snd_pcm_channel_params_t p_params;
 
     memset(&p_info, 0, sizeof(p_info));
-    if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_INFO, &p_info) < 0)	{
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+    if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_INFO, &p_info) < 0) {
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
     ft->file.pos = 0;
     ft->file.eof = 0;
     ft->file.size = p_info.buffer_size;
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
-	st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
+        return(ST_EOF);
     }
     if (ft->info.rate < p_info.min_rate) ft->info.rate = 2 * p_info.min_rate;
     else if (ft->info.rate > p_info.max_rate) ft->info.rate = p_info.max_rate;
     if (ft->info.channels == -1) ft->info.channels = p_info.min_voices;
     else if (ft->info.channels > p_info.max_voices) ft->info.channels = p_info.max_voices;
     if (get_format(ft, p_info.formats, &fmt) < 0)
-	return(ST_EOF);
+        return(ST_EOF);
 
     memset(&p_params, 0, sizeof(p_params));
     p_params.format.format = fmt;
@@ -551,12 +559,12 @@ ft_t ft;
     p_params.buf.block.frags_max = -1; /* Little trick (playback only) */
     p_params.buf.block.frags_min = 1;
     if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_PARAMS, &p_params) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
     if (ioctl(fileno(ft->fp), SND_PCM_IOCTL_CHANNEL_PREPARE) < 0) {
-	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
-	return(ST_EOF);
+        st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
+        return(ST_EOF);
     }
 
     /* Change to non-buffered I/O */
@@ -583,66 +591,66 @@ ft_t ft;
 int formats, *fmt;
 {
     if (ft->info.size == -1) {
-	if ((formats & SND_PCM_FMT_U8) || (formats & SND_PCM_FMT_S8))
-	    ft->info.size = ST_SIZE_BYTE;
-	else
-	    ft->info.size = ST_SIZE_WORD;
+        if ((formats & SND_PCM_FMT_U8) || (formats & SND_PCM_FMT_S8))
+            ft->info.size = ST_SIZE_BYTE;
+        else
+            ft->info.size = ST_SIZE_WORD;
     }
     if (ft->info.encoding == -1) {
-	if ((formats & SND_PCM_FMT_S16) || (formats & SND_PCM_FMT_S8))
-	    ft->info.encoding = ST_ENCODING_SIGN2;
-	else
-	    ft->info.encoding = ST_ENCODING_UNSIGNED;
+        if ((formats & SND_PCM_FMT_S16) || (formats & SND_PCM_FMT_S8))
+            ft->info.encoding = ST_ENCODING_SIGN2;
+        else
+            ft->info.encoding = ST_ENCODING_UNSIGNED;
     }
     if (ft->info.size == ST_SIZE_BYTE) {
-	switch (ft->info.encoding)
-	{
-	    case ST_ENCODING_SIGN2:
-		if (!(formats & SND_PCM_FMT_S8)) {
-		    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support signed byte samples");
-		    return ST_EOF;
-		}
-		*fmt = SND_PCM_SFMT_S8;
-		break;
-	    case ST_ENCODING_UNSIGNED:
-		if (!(formats & SND_PCM_FMT_U8)) {
-		    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support unsigned byte samples");
-		    return ST_EOF;
-		}
-		*fmt = SND_PCM_SFMT_U8;
-		break;
-	    default:
-		st_fail_errno(ft,ST_EFMT,EMSGFMT,st_encodings_str[(unsigned char)ft->info.encoding],"byte");
-		return ST_EOF;
-		break;
-	}
+        switch (ft->info.encoding)
+        {
+            case ST_ENCODING_SIGN2:
+                if (!(formats & SND_PCM_FMT_S8)) {
+                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support signed byte samples");
+                    return ST_EOF;
+                }
+                *fmt = SND_PCM_SFMT_S8;
+                break;
+            case ST_ENCODING_UNSIGNED:
+                if (!(formats & SND_PCM_FMT_U8)) {
+                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support unsigned byte samples");
+                    return ST_EOF;
+                }
+                *fmt = SND_PCM_SFMT_U8;
+                break;
+            default:
+                st_fail_errno(ft,ST_EFMT,EMSGFMT,st_encodings_str[(unsigned char)ft->info.encoding],"byte");
+                return ST_EOF;
+                break;
+        }
     }
     else if (ft->info.size == ST_SIZE_WORD) {
-	switch (ft->info.encoding)
-	{
-	    case ST_ENCODING_SIGN2:
-		if (!(formats & SND_PCM_FMT_S16)) {
-		    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support signed word samples");
-		    return ST_EOF;
-		}
-		*fmt = SND_PCM_SFMT_S16_LE;
-		break;
-	    case ST_ENCODING_UNSIGNED:
-		if (!(formats & SND_PCM_FMT_U16)) {
-		    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support unsigned word samples");
-		    return ST_EOF;
-		}
-		*fmt = SND_PCM_SFMT_U16_LE;
-		break;
-	    default:
-		st_fail_errno(ft,ST_EFMT,EMSGFMT,st_encodings_str[(unsigned char)ft->info.encoding],"word");
-		return ST_EOF;
-		break;
-	}
+        switch (ft->info.encoding)
+        {
+            case ST_ENCODING_SIGN2:
+                if (!(formats & SND_PCM_FMT_S16)) {
+                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support signed word samples");
+                    return ST_EOF;
+                }
+                *fmt = SND_PCM_SFMT_S16_LE;
+                break;
+            case ST_ENCODING_UNSIGNED:
+                if (!(formats & SND_PCM_FMT_U16)) {
+                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support unsigned word samples");
+                    return ST_EOF;
+                }
+                *fmt = SND_PCM_SFMT_U16_LE;
+                break;
+            default:
+                st_fail_errno(ft,ST_EFMT,EMSGFMT,st_encodings_str[(unsigned char)ft->info.encoding],"word");
+                return ST_EOF;
+                break;
+        }
     }
     else {
-	st_fail_errno(ft,ST_EFMT,EMSGFMT,st_encodings_str[(unsigned char)ft->info.encoding],st_sizes_str[(unsigned char)ft->info.size]);
-	return ST_EOF;
+        st_fail_errno(ft,ST_EFMT,EMSGFMT,st_encodings_str[(unsigned char)ft->info.encoding],st_sizes_str[(unsigned char)ft->info.size]);
+        return ST_EOF;
     }
     return 0;
 }
@@ -659,21 +667,21 @@ st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
      */
     if (len != nsamp)
     {
-	/* Reset the driver.  A future enhancement would be to
-	 * fill up the empty spots in the buffer (starting at
-	 * nsamp - len).  But I'm being lazy (cbagwell) and just
-	 * returning with a partial buffer.
-	 */
-	ioctl(fileno(ft->fp), SNDRV_PCM_IOCTL_PREPARE);
+        /* Reset the driver.  A future enhancement would be to
+         * fill up the empty spots in the buffer (starting at
+         * nsamp - len).  But I'm being lazy (cbagwell) and just
+         * returning with a partial buffer.
+         */
+        ioctl(fileno(ft->fp), SNDRV_PCM_IOCTL_PREPARE);
 
-	/* Raw routines use eof flag to store when we've
-	 * hit EOF or if an internal error occurs.  The
-	 * above ioctl is much like calling the stdio clearerr() function
-	 * and so we should reset libst's flag as well.  If the
-	 * error condition is still really there, it will be
-	 * detected on a future read.
-	 */
-	ft->file.eof = ST_SUCCESS;
+        /* Raw routines use eof flag to store when we've
+         * hit EOF or if an internal error occurs.  The
+         * above ioctl is much like calling the stdio clearerr() function
+         * and so we should reset libst's flag as well.  If the
+         * error condition is still really there, it will be
+         * detected on a future read.
+         */
+        ft->file.eof = ST_SUCCESS;
     }
 #endif
 
@@ -692,20 +700,20 @@ st_ssize_t st_alsawrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
      */
     if (len != nsamp)
     {
-	/* Reset the driver.  A future enhancement would be to
-	 * resend the remaining data (starting at (nsamp - len) in the buffer).
-	 * But since we've already lost some data, I'm being lazy
-	 * and letting a little more data be lost as well.
-	 */
-	ioctl(fileno(ft->fp), SNDRV_PCM_IOCTL_PREPARE);
+        /* Reset the driver.  A future enhancement would be to
+         * resend the remaining data (starting at (nsamp - len) in the buffer).
+         * But since we've already lost some data, I'm being lazy
+         * and letting a little more data be lost as well.
+         */
+        ioctl(fileno(ft->fp), SNDRV_PCM_IOCTL_PREPARE);
 
-	/* Raw routines use eof flag to store when an internal error
-	 * the above ioctl is much like calling the stdio clearerr() function
-	 * and so we should reset libst's flag as well.  If the
-	 * error condition is still really there, it will be
-	 * detected on a future write.
-	 */
-	ft->file.eof = ST_SUCCESS;
+        /* Raw routines use eof flag to store when an internal error
+         * the above ioctl is much like calling the stdio clearerr() function
+         * and so we should reset libst's flag as well.  If the
+         * error condition is still really there, it will be
+         * detected on a future write.
+         */
+        ft->file.eof = ST_SUCCESS;
     }
 #endif
 
