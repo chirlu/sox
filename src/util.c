@@ -87,11 +87,11 @@ st_fail(const char *fmt, ...)
  * go over the array limit ourself!
  */
 void
-st_fail_errno(ft_t ft, int errno, const char *fmt, ...)
+st_fail_errno(ft_t ft, int st_errno, const char *fmt, ...)
 {
 	va_list args;
 
-	ft->st_errno = errno;
+	ft->st_errno = st_errno;
 
 	va_start(args, fmt);
 	vsprintf(ft->st_errstr, fmt, args);

@@ -4,7 +4,7 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
-sox-12.18
+sox-12.17.1
 ---------
   o Andreas Kies fixed a bug were we were not detecting correctly
     if an output file was seekable.
@@ -16,6 +16,8 @@ sox-12.18
   o Fixed bug were it was impossible to output ADPCM data in wav files.
   o Fixed bug were rate had to be specified for sphere files (fix from
     Antti Honkela).
+  o Added small work around to let compile with cygwin's gcc 95.2
+    which also now allows to compile with GSM support under windows.
 
 sox-12.17
 ---------

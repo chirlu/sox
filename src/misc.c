@@ -12,8 +12,6 @@
  */
 
 #include "st.h"
-#include "version.h"
-#include "patchlvl.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -444,7 +442,7 @@ st_version()
 {
 	static char versionstr[20];
 	
-	sprintf(versionstr, "Version %d.%d", VERSION, PATCHLEVEL);
+	sprintf(versionstr, "Version %s", ST_LIB_VERSION);
 	return(versionstr);
 }
 
