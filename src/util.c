@@ -147,30 +147,153 @@ formp->filename);
 }
 
 /*
- * Check that we have a known effect name.
+ * Check that we have a known effect name.  If found, copy name of
+ * effect into structure and place a pointer to internal data.
+ * Returns -1 on error else it turns the total number of arguments
+ * that should be passed to this effects getopt() function.
  */
-void
-st_geteffect(effp)
-eff_t effp;
+int st_geteffect_opt(eff_t effp, int argc, char **argv)
+{
+	int i, optind;
+
+	for(i = 0; st_effects[i].name; i++) 
+	{
+	    char *s1 = st_effects[i].name, *s2 = argv[0];
+
+	    while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
+		s1++, s2++;
+	    if (*s1 || *s2)
+		continue;	/* not a match */
+
+	    /* Found it! */
+	    effp->name = st_effects[i].name;
+	    effp->h = &st_effects[i];
+
+	    optind = 1;
+
+	    while (optind < argc)
+	    {
+	        for (i = 0; st_effects[i].name; i++)
+	        {
+		    char *s1 = st_effects[i].name, *s2 = argv[optind];
+		    while (*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
+		    s1++, s2++;
+		    if (*s1 || *s2)
+		        continue;
+
+		    /* Found it! */
+		    return (optind - 1);
+	        }
+		/* Didn't find a match, try the next argument. */
+		optind++;
+	    }
+	    /* 
+	     * No matches found, all the following arguments are
+	     * for this effect passed in.
+	     */
+	    return (optind - 1);
+	}
+
+	return (ST_EOF);
+}
+
+/*
+ * Check that we have a known effect name.  If found, copy name of
+ * effect into structure and place a pointer to internal data.
+ * Returns -1 on on failure.
+ */
+
+int st_geteffect(eff_t effp, char *effect_name)
 {
 	int i;
 
 	for(i = 0; st_effects[i].name; i++) {
-		char *s1 = st_effects[i].name, *s2 = effp->name;
+		char *s1 = st_effects[i].name, *s2 = effect_name;
+
 		while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
 			s1++, s2++;
 		if (*s1 || *s2)
 			continue;	/* not a match */
+
 		/* Found it! */
+		effp->name = st_effects[i].name;
 		effp->h = &st_effects[i];
-		return;
+
+		return ST_SUCCESS;
 	}
-	/* Guido Van Rossum fix */
-	fprintf(stderr, "%s: Known effects: ",myname);
-	for (i = 1; st_effects[i].name; i++)
-		fprintf(stderr, "%s ", st_effects[i].name);
-	fprintf(stderr, "\n");
-	st_fail("Effect '%s' is not known!", effp->name);
+
+	return (ST_EOF);
+}
+
+/* 
+ * Copy input and output signal info into effect structures.
+ * Must pass in a bitmask containing info of wheither ST_EFF_CHAN
+ * or ST_EFF_RATE has been used previously on this effect stream.
+ * If not running multiple effects then just pass in a value of 0.
+ *
+ * Return value is the same mask plus addition of ST_EFF_CHAN or
+ * ST_EFF_RATE if it was used in this effect.  That make this
+ * return value can be passed back into this function in future
+ * calls.
+ */
+
+int st_updateeffect(eff_t effp, ft_t in, ft_t out, int effect_mask)
+{
+    int i;
+
+    effp->ininfo = in->info;
+    effp->ininfo = in->info;
+
+    effp->outinfo = out->info;
+    effp->outinfo = out->info;
+
+    for(i = 0; i < 8; i++) {
+        memcpy(&effp->loops[i], &in->loops[i], sizeof(struct st_loopinfo));
+	memcpy(&effp->loops[i], &in->loops[i], sizeof(struct st_loopinfo));
+    }
+    effp->instr = in->instr;
+    effp->instr = in->instr;
+
+    if (in->info.channels != out->info.channels)
+    {
+	/* Only effects with ST_EFF_CHAN flag can actually handle
+	 * outputing a different number of channels then the input.
+	 */
+	if (!(effp->h->flags & ST_EFF_CHAN))
+	{
+	    /* If this effect is being ran before a ST_EFF_CHAN effect
+	     * then effect's output is the same as the input file. Else its
+	     * input contains same number of channels as the output
+	     * file.
+	     */
+	    if (effect_mask & ST_EFF_CHAN)
+		effp->ininfo.channels = out->info.channels;
+	    else
+		effp->outinfo.channels = in->info.channels;
+
+	}
+    }
+
+    if (in->info.rate != out->info.rate)
+    {
+	/* Only the ST_EFF_RATE effect can handle an input that
+	 * is a different sample rate then the output.
+	 */
+	if (!(effp->h->flags & ST_EFF_RATE))
+	{
+	    if (effect_mask & ST_EFF_RATE)
+		effp->ininfo.rate = out->info.rate;
+	    else
+		effp->outinfo.rate = in->info.rate;
+	}
+    }
+
+    if (effp->h->flags & ST_EFF_CHAN)
+	effect_mask |= ST_EFF_CHAN;
+    if (effp->h->flags & ST_EFF_RATE)
+	effect_mask |= ST_EFF_RATE;
+
+    return effect_mask;
 }
 
 /*

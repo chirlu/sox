@@ -91,7 +91,7 @@ static int filetype(P1(int));
 static void process(P0);
 static void statistics(P0);
 static LONG volumechange(P3(LONG *buf, LONG ct, double vol));
-static void checkeffect(P1(eff_t));
+static void checkeffect(P0);
 static int flow_effect(P1(int));
 static int drain_effect(P1(int));
 
@@ -99,19 +99,44 @@ static struct st_soundstream informat, outformat;
 
 static ft_t ft;
 
-#define MAXEFF 4
-static struct st_effect eff;
-static struct st_effect efftab[MAXEFF];	/* table of left/mono channel effects */
-static struct st_effect efftabR[MAXEFF];	/* table of right channel effects */
-				/* efftab[0] is the input stream */
-static int neffects;			/* # of effects */
+/* We parse effects into a temporary effects table and then place into
+ * the real effects table.  This makes it easier to reorder some effects
+ * as needed.  For instance, we can run a resampling effect before
+ * converting a mono file to stereo.  This allows the resample to work
+ * on half the data.
+ *
+ * Real effects table only needs to be 2 entries bigger then the user
+ * specified table.  This is because at most we will need to add
+ * a resample effect and an channel averaging effect.
+ */
+#define MAX_EFF 16 
+#define MAX_USER_EFF 14
+
+/* 
+ * In efftab's, location 0 is always the input stream.
+ *
+ * If one was to support effects for quad-channel files, there would 
+ * need to be an effect tabel for each channel.
+ */
+
+static struct st_effect efftab[MAX_EFF]; /* left/mono channel effects */
+static struct st_effect efftabR[MAX_EFF];/* right channel effects */
+static int neffects;			 /* # of effects to run on data */
+
+static struct st_effect user_efftab[MAX_USER_EFF];
+static int nuser_effects;
+
 static char *ifile, *ofile;
 
 int main(argc, argv)
 int argc;
 char **argv;
 {
+
+        int argc_effect;
+
 	myname = argv[0];
+
 	init();
 	
 	ifile = ofile = NULL;
@@ -174,21 +199,51 @@ char **argv;
 	     */
 	}
 
-	/* Get effect name */
-	if (optind < argc) {
-		eff.name = argv[optind];
-		optind++;
-		st_geteffect(&eff);
-		(* eff.h->getopts)(&eff, argc - optind, &argv[optind]);
-	} else {
-		eff.name = "null";
-		st_geteffect(&eff);
+
+	/* Loop through the reset of the arguments looking for effects */
+	nuser_effects = 0;
+
+        while (optind < argc)
+        {
+	    if (nuser_effects >= MAX_USER_EFF)
+	    {
+	        st_fail("Sorry, too many effects specified.\n");
+	    }
+
+	    argc_effect = st_geteffect_opt(&user_efftab[nuser_effects], 
+		                           argc - optind, &argv[optind]);
+
+	    if (argc_effect == ST_EOF)
+	    {
+	        int i1;
+	        fprintf(stderr, "%s: Known effects: ",myname);
+	        for (i1 = 1; st_effects[i1].name; i1++)
+	            fprintf(stderr, "%s ", st_effects[i1].name);
+	        fprintf(stderr, "\n");
+	        st_fail("Effect '%s' is not known!", argv[optind]);
+	    }
+
+
+	    /* Skip past effect name */
+	    optind++;
+
+	    (*user_efftab[nuser_effects].h->getopts)(&user_efftab[nuser_effects], 
+			                             argc_effect, 
+						     &argv[optind]);
+
+	    /* Skip past the effect arguments */
+	    optind += argc_effect;
+	    nuser_effects++;
 	}
 
 	/* Check global arguments */
 	if (informat.info.dovol && informat.info.vol == 0.0)
-		st_fail("Volume must be non-zero"); /* negative volume is phase-reversal */
-	
+		st_fail("Volume must be non-zero");
+
+	/* negative volume is phase-reversal */
+	if (informat.info.vol < 0.0)
+	    st_report("Volume adjustment is negative.  This will result in a phase change\n");
+
 	/* If file types have not been set with -t, set from file names. */
 	if (! informat.filetype) {
 		if ((informat.filetype = strrchr(ifile, LASTCHAR)) != NULL)
@@ -397,7 +452,6 @@ static void init(P0) {
  */
 
 static void process(P0) {
-    LONG i;
     int e, f, havedata;
 
     st_gettype(&informat);
@@ -423,7 +477,6 @@ static void process(P0) {
     if (informat.comment)
 	st_report("Input file: comment \"%s\"\n", informat.comment);
 	
-    /* need to check EFF_REPORT */
     if (writing) {
         /*
          * There are two choices here:
@@ -478,22 +531,8 @@ static void process(P0) {
 	    st_report("Output file: comment \"%s\"\n", outformat.comment);
     }
 
-    /* Very Important: 
-     * Effect fabrication and start is called AFTER files open.
-     * Effect may write out data beforehand, and
-     * some formats don't know their sample rate until now.
-     */
-	
-    /* inform effect about signal information */
-    eff.ininfo = informat.info;
-    eff.outinfo = outformat.info;
-    for(i = 0; i < 8; i++) {
-	memcpy(&eff.loops[i], &informat.loops[i], sizeof(struct st_loopinfo));
-    }
-    eff.instr = informat.instr;
-
     /* build efftab */
-    checkeffect(&eff);
+    checkeffect();
 
     /* Start all effects */
     for(e = 1; e < neffects; e++) {
@@ -503,10 +542,21 @@ static void process(P0) {
     }
 
     /* Reserve an output buffer for all effects */
-    for(e = 0; e < neffects; e++) {
+    for(e = 0; e < neffects; e++) 
+    {
 	efftab[e].obuf = (LONG *) malloc(BUFSIZ * sizeof(LONG));
+	if (efftab[e].obuf == NULL)
+	{
+	    st_fail("could not allocate memory");
+	}
 	if (efftabR[e].name) 
+	{
 	    efftabR[e].obuf = (LONG *) malloc(BUFSIZ * sizeof(LONG));
+	    if (efftabR[e].obuf == NULL)
+	    {
+		st_fail("could not allocate memory");
+	    }
+	}
     }
 
 
@@ -711,203 +761,181 @@ int e;
     return(efftab[e].olen);
 }
 
-#define setin(eff, effname) \
-	{eff.name = effname; \
-	eff.ininfo.rate = informat.info.rate; \
-	eff.ininfo.channels = informat.info.channels; \
-	eff.outinfo.rate = informat.info.rate; \
-	eff.outinfo.channels = informat.info.channels;}
-
-#define setout(eff, effname) \
-	{eff.name = effname; \
-	eff.ininfo.rate = outformat.info.rate; \
-	eff.ininfo.channels = outformat.info.channels; \
-	eff.outinfo.rate = outformat.info.rate; \
-	eff.outinfo.channels = outformat.info.channels;}
-
 /*
  * If no effect given, decide what it should be.
  * Smart ruleset for multiple effects in sequence.
  * 	Puts user-specified effect in right place.
  */
 static void
-checkeffect(effp)
-eff_t effp;
+checkeffect()
 {
-	int i, j;
-	int needchan = 0, needrate = 0;
+	int i;
+	int needchan = 0, needrate = 0, haschan = 0, hasrate = 0;
+	int effects_mask = 0;
 
-	/* if given effect does these, we don't need to add them */
-	needrate = (informat.info.rate != outformat.info.rate) &&
-		! (effp->h->flags & ST_EFF_RATE);
-	needchan = (informat.info.channels != outformat.info.channels) &&
-		! (effp->h->flags & ST_EFF_MCHAN);
+	needrate = (informat.info.rate != outformat.info.rate);
+	needchan = (informat.info.channels != outformat.info.channels);
 
-	neffects = 1;
-	/* effect #0 is the input stream */
-	/* inform all effects about all relevant changes */
-	for(i = 0; i < MAXEFF; i++) {
-		efftab[i].name = efftabR[i].name = (char *) 0;
-		/* inform effect about signal information */
-		efftab[i].ininfo = informat.info;
-		efftabR[i].ininfo = informat.info;
-		efftab[i].outinfo = outformat.info;
-		efftabR[i].outinfo = outformat.info;
-		for(j = 0; j < 8; j++) {
-			memcpy(&efftab[i].loops[j], 
-				&informat.loops[j], sizeof(struct st_loopinfo));
-			memcpy(&efftabR[i].loops[j], 
-				&informat.loops[j], sizeof(struct st_loopinfo));
-		}
-		efftab[i].instr = informat.instr;
-		efftabR[i].instr = informat.instr;
+	for (i = 0; i < nuser_effects; i++)
+	{
+	    if (user_efftab[i].h->flags & ST_EFF_CHAN)
+	    {
+		haschan++;
+	    }
+	    if (user_efftab[i].h->flags & ST_EFF_RATE)
+	    {
+		hasrate++;
+	    }
 	}
 
-	/* If not writing output, then just add the user specified effect.
-	 * This is to avoid channel and rate averaging since you don't have
-	 * a real output format.
+	if (haschan > 1)
+	    st_fail("Can not specify multiple effects that modify channel #");
+	if (hasrate > 1)
+	    st_fail("Can not specify multiple effects that change sampel rate");
+	if (haschan && !needchan)
+	    st_fail("Can not specify channel effects when input and output channel # are equal");
+	if (hasrate && !needrate)
+	    st_fail("Can not specify sample rate effects when input and output rate are equal");
+
+	/* If not writing output then do not worry about adding
+	 * channel and rate effects.  This is just to speed things
+	 * up.
 	 */
-	if (! writing) {
-		neffects = 2;
-		efftab[1].name = effp->name;
-		if ((informat.info.channels == 2) &&
-		   (! (effp->h->flags & ST_EFF_MCHAN)))
-			efftabR[1].name = effp->name;
-	}
-	else if (soxpreview) {
-	    /* to go faster, i suppose rate could come first if downsampling */
-	    if (needchan && (informat.info.channels > outformat.info.channels))
-		{
-	        if (needrate) {
-		    neffects = 4;
-		    efftab[1].name = "avg";
-		    efftab[2].name = "rate";
-		    setout(efftab[3], effp->name);
-		} else {
-		    neffects = 3;
-		    efftab[1].name = "avg";
-		    setout(efftab[2], effp->name);
-		}
-	    } else if (needchan && 
-		    (informat.info.channels < outformat.info.channels)) {
-	        if (needrate) {
-		    neffects = 4;
-		    efftab[1].name = effp->name;
-		    efftab[1].outinfo.rate = informat.info.rate;
-		    efftab[1].outinfo.channels = informat.info.channels;
-		    efftab[2].name = "rate";
-		    efftab[3].name = "avg";
-		} else {
-		    neffects = 3;
-		    efftab[1].name = effp->name;
-		    efftab[1].outinfo.channels = informat.info.channels;
-		    efftab[2].name = "avg";
-		}
-	    } else {
-	        if (needrate) {
-		    neffects = 3;
-		    efftab[1].name = effp->name;
-		    efftab[1].outinfo.rate = informat.info.rate;
-		    efftab[2].name = "rate";
-		    if (informat.info.channels == 2)
-			    efftabR[2].name = "rate";
-		} else {
-		    neffects = 2;
-		    efftab[1].name = effp->name;
-		}
-		if ((informat.info.channels == 2) &&
-		    (! (effp->h->flags & ST_EFF_MCHAN)))
-		        efftabR[1].name = effp->name;
-	    }
-	} else {	/* not preview mode */
-	    /* [ sum to mono,] [ then rate,] then effect */
-	    /* not the purest, but much faster */
-	    if (needchan && 
-			(informat.info.channels > outformat.info.channels)) {
-	        if (needrate && (informat.info.rate != outformat.info.rate)) {
-		    neffects = 4;
-		    efftab[1].name = "avg";
-		    efftab[2].name = effp->name;
-		    efftab[2].outinfo.rate = informat.info.rate;
-		    efftab[2].outinfo.channels = informat.info.channels;
-		    efftab[3].name = "rate";
-		} else {
-		    neffects = 3;
-		    efftab[1].name = "avg";
-		    efftab[2].name = effp->name;
-		    efftab[2].outinfo.rate = informat.info.rate;
-		    efftab[2].outinfo.channels = informat.info.channels;
-		}
-	    } else if (needchan && 
-			(informat.info.channels < outformat.info.channels)) {
-	        if (needrate) {
-		    neffects = 4;
-		    efftab[1].name = effp->name;
-		    if (! (effp->h->flags & ST_EFF_MCHAN))
-			    efftabR[1].name = effp->name;
-		    efftab[1].outinfo.rate = informat.info.rate;
-		    efftab[1].outinfo.channels = informat.info.channels;
-		    efftab[2].name = "resample";
-		    efftab[3].name = "avg";
-		} else {
-		    neffects = 3;
-		    efftab[1].name = effp->name;
-		    if (! (effp->h->flags & ST_EFF_MCHAN))
-			    efftabR[1].name = effp->name;
-		    efftab[1].outinfo.channels = informat.info.channels;
-		    efftab[2].name = "avg";
-		}
-	    } else {
-	        if (needrate) {
-		    neffects = 3;
-		    efftab[1].name = effp->name;
-		    efftab[1].outinfo.rate = informat.info.rate;
-		    efftab[2].name = "resample";
-		    if (informat.info.channels == 2)
-			    efftabR[2].name = "rate";
-		} else {
-		    neffects = 2;
-		    efftab[1].name = effp->name;
-		}
-		if ((informat.info.channels == 2) &&
-		    (! (effp->h->flags & ST_EFF_MCHAN)))
-		        efftabR[1].name = effp->name;
-	    }
+	if (!writing)
+	{
+	    needchan = 0;
+	    needrate = 0;
 	}
 
-	for(i = 1; i < neffects; i++) {
-		/* pointer comparison OK here */
-		/* shallow copy of initialized effect data */
-		/* XXX this assumes that effect_getopt() doesn't malloc() */
-		if (efftab[i].name == effp->name) {
-			memcpy(&efftab[i], &eff, sizeof(struct st_effect));
-			if (efftabR[i].name) 
-			    memcpy(&efftabR[i], &eff, sizeof(struct st_effect));
-		} else {
-			/* set up & give default opts for added effects */
-			st_geteffect(&efftab[i]);
-			(* efftab[i].h->getopts)(&efftab[i],(int)0,(char **)0);
-			if (efftabR[i].name) 
-			    memcpy(&efftabR[i], &efftab[i], 
-				sizeof(struct st_effect));
-		}
+	/* --------- add the effects ------------------------ */
+
+	/* efftab[0] is always the input stream and always exists */
+	neffects = 1;
+
+	/* If reducing channels then its faster to run all effects
+	 * after the avg effect.
+	 */
+        if (needchan && !(haschan) &&
+	    (informat.info.channels > outformat.info.channels))
+        {
+	    /* Find effect and update initial pointers */
+	    st_geteffect(&efftab[neffects], "avg");
+
+	    /* give default opts for added effects */
+	    (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+					    (char **)0);
+
+	    /* Copy format info to effect table */
+	    effects_mask = st_updateeffect(&efftab[neffects], &informat, 
+		                           &outformat, effects_mask);
+
+	    neffects++;
 	}
-	
-    /* If a user doesn't specify an effect then a null entry could
-     * have been placed in the middle of the list above.  Remove
-     * those entries here.
-     */
-	for(i = 1; i < neffects; i++)
-	    if (! strcmp(efftab[i].name, "null")) {
-		for(; i < neffects; i++) {
-		    efftab[i] = efftab[i+1];
-		    efftabR[i] = efftabR[i+1];
-		}
-		neffects--;
+
+	/* If reducing the number of samples, its faster to run all effects
+	 * after the resample effect.
+	 */
+	if (needrate && !(hasrate) &&
+	    (informat.info.rate > outformat.info.rate))
+	{
+	    if (soxpreview)
+	        st_geteffect(&efftab[neffects], "rate");
+	    else
+	        st_geteffect(&efftab[neffects], "resample");
+
+	    /* set up & give default opts for added effects */
+	    (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+					    (char **)0);
+
+	    /* Copy format info to effect table */
+	    effects_mask = st_updateeffect(&efftab[neffects], &informat, 
+		                           &outformat, effects_mask);
+
+	    /* Rate can't handle multiple channels so be sure and
+	     * account for that.
+	     */
+	    if (efftab[neffects].ininfo.channels > 1)
+	    {
+	        memcpy(&efftabR[neffects], &efftab[neffects], 
+		       sizeof(struct st_effect));
 	    }
+
+	    neffects++;
+        }
+
+	/* Copy over user specified effects into real efftab */
+	for(i = 0; i < nuser_effects; i++) 
+	{
+	    memcpy(&efftab[neffects], &user_efftab[i], 
+		   sizeof(struct st_effect));
+
+	    /* Copy format info to effect table */
+	    effects_mask = st_updateeffect(&efftab[neffects], &informat, 
+		                           &outformat, effects_mask);
+
+	    /* If this effect can't handle multiple channels then
+	     * account for this.
+	     */
+	    if ((efftab[neffects].ininfo.channels > 1) &&
+		!(efftab[neffects].h->flags & ST_EFF_MCHAN))
+	    {
+	        memcpy(&efftabR[neffects], &efftab[neffects], 
+		       sizeof(struct st_effect));
+	    }
+
+	    neffects++;
+	}
+
+	/* If rate effect hasn't been added by now then add it here.
+	 * Check adding rate before avg because its faster to run
+	 * rate on less channels then more.
+	 */
+	if (needrate && !(effects_mask & ST_EFF_RATE))
+	{
+	    if (soxpreview)
+	        st_geteffect(&efftab[neffects], "rate");
+	    else
+	        st_geteffect(&efftab[neffects], "resample");
+
+	    /* set up & give default opts for added effects */
+	    (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+					    (char **)0);
+
+	    /* Copy format info to effect table */
+	    effects_mask = st_updateeffect(&efftab[neffects], &informat, 
+		                           &outformat, effects_mask);
+
+	    /* Rate can't handle multiple channels so be sure and
+	     * account for that.
+	     */
+	    if (efftab[neffects].ininfo.channels > 1)
+	    {
+	        memcpy(&efftabR[neffects], &efftab[neffects], 
+		       sizeof(struct st_effect));
+	    }
+
+	    neffects++;
+        }
+
+	/* If code up until know still hasn't added avg effect then
+	 * do it now.
+	 */
+	if (needchan && !(effects_mask & ST_EFF_CHAN))
+        {
+	    st_geteffect(&efftab[neffects], "avg");
+
+	    /* set up & give default opts for added effects */
+	    (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+					    (char **)0);
+
+	    /* Copy format info to effect table */
+	    effects_mask = st_updateeffect(&efftab[neffects], &informat, 
+		                           &outformat, effects_mask);
+
+	    neffects++;
+	}
 }
 
-/* Guido Van Rossum fix */
 static void statistics(P0) {
 	if (informat.info.dovol && clipped > 0)
 		st_report("Volume change clipped %d samples", clipped);

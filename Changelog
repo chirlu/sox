@@ -77,6 +77,8 @@ sox-12.17
   o Changed the default block alignement for IMA ADPCM WAV files to use
     256 which is what windows programs use.  Badly written readers expect
     256.
+  o Matthias Nutt helped add support for specifying multiple effects
+    to SoX on the command line.
 
 sox-12.16
 ---------

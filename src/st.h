@@ -335,7 +335,9 @@ void st_warn(P2(const char *, ...));
 void st_fail(P2(const char *, ...))NORET;
 void st_fail_errno(P4(ft_t, int, const char *, ...));
 
-void st_geteffect(P1(eff_t));
+int st_geteffect_opt(P3(eff_t, int, char **));
+int st_geteffect(P2(eff_t, char *));
+int st_updateeffect(P4(eff_t, ft_t, ft_t, int));
 void st_gettype(P1(ft_t));
 void st_checkformat(P1(ft_t));
 void st_copyformat(P2(ft_t, ft_t));

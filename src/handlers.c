@@ -730,7 +730,7 @@ st_effect_t st_effects[] = {
 	{"split", ST_EFF_CHAN | ST_EFF_MCHAN, 
 		st_split_getopts, st_split_start, st_split_flow, 
 		st_null_drain, st_split_stop},
-	{"stat", ST_EFF_MCHAN | ST_EFF_REPORT | ST_EFF_RATE | ST_EFF_CHAN,
+	{"stat", ST_EFF_MCHAN | ST_EFF_REPORT,
 		st_stat_getopts, st_stat_start, st_stat_flow, 
 		st_stat_drain, st_stat_stop},
 	{"stretch", 0,
