@@ -131,8 +131,8 @@ eff_t effp;
 	}
 	if (! (echos->delay_buf = (double *) malloc(sizeof (double) * echos->sumsamples)))
 		fail("echos: Cannot malloc %d bytes!\n", 
-			sizeof(long) * echos->sumsamples);
-	for ( j = 0; j < echos->samples[i]; ++j )
+			sizeof(double) * echos->sumsamples);
+	for ( j = 0; j < echos->sumsamples; ++j )
 		echos->delay_buf[j] = 0.0;
 	/* Be nice and check the hint with warning, if... */
 	sum_in_volume = 1.0;
