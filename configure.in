@@ -105,7 +105,11 @@ dnl Test for GSM library.
 
 if test "$gsmlib" = auto
 then
-  AC_CHECK_LIB(gsm, gsm_create, gsmlib=yes)
+  AC_CHECK_LIB(gsm, gsm_create)
+  if test "$ac_cv_lib_gsm" = yes
+  then
+    gsmlib=yes
+  fi
 else
   if test "$gsmlib" != no
   then
@@ -119,7 +123,7 @@ if test "$gsmlib" = yes
 then
 	if test "$gsminc" = auto
 	then
-	  AC_CHECK_HEADER(gsm.h, gsminc=yes)
+	  AC_CHECK_HEADERS(gsm.h, gsminc=yes)
 	else
 	  if test "$gsmlib" != no
 	  then
@@ -261,11 +265,11 @@ if test "$old_rate" = yes
 then
 	CFLAGS="$CFLAGS -DUSE_OLD_RATE"
 fi
-if test "$fast_ulaw_comp" = yes
+if test "$enable_fast_ulaw" = yes
 then
 	CFLAGS="$CFLAGS -DFAST_ULAW_COMPRESSION"
 fi
-if test "$fast_alaw_comp" = yes
+if test "$enable_fast_alaw" = yes
 then
 	CFLAGS="$CFLAGS -DFAST_ALAW_COMPRESSION"
 fi
