@@ -5454,7 +5454,7 @@ echo "${ECHO_T}... DONE $ac_stdint_h" >&6
 #endif
 EOF
 
-ac_config_files="$ac_config_files Makefile gsm/Makefile"
+ac_config_files="$ac_config_files libst-config Makefile gsm/Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure

@@ -295,7 +295,7 @@ dnl Generate output files...
 
 AC_CONFIG_HEADER(stconfig.h)
 AC_CREATE_STDINT_H(ststdint.h)
-AC_OUTPUT([Makefile gsm/Makefile])
+AC_OUTPUT([libst-config Makefile gsm/Makefile])
 
 if test ! -f tests.sh; then cp ${srcdir}/tests.sh tests.sh; fi
 if test ! -f testall.sh; then cp ${srcdir}/testall.sh testall.sh; fi
