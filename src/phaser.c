@@ -169,7 +169,7 @@ eff_t effp;
 void phaser_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
 	phaser_t phaser = (phaser_t) effp->priv;
 	int len, done;
@@ -205,7 +205,7 @@ int *isamp, *osamp;
 void phaser_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
-int *osamp;
+LONG *osamp;
 {
 	phaser_t phaser = (phaser_t) effp->priv;
 	int done;

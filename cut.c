@@ -62,7 +62,7 @@ eff_t effp;
 void cut_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
 	cut_t cut = (cut_t) effp->priv;
 	int len, done;
@@ -98,7 +98,7 @@ int *isamp, *osamp;
 void cut_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
-int *osamp;
+LONG *osamp;
 {
 	*osamp = 0;
 }

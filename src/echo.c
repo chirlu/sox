@@ -161,7 +161,7 @@ eff_t effp;
 void echo_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
 	echo_t echo = (echo_t) effp->priv;
 	int len, done;
@@ -199,7 +199,7 @@ int *isamp, *osamp;
 void echo_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
-int *osamp;
+LONG *osamp;
 {
 	echo_t echo = (echo_t) effp->priv;
 	double d_in, d_out;

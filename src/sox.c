@@ -56,7 +56,13 @@ extern int optind;
 #endif
 #endif
 
+#if defined(VMS)
+#define LASTCHAR	']'
+#elif defined(DOS) || defined(WIN32)
+#define LASTCHAR	'\\'
+#else
 #define LASTCHAR        '/'
+#endif
 
 /*
  * SOX main program.
@@ -172,11 +178,11 @@ char **argv;
 	if (optind < argc) {
 		eff.name = argv[optind];
 		optind++;
-		geteffect(&eff);
+		st_geteffect(&eff);
 		(* eff.h->getopts)(&eff, argc - optind, &argv[optind]);
 	} else {
 		eff.name = "null";
-		geteffect(&eff);
+		st_geteffect(&eff);
 	}
 
 	/* Check global arguments */
@@ -394,13 +400,13 @@ static void process(P0) {
     LONG i;
     int e, f, havedata;
 
-    gettype(&informat);
+    st_gettype(&informat);
     if (writing)
-	gettype(&outformat);
+	st_gettype(&outformat);
     
     /* Read and write starters can change their formats. */
     (* informat.h->startread)(&informat);
-    checkformat(&informat);
+    st_checkformat(&informat);
     
     if (informat.info.dovol)
 	report("Volume factor: %f\n", informat.info.vol);
@@ -454,10 +460,10 @@ static void process(P0) {
 	outformat.seekable  = (filetype(fileno(informat.fp)) == S_IFREG);
 #endif
 
-	copyformat(&informat, &outformat);
+	st_copyformat(&informat, &outformat);
 	(* outformat.h->startwrite)(&outformat);
-	checkformat(&outformat);
-	cmpformats(&informat, &outformat);
+	st_checkformat(&outformat);
+	st_cmpformats(&informat, &outformat);
 	report("Output file: using sample rate %lu\n\tsize %s, style %s, %d %s",
 	       outformat.info.rate, sizes[outformat.info.size], 
 	       styles[outformat.info.style], outformat.info.channels, 
@@ -860,8 +866,8 @@ eff_t effp;
 			    memcpy(&efftabR[i], &eff, sizeof(struct effect));
 		} else {
 			/* set up & give default opts for added effects */
-			geteffect(&efftab[i]);
-			(* efftab[i].h->getopts)(&efftab[i],0,(char *)0);
+			st_geteffect(&efftab[i]);
+			(* efftab[i].h->getopts)(&efftab[i],(int)0,(char **)0);
 			if (efftabR[i].name) 
 			    memcpy(&efftabR[i], &efftab[i], 
 				sizeof(struct effect));

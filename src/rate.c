@@ -99,7 +99,7 @@ eff_t effp;
 void rate_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
 	rate_t rate = (rate_t) effp->priv;
 	LONG *istart,*iend;

@@ -1,4 +1,3 @@
-
 /*
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
@@ -69,7 +68,7 @@ eff_t effp;
 void highp_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
 	highp_t highp = (highp_t) effp->priv;
 	int len, done;

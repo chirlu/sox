@@ -67,7 +67,7 @@ eff_t effp;
 void lowp_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
 	lowp_t lowp = (lowp_t) effp->priv;
 	int len, done;

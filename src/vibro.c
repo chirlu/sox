@@ -100,7 +100,7 @@ eff_t effp;
 void vibro_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
 	vibro_t vibro = (vibro_t) effp->priv;
 	register int counter, tablen;

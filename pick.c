@@ -99,7 +99,7 @@ eff_t effp;
 void pick_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
 	pick_t pick = (pick_t) effp->priv;
 	int len, done;

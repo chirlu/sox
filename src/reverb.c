@@ -192,7 +192,7 @@ eff_t effp;
 void reverb_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
 	reverb_t reverb = (reverb_t) effp->priv;
 	int len, done;
@@ -228,7 +228,7 @@ reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsam
 void reverb_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
-int *osamp;
+LONG *osamp;
 {
 	reverb_t reverb = (reverb_t) effp->priv;
 	float d_in, d_out;

@@ -108,7 +108,7 @@ eff_t effp;
 void band_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
 	band_t band = (band_t) effp->priv;
 	int len, done;

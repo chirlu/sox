@@ -59,7 +59,7 @@ eff_t effp;
 void skeleff_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
     skeleff_t skeleff = (skeleff_t) effp->priv;
     int len, done;
@@ -94,7 +94,7 @@ int *isamp, *osamp;
 
 void skeleff_drain(effp, obuf, osamp)
 LONG *obuf;
-int *osamp;
+LONG *osamp;
 {
 	*osamp = 0;
 }

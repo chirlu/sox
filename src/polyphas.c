@@ -49,11 +49,11 @@ typedef struct {
 
 typedef struct polyphase {
 
-  unsigned long lcmrate;         /* least common multiple of rates */
-  unsigned long inskip, outskip; /* LCM increments for I & O rates */
+  ULONG lcmrate;       		 /* least common multiple of rates */
+  ULONG inskip, outskip;	 /* LCM increments for I & O rates */
   double Factor;                 /* out_rate/in_rate               */
-  unsigned long total;           /* number of filter stages        */
-  unsigned long oskip;           /* output samples to skip at start*/
+  ULONG total;          	 /* number of filter stages        */
+  ULONG oskip;   	         /* output samples to skip at start*/
   double inpipe;                 /* output samples 'in the pipe'   */
   polystage *stage[MF];          /* array of pointers to polystage structs */
 
@@ -383,7 +383,7 @@ void poly_start(eff_t effp)
 
     st_initrand();
 
-    rate->lcmrate = st_lcm((long)effp->ininfo.rate, (long)effp->outinfo.rate);
+    rate->lcmrate = st_lcm((LONG)effp->ininfo.rate, (LONG)effp->outinfo.rate);
 
     /* Cursory check for LCM overflow.  
      * If both rate are below 65k, there should be no problem.
@@ -519,7 +519,7 @@ static void update_hist(Float *hist, int hist_size, int in_size)
 
 }
 
-void poly_flow(eff_t effp, long *ibuf, long *obuf, long *isamp, long *osamp)
+void poly_flow(eff_t effp, LONG *ibuf, LONG *obuf, LONG *isamp, LONG *osamp)
 {
   poly_t rate = (poly_t) effp->priv;
   polystage *s0,*s1;
@@ -578,9 +578,9 @@ void poly_flow(eff_t effp, long *ibuf, long *obuf, long *isamp, long *osamp)
   }
 
   {
-    long *q;
-    long out_size;
-    long oskip;
+    LONG *q;
+    LONG out_size;
+    LONG oskip;
     Float *out_buf;
     int k;
 
@@ -615,9 +615,9 @@ void poly_flow(eff_t effp, long *ibuf, long *obuf, long *isamp, long *osamp)
 /*
  * Process tail of input samples.
  */
-void poly_drain(eff_t effp, long *obuf, long *osamp)
+void poly_drain(eff_t effp, LONG *obuf, LONG *osamp)
 {
-  long in_size;
+  LONG in_size;
   /* Call "flow" with NULL input. */
   poly_flow(effp, NULL, obuf, &in_size, osamp);
 }

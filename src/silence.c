@@ -68,7 +68,7 @@ eff_t effp;
 void silence_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
 	silence_t silence = (silence_t) effp->priv;
 	int len, done;
@@ -94,7 +94,7 @@ int *isamp, *osamp;
 
 void skel_drain(effp, obuf, osamp)
 LONG *obuf;
-int *osamp;
+LONG *osamp;
 {
 	*osamp = 0;
 }

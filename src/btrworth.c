@@ -56,7 +56,7 @@ void
 butterworth_flow (effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
   butterworth_t butterworth = (butterworth_t) effp->priv;
 

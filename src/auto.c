@@ -73,7 +73,7 @@ ft_t ft;
                 }
 	report("Type AUTO changed to %s", type);
 	ft->filetype = type;
-	gettype(ft); /* Change ft->h to the new format */
+	st_gettype(ft); /* Change ft->h to the new format */
 	(* ft->h->startread)(ft);
 }
 

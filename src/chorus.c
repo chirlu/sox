@@ -210,7 +210,7 @@ eff_t effp;
 void chorus_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
 	chorus_t chorus = (chorus_t) effp->priv;
 	int len, done;
@@ -250,7 +250,7 @@ int *isamp, *osamp;
 void chorus_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
-int *osamp;
+LONG *osamp;
 {
 	chorus_t chorus = (chorus_t) effp->priv;
 	int done;

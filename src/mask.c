@@ -48,7 +48,7 @@ char **argv;
 void mask_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
 	int len, done;
 	

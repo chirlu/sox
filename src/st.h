@@ -11,6 +11,10 @@
  * the consequences of using this software.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_MALLOC_H
@@ -53,23 +57,32 @@
 #define REGPARM(n)
 #endif
 
-/*
- * Handler structure for each format.
- */
-
-typedef struct format {
-	char	**names;	/* file type names */
-	int	flags;		/* details about file type */
-	void	(*startread)();			
-	LONG	(*read)();			
-	void	(*stopread)();		
-	void	(*startwrite)();			
-	void	(*write)();
-	void	(*stopwrite)();		
-} format_t;
-
-/* FIXME: Does this need to be here? */ 
-extern format_t formats[];
+/* FIXME: Move to internal st header */
+#if	defined(__STDC__) || defined(__cplusplus)
+#define	P0 void
+#define	P1(a) a
+#define	P2(a,b) a, b
+#define	P3(a,b,c) a, b, c
+#define	P4(a,b,c,d) a, b, c, d
+#define	P5(a,b,c,d,e) a, b, c, d, e
+#define	P6(a,b,c,d,e,f) a, b, c, d, e, f
+#define	P7(a,b,c,d,e,f,g) a, b, c, d, e, f, g
+#define	P8(a,b,c,d,e,f,g,h) a, b, c, d, e, f, g, h
+#define	P9(a,b,c,d,e,f,g,h,i) a, b, c, d, e, f, g, h, i
+#define	P10(a,b,c,d,e,f,g,h,i,j) a, b, c, d, e, f, g, h, i, j
+#else
+#define	P0
+#define	P1(a)
+#define	P2(a,b)
+#define	P3(a,b,c)
+#define	P4(a,b,c,d)
+#define	P5(a,b,c,d,e)
+#define	P6(a,b,c,d,e,f)
+#define	P7(a,b,c,d,e,f,g)
+#define	P8(a,b,c,d,e,f,g,h)
+#define	P9(a,b,c,d,e,f,g,h,i)
+#define	P10(a,b,c,d,e,f,g,h,i,j)
+#endif
 
 /* Signal parameters */
 
@@ -142,6 +155,23 @@ struct fileinfo {
 
 #define NLOOPS		8
 
+/*
+ * Handler structure for each format.
+ */
+
+typedef struct soundstream *ft_t;
+
+typedef struct format {
+	char	**names;	/* file type names */
+	int	flags;		/* details about file type */
+	void	(*startread)(P1(ft_t ft));			
+	LONG	(*read)(P3(ft_t ft, LONG *buf, LONG len));			
+	void	(*stopread)(P1(ft_t ft));		
+	void	(*startwrite)(P1(ft_t ft));			
+	void	(*write)(P3(ft_t ft, LONG *buf, LONG len));
+	void	(*stopwrite)(P1(ft_t ft));		
+} format_t;
+
 struct soundstream {
 	struct	signalinfo info;	/* signal specifications */
 	struct  instrinfo instr;	/* instrument specification */
@@ -158,7 +188,8 @@ struct soundstream {
 	double	priv[PRIVSIZE/8];	/* format's private data area */
 };
 
-typedef struct soundstream *ft_t;
+/* FIXME: Does this need to be here? */ 
+extern format_t formats[];
 
 /* FIXME: Prefix all #defines with ST_ */
 /* flags field */
@@ -190,26 +221,31 @@ typedef struct soundstream *ft_t;
 extern const char *sizes[];
 extern const char *styles[];
 
-/*
- * Handler structure for each effect.
- */
-
-typedef struct {
-	char	*name;			/* effect name */
-	int	flags;			/* this and that */
-	void	(*getopts)();		/* process arguments */
-	void	(*start)();		/* start off effect */
-	void	(*flow)();		/* do a buffer */
-	void	(*drain)();		/* drain out at end */
-	void	(*stop)();		/* finish up effect */
-} effect_t;
-
-extern effect_t effects[]; /* declared in handlers.c */
-
 #define	EFF_CHAN	1		/* Effect can mix channels up/down */
 #define EFF_RATE	2		/* Effect can alter data rate */
 #define EFF_MCHAN	4		/* Effect can handle multi-channel */
 #define EFF_REPORT	8		/* Effect does nothing */
+
+/*
+ * Handler structure for each effect.
+ */
+
+typedef struct effect *eff_t;
+
+typedef struct {
+	char	*name;			/* effect name */
+	int	flags;			/* this and that */
+					/* process arguments */
+	void	(*getopts)(P3(eff_t effp, int argc, char **argv));
+					/* start off effect */
+	void	(*start)(P1(eff_t effp));
+					/* do a buffer */
+	void	(*flow)(P5(eff_t effp, LONG *ibuf, LONG *obuf,
+			   LONG *isamp, LONG *osamp));
+					/* drain out at end */
+	void	(*drain)(P3(eff_t effp, LONG *obuf, LONG *osamp));
+	void	(*stop)(P1(eff_t effp));/* finish up effect */
+} effect_t;
 
 struct effect {
 	char		*name;		/* effect name */
@@ -223,34 +259,7 @@ struct effect {
 	double		priv[PRIVSIZE];	/* private area for effect */
 };
 
-typedef struct effect *eff_t;
-
-/* FIXME: Move to internal st header */
-#if	defined(__STDC__)
-#define	P0 void
-#define	P1(a) a
-#define	P2(a,b) a, b
-#define	P3(a,b,c) a, b, c
-#define	P4(a,b,c,d) a, b, c, d
-#define	P5(a,b,c,d,e) a, b, c, d, e
-#define	P6(a,b,c,d,e,f) a, b, c, d, e, f
-#define	P7(a,b,c,d,e,f,g) a, b, c, d, e, f, g
-#define	P8(a,b,c,d,e,f,g,h) a, b, c, d, e, f, g, h
-#define	P9(a,b,c,d,e,f,g,h,i) a, b, c, d, e, f, g, h, i
-#define	P10(a,b,c,d,e,f,g,h,i,j) a, b, c, d, e, f, g, h, i, j
-#else
-#define	P0
-#define	P1(a)
-#define	P2(a,b)
-#define	P3(a,b,c)
-#define	P4(a,b,c,d)
-#define	P5(a,b,c,d,e)
-#define	P6(a,b,c,d,e,f)
-#define	P7(a,b,c,d,e,f,g)
-#define	P8(a,b,c,d,e,f,g,h)
-#define	P9(a,b,c,d,e,f,g,h,i)
-#define	P10(a,b,c,d,e,f,g,h,i,j)
-#endif
+extern effect_t effects[]; /* declared in handlers.c */
 
 /* declared in misc.c */
 extern LONG st_clip24(P1(LONG)) REGPARM(1);
@@ -259,10 +268,14 @@ extern void st_triangle(P4(int *, LONG, int, int));
 
 extern LONG st_gcd(P2(LONG,LONG)) REGPARM(2);
 extern LONG st_lcm(P2(LONG,LONG)) REGPARM(2);
+
 /****************************************************/
 /* Prototypes for internal cross-platform functions */
 /****************************************************/
 /* SJB: shouldn't these be elsewhere, exported from misc.c */
+/* CB: Yep, we need to create something like a "platform.h" file for
+ * these type functions.
+ */
 #ifndef HAVE_RAND
 extern int rand(P0);
 extern void srand(P1(ULONG seed));
@@ -315,11 +328,11 @@ void report(P2(const char *, ...));
 void warn(P2(const char *, ...));
 void fail(P2(const char *, ...))NORET;
 
-void geteffect(P1(eff_t));
-void gettype(P1(ft_t));
-void checkformat(P1(ft_t));
-void copyformat(P2(ft_t, ft_t));
-void cmpformats(P2(ft_t, ft_t));
+void st_geteffect(P1(eff_t));
+void st_gettype(P1(ft_t));
+void st_checkformat(P1(ft_t));
+void st_copyformat(P2(ft_t, ft_t));
+void st_cmpformats(P2(ft_t, ft_t));
 
 /* FIXME: Recording hacks shouldn't display a "sigint" style interface.
  * Instead we should provide a function to call when done playing/recording.
@@ -349,5 +362,9 @@ extern char *myname;
 #define REMOVE unlink
 
 const char *version(P0);			/* return version number */
+
+#ifdef __cplusplus
+} /* end of extern "C" */
+#endif
 
 #endif

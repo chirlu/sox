@@ -66,7 +66,7 @@ eff_t effp;
 void reverse_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
-int *isamp, *osamp;
+LONG *isamp, *osamp;
 {
 	reverse_t reverse = (reverse_t) effp->priv;
 
@@ -85,7 +85,7 @@ int *isamp, *osamp;
 void reverse_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
-int *osamp;
+LONG *osamp;
 {
 	reverse_t reverse = (reverse_t) effp->priv;
 	int len, nbytes;

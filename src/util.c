@@ -93,7 +93,7 @@ char *s1, *s2;
  * Check that we have a known format suffix string.
  */
 void
-gettype(formp)
+st_gettype(formp)
 ft_t formp;
 {
 	char **list;
@@ -133,7 +133,7 @@ formp->filename);
  * Check that we have a known effect name.
  */
 void
-geteffect(effp)
+st_geteffect(effp)
 eff_t effp;
 {
 	int i;
@@ -160,7 +160,7 @@ eff_t effp;
  * File format routines 
  */
 
-void copyformat(ft, ft2)
+void st_copyformat(ft, ft2)
 ft_t ft, ft2;
 {
 	int noise = 0, i;
@@ -201,13 +201,13 @@ ft_t ft, ft2;
 	ft2->instr = ft->instr;
 }
 
-void cmpformats(ft, ft2)
+void st_cmpformats(ft, ft2)
 ft_t ft, ft2;
 {
 }
 
 /* check that all settings have been given */
-void checkformat(ft) 
+void st_checkformat(ft) 
 ft_t ft;
 {
 	if (ft->info.rate == 0)
