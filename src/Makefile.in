@@ -125,7 +125,7 @@ clean:
 	$(RM) *.o
 
 distclean:
-	$(RM) *~ *.o *.raw *.sf core sox libst.a play
+	$(RM) *~ *.o *.raw *.sf core sox soxmix libst.a play
 	$(RM) config.cache config.log config.status config.h Makefile
 
 tar:

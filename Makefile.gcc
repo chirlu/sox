@@ -233,7 +233,7 @@ install-lib: libst.a
 	install -c -m 644 st.h $(INCDIR)
 
 clean:
-	$(RM) *~ *.o *.raw *.sf core sox libst.a
+	$(RM) *~ *.o *.raw *.sf core sox soxmix libst.a
 
 tar:	clean
 	$(RM) ../$(SRCDIR).tar
