@@ -294,14 +294,16 @@ ft_t ft;
 {
 	struct aupriv *p = (struct aupriv *) ft->priv;
 
+	/* Needed because of rawwrite(). Do now to flush
+	 * data before seeking around below.
+	 */
+	rawstopwrite(ft);
+
 	if (!ft->seekable)
 		return;
 	if (fseek(ft->fp, 0L, 0) != 0)
 		fail("Can't rewind output file to rewrite Sun header.");
 	auwriteheader(ft, p->data_size);
-
-	/* Needed because of rawwrite() */
-	rawstopwrite(ft);
 }
 
 void auwriteheader(ft, data_size)

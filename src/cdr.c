@@ -143,6 +143,9 @@ ft_t ft;
 	int padsamps = SECTORSIZE - (cdr->samples % SECTORSIZE);
 	short zero;
 
+	/* Flush buffer before writing anything else */
+	rawstopwrite(ft);
+
 	zero = 0;
 
 	if (padsamps != SECTORSIZE) 
@@ -152,7 +155,5 @@ ft_t ft;
 			padsamps--;
 		}
 	}
-
-	rawstopwrite(ft);
 }
 

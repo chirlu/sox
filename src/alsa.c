@@ -55,6 +55,7 @@ ft_t ft;
     memset(&r_info, 0, sizeof(r_info));
     ioctl(fileno(ft->fp), SND_PCM_IOCTL_RECORD_INFO, &r_info);
     ft->file.count = 0;
+    ft->file.pos = 0;
     ft->file.eof = 0;
     ft->file.size = r_info.buffer_size;
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
@@ -143,7 +144,7 @@ ft_t ft;
 
     memset(&p_info, 0, sizeof(p_info));
     ioctl(fileno(ft->fp), SND_PCM_IOCTL_PLAYBACK_INFO, &p_info);
-    ft->file.count = 0;
+    ft->file.pos = 0;
     ft->file.eof = 0;
     ft->file.size = p_info.buffer_size;
     if ((ft->file.buf = malloc (ft->file.size)) == NULL) {

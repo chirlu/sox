@@ -484,6 +484,7 @@ ft_t ft;
 		ft->info.size = WORD;
 	}
 	ft->info.style = SIGN2; /* We have a fixed style */
+
 	/* Compute the "very large number" so that a maximum number
 	   of samples can be transmitted through a pipe without the
 	   risk of causing overflow when calculating the number of bytes.
@@ -508,14 +509,16 @@ ft_t ft;
 {
 	struct aiffpriv *p = (struct aiffpriv *) ft->priv;
 
+	/* Needed because of rawwrite().  Call now to flush
+	 * buffer now before seeking around below.
+	 */
+	rawstopwrite(ft);
+
 	if (!ft->seekable)
 		return;
 	if (fseek(ft->fp, 0L, SEEK_SET) != 0)
 		fail("can't rewind output file to rewrite AIFF header");
 	aiffwriteheader(ft, p->nsamples / ft->info.channels);
-
-	/* Needed because of rawwrite() */
-	rawstopwrite(ft);
 }
 
 void aiffwriteheader(ft, nframes)
