@@ -45,9 +45,10 @@ This release understands:
 
 The sound effects include:
 
-  o Channel averaging, duplication, and removal
+  o Channel averaging, duplication, and removal (general mixer)
   o Band-pass filters
   o Band-reject filter
+  o Compress and Expand (compand) the dynamic range of a sample.
   o Chorus effect
   o DCShift audio.  Useful to get the best volume adjustments.
   o Deemphases filter
@@ -58,8 +59,8 @@ The sound effects include:
   o Apply a flanger effect
   o Apply a high-pass filter
   o Apply a low-pass filter
-  o Display a list of loops in a file
   o Add masking noise to a signal
+  o Multi-band compander
   o Pan sound between channels
   o Apply a phaser effect
   o Change the pitch of a sound file without effecting its speed
