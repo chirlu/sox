@@ -225,7 +225,6 @@ LIBS="$LIBS -L. -lst -lm"
 AC_SUBST(NEED_OSS)
 AC_SUBST(NEED_SUNAU)
 AC_SUBST(NEED_ALSA)
-AC_LINK_FILES(tests.sh monkey.au monkey.voc, tests.sh monkey.au monkey.voc)
 AC_OUTPUT([Makefile])
 
 echo

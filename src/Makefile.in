@@ -112,11 +112,10 @@ clean:
 
 distclean:
 	$(RM) *~ *.o *.raw *.sf core sox libst.a
-	$(RM) config.cache config.log config.status config.h Makefile
-	$(RM) tests.sh monkey.au monkey.voc
+	$(RM) config.cache config.log config.status config.h Makefile .depend
 
 tar:
-	$(RM) $(pkgname).tar
+	cd $(srcdir)/..; $(RM) $(pkgname).tar
 	cd $(srcdir)/.. ; $(TAR) $(pkgname).tar $(srcdir)
 
 ifeq (.depend,$(wildcard .depend))
