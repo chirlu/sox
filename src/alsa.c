@@ -83,7 +83,7 @@ ft_t ft;
 		fmt = SND_PCM_SFMT_U8;
 		break;
 	    default:
-		fail("Hardware does not support %s output", styles[ft->info.style]);
+		fail("Hardware does not support %s output", st_encodings_str[ft->info.style]);
 		return(ST_EOF);
 		break;
 	}
@@ -102,7 +102,7 @@ ft_t ft;
 		fmt = SND_PCM_SFMT_U16_LE;
 		break;
 	    default:
-		fail("Hardware does not support %s output", styles[ft->info.style]);
+		fail("Hardware does not support %s output", st_encodings_str[ft->info.style]);
 		return(ST_EOF);
 		break;
 	}
@@ -186,7 +186,7 @@ ft_t ft;
 		fmt = SND_PCM_SFMT_U8;
 		break;
 	    default:
-		fail("Hardware does not support %s output", styles[ft->info.style]);
+		fail("Hardware does not support %s output", st_encodings_str[ft->info.style]);
 		return(ST_EOF);
 		break;
 	}
@@ -211,7 +211,7 @@ ft_t ft;
 		fmt = SND_PCM_SFMT_U16_LE;
 		break;
 	    default:
-		fail("Hardware does not support %s output", styles[ft->info.style]);
+		fail("Hardware does not support %s output", st_encodings_str[ft->info.style]);
 		return(ST_EOF);
 		break;
 	}

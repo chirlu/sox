@@ -1,4 +1,4 @@
-/*;
+/*
  * Psion wve format, based on the au format file. Hacked by
  * Richard Caley (R.Caley@ed.ac.uk)
  */
