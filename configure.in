@@ -10,24 +10,23 @@ dnl AC_CONFIG_HEADER(config.h)
 dnl Parameters to configure
 
 AC_ARG_ENABLE(old_rate,
-	[  --enable-old-rate       Use old rate code],
-	[old_rate=yes])
+	[  --enable-old-rate       Use old rate code])
 
-AC_ARG_ENABLE(fast_ulaw_comp,
-	[  --enable-fast-ulaw      Use fast ulaw compression (+32K memory)],
-	[fast_ulaw_comp=yes])
+AC_ARG_ENABLE(fast_ulaw,
+	[  --enable-fast-ulaw      Use fast ulaw compression (+32K memory)])
 
-AC_ARG_ENABLE(fast_alaw_comp,
-	[  --enable-fast-alaw      Use fast alaw compression (+32K memory)],
-	[fast_alaw_comp=yes])
+AC_ARG_ENABLE(fast_alaw,
+	[  --enable-fast-alaw      Use fast alaw compression (+32K memory)])
 
-AC_ARG_WITH(gsm_libdir,
+AC_ARG_WITH(gsmlib,
 	[  --with-gsmlib           Location of GSM 6.10 library (=dir)],
-	[gsm_libdir="$withval"])
+	[gsmlib="$withval"],
+	[gsmlib=auto])
 
-AC_ARG_WITH(gsm_incdir,
+AC_ARG_WITH(gsminc,
 	[  --with-gsminc           Location of GSM 6.10 headers (=dir)],
-	[gsm_incdir="$withval"])
+	[gsminc="$withval"],
+	[gsminc=auto])
 
 AC_ARG_WITH(alsa_dsp,
 	[  --with-alsa-dsp         Force support for /dev/snd/pcm00 (ALSA)],
@@ -82,6 +81,7 @@ dnl Initial values for exported symbols.
 NEED_OSS=0
 NEED_SUNAU=0
 NEED_ALSA=0
+PLAY_SUPPORT=0
 
 CFLAGS="$CFLAGS -Wall"
 
@@ -102,17 +102,29 @@ then
 fi
 
 dnl Test for GSM library.
-AC_CHECK_LIB(gsm, gsm_create)
-if test "$ac_cv_lib_gsm" = yes
+
+if test "$gsmlib" = auto
 then
-	CFLAGS="$CFLAGS -DHAVE_GSM"
+  AC_CHECK_LIB(gsm, gsm_create, gsmlib=yes)
+else
+  if test "$gsmlib" != no
+  then
+    LIBS="$LIBS -L$gsmlib -lgsm"
+    CFLAGS="$CFLAGS -DHAVE_LIBGSM"
+    gsmlib=yes
+  fi
 fi
-if test "$ac_cv_lib_gsm" = no
+
+if test "$gsmlib" = yes
 then
-	if test -n "$gsm_libdir"
+	if test "$gsminc" = auto
 	then
-		CFLAGS="$CFLAGS -I$gsm_incdir -DHAVE_GSM"
-		LIBS="$LIBS -L$gsm_libdir -lgsm"
+	  AC_CHECK_HEADER(gsm.h, gsminc=yes)
+	else
+	  if test "$gsmlib" != no
+	  then
+		CFLAGS="$CFLAGS -I$gsminc"
+	  fi
 	fi
 fi
 
@@ -161,6 +173,7 @@ if test "$alsa_dsp" = yes
 then
 	CFLAGS="$CFLAGS -DALSA_PLAYER"
 	NEED_ALSA=1
+	PLAY_SUPPORT=1
 fi
 
 if test "$oss_dsp" = auto
@@ -199,6 +212,7 @@ if test "$oss_dsp" = yes
 then
 	CFLAGS="$CFLAGS -DOSS_PLAYER"
 	NEED_OSS=1
+	PLAY_SUPPORT=1
 fi
 
 if test "$sun_audio" = auto
@@ -238,6 +252,7 @@ if test "$sun_audio" = yes
 then
 	CFLAGS="$CFLAGS -DSUNAUDIO_PLAYER"
 	NEED_SUNAU=1
+	PLAY_SUPPORT=1
 fi
 
 dnl The end
@@ -260,6 +275,7 @@ LIBS="-L. -lst $LIBS"
 AC_SUBST(NEED_OSS)
 AC_SUBST(NEED_SUNAU)
 AC_SUBST(NEED_ALSA)
+AC_SUBST(PLAY_SUPPORT)
 
 dnl Generate output files...
 

@@ -61,23 +61,37 @@ void
 avg_start(effp)
 eff_t effp;
 {
-	switch (effp->outinfo.channels) {
-		case 1: switch (effp->ininfo.channels) {
-			case 2: 
-			case 4:
-				return;
+	switch (effp->outinfo.channels) 
+	{
+	case 1: switch (effp->ininfo.channels) 
+		{
+		case 2: 
+		case 4:
+			return;
+		default:
+			break;
 		}
-		case 2: switch (effp->ininfo.channels) {
-			case 1:
-			case 4:
-				return;
+		break;
+	case 2: switch (effp->ininfo.channels) 
+		{
+		case 1:
+		case 4:
+			return;
+		default:
+			break;
 		}
-		case 4: switch (effp->ininfo.channels) {
-			case 1:
-			case 2:
-				return;
+		break;
+	case 4: switch (effp->ininfo.channels) 
+		{
+		case 1:
+		case 2:
+			return;
+		default:
+			break;
 		}
-	}
+	default:
+		break;
+	}	
 	fail("Can't average %d channels into %d channels",
 		effp->ininfo.channels, effp->outinfo.channels);
 }

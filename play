@@ -157,7 +157,8 @@ while [ $# -ne 0 ]; do
 done
 
 arch=`uname -s`
-if [ "$arch" = "SunOS" ]; then
+case $arch in
+  SunOS)
     case `arch -k` in
 	# Use below for older Sun audio hardware
 	sun4|sun4c|sun4d)
@@ -171,12 +172,12 @@ if [ "$arch" = "SunOS" ]; then
     if [ -z "$device" ]; then
 	device="/dev/audio"
     fi
-elif [ "$arch" = "Linux" ]; then
+  Linux|FreeBSD)
     arch_defines="-t ossdsp"
     if [ -z "$device" ]; then
 	device="/dev/dsp"
     fi
-fi
+esac
 
 # If name is "rec" then record else assume user is wanting to play
 # a sound file.
