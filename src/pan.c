@@ -99,10 +99,10 @@ int st_pan_start(eff_t effp)
  */
 static st_sample_t clip(pan_t pan, PAN_FLOAT value)
 {
-    if (value < -ST_SAMPLE_MAX) 
+    if (value < ST_SAMPLE_MIN) 
     {
         pan->clipped++;
-        return -ST_SAMPLE_MAX;
+        return ST_SAMPLE_MIN;
     }
     else if (value > ST_SAMPLE_MAX) 
     {

@@ -277,10 +277,10 @@ static void process_intput_buffer(pitch_t pitch)
 
 static st_sample_t clip(pitch_t pitch, PITCH_FLOAT v)
 {
-    if (v < -ST_SAMPLE_MAX)
+    if (v < ST_SAMPLE_MIN)
     {
         pitch->clipped++;
-        return -ST_SAMPLE_MAX;
+        return ST_SAMPLE_MIN;
     }
     else if (v > ST_SAMPLE_MAX)
     {

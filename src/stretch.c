@@ -107,10 +107,10 @@ static void debug(stretch_t s, char * where)
  */
 static st_sample_t clip(stretch_t stretch, STRETCH_FLOAT v)
 {
-    if (v < -ST_SAMPLE_MAX)
+    if (v < ST_SAMPLE_MIN)
     {
         stretch->clipped++;
-        return -ST_SAMPLE_MAX;
+        return ST_SAMPLE_MIN;
     }
     else if (v > ST_SAMPLE_MAX)
     {

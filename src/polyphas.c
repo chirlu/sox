@@ -539,8 +539,8 @@ static st_sample_t clipfloat(Float sample)
 {
         if (sample > ST_SAMPLE_MAX)
         return ST_SAMPLE_MAX;
-        if (sample < -ST_SAMPLE_MAX)
-        return -ST_SAMPLE_MAX;
+        if (sample < ST_SAMPLE_MIN)
+        return ST_SAMPLE_MIN;
         return sample;
 }
 

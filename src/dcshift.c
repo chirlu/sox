@@ -76,11 +76,11 @@ int st_dcshift_getopts(eff_t effp, int n, char **argv)
 
         dcs->uselimiter = 1; /* ok, we'll use it */
         /* The following equation is derived so that there is no 
-	 * discontinuity in output amplitudes */
+         * discontinuity in output amplitudes */
         /* and a ST_SAMPLE_MAX input always maps to a ST_SAMPLE_MAX output 
-	 * when the limiter is activated. */
+         * when the limiter is activated. */
         /* (NOTE: There **WILL** be a discontinuity in the slope of the 
-	 * output amplitudes when using the limiter.) */
+         * output amplitudes when using the limiter.) */
         dcs->limiterthreshhold = ST_SAMPLE_MAX * (ONE - (fabs(dcs->dcshift) - dcs->limitergain));
     }
 
@@ -125,10 +125,10 @@ static st_sample_t clip(dcs_t dcs, const DCSHIFT_FLOAT v)
          dcs->clipped++;
          return ST_SAMPLE_MAX;
     }
-    else if (v < -ST_SAMPLE_MAX)
+    else if (v < ST_SAMPLE_MIN)
     {
         dcs->clipped++;
-        return -ST_SAMPLE_MAX;
+        return ST_SAMPLE_MIN;
     }
     /* else */
     return (st_sample_t) v;
@@ -171,11 +171,17 @@ int st_dcshift_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 }
                 else if (sample < -limiterthreshhold && dcshift < 0)
                 {
+                        /* Note this should really be ST_SAMPLE_MIN but
+                         * the clip() below will take care of the overflow.
+                         */
                         sample =  (sample + limiterthreshhold) * limitergain / (ST_SAMPLE_MAX - limiterthreshhold) - limiterthreshhold + dcshift;
                         dcs->limited++;
                 }
                 else
                 {
+                        /* Note this should consider ST_SAMPLE_MIN but
+                         * the clip() below will take care of the overflow.
+                         */
                         sample = dcshift * ST_SAMPLE_MAX + sample;
                 }
 

@@ -95,10 +95,10 @@ static SPEED_FLOAT cub(
 /* clip if necessary, and report. */
 static st_sample_t clip(speed_t speed, SPEED_FLOAT v)
 {
-    if (v < -ST_SAMPLE_MAX)
+    if (v < ST_SAMPLE_MIN)
     {
         speed->clipped++;
-        return -ST_SAMPLE_MAX;
+        return ST_SAMPLE_MIN;
     }
     else if (v > ST_SAMPLE_MAX)
     {
