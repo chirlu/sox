@@ -8,6 +8,7 @@
 
 SHELL = /bin/sh
 srcdir = @srcdir@
+prefix = @prefix@
 
 # Shell commands.
 
@@ -51,7 +52,9 @@ OSSSRC_0    =
 OSSSRC_1    = oss.c
 SUNAUSRC_0  =
 SUNAUSRC_1  = sunaudio.c
-EXTRASRCS   = $(OSSSRC_$(NEED_OSS)) $(SUNAUSRC_$(NEED_SUNAU))
+ALSASRC_0   =
+ALSASRC_1   = alsa.c
+EXTRASRCS   = $(OSSSRC_$(NEED_OSS)) $(SUNAUSRC_$(NEED_SUNAU)) $(ALSASRC_$(NEED_ALSA))
 
 LIBSRCS	= $(FSRC) $(ESRC) handlers.c libst.c misc.c util.c $(EXTRASRCS)
 
@@ -70,7 +73,9 @@ OSSOBJ_0    =
 OSSOBJ_1    = oss.o
 SUNAUOBJ_0  =
 SUNAUOBJ_1  = sunaudio.o
-EXTRAOBJS   = $(OSSOBJ_$(NEED_OSS)) $(SUNAUOBJ_$(NEED_SUNAU))
+ALSAOBJ_0   =
+ALSAOBJ_1   = alsa.o
+EXTRAOBJS   = $(OSSOBJ_$(NEED_OSS)) $(SUNAUOBJ_$(NEED_SUNAU)) $(ALSAOBJ_$(NEED_ALSA))
 
 LIBOBJS = $(FOBJ) $(EOBJ) handlers.o libst.o misc.o util.o $(EXTRAOBJS)
 

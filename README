@@ -1,7 +1,7 @@
-		SOX: Sound eXchange
+		SoX: Sound eXchange
 
 
-SOX (also known as Sound eXchange) translates sound samples between different
+SoX (also known as Sound eXchange) translates sound samples between different
 file formats, and optionally performs various sound effects.  
 
 This release understands:
@@ -72,29 +72,28 @@ Bagwell (cbagwell@sprynet.com), have started maintaining it since
 but until that time I will keep pushing its development forward.
 
 Caveats:
-SOX is intended as the Swiss Army knife of sound processing tools.  It 
+SoX is intended as the Swiss Army knife of sound processing tools.  It 
 doesn't do anything very well, but sooner or later it comes in very handy.
-SOX is really only usable day-to-day if you hide the wacky options with 
+SoX is really only usable day-to-day if you hide the wacky options with 
 one-line shell scripts.
 
 Installing:
-Unless your using a precompiled binary version, you will need to use
-the Amiga, DOS, OS9, or Unix Makefile as appropriate to compile SOX.
-Please read the Makefile's for several options that may need to be customized 
-for your setup.  See the INSTALL file for more detailed instructions.
+Unless your using a precompiled binary version, you will need to compile
+SoX as described in the INSTALL file.  Please read that file for further
+instructions.
 
 Now, read TIPS, CHEAT.eft and CHEAT.  These give a background on how
-SOX deals with sound files and how to convert this format
+SoX deals with sound files and how to convert this format
 to that format, and apply various effects with examples for the most 
 popular formats.
 
-SOX uses file suffices to determine the nature of a sound sample file.
+SoX uses file suffices to determine the nature of a sound sample file.
 If it finds the suffix in its list, it uses the appropriate read
 or write handler to deal with that file.  You may override the suffix
 by giving a different type via the '-t type' argument.  See the manual
 page for more information.
 
-SOX has an auto-detect feature that attempts to figure out
+SoX has an auto-detect feature that attempts to figure out
 the nature of an unmarked sound sample.  It works very well.
 This is the 'auto' file format.
 
@@ -109,11 +108,11 @@ Files are copyright by their respective authors.
 
 If you have bug fixes/enhancements, please send it to me as I would like
 to coordinate the releases.  Please document your changes.  I don't 
-possess every kind of computer currently sold, and SOX is now beyond 
+possess every kind of computer currently sold, and SoX is now beyond 
 the phase where I can understand and test most of your contributions.
 
-The majority of SOX features and source code are contributed
-by you the user.  Thank you very much for making SOX a success!
+The majority of SoX features and source code are contributed
+by you the user.  Thank you very much for making SoX a success!
 
 	Creator:
 		Lance Norskog		thinman@meer.net (inactive currently)

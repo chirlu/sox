@@ -34,6 +34,15 @@ char *alnames[] = {
 extern void alstartread();
 extern void alstartwrite();
 
+#if	defined(ALSA_PLAYER)
+char *alsanames[] = {
+	"alsa",
+	(char *) 0
+};
+extern void alsastartread();
+extern void alsastartwrite();
+#endif
+
 char *aunames[] = {
 	"au",
 #ifdef	NeXT
@@ -321,6 +330,11 @@ EXPORT format_t formats[] = {
 	{alnames, FILE_STEREO,
 		alstartread, rawread, rawstopread, 	   /* a-law byte raw */
 		alstartwrite, rawwrite, rawstopwrite},	
+#if	defined(ALSA_PLAYER)
+	{alsanames, FILE_STEREO,
+		alsastartread, rawread, rawstopread,      /* /dev/snd/pcmXX */
+		alsastartwrite, rawwrite, rawstopwrite},
+#endif
 	{aunames, FILE_STEREO,
 		austartread, auread, rawstopread,      /* SPARC .AU w/header */
 		austartwrite, auwrite, austopwrite},	

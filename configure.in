@@ -3,7 +3,7 @@ dnl
 dnl configure.in
 dnl
 
-AC_REVISION([configure.in 0.2])
+AC_REVISION([configure.in 0.3])
 AC_INIT(sox.c)
 dnl AC_CONFIG_HEADER(config.h)
 
@@ -37,15 +37,18 @@ AC_ARG_WITH(gsm_incdir,
 
 AC_ARG_WITH(alsa_dsp,
 	[  --with-alsa-dsp         Force support for /dev/snd/pcm00 (ALSA)],
-	[alsa_dsp=yes])
+	[alsa_dsp="$withval"],
+	[alsa_dsp=auto])
 
 AC_ARG_WITH(oss_dsp,
 	[  --with-oss-dsp          Force support for /dev/dsp (OSS)],
-	[oss_dsp=yes])
+	[oss_dsp="$withval"],
+	[oss_dsp=auto])
 
 AC_ARG_WITH(sun_audio,
 	[  --with-sun-audio        Force support for /dev/audio (SUN, etc)],
-	[sun_audio=yes])
+	[sun_audio="$withval"],
+	[sun_audio=auto])
 
 dnl Set host type
 
@@ -109,100 +112,109 @@ AC_CHECK_FUNCS(strerror memmove)
 
 dnl Checks for system services.
 
-AC_CACHE_CHECK(
-	[whether /dev/snd/pcm00 is functional (ALSA)],
-	ac_cv_dev_alsa_dsp,
-	AC_TRY_RUN(
-		[
-		int
-		main()
-			{
-			int fd = open("/dev/snd/pcm00", 0);
-			if (fd != -1)
+if test "$alsa_dsp" = auto
+then
+	AC_CACHE_CHECK(
+		[whether /dev/snd/pcm00 is functional (ALSA)],
+		ac_cv_dev_alsa_dsp,
+		AC_TRY_RUN(
+			[
+			int
+			main()
 				{
-				close(fd);
-				return 0;
+				int fd = open("/dev/snd/pcm00", 0);
+				if (fd != -1)
+					{
+					close(fd);
+					return 0;
+					}
+				return 1;
 				}
-			return 1;
-			}
-		],
-		ac_cv_dev_alsa_dsp=yes,
-		ac_cv_dev_alsa_dsp=no,
-		ac_cv_dev_alsa_dsp=no)
-	)
-if test "$ac_cv_dev_alsa_dsp" = yes; then alsa_dsp=yes; fi
+			],
+			ac_cv_dev_alsa_dsp=yes,
+			ac_cv_dev_alsa_dsp=no,
+			ac_cv_dev_alsa_dsp=no)
+		)
+
+	if test "$ac_cv_dev_alsa_dsp" = yes
+	then
+		alsa_dsp=yes
+	fi
+fi
 if test "$alsa_dsp" = yes
 then
 	CFLAGS="$CFLAGS -DALSA_PLAYER"
 	NEED_ALSA=1
-	if test "$ac_cv_dev_alsa_dsp" = no
-	then
-		AC_MSG_WARN([Force support for /dev/snd/pcm00 (ALSA)])
-	fi
 fi
 
-AC_CACHE_CHECK(
-	[whether /dev/dsp is functional (OSS)],
-	ac_cv_dev_oss_dsp,
-	AC_TRY_RUN(
-		[
-		int
-		main()
-			{
-			int fd = open("/dev/dsp", 0);
-			if (fd != -1)
+if test "$oss_dsp" = auto
+then
+	AC_CACHE_CHECK(
+		[whether /dev/dsp is functional (OSS)],
+		ac_cv_dev_oss_dsp,
+		AC_TRY_RUN(
+			[
+			int
+			main()
 				{
-				close(fd);
-				return 0;
+				int fd = open("/dev/dsp", 0);
+				if (fd != -1)
+					{
+					close(fd);
+					return 0;
+					}
+				return 1;
 				}
-			return 1;
-			}
-		],
-		ac_cv_dev_oss_dsp=yes,
-		ac_cv_dev_oss_dsp=no,
-		ac_cv_dev_oss_dsp=no)
-	)
-if test "$ac_cv_dev_oss_dsp" = yes; then oss_dsp=yes; fi
+			],
+			ac_cv_dev_oss_dsp=yes,
+			ac_cv_dev_oss_dsp=no,
+			ac_cv_dev_oss_dsp=no)
+		)
+	if test "$ac_cv_dev_oss_dsp" = yes
+	then
+		oss_dsp=yes
+	fi
+fi
 if test "$oss_dsp" = yes
 then
 	CFLAGS="$CFLAGS -DOSS_PLAYER"
 	NEED_OSS=1
-	if test "$ac_cv_dev_oss_dsp" = no
-	then
-		AC_MSG_WARN([Force support for /dev/dsp (OSS)])
-	fi
 fi
 
-AC_CACHE_CHECK(
-	[whether /dev/audio is functional (SUN, etc)],
-	ac_cv_dev_sun_audio,
-	AC_TRY_RUN(
-		[
-		int
-		main()
-			{
-			int fd = open("/dev/audio", 0);
-			if (fd != -1)
+if test "$sun_audio" = auto
+then
+	AC_CACHE_CHECK(
+		[whether /dev/audio is functional (SUN, etc)],
+		ac_cv_dev_sun_audio,
+		AC_TRY_RUN(
+			[
+			int
+			main()
 				{
-				close(fd);
-				return 0;
+				int fd = open("/dev/audio", 0);
+				if (fd != -1)
+					{
+					close(fd);
+					return 0;
+					}
+				return 1;
 				}
-			return 1;
-			}
-		],
-		ac_cv_dev_sun_audio=yes,
-		ac_cv_dev_sun_audio=no,
-		ac_cv_dev_sun_audio=no)
-	)
-if test "$ac_cv_dev_sun_audio" = yes; then sun_audio=yes; fi
+			],
+			ac_cv_dev_sun_audio=yes,
+			ac_cv_dev_sun_audio=no,
+			ac_cv_dev_sun_audio=no)
+		)
+	if test "$ac_cv_dev_sun_audio" = yes
+	then
+		AC_CHECK_HEADER(audioio.h,
+			sun_audio=yes,
+			AC_WARN([No audioio.h to compile with SUN /dev/audio]))
+	fi
+fi
 if test "$sun_audio" = yes
 then
 	CFLAGS="$CFLAGS -DSUNAUDIO_PLAYER"
 	NEED_SUNAU=1
-	if test "$ac_cv_dev_sun_audio" = no
-	then
-		AC_MSG_WARN([Force support for /dev/audio (SUN, etc)])
-	fi
 fi
 
 dnl The end

@@ -12,6 +12,7 @@
 #include "patchlvl.h"
 #include <string.h>
 #include <ctype.h>
+#include <signal.h>
 
 #ifdef __STDC__
 #include <stdarg.h>
@@ -272,3 +273,27 @@ ft_t ft;
 			ft->filename); */
 }
 
+static ft_t ft_queue[2];
+
+void
+sigint(s)
+int s;
+{
+    if (s == SIGINT) {
+	if (ft_queue[0])
+	    ft_queue[0]->file.eof = 1;
+	if (ft_queue[1])
+	    ft_queue[1]->file.eof = 1;
+    }
+}
+
+void
+sigintreg(ft)
+ft_t ft;
+{
+    if (ft_queue[0] == 0)
+	ft_queue[0] = ft;
+    else
+	ft_queue[1] = ft;
+    signal(SIGINT, sigint);
+}

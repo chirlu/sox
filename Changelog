@@ -22,6 +22,8 @@ sox-12.16
   o Fixed a couple cross-platform compiler issues.
   o Jimen Ching has added support for "configure" in to SOX.  Finally,
     a good solution to cross-platform compiling!
+  o Jimen Ching has added native support for the ALSA driver to play
+    and record audio from. (jching@flex.com)
   o Minor correction for -r example in manual page.
   o Renamed sox.sh to soxeffect and rewrote.  Symbolic links can be made
     from this file to the name of a sox effect.  It will then run that
