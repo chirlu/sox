@@ -33,6 +33,7 @@ This release understands:
   o Yamaha TX-16W sampler files.
   o Sound Blaster .VOC files
   o Ogg Vorbis files (with optional external library)
+  o Dialogic/OKI ADPCM files (.VOX)
   o Microsoft .WAV files
     o PCM, u-law, A-law
     o MS ADPCM, IMA ADPCM
