@@ -115,7 +115,7 @@ int st_phaser_getopts(eff_t effp, int n, char **argv)
 int st_phaser_start(eff_t effp)
 {
         phaser_t phaser = (phaser_t) effp->priv;
-        int i;
+        unsigned int i;
 
         phaser->maxsamples = phaser->delay * effp->ininfo.rate / 1000.0;
 

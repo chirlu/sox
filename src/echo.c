@@ -70,7 +70,8 @@ typedef struct echostuff {
         double  *delay_buf;
         float   in_gain, out_gain;
         float   delay[MAX_ECHOS], decay[MAX_ECHOS];
-        st_ssize_t samples[MAX_ECHOS], maxsamples, fade_out;
+        st_ssize_t samples[MAX_ECHOS], maxsamples;
+        st_size_t fade_out;
 } *echo_t;
 
 /* Private data for SKEL file */

@@ -167,7 +167,8 @@ int st_stat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                  st_size_t *isamp, st_size_t *osamp)
 {
         stat_t stat = (stat_t) effp->priv;
-        int len, done, x, x1;
+        int len, done, x;
+        unsigned int x1;
         short count;
         float magnitude;
         float ffa;
@@ -191,7 +192,7 @@ int st_stat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                     stat->fft_offset = 0;
                     FFT(1,stat->fft_bits,stat->re,stat->im);
                     ffa = (float)effp->ininfo.rate/stat->fft_size;
-                    for (x1= 0; x1 < stat->fft_size/2; x1++)
+                    for (x1 = 0; x1 < stat->fft_size/2; x1++)
                     {
                         if (x1 == 0 || x1 == 1)
                         {
@@ -265,7 +266,7 @@ int st_stat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 int st_stat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     stat_t stat = (stat_t) effp->priv;
-    int x;
+    unsigned int x;
     float magnitude;
     float ffa;
 

@@ -88,7 +88,7 @@ typedef struct resamplestuff {
    long Xoff;         /* Xh plus some room for creep  */
    long Xread;        /* X[Xread] is start-position to enter new samples */
    long Xp;           /* X[Xp] is position to start filter application   */
-   long Xsize,Ysize;  /* size (Floats) of X[],Y[]         */
+   unsigned long Xsize,Ysize; /* size (Floats) of X[],Y[]         */
    Float *X, *Y;      /* I/O buffers */
 } *resample_t;
 
@@ -286,7 +286,7 @@ int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 st_fail("resample: Can not handle this sample rate change. Nx not positive: %d", Nx);
                 return (ST_EOF);
         }
-        if (Nx > *isamp)
+        if ((unsigned long)Nx > *isamp)
                 Nx = *isamp;
         /*fprintf(stderr,"Nx %d\n",Nx);*/
 

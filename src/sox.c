@@ -563,6 +563,7 @@ static void process(void) {
     int e, f, flowstatus;
 #ifndef SOXMIX
     int current_input;
+    st_ssize_t ilen;
 #else
     st_size_t s;
     st_ssize_t ilen[MAX_INPUT_FILES];
@@ -699,23 +700,24 @@ static void process(void) {
     do {
 #ifndef SOXMIX
         efftab[0].olen = 
-            (*file_desc[current_input]->h->read)(file_desc[current_input],
-                                                 efftab[0].obuf, 
-                                                 (st_ssize_t)ST_BUFSIZ);
+        ilen = (*file_desc[current_input]->h->read)(file_desc[current_input],
+                                                    efftab[0].obuf, 
+                                                    (st_ssize_t)ST_BUFSIZ);
+
         /* FIXME: libst needs the feof() and ferror() concepts
          * to see if ST_EOF means a real failure.  Until then we
-         * must treat ST_EOF as just hiting the end of the buffer.
+         * must treat ST_EOF as just hiting the end of the file.
          */
-        if (efftab[0].olen == ST_EOF)
-        {
+        if (ilen == ST_EOF)
             efftab[0].olen = 0;
-        }
+        else
+            efftab[0].olen = ilen;
 
         /* Some file handlers claim 0 bytes instead of returning
          * ST_EOF.  In either case, attempt to go to the next
          * input file.
          */
-        if (efftab[0].olen == 0)
+        if (ilen == ST_EOF || efftab[0].olen == 0)
         {
             if (current_input < input_count-1)
             {

@@ -464,23 +464,15 @@ int st_seek(ft_t ft, st_size_t offset, int whence)
          * EPERM        "Operation not permitted"
          */
         if(whence == SEEK_CUR ){
-            /* FIXME: This isn't possible with current
-             * prototype anyways.  Should st_seek support negative
-             * offsets?
-             */
-            if( offset < 0 ){
-                st_fail_errno(ft,ST_EINVAL,"Can't seek backwards in pipe");
-            } else {
-                while ( offset > 0 && !feof(ft->fp) )
-                {
-                    getc(ft->fp);
-                    offset--;
-                }
-                if(offset)
-                    st_fail_errno(ft,ST_EOF,"offset past eof");
-                else
-                    ft->st_errno = ST_SUCCESS;
+            while ( offset > 0 && !feof(ft->fp) )
+            {
+                getc(ft->fp);
+                offset--;
             }
+            if(offset)
+                st_fail_errno(ft,ST_EOF,"offset past eof");
+            else
+                ft->st_errno = ST_SUCCESS;
         } else {
             st_fail_errno(ft,ST_EPERM,"File not seekable");
         }

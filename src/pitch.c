@@ -121,7 +121,7 @@ typedef struct
      */
     PITCH_FLOAT rate;    /* sweep rate, around 1.0 */
 
-    int step;            /* size of half a sweep, rounded to integer... */
+    unsigned int step;   /* size of half a sweep, rounded to integer... */
     PITCH_FLOAT * fade;  /* fading factors table lookup, ~ 1.0 -> ~ 0.0 */
 
     int overlap;         /* needed overlap */
@@ -129,10 +129,10 @@ typedef struct
     PITCH_FLOAT * tmp;   /* temporary buffer */
     PITCH_FLOAT * acc;   /* accumulation buffer */
 
-    int iacc;            /* part of acc already output */
+    unsigned int iacc;   /* part of acc already output */
 
     st_size_t size;      /* size of buffer for processing chunks. */
-    int index;           /* index of next empty input item. */
+    unsigned int index;  /* index of next empty input item. */
     st_sample_t *buf;    /* bufferize input */
 
     pitch_state_t state; /* buffer management status. */
@@ -382,7 +382,8 @@ int st_pitch_getopts(eff_t effp, int n, char **argv)
 int st_pitch_start(eff_t effp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
-    register int sample_rate = effp->outinfo.rate, i;
+    register int sample_rate = effp->outinfo.rate;
+    unsigned int i;
 
     /* check constraints. sox does already take care of that I guess?
      */
@@ -410,7 +411,7 @@ int st_pitch_start(eff_t effp)
 
     /* size is half of the actual target window size, because of symetry.
      */
-    pitch->step = (int) ((pitch->width*(HALF/THOUSAND))*sample_rate);
+    pitch->step = ((pitch->width*(HALF/THOUSAND))*sample_rate);
 
     /* make size odd? do we care? */
     /* if (!(size & 1)) size++; */
@@ -469,7 +470,7 @@ int st_pitch_start(eff_t effp)
     else if (pitch->fadeopt == PITCH_FADE_TRA)
     {
         /* 0 <= coef <= 0.5 */
-        register int plat = (int) (pitch->step*pitch->coef);
+        register unsigned int plat = (int) (pitch->step*pitch->coef);
         register PITCH_FLOAT slope = ONE / (pitch->step - 2*plat);
 
         for (i=0; i<plat; i++)

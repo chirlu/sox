@@ -61,7 +61,8 @@ typedef struct echosstuff {
         double  *delay_buf;
         float   in_gain, out_gain;
         float   delay[MAX_ECHOS], decay[MAX_ECHOS];
-        st_ssize_t samples[MAX_ECHOS], pointer[MAX_ECHOS], sumsamples;
+        st_ssize_t samples[MAX_ECHOS], pointer[MAX_ECHOS];
+        st_size_t sumsamples;
 } *echos_t;
 
 /* Private data for SKEL file */
@@ -109,7 +110,7 @@ int st_echos_start(eff_t effp)
         echos_t echos = (echos_t) effp->priv;
         int i;
         float sum_in_volume;
-        long j;
+        unsigned long j;
 
         if ( echos->in_gain < 0.0 )
         {

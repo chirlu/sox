@@ -84,7 +84,8 @@ typedef struct chorusstuff {
         long    length[MAX_CHORUS];
         int     *lookup_tab[MAX_CHORUS];
         int     depth_samples[MAX_CHORUS], samples[MAX_CHORUS];
-        int maxsamples, fade_out;
+        int maxsamples;
+        unsigned int fade_out;
 } *chorus_t;
 
 /*
