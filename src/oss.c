@@ -31,24 +31,6 @@
 #include "st.h"
 #include "libst.h"
 
-static int got_int = 0;
-
-static int abuf_size = 0;
-static int abuf_cnt = 0;
-static char *audiobuf;
-
-/* This is how we know when to stop recording.  User sends interrupt
- * (eg. control-c) and then we mark a flag to show we are done.
- * Must call "sigint(0)" during init so that the OS can be notified
- * what to do.
- */
-static void
-sigint(s)
-{
-    if (s) got_int = 1;
-    else signal(SIGINT, sigint);
-}
-
 /*
  * Do anything required before you start reading samples.
  * Read file header.
@@ -88,13 +70,16 @@ ft_t ft;
     else if (ft->info.channels > 2) ft->info.channels = 2;
 
     ioctl(fileno(ft->fp), SNDCTL_DSP_RESET, 0);
-    ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &abuf_size);
-    if (abuf_size < 4 || abuf_size > 65536) {
-	fail("Invalid audio buffer size %d", abuf_size);
+    ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &ft->file.size);
+    if (ft->file.size < 4 || ft->file.size > 65536) {
+	fail("Invalid audio buffer size %d", ft->file.size);
     }
+    ft->file.count = 0;
+    ft->file.pos = 0;
+    ft->file.eof = 0;
 
-    if ((audiobuf = malloc (abuf_size)) == NULL) {
-	fail("Unable to allocate input/output buffer of size %d", abuf_size);
+    if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
+	fail("Unable to allocate input/output buffer of size %d", ft->file.size);
     }
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_SYNC, NULL) < 0) {
@@ -127,154 +112,7 @@ ft_t ft;
 	ft->info.rate = tmp;
     }
 
-    sigint(0);	/* Prepare to catch SIGINT */
-}
-
-int dspget(ft)
-ft_t ft;
-{
-    int rval;
-
-    if (abuf_cnt < 1) {
-	abuf_cnt = read (fileno(ft->fp), (char *)audiobuf, abuf_size);
-	if (abuf_cnt == 0) {
-	    got_int = 1; /* Act like user said end record */
-	    return(0);
-	}
-    }
-    rval = *(audiobuf + (abuf_size-abuf_cnt));
-    abuf_cnt--;
-    return(rval);
-}
-
-/* Read short. */
-unsigned short dsprshort(ft)
-ft_t ft;
-{
-    unsigned short rval;
-    if (abuf_cnt < 2) {
-	abuf_cnt = read (fileno(ft->fp), (char *)audiobuf, abuf_size);
-	if (abuf_cnt == 0) {
-	    got_int = 1;  /* act like user said end recording */
-	    return(0);
-	}
-    }
-    rval = *((unsigned short *)(audiobuf + (abuf_size-abuf_cnt)));
-    abuf_cnt -= 2;
-    return(rval);
-}
-
-/*
- * Read up to len samples from file.
- * Convert to signed longs.
- * Place in buf[].
- * Return number of samples read.
- */
-
-LONG ossdspread(ft, buf, len)
-ft_t ft;
-LONG *buf, len;
-{
-    register int datum;
-    int done = 0;
-
-    if (got_int)
-	return(0); /* Return with length 0 read so program will end */
-
-    switch(ft->info.size) {
-    case BYTE:
-	switch(ft->info.style) {
-	case SIGN2:
-	    while(done < len) {
-		datum = dspget(ft);
-		if (got_int || feof(ft->fp))
-		    return(done);
-		/* scale signed up to long's range */
-		*buf++ = LEFT(datum, 24);
-		done++;
-	    }
-	    return done;
-	case UNSIGNED:
-	    while(done < len) {
-		datum = dspget(ft);
-		if (got_int || feof(ft->fp))
-		    return(done);
-		/* Convert to unsigned */
-		datum ^= 128;
-		/* scale signed up to long's range */
-		*buf++ = LEFT(datum, 24);
-		done++;
-	    }
-	    return done;
-	case ULAW:
-	    /* grab table from Posk stuff */
-	    while(done < len) {
-		datum = dspget(ft);
-		if (got_int || feof(ft->fp))
-		    return(done);
-		datum = st_ulaw_to_linear(datum);
-		/* scale signed up to long's range */
-		*buf++ = LEFT(datum, 16);
-		done++;
-	    }
-	    return done;
-	case ALAW:
-	    while(done < len) {
-		datum = dspget(ft);
-		if (got_int || feof(ft->fp))
-		    return(done);
-		datum = st_Alaw_to_linear(datum);
-		/* scale signed up to long's range */
-		*buf++ = LEFT(datum, 16);
-		done++;
-	    }
-	    return done;
-	}
-    case WORD:
-	switch(ft->info.style) {
-	case SIGN2:
-	    while(done < len) {
-		datum = dsprshort(ft);
-		if (got_int || feof(ft->fp))
-		    return(done);
-		/* scale signed up to long's range */
-		*buf++ = LEFT(datum, 16);
-		done++;
-	    }
-	    return done;
-	case UNSIGNED:
-	    while(done < len) {
-		datum = dsprshort(ft);
-		if (got_int || feof(ft->fp))
-		    return(done);
-		/* Convert to unsigned */
-		datum ^= 0x8000;
-		/* scale signed up to long's range */
-		*buf++ = LEFT(datum, 16);
-		done++;
-	    }
-	    return done;
-	case ULAW:
-	    fail("No U-Law support for shorts");
-	    return done;
-	case ALAW:
-	    fail("No A-Law support");
-	    return done;
-	}
-    }
-    fail("Drop through in ossdspread!");
-
-    /* Return number of samples read */
-    return(done);
-}
-
-/*
- * Do anything required when you stop reading samples.
- * Don't close input file!
- */
-void ossdspstopread(ft)
-ft_t ft;
-{
+    sigintreg(ft);	/* Prepare to catch SIGINT */
 }
 
 void ossdspstartwrite(ft)
@@ -316,13 +154,16 @@ ft_t ft;
     else if (ft->info.channels > 2) ft->info.channels = 2;
 
     ioctl(fileno(ft->fp), SNDCTL_DSP_RESET, 0);
-    ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &abuf_size);
-    if (abuf_size < 4 || abuf_size > 65536) {
-	    fail("Invalid audio buffer size %d", abuf_size);
+    ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &ft->file.size);
+    if (ft->file.size < 4 || ft->file.size > 65536) {
+	    fail("Invalid audio buffer size %d", ft->file.size);
     }
+    ft->file.count = 0;
+    ft->file.pos = 0;
+    ft->file.eof = 0;
 
-    if ((audiobuf = malloc (abuf_size)) == NULL) {
-	fail("Unable to allocate input/output buffer of size %d", abuf_size);
+    if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
+	fail("Unable to allocate input/output buffer of size %d", ft->file.size);
     }
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_SYNC, NULL) < 0) {
@@ -356,119 +197,4 @@ ft_t ft;
     }
 }
 
-void dspflush(ft)
-ft_t ft;
-{
-    if (write (fileno(ft->fp), audiobuf, abuf_cnt) != abuf_cnt) {
-        fail("Error writing to sound driver");
-    }
-    abuf_cnt = 0;
-}
-
-void dspput(ft,c)
-ft_t ft;
-int c;
-{
-    if (abuf_cnt > abuf_size-1) dspflush(ft);
-    *(audiobuf + abuf_cnt) = c;
-    abuf_cnt++;
-}
-
-/* Write short. */
-void
-dspshort(ft,ui)
-ft_t ft;
-unsigned short ui;
-{
-    if (abuf_cnt > abuf_size-2) dspflush(ft);
-    *((unsigned short *)(audiobuf + abuf_cnt)) = ui;
-    abuf_cnt += 2;
-}
-
-void ossdspwrite(ft, buf, len)
-ft_t ft;
-LONG *buf, len;
-{
-    register int datum;
-    int done = 0;
-
-    switch(ft->info.size) {
-    case BYTE:
-	switch(ft->info.style) {
-	case SIGN2:
-	    while(done < len) {
-		/* scale signed up to long's range */
-		datum = RIGHT(*buf++, 24);
-		dspput(ft,datum);
-		done++;
-	    }
-	    return;
-	case UNSIGNED:
-	    while(done < len) {
-		/* scale signed up to long's range */
-		datum = RIGHT(*buf++, 24);
-		/* Convert to unsigned */
-		datum ^= 128;
-		dspput(ft,datum);
-		done++;
-	    }
-	    return;
-	case ULAW:
-	    /* grab table from Posk stuff */
-	    while(done < len) {
-		/* scale signed up to long's range */
-		datum = RIGHT(*buf++, 16);
-		datum = st_linear_to_ulaw(datum);
-		dspput(ft,datum);
-		done++;
-	    }
-	    return;
-	case ALAW:
-	    while(done < len) {
-		/* scale signed up to long's range */
-		datum = RIGHT(*buf++, 16);
-		/* round up to 12 bits of data */
-		datum += 0x8;	/* + 0b1000 */
-		datum = st_linear_to_Alaw(datum);
-		dspput(ft,datum);
-		done++;
-	    }
-	    return;
-	}
-    case WORD:
-	switch(ft->info.style) {
-	case SIGN2:
-	    while(done < len) {
-		/* scale signed up to long's range */
-		datum = RIGHT(*buf++, 16);
-		dspshort(ft,datum);
-		done++;
-	    }
-	    return;
-	case UNSIGNED:
-	    while(done < len) {
-		/* scale signed up to long's range */
-		datum = RIGHT(*buf++, 16);
-		/* Convert to unsigned */
-		datum ^= 0x8000;
-		dspshort(ft,datum);
-		done++;
-	    }
-	    return;
-	case ULAW:
-	    fail("No U-Law support for shorts");
-	    return;
-	case ALAW:
-	    fail("No A-Law support");
-	    return;
-	}
-    }
-    fail("Drop through in ossdspwrite!");
-}
-
-void ossdspstopwrite(ft)
-ft_t ft;
-{
-    dspflush(ft);
-}
 #endif

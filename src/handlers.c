@@ -147,11 +147,7 @@ char *ossdspnames[] = {
 	(char *) 0
 };
 extern void ossdspstartread();
-extern LONG  ossdspread();
-extern void ossdspstopread();
 extern void ossdspstartwrite();
-extern void ossdspwrite();
-extern void ossdspstopwrite();
 #endif
 
 char *rawnames[] = {
@@ -363,8 +359,8 @@ EXPORT format_t formats[] = {
 #if	defined(OSS_PLAYER)
 	/* OSS player. */
 	{ossdspnames, FILE_STEREO,
-		ossdspstartread, ossdspread, ossdspstopread, 	 /* /dev/dsp */
-		ossdspstartwrite, ossdspwrite, ossdspstopwrite},
+		ossdspstartread, rawread, rawstopread, 	 /* /dev/dsp */
+		ossdspstartwrite, rawwrite, rawstopwrite},
 #endif
 	{rawnames, FILE_STEREO,
 		rawstartread, rawread, rawstopread, 	       /* Raw format */
