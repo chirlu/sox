@@ -29,17 +29,10 @@ typedef int32_t st_ssize_t;
 typedef uint32_t st_rate_t;
 
 /* Minimum and maximum values a sample can hold. */
-#define ST_SAMPLE_MAX 0x7fffffffL
+#define ST_SAMPLE_MAX 2147483647L
 #define ST_SAMPLE_MIN (-ST_SAMPLE_MAX - 1L)
-
-/* The following is the stepsize to be used when converting
- * normalized float data (-1 to 1) to a 32-bit signed sample.
- * FIXME: This is is an approximation because signed integers
- * have one more value on the negative and so sample/SCALE
- * doesn't map exactly to -1:1.
- */
-#define ST_SAMPLE_FLOAT_DWORD_SCALE 2147483647.0
-#define ST_SAMPLE_FLOAT_DDWORD_SCALE 9223372036854775807.0
+#define ST_SAMPLE_FLOAT_UNSCALE 2147483647.0
+#define ST_SAMPLE_FLOAT_SCALE 2147483648.0
 
 #define ST_UNSIGNED_BYTE_TO_SAMPLE(d) ((st_sample_t)((d) ^ 0x80) << 24)
 #define ST_SIGNED_BYTE_TO_SAMPLE(d) ((st_sample_t)(d) << 24)
@@ -49,8 +42,8 @@ typedef uint32_t st_rate_t;
 #define ST_SIGNED_DWORD_TO_SAMPLE(d) ((st_sample_t)d)
 /* FIXME: This is an approximation because it 
  * doesn't account for -1.0 mapping to -FLOAT_SCALE-1. */
-#define ST_FLOAT_DWORD_TO_SAMPLE(d) ((st_sample_t)(d*ST_SAMPLE_FLOAT_DWORD_SCALE))
-#define ST_FLOAT_DDWORD_TO_SAMPLE(d) ((st_sample_t)(d*ST_SAMPLE_FLOAT_DDWORD_SCALE))
+#define ST_FLOAT_DWORD_TO_SAMPLE(d) ((st_sample_t)(d*ST_SAMPLE_FLOAT_UNSCALE))
+#define ST_FLOAT_DDWORD_TO_SAMPLE(d) ((st_sample_t)(d*ST_SAMPLE_FLOAT_UNSCALE))
 #define ST_SAMPLE_TO_UNSIGNED_BYTE(d) ((uint8_t)((d) >> 24) ^ 0x80)
 #define ST_SAMPLE_TO_SIGNED_BYTE(d) ((int8_t)((d) >> 24))
 #define ST_SAMPLE_TO_UNSIGNED_WORD(d) ((uint16_t)((d) >> 16) ^ 0x8000)
@@ -58,11 +51,10 @@ typedef uint32_t st_rate_t;
 #define ST_SAMPLE_TO_UNSIGNED_DWORD(d) ((uint32_t)(d) ^ 0x80000000L)
 #define ST_SAMPLE_TO_SIGNED_DWORD(d) ((int32_t)(d))
 /* FIXME: This is an approximation because its impossible to
- * to reach 1.  Something like floor(d/(SCALE+0.5)) would probably
- * get it right.
+ * to reach 1.
  */
-#define ST_SAMPLE_TO_FLOAT_DWORD(d) ((float)(d/(ST_SAMPLE_FLOAT_DWORD_SCALE+1)))
-#define ST_SAMPLE_TO_FLOAT_DDWORD(d) ((double)((double)d/(ST_SAMPLE_FLOAT_DDWORD_SCALE+1)))
+#define ST_SAMPLE_TO_FLOAT_DWORD(d) ((float)(d/(ST_SAMPLE_FLOAT_SCALE)))
+#define ST_SAMPLE_TO_FLOAT_DDWORD(d) ((double)((double)d/(ST_SAMPLE_FLOAT_SCALE)))
 
 /* Maximum value size type can hold. (Minimum is 0). */
 #define ST_SIZE_MAX 0xffffffffL
