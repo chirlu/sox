@@ -341,6 +341,11 @@ int st_vorbisstartwrite(ft_t ft)
 	fprintf(stdout, "Channels: %d  Rate: %ld\n", ft->info.channels,
 		rate);
 
+	if (rate)
+	{
+	    st_fail_errno(ft, ST_EHDR, "Error setting up Ogg Vorbis encorder - make sure you've specied a sane rate and number of channels");
+	}
+
 	/* Set encoding to average bit rate of 112kbps VBR */
 	vorbis_encode_init_vbr(&ve->vi, ft->info.channels, ft->info.rate, 0.3f);
 

@@ -24,18 +24,20 @@ This release understands:
   o GSM files
   o Macintosh HCOM files
   o Amiga MAUD files
+  o MP3 files (with optional external library)
+  0 Psion Record.app files
   o IRCAM SoundFile files
   o NIST SPHERE files
   o Turtle beach SampleVision files.
   o Soundtool (DOS) files
   o Yamaha TX-16W sampler files.
   o Sound Blaster .VOC files
-  o Ogg Vorbis files
+  o Ogg Vorbis files (with optional external library)
   o Microsoft .WAV files
     o PCM, u-law, A-law
     o MS ADPCM, IMA ADPCM
     o GSM
-  o Psion (palmtop) A-law WVE and PRC files
+  o Psion (palmtop) A-law WVE files
   o Pseudo-file formats that allow direct playing/recording
     from some audio devices under UNIX.
   o Pseudo-nul file that reads and writes from/to nowhere
