@@ -333,6 +333,61 @@ void ImaBlockMashI(
 		ImaMashChannel(ch, chans, ip, n, st+ch, obuff, opt);
 }
 
+/*
+ * ImaSamplesIn(dataLen, chans, blockAlign, samplesPerBlock)
+ *  returns the number of samples/channel which would go
+ *  in the dataLen, given the other parameters ...
+ *  if input samplesPerBlock is 0, then returns the max
+ *  samplesPerBlock which would go into a block of size blockAlign
+ *  Yes, it is confusing.
+ */
+ULONG ImaSamplesIn(
+  ULONG dataLen,
+  unsigned short chans,
+  unsigned short blockAlign,
+  unsigned short samplesPerBlock
+)
+{
+  ULONG m, n;
+
+  if (samplesPerBlock) {
+    n = (dataLen / blockAlign) * samplesPerBlock;
+    m = (dataLen % blockAlign);
+  } else {
+    n = 0;
+    m = blockAlign;
+  }
+  if (m >= 4*chans) {
+    m -= 4*chans;    /* number of bytes beyond block-header */
+    m /= 4*chans;    /* number of 4-byte blocks/channel beyond header */
+    m = 8*m + 1;     /* samples/chan beyond header + 1 in header */
+    if (samplesPerBlock && m > samplesPerBlock) m = samplesPerBlock;
+    n += m;
+  }
+  return n;
+  /*wSamplesPerBlock = ((wBlockAlign - 4*wChannels)/(4*wChannels))*8 + 1;*/
+}
+
+/*
+ * ULONG ImaBytesPerBlock(chans, samplesPerBlock)
+ *   return minimum blocksize which would be required
+ *   to encode number of chans with given samplesPerBlock
+ */
+ULONG ImaBytesPerBlock(
+  unsigned short chans,
+  unsigned short samplesPerBlock
+)
+{
+  ULONG n;
+  /* per channel, ima has blocks of len 4, the 1st has 1st sample, the others
+   * up to 8 samples per block,
+   * so number of later blocks is (nsamp-1 + 7)/8, total blocks/chan is
+   * (nsamp-1+7)/8 + 1 = (nsamp+14)/8
+   */
+  n = ((ULONG)samplesPerBlock + 14)/8 * 4 * chans;
+  return n;
+}
+
 #if 0
 static void ImaMashChannel(int ch, const SAMPL *ip, int n, int *st)
 {

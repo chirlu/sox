@@ -3,7 +3,7 @@ dnl
 dnl configure.in
 dnl
 
-AC_REVISION([configure.in 0.3])
+AC_REVISION([configure.in 0.4])
 AC_INIT(sox.c)
 dnl AC_CONFIG_HEADER(config.h)
 
@@ -29,7 +29,7 @@ AC_ARG_WITH(gsminc,
 	[gsminc=auto])
 
 AC_ARG_WITH(alsa_dsp,
-	[  --with-alsa-dsp         Force support for /dev/snd/pcm00 (ALSA)],
+	[  --with-alsa-dsp         Force support for /dev/snd/pcmABXY (ALSA)],
 	[alsa_dsp="$withval"],
 	[alsa_dsp=auto])
 
@@ -133,17 +133,19 @@ dnl Checks for system services.
 if test "$alsa_dsp" = auto
 then
 	AC_CACHE_CHECK(
-		[whether /dev/snd/pcm00 is functional (ALSA)],
+		[whether /proc/asound is functional (ALSA)],
 		ac_cv_dev_alsa_dsp,
 		AC_TRY_RUN(
 			[
+			void *opendir(const char *);
+			void *closedir(const char *);
 			int
 			main()
 				{
-				int fd = open("/dev/snd/pcm00", 0);
-				if (fd != -1)
+				void *vp = opendir("/proc/asound");
+				if (vp != 0)
 					{
-					close(fd);
+					closedir(vp);
 					return 0;
 					}
 				return 1;
@@ -156,11 +158,19 @@ then
 
 	if test "$ac_cv_dev_alsa_dsp" = yes
 	then
-		alsa_dsp=yes
+		AC_CHECK_HEADERS(linux/asound.h, alsa_dsp=yes)
+		if test "$alsa_dsp" = auto
+		then
+			AC_WARN([No asound.h to compile with ALSA /dev/snd/pcmABXY])
+		fi
 	fi
 fi
 if test "$alsa_dsp" = yes
 then
+	if test "$ac_cv_dev_alsa_dsp" = ""
+	then
+		AC_CHECK_HEADERS(linux/asound.h)
+	fi
 	CFLAGS="$CFLAGS -DALSA_PLAYER"
 	NEED_ALSA=1
 	PLAY_SUPPORT=1
@@ -173,6 +183,8 @@ then
 		ac_cv_dev_oss_dsp,
 		AC_TRY_RUN(
 			[
+			int open(const char *, int);
+			int close(int);
 			int
 			main()
 				{
@@ -202,7 +214,7 @@ if test "$oss_dsp" = yes
 then
 	if test "$ac_cv_dev_oss_dsp" = ""
 	then
-		AC_CHECK_HEADERS(sys/soundcard.h machine/soundcard.h,)
+		AC_CHECK_HEADERS(sys/soundcard.h machine/soundcard.h)
 	fi
 	CFLAGS="$CFLAGS -DOSS_PLAYER"
 	NEED_OSS=1
@@ -216,6 +228,8 @@ then
 		ac_cv_dev_sun_audio,
 		AC_TRY_RUN(
 			[
+			int open(const char *, int);
+			int close(int);
 			int
 			main()
 				{
@@ -234,8 +248,7 @@ then
 		)
 	if test "$ac_cv_dev_sun_audio" = yes
 	then
-		AC_CHECK_HEADER(sys/audioio.h, sun_audio=yes)
-		AC_CHECK_HEADER(sun/audioio.h, sun_audio=yes)
+		AC_CHECK_HEADER(sys/audioio.h, sun/audioio.h, sun_audio=yes)
 		if test "$sun_audio" = auto
 		then
 			AC_WARN([No audioio.h to compile with SUN /dev/audio])
@@ -246,7 +259,7 @@ if test "$sun_audio" = yes
 then
 	if test "$ac_cv_dev_sun_audio" = ""
 	then
-		AC_CHECK_HEADERS(sys/audioio.h, sun/audioio.h,)
+		AC_CHECK_HEADERS(sys/audioio.h sun/audioio.h)
 	fi
 	CFLAGS="$CFLAGS -DSUNAUDIO_PLAYER"
 	NEED_SUNAU=1

@@ -86,20 +86,18 @@ typedef struct wavstuff {
     LONG	   numSamples;
     LONG	   dataLength;     /* needed for ADPCM writing */
     unsigned short formatTag;	   /* What type of encoding file is using */
-    
-    /* The following are only needed for ADPCM wav files */
     unsigned short samplesPerBlock;
-    unsigned short bytesPerBlock;
     unsigned short blockAlign;
+    
+    /* following used by *ADPCM wav files */
     unsigned short nCoefs;	    /* ADPCM: number of coef sets */
     short	  *iCoefs;	    /* ADPCM: coef sets           */
     unsigned char *packet;	    /* Temporary buffer for packets */
     short	  *samples;	    /* interleaved samples buffer */
-    short	  *samplePtr;       /* Pointer to current samples */
+    short	  *samplePtr;       /* Pointer to current sample  */
     short	  *sampleTop;       /* End of samples-buffer      */
-    unsigned short blockSamplesRemaining;/* Samples remaining in each channel */    
-    /* state holds step-size info for ADPCM or IMA_ADPCM writes */
-    int 	   state[16];       /* last, because maybe longer */
+    unsigned short blockSamplesRemaining;/* Samples remaining per channel */    
+    int 	   state[16];       /* step-size info for *ADPCM writes */
 
     /* following used by GSM 6.10 wav */
 #ifdef HAVE_LIBGSM
@@ -122,9 +120,16 @@ LONG rawread(P3(ft_t, LONG *, LONG));
 void rawwrite(P3(ft_t, LONG *, LONG));
 void wavwritehdr(P2(ft_t, int));
 
+
 /****************************************************************************/
 /* IMA ADPCM Support Functions Section                                      */
 /****************************************************************************/
+
+/*
+ *
+ * ImaAdpcmReadBlock - Grab and decode complete block of samples
+ *
+ */
 unsigned short  ImaAdpcmReadBlock(ft)
 ft_t ft;    
 {
@@ -134,27 +139,22 @@ ft_t ft;
 
     /* Pull in the packet and check the header */
     bytesRead = fread(wav->packet,1,wav->blockAlign,ft->fp);
+    samplesThisBlock = wav->samplesPerBlock;
     if (bytesRead < wav->blockAlign) 
     { 
 	/* If it looks like a valid header is around then try and */
 	/* work with partial blocks.  Specs say it should be null */
 	/* padded but I guess this is better than trailing quiet. */
-	if (bytesRead >= (4 * ft->info.channels))
-	{   /* SJB: FIXME this is incorrect */
-	    samplesThisBlock = (wav->blockAlign - (3 * ft->info.channels));
-	}
-	else
+	samplesThisBlock = ImaSamplesIn(0, ft->info.channels, bytesRead, 0);
+	if (samplesThisBlock == 0) 
 	{
 	    warn ("Premature EOF on .wav input file");
 	    return 0;
 	}
     }
-    else
-	samplesThisBlock = wav->samplesPerBlock;
     
     wav->samplePtr = wav->samples;
     
-
     /* For a full block, the following should be true: */
     /* wav->samplesPerBlock = blockAlign - 8byte header + 1 sample in header */
     ImaBlockExpandI(ft->info.channels, wav->packet, wav->samples, samplesThisBlock);
@@ -165,6 +165,7 @@ ft_t ft;
 /****************************************************************************/
 /* MS ADPCM Support Functions Section                                       */
 /****************************************************************************/
+
 /*
  *
  * AdpcmReadBlock - Grab and decode complete block of samples
@@ -180,25 +181,21 @@ ft_t ft;
 
     /* Pull in the packet and check the header */
     bytesRead = fread(wav->packet,1,wav->blockAlign,ft->fp);
+    samplesThisBlock = wav->samplesPerBlock;
     if (bytesRead < wav->blockAlign) 
     {
 	/* If it looks like a valid header is around then try and */
 	/* work with partial blocks.  Specs say it should be null */
-	/* padded but I guess this is better than trailing quite. */
-	if (bytesRead >= (7 * ft->info.channels))
-	{   /* SJB: FIXME this is incorrect */
-	    samplesThisBlock = (wav->blockAlign - (6 * ft->info.channels));
-	}
-	else
+	/* padded but I guess this is better than trailing quiet. */
+	samplesThisBlock = AdpcmSamplesIn(0, ft->info.channels, bytesRead, 0);
+	if (samplesThisBlock == 0) 
 	{
 	    warn ("Premature EOF on .wav input file");
 	    return 0;
 	}
     }
-    else
-	samplesThisBlock = wav->samplesPerBlock;
     
-    errmsg = AdpcmBlockExpandI(ft->info.channels, wav->packet, wav->samples, samplesThisBlock);
+    errmsg = AdpcmBlockExpandI(ft->info.channels, wav->nCoefs, wav->iCoefs, wav->packet, wav->samples, samplesThisBlock);
 
     if (errmsg)
 	warn((char*)errmsg);
@@ -207,8 +204,9 @@ ft_t ft;
 }
 
 /****************************************************************************/
-/* Common ADPCM Support Function                                            */
+/* Common ADPCM Write Function                                              */
 /****************************************************************************/
+
 static void xxxAdpcmWriteBlock(ft)
 ft_t ft;
 {
@@ -441,17 +439,22 @@ ft_t ft;
     unsigned short wExtSize = 0;    /* extended field for non-PCM */
 
     ULONG    wDataLength;	    /* length of sound data in bytes */
+    ULONG    bytesPerBlock = 0;
     ULONG    bytespersample;	    /* bytes per sample (per channel */
 
-    /* This is needed for rawread() */
+    if (sizeof(struct wavstuff)> PRIVSIZE)
+      fail("struct wav_t too big (%d); increase PRIVSIZE in st.h and recompile sox",sizeof(struct wavstuff));
+    /* This is needed for rawread(), rshort, etc */
     rawstartread(ft);
 
     endptr = (char *) &littlendian;
     if (!*endptr) ft->swap = ft->swap ? 0 : 1;
 
+#if 0
     /* If you need to seek around the input file. */
-    if (0 && ! ft->seekable)
+    if (! ft->seekable)
 	fail("WAVE input file must be a file, not a pipe");
+#endif
 
     if ( fread(magic, 1, 4, ft->fp) != 4 || strncmp("RIFF", magic, 4))
 	fail("WAVE: RIFF header not found");
@@ -561,7 +564,7 @@ ft_t ft;
 	ft->info.channels = wChannels;
     else
 	warn("User options overriding channels read in .wav header");
-	
+
     if (ft->info.rate == 0 || ft->info.rate == wSamplesPerSecond)
 	ft->info.rate = wSamplesPerSecond;
     else
@@ -587,17 +590,21 @@ ft_t ft;
 
     switch (wav->formatTag)
     {
+    /* ULONG max_spb; */
     case WAVE_FORMAT_ADPCM:
 	if (wExtSize < 4)
-	    fail("wave header error: format[%s] expects wExtSize >= %d",
-			    wav_format_str(wav->formatTag), 4);
+	    fail("format[%s]: expects wExtSize >= %d",
+			wav_format_str(wav->formatTag), 4);
 
 	if (wBitsPerSample != 4)
 	    fail("Can only handle 4-bit MS ADPCM in wav files");
 
 	wav->samplesPerBlock = rshort(ft);
-	wav->bytesPerBlock = ((wav->samplesPerBlock-2)*ft->info.channels + 1)/2
-		             + 7*ft->info.channels;
+	bytesPerBlock = AdpcmBytesPerBlock(ft->info.channels, wav->samplesPerBlock);
+	if (bytesPerBlock > wav->blockAlign)
+	    fail("format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
+		wav_format_str(wav->formatTag), wav->samplesPerBlock, wav->blockAlign);
+
 	wav->nCoefs = rshort(ft);
 	if (wav->nCoefs < 7 || wav->nCoefs > 0x100) {
 	    fail("ADPCM file nCoefs (%.4hx) makes no sense\n", wav->nCoefs);
@@ -610,15 +617,17 @@ ft_t ft;
 
 	wav->samples = (short *)malloc(wChannels*wav->samplesPerBlock*sizeof(short));
 
-	/* SJB: will need iCoefs later for adpcm.c */
+	/* nCoefs, iCoefs used by adpcm.c */
 	wav->iCoefs = (short *)malloc(wav->nCoefs * 2 * sizeof(short));
 	{
-	    int i;
+	    int i, errct=0;
 	    for (i=0; len>=2 && i < 2*wav->nCoefs; i++) {
 		wav->iCoefs[i] = rshort(ft);
-		/* fprintf(stderr,"iCoefs[%2d] %4d\n",i,wav->iCoefs[i]); */
 		len -= 2;
+		if (i<14) errct += (wav->iCoefs[i] != iCoef[i/2][i%2]);
+		/* fprintf(stderr,"iCoefs[%2d] %4d\n",i,wav->iCoefs[i]); */
 	    }
+	    if (errct) warn("base iCoefs differ in %d/14 positions",errct);
 	}
 
 	bytespersample = WORD;  /* AFTER de-compression */
@@ -626,14 +635,18 @@ ft_t ft;
 
     case WAVE_FORMAT_IMA_ADPCM:
 	if (wExtSize < 2)
-	    fail("wave header error: format[%s] expects wExtSize >= %d",
+	    fail("format[%s]: expects wExtSize >= %d",
 		    wav_format_str(wav->formatTag), 2);
 
 	if (wBitsPerSample != 4)
 	    fail("Can only handle 4-bit IMA ADPCM in wav files");
 
 	wav->samplesPerBlock = rshort(ft);
-	wav->bytesPerBlock = (wav->samplesPerBlock + 7)/2 * ft->info.channels;/* FIXME */
+	bytesPerBlock = ImaBytesPerBlock(ft->info.channels, wav->samplesPerBlock);
+	if (bytesPerBlock > wav->blockAlign || wav->samplesPerBlock%8 != 1)
+	    fail("format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
+		wav_format_str(wav->formatTag), wav->samplesPerBlock, wav->blockAlign);
+
 	wav->packet = (unsigned char *)malloc(wav->blockAlign);
 	len -= 2;
 
@@ -646,14 +659,15 @@ ft_t ft;
     /* GSM formats have extended fmt chunk.  Check for those cases. */
     case WAVE_FORMAT_GSM610:
 	if (wExtSize < 2)
-	    fail("wave header error: format[%s] expects wExtSize >= %d",
+	    fail("format[%s]: expects wExtSize >= %d",
 		    wav_format_str(wav->formatTag), 2);
 	wav->samplesPerBlock = rshort(ft);
+	bytesPerBlock = 65;
 	if (wav->blockAlign != 65)
-	    fail("wave header error: format[%s] expects blockAlign(%d) = %d",
+	    fail("format[%s]: expects blockAlign(%d) = %d",
 		    wav_format_str(wav->formatTag), wav->blockAlign, 65);
 	if (wav->samplesPerBlock != 320)
-	    fail("wave header error: format[%s] expects samplesPerBlock(%d) = %d",
+	    fail("format[%s]: expects samplesPerBlock(%d) = %d",
 		    wav_format_str(wav->formatTag), wav->samplesPerBlock, 320);
 	bytespersample = WORD;  /* AFTER de-compression */
 	len -= 2;
@@ -720,13 +734,8 @@ ft_t ft;
     {
 
     case WAVE_FORMAT_ADPCM:
-	/* Compute easiest part of number of samples.  For every block, there
-	   are samplesPerBlock samples to read. */
-	wav->numSamples = (((wDataLength / wav->blockAlign) * wav->samplesPerBlock) * ft->info.channels);
-	/* Next, for any partial blocks, subtract overhead from it and it
-	   will leave # of samples to read. */
-	wav->numSamples += 
-		((wDataLength % wav->blockAlign) - (6 * ft->info.channels)) * ft->info.channels;
+	wav->numSamples = 
+	    AdpcmSamplesIn(wDataLength, ft->info.channels, wav->blockAlign, wav->samplesPerBlock);
 	/*report("datalen %d, numSamples %d",wDataLength, wav->numSamples);*/
 	wav->blockSamplesRemaining = 0;	       /* Samples left in buffer */
 	break;
@@ -734,11 +743,9 @@ ft_t ft;
     case WAVE_FORMAT_IMA_ADPCM:
 	/* Compute easiest part of number of samples.  For every block, there
 	   are samplesPerBlock samples to read. */
-	wav->numSamples = (((wDataLength / wav->blockAlign) * wav->samplesPerBlock) * ft->info.channels);
-	/* Next, for any partial blocks, substract overhead from it and it
-	   will leave # of samples to read. */
-	wav->numSamples +=
-		((wDataLength % wav->blockAlign) - (3 * ft->info.channels)) * ft->info.channels;
+	wav->numSamples = 
+	    ImaSamplesIn(wDataLength, ft->info.channels, wav->blockAlign, wav->samplesPerBlock);
+	/*report("datalen %d, numSamples %d",wDataLength, wav->numSamples);*/
 	wav->blockSamplesRemaining = 0;	       /* Samples left in buffer */
 	initImaTable();
 	break;
@@ -766,12 +773,12 @@ ft_t ft;
     {
     case WAVE_FORMAT_ADPCM:
 	report("        %d Extsize, %d Samps/block, %d bytes/block %d Num Coefs",
-		wExtSize,wav->samplesPerBlock,wav->bytesPerBlock,wav->nCoefs);
+		wExtSize,wav->samplesPerBlock,bytesPerBlock,wav->nCoefs);
 	break;
 
     case WAVE_FORMAT_IMA_ADPCM:
 	report("        %d Extsize, %d Samps/block, %d bytes/block",
-		wExtSize,wav->samplesPerBlock,wav->bytesPerBlock);
+		wExtSize,wav->samplesPerBlock,bytesPerBlock);
 	break;
 
 #ifdef HAVE_LIBGSM
@@ -903,6 +910,9 @@ ft_t ft;
 	wav_t	wav = (wav_t) ft->priv;
 	int	littlendian = 1;
 	char	*endptr;
+
+  if (sizeof(struct wavstuff)> PRIVSIZE)
+    fail("struct wav_t too big (%d); increase PRIVSIZE in st.h and recompile sox",sizeof(struct wavstuff));
 
 	endptr = (char *) &littlendian;
 	if (!*endptr) ft->swap = ft->swap ? 0 : 1;
@@ -1103,7 +1113,7 @@ int second_header;
 			wBlockAlign = wChannels * 64; /* reasonable default */
 			wBitsPerSample = 4;
 	    		wExtSize = 2;
-			wSamplesPerBlock = ((wBlockAlign - 4*wChannels)/(4*wChannels))*8 + 1;
+			wSamplesPerBlock = ImaSamplesIn(0, wChannels, wBlockAlign, 0);
 			break;
 		case ADPCM:
 			/* warn("Experimental support writing ADPCM style.\n"); */
@@ -1113,7 +1123,7 @@ int second_header;
 			wBlockAlign = wChannels * 128; /* reasonable default */
 			wBitsPerSample = 4;
 	    		wExtSize = 4+4*7;      /* Ext fmt data length */
-			wSamplesPerBlock = 2*(wBlockAlign - 7*wChannels)/wChannels + 2;
+			wSamplesPerBlock = AdpcmSamplesIn(0, wChannels, wBlockAlign, 0);
 			break;
 		case GSM:
 #ifdef HAVE_LIBGSM
@@ -1169,9 +1179,8 @@ int second_header;
 	if (wFormatTag != WAVE_FORMAT_PCM) /* PCM omits the "fact" chunk */
 	    wRiffLength += (8+wFactSize);
 	
-	/* wAvgBytesPerSec <-- this is BEFORE compression, isn't it? */
-	/* if (wFormatTag != WAVE_FORMAT_GSM610)  GSM set this above */
-	wAvgBytesPerSec = ft->info.rate * wChannels * bytespersample;
+	/* wAvgBytesPerSec <-- this is BEFORE compression, isn't it? guess not. */
+	wAvgBytesPerSec = (double)wBlockAlign*ft->info.rate / (double)wSamplesPerBlock + 0.5;
 
 	/* figured out header info, so write it */
 	fputs("RIFF", ft->fp);

@@ -110,6 +110,8 @@ MsState_t *state;
 /* AdpcmBlockExpandI() outputs interleaved samples into one output buffer */
 const char *AdpcmBlockExpandI(
 	int chans,          /* total channels             */
+	int nCoef,
+	const short *iCoef,
 	const u_char *ibuff,/* input buffer[blockAlign]   */
 	SAMPL *obuff,       /* output samples, n*chans    */
 	int n               /* samples to decode PER channel */
@@ -124,12 +126,13 @@ const char *AdpcmBlockExpandI(
 	ip = ibuff;
 	for (ch = 0; ch < chans; ch++) {
 		u_char bpred = *ip++;
-		if (bpred >= 7) {
-			errmsg = "MSADPCM bpred >= 7, arbitrarily using 0\n";
+		if (bpred >= nCoef) {
+			errmsg = "MSADPCM bpred >= nCoef, arbitrarily using 0\n";
 			bpred = 0;
 		}
-		state[ch].iCoef[0] = iCoef[(int)bpred][0];
-		state[ch].iCoef[1] = iCoef[(int)bpred][1];
+		state[ch].iCoef[0] = iCoef[(int)bpred*2+0];
+		state[ch].iCoef[1] = iCoef[(int)bpred*2+1];
+		
 	}
 
 	for (ch = 0; ch < chans; ch++)
@@ -373,8 +376,8 @@ void AdpcmBlockMashI(
 	const SAMPL *ip,    /* ip[n*chans] is interleaved input samples */
 	int n,              /* samples to encode PER channel */
 	int *st,            /* input/output steps, 16<=st[i] */
-	u_char *obuff,      /* output buffer[blockAlign] */
-	int blockAlign,     /* >= 7*chans + n/2          */
+	u_char *obuff,      /* output buffer[blockAlign]     */
+	int blockAlign,     /* >= 7*chans + chans*(n-2)/2.0    */
 	int opt             /* non-zero allows some cpu-intensive code to improve output */
 )
 {
@@ -389,3 +392,50 @@ void AdpcmBlockMashI(
 	for (ch=0; ch<chans; ch++)
 		AdpcmMashChannel(ch, chans, ip, n, st+ch, obuff, opt);
 }
+
+/*
+ * AdpcmSamplesIn(dataLen, chans, blockAlign, samplesPerBlock)
+ *  returns the number of samples/channel which would be
+ *  in the dataLen, given the other parameters ...
+ *  if input samplesPerBlock is 0, then returns the max
+ *  samplesPerBlock which would go into a block of size blockAlign
+ *  Yes, it is confusing usage.
+ */
+ULONG AdpcmSamplesIn(
+	ULONG dataLen,
+	unsigned short chans,
+	unsigned short blockAlign,
+	unsigned short samplesPerBlock
+)
+{
+	ULONG m, n;
+
+	if (samplesPerBlock) {
+		n = (dataLen / blockAlign) * samplesPerBlock;
+		m = (dataLen % blockAlign);
+	} else {
+		n = 0;
+		m = blockAlign;
+	}
+	if (m >= 7*chans) {
+		m -= 7*chans;          /* bytes beyond block-header */
+		m = (2*m)/chans + 2;   /* nibbles/chans + 2 in header */
+		if (samplesPerBlock && m > samplesPerBlock) m = samplesPerBlock;
+		n += m;
+	}
+	return n;
+	/* wSamplesPerBlock = 2*(wBlockAlign - 7*wChannels)/wChannels + 2; */
+}
+
+ULONG AdpcmBytesPerBlock(
+	unsigned short chans,
+	unsigned short samplesPerBlock
+)
+{
+	ULONG n;
+	n = 7*chans;  /* header */ 
+	if (samplesPerBlock > 2)
+		n += (((ULONG)samplesPerBlock-2)*chans + 1)/2;
+	return n;
+}
+

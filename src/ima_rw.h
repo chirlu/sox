@@ -21,6 +21,10 @@
 #ifndef SAMPL
 #	define SAMPL short
 #endif
+/* FIXME: This breaks on Alphas! */
+#ifndef ULONG
+#	define ULONG unsigned long
+#endif
 
 /* #undef STRICT_IMA makes code a bit faster, but not
  * strictly compatible with the real IMA spec, which
@@ -62,5 +66,32 @@ extern void ImaBlockMashI(
 	int *st,            /* input/output state[chans], REQUIRE 0 <= st[ch] <= ISSTMAX */
 	u_char *obuff,      /* output buffer[blockAlign] */
 	int opt             /* non-zero allows some cpu-intensive code to improve output */
+);
+
+/* Some helper functions for computing samples/block and blockalign */
+
+/*
+ * ImaSamplesIn(dataLen, chans, blockAlign, samplesPerBlock)
+ *  returns the number of samples/channel which would go
+ *  in the dataLen, given the other parameters ...
+ *  if input samplesPerBlock is 0, then returns the max
+ *  samplesPerBlock which would go into a block of size blockAlign
+ *  Yes, it is confusing usage.
+ */
+extern ULONG ImaSamplesIn(
+	ULONG dataLen,
+	unsigned short chans,
+	unsigned short blockAlign,
+	unsigned short samplesPerBlock
+);
+
+/*
+ * ULONG ImaBytesPerBlock(chans, samplesPerBlock)
+ *   return minimum blocksize which would be required
+ *   to encode number of chans with given samplesPerBlock
+ */
+extern ULONG ImaBytesPerBlock(
+	unsigned short chans,
+	unsigned short samplesPerBlock
 );
 
