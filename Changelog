@@ -43,6 +43,8 @@ sox-12.17.4
     of oggenc based on suggestion from Christian Weisgerber.
   o Prints error message now when a channel value of -1 is given.
     Reported by Pierre Fortin.
+  o Fixed bug were memory could be trashed if a input WAV file contained
+    a comment.  Found by Rhys Chard.
 
 sox-12.17.3
 -----------

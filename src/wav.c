@@ -908,6 +908,8 @@ int st_wavstartread(ft_t ft)
         st_seek(ft, len, SEEK_CUR);
         if( findChunk(ft, "LIST") != ST_EOF){
 	    ft->comment = (char*)malloc(256);
+	    /* Initialize comment to a NULL string */
+	    ft->comment[0] = 0;
 	    while(!feof(ft->fp)){
 		st_reads(ft,magic,4);
 		if(strncmp(magic,"INFO",4) == 0){
@@ -916,14 +918,20 @@ int st_wavstartread(ft_t ft)
 			st_readdw(ft,&len); 
 			len = (len + 1) & ~1;
 			st_reads(ft,text,len);
-			strcat(ft->comment,text);
-			strcat(ft->comment,"\n");
+			if (strlen(ft->comment) + strlen(text) < 254)
+			{
+			    strcat(ft->comment,text);
+    			    strcat(ft->comment,"\n");
+			}
 		} else if(strncmp(magic,"ISFT",4) == 0){
 			st_readdw(ft,&len); 
 			len = (len + 1) & ~1;
 			st_reads(ft,text,len);
-			strcat(ft->comment,text);
-			strcat(ft->comment,"\n");
+			if (strlen(ft->comment) + strlen(text) < 254)
+			{
+			    strcat(ft->comment,text);
+    			    strcat(ft->comment,"\n");
+			}
 		} else if(strncmp(magic,"cue ",4) == 0){
 			st_readdw(ft,&len);
 			len = (len + 1) & ~1;
