@@ -105,7 +105,7 @@ extern void dvmsstartread();
 extern void dvmsstartwrite();
 extern void dvmsstopwrite();
 
-#ifdef HAS_GSM
+#ifdef HAVE_LIBGSM
 char *gsmnames[] = {
         "gsm",
 	(char *) 0
@@ -345,7 +345,7 @@ EXPORT format_t formats[] = {
 	{dvmsnames, 0,
 	        dvmsstartread, cvsdread, cvsdstopread,	   /* Cont. Variable */
 	        dvmsstartwrite, cvsdwrite, dvmsstopwrite},   /* Slope Delta */
-#ifdef HAS_GSM
+#ifdef HAVE_LIBGSM
 	{gsmnames, 0,
 	        gsmstartread, gsmread, gsmstopread,            /* GSM 06.10 */
 	        gsmstartwrite, gsmwrite, gsmstopwrite},

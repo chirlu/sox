@@ -81,11 +81,6 @@ LIBOBJS = $(FOBJ) $(EOBJ) handlers.o libst.o misc.o util.o $(EXTRAOBJS)
 
 VPATH	= @srcdir@
 
-.SUFFIXES:
-
-%.o: %.c
-	$(CC) $(CFLAGS) -c $<
-
 all: sox
 
 sox: libst.a sox.o

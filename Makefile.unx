@@ -142,7 +142,7 @@ GETOPT_DEFINES	= -DHAVE_GETOPT_H
 # GSM_PRE_LIBS	= -L/usr/local/lib
 # GSM_POST_LIBS	= -lgsm
 # GSM_INCLUDES	= -I/usr/local/include/
-# GSM_DEFINES	= -DHAS_GSM
+# GSM_DEFINES	= -DHAVE_LIBGSM
 
 # For sound support on machines that include the OSS sound driver
 # (such as Linux) then uncomment the following line.

@@ -188,7 +188,7 @@ then
 		)
 	if test "$ac_cv_dev_oss_dsp" = yes
 	then
-		AC_CHECK_HEADER(sys/soundcard.h, oss_dsp=yes)
+		AC_CHECK_HEADERS(sys/soundcard.h machine/soundcard.h, oss_dsp=yes)
 		if test "$oss_dsp" = auto
 		then
 			AC_WARN([No soundcard.h to compile with OSS /dev/dsp])
@@ -255,7 +255,7 @@ then
 	CFLAGS="$CFLAGS -DFAST_ALAW_COMPRESSION"
 fi
 
-LIBS="$LIBS -L. -lst"
+LIBS="-L. -lst $LIBS"
 
 AC_SUBST(NEED_OSS)
 AC_SUBST(NEED_SUNAU)

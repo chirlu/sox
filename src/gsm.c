@@ -1,4 +1,4 @@
-#if defined(HAS_GSM)
+#if defined(HAVE_LIBGSM)
 /*
  * Copyright 1991, 1992, 1993 Guido van Rossum And Sundry Contributors.
  * This source code is freely redistributable and may be used for
@@ -159,4 +159,4 @@ ft_t ft;
 	}
 	gsm_destroy(p->handle);
 }
-#endif /* HAS_GSM */
+#endif /* HAVE_LIBGSM */

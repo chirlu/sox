@@ -27,7 +27,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
+#ifdef HAVE_SYS_SOUNDCARD_H
 #include <sys/soundcard.h>
+#endif
+#ifdef HAVE_MACHINE_SOUNDCARD_H
+#include <machine/soundcard.h>
+#endif
 #include <sys/ioctl.h>
 #include "st.h"
 #include "libst.h"
