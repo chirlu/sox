@@ -10,6 +10,9 @@ sox-12.17.2
     that occurs on platforms that rand() can return large values.
     The bug resulted in polyphase resampling an audio file to a
     different rate then it said it was.
+  o Stan Seibert contributed a handler for Ogg Vorbis files.  It
+    handles all input formats but can only save using default
+    settings.
   o Darrick Servis has made major cleanups in the code in regards
     to error conditions.  Helps people using libst.
   o Darrick Servis has added added optional seek functionality sox.

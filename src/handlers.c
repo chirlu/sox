@@ -335,6 +335,21 @@ extern int  st_vocstartwrite();
 extern LONG st_vocwrite();
 extern int  st_vocstopwrite();
 
+#ifdef HAVE_LIBVORBIS
+static char *vorbisnames[] = {
+	"vorbis",
+	"ogg",
+	(char *) 0
+};
+
+extern int  st_vorbisstartread();
+extern LONG st_vorbisread();
+extern int  st_vorbisstopread();
+extern int  st_vorbisstartwrite();
+extern LONG st_vorbiswrite();
+extern int  st_vorbisstopwrite();
+#endif
+
 static char *wavnames[] = {
 	"wav",
 	(char *) 0
@@ -463,6 +478,11 @@ st_format_t st_formats[] = {
 	{vocnames, ST_FILE_STEREO,		/* Sound Blaster .VOC */
 		st_vocstartread, st_vocread, st_vocstopread,
 		st_vocstartwrite, st_vocwrite, st_vocstopwrite, st_nothing},
+#ifdef HAVE_LIBVORBIS
+	{vorbisnames, ST_FILE_STEREO,		/* Ogg Vorbis */
+		st_vorbisstartread, st_vorbisread, st_vorbisstopread,
+		st_vorbisstartwrite, st_vorbiswrite, st_vorbisstopwrite},
+#endif
 	{wavnames, ST_FILE_STEREO | ST_FILE_SEEK,		/* Microsoftt RIFF */
 		st_wavstartread, st_wavread, st_nothing,
 		st_wavstartwrite, st_wavwrite, st_wavstopwrite, st_wavseek},	

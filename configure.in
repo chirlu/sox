@@ -43,6 +43,16 @@ AC_ARG_WITH(sun_audio,
 	[sun_audio="$withval"],
 	[sun_audio=auto])
 
+AC_ARG_WITH(ogg_vorbislib,
+	[  --with-ogg-vorbislib    Location of Ogg Vorbis libraries (=dir)],
+	[ogg_vorbislib="$withval"],
+	[ogg_vorbislib=auto])
+
+AC_ARG_WITH(ogg_vorbisinc,
+	[  --with-ogg-vorbisinc    Location of Ogg Vorbis headers (=dir)],
+	[ogg_vorbisinc="$withval"],
+	[ogg_vorbisinc=auto])
+
 dnl Checks for programs.
 
 AC_PROG_CC
@@ -115,6 +125,37 @@ AC_CHECK_HEADER(gsm.h, gsminc=yes, gsminc=no)
 if test "$gsminc" = yes
 then
   AC_CHECK_LIB(gsm, gsm_create)
+fi
+CPPFLAGS="$ac_save_CPPFLAGS"
+
+
+dnl Test for Ogg Vorbis libraries.
+
+if test "$ogg_vorbislib" != auto  && test "$ogg_vorbislib" != no
+then
+  LIBS="$LIBS -L$ogg_vorbislib"
+fi
+
+dnl Need to tell preprocess where to look for Ogg Vorbis include files
+dnl when they are not in system directories.  Because of this make
+dnl a backup copy of the CPPFLAGS.
+ac_save_CPPFLAGS="$CPPFLAGS"
+
+if test "$ogg_vorbisinc" != auto && test "$ogg_vorbisinc" != no
+then
+  CFLAGS="$CFLAGS -I$ogg_vorbisinc"
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  if test \! -z "$ogg_vorbisinc" ; then
+    CPPFLAGS="$CPPFLAGS -I$ogg_vorbisinc"
+  fi
+fi
+
+AC_CHECK_HEADER(vorbis/codec.h, ogg_vorbisinc=yes, ogg_vorbisinc=no)
+if test "$ogg_vorbisinc" = yes
+then
+  AC_CHECK_LIB(vorbis, vorbis_analysis_init,
+               LIBS="$LIBS -logg -lvorbis -lvorbisfile -lvorbisenc"
+               AC_DEFINE(HAVE_LIBVORBIS))
 fi
 CPPFLAGS="$ac_save_CPPFLAGS"
 

@@ -44,7 +44,8 @@ PLAY_SUPPORT = @PLAY_SUPPORT@
 
 FOBJ	= 8svx.o adpcm.o aiff.o au.o auto.o avr.o cdr.o cvsd.o dat.o g721.o \
 	  g723_24.o g723_40.o g72x.o gsm.o hcom.o ima_rw.o maud.o nul.o \
-	  raw.o sf.o smp.o sndrtool.o sphere.o tx16w.o voc.o wav.o wve.o
+	  raw.o sf.o smp.o sndrtool.o sphere.o tx16w.o voc.o vorbis.o \
+	  wav.o wve.o
 
 EOBJ	= avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
 	  copy.o cut.o deemphas.o earwax.o echo.o echos.o fade.o filter.o \

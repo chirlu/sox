@@ -394,6 +394,22 @@ with the "Toccata" sound-card on the Amiga.
 Allows 8bit linear, 16bit linear, A-Law, u-law
 in mono and stereo.
 .TP 10
+.B .ogg
+Ogg Vorbis Compressed Audio.
+.br
+Ogg Vorbis is a open, patent-free codec designed for compressing music
+and streaming audio.  It is similar to MP3, VQF, AAC, and other lossy
+formats.  
+.B sox
+can decode all types of Ogg Vorbis files, but can only encode at 128 kbps.
+Decoding is somewhat CPU intensive and encoding is very CPU intensive.
+.br
+Ogg Vorbis in
+.B sox
+is optional and requires access to external Ogg Vorbis libraries.  To
+see if there is support for Ogg Vorbis run \fBsox -h\fR
+and look for it under the list of supported file formats as "vorbis".
+.TP 10
 .B ossdsp
 OSS /dev/dsp device driver
 .br
@@ -484,6 +500,11 @@ On input, the silence parts are filled out, loops are rejected,
 and sample data with a new sample rate is rejected.
 Silence with a different sample rate is generated appropriately.
 On output, silence is not detected, nor are impossible sample rates.
+.TP 10
+.B vorbis
+See
+.B .ogg
+format.
 .TP 10
 .B .wav
 Microsoft .WAV RIFF files.
