@@ -4,6 +4,10 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-12.17.4
+-----------
+  o Updated config.sub to detect latest supported OS's.
+
 sox-12.17.3
 -----------
   o Removed check that prevented pan from being invoked when the
