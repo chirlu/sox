@@ -1176,6 +1176,19 @@ int second_header;
 	wSamplesPerSecond = ft->info.rate;
 	wChannels = ft->info.channels;
 
+	/* Check to see if encoding is ADPCM or not.  If ADPCM
+	 * possibly override the size to be bytes.  It isn't needed
+	 * by this routine will look nicer (and more correct)
+	 * on verbose output.
+	 */
+	if ((ft->info.encoding == ST_ENCODING_ADPCM ||
+	     ft->info.encoding == ST_ENCODING_IMA_ADPCM) &&
+	    ft->info.size != ST_SIZE_BYTE)
+	{
+	    st_warn("Overriding output size to bytes for ADPCM data.");
+	    ft->info.size = ST_SIZE_BYTE;
+	}
+
 	switch (ft->info.size)
 	{
 		case ST_SIZE_BYTE:
@@ -1183,7 +1196,9 @@ int second_header;
 			if (ft->info.encoding != ST_ENCODING_UNSIGNED &&
 			    ft->info.encoding != ST_ENCODING_ULAW &&
 			    ft->info.encoding != ST_ENCODING_ALAW &&
-			    ft->info.encoding != ST_ENCODING_GSM)
+			    ft->info.encoding != ST_ENCODING_GSM &&
+			    ft->info.encoding != ST_ENCODING_ADPCM &&
+			    ft->info.encoding != ST_ENCODING_IMA_ADPCM)
 			{
 				st_warn("Do not support %s with 8-bit data.  Forcing to unsigned",st_encodings_str[ft->info.encoding]);
 				ft->info.encoding = ST_ENCODING_UNSIGNED;
