@@ -43,11 +43,12 @@
 static int ossdspinit(ft)
 ft_t ft;
 {
-    int sampletype, samplesize, dsp_stereo;
+    int sampletype=AFMT_U8, samplesize=8, dsp_stereo;
     int tmp, rc;
 
     if (ft->info.rate == 0.0) ft->info.rate = 8000;
     if (ft->info.size == -1) ft->info.size = ST_SIZE_BYTE;
+
     if (ft->info.size == ST_SIZE_BYTE) {
 	sampletype = AFMT_U8;
 	samplesize = 8;
@@ -133,7 +134,7 @@ ft_t ft;
 	else
 	{
             ft->info.size = ST_SIZE_WORD;
-	    ft->info.encoding = ST_ENCODING_SIGNED2;
+	    ft->info.encoding = ST_ENCODING_SIGN2;
 	    st_report("OSS driver doesn't like unsigned bytes");
 	    st_report("Forcing to signed words");
             if (ST_IS_BIGENDIAN)
