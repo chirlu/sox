@@ -21,6 +21,8 @@ sox-12.17.6
     alone from the rest of the sox package.
   o Benedikt Zeyen found a bug in synth effect when generating
     brown noise that could cause clipping.
+  o David Leverton sent another patch to prevent crashes on
+    amd64's when resampling.
 
 sox-12.17.5
 -----------
