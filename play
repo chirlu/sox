@@ -172,11 +172,13 @@ case $arch in
     if [ -z "$device" ]; then
 	device="/dev/audio"
     fi
+    ;;
   Linux|FreeBSD)
     arch_defines="-t ossdsp"
     if [ -z "$device" ]; then
 	device="/dev/dsp"
     fi
+    ;;
 esac
 
 # If name is "rec" then record else assume user is wanting to play
