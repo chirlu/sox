@@ -394,10 +394,10 @@ void wavgsmstopwrite(ft_t ft)
 /* General Sox WAV file code                                                */
 /****************************************************************************/
 
-static ULONG findChunk(ft_t ft, const char *Label)
+static u_int32_t findChunk(ft_t ft, const char *Label)
 {
     char magic[5];
-    ULONG len;
+    u_int32_t len;
     for (;;)
     {
 	if (st_reads(ft, magic, 4) == ST_EOF)
@@ -427,22 +427,23 @@ int st_wavstartread(ft_t ft)
 {
     wav_t	wav = (wav_t) ft->priv;
     char	magic[5];
-    ULONG	len;
+    u_int32_t	len;
     int		rc;
 
     /* wave file characteristics */
-    ULONG    wRiffLength;
+    u_int32_t      dwRiffLength;
     unsigned short wChannels;	    /* number of channels */
-    ULONG    wSamplesPerSecond;     /* samples per second per channel */
-    ULONG    wAvgBytesPerSec;	    /* estimate of bytes per second needed */
+    u_int32_t      dwSamplesPerSecond; /* samples per second per channel */
+    u_int32_t      dwAvgBytesPerSec;/* estimate of bytes per second needed */
     unsigned short wBitsPerSample;  /* bits per sample */
     unsigned short wFmtSize;
     unsigned short wExtSize = 0;    /* extended field for non-PCM */
 
-    ULONG    wDataLength;	    /* length of sound data in bytes */
+    u_int32_t      dwDataLength;    /* length of sound data in bytes */
     ULONG    bytesPerBlock = 0;
     ULONG    bytespersample;	    /* bytes per sample (per channel */
-	char text[256];
+    char text[256];
+    u_int32_t      dwLoopPos;
 
 	ft->st_errno = ST_SUCCESS;
 
@@ -454,7 +455,7 @@ int st_wavstartread(ft_t ft)
 	return ST_EOF;
     }
 
-    st_readdw(ft, &wRiffLength);
+    st_readdw(ft, &dwRiffLength);
 
     if (st_reads(ft, magic, 4) == ST_EOF || strncmp("WAVE", magic, 4))
     {
@@ -474,8 +475,8 @@ int st_wavstartread(ft_t ft)
 
     st_readw(ft, &(wav->formatTag));
     st_readw(ft, &wChannels);
-    st_readdw(ft, &wSamplesPerSecond);
-    st_readdw(ft, &wAvgBytesPerSec);	/* Average bytes/second */
+    st_readdw(ft, &dwSamplesPerSecond);
+    st_readdw(ft, &dwAvgBytesPerSec);	/* Average bytes/second */
     st_readw(ft, &(wav->blockAlign));	/* Block align */
     st_readw(ft, &wBitsPerSample);	/* bits per sample per channel */
     len -= 16;
@@ -600,8 +601,8 @@ int st_wavstartread(ft_t ft)
     else
 	st_report("User options overriding channels read in .wav header");
 
-    if (ft->info.rate == 0 || ft->info.rate == wSamplesPerSecond)
-	ft->info.rate = wSamplesPerSecond;
+    if (ft->info.rate == 0 || ft->info.rate == dwSamplesPerSecond)
+	ft->info.rate = dwSamplesPerSecond;
     else
 	st_report("User options overriding rate read in .wav header");
     
@@ -823,7 +824,7 @@ int st_wavstartread(ft_t ft)
      * the upcoming 'data' chunk */
 
     /* Now look for the wave data chunk */
-    wDataLength = len = findChunk(ft, "data");
+    dwDataLength = len = findChunk(ft, "data");
     /* findChunk() only returns if chunk was found */
 
 	/* Data starts here */
@@ -834,8 +835,9 @@ int st_wavstartread(ft_t ft)
 
     case WAVE_FORMAT_ADPCM:
 	wav->numSamples = 
-	    AdpcmSamplesIn(wDataLength, ft->info.channels, wav->blockAlign, wav->samplesPerBlock);
-	/*st_report("datalen %d, numSamples %d",wDataLength, wav->numSamples);*/
+	    AdpcmSamplesIn(dwDataLength, ft->info.channels, 
+		           wav->blockAlign, wav->samplesPerBlock);
+	/*st_report("datalen %d, numSamples %d",dwDataLength, wav->numSamples);*/
 	wav->blockSamplesRemaining = 0;	       /* Samples left in buffer */
 	ft->length = wav->numSamples*ft->info.channels;
 	break;
@@ -844,8 +846,9 @@ int st_wavstartread(ft_t ft)
 	/* Compute easiest part of number of samples.  For every block, there
 	   are samplesPerBlock samples to read. */
 	wav->numSamples = 
-	    ImaSamplesIn(wDataLength, ft->info.channels, wav->blockAlign, wav->samplesPerBlock);
-	/*st_report("datalen %d, numSamples %d",wDataLength, wav->numSamples);*/
+	    ImaSamplesIn(dwDataLength, ft->info.channels, 
+		         wav->blockAlign, wav->samplesPerBlock);
+	/*st_report("datalen %d, numSamples %d",dwDataLength, wav->numSamples);*/
 	wav->blockSamplesRemaining = 0;	       /* Samples left in buffer */
 	initImaTable();
 	ft->length = wav->numSamples*ft->info.channels;
@@ -853,23 +856,23 @@ int st_wavstartread(ft_t ft)
 
 #ifdef HAVE_LIBGSM
     case WAVE_FORMAT_GSM610:
-	wav->numSamples = (((wDataLength / wav->blockAlign) * wav->samplesPerBlock) * ft->info.channels);
+	wav->numSamples = (((dwDataLength / wav->blockAlign) * wav->samplesPerBlock) * ft->info.channels);
 	wavgsminit(ft);
 	ft->length = wav->numSamples;
 	break;
 #endif
 
     default:
-	wav->numSamples = wDataLength/ft->info.size;	/* total samples */
+	wav->numSamples = dwDataLength/ft->info.size;	/* total samples */
 	ft->length = wav->numSamples;
 
     }
 
     st_report("Reading Wave file: %s format, %d channel%s, %d samp/sec",
 	   wav_format_str(wav->formatTag), ft->info.channels,
-	   wChannels == 1 ? "" : "s", wSamplesPerSecond);
+	   wChannels == 1 ? "" : "s", dwSamplesPerSecond);
     st_report("        %d byte/sec, %d block align, %d bits/samp, %u data bytes",
-	   wAvgBytesPerSec, wav->blockAlign, wBitsPerSample, wDataLength);
+	   dwAvgBytesPerSec, wav->blockAlign, wBitsPerSample, dwDataLength);
 
     /* Can also report extended fmt information */
     switch (wav->formatTag)
@@ -925,7 +928,8 @@ int st_wavstartread(ft_t ft)
 			st_readdw(ft,&len);
 			len = (len + 1) & ~1;
 			st_seek(ft,len-4,SEEK_CUR);
-			st_readdw(ft,(ULONG*)&ft->loops[0].start); 
+			st_readdw(ft,&dwLoopPos);
+			ft->loops[0].start = dwLoopPos;
 		} else if(strncmp(magic,"note",4) == 0){
 			/*Skip*/
 			st_readdw(ft,&len);
@@ -935,8 +939,8 @@ int st_wavstartread(ft_t ft)
 			/*Skip*/
 		} else if(strncmp(magic,"ltxt",4) == 0){
 			st_seek(ft,4,SEEK_CUR);
-			st_readdw(ft,(ULONG*)&ft->loops[0].length); 
-			ft->loops[0].length = ft->loops[0].length - ft->loops[0].start;
+			st_readdw(ft,&dwLoopPos);
+			ft->loops[0].length = dwLoopPos - ft->loops[0].start;
 		} else if(strncmp(magic,"labl",4) == 0){
 			/*Skip*/
 			st_readdw(ft,&len);
@@ -1156,15 +1160,15 @@ bytes      variable      description
 16 - 19    wFmtSize       length of format chunk minus 8 byte header 
 20 - 21    wFormatTag     identifies PCM, ULAW etc
 22 - 23    wChannels      
-24 - 27    wSamplesPerSecond   samples per second per channel
-28 - 31    wAvgBytesPerSec     non-trivial for compressed formats
+24 - 27    dwSamplesPerSecond  samples per second per channel
+28 - 31    dwAvgBytesPerSec    non-trivial for compressed formats
 32 - 33    wBlockAlign         basic block size
 34 - 35    wBitsPerSample      non-trivial for compressed formats
 
 PCM formats then go straight to the data chunk:
 36 - 39    'data'
-40 - 43     wDataLength   length of data chunk minus 8 byte header
-44 - (wDataLength + 43)    the data
+40 - 43     dwDataLength   length of data chunk minus 8 byte header
+44 - (dwDataLength + 43)   the data
 
 non-PCM formats must write an extended format chunk and a fact chunk:
 
@@ -1174,8 +1178,8 @@ ULAW, ALAW formats:
 42 - 45    wFactSize = 4  length of the fact chunk minus 8 byte header
 46 - 49    wSamplesWritten   actual number of samples written out
 50 - 53    'data'
-54 - 57     wDataLength   length of data chunk minus 8 byte header
-58 - (wDataLength + 57)    the data
+54 - 57     dwDataLength  length of data chunk minus 8 byte header
+58 - (dwDataLength + 57)  the data
 
 
 GSM6.10  format:
@@ -1185,9 +1189,9 @@ GSM6.10  format:
 44 - 47    wFactSize = 4  length of the fact chunk minus 8 byte header
 48 - 51    wSamplesWritten   actual number of samples written out
 52 - 55    'data'
-56 - 59     wDataLength   length of data chunk minus 8 byte header
-60 - (wDataLength + 59)     the data
-(+ a padding byte if wDataLength is odd) 
+56 - 59     dwDataLength  length of data chunk minus 8 byte header
+60 - (dwDataLength + 59)  the data
+(+ a padding byte if dwDataLength is odd) 
 
 
 note that header contains (up to) 3 separate ways of describing the
@@ -1198,7 +1202,7 @@ and padded compressed formats:
 wRiffLength -      (riff header) the length of the file, minus 8 
 wSamplesWritten  -  (fact header) the number of samples written (after padding
                    to a complete block eg for GSM)
-wDataLength     -   (data chunk header) the number of (valid) data bytes written
+dwDataLength     - (data chunk header) the number of (valid) data bytes written
 
 */
 
@@ -1213,8 +1217,8 @@ static int wavwritehdr(ft_t ft, int second_header)
 	ULONG wFmtSize = 16;                /* size field of the fmt chunk */
 	unsigned short wFormatTag = 0;      /* data format */
 	unsigned short wChannels;           /* number of channels */
-	ULONG  wSamplesPerSecond;           /* samples per second per channel*/
-	ULONG  wAvgBytesPerSec=0;           /* estimate of bytes per second needed */
+	ULONG  dwSamplesPerSecond;          /* samples per second per channel*/
+	u_int32_t dwAvgBytesPerSec=0;       /* estimate of bytes per second needed */
 	unsigned short wBlockAlign=0;       /* byte alignment of a basic sample block */
 	unsigned short wBitsPerSample=0;    /* bits per sample */
 	/* fmt chunk extension (not PCM) */
@@ -1227,14 +1231,14 @@ static int wavwritehdr(ft_t ft, int second_header)
 	ULONG wSamplesWritten=0;	/* windows doesnt seem to use this*/
 
 	/* data chunk */
-	ULONG  wDataLength=0x7ffff000L;	/* length of sound data in bytes */
+	u_int32_t  dwDataLength=0x7ffff000L;	/* length of sound data in bytes */
 	/* end of variables written to header */
 
 	/* internal variables, intermediate values etc */
 	ULONG bytespersample; 		/* (uncompressed) bytes per sample (per channel) */
 	ULONG blocksWritten = 0;
 
-	wSamplesPerSecond = ft->info.rate;
+	dwSamplesPerSecond = ft->info.rate;
 	wChannels = ft->info.channels;
 
 	/* Check to see if encoding is ADPCM or not.  If ADPCM
@@ -1341,7 +1345,7 @@ static int wavwritehdr(ft_t ft, int second_header)
 			wChannels = ft->info.channels = 1;
 		    }
 		    wFormatTag = WAVE_FORMAT_GSM610;
-		    /* wAvgBytesPerSec = 1625*(wSamplesPerSecond/8000.)+0.5; */
+		    /* dwAvgBytesPerSec = 1625*(dwSamplesPerSecond/8000.)+0.5; */
 		    wBlockAlign=65;
 		    wBitsPerSample=0;  /* not representable as int   */
 		    wExtSize=2;        /* length of format extension */
@@ -1357,8 +1361,8 @@ static int wavwritehdr(ft_t ft, int second_header)
 	wav->samplesPerBlock = wSamplesPerBlock;
 
 	if (!second_header) { 	/* adjust for blockAlign */
-	    blocksWritten = wDataLength/wBlockAlign;
-	    wDataLength = blocksWritten * wBlockAlign;
+	    blocksWritten = dwDataLength/wBlockAlign;
+	    dwDataLength = blocksWritten * wBlockAlign;
 	    wSamplesWritten = blocksWritten * wSamplesPerBlock;
 	} else { 	/* fixup with real length */
 	    wSamplesWritten = wav->numSamples;
@@ -1366,7 +1370,7 @@ static int wavwritehdr(ft_t ft, int second_header)
 		{
 	    	case WAVE_FORMAT_ADPCM:
 	    	case WAVE_FORMAT_IMA_ADPCM:
-		    wDataLength = wav->dataLength;
+		    dwDataLength = wav->dataLength;
 		    break;
 #ifdef HAVE_LIBGSM
 		case WAVE_FORMAT_GSM610:
@@ -1375,24 +1379,24 @@ static int wavwritehdr(ft_t ft, int second_header)
 		default:
 		    wSamplesWritten /= wChannels; /* because how rawwrite()'s work */
 		    blocksWritten = (wSamplesWritten+wSamplesPerBlock-1)/wSamplesPerBlock;
-		    wDataLength = blocksWritten * wBlockAlign;
+		    dwDataLength = blocksWritten * wBlockAlign;
 		}
 	}
 
 #ifdef HAVE_LIBGSM
 	if (wFormatTag == WAVE_FORMAT_GSM610)
-	    wDataLength = (wDataLength+1) & ~1; /*round up to even */
+	    dwDataLength = (dwDataLength+1) & ~1; /*round up to even */
 #endif
 
 	if (wFormatTag != WAVE_FORMAT_PCM)
 	    wFmtSize += 2+wExtSize; /* plus ExtData */
 
-	wRiffLength = 4 + (8+wFmtSize) + (8+wDataLength); 
+	wRiffLength = 4 + (8+wFmtSize) + (8+dwDataLength); 
 	if (wFormatTag != WAVE_FORMAT_PCM) /* PCM omits the "fact" chunk */
 	    wRiffLength += (8+wFactSize);
 	
-	/* wAvgBytesPerSec <-- this is BEFORE compression, isn't it? guess not. */
-	wAvgBytesPerSec = (double)wBlockAlign*ft->info.rate / (double)wSamplesPerBlock + 0.5;
+	/* dwAvgBytesPerSec <-- this is BEFORE compression, isn't it? guess not. */
+	dwAvgBytesPerSec = (double)wBlockAlign*ft->info.rate / (double)wSamplesPerBlock + 0.5;
 
 	/* figured out header info, so write it */
 	st_writes(ft, "RIFF");
@@ -1402,8 +1406,8 @@ static int wavwritehdr(ft_t ft, int second_header)
 	st_writedw(ft, wFmtSize);
 	st_writew(ft, wFormatTag);
 	st_writew(ft, wChannels);
-	st_writedw(ft, wSamplesPerSecond);
-	st_writedw(ft, wAvgBytesPerSec);
+	st_writedw(ft, dwSamplesPerSecond);
+	st_writedw(ft, dwAvgBytesPerSec);
 	st_writew(ft, wBlockAlign);
 	st_writew(ft, wBitsPerSample); /* end info common to all fmts */
 
@@ -1442,24 +1446,24 @@ static int wavwritehdr(ft_t ft, int second_header)
 	}
 
 	st_writes(ft, "data");
-	st_writedw(ft, wDataLength);		/* data chunk size */
+	st_writedw(ft, dwDataLength);		/* data chunk size */
 
 	if (!second_header) {
 		st_report("Writing Wave file: %s format, %d channel%s, %d samp/sec",
 	        	wav_format_str(wFormatTag), wChannels,
-	        	wChannels == 1 ? "" : "s", wSamplesPerSecond);
+	        	wChannels == 1 ? "" : "s", dwSamplesPerSecond);
 		st_report("        %d byte/sec, %d block align, %d bits/samp",
-	                wAvgBytesPerSec, wBlockAlign, wBitsPerSample);
+	                dwAvgBytesPerSec, wBlockAlign, wBitsPerSample);
 	} else {
 		st_report("Finished writing Wave file, %u data bytes %u samples\n",
-			wDataLength,wav->numSamples);
+			dwDataLength,wav->numSamples);
 #ifdef HAVE_LIBGSM
 		if (wFormatTag == WAVE_FORMAT_GSM610){
 		    st_report("GSM6.10 format: %u blocks %u padded samples %u padded data bytes\n",
-			blocksWritten, wSamplesWritten, wDataLength);
-		    if (wav->gsmbytecount != wDataLength)
+			blocksWritten, wSamplesWritten, dwDataLength);
+		    if (wav->gsmbytecount != dwDataLength)
 			st_warn("help ! internal inconsistency - data_written %u gsmbytecount %u",
-				wDataLength, wav->gsmbytecount);
+				dwDataLength, wav->gsmbytecount);
 
 		}
 #endif

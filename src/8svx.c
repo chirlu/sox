@@ -16,7 +16,7 @@
 
 /* Private data used by writer */
 typedef struct svxpriv {
-	st_size_t nsamples;
+	u_int32_t nsamples;
 	FILE *ch[4];
 }*svx_t;
 
@@ -33,10 +33,10 @@ int st_svxstartread(ft_t ft)
 	char buf[12];
 	char *chunk_buf;
  
-	st_size_t totalsize;
-	st_size_t chunksize;
+	u_int32_t totalsize;
+	u_int32_t chunksize;
 
-	ULONG channels;
+	u_int32_t channels;
 	unsigned short rate;
 	int i;
 

@@ -373,8 +373,8 @@ static int getblock(ft_t ft)
         vs_t v = (vs_t) ft->priv;
         unsigned char uc, block;
         ULONG sblen;
-        unsigned short new_rate_short;
-        ULONG new_rate_long;
+        u_int16_t new_rate_16;
+        u_int32_t new_rate_32;
         int i;
         ULONG trash;
 
@@ -431,20 +431,20 @@ static int getblock(ft_t ft)
                         v->size = ST_SIZE_BYTE;
                         return (ST_SUCCESS);
                 case VOC_DATA_16:
-                        st_readdw(ft, &new_rate_long);
-                        if (new_rate_long == 0)
+                        st_readdw(ft, &new_rate_32);
+                        if (new_rate_32 == 0)
                         {
                             st_fail_errno(ft,ST_EFMT,"File %s: Sample rate is zero?",ft->filename);
                             return(ST_EOF);
                         }
-                        if ((v->rate != -1) && (new_rate_long != v->rate))
+                        if ((v->rate != -1) && (new_rate_32 != v->rate))
                         {
                             st_fail_errno(ft,ST_EFMT,"File %s: sample rate codes differ: %d != %d",
-                                ft->filename, v->rate, new_rate_long);
+                                ft->filename, v->rate, new_rate_32);
                             return(ST_EOF);
                         }
-                        v->rate = new_rate_long;
-                        ft->info.rate = new_rate_long;
+                        v->rate = new_rate_32;
+                        ft->info.rate = new_rate_32;
                         st_readb(ft, &uc);
                         switch (uc)
                         {
@@ -514,19 +514,19 @@ static int getblock(ft_t ft)
                         /* value from the extended block and not the     */
                         /* data block.                                   */
                         v->extended = 1;
-                        st_readw(ft, &new_rate_short);
-                        if (new_rate_short == 0)
+                        st_readw(ft, &new_rate_16);
+                        if (new_rate_16 == 0)
                         {
                            st_fail_errno(ft,ST_EFMT,"File %s: Sample rate is zero?");
                            return(ST_EOF);
                         }
-                        if ((v->rate != -1) && (new_rate_short != v->rate))
+                        if ((v->rate != -1) && (new_rate_16 != v->rate))
                         {
                            st_fail_errno(ft,ST_EFMT,"File %s: sample rate codes differ: %d != %d",
-                                        ft->filename, v->rate, new_rate_short);
+                                        ft->filename, v->rate, new_rate_16);
                            return(ST_EOF);
                         }
-                        v->rate = new_rate_short;
+                        v->rate = new_rate_16;
                         st_readb(ft, &uc);
                         if (uc != 0)
                         {

@@ -97,7 +97,7 @@ int st_rawstartwrite(ft_t ft)
 }
 
 /* Util to reverse the n chars starting at p. */
-/* FIXME: Move to misc.c */
+/* FIXME: This is already in misc.c */
 static void swapn(char *p, int n)
 {
 	char *q;
@@ -119,9 +119,8 @@ void st_ub_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
 
 	datum = *((unsigned char *)buf2);
         buf2++;
-	datum ^= 0x80;
 
-	*buf1++ = LEFT(datum,24);
+	*buf1++ = ST_UNSIGNED_BYTE_TO_SAMPLE(datum);
 	len--;
     }
 }
@@ -135,7 +134,7 @@ void st_sb_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
 	datum = *((unsigned char *)buf2);
         buf2++;
 
-	*buf1++ = LEFT(datum,24);
+	*buf1++ = ST_SIGNED_BYTE_TO_SAMPLE(datum);
 	len--;
     }
 }
@@ -149,7 +148,7 @@ void st_ulaw_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
 	datum = *((unsigned char *)buf2);
         buf2++;
 
-	*buf1++ = LEFT(st_ulaw_to_linear(datum),16);
+	*buf1++ = ST_ULAW_BYTE_TO_SAMPLE(datum);
 	len--;
     }
 }
@@ -163,7 +162,7 @@ void st_alaw_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
 	datum = *((unsigned char *)buf2);
         buf2++;
 
-	*buf1++ = LEFT(st_Alaw_to_linear(datum),16);
+	*buf1++ = ST_ALAW_BYTE_TO_SAMPLE(datum);
 	len--;
     }
 }
@@ -178,9 +177,8 @@ void st_uw_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
         buf2++; buf2++;
 	if (swap)
 	    datum = st_swapw(datum);
-	datum ^= 0x8000;
 
-	*buf1++ = LEFT(datum,16);
+	*buf1++ = ST_UNSIGNED_WORD_TO_SAMPLE(datum);
 	len--;
     }
 }
@@ -196,12 +194,12 @@ void st_sw_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
 	if (swap)
 	    datum = st_swapw(datum);
 
-	*buf1++ = LEFT(datum,16);
+	*buf1++ = ST_SIGNED_WORD_TO_SAMPLE(datum);
 	len--;
     }
 }
 
-void st_ul_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
+void st_udw_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
 {
     while (len)
     {
@@ -212,9 +210,7 @@ void st_ul_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
 	if (swap)
 	    datum = st_swapl(datum);
 
-	datum ^= 0x80000000L;
-
-	*buf1++ = datum;
+	*buf1++ = ST_UNSIGNED_DWORD_TO_SAMPLE(datum);
 	len--;
     }
 }
@@ -230,7 +226,7 @@ void st_sl_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
 	if (swap)
 	    datum = st_swapl(datum);
 
-	*buf1++ = datum;
+	*buf1++ = ST_SIGNED_DWORD_TO_SAMPLE(datum);
 	len--;
     }
 }
@@ -246,7 +242,7 @@ void st_f32_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
 	if (swap)
 	    datum = st_swapf(datum);
 
-	*buf1++ = datum;
+	*buf1++ = ST_FLOAT_DWORD_TO_SAMPLE(datum);
 	len--;
     }
 }
@@ -263,7 +259,7 @@ void st_f64_copy_buf(LONG *buf1, char *buf2, ULONG len, char swap)
 	if (swap)
 	    datum = st_swapd(datum);
 
-	*buf1++ = datum;
+	*buf1++ = ST_FLOAT_DDWORD_TO_SAMPLE(datum);
 	len--;
     }
 }
@@ -326,7 +322,7 @@ ULONG st_readbuf(LONG *p, int n, int size, int encoding, ft_t ft)
 		    copy_buf = st_sl_copy_buf;
 		    break;
 		case ST_ENCODING_UNSIGNED:
-		    copy_buf = st_ul_copy_buf;
+		    copy_buf = st_udw_copy_buf;
 		    break;
 		default:
 		    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size.");
@@ -517,7 +513,8 @@ LONG *buf, nsamp;
 				while(done < nsamp) {
 					int datum;
 					/* scale signed up to long's range */
-					datum = (int) RIGHT(*buf++, 24);
+					datum = 
+					    ST_SAMPLE_TO_SIGNED_BYTE(*buf++);
 					blockputc(ft, datum);
 					done++;
 				}
@@ -526,9 +523,9 @@ LONG *buf, nsamp;
 				while(done < nsamp) {
 					int datum;
 					/* scale signed up to long's range */
-					datum = (int) RIGHT(*buf++, 24);
+					datum = 
+					    ST_SAMPLE_TO_UNSIGNED_BYTE(*buf++);
 					/* Convert to unsigned */
-					datum ^= 128;
 					blockputc(ft, datum);
 					done++;
 				}
@@ -537,8 +534,8 @@ LONG *buf, nsamp;
 				while(done < nsamp) {
 					short datum;
 					/* scale signed up to long's range */
-					datum = (short) RIGHT(*buf++, 16);
-					datum = st_linear_to_ulaw(datum);
+					datum = 
+					    ST_SAMPLE_TO_ULAW_BYTE(*buf++);
 					blockputc(ft, datum);
 					done++;
 				}
@@ -547,10 +544,8 @@ LONG *buf, nsamp;
 				while(done < nsamp) {
 					int datum;
 					/* scale signed up to long's range */
-					datum = (int) RIGHT(*buf++, 16);
-					/* round up to 12 bits of data */
-					datum += 0x8;	/* + 0b1000 */
-					datum = st_linear_to_Alaw(datum);
+					datum =
+					    ST_SAMPLE_TO_ALAW_BYTE(*buf++);
 					blockputc(ft, datum);
 					done++;
 				}
@@ -564,13 +559,11 @@ LONG *buf, nsamp;
 				return blockw_sw(ft,buf,nsamp);
 			case ST_ENCODING_UNSIGNED:
 				while(done < nsamp) {
-					int datum;
-					unsigned short s;
+					u_int16_t s;
 					/* scale signed up to long's range */
-					datum = *buf++; 
-					s = RIGHT(datum, 16) ^ 0x8000;
+					s = ST_SAMPLE_TO_UNSIGNED_WORD(*buf++);
 					/* Convert to unsigned */
-					blockw(&s, sizeof(short),ft);
+					blockw(&s, sizeof(u_int16_t),ft);
 					done++;
 				}
 				return done;
@@ -588,7 +581,7 @@ LONG *buf, nsamp;
 			case ST_ENCODING_SIGN2:
 				while(done < nsamp) {
 					/* scale signed up to long's range */
-					blockw(buf, sizeof(LONG), ft);
+					blockw(buf, sizeof(u_int32_t), ft);
 					buf++;
 					done++;
 				}

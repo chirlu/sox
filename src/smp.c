@@ -35,8 +35,8 @@ struct smpheader {
 
 /* Samplevision loop definition structure */
 struct loop {
-	ULONG start; /* Sample count into sample data, not byte count */
-	ULONG end;   /* end point */
+	u_int32_t start; /* Sample count into sample data, not byte count */
+	u_int32_t end;   /* end point */
 	char type;   /* 0 = loop off, 1 = forward, 2 = forw/back */
 	short count;	     /* No of times to loop */
 };
@@ -44,7 +44,7 @@ struct loop {
 /* Samplevision marker definition structure */
 struct marker {
 	char name[10];		/* Ascii Marker name */
-	ULONG position;	/* Sample Number, not byte number */
+	u_int32_t position;	/* Sample Number, not byte number */
 };
 
 /* The trailer following the sample data */
@@ -52,16 +52,16 @@ struct smptrailer {
 	struct loop loops[8];		/* loops */
 	struct marker markers[8];	/* markers */
 	char MIDInote;			/* for unity pitch playback */
-	ULONG rate;			/* in hertz */
-	ULONG SMPTEoffset;		/* in subframes - huh? */
-	ULONG CycleSize;		/* sample count in one cycle of the */
+	u_int32_t rate;			/* in hertz */
+	u_int32_t SMPTEoffset;		/* in subframes - huh? */
+	u_int32_t CycleSize;		/* sample count in one cycle of the */
 					/* sampled sound -1 if unknown */
 };
 
 /* Private data for SMP file */
 typedef struct smpstuff {
-  ULONG NoOfSamps;		/* Sample data count in words */
-	LONG dataStart;
+  u_int32_t NoOfSamps;		/* Sample data count in words */
+  LONG dataStart;
   /* comment memory resides in private data because it's small */
   char comment[COMMENTLEN + NAMELEN + 3];
 } *smp_t;

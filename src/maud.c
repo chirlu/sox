@@ -29,7 +29,7 @@
 
 /* Private data for MAUD file */
 struct maudstuff { /* max. 100 bytes!!!! */
-	ULONG nsamples;
+	u_int32_t nsamples;
 };
 
 static void maudwriteheader(ft_t);
@@ -49,12 +49,12 @@ int st_maudstartread(ft_t ft)
 	char *chunk_buf;
 	
 	unsigned short bitpersam;
-	ULONG nom;
+	u_int32_t nom;
 	unsigned short denom;
 	unsigned short chaninf;
 	
-	ULONG chunksize;
-	ULONG trash;
+	u_int32_t chunksize;
+	u_int32_t trash32;
 	int rc;
 
 	/* Needed for rawread() */
@@ -77,7 +77,7 @@ int st_maudstartread(ft_t ft)
 		return (ST_EOF);
 	}
 	
-	st_readdw(ft, &trash); /* totalsize */
+	st_readdw(ft, &trash32); /* totalsize */
 	
 	if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "MAUD", 4) != 0)
 	{
@@ -112,7 +112,7 @@ int st_maudstartread(ft_t ft)
 			st_readw(ft, &bitpersam);
 
 			/* number of bits per sample after decompression */
-			st_readw(ft, (unsigned short *)&trash);
+			st_readw(ft, (unsigned short *)&trash32);
 
 			st_readdw(ft, &nom);         /* clock source frequency */
 			st_readw(ft, &denom);       /* clock devide           */
@@ -146,9 +146,9 @@ int st_maudstartread(ft_t ft)
 			
 			st_readw(ft, &chaninf); /* compression type */
 			
-			st_readdw(ft, &trash); /* rest of chunk, unused yet */
-			st_readdw(ft, &trash);
-			st_readdw(ft, &trash);
+			st_readdw(ft, &trash32); /* rest of chunk, unused yet */
+			st_readdw(ft, &trash32);
+			st_readdw(ft, &trash32);
 			
 			if (bitpersam == 8 && chaninf == 0) {
 				ft->info.size = ST_SIZE_BYTE;

@@ -42,6 +42,29 @@ typedef unsigned long st_rate_t;
 #define ST_SAMPLE_MAX 0x7fffffffL
 #define ST_SAMPLE_MIN (-ST_SAMPLE_MAX - 1L)
 
+#define ST_UNSIGNED_BYTE_TO_SAMPLE(d) (((d) ^ 0x80) << 24)
+#define ST_SIGNED_BYTE_TO_SAMPLE(d) ((d) << 24)
+#define ST_ULAW_BYTE_TO_SAMPLE(d) (st_ulaw_to_linear((d)) << 16)
+#define ST_ALAW_BYTE_TO_SAMPLE(d) (st_Alaw_to_linear((d)) << 16)
+#define ST_UNSIGNED_WORD_TO_SAMPLE(d) (((d) ^ 0x8000) << 16)
+#define ST_SIGNED_WORD_TO_SAMPLE(d) ((d) << 16)
+#define ST_UNSIGNED_DWORD_TO_SAMPLE(d) ((d) ^ 0x80000000L)
+#define ST_SIGNED_DWORD_TO_SAMPLE(d) (d)
+#define ST_FLOAT_DWORD_TO_SAMPLE(d) (d)
+#define ST_FLOAT_DDWORD_TO_SAMPLE(d) (d)
+
+#define ST_SAMPLE_TO_UNSIGNED_BYTE(d) (((d) >> 24) ^ 0x80)
+#define ST_SAMPLE_TO_SIGNED_BYTE(d) (((d) >> 24))
+#define ST_SAMPLE_TO_ULAW_BYTE(d) (st_linear_to_ulaw(((d) >> 16)))
+#define ST_SAMPLE_TO_ALAW_BYTE(d) (st_linear_to_Alaw(((d) >> 16)+0x08))
+#define ST_SAMPLE_TO_UNSIGNED_WORD(d) (((d) >> 16) ^ 0x8000)
+#define ST_SAMPLE_TO_SIGNED_WORD(d) ((d) >> 16)
+#define ST_SAMPLE_TO_UNSIGNED_DWORD(d) ((d) ^ 0x80000000L)
+#define ST_SAMPLE_TO_SIGNED_DWORD(d) (d)
+#define ST_SAMPLE_TO_FLOAT_DWORD(d) (d)
+#define ST_SAMPLE_TO_FLOAT_DDWORD(d) (d)
+
+
 /* Maximum value size type can hold. (Minimum is 0). */
 #define ST_SIZE_MAX 0xffffffffL
 

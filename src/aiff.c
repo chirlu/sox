@@ -86,18 +86,18 @@ int st_aiffstartread(ft_t ft)
 {
 	aiff_t aiff = (aiff_t ) ft->priv;
 	char buf[5];
-	ULONG totalsize;
-	LONG chunksize;
+	u_int32_t totalsize;
+	u_int32_t chunksize;
 	unsigned short channels = 0;
-	ULONG frames;
+	u_int32_t frames;
 	unsigned short bits = 0;
 	double rate = 0.0;
-	ULONG offset = 0;
-	ULONG blocksize = 0;
+	u_int32_t offset = 0;
+	u_int32_t blocksize = 0;
 	int foundcomm = 0, foundmark = 0, foundinstr = 0;
 	struct mark {
 		unsigned short id;
-		ULONG position;
+		u_int32_t position;
 		char name[40]; 
 	} marks[32];
 	unsigned short looptype;
@@ -110,7 +110,9 @@ int st_aiffstartread(ft_t ft)
 	char *copyright;
 	char *nametext;
 
-	ULONG trash;
+	u_int8_t trash8;
+	u_int16_t trash16;
+	u_int32_t trash32;
 
 	int rc;
 
@@ -169,7 +171,7 @@ int st_aiffstartread(ft_t ft)
 			    }
 			}
 			while(chunksize-- > 0)
-			    st_readb(ft, (unsigned char *)&trash);
+			    st_readb(ft, (unsigned char *)&trash8);
 			foundcomm = 1;
 		}
 		else if (strncmp(buf, "SSND", 4) == 0) {
@@ -214,27 +216,27 @@ int st_aiffstartread(ft_t ft)
 				marks[i].name[j] = 0;
 				if ((len & 1) == 0) {
 					chunksize--;
-					st_readb(ft, (unsigned char *)&trash);
+					st_readb(ft, (unsigned char *)&trash8);
 				}
 			}
 			/* HA HA!  Sound Designer (and others) makes */
 			/* bogus files. It spits out bogus chunksize */
 			/* for MARK field */
 			while(chunksize-- > 0)
-			    st_readb(ft, (unsigned char *)&trash);
+			    st_readb(ft, (unsigned char *)&trash8);
 		}
 		else if (strncmp(buf, "INST", 4) == 0) {
 			/* INST chunk */
 			st_readdw(ft, &chunksize);
 			st_readb(ft, &(ft->instr.MIDInote));
-			st_readb(ft, (unsigned char *)&trash);
+			st_readb(ft, (unsigned char *)&trash8);
 			st_readb(ft, &(ft->instr.MIDIlow));
 			st_readb(ft, &(ft->instr.MIDIhi));
 			/* Low  velocity */
-			st_readb(ft, (unsigned char *)&trash);
+			st_readb(ft, (unsigned char *)&trash8);
 			/* Hi  velocity */
-			st_readb(ft, (unsigned char *)&trash);
-			st_readw(ft, (unsigned short *)&trash);	/* gain */
+			st_readb(ft, (unsigned char *)&trash8);
+			st_readw(ft, (unsigned short *)&trash16);/* gain */
 			st_readw(ft, &looptype); /* sustain loop */
 			ft->loops[0].type = looptype;
 			st_readw(ft, &sustainLoopBegin); /* begin marker */
@@ -249,15 +251,15 @@ int st_aiffstartread(ft_t ft)
 		else if (strncmp(buf, "APPL", 4) == 0) {
 			st_readdw(ft, &chunksize);
 			while(chunksize-- > 0)
-			    st_readb(ft, (unsigned char *)&trash);
+			    st_readb(ft, (unsigned char *)&trash8);
 		}
 		else if (strncmp(buf, "ALCH", 4) == 0) {
 			/* I think this is bogus and gets grabbed by APPL */
 			/* INST chunk */
-			st_readdw(ft, &trash);		/* ENVS - jeez! */
+			st_readdw(ft, &trash32);		/* ENVS - jeez! */
 			st_readdw(ft, &chunksize);
 			while(chunksize-- > 0)
-			    st_readb(ft, (unsigned char *)&trash);
+			    st_readb(ft, (unsigned char *)&trash8);
 		}
 		else if (strncmp(buf, "ANNO", 4) == 0) {
 			rc = textChunk(&(ft->comment), "Annotation:", ft);
@@ -321,7 +323,7 @@ int st_aiffstartread(ft_t ft)
 			/* Skip the chunk using st_readb() so we may read
 			   from a pipe */
 			while (chunksize-- > 0) {
-			    if (st_readb(ft, (unsigned char *)&trash) == ST_EOF)
+			    if (st_readb(ft, (unsigned char *)&trash8) == ST_EOF)
 					break;
 			}
 		}
@@ -350,7 +352,7 @@ int st_aiffstartread(ft_t ft)
 		return(ST_EOF);
 	}
 	while ((LONG) (--offset) >= 0) {
-		if (st_readb(ft, (unsigned char *)&trash) == ST_EOF)
+		if (st_readb(ft, (unsigned char *)&trash8) == ST_EOF)
 		{
 			st_fail_errno(ft,errno,"unexpected EOF while skipping AIFF offset");
 			return(ST_EOF);
@@ -488,7 +490,7 @@ static void reportInstrument(ft_t ft)
 /* Process a text chunk, allocate memory, display it if verbose and return */
 static int textChunk(char **text, char *chunkDescription, ft_t ft) 
 {
-  LONG chunksize;
+  u_int32_t chunksize;
   st_readdw(ft, &chunksize);
   /* allocate enough memory to hold the text including a terminating \0 */
   *text = (char *) malloc((size_t) chunksize + 1);
@@ -522,9 +524,9 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft)
  */
 static int commentChunk(char **text, char *chunkDescription, ft_t ft)
 {
-  LONG chunksize;
+  u_int32_t chunksize;
   unsigned short numComments;
-  LONG timeStamp;
+  u_int32_t timeStamp;
   unsigned short markerId;
   unsigned short totalCommentLength = 0;
   unsigned int commentIndex;
@@ -586,7 +588,7 @@ st_ssize_t st_aiffread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 int st_aiffstopread(ft_t ft) 
 {
 	char buf[5];
-	ULONG chunksize;
+	u_int32_t chunksize;
 	ULONG trash;
 
 	if (!ft->seekable)

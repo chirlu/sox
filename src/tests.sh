@@ -20,6 +20,16 @@ else
 fi
 rm -f raw1.sb raw2.ub
 
+./sox $noise -r 8012 -c 1 raw1.ub raw1.al
+./sox $noise -r 8012 -c 1 raw1.al raw2.ub
+if cmp -s raw1.ub raw2.ub
+then
+    echo "Conversion between unsigned bytes and alaw bytes was successful"
+else
+    echo "Error converting between alaw and unsigned bytes"
+fi
+rm -f raw1.al raw2.ub
+
 ./sox $noise -r 8012 -c 1 raw1.ub raw1.sw
 ./sox $noise -r 8012 -c 1 raw1.sw raw2.ub
 if cmp -s raw1.ub raw2.ub

@@ -44,7 +44,7 @@ struct readpriv {
 	LONG cksum;
 	int dictentry;
 	int nrbits;
-	ULONG current;
+	u_int32_t current;
 	short sample;
 };
 
@@ -55,8 +55,8 @@ int st_hcomstartread(ft_t ft)
 	struct readpriv *p = (struct readpriv *) ft->priv;
 	int i;
 	char buf[5];
-	ULONG datasize, rsrcsize;
-	ULONG huffcount, checksum, compresstype, divisor;
+	u_int32_t datasize, rsrcsize;
+	u_int32_t huffcount, checksum, compresstype, divisor;
 	unsigned short dictsize;
 	int rc;
 
