@@ -54,8 +54,9 @@ If this library fails to compile on your system, you can specify
 
 SoX can make use of Ogg Vorbis libraries to play and record Ogg
 Vorbis files.  If this library is installed in a non-standard location
-in your system then you can use --with-ogg-vorbislib=path and
---with-ogg-vorbisinc=path to allow configure to find this library.
+in your system then you can use the CPPFLAGS and LDFLAGS variables
+to allow configure to find this library.  For examle,
+"./configure CPPFLAGS=-I/home/sox/include LDFLAGS=-L/home/sox/lib".
 
 If you're not processing lots of u-law or A-law files and would
 like to save around 64K of memory when SoX is executed then you
