@@ -228,8 +228,6 @@ struct st_effect
 {
     char            *name;          /* effect name */
     struct st_signalinfo ininfo;    /* input signal specifications */
-    struct st_loopinfo   loops[8];  /* input loops  specifications */
-    struct st_instrinfo  instr;     /* input instrument  specifications */
     struct st_signalinfo outinfo;   /* output signal specifications */
     st_effect_t     *h;             /* effects driver */
     st_sample_t     *obuf;          /* output buffer */
@@ -249,7 +247,7 @@ extern st_effect_t st_effects[]; /* declared in handlers.c */
 int st_geteffect_opt(eff_t, int, char **);
 int st_geteffect(eff_t, char *);
 int st_checkeffect(char *);
-int st_updateeffect(eff_t, ft_t, ft_t, int);
+int st_updateeffect(eff_t, st_signalinfo_t *in, st_signalinfo_t *out, int);
 int st_gettype(ft_t);
 ft_t st_initformat(void);
 void st_copyformat(ft_t, ft_t);

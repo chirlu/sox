@@ -61,7 +61,7 @@ extern int optind;
 static int dovolume = 0;        /* User wants volume change */
 static double volume = 1.0;     /* Linear volume change */
 static int clipped = 0;         /* Volume change clipping errors */
-static int writing = 0;         /* are we writing to a file? */
+static int writing = 1;         /* are we writing to a file? assume yes. */
 static int soxpreview = 0;      /* preview mode */
 
 static st_sample_t ibufl[ST_BUFSIZ/2];    /* Left/right interleave buffers */
@@ -69,11 +69,21 @@ static st_sample_t ibufr[ST_BUFSIZ/2];
 static st_sample_t obufl[ST_BUFSIZ/2];
 static st_sample_t obufr[ST_BUFSIZ/2];
 
+typedef struct file_options
+{
+    char *filename;
+    char *filetype;
+    st_signalinfo_t info;
+    char swap;
+    double volume;
+    char *comment;
+} file_options_t;
+
 /* local forward declarations */
-static void doopts(ft_t, int, char **);
-static void copy_input(ft_t);
+static void doopts(file_options_t *fo, int, char **);
+static void copy_input(int offset);
 static void open_input(ft_t);
-static void copy_output(ft_t);
+static void copy_output(int offset);
 static void open_output(ft_t);
 static void usage(char *) NORET;
 static int filetype(int);
@@ -85,19 +95,19 @@ static int flow_effect_out(void);
 static int flow_effect(int);
 static int drain_effect(int);
 
-#ifdef SOXMIX
 #define MAX_INPUT_FILES 2
+#define MAX_FILES MAX_INPUT_FILES + 1
+#ifdef SOXMIX
 #define REQUIRED_INPUT_FILES 2
 #else
-#define MAX_INPUT_FILES 1
 #define REQUIRED_INPUT_FILES 1
 #endif
 
-static ft_t informat[MAX_INPUT_FILES];
+/* Array's tracking input and output files */
+static file_options_t *file_opts[MAX_FILES];
+static ft_t file_desc[MAX_FILES];
+static int file_count = 0;
 static int input_count = 0;
-
-static ft_t outformat;
-static int output_count = 0;
 
 /* We parse effects into a temporary effects table and then place into
  * the real effects table.  This makes it easier to reorder some effects
@@ -107,7 +117,7 @@ static int output_count = 0;
  *
  * Real effects table only needs to be 2 entries bigger then the user
  * specified table.  This is because at most we will need to add
- * a resample effect and an channel averaging effect.
+ * a resample effect and a channel averaging effect.
  */
 #define MAX_EFF 16
 #define MAX_USER_EFF 14
@@ -126,200 +136,160 @@ static int neffects;                     /* # of effects to run on data */
 static struct st_effect user_efftab[MAX_USER_EFF];
 static int nuser_effects;
 
-int main(argc, argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
-        int argc_effect;
-        ft_t ft;
-        int parsing_output = 0;
-        int i;
+    int argc_effect;
+    file_options_t *fo;
+    int i;
 
-        myname = argv[0];
+    myname = argv[0];
 
-        /* Loop over arguments and filenames, stop when an effect name is found */
-        while (optind < argc && output_count < 1 &&
-               st_checkeffect(argv[optind]) != ST_SUCCESS)
+    /* Loop over arguments and filenames, stop when an effect name is 
+     * found.
+     */
+    while (optind < argc && st_checkeffect(argv[optind]) != ST_SUCCESS)
+    {
+        /*
+         * Its possible to not specify the output filename by using
+         * "-e" option. This allows effects to be ran on data but
+         * no output file to be written.
+         */
+        if (strcmp(argv[optind], "-e") == 0)
         {
-
-            /*
-             * Its possible to not specify the output filename by using
-             * "-e" option. This allows effects to be ran on data but
-             * no output file to be written.
+            /* -e option found.  Only thing valid after an -e
+             * option are effects.
              */
-            if (strcmp(argv[optind], "-e"))
-            {
-                /* No -e option appears to be set.  Attempt to see if
-                 * this is the last filename or not.  If we see no more
-                 * options or an effect name then we assume this is
-                 * the last filename.
-                 */
-                if (input_count >= REQUIRED_INPUT_FILES &&
-                    (optind == (argc-1) ||
-                     st_checkeffect(argv[optind+1]) == ST_SUCCESS ||
-                     input_count >= MAX_INPUT_FILES))
-                {
-                    parsing_output = 1;
-                }
-
-                if (parsing_output)
-                    writing = 1;
-            }
-            else
-            {
-                /* -e option found.  Make sure this was done on the
-                 * output side.  Should be no more parameters or
-                 * a valid effects name.
-                 */
-                if (input_count >= REQUIRED_INPUT_FILES &&
-                    (optind == (argc-1) ||
-                     st_checkeffect(argv[optind+1]) == ST_SUCCESS ||
-                     input_count >= MAX_INPUT_FILES))
-                {
-                    parsing_output = 1;
-                }
-
-                if (parsing_output)
-                {
-                    writing = 0;
-                    optind++;  /* Move passed -e */
-                }
-                else
-                {
-                    usage("Can only specify \"-e\" for output filenames");
-                }
-            }
-
-            ft = st_initformat();
-
-            doopts(ft, argc, argv);
-
-            /* See if we have all the input filenames we need.
-             * If not, then parse this as input filenames.
-             *
-             * If we have enough but haven't reached the max #
-             * of inputs, then only treat this as an input filename
-             * if it looks like we have more filenames left.
-             */
-            if (!parsing_output)
-            {
-                if (optind < argc)
-                {
-                    ft->filename = strdup(argv[optind]);
-                    optind++;
-
-                    copy_input(ft);
-                    open_input(ft);
-                }
-            }
-            else
-            {
-                if (optind < argc && writing)
-                {
-                    ft->filename = strdup(argv[optind]);
-                    optind++;
-                }
-                else
-                {
-                    ft->filename = 0;
-                }
-
-                copy_output(ft);
-                /* Hold off on opening file until the very last minute.
-                 * This allows us to verify header in input files are
-                 * what they should be and parse effect command lines.
-                 * That way if anything is found invalid, we will abort
-                 * without truncating any existing file that has the same
-                 * output filename.
-                 */
-            }
-        }
-
-        /* Make sure we got at least the required # of input filename */
-        if (input_count < REQUIRED_INPUT_FILES ||
-            !informat[REQUIRED_INPUT_FILES-1] ||
-            !informat[REQUIRED_INPUT_FILES-1]->filename)
-            usage("Not enough input files specified");
-
-        if (!outformat || (!outformat->filename && writing))
-            usage("No output file?");
-
-        /* Loop through the reset of the arguments looking for effects */
-        nuser_effects = 0;
-
-        while (optind < argc)
-        {
-            if (nuser_effects >= MAX_USER_EFF)
-            {
-                st_fail("To many effects specified.\n");
-            }
-
-            argc_effect = st_geteffect_opt(&user_efftab[nuser_effects],
-                                           argc - optind, &argv[optind]);
-
-            if (argc_effect == ST_EOF)
-            {
-                int i1;
-                fprintf(stderr, "%s: Known effects: ",myname);
-                for (i1 = 0; st_effects[i1].name; i1++)
-                    fprintf(stderr, "%s ", st_effects[i1].name);
-                fprintf(stderr, "\n\n");
-                st_fail("Effect '%s' is not known!", argv[optind]);
-            }
-
-
-            /* Skip past effect name */
             optind++;
-
-            (*user_efftab[nuser_effects].h->getopts)(&user_efftab[nuser_effects],
-                                                     argc_effect,
-                                                     &argv[optind]);
-
-            /* Skip past the effect arguments */
-            optind += argc_effect;
-            nuser_effects++;
+            if (optind >= argc ||
+                st_checkeffect(argv[optind]) == ST_SUCCESS)
+            {
+                writing = 0;
+            }
+            else
+            {
+                usage("Can only specify \"-e\" for output filenames");
+            }
         }
-
-        if (dovolume)
-            st_report("Volume factor: %f\n", volume);
-
-        if (dovolume && volume < 0.0)
-            st_report("Volume adjustment is negative.  This will result in a phase change\n");
-
-        process();
-        statistics();
-
-        for (i = 0; i < input_count; i++)
+        else
         {
-            if (informat[i])
-                free(informat[i]);
+            /* FIXME: Afterwards, set volume option to 1 / # inputs */
+            fo = calloc(sizeof(file_options_t), 1);
+            fo->info.size = -1;
+            fo->info.encoding = -1;
+            fo->info.channels = -1;
+            fo->volume = 1.0;
+            file_opts[file_count++] = fo;
+
+            doopts(fo, argc, argv);
+
+            if (optind < argc)
+            {
+                fo->filename = strdup(argv[optind]);
+                optind++;
+            }
+            else
+            {
+                usage("missing filename");
+            }
         }
-        if (outformat)
-            free(outformat);
-        return(0);
+    } /* while (commandline options) */
+
+    if (writing)
+        input_count = file_count - 1;
+    else
+        input_count = file_count;
+
+    /* Make sure we got at least the required # of input filename */
+    if (input_count < REQUIRED_INPUT_FILES)
+        usage("Not enough input or output filenames specified");
+
+    for (i = 0; i < input_count; i++)
+    {
+        copy_input(i);
+        open_input(file_desc[i]);
+    }
+
+    if (writing)
+    {
+        copy_output(file_count-1);
+        /* Hold off on opening file until the very last minute.
+         * This allows us to verify header in input files are
+         * what they should be and parse effect command lines.
+         * That way if anything is found invalid, we will abort
+         * without truncating any existing file that has the same
+         * output filename.
+         */
+    }
+
+    /* Loop through the reset of the arguments looking for effects */
+    nuser_effects = 0;
+
+    while (optind < argc)
+    {
+        if (nuser_effects >= MAX_USER_EFF)
+        {
+            st_fail("To many effects specified.\n");
+        }
+
+        argc_effect = st_geteffect_opt(&user_efftab[nuser_effects],
+                                       argc - optind, &argv[optind]);
+
+        if (argc_effect == ST_EOF)
+        {
+            int i1;
+            fprintf(stderr, "%s: Known effects: ",myname);
+            for (i1 = 0; st_effects[i1].name; i1++)
+                fprintf(stderr, "%s ", st_effects[i1].name);
+            fprintf(stderr, "\n\n");
+            st_fail("Effect '%s' is not known!", argv[optind]);
+        }
+
+
+        /* Skip past effect name */
+        optind++;
+
+        (*user_efftab[nuser_effects].h->getopts)(&user_efftab[nuser_effects],
+                                                 argc_effect,
+                                                 &argv[optind]);
+
+        /* Skip past the effect arguments */
+        optind += argc_effect;
+        nuser_effects++;
+    }
+
+    process();
+    statistics();
+
+    for (i = 0; i < file_count; i++)
+        free(file_desc[i]);
+
+    return(0);
 }
 
-static void copy_input(ft_t ft)
+static void copy_input(int offset)
 {
-    informat[input_count] = ft;
-
+    /* FIXME: Check for malloc for failures */
+    file_desc[offset] = st_initformat();
+    file_desc[offset]->info = file_opts[offset]->info;
+    file_desc[offset]->filename = file_opts[offset]->filename;
     /* Let auto effect do the work if user is not overriding. */
-    if (!ft->filetype)
-        ft->filetype = "auto";
+    if (!file_opts[offset]->filetype)
+        file_desc[offset]->filetype = "auto";
+    else
+        file_desc[offset]->filetype = strdup(file_opts[offset]->filetype);
 
-    if ( st_gettype(ft) )
+    if (st_gettype(file_desc[offset]))
         st_fail("Unknown input file format for '%s':  %s", 
-                ft->filename, ft->st_errstr);
-
-    input_count++;
+                file_desc[offset]->filename, 
+                file_desc[offset]->st_errstr);
 }
 
 static void open_input(ft_t ft)
 {
     /* Open file handler based on input name.  Used stdin file handler
-     * if the filename is "="
+     * if the filename is "-"
      */
-    if (! strcmp(ft->filename, "-"))
+    if (!strcmp(ft->filename, "-"))
         ft->fp = stdin;
     else if ((ft->fp = fopen(ft->filename, "rb")) == NULL)
         st_fail("Can't open input file '%s': %s", ft->filename,
@@ -339,34 +309,42 @@ static void open_input(ft_t ft)
 #define LASTCHAR '/'
 #endif
 
-static void copy_output(ft_t ft)
+static void copy_output(int offset)
 {
-    outformat = ft;
-
-    if (writing && !ft->filetype && ft->filename) {
+    /* FIXME: Check for malloc for failures */
+    file_desc[offset] = st_initformat();;
+    file_desc[offset]->info = file_opts[offset]->info;
+    file_desc[offset]->filename = file_opts[offset]->filename;
+    file_desc[offset]->filetype = file_opts[offset]->filetype;
+ 
+    if (writing && !file_desc[offset]->filetype) {
         /* Use filename extension to determine audio type. */
 
         /* First, chop off any path portions of filename.  This
          * prevents the next search from considering that part. */
-        if ((ft->filetype = strrchr(ft->filename, LASTCHAR)) == NULL)
-            ft->filetype = ft->filename;
+        /* FIXME: using strrchr can only lead to problems when knowing
+         * what to free()
+         */
+        if ((file_desc[offset]->filetype = 
+             strrchr(file_desc[offset]->filename, LASTCHAR)) == NULL)
+            file_desc[offset]->filetype = file_desc[offset]->filename;
 
         /* Now look for an filename extension */
-        if ((ft->filetype = strrchr(ft->filetype, '.')) != NULL)
-            ft->filetype++;
+        if ((file_desc[offset]->filetype = 
+             strrchr(file_desc[offset]->filetype, '.')) != NULL)
+            file_desc[offset]->filetype++;
         else
-            ft->filetype = NULL;
+            file_desc[offset]->filetype = NULL;
     }
 
-    if (writing && ft->filename)
+    if (writing)
     {
-        if ( st_gettype(ft) )
+        if (st_gettype(file_desc[offset]))
             st_fail("Unknown output file format for '%s': %s",
-                    ft->filename, ft->st_errstr);
+                    file_desc[offset]->filename, 
+                    file_desc[offset]->st_errstr);
 
     }
-
-    output_count++;
 }
 
 static void open_output(ft_t ft)
@@ -418,124 +396,107 @@ static char *getoptstr = "+r:v:t:c:phsuUAaigbwlfdxV";
 static char *getoptstr = "r:v:t:c:phsuUAaigbwlfdxV";
 #endif
 
-static void doopts(ft_t ft, int argc, char **argv)
+static void doopts(file_options_t *fo, int argc, char **argv)
 {
-        int c, i;
-        char *str;
+    int c, i;
+    char *str;
 
-        while ((c = getopt(argc, argv, getoptstr)) != -1) {
-                switch(c) {
-                case 'p':
-                        soxpreview++;
-                        break;
+    while ((c = getopt(argc, argv, getoptstr)) != -1) {
+        switch(c) {
+            case 'p':
+                soxpreview++;
+                break;
 
-                case 'h':
-                        usage((char *)0);
-                        /* no return from above */
+            case 'h':
+                usage((char *)0);
+                /* no return from above */
 
-                case 't':
-                        if (! ft) usage("-t");
-                        ft->filetype = optarg;
-                        if (ft->filetype[0] == '.')
-                                ft->filetype++;
-                        break;
+            case 't':
+                fo->filetype = optarg;
+                if (fo->filetype[0] == '.')
+                    fo->filetype++;
+                break;
 
-                case 'r':
-                        if (! ft) usage("-r");
-                        str = optarg;
-                        if ((! sscanf(str, "%u", &ft->info.rate)) ||
-                                        (ft->info.rate <= 0))
-                                st_fail("-r must be given a positive integer");
-                        break;
-                case 'v':
-                        if (!ft || dovolume) usage("-v");
-                        str = optarg;
-                        if (! sscanf(str, "%lf", &volume))
-                            st_fail("Volume value '%s' is not a number",
-                                    optarg);
-                        dovolume = 1;
-                        break;
+            case 'r':
+                str = optarg;
+                if ((!sscanf(optarg, "%u", &fo->info.rate)) ||
+                    (fo->info.rate <= 0))
+                    st_fail("-r must be given a positive integer");
+                break;
+            case 'v':
+                str = optarg;
+                if (!sscanf(str, "%lf", &fo->volume))
+                    st_fail("Volume value '%s' is not a number",
+                            optarg);
+                if (fo->volume < 0.0)
+                    st_report("Volume adjustment is negative.  This will result in a phase change\n");
+                break;
 
-                case 'c':
-                        if (! ft) usage("-c");
-                        str = optarg;
-                        if (!sscanf(str, "%d", &i))
-                            st_fail("-c must be given a number");
-                        /* Since we use -1 as a special internal value,
-                         * we must do some extra logic so user doesn't
-                         * get confused when we translate -1 to mean
-                         * something valid.
-                         */
-                        if (i < 1)
-                            st_fail("-c must be given a positive number");
-                        ft->info.channels = i;
-                        break;
-                case 'b':
-                        if (! ft) usage("-b");
-                        ft->info.size = ST_SIZE_BYTE;
-                        break;
-                case 'w':
-                        if (! ft) usage("-w");
-                        ft->info.size = ST_SIZE_WORD;
-                        break;
-                case 'l':
-                        if (! ft) usage("-l");
-                        ft->info.size = ST_SIZE_DWORD;
-                        break;
-                case 'd':
-                        if (! ft) usage("-d");
-                        ft->info.size = ST_SIZE_DDWORD;
-                        break;
-                case 's':
-                        if (! ft) usage("-s");
-                        ft->info.encoding = ST_ENCODING_SIGN2;
-                        break;
-                case 'u':
-                        if (! ft) usage("-u");
-                        ft->info.encoding = ST_ENCODING_UNSIGNED;
-                        break;
-                case 'U':
-                        if (! ft) usage("-U");
-                        ft->info.encoding = ST_ENCODING_ULAW;
-                        if (ft->info.size == -1)
-                            ft->info.size = ST_SIZE_BYTE;
-                        break;
-                case 'A':
-                        if (! ft) usage("-A");
-                        ft->info.encoding = ST_ENCODING_ALAW;
-                        if (ft->info.size == -1)
-                            ft->info.size = ST_SIZE_BYTE;
-                        break;
-                case 'f':
-                        if (! ft) usage("-f");
-                        ft->info.encoding = ST_ENCODING_FLOAT;
-                        break;
-                case 'a':
-                        if (! ft) usage("-a");
-                        ft->info.encoding = ST_ENCODING_ADPCM;
-                        break;
-                case 'i':
-                        if (! ft) usage("-i");
-                        ft->info.encoding = ST_ENCODING_IMA_ADPCM;
-                        break;
-                case 'g':
-                        if (! ft) usage("-g");
-                        ft->info.encoding = ST_ENCODING_GSM;
-                        break;
+            case 'c':
+                str = optarg;
+                if (!sscanf(str, "%d", &i))
+                    st_fail("-c must be given a number");
+                /* Since we use -1 as a special internal value,
+                 * we must do some extra logic so user doesn't
+                 * get confused when we translate -1 to mean
+                 * something valid.
+                 */
+                if (i < 1)
+                    st_fail("-c must be given a positive number");
+                fo->info.channels = i;
+                break;
+            case 'b':
+                fo->info.size = ST_SIZE_BYTE;
+                break;
+            case 'w':
+                fo->info.size = ST_SIZE_WORD;
+                break;
+            case 'l':
+                fo->info.size = ST_SIZE_DWORD;
+                break;
+            case 'd':
+                fo->info.size = ST_SIZE_DDWORD;
+                break;
+            case 's':
+                fo->info.encoding = ST_ENCODING_SIGN2;
+                break;
+            case 'u':
+                fo->info.encoding = ST_ENCODING_UNSIGNED;
+                break;
+            case 'U':
+                fo->info.encoding = ST_ENCODING_ULAW;
+                if (fo->info.size == -1)
+                    fo->info.size = ST_SIZE_BYTE;
+                break;
+            case 'A':
+                fo->info.encoding = ST_ENCODING_ALAW;
+                if (fo->info.size == -1)
+                    fo->info.size = ST_SIZE_BYTE;
+                break;
+            case 'f':
+                fo->info.encoding = ST_ENCODING_FLOAT;
+                break;
+            case 'a':
+                fo->info.encoding = ST_ENCODING_ADPCM;
+                break;
+            case 'i':
+                fo->info.encoding = ST_ENCODING_IMA_ADPCM;
+                break;
+            case 'g':
+                fo->info.encoding = ST_ENCODING_GSM;
+                break;
 
-                case 'x':
-                        if (! ft) usage("-x");
-                        ft->swap = 1;
-                        break;
+            case 'x':
+                fo->swap = 1;
+                break;
 
-                case 'V':
-                        verbose = 1;
-                        break;
-                }
+            case 'V':
+                verbose = 1;
+                break;
         }
+    }
 }
 
-#ifdef SOXMIX
 static int compare_input(ft_t ft1, ft_t ft2)
 {
     if (ft1->info.rate != ft2->info.rate)
@@ -549,7 +510,6 @@ static int compare_input(ft_t ft1, ft_t ft2)
 
     return ST_SUCCESS;
 }
-#endif
 
 /*
  * Process input file -> effect table -> output file
@@ -558,7 +518,9 @@ static int compare_input(ft_t ft1, ft_t ft2)
 
 static void process(void) {
     int e, f, flowstatus;
-#ifdef SOXMIX
+#ifndef SOXMIX
+    int current_input;
+#else
     st_size_t s;
     st_ssize_t ilen[MAX_INPUT_FILES];
     st_sample_t *ibuf[MAX_INPUT_FILES];
@@ -567,70 +529,70 @@ static void process(void) {
     for (f = 0; f < input_count; f++)
     {
         /* Read and write starters can change their formats. */
-        if ((* informat[f]->h->startread)(informat[f]) != ST_SUCCESS)
+        if ((*file_desc[f]->h->startread)(file_desc[f]) != ST_SUCCESS)
         {
-            st_fail("Failed reading %s: %s",informat[f]->filename,
-                    informat[f]->st_errstr);
+            st_fail("Failed reading %s: %s",file_desc[f]->filename,
+                    file_desc[f]->st_errstr);
         }
 
         /* Go a head and assume 1 channel audio if nothing is detected.
          * This is because libst usually doesn't set this for mono file
          * formats (for historical reasons).
          */
-        if (informat[f]->info.channels == -1)
-            informat[f]->info.channels = 1;
+        if (file_desc[f]->info.channels == -1)
+            file_desc[f]->info.channels = 1;
 
-        if ( st_checkformat(informat[f]) )
-            st_fail("bad input format for file %s: %s",informat[f]->filename,informat[f]->st_errstr);
+        if (st_checkformat(file_desc[f]) )
+            st_fail("bad input format for file %s: %s", file_desc[f]->filename,
+                    file_desc[f]->st_errstr);
 
         st_report("Input file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
-                  informat[f]->filename, informat[f]->info.rate,
-                  st_sizes_str[(unsigned char)informat[f]->info.size],
-                  st_encodings_str[(unsigned char)informat[f]->info.encoding],
-                  informat[f]->info.channels,
-                  (informat[f]->info.channels > 1) ? "channels" : "channel");
+                  file_desc[f]->filename, file_desc[f]->info.rate,
+                  st_sizes_str[(unsigned char)file_desc[f]->info.size],
+                  st_encodings_str[(unsigned char)file_desc[f]->info.encoding],
+                  file_desc[f]->info.channels,
+                  (file_desc[f]->info.channels > 1) ? "channels" : "channel");
 
-        if (informat[f]->comment)
+        if (file_desc[f]->comment)
             st_report("Input file %s: comment \"%s\"\n",
-                      informat[f]->filename, informat[f]->comment);
+                      file_desc[f]->filename, file_desc[f]->comment);
     }
 
-#ifdef SOXMIX
     for (f = 1; f < input_count; f++)
     {
-        if (compare_input(informat[0], informat[f]) != ST_SUCCESS)
+        if (compare_input(file_desc[0], file_desc[f]) != ST_SUCCESS)
         {
             st_fail("Input files must have the same rate, channels, data size, and encoding");
         }
     }
-#endif
 
     if (writing)
     {
-        open_output(outformat);
+        open_output(file_desc[file_count-1]);
 
         /* Always use first input file as a reference for output
          * file format.
          */
-        st_copyformat(informat[0], outformat);
+        st_copyformat(file_desc[0], file_desc[file_count-1]);
 
-        if ((*outformat->h->startwrite)(outformat) == ST_EOF)
-        {
-            st_fail(outformat->st_errstr);
-        }
+        if ((*file_desc[file_count-1]->h->startwrite)(file_desc[file_count-1]) == ST_EOF)
+            st_fail(file_desc[file_count-1]->st_errstr);
 
-        if (st_checkformat(outformat))
-                st_fail("bad output format: %s",outformat->st_errstr);
+        if (st_checkformat(file_desc[file_count-1]))
+            st_fail("bad output format: %s", 
+                    file_desc[file_count-1]->st_errstr);
 
         st_report("Output file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
-               outformat->filename, outformat->info.rate,
-               st_sizes_str[(unsigned char)outformat->info.size],
-               st_encodings_str[(unsigned char)outformat->info.encoding],
-               outformat->info.channels,
-               (outformat->info.channels > 1) ? "channels" : "channel");
+                  file_desc[file_count-1]->filename, 
+                  file_desc[file_count-1]->info.rate,
+                  st_sizes_str[(unsigned char)file_desc[file_count-1]->info.size],
+                  st_encodings_str[(unsigned char)file_desc[file_count-1]->info.encoding],
+                  file_desc[file_count-1]->info.channels,
+                  (file_desc[file_count-1]->info.channels > 1) ? "channels" : "channel");
 
-        if (outformat->comment)
-            st_report("Output file: comment \"%s\"\n", outformat->comment);
+        if (file_desc[file_count-1]->comment)
+            st_report("Output file: comment \"%s\"\n", 
+                      file_desc[file_count-1]->comment);
     }
 
     /* build efftab */
@@ -678,30 +640,53 @@ static void process(void) {
      * Just like errno, we must set st_errno to known values before
      * calling I/O operations.
      */
-    for (f = 0; f < input_count; f++)
-        informat[f]->st_errno = 0;
-    outformat->st_errno = 0;
-
-    /* Run input data through effects and get more until olen == 0 */
-    do {
+    for (f = 0; f < file_count; f++)
+        file_desc[f]->st_errno = 0;
 
 #ifndef SOXMIX
-        /* FIXME: Need to look at retur code and abort on failure */
-        efftab[0].olen = (*informat[0]->h->read)(informat[0],
-                                                 efftab[0].obuf, 
-                                                 (st_ssize_t)ST_BUFSIZ);
+    current_input = 0;
+#endif
+
+    /* Run input data through effects and get more until olen == 0 
+     * (or ST_EOF).
+     */
+    do {
+#ifndef SOXMIX
+        efftab[0].olen = (*file_desc[current_input]->h->read)(file_desc[current_input],
+                                                              efftab[0].obuf, 
+                                                              (st_ssize_t)ST_BUFSIZ);
+        /* FIXME: libst needs the feof() and ferror() concepts
+         * to see if ST_EOF means a real failure.  Until then we
+         * must treat ST_EOF as just hiting the end of the buffer.
+         */
+        if (efftab[0].olen == ST_EOF)
+        {
+            if (current_input < input_count-1)
+            {
+                current_input++;
+                continue;
+            }
+            efftab[0].olen = 0;
+        }
 #else
         for (f = 0; f < input_count; f++)
         {
-            ilen[f] = (*informat[f]->h->read)(informat[f],
-                                              ibuf[f], 
-                                              (st_ssize_t)ST_BUFSIZ);
+            ilen[f] = (*file_desc[f]->h->read)(file_desc[f],
+                                               ibuf[f], 
+                                               (st_ssize_t)ST_BUFSIZ);
+            /* FIXME: libst needs the feof() and ferror() concepts
+             * to see if ST_EOF means a real failure.  Until then we
+             * must treat ST_EOF as just hiting the end of the buffer.
+             */
+            if (ilen[f] == ST_EOF)
+                ilen[f] = 0;
         }
 
-        /* FIXME: Should check for ST_EOF from read and
-         * abort!
-         * FIXME: Should warn if the size of the reads are not
-         * the same!
+        /* FIXME: Run threw input data and change its volume
+         * based on value in in_file_opts[x]->volume
+         */
+        /* FIXME: Should report if the size of the reads are not
+         * the same.
          */
         efftab[0].olen = 0;
         for (f = 0; f < input_count; f++)
@@ -725,7 +710,6 @@ static void process(void) {
             }
         }
 #endif
-
         efftab[0].odone = 0;
 
         /* If not writing and no effects are occuring then not much
@@ -739,7 +723,7 @@ static void process(void) {
             break;
 
         /* Change the volume of this initial input data if needed. */
-        if (dovolume)
+        if (writing && file_opts[file_count-1]->volume != 1.0)
             clipped += volumechange(efftab[0].obuf, efftab[0].olen,
                                     volume);
 
@@ -750,7 +734,8 @@ static void process(void) {
         flowstatus = flow_effect_out();
 
         /* Negative flowstatus says no more output will ever be generated. */
-        if (flowstatus < 0 || outformat->st_errno)
+        if (flowstatus < 0 || 
+            (writing && file_desc[file_count-1]->st_errno))
             break;
 
     } while (1); /* break; efftab[0].olen == 0 */
@@ -763,7 +748,6 @@ static void process(void) {
     }
 #endif
 
-
     /* Drain the effects out first to last,
      * pushing residue through subsequent effects */
     /* oh, what a tangled web we weave */
@@ -775,15 +759,16 @@ static void process(void) {
                 break;          /* out of while (1) */
 
             /* FIXME: Need to look at return code and abort on failure */
-            if (writing&&efftab[neffects-1].olen > 0)
-                (* outformat->h->write)(outformat, efftab[neffects-1].obuf,
-                                       (st_ssize_t) efftab[neffects-1].olen);
+            if (writing && efftab[neffects-1].olen > 0)
+                (*file_desc[file_count-1]->h->write)(file_desc[file_count-1], 
+                                                     efftab[neffects-1].obuf,
+                                                     (st_ssize_t)efftab[neffects-1].olen);
 
             if (efftab[f].olen != ST_BUFSIZ)
                 break;
         }
     }
-    
+
     /* Free output buffers now that they won't be used */
     for(e = 0; e < neffects; e++)
     {
@@ -798,7 +783,7 @@ static void process(void) {
      */
 
     for (e = 1; e < neffects; e++) {
-        (* efftab[e].h->stop)(&efftab[e]);
+        (*efftab[e].h->stop)(&efftab[e]);
         if (efftabR[e].name)
             (* efftabR[e].h->stop)(&efftabR[e]);
     }
@@ -808,10 +793,10 @@ static void process(void) {
         /* If problems closing input file, just warn user since
          * we are exiting anyways.
          */
-        if ((* informat[f]->h->stopread)(informat[f]) == ST_EOF)
-            st_warn(informat[f]->st_errstr);
-        fclose(informat[f]->fp);
-        free(informat[f]->filename);
+        if ((*file_desc[f]->h->stopread)(file_desc[f]) == ST_EOF)
+            st_warn(file_desc[f]->st_errstr);
+        fclose(file_desc[f]->fp);
+        free(file_desc[f]->filename);
     }
 
     if (writing)
@@ -819,13 +804,12 @@ static void process(void) {
         /* problem closing output file, just warn user since we
          * are exiting anyways.
          */
-        if ((*outformat->h->stopwrite)(outformat) == ST_EOF)
-            st_warn(outformat->st_errstr);
-        free(outformat->filename);
-        free(outformat->comment);
+        if ((*file_desc[file_count-1]->h->stopwrite)(file_desc[file_count-1]) == ST_EOF)
+            st_warn(file_desc[file_count-1]->st_errstr);
+        free(file_desc[file_count-1]->filename);
+        free(file_desc[file_count-1]->comment);
+        fclose(file_desc[file_count-1]->fp);
     }
-    if (writing)
-        fclose(outformat->fp);
 }
 
 static int flow_effect_out(void)
@@ -843,18 +827,21 @@ static int flow_effect_out(void)
       }
 
       /* If outputing and output data was generated then write it */
-      if (writing&&(efftab[neffects-1].olen>efftab[neffects-1].odone))
+      if (writing && (efftab[neffects-1].olen>efftab[neffects-1].odone))
       {
-          (* outformat->h->write)(outformat,
-                                  efftab[neffects-1].obuf,
-                                  (st_ssize_t)efftab[neffects-1].olen);
+          /* FIXME: Should look at return code and abort
+           * on ST_EOF
+           */
+          (*file_desc[file_count-1]->h->write)(file_desc[file_count-1],
+                                               efftab[neffects-1].obuf,
+                                               (st_ssize_t)efftab[neffects-1].olen);
           efftab[neffects-1].odone = efftab[neffects-1].olen;
-      }
 
-      if (outformat->st_errno)
-      {
-          st_warn("Error writing: %s",outformat->st_errstr);
-          break;
+          if (file_desc[file_count-1]->st_errno)
+          {
+              st_warn("Error writing: %s", file_desc[file_count-1]->st_errstr);
+              break;
+          }
       }
 
       /* If any effect will never again produce data, give up.  This
@@ -893,6 +880,7 @@ int e;
          */
         idone = efftab[e-1].olen - efftab[e-1].odone;
         odone = ST_BUFSIZ;
+        /* FIXME: Should look at return code and abort on ST_EOF */
         effstatus = (* efftab[e].h->flow)(&efftab[e],
                                           &efftab[e-1].obuf[efftab[e-1].odone],
                                           efftab[e].obuf, &idone, &odone);
@@ -916,12 +904,14 @@ int e;
         /* left */
         idonel = (idone + 1)/2;         /* odd-length logic */
         odonel = odone/2;
+        /* FIXME: Should look at return code and abort on ST_EOF */
         effstatus = (* efftab[e].h->flow)(&efftab[e],
                                           ibufl, obufl, &idonel, &odonel);
 
         /* right */
         idoner = idone/2;               /* odd-length logic */
         odoner = odone/2;
+        /* FIXME: Should look at return code and abort on ST_EOF */
         effstatus = (* efftabR[e].h->flow)(&efftabR[e],
                                            ibufr, obufr, &idoner, &odoner);
 
@@ -965,6 +955,7 @@ int e;
 
         /* right */
         olenr = olen/2;
+        /* FIXME: Should look at return code and abort on ST_EOF */
         (* efftab[e].h->drain)(&efftabR[e], obufr, &olenr);
 
         obuf = efftab[e].obuf;
@@ -992,8 +983,11 @@ checkeffect()
         int needchan = 0, needrate = 0, haschan = 0, hasrate = 0;
         int effects_mask = 0;
 
-        needrate = (informat[0]->info.rate != outformat->info.rate);
-        needchan = (informat[0]->info.channels != outformat->info.channels);
+        if (writing)
+        {
+            needrate = (file_desc[0]->info.rate != file_desc[file_count-1]->info.rate);
+            needchan = (file_desc[0]->info.channels != file_desc[file_count-1]->info.channels);
+        }
 
         for (i = 0; i < nuser_effects; i++)
         {
@@ -1031,18 +1025,21 @@ checkeffect()
          * after the avg effect.
          */
         if (needchan && !(haschan) &&
-            (informat[0]->info.channels > outformat->info.channels))
+            (file_desc[0]->info.channels > file_desc[file_count-1]->info.channels))
         {
             /* Find effect and update initial pointers */
             st_geteffect(&efftab[neffects], "avg");
 
             /* give default opts for added effects */
+            /* FIXME: Should look at return code and abort on ST_EOF */
             (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
                                             (char **)0);
 
             /* Copy format info to effect table */
-            effects_mask = st_updateeffect(&efftab[neffects], informat[0],
-                                           outformat, effects_mask);
+            effects_mask = st_updateeffect(&efftab[neffects], 
+                                           &file_desc[0]->info,
+                                           &file_desc[file_count-1]->info, 
+                                           effects_mask);
 
             neffects++;
         }
@@ -1051,7 +1048,7 @@ checkeffect()
          * after the resample effect.
          */
         if (needrate && !(hasrate) &&
-            (informat[0]->info.rate > outformat->info.rate))
+            (file_desc[0]->info.rate > file_desc[file_count-1]->info.rate))
         {
             if (soxpreview)
                 st_geteffect(&efftab[neffects], "rate");
@@ -1059,12 +1056,15 @@ checkeffect()
                 st_geteffect(&efftab[neffects], "resample");
 
             /* set up & give default opts for added effects */
+            /* FIXME: Should look at return code and abort on ST_EOF */
             (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
                                             (char **)0);
 
             /* Copy format info to effect table */
-            effects_mask = st_updateeffect(&efftab[neffects], informat[0],
-                                           outformat, effects_mask);
+            effects_mask = st_updateeffect(&efftab[neffects], 
+                                           &file_desc[0]->info,
+                                           &file_desc[file_count-1]->info, 
+                                           effects_mask);
 
             /* Rate can't handle multiple channels so be sure and
              * account for that.
@@ -1085,8 +1085,10 @@ checkeffect()
                    sizeof(struct st_effect));
 
             /* Copy format info to effect table */
-            effects_mask = st_updateeffect(&efftab[neffects], informat[0],
-                                           outformat, effects_mask);
+            effects_mask = st_updateeffect(&efftab[neffects], 
+                                           &file_desc[0]->info,
+                                           &file_desc[file_count-1]->info, 
+                                           effects_mask);
 
             /* If this effect can't handle multiple channels then
              * account for this.
@@ -1113,12 +1115,15 @@ checkeffect()
                 st_geteffect(&efftab[neffects], "resample");
 
             /* set up & give default opts for added effects */
+            /* FIXME: Should look at return code and abort on ST_EOF */
             (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
                                             (char **)0);
 
             /* Copy format info to effect table */
-            effects_mask = st_updateeffect(&efftab[neffects], informat[0],
-                                           outformat, effects_mask);
+            effects_mask = st_updateeffect(&efftab[neffects], 
+                                           &file_desc[0]->info,
+                                           &file_desc[file_count-1]->info, 
+                                           effects_mask);
 
             /* Rate can't handle multiple channels so be sure and
              * account for that.
@@ -1140,12 +1145,15 @@ checkeffect()
             st_geteffect(&efftab[neffects], "avg");
 
             /* set up & give default opts for added effects */
+            /* FIXME: Should look at return code and abort on ST_EOF */
             (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
                                             (char **)0);
 
             /* Copy format info to effect table */
-            effects_mask = st_updateeffect(&efftab[neffects], informat[0],
-                                           outformat, effects_mask);
+            effects_mask = st_updateeffect(&efftab[neffects], 
+                                           &file_desc[0]->info,
+                                           &file_desc[file_count-1]->info, 
+                                           effects_mask);
 
             neffects++;
         }
@@ -1235,18 +1243,18 @@ void cleanup(void) {
     /* Close the input file and outputfile before exiting*/
     for (i = 0; i < input_count; i++)
     {
-        if (informat[i] && informat[i]->fp)
-                fclose(informat[i]->fp);
-        if (informat[i])
-            free(informat[i]);
+        if (file_desc[i] && file_desc[i]->fp)
+                fclose(file_desc[i]->fp);
+        if (file_desc[i])
+            free(file_desc[i]);
     }
-    if (outformat && outformat->fp) {
-        fclose(outformat->fp);
+    if (writing && file_desc[file_count-1] && file_desc[file_count-1]->fp) {
+        fclose(file_desc[file_count-1]->fp);
         /* remove the output file because we failed, if it's ours. */
         /* Don't if its not a regular file. */
-        if (filetype(fileno(outformat->fp)) == S_IFREG)
-            unlink(outformat->filename);
+        if (filetype(fileno(file_desc[file_count-1]->fp)) == S_IFREG)
+            unlink(file_desc[file_count-1]->filename);
+        if (file_desc[file_count-1])
+            free(file_desc[file_count-1]);
     }
-    if (outformat)
-        free(outformat);
 }

@@ -271,24 +271,14 @@ int st_checkeffect(char *effect_name)
  * calls.
  */
 
-int st_updateeffect(eff_t effp, ft_t in, ft_t out, int effect_mask)
+int st_updateeffect(eff_t effp, st_signalinfo_t *in, st_signalinfo_t *out, 
+                    int effect_mask)
 {
-    int i;
+    effp->ininfo = *in;
 
-    effp->ininfo = in->info;
-    effp->ininfo = in->info;
+    effp->outinfo = *out;
 
-    effp->outinfo = out->info;
-    effp->outinfo = out->info;
-
-    for(i = 0; i < 8; i++) {
-        memcpy(&effp->loops[i], &in->loops[i], sizeof(struct st_loopinfo));
-        memcpy(&effp->loops[i], &in->loops[i], sizeof(struct st_loopinfo));
-    }
-    effp->instr = in->instr;
-    effp->instr = in->instr;
-
-    if (in->info.channels != out->info.channels)
+    if (in->channels != out->channels)
     {
         /* Only effects with ST_EFF_CHAN flag can actually handle
          * outputing a different number of channels then the input.
@@ -301,14 +291,14 @@ int st_updateeffect(eff_t effp, ft_t in, ft_t out, int effect_mask)
              * file.
              */
             if (effect_mask & ST_EFF_CHAN)
-                effp->ininfo.channels = out->info.channels;
+                effp->ininfo.channels = out->channels;
             else
-                effp->outinfo.channels = in->info.channels;
+                effp->outinfo.channels = in->channels;
 
         }
     }
 
-    if (in->info.rate != out->info.rate)
+    if (in->rate != out->rate)
     {
         /* Only the ST_EFF_RATE effect can handle an input that
          * is a different sample rate then the output.
@@ -316,9 +306,9 @@ int st_updateeffect(eff_t effp, ft_t in, ft_t out, int effect_mask)
         if (!(effp->h->flags & ST_EFF_RATE))
         {
             if (effect_mask & ST_EFF_RATE)
-                effp->ininfo.rate = out->info.rate;
+                effp->ininfo.rate = out->rate;
             else
-                effp->outinfo.rate = in->info.rate;
+                effp->outinfo.rate = in->rate;
         }
     }
 

@@ -91,12 +91,12 @@ int st_rawseek(ft_t ft, st_size_t offset)
             break;
         default:
             st_fail_errno(ft,ST_ENOTSUP,"Can't seek this data size");
-            return(ft->st_errno);
+            return ft->st_errno;
     }
 
     ft->st_errno = st_seek(ft,offset*ft->info.size,SEEK_SET);
 
-    return(ft->st_errno);
+    return ft->st_errno;
 }
 
 int st_rawstartread(ft_t ft)
@@ -105,14 +105,14 @@ int st_rawstartread(ft_t ft)
     if (!ft->file.buf)
     {
         st_fail_errno(ft,ST_ENOMEM,"Unable to alloc resources");
-        return(ST_EOF);
+        return ST_EOF;
     }
     ft->file.size = ST_BUFSIZ;
     ft->file.count = 0;
     ft->file.pos = 0;
     ft->file.eof = 0;
 
-    return(ST_SUCCESS);
+    return ST_SUCCESS;
 }
 
 int st_rawstartwrite(ft_t ft)
@@ -121,13 +121,13 @@ int st_rawstartwrite(ft_t ft)
     if (!ft->file.buf)
     {
         st_fail_errno(ft,ST_ENOMEM,"Unable to alloc resources");
-        return(ST_EOF);
+        return ST_EOF;
     }
     ft->file.size = ST_BUFSIZ;
     ft->file.pos = 0;
     ft->file.eof = 0;
 
-    return(ST_SUCCESS);
+    return ST_SUCCESS;
 }
 
 void st_ub_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
@@ -360,7 +360,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                     break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return(0);
+                    return ST_EOF;
             }
             break;
 
@@ -375,7 +375,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                     break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return(0);
+                    return ST_EOF;
             }
             break;
 
@@ -393,7 +393,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                     break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return(0);
+                    return ST_EOF;
             }
             break;
 
@@ -410,7 +410,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 
         default:
             st_fail_errno(ft,ST_EFMT,"Do not support this data size for this handler");
-            return (0);
+            return ST_EOF;
     }
 
 
@@ -456,6 +456,10 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
         if (ft->file.eof)
             break;
     }
+
+    if (done == 0 && ft->file.eof)
+        return ST_EOF;
+
     return done;
 }
 
@@ -463,7 +467,7 @@ int st_rawstopread(ft_t ft)
 {
         free(ft->file.buf);
 
-        return(ST_SUCCESS);
+        return ST_SUCCESS;
 }
 
 void st_ub_write_buf(char* buf1, st_sample_t *buf2, st_ssize_t len, char swap)
@@ -668,7 +672,7 @@ st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                     break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return(0);
+                    return ST_EOF;
             }
             break;
 
@@ -683,7 +687,7 @@ st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                     break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return(0);
+                    return ST_EOF;
             }
             break;
 
@@ -701,7 +705,7 @@ st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                     break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return(0);
+                    return ST_EOF;
             }
             break;
 
@@ -713,13 +717,13 @@ st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                     break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return(0);
+                    return ST_EOF;
             }
             break;
 
         default:
             st_fail_errno(ft,ST_EFMT,"Do not support this data size for this handler");
-            return (0);
+            return ST_EOF;
     }
 
     while (done < nsamp && !ft->file.eof)
@@ -744,7 +748,7 @@ int st_rawstopwrite(ft_t ft)
 {
         writeflush(ft);
         free(ft->file.buf);
-        return(ST_SUCCESS);
+        return ST_SUCCESS;
 }
 
 /*

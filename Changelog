@@ -14,9 +14,13 @@ sox-12.17.6
     block when there wasn't.
   o Restructured directory layout so that source code is in
     a seperate directory.
+  o Modified SoX to accept multiple input files.  Concatenates
+    files together in this case.
+  o Removed map effect so that loops and instr could be removed
+    from effects structures.  This makes effects engine stand
+    alone from the rest of the sox package.
   o Benedikt Zeyen found a bug in synth effect when generating
     brown noise that could cause clipping.
-   
 
 sox-12.17.5
 -----------

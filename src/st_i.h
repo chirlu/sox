@@ -483,11 +483,6 @@ int st_lowp_stop(eff_t effp);
 int st_lowpass_getopts(eff_t effp, int argc, char **argv);
 int st_lowpass_start(eff_t effp);
 
-int st_map_getopts(eff_t effp, int argc, char **argv);
-int st_map_start(eff_t effp);
-int st_map_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                st_size_t *isamp, st_size_t *osamp);
-
 int st_mask_getopts(eff_t effp, int argc, char **argv);
 int st_mask_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                  st_size_t *isamp, st_size_t *osamp);

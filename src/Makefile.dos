@@ -22,7 +22,7 @@ FOBJ	= 8svx.obj adpcm.obj aiff.obj alsa.obj au.obj auto.obj \
 EOBJ	= avg.obj band.obj bandpass.obj breject.obj btrworth.obj chorus.obj \
 	  compand.obj copy.obj dcshift.obj deemphas.obj earwax.o \
 	  echo.obj echos.obj fade.obj filter.obj flanger.obj highp.obj \
-	  highpass.obj lowp.obj lowpass.obj map.obj mask.obj phaser.obj \
+	  highpass.obj lowp.obj lowpass.obj mask.obj phaser.obj \
 	  pitch.obj pan.obj polyphase.obj rate.obj repeat.obj resample.obj \
 	  reverb.obj reverse.obj silence.obj speed.obj stat.obj \
 	  stretch.obj swap.obj synth.obj trim.obj vibro.obj vol.obj
