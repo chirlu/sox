@@ -17,6 +17,9 @@ sox-12.17.7
     wasn't being flushed.
   o Guentcho Skordev pointed out ogg vorbis files were using
     the same value for serial numbers each time.
+  o Changed sox to only read the exact size of a WAV data chunk
+    if cooledit IFF LIST chunk is found at the end of the file.
+    Normally, this isn't done to allow reading > 2gig WAV files.
 
 sox-12.17.6
 -----------

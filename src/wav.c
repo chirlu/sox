@@ -87,6 +87,7 @@ typedef struct wavstuff {
     unsigned short samplesPerBlock;
     unsigned short blockAlign;
     st_size_t dataStart;  /* need to for seeking */
+    int found_cooledit_list;
     
     /* following used by *ADPCM wav files */
     unsigned short nCoefs;          /* ADPCM: number of coef sets */
@@ -909,6 +910,7 @@ int st_wavstartread(ft_t ft)
 
     /* Horrible way to find Cool Edit marker points. Taken from Quake source*/
     ft->loops[0].start = -1;
+    wav->found_cooledit_list = 0;
     if(ft->seekable){
         /*Got this from the quake source.  I think it 32bit aligns the chunks 
          * doubt any machine writing Cool Edit Chunks writes them at an odd 
@@ -916,6 +918,7 @@ int st_wavstartread(ft_t ft)
         len = (len + 1) & ~1;
         st_seek(ft, len, SEEK_CUR);
         if( findChunk(ft, "LIST") != ST_EOF){
+            wav->found_cooledit_list = 1;
             ft->comment = (char*)malloc(256);
             /* Initialize comment to a NULL string */
             ft->comment[0] = 0;
@@ -1024,7 +1027,8 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
              * wav handler.  Sometimes it accounts for stereo,
              * sometimes it does not.
              */
-            if (len > (wav->numSamples*ft->info.channels)) 
+            /* See reason for cooledit check in comments below */
+            if (wav->found_cooledit_list && len > (wav->numSamples*ft->info.channels)) 
                 len = (wav->numSamples*ft->info.channels);
 
             done = 0;
@@ -1073,7 +1077,8 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 
 #ifdef ENABLE_GSM
         case ST_ENCODING_GSM:
-            if (len > wav->numSamples) 
+            /* See reason for cooledit check in comments below */
+            if (wav->found_cooledit_list && len > wav->numSamples) 
                 len = wav->numSamples;
 
             done = wavgsmread(ft, buf, len);
@@ -1082,10 +1087,18 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
         break;
 #endif
         default: /* assume PCM or float encoding */
-#if 0
-            if (len > wav->numSamples) 
+            /* Cooledit seems to put a non-standard IFF LIST at
+             * the end of the file.  When this is detected,
+             * go ahead and only read in the reported size
+             * of data chunk so the LIST data is not treated
+             * as audio.  
+             * In other cases, go ahead and read unit EOF
+             * This allows us to process WAV files that are
+             * greater then 2Gig and can't be represented
+             * by the 32-bit size field.
+             */
+            if (wav->found_cooledit_list && len > wav->numSamples) 
                 len = wav->numSamples;
-#endif
 
             done = st_rawread(ft, buf, len);
             /* If software thinks there are more samples but I/O */
