@@ -254,6 +254,7 @@ int st_vocstartread(ft_t ft)
         v->rest = 0;
         v->total_size = 0;  /* ANN added */
         v->extended = 0;
+        v->format = VOC_FMT_LIN8U;
 
         /* read until we get the format information.... */
         rc = getblock(ft);
@@ -517,7 +518,7 @@ static int getblock(ft_t ft)
         uint32_t sblen;
         uint16_t new_rate_16;
         uint32_t new_rate_32;
-        int i;
+        uint32_t i;
         uint32_t trash;
 
         v->silent = 0;
@@ -595,7 +596,7 @@ static int getblock(ft_t ft)
                               "File %s: Sample rate is zero?",ft->filename);
                             return(ST_EOF);
                         }
-                        if ((v->rate != -1) && (new_rate_32 != v->rate))
+                        if ((v->rate != -1) && ((long)new_rate_32 != v->rate))
                         {
                             st_fail_errno(ft,ST_EFMT,
                               "File %s: sample rate codes differ: %d != %d",
@@ -656,7 +657,7 @@ static int getblock(ft_t ft)
                         /* Falling! Falling! */
                 case VOC_TEXT:
                         {
-                            int i;
+                            uint32_t i;
                             /* Could add to comment in SF? */
                             for(i = 0; i < sblen; i++) {
                                 st_readb(ft, (unsigned char *)&trash);

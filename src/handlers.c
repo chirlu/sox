@@ -392,7 +392,7 @@ st_format_t st_formats[] = {
         st_wvestartread, st_wveread, st_rawstopread,
         st_wvestartwrite, st_wvewrite, st_wvestopwrite, st_wveseek},
     {0, 0,
-        0, 0, 0, 0, 0, 0}
+        0, 0, 0, 0, 0, 0, 0}
 };
 
 /* Effects handlers. */

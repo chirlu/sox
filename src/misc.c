@@ -49,13 +49,13 @@ const char *st_encodings_str[] = {
         "signed (2's complement)",
         "u-law",
         "a-law",
-	"floating point",
+        "floating point",
         "adpcm",
         "ima_adpcm",
         "gsm",
-	"inversed u-law",
-	"inversed A-law",
-	"MPEG audio (layer I, III or III)"
+        "inversed u-law",
+        "inversed A-law",
+        "MPEG audio (layer I, III or III)"
 };
 
 static const char readerr[] = "Premature EOF while reading sample file.";
@@ -333,8 +333,8 @@ int strcasecmp(const char *s1, const char *s2)
 {
     for (; toupper(*s1) == toupper(*s2); ++s1, ++s2)
     {
-	if (*s1 == '\0')
-	    return(0);
+        if (*s1 == '\0')
+            return(0);
     }
     return ((*(unsigned char *)s1 < *(unsigned char *)s2) ? -1 : +1);
 }
@@ -450,6 +450,10 @@ int st_seek(ft_t ft, st_size_t offset, int whence)
          * EPERM        "Operation not permitted"
          */
         if(whence == SEEK_CUR ){
+            /* FIXME: This isn't possible with current
+             * prototype anyways.  Should st_seek support negative
+             * offsets?
+             */
             if( offset < 0 ){
                 st_fail_errno(ft,ST_EINVAL,"Can't seek backwards in pipe");
             } else {

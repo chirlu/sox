@@ -67,8 +67,8 @@ typedef struct
 static void debug(char * where, speed_t s)
 {
     fprintf(stderr, "%s: f=%f r=%f comp=%d i=%d ic=%d frac=%f state=%d v=%f\n",
-	    where, s->factor, s->rate, s->compression, s->index,
-	    s->icbuf, s->frac, s->state, s->cbuf[0]);
+            where, s->factor, s->rate, s->compression, s->index,
+            s->icbuf, s->frac, s->state, s->cbuf[0]);
 }
 */
 
@@ -97,16 +97,16 @@ static st_sample_t clip(speed_t speed, SPEED_FLOAT v)
 {
     if (v < -ST_SAMPLE_MAX)
     {
-	speed->clipped++;
-	return -ST_SAMPLE_MAX;
+        speed->clipped++;
+        return -ST_SAMPLE_MAX;
     }
     else if (v > ST_SAMPLE_MAX)
     {
-	speed->clipped++;
-	return ST_SAMPLE_MAX;
+        speed->clipped++;
+        return ST_SAMPLE_MAX;
     }
     else
-	return (st_sample_t) v;
+        return (st_sample_t) v;
 }
 
 /* get options. */
@@ -119,21 +119,21 @@ int st_speed_getopts(eff_t effp, int n, char **argv)
 
     if (n>0 && !strcmp(argv[0], "-c"))
     {
-	cent = 1;
-	argv++; n--;
+        cent = 1;
+        argv++; n--;
     }
 
     if (n && (!sscanf(argv[0], SPEED_FLOAT_SCAN, &speed->factor) ||
-	      (cent==0 && speed->factor<=ZERO)))
+              (cent==0 && speed->factor<=ZERO)))
     {
-	printf("n = %d cent = %d speed = %f\n",n,cent,speed->factor);
-	st_fail(SPEED_USAGE);
-	return ST_EOF;
+        printf("n = %d cent = %d speed = %f\n",n,cent,speed->factor);
+        st_fail(SPEED_USAGE);
+        return ST_EOF;
     }
     else if (cent != 0) /* CONST==2**(1/1200) */
     {
-	speed->factor = pow(1.00057778950655, speed->factor);
-	/* fprintf(stderr, "Speed factor: %f\n", speed->factor);*/
+        speed->factor = pow(1.00057778950655, speed->factor);
+        /* fprintf(stderr, "Speed factor: %f\n", speed->factor);*/
     }
 
     return ST_SUCCESS;
@@ -147,17 +147,17 @@ int st_speed_start(eff_t effp)
 
     if (speed->factor >= ONE)
     {
-	speed->compression = (int) speed->factor; /* floor */
-	speed->rate = speed->factor / speed->compression;
+        speed->compression = (int) speed->factor; /* floor */
+        speed->rate = speed->factor / speed->compression;
     }
     else
     {
-	speed->compression = 1;
-	speed->rate = speed->factor;
+        speed->compression = 1;
+        speed->rate = speed->factor;
     }
 
     speed->ibuf   = (st_sample_t *) malloc(speed->compression*
-	                                   sizeof(st_sample_t));
+                                           sizeof(st_sample_t));
     speed->index  = 0;
 
     speed->state = sp_input;
@@ -166,8 +166,8 @@ int st_speed_start(eff_t effp)
     speed->frac = ZERO;
 
     if (!speed->ibuf) {
-	st_fail("malloc failed");
-	return ST_EOF;
+        st_fail("malloc failed");
+        return ST_EOF;
     }
 
     return ST_SUCCESS;
@@ -185,14 +185,14 @@ static void transfer(speed_t speed)
     register SPEED_FLOAT s = ZERO;
 
     for (i=0; i<speed->index; i++)
-	s += (SPEED_FLOAT) speed->ibuf[i];
+        s += (SPEED_FLOAT) speed->ibuf[i];
     
     speed->cbuf[speed->icbuf++] = s / ((SPEED_FLOAT) speed->index);
     
     if (speed->icbuf == 4)
-	speed->state = sp_compute;
+        speed->state = sp_compute;
     else
-	speed->state = sp_input;
+        speed->state = sp_input;
     
     speed->index = 0;
 }
@@ -201,24 +201,24 @@ static void transfer(speed_t speed)
  */
 static st_size_t compute(speed_t speed, st_sample_t *obuf, st_size_t olen)
 {
-    register int i;
+    st_size_t i;
 
     for(i = 0;
-	i<olen && speed->frac < ONE;
-	i++, speed->frac += speed->rate)
-	obuf[i] = clip(speed, 
-		       cub(speed->cbuf[0], speed->cbuf[1],
-			   speed->cbuf[2], speed->cbuf[3], 
-			   speed->frac));
+        i<olen && speed->frac < ONE;
+        i++, speed->frac += speed->rate)
+        obuf[i] = clip(speed, 
+                       cub(speed->cbuf[0], speed->cbuf[1],
+                           speed->cbuf[2], speed->cbuf[3], 
+                           speed->frac));
     
     if (speed->frac >= ONE)
     {
-	speed->frac -= ONE;
-	speed->cbuf[0] = speed->cbuf[1];
-	speed->cbuf[1] = speed->cbuf[2];
-	speed->cbuf[2] = speed->cbuf[3];
-	speed->icbuf = 3;
-	speed->state = sp_input;
+        speed->frac -= ONE;
+        speed->cbuf[0] = speed->cbuf[1];
+        speed->cbuf[1] = speed->cbuf[2];
+        speed->cbuf[2] = speed->cbuf[3];
+        speed->icbuf = 3;
+        speed->state = sp_input;
     }
 
     return i; /* number of data out */
@@ -227,7 +227,7 @@ static st_size_t compute(speed_t speed, st_sample_t *obuf, st_size_t olen)
 /* handle a flow.
  */
 int st_speed_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	          st_size_t *isamp, st_size_t *osamp)
+                  st_size_t *isamp, st_size_t *osamp)
 {
     speed_t speed;
     register st_size_t len, iindex, oindex;
@@ -240,21 +240,21 @@ int st_speed_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
     while (iindex<len && oindex<len)
     {
-	/* store to input buffer. */
-	if (speed->state==sp_input)
-	{
-	    speed->ibuf[speed->index++] = ibuf[iindex++];
-	    if (speed->index==speed->compression)
-		speed->state = sp_transfer;
-	}
+        /* store to input buffer. */
+        if (speed->state==sp_input)
+        {
+            speed->ibuf[speed->index++] = ibuf[iindex++];
+            if (speed->index==speed->compression)
+                speed->state = sp_transfer;
+        }
 
-	/* transfer to compute buffer. */
-	if (speed->state==sp_transfer)
-	    transfer(speed);
+        /* transfer to compute buffer. */
+        if (speed->state==sp_transfer)
+            transfer(speed);
 
-	/* compute interpolation. */
-	if (speed->state==sp_compute)
-	    oindex += compute(speed, obuf+oindex, len-oindex);
+        /* compute interpolation. */
+        if (speed->state==sp_compute)
+            oindex += compute(speed, obuf+oindex, len-oindex);
     }
 
     *isamp = iindex;
@@ -268,15 +268,15 @@ int st_speed_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 int st_speed_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     speed_t speed = (speed_t) effp->priv;
-    register int i, oindex;
+    st_size_t i, oindex;
 
     transfer(speed);
 
     /* fix up trail by emptying cbuf */
     for (oindex=0, i=0; i<2 && oindex<*osamp;)
     {
-	if (speed->state==sp_input)
-	{
+        if (speed->state==sp_input)
+        {
           speed->ibuf[speed->index++] = ZERO;
           i++;
           if (speed->index==speed->compression)
@@ -304,7 +304,7 @@ int st_speed_stop(eff_t effp)
     speed_t speed = (speed_t) effp->priv;
 
     if (speed->clipped) 
-	st_warn("SPEED: %d values clipped...", speed->clipped);
+        st_warn("SPEED: %d values clipped...", speed->clipped);
 
     free(speed->ibuf);
     

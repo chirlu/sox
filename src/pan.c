@@ -65,10 +65,10 @@ int st_pan_getopts(eff_t effp, int n, char **argv)
     pan->clipped = 0;
     
     if (n && (!sscanf(argv[0], PAN_FLOAT_SCAN, &pan->dir) || 
-	      pan->dir < MONE || pan->dir > ONE))
+              pan->dir < MONE || pan->dir > ONE))
     {
-	st_fail(PAN_USAGE);
-	return ST_EOF;
+        st_fail(PAN_USAGE);
+        return ST_EOF;
     }
 
     return ST_SUCCESS;
@@ -80,13 +80,13 @@ int st_pan_getopts(eff_t effp, int n, char **argv)
 int st_pan_start(eff_t effp)
 {
     if (effp->outinfo.channels==1)
-	st_warn("PAN onto a mono channel...");
+        st_warn("PAN onto a mono channel...");
 
     if (effp->outinfo.rate != effp->ininfo.rate)
     {
-	st_fail("PAN cannot handle different rates (in=%ld, out=%ld)"
-	     " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
-	return ST_EOF;
+        st_fail("PAN cannot handle different rates (in=%ld, out=%ld)"
+             " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
+        return ST_EOF;
     }
 
     return ST_SUCCESS;
@@ -101,13 +101,13 @@ static st_sample_t clip(pan_t pan, PAN_FLOAT value)
 {
     if (value < -ST_SAMPLE_MAX) 
     {
-	pan->clipped++;
-	return -ST_SAMPLE_MAX;
+        pan->clipped++;
+        return -ST_SAMPLE_MAX;
     }
     else if (value > ST_SAMPLE_MAX) 
     {
-	pan->clipped++;
-	return ST_SAMPLE_MAX;
+        pan->clipped++;
+        return ST_SAMPLE_MAX;
     } /* else */
 
     return (st_sample_t) value;
@@ -129,7 +129,8 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 {
     pan_t pan = (pan_t) effp->priv;
     register st_size_t len;
-    register int done, ich, och;
+    st_size_t done;
+    char ich, och;
     register PAN_FLOAT left, right, dir, hdir;
     
     dir   = pan->dir;    /* -1   <=  dir  <= 1   */
@@ -149,237 +150,237 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     /* 9 different cases to handle: (1,2,4) X (1,2,4) */
     switch (och) {
     case 1: /* pan on mono channel... not much sense. just avg. */
-	switch (ich) {
-	case 1: /* simple copy */
-	    for (done=0; done<len; done++)
-		*obuf++ = *ibuf++;
-	    break;
-	case 2: /* average 2 */
-	    for (done=0; done<len; done++)
-		*obuf++ = clip(pan, HALF*ibuf[0] + HALF*ibuf[1]),
-		    ibuf += 2;
-	    break;
-	case 4: /* average 4 */
-	    for (done=0; done<len; done++)
-		*obuf++ = clip(pan, 
-			       QUARTER*ibuf[0] + QUARTER*ibuf[1] + 
-			       QUARTER*ibuf[2] + QUARTER*ibuf[3]),
-		    ibuf += 4;
-	    break;
-	default:
-	    UNEXPECTED_CHANNELS;
-	    break;
-	} /* end first switch in channel */
-	break;
+        switch (ich) {
+        case 1: /* simple copy */
+            for (done=0; done<len; done++)
+                *obuf++ = *ibuf++;
+            break;
+        case 2: /* average 2 */
+            for (done=0; done<len; done++)
+                *obuf++ = clip(pan, HALF*ibuf[0] + HALF*ibuf[1]),
+                    ibuf += 2;
+            break;
+        case 4: /* average 4 */
+            for (done=0; done<len; done++)
+                *obuf++ = clip(pan, 
+                               QUARTER*ibuf[0] + QUARTER*ibuf[1] + 
+                               QUARTER*ibuf[2] + QUARTER*ibuf[3]),
+                    ibuf += 4;
+            break;
+        default:
+            UNEXPECTED_CHANNELS;
+            break;
+        } /* end first switch in channel */
+        break;
     case 2:
-	switch (ich) {
-	case 1: /* linear */
-	    for (done=0; done<len; done++)
-	    {
-		obuf[0] = clip(pan, left * ibuf[0]);
-		obuf[1] = clip(pan, right * ibuf[0]);
-		obuf += 2;
-		ibuf++;
-	    }
-	    break;
-	case 2: /* linear panorama. 
-		 * I'm not sure this is the right way to do it.
-		 */
-	    if (dir <= ZERO) /* to the left */
-	    {
-		register PAN_FLOAT volume, cll, clr, cr;
+        switch (ich) {
+        case 1: /* linear */
+            for (done=0; done<len; done++)
+            {
+                obuf[0] = clip(pan, left * ibuf[0]);
+                obuf[1] = clip(pan, right * ibuf[0]);
+                obuf += 2;
+                ibuf++;
+            }
+            break;
+        case 2: /* linear panorama. 
+                 * I'm not sure this is the right way to do it.
+                 */
+            if (dir <= ZERO) /* to the left */
+            {
+                register PAN_FLOAT volume, cll, clr, cr;
 
-		volume = ONE - HALF*dir;
-		cll = volume*(ONEHALF-left);
-		clr = volume*(left-HALF);
-		cr  = volume*(ONE+dir);
+                volume = ONE - HALF*dir;
+                cll = volume*(ONEHALF-left);
+                clr = volume*(left-HALF);
+                cr  = volume*(ONE+dir);
 
-		for (done=0; done<len; done++)
-		{
-		    obuf[0] = clip(pan, cll * ibuf[0] + clr * ibuf[1]);
-		    obuf[1] = clip(pan, cr * ibuf[1]);
-		    obuf += 2;
-		    ibuf += 2;
-		}
-	    }
-	    else /* to the right */
-	    {
-		register PAN_FLOAT volume, cl, crl, crr;
+                for (done=0; done<len; done++)
+                {
+                    obuf[0] = clip(pan, cll * ibuf[0] + clr * ibuf[1]);
+                    obuf[1] = clip(pan, cr * ibuf[1]);
+                    obuf += 2;
+                    ibuf += 2;
+                }
+            }
+            else /* to the right */
+            {
+                register PAN_FLOAT volume, cl, crl, crr;
 
-		volume = ONE + HALF*dir;
-		cl  = volume*(ONE-dir);
-		crl = volume*(right-HALF);
-		crr = volume*(ONEHALF-right);
+                volume = ONE + HALF*dir;
+                cl  = volume*(ONE-dir);
+                crl = volume*(right-HALF);
+                crr = volume*(ONEHALF-right);
 
-		for (done=0; done<len; done++)
-		{
-		    obuf[0] = clip(pan, cl * ibuf[0]);
-		    obuf[1] = clip(pan, crl * ibuf[0] + crr * ibuf[1]);
-		    obuf += 2;
-		    ibuf += 2;
-		}
-	    }
-	    break;
-	case 4:
-	    if (dir <= ZERO) /* to the left */
-	    {
-		register PAN_FLOAT volume, cll, clr, cr;
+                for (done=0; done<len; done++)
+                {
+                    obuf[0] = clip(pan, cl * ibuf[0]);
+                    obuf[1] = clip(pan, crl * ibuf[0] + crr * ibuf[1]);
+                    obuf += 2;
+                    ibuf += 2;
+                }
+            }
+            break;
+        case 4:
+            if (dir <= ZERO) /* to the left */
+            {
+                register PAN_FLOAT volume, cll, clr, cr;
 
-		volume = ONE - HALF*dir;
-		cll = volume*(ONEHALF-left);
-		clr = volume*(left-HALF);
-		cr  = volume*(ONE+dir);
+                volume = ONE - HALF*dir;
+                cll = volume*(ONEHALF-left);
+                clr = volume*(left-HALF);
+                cr  = volume*(ONE+dir);
 
-		for (done=0; done<len; done++)
-		{
-		    register PAN_FLOAT ibuf0, ibuf1;
+                for (done=0; done<len; done++)
+                {
+                    register PAN_FLOAT ibuf0, ibuf1;
 
-		    /* build stereo signal */
-		    ibuf0 = HALF*ibuf[0] + HALF*ibuf[2];
-		    ibuf1 = HALF*ibuf[1] + HALF*ibuf[3];
+                    /* build stereo signal */
+                    ibuf0 = HALF*ibuf[0] + HALF*ibuf[2];
+                    ibuf1 = HALF*ibuf[1] + HALF*ibuf[3];
 
-		    /* pan it */
-		    obuf[0] = clip(pan, cll * ibuf0 + clr * ibuf1);
-		    obuf[1] = clip(pan, cr * ibuf1);
-		    obuf += 2;
-		    ibuf += 4;
-		}
-	    }
-	    else /* to the right */
-	    {
-		register PAN_FLOAT volume, cl, crl, crr;
+                    /* pan it */
+                    obuf[0] = clip(pan, cll * ibuf0 + clr * ibuf1);
+                    obuf[1] = clip(pan, cr * ibuf1);
+                    obuf += 2;
+                    ibuf += 4;
+                }
+            }
+            else /* to the right */
+            {
+                register PAN_FLOAT volume, cl, crl, crr;
 
-		volume = ONE + HALF*dir;
-		cl  = volume*(ONE-dir);
-		crl = volume*(right-HALF);
-		crr = volume*(ONEHALF-right);
+                volume = ONE + HALF*dir;
+                cl  = volume*(ONE-dir);
+                crl = volume*(right-HALF);
+                crr = volume*(ONEHALF-right);
 
-		for (done=0; done<len; done++)
-		{
-		    register PAN_FLOAT ibuf0, ibuf1;
+                for (done=0; done<len; done++)
+                {
+                    register PAN_FLOAT ibuf0, ibuf1;
 
-		    ibuf0 = HALF*ibuf[0] + HALF*ibuf[2];
-		    ibuf1 = HALF*ibuf[1] + HALF*ibuf[3];
+                    ibuf0 = HALF*ibuf[0] + HALF*ibuf[2];
+                    ibuf1 = HALF*ibuf[1] + HALF*ibuf[3];
 
-		    obuf[0] = clip(pan, cl * ibuf0);
-		    obuf[1] = clip(pan, crl * ibuf0 + crr * ibuf1);
-		    obuf += 2;
-		    ibuf += 4;
-		}
-	    }
-	    break;
-	default:
-	    UNEXPECTED_CHANNELS;
-	    break;
-	} /* end second switch in channel */
-	break;
+                    obuf[0] = clip(pan, cl * ibuf0);
+                    obuf[1] = clip(pan, crl * ibuf0 + crr * ibuf1);
+                    obuf += 2;
+                    ibuf += 4;
+                }
+            }
+            break;
+        default:
+            UNEXPECTED_CHANNELS;
+            break;
+        } /* end second switch in channel */
+        break;
     case 4:
-	switch (ich) {
-	case 1: /* linear */
-	    {
-		register PAN_FLOAT cr, cl;
+        switch (ich) {
+        case 1: /* linear */
+            {
+                register PAN_FLOAT cr, cl;
 
-		cl = HALF*left;
-		cr = HALF*right;
+                cl = HALF*left;
+                cr = HALF*right;
 
-		for (done=0; done<len; done++)
-		{
-		    obuf[0] = clip(pan, cl * ibuf[0]);
-		    obuf[2] = obuf[0];
-		    obuf[1] = clip(pan, cr * ibuf[0]);
-		    ibuf[3] = obuf[1];
-		    obuf += 4;
-		    ibuf++;
-		}
-	    }
-	    break;
-	case 2: /* simple linear panorama */
-	    if (dir <= ZERO) /* to the left */
-	    {
-		register PAN_FLOAT volume, cll, clr, cr;
+                for (done=0; done<len; done++)
+                {
+                    obuf[0] = clip(pan, cl * ibuf[0]);
+                    obuf[2] = obuf[0];
+                    obuf[1] = clip(pan, cr * ibuf[0]);
+                    ibuf[3] = obuf[1];
+                    obuf += 4;
+                    ibuf++;
+                }
+            }
+            break;
+        case 2: /* simple linear panorama */
+            if (dir <= ZERO) /* to the left */
+            {
+                register PAN_FLOAT volume, cll, clr, cr;
 
-		volume = HALF - QUARTER*dir;
-		cll = volume * (ONEHALF-left);
-		clr = volume * (left-HALF);
-		cr  = volume * (ONE+dir);
+                volume = HALF - QUARTER*dir;
+                cll = volume * (ONEHALF-left);
+                clr = volume * (left-HALF);
+                cr  = volume * (ONE+dir);
 
-		for (done=0; done<len; done++)
-		{
-		    obuf[0] = clip(pan, cll * ibuf[0] + clr * ibuf[1]);
-		    obuf[2] = obuf[0];
-		    obuf[1] = clip(pan, cr * ibuf[1]);
-		    ibuf[3] = obuf[1];
-		    obuf += 4;
-		    ibuf += 2;
-		}
-	    }
-	    else /* to the right */
-	    {
-		register PAN_FLOAT volume, cl, crl, crr;
+                for (done=0; done<len; done++)
+                {
+                    obuf[0] = clip(pan, cll * ibuf[0] + clr * ibuf[1]);
+                    obuf[2] = obuf[0];
+                    obuf[1] = clip(pan, cr * ibuf[1]);
+                    ibuf[3] = obuf[1];
+                    obuf += 4;
+                    ibuf += 2;
+                }
+            }
+            else /* to the right */
+            {
+                register PAN_FLOAT volume, cl, crl, crr;
 
-		volume = HALF + QUARTER*dir;
-		cl  = volume * (ONE-dir);
-		crl = volume * (right-HALF);
-		crr = volume * (ONEHALF-right);
+                volume = HALF + QUARTER*dir;
+                cl  = volume * (ONE-dir);
+                crl = volume * (right-HALF);
+                crr = volume * (ONEHALF-right);
 
-		for (done=0; done<len; done++)
-		{
-		    obuf[0] = clip(pan, cl * ibuf[0]);
-		    obuf[2] = obuf[0];
-		    obuf[1] = clip(pan, crl * ibuf[0] + crr * ibuf[1]);
-		    ibuf[3] = obuf[1];
-		    obuf += 4;
-		    ibuf += 2;
-		}
-	    }
-	    break;
-	case 4:
-	    /* maybe I could improve the formula to reverse...
-	       also, turn only by quarters.
-	     */
-	    if (dir <= ZERO) /* to the left */
-	    {
-		register PAN_FLOAT cown, cright;
+                for (done=0; done<len; done++)
+                {
+                    obuf[0] = clip(pan, cl * ibuf[0]);
+                    obuf[2] = obuf[0];
+                    obuf[1] = clip(pan, crl * ibuf[0] + crr * ibuf[1]);
+                    ibuf[3] = obuf[1];
+                    obuf += 4;
+                    ibuf += 2;
+                }
+            }
+            break;
+        case 4:
+            /* maybe I could improve the formula to reverse...
+               also, turn only by quarters.
+             */
+            if (dir <= ZERO) /* to the left */
+            {
+                register PAN_FLOAT cown, cright;
 
-		cright = -dir;
-		cown = ONE + dir;
+                cright = -dir;
+                cown = ONE + dir;
 
-		for (done=0; done<len; done++)
-		{
-		    obuf[0] = clip(pan, cown*ibuf[0] + cright*ibuf[1]);
-		    obuf[1] = clip(pan, cown*ibuf[1] + cright*ibuf[3]);
-		    obuf[2] = clip(pan, cown*ibuf[2] + cright*ibuf[0]);
-		    obuf[3] = clip(pan, cown*ibuf[3] + cright*ibuf[2]);
-		    obuf += 4;
-		    ibuf += 4;		    
-		}
-	    }
-	    else /* to the right */
-	    {
-		register PAN_FLOAT cleft, cown;
+                for (done=0; done<len; done++)
+                {
+                    obuf[0] = clip(pan, cown*ibuf[0] + cright*ibuf[1]);
+                    obuf[1] = clip(pan, cown*ibuf[1] + cright*ibuf[3]);
+                    obuf[2] = clip(pan, cown*ibuf[2] + cright*ibuf[0]);
+                    obuf[3] = clip(pan, cown*ibuf[3] + cright*ibuf[2]);
+                    obuf += 4;
+                    ibuf += 4;              
+                }
+            }
+            else /* to the right */
+            {
+                register PAN_FLOAT cleft, cown;
 
-		cleft = dir;
-		cown = ONE - dir;
+                cleft = dir;
+                cown = ONE - dir;
 
-		for (done=0; done<len; done++)
-		{
-		    obuf[0] = clip(pan, cleft*ibuf[2] + cown*ibuf[0]);
-		    obuf[1] = clip(pan, cleft*ibuf[0] + cown*ibuf[1]);
-		    obuf[2] = clip(pan, cleft*ibuf[3] + cown*ibuf[2]);
-		    obuf[3] = clip(pan, cleft*ibuf[1] + cown*ibuf[3]);
-		    obuf += 4;
-		    ibuf += 4;
-		}
-	    }
-	    break;
-	default:
-	    UNEXPECTED_CHANNELS;
-	    break;
-	} /* end third switch in channel */
-	break;
+                for (done=0; done<len; done++)
+                {
+                    obuf[0] = clip(pan, cleft*ibuf[2] + cown*ibuf[0]);
+                    obuf[1] = clip(pan, cleft*ibuf[0] + cown*ibuf[1]);
+                    obuf[2] = clip(pan, cleft*ibuf[3] + cown*ibuf[2]);
+                    obuf[3] = clip(pan, cleft*ibuf[1] + cown*ibuf[3]);
+                    obuf += 4;
+                    ibuf += 4;
+                }
+            }
+            break;
+        default:
+            UNEXPECTED_CHANNELS;
+            break;
+        } /* end third switch in channel */
+        break;
     default:
-	UNEXPECTED_CHANNELS;
-	break;
+        UNEXPECTED_CHANNELS;
+        break;
     } /* end switch out channel */
 
     return ST_SUCCESS;
@@ -395,8 +396,8 @@ int st_pan_stop(eff_t effp)
 {
     pan_t pan = (pan_t) effp->priv;
     if (pan->clipped) {
-	st_warn("PAN clipped %d values, maybe adjust volume?",
-	     pan->clipped);
+        st_warn("PAN clipped %d values, maybe adjust volume?",
+             pan->clipped);
     }
     return ST_SUCCESS;
 }

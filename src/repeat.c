@@ -121,12 +121,6 @@ int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                         repeat->remaining = repeat->total;
                 }
         }
-
-        if (repeat->remaining < 0) {
-                st_fail("repeat: unknown error");
-                return (ST_EOF);
-        }
-
         if (*osamp > repeat->remaining) {
                 buf = obuf;
                 samp = repeat->remaining;

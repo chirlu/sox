@@ -21,17 +21,17 @@
  *
  * Flow diagram for one channel:
  *
- *		 ------------	   ---------------
- *		|	     |	  |		  |	---
+ *               ------------      ---------------
+ *              |            |    |               |     ---
  * ibuff ---+---| integrator |--->| transfer func |--->|   |
- *	    |	|	     |	  |		  |    |   |
- *	    |	 ------------	   ---------------     |   |  * gain
- *	    |					       | * |----------->obuff
- *	    |	    -------			       |   |
- *	    |	   |	   |			       |   |
- *	    +----->| delay |-------------------------->|   |
- *		   |	   |			        ---
- *		    -------
+ *          |   |            |    |               |    |   |
+ *          |    ------------      ---------------     |   |  * gain
+ *          |                                          | * |----------->obuff
+ *          |       -------                            |   |
+ *          |      |       |                           |   |
+ *          +----->| delay |-------------------------->|   |
+ *                 |       |                            ---
+ *                  -------
  *
  * Usage:
  *   compand attack1,decay1[,attack2,decay2...]
@@ -46,16 +46,16 @@
 /* Private data for SKEL file */
 typedef struct {
   int expectedChannels; /* Also flags that channels aren't to be treated
-			   individually when = 1 and input not mono */
+                           individually when = 1 and input not mono */
   int transferPoints;   /* Number of points specified on the transfer
-			   function */
+                           function */
   double *attackRate;   /* An array of attack rates */
   double *decayRate;    /*    ... and of decay rates */
   double *transferIns;  /*    ... and points on the transfer function */
   double *transferOuts;
   double *volume;       /* Current "volume" of each channel */
   double outgain;       /* Post processor gain */
-  double delay;		/* Delay to apply before companding */
+  double delay;         /* Delay to apply before companding */
   st_sample_t *delay_buf;   /* Old samples, used for delay processing */
   st_ssize_t delay_buf_size;/* Size of delay_buf in samples */
   st_ssize_t delay_buf_ptr; /* Index into delay_buf */
@@ -76,12 +76,12 @@ int st_compand_getopts(eff_t effp, int n, char **argv)
     if (n < 2 || n > 5)
     {
       st_fail("Wrong number of arguments for the compander effect\n"
-	   "Use: {<attack_time>,<decay_time>}+ {<dB_in>,<db_out>}+ "
-	   "[<dB_postamp> [<initial-volume> [<delay_time]]]\n"
-	   "where {}+ means `one or more in a comma-separated, "
-	   "white-space-free list'\n"
-	   "and [] indications possible omission.  dB values are floating\n"
-	   "point or `-inf'; times are in seconds.");
+           "Use: {<attack_time>,<decay_time>}+ {<dB_in>,<db_out>}+ "
+           "[<dB_postamp> [<initial-volume> [<delay_time]]]\n"
+           "where {}+ means `one or more in a comma-separated, "
+           "white-space-free list'\n"
+           "and [] indications possible omission.  dB values are floating\n"
+           "point or `-inf'; times are in seconds.");
       return (ST_EOF);
     }
     else { /* Right no. of args, but are they well formed? */
@@ -91,86 +91,86 @@ int st_compand_getopts(eff_t effp, int n, char **argv)
       /* Start by checking the attack and decay rates */
 
       for (s = argv[0], commas = 0; *s; ++s)
-	if (*s == ',') ++commas;
+        if (*s == ',') ++commas;
 
       if (commas % 2 == 0) /* There must be an even number of
-			      attack/decay parameters */
+                              attack/decay parameters */
       {
-	st_fail("compander: Odd number of attack & decay rate parameters");
-	return (ST_EOF);
+        st_fail("compander: Odd number of attack & decay rate parameters");
+        return (ST_EOF);
       }
 
       rates = 1 + commas/2;
       if ((l->attackRate = malloc(sizeof(double) * rates)) == NULL ||
-	  (l->decayRate  = malloc(sizeof(double) * rates)) == NULL ||
-	  (l->volume     = malloc(sizeof(double) * rates)) == NULL)
+          (l->decayRate  = malloc(sizeof(double) * rates)) == NULL ||
+          (l->volume     = malloc(sizeof(double) * rates)) == NULL)
       {
-	st_fail("Out of memory");
-	return (ST_EOF);
+        st_fail("Out of memory");
+        return (ST_EOF);
       }
       l->expectedChannels = rates;
       l->delay_buf = NULL;
 
       /* Now tokenise the rates string and set up these arrays.  Keep
-	 them in seconds at the moment: we don't know the sample rate yet. */
+         them in seconds at the moment: we don't know the sample rate yet. */
 
       s = strtok(argv[0], ","); i = 0;
       do {
-	l->attackRate[i] = atof(s); s = strtok(NULL, ",");
-	l->decayRate[i]  = atof(s); s = strtok(NULL, ",");
-	++i;
+        l->attackRate[i] = atof(s); s = strtok(NULL, ",");
+        l->decayRate[i]  = atof(s); s = strtok(NULL, ",");
+        ++i;
       } while (s != NULL);
 
       /* Same business, but this time for the transfer function */
 
       for (s = argv[1], commas = 0; *s; ++s)
-	if (*s == ',') ++commas;
+        if (*s == ',') ++commas;
 
       if (commas % 2 == 0) /* There must be an even number of
-			      transfer parameters */
+                              transfer parameters */
       {
-	st_fail("compander: Odd number of transfer function parameters\n"
-	     "Each input value in dB must have a corresponding output value");
-	return (ST_EOF);
+        st_fail("compander: Odd number of transfer function parameters\n"
+             "Each input value in dB must have a corresponding output value");
+        return (ST_EOF);
       }
 
       tfers = 3 + commas/2; /* 0, 0 at start; 1, 1 at end */
       if ((l->transferIns  = malloc(sizeof(double) * tfers)) == NULL ||
-	  (l->transferOuts = malloc(sizeof(double) * tfers)) == NULL)
+          (l->transferOuts = malloc(sizeof(double) * tfers)) == NULL)
       {
-	st_fail("Out of memory");
-	return (ST_EOF);
+        st_fail("Out of memory");
+        return (ST_EOF);
       }
       l->transferPoints = tfers;
       l->transferIns[0] = 0.0; l->transferOuts[0] = 0.0;
       l->transferIns[tfers-1] = 1.0; l->transferOuts[tfers-1] = 1.0;
       s = strtok(argv[1], ","); i = 1;
       do {
-	if (!strcmp(s, "-inf"))
-	{
-	  st_fail("Input signals of zero level must always generate zero output");
-	  return (ST_EOF);
-	}
-	l->transferIns[i]  = pow(10.0, atof(s)/20.0);
-	if (l->transferIns[i] > 1.0)
-	{
-	  st_fail("dB values are relative to maximum input, and, ipso facto, "
-	       "cannot exceed 0");
-	  return (ST_EOF);
-	}
-	if (l->transferIns[i] == 1.0) /* Final point was explicit */
-	  --(l->transferPoints);
-	if (i > 0 && l->transferIns[i] <= l->transferIns[i-1])
-	{
-	  st_fail("Transfer function points don't have strictly ascending "
-	       "input amplitude");
-	  return (ST_EOF);
-	}
-	s = strtok(NULL, ",");
-	l->transferOuts[i] = strcmp(s, "-inf") ?
-	                       pow(10.0, atof(s)/20.0) : 0;
-	s = strtok(NULL, ",");
-	++i;
+        if (!strcmp(s, "-inf"))
+        {
+          st_fail("Input signals of zero level must always generate zero output");
+          return (ST_EOF);
+        }
+        l->transferIns[i]  = pow(10.0, atof(s)/20.0);
+        if (l->transferIns[i] > 1.0)
+        {
+          st_fail("dB values are relative to maximum input, and, ipso facto, "
+               "cannot exceed 0");
+          return (ST_EOF);
+        }
+        if (l->transferIns[i] == 1.0) /* Final point was explicit */
+          --(l->transferPoints);
+        if (i > 0 && l->transferIns[i] <= l->transferIns[i-1])
+        {
+          st_fail("Transfer function points don't have strictly ascending "
+               "input amplitude");
+          return (ST_EOF);
+        }
+        s = strtok(NULL, ",");
+        l->transferOuts[i] = strcmp(s, "-inf") ?
+                               pow(10.0, atof(s)/20.0) : 0;
+        s = strtok(NULL, ",");
+        ++i;
       } while (s != NULL);
       
       /* If there is a postprocessor gain, store it */
@@ -178,11 +178,11 @@ int st_compand_getopts(eff_t effp, int n, char **argv)
       else l->outgain = 1.0;
 
       /* Set the initial "volume" to be attibuted to the input channels.
-	 Unless specified, choose 1.0 (maximum) otherwise clipping will
-	 result if the user has seleced a long attack time */
+         Unless specified, choose 1.0 (maximum) otherwise clipping will
+         result if the user has seleced a long attack time */
       for (i = 0; i < l->expectedChannels; ++i) {
-	double v = n>=4 ? pow(10.0, atof(argv[3])/20) : 1.0;
-	l->volume[i] = v;
+        double v = n>=4 ? pow(10.0, atof(argv[3])/20) : 1.0;
+        l->volume[i] = v;
 
       /* If there is a delay, store it. */
       if (n >= 5) l->delay = atof(argv[4]);
@@ -205,20 +205,20 @@ int st_compand_start(eff_t effp)
   {
     fprintf(stderr, "Starting compand effect\n");
     fprintf(stderr, "\nRate %ld, size %d, encoding %d, output gain %g.\n",
-	   effp->outinfo.rate, effp->outinfo.size, effp->outinfo.encoding,
-	   l->outgain);
+           effp->outinfo.rate, effp->outinfo.size, effp->outinfo.encoding,
+           l->outgain);
     fprintf(stderr, "%d input channel(s) expected: actually %d\n",
-	   l->expectedChannels, effp->outinfo.channels);
+           l->expectedChannels, effp->outinfo.channels);
     fprintf(stderr, "\nAttack and decay rates\n"
-	     "======================\n");
+             "======================\n");
     for (i = 0; i < l->expectedChannels; ++i)
       fprintf(stderr, "Channel %d: attack = %-12g decay = %-12g\n",
-	     i, l->attackRate[i], l->decayRate[i]);
+             i, l->attackRate[i], l->decayRate[i]);
     fprintf(stderr, "\nTransfer function (linear values)\n"
-	     "=================  =============\n");
+             "=================  =============\n");
     for (i = 0; i < l->transferPoints; ++i)
       fprintf(stderr, "%12g -> %-12g\n",
-	     l->transferIns[i], l->transferOuts[i]);
+             l->transferIns[i], l->transferOuts[i]);
   }
 # endif
   
@@ -227,12 +227,12 @@ int st_compand_start(eff_t effp)
   for (i = 0; i < l->expectedChannels; ++i) {
     if (l->attackRate[i] > 1.0/effp->outinfo.rate)
       l->attackRate[i] = 1.0 -
-	exp(-1.0/(effp->outinfo.rate * l->attackRate[i]));
+        exp(-1.0/(effp->outinfo.rate * l->attackRate[i]));
     else
       l->attackRate[i] = 1.0;
     if (l->decayRate[i] > 1.0/effp->outinfo.rate)
       l->decayRate[i] = 1.0 -
-	exp(-1.0/(effp->outinfo.rate * l->decayRate[i]));
+        exp(-1.0/(effp->outinfo.rate * l->decayRate[i]));
     else
       l->decayRate[i] = 1.0;
   }
@@ -289,38 +289,38 @@ int st_compand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
     for (chan = 0; chan < filechans; ++chan) {
       if (l->expectedChannels == 1 && filechans > 1) {
-	/* User is expecting same compander for all channels */
-	int i;
-	double maxsamp = 0.0;
-	for (i = 0; i < filechans; ++i) {
-	  double rect = fabs(ibuf[i]);
-	  if (rect > maxsamp) maxsamp = rect;
-	}
-	doVolume(&l->volume[0], maxsamp, l, 0);
-	break;
+        /* User is expecting same compander for all channels */
+        int i;
+        double maxsamp = 0.0;
+        for (i = 0; i < filechans; ++i) {
+          double rect = fabs(ibuf[i]);
+          if (rect > maxsamp) maxsamp = rect;
+        }
+        doVolume(&l->volume[0], maxsamp, l, 0);
+        break;
       } else
-	doVolume(&l->volume[chan], fabs(ibuf[chan]), l, chan);
+        doVolume(&l->volume[chan], fabs(ibuf[chan]), l, chan);
     }
 
     /* Volume memory is updated: perform compand */
 
     for (chan = 0; chan < filechans; ++chan) {
       double v = l->expectedChannels > 1 ?
-	l->volume[chan] : l->volume[0];
+        l->volume[chan] : l->volume[0];
       double outv;
       int piece;
 
       for (piece = 1 /* yes, 1 */;
-	   piece < l->transferPoints;
-	   ++piece)
-	if (v >= l->transferIns[piece - 1] &&
-	    v < l->transferIns[piece])
-	  break;
+           piece < l->transferPoints;
+           ++piece)
+        if (v >= l->transferIns[piece - 1] &&
+            v < l->transferIns[piece])
+          break;
 
       outv = l->transferOuts[piece-1] +
-	(l->transferOuts[piece] - l->transferOuts[piece-1]) *
-	(v - l->transferIns[piece-1]) /
-	(l->transferIns[piece] - l->transferIns[piece-1]);
+        (l->transferOuts[piece] - l->transferOuts[piece-1]) *
+        (v - l->transferIns[piece-1]) /
+        (l->transferIns[piece] - l->transferIns[piece-1]);
 
       if (l->delay_buf_size <= 0)
       {
@@ -337,10 +337,10 @@ int st_compand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
       }
       else
       {
-	if (l->delay_buf_cnt >= l->delay_buf_size)
+        if (l->delay_buf_cnt >= l->delay_buf_size)
         {
             l->delay_buf_full=1; //delay buffer is now definetly full
-	    checkbuf = l->delay_buf[l->delay_buf_ptr]*(outv/v)*l->outgain;
+            checkbuf = l->delay_buf[l->delay_buf_ptr]*(outv/v)*l->outgain;
             if(checkbuf > ST_SAMPLE_MAX)
              obuf[odone] = ST_SAMPLE_MAX;
             else if(checkbuf < ST_SAMPLE_MIN)
@@ -351,9 +351,9 @@ int st_compand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             odone++;
             idone++;
         }
-	else
+        else
         {
-	    l->delay_buf_cnt++;
+            l->delay_buf_cnt++;
             idone++; //no "odone++" because we did not fill obuf[...]
         }
         l->delay_buf[l->delay_buf_ptr++] = ibuf[chan];
@@ -372,7 +372,7 @@ int st_compand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 int st_compand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
   compand_t l = (compand_t) effp->priv;
-  int done;
+  st_size_t done;
 
   /*
    * Drain out delay samples.  Note that this loop does all channels.

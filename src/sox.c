@@ -133,7 +133,7 @@ char **argv;
         int argc_effect;
         ft_t ft;
         int parsing_output = 0;
-	int i;
+        int i;
 
         myname = argv[0];
 
@@ -290,13 +290,13 @@ char **argv;
         process();
         statistics();
 
-	for (i = 0; i < input_count; i++)
-	{
-	    if (informat[i])
-		free(informat[i]);
-	}
-	if (outformat)
-	    free(outformat);
+        for (i = 0; i < input_count; i++)
+        {
+            if (informat[i])
+                free(informat[i]);
+        }
+        if (outformat)
+            free(outformat);
         return(0);
 }
 
@@ -310,7 +310,7 @@ static void copy_input(ft_t ft)
 
     if ( st_gettype(ft) )
         st_fail("Unknown input file format for '%s':  %s", 
-		ft->filename, ft->st_errstr);
+                ft->filename, ft->st_errstr);
 
     /* Default the input comment to the filename if not set from
      * command line.
@@ -370,7 +370,7 @@ static void copy_output(ft_t ft)
     {
         if ( st_gettype(ft) )
             st_fail("Unknown output file format for '%s': %s",
-		    ft->filename, ft->st_errstr);
+                    ft->filename, ft->st_errstr);
 
     }
 
@@ -469,13 +469,13 @@ static void doopts(ft_t ft, int argc, char **argv)
                         str = optarg;
                         if (!sscanf(str, "%d", &i))
                             st_fail("-c must be given a number");
-			/* Since we use -1 as a special internal value,
-			 * we must do some extra logic so user doesn't
-			 * get confused when we translate -1 to mean
-			 * something valid.
-			 */
-			if (i < 1)
-			    st_fail("-c must be given a positive number");
+                        /* Since we use -1 as a special internal value,
+                         * we must do some extra logic so user doesn't
+                         * get confused when we translate -1 to mean
+                         * something valid.
+                         */
+                        if (i < 1)
+                            st_fail("-c must be given a positive number");
                         ft->info.channels = i;
                         break;
                 case 'b':
@@ -567,7 +567,7 @@ static int compare_input(ft_t ft1, ft_t ft2)
 static void process(void) {
     int e, f, flowstatus;
 #ifdef SOXMIX
-    int s;
+    st_size_t s;
     st_ssize_t ilen[MAX_INPUT_FILES];
     st_sample_t *ibuf[MAX_INPUT_FILES];
 #endif
@@ -655,7 +655,7 @@ static void process(void) {
     for(e = 0; e < neffects; e++)
     {
         efftab[e].obuf = (st_sample_t *) malloc(ST_BUFSIZ * 
-		                                sizeof(st_sample_t));
+                                                sizeof(st_sample_t));
         if (efftab[e].obuf == NULL)
         {
             st_fail("could not allocate memory");
@@ -663,7 +663,7 @@ static void process(void) {
         if (efftabR[e].name)
         {
             efftabR[e].obuf = (st_sample_t *) malloc(ST_BUFSIZ * 
-		                                     sizeof(st_sample_t));
+                                                     sizeof(st_sample_t));
             if (efftabR[e].obuf == NULL)
             {
                 st_fail("could not allocate memory");
@@ -696,18 +696,23 @@ static void process(void) {
 #ifndef SOXMIX
         efftab[0].olen = (*informat[0]->h->read)(informat[0],
                                                  efftab[0].obuf, 
-						 (st_ssize_t)ST_BUFSIZ);
+                                                 (st_ssize_t)ST_BUFSIZ);
 #else
         for (f = 0; f < input_count; f++)
         {
             ilen[f] = (*informat[f]->h->read)(informat[f],
                                               ibuf[f], 
-					      (st_ssize_t)ST_BUFSIZ);
+                                              (st_ssize_t)ST_BUFSIZ);
         }
 
+        /* FIXME: Should check for ST_EOF from read and
+         * abort!
+         * FIXME: Should warn if the size of the reads are not
+         * the same!
+         */
         efftab[0].olen = 0;
         for (f = 0; f < input_count; f++)
-            if (ilen[f] > efftab[0].olen)
+            if ((st_size_t)ilen[f] > efftab[0].olen)
                 efftab[0].olen = ilen[f];
 
         for (s = 0; s < efftab[0].olen; s++)
@@ -720,9 +725,9 @@ static void process(void) {
             {
                 if (f == 0)
                     efftab[0].obuf[s] =
-                        (s<ilen[f]) ? (ibuf[f][s]/input_count) : 0;
+                        (s<(st_size_t)ilen[f]) ? (ibuf[f][s]/input_count) : 0;
                 else
-                    if (s < ilen[f])
+                    if (s < (st_size_t)ilen[f])
                         efftab[0].obuf[s] += ibuf[f][s]/input_count;
             }
         }
@@ -730,12 +735,12 @@ static void process(void) {
 
         efftab[0].odone = 0;
 
-	/* If not writing and no effects are occuring then not much
-	 * reason to continue reading.  This allows this case.  Mainly
-	 * useful to print out info about input file header and quite.
-	 */
-	if (!writing && neffects == 1)
-	    efftab[0].olen = 0;
+        /* If not writing and no effects are occuring then not much
+         * reason to continue reading.  This allows this case.  Mainly
+         * useful to print out info about input file header and quite.
+         */
+        if (!writing && neffects == 1)
+            efftab[0].olen = 0;
 
         if (efftab[0].olen == 0)
             break;
@@ -790,7 +795,7 @@ static void process(void) {
     {
         free(efftab[e].obuf);
         if (efftabR[e].obuf)
-	    free(efftabR[e].obuf);
+            free(efftabR[e].obuf);
     }
 
     /* Very Important:
@@ -1155,7 +1160,7 @@ static void statistics(void) {
 }
 
 static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct, 
-	                        double vol)
+                                double vol)
 {
         double y;
         st_sample_t *p,*top;
@@ -1235,16 +1240,16 @@ void cleanup(void) {
     {
         if (informat[i] && informat[i]->fp)
                 fclose(informat[i]->fp);
-	if (informat[i])
-	    free(informat[i]);
+        if (informat[i])
+            free(informat[i]);
     }
     if (outformat && outformat->fp) {
-	fclose(outformat->fp);
-	/* remove the output file because we failed, if it's ours. */
-	/* Don't if its not a regular file. */
-	if (filetype(fileno(outformat->fp)) == S_IFREG)
-	    unlink(outformat->filename);
+        fclose(outformat->fp);
+        /* remove the output file because we failed, if it's ours. */
+        /* Don't if its not a regular file. */
+        if (filetype(fileno(outformat->fp)) == S_IFREG)
+            unlink(outformat->filename);
     }
     if (outformat)
-	free(outformat);
+        free(outformat);
 }

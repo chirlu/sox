@@ -96,8 +96,8 @@
 /* linear factors for the Hamming window
    0<=i<=n: HAM_n(i) = HAM0 + HAM1*cos(i*PI/n)
  */
-#define HAM1		   ((PITCH_FLOAT)(0.46e0))
-#define HAM0		   ((PITCH_FLOAT)(0.54e0))
+#define HAM1               ((PITCH_FLOAT)(0.46e0))
+#define HAM0               ((PITCH_FLOAT)(0.54e0))
 
 /* state of buffer management... */
 typedef enum { pi_input, pi_compute, pi_output } pitch_state_t;
@@ -212,41 +212,41 @@ static void interpolation(
 
     if (rate>0) /* sweep forwards */
     {
-	for (index=ZERO, i=0; i<olen; i++, index+=rate)
-	{
-	    register int ifl = (int) index; /* FLOOR */
-	    register PITCH_FLOAT frac = index - ifl;
+        for (index=ZERO, i=0; i<olen; i++, index+=rate)
+        {
+            register int ifl = (int) index; /* FLOOR */
+            register PITCH_FLOAT frac = index - ifl;
 
-	    if (pitch->interopt==PITCH_INTERPOLE_LIN)
-		out[i] = lin((PITCH_FLOAT) ibuf[ifl], 
-			     (PITCH_FLOAT) ibuf[ifl+1],
-			     frac);
-	    else
-		out[i] = cub((PITCH_FLOAT) ibuf[ifl-1], 
-			     (PITCH_FLOAT) ibuf[ifl], 
-			     (PITCH_FLOAT) ibuf[ifl+1], 
-			     (PITCH_FLOAT) ibuf[ifl+2],
-			     frac);
-	}
+            if (pitch->interopt==PITCH_INTERPOLE_LIN)
+                out[i] = lin((PITCH_FLOAT) ibuf[ifl], 
+                             (PITCH_FLOAT) ibuf[ifl+1],
+                             frac);
+            else
+                out[i] = cub((PITCH_FLOAT) ibuf[ifl-1], 
+                             (PITCH_FLOAT) ibuf[ifl], 
+                             (PITCH_FLOAT) ibuf[ifl+1], 
+                             (PITCH_FLOAT) ibuf[ifl+2],
+                             frac);
+        }
     }
     else /* rate < 0, sweep backwards */
     {
-	for (index=ilen-1, i=olen-1; i>=0; i--, index+=rate)
-	{
-	    register int ifl = (int) index; /* FLOOR */
-	    register PITCH_FLOAT frac = index - ifl;
+        for (index=ilen-1, i=olen-1; i>=0; i--, index+=rate)
+        {
+            register int ifl = (int) index; /* FLOOR */
+            register PITCH_FLOAT frac = index - ifl;
 
-	    if (pitch->interopt==PITCH_INTERPOLE_LIN)
-		out[i] = lin((PITCH_FLOAT) ibuf[ifl], 
-			     (PITCH_FLOAT) ibuf[ifl+1],
-			     frac);
-	    else
-		out[i] = cub((PITCH_FLOAT) ibuf[ifl-1], 
-			     (PITCH_FLOAT) ibuf[ifl], 
-			     (PITCH_FLOAT) ibuf[ifl+1], 
-			     (PITCH_FLOAT) ibuf[ifl+2],
-			     frac);
-	}
+            if (pitch->interopt==PITCH_INTERPOLE_LIN)
+                out[i] = lin((PITCH_FLOAT) ibuf[ifl], 
+                             (PITCH_FLOAT) ibuf[ifl+1],
+                             frac);
+            else
+                out[i] = cub((PITCH_FLOAT) ibuf[ifl-1], 
+                             (PITCH_FLOAT) ibuf[ifl], 
+                             (PITCH_FLOAT) ibuf[ifl+1], 
+                             (PITCH_FLOAT) ibuf[ifl+2],
+                             frac);
+        }
     }
 }
 
@@ -258,37 +258,37 @@ static void process_intput_buffer(pitch_t pitch)
 
     /* forwards sweep */
     interpolation(pitch, 
-		  pitch->buf+pitch->overlap, pitch->step+pitch->overlap, 
-		  pitch->tmp, pitch->step,
-		  pitch->rate);
+                  pitch->buf+pitch->overlap, pitch->step+pitch->overlap, 
+                  pitch->tmp, pitch->step,
+                  pitch->rate);
     
     for (i=0; i<len; i++)
-	pitch->acc[i] = pitch->fade[i]*pitch->tmp[i];
+        pitch->acc[i] = pitch->fade[i]*pitch->tmp[i];
 
     /* backwards sweep */
     interpolation(pitch,
-		  pitch->buf, pitch->step+pitch->overlap,
-		  pitch->tmp, pitch->step,
-		  -pitch->rate);
+                  pitch->buf, pitch->step+pitch->overlap,
+                  pitch->tmp, pitch->step,
+                  -pitch->rate);
     
     for (i=0; i<len; i++)
-	pitch->acc[i] += pitch->fade[pitch->step-i-1]*pitch->tmp[i];
+        pitch->acc[i] += pitch->fade[pitch->step-i-1]*pitch->tmp[i];
 }
 
 static st_sample_t clip(pitch_t pitch, PITCH_FLOAT v)
 {
     if (v < -ST_SAMPLE_MAX)
     {
-	pitch->clipped++;
-	return -ST_SAMPLE_MAX;
+        pitch->clipped++;
+        return -ST_SAMPLE_MAX;
     }
     else if (v > ST_SAMPLE_MAX)
     {
-	pitch->clipped++;
-	return ST_SAMPLE_MAX;
+        pitch->clipped++;
+        return ST_SAMPLE_MAX;
     }
     else
-	return (st_sample_t) v;
+        return (st_sample_t) v;
 }
 
 /*
@@ -303,72 +303,72 @@ int st_pitch_getopts(eff_t effp, int n, char **argv)
 
     if (n && !sscanf(argv[0], PITCH_FLOAT_SCAN, &pitch->shift))
     {
-	st_fail(PITCH_USAGE);
-	return ST_EOF;
+        st_fail(PITCH_USAGE);
+        return ST_EOF;
     }
 
     /* sweep size in ms */
     pitch->width = PITCH_DEFAULT_WIDTH;
     if (n>1 && !sscanf(argv[1], PITCH_FLOAT_SCAN, &pitch->width))
     {
-	st_fail(PITCH_USAGE);
-	return ST_EOF;
+        st_fail(PITCH_USAGE);
+        return ST_EOF;
     }
 
     /* interpole option */
     pitch->interopt = PITCH_INTERPOLE_DEFAULT;
     if (n>2)
     {
-	switch(argv[2][0])
-	{
-	case 'l':
-	case 'L':
-	    pitch->interopt = PITCH_INTERPOLE_LIN;
-	    break;
-	case 'c':
-	case 'C':
-	    pitch->interopt = PITCH_INTERPOLE_CUB;
-	    break;
-	default:
-	    st_fail(PITCH_USAGE);
-	    return ST_EOF;
-	}
+        switch(argv[2][0])
+        {
+        case 'l':
+        case 'L':
+            pitch->interopt = PITCH_INTERPOLE_LIN;
+            break;
+        case 'c':
+        case 'C':
+            pitch->interopt = PITCH_INTERPOLE_CUB;
+            break;
+        default:
+            st_fail(PITCH_USAGE);
+            return ST_EOF;
+        }
     }
 
     /* fade option */
     pitch->fadeopt = PITCH_FADE_DEFAULT; /* default */
     if (n>3) 
     {
-	switch (argv[3][0]) /* what a parser;-) */
-	{
-	case 'l':
-	case 'L':
-	    pitch->fadeopt = PITCH_FADE_LIN;
-	    break;
-	case 't':
-	case 'T':
-	    pitch->fadeopt = PITCH_FADE_TRA;
-	    break;
-	case 'h':
-	case 'H':
-	    pitch->fadeopt = PITCH_FADE_HAM;
-	    break;
-	case 'c':
-	case 'C':
-	    pitch->fadeopt = PITCH_FADE_COS;
-	    break;
-	default:
-	    st_fail(PITCH_USAGE);
-	    return ST_EOF;
-	}
+        switch (argv[3][0]) /* what a parser;-) */
+        {
+        case 'l':
+        case 'L':
+            pitch->fadeopt = PITCH_FADE_LIN;
+            break;
+        case 't':
+        case 'T':
+            pitch->fadeopt = PITCH_FADE_TRA;
+            break;
+        case 'h':
+        case 'H':
+            pitch->fadeopt = PITCH_FADE_HAM;
+            break;
+        case 'c':
+        case 'C':
+            pitch->fadeopt = PITCH_FADE_COS;
+            break;
+        default:
+            st_fail(PITCH_USAGE);
+            return ST_EOF;
+        }
     }
     
     pitch->coef = QUARTER;
     if (n>4 && (!sscanf(argv[4], PITCH_FLOAT_SCAN, &pitch->coef) ||
-		pitch->coef<ZERO || pitch->coef>HALF))
+                pitch->coef<ZERO || pitch->coef>HALF))
     {
-	st_fail(PITCH_USAGE);
-	return ST_EOF;
+        st_fail(PITCH_USAGE);
+        return ST_EOF;
     }
 
     pitch->clipped = 0;
@@ -388,16 +388,16 @@ int st_pitch_start(eff_t effp)
      */
     if (effp->outinfo.rate != effp->ininfo.rate)
     {
-	st_fail("PITCH cannot handle different rates (in=%ld, out=%ld)"
-	     " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
-	return ST_EOF;
+        st_fail("PITCH cannot handle different rates (in=%ld, out=%ld)"
+             " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
+        return ST_EOF;
     }
  
     if (effp->outinfo.channels != effp->ininfo.channels)
     {
-	st_fail("PITCH cannot handle different channels (in=%ld, out=%ld)"
-	     " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
-	return ST_EOF;
+        st_fail("PITCH cannot handle different channels (in=%ld, out=%ld)"
+             " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
+        return ST_EOF;
     }
 
     /* computer inner stuff... */
@@ -417,9 +417,9 @@ int st_pitch_start(eff_t effp)
 
     /* security for safe cubic interpolation */
     if (pitch->rate > ONE)
-	pitch->overlap = (int) ((pitch->rate-ONE)*pitch->step) + 2;
+        pitch->overlap = (int) ((pitch->rate-ONE)*pitch->step) + 2;
     else
-	pitch->overlap = 2; 
+        pitch->overlap = 2; 
 
     pitch->size = pitch->step + 2*pitch->overlap;
 
@@ -430,61 +430,61 @@ int st_pitch_start(eff_t effp)
 
     if (!pitch->fade || !pitch->tmp || !pitch->acc || !pitch->buf)
     {
-	st_fail("malloc failed in st_pitch_start");
-	return ST_EOF;
+        st_fail("malloc failed in st_pitch_start");
+        return ST_EOF;
     }
 
     pitch->index = pitch->overlap;
 
     /* default initial signal */
     for (i=0; i<pitch->size; i++)
-	pitch->buf[i] = 0;
+        pitch->buf[i] = 0;
 
     if (pitch->fadeopt == PITCH_FADE_HAM)
     {
-	/* does it make sense to have such an option? */
-	register PITCH_FLOAT pi_step = M_PI / (pitch->step-1);
-	
-	for (i=0; i<pitch->step; i++)
-	    pitch->fade[i] = (PITCH_FLOAT) (HAM0 + HAM1*cos(pi_step*i));
+        /* does it make sense to have such an option? */
+        register PITCH_FLOAT pi_step = M_PI / (pitch->step-1);
+        
+        for (i=0; i<pitch->step; i++)
+            pitch->fade[i] = (PITCH_FLOAT) (HAM0 + HAM1*cos(pi_step*i));
     }
     else if (pitch->fadeopt == PITCH_FADE_COS)
     {
-	register PITCH_FLOAT pi_2_step = M_PI_2 / (pitch->step-1);
+        register PITCH_FLOAT pi_2_step = M_PI_2 / (pitch->step-1);
 
-	pitch->fade[0] = ONE; /* cos(0) == 1.0 */
-	for (i=1; i<pitch->step-1; i++)
-	    pitch->fade[i]  = (PITCH_FLOAT) cos(pi_2_step*i);
-	pitch->fade[pitch->step-1] = ZERO; /* cos(PI/2) == 0.0 */
+        pitch->fade[0] = ONE; /* cos(0) == 1.0 */
+        for (i=1; i<pitch->step-1; i++)
+            pitch->fade[i]  = (PITCH_FLOAT) cos(pi_2_step*i);
+        pitch->fade[pitch->step-1] = ZERO; /* cos(PI/2) == 0.0 */
     }
     else if (pitch->fadeopt == PITCH_FADE_LIN)
     {
-	register PITCH_FLOAT stepth = ONE / (pitch->step-1);
+        register PITCH_FLOAT stepth = ONE / (pitch->step-1);
 
-	pitch->fade[0] = ONE;
-	for (i=1; i<pitch->step-1; i++)
-	    pitch->fade[i] = (pitch->step-i-1) * stepth;
-	pitch->fade[pitch->step-1] = ZERO;
+        pitch->fade[0] = ONE;
+        for (i=1; i<pitch->step-1; i++)
+            pitch->fade[i] = (pitch->step-i-1) * stepth;
+        pitch->fade[pitch->step-1] = ZERO;
     }
     else if (pitch->fadeopt == PITCH_FADE_TRA)
     {
-	/* 0 <= coef <= 0.5 */
-	register int plat = (int) (pitch->step*pitch->coef);
-	register PITCH_FLOAT slope = ONE / (pitch->step - 2*plat);
+        /* 0 <= coef <= 0.5 */
+        register int plat = (int) (pitch->step*pitch->coef);
+        register PITCH_FLOAT slope = ONE / (pitch->step - 2*plat);
 
-	for (i=0; i<plat; i++)
-	    pitch->fade[i] = ONE;
+        for (i=0; i<plat; i++)
+            pitch->fade[i] = ONE;
 
-	for (; i<pitch->step-plat; i++)
-	    pitch->fade[i] = slope * (pitch->step-plat-i-1);
+        for (; i<pitch->step-plat; i++)
+            pitch->fade[i] = slope * (pitch->step-plat-i-1);
 
-	for (; i<pitch->step; i++)
-	    pitch->fade[i] = ZERO;
+        for (; i<pitch->step; i++)
+            pitch->fade[i] = ZERO;
     }
     else
     {
-	st_fail("unexpected PITCH_FADE parameter %d", pitch->fadeopt);
-	return ST_EOF;
+        st_fail("unexpected PITCH_FADE parameter %d", pitch->fadeopt);
+        return ST_EOF;
     }
 
     pitch->clipped = 0;
@@ -498,7 +498,8 @@ int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 st_size_t *isamp, st_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
-    register int i, len, size, iindex, oindex;
+    int i, size;
+    st_size_t len, iindex, oindex;
 
     size = pitch->size;
     /* size to process */
@@ -514,45 +515,45 @@ int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     */
     while (len>0 && iindex<*isamp && oindex<*osamp)
     {
-	if (pitch->state == pi_input)
-	{
-	    register int tocopy = MIN(pitch->size-pitch->index, len);
+        if (pitch->state == pi_input)
+        {
+            register int tocopy = MIN(pitch->size-pitch->index, len);
 
-	    memcpy(pitch->buf+pitch->index, ibuf+iindex, tocopy*sizeof(st_sample_t));
+            memcpy(pitch->buf+pitch->index, ibuf+iindex, tocopy*sizeof(st_sample_t));
 
-	    len -= tocopy;
-	    pitch->index += tocopy;
-	    iindex += tocopy;
+            len -= tocopy;
+            pitch->index += tocopy;
+            iindex += tocopy;
 
-	    if (pitch->index==pitch->size)
-		pitch->state = pi_compute;
-	}
+            if (pitch->index==pitch->size)
+                pitch->state = pi_compute;
+        }
 
-	if (pitch->state == pi_compute)
-	{
-	    process_intput_buffer(pitch);
-	    pitch->state = pi_output;
-	    pitch->iacc = 0;
-	}
+        if (pitch->state == pi_compute)
+        {
+            process_intput_buffer(pitch);
+            pitch->state = pi_output;
+            pitch->iacc = 0;
+        }
 
-	if (pitch->state == pi_output)
-	{
-	    register int toout = MIN(*osamp-oindex, pitch->step-pitch->iacc);
+        if (pitch->state == pi_output)
+        {
+            int toout = MIN(*osamp-oindex, pitch->step-pitch->iacc);
 
-	    for (i=0; i<toout; i++)
-		obuf[oindex++] = clip(pitch, pitch->acc[pitch->iacc++]);
+            for (i=0; i<toout; i++)
+                obuf[oindex++] = clip(pitch, pitch->acc[pitch->iacc++]);
 
-	    if (pitch->iacc == pitch->step)
-	    {
-		pitch->state = pi_input;
+            if (pitch->iacc == pitch->step)
+            {
+                pitch->state = pi_input;
 
-		/* shift input buffer. memmove? */
-		for (i=0; i<2*pitch->overlap; i++)
-		    pitch->buf[i] = pitch->buf[i+pitch->step];
-		
-		pitch->index = 2*pitch->overlap;
-	    }
-	}
+                /* shift input buffer. memmove? */
+                for (i=0; i<2*pitch->overlap; i++)
+                    pitch->buf[i] = pitch->buf[i+pitch->step];
+                
+                pitch->index = 2*pitch->overlap;
+            }
+        }
     }
 
     /* report consumption. */
@@ -567,27 +568,27 @@ int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 int st_pitch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
-    register int i;
+    st_size_t i;
 
     if (pitch->state == pi_input)
     {
-	/* complete input buffer content with 0. */
-	for (i=pitch->index; i<pitch->size; i++)
-	    pitch->buf[i] = 0;
+        /* complete input buffer content with 0. */
+        for (i=pitch->index; i<pitch->size; i++)
+            pitch->buf[i] = 0;
 
-	pitch->state = pi_compute;
+        pitch->state = pi_compute;
     }
 
     if (pitch->state == pi_compute)
     {
-	process_intput_buffer(pitch);
-	pitch->state = pi_output;
-	pitch->iacc = 0;
+        process_intput_buffer(pitch);
+        pitch->state = pi_output;
+        pitch->iacc = 0;
     }
 
     /* (pitch->state == pi_output) */
     for (i=0; i<*osamp && i<pitch->index-pitch->overlap;)
-	obuf[i++] = clip(pitch, pitch->acc[pitch->iacc++]);
+        obuf[i++] = clip(pitch, pitch->acc[pitch->iacc++]);
 
     /* report... */
     *osamp = i;
@@ -609,8 +610,8 @@ int st_pitch_stop(eff_t effp)
     free(pitch->buf);
 
     if (pitch->clipped)
-	st_warn("PITCH clipped %d values... adjust volume with -v option maybe?", 
-	     pitch->clipped);
+        st_warn("PITCH clipped %d values... adjust volume with -v option maybe?", 
+             pitch->clipped);
 
     return ST_SUCCESS;
 }

@@ -163,13 +163,13 @@ void st_ulaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
 {
     while (len)
     {
-	uint8_t datum;
+        uint8_t datum;
 
-	datum = *((uint8_t *)buf2);
-	buf2++;
+        datum = *((uint8_t *)buf2);
+        buf2++;
 
-	*buf1++ = ST_ULAW_BYTE_TO_SAMPLE(datum);
-	len--;
+        *buf1++ = ST_ULAW_BYTE_TO_SAMPLE(datum);
+        len--;
     }
 }
 
@@ -178,13 +178,13 @@ void st_alaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
 {
     while (len)
     {
-	uint8_t datum;
+        uint8_t datum;
 
-	datum = *((uint8_t *)buf2);
-	buf2++;
+        datum = *((uint8_t *)buf2);
+        buf2++;
 
-	*buf1++ = ST_ALAW_BYTE_TO_SAMPLE(datum);
-	len--;
+        *buf1++ = ST_ALAW_BYTE_TO_SAMPLE(datum);
+        len--;
     }
 }
 
@@ -193,13 +193,13 @@ void st_inv_ulaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
 {
     while (len)
     {
-	uint8_t datum;
+        uint8_t datum;
 
-	datum = *((uint8_t *)buf2);
-	buf2++;
+        datum = *((uint8_t *)buf2);
+        buf2++;
 
-	*buf1++ = ST_INVERT_ULAW_BYTE_TO_SAMPLE(datum);
-	len--;
+        *buf1++ = ST_INVERT_ULAW_BYTE_TO_SAMPLE(datum);
+        len--;
     }
 }
 
@@ -208,13 +208,13 @@ void st_inv_alaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
 {
     while (len)
     {
-	uint8_t datum;
+        uint8_t datum;
 
-	datum = *((uint8_t *)buf2);
-	buf2++;
+        datum = *((uint8_t *)buf2);
+        buf2++;
 
-	*buf1++ = ST_INVERT_ALAW_BYTE_TO_SAMPLE(datum);
-	len--;
+        *buf1++ = ST_INVERT_ALAW_BYTE_TO_SAMPLE(datum);
+        len--;
     }
 }
 
@@ -328,7 +328,13 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 {
     st_ssize_t len, done = 0;
     void (*read_buf)(st_sample_t *, char *, st_ssize_t, char) = 0;
-    int i;
+    size_t i;
+
+    if (nsamp < 0)
+    {
+        st_fail_errno(ft,ST_EINVAL,"st_rawread requires positive sizes");
+        return ST_EOF;
+    }
 
     switch(ft->info.size) {
         case ST_SIZE_BYTE:
@@ -408,7 +414,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
     }
 
 
-    len = MIN(nsamp,(ft->file.count-ft->file.pos)/ft->info.size);
+    len = MIN((st_size_t)nsamp,(ft->file.count-ft->file.pos)/ft->info.size);
     if (len)
     {
         read_buf(buf + done, ft->file.buf + ft->file.pos, len, ft->swap);
@@ -440,7 +446,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
             ft->file.count += i;
         }
 
-        len = MIN(nsamp - done,(ft->file.count-ft->file.pos)/ft->info.size);
+        len = MIN((st_size_t)nsamp - done,(ft->file.count-ft->file.pos)/ft->info.size);
         if (len)
         {
             read_buf(buf + done, ft->file.buf + ft->file.pos, len, ft->swap);
@@ -483,8 +489,8 @@ void st_ulaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
 {
     while (len)
     {
-	*(uint8_t *)buf1++ = ST_SAMPLE_TO_ULAW_BYTE(*buf2++);
-	len--;
+        *(uint8_t *)buf1++ = ST_SAMPLE_TO_ULAW_BYTE(*buf2++);
+        len--;
     }
 }
 
@@ -493,8 +499,8 @@ void st_alaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
 {
     while (len)
     {
-	*(uint8_t *)buf1++ = ST_SAMPLE_TO_ALAW_BYTE(*buf2++);
-	len--;
+        *(uint8_t *)buf1++ = ST_SAMPLE_TO_ALAW_BYTE(*buf2++);
+        len--;
     }
 }
 
@@ -503,8 +509,8 @@ void st_inv_ulaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
 {
     while (len)
     {
-	*(uint8_t *)buf1++ = ST_SAMPLE_TO_INVERT_ULAW_BYTE(*buf2++);
-	len--;
+        *(uint8_t *)buf1++ = ST_SAMPLE_TO_INVERT_ULAW_BYTE(*buf2++);
+        len--;
     }
 }
 
@@ -513,8 +519,8 @@ void st_inv_alaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
 {
     while (len)
     {
-	*(uint8_t *)buf1++ = ST_SAMPLE_TO_INVERT_ALAW_BYTE(*buf2++);
-	len--;
+        *(uint8_t *)buf1++ = ST_SAMPLE_TO_INVERT_ALAW_BYTE(*buf2++);
+        len--;
     }
 }
 
@@ -707,7 +713,7 @@ st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                     break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-		    return(0);
+                    return(0);
             }
             break;
 

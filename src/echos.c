@@ -51,17 +51,17 @@
 #include "st_i.h"
 
 #define DELAY_BUFSIZ ( 50L * ST_MAXRATE )
-#define MAX_ECHOS 7	/* 24 bit x ( 1 + MAX_ECHOS ) = */
-			/* 24 bit x 8 = 32 bit !!!	*/
+#define MAX_ECHOS 7     /* 24 bit x ( 1 + MAX_ECHOS ) = */
+                        /* 24 bit x 8 = 32 bit !!!      */
 
 /* Private data for SKEL file */
 typedef struct echosstuff {
-	int	counter[MAX_ECHOS];			
-	int	num_delays;
-	double	*delay_buf;
-	float	in_gain, out_gain;
-	float	delay[MAX_ECHOS], decay[MAX_ECHOS];
-	st_ssize_t samples[MAX_ECHOS], pointer[MAX_ECHOS], sumsamples;
+        int     counter[MAX_ECHOS];                     
+        int     num_delays;
+        double  *delay_buf;
+        float   in_gain, out_gain;
+        float   delay[MAX_ECHOS], decay[MAX_ECHOS];
+        st_ssize_t samples[MAX_ECHOS], pointer[MAX_ECHOS], sumsamples;
 } *echos_t;
 
 /* Private data for SKEL file */
@@ -71,34 +71,34 @@ typedef struct echosstuff {
  */
 int st_echos_getopts(eff_t effp, int n, char **argv) 
 {
-	echos_t echos = (echos_t) effp->priv;
-	int i;
+        echos_t echos = (echos_t) effp->priv;
+        int i;
 
-	echos->num_delays = 0;
+        echos->num_delays = 0;
 
-	if ((n < 4) || (n % 2))
-	{
-	    st_fail("Usage: echos gain-in gain-out delay decay [ delay decay ... ]");
-	    return (ST_EOF);
-	}
+        if ((n < 4) || (n % 2))
+        {
+            st_fail("Usage: echos gain-in gain-out delay decay [ delay decay ... ]");
+            return (ST_EOF);
+        }
 
-	i = 0;
-	sscanf(argv[i++], "%f", &echos->in_gain);
-	sscanf(argv[i++], "%f", &echos->out_gain);
-	while (i < n) {
-		/* Linux bug and it's cleaner. */
-		sscanf(argv[i++], "%f", &echos->delay[echos->num_delays]);
-		sscanf(argv[i++], "%f", &echos->decay[echos->num_delays]);
-		echos->num_delays++;
-		if ( echos->num_delays > MAX_ECHOS )
-		{
-			st_fail("echos: to many delays, use less than %i delays",
-				MAX_ECHOS);
-			return (ST_EOF);
-		}
-	}
-	echos->sumsamples = 0;
-	return (ST_SUCCESS);
+        i = 0;
+        sscanf(argv[i++], "%f", &echos->in_gain);
+        sscanf(argv[i++], "%f", &echos->out_gain);
+        while (i < n) {
+                /* Linux bug and it's cleaner. */
+                sscanf(argv[i++], "%f", &echos->delay[echos->num_delays]);
+                sscanf(argv[i++], "%f", &echos->decay[echos->num_delays]);
+                echos->num_delays++;
+                if ( echos->num_delays > MAX_ECHOS )
+                {
+                        st_fail("echos: to many delays, use less than %i delays",
+                                MAX_ECHOS);
+                        return (ST_EOF);
+                }
+        }
+        echos->sumsamples = 0;
+        return (ST_SUCCESS);
 }
 
 /*
@@ -106,68 +106,68 @@ int st_echos_getopts(eff_t effp, int n, char **argv)
  */
 int st_echos_start(eff_t effp)
 {
-	echos_t echos = (echos_t) effp->priv;
-	int i;
-	float sum_in_volume;
-	long j;
+        echos_t echos = (echos_t) effp->priv;
+        int i;
+        float sum_in_volume;
+        long j;
 
-	if ( echos->in_gain < 0.0 )
-	{
-		st_fail("echos: gain-in must be positive!\n");
-		return (ST_EOF);
-	}
-	if ( echos->in_gain > 1.0 )
-	{
-		st_fail("echos: gain-in must be less than 1.0!\n");
-		return (ST_EOF);
-	}
-	if ( echos->out_gain < 0.0 )
-	{
-		st_fail("echos: gain-in must be positive!\n");
-		return (ST_EOF);
-	}
-	for ( i = 0; i < echos->num_delays; i++ ) {
-		echos->samples[i] = echos->delay[i] * effp->ininfo.rate / 1000.0;
-		if ( echos->samples[i] < 1 )
-		{
-		    st_fail("echos: delay must be positive!\n");
-		    return (ST_EOF);
-		}
-		if ( echos->samples[i] > DELAY_BUFSIZ )
-		{
-			st_fail("echos: delay must be less than %g seconds!\n",
-				DELAY_BUFSIZ / (float) effp->ininfo.rate );
-			return (ST_EOF);
-		}
-		if ( echos->decay[i] < 0.0 )
-		{
-		    st_fail("echos: decay must be positive!\n" );
-		    return (ST_EOF);
-		}
-		if ( echos->decay[i] > 1.0 )
-		{
-		    st_fail("echos: decay must be less than 1.0!\n" );
-		    return (ST_EOF);
-		}
-		echos->counter[i] = 0;
-		echos->pointer[i] = echos->sumsamples;
-		echos->sumsamples += echos->samples[i];
-	}
-	if (! (echos->delay_buf = (double *) malloc(sizeof (double) * echos->sumsamples)))
-	{
-		st_fail("echos: Cannot malloc %d bytes!\n", 
-			sizeof(double) * echos->sumsamples);
-		return(ST_EOF);
-	}
-	for ( j = 0; j < echos->sumsamples; ++j )
-		echos->delay_buf[j] = 0.0;
-	/* Be nice and check the hint with warning, if... */
-	sum_in_volume = 1.0;
-	for ( i = 0; i < echos->num_delays; i++ ) 
-		sum_in_volume += echos->decay[i];
-	if ( sum_in_volume * echos->in_gain > 1.0 / echos->out_gain )
-		st_warn("echos: warning >>> gain-out can cause saturation of output <<<");
-	return (ST_SUCCESS);
+        if ( echos->in_gain < 0.0 )
+        {
+                st_fail("echos: gain-in must be positive!\n");
+                return (ST_EOF);
+        }
+        if ( echos->in_gain > 1.0 )
+        {
+                st_fail("echos: gain-in must be less than 1.0!\n");
+                return (ST_EOF);
+        }
+        if ( echos->out_gain < 0.0 )
+        {
+                st_fail("echos: gain-in must be positive!\n");
+                return (ST_EOF);
+        }
+        for ( i = 0; i < echos->num_delays; i++ ) {
+                echos->samples[i] = echos->delay[i] * effp->ininfo.rate / 1000.0;
+                if ( echos->samples[i] < 1 )
+                {
+                    st_fail("echos: delay must be positive!\n");
+                    return (ST_EOF);
+                }
+                if ( echos->samples[i] > DELAY_BUFSIZ )
+                {
+                        st_fail("echos: delay must be less than %g seconds!\n",
+                                DELAY_BUFSIZ / (float) effp->ininfo.rate );
+                        return (ST_EOF);
+                }
+                if ( echos->decay[i] < 0.0 )
+                {
+                    st_fail("echos: decay must be positive!\n" );
+                    return (ST_EOF);
+                }
+                if ( echos->decay[i] > 1.0 )
+                {
+                    st_fail("echos: decay must be less than 1.0!\n" );
+                    return (ST_EOF);
+                }
+                echos->counter[i] = 0;
+                echos->pointer[i] = echos->sumsamples;
+                echos->sumsamples += echos->samples[i];
+        }
+        if (! (echos->delay_buf = (double *) malloc(sizeof (double) * echos->sumsamples)))
+        {
+                st_fail("echos: Cannot malloc %d bytes!\n", 
+                        sizeof(double) * echos->sumsamples);
+                return(ST_EOF);
+        }
+        for ( j = 0; j < echos->sumsamples; ++j )
+                echos->delay_buf[j] = 0.0;
+        /* Be nice and check the hint with warning, if... */
+        sum_in_volume = 1.0;
+        for ( i = 0; i < echos->num_delays; i++ ) 
+                sum_in_volume += echos->decay[i];
+        if ( sum_in_volume * echos->in_gain > 1.0 / echos->out_gain )
+                st_warn("echos: warning >>> gain-out can cause saturation of output <<<");
+        return (ST_SUCCESS);
 }
 
 /*
@@ -177,41 +177,41 @@ int st_echos_start(eff_t effp)
 int st_echos_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
                 st_size_t *isamp, st_size_t *osamp)
 {
-	echos_t echos = (echos_t) effp->priv;
-	int len, done;
-	int j;
-	
-	double d_in, d_out;
-	st_sample_t out;
+        echos_t echos = (echos_t) effp->priv;
+        int len, done;
+        int j;
+        
+        double d_in, d_out;
+        st_sample_t out;
 
-	len = ((*isamp > *osamp) ? *osamp : *isamp);
-	for(done = 0; done < len; done++) {
-		/* Store delays as 24-bit signed longs */
-		d_in = (double) *ibuf++ / 256;
-		/* Compute output first */
-		d_out = d_in * echos->in_gain;
-		for ( j = 0; j < echos->num_delays; j++ ) {
-			d_out += echos->delay_buf[echos->counter[j] + echos->pointer[j]] * echos->decay[j];
-		}
-		/* Adjust the output volume and size to 24 bit */
-		d_out = d_out * echos->out_gain;
-		out = st_clip24((st_sample_t) d_out);
-		*obuf++ = out * 256;
-		/* Mix decay of delays and input */
-		for ( j = 0; j < echos->num_delays; j++ ) {
-			if ( j == 0 )
-				echos->delay_buf[echos->counter[j] + echos->pointer[j]] = d_in;
-			else
-				echos->delay_buf[echos->counter[j] + echos->pointer[j]] = 
-				   echos->delay_buf[echos->counter[j-1] + echos->pointer[j-1]] + d_in;
-		}
-		/* Adjust the counters */
-		for ( j = 0; j < echos->num_delays; j++ )
-			echos->counter[j] = 
-			   ( echos->counter[j] + 1 ) % echos->samples[j];
-	}
-	/* processed all samples */
-	return (ST_SUCCESS);
+        len = ((*isamp > *osamp) ? *osamp : *isamp);
+        for(done = 0; done < len; done++) {
+                /* Store delays as 24-bit signed longs */
+                d_in = (double) *ibuf++ / 256;
+                /* Compute output first */
+                d_out = d_in * echos->in_gain;
+                for ( j = 0; j < echos->num_delays; j++ ) {
+                        d_out += echos->delay_buf[echos->counter[j] + echos->pointer[j]] * echos->decay[j];
+                }
+                /* Adjust the output volume and size to 24 bit */
+                d_out = d_out * echos->out_gain;
+                out = st_clip24((st_sample_t) d_out);
+                *obuf++ = out * 256;
+                /* Mix decay of delays and input */
+                for ( j = 0; j < echos->num_delays; j++ ) {
+                        if ( j == 0 )
+                                echos->delay_buf[echos->counter[j] + echos->pointer[j]] = d_in;
+                        else
+                                echos->delay_buf[echos->counter[j] + echos->pointer[j]] = 
+                                   echos->delay_buf[echos->counter[j-1] + echos->pointer[j-1]] + d_in;
+                }
+                /* Adjust the counters */
+                for ( j = 0; j < echos->num_delays; j++ )
+                        echos->counter[j] = 
+                           ( echos->counter[j] + 1 ) % echos->samples[j];
+        }
+        /* processed all samples */
+        return (ST_SUCCESS);
 }
 
 /*
@@ -219,42 +219,42 @@ int st_echos_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
  */
 int st_echos_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
-	echos_t echos = (echos_t) effp->priv;
-	double d_in, d_out;
-	st_sample_t out;
-	int j;
-	long done;
+        echos_t echos = (echos_t) effp->priv;
+        double d_in, d_out;
+        st_sample_t out;
+        int j;
+        st_size_t done;
 
-	done = 0;
-	/* drain out delay samples */
-	while ( ( done < *osamp ) && ( done < echos->sumsamples ) ) {
-		d_in = 0;
-		d_out = 0;
-		for ( j = 0; j < echos->num_delays; j++ ) {
-			d_out += echos->delay_buf[echos->counter[j] + echos->pointer[j]] * echos->decay[j];
-		}
-		/* Adjust the output volume and size to 24 bit */
-		d_out = d_out * echos->out_gain;
-		out = st_clip24((st_sample_t) d_out);
-		*obuf++ = out * 256;
-		/* Mix decay of delays and input */
-		for ( j = 0; j < echos->num_delays; j++ ) {
-			if ( j == 0 )
-				echos->delay_buf[echos->counter[j] + echos->pointer[j]] = d_in;
-			else
-				echos->delay_buf[echos->counter[j] + echos->pointer[j]] = 
-				   echos->delay_buf[echos->counter[j-1] + echos->pointer[j-1]];
-		}
-		/* Adjust the counters */
-		for ( j = 0; j < echos->num_delays; j++ )
-			echos->counter[j] = 
-			   ( echos->counter[j] + 1 ) % echos->samples[j];
-		done++;
-		echos->sumsamples--;
-	};
-	/* samples played, it remains */
-	*osamp = done;
-	return (ST_SUCCESS);
+        done = 0;
+        /* drain out delay samples */
+        while ( ( done < *osamp ) && ( done < echos->sumsamples ) ) {
+                d_in = 0;
+                d_out = 0;
+                for ( j = 0; j < echos->num_delays; j++ ) {
+                        d_out += echos->delay_buf[echos->counter[j] + echos->pointer[j]] * echos->decay[j];
+                }
+                /* Adjust the output volume and size to 24 bit */
+                d_out = d_out * echos->out_gain;
+                out = st_clip24((st_sample_t) d_out);
+                *obuf++ = out * 256;
+                /* Mix decay of delays and input */
+                for ( j = 0; j < echos->num_delays; j++ ) {
+                        if ( j == 0 )
+                                echos->delay_buf[echos->counter[j] + echos->pointer[j]] = d_in;
+                        else
+                                echos->delay_buf[echos->counter[j] + echos->pointer[j]] = 
+                                   echos->delay_buf[echos->counter[j-1] + echos->pointer[j-1]];
+                }
+                /* Adjust the counters */
+                for ( j = 0; j < echos->num_delays; j++ )
+                        echos->counter[j] = 
+                           ( echos->counter[j] + 1 ) % echos->samples[j];
+                done++;
+                echos->sumsamples--;
+        };
+        /* samples played, it remains */
+        *osamp = done;
+        return (ST_SUCCESS);
 }
 
 /*
@@ -262,10 +262,10 @@ int st_echos_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
  */
 int st_echos_stop(eff_t effp)
 {
-	echos_t echos = (echos_t) effp->priv;
+        echos_t echos = (echos_t) effp->priv;
 
-	free((char *) echos->delay_buf);
-	echos->delay_buf = (double *) -1;   /* guaranteed core dump */
-	return (ST_SUCCESS);
+        free((char *) echos->delay_buf);
+        echos->delay_buf = (double *) -1;   /* guaranteed core dump */
+        return (ST_SUCCESS);
 }
 

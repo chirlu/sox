@@ -103,7 +103,7 @@ typedef struct wavstuff {
     gsm            gsmhandle;
     gsm_signal     *gsmsample;
     int            gsmindex;
-    int            gsmbytecount;    /* counts bytes written to data block */
+    st_size_t      gsmbytecount;    /* counts bytes written to data block */
 #endif
 } *wav_t;
 
@@ -391,14 +391,14 @@ void wavgsmstopwrite(ft_t ft)
     wavgsmdestroy(ft);
 }
 #endif        /*ifdef out gsm code */
+
 /****************************************************************************/
 /* General Sox WAV file code                                                */
 /****************************************************************************/
-
-static uint32_t findChunk(ft_t ft, const char *Label)
+static st_ssize_t findChunk(ft_t ft, const char *Label)
 {
     char magic[5];
-    uint32_t len;
+    st_ssize_t len;
     for (;;)
     {
         if (st_reads(ft, magic, 4) == ST_EOF)

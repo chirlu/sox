@@ -489,7 +489,7 @@ int st_avg_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 st_size_t *isamp, st_size_t *osamp)
 {
     avg_t avg = (avg_t) effp->priv;
-    int len, done;
+    st_size_t len, done;
     int ichan, ochan;
     int i, j;
     double samp;

@@ -153,7 +153,7 @@ static int ossdspinit(ft_t ft)
 
     tmp = ft->info.rate;
     if (ioctl (fileno(ft->fp), SNDCTL_DSP_SPEED, &tmp) < 0 || 
-        ft->info.rate != tmp) {
+        (int)ft->info.rate != tmp) {
         /* If the rate the sound card is using is not within 1% of what
          * the user specified then override the user setting.
          * The only reason not to always override this is because of

@@ -389,7 +389,7 @@ int st_aiffstartread(ft_t ft)
                 }
         } else  {
                 if ((ft->info.channels == -1)
-                        || (ft->info.rate == -1)
+                        || (ft->info.rate == 0)
                         || (ft->info.encoding == -1)
                         || (ft->info.size == -1)) {
                   st_report("You must specify # channels, sample rate, signed/unsigned,\n");
@@ -583,8 +583,9 @@ st_ssize_t st_aiffread(ft_t ft, st_sample_t *buf, st_ssize_t len)
         aiff_t aiff = (aiff_t ) ft->priv;
         st_ssize_t done;
 
-        /* just read what's left of SSND chunk */
-        if (len > aiff->nsamples)
+        if (len < 0)
+            return ST_EOF;
+        else if ((st_size_t)len > aiff->nsamples)
                 len = aiff->nsamples;
         done = st_rawread(ft, buf, len);
         if (done == 0 && aiff->nsamples != 0)

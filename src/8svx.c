@@ -38,9 +38,8 @@ int st_svxstartread(ft_t ft)
         uint32_t totalsize;
         uint32_t chunksize;
 
-        uint32_t channels;
+        uint32_t channels, i;
         unsigned short rate;
-        int i;
 
         long chan1_pos;
 

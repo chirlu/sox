@@ -37,6 +37,8 @@ sox-12.17.5
     Geiger.
   o J Robert Ray submitted fix for AIFF handler to ignore lowercase
     chunks that are unknown.
+  o Bugfix for 8-bit voc files.  Jimen Ching
+  o General warning cleanups (cbagwell)
 
 sox-12.17.4
 -----------

@@ -28,37 +28,37 @@
 #endif
 
 /* Magic numbers used in Sun and NeXT audio files */
-#define SUN_MAGIC 	0x2e736e64		/* Really '.snd' */
-#define SUN_INV_MAGIC	0x646e732e		/* '.snd' upside-down */
-#define DEC_MAGIC	0x2e736400		/* Really '\0ds.' (for DEC) */
-#define DEC_INV_MAGIC	0x0064732e		/* '\0ds.' upside-down */
-#define SUN_HDRSIZE	24			/* Size of minimal header */
-#define SUN_UNSPEC	((unsigned)(~0))	/* Unspecified data size */
-#define SUN_ULAW	1			/* u-law encoding */
-#define SUN_LIN_8	2			/* Linear 8 bits */
-#define SUN_LIN_16	3			/* Linear 16 bits */
-#define SUN_LIN_24	4			/* Linear 24 bits */
-#define SUN_LIN_32	5			/* Linear 32 bits */
-#define SUN_FLOAT	6			/* IEEE FP 32 bits */
-#define SUN_DOUBLE	7			/* IEEE FP 64 bits */
-#define SUN_G721	23			/* CCITT G.721 4-bits ADPCM */
-#define SUN_G723_3	25			/* CCITT G.723 3-bits ADPCM */
-#define SUN_G723_5	26			/* CCITT G.723 5-bits ADPCM */
-#define SUN_ALAW	27			/* a-law encoding */
+#define SUN_MAGIC       0x2e736e64              /* Really '.snd' */
+#define SUN_INV_MAGIC   0x646e732e              /* '.snd' upside-down */
+#define DEC_MAGIC       0x2e736400              /* Really '\0ds.' (for DEC) */
+#define DEC_INV_MAGIC   0x0064732e              /* '\0ds.' upside-down */
+#define SUN_HDRSIZE     24                      /* Size of minimal header */
+#define SUN_UNSPEC      ((unsigned)(~0))        /* Unspecified data size */
+#define SUN_ULAW        1                       /* u-law encoding */
+#define SUN_LIN_8       2                       /* Linear 8 bits */
+#define SUN_LIN_16      3                       /* Linear 16 bits */
+#define SUN_LIN_24      4                       /* Linear 24 bits */
+#define SUN_LIN_32      5                       /* Linear 32 bits */
+#define SUN_FLOAT       6                       /* IEEE FP 32 bits */
+#define SUN_DOUBLE      7                       /* IEEE FP 64 bits */
+#define SUN_G721        23                      /* CCITT G.721 4-bits ADPCM */
+#define SUN_G723_3      25                      /* CCITT G.723 3-bits ADPCM */
+#define SUN_G723_5      26                      /* CCITT G.723 5-bits ADPCM */
+#define SUN_ALAW        27                      /* a-law encoding */
 /* The other formats are not supported by sox at the moment */
 
 /* Private data */
 typedef struct aupriv {
-	/* For writer: size in bytes */
-	st_size_t data_size;
-	/* For seeking */
-	st_size_t dataStart;
-	/* For G72x decoding: */
-	struct g72x_state state;
-	int (*dec_routine)();
-	int dec_bits;
-	unsigned int in_buffer;
-	int in_bits;
+        /* For writer: size in bytes */
+        st_size_t data_size;
+        /* For seeking */
+        st_size_t dataStart;
+        /* For G72x decoding: */
+        struct g72x_state state;
+        int (*dec_routine)();
+        int dec_bits;
+        unsigned int in_buffer;
+        int in_bits;
 } *au_t;
 
 static void auwriteheader(ft_t ft, st_size_t data_size);
@@ -72,8 +72,8 @@ static int st_auencodingandsize(int sun_encoding, char *encoding, char *size)
             break;
     case SUN_ALAW:
             *encoding = ST_ENCODING_ALAW;
-	    *size = ST_SIZE_BYTE;
-	    break;
+            *size = ST_SIZE_BYTE;
+            break;
     case SUN_LIN_8:
             *encoding = ST_ENCODING_SIGN2;
             *size = ST_SIZE_BYTE;
@@ -103,157 +103,157 @@ static int st_auencodingandsize(int sun_encoding, char *encoding, char *size)
 
 int st_auseek(ft_t ft, st_size_t offset) 
 {
-	au_t au = (au_t ) ft->priv;
+        au_t au = (au_t ) ft->priv;
 
-	if (au->dec_routine != NULL)
-		st_fail_errno(ft,ST_ENOTSUP,"Sorry, DEC unsupported");
-	else 
-		return st_seek(ft,offset*ft->info.size + au->dataStart,SEEK_SET);
+        if (au->dec_routine != NULL)
+                st_fail_errno(ft,ST_ENOTSUP,"Sorry, DEC unsupported");
+        else 
+                return st_seek(ft,offset*ft->info.size + au->dataStart,SEEK_SET);
 
-	return(ft->st_errno);
+        return(ft->st_errno);
 }
 
 int st_austartread(ft_t ft) 
 {
-	/* The following 6 variables represent a Sun sound header on disk.
-	   The numbers are written as big-endians.
-	   Any extra bytes (totalling hdr_size - 24) are an
-	   "info" field of unspecified nature, usually a string.
-	   By convention the header size is a multiple of 4. */
-	uint32_t magic;
-	uint32_t hdr_size;
-	uint32_t data_size;
-	uint32_t encoding;
-	uint32_t sample_rate;
-	uint32_t channels;
+        /* The following 6 variables represent a Sun sound header on disk.
+           The numbers are written as big-endians.
+           Any extra bytes (totalling hdr_size - 24) are an
+           "info" field of unspecified nature, usually a string.
+           By convention the header size is a multiple of 4. */
+        uint32_t magic;
+        uint32_t hdr_size;
+        uint32_t data_size;
+        uint32_t encoding;
+        uint32_t sample_rate;
+        uint32_t channels;
 
-	register int i;
-	char *buf;
-	au_t p = (au_t ) ft->priv;
+        unsigned int i;
+        char *buf;
+        au_t p = (au_t ) ft->priv;
 
-	int rc;
+        int rc;
 
-	/* AU is in big endian format.  Swap whats read
-	 * in onlittle endian machines.
-	 */
-	if (ST_IS_LITTLEENDIAN)
-	{
-		ft->swap = ft->swap ? 0 : 1;
-	}
+        /* AU is in big endian format.  Swap whats read
+         * in onlittle endian machines.
+         */
+        if (ST_IS_LITTLEENDIAN)
+        {
+                ft->swap = ft->swap ? 0 : 1;
+        }
 
-	/* Check the magic word */
-	st_readdw(ft, &magic);
-	if (magic == DEC_INV_MAGIC) {
-		/* Inverted headers are not standard.  Code was probably
-		 * left over from pre-standardize period of testing for
-		 * endianess.  Its not hurting though.
-		 */
-		ft->swap = ft->swap ? 0 : 1;
-		st_report("Found inverted DEC magic word.  Swapping bytes.");
-	}
-	else if (magic == SUN_INV_MAGIC) {
-		ft->swap = ft->swap ? 0 : 1;
-		st_report("Found inverted Sun/NeXT magic word. Swapping bytes.");
-	}
-	else if (magic == SUN_MAGIC) {
-		st_report("Found Sun/NeXT magic word");
-	}
-	else if (magic == DEC_MAGIC) {
-		st_report("Found DEC magic word");
-	}
-	else
-	{
-		st_fail_errno(ft,ST_EHDR,"Did not detect valid Sun/NeXT/DEC magic number in header.");
-		return(ST_EOF);
-	}
+        /* Check the magic word */
+        st_readdw(ft, &magic);
+        if (magic == DEC_INV_MAGIC) {
+                /* Inverted headers are not standard.  Code was probably
+                 * left over from pre-standardize period of testing for
+                 * endianess.  Its not hurting though.
+                 */
+                ft->swap = ft->swap ? 0 : 1;
+                st_report("Found inverted DEC magic word.  Swapping bytes.");
+        }
+        else if (magic == SUN_INV_MAGIC) {
+                ft->swap = ft->swap ? 0 : 1;
+                st_report("Found inverted Sun/NeXT magic word. Swapping bytes.");
+        }
+        else if (magic == SUN_MAGIC) {
+                st_report("Found Sun/NeXT magic word");
+        }
+        else if (magic == DEC_MAGIC) {
+                st_report("Found DEC magic word");
+        }
+        else
+        {
+                st_fail_errno(ft,ST_EHDR,"Did not detect valid Sun/NeXT/DEC magic number in header.");
+                return(ST_EOF);
+        }
 
-	/* Read the header size */
-	st_readdw(ft, &hdr_size);
-	if (hdr_size < SUN_HDRSIZE)
-	{
-		st_fail_errno(ft,ST_EHDR,"Sun/NeXT header size too small.");
-		return(ST_EOF);
-	}
+        /* Read the header size */
+        st_readdw(ft, &hdr_size);
+        if (hdr_size < SUN_HDRSIZE)
+        {
+                st_fail_errno(ft,ST_EHDR,"Sun/NeXT header size too small.");
+                return(ST_EOF);
+        }
 
-	/* Read the data size; may be ~0 meaning unspecified */
-	st_readdw(ft, &data_size);
+        /* Read the data size; may be ~0 meaning unspecified */
+        st_readdw(ft, &data_size);
 
-	/* Read the encoding; there are some more possibilities */
-	st_readdw(ft, &encoding);
+        /* Read the encoding; there are some more possibilities */
+        st_readdw(ft, &encoding);
 
 
-	/* Translate the encoding into encoding and size parameters */
-	/* (Or, for G.72x, set the decoding routine and parameters) */
-	p->dec_routine = NULL;
-	p->in_buffer = 0;
-	p->in_bits = 0;
+        /* Translate the encoding into encoding and size parameters */
+        /* (Or, for G.72x, set the decoding routine and parameters) */
+        p->dec_routine = NULL;
+        p->in_buffer = 0;
+        p->in_bits = 0;
         if(st_auencodingandsize(encoding, &(ft->info.encoding),
-			     &(ft->info.size)) == ST_EOF)
-	{
+                             &(ft->info.size)) == ST_EOF)
+        {
             st_fail_errno(ft,ST_EFMT,"Unsupported encoding in Sun/NeXT header.\nOnly U-law, signed bytes, signed words, and ADPCM are supported.");
             return(ST_EOF);
-	}
-	switch (encoding) {
-	case SUN_G721:
-		g72x_init_state(&p->state);
-		p->dec_routine = g721_decoder;
-		p->dec_bits = 4;
-		break;
-	case SUN_G723_3:
-		g72x_init_state(&p->state);
-		p->dec_routine = g723_24_decoder;
-		p->dec_bits = 3;
-		break;
-	case SUN_G723_5:
-		g72x_init_state(&p->state);
-		p->dec_routine = g723_40_decoder;
-		p->dec_bits = 5;
-		break;
-	}
+        }
+        switch (encoding) {
+        case SUN_G721:
+                g72x_init_state(&p->state);
+                p->dec_routine = g721_decoder;
+                p->dec_bits = 4;
+                break;
+        case SUN_G723_3:
+                g72x_init_state(&p->state);
+                p->dec_routine = g723_24_decoder;
+                p->dec_bits = 3;
+                break;
+        case SUN_G723_5:
+                g72x_init_state(&p->state);
+                p->dec_routine = g723_40_decoder;
+                p->dec_bits = 5;
+                break;
+        }
 
-	/* Read the sampling rate */
-	st_readdw(ft, &sample_rate);
-	ft->info.rate = sample_rate;
+        /* Read the sampling rate */
+        st_readdw(ft, &sample_rate);
+        ft->info.rate = sample_rate;
 
-	/* Read the number of channels */
-	st_readdw(ft, &channels);
-	ft->info.channels = (int) channels;
+        /* Read the number of channels */
+        st_readdw(ft, &channels);
+        ft->info.channels = (int) channels;
 
-	/* Skip the info string in header; print it if verbose */
-	hdr_size -= SUN_HDRSIZE; /* #bytes already read */
-	if (hdr_size > 0) {
+        /* Skip the info string in header; print it if verbose */
+        hdr_size -= SUN_HDRSIZE; /* #bytes already read */
+        if (hdr_size > 0) {
                 /* Allocate comment buffer */
-		buf = (char *) malloc(hdr_size+1);		
-		for(i = 0; i < hdr_size; i++) {
-		    	st_readb(ft, (unsigned char *)&(buf[i]));
-			if (feof(ft->fp))
-			{
-				st_fail_errno(ft,ST_EOF,"Unexpected EOF in Sun/NeXT header info.");
-				return(ST_EOF);
-			}
-		}
-		/* Buffer should already be null terminated but
-		 * just in case we malloced an extra byte and 
-		 * force the last byte to be 0 anyways.
-		 * This should help work with a greater array of
-		 * software.
-		 */
-	        buf[hdr_size] = '\0';
+                buf = (char *) malloc(hdr_size+1);              
+                for(i = 0; i < hdr_size; i++) {
+                        st_readb(ft, (unsigned char *)&(buf[i]));
+                        if (feof(ft->fp))
+                        {
+                                st_fail_errno(ft,ST_EOF,"Unexpected EOF in Sun/NeXT header info.");
+                                return(ST_EOF);
+                        }
+                }
+                /* Buffer should already be null terminated but
+                 * just in case we malloced an extra byte and 
+                 * force the last byte to be 0 anyways.
+                 * This should help work with a greater array of
+                 * software.
+                 */
+                buf[hdr_size] = '\0';
 
-		ft->comment = buf;
-		st_report("Input file %s: Sun header info: %s", ft->filename, buf);
-	}
-	/* Needed for seeking */
-	ft->length = data_size/ft->info.size;
-	if(ft->seekable)
-		p->dataStart = ftell(ft->fp);
+                ft->comment = buf;
+                st_report("Input file %s: Sun header info: %s", ft->filename, buf);
+        }
+        /* Needed for seeking */
+        ft->length = data_size/ft->info.size;
+        if(ft->seekable)
+                p->dataStart = ftell(ft->fp);
 
-	/* Needed for rawread() */
-	rc = st_rawstartread(ft);
-	if (rc)
-	    return rc;
+        /* Needed for rawread() */
+        rc = st_rawstartread(ft);
+        if (rc)
+            return rc;
 
-	return(ST_SUCCESS);
+        return(ST_SUCCESS);
 }
 
 /* When writing, the header is supposed to contain the number of
@@ -267,25 +267,25 @@ int st_austartread(ft_t ft)
 
 int st_austartwrite(ft_t ft) 
 {
-	au_t p = (au_t ) ft->priv;
-	int rc;
+        au_t p = (au_t ) ft->priv;
+        int rc;
 
-	/* Needed because of rawwrite(); */
-	rc = st_rawstartwrite(ft);
-	if (rc)
-	    return rc;
+        /* Needed because of rawwrite(); */
+        rc = st_rawstartwrite(ft);
+        if (rc)
+            return rc;
 
-	/* AU is in big endian format.  Swap whats read in
-	 * on little endian machines.
-	 */
-	if (ST_IS_LITTLEENDIAN)
-	{
-		ft->swap = ft->swap ? 0 : 1;
-	}
+        /* AU is in big endian format.  Swap whats read in
+         * on little endian machines.
+         */
+        if (ST_IS_LITTLEENDIAN)
+        {
+                ft->swap = ft->swap ? 0 : 1;
+        }
 
-	p->data_size = 0;
-	auwriteheader(ft, SUN_UNSPEC);
-	return(ST_SUCCESS);
+        p->data_size = 0;
+        auwriteheader(ft, SUN_UNSPEC);
+        return(ST_SUCCESS);
 }
 
 /*
@@ -295,146 +295,146 @@ int st_austartwrite(ft_t ft)
  */
 static int unpack_input(ft_t ft, unsigned char *code)
 {
-	au_t p = (au_t ) ft->priv;
-	unsigned char		in_byte;
+        au_t p = (au_t ) ft->priv;
+        unsigned char           in_byte;
 
-	if (p->in_bits < p->dec_bits) {
-	        if (st_readb(ft, &in_byte) == ST_EOF) {
-			*code = 0;
-			return (-1);
-		}
-		p->in_buffer |= (in_byte << p->in_bits);
-		p->in_bits += 8;
-	}
-	*code = p->in_buffer & ((1 << p->dec_bits) - 1);
-	p->in_buffer >>= p->dec_bits;
-	p->in_bits -= p->dec_bits;
-	return (p->in_bits > 0);
+        if (p->in_bits < p->dec_bits) {
+                if (st_readb(ft, &in_byte) == ST_EOF) {
+                        *code = 0;
+                        return (-1);
+                }
+                p->in_buffer |= (in_byte << p->in_bits);
+                p->in_bits += 8;
+        }
+        *code = p->in_buffer & ((1 << p->dec_bits) - 1);
+        p->in_buffer >>= p->dec_bits;
+        p->in_bits -= p->dec_bits;
+        return (p->in_bits > 0);
 }
 
 st_ssize_t st_auread(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 {
-	au_t p = (au_t ) ft->priv;
-	unsigned char code;
-	int done;
-	if (p->dec_routine == NULL)
-		return st_rawread(ft, buf, samp);
-	done = 0;
-	while (samp > 0 && unpack_input(ft, &code) >= 0) {
-		*buf++ = ST_SIGNED_WORD_TO_SAMPLE(
-			(*p->dec_routine)(code, AUDIO_ENCODING_LINEAR,
-	  				  &p->state));
-		samp--;
-		done++;
-	}
-	return done;
+        au_t p = (au_t ) ft->priv;
+        unsigned char code;
+        int done;
+        if (p->dec_routine == NULL)
+                return st_rawread(ft, buf, samp);
+        done = 0;
+        while (samp > 0 && unpack_input(ft, &code) >= 0) {
+                *buf++ = ST_SIGNED_WORD_TO_SAMPLE(
+                        (*p->dec_routine)(code, AUDIO_ENCODING_LINEAR,
+                                          &p->state));
+                samp--;
+                done++;
+        }
+        return done;
 }
 
 st_ssize_t st_auwrite(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 {
-	au_t p = (au_t ) ft->priv;
-	p->data_size += samp * ft->info.size;
-	return(st_rawwrite(ft, buf, samp));
+        au_t p = (au_t ) ft->priv;
+        p->data_size += samp * ft->info.size;
+        return(st_rawwrite(ft, buf, samp));
 }
 
 int st_austopwrite(ft_t ft)
 {
-	au_t p = (au_t ) ft->priv;
-	int rc;
+        au_t p = (au_t ) ft->priv;
+        int rc;
 
-	/* Needed because of rawwrite(). Do now to flush
-	 * data before seeking around below.
-	 */
-	rc = st_rawstopwrite(ft);
-	if (rc)
-	    return rc;
+        /* Needed because of rawwrite(). Do now to flush
+         * data before seeking around below.
+         */
+        rc = st_rawstopwrite(ft);
+        if (rc)
+            return rc;
 
-	/* Attempt to update header */
-	if (ft->seekable)
-	{
-	  if (fseek(ft->fp, 0L, 0) != 0)
-	  {
-		st_fail_errno(ft,errno,"Can't rewind output file to rewrite Sun header.");
-		return(ST_EOF);
-	  }
-	  auwriteheader(ft, p->data_size);
-	}
-	return(ST_SUCCESS);
+        /* Attempt to update header */
+        if (ft->seekable)
+        {
+          if (fseek(ft->fp, 0L, 0) != 0)
+          {
+                st_fail_errno(ft,errno,"Can't rewind output file to rewrite Sun header.");
+                return(ST_EOF);
+          }
+          auwriteheader(ft, p->data_size);
+        }
+        return(ST_SUCCESS);
 }
 
 static int st_ausunencoding(int size, int encoding)
 {
-	int sun_encoding;
+        int sun_encoding;
 
-	if (encoding == ST_ENCODING_ULAW && size == ST_SIZE_BYTE)
-        	sun_encoding = SUN_ULAW;
-	else if (encoding == ST_ENCODING_ALAW && size == ST_SIZE_BYTE)
-	        sun_encoding = SUN_ALAW;
-	else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_BYTE)
-	        sun_encoding = SUN_LIN_8;
-	else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_WORD)
-	        sun_encoding = SUN_LIN_16;
-	else
-		sun_encoding = -1;
-	return sun_encoding;
+        if (encoding == ST_ENCODING_ULAW && size == ST_SIZE_BYTE)
+                sun_encoding = SUN_ULAW;
+        else if (encoding == ST_ENCODING_ALAW && size == ST_SIZE_BYTE)
+                sun_encoding = SUN_ALAW;
+        else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_BYTE)
+                sun_encoding = SUN_LIN_8;
+        else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_WORD)
+                sun_encoding = SUN_LIN_16;
+        else
+                sun_encoding = -1;
+        return sun_encoding;
 }
 
 static void auwriteheader(ft_t ft, st_size_t data_size)
 {
-	uint32_t magic;
-	uint32_t hdr_size;
-	uint32_t encoding;
-	uint32_t sample_rate;
-	uint32_t channels;
-	int   x;
-	int   comment_size;
+        uint32_t magic;
+        uint32_t hdr_size;
+        int      encoding;
+        uint32_t sample_rate;
+        uint32_t channels;
+        int   x;
+        int   comment_size;
 
-	if((encoding = st_ausunencoding(ft->info.size, ft->info.encoding)) == -1) {
-		st_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
-		st_report("Only U-law, A-law signed bytes, and signed words are supported.");
-		st_report("Defaulting to 8khz u-law\n");
-		encoding = SUN_ULAW;
-		ft->info.encoding = ST_ENCODING_ULAW;
-		ft->info.size = ST_SIZE_BYTE;
-		ft->info.rate = 8000;  /* strange but true */
-	}
+        if ((encoding = st_ausunencoding(ft->info.size, ft->info.encoding)) == -1) {
+                st_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
+                st_report("Only U-law, A-law signed bytes, and signed words are supported.");
+                st_report("Defaulting to 8khz u-law\n");
+                encoding = SUN_ULAW;
+                ft->info.encoding = ST_ENCODING_ULAW;
+                ft->info.size = ST_SIZE_BYTE;
+                ft->info.rate = 8000;  /* strange but true */
+        }
 
-	magic = SUN_MAGIC;
-	st_writedw(ft, magic);
+        magic = SUN_MAGIC;
+        st_writedw(ft, magic);
 
-	/* Info field is at least 4 bytes. Here I force it to something
-	 * useful when there is no comments.
-	 */
-	if (ft->comment == NULL)
-		ft->comment = "SOX";
+        /* Info field is at least 4 bytes. Here I force it to something
+         * useful when there is no comments.
+         */
+        if (ft->comment == NULL)
+                ft->comment = "SOX";
 
-	hdr_size = SUN_HDRSIZE;
+        hdr_size = SUN_HDRSIZE;
 
-	comment_size = strlen(ft->comment) + 1; /*+1 = null-term. */
-	if (comment_size < 4)
-	    comment_size = 4; /* minimum size */
+        comment_size = strlen(ft->comment) + 1; /*+1 = null-term. */
+        if (comment_size < 4)
+            comment_size = 4; /* minimum size */
 
-	hdr_size += comment_size;
+        hdr_size += comment_size;
 
-	st_writedw(ft, hdr_size);
+        st_writedw(ft, hdr_size);
 
-	st_writedw(ft, data_size);
+        st_writedw(ft, data_size);
 
-	st_writedw(ft, encoding);
+        st_writedw(ft, encoding);
 
-	sample_rate = ft->info.rate;
-	st_writedw(ft, sample_rate);
+        sample_rate = ft->info.rate;
+        st_writedw(ft, sample_rate);
 
-	channels = ft->info.channels;
-	st_writedw(ft, channels);
+        channels = ft->info.channels;
+        st_writedw(ft, channels);
 
-	st_writes(ft, ft->comment);
+        st_writes(ft, ft->comment);
 
-	/* Info must be 4 bytes at least and null terminated. */
-	x = strlen(ft->comment);
-	for (;x < 3; x++)
-	    st_writeb(ft, 0);
+        /* Info must be 4 bytes at least and null terminated. */
+        x = strlen(ft->comment);
+        for (;x < 3; x++)
+            st_writeb(ft, 0);
 
-	st_writeb(ft, 0);
+        st_writeb(ft, 0);
 }
 
