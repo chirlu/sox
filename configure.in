@@ -66,6 +66,10 @@ case "$target" in
 	*next*|*rhapsody* )
 		CFLAGS="$CFLAGS -DNeXT"
 		;;
+
+	*cygwin* )
+		CFLAGS="$CFLAGS -mno-cygwin"
+		LDFLAGS="$LDFLAGS -mno-cygwin"
 esac
 
 dnl Initial values for exported symbols.
