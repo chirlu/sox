@@ -1182,10 +1182,11 @@ int second_header;
 	 * on verbose output.
 	 */
 	if ((ft->info.encoding == ST_ENCODING_ADPCM ||
-	     ft->info.encoding == ST_ENCODING_IMA_ADPCM) &&
+	     ft->info.encoding == ST_ENCODING_IMA_ADPCM ||
+	     ft->info.encoding == ST_ENCODING_GSM) &&
 	    ft->info.size != ST_SIZE_BYTE)
 	{
-	    st_warn("Overriding output size to bytes for ADPCM data.");
+	    st_warn("Overriding output size to bytes for compressed data.");
 	    ft->info.size = ST_SIZE_BYTE;
 	}
 
