@@ -3,9 +3,9 @@ dnl
 dnl configure.in
 dnl
 
-AC_REVISION(1.5)
+AC_REVISION(1.6)
 
-AC_INIT(sox, 12.17.6, cbagwell@users.sourceforge.net, "sox-12.17.6")
+AC_INIT(sox, 12.17.7, cbagwell@users.sourceforge.net, "sox-12.17.7")
 
 AC_CONFIG_SRCDIR(sox.1)
 
@@ -72,6 +72,10 @@ case "$target" in
 		CFLAGS="$CFLAGS -mno-cygwin"
 		CPPFLAGS="$CPPFLAGS -mno-cygwin"
 		LDFLAGS="$LDFLAGS -mno-cygwin"
+                ;;
+        *linux* )
+                CPPFLAGS="$CPPFLAGS -I/lib/modules/`uname -r`/build/include"
+                ;;
 esac
 
 dnl Extra CFLAGS if we have gcc

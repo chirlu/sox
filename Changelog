@@ -25,6 +25,8 @@ sox-12.17.7
   o Added explicit rule for compile *.o from *.c so that
     CPPFLAGS is always referenced.  Not all platform's default
     rule includes CPPFLAGS (FreeBSD).
+  o Under linux, add include path to /lib/modules/* so that ALSA
+    include files can be auto detected.
 
 sox-12.17.6
 -----------
