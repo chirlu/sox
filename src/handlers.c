@@ -320,8 +320,8 @@ st_format_t st_formats[] = {
         st_ossdspstartwrite, st_rawwrite, st_rawstopwrite, st_format_nothing_seek},
 #endif
     {prcnames, ST_FILE_SEEK,
-	st_prcstartread, st_prcread, st_rawstopread,
-	st_prcstartwrite, st_prcwrite, st_prcstopwrite, st_prcseek},
+        st_prcstartread, st_prcread, st_rawstopread,
+        st_prcstartwrite, st_prcwrite, st_prcstopwrite, st_prcseek},
     {rawnames, ST_FILE_STEREO | ST_FILE_SEEK,
         st_rawstartread, st_rawread, st_rawstopread,
         st_rawstartwrite, st_rawwrite, st_rawstopwrite, st_rawseek},
@@ -377,7 +377,7 @@ st_format_t st_formats[] = {
         st_format_nothing_seek},
 #endif
     {wavnames, ST_FILE_STEREO | ST_FILE_SEEK,
-        st_wavstartread, st_wavread, st_format_nothing,
+        st_wavstartread, st_wavread, st_wavstopread,
         st_wavstartwrite, st_wavwrite, st_wavstopwrite, st_wavseek},
     {wvenames, ST_FILE_SEEK,
         st_wvestartread, st_wveread, st_rawstopread,

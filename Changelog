@@ -8,6 +8,9 @@ sox-12.17.5
 -----------
   o Thomas Klausner sent in patches to compile audio drivers under
     NetBSD.
+  o Rahul Powar pointed out a memory leak in the WAV file handler.
+    It wasn't calling the correct close() function when closing
+    input files.
 
 sox-12.17.4
 -----------

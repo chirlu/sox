@@ -345,6 +345,7 @@ int st_vorbisstopwrite(ft_t ft);
 
 int st_wavstartread(ft_t ft);
 st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len);
+int st_wavstopread(ft_t ft);
 int st_wavstartwrite(ft_t ft);
 st_ssize_t st_wavwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_wavstopwrite(ft_t ft);
