@@ -136,13 +136,13 @@ int st_txwstartread(ft)
 
   switch( sample_rate ) {
   case 1:
-    ft->info.rate = 33000;
+    ft->info.rate = 33333;
     break;
   case 2:
     ft->info.rate = 50000;
     break;
   case 3:
-    ft->info.rate = 16000;
+    ft->info.rate = 16667;
     break;
   default:
     blewIt = 1;
@@ -150,7 +150,7 @@ int st_txwstartread(ft)
     case 0x06:
       if ( (gunk[5] & 0xFE) == 0x52 ) {
 	blewIt = 0;
-	ft->info.rate = 33000;
+	ft->info.rate = 33333;
       }
       break;
     case 0x10:
@@ -162,13 +162,13 @@ int st_txwstartread(ft)
     case 0xF6:
       if ( (gunk[5] & 0xFE) == 0x52 ) {
 	blewIt = 0;
-	ft->info.rate = 16000;
+	ft->info.rate = 16667;
       }
       break;
     }
     if ( blewIt ) {
       st_report("Invalid sample rate identifier found %d", (int)sample_rate);
-      ft->info.rate = 33000;
+      ft->info.rate = 33333;
     }
   }
   st_report("Sample rate = %ld",ft->info.rate);

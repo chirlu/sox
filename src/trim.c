@@ -98,7 +98,7 @@ eff_t effp;
 	trim->length = (double)effp->ininfo.channels * effp->ininfo.rate * trim->length / TIMERES;
         if (trim->length < 0) 
         {
-                st_fail("trim: start must be positive");
+                st_fail("trim: length must be positive");
         }
 
         trim->done = 0;
