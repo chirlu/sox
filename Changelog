@@ -44,6 +44,9 @@ sox-12.17.3
   o Fixed problem were play script wasn't installed correctly if you
     build from another directory (pointed out by Mike Castle).
   o Made GSM support internal to libst (no external library required).
+  o Change configure script to enable ulaw/alaw lookup tables and GSM
+    support by default.  Also have Makefile's make use of more configure
+    prefix options to allow for customized installs.
 
 sox-12.17.2
 -----------

@@ -61,7 +61,7 @@ typedef uint32_t st_rate_t;
 #define ST_SAMPLE_TO_UNSIGNED_BYTE(d) (((d) >> 24) ^ 0x80)
 #define ST_SAMPLE_TO_SIGNED_BYTE(d) (((d) >> 24))
 #define ST_SAMPLE_TO_ULAW_BYTE(d) (st_linear_to_ulaw(((d) >> 16)))
-#define ST_SAMPLE_TO_ALAW_BYTE(d) (st_linear_to_Alaw(((d) >> 16)+0x08))
+#define ST_SAMPLE_TO_ALAW_BYTE(d) (st_linear_to_Alaw((((d) >> 16)+0x08)))
 #define ST_SAMPLE_TO_UNSIGNED_WORD(d) (((d) >> 16) ^ 0x8000)
 #define ST_SAMPLE_TO_SIGNED_WORD(d) ((d) >> 16)
 #define ST_SAMPLE_TO_UNSIGNED_DWORD(d) ((d) ^ 0x80000000L)

@@ -6,10 +6,16 @@
 # POSIX tools are available.
 #   
 
-SHELL = /bin/sh
+# Paths
+
+VPATH = @srcdir@
 srcdir = @srcdir@
-VPATH	= @srcdir@
 prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+libdir = @libdir@
+mandir = @mandir@
+includedir = @includedir@
 
 # Shell commands.
 
@@ -29,13 +35,6 @@ LDFLAGS	= -L. -Lgsm @LDFLAGS@
 LIBS	= -lst @LIBS@
 EXEEXT  = @EXEEXT@
 OBJEXT  = @OBJEXT@
-
-# Install directories
-
-BINDIR  = $(prefix)/bin
-LIBDIR	= $(prefix)/lib
-MANDIR  = $(prefix)/man
-INCDIR	= $(prefix)/include
 
 # Other macros.
 
@@ -86,7 +85,7 @@ soxmix: libst.a $(GSM_$(GSM_SUPPORT)) soxmix.o
 	$(CC) $(LDFLAGS) -o soxmix soxmix.o $(LIBS)
 
 play: play.in
-	$(SED) -e 's|@PREFIX@|$(BINDIR)|g' < $(srcdir)/play.in > play
+	$(SED) -e 's|@PREFIX@|$(bindir)|g' < $(srcdir)/play.in > play
 
 libst.a: $(LIBOBJS)
 	$(AR) libst.a $(LIBOBJS)
@@ -103,31 +102,31 @@ man: $(srcdir)/sox.1 $(srcdir)/soxexam.1 $(srcdir)/libst.3
 PLAY_INSTALL_0    =
 PLAY_INSTALL_1    = install-play
 
-install: sox $(PLAY_INSTALL_$(PLAY_SUPPORT))
-	$(srcdir)/mkinstalldirs $(BINDIR)
-	$(srcdir)/mkinstalldirs $(MANDIR)/man1
-	$(INSTALL) -c -m 755 sox $(BINDIR)
-	$(INSTALL) -c -m 644 $(srcdir)/sox.1 $(MANDIR)/man1
-	$(INSTALL) -c -m 644 $(srcdir)/soxexam.1 $(MANDIR)/man1
+install: sox soxmix $(PLAY_INSTALL_$(PLAY_SUPPORT))
+	$(srcdir)/mkinstalldirs $(bindir)
+	$(srcdir)/mkinstalldirs $(mandir)/man1
+	$(INSTALL) -c -m 755 sox $(bindir)
+	$(INSTALL) -c -m 644 $(srcdir)/sox.1 $(mandir)/man1
+	$(INSTALL) -c -m 644 $(srcdir)/soxexam.1 $(mandir)/man1
 
-install-play:
-	if [ -f $(BINDIR)/rec ] ; then $(RM) $(BINDIR)/rec; fi
-	if [ -f $(MANDIR)/man1/rec.1 ]; then $(RM) $(MANDIR)/man1/rec.1; fi
-	$(srcdir)/mkinstalldirs $(MANDIR)/man1
-	$(srcdir)/mkinstalldirs $(BINDIR)
-	$(INSTALL) -c -m 755 play $(BINDIR)
-	$(INSTALL) -c -m 644 $(srcdir)/play.1 $(MANDIR)/man1
-	$(LN_S) $(BINDIR)/play $(BINDIR)/rec
-	$(LN_S) $(MANDIR)/man1/play.1 $(MANDIR)/man1/rec.1
+install-play: play
+	if [ -f $(bindir)/rec ] ; then $(RM) $(bindir)/rec; fi
+	if [ -f $(mandir)/man1/rec.1 ]; then $(RM) $(mandir)/man1/rec.1; fi
+	$(srcdir)/mkinstalldirs $(mandir)/man1
+	$(srcdir)/mkinstalldirs $(bindir)
+	$(INSTALL) -c -m 755 play $(bindir)
+	$(INSTALL) -c -m 644 $(srcdir)/play.1 $(mandir)/man1
+	$(LN_S) $(bindir)/play $(bindir)/rec
+	$(LN_S) $(mandir)/man1/play.1 $(mandir)/man1/rec.1
 
 install-lib: libst.a
-	$(srcdir)/mkinstalldirs $(LIBDIR)/man1
-	$(srcdir)/mkinstalldirs $(MANDIR)/man3
-	$(srcdir)/mkinstalldirs $(INCDIR)
-	$(INSTALL) -c -m 644 libst.a $(LIBDIR)
-	$(RANLIB) $(LIBDIR)/libst.a
-	$(INSTALL) -c -m 644 libst.3 $(MANDIR)/man3
-	$(INSTALL) -c -m 644 st.h $(INCDIR)
+	$(srcdir)/mkinstalldirs $(mandir)/man1
+	$(srcdir)/mkinstalldirs $(mandir)/man3
+	$(srcdir)/mkinstalldirs $(includedir)
+	$(INSTALL) -c -m 644 libst.a $(libdir)
+	$(RANLIB) $(libdir)/libst.a
+	$(INSTALL) -c -m 644 libst.3 $(mandir)/man3
+	$(INSTALL) -c -m 644 st.h $(includedir)
 
 clean:
 	$(RM) *.o
