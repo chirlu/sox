@@ -106,7 +106,7 @@ install-play:
 	if [ -f $(MANDIR)/man1/rec.1 ]; then $(RM) $(MANDIR)/man1/rec.1; fi
 	$(srcdir)/mkinstalldirs $(MANDIR)/man1
 	$(srcdir)/mkinstalldirs $(BINDIR)
-	$(INSTALL) -c -m 755 $(srcdir)/play $(BINDIR)
+	$(INSTALL) -c -m 755 play $(BINDIR)
 	$(INSTALL) -c -m 644 $(srcdir)/play.1 $(MANDIR)/man1
 	ln -s $(BINDIR)/play $(BINDIR)/rec
 	ln -s $(MANDIR)/man1/play.1 $(MANDIR)/man1/rec.1

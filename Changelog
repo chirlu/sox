@@ -38,6 +38,10 @@ sox-12.17.3
     is scaled up to 32-bits, a little bit of noise starts to look like a
     large amplitude of noise.
   o Changed Floats into a type of encoding instead of a size of audio data.
+  o Put a flush at the end of OSS driver so that no old data would be
+    left in internal buffers after changing audio format parameters.
+  o Fixed problem were play script wasn't installed correctly if you
+    build from another directory (pointed out by Mike Castle).
 
 sox-12.17.2
 -----------

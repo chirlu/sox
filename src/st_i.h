@@ -14,7 +14,9 @@
  */
 
 #include "st.h"
-#include <sys/types.h>
+// FIXME: One works on solaris, the other on Linux
+//#include <sys/types.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
