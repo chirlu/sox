@@ -62,9 +62,9 @@ typedef struct silencestuff
     st_size_t	stop_holdoff_end;
     int		stop_found_periods;
 
-    int64_t     *window;
-    int64_t     *window_current;
-    int64_t     *window_end;
+    double      *window;
+    double      *window_current;
+    double      *window_end;
     st_size_t   window_size;
     double      rms_sum;
 
@@ -249,8 +249,8 @@ int st_silence_start(eff_t effp)
 	silence_t	silence = (silence_t) effp->priv;
 
 	silence->window_size = (effp->ininfo.rate / 10) * effp->ininfo.channels;
-	silence->window = (int64_t *)malloc(silence->window_size *
-		                            sizeof(int64_t));
+	silence->window = (double *)malloc(silence->window_size *
+		                           sizeof(double));
 
 	if (!silence->window)
 	{
@@ -259,7 +259,7 @@ int st_silence_start(eff_t effp)
 	}
 
 	memset(silence->window, 0, 
-	       silence->window_size * sizeof(int64_t));
+	       silence->window_size * sizeof(double));
 
 	silence->window_current = silence->window;
 	silence->window_end = silence->window + silence->window_size;
@@ -367,6 +367,10 @@ st_sample_t compute_rms(eff_t effp, st_sample_t sample)
 void update_rms(eff_t effp, st_sample_t sample)
 {
     silence_t silence = (silence_t) effp->priv;
+
+    silence->rms_sum -= *silence->window_current;
+    *silence->window_current = ((double)sample * (double)sample);
+    silence->rms_sum += *silence->window_current;
 
     silence->window_current++;
     if (silence->window_current >= silence->window_end)

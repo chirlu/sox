@@ -30,7 +30,7 @@ LN_S    = @LN_S@
 
 # Build macros.
 
-CFLAGS	= @CFLAGS@ @DEFS@ -I$(srcdir)
+CFLAGS	= @CFLAGS@ -I. -I$(srcdir)
 LDFLAGS	= -L. -Lgsm @LDFLAGS@
 LIBS	= -lst @LIBS@
 
@@ -127,8 +127,8 @@ install-lib: libst.a
 	$(srcdir)/mkinstalldirs $(includedir)
 	$(INSTALL) -c -m 644 libst.a $(libdir)
 	$(RANLIB) $(libdir)/libst.a
-	$(INSTALL) -c -m 644 libst.3 $(mandir)/man3
-	$(INSTALL) -c -m 644 st.h $(includedir)
+	$(INSTALL) -c -m 644 $(srcdir)/libst.3 $(mandir)/man3
+	$(INSTALL) -c -m 644 $(srcdir)/st.h $(includedir)
 	$(INSTALL) -c -m 644 ststdint.h $(includedir)
 
 PLAY_UNINSTALL_0    =
@@ -148,7 +148,7 @@ uninstall-play:
 
 uninstall-lib:
 	$(RM) $(libdir)/libst.a
-	$(RM)$(mandir)/man3/libst.3
+	$(RM) $(mandir)/man3/libst.3
 	$(RM) $(includedir)/st.h
 	$(RM) $(includedir)/ststdint.h
 
