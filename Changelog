@@ -4,6 +4,11 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-12.17.5
+-----------
+  o Thomas Klausner sent in patches to compile audio drivers under
+    NetBSD.
+
 sox-12.17.4
 -----------
   o Peter Nyhlen fixed a problem with reading Comments in Ogg Vorbis files.

@@ -31,7 +31,9 @@
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
+#ifndef __NetBSD__
 #include <stropts.h>
+#endif
 #include <malloc.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -170,7 +172,11 @@ int st_sunstartread(ft_t ft)
         return(ST_EOF);
     }
     /* Flush any data in the buffers - its probably in the wrong format */
+#ifdef __NetBSD__
+    ioctl(fileno(ft->fp), AUDIO_FLUSH);
+#else
     ioctl(fileno(ft->fp), I_FLUSH, FLUSHR);
+#endif
     /* Change to non-buffered I/O*/
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
     sigintreg(ft);      /* Prepare to catch SIGINT */
