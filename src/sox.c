@@ -412,7 +412,7 @@ static void init(P0) {
  */
 
 static void process(P0) {
-    int e, f, havedata;
+    int e, f, havedata, flowstatus;
 
     st_gettype(&informat);
     if (writing)
@@ -542,14 +542,18 @@ static void process(P0) {
 	for(e = 1; e < neffects; e++)
 	    efftab[e].odone = efftab[e].olen = 0;
 
+	flowstatus = 0;
+
 	do {
 	    ULONG w;
 
 	    /* run entire chain BACKWARDS: pull, don't push.*/
 	    /* this is because buffering system isn't a nice queueing system */
-	    for(e = neffects - 1; e > 0; e--) 
-		if (flow_effect(e))
+	    for(e = neffects - 1; e > 0; e--) {
+		flowstatus = flow_effect(e);
+		if (flowstatus)
 		    break;
+	    }
 
 	    /* If outputing and output data was generated then write it */
 	    if (writing&&(efftab[neffects-1].olen>efftab[neffects-1].odone)) 
@@ -563,6 +567,12 @@ static void process(P0) {
 	    if (outformat.st_errno)
 		st_fail(outformat.st_errstr);
 
+	    /* If any effect will never again produce data, give up.  This */
+	    /* works because of the pull status: the effect won't be able to */
+	    /* shut us down until all downstream buffers have been emptied. */
+	    if (flowstatus < 0)
+		break;
+
 	    /* if stuff still in pipeline, set up to flow effects again */
 	    havedata = 0;
 	    for(e = 0; e < neffects - 1; e++)
@@ -571,6 +581,10 @@ static void process(P0) {
 		    break;
 		}
 	} while (havedata);
+
+	/* Negative flowstatus says no more output will ever be generated. */
+	if (flowstatus < 0)
+	    break;
 
         /* Read another chunk of input data. */
         efftab[0].olen = (*informat.h->read)(&informat, 
@@ -635,6 +649,7 @@ int e;
 {
     LONG i, done, idone, odone, idonel, odonel, idoner, odoner;
     LONG *ibuf, *obuf;
+    int effstatus;
 
     /* I have no input data ? */
     if (efftab[e-1].odone == efftab[e-1].olen)
@@ -646,7 +661,7 @@ int e;
 	 */
 	idone = efftab[e-1].olen - efftab[e-1].odone;
 	odone = BUFSIZ;
-	(* efftab[e].h->flow)(&efftab[e], 
+	effstatus = (* efftab[e].h->flow)(&efftab[e], 
 			      &efftab[e-1].obuf[efftab[e-1].odone], 
 			      efftab[e].obuf, &idone, &odone);
 	efftab[e-1].odone += idone;
@@ -669,12 +684,14 @@ int e;
 	/* left */
 	idonel = (idone + 1)/2;		/* odd-length logic */
 	odonel = odone/2;
-	(* efftab[e].h->flow)(&efftab[e], ibufl, obufl, &idonel, &odonel);
+	effstatus = (* efftab[e].h->flow)(&efftab[e],
+					  ibufl, obufl, &idonel, &odonel);
 	
 	/* right */
 	idoner = idone/2;		/* odd-length logic */
 	odoner = odone/2;
-	(* efftabR[e].h->flow)(&efftabR[e], ibufr, obufr, &idoner, &odoner);
+	effstatus = (* efftabR[e].h->flow)(&efftabR[e],
+					   ibufr, obufr, &idoner, &odoner);
 
 	obuf = efftab[e].obuf;
 	 /* This loop implies left and right effect will always output
@@ -691,6 +708,8 @@ int e;
     } 
     if (done == 0) 
 	st_fail("Effect took & gave no samples!");
+    if (effstatus == ST_EOF)
+	return -1;
     return 1;
 }
 

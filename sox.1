@@ -38,7 +38,7 @@ sox \- Sound eXchange : universal sound sample translator
 .P
 .B Effects:
 .br
-    \fBavg\fR [ -l | -r ]
+    \fBavg\fR [ -l | -r | -f | -b | n,n,...,n ]
 .br
     \fBband\fR [ -n ] \fIcenter\fR [ \fIwidth\fR ]
 .br
@@ -54,7 +54,7 @@ sox \- Sound eXchange : universal sound sample translator
 .br
             \fIin-dB1\fR,\fIout-dB1\fR[,\fIin-dB2\fR,\fIout-dB2\fR...]
 .br
-            [ \fIgain\fR ] [ \fIinitial-volume\fR ]
+            [ \fIgain\fR [ \fIinitial-volume\fR [ \fIdelay\fR ] ] ]
 .br
     \fBcopy\fR
 .br
@@ -545,15 +545,35 @@ pipe.  This type can't be used for output files.
 Multiple effects may be applied to the audio data by specifying them
 one after another at the end of the command line.
 .TP 10
-avg [ \fI-l\fR | \fI-r\fR ]
+avg [ \fI-l\fR | \fI-r\fR | \fI-f\fR | \fI-b\fR | \fIn,n,...,n\fR ]
 Reduce the number of channels by averaging the samples,
 or duplicate channels to increase the number of channels.
 This effect is automatically used when the number of input
 channels differ from the number of output channels.  When reducing
 the number of channels it is possible to manually specify the
-avg effect and use the \fI-l\fR and \fI-r\fR options to select only
-the left or right channel for the output instead of averaging the
-two channels.
+avg effect and use the \fI-l\fR, \fI-r\fR, \fI-f\fR, or \fI-b\fR
+options to select only
+the left, right, front, or back channel(s) for the output instead of
+averaging the channels.
+The \fI-f\fR and \fI-b\fR options maintain left/right stereo
+separation; use the avg effect twice to select a single channel.
+
+The avg effect can also be invoked with up to 16 double-precision
+numbers, which specify the proportion of each input channel that is
+to be mixed into each output channel.
+In two-channel mode, 4 numbers are given: l->l, l->r, r->l, and r->r,
+respectively.
+In four-channel mode, the first 4 numbers give the proportions for the
+left-front output channel, as follows: lf->lf, rf->lf, lb->lf, and
+rb->rf.
+The next 4 give the right-front output in the same order, then
+left-back and right-back.
+
+It is also possible to use the 16 numbers to expand or reduce the
+channel count; just specify 0 for unused channels.
+Finally, if fewer than 4 numbers are given, certain special
+abbreviations may be
+invoked; see the source code for details.
 .TP 10
 band \fB[ \fI-n \fB] \fIcenter \fB[ \fIwidth\fB ]
 Apply a band-pass filter.
@@ -607,11 +627,12 @@ compand \fIattack1,decay1\fR[,\fIattack2,decay2\fR...]
 .TP 
         \fIin-dB1,out-dB1\fR[,\fIin-dB2,out-dB2\fR...]
 .TP 10
-        [\fIgain\fR] [\fIinitial-volume\fR]
+        [\fIgain\fR [\fIinitial-volume\fR [\fIdelay\fR ] ] ]
 Compand (compress or expand) the dynamic range of a sample.  The
 attack and decay time specify the integration time over which the
 absolute value of the input signal is integrated to determine its
-volume.  Where more than one pair of attack/decay parameters are
+volume; attacks refer to increases in volume and decays refer to
+decreases.  Where more than one pair of attack/decay parameters are
 specified, each channel is treated separately and the number of pairs
 must agree with the number of input channels.  The second parameter is
 a list of points on the compander's transfer function specified in dB
@@ -620,7 +641,9 @@ must be in a strictly increasing order but the transfer function does
 not have to be monotonically rising.  The special value \fI-inf\fR may
 be used to indicate that the input volume should be associated output
 volume.  The points \fI-inf,-inf\fR and \fI0,0\fR are assumed; the
-latter may be overridden, but the former may not.  The third
+latter may be overridden, but the former may not.
+
+The third
 (optional) parameter is a postprocessing gain in dB which is applied
 after the compression has taken place; the fourth (optional) parameter
 is an initial volume to be assumed for each channel when the effect
@@ -629,6 +652,13 @@ that, for example, a very large gain is not applied to initial signal
 levels before the companding action has begun to operate: it is quite
 probable that in such an event, the output would be severely clipped
 while the compander gain properly adjusts itself.
+
+The fifth (optional) parameter is a delay in seconds.
+The input signal is analyzed immediately to control the compander, but
+it is delayed before being fed to the volume adjuster.
+Specifying a delay approximately equal to the attack/decay times
+allows the compander to effectively operate in a "predictive" rather than a
+reactive mode.
 .TP 10
 copy
 Copy the input file to the output file.
@@ -674,7 +704,11 @@ Add a fade effect to the beginning, end, or both of the audio data.
 
 For fade-ins, this starts from the first sample and ramps the volume of the audio from 0 to full volume over \fIfade-in-length\fR seconds.  Specify 0 seconds if no fade-in is wanted.
 
-For fade-outs, the audio data will be trucated at the stop-time and the volume will be ramped from full volume down to 0 starting at \fIfade-out-length\fR seconds before the \fIstop-time\fR.  No fade-out is performed if these options are not specified.
+For fade-outs, the audio data will be truncated at the stop-time and
+the volume will be ramped from full volume down to 0 starting at
+\fIfade-out-length\fR seconds before the \fIstop-time\fR.  No fade-out
+is performed if these options are not specified.  All times can be
+specified in seconds, mm:ss.frac, or hh:mm:ss.frac format.
 
 An optional \fItype\fR can be specified to change the type of envelope.  Choices are q for quarter of a sinewave, h for half a sinewave, t for linear slope, l for logarithmic, and p for inverted parabola.  The default is a linear slope.
 .TP 10
@@ -1037,12 +1071,15 @@ audio file.  Audio samples are not sent to the output stream until
 the \fIstart\fR location is reached.  \fIstart\fR is a floating point number
 that tells the number of seconds to wait before starting.  If you know the
 sample number you would like to start at then the seconds can be obtained
-by multiply (sample # * sample rate).
+by multiplying (sample # * sample rate).
 .br
 The optional \fIlength\fR parameter tells the number of samples to output
 after the \fIstart\fR sample and is used to trim off the back side of the
 audio data.  Using a value of 0 for the \fIstart\fR parameter will allow
 trimming off the back side only.
+.br
+Both \fIstart\fR and \fIlength\fR can also be specified in mm:ss.frac
+or hh:mm:ss.frac format.
 .TP 10
 vibro \fIspeed \fB [ \fIdepth\fB ]
 Add the world-famous Fender Vibro-Champ sound

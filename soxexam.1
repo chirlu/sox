@@ -33,7 +33,7 @@ tell sox the data type and sample rate using command line options.
 .P
 When working with headerless files (raw files), you may take advantage of
 they pseudo-file types of .ub, .uw, .sb, .sw, .ul, and .sl.  By using these
-extensions on your filenames you will not have to specify the corrisponding
+extensions on your filenames you will not have to specify the corresponding
 options on the command line.
 .P
 .B Precision
@@ -154,7 +154,7 @@ parameter setting may make well-known "typically" or "classical"
 sounds. Likewise, for drums, vocals or guitars.)
 .P
 Single effects will be explained and some given parameter settings
-that can be used to understand the theorie by listening to the sound file
+that can be used to understand the theory by listening to the sound file
 with the added effect.
 .P
 Using multiple effects in parallel or in sequel can result either
@@ -163,7 +163,7 @@ variations of sounds such that your ear may follow the sound but
 you will feel unsatisfied. Hence, for the first time using effects
 try to compose them as less as possible. We don't regard the
 composition of effects in the examples because to many combinations
-are possible and you really need a very fast maschine and a lot of
+are possible and you really need a very fast machine and a lot of
 memory to play them in real-time.
 .P
 And real-time playing of sounds will speed up learning the parameter
@@ -171,7 +171,7 @@ setting.
 .P
 Basically, we will use the "play" front-end of SOX since it is easier
 to listen sounds coming out of the speaker or earphone instead
-of looking at cryptical data in sound files.
+of looking at cryptic data in sound files.
 .P
 For easy listening of file.xxx ( "xxx" is any sound format ):
 .P
@@ -198,14 +198,14 @@ playing you'll need a very fast machine.
 .P
 Notes:
 .P
-I played all examples in real-time on a Pentium 100 with 32 Mb and 
+I played all examples in real-time on a Pentium 100 with 32 MB and 
 Linux 2.0.30 using a self-recorded sample ( 3:15 min long in "wav"
 format with 44.1 kHz sample rate and stereo 16 bit ). 
 The sample should not contain any of the effects. However,
 if you take any recording of a sound track from radio or tape or cd,
 and it sounds like a live concert or ten people are playing the same
-rhythm with their drums or funky-groves, then take any other sample.
-(Typically, less then four different intruments and no synthesizer
+rhythm with their drums or funky-grooves, then take any other sample.
+(Typically, less then four different instruments and no synthesizer
 in the sample is suitable. Likewise, the combination vocal, drums, bass
 and guitar.)
 .P
@@ -214,7 +214,7 @@ Effects:
 .B Echo
 .P
 An echo effect can be naturally found in the mountains, standing somewhere
-on a moutain and shouting a single word will result in one or more repetitions
+on a mountain and shouting a single word will result in one or more repetitions
 of the word ( if not, turn a bit around ant try next, or climb to the next
 mountain ).
 .P
@@ -232,7 +232,7 @@ This will sound as doubling the number of instruments playing the same sample:
 .BR
 	play file.xxx echo 0.8 0.88 60.0 0.4
 .P
-If the delay is very short then it sound like a (metallic) roboter playing
+If the delay is very short then it sound like a (metallic) robot playing
 music:
 .P
 .BR
@@ -278,13 +278,13 @@ vocal sound like a chorus. But it can be applied to other instrument samples
 too.
 .P
 It works like the echo effect with a short delay, but the delay isn't constant.
-The delay is varied using a sinodial or triangular modulation. The modulation
+The delay is varied using a sinusoidal or triangular modulation. The modulation
 depth defines the range the modulated delay is played before or after the
 delay. Hence the delayed sound will sound slower or faster, that is the delayed
 sound tuned around the original one, like in a chorus where some vocal are
 a bit out of tune.
 .P
-The typical delay is around 40ms to 60ms, the speed of the modualtion is best
+The typical delay is around 40ms to 60ms, the speed of the modulation is best
 near 0.25Hz and the modulation depth around 2ms.
 .P
 A single delay will make the sample more overloaded:
@@ -320,7 +320,7 @@ Now, let's groove the sample:
 .BR
 	play file.xxx flanger 0.6 0.87 3.0 0.9 0.5 -s
 .P
-listen carefully between the difference of sinodial and triangular modulation:
+listen carefully between the difference of sinusoidal and triangular modulation:
 .P
 .BR
 	play file.xxx flanger 0.6 0.87 3.0 0.9 0.5 -t
@@ -330,7 +330,7 @@ If the decay is a bit lower, than the effect sounds more popular:
 .BR
 	play file.xxx flanger 0.8 0.88 3.0 0.4 0.5 -t
 .P
-The drunken loundspeaker system:
+The drunken loudspeaker system:
 .P
 .BR
 	play file.xxx flanger 0.9 0.9 4.0 0.23 1.3 -s
@@ -344,17 +344,17 @@ sport halls by shouting loud some words. You'll hear the words reflected from
 the walls.
 .P
 The biggest problem in using the reverb effect is the correct setting of the
-(wall) delays such that the sound is relistic an doesn't sound like music
-playing in a tin or overloaded feedback distroys any illusion of any big hall.
-To help you for much realisitc reverb effects, you should decide first, how
+(wall) delays such that the sound is realistic an doesn't sound like music
+playing in a tin or overloaded feedback destroys any illusion of any big hall.
+To help you for much realistic reverb effects, you should decide first, how
 long the reverb should take place until it is not loud enough to be registered
 by your ears. This is be done by the reverb time "t", in small halls 200ms in
 bigger one 1000ms, if you like. Clearly, the walls of such a hall aren't far
 away, so you should define its setting be given every wall its delay time.
-However, if the wall is to far eway for the reverb time, you won't hear the
-reverb, so the nearest wall will be best "t/4" delay and the farest "t/2".
+However, if the wall is to far away for the reverb time, you won't hear the
+reverb, so the nearest wall will be best "t/4" delay and the farthest "t/2".
 You can try other distances as well, but it won't sound very realistic.
-The walls shouldn't stand to close to each other and not in a multiple interger
+The walls shouldn't stand to close to each other and not in a multiple integer
 distance to each other ( so avoid wall like: 200.0 and 202.0, or something
 like 100.0 and 200.0 ).
 .P
@@ -380,18 +380,18 @@ Now, why not a futuristic hall with six walls:
 	play file.xxx reverb 1.0 600.0 180.0 200.0 220.0 240.0 280.0 300.0
 .P
 If you run out of machine power or memory, then stop as much applications
-as possible ( every interupt will consume a lot of cpu time which for
-bigger halls is absolutely neccessary ).
+as possible ( every interrupt will consume a lot of CPU time which for
+bigger halls is absolutely necessary ).
 .P
 .B Phaser
 .P
 The phaser effect is like the flanger effect, but it uses a reverb instead of
 an echo and does phase shifting. You'll hear the difference in the examples
 comparing both effects ( simply change the effect name ).
-The delay modulation can be done sinodial or triangular, preferable is the
+The delay modulation can be done sinusoidal or triangular, preferable is the
 later one for multiple instruments playing. For single instrument sounds
-the sinodial phaser effect will give a sharper phasing effect.
-The decay shouln't be to close to 1.0 which will cause dramatic feedback.
+the sinusoidal phaser effect will give a sharper phasing effect.
+The decay shouldn't be to close to 1.0 which will cause dramatic feedback.
 A good range is about 0.5 to 0.1 for the decay.
 .P
 We will take a parameter setting as for the flanger before ( gain-out is
@@ -400,7 +400,7 @@ lower since feedback can raise the output dramatically ):
 .BR
 	play file.xxx phaser 0.8 0.74 3.0 0.4 0.5 -t
 .P
-The drunken loundspeaker system ( now less alkohol ):
+The drunken loudspeaker system ( now less alcohol ):
 .P
 .BR
 	play file.xxx phaser 0.9 0.85 4.0 0.23 1.3 -s
@@ -415,22 +415,56 @@ The sample sounds if ten springs are in your ears:
 .BR
 	play file.xxx phaser 0.6 0.66 3.0 0.6 2.0 -t
 .P
+.B Compander
+.P
+The compander effect allows the dynamic range of a signal to be
+compressed or expanded.
+For most situations, the attack time (response to the music getting
+louder) should be shorter than the decay time because our ears are more
+sensitive to suddenly loud music than to suddenly soft music.
+.P
+For example, suppose you are listening to Strauss' "Also Sprach
+Zarathustra" in a noisy environment such as a car.
+If you turn up the volume enough to hear the soft passages over the
+road noise, the loud sections will be too loud.
+You could try this:
+.P
+.BR
+	play file.xxx compand 0.3,1 -90,-90,-70,-70,-60,-20,0,0 -5 0 0.2
+.P
+The transfer function ("-90,...") says that
+.I very
+soft sounds between -90 and -70 decibels (-90 is about the limit of
+16-bit encoding) will remain unchanged.
+That keeps the compander from boosting the volume on "silent" passages
+such as between movements.
+However, sounds in the range -60 decibels to 0 decibels (maximum
+volume) will be boosted so that the 60-dB dynamic range of the
+original music will be compressed 3-to-1 into a 20-dB range, which is
+wide enough to enjoy the music but narrow enough to get around the
+road noise.
+The -5 dB output gain is needed to avoid clipping (the number is
+inexact, and was derived by experimentation).
+The 0 for the initial volume will work fine for a clip that starts
+with a bit of silence, and the delay of 0.2 has the effect of causing
+the compander to react a bit more quickly to sudden volume changes.
+.P
 .B Other effects ( copy, rate, avg, stat, vibro, lowp, highp, band, reverb )
 .P
-The other effects are simply to use. However, an "easy to use manual" should
+The other effects are simple to use. However, an "easy to use manual" should
 be given here.
 .P
 .B More effects ( to do ! )
 .P
 There are a lot of effects around like noise gates, compressors, waw-waw,
 stereo effects and so on. They should be implemented making SOX to be more
-useful in sound mixing technics coming together with a great varity of
+useful in sound mixing techniques coming together with a great variety of
 different sound effects.
 .P
-Combining effects be using then in parallel or sequel on different channels
+Combining effects by using them in parallel or sequence on different channels
 needs some easy mechanism which is real-time stable.
 .P
-Really missing, is the changing of the parameters, starting and stoping of
+Really missing, is the changing of the parameters, starting and stopping of
 effects while playing samples in real-time!
 .P
 Good luck and have fun with all the effects!

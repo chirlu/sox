@@ -48,7 +48,8 @@ char **argv;
 
         switch (n) {
             case 2:
-			if (sscanf(argv[1], "%lf", &time) == 1)
+			time = st_parsetime(argv[1]);
+			if (time >= 0.0)
 			{
                             trim->length = time * TIMERES;
 			}
@@ -58,7 +59,8 @@ char **argv;
 			    return(ST_EOF);
 			}
             case 1:
-			if (sscanf(argv[0], "%lf", &time) == 1)
+			time = st_parsetime(argv[0]);
+			if (time >= 0.0)
 			{
                             trim->start = time * TIMERES;
 			}
@@ -86,13 +88,13 @@ eff_t effp;
         trim_t trim = (trim_t) effp->priv;
 
 
-        trim->start = effp->ininfo.channels * effp->ininfo.rate * trim->start / TIMERES;
+        trim->start = (double)effp->ininfo.channels * effp->ininfo.rate * trim->start / TIMERES;
         if (trim->start < 0) 
         {
                 st_fail("trim: start must be positive");
         }
 
-	trim->length = effp->ininfo.channels * effp->ininfo.rate * trim->length / TIMERES;
+	trim->length = (double)effp->ininfo.channels * effp->ininfo.rate * trim->length / TIMERES;
         if (trim->length < 0) 
         {
                 st_fail("trim: start must be positive");
@@ -128,7 +130,7 @@ LONG *isamp, *osamp;
 
 	if (trim->done) {
 		*osamp = 0;
-		return (ST_SUCCESS);
+		return (ST_EOF);
 	}
 
 	trim->index += done;

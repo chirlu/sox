@@ -60,6 +60,9 @@ int w; /* w != 0 is write */
 	if (!ft->info.rate)
 		ft->info.rate = 8000;
 
+	if (ft->info.channels == -1)
+	    ft->info.channels == 1;
+
 	p->channels = ft->info.channels;
 	if (p->channels > MAXCHANS || p->channels <= 0)
 	{

@@ -1,9 +1,8 @@
 /*
  * Compander effect
  *
- * Written by Nick Bailey (nick@polonius.demon.co.uk or
- * N.J.Bailey@leeds.ac.uk).  Hope page for this effect:
- * http://www.ee.keeds.ac.uk/homes/NJB/Softwere/Compand/compand.html
+ * Written by Nick Bailey (nick@bailey-family.org.uk or
+ *                         n.bailey@elec.gla.ac.uk)
  *
  * Copyright 1999 Chris Bagwell And Nick Bailey
  * This source code is freely redistributable and may be used for
@@ -17,6 +16,33 @@
 #include <math.h>
 #include "st.h"
 
+/*
+ * Compressor/expander effect for dsp.
+ *
+ * Flow diagram for one channel:
+ *
+ *		 ------------	   ---------------
+ *		|	     |	  |		  |	---
+ * ibuff ---+---| integrator |--->| transfer func |--->|   |
+ *	    |	|	     |	  |		  |    |   |
+ *	    |	 ------------	   ---------------     |   |  * gain
+ *	    |					       | * |----------->obuff
+ *	    |	    -------			       |   |
+ *	    |	   |	   |			       |   |
+ *	    +----->| delay |-------------------------->|   |
+ *		   |	   |			        ---
+ *		    -------
+ *
+ * Usage:
+ *   compand attack1,decay1[,attack2,decay2...]
+ *                  in-dB1,out-dB1[,in-dB2,out-dB2...]
+ *                 [ gain [ initial-volume [ delay ] ] ] 
+ *
+ * Note: clipping can occur if the transfer function pushes things too
+ * close to 0 dB.  In that case, use a negative gain, or reduce the
+ * output level of the transfer function.
+ */
+
 /* Private data for SKEL file */
 typedef struct {
   int expectedChannels; /* Also flags that channels aren't to be treated
@@ -28,8 +54,12 @@ typedef struct {
   double *transferIns;  /*    ... and points on the transfer function */
   double *transferOuts;
   double *volume;       /* Current "volume" of each channel */
-  LONG   *lastSamp;     /* Remeber the value of the previous sample */
   double outgain;       /* Post processor gain */
+  double delay;		/* Delay to apply before companding */
+  LONG   *delay_buf;	/* Old samples, used for delay processing */
+  long	 delay_buf_size; /* Size of delay_buf in samples */
+  long	 delay_buf_ptr; /* Index into delay_buf */
+  long	 delay_buf_cnt;	/* No. of active entries in delay_buf */
 } *compand_t;
 
 /*
@@ -45,11 +75,11 @@ char **argv;
 {
     compand_t l = (compand_t) effp->priv;
 
-    if (n < 2 || n > 4)
+    if (n < 2 || n > 5)
     {
       st_fail("Wrong number of arguments for the compander effect\n"
 	   "Use: {<attack_time>,<decay_time>}+ {<dB_in>,<db_out>}+ "
-	   "[<dB_postamp>]\n"
+	   "[<dB_postamp> [<initial-volume> [<delay_time]]]\n"
 	   "where {}+ means `one or more in a comma-separated, "
 	   "white-space-free list'\n"
 	   "and [] indications possible omission.  dB values are floating\n"
@@ -75,13 +105,13 @@ char **argv;
       rates = 1 + commas/2;
       if ((l->attackRate = malloc(sizeof(double) * rates)) == NULL ||
 	  (l->decayRate  = malloc(sizeof(double) * rates)) == NULL ||
-	  (l->volume     = malloc(sizeof(double) * rates)) == NULL ||
-	  (l->lastSamp   = calloc(rates, sizeof(LONG)))    == NULL)
+	  (l->volume     = malloc(sizeof(double) * rates)) == NULL)
       {
 	st_fail("Out of memory");
 	return (ST_EOF);
       }
       l->expectedChannels = rates;
+      l->delay_buf = NULL;
 
       /* Now tokenise the rates string and set up these arrays.  Keep
 	 them in seconds at the moment: we don't know the sample rate yet. */
@@ -155,6 +185,10 @@ char **argv;
       for (i = 0; i < l->expectedChannels; ++i) {
 	double v = n>=4 ? pow(10.0, atof(argv[3])/20) : 1.0;
 	l->volume[i] = v;
+
+      /* If there is a delay, store it. */
+      if (n >= 5) l->delay = atof(argv[4]);
+      else l->delay = 0.0;
       }
     }
     return (ST_SUCCESS);
@@ -205,6 +239,19 @@ eff_t effp;
     else
       l->decayRate[i] = 1.0;
   }
+
+  /* Allocate the delay buffer */
+  l->delay_buf_size = l->delay * effp->outinfo.rate * effp->outinfo.channels;
+  if (l->delay_buf_size > 0
+   && (l->delay_buf = malloc(sizeof(long) * l->delay_buf_size)) == NULL) {
+    st_fail("Out of memory");
+    return (ST_EOF);
+  }
+  for (i = 0;  i < l->delay_buf_size;  i++)
+    l->delay_buf[i] = 0;
+  l->delay_buf_ptr = 0;
+  l->delay_buf_cnt = 0;
+
   return (ST_SUCCESS);
 }
 
@@ -239,8 +286,7 @@ int *isamp, *osamp;
   int filechans = effp->outinfo.channels;
   int done;
 
-  for (done = 0; done < len;
-       done += filechans, obuf += filechans, ibuf += filechans) {
+  for (done = 0; done < len; ibuf += filechans) {
     int chan;
 
     /* Maintain the volume fields by simulating a leaky pump circuit */
@@ -280,11 +326,70 @@ int *isamp, *osamp;
 	(v - l->transferIns[piece-1]) /
 	(l->transferIns[piece] - l->transferIns[piece-1]);
 
-      obuf[chan] = ibuf[chan]*(outv/v)*l->outgain;
-	
+      if (l->delay_buf_size <= 0)
+        obuf[done++] = ibuf[chan]*(outv/v)*l->outgain;
+      else {
+	if (l->delay_buf_cnt >= l->delay_buf_size)
+	    obuf[done++] = l->delay_buf[l->delay_buf_ptr]*(outv/v)*l->outgain;
+	else
+	    l->delay_buf_cnt++;
+        l->delay_buf[l->delay_buf_ptr++] = ibuf[chan];
+        l->delay_buf_ptr %= l->delay_buf_size;
+      }
     }
   }
 
-  *isamp = len; *osamp = len;
+  *isamp = done; *osamp = done;
+  return (ST_SUCCESS);
+}
+
+/*
+ * Drain out compander delay lines. 
+ */
+int st_compand_drain(effp, obuf, osamp)
+eff_t effp;
+LONG *obuf;
+LONG *osamp;
+{
+  compand_t l = (compand_t) effp->priv;
+  int done;
+
+  /*
+   * Drain out delay samples.  Note that this loop does all channels.
+   */
+  for (done = 0;  done < *osamp  &&  l->delay_buf_cnt > 0;  done++) {
+    obuf[done] = l->delay_buf[l->delay_buf_ptr++];
+    l->delay_buf_ptr %= l->delay_buf_size;
+    l->delay_buf_cnt--;
+  }
+
+  /* tell caller number of samples played */
+  *osamp = done;
+  return (ST_SUCCESS);
+}
+
+
+/*
+ * Clean up compander effect.
+ */
+int st_compand_stop(effp)
+eff_t effp;
+{
+  compand_t l = (compand_t) effp->priv;
+
+  free((char *) l->delay_buf);
+  free((char *) l->transferOuts);
+  free((char *) l->transferIns);
+  free((char *) l->volume);
+  free((char *) l->decayRate);
+  free((char *) l->attackRate);
+
+  l->delay_buf = NULL;
+  l->transferOuts = NULL;
+  l->transferIns = NULL;
+  l->volume = NULL;
+  l->decayRate = NULL;
+  l->attackRate = NULL;
+
   return (ST_SUCCESS);
 }

@@ -352,6 +352,7 @@ void st_gettype(P1(ft_t));
 void st_checkformat(P1(ft_t));
 void st_copyformat(P2(ft_t, ft_t));
 void st_cmpformats(P2(ft_t, ft_t));
+double st_parsetime(P1(char *));
 
 /* FIXME: Recording hacks shouldn't display a "sigint" style interface.
  * Instead we should provide a function to call when done playing/recording.

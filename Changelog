@@ -4,8 +4,22 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-12.17.2
+-----------
+  o Geoff Kuenning rewrote the average effect into a general-purpose
+    parametric mapping from N channels to M channels.
+  o Geoff Kuenning added an optional delay-time parameter to the compander
+    effect to allow companding to effectively operate based on future
+    knowledge.
+  o Geoff Kuenning Added support to fade and trim effect for specifying time
+    in hh:mm:ss.frac format.
+    Fixed a bug that caused integer overflow when large start/stop times
+    were used.
+  o Geoff Kuenning updated play/rec/soxeffect scripts to handle all effects
+    added since 12.17. Spell-checked soxexam.1 file.
+
 sox-12.17.1
----------
+-----------
   o Andreas Kies fixed a bug were we were not detecting correctly
     if an output file was seekable.
   o Fixed a bug in the mask effect introduced in 12.17.  If the libc

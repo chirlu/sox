@@ -414,3 +414,30 @@ ft_t ft;
 	ft_queue[1] = ft;
     signal(SIGINT, sigint);
 }
+
+/* Parse a time specification in hh:mm:ss.frac format.  Returns -1 */
+/* on failure. */
+double
+st_parsetime(str)
+char *str;
+{
+    double time, moretime;
+    if (sscanf(str, "%lf", &time) != 1)
+	return -1;
+    str = strchr(str, ':');
+    if (str == NULL)
+	return time;
+    str++;				/* Skip colon */
+    time *= 60.0;
+    if (sscanf(str, "%lf", &moretime) != 1)
+	return -1;
+    time += moretime;
+    str = strchr(str, ':');
+    if (str == NULL)
+	return time;
+    str++;				/* Skip colon */
+    time *= 60.0;
+    if (sscanf(str, "%lf", &moretime) != 1)
+	return -1;
+    return time + moretime;
+}

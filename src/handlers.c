@@ -477,6 +477,8 @@ extern int st_chorus_stop();
 extern int st_compand_getopts();
 extern int st_compand_start();
 extern int st_compand_flow();
+extern int st_compand_drain();
+extern int st_compand_stop();
 
 extern int st_copy_getopts(); 
 extern int st_copy_start();
@@ -658,7 +660,7 @@ st_effect_t st_effects[] = {
 	{"null", 0, 			/* stand-in, never gets called */
 		st_nothing, st_nothing, st_nothing, 
 		st_null_drain, st_nothing},
-	{"avg", ST_EFF_MCHAN | ST_EFF_CHAN, 
+	{"avg", ST_EFF_MCHAN, 
 		st_avg_getopts, st_avg_start, st_avg_flow, 
 		st_null_drain, st_avg_stop},
 	{"band", 0, 
@@ -675,7 +677,7 @@ st_effect_t st_effects[] = {
 	 	st_chorus_drain, st_chorus_stop},
 	{"compand", ST_EFF_MCHAN,
 	        st_compand_getopts, st_compand_start, st_compand_flow,
-		st_null_drain, st_nothing},
+		st_compand_drain, st_compand_stop},
 	{"copy", ST_EFF_MCHAN, 
 		st_copy_getopts, st_copy_start, st_copy_flow, 
 		st_null_drain, st_nothing},
