@@ -20,6 +20,11 @@ sox-12.17.7
   o Changed sox to only read the exact size of a WAV data chunk
     if cooledit IFF LIST chunk is found at the end of the file.
     Normally, this isn't done to allow reading > 2gig WAV files.
+  o Modified configure to detect cygwin compiler after detecting
+    gcc compiler (fixes some default CFLAGS options).
+  o Added explicit rule for compile *.o from *.c so that
+    CPPFLAGS is always referenced.  Not all platform's default
+    rule includes CPPFLAGS (FreeBSD).
 
 sox-12.17.6
 -----------
