@@ -113,12 +113,12 @@ const char *AdpcmBlockExpandI(
 	int chans,          /* total channels             */
 	int nCoef,
 	const short *iCoef,
-	const u_char *ibuff,/* input buffer[blockAlign]   */
+	const unsigned char *ibuff,/* input buffer[blockAlign]   */
 	SAMPL *obuff,       /* output samples, n*chans    */
 	int n               /* samples to decode PER channel */
 )
 {
-	const u_char *ip;
+	const unsigned char *ip;
 	int ch;
 	const char *errmsg = NULL;
 	MsState_t state[4];						/* One decompressor state for each channel */
@@ -126,7 +126,7 @@ const char *AdpcmBlockExpandI(
 	/* Read the four-byte header for each channel */
 	ip = ibuff;
 	for (ch = 0; ch < chans; ch++) {
-		u_char bpred = *ip++;
+		unsigned char bpred = *ip++;
 		if (bpred >= nCoef) {
 			errmsg = "MSADPCM bpred >= nCoef, arbitrarily using 0\n";
 			bpred = 0;
@@ -149,7 +149,7 @@ const char *AdpcmBlockExpandI(
 
 	{
 		int ch;
-		u_char b;
+		unsigned char b;
 		short *op, *top;
 
 		/* already have 1st 2 samples from block-header */
@@ -178,12 +178,12 @@ static int AdpcmMashS(
 	const SAMPL *ibuff,  /* ibuff[] is interleaved input samples */
 	int n,               /* samples to encode PER channel */
 	int *iostep,         /* input/output step, REQUIRE 16 <= *st <= 0x7fff */
-	u_char *obuff,       /* output buffer[blockAlign], or NULL for no output  */
+	unsigned char *obuff,       /* output buffer[blockAlign], or NULL for no output  */
 	int sho              /* nonzero for debug printout */
 )
 {
 	const SAMPL *ip, *itop;
-	u_char *op;
+	unsigned char *op;
 	int ox = 0;      /*  */
 	int i, d, v0, v1, step;
 	double d2;       /* long long is okay also, speed abt the same */
@@ -317,7 +317,7 @@ static void AdpcmMashChannel(
 	const SAMPL *ip,    /* ip[] is interleaved input samples */
 	int n,              /* samples to encode PER channel, REQUIRE */
 	int *st,            /* input/output steps, 16<=st[i] */
-	u_char *obuff,      /* output buffer[blockAlign] */
+	unsigned char *obuff,      /* output buffer[blockAlign] */
 	int opt             /* non-zero allows some cpu-intensive code to improve output */
 )
 {
@@ -377,13 +377,13 @@ void AdpcmBlockMashI(
 	const SAMPL *ip,    /* ip[n*chans] is interleaved input samples */
 	int n,              /* samples to encode PER channel */
 	int *st,            /* input/output steps, 16<=st[i] */
-	u_char *obuff,      /* output buffer[blockAlign]     */
+	unsigned char *obuff,      /* output buffer[blockAlign]     */
 	int blockAlign,     /* >= 7*chans + chans*(n-2)/2.0    */
 	int opt             /* non-zero allows some cpu-intensive code to improve output */
 )
 {
 	int ch;
-	u_char *p;
+	unsigned char *p;
 
 	/*fprintf(stderr,"AdpcmMashI(chans %d, ip %p, n %d, st %p, obuff %p, bA %d)\n",
 								 chans, ip, n, st, obuff, blockAlign);*/

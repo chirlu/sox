@@ -48,7 +48,7 @@ extern void initImaTable(void);
 /* ImaBlockExpandI() outputs interleaved samples into one output buffer */
 extern void ImaBlockExpandI(
 	int chans,          /* total channels             */
-	const u_char *ibuff,/* input buffer[blockAlign]   */
+	const unsigned char *ibuff,/* input buffer[blockAlign]   */
 	SAMPL *obuff,       /* output samples, n*chans    */
 	int n               /* samples to decode PER channel, REQUIRE n % 8 == 1  */
 );
@@ -56,7 +56,7 @@ extern void ImaBlockExpandI(
 /* ImaBlockExpandM() outputs non-interleaved samples into chan separate output buffers */
 extern void ImaBlockExpandM(
 	int chans,          /* total channels             */
-	const u_char *ibuff,/* input buffer[blockAlign]   */
+	const unsigned char *ibuff,/* input buffer[blockAlign]   */
 	SAMPL **obuffs,     /* chan output sample buffers, each takes n samples */
 	int n               /* samples to decode PER channel, REQUIRE n % 8 == 1  */
 );
@@ -67,7 +67,7 @@ extern void ImaBlockMashI(
 	const SAMPL *ip,    /* ip[] is interleaved input samples */
 	int n,              /* samples to encode PER channel, REQUIRE n % 8 == 1 */
 	int *st,            /* input/output state[chans], REQUIRE 0 <= st[ch] <= ISSTMAX */
-	u_char *obuff,      /* output buffer[blockAlign] */
+	unsigned char *obuff, /* output buffer[blockAlign] */
 	int opt             /* non-zero allows some cpu-intensive code to improve output */
 );
 

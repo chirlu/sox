@@ -20,6 +20,7 @@
  */
 
 #include "st.h"
+#include "libst.h"
 
 #include <string.h>
 #include <stdlib.h>

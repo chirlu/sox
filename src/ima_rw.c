@@ -48,7 +48,7 @@ static const int imaStepSizeTable[ISSTMAX + 1] = {
 /* -0 - -3, decrease step size */
 /* -4 - -7, increase step size */
 
-static u_char imaStateAdjustTable[ISSTMAX+1][8];
+static unsigned char imaStateAdjustTable[ISSTMAX+1][8];
 
 void initImaTable(void)
 {
@@ -66,13 +66,13 @@ void initImaTable(void)
 static void ImaExpandS(
 	int ch,             /* channel number to decode, REQUIRE 0 <= ch < chans  */
 	int chans,          /* total channels             */
-	const u_char *ibuff,/* input buffer[blockAlign]   */
+	const unsigned char *ibuff,/* input buffer[blockAlign]   */
 	SAMPL *obuff,       /* obuff[n] will be output samples */
 	int n,              /* samples to decode PER channel, REQUIRE n % 8 == 1  */
 	int o_inc           /* index difference between successive output samples */
 )
 {
-	const u_char *ip;
+	const unsigned char *ip;
 	int i_inc;
 	SAMPL *op;
 	int i, val, state;
@@ -141,7 +141,7 @@ static void ImaExpandS(
 /* ImaBlockExpandI() outputs interleaved samples into one output buffer */
 void ImaBlockExpandI(
 	int chans,          /* total channels             */
-	const u_char *ibuff,/* input buffer[blockAlign]   */
+	const unsigned char *ibuff,/* input buffer[blockAlign]   */
 	SAMPL *obuff,       /* output samples, n*chans    */
 	int n               /* samples to decode PER channel, REQUIRE n % 8 == 1  */
 )
@@ -154,7 +154,7 @@ void ImaBlockExpandI(
 /* ImaBlockExpandM() outputs non-interleaved samples into chan separate output buffers */
 void ImaBlockExpandM(
 	int chans,          /* total channels             */
-	const u_char *ibuff,/* input buffer[blockAlign]   */
+	const unsigned char *ibuff,/* input buffer[blockAlign]   */
 	SAMPL **obuffs,     /* chan output sample buffers, each takes n samples */
 	int n               /* samples to decode PER channel, REQUIRE n % 8 == 1  */
 )
@@ -171,12 +171,12 @@ static int ImaMashS(
 	const SAMPL *ibuff, /* ibuff[] is interleaved input samples */
 	int n,              /* samples to encode PER channel, REQUIRE n % 8 == 1 */
 	int *st,            /* input/output state, REQUIRE 0 <= *st <= ISSTMAX */
-	u_char *obuff,      /* output buffer[blockAlign], or NULL for no output  */
+	unsigned char *obuff, /* output buffer[blockAlign], or NULL for no output  */
 	int sho             /* nonzero for debug printout */
 )
 {
 	const SAMPL *ip, *itop;
-	u_char *op;
+	unsigned char *op;
 	int o_inc = 0;      /* set 0 only to shut up gcc's 'might be uninitialized' */
 	int i, val;
 	int state;
@@ -268,7 +268,7 @@ static void ImaMashChannel(
 	const SAMPL *ip,    /* ip[] is interleaved input samples */
 	int n,              /* samples to encode PER channel, REQUIRE n % 8 == 1 */
 	int *st,            /* input/output state, REQUIRE 0 <= *st <= ISSTMAX */
-	u_char *obuff,      /* output buffer[blockAlign] */
+	unsigned char *obuff, /* output buffer[blockAlign] */
 	int opt             /* non-zero allows some cpu-intensive code to improve output */
 )
 {
@@ -324,7 +324,7 @@ void ImaBlockMashI(
 	const SAMPL *ip,    /* ip[] is interleaved input samples */
 	int n,              /* samples to encode PER channel, REQUIRE n % 8 == 1 */
 	int *st,            /* input/output state, REQUIRE 0 <= *st <= ISSTMAX */
-	u_char *obuff,      /* output buffer[blockAlign] */
+	unsigned char *obuff, /* output buffer[blockAlign] */
 	int opt             /* non-zero allows some cpu-intensive code to improve output */
 )
 {

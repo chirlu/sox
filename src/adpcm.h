@@ -23,7 +23,7 @@ extern const char *AdpcmBlockExpandI(
 	int chans,          /* total channels             */
 	int nCoef,
 	const short *iCoef,
-	const u_char *ibuff,/* input buffer[blockAlign]   */
+	const unsigned char *ibuff,/* input buffer[blockAlign]   */
 	SAMPL *obuff,       /* output samples, n*chans    */
 	int n               /* samples to decode PER channel, REQUIRE n % 8 == 1  */
 );
@@ -33,7 +33,7 @@ extern void AdpcmBlockMashI(
 	const SAMPL *ip,    /* ip[n*chans] is interleaved input samples */
 	int n,              /* samples to encode PER channel, REQUIRE */
 	int *st,            /* input/output steps, 16<=st[i] */
-	u_char *obuff,      /* output buffer[blockAlign] */
+	unsigned char *obuff,      /* output buffer[blockAlign] */
 	int blockAlign,     /* >= 7*chans + n/2          */
 	int opt             /* non-zero allows some cpu-intensive code to improve output */
 );
