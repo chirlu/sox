@@ -182,8 +182,8 @@ int st_noiseprof_stop(eff_t effp)
     int i;
 
     for (i = 0; i < effp->ininfo.channels; i ++) {
-        chandata_t* chan = &(data->chandata[i]);
         int j;
+        chandata_t* chan = &(data->chandata[i]);
 
         fprintf(data->output_file, "Channel %d: ", i);
 

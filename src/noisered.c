@@ -41,8 +41,8 @@ int st_noisered_getopts(eff_t effp, int n, char **argv)
     reddata_t data = (reddata_t) effp->priv;
 
     if (n > 2 || n < 1) {
-	    st_fail("Usage: noiseprof profile-file [threshold]");
-	    return (ST_EOF);
+            st_fail("Usage: noiseprof profile-file [threshold]");
+            return (ST_EOF);
     }
     data->threshold = 0.5;
     data->profile_filename = argv[0];
@@ -133,10 +133,9 @@ static void reduce_noise(chandata_t* chan, float* window, float level)
     float *power = (float*)calloc(WINDOWSIZE, sizeof(float));
     float *smoothing = chan->smoothing;
     static int callnum = 0;
+    int i;
 
     callnum ++;
-
-    int i;
 
     for (i = 0; i < FREQCOUNT; i ++) {
         assert(smoothing[i] >= 0 && smoothing[i] <= 1);

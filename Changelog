@@ -4,6 +4,10 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-12.17.8
+-----------
+  o noisered effect had compile problems with some compilers.
+
 sox-12.17.7
 -----------
   o Christian Weisgerber sent patches to man page fixes
