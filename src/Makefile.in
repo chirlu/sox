@@ -1,10 +1,6 @@
 #
-# Makefile.in
+# @configure_input@
 #
-# Processed by configure into a Makefile.  We assume the environment in
-# which we are running is a POSIX'y environment.  Thus, all of the standard
-# POSIX tools are available.
-#   
 
 # Paths
 
@@ -16,6 +12,7 @@ bindir = @bindir@
 libdir = @libdir@
 mandir = @mandir@
 includedir = @includedir@
+package_tarname = @PACKAGE_TARNAME@
 
 # Shell commands.
 
@@ -31,8 +28,8 @@ LN_S    = @LN_S@
 # Build macros.
 
 CFLAGS	= @CFLAGS@ -I. -I$(srcdir)
-LDFLAGS	= -L. -Lgsm @LDFLAGS@
-LIBS	= -lst @LIBS@
+LDFLAGS	= -L. @LDFLAGS@
+LIBS	= -lst -Lgsm @LIBS@
 
 # Other macros.
 
@@ -176,5 +173,25 @@ distclean:
 	$(RM) stconfig.h ststdint.h
 
 tar:
-	cd $(srcdir)/..; $(RM) $(pkgname).tar
-	cd $(srcdir)/.. ; $(TAR) $(pkgname).tar $(srcdir)
+	cd $(srcdir)/..; $(RM) $(package_tarname).tar
+	cd $(srcdir)/.. ; $(TAR) $(package_tarname).tar $(srcdir)
+
+# Rules to automatically rerun configure tools as needed.
+$(srcdir)/configure: configure.in aclocal.m4
+	cd $(srcdir) && autoconf
+
+stconfig.h: stconfig.h.in config.status
+	./config.status stconfig.h
+
+Makefile: Makefile.in config.status
+	./config.status Makefile
+
+gsm/Makefile: gsm/Makefile.in config.status
+	./config.status gsm/Makefile
+
+libst-config: libst-config.in config.status
+	./config.status libst-config
+
+config.status: configure
+	./config.status --recheck
+

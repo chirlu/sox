@@ -1,10 +1,6 @@
 #
-# Makefile.in
+# @configure_input@
 #
-# Processed by configure into a Makefile.  We assume the environment in
-# which we are running is a POSIX'y environment.  Thus, all of the standard
-# POSIX tools are available.
-#   
 
 VPATH = @srcdir@
 srcdir = @srcdir@

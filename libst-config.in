@@ -1,4 +1,7 @@
 #! /bin/sh
+#
+# @configure_input@
+#
 
 prefix="@prefix@"
 exec_prefix="@exec_prefix@"
