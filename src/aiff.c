@@ -27,19 +27,24 @@
  *
  * Sept 9, 1998 - fixed loop markers.
  *
+ * Feb. 9, 1999 - Small fix to work with invalid headers that include
+ *   a INST block with markers that equal 0.  It should ingore those.
+ *   Also fix endian problems when ran on Intel machines.  The check
+ *   for endianness was being performed AFTER reading the header instead
+ *   of before reading it.
+ *
  */
 
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "st.h"
+#include <stdio.h>
 
-#ifndef SEEK_SET
-#define SEEK_SET 0		/* nasty nasty */
+#ifdef unix
+#include <unistd.h>	/* For SEEK_* defines if not found in stdio */
 #endif
-#ifndef SEEK_CUR
-#define SEEK_CUR 1		/* nasty nasty */
-#endif /* SEEK_CUR */
+
+#include "st.h"
 
 /* Private data used by writer */
 struct aiffpriv {
@@ -69,7 +74,7 @@ ft_t ft;
 	double rate = 0.0;
 	ULONG offset = 0;
 	ULONG blocksize = 0;
-	int littlendian = 0;
+	int littlendian;
 	char *endptr;
 	int foundcomm = 0, foundmark = 0, foundinstr = 0;
 	struct mark {
@@ -85,6 +90,15 @@ ft_t ft;
 	char *copyright;
 	char *nametext;
 
+
+	/* AIFF is in Big Endian format.  Swap whats read in on Little */
+	/* Endian machines.                                            */
+	littlendian = 1;
+	endptr = (char *) &littlendian;
+	if (*endptr)
+	{
+	    ft->swap = ft->swap ? 0 : 1;
+	}
 
 	/* FORM chunk */
 	if (fread(buf, 1, 4, ft->fp) != 4 || strncmp(buf, "FORM", 4) != 0)
@@ -172,7 +186,15 @@ ft_t ft;
 			ft->loops[1].type = rbshort(ft); /* release loop */
 			releaseLoopBegin = rbshort(ft);  /* begin marker */
 			releaseLoopEnd = rbshort(ft);    /* end marker */
-			foundinstr = 1;
+
+			/* At least one known program generates an INST */
+			/* block with everything zeroed out (meaning    */
+			/* no Loops used).  In this case it should just */
+			/* be ingorned.				        */
+			if (sustainLoopBegin == 0 && releaseLoopBegin == 0)
+				foundinstr = 0;
+			else
+				foundinstr = 1;
 		}
 		else if (strncmp(buf, "APPL", 4) == 0) {
 			chunksize = rblong(ft);
@@ -284,7 +306,6 @@ ft_t ft;
 
 	p->nsamples = ssndsize / ft->info.size;	/* leave out channels */
 
-	/* process instrument and marker notations. */
 	if (foundmark && !foundinstr)
 		fail("Bogus AIFF file: MARKers but no INSTrument.");
 	if (!foundmark && foundinstr)
@@ -328,11 +349,6 @@ ft_t ft;
 	}
 	if (verbose)
 	  reportInstrument(ft);
-
-	endptr = (char *) &littlendian;
-	*endptr = 1;
-	if (littlendian == 1)
-		ft->swap = 1;
 }
 
 /* print out the MIDI key allocations, loop points, directions etc */
@@ -435,8 +451,17 @@ void aiffstartwrite(ft)
 ft_t ft;
 {
 	struct aiffpriv *p = (struct aiffpriv *) ft->priv;
-	int littlendian = 0;
+	int littlendian;
 	char *endptr;
+
+	/* AIFF is in Big Endian format.  Swap whats read in on Little */
+	/* Endian machines.                                            */
+	littlendian = 1;
+	endptr = (char *) &littlendian;
+	if (*endptr)
+	{
+	    ft->swap = ft->swap ? 0 : 1;
+	}
 
 	p->nsamples = 0;
 	if (ft->info.style == ULAW && ft->info.size == BYTE) {
@@ -451,11 +476,6 @@ ft_t ft;
 	   Sorry, the AIFF format does not provide for an "infinite"
 	   number of samples. */
 	aiffwriteheader(ft, 0x7f000000L / (ft->info.size*ft->info.channels));
-
-	endptr = (char *) &littlendian;
-	*endptr = 1;
-	if (littlendian == 1)
-		ft->swap = 1;
 }
 
 void aiffwrite(ft, buf, len)
