@@ -1,5 +1,6 @@
 /*	Silence effect for SoX
  *	by Heikki Leinonen (heilei@iki.fi) 25.03.2001
+ *	Major Modifications by Chris Bagwell 06.08.2001
  *
  *	This effect deletes samples from the start of the sound
  *	file until a sample exceeds a given threshold (either
@@ -51,7 +52,7 @@ typedef struct silencestuff
     char	crossings;
 } *silence_t;
 
-/*#define SILENCE_USAGE "Usage: silence count duration thershold [d | %%] [ -notrim ] [ count duration threshold [ d | %% ]]" */
+/*#define SILENCE_USAGE "Usage: silence count duration thershold [d | %% | s] [ -notrim ] [ count duration threshold [ d | %% | s ]]" */
 
 #define SILENCE_USAGE "Usage: silence count duration threshold [d | %%]"
 
@@ -100,7 +101,8 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
 	    return(ST_EOF);
 	}
 
-	if ((silence->stop_unit != '%') && (silence->stop_unit != 'd'))
+	if ((silence->stop_unit != '%') && (silence->stop_unit != 'd') &&
+		(silence->stop_unit != 's'))
 	{
 		st_fail(SILENCE_USAGE);
 		return(ST_EOF);
@@ -131,20 +133,30 @@ int st_silence_start(eff_t effp)
 
 	silence->crossings = 0;
 
-	if ((effp->outinfo.channels != 1) && (effp->outinfo.channels != 2))
-	{
-		st_fail("Silence effect can only be run on mono or stereo data");
-		return (ST_EOF);
-	}
 	return(ST_SUCCESS);
 }
 
 int aboveThreshold(LONG value, double threshold, char unit)
 {
-	double	ratio;
+    double ratio;
+    int rc = 0;
 
-	ratio = (double)labs(value) / (double)MAXLONG;
-	return((unit == '%') ? ((ratio * 100.0) >= threshold) : ((log10(ratio) * 20.0) >= threshold));
+    ratio = (double)labs(value) / (double)MAXLONG;
+
+    if (unit == 's')
+    {
+	rc = (labs(value) >= threshold);
+    }
+    else
+    {
+	if (unit == '%')
+	    ratio *= 100.0;
+	else if (unit == 'd')
+	    ratio = log10(ratio) * 20.0;
+    	rc = (ratio >= threshold);
+    }
+
+    return rc;
 }
 
 /* Process signed long samples from ibuf to obuf. */
@@ -236,6 +248,7 @@ silence_copy:
 			memcpy(obuf,ibuf,sizeof(LONG)*effp->ininfo.channels);
 			nrOfInSamplesRead += effp->ininfo.channels;
 			nrOfOutSamplesWritten += effp->ininfo.channels;
+			ibuf += effp->ininfo.channels;
 		    }
 		    else if (!threshold)
 		    {
