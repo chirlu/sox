@@ -181,9 +181,8 @@ extern st_format_t st_formats[];
 #define	ST_SIZE_FLOAT	5
 #define ST_SIZE_DOUBLE	6
 #define ST_SIZE_IEEE	7	/* IEEE 80-bit floats. */
-#define ST_SIZE_12BIT   8
 
-#define ST_SIZE_MAX     8
+#define ST_SIZE_MAX     7
 
 /* Style field */
 #define ST_ENCODING_UNSIGNED	1 /* unsigned linear: Sound Blaster */

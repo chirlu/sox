@@ -363,20 +363,28 @@ ft_t ft;
 		ft->info.channels = channels;
 		ft->info.rate = rate;
 		ft->info.encoding = ST_ENCODING_SIGN2;
-		switch (bits) {
-		case 8:
-			ft->info.size = ST_SIZE_BYTE;
-			break;
-		case 12:
-			ft->info.size = ST_SIZE_12BIT;
-			break;
-		case 16:
-			ft->info.size = ST_SIZE_WORD;
-			break;
-		default:
-			st_fail_errno(ft,ST_EFMT,"unsupported sample size in AIFF header: %d", bits);
-			return(ST_EOF);
-			/*NOTREACHED*/
+		if (bits <= 8)
+		{
+		    ft->info.size = ST_SIZE_BYTE;
+		    if (bits < 8)
+			st_report("Forcing data size from %d bits to 8 bits",bits);
+		}
+		else if (bits <= 16)
+		{
+		    ft->info.size = ST_SIZE_WORD;
+		    if (bits < 16)
+			st_report("Forcing data size from %d bits to 16 bits",bits);
+		}
+		else if (bits <= 32)
+		{
+		    ft->info.size = ST_SIZE_DWORD;
+		    if (bits < 32)
+			st_report("Forcing data size from %d bits to 32 bits",bits);
+		}
+		else
+		{
+		    st_fail_errno(ft,ST_EFMT,"unsupported sample size in AIFF header: %d", bits);
+		    return(ST_EOF);
 		}
 	} else  {
 		if ((ft->info.channels == -1)

@@ -47,8 +47,7 @@ sox-12.17.2
     to use stderr.
   o Corrected AU header length value when comments were less than
     4 bytes.
-  o Added initial support for 12-bit audio data.  AIFF files can now read 12-bit audio
-    data but can not write it (lacks command line support).
+  o Added support for reading non-standard bit size data from AIFF files.
 
 sox-12.17.1
 -----------
