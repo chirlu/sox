@@ -69,7 +69,7 @@ esac
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(getopt.h fcntl.h limits.h malloc.h unistd.h byteswap.h sys/types.h inttypes.h stdint.h string.h errno.h)
+AC_CHECK_HEADERS(getopt.h fcntl.h limits.h malloc.h unistd.h byteswap.h errno.h)
 
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = yes
