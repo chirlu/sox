@@ -65,7 +65,7 @@ ft_t ft;
          and second word is between 4000 & 25000 then this is sounder sound */
         /* otherwise, its probably raw, not handled here */
 
-	if (fread(buf, 1, 2, buf) != 2)
+	if (fread(buf, 1, 2, ft->fp) != 2)
 	{
 		fail("SND: unexpected EOF");
 		return(ST_EOF);
