@@ -94,12 +94,7 @@ AC_CHECKING(if math library is required during link)
 AC_CHECK_FUNC(pow)
 if test "$ac_cv_func_pow" = no
 then
-
   AC_CHECK_LIB(m, pow)
-  if test "$ac_cv_lib_m" = yes
-  then
-	LIBS="$LIBS -lm"
-  fi
 fi
 
 dnl Test for GSM library.
@@ -109,38 +104,34 @@ then
   LIBS="$LIBS -L$gsmlib"
 fi
 
+dnl Need to tell preprocess where to look for GSM include files
+dnl when they are not in system directories.  Because of this make
+dnl a backup copy of the CPPFLAGS.
+ac_save_CPPFLAGS="$CPPFLAGS"
+
 if test "$gsminc" != auto && test "$gsminc" != no
 then
   CFLAGS="$CFLAGS -I$gsminc"
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  if test \! -z "$gsminc" ; then
+    CPPFLAGS="$CPPFLAGS -I$gsminc"
+  fi
 fi
 
 AC_CHECK_HEADER(gsm.h, gsminc=yes, gsminc=no)
-if test "$gsminc" != yes
+if test "$gsminc" = yes
 then
-  AC_WARN([Can not find gsm.h header file])
-else
   AC_CHECK_LIB(gsm, gsm_create)
 fi
+CPPFLAGS="$ac_save_CPPFLAGS"
 
 dnl Checks for header files.
 
 AC_CHECK_HEADERS(getopt.h unistd.h malloc.h)
 
-if test "$ac_cv_lib_gsm_gsm_create" = yes
-then
-  AC_CHECK_HEADER(gsm.h, gsminc=yes)
-  if test "$gsminc" != yes
-  then
-    AC_WARN([Can not find gsm.h header file])
-  fi
-fi
-
-
 dnl Checks for library functions.
 
-AC_CHECK_FUNCS(getopt)
-
-AC_CHECK_FUNCS(strerror memmove)
+AC_CHECK_FUNCS(getopt strerror memmove)
 
 dnl Checks for system services.
 
