@@ -14,6 +14,8 @@ sox-12.18
   o Added a new fade in/out effect from Ari Moisio.
   o AIFF files now ignore a MARK chunk if the loop type is NoLoop (0).
   o Fixed bug were it was impossible to output ADPCM data in wav files.
+  o Fixed bug were rate had to be specified for sphere files (fix from
+    Antti Honkela).
 
 sox-12.17
 ---------

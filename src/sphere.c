@@ -91,7 +91,7 @@ ft_t ft;
 		}
 	    }
 	    if (strncmp(buf, "sample_rate", 11) == 0 &&
-		ft->info.rate == -1)
+		ft->info.rate == 0)
 	    {
 #ifdef __alpha__
 		sscanf(buf, "%s %s %d", fldname, fldtype, &ft->info.rate);
