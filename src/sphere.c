@@ -35,6 +35,7 @@ int st_spherestartread(ft_t ft)
 	char fldname[64], fldtype[16], fldsval[128];
 	int i;
 	int header_size, bytes_read;
+	long rate;
 	
 	/* Needed for rawread() */
 	rc = st_rawstartread(ft);
@@ -95,11 +96,8 @@ int st_spherestartread(ft_t ft)
 	    if (strncmp(buf, "sample_rate ", 12) == 0 &&
 		ft->info.rate == 0)
 	    {
-#ifdef __alpha__
-		sscanf(buf, "%s %s %d", fldname, fldtype, &ft->info.rate);
-#else
-		sscanf(buf, "%s %s %ld", fldname, fldtype, &ft->info.rate);
-#endif
+		sscanf(buf, "%s %s %ld", fldname, fldtype, &rate);
+		ft->info.rate = rate;
 	    }
 	    if (strncmp(buf, "sample_byte_format", 18) == 0)
 	    {
@@ -248,6 +246,7 @@ int st_spherestopwrite(ft_t ft)
     int rc;
     char buf[128];
     sphere_t sphere = (sphere_t) ft->priv;
+    long samples, rate;
 
     rc = st_rawstopwrite(ft);
     if (rc)
@@ -262,11 +261,8 @@ int st_spherestopwrite(ft_t ft)
     st_writes(ft, "NIST_1A\n");
     st_writes(ft, "   1024\n");
 
-#ifdef __alpha__
-    sprintf(buf, "sample_count -i %d\n", sphere->numSamples/ft->info.channels);
-#else
-    sprintf(buf, "sample_count -i %ld\n", sphere->numSamples/ft->info.channels);
-#endif
+    samples = sphere->numSamples/ft->info.channels;
+    sprintf(buf, "sample_count -i %ld\n", samples);
     st_writes(ft, buf);
 
     sprintf(buf, "sample_n_bytes -i %d\n", ft->info.size);
@@ -285,11 +281,8 @@ int st_spherestopwrite(ft_t ft)
     }
     st_writes(ft, buf);
 
-#ifdef __alpha__
-    sprintf(buf, "sample_rate -i %d\n", ft->info.rate);
-#else
-    sprintf(buf, "sample_rate -i %ld\n", ft->info.rate);
-#endif
+    rate = ft->info.rate;
+    sprintf(buf, "sample_rate -i %ld\n", rate);
     st_writes(ft, buf);
 
     if (ft->info.encoding == ST_ENCODING_ULAW)

@@ -38,13 +38,8 @@ int st_map_start(eff_t effp)
 
 	fprintf(stderr, "Loop info:\n");
 	for(i = 0; i < 8; i++) {
-#ifdef __alpha__
 		fprintf(stderr, "Loop %d: start:  %6d",i,effp->loops[i].start);
 		fprintf(stderr, " length: %6d", effp->loops[i].length);
-#else
-		fprintf(stderr, "Loop %d: start:  %6ld",i,effp->loops[i].start);
-		fprintf(stderr, " length: %6ld", effp->loops[i].length);
-#endif
 		fprintf(stderr, " count: %6d", effp->loops[i].count);
 		fprintf(stderr, " type:  ");
 		switch(effp->loops[i].type) {

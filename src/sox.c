@@ -441,13 +441,8 @@ static void doopts(ft_t ft, int argc, char **argv)
                 case 'r':
                         if (! ft) usage("-r");
                         str = optarg;
-#ifdef __alpha__
                         if ((! sscanf(str, "%u", &ft->info.rate)) ||
                                         (ft->info.rate <= 0))
-#else
-                        if ((! sscanf(str, "%lu", &ft->info.rate)) ||
-                                        (ft->info.rate <= 0))
-#endif
                                 st_fail("-r must be given a positive integer");
                         break;
                 case 'v':

@@ -70,6 +70,7 @@ int st_datstartwrite(ft_t ft)
    dat_t dat = (dat_t) ft->priv;
    double srate;
    char s[80];
+   long rate;
 
    if (ft->info.channels > 1)
    {
@@ -83,11 +84,8 @@ int st_datstartwrite(ft_t ft)
    dat->timevalue = 0.0;
    srate = ft->info.rate;
    dat->deltat = 1.0 / srate;
-#ifdef __alpha__
-   sprintf(s,"; Sample Rate %d\015\n", ft->info.rate);
-#else
-   sprintf(s,"; Sample Rate %ld\015\n",ft->info.rate);
-#endif
+   rate = ft->info.rate;
+   sprintf(s,"; Sample Rate %ld\015\n",rate);
    st_writes(ft, s);
 
    return (ST_SUCCESS);

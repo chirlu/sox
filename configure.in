@@ -59,6 +59,7 @@ AC_PROG_CC
 AC_PROG_RANLIB
 AC_PROG_INSTALL
 AC_PROG_CPP
+AC_C_INLINE
 
 AC_CHECK_PROGS(SED, sed)
 
@@ -161,7 +162,7 @@ CPPFLAGS="$ac_save_CPPFLAGS"
 
 dnl Checks for header files.
 
-AC_CHECK_HEADERS(getopt.h unistd.h malloc.h byteswap.h)
+AC_CHECK_HEADERS(getopt.h unistd.h malloc.h byteswap.h sys/types.h inttypes.h stdint.h)
 
 dnl Checks for library functions.
 

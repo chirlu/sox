@@ -22,21 +22,21 @@ extern "C" {
 #define ST_LIB_VERSION_CODE 0x0c1103
 #define ST_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
-#ifdef __alpha__
-#include <sys/types.h>  /* To get defines for exact size integers */
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h> 
+#else
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 #endif
 
-#ifdef __alpha
 typedef int32_t st_sample_t;
-typdef uint32_t st_size_t;
+typedef uint32_t st_size_t;
 typedef int32_t st_ssize_t;
-typedef uint32t_t st_rate_t;
-#else
-typedef long st_sample_t;
-typedef unsigned long st_size_t;
-typedef long st_ssize_t;
-typedef unsigned long st_rate_t;
-#endif
+typedef uint32_t st_rate_t;
 
 /* Minimum and maximum values a sample can hold. */
 #define ST_SAMPLE_MAX 0x7fffffffL
@@ -73,13 +73,8 @@ typedef unsigned long st_rate_t;
 #define ST_SSIZE_MIN (-ST_SSIZE_MAX - 1L)
 
 /* FIXME:  Remove from usage by libst */
-#ifdef __alpha__
 #define LONG    int32_t
 #define ULONG   u_int32_t
-#else
-#define LONG    long
-#define ULONG   unsigned long
-#endif
 
 /* FIXME: Get rid of this and usage of LONG_MAX */
 #define MAXLONG 0x7fffffffL

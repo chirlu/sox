@@ -351,7 +351,7 @@ int st_stat_stop(eff_t effp)
 		fprintf(stderr, "\n\n");
 	}
 	/* print out the info */
-	fprintf(stderr, "Samples read:      %12lu\n", stat->read);
+	fprintf(stderr, "Samples read:      %12u\n", stat->read);
 	fprintf(stderr, "Length (seconds):  %12.6f\n", (double)stat->read/effp->ininfo.rate/effp->ininfo.channels);
 	if (stat->srms)
 		fprintf(stderr, "Scaled by rms:     %12.6f\n", rms);

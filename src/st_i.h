@@ -14,9 +14,6 @@
  */
 
 #include "st.h"
-// FIXME: One works on solaris, the other on Linux
-//#include <sys/types.h>
-#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,10 +26,8 @@ extern "C" {
 /* various gcc optimizations and portablity defines */
 #ifdef __GNUC__
 #define NORET __attribute__((noreturn))
-#define INLINE inline
 #else
 #define NORET
-#define INLINE
 #endif
 
 #ifdef USE_REGPARM

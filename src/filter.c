@@ -86,7 +86,7 @@ int st_filter_getopts(eff_t effp, int n, char **argv)
 		return (ST_EOF);
 	}
 
-	if ((n >= 2) && !sscanf(argv[1], "%ld", &f->Nwin))
+	if ((n >= 2) && !sscanf(argv[1], "%d", &f->Nwin))
 	{
 		st_fail("Usage: filter low-high [ windowlength ]");
 		return (ST_EOF);

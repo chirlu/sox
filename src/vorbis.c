@@ -315,6 +315,7 @@ int st_vorbisstartwrite(ft_t ft)
 {
 	vorbis_t vb = (vorbis_t) ft->priv;
 	vorbis_enc_t *ve;
+	long rate;
 
 	/* Allocate memory for all of the structures */
 	ve = vb->vorbis_enc_data = malloc(sizeof(vorbis_enc_t));
@@ -325,8 +326,9 @@ int st_vorbisstartwrite(ft_t ft)
 	vorbis_info_init(&ve->vi);
 
 	/* DEBUG */
+	rate = ft->info.rate;
 	fprintf(stdout, "Channels: %d  Rate: %ld\n", ft->info.channels,
-		ft->info.rate);
+		rate);
 
 	/* Set encoding to average bit rate of 128kbps with no min or max */
 	vorbis_encode_init(&ve->vi, ft->info.channels, ft->info.rate,
