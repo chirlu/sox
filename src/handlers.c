@@ -227,11 +227,7 @@ char *sunnames[] = {
 	(char *) 0
 };
 extern void sunstartread();
-extern LONG sunread();
-extern void sunstopread();
 extern void sunstartwrite();
-extern void sunwrite();
-extern void sunstopwrite();
 #endif
 
 char *svxnames[] = {
@@ -397,8 +393,8 @@ EXPORT format_t formats[] = {
 #if	defined(SUNAUDIO_PLAYER)
 	/* Sun /dev/audio player. */
 	{sunnames, FILE_STEREO,
-		sunstartread, sunread, sunstopread, 	       /* /dev/audio */
-		sunstartwrite, sunwrite, sunstopwrite},
+		sunstartread, rawread, rawstopread, 	       /* /dev/audio */
+		sunstartwrite, rawwrite, rawstopwrite},
 #endif
 	{svxnames, FILE_STEREO,
 		svxstartread, svxread, svxstopread,            /* Amiga 8SVX */

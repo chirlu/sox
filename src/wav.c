@@ -945,6 +945,9 @@ void
 wavstopwrite(ft) 
 ft_t ft;
 {
+	/* Call this to flush out any remaining data. */
+	rawstopwrite(ft);
+
 	/* All samples are already written out. */
 	/* If file header needs fixing up, for example it needs the */
  	/* the number of samples in a field, seek back and write them here. */
@@ -954,9 +957,6 @@ ft_t ft;
 		fail("Sorry, can't rewind output file to rewrite .wav header.");
 	((wav_t) ft->priv)->second_header = 1;
 	wavwritehdr(ft);
-
-	/* Needed for rawwrite() */
-	rawstopwrite(ft);
 }
 
 /*

@@ -206,9 +206,12 @@ then
 		)
 	if test "$ac_cv_dev_sun_audio" = yes
 	then
-		AC_CHECK_HEADER(audioio.h,
-			sun_audio=yes,
-			AC_WARN([No audioio.h to compile with SUN /dev/audio]))
+		AC_CHECK_HEADER(sys/audioio.h, sun_audio=yes)
+		AC_CHECK_HEADER(sun/audioio.h, sun_audio=yes)
+		if test "$sun_audio" = auto
+		then
+			AC_WARN([No audioio.h to compile with SUN /dev/audio])
+		fi
 	fi
 fi
 if test "$sun_audio" = yes
@@ -237,7 +240,14 @@ LIBS="$LIBS -L. -lst -lm"
 AC_SUBST(NEED_OSS)
 AC_SUBST(NEED_SUNAU)
 AC_SUBST(NEED_ALSA)
+
+dnl Generate output files...
+
 AC_OUTPUT([Makefile])
+
+if test ! -f tests.sh; then cp ${srcdir}/tests.sh tests.sh; fi
+if test ! -f monkey.au; then cp ${srcdir}/monkey.au monkey.au; fi
+if test ! -f monkey.voc; then cp ${srcdir}/monkey.voc monkey.voc; fi
 
 touch .depend
 
