@@ -122,11 +122,11 @@ CPPFLAGS="$ac_save_CPPFLAGS"
 
 dnl Checks for header files.
 
-AC_CHECK_HEADERS(getopt.h unistd.h malloc.h)
+AC_CHECK_HEADERS(getopt.h unistd.h malloc.h byteswap.h)
 
 dnl Checks for library functions.
 
-AC_CHECK_FUNCS(getopt strerror memmove)
+AC_CHECK_FUNCS(getopt strerror memmove rand)
 
 dnl Checks for system services.
 
@@ -200,6 +200,10 @@ then
 fi
 if test "$oss_dsp" = yes
 then
+	if test "$ac_cv_dev_oss_dsp" = ""
+	then
+		AC_CHEKC_HEADERS(sys/soundcard.h machine/soundchare.h,)
+	fi
 	CFLAGS="$CFLAGS -DOSS_PLAYER"
 	NEED_OSS=1
 	PLAY_SUPPORT=1
@@ -240,6 +244,10 @@ then
 fi
 if test "$sun_audio" = yes
 then
+	if test "$ac_cv_dev_sun_audio" = ""
+	then
+		AC_CHEKC_HEADERS(sys/audioio.h, sun/audioio.h,)
+	fi
 	CFLAGS="$CFLAGS -DSUNAUDIO_PLAYER"
 	NEED_SUNAU=1
 	PLAY_SUPPORT=1

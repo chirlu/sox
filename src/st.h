@@ -13,6 +13,10 @@
 
 #include <stdio.h>
 
+#ifdef HAVE_BYTESWAP_H
+#include <byteswap.h>
+#endif
+
 /* FIXME: Move to seperate header */
 #ifdef __alpha__
 #include <sys/types.h>   /* To get defines for 32-bit integers */
@@ -239,10 +243,16 @@ void rawstopwrite(P1(ft_t ft));
 LONG rawread(P3(ft_t ft, LONG *buf, LONG nsamp));
 void rawwrite(P3(ft_t ft, LONG *buf, LONG nsamp));
 
-/* Utilities to byte-swap values */
+/* Utilities to byte-swap values, use libc optimized macro's if possible  */
+#ifdef HAVE_BYTESWAP_H
+#define swapw(x) bswap_16(x)
+#define swapl(x) bswap_32(x)
+#define swapf(x) (float)bswap_32((ULONG)(x))
+#else
 unsigned short swapw(P1(unsigned short us));		/* Swap short */
 ULONG  	       swapl(P1(ULONG ul));			/* Swap long */
 float  	       swapf(P1(float f));			/* Swap float */
+#endif
 double 	       swapd(P1(double d));			/* Swap double */
 
 void report(P2(char *, ...)),  warn(P2(char *, ...)),

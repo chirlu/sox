@@ -292,7 +292,7 @@ ft_t ft;
 	 * only swap the buffer after its full.
 	 */
 	if (ft->swap)
-		swapn(p0, n);
+		swapn(ft->file.buf + ft->file.pos, n);
 	ft->file.pos += n;
 }
 

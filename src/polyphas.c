@@ -194,8 +194,10 @@ static int permute(int *m, int *l, int ct, int ct1, int amalg)
   if (ct<=1) return ct;
   
   for (k=ct; k>1; ) {
-    int tmp, j;
-    j = rand() % k;
+    int tmp;
+    LONG j;
+    j = (LONG)rand() + ((LONG)rand()<<13); /* reasonably big */
+    j = j % k; /* non-negative! */
     k--;
     if (j != k) {
       tmp = m[k]; m[k]=m[j]; m[j]=tmp;

@@ -160,7 +160,8 @@ int n;
 }
 
 
-/* Byte swappers */
+/* Byte swappers, use libc optimized macro's if possible */
+#ifndef HAVE_BYTESWAP_H
 
 unsigned short
 swapw(us)
@@ -168,6 +169,8 @@ unsigned short us;
 {
 	return ((us >> 8) | (us << 8)) & 0xffff;
 }
+
+#endif
 
 ULONG
 swapl(ul)
@@ -230,22 +233,21 @@ LONG a, b;
     return a * (b / st_gcd(a, b));
 }
 
-/* FIXME: Need to add to autoconf to check for random */
 #ifndef HAVE_RAND
 /* 
  * Portable random generator as defined by ANSI C Standard.
  * Don't ask me why not all C libraries include it.
  */
 
-static int rand_seed;
+static ULONG rand_seed = 1;
 
 int rand() {
 	rand_seed = (rand_seed * 1103515245L) + 12345L;
-	return ((rand_seed/65536L) % 32768L);
+	return ((ULONG)(rand_seed/65536L) % 32768L);
 }
 
 void srand(seed) 
-int seed;
+unsigned int seed;
 {
 	rand_seed = seed;
 }
