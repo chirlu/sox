@@ -55,9 +55,6 @@ ft_t ft;
 	
 	ULONG chunksize;
 	ULONG trash;
-
-	int littlendian = 1;
-	char *endptr;
 	int rc;
 
 	/* Needed for rawread() */
@@ -65,11 +62,10 @@ ft_t ft;
 	if (rc)
 	    return rc;
 
-	endptr = (char *) &littlendian;
 	/* maud is in big endian format.  Swap whats read in
 	 * on little endian machines.
 	 */
-	if (*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}
@@ -251,9 +247,6 @@ int st_maudstartwrite(ft)
 ft_t ft;
 {
 	struct maudstuff * p = (struct maudstuff *) ft->priv;
-
-	int littlendian = 1;
-	char *endptr;
 	int rc;
 
 	/* Needed for rawwrite() */
@@ -261,11 +254,10 @@ ft_t ft;
 	if (rc)
 	    return rc;
 
-	endptr = (char *) &littlendian;
 	/* maud is in big endian format.  Swap whats read in
 	 * on little endian machines.
 	 */
-	if (*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}

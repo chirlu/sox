@@ -98,6 +98,32 @@ st_fail_errno(ft_t ft, int errno, const char *fmt, ...)
 	va_end(args);
 }
 
+int st_is_bigendian(void)
+{
+    int b;
+    char *p;
+
+    b = 1;
+    p = (char *) &b;
+    if (!*p)
+	return 1;
+    else
+	return 0;
+}
+
+int st_is_littleendian(void)
+{
+    int b;
+    char *p;
+
+    b = 1;
+    p = (char *) &b;
+    if (*p)
+	return 1;
+    else
+	return 0;
+}
+
 int strcmpcase(s1, s2)
 char *s1, *s2;
 {

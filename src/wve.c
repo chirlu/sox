@@ -28,9 +28,6 @@ ft_t ft;
 	struct wvepriv *p = (struct wvepriv *) ft->priv;
 	char magic[16];
 	short version;
-
-	int littlendian = 1;
-	char *endptr;
 	int rc;
 
 	ULONG trash;
@@ -40,11 +37,10 @@ ft_t ft;
 	if (rc)
 	    return rc;
 
-	endptr = (char *) &littlendian;
 	/* WVE is in big endian format.  Swap whats read in
 	 * on little endian machines.
 	 */
-	if (*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}
@@ -114,9 +110,6 @@ int st_wvestartwrite(ft)
 ft_t ft;
 {
 	struct wvepriv *p = (struct wvepriv *) ft->priv;
-
-	int littlendian = 1;
-	char *endptr;
 	int rc;
 
 	/* Needed for rawwrite() */
@@ -124,11 +117,10 @@ ft_t ft;
 	if (rc)
 	    return ST_EOF;
 
-	endptr = (char *) &littlendian;
 	/* wve is in big endian format.  Swap whats read in
 	 * on little endian machines.
 	 */
-	if (*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}

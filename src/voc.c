@@ -177,14 +177,11 @@ ft_t ft;
 	char header[20];
 	vs_t v = (vs_t) ft->priv;
 	unsigned short sbseek;
-	int littlendian = 1;
-	char *endptr;
 	int rc;
 
-	endptr = (char *) &littlendian;
 	/* VOC is in Little Endian format.  Swap bytes read in on */
 	/* Big Endian mahcines.				          */
-	if (!*endptr)
+	if (ST_IS_BIGENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}
@@ -306,13 +303,10 @@ int st_vocstartwrite(ft)
 ft_t ft;
 {
 	vs_t v = (vs_t) ft->priv;
-	int littlendian = 1;
-	char *endptr;
 
-	endptr = (char *) &littlendian;
 	/* VOC is in Little Endian format.  Swap whats read */
 	/* in on Big Endian machines.			    */
-	if (!*endptr)
+	if (ST_IS_BIGENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}

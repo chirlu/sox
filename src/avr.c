@@ -67,14 +67,11 @@ int st_avrstartread(ft)
 ft_t ft;
 {
   avr_t	avr = (avr_t)ft->priv;
-  int littlendian = 1;
-  char *endptr;
   int rc;
 
   /* AVR is a Big Endian format.  Swap whats read in on Little */
   /* Endian machines.					       */
-  endptr = (char *) &littlendian;
-  if (*endptr)
+  if (ST_IS_LITTLEENDIAN)
   {
 	  ft->swap = ft->swap ? 0 : 1;
   }
@@ -156,14 +153,11 @@ int st_avrstartwrite(ft)
 ft_t ft;
 {
   avr_t	avr = (avr_t)ft->priv;
-  int littlendian = 1;
-  char *endptr;
   int rc;
 
   /* AVR is a Big Endian format.  Swap whats read in on Little */
   /* Endian machines.					       */
-  endptr = (char *) &littlendian;
-  if (*endptr)
+  if (ST_IS_LITTLEENDIAN)
   {
 	  ft->swap = ft->swap ? 0 : 1;
   }

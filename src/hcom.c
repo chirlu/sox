@@ -58,17 +58,13 @@ ft_t ft;
 	ULONG datasize, rsrcsize;
 	ULONG huffcount, checksum, compresstype, divisor;
 	unsigned short dictsize;
-
-	int littlendian = 1;
-	char *endptr;
 	int rc;
 
 
-	endptr = (char *) &littlendian;
 	/* hcom is in big endian format.  Swap whats
 	 * read in on little machine
 	 */
-	if (*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}
@@ -282,14 +278,10 @@ ft_t ft;
 {
 	register struct writepriv *p = (struct writepriv *) ft->priv;
 
-	int littlendian = 1;
-	char *endptr;
-
-	endptr = (char *) &littlendian;
 	/* hcom is inbigendian format.  Swap whats
 	 * read in on little endian machines.
 	 */
-	if (*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}

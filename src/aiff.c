@@ -80,8 +80,6 @@ ft_t ft;
 	double rate = 0.0;
 	ULONG offset = 0;
 	ULONG blocksize = 0;
-	int littlendian = 1;
-	char *endptr;
 	int foundcomm = 0, foundmark = 0, foundinstr = 0;
 	struct mark {
 		unsigned short id;
@@ -109,8 +107,7 @@ ft_t ft;
 
 	/* AIFF is in Big Endian format.  Swap whats read in on Little */
 	/* Endian machines.                                            */
-	endptr = (char *) &littlendian;
-	if (*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{
 	    ft->swap = ft->swap ? 0 : 1;
 	}
@@ -614,8 +611,6 @@ int st_aiffstartwrite(ft)
 ft_t ft;
 {
 	struct aiffpriv *p = (struct aiffpriv *) ft->priv;
-	int littlendian;
-	char *endptr;
 	int rc;
 
 	/* Needed because st_rawwrite() */
@@ -625,9 +620,7 @@ ft_t ft;
 
 	/* AIFF is in Big Endian format.  Swap whats read in on Little */
 	/* Endian machines.                                            */
-	littlendian = 1;
-	endptr = (char *) &littlendian;
-	if (*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{
 	    ft->swap = ft->swap ? 0 : 1;
 	}

@@ -442,8 +442,6 @@ ft_t ft;
     wav_t	wav = (wav_t) ft->priv;
     char	magic[5];
     ULONG	len;
-    int		littlendian = 1;
-    char	*endptr;
     int		rc;
 
     /* wave file characteristics */
@@ -459,8 +457,7 @@ ft_t ft;
     ULONG    bytesPerBlock = 0;
     ULONG    bytespersample;	    /* bytes per sample (per channel */
 
-    endptr = (char *) &littlendian;
-    if (!*endptr) ft->swap = ft->swap ? 0 : 1;
+    if (ST_IS_BIGENDIAN) ft->swap = ft->swap ? 0 : 1;
 
     if (st_reads(ft, magic, 4) == ST_EOF || strncmp("RIFF", magic, 4))
     {
@@ -1037,12 +1034,9 @@ int st_wavstartwrite(ft)
 ft_t ft;
 {
 	wav_t	wav = (wav_t) ft->priv;
-	int	littlendian = 1;
-	char	*endptr;
 	int	rc;
 
-	endptr = (char *) &littlendian;
-	if (!*endptr) ft->swap = ft->swap ? 0 : 1;
+	if (ST_IS_BIGENDIAN) ft->swap = ft->swap ? 0 : 1;
 
 	wav->numSamples = 0;
 	wav->dataLength = 0;

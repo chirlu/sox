@@ -337,6 +337,17 @@ void st_warn(P2(const char *, ...));
 void st_fail(P2(const char *, ...))NORET;
 void st_fail_errno(P4(ft_t, int, const char *, ...));
 
+int st_is_bigendian(void);
+int st_is_littleendian(void);
+
+#ifdef WORDS_BIGENDIAN
+#define ST_IS_BIGENDIAN 1
+#define ST_IS_LITTLEENDIAN 0
+#else
+#define ST_IS_BIGENDIAN st_is_bigendian()
+#define ST_IS_LITTLEENDIAN st_is_littleendian()
+#endif
+
 int st_geteffect_opt(P3(eff_t, int, char **));
 int st_geteffect(P2(eff_t, char *));
 int st_updateeffect(P4(eff_t, ft_t, ft_t, int));

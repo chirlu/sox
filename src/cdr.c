@@ -42,9 +42,6 @@ typedef struct cdrstuff {
 int st_cdrstartread(ft) 
 ft_t ft;
 {
-
-	int     littlendian = 1;
-	char    *endptr;
 	int rc;
 
 	/* Needed because of rawread() */
@@ -52,10 +49,9 @@ ft_t ft;
 	if (rc)
 	    return rc;
 
-	endptr = (char *) &littlendian;
 	/* CDR is in Big Endian format.  Swap whats read in on */
         /* Little Endian machines.                             */
-	if (*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{ 
 	    ft->swap = ft->swap ? 0 : 1;
 	}
@@ -99,15 +95,11 @@ int st_cdrstartwrite(ft)
 ft_t ft;
 {
 	cdr_t cdr = (cdr_t) ft->priv;
-
-	int     littlendian = 1;
-	char    *endptr;
 	int rc;
 
-	endptr = (char *) &littlendian;
 	/* CDR is in Big Endian format.  Swap whats written out on */
 	/* Little Endian Machines.                                 */
-	if (*endptr) 
+	if (ST_IS_LITTLEENDIAN)
 	{
 	    ft->swap = ft->swap ? 0 : 1;
 	}

@@ -85,6 +85,10 @@ then
     CFLAGS="$CFLAGS -Wall"
 fi
 
+dnl Check for system dependent features.
+
+AC_C_BIGENDIAN
+
 dnl Checks for libraries.
 
 dnl Check if math library is needed.

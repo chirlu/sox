@@ -38,9 +38,6 @@ ft_t ft;
         char buf[97];
 
         unsigned short rate;
-
-	int littlendian = 1;
-	char *endptr;
 	int rc;
 
 	/* Needed for rawread() */
@@ -48,11 +45,10 @@ ft_t ft;
 	if (rc)
 	    return rc;
 
-	endptr = (char *) &littlendian;
 	/* sndt is in little endian format so 
 	 * swap bytes on big endian machines.
 	 */
-	if (!*endptr)
+	if (ST_IS_BIGENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}
@@ -116,9 +112,6 @@ int st_sndtstartwrite(ft)
 ft_t ft;
 {
 	struct sndpriv *p = (struct sndpriv *) ft->priv;
-
-	int littlendian = 1;
-	char *endptr;
 	int rc;
 
 	/* Needed for rawwrite() */
@@ -126,11 +119,10 @@ ft_t ft;
 	if (rc)
 	    return rc;
 
-	endptr = (char *) &littlendian;
 	/* sndt is in little endian format so
 	 * swap bytes on big endian machines
 	 */
-	if (!*endptr)
+	if (ST_IS_BIGENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}

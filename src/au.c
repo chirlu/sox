@@ -117,8 +117,6 @@ ft_t ft;
 	char *buf;
 	struct aupriv *p = (struct aupriv *) ft->priv;
 
-	int littlendian = 1;
-	char *endptr;
 	int rc;
 
 	/* Needed for rawread() */
@@ -126,11 +124,10 @@ ft_t ft;
 	if (rc)
 	    return rc;
 
-	endptr = (char *) &littlendian;
 	/* AU is in big endian format.  Swap whats read
 	 * in onlittle endian machines.
 	 */
-	if (*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}
@@ -242,8 +239,6 @@ int st_austartwrite(ft)
 ft_t ft;
 {
 	struct aupriv *p = (struct aupriv *) ft->priv;
-	int littlendian = 1;
-	char *endptr;
 	int rc;
 
 	/* Needed because of rawwrite(); */
@@ -251,11 +246,10 @@ ft_t ft;
 	if (rc)
 	    return rc;
 
-	endptr = (char *) &littlendian;
 	/* AU is in big endian format.  Swap whats read in
 	 * on little endian machines.
 	 */
-	if (*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}

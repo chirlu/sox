@@ -40,16 +40,13 @@ ft_t ft;
 	ULONG channels;
 	unsigned short rate;
 	int i;
-	int littlendian = 1;
-	char *endptr;
 
 	ULONG chan1_pos;
 
-	endptr = (char*) &littlendian;
 	/* 8svx is in big endian format. Swap whats
 	 * read in on little endian machines.
 	 */
-	if (*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}
@@ -260,14 +257,10 @@ ft_t ft;
 	struct svxpriv *p = (struct svxpriv *) ft->priv;
 	int i;
 
-	int littlendian = 1;
-	char *endptr;
-
-	endptr = (char *) &littlendian;
 	/* 8svx is in big endian format.  Swaps wahst
 	 * read in on little endian machines.
 	 */
-	if (*endptr)
+	if (ST_IS_LITTLEENDIAN)
 	{
 		ft->swap = ft->swap ? 0 : 1;
 	}
