@@ -727,6 +727,13 @@ static void process(void) {
 
         efftab[0].odone = 0;
 
+	/* If not writing and no effects are occuring then not much
+	 * reason to continue reading.  This allows this case.  Mainly
+	 * useful to print out info about input file header and quite.
+	 */
+	if (!writing && neffects == 1)
+	    efftab[0].olen = 0;
+
         if (efftab[0].olen == 0)
 	    break;
 
