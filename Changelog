@@ -6,12 +6,18 @@ sox-11gamma.
 
 sox-12.17
 ---------
+  o Sox can now read and write w98 compatible gsm .wav files,
+    if compiled properly with libgsm.  Thanks go to Stuart
+    Daines <sjd.u-net.com> for the gsm-wav patches.
+    This is new, and relatively untested. See -g format option.
   o Sox can now write IMA_ADPCM and ADPCM compressed .wav,
     this is new, and relatively untested. See -i and -a format
-		flags in manpage.
+    options in manpage.
   o General changes to wav.c for writing additional wav formats.
+    Reading wave headers: more consistency checks.
+    Writing wave headers: fixes for w98.
   o Speedups to adpcm read routines, new codex versions are
-	  now in ima_rw.c and adpcm.c.
+    now in ima_rw.c and adpcm.c.
   o Speedups for raw.c, especially for gcc with glibc.
   o Fixed a segfault problem with ulaw/alaw conversion, where
     an out-of-range index into the tables could occur.

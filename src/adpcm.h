@@ -22,7 +22,7 @@ extern const char *AdpcmBlockExpandI(
 	int n               /* samples to decode PER channel, REQUIRE n % 8 == 1  */
 );
 
-extern void AdpcmMashI(
+extern void AdpcmBlockMashI(
 	int chans,          /* total channels */
 	const SAMPL *ip,    /* ip[n*chans] is interleaved input samples */
 	int n,              /* samples to encode PER channel, REQUIRE */

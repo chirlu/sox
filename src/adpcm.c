@@ -368,7 +368,7 @@ static void AdpcmMashChannel(
 	obuff[ch] = kmin;
 }
 
-void AdpcmMashI(
+void AdpcmBlockMashI(
 	int chans,          /* total channels */
 	const SAMPL *ip,    /* ip[n*chans] is interleaved input samples */
 	int n,              /* samples to encode PER channel */

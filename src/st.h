@@ -27,6 +27,14 @@
 #define ULONG	unsigned long
 #endif
 
+#ifdef __GNUC__
+#define NORET __attribute__((noreturn))
+#define INLINE inline
+#else
+#define NORET
+#define INLINE
+#endif
+
 /*
  * Handler structure for each format.
  */
@@ -256,10 +264,11 @@ float  	       swapf(P1(float f));			/* Swap float */
 #endif
 double 	       swapd(P1(double d));			/* Swap double */
 
-void report(P2(char *, ...)),  warn(P2(char *, ...)),
-	 fail(P2(char *, ...));
-
 /* util.c */
+void report(P2(char *, ...));
+void warn(P2(char *, ...));
+void fail(P2(char *, ...))NORET;
+
 void geteffect(P1(eff_t));
 void gettype(P1(ft_t));
 void checkformat(P1(ft_t));

@@ -54,12 +54,12 @@ extern void ImaBlockExpandM(
 	int n               /* samples to decode PER channel, REQUIRE n % 8 == 1  */
 );
 
-extern void ImaMashChannel(
-	int ch,             /* channel number to encode, REQUIRE 0 <= ch < chans  */
+/* mash one block.  if you want to use opt>0, 9 is a reasonable value */
+extern void ImaBlockMashI(
 	int chans,          /* total channels */
 	const SAMPL *ip,    /* ip[] is interleaved input samples */
 	int n,              /* samples to encode PER channel, REQUIRE n % 8 == 1 */
-	int *st,            /* input/output state, REQUIRE 0 <= *st <= ISSTMAX */
+	int *st,            /* input/output state[chans], REQUIRE 0 <= st[ch] <= ISSTMAX */
 	u_char *obuff,      /* output buffer[blockAlign] */
 	int opt             /* non-zero allows some cpu-intensive code to improve output */
 );

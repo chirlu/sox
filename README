@@ -183,6 +183,9 @@ by you the user.  Thank you very much for making SoX a success!
 		Stan Brooks		stabro@megsinet.net
 			Rewrite of resample and polyphase code.
 			DSP filter effect.  Some test code/scripts.
+		Stuart Daines <sjd.u-net.com>
+		  Patches for r/w support of gsm-encoded wav files,
+			Cleanup of wav.c.
 		Chris Bagwell		cbagwell@sprynet.com
 			OSS and Sun players, bugfixes, ADPCM support,
 			patch collection and maintance.

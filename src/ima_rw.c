@@ -258,31 +258,11 @@ static int ImaMashS(
 	return (int) sqrt(d2);
 }
 
-#if 0
-static long AvgDelta(int ch, int chans, const SAMPL *ibuff, int n)
-{
-	const SAMPL *ip, *itop;
-	int v0;
-	long d1;
-	
-	ip = ibuff + ch;
-	itop = ip + n*chans;
-	d1 = 0;
-	v0 = *ip;
-	ip += chans;
-	for ( ; ip < itop; ip+=chans) {
-		int v1;
-
-		v1 = *ip;
-		d1 += abs(v1-v0);
-		v0 = v1;
-	}
-	return (d1/(n-1));
-}
-#endif
-
 /* mash one channel... if you want to use opt>0, 9 is a reasonable value */
-void ImaMashChannel(
+#ifdef __GNUC__
+inline
+#endif
+static void ImaMashChannel(
 	int ch,             /* channel number to encode, REQUIRE 0 <= ch < chans  */
 	int chans,          /* total channels */
 	const SAMPL *ip,    /* ip[] is interleaved input samples */
@@ -336,6 +316,21 @@ void ImaMashChannel(
 	d = ImaMashS(ch, chans, ip[0], ip,n,st, obuff, 0);
 	/* printf("%4d %6d %6d\n", s0-s32, d0, d32-d0); */
 	/* printf("%5d %2d\n", AvgDelta(ch,O.chans,ip,32), s0); */
+}
+
+/* mash one block.  if you want to use opt>0, 9 is a reasonable value */
+void ImaBlockMashI(
+	int chans,          /* total channels */
+	const SAMPL *ip,    /* ip[] is interleaved input samples */
+	int n,              /* samples to encode PER channel, REQUIRE n % 8 == 1 */
+	int *st,            /* input/output state, REQUIRE 0 <= *st <= ISSTMAX */
+	u_char *obuff,      /* output buffer[blockAlign] */
+	int opt             /* non-zero allows some cpu-intensive code to improve output */
+)
+{
+	int ch;
+	for (ch=0; ch<chans; ch++)
+		ImaMashChannel(ch, chans, ip, n, st+ch, obuff, opt);
 }
 
 #if 0
