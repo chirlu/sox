@@ -1575,7 +1575,33 @@ fi
 
 if test "$alsa_dsp" = yes
 then
+	echo $ac_n "checking for ALSA ioctl API""... $ac_c" 1>&6
+echo "configure:1580: checking for ALSA ioctl API" >&5
+	cat > conftest.$ac_ext <<EOF
+#line 1582 "configure"
+#include "confdefs.h"
+
+#include <linux/asound.h>
+
+int main() {
+
+snd_pcm_capture_info_t c_info;
+
+; return 0; }
+EOF
+if { (eval echo configure:1593: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+  rm -rf conftest*
+  alsa_api_ver=oldapi
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  alsa_api_ver=newapi
+fi
+rm -f conftest*
+	echo "$ac_t""$alsa_api_ver" 1>&6
 	CFLAGS="$CFLAGS -DALSA_PLAYER"
+	if test "$alsa_api_ver" = oldapi; then CFLAGS="$CFLAGS -DUSE_OLD_API"; fi
 	NEED_ALSA=1
 	PLAY_SUPPORT=1
 fi
@@ -1586,17 +1612,17 @@ then
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:1590: checking for $ac_hdr" >&5
+echo "configure:1616: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1595 "configure"
+#line 1621 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1600: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1626: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1637,17 +1663,17 @@ then
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:1641: checking for $ac_hdr" >&5
+echo "configure:1667: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1646 "configure"
+#line 1672 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1651: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1677: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
