@@ -183,6 +183,8 @@ struct st_soundstream {
 	char	*comment;		/* comment string */
 	FILE	*fp;			/* File stream pointer */
 	struct	st_fileinfo file;	/* File data block */
+	int     st_errno;		/* Failure error codes */
+	char	st_errstr[256];		/* Extend Failure text */
 	st_format_t *h;			/* format struct for this file */
 	/* FIXME: I perfer void * or char * */
 	double	priv[ST_MAX_PRIVSIZE/8]; /* format's private data area */
@@ -331,6 +333,7 @@ double 	       st_swapd(P1(double d));			/* Swap double */
 void report(P2(const char *, ...));
 void warn(P2(const char *, ...));
 void fail(P2(const char *, ...))NORET;
+void st_fail(P4(ft_t, int, const char *, ...));
 
 void st_geteffect(P1(eff_t));
 void st_gettype(P1(ft_t));
@@ -371,6 +374,12 @@ extern char *myname;
 #define ST_SUCCESS (0)
 
 const char *st_version(P0);			/* return version number */
+
+/* ST specific error codes.  The rest directly map from errno. */
+#define ST_EHDR 2000		/* Invalid Audio Header */
+#define ST_EFMT 2001		/* Unsupported data format */
+#define ST_ERATE 20002		/* Unsupported rate for format */
+#define ST_ENOMEM 2003		/* Can't alloc memory */
 
 #ifdef __cplusplus
 } /* end of extern "C" */

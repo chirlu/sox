@@ -405,7 +405,10 @@ static void process(P0) {
 	st_gettype(&outformat);
     
     /* Read and write starters can change their formats. */
-    (* informat.h->startread)(&informat);
+    if ((* informat.h->startread)(&informat) == ST_EOF)
+    {
+        fail(informat.st_errstr);
+    }
     st_checkformat(&informat);
     
     if (informat.info.dovol)
@@ -461,7 +464,10 @@ static void process(P0) {
 #endif
 
 	st_copyformat(&informat, &outformat);
-	(* outformat.h->startwrite)(&outformat);
+	if ((* outformat.h->startwrite)(&outformat) == ST_EOF)
+	{
+	    fail(outformat.st_errstr);
+	}
 	st_checkformat(&outformat);
 	st_cmpformats(&informat, &outformat);
 	report("Output file: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
@@ -505,6 +511,8 @@ static void process(P0) {
 
 
     /* Run input data through effects and get more until olen == 0 */
+    informat.st_errno = 0;
+    outformat.st_errno = 0;
     while (informat.info.x < informat.info.x1) {
 	ULONG ct, r;
 
@@ -528,6 +536,7 @@ static void process(P0) {
 	    efftab[e].odone = efftab[e].olen = 0;
 
 	do {
+	    ULONG w;
 
 	    /* run entire chain BACKWARDS: pull, don't push.*/
 	    /* this is because buffering system isn't a nice queueing system */
@@ -537,10 +546,13 @@ static void process(P0) {
 
 	    /* If outputing and output data was generated then write it */
 	    if (writing&&(efftab[neffects-1].olen>efftab[neffects-1].odone)) {
-		(* outformat.h->write)(&outformat, efftab[neffects-1].obuf, 
-				       (LONG) efftab[neffects-1].olen);
+		w = (* outformat.h->write)(&outformat, efftab[neffects-1].obuf, 
+				           (LONG) efftab[neffects-1].olen);
 	        efftab[neffects-1].odone = efftab[neffects-1].olen;
 	    }
+
+	    if (outformat.st_errno)
+		fail(outformat.st_errstr);
 
 	    /* if stuff still in pipeline, set up to flow effects again */
 	    havedata = 0;
@@ -552,6 +564,9 @@ static void process(P0) {
 	} while (havedata);
 
     }
+
+    if (informat.st_errno)
+	fail(informat.st_errstr);
 
     /* Drain the effects out first to last, 
      * pushing residue through subsequent effects */
@@ -584,11 +599,15 @@ static void process(P0) {
 	    (* efftabR[e].h->stop)(&efftabR[e]);
     }
 
-    (* informat.h->stopread)(&informat);
+    if ((* informat.h->stopread)(&informat) == ST_EOF)
+	fail(informat.st_errstr);
     fclose(informat.fp);
 
     if (writing)
-        (* outformat.h->stopwrite)(&outformat);
+    {
+        if ((* outformat.h->stopwrite)(&outformat) == ST_EOF)
+	    fail(outformat.st_errstr);
+    }
     if (writing)
         fclose(outformat.fp);
 }

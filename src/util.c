@@ -29,11 +29,13 @@
  */
 
 /* export flags */
+/* FIXME: To be moved inside of fileop structure per handler. */
 int verbose = 0;	/* be noisy on stderr */
 
+/* FIXME:  These functions are user level concepts.  Move them outside
+ * the ST library. 
+ */
 char *myname = 0;
-
-
 
 void
 report(const char *fmt, ...) 
@@ -80,6 +82,21 @@ fail(const char *fmt, ...)
 	exit(2);
 }
 
+
+/* Warning: no error checking is done with errstr.  Be sure not to
+ * go over the array limit ourself!
+ */
+void
+st_fail(ft_t ft, int errno, const char *fmt, ...)
+{
+	va_list args;
+
+	ft->st_errno = errno;
+
+	va_start(args, fmt);
+	vsprintf(ft->st_errstr, fmt, args);
+	va_end(args);
+}
 
 int strcmpcase(s1, s2)
 char *s1, *s2;
