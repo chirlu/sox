@@ -144,7 +144,7 @@ int st_mp3startread(ft_t ft)
         }
         
         mad_stream_buffer(p->Stream,p->InputBuffer,ReadSize);
-        p->Stream->error = (mad_error)0;
+        p->Stream->error = 0;
 
         while(mad_frame_decode(p->Frame,p->Stream)) {
             int tagsize;
@@ -265,7 +265,7 @@ st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len)
         }
 
         mad_stream_buffer(p->Stream,p->InputBuffer,ReadSize+Remaining);
-        p->Stream->error = (mad_error)0;
+        p->Stream->error = 0;
       }
 
     if(mad_frame_decode(p->Frame,p->Stream)){
