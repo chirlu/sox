@@ -26,14 +26,17 @@ typedef struct skelstuff {
  *	size and style of samples, 
  *	mono/stereo/quad.
  */
-skelstartread(ft) 
+int st_skelstartread(ft) 
 ft_t ft;
 {
 	skel_t sk = (skel_t) ft->priv;
 
 	/* If you need to seek around the input file. */
 	if (! ft->seekable)
+	{
 		fail("SKEL input file must be a file, not a pipe");
+		return (ST_EOF);
+	}
 
 	/*
 	 * If your format specifies or your file header contains
@@ -44,6 +47,7 @@ ft_t ft;
 	ft->info.style = UNSIGNED or SIGN2 ...;
 	ft->info.channels = 1 or 2 or 4;
 	ft->comment = any comment in file header.
+	return (ST_SUCCESS);
 }
 
 /*
@@ -53,7 +57,7 @@ ft_t ft;
  * Return number of samples read.
  */
 
-skelread(ft, buf, len) 
+LONG st_skelread(ft, buf, len) 
 ft_t ft;
 LONG *buf, len;
 {
@@ -85,19 +89,23 @@ LONG *buf, len;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-skelstopread(ft) 
+int skelstopread(ft) 
 ft_t ft;
 {
+    return (ST_SUCCESS);
 }
 
-skelstartwrite(ft) 
+int st_skelstartwrite(ft) 
 ft_t ft;
 {
 	skel_t sk = (skel_t) ft->priv;
 
 	/* If you have to seek around the output file */
 	if (! ft->seekable)
+	{
 		fail("Output .skel file must be a file, not a pipe");
+		return (ST_EOF);
+	}
 
 	/* If your format specifies any of the following info. */
 	ft->info.rate = 
@@ -106,10 +114,11 @@ ft_t ft;
 	ft->info.channels = 1 or 2 or 4;
 	/* Write file header, if any */
 	/* Write comment field, if any */
+	return(ST_SUCCESS);
 	
 }
 
-skelwrite(ft, buf, len) 
+LONG st_skelwrite(ft, buf, len) 
 ft_t ft;
 LONG *buf, len;
 {
@@ -122,14 +131,17 @@ LONG *buf, len;
 		putc((*buf++ >> 24) ^ 0x80, ft->fp);
 	/* If you cannot write out all of the supplied samples, */
 	/*	fail("SKEL: Can't write all samples to %s", ft->filename); */
+	/*      return (ST_EOF); */
+	return (ST_SUCCESS);
 	
 }
 
-skelstopwrite(ft) 
+int st_skelstopwrite(ft) 
 ft_t ft;
 {
 	/* All samples are already written out. */
 	/* If file header needs fixing up, for example it needs the */
  	/* the number of samples in a field, seek back and write them here. */
+    return (ST_SUCCESS);
 }
 

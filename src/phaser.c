@@ -80,7 +80,7 @@ typedef struct phaserstuff {
 /*
  * Process options
  */
-void phaser_getopts(effp, n, argv) 
+int st_phaser_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -88,7 +88,10 @@ char **argv;
 	phaser_t phaser = (phaser_t) effp->priv;
 
 	if (!((n == 5) || (n == 6)))
+	{
 	    fail("Usage: phaser gain-in gain-out delay decay speed [ -s | -t ]");
+	    return (ST_EOF);
+	}
 
 	sscanf(argv[0], "%f", &phaser->in_gain);
 	sscanf(argv[1], "%f", &phaser->out_gain);
@@ -102,14 +105,18 @@ char **argv;
 		else if ( ! strcmp(argv[5], "-t"))
 			phaser->modulation = MOD_TRIANGLE;
 		else
+		{
 	    		fail("Usage: phaser gain-in gain-out delay decay speed [ -s | -t ]");
+			return (ST_EOF);
+		}
 	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare for processing.
  */
-void phaser_start(effp)
+int st_phaser_start(effp)
 eff_t effp;
 {
 	phaser_t phaser = (phaser_t) effp->priv;
@@ -118,17 +125,35 @@ eff_t effp;
 	phaser->maxsamples = phaser->delay * effp->ininfo.rate / 1000.0;
 
 	if ( phaser->delay < 0.0 )
+	{
 	    fail("phaser: delay must be positive!\n");
+	    return (ST_EOF);
+	}
 	if ( phaser->delay > 5.0 )
+	{
 	    fail("phaser: delay must be less than 5.0 msec!\n");
+	    return (ST_EOF);
+	}
 	if ( phaser->speed < 0.1 )
+	{
 	    fail("phaser: speed must be more than 0.1 Hz!\n");
+	    return (ST_EOF);
+	}
 	if ( phaser->speed > 2.0 )
+	{
 	    fail("phaser: speed must be less than 2.0 Hz!\n");
+	    return (ST_EOF);
+	}
 	if ( phaser->decay < 0.0 )
+	{
 	    fail("phaser: decay must be positive!\n" );
+	    return (ST_EOF);
+	}
 	if ( phaser->decay >= 1.0 )
+	{
 	    fail("phaser: decay must be less that 1.0!\n" );
+	    return (ST_EOF);
+	}
 	/* Be nice and check the hint with warning, if... */
 	if ( phaser->in_gain > ( 1.0 - phaser->decay * phaser->decay ) )
 		warn("phaser: warning >>> gain-in can cause saturation or clipping of output <<<");
@@ -139,14 +164,20 @@ eff_t effp;
 
 	if (! (phaser->phaserbuf = 
 		(double *) malloc(sizeof (double) * phaser->maxsamples)))
+	{
 		fail("phaser: Cannot malloc %d bytes!\n", 
 			sizeof(double) * phaser->maxsamples);
+		return (ST_EOF);
+	}
 	for ( i = 0; i < phaser->maxsamples; i++ )
 		phaser->phaserbuf[i] = 0.0;
 	if (! (phaser->lookup_tab = 
 		(int *) malloc(sizeof (int) * phaser->length)))
+	{
 		fail("phaser: Cannot malloc %d bytes!\n", 
 			sizeof(int) * phaser->length);
+		return (ST_EOF);
+	}
 
 	if ( phaser->modulation == MOD_SINE )
 		st_sine(phaser->lookup_tab, phaser->length, 
@@ -159,6 +190,7 @@ eff_t effp;
 	phaser->counter = 0;
 	phaser->phase = 0;
 	phaser->fade_out = phaser->maxsamples;
+	return (ST_SUCCESS);
 }
 
 /*
@@ -166,7 +198,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void phaser_flow(effp, ibuf, obuf, isamp, osamp)
+int st_phaser_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -197,12 +229,13 @@ LONG *isamp, *osamp;
 		phaser->phase  = ( phaser->phase + 1 ) % phaser->length;
 	}
 	/* processed all samples */
+	return (ST_SUCCESS);
 }
 
 /*
  * Drain out reverb lines. 
  */
-void phaser_drain(effp, obuf, osamp)
+int st_phaser_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
 LONG *osamp;
@@ -235,12 +268,13 @@ LONG *osamp;
 	}
 	/* samples playd, it remains */
 	*osamp = done;
+	return (ST_SUCCESS);
 }
 
 /*
  * Clean up phaser effect.
  */
-void phaser_stop(effp)
+int st_phaser_stop(effp)
 eff_t effp;
 {
 	phaser_t phaser = (phaser_t) effp->priv;
@@ -249,5 +283,6 @@ eff_t effp;
 	phaser->phaserbuf = (double *) -1;   /* guaranteed core dump */
 	free((char *) phaser->lookup_tab);
 	phaser->lookup_tab = (int *) -1;   /* guaranteed core dump */
+	return (ST_SUCCESS);
 }
 

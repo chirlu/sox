@@ -37,9 +37,7 @@
 #include "btrworth.h"
 
 
-
-void
-highpass_getopts (effp, n, argv) 
+int st_highpass_getopts (effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -48,19 +46,21 @@ char **argv;
 
   if (n != 1) {
     fail("Usage: highpass FREQUENCY");
+    return (ST_EOF);
   }
 
-  butterworth_start (effp);
+  st_butterworth_start (effp);
 
   if (!(sscanf (argv [0], "%lf", &butterworth->frequency))) {
     fail("highpass: illegal frequency");
+    return (ST_EOF);
   }
+  return (ST_SUCCESS);
 }
 
 
 
-void
-highpass_start (effp)
+int st_highpass_start (effp)
 eff_t effp;
 {
   butterworth_t butterworth = (butterworth_t) effp->priv;
@@ -74,5 +74,5 @@ eff_t effp;
 
   butterworth->b [0] = 2 * (c * c - 1.0) * butterworth->a[0];
   butterworth->b [1] = (1.0 - sqrt(2.0) * c + c * c) * butterworth->a [0];
+  return (ST_SUCCESS);
 }
-

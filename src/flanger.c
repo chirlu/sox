@@ -79,7 +79,7 @@ typedef struct flangerstuff {
 /*
  * Process options
  */
-void flanger_getopts(effp, n, argv) 
+int st_flanger_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -87,7 +87,10 @@ char **argv;
 	flanger_t flanger = (flanger_t) effp->priv;
 
 	if (!((n == 5) || (n == 6)))
+	{
 	    fail("Usage: flanger gain-in gain-out delay decay speed [ -s | -t ]");
+	    return (ST_EOF);
+	}
 
 	sscanf(argv[0], "%f", &flanger->in_gain);
 	sscanf(argv[1], "%f", &flanger->out_gain);
@@ -101,14 +104,18 @@ char **argv;
 		else if ( ! strcmp(argv[5], "-t"))
 			flanger->modulation = MOD_TRIANGLE;
 		else
+		{
 	    		fail("Usage: flanger gain-in gain-out delay decay speed [ -s | -t ]");
+			return (ST_EOF);
+		}
 	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare for processing.
  */
-void flanger_start(effp)
+int st_flanger_start(effp)
 eff_t effp;
 {
 	flanger_t flanger = (flanger_t) effp->priv;
@@ -117,23 +124,50 @@ eff_t effp;
 	flanger->maxsamples = flanger->delay * effp->ininfo.rate / 1000.0;
 
 	if ( flanger->in_gain < 0.0 )
+	{
 	    fail("flanger: gain-in must be positive!\n");
+	    return (ST_EOF);
+	}
 	if ( flanger->in_gain > 1.0 )
+	{
 	    fail("flanger: gain-in must be less than 1.0!\n");
+	    return (ST_EOF);
+	}
 	if ( flanger->out_gain < 0.0 )
+	{
 	    fail("flanger: gain-out must be positive!\n");
+	    return (ST_EOF);
+	}
 	if ( flanger->delay < 0.0 )
+	{
 	    fail("flanger: delay must be positive!\n");
+	    return (ST_EOF);
+	}
 	if ( flanger->delay > 5.0 )
+	{
 	    fail("flanger: delay must be less than 5.0 msec!\n");
+	    return (ST_EOF);
+	}
 	if ( flanger->speed < 0.1 )
+	{
 	    fail("flanger: speed must be more than 0.1 Hz!\n");
+	    return (ST_EOF);
+	}
 	if ( flanger->speed > 2.0 )
+	{
 	    fail("flanger: speed must be less than 2.0 Hz!\n");
+	    return (ST_EOF);
+	}
 	if ( flanger->decay < 0.0 )
+	{
 	    fail("flanger: decay must be positive!\n" );
+	    return (ST_EOF);
+	}
 	if ( flanger->decay > 1.0 )
+	{
 	    fail("flanger: decay must be less that 1.0!\n" );
+	    return (ST_EOF);
+	}
 	/* Be nice and check the hint with warning, if... */
 	if ( flanger->in_gain * ( 1.0 + flanger->decay ) > 1.0 / flanger->out_gain )
 		warn("flanger: warning >>> gain-out can cause saturation or clipping of output <<<");
@@ -142,14 +176,20 @@ eff_t effp;
 
 	if (! (flanger->flangerbuf = 
 		(double *) malloc(sizeof (double) * flanger->maxsamples)))
+	{
 		fail("flanger: Cannot malloc %d bytes!\n", 
 			sizeof(double) * flanger->maxsamples);
+		return (ST_EOF);
+	}
 	for ( i = 0; i < flanger->maxsamples; i++ )
 		flanger->flangerbuf[i] = 0.0;
 	if (! (flanger->lookup_tab = 
 		(int *) malloc(sizeof (int) * flanger->length)))
+	{
 		fail("flanger: Cannot malloc %d bytes!\n", 
 			sizeof(int) * flanger->length);
+		return(ST_EOF);
+	}
 
 	if ( flanger->modulation == MOD_SINE )
 		st_sine(flanger->lookup_tab, flanger->length, 
@@ -162,6 +202,7 @@ eff_t effp;
 	flanger->counter = 0;
 	flanger->phase = 0;
 	flanger->fade_out = flanger->maxsamples;
+	return (ST_SUCCESS);
 }
 
 /*
@@ -169,7 +210,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void flanger_flow(effp, ibuf, obuf, isamp, osamp)
+int st_flanger_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -200,12 +241,13 @@ LONG *isamp, *osamp;
 		flanger->phase  = ( flanger->phase + 1 ) % flanger->length;
 	}
 	/* processed all samples */
+	return (ST_SUCCESS);
 }
 
 /*
  * Drain out reverb lines. 
  */
-void flanger_drain(effp, obuf, osamp)
+int st_flanger_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
 LONG *osamp;
@@ -238,12 +280,13 @@ LONG *osamp;
 	}
 	/* samples playd, it remains */
 	*osamp = done;
+	return (ST_SUCCESS);
 }
 
 /*
  * Clean up flanger effect.
  */
-void flanger_stop(effp)
+int st_flanger_stop(effp)
 eff_t effp;
 {
 	flanger_t flanger = (flanger_t) effp->priv;
@@ -252,5 +295,5 @@ eff_t effp;
 	flanger->flangerbuf = (double *) -1;   /* guaranteed core dump */
 	free((char *) flanger->lookup_tab);
 	flanger->lookup_tab = (int *) -1;   /* guaranteed core dump */
+	return (ST_SUCCESS);
 }
-

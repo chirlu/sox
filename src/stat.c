@@ -37,7 +37,7 @@ typedef struct statstuff {
 /*
  * Process options
  */
-void stat_getopts(effp, n, argv) 
+int st_stat_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -57,20 +57,29 @@ char **argv;
 			double scale;
 
 			if (n <= 1) 
+			{
 			  fail("-s option: invalid argument");
+			  return (ST_EOF);
+			}
 			if (!strcmp(argv[1],"rms")) {
 				stat->srms=1;
 				goto did2;
 			}
 			if (!sscanf(argv[1], "%lf", &scale))
+			{
 			  fail("-s option: invalid argument");
+			  return (ST_EOF);
+			}
 			stat->scale = scale;
 			goto did2;
 		}
 		if (!(strcmp(argv[0], "-rms"))) {
 			double scale;
 			if (n <= 1 || !sscanf(argv[1], "%lf", &scale))
+			{
 			  fail("-s option expects float argument");
+			  return(ST_EOF);
+			}
 			stat->srms = 1;
 			goto did2;
 		}
@@ -79,16 +88,20 @@ char **argv;
 			goto did1;
 		}
 		else
+		{
 			fail("Summary effect: unknown option");
+			return(ST_EOF);
+		}
 	  did2: --n; ++argv;
 	  did1: --n; ++argv;
 	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  */
-void stat_start(effp)
+int st_stat_start(effp)
 eff_t effp;
 {
 	stat_t stat = (stat_t) effp->priv;
@@ -107,6 +120,7 @@ eff_t effp;
 	for (i = 0; i < 4; i++)
 		stat->bin[i] = 0;
 
+	return (ST_SUCCESS);
 }
 
 /*
@@ -114,7 +128,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void stat_flow(effp, ibuf, obuf, isamp, osamp)
+int st_stat_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -125,7 +139,7 @@ LONG *isamp, *osamp;
 
 	count = 0;
 	len = ((*isamp > *osamp) ? *osamp : *isamp);
-	if (len==0) return;
+	if (len==0) return (ST_SUCCESS);
 
 	if (stat->read == 0)	/* 1st sample */
 		stat->min = stat->max = stat->last = (*ibuf)/stat->scale;
@@ -172,14 +186,14 @@ LONG *isamp, *osamp;
 	}
 	stat->read += len;
 	/* Process all samples */
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void
-stat_stop(effp)
+int st_stat_stop(effp)
 eff_t effp;
 {
 	stat_t stat = (stat_t) effp->priv;
@@ -213,7 +227,7 @@ eff_t effp;
 	/* Just print the volume adjustment */
 	if (stat->volume == 1 && amp > 0) {
 		fprintf(stderr, "%.3f\n", MAXLONG/(amp*scale));
-		return;
+		return (ST_SUCCESS);
 	}
 	if (stat->volume == 2) {
 		fprintf(stderr, "\n");
@@ -250,11 +264,11 @@ eff_t effp;
 		{
                         if (effp->ininfo.style == ST_ENCODING_UNSIGNED)
 			{
-                                printf ("\nTry: -t raw -b -s \n");
+                                fprintf (stderr,"\nTry: -t raw -b -s \n");
 			}
                         else
 			{
-                                printf ("\nTry: -t raw -b -u \n");
+                                fprintf (stderr,"\nTry: -t raw -b -u \n");
 			}
 
 		}
@@ -266,11 +280,11 @@ eff_t effp;
 		{
                         if (effp->ininfo.style == ST_ENCODING_ULAW)
 			{
-                                printf ("\nTry: -t raw -b -u \n");
+                                fprintf (stderr,"\nTry: -t raw -b -u \n");
 			}
                         else
 			{
-                                printf ("\nTry: -t raw -b -U \n");
+                                fprintf (stderr,"\nTry: -t raw -b -U \n");
 			}
 		}
                 else    
@@ -278,5 +292,6 @@ eff_t effp;
                         fprintf (stderr, "\nCan't guess the type\n");
 		}
         }
+	return (ST_SUCCESS);
 
 }

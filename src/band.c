@@ -59,7 +59,7 @@ typedef struct bandstuff {
 /*
  * Process options
  */
-void band_getopts(effp, n, argv) 
+int st_band_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -73,21 +73,31 @@ char **argv;
 		argv++;
 	}
 	if ((n < 1) || !sscanf(argv[0], "%f", &band->center))
+	{
 		fail("Usage: band [ -n ] center [ width ]");
+		return (ST_EOF);
+	}
 	band->width = band->center / 2;
 	if ((n >= 2) && !sscanf(argv[1], "%f", &band->width))
+	{
 		fail("Usage: band [ -n ] center [ width ]");
+		return (ST_EOF);
+	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  */
-void band_start(effp)
+int st_band_start(effp)
 eff_t effp;
 {
 	band_t band = (band_t) effp->priv;
 	if (band->center > effp->ininfo.rate/2)
+	{
 		fail("Band: center must be < minimum data rate/2\n");
+		return (ST_EOF);
+	}
 
 	band->C = exp(-2*M_PI*band->width/effp->ininfo.rate);
 	band->B = -4*band->C/(1+band->C)*
@@ -98,6 +108,7 @@ eff_t effp;
 	else
 		band->A = sqrt(1-band->B*band->B/(4*band->C))*(1-band->C);
 	band->out1 = band->out2 = 0.0;
+	return (ST_SUCCESS);
 }
 
 /*
@@ -105,7 +116,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void band_flow(effp, ibuf, obuf, isamp, osamp)
+int st_band_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -127,15 +138,16 @@ LONG *isamp, *osamp;
 	}
 	*isamp = len;
 	*osamp = len;
+	return(ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void band_stop(effp)
+int st_band_stop(effp)
 eff_t effp;
 {
-	/* nothing to do */
+	return (ST_SUCCESS);	/* nothing to do */
 }
 

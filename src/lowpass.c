@@ -24,10 +24,7 @@
 #include "st.h"
 #include "btrworth.h"
 
-
-
-void
-lowpass_getopts (effp, n, argv)
+int st_lowpass_getopts (effp, n, argv)
 eff_t effp;
 int n;
 char **argv;
@@ -36,19 +33,19 @@ char **argv;
 
   if (n != 1) {
     fail("Usage: lowpass FREQUENCY");
+    return (ST_EOF);
   }
 
-  butterworth_start (effp);
+  st_butterworth_start (effp);
 
   if (!(sscanf (argv [0], "%lf", &butterworth->frequency))) {
     fail("lowpass: illegal frequency");
+    return (ST_EOF);
   }
+  return (ST_SUCCESS);
 }
 
-
-
-void
-lowpass_start (effp)
+int st_lowpass_start (effp)
 eff_t effp;
 {
   butterworth_t butterworth = (butterworth_t) effp->priv;
@@ -62,5 +59,5 @@ eff_t effp;
 
   butterworth->b [0] = 2 * (1.0 - c * c) * butterworth->a[0];
   butterworth->b [1] = (1.0 - sqrt(2.0) * c + c * c) * butterworth->a [0];
+  return (ST_SUCCESS);
 }
-

@@ -35,27 +35,35 @@ typedef struct reversestuff {
  * Process options: none in our case.
  */
 
-void reverse_getopts(effp, n, argv) 
+int st_reverse_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
 {
 	if (n)
+	{
 		fail("Reverse effect takes no options.");
+		return (ST_EOF);
+	}
+	return(ST_SUCCESS);
 }
 
 /*
  * Prepare processing: open temporary file.
  */
 
-void reverse_start(effp)
+int st_reverse_start(effp)
 eff_t effp;
 {
 	reverse_t reverse = (reverse_t) effp->priv;
 	reverse->fp = tmpfile();
 	if (reverse->fp == NULL)
+	{
 		fail("Reverse effect can't create temporary file\n");
+		return (ST_EOF);
+	}
 	reverse->phase = WRITING;
+	return (ST_SUCCESS);
 }
 
 /*
@@ -63,7 +71,7 @@ eff_t effp;
  * don't generate any output samples.
  */
 
-void reverse_flow(effp, ibuf, obuf, isamp, osamp)
+int st_reverse_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -71,18 +79,25 @@ LONG *isamp, *osamp;
 	reverse_t reverse = (reverse_t) effp->priv;
 
 	if (reverse->phase != WRITING)
+	{
 		fail("Internal error: reverse_flow called in wrong phase");
+		return(ST_EOF);
+	}
 	if (fwrite((char *)ibuf, sizeof(LONG), *isamp, reverse->fp)
 	    != *isamp)
+	{
 		fail("Reverse effect write error on temporary file\n");
+		return(ST_EOF);
+	}
 	*osamp = 0;
+	return(ST_SUCCESS);
 }
 
 /*
  * Effect drain: generate the actual samples in reverse order.
  */
 
-void reverse_drain(effp, obuf, osamp)
+int st_reverse_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
 LONG *osamp;
@@ -97,7 +112,10 @@ LONG *osamp;
 		fseek(reverse->fp, 0L, SEEK_END);
 		reverse->pos = ftell(reverse->fp);
 		if (reverse->pos % sizeof(LONG) != 0)
+		{
 			fail("Reverse effect finds odd temporary file\n");
+			return(ST_EOF);
+		}
 		reverse->phase = READING;
 	}
 	len = *osamp;
@@ -109,23 +127,27 @@ LONG *osamp;
 	reverse->pos -= nbytes;
 	fseek(reverse->fp, reverse->pos, SEEK_SET);
 	if (fread((char *)obuf, sizeof(LONG), len, reverse->fp) != len)
+	{
 		fail("Reverse effect read error from temporary file\n");
+		return(ST_EOF);
+	}
 	for (i = 0, j = len-1; i < j; i++, j--) {
 		temp = obuf[i];
 		obuf[i] = obuf[j];
 		obuf[j] = temp;
 	}
 	*osamp = len;
+	return(ST_SUCCESS);
 }
 
 /*
  * Close and unlink the temporary file.
  */
-void reverse_stop(effp)
+int st_reverse_stop(effp)
 eff_t effp;
 {
 	reverse_t reverse = (reverse_t) effp->priv;
 
 	fclose(reverse->fp);
+	return (ST_SUCCESS);
 }
-

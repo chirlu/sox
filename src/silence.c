@@ -33,20 +33,23 @@ typedef struct silencestuff {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-void silence_getopts(effp, n, argv) 
+int st_silence_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
 {
 	if (n)
+	{
 		fail("Silence effect takes no options.");
+		return (ST_EOF);
+	}
 }
 
 /*
  * Prepare processing.
  * Do all initializations.
  */
-silence_start(effp)
+int st_silence_start(effp)
 eff_t effp;
 {
     silence_t silence = (silence_t) effp->priv;
@@ -58,6 +61,7 @@ eff_t effp;
     silence.begin = silence.end = 0;
     silence.begin_skip = silence.end_skip = 0;
     silence.begin_count = silence.end_count = 0;
+    return (ST_SUCCESS);
 }
 
 /*
@@ -65,7 +69,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void silence_flow(effp, ibuf, obuf, isamp, osamp)
+int st_silence_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -86,27 +90,30 @@ LONG *isamp, *osamp;
 	}
 	*isamp = 
 	*osamp = 
+	return (ST_SUCCESS);
 }
 
 /*
  * Drain out remaining samples if the effect generates any.
  */
 
-void skel_drain(effp, obuf, osamp)
+int st_skel_drain(effp, obuf, osamp)
 LONG *obuf;
 LONG *osamp;
 {
 	*osamp = 0;
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  *	(free allocated memory, etc.)
  */
-void skel_stop(effp)
+int st_skel_stop(effp)
 eff_t effp;
 {
 	/* nothing to do */
+    return (ST_SUCCESS);
 }
 
 

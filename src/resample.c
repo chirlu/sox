@@ -110,7 +110,7 @@ static LONG SrcEX(P2(resample_t r, LONG Nx));
 /*
  * Process options
  */
-void resample_getopts(effp, n, argv) 
+int st_resample_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -144,25 +144,34 @@ char **argv;
 	}
 
 	if ((n >= 1) && !sscanf(argv[0], "%lf", &r->rolloff))
+	{
 	  fail("Usage: resample [ rolloff [ beta ] ]");
+	  return (ST_EOF);
+	}
 	else if ((r->rolloff <= 0.01) || (r->rolloff >= 1.0))
+	{
 	  fail("resample: rolloff factor (%f) no good, should be 0.01<x<1.0", r->rolloff);
+	  return(ST_EOF);
+	}
 
 	if ((n >= 2) && !sscanf(argv[1], "%lf", &r->beta))
+	{
 	  fail("Usage: resample [ rolloff [ beta ] ]");
+	  return (ST_EOF);
+	}
 	else if (r->beta <= 2.0) {
 	  r->beta = 0;
 		report("resample opts: Nuttall window, cutoff %f\n", r->rolloff);
 	} else {
 		report("resample opts: Kaiser window, cutoff %f, beta %f\n", r->rolloff, r->beta);
 	}
-
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  */
-void resample_start(effp)
+int st_resample_start(effp)
 eff_t effp;
 {
 	resample_t r = (resample_t) effp->priv;
@@ -198,7 +207,10 @@ eff_t effp;
 	/* returns error # <=0, or adjusted wing-len > 0 */
 	i = makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq, 1);
 	if (i <= 0)
+	{
 		fail("resample: Unable to make filter\n");
+		return (ST_EOF);
+	}
 
 	/*report("Nmult: %ld, Nwing: %ld, Nq: %ld\n",r->Nmult,r->Nwing,r->Nq);*/
 
@@ -227,7 +239,10 @@ eff_t effp;
 	}
 	i = BUFFSIZE - 2*Xoff;
 	if (i < r->Factor + 1.0/r->Factor)      /* Check input buffer size */
+	{
 		fail("Factor is too small or large for BUFFSIZE");
+		return (ST_EOF);
+	}
 	
 	r->Xsize = 2*Xoff + i/(1.0+r->Factor);
 	r->Ysize = BUFFSIZE - r->Xsize;
@@ -239,6 +254,7 @@ eff_t effp;
 	/* Need Xoff zeros at beginning of sample */
 	for (i=0; i<Xoff; i++)
 		r->X[i] = 0;
+	return (ST_SUCCESS);
 }
 
 /*
@@ -246,7 +262,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void resample_flow(effp, ibuf, obuf, isamp, osamp)
+int st_resample_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -265,7 +281,10 @@ LONG *isamp, *osamp;
 
 	Nx = Nproc - r->Xread; /* space for right-wing future-data */
 	if (Nx <= 0)
+	{
 		fail("Nx not positive: %d", Nx);
+		return (ST_EOF);
+	}
 	if (Nx > *isamp)
 		Nx = *isamp;
 	/*fprintf(stderr,"Nx %d\n",Nx);*/
@@ -285,7 +304,7 @@ LONG *isamp, *osamp;
 		r->Xread = last;
 		/* leave *isamp alone, we consumed it */
 		*osamp = 0;
-		return;
+		return (ST_SUCCESS);
 	}
 	if (r->quadr < 0) { /* exact coeff's method */
 		LONG creep; 
@@ -340,18 +359,20 @@ LONG *isamp, *osamp;
 	*osamp = Nout;
 
 	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Process tail of input samples.
  */
-void resample_drain(effp, obuf, osamp)
+int st_resample_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
 LONG *osamp;
 {
 	resample_t r = (resample_t) effp->priv;
 	LONG isamp_res, *Obuf, osamp_res;
+	int rc;
 
 	/* fprintf(stderr,"Xoff %d, Xt %d  <--- DRAIN\n",r->Xoff, r->Xt); */
 
@@ -363,7 +384,9 @@ LONG *osamp;
 		LONG Isamp, Osamp;
 		Isamp = isamp_res;
 		Osamp = osamp_res;
-		resample_flow(effp, NULL, Obuf, &Isamp, &Osamp);
+		rc = st_resample_flow(effp, NULL, Obuf, &Isamp, &Osamp);
+		if (rc)
+		    return rc;
 	  /* fprintf(stderr,"DRAIN isamp,osamp  (%d,%d) -> (%d,%d)\n",
 		     isamp_res,osamp_res,Isamp,Osamp); */
 		Obuf += Osamp;
@@ -374,13 +397,14 @@ LONG *osamp;
 	/* fprintf(stderr,"DRAIN osamp %d\n", *osamp); */
 	if (isamp_res)
 		warn("drain overran obuf by %d\n", isamp_res); fflush(stderr);
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void resample_stop(effp)
+int st_resample_stop(effp)
 eff_t effp;
 {
 	resample_t r = (resample_t) effp->priv;
@@ -388,6 +412,7 @@ eff_t effp;
 	free(r->Imp - 1);
 	free(r->X);
 	/* free(r->Y); Y is in same block starting at X */ 
+	return (ST_SUCCESS);
 }
 
 /* over 90% of CPU time spent in this iprodUD() function */

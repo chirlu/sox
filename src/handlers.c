@@ -447,163 +447,155 @@ st_format_t st_formats[] = {
 
 /* Effects handlers. */
 
-extern LONG st_null_drain();		/* dummy drain routine */
+extern int st_null_drain();		/* dummy drain routine */
 
-extern void avg_getopts();
-extern void avg_start();
-extern void avg_flow();
-extern void avg_stop();
+extern int st_avg_getopts();
+extern int st_avg_start();
+extern int st_avg_flow();
+extern int st_avg_stop();
 
-extern void band_getopts();
-extern void band_start();
-extern void band_flow();
-extern void band_stop();
+extern int st_band_getopts();
+extern int st_band_start();
+extern int st_band_flow();
+extern int st_band_stop(); 
+extern int st_bandpass_getopts();
+extern int st_bandpass_start();
 
-extern void bandpass_getopts();
-extern void bandpass_start();
+extern int st_bandreject_getopts();
+extern int st_bandreject_start();
 
-extern void bandreject_getopts();
-extern void bandreject_start();
+extern int st_chorus_getopts();
+extern int st_chorus_start();
+extern int st_chorus_flow();
+extern int st_chorus_drain();
+extern int st_chorus_stop();
 
-extern void chorus_getopts();
-extern void chorus_start();
-extern void chorus_flow();
-extern void chorus_drain();
-extern void chorus_stop();
+extern int st_compand_getopts();
+extern int st_compand_start();
+extern int st_compand_flow();
 
-extern void compand_getopts();
-extern void compand_start();
-extern void compand_flow();
+extern int st_copy_getopts(); 
+extern int st_copy_start();
+extern int st_copy_flow();
+extern int st_copy_stop();
 
-extern void copy_getopts();
-extern void copy_start();
-extern void copy_flow();
-extern void copy_stop();
+extern int st_cut_getopts();
+extern int st_cut_start();
+extern int st_cut_flow();
+extern int st_cut_stop();
 
-extern void cut_getopts();
-extern void cut_start();
-extern void cut_flow();
-extern void cut_stop();
+extern int st_deemph_getopts();
+extern int st_deemph_start();
+extern int st_deemph_flow();
+extern int st_deemph_stop();
 
-extern void deemph_getopts();
-extern void deemph_start();
-extern void deemph_flow();
-extern void deemph_stop();
+extern int st_echo_getopts();
+extern int st_echo_start();
+extern int st_echo_flow();
+extern int st_echo_drain();
+extern int st_echo_stop();
 
-#ifdef	USE_DYN
-extern void dyn_getopts();
-extern void dyn_start();
-extern void dyn_flow();
-extern void dyn_stop();
-#endif
+extern int st_echos_getopts();
+extern int st_echos_start();
+extern int st_echos_flow();
+extern int st_echos_drain();
+extern int st_echos_stop();
 
-extern void echo_getopts();
-extern void echo_start();
-extern void echo_flow();
-extern void echo_drain();
-extern void echo_stop();
+extern int st_filter_getopts();
+extern int st_filter_start();
+extern int st_filter_flow();
+extern int st_filter_drain();
+extern int st_filter_stop();
 
-extern void echos_getopts();
-extern void echos_start();
-extern void echos_flow();
-extern void echos_drain();
-extern void echos_stop();
+extern int st_flanger_getopts();
+extern int st_flanger_start();
+extern int st_flanger_flow();
+extern int st_flanger_drain();
+extern int st_flanger_stop();
 
-extern void filter_getopts();
-extern void filter_start();
-extern void filter_flow();
-extern void filter_drain();
-extern void filter_stop();
+extern int st_highp_getopts();
+extern int st_highp_start();
+extern int st_highp_flow();
+extern int st_highp_stop();
 
-extern void flanger_getopts();
-extern void flanger_start();
-extern void flanger_flow();
-extern void flanger_drain();
-extern void flanger_stop();
+extern int st_highpass_getopts();
+extern int st_highpass_start();
 
-extern void highp_getopts();
-extern void highp_start();
-extern void highp_flow();
-extern void highp_stop();
+extern int st_lowp_getopts();
+extern int st_lowp_start();
+extern int st_lowp_flow();
+extern int st_lowp_stop();
 
-extern void highpass_getopts();
-extern void highpass_start();
+extern int st_lowpass_getopts();
+extern int st_lowpass_start();
 
-extern void lowp_getopts();
-extern void lowp_start();
-extern void lowp_flow();
-extern void lowp_stop();
+extern int st_map_getopts();
+extern int st_map_start();
+extern int st_map_flow();
 
-extern void lowpass_getopts();
-extern void lowpass_start();
+extern int st_mask_getopts();
+extern int st_mask_flow();
 
-extern void map_getopts();
-extern void map_start();
-extern void map_flow();
+extern int st_phaser_getopts();
+extern int st_phaser_start();
+extern int st_phaser_flow();
+extern int st_phaser_drain();
+extern int st_phaser_stop();
 
-extern void mask_getopts();
-extern void mask_flow();
+extern int st_pick_getopts();
+extern int st_pick_start();
+extern int st_pick_flow();
+extern int st_pick_stop();
 
-extern void phaser_getopts();
-extern void phaser_start();
-extern void phaser_flow();
-extern void phaser_drain();
-extern void phaser_stop();
+extern int st_poly_getopts();
+extern int st_poly_start();
+extern int st_poly_flow();
+extern int st_poly_drain();
+extern int st_poly_stop();
 
-extern void pick_getopts();
-extern void pick_start();
-extern void pick_flow();
-extern void pick_stop();
+extern int st_rate_getopts();
+extern int st_rate_start();
+extern int st_rate_flow();
+extern int st_rate_stop();
 
-extern void poly_getopts();
-extern void poly_start();
-extern void poly_flow();
-extern void poly_drain();
-extern void poly_stop();
+extern int st_resample_getopts();
+extern int st_resample_start();
+extern int st_resample_flow();
+extern int st_resample_drain();
+extern int st_resample_stop();
 
-extern void rate_getopts();
-extern void rate_start();
-extern void rate_flow();
-extern void rate_stop();
+extern int st_reverb_getopts();
+extern int st_reverb_start();
+extern int st_reverb_flow();
+extern int st_reverb_drain();
+extern int st_reverb_stop();
 
-extern void resample_getopts();
-extern void resample_start();
-extern void resample_flow();
-extern void resample_drain();
-extern void resample_stop();
+extern int st_reverse_getopts();
+extern int st_reverse_start();
+extern int st_reverse_flow();
+extern int st_reverse_drain();
+extern int st_reverse_stop();
 
-extern void reverb_getopts();
-extern void reverb_start();
-extern void reverb_flow();
-extern void reverb_drain();
-extern void reverb_stop();
+extern int st_split_getopts();
+extern int st_split_start();
+extern int st_split_flow();
+extern int st_split_stop();
 
-extern void reverse_getopts();
-extern void reverse_start();
-extern void reverse_flow();
-extern void reverse_drain();
-extern void reverse_stop();
+extern int st_stat_getopts();
+extern int st_stat_start();
+extern int st_stat_flow();
+extern int st_stat_stop();
 
-extern void split_getopts();
-extern void split_start();
-extern void split_flow();
-extern void split_stop();
+extern int st_swap_getopts();
+extern int st_swap_start();
+extern int st_swap_flow();
+extern int st_swap_drain();
+extern int st_swap_stop();
 
-extern void stat_getopts();
-extern void stat_start();
-extern void stat_flow();
-extern void stat_stop();
-
-extern void swap_getopts();
-extern void swap_start();
-extern void swap_flow();
-extern void swap_drain();
-extern void swap_stop();
-
-extern void vibro_getopts();
-extern void vibro_start();
-extern void vibro_flow();
-extern void vibro_stop();
+extern int st_vibro_getopts();
+extern int st_vibro_start();
+extern int st_vibro_flow();
+extern int st_vibro_stop();
 
 /*
  * EFF_CHAN means that the number of channels can change.
@@ -619,99 +611,94 @@ st_effect_t st_effects[] = {
 		st_nothing, st_nothing, st_nothing, 
 		st_null_drain, st_nothing},
 	{"avg", ST_EFF_CHAN | ST_EFF_MCHAN, 
-		avg_getopts, avg_start, avg_flow, 
-		st_null_drain, avg_stop},
+		st_avg_getopts, st_avg_start, st_avg_flow, 
+		st_null_drain, st_avg_stop},
 	{"band", 0, 
-		band_getopts, band_start, band_flow, 
-		st_null_drain, band_stop},
+		st_band_getopts, st_band_start, st_band_flow, 
+		st_null_drain, st_band_stop},
 	{"bandpass", 0, 
-		bandpass_getopts, bandpass_start, butterworth_flow, 
+		st_bandpass_getopts, st_bandpass_start, st_butterworth_flow, 
 		st_null_drain, st_nothing},
 	{"bandreject", 0, 
-		bandreject_getopts, bandreject_start, butterworth_flow, 
+		st_bandreject_getopts, st_bandreject_start, st_butterworth_flow, 
 		st_null_drain, st_nothing},
 	{"chorus", 0,
-	        chorus_getopts, chorus_start, chorus_flow,
-	 	chorus_drain, chorus_stop},
+	        st_chorus_getopts, st_chorus_start, st_chorus_flow,
+	 	st_chorus_drain, st_chorus_stop},
 	{"compand", ST_EFF_MCHAN,
-	        compand_getopts, compand_start, compand_flow,
+	        st_compand_getopts, st_compand_start, st_compand_flow,
 		st_null_drain, st_nothing},
 	{"copy", ST_EFF_MCHAN, 
-		copy_getopts, copy_start, copy_flow, 
+		st_copy_getopts, st_copy_start, st_copy_flow, 
 		st_null_drain, st_nothing},
 	{"cut", ST_EFF_MCHAN, 
-		cut_getopts, cut_start, cut_flow, 
+		st_cut_getopts, st_cut_start, st_cut_flow, 
 		st_null_drain, st_nothing},
 	{"deemph", ST_EFF_MCHAN,
-	        deemph_getopts, deemph_start, deemph_flow,
-	        st_null_drain, deemph_stop},
-#ifdef	USE_DYN
-	{"dyn", 0, 
-		dyn_getopts, dyn_start, dyn_flow, 
-		st_null_drain, dyn_stop},
-#endif
+	        st_deemph_getopts, st_deemph_start, st_deemph_flow,
+	        st_null_drain, st_deemph_stop},
 	{"echo", 0, 
-		echo_getopts, echo_start, echo_flow, 
-		echo_drain, echo_stop},
+		st_echo_getopts, st_echo_start, st_echo_flow, 
+		st_echo_drain, st_echo_stop},
 	{"echos", 0, 
-		echos_getopts, echos_start, echos_flow,
-	        echos_drain, echos_stop},
+		st_echos_getopts, st_echos_start, st_echos_flow,
+	        st_echos_drain, st_echos_stop},
 	{ "filter", 0,
-	    	filter_getopts, filter_start, filter_flow,
-		filter_drain, filter_stop},
+	    	st_filter_getopts, st_filter_start, st_filter_flow,
+		st_filter_drain, st_filter_stop},
 	{"flanger", 0,
-	        flanger_getopts, flanger_start, flanger_flow,
-	        flanger_drain, flanger_stop},
+	        st_flanger_getopts, st_flanger_start, st_flanger_flow,
+	        st_flanger_drain, st_flanger_stop},
 	{"highp", 0, 
-		highp_getopts, highp_start, highp_flow, 
-		st_null_drain,highp_stop},
+		st_highp_getopts, st_highp_start, st_highp_flow, 
+		st_null_drain, st_highp_stop},
 	{"highpass", 0, 
-		highpass_getopts, highpass_start, butterworth_flow, 
+		st_highpass_getopts, st_highpass_start, st_butterworth_flow, 
 		st_null_drain, st_nothing},
 	{"lowp", 0, 
-		lowp_getopts, lowp_start, lowp_flow, 
-		st_null_drain, lowp_stop},
+		st_lowp_getopts, st_lowp_start, st_lowp_flow, 
+		st_null_drain, st_lowp_stop},
 	{"lowpass", 0, 
-		lowpass_getopts, lowpass_start, butterworth_flow, 
+		st_lowpass_getopts, st_lowpass_start, st_butterworth_flow, 
 		st_null_drain, st_nothing},
 	{"map", ST_EFF_REPORT, 
-		map_getopts, map_start, map_flow, 
+		st_map_getopts, st_map_start, st_map_flow, 
 		st_null_drain, st_nothing},
 	{"mask", ST_EFF_MCHAN, 
-		mask_getopts, st_nothing, mask_flow, 
+		st_mask_getopts, st_nothing, st_mask_flow, 
 		st_null_drain, st_nothing},
 	{"phaser", 0,
-	        phaser_getopts, phaser_start, phaser_flow,
-	        phaser_drain, phaser_stop},
+	        st_phaser_getopts, st_phaser_start, st_phaser_flow,
+	        st_phaser_drain, st_phaser_stop},
 	{"pick", ST_EFF_CHAN | ST_EFF_MCHAN, 
-		pick_getopts, pick_start, pick_flow, 
-		st_null_drain, pick_stop},
+		st_pick_getopts, st_pick_start, st_pick_flow, 
+		st_null_drain, st_pick_stop},
 	{"polyphase", ST_EFF_RATE,
-	        poly_getopts, poly_start, poly_flow,
-	        poly_drain, poly_stop},
+	        st_poly_getopts, st_poly_start, st_poly_flow,
+	        st_poly_drain, st_poly_stop},
 	{"rate", ST_EFF_RATE, 
-		rate_getopts, rate_start, rate_flow, 
+		st_rate_getopts, st_rate_start, st_rate_flow, 
 		st_null_drain, st_nothing},
 	{"resample", ST_EFF_RATE, 
-		resample_getopts, resample_start, resample_flow, 
-		resample_drain, resample_stop},
+		st_resample_getopts, st_resample_start, st_resample_flow, 
+		st_resample_drain, st_resample_stop},
 	{"reverb", 0,
-	        reverb_getopts, reverb_start, reverb_flow,
-	        reverb_drain, reverb_stop},
+	        st_reverb_getopts, st_reverb_start, st_reverb_flow,
+	        st_reverb_drain, st_reverb_stop},
 	{"reverse", 0, 
-		reverse_getopts, reverse_start, 
-		reverse_flow, reverse_drain, reverse_stop},
+		st_reverse_getopts, st_reverse_start, 
+		st_reverse_flow, st_reverse_drain, st_reverse_stop},
 	{"split", ST_EFF_CHAN | ST_EFF_MCHAN, 
-		split_getopts, split_start, split_flow, 
-		st_null_drain,split_stop},
+		st_split_getopts, st_split_start, st_split_flow, 
+		st_null_drain, st_split_stop},
 	{"stat", ST_EFF_MCHAN | ST_EFF_REPORT | ST_EFF_RATE | ST_EFF_CHAN,
-		stat_getopts, stat_start, stat_flow, 
-		st_null_drain, stat_stop},
+		st_stat_getopts, st_stat_start, st_stat_flow, 
+		st_null_drain, st_stat_stop},
 	{"swap", ST_EFF_MCHAN,
-		swap_getopts, swap_start, swap_flow, 
-		swap_drain, swap_stop},
+		st_swap_getopts, st_swap_start, st_swap_flow, 
+		st_swap_drain, st_swap_stop},
 	{"vibro", 0, 
-		vibro_getopts, vibro_start, vibro_flow, 
+		st_vibro_getopts, st_vibro_start, st_vibro_flow, 
 		st_null_drain, st_nothing},
 	{0, 0, 0, 0, 0, 0, 0}
 };

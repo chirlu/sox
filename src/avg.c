@@ -31,7 +31,7 @@ typedef struct avgstuff {
 /*
  * Process options
  */
-void avg_getopts(effp, n, argv) 
+int st_avg_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -50,15 +50,19 @@ char **argv;
 		else if (!strcmp(argv[0], "-r"))
 			avg->mix = MIX_RIGHT;
 		else
+		{
 			fail("Usage: avg [ -l | -r ]");
+			return (ST_EOF);
+		}
 	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Start processing
  */
-void
-avg_start(effp)
+
+int st_avg_start(effp)
 eff_t effp;
 {
 	switch (effp->outinfo.channels) 
@@ -67,7 +71,7 @@ eff_t effp;
 		{
 		case 2: 
 		case 4:
-			return;
+			return (ST_SUCCESS);
 		default:
 			break;
 		}
@@ -76,7 +80,7 @@ eff_t effp;
 		{
 		case 1:
 		case 4:
-			return;
+			return (ST_SUCCESS);
 		default:
 			break;
 		}
@@ -85,7 +89,7 @@ eff_t effp;
 		{
 		case 1:
 		case 2:
-			return;
+			return (ST_SUCCESS);
 		default:
 			break;
 		}
@@ -94,13 +98,14 @@ eff_t effp;
 	}	
 	fail("Can't average %d channels into %d channels",
 		effp->ininfo.channels, effp->outinfo.channels);
+	return (ST_EOF);
 }
 
 /*
  * Process either isamp or osamp samples, whichever is smaller.
  */
 
-void avg_flow(effp, ibuf, obuf, isamp, osamp)
+int st_avg_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -264,6 +269,7 @@ LONG *isamp, *osamp;
 			}
 			break;
 	}	/* end switch out channels */
+	return (ST_SUCCESS);
 }
 
 /*
@@ -272,9 +278,9 @@ LONG *isamp, *osamp;
  *
  * Should have statistics on right, left, and output amplitudes.
  */
-void avg_stop(effp)
+int st_avg_stop(effp)
 eff_t effp;
 {
-	/* nothing to do */
+	return (ST_SUCCESS); /* nothing to do */
 }
 

@@ -31,8 +31,7 @@ typedef struct pickstuff {
 /*
  * Process options
  */
-void
-pick_getopts(effp, n, argv) 
+int st_pick_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -43,25 +42,29 @@ char **argv;
 		switch (argv[0][1]) {
 			case 'l':
 				pick->chan = CHAN_1;
-				return;
+				return (ST_SUCCESS);
 			case 'r':
 				pick->chan = CHAN_2;
-				return;
+				return (ST_SUCCESS);
 			case '1':
 				pick->chan = CHAN_1;
-				return;
+				return (ST_SUCCESS);
 			case '2':
 				pick->chan = CHAN_2;
-				return;
+				return (ST_SUCCESS);
 			case '3':
 				pick->chan = CHAN_3;
-				return;
+				return (ST_SUCCESS);
 			case '4':
 				pick->chan = CHAN_4;
-				return;
+				return (ST_SUCCESS);
 		}
 	}
-	pick->chan = -1;  /* invalid option */
+	/* Invalid option given.  Will give error when st_pick_stat()
+	 * is called
+	 */
+	pick->chan = -1;
+	return (ST_SUCCESS);
 }
 
 
@@ -71,23 +74,35 @@ char **argv;
  * channels selected, and that info is not available in pick_getopts()
  * above.
  */
-void
-pick_start(effp)
+int st_pick_start(effp)
 eff_t effp;
 {
 	pick_t pick = (pick_t) effp->priv;
 
 	if (effp->outinfo.channels != 1)  /* must be one output channel */
+	{
 	   fail("Can't pick with other than 1 output channel."); 
+	   return (ST_EOF);
+	}
 	if (effp->ininfo.channels != 2 && effp->ininfo.channels != 4)
+	{
 	        fail("Can't pick with other than 2 or 4 input channels.");
+		return (ST_EOF);
+	}
         if (effp->ininfo.channels == 2) {  /* check for valid option */
 	   if (pick->chan == -1 || pick->chan == CHAN_3 || pick->chan == CHAN_4)
+	   {
    	      fail("Must specify channel to pick: '-l', '-r', '-1', or '-2'.");
+	      return (ST_EOF);
+	   }
 	}
 	else  /* must be 4 channels; check for valid option */
 	   if (pick->chan == -1)
+	   {
 	      fail("Must specify channel to pick: '-1', '-2', '-3', or '-4'.");
+	      return (ST_EOF);
+	   }
+	return (ST_SUCCESS);
 }
 
 /*
@@ -96,7 +111,7 @@ eff_t effp;
  * while picking appropriate channels.
  */
 
-void pick_flow(effp, ibuf, obuf, isamp, osamp)
+int st_pick_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -124,15 +139,17 @@ LONG *isamp, *osamp;
 			*osamp = len;
 			break;
 	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void pick_stop(effp)
+int st_pick_stop(effp)
 eff_t effp;
 {
 	/* nothing to do */
+    return (ST_SUCCESS);
 }
 

@@ -16,23 +16,28 @@
 /*
  * Process options
  */
-void copy_getopts(effp, n, argv) 
+int st_copy_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
 {
 	if (n)
+	{
 		fail("Copy effect takes no options.");
+		return (ST_EOF);
+	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Start processing
  */
-void copy_start(effp)
+int st_copy_start(effp)
 eff_t effp;
 {
 	/* nothing to do */
 	/* stuff data into delaying effects here */
+    return (ST_SUCCESS);
 }
 
 /*
@@ -42,7 +47,7 @@ eff_t effp;
  * Return number of samples read.
  */
 
-void copy_flow(effp, ibuf, obuf, isamp, osamp)
+int st_copy_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -52,17 +57,18 @@ LONG *isamp, *osamp;
 	done = ((*isamp < *osamp) ? *isamp : *osamp);
 	memcpy(obuf, ibuf, done * sizeof(LONG));
 	*isamp = *osamp = done;
-	return;
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void copy_stop(effp)
+int st_copy_stop(effp)
 eff_t effp;
 {
 	/* nothing to do */
+    return (ST_SUCCESS);
 }
 
 

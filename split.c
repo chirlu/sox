@@ -25,21 +25,23 @@ typedef struct splitstuff {
 /*
  * Process options
  */
-void
-split_getopts(effp, n, argv) 
+int st_split_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
 {
 	if (n)
+	{
 		fail("Split effect takes no options.");
+		return (ST_EOF);
+	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  */
-void
-split_start(effp)
+int st_split_start(effp)
 eff_t effp;
 {
 	switch (effp->ininfo.channels) {
@@ -47,18 +49,19 @@ eff_t effp;
 			switch(effp->outinfo.channels) {
 				case 2:
 				case 4:
-					return;
+					return (ST_SUCCESS);
 			}
 			break;
 		case 2:	  /* 2 channels must split to 4 */
 			switch(effp->outinfo.channels) {
 				case 4:
-					return;
+					return (ST_SUCCESS);
 			}
 			break;
 	}
 	fail("Can't split %d channels into %d channels",
 		effp->ininfo.channels, effp->outinfo.channels);
+	return (ST_EOF);
 }
 
 /*
@@ -67,7 +70,7 @@ eff_t effp;
  * while splitting into appropriate channels.
  */
 
-void split_flow(effp, ibuf, obuf, isamp, osamp)
+int st_split_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -115,16 +118,16 @@ LONG *isamp, *osamp;
 			*osamp = len * 2;
 			break;
 	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void split_stop(effp)
+int st_split_stop(effp)
 eff_t effp;
 {
 	/* nothing to do */
+    return (ST_SUCCESS);
 }
-
-

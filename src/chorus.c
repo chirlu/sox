@@ -90,7 +90,7 @@ typedef struct chorusstuff {
 /*
  * Process options
  */
-void chorus_getopts(effp, n, argv) 
+int st_chorus_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -102,13 +102,19 @@ char **argv;
 	i = 0;
 
 	if ( ( n < 7 ) || (( n - 2 ) % 5 ) )
+	{
 	    fail("Usage: chorus gain-in gain-out delay decay speed depth [ -s | -t ]");
+	    return (ST_EOF);
+	}
 
 	sscanf(argv[i++], "%f", &chorus->in_gain);
 	sscanf(argv[i++], "%f", &chorus->out_gain);
 	while ( i < n ) {
 		if ( chorus->num_chorus > MAX_CHORUS )
+		{
 			fail("chorus: to many delays, use less than %i delays", MAX_CHORUS);
+			return (ST_EOF);
+		}
 		sscanf(argv[i++], "%f", &chorus->delay[chorus->num_chorus]);
 		sscanf(argv[i++], "%f", &chorus->decay[chorus->num_chorus]);
 		sscanf(argv[i++], "%f", &chorus->speed[chorus->num_chorus]);
@@ -118,16 +124,20 @@ char **argv;
 		else if ( ! strcmp(argv[i], "-t"))
 			chorus->modulation[chorus->num_chorus] = MOD_TRIANGLE;
 		else
+		{
     			fail("Usage: chorus gain-in gain-out delay decay speed [ -s | -t ]");
+			return (ST_EOF);
+		}
 		i++;
 		chorus->num_chorus++;
 	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare for processing.
  */
-void chorus_start(effp)
+int st_chorus_start(effp)
 eff_t effp;
 {
 	chorus_t chorus = (chorus_t) effp->priv;
@@ -137,11 +147,20 @@ eff_t effp;
 	chorus->maxsamples = 0;
 
 	if ( chorus->in_gain < 0.0 )
+	{
 		fail("chorus: gain-in must be positive!\n");
+		return (ST_EOF);
+	}
 	if ( chorus->in_gain > 1.0 )
+	{
 		fail("chorus: gain-in must be less than 1.0!\n");
+		return (ST_EOF);
+	}
 	if ( chorus->out_gain < 0.0 )
+	{
 		fail("chorus: gain-out must be positive!\n");
+		return (ST_EOF);
+	}
 	for ( i = 0; i < chorus->num_chorus; i++ ) {
 		chorus->samples[i] = (int) ( ( chorus->delay[i] + 
 			chorus->depth[i] ) * effp->ininfo.rate / 1000.0);
@@ -149,26 +168,53 @@ eff_t effp;
 			effp->ininfo.rate / 1000.0);
 
 		if ( chorus->delay[i] < 20.0 )
+		{
 	    		fail("chorus: delay must be more than 20.0 msec!\n");
+			return (ST_EOF);
+		}
 		if ( chorus->delay[i] > 100.0 )
+		{
 	    		fail("chorus: delay must be less than 100.0 msec!\n");
+			return (ST_EOF);
+		}
 		if ( chorus->speed[i] < 0.1 )
+		{
 	    		fail("chorus: speed must be more than 0.1 Hz!\n");
+			return (ST_EOF);
+		}
 		if ( chorus->speed[i] > 5.0 )
+		{
 	    		fail("chorus: speed must be less than 5.0 Hz!\n");
+			return (ST_EOF);
+		}
 		if ( chorus->depth[i] < 0.0 )
+		{
 	    		fail("chorus: delay must be more positive!\n");
+			return (ST_EOF);
+		}
 		if ( chorus->depth[i] > 10.0 )
-	    		fail("chorus: delay must be less than 10.0 msec!\n");
+		{
+		    fail("chorus: delay must be less than 10.0 msec!\n");
+		    return (ST_EOF);
+		}
 		if ( chorus->decay[i] < 0.0 )
+		{
 	    		fail("chorus: decay must be positive!\n" );
+			return (ST_EOF);
+		}
 		if ( chorus->decay[i] > 1.0 )
+		{
 	    		fail("chorus: decay must be less that 1.0!\n" );
+			return (ST_EOF);
+		}
 		chorus->length[i] = effp->ininfo.rate / chorus->speed[i];
 		if (! (chorus->lookup_tab[i] = 
 			(int *) malloc(sizeof (int) * chorus->length[i])))
+		{
 			fail("chorus: Cannot malloc %d bytes!\n", 
 				sizeof(int) * chorus->length[i]);
+			return (ST_EOF);
+		}
 		if ( chorus->modulation[i] == MOD_SINE )
 			st_sine(chorus->lookup_tab[i], chorus->length[i], 
 				chorus->depth_samples[i] - 1,
@@ -193,13 +239,17 @@ eff_t effp;
 
 	if (! (chorus->chorusbuf = 
 		(float *) malloc(sizeof (float) * chorus->maxsamples)))
+	{
 		fail("chorus: Cannot malloc %d bytes!\n", 
 			sizeof(float) * chorus->maxsamples);
+		return (ST_EOF);
+	}
 	for ( i = 0; i < chorus->maxsamples; i++ )
 		chorus->chorusbuf[i] = 0.0;
 
 	chorus->counter = 0;
 	chorus->fade_out = chorus->maxsamples;
+	return (ST_SUCCESS);
 }
 
 /*
@@ -207,7 +257,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void chorus_flow(effp, ibuf, obuf, isamp, osamp)
+int st_chorus_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -242,12 +292,13 @@ LONG *isamp, *osamp;
 				( chorus->phase[i] + 1 ) % chorus->length[i];
 	}
 	/* processed all samples */
+	return (ST_SUCCESS);
 }
 
 /*
  * Drain out reverb lines. 
  */
-void chorus_drain(effp, obuf, osamp)
+int st_chorus_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
 LONG *osamp;
@@ -284,12 +335,13 @@ LONG *osamp;
 	}
 	/* samples played, it remains */
 	*osamp = done;
+	return (ST_SUCCESS);
 }
 
 /*
  * Clean up chorus effect.
  */
-void chorus_stop(effp)
+int st_chorus_stop(effp)
 eff_t effp;
 {
 	chorus_t chorus = (chorus_t) effp->priv;
@@ -301,5 +353,5 @@ eff_t effp;
 		free((char *) chorus->lookup_tab[i]);
 		chorus->lookup_tab[i] = (int *) -1;   /* guaranteed core dump */
 	}
+	return (ST_SUCCESS);
 }
-

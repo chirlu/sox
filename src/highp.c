@@ -33,7 +33,7 @@ typedef struct highpstuff {
 /*
  * Process options
  */
-void highp_getopts(effp, n, argv) 
+int st_highp_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -41,23 +41,31 @@ char **argv;
 	highp_t highp = (highp_t) effp->priv;
 
 	if ((n < 1) || !sscanf(argv[0], "%f", &highp->center))
+	{
 		fail("Usage: highp center");
+		return (ST_EOF);
+	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  */
-void highp_start(effp)
+int st_highp_start(effp)
 eff_t effp;
 {
 	highp_t highp = (highp_t) effp->priv;
 	if (highp->center > effp->ininfo.rate*2)
+	{
 		fail("Highpass: center must be < minimum data rate*2\n");
+		return (ST_EOF);
+	}
 	
 	highp->A = (M_PI * 2.0 * highp->center) / effp->ininfo.rate;
 	highp->B = exp(-highp->A / effp->ininfo.rate);
 	highp->in1 = 0.0;
 	highp->out1 = 0.0;
+	return (ST_SUCCESS);
 }
 
 /*
@@ -65,7 +73,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void highp_flow(effp, ibuf, obuf, isamp, osamp)
+int st_highp_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -93,15 +101,17 @@ LONG *isamp, *osamp;
 	highp->out1 = d;
 	*isamp = len;
 	*osamp = len;
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void highp_stop(effp)
+int st_highp_stop(effp)
 eff_t effp;
 {
 	/* nothing to do */
+    return (ST_SUCCESS);
 }
 

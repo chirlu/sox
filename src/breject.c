@@ -36,10 +36,7 @@
 #include "st.h"
 #include "btrworth.h"
 
-
-
-void
-bandreject_getopts (effp, n, argv)
+int st_bandreject_getopts (effp, n, argv)
 eff_t effp;
 int n;
 char **argv;
@@ -48,23 +45,24 @@ char **argv;
 
   if (n != 2) {
     fail("Usage: bandreject FREQUENCY BANDWIDTH");
+    return (ST_EOF);
   }
 
-  butterworth_start (effp);
+  st_butterworth_start (effp);
 
   if (!(sscanf (argv [0], "%lf", &butterworth->frequency))) {
     fail("bandreject: illegal frequency");
+    return (ST_EOF);
   }
 
   if (!(sscanf (argv [1], "%lf", &butterworth->bandwidth))) {
    fail("bandreject: illegal bandwidth");
+   return (ST_EOF);
   }
+  return (ST_SUCCESS);
 }
 
-
-
-void
-bandreject_start (effp)
+int st_bandreject_start (effp)
 eff_t effp;
 {
   butterworth_t butterworth = (butterworth_t) effp->priv;
@@ -80,5 +78,5 @@ eff_t effp;
 
   butterworth->b [0] = butterworth->a[1];
   butterworth->b [1] = (1.0 - c) * butterworth->a[0];
+  return (ST_SUCCESS);
 }
-

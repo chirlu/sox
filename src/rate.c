@@ -53,29 +53,38 @@ typedef struct ratestuff {
 /*
  * Process options
  */
-void rate_getopts(effp, n, argv) 
+int st_rate_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
 {
 	if (n)
+	{
 		fail("Rate effect takes no options.");
+		return (ST_EOF);
+	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  */
-void rate_start(effp)
+int st_rate_start(effp)
 eff_t effp;
 {
 	rate_t rate = (rate_t) effp->priv;
         ULONG incr;
 
 	if (effp->ininfo.rate >= 65535 || effp->outinfo.rate >= 65535)
+	{
 	    fail("rate effect can only handle rates <= 65535");
+	    return (ST_EOF);
+	}
 	if (effp->ininfo.size == ST_SIZE_DWORD ||
 	    effp->ininfo.size == ST_SIZE_FLOAT)
-	    fail("rate effect does not work on data greater then 16 bits");
+	{
+	    warn("rate effect reduces data to 16 bits");
+	}
 
         rate->opos_frac=0;
         rate->opos=0;
@@ -90,6 +99,7 @@ eff_t effp;
         rate->ipos=0;
 
 	rate->ilast = 0;
+	return (ST_SUCCESS);
 }
 
 /*
@@ -97,7 +107,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void rate_flow(effp, ibuf, obuf, isamp, osamp)
+int st_rate_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -149,16 +159,18 @@ the_end:
 	*isamp = ibuf - istart;
 	*osamp = obuf - ostart;
 	rate->ilast = ilast;
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void rate_stop(effp)
+int st_rate_stop(effp)
 eff_t effp;
 {
 	/* nothing to do */
+    return (ST_SUCCESS);
 }
 
 #else /* USE_OLD_RATE */
@@ -226,19 +238,23 @@ typedef struct ratestuff {
 /*
  * Process options
  */
-void rate_getopts(effp, n, argv) 
+int st_rate_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
 {
 	if (n)
+	{
 		fail("Rate effect takes no options.");
+		return (ST_EOF);
+	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  */
-void rate_start(effp)
+int st_rate_start(effp)
 eff_t effp;
 {
 	rate_t rate = (rate_t) effp->priv;
@@ -252,6 +268,7 @@ eff_t effp;
 	rate->outskip = rate->lcmrate / effp->outinfo.rate; 
 	rate->total = rate->intot = rate->outtot = 0;
 	rate->lastsamp = 0;
+	return (ST_SUCCESS);
 }
 
 /*
@@ -259,7 +276,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void rate_flow(effp, ibuf, obuf, isamp, osamp)
+int st_rate_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 int *isamp, *osamp;
@@ -315,15 +332,17 @@ out:
 	*isamp = ibuf - istart;
 	*osamp = len;
 	rate->lastsamp = last;
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void rate_stop(effp)
+int st_rate_stop(effp)
 eff_t effp;
 {
 	/* nothing to do */
+    return (ST_SUCCESS);
 }
 #endif /* USE_OLD_RATE */

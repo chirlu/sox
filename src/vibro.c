@@ -41,7 +41,7 @@ typedef struct vibrostuff {
 /*
  * Process options
  */
-void vibro_getopts(effp, n, argv) 
+int st_vibro_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -51,14 +51,22 @@ char **argv;
 	vibro->depth = 0.5;
 	if ((n == 0) || !sscanf(argv[0], "%f", &vibro->speed) ||
 		((n == 2) && !sscanf(argv[1], "%f", &vibro->depth)))
+	{
 		fail("Usage: vibro speed [ depth ]");
+		return (ST_EOF);
+	}
 	if ((vibro->speed <= 0.001) || (vibro->speed > 30.0) || 
 			(vibro->depth < 0.0) || (vibro->depth > 1.0))
+	{
 		fail("Vibro: speed must be < 30.0, 0.0 < depth < 1.0");
+		return (ST_EOF);
+	}
+	return (ST_SUCCESS);
 }
 
 /* This was very painful.  We need a sine library. */
 /* SJB: this is somewhat different than st_sine()  */
+/* FIXME: move to misc.c */
 static void sine(buf, len, depth)
 short *buf;
 int len;
@@ -78,18 +86,22 @@ float depth;
 /*
  * Prepare processing.
  */
-void vibro_start(effp)
+int st_vibro_start(effp)
 eff_t effp;
 {
 	vibro_t vibro = (vibro_t) effp->priv;
 
 	vibro->length = effp->ininfo.rate / vibro->speed;
 	if (! (vibro->sinetab = (short*) malloc(vibro->length * sizeof(short))))
+	{
 		fail("Vibro: Cannot malloc %d bytes",
 			vibro->length * sizeof(short));
+		return (ST_EOF);
+	}
 
 	sine(vibro->sinetab, vibro->length, vibro->depth);
 	vibro->counter = 0;
+	return (ST_SUCCESS);
 }
 
 /*
@@ -97,7 +109,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void vibro_flow(effp, ibuf, obuf, isamp, osamp)
+int st_vibro_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -120,15 +132,17 @@ LONG *isamp, *osamp;
 	}
 	vibro->counter = counter;
 	/* processed all samples */
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void vibro_stop(effp)
+int st_vibro_stop(effp)
 eff_t effp;
 {
 	/* nothing to do */
+    return (ST_SUCCESS);
 }
 

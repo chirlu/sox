@@ -59,7 +59,7 @@ static void FiltWin(P2(filter_t f, LONG Nx));
 /*
  * Process options
  */
-void filter_getopts(effp, n, argv)
+int st_filter_getopts(effp, n, argv)
 eff_t effp;
 int n;
 char **argv;
@@ -84,24 +84,35 @@ char **argv;
 	}
 	/* fprintf(stderr,"freq: %d-%d\n", f->freq0, f->freq1);fflush(stderr); */
 	if (f->freq0 == 0 && f->freq1 == 0)
+	{
 		fail("Usage: filter low-high [ windowlength [ beta ] ]");
+		return (ST_EOF);
+	}
 
 	if ((n >= 2) && !sscanf(argv[1], "%ld", &f->Nwin))
+	{
 		fail("Usage: filter low-high [ windowlength ]");
+		return (ST_EOF);
+	}
 	else if (f->Nwin < 4) {
 		fail("filter: window length (%ld) <4 is too short", f->Nwin);
+		return (ST_EOF);
 	}
 
 	if ((n >= 3) && !sscanf(argv[2], "%lf", &f->beta))
+	{
 		fail("Usage: filter low-high [ windowlength [ beta ] ]");
+		return (ST_EOF);
+	}
 
 	report("filter opts: %d-%d, window-len %d, beta %f\n", f->freq0, f->freq1, f->Nwin, f->beta);
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  */
-void filter_start(effp)
+int st_filter_start(effp)
 eff_t effp;
 {
 	filter_t f = (filter_t) effp->priv;
@@ -116,15 +127,21 @@ eff_t effp;
 		f->freq1 = f->rate/2;
 
 	if ((f->freq0 < 0) || (f->freq0 > f->freq1))
+	{
 		fail("filter: low(%d),high(%d) parameters must satisfy 0 <= low <= high <= %d",
 					f->freq0, f->freq1, f->rate/2);
+		return (ST_EOF);
+	}
 	
 	Xh = f->Nwin/2;
 	Fp0 = (Float *) malloc(sizeof(Float) * (Xh + 2)) + 1;
 	if (f->freq0 > f->rate/200) {
 		Xh0 = makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, 1, 0);
 		if (Xh0 <= 1)
+		{
 			fail("filter: Unable to make low filter\n");
+			return (ST_EOF);
+		}
 	} else {
 		Xh0 = 0;
 	}
@@ -133,7 +150,10 @@ eff_t effp;
 	if (f->freq1 < f->rate/2) {
 		Xh1 = makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, 1, 0);
 		if (Xh1 <= 1)
+		{
 			fail("filter: Unable to make high filter\n");
+			return (ST_EOF);
+		}
 	} else {
 		Fp1[0] = 1.0;
 		Xh1 = 1;
@@ -164,6 +184,7 @@ eff_t effp;
 	/* Need Xh zeros at beginning of X */
 	for (i = 0; i < Xh; i++)
 		f->X[i] = 0;
+	return (ST_SUCCESS);
 }
 
 /*
@@ -171,7 +192,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void filter_flow(effp, ibuf, obuf, isamp, osamp)
+int st_filter_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -204,7 +225,7 @@ LONG *isamp, *osamp;
 	if (Nproc <= 0) {
 		f->Xt += Nx;
 		*osamp = 0;
-		return;
+		return (ST_SUCCESS);
 	}
 	/* fprintf(stderr,"flow Nproc %d\n",Nproc); */
 	FiltWin(f, Nproc);
@@ -219,12 +240,13 @@ LONG *isamp, *osamp;
 		*obuf++ = f->Y[i] * ISCALE;
 
 	*osamp = Nproc;
+	return (ST_SUCCESS);
 }
 
 /*
  * Process tail of input samples.
  */
-void filter_drain(effp, obuf, osamp)
+int st_filter_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
 LONG *osamp;
@@ -242,7 +264,7 @@ LONG *osamp;
 		LONG Isamp, Osamp;
 		Isamp = isamp_res;
 		Osamp = osamp_res;
-		filter_flow(effp, NULL, Obuf, &Isamp, &Osamp);
+		st_filter_flow(effp, NULL, Obuf, &Isamp, &Osamp);
 	  /* fprintf(stderr,"DRAIN isamp,osamp  (%d,%d) -> (%d,%d)\n",
 		 * isamp_res,osamp_res,Isamp,Osamp); */
 		Obuf += Osamp;
@@ -253,19 +275,21 @@ LONG *osamp;
 	/* fprintf(stderr,"DRAIN osamp %d\n", *osamp); */
 	if (isamp_res)
 		warn("drain overran obuf by %d\n", isamp_res); fflush(stderr);
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void filter_stop(effp)
+int st_filter_stop(effp)
 eff_t effp;
 {
 	filter_t f = (filter_t) effp->priv;
 
 	free(f->Fp - 1);
 	free(f->X);
+	return (ST_SUCCESS);
 }
 
 static double jprod(Fp, Xp, ct)

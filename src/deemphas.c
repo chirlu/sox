@@ -113,37 +113,49 @@ typedef struct deemphstuff {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-void deemph_getopts(effp, n, argv)
+int st_deemph_getopts(effp, n, argv)
 eff_t effp;
 int n;
 char **argv;
 {
      if (n)
+     {
           fail("Deemphasis filtering effect takes no options.\n");
+	  return (ST_EOF);
+     }
      if (sizeof(double)*ST_MAX_PRIVSIZE < sizeof(struct deemphstuff))
+     {
           fail("Internal error: PRIVSIZE too small.\n");
+	  return (ST_EOF);
+     }
+     return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  * Do all initializations.
  */
-void deemph_start(effp)
+int st_deemph_start(effp)
 eff_t effp;
 {
      /* check the input format */
      if (effp->ininfo.style != ST_ENCODING_SIGN2
          || effp->ininfo.rate != 44100
          || effp->ininfo.size != ST_SIZE_WORD)
+     {
           fail("The deemphasis effect works only with audio cd like samples.\nThe input format however has %d Hz sample rate and %d-byte%s signed linearly coded samples.",
             effp->ininfo.rate, effp->ininfo.size,
             effp->ininfo.style != ST_ENCODING_SIGN2 ? ", but not" : "");
+	  return (ST_EOF);
+     }
+     else
      {
           deemph_t deemph = (deemph_t) effp->priv;
 
           deemph->lastin = 0;
           deemph->lastout = 0.0;
      }
+     return (ST_SUCCESS);
 }
 
 /*
@@ -156,7 +168,7 @@ eff_t effp;
 #define b0      0.45995451989513153057
 #define b1      -0.08782333709141937339
 
-void deemph_flow(effp, ibuf, obuf, isamp, osamp)
+int st_deemph_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -174,25 +186,28 @@ LONG *isamp, *osamp;
                     deemph->lastout + 0.5 :
                     deemph->lastout - 0.5;
      }
+     return (ST_SUCCESS);
 }
 
 /*
  * Drain out remaining samples if the effect generates any.
  */
 
-void deemph_drain(effp, obuf, osamp)
+int st_deemph_drain(effp, obuf, osamp)
 LONG *obuf;
 LONG *osamp;
 {
      /* nothing to do */
+    return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.
  *   (free allocated memory, etc.)
  */
-void deemph_stop(effp)
+int st_deemph_stop(effp)
 eff_t effp;
 {
      /* nothing to do */
+    return (ST_SUCCESS);
 }

@@ -24,7 +24,7 @@ typedef struct swapstuff {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-void swap_getopts(effp, n, argv) 
+int st_swap_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -37,6 +37,7 @@ char **argv;
 	if (n != 4)
 	{
 	    fail("Usage: swap [1 2 3 4]");
+	    return (ST_EOF);
 	}
 	else
 	{
@@ -46,17 +47,22 @@ char **argv;
 	    sscanf(argv[3],"%d",&swap->order[3]);
 	}
     }
+    return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  * Do all initializations.
  */
-void swap_start(effp)
+int st_swap_start(effp)
 eff_t effp;
 {
     if (effp->outinfo.channels == 1)
+    {
 	fail("Can't swap channels on mono data.");
+	return (ST_EOF);
+    }
+    return (ST_SUCCESS);
 }
 
 /*
@@ -64,7 +70,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void swap_flow(effp, ibuf, obuf, isamp, osamp)
+int st_swap_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 int *isamp, *osamp;
@@ -122,25 +128,28 @@ int *isamp, *osamp;
 	
 	break;
     }
+    return (ST_SUCCESS);
 }
 
 /*
  * Drain out remaining samples if the effect generates any.
  */
 
-void swap_drain(effp, obuf, osamp)
+int st_swap_drain(effp, obuf, osamp)
 LONG *obuf;
 int *osamp;
 {
 	*osamp = 0;
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  *	(free allocated memory, etc.)
  */
-void swap_stop(effp)
+int st_swap_stop(effp)
 eff_t effp;
 {
 	/* nothing to do */
+    return (ST_SUCCESS);
 }

@@ -79,7 +79,7 @@ typedef struct echostuff {
 /*
  * Process options
  */
-void echo_getopts(effp, n, argv) 
+int st_echo_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -90,7 +90,10 @@ char **argv;
 	echo->num_delays = 0;
 
 	if ((n < 4) || (n % 2))
+	{
 	    fail("Usage: echo gain-in gain-out delay decay [ delay decay ... ]");
+	    return (ST_EOF);
+	}
 
 	i = 0;
 	sscanf(argv[i++], "%f", &echo->in_gain);
@@ -104,12 +107,13 @@ char **argv;
 		sscanf(argv[i++], "%f", &echo->decay[echo->num_delays]);
 		echo->num_delays++;
 	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare for processing.
  */
-void echo_start(effp)
+int st_echo_start(effp)
 eff_t effp;
 {
 	echo_t echo = (echo_t) effp->priv;
@@ -119,28 +123,52 @@ eff_t effp;
 
 	echo->maxsamples = 0L;
 	if ( echo->in_gain < 0.0 )
+	{
 		fail("echo: gain-in must be positive!\n");
+		return (ST_EOF);
+	}
 	if ( echo->in_gain > 1.0 )
+	{
 		fail("echo: gain-in must be less than 1.0!\n");
+		return (ST_EOF);
+	}
 	if ( echo->out_gain < 0.0 )
+	{
 		fail("echo: gain-in must be positive!\n");
+		return (ST_EOF);
+	}
 	for ( i = 0; i < echo->num_delays; i++ ) {
 		echo->samples[i] = echo->delay[i] * effp->ininfo.rate / 1000.0;
 		if ( echo->samples[i] < 1 )
+		{
 		    fail("echo: delay must be positive!\n");
+		    return (ST_EOF);
+		}
 		if ( echo->samples[i] > DELAY_BUFSIZ )
+		{
 			fail("echo: delay must be less than %g seconds!\n",
 				DELAY_BUFSIZ / (float) effp->ininfo.rate );
+			return (ST_EOF);
+		}
 		if ( echo->decay[i] < 0.0 )
+		{
 		    fail("echo: decay must be positive!\n" );
+		    return (ST_EOF);
+		}
 		if ( echo->decay[i] > 1.0 )
+		{
 		    fail("echo: decay must be less than 1.0!\n" );
+		    return (ST_EOF);
+		}
 		if ( echo->samples[i] > echo->maxsamples )
 			echo->maxsamples = echo->samples[i];
 	}
 	if (! (echo->delay_buf = (double *) malloc(sizeof (double) * echo->maxsamples)))
+	{
 		fail("echo: Cannot malloc %d bytes!\n", 
 			sizeof(long) * echo->maxsamples);
+		return (ST_EOF);
+	}
 	for ( j = 0; j < echo->maxsamples; ++j )
 		echo->delay_buf[j] = 0.0;
 	/* Be nice and check the hint with warning, if... */
@@ -151,6 +179,7 @@ eff_t effp;
 		warn("echo: warning >>> gain-out can cause saturation of output <<<");
 	echo->counter = 0;
 	echo->fade_out = echo->maxsamples;
+	return (ST_SUCCESS);
 }
 
 /*
@@ -158,7 +187,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void echo_flow(effp, ibuf, obuf, isamp, osamp)
+int st_echo_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -191,12 +220,13 @@ LONG *isamp, *osamp;
 		echo->counter = ( echo->counter + 1 ) % echo->maxsamples;
 	}
 	/* processed all samples */
+	return (ST_SUCCESS);
 }
 
 /*
  * Drain out reverb lines. 
  */
-void echo_drain(effp, obuf, osamp)
+int st_echo_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
 LONG *osamp;
@@ -230,17 +260,18 @@ LONG *osamp;
 	};
 	/* samples played, it remains */
 	*osamp = done;
+	return (ST_SUCCESS);
 }
 
 /*
  * Clean up reverb effect.
  */
-void echo_stop(effp)
+int st_echo_stop(effp)
 eff_t effp;
 {
 	echo_t echo = (echo_t) effp->priv;
 
 	free((char *) echo->delay_buf);
 	echo->delay_buf = (double *) -1;   /* guaranteed core dump */
+	return (ST_SUCCESS);
 }
-

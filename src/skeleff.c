@@ -24,7 +24,7 @@ typedef struct skelleffstuff {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-void skeleff_getopts(effp, n, argv) 
+int st_skeleff_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -36,19 +36,25 @@ char **argv;
 	if (n != 1)
 	{
 	    fail("Usage: skeleff [option]");
+	    return (ST_EOF);
 	}
     }
+    return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  * Do all initializations.
  */
-void skeleff_start(effp)
+int st_skeleff_start(effp)
 eff_t effp;
 {
     if (effp->outinfo.channels == 1)
+    {
 	fail("Can't run skeleff on mono data.");
+	return (ST_EOF);
+    }
+    return (ST_SUCCESS);
 }
 
 /*
@@ -56,7 +62,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void skeleff_flow(effp, ibuf, obuf, isamp, osamp)
+int st_skeleff_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -86,25 +92,28 @@ LONG *isamp, *osamp;
 	break;
 	
     }
+    return (ST_SUCCESS);
 }
 
 /*
  * Drain out remaining samples if the effect generates any.
  */
 
-void skeleff_drain(effp, obuf, osamp)
+int st_skeleff_drain(effp, obuf, osamp)
 LONG *obuf;
 LONG *osamp;
 {
 	*osamp = 0;
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  *	(free allocated memory, etc.)
  */
-void skeleff_stop(effp)
+int st_skeleff_stop(effp)
 eff_t effp;
 {
 	/* nothing to do */
+    return (ST_SUCCESS);
 }

@@ -29,7 +29,7 @@ typedef struct cutstuff {
 /*
  * Process options
  */
-void cut_getopts(effp, n, argv) 
+int st_cut_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -38,12 +38,13 @@ char **argv;
 
 	/* parse it */
 	cut->which = 0;	/* for now */
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  */
-void cut_start(effp)
+int st_cut_start(effp)
 eff_t effp;
 {
 	cut_t cut = (cut_t) effp->priv;
@@ -52,6 +53,7 @@ eff_t effp;
 	cut->where = 0;
 	cut->start = effp->loops[0].start;
 	cut->end = effp->loops[0].start + effp->loops[0].length;
+	return (ST_SUCCESS);
 }
 
 /*
@@ -59,7 +61,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void cut_flow(effp, ibuf, obuf, isamp, osamp)
+int st_cut_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -73,7 +75,7 @@ LONG *isamp, *osamp;
 		*isamp = len;
 		*osamp = 0;
 		cut->where += len;
-		return;
+		return (ST_SUCCESS);
 	}
 	*isamp = len;		/* We will have processed all inputs */
 	if (cut->where < cut->start) {
@@ -89,28 +91,31 @@ LONG *isamp, *osamp;
 		*obuf++ = *ibuf++;
 	}
 	*osamp = len;
+	return (ST_SUCCESS);
 }
 
 /*
  * Drain out remaining samples if the effect generates any.
  */
 
-void cut_drain(effp, obuf, osamp)
+int st_cut_drain(effp, obuf, osamp)
 eff_t effp;
 LONG *obuf;
 LONG *osamp;
 {
 	*osamp = 0;
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  *	(free allocated memory, etc.)
  */
-void cut_stop(effp)
+int st_cut_stop(effp)
 eff_t effp;
 {
 	/* nothing to do */
+    return (ST_SUCCESS);
 }
 
 

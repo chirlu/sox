@@ -79,7 +79,7 @@ static int win_type  = 0;
 static int win_width = 1024;
 static Float cutoff = 0.95;
    
-void poly_getopts(eff_t effp, int n, char **argv) 
+int st_poly_getopts(eff_t effp, int n, char **argv) 
 {
   /* 0: nuttall
      1: hamming */
@@ -129,7 +129,9 @@ void poly_getopts(eff_t effp, int n, char **argv)
     }
 
     fail("Polyphase: unknown argument (%s %s)!", argv[0], argv[1]);
+    return (ST_EOF);
   }
+  return (ST_SUCCESS);
 }
 
 /*
@@ -373,7 +375,7 @@ static void fir_design(Float *buffer, int length, Float cutoff)
  
 #define RIBLEN 2048
 
-void poly_start(eff_t effp)
+int st_poly_start(eff_t effp)
 {
     poly_t rate = (poly_t) effp->priv;
     static int l1[MF], l2[MF];
@@ -462,6 +464,7 @@ void poly_start(eff_t effp)
       s->window = (Float *) malloc(sizeof(Float) * size);
     }
     report("Poly:  output samples %d, oskip %d",size, rate->oskip);
+    return (ST_SUCCESS);
 }
 
 /*
@@ -483,7 +486,7 @@ static double st_prod(const Float *q, int qstep, const Float *p, int n)
   return sum;
 }
     
-void polyphase(Float *output, polystage *s)
+static void polyphase(Float *output, polystage *s)
 {
   int mm;
   int up = s->up;
@@ -519,7 +522,7 @@ static void update_hist(Float *hist, int hist_size, int in_size)
 
 }
 
-void poly_flow(eff_t effp, LONG *ibuf, LONG *obuf, LONG *isamp, LONG *osamp)
+int st_poly_flow(eff_t effp, LONG *ibuf, LONG *obuf, LONG *isamp, LONG *osamp)
 {
   poly_t rate = (poly_t) effp->priv;
   polystage *s0,*s1;
@@ -609,24 +612,26 @@ void poly_flow(eff_t effp, LONG *ibuf, LONG *obuf, LONG *isamp, LONG *osamp)
     }
 
   }
+  return (ST_SUCCESS);
 
 }
 
 /*
  * Process tail of input samples.
  */
-void poly_drain(eff_t effp, LONG *obuf, LONG *osamp)
+int st_poly_drain(eff_t effp, LONG *obuf, LONG *osamp)
 {
   LONG in_size;
   /* Call "flow" with NULL input. */
-  poly_flow(effp, NULL, obuf, &in_size, osamp);
+  st_poly_flow(effp, NULL, obuf, &in_size, osamp);
+  return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void poly_stop(eff_t effp)
+int st_poly_stop(eff_t effp)
 {
     poly_t rate = (poly_t) effp->priv;
     polystage *s;
@@ -638,4 +643,5 @@ void poly_stop(eff_t effp)
       if (s->filt_array) free((void *) s->filt_array);
       free((void *) s);
     }
+    return (ST_SUCCESS);
 }

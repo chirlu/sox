@@ -28,16 +28,20 @@
 /*
  * Process options
  */
-void mask_getopts(effp, n, argv) 
+int st_mask_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
 {
 	if (n)
+	{
 		fail("Mask effect takes no options.");
+		return (ST_EOF);
+	}
 	/* should take # of bits */
 
 	st_initrand();
+	return (ST_SUCCESS);
 }
 
 /*
@@ -45,7 +49,7 @@ char **argv;
  * Return number of samples processed.
  */
 
-void mask_flow(effp, ibuf, obuf, isamp, osamp)
+int st_mask_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -94,5 +98,5 @@ LONG *isamp, *osamp;
 
 	*isamp = done;
 	*osamp = done;
+	return (ST_SUCCESS);
 }
-

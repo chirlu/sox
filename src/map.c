@@ -20,19 +20,23 @@
 /*
  * Process options
  */
-void map_getopts(effp, n, argv) 
+int st_map_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
 {
 	if (n)
+	{
 		fail("Map effect takes no options.");
+		return (ST_EOF);
+	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  */
-void map_start(effp)
+int st_map_start(effp)
 eff_t effp;
 {
 	int i;
@@ -52,6 +56,7 @@ eff_t effp;
 	fprintf(stderr, "MIDI note: %d\n", effp->instr.MIDInote);
 	fprintf(stderr, "MIDI low : %d\n", effp->instr.MIDIlow);
 	fprintf(stderr, "MIDI hi  : %d\n", effp->instr.MIDIhi);
+	return (ST_SUCCESS);
 }
 
 /*
@@ -59,9 +64,10 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void map_flow(effp, ibuf, obuf, isamp, osamp)
+int st_map_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
 {
+    return (ST_SUCCESS);
 }

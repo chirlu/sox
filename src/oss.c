@@ -83,7 +83,7 @@ ft_t ft;
     ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &ft->file.size);
     if (ft->file.size < 4 || ft->file.size > 65536) {
 	    fail("Invalid audio buffer size %d", ft->file.size);
-	    returen (ST_EOF);
+	    return (ST_EOF);
     }
     ft->file.count = 0;
     ft->file.pos = 0;

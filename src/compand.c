@@ -38,7 +38,7 @@ typedef struct {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-void compand_getopts(effp, n, argv) 
+int st_compand_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -46,6 +46,7 @@ char **argv;
     compand_t l = (compand_t) effp->priv;
 
     if (n < 2 || n > 4)
+    {
       fail("Wrong number of arguments for the compander effect\n"
 	   "Use: {<attack_time>,<decay_time>}+ {<dB_in>,<db_out>}+ "
 	   "[<dB_postamp>]\n"
@@ -53,6 +54,8 @@ char **argv;
 	   "white-space-free list'\n"
 	   "and [] indications possible omission.  dB values are floating\n"
 	   "point or `-inf'; times are in seconds.");
+      return (ST_EOF);
+    }
     else { /* Right no. of args, but are they well formed? */
       char *s;
       int rates, tfers, i, commas;
@@ -64,14 +67,20 @@ char **argv;
 
       if (commas % 2 == 0) /* There must be an even number of
 			      attack/decay parameters */
+      {
 	fail("compander: Odd number of attack & decay rate parameters");
+	return (ST_EOF);
+      }
 
       rates = 1 + commas/2;
       if ((l->attackRate = malloc(sizeof(double) * rates)) == NULL ||
 	  (l->decayRate  = malloc(sizeof(double) * rates)) == NULL ||
 	  (l->volume     = malloc(sizeof(double) * rates)) == NULL ||
 	  (l->lastSamp   = calloc(rates, sizeof(LONG)))    == NULL)
+      {
 	fail("Out of memory");
+	return (ST_EOF);
+      }
       l->expectedChannels = rates;
 
       /* Now tokenise the rates string and set up these arrays.  Keep
@@ -91,29 +100,44 @@ char **argv;
 
       if (commas % 2 == 0) /* There must be an even number of
 			      transfer parameters */
+      {
 	fail("compander: Odd number of transfer function parameters\n"
 	     "Each input value in dB must have a corresponding output value");
+	return (ST_EOF);
+      }
 
       tfers = 3 + commas/2; /* 0, 0 at start; 1, 1 at end */
       if ((l->transferIns  = malloc(sizeof(double) * tfers)) == NULL ||
 	  (l->transferOuts = malloc(sizeof(double) * tfers)) == NULL)
+      {
 	fail("Out of memory");
+	return (ST_EOF);
+      }
       l->transferPoints = tfers;
       l->transferIns[0] = 0.0; l->transferOuts[0] = 0.0;
       l->transferIns[tfers-1] = 1.0; l->transferOuts[tfers-1] = 1.0;
       s = strtok(argv[1], ","); i = 1;
       do {
 	if (!strcmp(s, "-inf"))
+	{
 	  fail("Input signals of zero level must always generate zero output");
+	  return (ST_EOF);
+	}
 	l->transferIns[i]  = pow(10.0, atof(s)/20.0);
 	if (l->transferIns[i] > 1.0)
+	{
 	  fail("dB values are relative to maximum input, and, ipso facto, "
 	       "cannot exceed 0");
+	  return (ST_EOF);
+	}
 	if (l->transferIns[i] == 1.0) /* Final point was explicit */
 	  --(l->transferPoints);
 	if (i > 0 && l->transferIns[i] <= l->transferIns[i-1])
+	{
 	  fail("Transfer function points don't have strictly ascending "
 	       "input amplitude");
+	  return (ST_EOF);
+	}
 	s = strtok(NULL, ",");
 	l->transferOuts[i] = strcmp(s, "-inf") ?
 	                       pow(10.0, atof(s)/20.0) : 0;
@@ -133,13 +157,14 @@ char **argv;
 	l->volume[i] = v;
       }
     }
+    return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  * Do all initializations.
  */
-void compand_start(effp)
+int st_compand_start(effp)
 eff_t effp;
 {
   compand_t l = (compand_t) effp->priv;
@@ -180,6 +205,7 @@ eff_t effp;
     else
       l->decayRate[i] = 1.0;
   }
+  return (ST_SUCCESS);
 }
 
 /*
@@ -203,7 +229,7 @@ static void doVolume(double *v, double samp, compand_t l, int chan)
  * Return number of samples processed.
  */
 
-void compand_flow(effp, ibuf, obuf, isamp, osamp)
+int st_compand_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 int *isamp, *osamp;
@@ -260,4 +286,5 @@ int *isamp, *osamp;
   }
 
   *isamp = len; *osamp = len;
+  return (ST_SUCCESS);
 }

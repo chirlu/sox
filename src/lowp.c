@@ -33,7 +33,7 @@ typedef struct lowpstuff {
 /*
  * Process options
  */
-void lowp_getopts(effp, n, argv) 
+int st_lowp_getopts(effp, n, argv) 
 eff_t effp;
 int n;
 char **argv;
@@ -41,22 +41,30 @@ char **argv;
 	lowp_t lowp = (lowp_t) effp->priv;
 
 	if ((n < 1) || !sscanf(argv[0], "%f", &lowp->center))
+	{
 		fail("Usage: lowp center");
+		return (ST_EOF);
+	}
+	return (ST_SUCCESS);
 }
 
 /*
  * Prepare processing.
  */
-void lowp_start(effp)
+int st_lowp_start(effp)
 eff_t effp;
 {
 	lowp_t lowp = (lowp_t) effp->priv;
 	if (lowp->center > effp->ininfo.rate*2)
+	{
 		fail("Lowpass: center must be < minimum data rate*2\n");
+		return (ST_EOF);
+	}
 
 	lowp->A = (M_PI * 2.0 * lowp->center) / effp->ininfo.rate;
 	lowp->B = exp(-lowp->A / effp->ininfo.rate);
 	lowp->in1 = 0.0;
+	return (ST_SUCCESS);
 }
 
 /*
@@ -64,7 +72,7 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-void lowp_flow(effp, ibuf, obuf, isamp, osamp)
+int st_lowp_flow(effp, ibuf, obuf, isamp, osamp)
 eff_t effp;
 LONG *ibuf, *obuf;
 LONG *isamp, *osamp;
@@ -90,15 +98,17 @@ LONG *isamp, *osamp;
 	}
 	*isamp = len;
 	*osamp = len;
+	return (ST_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-void lowp_stop(effp)
+int st_lowp_stop(effp)
 eff_t effp;
 {
 	/* nothing to do */
+    return (ST_SUCCESS);
 }
 
