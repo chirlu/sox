@@ -886,6 +886,7 @@ ft_t ft;
 #endif
 
     default:
+	break;
     }
     return ST_SUCCESS;
 }
@@ -1051,6 +1052,7 @@ ft_t ft;
 	    break;
 #endif
 	default:
+	    break;
 	}
 	return ST_SUCCESS;
 }
@@ -1337,6 +1339,7 @@ int second_header;
 	    break;
 #endif
 	default:
+	    break;
 	}
 
 	/* if not PCM, write the 'fact' chunk */

@@ -63,6 +63,9 @@ sox-12.17
   o Moved most documentation to new "soxexam.1" manual page so that
     all users on a unix system will have access to important information.
     This means no more TIPS, CHEATS, or CHEATS.eft files.
+  o Richard Kent fixed a byte alignment problem in aiff comment code.
+  o Loring Holden added support to create missing directories on install
+    and support for installs from outside the source directory.
 
 sox-12.16
 ---------
