@@ -102,25 +102,17 @@ ft_t ft;
 	    type = NULL;
     }
 
-    if (type == 0) 
+    ft->filetype = type;
+    rc = st_gettype(ft); /* Change ft->h to the new format */
+    if(rc != ST_SUCCESS)
     {
-	st_warn("Could not detect type.  Assuming signed 16-bit data using rate of 44100.\n");
-	type = "raw";
-	ft->info.rate = 44100;
-	ft->info.size = ST_SIZE_WORD;
-	ft->info.encoding = ST_ENCODING_SIGN2;
+	st_fail_errno(ft,ST_EFMT,"Do not understand format type: %s\n",type);
+	return (rc);
     }
-	ft->filetype = type;
-	rc = st_gettype(ft); /* Change ft->h to the new format */
-	if(rc != ST_SUCCESS)
-	{
-	    st_fail_errno(ft,ST_EFMT,"Do not understand format type: %s\n",type);
-	    return (rc);
-	}
 
-	st_report("Detected file format type: %s\n", type);
-	return ((* ft->h->startread)(ft));
-    }
+    st_report("Detected file format type: %s\n", type);
+    return ((* ft->h->startread)(ft));
+}
 
 int st_autostartwrite(ft) 
 ft_t ft;

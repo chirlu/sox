@@ -66,23 +66,24 @@ LFLAGS  = -v -mh
 #       $(CC) $(CFLAGS) $*.c
 #       $(LDD) libst -+$*,,
 
-all: sox.exe mix.exe
+all: sox.exe soxmix.exe
 
 sox.exe: sox.obj libst.lib
         $(CC) $(LFLAGS) -L$(LIBDIR) sox.obj libst.lib
 
-mix.exe: mix.obj libst.lib
-        $(CC) $(LFLAGS) -L$(LIBDIR) mix.obj libst.lib
+soxmix.exe: soxmix.obj libst.lib
+        $(CC) $(LFLAGS) -L$(LIBDIR) soxmix.obj libst.lib
 
 libst.lib: $(LIBOBJS)
 
 sox.obj: sox.c st.h
         $(CC) $(CFLAGS) -I$(INCDIR) -L$(LIBDIR) $*.c
 
-mix.obj: mix.c st.h
-        $(CC) $(CFLAGS) -I$(INCDIR) -L$(LIBDIR) $*.c
+soxmix.obj: sox.c st.h
+        $(CC) $(CFLAGS) -DSOXMIX -I$(INCDIR) -L$(LIBDIR) sox.c
 
 clean:
         del *.obj
         del sox.exe
+	del soxmix.exe
         del libst.lib

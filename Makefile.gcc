@@ -192,13 +192,16 @@ SOX_DEFINES	= $(GSM_DEFINES) $(PLAYER_DEFINES) \
 
 CFLAGS  = $O $(SOX_DEFINES) $(SOX_INCLUDES)
 
-all: sox mix
+all: sox soxmix
 
 sox: sox.o $(SOUNDLIB)
 	$(CC) $(CFLAGS) -o sox sox.o $(SOUNDLIB) $(SOX_PRE_LIBS) $(SOX_POST_LIBS)
 
-mix: mix.o $(SOUNDLIB)
-	$(CC) $(CFLAGS) -o mix mix.o $(SOUNDLIB) $(SOX_PRE_LIBS) $(SOX_POST_LIBS)
+soxmix.o: sox.c
+	$(CC) $(CLAGS) -DSOXMIX -c -o soxmix.o sox.c
+
+soxmix: soxmix.o $(SOUNDLIB)
+	$(CC) $(CFLAGS) -o soxmix soxmix.o $(SOUNDLIB) $(SOX_PRE_LIBS) $(SOX_POST_LIBS)
 
 $(SOUNDLIB): $(LIBOBJS)
 	$(RM) $(SOUNDLIB)

@@ -286,6 +286,7 @@ ULONG st_readbuf(LONG *p, int n, int size, int encoding, ft_t ft)
 {
     ULONG len, done = 0;
     void (*copy_buf)(LONG *, char *, ULONG, char) = 0;
+    int i;
 
     switch(size) {
 	case ST_SIZE_BYTE:
@@ -341,11 +342,13 @@ ULONG st_readbuf(LONG *p, int n, int size, int encoding, ft_t ft)
 
 	case ST_SIZE_FLOAT:
 	    copy_buf = st_f32_copy_buf;
+	    /* Hack hack... Encoding should be FLOAT, not the size */
 	    size = 4;
 	    break;
 
 	case ST_SIZE_DOUBLE:
 	    copy_buf = st_f64_copy_buf;
+	    /* Hack hack... Encoding should be FLOAT, not the size */
 	    size = 8;
 	    break;
 
@@ -365,14 +368,24 @@ ULONG st_readbuf(LONG *p, int n, int size, int encoding, ft_t ft)
 
     while (done < n)
     {
-	if (!ft->file.eof && ft->file.pos == ft->file.count)
+	/* See if there is not enough data in buffer for any more reads.
+	 * If not then shift any remaining data down to the beginning
+	 * and attempt to fill up the rest of the buffer.
+	 */
+	if (!ft->file.eof && ft->file.pos >= (ft->file.count-size+1))
 	{
-	    ft->file.count = fread(ft->file.buf, 1, ft->file.size, ft->fp);
+	    for (i = 0; i < (ft->file.count-ft->file.pos); i++)
+		ft->file.buf[i] = ft->file.buf[ft->file.pos+i];
+
+	    i = ft->file.count-ft->file.pos;
 	    ft->file.pos = 0;
+
+	    ft->file.count = fread(ft->file.buf+i, 1, ft->file.size-i, ft->fp) ;
 	    if (ft->file.count == 0)
 	    {
 		ft->file.eof = 1;
 	    }
+	    ft->file.count += i;
 	}
 
         len = MIN(n - done,(ft->file.count-ft->file.pos)/size);

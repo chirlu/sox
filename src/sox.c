@@ -351,8 +351,12 @@ static void copy_output(ft_t ft)
             ft->filetype = NULL;
     }
 
-    if ( st_gettype(ft) )
-	st_fail("Unknown output file format for '%s'.  Use -t option to override",ft->filename);
+    if (writing)
+    {
+	if ( st_gettype(ft) )
+	    st_fail("Unknown output file format for '%s'.  Use -t option to override",ft->filename);
+
+    }
 }
 
 static void open_output(ft_t ft)

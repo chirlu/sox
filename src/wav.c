@@ -1568,9 +1568,13 @@ ft_t ft;
  	if (wav->samples) free(wav->samples);
  	if (wav->iCoefs) free(wav->iCoefs);
 
-	/* Now that we've free()'d memory, return with errors if needed */
-	if (ft->st_errno)
-	    return ST_EOF;
+	/* Flush any remaining data */
+	if (wav->formatTag != WAVE_FORMAT_IMA_ADPCM &&
+	    wav->formatTag != WAVE_FORMAT_ADPCM &&
+	    wav->formatTag != WAVE_FORMAT_GSM610)
+	{
+	    st_rawstopwrite(ft);
+	}
 
 	/* All samples are already written out. */
 	/* If file header needs fixing up, for example it needs the */
@@ -1580,19 +1584,11 @@ ft_t ft;
 
 	if (fseek(ft->fp, 0L, SEEK_SET) != 0)
 	{
-		st_fail_errno(ft,ST_EOF,"Sorry, can't rewind output file to rewrite .wav header.");
+		st_fail_errno(ft,ST_EOF,"Can't rewind output file to rewrite .wav header.");
 		return ST_EOF;
 	}
-	wavwritehdr(ft, 1);
 
-	if (wav->formatTag != WAVE_FORMAT_IMA_ADPCM &&
-	    wav->formatTag != WAVE_FORMAT_ADPCM &&
-	    wav->formatTag != WAVE_FORMAT_GSM610)
-	{
-	    st_rawstopwrite(ft);
-	}
-
-	return (ST_SUCCESS);
+	return (wavwritehdr(ft, 1));
 }
 
 /*

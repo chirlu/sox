@@ -74,7 +74,7 @@ all: sox soxmix $(PLAY_$(PLAY_SUPPORT))
 sox: libst.a sox.o
 	$(CC) $(LDFLAGS) -o sox sox.o $(LIBS)
 
-soxmix.o:
+soxmix.o: sox.c
 	$(CC) $(CFLAGS) -DSOXMIX -c -o soxmix.o sox.c
 
 soxmix: libst.a soxmix.o
