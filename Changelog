@@ -6,6 +6,10 @@ sox-11gamma.
 
 sox-12.17.2
 -----------
+  o Daniel Culbert found and fixed a bug in the polyphase effect
+    that occurs on platforms that rand() can return large values.
+    The bug resulted in polyphase resampling an audio file to a
+    different rate then it said it was.
   o Darrick Servis has made major cleanups in the code in regards
     to error conditions.  Helps people using libst.
   o Darrick Servis has added added optional seek functionality sox.

@@ -201,8 +201,8 @@ static int permute(int *m, int *l, int ct, int ct1, int amalg)
   
   for (k=ct; k>1; ) {
     int tmp;
-    LONG j;
-    j = (LONG)rand() + ((LONG)rand()<<13); /* reasonably big */
+    ULONG j;
+    j = (ULONG)(rand()%32768L) + ((ULONG)(rand()%32768L)<<13); /* reasonably big */
     j = j % k; /* non-negative! */
     k--;
     if (j != k) {
@@ -234,6 +234,11 @@ static int optimize_factors(int numer, int denom, int *l1, int *l2)
   int k;
   static int m1[MF],m2[MF];
   static int b1[MF],b2[MF];
+
+  memset(m1,0,sizeof(int)*MF);
+  memset(m2,0,sizeof(int)*MF);
+  memset(b1,0,sizeof(int)*MF);
+  memset(b2,0,sizeof(int)*MF);
 
   f_min = numer; if (f_min>denom) f_min = denom;
   c_min = 1<<30;
