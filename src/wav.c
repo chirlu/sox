@@ -457,10 +457,18 @@ int st_wavstartread(ft_t ft)
 
     if (ST_IS_BIGENDIAN) ft->swap = ft->swap ? 0 : 1;
 
-    if (st_reads(ft, magic, 4) == ST_EOF || strncmp("RIFF", magic, 4))
+    if (st_reads(ft, magic, 4) == ST_EOF || (strncmp("RIFF", magic, 4) != 0 &&
+                                             strncmp("RIFX", magic, 4) != 0))
     {
         st_fail_errno(ft,ST_EHDR,"WAVE: RIFF header not found");
         return ST_EOF;
+    }
+
+    /* RIFX is a Big-endian RIFF */
+    if (strncmp("RIFX", magic, 4) == 0) 
+    {
+        st_report("Found RIFX header, swapping bytes");
+        ft->swap = ft->swap ? 0 : 1;
     }
 
     st_readdw(ft, &dwRiffLength);
@@ -1174,39 +1182,40 @@ int st_wavstopread(ft_t ft)
 
 int st_wavstartwrite(ft_t ft) 
 {
-        wav_t   wav = (wav_t) ft->priv;
-        int     rc;
+    wav_t wav = (wav_t) ft->priv;
+    int rc;
 
-        ft->st_errno = ST_SUCCESS;
+    ft->st_errno = ST_SUCCESS;
 
-        if (ST_IS_BIGENDIAN) ft->swap = ft->swap ? 0 : 1;
+    if (ST_IS_BIGENDIAN) ft->swap = ft->swap ? 0 : 1;
 
-        /* FIXME: This reserves memory but things could fail
-         * later on and not release this memory.
-         */
-        if (ft->info.encoding != ST_ENCODING_ADPCM &&
-            ft->info.encoding != ST_ENCODING_IMA_ADPCM &&
-            ft->info.encoding != ST_ENCODING_GSM)
-        {
-                rc = st_rawstartwrite(ft);
-                if (rc)
-                    return rc;
-        }
-
-        wav->numSamples = 0;
-        wav->dataLength = 0;
-        if (!ft->seekable)
-                st_warn("Length in output .wav header will be wrong since can't seek to fix it");
-        rc = wavwritehdr(ft, 0);  /* also calculates various wav->* info */
-        if (rc != 0)
+    /* FIXME: This reserves memory but things could fail
+     * later on and not release this memory.
+     */
+    if (ft->info.encoding != ST_ENCODING_ADPCM &&
+        ft->info.encoding != ST_ENCODING_IMA_ADPCM &&
+        ft->info.encoding != ST_ENCODING_GSM)
+    {
+        rc = st_rawstartwrite(ft);
+        if (rc)
             return rc;
+    }
 
-        wav->packet = NULL;
-        wav->samples = NULL;
-        wav->iCoefs = NULL;
-        switch (wav->formatTag)
-        {
+    wav->numSamples = 0;
+    wav->dataLength = 0;
+    if (!ft->seekable)
+        st_warn("Length in output .wav header will be wrong since can't seek to fix it");
+    rc = wavwritehdr(ft, 0);  /* also calculates various wav->* info */
+    if (rc != 0)
+        return rc;
+
+    wav->packet = NULL;
+    wav->samples = NULL;
+    wav->iCoefs = NULL;
+    switch (wav->formatTag)
+    {
         int ch, sbsize;
+
         case WAVE_FORMAT_IMA_ADPCM:
             initImaTable();
         /* intentional case fallthru! */
@@ -1233,14 +1242,14 @@ int st_wavstartwrite(ft_t ft)
 #endif
         default:
             break;
-        }
-        return ST_SUCCESS;
+    }
+    return ST_SUCCESS;
 }
 
 /* wavwritehdr:  write .wav headers as follows:
  
 bytes      variable      description
-0  - 3     'RIFF'
+0  - 3     'RIFF'/'RIFX' Little/Big-endian
 4  - 7     wRiffLength   length of file minus the 8 byte riff header
 8  - 11    'WAVE'
 12 - 15    'fmt '
@@ -1492,7 +1501,20 @@ static int wavwritehdr(ft_t ft, int second_header)
     dwAvgBytesPerSec = (double)wBlockAlign*ft->info.rate / (double)wSamplesPerBlock + 0.5;
 
     /* figured out header info, so write it */
-    st_writes(ft, "RIFF");
+
+
+    /* If user specified opposite swap then we think, assume they are
+     * asking to write a RIFX file.
+     */
+    if ((!ST_IS_BIGENDIAN && ft->swap) || 
+        (ST_IS_BIGENDIAN && !ft->swap))
+    {
+        if (!second_header)
+            st_report("Requested to swap bytes so writing  RIFX header");
+        st_writes(ft, "RIFX");
+    }
+    else
+        st_writes(ft, "RIFF");
     st_writedw(ft, wRiffLength);
     st_writes(ft, "WAVE");
     st_writes(ft, "fmt ");

@@ -45,8 +45,11 @@ int st_autostartread(ft_t ft)
         {
             /* Look for .snd or dns. header of AU files */
             if ((strncmp(header, ".snd", 4) == 0) ||
-                    (strncmp(header, "dns.", 4) == 0) ||
-                    ((header[0] == '\0') && (strncmp(header+1, "ds.", 3) == 0))) 
+                (strncmp(header, "dns.", 4) == 0) ||
+                ((header[0] == '\0') && 
+                 (strncmp(header+1, "ds.", 3) == 0)) ||
+                ((strncmp(header, "sd.", 3) == 0) && 
+                 (header[3] == '\0')))
             {
                 type = "au";
             }

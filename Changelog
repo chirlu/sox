@@ -7,6 +7,10 @@ sox-11gamma.
 sox-12.17.8
 -----------
   o noisered effect had compile problems with some compilers.
+  o "-x" option was being ignored since 12.17.7.
+  o Stuart Brady added support for reading and writing RIFX files (big
+    endian RIFF/WAV files).  Also added support for auto detecting
+    DEC-style ".sd\0" files.
 
 sox-12.17.7
 -----------

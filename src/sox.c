@@ -291,6 +291,7 @@ static void copy_input(int offset)
         file_desc[offset]->filetype = "auto";
     else
         file_desc[offset]->filetype = strdup(file_opts[offset]->filetype);
+    file_desc[offset]->swap = file_opts[offset]->swap;
 
     if (st_gettype(file_desc[offset]))
         st_fail("Unknown input file format for '%s':  %s", 
@@ -330,7 +331,8 @@ static void copy_output(int offset)
     file_desc[offset]->info = file_opts[offset]->info;
     file_desc[offset]->filename = file_opts[offset]->filename;
     file_desc[offset]->filetype = file_opts[offset]->filetype;
- 
+    file_desc[offset]->swap = file_opts[offset]->swap;
+
     if (writing && !file_desc[offset]->filetype) {
         /* Use filename extension to determine audio type. */
 

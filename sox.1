@@ -625,6 +625,7 @@ They are the native sound file format of Windows.
 (Obviously, Windows was of such incredible importance
 to the computer industry that it just had to have its own 
 sound file format.)
+.br
 Normally \fB.wav\fR files have all formatting information
 in their headers, and so do not need any format options
 specified for an input file. If any are, they will
@@ -632,10 +633,13 @@ override the file header, and you will be warned to this effect.
 You had better know what you are doing! Output format
 options will cause a format conversion, and the \fB.wav\fR
 will written appropriately.
+.br
 SoX currently can read PCM, ULAW, ALAW, MS ADPCM, and IMA (or DVI) ADPCM.
-It can write all of these formats including
-.B (NEW!)
-the ADPCM encoding.
+It can write all of these formats including the ADPCM encoding.
+Big endian versions of RIFF files, called RIFX, can also be read
+and written.  To write a RIFX file, use the 
+.I -x
+option with the output file options.
 .TP 10
 .B .wve
 Psion 8-bit A-law
