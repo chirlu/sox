@@ -182,6 +182,8 @@ extern st_format_t st_formats[];
 #define ST_SIZE_DOUBLE	6
 #define ST_SIZE_IEEE	7	/* IEEE 80-bit floats. */
 
+#define ST_SIZE_MAX     7
+
 /* Style field */
 #define ST_ENCODING_UNSIGNED	1 /* unsigned linear: Sound Blaster */
 #define ST_ENCODING_SIGN2	2 /* signed linear 2's comp: Mac */
@@ -190,6 +192,8 @@ extern st_format_t st_formats[];
 #define ST_ENCODING_ADPCM	5 /* Compressed PCM */
 #define ST_ENCODING_IMA_ADPCM	6 /* Compressed PCM */
 #define ST_ENCODING_GSM		7 /* GSM 6.10 33-byte frame lossy compression */
+
+#define ST_ENCODING_MAX         7
 
 /* declared in misc.c */
 extern const char *st_sizes_str[];
@@ -330,9 +334,9 @@ int st_geteffect_opt(eff_t, int, char **);
 int st_geteffect(eff_t, char *);
 int st_updateeffect(eff_t, ft_t, ft_t, int);
 int st_gettype(ft_t);
-int st_checkformat(ft_t);
+void st_initformat(ft_t ft);
 void st_copyformat(ft_t, ft_t);
-void st_cmpformats(ft_t, ft_t);
+int st_checkformat(ft_t);
 double st_parsetime(char *);
 
 /* FIXME: Recording hacks shouldn't display a "sigint" style interface.

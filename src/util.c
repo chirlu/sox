@@ -35,8 +35,7 @@ int verbose = 0;	/* be noisy on stderr */
  */
 char *myname = 0;
 
-void
-st_report(const char *fmt, ...) 
+void st_report(const char *fmt, ...) 
 {
 	va_list args;
 
@@ -50,9 +49,7 @@ st_report(const char *fmt, ...)
 	fprintf(stderr, "\n");
 }
 
-
-void
-st_warn(const char *fmt, ...) 
+void st_warn(const char *fmt, ...) 
 {
 	va_list args;
 
@@ -64,8 +61,7 @@ st_warn(const char *fmt, ...)
 	fprintf(stderr, "\n");
 }
 
-void
-st_fail(const char *fmt, ...) 
+void st_fail(const char *fmt, ...) 
 {
 	va_list args;
 	extern void cleanup();
@@ -86,8 +82,7 @@ st_fail(const char *fmt, ...)
  * Note:  Changing vsprintf to vsnprintf should help that but bad
  * references to strings can still cause overflow.
  */
-void
-st_fail_errno(ft_t ft, int st_errno, const char *fmt, ...)
+void st_fail_errno(ft_t ft, int st_errno, const char *fmt, ...)
 {
 	va_list args;
 
@@ -125,8 +120,7 @@ int st_is_littleendian(void)
 	return 0;
 }
 
-int strcmpcase(s1, s2)
-char *s1, *s2;
+int strcmpcase(char *s1, char *s2)
 {
 	while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
 		s1++, s2++;
@@ -136,16 +130,16 @@ char *s1, *s2;
 /*
  * Check that we have a known format suffix string.
  */
-int
-st_gettype(formp)
-ft_t formp;
+int st_gettype(ft_t formp)
 {
 	char **list;
 	int i;
 
 	if (! formp->filetype){
-st_fail_errno(formp,ST_EFMT,"Must give file type for %s file, either as suffix or with -t option",
-formp->filename);
+            st_fail_errno(formp,
+		          ST_EFMT,
+			  "Must give file type for %s file, either as suffix or with -t option",
+			  formp->filename);
 		return(ST_EFMT);
 	}
 	for(i = 0; st_formats[i].names; i++) {
@@ -331,8 +325,24 @@ int st_updateeffect(eff_t effp, ft_t in, ft_t out, int effect_mask)
  * File format routines 
  */
 
-void st_copyformat(ft, ft2)
-ft_t ft, ft2;
+void st_initformat(ft_t ft)
+{
+    ft->filename = 0;
+    ft->filetype = 0;
+    ft->fp = 0;
+
+    ft->info.rate = 0;
+    ft->info.size = -1;
+    ft->info.encoding = -1;
+    ft->info.channels = -1;
+
+    ft->comment = 0;
+    ft->swap = 0;
+
+    /* FIXME: This should zero out the reset of the structures */
+}
+
+void st_copyformat(ft_t ft, ft_t ft2)
 {
 	int noise = 0, i;
 	double factor;
@@ -353,10 +363,15 @@ ft_t ft, ft2;
 		ft2->info.channels = ft->info.channels;
 		noise = 1;
 	}
+
+	/* FIXME: Do not copy pointers!  This should be at least
+	 * a malloc+strcpy.
+	 */
 	if (ft2->comment == NULL) {
 		ft2->comment = ft->comment;
 		noise = 1;
 	}
+
 	/* 
 	 * copy loop info, resizing appropriately 
 	 * it's in samples, so # channels don't matter
@@ -372,50 +387,49 @@ ft_t ft, ft2;
 	ft2->instr = ft->instr;
 }
 
-void st_cmpformats(ft, ft2)
-ft_t ft, ft2;
-{
-}
-
 /* check that all settings have been given */
-int st_checkformat(ft) 
-ft_t ft;
+int st_checkformat(ft_t ft) 
 {
 
 	ft->st_errno = ST_SUCCESS;
 
 	if (ft->info.rate == 0)
+	{
 		st_fail_errno(ft,ST_EFMT,"Sampling rate for %s file was not given\n", ft->filename);
-	if ((ft->info.rate < 100) || (ft->info.rate > 999999L))
-		st_fail_errno(ft,ST_EFMT,"Sampling rate %lu for %s file is bogus\n", 
-			ft->info.rate, ft->filename);
+		return ST_EOF;
+	}
+
 	if (ft->info.size == -1)
+	{
 		st_fail_errno(ft,ST_EFMT,"Data size was not given for %s file\nUse one of -b/-w/-l/-f/-d/-D", ft->filename);
+		return ST_EOF;
+	}
+
 	if (ft->info.encoding == -1 && ft->info.size != ST_SIZE_FLOAT)
+	{
 		st_fail_errno(ft,ST_EFMT,"Data encoding was not given for %s file\nUse one of -s/-u/-U/-A", ft->filename);
-/* I put these here because some modules call st_fail_errno with 
- *	st_sizes_str[ft->info.size] etc.  I don't think the library should 
- *	seg fault even if the app using doesn't init ft properly or overflows 
- *	into it. 
- *  anyway to check length on st_sizes_str[] ? */ 
-	if ((ft->info.size < 0) || (ft->info.size > 7))
+		return ST_EOF;
+	}
+
+	if ((ft->info.size <= 0) || (ft->info.size > ST_SIZE_MAX))
+	{
 		st_fail_errno(ft,ST_EFMT,"Data size %i for %s file is bogus\n", ft->filename,ft->info.size);
+		return ST_EOF;
+	}
+
 	/* anyway to check length on st_encoding_str[] ? */ 
-	if (ft->info.encoding < -1 || ft->info.encoding > 7)
+	if (ft->info.encoding <= 0  || ft->info.encoding > ST_ENCODING_MAX)
+	{
 		st_fail_errno(ft,ST_EFMT,"Data encoding %i for %s file is bogus\n", ft->filename,ft->info.encoding);
-	/* it's so common, might as well default */
-	if (ft->info.channels == -1)
-		ft->info.channels = 1;
-	/*	st_fail("Number of output channels was not given for %s file",
-			ft->filename); */
-	return ft->st_errno;
+		return ST_EOF;
+	}
+
+	return ST_SUCCESS;
 }
 
 static ft_t ft_queue[2];
 
-void
-sigint(s)
-int s;
+void sigint(int s)
 {
     if (s == SIGINT) {
 	if (ft_queue[0])
@@ -425,9 +439,7 @@ int s;
     }
 }
 
-void
-sigintreg(ft)
-ft_t ft;
+void sigintreg(ft_t ft)
 {
     if (ft_queue[0] == 0)
 	ft_queue[0] = ft;
@@ -438,9 +450,7 @@ ft_t ft;
 
 /* Parse a time specification in hh:mm:ss.frac format.  Returns -1 */
 /* on failure. */
-double
-st_parsetime(str)
-char *str;
+double st_parsetime(char *str)
 {
     double time, moretime;
     if (sscanf(str, "%lf", &time) != 1)

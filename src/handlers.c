@@ -363,8 +363,10 @@ extern int  st_nothing();
 extern LONG st_nothing_success();
 
 st_format_t st_formats[] = {
-	{aiffnames, ST_FILE_STEREO | ST_FILE_SEEK,		/* SGI/Apple AIFF */
-		st_aiffstartread, st_aiffread, st_aiffstopread,
+	{aiffnames, 					/* SGI/Apple AIFF */
+
+	    ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK,
+	        st_aiffstartread, st_aiffread, st_aiffstopread,
 		st_aiffstartwrite, st_aiffwrite, st_aiffstopwrite, st_aiffseek},
 	{alnames, ST_FILE_STEREO,		/* a-law byte raw */
 		st_alstartread, st_rawread, st_rawstopread,

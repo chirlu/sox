@@ -336,20 +336,17 @@ void doopts(int argc, char **argv)
 
 void init() {
 
-	/* init files */
-	informat.info.rate      = mixformat.info.rate = outformat.info.rate  = 0;
-	informat.info.size      = mixformat.info.size = outformat.info.size  = -1;
-	informat.info.encoding  = mixformat.info.encoding = outformat.info.encoding = -1;
-	informat.info.channels  = mixformat.info.channels = outformat.info.channels = -1;
-	informat.comment   = mixformat.comment = outformat.comment = NULL;
-	informat.swap      = mixformat.swap = 0;
-	informat.filetype  = mixformat.filetype = outformat.filetype  = (char *) 0;
-	informat.fp        = stdin;
-	mixformat.fp       = NULL;
-	outformat.fp       = stdout;
-	informat.filename  = "input";
-	mixformat.filename  = "mix";
-	outformat.filename = "output";
+    /* init files */
+    st_initformat(&informat);
+    st_initformat(&mixformat);
+    st_initformat(&outformat);
+
+    informat.fp        = stdin;
+    mixformat.fp       = NULL;
+    outformat.fp       = stdout;
+    informat.filename  = "input";
+    mixformat.filename  = "mix";
+    outformat.filename = "output";
 }
 
 /* 
@@ -367,10 +364,12 @@ void process() {
     
     /* Read and write starters can change their formats. */
     (* informat.h->startread)(&informat);
-    st_checkformat(&informat);
+    if (st_checkformat(&informat))
+	st_fail("bad input format");
     
     (* mixformat.h->startread)(&mixformat);
-    st_checkformat(&mixformat);
+    if (st_checkformat(&mixformat))
+	st_fail("bad input format");
     
     if (dovolume)
 	st_report("Volume factor: %f\n", volume);
@@ -405,7 +404,10 @@ void process() {
     if (writing) {
 	st_copyformat(&informat, &outformat);
 	(* outformat.h->startwrite)(&outformat);
-	st_checkformat(&outformat);
+
+	if (st_checkformat(&outformat))
+	    st_fail("bad output format");
+
 	st_report("Output file: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
 	       outformat.info.rate, st_sizes_str[outformat.info.size], 
 	       st_encodings_str[outformat.info.encoding], outformat.info.channels, 

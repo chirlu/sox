@@ -392,18 +392,14 @@ char **argv;
 
 static void init(void) {
 
-	/* init files */
-	informat.info.rate      = outformat.info.rate  = 0;
-	informat.info.size      = outformat.info.size  = -1;
-	informat.info.encoding  = outformat.info.encoding = -1;
-	informat.info.channels  = outformat.info.channels = -1;
-	informat.comment   = outformat.comment = NULL;
-	informat.swap      = 0;
-	informat.filetype  = outformat.filetype  = (char *) 0;
-	informat.fp        = stdin;
-	outformat.fp       = stdout;
-	informat.filename  = "input";
-	outformat.filename = "output";
+    /* init files */
+    st_initformat(&informat);
+    st_initformat(&outformat);
+
+    informat.fp        = stdin;
+    outformat.fp       = stdout;
+    informat.filename  = "input";
+    outformat.filename = "output";
 }
 
 /* 
@@ -425,6 +421,7 @@ static void process(void) {
     {
         st_fail(informat.st_errstr);
     }
+
     if ( st_checkformat(&informat) )
 		st_fail("bad input format");
     
@@ -484,7 +481,7 @@ static void process(void) {
 	}
 	if (st_checkformat(&outformat))
 		st_fail("bad output format");
-	st_cmpformats(&informat, &outformat);
+
 	st_report("Output file: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
 	       outformat.info.rate, st_sizes_str[outformat.info.size], 
 	       st_encodings_str[outformat.info.encoding], outformat.info.channels, 
