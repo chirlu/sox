@@ -25,7 +25,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "st.h"
+#include "st_i.h"
 
 #ifndef HAVE_MEMMOVE
 #define memmove(dest,src,len) bcopy((src),(dest),(len))
@@ -59,10 +59,7 @@ static void FiltWin(filter_t f, LONG Nx);
 /*
  * Process options
  */
-int st_filter_getopts(effp, n, argv)
-eff_t effp;
-int n;
-char **argv;
+int st_filter_getopts(eff_t effp, int n, char **argv)
 {
 	filter_t f = (filter_t) effp->priv;
 
@@ -112,8 +109,7 @@ char **argv;
 /*
  * Prepare processing.
  */
-int st_filter_start(effp)
-eff_t effp;
+int st_filter_start(eff_t effp)
 {
 	filter_t f = (filter_t) effp->priv;
 	Float *Fp0, *Fp1;
@@ -191,11 +187,8 @@ eff_t effp;
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_filter_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_filter_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                   st_size_t *isamp, st_size_t *osamp)
 {
 	filter_t f = (filter_t) effp->priv;
 	LONG i, Nx, Nproc;
@@ -246,10 +239,7 @@ LONG *isamp, *osamp;
 /*
  * Process tail of input samples.
  */
-int st_filter_drain(effp, obuf, osamp)
-eff_t effp;
-LONG *obuf;
-LONG *osamp;
+int st_filter_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
 	filter_t f = (filter_t) effp->priv;
 	LONG isamp_res, *Obuf, osamp_res;
@@ -282,8 +272,7 @@ LONG *osamp;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_filter_stop(effp)
-eff_t effp;
+int st_filter_stop(eff_t effp)
 {
 	filter_t f = (filter_t) effp->priv;
 
@@ -292,14 +281,12 @@ eff_t effp;
 	return (ST_SUCCESS);
 }
 
-static double jprod(Fp, Xp, ct)
-const Float Fp[], *Xp;
-LONG ct;
+static double jprod(const Float *Fp, const Float *Xp, LONG ct)
 {
 	const Float *fp, *xp, *xq;
 	double v = 0;
 	
-	fp = Fp + ct;				/* so sum starts with smaller coef's */
+	fp = Fp + ct;	/* so sum starts with smaller coef's */
 	xp = Xp - ct;
 	xq = Xp + ct;
 	while (fp > Fp) {   /* ct = 0 can happen */
@@ -310,9 +297,7 @@ LONG ct;
 	return v;
 }
 
-static void FiltWin(f, Nx)
-filter_t f;
-LONG Nx;
+static void FiltWin(filter_t f, LONG Nx)
 {
 	Float *Y;
 	Float *X, *Xend;

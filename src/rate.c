@@ -17,7 +17,7 @@
  */
 
 #include <math.h>
-#include "st.h"
+#include "st_i.h"
 
 /*
  * Linear Interpolation.
@@ -53,10 +53,7 @@ typedef struct ratestuff {
 /*
  * Process options
  */
-int st_rate_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_rate_getopts(eff_t effp, int n, char **argv) 
 {
 	if (n)
 	{
@@ -69,8 +66,7 @@ char **argv;
 /*
  * Prepare processing.
  */
-int st_rate_start(effp)
-eff_t effp;
+int st_rate_start(eff_t effp)
 {
 	rate_t rate = (rate_t) effp->priv;
         ULONG incr;
@@ -112,11 +108,8 @@ eff_t effp;
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_rate_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_rate_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                 st_size_t *isamp, st_size_t *osamp)
 {
 	rate_t rate = (rate_t) effp->priv;
 	LONG *istart,*iend;
@@ -172,8 +165,7 @@ the_end:
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_rate_stop(effp)
-eff_t effp;
+int st_rate_stop(eff_t effp)
 {
 	/* nothing to do */
     return (ST_SUCCESS);
@@ -244,10 +236,7 @@ typedef struct ratestuff {
 /*
  * Process options
  */
-int st_rate_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_rate_getopts(eff_t effp, int n, char **argv) 
 {
 	if (n)
 	{
@@ -260,8 +249,7 @@ char **argv;
 /*
  * Prepare processing.
  */
-int st_rate_start(effp)
-eff_t effp;
+int st_rate_start(eff_t effp)
 {
 	rate_t rate = (rate_t) effp->priv;
 	
@@ -281,11 +269,8 @@ eff_t effp;
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_rate_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-int *isamp, *osamp;
+int st_rate_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                 st_size_t *isamp, st_size_t *osamp)
 {
 	rate_t rate = (rate_t) effp->priv;
 	int len, done;
@@ -345,8 +330,7 @@ out:
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_rate_stop(effp)
-eff_t effp;
+int st_rate_stop(eff_t effp)
 {
 	/* nothing to do */
     return (ST_SUCCESS);

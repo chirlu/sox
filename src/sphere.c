@@ -12,7 +12,7 @@
 #include <math.h>
 #include <string.h>
 #include <errno.h>
-#include "st.h"
+#include "st_i.h"
 
 /* Private data for SKEL file */
 typedef struct spherestuff {
@@ -27,13 +27,13 @@ typedef struct spherestuff {
  *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
-int st_spherestartread(ft) 
-ft_t ft;
+int st_spherestartread(ft_t ft) 
 {
 	sphere_t sphere = (sphere_t) ft->priv;
 	int rc;
 	char buf[256];
 	char fldname[64], fldtype[16], fldsval[128];
+	int i;
 	int header_size, bytes_read;
 	
 	/* Needed for rawread() */
@@ -71,12 +71,14 @@ ft_t ft;
 	{
 	    if (strncmp(buf, "sample_n_bytes", 14) == 0 && ft->info.size == -1)
 	    {
-		sscanf(buf, "%s %s %d", fldname, fldtype, &ft->info.size);
+		sscanf(buf, "%s %s %d", fldname, fldtype, &i);
+		ft->info.size = i;
 	    }
 	    if (strncmp(buf, "channel_count", 13) == 0 && 
 		ft->info.channels == -1)
 	    {
-		sscanf(buf, "%s %s %d", fldname, fldtype, &ft->info.channels);
+		sscanf(buf, "%s %s %d", fldname, fldtype, &i);
+		ft->info.channels = i;
 	    }
 	    if (strncmp(buf, "sample_coding", 13) == 0)
 	    {
@@ -180,9 +182,7 @@ ft_t ft;
  * Return number of samples read.
  */
 
-LONG st_sphereread(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_sphereread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
     sphere_t sphere = (sphere_t) ft->priv;
 
@@ -196,8 +196,7 @@ LONG *buf, len;
     return st_rawread(ft, buf, len);
 }
 
-int st_spherestartwrite(ft) 
-ft_t ft;
+int st_spherestartwrite(ft_t ft) 
 {
     int rc;
     int x;
@@ -236,9 +235,7 @@ ft_t ft;
 	
 }
 
-LONG st_spherewrite(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_spherewrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
     sphere_t sphere = (sphere_t) ft->priv;
 
@@ -246,8 +243,7 @@ LONG *buf, len;
     return st_rawwrite(ft, buf, len);
 }
 
-int st_spherestopwrite(ft) 
-ft_t ft;
+int st_spherestopwrite(ft_t ft) 
 {
     int rc;
     char buf[128];

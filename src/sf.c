@@ -13,7 +13,7 @@
  * Derived from: Sound Tools skeleton handler file.
  */
 
-#include "st.h"
+#include "st_i.h"
 #include "sfircam.h"
 
 #ifndef SIZEOF_BSD_HEADER
@@ -34,9 +34,7 @@ typedef struct sfstuff {
  * Read the codes from the sound file, allocate space for the comment and
  * assign its pointer to the comment field in ft.
  */
-static void readcodes(ft, sfhead)
-ft_t ft;
-SFHEADER *sfhead;
+static void readcodes(ft_t ft, SFHEADER *sfhead)
 {
 	char *commentbuf = NULL, *sfcharp, *newline;
 	short bsize, finished = 0;
@@ -70,9 +68,7 @@ SFHEADER *sfhead;
 		ft->comment = commentbuf;
 }
 
-int st_sfseek(ft,offset) 
-ft_t ft;
-LONG offset;
+int st_sfseek(ft_t ft, st_size_t offset) 
 {
 	sf_t sf = (sf_t ) ft->priv;
 
@@ -87,8 +83,7 @@ LONG offset;
  *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
-int st_sfstartread(ft) 
-ft_t ft;
+int st_sfstartread(ft_t ft) 
 {
 	sf_t sf = (sf_t) ft->priv;
 	SFHEADER sfhead;
@@ -156,8 +151,7 @@ ft_t ft;
 	return(rc);
 }
 
-int st_sfstartwrite(ft) 
-ft_t ft;
+int st_sfstartwrite(ft_t ft) 
 {
 	sf_t sf = (sf_t) ft->priv;
 	SFHEADER sfhead;
@@ -215,6 +209,3 @@ ft_t ft;
 }
 
 /* Read and write are supplied by raw.c */
-
-
-

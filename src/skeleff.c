@@ -11,7 +11,7 @@
  */
 
 
-#include "st.h"
+#include "st_i.h"
 
 /* Private data for SKEL file */
 typedef struct skelleffstuff {
@@ -24,10 +24,7 @@ typedef struct skelleffstuff {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-int st_skeleff_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_skeleff_getopts(eff_t effp, int n, char **argv) 
 {
     skeleff_t skeleff = (skeleff_t) effp->priv;
 
@@ -46,8 +43,7 @@ char **argv;
  * Prepare processing.
  * Do all initializations.
  */
-int st_skeleff_start(effp)
-eff_t effp;
+int st_skeleff_start(eff_t effp)
 {
     if (effp->outinfo.channels == 1)
     {
@@ -61,11 +57,8 @@ eff_t effp;
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_skeleff_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_skeleff_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                    st_size_t *isamp, st_size_t *osamp)
 {
     skeleff_t skeleff = (skeleff_t) effp->priv;
     int len, done;
@@ -99,9 +92,7 @@ LONG *isamp, *osamp;
  * Drain out remaining samples if the effect generates any.
  */
 
-int st_skeleff_drain(effp, obuf, osamp)
-LONG *obuf;
-LONG *osamp;
+int st_skeleff_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
 	*osamp = 0;
 	return (ST_SUCCESS);
@@ -111,8 +102,7 @@ LONG *osamp;
  * Do anything required when you stop reading samples.  
  *	(free allocated memory, etc.)
  */
-int st_skeleff_stop(effp)
-eff_t effp;
+int st_skeleff_stop(eff_t effp)
 {
 	/* nothing to do */
     return (ST_SUCCESS);

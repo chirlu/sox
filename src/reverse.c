@@ -1,4 +1,3 @@
-
 /*
  * June 1, 1992
  * Copyright 1992 Guido van Rossum And Sundry Contributors
@@ -19,7 +18,7 @@
 #include <unistd.h>	/* For SEEK_* defines if not found in stdio */
 #endif
 
-#include "st.h"
+#include "st_i.h"
 
 /* Private data */
 typedef struct reversestuff {
@@ -35,10 +34,7 @@ typedef struct reversestuff {
  * Process options: none in our case.
  */
 
-int st_reverse_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_reverse_getopts(eff_t effp, int n, char **argv) 
 {
 	if (n)
 	{
@@ -52,8 +48,7 @@ char **argv;
  * Prepare processing: open temporary file.
  */
 
-int st_reverse_start(effp)
-eff_t effp;
+int st_reverse_start(eff_t effp)
 {
 	reverse_t reverse = (reverse_t) effp->priv;
 	reverse->fp = tmpfile();
@@ -70,11 +65,8 @@ eff_t effp;
  * Effect flow: a degenerate case: write input samples on temporary file,
  * don't generate any output samples.
  */
-
-int st_reverse_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_reverse_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                    st_size_t *isamp, st_size_t *osamp)
 {
 	reverse_t reverse = (reverse_t) effp->priv;
 
@@ -97,10 +89,7 @@ LONG *isamp, *osamp;
  * Effect drain: generate the actual samples in reverse order.
  */
 
-int st_reverse_drain(effp, obuf, osamp)
-eff_t effp;
-LONG *obuf;
-LONG *osamp;
+int st_reverse_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
 	reverse_t reverse = (reverse_t) effp->priv;
 	int len, nbytes;
@@ -143,8 +132,7 @@ LONG *osamp;
 /*
  * Close and unlink the temporary file.
  */
-int st_reverse_stop(effp)
-eff_t effp;
+int st_reverse_stop(eff_t effp)
 {
 	reverse_t reverse = (reverse_t) effp->priv;
 

@@ -14,7 +14,7 @@
 
 #include <string.h>
 #include <math.h>
-#include "st.h"
+#include "st_i.h"
 
 #ifndef TRUE
 #define TRUE 1
@@ -250,19 +250,25 @@ int st_silence_start(eff_t effp)
 	silence_t	silence = (silence_t) effp->priv;
 
 	/* Now that we now sample rate, reparse duration. */
-	if (st_parsesamples(effp->ininfo.rate, silence->stop_duration_str,
-		            &silence->stop_duration,'s') !=
-		ST_SUCCESS)
+	if (silence->start)
 	{
-	    st_fail(SILENCE_USAGE);
-	    return(ST_EOF);
+	    if (st_parsesamples(effp->ininfo.rate, silence->start_duration_str,
+			&silence->start_duration,'s') !=
+		    ST_SUCCESS)
+	    {
+		st_fail(SILENCE_USAGE);
+		return(ST_EOF);
+	    }
 	}
-	if (st_parsesamples(effp->ininfo.rate,silence->stop_duration_str,
-		            &silence->stop_duration,'s') !=
-		ST_SUCCESS)
+	if (silence->stop)
 	{
-	    st_fail(SILENCE_USAGE);
-	    return(ST_EOF);
+	    if (st_parsesamples(effp->ininfo.rate,silence->stop_duration_str,
+			&silence->stop_duration,'s') !=
+		    ST_SUCCESS)
+	    {
+		st_fail(SILENCE_USAGE);
+		return(ST_EOF);
+	    }
 	}
 
 	if (silence->start)
@@ -283,7 +289,7 @@ int st_silence_start(eff_t effp)
 	return(ST_SUCCESS);
 }
 
-int aboveThreshold(LONG value, double threshold, char unit)
+int aboveThreshold(st_sample_t value, double threshold, char unit)
 {
     double ratio;
     int rc = 0;
@@ -308,8 +314,8 @@ int aboveThreshold(LONG value, double threshold, char unit)
 
 /* Process signed long samples from ibuf to obuf. */
 /* Return number of samples processed in isamp and osamp. */
-int st_silence_flow(eff_t effp, LONG *ibuf, LONG *obuf, 
-	            LONG *isamp, LONG *osamp)
+int st_silence_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                    st_size_t *isamp, st_size_t *osamp)
 {
     silence_t silence = (silence_t) effp->priv;
     int	threshold, i, j;
@@ -524,7 +530,7 @@ silence_copy_flush:
 	return (ST_SUCCESS);
 }
 
-int st_silence_drain(eff_t effp, LONG *obuf, LONG *osamp)
+int st_silence_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     silence_t silence = (silence_t) effp->priv;
     int i;

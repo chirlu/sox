@@ -30,7 +30,7 @@
  */
 
 #include <math.h>
-#include "st.h"
+#include "st_i.h"
 
 /* Private data for Highpass effect */
 typedef struct highpstuff {
@@ -42,10 +42,7 @@ typedef struct highpstuff {
 /*
  * Process options
  */
-int st_highp_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_highp_getopts(eff_t effp, int n, char **argv) 
 {
 	highp_t highp = (highp_t) effp->priv;
 
@@ -60,8 +57,7 @@ char **argv;
 /*
  * Prepare processing.
  */
-int st_highp_start(effp)
-eff_t effp;
+int st_highp_start(eff_t effp)
 {
 	highp_t highp = (highp_t) effp->priv;
 	if (highp->cutoff > effp->ininfo.rate/2)
@@ -82,11 +78,8 @@ eff_t effp;
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_highp_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_highp_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                  st_size_t *isamp, st_size_t *osamp)
 {
 	highp_t highp = (highp_t) effp->priv;
 	int len, done;
@@ -117,8 +110,7 @@ LONG *isamp, *osamp;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_highp_stop(effp)
-eff_t effp;
+int st_highp_stop(eff_t effp)
 {
 	/* nothing to do */
     return (ST_SUCCESS);

@@ -19,7 +19,7 @@
  *
  */
 
-#include "st.h"
+#include "st_i.h"
 #include "libst.h"
 
 #include <string.h>
@@ -38,10 +38,7 @@
 
 static void rawdefaults(ft_t ft);
 
-
-int st_rawseek(ft,offset) 
-ft_t ft;
-LONG offset;
+int st_rawseek(ft_t ft, st_size_t offset) 
 {
 	int sample_size = 0;
 
@@ -68,8 +65,7 @@ LONG offset;
 	return(ft->st_errno);
 }
 
-int st_rawstartread(ft) 
-ft_t ft;
+int st_rawstartread(ft_t ft) 
 {
 	ft->file.buf = malloc(BUFSIZ);
 	if (!ft->file.buf)
@@ -85,8 +81,7 @@ ft_t ft;
 	return(ST_SUCCESS);
 }
 
-int st_rawstartwrite(ft) 
-ft_t ft;
+int st_rawstartwrite(ft_t ft) 
 {
 	ft->file.buf = malloc(BUFSIZ);
 	if (!ft->file.buf)
@@ -103,9 +98,7 @@ ft_t ft;
 
 /* Util to reverse the n chars starting at p. */
 /* FIXME: Move to misc.c */
-static void swapn(p, n)
-char *p;
-int n;
+static void swapn(char *p, int n)
 {
 	char *q;
 	if (n>1) {
@@ -369,11 +362,13 @@ ULONG st_readbuf(LONG *p, int n, int size, int encoding, ft_t ft)
 
     while (done < n)
     {
-	/* See if there is not enough data in buffer for any more reads.
+	/* See if there is not enough data in buffer for any more reads
+	 * or if there is no data in the buffer at all.
 	 * If not then shift any remaining data down to the beginning
-	 * and attempt to fill up the rest of the buffer.
+	 * and attempt to fill up the rest of the buffer.  
 	 */
-	if (!ft->file.eof && ft->file.pos >= (ft->file.count-size+1))
+	if (!ft->file.eof && (ft->file.count == 0 ||
+		              ft->file.pos >= (ft->file.count-size+1)))
 	{
 	    for (i = 0; i < (ft->file.count-ft->file.pos); i++)
 		ft->file.buf[i] = ft->file.buf[ft->file.pos+i];
@@ -614,7 +609,8 @@ LONG *buf, nsamp;
 	}
 	/* Possible overflow */
 	st_fail_errno(ft,ST_EFMT,"Sorry, don't have code to write %s, %s",
-		st_encodings_str[ft->info.encoding], st_sizes_str[ft->info.size]);
+		st_encodings_str[(unsigned char)ft->info.encoding],
+     		st_sizes_str[(unsigned char)ft->info.size]);
 	return 0;
 }
 

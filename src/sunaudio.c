@@ -31,7 +31,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
-#include "st.h"
+#include "st_i.h"
 
 /*
  * Do anything required before you start reading samples.
@@ -40,8 +40,7 @@
  *	size and encoding of samples,
  *	mono/stereo/quad.
  */
-int st_sunstartread(ft)
-ft_t ft;
+int st_sunstartread(ft_t ft)
 {
     int samplesize, encoding;
     audio_info_t audio_if;
@@ -176,8 +175,7 @@ ft_t ft;
     return (ST_SUCCESS);
 }
 
-int st_sunstartwrite(ft)
-ft_t ft;
+int st_sunstartwrite(ft_t ft)
 {
     int samplesize, encoding;
     audio_info_t audio_if;

@@ -65,7 +65,7 @@
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
 #include <math.h>
 #include <string.h>
-#include "st.h"
+#include "st_i.h"
 
 #define MOD_SINE	0
 #define MOD_TRIANGLE	1
@@ -76,12 +76,12 @@ typedef struct chorusstuff {
 	int	num_chorus;
 	int	modulation[MAX_CHORUS];
 	int	counter;			
-	long	phase[MAX_CHORUS];
+	LONG	phase[MAX_CHORUS];
 	float	*chorusbuf;
 	float	in_gain, out_gain;
 	float	delay[MAX_CHORUS], decay[MAX_CHORUS];
 	float	speed[MAX_CHORUS], depth[MAX_CHORUS];
-	long	length[MAX_CHORUS];
+	LONG	length[MAX_CHORUS];
 	int	*lookup_tab[MAX_CHORUS];
 	int	depth_samples[MAX_CHORUS], samples[MAX_CHORUS];
 	int	maxsamples, fade_out;
@@ -90,10 +90,7 @@ typedef struct chorusstuff {
 /*
  * Process options
  */
-int st_chorus_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_chorus_getopts(eff_t effp, int n, char **argv) 
 {
 	chorus_t chorus = (chorus_t) effp->priv;
 	int i;
@@ -137,8 +134,7 @@ char **argv;
 /*
  * Prepare for processing.
  */
-int st_chorus_start(effp)
-eff_t effp;
+int st_chorus_start(eff_t effp)
 {
 	chorus_t chorus = (chorus_t) effp->priv;
 	int i;
@@ -256,11 +252,8 @@ eff_t effp;
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_chorus_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_chorus_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                   st_size_t *isamp, st_size_t *osamp)
 {
 	chorus_t chorus = (chorus_t) effp->priv;
 	int len, done;
@@ -298,10 +291,7 @@ LONG *isamp, *osamp;
 /*
  * Drain out reverb lines. 
  */
-int st_chorus_drain(effp, obuf, osamp)
-eff_t effp;
-LONG *obuf;
-LONG *osamp;
+int st_chorus_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
 	chorus_t chorus = (chorus_t) effp->priv;
 	int done;
@@ -341,8 +331,7 @@ LONG *osamp;
 /*
  * Clean up chorus effect.
  */
-int st_chorus_stop(effp)
-eff_t effp;
+int st_chorus_stop(eff_t effp)
 {
 	chorus_t chorus = (chorus_t) effp->priv;
 	int i;

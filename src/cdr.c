@@ -22,7 +22,7 @@
  *
  */
 
-#include "st.h"
+#include "st_i.h"
 
 #define SECTORSIZE	(2352 / 2)
 
@@ -39,8 +39,7 @@ typedef struct cdrstuff {
  *	mono/stereo/quad.
  */
 
-int st_cdrstartread(ft) 
-ft_t ft;
+int st_cdrstartread(ft_t ft) 
 {
 	int rc;
 
@@ -79,9 +78,7 @@ ft_t ft;
  * Return number of samples read.
  */
 
-LONG st_cdrread(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_cdrread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 
 	return st_rawread(ft, buf, len);
@@ -91,15 +88,13 @@ LONG *buf, len;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_cdrstopread(ft) 
-ft_t ft;
+int st_cdrstopread(ft_t ft) 
 {
 	/* Needed because of rawread() */
 	return st_rawstopread(ft);
 }
 
-int st_cdrstartwrite(ft) 
-ft_t ft;
+int st_cdrstartwrite(ft_t ft) 
 {
 	cdr_t cdr = (cdr_t) ft->priv;
 	int rc;
@@ -126,9 +121,7 @@ ft_t ft;
 	return(ST_SUCCESS);
 }
 
-LONG st_cdrwrite(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_cdrwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	cdr_t cdr = (cdr_t) ft->priv;
 
@@ -142,8 +135,7 @@ LONG *buf, len;
  * samples.  We write -32768 for each sample to pad it out.
  */
 
-int st_cdrstopwrite(ft) 
-ft_t ft;
+int st_cdrstopwrite(ft_t ft) 
 {
 	cdr_t cdr = (cdr_t) ft->priv;
 	int padsamps = SECTORSIZE - (cdr->samples % SECTORSIZE);
@@ -167,4 +159,3 @@ ft_t ft;
 	}
 	return(ST_SUCCESS);
 }
-

@@ -25,7 +25,7 @@
  * 
 */
 
-#include "st.h"
+#include "st_i.h"
 
 #define EARWAX_SCALE 64
 
@@ -75,10 +75,7 @@ typedef struct earwaxstuff {
 /*
  * Process options
  */
-int st_earwax_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_earwax_getopts(eff_t effp, int n, char **argv) 
 {
   /* no options */
   if (n){
@@ -91,8 +88,7 @@ char **argv;
 /*
  * Prepare for processing.
  */
-int st_earwax_start(effp)
-eff_t effp;
+int st_earwax_start(eff_t effp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int i;
@@ -126,10 +122,8 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-int st_earwax_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_earwax_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                   st_size_t *isamp, st_size_t *osamp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int len, done;
@@ -160,10 +154,7 @@ LONG *isamp, *osamp;
 /*
  * Drain out taps.
  */
-int st_earwax_drain(effp, obuf, osamp)
-eff_t effp;
-LONG *obuf;
-LONG *osamp;
+int st_earwax_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int i,j;
@@ -184,8 +175,7 @@ LONG *osamp;
 /*
  * Clean up taps.
  */
-int st_earwax_stop(effp)
-eff_t effp;
+int st_earwax_stop(eff_t effp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
 

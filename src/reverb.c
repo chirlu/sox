@@ -1,4 +1,3 @@
-
 /*
  * August 24, 1998
  * Copyright (C) 1998 Juergen Mueller And Sundry Contributors
@@ -94,7 +93,7 @@
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
 #include <math.h>
-#include "st.h"
+#include "st_i.h"
 
 #define REVERB_FADE_THRESH 10
 #define DELAY_BUFSIZ ( 50L * ST_MAXRATE )
@@ -114,10 +113,7 @@ typedef struct reverbstuff {
 /*
  * Process options
  */
-int st_reverb_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_reverb_getopts(eff_t effp, int n, char **argv) 
 {
 	reverb_t reverb = (reverb_t) effp->priv;
 	int i;
@@ -152,8 +148,7 @@ char **argv;
 /*
  * Prepare for processing.
  */
-int st_reverb_start(effp)
-eff_t effp;
+int st_reverb_start(eff_t effp)
 {
 	reverb_t reverb = (reverb_t) effp->priv;
 	int i;
@@ -211,11 +206,8 @@ eff_t effp;
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_reverb_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_reverb_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                   st_size_t *isamp, st_size_t *osamp)
 {
 	reverb_t reverb = (reverb_t) effp->priv;
 	int len, done;
@@ -249,10 +241,7 @@ reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsam
 /*
  * Drain out reverb lines. 
  */
-int st_reverb_drain(effp, obuf, osamp)
-eff_t effp;
-LONG *obuf;
-LONG *osamp;
+int st_reverb_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
 	reverb_t reverb = (reverb_t) effp->priv;
 	float d_in, d_out;
@@ -288,8 +277,7 @@ reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsam
 /*
  * Clean up reverb effect.
  */
-int st_reverb_stop(effp)
-eff_t effp;
+int st_reverb_stop(eff_t effp)
 {
 	reverb_t reverb = (reverb_t) effp->priv;
 

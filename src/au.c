@@ -19,7 +19,7 @@
  * Output is always in big-endian (Sun/NeXT) order.
  */
 
-#include "st.h"
+#include "st_i.h"
 #include "g72x.h"
 #include <stdlib.h>
 #include <string.h>
@@ -61,10 +61,7 @@ typedef struct aupriv {
 
 static void auwriteheader(ft_t ft, ULONG data_size);
 
-int st_auencodingandsize(sun_encoding, encoding, size)
-int sun_encoding;
-int *encoding;
-int *size;
+static int st_auencodingandsize(int sun_encoding, char *encoding, char *size)
 {
     switch (sun_encoding) {
     case SUN_ULAW:
@@ -102,9 +99,7 @@ int *size;
     return(ST_SUCCESS);
 }
 
-int st_auseek(ft,offset) 
-ft_t ft;
-LONG offset;
+int st_auseek(ft_t ft, st_size_t offset) 
 {
 	au_t au = (au_t ) ft->priv;
 
@@ -116,8 +111,7 @@ LONG offset;
 	return(ft->st_errno);
 }
 
-int st_austartread(ft) 
-ft_t ft;
+int st_austartread(ft_t ft) 
 {
 	/* The following 6 variables represent a Sun sound header on disk.
 	   The numbers are written as big-endians.
@@ -269,8 +263,7 @@ ft_t ft;
    if it is not, the unspecified size remains in the header
    (this is legal). */
 
-int st_austartwrite(ft) 
-ft_t ft;
+int st_austartwrite(ft_t ft) 
 {
 	au_t p = (au_t ) ft->priv;
 	int rc;
@@ -298,10 +291,7 @@ ft_t ft;
  * Returns 1 if there is residual input, returns -1 if eof, else returns 0.
  * (Adapted from Sun's decode.c.)
  */
-static int
-unpack_input(ft, code)
-ft_t			ft;
-unsigned char		*code;
+static int unpack_input(ft_t ft, unsigned char *code)
 {
 	au_t p = (au_t ) ft->priv;
 	unsigned char		in_byte;
@@ -320,9 +310,7 @@ unsigned char		*code;
 	return (p->in_bits > 0);
 }
 
-LONG st_auread(ft, buf, samp)
-ft_t ft;
-LONG *buf, samp;
+st_ssize_t st_auread(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 {
 	au_t p = (au_t ) ft->priv;
 	unsigned char code;
@@ -340,17 +328,14 @@ LONG *buf, samp;
 	return done;
 }
 
-LONG st_auwrite(ft, buf, samp)
-ft_t ft;
-LONG *buf, samp;
+st_ssize_t st_auwrite(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 {
 	au_t p = (au_t ) ft->priv;
 	p->data_size += samp * ft->info.size;
 	return(st_rawwrite(ft, buf, samp));
 }
 
-int st_austopwrite(ft)
-ft_t ft;
+int st_austopwrite(ft_t ft)
 {
 	au_t p = (au_t ) ft->priv;
 	int rc;
@@ -375,9 +360,7 @@ ft_t ft;
 	return(ST_SUCCESS);
 }
 
-int st_ausunencoding(size, encoding)
-int size;
-int encoding;
+static int st_ausunencoding(int size, int encoding)
 {
 	int sun_encoding;
 
@@ -394,9 +377,7 @@ int encoding;
 	return sun_encoding;
 }
 
-static void auwriteheader(ft, data_size)
-ft_t ft;
-ULONG data_size;
+static void auwriteheader(ft_t ft, st_size_t data_size)
 {
 	ULONG magic;
 	ULONG hdr_size;

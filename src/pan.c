@@ -16,7 +16,7 @@
  * pan 0.0 basically behaves as avg.
  */
 
-#include "st.h"
+#include "st_i.h"
 
 /* should be taken care in st.h? */
 #include <limits.h> /* LONG_MAX */
@@ -60,10 +60,7 @@ typedef struct {
 /*
  * Process options
  */
-int st_pan_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_pan_getopts(eff_t effp, int n, char **argv) 
 {
     pan_t pan = (pan_t) effp->priv; 
     
@@ -83,8 +80,7 @@ char **argv;
 /*
  * Start processing
  */
-int st_pan_start(effp)
-eff_t effp;
+int st_pan_start(eff_t effp)
 {
     if (effp->outinfo.channels==1)
 	st_warn("PAN onto a mono channel...");
@@ -131,10 +127,8 @@ static LONG clip(pan_t pan, PAN_FLOAT value)
 /*
  * Process either isamp or osamp samples, whichever is smaller.
  */
-int st_pan_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                st_size_t *isamp, st_size_t *osamp)
 {
     pan_t pan = (pan_t) effp->priv;
     register LONG len;
@@ -400,8 +394,7 @@ LONG *isamp, *osamp;
  *
  * Should have statistics on right, left, and output amplitudes.
  */
-int st_pan_stop(effp)
-eff_t effp;
+int st_pan_stop(eff_t effp)
 {
     pan_t pan = (pan_t) effp->priv;
     if (pan->clipped) {

@@ -7,7 +7,7 @@
  * the consequences of using this software.
  */
 
-#include "st.h"
+#include "st_i.h"
 #include <string.h>
 #include <ctype.h>
 #include <signal.h>

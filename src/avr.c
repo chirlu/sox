@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "st.h"
+#include "st_i.h"
 
 #define AVR_MAGIC "2BIT"
 

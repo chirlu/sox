@@ -26,6 +26,13 @@ sox-12.17.3
     problem.
   o Erik de Castro Lopo pointed out that when writing 16-bit VOC files
     the headers did not contain the correct length or encoding type.
+  o Seperated st.h into 2 files.  st.h for libst users and st_i.h for
+    internal use.
+  o SoX was some times getting confused and thinking an EOF was an
+    error case when reading audio files.  Removed unneeded aborts
+    when EOF was OK.
+  o Change libst to use two new data types: st_sample_t and st_size_t.
+    This allows for better support and maintaince on 64-bit machines.
 
 sox-12.17.2
 -----------

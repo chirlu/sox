@@ -14,7 +14,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#include "st.h"
+#include "st_i.h"
 
 /*
  * Compressor/expander effect for dsp.
@@ -57,9 +57,9 @@ typedef struct {
   double outgain;       /* Post processor gain */
   double delay;		/* Delay to apply before companding */
   LONG   *delay_buf;	/* Old samples, used for delay processing */
-  long	 delay_buf_size; /* Size of delay_buf in samples */
-  long	 delay_buf_ptr; /* Index into delay_buf */
-  long	 delay_buf_cnt;	/* No. of active entries in delay_buf */
+  LONG	 delay_buf_size; /* Size of delay_buf in samples */
+  LONG	 delay_buf_ptr; /* Index into delay_buf */
+  LONG	 delay_buf_cnt;	/* No. of active entries in delay_buf */
 } *compand_t;
 
 /*
@@ -68,10 +68,7 @@ typedef struct {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-int st_compand_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_compand_getopts(eff_t effp, int n, char **argv) 
 {
     compand_t l = (compand_t) effp->priv;
 
@@ -198,8 +195,7 @@ char **argv;
  * Prepare processing.
  * Do all initializations.
  */
-int st_compand_start(effp)
-eff_t effp;
+int st_compand_start(eff_t effp)
 {
   compand_t l = (compand_t) effp->priv;
   int i;
@@ -275,11 +271,8 @@ static void doVolume(double *v, double samp, compand_t l, int chan)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_compand_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-int *isamp, *osamp;
+int st_compand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                    st_size_t *isamp, st_size_t *osamp)
 {
   compand_t l = (compand_t) effp->priv;
   int len =  (*isamp > *osamp) ? *osamp : *isamp;
@@ -346,10 +339,7 @@ int *isamp, *osamp;
 /*
  * Drain out compander delay lines. 
  */
-int st_compand_drain(effp, obuf, osamp)
-eff_t effp;
-LONG *obuf;
-LONG *osamp;
+int st_compand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
   compand_t l = (compand_t) effp->priv;
   int done;
@@ -372,8 +362,7 @@ LONG *osamp;
 /*
  * Clean up compander effect.
  */
-int st_compand_stop(effp)
-eff_t effp;
+int st_compand_stop(eff_t effp)
 {
   compand_t l = (compand_t) effp->priv;
 

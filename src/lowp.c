@@ -28,7 +28,7 @@
  */
 
 #include <math.h>
-#include "st.h"
+#include "st_i.h"
 
 /* Private data for Lowpass effect */
 typedef struct lowpstuff {
@@ -40,10 +40,7 @@ typedef struct lowpstuff {
 /*
  * Process options
  */
-int st_lowp_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_lowp_getopts(eff_t effp, int n, char **argv) 
 {
 	lowp_t lowp = (lowp_t) effp->priv;
 
@@ -58,8 +55,7 @@ char **argv;
 /*
  * Prepare processing.
  */
-int st_lowp_start(effp)
-eff_t effp;
+int st_lowp_start(eff_t effp)
 {
 	lowp_t lowp = (lowp_t) effp->priv;
 	if (lowp->cutoff > effp->ininfo.rate / 2)
@@ -78,11 +74,8 @@ eff_t effp;
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_lowp_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_lowp_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                 st_size_t *isamp, st_size_t *osamp)
 {
 	lowp_t lowp = (lowp_t) effp->priv;
 	int len, done;
@@ -110,8 +103,7 @@ LONG *isamp, *osamp;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_lowp_stop(effp)
-eff_t effp;
+int st_lowp_stop(eff_t effp)
 {
 	/* nothing to do */
     return (ST_SUCCESS);

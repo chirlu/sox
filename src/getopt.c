@@ -51,7 +51,7 @@ int ansi_c_needs_something_here_too;
 
 #include <string.h>
 
-#include "st.h"
+#include "st_i.h"
 
 /*
  * get option letter from argument vector
@@ -65,10 +65,7 @@ char	*optarg;		/* argument associated with option */
 #define tell(s)	fputs(*nargv,stderr);fputs(s,stderr); \
 		fputc(optopt,stderr);fputc('\n',stderr);return(BADCH);
 
-int getopt(nargc,nargv,ostr)
-int	nargc;
-char	**nargv,
-	*ostr;
+int getopt(int nargc, char **nargv, char *ostr)
 {
 	static char	*place = EMSG;	/* option letter processing */
 	static char	*lastostr = (char *) 0;

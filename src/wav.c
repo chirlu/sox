@@ -67,7 +67,7 @@
 #include <unistd.h>		/* For SEEK_* defines if not found in stdio */
 #endif
 
-#include "st.h"
+#include "st_i.h"
 #include "wav.h"
 #include "ima_rw.h"
 #include "adpcm.h"
@@ -127,8 +127,7 @@ static int wavwritehdr(ft_t, int);
  * ImaAdpcmReadBlock - Grab and decode complete block of samples
  *
  */
-unsigned short  ImaAdpcmReadBlock(ft)
-ft_t ft;    
+unsigned short  ImaAdpcmReadBlock(ft_t ft)
 {
     wav_t	wav = (wav_t) ft->priv;
     int bytesRead;
@@ -168,8 +167,7 @@ ft_t ft;
  * AdpcmReadBlock - Grab and decode complete block of samples
  *
  */
-unsigned short  AdpcmReadBlock(ft)
-ft_t ft;    
+unsigned short  AdpcmReadBlock(ft_t ft)
 {
     wav_t	wav = (wav_t) ft->priv;
     int bytesRead;
@@ -204,8 +202,7 @@ ft_t ft;
 /* Common ADPCM Write Function                                              */
 /****************************************************************************/
 
-static int xxxAdpcmWriteBlock(ft)
-ft_t ft;
+static int xxxAdpcmWriteBlock(ft_t ft)
 {
     wav_t wav = (wav_t) ft->priv;
     int chans, ct;
@@ -246,8 +243,7 @@ ft_t ft;
 /****************************************************************************/
 #ifdef HAVE_LIBGSM
 /* create the gsm object, malloc buffer for 160*2 samples */
-int wavgsminit(ft)
-ft_t ft;
+int wavgsminit(ft_t ft)
 {	
     int valueP=1;
     wav_t	wav = (wav_t) ft->priv;
@@ -274,17 +270,14 @@ ft_t ft;
 }
 
 /*destroy the gsm object and free the buffer */
-void wavgsmdestroy(ft)
-ft_t ft;
+void wavgsmdestroy(ft_t ft)
 {	
     wav_t	wav = (wav_t) ft->priv;
     gsm_destroy(wav->gsmhandle);
     free(wav->gsmsample);
 }
 
-LONG wavgsmread(ft, buf, len)
-ft_t ft;
-LONG *buf, len;
+st_ssize_t wavgsmread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
     wav_t	wav = (wav_t) ft->priv;
     int done=0;
@@ -328,9 +321,7 @@ LONG *buf, len;
     return done;
 }
 
-static int wavgsmflush(ft, pad)
-ft_t ft;
-int pad; /* normally 0, but 1 to pad last write to even datalen */
+static int wavgsmflush(ft_t ft, int pad)
 {
     gsm_byte	frame[65];
     wav_t	wav = (wav_t) ft->priv;
@@ -364,9 +355,7 @@ int pad; /* normally 0, but 1 to pad last write to even datalen */
     return (ST_SUCCESS);
 }
 
-LONG wavgsmwrite(ft, buf, len)
-ft_t ft;
-LONG *buf, len;
+st_ssize_t wavgsmwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
     wav_t	wav = (wav_t) ft->priv;
     int done = 0;
@@ -389,8 +378,7 @@ LONG *buf, len;
 
 }
 
-void wavgsmstopwrite(ft)
-ft_t ft;
+void wavgsmstopwrite(ft_t ft)
 {
     wav_t	wav = (wav_t) ft->priv;
 
@@ -406,19 +394,6 @@ ft_t ft;
 /* General Sox WAV file code                                                */
 /****************************************************************************/
 
-/* FIXME: Use common misc.c skip code 
-
-moved to misc.c using st_seek(ft,len,SEEK_CUR) instead
-
-static void fSkip(FILE *fp, ULONG len)
-{
-    while (len > 0 && !feof(fp))
-    {
-	getc(fp);
-	len--;
-    }
-}
-*/
 static ULONG findChunk(ft_t ft, const char *Label)
 {
     char magic[5];
@@ -448,8 +423,7 @@ static ULONG findChunk(ft_t ft, const char *Label)
  *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
-int st_wavstartread(ft) 
-ft_t ft;
+int st_wavstartread(ft_t ft) 
 {
     wav_t	wav = (wav_t) ft->priv;
     char	magic[5];
@@ -516,7 +490,7 @@ ft_t ft;
 	/* Default (-1) depends on sample size.  Set that later on. */
 	if (ft->info.encoding != -1 && ft->info.encoding != ST_ENCODING_UNSIGNED &&
 	    ft->info.encoding != ST_ENCODING_SIGN2)
-	    st_warn("User options overriding encoding read in .wav header");
+	    st_report("User options overriding encoding read in .wav header");
 
 	/* Needed by rawread() functions */
         rc = st_rawstartread(ft);
@@ -529,14 +503,14 @@ ft_t ft;
 	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_IMA_ADPCM)
 	    ft->info.encoding = ST_ENCODING_IMA_ADPCM;
 	else
-	    st_warn("User options overriding encoding read in .wav header");
+	    st_report("User options overriding encoding read in .wav header");
 	break;
 
     case WAVE_FORMAT_ADPCM:
 	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_ADPCM)
 	    ft->info.encoding = ST_ENCODING_ADPCM;
 	else
-	    st_warn("User options overriding encoding read in .wav header");
+	    st_report("User options overriding encoding read in .wav header");
 	break;
 
     case WAVE_FORMAT_IEEE_FLOAT:
@@ -547,7 +521,7 @@ ft_t ft;
 	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_ALAW)
 	    ft->info.encoding = ST_ENCODING_ALAW;
 	else
-	    st_warn("User options overriding encoding read in .wav header");
+	    st_report("User options overriding encoding read in .wav header");
 
 	/* Needed by rawread() functions */
         rc = st_rawstartread(ft);
@@ -560,7 +534,7 @@ ft_t ft;
 	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_ULAW)
 	    ft->info.encoding = ST_ENCODING_ULAW;
 	else
-	    st_warn("User options overriding encoding read in .wav header");
+	    st_report("User options overriding encoding read in .wav header");
 
 	/* Needed by rawread() functions */
         rc = st_rawstartread(ft);
@@ -586,7 +560,7 @@ ft_t ft;
 	if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_GSM )
 	    ft->info.encoding = ST_ENCODING_GSM;
 	else
-	    st_warn("User options overriding encoding read in .wav header");
+	    st_report("User options overriding encoding read in .wav header");
 	break;
 #else
 	st_fail_errno(ft,ST_EOF,"Sorry, this WAV file is in GSM6.10 format and no GSM support present, recompile sox with gsm library");
@@ -624,12 +598,12 @@ ft_t ft;
     if (ft->info.channels == -1 || ft->info.channels == wChannels)
 	ft->info.channels = wChannels;
     else
-	st_warn("User options overriding channels read in .wav header");
+	st_report("User options overriding channels read in .wav header");
 
     if (ft->info.rate == 0 || ft->info.rate == wSamplesPerSecond)
 	ft->info.rate = wSamplesPerSecond;
     else
-	st_warn("User options overriding rate read in .wav header");
+	st_report("User options overriding rate read in .wav header");
     
 
     wav->iCoefs = NULL;
@@ -985,9 +959,7 @@ ft_t ft;
  * Return number of samples read.
  */
 
-LONG st_wavread(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	wav_t	wav = (wav_t) ft->priv;
 	LONG	done;
@@ -1081,8 +1053,7 @@ LONG *buf, len;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_wavstopread(ft) 
-ft_t ft;
+int st_wavstopread(ft_t ft) 
 {
     wav_t	wav = (wav_t) ft->priv;
     int		rc = ST_SUCCESS;
@@ -1110,8 +1081,7 @@ ft_t ft;
     return rc;
 }
 
-int st_wavstartwrite(ft) 
-ft_t ft;
+int st_wavstartwrite(ft_t ft) 
 {
 	wav_t	wav = (wav_t) ft->priv;
 	int	rc;
@@ -1232,9 +1202,7 @@ wDataLength     -   (data chunk header) the number of (valid) data bytes written
 
 */
 
-static int wavwritehdr(ft, second_header) 
-ft_t ft;
-int second_header;
+static int wavwritehdr(ft_t ft, int second_header) 
 {
 	wav_t	wav = (wav_t) ft->priv;
 
@@ -1294,7 +1262,7 @@ int second_header;
 			    ft->info.encoding != ST_ENCODING_ADPCM &&
 			    ft->info.encoding != ST_ENCODING_IMA_ADPCM)
 			{
-				st_warn("Do not support %s with 8-bit data.  Forcing to unsigned",st_encodings_str[ft->info.encoding]);
+				st_warn("Do not support %s with 8-bit data.  Forcing to unsigned",st_encodings_str[(unsigned char)ft->info.encoding]);
 				ft->info.encoding = ST_ENCODING_UNSIGNED;
 			}
 			break;
@@ -1302,7 +1270,7 @@ int second_header;
 			wBitsPerSample = 16;
 			if (ft->info.encoding != ST_ENCODING_SIGN2)
 			{
-				st_warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[ft->info.encoding]);
+				st_warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
 				ft->info.encoding = ST_ENCODING_SIGN2;
 			}
 			break;
@@ -1310,13 +1278,13 @@ int second_header;
 			wBitsPerSample = 32;
 			if (ft->info.encoding != ST_ENCODING_SIGN2)
 			{
-				st_warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[ft->info.encoding]);
+				st_warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
 				ft->info.encoding = ST_ENCODING_SIGN2;
 			}
 
 			break;
 		default:
-			st_warn("Do not support %s in WAV files.  Forcing to Signed Words.",st_sizes_str[ft->info.size]);
+			st_warn("Do not support %s in WAV files.  Forcing to Signed Words.",st_sizes_str[(unsigned char)ft->info.size]);
 			ft->info.encoding = ST_ENCODING_SIGN2;
 			ft->info.size = ST_SIZE_WORD;
 			wBitsPerSample = 16;
@@ -1499,9 +1467,7 @@ int second_header;
 	return ST_SUCCESS;
 }
 
-LONG st_wavwrite(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_wavwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	wav_t	wav = (wav_t) ft->priv;
 	LONG	total_len = len;
@@ -1543,8 +1509,7 @@ LONG *buf, len;
 	}
 }
 
-int st_wavstopwrite(ft) 
-ft_t ft;
+int st_wavstopwrite(ft_t ft) 
 {
 	wav_t	wav = (wav_t) ft->priv;
 
@@ -1594,9 +1559,7 @@ ft_t ft;
 /*
  * Return a string corresponding to the wave format type.
  */
-static char *
-wav_format_str(wFormatTag) 
-unsigned wFormatTag;
+static char *wav_format_str(unsigned wFormatTag) 
 {
 	switch (wFormatTag)
 	{
@@ -1645,9 +1608,7 @@ unsigned wFormatTag;
 	}
 }
 
-int st_wavseek(ft,offset) 
-ft_t ft;
-LONG offset;
+int st_wavseek(ft_t ft, st_size_t offset) 
 {
 	wav_t	wav = (wav_t) ft->priv;
 

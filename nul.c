@@ -16,7 +16,7 @@
  */
 
 #include <math.h>
-#include "st.h"
+#include "st_i.h"
 
 /* Private data for nul file */
 typedef struct nulstuff {
@@ -32,8 +32,7 @@ typedef struct nulstuff {
  *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
-int st_nulstartread(ft) 
-ft_t ft;
+int st_nulstartread(ft_t ft) 
 {
 	nul_t sk = (nul_t) ft->priv;
 	/* no samples read yet */
@@ -66,9 +65,7 @@ ft_t ft;
  * Return number of samples read.
  */
 
-LONG st_nulread(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_nulread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	nul_t sk = (nul_t) ft->priv;
 	int done = 0;
@@ -88,14 +85,12 @@ LONG *buf, len;
  * Don't close input file! 
  * .. nothing to be done
  */
-int st_nulstopread(ft) 
-ft_t ft;
+int st_nulstopread(ft_t ft) 
 { 
     return (ST_SUCCESS);
 }
 
-int st_nulstartwrite(ft) 
-ft_t ft;
+int st_nulstartwrite(ft_t ft) 
 {
 	nul_t sk = (nul_t) ft->priv;
 	sk->writesamples=0;
@@ -103,9 +98,7 @@ ft_t ft;
 	
 }
 
-LONG st_nulwrite(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_nulwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	nul_t sk = (nul_t) ft->priv;
 	while(len--)
@@ -115,8 +108,7 @@ LONG *buf, len;
 	
 }
 
-int st_nulstopwrite(ft) 
-ft_t ft;
+int st_nulstopwrite(ft_t ft) 
 {
     /* nothing to do */
     return (ST_SUCCESS);

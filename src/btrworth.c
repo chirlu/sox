@@ -33,11 +33,10 @@
 
 #include <math.h>
 
-#include "st.h"
+#include "st_i.h"
 #include "btrworth.h"
 
-int st_butterworth_start (effp)
-eff_t effp;
+int st_butterworth_start (eff_t effp)
 {
   butterworth_t butterworth = (butterworth_t) effp->priv;
 
@@ -48,10 +47,8 @@ eff_t effp;
   return (ST_SUCCESS);
 }
 
-int st_butterworth_flow (effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_butterworth_flow (eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+	                 st_size_t *isamp, st_size_t *osamp)
 {
   butterworth_t butterworth = (butterworth_t) effp->priv;
 
@@ -98,4 +95,3 @@ LONG *isamp, *osamp;
   *osamp = len;
   return (ST_SUCCESS);
 }
-

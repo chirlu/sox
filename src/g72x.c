@@ -30,7 +30,7 @@
  * Common routines for G.721 and G.723 conversions.
  */
 
-#include "st.h"
+#include "st_i.h"
 #include "libst.h"
 #include "g72x.h"
 

@@ -11,7 +11,7 @@
  * Cannot handle rate change.
  */
 
-#include "st.h"
+#include "st_i.h"
 
 #include <math.h>   /* exp(), sqrt() */
 #include <limits.h> /* LONG_MAX */
@@ -49,10 +49,7 @@ typedef struct {
 /*
  * Process options: dcshift (float) type (amplitude, power, dB)
  */
-int st_dcshift_getopts(effp, n, argv)
-eff_t effp;
-int n;
-char **argv;
+int st_dcshift_getopts(eff_t effp, int n, char **argv)
 {
     dcs_t dcs = (dcs_t) effp->priv;
     dcs->dcshift = ONE; /* default is no change */
@@ -91,8 +88,7 @@ char **argv;
 /*
  * Start processing
  */
-int st_dcshift_start(effp)
-eff_t effp;
+int st_dcshift_start(eff_t effp)
 {
     dcs_t dcs = (dcs_t) effp->priv;
 
@@ -143,10 +139,8 @@ static LONG clip(dcs_t dcs, const DCSHIFT_FLOAT v)
 /*
  * Process data.
  */
-int st_dcshift_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_dcshift_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                    st_size_t *isamp, st_size_t *osamp)
 {
     dcs_t dcs = (dcs_t) effp->priv;
     register DCSHIFT_FLOAT dcshift = dcs->dcshift;
@@ -199,8 +193,7 @@ LONG *isamp, *osamp;
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-int st_dcshift_stop(effp)
-eff_t effp;
+int st_dcshift_stop(eff_t effp)
 {
     dcs_t dcs = (dcs_t) effp->priv;
 

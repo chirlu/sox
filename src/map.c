@@ -1,4 +1,3 @@
-
 /*
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
@@ -15,15 +14,12 @@
  */
 
 #include <math.h>
-#include "st.h"
+#include "st_i.h"
 
 /*
  * Process options
  */
-int st_map_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_map_getopts(eff_t effp, int n, char **argv) 
 {
 	if (n)
 	{
@@ -36,15 +32,19 @@ char **argv;
 /*
  * Prepare processing.
  */
-int st_map_start(effp)
-eff_t effp;
+int st_map_start(eff_t effp)
 {
 	int i;
 
 	fprintf(stderr, "Loop info:\n");
 	for(i = 0; i < 8; i++) {
+#ifdef __alpha__
 		fprintf(stderr, "Loop %d: start:  %6d",i,effp->loops[i].start);
 		fprintf(stderr, " length: %6d", effp->loops[i].length);
+#else
+		fprintf(stderr, "Loop %d: start:  %6ld",i,effp->loops[i].start);
+		fprintf(stderr, " length: %6ld", effp->loops[i].length);
+#endif
 		fprintf(stderr, " count: %6d", effp->loops[i].count);
 		fprintf(stderr, " type:  ");
 		switch(effp->loops[i].type) {
@@ -63,11 +63,8 @@ eff_t effp;
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_map_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_map_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                st_size_t *isamp, st_size_t *osamp)
 {
     return (ST_SUCCESS);
 }

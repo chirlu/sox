@@ -55,7 +55,7 @@
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
 #include <math.h>
 #include <string.h>
-#include "st.h"
+#include "st_i.h"
 
 #define MOD_SINE	0
 #define MOD_TRIANGLE	1
@@ -69,9 +69,9 @@ typedef struct flangerstuff {
 	float	in_gain, out_gain;
 	float	delay, decay;
 	float	speed;
-	long	length;
+	LONG	length;
 	int	*lookup_tab;
-	long	maxsamples, fade_out;
+	LONG	maxsamples, fade_out;
 } *flanger_t;
 
 /* Private data for SKEL file */
@@ -79,10 +79,7 @@ typedef struct flangerstuff {
 /*
  * Process options
  */
-int st_flanger_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_flanger_getopts(eff_t effp, int n, char **argv) 
 {
 	flanger_t flanger = (flanger_t) effp->priv;
 
@@ -115,8 +112,7 @@ char **argv;
 /*
  * Prepare for processing.
  */
-int st_flanger_start(effp)
-eff_t effp;
+int st_flanger_start(eff_t effp)
 {
 	flanger_t flanger = (flanger_t) effp->priv;
 	int i;
@@ -209,11 +205,8 @@ eff_t effp;
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_flanger_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_flanger_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                    st_size_t *isamp, st_size_t *osamp)
 {
 	flanger_t flanger = (flanger_t) effp->priv;
 	int len, done;
@@ -247,10 +240,7 @@ LONG *isamp, *osamp;
 /*
  * Drain out reverb lines. 
  */
-int st_flanger_drain(effp, obuf, osamp)
-eff_t effp;
-LONG *obuf;
-LONG *osamp;
+int st_flanger_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
 	flanger_t flanger = (flanger_t) effp->priv;
 	int done;
@@ -286,8 +276,7 @@ LONG *osamp;
 /*
  * Clean up flanger effect.
  */
-int st_flanger_stop(effp)
-eff_t effp;
+int st_flanger_stop(eff_t effp)
 {
 	flanger_t flanger = (flanger_t) effp->priv;
 

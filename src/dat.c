@@ -20,7 +20,7 @@
  *
  */
 
-#include "st.h"
+#include "st_i.h"
 
 /* Private data for dat file */
 typedef struct dat {
@@ -28,15 +28,13 @@ typedef struct dat {
 } *dat_t;
 
 /* FIXME: Move this to misc.c */
-static LONG roundoff(x)
-double x;
+static LONG roundoff(double x)
 {
     if (x < 0.0) return(x - 0.5);
     else return(x + 0.5);
 }
 
-int st_datstartread(ft)
-ft_t ft;
+int st_datstartread(ft_t ft)
 {
    char inpstr[82];
    char sc;
@@ -67,8 +65,7 @@ ft_t ft;
    return (ST_SUCCESS);
 }
 
-int st_datstartwrite(ft)
-ft_t ft;
+int st_datstartwrite(ft_t ft)
 {
    dat_t dat = (dat_t) ft->priv;
    double srate;
@@ -96,9 +93,7 @@ ft_t ft;
    return (ST_SUCCESS);
 }
 
-LONG st_datread(ft, buf, nsamp)
-ft_t ft;
-LONG *buf, nsamp;
+st_ssize_t st_datread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 {
     char inpstr[82];
     double sampval;
@@ -127,9 +122,7 @@ LONG *buf, nsamp;
 	return (done);
 }
 
-LONG st_datwrite(ft, buf, nsamp)
-ft_t ft;
-LONG *buf, nsamp;
+st_ssize_t st_datwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 {
     dat_t dat = (dat_t) ft->priv;
     int done = 0;

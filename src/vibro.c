@@ -26,7 +26,7 @@
 
 #include <math.h>
 #include <stdlib.h>
-#include "st.h"
+#include "st_i.h"
 
 /* Private data for Vibro effect */
 typedef struct vibrostuff {
@@ -41,10 +41,7 @@ typedef struct vibrostuff {
 /*
  * Process options
  */
-int st_vibro_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_vibro_getopts(eff_t effp, int n, char **argv) 
 {
 	vibro_t vibro = (vibro_t) effp->priv;
 
@@ -67,10 +64,7 @@ char **argv;
 /* This was very painful.  We need a sine library. */
 /* SJB: this is somewhat different than st_sine()  */
 /* FIXME: move to misc.c */
-static void sine(buf, len, depth)
-short *buf;
-int len;
-float depth;
+static void sine(short *buf, int len, float depth)
 {
 	int i;
 	int scale = depth * 128;
@@ -86,8 +80,7 @@ float depth;
 /*
  * Prepare processing.
  */
-int st_vibro_start(effp)
-eff_t effp;
+int st_vibro_start(eff_t effp)
 {
 	vibro_t vibro = (vibro_t) effp->priv;
 
@@ -109,10 +102,8 @@ eff_t effp;
  * Return number of samples processed.
  */
 
-int st_vibro_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_vibro_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                  st_size_t *isamp, st_size_t *osamp)
 {
 	vibro_t vibro = (vibro_t) effp->priv;
 	register int counter, tablen;
@@ -139,8 +130,7 @@ LONG *isamp, *osamp;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_vibro_stop(effp)
-eff_t effp;
+int st_vibro_stop(eff_t effp)
 {
 	/* nothing to do */
     return (ST_SUCCESS);

@@ -35,7 +35,7 @@
  * Some speed-optimization could be added at code size expanse/expense?
  */
 
-#include "st.h"
+#include "st_i.h"
 
 #include <stdlib.h> /* malloc(), free() */
 #include <string.h> /* memcpy() */
@@ -295,10 +295,7 @@ static LONG clip(pitch_t pitch, PITCH_FLOAT v)
 /*
  * Process options
  */
-int st_pitch_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_pitch_getopts(eff_t effp, int n, char **argv) 
 {
     pitch_t pitch = (pitch_t) effp->priv; 
     
@@ -383,8 +380,7 @@ char **argv;
 /*
  * Start processing
  */
-int st_pitch_start(effp)
-eff_t effp;
+int st_pitch_start(eff_t effp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
     register int sample_rate = effp->outinfo.rate, i;
@@ -499,10 +495,8 @@ eff_t effp;
 
 /* Processes input.
  */
-int st_pitch_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                st_size_t *isamp, st_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
     register int i, len, size, iindex, oindex;
@@ -571,10 +565,7 @@ LONG *isamp, *osamp;
 
 /* at the end...
  */
-int st_pitch_drain(effp, obuf, osamp)
-eff_t effp;
-LONG * obuf;
-LONG * osamp;
+int st_pitch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
     register int i;
@@ -609,8 +600,7 @@ LONG * osamp;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_pitch_stop(effp)
-eff_t effp;
+int st_pitch_stop(eff_t effp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
 

@@ -1,4 +1,3 @@
-
 /*
  * August 24, 1998
  * Copyright (C) 1998 Juergen Mueller And Sundry Contributors
@@ -58,7 +57,7 @@
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
 #include <math.h>
 #include <string.h>
-#include "st.h"
+#include "st_i.h"
 
 #define MOD_SINE	0
 #define MOD_TRIANGLE	1
@@ -72,18 +71,15 @@ typedef struct phaserstuff {
 	float	in_gain, out_gain;
 	float	delay, decay;
 	float	speed;
-	long	length;
+	LONG    length;
 	int	*lookup_tab;
-	long	maxsamples, fade_out;
+	LONG	maxsamples, fade_out;
 } *phaser_t;
 
 /*
  * Process options
  */
-int st_phaser_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_phaser_getopts(eff_t effp, int n, char **argv) 
 {
 	phaser_t phaser = (phaser_t) effp->priv;
 
@@ -116,8 +112,7 @@ char **argv;
 /*
  * Prepare for processing.
  */
-int st_phaser_start(effp)
-eff_t effp;
+int st_phaser_start(eff_t effp)
 {
 	phaser_t phaser = (phaser_t) effp->priv;
 	int i;
@@ -197,11 +192,8 @@ eff_t effp;
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_phaser_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_phaser_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                   st_size_t *isamp, st_size_t *osamp)
 {
 	phaser_t phaser = (phaser_t) effp->priv;
 	int len, done;
@@ -235,10 +227,7 @@ LONG *isamp, *osamp;
 /*
  * Drain out reverb lines. 
  */
-int st_phaser_drain(effp, obuf, osamp)
-eff_t effp;
-LONG *obuf;
-LONG *osamp;
+int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
 	phaser_t phaser = (phaser_t) effp->priv;
 	int done;
@@ -274,8 +263,7 @@ LONG *osamp;
 /*
  * Clean up phaser effect.
  */
-int st_phaser_stop(effp)
-eff_t effp;
+int st_phaser_stop(eff_t effp)
 {
 	phaser_t phaser = (phaser_t) effp->priv;
 

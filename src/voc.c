@@ -138,7 +138,7 @@ BLOCK 9 - data block that supersedes blocks 1 and 8.
 
 ------------------------------------------------------------------------*/
 
-#include "st.h"
+#include "st_i.h"
 #include <string.h>
 
 /* Private data for VOC file */
@@ -171,8 +171,7 @@ static int getblock(ft_t);
 static void blockstart(ft_t);
 static void blockstop(ft_t);
 
-int st_vocstartread(ft)
-ft_t ft;
+int st_vocstartread(ft_t ft) 
 {
         char header[20];
         vs_t v = (vs_t) ft->priv;
@@ -229,9 +228,7 @@ ft_t ft;
         return(ST_SUCCESS);
 }
 
-LONG st_vocread(ft, buf, len)
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_vocread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
         vs_t v = (vs_t) ft->priv;
         int done = 0;
@@ -284,8 +281,7 @@ LONG *buf, len;
 }
 
 /* nothing to do */
-int st_vocstopread(ft)
-ft_t ft;
+int st_vocstopread(ft_t ft) 
 {
     return(ST_SUCCESS);
 }
@@ -301,8 +297,7 @@ ft_t ft;
  * which will work with the oldest software (eg. an 8-bit mono sample
  * will be able to be played with a really old SB VOC player.)
  */
-int st_vocstartwrite(ft)
-ft_t ft;
+int st_vocstartwrite(ft_t ft) 
 {
         vs_t v = (vs_t) ft->priv;
 
@@ -337,9 +332,7 @@ ft_t ft;
         return(ST_SUCCESS);
 }
 
-LONG st_vocwrite(ft, buf, len)
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_vocwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
         vs_t v = (vs_t) ft->priv;
         unsigned char uc;
@@ -366,8 +359,7 @@ LONG *buf, len;
         return done;
 }
 
-int st_vocstopwrite(ft)
-ft_t ft;
+int st_vocstopwrite(ft_t ft) 
 {
         blockstop(ft);
         return(ST_SUCCESS);
@@ -376,9 +368,7 @@ ft_t ft;
 /* Voc-file handlers */
 
 /* Read next block header, save info, leave position at start of data */
-static int
-getblock(ft)
-ft_t ft;
+static int getblock(ft_t ft)
 {
         vs_t v = (vs_t) ft->priv;
         unsigned char uc, block;
@@ -565,8 +555,7 @@ ft_t ft;
 }
 
 /* Start an output block. */
-static void blockstart(ft)
-ft_t ft;
+static void blockstart(ft_t ft)
 {
         vs_t v = (vs_t) ft->priv;
 
@@ -620,8 +609,7 @@ ft_t ft;
 }
 
 /* End the current data or silence block. */
-static void blockstop(ft)
-ft_t ft;
+static void blockstop(ft_t ft) 
 {
         vs_t v = (vs_t) ft->priv;
         LONG datum;
@@ -646,4 +634,3 @@ ft_t ft;
                 st_writeb(ft, (int)datum); /* high byte of length */
         }
 }
-

@@ -11,16 +11,13 @@
  * Sound Tools skeleton effect file.
  */
 
-#include "st.h"
+#include "st_i.h"
 #include "string.h" /* memcpy() */
 
 /*
  * Process options
  */
-int st_copy_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_copy_getopts(eff_t effp, int n, char **argv) 
 {
 	if (n)
 	{
@@ -33,8 +30,7 @@ char **argv;
 /*
  * Start processing
  */
-int st_copy_start(effp)
-eff_t effp;
+int st_copy_start(eff_t effp)
 {
 	/* nothing to do */
 	/* stuff data into delaying effects here */
@@ -47,11 +43,8 @@ eff_t effp;
  * Place in buf[].
  * Return number of samples read.
  */
-
-int st_copy_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_copy_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                 st_size_t *isamp, st_size_t *osamp)
 {
 	int done;
 	
@@ -65,13 +58,8 @@ LONG *isamp, *osamp;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_copy_stop(effp)
-eff_t effp;
+int st_copy_stop(eff_t effp)
 {
 	/* nothing to do */
     return (ST_SUCCESS);
 }
-
-
-
-

@@ -14,7 +14,7 @@
  * used any more -- but this is just laziness on my part.) 
  */
 
-#include "st.h"
+#include "st_i.h"
 #include <string.h>
 
 #if defined(DOS) || defined(WIN32)
@@ -23,8 +23,7 @@
 #define LASTCHAR '/'
 #endif
 
-int st_autostartread(ft)
-ft_t ft;
+int st_autostartread(ft_t ft)
 {
     char *type;
     char header[20];
@@ -86,9 +85,9 @@ ft_t ft;
 		if (fread(header, 1, 1, ft->fp) == 1 && *header == 'D')
 		{
 		    /* Once we've found SOUND see if its smp or sndt */
-		    if (fread(header, 1, 13, ft->fp) == 13)
+		    if (fread(header, 1, 12, ft->fp) == 12)
 		    {
-			if (strncmp(header, "D SAMPLE DATA", 13) == 0)
+			if (strncmp(header, " SAMPLE DATA", 12) == 0)
     			    type = "smp";
 			else
 			    type = "sndt";
@@ -167,8 +166,7 @@ ft_t ft;
     return ((* ft->h->startread)(ft));
 }
 
-int st_autostartwrite(ft) 
-ft_t ft;
+int st_autostartwrite(ft_t ft) 
 {
 	st_fail_errno(ft,ST_EFMT,"Type AUTO can only be used for input!");
 	return(ST_EOF);

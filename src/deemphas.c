@@ -99,7 +99,7 @@ pause -1 "Hit return to continue"
  */
 
 #include <math.h>
-#include "st.h"
+#include "st_i.h"
 
 /* Private data for deemph file */
 typedef struct deemphstuff {
@@ -113,17 +113,14 @@ typedef struct deemphstuff {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-int st_deemph_getopts(effp, n, argv)
-eff_t effp;
-int n;
-char **argv;
+int st_deemph_getopts(eff_t effp, int n, char **argv)
 {
      if (n)
      {
           st_fail("Deemphasis filtering effect takes no options.\n");
 	  return (ST_EOF);
      }
-     if (sizeof(double)*ST_MAX_PRIVSIZE < sizeof(struct deemphstuff))
+     if (sizeof(double)*ST_MAX_EFFECT_PRIVSIZE < sizeof(struct deemphstuff))
      {
           st_fail("Internal error: PRIVSIZE too small.\n");
 	  return (ST_EOF);
@@ -135,8 +132,7 @@ char **argv;
  * Prepare processing.
  * Do all initializations.
  */
-int st_deemph_start(effp)
-eff_t effp;
+int st_deemph_start(eff_t effp)
 {
      /* check the input format */
      if (effp->ininfo.encoding != ST_ENCODING_SIGN2
@@ -168,10 +164,8 @@ eff_t effp;
 #define b0      0.45995451989513153057
 #define b1      -0.08782333709141937339
 
-int st_deemph_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_deemph_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                   st_size_t *isamp, st_size_t *osamp)
 {
      deemph_t deemph = (deemph_t) effp->priv;
      int len, done;
@@ -193,9 +187,7 @@ LONG *isamp, *osamp;
  * Drain out remaining samples if the effect generates any.
  */
 
-int st_deemph_drain(effp, obuf, osamp)
-LONG *obuf;
-LONG *osamp;
+int st_deemph_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
      /* nothing to do */
     return (ST_SUCCESS);
@@ -205,8 +197,7 @@ LONG *osamp;
  * Do anything required when you stop reading samples.
  *   (free allocated memory, etc.)
  */
-int st_deemph_stop(effp)
-eff_t effp;
+int st_deemph_stop(eff_t effp)
 {
      /* nothing to do */
     return (ST_SUCCESS);

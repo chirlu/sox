@@ -12,7 +12,7 @@
  */
 
 #include <math.h>
-#include "st.h"
+#include "st_i.h"
 
 /* Private data for SKEL file */
 typedef struct skelstuff {
@@ -26,8 +26,7 @@ typedef struct skelstuff {
  *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
-int st_skelstartread(ft) 
-ft_t ft;
+int st_skelstartread(ft_t ft) 
 {
 	skel_t sk = (skel_t) ft->priv;
 
@@ -57,9 +56,7 @@ ft_t ft;
  * Return number of samples read.
  */
 
-LONG st_skelread(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_skelread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	skel_t sk = (skel_t) ft->priv;
 	int abs;
@@ -89,20 +86,17 @@ LONG *buf, len;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int skelstopread(ft) 
-ft_t ft;
+int skelstopread(ft_t ft) 
 {
     return (ST_SUCCESS);
 }
 
-int st_skelstartwrite(ft) 
-ft_t ft;
+int st_skelstartwrite(ft_t ft) 
 {
 	skel_t sk = (skel_t) ft->priv;
 
 	/* If you have to seek around the output file */
-	if (! ft->seekable)
-	{
+	if (! ft->seekable) {
 		st_fail_errno(ft,ST_EVALUE,"Output .skel file must be a file, not a pipe");
 		return (ST_EOF);
 	}
@@ -118,9 +112,7 @@ ft_t ft;
 	
 }
 
-LONG st_skelwrite(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_skelwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	skel_t sk = (skel_t) ft->priv;
 	register int datum;
@@ -136,8 +128,7 @@ LONG *buf, len;
 	
 }
 
-int st_skelstopwrite(ft) 
-ft_t ft;
+int st_skelstopwrite(ft_t ft) 
 {
 	/* All samples are already written out. */
 	/* If file header needs fixing up, for example it needs the */

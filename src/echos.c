@@ -48,7 +48,7 @@
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
 #include <math.h>
-#include "st.h"
+#include "st_i.h"
 
 #define DELAY_BUFSIZ ( 50L * ST_MAXRATE )
 #define MAX_ECHOS 7	/* 24 bit x ( 1 + MAX_ECHOS ) = */
@@ -61,7 +61,7 @@ typedef struct echosstuff {
 	double	*delay_buf;
 	float	in_gain, out_gain;
 	float	delay[MAX_ECHOS], decay[MAX_ECHOS];
-	long	samples[MAX_ECHOS], pointer[MAX_ECHOS], sumsamples;
+	LONG	samples[MAX_ECHOS], pointer[MAX_ECHOS], sumsamples;
 } *echos_t;
 
 /* Private data for SKEL file */
@@ -69,10 +69,7 @@ typedef struct echosstuff {
 /*
  * Process options
  */
-int st_echos_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_echos_getopts(eff_t effp, int n, char **argv) 
 {
 	echos_t echos = (echos_t) effp->priv;
 	int i;
@@ -107,8 +104,7 @@ char **argv;
 /*
  * Prepare for processing.
  */
-int st_echos_start(effp)
-eff_t effp;
+int st_echos_start(eff_t effp)
 {
 	echos_t echos = (echos_t) effp->priv;
 	int i;
@@ -178,11 +174,8 @@ eff_t effp;
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_echos_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_echos_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                st_size_t *isamp, st_size_t *osamp)
 {
 	echos_t echos = (echos_t) effp->priv;
 	int len, done;
@@ -224,10 +217,7 @@ LONG *isamp, *osamp;
 /*
  * Drain out reverb lines. 
  */
-int st_echos_drain(effp, obuf, osamp)
-eff_t effp;
-LONG *obuf;
-LONG *osamp;
+int st_echos_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
 	echos_t echos = (echos_t) effp->priv;
 	double d_in, d_out;
@@ -270,8 +260,7 @@ LONG *osamp;
 /*
  * Clean up echos effect.
  */
-int st_echos_stop(effp)
-eff_t effp;
+int st_echos_stop(eff_t effp)
 {
 	echos_t echos = (echos_t) effp->priv;
 

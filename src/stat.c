@@ -18,7 +18,7 @@
 
 #include <math.h>
 #include <string.h>
-#include "st.h"
+#include "st_i.h"
 
 /* Private data for STAT effect */
 typedef struct statstuff {
@@ -45,10 +45,7 @@ typedef struct statstuff {
 /*
  * Process options
  */
-int st_stat_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_stat_getopts(eff_t effp, int n, char **argv) 
 {
 	stat_t stat = (stat_t) effp->priv;
 
@@ -106,8 +103,7 @@ char **argv;
 /*
  * Prepare processing.
  */
-int st_stat_start(effp)
-eff_t effp;
+int st_stat_start(eff_t effp)
 {
 	stat_t stat = (stat_t) effp->priv;
 	int i;
@@ -167,10 +163,8 @@ eff_t effp;
 
 extern int FFT(short dir,long m,double *x,double *y);
 
-int st_stat_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_stat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                 st_size_t *isamp, st_size_t *osamp)
 {
 	stat_t stat = (stat_t) effp->priv;
 	int len, done, x, x1;
@@ -268,10 +262,7 @@ LONG *isamp, *osamp;
 /*
  * Process tail of input samples.
  */
-int st_stat_drain(effp, obuf, osamp)
-eff_t effp;
-LONG *obuf;
-LONG *osamp;
+int st_stat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     stat_t stat = (stat_t) effp->priv;
     int x;
@@ -320,8 +311,7 @@ LONG *osamp;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_stat_stop(effp)
-eff_t effp;
+int st_stat_stop(eff_t effp)
 {
 	stat_t stat = (stat_t) effp->priv;
 	double amp, scale, rms = 0, freq;

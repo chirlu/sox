@@ -51,7 +51,7 @@
 #include <unistd.h>	/* For SEEK_* defines if not found in stdio */
 #endif
 
-#include "st.h"
+#include "st_i.h"
 
 /* Private data used by writer */
 typedef struct aiffpriv {
@@ -70,9 +70,7 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft);
 static int commentChunk(char **text, char *chunkDescription, ft_t ft);
 static void reportInstrument(ft_t ft);
 
-int st_aiffseek(ft,offset) 
-ft_t ft;
-LONG offset;
+int st_aiffseek(ft_t ft,st_size_t offset) 
 {
 	aiff_t aiff = (aiff_t ) ft->priv;
 
@@ -84,8 +82,7 @@ LONG offset;
 	return(ft->st_errno);
 }
 
-int st_aiffstartread(ft) 
-ft_t ft;
+int st_aiffstartread(ft_t ft) 
 {
 	aiff_t aiff = (aiff_t ) ft->priv;
 	char buf[5];
@@ -463,8 +460,7 @@ ft_t ft;
 }
 
 /* print out the MIDI key allocations, loop points, directions etc */
-static void reportInstrument(ft)
-ft_t ft;
+static void reportInstrument(ft_t ft)
 {
   int loopNum;
 
@@ -490,10 +486,7 @@ ft_t ft;
 }
 
 /* Process a text chunk, allocate memory, display it if verbose and return */
-static int textChunk(text, chunkDescription, ft) 
-char **text;
-char *chunkDescription;
-ft_t ft;
+static int textChunk(char **text, char *chunkDescription, ft_t ft) 
 {
   LONG chunksize;
   st_readdw(ft, &chunksize);
@@ -527,10 +520,7 @@ ft_t ft;
 /* Comment lengths are words, not double words, and we can have several, so
    we use a special function, not textChunk().;
  */
-static int commentChunk(text, chunkDescription, ft)
-char **text;
-char *chunkDescription;
-ft_t ft;
+static int commentChunk(char **text, char *chunkDescription, ft_t ft)
 {
   LONG chunksize;
   unsigned short numComments;
@@ -578,9 +568,7 @@ ft_t ft;
   return(ST_SUCCESS);
 }
 
-LONG st_aiffread(ft, buf, len)
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_aiffread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
 	aiff_t aiff = (aiff_t ) ft->priv;
 	LONG done;
@@ -595,8 +583,7 @@ LONG *buf, len;
 	return done;
 }
 
-int st_aiffstopread(ft) 
-ft_t ft;
+int st_aiffstopread(ft_t ft) 
 {
 	char buf[5];
 	ULONG chunksize;
@@ -639,8 +626,7 @@ ft_t ft;
    Strictly spoken this is not legal, but the playaiff utility
    will still be able to play the resulting file. */
 
-int st_aiffstartwrite(ft)
-ft_t ft;
+int st_aiffstartwrite(ft_t ft)
 {
 	aiff_t aiff = (aiff_t ) ft->priv;
 	int rc;
@@ -675,9 +661,7 @@ ft_t ft;
 	return(aiffwriteheader(ft, 0x7f000000L / (ft->info.size*ft->info.channels)));
 }
 
-LONG st_aiffwrite(ft, buf, len)
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_aiffwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
 	aiff_t aiff = (aiff_t ) ft->priv;
 	aiff->nsamples += len;
@@ -685,8 +669,7 @@ LONG *buf, len;
 	return(len);
 }
 
-int st_aiffstopwrite(ft)
-ft_t ft;
+int st_aiffstopwrite(ft_t ft)
 {
 	aiff_t aiff = (aiff_t ) ft->priv;
 	int rc;
@@ -711,9 +694,7 @@ ft_t ft;
 	return(aiffwriteheader(ft, aiff->nsamples / ft->info.channels));
 }
 
-static int aiffwriteheader(ft, nframes)
-ft_t ft;
-LONG nframes;
+static int aiffwriteheader(ft_t ft, LONG nframes)
 {
 	int hsize =
 		8 /*COMM hdr*/ + 18 /*COMM chunk*/ +
@@ -849,8 +830,7 @@ LONG nframes;
 	return(ST_SUCCESS);
 }
 
-static double read_ieee_extended(ft)
-ft_t ft;
+static double read_ieee_extended(ft_t ft)
 {
 	char buf[10];
 	if (fread(buf, 1, 10, ft->fp) != 10)
@@ -861,9 +841,7 @@ ft_t ft;
 	return ConvertFromIeeeExtended(buf);
 }
 
-static void write_ieee_extended(ft, x)
-ft_t ft;
-double x;
+static void write_ieee_extended(ft_t ft, double x)
 {
 	char buf[10];
 	ConvertToIeeeExtended(x, buf);
@@ -918,9 +896,7 @@ double x;
 
 # define FloatToUnsigned(f)      ((ULONG)(((LONG)(f - 2147483648.0)) + 2147483647L) + 1)
 
-static void ConvertToIeeeExtended(num, bytes)
-double num;
-char *bytes;
+static void ConvertToIeeeExtended(double num, char *bytes)
 {
     int    sign;
     int expon;
@@ -1017,8 +993,7 @@ char *bytes;
  * Extended precision IEEE floating-point conversion routine.
  ****************************************************************/
 
-static double ConvertFromIeeeExtended(bytes)
-unsigned char *bytes;	/* LCN */
+static double ConvertFromIeeeExtended(unsigned char *bytes)
 {
     double    f;
     int    expon;

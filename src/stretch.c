@@ -19,7 +19,7 @@
  * It cannot handle different number of channels.
  * It cannot handle rate change.
  */
-#include "st.h"
+#include "st_i.h"
 
 #include <stdlib.h> /* malloc and free */
 #include <limits.h> /* LONG_MAX */
@@ -127,10 +127,7 @@ static LONG clip(stretch_t stretch, STRETCH_FLOAT v)
 /*
  * Process options
  */
-int st_stretch_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_stretch_getopts(eff_t effp, int n, char **argv) 
 {
     stretch_t stretch = (stretch_t) effp->priv; 
     
@@ -208,8 +205,7 @@ char **argv;
 /*
  * Start processing
  */
-int st_stretch_start(effp)
-eff_t effp;
+int st_stretch_start(eff_t effp)
 {
     stretch_t stretch = (stretch_t) effp->priv;
     register int i;
@@ -315,10 +311,8 @@ static void combine(stretch_t stretch)
 /*
  * Processes flow.
  */
-int st_stretch_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_stretch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                    st_size_t *isamp, st_size_t *osamp)
 {
     stretch_t stretch = (stretch_t) effp->priv;
     register int iindex, oindex, i;
@@ -389,10 +383,7 @@ LONG *isamp, *osamp;
  * Drain buffer at the end
  * maybe not correct ? end might be artificially faded?
  */
-int st_stretch_drain(effp, obuf, osamp)
-eff_t effp;
-LONG *obuf;
-LONG *osamp;
+int st_stretch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     stretch_t stretch = (stretch_t) effp->priv;
     register int i, oindex;
@@ -425,8 +416,7 @@ LONG *osamp;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_stretch_stop(effp)
-eff_t effp;
+int st_stretch_stop(eff_t effp)
 {
     stretch_t stretch = (stretch_t) effp->priv;
 

@@ -11,7 +11,7 @@
  * Sound Tools skeleton effect file.
  */
 
-#include "st.h"
+#include "st_i.h"
 #include <string.h>
 
 /* Time resolutin one millisecond */
@@ -38,10 +38,7 @@ typedef struct
 /*
  * Process options
  */
-int st_trim_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_trim_getopts(eff_t effp, int n, char **argv) 
 {
     trim_t trim = (trim_t) effp->priv;
 
@@ -92,8 +89,7 @@ char **argv;
 /*
  * Start processing
  */
-int st_trim_start(effp)
-eff_t effp;
+int st_trim_start(eff_t effp)
 {
     trim_t trim = (trim_t) effp->priv;
 
@@ -133,11 +129,8 @@ eff_t effp;
  * Place in buf[].
  * Return number of samples read.
  */
-
-int st_trim_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_trim_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                 st_size_t *isamp, st_size_t *osamp)
 {
     int done;
     int offset;
@@ -207,8 +200,7 @@ LONG *isamp, *osamp;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_trim_stop(effp)
-eff_t effp;
+int st_trim_stop(eff_t effp)
 {
     trim_t trim = (trim_t) effp->priv;
 

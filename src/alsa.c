@@ -17,7 +17,7 @@
 #include <fcntl.h>
 #include <linux/asound.h>
 #include <sys/ioctl.h>
-#include "st.h"
+#include "st_i.h"
 
 static int get_format(ft_t ft, int formats, int *fmt);
 

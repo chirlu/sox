@@ -15,7 +15,7 @@
 #include <limits.h>
 #include <math.h>
 #include <ctype.h>
-#include "st.h"
+#include "st_i.h"
 
 #define USSTR ""\
 "Usage:synth [length] type mix [freq[-freq2]] [off] [ph] [p1] [p2] [p3]\n"\
@@ -230,10 +230,7 @@ static void parmcopy(synth_t sy, int s, int d){
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-int st_synth_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_synth_getopts(eff_t effp, int n, char **argv) 
 {
     int argn;
     char *usstr=USSTR;
@@ -426,8 +423,7 @@ char **argv;
  * Prepare processing.
  * Do all initializations.
  */
-int st_synth_start(effp)
-eff_t effp;
+int st_synth_start(eff_t effp)
 {
     int i;
     int c;
@@ -696,11 +692,8 @@ static LONG do_synth(LONG iv, synth_t synth, int c){
 /*
  * Processed signed long samples from ibuf to obuf.
  */
-
-int st_synth_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_synth_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                  st_size_t *isamp, st_size_t *osamp)
 {
     synth_t synth = (synth_t) effp->priv;
     int len; /* number of input samples */
@@ -746,9 +739,7 @@ LONG *isamp, *osamp;
  * Drain out remaining samples if the effect generates any.
  */
 
-int st_synth_drain(effp, obuf, osamp)
-LONG *obuf;
-LONG *osamp;
+int st_synth_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
 	*osamp = 0;
 	return (ST_SUCCESS);
@@ -758,8 +749,7 @@ LONG *osamp;
  * Do anything required when you stop reading samples.  
  *	(free allocated memory, etc.)
  */
-int st_synth_stop(effp)
-eff_t effp;
+int st_synth_stop(eff_t effp)
 {
     /* nothing to do */
     return (ST_SUCCESS);

@@ -16,7 +16,7 @@
 #include <unistd.h>	/* For SEEK_* defines if not found in stdio */
 #endif
 
-#include "st.h"
+#include "st_i.h"
 
 /* Private data used by writer */
 typedef struct sndpriv {
@@ -30,9 +30,7 @@ typedef struct sndpriv {
 
 static void  sndtwriteheader(ft_t ft,LONG nsamples);
 
-int st_sndseek(ft,offset) 
-ft_t ft;
-LONG offset;
+int st_sndseek(ft_t ft, st_size_t offset) 
 {
 	snd_t snd = (snd_t ) ft->priv;
 
@@ -43,8 +41,7 @@ LONG offset;
 /*                         SNDSTARTREAD                                */
 /*======================================================================*/
 
-int st_sndtstartread(ft)
-ft_t ft;
+int st_sndtstartread(ft_t ft)
 {
 	snd_t snd = (snd_t ) ft->priv;
 
@@ -124,8 +121,7 @@ return (ST_SUCCESS);
 /*======================================================================*/
 /*                         SNDTSTARTWRITE                               */
 /*======================================================================*/
-int st_sndtstartwrite(ft)
-ft_t ft;
+int st_sndtstartwrite(ft_t ft)
 {
 	snd_t p = (snd_t ) ft->priv;
 	int rc;
@@ -152,11 +148,11 @@ sndtwriteheader(ft, 0);
 
 return(ST_SUCCESS);
 }
+
 /*======================================================================*/
 /*                         SNDRSTARTWRITE                               */
 /*======================================================================*/
-int st_sndrstartwrite(ft)
-ft_t ft;
+int st_sndrstartwrite(ft_t ft)
 {
 	int rc;
 
@@ -191,9 +187,7 @@ return(ST_SUCCESS);
 /*                         SNDTWRITE                                     */
 /*======================================================================*/
 
-LONG st_sndtwrite(ft, buf, len)
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_sndtwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
 	snd_t p = (snd_t ) ft->priv;
 	p->nsamples += len;
@@ -204,8 +198,7 @@ LONG *buf, len;
 /*                         SNDTSTOPWRITE                                */
 /*======================================================================*/
 
-int st_sndtstopwrite(ft)
-ft_t ft;
+int st_sndtstopwrite(ft_t ft)
 {
 	snd_t p = (snd_t ) ft->priv;
 	int rc;
@@ -230,9 +223,7 @@ ft_t ft;
 /*======================================================================*/
 /*                         SNDTWRITEHEADER                              */
 /*======================================================================*/
-static void sndtwriteheader(ft,nsamples)
-ft_t ft;
-LONG nsamples;
+static void sndtwriteheader(ft_t ft, st_ssize_t nsamples)
 {
 char name_buf[97];
 

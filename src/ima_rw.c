@@ -23,7 +23,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "st.h"
+#include "st_i.h"
 #include "ima_rw.h"
 /*
  *

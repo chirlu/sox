@@ -45,7 +45,7 @@
  * the name of the module which it is implementing.
  *
  */
-#include "st.h"
+#include "st_i.h"
 #include "libst.h"
 #include "g72x.h"
 
@@ -84,11 +84,7 @@ static short qtab_723_40[15] = {-122, -16, 68, 139, 198, 250, 298, 339,
  * the resulting 5-bit CCITT G.723 40Kbps code.
  * Returns -1 if the input coding value is invalid.
  */
-int
-g723_40_encoder(sl, in_coding, state_ptr)
-	int		sl;
-	int		in_coding;
-	struct g72x_state *state_ptr;
+int g723_40_encoder(int sl, int in_coding, struct g72x_state *state_ptr)
 {
 	short		sei, sezi, se, sez;	/* ACCUM */
 	short		d;			/* SUBTA */
@@ -140,11 +136,7 @@ g723_40_encoder(sl, in_coding, state_ptr)
  * the resulting 16-bit linear PCM, A-law or u-law sample value.
  * -1 is returned if the output coding is unknown.
  */
-int
-g723_40_decoder( i, out_coding, state_ptr)
-	int		i;
-	int		out_coding;
-	struct g72x_state *state_ptr;
+int g723_40_decoder(int i, int out_coding, struct g72x_state *state_ptr)
 {
 	short		sezi, sei, sez, se;	/* ACCUM */
 	short		y;			/* MIX */

@@ -11,7 +11,7 @@
  * Sound Tools miscellaneous stuff.
  */
 
-#include "st.h"
+#include "st_i.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +23,10 @@
 #include <sys/stat.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+#ifdef HAVE_BYTESWAP_H
+#include <byteswap.h>
 #endif
 
 const char *st_sizes_str[] = {
@@ -339,18 +343,14 @@ double df;
 }
 
 
-/* dummy routines for do-nothing functions */
-void st_nothing(void) {}
-LONG st_nothing_success(void) {return(0);}
+/* dummy format routines for do-nothing functions */
+int st_format_nothing(ft_t ft) { return(ST_SUCCESS); }
+st_ssize_t st_format_nothing_io(ft_t ft, st_sample_t *buf, st_ssize_t len) { return(0); }
+int st_format_nothing_seek(ft_t ft, st_size_t offset) { return(ST_SUCCESS); }
 
-/* dummy drain routine for effects */
-void st_null_drain(effp, obuf, osamp)
-eff_t effp;
-LONG *obuf;
-LONG *osamp;
-{
-	*osamp = 0;
-}
+/* dummy effect routine for do-nothing functions */
+int st_effect_nothing(eff_t effp) { return(ST_SUCCESS); }
+int st_effect_nothing_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp) { *osamp = 0; return(ST_SUCCESS); }
 
 /* here for linear interp.  might be useful for other things */
 LONG st_gcd(a, b) 

@@ -26,7 +26,7 @@
  *
  */
 
-#include "st.h"
+#include "st_i.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>             /* for malloc() */
@@ -260,7 +260,7 @@ char **argv;
             {
                 int i1;
                 fprintf(stderr, "%s: Known effects: ",myname);
-                for (i1 = 1; st_effects[i1].name; i1++)
+                for (i1 = 0; st_effects[i1].name; i1++)
                     fprintf(stderr, "%s ", st_effects[i1].name);
                 fprintf(stderr, "\n\n");
                 st_fail("Effect '%s' is not known!", argv[optind]);
@@ -318,7 +318,7 @@ static void open_input(ft_t ft)
      */
     if (! strcmp(ft->filename, "-"))
         ft->fp = stdin;
-    else if ((ft->fp = fopen(ft->filename, READBINARY)) == NULL)
+    else if ((ft->fp = fopen(ft->filename, "rb")) == NULL)
         st_fail("Can't open input file '%s': %s", ft->filename,
                 strerror(errno));
 
@@ -386,7 +386,7 @@ static void open_output(ft_t ft)
         }
         else {
 
-            ft->fp = fopen(ft->filename, WRITEBINARY);
+            ft->fp = fopen(ft->filename, "wb");
 
             if (ft->fp == NULL)
                 st_fail("Can't open output file '%s': %s",
@@ -416,7 +416,7 @@ static char *getoptstr = "r:v:t:c:phsuUAaigbwlfdDxV";
 
 static void doopts(ft_t ft, int argc, char **argv)
 {
-        int c;
+        int c, i;
         char *str;
 
         while ((c = getopt(argc, argv, getoptstr)) != -1) {
@@ -460,8 +460,9 @@ static void doopts(ft_t ft, int argc, char **argv)
                 case 'c':
                         if (! ft) usage("-c");
                         str = optarg;
-                        if (! sscanf(str, "%d", &ft->info.channels))
+                        if (! sscanf(str, "%d", &i))
                                 st_fail("-c must be given a number");
+			ft->info.channels = i;
                         break;
                 case 'b':
                         if (! ft) usage("-b");
@@ -579,8 +580,8 @@ static void process(void) {
 
         st_report("Input file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
                   informat[f]->filename, informat[f]->info.rate,
-                  st_sizes_str[informat[f]->info.size],
-                  st_encodings_str[informat[f]->info.encoding],
+                  st_sizes_str[(unsigned char)informat[f]->info.size],
+                  st_encodings_str[(unsigned char)informat[f]->info.encoding],
                   informat[f]->info.channels,
                   (informat[f]->info.channels > 1) ? "channels" : "channel");
 
@@ -618,8 +619,8 @@ static void process(void) {
 
         st_report("Output file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
                outformat->filename, outformat->info.rate,
-               st_sizes_str[outformat->info.size],
-               st_encodings_str[outformat->info.encoding],
+               st_sizes_str[(unsigned char)outformat->info.size],
+               st_encodings_str[(unsigned char)outformat->info.encoding],
                outformat->info.channels,
                (outformat->info.channels > 1) ? "channels" : "channel");
 
@@ -680,27 +681,12 @@ static void process(void) {
 #ifndef SOXMIX
         efftab[0].olen = (*informat[0]->h->read)(informat[0],
                                               efftab[0].obuf, (LONG) BUFSIZ);
-
-        if (informat[0]->st_errno)
-        {
-            st_warn("Error reading from %s: %s", informat[0]->filename,
-                    informat[0]->st_errstr);
-            break;
-        }
 #else
         for (f = 0; f < input_count; f++)
         {
             ilen[f] = (*informat[f]->h->read)(informat[f],
                                               ibuf[f], (LONG)BUFSIZ);
-            if (informat[f]->st_errno)
-            {
-                st_warn("Error reading from %s: %s", informat[f]->filename,
-                        informat[0]->st_errstr);
-                break;
-            }
         }
-        if (f < input_count && informat[f]->st_errno)
-            break;
 
         efftab[0].olen = 0;
         for (f = 0; f < input_count; f++)
@@ -1194,7 +1180,7 @@ char *opt;
             fprintf(stderr,"gopts: -e -h -p -v volume -V\n\n");
             fprintf(stderr,"fopts: -r rate -c channels -s/-u/-U/-A/-a/-i/-g -b/-w/-l/-f/-d/-D -x\n\n");
             fprintf(stderr, "effect: ");
-            for (i = 1; st_effects[i].name != NULL; i++) {
+            for (i = 0; st_effects[i].name != NULL; i++) {
                 fprintf(stderr, "%s ", st_effects[i].name);
             }
             fprintf(stderr, "\n\neffopts: depends on effect\n\n");
@@ -1219,6 +1205,6 @@ void cleanup(void) {
                 /* remove the output file because we failed, if it's ours. */
                 /* Don't if its not a regular file. */
                 if (filetype(fileno(outformat->fp)) == S_IFREG)
-                    REMOVE(outformat->filename);
+                    unlink(outformat->filename);
         }
 }

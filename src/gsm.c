@@ -27,7 +27,7 @@
  *   Rewritten to support multiple channels
  */
 
-#include "st.h"
+#include "st_i.h"
 #include "gsm.h"
 #include <errno.h>
 
@@ -48,10 +48,7 @@ struct gsmpriv {
 	gsm		handle[MAXCHANS];
 };
 
-static int
-gsmstart_rw(ft,w) 
-ft_t ft;
-int w; /* w != 0 is write */
+static int gsmstart_rw(ft_t ft, int w) 
 {
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
 	int ch;
@@ -86,14 +83,12 @@ int w; /* w != 0 is write */
 	return (ST_SUCCESS);
 }
 
-int st_gsmstartread(ft) 
-ft_t ft;
+int st_gsmstartread(ft_t ft) 
 {
 	return gsmstart_rw(ft,0);
 }
 
-int st_gsmstartwrite(ft)
-ft_t ft;
+int st_gsmstartwrite(ft_t ft)
 {
 	return gsmstart_rw(ft,1);
 }
@@ -105,9 +100,7 @@ ft_t ft;
  * Return number of samples read.
  */
 
-LONG st_gsmread(ft, buf, samp)
-ft_t ft;
-long *buf, samp;
+st_ssize_t st_gsmread(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 {
 	int done = 0;
 	int r, ch, chans;
@@ -149,8 +142,7 @@ long *buf, samp;
 	return done;
 }
 
-static int gsmflush(ft)
-ft_t ft;
+static int gsmflush(ft_t ft)
 {
 	int r, ch, chans;
 	gsm_signal *gbuff;
@@ -185,9 +177,7 @@ ft_t ft;
 	return (ST_SUCCESS);
 }
 
-LONG st_gsmwrite(ft, buf, samp)
-ft_t ft;
-long *buf, samp;
+st_ssize_t st_gsmwrite(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 {
 	int done = 0;
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
@@ -209,8 +199,7 @@ long *buf, samp;
 	return done;
 }
 
-int st_gsmstopread(ft)
-ft_t ft;
+int st_gsmstopread(ft_t ft)
 {
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;
 	int ch;
@@ -223,8 +212,7 @@ ft_t ft;
 	return (ST_SUCCESS);
 }
 
-int st_gsmstopwrite(ft)
-ft_t ft;
+int st_gsmstopwrite(ft_t ft)
 {
     	int rc;
 	struct gsmpriv *p = (struct gsmpriv *) ft->priv;

@@ -1,7 +1,7 @@
 /* libst.c - portable sound tools library
 */
 
-#include "st.h"
+#include "st_i.h"
 #include "libst.h"
 
 #ifndef FAST_ULAW_CONVERSION

@@ -17,24 +17,40 @@ extern "C" {
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
-#ifdef HAVE_BYTESWAP_H
-#include <byteswap.h>
-#endif
 
-/* Release 12.17.2 of libst */
-#define ST_LIB_VERSION_CODE 0x0c1102
+/* Release 12.17.3 of libst */
+#define ST_LIB_VERSION_CODE 0x0c1103
 #define ST_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
-/* SJB: these may be changed to assist fail-recovery in libST */
-#define st_malloc malloc
-#define st_free free
-
-/* FIXME: Move to separate header */
 #ifdef __alpha__
-#include <sys/types.h>   /* To get defines for 32-bit integers */
+#include <sys/types.h>  /* To get defines for exact size integers */
+#endif
+
+#ifdef __alpha
+typedef int32_t st_sample_t;
+typdef uint32_t st_size_t;
+typedef int32_t st_ssize_t;
+typedef uint32t_t st_rate_t;
+#else
+typedef long st_sample_t;
+typedef unsigned long st_size_t;
+typedef long st_ssize_t;
+typedef unsigned long st_rate_t;
+#endif
+
+/* Minimum and maximum values a sample can hold. */
+#define ST_SAMPLE_MAX 0x7fffffffL
+#define ST_SAMPLE_MIN (-ST_SAMPLE_MAX - 1L)
+
+/* Maximum value size type can hold. (Minimum is 0). */
+#define ST_SIZE_MAX 0xffffffffL
+
+/* Minimum and maximum value signed size type can hold. */
+#define ST_SSIZE_MAX 0x7fffffffL
+#define ST_SSIZE_MIN (-ST_SSIZE_MAX - 1L)
+
+/* FIXME:  Remove from usage by libst */
+#ifdef __alpha__
 #define LONG    int32_t
 #define ULONG   u_int32_t
 #else
@@ -42,60 +58,41 @@ extern "C" {
 #define ULONG   unsigned long
 #endif
 
+/* FIXME: Get rid of this and usage of LONG_MAX */
 #define MAXLONG 0x7fffffffL
 #define MAXULONG 0xffffffffL
 
-/* various gcc optimizations */
-#ifdef __GNUC__
-#define NORET __attribute__((noreturn))
-#define INLINE inline
-#else
-#define NORET
-#define INLINE
-#endif
-
-#ifdef USE_REGPARM
-#define REGPARM(n) __attribute__((regparm(n)))
-#else
-#define REGPARM(n)
-#endif
-
 /* Signal parameters */
 
-/* FIXME: Change to typedef */
-typedef struct  st_signalinfo {
-        LONG            rate;           /* sampling rate */
-        int             size;           /* word length of data */
-        int             encoding;       /* format of sample numbers */
-        int             channels;       /* number of sound channels */
+typedef struct  st_signalinfo 
+{
+    st_rate_t rate;      /* sampling rate */
+    char size;           /* word length of data */
+    char encoding;       /* format of sample numbers */
+    char channels;       /* number of sound channels */
 } st_signalinfo_t;
 
 /* Loop parameters */
 
-/* FIXME: Change to typedef */
-typedef struct  st_loopinfo {
-        int             start;          /* first sample */
-        int             length;         /* length */
-        int             count;          /* number of repeats, 0=forever */
-        int             type;           /* 0=no, 1=forward, 2=forward/back */
-}st_loopinfo_t;
+typedef struct  st_loopinfo 
+{
+    st_size_t    start;          /* first sample */
+    st_size_t    length;         /* length */
+    unsigned int count;          /* number of repeats, 0=forever */
+    char         type;           /* 0=no, 1=forward, 2=forward/back */
+} st_loopinfo_t;
 
 /* Instrument parameters */
 
 /* vague attempt at generic information for sampler-specific info */
 
-/* FIXME: Change to typedef */
-typedef struct  st_instrinfo {
-        char            MIDInote;       /* for unity pitch playback */
-        char            MIDIlow, MIDIhi;/* MIDI pitch-bend range */
-        char            loopmode;       /* semantics of loop data */
-        char            nloops;         /* number of active loops */
-        unsigned char   smpte[4];       /* SMPTE offset (hour:min:sec:frame) */
-                                        /* this is a film audio thing */
+typedef struct  st_instrinfo 
+{
+    char MIDInote;       /* for unity pitch playback */
+    char MIDIlow, MIDIhi;/* MIDI pitch-bend range */
+    char loopmode;       /* semantics of loop data */
+    char nloops;         /* number of active loops (max ST_MAX_NLOOPS) */
 } st_instrinfo_t;
-
-
-#define ST_MIDI_UNITY 60        /* MIDI note number to play sample at unity */
 
 /* Loop modes, upper 4 bits mask the loop blass, lower 4 bits describe */
 /* the loop behaviour, ie. single shot, bidirectional etc. */
@@ -107,21 +104,22 @@ typedef struct  st_instrinfo {
  * File buffer info.  Holds info so that data can be read in blocks.
  */
 
-/* FIXME: Change to typedef */
-typedef struct st_fileinfo {
-        char    *buf;                   /* Pointer to data buffer */
-        int     size;                   /* Size of buffer */
-        int     count;                  /* Count read in to buffer */
-        int     pos;                    /* Position in buffer */
-        int     eof;                    /* Marker that EOF has been reached */
-}st_fileinfo_t;
+typedef struct st_fileinfo 
+{
+    char          *buf;                 /* Pointer to data buffer */
+    st_size_t     size;                 /* Size of buffer */
+    st_size_t     count;                /* Count read in to buffer */
+    st_size_t     pos;                  /* Position in buffer */
+    unsigned char eof;                  /* Marker that EOF has been reached */
+} st_fileinfo_t;
 
 
 /*
  *  Format information for input and output files.
  */
 
-#define ST_MAX_PRIVSIZE 330
+#define ST_MAX_FILE_PRIVSIZE 330
+#define ST_MAX_EFFECT_PRIVSIZE 330
 
 #define ST_MAX_NLOOPS           8
 
@@ -132,51 +130,52 @@ typedef struct st_fileinfo {
 typedef struct st_soundstream *ft_t;
 
 typedef struct st_format {
-        char    **names;        /* file type names */
-        int     flags;          /* details about file type */
-        int     (*startread)(ft_t ft);
-        LONG    (*read)(ft_t ft, LONG *buf, LONG len);
-        int     (*stopread)(ft_t ft);
-        int     (*startwrite)(ft_t ft);
-        LONG    (*write)(ft_t ft, LONG *buf, LONG len);
-        int     (*stopwrite)(ft_t ft);
-        int     (*seek)(ft_t ft, LONG offset);
+    char         **names;
+    unsigned int flags;
+    int          (*startread)(ft_t ft);
+    st_ssize_t   (*read)(ft_t ft, st_sample_t *buf, st_ssize_t len);
+    int          (*stopread)(ft_t ft);
+    int          (*startwrite)(ft_t ft);
+    st_ssize_t   (*write)(ft_t ft, st_sample_t *buf, st_ssize_t len);
+    int          (*stopwrite)(ft_t ft);
+    int          (*seek)(ft_t ft, st_size_t offset);
 } st_format_t;
 
 struct st_soundstream {
-        st_signalinfo_t info;   /* signal specifications */
-        st_instrinfo_t instr;   /* instrument specification */
-        st_loopinfo_t loops[ST_MAX_NLOOPS]; /* Looping specification */
-        char    swap;                   /* do byte- or word-swap */
-        char    seekable;               /* can seek on this file */
-        LONG    length;                 /* estimate of total samples in file - for seeking*/
-        char    *filename;              /* file name */
-        char    *filetype;              /* type of file */
-        char    *comment;               /* comment string */
-        FILE    *fp;                    /* File stream pointer */
-        st_fileinfo_t file;     /* File data block */
-        int     st_errno;               /* Failure error codes */
-        char    st_errstr[256];         /* Extend Failure text */
-        st_format_t *h;                 /* format struct for this file */
-	/* The following is a portable trick to force the buffer to be
-	 * aligned on an 8-byte bounder on platforms that are really picky
-	 * about this.  All pointer accesses to this data are always cast
-	 * to a structure so it doesn't really matter what we do declare
-	 * it as.
-	 */
-        double priv[ST_MAX_PRIVSIZE/8]; /* format's private data area */
+    st_signalinfo_t info;                 /* signal specifications */
+    st_instrinfo_t  instr;                /* instrument specification */
+    st_loopinfo_t   loops[ST_MAX_NLOOPS]; /* Looping specification */
+    char            swap;                 /* do byte- or word-swap */
+    char            seekable;             /* can seek on this file */
+    st_size_t       length; /* estimate of total samples in file - for seeking*/
+    char            *filename;            /* file name */
+    char            *filetype;            /* type of file */
+    char            *comment;             /* comment string */
+    FILE            *fp;                  /* File stream pointer */
+    st_fileinfo_t   file;                 /* File data block */
+    int             st_errno;             /* Failure error codes */
+    char            st_errstr[256];       /* Extend Failure text */
+    st_format_t     *h;                   /* format struct for this file */
+    /* The following is a portable trick to align this variable on
+     * an 8-byte bounder.  Once this is done, the buffer alloced
+     * after it should be align on an 8-byte boundery as well.
+     * This lets you cast any structure over the private area
+     * without concerns of alignment.
+     */
+    double priv1;
+    char   priv[ST_MAX_FILE_PRIVSIZE]; /* format's private data area */
 };
 
 extern st_format_t st_formats[];
 
 /* file flags field */
-#define ST_FILE_STEREO  1       /* does file format support stereo? */
-#define ST_FILE_LOOPS   2       /* does file format support loops? */
-#define ST_FILE_INSTR   4       /* does file format support instrument specificications? */
-#define ST_FILE_SEEK    8       /* does file format support seeking? */
+#define ST_FILE_STEREO  1  /* does file format support stereo? */
+#define ST_FILE_LOOPS   2  /* does file format support loops? */
+#define ST_FILE_INSTR   4  /* does file format support instrument specs? */
+#define ST_FILE_SEEK    8  /* does file format support seeking? */
 
 /* Size field */
-/* SJB: note that the 1st 3 are sometimes used as sizeof(type) */
+/* note that the 1st 3 are sometimes used as sizeof(type) */
 #define ST_SIZE_BYTE    1
 #define ST_SIZE_8BIT    1
 #define ST_SIZE_WORD    2
@@ -215,128 +214,40 @@ extern const char *st_encodings_str[];
 
 typedef struct st_effect *eff_t;
 
-typedef struct {
-        char    *name;                  /* effect name */
-        int     flags;                  /* this and that */
-                                        /* process arguments */
-        int     (*getopts)(eff_t effp, int argc, char **argv);
-                                        /* start off effect */
-        int     (*start)(eff_t effp);
-                                        /* do a buffer */
-        int     (*flow)(eff_t effp, LONG *ibuf, LONG *obuf,
-                        LONG *isamp, LONG *osamp);
-                                        /* drain out at end */
-        int     (*drain)(eff_t effp, LONG *obuf, LONG *osamp);
-        int     (*stop)(eff_t effp);    /* finish up effect */
+typedef struct 
+{
+    char    *name;                  /* effect name */
+    unsigned int flags;
+
+    int (*getopts)(eff_t effp, int argc, char **argv);
+    int (*start)(eff_t effp);
+    int (*flow)(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+	        st_size_t *isamp, st_size_t *osamp);
+    int (*drain)(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
+    int (*stop)(eff_t effp);
 } st_effect_t;
 
-struct st_effect {
-        char            *name;          /* effect name */
-        struct st_signalinfo ininfo;    /* input signal specifications */
-        struct st_loopinfo   loops[8];  /* input loops  specifications */
-        struct st_instrinfo  instr;     /* input instrument  specifications */
-        struct st_signalinfo outinfo;   /* output signal specifications */
-        st_effect_t     *h;             /* effects driver */
-        LONG            *obuf;          /* output buffer */
-        LONG            odone, olen;    /* consumed, total length */
-	/* The following is a portable trick to force the buffer to be
-	 * aligned on an 8-byte bounder on platforms that are really picky
-	 * about this.  All pointer accesses to this data are always cast
-	 * to a structure so it doesn't really matter what we do declare
-	 * it as.
-	 */
-        double priv[ST_MAX_PRIVSIZE/8]; /* private area for effect */
+struct st_effect 
+{
+    char            *name;          /* effect name */
+    struct st_signalinfo ininfo;    /* input signal specifications */
+    struct st_loopinfo   loops[8];  /* input loops  specifications */
+    struct st_instrinfo  instr;     /* input instrument  specifications */
+    struct st_signalinfo outinfo;   /* output signal specifications */
+    st_effect_t     *h;             /* effects driver */
+    st_sample_t     *obuf;          /* output buffer */
+    st_size_t       odone, olen;    /* consumed, total length */
+    /* The following is a portable trick to align this variable on
+     * an 8-byte bounder.  Once this is done, the buffer alloced
+     * after it should be align on an 8-byte boundery as well.
+     * This lets you cast any structure over the private area
+     * without concerns of alignment.
+     */
+    double priv1;
+    char priv[ST_MAX_EFFECT_PRIVSIZE]; /* private area for effect */
 };
 
 extern st_effect_t st_effects[]; /* declared in handlers.c */
-
-/* declared in misc.c */
-extern LONG st_clip24(LONG) REGPARM(1);
-extern void st_sine(int *, LONG, int, int);
-extern void st_triangle(int *, LONG, int, int);
-
-extern LONG st_gcd(LONG,LONG) REGPARM(2);
-extern LONG st_lcm(LONG,LONG) REGPARM(2);
-
-/****************************************************/
-/* Prototypes for internal cross-platform functions */
-/****************************************************/
-/* SJB: shouldn't these be elsewhere, exported from misc.c */
-/* CB: Yep, we need to create something like a "platform.h" file for
- * these type functions.
- */
-#ifndef HAVE_RAND
-extern int rand(void);
-extern void srand(unsigned int seed);
-#endif
-extern void st_initrand(void);
-
-#ifndef HAVE_STRERROR
-char *strerror(int errorcode);
-#endif
-
-/* Read and write basic data types from "ft" stream.  Uses ft->swap for
- * possible byte swapping.
- */
-/* declared in misc.c */
-LONG    st_read(ft_t ft, void *buf, int size, LONG len);
-LONG    st_write(ft_t ft, void *buf, int size, LONG len);
-int     st_reads(ft_t ft, char *c, int len);
-int     st_writes(ft_t ft, char *c);
-int     st_readb(ft_t ft, unsigned char *uc);
-int     st_writeb(ft_t ft, unsigned char uc);
-int     st_readw(ft_t ft, unsigned short *us);
-int     st_writew(ft_t ft, unsigned short us);
-int     st_readdw(ft_t ft, ULONG *ul);
-int     st_writedw(ft_t ft, ULONG ul);
-int     st_readf(ft_t ft, float *f);
-int     st_writef(ft_t ft, double f);
-int     st_readdf(ft_t ft, double *d);
-int     st_writedf(ft_t ft, double d);
-int st_seek(ft_t ft, LONG offset, int whence);
-LONG st_filelength(ft_t ft);
-
-/* FIXME: raw routines are used by so many formats their prototypes are defined
- * here for convience.  This wont last for long so application software
- * shouldn't make use of it.
- */
-/* declared in raw.c */
-int st_rawstartread(ft_t ft);
-int st_rawstartwrite(ft_t ft);
-int st_rawstopread(ft_t ft);
-int st_rawstopwrite(ft_t ft);
-int st_rawseek(ft_t ft, LONG offset);
-LONG st_rawread(ft_t ft, LONG *buf, LONG nsamp);
-LONG st_rawwrite(ft_t ft, LONG *buf, LONG nsamp);
-
-/* Utilities to byte-swap values, use libc optimized macro's if possible  */
-#ifdef HAVE_BYTESWAP_H
-#define st_swapw(x) bswap_16(x)
-#define st_swapl(x) bswap_32(x)
-#define st_swapf(x) (float)bswap_32((ULONG)(x))
-#else
-unsigned short st_swapw(unsigned short us);             /* Swap short */
-ULONG          st_swapl(ULONG ul);                      /* Swap long */
-float          st_swapf(float f);                       /* Swap float */
-#endif
-double         st_swapd(double d);                      /* Swap double */
-
-/* util.c */
-void st_report(const char *, ...);
-void st_warn(const char *, ...);
-void st_fail(const char *, ...) NORET;
-void st_fail_errno(ft_t, int, const char *, ...);
-
-int st_is_bigendian(void);
-int st_is_littleendian(void);
-
-#ifdef WORDS_BIGENDIAN
-#define ST_IS_BIGENDIAN 1
-#define ST_IS_LITTLEENDIAN 0
-#else
-#define ST_IS_BIGENDIAN st_is_bigendian()
-#define ST_IS_LITTLEENDIAN st_is_littleendian()
-#endif
 
 int st_geteffect_opt(eff_t, int, char **);
 int st_geteffect(eff_t, char *);
@@ -346,7 +257,7 @@ int st_gettype(ft_t);
 void st_initformat(ft_t ft);
 void st_copyformat(ft_t, ft_t);
 int st_checkformat(ft_t);
-int st_parsesamples(ULONG rate, char *str, ULONG *samples, char def);
+int st_parsesamples(st_rate_t rate, char *str, st_size_t *samples, char def);
 
 /* FIXME: Recording hacks shouldn't display a "sigint" style interface.
  * Instead we should provide a function to call when done playing/recording.
@@ -354,33 +265,9 @@ int st_parsesamples(ULONG rate, char *str, ULONG *samples, char def);
  */
 void sigintreg(ft_t);
 
-/* export flags */
-/* FIXME: these declared in util.c, inappropriate for lib */
+/* FIXME: these declared in util.c, global is inappropriate for lib */
 extern int verbose;     /* be noisy on stderr */
 extern char *myname;
-
-extern int errno;
-/* Warning, this is a MAX value used in the library.  Each format and
- * effect may have its own limitations of rate.
- */
-#define ST_MAXRATE      50L * 1024 /* maximum sample rate in library */
-
-/* FIXME: Move to internal st header */
-#define RIGHT(datum, bits)      ((datum) >> bits)
-#define LEFT(datum, bits)       ((datum) << bits)
-
-#ifndef M_PI
-#define M_PI    3.14159265358979323846
-#endif
-#ifndef M_PI_2
-#define M_PI_2  1.57079632679489661923  /* pi/2 */
-#endif
-
-
-/* FIXME: Move to platform header file */
-#define READBINARY      "rb"
-#define WRITEBINARY     "wb"
-#define REMOVE unlink
 
 #define ST_EOF (-1)
 #define ST_SUCCESS (0)

@@ -1,4 +1,3 @@
-
 /*
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
@@ -14,7 +13,7 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include "st.h"
+#include "st_i.h"
 
 #define HALFABIT 1.44			/* square root of 2 */
 
@@ -28,10 +27,7 @@
 /*
  * Process options
  */
-int st_mask_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_mask_getopts(eff_t effp, int n, char **argv) 
 {
 	if (n)
 	{
@@ -48,11 +44,8 @@ char **argv;
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_mask_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_mask_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                 st_size_t *isamp, st_size_t *osamp)
 {
 	int len, done;
 	

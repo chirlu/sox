@@ -21,7 +21,7 @@
  *
  */
 
-#include "st.h"
+#include "st_i.h"
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -50,8 +50,7 @@ struct readpriv {
 
 static int skipbytes(ft_t, int);
 
-int st_hcomstartread(ft)
-ft_t ft;
+int st_hcomstartread(ft_t ft)
 {
 	struct readpriv *p = (struct readpriv *) ft->priv;
 	int i;
@@ -162,9 +161,7 @@ ft_t ft;
 }
 
 /* FIXME: Move to misc.c */
-static int skipbytes(ft, n)
-ft_t ft;
-int n;
+static int skipbytes(ft_t ft, int n)
 {
     unsigned char trash;
 	while (--n >= 0) {
@@ -177,9 +174,7 @@ int n;
 	return(ST_SUCCESS);
 }
 
-LONG st_hcomread(ft, buf, len)
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_hcomread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
 	register struct readpriv *p = (struct readpriv *) ft->priv;
 	int done = 0;
@@ -246,8 +241,7 @@ LONG *buf, len;
 	return done;
 }
 
-int st_hcomstopread(ft) 
-ft_t ft;
+int st_hcomstopread(ft_t ft) 
 {
 	register struct readpriv *p = (struct readpriv *) ft->priv;
 
@@ -274,8 +268,7 @@ struct writepriv {
 
 #define BUFINCR (10*BUFSIZ)
 
-int st_hcomstartwrite(ft) 
-ft_t ft;
+int st_hcomstartwrite(ft_t ft) 
 {
 	register struct writepriv *p = (struct writepriv *) ft->priv;
 
@@ -312,9 +305,7 @@ ft_t ft;
 	return (ST_SUCCESS);
 }
 
-LONG st_hcomwrite(ft, buf, len)
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_hcomwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
 	register struct writepriv *p = (struct writepriv *) ft->priv;
 	LONG datum;
@@ -359,8 +350,7 @@ static LONG codes[256];
 static LONG codesize[256];
 static LONG checksum;
 
-static void makecodes(e, c, s, b)
-int e, c, s, b;
+static void makecodes(int e, int c, int s, int b)
 {
   if(dictionary[e].dict_leftson < 0) {
     codes[dictionary[e].dict_rightson] = c;
@@ -375,9 +365,7 @@ static LONG curword;
 static int nbits;
 
 /* FIXME: Place in misc.c */
-static void putlong(c, v)
-unsigned char *c;
-LONG v;
+static void putlong(unsigned char *c, LONG v)
 {
   *c++ = (v >> 24) & 0xff;
   *c++ = (v >> 16) & 0xff;
@@ -385,18 +373,14 @@ LONG v;
   *c++ = v & 0xff;
 }
 
-static void putshort(c, v)
-unsigned char *c;
-short v;
+static void putshort(unsigned char *c, short v)
 {
   *c++ = (v >> 8) & 0xff;
   *c++ = v & 0xff;
 }
 
 
-static void putcode(c, df)
-unsigned char c;
-unsigned char ** df;
+static void putcode(unsigned char c, unsigned char **df)
 {
 LONG code, size;
 int i;
@@ -417,10 +401,7 @@ int i;
   }
 }
 
-static int compress(df, dl, fr)
-unsigned char **df;
-LONG *dl;
-float fr;
+static int compress(unsigned char **df, LONG *dl, float fr)
 {
   LONG samplerate;
   unsigned char *datafork = *df;
@@ -530,9 +511,7 @@ float fr;
 }
 
 /* FIXME: Place in misc.c */
-static void padbytes(ft, n)
-ft_t ft;
-int n;
+static void padbytes(ft_t ft, int n)
 {
 	while (--n >= 0)
 	    st_writeb(ft, '\0');
@@ -541,8 +520,7 @@ int n;
 
 /* End of hcom utility routines */
 
-int st_hcomstopwrite(ft) 
-ft_t ft;
+int st_hcomstopwrite(ft_t ft) 
 {
 	register struct writepriv *p = (struct writepriv *) ft->priv;
 	unsigned char *compressed_data = p->data;

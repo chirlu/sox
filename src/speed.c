@@ -11,7 +11,7 @@
  * I think it is especially inefficient.
  */
 
-#include "st.h"
+#include "st_i.h"
 
 #include <limits.h> /* LONG_MAX */
 #include <math.h> /* pow */
@@ -111,10 +111,7 @@ static LONG clip(speed_t speed, SPEED_FLOAT v)
 }
 
 /* get options. */
-int st_speed_getopts(effp, n, argv)
-     eff_t effp;
-     int n;
-     char ** argv;
+int st_speed_getopts(eff_t effp, int n, char **argv)
 {
     speed_t speed = (speed_t) effp->priv;
     int cent = 0;
@@ -144,8 +141,7 @@ int st_speed_getopts(effp, n, argv)
 }
 
 /* start processing. */
-int st_speed_start(effp)
-     eff_t effp;
+int st_speed_start(eff_t effp)
 {
     speed_t speed = (speed_t) effp->priv;
     speed->clipped = 0;
@@ -203,7 +199,7 @@ static void transfer(speed_t speed)
 
 /* interpolate values
  */
-static int compute(speed_t speed, LONG * obuf, int olen)
+static st_size_t compute(speed_t speed, st_sample_t *obuf, st_size_t olen)
 {
     register int i;
 
@@ -230,13 +226,11 @@ static int compute(speed_t speed, LONG * obuf, int olen)
 
 /* handle a flow.
  */
-int st_speed_flow(effp, ibuf, obuf, isamp, osamp)
-     eff_t effp;
-     LONG * ibuf, *obuf;
-     LONG * isamp, * osamp;
+int st_speed_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+	          st_size_t *isamp, st_size_t *osamp)
 {
     speed_t speed;
-    register int len, iindex, oindex;
+    register st_size_t len, iindex, oindex;
 
     speed = (speed_t) effp->priv;
 
@@ -271,10 +265,7 @@ int st_speed_flow(effp, ibuf, obuf, isamp, osamp)
 
 /* end of stuff. 
  */
-int st_speed_drain(effp, obuf, osamp)
-     eff_t effp;
-     LONG * obuf;
-     LONG * osamp;
+int st_speed_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     speed_t speed = (speed_t) effp->priv;
     register int i, oindex;
@@ -308,8 +299,7 @@ int st_speed_drain(effp, obuf, osamp)
 
 /* stop processing. report overflows. 
  */
-int st_speed_stop(effp)
-     eff_t effp;
+int st_speed_stop(eff_t effp)
 {
     speed_t speed = (speed_t) effp->priv;
 

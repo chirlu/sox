@@ -15,7 +15,7 @@
  */
 
 #include <math.h>
-#include "st.h"
+#include "st_i.h"
 
 /* Private data for split */
 typedef struct splitstuff {
@@ -25,10 +25,7 @@ typedef struct splitstuff {
 /*
  * Process options
  */
-int st_split_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_split_getopts(eff_t effp, int n, char **argv) 
 {
 	if (n)
 	{
@@ -41,8 +38,7 @@ char **argv;
 /*
  * Prepare processing.
  */
-int st_split_start(effp)
-eff_t effp;
+int st_split_start(eff_t effp)
 {
 	switch (effp->ininfo.channels) {
 		case 1:   /* 1 channel must split to 2 or 4 */
@@ -69,11 +65,8 @@ eff_t effp;
  * isamp or osamp samples, whichever is smaller,
  * while splitting into appropriate channels.
  */
-
-int st_split_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_split_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                  st_size_t *isamp, st_size_t *osamp)
 {
 	int len, done;
 
@@ -125,8 +118,7 @@ LONG *isamp, *osamp;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_split_stop(effp)
-eff_t effp;
+int st_split_stop(eff_t effp)
 {
 	/* nothing to do */
     return (ST_SUCCESS);

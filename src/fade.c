@@ -22,7 +22,7 @@
 
 #include <math.h>
 #include <string.h>
-#include "st.h"
+#include "st_i.h"
 
 /* Private data for fade file */
 typedef struct fadestuff
@@ -210,7 +210,8 @@ int st_fade_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_fade_flow(eff_t effp, LONG *ibuf, LONG *obuf, int *isamp, int *osamp)
+int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+	         st_size_t *isamp, st_size_t *osamp)
 {
     fade_t fade = (fade_t) effp->priv;
     /* len is total samples, chcnt counts channels */
@@ -284,7 +285,7 @@ int st_fade_flow(eff_t effp, LONG *ibuf, LONG *obuf, int *isamp, int *osamp)
 /*
  * Drain out remaining samples if the effect generates any.
  */
-int st_fade_drain(eff_t effp, LONG *obuf, LONG *osamp)
+int st_fade_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     fade_t fade = (fade_t) effp->priv;
     int len, t_chan = 0;

@@ -37,7 +37,7 @@
  * of workstation attributes, such as hardware 2's complement arithmetic.
  *
  */
-#include "st.h"
+#include "st_i.h"
 #include "libst.h"
 #include "g72x.h"
 
@@ -65,11 +65,7 @@ static short qtab_723_24[3] = {8, 218, 331};
  * Encodes a linear PCM, A-law or u-law input sample and returns its 3-bit code.
  * Returns -1 if invalid input coding value.
  */
-int
-g723_24_encoder(sl, in_coding, state_ptr)
-	int		sl;
-	int		in_coding;
-	struct g72x_state *state_ptr;
+int g723_24_encoder(int sl, int in_coding, struct g72x_state *state_ptr)
 {
 	short		sei, sezi, se, sez;	/* ACCUM */
 	short		d;			/* SUBTA */
@@ -120,11 +116,7 @@ g723_24_encoder(sl, in_coding, state_ptr)
  * the resulting 16-bit linear PCM, A-law or u-law sample value.
  * -1 is returned if the output coding is unknown.
  */
-int
-g723_24_decoder(i, out_coding, state_ptr)
-	int		i;
-	int		out_coding;
-	struct g72x_state *state_ptr;
+int g723_24_decoder(int i, int out_coding, struct g72x_state *state_ptr)
 {
 	short		sezi, sei, sez, se;	/* ACCUM */
 	short		y;			/* MIX */

@@ -16,7 +16,7 @@
  * Add: Loop point verbose info.  It's a start, anyway.
  */
 
-#include "st.h"
+#include "st_i.h"
 #include <string.h>
 #include <errno.h>
 
@@ -72,9 +72,7 @@ char *SVmagic = "SOUND SAMPLE DATA ", *SVvers = "2.1 ";
  * Read the SampleVision trailer structure.
  * Returns 1 if everything was read ok, 0 if there was an error.
  */
-static int readtrailer(ft, trailer)
-ft_t ft;
-struct smptrailer *trailer;
+static int readtrailer(ft_t ft, struct smptrailer *trailer)
 {
 	int i;
 	ULONG trash;
@@ -109,10 +107,7 @@ struct smptrailer *trailer;
 /*
  * set the trailer data - loops and markers, to reasonably benign values
  */
-static void settrailer(ft, trailer, rate)
-ft_t ft;
-struct smptrailer *trailer;
-unsigned int rate;
+static void settrailer(ft_t ft, struct smptrailer *trailer, ULONG rate)
 {
 	int i;
 
@@ -146,9 +141,7 @@ unsigned int rate;
  * Write the SampleVision trailer structure.
  * Returns 1 if everything was written ok, 0 if there was an error.
  */
-static int writetrailer(ft, trailer)
-ft_t ft;
-struct smptrailer *trailer;
+static int writetrailer(ft_t ft, struct smptrailer *trailer)
 {
 	int i;
 
@@ -174,9 +167,7 @@ struct smptrailer *trailer;
 	return(ST_SUCCESS);
 }
 
-int st_smpseek(ft,offset) 
-ft_t ft;
-LONG offset;
+int st_smpseek(ft_t ft, st_size_t offset) 
 {
 	smp_t smp = (smp_t) ft->priv;
 
@@ -194,8 +185,7 @@ LONG offset;
  *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
-int st_smpstartread(ft) 
-ft_t ft;
+int st_smpstartread(ft_t ft) 
 {
 	smp_t smp = (smp_t) ft->priv;
 	int i;
@@ -326,9 +316,7 @@ ft_t ft;
  * Place in buf[].
  * Return number of samples read.
  */
-LONG st_smpread(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_smpread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	smp_t smp = (smp_t) ft->priv;
 	unsigned short datum;
@@ -346,14 +334,12 @@ LONG *buf, len;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_smpstopread(ft) 
-ft_t ft;
+int st_smpstopread(ft_t ft) 
 {
     return(ST_SUCCESS);
 }
 
-int st_smpstartwrite(ft) 
-ft_t ft;
+int st_smpstartwrite(ft_t ft) 
 {
 	smp_t smp = (smp_t) ft->priv;
 	struct smpheader header;
@@ -394,9 +380,7 @@ ft_t ft;
 	return(ST_SUCCESS);
 }
 
-LONG st_smpwrite(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_smpwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	smp_t smp = (smp_t) ft->priv;
 	register int datum;
@@ -412,8 +396,7 @@ LONG *buf, len;
 	return(done);
 }
 
-int st_smpstopwrite(ft) 
-ft_t ft;
+int st_smpstopwrite(ft_t ft) 
 {
 	smp_t smp = (smp_t) ft->priv;
 	struct smptrailer trailer;

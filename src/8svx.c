@@ -12,36 +12,35 @@
 #include <unistd.h>	/* For SEEK_* defines if not found in stdio */
 #endif
 
-#include "st.h"
+#include "st_i.h"
 
 /* Private data used by writer */
 typedef struct svxpriv {
-	ULONG nsamples;
+	st_size_t nsamples;
 	FILE *ch[4];
 }*svx_t;
 
-static void svxwriteheader(ft_t, LONG);
+static void svxwriteheader(ft_t, st_ssize_t);
 
 /*======================================================================*/
 /*                         8SVXSTARTREAD                                */
 /*======================================================================*/
 
-int st_svxstartread(ft)
-ft_t ft;
+int st_svxstartread(ft_t ft)
 {
 	svx_t p = (svx_t ) ft->priv;
 
 	char buf[12];
 	char *chunk_buf;
  
-	ULONG totalsize;
-	ULONG chunksize;
+	st_size_t totalsize;
+	st_size_t chunksize;
 
 	ULONG channels;
 	unsigned short rate;
 	int i;
 
-	ULONG chan1_pos;
+	long chan1_pos;
 
 	if (! ft->seekable)
 	{
@@ -188,7 +187,7 @@ ft_t ft;
 	chan1_pos = ftell(p->ch[0]);
 
 	for (i = 1; i < channels; i++) {
-		if ((p->ch[i] = fopen(ft->filename, READBINARY)) == NULL)
+		if ((p->ch[i] = fopen(ft->filename, "rb")) == NULL)
 		{
 			st_fail_errno(ft,errno,"Can't open channel file '%s'",
 				ft->filename);
@@ -213,9 +212,7 @@ ft_t ft;
 /*======================================================================*/
 /*                         8SVXREAD                                     */
 /*======================================================================*/
-LONG st_svxread(ft, buf, nsamp) 
-ft_t ft;
-LONG *buf, nsamp;
+st_ssize_t st_svxread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp) 
 {
 	unsigned char datum;
 	int done = 0;
@@ -240,8 +237,7 @@ LONG *buf, nsamp;
 /*======================================================================*/
 /*                         8SVXSTOPREAD                                 */
 /*======================================================================*/
-int st_svxstopread(ft)
-ft_t ft;
+int st_svxstopread(ft_t ft)
 {
 	int i;
 
@@ -257,8 +253,7 @@ ft_t ft;
 /*======================================================================*/
 /*                         8SVXSTARTWRITE                               */
 /*======================================================================*/
-int st_svxstartwrite(ft)
-ft_t ft;
+int st_svxstartwrite(ft_t ft)
 {
 	svx_t p = (svx_t ) ft->priv;
 	int i;
@@ -294,9 +289,7 @@ ft_t ft;
 /*                         8SVXWRITE                                    */
 /*======================================================================*/
 
-LONG st_svxwrite(ft, buf, len)
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_svxwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
 	svx_t p = (svx_t ) ft->priv;
 
@@ -321,8 +314,7 @@ LONG *buf, len;
 /*                         8SVXSTOPWRITE                                */
 /*======================================================================*/
 
-int st_svxstopwrite(ft)
-ft_t ft;
+int st_svxstopwrite(ft_t ft)
 {
 	svx_t p = (svx_t ) ft->priv;
 
@@ -363,9 +355,7 @@ ft_t ft;
 /*                         8SVXWRITEHEADER                              */
 /*======================================================================*/
 #define SVXHEADERSIZE 100
-static void svxwriteheader(ft,nsamples)
-ft_t ft;
-LONG nsamples;
+static void svxwriteheader(ft_t ft, st_ssize_t nsamples)
 {
 	LONG formsize =  nsamples + SVXHEADERSIZE - 8;
 

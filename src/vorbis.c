@@ -22,7 +22,7 @@
 #include <math.h>
 #include <errno.h>
 #include <string.h>
-#include "st.h"
+#include "st_i.h"
 
 #include <ogg/ogg.h>
 #include <vorbis/codec.h>
@@ -85,8 +85,7 @@ static int _fseek64_wrap(FILE *f,ogg_int64_t off,int whence){
  *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
-int st_vorbisstartread(ft) 
-ft_t ft;
+int st_vorbisstartread(ft_t ft) 
 {
 	vorbis_t vb = (vorbis_t) ft->priv;
 	vorbis_info *vi;
@@ -178,8 +177,7 @@ ft_t ft;
 /* Refill the buffer with samples.  Returns BUF_EOF if the end of the
    vorbis data was reached while the buffer was being filled,
    BUF_ERROR is something bad happens, and BUF_DATA otherwise */
-int refill_buffer (vb)
-vorbis_t vb;
+int refill_buffer (vorbis_t vb)
 {
 	int num_read;
 
@@ -214,9 +212,7 @@ vorbis_t vb;
  * Return number of samples read.
  */
 
-LONG st_vorbisread(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_vorbisread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	vorbis_t vb = (vorbis_t) ft->priv;
 	int i;
@@ -250,8 +246,7 @@ LONG *buf, len;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_vorbisstopread(ft) 
-ft_t ft;
+int st_vorbisstopread(ft_t ft) 
 {
 	vorbis_t vb = (vorbis_t) ft->priv;
 
@@ -275,9 +270,7 @@ int oe_write_page(ogg_page *page, FILE *fp)
 /* Write out the header packets.  Derived mostly from encode.c in
    oggenc.  Returns HEADER_ERROR if the header cannot be written and
    HEADER_OK otherwise. */
-int write_vorbis_header(ft, ve)
-ft_t ft;
-vorbis_enc_t *ve;
+int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
 {
 	ogg_packet header_main;
 	ogg_packet header_comments;
@@ -318,8 +311,7 @@ vorbis_enc_t *ve;
 	return HEADER_OK;
 }
 
-int st_vorbisstartwrite(ft) 
-ft_t ft;
+int st_vorbisstartwrite(ft_t ft) 
 {
 	vorbis_t vb = (vorbis_t) ft->priv;
 	vorbis_enc_t *ve;
@@ -351,9 +343,7 @@ ft_t ft;
 	return(ST_SUCCESS);	
 }
 
-LONG st_vorbiswrite(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_vorbiswrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	vorbis_t vb = (vorbis_t) ft->priv;
 	vorbis_enc_t *ve = vb->vorbis_enc_data;
@@ -400,8 +390,7 @@ LONG *buf, len;
 	return (ST_SUCCESS);	
 }
 
-int st_vorbisstopwrite(ft) 
-ft_t ft;
+int st_vorbisstopwrite(ft_t ft) 
 {
 	vorbis_t vb = (vorbis_t) ft->priv;
 	vorbis_enc_t *ve = vb->vorbis_enc_data;

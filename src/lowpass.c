@@ -21,7 +21,7 @@
 
 #include <math.h>
 
-#include "st.h"
+#include "st_i.h"
 #include "btrworth.h"
 
 int st_lowpass_getopts (effp, n, argv)

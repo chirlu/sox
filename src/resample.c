@@ -1,4 +1,3 @@
-
 /*
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
@@ -54,7 +53,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "st.h"
+#include "st_i.h"
 
 /* resample includes */
 #include "resampl.h"
@@ -114,10 +113,7 @@ static LONG SrcEX(resample_t r, LONG Nx);
 /*
  * Process options
  */
-int st_resample_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_resample_getopts(eff_t effp, int n, char **argv) 
 {
 	resample_t r = (resample_t) effp->priv;
 
@@ -175,8 +171,7 @@ char **argv;
 /*
  * Prepare processing.
  */
-int st_resample_start(effp)
-eff_t effp;
+int st_resample_start(eff_t effp)
 {
 	resample_t r = (resample_t) effp->priv;
 	LONG Xoff, gcdrate;
@@ -271,11 +266,8 @@ eff_t effp;
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-int st_resample_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                     st_size_t *isamp, st_size_t *osamp)
 {
 	resample_t r = (resample_t) effp->priv;
 	LONG i, last, Nout, Nx, Nproc;
@@ -375,10 +367,7 @@ LONG *isamp, *osamp;
 /*
  * Process tail of input samples.
  */
-int st_resample_drain(effp, obuf, osamp)
-eff_t effp;
-LONG *obuf;
-LONG *osamp;
+int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
 	resample_t r = (resample_t) effp->priv;
 	LONG isamp_res, *Obuf, osamp_res;
@@ -414,8 +403,7 @@ LONG *osamp;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_resample_stop(effp)
-eff_t effp;
+int st_resample_stop(eff_t effp)
 {
 	resample_t r = (resample_t) effp->priv;
 	
@@ -427,10 +415,8 @@ eff_t effp;
 
 /* over 90% of CPU time spent in this iprodUD() function */
 /* quadratic interpolation */
-static double qprodUD(Imp, Xp, Inc, T0, dhb, ct)
-const Float Imp[], *Xp;
-LONG Inc, dhb, ct;
-double T0;
+static double qprodUD(const Float Imp[], const Float *Xp, LONG Inc, double T0, 
+	              LONG dhb, LONG ct)
 {
   const double f = 1.0/(1<<La);
   double v;
@@ -461,10 +447,8 @@ double T0;
 }
 
 /* linear interpolation */
-static double iprodUD(Imp, Xp, Inc, T0, dhb, ct)
-const Float Imp[], *Xp;
-LONG Inc, dhb, ct;
-double T0;
+static double iprodUD(const Float Imp[], const Float *Xp, LONG Inc, 
+	              double T0, LONG dhb, LONG ct)
 {
   const double f = 1.0/(1<<La);
   double v;
@@ -491,9 +475,7 @@ double T0;
 /* From resample:filters.c */
 /* Sampling rate conversion subroutine */
 
-static LONG SrcUD(r, Nx)
-resample_t r;
-LONG Nx;
+static LONG SrcUD(resample_t r, LONG Nx)
 {
    Float *Ystart, *Y;
    double Factor;
@@ -538,9 +520,8 @@ LONG Nx;
 }
 
 /* exact coeff's */
-static double prodEX(Imp, Xp, Inc, T0, dhb, ct)
-const Float Imp[], *Xp;
-LONG Inc, T0, dhb, ct;
+static double prodEX(const Float Imp[], const Float *Xp, 
+	             LONG Inc, LONG T0, LONG dhb, LONG ct)
 {
   double v;
   const Float *Cp;
@@ -556,9 +537,7 @@ LONG Inc, T0, dhb, ct;
   return v;
 }
 
-static LONG SrcEX(r, Nx)
-resample_t r;
-LONG Nx;
+static LONG SrcEX(resample_t r, LONG Nx)
 {
    Float *Ystart, *Y;
    double Factor;
@@ -593,11 +572,8 @@ LONG Nx;
    return (Y - Ystart);        /* Return the number of output samples */
 }
 
-int makeFilter(Imp, Nwing, Froll, Beta, Num, Normalize)
-Float Imp[];
-LONG Nwing, Num;
-int Normalize;    /* non-zero to normalize DCGain of filter */
-double Froll, Beta;
+int makeFilter(Float Imp[], LONG Nwing, double Froll, double Beta, 
+	       LONG Num, int Normalize)
 {
    double *ImpR;
    LONG Mwing, i;
@@ -684,8 +660,7 @@ double Froll, Beta;
 
 #define IzeroEPSILON 1E-21               /* Max error acceptable in Izero */
 
-static double Izero(x)
-double x;
+static double Izero(double x)
 {
    double sum, u, halfx, temp;
    LONG n;
@@ -702,9 +677,7 @@ double x;
    return(sum);
 }
 
-static void LpFilter(c,N,frq,Beta,Num)
-double c[], frq, Beta;
-LONG N, Num;
+static void LpFilter(double *c, LONG N, double frq, double Beta, LONG Num)
 {
    LONG i;
 

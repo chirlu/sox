@@ -1,4 +1,3 @@
-
 /*
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
@@ -15,7 +14,7 @@
  *  file by selecting 2 channels from a 4 channel file.
  */
 
-#include "st.h"
+#include "st_i.h"
 
 /* Private data for SKEL file */
 typedef struct pickstuff {
@@ -31,10 +30,7 @@ typedef struct pickstuff {
 /*
  * Process options
  */
-int st_pick_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_pick_getopts(eff_t effp, int n, char **argv) 
 {
 	pick_t pick = (pick_t) effp->priv;
 
@@ -74,8 +70,7 @@ char **argv;
  * channels selected, and that info is not available in pick_getopts()
  * above.
  */
-int st_pick_start(effp)
-eff_t effp;
+int st_pick_start(eff_t effp)
 {
 	pick_t pick = (pick_t) effp->priv;
 
@@ -110,11 +105,8 @@ eff_t effp;
  * isamp or osamp samples, whichever is smaller,
  * while picking appropriate channels.
  */
-
-int st_pick_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_pick_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                 st_size_t *isamp, st_size_t *osamp)
 {
 	pick_t pick = (pick_t) effp->priv;
 	int len, done;
@@ -146,8 +138,7 @@ LONG *isamp, *osamp;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_pick_stop(effp)
-eff_t effp;
+int st_pick_stop(eff_t effp)
 {
 	/* nothing to do */
     return (ST_SUCCESS);

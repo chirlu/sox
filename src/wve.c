@@ -3,7 +3,7 @@
  * Richard Caley (R.Caley@ed.ac.uk)
  */
 
-#include "st.h"
+#include "st_i.h"
 #include "g72x.h"
 #include <string.h>
 #include <errno.h>
@@ -25,17 +25,14 @@ typedef struct wvepriv
 
 static void wvewriteheader(ft_t ft);
 
-int st_wveseek(ft,offset) 
-ft_t ft;
-LONG offset;
+int st_wveseek(ft_t ft, st_size_t offset) 
 {
 	wve_t wve = (wve_t ) ft->priv;
 
 	return st_seek(ft,offset*ft->info.size + wve->dataStart,SEEK_SET);
 }
 
-int st_wvestartread(ft) 
-ft_t ft;
+int st_wvestartread(ft_t ft) 
 {
 	wve_t p = (wve_t ) ft->priv;
 	char magic[16];
@@ -103,8 +100,12 @@ ft_t ft;
 	ft->info.encoding = ST_ENCODING_ALAW;
 	ft->info.size = ST_SIZE_BYTE;
 
+	if (ft->info.rate != 0)
+	    st_report("WVE must use 8000 sample rate.  Overriding");
 	ft->info.rate = 8000;
 
+	if (ft->info.channels != -1 && ft->info.channels != 1)
+	    st_report("WVE must only supports 1 channel.  Overriding");
 	ft->info.channels = 1;
 
 	p->dataStart = ftell(ft->fp);
@@ -122,8 +123,7 @@ ft_t ft;
    if it is not, the unspecified size remains in the header
    (this is illegal). */
 
-int st_wvestartwrite(ft) 
-ft_t ft;
+int st_wvestartwrite(ft_t ft) 
 {
 	wve_t p = (wve_t ) ft->priv;
 	int rc;
@@ -145,6 +145,12 @@ ft_t ft;
 	if (p->repeats == 0)
 	    p->repeats = 1;
 
+	if (ft->info.rate != 0)
+	    st_report("WVE must use 8000 sample rate.  Overriding");
+
+	if (ft->info.channels != -1 && ft->info.channels != 1)
+	    st_report("WVE must only supports 1 channel.  Overriding");
+
 	ft->info.encoding = ST_ENCODING_ALAW;
 	ft->info.size = ST_SIZE_BYTE;
 	ft->info.rate = 8000;
@@ -153,24 +159,19 @@ ft_t ft;
 	return ST_SUCCESS;
 }
 
-LONG st_wveread(ft, buf, samp)
-ft_t ft;
-LONG *buf, samp;
+st_ssize_t st_wveread(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 {
 	return st_rawread(ft, buf, samp);
 }
 
-LONG st_wvewrite(ft, buf, samp)
-ft_t ft;
-LONG *buf, samp;
+st_ssize_t st_wvewrite(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 {
 	wve_t p = (wve_t ) ft->priv;
 	p->length += samp * ft->info.size;
 	return st_rawwrite(ft, buf, samp);
 }
 
-int st_wvestopwrite(ft)
-ft_t ft;
+int st_wvestopwrite(ft_t ft)
 {
 	if (!ft->seekable)
 	{
@@ -189,8 +190,7 @@ ft_t ft;
 	return st_rawstopwrite(ft);
 }
 
-static void wvewriteheader(ft)
-ft_t ft;
+static void wvewriteheader(ft_t ft)
 {
 
     char magic[16];
@@ -215,4 +215,3 @@ ft_t ft;
     st_writew(ft, zero);
     st_writew(ft, zero);
 }
-

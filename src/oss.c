@@ -37,11 +37,10 @@
 #include <machine/soundcard.h>
 #endif
 #include <sys/ioctl.h>
-#include "st.h"
+#include "st_i.h"
 
 /* common r/w initialization code */
-static int ossdspinit(ft)
-ft_t ft;
+static int ossdspinit(ft_t ft)
 {
     int sampletype, samplesize, dsp_stereo;
     int tmp, rc;
@@ -204,8 +203,7 @@ ft_t ft;
  *	size and encoding of samples,
  *	mono/stereo/quad.
  */
-int st_ossdspstartread(ft)
-ft_t ft;
+int st_ossdspstartread(ft_t ft)
 {
     int rc;
     rc = ossdspinit(ft);
@@ -213,8 +211,7 @@ ft_t ft;
     return rc;
 }
 
-int st_ossdspstartwrite(ft)
-ft_t ft;
+int st_ossdspstartwrite(ft_t ft)
 {
     return ossdspinit(ft);
 }

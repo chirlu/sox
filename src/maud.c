@@ -17,7 +17,7 @@
  *
  */
 
-#include "st.h"
+#include "st_i.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -41,8 +41,7 @@ static void maudwriteheader(ft_t);
  *	size and encoding of samples, 
  *	mono/stereo/quad.
  */
-int st_maudstartread(ft) 
-ft_t ft;
+int st_maudstartread(ft_t ft) 
 {
 	struct maudstuff * p = (struct maudstuff *) ft->priv;
 	
@@ -226,9 +225,7 @@ ft_t ft;
  * Return number of samples read.
  */
 
-LONG st_maudread(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_maudread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	return (st_rawread(ft, buf, len));
 }
@@ -237,15 +234,13 @@ LONG *buf, len;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_maudstopread(ft) 
-ft_t ft;
+int st_maudstopread(ft_t ft) 
 {
 	/* Needed because of rawread() */
 	return st_rawstopread(ft);
 }
 
-int st_maudstartwrite(ft) 
-ft_t ft;
+int st_maudstartwrite(ft_t ft) 
 {
 	struct maudstuff * p = (struct maudstuff *) ft->priv;
 	int rc;
@@ -287,9 +282,7 @@ ft_t ft;
 	return (ST_SUCCESS);
 }
 
-LONG st_maudwrite(ft, buf, len) 
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_maudwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 	struct maudstuff * p = (struct maudstuff *) ft->priv;
 	
@@ -298,8 +291,7 @@ LONG *buf, len;
 	return st_rawwrite(ft, buf, len);
 }
 
-int st_maudstopwrite(ft) 
-ft_t ft;
+int st_maudstopwrite(ft_t ft) 
 {
         int rc;
 
@@ -321,8 +313,7 @@ ft_t ft;
 }
 
 #define MAUDHEADERSIZE (4+(4+4+32)+(4+4+32)+(4+4))
-static void maudwriteheader(ft)
-ft_t ft;
+static void maudwriteheader(ft_t ft)
 {
 	struct maudstuff * p = (struct maudstuff *) ft->priv;
 	

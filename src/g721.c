@@ -49,7 +49,7 @@
  *
  */
 
-#include "st.h"
+#include "st_i.h"
 #include "g72x.h"
 #include "libst.h"
 
@@ -78,11 +78,7 @@ static short	_fitab[16] = {0, 0, 0, 0x200, 0x200, 0x200, 0x600, 0xE00,
  * Encodes the input vale of linear PCM, A-law or u-law data sl and returns
  * the resulting code. -1 is returned for unknown input coding value.
  */
-int
-g721_encoder(sl, in_coding,state_ptr)
-	int		sl;
-	int		in_coding;
-	struct g72x_state *state_ptr;
+int g721_encoder(int sl, int in_coding, struct g72x_state *state_ptr)
 {
 	short		sezi, se, sez;		/* ACCUM */
 	short		d;			/* SUBTA */
@@ -135,11 +131,7 @@ g721_encoder(sl, in_coding,state_ptr)
  * returns the resulting linear PCM, A-law or u-law value.
  * return -1 for unknown out_coding value.
  */
-int
-g721_decoder(i, out_coding, state_ptr)
-	int		i;
-	int		out_coding;
-	struct g72x_state *state_ptr;
+int g721_decoder(int i, int out_coding, struct g72x_state *state_ptr)
 {
 	short		sezi, sei, sez, se;	/* ACCUM */
 	short		y;			/* MIX */

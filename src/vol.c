@@ -8,7 +8,7 @@
  * Cannot handle rate change.
  */
 
-#include "st.h"
+#include "st_i.h"
 
 #include <math.h>   /* exp(), sqrt() */
 #include <limits.h> /* LONG_MAX */
@@ -49,10 +49,7 @@ typedef struct {
 /*
  * Process options: gain (float) type (amplitude, power, dB)
  */
-int st_vol_getopts(effp, n, argv) 
-eff_t effp;
-int n;
-char **argv;
+int st_vol_getopts(eff_t effp, int n, char **argv) 
 {
     vol_t vol = (vol_t) effp->priv; 
     vol->gain = ONE; /* default is no change */
@@ -110,8 +107,7 @@ char **argv;
 /*
  * Start processing
  */
-int st_vol_start(effp)
-eff_t effp;
+int st_vol_start(eff_t effp)
 {
     vol_t vol = (vol_t) effp->priv;
     
@@ -162,10 +158,8 @@ static LONG clip(vol_t vol, const VOL_FLOAT v)
 /*
  * Process data.
  */
-int st_vol_flow(effp, ibuf, obuf, isamp, osamp)
-eff_t effp;
-LONG *ibuf, *obuf;
-LONG *isamp, *osamp;
+int st_vol_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+                st_size_t *isamp, st_size_t *osamp)
 {
     vol_t vol = (vol_t) effp->priv;
     register VOL_FLOAT gain = vol->gain;
@@ -217,8 +211,7 @@ LONG *isamp, *osamp;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_vol_stop(effp)
-eff_t effp;
+int st_vol_stop(eff_t effp)
 {
     vol_t vol = (vol_t) effp->priv;
     if (vol->limited)

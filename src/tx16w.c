@@ -41,7 +41,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "st.h"
+#include "st_i.h"
 
 /* Private data for TX16 file */
 typedef struct txwstuff {
@@ -74,8 +74,7 @@ static LONG writedone=0;
  *	size and encoding of samples,
  *	mono/stereo/quad.
  */
-int st_txwstartread(ft)
-     ft_t ft;
+int st_txwstartread(ft_t ft)
 {
   int c;
   char filetype[7];
@@ -187,9 +186,7 @@ int st_txwstartread(ft)
  * Return number of samples read.
  */
 
-LONG st_txwread(ft, buf, len)
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_txwread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
     txw_t sk = (txw_t) ft->priv;
 	int done = 0;
@@ -243,14 +240,12 @@ LONG *buf, len;
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_txwstopread(ft)
-ft_t ft;
+int st_txwstopread(ft_t ft)
 {
     return(ST_SUCCESS);
 }
 
-int st_txwstartwrite(ft)
-ft_t ft;
+int st_txwstartwrite(ft_t ft)
 {
   struct WaveHeader_ WH;
 
@@ -279,9 +274,7 @@ ft_t ft;
   return(ST_SUCCESS);
 }
 
-LONG st_txwwrite(ft, buf, len)
-ft_t ft;
-LONG *buf, len;
+st_ssize_t st_txwwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
 	int i;
         unsigned int w1,w2;
@@ -304,8 +297,7 @@ LONG *buf, len;
 	return(len);
 }
 
-int st_txwstopwrite(ft)
-ft_t ft;
+int st_txwstopwrite(ft_t ft)
 {
     struct WaveHeader_ WH;
     int AttackLength, LoopLength, i;

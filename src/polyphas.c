@@ -33,7 +33,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
-#include "st.h"
+#include "st_i.h"
 
 #define Float float/*double*/
 #define ISCALE 0x10000
@@ -546,7 +546,8 @@ static LONG clipfloat(Float sample)
 	return sample;
 }
 
-int st_poly_flow(eff_t effp, LONG *ibuf, LONG *obuf, LONG *isamp, LONG *osamp)
+int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+	         st_size_t *isamp, st_size_t *osamp)
 {
   poly_t rate = (poly_t) effp->priv;
   polystage *s0,*s1;
@@ -643,7 +644,7 @@ int st_poly_flow(eff_t effp, LONG *ibuf, LONG *obuf, LONG *isamp, LONG *osamp)
 /*
  * Process tail of input samples.
  */
-int st_poly_drain(eff_t effp, LONG *obuf, LONG *osamp)
+int st_poly_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
   LONG in_size;
   /* Call "flow" with NULL input. */
