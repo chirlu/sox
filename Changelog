@@ -68,7 +68,8 @@ sox-12.17
     and support for installs from outside the source directory.
   o Fabien COELHO added a pan and volume effect.
   o Fabien COELHO added a speed effect to sox (like speeding up a tape
-    machine).
+    machine).  Also added pitch which changes pitch without effecting
+    duration and stretch which stretch time without effecting pitch.
 
 sox-12.16
 ---------
