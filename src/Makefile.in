@@ -8,6 +8,7 @@
 
 SHELL = /bin/sh
 srcdir = @srcdir@
+VPATH	= @srcdir@
 prefix = @prefix@
 
 # Shell commands.
@@ -64,8 +65,6 @@ EXTRAOBJS   = $(OSSOBJ_$(NEED_OSS)) $(SUNAUOBJ_$(NEED_SUNAU)) $(ALSAOBJ_$(NEED_A
 
 LIBOBJS = $(FOBJ) $(EOBJ) handlers.o libst.o misc.o util.o getopt.o $(EXTRAOBJS)
 
-VPATH	= @srcdir@
-
 PLAY_0    =
 PLAY_1    = play
 
@@ -75,7 +74,7 @@ sox: libst.a sox.o
 	$(CC) $(LDFLAGS) -o sox sox.o $(LIBS)
 
 soxmix.o: sox.c
-	$(CC) $(CFLAGS) -DSOXMIX -c -o soxmix.o sox.c
+	$(CC) $(CFLAGS) -DSOXMIX -c -o soxmix.o $<
 
 soxmix: libst.a soxmix.o
 	$(CC) $(LDFLAGS) -o soxmix soxmix.o $(LIBS)
