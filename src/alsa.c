@@ -213,7 +213,7 @@ ft_t ft;
     struct alsa_setup a_setup;
     struct sndrv_pcm_hw_params params;
 
-    if (alsa_hw_info_get(fileno(ft->fp), a_info, &params) < 0) {
+    if (alsa_hw_info_get(fileno(ft->fp), &a_info, &params) < 0) {
 	st_fail_errno(ft,ST_EPERM,"ioctl operation failed %d",errno);
 	return(ST_EOF);
     }
