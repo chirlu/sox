@@ -20,14 +20,17 @@
  * at ftp://ccrma-ftp.stanford.edu/pub/NeXT/
  * under the name of resample-version.number.tar.Z
  *
- * NOTE: This source badly needs to be updated to reflect the latest
- * version of the above software!  Someone please perform this and
- * send patches to cbagwell@sprynet.com.
+ * NOTE: There is a newer version of the resample routine then what
+ * this file was originally based on.  Those adventurous might be
+ * interested in reviewing its improvesments and porting it to this
+ * version.
  */
+
 /* Fixed bug: roll off frequency was wrong, too high by 2 when upsampling,
  * too low by 2 when downsampling.
  * Andreas Wilde, 12. Feb. 1999, andreas@eakaw2.et.tu-dresden.de
 */
+
 /*
  * October 29, 1999
  * Various changes, bugfixes(?), increased precision, by Stan Brooks.

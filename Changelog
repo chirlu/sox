@@ -70,7 +70,7 @@ sox-12.17
   o Fabien COELHO added a speed effect to sox (like speeding up a tape
     machine).  Also added pitch which changes pitch without effecting
     duration and stretch which stretch time without effecting pitch.
-  o Leigh Smit updated aiff support to use the COMT check when writing
+  o Leigh Smith updated aiff support to use the COMT check when writing
     comments instead of the ANNO.  It is the prefered method from Apple
     and newer programs are starting to require it.  Also fixed some bugs
     in how we compute the length of various chunks in output files.

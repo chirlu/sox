@@ -755,7 +755,7 @@ recommended, as it produces poor quality results.
 
 .br
 -cutoff # : specify the filter cutoff frequency in terms of fraction of
-bandwidth, also know as the Nyquist frequency.  Please see 
+frequency bandwidth, also know as the Nyquist frequency.  Please see 
 the \fIresample\fR effect for
 further information on Nyquist frequency.  If upsampling, then this is the 
 fraction of the original signal
@@ -831,15 +831,23 @@ Nyquist frequency for the lower sample rate.  rolloff therefore should
 be something between 0.0 and 1.0, in practice 0.8-0.95.  The defaults are
 indicated above.
 
-The \fINyquist frequency\fR is 1/2 of the sample rate.  This refers to the
-fact that an audio file can only represent frequencies up to 1/2 of the 
-sample rate.  Therefore, when reducing the sample rate of an audio file a
-filter will remove all frequency information above the new Nyquist frequency.
+The \fINyquist frequency\fR is equal to (sample rate / 2).  Logically,
+this is because the A/D converter needs at least 2 samples to detect 1
+cycle at the Nyquist frequency.  Frequencies higher then the Nyquist
+will actually appear as lower frequencies to the A/D converter and
+is called aliasing.  Normally, A/D converts run the signal through
+a highpass filter first to avoid these problems.
+
+Similar problems will happen in software when reducing the sample rate of 
+an audio file (frequencies above the new Nyquist frequency can be aliased
+to lower frequencies).  Therefore, a good resample effect
+will remove all frequency information above the new Nyquist frequency.
+
 The \fIrolloff\fR refers to how close to the Nyquist frequency this cutoff
 is, with closer being better.  When increasing the sample rate of an 
 audio file you would not expect to have any frequencies exist that are 
-past the original Nyquist frequency.  Because of filter properties, it 
-is common to have false frequency data created that is above the old 
+past the original Nyquist frequency.  Because of resampling properties, it 
+is common to have alaising data created that is above the old 
 Nyquist frequency.  In that case the \fIrolloff\fR refers to how close 
 to the original Nyquist frequency to use a highpass filter to remove
 this false data, with closer also being better.
