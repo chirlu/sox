@@ -3,7 +3,7 @@ dnl
 dnl configure.in
 dnl
 
-AC_REVISION([configure.in 1.2])
+AC_REVISION([1.3])
 
 AC_INIT(sox.c)
 
@@ -214,7 +214,7 @@ AC_SUBST(PLAY_SUPPORT)
 dnl Generate output files...
 
 AC_CONFIG_HEADER(stconfig.h)
-AC_NEED_STDINT_H(ststdint.h)
+AC_CREATE_STDINT_H(ststdint.h)
 AC_OUTPUT([Makefile gsm/Makefile])
 
 if test ! -f tests.sh; then cp ${srcdir}/tests.sh tests.sh; fi
