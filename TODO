@@ -1,6 +1,9 @@
 People are encouraged to pick some of these and implement it.  Send
 all patches to cbagwell@users.sourceforge.net.
 
+  o VOX format says its reading/writing SIGN2 data when its
+    really OKI ADPCM.
+
   o Add an interface to libst so that applications can query
     what size/encoding/rate/channels a given format handles.
     Then applications could modify parameters before an error
