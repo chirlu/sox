@@ -384,7 +384,7 @@ st_format_t st_formats[] = {
  */
 
 st_effect_t st_effects[] = {
-	{"avg", ST_EFF_CHAN, 
+	{"avg", ST_EFF_MCHAN | ST_EFF_CHAN, 
 		st_avg_getopts, st_avg_start, st_avg_flow, 
 		st_effect_nothing_drain, st_avg_stop},
 	{"band", 0, 
