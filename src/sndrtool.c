@@ -240,7 +240,7 @@ st_writew (ft,0);
 st_writew (ft,10);
 st_writew (ft,4);
 memset (name_buf, 0, 96);
-sprintf (name_buf,"%s - File created by Sound Exchange",ft->filename);
+sprintf (name_buf,"%.62s - File created by Sound Exchange",ft->filename);
 fwrite (name_buf, 1, 96, ft->fp);
 }
 

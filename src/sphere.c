@@ -53,7 +53,7 @@ int st_spherestartread(ft_t ft)
 
 	if (st_reads(ft, fldsval, 8) == ST_EOF)
 	{
-	    st_fail_errno(ft,ST_EHDR,"Error reading Sphere header %s",fldsval);
+	    st_fail_errno(ft,ST_EHDR,"Error reading Sphere header");
 	    return(ST_EOF);
 	}
 

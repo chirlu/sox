@@ -36,6 +36,13 @@ sox-12.17.4
     for System/Alarms in some Psion devices.
   o Richard Bannister sent in a patch to make writing vorbis files
     work with Vorbis 1.0 libraries.
+  o Fixed configure scripts so that they can be ran with the
+    --with-oss-dsp, --with-alsa, and --with-sun-audio options.
+    Was causing compile time problems.  Reported by Raul Coronado.
+  o Change Ogg Vorbis support to use VBR encoding to match defaults
+    of oggenc based on suggestion from Christian Weisgerber.
+  o Prints error message now when a channel value of -1 is given.
+    Reported by Pierre Fortin.
 
 sox-12.17.3
 -----------

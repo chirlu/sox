@@ -467,8 +467,15 @@ static void doopts(ft_t ft, int argc, char **argv)
                 case 'c':
                         if (! ft) usage("-c");
                         str = optarg;
-                        if (! sscanf(str, "%d", &i))
-                                st_fail("-c must be given a number");
+                        if (!sscanf(str, "%d", &i))
+                            st_fail("-c must be given a number");
+			/* Since we use -1 as a special internal value,
+			 * we must do some extra logic so user doesn't
+			 * get confused when we translate -1 to mean
+			 * something valid.
+			 */
+			if (i < 1)
+			    st_fail("-c must be given a positive number");
                         ft->info.channels = i;
                         break;
                 case 'b':

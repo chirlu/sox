@@ -25,17 +25,17 @@ AC_ARG_ENABLE(gsm,
 	enable_gsm=$enableval, enable_gsm=yes)
 
 AC_ARG_WITH(alsa_dsp,
-	[  --with-alsa-dsp         Force support for /dev/snd/pcmABXY (ALSA)],
+	[  --without-alsa-dsp      Disable detection of /dev/snd/pcmABXY (ALSA)],
 	[alsa_dsp="$withval"],
 	[alsa_dsp=auto])
 
 AC_ARG_WITH(oss_dsp,
-	[  --with-oss-dsp          Force support for /dev/dsp (OSS)],
+	[  --without-oss-dsp       Disable detection of /dev/dsp (OSS)],
 	[oss_dsp="$withval"],
 	[oss_dsp=auto])
 
 AC_ARG_WITH(sun_audio,
-	[  --with-sun-audio        Force support for /dev/audio (SUN, etc)],
+	[  --without-sun-audio     Disable detection of /dev/audio (SUN, etc)],
 	[sun_audio="$withval"],
 	[sun_audio=auto])
 
@@ -217,14 +217,13 @@ AC_CHECK_FUNCS(getopt strerror memmove rand strcasecmp)
 
 dnl Checks for system services.
 
-if test "$alsa_dsp" = auto
+if test "$alsa_dsp" = yes
 then
-	AC_CHECK_HEADERS(linux/asound.h, alsa_dsp=check_ioctl)
-	AC_CHECK_HEADERS(sound/asound.h, alsa_dsp=alsa9)
+	alsa_type=alsa9
 fi
 
 AC_MSG_CHECKING([for ALSA ioctl API])
-if test "$alsa_dsp" = check_ioctl
+if test "$alsa_type" = check_ioctl
 then
 	AC_TRY_COMPILE(
 [
@@ -233,22 +232,22 @@ then
 [
 snd_pcm_capture_info_t c_info;
 ],
-		alsa_dsp=alsa4,alsa_dsp=alsa5)
+		alsa_type=alsa4,alsa_type=alsa5)
 fi
 
-if test "$alsa_dsp" = alsa9
+if test "$alsa_type" = alsa9
 then
 	CFLAGS="$CFLAGS -DALSA_PLAYER -DUSE_ALSA9"
 	NEED_ALSA=1
 	PLAY_SUPPORT=1
 	AC_MSG_RESULT([0.9.X])
-elif test "$alsa_dsp" = alsa5
+elif test "$alsa_type" = alsa5
 then
 	CFLAGS="$CFLAGS -DALSA_PLAYER -DUSE_ALSA5"
 	NEED_ALSA=1
 	PLAY_SUPPORT=1
 	AC_MSG_RESULT([0.5.X])
-elif test "$alsa_dsp" = alsa4
+elif test "$alsa_type" = alsa4
 then
 	CFLAGS="$CFLAGS -DALSA_PLAYER -DUSE_ALSA4"
 	NEED_ALSA=1
@@ -258,10 +257,7 @@ else
 	AC_MSG_RESULT([not found])
 fi
 
-if test "$oss_dsp" = auto
-then
-	AC_CHECK_HEADERS(sys/soundcard.h machine/soundcard.h, oss_dsp=yes)
-fi
+AC_CHECK_HEADERS(sys/soundcard.h machine/soundcard.h, oss_dsp=yes)
 
 if test "$oss_dsp" = yes
 then
@@ -270,10 +266,7 @@ then
 	PLAY_SUPPORT=1
 fi
 
-if test "$sun_audio" = auto
-then
-	AC_CHECK_HEADERS(sys/audioio.h sun/audioio.h, sun_audio=yes)
-fi
+AC_CHECK_HEADERS(sys/audioio.h sun/audioio.h, sun_audio=yes)
 
 if test "$sun_audio" = yes
 then
