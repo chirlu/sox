@@ -674,12 +674,20 @@ static void process(void) {
          */
         if (efftab[0].olen == ST_EOF)
         {
+            efftab[0].olen = 0;
+        }
+
+        /* Some file handlers claim 0 bytes instead of returning
+         * ST_EOF.  In either case, attempt to go to the next
+         * input file.
+         */
+        if (efftab[0].olen == 0)
+        {
             if (current_input < input_count-1)
             {
                 current_input++;
                 continue;
             }
-            efftab[0].olen = 0;
         }
 
         /* Adjust input side volume based on value specified
