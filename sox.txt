@@ -57,7 +57,7 @@ SYNOPSIS
 	    reverse
 	    speed factor
 	    split
-	    stat [ debug | -v ]
+	    stat [ -s n ] [-rms ] [ -v ] [ -d ]
 
 
 
@@ -811,45 +811,45 @@ SoX(1)							   SoX(1)
 		 poor quality results.
 
 		 -cutoff  # : specify the filter cutoff frequency
-		 in terms of fraction of bandwidth, also know  as
-		 the  Nyquist frequency.  Please see the resample
-		 effect for further information on  Nyquist  fre-
-		 quency.   If  upsampling, then this is the frac-
-		 tion of  the  original	 signal	 that  should  go
-		 through.   If downsampling, this is the fraction
-		 of the signal left after downsampling.	  Default
-		 is 0.95.  Remember that this is a float.
+		 in terms of  fraction	of  frequency  bandwidth,
+		 also  know as the Nyquist frequency.  Please see
+		 the resample effect for further  information  on
+		 Nyquist  frequency.  If upsampling, then this is
+		 the fraction of the original signal that  should
+		 go  through.  If downsampling, this is the frac-
+		 tion of  the  signal  left  after  downsampling.
+		 Default is 0.95.  Remember that this is a float.
 
 
        rate	 Translate input sampling rate to output sampling
-		 rate via linear interpolation to the Least  Com-
+		 rate  via linear interpolation to the Least Com-
 		 mon Multiple of the two sampling rates.  This is
 		 the default effect if the two files have differ-
-		 ent  sampling	rates and the preview options was
+		 ent sampling rates and the preview  options  was
 		 specified.  This is fast but noisy: the spectrum
-		 of  the  original  sound will be shifted upwards
-		 and duplicated faintly when up-translating by	a
+		 of the original sound will  be	 shifted  upwards
+		 and  duplicated faintly when up-translating by a
 		 multiple.
 
-		 Lerp-ing  is  acceptable  for	cheap 8-bit sound
-		 hardware, but for CD-quality  sound  you  should
-		 instead  use  either  resample or polyphase.  If
+		 Lerp-ing is acceptable	 for  cheap  8-bit  sound
+		 hardware,  but	 for  CD-quality sound you should
+		 instead use either resample  or  polyphase.   If
 		 you are wondering which rate changing effects to
-		 use,  you  will want to read a detailed analysis
+		 use, you will want to read a  detailed	 analysis
 		 of  all  of  them  at	http://eakaw2.et.tu-dres-
 		 den.de/~wilde/resample/resample.html
 
        resample [ -qs | -q | -ql ] [ rolloff [ beta ] ]
 		 Translate input sampling rate to output sampling
 		 rate  via  simulated  analog  filtration.   This
-		 method	 is slower than rate, but gives much bet-
+		 method is slower than rate, but gives much  bet-
 		 ter results.
 
 		 By default, linear interpolation is used, with a
-		 window	 width	about  45 samples at the lower of
-		 the two rate.	This gives an accuracy	of  about
-		 16  bits, but insufficient stopband rejection in
-		 the case that you want to have	 rolloff  greater
+		 window width about 45 samples at  the	lower  of
+		 the  two  rate.  This gives an accuracy of about
+		 16 bits, but insufficient stopband rejection  in
+		 the  case  that you want to have rolloff greater
 
 
 
@@ -864,16 +864,16 @@ SoX(1)							   SoX(1)
 
 		 than about 0.80 of the Nyquist frequency.
 
-		 The  -q*  options will change the default values
-		 for rolloff and beta as well  as  use	quadratic
-		 interpolation	of filter coefficients, resulting
+		 The -q* options will change the  default  values
+		 for  rolloff  and  beta as well as use quadratic
+		 interpolation of filter coefficients,	resulting
 		 in about 24 bits precision.  The -qs, -q, or -ql
-		 options  specify  increased accuracy at the cost
-		 of lower execution speed.   It	 is  optional  to
-		 specify  rolloff  and beta parameters when using
+		 options specify increased accuracy at	the  cost
+		 of  lower  execution  speed.	It is optional to
+		 specify rolloff and beta parameters  when  using
 		 the -q* options.
 
-		 Following is a table of the reasonable	 defaults
+		 Following  is a table of the reasonable defaults
 		 which are built-in to sox:
 
 		    Option  Window rolloff beta interpolation
@@ -885,37 +885,37 @@ SoX(1)							   SoX(1)
 		    ------  ------ ------- ---- -------------
 
 		 -qs, -q, or -ql use window lengths of 45, 75, or
-		 149 samples, respectively, at the lower  sample-
+		 149  samples, respectively, at the lower sample-
 		 rate of the two files.	 This means progressively
-		 sharper stop-band rejection,  at  proportionally
+		 sharper  stop-band  rejection, at proportionally
 		 slower execution times.
 
-		 rolloff  refers  to the cut-off frequency of the
-		 low pass filter and is given  in  terms  of  the
-		 Nyquist  frequency  for  the  lower sample rate.
-		 rolloff therefore should  be  something  between
+		 rolloff refers to the cut-off frequency  of  the
+		 low  pass  filter  and	 is given in terms of the
+		 Nyquist frequency for	the  lower  sample  rate.
+		 rolloff  therefore  should  be something between
 		 0.0 and 1.0, in practice 0.8-0.95.  The defaults
 		 are indicated above.
 
-		 The Nyquist frequency is 1/2 of the sample rate.
-		 This  refers  to the fact that an audio file can
-		 only represent frequencies up to 1/2 of the sam-
-		 ple  rate.   Therefore, when reducing the sample
-		 rate of an audio file a filter will  remove  all
-		 frequency information above the new Nyquist fre-
-		 quency.  The rolloff refers to how close to  the
-		 Nyquist  frequency  this  cutoff is, with closer
-		 being better.	When increasing the  sample  rate
-		 of  an	 audio	file you would not expect to have
-		 any frequencies exist that are past the original
-		 Nyquist  frequency.   Because	of filter proper-
-		 ties, it is common to have false frequency  data
-		 created that is above the old Nyquist frequency.
-		 In that case the rolloff refers to how close  to
-		 the original Nyquist frequency to use a highpass
-		 filter to remove this false  data,  with  closer
-		 also being better.
+		 The Nyquist frequency is equal to (sample rate /
+		 2).  Logically, this is  because  the	A/D  con-
+		 verter	 needs	at  least  2  samples to detect 1
+		 cycle at  the	Nyquist	 frequency.   Frequencies
+		 higher	 then the Nyquist will actually appear as
+		 lower frequencies to the A/D  converter  and  is
+		 called aliasing.  Normally, A/D converts run the
+		 signal through a highpass filter first to  avoid
+		 these problems.
 
+		 Similar  problems  will  happen in software when
+		 reducing the sample rate of an audio file  (fre-
+		 quencies  above the new Nyquist frequency can be
+		 aliased to  lower  frequencies).   Therefore,	a
+		 good  resample	 effect will remove all frequency
+		 information above the new Nyquist frequency.
+
+		 The rolloff refers to how close to  the  Nyquist
+		 frequency  this  cutoff  is,  with  closer being
 
 
 
@@ -927,6 +927,17 @@ SoX(1)							   SoX(1)
 
 SoX(1)							   SoX(1)
 
+
+		 better.  When increasing the sample rate  of  an
+		 audio file you would not expect to have any fre-
+		 quencies  exist  that	are  past  the	 original
+		 Nyquist  frequency.  Because of resampling prop-
+		 erties, it is common to have alaising data  cre-
+		 ated  that  is	 above the old Nyquist frequency.
+		 In that case the rolloff refers to how close  to
+		 the original Nyquist frequency to use a highpass
+		 filter to remove this false  data,  with  closer
+		 also being better.
 
 		 The beta parameter determines the type of filter
 		 window used.  Any value greater than 2.0 is  the
@@ -970,18 +981,7 @@ SoX(1)							   SoX(1)
 		 is  given  in	milliseconds  and its feedback is
 		 depending on the  reverb-time	in  milliseconds.
 		 Each  delay  should  be  in the range of half to
-		 quarter of reverb-time to get a realistic rever-
-		 beration.  Gain-out is the volume of the output.
-
-       reverse	 Reverse the sound sample  completely.	 Included
-		 for finding Satanic subliminals.
-
-       speed factor
-		 Speed	up  or down the sound, as a magnetic tape
-		 with a speed control.	It affects both pitch and
-		 time.	A  factor  of 1.0 means no change, and is
-		 the  default.	 2.0  doubles  speed,  thus  time
-		 length	 is cut by a half and pitch is one octave
+		 quarter  of  reverb-time  to  get  a	realistic
 
 
 
@@ -994,6 +994,18 @@ SoX(1)							   SoX(1)
 SoX(1)							   SoX(1)
 
 
+		 reverberation.	  Gain-out  is	the volume of the
+		 output.
+
+       reverse	 Reverse the sound sample  completely.	 Included
+		 for finding Satanic subliminals.
+
+       speed factor
+		 Speed	up  or down the sound, as a magnetic tape
+		 with a speed control.	It affects both pitch and
+		 time.	A  factor  of 1.0 means no change, and is
+		 the  default.	 2.0  doubles  speed,  thus  time
+		 length	 is cut by a half and pitch is one octave
 		 higher.  0.5 halves speed thus time length  dou-
 		 bles and pitch is one octave lower.
 
@@ -1001,24 +1013,52 @@ SoX(1)							   SoX(1)
 		 ing the input channel	to  the	 left  and  right
 		 channels.
 
-       stat [ debug | -v ]
+       stat [ -s n ] [-rms ] [ -v ] [ -d ]
 		 Do  a	statistical  check on the input file, and
-		 print results on the standard error file.   stat
-		 may  copy  the file untouched from input to out-
-		 put, if you select an output file.  The  "Volume
-		 Adjustment:"  field  in the statistics gives you
-		 the argument to the -v number	which  will  make
-		 the sample as loud as possible without clipping.
-		 There is an  optional	parameter  -v  that  will
-		 print out the "Volume Adjustment:" field's value
-		 and return.  This could be of use in scripts  to
-		 auto  convert	the  volume.  There is an also an
-		 optional parameter debug  that	 will  place  sox
-		 into  debug mode and print out a hex dump of the
-		 sound file from the internal buffer that  is  in
-		 32-bit	 signed PCM data.  This is mainly only of
-		 use in tracking down endian problems that  creep
-		 in to sox on cross-platform versions.
+		 print results on the standard error file.  Audio
+		 data  is  passed unmodified from input to output
+		 file unless used along with the -e option.
+
+		 The "Volume Adjustment:" field in the statistics
+		 gives	you  the  argument to the -v number which
+		 will make the sample as loud as possible without
+		 clipping.
+
+		 The option -v will print out the "Volume Adjust-
+		 ment:" field's	 value	only  and  return.   This
+		 could	be  of use in scripts to auto convert the
+		 volume.
+
+		 The -s n option is used to scale the input  data
+		 by  a	given  factor.	The default value of n is
+		 the  max  value  of  a	 signed	  long	 variable
+		 (0x7fffffff).	Internal effects always work with
+		 signed long PCM data and  so  the  value  should
+		 relate to this fact.
+
+		 The  -rms option will convert all output average
+		 values to root mean square format.
+
+		 There is also an optional parameter -d that will
+		 print	out a hex dump of the sound file from the
+		 internal buffer that is  in  32-bit  signed  PCM
+		 data.	 This  is  mainly only of use in tracking
+		 down endian problems that creep  in  to  sox  on
+		 cross-platform versions.
+
+
+
+
+
+
+			  July 24, 2000			       16
+
+
+
+
+
+SoX(1)							   SoX(1)
+
 
        stretch factor [window fade shift fading]
 		 Time  stretch	file  by  a  given factor. Change
@@ -1048,18 +1088,6 @@ SoX(1)							   SoX(1)
 		 Add  the  world-famous	 Fender Vibro-Champ sound
 		 effect to a sound sample by using a sine wave as
 		 the volume knob.  Speed gives the Hertz value of
-
-
-
-			  July 24, 2000			       16
-
-
-
-
-
-SoX(1)							   SoX(1)
-
-
 		 the wave.  This must be under 30.   Depth  gives
 		 the  amount  the  volume is cut into by the sine
 		 wave, ranging 0.0 to 1.0 and defaulting to  0.5.
@@ -1086,14 +1114,27 @@ SoX(1)							   SoX(1)
 
        Sox enforces certain effects.  If the two files have  dif-
        ferent sampling rates, the requested effect must be one of
-       copy, or rate, If the two files have different numbers  of
-       channels, the avg effect must be requested.
+
+
+
+			  July 24, 2000			       17
+
+
+
+
+
+SoX(1)							   SoX(1)
+
+
+       polyphase, rate, or resample.  If the two files have  dif-
+       ferent  numbers of channels, the avg or other channel mix-
+       ing effect must be requested.
 
 BUGS
-       The  syntax  is horrific.  Thats the breaks when trying to
+       The syntax is horrific.	Thats the breaks when  trying  to
        handle all things from the command line.
 
-       Please report any bugs found in this  version  of  sox  to
+       Please  report  any  bugs  found in this version of sox to
        Chris Bagwell (cbagwell@sprynet.com)
 
 FILES
@@ -1101,10 +1142,10 @@ SEE ALSO
        play(1), rec(1), soxexam(1)
 
 NOTICES
-       The  version  of	 Sox that accompanies this manual page is
-       support by Chris Bagwell	 (cbagwell@sprynet.com).   Please
+       The version of Sox that accompanies this	 manual	 page  is
+       support	by  Chris Bagwell (cbagwell@sprynet.com).  Please
        refer any questions regarding it to this address.  You may
-       obtain  the  latest  version   at   the	 the   web   site
+       obtain	the   latest   version	 at   the  the	web  site
        http://home.sprynet.com/~cbagwell/sox.html
 
 
@@ -1117,6 +1158,31 @@ NOTICES
 
 
 
-			  July 24, 2000			       17
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			  July 24, 2000			       18
 
 

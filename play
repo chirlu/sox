@@ -65,7 +65,7 @@ formats, and effect options."
 # loop over arguments
 while [ $# -ne 0 ]; do
     case "$1" in
-	avg|band|chorus|copy|cut|deemph|echo|echos|flanger|highp|lowp|map|mask|phaser|pick|polyphase|rate|resample|reverb|reverse|split|stat|vibro)
+	avg|band|bandreject|chorus|compand|copy|cut|deemph|echo|echos|filter|flanger|highp|lowp|map|mask|pan|phaser|pick|pitch|polyphase|rate|resample|reverb|reverse|speed|split|stat|stretch|vibro|vol)
 	    effects="$@"
 	    break
 	    ;;
