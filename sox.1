@@ -645,12 +645,12 @@ avg effect and use the \fI-l\fR, \fI-r\fR, \fI-f\fR, \fI-b\fR,
 \fI-1\fR, \fI-2\fR, \fI-3\fR, \fI-4\fR, options to select only
 the left, right, front, back channel(s) or specific channel 
 for the output instead of averaging the channels.
-The \fI-l\fR, \fI-r\fR, \fI-f\fR, and \fI-b\fR options will do averaging
+The \fI-l\fR, and \fI-r\fR options will do averaging
 in quad-channel files so select the exact channel to prevent this.
 
 The avg effect can also be invoked with up to 16 double-precision
-numbers, which specify the proportion of each input channel that is
-to be mixed into each output channel.
+numbers, which specify the proportion (0.0 = 0% and 1.0 = 100%) 
+of each input channel that is to be mixed into each output channel.
 In two-channel mode, 4 numbers are given: l->l, l->r, r->l, and r->r,
 respectively.
 In four-channel mode, the first 4 numbers give the proportions for the
@@ -661,9 +661,28 @@ left-back and right-back.
 
 It is also possible to use the 16 numbers to expand or reduce the
 channel count; just specify 0 for unused channels.
-Finally, if fewer than 4 numbers are given, certain special
-abbreviations may be
-invoked; see the source code for details.
+
+Finally, certain reduced combination of numbers can be specified
+for certain input/output channel combinations.
+
+
+In Ch  Out Ch Num Mappings
+.br
+_____  ______ ___ _____________________________
+.b4
+  2      1     2   l->l, r->l
+.br
+  2      2     1   adjust balance
+.br
+  4      1     4   lf->l, rf->l, lb->l, rb-l
+.br
+  4      2     2   lf->l&rf->r, lb->l&rb->r
+.br
+  4      4     1   adjust balance
+.br
+  4      4     2   front balance, back balance
+.br
+
 .TP 10
 band \fB[ \fI-n \fB] \fIcenter \fB[ \fIwidth\fB ]
 Apply a band-pass filter.

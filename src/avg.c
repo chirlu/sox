@@ -168,7 +168,7 @@ int st_avg_start(eff_t effp)
        4) 2->2 fully general mix (4 numbers)
        5) 2->4 duplication (0 numbers)
        6) 4->1 mixdown (0 or 4 numbers)
-       7) 4->2 mixdown (0 or 2 numbers)
+       7) 4->2 mixdown (0, or 2 numbers)
        8) 4->4 balance (1 or 2 numbers)
 
        The above has one ambiguity: n->n volume change conflicts with
@@ -214,7 +214,7 @@ int st_avg_start(eff_t effp)
                  pans[1] = 0.0;
                  avg->num_pans = 2;
              }
-             else if (ichan == 4 && ochan == 2)
+             else if (ichan == 4 && ochan == 1)
              {
                  pans[0] = 0.5;
                  pans[1] = 0.0;
@@ -236,7 +236,7 @@ int st_avg_start(eff_t effp)
                  pans[1] = 1.0;
                  avg->num_pans = 2;
              }
-             else if (ichan == 4 && ochan == 2)
+             else if (ichan == 4 && ochan == 1)
              {
                  pans[0] = 0.0;
                  pans[1] = 0.5;
@@ -255,10 +255,8 @@ int st_avg_start(eff_t effp)
              if (ichan == 4 && ochan == 2)
              {
                  pans[0] = 1.0;
-                 pans[1] = 1.0;
-                 pans[2] = 0.0;
-                 pans[3] = 0.0;
-                 avg->num_pans = 4;
+                 pans[1] = 0.0;
+                 avg->num_pans = 2;
              }
              else
              {
@@ -270,10 +268,8 @@ int st_avg_start(eff_t effp)
              if (ichan == 4 && ochan == 2)
              {
                  pans[0] = 0.0;
-                 pans[1] = 0.0;
-                 pans[2] = 1.0;
-                 pans[3] = 1.0;
-                 avg->num_pans = 4;
+                 pans[1] = 1.0;
+                 avg->num_pans = 2;
              }
              else
              {
