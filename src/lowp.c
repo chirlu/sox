@@ -98,7 +98,7 @@ LONG *isamp, *osamp;
 		    d = -2147483647L;
 		else if (d > 2147483647L)
 		    d = 2147483647L;
-		lowp->outm1 = l;
+		lowp->outm1 = d;
 		*obuf++ = d;
 	}
 	*isamp = len;

@@ -34,6 +34,14 @@ sox-12.17.2
   o With help from David Blythe, updated OSS drivers to use newer format
     interface.  OSS driver will now attempt to detect a valid endian type
     to use with sound card.
+  o Carsten Borchardt pointed out a bug in lowp filter.  Added new
+    nul file handler that reads and writes from/to nothing.
+    Also added new synth effect that creates sounds using a simple
+    synthesizer.  Created a testcd.sh that uses two new features
+    to create a test sound CD for testing audio equipment.
+  o Ben Last added a new program that uses libst and will merge two
+    seperate audio files into a single file with multiple channels.
+    Written for sox 12.16 so doesn't work with 12.17.2 yet.
 
 sox-12.17.1
 -----------

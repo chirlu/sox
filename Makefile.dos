@@ -12,7 +12,7 @@
 
 FOBJ	= 8svx.obj adpcm.obj aiff.obj alsa.obj au.obj auto.obj avr.obj cdr.obj \
 	  cvsd.obj dat.obj g721.obj g723_24.obj g723_40.obj g72x.obj gsm.obj \
-	  hcom.obj ima_rw.obj maud.obj oss.obj raw.obj sf.obj smp.obj \
+	  hcom.obj ima_rw.obj maud.obj nul.obj oss.obj raw.obj sf.obj smp.obj \
 	  sndrtool.obj sphere.obj sunaudio.obj tx16w.obj voc.obj \
 	  wav.obj wve.obj
 
@@ -22,7 +22,7 @@ EOBJ	= avg.obj band.obj bandpass.obj breject.obj btrworth.obj chorus.obj \
           lowp.obj lowpass.obj map.obj mask.obj phaser.obj pick.obj \
 	  pitch.obj pan.obj polyphase.obj rate.obj resample.obj reverb.obj \
 	  reverse.obj speed.obj split.obj stat.obj stretch.obj \
-	  swap.obj trim.obj vibro.obj vol.obj
+	  swap.obj synth.obj trim.obj vibro.obj vol.obj
 
 LIBOBJS   = $(FOBJ) $(EOBJ) handlers.obj libst.obj misc.obj getopt.obj util.obj
 
@@ -66,14 +66,20 @@ LFLAGS  = -v -mh
 #       $(CC) $(CFLAGS) $*.c
 #       $(LDD) libst -+$*,,
 
-all: sox.exe
+all: sox.exe mix.exe
 
 sox.exe: sox.obj libst.lib
         $(CC) $(LFLAGS) -L$(LIBDIR) sox.obj libst.lib
 
+mix.exe: mix.obj libst.lib
+        $(CC) $(LFLAGS) -L$(LIBDIR) mix.obj libst.lib
+
 libst.lib: $(LIBOBJS)
 
 sox.obj: sox.c st.h
+        $(CC) $(CFLAGS) -I$(INCDIR) -L$(LIBDIR) $*.c
+
+mix.obj: mix.c st.h
         $(CC) $(CFLAGS) -I$(INCDIR) -L$(LIBDIR) $*.c
 
 clean:

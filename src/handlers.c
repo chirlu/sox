@@ -161,6 +161,18 @@ extern LONG st_maudwrite();
 extern int  st_maudstartwrite();
 extern int  st_maudstopwrite();
 
+static char *nulnames[] = {
+        "nul",
+        (char *) 0,
+};
+
+extern int  st_nulstartread();
+extern LONG st_nulread();
+extern int  st_nulstopread();
+extern LONG st_nulwrite();
+extern int  st_nulstartwrite();
+extern int  st_nulstopwrite();
+
 #if	defined(OSS_PLAYER)
 static char *ossdspnames[] = {
 	"ossdsp",
@@ -394,6 +406,9 @@ st_format_t st_formats[] = {
         {maudnames, ST_FILE_STEREO,    		/* Amiga MAUD */
 		st_maudstartread, st_maudread, st_maudstopread,
 		st_maudstartwrite, st_maudwrite, st_maudstopwrite, st_nothing},
+        {nulnames, ST_FILE_STEREO,    		/* NUL */
+ 		st_nulstartread, st_nulread, st_nulstopread,
+ 		st_nulstartwrite, st_nulwrite, st_nulstopwrite},
 #if	defined(OSS_PLAYER)
 	{ossdspnames, ST_FILE_STEREO,		/* OSS /dev/dsp player */
 		st_ossdspstartread, st_rawread, st_rawstopread,
@@ -641,6 +656,12 @@ extern int st_swap_flow();
 extern int st_swap_drain();
 extern int st_swap_stop();
 
+extern int st_synth_getopts(); 
+extern int st_synth_start();
+extern int st_synth_flow();
+extern int st_synth_drain();
+extern int st_synth_stop();
+
 extern int st_vibro_getopts();
 extern int st_vibro_start();
 extern int st_vibro_flow();
@@ -772,6 +793,9 @@ st_effect_t st_effects[] = {
 	{"swap", ST_EFF_MCHAN,
 		st_swap_getopts, st_swap_start, st_swap_flow, 
 		st_swap_drain, st_swap_stop},
+        {"synth", ST_EFF_MCHAN, 
+                st_synth_getopts, st_synth_start, st_synth_flow, 
+                st_synth_drain, st_synth_stop},
 	{"vibro", 0, 
 		st_vibro_getopts, st_vibro_start, st_vibro_flow, 
 		st_null_drain, st_nothing},

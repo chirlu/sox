@@ -1367,8 +1367,8 @@ int second_header;
 #ifdef HAVE_LIBGSM
 		    if (wChannels!=1)
 		    {
-			st_fail_errno(ft,ST_EOF,"Channels(%d) must be == 1\n",wChannels);
-			return ST_EOF;
+			st_warn("Overriding GSM audio from %d channel to 1\n",wChannels);
+			wChannels = ft->info.channels = 1;
 		    }
 		    wFormatTag = WAVE_FORMAT_GSM610;
 		    /* wAvgBytesPerSec = 1625*(wSamplesPerSecond/8000.)+0.5; */

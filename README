@@ -37,6 +37,7 @@ This release understands:
   o Psion (palmtop) A-law WVE files
   o Pseudo-file fomats that allow direct playing/recording
     from some audio devices under unix.
+  o Pseudo-nul file that reads and writes from/to nowhere
 
 The sound effects include:
 
@@ -65,10 +66,11 @@ The sound effects include:
   o Reverse the sound samples (to search for Satanic messages ;-)
   o Change the speed of samples being played (like speeding up the motor
     on a tape recorder)
-  o Stretch/shorten the duration of a sound file.
   o Convert from mono to stereo
-  o Swap stereo channels
   o Display general stats on a sound sample
+  o Stretch/shorten the duration of a sound file.
+  o Swap stereo channels
+  o Create sounds with a simple synthesizer.
   o Trim audio data from beginning and end of file.
   o Add the world-famous Fender Vibro-Champ effect
   o Adjust volume of samples
