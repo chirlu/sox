@@ -158,18 +158,18 @@ int st_avg_start(eff_t effp)
        left f/r to all f/r is 1,1,0,0 0,0,0,0 0,0,1,1 0,0,0,0
        etc.
 
-       The interesting ones from above (deserving of abbreviations of
+       The interesting cases from above (deserving of abbreviations of
        less than 16 numbers) are:
 
-       n->n volume change (1 number)
-       1->n duplication (0 numbers)
-       2->1 mixdown (0 or 2 numbers)
-       2->2 balance (1 number)
-       2->2 fully general mix (4 numbers)
-       2->4 duplication (0 numbers)
-       4->1 mixdown (0 or 4 numbers)
-       4->2 mixdown (0 or 2 numbers)
-       4->4 balance (1 or 2 numbers)
+       0) n->n volume change (1 number)
+       1) 1->n duplication (0 numbers)
+       2) 2->1 mixdown (0 or 2 numbers)
+       3) 2->2 balance (1 number)
+       4) 2->2 fully general mix (4 numbers)
+       5) 2->4 duplication (0 numbers)
+       6) 4->1 mixdown (0 or 4 numbers)
+       7) 4->2 mixdown (0 or 2 numbers)
+       8) 4->4 balance (1 or 2 numbers)
 
        The above has one ambiguity: n->n volume change conflicts with
        n->n balance for n != 1.  In such a case, we'll prefer
@@ -179,7 +179,7 @@ int st_avg_start(eff_t effp)
      */
      avg_t avg = (avg_t) effp->priv;
      double pans[16];
-     int i;
+     int i, j;
      int ichan, ochan;
 
      for (i = 0;  i < 16;  i++)
@@ -206,24 +206,6 @@ int st_avg_start(eff_t effp)
                  st_fail("Output must have different number of channels to use avg effect");
                  return(ST_EOF);
              }
-             /* When reducing channel count, need to reduce values
-              * to prevent clipping.
-              */
-             if (ochan < ichan)
-             {
-                 pans[0] = 0.5;
-                 pans[1] = 0.5;
-             }
-             /* else we are duplicating into new channels and can
-              * use full values.
-              */
-             else
-             {
-                 pans[0] = 1;
-                 pans[1] = 1;
-             }
-             avg->num_pans = 2;
-             avg->mix = MIX_CENTER;
              break;             /* Code below will handle this case */
          case MIX_LEFT:
              if (ichan == 2 && ochan == 1)
@@ -377,37 +359,53 @@ int st_avg_start(eff_t effp)
              return ST_EOF;
      }
 
-     /* FIXME: If num_pans <= 0 need to clear out sources[][] array
-      * or else there will be garbage in lower array were user
-      * was storing temp data
+     /* If number of pans is 4 or less then its a shorthand
+      * representation.  If user specified it, then we have
+      * garbage in our sources[][] array.  Need to clear that
+      * now that all data is stored in pans[] array.
       */
+     if (avg->num_pans <= 4)
+     {
+         for (i = 0; i < ichan; i++)
+         {
+             for (j = 0; j < ochan; j++) 
+             {
+                 avg->sources[i][j] = 0;
+             }
+         }
+     }
 
      /* If the number of pans given is 4 or fewer, handle the special */
      /* cases listed in the comments above.  The code is lengthy but */
      /* straightforward. */
      if (avg->num_pans == 0) {
-         if (ichan == 1) {
+         /* CASE 1 */
+         if (ichan == 1 && ochan > ichan) {
              avg->sources[0][0] = 1.0;
              avg->sources[0][1] = 1.0;
              avg->sources[0][2] = 1.0;
              avg->sources[0][3] = 1.0;
          }
+         /* CASE 2 */
          else if (ichan == 2 && ochan == 1) {
              avg->sources[0][0] = 0.5;
              avg->sources[1][0] = 0.5;
          }
+         /* CASE 5 */
          else if (ichan == 2 && ochan == 4) {
              avg->sources[0][0] = 1.0;
              avg->sources[0][2] = 1.0;
              avg->sources[1][1] = 1.0;
              avg->sources[1][3] = 1.0;
          }
+         /* CASE 6 */
          else if (ichan == 4 && ochan == 1) {
              avg->sources[0][0] = 0.25;
              avg->sources[1][0] = 0.25;
              avg->sources[2][0] = 0.25;
              avg->sources[3][0] = 0.25;
          }
+         /* CASE 7 */
          else if (ichan == 4 && ochan == 2) {
              avg->sources[0][0] = 0.5;
              avg->sources[1][1] = 0.5;
@@ -421,9 +419,10 @@ int st_avg_start(eff_t effp)
      }
      else if (avg->num_pans == 1) {
          /* Might be volume change or balance change */
+         /* CASE 3 and CASE 8 */
          if ((ichan == 2 || ichan == 4) &&  ichan == ochan) {
              /* -1 is left only, 1 is right only */
-             if (avg->sources[0][0] <= 0.0) {
+             if (pans[0] <= 0.0) {
                  avg->sources[1][1] = pans[0] + 1.0;
                  if (avg->sources[1][1] < 0.0)
                      avg->sources[1][1] = 0.0;
@@ -447,19 +446,19 @@ int st_avg_start(eff_t effp)
          }
      }
      else if (avg->num_pans == 2) {
-         /* FIXME: No catches for duplicating channels.  Perhaps
-          * it could be changed to be handled by 0 pan case above.
-          */
+         /* CASE 2 */
          if (ichan == 2 && ochan == 1) {
              avg->sources[0][0] = pans[0];
              avg->sources[1][0] = pans[1];
          }
+         /* CASE 7 */
          else if (ichan == 4 && ochan == 2) {
              avg->sources[0][0] = pans[0];
              avg->sources[1][1] = pans[0];
              avg->sources[2][0] = pans[1];
              avg->sources[3][1] = pans[1];
          }
+         /* CASE 8 */
          else if (ichan == 4 && ochan == 4) {
              /* pans[0] is front -> front, pans[1] is for back */
              avg->sources[0][0] = pans[0];
@@ -467,8 +466,14 @@ int st_avg_start(eff_t effp)
              avg->sources[2][2] = pans[1];
              avg->sources[3][3] = pans[1];
          }
+         else
+         {
+             st_fail("Invalid options specified to avg for this channel combination");
+             return ST_EOF;
+         }
      }
      else if (avg->num_pans == 4) {
+         /* CASE 4 */
          if (ichan == 2 && ochan == 2) {
              /* Shorthand for 2-channel case */
              avg->sources[0][0] = pans[0];
@@ -476,17 +481,17 @@ int st_avg_start(eff_t effp)
              avg->sources[1][0] = pans[2];
              avg->sources[1][1] = pans[3];
          }
-         else if (ichan == 4 && ochan == 2) {
-             avg->sources[0][0] = pans[0];
-             avg->sources[1][1] = pans[1];
-             avg->sources[2][0] = pans[2];
-             avg->sources[3][1] = pans[3];
-         }
+         /* CASE 6 */
          else if (ichan == 4 && ochan == 1) {
              avg->sources[0][0] = pans[0];
              avg->sources[1][0] = pans[1];
              avg->sources[2][0] = pans[2];
              avg->sources[3][0] = pans[3];
+         }
+         else
+         {
+             st_fail("Invalid options specified to avg for this channel combination");
+             return ST_EOF;
          }
      }
      else
