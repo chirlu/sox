@@ -298,13 +298,14 @@ LONG *buf, len;
 /* understands this format. */
 
 /* XXX This uses global variables -- one day these should all be
-   passed around in a structure instead. */
+   passed around in a structure instead. Use static so we don't
+   polute global name space. */
 
-dictent dictionary[511];
-dictent *de;
-LONG codes[256];
-LONG codesize[256];
-LONG checksum;
+static dictent dictionary[511];
+static dictent *de;
+static LONG codes[256];
+static LONG codesize[256];
+static LONG checksum;
 
 void makecodes(e, c, s, b)
 int e, c, s, b;
@@ -318,8 +319,8 @@ int e, c, s, b;
   }
 }
 
-LONG curword;
-int nbits;
+static LONG curword;
+static int nbits;
 
 void putlong(c, v)
 unsigned char *c;

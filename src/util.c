@@ -40,7 +40,7 @@ EXPORT int writing = 0;	/* are we writing to a file? */
 EXPORT int verbose = 0;	/* be noisy on stderr */
 EXPORT int summary = 0;	/* just print summary of information */
 
-EXPORT char *myname;
+EXPORT char *myname = 0;
 
 EXPORT int soxpreview = 0;	/* preview mode */
 

@@ -113,6 +113,7 @@ install-play:
 
 install-lib: libst.a
 	$(INSTALL) -c -m 644 libst.a $(LIBDIR)
+	$(RANLIB) $(LIBDIR)/libst.a
 	$(INSTALL) -c -m 644 libst.3 $(MANDIR)/man3
 	$(INSTALL) -c -m 644 st.h $(INCDIR)
 
