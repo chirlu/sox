@@ -94,12 +94,11 @@ void st_clearerr(ft_t ft);
 #ifdef HAVE_BYTESWAP_H
 #define st_swapw(x) bswap_16(x)
 #define st_swapdw(x) bswap_32(x)
-#define st_swapf(x) (float)bswap_32((uint32_t)(x))
 #else
 uint16_t st_swapw(uint16_t uw);
 uint32_t st_swapdw(uint32_t udw);
-float st_swapf(float f);
 #endif
+float st_swapf(float f);
 uint32_t st_swap24(uint32_t udw);
 double st_swapd(double d);
 
