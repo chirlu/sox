@@ -35,7 +35,7 @@ This release understands:
     o PCM, u-law, A-law
     o MS ADPCM, IMA ADPCM
     o GSM
-  o Psion (palmtop) A-law WVE files
+  o Psion (palmtop) A-law WVE and PRC files
   o Pseudo-file formats that allow direct playing/recording
     from some audio devices under UNIX.
   o Pseudo-nul file that reads and writes from/to nowhere
