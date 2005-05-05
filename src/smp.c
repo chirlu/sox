@@ -25,6 +25,7 @@
 #define NAMELEN    30           /* Size of Samplevision name */
 #define COMMENTLEN 60           /* Size of Samplevision comment, not shared */
 #define MIDI_UNITY 60           /* MIDI note number to play sample at unity */
+#define MARKERLEN  10           /* Size of Marker name */
 
 /* The header preceeding the sample data */
 struct smpheader {
@@ -45,8 +46,8 @@ struct loop {
 
 /* Samplevision marker definition structure */
 struct marker {
-        char name[10];          /* Ascii Marker name */
-        uint32_t position;      /* Sample Number, not byte number */
+        char name[MARKERLEN + 1]; /* Ascii Marker name */
+        uint32_t position;        /* Sample Number, not byte number */
 };
 
 /* The trailer following the sample data */
@@ -92,11 +93,12 @@ static int readtrailer(ft_t ft, struct smptrailer *trailer)
                 ft->loops[i].count = trailer->loops[i].count;
         }
         for(i = 0; i < 8; i++) {        /* read the 8 markers */
-                if (st_read(ft, trailer->markers[i].name, 1, 10) != 10)
+                if (st_read(ft, trailer->markers[i].name, 1, MARKERLEN) != 10)
                 {
                     st_fail_errno(ft,ST_EHDR,"EOF in SMP");
                     return(ST_EOF);
                 }
+                trailer->markers[i].name[MARKERLEN] = 0;
                 st_readdw(ft, &(trailer->markers[i].position));
         }
         st_readb(ft, (unsigned char *)&(trailer->MIDInote));

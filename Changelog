@@ -12,6 +12,8 @@ sox-12.17.8
     endian RIFF/WAV files).  Also added support for auto detecting
     DEC-style ".sd\0" files.
   o Gene Mar found typo in polyphase nuttall calculation.
+  o SMP buffer overflow (detected by gcc 4.0).  Reported by Marcus Meissner
+    and Matthias Saou.
 
 sox-12.17.7
 -----------
