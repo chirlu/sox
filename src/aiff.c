@@ -552,10 +552,12 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
   uint32_t timeStamp;
   unsigned short markerId;
   unsigned short totalCommentLength = 0;
+  unsigned int totalReadLength = 0;
   unsigned int commentIndex;
 
   st_readdw(ft, &chunksize);
   st_readw(ft, &numComments);
+  totalReadLength += 2; /* chunksize doesn't count */
   for(commentIndex = 0; commentIndex < numComments; commentIndex++) {
     unsigned short commentLength;
 
@@ -580,6 +582,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
         return(ST_EOF);
     }
     *(*text + totalCommentLength) = '\0';
+    totalReadLength += totalCommentLength + 4 + 2 + 2; /* include header */
     if (commentLength % 2) {
         /* Read past pad byte */
         char c;
@@ -590,6 +593,14 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
     }
   }
   st_report("%-10s   \"%s\"\n", chunkDescription, *text);
+  /* make sure we read the whole chunk */
+  if (totalReadLength < chunksize) {
+       int i;
+       char c;
+       for (i=0; i < chunksize - totalReadLength; i++ ) {
+               st_read(ft, &c, 1, 1);
+       }
+  }
   return(ST_SUCCESS);
 }
 

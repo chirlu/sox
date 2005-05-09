@@ -14,6 +14,14 @@ sox-12.17.8
   o Gene Mar found typo in polyphase nuttall calculation.
   o SMP buffer overflow (detected by gcc 4.0).  Reported by Marcus Meissner
     and Matthias Saou.
+  o Fixed URL in manpage to resample overviews.
+  o Fixed WAV handler so that it didn't think WAV chunks with max size
+    were invalid chunks.  This allows WAV's to be used in pipes since
+    they have to default to max size.
+  o WAV files with alaw or ulaw data don't need extended format chunks.
+    (Lars Immisch)
+  o In AIFF files, fixed problem were short comments should cause
+    AIFF handler to get confused and become misaligned.
 
 sox-12.17.7
 -----------

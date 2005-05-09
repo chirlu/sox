@@ -394,11 +394,9 @@ void wavgsmstopwrite(ft_t ft)
 /****************************************************************************/
 /* General Sox WAV file code                                                */
 /****************************************************************************/
-static st_ssize_t findChunk(ft_t ft, const char *Label)
+static int findChunk(ft_t ft, const char *Label, st_size_t *len)
 {
     char magic[5];
-    st_ssize_t len;
-    uint32_t tmp_len;
     for (;;)
     {
         if (st_reads(ft, magic, 4) == ST_EOF)
@@ -407,21 +405,26 @@ static st_ssize_t findChunk(ft_t ft, const char *Label)
                           Label);
             return ST_EOF;
         }
-        st_readdw(ft, &tmp_len);
-        len = tmp_len;
         st_report("WAV Chunk %s", magic);
+        if (st_readdw(ft, len) == ST_EOF)
+        {
+            st_fail_errno(ft, ST_EHDR, "WAVE file %s chunk is to short", 
+                          magic);
+            return ST_EOF;
+        }
 
         if (strncmp(Label, magic, 4) == 0)
             break; /* Found the data chunk */
 
         /* skip to next chunk */
-        if (st_seek(ft, len, SEEK_CUR) != ST_SUCCESS)
+        if (st_seek(ft, *len, SEEK_CUR) != ST_SUCCESS)
         {
-            st_fail_errno(ft,ST_EHDR, "WAV chunk appears to have invalid size %d.", len);
+            st_fail_errno(ft,ST_EHDR, 
+                          "WAV chunk appears to have invalid size %d.", *len);
             return ST_EOF;
         }
     }
-    return len;
+    return ST_SUCCESS;
 }
 
 /*
@@ -480,8 +483,12 @@ int st_wavstartread(ft_t ft)
     }
 
     /* Now look for the format chunk */
-    wFmtSize = len = findChunk(ft, "fmt ");
-    /* findChunk() only returns if chunk was found */
+    if (findChunk(ft, "fmt ", &len) == ST_EOF)
+    {
+        st_fail_errno(ft,ST_EHDR,"WAVE chunk fmt not found");
+        return ST_EOF;
+    }
+    wFmtSize = len;
     
     if (wFmtSize < 16)
     {
@@ -636,8 +643,12 @@ int st_wavstartread(ft_t ft)
     wav->packet = NULL;
     wav->samples = NULL;
 
-    /* non-PCM formats have extended fmt chunk.  Check for those cases. */
-    if (wav->formatTag != WAVE_FORMAT_PCM) {
+    /* non-PCM formats expect alaw and mulaw formats have extended fmt chunk.  
+     * Check for those cases. 
+     */
+    if (wav->formatTag != WAVE_FORMAT_PCM &&
+        wav->formatTag != WAVE_FORMAT_ALAW &&
+        wav->formatTag != WAVE_FORMAT_MULAW) {
         if (len >= 2) {
             st_readw(ft, &wExtSize);
             len -= 2;
@@ -848,12 +859,12 @@ int st_wavstartread(ft_t ft)
      * the upcoming 'data' chunk */
 
     /* Now look for the wave data chunk */
-    dwDataLength = len = findChunk(ft, "data");
-    if (len == ST_EOF)
+    if (findChunk(ft, "data", &len) == ST_EOF)
     {
         st_fail_errno(ft, ST_EOF, "Could not find data chunk.");
         return ST_EOF;
     }
+    dwDataLength = len;
 
     /* Data starts here */
     wav->dataStart = st_tell(ft);
@@ -935,7 +946,7 @@ int st_wavstartread(ft_t ft)
          * offset */
         len = (len + 1) & ~1;
         if (st_seek(ft, len, SEEK_CUR) == ST_SUCCESS &&
-            findChunk(ft, "LIST") != ST_EOF)
+            findChunk(ft, "LIST", &len) != ST_EOF)
         {
             wav->found_cooledit = 1;
             ft->comment = (char*)malloc(256);
@@ -1021,6 +1032,7 @@ int st_wavstartread(ft_t ft)
                     else 
                     {
                         st_report("Attempting to seek beyond unsupported chunk '%c%c%c%c' of length %d bytes\n", magic[0], magic[1], magic[2], magic[3], len);
+                        len = (len + 1) & ~1;
                         st_seek(ft, len, SEEK_CUR);
                     }
                 }
