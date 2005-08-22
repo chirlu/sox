@@ -3,9 +3,9 @@ dnl
 dnl configure.in
 dnl
 
-AC_REVISION(1.6)
+AC_REVISION(1.8)
 
-AC_INIT(sox, 12.17.7, cbagwell@users.sourceforge.net, "sox-12.17.7")
+AC_INIT(sox, 12.17.8, cbagwell@users.sourceforge.net, "sox-12.17.8")
 
 AC_CONFIG_SRCDIR(sox.1)
 
