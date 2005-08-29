@@ -20,7 +20,6 @@
 #define WINDOWSIZE 2048
 #define FREQCOUNT (WINDOWSIZE/2+1)
 
-static int min(int a, int b) {
-    if (a < b) return a;
-    else       return b;
-}
+#ifndef min
+#define min(s1,s2) ((s1)<(s2)?(s1):(s2))
+#endif
