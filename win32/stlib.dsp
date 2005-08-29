@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "." /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x40d /d "_DEBUG"
 # ADD RSC /l 0x40d /d "_DEBUG"
 BSC32=bscmake.exe
@@ -85,339 +85,347 @@ LIB32=link.exe -lib
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\8svx.c
+SOURCE=..\src\8svx.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\adpcm.c
+SOURCE=..\src\adpcm.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\adpcm.h
+SOURCE=..\src\adpcm.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\aiff.c
+SOURCE=..\src\aiff.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\alsa.c
+SOURCE=..\src\alsa.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\au.c
+SOURCE=..\src\au.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\auto.c
+SOURCE=..\src\auto.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\avg.c
+SOURCE=..\src\avg.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\avr.c
+SOURCE=..\src\avr.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\band.c
+SOURCE=..\src\band.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\bandpass.c
+SOURCE=..\src\bandpass.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\breject.c
+SOURCE=..\src\breject.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\btrworth.c
+SOURCE=..\src\btrworth.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\cdr.c
+SOURCE=..\src\cdr.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\chorus.c
+SOURCE=..\src\chorus.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\compand.c
+SOURCE=..\src\compand.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\copy.c
+SOURCE=..\src\copy.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\cvsd.c
+SOURCE=..\src\cvsd.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\dat.c
+SOURCE=..\src\dat.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\dcshift.c
+SOURCE=..\src\dcshift.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\deemphas.c
+SOURCE=..\src\deemphas.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\earwax.c
+SOURCE=..\src\earwax.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\echo.c
+SOURCE=..\src\echo.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\echos.c
+SOURCE=..\src\echos.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\fade.c
+SOURCE=..\src\FFT.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\filter.c
+SOURCE=..\src\fade.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\flanger.c
+SOURCE=..\src\filter.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\g711.c
+SOURCE=..\src\flanger.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\g711.h
+SOURCE=..\src\g711.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\g721.c
+SOURCE=..\src\g711.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\g723_16.c
+SOURCE=..\src\g721.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\g723_24.c
+SOURCE=..\src\g723_16.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\g723_40.c
+SOURCE=..\src\g723_24.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\g72x.c
+SOURCE=..\src\g723_40.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\getopt.c
+SOURCE=..\src\g72x.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\gsm.c
+SOURCE=..\src\getopt.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\handlers.c
+SOURCE=..\src\gsm.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\hcom.c
+SOURCE=..\src\handlers.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\highp.c
+SOURCE=..\src\hcom.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\highpass.c
+SOURCE=..\src\highp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\ima_rw.c
+SOURCE=..\src\highpass.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\lowp.c
+SOURCE=..\src\ima_rw.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\lowpass.c
+SOURCE=..\src\lowp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\map.c
+SOURCE=..\src\lowpass.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\mask.c
+SOURCE=..\src\mask.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\maud.c
+SOURCE=..\src\maud.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcompand.c
+SOURCE=..\src\mcompand.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\misc.c
+SOURCE=..\src\misc.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\mp3.c
+SOURCE=..\src\mp3.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\nulfile.c
+SOURCE=..\src\noiseprof.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\oss.c
+SOURCE=..\src\noisered.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\pan.c
+SOURCE=..\src\nulfile.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\phaser.c
+SOURCE=..\src\oss.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\pitch.c
+SOURCE=..\src\pan.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\polyphas.c
+SOURCE=..\src\phaser.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\prc.c
+SOURCE=..\src\pitch.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\rate.c
+SOURCE=..\src\polyphas.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\raw.c
+SOURCE=..\src\prc.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\repeat.c
+SOURCE=..\src\rate.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\resample.c
+SOURCE=..\src\raw.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\reverb.c
+SOURCE=..\src\repeat.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\reverse.c
+SOURCE=..\src\resample.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\sf.c
+SOURCE=..\src\reverb.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\silence.c
+SOURCE=..\src\reverse.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\skeleff.c
+SOURCE=..\src\sf.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\smp.c
+SOURCE=..\src\silence.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\sndrtool.c
+SOURCE=..\src\skeleff.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\speed.c
+SOURCE=..\src\smp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\sphere.c
+SOURCE=..\src\sndrtool.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\stat.c
+SOURCE=..\src\speed.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\stretch.c
+SOURCE=..\src\sphere.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\sunaudio.c
+SOURCE=..\src\stat.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\swap.c
+SOURCE=..\src\stretch.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\synth.c
+SOURCE=..\src\sunaudio.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\trim.c
+SOURCE=..\src\swap.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\tx16w.c
+SOURCE=..\src\synth.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\util.c
+SOURCE=..\src\trim.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vibro.c
+SOURCE=..\src\tx16w.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\voc.c
+SOURCE=..\src\util.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vol.c
+SOURCE=..\src\vibro.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vorbis.c
+SOURCE=..\src\voc.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vox.c
+SOURCE=..\src\vol.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wav.c
+SOURCE=..\src\vorbis.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wve.c
+SOURCE=..\src\vox.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\wav.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\wve.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -425,35 +433,43 @@ SOURCE=.\wve.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\btrworth.h
+SOURCE=..\src\btrworth.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\cvsdfilt.h
+SOURCE=..\src\cvsdfilt.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\g72x.h
+SOURCE=..\src\FFT.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\ima_rw.h
+SOURCE=..\src\g72x.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\resampl.h
+SOURCE=..\src\ima_rw.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\sfircam.h
+SOURCE=..\src\noisered.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\st.h
+SOURCE=..\src\resampl.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\st_i.h
+SOURCE=..\src\sfircam.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\st.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\st_i.h
 # End Source File
 # Begin Source File
 
@@ -461,7 +477,7 @@ SOURCE=.\ststdint.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\wav.h
+SOURCE=..\src\wav.h
 # End Source File
 # End Group
 # End Target
