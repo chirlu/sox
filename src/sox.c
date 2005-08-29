@@ -49,6 +49,16 @@ extern int optind;
 #endif
 #endif
 
+#ifdef _MSC_VER
+/*
+ * __STDC__ is defined, so these symbols aren't created.
+ */
+#define S_IFMT   _S_IFMT
+#define S_IFREG  _S_IFREG
+#define fstat _fstat
+#define strdup _strdup
+#endif
+
 /*
  * SOX main program.
  *
