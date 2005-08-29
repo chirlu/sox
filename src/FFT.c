@@ -112,13 +112,8 @@ void InitFFT()
    }
 }
 
-inline int FastReverseBits(int i, int NumBits)
-{
-   if (NumBits <= MaxFastBits)
-      return gFFTBitTable[NumBits - 1][i];
-   else
-      return ReverseBits(i, NumBits);
-}
+#define FastReverseBits(i, NumBits) \
+   (NumBits <= MaxFastBits) ? gFFTBitTable[NumBits - 1][i] : ReverseBits(i, NumBits)
 
 /*
  * Complex Fast Fourier Transform
