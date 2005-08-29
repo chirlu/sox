@@ -94,8 +94,8 @@ static void collect_data(profdata_t data, chandata_t* chan) {
     PowerSpectrum(WINDOWSIZE, chan->window, out);
 
     for (i = 0; i < FREQCOUNT; i ++) {
-        float value = log(out[i]);
-        if (finite(value)) {
+        if (out[i] > 0) {
+            float value = log(out[i]);
             chan->sum[i] += value;
             chan->profilecount[i] ++;
         }
