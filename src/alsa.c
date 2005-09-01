@@ -140,17 +140,20 @@ struct alsa_setup *setup;
     struct sndrv_mask *msk;
     struct sndrv_interval *intr;
 
+    params->cmask = 0;
+    params->rmask = 0;
+
     i = SNDRV_PCM_HW_PARAM_ACCESS;
     msk = alsa_params_masks(params, i);
     msk->bits[0] &= 1 << SNDRV_PCM_ACCESS_RW_INTERLEAVED; /* Only care about first 32 bits. */
-    params->cmask = 1 << i;
-    params->rmask = 1 << i;
+    params->cmask |= 1 << i;
+    params->rmask |= 1 << i;
 
     i = SNDRV_PCM_HW_PARAM_FORMAT;
     msk = alsa_params_masks(params, i);
     msk->bits[0] &= 1 << setup->format; /* Only care about first 32 bits. */
-    params->cmask = 1 << i;
-    params->rmask = 1 << i;
+    params->cmask |= 1 << i;
+    params->rmask |= 1 << i;
 
     i = SNDRV_PCM_HW_PARAM_CHANNELS;
     intr = alsa_params_intervals(params, i);
@@ -158,8 +161,8 @@ struct alsa_setup *setup;
     intr->min = intr->max = setup->channels;
     intr->openmin = intr->openmax = 0;
     intr->integer = 1;
-    params->cmask = 1 << i;
-    params->rmask = 1 << i;
+    params->cmask |= 1 << i;
+    params->rmask |= 1 << i;
 
     i = SNDRV_PCM_HW_PARAM_RATE;
     intr = alsa_params_intervals(params, i);
@@ -167,8 +170,8 @@ struct alsa_setup *setup;
     intr->min = intr->max = setup->rate;
     intr->openmin = intr->openmax = 0;
     intr->integer = 1;
-    params->cmask = 1 << i;
-    params->rmask = 1 << i;
+    params->cmask |= 1 << i;
+    params->rmask |= 1 << i;
 
     i = SNDRV_PCM_HW_PARAM_BUFFER_BYTES;
     intr = alsa_params_intervals(params, i);
@@ -176,8 +179,8 @@ struct alsa_setup *setup;
     intr->min = intr->max = setup->buffer_size;
     intr->openmin = intr->openmax = 0;
     intr->integer = 1;
-    params->cmask = 1 << i;
-    params->rmask = 1 << i;
+    params->cmask |= 1 << i;
+    params->rmask |= 1 << i;
 
     i = SNDRV_PCM_HW_PARAM_PERIODS;
     intr = alsa_params_intervals(params, i);
@@ -185,8 +188,8 @@ struct alsa_setup *setup;
     intr->min = intr->max = setup->periods;
     intr->openmin = intr->openmax = 0;
     intr->integer = 1;
-    params->cmask = 1 << i;
-    params->rmask = 1 << i;
+    params->cmask |= 1 << i;
+    params->rmask |= 1 << i;
 
     i = SNDRV_PCM_HW_PARAM_PERIOD_BYTES;
     intr = alsa_params_intervals(params, i);
@@ -194,8 +197,8 @@ struct alsa_setup *setup;
     intr->min = intr->max = setup->period_size;
     intr->openmin = intr->openmax = 0;
     intr->integer = 1;
-    params->cmask = 1 << i;
-    params->rmask = 1 << i;
+    params->cmask |= 1 << i;
+    params->rmask |= 1 << i;
 
     if (ioctl(fd, SNDRV_PCM_IOCTL_HW_PARAMS, params) < 0) {
         return -1;
