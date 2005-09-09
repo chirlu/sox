@@ -4,6 +4,11 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-12.17.9
+-----------
+
+  o Updates to compile under VC6. Jimen Ching
+
 sox-12.17.8
 -----------
   o noisered effect had compile problems with some compilers.

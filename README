@@ -38,6 +38,7 @@ This release understands:
     o PCM, u-law, A-law
     o MS ADPCM, IMA ADPCM
     o GSM
+    o RIFX (big endian)
   o Psion (palmtop) A-law WVE files
   o Pseudo-file formats that allow direct playing/recording
     from some audio devices under UNIX.
