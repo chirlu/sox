@@ -1769,7 +1769,7 @@ int st_wavseek(ft_t ft, st_size_t offset)
             ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
 
             if( ft->st_errno == ST_SUCCESS )
-                wav->numSamples = ft->length - new_offset;
+                wav->numSamples = ft->length - (new_offset / ft->info.size);
     }
 
     return(ft->st_errno);

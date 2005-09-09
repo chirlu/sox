@@ -91,7 +91,7 @@ int st_aiffseek(ft_t ft, st_size_t offset)
     ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
 
     if (ft->st_errno == ST_SUCCESS)
-        aiff->nsamples = ft->length - new_offset;
+        aiff->nsamples = ft->length - (new_offset / ft->info.size);
 
     return(ft->st_errno);
 }

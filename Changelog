@@ -11,6 +11,8 @@ sox-12.17.9
   o Declare st_signalinfo_t to specifically be signed in case
     platform does not default ot signed chars.  This
     is required for NetBSD/powerpc.
+  o When seek()ing in AIFF, SMP, and WAV handlers, remaining samples were
+    incorrectly computed based on bytes and not samples.  Jukka
 
 sox-12.17.8
 -----------
