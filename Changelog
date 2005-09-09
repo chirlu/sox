@@ -13,6 +13,8 @@ sox-12.17.9
     is required for NetBSD/powerpc.
   o When seek()ing in AIFF, SMP, and WAV handlers, remaining samples were
     incorrectly computed based on bytes and not samples.  Jukka
+  o Changed noisered effect to just warn during clipping instead
+    of aborting.  Ian Turner
 
 sox-12.17.8
 -----------

@@ -223,7 +223,16 @@ static int process_window(reddata_t data, int chan_num, int num_chans,
     if (!first) {
         for (j = 0; j < use; j ++) {
             float s = chan->window[j] + chan->lastwindow[WINDOWSIZE/2 + j];
-            assert(s >= -1 && s <= 1);
+            if (s < -1 || s > 1) {
+                float news;
+                if (s > 1)
+                    news = 1;
+                else
+                    news = -1;
+
+                st_warn("noisered: Output clipped from %f to %f.\n",
+                        s, news);
+            }
             obuf[chan_num + num_chans * j] =
                 ST_FLOAT_DWORD_TO_SAMPLE(s);
         }

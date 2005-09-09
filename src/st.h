@@ -80,7 +80,7 @@ typedef struct  st_loopinfo
     st_size_t    start;          /* first sample */
     st_size_t    length;         /* length */
     unsigned int count;          /* number of repeats, 0=forever */
-    char         type;           /* 0=no, 1=forward, 2=forward/back */
+    signed char  type;           /* 0=no, 1=forward, 2=forward/back */
 } st_loopinfo_t;
 
 /* Instrument parameters */
@@ -92,7 +92,7 @@ typedef struct  st_instrinfo
     char MIDInote;       /* for unity pitch playback */
     char MIDIlow, MIDIhi;/* MIDI pitch-bend range */
     char loopmode;       /* semantics of loop data */
-    char nloops;         /* number of active loops (max ST_MAX_NLOOPS) */
+    signed char nloops;  /* number of active loops (max ST_MAX_NLOOPS) */
 } st_instrinfo_t;
 
 /* Loop modes, upper 4 bits mask the loop blass, lower 4 bits describe */
