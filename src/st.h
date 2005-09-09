@@ -67,10 +67,10 @@ typedef uint32_t st_rate_t;
 
 typedef struct  st_signalinfo
 {
-    st_rate_t rate;      /* sampling rate */
-    char size;           /* word length of data */
-    char encoding;       /* format of sample numbers */
-    char channels;       /* number of sound channels */
+    st_rate_t rate;         /* sampling rate */
+    signed char size;     /* word length of data */
+    signed char encoding; /* format of sample numbers */
+    signed char channels; /* number of sound channels */
 } st_signalinfo_t;
 
 /* Loop parameters */

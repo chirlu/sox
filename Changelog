@@ -8,6 +8,9 @@ sox-12.17.9
 -----------
 
   o Updates to compile under VC6. Jimen Ching
+  o Declare st_signalinfo_t to specifically be signed in case
+    platform does not default ot signed chars.  This
+    is required for NetBSD/powerpc.
 
 sox-12.17.8
 -----------

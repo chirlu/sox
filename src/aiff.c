@@ -570,7 +570,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
       *text = (char *) malloc((size_t) totalCommentLength + 1);
     }
     else {
-      realloc(*text, (size_t) totalCommentLength + 1);
+      *text = realloc(*text, (size_t) totalCommentLength + 1);
     }
 
     if (*text == NULL) {
