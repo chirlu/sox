@@ -55,7 +55,7 @@ const char *st_encodings_str[] = {
         "gsm",
         "inversed u-law",
         "inversed A-law",
-        "MPEG audio (layer I, III or III)"
+        "MPEG audio (layer I, II or III)"
 };
 
 static const char readerr[] = "Premature EOF while reading sample file.";

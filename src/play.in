@@ -53,6 +53,7 @@ Play/record sound files to/from unix style sound devices.
                                SIZE is either b, w, l, f, d, or D
   -t, --type=TYPE              specifies file format of FILE
   -v, --volume=VOLUME          change amplitude
+  -V, --verbose                print verbose information
   -x, --xinu                   reverse bit order of sample
                                (only works with 16-bit and 32-bit integer data)
       --file                   next argument is FILE
@@ -125,6 +126,9 @@ while [ $# -ne 0 ]; do
 	--volume=*)
 	    volume="-v `echo $1 | sed 's/.*=//'`"
 	    ;;
+        -V|--verbose)
+            fopts="$fopts -V"
+            ;;
 	-x|--xinu)
 	    fopts="$fopts -x"
 	    ;;

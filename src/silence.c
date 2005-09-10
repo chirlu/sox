@@ -164,8 +164,6 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
         {
             silence->stop_periods = -silence->stop_periods;
             silence->restart = 1;
-            st_fail("Periods must not be greater then zero");
-            return(ST_EOF);
         }
         else
             silence->restart = 0;

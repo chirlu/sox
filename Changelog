@@ -21,6 +21,9 @@ sox-12.17.9
     played with a sped up tempo.
     Bugfix will also apply to other times when multiple effects
     are ran on the command line.
+  o Added support for -V option to play/rec scripts.
+  o Fix to silence effect to allow negative periods to be specified
+    (to remove silence from middle of sound file).
 
 sox-12.17.8
 -----------
