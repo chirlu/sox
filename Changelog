@@ -15,6 +15,12 @@ sox-12.17.9
     incorrectly computed based on bytes and not samples.  Jukka
   o Changed noisered effect to just warn during clipping instead
     of aborting.  Ian Turner
+  o Fixed bug were pieces of audio were lost every buffer read
+    when running both -c and -r options together on mono audio.
+    Users probably percieved it as shorter audio files that
+    played with a sped up tempo.
+    Bugfix will also apply to other times when multiple effects
+    are ran on the command line.
 
 sox-12.17.8
 -----------

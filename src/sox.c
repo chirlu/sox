@@ -102,6 +102,7 @@ static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct, double vol);
 static void checkeffect(void);
 static int flow_effect_out(void);
 static int flow_effect(int);
+static int drain_effect_out(void);
 static int drain_effect(int);
 
 #define MAX_INPUT_FILES 32
@@ -143,6 +144,7 @@ static int input_count = 0;
 static struct st_effect efftab[MAX_EFF]; /* left/mono channel effects */
 static struct st_effect efftabR[MAX_EFF];/* right channel effects */
 static int neffects;                     /* # of effects to run on data */
+static int input_eff;                    /* last input effect with data */
 
 static struct st_effect user_efftab[MAX_USER_EFF];
 static int nuser_effects;
@@ -706,6 +708,8 @@ static void process(void) {
     current_input = 0;
 #endif
 
+    input_eff = 0;
+
     /* Run input data through effects and get more until olen == 0 
      * (or ST_EOF).
      */
@@ -835,6 +839,9 @@ static void process(void) {
 
     } while (1); 
 
+    /* This will drain the effects */
+    drain_effect_out();
+
 #ifdef SOXMIX
     /* Free input buffers now that they are not used */
     for (f = 0; f < MAX_INPUT_FILES; f++)
@@ -842,33 +849,6 @@ static void process(void) {
         free(ibuf[f]);
     }
 #endif
-
-    /* Drain the effects out first to last,
-     * pushing residue through subsequent effects */
-    /* oh, what a tangled web we weave */
-    for(f = 1; f < neffects; f++)
-    {
-        while (1) {
-
-            if (drain_effect(f) == 0)
-                break;          /* out of while (1) */
-
-            /* Change the volume of this output data if needed. */
-            if (writing && file_opts[file_count-1]->volume != 1.0)
-                clipped += volumechange(efftab[neffects-1].obuf, 
-                                        efftab[neffects-1].olen,
-                                        file_opts[file_count-1]->volume);
-
-            /* FIXME: Need to look at return code and abort on failure */
-            if (writing && efftab[neffects-1].olen > 0)
-                (*file_desc[file_count-1]->h->write)(file_desc[file_count-1], 
-                                                     efftab[neffects-1].obuf,
-                                                     (st_ssize_t)efftab[neffects-1].olen);
-
-            if (efftab[f].olen != ST_BUFSIZ)
-                break;
-        }
-    }
 
     /* Free output buffers now that they won't be used */
     for(e = 0; e < neffects; e++)
@@ -916,12 +896,11 @@ static void process(void) {
 static int flow_effect_out(void)
 {
     int e, havedata, flowstatus = 0;
-    int input_eff = 0;
 
     do {
       /* run entire chain BACKWARDS: pull, don't push.*/
       /* this is because buffering system isn't a nice queueing system */
-      for(e = neffects - 1; e > input_eff; e--)
+      for(e = neffects - 1; e >= input_eff; e--)
       {
           /* flow_effect returns ST_EOF when it will not process
            * any more samples.  This is used to bail out early.
@@ -931,7 +910,22 @@ static int flow_effect_out(void)
            */
           flowstatus  = flow_effect(e);
           if (flowstatus == ST_EOF)
-              input_eff = e;
+              input_eff = e+1;
+
+          /* If this buffer contains more input data then break out
+           * of this loop now.  This will allow us to loop back around
+           * and reprocess the rest of this input buffer.
+           * I suppose this could be an issue with some effects
+           * if they crash when given small input buffers.
+           * But I was more concerned that we would need to do
+           * some type of garbage collection otherwise.  By this I
+           * mean that if we went ahead and processed an effect
+           * lower in the chain, it might only have like 2 bytes
+           * left at the end of this buffer to place its data in.
+           * Software is more likely to refuse to handle that.
+           */
+          if (efftab[e].odone < efftab[e].olen)
+              break;
       }
 
       /* If outputing and output data was generated then write it */
@@ -950,7 +944,11 @@ static int flow_effect_out(void)
           (*file_desc[file_count-1]->h->write)(file_desc[file_count-1],
                                                efftab[neffects-1].obuf,
                                                (st_ssize_t)efftab[neffects-1].olen);
-          efftab[neffects-1].odone = efftab[neffects-1].olen;
+          /* FIXME: Goes with above.  Should look at # of bytes writen. */
+          /* Currently, assuming all bytes were written and resetting
+           * buffer pointers accordingly.
+           */
+          efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
 
           if (file_desc[file_count-1]->st_errno)
           {
@@ -958,17 +956,46 @@ static int flow_effect_out(void)
               break;
           }
       }
+      else
+          /* Make it look like everything was consumed */
+          efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
 
       /* if stuff still in pipeline, set up to flow effects again */
       /* When all effects have reported ST_EOF then this check will
        * show no more data.
        */
       havedata = 0;
-      for(e = neffects - 2; e >= input_eff; e--)
+      for(e = neffects - 1; e >= input_eff; e--)
+      {
           if (efftab[e].odone < efftab[e].olen) {
               havedata = 1;
               break;
           }
+      }
+
+      if (!havedata && input_eff > 0)
+      {
+          /* If the input file is not returning data then
+           * we must prime the pump using the drain effect.
+           * After its primed, the loop will suck the data
+           * threw.  Once an input_eff stop reporting samples,
+           * we will continue to the next until all are drained.
+           */
+          while (input_eff < neffects)
+          {
+              int rc;
+
+              rc = drain_effect(input_eff);
+
+              if (rc == ST_EOF || efftab[input_eff].olen == 0)
+                  input_eff++;
+              else
+              {
+                  havedata = 1;
+                  break;
+              }
+          }
+      }
     } while (havedata);
 
     /* If input_eff isn't pointing at fake first entry then there
@@ -996,14 +1023,16 @@ static int flow_effect(int e)
          * run effect over entire buffer.
          */
         idone = efftab[e-1].olen - efftab[e-1].odone;
-        odone = ST_BUFSIZ;
+        odone = ST_BUFSIZ - efftab[e].olen;
         effstatus = (* efftab[e].h->flow)(&efftab[e],
                                           &efftab[e-1].obuf[efftab[e-1].odone],
-                                          efftab[e].obuf, (st_size_t *)&idone, 
+                                          &efftab[e].obuf[efftab[e].olen], 
+                                          (st_size_t *)&idone, 
                                           (st_size_t *)&odone);
         efftab[e-1].odone += idone;
-        efftab[e].odone = 0;
-        efftab[e].olen = odone;
+        /* Leave efftab[e].odone were it was since we didn't consume data */
+        /*efftab[e].odone = 0;*/
+        efftab[e].olen += odone; 
         done = idone + odone;
     } else {
 
@@ -1011,7 +1040,8 @@ static int flow_effect(int e)
          * on each of them.
          */
         idone = efftab[e-1].olen - efftab[e-1].odone;
-        odone = ST_BUFSIZ;
+        odone = ST_BUFSIZ - efftab[e].olen;
+
         ibuf = &efftab[e-1].obuf[efftab[e-1].odone];
         for(i = 0; i < idone; i += 2) {
             ibufl[i/2] = *ibuf++;
@@ -1033,7 +1063,7 @@ static int flow_effect(int e)
                                            ibufr, obufr, (st_size_t *)&idoner, 
                                            (st_size_t *)&odoner);
 
-        obuf = efftab[e].obuf;
+        obuf = &efftab[e].obuf[efftab[e].olen];
          /* This loop implies left and right effect will always output
           * the same amount of data.
           */
@@ -1042,40 +1072,75 @@ static int flow_effect(int e)
             *obuf++ = obufr[i];
         }
         efftab[e-1].odone += idonel + idoner;
-        efftab[e].odone = 0;
-        efftab[e].olen = odonel + odoner;
+        /* Don't clear since nothng has been consumed yet */
+        /*efftab[e].odone = 0;*/
+        efftab[e].olen += odonel + odoner;
         done = idonel + idoner + odonel + odoner;
     }
     if (effstatus == ST_EOF)
+    {
         return ST_EOF;
+    }
     if (done == 0)
         st_fail("Effect took & gave no samples!");
     return ST_SUCCESS;
+}
+
+static int drain_effect_out(void)
+{
+    /* Skip past input effect since we know thats not needed */
+    if (input_eff == 0)
+        input_eff = 1;
+
+    /* Try to prime the pump with some data */
+    while (input_eff < neffects)
+    {
+        int rc;
+
+        rc = drain_effect(input_eff);
+
+        if (rc == ST_EOF || efftab[input_eff].olen == 0)
+            input_eff++;
+        else
+            break;
+    }
+
+    /* Just do standard flow routines after the priming. */
+    return flow_effect_out();
 }
 
 static int drain_effect(int e)
 {
     st_ssize_t i, olen, olenl, olenr;
     st_sample_t *obuf;
+    int rc;
 
     if (! efftabR[e].name) {
         efftab[e].olen = ST_BUFSIZ;
-        /* FIXME: Should look at return code and abort on ST_EOF */
-        (* efftab[e].h->drain)(&efftab[e],efftab[e].obuf,
-                               &efftab[e].olen);
+        rc = (* efftab[e].h->drain)(&efftab[e],efftab[e].obuf,
+                                    &efftab[e].olen);
+        efftab[e].odone = 0;
     }
     else {
+        int rc_l, rc_r;
+
         olen = ST_BUFSIZ;
 
         /* left */
         olenl = olen/2;
-        /* FIXME: Should look at return code and abort on ST_EOF */
-        (* efftab[e].h->drain)(&efftab[e], obufl, (st_size_t *)&olenl);
+        rc_l = (* efftab[e].h->drain)(&efftab[e], obufl, 
+                                      (st_size_t *)&olenl);
 
         /* right */
         olenr = olen/2;
         /* FIXME: Should look at return code and abort on ST_EOF */
-        (* efftab[e].h->drain)(&efftabR[e], obufr, (st_size_t *)&olenr);
+        rc_r = (* efftab[e].h->drain)(&efftabR[e], obufr, 
+                                      (st_size_t *)&olenr);
+
+        if (rc_l == ST_EOF || rc_r == ST_EOF)
+            rc = ST_EOF;
+        else
+            rc = ST_SUCCESS;
 
         obuf = efftab[e].obuf;
         /* This loop implies left and right effect will always output
@@ -1086,10 +1151,11 @@ static int drain_effect(int e)
             *obuf++ = obufr[i];
         }
         efftab[e].olen = olenl + olenr;
+        efftab[e].odone = 0;
     }
-    return(efftab[e].olen);
+    return rc;
 }
-
+ 
 /*
  * If no effect given, decide what it should be.
  * Smart ruleset for multiple effects in sequence.

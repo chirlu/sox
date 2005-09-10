@@ -383,7 +383,7 @@ int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         st_sample_t *Obuf;
         int rc;
 
-        /* fprintf(stderr,"Xoff %d, Xt %d  <--- DRAIN\n",r->Xoff, r->Xt); */
+        /* fprintf(stderr,"Xoff %d  <--- DRAIN\n",r->Xoff); */
 
         /* stuff end with Xoff zeros */
         isamp_res = r->Xoff;
@@ -396,8 +396,8 @@ int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 rc = st_resample_flow(effp, NULL, Obuf, (st_size_t *)&Isamp, (st_size_t *)&Osamp);
                 if (rc)
                     return rc;
-          /* fprintf(stderr,"DRAIN isamp,osamp  (%d,%d) -> (%d,%d)\n",
-                     isamp_res,osamp_res,Isamp,Osamp); */
+                /* fprintf(stderr,"DRAIN isamp,osamp  (%d,%d) -> (%d,%d)\n",
+                        isamp_res,osamp_res,Isamp,Osamp); */
                 Obuf += Osamp;
                 osamp_res -= Osamp;
                 isamp_res -= Isamp;
@@ -406,7 +406,7 @@ int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         /* fprintf(stderr,"DRAIN osamp %d\n", *osamp); */
         if (isamp_res)
                 st_warn("drain overran obuf by %d\n", isamp_res); fflush(stderr);
-        return (ST_SUCCESS);
+        return (ST_EOF);
 }
 
 /*
