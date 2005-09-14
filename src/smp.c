@@ -191,7 +191,8 @@ int st_smpseek(ft_t ft, st_size_t offset)
     ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
 
     if( ft->st_errno == ST_SUCCESS )
-        smp->NoOfSamps = ft->length - (new_offset / ft->info.size);
+        smp->NoOfSamps = (ft->length*ft->info.channels) - 
+                         (new_offset / ft->info.size);
 
     return(ft->st_errno);
 }

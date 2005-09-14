@@ -24,6 +24,12 @@ sox-12.17.9
   o Added support for -V option to play/rec scripts.
   o Fix to silence effect to allow negative periods to be specified
     (to remove silence from middle of sound file).
+  o Fix swap option handling so that special case of "swap 1 1" will
+    work.
+  o Track length of Ogg Vorbis files on read.
+  o Add support for displaying a status line that tracks progress
+    of read/write routines.  Part of information requires read
+    file handlers to be able to determine file length.
 
 sox-12.17.8
 -----------

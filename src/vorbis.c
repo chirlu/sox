@@ -126,9 +126,15 @@ int st_vorbisstartread(ft_t ft)
 
         /* Record audio info */
         ft->info.rate = vi->rate;
-        ft->info.size = ST_SIZE_16BIT;
-        ft->info.encoding = ST_ENCODING_SIGN2;
+        ft->info.size = ST_SIZE_32BIT;
+        ft->info.encoding = ST_ENCODING_VORBIS;
         ft->info.channels = vi->channels;
+
+        /* ov_pcm_total doesn't work on non-seekable files so
+         * skip that step in that case.
+         */
+        if (ft->seekable)
+            ft->length = ov_pcm_total(vb->vf, -1);
         
         /* Record comments */
         if (vc->comments == 0)
@@ -343,6 +349,9 @@ int st_vorbisstartwrite(ft_t ft)
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve;
         long rate;
+
+        ft->info.size = ST_SIZE_32BIT;
+        ft->info.encoding = ST_ENCODING_VORBIS;
 
         /* Allocate memory for all of the structures */
         ve = vb->vorbis_enc_data = (vorbis_enc_t *)malloc(sizeof(vorbis_enc_t));

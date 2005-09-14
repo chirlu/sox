@@ -43,6 +43,18 @@ const char *st_sizes_str[] = {
         "long longs"
 };
 
+const char *st_size_bits_str[] = {
+        "NONSENSE!",
+        "8-bits",
+        "16-bits",
+        "24-bits",
+        "32-bits",
+        "NONSENSE",
+        "NONSENSE",
+        "NONSENSE",
+        "64-bits"
+};
+
 const char *st_encodings_str[] = {
         "NONSENSE!",
         "unsigned",
@@ -55,7 +67,8 @@ const char *st_encodings_str[] = {
         "gsm",
         "inversed u-law",
         "inversed A-law",
-        "MPEG audio (layer I, II or III)"
+        "MPEG audio (layer I, II or III)",
+        "Vorbis"
 };
 
 static const char readerr[] = "Premature EOF while reading sample file.";

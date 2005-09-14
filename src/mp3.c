@@ -203,6 +203,13 @@ more_data:
             mad_stream_skip(p->Stream, tagsize);
         }
 
+        /* TODO: It would be nice to look for Xing VBR headers
+         * or TLE fields in ID3 to detect length of file
+         * and set ft->length.
+         * For CBR, we should fstat the file and divided
+         * by bitrate to find length.
+         */
+
         switch(p->Frame->header.mode)
         {
                 case MAD_MODE_SINGLE_CHANNEL:

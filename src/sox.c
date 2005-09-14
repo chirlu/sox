@@ -72,6 +72,12 @@ static int clipped = 0;         /* Volume change clipping errors */
 static int writing = 1;         /* are we writing to a file? assume yes. */
 static int soxpreview = 0;      /* preview mode */
 
+static int quite = 0;
+static int status = 0;
+static unsigned long input_samples = 0;
+static unsigned long read_samples = 0;
+static unsigned long output_samples = 0;
+
 static st_sample_t ibufl[ST_BUFSIZ/2];    /* Left/right interleave buffers */
 static st_sample_t ibufr[ST_BUFSIZ/2];
 static st_sample_t obufl[ST_BUFSIZ/2];
@@ -97,13 +103,20 @@ static void open_output(ft_t);
 static void usage(char *) NORET;
 static int filetype(int);
 static void process(void);
+static void print_input_status(int input);
+static void update_status(void);
 static void statistics(void);
 static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct, double vol);
-static void checkeffect(void);
+void parse_effects(int argc, char **argv);
+void check_effects(void);
+void start_effects(void);
+void reserve_effect_buf(void);
 static int flow_effect_out(void);
 static int flow_effect(int);
-static int drain_effect_out(void);
-static int drain_effect(int);
+int drain_effect_out(void);
+int drain_effect(int);
+void release_effect_buf(void);
+void stop_effects(void);
 
 #define MAX_INPUT_FILES 32
 #define MAX_FILES MAX_INPUT_FILES + 1
@@ -151,7 +164,6 @@ static int nuser_effects;
 
 int main(int argc, char **argv)
 {
-    int argc_effect;
     file_options_t *fo;
     int i;
 
@@ -216,7 +228,7 @@ int main(int argc, char **argv)
     else
         input_count = file_count;
 
-    /* Make sure we got at least the required # of input filename */
+    /* Make sure we got at least the required # of input filenames */
     if (input_count < REQUIRED_INPUT_FILES)
         usage("Not enough input or output filenames specified");
 
@@ -248,46 +260,16 @@ int main(int argc, char **argv)
     }
 
     /* Loop through the reset of the arguments looking for effects */
-    nuser_effects = 0;
-
-    while (optind < argc)
-    {
-        if (nuser_effects >= MAX_USER_EFF)
-        {
-            st_fail("To many effects specified.\n");
-        }
-
-        argc_effect = st_geteffect_opt(&user_efftab[nuser_effects],
-                                       argc - optind, &argv[optind]);
-
-        if (argc_effect == ST_EOF)
-        {
-            int i1;
-            fprintf(stderr, "%s: Known effects: ",myname);
-            for (i1 = 0; st_effects[i1].name; i1++)
-                fprintf(stderr, "%s ", st_effects[i1].name);
-            fprintf(stderr, "\n\n");
-            st_fail("Effect '%s' is not known!", argv[optind]);
-        }
-
-
-        /* Skip past effect name */
-        optind++;
-
-        (*user_efftab[nuser_effects].h->getopts)(&user_efftab[nuser_effects],
-                                                 argc_effect,
-                                                 &argv[optind]);
-
-        /* Skip past the effect arguments */
-        optind += argc_effect;
-        nuser_effects++;
-    }
+    parse_effects(argc, argv);
 
     process();
     statistics();
 
     for (i = 0; i < file_count; i++)
         free(file_desc[i]);
+
+    if (status)
+        fprintf(stderr, "\n\nDone.\n");
 
     return(0);
 }
@@ -372,6 +354,18 @@ static void copy_output(int offset)
                     file_desc[offset]->filename, 
                     file_desc[offset]->st_errstr);
 
+        /* When writing to an audio device, auto turn on the
+         * status display to match behavior of ogg123/mpg123
+         * utils.  That is unless user requested us not to display]
+         * anything.
+         */
+        if (strcmp(file_desc[offset]->filetype, "alsa") == 0 ||
+            strcmp(file_desc[offset]->filetype, "ossdsp") == 0 ||
+            strcmp(file_desc[offset]->filetype, "sunau") == 0)
+        {
+            if (!quite)
+                status = 1;
+        }
     }
 }
 
@@ -419,9 +413,9 @@ static void open_output(ft_t ft)
 }
 
 #ifdef HAVE_GETOPT_H
-static char *getoptstr = "+r:v:t:c:phsuUAaigbwlfdxV";
+static char *getoptstr = "+r:v:t:c:phsuUAaigbwlfdxVSq";
 #else
-static char *getoptstr = "r:v:t:c:phsuUAaigbwlfdxV";
+static char *getoptstr = "r:v:t:c:phsuUAaigbwlfdxVSq";
 #endif
 
 static void doopts(file_options_t *fo, int argc, char **argv)
@@ -522,6 +516,16 @@ static void doopts(file_options_t *fo, int argc, char **argv)
             case 'V':
                 verbose = 1;
                 break;
+
+            case 'S':
+                status = 1;
+                quite = 0;
+                break;
+
+            case 'q':
+                status = 0;
+                quite = 1;
+                break;
         }
     }
 }
@@ -574,7 +578,7 @@ void optimize_trim(void)
  */
 
 static void process(void) {
-    int e, f, flowstatus;
+    int e, f, flowstatus = ST_SUCCESS;
 #ifndef SOXMIX
     int current_input;
     st_ssize_t ilen;
@@ -654,47 +658,39 @@ static void process(void) {
     }
 
     /* build efftab */
-    checkeffect();
+    check_effects();
 
     /* Start all effects */
-    for(e = 1; e < neffects; e++) {
-        (* efftab[e].h->start)(&efftab[e]);
-        if (efftabR[e].name)
-            (* efftabR[e].h->start)(&efftabR[e]);
-    }
+    start_effects();
 
     /* Reserve an output buffer for all effects */
-    for(e = 0; e < neffects; e++)
-    {
-        efftab[e].obuf = (st_sample_t *) malloc(ST_BUFSIZ * 
-                                                sizeof(st_sample_t));
-        if (efftab[e].obuf == NULL)
-        {
-            st_fail("could not allocate memory");
-        }
-        if (efftabR[e].name)
-        {
-            efftabR[e].obuf = (st_sample_t *) malloc(ST_BUFSIZ * 
-                                                     sizeof(st_sample_t));
-            if (efftabR[e].obuf == NULL)
-            {
-                st_fail("could not allocate memory");
-            }
-        }
-    }
+    reserve_effect_buf();
 
     /* Try to save some time if first effect is "trim" by seeking */
     optimize_trim();
 
 #ifdef SOXMIX
-    for (f = 0; f < MAX_INPUT_FILES; f++)
+    for (f = 0; f < input_count; f++)
     {
+        /* Treat overall length the same as longest input file. */
+        if (file_desc[f]->length > input_samples)
+            input_samples = file_desc[f]->length;
+
         ibuf[f] = (st_sample_t *)malloc(ST_BUFSIZ * sizeof(st_sample_t));
         if (!ibuf[f])
         {
             st_fail("could not allocate memory");
         }
+
+        if (status)
+            print_input_status(f);
     }
+#else
+    current_input = 0;
+    input_samples = file_desc[current_input]->length;
+
+    if (status)
+        print_input_status(current_input);
 #endif
 
     /*
@@ -703,10 +699,6 @@ static void process(void) {
      */
     for (f = 0; f < file_count; f++)
         file_desc[f]->st_errno = 0;
-
-#ifndef SOXMIX
-    current_input = 0;
-#endif
 
     input_eff = 0;
 
@@ -738,6 +730,12 @@ static void process(void) {
             if (current_input < input_count-1)
             {
                 current_input++;
+                input_samples = file_desc[current_input]->length;
+                read_samples = 0;
+
+                if (status)
+                    print_input_status(current_input);
+
                 continue;
             }
         }
@@ -832,6 +830,9 @@ static void process(void) {
 
         flowstatus = flow_effect_out();
 
+        if (status)
+            update_status();
+
         /* Negative flowstatus says no more output will ever be generated. */
         if (flowstatus == ST_EOF || 
             (writing && file_desc[file_count-1]->st_errno))
@@ -844,30 +845,20 @@ static void process(void) {
 
 #ifdef SOXMIX
     /* Free input buffers now that they are not used */
-    for (f = 0; f < MAX_INPUT_FILES; f++)
+    for (f = 0; f < input_count; f++)
     {
         free(ibuf[f]);
     }
 #endif
 
     /* Free output buffers now that they won't be used */
-    for(e = 0; e < neffects; e++)
-    {
-        free(efftab[e].obuf);
-        if (efftabR[e].obuf)
-            free(efftabR[e].obuf);
-    }
+    release_effect_buf();
 
     /* Very Important:
      * Effect stop is called BEFORE files close.
      * Effect may write out more data after.
      */
-
-    for (e = 1; e < neffects; e++) {
-        (*efftab[e].h->stop)(&efftab[e]);
-        if (efftabR[e].name)
-            (* efftabR[e].h->stop)(&efftabR[e]);
-    }
+    stop_effects();
 
     for (f = 0; f < input_count; f++)
     {
@@ -890,6 +881,269 @@ static void process(void) {
         free(file_desc[file_count-1]->filename);
         free(file_desc[file_count-1]->comment);
         fclose(file_desc[file_count-1]->fp);
+    }
+}
+
+void parse_effects(int argc, char **argv)
+{
+    int argc_effect;
+
+    nuser_effects = 0;
+
+    while (optind < argc)
+    {
+        if (nuser_effects >= MAX_USER_EFF)
+        {
+            st_fail("To many effects specified.\n");
+        }
+
+        argc_effect = st_geteffect_opt(&user_efftab[nuser_effects],
+                                       argc - optind, &argv[optind]);
+
+        if (argc_effect == ST_EOF)
+        {
+            int i1;
+            fprintf(stderr, "%s: Known effects: ",myname);
+            for (i1 = 0; st_effects[i1].name; i1++)
+                fprintf(stderr, "%s ", st_effects[i1].name);
+            fprintf(stderr, "\n\n");
+            st_fail("Effect '%s' is not known!", argv[optind]);
+        }
+
+
+        /* Skip past effect name */
+        optind++;
+
+        (*user_efftab[nuser_effects].h->getopts)
+            (&user_efftab[nuser_effects],
+             argc_effect,
+             &argv[optind]);
+
+        /* Skip past the effect arguments */
+        optind += argc_effect;
+        nuser_effects++;
+    }
+}
+
+/*
+ * If no effect given, decide what it should be.
+ * Smart ruleset for multiple effects in sequence.
+ *      Puts user-specified effect in right place.
+ */
+void check_effects(void)
+{
+    int i;
+    int needchan = 0, needrate = 0, haschan = 0, hasrate = 0;
+    int effects_mask = 0;
+
+    if (writing)
+    {
+        needrate = (file_desc[0]->info.rate != file_desc[file_count-1]->info.rate);
+        needchan = (file_desc[0]->info.channels != file_desc[file_count-1]->info.channels);
+    }
+
+    for (i = 0; i < nuser_effects; i++)
+    {
+        if (user_efftab[i].h->flags & ST_EFF_CHAN)
+        {
+            haschan++;
+        }
+        if (user_efftab[i].h->flags & ST_EFF_RATE)
+        {
+            hasrate++;
+        }
+    }
+
+    if (haschan > 1)
+        st_fail("Can not specify multiple effects that modify channel #");
+    if (hasrate > 1)
+        st_report("Can not specify multiple effects that change sample rate");
+
+    /* If not writing output then do not worry about adding
+     * channel and rate effects.  This is just to speed things
+     * up.
+     */
+    if (!writing)
+    {
+        needchan = 0;
+        needrate = 0;
+    }
+
+    /* --------- add the effects ------------------------ */
+
+    /* efftab[0] is always the input stream and always exists */
+    neffects = 1;
+
+    /* If reducing channels then its faster to run all effects
+     * after the avg effect.
+     */
+    if (needchan && !(haschan) &&
+        (file_desc[0]->info.channels > file_desc[file_count-1]->info.channels))
+    {
+        /* Find effect and update initial pointers */
+        st_geteffect(&efftab[neffects], "avg");
+
+        /* give default opts for added effects */
+        /* FIXME: Should look at return code and abort on ST_EOF */
+        (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+                                        (char **)0);
+
+        /* Copy format info to effect table */
+        effects_mask = st_updateeffect(&efftab[neffects], 
+                                       &file_desc[0]->info,
+                                       &file_desc[file_count-1]->info, 
+                                       effects_mask);
+
+        neffects++;
+    }
+
+    /* If reducing the number of samples, its faster to run all effects
+     * after the resample effect.
+     */
+    if (needrate && !(hasrate) &&
+        (file_desc[0]->info.rate > file_desc[file_count-1]->info.rate))
+    {
+        if (soxpreview)
+            st_geteffect(&efftab[neffects], "rate");
+        else
+            st_geteffect(&efftab[neffects], "resample");
+
+        /* set up & give default opts for added effects */
+        /* FIXME: Should look at return code and abort on ST_EOF */
+        (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+                                        (char **)0);
+
+        /* Copy format info to effect table */
+        effects_mask = st_updateeffect(&efftab[neffects], 
+                                       &file_desc[0]->info,
+                                       &file_desc[file_count-1]->info, 
+                                       effects_mask);
+
+        /* Rate can't handle multiple channels so be sure and
+         * account for that.
+         */
+        if (efftab[neffects].ininfo.channels > 1)
+        {
+            memcpy(&efftabR[neffects], &efftab[neffects],
+                   sizeof(struct st_effect));
+        }
+
+        neffects++;
+    }
+
+    /* Copy over user specified effects into real efftab */
+    for(i = 0; i < nuser_effects; i++)
+    {
+        memcpy(&efftab[neffects], &user_efftab[i],
+               sizeof(struct st_effect));
+
+        /* Copy format info to effect table */
+        effects_mask = st_updateeffect(&efftab[neffects], 
+                                       &file_desc[0]->info,
+                                       &file_desc[file_count-1]->info, 
+                                       effects_mask);
+
+        /* If this effect can't handle multiple channels then
+         * account for this.
+         */
+        if ((efftab[neffects].ininfo.channels > 1) &&
+            !(efftab[neffects].h->flags & ST_EFF_MCHAN))
+        {
+            memcpy(&efftabR[neffects], &efftab[neffects],
+                   sizeof(struct st_effect));
+        }
+
+        neffects++;
+    }
+
+    /* If rate effect hasn't been added by now then add it here.
+     * Check adding rate before avg because its faster to run
+     * rate on less channels then more.
+     */
+    if (needrate && !(effects_mask & ST_EFF_RATE))
+    {
+        if (soxpreview)
+            st_geteffect(&efftab[neffects], "rate");
+        else
+            st_geteffect(&efftab[neffects], "resample");
+
+        /* set up & give default opts for added effects */
+        /* FIXME: Should look at return code and abort on ST_EOF */
+        (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+                                        (char **)0);
+
+        /* Copy format info to effect table */
+        effects_mask = st_updateeffect(&efftab[neffects], 
+                                       &file_desc[0]->info,
+                                       &file_desc[file_count-1]->info, 
+                                       effects_mask);
+
+        /* Rate can't handle multiple channels so be sure and
+         * account for that.
+         */
+        if (efftab[neffects].ininfo.channels > 1)
+        {
+            memcpy(&efftabR[neffects], &efftab[neffects],
+                   sizeof(struct st_effect));
+        }
+
+        neffects++;
+    }
+
+    /* If code up until now still hasn't added avg effect then
+     * do it now.
+     */
+    if (needchan && !(effects_mask & ST_EFF_CHAN))
+    {
+        st_geteffect(&efftab[neffects], "avg");
+
+        /* set up & give default opts for added effects */
+        /* FIXME: Should look at return code and abort on ST_EOF */
+        (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+                                        (char **)0);
+
+        /* Copy format info to effect table */
+        effects_mask = st_updateeffect(&efftab[neffects], 
+                                       &file_desc[0]->info,
+                                       &file_desc[file_count-1]->info, 
+                                       effects_mask);
+
+        neffects++;
+    }
+}
+
+void start_effects(void)
+{
+    int e;
+
+    for(e = 1; e < neffects; e++) {
+        (*efftab[e].h->start)(&efftab[e]);
+        if (efftabR[e].name)
+            (*efftabR[e].h->start)(&efftabR[e]);
+    }
+}
+
+void reserve_effect_buf(void)
+{
+    int e;
+
+    for(e = 0; e < neffects; e++)
+    {
+        efftab[e].obuf = (st_sample_t *)malloc(ST_BUFSIZ * 
+                                                sizeof(st_sample_t));
+        if (efftab[e].obuf == NULL)
+        {
+            st_fail("could not allocate memory");
+        }
+        if (efftabR[e].name)
+        {
+            efftabR[e].obuf = (st_sample_t *)malloc(ST_BUFSIZ * 
+                                                     sizeof(st_sample_t));
+            if (efftabR[e].obuf == NULL)
+            {
+                st_fail("could not allocate memory");
+            }
+        }
     }
 }
 
@@ -948,6 +1202,10 @@ static int flow_effect_out(void)
           /* Currently, assuming all bytes were written and resetting
            * buffer pointers accordingly.
            */
+          read_samples += (efftab[neffects-1].olen / 
+                           file_desc[file_count-1]->info.channels);
+          output_samples += (efftab[neffects-1].olen / 
+                             file_desc[file_count-1]->info.channels);
           efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
 
           if (file_desc[file_count-1]->st_errno)
@@ -957,8 +1215,14 @@ static int flow_effect_out(void)
           }
       }
       else
+      {
           /* Make it look like everything was consumed */
+          read_samples += (efftab[neffects-1].olen / 
+                           file_desc[file_count-1]->info.channels);
+          output_samples += (efftab[neffects-1].olen / 
+                             file_desc[file_count-1]->info.channels);
           efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
+      }
 
       /* if stuff still in pipeline, set up to flow effects again */
       /* When all effects have reported ST_EOF then this check will
@@ -1086,7 +1350,7 @@ static int flow_effect(int e)
     return ST_SUCCESS;
 }
 
-static int drain_effect_out(void)
+int drain_effect_out(void)
 {
     /* Skip past input effect since we know thats not needed */
     if (input_eff == 0)
@@ -1109,7 +1373,7 @@ static int drain_effect_out(void)
     return flow_effect_out();
 }
 
-static int drain_effect(int e)
+int drain_effect(int e)
 {
     st_ssize_t i, olen, olenl, olenr;
     st_sample_t *obuf;
@@ -1155,198 +1419,112 @@ static int drain_effect(int e)
     }
     return rc;
 }
- 
-/*
- * If no effect given, decide what it should be.
- * Smart ruleset for multiple effects in sequence.
- *      Puts user-specified effect in right place.
- */
-static void
-checkeffect()
+
+void release_effect_buf(void)
 {
-        int i;
-        int needchan = 0, needrate = 0, haschan = 0, hasrate = 0;
-        int effects_mask = 0;
-
-        if (writing)
-        {
-            needrate = (file_desc[0]->info.rate != file_desc[file_count-1]->info.rate);
-            needchan = (file_desc[0]->info.channels != file_desc[file_count-1]->info.channels);
-        }
-
-        for (i = 0; i < nuser_effects; i++)
-        {
-            if (user_efftab[i].h->flags & ST_EFF_CHAN)
-            {
-                haschan++;
-            }
-            if (user_efftab[i].h->flags & ST_EFF_RATE)
-            {
-                hasrate++;
-            }
-        }
-
-        if (haschan > 1)
-            st_fail("Can not specify multiple effects that modify channel #");
-        if (hasrate > 1)
-            st_report("Can not specify multiple effects that change sample rate");
-
-        /* If not writing output then do not worry about adding
-         * channel and rate effects.  This is just to speed things
-         * up.
-         */
-        if (!writing)
-        {
-            needchan = 0;
-            needrate = 0;
-        }
-
-        /* --------- add the effects ------------------------ */
-
-        /* efftab[0] is always the input stream and always exists */
-        neffects = 1;
-
-        /* If reducing channels then its faster to run all effects
-         * after the avg effect.
-         */
-        if (needchan && !(haschan) &&
-            (file_desc[0]->info.channels > file_desc[file_count-1]->info.channels))
-        {
-            /* Find effect and update initial pointers */
-            st_geteffect(&efftab[neffects], "avg");
-
-            /* give default opts for added effects */
-            /* FIXME: Should look at return code and abort on ST_EOF */
-            (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                            (char **)0);
-
-            /* Copy format info to effect table */
-            effects_mask = st_updateeffect(&efftab[neffects], 
-                                           &file_desc[0]->info,
-                                           &file_desc[file_count-1]->info, 
-                                           effects_mask);
-
-            neffects++;
-        }
-
-        /* If reducing the number of samples, its faster to run all effects
-         * after the resample effect.
-         */
-        if (needrate && !(hasrate) &&
-            (file_desc[0]->info.rate > file_desc[file_count-1]->info.rate))
-        {
-            if (soxpreview)
-                st_geteffect(&efftab[neffects], "rate");
-            else
-                st_geteffect(&efftab[neffects], "resample");
-
-            /* set up & give default opts for added effects */
-            /* FIXME: Should look at return code and abort on ST_EOF */
-            (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                            (char **)0);
-
-            /* Copy format info to effect table */
-            effects_mask = st_updateeffect(&efftab[neffects], 
-                                           &file_desc[0]->info,
-                                           &file_desc[file_count-1]->info, 
-                                           effects_mask);
-
-            /* Rate can't handle multiple channels so be sure and
-             * account for that.
-             */
-            if (efftab[neffects].ininfo.channels > 1)
-            {
-                memcpy(&efftabR[neffects], &efftab[neffects],
-                       sizeof(struct st_effect));
-            }
-
-            neffects++;
-        }
-
-        /* Copy over user specified effects into real efftab */
-        for(i = 0; i < nuser_effects; i++)
-        {
-            memcpy(&efftab[neffects], &user_efftab[i],
-                   sizeof(struct st_effect));
-
-            /* Copy format info to effect table */
-            effects_mask = st_updateeffect(&efftab[neffects], 
-                                           &file_desc[0]->info,
-                                           &file_desc[file_count-1]->info, 
-                                           effects_mask);
-
-            /* If this effect can't handle multiple channels then
-             * account for this.
-             */
-            if ((efftab[neffects].ininfo.channels > 1) &&
-                !(efftab[neffects].h->flags & ST_EFF_MCHAN))
-            {
-                memcpy(&efftabR[neffects], &efftab[neffects],
-                       sizeof(struct st_effect));
-            }
-
-            neffects++;
-        }
-
-        /* If rate effect hasn't been added by now then add it here.
-         * Check adding rate before avg because its faster to run
-         * rate on less channels then more.
-         */
-        if (needrate && !(effects_mask & ST_EFF_RATE))
-        {
-            if (soxpreview)
-                st_geteffect(&efftab[neffects], "rate");
-            else
-                st_geteffect(&efftab[neffects], "resample");
-
-            /* set up & give default opts for added effects */
-            /* FIXME: Should look at return code and abort on ST_EOF */
-            (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                            (char **)0);
-
-            /* Copy format info to effect table */
-            effects_mask = st_updateeffect(&efftab[neffects], 
-                                           &file_desc[0]->info,
-                                           &file_desc[file_count-1]->info, 
-                                           effects_mask);
-
-            /* Rate can't handle multiple channels so be sure and
-             * account for that.
-             */
-            if (efftab[neffects].ininfo.channels > 1)
-            {
-                memcpy(&efftabR[neffects], &efftab[neffects],
-                       sizeof(struct st_effect));
-            }
-
-            neffects++;
-        }
-
-        /* If code up until now still hasn't added avg effect then
-         * do it now.
-         */
-        if (needchan && !(effects_mask & ST_EFF_CHAN))
-        {
-            st_geteffect(&efftab[neffects], "avg");
-
-            /* set up & give default opts for added effects */
-            /* FIXME: Should look at return code and abort on ST_EOF */
-            (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                            (char **)0);
-
-            /* Copy format info to effect table */
-            effects_mask = st_updateeffect(&efftab[neffects], 
-                                           &file_desc[0]->info,
-                                           &file_desc[file_count-1]->info, 
-                                           effects_mask);
-
-            neffects++;
-        }
+    int e;
+    
+    for(e = 0; e < neffects; e++)
+    {
+        free(efftab[e].obuf);
+        if (efftabR[e].obuf)
+            free(efftabR[e].obuf);
+    }
 }
 
-static void statistics(void) {
-        if (clipped > 0)
-                st_report("Volume change clipped %d samples", clipped);
+void stop_effects(void)
+{
+    int e;
+
+    for (e = 1; e < neffects; e++) {
+        (*efftab[e].h->stop)(&efftab[e]);
+        if (efftabR[e].name)
+            (* efftabR[e].h->stop)(&efftabR[e]);
+    }
+}
+
+static void print_input_status(int input)
+{
+    fprintf(stderr, "\nInput Filename : %s\n", file_desc[input]->filename);
+    fprintf(stderr, "Sample Size    : %s\n", 
+            st_size_bits_str[file_desc[input]->info.size]);
+    fprintf(stderr, "Sample Encoding: %s\n", 
+            st_encodings_str[file_desc[input]->info.encoding]);
+    fprintf(stderr, "Channels       : %d\n", file_desc[input]->info.channels);
+    fprintf(stderr, "Sample Rate    : %d\n", file_desc[input]->info.rate);
+
+    if (file_desc[input]->comment && *file_desc[input]->comment)
+        fprintf(stderr, "Comments       :\n%s\n", file_desc[input]->comment);
+    fprintf(stderr, "\n");
+}
+ 
+static void update_status(void)
+{
+    int read_min, left_min, in_min;
+    double read_sec, left_sec, in_sec;
+    double read_time, left_time, in_time;
+    float completed;
+    unsigned long out_size;
+    char unit;
+
+    /* Currently, for both sox and soxmix, all input files must have
+     * the same sample rate.  So we can always just use the rate
+     * of the first input file to compute time.
+     */
+    read_time = (double)read_samples / (double)file_desc[0]->info.rate;
+
+    read_min = read_time / 60;
+    read_sec = (double)read_time - 60.0f * (double)read_min;
+
+    out_size = output_samples / 1073741824;
+    if (out_size)
+        unit = 'G';
+    else
+    {
+        out_size = output_samples / 1048675;
+        if (out_size)
+            unit = 'M';
+        else
+        {
+            out_size = output_samples / 1024;
+            if (out_size)
+                unit = 'K';
+            else
+                unit = ' ';
+        }
+    }
+
+    if (input_samples)
+    {
+        in_time = (double)input_samples / (double)file_desc[0]->info.rate;
+        left_time = in_time - read_time;
+        if (left_time < 0)
+            left_time = 0;
+
+        completed = ((double)read_samples / (double)input_samples) * 100;
+        if (completed < 0)
+            completed = 0;
+    }
+    else
+    {
+        in_time = 0;
+        left_time = 0;
+        completed = 0;
+    }
+
+    left_min = left_time / 60;
+    left_sec = (double)left_time - 60.0f * (double)left_min;
+
+    in_min = in_time / 60;
+    in_sec = (double)in_time - 60.0f * (double)in_min;
+
+    fprintf(stderr, "\rTime: %02i:%05.2f [%02i:%05.2f] of %02i:%05.2f (% 5.1f%%) Output Buffer: % 5ld%c", read_min, read_sec, left_min, left_sec, in_min, in_sec, completed, out_size, unit);
+}
+
+static void statistics(void) 
+{
+    if (clipped > 0)
+        st_report("Volume change clipped %d samples", clipped);
 }
 
 static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct, 
@@ -1401,8 +1579,8 @@ static void usage(char *opt)
         if (opt)
                 fprintf(stderr, "Failed: %s\n", opt);
         else {
-            fprintf(stderr,"gopts: -e -h -p -v volume -V\n\n");
-            fprintf(stderr,"fopts: -r rate -c channels -s/-u/-U/-A/-a/-i/-g/-f -b/-w/-l/-d -x\n\n");
+            fprintf(stderr,"gopts: -e -h -p -q -S -V\n\n");
+            fprintf(stderr,"fopts: -r rate -c channels -s/-u/-U/-A/-a/-i/-g/-f -b/-w/-l/-d -v volume -x\n\n");
             fprintf(stderr, "effect: ");
             for (i = 0; st_effects[i].name != NULL; i++) {
                 fprintf(stderr, "%s ", st_effects[i].name);

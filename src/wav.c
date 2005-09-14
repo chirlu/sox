@@ -87,8 +87,8 @@ typedef struct wavstuff {
     unsigned short samplesPerBlock;
     unsigned short blockAlign;
     st_size_t dataStart;  /* need to for seeking */
-    int found_cooledit;
-    
+    int found_cooledit;   
+
     /* following used by *ADPCM wav files */
     unsigned short nCoefs;          /* ADPCM: number of coef sets */
     short         *iCoefs;          /* ADPCM: coef sets           */
@@ -878,7 +878,7 @@ int st_wavstartread(ft_t ft)
                            wav->blockAlign, wav->samplesPerBlock);
         /*st_report("datalen %d, numSamples %d",dwDataLength, wav->numSamples);*/
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
-        ft->length = wav->numSamples*ft->info.channels;
+        ft->length = wav->numSamples;
         break;
 
     case WAVE_FORMAT_IMA_ADPCM:
@@ -890,21 +890,20 @@ int st_wavstartread(ft_t ft)
         /*st_report("datalen %d, numSamples %d",dwDataLength, wav->numSamples);*/
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
         initImaTable();
-        ft->length = wav->numSamples*ft->info.channels;
+        ft->length = wav->numSamples;
         break;
 
 #ifdef ENABLE_GSM
     case WAVE_FORMAT_GSM610:
-        wav->numSamples = (((dwDataLength / wav->blockAlign) * wav->samplesPerBlock) * ft->info.channels);
+        wav->numSamples = ((dwDataLength / wav->blockAlign) * wav->samplesPerBlock);
         wavgsminit(ft);
         ft->length = wav->numSamples;
         break;
 #endif
 
     default:
-        wav->numSamples = dwDataLength/ft->info.size;   /* total samples */
+        wav->numSamples = dwDataLength/ft->info.size/ft->info.channels;
         ft->length = wav->numSamples;
-
     }
 
     st_report("Reading Wave file: %s format, %d channel%s, %d samp/sec",
@@ -916,25 +915,27 @@ int st_wavstartread(ft_t ft)
     /* Can also report extended fmt information */
     switch (wav->formatTag)
     {
-    case WAVE_FORMAT_ADPCM:
-        st_report("        %d Extsize, %d Samps/block, %d bytes/block %d Num Coefs",
-                wExtSize,wav->samplesPerBlock,bytesPerBlock,wav->nCoefs);
-        break;
+        case WAVE_FORMAT_ADPCM:
+            st_report("        %d Extsize, %d Samps/block, %d bytes/block %d Num Coefs, %d Samps/chan",
+                      wExtSize,wav->samplesPerBlock,bytesPerBlock,wav->nCoefs,
+                      wav->numSamples);
+            break;
 
-    case WAVE_FORMAT_IMA_ADPCM:
-        st_report("        %d Extsize, %d Samps/block, %d bytes/block",
-                wExtSize,wav->samplesPerBlock,bytesPerBlock);
-        break;
+        case WAVE_FORMAT_IMA_ADPCM:
+            st_report("        %d Extsize, %d Samps/block, %d bytes/block %d Samps/chan",
+                      wExtSize, wav->samplesPerBlock, bytesPerBlock, 
+                      wav->numSamples);
+            break;
 
 #ifdef ENABLE_GSM
-    case WAVE_FORMAT_GSM610:
-        st_report("GSM .wav: %d Extsize, %d Samps/block,  %d samples",
-                wExtSize,wav->samplesPerBlock,wav->numSamples);
-        break;
+        case WAVE_FORMAT_GSM610:
+            st_report("GSM .wav: %d Extsize, %d Samps/block, %d Samples/chan",
+                      wExtSize, wav->samplesPerBlock, wav->numSamples);
+            break;
 #endif
 
-    default:
-        break;
+        default:
+            st_report("        %d Samps/chans", wav->numSamples);
     }
 
     /* Horrible way to find Cool Edit marker points. Taken from Quake source*/
@@ -1066,10 +1067,6 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
         case ST_ENCODING_IMA_ADPCM:
         case ST_ENCODING_ADPCM:
 
-            /* FIXME: numSamples is not used consistently in
-             * wav handler.  Sometimes it accounts for stereo,
-             * sometimes it does not.
-             */
             /* See reason for cooledit check in comments below */
             if (wav->found_cooledit && len > (wav->numSamples*ft->info.channels)) 
                 len = (wav->numSamples*ft->info.channels);
@@ -1121,8 +1118,8 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 #ifdef ENABLE_GSM
         case ST_ENCODING_GSM:
             /* See reason for cooledit check in comments below */
-            if (wav->found_cooledit && len > wav->numSamples) 
-                len = wav->numSamples;
+            if (wav->found_cooledit && len > wav->numSamples*ft->info.channels) 
+                len = (wav->numSamples*ft->info.channels);
 
             done = wavgsmread(ft, buf, len);
             if (done == 0 && wav->numSamples != 0)
@@ -1140,8 +1137,8 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
              * greater then 2Gig and can't be represented
              * by the 32-bit size field.
              */
-            if (wav->found_cooledit && len > wav->numSamples) 
-                len = wav->numSamples;
+            if (wav->found_cooledit && len > wav->numSamples*ft->info.channels) 
+                len = (wav->numSamples*ft->info.channels);
 
             done = st_rawread(ft, buf, len);
             /* If software thinks there are more samples but I/O */
@@ -1150,7 +1147,7 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
                 st_warn("Premature EOF on .wav input file");
         }
 
-        wav->numSamples -= done;
+        wav->numSamples -= (done/ft->info.channels);
         return done;
 }
 
@@ -1629,13 +1626,13 @@ st_ssize_t st_wavwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 #ifdef ENABLE_GSM
         case WAVE_FORMAT_GSM610:
             len = wavgsmwrite(ft, buf, len);
-            wav->numSamples += len;
+            wav->numSamples += (len/ft->info.channels);
             return len;
             break;
 #endif
         default:
             len = st_rawwrite(ft, buf, len);
-            wav->numSamples += len; /* must later be divided by wChannels */
+            wav->numSamples += (len/ft->info.channels);
             return len;
         }
 }
@@ -1769,7 +1766,8 @@ int st_wavseek(ft_t ft, st_size_t offset)
             ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
 
             if( ft->st_errno == ST_SUCCESS )
-                wav->numSamples = ft->length - (new_offset / ft->info.size);
+                wav->numSamples = ft->length - (new_offset / ft->info.size /
+                                  ft->info.channels);
     }
 
     return(ft->st_errno);

@@ -91,7 +91,8 @@ int st_aiffseek(ft_t ft, st_size_t offset)
     ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
 
     if (ft->st_errno == ST_SUCCESS)
-        aiff->nsamples = ft->length - (new_offset / ft->info.size);
+        aiff->nsamples = ft->length - 
+                          (new_offset / ft->info.size / ft->info.channels);
 
     return(ft->st_errno);
 }
@@ -415,12 +416,12 @@ int st_aiffstartread(ft_t ft)
 
         }
 
-        aiff->nsamples = ssndsize / ft->info.size;      /* leave out channels */
+        aiff->nsamples = ssndsize / ft->info.size / ft->info.channels;
 
         /* Cope with 'sowt' CD tracks as read on Macs */
         if (is_sowt)
         {
-                aiff->nsamples -= 4;
+                aiff->nsamples -= (4 / ft->info.channels);
                 ft->swap = ft->swap ? 0 : 1;
         }
         
@@ -611,12 +612,12 @@ st_ssize_t st_aiffread(ft_t ft, st_sample_t *buf, st_ssize_t len)
 
         if (len < 0)
             return ST_EOF;
-        else if ((st_size_t)len > aiff->nsamples)
-                len = aiff->nsamples;
+        else if ((st_size_t)len > aiff->nsamples*ft->info.channels)
+                len = (aiff->nsamples*ft->info.channels);
         done = st_rawread(ft, buf, len);
         if (done == 0 && aiff->nsamples != 0)
                 st_warn("Premature EOF on AIFF input file");
-        aiff->nsamples -= done;
+        aiff->nsamples -= (done / ft->info.channels);
         return done;
 }
 
@@ -704,7 +705,7 @@ int st_aiffstartwrite(ft_t ft)
 st_ssize_t st_aiffwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
-        aiff->nsamples += len;
+        aiff->nsamples += (len / ft->info.channels);
         st_rawwrite(ft, buf, len);
         return(len);
 }
@@ -731,7 +732,7 @@ int st_aiffstopwrite(ft_t ft)
                 st_fail_errno(ft,errno,"can't rewind output file to rewrite AIFF header");
                 return(ST_EOF);
         }
-        return(aiffwriteheader(ft, aiff->nsamples / ft->info.channels));
+        return(aiffwriteheader(ft, aiff->nsamples));
 }
 
 static int aiffwriteheader(ft_t ft, st_size_t nframes)

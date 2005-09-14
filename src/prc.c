@@ -113,7 +113,7 @@ int st_prcstartread(ft_t ft)
         ft->info.channels = 1;
 
         p->dataStart = st_tell(ft);
-        ft->length = p->length/ft->info.size;
+        ft->length = p->length/ft->info.size/ft->info.channels;
 
         return (ST_SUCCESS);
 }

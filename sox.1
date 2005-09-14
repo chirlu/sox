@@ -37,7 +37,7 @@ sox \- Sound eXchange : universal sound sample translator
 .P
 .B General options:
 .br
-    [ -h ] [ -p ] [ -V ]
+    [ -h ] [ -p ] [ -q ] [ -S ] [ -V ]
 .P
 .B Format options:
 .br
@@ -225,29 +225,56 @@ SoX can be used as a part of pipe operations by using the special
 filenames of "-".  If specified as an input name, it will read data
 from stdin.  If specified as an output name, it will send data
 to stdout.
+.PP
+\fBGeneral options:\fR
+.TP 10
+\fB-h\fR
+Print version number and usage information.
+.TP 10
+\fB-p\fR
+Run in preview mode and run fast.  This will somewhat speed up
+SoX when the output format has a different number of channels and
+a different rate than the input file.  Currently, this defaults to
+using the \fBrate\fR effect instead of the \fBresample\fR effect for sample
+rate changes.
+.TP 10
+\fB-q\fR
+Run in quite mode when SoX wouldn't otherwise do that.  Inverse of \fB-S\fR
+option.
+.TP
+\fB-S\fR
+Print status while processing audio data.  Tells how much of audio data has been
+processed in terms of audio running time instead of samples.
+.TP 10
+\fB-V\fR
+Print a description of processing phases.
+Useful for figuring out exactly how
+.I SoX
+.PP
+is mangling your sound samples.
+.PP
 \fBFormat options:\fR
 .PP
-Format options effect the audio samples that they immediately precede.  If
-they are placed before the input file name then they effect the input
-data.  If they are placed before the output file name then they will
-effect the output data.  By taking advantage of this, you can override
-a input file's corrupted header or produce an output file that is totally
-different style then the input file.  It is also how SoX is informed about
-the format of raw input data.
+Format options effect the input or output file that they immediately precede.
+.PP
+Self describing input files can obtain all the format information directly from the header and so don't generally need format options.  Headerless input files lack this information and so format options must be used to inform SoX of the file's data type, sample rate, and number of channels.
+.PP
+By default, SoX attempts to write audio data using the same data type, sample rate, and channel count as the input data.  If the user wants the output file to be of a different format then format options can be used to specify the differences.
+.PP
+If an output file format doesn't support the same data type, sample rate, or channel count as the input file format, then SoX will auto select the closest values it does support so that the user does not have to specify these format change options manually.
 .TP 10
 \fB-t \fIfiletype\fR
 gives the type of the sound sample file.  Useful when file extension is
-not standard or for specifying the .auto file type.
+not standard or can not be determeind by looking at the header of the file.
 .TP 10
 \fB-r \fIrate\fR
 Gives the sample rate in Hertz of the file.  To cause the output file to have
 a different sample rate than the input file, include this option as a part
-of the output options.
+of the output format options.
 .br
 If the input and output files have
-different rates then a sample rate change effect must be ran.  If a
-sample rate changing effect is not specified then a default one will internally
-be ran by SoX using its default parameters.
+different rates then a sample rate change effect must be ran.  Since SoX has
+multiple rate changing effects, the user can specify which to use as an effect.  If no rate change effect is specified then a default one will be chosen.
 .TP 10
 \fB-v \fIvolume\fR
 Change amplitude (floating point); 
@@ -330,29 +357,12 @@ avg effect must be used.  If the avg effect is not specified on the
 command line it will be invoked internally with default parameters.
 .TP 10
 \fB-e\fR
-When used after the input filename (so that it applies to the output file)
+When specified after the last input filename (so that it applies
+to the output file)
 it allows you to avoid giving an output filename and will not
 produce an output file.  It will apply any specified effects
 to the input file.  This is mainly useful with the \fBstat\fR effect
-but can be used with others.
-.PP
-\fBGeneral options:\fR
-.TP 10
-\fB-h\fR
-Print version number and usage information.
-.TP 10
-\fB-p\fR
-Run in preview mode and run fast.  This will somewhat speed up
-SoX when the output format has a different number of channels and
-a different rate than the input file.  Currently, this defaults to
-using the \fBrate\fR effect instead of the \fBresample\fR effect for sample
-rate changes.
-.TP 10
-\fB-V\fR
-Print a description of processing phases.
-Useful for figuring out exactly how
-.I SoX
-is mangling your sound samples.
+but can be used.
 .SH FILE TYPES
 .I SoX
 attempts to determine the file type of input files automatically by looking 
@@ -618,7 +628,7 @@ See
 .B .ogg
 format.
 .TP 10
-.B vox
+.B .vox
 A headerless file of Dialogic/OKI ADPCM audio data commonly comes with the
 extension .vox.  This ADPCM data has 12-bit precision packed into only 4-bits.
 .TP 10
@@ -677,9 +687,7 @@ Similarly, most Mac sound files are in unsigned byte format with
 a sample rate of 11025 or 22050 hz.
 .TP 10
 .B .auto
-This is a ``meta-type'': specifying this type for an input file
-triggers some code that tries to guess the real type by looking for
-magic words in the header.  If the type can't be guessed, the program
+This is a ``meta-type'' and is the default file type if the user does not specify one. This file type attempts to guess the real type by looking for magic words in the header. If the type can't be guessed, the program
 exits with an error message.  The input must be a plain file, not a
 pipe.  This type can't be used for output files.
 .SH EFFECTS

@@ -148,7 +148,8 @@ struct st_soundstream {
     st_loopinfo_t   loops[ST_MAX_NLOOPS]; /* Looping specification */
     char            swap;                 /* do byte- or word-swap */
     char            seekable;             /* can seek on this file */
-    st_size_t       length; /* estimate of total samples in file - for seeking*/
+    /* Total samples per channel of file.  Zero if unknown. */
+    st_size_t       length;    
     char            *filename;            /* file name */
     char            *filetype;            /* type of file */
     char            *comment;             /* comment string */
@@ -199,10 +200,12 @@ extern st_format_t st_formats[];
 #define ST_ENCODING_INV_ULAW    9 /* Inversed bit-order u-law */
 #define ST_ENCODING_INV_ALAW    10/* Inversed bit-order A-law */
 #define ST_ENCODING_MP3         11/* MP3 compression */
-#define ST_ENCODING_MAX         11 
+#define ST_ENCODING_VORBIS      12/* Vorbis compression */
+#define ST_ENCODING_MAX         12 
 
 /* declared in misc.c */
 extern const char *st_sizes_str[];
+extern const char *st_size_bits_str[];
 extern const char *st_encodings_str[];
 
 #define ST_EFF_CHAN     1               /* Effect can mix channels up/down */

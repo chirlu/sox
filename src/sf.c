@@ -154,7 +154,7 @@ int st_sfstartread(ft_t ft)
 
 /* Need length for seeking */
         if(ft->seekable){
-                ft->length = st_filelength(ft)/samplesize;
+                ft->length = st_filelength(ft)/samplesize/ft->info.channels;
                 sf->dataStart = st_tell(ft);
         } else {
                 ft->length = 0;

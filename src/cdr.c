@@ -24,51 +24,51 @@
 
 #include "st_i.h"
 
-#define SECTORSIZE	(2352 / 2)
+#define SECTORSIZE      (2352 / 2)
 
 /* Private data for SKEL file */
 typedef struct cdrstuff {
-	st_size_t samples;	/* number of samples written */
+        st_size_t samples;      /* number of samples written */
 } *cdr_t;
 
 /*
  * Do anything required before you start reading samples.
  * Read file header. 
- *	Find out sampling rate, 
- *	size and encoding of samples, 
- *	mono/stereo/quad.
+ *      Find out sampling rate, 
+ *      size and encoding of samples, 
+ *      mono/stereo/quad.
  */
 
 int st_cdrstartread(ft_t ft) 
 {
-	int rc;
+        int rc;
 
-	/* Needed because of rawread() */
-	rc = st_rawstartread(ft);
-	if (rc)
-	    return rc;
+        /* Needed because of rawread() */
+        rc = st_rawstartread(ft);
+        if (rc)
+            return rc;
 
-	/* CDR is in Big Endian format.  Swap whats read in on */
+        /* CDR is in Big Endian format.  Swap whats read in on */
         /* Little Endian machines.                             */
-	if (ST_IS_LITTLEENDIAN)
-	{ 
-	    ft->swap = ft->swap ? 0 : 1;
-	}
+        if (ST_IS_LITTLEENDIAN)
+        { 
+            ft->swap = ft->swap ? 0 : 1;
+        }
 
-	ft->info.rate = 44100L;
-	ft->info.size = ST_SIZE_WORD;
-	ft->info.encoding = ST_ENCODING_SIGN2;
-	ft->info.channels = 2;
-	ft->comment = NULL;
+        ft->info.rate = 44100L;
+        ft->info.size = ST_SIZE_WORD;
+        ft->info.encoding = ST_ENCODING_SIGN2;
+        ft->info.channels = 2;
+        ft->comment = NULL;
 
 /* Need length for seeking */
-	if(ft->seekable){
-		ft->length = st_filelength(ft)/2;
-	} else {
-		ft->length = 0;
-	}
-	
-	return(ST_SUCCESS);
+        if(ft->seekable){
+                ft->length = st_filelength(ft)/2/2;
+        } else {
+                ft->length = 0;
+        }
+        
+        return(ST_SUCCESS);
 }
 
 /*
@@ -81,7 +81,7 @@ int st_cdrstartread(ft_t ft)
 st_ssize_t st_cdrread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
 
-	return st_rawread(ft, buf, len);
+        return st_rawread(ft, buf, len);
 }
 
 /*
@@ -90,44 +90,44 @@ st_ssize_t st_cdrread(ft_t ft, st_sample_t *buf, st_ssize_t len)
  */
 int st_cdrstopread(ft_t ft) 
 {
-	/* Needed because of rawread() */
-	return st_rawstopread(ft);
+        /* Needed because of rawread() */
+        return st_rawstopread(ft);
 }
 
 int st_cdrstartwrite(ft_t ft) 
 {
-	cdr_t cdr = (cdr_t) ft->priv;
-	int rc;
+        cdr_t cdr = (cdr_t) ft->priv;
+        int rc;
 
-	/* CDR is in Big Endian format.  Swap whats written out on */
-	/* Little Endian Machines.                                 */
-	if (ST_IS_LITTLEENDIAN)
-	{
-	    ft->swap = ft->swap ? 0 : 1;
-	}
+        /* CDR is in Big Endian format.  Swap whats written out on */
+        /* Little Endian Machines.                                 */
+        if (ST_IS_LITTLEENDIAN)
+        {
+            ft->swap = ft->swap ? 0 : 1;
+        }
 
-	/* Needed because of rawwrite() */
-	rc = st_rawstartwrite(ft);
-	if (rc)
-	    return rc;
+        /* Needed because of rawwrite() */
+        rc = st_rawstartwrite(ft);
+        if (rc)
+            return rc;
 
-	cdr->samples = 0;
+        cdr->samples = 0;
 
-	ft->info.rate = 44100L;
-	ft->info.size = ST_SIZE_WORD;
-	ft->info.encoding = ST_ENCODING_SIGN2;
-	ft->info.channels = 2;
+        ft->info.rate = 44100L;
+        ft->info.size = ST_SIZE_WORD;
+        ft->info.encoding = ST_ENCODING_SIGN2;
+        ft->info.channels = 2;
 
-	return(ST_SUCCESS);
+        return(ST_SUCCESS);
 }
 
 st_ssize_t st_cdrwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
-	cdr_t cdr = (cdr_t) ft->priv;
+        cdr_t cdr = (cdr_t) ft->priv;
 
-	cdr->samples += len;
+        cdr->samples += len;
 
-	return st_rawwrite(ft, buf, len);
+        return st_rawwrite(ft, buf, len);
 }
 
 /*
@@ -137,25 +137,25 @@ st_ssize_t st_cdrwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
 
 int st_cdrstopwrite(ft_t ft) 
 {
-	cdr_t cdr = (cdr_t) ft->priv;
-	int padsamps = SECTORSIZE - (cdr->samples % SECTORSIZE);
-	short zero;
-	int rc;
+        cdr_t cdr = (cdr_t) ft->priv;
+        int padsamps = SECTORSIZE - (cdr->samples % SECTORSIZE);
+        short zero;
+        int rc;
 
-	/* Flush buffer before writing anything else */
-	rc = st_rawstopwrite(ft);
+        /* Flush buffer before writing anything else */
+        rc = st_rawstopwrite(ft);
 
-	if (rc)
-	    return rc;
+        if (rc)
+            return rc;
 
-	zero = 0;
+        zero = 0;
 
-	if (padsamps != SECTORSIZE) 
-	{
-		while (padsamps > 0) {
-			st_writew(ft, zero);
-			padsamps--;
-		}
-	}
-	return(ST_SUCCESS);
+        if (padsamps != SECTORSIZE) 
+        {
+                while (padsamps > 0) {
+                        st_writew(ft, zero);
+                        padsamps--;
+                }
+        }
+        return(ST_SUCCESS);
 }
