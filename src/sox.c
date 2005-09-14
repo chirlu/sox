@@ -702,6 +702,10 @@ static void process(void) {
 
     input_eff = 0;
 
+    /* mark chain as empty */
+    for(e = 1; e < neffects; e++)
+        efftab[e].odone = efftab[e].olen = 0;
+
     /* Run input data through effects and get more until olen == 0 
      * (or ST_EOF).
      */
@@ -823,10 +827,6 @@ static void process(void) {
 
         if (efftab[0].olen == 0)
             break;
-
-        /* mark chain as empty */
-        for(e = 1; e < neffects; e++)
-            efftab[e].odone = efftab[e].olen = 0;
 
         flowstatus = flow_effect_out();
 
@@ -1179,7 +1179,10 @@ static int flow_effect_out(void)
            * Software is more likely to refuse to handle that.
            */
           if (efftab[e].odone < efftab[e].olen)
+          {
+              /* fprintf(stderr, "Breaking out of loop to flush buffer\n"); */
               break;
+          }
       }
 
       /* If outputing and output data was generated then write it */
@@ -1231,6 +1234,12 @@ static int flow_effect_out(void)
       havedata = 0;
       for(e = neffects - 1; e >= input_eff; e--)
       {
+          /* If odone and olen are the same then this buffer
+           * can be reused.
+           */
+          if (efftab[e].odone == efftab[e].olen)
+              efftab[e].odone = efftab[e].olen = 0;
+
           if (efftab[e].odone < efftab[e].olen) {
               havedata = 1;
               break;
@@ -1280,7 +1289,10 @@ static int flow_effect(int e)
 
     /* I have no input data ? */
     if (efftab[e-1].odone == efftab[e-1].olen)
+    {
+        /* fprintf(stderr, "%s no data to pull to me!\n", efftab[e].name); */
         return 0;
+    }
 
     if (! efftabR[e].name) {
         /* No stereo data, or effect can handle stereo data so
@@ -1288,15 +1300,23 @@ static int flow_effect(int e)
          */
         idone = efftab[e-1].olen - efftab[e-1].odone;
         odone = ST_BUFSIZ - efftab[e].olen;
+        /* fprintf(stderr, "pre %s idone=%d, odone=%d\n", efftab[e].name, idone, odone); */
+        /* fprintf(stderr, "pre %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); */
+
         effstatus = (* efftab[e].h->flow)(&efftab[e],
                                           &efftab[e-1].obuf[efftab[e-1].odone],
                                           &efftab[e].obuf[efftab[e].olen], 
                                           (st_size_t *)&idone, 
                                           (st_size_t *)&odone);
+
         efftab[e-1].odone += idone;
         /* Leave efftab[e].odone were it was since we didn't consume data */
         /*efftab[e].odone = 0;*/
         efftab[e].olen += odone; 
+
+        /* fprintf(stderr, "post %s idone=%d, odone=%d\n", efftab[e].name, idone, odone); */
+        /* fprintf(stderr, "post %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); */
+
         done = idone + odone;
     } else {
 
