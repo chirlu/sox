@@ -523,7 +523,7 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft)
     st_fail_errno(ft,ST_ENOMEM,"AIFF: Couldn't allocate %s header", chunkDescription);
     return(ST_EOF);
   }
-  if (st_read(ft, *text, 1, chunksize) != chunksize)
+  if (st_readbuf(ft, *text, 1, chunksize) != chunksize)
   {
     st_fail_errno(ft,ST_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
     return(ST_EOF);
@@ -533,7 +533,7 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft)
         {
                 /* Read past pad byte */
                 char c;
-                if (st_read(ft, &c, 1, 1) != 1)
+                if (st_readbuf(ft, &c, 1, 1) != 1)
                 {
                 st_fail_errno(ft,ST_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
                         return(ST_EOF);
@@ -578,7 +578,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
         st_fail_errno(ft,ST_ENOMEM,"AIFF: Couldn't allocate %s header", chunkDescription);
         return(ST_EOF);
     }
-    if (st_read(ft, *text + totalCommentLength - commentLength, 1, commentLength) != commentLength) {
+    if (st_readbuf(ft, *text + totalCommentLength - commentLength, 1, commentLength) != commentLength) {
         st_fail_errno(ft,ST_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
         return(ST_EOF);
     }
@@ -587,7 +587,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
     if (commentLength % 2) {
         /* Read past pad byte */
         char c;
-        if (st_read(ft, &c, 1, 1) != 1) {
+        if (st_readbuf(ft, &c, 1, 1) != 1) {
             st_fail_errno(ft,ST_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
             return(ST_EOF);
         }
@@ -599,7 +599,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
        int i;
        char c;
        for (i=0; i < chunksize - totalReadLength; i++ ) {
-               st_read(ft, &c, 1, 1);
+               st_readbuf(ft, &c, 1, 1);
        }
   }
   return(ST_SUCCESS);
@@ -631,7 +631,7 @@ int st_aiffstopread(ft_t ft)
         {
             while (! st_eof(ft)) 
             {
-                if (st_read(ft, buf, 1, 4) != 4)
+                if (st_readbuf(ft, buf, 1, 4) != 4)
                         break;
 
                 st_readdw(ft, &chunksize);
@@ -877,7 +877,7 @@ static int aiffwriteheader(ft_t ft, st_size_t nframes)
 static double read_ieee_extended(ft_t ft)
 {
         char buf[10];
-        if (st_read(ft, buf, 1, 10) != 10)
+        if (st_readbuf(ft, buf, 1, 10) != 10)
         {
                 st_fail_errno(ft,ST_EOF,"EOF while reading IEEE extended number");
                 return(ST_EOF);
@@ -895,7 +895,7 @@ static void write_ieee_extended(ft_t ft, double x)
                 buf[0], buf[1], buf[2], buf[3], buf[4],
                 buf[5], buf[6], buf[7], buf[8], buf[9]);
         */
-        (void)st_write(ft, buf, 1, 10);
+        (void)st_writebuf(ft, buf, 1, 10);
 }
 
 

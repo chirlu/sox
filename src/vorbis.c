@@ -279,8 +279,8 @@ int st_vorbisstopread(ft_t ft)
 int oe_write_page(ogg_page *page, ft_t ft)
 {
         int written;
-        written = st_write(ft, page->header,1,page->header_len);
-        written += st_write(ft, page->body,1,page->body_len);
+        written = st_writebuf(ft, page->header,1,page->header_len);
+        written += st_writebuf(ft, page->body,1,page->body_len);
 
         return written;
 }

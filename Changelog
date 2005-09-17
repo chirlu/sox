@@ -30,6 +30,12 @@ sox-12.17.9
   o Add support for displaying a status line that tracks progress
     of read/write routines.  Part of information requires read
     file handlers to be able to determine file length.
+  o Converted alsa driver to use asoundlib instead of directly
+    talking to kernel driver.  This also means that device names
+    are now the ALSA logical names instead of /dev type names.
+  o Added ALSA support to play/rec scripts.
+  o Added st_open* and st_close() routines to help simply
+    developer interface to libst.
 
 sox-12.17.8
 -----------

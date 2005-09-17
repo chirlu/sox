@@ -169,7 +169,7 @@ st_ssize_t st_voxread (ft_t ft,st_sample_t *buffer,st_ssize_t length)
                    { // ... refill buffer 
 
                      if (ft->file.pos >= ft->file.count)
-                        { ft->file.count = st_read (ft,ft->file.buf,1,ft->file.size);
+                        { ft->file.count = st_readbuf (ft,ft->file.buf,1,ft->file.size);
                           ft->file.pos   = 0;
 
                           if (ft->file.count == 0)
@@ -288,7 +288,7 @@ st_ssize_t st_voxwrite (ft_t ft,st_sample_t *buffer,st_ssize_t length)
                         { ft->file.buf[ft->file.count++] = byte;
 
                           if (ft->file.count >= ft->file.size)
-                             { st_write (ft,ft->file.buf,1,ft->file.count);
+                             { st_writebuf (ft,ft->file.buf,1,ft->file.count);
 
                                ft->file.count = 0;
                              }
@@ -330,7 +330,7 @@ int  st_voxstopwrite (ft_t ft)
           }
 
        if (ft->file.count > 0)
-          st_write (ft,ft->file.buf,1,ft->file.count);
+          st_writebuf (ft,ft->file.buf,1,ft->file.count);
 
        // ... free buffer
 

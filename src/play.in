@@ -18,6 +18,10 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
 
+HAVE_ALSA=@NEED_ALSA@
+HAVE_OSS=@NEED_OSS@
+HAVE_SUNAU=@NEED_ALSA@
+
 # Look for sox in install directory first and then in current direction
 # if not found.
 PATH="$bindir:.:$PATH"
@@ -167,42 +171,50 @@ while [ $# -ne 0 ]; do
     shift
 done
 
-arch=`uname -s`
-case $arch in
-  SunOS)
-    case `uname -r` in
-        # Solaris software can auto-detect hardware capabilities.
-        5.*)
-	    arch_defines="-t sunau"
-	    ;;
-	# For SunOS default to signed words.  Some hardware can only play u-law and would need
-	# to be changed here.
-	*)
-	    arch_defines="-t sunau -w -s"
-	    ;;
-    esac
-    if [ -z "$device" ]; then
-	device="/dev/audio"
-    fi
-    ;;
-  Linux|FreeBSD)
-    arch_defines="-t ossdsp"
-    if [ -z "$device" ]; then
-	device="/dev/dsp"
-    fi
-    ;;
-  NetBSD|OpenBSD)
-    arch_defines="-t sunau"
-    if [ -z "$device" ]; then
-        device="/dev/audio"
-    fi
-    ;;
-esac
-
 # If user sets AUDIODEV environment variable then force output device
 # to by that.  Solaris SunRay's make use of this for sure.
 if [ -n "$AUDIODEV" ]; then
     device="$AUDIODEV"
+fi
+
+if [ "$HAVE_ALSA" == "1" ]; then
+    arch_defines="-t alsa"
+    if [ -z "$device" ]; then
+	device="default"
+    fi
+else
+    if [ "$HAVE_OSS" == "1" ]; then
+        arch_defines="-t ossdsp"
+        if [ -z "$device" ]; then
+            device="/dev/dsp"
+        fi
+    else
+        arch=`uname -s`
+        case $arch in
+            SunOS)
+            case `uname -r` in
+                # Solaris software can auto-detect hardware capabilities.
+                5.*)
+                arch_defines="-t sunau"
+                ;;
+                # For SunOS default to signed words.  Some hardware can only play u-law and would need
+                # to be changed here.
+                *)
+                arch_defines="-t sunau -w -s"
+                ;;
+            esac
+            if [ -z "$device" ]; then
+                device="/dev/audio"
+            fi
+            ;;
+            NetBSD|OpenBSD)
+            arch_defines="-t sunau"
+            if [ -z "$device" ]; then
+                device="/dev/audio"
+            fi
+            ;;
+        esac
+    fi
 fi
 
 # If name is "rec" then record else assume user is wanting to play

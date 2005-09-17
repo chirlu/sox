@@ -451,7 +451,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
             i = ft->file.count-ft->file.pos;
             ft->file.pos = 0;
 
-            ft->file.count = st_read(ft, ft->file.buf+i, 1, ft->file.size-i);
+            ft->file.count = st_readbuf(ft, ft->file.buf+i, 1, ft->file.size-i);
             if (ft->file.count != ft->file.size-i || ft->file.count == 0)
             {
                 ft->file.eof = 1;
@@ -641,7 +641,7 @@ void st_f64_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
 
 static void writeflush(ft_t ft)
 {
-        if (st_write(ft, ft->file.buf, 1, ft->file.pos) != ft->file.pos)
+        if (st_writebuf(ft, ft->file.buf, 1, ft->file.pos) != ft->file.pos)
         {
             ft->file.eof = ST_EOF;
         }

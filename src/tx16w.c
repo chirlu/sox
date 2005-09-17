@@ -271,7 +271,7 @@ int st_txwstartwrite(ft_t ft)
     /* dummy numbers, just for place holder, real header is written
        at end of processing, since byte count is needed */
 
-    st_write(ft, &WH, 1, 32);
+    st_writebuf(ft, &WH, 1, 32);
     writedone = 32;
     return(ST_SUCCESS);
 }
@@ -371,7 +371,7 @@ int st_txwstopwrite(ft_t ft)
         magic2[WH.sample_rate];
 
     st_rewind(ft);
-    st_write(ft, &WH, 1, 32);
+    st_writebuf(ft, &WH, 1, 32);
 
     return(ST_SUCCESS);
 }

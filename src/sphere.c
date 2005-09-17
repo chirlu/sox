@@ -157,7 +157,7 @@ int st_spherestartread(ft_t ft)
 
         while (header_size)
         {
-            bytes_read = st_read(ft, buf, ST_SIZE_BYTE, header_size);
+            bytes_read = st_readbuf(ft, buf, ST_SIZE_BYTE, header_size);
             if (bytes_read == 0)
             {
                 free(buf);

@@ -67,8 +67,8 @@ char *strerror(int errorcode);
  * possible byte swapping.
  */
 /* declared in misc.c */
-st_ssize_t st_read(ft_t ft, void *buf, size_t size, st_ssize_t len);
-st_ssize_t st_write(ft_t ft, void *buf, size_t size, st_ssize_t len);
+st_ssize_t st_readbuf(ft_t ft, void *buf, size_t size, st_ssize_t len);
+st_ssize_t st_writebuf(ft_t ft, void *buf, size_t size, st_ssize_t len);
 int st_reads(ft_t ft, char *c, st_ssize_t len);
 int st_writes(ft_t ft, char *c);
 int st_readb(ft_t ft, uint8_t *ub);
@@ -170,6 +170,7 @@ int st_alstartwrite(ft_t ft);
 #ifdef HAVE_ALSA
 int st_alsastartread(ft_t ft);
 st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_ssize_t len);
+int st_alsastopread(ft_t ft);
 int st_alsastartwrite(ft_t ft);
 st_ssize_t st_alsawrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
 int st_alsastopwrite(ft_t ft);

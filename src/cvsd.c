@@ -470,7 +470,7 @@ static int dvms_read_header(ft_t ft, struct dvms_header *hdr)
         int i;
         unsigned sum;
 
-        if (st_read(ft, hdrbuf, sizeof(hdrbuf), 1) != 1)
+        if (st_readbuf(ft, hdrbuf, sizeof(hdrbuf), 1) != 1)
         {
                 return (ST_EOF);
         }
@@ -541,7 +541,7 @@ static int dvms_write_header(ft_t ft, struct dvms_header *hdr)
                 st_report("seek failed\n: %s",strerror(errno));
                 return (ST_EOF);
         }
-        if (st_write(ft, hdrbuf, sizeof(hdrbuf), 1) != 1)
+        if (st_writebuf(ft, hdrbuf, sizeof(hdrbuf), 1) != 1)
         {
                 st_report("%s\n",strerror(errno));
                 return (ST_EOF);

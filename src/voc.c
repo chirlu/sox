@@ -230,7 +230,7 @@ int st_vocstartread(ft_t ft)
         }
 
 
-        if (st_read(ft, header, 1, 20) != 20)
+        if (st_readbuf(ft, header, 1, 20) != 20)
         {
                 st_fail_errno(ft,ST_EHDR,"unexpected EOF in VOC header");
                 return(ST_EOF);

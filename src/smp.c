@@ -93,7 +93,7 @@ static int readtrailer(ft_t ft, struct smptrailer *trailer)
                 ft->loops[i].count = trailer->loops[i].count;
         }
         for(i = 0; i < 8; i++) {        /* read the 8 markers */
-                if (st_read(ft, trailer->markers[i].name, 1, MARKERLEN) != 10)
+                if (st_readbuf(ft, trailer->markers[i].name, 1, MARKERLEN) != 10)
                 {
                     st_fail_errno(ft,ST_EHDR,"EOF in SMP");
                     return(ST_EOF);
@@ -227,7 +227,7 @@ int st_smpstartread(ft_t ft)
         }
 
         /* Read SampleVision header */
-        if (st_read(ft, (char *)&header, 1, HEADERSIZE) != HEADERSIZE)
+        if (st_readbuf(ft, (char *)&header, 1, HEADERSIZE) != HEADERSIZE)
         {
                 st_fail_errno(ft,ST_EHDR,"unexpected EOF in SMP header");
                 return(ST_EOF);
@@ -387,7 +387,7 @@ int st_smpstartwrite(ft_t ft)
         sprintf(header.name, "%-*.*s", NAMELEN, NAMELEN, ft->comment);
 
         /* Write file header */
-        if(st_write(ft, &header, 1, HEADERSIZE) != HEADERSIZE)
+        if(st_writebuf(ft, &header, 1, HEADERSIZE) != HEADERSIZE)
         {
             st_fail_errno(ft,errno,"SMP: Can't write header completely");
             return(ST_EOF);

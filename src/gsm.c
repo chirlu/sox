@@ -121,7 +121,7 @@ st_ssize_t st_gsmread(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 
                 if (done>=samp) break;
 
-                r = st_read(ft, p->frames, p->channels*FRAMESIZE, 1);
+                r = st_readbuf(ft, p->frames, p->channels*FRAMESIZE, 1);
                 if (r != 1) break;
 
                 p->samplePtr = p->samples;
@@ -170,7 +170,7 @@ static int gsmflush(ft_t ft)
                         gsp += chans;
                 }
                 gsm_encode(p->handle[ch], gbuff, p->frames);
-                r = st_write(ft, p->frames, FRAMESIZE, 1);
+                r = st_writebuf(ft, p->frames, FRAMESIZE, 1);
                 if (r != 1)
                 {
                         st_fail_errno(ft,errno,"write error");

@@ -189,7 +189,7 @@ int st_maudstartread(ft_t ft)
                             st_fail_errno(ft,ST_ENOMEM,"Couldn't alloc resources");
                             return(ST_EOF);
                         }
-                        if (st_read(ft, chunk_buf, 1, (int)chunksize) 
+                        if (st_readbuf(ft, chunk_buf, 1, (int)chunksize) 
                             != chunksize)
                         {
                                 st_fail_errno(ft,ST_EOF,"MAUD: Unexpected EOF in ANNO header");

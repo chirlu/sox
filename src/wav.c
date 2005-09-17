@@ -135,7 +135,7 @@ unsigned short  ImaAdpcmReadBlock(ft_t ft)
     int samplesThisBlock;
 
     /* Pull in the packet and check the header */
-    bytesRead = st_read(ft, wav->packet, 1, wav->blockAlign);
+    bytesRead = st_readbuf(ft, wav->packet, 1, wav->blockAlign);
     samplesThisBlock = wav->samplesPerBlock;
     if (bytesRead < wav->blockAlign) 
     { 
@@ -176,7 +176,7 @@ unsigned short  AdpcmReadBlock(ft_t ft)
     const char *errmsg;
 
     /* Pull in the packet and check the header */
-    bytesRead = st_read(ft, wav->packet, 1, wav->blockAlign);
+    bytesRead = st_readbuf(ft, wav->packet, 1, wav->blockAlign);
     samplesThisBlock = wav->samplesPerBlock;
     if (bytesRead < wav->blockAlign) 
     {
@@ -222,7 +222,7 @@ static int xxxAdpcmWriteBlock(ft_t ft)
             ImaBlockMashI(chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, 9);
         }
         /* write the compressed packet */
-        if (st_write(ft, wav->packet, wav->blockAlign, 1) != 1)
+        if (st_writebuf(ft, wav->packet, wav->blockAlign, 1) != 1)
         {
             st_fail_errno(ft,ST_EOF,"write error");
             return (ST_EOF);
@@ -294,7 +294,7 @@ st_ssize_t wavgsmread(ft_t ft, st_sample_t *buf, st_ssize_t len)
   /* read and decode loop, possibly leaving some samples in wav->gsmsample */
     while (done < len) {
         wav->gsmindex=0;
-        bytes = st_read(ft, frame, 1, 65);   
+        bytes = st_readbuf(ft, frame, 1, 65);   
         if (bytes <=0)
             return done;
         if (bytes<65) {
@@ -335,7 +335,7 @@ static int wavgsmflush(ft_t ft)
     gsm_encode(wav->gsmhandle, wav->gsmsample, frame);
     /*encode the odd half long (33 byte) frame */
     gsm_encode(wav->gsmhandle, wav->gsmsample+160, frame+32);
-    if (st_write(ft, frame, 1, 65) != 65)
+    if (st_writebuf(ft, frame, 1, 65) != 65)
     {
         st_fail_errno(ft,ST_EOF,"write error");
         return (ST_EOF);

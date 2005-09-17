@@ -133,7 +133,7 @@ int st_mp3startread(ft_t ft)
         /* We need to decode the first frame,
          * so we know the output format */
 more_data:
-        ReadSize=st_read(ft, p->InputBuffer, 1, INPUT_BUFFER_SIZE);
+        ReadSize=st_readbuf(ft, p->InputBuffer, 1, INPUT_BUFFER_SIZE);
         if(ReadSize<=0)
         {
                 if(st_error(ft))
@@ -159,7 +159,7 @@ more_data:
                 /* Read another buffer full of data. */
                 memmove(p->InputBuffer, p->Stream->this_frame, remaining);
 
-                ReadSize=st_read(ft, p->InputBuffer+remaining, 1, INPUT_BUFFER_SIZE-remaining);
+                ReadSize=st_readbuf(ft, p->InputBuffer+remaining, 1, INPUT_BUFFER_SIZE-remaining);
                 if (ReadSize <= 0) {
                   st_fail_errno(ft,ST_EOF,"The file is not an MP3 file or it is corrupted");
                   return ST_EOF;
@@ -192,9 +192,9 @@ more_data:
                 while (tagsize > 0)
                 {
                     if (tagsize < INPUT_BUFFER_SIZE)
-                        ReadSize=st_read(ft, p->InputBuffer, 1, tagsize);
+                        ReadSize=st_readbuf(ft, p->InputBuffer, 1, tagsize);
                     else
-                        ReadSize=st_read(ft, p->InputBuffer, 1, INPUT_BUFFER_SIZE);
+                        ReadSize=st_readbuf(ft, p->InputBuffer, 1, INPUT_BUFFER_SIZE);
                     tagsize -= ReadSize;
                 }
                 goto more_data;
@@ -289,7 +289,7 @@ st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len)
         Remaining=p->Stream->bufend - p->Stream->next_frame;
         memmove(p->InputBuffer,p->Stream->next_frame,Remaining);
 
-        ReadSize=st_read(ft, p->InputBuffer+Remaining, 1, 
+        ReadSize=st_readbuf(ft, p->InputBuffer+Remaining, 1, 
                          INPUT_BUFFER_SIZE-Remaining);
         if(ReadSize == 0){
           p->eof=1;
@@ -466,7 +466,7 @@ st_ssize_t st_mp3write(ft_t ft, st_sample_t *buf, st_ssize_t samp)
     goto end;
   }
 
-  if (st_write(ft, mp3buffer, 1, written) < written){
+  if (st_writebuf(ft, mp3buffer, 1, written) < written){
      st_fail_errno(ft,ST_EOF,"File write failed");
      goto end;
   }
@@ -493,7 +493,7 @@ int st_mp3stopwrite(ft_t ft)
   if ( (written=lame_encode_flush(p->gfp, (unsigned char *)mp3buffer, 7200)) <0){
     st_fail_errno(ft,ST_EOF,"Encoding failed");
   }
-  else if (st_write(ft, mp3buffer, 1, written) < written){
+  else if (st_writebuf(ft, mp3buffer, 1, written) < written){
     st_fail_errno(ft,ST_EOF,"File write failed");
   }
 

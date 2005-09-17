@@ -33,8 +33,6 @@
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
-#include <sys/types.h>          /* for fstat() */
-#include <sys/stat.h>           /* for fstat() */
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>             /* for unlink() */
 #endif
@@ -49,6 +47,8 @@ extern int optind;
 #endif
 #endif
 
+#include <sys/types.h> /* for fstat() */
+#include <sys/stat.h> /* for fstat() */
 #ifdef _MSC_VER
 /*
  * __STDC__ is defined, so these symbols aren't created.
@@ -96,27 +96,22 @@ typedef struct file_options
 
 /* local forward declarations */
 static void doopts(file_options_t *fo, int, char **);
-static void copy_input(int offset);
-static void open_input(ft_t);
-static void copy_output(int offset);
-static void open_output(ft_t);
 static void usage(char *) NORET;
-static int filetype(int);
 static void process(void);
 static void print_input_status(int input);
 static void update_status(void);
 static void statistics(void);
 static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct, double vol);
-void parse_effects(int argc, char **argv);
-void check_effects(void);
-void start_effects(void);
-void reserve_effect_buf(void);
+static void parse_effects(int argc, char **argv);
+static void check_effects(void);
+static void start_effects(void);
+static void reserve_effect_buf(void);
 static int flow_effect_out(void);
 static int flow_effect(int);
-int drain_effect_out(void);
-int drain_effect(int);
-void release_effect_buf(void);
-void stop_effects(void);
+static int drain_effect_out(void);
+static int drain_effect(int);
+static void release_effect_buf(void);
+static void stop_effects(void);
 
 #define MAX_INPUT_FILES 32
 #define MAX_FILES MAX_INPUT_FILES + 1
@@ -243,20 +238,10 @@ int main(int argc, char **argv)
         if (!file_opts[i]->uservolume)
             file_opts[i]->volume = 1.0 / input_count;
 #endif
-        copy_input(i);
-        open_input(file_desc[i]);
-    }
-
-    if (writing)
-    {
-        copy_output(file_count-1);
-        /* Hold off on opening file until the very last minute.
-         * This allows us to verify header in input files are
-         * what they should be and parse effect command lines.
-         * That way if anything is found invalid, we will abort
-         * without truncating any existing file that has the same
-         * output filename.
-         */
+        file_desc[i] = st_open_input(file_opts[i]->filename,
+                                     &file_opts[i]->info, 
+                                     file_opts[i]->filetype,
+                                     file_opts[i]->swap);
     }
 
     /* Loop through the reset of the arguments looking for effects */
@@ -272,144 +257,6 @@ int main(int argc, char **argv)
         fprintf(stderr, "\n\nDone.\n");
 
     return(0);
-}
-
-static void copy_input(int offset)
-{
-    /* FIXME: Check for malloc for failures */
-    file_desc[offset] = st_initformat();
-    file_desc[offset]->info = file_opts[offset]->info;
-    file_desc[offset]->filename = file_opts[offset]->filename;
-    /* Let auto effect do the work if user is not overriding. */
-    if (!file_opts[offset]->filetype)
-        file_desc[offset]->filetype = "auto";
-    else
-        file_desc[offset]->filetype = strdup(file_opts[offset]->filetype);
-    file_desc[offset]->swap = file_opts[offset]->swap;
-
-    if (st_gettype(file_desc[offset]))
-        st_fail("Unknown input file format for '%s':  %s", 
-                file_desc[offset]->filename, 
-                file_desc[offset]->st_errstr);
-}
-
-static void open_input(ft_t ft)
-{
-    /* Open file handler based on input name.  Used stdin file handler
-     * if the filename is "-"
-     */
-    if (!strcmp(ft->filename, "-"))
-        ft->fp = stdin;
-    else if ((ft->fp = fopen(ft->filename, "rb")) == NULL)
-        st_fail("Can't open input file '%s': %s", ft->filename,
-                strerror(errno));
-
-    /* See if this file is seekable or not */
-#if     defined(DUMB_FILESYSTEM)
-    ft->seekable = 0;
-#else
-    ft->seekable = (filetype(fileno(ft->fp)) == S_IFREG);
-#endif
-}
-
-#if defined(DOS) || defined(WIN32)
-#define LASTCHAR '\\'
-#else
-#define LASTCHAR '/'
-#endif
-
-static void copy_output(int offset)
-{
-    /* FIXME: Check for malloc for failures */
-    file_desc[offset] = st_initformat();;
-    file_desc[offset]->info = file_opts[offset]->info;
-    file_desc[offset]->filename = file_opts[offset]->filename;
-    file_desc[offset]->filetype = file_opts[offset]->filetype;
-    file_desc[offset]->swap = file_opts[offset]->swap;
-
-    if (writing && !file_desc[offset]->filetype) {
-        /* Use filename extension to determine audio type. */
-
-        /* First, chop off any path portions of filename.  This
-         * prevents the next search from considering that part. */
-        /* FIXME: using strrchr can only lead to problems when knowing
-         * what to free()
-         */
-        if ((file_desc[offset]->filetype = 
-             strrchr(file_desc[offset]->filename, LASTCHAR)) == NULL)
-            file_desc[offset]->filetype = file_desc[offset]->filename;
-
-        /* Now look for an filename extension */
-        if ((file_desc[offset]->filetype = 
-             strrchr(file_desc[offset]->filetype, '.')) != NULL)
-            file_desc[offset]->filetype++;
-        else
-            file_desc[offset]->filetype = NULL;
-    }
-
-    if (writing)
-    {
-        if (st_gettype(file_desc[offset]))
-            st_fail("Unknown output file format for '%s': %s",
-                    file_desc[offset]->filename, 
-                    file_desc[offset]->st_errstr);
-
-        /* When writing to an audio device, auto turn on the
-         * status display to match behavior of ogg123/mpg123
-         * utils.  That is unless user requested us not to display]
-         * anything.
-         */
-        if (strcmp(file_desc[offset]->filetype, "alsa") == 0 ||
-            strcmp(file_desc[offset]->filetype, "ossdsp") == 0 ||
-            strcmp(file_desc[offset]->filetype, "sunau") == 0)
-        {
-            if (!quite)
-                status = 1;
-        }
-    }
-}
-
-static void open_output(ft_t ft)
-{
-    if (writing) {
-        /*
-         * There are two choices here:
-         *      1) stomp the old file - normal shell "> file" behavior
-         *      2) fail if the old file already exists - csh mode
-         */
-        if (! strcmp(ft->filename, "-"))
-        {
-            ft->fp = stdout;
-
-            /* stdout tends to be line-buffered.  Override this */
-            /* to be Full Buffering. */
-            if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*ST_BUFSIZ))
-            {
-                st_fail("Can't set write buffer");
-            }
-        }
-        else {
-
-            ft->fp = fopen(ft->filename, "wb");
-
-            if (ft->fp == NULL)
-                st_fail("Can't open output file '%s': %s",
-                        ft->filename, strerror(errno));
-
-            /* stdout tends to be line-buffered.  Override this */
-            /* to be Full Buffering. */
-            if (setvbuf (ft->fp,NULL,_IOFBF,sizeof(char)*ST_BUFSIZ))
-            {
-                st_fail("Can't set write buffer");
-            }
-
-        } /* end of else != stdout */
-#if     defined(DUMB_FILESYSTEM)
-        ft->seekable = 0;
-#else
-        ft->seekable  = (filetype(fileno(ft->fp)) == S_IFREG);
-#endif
-    }
 }
 
 #ifdef HAVE_GETOPT_H
@@ -590,24 +437,6 @@ static void process(void) {
 
     for (f = 0; f < input_count; f++)
     {
-        /* Read and write starters can change their formats. */
-        if ((*file_desc[f]->h->startread)(file_desc[f]) != ST_SUCCESS)
-        {
-            st_fail("Failed reading %s: %s",file_desc[f]->filename,
-                    file_desc[f]->st_errstr);
-        }
-
-        /* Go a head and assume 1 channel audio if nothing is detected.
-         * This is because libst usually doesn't set this for mono file
-         * formats (for historical reasons).
-         */
-        if (file_desc[f]->info.channels == -1)
-            file_desc[f]->info.channels = 1;
-
-        if (st_checkformat(file_desc[f]) )
-            st_fail("bad input format for file %s: %s", file_desc[f]->filename,
-                    file_desc[f]->st_errstr);
-
         st_report("Input file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
                   file_desc[f]->filename, file_desc[f]->info.rate,
                   st_sizes_str[(unsigned char)file_desc[f]->info.size],
@@ -630,19 +459,28 @@ static void process(void) {
 
     if (writing)
     {
-        open_output(file_desc[file_count-1]);
+        file_desc[file_count-1] = 
+            st_open_output(file_opts[file_count-1]->filename,
+                           &file_opts[file_count-1]->info, 
+                           &file_desc[0]->info,
+                           file_desc[0]->comment,
+                           file_desc[0]->loops,
+                           &file_desc[0]->instr,
+                           file_opts[file_count-1]->filetype,
+                           file_opts[file_count-1]->swap);
 
-        /* Always use first input file as a reference for output
-         * file format.
+        /* When writing to an audio device, auto turn on the
+         * status display to match behavior of ogg123/mpg123
+         * utils.  That is unless user requested us not to display]
+         * anything.
          */
-        st_copyformat(file_desc[0], file_desc[file_count-1]);
-
-        if ((*file_desc[file_count-1]->h->startwrite)(file_desc[file_count-1]) == ST_EOF)
-            st_fail(file_desc[file_count-1]->st_errstr);
-
-        if (st_checkformat(file_desc[file_count-1]))
-            st_fail("bad output format: %s", 
-                    file_desc[file_count-1]->st_errstr);
+        if (strcmp(file_desc[file_count-1]->filetype, "alsa") == 0 ||
+            strcmp(file_desc[file_count-1]->filetype, "ossdsp") == 0 ||
+            strcmp(file_desc[file_count-1]->filetype, "sunau") == 0)
+        {
+            if (!quite)
+                status = 1;
+        }
 
         st_report("Output file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
                   file_desc[file_count-1]->filename, 
@@ -725,6 +563,8 @@ static void process(void) {
         else
             efftab[0].olen = ilen;
 
+        read_samples += (efftab[0].olen / file_desc[0]->info.channels);
+
         /* Some file handlers claim 0 bytes instead of returning
          * ST_EOF.  In either case, attempt to go to the next
          * input file.
@@ -763,6 +603,10 @@ static void process(void) {
              */
             if (ilen[f] == ST_EOF)
                 ilen[f] = 0;
+
+            /* Only count read samples for first file in mix */
+            if (f == 0)
+                read_samples += (efftab[0].olen / file_desc[0]->info.channels);
 
             /* Adjust input side volume based on value specified
              * by user for this file.
@@ -865,10 +709,8 @@ static void process(void) {
         /* If problems closing input file, just warn user since
          * we are exiting anyways.
          */
-        if ((*file_desc[f]->h->stopread)(file_desc[f]) == ST_EOF)
+        if (st_close(file_desc[f]) == ST_EOF)
             st_warn(file_desc[f]->st_errstr);
-        fclose(file_desc[f]->fp);
-        free(file_desc[f]->filename);
     }
 
     if (writing)
@@ -876,15 +718,12 @@ static void process(void) {
         /* problem closing output file, just warn user since we
          * are exiting anyways.
          */
-        if ((*file_desc[file_count-1]->h->stopwrite)(file_desc[file_count-1]) == ST_EOF)
+        if (st_close(file_desc[file_count-1]) == ST_EOF)
             st_warn(file_desc[file_count-1]->st_errstr);
-        free(file_desc[file_count-1]->filename);
-        free(file_desc[file_count-1]->comment);
-        fclose(file_desc[file_count-1]->fp);
     }
 }
 
-void parse_effects(int argc, char **argv)
+static void parse_effects(int argc, char **argv)
 {
     int argc_effect;
 
@@ -930,7 +769,7 @@ void parse_effects(int argc, char **argv)
  * Smart ruleset for multiple effects in sequence.
  *      Puts user-specified effect in right place.
  */
-void check_effects(void)
+static void check_effects(void)
 {
     int i;
     int needchan = 0, needrate = 0, haschan = 0, hasrate = 0;
@@ -1112,7 +951,7 @@ void check_effects(void)
     }
 }
 
-void start_effects(void)
+static void start_effects(void)
 {
     int e;
 
@@ -1123,7 +962,7 @@ void start_effects(void)
     }
 }
 
-void reserve_effect_buf(void)
+static void reserve_effect_buf(void)
 {
     int e;
 
@@ -1205,8 +1044,6 @@ static int flow_effect_out(void)
           /* Currently, assuming all bytes were written and resetting
            * buffer pointers accordingly.
            */
-          read_samples += (efftab[neffects-1].olen / 
-                           file_desc[file_count-1]->info.channels);
           output_samples += (efftab[neffects-1].olen / 
                              file_desc[file_count-1]->info.channels);
           efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
@@ -1220,8 +1057,6 @@ static int flow_effect_out(void)
       else
       {
           /* Make it look like everything was consumed */
-          read_samples += (efftab[neffects-1].olen / 
-                           file_desc[file_count-1]->info.channels);
           output_samples += (efftab[neffects-1].olen / 
                              file_desc[file_count-1]->info.channels);
           efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
@@ -1242,7 +1077,9 @@ static int flow_effect_out(void)
 
           if (efftab[e].odone < efftab[e].olen) {
               havedata = 1;
-              break;
+              /* Don't break out because other things are being
+               * done in loop.
+               */
           }
       }
 
@@ -1370,7 +1207,7 @@ static int flow_effect(int e)
     return ST_SUCCESS;
 }
 
-int drain_effect_out(void)
+static int drain_effect_out(void)
 {
     /* Skip past input effect since we know thats not needed */
     if (input_eff == 0)
@@ -1393,7 +1230,7 @@ int drain_effect_out(void)
     return flow_effect_out();
 }
 
-int drain_effect(int e)
+static int drain_effect(int e)
 {
     st_ssize_t i, olen, olenl, olenr;
     st_sample_t *obuf;
@@ -1440,7 +1277,7 @@ int drain_effect(int e)
     return rc;
 }
 
-void release_effect_buf(void)
+static void release_effect_buf(void)
 {
     int e;
     
@@ -1452,7 +1289,7 @@ void release_effect_buf(void)
     }
 }
 
-void stop_effects(void)
+static void stop_effects(void)
 {
     int e;
 
@@ -1571,15 +1408,6 @@ static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct,
         return clips;
 }
 
-static int filetype(int fd)
-{
-        struct stat st;
-
-        fstat(fd, &st);
-
-        return st.st_mode & S_IFMT;
-}
-
 #ifdef SOXMIX
 static char *usagestr =
 "[ gopts ] [ fopts ] ifile1 [fopts] ifile2 [ fopts ] ofile [ effect [ effopts ] ]";
@@ -1618,23 +1446,32 @@ static void usage(char *opt)
 
 
 /* called from util.c::st_fail() */
-void cleanup(void) {
+void cleanup(void) 
+{
     int i;
+    struct stat st;
+    char *fn;
 
     /* Close the input file and outputfile before exiting*/
     for (i = 0; i < input_count; i++)
     {
-        if (file_desc[i] && file_desc[i]->fp)
-                fclose(file_desc[i]->fp);
         if (file_desc[i])
+        {
+            st_close(file_desc[i]);
             free(file_desc[i]);
+        }
     }
-    if (writing && file_desc[file_count-1] && file_desc[file_count-1]->fp) {
-        fclose(file_desc[file_count-1]->fp);
+    if (writing && file_desc[file_count-1])
+    {
+        fstat(fileno(file_desc[file_count-1]->fp), &st);
+        fn = strdup(file_desc[file_count-1]->filename);
+        st_close(file_desc[file_count-1]);
+
         /* remove the output file because we failed, if it's ours. */
         /* Don't if its not a regular file. */
-        if (filetype(fileno(file_desc[file_count-1]->fp)) == S_IFREG)
-            unlink(file_desc[file_count-1]->filename);
+        if ((st.st_mode & S_IFMT) == S_IFREG)
+            unlink(fn);
+        free(fn);
         if (file_desc[file_count-1])
             free(file_desc[file_count-1]);
     }

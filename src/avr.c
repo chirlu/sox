@@ -82,7 +82,7 @@ int st_avrstartread(ft_t ft)
     return(ST_EOF);
   }
 
-  st_read(ft, avr->name, 1, sizeof(avr->name));
+  st_readbuf(ft, avr->name, 1, sizeof(avr->name));
 
   st_readw (ft, &(avr->mono));
   if (avr->mono) {
@@ -137,9 +137,9 @@ int st_avrstartread(ft_t ft)
 
   st_readw (ft, &(avr->res3));
 
-  st_read(ft, avr->ext, 1, sizeof(avr->ext));
+  st_readbuf(ft, avr->ext, 1, sizeof(avr->ext));
 
-  st_read(ft, avr->user, 1, sizeof(avr->user));
+  st_readbuf(ft, avr->user, 1, sizeof(avr->user));
 
   rc = st_rawstartread (ft);
   if (rc)
@@ -248,10 +248,10 @@ int st_avrstartwrite(ft_t ft)
   st_writew (ft, 0);
 
   /* ext */
-  st_write(ft, (void *)"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 1, sizeof(avr->ext));
+  st_writebuf(ft, (void *)"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 1, sizeof(avr->ext));
 
   /* user */
-  st_write(ft, 
+  st_writebuf(ft, 
            (void *)"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
            "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
            "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"

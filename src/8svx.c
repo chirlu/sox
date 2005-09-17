@@ -84,7 +84,7 @@ int st_svxstartread(ft_t ft)
                         st_seek(ft,12,SEEK_CUR);
                         st_readw(ft, &rate);
                         st_seek(ft,1,SEEK_CUR);
-                        st_read(ft, buf,1,1);
+                        st_readbuf(ft, buf,1,1);
                         if (buf[0] != 0)
                         {
                                 st_fail_errno(ft, ST_EFMT, "Unsupported data compression");
@@ -104,7 +104,7 @@ int st_svxstartread(ft_t ft)
                             st_fail_errno(ft, ST_ENOMEM, "Unable to alloc memory");
                             return(ST_EOF);
                         }
-                        if (st_read(ft, chunk_buf,1,(size_t)chunksize) 
+                        if (st_readbuf(ft, chunk_buf,1,(size_t)chunksize) 
                                         != chunksize)
                         {
                                 st_fail_errno(ft, ST_EHDR, "Couldn't read all of header");
@@ -127,7 +127,7 @@ int st_svxstartread(ft_t ft)
                             st_fail_errno(ft, ST_ENOMEM, "Unable to alloc memory");
                             return(ST_EOF);
                         }
-                        if (st_read(ft, chunk_buf,1,(size_t)chunksize) 
+                        if (st_readbuf(ft, chunk_buf,1,(size_t)chunksize) 
                                         != chunksize)
                         {
                                 st_fail_errno(ft, ST_EHDR, "Couldn't read all of header");

@@ -262,8 +262,8 @@ st_format_t st_formats[] = {
         st_alstartread, st_rawread, st_rawstopread,
         st_alstartwrite, st_rawwrite, st_rawstopwrite, st_format_nothing_seek},
 #ifdef HAVE_ALSA
-    {alsanames, ST_FILE_STEREO,
-        st_alsastartread, st_alsaread, st_rawstopread,
+    {alsanames, ST_FILE_STEREO | ST_FILE_NOSTDIO,
+        st_alsastartread, st_alsaread, st_alsastopread,
         st_alsastartwrite, st_alsawrite, st_alsastopwrite,
         st_format_nothing_seek},
 #endif
@@ -316,7 +316,7 @@ st_format_t st_formats[] = {
         st_mp3startread, st_mp3read, st_mp3stopread,
         st_mp3startwrite, st_mp3write, st_mp3stopwrite, st_format_nothing_seek},
 #endif
-    {nulnames, ST_FILE_STEREO,
+    {nulnames, ST_FILE_STEREO | ST_FILE_NOSTDIO,
         st_nulstartread, st_nulread, st_nulstopread,
         st_nulstartwrite, st_nulwrite, st_nulstopwrite, st_format_nothing_seek},
 #ifdef HAVE_OSS

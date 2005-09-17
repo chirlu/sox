@@ -19,8 +19,8 @@ extern "C" {
 #include <stdlib.h>
 #include "ststdint.h"
 
-/* Release 12.17.8 of libst */
-#define ST_LIB_VERSION_CODE 0x0c1108
+/* Release 12.17.9 of libst */
+#define ST_LIB_VERSION_CODE 0x0c1109
 #define ST_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 typedef int32_t st_sample_t;
@@ -148,6 +148,7 @@ struct st_soundstream {
     st_loopinfo_t   loops[ST_MAX_NLOOPS]; /* Looping specification */
     char            swap;                 /* do byte- or word-swap */
     char            seekable;             /* can seek on this file */
+    char            mode;                 /* read or write mode */
     /* Total samples per channel of file.  Zero if unknown. */
     st_size_t       length;    
     char            *filename;            /* file name */
@@ -175,6 +176,7 @@ extern st_format_t st_formats[];
 #define ST_FILE_LOOPS   2  /* does file format support loops? */
 #define ST_FILE_INSTR   4  /* does file format support instrument specs? */
 #define ST_FILE_SEEK    8  /* does file format support seeking? */
+#define ST_FILE_NOSTDIO 16 /* does not use stdio routines */
 
 /* Size field */
 #define ST_SIZE_BYTE    1
@@ -252,14 +254,21 @@ struct st_effect
 
 extern st_effect_t st_effects[]; /* declared in handlers.c */
 
+extern ft_t st_open_input(const char *path, const st_signalinfo_t *si, 
+                          const char *filetype, const char swap);
+extern ft_t st_open_output(const char *path, const st_signalinfo_t *info,
+                           const st_signalinfo_t *input_info,
+                           const char *comment, const st_loopinfo_t *loops,
+                           const st_instrinfo_t *instr,
+                           const char *filetype, const char swap);
+extern int st_close(ft_t ft);
+
 int st_geteffect_opt(eff_t, int, char **);
 int st_geteffect(eff_t, char *);
 int st_checkeffect(char *);
 int st_updateeffect(eff_t, st_signalinfo_t *in, st_signalinfo_t *out, int);
 int st_gettype(ft_t);
 ft_t st_initformat(void);
-void st_copyformat(ft_t, ft_t);
-int st_checkformat(ft_t);
 int st_parsesamples(st_rate_t rate, char *str, st_size_t *samples, char def);
 
 /* FIXME: Recording hacks shouldn't display a "sigint" style interface.

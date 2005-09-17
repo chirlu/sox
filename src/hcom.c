@@ -540,7 +540,7 @@ int st_hcomstopwrite(ft_t ft)
         }
 
         /* Write the header */
-        st_write(ft, (void *)"\000\001A", 1, 3); /* Dummy file name "A" */
+        st_writebuf(ft, (void *)"\000\001A", 1, 3); /* Dummy file name "A" */
         padbytes(ft, 65-3);
         st_writes(ft, "FSSD");
         padbytes(ft, 83-69);
@@ -554,7 +554,7 @@ int st_hcomstopwrite(ft_t ft)
         }
 
         /* Write the compressed_data fork */
-        if (st_write(ft, compressed_data, 1, (int)compressed_len) != compressed_len)
+        if (st_writebuf(ft, compressed_data, 1, (int)compressed_len) != compressed_len)
         {
                 st_fail_errno(ft,errno,"can't write compressed HCOM data");
                 rc = ST_EOF;

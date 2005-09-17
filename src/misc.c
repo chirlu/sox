@@ -80,7 +80,7 @@ static const char writerr[] = "Error writing sample file.  You are probably out 
  * Returns number of elements read, not bytes read.
  */
 
-st_ssize_t st_read(ft_t ft, void *buf, size_t size, st_ssize_t len)
+st_ssize_t st_readbuf(ft_t ft, void *buf, size_t size, st_ssize_t len)
 {
     return fread(buf, size, len, ft->fp);
 }
@@ -89,7 +89,7 @@ st_ssize_t st_read(ft_t ft, void *buf, size_t size, st_ssize_t len)
  * Returns number of elements writen, not bytes writen.
  */
 
-st_ssize_t st_write(ft_t ft, void *buf, size_t size, st_ssize_t len)
+st_ssize_t st_writebuf(ft_t ft, void *buf, size_t size, st_ssize_t len)
 {
     return fwrite(buf, size, len, ft->fp);
 }
@@ -147,7 +147,7 @@ int st_reads(ft_t ft, char *c, st_ssize_t len)
     sc = c;
     do
     {
-        if (st_read(ft, &in, 1, 1) != 1)
+        if (st_readbuf(ft, &in, 1, 1) != 1)
         {
             *sc = 0;
                 st_fail_errno(ft,errno,readerr);
@@ -168,7 +168,7 @@ int st_reads(ft_t ft, char *c, st_ssize_t len)
 /* Write null-terminated string (without \0). */
 int st_writes(ft_t ft, char *c)
 {
-        if (st_write(ft, c, 1, strlen(c)) != strlen(c))
+        if (st_writebuf(ft, c, 1, strlen(c)) != strlen(c))
         {
                 st_fail_errno(ft,errno,writerr);
                 return(ST_EOF);
@@ -179,7 +179,7 @@ int st_writes(ft_t ft, char *c)
 /* Read byte. */
 int st_readb(ft_t ft, uint8_t *ub)
 {
-        if (st_read(ft, ub, 1, 1) != 1)
+        if (st_readbuf(ft, ub, 1, 1) != 1)
         {
                 st_fail_errno(ft,errno,readerr);
             return(ST_EOF);
@@ -190,7 +190,7 @@ int st_readb(ft_t ft, uint8_t *ub)
 /* Write byte. */
 int st_writeb(ft_t ft, uint8_t ub)
 {
-        if (st_write(ft, &ub, 1, 1) != 1)
+        if (st_writebuf(ft, &ub, 1, 1) != 1)
         {
                 st_fail_errno(ft,errno,writerr);
                 return(ST_EOF);
@@ -201,7 +201,7 @@ int st_writeb(ft_t ft, uint8_t ub)
 /* Read word. */
 int st_readw(ft_t ft, uint16_t *uw)
 {
-        if (st_read(ft, uw, 2, 1) != 1)
+        if (st_readbuf(ft, uw, 2, 1) != 1)
         {
                 st_fail_errno(ft,errno,readerr);
             return (ST_EOF);
@@ -216,7 +216,7 @@ int st_writew(ft_t ft, uint16_t uw)
 {
         if (ft->swap)
                 uw = st_swapw(uw);
-        if (st_write(ft, &uw, 2, 1) != 1)
+        if (st_writebuf(ft, &uw, 2, 1) != 1)
         {
                 st_fail_errno(ft,errno,writerr);
                 return (ST_EOF);
@@ -227,7 +227,7 @@ int st_writew(ft_t ft, uint16_t uw)
 /* Read double word. */
 int st_readdw(ft_t ft, uint32_t *udw)
 {
-        if (st_read(ft, udw, 4, 1) != 1)
+        if (st_readbuf(ft, udw, 4, 1) != 1)
         {
                 st_fail_errno(ft,errno,readerr);
             return (ST_EOF);
@@ -242,7 +242,7 @@ int st_writedw(ft_t ft, uint32_t udw)
 {
         if (ft->swap)
                 udw = st_swapdw(udw);
-        if (st_write(ft, &udw, 4, 1) != 1)
+        if (st_writebuf(ft, &udw, 4, 1) != 1)
         {
                 st_fail_errno(ft,errno,writerr);
                 return (ST_EOF);
@@ -253,7 +253,7 @@ int st_writedw(ft_t ft, uint32_t udw)
 /* Read float. */
 int st_readf(ft_t ft, float *f)
 {
-        if (st_read(ft, f, sizeof(float), 1) != 1)
+        if (st_readbuf(ft, f, sizeof(float), 1) != 1)
         {
             return(ST_EOF);
         }
@@ -269,7 +269,7 @@ int st_writef(ft_t ft, float f)
 
         if (ft->swap)
                 t = st_swapf(t);
-        if (st_write(ft, &t, sizeof(float), 1) != 1)
+        if (st_writebuf(ft, &t, sizeof(float), 1) != 1)
         {
                 st_fail_errno(ft,errno,writerr);
                 return (ST_EOF);
@@ -280,7 +280,7 @@ int st_writef(ft_t ft, float f)
 /* Read double. */
 int st_readdf(ft_t ft, double *d)
 {
-        if (st_read(ft, d, sizeof(double), 1) != 1)
+        if (st_readbuf(ft, d, sizeof(double), 1) != 1)
         {
             return(ST_EOF);
         }
@@ -294,7 +294,7 @@ int st_writedf(ft_t ft, double d)
 {
         if (ft->swap)
                 d = st_swapd(d);
-        if (st_write(ft, &d, sizeof(double), 1) != 1)
+        if (st_writebuf(ft, &d, sizeof(double), 1) != 1)
         {
                 st_fail_errno(ft,errno,writerr);
                 return (ST_EOF);

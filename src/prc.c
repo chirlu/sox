@@ -84,7 +84,7 @@ int st_prcstartread(ft_t ft)
         }
 
         /* Check the header */
-        st_read(ft, head,1, sizeof(header));
+        st_readbuf(ft, head,1, sizeof(header));
         if (memcmp(head, header, sizeof(header))==0) {
                 st_report("Found Psion record.app header");
         }
@@ -99,7 +99,7 @@ int st_prcstartread(ft_t ft)
         st_report("Found length=%d",len);
 
         /* dummy read rest */
-        st_read(ft, head,1,14+2+2);
+        st_readbuf(ft, head,1,14+2+2);
 
         ft->info.encoding = ST_ENCODING_ALAW;
         ft->info.size = ST_SIZE_BYTE;
@@ -203,9 +203,9 @@ static void prcwriteheader(ft_t ft)
 
   st_report("Final length=%d",p->length);
   memset(nullbuf,0,14);
-  st_write(ft, header, 1, sizeof(header));
+  st_writebuf(ft, header, 1, sizeof(header));
   st_writew(ft, p->length);
-  st_write(ft, nullbuf,1,14);
+  st_writebuf(ft, nullbuf,1,14);
   st_writew(ft, p->length);
-  st_write(ft, nullbuf,1,2);
+  st_writebuf(ft, nullbuf,1,2);
 }

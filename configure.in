@@ -3,9 +3,9 @@ dnl
 dnl configure.in
 dnl
 
-AC_REVISION(1.8)
+AC_REVISION(1.9)
 
-AC_INIT(sox, 12.17.8, cbagwell@users.sourceforge.net, "sox-12.17.8")
+AC_INIT(sox, 12.17.9, cbagwell@users.sourceforge.net, "sox-12.17.9")
 
 AC_CONFIG_SRCDIR(sox.1)
 
@@ -181,53 +181,19 @@ dnl Checks for ASLA.
 
 if test "$enable_alsa_dsp" = yes
 then
-    AC_CHECK_HEADERS(linux/asound.h, alsa_type=check_ioctl)
-    AC_CHECK_HEADERS(sound/asound.h, alsa_type=alsa9)
+    AC_CHECK_HEADERS(alsa/asoundlib.h, found_alsa_dsp=yes)
 
-    AC_MSG_CHECKING([for ALSA ioctl API])
-
-    if test "$alsa_type" = check_ioctl
+    if test "$found_alsa_dsp" = yes
     then
-	AC_TRY_COMPILE(
-[
-#include <linux/asound.h>
-],
-[
-snd_pcm_capture_info_t c_info;
-],
-		alsa_type=alsa4,alsa_type=alsa5)
-    fi
-
-    if test "$alsa_type" = alsa9
-    then
-        AC_DEFINE([HAVE_ALSA], 1, 
-                  [Define if you have ALSA installed])
-        AC_DEFINE([HAVE_ALSA9], 1, 
-                  [Define if you have ALSA 0.9 installed])
-	NEED_ALSA=1
-	PLAY_SUPPORT=1
-	AC_MSG_RESULT([0.9.X])
-    elif test "$alsa_type" = alsa5
-    then
-        AC_DEFINE([HAVE_ALSA], 1, 
-                  [Define if you have ALSA installed])
-        AC_DEFINE([HAVE_ALSA5], 1, 
-                  [Define if you have ALSA 0.5 installed])
-	NEED_ALSA=1
-	PLAY_SUPPORT=1
-	AC_MSG_RESULT([0.5.X])
-    elif test "$alsa_type" = alsa4
-    then
-        AC_DEFINE([HAVE_ALSA], 1, 
-                  [Define if you have ALSA installed])
-        AC_DEFINE([HAVE_ALSA4], 1, 
-                  [Define if you have ALSA 0.4 installed])
-	NEED_ALSA=1
-	PLAY_SUPPORT=1
-	AC_MSG_RESULT([0.4.X])
+        AC_CHECK_LIB(asound, snd_pcm_open,
+                     LIBS="$LIBS -lasound"
+                     NEED_ALSA=1
+                     PLAY_SUPPORT=1
+                     AC_DEFINE([HAVE_ALSA], 1, 
+		               [Define if you have ALSA library installed]),
+		     enable_lame=no)
     else
-	AC_MSG_RESULT([not found])
-	enable_alsa_dsp=no
+        enable_alsa_dsp=no
     fi
 fi
 

@@ -84,7 +84,7 @@ int st_sndtstartread(ft_t ft)
          and second word is between 4000 & 25000 then this is sounder sound */
         /* otherwise, its probably raw, not handled here */
 
-        if (st_read(ft, buf, 1, 2) != 2)
+        if (st_readbuf(ft, buf, 1, 2) != 2)
         {
                 st_fail_errno(ft,errno,"SND: unexpected EOF");
                 return(ST_EOF);
@@ -103,7 +103,7 @@ int st_sndtstartread(ft_t ft)
         else
         {
         /* sndtool ? */
-        st_read(ft, &buf[2], 1, 6);
+        st_readbuf(ft, &buf[2], 1, 6);
         if (strncmp(buf,"SOUND",5))
         {
                 st_fail_errno(ft,ST_EFMT,"SND: unrecognized SND format");
@@ -253,6 +253,6 @@ static void sndtwriteheader(ft_t ft, st_size_t nsamples)
     st_writew (ft,4);
     memset (name_buf, 0, 96);
     sprintf (name_buf,"%.62s - File created by Sound Exchange",ft->filename);
-    st_write(ft, name_buf, 1, 96);
+    st_writebuf(ft, name_buf, 1, 96);
 }
 
