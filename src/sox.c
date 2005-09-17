@@ -1190,6 +1190,11 @@ static int flow_effect(int e)
         /* left */
         idonel = (idone + 1)/2;         /* odd-length logic */
         odonel = odone/2;
+#if 0
+        fprintf(stderr, "pre %s idone=%d, odone=%d\n", efftab[e].name, idone, odone);
+        fprintf(stderr, "pre %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
+#endif
+
         effstatus = (* efftab[e].h->flow)(&efftab[e],
                                           ibufl, obufl, (st_size_t *)&idonel, 
                                           (st_size_t *)&odonel);
@@ -1214,6 +1219,12 @@ static int flow_effect(int e)
         /* Don't clear since nothng has been consumed yet */
         /*efftab[e].odone = 0;*/
         efftab[e].olen += odonel + odoner;
+#if 0
+        fprintf(stderr, "post %s idone=%d, odone=%d\n", efftab[e].name, idone, odone); 
+        fprintf(stderr, "post %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
+#endif
+
+
         done = idonel + idoner + odonel + odoner;
     }
     if (effstatus == ST_EOF)
