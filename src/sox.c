@@ -553,6 +553,11 @@ static void process(void) {
         ilen = (*file_desc[current_input]->h->read)(file_desc[current_input],
                                                     efftab[0].obuf, 
                                                     (st_ssize_t)ST_BUFSIZ);
+        if (ilen > ST_BUFSIZ)
+        {
+            st_warn("WARNING: Corrupt value of %d!  Assuming 0 bytes read.\n", ilen);
+            ilen = 0;
+        }
 
         /* FIXME: libst needs the feof() and ferror() concepts
          * to see if ST_EOF means a real failure.  Until then we
@@ -562,6 +567,7 @@ static void process(void) {
             efftab[0].olen = 0;
         else
             efftab[0].olen = ilen;
+        efftab[0].odone = 0;
 
         read_samples += (efftab[0].olen / file_desc[0]->info.channels);
 
@@ -993,7 +999,7 @@ static int flow_effect_out(void)
     do {
       /* run entire chain BACKWARDS: pull, don't push.*/
       /* this is because buffering system isn't a nice queueing system */
-      for(e = neffects - 1; e >= input_eff; e--)
+      for(e = neffects - 1; e > input_eff; e--)
       {
           /* flow_effect returns ST_EOF when it will not process
            * any more samples.  This is used to bail out early.
@@ -1019,7 +1025,9 @@ static int flow_effect_out(void)
            */
           if (efftab[e].odone < efftab[e].olen)
           {
-              /* fprintf(stderr, "Breaking out of loop to flush buffer\n"); */
+#if 0
+              fprintf(stderr, "Breaking out of loop to flush buffer\n");
+#endif
               break;
           }
       }
@@ -1067,7 +1075,7 @@ static int flow_effect_out(void)
        * show no more data.
        */
       havedata = 0;
-      for(e = neffects - 1; e >= input_eff; e--)
+      for(e = neffects - 1; e > input_eff; e--)
       {
           /* If odone and olen are the same then this buffer
            * can be reused.
@@ -1113,7 +1121,12 @@ static int flow_effect_out(void)
      * fact to caller.
      */
     if (input_eff > 0)
+    {
+#if 0
+        fprintf(stderr, "Effect return ST_EOF\n");
+#endif
         return ST_EOF;
+    }
 
     return ST_SUCCESS;
 }
@@ -1127,7 +1140,9 @@ static int flow_effect(int e)
     /* I have no input data ? */
     if (efftab[e-1].odone == efftab[e-1].olen)
     {
-        /* fprintf(stderr, "%s no data to pull to me!\n", efftab[e].name); */
+#if 0
+        fprintf(stderr, "%s no data to pull to me!\n", efftab[e].name);
+#endif
         return 0;
     }
 
@@ -1137,8 +1152,10 @@ static int flow_effect(int e)
          */
         idone = efftab[e-1].olen - efftab[e-1].odone;
         odone = ST_BUFSIZ - efftab[e].olen;
-        /* fprintf(stderr, "pre %s idone=%d, odone=%d\n", efftab[e].name, idone, odone); */
-        /* fprintf(stderr, "pre %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); */
+#if 0
+        fprintf(stderr, "pre %s idone=%d, odone=%d\n", efftab[e].name, idone, odone);
+        fprintf(stderr, "pre %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
+#endif
 
         effstatus = (* efftab[e].h->flow)(&efftab[e],
                                           &efftab[e-1].obuf[efftab[e-1].odone],
@@ -1150,9 +1167,10 @@ static int flow_effect(int e)
         /* Leave efftab[e].odone were it was since we didn't consume data */
         /*efftab[e].odone = 0;*/
         efftab[e].olen += odone; 
-
-        /* fprintf(stderr, "post %s idone=%d, odone=%d\n", efftab[e].name, idone, odone); */
-        /* fprintf(stderr, "post %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); */
+#if 0
+        fprintf(stderr, "post %s idone=%d, odone=%d\n", efftab[e].name, idone, odone); 
+        fprintf(stderr, "post %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
+#endif
 
         done = idone + odone;
     } else {

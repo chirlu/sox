@@ -64,21 +64,21 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     if ((err = snd_pcm_open(&(alsa->pcm_handle), ft->filename, 
                             mode, 0)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot open audio device\n");
+        st_fail_errno(ft, ST_EPERM, "cannot open audio device");
         return ST_EOF;
     }
 
     if ((err = snd_pcm_hw_params_malloc(&hw_params)) < 0) 
     {
         st_fail_errno(ft, ST_ENOMEM, 
-                      "cannot allocate hardware parameter structure\n");
+                      "cannot allocate hardware parameter structure");
         return ST_EOF;
     }
 
     if ((err = snd_pcm_hw_params_any(alsa->pcm_handle, hw_params)) < 0) 
     {
         st_fail_errno(ft, ST_EPERM,
-                      "cannot initialize hardware parameter structure\n");
+                      "cannot initialize hardware parameter structure");
         return ST_EOF;
     }
 
@@ -86,7 +86,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
                                             SND_PCM_ACCESS_RW_INTERLEAVED)) < 0)
     {
         st_fail_errno(ft, ST_EPERM,
-                      "cannot set access type\n");
+                      "cannot set access type");
         return ST_EOF;
     }
 
@@ -111,7 +111,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     if ((err = snd_pcm_hw_params_set_format(alsa->pcm_handle, 
                                             hw_params, fmt)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot set sample format\n");
+        st_fail_errno(ft, ST_EPERM, "cannot set sample format");
         return ST_EOF;
     }
 
@@ -126,7 +126,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
             rate = max_rate;
     if (rate != ft->info.rate)
     {
-        st_warn("alsa: Hardware does not support %d.  Forcing sample rate to %d.\n", ft->info.rate, rate);
+        st_warn("alsa: Hardware does not support %d.  Forcing sample rate to %d.", ft->info.rate, rate);
     }
 
     dir = 0;
@@ -135,12 +135,12 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
                                                &rate,
                                                &dir)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot set sample rate\n");
+        st_fail_errno(ft, ST_EPERM, "cannot set sample rate");
         return ST_EOF;
     }
     if (rate != ft->info.rate)
     {
-        st_warn("Could not set exact rate of %d.  Approximating with %d\n",
+        st_warn("Could not set exact rate of %d.  Approximating with %d",
                 ft->info.rate, rate);
     }
 
@@ -150,29 +150,27 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
                                               hw_params, 
                                               ft->info.channels)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot set channel count\n");
+        st_fail_errno(ft, ST_EPERM, "cannot set channel count");
         return ST_EOF;
     }
 
-#if 0
     /* Set number of periods. Periods used to be called fragments. */ 
     if (snd_pcm_hw_params_set_periods(alsa->pcm_handle, hw_params, 2, 0) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "Error setting periods.\n");
+        st_fail_errno(ft, ST_EPERM, "Error setting periods.");
         return ST_EOF;
     }
 
     /* Set buffer size (in frames). The resulting latency is given by */
     /* latency = periodsize * periods / (rate * bytes_per_frame)     */
     if (snd_pcm_hw_params_set_buffer_size(alsa->pcm_handle, hw_params, (ST_BUFSIZ * 8)>>2) < 0) {
-      st_fail_errno(ft, ST_EPERM, "Error setting buffersize.\n");
+      st_fail_errno(ft, ST_EPERM, "Error setting buffersize.");
       return ST_EOF;
     }
-#endif
 
     if ((err = snd_pcm_hw_params(alsa->pcm_handle, hw_params)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot set parameters\n");
+        st_fail_errno(ft, ST_EPERM, "cannot set parameters");
         return ST_EOF;
     }
 
@@ -180,13 +178,44 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
 
     if ((err = snd_pcm_prepare(alsa->pcm_handle)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot prepare audio interface for use\n");
+        st_fail_errno(ft, ST_EPERM, "cannot prepare audio interface for use");
         return ST_EOF;
     }
 
     sigintreg(ft);      /* Prepare to catch SIGINT */
 
     return (ST_SUCCESS);
+}
+
+/*
+ *   Underrun and suspend recovery
+ */
+static int xrun_recovery(snd_pcm_t *handle, int err)
+{
+    if (err == -EPIPE) 
+    {    /* under-run */
+        err = snd_pcm_prepare(handle);
+        if (err < 0)
+            st_warn("Can't recovery from overrun, prepare failed: %s", snd_strerror(err));
+        return 0;
+    } 
+    else 
+    {
+        if (err == -ESTRPIPE) 
+        {
+            /* wait until the suspend flag is released */
+            while ((err = snd_pcm_resume(handle)) == -EAGAIN)
+                sleep(1);                       
+            if (err < 0) 
+            {
+                err = snd_pcm_prepare(handle);
+                if (err < 0)
+                    st_warn("Can't recovery from suspend, prepare failed: %s", snd_strerror(err));
+            }
+        }
+        return 0;
+    }
+    return err;
 }
 
 /*
@@ -204,6 +233,7 @@ int st_alsastartread(ft_t ft)
 st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 {
     st_ssize_t len;
+    int err;
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
     void (*read_buf)(st_sample_t *, char *, st_ssize_t, char) = 0;
 
@@ -251,10 +281,29 @@ st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
     /* Prevent overflow */
     if (nsamp > alsa->buf_size/ft->info.size)
         nsamp = (alsa->buf_size/ft->info.size);
+    len = 0;
 
-    len = snd_pcm_readi(alsa->pcm_handle, alsa->buf, nsamp);
-
-    read_buf(buf, alsa->buf, len, ft->swap);
+    while (len < nsamp)
+    {
+        /* ALSA library takes "frame" counts. */
+        err = snd_pcm_readi(alsa->pcm_handle, alsa->buf, 
+                            (nsamp-len)/ft->info.channels);
+        if (err == -EAGAIN)
+            continue;
+        if (err < 0)
+        {
+            if (xrun_recovery(alsa->pcm_handle, err) < 0)
+            {
+                st_fail_errno(ft, ST_EPERM, "ALSA write error");
+                return ST_EOF;
+            }
+        }
+        else
+        {
+            read_buf(buf+len, alsa->buf, err, ft->swap);
+            len += err * ft->info.channels;
+        }
+    }
 
     return len;
 }
@@ -299,21 +348,21 @@ int st_alsastartwrite(ft_t ft)
     if ((err = snd_pcm_open(&(alsa->pcm_handle), ft->filename, 
                             SND_PCM_STREAM_PLAYBACK, 0)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot open audio device\n");
+        st_fail_errno(ft, ST_EPERM, "cannot open audio device");
         return ST_EOF;
     }
 
     if ((err = snd_pcm_hw_params_malloc(&hw_params)) < 0) 
     {
         st_fail_errno(ft, ST_ENOMEM, 
-                      "cannot allocate hardware parameter structure\n");
+                      "cannot allocate hardware parameter structure");
         return ST_EOF;
     }
 
     if ((err = snd_pcm_hw_params_any(alsa->pcm_handle, hw_params)) < 0) 
     {
         st_fail_errno(ft, ST_EPERM,
-                      "cannot initialize hardware parameter structure\n");
+                      "cannot initialize hardware parameter structure");
         return ST_EOF;
     }
 
@@ -321,7 +370,7 @@ int st_alsastartwrite(ft_t ft)
                                             SND_PCM_ACCESS_RW_INTERLEAVED)) < 0)
     {
         st_fail_errno(ft, ST_EPERM,
-                      "cannot set access type\n");
+                      "cannot set access type");
         return ST_EOF;
     }
 
@@ -346,7 +395,7 @@ int st_alsastartwrite(ft_t ft)
     if ((err = snd_pcm_hw_params_set_format(alsa->pcm_handle, 
                                             hw_params, fmt)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot set sample format\n");
+        st_fail_errno(ft, ST_EPERM, "cannot set sample format");
         return ST_EOF;
     }
 
@@ -361,7 +410,7 @@ int st_alsastartwrite(ft_t ft)
             rate = max_rate;
     if (rate != ft->info.rate)
     {
-        st_warn("alsa: Hardware does not support %d.  Forcing sample rate to %d.\n", ft->info.rate, rate);
+        st_warn("alsa: Hardware does not support %d.  Forcing sample rate to %d.", ft->info.rate, rate);
     }
 
     dir = 0;
@@ -370,12 +419,12 @@ int st_alsastartwrite(ft_t ft)
                                                &rate,
                                                &dir)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot set sample rate\n");
+        st_fail_errno(ft, ST_EPERM, "cannot set sample rate");
         return ST_EOF;
     }
     if (rate != ft->info.rate)
     {
-        st_warn("Could not set exact rate of %d.  Approximating with %d\n",
+        st_warn("Could not set exact rate of %d.  Approximating with %d",
                 ft->info.rate, rate);
     }
 
@@ -385,7 +434,7 @@ int st_alsastartwrite(ft_t ft)
                                               hw_params, 
                                               ft->info.channels)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot set channel count\n");
+        st_fail_errno(ft, ST_EPERM, "cannot set channel count");
         return ST_EOF;
     }
 
@@ -393,21 +442,21 @@ int st_alsastartwrite(ft_t ft)
     /* Set number of periods. Periods used to be called fragments. */ 
     if (snd_pcm_hw_params_set_periods(alsa->pcm_handle, hw_params, 2, 0) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "Error setting periods.\n");
+        st_fail_errno(ft, ST_EPERM, "Error setting periods.");
         return ST_EOF;
     }
 
     /* Set buffer size (in frames). The resulting latency is given by */
     /* latency = periodsize * periods / (rate * bytes_per_frame)     */
     if (snd_pcm_hw_params_set_buffer_size(alsa->pcm_handle, hw_params, (ST_BUFSIZ * 2)>>2) < 0) {
-      st_fail_errno(ft, ST_EPERM, "Error setting buffersize.\n");
+      st_fail_errno(ft, ST_EPERM, "Error setting buffersize.");
       return ST_EOF;
     }
 #endif
 
     if ((err = snd_pcm_hw_params(alsa->pcm_handle, hw_params)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot set parameters\n");
+        st_fail_errno(ft, ST_EPERM, "cannot set parameters");
         return ST_EOF;
     }
 
@@ -415,7 +464,7 @@ int st_alsastartwrite(ft_t ft)
 
     if ((err = snd_pcm_prepare(alsa->pcm_handle)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot prepare audio interface for use\n");
+        st_fail_errno(ft, ST_EPERM, "cannot prepare audio interface for use");
         return ST_EOF;
     }
 
@@ -427,6 +476,7 @@ int st_alsastartwrite(ft_t ft)
 st_ssize_t st_alsawrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 {
     st_ssize_t len;
+    int err;
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
     void (*write_buf)(char *, st_sample_t *, st_ssize_t, char) = 0;
 
@@ -473,12 +523,26 @@ st_ssize_t st_alsawrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
     /* Prevent overflow */
     if (nsamp > alsa->buf_size/ft->info.size)
         nsamp = (alsa->buf_size/ft->info.size);
+    len = 0;
 
     write_buf(alsa->buf, buf, nsamp, ft->swap);
 
-    if ((len = snd_pcm_writei(alsa->pcm_handle, alsa->buf, nsamp)) != nsamp) {
-        snd_pcm_prepare(alsa->pcm_handle);
-        fprintf(stderr, "Report me!  Buffer underrun thats not dealt with\n");
+    while (len < nsamp)
+    {
+        err = snd_pcm_writei(alsa->pcm_handle, alsa->buf, 
+                             (nsamp-len)/ft->info.channels);
+        if (err == -EAGAIN)
+            continue;
+        if (err < 0)
+        {
+            if (xrun_recovery(alsa->pcm_handle, err) < 0)
+            {
+                st_fail_errno(ft, ST_EPERM, "ALSA write error\n");
+                return ST_EOF;
+            }
+        }
+        else
+            len += err * ft->info.channels;
     }
 
     return len;
@@ -516,7 +580,7 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
     if (ft->info.size != ST_SIZE_WORD &&
         ft->info.size != ST_SIZE_BYTE)
     {
-        st_warn("ALSA driver only supports byte and word samples.  Changing to word.\n");
+        st_warn("ALSA driver only supports byte and word samples.  Changing to word.");
         ft->info.size = ST_SIZE_WORD;
     }
 
@@ -525,12 +589,12 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
     {
         if (ft->info.size == ST_SIZE_WORD)
         {
-            st_warn("ALSA driver only supports signed and unsigned samples.  Changing to signed.\n");
+            st_warn("ALSA driver only supports signed and unsigned samples.  Changing to signed.");
             ft->info.encoding = ST_ENCODING_SIGN2;
         }
         else
         {
-            st_warn("ALSA driver only supports signed and unsigned samples.  Changing to unsigned.\n");
+            st_warn("ALSA driver only supports signed and unsigned samples.  Changing to unsigned.");
             ft->info.encoding = ST_ENCODING_UNSIGNED;
         }
     }
