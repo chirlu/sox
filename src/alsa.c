@@ -399,7 +399,7 @@ int st_alsastartwrite(ft_t ft)
 
     /* Set buffer size (in frames). The resulting latency is given by */
     /* latency = periodsize * periods / (rate * bytes_per_frame)     */
-    if (snd_pcm_hw_params_set_buffer_size(alsa->pcm_handle, hw_params, (ST_BUFSIZ * 8)>>2) < 0) {
+    if (snd_pcm_hw_params_set_buffer_size(alsa->pcm_handle, hw_params, (ST_BUFSIZ * 2)>>2) < 0) {
       st_fail_errno(ft, ST_EPERM, "Error setting buffersize.\n");
       return ST_EOF;
     }
@@ -478,6 +478,7 @@ st_ssize_t st_alsawrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 
     if ((len = snd_pcm_writei(alsa->pcm_handle, alsa->buf, nsamp)) != nsamp) {
         snd_pcm_prepare(alsa->pcm_handle);
+        fprintf(stderr, "Report me!  Buffer underrun thats not dealt with\n");
     }
 
     return len;
@@ -489,6 +490,7 @@ ft_t ft;
 {
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
 
+    snd_pcm_drain(alsa->pcm_handle);
     snd_pcm_close(alsa->pcm_handle);
 
     free(alsa->buf);
