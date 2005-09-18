@@ -128,7 +128,7 @@ int st_mp3startread(ft_t ft)
         mad_timer_reset(p->Timer);
 
         ft->info.encoding = ST_ENCODING_MP3;
-        ft->info.size = ST_SIZE_DWORD;
+        ft->info.size = ST_SIZE_WORD;
 
         /* We need to decode the first frame,
          * so we know the output format */

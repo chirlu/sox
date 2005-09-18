@@ -208,7 +208,6 @@ int st_ossdspstartread(ft_t ft)
 {
     int rc;
     rc = ossdspinit(ft);
-    sigintreg(ft);      /* Prepare to catch SIGINT */
     return rc;
 }
 

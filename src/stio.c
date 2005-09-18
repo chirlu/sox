@@ -62,7 +62,6 @@ static int st_checkformat(ft_t ft)
                 return ST_EOF;
         }
 
-        /* anyway to check length on st_encoding_str[] ? */
         if (ft->info.encoding <= 0  || ft->info.encoding > ST_ENCODING_MAX)
         {
                 st_fail_errno(ft,ST_EFMT,"data encoding %i is invalid");
@@ -95,8 +94,7 @@ ft_t st_open_input(const char *path, const st_signalinfo_t *si,
 
     if (st_gettype(ft) != ST_SUCCESS)
     {
-        /* FIXME */
-        st_fail("Unknown input file format for '%s':  %s", 
+        st_warn("Unknown input file format for '%s':  %s", 
                 ft->filename, 
                 ft->st_errstr);
         goto input_error;
@@ -118,8 +116,7 @@ ft_t st_open_input(const char *path, const st_signalinfo_t *si,
             ft->fp = stdin;
         else if ((ft->fp = fopen(ft->filename, "rb")) == NULL)
         {
-            /* FIXME */
-            st_fail("Can't open input file '%s': %s", ft->filename,
+            st_warn("Can't open input file '%s': %s", ft->filename,
                     strerror(errno));
             goto input_error;
         }
@@ -131,8 +128,7 @@ ft_t st_open_input(const char *path, const st_signalinfo_t *si,
     /* Read and write starters can change their formats. */
     if ((*ft->h->startread)(ft) != ST_SUCCESS)
     {
-        /* FIXME */
-        st_fail("Failed reading %s: %s", ft->filename, ft->st_errstr);
+        st_warn("Failed reading %s: %s", ft->filename, ft->st_errstr);
         goto input_error;
     }
 
@@ -248,8 +244,7 @@ ft_t st_open_output(const char *path, const st_signalinfo_t *info,
 
     if (st_gettype(ft) != ST_SUCCESS)
     {
-        /* FIXME */
-        st_fail("Unknown output file format for '%s':  %s", 
+        st_warn("Unknown output file format for '%s':  %s", 
                 ft->filename, 
                 ft->st_errstr);
         goto output_error;
@@ -274,8 +269,7 @@ ft_t st_open_output(const char *path, const st_signalinfo_t *info,
         }
         else if ((ft->fp = fopen(ft->filename, "wb")) == NULL)
         {
-            /* FIXME */
-            st_fail("Can't open output file '%s': %s", ft->filename,
+            st_warn("Can't open output file '%s': %s", ft->filename,
                     strerror(errno));
             goto output_error;
         }
@@ -285,8 +279,7 @@ ft_t st_open_output(const char *path, const st_signalinfo_t *info,
         /* FIXME: Use buffer size from ft structure */
         if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char)*ST_BUFSIZ))
         {
-            /* FIXME */
-            st_fail("Can't set write buffer");
+            st_warn("Can't set write buffer");
             goto output_error;
         }
 
@@ -299,8 +292,7 @@ ft_t st_open_output(const char *path, const st_signalinfo_t *info,
     /* Read and write starters can change their formats. */
     if ((*ft->h->startwrite)(ft) != ST_SUCCESS)
     {
-        /* FIXME */
-        st_fail("Failed writing %s: %s", ft->filename, ft->st_errstr);
+        st_warn("Failed writing %s: %s", ft->filename, ft->st_errstr);
         goto output_error;
     }
 
@@ -321,6 +313,16 @@ output_error:
         free(ft->filetype);
     free(ft);
     return NULL;
+}
+
+st_ssize_t st_read(ft_t ft, st_sample_t *buf, st_ssize_t len)
+{
+    return (*ft->h->read)(ft, buf, len);
+}
+
+st_ssize_t st_write(ft_t ft, st_sample_t *buf, st_ssize_t len)
+{
+    return (*ft->h->write)(ft, buf, len);
 }
 
 int st_close(ft_t ft)

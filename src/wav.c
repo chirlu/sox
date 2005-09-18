@@ -1356,7 +1356,7 @@ static int wavwritehdr(ft_t ft, int second_header)
          ft->info.encoding == ST_ENCODING_GSM) &&
          ft->info.size != ST_SIZE_BYTE)
     {
-        st_warn("Overriding output size to bytes for compressed data.");
+        st_report("Overriding output size to bytes for compressed data.");
         ft->info.size = ST_SIZE_BYTE;
     }
 
@@ -1371,7 +1371,7 @@ static int wavwritehdr(ft_t ft, int second_header)
                     ft->info.encoding != ST_ENCODING_ADPCM &&
                     ft->info.encoding != ST_ENCODING_IMA_ADPCM)
             {
-                st_warn("Do not support %s with 8-bit data.  Forcing to unsigned",st_encodings_str[(unsigned char)ft->info.encoding]);
+                st_report("Do not support %s with 8-bit data.  Forcing to unsigned",st_encodings_str[(unsigned char)ft->info.encoding]);
                 ft->info.encoding = ST_ENCODING_UNSIGNED;
             }
             break;
@@ -1379,7 +1379,7 @@ static int wavwritehdr(ft_t ft, int second_header)
             wBitsPerSample = 16;
             if (ft->info.encoding != ST_ENCODING_SIGN2)
             {
-                st_warn("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
+                st_report("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
                 ft->info.encoding = ST_ENCODING_SIGN2;
             }
             break;
@@ -1388,13 +1388,13 @@ static int wavwritehdr(ft_t ft, int second_header)
             if (ft->info.encoding != ST_ENCODING_SIGN2 &&
                 ft->info.encoding != ST_ENCODING_FLOAT)
             {
-                st_warn("Do not support %s with 32-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
+                st_report("Do not support %s with 32-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
                 ft->info.encoding = ST_ENCODING_SIGN2;
             }
 
             break;
         default:
-            st_warn("Do not support %s in WAV files.  Forcing to Signed Words.",st_sizes_str[(unsigned char)ft->info.size]);
+            st_report("Do not support %s in WAV files.  Forcing to Signed Words.",st_sizes_str[(unsigned char)ft->info.size]);
             ft->info.encoding = ST_ENCODING_SIGN2;
             ft->info.size = ST_SIZE_WORD;
             wBitsPerSample = 16;
@@ -1452,7 +1452,7 @@ static int wavwritehdr(ft_t ft, int second_header)
 #ifdef ENABLE_GSM
             if (wChannels!=1)
             {
-                st_warn("Overriding GSM audio from %d channel to 1\n",wChannels);
+                st_report("Overriding GSM audio from %d channel to 1\n",wChannels);
                 wChannels = ft->info.channels = 1;
             }
             wFormatTag = WAVE_FORMAT_GSM610;

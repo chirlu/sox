@@ -261,6 +261,8 @@ extern ft_t st_open_output(const char *path, const st_signalinfo_t *info,
                            const char *comment, const st_loopinfo_t *loops,
                            const st_instrinfo_t *instr,
                            const char *filetype, const char swap);
+extern st_ssize_t st_read(ft_t ft, st_sample_t *buf, st_ssize_t len);
+extern st_ssize_t st_write(ft_t ft, st_sample_t *buf, st_ssize_t len);
 extern int st_close(ft_t ft);
 
 int st_geteffect_opt(eff_t, int, char **);
@@ -270,12 +272,6 @@ int st_updateeffect(eff_t, st_signalinfo_t *in, st_signalinfo_t *out, int);
 int st_gettype(ft_t);
 ft_t st_initformat(void);
 int st_parsesamples(st_rate_t rate, char *str, st_size_t *samples, char def);
-
-/* FIXME: Recording hacks shouldn't display a "sigint" style interface.
- * Instead we should provide a function to call when done playing/recording.
- * sox.c should be responsible for registering to sigint.
- */
-void sigintreg(ft_t);
 
 /* FIXME: these declared in util.c, global is inappropriate for lib */
 extern int verbose;     /* be noisy on stderr */
@@ -294,6 +290,7 @@ const char *st_version(void);                   /* return version number */
 #define ST_EPERM 2004           /* Operation not permitted */
 #define ST_ENOTSUP 2005         /* Operation not supported */
 #define ST_EINVAL 2006          /* Invalid argument */
+#define ST_EFFMT 2007           /* Unsupported file format */
 
 #ifdef __cplusplus
 } /* end of extern "C" */

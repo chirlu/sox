@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>             /* for malloc() */
+#include <signal.h>
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
@@ -72,6 +73,8 @@ static int clipped = 0;         /* Volume change clipping errors */
 static int writing = 1;         /* are we writing to a file? assume yes. */
 static int soxpreview = 0;      /* preview mode */
 
+static int user_abort = 0;
+
 static int quite = 0;
 static int status = 0;
 static unsigned long input_samples = 0;
@@ -112,6 +115,8 @@ static int drain_effect_out(void);
 static int drain_effect(int);
 static void release_effect_buf(void);
 static void stop_effects(void);
+void cleanup(void);
+static void sigint(int s);
 
 #define MAX_INPUT_FILES 32
 #define MAX_FILES MAX_INPUT_FILES + 1
@@ -242,10 +247,20 @@ int main(int argc, char **argv)
                                      &file_opts[i]->info, 
                                      file_opts[i]->filetype,
                                      file_opts[i]->swap);
+        if (!file_desc[i])
+        {
+            /* st_open_input() will call st_warn for most errors.
+             * Rely on that printing something.
+             */
+            cleanup();
+            exit(2);
+        }
     }
 
     /* Loop through the reset of the arguments looking for effects */
     parse_effects(argc, argv);
+
+    signal(SIGINT, sigint);
 
     process();
     statistics();
@@ -469,9 +484,18 @@ static void process(void) {
                            file_opts[file_count-1]->filetype,
                            file_opts[file_count-1]->swap);
 
+        if (!file_desc[file_count-1])
+        {
+            /* st_open_output() will call st_warn for most errors.
+             * Rely on that printing something.
+             */
+            cleanup();
+            exit(2);
+        }
+
         /* When writing to an audio device, auto turn on the
-         * status display to match behavior of ogg123/mpg123
-         * utils.  That is unless user requested us not to display]
+         * status display to match behavior of ogg123 status.
+         * That is unless user requested us not to display]
          * anything.
          */
         if (strcmp(file_desc[file_count-1]->filetype, "alsa") == 0 ||
@@ -549,10 +573,8 @@ static void process(void) {
      */
     do {
 #ifndef SOXMIX
-        efftab[0].olen = 
-        ilen = (*file_desc[current_input]->h->read)(file_desc[current_input],
-                                                    efftab[0].obuf, 
-                                                    (st_ssize_t)ST_BUFSIZ);
+        ilen = st_read(file_desc[current_input], efftab[0].obuf, 
+                       (st_ssize_t)ST_BUFSIZ);
         if (ilen > ST_BUFSIZ)
         {
             st_warn("WARNING: Corrupt value of %d!  Assuming 0 bytes read.\n", ilen);
@@ -567,7 +589,6 @@ static void process(void) {
             efftab[0].olen = 0;
         else
             efftab[0].olen = ilen;
-        efftab[0].odone = 0;
 
         read_samples += (efftab[0].olen / file_desc[0]->info.channels);
 
@@ -600,9 +621,8 @@ static void process(void) {
 #else
         for (f = 0; f < input_count; f++)
         {
-            ilen[f] = (*file_desc[f]->h->read)(file_desc[f],
-                                               ibuf[f], 
-                                               (st_ssize_t)ST_BUFSIZ);
+            ilen[f] = st_read(file_desc[f], ibuf[f], (st_ssize_t)ST_BUFSIZ);
+
             /* FIXME: libst needs the feof() and ferror() concepts
              * to see if ST_EOF means a real failure.  Until then we
              * must treat ST_EOF as just hiting the end of the buffer.
@@ -682,6 +702,12 @@ static void process(void) {
 
         if (status)
             update_status();
+
+        /* Quite reading/writing on user aborts.  This will close
+         * done the files nicely as if an EOF was reached on read.
+         */
+        if (user_abort)
+            break;
 
         /* Negative flowstatus says no more output will ever be generated. */
         if (flowstatus == ST_EOF || 
@@ -995,6 +1021,7 @@ static void reserve_effect_buf(void)
 static int flow_effect_out(void)
 {
     int e, havedata, flowstatus = 0;
+    int len, total;
 
     do {
       /* run entire chain BACKWARDS: pull, don't push.*/
@@ -1045,22 +1072,23 @@ static int flow_effect_out(void)
           /* FIXME: Should look at return code and abort
            * on ST_EOF
            */
-          (*file_desc[file_count-1]->h->write)(file_desc[file_count-1],
-                                               efftab[neffects-1].obuf,
-                                               (st_ssize_t)efftab[neffects-1].olen);
-          /* FIXME: Goes with above.  Should look at # of bytes writen. */
-          /* Currently, assuming all bytes were written and resetting
-           * buffer pointers accordingly.
-           */
-          output_samples += (efftab[neffects-1].olen / 
-                             file_desc[file_count-1]->info.channels);
-          efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
-
-          if (file_desc[file_count-1]->st_errno)
+          total = 0;
+          do
           {
-              st_warn("Error writing: %s", file_desc[file_count-1]->st_errstr);
-              break;
-          }
+              len = st_write(file_desc[file_count-1], 
+                             &efftab[neffects-1].obuf[total],
+                             (st_ssize_t)efftab[neffects-1].olen-total);
+
+              if (len < 0)
+              {
+                  st_warn("Error writing: %s",
+                          file_desc[file_count-1]->st_errstr);
+                  return ST_EOF;
+              }
+              total += len;
+              output_samples += (len / file_desc[file_count-1]->info.channels);
+              efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
+          } while (total < efftab[neffects-1].olen);
       }
       else
       {
@@ -1283,7 +1311,6 @@ static int drain_effect(int e)
 
         /* right */
         olenr = olen/2;
-        /* FIXME: Should look at return code and abort on ST_EOF */
         rc_r = (* efftab[e].h->drain)(&efftabR[e], obufr, 
                                       (st_size_t *)&olenr);
 
@@ -1473,7 +1500,6 @@ static void usage(char *opt)
         exit(1);
 }
 
-
 /* called from util.c::st_fail() */
 void cleanup(void) 
 {
@@ -1503,5 +1529,13 @@ void cleanup(void)
         free(fn);
         if (file_desc[file_count-1])
             free(file_desc[file_count-1]);
+    }
+}
+
+static void sigint(int s)
+{
+    if (s == SIGINT)
+    {
+        user_abort = 1;
     }
 }

@@ -126,7 +126,7 @@ int st_vorbisstartread(ft_t ft)
 
         /* Record audio info */
         ft->info.rate = vi->rate;
-        ft->info.size = ST_SIZE_32BIT;
+        ft->info.size = ST_SIZE_16BIT;
         ft->info.encoding = ST_ENCODING_VORBIS;
         ft->info.channels = vi->channels;
 
@@ -350,7 +350,7 @@ int st_vorbisstartwrite(ft_t ft)
         vorbis_enc_t *ve;
         long rate;
 
-        ft->info.size = ST_SIZE_32BIT;
+        ft->info.size = ST_SIZE_16BIT;
         ft->info.encoding = ST_ENCODING_VORBIS;
 
         /* Allocate memory for all of the structures */

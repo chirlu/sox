@@ -49,11 +49,13 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     unsigned int min_chan, max_chan;
     unsigned int rate, periods;
     snd_pcm_uframes_t buffer_size;
-    snd_pcm_sframes_t period_size;
     int dir;
     snd_pcm_format_mask_t *fmask;
+#if 0
     unsigned int buffer_time = 500000;
     unsigned int period_time = 100000;
+    snd_pcm_sframes_t period_size;
+#endif
 
     /* Reserve buffer for 16-bit data.  FIXME: Whats a good size? */
     alsa->buf_size = ST_BUFSIZ*2;
@@ -92,8 +94,8 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     err = snd_pcm_hw_params_set_rate_resample(alsa->pcm_handle, hw_params, 
                                               rate);
     if (err < 0) {
-        printf("Resampling setup failed for playback: %s\n", snd_strerror(err));
-        return err;
+        st_fail_errno(ft, ST_EPERM, "Resampling setup failed for playback");
+        return ST_EOF;
     }
 
     if ((err = snd_pcm_hw_params_set_access(alsa->pcm_handle, hw_params, 
@@ -131,7 +133,6 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
 
     snd_pcm_hw_params_get_rate_min(hw_params, &min_rate, &dir);
     snd_pcm_hw_params_get_rate_max(hw_params, &max_rate, &dir);
-    fprintf(stderr, "min_rate=%d max_rate=%d\n", min_rate, max_rate);
 
     rate = ft->info.rate;
     if (rate < min_rate) 
@@ -141,7 +142,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
             rate = max_rate;
     if (rate != ft->info.rate)
     {
-        st_warn("alsa: Hardware does not support %d.  Forcing sample rate to %d.", ft->info.rate, rate);
+        st_report("alsa: Hardware does not support %d.  Forcing sample rate to %d.", ft->info.rate, rate);
         ft->info.rate = rate;
     }
 
@@ -158,10 +159,9 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
                                &rate,
                                &dir);
  
-    fprintf(stderr, "new rate=%d\n", rate);
     if (rate != ft->info.rate)
     {
-        st_warn("Could not set exact rate of %d.  Approximating with %d",
+        st_report("Could not set exact rate of %d.  Approximating with %d",
                 ft->info.rate, rate);
     }
 
@@ -201,7 +201,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     }
 #endif
 
-#if 0
+#if 1
     /* Set number of periods. Periods used to be called fragments. */ 
     periods = 2;
     if (snd_pcm_hw_params_set_periods_near(alsa->pcm_handle, hw_params, 
@@ -214,7 +214,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
 
     /* Set buffer size (in frames). The resulting latency is given by */
     /* latency = periodsize * periods / (rate * bytes_per_frame)     */
-    buffer_size = ((ST_BUFSIZ/ft->info.channels) * periods);
+    buffer_size = ((ST_BUFSIZ/ft->info.size/ft->info.channels) * periods);
     if (snd_pcm_hw_params_set_buffer_size_near(alsa->pcm_handle, hw_params, 
                                                &buffer_size) < 0) {
       st_fail_errno(ft, ST_EPERM, "Error setting buffersize.");
@@ -279,8 +279,6 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
         return ST_EOF;
     }
 
-    sigintreg(ft);      /* Prepare to catch SIGINT */
-
     return (ST_SUCCESS);
 }
 
@@ -334,13 +332,6 @@ st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
     void (*read_buf)(st_sample_t *, char *, st_ssize_t, char) = 0;
 
-    /* Check to see if user sent SIGINT and if so return ST_EOF to
-     * stop playing.
-     */
-    if (ft->file.eof)
-        return ST_EOF;
-
-
     switch(ft->info.size) {
         case ST_SIZE_BYTE:
             switch(ft->info.encoding)
@@ -389,8 +380,6 @@ st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
             continue;
         if (err < 0)
         {
-            if (ft->file.eof)
-                return ST_EOF;
             if (xrun_recovery(alsa->pcm_handle, err) < 0)
             {
                 st_fail_errno(ft, ST_EPERM, "ALSA write error");
@@ -399,7 +388,7 @@ st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
         }
         else
         {
-            read_buf(buf+len, alsa->buf, err, ft->swap);
+            read_buf(buf+(len*sizeof(st_sample_t)), alsa->buf, err, ft->swap);
             len += err * ft->info.channels;
         }
     }
@@ -430,12 +419,6 @@ st_ssize_t st_alsawrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
     int err;
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
     void (*write_buf)(char *, st_sample_t *, st_ssize_t, char) = 0;
-
-    /* Check to see if user sent SIGINT and if so return ST_EOF to
-     * stop recording
-     */
-    if (ft->file.eof)
-        return ST_EOF;
 
     switch(ft->info.size) {
         case ST_SIZE_BYTE:
@@ -480,14 +463,13 @@ st_ssize_t st_alsawrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 
     while (len < nsamp)
     {
-        err = snd_pcm_writei(alsa->pcm_handle, alsa->buf, 
+        err = snd_pcm_writei(alsa->pcm_handle, 
+                             alsa->buf+(len*ft->info.size), 
                              (nsamp-len)/ft->info.channels);
         if (err == -EAGAIN)
             continue;
         if (err < 0)
         {
-            if (ft->file.eof)
-                return ST_EOF;
             if (xrun_recovery(alsa->pcm_handle, err) < 0)
             {
                 st_fail_errno(ft, ST_EPERM, "ALSA write error\n");
@@ -533,7 +515,7 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
     if (ft->info.size != ST_SIZE_WORD &&
         ft->info.size != ST_SIZE_BYTE)
     {
-        st_warn("ALSA driver only supports byte and word samples.  Changing to word.");
+        st_report("ALSA driver only supports byte and word samples.  Changing to word.");
         ft->info.size = ST_SIZE_WORD;
     }
 
@@ -542,12 +524,12 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
     {
         if (ft->info.size == ST_SIZE_WORD)
         {
-            st_warn("ALSA driver only supports signed and unsigned samples.  Changing to signed.");
+            st_report("ALSA driver only supports signed and unsigned samples.  Changing to signed.");
             ft->info.encoding = ST_ENCODING_SIGN2;
         }
         else
         {
-            st_warn("ALSA driver only supports signed and unsigned samples.  Changing to unsigned.");
+            st_report("ALSA driver only supports signed and unsigned samples.  Changing to unsigned.");
             ft->info.encoding = ST_ENCODING_UNSIGNED;
         }
     }

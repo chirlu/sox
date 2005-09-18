@@ -181,7 +181,6 @@ int st_sunstartread(ft_t ft)
 #endif
     /* Change to non-buffered I/O*/
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
-    sigintreg(ft);      /* Prepare to catch SIGINT */
 
     return (ST_SUCCESS);
 }

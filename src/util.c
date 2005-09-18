@@ -10,7 +10,6 @@
 #include "st_i.h"
 #include <string.h>
 #include <ctype.h>
-#include <signal.h>
 
 #ifdef __STDC__
 #include <stdarg.h>
@@ -318,30 +317,6 @@ int st_updateeffect(eff_t effp, st_signalinfo_t *in, st_signalinfo_t *out,
         effect_mask |= ST_EFF_RATE;
 
     return effect_mask;
-}
-
-/*
- * File format routines
- */
-static ft_t ft_queue[2] = {0, 0};
-
-static void sigint(int s)
-{
-    if (s == SIGINT) {
-        if (ft_queue[0])
-            ft_queue[0]->file.eof = 1;
-        if (ft_queue[1])
-            ft_queue[1]->file.eof = 1;
-    }
-}
-
-void sigintreg(ft_t ft)
-{
-    if (ft_queue[0] == 0)
-        ft_queue[0] = ft;
-    else
-        ft_queue[1] = ft;
-    signal(SIGINT, sigint);
 }
 
 /*
