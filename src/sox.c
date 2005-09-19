@@ -1026,7 +1026,7 @@ static int flow_effect_out(void)
     do {
       /* run entire chain BACKWARDS: pull, don't push.*/
       /* this is because buffering system isn't a nice queueing system */
-      for(e = neffects - 1; e > input_eff; e--)
+      for(e = neffects - 1; e >= input_eff; e--)
       {
           /* flow_effect returns ST_EOF when it will not process
            * any more samples.  This is used to bail out early.
@@ -1103,7 +1103,7 @@ static int flow_effect_out(void)
        * show no more data.
        */
       havedata = 0;
-      for(e = neffects - 1; e > input_eff; e--)
+      for(e = neffects - 1; e >= input_eff; e--)
       {
           /* If odone and olen are the same then this buffer
            * can be reused.
