@@ -2852,9 +2852,6 @@ case "$target" in
 		CPPFLAGS="$CPPFLAGS -mno-cygwin"
 		LDFLAGS="$LDFLAGS -mno-cygwin"
                 ;;
-        *linux* )
-                CPPFLAGS="$CPPFLAGS -I/lib/modules/`uname -r`/build/include"
-                ;;
 esac
 
 if test "$GCC" = yes; then

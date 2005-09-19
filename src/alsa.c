@@ -90,6 +90,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     }
 
     /* set hardware resampling */
+#if 0
     rate = 0;
     err = snd_pcm_hw_params_set_rate_resample(alsa->pcm_handle, hw_params, 
                                               rate);
@@ -97,6 +98,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
         st_fail_errno(ft, ST_EPERM, "Resampling setup failed for playback");
         return ST_EOF;
     }
+#endif
 
     if ((err = snd_pcm_hw_params_set_access(alsa->pcm_handle, hw_params, 
                                             SND_PCM_ACCESS_RW_INTERLEAVED)) < 0)
@@ -135,10 +137,10 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     snd_pcm_hw_params_get_rate_min(hw_params, &min_rate, &dir);
     snd_pcm_hw_params_get_rate_max(hw_params, &max_rate, &dir);
 
-    if (rate < min_rate) 
+    if (min_rate != -1 && rate < min_rate) 
         rate = min_rate;
     else 
-        if (rate > max_rate) 
+        if (max_rate != -1 && rate > max_rate) 
             rate = max_rate;
     if (rate != ft->info.rate)
     {
