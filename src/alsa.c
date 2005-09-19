@@ -90,7 +90,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     }
 
     /* set hardware resampling */
-    rate = 0;
+    rate = 1;
     err = snd_pcm_hw_params_set_rate_resample(alsa->pcm_handle, hw_params, 
                                               rate);
     if (err < 0) {
@@ -131,10 +131,11 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
         return ST_EOF;
     }
 
+    rate = ft->info.rate;
+#if 0
     snd_pcm_hw_params_get_rate_min(hw_params, &min_rate, &dir);
     snd_pcm_hw_params_get_rate_max(hw_params, &max_rate, &dir);
 
-    rate = ft->info.rate;
     if (rate < min_rate) 
         rate = min_rate;
     else 
@@ -145,7 +146,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
         st_report("alsa: Hardware does not support %d.  Forcing sample rate to %d.", ft->info.rate, rate);
         ft->info.rate = rate;
     }
-
+#endif
     dir = 0;
     if ((err = snd_pcm_hw_params_set_rate_near(alsa->pcm_handle, 
                                                hw_params, 
