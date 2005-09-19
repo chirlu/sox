@@ -269,7 +269,12 @@ int main(int argc, char **argv)
         free(file_desc[i]);
 
     if (status)
-        fprintf(stderr, "\n\nDone.\n");
+    {
+        if (user_abort)
+            fprintf(stderr, "\n\nAborted.\n");
+        else
+            fprintf(stderr, "\n\nDone.\n");
+    }
 
     return(0);
 }
