@@ -438,7 +438,7 @@ st_ssize_t st_vorbiswrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
                 }
         }
 
-        return (ST_SUCCESS);    
+        return (len);    
 }
 
 int st_vorbisstopwrite(ft_t ft) 

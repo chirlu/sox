@@ -1086,9 +1086,9 @@ static int flow_effect_out(void)
                   return ST_EOF;
               }
               total += len;
-              output_samples += (len / file_desc[file_count-1]->info.channels);
-              efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
           } while (total < efftab[neffects-1].olen);
+          output_samples += (total / file_desc[file_count-1]->info.channels);
+          efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
       }
       else
       {
