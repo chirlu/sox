@@ -302,7 +302,7 @@ st_ssize_t st_voxwrite (ft_t ft,st_sample_t *buffer,st_ssize_t length)
              state->store.byte = byte;
              state->store.flag = flag;
         
-             return (ST_SUCCESS);
+             return (count);
            }
 
 /******************************************************************************
