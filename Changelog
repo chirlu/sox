@@ -36,6 +36,8 @@ sox-12.17.9
   o Added ALSA support to play/rec scripts.
   o Added st_open* and st_close() routines to help simply
     developer interface to libst.
+  o Force word-alignment on AIFF SSND and APPL chunks on input.
+    Matthew Hodgson.
 
 sox-12.17.8
 -----------

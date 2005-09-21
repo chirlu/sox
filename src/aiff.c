@@ -204,6 +204,10 @@ int st_aiffstartread(ft_t ft)
                         st_readdw(ft, &blocksize);
                         chunksize -= 8;
                         ssndsize = chunksize;
+                        /* word-align chunksize in case it wasn't
+                         * done by writing application already.
+                         */
+                        chunksize += (chunksize % 2);
                         /* if can't seek, just do sound now */
                         if (!ft->seekable)
                                 break;
@@ -273,6 +277,10 @@ int st_aiffstartread(ft_t ft)
                 }
                 else if (strncmp(buf, "APPL", 4) == 0) {
                         st_readdw(ft, &chunksize);
+                        /* word-align chunksize in case it wasn't
+                         * done by writing application already.
+                         */
+                        chunksize += (chunksize % 2);
                         while(chunksize-- > 0)
                             st_readb(ft, (unsigned char *)&trash8);
                 }
