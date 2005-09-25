@@ -50,20 +50,20 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     unsigned int min_rate, max_rate;
     unsigned int min_chan, max_chan;
     unsigned int rate;
-#if 0
+#if 1
     unsigned int periods;
 #endif
     snd_pcm_uframes_t buffer_size;
     int dir;
     snd_pcm_format_mask_t *fmask;
-#if 1
+#if 0
     unsigned int buffer_time = 500000;
     unsigned int period_time = 100000;
     snd_pcm_sframes_t period_size;
 #endif
 
-    /* Reserve buffer for 16-bit data.  FIXME: Whats a good size? */
-    alsa->buf_size = ST_BUFSIZ*2;
+    /*  FIXME: Whats a good size? */
+    alsa->buf_size = (ST_BUFSIZ / sizeof(st_sample_t)) * ft->info.size;
 
     if ((alsa->buf = malloc(alsa->buf_size)) == NULL) 
     {
@@ -181,7 +181,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
         return ST_EOF;
     }
 
-#if 1
+#if 0
         /* set the buffer time */
         err = snd_pcm_hw_params_set_buffer_time_near(alsa->pcm_handle, hw_params, &buffer_time, &dir);
         if (err < 0) {
@@ -207,9 +207,9 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     }
 #endif
 
-#if 0
+#if 1
     /* Set number of periods. Periods used to be called fragments. */ 
-    periods = 2;
+    periods = 16;
     if (snd_pcm_hw_params_set_periods_near(alsa->pcm_handle, hw_params, 
                                            &periods, &dir) < 0) 
     {
@@ -218,9 +218,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     }
     snd_pcm_hw_params_get_periods(hw_params, &periods, &dir);
 
-    /* Set buffer size (in frames). The resulting latency is given by */
-    /* latency = periodsize * periods / (rate * bytes_per_frame)     */
-    buffer_size = ((ST_BUFSIZ/ft->info.size/ft->info.channels) * periods);
+    buffer_size = alsa->buf_size;
     if (snd_pcm_hw_params_set_buffer_size_near(alsa->pcm_handle, hw_params, 
                                                &buffer_size) < 0) {
       st_fail_errno(ft, ST_EPERM, "Error setting buffersize.");
