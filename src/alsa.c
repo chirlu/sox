@@ -44,14 +44,19 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     int err;
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
     snd_pcm_hw_params_t *hw_params;
+#if 0
     snd_pcm_sw_params_t *sw_params;
+#endif
     unsigned int min_rate, max_rate;
     unsigned int min_chan, max_chan;
-    unsigned int rate, periods;
+    unsigned int rate;
+#if 0
+    unsigned int periods;
+#endif
     snd_pcm_uframes_t buffer_size;
     int dir;
     snd_pcm_format_mask_t *fmask;
-#if 0
+#if 1
     unsigned int buffer_time = 500000;
     unsigned int period_time = 100000;
     snd_pcm_sframes_t period_size;
@@ -89,8 +94,8 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
         return ST_EOF;
     }
 
-    /* set hardware resampling */
-#if 0
+#if SND_LIB_VERSION >= 0x010009
+    /* Turn off software resampling */
     rate = 0;
     err = snd_pcm_hw_params_set_rate_resample(alsa->pcm_handle, hw_params, 
                                               rate);
@@ -176,7 +181,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
         return ST_EOF;
     }
 
-#if 0
+#if 1
         /* set the buffer time */
         err = snd_pcm_hw_params_set_buffer_time_near(alsa->pcm_handle, hw_params, &buffer_time, &dir);
         if (err < 0) {
@@ -202,7 +207,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     }
 #endif
 
-#if 1
+#if 0
     /* Set number of periods. Periods used to be called fragments. */ 
     periods = 2;
     if (snd_pcm_hw_params_set_periods_near(alsa->pcm_handle, hw_params, 
@@ -231,13 +236,14 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
 
     snd_pcm_hw_params_free(hw_params);
 
+#if 0
     if ((err = snd_pcm_sw_params_malloc(&sw_params)) < 0) 
     {
         st_fail_errno(ft, ST_ENOMEM, 
                       "cannot allocate software parameter structure");
         return ST_EOF;
     }
-#if 0
+
     /* get the current swparams */
     err = snd_pcm_sw_params_current(alsa->pcm_handle, sw_params);
     if (err < 0) {
@@ -271,8 +277,9 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
         printf("Unable to set sw params for playback: %s\n", snd_strerror(err));
         return err;
     }
-#endif
+
     snd_pcm_sw_params_free(sw_params);
+#endif
 
     if ((err = snd_pcm_prepare(alsa->pcm_handle)) < 0) 
     {
