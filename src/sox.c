@@ -75,7 +75,7 @@ static int soxpreview = 0;      /* preview mode */
 
 static int user_abort = 0;
 
-static int quite = 0;
+static int quiet = 0;
 static int status = 0;
 static unsigned long input_samples = 0;
 static unsigned long read_samples = 0;
@@ -386,12 +386,12 @@ static void doopts(file_options_t *fo, int argc, char **argv)
 
             case 'S':
                 status = 1;
-                quite = 0;
+                quiet = 0;
                 break;
 
             case 'q':
                 status = 0;
-                quite = 1;
+                quiet = 1;
                 break;
         }
     }
@@ -507,7 +507,7 @@ static void process(void) {
             strcmp(file_desc[file_count-1]->filetype, "ossdsp") == 0 ||
             strcmp(file_desc[file_count-1]->filetype, "sunau") == 0)
         {
-            if (!quite)
+            if (!quiet)
                 status = 1;
         }
 
@@ -695,7 +695,7 @@ static void process(void) {
 
         /* If not writing and no effects are occuring then not much
          * reason to continue reading.  This allows this case.  Mainly
-         * useful to print out info about input file header and quite.
+         * useful to print out info about input file header and quiet.
          */
         if (!writing && neffects == 1)
             efftab[0].olen = 0;
