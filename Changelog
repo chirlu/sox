@@ -34,8 +34,8 @@ sox-12.17.9
     talking to kernel driver.  This also means that device names
     are now the ALSA logical names instead of /dev type names.
   o Added ALSA support to play/rec scripts.
-  o Added st_open* and st_close() routines to help simply
-    developer interface to libst.
+  o Added st_open*, st_read, st_write, st_seek, st_close routines 
+    to help simplify developer interface to libst.  See libst.3..
   o Force word-alignment on AIFF SSND and APPL chunks on input.
     Matthew Hodgson.
 
