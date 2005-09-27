@@ -44,7 +44,7 @@ int st_wveseek(ft_t ft, st_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += wve->dataStart;
 
-    return st_seek(ft, offset, SEEK_SET);
+    return st_seeki(ft, offset, SEEK_SET);
 }
 
 int st_wvestartread(ft_t ft)
@@ -198,7 +198,7 @@ int st_wvestopwrite(ft_t ft)
             return ST_SUCCESS;
         }
 
-        if (st_seek(ft, 0L, 0) != 0)
+        if (st_seeki(ft, 0L, 0) != 0)
         {
                 st_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
                 return(ST_EOF);

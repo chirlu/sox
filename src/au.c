@@ -129,7 +129,7 @@ int st_auseek(ft_t ft, st_size_t offset)
             new_offset += (channel_block - alignment);
         new_offset += au->dataStart;
 
-        ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
+        ft->st_errno = st_seeki(ft, new_offset, SEEK_SET);
     }
 
     return(ft->st_errno);
@@ -374,7 +374,7 @@ int st_austopwrite(ft_t ft)
         /* Attempt to update header */
         if (ft->seekable)
         {
-          if (st_seek(ft, 0L, 0) != 0)
+          if (st_seeki(ft, 0L, 0) != 0)
           {
                 st_fail_errno(ft,errno,"Can't rewind output file to rewrite Sun header.");
                 return(ST_EOF);

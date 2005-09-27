@@ -85,7 +85,7 @@ int st_sfseek(ft_t ft, st_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += sf->dataStart;
 
-    return st_seek(ft, new_offset, SEEK_SET);
+    return st_seeki(ft, new_offset, SEEK_SET);
 }
 
 /*

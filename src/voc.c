@@ -797,14 +797,14 @@ static void blockstop(ft_t ft)
         st_sample_t datum;
 
         st_writeb(ft, 0);                     /* End of file block code */
-        st_seek(ft, v->blockseek, 0);         /* seek back to block length */
-        st_seek(ft, 1, 1);                    /* seek forward one */
+        st_seeki(ft, v->blockseek, 0);         /* seek back to block length */
+        st_seeki(ft, 1, 1);                    /* seek forward one */
         if (v->silent) {
                 st_writew(ft, v->samples);
         } else {
           if (ft->info.size == ST_SIZE_BYTE) {
             if (ft->info.channels > 1) {
-              st_seek(ft, 8, 1); /* forward 7 + 1 for new block header */
+              st_seeki(ft, 8, 1); /* forward 7 + 1 for new block header */
             }
           }
                 v->samples += 2;                /* adjustment: SBDK pp. 3-5 */

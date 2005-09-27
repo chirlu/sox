@@ -511,10 +511,12 @@ char *strerror(int errcode)
 }
 #endif
 
-/* Sets file offset
- * offset in bytes
+/* Implements traditional fseek() behavior.  Meant to abstract out
+ * file operations so that they could one day also work on memory
+ * buffers.
+ * Offset is in bytes as apposed to st_seek() which is in samples.
  */
-int st_seek(ft_t ft, st_size_t offset, int whence)
+int st_seeki(ft_t ft, st_size_t offset, int whence)
 {
     if( ft->seekable == 0 ){
         /*

@@ -48,7 +48,7 @@ int st_sndseek(ft_t ft, st_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += snd->dataStart;
 
-    return st_seek(ft, new_offset, SEEK_SET);
+    return st_seeki(ft, new_offset, SEEK_SET);
 }
 /*======================================================================*/
 /*                         SNDSTARTREAD                                */
@@ -98,7 +98,7 @@ int st_sndtstartread(ft_t ft)
                 st_fail_errno(ft,ST_EFMT,"SND: sample rate out of range");
                 return(ST_EOF);
         }
-        st_seek(ft, 4, SEEK_CUR);
+        st_seeki(ft, 4, SEEK_CUR);
         }
         else
         {
@@ -109,9 +109,9 @@ int st_sndtstartread(ft_t ft)
                 st_fail_errno(ft,ST_EFMT,"SND: unrecognized SND format");
                 return(ST_EOF);
         }
-        st_seek(ft, 12, SEEK_CUR);
+        st_seeki(ft, 12, SEEK_CUR);
         st_readw(ft, &rate);
-        st_seek(ft, 6, SEEK_CUR);
+        st_seeki(ft, 6, SEEK_CUR);
         if (st_reads(ft, buf, 96) == ST_EOF)
         {
                 st_fail_errno(ft,ST_EHDR,"SND: unexpected EOF in SND header");
@@ -222,7 +222,7 @@ int st_sndtstopwrite(ft_t ft)
             return rc;
 
         /* fixup file sizes in header */
-        if (st_seek(ft, 0L, 0) != 0){
+        if (st_seeki(ft, 0L, 0) != 0){
                 st_fail_errno(ft,errno,"can't rewind output file to rewrite SND header");
                 return ST_EOF;
         }

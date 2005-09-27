@@ -81,7 +81,7 @@ int st_readf(ft_t ft, float *f);
 int st_writef(ft_t ft, float f);
 int st_readdf(ft_t ft, double *d);
 int st_writedf(ft_t ft, double d);
-int st_seek(ft_t ft, st_size_t offset, int whence);
+int st_seeki(ft_t ft, st_size_t offset, int whence);
 st_size_t st_filelength(ft_t ft);
 int st_flush(ft_t ft);
 st_size_t st_tell(ft_t ft);

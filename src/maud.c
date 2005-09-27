@@ -206,7 +206,7 @@ int st_maudstartread(ft_t ft)
                 st_readdw(ft, &chunksize);
                 if (chunksize & 1)
                         chunksize++;
-                st_seek(ft, chunksize, SEEK_CUR);
+                st_seeki(ft, chunksize, SEEK_CUR);
                 continue;
                 
         }
@@ -304,7 +304,7 @@ int st_maudstopwrite(ft_t ft)
 
         /* All samples are already written out. */
         
-        if (st_seek(ft, 0L, 0) != 0) 
+        if (st_seeki(ft, 0L, 0) != 0) 
         {
             st_fail_errno(ft,errno,"can't rewind output file to rewrite MAUD header");
             return(ST_EOF);

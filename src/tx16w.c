@@ -97,7 +97,7 @@ int st_txwstartread(ft_t ft)
     while (st_readb(ft, (unsigned char *)&trash) != ST_EOF)
         num_samp_bytes++; 
     num_samp_bytes -= 32;         /* calculate num samples by sub header size */
-    st_seek(ft, 0L, 0);           /* rewind file */
+    st_seeki(ft, 0L, 0);           /* rewind file */
     sk->rest = num_samp_bytes;    /* set how many sample bytes to read */
 
     /* first 6 bytes are file type ID LM8953 */

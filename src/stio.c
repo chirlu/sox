@@ -71,8 +71,8 @@ static int st_checkformat(ft_t ft)
         return ST_SUCCESS;
 }
 
-ft_t st_open_input(const char *path, const st_signalinfo_t *si,
-                   const char *filetype, const char swap)
+ft_t st_open_input(const char *path, const st_signalinfo_t *info,
+                   const char *filetype, char swap)
 {
     ft_t ft;
 
@@ -103,7 +103,7 @@ ft_t st_open_input(const char *path, const st_signalinfo_t *si,
     ft->info.size = -1;
     ft->info.encoding = -1;
     ft->info.channels = -1;
-    ft->info = *si;
+    ft->info = *info;
     ft->swap = swap;
     ft->mode = 'r';
 
@@ -204,7 +204,7 @@ ft_t st_open_output(const char *path, const st_signalinfo_t *info,
                     const st_signalinfo_t *input_info,
                     const char *comment, const st_loopinfo_t *loops,
                     const st_instrinfo_t *instr,
-                    const char *filetype, const char swap)
+                    const char *filetype, char swap)
 {
     ft_t ft;
     ft = (ft_t)calloc(sizeof(struct st_soundstream), 1);
@@ -349,4 +349,23 @@ int st_close(ft_t ft)
         free(ft->comment);
 
     return rc;
+}
+
+int st_seek(ft_t ft, st_size_t offset, int whence)
+{
+    /* One day, ST_SEEK_CUR and ST_SEEK_END should be impelemented */
+    if (whence != ST_SEEK_SET)
+        return ST_EOF;
+    /* FIXME: Should return this */
+/*        return ST_EINVAL; */
+
+    /* If file is a seekable file and this handler supports seeking,
+     * the invoke handlers function.
+     */
+    if (ft->seekable  && (ft->h->flags & ST_FILE_SEEK))
+        return (*ft->h->seek)(ft, offset);
+    else
+        return ST_EOF;
+    /* FIXME: Should return this */
+/*        return ST_EBADF; */
 }

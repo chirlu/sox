@@ -426,12 +426,12 @@ void optimize_trim(void)
     {
         if ((file_desc[0]->h->flags & ST_FILE_SEEK) && file_desc[0]->seekable)
         {
-            if (file_desc[0]->h->seek(file_desc[0], 
-                                      st_trim_get_start(&efftab[1])) != ST_EOF)
+            if (st_seek(file_desc[0], st_trim_get_start(&efftab[1]),
+                        ST_SEEK_SET) != ST_EOF)
             {
                 /* Assuming a failed seek stayed where it was.  If the
                  * seek worked then reset the start location of
-                 * trim so that it skips that part.
+                 * trim so that it thinks user didn't request a skip.
                  */
                 st_trim_clear_start(&efftab[1]);
             }

@@ -107,7 +107,7 @@ int st_rawseek(ft_t ft, st_size_t offset)
     if (alignment != 0)
         new_offset += (channel_block - alignment);
 
-    ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
+    ft->st_errno = st_seeki(ft, new_offset, SEEK_SET);
 
     return ft->st_errno;
 }

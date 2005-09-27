@@ -417,7 +417,7 @@ static int findChunk(ft_t ft, const char *Label, st_size_t *len)
             break; /* Found the data chunk */
 
         /* skip to next chunk */
-        if (st_seek(ft, *len, SEEK_CUR) != ST_SUCCESS)
+        if (st_seeki(ft, *len, SEEK_CUR) != ST_SUCCESS)
         {
             st_fail_errno(ft,ST_EHDR, 
                           "WAV chunk appears to have invalid size %d.", *len);
@@ -853,7 +853,7 @@ int st_wavstartread(ft_t ft)
     }
 
     /* Skip anything left over from fmt chunk */
-    st_seek(ft, len, SEEK_CUR);
+    st_seeki(ft, len, SEEK_CUR);
 
     /* for non-PCM formats, there's a 'fact' chunk before
      * the upcoming 'data' chunk */
@@ -946,7 +946,7 @@ int st_wavstartread(ft_t ft)
          * doubt any machine writing Cool Edit Chunks writes them at an odd 
          * offset */
         len = (len + 1) & ~1;
-        if (st_seek(ft, len, SEEK_CUR) == ST_SUCCESS &&
+        if (st_seeki(ft, len, SEEK_CUR) == ST_SUCCESS &&
             findChunk(ft, "LIST", &len) != ST_EOF)
         {
             wav->found_cooledit = 1;
@@ -994,7 +994,7 @@ int st_wavstartread(ft_t ft)
                             strcat(ft->comment,text);
                         }
                         if (strlen(text) < len)
-                           st_seek(ft, len - strlen(text), SEEK_CUR); 
+                           st_seeki(ft, len - strlen(text), SEEK_CUR); 
                     } 
                     else if (strncmp(magic,"ISFT",4) == 0)
                     {
@@ -1013,12 +1013,12 @@ int st_wavstartread(ft_t ft)
                             strcat(ft->comment,text);
                         }
                         if (strlen(text) < len)
-                           st_seek(ft, len - strlen(text), SEEK_CUR); 
+                           st_seeki(ft, len - strlen(text), SEEK_CUR); 
                     } 
                     else if (strncmp(magic,"cue ",4) == 0)
                     {
                         st_report("Chunk cue ");
-                        st_seek(ft,len-4,SEEK_CUR);
+                        st_seeki(ft,len-4,SEEK_CUR);
                         st_readdw(ft,&dwLoopPos);
                         ft->loops[0].start = dwLoopPos;
                     } 
@@ -1028,19 +1028,19 @@ int st_wavstartread(ft_t ft)
                         st_readdw(ft,&dwLoopPos);
                         ft->loops[0].length = dwLoopPos - ft->loops[0].start;
                         if (len > 4)
-                           st_seek(ft, len - 4, SEEK_CUR); 
+                           st_seeki(ft, len - 4, SEEK_CUR); 
                     } 
                     else 
                     {
                         st_report("Attempting to seek beyond unsupported chunk '%c%c%c%c' of length %d bytes\n", magic[0], magic[1], magic[2], magic[3], len);
                         len = (len + 1) & ~1;
-                        st_seek(ft, len, SEEK_CUR);
+                        st_seeki(ft, len, SEEK_CUR);
                     }
                 }
             }
         }
         st_clearerr(ft);
-        st_seek(ft,wav->dataStart,SEEK_SET);
+        st_seeki(ft,wav->dataStart,SEEK_SET);
     }   
     return ST_SUCCESS;
 }
@@ -1675,7 +1675,7 @@ int st_wavstopwrite(ft_t ft)
         if (!ft->seekable)
                 return ST_EOF;
 
-        if (st_seek(ft, 0L, SEEK_SET) != 0)
+        if (st_seeki(ft, 0L, SEEK_SET) != 0)
         {
                 st_fail_errno(ft,ST_EOF,"Can't rewind output file to rewrite .wav header.");
                 return ST_EOF;
@@ -1763,7 +1763,7 @@ int st_wavseek(ft_t ft, st_size_t offset)
                 new_offset += (channel_block - alignment);
             new_offset += wav->dataStart;
 
-            ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
+            ft->st_errno = st_seeki(ft, new_offset, SEEK_SET);
 
             if( ft->st_errno == ST_SUCCESS )
                 wav->numSamples = ft->length - (new_offset / ft->info.size /

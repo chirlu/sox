@@ -254,16 +254,19 @@ struct st_effect
 
 extern st_effect_t st_effects[]; /* declared in handlers.c */
 
-extern ft_t st_open_input(const char *path, const st_signalinfo_t *si, 
-                          const char *filetype, const char swap);
+extern ft_t st_open_input(const char *path, const st_signalinfo_t *info, 
+                          const char *filetype, char swap);
 extern ft_t st_open_output(const char *path, const st_signalinfo_t *info,
                            const st_signalinfo_t *input_info,
                            const char *comment, const st_loopinfo_t *loops,
                            const st_instrinfo_t *instr,
-                           const char *filetype, const char swap);
+                           const char *filetype, char swap);
 extern st_ssize_t st_read(ft_t ft, st_sample_t *buf, st_ssize_t len);
 extern st_ssize_t st_write(ft_t ft, st_sample_t *buf, st_ssize_t len);
 extern int st_close(ft_t ft);
+
+#define ST_SEEK_SET 0
+extern int st_seek(ft_t ft, st_size_t offset, int whence);
 
 int st_geteffect_opt(eff_t, int, char **);
 int st_geteffect(eff_t, char *);

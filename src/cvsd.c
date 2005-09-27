@@ -536,7 +536,7 @@ static int dvms_write_header(ft_t ft, struct dvms_header *hdr)
                 sum += *pchs++;
         hdr->Crc = sum;
         put16(&pch, hdr->Crc);
-        if (st_seek(ft, 0, SEEK_SET) < 0)
+        if (st_seeki(ft, 0, SEEK_SET) < 0)
         {
                 st_report("seek failed\n: %s",strerror(errno));
                 return (ST_EOF);
@@ -653,7 +653,7 @@ int st_dvmsstopwrite(ft_t ft)
             st_warn("File not seekable");
             return (ST_EOF);
         }
-        if (st_seek(ft, 0L, 0) != 0)
+        if (st_seeki(ft, 0L, 0) != 0)
         {
                 st_fail_errno(ft,errno,"Can't rewind output file to rewrite DVMS header.");
                 return(ST_EOF);

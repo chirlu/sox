@@ -88,7 +88,7 @@ int st_aiffseek(ft_t ft, st_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += aiff->dataStart;
 
-    ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
+    ft->st_errno = st_seeki(ft, new_offset, SEEK_SET);
 
     if (ft->st_errno == ST_SUCCESS)
         aiff->nsamples = ft->length - 
@@ -213,7 +213,7 @@ int st_aiffstartread(ft_t ft)
                                 break;
                         /* else, seek to end of sound and hunt for more */
                         seekto = st_tell(ft);
-                        st_seek(ft, chunksize, SEEK_CUR); 
+                        st_seeki(ft, chunksize, SEEK_CUR); 
                 }
                 else if (strncmp(buf, "MARK", 4) == 0) {
                         /* MARK chunk */
@@ -363,7 +363,7 @@ int st_aiffstartread(ft_t ft)
         if (ft->seekable)
         {
                 if (seekto > 0)
-                        st_seek(ft, seekto, SEEK_SET);
+                        st_seeki(ft, seekto, SEEK_SET);
                 else
                 {
                         st_fail_errno(ft,ST_EOF,"AIFF: no sound data on input file");
@@ -735,7 +735,7 @@ int st_aiffstopwrite(ft_t ft)
             st_fail_errno(ft,ST_EOF,"Non-seekable file.");
             return(ST_EOF);
         }
-        if (st_seek(ft, 0L, SEEK_SET) != 0)
+        if (st_seeki(ft, 0L, SEEK_SET) != 0)
         {
                 st_fail_errno(ft,errno,"can't rewind output file to rewrite AIFF header");
                 return(ST_EOF);

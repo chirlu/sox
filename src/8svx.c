@@ -81,16 +81,16 @@ int st_svxstartread(ft_t ft)
                                 st_fail_errno(ft, ST_EHDR, "VHDR chunk has bad size");
                                 return(ST_EOF);
                         }
-                        st_seek(ft,12,SEEK_CUR);
+                        st_seeki(ft,12,SEEK_CUR);
                         st_readw(ft, &rate);
-                        st_seek(ft,1,SEEK_CUR);
+                        st_seeki(ft,1,SEEK_CUR);
                         st_readbuf(ft, buf,1,1);
                         if (buf[0] != 0)
                         {
                                 st_fail_errno(ft, ST_EFMT, "Unsupported data compression");
                                 return(ST_EOF);
                         }
-                        st_seek(ft,4,SEEK_CUR);
+                        st_seeki(ft,4,SEEK_CUR);
                         continue;
                 }
 
@@ -160,7 +160,7 @@ int st_svxstartread(ft_t ft)
                 st_readdw(ft, &chunksize);
                 if (chunksize & 1)
                         chunksize++;
-                st_seek(ft,chunksize,SEEK_CUR);
+                st_seeki(ft,chunksize,SEEK_CUR);
                 continue;
 
         }
@@ -343,7 +343,7 @@ int st_svxstopwrite(ft_t ft)
             st_writeb(ft, '\0');
 
         /* fixup file sizes in header */
-        if (st_seek(ft, 0L, 0) != 0)
+        if (st_seeki(ft, 0L, 0) != 0)
         {
                 st_fail_errno(ft,errno,"can't rewind output file to rewrite 8SVX header");
                 return(ST_EOF);

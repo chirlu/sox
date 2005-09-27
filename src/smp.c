@@ -188,7 +188,7 @@ int st_smpseek(ft_t ft, st_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += smp->dataStart;
 
-    ft->st_errno = st_seek(ft, new_offset, SEEK_SET);
+    ft->st_errno = st_seeki(ft, new_offset, SEEK_SET);
 
     if( ft->st_errno == ST_SUCCESS )
         smp->NoOfSamps = (ft->length*ft->info.channels) - 
@@ -264,7 +264,7 @@ int st_smpstartread(ft_t ft)
 
         /* seek from the current position (the start of sample data) by */
         /* NoOfSamps * 2 */
-        if (st_seek(ft, smp->NoOfSamps * 2L, 1) == -1)
+        if (st_seeki(ft, smp->NoOfSamps * 2L, 1) == -1)
         {
                 st_fail_errno(ft,errno,"SMP unable to seek to trailer");
                 return(ST_EOF);
@@ -276,7 +276,7 @@ int st_smpstartread(ft_t ft)
         }
 
         /* seek back to the beginning of the data */
-        if (st_seek(ft, samplestart, 0) == -1) 
+        if (st_seeki(ft, samplestart, 0) == -1) 
         {
                 st_fail_errno(ft,errno,"SMP unable to seek back to start of sample data");
                 return(ST_EOF);
@@ -422,7 +422,7 @@ int st_smpstopwrite(ft_t ft)
         /* Assign the trailer data */
         settrailer(ft, &trailer, ft->info.rate);
         writetrailer(ft, &trailer);
-        if (st_seek(ft, 112, 0) == -1)
+        if (st_seeki(ft, 112, 0) == -1)
         {
                 st_fail_errno(ft,errno,"SMP unable to seek back to save size");
                 return(ST_EOF);

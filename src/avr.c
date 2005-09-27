@@ -281,11 +281,11 @@ int st_avrstopwrite(ft_t ft)
       return rc;
 
   /* Fix size */
-  st_seek(ft, 26L, SEEK_SET);
+  st_seeki(ft, 26L, SEEK_SET);
   st_writedw (ft, size);
 
   /* Fix lend */
-  st_seek(ft, 34L, SEEK_SET);
+  st_seeki(ft, 34L, SEEK_SET);
   st_writedw (ft, size);
 
   return(ST_SUCCESS);
