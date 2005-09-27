@@ -15,9 +15,9 @@ libst \- Sound Tools : sound sample file and effects libraries.
 .SH SYNOPSIS
 .B #include <st.h>
 .P
-.B ft_t st_open_input(const char *\fIpath\fB, const st_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB, char \fIswap\fB);
+.B ft_t st_open_input(const char *\fIpath\fB, const st_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB);
 .P
-.B ft_t st_open_output(const char *\fIpath\fB, const st_signalinfo_t *\fIinfo\fB, const st_signalinfo_t *\fIinput_info\fB, const char *\fIcomment\fB, const st_loopinfo_t *\fIloops\fB, const st_instrinfo_t *\fIinstr\fB, const char *\fIfiletype\fB, char \fIswap\fB);
+.B ft_t st_open_output(const char *\fIpath\fB, const st_signalinfo_t *\fIinfo\fB, const char *\fIcomment\fB, const st_loopinfo_t *\fIloops\fB, const st_instrinfo_t *\fIinstr\fB, const char *\fIfiletype\fB);
 .P
 .B st_ssize_t st_read(ft_t \fIft\fB, st_sample_t *\fIbuf\fB, st_ssize_t \fIlen\fB);
 .P
@@ -32,6 +32,10 @@ libst \- Sound Tools : sound sample file and effects libraries.
 .I Sound\ Tools
 is a library of sound sample file format readers/writers
 and sound effects processors.  It is mainly developed for use by SoX but is useful for any sound application.
+.P
+\fBst_open_input\fR function opens the file for reading whose name is the string pointed to by \fIpath\fR and associates an ft_t with it. If \fIinfo\fR is non-NULL then it will be used to specify the data format of the input file.  This is normally only needed for headerless audio files since the information is not stored in the file.  If \fIfiletype\fR is non-NULL then it will be used to specify the file type.  If this is not specified then the file type is attempted to be derived by looking at the file header and/or the filename extension.  A special name of "-" can be used to read data from stdin.
+.P
+\fBst_open_output\fR function opens the file for writing whose name is the string pointed to by \fIpath\fR and associates an ft_t with it.  If \fIinfo\fR is non-NULL then it will be used to specify the data format of the output file.  Since most file formats can write data in different data formats, this generally has to be specified.  The info structure from the input format handler can be specified to copy data over in the same format.  If \fIcomment\fR is non-NULL, it will be written in the file header for formats that support comments.  If \fIloops\fR is specified, the loop information is written to the header of formats that spport loops.  If \fIinstr\fR is non-NULL, it will be written in the file header for formats that suport instruments.    Both \fIloops\fR and \fIinstr\fR data can be taken from the ft_t structure of an input file.  If \fIfiletype\fR is non-NULL then it will be used to specify the file type.  If this is not specified then the file type is attempted to be derived by looking at the filename extension.  A special name of "-" can be used to write data to stdout.
 .P
 The function \fBst_read\fR reads \fIlen\fR samples in to \fIbuf\fR using the format handler specified by \fIft\fR.  All data read is converted to 32-bit signed samples before being placed in to \fIbuf\fR.  The value of \fIlen\fR is specified in total samples.  If its value is not evenly divisable by the number of channels, undefined behavior will occur.
 .P
