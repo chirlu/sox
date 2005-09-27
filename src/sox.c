@@ -91,7 +91,6 @@ typedef struct file_options
     char *filename;
     char *filetype;
     st_signalinfo_t info;
-    char swap;
     double volume;
     char uservolume;
     char *comment;
@@ -245,8 +244,7 @@ int main(int argc, char **argv)
 #endif
         file_desc[i] = st_open_input(file_opts[i]->filename,
                                      &file_opts[i]->info, 
-                                     file_opts[i]->filetype,
-                                     file_opts[i]->swap);
+                                     file_opts[i]->filetype);
         if (!file_desc[i])
         {
             /* st_open_input() will call st_warn for most errors.
@@ -377,7 +375,7 @@ static void doopts(file_options_t *fo, int argc, char **argv)
                 break;
 
             case 'x':
-                fo->swap = 1;
+                fo->info.swap = 1;
                 break;
 
             case 'V':
@@ -479,15 +477,43 @@ static void process(void) {
 
     if (writing)
     {
+        st_loopinfo_t loops[ST_MAX_NLOOPS];
+        double factor;
+        int i;
+
+        if (file_opts[file_count-1]->info.rate == 0)
+            file_opts[file_count-1]->info.rate = file_desc[0]->info.rate;
+        if (file_opts[file_count-1]->info.size == -1)
+            file_opts[file_count-1]->info.size = file_desc[0]->info.size;
+        if (file_opts[file_count-1]->info.encoding == -1)
+            file_opts[file_count-1]->info.encoding = 
+                file_desc[0]->info.encoding;
+        if (file_opts[file_count-1]->info.channels == -1)
+            file_opts[file_count-1]->info.channels = 
+                file_desc[0]->info.channels;
+
+        /*
+         * copy loop info, resizing appropriately
+         * it's in samples, so # channels don't matter
+         * FIXME: This doesn't work for multi-file processing or
+         * effects that change file length.
+         */
+        factor = (double) file_opts[file_count-1]->info.rate / (double) 
+            file_desc[0]->info.rate;
+        for(i = 0; i < ST_MAX_NLOOPS; i++) {
+            loops[i].start = file_desc[0]->loops[i].start * factor;
+            loops[i].length = file_desc[0]->loops[i].length * factor;
+            loops[i].count = file_desc[0]->loops[i].count;
+            loops[i].type = file_desc[0]->loops[i].type;
+        }
+
         file_desc[file_count-1] = 
             st_open_output(file_opts[file_count-1]->filename,
                            &file_opts[file_count-1]->info, 
-                           &file_desc[0]->info,
                            file_desc[0]->comment,
-                           file_desc[0]->loops,
+                           loops,
                            &file_desc[0]->instr,
-                           file_opts[file_count-1]->filetype,
-                           file_opts[file_count-1]->swap);
+                           file_opts[file_count-1]->filetype);
 
         if (!file_desc[file_count-1])
         {

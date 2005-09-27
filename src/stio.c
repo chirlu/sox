@@ -72,7 +72,7 @@ static int st_checkformat(ft_t ft)
 }
 
 ft_t st_open_input(const char *path, const st_signalinfo_t *info,
-                   const char *filetype, char swap)
+                   const char *filetype)
 {
     ft_t ft;
 
@@ -103,8 +103,10 @@ ft_t st_open_input(const char *path, const st_signalinfo_t *info,
     ft->info.size = -1;
     ft->info.encoding = -1;
     ft->info.channels = -1;
-    ft->info = *info;
-    ft->swap = swap;
+    if (info)
+        ft->info = *info;
+    /* FIXME: Remove ft->swap from code */
+    ft->swap = ft->info.swap;
     ft->mode = 'r';
 
     if (!(ft->h->flags & ST_FILE_NOSTDIO))
@@ -164,49 +166,14 @@ input_error:
 #define LASTCHAR '/'
 #endif
 
-static void st_copyformat(ft_t ft, const st_signalinfo_t *info,
-                          const char *comment, const st_loopinfo_t *loops,
-                          const st_instrinfo_t *instr)
-{
-    int i;
-    double factor;
-
-    if (ft->info.rate == 0)
-        ft->info.rate = info->rate;
-    if (ft->info.size == -1)
-        ft->info.size = info->size;
-    if (ft->info.encoding == -1)
-        ft->info.encoding = info->encoding;
-    if (ft->info.channels == -1)
-        ft->info.channels = info->channels;
-
-    if (ft->comment == NULL && comment != NULL)
-        ft->comment = strdup(comment);
-    else
-        ft->comment = strdup("Processed by SoX");
-
-    /*
-     * copy loop info, resizing appropriately
-     * it's in samples, so # channels don't matter
-     */
-    factor = (double) ft->info.rate / (double) info->rate;
-    for(i = 0; i < ST_MAX_NLOOPS; i++) {
-        ft->loops[i].start = loops[i].start * factor;
-        ft->loops[i].length = loops[i].length * factor;
-        ft->loops[i].count = loops[i].count;
-        ft->loops[i].type = loops[i].type;
-    }
-    /* leave SMPTE # alone since it's absolute */
-    ft->instr = *instr;
-}
-
 ft_t st_open_output(const char *path, const st_signalinfo_t *info,
-                    const st_signalinfo_t *input_info,
                     const char *comment, const st_loopinfo_t *loops,
                     const st_instrinfo_t *instr,
-                    const char *filetype, char swap)
+                    const char *filetype)
 {
     ft_t ft;
+    int i;
+
     ft = (ft_t)calloc(sizeof(struct st_soundstream), 1);
 
     if (!ft )
@@ -253,8 +220,8 @@ ft_t st_open_output(const char *path, const st_signalinfo_t *info,
     ft->info.size = -1;
     ft->info.encoding = -1;
     ft->info.channels = -1;
-    ft->info = *info;
-    ft->swap = swap;
+    if (info)
+        ft->info = *info;
     ft->mode = 'w';
 
     if (!(ft->h->flags & ST_FILE_NOSTDIO))
@@ -287,7 +254,21 @@ ft_t st_open_output(const char *path, const st_signalinfo_t *info,
         ft->seekable = is_seekable(ft);
     }
 
-    st_copyformat(ft, input_info, comment, loops, instr);
+    if (ft->comment == NULL && comment != NULL)
+        ft->comment = strdup(comment);
+    else
+        ft->comment = strdup("Processed by SoX");
+
+    for (i = 0; i < ST_MAX_NLOOPS; i++)
+    {
+        ft->loops[i] = loops[i];
+    }
+
+    /* leave SMPTE # alone since it's absolute */
+    ft->instr = *instr;
+
+    /* FIXME: Remove ft->swap from code */
+    ft->swap = ft->info.swap;
 
     /* Read and write starters can change their formats. */
     if ((*ft->h->startwrite)(ft) != ST_SUCCESS)
