@@ -878,7 +878,7 @@ int st_wavstartread(ft_t ft)
                            wav->blockAlign, wav->samplesPerBlock);
         /*st_report("datalen %d, numSamples %d",dwDataLength, wav->numSamples);*/
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
-        ft->length = wav->numSamples;
+        ft->length = wav->numSamples*ft->info.channels;
         break;
 
     case WAVE_FORMAT_IMA_ADPCM:
@@ -890,20 +890,20 @@ int st_wavstartread(ft_t ft)
         /*st_report("datalen %d, numSamples %d",dwDataLength, wav->numSamples);*/
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
         initImaTable();
-        ft->length = wav->numSamples;
+        ft->length = wav->numSamples*ft->info.channels;
         break;
 
 #ifdef ENABLE_GSM
     case WAVE_FORMAT_GSM610:
         wav->numSamples = ((dwDataLength / wav->blockAlign) * wav->samplesPerBlock);
         wavgsminit(ft);
-        ft->length = wav->numSamples;
+        ft->length = wav->numSamples*ft->info.channels;
         break;
 #endif
 
     default:
         wav->numSamples = dwDataLength/ft->info.size/ft->info.channels;
-        ft->length = wav->numSamples;
+        ft->length = wav->numSamples*ft->info.channels;
     }
 
     st_report("Reading Wave file: %s format, %d channel%s, %d samp/sec",
@@ -1488,7 +1488,6 @@ static int wavwritehdr(ft_t ft, int second_header)
                 /* intentional case fallthrough! */
 #endif
             default:
-                dwSamplesWritten /= wChannels; /* because how rawwrite()'s work */
                 blocksWritten = (dwSamplesWritten+wSamplesPerBlock-1)/wSamplesPerBlock;
                 dwDataLength = blocksWritten * wBlockAlign;
         }
@@ -1766,8 +1765,8 @@ int st_wavseek(ft_t ft, st_size_t offset)
             ft->st_errno = st_seeki(ft, new_offset, SEEK_SET);
 
             if( ft->st_errno == ST_SUCCESS )
-                wav->numSamples = ft->length - (new_offset / ft->info.size /
-                                  ft->info.channels);
+                wav->numSamples = (ft->length / ft->info.channels) -
+                                  (new_offset / ft->info.size / ft->info.channels);
     }
 
     return(ft->st_errno);

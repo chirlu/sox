@@ -1,7 +1,7 @@
 #ifndef ST_I_H
 #define ST_I_H
 /*
- * Sound Tools Interal - October 11, 2001
+ * Sound Tools Internal - October 11, 2001
  *
  *   This file is meant for libst internal use only
  *

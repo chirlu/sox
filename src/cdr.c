@@ -63,7 +63,7 @@ int st_cdrstartread(ft_t ft)
 
 /* Need length for seeking */
         if(ft->seekable){
-                ft->length = st_filelength(ft)/2/2;
+                ft->length = st_filelength(ft)/ST_SIZE_WORD;
         } else {
                 ft->length = 0;
         }

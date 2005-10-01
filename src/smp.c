@@ -191,8 +191,7 @@ int st_smpseek(ft_t ft, st_size_t offset)
     ft->st_errno = st_seeki(ft, new_offset, SEEK_SET);
 
     if( ft->st_errno == ST_SUCCESS )
-        smp->NoOfSamps = (ft->length*ft->info.channels) - 
-                         (new_offset / ft->info.size);
+        smp->NoOfSamps = ft->length - (new_offset / ft->info.size);
 
     return(ft->st_errno);
 }
@@ -263,8 +262,8 @@ int st_smpstartread(ft_t ft)
         samplestart = st_tell(ft);
 
         /* seek from the current position (the start of sample data) by */
-        /* NoOfSamps * 2 */
-        if (st_seeki(ft, smp->NoOfSamps * 2L, 1) == -1)
+        /* NoOfSamps * sizeof(int16_t) */
+        if (st_seek(ft, smp->NoOfSamps * 2L, 1) == -1)
         {
                 st_fail_errno(ft,errno,"SMP unable to seek to trailer");
                 return(ST_EOF);

@@ -131,10 +131,11 @@ int st_vorbisstartread(ft_t ft)
         ft->info.channels = vi->channels;
 
         /* ov_pcm_total doesn't work on non-seekable files so
-         * skip that step in that case.
+         * skip that step in that case.  Also, it reports
+         * "frame"-ish results so we must * channels.
          */
         if (ft->seekable)
-            ft->length = ov_pcm_total(vb->vf, -1);
+            ft->length = ov_pcm_total(vb->vf, -1) * ft->info.channels;
         
         /* Record comments */
         if (vc->comments == 0)

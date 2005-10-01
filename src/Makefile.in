@@ -69,7 +69,8 @@ ALSAOBJ_0   =
 ALSAOBJ_1   = alsa.o
 EXTRAOBJS   = $(OSSOBJ_$(NEED_OSS)) $(SUNAUOBJ_$(NEED_SUNAU)) $(ALSAOBJ_$(NEED_ALSA)) $(GSMOBJ_$(GSM_SUPPORT))
 
-LIBOBJS = $(FOBJ) $(EOBJ) handlers.o stio.o misc.o util.o getopt.o $(EXTRAOBJS)
+LIBOBJS = $(FOBJ) $(EOBJ) getopt.o handlers.o misc.o stio.o \
+	  util.o $(EXTRAOBJS)
 
 # Building libgsm.a is kinda a hack.  It switches to a different
 # makefile with hardcoded options.  We really want the object files
