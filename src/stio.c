@@ -71,8 +71,8 @@ static int st_checkformat(ft_t ft)
         return ST_SUCCESS;
 }
 
-ft_t st_open_input(const char *path, const st_signalinfo_t *info,
-                   const char *filetype)
+ft_t st_open_read(const char *path, const st_signalinfo_t *info,
+                  const char *filetype)
 {
     ft_t ft;
 
@@ -166,10 +166,10 @@ input_error:
 #define LASTCHAR '/'
 #endif
 
-ft_t st_open_output(const char *path, const st_signalinfo_t *info,
-                    const char *comment, const st_loopinfo_t *loops,
-                    const st_instrinfo_t *instr,
-                    const char *filetype)
+ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
+                         const char *filetype, const char *comment,
+                         const st_instrinfo_t *instr,
+                         const st_loopinfo_t *loops)
 {
     ft_t ft;
     int i;
@@ -259,13 +259,17 @@ ft_t st_open_output(const char *path, const st_signalinfo_t *info,
     else
         ft->comment = strdup("Processed by SoX");
 
-    for (i = 0; i < ST_MAX_NLOOPS; i++)
+    if (loops)
     {
-        ft->loops[i] = loops[i];
+        for (i = 0; i < ST_MAX_NLOOPS; i++)
+        {
+            ft->loops[i] = loops[i];
+        }
     }
 
     /* leave SMPTE # alone since it's absolute */
-    ft->instr = *instr;
+    if (instr)
+        ft->instr = *instr;
 
     /* FIXME: Remove ft->swap from code */
     ft->swap = ft->info.swap;
@@ -294,6 +298,12 @@ output_error:
         free(ft->filetype);
     free(ft);
     return NULL;
+}
+
+ft_t st_open_write(const char *path, const st_signalinfo_t *info,
+                         const char *filetype, const char *comment)
+{
+    return st_open_write_instr(path, info, filetype, comment, NULL, NULL);
 }
 
 st_ssize_t st_read(ft_t ft, st_sample_t *buf, st_ssize_t len)

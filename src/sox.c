@@ -242,12 +242,12 @@ int main(int argc, char **argv)
         if (!file_opts[i]->uservolume)
             file_opts[i]->volume = 1.0 / input_count;
 #endif
-        file_desc[i] = st_open_input(file_opts[i]->filename,
-                                     &file_opts[i]->info, 
-                                     file_opts[i]->filetype);
+        file_desc[i] = st_open_read(file_opts[i]->filename,
+                                    &file_opts[i]->info, 
+                                    file_opts[i]->filetype);
         if (!file_desc[i])
         {
-            /* st_open_input() will call st_warn for most errors.
+            /* st_open_read() will call st_warn for most errors.
              * Rely on that printing something.
              */
             cleanup();
@@ -508,16 +508,16 @@ static void process(void) {
         }
 
         file_desc[file_count-1] = 
-            st_open_output(file_opts[file_count-1]->filename,
-                           &file_opts[file_count-1]->info, 
-                           file_desc[0]->comment,
-                           loops,
-                           &file_desc[0]->instr,
-                           file_opts[file_count-1]->filetype);
+            st_open_write_instr(file_opts[file_count-1]->filename,
+                                &file_opts[file_count-1]->info, 
+                                file_opts[file_count-1]->filetype,
+                                file_desc[0]->comment,
+                                &file_desc[0]->instr,
+                                loops);
 
         if (!file_desc[file_count-1])
         {
-            /* st_open_output() will call st_warn for most errors.
+            /* st_open_write() will call st_warn for most errors.
              * Rely on that printing something.
              */
             cleanup();

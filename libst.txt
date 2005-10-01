@@ -6,30 +6,105 @@ NAME
        libst - Sound Tools : sound sample file and effects libraries.
 
 SYNOPSIS
+       #include <st.h>
+
+       ft_t st_open_input(const char *path, const st_signalinfo_t *info, const
+       char *filetype);
+
+       ft_t st_open_output(const  char	*path,	const  st_signalinfo_t	*info,
+       const char *filetype, const char *comment);
+
+       st_ssize_t st_read(ft_t ft, st_sample_t *buf, st_ssize_t len);
+
+       st_ssize_t st_write(ft_t ft, st_sample_t *buf, st_ssize_t len);
+
+       int st_close(ft_t ft);
+
+       int st_seek(ft_t ft, st_size_t offset, int whence);
+
        cc file.c -o file libst.a
 
 DESCRIPTION
        Sound Tools  is	a  library of sound sample file format readers/writers
-       and sound effects processors.
+       and sound effects processors.  It is mainly developed for  use  by  SoX
+       but is useful for any sound application.
+
+       st_open_input  function	opens  the  file for reading whose name is the
+       string pointed to by path and associates an ft_t with it.  If  info  is
+       non-NULL	 then  it will be used to specify the data format of the input
+       file.  This is normally only needed for headerless  audio  files	 since
+       the  information	 is  not  stored in the file.  If filetype is non-NULL
+       then it will be used to specify the file type.  If this is  not	speci-
+       fied  then  the	file type is attempted to be derived by looking at the
+       file header and/or the filename extension.  A special name of  "-"  can
+       be used to read data from stdin.
+
+       st_open_output  function	 opens	the file for writing whose name is the
+       string pointed to by path and associates an ft_t with it.  If  info  is
+       non-NULL	 then it will be used to specify the data format of the output
+       file.  Since most file formats can write data in	 different  data  for-
+       mats,  this generally has to be specified.  The info structure from the
+       input format handler can be specified to copy data  over	 in  the  same
+       format.	 If comment is non-NULL, it will be written in the file header
+       for formats that support comments. If filetype is non-NULL then it will
+       be  used	 to  specify the file type.  If this is not specified then the
+       file type is attempted to be derived by looking at the filename	exten-
+       sion.  A special name of "-" can be used to write data to stdout.
+
+       The  function st_read reads len samples in to buf using the format han-
+       dler specified by ft.  All data read is converted to 32-bit signed sam-
+       ples  before  being placed in to buf.  The value of len is specified in
+       total samples.  If its value is not evenly divisable by the  number  of
+       channels, undefined behavior will occur.
+
+       The function st_write writes len samples from buf using the format han-
+       dler specified by ft.  Data in buf must be 32-bit  signed  samples  and
+       will be converted during the write process.  The value of len is speci-
+       fied in total samples.  If its value is not  evenly  divisable  by  the
+       number of channels, undefined behavior will occur.
+
+       The  st_close  function	dissociates the named ft_t from its underlying
+       file or set of functions.  If the format handler	 was  being  used  for
+       output, any buffered data is written first.
 
        Sound Tools includes skeleton C files to assist you in writing new for-
-       mats  and  effects.   The full skeleton driver, skel.c, helps you write
-       drivers for a new format which has data structures.  The simple	skele-
-       ton  drivers  help you write a new driver for raw (headerless) formats,
+       mats and effects.  The full skeleton driver, skel.c,  helps  you	 write
+       drivers	for a new format which has data structures.  The simple skele-
+       ton drivers help you write a new driver for raw	(headerless)  formats,
        or for formats which just have a simple header followed by raw data.
 
-       Most sound sample formats are fairly simple: they are just a string  of
-       bytes  or  words	 and  are presumed to be sampled at a known data rate.
-       Most of them have a short data structure at the beginning of the	 file.
+RETURN VALUE
+       Upon  successful	 completion  st_open_input and st_open_output return a
+       ft_t (which is a pointer).  Otherwise, NULL is returned.	 TODO: Need  a
+       what  to	 return	 reason for failures.  Currently, relies on st_warn to
+       print information.
+
+       st_read and st_write return the number of samples successfully read  or
+       written.	 If an error occurs, or the end-of-file is reached, the return
+       value is a short item count or ST_EOF. TODO: st_read does not  distigu-
+       ish between end-of-ifle and error.  Need an feof() and ferror() concept
+       to determine which occured.
+
+       Upon successful completion st_close returns 0.	Otherwise,  ST_EOF  is
+       returned.   In  either case, any further access (including another call
+       to st_close()) to the handler results in undefined behavior. TODO: Need
+       a  way  to return reason for failures.  Currently, relies on st_warn to
+       print information.
+
+       Upon successful completion st_seek returns  0.	Otherwise,  ST_EOF  is
+       returned.  TODO Need to set a global error and implement st_tell.
+
+ERRORS
+       TODO
 
 INTERNALS
        The  Sound Tools formats and effects operate on an internal buffer for-
        mat of signed 32-bit longs.  The data processing	 routines  are	called
        with buffers of these samples, and buffer sizes which refer to the num-
        ber of samples processed, not the number of bytes.  File readers trans-
-       late  the  input samples to signed longs and return the number of longs
-       read.  For example, data in linear signed byte format  is  left-shifted
-       24 bits.
+       late  the input samples to signed 32-bit integers and return the number
+       of samples read.	 For example, data in linear  signed  byte  format  is
+       left-shifted 24 bits.
 
        This does cause problems in processing the data.	 For example:
 	    *obuf++ = (*ibuf++ + *ibuf++)/2;
@@ -49,10 +124,10 @@ FORMATS
        format structure, and a private structure.
 
        The format structure contains a list of control parameters for the sam-
-       ple:  sampling  rate,  data size (bytes, words, floats, etc.), encoding
-       (unsigned, signed, logarithmic), number of  sound  channels.   It  also
-       contains	 other	state information: whether the sample file needs to be
-       byte-swapped, whether fseek() will work, its suffix,  its  file	stream
+       ple:  sampling rate, data size (8, 16, or 32 bits), encoding (unsigned,
+       signed, floating point, etc.), number of sound channels.	 It also  con-
+       tains  other  state  information:  whether  the sample file needs to be
+       byte-swapped, whether st_seek() will work, its suffix, its file	stream
        pointer, its format pointer, and the private structure for the format .
 
        The private area is just a preallocated data array for  the  format  to
@@ -120,32 +195,16 @@ EFFECTS
 			   own.	 See echo.c for how to do this, and  see  that
 			   what it does is absolutely bogus.
 
-COMMENTS
-       Theoretically,  formats	can be used to manipulate several files inside
-       one program.  Multi-sample files, for example the download for  a  sam-
-       pling keyboard, can be handled cleanly with this feature.
-
-PORTABILITY PROBLEMS
-       Many  computers	don’t supply arithmetic shifting, so do multiplies and
-       divides instead of << and >>.  The compiler will do the right thing  if
-       the CPU supplies arithmetic shifting.
-
-       Do  all	arithmetic conversions one stage at a time.  I’ve had too many
-       problems with "obviously clean" combinations.
-
-       In general, don’t worry about "efficiency".  The sox.c base  translator
-       is  disk-bound  on  any	machine (other than a 8088 PC with an SMD disk
-       controller).  Just comment your code and make sure it’s clean and  sim-
-       ple.  You’ll find that DSP code is extremely painful to write as it is.
-
 BUGS
-       The HCOM format is not re-entrant; it can only be used once in  a  pro-
+       The  HCOM  format is not re-entrant; it can only be used once in a pro-
        gram.
 
-       The  program/library interface is pretty weak.  There’s too much ad-hoc
-       information which a program is supposed	to  gather  up.	  Sound	 Tools
-       wants to be an object-oriented dataflow architecture.
+       On errors, the effects currently invoke st_fail and rely on that	 call-
+       ing exit().  They do not currently gracefully fail.
+
+       The program/library interface is pretty weak.
 
 
 
-				October 15 1996				 ST(3)
+
+			       September 26 2005			 ST(3)
