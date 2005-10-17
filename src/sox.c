@@ -621,7 +621,7 @@ static void process(void) {
         else
             efftab[0].olen = ilen;
 
-        read_samples += (efftab[0].olen / file_desc[0]->info.channels);
+        read_samples += efftab[0].olen;
 
         /* Some file handlers claim 0 bytes instead of returning
          * ST_EOF.  In either case, attempt to go to the next
@@ -663,7 +663,7 @@ static void process(void) {
 
             /* Only count read samples for first file in mix */
             if (f == 0)
-                read_samples += (efftab[0].olen / file_desc[0]->info.channels);
+                read_samples += efftab[0].olen;
 
             /* Adjust input side volume based on value specified
              * by user for this file.
@@ -1415,7 +1415,8 @@ static void update_status(void)
      * the same sample rate.  So we can always just use the rate
      * of the first input file to compute time.
      */
-    read_time = (double)read_samples / (double)file_desc[0]->info.rate;
+    read_time = (double)read_samples / (double)file_desc[0]->info.rate /
+                (double)file_desc[0]->info.channels;
 
     read_min = read_time / 60;
     read_sec = (double)read_time - 60.0f * (double)read_min;
@@ -1440,7 +1441,8 @@ static void update_status(void)
 
     if (input_samples)
     {
-        in_time = (double)input_samples / (double)file_desc[0]->info.rate;
+        in_time = (double)input_samples / (double)file_desc[0]->info.rate /
+                  (double)file_desc[0]->info.channels;
         left_time = in_time - read_time;
         if (left_time < 0)
             left_time = 0;
