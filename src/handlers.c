@@ -115,6 +115,7 @@ static char *maudnames[] = {
 /* MP3 */
 static char *mp3names[] = {
         "mp3",
+        "mp2",
         (char *) 0,
 };
 #endif

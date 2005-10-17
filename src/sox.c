@@ -1408,7 +1408,7 @@ static void update_status(void)
     double read_sec, left_sec, in_sec;
     double read_time, left_time, in_time;
     float completed;
-    unsigned long out_size;
+    double out_size;
     char unit;
 
     /* Currently, for both sox and soxmix, all input files must have
@@ -1420,18 +1420,18 @@ static void update_status(void)
     read_min = read_time / 60;
     read_sec = (double)read_time - 60.0f * (double)read_min;
 
-    out_size = output_samples / 1073741824;
-    if (out_size)
+    out_size = output_samples / 1000000000.0;
+    if (out_size >= 1.0)
         unit = 'G';
     else
     {
-        out_size = output_samples / 1048675;
-        if (out_size)
+        out_size = output_samples / 1000000.0;
+        if (out_size >= 1.0)
             unit = 'M';
         else
         {
-            out_size = output_samples / 1024;
-            if (out_size)
+            out_size = output_samples / 1000.0;
+            if (out_size >= 1.0)
                 unit = 'K';
             else
                 unit = ' ';
@@ -1462,7 +1462,7 @@ static void update_status(void)
     in_min = in_time / 60;
     in_sec = (double)in_time - 60.0f * (double)in_min;
 
-    fprintf(stderr, "\rTime: %02i:%05.2f [%02i:%05.2f] of %02i:%05.2f (% 5.1f%%) Output Buffer: % 5ld%c", read_min, read_sec, left_min, left_sec, in_min, in_sec, completed, out_size, unit);
+    fprintf(stderr, "\rTime: %02i:%05.2f [%02i:%05.2f] of %02i:%05.2f (% 5.1f%%) Output Buffer:% 7.2f%c", read_min, read_sec, left_min, left_sec, in_min, in_sec, completed, out_size, unit);
 }
 
 static void statistics(void) 
