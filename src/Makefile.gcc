@@ -34,7 +34,7 @@ EOBJ    = avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
 	  vibro.o vol.o
 
 SOUNDLIB = libst.a
-LIBOBJS = $(FOBJ) $(EOBJ) handlers.o misc.o util.o getopt.o
+LIBOBJS = $(FOBJ) $(EOBJ) handlers.o misc.o stio.o util.o getopt.o
 
 ##############################################################################
 
