@@ -1147,7 +1147,14 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
                 st_warn("Premature EOF on .wav input file");
         }
 
-        wav->numSamples -= (done/ft->info.channels);
+        /* Only return buffers that contain a totally playable
+         * amount of audio.
+         */
+        done -= (done % (ft->info.channels * ft->info.size));
+        if (done/ft->info.channels > wav->numSamples)
+            wav->numSamples = 0;
+        else
+            wav->numSamples -= (done/ft->info.channels);
         return done;
 }
 

@@ -38,6 +38,8 @@ sox-12.17.9
     to help simplify developer interface to libst.  See libst.3..
   o Force word-alignment on AIFF SSND and APPL chunks on input.
     Matthew Hodgson.
+  o Add fix to WAV handler to only return data in multiples
+    of sample_size*channels to better handle corrupt files.
 
 sox-12.17.8
 -----------
