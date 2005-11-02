@@ -307,8 +307,8 @@ st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len)
           int tagsize;
           if ( (tagsize=tagtype(p->Stream->this_frame, p->Stream->bufend - p->Stream->this_frame)) == 0){
             if (!p->eof)
-              st_warn("recoverable frame level error (%s).\n",
-                      mad_stream_errorstr(p->Stream));
+              st_report("recoverable frame level error (%s).\n",
+                        mad_stream_errorstr(p->Stream));
           }
           else mad_stream_skip(p->Stream,tagsize);
           continue;
@@ -319,8 +319,8 @@ st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len)
             continue;
           else
             {
-              st_warn("unrecoverable frame level error (%s).\n",
-                      mad_stream_errorstr(p->Stream));
+              st_report("unrecoverable frame level error (%s).\n",
+                        mad_stream_errorstr(p->Stream));
               return done;
             }
         }
