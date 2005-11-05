@@ -43,55 +43,37 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     int fmt = SND_PCM_FORMAT_S16;
     int err;
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
-    snd_pcm_hw_params_t *hw_params;
+    snd_pcm_hw_params_t *hw_params = NULL;
 #if 0
     snd_pcm_sw_params_t *sw_params;
 #endif
     unsigned int min_rate, max_rate;
     unsigned int min_chan, max_chan;
     unsigned int rate;
-#if 1
-    unsigned int periods;
-#endif
-    snd_pcm_uframes_t buffer_size;
+    snd_pcm_uframes_t buffer_size, buffer_size_min, buffer_size_max;
+    snd_pcm_uframes_t period_size, period_size_min, period_size_max;
     int dir;
-    snd_pcm_format_mask_t *fmask;
-#if 0
-    unsigned int buffer_time = 500000;
-    unsigned int period_time = 100000;
-    snd_pcm_sframes_t period_size;
-#endif
-
-    /*  FIXME: Whats a good size? */
-    alsa->buf_size = (ST_BUFSIZ / sizeof(st_sample_t)) * ft->info.size;
-
-    if ((alsa->buf = malloc(alsa->buf_size)) == NULL) 
-    {
-        st_fail_errno(ft,ST_ENOMEM,
-                      "unable to allocate output buffer of size %d", 
-                      ft->file.size);
-        return(ST_EOF);
-    }
+    snd_pcm_format_mask_t *fmask = NULL;
 
     if ((err = snd_pcm_open(&(alsa->pcm_handle), ft->filename, 
                             mode, 0)) < 0) 
     {
         st_fail_errno(ft, ST_EPERM, "cannot open audio device");
-        return ST_EOF;
+        goto open_error;
     }
 
     if ((err = snd_pcm_hw_params_malloc(&hw_params)) < 0) 
     {
         st_fail_errno(ft, ST_ENOMEM, 
                       "cannot allocate hardware parameter structure");
-        return ST_EOF;
+        goto open_error;
     }
 
     if ((err = snd_pcm_hw_params_any(alsa->pcm_handle, hw_params)) < 0) 
     {
         st_fail_errno(ft, ST_EPERM,
                       "cannot initialize hardware parameter structure");
-        return ST_EOF;
+        goto open_error;
     }
 
 #if SND_LIB_VERSION >= 0x010009
@@ -101,7 +83,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
                                               rate);
     if (err < 0) {
         st_fail_errno(ft, ST_EPERM, "Resampling setup failed for playback");
-        return ST_EOF;
+        goto open_error;
     }
 #endif
 
@@ -110,7 +92,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     {
         st_fail_errno(ft, ST_EPERM,
                       "cannot set access type");
-        return ST_EOF;
+        goto open_error;
     }
 
     snd_pcm_hw_params_get_channels_min(hw_params, &min_chan);
@@ -127,15 +109,16 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     snd_pcm_hw_params_get_format_mask(hw_params, fmask);
 
     if (get_format(ft, fmask, &fmt) < 0)
-        return (ST_EOF);
+        goto open_error;
 
     snd_pcm_format_mask_free(fmask);
+    fmask = NULL;
 
     if ((err = snd_pcm_hw_params_set_format(alsa->pcm_handle, 
                                             hw_params, fmt)) < 0) 
     {
         st_fail_errno(ft, ST_EPERM, "cannot set sample format");
-        return ST_EOF;
+        goto open_error;
     }
 
     rate = ft->info.rate;
@@ -159,7 +142,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
                                                &dir)) < 0) 
     {
         st_fail_errno(ft, ST_EPERM, "cannot set sample rate");
-        return ST_EOF;
+        goto open_error;
     }
     snd_pcm_hw_params_get_rate(hw_params, 
                                &rate,
@@ -178,114 +161,105 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
                                               ft->info.channels)) < 0) 
     {
         st_fail_errno(ft, ST_EPERM, "cannot set channel count");
-        return ST_EOF;
+        goto open_error;
     }
 
-#if 0
-        /* set the buffer time */
-        err = snd_pcm_hw_params_set_buffer_time_near(alsa->pcm_handle, hw_params, &buffer_time, &dir);
-        if (err < 0) {
-                printf("Unable to set buffer time %i for playback: %s\n", buffer_time, snd_strerror(err));
-                return err;
-        }
-        err = snd_pcm_hw_params_get_buffer_size(hw_params, &buffer_size);
-        if (err < 0) {
-                printf("Unable to get buffer size for playback: %s\n", snd_strerror(err));
-                return err;
-        }
+    buffer_size = (ST_BUFSIZ / sizeof(st_sample_t) / ft->info.channels);
 
-    /* set the period time */
-    err = snd_pcm_hw_params_set_period_time_near(alsa->pcm_handle, hw_params, &period_time, &dir);
-    if (err < 0) {
-        printf("Unable to set period time %i for playback: %s\n", period_time, snd_strerror(err));
-        return err;
+    if (snd_pcm_hw_params_get_buffer_size_min(hw_params, &buffer_size_min) < 0)
+    {
+        st_fail_errno(ft, ST_EPERM, "Error getting min buffer size.");
+        goto open_error;
     }
-    err = snd_pcm_hw_params_get_period_size(hw_params, &period_size, &dir);
-    if (err < 0) {
-        printf("Unable to get period size for playback: %s\n", snd_strerror(err));
-        return err;
-    }
-#endif
 
-#if 1
-    /* Set number of periods. Periods used to be called fragments. */ 
-    periods = 16;
-    if (snd_pcm_hw_params_set_periods_near(alsa->pcm_handle, hw_params, 
-                                           &periods, &dir) < 0) 
+    if (snd_pcm_hw_params_get_buffer_size_max(hw_params, &buffer_size_max) < 0)
+    {
+        st_fail_errno(ft, ST_EPERM, "Error getting max buffer size.");
+        goto open_error;
+    }
+
+    dir = 0;
+    if (snd_pcm_hw_params_get_period_size_min(hw_params, 
+                                              &period_size_min, &dir) < 0)
+    {
+        st_fail_errno(ft, ST_EPERM, "Error getting min period size.");
+        goto open_error;
+    }
+
+    dir = 0;
+    if (snd_pcm_hw_params_get_period_size_max(hw_params, 
+                                              &period_size_max, &dir) < 0)
+    {
+        st_fail_errno(ft, ST_EPERM, "Error getting max buffer size.");
+        goto open_error;
+    }
+
+    if (buffer_size_max < buffer_size)
+        buffer_size = buffer_size_max;
+    else if (buffer_size_min > buffer_size)
+        buffer_size = buffer_size_min;
+
+    period_size = buffer_size / 8;
+    buffer_size = period_size * 8;
+
+    dir = 0;
+    if (snd_pcm_hw_params_set_period_size_near(alsa->pcm_handle, hw_params, 
+                                               &period_size, &dir) < 0) 
     {
         st_fail_errno(ft, ST_EPERM, "Error setting periods.");
-        return ST_EOF;
+        goto open_error;
     }
-    snd_pcm_hw_params_get_periods(hw_params, &periods, &dir);
+    snd_pcm_hw_params_get_period_size(hw_params, &period_size, &dir);
 
-    buffer_size = alsa->buf_size;
+    dir = 0;
     if (snd_pcm_hw_params_set_buffer_size_near(alsa->pcm_handle, hw_params, 
                                                &buffer_size) < 0) {
-      st_fail_errno(ft, ST_EPERM, "Error setting buffersize.");
-      return ST_EOF;
+        st_fail_errno(ft, ST_EPERM, "Error setting buffersize.");
+        goto open_error;
     }
-#endif
+
+    snd_pcm_hw_params_get_buffer_size(hw_params, &buffer_size);
+    if (period_size*2 > buffer_size)
+    {
+        st_fail_errno(ft, ST_EPERM, "Buffer to small. Could not use.");
+        goto open_error;
+    }
 
     if ((err = snd_pcm_hw_params(alsa->pcm_handle, hw_params)) < 0) 
     {
         st_fail_errno(ft, ST_EPERM, "cannot set parameters");
-        return ST_EOF;
+        goto open_error;
     }
 
     snd_pcm_hw_params_free(hw_params);
-
-#if 0
-    if ((err = snd_pcm_sw_params_malloc(&sw_params)) < 0) 
-    {
-        st_fail_errno(ft, ST_ENOMEM, 
-                      "cannot allocate software parameter structure");
-        return ST_EOF;
-    }
-
-    /* get the current swparams */
-    err = snd_pcm_sw_params_current(alsa->pcm_handle, sw_params);
-    if (err < 0) {
-        printf("Unable to determine current swparams for playback: %s\n", snd_strerror(err));
-        return err;
-    }
-    /* start the transfer when the buffer is almost full: */
-    /* (buffer_size / avail_min) * avail_min */
-    err = snd_pcm_sw_params_set_start_threshold(alsa->pcm_handle, sw_params, 
-                                                (buffer_size / period_size) * period_size);
-    if (err < 0) {
-        printf("Unable to set start threshold mode for playback: %s\n",
-               snd_strerror(err));
-        return err;
-    }
-    /* allow the transfer when at least period_size samples can be processed */
-    err = snd_pcm_sw_params_set_avail_min(alsa->pcm_handle, sw_params, period_size);
-    if (err < 0) {
-        printf("Unable to set avail min for playback: %s\n", snd_strerror(err));
-        return err;
-    }
-    /* align all transfers to 1 sample */
-    err = snd_pcm_sw_params_set_xfer_align(alsa->pcm_handle, sw_params, 1);
-    if (err < 0) {
-        printf("Unable to set transfer align for playback: %s\n", snd_strerror(err));
-        return err;
-    }
-    /* write the parameters to the playback device */
-    err = snd_pcm_sw_params(alsa->pcm_handle, sw_params);
-    if (err < 0) {
-        printf("Unable to set sw params for playback: %s\n", snd_strerror(err));
-        return err;
-    }
-
-    snd_pcm_sw_params_free(sw_params);
-#endif
+    hw_params = NULL;
 
     if ((err = snd_pcm_prepare(alsa->pcm_handle)) < 0) 
     {
         st_fail_errno(ft, ST_EPERM, "cannot prepare audio interface for use");
-        return ST_EOF;
+        goto open_error;
+    }
+
+    alsa->buf_size = buffer_size * ft->info.size * ft->info.channels;
+
+    if ((alsa->buf = malloc(alsa->buf_size)) == NULL) 
+    {
+        st_fail_errno(ft,ST_ENOMEM,
+                      "unable to allocate output buffer of size %d", 
+                      ft->file.size);
+        return(ST_EOF);
     }
 
     return (ST_SUCCESS);
+
+open_error:
+    if (fmask)
+        snd_pcm_format_mask_free(fmask);
+    if (hw_params)
+        snd_pcm_hw_params_free(hw_params);
+
+    return ST_EOF;
+
 }
 
 /*

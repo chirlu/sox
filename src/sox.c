@@ -1142,8 +1142,19 @@ static int flow_effect_out(void)
           if (efftab[e].odone == efftab[e].olen)
               efftab[e].odone = efftab[e].olen = 0;
 
-          if (efftab[e].odone < efftab[e].olen) {
-              havedata = 1;
+          if (efftab[e].odone < efftab[e].olen) 
+          {
+              /* Only mark that we have more data if a full
+               * frame that can be written.
+               * FIXME: If this error case happens for the
+               * input buffer then the data will be lost and
+               * will cause stereo channels to be inversed.
+               */
+              if ((efftab[e].olen - efftab[e].odone) >= 
+                  file_desc[file_count-1]->info.channels)
+                  havedata = 1;
+              else
+                  st_warn("Received buffer with incomplete amount of samples.");
               /* Don't break out because other things are being
                * done in loop.
                */
