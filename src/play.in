@@ -199,7 +199,6 @@ while [ $# -ne 0 ]; do
             else
                 filename=`echo $1 | sed 's/\ /\\\ /g'`
                 filename=$1
-                echo $filename
                 play_opts="$play_opts $fopts $fopts2 \"$filename\""
                 fopts=""
                 fopts2=""
