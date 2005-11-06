@@ -90,7 +90,7 @@ DESCRIPTION
        audio  sample data type and apply one or more sound effects to the file
        during this translation.
 
-       If more then one input file is specified	 then  they  are  concatenated
+       If more than one input file is specified	 then  they  are  concatenated
        into  the  output  file.	  In  this case, it has a restriction that all
        input files must be of the same data type and sample rates.
 

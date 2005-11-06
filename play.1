@@ -5,26 +5,42 @@
 play, rec \- play and record sound files
 .SH SYNOPSIS
 .B play
-.I "[fopts] infile [effect]"
+.I "[ general options ] [ format options ] infile1 [ [ format options ] infile2 ... ] [effect]"
 .P
 .B rec
-.I "[fopts] outfile [effect]"
+.I "[ general options ] [format options ] outfile [effect]"
 .SH "DESCRIPTION"
-This manual page briefly documents the
-.B play and rec
-commands.
-.PP
 .B play
 and
 .B rec
-are programs that allow you to play and record different types of sound files 
-from the command line.  They are front ends to the more general 
+is a command line front end to the
+.B sox(1)
+program.  It will play/record audio files to/from unix-style audio devices.  It can optionally apply audio effects to the file.
+.PP
+When playing audio files, more then one input file can be specified.  If more than one is specified then they are concatenated together while playing.  In this case, it has a restriction that all input files must be of the same data type and sample rates.
+
+When playing audio files without headers, format options may be specified to inform sox of the files sample rate, data size and encoding, and number of channels.  When recording audio data, this same information needs to be presented so that the audio device can be placed into the proper mode.
+
+.SH GENERAL OPTIONS
+A summary of general options are included below.  They should only be specified once on the command line.
+For a complete description of options and their values, see 
+the 
 .B sox(1) 
-package.  Normally, the play command will automatically detect the 
-type and other parameters of the soundfile. If it can't do 
-so, the parameters can be changed through options.
-.SH OPTIONS
-A summary of common options are included below.
+man page.
+.TP
+.B \-d [device], \-\-device=[device]
+Specify a different device to play/record the sound file to/from.
+.TP
+.B \-h, \-\-help
+Show summary of options.
+.TP
+.B \-V, \-\-verbose
+Print verbose information during processing
+.TP
+.B \-\-version
+Show version of play/rec.
+.SH FORMAT OPTIONS
+A summary of format options are included below.  These options apply to the filename they immediately preceed.
 For a complete description of options and their values, see 
 the 
 .B sox(1) 
@@ -33,11 +49,8 @@ man page.
 .B \-c [channels], \-\-channels=[channels]
 Define the number of channels in the file.
 .TP
-.B \-d [device], \-\-device=[device]
-Specify a different device to play the sound file to.
-.TP
-.B \-\-file
-Next specified option is FILENAME.
+.B \-\-file=[filename]
+Specify the filename.
 .TP
 .B \-f [format], \-\-format=[format]
 Specify bit format of the sample. One of s, u, U, A, a, or g.
@@ -55,23 +68,17 @@ automatically determined.
 .B \-v [volume], \-\-volume=[volume]
 Change the audio volume
 .TP
-.B \-V, \-\-verbose
-Print verbose information during processing
-.TP
 .B \-x , \-\-xinu
 Reverse the byte order of the sample (only works with 16 and 32-bit data).
-.TP
-.B \-h, \-\-help
-Show summary of options.
-.TP
-.B \-\-version
-Show version of play/rec.
-
 .TP
 Description of effects are described in the 
 .B sox(1) 
 man page.
-
+.SH EFFECTS
+For a complete description of effects and their values, see 
+the 
+.B sox(1) 
+man page.
 .SH "SEE ALSO"
 
  sox(1)

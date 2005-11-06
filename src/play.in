@@ -5,7 +5,9 @@
 # Originally developed by Chris Bagwell (cbagwell@sprynet.com)
 #
 #   TODO:  Put each set of fopts and filenames on an array and then 
-#          play each filename back with the given effect.h
+#          play each filename back with the given effect. This
+#          would allow the files to be of different data types
+#          and sample rates.
 #
 # Change History:
 #
@@ -27,7 +29,11 @@ HAVE_SUNAU=@NEED_ALSA@
 PATH="$bindir:.:$PATH"
 
 program_name=`basename $0`
-program_version="2.0"
+rec_mode="no"
+if [ "$program_name" = "rec" ]; then
+    rec_mode="yes"
+fi
+program_version="3.0"
 
 if [ -z "$1" ]; then
     echo "\
@@ -45,11 +51,25 @@ version()
 help()
 {
     echo "\
-Usage: $program_name [OPTION]... FILE [EFFECT]...
+Usage: $program_name [GENERAL OPTIONS] [FORMAT OPTIONS] FILE [EFFECT]...
 Play/record sound files to/from unix style sound devices.
 
-  -c, --channels=CHANNELS      specifies the number of sound channels in FILE
+GENERAL OPTIONS:
+
+General options should only be specified one.
+
   -d, --device=DEVICE          use DEVICE for input/output
+  -V, --verbose                print verbose information
+  -h, --help                   display this help and exit
+      --version                output version information and exit
+
+FORMAT OPTIONS:
+
+File options can be specified for each filename.  Multiple filenames can
+be specified when playing audio files but they must all be of
+the data type and sample rates.
+
+  -c, --channels=CHANNELS      specifies the number of sound channels in FILE
   -f, --format=FORMAT          specifies bit format of sample
                                FORMAT is either s, u, U, A, a, or g
   -r, --rate=RATE              sample rate in hertz of FILE
@@ -57,22 +77,18 @@ Play/record sound files to/from unix style sound devices.
                                SIZE is either b, w, l, f, d, or D
   -t, --type=TYPE              specifies file format of FILE
   -v, --volume=VOLUME          change amplitude
-  -V, --verbose                print verbose information
   -x, --xinu                   reverse bit order of sample
                                (only works with 16-bit and 32-bit integer data)
-      --file                   next argument is FILE
-  -h, --help                   display this help and exit
-      --version                output version information and exit
+      --file=FILENAME          specify filename
 
 EFFECTs are one or more of the following:  avg, band, chorus, copy, cut, 
-deemph, echo, echos, flanger, highp, lowp, map, mask, phaser, pick, polyphase
-rate, repeat, resample, reverb, reverse, split, stat, vibro.
+deemph, echo, echos, flanger, highp, lowp, map, mask, phaser, pick,
+polyphase, rate, repeat, resample, reverb, reverse, split, stat, vibro.
 
 See sox man page for detailed information on supported file types, data
 formats, and effect options."
     exit 0
 }
-
 
 # loop over arguments
 while [ $# -ne 0 ]; do
@@ -125,24 +141,30 @@ while [ $# -ne 0 ]; do
 	    ;;
 	-v)
 	    shift
-	    volume="-v $1"
+	    fopts2="$fopts2 -v $1"
 	    ;;
 	--volume=*)
-	    volume="-v `echo $1 | sed 's/.*=//'`"
+	    fopts2="$fopts2 -v `echo $1 | sed 's/.*=//'`"
 	    ;;
         -V|--verbose)
-            fopts="$fopts -V"
+            gopts="$gopts -V"
             ;;
 	-x|--xinu)
 	    fopts="$fopts -x"
 	    ;;
-	--file)
-	    shift
-	    if [ -z "$filename" ]; then
-		filename="$1"
-	    else
-		echo "Filename already given.  Ignoring extra name: $1" 1>&2
-	    fi
+	--file=*)
+            if [ $rec_mode == "yes" ]; then
+	        if [ -z "$filename" ]; then
+                    filename=`echo $1 | sed 's/.*=//'`
+                else
+                    echo "Filename already given.  Ignoring extra name: $1" 1>&2
+	        fi
+            else
+                filename=`echo $1 | sed 's/.*=//'`
+                play_opts="$play_opts $fopts $fopts2 \"$filename\""
+                fopts=""
+                fopts2=""
+            fi
 	    ;;
 	-h)
 	    help
@@ -154,18 +176,34 @@ while [ $# -ne 0 ]; do
 	    version
 	    ;;
 	-)
-	    filename="-"
-	    ;;
-	-*)
-	    fopts="$fopts $1"
+            if [ $rec_mode == "yes" ]; then
+	        if [ -z "$filename" ]; then
+	            filename="-"
+                else
+                    echo "Filename already given.  Ignoring extra name: $1" 1>&2
+	        fi
+            else
+                filename="-"
+                play_opts="$play_opts $fopts $fopts2 \"$filename\""
+                fopts=""
+                fopts2=""
+            fi
 	    ;;
 	*)
-	    if [ -z "$filename" ]; then
-		filename="$1"
-	    else
-		echo "Filename already given.  Ignoring extra name: $1" 1>&2
-	    fi
-	    
+            if [ $rec_mode == "yes" ]; then
+	        if [ -z "$filename" ]; then
+	            filename="$1"
+                else
+                    echo "Filename already given.  Ignoring extra name: $1" 1>&2
+	        fi
+            else
+                filename=`echo $1 | sed 's/\ /\\\ /g'`
+                filename=$1
+                echo $filename
+                play_opts="$play_opts $fopts $fopts2 \"$filename\""
+                fopts=""
+                fopts2=""
+            fi
 	    ;;
     esac
     shift
@@ -219,7 +257,7 @@ fi
 
 # If name is "rec" then record else assume user is wanting to play
 # a sound file.
-if [ "$program_name" = "rec" ]; then
+if [ "$rec_mode" = "yes" ]; then
 
     # Don't send data to stdout if they are reading from it.
     if [ "$filename" = "-" ]; then
@@ -227,8 +265,15 @@ if [ "$program_name" = "rec" ]; then
     else
       echo "Send break (control-c) to end recording"
     fi
-    sox $volume $arch_defines $fopts $device $fopts2 "$filename" $effects 
-
+    # $fopts are specified on both sides because audio driver
+    # may not support the given format and might pick
+    # something close to it.  Asume user really wants the
+    # file to be in the specified format and so request
+    # sox to do any conversions.
+    sox $gopts $arch_defines $fopts $device $fopts $fopts2 "$filename" $effects 
 else
-    sox $volume $fopts $fopts2 "$filename" $arch_defines $device $effects
+    # Eval is needed to recongnize the quotes around filename
+    # and let them be passed to program as 1 option (in case
+    # filename has spaces).
+    eval sox $gopts $play_opts $arch_defines $device $effects
 fi
