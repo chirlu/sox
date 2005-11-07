@@ -153,7 +153,7 @@ while [ $# -ne 0 ]; do
 	    fopts="$fopts -x"
 	    ;;
 	--file=*)
-            if [ $rec_mode == "yes" ]; then
+            if [ $rec_mode = "yes" ]; then
 	        if [ -z "$filename" ]; then
                     filename=`echo $1 | sed 's/.*=//'`
                 else
@@ -176,7 +176,7 @@ while [ $# -ne 0 ]; do
 	    version
 	    ;;
 	-)
-            if [ $rec_mode == "yes" ]; then
+            if [ $rec_mode = "yes" ]; then
 	        if [ -z "$filename" ]; then
 	            filename="-"
                 else
@@ -190,7 +190,7 @@ while [ $# -ne 0 ]; do
             fi
 	    ;;
 	*)
-            if [ $rec_mode == "yes" ]; then
+            if [ $rec_mode = "yes" ]; then
 	        if [ -z "$filename" ]; then
 	            filename="$1"
                 else
@@ -214,13 +214,13 @@ if [ -n "$AUDIODEV" ]; then
     device="$AUDIODEV"
 fi
 
-if [ "$HAVE_ALSA" == "1" ]; then
+if [ "$HAVE_ALSA" = "1" ]; then
     arch_defines="-t alsa"
     if [ -z "$device" ]; then
 	device="default"
     fi
 else
-    if [ "$HAVE_OSS" == "1" ]; then
+    if [ "$HAVE_OSS" = "1" ]; then
         arch_defines="-t ossdsp"
         if [ -z "$device" ]; then
             device="/dev/dsp"
