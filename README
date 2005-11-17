@@ -83,12 +83,6 @@ The sound effects include:
   o Adjust volume of samples
   o Noise elimination using frequency profiling
 
-History:
-
-This is release 12.17.8 of SoX and its companion library Sound Tools.
-SoX was originally written and maintained by Lance Norskog but is
-currently maintained by Chris Bagwell (cbagwell@users.sourceforge.net).
-
 Installing:
 
 Unless your using a pre-compiled binary version, you will need to compile

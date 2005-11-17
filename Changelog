@@ -40,6 +40,8 @@ sox-12.17.9
     Matthew Hodgson.
   o Add fix to WAV handler to only return data in multiples
     of sample_size*channels to better handle corrupt files.
+  o Fixed bug where "-4" option didn't work with avg effect.
+    (Tom Christie)
 
 sox-12.17.8
 -----------

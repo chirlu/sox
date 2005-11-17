@@ -79,7 +79,7 @@ int st_avg_getopts(eff_t effp, int n, char **argv)
             avg->mix = MIX_RIGHT_FRONT;
         else if (!strcmp(argv[0], "-3"))
             avg->mix = MIX_LEFT_BACK;
-        else if (!strcmp(argv[0], "-2"))
+        else if (!strcmp(argv[0], "-4"))
             avg->mix = MIX_RIGHT_BACK;
         else if (argv[0][0] == '-' && !isdigit((int)argv[0][1])
                 && argv[0][1] != '.') {
