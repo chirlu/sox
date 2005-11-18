@@ -49,7 +49,7 @@ fi
 
 fade_first_opts=
 if [ "$fade_first" != "no" ]; then
-    fade_first_opts="fade t 0 0:0:$fade_length"
+    fade_first_opts="fade t 0 0:0:$fade_length 0:0:$fade_length"
 fi
 
 fade_second_opts=

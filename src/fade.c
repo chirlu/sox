@@ -34,7 +34,7 @@ typedef struct fadestuff
     int endpadwarned;
 } *fade_t;
 
-#define FADE_USAGE "Usage: fade [ type ] fade-in-length [ stop-time [ fade-out-length ] ]\nTimes is hh:mm:ss.fac format.\nFade type one of q, h, t, l or p.\n"
+#define FADE_USAGE "Usage: fade [ type ] fade-in-length [ stop-time [ fade-out-length ] ]\nTime is in hh:mm:ss.frac format.\nFade type one of q, h, t, l or p.\n"
 
 /* prototypes */
 static double fade_gain(st_size_t index, st_size_t range, char fadetype);
@@ -182,13 +182,14 @@ int st_fade_start(eff_t effp)
 
         }
         else
-            /* If no start time specified, assume everything
-             * after fadein.
+            /* If user doesn't specify fade out length then
+             * use same length as input side.  This is stored
+             * in in_stop.
              */
-            fade->out_start = fade->in_stop;
+            fade->out_start = fade->out_stop - fade->in_stop;
     }
     else
-        /* If not specified then user doesn't wants to process all 
+        /* If not specified then user wants to process all 
          * of file.  Use a value of zero to indicate this.
          */
         fade->out_stop = 0;
@@ -205,6 +206,8 @@ int st_fade_start(eff_t effp)
 
     fade->endpadwarned = 0;
 
+    /* fprintf(stderr, "fade: in_start = %d in_stop = %d out_start = %d out_stop = %d\n", fade->in_start, fade->in_stop, fade->out_start, fade->out_stop); */
+
     return(ST_SUCCESS);
 }
 
@@ -217,7 +220,7 @@ int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 {
     fade_t fade = (fade_t) effp->priv;
     /* len is total samples, chcnt counts channels */
-    int len = 0, chcnt = 0, t_output = 0;
+    int len = 0, chcnt = 0, t_output = 1, more_output = 1;
     st_sample_t t_ibuf;
 
     len = ((*isamp > *osamp) ? *osamp : *isamp);
@@ -225,7 +228,7 @@ int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     *osamp = 0;
     *isamp = 0;
 
-    for(; len; len--)
+    for(; len && more_output; len--)
     {
         t_ibuf = (fade->samplesdone < 0 ? 0 : *ibuf);
 
@@ -251,6 +254,9 @@ int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                               fade->out_stop - fade->out_start,
                               fade->out_fadetype);
             } /* endif fade-out */
+
+            if (!(!fade->do_out || fade->samplesdone < fade->out_stop))
+                more_output = 0;
 
             t_output = 1;
         }
@@ -282,7 +288,14 @@ int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             fade->samplesdone += 1;
         } /* endif all channels */
     } /* endfor */
-    return(ST_SUCCESS);
+
+    /* If not more samples will be returned, let application know
+     * this.
+     */
+    if (fade->do_out && fade->samplesdone >= fade->out_stop)
+        return ST_EOF;
+    else
+        return ST_SUCCESS;
 }
 
 /*
@@ -317,7 +330,11 @@ int st_fade_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
             t_chan = 0;
         } /* endif channels */
     } /* endfor */
-    return(ST_SUCCESS);
+
+    if (fade->do_out && fade->samplesdone >= fade->out_stop)
+        return ST_EOF;
+    else
+        return ST_SUCCESS;
 }
 
 /*
