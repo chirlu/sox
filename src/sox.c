@@ -259,6 +259,7 @@ int main(int argc, char **argv)
     parse_effects(argc, argv);
 
     signal(SIGINT, sigint);
+    signal(SIGTERM, sigint);
 
     process();
     statistics();
@@ -1578,7 +1579,7 @@ void cleanup(void)
 
 static void sigint(int s)
 {
-    if (s == SIGINT)
+    if (s == SIGINT || s == SIGTERM)
     {
         user_abort = 1;
     }

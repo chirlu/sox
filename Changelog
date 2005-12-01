@@ -47,6 +47,8 @@ sox-12.17.9
     updates to the sample crossfade scripts.  Also modified fade
     effect to report when no more samples will be produced to
     prevent unneeded reading of whole file.
+  o Allow aborting SoX with SIGTERM, along with previous SIGINT.
+    Norman Ramsey.
 
 sox-12.17.8
 -----------
