@@ -103,7 +103,13 @@ int st_swap_start(eff_t effp)
             swap->order[3] = 3;
         }
 
-        if (!swap->order[2] && !swap->order[3])
+        if (swap->order[0] < 1 || swap->order[0] > 4)
+            st_fail("invalid swap channel options used");
+        if (swap->order[1] < 1 || swap->order[1] > 4)
+            st_fail("invalid swap channel options used");
+        if (swap->order[2] < 1 || swap->order[2] > 4)
+            st_fail("invalid swap channel options used");
+        if (swap->order[3] < 1 || swap->order[3] > 4)
             st_fail("invalid swap channel options used");
 
         /* Convert to array offsets */
