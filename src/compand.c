@@ -325,12 +325,8 @@ int st_compand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
       if (l->delay_buf_size <= 0)
       {
         checkbuf = ibuf[chan]*(outv/v)*l->outgain;
-        if(checkbuf > ST_SAMPLE_MAX)
-         obuf[odone] = ST_SAMPLE_MAX;
-        else if(checkbuf < ST_SAMPLE_MIN)
-         obuf[odone] = ST_SAMPLE_MIN;
-        else
-         obuf[odone] = checkbuf;
+        ST_SAMPLE_CLIP(checkbuf, NULL);
+        obuf[odone] = checkbuf;
 
         idone++;
         odone++;
@@ -341,12 +337,8 @@ int st_compand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         {
             l->delay_buf_full=1; //delay buffer is now definetly full
             checkbuf = l->delay_buf[l->delay_buf_ptr]*(outv/v)*l->outgain;
-            if(checkbuf > ST_SAMPLE_MAX)
-             obuf[odone] = ST_SAMPLE_MAX;
-            else if(checkbuf < ST_SAMPLE_MIN)
-             obuf[odone] = ST_SAMPLE_MIN;
-            else
-             obuf[odone] = checkbuf;
+            ST_SAMPLE_CLIP(checkbuf, NULL);
+            obuf[odone] = checkbuf;
 
             odone++;
             idone++;

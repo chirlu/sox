@@ -703,16 +703,7 @@ static void process(void) {
                     {
                         double sample;
                         sample = efftab[0].obuf[s] + ibuf[f][s];
-                        if (sample < ST_SAMPLE_MIN)
-                        {
-                            sample = ST_SAMPLE_MIN;
-                            clipped++;
-                        }
-                        else if (sample > ST_SAMPLE_MAX)
-                        {
-                            sample = ST_SAMPLE_MAX;
-                            clipped++;
-                        }
+                        ST_SAMPLE_CLIP(sample, &clipped);
                         efftab[0].obuf[s] = sample;
                     }
             }
@@ -1508,14 +1499,7 @@ static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct,
         top = buf+ct;
         while (p < top) {
             y = vol * *p;
-            if (y < ST_SAMPLE_MIN) {
-                y = ST_SAMPLE_MIN;
-                clips++;
-            }
-            else if (y > ST_SAMPLE_MAX) {
-                y = ST_SAMPLE_MAX;
-                clips++;
-            }
+            ST_SAMPLE_CLIP(y, &clips);
             *p++ = y;
         }
         return clips;

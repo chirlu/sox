@@ -93,26 +93,6 @@ int st_pan_start(eff_t effp)
 }
 
 
-/* clip value if necessary. see comments about such a function in vol.c
- * Okay, it might be quite slow to have such a function for so small
- * a task. Hopefully the function can be inlined by the compiler?
- */
-static st_sample_t clip(pan_t pan, PAN_FLOAT value)
-{
-    if (value < ST_SAMPLE_MIN) 
-    {
-        pan->clipped++;
-        return ST_SAMPLE_MIN;
-    }
-    else if (value > ST_SAMPLE_MAX) 
-    {
-        pan->clipped++;
-        return ST_SAMPLE_MAX;
-    } /* else */
-
-    return (st_sample_t) value;
-}
-
 #ifndef MIN
 #define MIN(s1,s2) ((s1)<(s2)?(s1):(s2))
 #endif
@@ -157,15 +137,24 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             break;
         case 2: /* average 2 */
             for (done=0; done<len; done++)
-                *obuf++ = clip(pan, HALF*ibuf[0] + HALF*ibuf[1]),
-                    ibuf += 2;
+            {
+                float f;
+                f = HALF*ibuf[0] + HALF*ibuf[1];
+                ST_SAMPLE_CLIP(f, &pan->clipped);
+                *obuf++ = f;
+                ibuf += 2;
+            }
             break;
         case 4: /* average 4 */
             for (done=0; done<len; done++)
-                *obuf++ = clip(pan, 
-                               QUARTER*ibuf[0] + QUARTER*ibuf[1] + 
-                               QUARTER*ibuf[2] + QUARTER*ibuf[3]),
-                    ibuf += 4;
+            {
+                float f;
+                f = QUARTER*ibuf[0] + QUARTER*ibuf[1] + 
+                        QUARTER*ibuf[2] + QUARTER*ibuf[3];
+                ST_SAMPLE_CLIP(f, &pan->clipped);
+                *obuf++ = f;
+                ibuf += 4;
+            }
             break;
         default:
             UNEXPECTED_CHANNELS;
@@ -177,8 +166,14 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         case 1: /* linear */
             for (done=0; done<len; done++)
             {
-                obuf[0] = clip(pan, left * ibuf[0]);
-                obuf[1] = clip(pan, right * ibuf[0]);
+                float f;
+
+                f = left * ibuf[0];
+                ST_SAMPLE_CLIP(f, &pan->clipped);
+                obuf[0] = f;
+                f = right * ibuf[0];
+                ST_SAMPLE_CLIP(f, &pan->clipped);
+                obuf[1] = f;
                 obuf += 2;
                 ibuf++;
             }
@@ -197,8 +192,14 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
                 for (done=0; done<len; done++)
                 {
-                    obuf[0] = clip(pan, cll * ibuf[0] + clr * ibuf[1]);
-                    obuf[1] = clip(pan, cr * ibuf[1]);
+                    float f;
+
+                    f = cll * ibuf[0] + clr * ibuf[1];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[0] = f;
+                    f = cr * ibuf[1];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[1] = f;
                     obuf += 2;
                     ibuf += 2;
                 }
@@ -214,8 +215,14 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
                 for (done=0; done<len; done++)
                 {
-                    obuf[0] = clip(pan, cl * ibuf[0]);
-                    obuf[1] = clip(pan, crl * ibuf[0] + crr * ibuf[1]);
+                    float f;
+
+                    f = cl * ibuf[0];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[0] = f;
+                    f = crl * ibuf[0] + crr * ibuf[1];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[1] = f;
                     obuf += 2;
                     ibuf += 2;
                 }
@@ -233,15 +240,19 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
                 for (done=0; done<len; done++)
                 {
-                    register PAN_FLOAT ibuf0, ibuf1;
+                    register PAN_FLOAT ibuf0, ibuf1, f;
 
                     /* build stereo signal */
                     ibuf0 = HALF*ibuf[0] + HALF*ibuf[2];
                     ibuf1 = HALF*ibuf[1] + HALF*ibuf[3];
 
                     /* pan it */
-                    obuf[0] = clip(pan, cll * ibuf0 + clr * ibuf1);
-                    obuf[1] = clip(pan, cr * ibuf1);
+                    f = cll * ibuf0 + clr * ibuf1;
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[0] = f;
+                    f = cr * ibuf1;
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[1] = f;
                     obuf += 2;
                     ibuf += 4;
                 }
@@ -257,13 +268,17 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
                 for (done=0; done<len; done++)
                 {
-                    register PAN_FLOAT ibuf0, ibuf1;
+                    register PAN_FLOAT ibuf0, ibuf1, f;
 
                     ibuf0 = HALF*ibuf[0] + HALF*ibuf[2];
                     ibuf1 = HALF*ibuf[1] + HALF*ibuf[3];
 
-                    obuf[0] = clip(pan, cl * ibuf0);
-                    obuf[1] = clip(pan, crl * ibuf0 + crr * ibuf1);
+                    f = cl * ibuf0;
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[0] = f;
+                    f = crl * ibuf0 + crr * ibuf1;
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[1] = f;
                     obuf += 2;
                     ibuf += 4;
                 }
@@ -285,10 +300,14 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
                 for (done=0; done<len; done++)
                 {
-                    obuf[0] = clip(pan, cl * ibuf[0]);
-                    obuf[2] = obuf[0];
-                    obuf[1] = clip(pan, cr * ibuf[0]);
-                    ibuf[3] = obuf[1];
+                    float f;
+
+                    f = cl * ibuf[0];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[2] = obuf[0] = f;
+                    f = cr * ibuf[0];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    ibuf[3] = obuf[1] = f;
                     obuf += 4;
                     ibuf++;
                 }
@@ -306,10 +325,14 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
                 for (done=0; done<len; done++)
                 {
-                    obuf[0] = clip(pan, cll * ibuf[0] + clr * ibuf[1]);
-                    obuf[2] = obuf[0];
-                    obuf[1] = clip(pan, cr * ibuf[1]);
-                    ibuf[3] = obuf[1];
+                    float f;
+
+                    f = cll * ibuf[0] + clr * ibuf[1];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[2] = obuf[0] = f;
+                    f = cr * ibuf[1];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    ibuf[3] = obuf[1] = f;
                     obuf += 4;
                     ibuf += 2;
                 }
@@ -325,10 +348,14 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
                 for (done=0; done<len; done++)
                 {
-                    obuf[0] = clip(pan, cl * ibuf[0]);
-                    obuf[2] = obuf[0];
-                    obuf[1] = clip(pan, crl * ibuf[0] + crr * ibuf[1]);
-                    ibuf[3] = obuf[1];
+                    float f;
+
+                    f = cl * ibuf[0];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[2] = obuf[0] =f ;
+                    f = crl * ibuf[0] + crr * ibuf[1];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    ibuf[3] = obuf[1] = f;
                     obuf += 4;
                     ibuf += 2;
                 }
@@ -347,10 +374,20 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
                 for (done=0; done<len; done++)
                 {
-                    obuf[0] = clip(pan, cown*ibuf[0] + cright*ibuf[1]);
-                    obuf[1] = clip(pan, cown*ibuf[1] + cright*ibuf[3]);
-                    obuf[2] = clip(pan, cown*ibuf[2] + cright*ibuf[0]);
-                    obuf[3] = clip(pan, cown*ibuf[3] + cright*ibuf[2]);
+                    float f;
+
+                    f = cown*ibuf[0] + cright*ibuf[1];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[0] = f;
+                    f = cown*ibuf[1] + cright*ibuf[3];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[1] = f;
+                    f = cown*ibuf[2] + cright*ibuf[0];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[2] = f;
+                    f = cown*ibuf[3] + cright*ibuf[2];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[3] = f;
                     obuf += 4;
                     ibuf += 4;              
                 }
@@ -364,10 +401,20 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
                 for (done=0; done<len; done++)
                 {
-                    obuf[0] = clip(pan, cleft*ibuf[2] + cown*ibuf[0]);
-                    obuf[1] = clip(pan, cleft*ibuf[0] + cown*ibuf[1]);
-                    obuf[2] = clip(pan, cleft*ibuf[3] + cown*ibuf[2]);
-                    obuf[3] = clip(pan, cleft*ibuf[1] + cown*ibuf[3]);
+                    float f;
+
+                    f = cleft*ibuf[2] + cown*ibuf[0];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[0] = f;
+                    f = cleft*ibuf[0] + cown*ibuf[1];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[1] = f;
+                    f = cleft*ibuf[3] + cown*ibuf[2];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[2] = f;
+                    f = cleft*ibuf[1] + cown*ibuf[3];
+                    ST_SAMPLE_CLIP(f, &pan->clipped);
+                    obuf[3] = f;
                     obuf += 4;
                     ibuf += 4;
                 }

@@ -114,26 +114,6 @@ int st_dcshift_start(eff_t effp)
     return ST_SUCCESS;
 }
 
-/* conversion. clipping could be smoother at high ends?
- * this could be a function on its own, with clip count and report
- * handled by eff_t and caller.
- */
-static st_sample_t clip(dcs_t dcs, const DCSHIFT_FLOAT v)
-{
-    if (v > ST_SAMPLE_MAX)
-    {
-         dcs->clipped++;
-         return ST_SAMPLE_MAX;
-    }
-    else if (v < ST_SAMPLE_MIN)
-    {
-        dcs->clipped++;
-        return ST_SAMPLE_MIN;
-    }
-    /* else */
-    return (st_sample_t) v;
-}
-
 #ifndef MIN
 #define MIN(s1,s2) ((s1)<(s2)?(s1):(s2))
 #endif
@@ -185,14 +165,21 @@ int st_dcshift_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                         sample = dcshift * ST_SAMPLE_MAX + sample;
                 }
 
-                *obuf++ = clip(dcs, sample);
+                ST_SAMPLE_CLIP(sample, &dcs->clipped);
+                *obuf++ = sample;
             }
     }
     else
     {
         /* quite basic, with clipping */
         for (;len>0; len--)
-                *obuf++ = clip(dcs, dcshift * ST_SAMPLE_MAX + *ibuf++);
+        {
+                float f;
+
+                f = dcshift * ST_SAMPLE_MAX + *ibuf++;
+                ST_SAMPLE_CLIP(f, &dcs->clipped);
+                *obuf++ = f;
+        }
     }
     return ST_SUCCESS;
 }

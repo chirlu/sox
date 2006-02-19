@@ -275,22 +275,6 @@ static void process_intput_buffer(pitch_t pitch)
         pitch->acc[i] += pitch->fade[pitch->step-i-1]*pitch->tmp[i];
 }
 
-static st_sample_t clip(pitch_t pitch, PITCH_FLOAT v)
-{
-    if (v < ST_SAMPLE_MIN)
-    {
-        pitch->clipped++;
-        return ST_SAMPLE_MIN;
-    }
-    else if (v > ST_SAMPLE_MAX)
-    {
-        pitch->clipped++;
-        return ST_SAMPLE_MAX;
-    }
-    else
-        return (st_sample_t) v;
-}
-
 /*
  * Process options
  */
@@ -542,7 +526,13 @@ int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             int toout = MIN(*osamp-oindex, pitch->step-pitch->iacc);
 
             for (i=0; i<toout; i++)
-                obuf[oindex++] = clip(pitch, pitch->acc[pitch->iacc++]);
+            {
+                float f;
+
+                f = pitch->acc[pitch->iacc++];
+                ST_SAMPLE_CLIP(f, &pitch->clipped);
+                obuf[oindex++] = f;
+            }
 
             if (pitch->iacc == pitch->step)
             {
@@ -589,7 +579,13 @@ int st_pitch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 
     /* (pitch->state == pi_output) */
     for (i=0; i<*osamp && i<pitch->index-pitch->overlap;)
-        obuf[i++] = clip(pitch, pitch->acc[pitch->iacc++]);
+    {
+        float f;
+
+        f = pitch->acc[pitch->iacc++];
+        ST_SAMPLE_CLIP(f, &pitch->clipped);
+        obuf[i++] = f;
+    }
 
     /* report... */
     *osamp = i;

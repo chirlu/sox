@@ -81,12 +81,7 @@ int st_butterworth_flow (eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     butterworth->y [1] = butterworth->y [0];
     butterworth->y [0] = out;
 
-    if (out < ST_SAMPLE_MIN) {
-      out = ST_SAMPLE_MIN;
-    }
-    else if (out > ST_SAMPLE_MAX) {
-      out = ST_SAMPLE_MAX;
-    }
+    ST_SAMPLE_CLIP(out, NULL);
 
     *obuf++ = out;
   }

@@ -92,23 +92,6 @@ static SPEED_FLOAT cub(
     return ((a * x + b) * x + c) * x + d;
 }
 
-/* clip if necessary, and report. */
-static st_sample_t clip(speed_t speed, SPEED_FLOAT v)
-{
-    if (v < ST_SAMPLE_MIN)
-    {
-        speed->clipped++;
-        return ST_SAMPLE_MIN;
-    }
-    else if (v > ST_SAMPLE_MAX)
-    {
-        speed->clipped++;
-        return ST_SAMPLE_MAX;
-    }
-    else
-        return (st_sample_t) v;
-}
-
 /* get options. */
 int st_speed_getopts(eff_t effp, int n, char **argv)
 {
@@ -206,10 +189,15 @@ static st_size_t compute(speed_t speed, st_sample_t *obuf, st_size_t olen)
     for(i = 0;
         i<olen && speed->frac < ONE;
         i++, speed->frac += speed->rate)
-        obuf[i] = clip(speed, 
-                       cub(speed->cbuf[0], speed->cbuf[1],
-                           speed->cbuf[2], speed->cbuf[3], 
-                           speed->frac));
+    {
+        float f;
+
+        f = cub(speed->cbuf[0], speed->cbuf[1],
+                speed->cbuf[2], speed->cbuf[3], 
+                speed->frac);
+        ST_SAMPLE_CLIP(f, &speed->clipped);
+        obuf[i] = f;
+    }
     
     if (speed->frac >= ONE)
     {

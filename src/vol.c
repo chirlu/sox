@@ -133,26 +133,6 @@ int st_vol_start(eff_t effp)
     return ST_SUCCESS;
 }
 
-/* conversion. clipping could be smoother at high ends?
- * this could be a function on its own, with clip count and report
- * handled by eff_t and caller.
- */
-static st_sample_t clip(vol_t vol, const VOL_FLOAT v)
-{
-    if (v > ST_SAMPLE_MAX)
-    {
-         vol->clipped++;
-         return ST_SAMPLE_MAX;
-    }
-    else if (v < ST_SAMPLE_MIN)
-    {
-        vol->clipped++;
-        return ST_SAMPLE_MIN;
-    }
-    /* else */
-    return (st_sample_t) v;
-}
-
 #ifndef MIN
 #define MIN(s1,s2) ((s1)<(s2)?(s1):(s2))
 #endif
@@ -203,14 +183,19 @@ int st_vol_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                         sample = gain * sample;
                 }
 
-                *obuf++ = clip(vol, sample);
+                ST_SAMPLE_CLIP(sample, vol->clipped);
+               *obuf++ = sample;
             }
     }
     else
     {
         /* quite basic, with clipping */
         for (;len>0; len--)
-                *obuf++ = clip(vol, gain * *ibuf++);
+        {
+                sample = gain * *ibuf++;
+                ST_SAMPLE_CLIP(sample, vol->clipped);
+                *obuf++ = sample;
+        }
     }
     return ST_SUCCESS;
 }

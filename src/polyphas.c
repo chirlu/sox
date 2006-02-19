@@ -535,15 +535,6 @@ static void update_hist(Float *hist, int hist_size, int in_size)
 
 }
 
-static st_sample_t clipfloat(Float sample)
-{
-        if (sample > ST_SAMPLE_MAX)
-        return ST_SAMPLE_MAX;
-        if (sample < ST_SAMPLE_MIN)
-        return ST_SAMPLE_MIN;
-        return sample;
-}
-
 int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                  st_size_t *isamp, st_size_t *osamp)
 {
@@ -621,7 +612,12 @@ int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 if (out_size > oskip + *osamp) out_size = oskip + *osamp;
 
     for(q=obuf, k=oskip; k < out_size; k++)
-      *q++ = clipfloat(out_buf[k] * ISCALE); /* should clip-limit */
+    {
+        float f;
+        f = out_buf[k] * ISCALE; /* should clip-limit */
+        ST_SAMPLE_CLIP(f, NULL);
+        *q++ = f;
+    }
 
                 *osamp = q-obuf;
                 rate->inpipe -= *osamp;

@@ -210,9 +210,10 @@ static int process_window(reddata_t data, int chan_num, int num_chans,
                           st_sample_t *obuf, int len) {
     int j;
     float* nextwindow;
-    int use = min(len, WINDOWSIZE)-(WINDOWSIZE/2);
+    int use = min(len, WINDOWSIZE)-min(len,(WINDOWSIZE/2));
     chandata_t *chan = &(data->chandata[chan_num]);
     int first = (chan->lastwindow == NULL);
+    int clipped = 0;
 
     nextwindow = (float*)calloc(WINDOWSIZE, sizeof(float));
     memcpy(nextwindow, chan->window+WINDOWSIZE/2,
@@ -223,15 +224,12 @@ static int process_window(reddata_t data, int chan_num, int num_chans,
     if (!first) {
         for (j = 0; j < use; j ++) {
             float s = chan->window[j] + chan->lastwindow[WINDOWSIZE/2 + j];
-            if (s < -1 || s > 1) {
-                float news;
-                if (s > 1)
-                    news = 1;
-                else
-                    news = -1;
-
-                st_warn("noisered: Output clipped from %f to %f.\n",
-                        s, news);
+            ST_NORMALIZED_CLIP(s, &clipped);
+            if (clipped)
+            {
+                /* Reset for future tests. */
+                clipped = 0;
+                st_warn("noisered: Output clipped to %f.\n", s);
             }
             obuf[chan_num + num_chans * j] =
                 ST_FLOAT_DWORD_TO_SAMPLE(s);
@@ -314,7 +312,10 @@ int st_noisered_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     for (i = 0; i < tracks; i ++) {
         *osamp = process_window(data, i, tracks, obuf, data->bufdata);
     }
-    return (ST_SUCCESS);
+    /* This is very picky.  osamp needs to be big enough to get all
+     * remaining data or it will be discarded.
+     */
+    return (ST_EOF);
 }
 
 /*

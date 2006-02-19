@@ -103,26 +103,6 @@ static void debug(stretch_t s, char * where)
 }
 */
 
-/* clip amplitudes and count number of clipped values.
- */
-static st_sample_t clip(stretch_t stretch, STRETCH_FLOAT v)
-{
-    if (v < ST_SAMPLE_MIN)
-    {
-        stretch->clipped++;
-        return ST_SAMPLE_MIN;
-    }
-    else if (v > ST_SAMPLE_MAX)
-    {
-        stretch->clipped++;
-        return ST_SAMPLE_MAX;
-    }
-    else
-    {
-        return (st_sample_t) v;
-    }
-}
-
 /*
  * Process options
  */
@@ -353,8 +333,12 @@ int st_stretch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         if (stretch->state == output_state)
         {
             while (stretch->oindex<stretch->oshift && oindex<*osamp)
-                obuf[oindex++] = 
-                    clip(stretch, stretch->obuf[stretch->oindex++]);
+            {
+                float f;
+                f = stretch->obuf[stretch->oindex++];
+                ST_SAMPLE_CLIP(f, &stretch->clipped);
+                obuf[oindex++] = f;
+            }
 
             if (stretch->oindex >= stretch->oshift && oindex<*osamp)
             {
@@ -405,7 +389,13 @@ int st_stretch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     if (stretch->state == output_state)
     {
         for (; oindex<*osamp && stretch->oindex<stretch->index;)
-            obuf[oindex++] = clip(stretch, stretch->obuf[stretch->oindex++]);
+        {
+            float f;
+
+            f = stretch->obuf[stretch->oindex++];
+            ST_SAMPLE_CLIP(f, &stretch->clipped);
+            obuf[oindex++] = f;
+        }
     }
     
     *osamp = oindex;

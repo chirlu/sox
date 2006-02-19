@@ -357,13 +357,8 @@ int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 // orig: *obuf++ = r->Y[i] * ISCALE;
                 Float ftemp = r->Y[i] * ISCALE;
 
-                if (ftemp > ST_SAMPLE_MAX)
-                        *obuf = ST_SAMPLE_MAX;
-                else if (ftemp < ST_SAMPLE_MIN)
-                        *obuf = ST_SAMPLE_MIN;
-                else
-                        *obuf = ftemp;
-                obuf++;
+                ST_SAMPLE_CLIP(ftemp, NULL);
+                *obuf++ = ftemp;
         }
 
         *isamp = Nx;

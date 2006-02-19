@@ -93,10 +93,7 @@ int st_highp_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 d = highp->A0 * l + 
                     highp->A1 * highp->inm1 + 
                     highp->B1 * highp->outm1;
-                if (d < ST_SAMPLE_MIN)
-                    d = ST_SAMPLE_MIN;
-                else if (d > ST_SAMPLE_MAX)
-                    d = ST_SAMPLE_MAX;
+                ST_SAMPLE_CLIP(d, NULL);
                 highp->inm1 = l;
                 highp->outm1 = d;
                 *obuf++ = d;

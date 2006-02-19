@@ -527,10 +527,7 @@ int st_avg_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             samp = 0.0;
             for (i = 0; i < ichan; i++)
                 samp += ibuf[i] * avg->sources[i][j];
-            if (samp < ST_SAMPLE_MIN)
-                samp = ST_SAMPLE_MIN;
-            else if (samp > ST_SAMPLE_MAX)
-                samp = ST_SAMPLE_MAX;
+            ST_SAMPLE_CLIP(samp, NULL);
             obuf[j] = samp;
         }
     }

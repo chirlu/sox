@@ -8,13 +8,15 @@ sox-12.1x.xx
 ------------
 
   o The "filter" effect could go into infinite drain mode.  Now
-    only drain 1 buffer.
+    only drain 1 buffer.  noisered as well.
   o SoX was ignoring user aborts (ctrl-c) if it occured during
     effect drain operations.  This was bad if effects had
     bugs and stuck in infinite loop.
   o Stop SoX from crashing when file type could not be auto
     determined (bug 1417776).
   o Output filenames with multiple '.' confused SoX.  (Christian Hammers)
+  o Moved to a common set of CLIP routines.  This fixed clipping
+    bugs in noisered and mcompand.
 
 sox-12.17.9
 -----------
