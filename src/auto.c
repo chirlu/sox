@@ -173,6 +173,11 @@ int st_autostartread(ft_t ft)
             type = NULL;
     }
 
+    if(!type)
+    {
+        st_fail_errno(ft,ST_EFMT, "Could not determine file type.\n");
+        return (ST_EOF);
+    }
     free(ft->filetype);
     ft->filetype = strdup(type);
     rc = st_gettype(ft); /* Change ft->h to the new format */

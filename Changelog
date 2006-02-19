@@ -4,6 +4,17 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-12.1x.xx
+------------
+
+  o The "filter" effect could go into infinite drain mode.  Now
+    only drain 1 buffer.
+  o SoX was ignoring user aborts (ctrl-c) if it occured during
+    effect drain operations.  This was bad if effects had
+    bugs and stuck in infinite loop.
+  o Stop SoX from crashing when file type could not be auto
+    determined (bug 1417776).
+
 sox-12.17.9
 -----------
 

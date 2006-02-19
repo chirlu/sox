@@ -1107,6 +1107,12 @@ static int flow_effect_out(void)
           total = 0;
           do
           {
+              /* Do not do any more writing during user aborts as
+               * we may be stuck in an infinite writing loop.
+               */
+              if (user_abort)
+                  return ST_EOF;
+
               len = st_write(file_desc[file_count-1], 
                              &efftab[neffects-1].obuf[total],
                              (st_ssize_t)efftab[neffects-1].olen-total);
@@ -1207,6 +1213,12 @@ static int flow_effect(int e)
     st_ssize_t i, done, idone, odone, idonel, odonel, idoner, odoner;
     st_sample_t *ibuf, *obuf;
     int effstatus;
+
+    /* Do not attempt to do any more effect processing during
+     * user aborts as we may be stuck in an infinit flow loop.
+     */
+    if (user_abort)
+        return ST_EOF;
 
     /* I have no input data ? */
     if (efftab[e-1].odone == efftab[e-1].olen)
