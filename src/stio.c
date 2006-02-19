@@ -191,11 +191,8 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
 
         /* Use filename extension to determine audio type. */
         chop = ft->filename + len;
-        while (chop > ft->filename && *chop != LASTCHAR)
+        while (chop > ft->filename && *chop != LASTCHAR && *chop != '.')
             chop--;
-
-        while (chop < ft->filename+len && *chop != '.')
-            chop++;
 
         if (*chop == '.')
         {
@@ -206,10 +203,13 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
     else
         ft->filetype = strdup(filetype);
 
-    if (!ft->filename || !ft->filetype)
+    if (!ft->filename)
+    {
+        st_warn("Unknown output file format for 'NULL'.");
         goto output_error;
+    }
 
-    if (st_gettype(ft) != ST_SUCCESS)
+    if (!ft->filetype || st_gettype(ft) != ST_SUCCESS)
     {
         st_warn("Unknown output file format for '%s':  %s", 
                 ft->filename, 
