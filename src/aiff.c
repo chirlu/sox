@@ -228,19 +228,40 @@ int st_aiffstartread(ft_t ft)
                         else
                             foundmark = 1;
 
-                        chunksize -= 2;
-                        for(i = 0; i < nmarks; i++) {
-                                unsigned char len;
+                        /* Make sure its not larger then we support */
+                        if (nmarks > 32)
+                            nmarks = 32;
 
+                        if (chunksize > 2)
+                            chunksize -= 2;
+                        for(i = 0; i < nmarks && chunksize; i++) {
+                                unsigned char len, read_len, tmp_c;
+
+                                if (chunksize < 6)
+                                    break;
                                 st_readw(ft, &(marks[i].id));
                                 st_readdw(ft, &(marks[i].position));
                                 chunksize -= 6;
-                                st_readb(ft, &len);
-                                chunksize -= len + 1;
-                                for(j = 0; j < len ; j++) 
-                                    st_readb(ft, (unsigned char *)&(marks[i].name[j]));
-                                marks[i].name[j] = 0;
-                                if ((len & 1) == 0) {
+                                /* If error reading length then
+                                 * don't try to read more bytes
+                                 * based on that value.
+                                 */
+                                if (st_readb(ft, &len) != ST_SUCCESS)
+                                    break;
+                                if (len > chunksize)
+                                    len = chunksize;
+                                read_len = len;
+                                if (read_len > 39)
+                                    read_len = 39;
+                                for(j = 0; j < len && chunksize; j++) 
+                                {
+                                    st_readb(ft, &tmp_c);
+                                    if (j < read_len)
+                                        marks[i].name[j] = tmp_c;
+                                    chunksize--;
+                                }
+                                marks[i].name[read_len] = 0;
+                                if ((len & 1) == 0 && chunksize) {
                                         chunksize--;
                                         st_readb(ft, (unsigned char *)&trash8);
                                 }

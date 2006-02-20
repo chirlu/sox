@@ -82,18 +82,18 @@ int st_spherestartread(ft_t ft)
         {
             if (strncmp(buf, "sample_n_bytes", 14) == 0 && ft->info.size == -1)
             {
-                sscanf(buf, "%s %s %d", fldname, fldtype, &i);
+                sscanf(buf, "%63s %15s %d", fldname, fldtype, &i);
                 ft->info.size = i;
             }
             if (strncmp(buf, "channel_count", 13) == 0 && 
                 ft->info.channels == -1)
             {
-                sscanf(buf, "%s %s %d", fldname, fldtype, &i);
+                sscanf(buf, "%63s %15s %d", fldname, fldtype, &i);
                 ft->info.channels = i;
             }
             if (strncmp(buf, "sample_coding", 13) == 0)
             {
-                sscanf(buf, "%s %s %s", fldname, fldtype, fldsval);
+                sscanf(buf, "%63s %15s %127s", fldname, fldtype, fldsval);
                 /* Only bother looking for ulaw flag.  All others
                  * should be caught below by default PCM check
                  */
@@ -106,12 +106,12 @@ int st_spherestartread(ft_t ft)
             if (strncmp(buf, "sample_rate ", 12) == 0 &&
                 ft->info.rate == 0)
             {
-                sscanf(buf, "%s %s %ld", fldname, fldtype, &rate);
+                sscanf(buf, "%53s %15s %ld", fldname, fldtype, &rate);
                 ft->info.rate = rate;
             }
             if (strncmp(buf, "sample_byte_format", 18) == 0)
             {
-                sscanf(buf, "%s %s %s", fldname, fldtype, fldsval);
+                sscanf(buf, "%53s %15s %127s", fldname, fldtype, fldsval);
                 if (strncmp(fldsval,"01",2) == 0)
                 {
                     /* Data is in little endian. */

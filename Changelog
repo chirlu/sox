@@ -17,6 +17,9 @@ sox-12.1x.xx
   o Output filenames with multiple '.' confused SoX.  (Christian Hammers)
   o Moved to a common set of CLIP routines.  This fixed clipping
     bugs in noisered and mcompand.
+  o Stop SoX from crashing on sphere files that contain large text
+    strings.  Ulf Hamhammar
+  o Fix some overflow crashes in aiff handler.  Ulf Hamhammar.
 
 sox-12.17.9
 -----------

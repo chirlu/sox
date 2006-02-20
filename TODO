@@ -100,8 +100,6 @@ all patches to cbagwell@users.sourceforge.net.
 
   o Make a global version of MIN/MAX instead of sprinkled min/max/MIN/MAX
 
-  o Make a global version of clip() instead of sprinked in all files.
-
   o Fix conversions to and from st_sample_t to floats.  Currently,
     its an approximation because it doesn't account from negative
     side having 1 more value then positive side.  That means instead
