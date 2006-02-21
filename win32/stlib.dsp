@@ -372,7 +372,7 @@ SOURCE=..\src\sphere.c
 SOURCE=..\src\stat.c
 # End Source File
 # Begin Source File
-#
+
 SOURCE=..\src\stio.c
 # End Source File
 # Begin Source File

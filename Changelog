@@ -23,6 +23,9 @@ sox-12.1x.xx
   o Fix some overflow crashes in aiff handler. (1430024)  Ulf Hamhammar.
   o Under windows, set piped input to binary mode (1417794). Marty
   o Fixed broken internal version of strdup().  (1417790) Marty
+  o Stop infinite loop when reading MP3's with a tag size of
+    exactly 8192 bytes.  (1417511) Hans Fugal
+  o Fix typo in stlib.dsp for loading in Visual Studio 6.
 
 sox-12.17.9
 -----------
