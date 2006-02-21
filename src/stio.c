@@ -23,6 +23,15 @@
 #define fstat _fstat
 #endif
 
+/* Based from zlib's minigzip: */
+#if defined(WIN32) || defined(__NT__)
+#  include <fcntl.h>
+#  include <io.h>
+#  define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
+#else
+#  define SET_BINARY_MODE(file)
+#endif
+
 static int is_seekable(ft_t ft)
 {
         struct stat st;
@@ -115,7 +124,10 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
          * if the filename is "-"
          */
         if (!strcmp(ft->filename, "-"))
+        {
+            SET_BINARY_MODE(stdin);
             ft->fp = stdin;
+        }
         else if ((ft->fp = fopen(ft->filename, "rb")) == NULL)
         {
             st_warn("Can't open input file '%s': %s", ft->filename,
@@ -189,7 +201,10 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
 
         len = strlen(ft->filename);
 
-        /* Use filename extension to determine audio type. */
+        /* Use filename extension to determine audio type.
+         * Search for the last '.' appearing in the filename, same
+         * as for input files.
+         */
         chop = ft->filename + len;
         while (chop > ft->filename && *chop != LASTCHAR && *chop != '.')
             chop--;
@@ -226,7 +241,7 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
 
     if (!(ft->h->flags & ST_FILE_NOSTDIO))
     {
-        /* Open file handler based on input name.  Used stdin file handler
+        /* Open file handler based on output name.  Used stdout file handler
          * if the filename is "-"
          */
         if (!strcmp(ft->filename, "-"))
