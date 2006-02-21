@@ -401,9 +401,9 @@ char *strdup(const char *s)
 {
     char *dups;
 
-    dups = (char *)malloc(strlen(s+1));
+    dups = (char *)malloc(strlen(s)+1);
     strcpy(dups, s);
-    return s;
+    return dups;
 }
 #endif
 
