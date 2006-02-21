@@ -183,7 +183,7 @@ more_data:
              * means that we really need a loop to continue reading
              * more data.
              */
-            if (tagsize > remaining)
+            if (tagsize >= remaining)
             {
                 /* Discard the remaining data and read the rest of the tag
                  * data from the file and start over.
