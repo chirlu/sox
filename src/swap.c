@@ -183,8 +183,8 @@ int st_swap_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
 int st_swap_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
-        *osamp = 0;
-        return (ST_SUCCESS);
+    *osamp = 0;
+    return ST_EOF;
 }
 
 /*

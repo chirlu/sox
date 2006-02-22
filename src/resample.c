@@ -401,6 +401,9 @@ int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         /* fprintf(stderr,"DRAIN osamp %d\n", *osamp); */
         if (isamp_res)
                 st_warn("drain overran obuf by %d\n", isamp_res); fflush(stderr);
+        /* FIXME: This is very picky.  IF obuf is not big enough to
+         * drain remaining samples, they will be lost.
+         */
         return (ST_EOF);
 }
 

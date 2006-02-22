@@ -312,7 +312,7 @@ int st_noisered_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     for (i = 0; i < tracks; i ++) {
         *osamp = process_window(data, i, tracks, obuf, data->bufdata);
     }
-    /* This is very picky.  osamp needs to be big enough to get all
+    /* FIXME: This is very picky.  osamp needs to be big enough to get all
      * remaining data or it will be discarded.
      */
     return (ST_EOF);

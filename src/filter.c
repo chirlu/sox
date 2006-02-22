@@ -266,7 +266,7 @@ int st_filter_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         /* fprintf(stderr,"DRAIN osamp %d\n", *osamp); */
         if (isamp_res)
                 st_warn("drain overran obuf by %d\n", isamp_res); fflush(stderr);
-        /* This is very picky. osamp better be big enough to grab
+        /* FIXME: This is very picky. osamp better be big enough to grab
          * all remaining samples or they will be discarded.
          */
         return (ST_EOF);

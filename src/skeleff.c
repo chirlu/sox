@@ -15,7 +15,7 @@
 
 /* Private data for SKEL file */
 typedef struct skelleffstuff {
-	int  localdata;
+        int  localdata;
 } *skeleff_t;
 
 /*
@@ -30,11 +30,11 @@ int st_skeleff_getopts(eff_t effp, int n, char **argv)
 
     if (n)
     {
-	if (n != 1)
-	{
-	    st_fail("Usage: skeleff [option]");
-	    return (ST_EOF);
-	}
+        if (n != 1)
+        {
+            st_fail("Usage: skeleff [option]");
+            return (ST_EOF);
+        }
     }
     return (ST_SUCCESS);
 }
@@ -47,8 +47,8 @@ int st_skeleff_start(eff_t effp)
 {
     if (effp->outinfo.channels == 1)
     {
-	st_fail("Can't run skeleff on mono data.");
-	return (ST_EOF);
+        st_fail("Can't run skeleff on mono data.");
+        return (ST_EOF);
     }
     return (ST_SUCCESS);
 }
@@ -66,24 +66,24 @@ int st_skeleff_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     switch (effp->outinfo.channels)
     {
     case 2:
-	/* Length to process will be buffer length / 2 since we
-	 * work with two samples at a time.
-	 */
-	len = ((*isamp > *osamp) ? *osamp : *isamp) / 2;
-	for(done = 0; done < len; done++)
-	{
-	    obuf[0] = ibuf[0];
-	    obuf[1] = ibuf[1];
-	    /* Advance buffer by 2 samples */
-	    ibuf += 2;
-	    obuf += 2;
-	}
-	
-	*isamp = len * 2;
-	*osamp = len * 2;
-	
-	break;
-	
+        /* Length to process will be buffer length / 2 since we
+         * work with two samples at a time.
+         */
+        len = ((*isamp > *osamp) ? *osamp : *isamp) / 2;
+        for(done = 0; done < len; done++)
+        {
+            obuf[0] = ibuf[0];
+            obuf[1] = ibuf[1];
+            /* Advance buffer by 2 samples */
+            ibuf += 2;
+            obuf += 2;
+        }
+        
+        *isamp = len * 2;
+        *osamp = len * 2;
+        
+        break;
+        
     }
     return (ST_SUCCESS);
 }
@@ -94,16 +94,20 @@ int st_skeleff_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
 int st_skeleff_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
-	*osamp = 0;
-	return (ST_SUCCESS);
+        *osamp = 0;
+        /* Help out application and return ST_EOF when drain
+         * will not return any mre information.  *osamp == 0
+         * also indicates that.
+         */
+        return (ST_EOF);
 }
 
 /*
  * Do anything required when you stop reading samples.  
- *	(free allocated memory, etc.)
+ *      (free allocated memory, etc.)
  */
 int st_skeleff_stop(eff_t effp)
 {
-	/* nothing to do */
+        /* nothing to do */
     return (ST_SUCCESS);
 }

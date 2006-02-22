@@ -663,7 +663,11 @@ int st_mcompand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
   }
 
   *osamp = mostdrained;
-  return (ST_SUCCESS);
+
+  if (mostdrained)
+      return ST_SUCCESS;
+  else
+      return ST_EOF;
 }
 
 /*

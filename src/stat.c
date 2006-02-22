@@ -305,7 +305,7 @@ int st_stat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     }
 
     *osamp = 0;
-    return (ST_SUCCESS);
+    return (ST_EOF);
 }
 
 /*

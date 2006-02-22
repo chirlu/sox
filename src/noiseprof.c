@@ -159,7 +159,7 @@ int st_noiseprof_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     *osamp = 0;
 
     if (data->bufdata == 0) {
-        return ST_SUCCESS;
+        return ST_EOF;
     }
 
     for (i = 0; i < tracks; i ++) {
@@ -169,8 +169,11 @@ int st_noiseprof_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         }
         collect_data(data, &(data->chandata[i]));
     }
-    
-    return (ST_SUCCESS);
+
+    if (data->bufdata == WINDOWSIZE || data->bufdata == 0)
+        return ST_EOF;
+    else
+        return ST_SUCCESS;
 }
 
 /*

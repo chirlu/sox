@@ -361,7 +361,8 @@ int st_format_nothing_seek(ft_t ft, st_size_t offset) { st_fail_errno(ft, ST_ENO
 
 /* dummy effect routine for do-nothing functions */
 int st_effect_nothing(eff_t effp) { return(ST_SUCCESS); }
-int st_effect_nothing_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp) { *osamp = 0; return(ST_SUCCESS); }
+int st_effect_nothing_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp) 
+  { /* Inform no more samples to drain */ *osamp = 0; return(ST_EOF); }
 
 /* here for linear interp.  might be useful for other things */
 st_sample_t st_gcd(st_sample_t a, st_sample_t b)

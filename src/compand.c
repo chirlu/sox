@@ -378,7 +378,11 @@ int st_compand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 
   /* tell caller number of samples played */
   *osamp = done;
-  return (ST_SUCCESS);
+
+  if (l->delay_buf_cnt > 0)
+      return ST_SUCCESS;
+  else
+      return ST_EOF;
 }
 
 
