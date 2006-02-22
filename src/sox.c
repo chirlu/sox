@@ -703,7 +703,7 @@ static void process(void) {
                     {
                         double sample;
                         sample = efftab[0].obuf[s] + ibuf[f][s];
-                        ST_SAMPLE_CLIP(sample, &clipped);
+                        ST_SAMPLE_CLIP_COUNT(sample, clipped);
                         efftab[0].obuf[s] = sample;
                     }
             }
@@ -1499,7 +1499,7 @@ static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct,
         top = buf+ct;
         while (p < top) {
             y = vol * *p;
-            ST_SAMPLE_CLIP(y, &clips);
+            ST_SAMPLE_CLIP_COUNT(y, clips);
             *p++ = y;
         }
         return clips;

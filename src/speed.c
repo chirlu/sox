@@ -195,7 +195,7 @@ static st_size_t compute(speed_t speed, st_sample_t *obuf, st_size_t olen)
         f = cub(speed->cbuf[0], speed->cbuf[1],
                 speed->cbuf[2], speed->cbuf[3], 
                 speed->frac);
-        ST_SAMPLE_CLIP(f, &speed->clipped);
+        ST_SAMPLE_CLIP_COUNT(f, speed->clipped);
         obuf[i] = f;
     }
     

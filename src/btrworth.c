@@ -81,7 +81,7 @@ int st_butterworth_flow (eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     butterworth->y [1] = butterworth->y [0];
     butterworth->y [0] = out;
 
-    ST_SAMPLE_CLIP(out, NULL);
+    ST_SAMPLE_CLIP(out);
 
     *obuf++ = out;
   }

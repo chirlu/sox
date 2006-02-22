@@ -1,6 +1,9 @@
 People are encouraged to pick some of these and implement it.  Send
 all patches to cbagwell@users.sourceforge.net.
 
+  o Change all calls to ST_SAMPLE_CLIP to use counters and
+    report clipping to user.
+
   o Update all read routines to be like WAV handler and only
     return data in multiples of sample_size*channels.  This
     will prevent corrupt files from causing sox to go into

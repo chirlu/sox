@@ -224,7 +224,7 @@ static int process_window(reddata_t data, int chan_num, int num_chans,
     if (!first) {
         for (j = 0; j < use; j ++) {
             float s = chan->window[j] + chan->lastwindow[WINDOWSIZE/2 + j];
-            ST_NORMALIZED_CLIP(s, &clipped);
+            ST_NORMALIZED_CLIP_COUNT(s, clipped);
             if (clipped)
             {
                 /* Reset for future tests. */

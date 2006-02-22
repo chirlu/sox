@@ -57,27 +57,36 @@ typedef uint32_t st_rate_t;
 #define ST_SAMPLE_TO_FLOAT_DDWORD(d) ((double)((double)d/(ST_SAMPLE_FLOAT_SCALE)))
 
 /* MACRO to clip a data type that is greater then st_sample_t to
- * st_sample_t's limits; optionally incrementing clips if its a
- * non-NULL pointer of type st_size_t.
+ * st_sample_t's limits.
  */
-#define ST_SAMPLE_CLIP(samp, clips) \
+#define ST_SAMPLE_CLIP(samp) \
   do { \
     if (samp > ST_SAMPLE_MAX) \
-      { samp = ST_SAMPLE_MAX; if (clips) (*(st_size_t *)clips)++; } \
+      { samp = ST_SAMPLE_MAX; } \
     else if (samp < ST_SAMPLE_MIN) \
-      { samp = ST_SAMPLE_MIN; if (clips) (*(st_size_t *)clips)++; } \
+      { samp = ST_SAMPLE_MIN; } \
+  } while (0)
+
+/* MACRO to clip a data type that is greater then st_sample_t to
+ * st_sample_t's limits and increment a counter if clipping occurs..
+ */
+#define ST_SAMPLE_CLIP_COUNT(samp, clips) \
+  do { \
+    if (samp > ST_SAMPLE_MAX) \
+      { samp = ST_SAMPLE_MAX; clips++; } \
+    else if (samp < ST_SAMPLE_MIN) \
+      { samp = ST_SAMPLE_MIN; clips++; } \
   } while (0)
 
 /* MACRO to clip a normalized floating point data between 1.0 and -1.0
- * to those limits.; optionally incrementing clips if its a
- * non-NULL pointer of type st_size_t.
+ * to those limits and increment a counter when clipping occurs.
  */
-#define ST_NORMALIZED_CLIP(samp, clips) \
+#define ST_NORMALIZED_CLIP_COUNT(samp, clips) \
   do { \
     if (samp > 1) \
-      { samp = 1; if (clips) (*(st_size_t *)clips)++; } \
+      { samp = 1; clips++; } \
     else if (samp < -1) \
-      { samp = -1; if (clips) (*(st_size_t *)clips)++; } \
+      { samp = -1; clips++; } \
   } while (0)
 
 /* Maximum value size type can hold. (Minimum is 0). */

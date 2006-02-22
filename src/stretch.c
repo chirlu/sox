@@ -336,7 +336,7 @@ int st_stretch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             {
                 float f;
                 f = stretch->obuf[stretch->oindex++];
-                ST_SAMPLE_CLIP(f, &stretch->clipped);
+                ST_SAMPLE_CLIP_COUNT(f, stretch->clipped);
                 obuf[oindex++] = f;
             }
 
@@ -393,7 +393,7 @@ int st_stretch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
             float f;
 
             f = stretch->obuf[stretch->oindex++];
-            ST_SAMPLE_CLIP(f, &stretch->clipped);
+            ST_SAMPLE_CLIP_COUNT(f, stretch->clipped);
             obuf[oindex++] = f;
         }
     }

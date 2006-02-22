@@ -165,7 +165,7 @@ int st_dcshift_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                         sample = dcshift * ST_SAMPLE_MAX + sample;
                 }
 
-                ST_SAMPLE_CLIP(sample, &dcs->clipped);
+                ST_SAMPLE_CLIP_COUNT(sample, dcs->clipped);
                 *obuf++ = sample;
             }
     }
@@ -177,7 +177,7 @@ int st_dcshift_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 float f;
 
                 f = dcshift * ST_SAMPLE_MAX + *ibuf++;
-                ST_SAMPLE_CLIP(f, &dcs->clipped);
+                ST_SAMPLE_CLIP_COUNT(f, dcs->clipped);
                 *obuf++ = f;
         }
     }
