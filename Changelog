@@ -26,6 +26,11 @@ sox-12.1x.xx
   o Stop infinite loop when reading MP3's with a tag size of
     exactly 8192 bytes.  (1417511) Hans Fugal
   o Fix typo in stlib.dsp for loading in Visual Studio 6.
+  o Fixed problems in silence effect related to removing multiple
+    periods of silence from the middle of the sound file.
+  o Reduced the window size greatly on the silence effect to
+    prevent leaving in silence that looked like noise still based
+    on RMS values.
 
 sox-12.17.9
 -----------

@@ -75,6 +75,19 @@ typedef struct silencestuff
     char        mode;
 } *silence_t;
 
+static void clear_rms(eff_t effp)
+
+{
+    silence_t silence = (silence_t) effp->priv;
+
+    memset(silence->window, 0, 
+           silence->window_size * sizeof(double));
+
+    silence->window_current = silence->window;
+    silence->window_end = silence->window + silence->window_size;
+    silence->rms_sum = 0;
+}
+
 #define SILENCE_USAGE "Usage: silence above_periods [ duration thershold[d | %% ] ] [ below_periods duration threshold[ d | %% ]]"
 
 int st_silence_getopts(eff_t effp, int n, char **argv)
@@ -253,7 +266,12 @@ int st_silence_start(eff_t effp)
 {
         silence_t       silence = (silence_t) effp->priv;
 
-        silence->window_size = (effp->ininfo.rate / 10) * effp->ininfo.channels;
+        /* When you want to remove silence, small window sizes are
+         * better or else RMS will look like non-silence at
+         * aburpt changes from load to silence.
+         */
+        silence->window_size = (effp->ininfo.rate / 50) * 
+                               effp->ininfo.channels;
         silence->window = (double *)malloc(silence->window_size *
                                            sizeof(double));
 
@@ -263,12 +281,7 @@ int st_silence_start(eff_t effp)
             return(ST_EOF);
         }
 
-        memset(silence->window, 0, 
-               silence->window_size * sizeof(double));
-
-        silence->window_current = silence->window;
-        silence->window_end = silence->window + silence->window_size;
-        silence->rms_sum = 0;
+        clear_rms(effp);
 
         /* Now that we now sample rate, reparse duration. */
         if (silence->start)
@@ -354,7 +367,7 @@ int aboveThreshold(eff_t effp, st_sample_t value, double threshold, char unit)
     return rc;
 }
 
-st_sample_t compute_rms(eff_t effp, st_sample_t sample)
+static st_sample_t compute_rms(eff_t effp, st_sample_t sample)
 {
     silence_t silence = (silence_t) effp->priv;
     double new_sum;
@@ -369,7 +382,7 @@ st_sample_t compute_rms(eff_t effp, st_sample_t sample)
     return (rms);
 }
 
-void update_rms(eff_t effp, st_sample_t sample)
+static void update_rms(eff_t effp, st_sample_t sample)
 {
     silence_t silence = (silence_t) effp->priv;
 
@@ -404,7 +417,10 @@ int st_silence_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
              * Need to make sure and copy input in groups of "channels" to
              * prevent getting buffers out of sync.
              */
-            nrOfTicks = min((*isamp), (*osamp)) / effp->ininfo.channels;
+silence_trim:
+            nrOfTicks = min((*isamp-nrOfInSamplesRead), 
+                            (*osamp-nrOfOutSamplesWritten)) / 
+                           effp->ininfo.channels;
             for(i = 0; i < nrOfTicks; i++)
             {
                 threshold = 0;
@@ -558,16 +574,22 @@ silence_copy:
                                 silence->stop_holdoff_end = 0;
                                 if (!silence->restart)
                                 {
-                                    silence->mode = SILENCE_STOP;
                                     *isamp = nrOfInSamplesRead;
                                     *osamp = nrOfOutSamplesWritten;
+                                    silence->mode = SILENCE_STOP;
                                     /* Return ST_EOF since no more processing */
                                     return (ST_EOF);
                                 }
                                 else
                                 {
+                                    silence->stop_found_periods = 0;
+                                    silence->start_found_periods = 0;
+                                    silence->start_holdoff_offset = 0;
+                                    silence->start_holdoff_end = 0;
+                                    clear_rms(effp);
                                     silence->mode = SILENCE_TRIM;
-                                    return (ST_SUCCESS);
+
+                                    goto silence_trim;
                                 }
                             }
                             else
