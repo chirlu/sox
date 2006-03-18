@@ -31,6 +31,8 @@ sox-12.1x.xx
   o Reduced the window size greatly on the silence effect to
     prevent leaving in silence that looked like noise still based
     on RMS values.
+  o Prevent infinite loop in pitch effect from uninitialize variable.
+    Frank Heckenbach
 
 sox-12.17.9
 -----------

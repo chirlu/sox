@@ -387,6 +387,8 @@ int st_pitch_start(eff_t effp)
 
     /* computer inner stuff... */
 
+    pitch->state = pi_input;
+
     /* Should I trust pow?
      * BTW, the twelve's root of two is 1.0594630943592952645618252,
      * if we consider an equal temperament.
