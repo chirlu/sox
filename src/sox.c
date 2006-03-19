@@ -157,6 +157,7 @@ static struct st_effect efftab[MAX_EFF]; /* left/mono channel effects */
 static struct st_effect efftabR[MAX_EFF];/* right channel effects */
 static int neffects;                     /* # of effects to run on data */
 static int input_eff;                    /* last input effect with data */
+static int input_eff_eof;                /* has input_eff reached EOF? */
 
 static struct st_effect user_efftab[MAX_USER_EFF];
 static int nuser_effects;
@@ -595,6 +596,7 @@ static void process(void) {
         file_desc[f]->st_errno = 0;
 
     input_eff = 0;
+    input_eff_eof = 0;
 
     /* mark chain as empty */
     for(e = 1; e < neffects; e++)
@@ -1051,6 +1053,13 @@ static int flow_effect_out(void)
       /* this is because buffering system isn't a nice queueing system */
       for(e = neffects - 1; e >= input_eff; e--)
       {
+          /* Do not call flow effect on input if its reported
+           * EOF already as thats a waste of time and may
+           * do bad things.
+           */
+          if (e == input_eff && input_eff_eof)
+              continue;
+
           /* flow_effect returns ST_EOF when it will not process
            * any more samples.  This is used to bail out early.
            * Since we are "pulling" data, it is OK that we are not
@@ -1059,7 +1068,11 @@ static int flow_effect_out(void)
            */
           flowstatus  = flow_effect(e);
           if (flowstatus == ST_EOF)
+          {
               input_eff = e+1;
+              /* Assume next effect hasn't reach EOF yet */
+              input_eff_eof = 0;
+          }
 
           /* If this buffer contains more input data then break out
            * of this loop now.  This will allow us to loop back around
@@ -1173,11 +1186,16 @@ static int flow_effect_out(void)
 
               rc = drain_effect(input_eff);
 
-              if (rc == ST_EOF || efftab[input_eff].olen == 0)
+              if (efftab[input_eff].olen == 0)
+              {
                   input_eff++;
+                  /* Assume next effect hasn't reached EOF yet. */
+                  input_eff_eof = 0;
+              }
               else
               {
                   havedata = 1;
+                  input_eff_eof = (rc == ST_EOF) ? 1 : 0;
                   break;
               }
           }
@@ -1314,7 +1332,11 @@ static int drain_effect_out(void)
 {
     /* Skip past input effect since we know thats not needed */
     if (input_eff == 0)
+    {
         input_eff = 1;
+        /* Assuming next effect hasn't reached EOF yet. */
+        input_eff_eof = 0;
+    }
 
     /* Try to prime the pump with some data */
     while (input_eff < neffects)
@@ -1323,10 +1345,17 @@ static int drain_effect_out(void)
 
         rc = drain_effect(input_eff);
 
-        if (rc == ST_EOF || efftab[input_eff].olen == 0)
+        if (efftab[input_eff].olen == 0)
+        {
             input_eff++;
+            /* Assuming next effect hasn't reached EOF yet. */
+            input_eff_eof = 0;
+        }
         else
+        {
+            input_eff_eof = (rc == ST_EOF) ? 1 : 0;
             break;
+        }
     }
 
     /* Just do standard flow routines after the priming. */

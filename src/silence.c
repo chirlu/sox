@@ -677,7 +677,10 @@ int st_silence_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     }
 
     *osamp = nrOfOutSamplesWritten;
-    return(ST_SUCCESS);
+    if (silence->mode == SILENCE_STOP || *osamp == 0)
+        return ST_EOF;
+    else
+        return ST_SUCCESS;
 }
 
 int st_silence_stop(eff_t effp)

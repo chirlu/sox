@@ -113,7 +113,7 @@ int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         if (repeat->remaining == 0) {
                 if (repeat->repeats == 0) {
                         *osamp = 0;
-                        return (ST_SUCCESS);
+                        return (ST_EOF);
                 }
                 else {
                         repeat->repeats--;
@@ -180,7 +180,10 @@ int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 repeat->remaining -= *osamp;
         }
 
-        return (ST_SUCCESS);
+        if (repeat->remaining == 0)
+            return ST_EOF;
+        else
+            return ST_SUCCESS;
 }
 
 int st_repeat_stop(eff_t effp)

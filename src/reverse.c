@@ -126,7 +126,10 @@ int st_reverse_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 obuf[j] = temp;
         }
         *osamp = len;
-        return(ST_SUCCESS);
+        if (reverse->pos == 0)
+            return ST_EOF;
+        else
+            return ST_SUCCESS;
 }
 
 /*

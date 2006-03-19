@@ -257,7 +257,10 @@ int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         }
         /* samples playd, it remains */
         *osamp = done;
-        return (ST_SUCCESS);
+        if (phaser->fade_out == 0)
+            return ST_EOF;
+        else
+            return ST_SUCCESS;
 }
 
 /*

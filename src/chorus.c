@@ -326,7 +326,10 @@ int st_chorus_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         }
         /* samples played, it remains */
         *osamp = done;
-        return (ST_SUCCESS);
+        if (chorus->fade_out == 0)
+            return ST_EOF;
+        else
+            return ST_SUCCESS;
 }
 
 /*

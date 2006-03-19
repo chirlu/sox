@@ -36,6 +36,8 @@ sox-12.1x.xx
   o Prevent crashes when printing error mesages (1447239)
   o Added makefile and support files to compile using Open Watcom
     compiler.  (1417798) Marty
+  o Stop calling flow() on effects that returned EOF during drain().  Allows 
+    two back-to-back reverse effects to work.
 
 sox-12.17.9
 -----------
