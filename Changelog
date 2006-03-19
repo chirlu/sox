@@ -33,6 +33,9 @@ sox-12.1x.xx
     on RMS values.
   o Prevent infinite loop in pitch effect from uninitialize variable.
     Frank Heckenbach
+  o Prevent crashes when printing error mesages (1447239)
+  o Added makefile and support files to compile using Open Watcom
+    compiler.  (1417798) Marty
 
 sox-12.17.9
 -----------
