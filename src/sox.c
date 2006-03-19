@@ -765,7 +765,7 @@ static void process(void) {
          * we are exiting anyways.
          */
         if (st_close(file_desc[f]) == ST_EOF)
-            st_warn(file_desc[f]->st_errstr);
+            st_warn("%s", file_desc[f]->st_errstr);
     }
 
     if (writing)
@@ -774,7 +774,7 @@ static void process(void) {
          * are exiting anyways.
          */
         if (st_close(file_desc[file_count-1]) == ST_EOF)
-            st_warn(file_desc[file_count-1]->st_errstr);
+            st_warn("%s", file_desc[file_count-1]->st_errstr);
     }
 }
 
