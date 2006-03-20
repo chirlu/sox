@@ -19,7 +19,7 @@ extern "C" {
 #include <stdlib.h>
 #include "ststdint.h"
 
-/* Release 12.17.9 of libst */
+/* Release 12.18.1 of libst */
 #define ST_LIB_VERSION_CODE 0x0c1109
 #define ST_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 

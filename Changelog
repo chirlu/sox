@@ -4,7 +4,7 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
-sox-12.1x.xx
+sox-12.18.1
 ------------
 
   o The "filter" effect could go into infinite drain mode.  Now
