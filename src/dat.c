@@ -18,13 +18,23 @@
  * September 24, 1998: cbagwell - Set up extra output format info so that 
  * reports are accurate.  Also warn user when forcing to mono.
  *
+ * November 25, 2005: tomchristie - Work with multiple channels
+ *
  */
 
 #include "st_i.h"
+#include <string.h>
+
+/* float output normalized to approx 1.0 */
+#define FLOATTOLONG (2.147483648e9)
+#define LONGTOFLOAT (1 / FLOATTOLONG)
+#define LINEWIDTH 256
 
 /* Private data for dat file */
 typedef struct dat {
-        double timevalue, deltat;
+    double timevalue, deltat;
+    int buffered;
+    char prevline[LINEWIDTH]; 
 } *dat_t;
 
 /* FIXME: Move this to misc.c */
@@ -36,105 +46,130 @@ static st_sample_t roundoff(double x)
 
 int st_datstartread(ft_t ft)
 {
-   char inpstr[82];
-   char sc;
-   long rate;
+    char inpstr[LINEWIDTH];
+    long rate;
+    int chan;
+    int status;
+    char sc;
 
-   while (ft->info.rate == 0) {
-      st_reads(ft, inpstr, 82);
-      inpstr[81] = 0;
-      sscanf(inpstr," %c",&sc);
-      if (sc != ';') 
-      {
-          st_fail_errno(ft,ST_EHDR,"Cannot determine sample rate.");
-          return (ST_EOF);
+    /* Read lines until EOF or first non-comment line */
+    while ((status = st_reads(ft, inpstr, LINEWIDTH-1)) != ST_EOF) {
+      inpstr[LINEWIDTH-1] = 0;
+      if ((sscanf(inpstr," %c", &sc) != 0) && (sc != ';')) break;
+      if (sscanf(inpstr," ; Sample Rate %ld", &rate)) {
+        ft->info.rate=rate;
+      } else if (sscanf(inpstr," ; Channels %d", &chan)) {
+        ft->info.channels=chan;
       }
-      /* Store in system dependent long to get around cross platform
-       * problems.
-       */
-      sscanf(inpstr," ; Sample Rate %ld", &rate);
-      ft->info.rate = rate;
-   }
+    }
+    /* Hold a copy of the last line we read (first non-comment) */
+    if (status != ST_EOF) {
+      strncpy(((dat_t)ft->priv)->prevline, inpstr, LINEWIDTH);
+      ((dat_t)ft->priv)->buffered = 1;
+    } else {
+      ((dat_t)ft->priv)->buffered = 0;
+    }
 
-   if (ft->info.channels == -1)
+    /* Default channels to 1 if not found */
+    if (ft->info.channels == -1)
        ft->info.channels = 1;
 
-   ft->info.size = ST_SIZE_64BIT;
-   ft->info.encoding = ST_ENCODING_FLOAT;
+    ft->info.size = ST_SIZE_64BIT;
+    ft->info.encoding = ST_ENCODING_FLOAT;
 
-   return (ST_SUCCESS);
+    return (ST_SUCCESS);
 }
 
 int st_datstartwrite(ft_t ft)
 {
-   dat_t dat = (dat_t) ft->priv;
-   double srate;
-   char s[80];
-   long rate;
+    dat_t dat = (dat_t) ft->priv;
+    char s[LINEWIDTH];
 
-   if (ft->info.channels > 1)
-   {
-        st_report("Can only create .dat files with one channel.");
-        st_report("Forcing output to 1 channel.");
-        ft->info.channels = 1;
-   }
-   
-   ft->info.size = ST_SIZE_64BIT;
-   ft->info.encoding = ST_ENCODING_FLOAT;
-   dat->timevalue = 0.0;
-   srate = ft->info.rate;
-   dat->deltat = 1.0 / srate;
-   rate = ft->info.rate;
-   sprintf(s,"; Sample Rate %ld\015\n",rate);
-   st_writes(ft, s);
+    ft->info.size = ST_SIZE_64BIT;
+    ft->info.encoding = ST_ENCODING_FLOAT;
+    dat->timevalue = 0.0;
+    dat->deltat = 1.0 / (double)ft->info.rate;
+    /* Write format comments to start of file */
+    sprintf(s,"; Sample Rate %ld\015\n", (long)ft->info.rate);
+    st_writes(ft, s);
+    sprintf(s,"; Channels %d\015\n", (int)ft->info.channels);
+    st_writes(ft, s);
 
-   return (ST_SUCCESS);
+    return (ST_SUCCESS);
 }
 
 st_ssize_t st_datread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 {
-    char inpstr[82];
-    double sampval;
-    int retc;
+    char inpstr[LINEWIDTH];
+    int  inpPtr = 0;
+    int  inpPtrInc = 0;
+    double sampval = 0.0;
+    int retc = 0;
+    char sc = 0;
     int done = 0;
-    char sc;
+    int i=0;
+
+    /* Always read a complete set of channels */
+    nsamp -= (nsamp % ft->info.channels);
 
     while (done < nsamp) {
-        do {
-          st_reads(ft, inpstr, 82);
-          if (st_eof(ft)) {
-                return (done);
-          }
-          sscanf(inpstr," %c",&sc);
-          }
-          while(sc == ';');  /* eliminate comments */
-        retc = sscanf(inpstr,"%*s %lg",&sampval);
-        if (retc != 1) 
-        {
-            st_fail_errno(ft,ST_EOF,"Unable to read sample.");
-            return (0);
+
+      /* Read a line or grab the buffered first line */
+      if (((dat_t)ft->priv)->buffered) {
+        strncpy(inpstr, ((dat_t)ft->priv)->prevline, LINEWIDTH);
+        ((dat_t)ft->priv)->buffered=0;
+      } else {
+        st_reads(ft, inpstr, LINEWIDTH-1);
+        inpstr[LINEWIDTH-1] = 0;
+        if (st_eof(ft)) return (done);
+      }
+
+      /* Skip over comments - ie. 0 or more whitespace, then ';' */
+      if ((sscanf(inpstr," %c", &sc) != 0) && (sc==';')) continue;
+
+      /* Read a complete set of channels */
+      sscanf(inpstr," %*s%n", &inpPtr);
+      for (i=0; i<ft->info.channels; i++) {
+        retc = sscanf(&inpstr[inpPtr]," %lg%n", &sampval, &inpPtrInc);
+        inpPtr += inpPtrInc;
+        if (retc != 1) {
+          st_fail_errno(ft,ST_EOF,"Unable to read sample.");
+          return (ST_EOF);
         }
-        *buf++ = roundoff(sampval * 2.147483648e9);
-        ++done;
+        *buf++ = roundoff(sampval * FLOATTOLONG);
+        done++;
+      }
     }
-        return (done);
+
+    return (done);
 }
 
 st_ssize_t st_datwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 {
     dat_t dat = (dat_t) ft->priv;
     int done = 0;
-    double sampval;
-    char s[80];
+    double sampval=0.0;
+    char s[LINEWIDTH];
+    int i=0;
 
+    /* Always write a complete set of channels */
+    nsamp -= (nsamp % ft->info.channels);
+
+    /* Write time, then sample values, then CRLF newline */
     while(done < nsamp) {
-       sampval = *buf++ ;
-       sampval = sampval / 2.147483648e9;  /* normalize to approx 1.0 */
-       sprintf(s," %15.8g  %15.8g \015\n",dat->timevalue,sampval);
-       st_writes(ft, s);
-       dat->timevalue += dat->deltat;
-       done++;
-       }
+      sprintf(s," %15.8g ",dat->timevalue);
+      st_writes(ft, s);
+      for (i=0; i<ft->info.channels; i++) {
+        sampval = *buf++ ;
+        sampval = sampval * LONGTOFLOAT;
+        sprintf(s," %15.8g", sampval);
+        st_writes(ft, s);
+        done++;
+      }
+      sprintf(s," \015\n");
+      st_writes(ft, s);
+      dat->timevalue += dat->deltat;
+    }
     return done;
 }
 

@@ -38,6 +38,8 @@ sox-12.1x.xx
     compiler.  (1417798) Marty
   o Stop calling flow() on effects that returned EOF during drain().  Allows 
     two back-to-back reverse effects to work.
+  o Added support for multiple channels in .dat files. 
+    (1366634) tomchristie
 
 sox-12.17.9
 -----------
