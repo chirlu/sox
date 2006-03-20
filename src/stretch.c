@@ -386,21 +386,21 @@ int st_stretch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         stretch->state = output_state;
     }
 
-    if (stretch->state == output_state)
+    for (; oindex<*osamp && stretch->oindex<stretch->index;)
     {
-        for (; oindex<*osamp && stretch->oindex<stretch->index;)
-        {
-            float f;
+        float f;
 
-            f = stretch->obuf[stretch->oindex++];
-            ST_SAMPLE_CLIP_COUNT(f, stretch->clipped);
-            obuf[oindex++] = f;
-        }
+        f = stretch->obuf[stretch->oindex++];
+        ST_SAMPLE_CLIP_COUNT(f, stretch->clipped);
+        obuf[oindex++] = f;
     }
     
     *osamp = oindex;
 
-    return ST_SUCCESS;
+    if (stretch->oindex == stretch->index)
+        return ST_EOF;
+    else
+        return ST_SUCCESS;
 }
 
 

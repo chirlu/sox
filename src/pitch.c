@@ -592,7 +592,10 @@ int st_pitch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     /* report... */
     *osamp = i;
 
-    return ST_SUCCESS;
+    if ((pitch->index - pitch->overlap) == 0)
+        return ST_EOF;
+    else
+        return ST_SUCCESS;
 }
     
 /*

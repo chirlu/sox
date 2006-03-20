@@ -106,7 +106,7 @@ int st_earwax_start(eff_t effp)
   earwax->tap = (st_sample_t*)malloc( sizeof(st_sample_t) * EARWAX_NUMTAPS );
   if( !earwax->tap ){
     st_fail("earwax: Cannot malloc %d bytes!\n", 
-	    sizeof(st_sample_t) * EARWAX_NUMTAPS );
+            sizeof(st_sample_t) * EARWAX_NUMTAPS );
     return (ST_EOF);
   }
 
@@ -170,7 +170,7 @@ int st_earwax_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
   }
   *osamp = EARWAX_NUMTAPS-1;
 
-  return (ST_SUCCESS);
+  return (ST_EOF);
 }
 
 /*

@@ -265,24 +265,27 @@ int st_speed_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     {
         if (speed->state==sp_input)
         {
-          speed->ibuf[speed->index++] = ZERO;
-          i++;
-          if (speed->index==speed->compression)
-             speed->state = sp_transfer;
-      }
+            speed->ibuf[speed->index++] = ZERO;
+            i++;
+            if (speed->index==speed->compression)
+                speed->state = sp_transfer;
+        }
 
-      /* transfer to compute buffer. */
-      if (speed->state==sp_transfer)
-          transfer(speed);
+        /* transfer to compute buffer. */
+        if (speed->state==sp_transfer)
+            transfer(speed);
 
-      /* compute interpolation. */
-      if (speed->state==sp_compute)
-          oindex += compute(speed, obuf+oindex, *osamp-oindex);
+        /* compute interpolation. */
+        if (speed->state==sp_compute)
+            oindex += compute(speed, obuf+oindex, *osamp-oindex);
     }
 
     *osamp = oindex; /* report how much was generated. */
 
-    return ST_SUCCESS;
+    if (speed->state==sp_input)
+        return ST_EOF;
+    else
+        return ST_SUCCESS;
 }
 
 /* stop processing. report overflows. 
@@ -292,7 +295,7 @@ int st_speed_stop(eff_t effp)
     speed_t speed = (speed_t) effp->priv;
 
     if (speed->clipped) 
-        st_warn("SPEED: %d values clipped...", speed->clipped);
+        st_report("SPEED: %d values clipped...", speed->clipped);
 
     free(speed->ibuf);
     
