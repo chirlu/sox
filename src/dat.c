@@ -136,7 +136,9 @@ st_ssize_t st_datread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
           st_fail_errno(ft,ST_EOF,"Unable to read sample.");
           return (ST_EOF);
         }
-        *buf++ = roundoff(sampval * FLOATTOLONG);
+        sampval = roundoff(sampval * FLOATTOLONG);
+        ST_SAMPLE_CLIP(sampval);
+        *buf++ = sampval;
         done++;
       }
     }
