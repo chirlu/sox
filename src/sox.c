@@ -1174,6 +1174,15 @@ static int flow_effect_out(void)
 
       if (!havedata && input_eff > 0)
       {
+          /* When EOF has been detected, skip to the next input
+           * before looking for more data.
+           */
+          if (input_eff_eof)
+          {
+              input_eff++;
+              input_eff_eof = 0;
+          }
+
           /* If the input file is not returning data then
            * we must prime the pump using the drain effect.
            * After its primed, the loop will suck the data
