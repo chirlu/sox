@@ -246,8 +246,8 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
          */
         if (!strcmp(ft->filename, "-"))
         {
+            SET_BINARY_MODE(stdout);
             ft->fp = stdout;
-
         }
         else if ((ft->fp = fopen(ft->filename, "wb")) == NULL)
         {
