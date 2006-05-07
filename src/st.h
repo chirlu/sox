@@ -20,7 +20,7 @@ extern "C" {
 #include "ststdint.h"
 
 /* Release 12.18.1 of libst */
-#define ST_LIB_VERSION_CODE 0x0c1109
+#define ST_LIB_VERSION_CODE 0x0c1201
 #define ST_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 typedef int32_t st_sample_t;
