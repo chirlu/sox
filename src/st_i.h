@@ -105,7 +105,7 @@ double st_swapd(double d);
 /* util.c */
 void st_report(const char *, ...);
 void st_warn(const char *, ...);
-void st_fail(const char *, ...) NORET;
+void st_fail(const char *, ...);
 void st_fail_errno(ft_t, int, const char *, ...);
 
 int st_is_bigendian(void);

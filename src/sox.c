@@ -615,12 +615,14 @@ static void process(void) {
             ilen = 0;
         }
 
-        /* FIXME: libst needs the feof() and ferror() concepts
-         * to see if ST_EOF means a real failure.  Until then we
-         * must treat ST_EOF as just hiting the end of the file.
-         */
         if (ilen == ST_EOF)
+        {
             efftab[0].olen = 0;
+            if (file_desc[current_input]->st_errno)
+            {
+                fprintf(stderr, file_desc[current_input]->st_errstr);
+            }
+        }
         else
             efftab[0].olen = ilen;
 
@@ -657,12 +659,14 @@ static void process(void) {
         {
             ilen[f] = st_read(file_desc[f], ibuf[f], (st_ssize_t)ST_BUFSIZ);
 
-            /* FIXME: libst needs the feof() and ferror() concepts
-             * to see if ST_EOF means a real failure.  Until then we
-             * must treat ST_EOF as just hiting the end of the buffer.
-             */
             if (ilen[f] == ST_EOF)
+            {
                 ilen[f] = 0;
+                if (file_desc[f]->st_errno)
+                {
+                    fprintf(stderr, file_desc[f]->st_errstr);
+                }
+            }
 
             /* Only count read samples for first file in mix */
             if (f == 0)
@@ -742,7 +746,9 @@ static void process(void) {
     } while (1); 
 
     /* This will drain the effects */
-    drain_effect_out();
+    /* Don't write if output is indicating errors. */
+    if (writing && file_desc[file_count-1]->st_errno)
+        drain_effect_out();
 
 #ifdef SOXMIX
     /* Free input buffers now that they are not used */
@@ -831,6 +837,7 @@ static void check_effects(void)
     int i;
     int needchan = 0, needrate = 0, haschan = 0, hasrate = 0;
     int effects_mask = 0;
+    int status;
 
     if (writing)
     {
@@ -880,9 +887,14 @@ static void check_effects(void)
         st_geteffect(&efftab[neffects], "avg");
 
         /* give default opts for added effects */
-        /* FIXME: Should look at return code and abort on ST_EOF */
-        (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                        (char **)0);
+        status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+                                                 (char **)0);
+
+        if (status == ST_EOF)
+        {
+            cleanup();
+            exit(2);
+        }
 
         /* Copy format info to effect table */
         effects_mask = st_updateeffect(&efftab[neffects], 
@@ -905,9 +917,14 @@ static void check_effects(void)
             st_geteffect(&efftab[neffects], "resample");
 
         /* set up & give default opts for added effects */
-        /* FIXME: Should look at return code and abort on ST_EOF */
-        (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                        (char **)0);
+        status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+                                                 (char **)0);
+
+        if (status == ST_EOF)
+        {
+            cleanup();
+            exit(2);
+        }
 
         /* Copy format info to effect table */
         effects_mask = st_updateeffect(&efftab[neffects], 
@@ -964,9 +981,14 @@ static void check_effects(void)
             st_geteffect(&efftab[neffects], "resample");
 
         /* set up & give default opts for added effects */
-        /* FIXME: Should look at return code and abort on ST_EOF */
-        (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                        (char **)0);
+        status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+                                                  (char **)0);
+
+        if (status == ST_EOF)
+        {
+            cleanup();
+            exit(2);
+        }
 
         /* Copy format info to effect table */
         effects_mask = st_updateeffect(&efftab[neffects], 
@@ -994,9 +1016,13 @@ static void check_effects(void)
         st_geteffect(&efftab[neffects], "avg");
 
         /* set up & give default opts for added effects */
-        /* FIXME: Should look at return code and abort on ST_EOF */
-        (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                        (char **)0);
+        status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+                                                 (char **)0);
+        if (status == ST_EOF)
+        {
+            cleanup();
+            exit(2);
+        }
 
         /* Copy format info to effect table */
         effects_mask = st_updateeffect(&efftab[neffects], 
@@ -1104,10 +1130,6 @@ static int flow_effect_out(void)
                                       efftab[neffects-1].olen,
                                       file_opts[file_count-1]->volume);
 
-
-          /* FIXME: Should look at return code and abort
-           * on ST_EOF
-           */
           total = 0;
           do
           {
@@ -1121,7 +1143,7 @@ static int flow_effect_out(void)
                              &efftab[neffects-1].obuf[total],
                              (st_ssize_t)efftab[neffects-1].olen-total);
 
-              if (len < 0)
+              if (len < 0 || file_desc[file_count-1]->file.eof)
               {
                   st_warn("Error writing: %s",
                           file_desc[file_count-1]->st_errstr);
@@ -1230,7 +1252,7 @@ static int flow_effect(int e)
 {
     st_ssize_t i, done, idone, odone, idonel, odonel, idoner, odoner;
     st_sample_t *ibuf, *obuf;
-    int effstatus;
+    int effstatus, effstatusl, effstatusr;
 
     /* Do not attempt to do any more effect processing during
      * user aborts as we may be stuck in an infinit flow loop.
@@ -1274,8 +1296,9 @@ static int flow_effect(int e)
 #endif
 
         done = idone + odone;
-    } else {
-
+    } 
+    else 
+    {
         /* Put stereo data in two seperate buffers and run effect
          * on each of them.
          */
@@ -1296,15 +1319,14 @@ static int flow_effect(int e)
         fprintf(stderr, "pre %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
 #endif
 
-        effstatus = (* efftab[e].h->flow)(&efftab[e],
+        effstatusl = (* efftab[e].h->flow)(&efftab[e],
                                           ibufl, obufl, (st_size_t *)&idonel, 
                                           (st_size_t *)&odonel);
 
         /* right */
         idoner = idone/2;               /* odd-length logic */
         odoner = odone/2;
-        /* FIXME: effstatus of previous operation is lost. */
-        effstatus = (* efftabR[e].h->flow)(&efftabR[e],
+        effstatusr = (* efftabR[e].h->flow)(&efftabR[e],
                                            ibufr, obufr, (st_size_t *)&idoner, 
                                            (st_size_t *)&odoner);
 
@@ -1325,8 +1347,12 @@ static int flow_effect(int e)
         fprintf(stderr, "post %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
 #endif
 
-
         done = idonel + idoner + odonel + odoner;
+
+        if (effstatusl)
+            effstatus = effstatusl;
+        else
+            effstatus = effstatusr;
     }
     if (effstatus == ST_EOF)
     {
@@ -1579,7 +1605,6 @@ static void usage(char *opt)
         exit(1);
 }
 
-/* called from util.c::st_fail() */
 void cleanup(void) 
 {
     int i;

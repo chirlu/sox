@@ -60,10 +60,13 @@ void st_warn(const char *fmt, ...)
         fprintf(stderr, "\n");
 }
 
+/* Warning: This function is depricated.  st_fail_errno() is
+ * the preferred way so that applications can control printing
+ * to their choice; not just stderr.
+ */
 void st_fail(const char *fmt, ...)
 {
         va_list args;
-        extern void cleanup();
 
         fprintf(stderr, "%s: ", myname);
 
@@ -71,8 +74,6 @@ void st_fail(const char *fmt, ...)
         vfprintf(stderr, fmt, args);
         va_end(args);
         fprintf(stderr, "\n");
-        cleanup();
-        exit(2);
 }
 
 

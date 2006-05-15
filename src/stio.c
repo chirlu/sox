@@ -155,7 +155,7 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
 
     if (st_checkformat(ft) )
     {
-        st_fail("bad input format for file %s: %s", ft->filename,
+        st_warn("bad input format for file %s: %s", ft->filename,
                 ft->st_errstr);
         goto input_error;
     }
@@ -298,7 +298,7 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
 
     if (st_checkformat(ft) )
     {
-        st_fail("bad output format for file %s: %s", ft->filename,
+        st_warn("bad output format for file %s: %s", ft->filename,
                 ft->st_errstr);
         goto output_error;
     }
