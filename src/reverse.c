@@ -142,3 +142,14 @@ int st_reverse_stop(eff_t effp)
         fclose(reverse->fp);
         return (ST_SUCCESS);
 }
+
+st_effect_t st_reverse_effect = {
+  "reverse",
+  NULL,
+  0,
+  st_reverse_getopts,
+  st_reverse_start,
+  st_reverse_flow,
+  st_reverse_drain,
+  st_reverse_stop
+};

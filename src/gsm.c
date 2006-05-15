@@ -232,4 +232,23 @@ int st_gsmstopwrite(ft_t ft)
 
         return st_gsmstopread(ft); /* destroy handles and free buffers */
 }
+
+/* GSM 06.10 */
+static char *gsmnames[] = {
+  "gsm",
+  NULL
+};
+
+st_format_t st_gsm_format = {
+  gsmnames,
+  NULL,
+  0,
+  st_gsmstartread,
+  st_gsmread,
+  st_gsmstopread,
+  st_gsmstartwrite,
+  st_gsmwrite,
+  st_gsmstopwrite,
+  st_format_nothing_seek
+};
 #endif /* ENABLE_GSM */

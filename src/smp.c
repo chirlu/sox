@@ -430,3 +430,22 @@ int st_smpstopwrite(ft_t ft)
 
         return(ST_SUCCESS);
 }
+
+/* SampleVision sound */
+static char *smpnames[] = {
+  "smp",
+  NULL,
+};
+
+st_format_t st_smp_format = {
+  smpnames,
+  NULL,
+  ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK,
+  st_smpstartread,
+  st_smpread,
+  st_smpstopread,
+  st_smpstartwrite,
+  st_smpwrite,
+  st_smpstopwrite,
+  st_smpseek
+};

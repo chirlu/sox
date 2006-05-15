@@ -821,3 +821,188 @@ void rawdefaults(ft_t ft)
         if (ft->info.channels == -1)
                 ft->info.channels = 1;
 }
+
+static char *rawnames[] = {
+  "raw",
+  NULL
+};
+
+st_format_t st_raw_format = {
+   rawnames,
+   NULL,
+   ST_FILE_STEREO | ST_FILE_SEEK,
+   st_rawstartread,
+   st_rawread,
+   st_rawstopread,
+   st_rawstartwrite,
+   st_rawwrite,
+   st_rawstopwrite,
+   st_rawseek
+};
+
+/* a-law byte raw */
+static char *alnames[] = {
+  "al",
+  NULL
+};
+
+st_format_t st_al_format = {
+  alnames,
+  NULL,
+  ST_FILE_STEREO,
+  st_alstartread,
+  st_rawread,
+  st_rawstopread,
+  st_alstartwrite,
+  st_rawwrite,
+  st_rawstopwrite,
+  st_format_nothing_seek
+};
+
+/* inverse a-law byte raw */
+static char *lanames[] = {
+  "la",
+  NULL
+};
+
+st_format_t st_la_format = {
+  lanames,
+  NULL,
+  ST_FILE_STEREO,
+  st_lastartread,
+  st_rawread,
+  st_rawstopread,
+  st_lastartwrite,
+  st_rawwrite,
+  st_rawstopwrite,
+  st_format_nothing_seek
+};
+
+/* inverse u-law byte raw */
+static char *lunames[] = {
+  "lu",
+  NULL
+};
+
+st_format_t st_lu_format = {
+  lunames,
+  NULL,
+  ST_FILE_STEREO,
+  st_lustartread,
+  st_rawread,
+  st_rawstopread,
+  st_lustartwrite,
+  st_rawwrite,
+  st_rawstopwrite,
+  st_format_nothing_seek
+};
+
+static char *sbnames[] = {
+  "sb",
+  NULL
+};
+
+st_format_t st_sb_format = {
+  sbnames,
+  NULL,
+  ST_FILE_STEREO,
+  st_sbstartread,
+  st_rawread,
+  st_rawstopread,
+  st_sbstartwrite,
+  st_rawwrite,
+  st_rawstopwrite,
+  st_format_nothing_seek
+};
+
+static char *slnames[] = {
+  "sl",
+  NULL,
+};
+
+st_format_t st_sl_format = {
+  slnames,
+  NULL,
+  ST_FILE_STEREO,
+  st_slstartread,
+  st_rawread,
+  st_rawstopread,
+  st_slstartwrite,
+  st_rawwrite,
+  st_rawstopwrite,
+  st_format_nothing_seek
+};
+
+static char *swnames[] = {
+  "sw",
+  NULL
+};
+
+st_format_t st_sw_format = {
+  swnames,
+  NULL,
+  ST_FILE_STEREO,
+  st_swstartread,
+  st_rawread,
+  st_rawstopread,
+  st_swstartwrite,
+  st_rawwrite,
+  st_rawstopwrite,
+  st_format_nothing_seek
+};
+
+static char *ubnames[] = {
+  "ub",
+  "sou",
+  "fssd",
+  NULL
+};
+
+st_format_t st_ub_format = {
+  ubnames,
+  NULL,
+  ST_FILE_STEREO,
+  st_ubstartread,
+  st_rawread,
+  st_rawstopread,
+  st_ubstartwrite,
+  st_rawwrite,
+  st_rawstopwrite,
+  st_format_nothing_seek
+};
+
+static char *ulnames[] = {
+  "ul",
+  NULL
+};
+
+st_format_t st_ul_format = {
+   ulnames,
+   NULL,
+   ST_FILE_STEREO,
+   st_ulstartread,
+   st_rawread,
+   st_rawstopread,
+   st_ulstartwrite,
+   st_rawwrite,
+   st_rawstopwrite,
+   st_format_nothing_seek
+};
+
+static char *uwnames[] = {
+  "uw",
+  NULL
+};
+
+st_format_t st_uw_format = {
+  uwnames,
+  NULL,
+  ST_FILE_STEREO,
+  st_uwstartread,
+  st_rawread,
+  st_rawstopread,
+  st_uwstartwrite,
+  st_rawwrite,
+  st_rawstopwrite,
+  st_format_nothing_seek
+};

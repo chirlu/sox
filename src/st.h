@@ -166,6 +166,7 @@ typedef struct st_soundstream *ft_t;
 
 typedef struct st_format {
     char         **names;
+    char         *usage;
     unsigned int flags;
     int          (*startread)(ft_t ft);
     st_ssize_t   (*read)(ft_t ft, st_sample_t *buf, st_ssize_t len);
@@ -203,7 +204,7 @@ struct st_soundstream {
     char   priv[ST_MAX_FILE_PRIVSIZE]; /* format's private data area */
 };
 
-extern st_format_t st_formats[];
+extern st_format_t *st_formats[];
 
 /* file flags field */
 #define ST_FILE_STEREO  1  /* does file format support stereo? */
@@ -258,6 +259,7 @@ typedef struct st_effect *eff_t;
 typedef struct
 {
     char    *name;                  /* effect name */
+    char    *usage;
     unsigned int flags;
 
     int (*getopts)(eff_t effp, int argc, char **argv);
@@ -286,7 +288,7 @@ struct st_effect
     char priv[ST_MAX_EFFECT_PRIVSIZE]; /* private area for effect */
 };
 
-extern st_effect_t st_effects[]; /* declared in handlers.c */
+extern st_effect_t *st_effects[]; /* declared in handlers.c */
 
 extern ft_t st_open_read(const char *path, const st_signalinfo_t *info, 
                          const char *filetype);

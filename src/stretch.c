@@ -421,3 +421,14 @@ int st_stretch_stop(eff_t effp)
 
     return ST_SUCCESS;
 }
+
+st_effect_t st_stretch_effect = {
+  "stretch",
+  NULL,
+  0,
+  st_stretch_getopts,
+  st_stretch_start,
+  st_stretch_flow,
+  st_stretch_drain,
+  st_stretch_stop
+};

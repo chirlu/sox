@@ -76,3 +76,14 @@ int st_bandreject_start(eff_t effp)
   butterworth->b [1] = (1.0 - c) * butterworth->a[0];
   return (ST_SUCCESS);
 }
+
+st_effect_t st_bandreject_effect = {
+  "bandreject",
+  NULL,
+  0,
+  st_bandreject_getopts,
+  st_bandreject_start,
+  st_butterworth_flow,
+  st_effect_nothing_drain,
+  st_effect_nothing
+};

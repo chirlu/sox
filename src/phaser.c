@@ -277,3 +277,13 @@ int st_phaser_stop(eff_t effp)
         return (ST_SUCCESS);
 }
 
+st_effect_t st_phaser_effect = {
+  "phaser",
+  NULL,
+  0,
+  st_phaser_getopts,
+  st_phaser_start,
+  st_phaser_flow,
+  st_phaser_drain,
+  st_phaser_stop
+};

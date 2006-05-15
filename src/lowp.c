@@ -106,3 +106,13 @@ int st_lowp_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
+st_effect_t st_lowp_effect = {
+  "lowp",
+  NULL,
+  0,
+  st_lowp_getopts,
+  st_lowp_start,
+  st_lowp_flow,
+  st_effect_nothing_drain,
+  st_lowp_stop
+};

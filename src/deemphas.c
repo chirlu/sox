@@ -202,3 +202,14 @@ int st_deemph_stop(eff_t effp)
      /* nothing to do */
     return (ST_SUCCESS);
 }
+
+st_effect_t st_deemph_effect = {
+  "deemph",
+  NULL,
+  ST_EFF_MCHAN,
+  st_deemph_getopts,
+  st_deemph_start,
+  st_deemph_flow,
+  st_effect_nothing_drain,
+  st_deemph_stop
+};

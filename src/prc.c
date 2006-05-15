@@ -209,3 +209,22 @@ static void prcwriteheader(ft_t ft)
   st_writew(ft, p->length);
   st_writebuf(ft, nullbuf,1,2);
 }
+
+/* Psion .prc */
+static char *prcnames[] = {
+  "prc",
+  NULL
+};
+
+st_format_t st_prc_format = {
+  prcnames,
+  NULL,
+  ST_FILE_SEEK,
+  st_prcstartread,
+  st_prcread,
+  st_rawstopread,
+  st_prcstartwrite,
+  st_prcwrite,
+  st_prcstopwrite,
+  st_prcseek
+};

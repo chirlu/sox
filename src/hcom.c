@@ -571,3 +571,22 @@ int st_hcomstopwrite(ft_t ft)
 
         return (ST_SUCCESS);
 }
+
+/* Mac FSSD/HCOM */
+static char *hcomnames[] = {
+  "hcom",
+  NULL
+};
+
+st_format_t st_hcom_format = {
+  hcomnames,
+  NULL,
+  0,
+  st_hcomstartread,
+  st_hcomread,
+  st_hcomstopread,
+  st_hcomstartwrite,
+  st_hcomwrite,
+  st_hcomstopwrite,
+  st_format_nothing_seek
+};

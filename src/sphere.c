@@ -308,3 +308,22 @@ int st_spherestopwrite(ft_t ft)
 
     return (ST_SUCCESS);
 }
+
+/* NIST Sphere File */
+static char *spherenames[] = {
+  "sph",
+  NULL
+};
+
+st_format_t st_sphere_format = {
+  spherenames,
+  NULL,
+  ST_FILE_STEREO,
+  st_spherestartread,
+  st_sphereread,
+  st_rawstopread,
+  st_spherestartwrite,
+  st_spherewrite,
+  st_spherestopwrite,
+  st_format_nothing_seek
+};

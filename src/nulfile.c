@@ -109,15 +109,20 @@ int st_nulstopwrite(ft_t ft)
     return (ST_SUCCESS);
 }
 
+static char *nulnames[] = {
+  "nul",
+  NULL,
+};
 
-
-
-
-
-
-
-
-
-
-
-
+st_format_t st_nul_format = {
+  nulnames,
+  NULL,
+  ST_FILE_STEREO | ST_FILE_NOSTDIO,
+  st_nulstartread,
+  st_nulread,
+  st_nulstopread,
+  st_nulstartwrite,
+  st_nulwrite,
+  st_nulstopwrite,
+  st_format_nothing_seek
+};

@@ -336,3 +336,14 @@ int st_rate_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 #endif /* USE_OLD_RATE */
+
+st_effect_t st_rate_effect = {
+  "rate",
+  NULL, 
+  ST_EFF_RATE,
+  st_rate_getopts,
+  st_rate_start,
+  st_rate_flow,
+  st_effect_nothing_drain,
+  st_effect_nothing
+};

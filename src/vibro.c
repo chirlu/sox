@@ -136,3 +136,13 @@ int st_vibro_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
+st_effect_t st_vibro_effect = {
+  "vibro",
+  NULL,
+  0,
+  st_vibro_getopts,
+  st_vibro_start,
+  st_vibro_flow,
+  st_effect_nothing_drain,
+  st_effect_nothing
+};

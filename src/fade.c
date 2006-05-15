@@ -399,3 +399,14 @@ static double fade_gain(st_size_t index, st_size_t range, char type)
 
     return retval;
 }
+
+st_effect_t st_fade_effect = {
+  "fade",
+  NULL,
+  ST_EFF_MCHAN,
+  st_fade_getopts,
+  st_fade_start,
+  st_fade_flow,
+  st_fade_drain,
+  st_fade_stop
+};

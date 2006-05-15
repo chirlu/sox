@@ -343,6 +343,17 @@ int st_noisered_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
+st_effect_t st_noisered_effect = {
+  "noisered",
+  NULL,
+  ST_EFF_MCHAN,
+  st_noisered_getopts,
+  st_noisered_start,
+  st_noisered_flow,
+  st_noisered_drain,
+  st_noisered_stop
+};
+
 /* For Emacs:
   Local Variables:
   c-basic-offset: 4

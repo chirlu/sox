@@ -547,3 +547,24 @@ int st_avg_stop(eff_t effp)
     return (ST_SUCCESS); /* nothing to do */
 }
 
+st_effect_t st_avg_effect = {
+  "avg",
+  NULL,
+  ST_EFF_MCHAN | ST_EFF_CHAN,
+  st_avg_getopts,
+  st_avg_start,
+  st_avg_flow,
+  st_effect_nothing_drain,
+  st_avg_stop
+};
+
+st_effect_t st_pick_effect = {
+  "pick",
+  NULL,
+  ST_EFF_MCHAN | ST_EFF_CHAN,
+  st_avg_getopts,
+  st_avg_start,
+  st_avg_flow,
+  st_effect_nothing_drain,
+  st_avg_stop
+};

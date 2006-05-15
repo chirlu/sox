@@ -63,3 +63,14 @@ int st_copy_stop(eff_t effp)
 	/* nothing to do */
     return (ST_SUCCESS);
 }
+
+st_effect_t st_copy_effect = {
+  "copy",
+  NULL,
+  ST_EFF_MCHAN,
+  st_copy_getopts,
+  st_copy_start,
+  st_copy_flow,
+  st_effect_nothing_drain,
+  st_effect_nothing
+};

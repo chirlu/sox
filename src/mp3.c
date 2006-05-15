@@ -520,4 +520,24 @@ int st_mp3stopwrite(ft_t ft)
   return ST_EOF;
 }
 #endif /* HAVE_LAME */
+
+/* MP3 */
+static char *mp3names[] = {
+  "mp3",
+  "mp2",
+  NULL,
+};
+
+st_format_t st_mp3_format = {
+  mp3names,
+  NULL,
+  ST_FILE_STEREO,
+  st_mp3startread,
+  st_mp3read,
+  st_mp3stopread,
+  st_mp3startwrite,
+  st_mp3write,
+  st_mp3stopwrite,
+  st_format_nothing_seek
+};
 #endif

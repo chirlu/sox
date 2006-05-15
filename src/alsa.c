@@ -631,4 +631,22 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
     return 0;
 }
 
+/* /dev/snd/pcmXX */
+static char *alsanames[] = {
+  "alsa",
+  NULL
+};
+
+st_format_t st_alsa_format = {
+   alsanames,
+   NULL,
+   ST_FILE_STEREO | ST_FILE_NOSTDIO,
+   st_alsastartread,
+   st_alsaread,
+   st_alsastopread,
+   st_alsastartwrite,
+   st_alsawrite,
+   st_alsastopwrite,
+   st_format_nothing_seek
+};
 #endif /* HAVE_ALSA */

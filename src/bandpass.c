@@ -76,3 +76,14 @@ int st_bandpass_start (eff_t effp)
   butterworth->b [1] = (c - 1.0) * butterworth->a[0];
   return (ST_SUCCESS);
 }
+
+st_effect_t st_bandpass_effect = {
+  "bandpass",
+  NULL,
+  0,
+  st_bandpass_getopts,
+  st_bandpass_start,
+  st_butterworth_flow,
+  st_effect_nothing_drain,
+  st_effect_nothing
+};

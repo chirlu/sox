@@ -231,3 +231,22 @@ static void wvewriteheader(ft_t ft)
     st_writew(ft, zero);
     st_writew(ft, zero);
 }
+
+/* Psion .wve */
+static char *wvenames[] = {
+  "wve",
+  NULL
+};
+
+st_format_t st_wve_format = {
+  wvenames,
+  NULL,
+  ST_FILE_SEEK,
+  st_wvestartread,
+  st_wveread,
+  st_rawstopread,
+  st_wvestartwrite,
+  st_wvewrite,
+  st_wvestopwrite,
+  st_wveseek
+};

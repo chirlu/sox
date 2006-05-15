@@ -709,3 +709,14 @@ static void LpFilter(double *c, long N, double frq, double Beta, long Num)
       }
    }
 }
+
+st_effect_t st_resample_effect = {
+   "resample",
+   NULL,
+   ST_EFF_RATE,
+   st_resample_getopts,
+   st_resample_start,
+   st_resample_flow,
+   st_resample_drain,
+   st_resample_stop
+};

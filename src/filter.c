@@ -314,3 +314,14 @@ static void FiltWin(filter_t f, long Nx)
                 X++;
         }
 }
+
+st_effect_t st_filter_effect = {
+  "filter",
+  NULL,
+  0,
+  st_filter_getopts,
+  st_filter_start,
+  st_filter_flow,
+  st_filter_drain,
+  st_filter_stop
+};

@@ -462,3 +462,22 @@ static void auwriteheader(ft_t ft, st_size_t data_size)
         st_writeb(ft, 0);
 }
 
+/* SPARC .au w/header */
+static char *aunames[] = {
+  "au",
+  "snd",
+  NULL
+};
+
+st_format_t st_au_format = {
+  aunames,
+  NULL,
+  ST_FILE_STEREO | ST_FILE_SEEK,
+  st_austartread,
+  st_auread,
+  st_rawstopread,
+  st_austartwrite,
+  st_auwrite,
+  st_austopwrite,
+  st_auseek
+};

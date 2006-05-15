@@ -387,3 +387,22 @@ static void maudwriteheader(ft_t ft)
         st_writes(ft, "MDAT");
         st_writedw(ft, p->nsamples * ft->info.size ); /* samples in file */
 }
+
+/* Amiga MAUD */
+static char *maudnames[] = {
+  "maud",
+  NULL,
+};
+
+st_format_t st_maud_format = {
+  maudnames,
+  NULL,
+  ST_FILE_STEREO,
+  st_maudstartread,
+  st_maudread,
+  st_maudstopread,
+  st_maudstartwrite,
+  st_maudwrite,
+  st_maudstopwrite,
+  st_format_nothing_seek
+};

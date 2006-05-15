@@ -375,3 +375,22 @@ int st_txwstopwrite(ft_t ft)
 
     return(ST_SUCCESS);
 }
+
+/* Yamaha TX16W and SY99 waves */
+static char *txwnames[] = {
+  "txw",
+  NULL
+};
+
+st_format_t st_txw_format = {
+   txwnames,
+   NULL,
+   0,
+   st_txwstartread,
+   st_txwread,
+   st_txwstopread,
+   st_txwstartwrite,
+   st_txwwrite,
+   st_txwstopwrite,
+   st_format_nothing_seek
+};

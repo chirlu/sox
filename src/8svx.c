@@ -389,3 +389,22 @@ static void svxwriteheader(ft_t ft, st_ssize_t nsamples)
         st_writes(ft, "BODY");
         st_writedw(ft, nsamples); /* samples in file */
 }
+
+/* Amiga 8SVX */
+static char *svxnames[] = {
+  "8svx",
+  NULL
+};
+
+st_format_t st_svx_format = {
+  svxnames,
+  NULL,
+  ST_FILE_STEREO,
+  st_svxstartread,
+  st_svxread,
+  st_svxstopread,
+  st_svxstartwrite,
+  st_svxwrite,
+  st_svxstopwrite,
+  st_format_nothing_seek
+};

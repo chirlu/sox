@@ -113,3 +113,13 @@ int st_highp_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
+st_effect_t st_highp_effect = {
+  "highp",
+  NULL,
+  0,
+  st_highp_getopts,
+  st_highp_start,
+  st_highp_flow,
+  st_effect_nothing_drain,
+  st_highp_stop
+};

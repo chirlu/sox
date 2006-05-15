@@ -806,8 +806,8 @@ static void parse_effects(int argc, char **argv)
         {
             int i1;
             fprintf(stderr, "%s: Known effects: ",myname);
-            for (i1 = 0; st_effects[i1].name; i1++)
-                fprintf(stderr, "%s ", st_effects[i1].name);
+            for (i1 = 0; st_effects[i1]->name; i1++)
+                fprintf(stderr, "%s ", st_effects[i1]->name);
             fprintf(stderr, "\n\n");
             st_fail("Effect '%s' is not known!", argv[optind]);
         }
@@ -1591,14 +1591,14 @@ static void usage(char *opt)
             fprintf(stderr,"gopts: -e -h -p -q -S -V\n\n");
             fprintf(stderr,"fopts: -r rate -c channels -s/-u/-U/-A/-a/-i/-g/-f -b/-w/-l/-d -v volume -x\n\n");
             fprintf(stderr, "effect: ");
-            for (i = 0; st_effects[i].name != NULL; i++) {
-                fprintf(stderr, "%s ", st_effects[i].name);
+            for (i = 0; st_effects[i]->name != NULL; i++) {
+                fprintf(stderr, "%s ", st_effects[i]->name);
             }
             fprintf(stderr, "\n\neffopts: depends on effect\n\n");
             fprintf(stderr, "Supported file formats: ");
-            for (i = 0; st_formats[i].names != NULL; i++) {
+            for (i = 0; st_formats[i]->names != NULL; i++) {
                 /* only print the first name */
-                fprintf(stderr, "%s ", st_formats[i].names[0]);
+                fprintf(stderr, "%s ", st_formats[i]->names[0]);
             }
             fputc('\n', stderr);
         }

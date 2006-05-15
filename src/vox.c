@@ -442,3 +442,20 @@ static short devox (uint8_t code,vox_t state)
         return (sample);
       }
 
+static char *voxnames[] = {
+  "vox",
+  NULL
+};
+
+st_format_t st_vox_format = {
+  voxnames,
+  NULL,
+  0,
+  st_voxstartread,
+  st_voxread,
+  st_voxstopread,
+  st_voxstartwrite,
+  st_voxwrite,
+  st_voxstopwrite,
+  st_format_nothing_seek
+};

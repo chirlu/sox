@@ -286,3 +286,14 @@ int st_reverb_stop(eff_t effp)
         reverb->reverbbuf = (float *) -1;   /* guaranteed core dump */
         return (ST_SUCCESS);
 }
+
+st_effect_t st_reverb_effect = {
+  "reverb",
+  NULL,
+  0,
+  st_reverb_getopts,
+  st_reverb_start,
+  st_reverb_flow,
+  st_reverb_drain,
+  st_reverb_stop
+};

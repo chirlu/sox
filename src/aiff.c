@@ -1100,3 +1100,23 @@ static double ConvertFromIeeeExtended(unsigned char *bytes)
     else
         return f;
 }
+
+
+static char *aiffnames[] = {
+  "aiff",
+  "aif",
+  NULL
+};
+
+st_format_t st_aiff_format = {
+  aiffnames,
+  NULL,
+  ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK,
+  st_aiffstartread,
+  st_aiffread,
+  st_aiffstopread,
+  st_aiffstartwrite,
+  st_aiffwrite,
+  st_aiffstopwrite,
+  st_aiffseek
+};

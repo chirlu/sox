@@ -1778,3 +1778,22 @@ int st_wavseek(ft_t ft, st_size_t offset)
 
     return(ft->st_errno);
 }
+
+/* Microsoftt RIFF */
+static char *wavnames[] = {
+  "wav",
+  NULL
+};
+
+st_format_t st_wav_format = {
+  wavnames,
+  NULL,
+  ST_FILE_STEREO | ST_FILE_SEEK,
+  st_wavstartread,
+  st_wavread,
+  st_wavstopread,
+  st_wavstartwrite,
+  st_wavwrite,
+  st_wavstopwrite,
+  st_wavseek
+};

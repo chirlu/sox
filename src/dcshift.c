@@ -212,3 +212,14 @@ int st_dcshift_stop(eff_t effp)
     }
     return ST_SUCCESS;
 }
+
+st_effect_t st_dcshift_effect = {
+   "dcshift",
+   NULL,
+   ST_EFF_MCHAN,
+   st_dcshift_getopts,
+   st_dcshift_start,
+   st_dcshift_flow,
+   st_effect_nothing_drain,
+   st_dcshift_stop
+};

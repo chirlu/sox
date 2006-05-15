@@ -196,3 +196,21 @@ int st_autostartwrite(ft_t ft)
         st_fail_errno(ft,ST_EFMT,"Type AUTO can only be used for input!");
         return(ST_EOF);
 }
+
+static char *autonames[] = {
+  "auto",
+  NULL
+};
+
+st_format_t st_auto_format = {
+  autonames,
+  NULL,
+  ST_FILE_STEREO,
+  st_autostartread,
+  st_format_nothing_io,
+  st_format_nothing,
+  st_autostartwrite,
+  st_format_nothing_io,
+  st_format_nothing,
+  st_format_nothing_seek
+};

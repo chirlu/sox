@@ -409,3 +409,14 @@ int st_compand_stop(eff_t effp)
 
   return (ST_SUCCESS);
 }
+
+st_effect_t st_compand_effect = {
+   "compand",
+   NULL,
+   ST_EFF_MCHAN,
+   st_compand_getopts,
+   st_compand_start,
+   st_compand_flow,
+   st_compand_drain,
+   st_compand_stop
+};

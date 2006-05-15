@@ -290,3 +290,21 @@ int st_avrstopwrite(ft_t ft)
 
   return(ST_SUCCESS);
 }
+
+static char *avrnames[] = {
+  "avr",
+  NULL
+};
+
+st_format_t st_avr_format = {
+  avrnames,
+  NULL,
+  ST_FILE_STEREO,
+  st_avrstartread,
+  st_rawread,
+  st_format_nothing,
+  st_avrstartwrite,
+  st_avrwrite,
+  st_avrstopwrite,
+  st_format_nothing_seek
+};

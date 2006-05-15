@@ -195,3 +195,13 @@ int st_repeat_stop(eff_t effp)
         return (ST_SUCCESS);
 }
 
+st_effect_t st_repeat_effect = {
+  "repeat",
+  NULL,
+  0,
+  st_repeat_getopts,
+  st_repeat_start,
+  st_repeat_flow,
+  st_repeat_drain,
+  st_repeat_stop
+};

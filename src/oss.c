@@ -215,4 +215,23 @@ int st_ossdspstartwrite(ft_t ft)
 {
     return ossdspinit(ft);
 }
+
+/* OSS /dev/dsp player */
+static char *ossdspnames[] = {
+  "ossdsp",
+  NULL
+};
+
+st_format_t st_ossdsp_format = {
+  ossdspnames,
+  NULL,
+  ST_FILE_STEREO,
+  st_ossdspstartread,
+  st_rawread,
+  st_rawstopread,
+  st_ossdspstartwrite,
+  st_rawwrite,
+  st_rawstopwrite,
+  st_format_nothing_seek
+};
 #endif

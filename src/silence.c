@@ -695,3 +695,14 @@ int st_silence_stop(eff_t effp)
         free(silence->stop_holdoff);
     return(ST_SUCCESS);
 }
+
+st_effect_t st_silence_effect = {
+  "silence",
+  NULL,
+  ST_EFF_MCHAN,
+  st_silence_getopts,
+  st_silence_start,
+  st_silence_flow,
+  st_silence_drain,
+  st_silence_stop
+};

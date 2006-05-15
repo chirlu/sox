@@ -256,3 +256,21 @@ static void sndtwriteheader(ft_t ft, st_size_t nsamples)
     st_writebuf(ft, name_buf, 1, 96);
 }
 
+/* Sndtool Sound File */
+static char *sndtnames[] = {
+  "sndt",
+  NULL
+};
+
+st_format_t st_snd_format = {
+  sndtnames,
+  NULL,
+  ST_FILE_STEREO | ST_FILE_SEEK,
+  st_sndtstartread,
+  st_rawread,
+  st_rawstopread,
+  st_sndtstartwrite,
+  st_sndtwrite,
+  st_sndtstopwrite,
+  st_sndseek
+};

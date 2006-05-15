@@ -219,3 +219,14 @@ int st_vol_stop(eff_t effp)
     }
     return ST_SUCCESS;
 }
+
+st_effect_t st_vol_effect = {
+  "vol",
+  NULL,
+  ST_EFF_MCHAN,
+  st_vol_getopts,
+  st_vol_start,
+  st_vol_flow,
+  st_effect_nothing_drain,
+  st_vol_stop
+};

@@ -301,3 +301,14 @@ int st_speed_stop(eff_t effp)
     
     return ST_SUCCESS;
 }
+
+st_effect_t st_speed_effect = {
+  "speed",
+  NULL,
+  0,
+  st_speed_getopts,
+  st_speed_start,
+  st_speed_flow,
+  st_speed_drain,
+  st_speed_stop
+};

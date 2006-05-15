@@ -140,8 +140,8 @@ int st_gettype(ft_t formp)
                           "Filetype was not specified");
                 return(ST_EFMT);
         }
-        for(i = 0; st_formats[i].names; i++) {
-                for(list = st_formats[i].names; *list; list++) {
+        for(i = 0; st_formats[i]->names; i++) {
+                for(list = st_formats[i]->names; *list; list++) {
                         char *s1 = *list, *s2 = formp->filetype;
                         if (! strcmpcase(s1, s2))
                                 break;  /* not a match */
@@ -149,7 +149,7 @@ int st_gettype(ft_t formp)
                 if (! *list)
                         continue;
                 /* Found it! */
-                formp->h = &st_formats[i];
+                formp->h = st_formats[i];
                 return ST_SUCCESS;
         }
         st_fail_errno(formp, ST_EFMT, "File type '%s' is not known",
@@ -167,9 +167,9 @@ int st_geteffect_opt(eff_t effp, int argc, char **argv)
 {
         int i, optind;
 
-        for(i = 0; st_effects[i].name; i++)
+        for(i = 0; st_effects[i]->name; i++)
         {
-            char *s1 = st_effects[i].name, *s2 = argv[0];
+            char *s1 = st_effects[i]->name, *s2 = argv[0];
 
             while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
                 s1++, s2++;
@@ -177,16 +177,16 @@ int st_geteffect_opt(eff_t effp, int argc, char **argv)
                 continue;       /* not a match */
 
             /* Found it! */
-            effp->name = st_effects[i].name;
-            effp->h = &st_effects[i];
+            effp->name = st_effects[i]->name;
+            effp->h = st_effects[i];
 
             optind = 1;
 
             while (optind < argc)
             {
-                for (i = 0; st_effects[i].name; i++)
+                for (i = 0; st_effects[i]->name; i++)
                 {
-                    char *s1 = st_effects[i].name, *s2 = argv[optind];
+                    char *s1 = st_effects[i]->name, *s2 = argv[optind];
                     while (*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
                     s1++, s2++;
                     if (*s1 || *s2)
@@ -218,8 +218,8 @@ int st_geteffect(eff_t effp, char *effect_name)
 {
         int i;
 
-        for(i = 0; st_effects[i].name; i++) {
-                char *s1 = st_effects[i].name, *s2 = effect_name;
+        for(i = 0; st_effects[i]->name; i++) {
+                char *s1 = st_effects[i]->name, *s2 = effect_name;
 
                 while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
                         s1++, s2++;
@@ -227,8 +227,8 @@ int st_geteffect(eff_t effp, char *effect_name)
                         continue;       /* not a match */
 
                 /* Found it! */
-                effp->name = st_effects[i].name;
-                effp->h = &st_effects[i];
+                effp->name = st_effects[i]->name;
+                effp->h = st_effects[i];
 
                 return ST_SUCCESS;
         }
@@ -245,9 +245,8 @@ int st_checkeffect(char *effect_name)
 {
         int i;
 
-        for(i = 0; st_effects[i].name; i++) {
-                char *s1 = st_effects[i].name, *s2 = effect_name;
-
+        for(i = 0; st_effects[i]->name; i++) {
+                char *s1 = st_effects[i]->name, *s2 = effect_name;
                 while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
                         s1++, s2++;
                 if (*s1 || *s2)

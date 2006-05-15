@@ -668,3 +668,43 @@ int st_dvmsstopwrite(ft_t ft)
 }
 
 /* ---------------------------------------------------------------------- */
+
+/* Cont. Variable Slope Delta */
+static char *cvsdnames[] = {
+  "cvs",
+  "cvsd",
+  NULL
+};
+
+st_format_t st_cvsd_format = {
+  cvsdnames,
+  NULL,
+  0,
+  st_cvsdstartread,
+  st_cvsdread,
+  st_cvsdstopread,
+  st_cvsdstartwrite,
+  st_cvsdwrite,
+  st_cvsdstopwrite,
+  st_format_nothing_seek
+};
+
+/* Cont. Variable Solot Delta */
+static char *dvmsnames[] = {
+  "vms",
+  "dvms",
+  NULL
+};
+
+st_format_t st_dvms_format = {
+  dvmsnames,
+  NULL,
+  0,
+  st_dvmsstartread,
+  st_cvsdread,
+  st_cvsdstopread,
+  st_dvmsstartwrite,
+  st_cvsdwrite,
+  st_dvmsstopwrite,
+  st_format_nothing_seek
+};

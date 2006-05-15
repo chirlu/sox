@@ -273,3 +273,13 @@ int st_echos_stop(eff_t effp)
         return (ST_SUCCESS);
 }
 
+st_effect_t st_echos_effect = {
+  "echos",
+  NULL,
+  0,
+  st_echos_getopts,
+  st_echos_start,
+  st_echos_flow,
+  st_echos_drain,
+  st_echos_stop
+};

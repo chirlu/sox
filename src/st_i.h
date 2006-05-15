@@ -147,6 +147,65 @@ int st_is_littleendian(void);
  *=============================================================================
  */
 
+st_format_t st_svx_format;
+st_format_t st_aiff_format;
+#ifdef HAVE_ALSA
+st_format_t st_alsa_format;
+#endif
+st_format_t st_au_format;
+st_format_t st_auto_format;
+st_format_t st_avr_format;
+st_format_t st_cdr_format;
+st_format_t st_cvsd_format;
+st_format_t st_dvms_format;
+st_format_t st_dat_format;
+#ifdef ENABLE_GSM
+st_format_t st_gsm_format;
+#endif
+st_format_t st_hcom_format;
+st_format_t st_maud_format;
+st_format_t st_mp3_format;
+st_format_t st_nul_format;
+#ifdef HAVE_OSS
+st_format_t st_ossdsp_format;
+#endif
+st_format_t st_prc_format;
+st_format_t st_raw_format;
+st_format_t st_al_format;
+st_format_t st_la_format;
+st_format_t st_lu_format;
+st_format_t st_sb_format;
+st_format_t st_sl_format;
+st_format_t st_sw_format;
+st_format_t st_ub_format;
+st_format_t st_ul_format;
+st_format_t st_uw_format;
+st_format_t st_sf_format;
+st_format_t st_smp_format;
+st_format_t st_snd_format;
+st_format_t st_sphere_format;
+#ifdef HAVE_SUNAUDIO
+st_format_t st_sun_format;
+#endif
+st_format_t st_txw_format;
+st_format_t st_voc_format;
+#ifdef HAVE_LIBVORBIS
+st_format_t st_vorbis_format;
+#endif
+st_format_t st_vox_format;
+st_format_t st_wav_format;
+st_format_t st_wve_format;
+
+/* Raw I/O
+ */
+int st_rawstartread(ft_t ft);
+st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp);
+int st_rawstopread(ft_t ft);
+int st_rawstartwrite(ft_t ft);
+st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp);
+int st_rawstopwrite(ft_t ft);
+int st_rawseek(ft_t ft, st_size_t offset);
+
 /* The following functions can be used to simply return success if
  * a file handler or effect doesn't need to do anything special
  */
@@ -156,486 +215,58 @@ int st_format_nothing_seek(ft_t ft, st_size_t offset);
 int st_effect_nothing(eff_t effp);
 int st_effect_nothing_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 
-int st_aiffstartread(ft_t ft);
-st_ssize_t st_aiffread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_aiffstopread(ft_t ft);
-int st_aiffstartwrite(ft_t ft);
-st_ssize_t st_aiffwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_aiffstopwrite(ft_t ft);
-int st_aiffseek(ft_t ft, st_size_t offset);
-
-int st_alstartread(ft_t ft);
-int st_alstartwrite(ft_t ft);
-
-#ifdef HAVE_ALSA
-int st_alsastartread(ft_t ft);
-st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_alsastopread(ft_t ft);
-int st_alsastartwrite(ft_t ft);
-st_ssize_t st_alsawrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_alsastopwrite(ft_t ft);
-#endif
-
-int st_austartread(ft_t ft);
-st_ssize_t st_auread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_austartwrite(ft_t ft);
-st_ssize_t st_auwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_austopwrite(ft_t ft);
-int st_auseek(ft_t ft, st_size_t offset);
-
-int st_autostartread(ft_t ft);
-int st_autostartwrite(ft_t ft);
-
-int st_avrstartread(ft_t ft);
-int st_avrstartwrite(ft_t ft);
-st_ssize_t st_avrwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_avrstopwrite(ft_t ft);
-
-int st_cdrstartread(ft_t ft);
-st_ssize_t st_cdrread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_cdrstopread(ft_t ft);
-int st_cdrstartwrite(ft_t ft);
-st_ssize_t st_cdrwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_cdrstopwrite(ft_t ft);
-
-int st_cvsdstartread(ft_t ft);
-st_ssize_t st_cvsdread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_cvsdstopread(ft_t ft);
-int st_cvsdstartwrite(ft_t ft);
-st_ssize_t st_cvsdwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_cvsdstopwrite(ft_t ft);
-
-int st_datstartread(ft_t ft);
-st_ssize_t st_datread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_datstartwrite(ft_t ft);
-st_ssize_t st_datwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-
-int st_dvmsstartread(ft_t ft);
-int st_dvmsstartwrite(ft_t ft);
-int st_dvmsstopwrite(ft_t ft);
-
-#ifdef ENABLE_GSM
-int st_gsmstartread(ft_t ft);
-st_ssize_t st_gsmread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_gsmstopread(ft_t ft);
-int st_gsmstartwrite(ft_t ft);
-st_ssize_t st_gsmwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_gsmstopwrite(ft_t ft);
-#endif
-
-int st_hcomstartread(ft_t ft);
-st_ssize_t st_hcomread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_hcomstopread(ft_t ft);
-int st_hcomstartwrite(ft_t ft);
-st_ssize_t st_hcomwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_hcomstopwrite(ft_t ft);
-
-int st_lastartread(ft_t ft);
-int st_lastartwrite(ft_t ft);
-
-int st_lustartread(ft_t ft);
-int st_lustartwrite(ft_t ft);
-
-int st_maudstartread(ft_t ft);
-st_ssize_t st_maudread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_maudstopread(ft_t ft);
-st_ssize_t st_maudwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_maudstartwrite(ft_t ft);
-int st_maudstopwrite(ft_t ft);
-
-int st_mp3startread(ft_t ft);
-st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_mp3stopread(ft_t ft);
-st_ssize_t st_mp3write(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_mp3startwrite(ft_t ft);
-int st_mp3stopwrite(ft_t ft);
-
-int st_nulstartread(ft_t ft);
-st_ssize_t st_nulread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_nulstopread(ft_t ft);
-int st_nulstartwrite(ft_t ft);
-st_ssize_t st_nulwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_nulstopwrite(ft_t ft);
-
-#ifdef HAVE_OSS
-int st_ossdspstartread(ft_t ft);
-int st_ossdspstartwrite(ft_t ft);
-#endif
-
-int st_prcstartread(ft_t ft);
-st_ssize_t st_prcread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_prcstartwrite(ft_t ft);
-st_ssize_t st_prcwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_prcstopwrite(ft_t ft);
-int st_prcseek(ft_t ft, st_size_t offset);
-
-int st_rawstartread(ft_t ft);
-st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp);
-int st_rawstopread(ft_t ft);
-int st_rawstartwrite(ft_t ft);
-st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp);
-int st_rawstopwrite(ft_t ft);
-int st_rawseek(ft_t ft, st_size_t offset);
-
-int st_sbstartread(ft_t ft);
-int st_sbstartwrite(ft_t ft);
-
-int st_sfstartread(ft_t ft);
-int st_sfstartwrite(ft_t ft);
-int st_sfseek(ft_t ft, st_size_t offset);
-
-int st_slstartread(ft_t ft);
-int st_slstartwrite(ft_t ft);
-
-int st_smpstartread(ft_t ft);
-st_ssize_t st_smpread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_smpstopread(ft_t ft);
-int st_smpstartwrite(ft_t ft);
-st_ssize_t st_smpwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_smpstopwrite(ft_t ft);
-int st_smpseek(ft_t ft, st_size_t offset);
-
-int st_sndtstartread(ft_t ft);
-int st_sndtstartwrite(ft_t ft);
-st_ssize_t st_sndtwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_sndtstopwrite(ft_t ft);
-int st_sndseek(ft_t ft, st_size_t offset);
-
-int st_spherestartread(ft_t ft);
-st_ssize_t st_sphereread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_spherestartwrite(ft_t ft);
-st_ssize_t st_spherewrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_spherestopwrite(ft_t ft);
-
-#ifdef HAVE_SUNAUDIO
-int st_sunstartread(ft_t ft);
-int st_sunstartwrite(ft_t ft);
-#endif
-
-int st_svxstartread(ft_t ft);
-st_ssize_t st_svxread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_svxstopread(ft_t ft);
-int st_svxstartwrite(ft_t ft);
-st_ssize_t st_svxwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_svxstopwrite(ft_t ft);
-
-int st_swstartread(ft_t ft);
-int st_swstartwrite(ft_t ft);
-
-int st_txwstartread(ft_t ft);
-st_ssize_t st_txwread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_txwstopread(ft_t ft);
-int st_txwstartwrite(ft_t ft);
-st_ssize_t st_txwwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_txwstopwrite(ft_t ft);
-
-int st_ubstartread(ft_t ft);
-int st_ubstartwrite(ft_t ft);
-
-int st_ulstartread(ft_t ft);
-int st_ulstartwrite(ft_t ft);
-
-int st_uwstartread(ft_t ft);
-int st_uwstartwrite(ft_t ft);
-
-int st_vocstartread(ft_t ft);
-st_ssize_t st_vocread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_vocstopread(ft_t ft);
-int st_vocstartwrite(ft_t ft);
-st_ssize_t st_vocwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_vocstopwrite(ft_t ft);
-
-#ifdef HAVE_LIBVORBIS
-int st_vorbisstartread(ft_t ft);
-st_ssize_t st_vorbisread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_vorbisstopread(ft_t ft);
-int st_vorbisstartwrite(ft_t ft);
-st_ssize_t st_vorbiswrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_vorbisstopwrite(ft_t ft);
-#endif
-
-int st_voxstartread(ft_t ft);
-st_ssize_t st_voxread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_voxstopread(ft_t ft);
-int st_voxstartwrite(ft_t ft);
-st_ssize_t st_voxwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_voxstopwrite(ft_t ft);
-
-int st_wavstartread(ft_t ft);
-st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_wavstopread(ft_t ft);
-int st_wavstartwrite(ft_t ft);
-st_ssize_t st_wavwrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_wavstopwrite(ft_t ft);
-int st_wavseek(ft_t ft, st_size_t offset);
-
-int st_wvestartread(ft_t ft);
-st_ssize_t st_wveread(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_wvestartwrite(ft_t ft);
-st_ssize_t st_wvewrite(ft_t ft, st_sample_t *buf, st_ssize_t len);
-int st_wvestopwrite(ft_t ft);
-int st_wveseek(ft_t ft, st_size_t offset);
-
 /*=============================================================================
  * Effects
  *=============================================================================
  */
-int st_avg_getopts(eff_t effp, int argc, char **argv);
-int st_avg_start(eff_t effp);
-int st_avg_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                st_size_t *isamp, st_size_t *osamp);
-int st_avg_stop(eff_t effp);
 
-int st_band_getopts(eff_t effp, int argc, char **argv);
-int st_band_start(eff_t effp);
-int st_band_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                 st_size_t *isamp, st_size_t *osamp);
-int st_band_stop(eff_t effp);
-int st_bandpass_getopts(eff_t effp, int argc, char **argv);
-int st_bandpass_start(eff_t effp);
+st_effect_t st_avg_effect;
+st_effect_t st_pick_effect;
+st_effect_t st_band_effect;
+st_effect_t st_bandpass_effect;
+st_effect_t st_bandreject_effect;
+st_effect_t st_chorus_effect;
+st_effect_t st_compand_effect;
+st_effect_t st_copy_effect;
+st_effect_t st_dcshift_effect;
+st_effect_t st_deemph_effect;
+st_effect_t st_earwax_effect;
+st_effect_t st_echo_effect;
+st_effect_t st_echos_effect;
+st_effect_t st_fade_effect;
+st_effect_t st_filter_effect;
+st_effect_t st_flanger_effect;
+st_effect_t st_highp_effect;
+st_effect_t st_highpass_effect;
+st_effect_t st_lowp_effect;
+st_effect_t st_lowpass_effect;
+st_effect_t st_mask_effect;
+st_effect_t st_mcompand_effect;
+st_effect_t st_noiseprof_effect;
+st_effect_t st_noisered_effect;
+st_effect_t st_pan_effect;
+st_effect_t st_phaser_effect;
+st_effect_t st_pitch_effect;
+st_effect_t st_polyphase_effect;
+st_effect_t st_rate_effect;
+st_effect_t st_repeat_effect;
+st_effect_t st_resample_effect;
+st_effect_t st_reverb_effect;
+st_effect_t st_reverse_effect;
+st_effect_t st_silence_effect;
+st_effect_t st_speed_effect;
+st_effect_t st_stat_effect;
+st_effect_t st_stretch_effect;
+st_effect_t st_swap_effect;
+st_effect_t st_synth_effect;
+st_effect_t st_trim_effect;
+st_effect_t st_vibro_effect;
+st_effect_t st_vol_effect;
 
-int st_bandreject_getopts(eff_t effp, int argc, char **argv);
-int st_bandreject_start(eff_t effp);
-
-int st_chorus_getopts(eff_t effp, int argc, char **argv);
-int st_chorus_start(eff_t effp);
-int st_chorus_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                   st_size_t *isamp, st_size_t *osamp);
-int st_chorus_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_chorus_stop(eff_t effp);
-
-int st_compand_getopts(eff_t effp, int argc, char **argv);
-int st_compand_start(eff_t effp);
-int st_compand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                    st_size_t *isamp, st_size_t *osamp);
-int st_compand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_compand_stop(eff_t effp);
-
-int st_copy_getopts(eff_t effp, int argc, char **argv);
-int st_copy_start(eff_t effp);
-int st_copy_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                 st_size_t *isamp, st_size_t *osamp);
-int st_copy_stop(eff_t effp);
-
-int st_dcshift_getopts(eff_t effp, int argc, char **argv);
-int st_dcshift_start(eff_t effp);
-int st_dcshift_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                    st_size_t *isamp, st_size_t *osamp);
-int st_dcshift_stop(eff_t effp);
-
-int st_deemph_getopts(eff_t effp, int argc, char **argv);
-int st_deemph_start(eff_t effp);
-int st_deemph_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                   st_size_t *isamp, st_size_t *osamp);
-int st_deemph_stop(eff_t effp);
-
-int st_earwax_getopts(eff_t effp, int argc, char **argv);
-int st_earwax_start(eff_t effp);
-int st_earwax_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                   st_size_t *isamp, st_size_t *osamp);
-int st_earwax_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_earwax_stop(eff_t effp);
-
-int st_echo_getopts(eff_t effp, int argc, char **argv);
-int st_echo_start(eff_t effp);
-int st_echo_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                 st_size_t *isamp, st_size_t *osamp);
-int st_echo_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_echo_stop(eff_t effp);
-
-int st_echos_getopts(eff_t effp, int argc, char **argv);
-int st_echos_start(eff_t effp);
-int st_echos_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                  st_size_t *isamp, st_size_t *osamp);
-int st_echos_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_echos_stop(eff_t effp);
-
-int st_fade_getopts(eff_t effp, int argc, char **argv);
-int st_fade_start(eff_t effp);
-int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                 st_size_t *isamp, st_size_t *osamp);
-int st_fade_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_fade_stop(eff_t effp);
-
-int st_filter_getopts(eff_t effp, int argc, char **argv);
-int st_filter_start(eff_t effp);
-int st_filter_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                   st_size_t *isamp, st_size_t *osamp);
-int st_filter_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_filter_stop(eff_t effp);
-
-int st_flanger_getopts(eff_t effp, int argc, char **argv);
-int st_flanger_start(eff_t effp);
-int st_flanger_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                    st_size_t *isamp, st_size_t *osamp);
-int st_flanger_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_flanger_stop(eff_t effp);
-
-int st_highp_getopts(eff_t effp, int argc, char **argv);
-int st_highp_start(eff_t effp);
-int st_highp_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                  st_size_t *isamp, st_size_t *osamp);
-int st_highp_stop(eff_t effp);
-
-int st_highpass_getopts(eff_t effp, int argc, char **argv);
-int st_highpass_start(eff_t effp);
-
-int st_lowp_getopts(eff_t effp, int argc, char **argv);
-int st_lowp_start(eff_t effp);
-int st_lowp_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                 st_size_t *isamp, st_size_t *osamp);
-int st_lowp_stop(eff_t effp);
-
-int st_lowpass_getopts(eff_t effp, int argc, char **argv);
-int st_lowpass_start(eff_t effp);
-
-int st_mask_getopts(eff_t effp, int argc, char **argv);
-int st_mask_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                 st_size_t *isamp, st_size_t *osamp);
-
-int st_mcompand_getopts(eff_t effp, int argc, char **argv);
-int st_mcompand_start(eff_t effp);
-int st_mcompand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                     st_size_t *isamp, st_size_t *osamp);
-int st_mcompand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_mcompand_stop(eff_t effp);
-
-int st_noiseprof_getopts(eff_t effp, int argc, char **argv);
-int st_noiseprof_start(eff_t effp);
-int st_noiseprof_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                     st_size_t *isamp, st_size_t *osamp);
-int st_noiseprof_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_noiseprof_stop(eff_t effp);
-
-int st_noisered_getopts(eff_t effp, int argc, char **argv);
-int st_noisered_start(eff_t effp);
-int st_noisered_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                     st_size_t *isamp, st_size_t *osamp);
-int st_noisered_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_noisered_stop(eff_t effp);
-
-int st_pan_getopts(eff_t effp, int argc, char **argv);
-int st_pan_start(eff_t effp);
-int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                st_size_t *isamp, st_size_t *osamp);
-int st_pan_stop(eff_t effp);
-
-int st_phaser_getopts(eff_t effp, int argc, char **argv);
-int st_phaser_start(eff_t effp);
-int st_phaser_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                   st_size_t *isamp, st_size_t *osamp);
-int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_phaser_stop(eff_t effp);
-
-int st_pitch_getopts(eff_t effp, int argc, char **argv);
-int st_pitch_start(eff_t effp);
-int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                  st_size_t *isamp, st_size_t *osamp);
-int st_pitch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_pitch_stop(eff_t effp);
-
-int st_poly_getopts(eff_t effp, int argc, char **argv);
-int st_poly_start(eff_t effp);
-int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                 st_size_t *isamp, st_size_t *osamp);
-int st_poly_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_poly_stop(eff_t effp);
-
-int st_rate_getopts(eff_t effp, int argc, char **argv);
-int st_rate_start(eff_t effp);
-int st_rate_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                 st_size_t *isamp, st_size_t *osamp);
-int st_rate_stop(eff_t effp);
-
-int st_repeat_getopts(eff_t effp, int argc, char **argv);
-int st_repeat_start(eff_t effp);
-int st_repeat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                     st_size_t *isamp, st_size_t *osamp);
-int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_repeat_stop(eff_t effp);
-
-int st_resample_getopts(eff_t effp, int argc, char **argv);
-int st_resample_start(eff_t effp);
-int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                     st_size_t *isamp, st_size_t *osamp);
-int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_resample_stop(eff_t effp);
-
-int st_reverb_getopts(eff_t effp, int argc, char **argv);
-int st_reverb_start(eff_t effp);
-int st_reverb_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                   st_size_t *isamp, st_size_t *osamp);
-int st_reverb_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_reverb_stop(eff_t effp);
-
-int st_reverse_getopts(eff_t effp, int argc, char **argv);
-int st_reverse_start(eff_t effp);
-int st_reverse_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                    st_size_t *isamp, st_size_t *osamp);
-int st_reverse_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_reverse_stop(eff_t effp);
-
-int st_silence_getopts(eff_t effp, int argc, char **argv);
-int st_silence_start(eff_t effp);
-int st_silence_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                    st_size_t *isamp, st_size_t *osamp);
-int st_silence_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_silence_stop(eff_t effp);
-
-int st_speed_getopts(eff_t effp, int argc, char **argv);
-int st_speed_start(eff_t effp);
-int st_speed_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                  st_size_t *isamp, st_size_t *osamp);
-int st_speed_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_speed_stop(eff_t effp);
-
-int st_stat_getopts(eff_t effp, int argc, char **argv);
-int st_stat_start(eff_t effp);
-int st_stat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                 st_size_t *isamp, st_size_t *osamp);
-int st_stat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_stat_stop(eff_t effp);
-
-int st_stretch_getopts(eff_t effp, int argc, char **argv);
-int st_stretch_start(eff_t effp);
-int st_stretch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                    st_size_t *isamp, st_size_t *osamp);
-int st_stretch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_stretch_stop(eff_t effp);
-
-int st_swap_getopts(eff_t effp, int argc, char **argv);
-int st_swap_start(eff_t effp);
-int st_swap_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                 st_size_t *isamp, st_size_t *osamp);
-int st_swap_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_swap_stop(eff_t effp);
-
-int st_synth_getopts(eff_t effp, int argc, char **argv);
-int st_synth_start(eff_t effp);
-int st_synth_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                  st_size_t *isamp, st_size_t *osamp);
-int st_synth_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
-int st_synth_stop(eff_t effp);
-
-int st_trim_getopts(eff_t effp, int argc, char **argv);
-int st_trim_start(eff_t effp);
-int st_trim_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                 st_size_t *isamp, st_size_t *osamp);
-int st_trim_stop(eff_t effp);
+/* Needed in sox.c
+ */
 st_size_t st_trim_get_start(eff_t effp);
 void st_trim_clear_start(eff_t effp);
-
-int st_vibro_getopts(eff_t effp, int argc, char **argv);
-int st_vibro_start(eff_t effp);
-int st_vibro_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                  st_size_t *isamp, st_size_t *osamp);
-int st_vibro_stop(eff_t effp);
-
-int st_vol_getopts(eff_t effp, int argc, char **argv);
-int st_vol_start(eff_t effp);
-int st_vol_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
-                st_size_t *isamp, st_size_t *osamp);
-int st_vol_stop(eff_t effp);
 
 #ifdef __cplusplus
 } /* end of extern "C" */

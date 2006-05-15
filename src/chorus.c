@@ -348,3 +348,14 @@ int st_chorus_stop(eff_t effp)
         }
         return (ST_SUCCESS);
 }
+
+st_effect_t st_chorus_effect = {
+  "chorus",
+  NULL,
+  0,
+  st_chorus_getopts,
+  st_chorus_start,
+  st_chorus_flow,
+  st_chorus_drain,
+  st_chorus_stop
+};

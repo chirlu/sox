@@ -286,3 +286,14 @@ int st_flanger_stop(eff_t effp)
         flanger->lookup_tab = (int *) -1;   /* guaranteed core dump */
         return (ST_SUCCESS);
 }
+
+st_effect_t st_flanger_effect = {
+  "flanger",
+  NULL,
+  0,
+  st_flanger_getopts,
+  st_flanger_start,
+  st_flanger_flow,
+  st_flanger_drain,
+  st_flanger_stop
+};

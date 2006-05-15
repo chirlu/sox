@@ -218,3 +218,14 @@ void st_trim_clear_start(eff_t effp)
     trim_t trim = (trim_t)effp->priv;
     trim->start = 0;
 }
+
+st_effect_t st_trim_effect = {
+  "trim",
+  NULL,
+  ST_EFF_MCHAN,
+  st_trim_getopts,
+  st_trim_start,
+  st_trim_flow,
+  st_effect_nothing_drain,
+  st_effect_nothing
+};

@@ -144,3 +144,13 @@ int st_band_stop(eff_t effp)
 	return (ST_SUCCESS);	/* nothing to do */
 }
 
+st_effect_t st_band_effect = {
+   "band",
+   NULL,
+   0,
+   st_band_getopts,
+   st_band_start,
+   st_band_flow,
+   st_effect_nothing_drain,
+   st_band_stop
+};

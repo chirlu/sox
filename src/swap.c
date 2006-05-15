@@ -196,3 +196,14 @@ int st_swap_stop(eff_t effp)
         /* nothing to do */
     return (ST_SUCCESS);
 }
+
+st_effect_t st_swap_effect = {
+  "swap",
+  NULL,
+  ST_EFF_MCHAN,
+  st_swap_getopts,
+  st_swap_start,
+  st_swap_flow,
+  st_swap_drain,
+  st_swap_stop
+};

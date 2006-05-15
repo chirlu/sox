@@ -448,3 +448,14 @@ int st_pan_stop(eff_t effp)
     }
     return ST_SUCCESS;
 }
+
+st_effect_t st_pan_effect = {
+  "pan",
+  NULL,
+  ST_EFF_MCHAN | ST_EFF_CHAN,
+  st_pan_getopts,
+  st_pan_start,
+  st_pan_flow,
+  st_effect_nothing_drain,
+  st_pan_stop
+};

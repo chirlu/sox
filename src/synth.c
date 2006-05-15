@@ -756,6 +756,17 @@ int st_synth_stop(eff_t effp)
     /* nothing to do */
     return (ST_SUCCESS);
 }
+
+st_effect_t st_synth_effect = {
+  "synth",
+  NULL,
+  ST_EFF_MCHAN,
+  st_synth_getopts,
+  st_synth_start,
+  st_synth_flow,
+  st_synth_drain,
+  st_synth_stop
+};
 /*-------------------------------------------------------------- end of file */
 
 

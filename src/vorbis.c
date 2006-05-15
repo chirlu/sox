@@ -458,4 +458,23 @@ int st_vorbisstopwrite(ft_t ft)
         return (ST_SUCCESS);
 }
 
+static char *vorbisnames[] = {
+  "vorbis",
+  "ogg",
+  NULL
+};
+
+st_format_t st_vorbis_format = {
+  vorbisnames,
+  NULL,
+  ST_FILE_STEREO,
+  st_vorbisstartread,
+  st_vorbisread,
+  st_vorbisstopread,
+  st_vorbisstartwrite,
+  st_vorbiswrite,
+  st_vorbisstopwrite,
+  st_format_nothing_seek
+};
+
 #endif /* HAVE_LIBVORBIS */

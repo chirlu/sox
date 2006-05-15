@@ -96,3 +96,14 @@ int st_mask_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 	*osamp = done;
 	return (ST_SUCCESS);
 }
+
+st_effect_t st_mask_effect = {
+  "mask",
+  NULL,
+  ST_EFF_MCHAN,
+  st_mask_getopts,
+  st_effect_nothing,
+  st_mask_flow,
+  st_effect_nothing_drain,
+  st_effect_nothing
+};

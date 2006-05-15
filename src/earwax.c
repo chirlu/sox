@@ -184,3 +184,14 @@ int st_earwax_stop(eff_t effp)
 
   return (ST_SUCCESS);
 }
+
+st_effect_t st_earwax_effect = {
+  "earwax",
+  NULL,
+  ST_EFF_MCHAN,
+  st_earwax_getopts,
+  st_earwax_start,
+  st_earwax_flow,
+  st_earwax_drain,
+  st_earwax_stop
+};

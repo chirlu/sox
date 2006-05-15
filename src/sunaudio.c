@@ -313,4 +313,22 @@ int st_sunstartwrite(ft_t ft)
     return (ST_SUCCESS);
 }
 
+/* Sun /dev/audio player */
+static char *sunnames[] = {
+  "sunau",
+  NULL
+};
+
+st_format_t st_sun_format = {
+  sunnames,
+  NULL,
+  ST_FILE_STEREO,
+  st_sunstartread,
+  st_rawread,
+  st_rawstopread,
+  st_sunstartwrite,
+  st_rawwrite,
+  st_rawstopwrite,
+  st_format_nothing_seek
+};
 #endif

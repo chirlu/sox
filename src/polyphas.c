@@ -664,3 +664,14 @@ int st_poly_stop(eff_t effp)
     }
     return (ST_SUCCESS);
 }
+
+st_effect_t st_polyphase_effect = {
+  "polyphase",
+  NULL,
+  ST_EFF_RATE,
+  st_poly_getopts,
+  st_poly_start,
+  st_poly_flow,
+  st_poly_drain,
+  st_poly_stop
+};

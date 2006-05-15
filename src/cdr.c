@@ -159,3 +159,21 @@ int st_cdrstopwrite(ft_t ft)
         }
         return(ST_SUCCESS);
 }
+
+static char *cdrnames[] = {
+  "cdr",
+  NULL
+};
+
+st_format_t st_cdr_format = {
+  cdrnames,
+  NULL,
+  ST_FILE_STEREO | ST_FILE_SEEK,
+  st_cdrstartread,
+  st_cdrread,
+  st_cdrstopread,
+  st_cdrstartwrite,
+  st_cdrwrite,
+  st_cdrstopwrite,
+  st_rawseek
+};

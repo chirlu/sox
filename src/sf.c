@@ -222,3 +222,21 @@ int st_sfstartwrite(ft_t ft)
 }
 
 /* Read and write are supplied by raw.c */
+/* IRCAM Sound File */
+static char *sfnames[] = {
+  "sf",
+  NULL
+};
+
+st_format_t st_sf_format = {
+  sfnames,
+  NULL,
+  ST_FILE_STEREO | ST_FILE_SEEK,
+  st_sfstartread,
+  st_rawread,
+  st_rawstopread,
+  st_sfstartwrite,
+  st_rawwrite,
+  st_rawstopwrite,
+  st_sfseek
+};

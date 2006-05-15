@@ -175,3 +175,21 @@ st_ssize_t st_datwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
     return done;
 }
 
+/* Text data samples */
+static char *datnames[] = {
+  "dat",
+  NULL
+};
+
+st_format_t st_dat_format = {
+  datnames,
+  NULL,
+  0,
+  st_datstartread,
+  st_datread,
+  st_format_nothing,
+  st_datstartwrite,
+  st_datwrite,
+  st_format_nothing,
+  st_format_nothing_seek
+};

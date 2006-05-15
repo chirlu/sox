@@ -72,3 +72,14 @@ int st_highpass_start(eff_t effp)
   butterworth->b [1] = (1.0 - sqrt(2.0) * c + c * c) * butterworth->a [0];
   return (ST_SUCCESS);
 }
+
+st_effect_t st_highpass_effect = {
+  "highpass",
+  NULL, 
+  0,
+  st_highpass_getopts,
+  st_highpass_start,
+  st_butterworth_flow,
+  st_effect_nothing_drain,
+  st_effect_nothing
+};

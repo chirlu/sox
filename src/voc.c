@@ -816,3 +816,22 @@ static void blockstop(ft_t ft)
                 st_writeb(ft, (int)datum); /* high byte of length */
         }
 }
+
+/* Sound Blaster .VOC */
+static char *vocnames[] = {
+  "voc",
+  NULL
+};
+
+st_format_t st_voc_format = {
+  vocnames,
+  NULL,
+  ST_FILE_STEREO,
+  st_vocstartread,
+  st_vocread,
+  st_vocstopread,
+  st_vocstartwrite,
+  st_vocwrite,
+  st_vocstopwrite,
+  st_format_nothing_seek
+};

@@ -617,3 +617,14 @@ int st_pitch_stop(eff_t effp)
 
     return ST_SUCCESS;
 }
+
+st_effect_t st_pitch_effect = {
+  "pitch",
+  NULL,
+  0,
+  st_pitch_getopts,
+  st_pitch_start,
+  st_pitch_flow,
+  st_pitch_drain,
+  st_pitch_stop
+};

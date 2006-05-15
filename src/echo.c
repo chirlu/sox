@@ -268,3 +268,14 @@ int st_echo_stop(eff_t effp)
         echo->delay_buf = (double *) -1;   /* guaranteed core dump */
         return (ST_SUCCESS);
 }
+
+st_effect_t st_echo_effect = {
+  "echo",
+  NULL,
+  0,
+  st_echo_getopts,
+  st_echo_start,
+  st_echo_flow,
+  st_echo_drain,
+  st_echo_stop
+};

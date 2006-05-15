@@ -209,6 +209,17 @@ int st_noiseprof_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
+st_effect_t st_noiseprof_effect = {
+  "noiseprof",
+  NULL,
+  ST_EFF_MCHAN | ST_EFF_REPORT,
+  st_noiseprof_getopts,
+  st_noiseprof_start,
+  st_noiseprof_flow,
+  st_noiseprof_drain,
+  st_noiseprof_stop
+};
+
 /* For Emacs:
    Local Variables:
    c-basic-offset: 4

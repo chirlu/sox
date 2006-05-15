@@ -501,3 +501,14 @@ static int FFT(short dir,long m,double *re,double *im)
 
    return ST_SUCCESS;
 }
+
+st_effect_t st_stat_effect = {
+  "stat",
+  NULL,
+  ST_EFF_MCHAN | ST_EFF_REPORT,
+  st_stat_getopts,
+  st_stat_start,
+  st_stat_flow,
+  st_stat_drain,
+  st_stat_stop
+};
