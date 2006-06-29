@@ -471,7 +471,7 @@ st_ssize_t st_mp3write(ft_t ft, st_sample_t *buf, st_ssize_t samp)
      goto end;
   }
 
-  done = nsamples;
+  done = nsamples*ft->info.channels;
 
  end:
   free(mp3buffer);

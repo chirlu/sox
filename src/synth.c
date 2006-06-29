@@ -721,13 +721,8 @@ int st_synth_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         synth->samples_done++;
         if(synth->length > 0 ){
             if( synth->samples_done > synth->length){
-                /* break 'nul' file fileter when enough samples 
-                 * are produced. the actual number of samples 
-                 * will be a little bigger, depends on when the
-                 * signal gets to the plugin
-                 */
-                raise(SIGINT); /* only once */
                 *osamp = done*chan;
+                return ST_EOF;
                 break;
 
             }

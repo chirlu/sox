@@ -11,7 +11,13 @@ sox-12.18.2
     library.  Applications are now required to detect
     all failures from return codes and cleanup as they
     want.
-
+  o Changed how list of formats and effects are stored internally.
+    Effects libst users only.
+  o Modify the synth effect to not use SIGINT to stop processing
+    and instead return ST_EOF.  This allows exact acount of
+    samples to be written out instead of an approximate amount.
+  o Fix hangup when attempting to write stereo MP3 files.
+    (1512218) Kendrick Shaw
 
 sox-12.18.1
 ------------
