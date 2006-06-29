@@ -38,14 +38,10 @@
 #include <unistd.h>             /* for unlink() */
 #endif
 
-#ifdef HAVE_GETOPT_H
+#ifdef HAVE_GETOPT_LONG
 #include <getopt.h>
 #else
-#ifndef HAVE_GETOPT
-int getopt(int,char **,char *);
-extern char *optarg;
-extern int optind;
-#endif
+#include "getopt.h"
 #endif
 
 #include <sys/types.h> /* for fstat() */

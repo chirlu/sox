@@ -21,6 +21,7 @@ sox-12.18.2
   o Fix hangup when attempting to write stereo MP3 files.
     (1512218) Kendrick Shaw
   o Deemp effect would lose stereo sepeartion. (1479249)
+  o Adding cross-platform support for getopt_long
 
 sox-12.18.1
 ------------

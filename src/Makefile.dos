@@ -28,7 +28,8 @@ EOBJ	= avg.obj band.obj bandpass.obj breject.obj btrworth.obj chorus.obj \
 	  reverb.obj reverse.obj silence.obj speed.obj stat.obj \
 	  stretch.obj swap.obj synth.obj trim.obj vibro.obj vol.obj
 
-LIBOBJS   = $(FOBJ) $(EOBJ) handlers.obj misc.obj stio.obj getopt.obj util.obj
+LIBOBJS   = $(FOBJ) $(EOBJ) handlers.obj misc.obj stio.obj getopt.obj \
+	    getopt1.obj util.obj
 
 
 # The following defines tell where compiler files are kept, not where
