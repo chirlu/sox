@@ -14,7 +14,7 @@
  * Sound Tools file format and effect tables.
  */
 
-st_format_t st_terminator_format =
+st_format_t st_terminate_format =
 {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
@@ -71,7 +71,7 @@ st_format_t *st_formats[] = {
   &st_vox_format,
   &st_wav_format,
   &st_wve_format,
-  &st_terminator_format,
+  &st_terminate_format,
   NULL
 };
 
@@ -84,7 +84,7 @@ st_format_t *st_formats[] = {
  *
  */
 
-st_effect_t st_terminator_effect =
+st_effect_t st_terminate_effect =
 {
   0, 0, 0, 0, 0, 0, 0, 0
 };
@@ -132,6 +132,6 @@ st_effect_t *st_effects[] = {
   &st_trim_effect,
   &st_vibro_effect,
   &st_vol_effect,
-  &st_terminator_effect,
+  &st_terminate_effect,
   NULL
 };

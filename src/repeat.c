@@ -37,7 +37,7 @@ int st_repeat_getopts(eff_t effp, int n, char **argv)
         repeat_t repeat = (repeat_t)effp->priv;
 
         if (n != 1) {
-                st_fail("Usage: repeat count]");
+                st_fail(st_repeat_effect.usage);
                 return (ST_EOF);
         }
 
@@ -197,7 +197,7 @@ int st_repeat_stop(eff_t effp)
 
 st_effect_t st_repeat_effect = {
   "repeat",
-  NULL,
+  "Usage: repeat count",
   0,
   st_repeat_getopts,
   st_repeat_start,

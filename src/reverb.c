@@ -123,7 +123,7 @@ int st_reverb_getopts(eff_t effp, int n, char **argv)
 
         if ( n < 3 )
         {
-            st_fail("Usage: reverb gain-out reverb-time delay [ delay ... ]");
+            st_fail(st_reverb_effect.usage);
             return (ST_EOF);
         }
 
@@ -289,7 +289,7 @@ int st_reverb_stop(eff_t effp)
 
 st_effect_t st_reverb_effect = {
   "reverb",
-  NULL,
+  "Usage: reverb gain-out reverb-time delay [ delay ... ]",
   0,
   st_reverb_getopts,
   st_reverb_start,

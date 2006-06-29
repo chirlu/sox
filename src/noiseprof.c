@@ -44,7 +44,7 @@ int st_noiseprof_getopts(eff_t effp, int n, char **argv)
     if (n == 1) {
         data->output_filename = argv[0];
     } else if (n > 1) {
-        st_fail("Usage: noiseprof [filename]");
+        st_fail(st_noiseprof_effect.usage);
         return (ST_EOF);
     }
 
@@ -211,7 +211,7 @@ int st_noiseprof_stop(eff_t effp)
 
 st_effect_t st_noiseprof_effect = {
   "noiseprof",
-  NULL,
+  "Usage: noiseprof [filename]",
   ST_EFF_MCHAN | ST_EFF_REPORT,
   st_noiseprof_getopts,
   st_noiseprof_start,

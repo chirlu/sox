@@ -12,7 +12,9 @@ sox-12.18.2
     all failures from return codes and cleanup as they
     want.
   o Changed how list of formats and effects are stored internally.
-    Effects libst users only.
+    Effects libst users only. Dirk
+  o Store effects usage so that its accessable by applications.
+    Dirk
   o Modify the synth effect to not use SIGINT to stop processing
     and instead return ST_EOF.  This allows exact acount of
     samples to be written out instead of an approximate amount.

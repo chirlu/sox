@@ -38,10 +38,6 @@
 #define QUARTER  ((PAN_FLOAT)(0.25e0))
 #define ZERO     ((PAN_FLOAT)(0.0e0))
 
-/* error message */
-
-#define PAN_USAGE "Usage: pan direction (in [-1.0 .. 1.0])"
-
 /* structure to hold pan parameter */
 
 typedef struct {
@@ -67,7 +63,7 @@ int st_pan_getopts(eff_t effp, int n, char **argv)
     if (n && (!sscanf(argv[0], PAN_FLOAT_SCAN, &pan->dir) || 
               pan->dir < MONE || pan->dir > ONE))
     {
-        st_fail(PAN_USAGE);
+        st_fail(st_pan_effect.usage);
         return ST_EOF;
     }
 
@@ -451,7 +447,7 @@ int st_pan_stop(eff_t effp)
 
 st_effect_t st_pan_effect = {
   "pan",
-  NULL,
+  "Usage: pan direction (in [-1.0 .. 1.0])",
   ST_EFF_MCHAN | ST_EFF_CHAN,
   st_pan_getopts,
   st_pan_start,

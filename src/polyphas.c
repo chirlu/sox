@@ -667,7 +667,14 @@ int st_poly_stop(eff_t effp)
 
 st_effect_t st_polyphase_effect = {
   "polyphase",
-  NULL,
+  "Usage: -w <nut / ham>        :  window type\n"
+  "       -width <short / long> :  window width\n"
+  "                                short = 128 samples\n"
+  "                                long  = 1024 samples\n"
+  "       <num>                    num:  explicit number\n"
+  "\n"
+  "       -cutoff <float>       :  frequency cutoff for base bandwidth.\n"
+  "                                Default = 0.95 = 95%",
   ST_EFF_RATE,
   st_poly_getopts,
   st_poly_start,

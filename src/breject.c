@@ -41,7 +41,7 @@ int st_bandreject_getopts(eff_t effp, int n, char **argv)
   butterworth_t butterworth = (butterworth_t)effp->priv;
 
   if (n != 2) {
-    st_fail("Usage: bandreject FREQUENCY BANDWIDTH");
+    st_fail(st_bandreject_effect.usage);
     return (ST_EOF);
   }
 
@@ -79,7 +79,7 @@ int st_bandreject_start(eff_t effp)
 
 st_effect_t st_bandreject_effect = {
   "bandreject",
-  NULL,
+  "Usage: bandreject FREQUENCY BANDWIDTH",
   0,
   st_bandreject_getopts,
   st_bandreject_start,

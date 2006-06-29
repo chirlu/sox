@@ -21,7 +21,7 @@ int st_copy_getopts(eff_t effp, int n, char **argv)
 {
 	if (n)
 	{
-		st_fail("Copy effect takes no options.");
+		st_fail(st_copy_effect.usage);
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -66,7 +66,7 @@ int st_copy_stop(eff_t effp)
 
 st_effect_t st_copy_effect = {
   "copy",
-  NULL,
+  "Usage: Copy effect takes no options",
   ST_EFF_MCHAN,
   st_copy_getopts,
   st_copy_start,

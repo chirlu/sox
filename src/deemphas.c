@@ -117,7 +117,7 @@ int st_deemph_getopts(eff_t effp, int n, char **argv)
 {
      if (n)
      {
-          st_fail("Deemphasis filtering effect takes no options.\n");
+          st_fail(st_deemph_effect.usage);
           return (ST_EOF);
      }
      if (sizeof(double)*ST_MAX_EFFECT_PRIVSIZE < sizeof(struct deemphstuff))
@@ -205,7 +205,7 @@ int st_deemph_stop(eff_t effp)
 
 st_effect_t st_deemph_effect = {
   "deemph",
-  NULL,
+  "Usage: Deemphasis filtering effect takes no options",
   ST_EFF_MCHAN,
   st_deemph_getopts,
   st_deemph_start,

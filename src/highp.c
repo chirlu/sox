@@ -48,7 +48,7 @@ int st_highp_getopts(eff_t effp, int n, char **argv)
 
         if ((n < 1) || !sscanf(argv[0], "%f", &highp->cutoff))
         {
-                st_fail("Usage: highp cutoff");
+                st_fail(st_highp_effect.usage);
                 return (ST_EOF);
         }
         return (ST_SUCCESS);
@@ -115,7 +115,7 @@ int st_highp_stop(eff_t effp)
 
 st_effect_t st_highp_effect = {
   "highp",
-  NULL,
+  "Usage: highp cutoff",
   0,
   st_highp_getopts,
   st_highp_start,

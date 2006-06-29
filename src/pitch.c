@@ -55,11 +55,6 @@
 #define PITCH_FLOAT_SCAN "%lf"
 #endif
 
-#define PITCH_USAGE \
-    "Usage: pitch shift width interpole fade" \
-    " (in cents, in ms, cub/lin, cos/ham/lin/trap)" \
-    " (defaults: 0 20 c c)"
-
 /* cross fading options for transitions
  */
 #define PITCH_FADE_COS 0 /* cosine */
@@ -287,7 +282,7 @@ int st_pitch_getopts(eff_t effp, int n, char **argv)
 
     if (n && !sscanf(argv[0], PITCH_FLOAT_SCAN, &pitch->shift))
     {
-        st_fail(PITCH_USAGE);
+        st_fail(st_pitch_effect.usage);
         return ST_EOF;
     }
 
@@ -295,7 +290,7 @@ int st_pitch_getopts(eff_t effp, int n, char **argv)
     pitch->width = PITCH_DEFAULT_WIDTH;
     if (n>1 && !sscanf(argv[1], PITCH_FLOAT_SCAN, &pitch->width))
     {
-        st_fail(PITCH_USAGE);
+        st_fail(st_pitch_effect.usage);
         return ST_EOF;
     }
 
@@ -314,7 +309,7 @@ int st_pitch_getopts(eff_t effp, int n, char **argv)
             pitch->interopt = PITCH_INTERPOLE_CUB;
             break;
         default:
-            st_fail(PITCH_USAGE);
+            st_fail(st_pitch_effect.usage);
             return ST_EOF;
         }
     }
@@ -342,7 +337,7 @@ int st_pitch_getopts(eff_t effp, int n, char **argv)
             pitch->fadeopt = PITCH_FADE_COS;
             break;
         default:
-            st_fail(PITCH_USAGE);
+            st_fail(st_pitch_effect.usage);
             return ST_EOF;
         }
     }
@@ -351,7 +346,7 @@ int st_pitch_getopts(eff_t effp, int n, char **argv)
     if (n>4 && (!sscanf(argv[4], PITCH_FLOAT_SCAN, &pitch->coef) ||
                 pitch->coef<ZERO || pitch->coef>HALF))
     {
-        st_fail(PITCH_USAGE);
+        st_fail(st_pitch_effect.usage);
         return ST_EOF;
     }
 
@@ -620,7 +615,9 @@ int st_pitch_stop(eff_t effp)
 
 st_effect_t st_pitch_effect = {
   "pitch",
-  NULL,
+  "Usage: pitch shift width interpole fade\n"
+  "       (in cents, in ms, cub/lin, cos/ham/lin/trap)"
+  "       (defaults: 0 20 c c)",
   0,
   st_pitch_getopts,
   st_pitch_start,

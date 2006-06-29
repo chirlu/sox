@@ -41,7 +41,7 @@ int st_bandpass_getopts (eff_t effp, int n, char **argv)
   butterworth_t butterworth = (butterworth_t)effp->priv;
 
   if (n != 2) {
-    st_fail("Usage: bandpass FREQUENCY BANDWIDTH");
+    st_fail(st_bandpass_effect.usage);
     return (ST_EOF);
   }
 
@@ -79,7 +79,7 @@ int st_bandpass_start (eff_t effp)
 
 st_effect_t st_bandpass_effect = {
   "bandpass",
-  NULL,
+  "Usage: bandpass FREQUENCY BANDWIDTH",
   0,
   st_bandpass_getopts,
   st_bandpass_start,

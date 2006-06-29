@@ -17,8 +17,6 @@
 /* Time resolutin one millisecond */
 #define TIMERES 1000
 
-#define TRIM_USAGE "Trim usage: trim start [length]"
-
 typedef struct
 {
     /* options here */
@@ -57,7 +55,7 @@ int st_trim_getopts(eff_t effp, int n, char **argv)
             if (st_parsesamples(0, trim->length_str,
                                 &trim->length, 't') != ST_SUCCESS)
             {
-                st_fail(TRIM_USAGE);
+                st_fail(st_trim_effect.usage);
                 return(ST_EOF);
             }
         case 1:
@@ -72,12 +70,12 @@ int st_trim_getopts(eff_t effp, int n, char **argv)
             if (st_parsesamples(0, trim->start_str,
                                 &trim->start, 't') != ST_SUCCESS)
             {
-                st_fail(TRIM_USAGE);
+                st_fail(st_trim_effect.usage);
                 return(ST_EOF);
             }
             break;
         default:
-            st_fail(TRIM_USAGE);
+            st_fail(st_trim_effect.usage);
             return ST_EOF;
             break;
 
@@ -95,7 +93,7 @@ int st_trim_start(eff_t effp)
     if (st_parsesamples(effp->ininfo.rate, trim->start_str,
                         &trim->start, 't') != ST_SUCCESS)
     {
-        st_fail(TRIM_USAGE);
+        st_fail(st_trim_effect.usage);
         return(ST_EOF);
     }
     /* Account for # of channels */
@@ -106,7 +104,7 @@ int st_trim_start(eff_t effp)
         if (st_parsesamples(effp->ininfo.rate, trim->length_str,
                     &trim->length, 't') != ST_SUCCESS)
         {
-            st_fail(TRIM_USAGE);
+            st_fail(st_trim_effect.usage);
             return(ST_EOF);
         }
     }
@@ -221,7 +219,7 @@ void st_trim_clear_start(eff_t effp)
 
 st_effect_t st_trim_effect = {
   "trim",
-  NULL,
+  "Usage: trim start [length]",
   ST_EFF_MCHAN,
   st_trim_getopts,
   st_trim_start,

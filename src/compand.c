@@ -75,13 +75,7 @@ int st_compand_getopts(eff_t effp, int n, char **argv)
 
     if (n < 2 || n > 5)
     {
-      st_fail("Wrong number of arguments for the compander effect\n"
-           "Use: {<attack_time>,<decay_time>}+ {<dB_in>,<db_out>}+ "
-           "[<dB_postamp> [<initial-volume> [<delay_time]]]\n"
-           "where {}+ means `one or more in a comma-separated, "
-           "white-space-free list'\n"
-           "and [] indications possible omission.  dB values are floating\n"
-           "point or `-inf'; times are in seconds.");
+      st_fail (st_compand_effect.usage);
       return (ST_EOF);
     }
     else { /* Right no. of args, but are they well formed? */
@@ -412,7 +406,10 @@ int st_compand_stop(eff_t effp)
 
 st_effect_t st_compand_effect = {
    "compand",
-   NULL,
+   "Usage: {<attack_time>,<decay_time>}+ {<dB_in>,<db_out>}+ [<dB_postamp> [<initial-volume> [<delay_time]]]\n"
+   "       where {}+ means e or more in a comma-separated, white-space-free list'\n"
+   "       and [] indications possible omission.  dB values are floating\n"
+   "       point or -inf'; times are in seconds.",
    ST_EFF_MCHAN,
    st_compand_getopts,
    st_compand_start,

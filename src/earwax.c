@@ -80,7 +80,7 @@ int st_earwax_getopts(eff_t effp, int n, char **argv)
 {
   /* no options */
   if (n){
-    st_fail("The earwax filtering effect takes no options.\n");
+    st_fail(st_earwax_effect.usage);
     return (ST_EOF);
   }
   return (ST_SUCCESS);
@@ -187,7 +187,7 @@ int st_earwax_stop(eff_t effp)
 
 st_effect_t st_earwax_effect = {
   "earwax",
-  NULL,
+  "Usage: The earwax filtering effect takes no options",
   ST_EFF_MCHAN,
   st_earwax_getopts,
   st_earwax_start,

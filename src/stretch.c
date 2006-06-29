@@ -33,11 +33,6 @@
 #define STRETCH_FLOAT_SCAN "%f"
 #endif
 
-#define STRETCH_USAGE \
-    "Usage: stretch factor [window fade shift fading]\n" \
-    "\t(expansion, frame in ms, lin/..., unit<1.0, unit<0.5)\n" \
-    "\t(defaults: 1.0 20 lin ...)"
-
 /* ok, it looks stupid to have such constant.
    this is because of the cast, if floats are switched to doubles.
  */
@@ -108,6 +103,7 @@ static void debug(stretch_t s, char * where)
  */
 int st_stretch_getopts(eff_t effp, int n, char **argv) 
 {
+    char usage[1024];
     stretch_t stretch = (stretch_t) effp->priv; 
     
     /* default options */
@@ -117,13 +113,15 @@ int st_stretch_getopts(eff_t effp, int n, char **argv)
 
     if (n>0 && !sscanf(argv[0], STRETCH_FLOAT_SCAN, &stretch->factor))
     {
-        st_fail(STRETCH_USAGE "\n\terror while parsing factor");
+        sprintf (usage, "%s\n\terror while parsing factor", st_stretch_effect.usage);
+        st_fail(usage);
         return ST_EOF;
     }
 
     if (n>1 && !sscanf(argv[1], STRETCH_FLOAT_SCAN, &stretch->window))
     {
-        st_fail(STRETCH_USAGE "\n\terror while parsing window size");
+        sprintf (usage, "%s\n\terror while parsing window size", st_stretch_effect.usage);
+        st_fail(usage);
         return ST_EOF;
     }
 
@@ -136,7 +134,8 @@ int st_stretch_getopts(eff_t effp, int n, char **argv)
             stretch->fade = st_linear_fading;
             break;
         default:
-            st_fail(STRETCH_USAGE "\n\terror while parsing fade type");
+            sprintf (usage, "%s\n\terror while parsing fade type", st_stretch_effect.usage);
+            st_fail(usage);
             return ST_EOF;
         }
     }
@@ -147,13 +146,15 @@ int st_stretch_getopts(eff_t effp, int n, char **argv)
  
     if (n>3 && !sscanf(argv[3], STRETCH_FLOAT_SCAN, &stretch->shift))
     {
-        st_fail(STRETCH_USAGE "\n\terror while parsing shift ratio");
+        sprintf (usage, "%s\n\terror while parsing shift ratio", st_stretch_effect.usage);
+        st_fail(usage);
         return ST_EOF;
     }
 
     if (stretch->shift > ONE || stretch->shift <= ZERO)
     {
-        st_fail(STRETCH_USAGE "\n\terror with shift ratio value");
+        sprintf (usage, "%s\n\terror with shift ratio value", st_stretch_effect.usage);
+        st_fail(usage);
         return ST_EOF;
     }
 
@@ -168,13 +169,15 @@ int st_stretch_getopts(eff_t effp, int n, char **argv)
 
     if (n>4 && !sscanf(argv[4], STRETCH_FLOAT_SCAN, &stretch->fading))
     {
-        st_fail(STRETCH_USAGE "\n\terror while parsing fading ratio");
+        sprintf (usage, "%s\n\terror while parsing fading ratio", st_stretch_effect.usage);
+        st_fail(usage);
         return ST_EOF;
     }
 
     if (stretch->fading > HALF || stretch->fading < ZERO)
     {
-        st_fail(STRETCH_USAGE "\n\terror with fading ratio value");
+        sprintf (usage, "%s\n\terror with fading ratio value", st_stretch_effect.usage);
+        st_fail(usage);
         return ST_EOF;
     }
 
@@ -424,7 +427,9 @@ int st_stretch_stop(eff_t effp)
 
 st_effect_t st_stretch_effect = {
   "stretch",
-  NULL,
+  "Usage: stretch factor [window fade shift fading]\n"
+  "       (expansion, frame in ms, lin/..., unit<1.0, unit<0.5)\n"
+  "       (defaults: 1.0 20 lin ...)",
   0,
   st_stretch_getopts,
   st_stretch_start,

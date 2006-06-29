@@ -16,22 +16,6 @@
 #include <ctype.h>
 #include "st_i.h"
 
-#define USSTR ""\
-"Usage:synth [length] type mix [freq[-freq2]] [off] [ph] [p1] [p2] [p3]\n"\
-"   <length> length in sec or hh:mm:ss.frac, 0=inputlength, default=0\n"\
-"   <type>   is sine, square, triangle, sawtooth, trapetz, exp,\n"\
-"               whitenoise, pinknoise, brownnoise, default=sine\n"\
-"   <mix>    is create, mix, amod, default=create\n"\
-"   <freq>   frequency at beginning in Hz, not used  for noise..\n"\
-"   <freq2>  frequency at end in Hz, not used for noise..\n"\
-"            <freq/2> can be given as %%n, where 'n' is the number of\n"\
-"            half notes in respect to A (440Hz)\n"\
-"   <off>    Bias (DC-offset)  of signal in percent, default=0\n"\
-"   <ph>     phase shift 0..100 shift phase 0..2*Pi, not used for noise..\n"\
-"   <p1>     square: Ton/Toff, triangle+trapetz: rising slope time (0..100)\n"\
-"   <p2>     trapetz: ON time (0..100)\n"\
-"   <p3>     trapetz: falling slope position (0..100)"
-
 #define PCOUNT 5
 
 #define SYNTH_SINE       0
@@ -232,7 +216,6 @@ static void parmcopy(synth_t sy, int s, int d){
 int st_synth_getopts(eff_t effp, int n, char **argv) 
 {
     int argn;
-    char *usstr=USSTR;
     char *hlp;
     int i;
     int c;
@@ -258,7 +241,7 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
 
     argn=0;
     if ( n<0){
-        st_fail(usstr);
+        st_fail(st_synth_effect.usage);
         return(ST_EOF);
     }
     if(n==0){
@@ -280,7 +263,7 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
         if (st_parsesamples(0, synth->length_str, &synth->length, 't') !=
                 ST_SUCCESS)
         {
-            st_fail(usstr);
+            st_fail(st_synth_effect.usage);
             return (ST_EOF);
         }
         argn++;
@@ -326,7 +309,7 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
             }else{
                 /* type not given, error */
                 st_warn("synth: no type given");
-                st_fail(usstr);
+                st_fail(st_synth_effect.usage);
                 return(ST_EOF);
             }
             if(n > argn){
@@ -350,7 +333,7 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
                     synth->freq2[c] = synth->freq[c];
                     if(synth->freq[c] < 0.0){
                         st_warn("synth: illegal freq");
-                        st_fail(usstr);
+                        st_fail(st_synth_effect.usage);
                         return(ST_EOF);
                     }
                     if(*hlp=='-') {
@@ -359,7 +342,7 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
                         synth->freq2[c]=StringToFreq(hlp+1,&hlp2);
                         if(synth->freq2[c] < 0.0){
                             st_warn("synth: illegal freq2");
-                            st_fail(usstr);
+                            st_fail(st_synth_effect.usage);
                             return(ST_EOF);
                         }
                     }
@@ -373,7 +356,7 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
                         }
                         if( i >= PCOUNT) {
                             st_warn("synth: too many parameters");
-                            st_fail(usstr);
+                            st_fail(st_synth_effect.usage);
                             return(ST_EOF);
                             
                         }
@@ -381,7 +364,7 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
                         if(hlp==argv[argn]){
                                 /* error in number */
                             st_warn("synth: parameter error");
-                            st_fail(usstr);
+                            st_fail(st_synth_effect.usage);
                             return(ST_EOF);
                         } 
                         i++;
@@ -427,7 +410,6 @@ int st_synth_start(eff_t effp)
     int i;
     int c;
     synth_t synth = (synth_t) effp->priv;
-    char *usstr=USSTR;
 
     st_initrand();
 
@@ -436,7 +418,7 @@ int st_synth_start(eff_t effp)
         if (st_parsesamples(effp->ininfo.rate, synth->length_str,
                             &synth->length, 't') != ST_SUCCESS)
         {
-            st_fail(usstr);
+            st_fail(st_synth_effect.usage);
             return(ST_EOF);
         }
     }
@@ -754,7 +736,20 @@ int st_synth_stop(eff_t effp)
 
 st_effect_t st_synth_effect = {
   "synth",
-  NULL,
+  "Usage: synth [length] type mix [freq[-freq2]] [off] [ph] [p1] [p2] [p3]\n"
+  "       <length> length in sec or hh:mm:ss.frac, 0=inputlength, default=0\n"
+  "       <type>   is sine, square, triangle, sawtooth, trapetz, exp,\n"
+  "                whitenoise, pinknoise, brownnoise, default=sine\n"
+  "       <mix>    is create, mix, amod, default=create\n"
+  "       <freq>   frequency at beginning in Hz, not used  for noise..\n"
+  "       <freq2>  frequency at end in Hz, not used for noise..\n"
+  "                <freq/2> can be given as %%n, where 'n' is the number of\n"
+  "                half notes in respect to A (440Hz)\n"
+  "       <off>    Bias (DC-offset)  of signal in percent, default=0\n"
+  "       <ph>     phase shift 0..100 shift phase 0..2*Pi, not used for noise..\n"
+  "       <p1>     square: Ton/Toff, triangle+trapetz: rising slope time (0..100)\n"
+  "       <p2>     trapetz: ON time (0..100)\n"
+  "       <p3>     trapetz: falling slope position (0..100)",
   ST_EFF_MCHAN,
   st_synth_getopts,
   st_synth_start,

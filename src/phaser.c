@@ -85,7 +85,7 @@ int st_phaser_getopts(eff_t effp, int n, char **argv)
 
         if (!((n == 5) || (n == 6)))
         {
-            st_fail("Usage: phaser gain-in gain-out delay decay speed [ -s | -t ]");
+            st_fail(st_phaser_effect.usage);
             return (ST_EOF);
         }
 
@@ -102,7 +102,7 @@ int st_phaser_getopts(eff_t effp, int n, char **argv)
                         phaser->modulation = MOD_TRIANGLE;
                 else
                 {
-                        st_fail("Usage: phaser gain-in gain-out delay decay speed [ -s | -t ]");
+                        st_fail(st_phaser_effect.usage);
                         return (ST_EOF);
                 }
         }
@@ -279,7 +279,7 @@ int st_phaser_stop(eff_t effp)
 
 st_effect_t st_phaser_effect = {
   "phaser",
-  NULL,
+  "Usage: phaser gain-in gain-out delay decay speed [ -s | -t ]",
   0,
   st_phaser_getopts,
   st_phaser_start,

@@ -42,7 +42,7 @@ int st_highpass_getopts(eff_t effp, int n, char **argv)
   butterworth_t butterworth = (butterworth_t)effp->priv;
 
   if (n != 1) {
-    st_fail("Usage: highpass FREQUENCY");
+    st_fail(st_highpass_effect.usage);
     return (ST_EOF);
   }
 
@@ -75,7 +75,7 @@ int st_highpass_start(eff_t effp)
 
 st_effect_t st_highpass_effect = {
   "highpass",
-  NULL, 
+  "Usage: highpass FREQUENCY",
   0,
   st_highpass_getopts,
   st_highpass_start,

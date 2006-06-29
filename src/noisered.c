@@ -41,7 +41,7 @@ int st_noisered_getopts(eff_t effp, int n, char **argv)
     reddata_t data = (reddata_t) effp->priv;
 
     if (n > 2 || n < 1) {
-            st_fail("Usage: noiseprof profile-file [threshold]");
+            st_fail(st_noisered_effect.usage);
             return (ST_EOF);
     }
     data->threshold = 0.5;
@@ -345,7 +345,7 @@ int st_noisered_stop(eff_t effp)
 
 st_effect_t st_noisered_effect = {
   "noisered",
-  NULL,
+  "Usage: noiseprof profile-file [threshold]",
   ST_EFF_MCHAN,
   st_noisered_getopts,
   st_noisered_start,

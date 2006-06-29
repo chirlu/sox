@@ -71,13 +71,13 @@ int st_band_getopts(eff_t effp, int n, char **argv)
 	}
 	if ((n < 1) || !sscanf(argv[0], "%f", &band->center))
 	{
-		st_fail("Usage: band [ -n ] center [ width ]");
+		st_fail(st_band_effect.usage);
 		return (ST_EOF);
 	}
 	band->width = band->center / 2;
 	if ((n >= 2) && !sscanf(argv[1], "%f", &band->width))
 	{
-		st_fail("Usage: band [ -n ] center [ width ]");
+		st_fail(st_band_effect.usage);
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -146,7 +146,7 @@ int st_band_stop(eff_t effp)
 
 st_effect_t st_band_effect = {
    "band",
-   NULL,
+   "Usage: band [ -n ] center [ width ]",
    0,
    st_band_getopts,
    st_band_start,

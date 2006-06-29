@@ -26,13 +26,6 @@
 #define ONE       ((VOL_FLOAT)(1.0e0))
 #define TWENTY    ((VOL_FLOAT)(20.0e0))
 
-#define VOL_USAGE \
-    "Usage: vol gain [ type [ limitergain ] ]" \
-    " (default type=amplitude: 1.0 is constant, <0.0 change phase;" \
-    " type=power 1.0 is constant; type=dB: 0.0 is constant, +6 doubles ampl.)" \
-    " The peak limiter has a gain much less than 1.0 (ie 0.05 or 0.02) which is only" \
-    " used on peaks to prevent clipping. (default is no limiter)"
-
 typedef struct {
     VOL_FLOAT gain; /* amplitude gain. */
     
@@ -56,7 +49,7 @@ int st_vol_getopts(eff_t effp, int n, char **argv)
     
     if (n && (!sscanf(argv[0], VOL_FLOAT_SCAN, &vol->gain)))
     {
-        st_fail(VOL_USAGE);
+        st_fail(st_vol_effect.usage);
         return ST_EOF;
     }
 
@@ -88,7 +81,7 @@ int st_vol_getopts(eff_t effp, int n, char **argv)
     {
         if ((fabs(vol->gain) < ONE) || !sscanf(argv[2], VOL_FLOAT_SCAN, &vol->limitergain) || !((vol->limitergain > ZERO) && (vol->limitergain < ONE)))
         {
-                st_fail(VOL_USAGE);
+                st_fail(st_vol_effect.usage);
                 return ST_EOF;                  
         }
         
@@ -222,7 +215,11 @@ int st_vol_stop(eff_t effp)
 
 st_effect_t st_vol_effect = {
   "vol",
-  NULL,
+  "Usage: vol gain [ type [ limitergain ] ]"
+  "       (default type=amplitude: 1.0 is constant, <0.0 change phase;\n"
+  "       type=power 1.0 is constant; type=dB: 0.0 is constant, +6 doubles ampl.)\n"
+  "       The peak limiter has a gain much less than 1.0 (ie 0.05 or 0.02) which is only\n"
+  "       used on peaks to prevent clipping. (default is no limiter)",
   ST_EFF_MCHAN,
   st_vol_getopts,
   st_vol_start,

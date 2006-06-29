@@ -240,7 +240,7 @@ int st_rate_getopts(eff_t effp, int n, char **argv)
 {
 	if (n)
 	{
-		st_fail("Rate effect takes no options.");
+		st_fail(st_rate_effect.usage);
 		return (ST_EOF);
 	}
 	return (ST_SUCCESS);
@@ -339,7 +339,7 @@ int st_rate_stop(eff_t effp)
 
 st_effect_t st_rate_effect = {
   "rate",
-  NULL, 
+  "Usage: Rate effect takes no options",
   ST_EFF_RATE,
   st_rate_getopts,
   st_rate_start,

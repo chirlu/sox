@@ -31,8 +31,6 @@
 #define ONESIXTH           ((SPEED_FLOAT)(1.0e0/6.0e0))
 #define ZERO               ((SPEED_FLOAT)(0.0e0))
 
-#define SPEED_USAGE "speed [-c] factor (default 1.0, <1 slows, -c: factor in cent)"
-
 /* automaton status
  */
 typedef enum { sp_input, sp_transfer, sp_compute } buffer_state_t;
@@ -110,7 +108,7 @@ int st_speed_getopts(eff_t effp, int n, char **argv)
               (cent==0 && speed->factor<=ZERO)))
     {
         printf("n = %d cent = %d speed = %f\n",n,cent,speed->factor);
-        st_fail(SPEED_USAGE);
+        st_fail(st_speed_effect.usage);
         return ST_EOF;
     }
     else if (cent != 0) /* CONST==2**(1/1200) */
@@ -304,7 +302,7 @@ int st_speed_stop(eff_t effp)
 
 st_effect_t st_speed_effect = {
   "speed",
-  NULL,
+  "Usage: speed [-c] factor (default 1.0, <1 slows, -c: factor in cent)",
   0,
   st_speed_getopts,
   st_speed_start,

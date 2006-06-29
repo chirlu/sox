@@ -101,7 +101,7 @@ int st_chorus_getopts(eff_t effp, int n, char **argv)
 
         if ( ( n < 7 ) || (( n - 2 ) % 5 ) )
         {
-            st_fail("Usage: chorus gain-in gain-out delay decay speed depth [ -s | -t ]");
+            st_fail(st_chorus_effect.usage);
             return (ST_EOF);
         }
 
@@ -123,7 +123,7 @@ int st_chorus_getopts(eff_t effp, int n, char **argv)
                         chorus->modulation[chorus->num_chorus] = MOD_TRIANGLE;
                 else
                 {
-                        st_fail("Usage: chorus gain-in gain-out delay decay speed [ -s | -t ]");
+                        st_fail(st_chorus_effect.usage);
                         return (ST_EOF);
                 }
                 i++;
@@ -351,7 +351,7 @@ int st_chorus_stop(eff_t effp)
 
 st_effect_t st_chorus_effect = {
   "chorus",
-  NULL,
+  "Usage: chorus gain-in gain-out delay decay speed depth [ -s | -t ]",
   0,
   st_chorus_getopts,
   st_chorus_start,

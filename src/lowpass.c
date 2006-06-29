@@ -29,7 +29,7 @@ int st_lowpass_getopts(eff_t effp, int n, char **argv)
   butterworth_t butterworth = (butterworth_t)effp->priv;
 
   if (n != 1) {
-    st_fail("Usage: lowpass FREQUENCY");
+    st_fail(st_lowpass_effect.usage);
     return (ST_EOF);
   }
 
@@ -60,7 +60,7 @@ int st_lowpass_start(eff_t effp)
 
 st_effect_t st_lowpass_effect = {
   "lowpass",
-  NULL,
+  "Usage: lowpass FREQUENCY",
   0,
   st_lowpass_getopts,
   st_lowpass_start,

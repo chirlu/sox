@@ -31,7 +31,7 @@ int st_mask_getopts(eff_t effp, int n, char **argv)
 {
 	if (n)
 	{
-		st_fail("Mask effect takes no options.");
+		st_fail(st_mask_effect.usage);
 		return (ST_EOF);
 	}
 	/* should take # of bits */
@@ -99,7 +99,7 @@ int st_mask_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
 st_effect_t st_mask_effect = {
   "mask",
-  NULL,
+  "Usage: Mask effect takes no options",
   ST_EFF_MCHAN,
   st_mask_getopts,
   st_effect_nothing,

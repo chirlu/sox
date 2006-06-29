@@ -38,7 +38,7 @@ int st_reverse_getopts(eff_t effp, int n, char **argv)
 {
         if (n)
         {
-                st_fail("Reverse effect takes no options.");
+                st_fail(st_reverse_effect.usage);
                 return (ST_EOF);
         }
         return(ST_SUCCESS);
@@ -145,7 +145,7 @@ int st_reverse_stop(eff_t effp)
 
 st_effect_t st_reverse_effect = {
   "reverse",
-  NULL,
+  "Usage: Reverse effect takes no options",
   0,
   st_reverse_getopts,
   st_reverse_start,

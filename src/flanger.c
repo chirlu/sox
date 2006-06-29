@@ -85,7 +85,7 @@ int st_flanger_getopts(eff_t effp, int n, char **argv)
 
         if (!((n == 5) || (n == 6)))
         {
-            st_fail("Usage: flanger gain-in gain-out delay decay speed [ -s | -t ]");
+            st_fail(st_flanger_effect.usage);
             return (ST_EOF);
         }
 
@@ -102,7 +102,7 @@ int st_flanger_getopts(eff_t effp, int n, char **argv)
                         flanger->modulation = MOD_TRIANGLE;
                 else
                 {
-                        st_fail("Usage: flanger gain-in gain-out delay decay speed [ -s | -t ]");
+                        st_fail(st_flanger_effect.usage);
                         return (ST_EOF);
                 }
         }
@@ -289,7 +289,7 @@ int st_flanger_stop(eff_t effp)
 
 st_effect_t st_flanger_effect = {
   "flanger",
-  NULL,
+  "Usage: flanger gain-in gain-out delay decay speed [ -s | -t ]",
   0,
   st_flanger_getopts,
   st_flanger_start,

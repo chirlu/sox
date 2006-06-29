@@ -88,8 +88,6 @@ static void clear_rms(eff_t effp)
     silence->rms_sum = 0;
 }
 
-#define SILENCE_USAGE "Usage: silence above_periods [ duration thershold[d | %% ] ] [ below_periods duration threshold[ d | %% ]]"
-
 int st_silence_getopts(eff_t effp, int n, char **argv)
 {
     silence_t   silence = (silence_t) effp->priv;
@@ -97,7 +95,7 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
 
     if (n < 1)
     {
-        st_fail(SILENCE_USAGE);
+        st_fail(st_silence_effect.usage);
         return (ST_EOF);
     }
 
@@ -105,7 +103,7 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
     silence->start = FALSE;
     if (sscanf(argv[0], "%d", &silence->start_periods) != 1)
     {
-        st_fail(SILENCE_USAGE);
+        st_fail(st_silence_effect.usage);
         return(ST_EOF);
     }
     if (silence->start_periods < 0)
@@ -121,7 +119,7 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
         silence->start = TRUE;
         if (n < 2)
         {
-            st_fail(SILENCE_USAGE);
+            st_fail(st_silence_effect.usage);
             return ST_EOF;
         }
 
@@ -141,7 +139,7 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
                     &silence->start_duration,'s') !=
                 ST_SUCCESS)
         {
-            st_fail(SILENCE_USAGE);
+            st_fail(st_silence_effect.usage);
             return(ST_EOF);
         }
 
@@ -149,7 +147,7 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
                 &silence->start_unit);
         if (parse_count < 1)
         {
-            st_fail(SILENCE_USAGE);
+            st_fail(st_silence_effect.usage);
             return ST_EOF;
         }
         else if (parse_count < 2)
@@ -165,12 +163,12 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
     {
         if (n < 3)
         {
-            st_fail(SILENCE_USAGE);
+            st_fail(st_silence_effect.usage);
             return ST_EOF;
         }
         if (sscanf(argv[0], "%d", &silence->stop_periods) != 1)
         {
-            st_fail(SILENCE_USAGE);
+            st_fail(st_silence_effect.usage);
             return ST_EOF;
         }
         if (silence->stop_periods < 0)
@@ -200,7 +198,7 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
                     &silence->stop_duration,'s') !=
                 ST_SUCCESS)
         {
-            st_fail(SILENCE_USAGE);
+            st_fail(st_silence_effect.usage);
             return(ST_EOF);
         }
 
@@ -208,7 +206,7 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
                              &silence->stop_unit);
         if (parse_count < 1)
         {
-            st_fail(SILENCE_USAGE);
+            st_fail(st_silence_effect.usage);
             return ST_EOF;
         }
         else if (parse_count < 2)
@@ -224,7 +222,7 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
         if ((silence->start_unit != '%') && (silence->start_unit != 'd'))
         {
             st_fail("Invalid unit specified");
-            st_fail(SILENCE_USAGE);
+            st_fail(st_silence_effect.usage);
             return(ST_EOF);
         }
         if ((silence->start_unit == '%') && ((silence->start_threshold < 0.0)
@@ -290,7 +288,7 @@ int st_silence_start(eff_t effp)
                                 &silence->start_duration, 's') !=
                     ST_SUCCESS)
             {
-                st_fail(SILENCE_USAGE);
+                st_fail(st_silence_effect.usage);
                 return(ST_EOF);
             }
         }
@@ -300,7 +298,7 @@ int st_silence_start(eff_t effp)
                                 &silence->stop_duration,'s') !=
                     ST_SUCCESS)
             {
-                st_fail(SILENCE_USAGE);
+                st_fail(st_silence_effect.usage);
                 return(ST_EOF);
             }
         }
@@ -698,7 +696,7 @@ int st_silence_stop(eff_t effp)
 
 st_effect_t st_silence_effect = {
   "silence",
-  NULL,
+  "Usage: silence above_periods [ duration thershold[d | %% ] ] [ below_periods duration threshold[ d | %% ]]",
   ST_EFF_MCHAN,
   st_silence_getopts,
   st_silence_start,

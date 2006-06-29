@@ -89,7 +89,7 @@ int st_echo_getopts(eff_t effp, int n, char **argv)
 
         if ((n < 4) || (n % 2))
         {
-            st_fail("Usage: echo gain-in gain-out delay decay [ delay decay ... ]");
+            st_fail(st_echo_effect.usage);
             return (ST_EOF);
         }
 
@@ -271,7 +271,7 @@ int st_echo_stop(eff_t effp)
 
 st_effect_t st_echo_effect = {
   "echo",
-  NULL,
+  "Usage: echo gain-in gain-out delay decay [ delay decay ... ]",
   0,
   st_echo_getopts,
   st_echo_start,

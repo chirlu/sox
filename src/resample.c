@@ -145,7 +145,7 @@ int st_resample_getopts(eff_t effp, int n, char **argv)
 
         if ((n >= 1) && (sscanf(argv[0], "%lf", &r->rolloff) != 1))
         {
-          st_fail("Usage: resample [ rolloff [ beta ] ]");
+          st_fail(st_resample_effect.usage);
           return (ST_EOF);
         }
         else if ((r->rolloff <= 0.01) || (r->rolloff >= 1.0))
@@ -156,7 +156,7 @@ int st_resample_getopts(eff_t effp, int n, char **argv)
 
         if ((n >= 2) && !sscanf(argv[1], "%lf", &r->beta))
         {
-          st_fail("Usage: resample [ rolloff [ beta ] ]");
+          st_fail(st_resample_effect.usage);
           return (ST_EOF);
         }
         else if (r->beta <= 2.0) {
@@ -712,7 +712,7 @@ static void LpFilter(double *c, long N, double frq, double Beta, long Num)
 
 st_effect_t st_resample_effect = {
    "resample",
-   NULL,
+   "Usage: resample [ rolloff [ beta ] ]",
    ST_EFF_RATE,
    st_resample_getopts,
    st_resample_start,

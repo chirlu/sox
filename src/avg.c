@@ -45,7 +45,6 @@ typedef struct avgstuff {
 #define MIX_LEFT_BACK   8
 #define MIX_RIGHT_BACK  9
 
-#define ST_AVG_USAGE "usage: avg [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]"
 
 /*
  * Process options
@@ -83,7 +82,7 @@ int st_avg_getopts(eff_t effp, int n, char **argv)
             avg->mix = MIX_RIGHT_BACK;
         else if (argv[0][0] == '-' && !isdigit((int)argv[0][1])
                 && argv[0][1] != '.') {
-            st_fail(ST_AVG_USAGE);
+            st_fail(st_avg_effect.usage);
             return (ST_EOF);
         }
         else {
@@ -108,7 +107,7 @@ int st_avg_getopts(eff_t effp, int n, char **argv)
         avg->mix = MIX_CENTER;
     }
     else {
-        st_fail(ST_AVG_USAGE);
+        st_fail(st_avg_effect.usage);
         return ST_EOF;
     }
 
@@ -549,7 +548,7 @@ int st_avg_stop(eff_t effp)
 
 st_effect_t st_avg_effect = {
   "avg",
-  NULL,
+  "Usage: avg [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
   ST_EFF_MCHAN | ST_EFF_CHAN,
   st_avg_getopts,
   st_avg_start,
@@ -560,7 +559,7 @@ st_effect_t st_avg_effect = {
 
 st_effect_t st_pick_effect = {
   "pick",
-  NULL,
+  "Usage: pick [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
   ST_EFF_MCHAN | ST_EFF_CHAN,
   st_avg_getopts,
   st_avg_start,

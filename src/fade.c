@@ -34,8 +34,6 @@ typedef struct fadestuff
     int endpadwarned;
 } *fade_t;
 
-#define FADE_USAGE "Usage: fade [ type ] fade-in-length [ stop-time [ fade-out-length ] ]\nTime is in hh:mm:ss.frac format.\nFade type one of q, h, t, l or p.\n"
-
 /* prototypes */
 static double fade_gain(st_size_t index, st_size_t range, char fadetype);
 
@@ -55,7 +53,7 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
 
     if (n < 1 || n > 4)
     { /* Wrong number of arguments. */
-        st_fail(FADE_USAGE);
+        st_fail(st_fade_effect.usage);
         return(ST_EOF);
     }
 
@@ -89,7 +87,7 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
     if (st_parsesamples(0, fade->in_stop_str, &fade->in_stop, 't') !=
             ST_SUCCESS)
     {
-        st_fail(FADE_USAGE);
+        st_fail(st_fade_effect.usage);
         return(ST_EOF);
     }
 
@@ -112,7 +110,7 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
              if (st_parsesamples(0, fade->out_stop_str, 
                          &fade->out_stop, 't') != ST_SUCCESS)
              {
-                 st_fail(FADE_USAGE);
+                 st_fail(st_fade_effect.usage);
                  return(ST_EOF);
              }
         }
@@ -130,7 +128,7 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
              if (st_parsesamples(0, fade->out_start_str, 
                          &fade->out_start, 't') != ST_SUCCESS)
              {
-                 st_fail(FADE_USAGE);
+                 st_fail(st_fade_effect.usage);
                  return(ST_EOF);
              }
         }
@@ -152,7 +150,7 @@ int st_fade_start(eff_t effp)
     if (st_parsesamples(effp->ininfo.rate, fade->in_stop_str,
                         &fade->in_stop, 't') != ST_SUCCESS)
     {
-        st_fail(FADE_USAGE);
+        st_fail(st_fade_effect.usage);
         return(ST_EOF);
     }
 
@@ -164,7 +162,7 @@ int st_fade_start(eff_t effp)
         if (st_parsesamples(effp->ininfo.rate, fade->out_stop_str,
                             &fade->out_stop, 't') != ST_SUCCESS)
         {
-            st_fail(FADE_USAGE);
+            st_fail(st_fade_effect.usage);
             return(ST_EOF);
         }
 
@@ -174,7 +172,7 @@ int st_fade_start(eff_t effp)
             if (st_parsesamples(effp->ininfo.rate, fade->out_start_str,
                         &fade->out_start, 't') != ST_SUCCESS)
             {
-                st_fail(FADE_USAGE);
+                st_fail(st_fade_effect.usage);
                 return(ST_EOF);
             }
             /* Fade time is relative to stop time. */
@@ -402,7 +400,9 @@ static double fade_gain(st_size_t index, st_size_t range, char type)
 
 st_effect_t st_fade_effect = {
   "fade",
-  NULL,
+  "Usage: fade [ type ] fade-in-length [ stop-time [ fade-out-length ] ]\n"
+  "       Time is in hh:mm:ss.frac format.\n"
+  "       Fade type one of q, h, t, l or p.",
   ST_EFF_MCHAN,
   st_fade_getopts,
   st_fade_start,

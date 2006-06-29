@@ -29,11 +29,6 @@
 #define ONE       ((DCSHIFT_FLOAT)(1.0e0))
 #define TWENTY    ((DCSHIFT_FLOAT)(20.0e0))
 
-char *dcshift_usage = "Usage: dcshift shift [ limitergain ]\n"
-"The peak limiter has a gain much less than 1.0 (ie 0.05 or 0.02) which is only\n"
-"used on peaks to prevent clipping. (default is no limiter)";
-
-#define DCSHIFT_USAGE dcshift_usage
 
 typedef struct {
     DCSHIFT_FLOAT dcshift; /* DC shift. */
@@ -56,13 +51,13 @@ int st_dcshift_getopts(eff_t effp, int n, char **argv)
 
     if (n < 1)
     {
-        st_fail(DCSHIFT_USAGE);
+        st_fail(st_dcshift_effect.usage);
         return ST_EOF;
     }
 
     if (n && (!sscanf(argv[0], DCSHIFT_FLOAT_SCAN, &dcs->dcshift)))
     {
-        st_fail(DCSHIFT_USAGE);
+        st_fail(st_dcshift_effect.usage);
         return ST_EOF;
     }
 
@@ -70,7 +65,7 @@ int st_dcshift_getopts(eff_t effp, int n, char **argv)
     {
         if (!sscanf(argv[1], DCSHIFT_FLOAT_SCAN, &dcs->limitergain))
         {
-                st_fail(DCSHIFT_USAGE);
+                st_fail(st_dcshift_effect.usage);
                 return ST_EOF;
         }
 
@@ -215,7 +210,9 @@ int st_dcshift_stop(eff_t effp)
 
 st_effect_t st_dcshift_effect = {
    "dcshift",
-   NULL,
+   "Usage: dcshift shift [ limitergain ]\n"
+   "       The peak limiter has a gain much less than 1.0 (ie 0.05 or 0.02) which is only\n"
+   "       used on peaks to prevent clipping. (default is no limiter)",
    ST_EFF_MCHAN,
    st_dcshift_getopts,
    st_dcshift_start,

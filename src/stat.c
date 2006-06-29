@@ -504,7 +504,7 @@ static int FFT(short dir,long m,double *re,double *im)
 
 st_effect_t st_stat_effect = {
   "stat",
-  NULL,
+  "Usage: ?",
   ST_EFF_MCHAN | ST_EFF_REPORT,
   st_stat_getopts,
   st_stat_start,

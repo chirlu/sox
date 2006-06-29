@@ -49,7 +49,7 @@ int st_vibro_getopts(eff_t effp, int n, char **argv)
 	if ((n == 0) || !sscanf(argv[0], "%f", &vibro->speed) ||
 		((n == 2) && !sscanf(argv[1], "%f", &vibro->depth)))
 	{
-		st_fail("Usage: vibro speed [ depth ]");
+		st_fail(st_vibro_effect.usage);
 		return (ST_EOF);
 	}
 	if ((vibro->speed <= 0.001) || (vibro->speed > 30.0) || 
@@ -138,7 +138,7 @@ int st_vibro_stop(eff_t effp)
 
 st_effect_t st_vibro_effect = {
   "vibro",
-  NULL,
+  "Usage: vibro speed [ depth ]",
   0,
   st_vibro_getopts,
   st_vibro_start,

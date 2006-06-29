@@ -46,7 +46,7 @@ int st_lowp_getopts(eff_t effp, int n, char **argv)
 
         if ((n < 1) || !sscanf(argv[0], "%f", &lowp->cutoff))
         {
-                st_fail("Usage: lowp cutoff");
+                st_fail(st_lowp_effect.usage);
                 return (ST_EOF);
         }
         return (ST_SUCCESS);
@@ -108,7 +108,7 @@ int st_lowp_stop(eff_t effp)
 
 st_effect_t st_lowp_effect = {
   "lowp",
-  NULL,
+  "Usage: lowp cutoff",
   0,
   st_lowp_getopts,
   st_lowp_start,

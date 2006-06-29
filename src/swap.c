@@ -35,7 +35,7 @@ int st_swap_getopts(eff_t effp, int n, char **argv)
         swap->def_opts = 0;
         if (n != 2 && n != 4)
         {
-            st_fail("Usage: swap [1 2 | 1 2 3 4]");
+            st_fail(st_swap_effect.usage);
             return (ST_EOF);
         }
         else if (n == 2)
@@ -199,7 +199,7 @@ int st_swap_stop(eff_t effp)
 
 st_effect_t st_swap_effect = {
   "swap",
-  NULL,
+  "Usage: swap [1 2 | 1 2 3 4]",
   ST_EFF_MCHAN,
   st_swap_getopts,
   st_swap_start,

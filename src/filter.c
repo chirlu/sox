@@ -82,13 +82,13 @@ int st_filter_getopts(eff_t effp, int n, char **argv)
         /* fprintf(stderr,"freq: %d-%d\n", f->freq0, f->freq1);fflush(stderr); */
         if (f->freq0 == 0 && f->freq1 == 0)
         {
-                st_fail("Usage: filter low-high [ windowlength [ beta ] ]");
+                st_fail(st_filter_effect.usage);
                 return (ST_EOF);
         }
 
         if ((n >= 2) && !sscanf(argv[1], "%ld", &f->Nwin))
         {
-                st_fail("Usage: filter low-high [ windowlength ]");
+                st_fail(st_filter_effect.usage);
                 return (ST_EOF);
         }
         else if (f->Nwin < 4) {
@@ -98,7 +98,7 @@ int st_filter_getopts(eff_t effp, int n, char **argv)
 
         if ((n >= 3) && !sscanf(argv[2], "%lf", &f->beta))
         {
-                st_fail("Usage: filter low-high [ windowlength [ beta ] ]");
+                st_fail(st_filter_effect.usage);
                 return (ST_EOF);
         }
 
@@ -317,7 +317,7 @@ static void FiltWin(filter_t f, long Nx)
 
 st_effect_t st_filter_effect = {
   "filter",
-  NULL,
+  "Usage: filter low-high [ windowlength [ beta ] ]",
   0,
   st_filter_getopts,
   st_filter_start,
