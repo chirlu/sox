@@ -20,6 +20,7 @@ sox-12.18.2
     samples to be written out instead of an approximate amount.
   o Fix hangup when attempting to write stereo MP3 files.
     (1512218) Kendrick Shaw
+  o Deemp effect would lose stereo sepeartion. (1479249)
 
 sox-12.18.1
 ------------

@@ -206,7 +206,7 @@ int st_deemph_stop(eff_t effp)
 st_effect_t st_deemph_effect = {
   "deemph",
   "Usage: Deemphasis filtering effect takes no options",
-  ST_EFF_MCHAN,
+  0,
   st_deemph_getopts,
   st_deemph_start,
   st_deemph_flow,
