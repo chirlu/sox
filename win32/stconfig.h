@@ -30,11 +30,8 @@
 /* Define to 1 if you have the <fcntl.h> header file. XXX */
 #define HAVE_FCNTL_H 1
 
-/* Define to 1 if you have the `getopt' function. */
-#undef HAVE_GETOPT
-
-/* Define to 1 if you have the <getopt.h> header file. */
-#undef HAVE_GETOPT_H
+/* Define to 1 if you have the `getopt_long' function. */
+#undef HAVE_GETOPT_LONG
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
