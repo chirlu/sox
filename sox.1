@@ -9,7 +9,7 @@
 .if t .sp .5v
 .if n .sp
 ..
-.TH SoX 1 "December 11, 2001"
+.TH SoX 1 "December 11, 2001" "sox" "Sound eXchange"
 .SH NAME
 sox \- Sound eXchange : universal sound sample translator
 .SH SYNOPSIS
@@ -160,7 +160,7 @@ must be of the same data type and sample rates.
 .I soxmix
 is functionally the same as the command line program
 .I sox
-expect that it takes two or more files as input and mixes the audio together
+except that it takes two or more files as input and mixes the audio together
 to produce a single file as output.  It has a restriction that all
 input files must be of the same data type and sample rates.
 .P
@@ -1412,20 +1412,27 @@ Not specifying this parameter will cause no limiter to be used.  In verbose
 mode, this effect will display the percentage of audio data that needed to be
 limited.
 .SH BUGS
-The syntax is horrific.  Thats the breaks when trying to handle all things from the command line.
-.P
-Please report any bugs found in this version of SoX to Chris Bagwell (cbagwell@users.sourceforge.net)
-.SH FILES
+Please report any bugs found in this version of SoX mailing list (sox-users@lists.sourceforge.net)
 .SH SEE ALSO
 .BR play (1),
 .BR rec (1),
 .BR soxexam(1)
-.SH NOTICES
-The version of SoX that accompanies this manual page is support by 
-Chris Bagwell (cbagwell@users.sourceforge.net).  Please refer any questions 
-regarding it to this address.  You may obtain the latest version at the 
-the web site http://sox.sourceforge.net/
-.SH AUTHOR
+.LP
+The SoX web page at http://sox.sourceforge.net/
+.SH LICENSE
+Copyright 2006 by Chris Bagwell
+.LP
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
+.LP
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+.SH AUTHORS
 Chris Bagwell (cbagwell@users.sourceforge.net).  
 .P
-Updates by Anonymous
+Additional Authors and contributors are listed in the Changelog file that
+is distributed with the source code.
