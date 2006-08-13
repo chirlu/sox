@@ -275,19 +275,27 @@ int main(int argc, char **argv)
     return(0);
 }
 
-#ifdef HAVE_GETOPT_H
 static char *getoptstr = "+r:v:t:c:phsuUAaigbwlfdxVSq";
-#else
-static char *getoptstr = "r:v:t:c:phsuUAaigbwlfdxVSq";
-#endif
+
+static struct option getoptarray[] =
+{
+    {"version", 0, NULL, 'V'},
+    {NULL, 0, NULL, 0}
+};
 
 static void doopts(file_options_t *fo, int argc, char **argv)
 {
     int c, i;
     char *str;
 
-    while ((c = getopt(argc, argv, getoptstr)) != -1) {
+    while ((c = getopt_long(argc, argv, getoptstr, getoptarray, NULL)) != -1) {
         switch(c) {
+            case 0:
+                /* FIXME: Long options here */
+                usage((char *)0);
+                /* no return from above */
+                break;
+
             case 'p':
                 soxpreview++;
                 break;
@@ -388,6 +396,11 @@ static void doopts(file_options_t *fo, int argc, char **argv)
             case 'q':
                 status = 0;
                 quiet = 1;
+                break;
+
+            case '?':
+                usage((char *)0);
+                /* no return from above */
                 break;
         }
     }
