@@ -1,4 +1,4 @@
-/* stconfig.h.in.  Generated from configure.in by autoheader.  */
+/* src/stconfig.h.in.  Generated from configure.in by autoheader.  */
 
 /* Define if you want to use internal GSM library */
 #undef ENABLE_GSM
@@ -9,17 +9,11 @@
 /* Define if you want to use fast ULAW conversions */
 #undef FAST_ULAW_CONVERSION
 
-/* Define if you have ALSA installed */
+/* Define if you have ALSA library installed */
 #undef HAVE_ALSA
 
-/* Define if you have ALSA 0.4 installed */
-#undef HAVE_ALSA4
-
-/* Define if you have ALSA 0.5 installed */
-#undef HAVE_ALSA5
-
-/* Define if you have ALSA 0.9 installed */
-#undef HAVE_ALSA9
+/* Define to 1 if you have the <alsa/asoundlib.h> header file. */
+#undef HAVE_ALSA_ASOUNDLIB_H
 
 /* Define to 1 if you have the <byteswap.h> header file. */
 #undef HAVE_BYTESWAP_H
@@ -30,7 +24,7 @@
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 
-/* Define to 1 if you have the `getopt_LONG' function. */
+/* Define to 1 if you have the `getopt_long' function. */
 #undef HAVE_GETOPT_LONG
 
 /* Define to 1 if you have the <inttypes.h> header file. */
@@ -51,9 +45,6 @@
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
-/* Define to 1 if you have the <linux/asound.h> header file. */
-#undef HAVE_LINUX_ASOUND_H
-
 /* Define to 1 if you have the <machine/soundcard.h> header file. */
 #undef HAVE_MACHINE_SOUNDCARD_H
 
@@ -71,9 +62,6 @@
 
 /* Define to 1 if you have the `rand' function. */
 #undef HAVE_RAND
-
-/* Define to 1 if you have the <sound/asound.h> header file. */
-#undef HAVE_SOUND_ASOUND_H
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -160,9 +148,11 @@
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
 
-/* Define as `__inline' if that's what the C compiler calls it, or to nothing
-   if it is not supported. */
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
 #undef inline
+#endif
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
 #undef size_t

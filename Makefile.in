@@ -18,6 +18,7 @@ includedir = @includedir@
 
 INSTALL	= @INSTALL@
 LN_S    = @LN_S@
+RM      = /bin/rm
 
 all: 
 	cd src && $(MAKE) $@
@@ -41,13 +42,13 @@ install: $(PLAY_INSTALL_$(PLAY_SUPPORT))
 install-play:
 	if [ -f $(mandir)/man1/rec.1 ]; then $(RM) $(mandir)/man1/rec.1; fi
 	$(srcdir)/mkinstalldirs $(mandir)/man1
-	$(INSTALL) -c -m 644 $(srcdir)/play.1 $(mandir)/man1
+	$(INSTALL) -m 644 $(srcdir)/play.1 $(mandir)/man1
 	cd $(mandir)/man1 && $(LN_S) play.1 rec.1
 
 install-lib:
 	cd src && $(MAKE) $@
 	$(srcdir)/mkinstalldirs $(mandir)/man3
-	$(INSTALL) -c -m 644 $(srcdir)/libst.3 $(mandir)/man3
+	$(INSTALL) -m 644 $(srcdir)/libst.3 $(mandir)/man3
 
 
 PLAY_UNINSTALL_0    =

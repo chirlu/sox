@@ -5,7 +5,7 @@ dnl
 
 AC_REVISION(1.9)
 
-AC_INIT(sox, 12.18.1, cbagwell@users.sourceforge.net, "sox-12.18.1")
+AC_INIT(sox, 12.18.2, cbagwell@users.sourceforge.net, "sox-12.18.2")
 
 AC_CONFIG_SRCDIR(sox.1)
 

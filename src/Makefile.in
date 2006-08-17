@@ -23,6 +23,7 @@ INSTALL	= @INSTALL@
 AR	= ar r
 RM	= rm -f
 LN_S    = @LN_S@
+RM      = /bin/rm
 
 # Build macros.
 CFLAGS	= @CFLAGS@ -I$(srcdir) -I$(builddir)
