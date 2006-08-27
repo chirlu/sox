@@ -280,7 +280,7 @@ static char *getoptstr = "+r:v:t:c:phsuUAaigbwlfdxVSq";
 
 static struct option long_options[] =
 {
-    {"version", 0, NULL, 'V'},
+    {"version", 0, NULL, 0},
     {"help", 0, NULL, 'h'},
     {"help-effect", 1, NULL, 0},
     {NULL, 0, NULL, 0}
@@ -299,6 +299,13 @@ static void doopts(file_options_t *fo, int argc, char **argv)
                 if (strncmp("help-effect", long_options[option_index].name,
                             11) == 0)
                     usage_effect(optarg);
+                else if (strncmp("version", long_options[option_index].name,
+                            7) == 0)
+                {
+                    printf("%s: ", myname);
+                    printf("v%s\n", st_version());
+                    exit(0);
+                }
                 /* no return from above */
                 break;
 
@@ -1597,16 +1604,15 @@ static void usage(char *opt)
 {
     int i;
 
-    fprintf(stderr, "%s: ", myname);
-    fprintf(stderr, "%s\n\n", st_version());
+    printf("%s: ", myname);
+    printf("Version %s\n\n", st_version());
     if (opt)
         fprintf(stderr, "Failed: %s\n\n", opt);
-    fprintf(stderr, "Usage: %s\n\n", usagestr);
-    fprintf(stderr,
+    printf("Usage: %s\n\n", usagestr);
+    printf(
 "Global options (gopts):\n"
 "\n"
-"Global options can be specified anywhere on the command and\n"
-"are applied globally.\n"
+"Global options can be specified anywhere on the command\n"
 "\n"
 "-h              print version number and usage information\n"
 "--help          same as -h\n"
@@ -1615,12 +1621,13 @@ static void usage(char *opt)
 "-p              run in preview mode and run fast\n"
 "-q              run in quite mode.  Inverse of -S option\n"
 "-S              print status while processing audio data.\n"
+"--version       print version number of SoX and exit\n"
 "-V              verbose mode.  print a description during processing phase\n"
 "\n"
 "Format options (fopts):\n"
 "\n"
 "Format options only need to be supplied on input files that are\n"
-"headerless otherwise they are obtained from the audio datas header.\n"
+"headerless otherwise they are obtained from the audio data's header.\n"
 "Output files will default to the same format options as the input\n"
 "file unless overriden on the command line.\n"
 "\n"
@@ -1637,19 +1644,18 @@ static void usage(char *opt)
 "                long(32-bits)/double long(64-bits)\n"
 "\n");
 
-    fprintf(stderr, "Supported file formats: ");
+    printf("Supported file formats: ");
     for (i = 0; st_formats[i]->names != NULL; i++) {
         /* only print the first name */
-        fprintf(stderr, "%s ", st_formats[i]->names[0]);
+        printf("%s ", st_formats[i]->names[0]);
     }
 
-    fprintf(stderr, "\n\nSupported effects: ");
+    printf("\n\nSupported effects: ");
     for (i = 0; st_effects[i]->name != NULL; i++) {
-        fprintf(stderr, "%s ", st_effects[i]->name);
+        printf("%s ", st_effects[i]->name);
     }
 
-    fprintf(stderr, "\n\neffopts: depends on effect\n");
-    fputc('\n', stderr);
+    printf( "\n\neffopts: depends on effect\n\n");
     exit(1);
 }
 
@@ -1657,20 +1663,20 @@ static void usage_effect(char *effect)
 {
     int i;
 
-    fprintf(stderr, "%s: ", myname);
-    fprintf(stderr, "%s\n\n", st_version());
+    printf("%s: ", myname);
+    printf("v%s\n\n", st_version());
 
-    fprintf(stderr, "Effect usage:\n\n");
+    printf("Effect usage:\n\n");
 
     for (i = 0; st_effects[i]->name != NULL; i++)
         if (!strcmp ("all", effect) || !strcmp (st_effects[i]->name, effect))
         {
-            char *p = strstr (st_effects[i]->usage, "Usage: ");
-            fprintf (stderr, "%s\n\n", p ? p + 7 : st_effects[i]->usage);
+            char *p = strstr(st_effects[i]->usage, "Usage: ");
+            printf("%s\n\n", p ? p + 7 : st_effects[i]->usage);
         }
 
     if (!effect)
-        fprintf (stderr, "see --help-effect=effect for effopts (all for effopts of all effects)\n\n");
+        printf("see --help-effect=effect for effopts ('all' for effopts of all effects)\n\n");
     exit(1);
 } /* usage_effect */
  

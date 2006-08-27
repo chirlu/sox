@@ -109,6 +109,8 @@ OPTIONS
 		 audio data has been processed in terms of audio running  time
 		 instead of samples.
 
+       --version Print version number and exit.
+
        -V	 Print	a description of processing phases.  Useful for figur-
 		 ing out exactly how SoX
 
@@ -879,8 +881,8 @@ EFFECTS
 		 This means progressively sharper stop-band rejection, at pro-
 		 portionally slower execution times.
 
-		 rolloff refers to the cut-off frequency of the low pass  fil-
-		 ter  and  is  given in terms of the Nyquist frequency for the
+		 rolloff refers to the	cut-off	 frequency  of	the  low  pass
+		 filter and is given in terms of the Nyquist frequency for the
 		 lower sample rate.  rolloff  therefore	 should	 be  something
 		 between  0.0 and 1.0, in practice 0.8-0.95.  The defaults are
 		 indicated above.
