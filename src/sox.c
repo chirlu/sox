@@ -95,6 +95,7 @@ typedef struct file_options
 /* local forward declarations */
 static void doopts(file_options_t *fo, int, char **);
 static void usage(char *) NORET;
+static void usage_effect(char *) NORET;
 static void process(void);
 static void print_input_status(int input);
 static void update_status(void);
@@ -277,22 +278,27 @@ int main(int argc, char **argv)
 
 static char *getoptstr = "+r:v:t:c:phsuUAaigbwlfdxVSq";
 
-static struct option getoptarray[] =
+static struct option long_options[] =
 {
     {"version", 0, NULL, 'V'},
+    {"help", 0, NULL, 'h'},
+    {"help-effect", 1, NULL, 0},
     {NULL, 0, NULL, 0}
 };
 
 static void doopts(file_options_t *fo, int argc, char **argv)
 {
     int c, i;
+    int option_index;
     char *str;
 
-    while ((c = getopt_long(argc, argv, getoptstr, getoptarray, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, getoptstr, 
+                            long_options, &option_index)) != -1) {
         switch(c) {
             case 0:
-                /* FIXME: Long options here */
-                usage((char *)0);
+                if (strncmp("help-effect", long_options[option_index].name,
+                            11) == 0)
+                    usage_effect(optarg);
                 /* no return from above */
                 break;
 
@@ -303,6 +309,7 @@ static void doopts(file_options_t *fo, int argc, char **argv)
             case 'h':
                 usage((char *)0);
                 /* no return from above */
+                break;
 
             case 't':
                 fo->filetype = optarg;
@@ -1590,30 +1597,83 @@ static void usage(char *opt)
 {
     int i;
 
-        fprintf(stderr, "%s: ", myname);
-        if (verbose || !opt)
-                fprintf(stderr, "%s\n\n", st_version());
-        fprintf(stderr, "Usage: %s\n\n", usagestr);
-        if (opt)
-                fprintf(stderr, "Failed: %s\n", opt);
-        else {
-            fprintf(stderr,"gopts: -e -h -p -q -S -V\n\n");
-            fprintf(stderr,"fopts: -r rate -c channels -s/-u/-U/-A/-a/-i/-g/-f -b/-w/-l/-d -v volume -x\n\n");
-            fprintf(stderr, "effect: ");
-            for (i = 0; st_effects[i]->name != NULL; i++) {
-                fprintf(stderr, "%s ", st_effects[i]->name);
-            }
-            fprintf(stderr, "\n\neffopts: depends on effect\n\n");
-            fprintf(stderr, "Supported file formats: ");
-            for (i = 0; st_formats[i]->names != NULL; i++) {
-                /* only print the first name */
-                fprintf(stderr, "%s ", st_formats[i]->names[0]);
-            }
-            fputc('\n', stderr);
-        }
-        exit(1);
+    fprintf(stderr, "%s: ", myname);
+    fprintf(stderr, "%s\n\n", st_version());
+    if (opt)
+        fprintf(stderr, "Failed: %s\n\n", opt);
+    fprintf(stderr, "Usage: %s\n\n", usagestr);
+    fprintf(stderr,
+"Global options (gopts):\n"
+"\n"
+"Global options can be specified anywhere on the command and\n"
+"are applied globally.\n"
+"\n"
+"-h              print version number and usage information\n"
+"--help          same as -h\n"
+"--help-efffect=name\n"
+"                print usage of specified effect.  use 'all' to print all\n"
+"-p              run in preview mode and run fast\n"
+"-q              run in quite mode.  Inverse of -S option\n"
+"-S              print status while processing audio data.\n"
+"-V              verbose mode.  print a description during processing phase\n"
+"\n"
+"Format options (fopts):\n"
+"\n"
+"Format options only need to be supplied on input files that are\n"
+"headerless otherwise they are obtained from the audio datas header.\n"
+"Output files will default to the same format options as the input\n"
+"file unless overriden on the command line.\n"
+"\n"
+"-c channels     number of channels in audio data\n"
+"-e              skip processing of this filename.  useful only\n"
+"                on output filename to prevent writing data.\n"
+"-r rate         sample rate of audio\n"
+"-t fileformat   format/type of audio\n"
+"-v volume       volume adjustment factor (floating point)\n"
+"-x              invert auto-detected endianess of data\n"
+"-s/-u/-U/-A/    sample encoding.  signed/unsigned/u-law/A-law\n"
+"  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point\n"
+"-b/-w/-l/-d     sample size. byte(8-bits)/word(16-bits)/\n"
+"                long(32-bits)/double long(64-bits)\n"
+"\n");
+
+    fprintf(stderr, "Supported file formats: ");
+    for (i = 0; st_formats[i]->names != NULL; i++) {
+        /* only print the first name */
+        fprintf(stderr, "%s ", st_formats[i]->names[0]);
+    }
+
+    fprintf(stderr, "\n\nSupported effects: ");
+    for (i = 0; st_effects[i]->name != NULL; i++) {
+        fprintf(stderr, "%s ", st_effects[i]->name);
+    }
+
+    fprintf(stderr, "\n\neffopts: depends on effect\n");
+    fputc('\n', stderr);
+    exit(1);
 }
 
+static void usage_effect(char *effect)
+{
+    int i;
+
+    fprintf(stderr, "%s: ", myname);
+    fprintf(stderr, "%s\n\n", st_version());
+
+    fprintf(stderr, "Effect usage:\n\n");
+
+    for (i = 0; st_effects[i]->name != NULL; i++)
+        if (!strcmp ("all", effect) || !strcmp (st_effects[i]->name, effect))
+        {
+            char *p = strstr (st_effects[i]->usage, "Usage: ");
+            fprintf (stderr, "%s\n\n", p ? p + 7 : st_effects[i]->usage);
+        }
+
+    if (!effect)
+        fprintf (stderr, "see --help-effect=effect for effopts (all for effopts of all effects)\n\n");
+    exit(1);
+} /* usage_effect */
+ 
 void cleanup(void) 
 {
     int i;

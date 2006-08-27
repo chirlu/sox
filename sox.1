@@ -33,119 +33,6 @@ sox \- Sound eXchange : universal sound sample translator
     [ \fIformat options\fR ] \fIoutfile\fR
 .br
     [ \fIeffect\fR [ \fIeffect options\fR ] ... ]
-
-.P
-.B General options:
-.br
-    [ -h ] [ -p ] [ -q ] [ -S ] [ -V ]
-.P
-.B Format options:
-.br
-    [ -t \fIfiletype\fR ] [ -r \fIrate\fR ] [ -s/-u/-U/-A/-a/-i/-g/-f ]
-    [ -b/-w/-l/-d ] [ -v \fIvolume\fR ]
-    [ -c \fIchannels\fR ] [ -x ] [ -e ]
-.P
-.B Effects:
-.br
-    \fBavg\fR [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,...,n ]
-.br
-    \fBband\fR [ -n ] \fIcenter\fR [ \fIwidth\fR ]
-.br
-    \fBbandpass\fR \fIfrequency bandwidth\fR
-.br
-    \fBbandreject\fR \fIfrequency bandwidth\fR
-.br
-    \fBchorus\fR \fIgain-in gain out delay decay speed depth\fR
-.br
-           -s | -t [ \fIdelay decay speed depth\fR -s | -t ]
-.br
-    \fBcompand\fR \fIattack1\fR,\fIdecay1\fR[,\fIattack2\fR,\fIdecay2\fR...]
-.br
-            \fIin-dB1\fR,\fIout-dB1\fR[,\fIin-dB2\fR,\fIout-dB2\fR...]
-.br
-            [ \fIgain\fR [ \fIinitial-volume\fR [ \fIdelay\fR ] ] ]
-.br
-    \fBcopy\fR
-.br
-    \fBdcshift\fR \fIshift\fR [ \fIlimitergain\fR ]
-.br
-    \fBdeemph\fR
-.br
-    \fBearwax\fR
-.br
-    \fBecho\fR \fIgain-in gain-out delay decay\fR [ \fIdelay decay ...\fR ]
-.br
-    \fBechos\fR \fIgain-in gain-out delay decay\fR [ \fIdelay decay ...\fR ]
-.br
-    \fBfade\fR [ \fItype\fR ] \fIfade-in-length\fR 
-         [ \fIstop-time\fR [ \fIfade-out-length\fR ] ]
-.br
-    \fBfilter\fR [ \fIlow\fR ]-[ \fIhigh\fR ] [ \fIwindow-len\fR [ \fIbeta\fR ]]
-.br
-    \fBflanger\fR \fIgain-in gain-out delay decay speed\fR < -s | -t >
-.br
-    \fBhighp\fR \fIfrequency\fR
-.br
-    \fBhighpass\fR \fIfrequency\fR
-.br
-    \fBlowp\fR \fIfrequency\fR
-.br
-    \fBlowpass\fR \fIfrequency\fR
-.br
-    \fBmask\fR
-.br
-    \fBmcompand\fR "\fIattack1\fR,\fIdecay1\fR[,\fIattack2\fR,\fIdecay2\fR...]
-.br
-             \fIin-dB1\fR,\fIout-dB1\fR[,\fIin-dB2\fR,\fIout-dB2\fR...]
-.br
-             [ \fIgain\fR [ \fIinitial-volume\fR [ \fIdelay\fR ] ] ]" xover_freq
-.br
-    \fBnoiseprof\fR [\fIprofile-file\fR]
-.br
-    \fBnoisered\fR \fIprofile-file\fR [threshold]
-.br
-    \fBpan\fR \fIdirection\fR
-.br
-    \fBphaser\fR \fIgain-in gain-out delay decay speed\fR < -s | -t >
-.br
-    \fBpick\fR [ \fI-1\fR | \fI-2\fR | \fI-3\fR | \fI-4\fR | \fI-l\fR | \fI-r\fR | \fI-f\fR | \fI-b\fR ]
-.br
-    \fBpitch\fR \fIshift\fR [ \fIwidth interpole fade\fR ]
-.br
-    \fBpolyphase\fR [ -w < \fInut\fR / \fIham\fR > ] 
-              [ \fI -width\fR < \fIlong\fR / \fIshort\fR / # > ] 
-              [ \fI-cutoff #\fR ]
-.br
-    \fBrate\fR
-.br
-    \fBrepeat\fR \fIcount\fR
-.br
-    \fBresample\fR [ -qs | -q | -ql ] [ \fIrolloff\fR [ \fIbeta\fR ] ]
-.br
-    \fBreverb\fR \fIgain-out reverb-time delay\fR [ \fIdelay\fR ... ]
-.br
-    \fBreverse\fR
-.br
-    \fBsilence\fR \fIabove_periods\fR [ \fIduration threshold\fR[ \fId\fR | \fI%\fR ]
-            [ \fIbelow_periods duration 
-              threshold\fR[ \fId\fR | \fI%\fR ]]
-.br
-    \fBspeed\fR [ -c ] \fIfactor\fR
-.br
-    \fBstat\fR [ -s \fIn\fR ] [ -rms ] [ -v ] [ -d ]
-.br
-    \fBstretch\fR [ \fIfactor\fR [ \fIwindow fade shift fading\fR ]
-.br
-    \fBswap\fR [ \fI1 2\fR | \fI1 2 3 4\fR ]
-.br
-    \fBsynth\fR [ \fIlength\fR ] \fItype mix\fR [ \fIfreq\fR [ \fI-freq2\fR ]
-          [ \fIoff\fR ] [ \fIph\fR ] [ \fIp1\fR ] [ \fIp2\fR ] [ \fIp3\fR ]
-.br
-    \fBtrim\fR \fIstart\fR [ \fIlength\fR ]
-.br
-    \fBvibro\fR \fIspeed\fR [ \fIdepth\fR ]
-.br
-    \fBvol\fR \fIgain\fR [ \fItype\fR [ \fIlimitergain\fR ] ] 
 .SH DESCRIPTION
 .I SoX
 is a command line program that can convert most popular audio files
@@ -226,10 +113,17 @@ filenames of "-".  If specified as an input name, it will read data
 from stdin.  If specified as an output name, it will send data
 to stdout.
 .PP
-\fBGeneral options:\fR
+\fBGlobal options:\fR
 .TP 10
 \fB-h\fR
 Print version number and usage information.
+.TP 10
+\fB--help\fR
+Same as \fB-h\fR
+.TP 10
+\fB--help-effect=name\fR
+Prints usage information on the specifed effect.  The name
+\fBall\fR can be used to disable usage on all effects.
 .TP 10
 \fB-p\fR
 Run in preview mode and run fast.  This will somewhat speed up
@@ -263,9 +157,22 @@ By default, SoX attempts to write audio data using the same data type, sample ra
 .PP
 If an output file format doesn't support the same data type, sample rate, or channel count as the input file format, then SoX will auto select the closest values it does support so that the user does not have to specify these format change options manually.
 .TP 10
-\fB-t \fIfiletype\fR
-gives the type of the sound sample file.  Useful when file extension is
-not standard or can not be determeind by looking at the header of the file.
+\fB-c \fIchannels\fR
+The number of sound channels in the data file.
+This may be 1, 2, or 4; for mono, stereo, or quad sound data.  To cause
+the output file to have a different number of channels than the input
+file, include this option with the output file options.
+If the input and output file have a different number of channels then the
+avg effect must be used.  If the avg effect is not specified on the 
+command line it will be invoked internally with default parameters.
+.TP 10
+\fB-e\fR
+When specified after the last input filename (so that it applies
+to the output file)
+it allows you to avoid giving an output filename and will not
+produce an output file.  It will apply any specified effects
+to the input file.  This is mainly useful with the \fBstat\fR effect
+but can be used.
 .TP 10
 \fB-r \fIrate\fR
 Gives the sample rate in Hertz of the file.  To cause the output file to have
@@ -275,6 +182,10 @@ of the output format options.
 If the input and output files have
 different rates then a sample rate change effect must be ran.  Since SoX has
 multiple rate changing effects, the user can specify which to use as an effect.  If no rate change effect is specified then a default one will be chosen.
+.TP 10
+\fB-t \fIfileformat\fR
+gives the format of the sound sample file.  Useful when file extension is
+not standard or can not be determeind by looking at the header of the file.
 .TP 10
 \fB-v \fIvolume\fR
 Change amplitude (floating point); 
@@ -301,6 +212,14 @@ and can specify the -v option to override this default value.
 Note: For the non-mixing case, see the \fBstat\fR effect for information on 
 finding the maximum volume adjustment that can be done with this option 
 without causing audio data to be clipped.
+.TP 10
+\fB-x\fR
+The sample data is in XINU format; that is,
+it comes from a machine with the opposite word order 
+than yours and must
+be swapped according to the word-size given above.
+Only 16-bit and 32-bit integer data may be swapped.
+Machine-format floating-point data is not portable.
 .TP 10
 \fB-s/-u/-U/-A/-a/-i/-g/-f\fR
 The sample data encoding is signed linear (2's complement),
@@ -338,31 +257,6 @@ quality.  It usually is CPU intensive to work with GSM audio data.
 \fB-b/-w/-l/-d\fR
 The sample data size is in bytes, 16-bit words, 32-bit long words, 
 or 64-bit double long (long long) words.
-.TP 10
-\fB-x\fR
-The sample data is in XINU format; that is,
-it comes from a machine with the opposite word order 
-than yours and must
-be swapped according to the word-size given above.
-Only 16-bit and 32-bit integer data may be swapped.
-Machine-format floating-point data is not portable.
-.TP 10
-\fB-c \fIchannels\fR
-The number of sound channels in the data file.
-This may be 1, 2, or 4; for mono, stereo, or quad sound data.  To cause
-the output file to have a different number of channels than the input
-file, include this option with the output file options.
-If the input and output file have a different number of channels then the
-avg effect must be used.  If the avg effect is not specified on the 
-command line it will be invoked internally with default parameters.
-.TP 10
-\fB-e\fR
-When specified after the last input filename (so that it applies
-to the output file)
-it allows you to avoid giving an output filename and will not
-produce an output file.  It will apply any specified effects
-to the input file.  This is mainly useful with the \fBstat\fR effect
-but can be used.
 .SH FILE TYPES
 .I SoX
 attempts to determine the file type of input files automatically by looking 
