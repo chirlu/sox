@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/* $Header: /cvsroot/sox/sox/src/gsm/Attic/code.c,v 1.1 2001/11/14 03:31:26 cbagwell Exp $ */
+/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/code.c,v 1.1 2006/08/27 23:04:56 cbagwell Exp $ */
 
 #include	<stdlib.h>
 #include	<string.h>

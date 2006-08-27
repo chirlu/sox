@@ -57,10 +57,11 @@ EOBJ	= avg.o band.o bandpass.o breject.o btrworth.o chorus.o compand.o \
 
 
 GSMOBJ_0 =
-GSMOBJ_1 =  gsm/add.o gsm/code.o gsm/decode.o gsm/long_term.o gsm/lpc.o \
-	    gsm/preprocess.o gsm/rpe.o gsm/gsm_destroy.o \
-	    gsm/gsm_decode.o gsm/gsm_encode.o gsm/gsm_create.o \
-	    gsm/gsm_option.o gsm/short_term.o gsm/table.o
+GSMOBJ_1 =  libgsm/add.o libgsm/code.o libgsm/decode.o libgsm/long_term.o \
+	    libgsm/lpc.o libgsm/preprocess.o libgsm/rpe.o \
+	    libgsm/gsm_destroy.o libgsm/gsm_decode.o libgsm/gsm_encode.o \
+	    libgsm/gsm_create.o libgsm/gsm_option.o libgsm/short_term.o \
+	    libgsm/table.o
 
 OSSOBJ_0    =
 OSSOBJ_1    = oss.o
@@ -79,7 +80,8 @@ LIBOBJS = $(FOBJ) $(EOBJ) getopt.o getopt1.o handlers.o misc.o stio.o \
 # target is just an easy way to make sure that makefile builds
 # the objects instead of this makefile.
 GSM_0     =
-GSM_1     = gsm/libgsm.a
+GSM_1     = libgsm/libgsm.a
+GSM_ext   = 
 PLAY_0    =
 PLAY_1    = play
 
@@ -98,8 +100,8 @@ libst.a: $(LIBOBJS)
 	$(AR) libst.a $(LIBOBJS) 
 	$(RANLIB) libst.a
 
-gsm/libgsm.a:
-	cd gsm && $(MAKE)
+libgsm/libgsm.a:
+	cd libgsm && $(MAKE)
 
 PLAY_INSTALL_0    =
 PLAY_INSTALL_1    = install-play
@@ -142,11 +144,11 @@ uninstall-lib:
 
 clean:
 	$(RM) *.o libst.a
-	cd gsm && $(RM) *.o libgsm.a
+	cd libgsm && $(RM) *.o libgsm.a
 
 distclean:
 	$(RM) *~ *.o *.raw *.sf core sox soxmix libst.a play libst-config
-	cd gsm && $(RM) *~ *.o core libgsm.a Makefile
+	cd libgsm && $(RM) *~ *.o core libgsm.a Makefile
 	$(RM) stconfig.h ststdint.h Makefile
 
 # Not all platforms use CPPFLAGS concept by default so define custom

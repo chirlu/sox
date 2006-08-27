@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/*$Header: /cvsroot/sox/sox/src/gsm/Attic/gsm.h,v 1.2 2001/11/29 02:24:19 cbagwell Exp $*/
+/*$Header: /cvsroot/sox/sox/src/libgsm/Attic/gsm.h,v 1.1 2006/08/27 23:04:56 cbagwell Exp $*/
 
 #ifndef	GSM_H
 #define	GSM_H

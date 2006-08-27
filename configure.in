@@ -24,8 +24,12 @@ AC_ARG_ENABLE(fast_alaw,
 	enable_fast_alaw=$enableval, enable_fast_alaw=yes)
 
 AC_ARG_ENABLE(gsm,
-	[  --disable-gsm           Disable internal GSM support],
+	[  --disable-gsm           Disable GSM support],
 	enable_gsm=$enableval, enable_gsm=yes)
+
+AC_ARG_ENABLE(gsm,
+	[  --disable-external-gsm  Disable external GSM support],
+	enable_external_gsm=$enableval, enable_external_gsm=yes)
 
 AC_ARG_ENABLE(alsa_dsp,
 	[  --disable-alsa-dsp      Disable detection of ALSA],
@@ -226,9 +230,28 @@ fi
 
 if test "$enable_gsm" = yes
 then
+    if test "$enable_external_gsm" = yes
+    then
+        AC_CHECK_HEADERS(gsm/gsm.h, found_libgsm=yes)
+
+        if test "$found_libgsm" = yes
+        then
+            AC_CHECK_LIB(gsm, gsm_create,
+                         LIBS="$LIBS -lgsm"
+                         GSM_SUPPORT=ext
+                         AC_DEFINE([EXTERNAL_GSM], 1, 
+                                   [Define if you have libgsm library installed])
+            )
+            fi
+        fi
+
+        if test "$GSM_SUPPORT" = 0
+        then
+            dnl use internal libgsm
+            GSM_SUPPORT=1
+        fi
         AC_DEFINE([ENABLE_GSM], 1, 
                   [Define if you want to use internal GSM library])
-	GSM_SUPPORT=1
 fi
 
 AC_SUBST(NEED_OSS)
@@ -241,7 +264,7 @@ dnl Generate output files...
 
 AC_CONFIG_HEADER(src/stconfig.h)
 
-AC_CONFIG_FILES([Makefile src/libst-config src/Makefile src/gsm/Makefile])
+AC_CONFIG_FILES([Makefile src/libst-config src/Makefile src/libgsm/Makefile])
 AC_CONFIG_FILES([src/play], [chmod +x src/play])
 
 AC_OUTPUT()

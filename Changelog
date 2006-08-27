@@ -24,6 +24,8 @@ sox-12.18.2
   o Adding cross-platform support for getopt_long
   o Make help screens print much more information and add
     new --help-effect option.  (Originally from Dirk).
+  o Add support for using an external gsm library instead of
+    just the internal one.  Vladimir Nadvornik
 
 sox-12.18.1
 ------------

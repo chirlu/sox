@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/* $Header: /cvsroot/sox/sox/src/gsm/Attic/gsm_option.c,v 1.1 2001/11/14 03:44:46 cbagwell Exp $ */
+/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/gsm_option.c,v 1.1 2006/08/27 23:04:56 cbagwell Exp $ */
 
 #include "private.h"
 

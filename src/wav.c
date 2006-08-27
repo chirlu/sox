@@ -72,7 +72,11 @@
 #include "ima_rw.h"
 #include "adpcm.h"
 #ifdef ENABLE_GSM
-#include "gsm/gsm.h"
+#if defined(EXTERNAL_GSM)
+#include <gsm/gsm.h>
+#else
+#include "libgsm/gsm.h"
+#endif
 #endif
 
 #undef PAD_NSAMPS

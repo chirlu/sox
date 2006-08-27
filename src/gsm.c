@@ -30,7 +30,12 @@
 
 #if defined(ENABLE_GSM)
 
-#include "gsm/gsm.h"
+#if defined(EXTERNAL_GSM)
+#include <gsm/gsm.h>
+#else
+#include "libgsm/gsm.h"
+#endif
+
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
