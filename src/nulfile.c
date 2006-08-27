@@ -12,19 +12,12 @@
  * Written by Carsten Borchardt 
  * The author is not responsible for the consequences 
  * of using this software
- *
  */
 
-#include <math.h>
 #include "st_i.h"
 
-/* Private data for nul file */
-typedef struct nulstuff {
-        int     rest;                   /* bytes remaining in current block */
-    unsigned long readsamples;
-    unsigned long writesamples;
-} *nul_t;
-
+/* No private data needed for nul file */
+ 
 /*
  * Do anything required before you start reading samples.
  * Read file header. 
@@ -34,23 +27,20 @@ typedef struct nulstuff {
  */
 int st_nulstartread(ft_t ft) 
 {
-        nul_t sk = (nul_t) ft->priv;
-        /* no samples read yet */
-        sk->readsamples=0;
+    /* if no input rate is given as parameter, switch to 
+     * default parameter
+     */
+    if(ft->info.rate == 0)
+    {
+        /* input rate not set, switch to default */
+        ft->info.rate = 44100;
+        ft->info.size = ST_SIZE_WORD;
+        ft->info.encoding = ST_ENCODING_SIGN2;
+        ft->info.channels = 2;
+    }
+    ft->comment = "nul file";
 
-        /* if no input rate is given as parameter, switch to 
-         * default parameter
-         */
-        if(ft->info.rate == 0){
-            /* input rate not set, switch to default */
-            ft->info.rate = 44100;
-            ft->info.size = ST_SIZE_WORD;
-            ft->info.encoding = ST_ENCODING_SIGN2;
-            ft->info.channels = 2;
-        }
-        ft->comment = "nul file";
-        
-        return (ST_SUCCESS);
+    return (ST_SUCCESS);
 }
 
 /*
@@ -62,17 +52,12 @@ int st_nulstartread(ft_t ft)
 
 st_ssize_t st_nulread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
-        nul_t sk = (nul_t) ft->priv;
-        int done = 0;
-        st_sample_t l;
-        for(; done < len; done++) {
-            if (ft->file.eof)
-                break;
-            l = 0; /* nul samples are always 0 */
-            sk->readsamples++;
-            *buf++ = l;
-        }
-        return done;
+    st_ssize_t done = 0;
+    for(; done < len; done++)
+    {
+        buf[done] = 0;
+    }
+    return done;
 }
 
 /*
@@ -87,20 +72,12 @@ int st_nulstopread(ft_t ft)
 
 int st_nulstartwrite(ft_t ft) 
 {
-        nul_t sk = (nul_t) ft->priv;
-        sk->writesamples=0;
-        return(ST_SUCCESS);
-        
+    return(ST_SUCCESS);
 }
 
 st_ssize_t st_nulwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
-        nul_t sk = (nul_t) ft->priv;
-        while(len--)
-            sk->writesamples++;
-        st_writeb(ft, (*buf++ >> 24) ^ 0x80);
-        return (ST_SUCCESS);
-        
+    return len;    
 }
 
 int st_nulstopwrite(ft_t ft) 

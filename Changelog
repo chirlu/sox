@@ -26,6 +26,8 @@ sox-12.18.2
     new --help-effect option.  (Originally from Dirk).
   o Add support for using an external gsm library instead of
     just the internal one.  Vladimir Nadvornik
+  o Updates to nul file handler to prevent crashes during output.
+    Martin Panter (1482869)
 
 sox-12.18.1
 ------------
