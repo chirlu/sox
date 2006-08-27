@@ -22,6 +22,8 @@ sox-12.18.2
     (1512218) Kendrick Shaw
   o Deemp effect would lose stereo sepeartion. (1479249)
   o Adding cross-platform support for getopt_long
+  o Make help screens print much more information and add
+    new --help-effect option.  (Originally from Dirk).
 
 sox-12.18.1
 ------------
