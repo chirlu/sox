@@ -8,13 +8,13 @@ NAME
 SYNOPSIS
        sox infile1 [ infile2 ... ] outfile
 
-       sox [ general options ] [ format options ] infile1
+       sox [ global options ] [ format options ] infile1
 	   [ [ format options ] infile2 ... ] [ format options ] outfile
 	   [ effect [ effect options ] ... ]
 
        soxmix infile1 infile2 [ infile3 ... ] outfile
 
-       soxmix [ general options ] [ format options ] infile1
+       soxmix [ global options ] [ format options ] infile1
 	   [ format options ] infile2
 	   [ [ format options ] infile3 ... ]
 	   [ format options ] outfile
