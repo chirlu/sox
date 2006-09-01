@@ -812,6 +812,7 @@ static void process(void) {
 static void parse_effects(int argc, char **argv)
 {
     int argc_effect;
+    int effect_rc;
 
     nuser_effects = 0;
 
@@ -833,16 +834,22 @@ static void parse_effects(int argc, char **argv)
                 fprintf(stderr, "%s ", st_effects[i1]->name);
             fprintf(stderr, "\n\n");
             st_fail("Effect '%s' is not known!", argv[optind]);
+            exit(2);
         }
 
 
         /* Skip past effect name */
         optind++;
 
-        (*user_efftab[nuser_effects].h->getopts)
+        effect_rc = (*user_efftab[nuser_effects].h->getopts)
             (&user_efftab[nuser_effects],
              argc_effect,
              &argv[optind]);
+
+        if (effect_rc == ST_EOF)
+        {
+            exit(2);
+        }
 
         /* Skip past the effect arguments */
         optind += argc_effect;
