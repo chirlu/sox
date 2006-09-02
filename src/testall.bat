@@ -10,8 +10,8 @@ echo. >>t.bat
 echo cls >>t.bat
 echo echo Format: %%format%%   Options: %%opts%% >>t.bat
 echo echo on >>t.bat
-echo .\sox monkey.voc %%opts%% %%tmp%%\monkey.%%format%% %%effect%% >>t.bat
-echo .\sox %%opts%% %%tmp%%\monkey.%%format%% %%tmp%%\monkey1.voc %%effect%% >>t.bat
+echo .\sox monkey.wav %%opts%% %%tmp%%\monkey.%%format%% %%effect%% >>t.bat
+echo .\sox %%opts%% %%tmp%%\monkey.%%format%% %%tmp%%\monkey1.wav %%effect%% >>t.bat
 echo @echo off >>t.bat
 echo echo. >>t.bat
 echo set format=>>t.bat
@@ -27,7 +27,7 @@ set effect=%1 %2 %3 %4 %5 %6 %7 %8 %9
 call t.bat 8svx
 call t.bat aiff
 call t.bat au
-call t.bat avr
+call t.bat avr -u
 call t.bat cdr
 call t.bat cvs
 call t.bat dat

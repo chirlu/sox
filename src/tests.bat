@@ -15,10 +15,10 @@ del in.raw
 cls
 
 echo on
-.\sox %noise% %file%.voc ub.raw
+.\sox %noise% %file%.wav ub.raw
 .\sox %noise% -t raw -r 8196 -u -b -c 1 ub.raw -r 8196 -s -b sb.raw
 .\sox %noise% -t raw -r 8196 -s -b -c 1 sb.raw -r 8196 -u -b ub2.raw
-.\sox %noise% -r 8196 -u -b -c 1 ub2.raw -r 8196 ub2.voc
+.\sox %noise% -r 8196 -u -b -c 1 ub2.raw -r 8196 ub2.wav
 @echo off
 
 echo.
@@ -34,8 +34,8 @@ echo Skip checksum and rate byte. DOS isn't good at this, so just use a
 echo rough test.
 
 echo.
-dir %file%.voc
-dir ub2.voc
+dir %file%.wav
+dir ub2.wav
 echo.
 echo The two filesizes above should be the same.
 pause
@@ -44,7 +44,7 @@ cls
 del ub.raw
 del sb.raw
 del ub2.raw
-del ub2.voc
+del ub2.wav
 
 echo on
 .\sox %noise% %file%.au -u -r 8192 -u -b ub.raw
