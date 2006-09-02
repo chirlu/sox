@@ -16,6 +16,8 @@
 #include <ctype.h>
 #include "st_i.h"
 
+static st_effect_t st_synth_effect;
+
 #define PCOUNT 5
 
 #define SYNTH_SINE       0
@@ -734,7 +736,7 @@ int st_synth_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
-st_effect_t st_synth_effect = {
+static st_effect_t st_synth_effect = {
   "synth",
   "Usage: synth [length] type mix [freq[-freq2]] [off] [ph] [p1] [p2] [p3]\n"
   "       <length> length in sec or hh:mm:ss.frac, 0=inputlength, default=0\n"
@@ -757,14 +759,10 @@ st_effect_t st_synth_effect = {
   st_synth_drain,
   st_synth_stop
 };
+
+const st_effect_t *st_synth_effect_fn(void)
+{
+    return &st_synth_effect;
+}
 /*-------------------------------------------------------------- end of file */
-
-
-
-
-
-
-
-
-
 

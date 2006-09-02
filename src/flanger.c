@@ -57,6 +57,8 @@
 #include <string.h>
 #include "st_i.h"
 
+static st_effect_t st_flanger_effect;
+
 #define MOD_SINE        0
 #define MOD_TRIANGLE    1
 
@@ -287,7 +289,7 @@ int st_flanger_stop(eff_t effp)
         return (ST_SUCCESS);
 }
 
-st_effect_t st_flanger_effect = {
+static st_effect_t st_flanger_effect = {
   "flanger",
   "Usage: flanger gain-in gain-out delay decay speed [ -s | -t ]",
   0,
@@ -297,3 +299,8 @@ st_effect_t st_flanger_effect = {
   st_flanger_drain,
   st_flanger_stop
 };
+
+const st_effect_t *st_flanger_effect_fn(void)
+{
+    return &st_flanger_effect;
+}

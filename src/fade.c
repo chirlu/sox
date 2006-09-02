@@ -24,6 +24,8 @@
 #include <string.h>
 #include "st_i.h"
 
+static st_effect_t st_fade_effect;
+
 /* Private data for fade file */
 typedef struct fadestuff
 { /* These are measured as samples */
@@ -398,7 +400,7 @@ static double fade_gain(st_size_t index, st_size_t range, char type)
     return retval;
 }
 
-st_effect_t st_fade_effect = {
+static st_effect_t st_fade_effect = {
   "fade",
   "Usage: fade [ type ] fade-in-length [ stop-time [ fade-out-length ] ]\n"
   "       Time is in hh:mm:ss.frac format.\n"
@@ -410,3 +412,8 @@ st_effect_t st_fade_effect = {
   st_fade_drain,
   st_fade_stop
 };
+
+const st_effect_t *st_fade_effect_fn(void)
+{
+    return &st_fade_effect;
+}

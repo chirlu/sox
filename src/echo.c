@@ -59,6 +59,8 @@
 #include <math.h>
 #include "st_i.h"
 
+static st_effect_t st_echo_effect;
+
 #define DELAY_BUFSIZ ( 50L * ST_MAXRATE )
 #define MAX_ECHOS 7     /* 24 bit x ( 1 + MAX_ECHOS ) = */
                         /* 24 bit x 8 = 32 bit !!!      */
@@ -269,7 +271,7 @@ int st_echo_stop(eff_t effp)
         return (ST_SUCCESS);
 }
 
-st_effect_t st_echo_effect = {
+static st_effect_t st_echo_effect = {
   "echo",
   "Usage: echo gain-in gain-out delay decay [ delay decay ... ]",
   0,
@@ -279,3 +281,8 @@ st_effect_t st_echo_effect = {
   st_echo_drain,
   st_echo_stop
 };
+
+const st_effect_t *st_echo_effect_fn(void)
+{
+    return &st_echo_effect;
+}

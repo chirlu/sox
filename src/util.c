@@ -167,47 +167,54 @@ int st_gettype(ft_t formp)
  */
 int st_geteffect_opt(eff_t effp, int argc, char **argv)
 {
-        int i, optind;
+    int i, optind;
 
-        for(i = 0; st_effects[i]->name; i++)
+    for(i = 0; st_effect_fns[i]; i++)
+    {
+        char *s1, *s2;
+        const st_effect_t *e = st_effect_fns[i]();
+
+        if (!e || !e->name)
+            continue;
+
+        s1 = e->name;
+        s2 = argv[0];
+
+        while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
+            s1++, s2++;
+        if (*s1 || *s2)
+            continue;       /* not a match */
+
+        /* Found it! */
+        effp->name = e->name;
+        effp->h = e;
+
+        optind = 1;
+
+        while (optind < argc)
         {
-            char *s1 = st_effects[i]->name, *s2 = argv[0];
-
-            while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
-                s1++, s2++;
-            if (*s1 || *s2)
-                continue;       /* not a match */
-
-            /* Found it! */
-            effp->name = st_effects[i]->name;
-            effp->h = st_effects[i];
-
-            optind = 1;
-
-            while (optind < argc)
+            for (i = 0; e->name; i++)
             {
-                for (i = 0; st_effects[i]->name; i++)
-                {
-                    char *s1 = st_effects[i]->name, *s2 = argv[optind];
-                    while (*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
+                char *s1 = e->name, *s2 = argv[optind];
+                while (*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
                     s1++, s2++;
-                    if (*s1 || *s2)
-                        continue;
+                if (*s1 || *s2)
+                    continue;
 
-                    /* Found it! */
-                    return (optind - 1);
-                }
-                /* Didn't find a match, try the next argument. */
-                optind++;
+                /* Found it! */
+                return (optind - 1);
             }
-            /*
-             * No matches found, all the following arguments are
-             * for this effect passed in.
-             */
-            return (optind - 1);
+            /* Didn't find a match, try the next argument. */
+            optind++;
         }
+        /*
+         * No matches found, all the following arguments are
+         * for this effect passed in.
+         */
+        return (optind - 1);
+    }
 
-        return (ST_EOF);
+    return (ST_EOF);
 }
 
 /*
@@ -218,46 +225,59 @@ int st_geteffect_opt(eff_t effp, int argc, char **argv)
 
 int st_geteffect(eff_t effp, char *effect_name)
 {
-        int i;
+    int i;
 
-        for(i = 0; st_effects[i]->name; i++) {
-                char *s1 = st_effects[i]->name, *s2 = effect_name;
+    for(i = 0; st_effect_fns[i]; i++) {
+        char *s1, *s2;
+        const st_effect_t *e = st_effect_fns[i]();
 
-                while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
-                        s1++, s2++;
-                if (*s1 || *s2)
-                        continue;       /* not a match */
+        if (!e || !e->name)
+            continue;
 
-                /* Found it! */
-                effp->name = st_effects[i]->name;
-                effp->h = st_effects[i];
+        s1 = e->name;
+        s2 = effect_name;
 
-                return ST_SUCCESS;
-        }
+        while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
+            s1++, s2++;
+        if (*s1 || *s2)
+            continue;       /* not a match */
 
-        return (ST_EOF);
+        /* Found it! */
+        effp->name = e->name;
+        effp->h = e;
+
+        return ST_SUCCESS;
+    }
+
+    return (ST_EOF);
 }
 
 /*
  * Check that we have a known effect name.  Return ST_SUCESS if found, else
  * return ST_EOF.
  */
-
 int st_checkeffect(char *effect_name)
 {
-        int i;
+    int i;
 
-        for(i = 0; st_effects[i]->name; i++) {
-                char *s1 = st_effects[i]->name, *s2 = effect_name;
-                while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
-                        s1++, s2++;
-                if (*s1 || *s2)
-                        continue;       /* not a match */
+    for(i = 0; st_effect_fns[i]; i++) {
+        char *s1, *s2;
+        const st_effect_t *e = st_effect_fns[i]();
 
-                return ST_SUCCESS;
-        }
+        if (!e || !e->name)
+            continue;
 
-        return (ST_EOF);
+        s1 = e->name;
+        s2 = effect_name;
+        while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
+            s1++, s2++;
+        if (*s1 || *s2)
+            continue;       /* not a match */
+
+        return ST_SUCCESS;
+    }
+
+    return (ST_EOF);
 }
 
 /*

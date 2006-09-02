@@ -24,6 +24,8 @@
 #include "st_i.h"
 #include "btrworth.h"
 
+static st_effect_t st_lowpass_effect;
+
 int st_lowpass_getopts(eff_t effp, int n, char **argv)
 {
   butterworth_t butterworth = (butterworth_t)effp->priv;
@@ -58,7 +60,7 @@ int st_lowpass_start(eff_t effp)
   return (ST_SUCCESS);
 }
 
-st_effect_t st_lowpass_effect = {
+static st_effect_t st_lowpass_effect = {
   "lowpass",
   "Usage: lowpass FREQUENCY",
   0,
@@ -68,3 +70,8 @@ st_effect_t st_lowpass_effect = {
   st_effect_nothing_drain,
   st_effect_nothing
 };
+
+const st_effect_t *st_lowpass_effect_fn(void)
+{
+    return &st_lowpass_effect;
+}

@@ -43,7 +43,8 @@
  * output level of the transfer function.
  */
 
-/* Private data for SKEL file */
+static st_effect_t st_compand_effect;
+
 typedef struct {
   int expectedChannels; /* Also flags that channels aren't to be treated
                            individually when = 1 and input not mono */
@@ -404,7 +405,7 @@ int st_compand_stop(eff_t effp)
   return (ST_SUCCESS);
 }
 
-st_effect_t st_compand_effect = {
+static st_effect_t st_compand_effect = {
    "compand",
    "Usage: {<attack_time>,<decay_time>}+ {<dB_in>,<db_out>}+ [<dB_postamp> [<initial-volume> [<delay_time]]]\n"
    "       where {}+ means e or more in a comma-separated, white-space-free list'\n"
@@ -417,3 +418,8 @@ st_effect_t st_compand_effect = {
    st_compand_drain,
    st_compand_stop
 };
+
+const st_effect_t *st_compand_effect_fn(void)
+{
+    return &st_compand_effect;
+}

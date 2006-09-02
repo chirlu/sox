@@ -19,6 +19,8 @@
 #include <string.h>
 #include <errno.h>
 
+static st_effect_t st_noiseprof_effect;
+
 typedef struct chandata {
     float *sum;
     int   *profilecount;
@@ -209,7 +211,7 @@ int st_noiseprof_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
-st_effect_t st_noiseprof_effect = {
+static st_effect_t st_noiseprof_effect = {
   "noiseprof",
   "Usage: noiseprof [filename]",
   ST_EFF_MCHAN | ST_EFF_REPORT,
@@ -219,6 +221,11 @@ st_effect_t st_noiseprof_effect = {
   st_noiseprof_drain,
   st_noiseprof_stop
 };
+
+const st_effect_t *st_noiseprof_effect_fn(void)
+{
+    return &st_noiseprof_effect;
+}
 
 /* For Emacs:
    Local Variables:

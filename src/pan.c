@@ -18,6 +18,8 @@
 
 #include "st_i.h"
 
+static st_effect_t st_pan_effect;
+
 /* type for computations.
    float mantissa is okay for 8 or 16 bits signals.
    maybe a little bit short for 24 bits.
@@ -445,7 +447,7 @@ int st_pan_stop(eff_t effp)
     return ST_SUCCESS;
 }
 
-st_effect_t st_pan_effect = {
+static st_effect_t st_pan_effect = {
   "pan",
   "Usage: pan direction (in [-1.0 .. 1.0])",
   ST_EFF_MCHAN | ST_EFF_CHAN,
@@ -455,3 +457,8 @@ st_effect_t st_pan_effect = {
   st_effect_nothing_drain,
   st_pan_stop
 };
+
+const st_effect_t *st_pan_effect_fn(void)
+{
+    return &st_pan_effect;
+}

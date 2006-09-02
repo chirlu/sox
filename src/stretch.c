@@ -24,6 +24,8 @@
 #include <stdlib.h> /* malloc and free */
 #include <string.h> /* memcpy() */
 
+static st_effect_t st_stretch_effect;
+
 #ifndef MIN
 #define MIN(s1,s2) ((s1)<(s2)?(s1):(s2))
 #endif
@@ -425,7 +427,7 @@ int st_stretch_stop(eff_t effp)
     return ST_SUCCESS;
 }
 
-st_effect_t st_stretch_effect = {
+static st_effect_t st_stretch_effect = {
   "stretch",
   "Usage: stretch factor [window fade shift fading]\n"
   "       (expansion, frame in ms, lin/..., unit<1.0, unit<0.5)\n"
@@ -437,3 +439,8 @@ st_effect_t st_stretch_effect = {
   st_stretch_drain,
   st_stretch_stop
 };
+
+const st_effect_t *st_stretch_effect_fn(void)
+{
+    return &st_stretch_effect;
+}

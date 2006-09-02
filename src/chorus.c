@@ -71,7 +71,8 @@
 #define MOD_TRIANGLE    1
 #define MAX_CHORUS      7
 
-/* Private data for SKEL file */
+static st_effect_t st_chorus_effect;
+
 typedef struct chorusstuff {
         int     num_chorus;
         int     modulation[MAX_CHORUS];
@@ -349,7 +350,7 @@ int st_chorus_stop(eff_t effp)
         return (ST_SUCCESS);
 }
 
-st_effect_t st_chorus_effect = {
+static st_effect_t st_chorus_effect = {
   "chorus",
   "Usage: chorus gain-in gain-out delay decay speed depth [ -s | -t ]",
   0,
@@ -359,3 +360,8 @@ st_effect_t st_chorus_effect = {
   st_chorus_drain,
   st_chorus_stop
 };
+
+const st_effect_t *st_chorus_effect_fn(void)
+{
+    return &st_chorus_effect;
+}

@@ -13,7 +13,8 @@
 
 #include "st_i.h"
 
-/* Private data for SKEL file */
+static st_effect_t st_swap_effect;
+
 typedef struct swapstuff {
     int         order[4];
     int         def_opts;
@@ -197,7 +198,7 @@ int st_swap_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
-st_effect_t st_swap_effect = {
+static st_effect_t st_swap_effect = {
   "swap",
   "Usage: swap [1 2 | 1 2 3 4]",
   ST_EFF_MCHAN,
@@ -207,3 +208,8 @@ st_effect_t st_swap_effect = {
   st_swap_drain,
   st_swap_stop
 };
+
+const st_effect_t *st_swap_effect_fn(void)
+{
+    return &st_swap_effect;
+}

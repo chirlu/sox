@@ -32,6 +32,8 @@
 #include <math.h>
 #include "st_i.h"
 
+static st_effect_t st_highp_effect;
+
 /* Private data for Highpass effect */
 typedef struct highpstuff {
         float   cutoff;
@@ -113,7 +115,7 @@ int st_highp_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
-st_effect_t st_highp_effect = {
+static st_effect_t st_highp_effect = {
   "highp",
   "Usage: highp cutoff",
   0,
@@ -123,3 +125,8 @@ st_effect_t st_highp_effect = {
   st_effect_nothing_drain,
   st_highp_stop
 };
+
+const st_effect_t *st_highp_effect_fn(void)
+{
+    return &st_highp_effect;
+}

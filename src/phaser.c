@@ -59,6 +59,8 @@
 #include <string.h>
 #include "st_i.h"
 
+static st_effect_t st_phaser_effect;
+
 #define MOD_SINE        0
 #define MOD_TRIANGLE    1
 
@@ -277,7 +279,7 @@ int st_phaser_stop(eff_t effp)
         return (ST_SUCCESS);
 }
 
-st_effect_t st_phaser_effect = {
+static st_effect_t st_phaser_effect = {
   "phaser",
   "Usage: phaser gain-in gain-out delay decay speed [ -s | -t ]",
   0,
@@ -287,3 +289,8 @@ st_effect_t st_phaser_effect = {
   st_phaser_drain,
   st_phaser_stop
 };
+
+const st_effect_t *st_phaser_effect_fn(void)
+{
+    return &st_phaser_effect;
+}

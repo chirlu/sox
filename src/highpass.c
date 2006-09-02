@@ -36,6 +36,7 @@
 #include "st_i.h"
 #include "btrworth.h"
 
+static st_effect_t st_highpass_effect;
 
 int st_highpass_getopts(eff_t effp, int n, char **argv) 
 {
@@ -73,7 +74,7 @@ int st_highpass_start(eff_t effp)
   return (ST_SUCCESS);
 }
 
-st_effect_t st_highpass_effect = {
+static st_effect_t st_highpass_effect = {
   "highpass",
   "Usage: highpass FREQUENCY",
   0,
@@ -83,3 +84,8 @@ st_effect_t st_highpass_effect = {
   st_effect_nothing_drain,
   st_effect_nothing
 };
+
+const st_effect_t *st_highpass_effect_fn(void)
+{
+    return &st_highpass_effect;
+}

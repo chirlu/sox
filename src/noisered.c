@@ -16,6 +16,8 @@
 #include <string.h>
 #include <assert.h>
 
+static st_effect_t st_noisered_effect;
+
 typedef struct chandata {
     float *window;
     float *lastwindow;
@@ -343,7 +345,7 @@ int st_noisered_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
-st_effect_t st_noisered_effect = {
+static st_effect_t st_noisered_effect = {
   "noisered",
   "Usage: noiseprof profile-file [threshold]",
   ST_EFF_MCHAN,
@@ -353,6 +355,11 @@ st_effect_t st_noisered_effect = {
   st_noisered_drain,
   st_noisered_stop
 };
+
+const st_effect_t *st_noisered_effect_fn(void)
+{
+    return &st_noisered_effect;
+}
 
 /* For Emacs:
   Local Variables:

@@ -27,6 +27,8 @@
 
 #include "st_i.h"
 
+static st_effect_t st_filter_effect;
+
 #ifndef HAVE_MEMMOVE
 #define memmove(dest,src,len) bcopy((src),(dest),(len))
 #endif
@@ -315,7 +317,7 @@ static void FiltWin(filter_t f, long Nx)
         }
 }
 
-st_effect_t st_filter_effect = {
+static st_effect_t st_filter_effect = {
   "filter",
   "Usage: filter low-high [ windowlength [ beta ] ]",
   0,
@@ -325,3 +327,8 @@ st_effect_t st_filter_effect = {
   st_filter_drain,
   st_filter_stop
 };
+
+const st_effect_t *st_filter_effect_fn(void)
+{
+    return &st_filter_effect;
+}

@@ -56,12 +56,12 @@ typedef struct ratestuff {
  */
 int st_rate_getopts(eff_t effp, int n, char **argv) 
 {
-	if (n)
-	{
-		st_fail("Rate effect takes no options.");
-		return (ST_EOF);
-	}
-	return (ST_SUCCESS);
+        if (n)
+        {
+                st_fail("Rate effect takes no options.");
+                return (ST_EOF);
+        }
+        return (ST_SUCCESS);
 }
 
 /*
@@ -69,25 +69,25 @@ int st_rate_getopts(eff_t effp, int n, char **argv)
  */
 int st_rate_start(eff_t effp)
 {
-	rate_t rate = (rate_t) effp->priv;
+        rate_t rate = (rate_t) effp->priv;
         unsigned long incr;
 
-	if (effp->ininfo.rate == effp->outinfo.rate)
-	{
-	    st_fail("Input and Output rates must be different to use rate effect");
-	    return(ST_EOF);
-	}
+        if (effp->ininfo.rate == effp->outinfo.rate)
+        {
+            st_fail("Input and Output rates must be different to use rate effect");
+            return(ST_EOF);
+        }
 
-	if (effp->ininfo.rate >= 65535 || effp->outinfo.rate >= 65535)
-	{
-	    st_fail("rate effect can only handle rates <= 65535");
-	    return (ST_EOF);
-	}
-	if (effp->ininfo.size == ST_SIZE_DWORD || 
-	    effp->ininfo.size == ST_SIZE_DDWORD)
-	{
-	    st_warn("rate effect reduces data to 16 bits");
-	}
+        if (effp->ininfo.rate >= 65535 || effp->outinfo.rate >= 65535)
+        {
+            st_fail("rate effect can only handle rates <= 65535");
+            return (ST_EOF);
+        }
+        if (effp->ininfo.size == ST_SIZE_DWORD || 
+            effp->ininfo.size == ST_SIZE_DDWORD)
+        {
+            st_warn("rate effect reduces data to 16 bits");
+        }
 
         rate->opos_frac=0;
         rate->opos=0;
@@ -101,8 +101,8 @@ int st_rate_start(eff_t effp)
         
         rate->ipos=0;
 
-	rate->ilast = 0;
-	return (ST_SUCCESS);
+        rate->ilast = 0;
+        return (ST_SUCCESS);
 }
 
 /*
@@ -112,10 +112,10 @@ int st_rate_start(eff_t effp)
 int st_rate_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
                  st_size_t *isamp, st_size_t *osamp)
 {
-	rate_t rate = (rate_t) effp->priv;
-	st_sample_t *istart,*iend;
-	st_sample_t *ostart,*oend;
-	st_sample_t ilast,icur,out;
+        rate_t rate = (rate_t) effp->priv;
+        st_sample_t *istart,*iend;
+        st_sample_t *ostart,*oend;
+        st_sample_t ilast,icur,out;
         unsigned long tmp;
         double t;
 
@@ -129,7 +129,7 @@ int st_rate_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
         while (obuf < oend) {
 
-		/* Safety catch to make sure we have input samples.  */
+                /* Safety catch to make sure we have input samples.  */
                 if (ibuf >= iend) goto the_end;
 
                 /* read as many input samples so that ipos > opos */
@@ -137,7 +137,7 @@ int st_rate_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 while (rate->ipos <= rate->opos) {
                         ilast = *ibuf++;
                         rate->ipos++;
-			/* See if we finished the input buffer yet */
+                        /* See if we finished the input buffer yet */
                         if (ibuf >= iend) goto the_end;
                 }
 
@@ -156,10 +156,10 @@ int st_rate_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 rate->opos_frac = tmp & (((unsigned long) 1 << FRAC_BITS)-1);
         }
 the_end:
-	*isamp = ibuf - istart;
-	*osamp = obuf - ostart;
-	rate->ilast = ilast;
-	return (ST_SUCCESS);
+        *isamp = ibuf - istart;
+        *osamp = obuf - ostart;
+        rate->ilast = ilast;
+        return (ST_SUCCESS);
 }
 
 /*
@@ -168,7 +168,7 @@ the_end:
  */
 int st_rate_stop(eff_t effp)
 {
-	/* nothing to do */
+        /* nothing to do */
     return (ST_SUCCESS);
 }
 
@@ -226,11 +226,11 @@ int st_rate_stop(eff_t effp)
 
 /* Private data for Lerp via LCM file */
 typedef struct ratestuff {
-	st_rate_t lcmrate;		/* least common multiple of rates */
-	unsigned long inskip, outskip;	/* LCM increments for I & O rates */
-	unsigned long total;
-	unsigned long intot, outtot;	/* total samples in LCM basis */
-	st_sample_t lastsamp;		/* history */
+        st_rate_t lcmrate;              /* least common multiple of rates */
+        unsigned long inskip, outskip;  /* LCM increments for I & O rates */
+        unsigned long total;
+        unsigned long intot, outtot;    /* total samples in LCM basis */
+        st_sample_t lastsamp;           /* history */
 } *rate_t;
 
 /*
@@ -238,12 +238,12 @@ typedef struct ratestuff {
  */
 int st_rate_getopts(eff_t effp, int n, char **argv) 
 {
-	if (n)
-	{
-		st_fail(st_rate_effect.usage);
-		return (ST_EOF);
-	}
-	return (ST_SUCCESS);
+        if (n)
+        {
+                st_fail(st_rate_effect.usage);
+                return (ST_EOF);
+        }
+        return (ST_SUCCESS);
 }
 
 /*
@@ -251,18 +251,18 @@ int st_rate_getopts(eff_t effp, int n, char **argv)
  */
 int st_rate_start(eff_t effp)
 {
-	rate_t rate = (rate_t) effp->priv;
-	
-	rate->lcmrate = st_lcm((st_sample_t)effp->ininfo.rate, (st_sample_t)effp->outinfo.rate);
-	/* Cursory check for LCM overflow.  
-	 * If both rate are below 65k, there should be no problem.
-	 * 16 bits x 16 bits = 32 bits, which we can handle.
-	 */
-	rate->inskip = rate->lcmrate / effp->ininfo.rate;
-	rate->outskip = rate->lcmrate / effp->outinfo.rate; 
-	rate->total = rate->intot = rate->outtot = 0;
-	rate->lastsamp = 0;
-	return (ST_SUCCESS);
+        rate_t rate = (rate_t) effp->priv;
+        
+        rate->lcmrate = st_lcm((st_sample_t)effp->ininfo.rate, (st_sample_t)effp->outinfo.rate);
+        /* Cursory check for LCM overflow.  
+         * If both rate are below 65k, there should be no problem.
+         * 16 bits x 16 bits = 32 bits, which we can handle.
+         */
+        rate->inskip = rate->lcmrate / effp->ininfo.rate;
+        rate->outskip = rate->lcmrate / effp->outinfo.rate; 
+        rate->total = rate->intot = rate->outtot = 0;
+        rate->lastsamp = 0;
+        return (ST_SUCCESS);
 }
 
 /*
@@ -272,58 +272,58 @@ int st_rate_start(eff_t effp)
 int st_rate_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
                  st_size_t *isamp, st_size_t *osamp)
 {
-	rate_t rate = (rate_t) effp->priv;
-	int len, done;
-	st_sample_t *istart = ibuf;
-	st_sample_t last;
+        rate_t rate = (rate_t) effp->priv;
+        int len, done;
+        st_sample_t *istart = ibuf;
+        st_sample_t last;
 
-	done = 0;
-	if (rate->total == 0) {
-		/* Emit first sample.  We know the fence posts meet. */
-		*obuf = *ibuf++;
-		rate->lastsamp = *obuf++ / 65536L;
-		done = 1;
-		rate->total = 1;
-		/* advance to second output */
-		rate->outtot += rate->outskip;
-		/* advance input range to span next output */
-		while ((rate->intot + rate->inskip) <= rate->outtot){
-			last = *ibuf++ / 65536L;
-			rate->intot += rate->inskip;
-		}
-	} 
+        done = 0;
+        if (rate->total == 0) {
+                /* Emit first sample.  We know the fence posts meet. */
+                *obuf = *ibuf++;
+                rate->lastsamp = *obuf++ / 65536L;
+                done = 1;
+                rate->total = 1;
+                /* advance to second output */
+                rate->outtot += rate->outskip;
+                /* advance input range to span next output */
+                while ((rate->intot + rate->inskip) <= rate->outtot){
+                        last = *ibuf++ / 65536L;
+                        rate->intot += rate->inskip;
+                }
+        } 
 
-	/* start normal flow-through operation */
-	last = rate->lastsamp;
-		
-	/* number of output samples the input can feed */
-	len = (*isamp * rate->inskip) / rate->outskip;
-	if (len > *osamp)
-		len = *osamp;
-	for(; done < len; done++) {
-		*obuf = last;
-		*obuf += ((float)((*ibuf / 65536L)  - last)* ((float)rate->outtot -
-				rate->intot))/rate->inskip;
-		*obuf *= 65536L;
-		obuf++;
-		/* advance to next output */
-		rate->outtot += rate->outskip;
-		/* advance input range to span next output */
-		while ((rate->intot + rate->inskip) <= rate->outtot){
-			last = *ibuf++ / 65536L;
-			rate->intot += rate->inskip;
-			if (ibuf - istart == *isamp)
-				goto out;
-		}
-		/* long samples with high LCM's overrun counters! */
-		if (rate->outtot == rate->intot)
-			rate->outtot = rate->intot = 0;
-	}
+        /* start normal flow-through operation */
+        last = rate->lastsamp;
+                
+        /* number of output samples the input can feed */
+        len = (*isamp * rate->inskip) / rate->outskip;
+        if (len > *osamp)
+                len = *osamp;
+        for(; done < len; done++) {
+                *obuf = last;
+                *obuf += ((float)((*ibuf / 65536L)  - last)* ((float)rate->outtot -
+                                rate->intot))/rate->inskip;
+                *obuf *= 65536L;
+                obuf++;
+                /* advance to next output */
+                rate->outtot += rate->outskip;
+                /* advance input range to span next output */
+                while ((rate->intot + rate->inskip) <= rate->outtot){
+                        last = *ibuf++ / 65536L;
+                        rate->intot += rate->inskip;
+                        if (ibuf - istart == *isamp)
+                                goto out;
+                }
+                /* long samples with high LCM's overrun counters! */
+                if (rate->outtot == rate->intot)
+                        rate->outtot = rate->intot = 0;
+        }
 out:
-	*isamp = ibuf - istart;
-	*osamp = len;
-	rate->lastsamp = last;
-	return (ST_SUCCESS);
+        *isamp = ibuf - istart;
+        *osamp = len;
+        rate->lastsamp = last;
+        return (ST_SUCCESS);
 }
 
 /*
@@ -332,12 +332,12 @@ out:
  */
 int st_rate_stop(eff_t effp)
 {
-	/* nothing to do */
+        /* nothing to do */
     return (ST_SUCCESS);
 }
 #endif /* USE_OLD_RATE */
 
-st_effect_t st_rate_effect = {
+static st_effect_t st_rate_effect = {
   "rate",
   "Usage: Rate effect takes no options",
   ST_EFF_RATE,
@@ -347,3 +347,8 @@ st_effect_t st_rate_effect = {
   st_effect_nothing_drain,
   st_effect_nothing
 };
+
+const st_effect_t *st_rate_effect_fn(void)
+{
+    return &st_rate_effect;
+}

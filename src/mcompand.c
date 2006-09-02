@@ -712,7 +712,7 @@ int st_mcompand_stop(eff_t effp)
   return (ST_SUCCESS);
 }
 
-st_effect_t st_mcompand_effect = {
+static st_effect_t st_mcompand_effect = {
   "mcompand",
   "Usage: mcompand quoted_compand_args [crossover_frequency quoted_compand_args [...]]\n"
   "\n"
@@ -720,23 +720,7 @@ st_effect_t st_mcompand_effect = {
   "\n"
   "  attack1,decay1[,attack2,decay2...]\n"
   "                 in-dB1,out-dB1[,in-dB2,out-dB2...]\n"
-  "                [ gain [ initial-volume [ delay ] ] ]\n"
-  "\n"
-  "  Beware a variety of headroom (clipping) bugaboos.\n"
-  "\n"
-  "  Here is an example application, an FM radio sound simulator (or\n"
-  "  broadcast signal conditioner, if the lowp at the end is skipped -\n"
-  "  note that the pipeline is set up with US-style 75us preemphasis).\n"
-  "\n"
-  "  sox -V -t raw -r 44100 -s -w -c 2 - -t raw -r 44100 -s -l -c 2 \\\n"
-  "     - vol -3 db filter 8000- 32 100 mcompand \".005,.1 \\\n"
-  "     -47,-40,-34,-34,-17,-33 0 0 0\" 100 \".003,.05 \\\n"
-  "     -47,-40,-34,-34,-17,-33 0 0 0\" 400 \".000625,.0125 \\\n"
-  "     -47,-40,-34,-34,-15,-33 0 0 0\" 1600 \".0001,.025 \\\n"
-  "     -47,-40,-34,-34,-31,-31,-0,-30 0 0 0\" 6400 \\\n"
-  "     \"0,.025 -38,-31,-28,-28,-0,-25 0 0 0\" vol 27 db vol -12 \\\n"
-  "     db highpass 22 highpass 22 filter -17500 256 vol +12 db \\\n"
-  "     vol -3 db lowp 1780",
+  "                [ gain [ initial-volume [ delay ] ] ]\n",
   ST_EFF_MCHAN,
   st_mcompand_getopts,
   st_mcompand_start,
@@ -744,3 +728,8 @@ st_effect_t st_mcompand_effect = {
   st_mcompand_drain,
   st_mcompand_stop
 };
+
+const st_effect_t *st_mcompand_effect_fn(void)
+{
+    return &st_mcompand_effect;
+}

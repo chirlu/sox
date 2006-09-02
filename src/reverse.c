@@ -20,6 +20,8 @@
 
 #include "st_i.h"
 
+static st_effect_t st_reverse_effect;
+
 /* Private data */
 typedef struct reversestuff {
         FILE *fp;
@@ -143,7 +145,7 @@ int st_reverse_stop(eff_t effp)
         return (ST_SUCCESS);
 }
 
-st_effect_t st_reverse_effect = {
+static st_effect_t st_reverse_effect = {
   "reverse",
   "Usage: Reverse effect takes no options",
   0,
@@ -153,3 +155,8 @@ st_effect_t st_reverse_effect = {
   st_reverse_drain,
   st_reverse_stop
 };
+
+const st_effect_t *st_reverse_effect_fn(void)
+{
+    return &st_reverse_effect;
+}

@@ -12,6 +12,8 @@
 
 #include <math.h>   /* exp(), sqrt() */
 
+static st_effect_t st_vol_effect;
+
 /* type used for computations. 
  */
 #ifndef VOL_FLOAT
@@ -213,7 +215,7 @@ int st_vol_stop(eff_t effp)
     return ST_SUCCESS;
 }
 
-st_effect_t st_vol_effect = {
+static st_effect_t st_vol_effect = {
   "vol",
   "Usage: vol gain [ type [ limitergain ] ]"
   "       (default type=amplitude: 1.0 is constant, <0.0 change phase;\n"
@@ -227,3 +229,8 @@ st_effect_t st_vol_effect = {
   st_effect_nothing_drain,
   st_vol_stop
 };
+
+const st_effect_t *st_vol_effect_fn(void)
+{
+    return &st_vol_effect;
+}

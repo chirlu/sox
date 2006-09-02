@@ -27,6 +27,8 @@
 
 #include "st_i.h"
 
+static st_effect_t st_earwax_effect;
+
 #define EARWAX_SCALE 64
 
 /* A stereo fir filter. One side filters as if the signal was from
@@ -185,7 +187,7 @@ int st_earwax_stop(eff_t effp)
   return (ST_SUCCESS);
 }
 
-st_effect_t st_earwax_effect = {
+static st_effect_t st_earwax_effect = {
   "earwax",
   "Usage: The earwax filtering effect takes no options",
   ST_EFF_MCHAN,
@@ -195,3 +197,8 @@ st_effect_t st_earwax_effect = {
   st_earwax_drain,
   st_earwax_stop
 };
+
+const st_effect_t *st_earwax_effect_fn(void)
+{
+    return &st_earwax_effect;
+}

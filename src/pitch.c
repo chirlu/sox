@@ -42,6 +42,8 @@
 
 #include <math.h>   /* cos(), pow() */
 
+static st_effect_t st_pitch_effect;
+
 #ifndef MIN
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #endif
@@ -613,7 +615,7 @@ int st_pitch_stop(eff_t effp)
     return ST_SUCCESS;
 }
 
-st_effect_t st_pitch_effect = {
+static st_effect_t st_pitch_effect = {
   "pitch",
   "Usage: pitch shift width interpole fade\n"
   "       (in cents, in ms, cub/lin, cos/ham/lin/trap)"
@@ -625,3 +627,8 @@ st_effect_t st_pitch_effect = {
   st_pitch_drain,
   st_pitch_stop
 };
+
+const st_effect_t *st_pitch_effect_fn(void)
+{
+    return &st_pitch_effect;
+}

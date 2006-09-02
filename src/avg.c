@@ -21,7 +21,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-/* Private data for SKEL file */
+static st_effect_t st_avg_effect;
+
 typedef struct avgstuff {
         /* How to generate each output channel.  sources[i][j] */
         /* represents the fraction of channel i that should be passed */
@@ -546,7 +547,7 @@ int st_avg_stop(eff_t effp)
     return (ST_SUCCESS); /* nothing to do */
 }
 
-st_effect_t st_avg_effect = {
+static st_effect_t st_avg_effect = {
   "avg",
   "Usage: avg [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
   ST_EFF_MCHAN | ST_EFF_CHAN,
@@ -557,7 +558,7 @@ st_effect_t st_avg_effect = {
   st_avg_stop
 };
 
-st_effect_t st_pick_effect = {
+static st_effect_t st_pick_effect = {
   "pick",
   "Usage: pick [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
   ST_EFF_MCHAN | ST_EFF_CHAN,
@@ -567,3 +568,13 @@ st_effect_t st_pick_effect = {
   st_effect_nothing_drain,
   st_avg_stop
 };
+
+const st_effect_t *st_avg_effect_fn(void)
+{
+    return &st_avg_effect;
+}
+
+const st_effect_t *st_pick_effect_fn(void)
+{
+    return &st_pick_effect;
+}

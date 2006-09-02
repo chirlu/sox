@@ -101,6 +101,8 @@ pause -1 "Hit return to continue"
 #include <math.h>
 #include "st_i.h"
 
+static st_effect_t st_deemph_effect ;
+
 /* Private data for deemph file */
 typedef struct deemphstuff {
      st_sample_t lastin;
@@ -203,7 +205,7 @@ int st_deemph_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
-st_effect_t st_deemph_effect = {
+static st_effect_t st_deemph_effect = {
   "deemph",
   "Usage: Deemphasis filtering effect takes no options",
   0,
@@ -213,3 +215,8 @@ st_effect_t st_deemph_effect = {
   st_effect_nothing_drain,
   st_deemph_stop
 };
+
+const st_effect_t *st_deemph_effect_fn(void)
+{
+    return &st_deemph_effect;
+}

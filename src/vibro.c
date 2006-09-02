@@ -28,14 +28,16 @@
 #include <stdlib.h>
 #include "st_i.h"
 
+static st_effect_t st_vibro_effect;
+
 /* Private data for Vibro effect */
 typedef struct vibrostuff {
-	float 		speed;
-	float 		depth;
-	short		*sinetab;		/* sine wave to apply */
-	int		mult;			/* multiplier */
-	unsigned	length;			/* length of table */
-	int		counter;		/* current counter */
+        float           speed;
+        float           depth;
+        short           *sinetab;               /* sine wave to apply */
+        int             mult;                   /* multiplier */
+        unsigned        length;                 /* length of table */
+        int             counter;                /* current counter */
 } *vibro_t;
 
 /*
@@ -43,22 +45,22 @@ typedef struct vibrostuff {
  */
 int st_vibro_getopts(eff_t effp, int n, char **argv) 
 {
-	vibro_t vibro = (vibro_t) effp->priv;
+        vibro_t vibro = (vibro_t) effp->priv;
 
-	vibro->depth = 0.5;
-	if ((n == 0) || !sscanf(argv[0], "%f", &vibro->speed) ||
-		((n == 2) && !sscanf(argv[1], "%f", &vibro->depth)))
-	{
-		st_fail(st_vibro_effect.usage);
-		return (ST_EOF);
-	}
-	if ((vibro->speed <= 0.001) || (vibro->speed > 30.0) || 
-			(vibro->depth < 0.0) || (vibro->depth > 1.0))
-	{
-		st_fail("Vibro: speed must be < 30.0, 0.0 < depth < 1.0");
-		return (ST_EOF);
-	}
-	return (ST_SUCCESS);
+        vibro->depth = 0.5;
+        if ((n == 0) || !sscanf(argv[0], "%f", &vibro->speed) ||
+                ((n == 2) && !sscanf(argv[1], "%f", &vibro->depth)))
+        {
+                st_fail(st_vibro_effect.usage);
+                return (ST_EOF);
+        }
+        if ((vibro->speed <= 0.001) || (vibro->speed > 30.0) || 
+                        (vibro->depth < 0.0) || (vibro->depth > 1.0))
+        {
+                st_fail("Vibro: speed must be < 30.0, 0.0 < depth < 1.0");
+                return (ST_EOF);
+        }
+        return (ST_SUCCESS);
 }
 
 /* This was very painful.  We need a sine library. */
@@ -66,15 +68,15 @@ int st_vibro_getopts(eff_t effp, int n, char **argv)
 /* FIXME: move to misc.c */
 static void sine(short *buf, int len, float depth)
 {
-	int i;
-	int scale = depth * 128;
-	int base = (1.0 - depth) * 128;
-	double val;
+        int i;
+        int scale = depth * 128;
+        int base = (1.0 - depth) * 128;
+        double val;
 
-	for (i = 0; i < len; i++) {
-		val = sin((float)i/(float)len * 2.0 * M_PI);
-		buf[i] = (val + 1.0) * scale + base * 2;
-	}
+        for (i = 0; i < len; i++) {
+                val = sin((float)i/(float)len * 2.0 * M_PI);
+                buf[i] = (val + 1.0) * scale + base * 2;
+        }
 }
 
 /*
@@ -82,19 +84,19 @@ static void sine(short *buf, int len, float depth)
  */
 int st_vibro_start(eff_t effp)
 {
-	vibro_t vibro = (vibro_t) effp->priv;
+        vibro_t vibro = (vibro_t) effp->priv;
 
-	vibro->length = effp->ininfo.rate / vibro->speed;
-	if (! (vibro->sinetab = (short*) malloc(vibro->length * sizeof(short))))
-	{
-		st_fail("Vibro: Cannot malloc %d bytes",
-			vibro->length * sizeof(short));
-		return (ST_EOF);
-	}
+        vibro->length = effp->ininfo.rate / vibro->speed;
+        if (! (vibro->sinetab = (short*) malloc(vibro->length * sizeof(short))))
+        {
+                st_fail("Vibro: Cannot malloc %d bytes",
+                        vibro->length * sizeof(short));
+                return (ST_EOF);
+        }
 
-	sine(vibro->sinetab, vibro->length, vibro->depth);
-	vibro->counter = 0;
-	return (ST_SUCCESS);
+        sine(vibro->sinetab, vibro->length, vibro->depth);
+        vibro->counter = 0;
+        return (ST_SUCCESS);
 }
 
 /*
@@ -105,25 +107,25 @@ int st_vibro_start(eff_t effp)
 int st_vibro_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
                   st_size_t *isamp, st_size_t *osamp)
 {
-	vibro_t vibro = (vibro_t) effp->priv;
-	register int counter, tablen;
-	int len, done;
-	short *sinetab;
-	st_sample_t l;
+        vibro_t vibro = (vibro_t) effp->priv;
+        register int counter, tablen;
+        int len, done;
+        short *sinetab;
+        st_sample_t l;
 
-	len = ((*isamp > *osamp) ? *osamp : *isamp);
+        len = ((*isamp > *osamp) ? *osamp : *isamp);
 
-	sinetab = vibro->sinetab;
-	counter = vibro->counter;
-	tablen = vibro->length;
-	for(done = 0; done < len; done++) {
-		l = *ibuf++;
-		/* 24x8 gives 32-bit result */
-		*obuf++ = ((l / 256) * sinetab[counter++ % tablen]);
-	}
-	vibro->counter = counter;
-	/* processed all samples */
-	return (ST_SUCCESS);
+        sinetab = vibro->sinetab;
+        counter = vibro->counter;
+        tablen = vibro->length;
+        for(done = 0; done < len; done++) {
+                l = *ibuf++;
+                /* 24x8 gives 32-bit result */
+                *obuf++ = ((l / 256) * sinetab[counter++ % tablen]);
+        }
+        vibro->counter = counter;
+        /* processed all samples */
+        return (ST_SUCCESS);
 }
 
 /*
@@ -132,11 +134,11 @@ int st_vibro_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
  */
 int st_vibro_stop(eff_t effp)
 {
-	/* nothing to do */
+        /* nothing to do */
     return (ST_SUCCESS);
 }
 
-st_effect_t st_vibro_effect = {
+static st_effect_t st_vibro_effect = {
   "vibro",
   "Usage: vibro speed [ depth ]",
   0,
@@ -146,3 +148,8 @@ st_effect_t st_vibro_effect = {
   st_effect_nothing_drain,
   st_effect_nothing
 };
+
+const st_effect_t *st_vibro_effect_fn(void)
+{
+    return &st_vibro_effect;
+}

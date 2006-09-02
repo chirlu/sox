@@ -95,6 +95,8 @@
 #include <math.h>
 #include "st_i.h"
 
+static st_effect_t st_reverb_effect;
+
 #define REVERB_FADE_THRESH 10
 #define DELAY_BUFSIZ ( 50L * ST_MAXRATE )
 #define MAXREVERBS 8
@@ -287,7 +289,7 @@ int st_reverb_stop(eff_t effp)
         return (ST_SUCCESS);
 }
 
-st_effect_t st_reverb_effect = {
+static st_effect_t st_reverb_effect = {
   "reverb",
   "Usage: reverb gain-out reverb-time delay [ delay ... ]",
   0,
@@ -297,3 +299,8 @@ st_effect_t st_reverb_effect = {
   st_reverb_drain,
   st_reverb_stop
 };
+
+const st_effect_t *st_reverb_effect_fn(void)
+{
+    return &st_reverb_effect;
+}

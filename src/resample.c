@@ -58,6 +58,8 @@
 /* resample includes */
 #include "resampl.h"
 
+static st_effect_t st_resample_effect;
+
 /* this Float MUST match that in filter.c */
 #define Float double/*float*/
 #define ISCALE 0x10000
@@ -710,7 +712,7 @@ static void LpFilter(double *c, long N, double frq, double Beta, long Num)
    }
 }
 
-st_effect_t st_resample_effect = {
+static st_effect_t st_resample_effect = {
    "resample",
    "Usage: resample [ rolloff [ beta ] ]",
    ST_EFF_RATE,
@@ -720,3 +722,8 @@ st_effect_t st_resample_effect = {
    st_resample_drain,
    st_resample_stop
 };
+
+const st_effect_t *st_resample_effect_fn(void)
+{
+    return &st_resample_effect;
+}

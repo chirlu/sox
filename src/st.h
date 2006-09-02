@@ -273,7 +273,7 @@ struct st_effect
     char            *name;          /* effect name */
     struct st_signalinfo ininfo;    /* input signal specifications */
     struct st_signalinfo outinfo;   /* output signal specifications */
-    st_effect_t     *h;             /* effects driver */
+    const st_effect_t *h;           /* effects driver */
     st_sample_t     *obuf;          /* output buffer */
     st_size_t       odone, olen;    /* consumed, total length */
     /* The following is a portable trick to align this variable on
@@ -285,8 +285,6 @@ struct st_effect
     double priv1;
     char priv[ST_MAX_EFFECT_PRIVSIZE]; /* private area for effect */
 };
-
-extern st_effect_t *st_effects[]; /* declared in handlers.c */
 
 extern ft_t st_open_read(const char *path, const st_signalinfo_t *info, 
                          const char *filetype);

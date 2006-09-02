@@ -15,6 +15,8 @@
 
 #include <math.h>   /* exp(), sqrt() */
 
+static st_effect_t st_dcshift_effect;
+
 /* type used for computations.
  */
 #ifndef DCSHIFT_FLOAT
@@ -208,7 +210,7 @@ int st_dcshift_stop(eff_t effp)
     return ST_SUCCESS;
 }
 
-st_effect_t st_dcshift_effect = {
+static st_effect_t st_dcshift_effect = {
    "dcshift",
    "Usage: dcshift shift [ limitergain ]\n"
    "       The peak limiter has a gain much less than 1.0 (ie 0.05 or 0.02) which is only\n"
@@ -220,3 +222,8 @@ st_effect_t st_dcshift_effect = {
    st_effect_nothing_drain,
    st_dcshift_stop
 };
+
+const st_effect_t *st_dcshift_effect_fn(void)
+{
+    return &st_dcshift_effect;
+}

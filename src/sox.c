@@ -849,11 +849,6 @@ static void parse_effects(int argc, char **argv)
 
         if (argc_effect == ST_EOF)
         {
-            int i1;
-            fprintf(stderr, "%s: Known effects: ",myname);
-            for (i1 = 0; st_effects[i1]->name; i1++)
-                fprintf(stderr, "%s ", st_effects[i1]->name);
-            fprintf(stderr, "\n\n");
             st_fail("Effect '%s' is not known!", argv[optind]);
             cleanup();
             exit(2);
@@ -1646,6 +1641,7 @@ static void usage(char *opt)
 {
     int i;
     const st_format_t *f;
+    const st_effect_t *e;
 
     printf("%s: ", myname);
     printf("Version %s\n\n", st_version());
@@ -1698,8 +1694,12 @@ static void usage(char *opt)
     }
 
     printf("\n\nSupported effects: ");
-    for (i = 0; st_effects[i]->name != NULL; i++) {
-        printf("%s ", st_effects[i]->name);
+    for (i = 0; st_effect_fns[i]; i++) {
+        e = st_effect_fns[i]();
+        if (e && e->name)
+        {
+            printf("%s ", e->name);
+        }
     }
 
     printf( "\n\neffopts: depends on effect\n\n");
@@ -1709,18 +1709,24 @@ static void usage(char *opt)
 static void usage_effect(char *effect)
 {
     int i;
+    const st_effect_t *e;
 
     printf("%s: ", myname);
     printf("v%s\n\n", st_version());
 
     printf("Effect usage:\n\n");
 
-    for (i = 0; st_effects[i]->name != NULL; i++)
-        if (!strcmp ("all", effect) || !strcmp (st_effects[i]->name, effect))
+
+    for (i = 0; st_effect_fns[i]; i++)
+    {
+        e = st_effect_fns[i]();
+        if (e && e->name &&
+            (!strcmp("all", effect) ||  !strcmp(e->name, effect)))
         {
-            char *p = strstr(st_effects[i]->usage, "Usage: ");
-            printf("%s\n\n", p ? p + 7 : st_effects[i]->usage);
+            char *p = strstr(e->usage, "Usage: ");
+            printf("%s\n\n", p ? p + 7 : e->usage);
         }
+    }
 
     if (!effect)
         printf("see --help-effect=effect for effopts ('all' for effopts of all effects)\n\n");

@@ -30,6 +30,8 @@
 #include <math.h>
 #include "st_i.h"
 
+static st_effect_t st_lowp_effect;
+
 /* Private data for Lowpass effect */
 typedef struct lowpstuff {
         float   cutoff;
@@ -106,7 +108,7 @@ int st_lowp_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
-st_effect_t st_lowp_effect = {
+static st_effect_t st_lowp_effect = {
   "lowp",
   "Usage: lowp cutoff",
   0,
@@ -116,3 +118,8 @@ st_effect_t st_lowp_effect = {
   st_effect_nothing_drain,
   st_lowp_stop
 };
+
+const st_effect_t *st_lowp_effect_fn(void)
+{
+    return &st_lowp_effect;
+}

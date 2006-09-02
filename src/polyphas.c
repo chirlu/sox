@@ -665,7 +665,7 @@ int st_poly_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
-st_effect_t st_polyphase_effect = {
+static st_effect_t st_polyphase_effect = {
   "polyphase",
   "Usage: -w <nut / ham>        :  window type\n"
   "       -width <short / long> :  window width\n"
@@ -682,3 +682,8 @@ st_effect_t st_polyphase_effect = {
   st_poly_drain,
   st_poly_stop
 };
+
+const st_effect_t *st_polyphase_effect_fn(void)
+{
+    return &st_polyphase_effect;
+}

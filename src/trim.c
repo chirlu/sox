@@ -14,6 +14,8 @@
 #include "st_i.h"
 #include <string.h>
 
+static st_effect_t st_trim_effect;
+
 /* Time resolutin one millisecond */
 #define TIMERES 1000
 
@@ -217,7 +219,7 @@ void st_trim_clear_start(eff_t effp)
     trim->start = 0;
 }
 
-st_effect_t st_trim_effect = {
+static st_effect_t st_trim_effect = {
   "trim",
   "Usage: trim start [length]",
   ST_EFF_MCHAN,
@@ -227,3 +229,8 @@ st_effect_t st_trim_effect = {
   st_effect_nothing_drain,
   st_effect_nothing
 };
+
+const st_effect_t *st_trim_effect_fn(void)
+{
+    return &st_trim_effect;
+}

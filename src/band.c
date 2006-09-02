@@ -46,14 +46,16 @@
 #include <string.h>
 #include "st_i.h"
 
+static st_effect_t st_band_effect;
+
 /* Private data for Bandpass effect */
 typedef struct bandstuff {
-	float	center;
-	float	width;
-	double	A, B, C;
-	double	out1, out2;
-	short	noise;
-	/* 50 bytes of data, 52 bytes long for allocation purposes. */
+        float   center;
+        float   width;
+        double  A, B, C;
+        double  out1, out2;
+        short   noise;
+        /* 50 bytes of data, 52 bytes long for allocation purposes. */
 } *band_t;
 
 /*
@@ -61,26 +63,26 @@ typedef struct bandstuff {
  */
 int st_band_getopts(eff_t effp, int n, char **argv) 
 {
-	band_t band = (band_t) effp->priv;
+        band_t band = (band_t) effp->priv;
 
-	band->noise = 0;
-	if (n > 0 && !strcmp(argv[0], "-n")) {
-		band->noise = 1;
-		n--;
-		argv++;
-	}
-	if ((n < 1) || !sscanf(argv[0], "%f", &band->center))
-	{
-		st_fail(st_band_effect.usage);
-		return (ST_EOF);
-	}
-	band->width = band->center / 2;
-	if ((n >= 2) && !sscanf(argv[1], "%f", &band->width))
-	{
-		st_fail(st_band_effect.usage);
-		return (ST_EOF);
-	}
-	return (ST_SUCCESS);
+        band->noise = 0;
+        if (n > 0 && !strcmp(argv[0], "-n")) {
+                band->noise = 1;
+                n--;
+                argv++;
+        }
+        if ((n < 1) || !sscanf(argv[0], "%f", &band->center))
+        {
+                st_fail(st_band_effect.usage);
+                return (ST_EOF);
+        }
+        band->width = band->center / 2;
+        if ((n >= 2) && !sscanf(argv[1], "%f", &band->width))
+        {
+                st_fail(st_band_effect.usage);
+                return (ST_EOF);
+        }
+        return (ST_SUCCESS);
 }
 
 /*
@@ -88,23 +90,23 @@ int st_band_getopts(eff_t effp, int n, char **argv)
  */
 int st_band_start(eff_t effp)
 {
-	band_t band = (band_t) effp->priv;
-	if (band->center > effp->ininfo.rate/2)
-	{
-		st_fail("Band: center must be < minimum data rate/2\n");
-		return (ST_EOF);
-	}
+        band_t band = (band_t) effp->priv;
+        if (band->center > effp->ininfo.rate/2)
+        {
+                st_fail("Band: center must be < minimum data rate/2\n");
+                return (ST_EOF);
+        }
 
-	band->C = exp(-2*M_PI*band->width/effp->ininfo.rate);
-	band->B = -4*band->C/(1+band->C)*
-		cos(2*M_PI*band->center/effp->ininfo.rate);
-	if (band->noise)
-		band->A = sqrt(((1+band->C)*(1+band->C)-band->B *
-			band->B)*(1-band->C)/(1+band->C));
-	else
-		band->A = sqrt(1-band->B*band->B/(4*band->C))*(1-band->C);
-	band->out1 = band->out2 = 0.0;
-	return (ST_SUCCESS);
+        band->C = exp(-2*M_PI*band->width/effp->ininfo.rate);
+        band->B = -4*band->C/(1+band->C)*
+                cos(2*M_PI*band->center/effp->ininfo.rate);
+        if (band->noise)
+                band->A = sqrt(((1+band->C)*(1+band->C)-band->B *
+                        band->B)*(1-band->C)/(1+band->C));
+        else
+                band->A = sqrt(1-band->B*band->B/(4*band->C))*(1-band->C);
+        band->out1 = band->out2 = 0.0;
+        return (ST_SUCCESS);
 }
 
 /*
@@ -113,26 +115,26 @@ int st_band_start(eff_t effp)
  */
 
 int st_band_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
-	         st_size_t *isamp, st_size_t *osamp)
+                 st_size_t *isamp, st_size_t *osamp)
 {
-	band_t band = (band_t) effp->priv;
-	int len, done;
-	double d;
-	st_sample_t l;
+        band_t band = (band_t) effp->priv;
+        int len, done;
+        double d;
+        st_sample_t l;
 
-	len = ((*isamp > *osamp) ? *osamp : *isamp);
+        len = ((*isamp > *osamp) ? *osamp : *isamp);
 
-	/* yeah yeah yeah registers & integer arithmetic yeah yeah yeah */
-	for(done = 0; done < len; done++) {
-		l = *ibuf++;
-		d = (band->A * l - band->B * band->out1) - band->C * band->out2;
-		band->out2 = band->out1;
-		band->out1 = d;
-		*obuf++ = d;
-	}
-	*isamp = len;
-	*osamp = len;
-	return(ST_SUCCESS);
+        /* yeah yeah yeah registers & integer arithmetic yeah yeah yeah */
+        for(done = 0; done < len; done++) {
+                l = *ibuf++;
+                d = (band->A * l - band->B * band->out1) - band->C * band->out2;
+                band->out2 = band->out1;
+                band->out1 = d;
+                *obuf++ = d;
+        }
+        *isamp = len;
+        *osamp = len;
+        return(ST_SUCCESS);
 }
 
 /*
@@ -141,10 +143,10 @@ int st_band_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
  */
 int st_band_stop(eff_t effp)
 {
-	return (ST_SUCCESS);	/* nothing to do */
+        return (ST_SUCCESS);    /* nothing to do */
 }
 
-st_effect_t st_band_effect = {
+static st_effect_t st_band_effect = {
    "band",
    "Usage: band [ -n ] center [ width ]",
    0,
@@ -154,3 +156,8 @@ st_effect_t st_band_effect = {
    st_effect_nothing_drain,
    st_band_stop
 };
+
+const st_effect_t *st_band_effect_fn(void)
+{
+    return &st_band_effect;
+}

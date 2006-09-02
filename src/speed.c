@@ -16,6 +16,8 @@
 #include <math.h> /* pow */
 #include <string.h>
 
+static st_effect_t st_speed_effect;
+
 /* type used for computations.
  */
 #ifndef SPEED_FLOAT
@@ -300,7 +302,7 @@ int st_speed_stop(eff_t effp)
     return ST_SUCCESS;
 }
 
-st_effect_t st_speed_effect = {
+static st_effect_t st_speed_effect = {
   "speed",
   "Usage: speed [-c] factor (default 1.0, <1 slows, -c: factor in cent)",
   0,
@@ -310,3 +312,8 @@ st_effect_t st_speed_effect = {
   st_speed_drain,
   st_speed_stop
 };
+
+const st_effect_t *st_speed_effect_fn(void)
+{
+    return &st_speed_effect;
+}

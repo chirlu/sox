@@ -18,6 +18,8 @@
 #include <math.h>
 #include "st_i.h"
 
+static st_effect_t st_silence_effect;
+
 #ifndef TRUE
 #define TRUE 1
 #endif
@@ -694,7 +696,7 @@ int st_silence_stop(eff_t effp)
     return(ST_SUCCESS);
 }
 
-st_effect_t st_silence_effect = {
+static st_effect_t st_silence_effect = {
   "silence",
   "Usage: silence above_periods [ duration thershold[d | %% ] ] [ below_periods duration threshold[ d | %% ]]",
   ST_EFF_MCHAN,
@@ -704,3 +706,8 @@ st_effect_t st_silence_effect = {
   st_silence_drain,
   st_silence_stop
 };
+
+const st_effect_t *st_silence_effect_fn(void)
+{
+    return &st_silence_effect;
+}

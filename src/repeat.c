@@ -24,6 +24,8 @@
 #include <string.h>
 #include "st_i.h"
 
+static st_effect_t st_repeat_effect;
+
 typedef struct repeatstuff {
         FILE *fp;
         int first_drain;
@@ -195,7 +197,7 @@ int st_repeat_stop(eff_t effp)
         return (ST_SUCCESS);
 }
 
-st_effect_t st_repeat_effect = {
+static st_effect_t st_repeat_effect = {
   "repeat",
   "Usage: repeat count",
   0,
@@ -205,3 +207,8 @@ st_effect_t st_repeat_effect = {
   st_repeat_drain,
   st_repeat_stop
 };
+
+const st_effect_t *st_repeat_effect_fn(void)
+{
+    return &st_repeat_effect;
+}

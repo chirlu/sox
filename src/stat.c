@@ -502,7 +502,7 @@ static int FFT(short dir,long m,double *re,double *im)
    return ST_SUCCESS;
 }
 
-st_effect_t st_stat_effect = {
+static st_effect_t st_stat_effect = {
   "stat",
   "Usage: [ -s n ] [ -rms ] [ -v ] [ -d ]",
   ST_EFF_MCHAN | ST_EFF_REPORT,
@@ -512,3 +512,8 @@ st_effect_t st_stat_effect = {
   st_stat_drain,
   st_stat_stop
 };
+
+const st_effect_t *st_stat_effect_fn(void)
+{
+    return &st_stat_effect;
+}
