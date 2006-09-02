@@ -396,7 +396,7 @@ static char *svxnames[] = {
   NULL
 };
 
-st_format_t st_svx_format = {
+static st_format_t st_svx_format = {
   svxnames,
   NULL,
   ST_FILE_STEREO,
@@ -408,3 +408,8 @@ st_format_t st_svx_format = {
   st_svxstopwrite,
   st_format_nothing_seek
 };
+
+const st_format_t *st_svx_format_fn(void)
+{
+    return &st_svx_format;
+}

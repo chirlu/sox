@@ -296,7 +296,7 @@ static char *avrnames[] = {
   NULL
 };
 
-st_format_t st_avr_format = {
+static st_format_t st_avr_format = {
   avrnames,
   NULL,
   ST_FILE_STEREO,
@@ -308,3 +308,8 @@ st_format_t st_avr_format = {
   st_avrstopwrite,
   st_format_nothing_seek
 };
+
+const st_format_t *st_avr_format_fn(void)
+{
+    return &st_avr_format;
+}

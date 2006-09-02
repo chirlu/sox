@@ -437,7 +437,7 @@ static char *smpnames[] = {
   NULL,
 };
 
-st_format_t st_smp_format = {
+static st_format_t st_smp_format = {
   smpnames,
   NULL,
   ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK,
@@ -449,3 +449,8 @@ st_format_t st_smp_format = {
   st_smpstopwrite,
   st_smpseek
 };
+
+const st_format_t *st_smp_format_fn(void)
+{
+    return &st_smp_format;
+}

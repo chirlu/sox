@@ -91,7 +91,7 @@ static char *nulnames[] = {
   NULL,
 };
 
-st_format_t st_nul_format = {
+static st_format_t st_nul_format = {
   nulnames,
   NULL,
   ST_FILE_STEREO | ST_FILE_NOSTDIO,
@@ -103,3 +103,8 @@ st_format_t st_nul_format = {
   st_nulstopwrite,
   st_format_nothing_seek
 };
+
+const st_format_t *st_nul_format_fn(void)
+{
+    return &st_nul_format;
+}

@@ -676,7 +676,7 @@ static char *cvsdnames[] = {
   NULL
 };
 
-st_format_t st_cvsd_format = {
+static st_format_t st_cvsd_format = {
   cvsdnames,
   NULL,
   0,
@@ -689,6 +689,10 @@ st_format_t st_cvsd_format = {
   st_format_nothing_seek
 };
 
+const st_format_t *st_cvsd_format_fn(void)
+{
+    return &st_cvsd_format;
+}
 /* Cont. Variable Solot Delta */
 static char *dvmsnames[] = {
   "vms",
@@ -696,7 +700,7 @@ static char *dvmsnames[] = {
   NULL
 };
 
-st_format_t st_dvms_format = {
+static st_format_t st_dvms_format = {
   dvmsnames,
   NULL,
   0,
@@ -708,3 +712,8 @@ st_format_t st_dvms_format = {
   st_dvmsstopwrite,
   st_format_nothing_seek
 };
+
+const st_format_t *st_dvms_format_fn(void)
+{
+    return &st_dvms_format;
+}

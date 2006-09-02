@@ -238,7 +238,7 @@ static char *wvenames[] = {
   NULL
 };
 
-st_format_t st_wve_format = {
+static st_format_t st_wve_format = {
   wvenames,
   NULL,
   ST_FILE_SEEK,
@@ -250,3 +250,8 @@ st_format_t st_wve_format = {
   st_wvestopwrite,
   st_wveseek
 };
+
+const st_format_t *st_wve_format_fn(void)
+{
+    return &st_wve_format;
+}

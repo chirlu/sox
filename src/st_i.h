@@ -147,54 +147,58 @@ int st_is_littleendian(void);
  *=============================================================================
  */
 
-st_format_t st_svx_format;
-st_format_t st_aiff_format;
+typedef const st_format_t *(*st_format_fn_t)(void);
+
+extern st_format_fn_t st_format_fns[];
+
+extern const st_format_t *st_aiff_format_fn(void);
 #ifdef HAVE_ALSA
-st_format_t st_alsa_format;
+extern const st_format_t *st_alsa_format_fn(void);
 #endif
-st_format_t st_au_format;
-st_format_t st_auto_format;
-st_format_t st_avr_format;
-st_format_t st_cdr_format;
-st_format_t st_cvsd_format;
-st_format_t st_dvms_format;
-st_format_t st_dat_format;
+extern const st_format_t *st_au_format_fn(void);
+extern const st_format_t *st_auto_format_fn(void);
+extern const st_format_t *st_avr_format_fn(void);
+extern const st_format_t *st_cdr_format_fn(void);
+extern const st_format_t *st_cvsd_format_fn(void);
+extern const st_format_t *st_dvms_format_fn(void);
+extern const st_format_t *st_dat_format_fn(void);
 #ifdef ENABLE_GSM
-st_format_t st_gsm_format;
+extern const st_format_t *st_gsm_format_fn(void);
 #endif
-st_format_t st_hcom_format;
-st_format_t st_maud_format;
-st_format_t st_mp3_format;
-st_format_t st_nul_format;
+extern const st_format_t *st_hcom_format_fn(void);
+extern const st_format_t *st_maud_format_fn(void);
+extern const st_format_t *st_mp3_format_fn(void);
+extern const st_format_t *st_nul_format_fn(void);
 #ifdef HAVE_OSS
-st_format_t st_ossdsp_format;
+extern const st_format_t *st_ossdsp_format_fn(void);
 #endif
-st_format_t st_prc_format;
-st_format_t st_raw_format;
-st_format_t st_al_format;
-st_format_t st_la_format;
-st_format_t st_lu_format;
-st_format_t st_sb_format;
-st_format_t st_sl_format;
-st_format_t st_sw_format;
-st_format_t st_ub_format;
-st_format_t st_ul_format;
-st_format_t st_uw_format;
-st_format_t st_sf_format;
-st_format_t st_smp_format;
-st_format_t st_snd_format;
-st_format_t st_sphere_format;
+extern const st_format_t *st_prc_format_fn(void);
+extern const st_format_t *st_raw_format_fn(void);
+extern const st_format_t *st_al_format_fn(void);
+extern const st_format_t *st_la_format_fn(void);
+extern const st_format_t *st_lu_format_fn(void);
+extern const st_format_t *st_sb_format_fn(void);
+extern const st_format_t *st_sl_format_fn(void);
+extern const st_format_t *st_sw_format_fn(void);
+extern const st_format_t *st_ub_format_fn(void);
+extern const st_format_t *st_ul_format_fn(void);
+extern const st_format_t *st_uw_format_fn(void);
+extern const st_format_t *st_sf_format_fn(void);
+extern const st_format_t *st_smp_format_fn(void);
+extern const st_format_t *st_snd_format_fn(void);
+extern const st_format_t *st_sphere_format_fn(void);
 #ifdef HAVE_SUNAUDIO
-st_format_t st_sun_format;
+extern const st_format_t *st_sun_format_fn(void);
 #endif
-st_format_t st_txw_format;
-st_format_t st_voc_format;
+extern const st_format_t *st_svx_format_fn(void);
+extern const st_format_t *st_txw_format_fn(void);
+extern const st_format_t *st_voc_format_fn(void);
 #ifdef HAVE_LIBVORBIS
-st_format_t st_vorbis_format;
+extern const st_format_t *st_vorbis_format_fn(void);
 #endif
-st_format_t st_vox_format;
-st_format_t st_wav_format;
-st_format_t st_wve_format;
+extern const st_format_t *st_vox_format_fn(void);
+extern const st_format_t *st_wav_format_fn(void);
+extern const st_format_t *st_wve_format_fn(void);
 
 /* Raw I/O
  */

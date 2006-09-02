@@ -193,7 +193,7 @@ struct st_soundstream {
     st_fileinfo_t   file;                 /* File data block */
     int             st_errno;             /* Failure error codes */
     char            st_errstr[256];       /* Extend Failure text */
-    st_format_t     *h;                   /* format struct for this file */
+    const st_format_t *h;                 /* format struct for this file */
     /* The following is a portable trick to align this variable on
      * an 8-byte bounder.  Once this is done, the buffer alloced
      * after it should be align on an 8-byte boundery as well.
@@ -203,8 +203,6 @@ struct st_soundstream {
     double priv1;
     char   priv[ST_MAX_FILE_PRIVSIZE]; /* format's private data area */
 };
-
-extern st_format_t *st_formats[];
 
 /* file flags field */
 #define ST_FILE_STEREO  1  /* does file format support stereo? */

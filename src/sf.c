@@ -228,7 +228,7 @@ static char *sfnames[] = {
   NULL
 };
 
-st_format_t st_sf_format = {
+static st_format_t st_sf_format = {
   sfnames,
   NULL,
   ST_FILE_STEREO | ST_FILE_SEEK,
@@ -240,3 +240,8 @@ st_format_t st_sf_format = {
   st_rawstopwrite,
   st_sfseek
 };
+
+const st_format_t *st_sf_format_fn(void)
+{
+    return &st_sf_format;
+}

@@ -244,7 +244,7 @@ static char *gsmnames[] = {
   NULL
 };
 
-st_format_t st_gsm_format = {
+static st_format_t st_gsm_format = {
   gsmnames,
   NULL,
   0,
@@ -256,4 +256,9 @@ st_format_t st_gsm_format = {
   st_gsmstopwrite,
   st_format_nothing_seek
 };
+
+const st_format_t *st_gsm_format_fn(void)
+{
+    return &st_gsm_format;
+}
 #endif /* ENABLE_GSM */

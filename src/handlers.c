@@ -14,64 +14,58 @@
  * Sound Tools file format and effect tables.
  */
 
-st_format_t st_terminate_format =
-{
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-
 /* File format handlers. */
-st_format_t *st_formats[] = {
-  &st_aiff_format,
-  &st_al_format,
+st_format_fn_t st_format_fns[] = {
+  st_aiff_format_fn,
+  st_al_format_fn,
 #if     defined(HAVE_ALSA)
-  &st_alsa_format,
+  st_alsa_format_fn,
 #endif
-  &st_au_format,
-  &st_auto_format,
-  &st_avr_format,
-  &st_cdr_format,
-  &st_cvsd_format,
-  &st_dat_format,
-  &st_dvms_format,
+  st_au_format_fn,
+  st_auto_format_fn,
+  st_avr_format_fn,
+  st_cdr_format_fn,
+  st_cvsd_format_fn,
+  st_dat_format_fn,
+  st_dvms_format_fn,
 #ifdef ENABLE_GSM
-  &st_gsm_format,
+  st_gsm_format_fn,
 #endif
-  &st_hcom_format,
-  &st_la_format,
-  &st_lu_format,
-  &st_maud_format,
+  st_hcom_format_fn,
+  st_la_format_fn,
+  st_lu_format_fn,
+  st_maud_format_fn,
 #if defined(HAVE_LIBMAD) || defined(HAVE_LAME)
-  &st_mp3_format,
+  st_mp3_format_fn,
 #endif
-  &st_nul_format,
+  st_nul_format_fn,
 #if     defined(HAVE_OSS)
-  &st_ossdsp_format,
+  st_ossdsp_format_fn,
 #endif
-  &st_prc_format,
-  &st_raw_format,
-  &st_sb_format,
-  &st_sf_format,
-  &st_sl_format,
-  &st_smp_format,
-  &st_snd_format,
-  &st_sphere_format,
+  st_prc_format_fn,
+  st_raw_format_fn,
+  st_sb_format_fn,
+  st_sf_format_fn,
+  st_sl_format_fn,
+  st_smp_format_fn,
+  st_snd_format_fn,
+  st_sphere_format_fn,
 #if     defined(HAVE_SUNAUDIO)
-  &st_sun_format,
+  st_sun_format_fn,
 #endif
-  &st_svx_format,
-  &st_sw_format,
-  &st_txw_format,
-  &st_ub_format,
-  &st_ul_format,
-  &st_uw_format,
-  &st_voc_format,
+  st_svx_format_fn,
+  st_sw_format_fn,
+  st_txw_format_fn,
+  st_ub_format_fn,
+  st_ul_format_fn,
+  st_uw_format_fn,
+  st_voc_format_fn,
 #ifdef HAVE_LIBVORBIS
-  &st_vorbis_format,
+  st_vorbis_format_fn,
 #endif
-  &st_vox_format,
-  &st_wav_format,
-  &st_wve_format,
-  &st_terminate_format,
+  st_vox_format_fn,
+  st_wav_format_fn,
+  st_wve_format_fn,
   NULL
 };
 

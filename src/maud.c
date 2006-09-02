@@ -394,7 +394,7 @@ static char *maudnames[] = {
   NULL,
 };
 
-st_format_t st_maud_format = {
+static st_format_t st_maud_format = {
   maudnames,
   NULL,
   ST_FILE_STEREO,
@@ -406,3 +406,8 @@ st_format_t st_maud_format = {
   st_maudstopwrite,
   st_format_nothing_seek
 };
+
+const st_format_t *st_maud_format_fn(void)
+{
+    return &st_maud_format;
+}

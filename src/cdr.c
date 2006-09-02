@@ -165,7 +165,7 @@ static char *cdrnames[] = {
   NULL
 };
 
-st_format_t st_cdr_format = {
+static st_format_t st_cdr_format = {
   cdrnames,
   NULL,
   ST_FILE_STEREO | ST_FILE_SEEK,
@@ -177,3 +177,8 @@ st_format_t st_cdr_format = {
   st_cdrstopwrite,
   st_rawseek
 };
+
+const st_format_t *st_cdr_format_fn(void)
+{
+    return &st_cdr_format;
+}

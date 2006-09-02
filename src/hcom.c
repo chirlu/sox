@@ -578,7 +578,7 @@ static char *hcomnames[] = {
   NULL
 };
 
-st_format_t st_hcom_format = {
+static st_format_t st_hcom_format = {
   hcomnames,
   NULL,
   0,
@@ -590,3 +590,8 @@ st_format_t st_hcom_format = {
   st_hcomstopwrite,
   st_format_nothing_seek
 };
+
+const st_format_t *st_hcom_format_fn(void)
+{
+    return &st_hcom_format;
+}

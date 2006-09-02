@@ -823,7 +823,7 @@ static char *vocnames[] = {
   NULL
 };
 
-st_format_t st_voc_format = {
+static st_format_t st_voc_format = {
   vocnames,
   NULL,
   ST_FILE_STEREO,
@@ -835,3 +835,8 @@ st_format_t st_voc_format = {
   st_vocstopwrite,
   st_format_nothing_seek
 };
+
+const st_format_t *st_voc_format_fn(void)
+{
+    return &st_voc_format;
+}

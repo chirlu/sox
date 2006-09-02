@@ -1789,7 +1789,7 @@ static char *wavnames[] = {
   NULL
 };
 
-st_format_t st_wav_format = {
+static st_format_t st_wav_format = {
   wavnames,
   NULL,
   ST_FILE_STEREO | ST_FILE_SEEK,
@@ -1801,3 +1801,8 @@ st_format_t st_wav_format = {
   st_wavstopwrite,
   st_wavseek
 };
+
+const st_format_t *st_wav_format_fn()
+{
+    return &st_wav_format;
+}

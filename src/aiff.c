@@ -1108,7 +1108,7 @@ static char *aiffnames[] = {
   NULL
 };
 
-st_format_t st_aiff_format = {
+static st_format_t st_aiff_format = {
   aiffnames,
   NULL,
   ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK,
@@ -1120,3 +1120,8 @@ st_format_t st_aiff_format = {
   st_aiffstopwrite,
   st_aiffseek
 };
+
+const st_format_t *st_aiff_format_fn(void)
+{
+    return &st_aiff_format;
+}

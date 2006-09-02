@@ -319,7 +319,7 @@ static char *sunnames[] = {
   NULL
 };
 
-st_format_t st_sun_format = {
+static st_format_t st_sun_format = {
   sunnames,
   NULL,
   ST_FILE_STEREO,
@@ -331,4 +331,9 @@ st_format_t st_sun_format = {
   st_rawstopwrite,
   st_format_nothing_seek
 };
+
+const st_format_t *st_sun_format_fn(void)
+{
+    return &st_sun_format;
+}
 #endif

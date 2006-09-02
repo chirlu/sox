@@ -222,7 +222,7 @@ static char *ossdspnames[] = {
   NULL
 };
 
-st_format_t st_ossdsp_format = {
+static st_format_t st_ossdsp_format = {
   ossdspnames,
   NULL,
   ST_FILE_STEREO,
@@ -234,4 +234,9 @@ st_format_t st_ossdsp_format = {
   st_rawstopwrite,
   st_format_nothing_seek
 };
+
+const st_format_t *st_ossdsp_format_fn(void)
+{
+    return &st_ossdsp_format;
+}
 #endif

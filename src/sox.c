@@ -174,6 +174,7 @@ int main(int argc, char **argv)
         if (file_count >= MAX_FILES)
         {
             st_fail("to many filenames. max of %d input files and 1 output files\n", MAX_INPUT_FILES);
+            exit(1);
         }
 
         /*
@@ -248,7 +249,6 @@ int main(int argc, char **argv)
             /* st_open_read() will call st_warn for most errors.
              * Rely on that printing something.
              */
-            cleanup();
             exit(2);
         }
     }
@@ -328,13 +328,21 @@ static void doopts(file_options_t *fo, int argc, char **argv)
                 str = optarg;
                 if ((!sscanf(optarg, "%u", &fo->info.rate)) ||
                     (fo->info.rate <= 0))
+                {
                     st_fail("-r must be given a positive integer");
+                    cleanup();
+                    exit(1);
+                }
                 break;
             case 'v':
                 str = optarg;
                 if (!sscanf(str, "%lf", &fo->volume))
+                {
                     st_fail("Volume value '%s' is not a number",
                             optarg);
+                    cleanup();
+                    exit(1);
+                }
                 fo->uservolume = 1;
                 if (fo->volume < 0.0)
                     st_report("Volume adjustment is negative.  This will result in a phase change\n");
@@ -343,14 +351,22 @@ static void doopts(file_options_t *fo, int argc, char **argv)
             case 'c':
                 str = optarg;
                 if (!sscanf(str, "%d", &i))
+                {
                     st_fail("-c must be given a number");
+                    cleanup();
+                    exit(1);
+                }
                 /* Since we use -1 as a special internal value,
                  * we must do some extra logic so user doesn't
                  * get confused when we translate -1 to mean
                  * something valid.
                  */
                 if (i < 1)
+                {
                     st_fail("-c must be given a positive number");
+                    cleanup();
+                    exit(1);
+                }
                 fo->info.channels = i;
                 break;
             case 'b':
@@ -497,6 +513,7 @@ static void process(void) {
         if (compare_input(file_desc[0], file_desc[f]) != ST_SUCCESS)
         {
             st_fail("Input files must have the same rate, channels, data size, and encoding");
+            exit(1);
         }
     }
 
@@ -598,6 +615,8 @@ static void process(void) {
         if (!ibuf[f])
         {
             st_fail("could not allocate memory");
+            cleanup();
+            exit(1);
         }
 
         if (status)
@@ -821,6 +840,8 @@ static void parse_effects(int argc, char **argv)
         if (nuser_effects >= MAX_USER_EFF)
         {
             st_fail("To many effects specified.\n");
+            cleanup();
+            exit(2);
         }
 
         argc_effect = st_geteffect_opt(&user_efftab[nuser_effects],
@@ -834,6 +855,7 @@ static void parse_effects(int argc, char **argv)
                 fprintf(stderr, "%s ", st_effects[i1]->name);
             fprintf(stderr, "\n\n");
             st_fail("Effect '%s' is not known!", argv[optind]);
+            cleanup();
             exit(2);
         }
 
@@ -848,6 +870,7 @@ static void parse_effects(int argc, char **argv)
 
         if (effect_rc == ST_EOF)
         {
+            cleanup();
             exit(2);
         }
 
@@ -888,7 +911,11 @@ static void check_effects(void)
     }
 
     if (haschan > 1)
+    {
         st_fail("Can not specify multiple effects that modify channel #");
+        cleanup();
+        exit(2);
+    }
     if (hasrate > 1)
         st_report("Can not specify multiple effects that change sample rate");
 
@@ -1086,6 +1113,8 @@ static void reserve_effect_buf(void)
         if (efftab[e].obuf == NULL)
         {
             st_fail("could not allocate memory");
+            cleanup();
+            exit(2);
         }
         if (efftabR[e].name)
         {
@@ -1094,6 +1123,8 @@ static void reserve_effect_buf(void)
             if (efftabR[e].obuf == NULL)
             {
                 st_fail("could not allocate memory");
+                cleanup();
+                exit(2);
             }
         }
     }
@@ -1389,7 +1420,11 @@ static int flow_effect(int e)
         return ST_EOF;
     }
     if (done == 0)
+    {
         st_fail("Effect took & gave no samples!");
+        cleanup();
+        exit(2);
+    }
     return ST_SUCCESS;
 }
 
@@ -1610,6 +1645,7 @@ static char *usagestr =
 static void usage(char *opt)
 {
     int i;
+    const st_format_t *f;
 
     printf("%s: ", myname);
     printf("Version %s\n\n", st_version());
@@ -1652,9 +1688,13 @@ static void usage(char *opt)
 "\n");
 
     printf("Supported file formats: ");
-    for (i = 0; st_formats[i]->names != NULL; i++) {
-        /* only print the first name */
-        printf("%s ", st_formats[i]->names[0]);
+    for (i = 0; st_format_fns[i]; i++) {
+        f = st_format_fns[i]();
+        if (f && f->names)
+        {
+            /* only print the first name */
+            printf("%s ", f->names[0]);
+        }
     }
 
     printf("\n\nSupported effects: ");

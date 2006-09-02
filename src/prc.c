@@ -216,7 +216,7 @@ static char *prcnames[] = {
   NULL
 };
 
-st_format_t st_prc_format = {
+static st_format_t st_prc_format = {
   prcnames,
   NULL,
   ST_FILE_SEEK,
@@ -228,3 +228,8 @@ st_format_t st_prc_format = {
   st_prcstopwrite,
   st_prcseek
 };
+
+const st_format_t *st_prc_format_fn(void)
+{
+    return &st_prc_format;
+}

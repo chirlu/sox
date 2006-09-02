@@ -382,7 +382,7 @@ static char *txwnames[] = {
   NULL
 };
 
-st_format_t st_txw_format = {
+static st_format_t st_txw_format = {
    txwnames,
    NULL,
    0,
@@ -394,3 +394,8 @@ st_format_t st_txw_format = {
    st_txwstopwrite,
    st_format_nothing_seek
 };
+
+const st_format_t *st_txw_format_fn(void)
+{
+    return &st_txw_format;
+}

@@ -315,7 +315,7 @@ static char *spherenames[] = {
   NULL
 };
 
-st_format_t st_sphere_format = {
+static st_format_t st_sphere_format = {
   spherenames,
   NULL,
   ST_FILE_STEREO,
@@ -327,3 +327,8 @@ st_format_t st_sphere_format = {
   st_spherestopwrite,
   st_format_nothing_seek
 };
+
+const st_format_t *st_sphere_format_fn(void)
+{
+    return &st_sphere_format;
+}

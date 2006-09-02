@@ -464,7 +464,7 @@ static char *vorbisnames[] = {
   NULL
 };
 
-st_format_t st_vorbis_format = {
+static st_format_t st_vorbis_format = {
   vorbisnames,
   NULL,
   ST_FILE_STEREO,
@@ -477,4 +477,8 @@ st_format_t st_vorbis_format = {
   st_format_nothing_seek
 };
 
+const st_format_t *st_vorbis_format_fn(void)
+{
+    return &st_vorbis_format;
+}
 #endif /* HAVE_LIBVORBIS */

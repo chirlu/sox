@@ -469,7 +469,7 @@ static char *aunames[] = {
   NULL
 };
 
-st_format_t st_au_format = {
+static st_format_t st_au_format = {
   aunames,
   NULL,
   ST_FILE_STEREO | ST_FILE_SEEK,
@@ -481,3 +481,8 @@ st_format_t st_au_format = {
   st_austopwrite,
   st_auseek
 };
+
+const st_format_t *st_au_format_fn(void)
+{
+    return &st_au_format;
+}

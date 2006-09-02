@@ -202,7 +202,7 @@ static char *autonames[] = {
   NULL
 };
 
-st_format_t st_auto_format = {
+static st_format_t st_auto_format = {
   autonames,
   NULL,
   ST_FILE_STEREO,
@@ -214,3 +214,8 @@ st_format_t st_auto_format = {
   st_format_nothing,
   st_format_nothing_seek
 };
+
+const st_format_t *st_auto_format_fn(void)
+{
+    return &st_auto_format;
+}

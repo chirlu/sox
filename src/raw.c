@@ -827,7 +827,7 @@ static char *rawnames[] = {
   NULL
 };
 
-st_format_t st_raw_format = {
+static st_format_t st_raw_format = {
    rawnames,
    NULL,
    ST_FILE_STEREO | ST_FILE_SEEK,
@@ -840,13 +840,18 @@ st_format_t st_raw_format = {
    st_rawseek
 };
 
+const st_format_t *st_raw_format_fn(void)
+{
+    return &st_raw_format;
+}
+
 /* a-law byte raw */
 static char *alnames[] = {
   "al",
   NULL
 };
 
-st_format_t st_al_format = {
+static st_format_t st_al_format = {
   alnames,
   NULL,
   ST_FILE_STEREO,
@@ -859,13 +864,18 @@ st_format_t st_al_format = {
   st_format_nothing_seek
 };
 
+const st_format_t *st_al_format_fn(void)
+{
+    return &st_al_format;
+}
+
 /* inverse a-law byte raw */
 static char *lanames[] = {
   "la",
   NULL
 };
 
-st_format_t st_la_format = {
+static st_format_t st_la_format = {
   lanames,
   NULL,
   ST_FILE_STEREO,
@@ -878,13 +888,18 @@ st_format_t st_la_format = {
   st_format_nothing_seek
 };
 
+const st_format_t *st_la_format_fn(void)
+{
+    return &st_la_format;
+}
+
 /* inverse u-law byte raw */
 static char *lunames[] = {
   "lu",
   NULL
 };
 
-st_format_t st_lu_format = {
+static st_format_t st_lu_format = {
   lunames,
   NULL,
   ST_FILE_STEREO,
@@ -897,12 +912,17 @@ st_format_t st_lu_format = {
   st_format_nothing_seek
 };
 
+const st_format_t *st_lu_format_fn(void)
+{
+    return &st_lu_format;
+}
+
 static char *sbnames[] = {
   "sb",
   NULL
 };
 
-st_format_t st_sb_format = {
+static st_format_t st_sb_format = {
   sbnames,
   NULL,
   ST_FILE_STEREO,
@@ -915,12 +935,17 @@ st_format_t st_sb_format = {
   st_format_nothing_seek
 };
 
+const st_format_t *st_sb_format_fn(void)
+{
+    return &st_sb_format;
+}
+
 static char *slnames[] = {
   "sl",
   NULL,
 };
 
-st_format_t st_sl_format = {
+static st_format_t st_sl_format = {
   slnames,
   NULL,
   ST_FILE_STEREO,
@@ -933,12 +958,17 @@ st_format_t st_sl_format = {
   st_format_nothing_seek
 };
 
+const st_format_t *st_sl_format_fn(void)
+{
+    return &st_sl_format;
+}
+
 static char *swnames[] = {
   "sw",
   NULL
 };
 
-st_format_t st_sw_format = {
+static st_format_t st_sw_format = {
   swnames,
   NULL,
   ST_FILE_STEREO,
@@ -951,6 +981,11 @@ st_format_t st_sw_format = {
   st_format_nothing_seek
 };
 
+const st_format_t *st_sw_format_fn(void)
+{
+    return &st_sw_format;
+}
+
 static char *ubnames[] = {
   "ub",
   "sou",
@@ -958,7 +993,7 @@ static char *ubnames[] = {
   NULL
 };
 
-st_format_t st_ub_format = {
+static st_format_t st_ub_format = {
   ubnames,
   NULL,
   ST_FILE_STEREO,
@@ -971,12 +1006,17 @@ st_format_t st_ub_format = {
   st_format_nothing_seek
 };
 
+const st_format_t *st_ub_format_fn(void)
+{
+    return &st_ub_format;
+}
+
 static char *ulnames[] = {
   "ul",
   NULL
 };
 
-st_format_t st_ul_format = {
+static st_format_t st_ul_format = {
    ulnames,
    NULL,
    ST_FILE_STEREO,
@@ -989,12 +1029,17 @@ st_format_t st_ul_format = {
    st_format_nothing_seek
 };
 
+const st_format_t *st_ul_format_fn(void)
+{
+    return &st_ul_format;
+}
+
 static char *uwnames[] = {
   "uw",
   NULL
 };
 
-st_format_t st_uw_format = {
+static st_format_t st_uw_format = {
   uwnames,
   NULL,
   ST_FILE_STEREO,
@@ -1006,3 +1051,8 @@ st_format_t st_uw_format = {
   st_rawstopwrite,
   st_format_nothing_seek
 };
+
+const st_format_t *st_uw_format_fn(void)
+{
+    return &st_uw_format;
+}

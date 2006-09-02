@@ -131,30 +131,32 @@ int strcmpcase(char *s1, char *s2)
  */
 int st_gettype(ft_t formp)
 {
-        char **list;
-        int i;
+    char **list;
+    int i;
+    const st_format_t *f;
 
-        if (! formp->filetype){
-            st_fail_errno(formp,
-                          ST_EFMT,
-                          "Filetype was not specified");
-                return(ST_EFMT);
+    if (! formp->filetype){
+        st_fail_errno(formp,
+                      ST_EFMT,
+                      "Filetype was not specified");
+        return(ST_EFMT);
+    }
+    for(i = 0; st_format_fns[i]; i++) {
+        f = st_format_fns[i]();
+        for(list = f->names; *list; list++) {
+            char *s1 = *list, *s2 = formp->filetype;
+            if (! strcmpcase(s1, s2))
+                break;  /* not a match */
         }
-        for(i = 0; st_formats[i]->names; i++) {
-                for(list = st_formats[i]->names; *list; list++) {
-                        char *s1 = *list, *s2 = formp->filetype;
-                        if (! strcmpcase(s1, s2))
-                                break;  /* not a match */
-                }
-                if (! *list)
-                        continue;
-                /* Found it! */
-                formp->h = st_formats[i];
-                return ST_SUCCESS;
-        }
-        st_fail_errno(formp, ST_EFMT, "File type '%s' is not known",
-                      formp->filetype);
-        return ST_EFMT;
+        if (! *list)
+            continue;
+        /* Found it! */
+        formp->h = f;
+        return ST_SUCCESS;
+    }
+    st_fail_errno(formp, ST_EFMT, "File type '%s' is not known",
+                  formp->filetype);
+    return ST_EFMT;
 }
 
 /*

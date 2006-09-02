@@ -262,7 +262,7 @@ static char *sndtnames[] = {
   NULL
 };
 
-st_format_t st_snd_format = {
+const st_format_t st_snd_format = {
   sndtnames,
   NULL,
   ST_FILE_STEREO | ST_FILE_SEEK,
@@ -274,3 +274,8 @@ st_format_t st_snd_format = {
   st_sndtstopwrite,
   st_sndseek
 };
+
+const st_format_t *st_snd_format_fn(void)
+{
+    return &st_snd_format;
+}

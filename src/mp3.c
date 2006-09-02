@@ -528,7 +528,7 @@ static char *mp3names[] = {
   NULL,
 };
 
-st_format_t st_mp3_format = {
+static st_format_t st_mp3_format = {
   mp3names,
   NULL,
   ST_FILE_STEREO,
@@ -540,4 +540,9 @@ st_format_t st_mp3_format = {
   st_mp3stopwrite,
   st_format_nothing_seek
 };
+
+const st_format_t *st_mp3_format_fn(void)
+{
+    return &st_mp3_format;
+}
 #endif
