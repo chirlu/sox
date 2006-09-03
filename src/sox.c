@@ -1674,7 +1674,7 @@ static void usage(char *opt)
 "-e              skip processing of this filename.  useful only\n"
 "                on output filename to prevent writing data.\n"
 "-r rate         sample rate of audio\n"
-"-t fileformat   format/type of audio\n"
+"-t filetype     file type of audio\n"
 "-v volume       volume adjustment factor (floating point)\n"
 "-x              invert auto-detected endianess of data\n"
 "-s/-u/-U/-A/    sample encoding.  signed/unsigned/u-law/A-law\n"
