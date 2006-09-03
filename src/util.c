@@ -193,8 +193,9 @@ int st_geteffect_opt(eff_t effp, int argc, char **argv)
 
         while (optind < argc)
         {
-            for (i = 0; e->name; i++)
+            for (i = 0; st_effect_fns[i]; i++)
             {
+                const st_effect_t *e = st_effect_fns[i]();
                 char *s1 = e->name, *s2 = argv[optind];
                 while (*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
                     s1++, s2++;
