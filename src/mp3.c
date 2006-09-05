@@ -39,7 +39,7 @@ struct mp3priv {
         mad_timer_t             *Timer;
         unsigned char           *InputBuffer;
         st_ssize_t              cursamp;
-        unsigned long           FrameCount;
+        st_size_t               FrameCount;
         int                     eof;
 #endif /*HAVE_LIBMAD*/
 #if defined(HAVE_LAME)
@@ -420,68 +420,99 @@ int st_mp3startwrite(ft_t ft)
 
 st_ssize_t st_mp3write(ft_t ft, st_sample_t *buf, st_ssize_t samp)
 {
-  struct mp3priv *p = (struct mp3priv *) ft->priv;
-  char *mp3buffer;
-  int mp3buffer_size;
-  long *buffer_l, *buffer_r;
-  int nsamples = samp/ft->info.channels;
-  int i,j;
-  st_ssize_t done = 0;
-  int written;
+    struct mp3priv *p = (struct mp3priv *)ft->priv;
+    char *mp3buffer;
+    int mp3buffer_size;
+    short signed int *buffer_l, *buffer_r = NULL;
+    int nsamples = samp/ft->info.channels;
+    int i,j;
+    st_ssize_t done = 0;
+    int written;
 
-  if ( (buffer_r=(long*)malloc(nsamples*sizeof(long))) == NULL){
-    st_fail_errno(ft,ST_ENOMEM,"Memory allocation failed");
-    goto end4;
-  }
-
-  if (ft->info.channels==2){ /* Why isn't there a lame_encode_buffer_long_interleaved? */
-    if ( (buffer_l=(long*)malloc(nsamples*sizeof(long))) == NULL){
-      st_fail_errno(ft,ST_ENOMEM,"Memory allocation failed");
-      goto end3;
+    /* NOTE: This logic assumes that "short int" is 16-bits
+     * on all platforms.  It happens to be for all that I know
+     * about.
+     *
+     * Lame ultimately wants data scaled to 16-bit samples
+     * and assumes for the majority of cases that your passing
+     * in something scaled based on passed in datatype
+     * (16, 32, 64, and float).
+     * 
+     * If we used long buffers then this means it expects
+     * different scalling between 32-bit and 64-bit CPU's.
+     *
+     * We might as well scale it ourselfs to 16-bit to allow
+     * malloc()'ing a smaller buffer and call a consistent
+     * interface.
+     */
+    if ((buffer_l = 
+         (short signed int *)malloc(nsamples*
+                                    sizeof(short signed int))) == NULL)
+    {
+        st_fail_errno(ft, ST_ENOMEM, "Memory allocation failed");
+        goto end4;
     }
-    j=0;
-    for (i=0;i<nsamples;i++){
-      buffer_l[i]=(long)buf[j++];   /* Should we paranoically check whether long is actually 32 bits? */
-      buffer_r[i]=(long)buf[j++];
+
+    if (ft->info.channels == 2)
+    {
+        /* lame doesn't support iterleaved samples so we must break
+         * them out into seperate buffers.
+         */
+        if ((buffer_r = 
+             (short signed int *)malloc(nsamples*
+                                          sizeof(short signed int))) == NULL)
+        {
+            st_fail_errno(ft,ST_ENOMEM,"Memory allocation failed");
+            goto end3;
+        }
+
+        j=0;
+        for (i=0; i<nsamples; i++)
+        {
+            buffer_l[i]=ST_SAMPLE_TO_SIGNED_WORD(buf[j++]);
+            buffer_r[i]=ST_SAMPLE_TO_SIGNED_WORD(buf[j++]);
+        }
     }
-  }
-  else{
-    buffer_l=(long*)buf;
-    memset(buffer_r,0,nsamples*sizeof(long));
-  }
+    else
+    {
+        j=0;
+        for (i=0; i<nsamples; i++)
+        {
+            buffer_l[i]=ST_SAMPLE_TO_SIGNED_WORD(buf[j++]); 
+        }
+    }
 
-  mp3buffer_size=1.25*nsamples + 7200;
-  if ( (mp3buffer=(char *)malloc(mp3buffer_size)) == NULL){
-    st_fail_errno(ft,ST_ENOMEM,"Memory allocation failed");
-    goto end2;
-  }
- 
-  if ( (written = lame_encode_buffer_long2(p->gfp,
-                                           buffer_l,
-                                           buffer_r,
-                                           nsamples,
-                                           (unsigned char *)mp3buffer,
-                                           mp3buffer_size)) < 0){
-    st_fail_errno(ft,ST_EOF,"Encoding failed");
-    goto end;
-  }
+    mp3buffer_size = 1.25 * nsamples + 7200;
+    if ((mp3buffer=(char *)malloc(mp3buffer_size)) == NULL)
+    {
+        st_fail_errno(ft,ST_ENOMEM,"Memory allocation failed");
+        goto end2;
+    }
 
-  if (st_writebuf(ft, mp3buffer, 1, written) < written){
-     st_fail_errno(ft,ST_EOF,"File write failed");
-     goto end;
-  }
+    if ((written = lame_encode_buffer(p->gfp,buffer_l, buffer_r,
+                                      nsamples, (unsigned char *)mp3buffer,
+                                      mp3buffer_size)) < 0){
+        st_fail_errno(ft,ST_EOF,"Encoding failed");
+        goto end;
+    }
 
-  done = nsamples*ft->info.channels;
+    if (st_writebuf(ft, mp3buffer, 1, written) < written)
+    {
+        st_fail_errno(ft,ST_EOF,"File write failed");
+        goto end;
+    }
 
- end:
-  free(mp3buffer);
- end2:
-  if (ft->info.channels == 2)
+    done = nsamples*ft->info.channels;
+
+end:
+    free(mp3buffer);
+end2:
+    if (ft->info.channels == 2)
+        free(buffer_r);
+end3:
     free(buffer_l);
- end3:
-  free(buffer_r);
- end4:
-  return done;
+end4:
+    return done;
 }
 
 int st_mp3stopwrite(ft_t ft)

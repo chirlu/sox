@@ -4,6 +4,10 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-12.18.3
+-----------
+  o Fix writing MP3 files on AMD64 processors.
+
 sox-12.18.2
 -----------
   o Adding in debain's disk full fix (#313206).
