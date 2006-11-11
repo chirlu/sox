@@ -714,7 +714,7 @@ static void LpFilter(double *c, long N, double frq, double Beta, long Num)
 
 static st_effect_t st_resample_effect = {
    "resample",
-   "Usage: resample [ rolloff [ beta ] ]",
+   "Usage: resample [ -qs | -q | -ql ] [ rolloff [ beta ] ]",
    ST_EFF_RATE,
    st_resample_getopts,
    st_resample_start,
