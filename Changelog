@@ -9,6 +9,7 @@ sox-12.18.3
   o Fix writing MP3 files on AMD64 processors.
   o More fixes to MP3 tag reading.  Sometimes tags were
     detected as valid MP3 frames.
+  o Add new getopt1.c to win32 project file.
 
 sox-12.18.2
 -----------
