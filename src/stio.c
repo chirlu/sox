@@ -28,7 +28,7 @@
 #  include <fcntl.h>
 #  include <io.h>
 #ifndef O_BINARY
-#define O_BINRARY _O_BINARY
+#define O_BINARY _O_BINARY
 #endif
 #  define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
 #else
