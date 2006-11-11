@@ -61,6 +61,11 @@ AC_ARG_ENABLE(lame,
 	[enable_lame=$enableval],
 	[enable_lame=yes])
 
+AC_ARG_ENABLE(samplerate,
+        [  --disable-samplerate    Detection of libsamplerate (aka Secret Rabbit Code)],
+        [enable_samplerate=$enableval],
+        [enable_samplerate=yes])
+
 dnl Set host type
 AC_CANONICAL_SYSTEM
 
@@ -178,7 +183,22 @@ then
     fi
 fi
 
-dnl Checks for ASLA.
+dnl Test for libsamplerate.
+
+if test "$enable_samplerate" = yes
+then
+    PKG_CHECK_MODULES(SAMPLERATE, samplerate >= 0.0.15,
+            ac_cv_samplerate=1, ac_cv_samplerate=0)
+
+    AC_DEFINE_UNQUOTED([HAVE_SAMPLERATE],${ac_cv_samplerate},
+            [Set to 1 if you have libsamplerate.])
+
+    AC_SUBST(SAMPLERATE_CFLAGS)
+    AC_SUBST(SAMPLERATE_LIBS)
+    LIBS="$LIBS -lsamplerate"
+fi
+
+dnl Checks for ALSA.
 
 if test "$enable_alsa_dsp" = yes
 then
@@ -287,6 +307,7 @@ echo "SUN /dev/audio....................   $enable_sun_audio"
 echo "Ogg Vorbis support................   $enable_ogg_vorbis"
 echo "MAD MP3 Decoder...................   $enable_mad"
 echo "LAME MP3 Encoder..................   $enable_lame"
+echo "Secret Rabbit Code resampling.....   $enable_samplerate"
 echo
 echo "Configure finished.  Do 'make; make install' to compile and install SoX."
 echo

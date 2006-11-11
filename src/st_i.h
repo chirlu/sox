@@ -256,6 +256,9 @@ extern const st_effect_t *st_pan_effect_fn(void);
 extern const st_effect_t *st_phaser_effect_fn(void);
 extern const st_effect_t *st_pitch_effect_fn(void);
 extern const st_effect_t *st_polyphase_effect_fn(void);
+#ifdef HAVE_SAMPLERATE
+extern const st_effect_t *st_rabbit_effect_fn(void);
+#endif
 extern const st_effect_t *st_rate_effect_fn(void);
 extern const st_effect_t *st_repeat_effect_fn(void);
 extern const st_effect_t *st_resample_effect_fn(void);

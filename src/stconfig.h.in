@@ -33,6 +33,9 @@
 /* Define if you have LAME (LAME Ain't an MP3 Encoder) library installed */
 #undef HAVE_LAME
 
+/* Define if you have libsamplerate (Secret Rabbit Code) library installed */
+#undef HAVE_SAMPLERATE
+
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
