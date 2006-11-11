@@ -789,7 +789,7 @@ static void process(void) {
 
     /* This will drain the effects */
     /* Don't write if output is indicating errors. */
-    if (writing && file_desc[file_count-1]->st_errno)
+    if (writing && file_desc[file_count-1]->st_errno == 0)
         drain_effect_out();
 
 #ifdef SOXMIX
