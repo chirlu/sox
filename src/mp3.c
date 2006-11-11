@@ -40,7 +40,6 @@ struct mp3priv {
         unsigned char           *InputBuffer;
         st_ssize_t              cursamp;
         st_size_t               FrameCount;
-        int                     eof;
 #endif /*HAVE_LIBMAD*/
 #if defined(HAVE_LAME)
         lame_global_flags       *gfp;
@@ -55,183 +54,227 @@ struct mp3priv {
 
 #define ID3_TAG_FLAG_FOOTERPRESENT 0x10
 
-int tagtype(const unsigned char *data, int length)
+static int tagtype(const unsigned char *data, int length)
 {
-  if (length >= 3 && data[0] == 'T' && data[1] == 'A' && data[2] == 'G')
-        return 128; /* ID3V1 */
+    /* TODO: It would be nice to look for Xing VBR headers
+     * or TLE fields in ID3 to detect length of file
+     * and set ft->length.
+     * For CBR, we should fstat the file and divided
+     * by bitrate to find length.
+     */
 
-  if (length >= 10 &&
-      (data[0] == 'I' && data[1] == 'D' && data[2] == '3') &&
-      data[3] < 0xff && data[4] < 0xff &&
-      data[6] < 0x80 && data[7] < 0x80 && data[8] < 0x80 && data[9] < 0x80)
-  {     /* ID3V2 */
+    if (length >= 3 && data[0] == 'T' && data[1] == 'A' && data[2] == 'G')
+    {
+        return 128; /* ID3V1 */
+    }
+
+    if (length >= 10 &&
+        (data[0] == 'I' && data[1] == 'D' && data[2] == '3') &&
+        data[3] < 0xff && data[4] < 0xff &&
+        data[6] < 0x80 && data[7] < 0x80 && data[8] < 0x80 && data[9] < 0x80)
+    {     /* ID3V2 */
         unsigned char flags;
         unsigned int size;
         flags = data[5];
         size = (data[6]<<21) + (data[7]<<14) + (data[8]<<7) + data[9];
         if (flags & ID3_TAG_FLAG_FOOTERPRESENT)
-                size += 10;
+            size += 10;
         return 10 + size;
-  }
+    }
 
-  return 0;
+    return 0;
+}
+
+/*
+ * (Re)fill the stream buffer whish is to be decoded.  If any data
+ * still exists in the buffer then they are first shifted to be
+ * front of the stream buffer.
+ */
+static int st_mp3_input(ft_t ft)
+{
+    struct mp3priv *p = (struct mp3priv *) ft->priv;
+    size_t bytes_read;
+    size_t remaining;
+
+    remaining = p->Stream->bufend - p->Stream->next_frame;
+
+    /* libmad does not consume all the buffer it's given. Some
+     * data, part of a truncated frame, is left unused at the
+     * end of the buffer. That data must be put back at the
+     * beginning of the buffer and taken in account for
+     * refilling the buffer. This means that the input buffer
+     * must be large enough to hold a complete frame at the
+     * highest observable bit-rate (currently 448 kb/s).
+     * TODO: Is 2016 bytes the size of the largest frame?
+     * (448000*(1152/32000))/8
+     */
+    memmove(p->InputBuffer, p->Stream->next_frame, remaining);
+
+    bytes_read = st_readbuf(ft, p->InputBuffer+remaining, 1, 
+                            INPUT_BUFFER_SIZE-remaining);
+    if (bytes_read == 0)
+    {
+        return ST_EOF;
+    }
+
+    mad_stream_buffer(p->Stream, p->InputBuffer, bytes_read+remaining);
+    p->Stream->error = 0;
+
+    return ST_SUCCESS;
+}
+
+/* Attempts to read an ID3 tag at the current location in stream and
+ * consume it all.  Returns ST_EOF if no tag is found.  Its up to
+ * caller to recover.
+ * */
+static int st_mp3_inputtag(ft_t ft)
+{
+    struct mp3priv *p = (struct mp3priv *) ft->priv;
+    int rc = ST_EOF;
+    size_t bytes_read;
+    size_t remaining;
+    size_t tagsize;
+
+
+    /* FIXME: This needs some more work if we are to ever
+     * look at the ID3 frame.  This is because the Stream
+     * may not be able to hold the complete ID3 frame.
+     * We should consume the whole frame inside tagtype()
+     * instead of outside of tagframe().  That would support
+     * recovering when Stream contains less then 8-bytes (header)
+     * and also when ID3v2 is bigger then Stream buffer size.
+     * Need to pass in stream so that buffer can be
+     * consumed as well as letting additional data to be
+     * read in.
+     */
+    remaining = p->Stream->bufend - p->Stream->next_frame;
+    if ((tagsize = tagtype(p->Stream->this_frame, remaining)))
+    {
+        mad_stream_skip(p->Stream, tagsize);
+        rc = ST_SUCCESS;
+    }
+
+    /* We know that a valid frame hasn't been found yet
+     * so help libmad out and go back into frame seek mode.
+     * This is true whether an ID3 tag was found or not.
+     */
+    mad_stream_sync(p->Stream);
+
+    return rc;
 }
 
 int st_mp3startread(ft_t ft) 
 {
-        struct mp3priv *p = (struct mp3priv *) ft->priv;
-        size_t ReadSize;
+    struct mp3priv *p = (struct mp3priv *) ft->priv;
+    size_t ReadSize;
 
-        p->Stream=(struct mad_stream *)malloc(sizeof(struct mad_stream));
-        if (p->Stream == NULL){
-          st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
-          return ST_EOF;
-        }
-        
-        p->Frame=(struct mad_frame *)malloc(sizeof(struct mad_frame));
-        if (p->Frame == NULL){
-          st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
-          free(p->Stream);
-          return ST_EOF;
-        }
-        
-        p->Synth=(struct mad_synth *)malloc(sizeof(struct mad_synth));
-        if (p->Synth == NULL){
-          st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
-          free(p->Stream);
-          free(p->Frame);
-          return ST_EOF;
-        }
-        
-        p->Timer=(mad_timer_t *)malloc(sizeof(mad_timer_t));
-        if (p->Timer == NULL){
-          st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
-          free(p->Stream);
-          free(p->Frame);
-          free(p->Synth);
-          return ST_EOF;
-        }
-        
-        p->InputBuffer=(unsigned char *)malloc(INPUT_BUFFER_SIZE);
-        if (p->InputBuffer == NULL){
-          st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
-          free(p->Stream);
-          free(p->Frame);
-          free(p->Synth);
-          free(p->Timer);
-          return ST_EOF;
-        }
-        
-        mad_stream_init(p->Stream);
-        mad_frame_init(p->Frame);
-        mad_synth_init(p->Synth);
-        mad_timer_reset(p->Timer);
+    p->Stream = NULL;
+    p->Frame = NULL;
+    p->Synth = NULL;
+    p->Timer = NULL;
+    p->InputBuffer = NULL;
 
-        ft->info.encoding = ST_ENCODING_MP3;
-        ft->info.size = ST_SIZE_WORD;
+    p->Stream=(struct mad_stream *)malloc(sizeof(struct mad_stream));
+    p->Frame=(struct mad_frame *)malloc(sizeof(struct mad_frame));
+    p->Synth=(struct mad_synth *)malloc(sizeof(struct mad_synth));
+    p->Timer=(mad_timer_t *)malloc(sizeof(mad_timer_t));
+    p->InputBuffer=(unsigned char *)malloc(INPUT_BUFFER_SIZE);
 
-        /* We need to decode the first frame,
-         * so we know the output format */
-more_data:
-        ReadSize=st_readbuf(ft, p->InputBuffer, 1, INPUT_BUFFER_SIZE);
-        if(ReadSize<=0)
+    if (!p->Stream || !p->Frame || !p->Synth || 
+        !p->Timer || !p->InputBuffer)
+    {
+        st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
+        goto error;
+    }
+
+    mad_stream_init(p->Stream);
+    mad_frame_init(p->Frame);
+    mad_synth_init(p->Synth);
+    mad_timer_reset(p->Timer);
+
+    ft->info.encoding = ST_ENCODING_MP3;
+    ft->info.size = ST_SIZE_WORD;
+
+    /* Decode at least one valid frame to find out the input
+     * format.  The decoded frame will be saved off so that it
+     * can be processed later.
+     */
+    ReadSize=st_readbuf(ft, p->InputBuffer, 1, INPUT_BUFFER_SIZE);
+    if(ReadSize<=0)
+    {
+        if(st_error(ft))
+            st_fail_errno(ft,ST_EOF,"read error on bitstream");
+        if(st_eof(ft))
+            st_fail_errno(ft,ST_EOF,"end of input stream");
+        return(ST_EOF);
+    }
+
+    mad_stream_buffer(p->Stream, p->InputBuffer, ReadSize);
+
+    /* Find a valid frame before starting up.  This makes sure
+     * that we have a valid MP3 and also skips past ID3v2 tags
+     * at the beginning of the audio file.
+     */
+    p->Stream->error = 0;
+    while (mad_frame_decode(p->Frame,p->Stream)) 
+    {
+        /* check whether input buffer needs a refill */
+        if (p->Stream->error == MAD_ERROR_BUFLEN)
         {
-                if(st_error(ft))
-                        st_fail_errno(ft,ST_EOF,"read error on bitstream");
-                if(st_eof(ft))
-                        st_fail_errno(ft,ST_EOF,"end of input stream");
-                return(ST_EOF);
+            if (st_mp3_input(ft) == ST_EOF)
+                return ST_EOF;
+
+            continue;
         }
-        
-        mad_stream_buffer(p->Stream,p->InputBuffer,ReadSize);
+
+        /* Consume any ID3 tags */
+        st_mp3_inputtag(ft);
+
+        /* FIXME: We should probably detect when we've read
+         * a bunch of non-ID3 data and still haven't found a
+         * frame.  In that case we can abort early without
+         * scanning the whole file.
+         */
         p->Stream->error = 0;
+    }
 
-        /* Find a valid frame before starting up.  This makes sure
-         * that we have a valid MP3 and also skips past ID3v2 tags
-         * at the beginning of the audio file.
-         */
-        while(mad_frame_decode(p->Frame,p->Stream)) {
-            int tagsize;
-            size_t remaining;
+    if (p->Stream->error)
+    {
+        st_fail_errno(ft,ST_EOF,"No valid MP3 frame found");
+        return ST_EOF;
+    }
 
-            remaining = p->Stream->bufend - p->Stream->this_frame;
-            if (remaining <= 8) {
-                /* Read another buffer full of data. */
-                memmove(p->InputBuffer, p->Stream->this_frame, remaining);
+    switch(p->Frame->header.mode)
+    {
+        case MAD_MODE_SINGLE_CHANNEL:
+        case MAD_MODE_DUAL_CHANNEL:
+        case MAD_MODE_JOINT_STEREO:
+        case MAD_MODE_STEREO:
+            ft->info.channels = MAD_NCHANNELS(&p->Frame->header);
+            break;
+        default:
+            st_fail_errno(ft, ST_EFMT, "Cannot determine number of channels");
+            return ST_EOF;
+    }
 
-                ReadSize=st_readbuf(ft, p->InputBuffer+remaining, 1, INPUT_BUFFER_SIZE-remaining);
-                if (ReadSize <= 0) {
-                  st_fail_errno(ft,ST_EOF,"The file is not an MP3 file or it is corrupted");
-                  return ST_EOF;
-                }
+    p->FrameCount=1;
 
-                remaining+=ReadSize;
-                mad_stream_buffer(p->Stream, p->InputBuffer, remaining);
-                p->Stream->error = 0;
-            }
+    mad_timer_add(p->Timer,p->Frame->header.duration);
+    mad_synth_frame(p->Synth,p->Frame);
+    ft->info.rate=p->Synth->pcm.samplerate;
 
-            /* Skip past this frame, based on tag size.  If invalid
-             * tag then Walk threw the stream one byte at a time (tagsize=1)
-             * until we find a valid frame.  Previous if() will
-             * abort once we got a certain distance.
-             */
-            if ((tagsize=tagtype(p->Stream->this_frame, remaining)) == 0)
-                tagsize = 1; /* Walk through the stream. */
+    p->cursamp = 0;
 
-            /* ID3v2 tags can be any size.  That means they can
-             * span a buffer larger then INPUT_BUFFER_SIZE.  That
-             * means that we really need a loop to continue reading
-             * more data.
-             */
-            if (tagsize >= remaining)
-            {
-                /* Discard the remaining data and read the rest of the tag
-                 * data from the file and start over.
-                 */
-                tagsize -= remaining;
-                while (tagsize > 0)
-                {
-                    if (tagsize < INPUT_BUFFER_SIZE)
-                        ReadSize=st_readbuf(ft, p->InputBuffer, 1, tagsize);
-                    else
-                        ReadSize=st_readbuf(ft, p->InputBuffer, 1, INPUT_BUFFER_SIZE);
-                    tagsize -= ReadSize;
-                }
-                goto more_data;
-            }
+    return ST_SUCCESS;
 
-            mad_stream_skip(p->Stream, tagsize);
-        }
+error:
+    if (p->Stream) free(p->Stream);
+    if (p->Frame) free(p->Frame);
+    if (p->Synth) free(p->Synth);
+    if (p->Timer) free(p->Timer);
+    if (p->InputBuffer) free(p->InputBuffer);
 
-        /* TODO: It would be nice to look for Xing VBR headers
-         * or TLE fields in ID3 to detect length of file
-         * and set ft->length.
-         * For CBR, we should fstat the file and divided
-         * by bitrate to find length.
-         */
-
-        switch(p->Frame->header.mode)
-        {
-                case MAD_MODE_SINGLE_CHANNEL:
-                case MAD_MODE_DUAL_CHANNEL:
-                case MAD_MODE_JOINT_STEREO:
-                case MAD_MODE_STEREO:
-                  ft->info.channels = MAD_NCHANNELS(&p->Frame->header);
-                  break;
-                default:
-                  st_fail_errno(ft,ST_EFMT,"Cannot determine number of channels");
-                  return ST_EOF;
-        }
-
-        p->FrameCount=1;
-        ft->info.rate=p->Frame->header.samplerate;
-
-        mad_timer_add(p->Timer,p->Frame->header.duration);
-        mad_synth_frame(p->Synth,p->Frame);
-        p->cursamp = 0;
-        p->eof     = 0;
-
-        return ST_SUCCESS;
+    return ST_EOF;
 }
 
 /*
@@ -240,98 +283,67 @@ more_data:
  * Place in buf[].
  * Return number of samples read.
  */
-
 st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len)
 {
-  struct mp3priv *p = (struct mp3priv *) ft->priv;
-  st_ssize_t donow,i,done=0;
-  mad_fixed_t sample;
-  int chan;
+    struct mp3priv *p = (struct mp3priv *) ft->priv;
+    st_ssize_t donow,i,done=0;
+    mad_fixed_t sample;
+    int chan;
 
-  do{
-    donow=MIN(len,(p->Synth->pcm.length - p->cursamp)*ft->info.channels);
-    i=0;
-    while(i<donow){
-      for(chan=0;chan<ft->info.channels;chan++){
-        sample=p->Synth->pcm.samples[chan][p->cursamp];
-        if (sample < -MAD_F_ONE)
-          sample=-MAD_F_ONE;
-        else if (sample >= MAD_F_ONE)
-          sample=MAD_F_ONE-1;
-        *buf++=(st_sample_t)(sample<<(32-1-MAD_F_FRACBITS));
-        i++;
-      }
-      p->cursamp++;
-    };
+    do {
+        donow=MIN(len,(p->Synth->pcm.length - p->cursamp)*ft->info.channels);
+        i=0;
+        while(i<donow){
+            for(chan=0;chan<ft->info.channels;chan++){
+                sample=p->Synth->pcm.samples[chan][p->cursamp];
+                if (sample < -MAD_F_ONE)
+                    sample=-MAD_F_ONE;
+                else if (sample >= MAD_F_ONE)
+                    sample=MAD_F_ONE-1;
+                *buf++=(st_sample_t)(sample<<(32-1-MAD_F_FRACBITS));
+                i++;
+            }
+            p->cursamp++;
+        };
 
-    len-=donow;
-    done+=donow;
+        len-=donow;
+        done+=donow;
 
-    if (len==0 || p->eof) break;
+        if (len==0) break;
 
-    /* check whether input buffer needs a refill */
-
-    if(p->Stream->error==MAD_ERROR_BUFLEN)
-      {
-        size_t          ReadSize, Remaining;
-        
-        /* libmad does not consume all the buffer it's given. Some
-         * datas, part of a truncated frame, is left unused at the
-         * end of the buffer. Those datas must be put back at the
-         * beginning of the buffer and taken in account for
-         * refilling the buffer. This means that the input buffer
-         * must be large enough to hold a complete frame at the
-         * highest observable bit-rate (currently 448 kb/s). XXX=XXX
-         * Is 2016 bytes the size of the largest frame?
-         * (448000*(1152/32000))/8
-         */
-        
-        Remaining=p->Stream->bufend - p->Stream->next_frame;
-        memmove(p->InputBuffer,p->Stream->next_frame,Remaining);
-
-        ReadSize=st_readbuf(ft, p->InputBuffer+Remaining, 1, 
-                         INPUT_BUFFER_SIZE-Remaining);
-        if(ReadSize == 0){
-          p->eof=1;
-          memset(p->InputBuffer+Remaining,0,MAD_BUFFER_GUARD);
-          ReadSize=MAD_BUFFER_GUARD;
+        /* check whether input buffer needs a refill */
+        if (p->Stream->error == MAD_ERROR_BUFLEN)
+        {
+            if (st_mp3_input(ft) == ST_EOF)
+                return ST_EOF;
         }
 
-        mad_stream_buffer(p->Stream,p->InputBuffer,ReadSize+Remaining);
-        p->Stream->error = 0;
-      }
-
-    if(mad_frame_decode(p->Frame,p->Stream)){
-      if(MAD_RECOVERABLE(p->Stream->error))
+        if (mad_frame_decode(p->Frame,p->Stream))
         {
-          int tagsize;
-          if ( (tagsize=tagtype(p->Stream->this_frame, p->Stream->bufend - p->Stream->this_frame)) == 0){
-            if (!p->eof)
-              st_report("recoverable frame level error (%s).\n",
-                        mad_stream_errorstr(p->Stream));
-          }
-          else mad_stream_skip(p->Stream,tagsize);
-          continue;
-        }
-      else
-        {
-          if(p->Stream->error==MAD_ERROR_BUFLEN)
-            continue;
-          else
+            if(MAD_RECOVERABLE(p->Stream->error))
             {
-              st_report("unrecoverable frame level error (%s).\n",
-                        mad_stream_errorstr(p->Stream));
-              return done;
+                st_mp3_inputtag(ft);
+                continue;
+            }
+            else
+            {
+                if (p->Stream->error == MAD_ERROR_BUFLEN)
+                    continue;
+                else
+                {
+                    st_report("unrecoverable frame level error (%s).\n",
+                              mad_stream_errorstr(p->Stream));
+                    return done;
+                }
             }
         }
-    }
-    p->FrameCount++;
-    mad_timer_add(p->Timer,p->Frame->header.duration);
-    mad_synth_frame(p->Synth,p->Frame);
-    p->cursamp=0;
-  }while(1);
+        p->FrameCount++;
+        mad_timer_add(p->Timer,p->Frame->header.duration);
+        mad_synth_frame(p->Synth,p->Frame);
+        p->cursamp=0;
+    } while(1);
 
-  return done;
+    return done;
 }
 
 int st_mp3stopread(ft_t ft)
