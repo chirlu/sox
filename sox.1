@@ -57,7 +57,7 @@ can work with.  The first are self-describing file formats.  These
 contain a header that completely describe the characteristics of
 the audio data that follows.
 .P
-The second type are header-less data, or sometimes called raw data.  A
+The second type are headerless data, often called raw data.  A
 user must pass enough information to
 .I SoX
 on the command line so that it knows what type of data it contains.
@@ -65,7 +65,7 @@ on the command line so that it knows what type of data it contains.
 Audio data can usually be totally described by four characteristics:
 .TP 10
 rate
-The sample rate is in samples per second.  For example, CD sample rates are at 44100.
+The sample rate is in samples per second.  For example, CDs use 44,100 samples per second.
 .TP 10 
 data size
 The precision the data is stored in.  Most popular are 8-bit bytes or 16-bit 
@@ -75,7 +75,7 @@ data encoding
 What encoding the data type uses.  Examples are u-law, ADPCM, or signed linear data.
 .TP 10
 channels
-How many channels are contained in the audio data.  Mono and Stereo are the two most common.
+How many channels are contained in the audio data.  Mono (1) and stereo (2) are the two most common.
 .P
 Please refer to the
 .B soxexam(1)
