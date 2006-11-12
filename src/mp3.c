@@ -131,7 +131,6 @@ static int st_mp3_inputtag(ft_t ft)
 {
     struct mp3priv *p = (struct mp3priv *) ft->priv;
     int rc = ST_EOF;
-    size_t bytes_read;
     size_t remaining;
     size_t tagsize;
 
