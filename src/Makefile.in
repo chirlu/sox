@@ -26,10 +26,10 @@ LN_S    = @LN_S@
 RM      = /bin/rm -f
 
 # Build macros.
-CFLAGS	= @CFLAGS@ -I$(srcdir) -I$(builddir)
+CFLAGS	= @CFLAGS@ @SAMPLERATE_CFLAGS@ -I$(srcdir) -I$(builddir)
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS	= -L. @LDFLAGS@
-LIBS	= -lst @LIBS@
+LIBS	= -lst @LIBS@ @SAMPLERATE_LIBS@
 
 # Other macros.
 

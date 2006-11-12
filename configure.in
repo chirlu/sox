@@ -187,26 +187,13 @@ dnl Test for libsamplerate.
 
 if test "$enable_samplerate" = yes
 then
-    AC_CHECK_HEADER(samplerate.h, ac_cv_samplerate=1, ac_cv_samplerate=0)
-
-    if test "$ac_cv_samplerate" = 1 
-    then
-        PKG_CHECK_MODULES(SAMPLERATE, samplerate >= 0.0.15,
-                          ac_cv_samplerate=1, ac_cv_samplerate=0)
-    fi
-
-    AC_DEFINE_UNQUOTED([HAVE_SAMPLERATE],${ac_cv_samplerate},
-            [Set to 1 if you have libsamplerate.])
-
-    if test "$ac_cv_samplerate" = 1 
-    then
-        AC_SUBST(SAMPLERATE_CFLAGS)
-        AC_SUBST(SAMPLERATE_LIBS)
-        LIBS="$LIBS -lsamplerate"
-    else
-        enable_samplerate=no
-    fi
+    PKG_CHECK_MODULES(SAMPLERATE, samplerate >= 0.0.15,
+        AC_DEFINE_UNQUOTED([HAVE_SAMPLERATE],1,
+            [Set to 1 if you have libsamplerate.]),
+        enable_samplerate=no)
 fi
+AC_SUBST(SAMPLERATE_CFLAGS)
+AC_SUBST(SAMPLERATE_LIBS)
 
 dnl Checks for ALSA.
 
