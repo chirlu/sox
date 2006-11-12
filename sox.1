@@ -303,7 +303,7 @@ It works for both playing and recording sound samples.  When playing sound
 files it attempts to set up the ALSA driver to use the same format as the
 input file.  It is suggested to always override the output values to use
 the highest quality samples your sound card can handle.  Example:
-.I sox infile -t alsa -w -s /dev/snd/pcmC0D0p
+.I sox infile -t alsa default
 .TP 10
 .B .au
 SUN Microsystems AU files.
