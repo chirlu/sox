@@ -103,7 +103,7 @@ static void statistics(void);
 static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct, double vol);
 static void parse_effects(int argc, char **argv);
 static void check_effects(void);
-static void start_effects(void);
+static int start_effects(void);
 static void reserve_effect_buf(void);
 static int flow_effect_out(void);
 static int flow_effect(int);
@@ -147,7 +147,7 @@ static int input_count = 0;
  *
  * If one was to support effects for quad-channel files, there would
  * need to be an effect table for each channel to handle effects
- * that done st ST_EFF_MCHAN.
+ * that don't set ST_EFF_MCHAN.
  */
 
 static struct st_effect efftab[MAX_EFF]; /* left/mono channel effects */
@@ -596,7 +596,7 @@ static void process(void) {
     check_effects();
 
     /* Start all effects */
-    start_effects();
+    flowstatus = start_effects();
 
     /* Reserve an output buffer for all effects */
     reserve_effect_buf();
@@ -644,29 +644,35 @@ static void process(void) {
     for(e = 1; e < neffects; e++)
         efftab[e].odone = efftab[e].olen = 0;
 
-    /* Run input data through effects and get more until olen == 0 
-     * (or ST_EOF).
-     */
-    do {
+    /* If start functions set flowstatus to ST_EOF, skip both flow and
+       drain; we have to have this "if" because after flow flowstatus is
+       supposed to be ST_EOF, so we can't test that in order to know
+       whether to drain. */
+    if (flowstatus == 0) {
+    
+      /* Run input data through effects and get more until olen == 0 
+       * (or ST_EOF).
+       */
+      do {
 #ifndef SOXMIX
         ilen = st_read(file_desc[current_input], efftab[0].obuf, 
                        (st_ssize_t)ST_BUFSIZ);
         if (ilen > ST_BUFSIZ)
-        {
+          {
             st_warn("WARNING: Corrupt value of %d!  Assuming 0 bytes read.\n", ilen);
             ilen = 0;
-        }
-
+          }
+        
         if (ilen == ST_EOF)
-        {
+          {
             efftab[0].olen = 0;
             if (file_desc[current_input]->st_errno)
-            {
+              {
                 fprintf(stderr, file_desc[current_input]->st_errstr);
-            }
-        }
+              }
+          }
         else
-            efftab[0].olen = ilen;
+          efftab[0].olen = ilen;
 
         read_samples += efftab[0].olen;
 
@@ -675,64 +681,64 @@ static void process(void) {
          * input file.
          */
         if (ilen == ST_EOF || efftab[0].olen == 0)
-        {
+          {
             if (current_input < input_count-1)
-            {
+              {
                 current_input++;
                 input_samples = file_desc[current_input]->length;
                 read_samples = 0;
 
                 if (status)
-                    print_input_status(current_input);
+                  print_input_status(current_input);
 
                 continue;
-            }
-        }
+              }
+          }
 
         /* Adjust input side volume based on value specified
          * by user for this file.
          */
         if (file_opts[current_input]->volume != 1.0)
-            clipped += volumechange(efftab[0].obuf, 
-                                    efftab[0].olen,
-                                    file_opts[current_input]->volume);
+          clipped += volumechange(efftab[0].obuf, 
+                                  efftab[0].olen,
+                                  file_opts[current_input]->volume);
 #else
         for (f = 0; f < input_count; f++)
-        {
+          {
             ilen[f] = st_read(file_desc[f], ibuf[f], (st_ssize_t)ST_BUFSIZ);
 
             if (ilen[f] == ST_EOF)
-            {
+              {
                 ilen[f] = 0;
                 if (file_desc[f]->st_errno)
-                {
+                  {
                     fprintf(stderr, file_desc[f]->st_errstr);
-                }
-            }
+                  }
+              }
 
             /* Only count read samples for first file in mix */
             if (f == 0)
-                read_samples += efftab[0].olen;
+              read_samples += efftab[0].olen;
 
             /* Adjust input side volume based on value specified
              * by user for this file.
              */
             if (file_opts[f]->volume != 1.0)
-                clipped += volumechange(ibuf[f], 
-                                        ilen[f],
-                                        file_opts[f]->volume);
-        }
+              clipped += volumechange(ibuf[f], 
+                                      ilen[f],
+                                      file_opts[f]->volume);
+          }
 
         /* FIXME: Should report if the size of the reads are not
          * the same.
          */
         efftab[0].olen = 0;
         for (f = 0; f < input_count; f++)
-            if ((st_size_t)ilen[f] > efftab[0].olen)
-                efftab[0].olen = ilen[f];
+          if ((st_size_t)ilen[f] > efftab[0].olen)
+            efftab[0].olen = ilen[f];
 
         for (s = 0; s < efftab[0].olen; s++)
-        {
+          {
             /* Mix data together by summing samples together.
              * It is assumed that input side volume adjustments
              * will take care of any possible overflow.
@@ -742,20 +748,20 @@ static void process(void) {
              * occur because of this.
              */
             for (f = 0; f < input_count; f++)
-            {
+              {
                 if (f == 0)
-                    efftab[0].obuf[s] =
-                        (s<(st_size_t)ilen[f]) ? ibuf[f][s] : 0;
+                  efftab[0].obuf[s] =
+                    (s<(st_size_t)ilen[f]) ? ibuf[f][s] : 0;
                 else
-                    if (s < (st_size_t)ilen[f])
+                  if (s < (st_size_t)ilen[f])
                     {
-                        double sample;
-                        sample = efftab[0].obuf[s] + ibuf[f][s];
-                        ST_SAMPLE_CLIP_COUNT(sample, clipped);
-                        efftab[0].obuf[s] = sample;
+                      double sample;
+                      sample = efftab[0].obuf[s] + ibuf[f][s];
+                      ST_SAMPLE_CLIP_COUNT(sample, clipped);
+                      efftab[0].obuf[s] = sample;
                     }
-            }
-        }
+              }
+          }
 #endif
         efftab[0].odone = 0;
 
@@ -764,33 +770,32 @@ static void process(void) {
          * useful to print out info about input file header and quiet.
          */
         if (!writing && neffects == 1)
-            efftab[0].olen = 0;
+          efftab[0].olen = 0;
 
         if (efftab[0].olen == 0)
-            break;
+          break;
 
         flowstatus = flow_effect_out();
 
         if (status)
-            update_status();
+          update_status();
 
-        /* Quite reading/writing on user aborts.  This will close
+        /* Quit reading/writing on user aborts.  This will close
          * done the files nicely as if an EOF was reached on read.
          */
         if (user_abort)
-            break;
+          break;
 
-        /* Negative flowstatus says no more output will ever be generated. */
-        if (flowstatus == ST_EOF || 
-            (writing && file_desc[file_count-1]->st_errno))
-            break;
+        /* If writing and there's an error, don't try to write more. */
+        if (writing && file_desc[file_count-1]->st_errno)
+          break;
+      } while (flowstatus == 0);
 
-    } while (1); 
-
-    /* This will drain the effects */
-    /* Don't write if output is indicating errors. */
-    if (writing && file_desc[file_count-1]->st_errno == 0)
+      /* This will drain the effects */
+      /* Don't write if output is indicating errors. */
+      if (writing && file_desc[file_count-1]->st_errno == 0)
         drain_effect_out();
+    }
 
 #ifdef SOXMIX
     /* Free input buffers now that they are not used */
@@ -1086,15 +1091,19 @@ static void check_effects(void)
     }
 }
 
-static void start_effects(void)
+static int start_effects(void)
 {
-    int e;
+    int e, ret = ST_SUCCESS;
 
     for(e = 1; e < neffects; e++) {
-        (*efftab[e].h->start)(&efftab[e]);
+        if ((ret = (*efftab[e].h->start)(&efftab[e])) == ST_EOF)
+            break;
         if (efftabR[e].name)
-            (*efftabR[e].h->start)(&efftabR[e]);
+            if ((ret = (*efftabR[e].h->start)(&efftabR[e])) == ST_EOF)
+                break;
     }
+
+    return ret;
 }
 
 static void reserve_effect_buf(void)
