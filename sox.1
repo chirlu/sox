@@ -923,8 +923,9 @@ this is a float.
 
 .TP 10
 rabbit [ \fI-c0\fR | \fI-c1\fR | \fI-c2\fR | \fI-c3\fR | \fI-c4\fR ]
-Resample using libsamplerate, aka Secret Rabbit Code. See
-http://www.mega-nerd.com/SRC/ for details of the algorithm. Algorithms
+Resample using libsamplerate, aka Secret Rabbit Code. This effect is optional
+and must have been selected at compile time of \fISoX\fR.
+See http://www.mega-nerd.com/SRC/ for details of the algorithm. Algorithms
 0 through 2 are progressively faster and lower quality versions of the
 sinc algorithm; the default is \fI-c0\fR, which is probably the best
 quality algorithm for general use currently available in sox.
