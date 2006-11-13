@@ -104,7 +104,7 @@ The following will mix two sound files together to to produce a single sound
 file.
 .P
 .br
-        soxmix music.wav voice.wav mixed.wav
+	soxmix music.wav voice.wav mixed.wav
 .PP
 \fBFilenames:\fR
 .PP
@@ -212,7 +212,7 @@ by 0.5.  This is done to prevent clipping of audio data during
 the mixing operation. 
 Users will most likely not be happy with this large of a volume adjustment
 and can specify the -v option to override this default value.
-                                   
+
 Note: For the non-mixing case, see the \fBstat\fR effect for information on 
 finding the maximum volume adjustment that can be done with this option 
 without causing audio data to be clipped.
@@ -241,7 +241,7 @@ this encoding but there is currently no command line option to
 specify it.  If you need this support then you can use the pseudo
 file types of ".la" and ".lu" to inform sox of the encoding.  See
 supported file types for more information.
-                                   
+
 ADPCM is a form of sound compression that has a good
 compromise between good sound quality and fast encoding/decoding
 time.  It is used for telephone sound compression and places were
@@ -253,7 +253,7 @@ files, in all others it means G.726 ADPCM.
 IMA ADPCM is a specific form of ADPCM compression, slightly simpler
 and slightly lower fidelity than Microsoft's flavor of ADPCM.
 IMA ADPCM is also called DVI ADPCM.
-                                   
+
 GSM is a standard used for telephone sound compression in
 European countries and it's gaining popularity because of its
 quality.  It usually is CPU intensive to work with GSM audio data.
