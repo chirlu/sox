@@ -54,4 +54,4 @@ convertToAndFrom 8svx aiff au avr dat maud sf smp
 rate=5512
 convertToAndFrom hcom
 rate=8000
-convertToAndFrom voc wve
+convertToAndFrom voc wve flac
