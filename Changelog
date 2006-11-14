@@ -17,10 +17,13 @@ sox-12.18.3
   o Fixed a bug introduced in 12.18.2 that stopped the draining
     of effects from occuring.  This had stopped the reverse effect,
     among others, from working.  Reuben Thomas
+  o Add FLAC support (robs@users.sf.net)
+  o Allow encoding quality to be specified (works for Ogg too, but not
+    MP3).
 
 sox-12.18.2
 -----------
-  o Adding in debain's disk full fix (#313206).
+  o Adding in Debian's disk full fix (#313206).
   o Finally got rid of reference to cleanup() function in
     library.  Applications are now required to detect
     all failures from return codes and cleanup as they
