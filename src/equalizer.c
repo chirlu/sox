@@ -171,7 +171,7 @@ int st_equalizer_flow(eff_t effp, st_sample_t *ibuf,
 
 static st_effect_t st_equalizer_effect = {
   "equalizer",
-  "Usage: equalizer central-freqency Q gain",
+  "Usage: equalizer central-frequency Q gain",
   0,
   st_equalizer_getopts, st_equalizer_start,
   st_equalizer_flow, st_effect_nothing_drain,

@@ -863,7 +863,7 @@ when listened to on headphones the stereo image is
 moved from inside
 your head (standard for headphones) to outside and in front of the
 listener (standard for speakers). See 
-www.geocities.com/beinges
+http://www.geocities.com/beinges
 for a full explanation.
 .TP 10
 echo \fIgain-in gain-out delay decay \fR[ \fIdelay decay ... \fR]
@@ -877,10 +877,11 @@ Add a sequence of echos to a sound sample.
 Each delay/decay part gives the delay in milliseconds 
 and the decay (relative to gain-in) of that echo.
 Gain-out is the volume of the output.
-.TP
-fade [ \fItype\fR ] \fIfade-in-length\fR
 .TP 10
-     [ \fIstop-time\fR [ \fIfade-out-length\fR ] ]
+equalizer \fIcentral-frequency\fR \fIQ\fR \fIgain\fR
+Apply an equalizer effect. \fIcentral-frequency\fR gives the central frequency in Hz, \fIQ\fR is the Q-factor (see http://en.wikipedia.org/wiki/Q_factor), and \fIgain\fR is the gain or attenuation in dB.
+.TP 10
+fade [ \fItype\fR ] \fIfade-in-length\fR [ \fIstop-time\fR [ \fIfade-out-length\fR ] ]
 Add a fade effect to the beginning, end, or both of the audio data.  
 
 For fade-ins, this starts from the first sample and ramps the volume of the audio from 0 to full volume over \fIfade-in-length\fR seconds.  Specify 0 seconds if no fade-in is wanted.

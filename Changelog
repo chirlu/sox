@@ -27,6 +27,7 @@ sox-12.18.3
     by command-line arguments. (robs@users.sf.net)
   o More and better self-tests. (robs@users.sf.net)
   o Support Maxis's XA format. (Dwayne C. Litzenberger)
+  o Add equalizer effect (Pascal Giard)
 
 sox-12.18.2
 -----------
