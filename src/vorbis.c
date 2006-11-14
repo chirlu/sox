@@ -350,6 +350,7 @@ int st_vorbisstartwrite(ft_t ft)
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve;
         long rate;
+        double quality = 3; /* Default compression quality gives ~112kbps */
 
         ft->info.size = ST_SIZE_16BIT;
         ft->info.encoding = ST_ENCODING_VORBIS;
@@ -372,8 +373,18 @@ int st_vorbisstartwrite(ft_t ft)
             st_fail_errno(ft, ST_EHDR, "Error setting up Ogg Vorbis encorder - make sure you've specied a sane rate and number of channels");
         }
 
-        /* Set encoding to average bit rate of 112kbps VBR */
-        vorbis_encode_init_vbr(&ve->vi, ft->info.channels, ft->info.rate, 0.3f);
+        /* Use encoding to average bit rate of VBR as specified by the -C option */
+        if (ft->info.compression != HUGE_VAL)
+        {
+            if (ft->info.compression < -1 || ft->info.compression > 10)
+            {
+                st_fail_errno(ft,ST_EINVAL,
+                              "Vorbis compression quality nust be between -1 and 10");
+                return ST_EOF;
+            }
+            quality = ft->info.compression;
+        }
+        vorbis_encode_init_vbr(&ve->vi, ft->info.channels, ft->info.rate, quality / 10);
 
         vorbis_analysis_init(&ve->vd, &ve->vi);
         vorbis_block_init(&ve->vd, &ve->vb);

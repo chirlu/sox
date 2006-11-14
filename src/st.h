@@ -23,6 +23,18 @@ extern "C" {
 #define ST_LIB_VERSION_CODE 0x0c1202
 #define ST_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
+/* C language enhancements: */
+
+/* Boolean type, compatible with C++ */
+typedef enum {false, true} bool;
+
+/* Compile-time ("static") assertion */
+/*   e.g. assert_static(sizeof(int) >= 4, int_type_too_small)    */
+#define assert_static(e,f) enum {assert_static__##f = 1/(e)}
+
+/* Array-length operator */
+#define array_length(a) (sizeof(a)/sizeof(a[0]))
+
 typedef int32_t st_sample_t;
 typedef uint32_t st_size_t;
 typedef int32_t st_ssize_t;
@@ -105,6 +117,7 @@ typedef struct  st_signalinfo
     signed char encoding; /* format of sample numbers */
     signed char channels; /* number of sound channels */
     char swap;            /* do byte- or word-swap */
+    double compression;   /* compression factor (where applicable) */
 } st_signalinfo_t;
 
 /* Loop parameters */
@@ -236,7 +249,8 @@ struct st_soundstream {
 #define ST_ENCODING_INV_ALAW    10/* Inversed bit-order A-law */
 #define ST_ENCODING_MP3         11/* MP3 compression */
 #define ST_ENCODING_VORBIS      12/* Vorbis compression */
-#define ST_ENCODING_MAX         12 
+#define ST_ENCODING_FLAC        13/* FLAC compression */
+#define ST_ENCODING_MAX         13 
 
 /* declared in misc.c */
 extern const char *st_sizes_str[];

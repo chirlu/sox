@@ -27,6 +27,7 @@
  */
 
 #include "st_i.h"
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>             /* for malloc() */
@@ -204,6 +205,7 @@ int main(int argc, char **argv)
             fo->info.size = -1;
             fo->info.encoding = -1;
             fo->info.channels = -1;
+            fo->info.compression = HUGE_VAL;
             fo->volume = 1.0;
             file_opts[file_count++] = fo;
 
@@ -251,6 +253,13 @@ int main(int argc, char **argv)
              */
             exit(2);
         }
+
+        if (file_opts[i]->info.compression != HUGE_VAL)
+        {
+            st_fail("-C only allowed for output file");
+            cleanup();
+            exit(1);
+        }
     }
 
     /* Loop through the reset of the arguments looking for effects */
@@ -276,7 +285,7 @@ int main(int argc, char **argv)
     return(0);
 }
 
-static char *getoptstr = "+r:v:t:c:phsuUAaigbwlfdxVSq";
+static char *getoptstr = "+r:v:t:c:C:phsuUAaigbwlfdxVSq";
 
 static struct option long_options[] =
 {
@@ -369,6 +378,17 @@ static void doopts(file_options_t *fo, int argc, char **argv)
                 }
                 fo->info.channels = i;
                 break;
+
+            case 'C':
+                str = optarg;
+                if (!sscanf(str, "%lf", &fo->info.compression))
+                {
+                    st_fail("-C must be given a number");
+                    cleanup();
+                    exit(1);
+                }
+                break;
+
             case 'b':
                 fo->info.size = ST_SIZE_BYTE;
                 break;
@@ -1680,6 +1700,7 @@ static void usage(char *opt)
 "file unless overriden on the command line.\n"
 "\n"
 "-c channels     number of channels in audio data\n"
+"-C compression  compression factor for variably compressing output formats\n"
 "-e              skip processing of this filename.  useful only\n"
 "                on output filename to prevent writing data.\n"
 "-r rate         sample rate of audio\n"

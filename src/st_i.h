@@ -68,7 +68,7 @@ char *strerror(int errorcode);
  */
 /* declared in misc.c */
 st_ssize_t st_readbuf(ft_t ft, void *buf, size_t size, st_ssize_t len);
-st_ssize_t st_writebuf(ft_t ft, void *buf, size_t size, st_ssize_t len);
+st_ssize_t st_writebuf(ft_t ft, void const *buf, size_t size, st_ssize_t len);
 int st_reads(ft_t ft, char *c, st_ssize_t len);
 int st_writes(ft_t ft, char *c);
 int st_readb(ft_t ft, uint8_t *ub);
@@ -162,6 +162,9 @@ extern const st_format_t *st_cdr_format_fn(void);
 extern const st_format_t *st_cvsd_format_fn(void);
 extern const st_format_t *st_dvms_format_fn(void);
 extern const st_format_t *st_dat_format_fn(void);
+#ifdef HAVE_LIBFLAC
+extern const st_format_t *st_flac_format_fn(void);
+#endif
 #ifdef ENABLE_GSM
 extern const st_format_t *st_gsm_format_fn(void);
 #endif

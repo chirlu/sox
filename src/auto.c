@@ -126,7 +126,11 @@ int st_autostartread(ft_t ft)
             else if (strncmp(header, "Ogg", 3) == 0)
             {
                 type = "ogg";
-          }
+            }
+            else if (strncmp(header, "fLaC", 4) == 0)
+            {
+                type = "flac";
+            }
         } /* read 4-byte header */
 
         /* If we didn't find type yet then start looking for file

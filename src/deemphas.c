@@ -137,13 +137,18 @@ int st_deemph_getopts(eff_t effp, int n, char **argv)
 int st_deemph_start(eff_t effp)
 {
      /* check the input format */
-     if (effp->ininfo.encoding != ST_ENCODING_SIGN2
-         || effp->ininfo.rate != 44100
-         || effp->ininfo.size != ST_SIZE_WORD)
+
+     /* This used to check the input file sample encoding method and size
+      * but these are irrelevant as effects always work with the ST internal
+      * long-integer format regardless of the input format.
+      *   The only parameter that is important for the deemph effect is
+      * sampling rate as this has been harded coded into the pre-calculated
+      * filter coefficients.
+      */
+     if (effp->ininfo.rate != 44100)
      {
-          st_fail("The deemphasis effect works only with audio cd like samples.\nThe input format however has %d Hz sample rate and %d-byte%s signed linearly coded samples.",
-            effp->ininfo.rate, effp->ininfo.size,
-            effp->ininfo.encoding != ST_ENCODING_SIGN2 ? ", but not" : "");
+          st_fail("The deemphasis effect works only with audio-CD-like samples.\nThe input format however has %d Hz sample rate.",
+            effp->ininfo.rate);
           return (ST_EOF);
      }
      else

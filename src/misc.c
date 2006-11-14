@@ -68,7 +68,8 @@ const char *st_encodings_str[] = {
         "inversed u-law",
         "inversed A-law",
         "MPEG audio (layer I, II or III)",
-        "Vorbis"
+        "Vorbis",
+        "FLAC"
 };
 
 static const char readerr[] = "Premature EOF while reading sample file.";
@@ -89,7 +90,7 @@ st_ssize_t st_readbuf(ft_t ft, void *buf, size_t size, st_ssize_t len)
  * Returns number of elements writen, not bytes writen.
  */
 
-st_ssize_t st_writebuf(ft_t ft, void *buf, size_t size, st_ssize_t len)
+st_ssize_t st_writebuf(ft_t ft, void const *buf, size_t size, st_ssize_t len)
 {
     return fwrite(buf, size, len, ft->fp);
 }

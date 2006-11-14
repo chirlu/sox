@@ -28,6 +28,9 @@ st_format_fn_t st_format_fns[] = {
   st_cvsd_format_fn,
   st_dat_format_fn,
   st_dvms_format_fn,
+#ifdef HAVE_LIBFLAC
+  st_flac_format_fn,
+#endif
 #ifdef ENABLE_GSM
   st_gsm_format_fn,
 #endif

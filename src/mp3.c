@@ -22,6 +22,7 @@
 
 #if defined(HAVE_LAME)
 #include <lame/lame.h>
+#include <math.h>
 #endif
 
 #ifndef MIN
@@ -418,6 +419,11 @@ int st_mp3startwrite(ft_t ft)
   /* The bitrate, mode, quality and other settings are the default ones,
      since SoX's command line options do not allow to set them */
 
+  /* FIXME: Someone who knows about lame could implement adjustable compression
+     here.  E.g. by using the -C value as an index into a table of params or
+     as a compressed bit-rate. */
+  if (ft->info.compression != HUGE_VAL)
+      st_warn("-C option not supported for mp3; using default compression rate");
   if (lame_init_params(p->gfp) < 0){
         st_fail_errno(ft,ST_EOF,"LAME initialization failed");
         return(ST_EOF);
