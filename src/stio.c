@@ -90,7 +90,7 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
 
     ft = (ft_t)calloc(sizeof(struct st_soundstream), 1);
 
-    if (!ft )
+    if (!ft)
         return NULL;
 
     ft->filename = strdup(path);
