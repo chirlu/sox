@@ -246,6 +246,7 @@ extern const st_effect_t *st_deemph_effect_fn(void);
 extern const st_effect_t *st_earwax_effect_fn(void);
 extern const st_effect_t *st_echo_effect_fn(void);
 extern const st_effect_t *st_echos_effect_fn(void);
+extern const st_effect_t *st_equalizer_effect_fn(void);
 extern const st_effect_t *st_fade_effect_fn(void);
 extern const st_effect_t *st_filter_effect_fn(void);
 extern const st_effect_t *st_flanger_effect_fn(void);

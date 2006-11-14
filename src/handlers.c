@@ -96,6 +96,7 @@ st_effect_fn_t st_effect_fns[] = {
   st_earwax_effect_fn,
   st_echo_effect_fn,
   st_echos_effect_fn,
+  st_equalizer_effect_fn,
   st_fade_effect_fn,
   st_filter_effect_fn,
   st_flanger_effect_fn,
