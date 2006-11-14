@@ -878,8 +878,10 @@ Each delay/decay part gives the delay in milliseconds
 and the decay (relative to gain-in) of that echo.
 Gain-out is the volume of the output.
 .TP 10
-equalizer \fIcentral-frequency\fR \fIQ\fR \fIgain\fR
-Apply an equalizer effect. \fIcentral-frequency\fR gives the central frequency in Hz, \fIQ\fR is the Q-factor (see http://en.wikipedia.org/wiki/Q_factor), and \fIgain\fR is the gain or attenuation in dB.
+equalizer \fIcentral\-frequency\fR \fIQ\fR \fIgain\fR
+Apply an equalizer effect which allows you to modify the amplitude (\fIgain\fR) of a signal at and around (\fIQ\-factor\fR) a central frequency (\fIcentral\-frequency\fR), leaving all other frequencies untouched (unlike regular bandpass/bandreject filters).
+ 
+\fIcentral\-frequency\fR gives the central frequency in Hz, \fIQ\fR is the Q\-factor (see http://en.wikipedia.org/wiki/Q_factor), and \fIgain\fR is the gain or attenuation in dB.
 
 This effect supports the \fI-o\fR option (see above).
 .TP 10
