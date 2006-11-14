@@ -9,7 +9,7 @@
 .if t .sp .5v
 .if n .sp
 ..
-.TH SoX 1 "November 13, 2006" "sox" "Sound eXchange"
+.TH SoX 1 "November 14, 2006" "sox" "Sound eXchange"
 .SH NAME
 sox \- Sound eXchange : universal sound sample translator
 .SH SYNOPSIS
@@ -378,7 +378,7 @@ formats.
 Free Lossless Audio Codec compressed audio
 .br
 FLAC is an open, patent-free CODEC designed for compressing
-music.  It is similar to mp3 and Ogg Vorbis, but lossless,
+music. It is similar to MP3 and Ogg Vorbis, but lossless,
 meaning that audio is compressed in FLAC without any loss in
 quality. 
 .ti +3
@@ -391,7 +391,7 @@ Vorbis files.]
 .ti +3
 .B SoX
 has rudimentary support for writing FLAC files: it can encode to
-native FLAC using compression levels 0 to 8.  8 is the default
+native FLAC using compression levels 0 to 8. 8 is the default
 compression level and gives the best (but slowest) compression;
 0 gives the least (but fastest) compression. The compression
 level can be selected using the
@@ -408,7 +408,7 @@ output files, however
 will copy input file "comments" (which can be used to hold Replay
 Gain information) to output files that
 support comments, so FLAC output files may contain Replay Gain
-information if some was present in the input file.  In this case the
+information if some was present in the input file. In this case the
 Replay Gain information in the output file is likely to be incorrect and so should
 be recalculated using a tool that supports this (not
 .B SoX
@@ -417,7 +417,7 @@ be recalculated using a tool that supports this (not
 .ti +3
 FLAC support in
 .B SoX
-is optional and requires access to external FLAC libraries.  To
+is optional and requires optional FLAC libraries.  To
 see if there is support for FLAC run \fBsox -h\fR and look for
 it under the list of supported file formats as "flac".
 .TP 10
@@ -755,29 +755,25 @@ the audio signal using a two-pole shelving filter with (by
 default) a response similar to that of a standard hi-fi's
 (Baxandall) tone controls.
 
-\fIgain\fR is a negative or positive number that specifies the
-dB gain at 0Hz (for \fIbass\fR), or whichever is the lower of
-~22kHz and the Nyquist frequency (for \fItreble\fR).  Its useful
-range is about -20.0 (for a large cut) to +20.0 (for a large
-boost).
-.br
-   N.B. When using a positive \fIgain\fR, in order to prevent
-clipping, it may be necessary to precede this effect with a
-suitable attenuation using the \fI-v\fR option or the \fIvol\fR
-effect.  SoX will display a warning message should clipping
-occur.
+\fIgain\fR gives the dB gain at 0Hz (for \fIbass\fR), or whichever is
+the lower of ~22kHz and the Nyquist frequency (for \fItreble\fR). Its
+useful range is about -20.0 (for a large cut) to +20.0 (for a large
+boost). N.B. When using a positive \fIgain\fR, in order to prevent
+clipping, it may be necessary to precede this effect with a suitable
+attenuation using the \fI-v\fR option or the \fIvol\fR effect. SoX
+will display a warning message should clipping occur.
 
 If desired, the filter can be fine-tuned using the following
 optional parameters (in either order):
 
-\fIfrequency\fR sets the filter's centre frequency and so can be
+\fIfrequency\fR sets the filter's center frequency and so can be
 used to extend or reduce the frequency range to be boosted or
 cut. The default value is 100Hz (for \fIbass\fR) or 3kHz (for
 \fItreble\fR).
 
-\fIslope\fR is a number between 0 and 1.0 that determines how
+\fIslope\fR is a number between 0 and 1 that determines how
 steep the filter's shelf transition is.  Its useful range is
-about 0.3 (for a gentle slope) to 1.0 (for a steep slope).  The
+about 0.3 (for a gentle slope) to 1 (for a steep slope).  The
 default value is 0.5.
 
 The \fIbass\fR and \fItreble\fR effects support the \fI-o\fR
