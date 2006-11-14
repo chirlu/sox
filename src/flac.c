@@ -3,7 +3,7 @@
  *
  * Support for FLAC input and rudimentary support for FLAC output.
  *
- * This implementation (c) 2006 aquegg
+ * (c) 2006 robs@users.sourceforge.net
  *
  * See LICENSE file for further copyright information.
  */
@@ -114,7 +114,7 @@ static void FLAC__decoder_error_callback(FLAC__FileDecoder const * const flac, F
 
   (void) flac;
 
-  st_fail_errno(format, ST_EINVAL, "FLAC ERROR %i: %s", status, FLAC__StreamDecoderErrorStatusString[status]);
+  st_fail_errno(format, ST_EINVAL, "%s", FLAC__StreamDecoderErrorStatusString[status]);
 }
 
 
@@ -272,6 +272,7 @@ void flac_stream_encoder_metadata_callback(FLAC__StreamEncoder const * encoder, 
 static int st_format_start_write(ft_t const format)
 {
   Encoder * encoder = (Encoder *) format->priv;
+  FLAC__StreamEncoderState status;
 
   memset(encoder, 0, sizeof(*encoder));
   encoder->flac = FLAC__stream_encoder_new();
@@ -318,15 +319,20 @@ static int st_format_start_write(ft_t const format)
       }
     }
 
-#define SET_OPTION(x) st_report("FLAC "#x" = %i", options[compression_level].x); \
-    FLAC__stream_encoder_set_##x(encoder->flac, options[compression_level].x)
+#define SET_OPTION(x) do {\
+  st_report("FLAC "#x" = %i", options[compression_level].x); \
+  FLAC__stream_encoder_set_##x(encoder->flac, options[compression_level].x);\
+} while (0)
     SET_OPTION(blocksize);
     SET_OPTION(do_exhaustive_model_search);
-    SET_OPTION(do_mid_side_stereo);
-    SET_OPTION(loose_mid_side_stereo);
     SET_OPTION(max_lpc_order);
     SET_OPTION(max_residual_partition_order);
     SET_OPTION(min_residual_partition_order);
+    if (format->info.channels == 2)
+    {
+      SET_OPTION(do_mid_side_stereo);
+      SET_OPTION(loose_mid_side_stereo);
+    }
 #undef SET_OPTION
   }
 
@@ -336,6 +342,22 @@ static int st_format_start_write(ft_t const format)
   FLAC__stream_encoder_set_channels(encoder->flac, format->info.channels);
   FLAC__stream_encoder_set_bits_per_sample(encoder->flac, encoder->bits_per_sample);
   FLAC__stream_encoder_set_sample_rate(encoder->flac, format->info.rate);
+
+  { /* Check if rate is streamable: */
+    static const unsigned streamable_rates[] =
+      {8000, 16000, 22050, 24000, 32000, 44100, 48000, 96000};
+    int i;
+    bool streamable = false;
+    for (i = 0; !streamable && i < array_length(streamable_rates); ++i)
+    {
+       streamable = (streamable_rates[i] == format->info.rate);
+    }
+    if (!streamable)
+    {
+      st_warn("FLAC: non-standard rate; output may not be streamable");
+      FLAC__stream_encoder_set_streamable_subset(encoder->flac, false);
+    }
+  }
 
   if (format->length != 0)
   {
@@ -395,9 +417,10 @@ static int st_format_start_write(ft_t const format)
   FLAC__stream_encoder_set_metadata_callback(encoder->flac, flac_stream_encoder_metadata_callback);
   FLAC__stream_encoder_set_client_data(encoder->flac, format);
 
-  if (FLAC__stream_encoder_init(encoder->flac) != FLAC__STREAM_ENCODER_OK)
+  status = FLAC__stream_encoder_init(encoder->flac);
+  if (status != FLAC__STREAM_ENCODER_OK)
   {
-    st_fail_errno(format, ST_EHDR, "FLAC ERROR initialising encoder");
+    st_fail_errno(format, ST_EINVAL, "%s", FLAC__StreamEncoderStateString[status]);
     return ST_EOF;
   }
   return ST_SUCCESS;
