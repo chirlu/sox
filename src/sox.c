@@ -869,7 +869,7 @@ static void parse_effects(int argc, char **argv)
     {
         if (nuser_effects >= MAX_USER_EFF)
         {
-            st_fail("To many effects specified.\n");
+            st_fail("Too many effects specified.\n");
             cleanup();
             exit(2);
         }
