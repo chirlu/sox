@@ -1,0 +1,354 @@
+/*
+ * xa.c  Support for Maxis .XA file format
+ * 
+ *      Copyright (C) 2006 Dwayne C. Litzenberger <dlitz@dlitz.net>
+ *
+ *   This library is free software; you can redistribute it and/or
+ *   modify it under the terms of the GNU Library General Public
+ *   License as published by the Free Software Foundation; either
+ *   version 2 of the License, or (at your option) any later version.
+ *
+ *   This library is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *   Library General Public License for more details.
+ *
+ *   You should have received a copy of the GNU Library General Public
+ *   License along with this library; if not, write to the Free Software
+ *   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA  02110-1301
+ *   USA
+ *
+ */
+
+/* Thanks to Valery V. Anisimovsky <samael@avn.mccme.ru> for the 
+ * "Maxis XA Audio File Format Description", dated 5-01-2002. */
+
+#include <string.h>             /* Included for strncmp */
+#include <stdlib.h>             /* Included for malloc and free */
+#include <stdio.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>             /* For SEEK_* defines if not found in stdio */
+#endif
+
+#include "st_i.h"
+
+#define HNIBBLE(byte) (((byte) >> 4) & 0xf)
+#define LNIBBLE(byte) ((byte) & 0xf)
+
+/* .xa file header */
+typedef struct {
+    char magic[4];  /* "XA\0\0", "XAI\0" (sound/speech), or "XAJ\0" (music) */
+    uint32_t outSize;       /* decompressed size of the stream (in bytes) */
+
+    /* WAVEFORMATEX structure for the decompressed data */
+    uint16_t tag;           /* 0x0001 - PCM data */
+    uint16_t channels;      /* number of channels */
+    uint32_t sampleRate;    /* sample rate (samples/sec) */
+    uint32_t avgByteRate;   /* sampleRate * align */
+    uint16_t align;         /* bits / 8 * channels */
+    uint16_t bits;          /* 8 or 16 */
+} xa_header_t;
+
+typedef struct {
+    int32_t curSample;      /* current sample */
+    int32_t prevSample;     /* previous sample */
+    int32_t c1;
+    int32_t c2;
+    unsigned int shift;
+} xa_state_t;
+
+/* Private data for .xa file */
+typedef struct xastuff {
+    xa_header_t header;
+    xa_state_t *state;
+    unsigned int blockSize;
+    unsigned int bufPos;    /* position within the current block */
+    unsigned char *buf;     /* buffer for the current block */
+    unsigned int bytesDecoded;  /* number of decompressed bytes read */
+} *xa_t;
+
+/* coefficients for EA ADPCM */
+static int32_t EA_ADPCM_Table[]= {
+    0, 240,  460,  392,
+    0,   0, -208, -220,
+    0,   1,    3,    4,
+    7,   8,   10,   11,
+    0,  -1,   -3,   -4
+};
+
+/* Clip sample to 16 bits */
+static inline int32_t clip16(int32_t sample)
+{
+    if (sample > 32767) {
+        return 32767;
+    } else if (sample < -32768) {
+        return -32768;
+    } else {
+        return sample;
+    }
+}
+
+static int st_xastartread(ft_t ft)
+{
+    xa_t xa = (xa_t) ft->priv;
+    char *magic = xa->header.magic;
+
+    /* Check for the magic value */
+    if (st_readbuf(ft, xa->header.magic, 1, 4) != 4 ||
+        (memcmp("XA\0\0", xa->header.magic, 4) != 0 &&
+         memcmp("XAI\0", xa->header.magic, 4) != 0 &&
+         memcmp("XAJ\0", xa->header.magic, 4) != 0))
+    {
+        st_fail_errno(ft, ST_EHDR, "XA: Header not found");
+        return ST_EOF;
+    }
+    
+    /* Byte-swap on big-endian systems */
+    if (ST_IS_BIGENDIAN) ft->swap = ft->swap ? 0 : 1;
+
+    /* Read the rest of the header */
+    if (st_readdw(ft, &xa->header.outSize) != ST_SUCCESS) return ST_EOF;
+    if (st_readw(ft, &xa->header.tag) != ST_SUCCESS) return ST_EOF;
+    if (st_readw(ft, &xa->header.channels) != ST_SUCCESS) return ST_EOF;
+    if (st_readdw(ft, &xa->header.sampleRate) != ST_SUCCESS) return ST_EOF;
+    if (st_readdw(ft, &xa->header.avgByteRate) != ST_SUCCESS) return ST_EOF;
+    if (st_readw(ft, &xa->header.align) != ST_SUCCESS) return ST_EOF;
+    if (st_readw(ft, &xa->header.bits) != ST_SUCCESS) return ST_EOF;
+
+    /* Output the data from the header */
+    st_report("XA Header:");
+    st_report(" szID:          %02x %02x %02x %02x  |%c%c%c%c|",
+        magic[0], magic[1], magic[2], magic[3],
+        (magic[0] >= 0x20 && magic[0] <= 0x7e) ? magic[0] : '.',
+        (magic[1] >= 0x20 && magic[1] <= 0x7e) ? magic[1] : '.',
+        (magic[2] >= 0x20 && magic[2] <= 0x7e) ? magic[2] : '.',
+        (magic[3] >= 0x20 && magic[3] <= 0x7e) ? magic[3] : '.');
+    st_report(" dwOutSize:     %u", xa->header.outSize);
+    st_report(" wTag:          0x%04x", xa->header.tag);
+    st_report(" wChannels:     %u", xa->header.channels);
+    st_report(" dwSampleRate:  %u", xa->header.sampleRate);
+    st_report(" dwAvgByteRate: %u", xa->header.avgByteRate);
+    st_report(" wAlign:        %u", xa->header.align);
+    st_report(" wBits:         %u", xa->header.bits);
+
+    /* Populate the st_soundstream structure */
+    ft->info.encoding = ST_ENCODING_SIGN2;
+    
+    if (ft->info.size == -1 || ft->info.size == (xa->header.bits >> 3)) {
+        ft->info.size = xa->header.bits >> 3;
+    } else {
+        st_report("User options overriding size read in .xa header");
+    }
+    
+    if (ft->info.channels == -1 || ft->info.channels == xa->header.channels) {
+        ft->info.channels = xa->header.channels;
+    } else {
+        st_report("User options overriding channels read in .xa header");
+    }
+    
+    if (ft->info.rate == 0 || ft->info.rate == xa->header.sampleRate) {
+        ft->info.rate = xa->header.sampleRate;
+    } else {
+        st_report("User options overriding rate read in .xa header");
+    }
+    
+    /* Check for supported formats */
+    if (ft->info.size != 2) {
+        st_fail_errno(ft, ST_EFMT, "%d-bit sample resolution not supported.",
+            ft->info.size << 3);
+        return ST_EOF;
+    }
+    
+    /* Validate the header */
+    if (xa->header.bits != ft->info.size << 3) {
+        st_report("Invalid sample resolution %d bits.  Assuming %d bits.",
+            xa->header.bits, ft->info.size << 3);
+        xa->header.bits = ft->info.size << 3;
+    }
+    if (xa->header.align != ft->info.size * xa->header.channels) {
+        st_report("Invalid sample alignment value %d.  Assuming %d.",
+            xa->header.align, ft->info.size * xa->header.channels);
+        xa->header.align = ft->info.size * xa->header.channels;
+    }
+    if (xa->header.avgByteRate != (xa->header.align * xa->header.sampleRate)) {
+        st_report("Invalid dwAvgByteRate value %d.  Assuming %d.",
+            xa->header.avgByteRate, xa->header.align * xa->header.sampleRate);
+        xa->header.avgByteRate = xa->header.align * xa->header.sampleRate;
+    }
+
+    /* Set up the block buffer */
+    xa->blockSize = ft->info.channels * 0xf;
+    xa->bufPos = xa->blockSize;
+
+    /* Allocate memory for the block buffer */
+    xa->buf = (unsigned char *) calloc(1, xa->blockSize);
+    if (xa->buf == NULL) {
+        st_fail_errno(ft, ST_ENOMEM, "Unable to allocate block buffer");
+        return ST_EOF;
+    }
+    
+    /* Allocate memory for the state */
+    xa->state = (xa_state_t *) calloc(sizeof(xa_state_t), ft->info.channels);
+    if (xa->state == NULL) {
+        /* Free xa->buf */
+        free(xa->buf);
+        xa->buf = NULL;
+        
+        /* Return error */
+        st_fail_errno(ft, ST_ENOMEM, "Unable to allocate state variables");
+        return ST_EOF;
+    }
+    
+    /* Final initialization */
+    xa->bytesDecoded = 0;
+    
+    return ST_SUCCESS;
+}
+
+/* 
+ * Read up to len samples from a file, converted to signed longs.
+ * Return the number of samples read.
+ */
+static st_ssize_t st_xaread(ft_t ft, st_sample_t *buf, st_ssize_t len)
+{
+    xa_t xa = (xa_t) ft->priv;
+    st_ssize_t done;
+    st_ssize_t bytes;
+    int32_t sample;
+    unsigned char inByte;
+    unsigned int i;
+
+    ft->st_errno = ST_SUCCESS;
+    done = 0;
+    while (done < len) {
+        if (xa->bufPos >= xa->blockSize) {
+            /* Read the next block */
+            bytes = st_readbuf(ft, xa->buf, 1, xa->blockSize);
+            if (bytes < xa->blockSize) {
+                if (st_eof(ft)) {
+                    if (done > 0) {
+                        return done;
+                    }
+                    st_fail_errno(ft,ST_EOF,"Premature EOF on .xa input file");
+                    return ST_EOF;
+                } else {
+                    /* error */
+                    st_fail_errno(ft,ST_EOF,"read error on input stream");
+                    return ST_EOF;
+                }
+            }
+            xa->bufPos = 0;
+            
+            for (i = 0; i < ft->info.channels; i++) {
+                inByte = xa->buf[i];
+                xa->state[i].c1 = EA_ADPCM_Table[HNIBBLE(inByte)];
+                xa->state[i].c2 = EA_ADPCM_Table[HNIBBLE(inByte) + 4];
+                xa->state[i].shift = LNIBBLE(inByte) + 8;
+            }
+            xa->bufPos += ft->info.channels;
+        } else {
+            /* Process the block */
+            for (i = 0; i < ft->info.channels && done < len; i++) {
+                /* high nibble */
+                sample = HNIBBLE(xa->buf[xa->bufPos+i]);
+                sample = (sample << 28) >> xa->state[i].shift;
+                sample = (sample +
+                          xa->state[i].curSample * xa->state[i].c1 +
+                          xa->state[i].prevSample * xa->state[i].c2 + 0x80) >> 8;
+                sample = clip16(sample);
+                xa->state[i].prevSample = xa->state[i].curSample;
+                xa->state[i].curSample = sample;
+                
+                buf[done++] = ST_SIGNED_WORD_TO_SAMPLE(sample);
+                xa->bytesDecoded += ft->info.size;
+            }
+            for (i = 0; i < ft->info.channels && done < len; i++) {
+                /* low nibble */
+                sample = LNIBBLE(xa->buf[xa->bufPos+i]);
+                sample = (sample << 28) >> xa->state[i].shift;
+                sample = (sample +
+                          xa->state[i].curSample * xa->state[i].c1 +
+                          xa->state[i].prevSample * xa->state[i].c2 + 0x80) >> 8;
+                sample = clip16(sample);
+                xa->state[i].prevSample = xa->state[i].curSample;
+                xa->state[i].curSample = sample;
+                
+                buf[done++] = ST_SIGNED_WORD_TO_SAMPLE(sample);
+                xa->bytesDecoded += ft->info.size;
+            }
+
+            xa->bufPos += ft->info.channels;
+        }
+    }
+    if (done == 0) {
+        return ST_EOF;
+    }
+    return done;
+}
+
+static int st_xastopread(ft_t ft)
+{
+    xa_t xa = (xa_t) ft->priv;
+
+    ft->st_errno = ST_SUCCESS;
+
+    /* Free memory */
+    if (xa->buf != NULL) {
+        free(xa->buf);
+        xa->buf = NULL;
+    }
+    if (xa->state != NULL) {
+        free(xa->state);
+        xa->state = NULL;
+    }
+    
+    return ST_SUCCESS;
+}
+
+static int st_xastartwrite(ft_t ft)
+{
+    st_fail_errno(ft, ST_ENOTSUP, ".XA writing not supported");
+    return ST_EOF;
+}
+
+static st_ssize_t st_xawrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
+{
+    st_fail_errno(ft, ST_ENOTSUP, ".XA writing not supported");
+    return ST_EOF;
+}
+
+static int st_xastopwrite(ft_t ft)
+{
+    st_fail_errno(ft, ST_ENOTSUP, ".XA writing not supported");
+    return ST_EOF;
+}
+
+static int st_xaseek(ft_t ft, st_size_t offset)
+{
+    return st_format_nothing_seek(ft, offset);
+}
+
+/* Maxis .xa */
+static char *xanames[] = {
+    "xa",
+    NULL
+};
+
+st_format_t st_xa_format = {
+  xanames,
+  NULL,
+  ST_FILE_STEREO,
+  st_xastartread,
+  st_xaread,
+  st_xastopread,
+  st_xastartwrite,
+  st_xawrite,
+  st_xastopwrite,
+  st_xaseek
+};
+
+const st_format_t *st_xa_format_fn(void)
+{
+  return &st_xa_format;
+}
