@@ -26,6 +26,7 @@ sox-12.18.3
   o Allow the rate and number of channels of .au files to be overridden
     by command-line arguments. (robs@users.sf.net)
   o More and better self-tests. (robs@users.sf.net)
+  o Support Maxis's XA format. (Dwayne C. Litzenberger)
 
 sox-12.18.2
 -----------

@@ -69,6 +69,7 @@ st_format_fn_t st_format_fns[] = {
   st_vox_format_fn,
   st_wav_format_fn,
   st_wve_format_fn,
+  st_xa_format_fn,
   NULL
 };
 

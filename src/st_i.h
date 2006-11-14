@@ -202,6 +202,7 @@ extern const st_format_t *st_vorbis_format_fn(void);
 extern const st_format_t *st_vox_format_fn(void);
 extern const st_format_t *st_wav_format_fn(void);
 extern const st_format_t *st_wve_format_fn(void);
+extern const st_format_t *st_xa_format_fn(void);
 
 /* Raw I/O
  */

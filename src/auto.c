@@ -131,6 +131,12 @@ int st_autostartread(ft_t ft)
             {
                 type = "flac";
             }
+            else if ((memcmp(header, "XAI\0", 4) == 0) ||
+                     (memcmp(header, "XAJ\0", 4) == 0) ||
+                     (memcmp(header, "XA\0\0", 4) == 0))
+            {
+                type = "xa";
+            }
         } /* read 4-byte header */
 
         /* If we didn't find type yet then start looking for file

@@ -41,6 +41,8 @@ This release understands:
     o GSM
     o RIFX (big endian)
   o Psion (palmtop) A-law WVE files and Record voice notes
+  o Maxis XA Audio files
+    o EA ADPCM (read support only, for now)
   o Pseudo-file formats that allow direct playing/recording
     from some audio devices under UNIX.
   o Pseudo-nul file that reads and writes from/to nowhere
