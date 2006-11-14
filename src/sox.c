@@ -175,7 +175,7 @@ int main(int argc, char **argv)
     {
         if (file_count >= MAX_FILES)
         {
-            st_fail("to many filenames. max of %d input files and 1 output files\n", MAX_INPUT_FILES);
+            st_fail("to many filenames. max of %d input files and 1 output file\n", MAX_INPUT_FILES);
             exit(1);
         }
 
