@@ -59,7 +59,7 @@ extern "C" {
  * input array, and that NumSamples must be a power of two.
  */
 
-void PowerSpectrum(int NumSamples, float *In, float *Out);
+void PowerSpectrum(int NumSamples, const float *In, float *Out);
 
 /*
  * Computes an FFT when the input data is real but you still
@@ -69,7 +69,7 @@ void PowerSpectrum(int NumSamples, float *In, float *Out);
  */
 
 void RealFFT(int NumSamples,
-             float *RealIn, float *RealOut, float *ImagOut);
+             const float *RealIn, float *RealOut, float *ImagOut);
 
 /*
  * Computes a FFT of complex input and returns complex output.
@@ -79,7 +79,7 @@ void RealFFT(int NumSamples,
 
 void FFT(int NumSamples,
          int InverseTransform,
-         float *RealIn, float *ImagIn, float *RealOut, float *ImagOut);
+         const float *RealIn, float *ImagIn, float *RealOut, float *ImagOut);
 
 /*
  * Applies a windowing function to the data in place

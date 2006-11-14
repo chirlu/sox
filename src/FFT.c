@@ -121,7 +121,7 @@ void InitFFT()
 
 void FFT(int NumSamples,
          int InverseTransform,
-         float *RealIn, float *ImagIn, float *RealOut, float *ImagOut)
+         const float *RealIn, float *ImagIn, float *RealOut, float *ImagOut)
 {
    int NumBits;                 /* Number of bits needed to store indices */
    int i, j, k, n;
@@ -229,7 +229,7 @@ void FFT(int NumSamples,
  * i4  <->  imag[n/2-i]
  */
 
-void RealFFT(int NumSamples, float *RealIn, float *RealOut, float *ImagOut)
+void RealFFT(int NumSamples, const float *RealIn, float *RealOut, float *ImagOut)
 {
    int Half = NumSamples / 2;
    int i;
@@ -294,7 +294,7 @@ void RealFFT(int NumSamples, float *RealIn, float *RealOut, float *ImagOut)
  * of its code.
  */
 
-void PowerSpectrum(int NumSamples, float *In, float *Out)
+void PowerSpectrum(int NumSamples, const float *In, float *Out)
 {
   int Half, i, i3;
   float theta, wtemp, wpr, wpi, wr, wi;
