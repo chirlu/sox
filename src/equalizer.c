@@ -124,6 +124,26 @@ int st_equalizer_start(eff_t effp)
   eq->y[1] = 0; // y[n-1]
   eq->y[2] = 0; // y[n-2]
 
+  if (effp->globalinfo.octave_plot_effect)
+  {
+    printf(
+      "title('SoX effect: %s gain=%g centre=%g Q=%g (rate=%u)')\n"
+      "xlabel('Frequency (Hz)')\n"
+      "ylabel('Amplitude Response (dB)')\n"
+      "Fs=%u;minF=10;maxF=Fs/2;\n"
+      "axis([minF maxF -25 25])\n"
+      "sweepF=logspace(log10(minF),log10(maxF),200);\n"
+      "grid on\n"
+      "[h,w]=freqz([%f %f %f],[%f %f %f],sweepF,Fs);\n"
+      "semilogx(w,20*log10(h),'b')\n"
+      "pause\n"
+      , effp->name, eq->gain, eq->cfreq, eq->Q
+      , effp->ininfo.rate, effp->ininfo.rate
+      , eq->b[0], eq->b[1], eq->b[2], eq->a[0], eq->a[1], eq->a[2]
+      );
+    exit(0);
+  }
+
   return (ST_SUCCESS);
 }
 
