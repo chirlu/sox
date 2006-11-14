@@ -6,7 +6,7 @@
  *
  * Filter design by Robert Bristow-Johnson  <rbj@audioimagination.com>
  *
- * This implementation (c) 2006 aquegg
+ * This implementation (c) 2006 robs@users.sourceforge.net
  *
  * See LICENSE file for further copyright information.
  */
