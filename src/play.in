@@ -93,7 +93,7 @@ formats, and effect options."
 # loop over arguments
 while [ $# -ne 0 ]; do
     case "$1" in
-	avg|band|bandpass|bandreject|chorus|compand|copy|cut|deemph|earwax|echo|echos|fade|filter|flanger|highp|highpass|lowp|lowpass|map|mask|mcompand|noiseprof|noisered|pan|phaser|pick|pitch|polyphase|rate|repeat|resample|reverb|reverse|silence|speed|split|stat|stretch|swap|trim|vibro|vol)
+	avg|band|bandpass|bandreject|bass|chorus|compand|copy|cut|deemph|earwax|echo|echos|fade|filter|flanger|highp|highpass|lowp|lowpass|map|mask|mcompand|noiseprof|noisered|pan|phaser|pick|pitch|polyphase|rate|repeat|resample|reverb|reverse|silence|speed|split|stat|stretch|swap|treble|trim|vibro|vol)
 	    effects="$@"
 	    break
 	    ;;

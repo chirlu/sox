@@ -23,6 +23,7 @@ tx16w.obj voc.obj vorbis.obj vox.obj wav.obj wve.obj
 
 EOBJ = avg.obj band.obj bandpass.obj breject.obj btrworth.obj chorus.obj &
 compand.obj copy.obj dcshift.obj deemphas.obj earwax.obj echo.obj echos.obj &
+biquad.obj tone.obj &
 fade.obj FFT.obj filter.obj flanger.obj highp.obj highpass.obj lowp.obj &
 lowpass.obj mask.obj mcompand.obj noiseprof.obj noisered.obj phaser.obj &
 pitch.obj pan.obj polyphas.obj rate.obj repeat.obj resample.obj reverb.obj &

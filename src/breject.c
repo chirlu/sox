@@ -76,6 +76,7 @@ int st_bandreject_start(eff_t effp)
 
   butterworth->b [0] = butterworth->a[1];
   butterworth->b [1] = (1.0 - c) * butterworth->a[0];
+  st_butterworth_plot(effp);
   return (ST_SUCCESS);
 }
 

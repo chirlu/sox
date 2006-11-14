@@ -106,6 +106,27 @@ int st_band_start(eff_t effp)
         else
                 band->A = sqrt(1-band->B*band->B/(4*band->C))*(1-band->C);
         band->out1 = band->out2 = 0.0;
+        if (effp->globalinfo.octave_plot_effect)
+        {
+          printf(
+            "title('SoX effect: %s centre=%g width=%g (rate=%u)')\n"
+            "xlabel('Frequency (Hz)')\n"
+            "ylabel('Amplitude Response (dB)')\n"
+            "Fs=%u;minF=10;maxF=Fs/2;\n"
+            "axis([minF maxF -75 25])\n"
+            "sweepF=logspace(log10(minF),log10(maxF),200);\n"
+            "grid on\n"
+            "[h,w]=freqz([%f 0 0],[1 %f %f],sweepF,Fs);\n"
+            "semilogx(w,20*log10(h),'b')\n"
+            "pause\n"
+            , effp->name, band->center, band->width
+            , effp->ininfo.rate, effp->ininfo.rate
+            , band->A
+            , band->B
+            , band->C
+            );
+          exit(0);
+        }
         return (ST_SUCCESS);
 }
 

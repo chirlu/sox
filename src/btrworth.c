@@ -47,6 +47,35 @@ int st_butterworth_start (eff_t effp)
   return (ST_SUCCESS);
 }
 
+void st_butterworth_plot (eff_t effp)
+{
+  butterworth_t butterworth = (butterworth_t) effp->priv;
+
+  if (effp->globalinfo.octave_plot_effect)
+  {
+    printf(
+      "title('SoX effect: %s centre=%g width=%g (rate=%u)')\n"
+      "xlabel('Frequency (Hz)')\n"
+      "ylabel('Amplitude Response (dB)')\n"
+      "Fs=%u;minF=10;maxF=Fs/2;\n"
+      "axis([minF maxF -95 5])\n"
+      "sweepF=logspace(log10(minF),log10(maxF),200);\n"
+      "grid on\n"
+      "[h,w]=freqz([%f %f %f],[1 %f %f],sweepF,Fs);\n"
+      "semilogx(w,20*log10(h),'b')\n"
+      "pause\n"
+      , effp->name, butterworth->frequency, butterworth->bandwidth
+      , effp->ininfo.rate, effp->ininfo.rate
+      , butterworth->a[0]
+      , butterworth->a[1]
+      , butterworth->a[2]
+      , butterworth->b[0]
+      , butterworth->b[1]
+      );
+    exit(0);
+  }
+}
+
 int st_butterworth_flow (eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
                          st_size_t *isamp, st_size_t *osamp)
 {

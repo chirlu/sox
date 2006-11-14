@@ -130,6 +130,11 @@ int st_deemph_getopts(eff_t effp, int n, char **argv)
      return (ST_SUCCESS);
 }
 
+/* filter coefficients */
+#define a1      -0.62786881719628784282
+#define b0      0.45995451989513153057
+#define b1      -0.08782333709141937339
+
 /*
  * Prepare processing.
  * Do all initializations.
@@ -158,6 +163,25 @@ int st_deemph_start(eff_t effp)
           deemph->lastin = 0;
           deemph->lastout = 0.0;
      }
+     if (effp->globalinfo.octave_plot_effect)
+     {
+       printf(
+         "title('SoX effect: %s (rate=%u)')\n"
+         "xlabel('Frequency (Hz)')\n"
+         "ylabel('Amplitude Response (dB)')\n"
+         "Fs=%u;minF=10;maxF=Fs/2;\n"
+         "axis([minF maxF -25 25])\n"
+         "sweepF=logspace(log10(minF),log10(maxF),200);\n"
+         "grid on\n"
+         "[h,w]=freqz([%f %f],[1 %f],sweepF,Fs);\n"
+         "semilogx(w,20*log10(h),'b')\n"
+         "pause\n"
+         , effp->name
+         , effp->ininfo.rate, effp->ininfo.rate
+         , b0, b1, a1
+         );
+       exit(0);
+     }
      return (ST_SUCCESS);
 }
 
@@ -165,11 +189,6 @@ int st_deemph_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-/* filter coefficients */
-#define a1      -0.62786881719628784282
-#define b0      0.45995451989513153057
-#define b1      -0.08782333709141937339
 
 int st_deemph_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
                    st_size_t *isamp, st_size_t *osamp)

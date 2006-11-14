@@ -69,6 +69,26 @@ int st_lowp_start(eff_t effp)
         lowp->B = exp((-2.0 * M_PI * (lowp->cutoff / effp->ininfo.rate)));
         lowp->A = 1 - lowp->B;
         lowp->outm1 = 0.0;
+
+        if (effp->globalinfo.octave_plot_effect)
+        {
+          printf(
+            "title('SoX effect: %s cutoff=%g (rate=%u)')\n"
+            "xlabel('Frequency (Hz)')\n"
+            "ylabel('Amplitude Response (dB)')\n"
+            "Fs=%u;minF=10;maxF=Fs/2;\n"
+            "axis([minF maxF -95 5])\n"
+            "sweepF=logspace(log10(minF),log10(maxF),200);\n"
+            "grid on\n"
+            "[h,w]=freqz([%f 0],[1 %f],sweepF,Fs);\n"
+            "semilogx(w,20*log10(h),'b')\n"
+            "pause\n"
+            , effp->name, lowp->cutoff
+            , effp->ininfo.rate, effp->ininfo.rate
+            , lowp->A, -lowp->B
+            );
+          exit(0);
+        }
         return (ST_SUCCESS);
 }
 

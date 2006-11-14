@@ -125,6 +125,18 @@ Same as \fB-h\fR
 Prints usage information on the specified effect.  The name
 \fBall\fR can be used to disable usage on all effects.
 .TP 10
+\fB-o\fR
+Run in a mode that can be used, in conjunction with the GNU
+Octave program, to assist with the selection and configuration
+of many of the filtering effects.  For the first given effect
+that supports the \fI-o\fR option, SoX will output Octave
+commands to plot the effect's transfer function, and then exit
+without actually processing any audio.  E.g.
+
+	sox -o input-file -e highpass 1320 > plot.m
+.br
+	octave plot.m
+.TP 10
 \fB-p\fR
 Run in preview mode and run fast.  This will somewhat speed up
 SoX when the output format has a different number of channels and
@@ -322,6 +334,15 @@ The latter are probably original SUN u-law 8000 Hz samples.
 These can be dealt with using the 
 .B .ul
 format (see below).
+.br
+   It is possible to override .au file header information
+with the
+.B -r
+and
+.B -c
+options, in which case 
+.I SoX
+will issue a warning to that effect.
 .TP 10
 .B .avr
 Audio Visual Research.
@@ -705,12 +726,56 @@ i.e. peaking at the
 .I center
 frequency and settling around it.
 See \fBfilter\fR for a bandpass effect with steeper shoulders.
+
+This effect supports the \fI-o\fR option (see above).
+
 .TP 10
 bandpass \fIfrequency bandwidth\fB
 Butterworth bandpass filter. Description coming soon!
+
+This effect supports the \fI-o\fR option (see above).
+
 .TP 10
 bandreject \fIfrequency bandwidth\fB
 Butterworth bandreject filter.  Description coming soon!
+
+This effect supports the \fI-o\fR option (see above).
+
+.TP 10
+bass|treble \fIgain\fR [\fIfrequency\fR] [\fIslope\fR]
+Boost or cut the bass (lower) or treble (upper) frequencies of
+the audio signal using a two-pole shelving filter with (by
+default) a response similar to that of a standard hi-fi's
+(Baxandall) tone controls.
+
+\fIgain\fR is a negative or positive number that specifies the
+dB gain at 0Hz (for \fIbass\fR), or whichever is the lower of
+~22kHz and the Nyquist frequency (for \fItreble\fR).  Its useful
+range is about -20.0 (for a large cut) to +20.0 (for a large
+boost).
+.br
+   N.B. When using a positive \fIgain\fR, in order to prevent
+clipping, it may be necessary to precede this effect with a
+suitable attenuation using the \fI-v\fR option or the \fIvol\fR
+effect.  SoX will display a warning message should clipping
+occur.
+
+If desired, the filter can be fine-tuned using the following
+optional parameters (in either order):
+
+\fIfrequency\fR sets the filter's centre frequency and so can be
+used to extend or reduce the frequency range to be boosted or
+cut. The default value is 100Hz (for \fIbass\fR) or 3kHz (for
+\fItreble\fR).
+
+\fIslope\fR is a number between 0 and 1.0 that determines how
+steep the filter's shelf transition is.  Its useful range is
+about 0.3 (for a gentle slope) to 1.0 (for a steep slope).  The
+default value is 0.5.
+
+The \fIbass\fR and \fItreble\fR effects support the \fI-o\fR
+option (see above).
+
 .TP
 chorus \fIgain-in gain-out delay decay speed depth 
 .TP 10
@@ -780,6 +845,9 @@ Apply a treble attenuation shelving filter to samples in
 audio CD format.  The frequency response of pre-emphasized
 recordings is rectified.  The filtering is defined in the
 standard document ISO 908.
+
+This effect supports the \fI-o\fR option (see above).
+
 .TP 10
 earwax
 Makes sound easier to listen to on headphones.
@@ -856,9 +924,15 @@ I frequency
 in the middle of the drop.
 The slope of the filter is quite gentle.
 See \fBfilter\fR for a highpass effect with sharper cutoff.
+
+This effect supports the \fI-o\fR option (see above).
+
 .TP 10
 highpass \fIfrequency\fB
 Butterworth highpass filter.  Description coming soon!
+
+This effect supports the \fI-o\fR option (see above).
+
 .TP 10
 lowp \fIfrequency\fR
 Apply a single pole recursive low-pass filter.
@@ -867,9 +941,15 @@ The frequency response drops logarithmically with
 in the middle of the drop.
 The slope of the filter is quite gentle.
 See \fBfilter\fR for a lowpass effect with sharper cutoff.
+
+This effect supports the \fI-o\fR option (see above).
+
 .TP 10
 lowpass \fIfrequency\fB
 Butterworth lowpass filter.  Description coming soon!
+
+This effect supports the \fI-o\fR option (see above).
+
 .TP 10
 mask
 Add "masking noise" to signal.
@@ -1295,6 +1375,10 @@ half notes in respect to A (440Hz)
 \fIp2\fR trapezium: ON time (0..100)
 
 \fIp3\fR trapezium: falling slope position (0..100)
+.TP 10
+treble \fIgain\fR [\fIfrequency\fR] [\fIslope\fR]
+See the description of the \fIbass\fR effect for details.
+
 .TP 10
 trim \fIstart\fR [ \fIlength\fR ]
 Trim can trim off unwanted audio data from the beginning and end of the

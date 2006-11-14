@@ -73,6 +73,26 @@ int st_highp_start(eff_t effp)
         highp->A1 = (-1 * (1 + highp->B1)) / 2;
         highp->inm1 = 0.0;
         highp->outm1 = 0.0;
+
+        if (effp->globalinfo.octave_plot_effect)
+        {
+          printf(
+            "title('SoX effect: %s cutoff=%g (rate=%u)')\n"
+            "xlabel('Frequency (Hz)')\n"
+            "ylabel('Amplitude Response (dB)')\n"
+            "Fs=%u;minF=10;maxF=Fs/2;\n"
+            "axis([minF maxF -95 5])\n"
+            "sweepF=logspace(log10(minF),log10(maxF),200);\n"
+            "grid on\n"
+            "[h,w]=freqz([%f %f],[1 %f],sweepF,Fs);\n"
+            "semilogx(w,20*log10(h),'b')\n"
+            "pause\n"
+            , effp->name, highp->cutoff
+            , effp->ininfo.rate, effp->ininfo.rate
+            , highp->A0, highp->A1, -highp->B1
+            );
+          exit(0);
+        }
         return (ST_SUCCESS);
 }
 

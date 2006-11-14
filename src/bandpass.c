@@ -76,6 +76,7 @@ int st_bandpass_start (eff_t effp)
 
   butterworth->b [0] = -c * d * butterworth->a [0];
   butterworth->b [1] = (c - 1.0) * butterworth->a[0];
+  st_butterworth_plot(effp);
   return (ST_SUCCESS);
 }
 

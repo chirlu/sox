@@ -20,6 +20,12 @@ sox-12.18.3
   o Add FLAC support (robs@users.sf.net)
   o Allow encoding quality to be specified (works for Ogg too, but not
     MP3).
+  o bass and treble altering effects. (robs@users.sf.net)
+  o Visualisation of various filters' frequency response via Octave.
+    (robs@users.sf.net)
+  o Allow the rate and number of channels of .au files to be overridden
+    by command-line arguments. (robs@users.sf.net)
+  o More and better self-tests. (robs@users.sf.net)
 
 sox-12.18.2
 -----------

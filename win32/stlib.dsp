@@ -197,6 +197,14 @@ SOURCE=..\src\flanger.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\biquad.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\tone.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\g711.c
 # End Source File
 # Begin Source File

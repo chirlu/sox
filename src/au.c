@@ -233,13 +233,21 @@ int st_austartread(ft_t ft)
                 break;
         }
 
+
         /* Read the sampling rate */
         st_readdw(ft, &sample_rate);
-        ft->info.rate = sample_rate;
+        if (ft->info.rate == 0 || ft->info.rate == sample_rate)
+            ft->info.rate = sample_rate;
+        else
+            st_report("User options overriding rate read in .au header");
 
         /* Read the number of channels */
         st_readdw(ft, &channels);
-        ft->info.channels = (int) channels;
+        if (ft->info.channels == -1 || ft->info.channels == (int) channels)
+            ft->info.channels = (int) channels;
+        else
+            st_report("User options overriding channels read in .au header");
+
 
         /* Skip the info string in header; print it if verbose */
         hdr_size -= SUN_HDRSIZE; /* #bytes already read */

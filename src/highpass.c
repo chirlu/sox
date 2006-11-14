@@ -71,6 +71,7 @@ int st_highpass_start(eff_t effp)
 
   butterworth->b [0] = 2 * (c * c - 1.0) * butterworth->a[0];
   butterworth->b [1] = (1.0 - sqrt(2.0) * c + c * c) * butterworth->a [0];
+  st_butterworth_plot(effp);
   return (ST_SUCCESS);
 }
 

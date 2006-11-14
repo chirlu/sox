@@ -69,6 +69,7 @@
 static int clipped = 0;         /* Volume change clipping errors */
 static int writing = 1;         /* are we writing to a file? assume yes. */
 static int soxpreview = 0;      /* preview mode */
+static st_globalinfo_t globalinfo;
 
 static int user_abort = 0;
 
@@ -285,7 +286,7 @@ int main(int argc, char **argv)
     return(0);
 }
 
-static char *getoptstr = "+r:v:t:c:C:phsuUAaigbwlfdxVSq";
+static char *getoptstr = "+r:v:t:c:C:phsuUAaigbwlfdxVSqo";
 
 static struct option long_options[] =
 {
@@ -316,6 +317,10 @@ static void doopts(file_options_t *fo, int argc, char **argv)
                     exit(0);
                 }
                 /* no return from above */
+                break;
+
+            case 'o':
+                globalinfo.octave_plot_effect = true;
                 break;
 
             case 'p':
@@ -920,6 +925,8 @@ static void check_effects(void)
 
     for (i = 0; i < nuser_effects; i++)
     {
+        user_efftab[i].globalinfo = globalinfo;
+
         if (user_efftab[i].h->flags & ST_EFF_CHAN)
         {
             haschan++;

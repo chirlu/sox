@@ -43,7 +43,6 @@ typedef uint32_t st_rate_t;
 /* Minimum and maximum values a sample can hold. */
 #define ST_SAMPLE_MAX 2147483647L
 #define ST_SAMPLE_MIN (-ST_SAMPLE_MAX - 1L)
-#define ST_SAMPLE_FLOAT_UNSCALE 2147483647.0
 #define ST_SAMPLE_FLOAT_SCALE 2147483648.0
 
 #define ST_UNSIGNED_BYTE_TO_SAMPLE(d) ((st_sample_t)((d) ^ 0x80) << 24)
@@ -52,10 +51,8 @@ typedef uint32_t st_rate_t;
 #define ST_SIGNED_WORD_TO_SAMPLE(d) ((st_sample_t)(d) << 16)
 #define ST_UNSIGNED_DWORD_TO_SAMPLE(d) ((st_sample_t)((d) ^ 0x80000000L))
 #define ST_SIGNED_DWORD_TO_SAMPLE(d) ((st_sample_t)d)
-/* FIXME: This is an approximation because it 
- * doesn't account for -1.0 mapping to -FLOAT_SCALE-1. */
-#define ST_FLOAT_DWORD_TO_SAMPLE(d) ((st_sample_t)(d*ST_SAMPLE_FLOAT_UNSCALE))
-#define ST_FLOAT_DDWORD_TO_SAMPLE(d) ((st_sample_t)(d*ST_SAMPLE_FLOAT_UNSCALE))
+#define ST_FLOAT_DWORD_TO_SAMPLE(d) (d==1? ST_SAMPLE_MAX : (st_sample_t)(d*ST_SAMPLE_FLOAT_SCALE))
+#define ST_FLOAT_DDWORD_TO_SAMPLE ST_FLOAT_DWORD_TO_SAMPLE
 #define ST_SAMPLE_TO_UNSIGNED_BYTE(d) ((uint8_t)((d) >> 24) ^ 0x80)
 #define ST_SAMPLE_TO_SIGNED_BYTE(d) ((int8_t)((d) >> 24))
 #define ST_SAMPLE_TO_UNSIGNED_WORD(d) ((uint16_t)((d) >> 16) ^ 0x8000)
@@ -90,6 +87,13 @@ typedef uint32_t st_rate_t;
       { samp = ST_SAMPLE_MIN; clips++; } \
   } while (0)
 
+/* Rvalue MACRO to round and clip a double to a st_sample_t,
+ * and increment a counter if clipping occurs.
+ */
+#define ST_ROUND_CLIP_COUNT(d, clips) \
+  (d < 0? d <= ST_SAMPLE_MIN - 0.5? ++clips, ST_SAMPLE_MIN: d - 0.5 \
+        : d >= ST_SAMPLE_MAX + 0.5? ++clips, ST_SAMPLE_MAX: d + 0.5)
+
 /* MACRO to clip a normalized floating point data between 1.0 and -1.0
  * to those limits and increment a counter when clipping occurs.
  */
@@ -107,6 +111,13 @@ typedef uint32_t st_rate_t;
 /* Minimum and maximum value signed size type can hold. */
 #define ST_SSIZE_MAX 0x7fffffffL
 #define ST_SSIZE_MIN (-ST_SSIZE_MAX - 1L)
+
+/* Global parameters */
+
+typedef struct  st_globalinfo
+{
+    bool octave_plot_effect;/* to help user choose effect & options */
+} st_globalinfo_t;
 
 /* Signal parameters */
 
@@ -285,6 +296,7 @@ typedef struct
 struct st_effect
 {
     char            *name;          /* effect name */
+    struct st_globalinfo globalinfo;/* global ST parameters */
     struct st_signalinfo ininfo;    /* input signal specifications */
     struct st_signalinfo outinfo;   /* output signal specifications */
     const st_effect_t *h;           /* effects driver */

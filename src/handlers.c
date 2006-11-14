@@ -84,6 +84,7 @@ st_format_fn_t st_format_fns[] = {
 st_effect_fn_t st_effect_fns[] = {
   st_avg_effect_fn,
   st_band_effect_fn,
+  st_bass_effect_fn,
   st_bandpass_effect_fn,
   st_bandreject_effect_fn,
   st_chorus_effect_fn,
@@ -124,6 +125,7 @@ st_effect_fn_t st_effect_fns[] = {
   st_stretch_effect_fn,
   st_swap_effect_fn,
   st_synth_effect_fn,
+  st_treble_effect_fn,
   st_trim_effect_fn,
   st_vibro_effect_fn,
   st_vol_effect_fn,
