@@ -3,26 +3,33 @@
  *
  * This is the main function for the command line sox program.
  *
+ * Copyright 1991 Lance Norskog And Sundry Contributors
+ * Copyright 1998-2006 Chris Bagnall and SoX contributors
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this library. If not, write to the Free Software
+ * Foundation, Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301,
+ * USA.
+ *
+ * 
+ * Original copyright notice:
+ * 
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained.
  * Lance Norskog And Sundry Contributors are not responsible for
  * the consequences of using this software.
- *
- * Change History:
- *
- * June 1, 1998 - Chris Bagwell (cbagwell@sprynet.com)
- *   Added patch to get volume working again.  Based on patch sent from
- *   Matija Nalis <mnalis@public.srce.hr>.
- *   Added command line switches to force format to ADPCM or GSM.
- *
- * September 12, 1998 - Chris Bagwell (cbagwell@sprynet.com)
- *   Reworked code that handled effects.  Wasn't correctly draining
- *   stereo effects and a few other problems.
- *   Made command usage (-h) show supported effects and file formats.
- *   (this is partially from a patch by Leigh Smith
- *    leigh@psychokiller.dialix.oz.au).
  *
  */
 
