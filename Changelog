@@ -32,6 +32,8 @@ sox-12.18.3
     parameters. (robs)
   o Allow command-line time parameters of < 1 sec to omit the
     leading 0. (robs)
+  o Fix nul file hander ignoring other format options if rate
+    option has not been given. (robs)
 
 sox-12.18.2
 -----------

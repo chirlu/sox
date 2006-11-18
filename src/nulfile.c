@@ -27,17 +27,12 @@
  */
 int st_nulstartread(ft_t ft) 
 {
-    /* if no input rate is given as parameter, switch to 
-     * default parameter
-     */
-    if(ft->info.rate == 0)
-    {
-        /* input rate not set, switch to default */
-        ft->info.rate = 44100;
-        ft->info.size = ST_SIZE_WORD;
-        ft->info.encoding = ST_ENCODING_SIGN2;
-        ft->info.channels = 2;
-    }
+    /* If format parameters are not given, set defaults: */
+    if (ft->info.rate     ==  0) ft->info.rate     = 44100;
+    if (ft->info.size     == -1) ft->info.size     = ST_SIZE_WORD;
+    if (ft->info.encoding == -1) ft->info.encoding = ST_ENCODING_SIGN2;
+    if (ft->info.channels == -1) ft->info.channels = 2;
+
     ft->comment = "nul file";
 
     return (ST_SUCCESS);
