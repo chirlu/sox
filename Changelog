@@ -34,6 +34,10 @@ sox-12.18.3
     leading 0. (robs)
   o Fix nul file hander ignoring other format options if rate
     option has not been given. (robs)
+  o Fix synth length accuracy. (robs)
+  o Fix broken audio when using synth as follows:
+    sox -t nul /dev/null -c 1 output.wav synth 1 sine
+    (robs)
 
 sox-12.18.2
 -----------

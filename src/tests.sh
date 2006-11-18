@@ -55,3 +55,11 @@ rate=5512
 convertToAndFrom hcom
 rate=8000
 convertToAndFrom voc wve flac
+
+./sox -c 1 -t nul /dev/null output.ub synth .01 sine
+if [ `wc -c <output.ub` = 441 ]; then
+  echo "ok     synth size"
+else
+  echo "*FAIL* synth size"
+fi
+rm output.ub

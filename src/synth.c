@@ -253,7 +253,7 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
     
 
     /* read length if given ( if first par starts with digit )*/
-    if( isdigit((int)argv[argn][0])) {
+    if( isdigit((int)argv[argn][0]) || argv[argn][0] == '.') {
         synth->length_str = (char *)malloc(strlen(argv[argn])+1);
         if (!synth->length_str)
         {
@@ -683,9 +683,10 @@ int st_synth_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 {
     synth_t synth = (synth_t) effp->priv;
     int len; /* number of input samples */
-    int done;
+    int done = 0;
     int c;
     int chan=effp->ininfo.channels;
+    int result = ST_SUCCESS;
 
     if(chan > MAXCHAN ){
         st_fail("synth: can not operate with more than %d channels",MAXCHAN);
@@ -694,7 +695,8 @@ int st_synth_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
     len = ((*isamp > *osamp) ? *osamp : *isamp) / chan;
 
-    for(done = 0; done < len ; done++){
+    while (done < len && result == ST_SUCCESS)
+    {
         for(c=0;c<chan;c++){
             /* each channel is independent, but the algorithm is the same */
 
@@ -702,18 +704,15 @@ int st_synth_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         }
         ibuf+=chan;
         obuf+=chan;
+        ++done;
         synth->samples_done++;
-        if(synth->length > 0 ){
-            if( synth->samples_done > synth->length){
-                *osamp = done*chan;
-                return ST_EOF;
-                break;
-
-            }
+        if (synth->length > 0 && synth->samples_done == synth->length)
+        {
+            result = ST_EOF;
+        }
     }
-        
-    }
-    return (ST_SUCCESS);
+    *isamp = *osamp = done * chan;
+    return result;
 }
 
 /*
