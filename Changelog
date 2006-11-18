@@ -38,6 +38,9 @@ sox-12.18.3
   o Fix broken audio when using synth as follows:
     sox -t nul /dev/null -c 1 output.wav synth 1 sine
     (robs)
+  o Fix broken audio when using deemph as follows:
+    sox -t nul /dev/null -c 1 output.wav synth 1 sine deemph
+    (robs)
 
 sox-12.18.2
 -----------

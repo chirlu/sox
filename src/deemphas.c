@@ -206,6 +206,7 @@ int st_deemph_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                     deemph->lastout + 0.5 :
                     deemph->lastout - 0.5;
      }
+     *isamp = *osamp = len;
      return (ST_SUCCESS);
 }
 
