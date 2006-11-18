@@ -356,7 +356,7 @@ int st_updateeffect(eff_t effp, st_signalinfo_t *in, st_signalinfo_t *out,
 int st_parsesamples(st_rate_t rate, char *str, st_size_t *samples, char def)
 {
     int found_samples = 0, found_time = 0;
-    int time;
+    int time = 0;
     long long_samples;
     float frac = 0;
 
@@ -371,7 +371,7 @@ int st_parsesamples(st_rate_t rate, char *str, st_size_t *samples, char def)
 
         while(1)
         {
-            if (sscanf(str, "%d", &time) != 1)
+            if (str[0] != '.' && sscanf(str, "%d", &time) != 1)
                 return ST_EOF;
             *samples += time;
 
@@ -393,7 +393,7 @@ int st_parsesamples(st_rate_t rate, char *str, st_size_t *samples, char def)
         }
 
         *samples *= rate;
-        *samples += (rate * frac);
+        *samples += (rate * frac) + 0.5;
         return ST_SUCCESS;
     }
     if (found_samples || (def == 's' && !found_time))
