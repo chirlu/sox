@@ -125,6 +125,7 @@ int st_vibro_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         }
         vibro->counter = counter;
         /* processed all samples */
+        *isamp = *osamp = len;
         return (ST_SUCCESS);
 }
 
