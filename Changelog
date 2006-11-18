@@ -28,6 +28,10 @@ sox-12.18.3
   o More and better self-tests. (robs@users.sf.net)
   o Support Maxis's XA format. (Dwayne C. Litzenberger)
   o Add equalizer effect (Pascal Giard)
+  o Fix rounding error when reading command-line time
+    parameters. (robs)
+  o Allow command-line time parameters of < 1 sec to omit the
+    leading 0. (robs)
 
 sox-12.18.2
 -----------
