@@ -2,52 +2,52 @@
  *
  * FFT.h
  *
- * Based on FFT.h from Audacity, which contained the following text:
+ * Based on FFT.h from Audacity, with the following permission from
+ * its author, Dominic Mazzoni (in particular, relicensing the code
+ * for use in SoX):
  *
- *     This file contains a few FFT routines, including a real-FFT
- *     routine that is almost twice as fast as a normal complex FFT,
- *     and a power spectrum routine when you know you don't care
- *     about phase information.
+ *  I hereby license you under the LGPL all of the code in FFT.cpp
+ *  from any version of Audacity, with the exception of the windowing
+ *  function code, as I wrote the rest of the line [sic] that appears
+ *  in any version of Audacity (or they are derived from Don Cross or
+ *  NR, which is okay).
  *
- *     Some of this code was based on a free implementation of an FFT
- *     by Don Cross, available on the web at:
+ *  -- Dominic Mazzoni <dominic@audacityteam.org>, 18th November 2006
  *
- *        http://www.intersrv.com/~dcross/fft.html
+ * As regards the windowing function, WindowFunc, Dominic granted a
+ * license to it too, writing on the same day:
  *
- *     The basic algorithm for his code was based on Numerican Recipes
- *     in Fortran.  I optimized his code further by reducing array
- *     accesses, caching the bit reversal table, and eliminating
- *     float-to-double conversions, and I added the routines to
- *     calculate a real FFT and a real power spectrum.
+ *  OK, we're good. That's the original version that I wrote, before
+ *  others contributed.
  *
- *     Note: all of these routines use single-precision floats.
- *     I have found that in practice, floats work well until you
- *     get above 8192 samples.  If you need to do a larger FFT,
- *     you need to use doubles.
+ * Some of this code was based on a free implementation of an FFT
+ * by Don Cross, available on the web at:
+ *
+ * http://www.intersrv.com/~dcross/fft.html [no longer, it seems]
+ *
+ * The basic algorithm for his code was based on Numerical Recipes
+ * in Fortran.
  *
  * This file is now part of SoX, and is copyright Ian Turner and others.
  * 
  * SoX is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
  *
  * Foobar is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with SoX; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library. If not, write to the Free Software
+ * Foundation, Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301,
+ * USA.
  */
 
 #ifndef M_PI
 #define	M_PI		3.14159265358979323846  /* pi */
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 /*
@@ -90,7 +90,3 @@ typedef enum {RECTANGULAR = 0, /* no window */
               HANNING = 3} windowfunc_t;
 
 void WindowFunc(windowfunc_t whichFunction, int NumSamples, float *data);
-
-#ifdef __cplusplus
-}
-#endif
