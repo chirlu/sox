@@ -88,6 +88,7 @@ int st_rawseek(ft_t ft, st_size_t offset)
     switch(ft->info.size) {
         case ST_SIZE_BYTE:
         case ST_SIZE_WORD:
+        case ST_SIZE_24BIT:
         case ST_SIZE_DWORD:
         case ST_SIZE_DDWORD:
             break;
@@ -143,7 +144,7 @@ int st_rawstartwrite(ft_t ft)
     return ST_SUCCESS;
 }
 
-void st_ub_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
+void st_ub_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -157,7 +158,7 @@ void st_ub_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_sb_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
+void st_sb_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -171,7 +172,7 @@ void st_sb_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_ulaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
+void st_ulaw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len,
                       char swap)
 {
     while (len)
@@ -186,7 +187,7 @@ void st_ulaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
     }
 }
 
-void st_alaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
+void st_alaw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len,
                       char swap)
 {
     while (len)
@@ -201,7 +202,7 @@ void st_alaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
     }
 }
 
-void st_inv_ulaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
+void st_inv_ulaw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len,
                           char swap)
 {
     while (len)
@@ -216,7 +217,7 @@ void st_inv_ulaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
     }
 }
 
-void st_inv_alaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
+void st_inv_alaw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len,
                           char swap)
 {
     while (len)
@@ -232,7 +233,7 @@ void st_inv_alaw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len,
 }
 
 
-void st_uw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
+void st_uw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -248,7 +249,7 @@ void st_uw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_sw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
+void st_sw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -264,7 +265,49 @@ void st_sw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_udw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
+
+
+static int24_t st_24_read_one(char const * * buffer, char swap)
+{
+  /* N.B. overreads an extra byte; however SoX buffers are 2^n bytes long and
+   * since 2^n != 0 (mod 3), there will always be an extra byte to read from. */
+  int24_t datum  = *(int24_t const *)*buffer;
+
+  *buffer += 3;
+
+  if (ST_IS_BIGENDIAN)
+  {
+    datum >>= 8;
+  }
+
+  return swap? st_swap24(datum) : datum;
+}
+
+
+
+void st_u24_read_buf(st_sample_t * buf1, char const * buf2, st_ssize_t len, char const swap)
+{
+  while (len--)
+  {
+    int24_t datum = st_24_read_one(&buf2, swap);
+    *buf1++ = ST_UNSIGNED_24BIT_TO_SAMPLE(datum);
+  }
+}
+
+
+
+void st_s24_read_buf(st_sample_t * buf1, char const * buf2, st_ssize_t len, char const swap)
+{
+  while (len--)
+  {
+    int24_t datum = st_24_read_one(&buf2, swap);
+    *buf1++ = ST_SIGNED_24BIT_TO_SAMPLE(datum);
+  }
+}
+
+
+
+void st_udw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -280,7 +323,7 @@ void st_udw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_dw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
+void st_dw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -296,7 +339,7 @@ void st_dw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_f32_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
+void st_f32_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -312,7 +355,7 @@ void st_f32_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_f64_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
+void st_f64_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -340,7 +383,7 @@ void st_f64_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap)
 st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 {
     st_ssize_t len, done = 0;
-    void (*read_buf)(st_sample_t *, char *, st_ssize_t, char) = 0;
+    void (*read_buf)(st_sample_t *, char const *, st_ssize_t, char) = 0;
     size_t i;
 
     if (nsamp < 0)
@@ -385,6 +428,21 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                     break;
                 case ST_ENCODING_UNSIGNED:
                     read_buf = st_uw_read_buf;
+                    break;
+                default:
+                    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
+                    return ST_EOF;
+            }
+            break;
+
+        case ST_SIZE_24BIT:
+            switch(ft->info.encoding)
+            {
+                case ST_ENCODING_SIGN2:
+                    read_buf = st_s24_read_buf;
+                    break;
+                case ST_ENCODING_UNSIGNED:
+                    read_buf = st_u24_read_buf;
                     break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
@@ -483,7 +541,7 @@ int st_rawstopread(ft_t ft)
         return ST_SUCCESS;
 }
 
-void st_ub_write_buf(char* buf1, st_sample_t *buf2, st_ssize_t len, char swap)
+void st_ub_write_buf(char* buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -492,7 +550,7 @@ void st_ub_write_buf(char* buf1, st_sample_t *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_sb_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
+void st_sb_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -501,7 +559,7 @@ void st_sb_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_ulaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
+void st_ulaw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len,
                        char swap)
 {
     while (len)
@@ -511,7 +569,7 @@ void st_ulaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
     }
 }
 
-void st_alaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
+void st_alaw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len,
                        char swap)
 {
     while (len)
@@ -521,7 +579,7 @@ void st_alaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
     }
 }
 
-void st_inv_ulaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
+void st_inv_ulaw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len,
                            char swap)
 {
     while (len)
@@ -531,7 +589,7 @@ void st_inv_ulaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
     }
 }
 
-void st_inv_alaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
+void st_inv_alaw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len,
                            char swap)
 {
     while (len)
@@ -541,7 +599,7 @@ void st_inv_alaw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len,
     }
 }
 
-void st_uw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
+void st_uw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -557,7 +615,7 @@ void st_uw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_sw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
+void st_sw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -573,7 +631,51 @@ void st_sw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_udw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
+
+
+static void st_24_write_one(char * * const buf1, int24_t datum, char const swap)
+{
+  if (swap)
+  {
+    datum = st_swap24(datum);
+  }
+  if (ST_IS_BIGENDIAN)
+  {
+    datum <<= 8;
+  }
+
+  /* N.B. overwrites an extra byte; however SoX buffers are 2^n bytes long and
+   * since 2^n != 0 (mod 3), there will always be an extra byte to write to. */
+  *(int24_t *)*buf1 = datum;
+
+  *buf1 += 3;
+}
+
+
+
+void st_u24_write_buf(char * buf1, st_sample_t const * buf2, st_ssize_t len, char const swap)
+{
+  while (len--)
+  {
+    int24_t datum = ST_SAMPLE_TO_UNSIGNED_24BIT(*buf2++);
+    st_24_write_one(&buf1, datum, swap);
+  }
+}
+
+
+
+void st_s24_write_buf(char * buf1, st_sample_t const * buf2, st_ssize_t len, char const swap)
+{
+  while (len--)
+  {
+    int24_t datum = ST_SAMPLE_TO_SIGNED_24BIT(*buf2++);
+    st_24_write_one(&buf1, datum, swap);
+  }
+}
+
+
+
+void st_udw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -589,7 +691,7 @@ void st_udw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_dw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
+void st_dw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -605,7 +707,7 @@ void st_dw_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_f32_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
+void st_f32_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -621,7 +723,7 @@ void st_f32_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
     }
 }
 
-void st_f64_write_buf(char *buf1, st_sample_t *buf2, st_ssize_t len, char swap)
+void st_f64_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
 {
     while (len)
     {
@@ -659,7 +761,7 @@ static void writeflush(ft_t ft)
 st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 {
     st_ssize_t len, done = 0;
-    void (*write_buf)(char *, st_sample_t *, st_ssize_t, char) = 0;
+    void (*write_buf)(char *, st_sample_t const *, st_ssize_t, char) = 0;
 
     switch(ft->info.size) {
         case ST_SIZE_BYTE:
@@ -697,6 +799,21 @@ st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                     break;
                 case ST_ENCODING_UNSIGNED:
                     write_buf = st_uw_write_buf;
+                    break;
+                default:
+                    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
+                    return ST_EOF;
+            }
+            break;
+
+        case ST_SIZE_24BIT:
+            switch(ft->info.encoding)
+            {
+                case ST_ENCODING_SIGN2:
+                    write_buf = st_s24_write_buf;
+                    break;
+                case ST_ENCODING_UNSIGNED:
+                    write_buf = st_u24_write_buf;
                     break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
@@ -798,6 +915,15 @@ STARTWRITE(st_uwstartwrite,ST_SIZE_WORD,ST_ENCODING_UNSIGNED)
 
 STARTREAD(st_swstartread,ST_SIZE_WORD,ST_ENCODING_SIGN2)
 STARTWRITE(st_swstartwrite,ST_SIZE_WORD,ST_ENCODING_SIGN2)
+
+STARTREAD(st_u3startread,ST_SIZE_24BIT,ST_ENCODING_UNSIGNED)
+STARTWRITE(st_u3startwrite,ST_SIZE_24BIT,ST_ENCODING_UNSIGNED)
+
+STARTREAD(st_s3startread,ST_SIZE_24BIT,ST_ENCODING_SIGN2)
+STARTWRITE(st_s3startwrite,ST_SIZE_24BIT,ST_ENCODING_SIGN2)
+
+STARTREAD(st_u4startread,ST_SIZE_DWORD,ST_ENCODING_UNSIGNED)
+STARTWRITE(st_u4startwrite,ST_SIZE_DWORD,ST_ENCODING_UNSIGNED)
 
 STARTREAD(st_slstartread,ST_SIZE_DWORD,ST_ENCODING_SIGN2)
 STARTWRITE(st_slstartwrite,ST_SIZE_DWORD,ST_ENCODING_SIGN2)
@@ -940,6 +1066,35 @@ const st_format_t *st_sb_format_fn(void)
     return &st_sb_format;
 }
 
+
+
+/* Unsigned 3 byte raw; used for testing only; not documented in the man page */
+
+static char *u4names[] = {
+  "u4",
+  NULL,
+};
+
+static st_format_t st_u4_format = {
+  u4names,
+  NULL,
+  ST_FILE_STEREO,
+  st_u4startread,
+  st_rawread,
+  st_rawstopread,
+  st_u4startwrite,
+  st_rawwrite,
+  st_rawstopwrite,
+  st_format_nothing_seek
+};
+
+const st_format_t *st_u4_format_fn(void)
+{
+    return &st_u4_format;
+}
+
+
+
 static char *slnames[] = {
   "sl",
   NULL,
@@ -985,6 +1140,35 @@ const st_format_t *st_sw_format_fn(void)
 {
     return &st_sw_format;
 }
+
+
+
+/* Signed 3 byte raw; used for testing only; not documented in the man page */
+
+static char *s3names[] = {
+  "s3",
+  NULL
+};
+
+static st_format_t st_s3_format = {
+  s3names,
+  NULL,
+  ST_FILE_STEREO,
+  st_s3startread,
+  st_rawread,
+  st_rawstopread,
+  st_s3startwrite,
+  st_rawwrite,
+  st_rawstopwrite,
+  st_format_nothing_seek
+};
+
+const st_format_t *st_s3_format_fn(void)
+{
+    return &st_s3_format;
+}
+
+
 
 static char *ubnames[] = {
   "ub",
@@ -1055,4 +1239,31 @@ static st_format_t st_uw_format = {
 const st_format_t *st_uw_format_fn(void)
 {
     return &st_uw_format;
+}
+
+
+
+/* Unsigned 3 byte raw; used for testing only; not documented in the man page */
+
+static char *u3names[] = {
+  "u3",
+  NULL
+};
+
+static st_format_t st_u3_format = {
+  u3names,
+  NULL,
+  ST_FILE_STEREO,
+  st_u3startread,
+  st_rawread,
+  st_rawstopread,
+  st_u3startwrite,
+  st_rawwrite,
+  st_rawstopwrite,
+  st_format_nothing_seek
+};
+
+const st_format_t *st_u3_format_fn(void)
+{
+    return &st_u3_format;
 }
