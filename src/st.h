@@ -40,6 +40,9 @@ typedef uint32_t st_size_t;
 typedef int32_t st_ssize_t;
 typedef uint32_t st_rate_t;
 
+typedef int32_t int24_t;
+typedef uint32_t uint24_t;
+
 /* Minimum and maximum values a sample can hold. */
 #define ST_SAMPLE_MAX 2147483647L
 #define ST_SAMPLE_MIN (-ST_SAMPLE_MAX - 1L)
@@ -49,6 +52,8 @@ typedef uint32_t st_rate_t;
 #define ST_SIGNED_BYTE_TO_SAMPLE(d) ((st_sample_t)(d) << 24)
 #define ST_UNSIGNED_WORD_TO_SAMPLE(d) ((st_sample_t)((d) ^ 0x8000) << 16)
 #define ST_SIGNED_WORD_TO_SAMPLE(d) ((st_sample_t)(d) << 16)
+#define ST_UNSIGNED_24BIT_TO_SAMPLE(d) ((st_sample_t)((d) ^ 0x800000L) << 8)
+#define ST_SIGNED_24BIT_TO_SAMPLE(d) ((st_sample_t)(d) << 8)
 #define ST_UNSIGNED_DWORD_TO_SAMPLE(d) ((st_sample_t)((d) ^ 0x80000000L))
 #define ST_SIGNED_DWORD_TO_SAMPLE(d) ((st_sample_t)d)
 #define ST_FLOAT_DWORD_TO_SAMPLE(d) (d==1? ST_SAMPLE_MAX : (st_sample_t)(d*ST_SAMPLE_FLOAT_SCALE))
@@ -57,6 +62,8 @@ typedef uint32_t st_rate_t;
 #define ST_SAMPLE_TO_SIGNED_BYTE(d) ((int8_t)((d) >> 24))
 #define ST_SAMPLE_TO_UNSIGNED_WORD(d) ((uint16_t)((d) >> 16) ^ 0x8000)
 #define ST_SAMPLE_TO_SIGNED_WORD(d) ((int16_t)((d) >> 16))
+#define ST_SAMPLE_TO_UNSIGNED_24BIT(d) ((uint24_t)((d) >> 8) ^ 0x800000L)
+#define ST_SAMPLE_TO_SIGNED_24BIT(d) ((int24_t)((d) >> 8))
 #define ST_SAMPLE_TO_UNSIGNED_DWORD(d) ((uint32_t)(d) ^ 0x80000000L)
 #define ST_SAMPLE_TO_SIGNED_DWORD(d) ((int32_t)(d))
 /* FIXME: This is an approximation because its impossible to
