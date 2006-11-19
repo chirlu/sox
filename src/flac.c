@@ -208,7 +208,14 @@ static st_ssize_t st_format_read(ft_t const format, st_sample_t * sampleBuffer, 
 
       for (channel = 0; channel < decoder->channels; ++channel)
       {
-        *sampleBuffer++ = decoder->decoded_wide_samples[channel][decoder->wide_sample_number] << (32 - decoder->bits_per_sample);
+        FLAC__int32 d = decoder->decoded_wide_samples[channel][decoder->wide_sample_number];
+        switch (decoder->bits_per_sample)
+        {
+          case  8: *sampleBuffer++ = ST_SIGNED_BYTE_TO_SAMPLE(d); break;
+          case 16: *sampleBuffer++ = ST_SIGNED_WORD_TO_SAMPLE(d); break;
+          case 24: *sampleBuffer++ = ST_SIGNED_24BIT_TO_SAMPLE(d); break;
+          case 32: *sampleBuffer++ = ST_SIGNED_DWORD_TO_SAMPLE(d); break;
+        }
         ++actual;
       }
       ++decoder->wide_sample_number;
@@ -336,7 +343,7 @@ static int st_format_start_write(ft_t const format)
 #undef SET_OPTION
   }
 
-  encoder->bits_per_sample = (format->info.size > 3 ? 3 : format->info.size) << 3;
+  encoder->bits_per_sample = (format->info.size > 4 ? 4 : format->info.size) << 3;
   st_report("FLAC encoding at %i bits per sample", encoder->bits_per_sample);
 
   FLAC__stream_encoder_set_channels(encoder->flac, format->info.channels);
@@ -354,7 +361,7 @@ static int st_format_start_write(ft_t const format)
     }
     if (!streamable)
     {
-      st_warn("FLAC: non-standard rate; output may not be streamable");
+      st_report("FLAC: non-standard rate; output may not be streamable");
       FLAC__stream_encoder_set_streamable_subset(encoder->flac, false);
     }
   }
@@ -435,7 +442,13 @@ static st_ssize_t st_format_write(ft_t const format, st_sample_t const_ * const 
 
   for (i = 0; i < len; ++i)
   {
-    encoder->decoded_samples[i] = sampleBuffer[i] >> (32 - encoder->bits_per_sample);
+    switch (encoder->bits_per_sample)
+    {
+      case  8: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_BYTE(sampleBuffer[i]); break;
+      case 16: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_WORD(sampleBuffer[i]); break;
+      case 24: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_24BIT(sampleBuffer[i]); break;
+      case 32: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_DWORD(sampleBuffer[i]); break;
+    }
   }
   FLAC__stream_encoder_process_interleaved(encoder->flac, encoder->decoded_samples, len / format->info.channels);
   return FLAC__stream_encoder_get_state(encoder->flac) == FLAC__STREAM_ENCODER_OK ? len : -1;

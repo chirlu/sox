@@ -47,6 +47,7 @@ st_format_fn_t st_format_fns[] = {
 #endif
   st_prc_format_fn,
   st_raw_format_fn,
+  st_s3_format_fn,
   st_sb_format_fn,
   st_sf_format_fn,
   st_sl_format_fn,
@@ -59,6 +60,8 @@ st_format_fn_t st_format_fns[] = {
   st_svx_format_fn,
   st_sw_format_fn,
   st_txw_format_fn,
+  st_u3_format_fn,
+  st_u4_format_fn,
   st_ub_format_fn,
   st_ul_format_fn,
   st_uw_format_fn,
