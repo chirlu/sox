@@ -18,8 +18,8 @@ getFormat () {
     ub ) formatText="unsigned byte" ;;
     uw ) formatText="unsigned word" ;;
     raw) formatText="float"; formatFlags="-f -l" ;;
-    au ) formatFlags="-s -b" ;;
-    wav) formatFlags="-u -b" ;;
+    au ) formatFlags="-s" ;;
+    Wav) formatFlags="-u -b" ;;
   esac
 }
   
@@ -44,13 +44,25 @@ convertToAndFrom () {
 
 format1=ub
 rate=8012
-convertToAndFrom sb sw sl al uw raw
+convertToAndFrom sb ub sw uw s3 u3 sl u4 raw dat au wav aiff flac al
 
 format1=sw
-convertToAndFrom sl ul uw raw
+convertToAndFrom sw uw s3 u3 sl u4 raw au wav aiff flac ul
 
-format1=wav
-convertToAndFrom 8svx aiff au avr dat maud sf smp
+format1=u3
+convertToAndFrom s3 u3 sl u4 wav flac
+
+format1=sl
+convertToAndFrom sl u4 wav
+
+format1=al
+convertToAndFrom al sw uw sl raw dat
+
+format1=ul
+convertToAndFrom ul sw uw sl raw dat
+
+format1=Wav
+convertToAndFrom Wav 8svx aiff au avr dat maud sf smp
 rate=5512
 convertToAndFrom hcom
 rate=8000
