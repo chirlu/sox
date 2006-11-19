@@ -840,6 +840,17 @@ int st_wavstartread(ft_t ft)
             ft->info.encoding = ST_ENCODING_SIGN2;
         break;
         
+    case ST_SIZE_24BIT:
+        if (ft->info.size == -1 || ft->info.size == ST_SIZE_24BIT)
+            ft->info.size = ST_SIZE_24BIT;
+        else
+            st_warn("User options overriding size read in .wav header");
+
+        /* Now we have enough information to set default encodings. */
+        if (ft->info.encoding == -1)
+            ft->info.encoding = ST_ENCODING_SIGN2;
+        break;
+        
     case ST_SIZE_DWORD:
         if (ft->info.size == -1 || ft->info.size == ST_SIZE_DWORD)
             ft->info.size = ST_SIZE_DWORD;
@@ -1154,7 +1165,7 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len)
         /* Only return buffers that contain a totally playable
          * amount of audio.
          */
-        done -= (done % (ft->info.channels * ft->info.size));
+        done -= done % ft->info.channels;
         if (done/ft->info.channels > wav->numSamples)
             wav->numSamples = 0;
         else
@@ -1394,6 +1405,15 @@ static int wavwritehdr(ft_t ft, int second_header)
                 ft->info.encoding = ST_ENCODING_SIGN2;
             }
             break;
+        case ST_SIZE_24BIT:
+            wBitsPerSample = 24;
+            if (ft->info.encoding != ST_ENCODING_SIGN2)
+            {
+                st_report("Do not support %s with 24-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
+                ft->info.encoding = ST_ENCODING_SIGN2;
+            }
+            break;
+
         case ST_SIZE_DWORD:
             wBitsPerSample = 32;
             if (ft->info.encoding != ST_ENCODING_SIGN2 &&
