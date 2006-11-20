@@ -1068,7 +1068,7 @@ const st_format_t *st_sb_format_fn(void)
 
 
 
-/* Unsigned 3 byte raw; used for testing only; not documented in the man page */
+/* Unsigned 4 byte raw; used for testing only; not documented in the man page */
 
 static char *u4names[] = {
   "u4",
