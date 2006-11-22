@@ -181,6 +181,10 @@ SOURCE=..\src\echos.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\equalizer.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\FFT.c
 # End Source File
 # Begin Source File
@@ -442,6 +446,10 @@ SOURCE=..\src\wav.c
 # Begin Source File
 
 SOURCE=..\src\wve.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\xa.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
