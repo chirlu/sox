@@ -39,7 +39,8 @@ sox-12.18.3
     effects: synth, deemph, vibro. (robs)
   o Fix wav file handler discarding the last PCM sample in certain
     circumstances. (robs)
-  o Add support for 24-bit PCM raw, wav, & flac files. (robs)
+  o Add support for 24-bit PCM raw, wav (WAVE_FORMAT_EXTENSIBLE) [FR# 801015],
+    & flac files. (robs)
 
 sox-12.18.2
 -----------

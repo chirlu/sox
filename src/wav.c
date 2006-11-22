@@ -508,6 +508,40 @@ int st_wavstartread(ft_t ft)
     st_readw(ft, &wBitsPerSample);      /* bits per sample per channel */
     len -= 16;
 
+    if (wav->formatTag == WAVE_FORMAT_EXTENSIBLE)
+    {
+      uint16_t extensionSize;
+      uint16_t numberOfValidBits;
+      uint32_t speakerPositionMask;
+      uint16_t subFormatTag;
+      uint8_t dummyByte;
+      int i;
+
+      if (wFmtSize < 18)
+      {
+        st_fail_errno(ft,ST_EHDR,"WAVE file fmt chunk is too short");
+        return ST_EOF;
+      }
+      st_readw(ft, &extensionSize);
+      len -= 2;
+      if (extensionSize < 22)
+      {
+        st_fail_errno(ft,ST_EHDR,"WAVE file fmt chunk is too short");
+        return ST_EOF;
+      }
+      st_readw(ft, &numberOfValidBits);
+      st_readdw(ft, &speakerPositionMask);
+      st_readw(ft, &subFormatTag);
+      for (i = 0; i < 14; ++i) st_readb(ft, &dummyByte);
+      len -= 22;
+      if (numberOfValidBits != wBitsPerSample)
+      {
+        st_fail_errno(ft,ST_EHDR,"WAVE file fmt with padded samples is not supported yet");
+        return ST_EOF;
+      }
+      wav->formatTag = subFormatTag;
+    }
+
     switch (wav->formatTag)
     {
     case WAVE_FORMAT_UNKNOWN:
@@ -1364,6 +1398,7 @@ static int wavwritehdr(ft_t ft, int second_header)
     /* internal variables, intermediate values etc */
     int bytespersample; /* (uncompressed) bytes per sample (per channel) */
     long blocksWritten = 0;
+    bool isExtensible = false;    /* WAVE_FORMAT_EXTENSIBLE? */
 
     dwSamplesPerSecond = ft->info.rate;
     wChannels = ft->info.channels;
@@ -1529,7 +1564,12 @@ static int wavwritehdr(ft_t ft, int second_header)
         dwDataLength = (dwDataLength+1) & ~1; /*round up to even */
 #endif
 
-    if (wFormatTag != WAVE_FORMAT_PCM)
+    if (wFormatTag == WAVE_FORMAT_PCM && wBitsPerSample > ST_SIZE_16BIT)
+    {
+      isExtensible = true;
+      wFmtSize += 2 + 22;
+    }
+    else if (wFormatTag != WAVE_FORMAT_PCM)
         wFmtSize += 2+wExtSize; /* plus ExtData */
 
     wRiffLength = 4 + (8+wFmtSize) + (8+dwDataLength); 
@@ -1558,13 +1598,27 @@ static int wavwritehdr(ft_t ft, int second_header)
     st_writes(ft, "WAVE");
     st_writes(ft, "fmt ");
     st_writedw(ft, wFmtSize);
-    st_writew(ft, wFormatTag);
+    st_writew(ft, isExtensible? WAVE_FORMAT_EXTENSIBLE : wFormatTag);
     st_writew(ft, wChannels);
     st_writedw(ft, dwSamplesPerSecond);
     st_writedw(ft, dwAvgBytesPerSec);
     st_writew(ft, wBlockAlign);
     st_writew(ft, wBitsPerSample); /* end info common to all fmts */
 
+    if (isExtensible)
+    {
+      int i;
+      static const char guid[14] = "\x00\x00\x00\x00\x10\x00\x80\x00\x00\xAA\x00\x38\x9B\x71";
+      st_writew(ft, 22);
+      st_writew(ft, wBitsPerSample); /* No padding in container */
+      st_writedw(ft, 0);             /* Speaker mapping not specified */
+      st_writew(ft, wFormatTag);
+      for (i = 0; i < array_length(guid); ++i)
+      {
+        st_writeb(ft, guid[i]);
+      }
+    }
+    else 
     /* if not PCM, we need to write out wExtSize even if wExtSize=0 */
     if (wFormatTag != WAVE_FORMAT_PCM)
         st_writew(ft,wExtSize);
@@ -1593,7 +1647,7 @@ static int wavwritehdr(ft_t ft, int second_header)
     }
 
     /* if not PCM, write the 'fact' chunk */
-    if (wFormatTag != WAVE_FORMAT_PCM){
+    if (isExtensible || wFormatTag != WAVE_FORMAT_PCM){
         st_writes(ft, "fact");
         st_writedw(ft,dwFactSize); 
         st_writedw(ft,dwSamplesWritten);

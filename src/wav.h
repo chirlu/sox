@@ -25,6 +25,7 @@
 #define WAVE_FORMAT_MPEGLAYER3          (0x0055)
 #define WAVE_FORMAT_G726_ADPCM          (0x0064)
 #define WAVE_FORMAT_G722_ADPCM          (0x0065)
+#define WAVE_FORMAT_EXTENSIBLE          (0xfffe)
 
 #endif /* WAV_H_INCLUDED */
 
