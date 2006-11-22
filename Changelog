@@ -41,6 +41,7 @@ sox-12.18.3
     circumstances. (robs)
   o Add support for 24-bit PCM raw, wav (WAVE_FORMAT_EXTENSIBLE) [FR# 801015],
     & flac files. (robs)
+  o Added alias -1 (for -b), -2 (for -w), -4 (for -d). (robs)
 
 sox-12.18.2
 -----------

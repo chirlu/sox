@@ -59,11 +59,10 @@ all patches to cbagwell@users.sourceforge.net.
   o Document how the synth effect is meant to be used (with nul file
     handler).
 
-  o Implement FLAC (http://flac.sf.net) and speex (http://www.speex.org).
+  o Implement speex (http://www.speex.org).
   
-  o Support 24-bit formats... Difficult because sometimes that means
-    24-bits in a 32-bit integer and sometimes it means packed 24-bits
-    (read 3-bytes at a time).
+  o Support 24-bit formats where the 24-bits are stored in a 32-bit
+    integer.
 
   o Modify .dat handler to support stereo data... Probably should remove
     time offset column since its not real useful (could be added by
@@ -86,8 +85,6 @@ all patches to cbagwell@users.sourceforge.net.
     machines endian).  This would be useful for cdr.c
     since some formats like to keep the data in little-endien
     (CDDA?).
-
-  o Add alias -1 (for -b), -2 (for -w), -4 (for -d).
 
   o Add a fifo/buffer to audio drivers to prevent losing audio data.
     Perhaps mpg123 could be used as an example.

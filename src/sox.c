@@ -293,7 +293,7 @@ int main(int argc, char **argv)
     return(0);
 }
 
-static char *getoptstr = "+r:v:t:c:C:phsuUAaigbw3lfdxVSqo";
+static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lfdxVSqo";
 
 static struct option long_options[] =
 {
@@ -401,16 +401,16 @@ static void doopts(file_options_t *fo, int argc, char **argv)
                 }
                 break;
 
-            case 'b':
+            case '1': case 'b':
                 fo->info.size = ST_SIZE_BYTE;
                 break;
-            case 'w':
+            case '2': case 'w':
                 fo->info.size = ST_SIZE_WORD;
                 break;
             case '3':
                 fo->info.size = ST_SIZE_24BIT;
                 break;
-            case 'l':
+            case '4': case 'l':
                 fo->info.size = ST_SIZE_DWORD;
                 break;
             case 'd':
@@ -1726,7 +1726,8 @@ static void usage(char *opt)
 "-x              invert auto-detected endianess of data\n"
 "-s/-u/-U/-A/    sample encoding.  signed/unsigned/u-law/A-law\n"
 "  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point\n"
-"-b/-w/-3/-l/-d  sample size. byte(8-bits)/word(16-bits)/3-byte(24-bits)/\n"
+"-1/-2/-3/-4     sample size in bytes\n"
+"-b/-w/-l/-d     sample size. byte(8-bits)/word(16-bits)/\n"
 "                long(32-bits)/double long(64-bits)\n"
 "\n");
 
