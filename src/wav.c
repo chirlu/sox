@@ -1564,7 +1564,7 @@ static int wavwritehdr(ft_t ft, int second_header)
         dwDataLength = (dwDataLength+1) & ~1; /*round up to even */
 #endif
 
-    if (wFormatTag == WAVE_FORMAT_PCM && wBitsPerSample > ST_SIZE_16BIT)
+    if (wFormatTag == WAVE_FORMAT_PCM && wBitsPerSample > 16)
     {
       isExtensible = true;
       wFmtSize += 2 + 22;
