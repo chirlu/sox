@@ -98,8 +98,6 @@ all patches to cbagwell@users.sourceforge.net.
     of detecting uint64_t...  Use that when possible to speed up
     math (won't have to convert back and forth from int to float).
 
-  o Make a global version of MIN/MAX instead of sprinkled min/max/MIN/MAX
-
   o Fix conversions to and from st_sample_t to floats.  Currently,
     its an approximation because it doesn't account from negative
     side having 1 more value then positive side.  That means instead
