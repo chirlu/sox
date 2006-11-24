@@ -1262,9 +1262,6 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-old-rate       Use old rate code
-  --disable-fast-ulaw     Disable fast ulaw compression (-32K memory)
-  --disable-fast-alaw     Disable fast alaw compression (-32K memory)
   --disable-gsm           Disable GSM support
   --disable-external-gsm  Disable external GSM support
   --disable-alsa-dsp      Disable detection of ALSA
@@ -1723,30 +1720,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-
-
-# Check whether --enable-old_rate was given.
-if test "${enable_old_rate+set}" = set; then
-  enableval=$enable_old_rate; enable_old_rate=$enableval
-else
-  enable_old_rate=no
-fi
-
-
-# Check whether --enable-fast_ulaw was given.
-if test "${enable_fast_ulaw+set}" = set; then
-  enableval=$enable_fast_ulaw; enable_fast_ulaw=$enableval
-else
-  enable_fast_ulaw=yes
-fi
-
-
-# Check whether --enable-fast_alaw was given.
-if test "${enable_fast_alaw+set}" = set; then
-  enableval=$enable_fast_alaw; enable_fast_alaw=$enableval
-else
-  enable_fast_alaw=yes
-fi
 
 
 # Check whether --enable-gsm was given.
@@ -4177,129 +4150,6 @@ presetting ac_cv_c_bigendian=no (or yes) will help" >&2;}
    { (exit 1); exit 1; }; } ;;
 esac
 
-{ echo "$as_me:$LINENO: checking for an ANSI C-conforming const" >&5
-echo $ECHO_N "checking for an ANSI C-conforming const... $ECHO_C" >&6; }
-if test "${ac_cv_c_const+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-int
-main ()
-{
-/* FIXME: Include the comments suggested by Paul. */
-#ifndef __cplusplus
-  /* Ultrix mips cc rejects this.  */
-  typedef int charset[2];
-  const charset cs;
-  /* SunOS 4.1.1 cc rejects this.  */
-  char const *const *pcpcc;
-  char **ppc;
-  /* NEC SVR4.0.2 mips cc rejects this.  */
-  struct point {int x, y;};
-  static struct point const zero = {0,0};
-  /* AIX XL C 1.02.0.0 rejects this.
-     It does not let you subtract one const X* pointer from another in
-     an arm of an if-expression whose if-part is not a constant
-     expression */
-  const char *g = "string";
-  pcpcc = &g + (g ? g-g : 0);
-  /* HPUX 7.0 cc rejects these. */
-  ++pcpcc;
-  ppc = (char**) pcpcc;
-  pcpcc = (char const *const *) ppc;
-  { /* SCO 3.2v4 cc rejects this.  */
-    char *t;
-    char const *s = 0 ? (char *) 0 : (char const *) 0;
-
-    *t++ = 0;
-    if (s) return 0;
-  }
-  { /* Someone thinks the Sun supposedly-ANSI compiler will reject this.  */
-    int x[] = {25, 17};
-    const int *foo = &x[0];
-    ++foo;
-  }
-  { /* Sun SC1.0 ANSI compiler rejects this -- but not the above. */
-    typedef const int *iptr;
-    iptr p = 0;
-    ++p;
-  }
-  { /* AIX XL C 1.02.0.0 rejects this saying
-       "k.c", line 2.27: 1506-025 (S) Operand must be a modifiable lvalue. */
-    struct s { int j; const int *ap[3]; };
-    struct s *b; b->j = 5;
-  }
-  { /* ULTRIX-32 V3.1 (Rev 9) vcc rejects this */
-    const int foo = 10;
-    if (!foo) return 0;
-  }
-  return !cs[0] && !zero.x;
-#endif
-
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext
-if { (ac_try="$ac_compile"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_compile") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
-  { (case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_try") 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest.$ac_objext'
-  { (case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_try") 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_c_const=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_cv_c_const=no
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
-{ echo "$as_me:$LINENO: result: $ac_cv_c_const" >&5
-echo "${ECHO_T}$ac_cv_c_const" >&6; }
-if test $ac_cv_c_const = no; then
-
-cat >>confdefs.h <<\_ACEOF
-#define const
-_ACEOF
-
-fi
-
 { echo "$as_me:$LINENO: checking for inline" >&5
 echo $ECHO_N "checking for inline... $ECHO_C" >&6; }
 if test "${ac_cv_c_inline+set}" = set; then
@@ -4466,31 +4316,6 @@ _ACEOF
 
 fi
 
-
-if test "$enable_old_rate" = yes
-then
-
-cat >>confdefs.h <<\_ACEOF
-#define USE_OLD_RATE 1
-_ACEOF
-
-fi
-if test "$enable_fast_ulaw" = yes
-then
-
-cat >>confdefs.h <<\_ACEOF
-#define FAST_ULAW_CONVERSION 1
-_ACEOF
-
-fi
-if test "$enable_fast_alaw" = yes
-then
-
-cat >>confdefs.h <<\_ACEOF
-#define FAST_ALAW_CONVERSION 1
-_ACEOF
-
-fi
 
 { echo "$as_me:$LINENO: checking for ANSI C header files" >&5
 echo $ECHO_N "checking for ANSI C header files... $ECHO_C" >&6; }
@@ -9778,9 +9603,6 @@ if test ! -f src/monkey.au; then cp ${srcdir}/src/monkey.au src/monkey.au; fi
 if test ! -f src/monkey.wav; then cp ${srcdir}/src/monkey.wav src/monkey.wav; fi
 
 echo
-echo "Old Rate enabled..................   $enable_old_rate"
-echo "Fast ulaw enabled.................   $enable_fast_ulaw"
-echo "Fast alaw enabled.................   $enable_fast_alaw"
 echo "GSM Support.......................   $enable_gsm"
 echo "ALSA Driver.......................   $enable_alsa_dsp"
 echo "OSS Driver........................   $enable_oss_dsp"

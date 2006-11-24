@@ -11,18 +11,6 @@ AC_CONFIG_SRCDIR(sox.1)
 
 dnl Parameters to configure
 
-AC_ARG_ENABLE(old_rate,
-	[  --enable-old-rate       Use old rate code],
-	enable_old_rate=$enableval, enable_old_rate=no)
-
-AC_ARG_ENABLE(fast_ulaw,
-	[  --disable-fast-ulaw     Disable fast ulaw compression (-32K memory)],
-	enable_fast_ulaw=$enableval, enable_fast_ulaw=yes)
-
-AC_ARG_ENABLE(fast_alaw,
-	[  --disable-fast-alaw     Disable fast alaw compression (-32K memory)],
-	enable_fast_alaw=$enableval, enable_fast_alaw=yes)
-
 AC_ARG_ENABLE(gsm,
 	[  --disable-gsm           Disable GSM support],
 	enable_gsm=$enableval, enable_gsm=yes)
@@ -81,14 +69,6 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_CPP
 
-case "$target" in
-	*cygwin* )
-		CFLAGS="$CFLAGS -mno-cygwin"
-		CPPFLAGS="$CPPFLAGS -mno-cygwin"
-		LDFLAGS="$LDFLAGS -mno-cygwin"
-                ;;
-esac
-
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = yes; then
     CFLAGS="$CFLAGS -Wall"
@@ -96,25 +76,8 @@ fi
 
 dnl Check for system dependent features.
 AC_C_BIGENDIAN
-AC_C_CONST
 AC_C_INLINE
 AC_TYPE_SIZE_T
-
-if test "$enable_old_rate" = yes
-then
-    AC_DEFINE([USE_OLD_RATE], 1, 
-              [Define if you want to use old rate routines])
-fi
-if test "$enable_fast_ulaw" = yes
-then
-    AC_DEFINE([FAST_ULAW_CONVERSION], 1, 
-              [Define if you want to use fast ULAW conversions])
-fi
-if test "$enable_fast_alaw" = yes
-then
-    AC_DEFINE([FAST_ALAW_CONVERSION], 1, 
-              [Define if you want to use fast ALAW conversions])
-fi
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -314,9 +277,6 @@ if test ! -f src/monkey.au; then cp ${srcdir}/src/monkey.au src/monkey.au; fi
 if test ! -f src/monkey.wav; then cp ${srcdir}/src/monkey.wav src/monkey.wav; fi
 
 echo
-echo "Old Rate enabled..................   $enable_old_rate"
-echo "Fast ulaw enabled.................   $enable_fast_ulaw"
-echo "Fast alaw enabled.................   $enable_fast_alaw"
 echo "GSM Support.......................   $enable_gsm"
 echo "ALSA Driver.......................   $enable_alsa_dsp"
 echo "OSS Driver........................   $enable_oss_dsp"
