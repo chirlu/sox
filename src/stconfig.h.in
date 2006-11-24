@@ -3,12 +3,6 @@
 /* Define if you want to use internal GSM library */
 #undef ENABLE_GSM
 
-/* Define if you want to use fast ALAW conversions */
-#undef FAST_ALAW_CONVERSION
-
-/* Define if you want to use fast ULAW conversions */
-#undef FAST_ULAW_CONVERSION
-
 /* Define if you have ALSA library installed */
 #undef HAVE_ALSA
 
@@ -144,15 +138,9 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Define if you want to use old rate routines */
-#undef USE_OLD_RATE
-
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #undef WORDS_BIGENDIAN
-
-/* Define to empty if `const' does not conform to ANSI C. */
-#undef const
 
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
