@@ -18,8 +18,6 @@ all patches to cbagwell@users.sourceforge.net.
     for 2->4.
 
   o Remove FFT code from stat effect and use new FFT.c code.
-    Ideally, FFT needs to become LGPL license instead of
-    GPL so that it can be used as apart of LGPL libst.
 
   o Modify noiseprof and noisered so that they can read
     and write from stdin/out.  This would allow to run
