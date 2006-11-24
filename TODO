@@ -83,9 +83,7 @@ all patches to cbagwell@users.sourceforge.net.
   o Add a fifo/buffer to audio drivers to prevent losing audio data.
     Perhaps mpg123 could be used as an example.
 
-  o Add new PRC format in to auto.c
-
-  o Still passing some options using CFLAGS instead of stconfig.h.
+  o Add new PRC format in to auto.c.
 
   o Lots of effects are using "double" to prevent overflow of
     st_sample_t math.  With ststdint.h we now have a portable way
@@ -115,7 +113,7 @@ all patches to cbagwell@users.sourceforge.net.
 SOX includes skeleton format files to assist you in supporting new 
 formats, sound effect loops, and special-purpose programs.
 The full skeleton format, skel.c, helps you write a driver 
-for a new format which has data structures.  Skeleff.c is
+for a new format which has data structures.  skeleff.c is
 a starting point for writing a sound effect loop.  Sox.c is
 a good starting point for new programs.  (Someone finally
 did this and told me what was wrong...)
