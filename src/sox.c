@@ -73,6 +73,8 @@
  * Rewrite for multiple effects: Aug 24, 1994.
  */
 
+static int soxmix = 0;          /* non-zero if running as soxmix */
+ 
 static int clipped = 0;         /* Volume change clipping errors */
 static int writing = 1;         /* are we writing to a file? assume yes. */
 static int soxpreview = 0;      /* preview mode */
@@ -125,11 +127,6 @@ static void sigint(int s);
 
 #define MAX_INPUT_FILES 32
 #define MAX_FILES MAX_INPUT_FILES + 1
-#ifdef SOXMIX
-#define REQUIRED_INPUT_FILES 2
-#else
-#define REQUIRED_INPUT_FILES 1
-#endif
 
 /* Array's tracking input and output files */
 static file_options_t *file_opts[MAX_FILES];
@@ -175,6 +172,10 @@ int main(int argc, char **argv)
 
     myname = argv[0];
 
+    i = strlen(myname);
+    if (i >= sizeof("soxmix") - 1)
+      soxmix = strcmp(myname + i - (sizeof("soxmix") - 1), "soxmix") == 0;
+    
     /* Loop over arguments and filenames, stop when an effect name is 
      * found.
      */
@@ -237,12 +238,12 @@ int main(int argc, char **argv)
         input_count = file_count;
 
     /* Make sure we got at least the required # of input filenames */
-    if (input_count < REQUIRED_INPUT_FILES)
+    if (input_count < soxmix ? 2 : 1)
         usage("Not enough input or output filenames specified");
 
     for (i = 0; i < input_count; i++)
     {
-#ifdef SOXMIX
+      if (soxmix) {
         /* When mixing audio, default to input side volume
          * adjustments that will make sure no clipping will
          * occur.  Users most likely won't be happy with
@@ -250,7 +251,8 @@ int main(int argc, char **argv)
          */
         if (!file_opts[i]->uservolume)
             file_opts[i]->volume = 1.0 / input_count;
-#endif
+      }
+      
         file_desc[i] = st_open_read(file_opts[i]->filename,
                                     &file_opts[i]->info, 
                                     file_opts[i]->filetype);
@@ -520,14 +522,10 @@ void optimize_trim(void)
 
 static void process(void) {
     int e, f, flowstatus = ST_SUCCESS;
-#ifndef SOXMIX
     int current_input;
-    st_ssize_t ilen;
-#else
     st_size_t s;
     st_ssize_t ilen[MAX_INPUT_FILES];
     st_sample_t *ibuf[MAX_INPUT_FILES];
-#endif
 
     for (f = 0; f < input_count; f++)
     {
@@ -639,31 +637,31 @@ static void process(void) {
     /* Try to save some time if first effect is "trim" by seeking */
     optimize_trim();
 
-#ifdef SOXMIX
-    for (f = 0; f < input_count; f++)
-    {
-        /* Treat overall length the same as longest input file. */
-        if (file_desc[f]->length > input_samples)
-            input_samples = file_desc[f]->length;
-
-        ibuf[f] = (st_sample_t *)malloc(ST_BUFSIZ * sizeof(st_sample_t));
-        if (!ibuf[f])
+    if (!soxmix) {
+      for (f = 0; f < input_count; f++)
         {
-            st_fail("could not allocate memory");
-            cleanup();
-            exit(1);
-        }
-
-        if (status)
+          /* Treat overall length the same as longest input file. */
+          if (file_desc[f]->length > input_samples)
+            input_samples = file_desc[f]->length;
+          
+          ibuf[f] = (st_sample_t *)malloc(ST_BUFSIZ * sizeof(st_sample_t));
+          if (!ibuf[f])
+            {
+              st_fail("could not allocate memory");
+              cleanup();
+              exit(1);
+            }
+          
+          if (status)
             print_input_status(f);
-    }
-#else
-    current_input = 0;
-    input_samples = file_desc[current_input]->length;
-
-    if (status)
+        }
+    } else {
+      current_input = 0;
+      input_samples = file_desc[current_input]->length;
+      
+      if (status)
         print_input_status(current_input);
-#endif
+    }
 
     /*
      * Just like errno, we must set st_errno to known values before
@@ -689,115 +687,115 @@ static void process(void) {
        * (or ST_EOF).
        */
       do {
-#ifndef SOXMIX
-        ilen = st_read(file_desc[current_input], efftab[0].obuf, 
-                       (st_ssize_t)ST_BUFSIZ);
-        if (ilen > ST_BUFSIZ)
-          {
-            st_warn("WARNING: Corrupt value of %d!  Assuming 0 bytes read.\n", ilen);
-            ilen = 0;
-          }
-        
-        if (ilen == ST_EOF)
-          {
-            efftab[0].olen = 0;
-            if (file_desc[current_input]->st_errno)
-              {
-                fprintf(stderr, file_desc[current_input]->st_errstr);
-              }
-          }
-        else
-          efftab[0].olen = ilen;
-
-        read_samples += efftab[0].olen;
-
-        /* Some file handlers claim 0 bytes instead of returning
-         * ST_EOF.  In either case, attempt to go to the next
-         * input file.
-         */
-        if (ilen == ST_EOF || efftab[0].olen == 0)
-          {
-            if (current_input < input_count-1)
-              {
-                current_input++;
-                input_samples = file_desc[current_input]->length;
-                read_samples = 0;
-
-                if (status)
-                  print_input_status(current_input);
-
-                continue;
-              }
-          }
-
-        /* Adjust input side volume based on value specified
-         * by user for this file.
-         */
-        if (file_opts[current_input]->volume != 1.0)
-          clipped += volumechange(efftab[0].obuf, 
-                                  efftab[0].olen,
-                                  file_opts[current_input]->volume);
-#else
-        for (f = 0; f < input_count; f++)
-          {
-            ilen[f] = st_read(file_desc[f], ibuf[f], (st_ssize_t)ST_BUFSIZ);
-
-            if (ilen[f] == ST_EOF)
-              {
-                ilen[f] = 0;
-                if (file_desc[f]->st_errno)
-                  {
-                    fprintf(stderr, file_desc[f]->st_errstr);
-                  }
-              }
-
-            /* Only count read samples for first file in mix */
-            if (f == 0)
-              read_samples += efftab[0].olen;
-
-            /* Adjust input side volume based on value specified
-             * by user for this file.
-             */
-            if (file_opts[f]->volume != 1.0)
-              clipped += volumechange(ibuf[f], 
-                                      ilen[f],
-                                      file_opts[f]->volume);
-          }
-
-        /* FIXME: Should report if the size of the reads are not
-         * the same.
-         */
-        efftab[0].olen = 0;
-        for (f = 0; f < input_count; f++)
-          if ((st_size_t)ilen[f] > efftab[0].olen)
-            efftab[0].olen = ilen[f];
-
-        for (s = 0; s < efftab[0].olen; s++)
-          {
-            /* Mix data together by summing samples together.
-             * It is assumed that input side volume adjustments
-             * will take care of any possible overflow.
-             * By default, SoX sets the volume adjustment
-             * to 1/input_count but the user can override this.
-             * They probably will and some clipping will probably
-             * occur because of this.
-             */
-            for (f = 0; f < input_count; f++)
-              {
-                if (f == 0)
-                  efftab[0].obuf[s] =
-                    (s<(st_size_t)ilen[f]) ? ibuf[f][s] : 0;
-                else
-                  if (s < (st_size_t)ilen[f])
+        if (!soxmix) {
+          ilen[0] = st_read(file_desc[current_input], efftab[0].obuf, 
+                         (st_ssize_t)ST_BUFSIZ);
+          if (ilen[0] > ST_BUFSIZ)
+            {
+              st_warn("WARNING: Corrupt value of %d!  Assuming 0 bytes read.\n", ilen);
+              ilen[0] = 0;
+            }
+          
+          if (ilen[0] == ST_EOF)
+            {
+              efftab[0].olen = 0;
+              if (file_desc[current_input]->st_errno)
+                {
+                  fprintf(stderr, file_desc[current_input]->st_errstr);
+                }
+            }
+          else
+            efftab[0].olen = ilen[0];
+          
+          read_samples += efftab[0].olen;
+          
+          /* Some file handlers claim 0 bytes instead of returning
+           * ST_EOF.  In either case, attempt to go to the next
+           * input file.
+           */
+          if (ilen[0] == ST_EOF || efftab[0].olen == 0)
+            {
+              if (current_input < input_count-1)
+                {
+                  current_input++;
+                  input_samples = file_desc[current_input]->length;
+                  read_samples = 0;
+                  
+                  if (status)
+                    print_input_status(current_input);
+                  
+                  continue;
+                }
+            }
+          
+          /* Adjust input side volume based on value specified
+           * by user for this file.
+           */
+          if (file_opts[current_input]->volume != 1.0)
+            clipped += volumechange(efftab[0].obuf, 
+                                    efftab[0].olen,
+                                    file_opts[current_input]->volume);
+        } else /* soxmix */ {
+          for (f = 0; f < input_count; f++)
+            {
+              ilen[f] = st_read(file_desc[f], ibuf[f], (st_ssize_t)ST_BUFSIZ);
+              
+              if (ilen[f] == ST_EOF)
+                {
+                  ilen[f] = 0;
+                  if (file_desc[f]->st_errno)
                     {
-                      double sample;
-                      sample = efftab[0].obuf[s] + ibuf[f][s];
-                      ST_SAMPLE_CLIP_COUNT(sample, clipped);
-                      efftab[0].obuf[s] = sample;
+                      fprintf(stderr, file_desc[f]->st_errstr);
                     }
-              }
-          }
-#endif
+                }
+              
+              /* Only count read samples for first file in mix */
+              if (f == 0)
+                read_samples += efftab[0].olen;
+              
+              /* Adjust input side volume based on value specified
+               * by user for this file.
+               */
+              if (file_opts[f]->volume != 1.0)
+                clipped += volumechange(ibuf[f], 
+                                        ilen[f],
+                                        file_opts[f]->volume);
+            }
+          
+          /* FIXME: Should report if the size of the reads are not
+           * the same.
+           */
+          efftab[0].olen = 0;
+          for (f = 0; f < input_count; f++)
+            if ((st_size_t)ilen[f] > efftab[0].olen)
+              efftab[0].olen = ilen[f];
+          
+          for (s = 0; s < efftab[0].olen; s++)
+            {
+              /* Mix data together by summing samples together.
+               * It is assumed that input side volume adjustments
+               * will take care of any possible overflow.
+               * By default, SoX sets the volume adjustment
+               * to 1/input_count but the user can override this.
+               * They probably will and some clipping will probably
+               * occur because of this.
+               */
+              for (f = 0; f < input_count; f++)
+                {
+                  if (f == 0)
+                    efftab[0].obuf[s] =
+                      (s<(st_size_t)ilen[f]) ? ibuf[f][s] : 0;
+                  else
+                    if (s < (st_size_t)ilen[f])
+                      {
+                        double sample;
+                        sample = efftab[0].obuf[s] + ibuf[f][s];
+                        ST_SAMPLE_CLIP_COUNT(sample, clipped);
+                        efftab[0].obuf[s] = sample;
+                      }
+                }
+            }
+        }
         efftab[0].odone = 0;
 
         /* If not writing and no effects are occuring then not much
@@ -832,13 +830,12 @@ static void process(void) {
         drain_effect_out();
     }
 
-#ifdef SOXMIX
-    /* Free input buffers now that they are not used */
-    for (f = 0; f < input_count; f++)
-    {
-        free(ibuf[f]);
-    }
-#endif
+    if (soxmix)
+      /* Free input buffers now that they are not used */
+      for (f = 0; f < input_count; f++)
+        {
+          free(ibuf[f]);
+        }
 
     /* Free output buffers now that they won't be used */
     release_effect_buf();
@@ -1675,19 +1672,17 @@ static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct,
         return clips;
 }
 
-#ifdef SOXMIX
-static char *usagestr =
-"[ gopts ] [ fopts ] ifile1 [fopts] ifile2 [ fopts ] ofile [ effect [ effopts ] ]";
-#else
-static char *usagestr =
-"[ gopts ] [ fopts ] ifile [ fopts ] ofile [ effect [ effopts ] ]";
-#endif
-
 static void usage(char *opt)
 {
     int i;
     const st_format_t *f;
     const st_effect_t *e;
+    static char *usagestr;
+
+    if (soxmix)
+      usagestr = "[ gopts ] [ fopts ] ifile1 [fopts] ifile2 [ fopts ] ofile [ effect [ effopts ] ]";
+    else
+      usagestr = "[ gopts ] [ fopts ] ifile [ fopts ] ofile [ effect [ effopts ] ]";
 
     printf("%s: ", myname);
     printf("Version %s\n\n", st_version());
@@ -1764,7 +1759,6 @@ static void usage_effect(char *effect)
 
     printf("Effect usage:\n\n");
 
-
     for (i = 0; st_effect_fns[i]; i++)
     {
         e = st_effect_fns[i]();
@@ -1779,7 +1773,7 @@ static void usage_effect(char *effect)
     if (!effect)
         printf("see --help-effect=effect for effopts ('all' for effopts of all effects)\n\n");
     exit(1);
-} /* usage_effect */
+}
  
 void cleanup(void) 
 {
@@ -1815,7 +1809,5 @@ void cleanup(void)
 static void sigint(int s)
 {
     if (s == SIGINT || s == SIGTERM)
-    {
-        user_abort = 1;
-    }
+      user_abort = 1;
 }
