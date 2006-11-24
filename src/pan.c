@@ -91,10 +91,6 @@ int st_pan_start(eff_t effp)
 }
 
 
-#ifndef MIN
-#define MIN(s1,s2) ((s1)<(s2)?(s1):(s2))
-#endif
-
 #define UNEXPECTED_CHANNELS \
     st_fail("unexpected number of channels (in=%d, out=%d)", ich, och); \
     return ST_EOF
@@ -119,7 +115,7 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     ich = effp->ininfo.channels;
     och = effp->outinfo.channels;
 
-    len = MIN(*osamp/och,*isamp/ich);
+    len = min(*osamp/och,*isamp/ich);
 
     /* report back how much is processed. */
     *isamp = len*ich;

@@ -128,10 +128,6 @@ int st_vol_start(eff_t effp)
     return ST_SUCCESS;
 }
 
-#ifndef MIN
-#define MIN(s1,s2) ((s1)<(s2)?(s1):(s2))
-#endif
-
 /*
  * Process data.
  */
@@ -144,7 +140,7 @@ int st_vol_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     register VOL_FLOAT sample;
     register st_size_t len;
     
-    len = MIN(*osamp, *isamp);
+    len = min(*osamp, *isamp);
 
     /* report back dealt with amount. */
     *isamp = len; *osamp = len;

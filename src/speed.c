@@ -156,10 +156,6 @@ int st_speed_start(eff_t effp)
     return ST_SUCCESS;
 }
 
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-
 /* transfer input buffer to computation buffer.
  */
 static void transfer(speed_t speed)
@@ -222,7 +218,7 @@ int st_speed_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
     speed = (speed_t) effp->priv;
 
-    len = MIN(*isamp, *osamp);
+    len = min(*isamp, *osamp);
     iindex = 0;
     oindex = 0;
 

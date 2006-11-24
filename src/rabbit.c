@@ -29,16 +29,6 @@
 
 static st_effect_t st_rabbit_effect;
 
-#ifdef min
-#undef min
-#endif
-#define min(a, b) ((a) <= (b) ? (a) : (b))
-
-#ifdef max
-#undef max
-#endif
-#define max(a, b) ((a) >= (b) ? (a) : (b))
-
 /* Private data for resampling */
 typedef struct {
   int converter_type;           /* SRC converter type */

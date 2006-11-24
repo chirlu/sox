@@ -32,6 +32,16 @@ typedef enum {false, true} bool;
 /*   e.g. assert_static(sizeof(int) >= 4, int_type_too_small)    */
 #define assert_static(e,f) enum {assert_static__##f = 1/(e)}
 
+#ifdef min
+#undef min
+#endif
+#define min(a, b) ((a) <= (b) ? (a) : (b))
+
+#ifdef max
+#undef max
+#endif
+#define max(a, b) ((a) >= (b) ? (a) : (b))
+
 /* Array-length operator */
 #define array_length(a) (sizeof(a)/sizeof(a[0]))
 

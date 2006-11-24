@@ -25,10 +25,6 @@
 #include <math.h>
 #endif
 
-#ifndef MIN
-#define MIN(s1,s2) ((s1)<(s2)?(s1):(s2))
-#endif
-
 #define INPUT_BUFFER_SIZE       (ST_BUFSIZ)
 
 /* Private data */
@@ -291,7 +287,7 @@ st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len)
     int chan;
 
     do {
-        donow=MIN(len,(p->Synth->pcm.length - p->cursamp)*ft->info.channels);
+        donow=min(len,(p->Synth->pcm.length - p->cursamp)*ft->info.channels);
         i=0;
         while(i<donow){
             for(chan=0;chan<ft->info.channels;chan++){

@@ -26,10 +26,6 @@
 
 static st_effect_t st_stretch_effect;
 
-#ifndef MIN
-#define MIN(s1,s2) ((s1)<(s2)?(s1):(s2))
-#endif
-
 #ifndef STRETCH_FLOAT
 #define STRETCH_FLOAT float
 #define STRETCH_FLOAT_SCAN "%f"
@@ -310,7 +306,7 @@ int st_stretch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     {
         if (stretch->state == input_state)
         {
-            st_size_t tocopy = MIN(*isamp-iindex, 
+            st_size_t tocopy = min(*isamp-iindex, 
                                    stretch->size-stretch->index);
 
             memcpy(stretch->ibuf+stretch->index, 

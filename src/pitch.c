@@ -44,10 +44,6 @@
 
 static st_effect_t st_pitch_effect;
 
-#ifndef MIN
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#endif
-
 /* float type for the computations.
    should be common to all effects?
    I use such trick in vol, pan, speed, pitch and stretch...
@@ -487,7 +483,7 @@ int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
     size = pitch->size;
     /* size to process */
-    len = MIN(*isamp, *osamp);
+    len = min(*isamp, *osamp);
     iindex = 0;
     oindex = 0;
 
@@ -501,7 +497,7 @@ int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     {
         if (pitch->state == pi_input)
         {
-            register int tocopy = MIN(pitch->size-pitch->index, len);
+            register int tocopy = min(pitch->size-pitch->index, len);
 
             memcpy(pitch->buf+pitch->index, ibuf+iindex, tocopy*sizeof(st_sample_t));
 
@@ -522,7 +518,7 @@ int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
         if (pitch->state == pi_output)
         {
-            int toout = MIN(*osamp-oindex, pitch->step-pitch->iacc);
+            int toout = min(*osamp-oindex, pitch->step-pitch->iacc);
 
             for (i=0; i<toout; i++)
             {

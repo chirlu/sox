@@ -34,10 +34,6 @@
 
 #define MAXWSPEED 1
 
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-
 /* Lookup table to reverse the bit order of a byte. ie MSB become LSB */
 unsigned char cswap[256] = {
   0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0, 0x10, 0x90, 0x50, 0xD0,
@@ -485,7 +481,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
     }
 
 
-    len = MIN((st_size_t)nsamp,(ft->file.count-ft->file.pos)/ft->info.size);
+    len = min((st_size_t)nsamp,(ft->file.count-ft->file.pos)/ft->info.size);
     if (len)
     {
         read_buf(buf + done, ft->file.buf + ft->file.pos, len, ft->swap);
@@ -517,7 +513,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
             ft->file.count += i;
         }
 
-        len = MIN((st_size_t)nsamp - done,(ft->file.count-ft->file.pos)/ft->info.size);
+        len = min((st_size_t)nsamp - done,(ft->file.count-ft->file.pos)/ft->info.size);
         if (len)
         {
             read_buf(buf + done, ft->file.buf + ft->file.pos, len, ft->swap);
@@ -863,7 +859,7 @@ st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
             writeflush(ft);
         }
 
-        len = MIN(nsamp-done,(ft->file.size-ft->file.pos)/ft->info.size);
+        len = min(nsamp-done,(ft->file.size-ft->file.pos)/ft->info.size);
         if (len)
         {
             write_buf(ft->file.buf + ft->file.pos, buf+done, len, ft->swap);
