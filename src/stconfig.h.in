@@ -120,21 +120,6 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* The number of bytes in type char */
-#undef SIZEOF_CHAR
-
-/* The number of bytes in type int */
-#undef SIZEOF_INT
-
-/* The number of bytes in type long */
-#undef SIZEOF_LONG
-
-/* The number of bytes in type short */
-#undef SIZEOF_SHORT
-
-/* The number of bytes in type void* */
-#undef SIZEOF_VOIDP
-
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
