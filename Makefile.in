@@ -23,21 +23,26 @@ RM      = /bin/rm -f
 all: 
 	cd src && $(MAKE) $@
 
-man: $(srcdir)/sox.1 $(srcdir)/soxexam.1 $(srcdir)/libst.3
+man: $(srcdir)/sox.1 $(srcdir)/soxexam.1 $(srcdir)/libst.3 $(srcdir)/libgsm/gsm.3
 	nroff -man $(srcdir)/sox.1 | col -b > sox.txt
 	nroff -man $(srcdir)/soxexam.1 | col -b > soxexam.txt
 	nroff -man $(srcdir)/libst.3 | col -b > libst.txt
+	nroff -man $(srcdir)/src/libgsm/gsm.3 | col -b > gsm.txt
+	nroff -man $(srcdir)/src/libgsm/gsm_option.3 | col -b > gsm_option.txt
 
 PLAY_INSTALL_0 =
 PLAY_INSTALL_1  = install-play
 
 install: $(PLAY_INSTALL_$(PLAY_SUPPORT))
 	cd src && $(MAKE) $@
-	$(srcdir)/mkinstalldirs $(mandir)/man1
+	$(srcdir)/mkinstalldirs $(mandir)/man1 $(mandir)/man3
 	$(INSTALL) -c -m 644 $(srcdir)/sox.1 $(mandir)/man1
 	if [ -f $(mandir)/man1/soxmix.1 ] ; then $(RM) $(mandir)/man1/soxmix.1; fi
 	cd $(mandir)/man1 && $(LN_S) sox.1 soxmix.1
 	$(INSTALL) -c -m 644 $(srcdir)/soxexam.1 $(mandir)/man1
+	$(INSTALL) -c -m 644 $(srcdir)/libst.3 $(mandir)/man3
+	$(INSTALL) -c -m 644 $(srcdir)/src/libgsm/gsm.3 $(mandir)/man3
+	$(INSTALL) -c -m 644 $(srcdir)/src/libgsm/gsm_option.3 $(mandir)/man3
 
 install-play:
 	if [ -f $(mandir)/man1/rec.1 ]; then $(RM) $(mandir)/man1/rec.1; fi
