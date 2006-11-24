@@ -38,11 +38,6 @@ tracker at http://sf.net/projects/sox/.
     occurs.  This would allow stripping out override logic
     in various formats.
 
-  o Silence effect could clip silence from end of file.
-    Easiest way is to create a tmp file and store only
-    periods of silence so that it can be flowed/drained
-    out if non-silence is detected.
-
   o Effects engine should not have a global "flow" period
     followed by a global "drain" period.  Each effect should
     track which it needs to invoke.  Until thats done you
