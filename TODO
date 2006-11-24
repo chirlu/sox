@@ -40,13 +40,12 @@ tracker at http://sf.net/projects/sox/.
 
   o Effects engine should not have a global "flow" period
     followed by a global "drain" period.  Each effect should
-    track which it needs to invoke.  Until thats done you
+    track which it needs to invoke.  Until that's done you
     won't be able to stack two effects that both make use
     of drain (ie. can't run the "reverse" effect twice
     on the same command line and have a good output file).
 
-  o Have sox.c auto remove an resample effects when rates are the same
-    (allows scripts to be dumper).
+  o Make resample effects idempotent when rates are the same.
 
   o Add MP3 support to WAV handler. Can copy most work from mp3.c.
 
@@ -95,11 +94,6 @@ tracker at http://sf.net/projects/sox/.
 
   o WAV handler is not using world alignment for at least the
     main data chunk (expect for GSM).
-
-  o Add support for .TXT format as Cooledit supports.  Not really fit for
-    graphing since it is only a stream of ascii sample values but some
-    program appear to like it.  Also has a much nicer header.
-    http://lab.chass.utoronto.ca/damion/audio/coolwav.htm
 
   o Keep sox from using "fail" on errors.  Sox was supposed to be
     a sound library called "ST" but libraries shouldn't exit a program,
