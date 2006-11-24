@@ -3,23 +3,8 @@
 /* Define if you want to use internal GSM library */
 #undef ENABLE_GSM
 
-/* Define if you want to use fast ALAW conversions */
-#define FAST_ALAW_CONVERSION 1
-
-/* Define if you want to use fast ULAW conversions */
-#define FAST_ULAW_CONVERSION 1
-
 /* Define if you have ALSA installed */
 #undef HAVE_ALSA
-
-/* Define if you have ALSA 0.4 installed */
-#undef HAVE_ALSA4
-
-/* Define if you have ALSA 0.5 installed */
-#undef HAVE_ALSA5
-
-/* Define if you have ALSA 0.9 installed */
-#undef HAVE_ALSA9
 
 /* Define to 1 if you have the <byteswap.h> header file. */
 #undef HAVE_BYTESWAP_H
@@ -48,7 +33,7 @@ after "-" and invalid options. */
 #undef HAVE_LIBMAD
 
 /* Define if you have Ogg Vorbis Library installed */
-//#define HAVE_LIBVORBIS
+#undef HAVE_LIBVORBIS
 
 /* Define to 1 if you have the <limits.h> header file. */
 #define HAVE_LIMITS_H 1
@@ -135,26 +120,8 @@ after "-" and invalid options. */
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* The number of bytes in type char */
-#define SIZEOF_CHAR (sizeof (char))
-
-/* The number of bytes in type int */
-#define SIZEOF_INT (sizeof (int))
-
-/* The number of bytes in type long */
-#define SIZEOF_LONG (sizeof (long))
-
-/* The number of bytes in type short */
-#define SIZEOF_SHORT (sizeof (short))
-
-/* The number of bytes in type void* */
-#define SIZEOF_VOIDP (sizeof (void *))
-
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
-
-/* Define if you want to use old rate routines */
-#undef USE_OLD_RATE
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
