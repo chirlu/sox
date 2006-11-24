@@ -127,9 +127,6 @@ after "-" and invalid options. */
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #undef WORDS_BIGENDIAN
 
-/* Define to empty if `const' does not conform to ANSI C. */
-#undef const
-
 /* Define as `__inline' if that's what the C compiler calls it, or to nothing
    if it is not supported. */
 #undef inline
