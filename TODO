@@ -7,7 +7,7 @@ all patches to cbagwell@users.sourceforge.net.
   o Update all read routines to be like WAV handler and only
     return data in multiples of sample_size*channels.  This
     will prevent corrupt files from causing sox to go into
-    infinit loop trying to read just a couple more bytes.
+    infinite loop trying to read just a couple more bytes.
 
   o Make "mix" an alias of "avg" since thats closer to what it
     really is.  For 2->2 mixes, make a 2 option L->L and R->R
@@ -60,10 +60,10 @@ all patches to cbagwell@users.sourceforge.net.
   o Implement speex (http://www.speex.org).
   
   o Support 24-bit formats where the 24-bits are stored in a 32-bit
-    integer.
+    integer. (Done for WAV.)
 
   o Modify .dat handler to support stereo data... Probably should remove
-    time offset column since its not real useful (could be added by
+    time offset column since it's not real useful (could be added by
     a simple post-processor).  Also, should store information in
     header related to original data so that it can be converted back
     to similar percision easier.  Another idea is to normalize the
@@ -73,10 +73,6 @@ all patches to cbagwell@users.sourceforge.net.
 
   o Detect support for -D_FILE_OFFSET_BITS=64 and -D_LARGEFILE_SOURCE
     and auto add to CFLAGS so that large files can be accessed.
-
-  o Don't force -no-cygwin under cygwin since it now contains
-    support for /dev/dsp. Some people might want to use that
-    to play audio files under windows.
 
   o Add command line options that specify a specific endian
     (as apposed to -x which just reverses it from current
