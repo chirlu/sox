@@ -85,16 +85,12 @@ GSM_ext   =
 PLAY_0    =
 PLAY_1    = play
 
-all: sox soxmix $(PLAY_$(PLAY_SUPPORT))
+all: sox $(PLAY_$(PLAY_SUPPORT))
 
 sox: $(GSM_$(GSM_SUPPORT)) libst.a sox.o
 	$(CC) $(LDFLAGS) -o sox sox.o $(LIBS)
-
-soxmix.o: sox.c
-	$(CC) $(CFLAGS) -DSOXMIX -c $(srcdir)/sox.c -o soxmix.o
-
-soxmix: $(GSM_$(GSM_SUPPORT)) libst.a soxmix.o
-	$(CC) $(LDFLAGS) -o soxmix soxmix.o $(LIBS)
+	$(RM) soxmix
+	$(LN_S) soxmix sox
 
 libst.a: $(LIBOBJS)
 	$(AR) libst.a $(LIBOBJS) 
@@ -106,10 +102,11 @@ libgsm/libgsm.a:
 PLAY_INSTALL_0    =
 PLAY_INSTALL_1    = install-play
 
-install: sox soxmix $(PLAY_INSTALL_$(PLAY_SUPPORT))
+install: sox $(PLAY_INSTALL_$(PLAY_SUPPORT))
 	$(top_srcdir)/mkinstalldirs $(bindir)
 	$(INSTALL) -c -m 755 sox $(bindir)
-	$(INSTALL) -c -m 755 soxmix $(bindir)
+	$(RM) $(bindir)/soxmix
+	cd $(bindir) && $(LN_S) soxmix sox
 
 install-play:
 	if [ -f $(bindir)/rec ] ; then $(RM) $(bindir)/rec; fi
