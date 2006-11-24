@@ -75,7 +75,7 @@ tracker at http://sf.net/projects/sox/.
     since some formats like to keep the data in little-endien
     (CDDA?).
 
-  o Add a fifo/buffer to audio drivers to prevent losing audio data.
+  o Add a FIFO/buffer to audio drivers to prevent losing audio data.
     Perhaps mpg123 could be used as an example.
 
   o Add new PRC format in to auto.c.
