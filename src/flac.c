@@ -230,13 +230,12 @@ static int st_format_stop_read(ft_t const format)
 {
   Decoder * decoder = (Decoder *) format->priv;
 
-  int result = FLAC__file_decoder_finish(decoder->flac) ? ST_SUCCESS : ST_EOF;
-
-  if (result == ST_SUCCESS)
+  if (!FLAC__file_decoder_finish(decoder->flac) && decoder->eof)
   {
-    FLAC__file_decoder_delete(decoder->flac);
+    st_warn("FLAC decoder MD5 checksum mismatch.");
   }
-  return result;
+  FLAC__file_decoder_delete(decoder->flac);
+  return ST_SUCCESS;
 }
 
 
