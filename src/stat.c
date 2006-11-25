@@ -1,4 +1,13 @@
 /*
+ * Sound Tools statistics "effect" file.
+ *
+ * Compute various statistics on file and print them.
+ *
+ * Output is unmodified from input.
+ *
+ */
+
+/*
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for
@@ -7,18 +16,10 @@
  * the consequences of using this software.
  */
 
-/*
- * Sound Tools statistics "effect" file.
- *
- * Build various statistics on file and print them.
- *
- * Output is unmodified from input.
- *
- */
-
 #include <math.h>
 #include <string.h>
 #include "st_i.h"
+#include "FFT.h"
 
 /* Private data for STAT effect */
 typedef struct statstuff {
@@ -34,9 +35,8 @@ typedef struct statstuff {
         int     srms;
         int     fft;
         unsigned long   bin[4];
-        double  *re;
-        double  *im;
-        unsigned long   fft_bits;
+        float  *re_in;
+        float  *re_out;
         unsigned long   fft_size;
         unsigned long   fft_offset;
 } *stat_t;
@@ -57,9 +57,7 @@ int st_stat_getopts(eff_t effp, int n, char **argv)
         while (n>0)
         {
                 if (!(strcmp(argv[0], "-v")))
-                {
                         stat->volume = 1;
-                }
                 else if (!(strcmp(argv[0], "-s")))
                 {
                         double scale;
@@ -76,20 +74,15 @@ int st_stat_getopts(eff_t effp, int n, char **argv)
                         }
                         stat->scale = scale;
 
-                        /* Two option argument.  Account for this */
+                        /* Two argument option.  Account for this */
                         --n; ++argv;
                 }
                 else if (!(strcmp(argv[0], "-rms")))
-                {
                         stat->srms = 1;
-                }
                 else if (!(strcmp(argv[0], "-freq")))
-                {
                         stat->fft = 1;
-                }
-                else if (!(strcmp(argv[0], "-d"))) {
+                else if (!(strcmp(argv[0], "-d")))
                         stat->volume = 2;
-                }
                 else
                 {
                         st_fail("Summary effect: unknown option");
@@ -107,7 +100,6 @@ int st_stat_start(eff_t effp)
 {
         stat_t stat = (stat_t) effp->priv;
         int i;
-        unsigned long  bitmask;
 
         stat->min = stat->max = stat->mid = 0;
         stat->asum = 0;
@@ -123,30 +115,16 @@ int st_stat_start(eff_t effp)
                 stat->bin[i] = 0;
 
         stat->fft_size = 4096;
-        stat->re = 0;
-        stat->im = 0;
+        stat->re_in = stat->re_out = NULL;
 
         if (stat->fft)
         {
-            bitmask = 0x80000000L;
-            stat->fft_bits = 31;
             stat->fft_offset = 0;
-            while (bitmask && !(stat->fft_size & bitmask))
-            {
-                bitmask = bitmask >> 1;
-                stat->fft_bits--;
-            }
 
-            if (bitmask && (stat->fft_size & ~bitmask))
-            {
-                st_fail("FFT can only use sample buffers of 2^n. Buffer size used is %ld",stat->fft_size);
-                return(ST_EOF);
-            }
+            stat->re_in = (float *)malloc(sizeof(float) * stat->fft_size);
+            stat->re_out = (float *)malloc(sizeof(float) * (stat->fft_size / 2));
 
-            stat->re = (double *)malloc(sizeof(double) * stat->fft_size);
-            stat->im = (double *)malloc(sizeof(double) * stat->fft_size);
-
-            if (!stat->re || !stat->im)
+            if (!stat->re_in || !stat->re_out)
             {
                 st_fail("Unable to allocate memory for FFT buffers.");
                 return (ST_EOF);
@@ -157,25 +135,33 @@ int st_stat_start(eff_t effp)
 }
 
 /*
+ * Print power spectrum to given stream
+ */
+static void print_power_spectrum(unsigned samples, float rate, float *re_in, float *re_out)
+{
+  float ffa = rate / samples;
+  unsigned i;
+  
+  PowerSpectrum(samples, re_in, re_out);
+  for (i = 0; i < samples / 2; i++)
+    fprintf(stderr, "%f  %f\n", ffa * i, re_out[i]);
+}
+
+/*
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-
-static int FFT(short dir,long m,double *x,double *y);
 
 int st_stat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                  st_size_t *isamp, st_size_t *osamp)
 {
         stat_t stat = (stat_t) effp->priv;
         int len, done, x;
-        unsigned int x1;
-        short count;
-        float magnitude;
-        float ffa;
+        short count = 0;
 
-        count = 0;
         len = ((*isamp > *osamp) ? *osamp : *isamp);
-        if (len==0) return (ST_SUCCESS);
+        if (len==0)
+          return (ST_SUCCESS);
 
         if (stat->read == 0)    /* 1st sample */
                 stat->min = stat->max = stat->mid = stat->last = (*ibuf)/stat->scale;
@@ -184,33 +170,16 @@ int st_stat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         {
             for (x = 0; x < len; x++)
             {
-                stat->re[stat->fft_offset] = ibuf[x];
-                stat->im[stat->fft_offset++] = 0;
+                stat->re_in[stat->fft_offset++] = ST_SAMPLE_TO_FLOAT_DWORD(ibuf[x]);
 
                 if (stat->fft_offset >= stat->fft_size)
                 {
                     stat->fft_offset = 0;
-                    FFT(1,stat->fft_bits,stat->re,stat->im);
-                    ffa = (float)effp->ininfo.rate/stat->fft_size;
-                    for (x1 = 0; x1 < stat->fft_size/2; x1++)
-                    {
-                        if (x1 == 0 || x1 == 1)
-                        {
-                            magnitude = 0.0; /* no DC */
-                        }
-                        else
-                        {
-                            magnitude = sqrt(stat->re[x1]*stat->re[x1] + stat->im[x1]*stat->im[x1]);
-                            if (x1 == (stat->fft_size/2) - 1)
-                                magnitude *= 2.0;
-                        }
-                        fprintf(stderr,"%f  %f\n",ffa*x1, magnitude);
-                    }
+                    print_power_spectrum(stat->fft_size, effp->ininfo.rate, stat->re_in, stat->re_out);
                 }
 
             }
         }
-
 
         for(done = 0; done < len; done++) {
                 long lsamp;
@@ -220,7 +189,6 @@ int st_stat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 samp = (double)lsamp/stat->scale;
                 stat->bin[(lsamp>>30)+2]++;
                 *obuf++ = lsamp;
-
 
                 if (stat->volume == 2)
                 {
@@ -266,42 +234,18 @@ int st_stat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 int st_stat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     stat_t stat = (stat_t) effp->priv;
-    unsigned int x;
-    float magnitude;
-    float ffa;
 
     /* When we run out of samples, then we need to pad buffer with
-     * zeros and then run FFT one last time.  Only perform this
-     * operation if there are at least 1 sample in the buffer.
+     * zeros and then run FFT one last time to process any unprocessed
+     * samples.
      */
+    if (stat->fft && stat->fft_offset) {
+      unsigned int x;
 
-    if (stat->fft && stat->fft_offset)
-    {
-        /* When we run out of samples, then we need to pad buffer with
-         * zeros and then run FFT one last time.  Only perform this
-         * operation if there are at least 1 sample in the buffer.
-         */
-        for (x = stat->fft_offset; x < stat->fft_size; x++)
-        {
-            stat->re[x] = 0;
-            stat->im[x] = 0;
-        }
-        FFT(1,stat->fft_bits,stat->re,stat->im);
-        ffa = (float)effp->ininfo.rate/stat->fft_size;
-        for (x=0; x < stat->fft_size/2; x++)
-        {
-            if (x == 0 || x == 1)
-            {
-                magnitude = 0.0; /* no DC */
-            }
-            else
-            {
-                magnitude = sqrt(stat->re[x]*stat->re[x] + stat->im[x]*stat->im[x]);
-                if (x != (stat->fft_size/2) - 1)
-                    magnitude *= 2.0;
-            }
-            fprintf(stderr, "%f  %f\n",ffa*x, magnitude);
-        }
+      for (x = stat->fft_offset; x < stat->fft_size; x++)
+        stat->re_in[x] = 0;
+      
+      print_power_spectrum(stat->fft_size, effp->ininfo.rate, stat->re_in, stat->re_out);
     }
 
     *osamp = 0;
@@ -348,9 +292,8 @@ int st_stat_stop(eff_t effp)
                 fprintf(stderr, "%.3f\n", ST_SAMPLE_MAX/(amp*scale));
                 return (ST_SUCCESS);
         }
-        if (stat->volume == 2) {
+        if (stat->volume == 2)
                 fprintf(stderr, "\n\n");
-        }
         /* print out the info */
         fprintf(stderr, "Samples read:      %12u\n", stat->read);
         fprintf(stderr, "Length (seconds):  %12.6f\n", (double)stat->read/effp->ininfo.rate/effp->ininfo.channels);
@@ -372,7 +315,8 @@ int st_stat_stop(eff_t effp)
         freq = sqrt(stat->dsum2/stat->sum2)*effp->ininfo.rate/(M_PI*2);
         fprintf(stderr, "Rough   frequency: %12d\n", (int)freq);
 
-        if (amp>0) fprintf(stderr, "Volume adjustment: %12.3f\n", ST_SAMPLE_MAX/(amp*scale));
+        if (amp>0)
+        	fprintf(stderr, "Volume adjustment: %12.3f\n", ST_SAMPLE_MAX/(amp*scale));
 
         if (stat->bin[2] == 0 && stat->bin[3] == 0)
                 fprintf(stderr, "\nProbably text, not sound\n");
@@ -383,128 +327,35 @@ int st_stat_stop(eff_t effp)
                 if (x >= 3.0)                  /* use opposite encoding */
                 {
                         if (effp->ininfo.encoding == ST_ENCODING_UNSIGNED)
-                        {
                                 fprintf (stderr,"\nTry: -t raw -b -s \n");
-                        }
                         else
-                        {
                                 fprintf (stderr,"\nTry: -t raw -b -u \n");
-                        }
 
                 }
                 else if (x <= 1.0/3.0)
-                {
-                    ;;              /* correctly decoded */
-                }
+                  ;             /* correctly decoded */
                 else if (x >= 0.5 && x <= 2.0)       /* use ULAW */
                 {
                         if (effp->ininfo.encoding == ST_ENCODING_ULAW)
-                        {
                                 fprintf (stderr,"\nTry: -t raw -b -u \n");
-                        }
                         else
-                        {
                                 fprintf (stderr,"\nTry: -t raw -b -U \n");
-                        }
                 }
                 else
-                {
                         fprintf (stderr, "\nCan't guess the type\n");
-                }
         }
 
-        /* Release FFT memory if allocated */
-        if (stat->re)
-            free((void *)stat->re);
-        if (stat->im)
-            free((void *)stat->im);
+        /* Release FFT memory */
+        free(stat->re_in);
+        free(stat->re_out);
 
         return (ST_SUCCESS);
 
 }
 
-
-/*
-   This computes an in-place complex-to-complex FFT
-   x and y are the real and imaginary arrays of 2^(m-1) points.
-   dir =  1 gives forward transform
-   dir = -1 gives reverse transform
-*/
-static int FFT(short dir,long m,double *re,double *im)
-{
-   long n,i,i1,j,k,i2,l,l1,l2;
-   double c1,c2,tre,tim,t1,t2,u1,u2,z;
-
-   /* Calculate the number of points */
-   n = 1;
-   for (i=0;i<m;i++)
-      n *= 2;
-
-   /* Do the bit reversal */
-   i2 = n >> 1;
-
-   j = 0;
-
-   for (i=0;i<n-1;i++) {
-      if (i < j) {
-         tre = re[i];
-         tim = im[i];
-         re[i] = re[j];
-         im[i] = im[j];
-         re[j] = tre;
-         im[j] = tim;
-      }
-      k = i2;
-      while (k <= j) {
-         j -= k;
-         k >>= 1;
-      }
-      j += k;
-   }
-
-   /* Compute the FFT */
-   c1 = -1.0;
-   c2 = 0.0;
-   l2 = 1;
-   for (l=0;l<m;l++) {
-      l1 = l2;
-      l2 <<= 1;
-      u1 = 1.0;
-      u2 = 0.0;
-      for (j=0;j<l1;j++) {
-         for (i=j;i<n;i+=l2) {
-            i1 = i + l1;
-            t1 = u1 * re[i1] - u2 * im[i1];
-            t2 = u1 * im[i1] + u2 * re[i1];
-            re[i1] = re[i] - t1;
-            im[i1] = im[i] - t2;
-            re[i] += t1;
-            im[i] += t2;
-         }
-         z =  u1 * c1 - u2 * c2;
-         u2 = u1 * c2 + u2 * c1;
-         u1 = z;
-      }
-      c2 = sqrt((1.0 - c1) / 2.0);
-      if (dir == 1)
-         c2 = -c2;
-      c1 = sqrt((1.0 + c1) / 2.0);
-   }
-
-   /* Scaling for forward transform */
-   if (dir == 1) {
-      for (i=0;i<n;i++) {
-         re[i] /= n;
-         im[i] /= n;
-      }
-   }
-
-   return ST_SUCCESS;
-}
-
 static st_effect_t st_stat_effect = {
   "stat",
-  "Usage: [ -s n ] [ -rms ] [ -v ] [ -d ]",
+  "Usage: [ -s N ] [ -rms ] [-freq] [ -v ] [ -d ]",
   ST_EFF_MCHAN | ST_EFF_REPORT,
   st_stat_getopts,
   st_stat_start,
