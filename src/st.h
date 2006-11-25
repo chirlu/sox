@@ -83,17 +83,6 @@ typedef uint32_t uint24_t;
 #define ST_SAMPLE_TO_FLOAT_DDWORD(d) ((double)((double)d/(ST_SAMPLE_FLOAT_SCALE)))
 
 /* MACRO to clip a data type that is greater then st_sample_t to
- * st_sample_t's limits.
- */
-#define ST_SAMPLE_CLIP(samp) \
-  do { \
-    if (samp > ST_SAMPLE_MAX) \
-      { samp = ST_SAMPLE_MAX; } \
-    else if (samp < ST_SAMPLE_MIN) \
-      { samp = ST_SAMPLE_MIN; } \
-  } while (0)
-
-/* MACRO to clip a data type that is greater then st_sample_t to
  * st_sample_t's limits and increment a counter if clipping occurs..
  */
 #define ST_SAMPLE_CLIP_COUNT(samp, clips) \
@@ -108,8 +97,15 @@ typedef uint32_t uint24_t;
  * and increment a counter if clipping occurs.
  */
 #define ST_ROUND_CLIP_COUNT(d, clips) \
-  (d < 0? d <= ST_SAMPLE_MIN - 0.5? ++clips, ST_SAMPLE_MIN: d - 0.5 \
-        : d >= ST_SAMPLE_MAX + 0.5? ++clips, ST_SAMPLE_MAX: d + 0.5)
+  ((d) < 0? (d) <= ST_SAMPLE_MIN - 0.5? ++(clips), ST_SAMPLE_MIN: (d) - 0.5 \
+        : (d) >= ST_SAMPLE_MAX + 0.5? ++(clips), ST_SAMPLE_MAX: (d) + 0.5)
+
+/* Rvalue MACRO to clip a st_sample_t to 24 bits,
+ * and increment a counter if clipping occurs.
+ */
+#define ST_24BIT_CLIP_COUNT(l, clips) \
+  ((l) >= ((st_sample_t)1 << 23)? ++(clips), ((st_sample_t)1 << 23) - 1 : \
+   (l) <=-((st_sample_t)1 << 23)? ++(clips),-((st_sample_t)1 << 23) + 1 : (l))
 
 /* MACRO to clip a normalized floating point data between 1.0 and -1.0
  * to those limits and increment a counter when clipping occurs.
@@ -121,6 +117,12 @@ typedef uint32_t uint24_t;
     else if (samp < -1) \
       { samp = -1; clips++; } \
   } while (0)
+
+/* MACROs for effects where standard clip counting and reporting is used. */
+#define ST_EFF_SAMPLE_CLIP_COUNT(s) ST_SAMPLE_CLIP_COUNT(s, effp->clippedCount)
+#define ST_EFF_24BIT_CLIP_COUNT(s) ST_24BIT_CLIP_COUNT(s, effp->clippedCount)
+#define ST_EFF_ROUND_CLIP_COUNT(s) ST_ROUND_CLIP_COUNT(s, effp->clippedCount)
+#define ST_EFF_NORMALIZED_CLIP_COUNT(s) ST_NORMALIZED_CLIP_COUNT(s, effp->clippedCount)
 
 /* Maximum value size type can hold. (Minimum is 0). */
 #define ST_SIZE_MAX 0xffffffffL
@@ -227,6 +229,7 @@ struct st_soundstream {
     char            mode;                 /* read or write mode */
     /* Total samples per channel of file.  Zero if unknown. */
     st_size_t       length;    
+    st_size_t       clippedCount;         /* increment if clipping occurs */
     char            *filename;            /* file name */
     char            *filetype;            /* type of file */
     char            *comment;             /* comment string */
@@ -319,6 +322,7 @@ struct st_effect
     const st_effect_t *h;           /* effects driver */
     st_sample_t     *obuf;          /* output buffer */
     st_size_t       odone, olen;    /* consumed, total length */
+    st_size_t       clippedCount;   /* increment if clipping occurs */
     /* The following is a portable trick to align this variable on
      * an 8-byte bounder.  Once this is done, the buffer alloced
      * after it should be align on an 8-byte boundery as well.

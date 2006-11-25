@@ -1,0 +1,58 @@
+Clipping Counting & Reporting Implementation Status 
+
+As of 24th Nov '06, this aspect of the implementation is
+believed to be complete.
+
+1st column: effect/format name
+2nd column: could clip (in theory)
+3rd column: CLIP_COUNT reporting implemented: yes, no, or (yes) custom
+
+avg		y	y
+band		n	n
+bass		y	y
+bandpass	n	y
+bandreject	see bandpass
+chorus		y	y
+compand		y	y
+copy		n	n
+dcshift		y	c
+deemph		n	n
+earwax		?	n
+echo		y	y
+echos		y	y
+equalizer	y	y
+fade		n	n
+filter		n	n
+flanger		y	y
+highp		n	y
+highpass	see bandpass
+lowp		n	y
+lowpass		see bandpass
+mask		n	n
+mcompand	y	y
+noiseprof	n	n
+noisered	n	y
+pan		n	y
+phaser		y	y
+pick		see avg
+pitch		y	y
+polyphase	y	y
+rate		n	n
+repeat		n	n
+resample	y	y
+reverb		y	y
+reverse		n	n
+silence		n	n
+speed		y	y
+stat		n	n
+stretch		y	y
+swap		n	n
+synth		n	n
+treble		see bass
+trim		n	n
+vibro		n	n
+vol		y	c
+
+-v		y	c
+
+dat		y	y

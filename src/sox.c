@@ -848,6 +848,11 @@ static void process(void) {
 
     for (f = 0; f < input_count; f++)
     {
+        if (file_desc[f]->clippedCount != 0)
+        {
+          st_warn("%s: %u values clipped on input", file_desc[f]->filename, file_desc[f]->clippedCount);
+        }
+
         /* If problems closing input file, just warn user since
          * we are exiting anyways.
          */
@@ -1130,11 +1135,15 @@ static int start_effects(void)
     int e, ret = ST_SUCCESS;
 
     for(e = 1; e < neffects; e++) {
+        efftab[e].clippedCount = 0;
         if ((ret = (*efftab[e].h->start)(&efftab[e])) == ST_EOF)
             break;
         if (efftabR[e].name)
+        {
+            efftabR[e].clippedCount = 0;
             if ((ret = (*efftabR[e].h->start)(&efftabR[e])) == ST_EOF)
                 break;
+        }
     }
 
     return ret;
@@ -1563,9 +1572,18 @@ static void stop_effects(void)
     int e;
 
     for (e = 1; e < neffects; e++) {
+        st_size_t clippedCount;
         (*efftab[e].h->stop)(&efftab[e]);
+        clippedCount = efftab[e].clippedCount;
         if (efftabR[e].name)
+        {
             (* efftabR[e].h->stop)(&efftabR[e]);
+            clippedCount += efftab[e].clippedCount;
+        }
+        if (clippedCount != 0)
+        {
+          st_warn("%s: %u values clipped, maybe adjust volume?", efftab[e].name, clippedCount);
+        }
     }
 }
 

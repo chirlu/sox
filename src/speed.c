@@ -47,8 +47,6 @@ typedef struct
 
     /* internals.
      */
-    int clipped;          /* number of clipped values to report */
-
     SPEED_FLOAT rate;     /* rate of buffer sweep */
 
     int compression;      /* integer compression of the signal. */
@@ -126,7 +124,6 @@ int st_speed_getopts(eff_t effp, int n, char **argv)
 int st_speed_start(eff_t effp)
 {
     speed_t speed = (speed_t) effp->priv;
-    speed->clipped = 0;
 
     if (speed->factor >= ONE)
     {
@@ -178,7 +175,7 @@ static void transfer(speed_t speed)
 
 /* interpolate values
  */
-static st_size_t compute(speed_t speed, st_sample_t *obuf, st_size_t olen)
+static st_size_t compute(eff_t effp, speed_t speed, st_sample_t *obuf, st_size_t olen)
 {
     st_size_t i;
 
@@ -191,7 +188,7 @@ static st_size_t compute(speed_t speed, st_sample_t *obuf, st_size_t olen)
         f = cub(speed->cbuf[0], speed->cbuf[1],
                 speed->cbuf[2], speed->cbuf[3], 
                 speed->frac);
-        ST_SAMPLE_CLIP_COUNT(f, speed->clipped);
+        ST_EFF_SAMPLE_CLIP_COUNT(f);
         obuf[i] = f;
     }
     
@@ -238,7 +235,7 @@ int st_speed_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
         /* compute interpolation. */
         if (speed->state==sp_compute)
-            oindex += compute(speed, obuf+oindex, len-oindex);
+            oindex += compute(effp, speed, obuf+oindex, len-oindex);
     }
 
     *isamp = iindex;
@@ -273,7 +270,7 @@ int st_speed_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 
         /* compute interpolation. */
         if (speed->state==sp_compute)
-            oindex += compute(speed, obuf+oindex, *osamp-oindex);
+            oindex += compute(effp, speed, obuf+oindex, *osamp-oindex);
     }
 
     *osamp = oindex; /* report how much was generated. */
@@ -289,9 +286,6 @@ int st_speed_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 int st_speed_stop(eff_t effp)
 {
     speed_t speed = (speed_t) effp->priv;
-
-    if (speed->clipped) 
-        st_report("SPEED: %d values clipped...", speed->clipped);
 
     free(speed->ibuf);
     

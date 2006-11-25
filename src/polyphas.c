@@ -615,7 +615,7 @@ int st_poly_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     {
         float f;
         f = out_buf[k] * ISCALE; /* should clip-limit */
-        ST_SAMPLE_CLIP(f);
+        ST_EFF_SAMPLE_CLIP_COUNT(f);
         *q++ = f;
     }
 

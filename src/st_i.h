@@ -38,7 +38,6 @@ extern "C" {
 #endif
 
 /* declared in misc.c */
-st_sample_t st_clip24(st_sample_t) REGPARM(1);
 void st_sine(int *buf, st_ssize_t len, int max, int depth);
 void st_triangle(int *buf, st_ssize_t len, int max, int depth);
 

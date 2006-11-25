@@ -132,7 +132,7 @@ static int lowpass_setup (butterworth_crossover_t butterworth, double frequency,
   return (ST_SUCCESS);
 }
 
-static int lowpass_flow(butterworth_crossover_t butterworth, int nChan, st_sample_t *ibuf, st_sample_t *lowbuf, st_sample_t *highbuf,
+static int lowpass_flow(eff_t effp, butterworth_crossover_t butterworth, int nChan, st_sample_t *ibuf, st_sample_t *lowbuf, st_sample_t *highbuf,
                          int len) {
   int chan;
   double in, out;
@@ -168,7 +168,7 @@ static int lowpass_flow(butterworth_crossover_t butterworth, int nChan, st_sampl
       butterworth->xy_low[chan].y [1] = butterworth->xy_low[chan].y [0];
       butterworth->xy_low[chan].y [0] = out;
 
-      ST_SAMPLE_CLIP(out);
+      ST_EFF_SAMPLE_CLIP_COUNT(out);
 
       *lowbufptr = out;
 
@@ -185,7 +185,7 @@ static int lowpass_flow(butterworth_crossover_t butterworth, int nChan, st_sampl
       butterworth->xy_high[chan].y [1] = butterworth->xy_high[chan].y [0];
       butterworth->xy_high[chan].y [0] = out;
 
-      ST_SAMPLE_CLIP(out);
+      ST_EFF_SAMPLE_CLIP_COUNT(out);
 
       /* don't forget polarity reversal of high pass! */
 
@@ -600,7 +600,7 @@ int st_mcompand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     l = &c->bands[band];
 
     if (l->topfreq)
-      lowpass_flow(&l->filter, effp->outinfo.channels, abuf, bbuf, cbuf, len);
+      lowpass_flow(effp, &l->filter, effp->outinfo.channels, abuf, bbuf, cbuf, len);
     else {
       bbuf = abuf;
       abuf = cbuf;
@@ -611,7 +611,7 @@ int st_mcompand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     for (i=0;i<len;++i)
     {
       out = obuf[i] + abuf[i];
-      ST_SAMPLE_CLIP(out);
+      ST_EFF_SAMPLE_CLIP_COUNT(out);
       obuf[i] = out;
     }
     oldabuf = abuf;
@@ -624,7 +624,7 @@ int st_mcompand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
   return ST_SUCCESS;
 }
 
-static int st_mcompand_drain_1(compand_t c, comp_band_t l, st_sample_t *obuf, int maxdrain, int band)
+static int st_mcompand_drain_1(eff_t effp, compand_t c, comp_band_t l, st_sample_t *obuf, int maxdrain, int band)
 {
   int done;
   double out;
@@ -634,7 +634,7 @@ static int st_mcompand_drain_1(compand_t c, comp_band_t l, st_sample_t *obuf, in
    */
   for (done = 0;  done < maxdrain  &&  l->delay_buf_cnt > 0;  done++) {
     out = obuf[done] + l->delay_buf[l->delay_buf_ptr++];
-    ST_SAMPLE_CLIP(out);
+    ST_EFF_SAMPLE_CLIP_COUNT(out);
     obuf[done] = out;
     l->delay_buf_ptr %= c->delay_buf_size;
     l->delay_buf_cnt--;
@@ -657,7 +657,7 @@ int st_mcompand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
   memset(obuf,0,*osamp * sizeof *obuf);
   for (band=0;band<c->nBands;++band) {
     l = &c->bands[band];
-    drained = st_mcompand_drain_1(c,l,obuf,*osamp,0);
+    drained = st_mcompand_drain_1(effp, c,l,obuf,*osamp,0);
     if (drained > mostdrained)
       mostdrained = drained;
   }

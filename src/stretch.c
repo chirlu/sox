@@ -68,7 +68,6 @@ typedef struct
     /* internal stuff 
      */
     stretch_status_t state; /* automaton status */
-    int clipped;            /* number of clipped values. */
 
     int size;               /* buffer size */
     int index;              /* next available element */
@@ -206,7 +205,6 @@ int st_stretch_start(eff_t effp)
     }
 
     stretch->state = input_state;
-    stretch->clipped = 0;
 
     stretch->size = (int)(effp->outinfo.rate * ONETHOUSANDS * stretch->window);
     /* start in the middle of an input to avoid initial fading... */
@@ -337,7 +335,7 @@ int st_stretch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             {
                 float f;
                 f = stretch->obuf[stretch->oindex++];
-                ST_SAMPLE_CLIP_COUNT(f, stretch->clipped);
+                ST_EFF_SAMPLE_CLIP_COUNT(f);
                 obuf[oindex++] = f;
             }
 
@@ -392,7 +390,7 @@ int st_stretch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         float f;
 
         f = stretch->obuf[stretch->oindex++];
-        ST_SAMPLE_CLIP_COUNT(f, stretch->clipped);
+        ST_EFF_SAMPLE_CLIP_COUNT(f);
         obuf[oindex++] = f;
     }
     
@@ -416,9 +414,6 @@ int st_stretch_stop(eff_t effp)
     free(stretch->ibuf);
     free(stretch->obuf);
     free(stretch->fbuf);
-
-    if (stretch->clipped)
-        st_warn("STRETCH clipped %d values...", stretch->clipped);
 
     return ST_SUCCESS;
 }

@@ -208,7 +208,7 @@ int st_echo_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 }
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * echo->out_gain;
-                out = st_clip24((st_sample_t) d_out);
+                out = ST_EFF_24BIT_CLIP_COUNT((st_sample_t) d_out);
                 *obuf++ = out * 256;
                 /* Store input in delay buffer */
                 echo->delay_buf[echo->counter] = d_in;
@@ -242,7 +242,7 @@ int st_echo_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 }
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * echo->out_gain;
-                out = st_clip24((st_sample_t) d_out);
+                out = ST_EFF_24BIT_CLIP_COUNT((st_sample_t) d_out);
                 *obuf++ = out * 256;
                 /* Store input in delay buffer */
                 echo->delay_buf[echo->counter] = d_in;

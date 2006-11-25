@@ -436,16 +436,6 @@ void st_initrand(void) {
     srand(t);
 }
 
-st_sample_t st_clip24(st_sample_t l)
-{
-    if (l >= ((st_sample_t)1 << 23))
-        return ((st_sample_t)1 << 23) - 1;
-    else if (l <= -((st_sample_t)1 << 23))
-        return -((st_sample_t)1 << 23) + 1;
-    else
-        return l;
-}
-
 /* This was very painful.  We need a sine library. */
 
 void st_sine(int *buf, st_ssize_t len, int max, int depth)

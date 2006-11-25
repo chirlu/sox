@@ -214,7 +214,7 @@ int st_phaser_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         phaser->maxsamples] * phaser->decay * -1.0;
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_in * phaser->out_gain;
-                out = st_clip24((st_sample_t) d_out);
+                out = ST_EFF_24BIT_CLIP_COUNT((st_sample_t) d_out);
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 phaser->phaserbuf[phaser->counter] = d_in;
@@ -247,7 +247,7 @@ int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         phaser->maxsamples] * phaser->decay * -1.0;
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_in * phaser->out_gain;
-                out = st_clip24((st_sample_t) d_out);
+                out = ST_EFF_24BIT_CLIP_COUNT((st_sample_t) d_out);
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 phaser->phaserbuf[phaser->counter] = d_in;

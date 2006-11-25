@@ -109,7 +109,7 @@ int st_lowp_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         for(done = 0; done < len; done++) {
                 l = *ibuf++;
                 d = lowp->A * l + lowp->B * lowp->outm1;
-                ST_SAMPLE_CLIP(d);
+                ST_EFF_SAMPLE_CLIP_COUNT(d);
                 lowp->outm1 = d;
                 *obuf++ = d;
         }

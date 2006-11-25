@@ -173,13 +173,7 @@ int st_equalizer_flow(eff_t effp, st_sample_t *ibuf,
            );
     eq->y[0] = out;
 
-    if (out < ST_SAMPLE_MIN) {
-      out = ST_SAMPLE_MIN;
-    }
-    else if (out > ST_SAMPLE_MAX) {
-      out = ST_SAMPLE_MAX;
-    }
-
+    ST_EFF_SAMPLE_CLIP_COUNT(out);
     *obuf++ = out;
   }
 

@@ -45,6 +45,8 @@ sox-12.18.3
   o Remove old, optional rate change and alaw/ulaw conversion code.
     (Reuben Thomas)
   o Make sox and soxmix a single binary.  (Reuben Thomas)
+  o Consistent (and hopefully complete) clipping detection and
+    reporting.  (robs)
 
 sox-12.18.2
 -----------

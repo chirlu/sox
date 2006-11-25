@@ -130,8 +130,6 @@ typedef struct
 
     pitch_state_t state; /* buffer management status. */
 
-    int clipped;         /* number of clipped values (i.e. overflows) */
-
 } * pitch_t;
 
 /* // debug functions
@@ -348,8 +346,6 @@ int st_pitch_getopts(eff_t effp, int n, char **argv)
         return ST_EOF;
     }
 
-    pitch->clipped = 0;
-
     return ST_SUCCESS;
 }
 
@@ -467,8 +463,6 @@ int st_pitch_start(eff_t effp)
         return ST_EOF;
     }
 
-    pitch->clipped = 0;
-
     return ST_SUCCESS;
 }
 
@@ -525,7 +519,7 @@ int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 float f;
 
                 f = pitch->acc[pitch->iacc++];
-                ST_SAMPLE_CLIP_COUNT(f, pitch->clipped);
+                ST_EFF_SAMPLE_CLIP_COUNT(f);
                 obuf[oindex++] = f;
             }
 
@@ -578,7 +572,7 @@ int st_pitch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         float f;
 
         f = pitch->acc[pitch->iacc++];
-        ST_SAMPLE_CLIP_COUNT(f, pitch->clipped);
+        ST_EFF_SAMPLE_CLIP_COUNT(f);
         obuf[i++] = f;
     }
 
@@ -603,10 +597,6 @@ int st_pitch_stop(eff_t effp)
     free(pitch->tmp);
     free(pitch->acc);
     free(pitch->buf);
-
-    if (pitch->clipped)
-        st_warn("PITCH clipped %d values... adjust volume with -v option maybe?", 
-             pitch->clipped);
 
     return ST_SUCCESS;
 }

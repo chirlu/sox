@@ -37,13 +37,6 @@ typedef struct dat {
     char prevline[LINEWIDTH]; 
 } *dat_t;
 
-/* FIXME: Move this to misc.c */
-static st_sample_t roundoff(double x)
-{
-    if (x < 0.0) return(x - 0.5);
-    else return(x + 0.5);
-}
-
 int st_datstartread(ft_t ft)
 {
     char inpstr[LINEWIDTH];
@@ -136,9 +129,8 @@ st_ssize_t st_datread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
           st_fail_errno(ft,ST_EOF,"Unable to read sample.");
           return (ST_EOF);
         }
-        sampval = roundoff(sampval * FLOATTOLONG);
-        ST_SAMPLE_CLIP(sampval);
-        *buf++ = sampval;
+        sampval *= FLOATTOLONG;
+        *buf++ = ST_ROUND_CLIP_COUNT(sampval, ft->clippedCount);
         done++;
       }
     }
