@@ -5,9 +5,9 @@ tracker at http://sf.net/projects/sox/.
   o Update all read routines to be like WAV handler and only
     return data in multiples of sample_size*channels.  This
     will prevent corrupt files from causing sox to go into
-    infinite loop trying to read just a couple more bytes.
+    an infinite loop trying to read just a couple more bytes.
 
-  o Make "mix" an alias of "avg" since thats closer to what it
+  o Make "mix" an alias of "avg" since that's closer to what it
     really is.  For 2->2 mixes, make a 2 option L->L and R->R
     shortcut.  Similar 4 option for 4->4.
 
