@@ -1,12 +1,12 @@
 /*
+ * NIST Sphere file format handler.
+ */
+
+/*
  * August 7, 2000
  *
  * Copyright (C) 2000 Chris Bagwell (cbagwell@sprynet.com)
  *
- */
-
-/*
- * NIST Sphere file format handler.
  */
 
 #include "st_i.h"
@@ -168,20 +168,17 @@ int st_spherestartread(ft_t ft)
 
         sphere->shorten_check[0] = 0;
 
-        /* TODO: Check first four bytes of data to see if its shorten
-         * compressed or not.  This data will need to be written to
-         * buffer during first st_sphereread().
+        /* Check first four bytes of data to see if it's shorten
+         * compressed or not.
          */
-#if 0
         st_reads(ft, sphere->shorten_check, 4);
 
         if (!strcmp(sphere->shorten_check,"ajkg"))
         {
-            st_fail_errno(ft,ST_EFMT,"File uses shorten compression, can not handle this.");
+            st_fail_errno(ft,ST_EFMT,"File uses shorten compression, cannot handle this.");
             free(buf);
             return(ST_EOF);
         }
-#endif
 
         free(buf);
         return (ST_SUCCESS);
