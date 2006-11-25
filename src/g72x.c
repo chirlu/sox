@@ -171,12 +171,6 @@ int step_size(struct g72x_state *state_ptr)
  * as a subtraction.
  */
 int quantize(int d, int y, short *table, int size)
-#if 0
-        int             d;      /* Raw difference signal sample */
-        int             y;      /* Step size multiplier */
-        short           *table; /* quantization table */
-        int             size;   /* table size of short integers */
-#endif
 {
         short           dqm;    /* Magnitude of 'd' */
         short           exp;    /* Integer part of base 2 log of 'd' */
@@ -223,11 +217,6 @@ int quantize(int d, int y, short *table, int size)
  * Multiplication is performed in log base 2 domain as addition.
  */
 int reconstruct(int sign, int dqln, int y)
-#if 0
-        int             sign;   /* 0 for non-negative value */
-        int             dqln;   /* G.72x codeword */
-        int             y;      /* Step size multiplier */
-#endif
 {
         short           dql;    /* Log of 'dq' magnitude */
         short           dex;    /* Integer part of log */
@@ -254,16 +243,6 @@ int reconstruct(int sign, int dqln, int y)
  */
 void update(int code_size, int y, int wi, int fi, int dq, int sr, 
             int dqsez, struct g72x_state *state_ptr)
-#if 0
-        int             code_size;      /* distinguish 723_40 with others */
-        int             y;              /* quantizer step size */
-        int             wi;             /* scale factor multiplier */
-        int             fi;             /* for long/short term energies */
-        int             dq;             /* quantized prediction difference */
-        int             sr;             /* reconstructed signal */
-        int             dqsez;          /* difference from 2-pole predictor */
-        struct g72x_state *state_ptr;   /* coder state pointer */
-#endif
 {
         int             cnt;
         short           mag, exp;       /* Adaptive predictor, FLOAT A */
@@ -466,14 +445,6 @@ void update(int code_size, int y, int wi, int fi, int dq, int sr,
  *      adjusted A-law or u-law compressed sample.
  */
 int tandem_adjust_alaw(int sr, int se, int y, int i, int sign, short *qtab)
-#if 0
-        int             sr;     /* decoder output linear PCM sample */
-        int             se;     /* predictor estimate sample */
-        int             y;      /* quantizer step size */
-        int             i;      /* decoder input code */
-        int             sign;
-        short           *qtab;
-#endif
 {
         unsigned char   sp;     /* A-law compressed 8-bit code */
         short           dx;     /* prediction error */
@@ -516,14 +487,6 @@ int tandem_adjust_alaw(int sr, int se, int y, int i, int sign, short *qtab)
 }
 
 int tandem_adjust_ulaw(int sr, int se, int y, int i, int sign, short *qtab)
-#if 0
-        int             sr;     /* decoder output linear PCM sample */
-        int             se;     /* predictor estimate sample */
-        int             y;      /* quantizer step size */
-        int             i;      /* decoder input code */
-        int             sign;
-        short           *qtab;
-#endif
 {
         unsigned char   sp;     /* u-law compressed 8-bit code */
         short           dx;     /* prediction error */
