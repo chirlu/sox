@@ -222,7 +222,7 @@ int st_geteffect_opt(eff_t effp, int argc, char **argv)
 {
     int i, optind;
 
-    for(i = 0; st_effect_fns[i]; i++)
+    for (i = 0; st_effect_fns[i]; i++)
     {
         char *s1, *s2;
         const st_effect_t *e = st_effect_fns[i]();
