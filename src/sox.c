@@ -891,7 +891,11 @@ static void process(void) {
          * we are exiting anyways.
          */
         if (st_close(file_desc[f]) == ST_EOF)
-            st_warn("%s", file_desc[f]->st_errstr);
+        {
+          /* We no longer have any info about this file as we've just
+           * st_close'd it, so just refer to file number: */
+          st_warn("Input file # %i reported an error whilst it was being closed.", f);
+        }
     }
 
     if (writing)
@@ -900,7 +904,11 @@ static void process(void) {
          * are exiting anyways.
          */
         if (st_close(file_desc[file_count-1]) == ST_EOF)
-            st_warn("%s", file_desc[file_count-1]->st_errstr);
+        {
+          /* We no longer have any info about this file as we've just
+           * st_close'd it, so just refer to it as the "Output file": */
+          st_warn("Output file reported an error whilst it was being closed.");
+        }
     }
 }
 
