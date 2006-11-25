@@ -268,12 +268,12 @@ static int optimize_factors(int numer, int denom, int *l1, int *l2)
       if (c_min>cost) {
         c_min = cost;
         u_min = u;
-#       if 0
+#if 0
         st_debug("c_min %d, [%d-%d]:",c_min,numer,denom);
         for (j=0; j<u; j++)
           st_debug(" (%d,%d)",m1[j],m2[j]);
         st_debug("");
-#       endif
+#endif
        memcpy(b1,m1,u*sizeof(int));
        memcpy(b2,m2,u*sizeof(int));
       }
