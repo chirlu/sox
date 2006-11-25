@@ -256,7 +256,6 @@ void RealFFT(int NumSamples, const float *RealIn, float *RealOut, float *ImagOut
 
    float h1r, h1i, h2r, h2i;
 
-
    float *tmpReal = (float*)calloc(Half, sizeof(float));
    float *tmpImag = (float*)calloc(Half, sizeof(float));
 
@@ -267,9 +266,7 @@ void RealFFT(int NumSamples, const float *RealIn, float *RealOut, float *ImagOut
 
    FFT(Half, 0, tmpReal, tmpImag, RealOut, ImagOut);
 
-
    for (i = 1; i < Half / 2; i++) {
-
       i3 = Half - i;
 
       h1r = 0.5 * (RealOut[i] + RealOut[i3]);
@@ -282,11 +279,13 @@ void RealFFT(int NumSamples, const float *RealIn, float *RealOut, float *ImagOut
       RealOut[i3] = h1r - wr * h2r + wi * h2i;
       ImagOut[i3] = -h1i + wr * h2i + wi * h2r;
 
-      wr = (wtemp = wr) * wpr - wi * wpi + wr;
+      wtemp = wr;
+      wr = wr * wpr - wi * wpi + wr;
       wi = wi * wpr + wtemp * wpi + wi;
    }
 
-   RealOut[0] = (h1r = RealOut[0]) + ImagOut[0];
+   h1r = RealOut[0];
+   RealOut[0] += ImagOut[0];
    ImagOut[0] = h1r - ImagOut[0];
 
    free(tmpReal);
@@ -320,59 +319,59 @@ void PowerSpectrum(int NumSamples, const float *In, float *Out)
   theta = M_PI / Half;
 
   tmpReal = (float*)calloc(Half, sizeof(float));
-   tmpImag = (float*)calloc(Half, sizeof(float));
-   RealOut = (float*)calloc(Half, sizeof(float));
-   ImagOut = (float*)calloc(Half, sizeof(float));
+  tmpImag = (float*)calloc(Half, sizeof(float));
+  RealOut = (float*)calloc(Half, sizeof(float));
+  ImagOut = (float*)calloc(Half, sizeof(float));
 
-   for (i = 0; i < Half; i++) {
-      tmpReal[i] = In[2 * i];
-      tmpImag[i] = In[2 * i + 1];
-   }
+  for (i = 0; i < Half; i++) {
+    tmpReal[i] = In[2 * i];
+    tmpImag[i] = In[2 * i + 1];
+  }
 
-   FFT(Half, 0, tmpReal, tmpImag, RealOut, ImagOut);
+  FFT(Half, 0, tmpReal, tmpImag, RealOut, ImagOut);
 
-   wtemp = (float) sin(0.5 * theta);
+  wtemp = (float) sin(0.5 * theta);
 
-   wpr = -2.0 * wtemp * wtemp;
-   wpi = (float) sin(theta);
-   wr = 1.0 + wpr;
-   wi = wpi;
+  wpr = -2.0 * wtemp * wtemp;
+  wpi = (float) sin(theta);
+  wr = 1.0 + wpr;
+  wi = wpi;
 
-   for (i = 1; i < Half / 2; i++) {
+  for (i = 1; i < Half / 2; i++) {
 
-      i3 = Half - i;
+    i3 = Half - i;
+    
+    h1r = 0.5 * (RealOut[i] + RealOut[i3]);
+    h1i = 0.5 * (ImagOut[i] - ImagOut[i3]);
+    h2r = 0.5 * (ImagOut[i] + ImagOut[i3]);
+    h2i = -0.5 * (RealOut[i] - RealOut[i3]);
+    
+    rt = h1r + wr * h2r - wi * h2i;
+    it = h1i + wr * h2i + wi * h2r;
 
-      h1r = 0.5 * (RealOut[i] + RealOut[i3]);
-      h1i = 0.5 * (ImagOut[i] - ImagOut[i3]);
-      h2r = 0.5 * (ImagOut[i] + ImagOut[i3]);
-      h2i = -0.5 * (RealOut[i] - RealOut[i3]);
+    Out[i] = rt * rt + it * it;
 
-      rt = h1r + wr * h2r - wi * h2i;
-      it = h1i + wr * h2i + wi * h2r;
+    rt = h1r - wr * h2r + wi * h2i;
+    it = -h1i + wr * h2i + wi * h2r;
+    
+    Out[i3] = rt * rt + it * it;
+    
+    wr = (wtemp = wr) * wpr - wi * wpi + wr;
+    wi = wi * wpr + wtemp * wpi + wi;
+  }
 
-      Out[i] = rt * rt + it * it;
-
-      rt = h1r - wr * h2r + wi * h2i;
-      it = -h1i + wr * h2i + wi * h2r;
-
-      Out[i3] = rt * rt + it * it;
-
-      wr = (wtemp = wr) * wpr - wi * wpi + wr;
-      wi = wi * wpr + wtemp * wpi + wi;
-   }
-
-   rt = (h1r = RealOut[0]) + ImagOut[0];
-   it = h1r - ImagOut[0];
-   Out[0] = rt * rt + it * it;
-
-   rt = RealOut[Half / 2];
-   it = ImagOut[Half / 2];
-   Out[Half / 2] = rt * rt + it * it;
-   
-   free(tmpReal);
-   free(tmpImag);
-   free(RealOut);
-   free(ImagOut);
+  rt = (h1r = RealOut[0]) + ImagOut[0];
+  it = h1r - ImagOut[0];
+  Out[0] = rt * rt + it * it;
+  
+  rt = RealOut[Half / 2];
+  it = ImagOut[Half / 2];
+  Out[Half / 2] = rt * rt + it * it;
+  
+  free(tmpReal);
+  free(tmpImag);
+  free(RealOut);
+  free(ImagOut);
 }
 
 /*
