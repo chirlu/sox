@@ -287,9 +287,9 @@ int main(int argc, char **argv)
     if (status)
     {
         if (user_abort)
-            fprintf(stderr, "\n\nAborted.\n");
+            fprintf(stderr, "Aborted.\n");
         else
-            fprintf(stderr, "\n\nDone.\n");
+            fprintf(stderr, "Done.\n");
     }
 
     return(0);
@@ -828,6 +828,11 @@ static void process(void) {
       /* Don't write if output is indicating errors. */
       if (writing && file_desc[file_count-1]->st_errno == 0)
         drain_effect_out();
+    }
+
+    if (status)
+    {
+      fputs("\n\n", stderr);
     }
 
     if (soxmix)
