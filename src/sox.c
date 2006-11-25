@@ -1670,7 +1670,7 @@ static void update_status(void)
 static void statistics(void) 
 {
     if (clipped > 0)
-        st_report("Volume change clipped %d samples", clipped);
+        st_warn("Volume change clipped %d samples", clipped);
 }
 
 static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct, 
