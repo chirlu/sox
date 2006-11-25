@@ -245,9 +245,7 @@ int main(int argc, char **argv)
                 optind++;
             }
             else
-            {
                 usage("missing filename");
-            }
         }
     } /* while (commandline options) */
 
