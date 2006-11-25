@@ -41,15 +41,6 @@ st_output_message_handler_t st_output_message_handler = NULL;
 
 
 
-/* This is a bit of a hack.  It's useful to have the ST library
- * report which driver (i.e. format or effect handler) is outputing
- * the message.  Using the filename for this purpose is only an
- * approximation, but it saves a lot of work. ;)
- */
-char const * filename = 0;
-
-
-
 void st_output_message(FILE * file, st_output_message_t message)
 {
   char buffer[10];
@@ -88,12 +79,21 @@ void st_output_message(FILE * file, st_output_message_t message)
 
 
 
+/* This is a bit of a hack.  It's useful to have the ST library
+ * report which driver (i.e. format or effect handler) is outputing
+ * the message.  Using the filename for this purpose is only an
+ * approximation, but it saves a lot of work. ;)
+ */
+char const * st_message_filename = 0;
+
+
+
 static void st_emit_message(int level, char const * fmt, va_list ap)
 {
   if (st_output_message_handler != NULL)
   {
     struct st_output_message_s m;
-    m.filename = filename;
+    m.filename = st_message_filename;
     m.fmt = fmt;
     m.ap = ap;
     (*st_output_message_handler)(level, &m);

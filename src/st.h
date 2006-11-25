@@ -356,7 +356,7 @@ int st_gettype(ft_t);
 ft_t st_initformat(void);
 int st_parsesamples(st_rate_t rate, char *str, st_size_t *samples, char def);
 
-extern char const * filename;
+extern char const * st_message_filename;
 
 #define ST_EOF (-1)
 #define ST_SUCCESS (0)

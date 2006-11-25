@@ -115,12 +115,12 @@ void st_debug(const char *, ...);
 void st_debug_more(char const * fmt, ...);
 void st_debug_most(char const * fmt, ...);
 
-#define st_fail       filename=__FILE__,st_fail
-#define st_warn       filename=__FILE__,st_warn
-#define st_report     filename=__FILE__,st_report
-#define st_debug      filename=__FILE__,st_debug
-#define st_debug_more filename=__FILE__,st_debug_more
-#define st_debug_most filename=__FILE__,st_debug_most
+#define st_fail       st_message_filename=__FILE__,st_fail
+#define st_warn       st_message_filename=__FILE__,st_warn
+#define st_report     st_message_filename=__FILE__,st_report
+#define st_debug      st_message_filename=__FILE__,st_debug
+#define st_debug_more st_message_filename=__FILE__,st_debug_more
+#define st_debug_most st_message_filename=__FILE__,st_debug_most
 
 void st_fail_errno(ft_t, int, const char *, ...);
 
