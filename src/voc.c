@@ -197,8 +197,6 @@ typedef struct vocstuff {
 #define VOC_FMT_MU255          7   /* CCITT u-Law 8-bit PCM */
 #define VOC_FMT_CRLADPCM4A 0x200   /* Creative 16-bit to 4-bit ADPCM */
 
-#define min(a, b)       (((a) < (b)) ? (a) : (b))
-
 /* Prototypes for internal functions */
 static int getblock(ft_t);
 static void blockstart(ft_t);
