@@ -151,6 +151,7 @@ typedef const st_format_t *(*st_format_fn_t)(void);
 extern st_format_fn_t st_format_fns[];
 
 extern const st_format_t *st_aiff_format_fn(void);
+extern const st_format_t *st_aifc_format_fn(void);
 #ifdef HAVE_ALSA
 extern const st_format_t *st_alsa_format_fn(void);
 #endif

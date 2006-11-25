@@ -26,6 +26,7 @@ set effect=%1 %2 %3 %4 %5 %6 %7 %8 %9
 
 call t.bat 8svx
 call t.bat aiff
+call t.bat aifc
 call t.bat au
 call t.bat avr -u
 call t.bat cdr

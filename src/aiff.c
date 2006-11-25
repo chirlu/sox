@@ -38,6 +38,10 @@
  * Jul 12, 2000 - Leigh Smith <leigh@tomandandy.com>
  *   Replaced ANNO with COMT chunk writing headers and added COMT
  *   chunk reading
+ *
+ * Nov 24, 2006 - Shinji Hashimoto <sh@tw.tokai-tv.co.jp>
+ *   added AIFF-C format output that is defined in DAVIC 1.4 Part 9 Annex B
+ *   (usable for japanese-data-broadcasting, specified by ARIB STD-B24.)
  */
 
 #include "st_i.h"
@@ -64,6 +68,7 @@ typedef struct aiffpriv {
 /* forward declarations */
 static double read_ieee_extended(ft_t);
 static int aiffwriteheader(ft_t, st_size_t);
+static int aifcwriteheader(ft_t, st_size_t);
 static void write_ieee_extended(ft_t, double);
 static double ConvertFromIeeeExtended(unsigned char*);
 static void ConvertToIeeeExtended(double, char *);
@@ -188,7 +193,7 @@ int st_aiffstartread(ft_t ft)
                             else if (strncmp(buf, "NONE", 4) != 0)
                             {
                                 buf[4] = 0;
-                                st_fail_errno(ft,ST_EHDR,"Can not support AIFC files that contain compressed data: %s",buf);
+                                st_fail_errno(ft,ST_EHDR,"AIFC files that contain compressed data are not supported: %s",buf);
                                 return(ST_EOF);
                             }
                         }
@@ -702,7 +707,7 @@ int st_aiffstartwrite(ft_t ft)
         if (rc)
             return rc;
 
-        /* AIFF is in Big Endian format.  Swap whats read in on Little */
+        /* AIFF is in Big Endian format.  Swap what's read in on Little */
         /* Endian machines.                                            */
         if (ST_IS_LITTLEENDIAN)
         {
@@ -899,6 +904,125 @@ static int aiffwriteheader(ft_t ft, st_size_t nframes)
         st_writedw(ft, 8 + nframes * ft->info.channels * ft->info.size); 
         st_writedw(ft, 0); /* offset */
         st_writedw(ft, 0); /* block size */
+        return(ST_SUCCESS);
+}
+
+int st_aifcstartwrite(ft_t ft)
+{
+        aiff_t aiff = (aiff_t ) ft->priv;
+        int rc;
+
+        /* Needed because st_rawwrite() */
+        rc = st_rawstartwrite(ft);
+        if (rc)
+            return rc;
+
+        /* AIFC is in Big Endian format.  Swap what's read in on Little */
+        /* Endian machines.                                            */
+        if (ST_IS_LITTLEENDIAN)
+        {
+            ft->swap = ft->swap ? 0 : 1;
+        }
+
+        aiff->nsamples = 0;
+        if ((ft->info.encoding == ST_ENCODING_ULAW ||
+             ft->info.encoding == ST_ENCODING_ALAW) && 
+            ft->info.size == ST_SIZE_BYTE) {
+                st_report("expanding 8-bit u-law to signed 16 bits");
+                ft->info.encoding = ST_ENCODING_SIGN2;
+                ft->info.size = ST_SIZE_WORD;
+        }
+        if (ft->info.encoding != -1 && ft->info.encoding != ST_ENCODING_SIGN2)
+            st_report("AIFC only supports signed data.  Forcing to signed.");
+        ft->info.encoding = ST_ENCODING_SIGN2; /* We have a fixed encoding */
+
+        /* Compute the "very large number" so that a maximum number
+           of samples can be transmitted through a pipe without the
+           risk of causing overflow when calculating the number of bytes.
+           At 48 kHz, 16 bits stereo, this gives ~3 hours of music.
+           Sorry, the AIFC format does not provide for an "infinite"
+           number of samples. */
+        return(aifcwriteheader(ft, 0x7f000000L / (ft->info.size*ft->info.channels)));
+}
+
+int st_aifcstopwrite(ft_t ft)
+{
+        aiff_t aiff = (aiff_t ) ft->priv;
+        int rc;
+
+        /* Needed because of st_rawwrite().  Call now to flush
+         * buffer now before seeking around below.
+         */
+        rc = st_rawstopwrite(ft);
+        if (rc)
+            return rc;
+
+        if (!ft->seekable)
+        {
+            st_fail_errno(ft,ST_EOF,"Non-seekable file.");
+            return(ST_EOF);
+        }
+        if (st_seeki(ft, 0L, SEEK_SET) != 0)
+        {
+                st_fail_errno(ft,errno,"can't rewind output file to rewrite AIFC header");
+                return(ST_EOF);
+        }
+        return(aifcwriteheader(ft, aiff->nsamples / ft->info.channels));
+}
+
+static int aifcwriteheader(ft_t ft, st_size_t nframes)
+{
+        int hsize =
+                12 /*FVER*/ + 8 /*COMM hdr*/ + 18+4+1+15 /*COMM chunk*/ +
+                8 /*SSND hdr*/ + 12 /*SSND chunk*/;
+        int bits = 0;
+
+        if (ft->info.encoding == ST_ENCODING_SIGN2 && 
+            ft->info.size == ST_SIZE_BYTE)
+                bits = 8;
+        else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
+                 ft->info.size == ST_SIZE_WORD)
+                bits = 16;
+        else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
+                 ft->info.size == ST_SIZE_DWORD)
+                bits = 32;
+        else
+        {
+                st_fail_errno(ft,ST_EFMT,"unsupported output encoding/size for AIFC header");
+                return(ST_EOF);
+        }
+
+        st_writes(ft, "FORM"); /* IFF header */
+        /* file size */
+        st_writedw(ft, hsize + nframes * ft->info.size * ft->info.channels); 
+        st_writes(ft, "AIFC"); /* File type */
+
+        /* FVER chunk */
+        st_writes(ft, "FVER");
+        st_writedw(ft, 4); /* FVER chunk size */
+        st_writedw(ft, 0xa2805140L); /* version_date(May23,1990,2:40pm) */
+
+        /* COMM chunk -- describes encoding (and #frames) */
+        st_writes(ft, "COMM");
+        st_writedw(ft, 18+4+1+15); /* COMM chunk size */
+        st_writew(ft, ft->info.channels); /* nchannels */
+        st_writedw(ft, nframes); /* number of frames */
+        st_writew(ft, bits); /* sample width, in bits */
+        write_ieee_extended(ft, (double)ft->info.rate);
+
+        st_writes(ft, "NONE"); /*compression_type*/
+        st_writeb(ft, 14);
+        st_writes(ft, "not compressed");
+        st_writeb(ft, 0);
+
+        /* SSND chunk -- describes data */
+        st_writes(ft, "SSND");
+        /* chunk size */
+        st_writedw(ft, 8 + nframes * ft->info.channels * ft->info.size); 
+        st_writedw(ft, 0); /* offset */
+        st_writedw(ft, 0); /* block size */
+
+        /* Any Private chunks shall appear after the required chunks (FORM,FVER,COMM,SSND) */
         return(ST_SUCCESS);
 }
 
@@ -1124,4 +1248,28 @@ static st_format_t st_aiff_format = {
 const st_format_t *st_aiff_format_fn(void)
 {
     return &st_aiff_format;
+}
+
+static char *aifcnames[] = {
+  "aifc",
+  "aiffc",
+  NULL
+};
+
+static st_format_t st_aifc_format = {
+  aifcnames,
+  NULL,
+  ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK,
+  st_aiffstartread,
+  st_aiffread,
+  st_aiffstopread,
+  st_aifcstartwrite,
+  st_aiffwrite,
+  st_aifcstopwrite,
+  st_aiffseek
+};
+
+const st_format_t *st_aifc_format_fn(void)
+{
+    return &st_aifc_format;
 }

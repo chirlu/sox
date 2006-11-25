@@ -10,6 +10,7 @@ t() {
 }
 t 8svx
 t aiff
+t aifc
 t au 
 t avr -u
 t cdr

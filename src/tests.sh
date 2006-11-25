@@ -44,10 +44,10 @@ convertToAndFrom () {
 
 format1=ub
 rate=8012
-convertToAndFrom sb ub sw uw s3 u3 sl u4 raw dat au wav aiff flac al
+convertToAndFrom sb ub sw uw s3 u3 sl u4 raw dat au wav aiff aifc flac al
 
 format1=sw
-convertToAndFrom sw uw s3 u3 sl u4 raw au wav aiff flac ul
+convertToAndFrom sw uw s3 u3 sl u4 raw au wav aiff aifc flac ul
 
 format1=u3
 convertToAndFrom s3 u3 sl u4 wav flac
@@ -62,7 +62,7 @@ format1=ul
 convertToAndFrom ul sw uw sl raw dat
 
 format1=Wav
-convertToAndFrom Wav 8svx aiff au avr dat maud sf smp
+convertToAndFrom Wav 8svx aiff aifc au avr dat maud sf smp
 rate=5512
 convertToAndFrom hcom
 rate=8000

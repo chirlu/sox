@@ -17,6 +17,7 @@
 /* File format handlers. */
 st_format_fn_t st_format_fns[] = {
   st_aiff_format_fn,
+  st_aifc_format_fn,
   st_al_format_fn,
 #if     defined(HAVE_ALSA)
   st_alsa_format_fn,
