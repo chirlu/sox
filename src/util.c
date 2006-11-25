@@ -25,56 +25,109 @@
  * and utility routines for other main programs to use.
  */
 
-/* export flags */
-/* FIXME: To be moved inside of fileop structure per handler. */
-int verbose = 0;        /* be noisy on stderr */
 
-/* FIXME:  These functions are user level concepts.  Move them outside
- * the ST library.
+
+
+struct st_output_message_s
+{
+  char const * filename;
+  char const * fmt;
+  va_list      ap;
+};
+
+
+
+st_output_message_handler_t st_output_message_handler = NULL;
+
+
+
+/* This is a bit of a hack.  It's useful to have the ST library
+ * report which driver (i.e. format or effect handler) is outputing
+ * the message.  Using the filename for this purpose is only an
+ * approximation, but it saves a lot of work. ;)
  */
-char *myname = 0;
+char const * filename = 0;
 
-void st_report(const char *fmt, ...)
+
+
+void st_output_message(FILE * file, st_output_message_t message)
 {
-        va_list args;
+  char buffer[10];
+  char const * drivername;
+  char const * dot_pos;
+ 
+  drivername = strrchr(message->filename, '/');
+  if (drivername != NULL)
+  {
+    ++drivername;
+  }
+  else
+  {
+    drivername = strrchr(message->filename, '\\');
+    if (drivername != NULL)
+    {
+      ++drivername;
+    }
+    else
+    {
+      drivername = message->filename;
+    }
+  }
 
-        if (! verbose)
-                return;
+  dot_pos = strrchr(drivername, '.');
+  if (dot_pos != NULL && dot_pos - drivername <= sizeof(buffer) - 1)
+  {
+    strncpy(buffer, drivername, dot_pos - drivername);
+    buffer[dot_pos - drivername] = '\0';
+    drivername = buffer;
+  }
 
-        fprintf(stderr, "%s: ", myname);
-        va_start(args, fmt);
-        vfprintf(stderr, fmt, args);
-        va_end(args);
-        fprintf(stderr, "\n");
+  fprintf(file, "%s: ", drivername);
+  vfprintf(file, message->fmt, message->ap);
 }
 
-void st_warn(const char *fmt, ...)
+
+
+static void st_emit_message(int level, char const * fmt, va_list ap)
 {
-        va_list args;
-
-        fprintf(stderr, "%s: ", myname);
-        va_start(args, fmt);
-
-        vfprintf(stderr, fmt, args);
-        va_end(args);
-        fprintf(stderr, "\n");
+  if (st_output_message_handler != NULL)
+  {
+    struct st_output_message_s m;
+    m.filename = filename;
+    m.fmt = fmt;
+    m.ap = ap;
+    (*st_output_message_handler)(level, &m);
+  }
 }
 
-/* Warning: This function is depricated.  st_fail_errno() is
- * the preferred way so that applications can control printing
- * to their choice; not just stderr.
- */
-void st_fail(const char *fmt, ...)
-{
-        va_list args;
 
-        fprintf(stderr, "%s: ", myname);
 
-        va_start(args, fmt);
-        vfprintf(stderr, fmt, args);
-        va_end(args);
-        fprintf(stderr, "\n");
+#undef st_fail
+#undef st_warn
+#undef st_report
+#undef st_debug
+#undef st_debug_more
+#undef st_debug_most
+
+#define ST_MESSAGE_FUNCTION(name,level) \
+void name(char const * fmt, ...) \
+{ \
+  va_list args; \
+\
+  va_start(args, fmt); \
+  st_emit_message(level, fmt, args); \
+  va_end(args); \
 }
+
+ST_MESSAGE_FUNCTION(st_fail  , 1)
+ST_MESSAGE_FUNCTION(st_warn  , 2)
+ST_MESSAGE_FUNCTION(st_report, 3)
+ST_MESSAGE_FUNCTION(st_debug , 4)
+ST_MESSAGE_FUNCTION(st_debug_more , 5)
+ST_MESSAGE_FUNCTION(st_debug_most , 6)
+
+#undef ST_MESSAGE_FUNCTION
+
 
 
 /* Warning: no error checking is done with errstr.  Be sure not to

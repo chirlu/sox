@@ -275,15 +275,15 @@ int st_vocstartread(ft_t ft)
             ft->info.encoding = ST_ENCODING_UNSIGNED;
             break;
         case VOC_FMT_CRLADPCM4:  /*     1    Creative 8-bit to 4-bit ADPCM */
-            st_warn ("Unsupported VOC format CRLADPCM4 %d", v->format);
+            st_fail ("Unsupported VOC format CRLADPCM4 %d", v->format);
             rtn=ST_EOF;
             break;
         case VOC_FMT_CRLADPCM3:  /*     2    Creative 8-bit to 3-bit ADPCM */
-            st_warn ("Unsupported VOC format CRLADPCM3 %d", v->format);
+            st_fail ("Unsupported VOC format CRLADPCM3 %d", v->format);
             rtn=ST_EOF;
             break;
         case VOC_FMT_CRLADPCM2:  /*     3    Creative 8-bit to 2-bit ADPCM */
-            st_warn ("Unsupported VOC format CRLADPCM2 %d", v->format);
+            st_fail ("Unsupported VOC format CRLADPCM2 %d", v->format);
             rtn=ST_EOF;
             break;
         case VOC_FMT_LIN16:      /*     4    16-bit signed PCM */
@@ -296,11 +296,11 @@ int st_vocstartread(ft_t ft)
             ft->info.encoding = ST_ENCODING_ULAW;
             break;
         case VOC_FMT_CRLADPCM4A: /*0x200    Creative 16-bit to 4-bit ADPCM */
-            printf ("Unsupported VOC format CRLADPCM4A %d", v->format);
+            st_fail ("Unsupported VOC format CRLADPCM4A %d", v->format);
             rtn=ST_EOF;
             break;
         default:
-            printf ("Unknown VOC format %d", v->format);
+            st_fail ("Unknown VOC format %d", v->format);
             rtn=ST_EOF;
             break;
         }
@@ -655,27 +655,37 @@ static int getblock(ft_t ft)
                         st_readb(ft, &uc);
                         /* Falling! Falling! */
                 case VOC_TEXT:
-                        {
-                            uint32_t i;
-                            /* Could add to comment in SF? */
-                            for(i = 0; i < sblen; i++) {
-                                st_readb(ft, (unsigned char *)&trash);
-                                /* uncomment lines below to display text */
-                                /* Note, if this is uncommented, studio */
-                                /* will not be able to read the VOC file */
-                                /* ANN:  added verbose dump of text info */
-                                /* */
-                                if (verbose) {
-                                    if ((trash != '\0') && (trash != '\r'))
-                                        putc (trash, stderr);
-                                }
-                                /* */
+                        { 
+                          /* TODO: Could add to comment in SF? */
+
+                          /* Note, if this is sent to stderr, studio */
+                          /* will not be able to read the VOC file */
+
+                          uint32_t i = sblen;
+                          char c/*, line_buf[80];
+                          int len = 0*/;
+
+                          while (i--)
+                          {
+                            st_readb(ft, (unsigned char *)&c);
+                            /* FIXME: this needs to be tested but I couldn't
+                             * find a voc file with a VOC_TEXT chunk :(
+                            if (c != '\0' && c != '\r')
+                              line_buf[len++] = c;
+                            if (len && (c == '\0' || c == '\r' ||
+                                i == 0 || len == sizeof(line_buf) - 1))
+                            {
+                              st_report("%s", line_buf);
+                              line_buf[len] = '\0';
+                              len = 0;
                             }
+                            */
+                          }
                         }
                         continue;       /* get next block */
                 case VOC_LOOP:
                 case VOC_LOOPEND:
-                        st_report("File %s: skipping repeat loop");
+                        st_debug("File %s: skipping repeat loop");
                         for(i = 0; i < sblen; i++)
                             st_readb(ft, (unsigned char *)&trash);
                         break;
@@ -720,7 +730,7 @@ static int getblock(ft_t ft)
                         /* can be grabed.                               */
                         continue;
                 default:
-                        st_report("File %s: skipping unknown block code %d",
+                        st_debug("File %s: skipping unknown block code %d",
                                 ft->filename, block);
                         for(i = 0; i < sblen; i++)
                             st_readb(ft, (unsigned char *)&trash);

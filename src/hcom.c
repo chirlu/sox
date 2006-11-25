@@ -140,7 +140,7 @@ int st_hcomstartread(ft_t ft)
                 st_readw(ft, (unsigned short *)&(p->dictionary[i].dict_leftson));
                 st_readw(ft, (unsigned short *)&(p->dictionary[i].dict_rightson));
                 /*
-                st_report("%d %d",
+                st_debug("%d %d",
                        p->dictionary[i].dict_leftson,
                        p->dictionary[i].dict_rightson);
                        */
@@ -153,7 +153,7 @@ int st_hcomstartread(ft_t ft)
         p->checksum = checksum;
         p->deltacompression = compresstype;
         if (!p->deltacompression)
-                st_report("HCOM data using value compression");
+                st_debug("HCOM data using value compression");
         p->huffcount = huffcount;
         p->cksum = 0;
         p->dictentry = 0;
@@ -419,10 +419,8 @@ static int compress(unsigned char **df, int32_t *dl, float fr)
     d = (datafork[i] - (sample & 0xff)) & 0xff; /* creates absolute entries LMS */
     sample = datafork[i];
     datafork[i] = d;
-#if 0                           /* checking our table is accessed correctly */
-    if(d < 0 || d > 255)
-      printf("d is outside array bounds %d\n", d);
-#endif
+    if(d < 0 || d > 255) /* checking our table is accessed correctly */
+      st_debug("d is outside array bounds %d", d);
     frequtable[d]++;
   }
   de = dictionary;
@@ -476,8 +474,8 @@ static int compress(unsigned char **df, int32_t *dl, float fr)
           l += frequtable[i] * codesize[i];
   }
   l = (((l + 31) >> 5) << 2) + 24 + dictsize * 4;
-  st_report("  Original size: %6d bytes", *dl);
-  st_report("Compressed size: %6d bytes", l);
+  st_debug("  Original size: %6d bytes", *dl);
+  st_debug("Compressed size: %6d bytes", l);
   if((datafork = (unsigned char *)malloc((unsigned)l)) == NULL)
   {
     return (ST_ENOMEM);

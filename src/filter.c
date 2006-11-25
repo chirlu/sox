@@ -81,7 +81,7 @@ int st_filter_getopts(eff_t effp, int n, char **argv)
                 }
                 if (*p) f->freq1 = f->freq0 = 0;
         }
-        /* fprintf(stderr,"freq: %d-%d\n", f->freq0, f->freq1);fflush(stderr); */
+        st_debug("freq: %d-%d", f->freq0, f->freq1);
         if (f->freq0 == 0 && f->freq1 == 0)
         {
                 st_fail(st_filter_effect.usage);
@@ -104,7 +104,7 @@ int st_filter_getopts(eff_t effp, int n, char **argv)
                 return (ST_EOF);
         }
 
-        st_report("filter opts: %d-%d, window-len %d, beta %f\n", f->freq0, f->freq1, f->Nwin, f->beta);
+        st_debug("filter opts: %d-%d, window-len %d, beta %f", f->freq0, f->freq1, f->Nwin, f->beta);
         return (ST_SUCCESS);
 }
 
@@ -137,7 +137,7 @@ int st_filter_start(eff_t effp)
                 Xh0 = makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, 1, 0);
                 if (Xh0 <= 1)
                 {
-                        st_fail("filter: Unable to make low filter\n");
+                        st_fail("filter: Unable to make low filter");
                         return (ST_EOF);
                 }
         } else {
@@ -149,7 +149,7 @@ int st_filter_start(eff_t effp)
                 Xh1 = makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, 1, 0);
                 if (Xh1 <= 1)
                 {
-                        st_fail("filter: Unable to make high filter\n");
+                        st_fail("filter: Unable to make high filter");
                         return (ST_EOF);
                 }
         } else {
@@ -196,7 +196,7 @@ int st_filter_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         long i, Nx, Nproc;
 
         /* constrain amount we actually process */
-        /* fprintf(stderr,"Xh %d, Xt %d, isamp %d, ",f->Xh, f->Xt, *isamp);fflush(stderr); */
+        /* st_debug("Xh %d, Xt %d, isamp %d, ",f->Xh, f->Xt, *isamp); */
         Nx = BUFFSIZE + 2*f->Xh - f->Xt;
         if (Nx > *isamp) Nx = *isamp;
         if (Nx > *osamp) Nx = *osamp;
@@ -222,7 +222,7 @@ int st_filter_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 *osamp = 0;
                 return (ST_SUCCESS);
         }
-        /* fprintf(stderr,"flow Nproc %d\n",Nproc); */
+        st_debug("flow Nproc %d",Nproc);
         FiltWin(f, Nproc);
 
         /* Copy back portion of input signal that must be re-used */
@@ -247,7 +247,7 @@ int st_filter_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         long isamp_res, osamp_res;
         st_sample_t *Obuf;
 
-        /* fprintf(stderr,"Xh %d, Xt %d  <--- DRAIN\n",f->Xh, f->Xt); */
+        st_debug("Xh %d, Xt %d  <--- DRAIN",f->Xh, f->Xt);
 
         /* stuff end with Xh zeros */
         isamp_res = f->Xh;
@@ -258,16 +258,16 @@ int st_filter_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 Isamp = isamp_res;
                 Osamp = osamp_res;
                 st_filter_flow(effp, NULL, Obuf, (st_size_t *)&Isamp, (st_size_t *)&Osamp);
-          /* fprintf(stderr,"DRAIN isamp,osamp  (%d,%d) -> (%d,%d)\n",
+          /* st_debug("DRAIN isamp,osamp  (%d,%d) -> (%d,%d)",
                  * isamp_res,osamp_res,Isamp,Osamp); */
                 Obuf += Osamp;
                 osamp_res -= Osamp;
                 isamp_res -= Isamp;
         };
         *osamp -= osamp_res;
-        /* fprintf(stderr,"DRAIN osamp %d\n", *osamp); */
+        /* st_debug("DRAIN osamp %d", *osamp); */
         if (isamp_res)
-                st_warn("drain overran obuf by %d\n", isamp_res); fflush(stderr);
+                st_warn("drain overran obuf by %d", isamp_res);
         /* FIXME: This is very picky. osamp better be big enough to grab
          * all remaining samples or they will be discarded.
          */

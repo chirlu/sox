@@ -139,7 +139,7 @@ int st_stat_start(eff_t effp)
 
             if (bitmask && (stat->fft_size & ~bitmask))
             {
-                st_fail("FFT can only use sample buffers of 2^n. Buffer size used is %ld\n",stat->fft_size);
+                st_fail("FFT can only use sample buffers of 2^n. Buffer size used is %ld",stat->fft_size);
                 return(ST_EOF);
             }
 
@@ -148,7 +148,7 @@ int st_stat_start(eff_t effp)
 
             if (!stat->re || !stat->im)
             {
-                st_fail("Unable to allocate memory for FFT buffers.\n");
+                st_fail("Unable to allocate memory for FFT buffers.");
                 return (ST_EOF);
             }
         }

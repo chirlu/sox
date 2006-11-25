@@ -173,12 +173,12 @@ int st_reverb_start(eff_t effp)
                 reverb->samples[i] = reverb->delay[i] * effp->ininfo.rate / 1000.0;
                 if ( reverb->samples[i] < 1 )
                 {
-                    st_fail("reverb: delay must be positive!\n");
+                    st_fail("reverb: delay must be positive!");
                     return (ST_EOF);
                 }
                 if ( reverb->samples[i] > DELAY_BUFSIZ )
                 {
-                        st_fail("reverb: delay must be less than %g seconds!\n",
+                        st_fail("reverb: delay must be less than %g seconds!",
                                 DELAY_BUFSIZ / (float) effp->ininfo.rate );
                         return(ST_EOF);
                 }
@@ -189,7 +189,7 @@ int st_reverb_start(eff_t effp)
         }
         if (! (reverb->reverbbuf = (float *) malloc(sizeof (float) * reverb->maxsamples)))
         {
-                st_fail("reverb: Cannot malloc %d bytes!\n", 
+                st_fail("reverb: Cannot malloc %d bytes!", 
                         sizeof(float) * reverb->maxsamples);
                 return(ST_EOF);
         }

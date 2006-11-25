@@ -100,14 +100,14 @@ int st_earwax_start(eff_t effp)
   if (effp->ininfo.encoding != ST_ENCODING_SIGN2
       || effp->ininfo.rate != 44100
       || effp->ininfo.channels != 2){
-    st_fail("the earwax effect works only with audio cd (44.1 kHz, twos-complement signed linear, stereo) samples.\n");
+    st_fail("the earwax effect works only with audio cd (44.1 kHz, twos-complement signed linear, stereo) samples.");
     return (ST_EOF);
   }
 
   /* allocate tap memory */
   earwax->tap = (st_sample_t*)malloc( sizeof(st_sample_t) * EARWAX_NUMTAPS );
   if( !earwax->tap ){
-    st_fail("earwax: Cannot malloc %d bytes!\n", 
+    st_fail("earwax: Cannot malloc %d bytes!", 
             sizeof(st_sample_t) * EARWAX_NUMTAPS );
     return (ST_EOF);
   }

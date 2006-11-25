@@ -211,7 +211,7 @@ int refill_buffer (vorbis_t vb)
                 if (num_read == 0)
                         return (BUF_EOF);
                 else if (num_read == OV_HOLE)
-                        st_warn("Warning: hole in stream; probably harmless\n");
+                        st_warn("Warning: hole in stream; probably harmless");
                 else if (num_read < 0)
                         return (BUF_ERROR);
                 else

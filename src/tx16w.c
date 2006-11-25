@@ -123,7 +123,7 @@ int st_txwstartread(ft_t ft)
      */
 
     /* Check to make sure we got a good filetype ID from file */
-    st_report("Found header filetype %s",filetype);
+    st_debug("Found header filetype %s",filetype);
     if(strcmp(filetype,"LM8953"))
     {
         st_fail_errno(ft,ST_EHDR,"Invalid filetype ID in input file header, != LM8953");
@@ -166,11 +166,11 @@ int st_txwstartread(ft_t ft)
                     break;
             }
             if ( blewIt ) {
-                st_report("Invalid sample rate identifier found %d", (int)sample_rate);
+                st_debug("Invalid sample rate identifier found %d", (int)sample_rate);
                 ft->info.rate = 33333;
             }
     }
-    st_report("Sample rate = %ld",ft->info.rate);
+    st_debug("Sample rate = %ld",ft->info.rate);
 
     ft->info.channels = 1 ; /* not sure about stereo sample data yet ??? */
     ft->info.size = ST_SIZE_WORD; /* this is close enough */
@@ -249,7 +249,7 @@ int st_txwstartwrite(ft_t ft)
 {
     struct WaveHeader_ WH;
 
-    st_report("tx16w selected output");
+    st_debug("tx16w selected output");
 
     memset(&WH, 0, sizeof(struct WaveHeader_));
 
@@ -308,7 +308,7 @@ int st_txwstopwrite(ft_t ft)
     /* If file header needs fixing up, for example it needs the */
     /* the number of samples in a field, seek back and write them here. */
 
-    st_report("tx16w:output finished");
+    st_debug("tx16w:output finished");
 
     memset(&WH, 0, sizeof(struct WaveHeader_));
     strncpy(WH.filetype,"LM8953",6);
@@ -326,7 +326,7 @@ int st_txwstopwrite(ft_t ft)
     else                            WH.sample_rate = 2;
 
     if (tx16w_len >= TXMAXLEN) {
-        st_warn("Sound too large for TX16W. Truncating, Loop Off\n");
+        st_warn("Sound too large for TX16W. Truncating, Loop Off");
         AttackLength       = TXMAXLEN/2;
         LoopLength         = TXMAXLEN/2;
     }

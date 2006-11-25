@@ -165,6 +165,23 @@ static int input_eff_eof;                /* has input_eff reached EOF? */
 static struct st_effect user_efftab[MAX_USER_EFF];
 static int nuser_effects;
 
+static int verbosity_level = 2;        /* be noisy on stderr */
+static char * myname = 0;
+
+
+
+static void sox_output_message(int level, st_output_message_t m)
+{
+  if (verbosity_level >= level)
+  {
+    fprintf(stderr, "%s ", myname);
+    st_output_message(stderr, m);
+    fprintf(stderr, "\n");
+  }
+}
+
+
+
 int main(int argc, char **argv)
 {
     file_options_t *fo;
@@ -176,6 +193,8 @@ int main(int argc, char **argv)
     if (i >= sizeof("soxmix") - 1)
       soxmix = strcmp(myname + i - (sizeof("soxmix") - 1), "soxmix") == 0;
     
+    st_output_message_handler = sox_output_message;
+
     /* Loop over arguments and filenames, stop when an effect name is 
      * found.
      */
@@ -183,7 +202,7 @@ int main(int argc, char **argv)
     {
         if (file_count >= MAX_FILES)
         {
-            st_fail("to many filenames. max of %d input files and 1 output file\n", MAX_INPUT_FILES);
+            st_fail("too many filenames. max of %d input files and 1 output file", MAX_INPUT_FILES);
             exit(1);
         }
 
@@ -295,7 +314,7 @@ int main(int argc, char **argv)
     return(0);
 }
 
-static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lfdxVSqo";
+static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lfdxV::Sqo";
 
 static struct option long_options[] =
 {
@@ -368,7 +387,7 @@ static void doopts(file_options_t *fo, int argc, char **argv)
                 }
                 fo->uservolume = 1;
                 if (fo->volume < 0.0)
-                    st_report("Volume adjustment is negative.  This will result in a phase change\n");
+                    st_report("Volume adjustment is negative.  This will result in a phase change");
                 break;
 
             case 'c':
@@ -452,7 +471,17 @@ static void doopts(file_options_t *fo, int argc, char **argv)
                 break;
 
             case 'V':
-                verbose = 1;
+                str = optarg;
+                if (optarg == NULL)
+                {
+                  ++verbosity_level;
+                }
+                else if (sscanf(str, "%i", &verbosity_level) == 0)
+                {
+                  st_fail("argument for -V must be an integer");
+                  cleanup();
+                  exit(1);
+                }
                 break;
 
             case 'S':
@@ -537,7 +566,7 @@ static void process(void) {
                   (file_desc[f]->info.channels > 1) ? "channels" : "channel");
 
         if (file_desc[f]->comment)
-            st_report("Input file %s: comment \"%s\"\n",
+            st_report("Input file %s: comment \"%s\"",
                       file_desc[f]->filename, file_desc[f]->comment);
     }
 
@@ -621,7 +650,7 @@ static void process(void) {
                   (file_desc[file_count-1]->info.channels > 1) ? "channels" : "channel");
 
         if (file_desc[file_count-1]->comment)
-            st_report("Output file: comment \"%s\"\n", 
+            st_report("Output file: comment \"%s\"", 
                       file_desc[file_count-1]->comment);
     }
 
@@ -692,7 +721,7 @@ static void process(void) {
                          (st_ssize_t)ST_BUFSIZ);
           if (ilen[0] > ST_BUFSIZ)
             {
-              st_warn("WARNING: Corrupt value of %d!  Assuming 0 bytes read.\n", ilen);
+              st_warn("WARNING: Corrupt value of %d!  Assuming 0 bytes read.", ilen);
               ilen[0] = 0;
             }
           
@@ -886,7 +915,7 @@ static void parse_effects(int argc, char **argv)
     {
         if (nuser_effects >= MAX_USER_EFF)
         {
-            st_fail("Too many effects specified.\n");
+            st_fail("Too many effects specified.");
             cleanup();
             exit(2);
         }

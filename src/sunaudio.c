@@ -76,7 +76,7 @@ int st_sunstartread(ft_t ft)
         st_fail_errno(ft,errno,"Unable to get device information.");
         return(ST_EOF);
     }
-    st_report("Hardware detected:  %s\n",audio_dev.name);
+    st_report("Hardware detected:  %s",audio_dev.name);
     if (strcmp("SUNW,am79c30",audio_dev.name) == 0)
     {
         simple_hw = 1;
@@ -210,7 +210,7 @@ int st_sunstartwrite(ft_t ft)
         st_fail_errno(ft,errno,"Unable to get device information.");
         return(ST_EOF);
     }
-    st_report("Hardware detected:  %s\n",audio_dev.name);
+    st_report("Hardware detected:  %s",audio_dev.name);
     if (strcmp("SUNW,am79c30",audio_dev.name) == 0)
     {
         simple_hw = 1;

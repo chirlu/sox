@@ -327,7 +327,7 @@ st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len)
                     continue;
                 else
                 {
-                    st_report("unrecoverable frame level error (%s).\n",
+                    st_report("unrecoverable frame level error (%s).",
                               mad_stream_errorstr(p->Stream));
                     return done;
                 }

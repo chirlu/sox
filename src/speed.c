@@ -64,7 +64,7 @@ typedef struct
 /*
 static void debug(char * where, speed_t s)
 {
-    fprintf(stderr, "%s: f=%f r=%f comp=%d i=%d ic=%d frac=%f state=%d v=%f\n",
+    st_debug("%s: f=%f r=%f comp=%d i=%d ic=%d frac=%f state=%d v=%f",
             where, s->factor, s->rate, s->compression, s->index,
             s->icbuf, s->frac, s->state, s->cbuf[0]);
 }
@@ -107,14 +107,14 @@ int st_speed_getopts(eff_t effp, int n, char **argv)
     if (n && (!sscanf(argv[0], SPEED_FLOAT_SCAN, &speed->factor) ||
               (cent==0 && speed->factor<=ZERO)))
     {
-        printf("n = %d cent = %d speed = %f\n",n,cent,speed->factor);
+        st_debug("n = %d cent = %d speed = %f",n,cent,speed->factor);
         st_fail(st_speed_effect.usage);
         return ST_EOF;
     }
     else if (cent != 0) /* CONST==2**(1/1200) */
     {
         speed->factor = pow((double)1.00057778950655, speed->factor);
-        /* fprintf(stderr, "Speed factor: %f\n", speed->factor);*/
+        /* st_debug("Speed factor: %f", speed->factor);*/
     }
 
     return ST_SUCCESS;

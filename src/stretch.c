@@ -86,7 +86,7 @@ typedef struct
 /*
 static void debug(stretch_t s, char * where)
 {
-    fprintf(stderr, 
+    st_debug(
             "%s: (f=%.2f w=%.2f r=%.2f f=%.2f)"
             " st=%d s=%d ii=%d is=%d oi=%d os=%d fs=%d\n",
             where, s->factor, s->window, s->shift, s->fading,

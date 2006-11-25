@@ -64,7 +64,7 @@ int st_highp_start(eff_t effp)
         highp_t highp = (highp_t) effp->priv;
         if (highp->cutoff > effp->ininfo.rate/2)
         {
-                st_fail("Highpass: cutoff must be < sample rate / 2 (Nyquest rate)\n");
+                st_fail("Highpass: cutoff must be < sample rate / 2 (Nyquest rate)");
                 return (ST_EOF);
         }
 

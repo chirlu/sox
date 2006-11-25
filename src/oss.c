@@ -147,7 +147,7 @@ static int ossdspinit(ft_t ft)
 
     if (tmp != dsp_stereo)
     {
-        st_warn("Sound card appears to only support %d channels.  Overriding format\n", tmp+1);
+        st_warn("Sound card appears to only support %d channels.  Overriding format", tmp+1);
         ft->info.channels = tmp + 1;
     }
 

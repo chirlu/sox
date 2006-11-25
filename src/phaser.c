@@ -123,32 +123,32 @@ int st_phaser_start(eff_t effp)
 
         if ( phaser->delay < 0.0 )
         {
-            st_fail("phaser: delay must be positive!\n");
+            st_fail("phaser: delay must be positive!");
             return (ST_EOF);
         }
         if ( phaser->delay > 5.0 )
         {
-            st_fail("phaser: delay must be less than 5.0 msec!\n");
+            st_fail("phaser: delay must be less than 5.0 msec!");
             return (ST_EOF);
         }
         if ( phaser->speed < 0.1 )
         {
-            st_fail("phaser: speed must be more than 0.1 Hz!\n");
+            st_fail("phaser: speed must be more than 0.1 Hz!");
             return (ST_EOF);
         }
         if ( phaser->speed > 2.0 )
         {
-            st_fail("phaser: speed must be less than 2.0 Hz!\n");
+            st_fail("phaser: speed must be less than 2.0 Hz!");
             return (ST_EOF);
         }
         if ( phaser->decay < 0.0 )
         {
-            st_fail("phaser: decay must be positive!\n" );
+            st_fail("phaser: decay must be positive!" );
             return (ST_EOF);
         }
         if ( phaser->decay >= 1.0 )
         {
-            st_fail("phaser: decay must be less that 1.0!\n" );
+            st_fail("phaser: decay must be less that 1.0!" );
             return (ST_EOF);
         }
         /* Be nice and check the hint with warning, if... */
@@ -162,7 +162,7 @@ int st_phaser_start(eff_t effp)
         if (! (phaser->phaserbuf = 
                 (double *) malloc(sizeof (double) * phaser->maxsamples)))
         {
-                st_fail("phaser: Cannot malloc %d bytes!\n", 
+                st_fail("phaser: Cannot malloc %d bytes!", 
                         sizeof(double) * phaser->maxsamples);
                 return (ST_EOF);
         }
@@ -171,7 +171,7 @@ int st_phaser_start(eff_t effp)
         if (! (phaser->lookup_tab = 
                 (int *) malloc(sizeof (int) * phaser->length)))
         {
-                st_fail("phaser: Cannot malloc %d bytes!\n", 
+                st_fail("phaser: Cannot malloc %d bytes!", 
                         sizeof(int) * phaser->length);
                 return (ST_EOF);
         }

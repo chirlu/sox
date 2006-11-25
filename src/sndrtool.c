@@ -117,7 +117,7 @@ int st_sndtstartread(ft_t ft)
                 st_fail_errno(ft,ST_EHDR,"SND: unexpected EOF in SND header");
                 return(ST_EOF);
         }
-        st_report("%s",buf);
+        st_debug("%s",buf);
         }
 
         ft->info.channels = 1;

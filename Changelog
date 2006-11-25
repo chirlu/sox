@@ -47,6 +47,8 @@ sox-12.18.3
   o Make sox and soxmix a single binary.  (Reuben Thomas)
   o Consistent (and hopefully complete) clipping detection and
     reporting.  (robs)
+  o -V now gives only user-relevant messages, use -V -V to get
+    developer-relevant messages.  (robs)
 
 sox-12.18.2
 -----------

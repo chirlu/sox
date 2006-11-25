@@ -93,7 +93,7 @@ int st_maudstartread(ft_t ft)
                 
                 /*
                 buf[4] = 0;
-                st_report("chunk %s",buf);
+                st_debug("chunk %s",buf);
                 */
                 
                 if (strncmp(buf,"MHDR",4) == 0) {
@@ -196,7 +196,7 @@ int st_maudstartread(ft_t ft)
                                 return(ST_EOF);
                         }
                         chunk_buf[chunksize] = '\0';
-                        st_report("%s",chunk_buf);
+                        st_debug("%s",chunk_buf);
                         free(chunk_buf);
                         
                         continue;

@@ -114,7 +114,7 @@ int st_noisered_start(eff_t effp)
         fchannels ++;
     }
     if (fchannels != channels) {
-        st_fail("noisered: channel mismatch: %d in input, %d in profile.\n",
+        st_fail("noisered: channel mismatch: %d in input, %d in profile.",
                 channels, fchannels);
         return ST_EOF;
     }

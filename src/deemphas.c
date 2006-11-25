@@ -109,6 +109,9 @@ typedef struct deemphstuff {
      double      lastout;
 } *deemph_t;
 
+assert_static(sizeof(struct deemphstuff) <= ST_MAX_EFFECT_PRIVSIZE, 
+    /* else */ deemph_PRIVSIZE_too_big);
+
 /*
  * Process options
  *
@@ -120,11 +123,6 @@ int st_deemph_getopts(eff_t effp, int n, char **argv)
      if (n)
      {
           st_fail(st_deemph_effect.usage);
-          return (ST_EOF);
-     }
-     if (sizeof(double)*ST_MAX_EFFECT_PRIVSIZE < sizeof(struct deemphstuff))
-     {
-          st_fail("Internal error: PRIVSIZE too small.\n");
           return (ST_EOF);
      }
      return (ST_SUCCESS);

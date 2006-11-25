@@ -93,7 +93,7 @@ int st_band_start(eff_t effp)
         band_t band = (band_t) effp->priv;
         if (band->center > effp->ininfo.rate/2)
         {
-                st_fail("Band: center must be < minimum data rate/2\n");
+                st_fail("Band: center must be < minimum data rate/2");
                 return (ST_EOF);
         }
 

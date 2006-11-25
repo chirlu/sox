@@ -116,40 +116,40 @@ int st_echos_start(eff_t effp)
 
         if ( echos->in_gain < 0.0 )
         {
-                st_fail("echos: gain-in must be positive!\n");
+                st_fail("echos: gain-in must be positive!");
                 return (ST_EOF);
         }
         if ( echos->in_gain > 1.0 )
         {
-                st_fail("echos: gain-in must be less than 1.0!\n");
+                st_fail("echos: gain-in must be less than 1.0!");
                 return (ST_EOF);
         }
         if ( echos->out_gain < 0.0 )
         {
-                st_fail("echos: gain-in must be positive!\n");
+                st_fail("echos: gain-in must be positive!");
                 return (ST_EOF);
         }
         for ( i = 0; i < echos->num_delays; i++ ) {
                 echos->samples[i] = echos->delay[i] * effp->ininfo.rate / 1000.0;
                 if ( echos->samples[i] < 1 )
                 {
-                    st_fail("echos: delay must be positive!\n");
+                    st_fail("echos: delay must be positive!");
                     return (ST_EOF);
                 }
                 if ( echos->samples[i] > DELAY_BUFSIZ )
                 {
-                        st_fail("echos: delay must be less than %g seconds!\n",
+                        st_fail("echos: delay must be less than %g seconds!",
                                 DELAY_BUFSIZ / (float) effp->ininfo.rate );
                         return (ST_EOF);
                 }
                 if ( echos->decay[i] < 0.0 )
                 {
-                    st_fail("echos: decay must be positive!\n" );
+                    st_fail("echos: decay must be positive!" );
                     return (ST_EOF);
                 }
                 if ( echos->decay[i] > 1.0 )
                 {
-                    st_fail("echos: decay must be less than 1.0!\n" );
+                    st_fail("echos: decay must be less than 1.0!" );
                     return (ST_EOF);
                 }
                 echos->counter[i] = 0;
@@ -158,7 +158,7 @@ int st_echos_start(eff_t effp)
         }
         if (! (echos->delay_buf = (double *) malloc(sizeof (double) * echos->sumsamples)))
         {
-                st_fail("echos: Cannot malloc %d bytes!\n", 
+                st_fail("echos: Cannot malloc %d bytes!", 
                         sizeof(double) * echos->sumsamples);
                 return(ST_EOF);
         }

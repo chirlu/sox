@@ -77,7 +77,7 @@ int st_repeat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
         if (fwrite((char *)ibuf, sizeof(st_sample_t), *isamp, repeat->fp) !=
                         *isamp) {
-                st_fail("repeat: write error on temporary file\n");
+                st_fail("repeat: write error on temporary file");
                 return (ST_EOF);
         }
 
@@ -102,7 +102,7 @@ int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 repeat->total = ftell(repeat->fp);
 
                 if ((repeat->total % sizeof(st_sample_t)) != 0) {
-                        st_fail("repeat: corrupted temporary file\n");
+                        st_fail("repeat: corrupted temporary file");
                         return (ST_EOF);
                 }
         
@@ -131,7 +131,7 @@ int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                                 repeat->fp);
                 if (read != samp) {
                         perror(strerror(errno));
-                        st_fail("repeat1: read error on temporary file\n");
+                        st_fail("repeat1: read error on temporary file");
                         return(ST_EOF);
                 }
 
@@ -176,7 +176,7 @@ int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                                 repeat->fp);
                 if (read != *osamp) {
                         perror(strerror(errno));
-                        st_fail("repeat3: read error on temporary file\n");
+                        st_fail("repeat3: read error on temporary file");
                         return(ST_EOF);
                 }
                 repeat->remaining -= *osamp;

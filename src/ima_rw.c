@@ -83,8 +83,7 @@ static void ImaExpandS(
         val = (short)(ip[0] + (ip[1]<<8)); /* need cast for sign-extend */
         state = ip[2];
         if (state > ISSTMAX) {
-                st_warn("IMA_ADPCM block ch%d initial-state (%d) out of range\n", ch, state);
-                fflush(stderr);
+                st_warn("IMA_ADPCM block ch%d initial-state (%d) out of range", ch, state);
                 state = 0;
         }
         /* specs say to ignore ip[3] , but write it as 0 */
@@ -247,9 +246,6 @@ static int ImaMashS(
 
         }
         d2 /= n; /* be sure it's non-negative */
-        if (sho) {
-                fflush(stderr);
-        }
         *st = state;
         return (int) sqrt(d2);
 }

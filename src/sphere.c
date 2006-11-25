@@ -177,7 +177,7 @@ int st_spherestartread(ft_t ft)
 
         if (!strcmp(sphere->shorten_check,"ajkg"))
         {
-            st_fail_errno(ft,ST_EFMT,"File uses shorten compression, can not handle this.\n");
+            st_fail_errno(ft,ST_EFMT,"File uses shorten compression, can not handle this.");
             free(buf);
             return(ST_EOF);
         }
@@ -268,7 +268,7 @@ int st_spherestopwrite(ft_t ft)
 
     if (st_seeki(ft, 0L, 0) != 0)
     {
-        st_fail_errno(ft,errno,"Could not rewird output file to rewrite sphere header.\n");
+        st_fail_errno(ft,errno,"Could not rewird output file to rewrite sphere header.");
         return (ST_EOF);
     }
 

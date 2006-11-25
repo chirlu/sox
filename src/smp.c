@@ -233,12 +233,12 @@ int st_smpstartread(ft_t ft)
         }
         if (strncmp(header.Id, SVmagic, 17) != 0)
         {
-                st_fail_errno(ft,ST_EHDR,"SMP header does not begin with magic word %s\n", SVmagic);
+                st_fail_errno(ft,ST_EHDR,"SMP header does not begin with magic word %s", SVmagic);
                 return(ST_EOF);
         }
         if (strncmp(header.version, SVvers, 4) != 0)
         {
-                st_fail_errno(ft,ST_EHDR,"SMP header is not version %s\n", SVvers);
+                st_fail_errno(ft,ST_EHDR,"SMP header is not version %s", SVvers);
                 return(ST_EOF);
         }
 
@@ -288,7 +288,7 @@ int st_smpstartread(ft_t ft)
         smp->dataStart = samplestart;
         ft->length = smp->NoOfSamps;
 
-        st_report("SampleVision trailer:\n");
+        st_report("SampleVision trailer:");
         for(i = 0; i < 8; i++) if (1 || trailer.loops[i].count) {
 #ifdef __alpha__
                 st_report("Loop %d: start: %6d", i, trailer.loops[i].start);
@@ -299,12 +299,12 @@ int st_smpstartread(ft_t ft)
 #endif
                 st_report(" count: %6d", trailer.loops[i].count);
                 switch(trailer.loops[i].type) {
-                    case 0: st_report("type:  off\n"); break;
-                    case 1: st_report("type:  forward\n"); break;
-                    case 2: st_report("type:  forward/backward\n"); break;
+                    case 0: st_report("type:  off"); break;
+                    case 1: st_report("type:  forward"); break;
+                    case 2: st_report("type:  forward/backward"); break;
                 }
         }
-        st_report("MIDI Note number: %d\n\n", trailer.MIDInote);
+        st_report("MIDI Note number: %d", trailer.MIDInote);
 
         ft->instr.nloops = 0;
         for(i = 0; i < 8; i++) 

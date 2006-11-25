@@ -111,7 +111,7 @@ int st_svxstartread(ft_t ft)
                                 return(ST_EOF);
                         }
                         chunk_buf[chunksize] = '\0';
-                        st_report("%s",chunk_buf);
+                        st_debug("%s",chunk_buf);
                         free(chunk_buf);
 
                         continue;
@@ -134,7 +134,7 @@ int st_svxstartread(ft_t ft)
                                 return(ST_EOF);
                         }
                         chunk_buf[chunksize] = '\0';
-                        st_report("%s",chunk_buf);
+                        st_debug("%s",chunk_buf);
                         free(chunk_buf);
 
                         continue;

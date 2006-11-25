@@ -56,7 +56,7 @@ int st_reverse_start(eff_t effp)
         reverse->fp = tmpfile();
         if (reverse->fp == NULL)
         {
-                st_fail("Reverse effect can't create temporary file\n");
+                st_fail("Reverse effect can't create temporary file");
                 return (ST_EOF);
         }
         reverse->phase = WRITING;
@@ -80,7 +80,7 @@ int st_reverse_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         if (fwrite((char *)ibuf, sizeof(st_sample_t), *isamp, reverse->fp)
             != *isamp)
         {
-                st_fail("Reverse effect write error on temporary file\n");
+                st_fail("Reverse effect write error on temporary file");
                 return(ST_EOF);
         }
         *osamp = 0;
@@ -104,7 +104,7 @@ int st_reverse_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 reverse->pos = ftell(reverse->fp);
                 if (reverse->pos % sizeof(st_sample_t) != 0)
                 {
-                        st_fail("Reverse effect finds odd temporary file\n");
+                        st_fail("Reverse effect finds odd temporary file");
                         return(ST_EOF);
                 }
                 reverse->phase = READING;
@@ -119,7 +119,7 @@ int st_reverse_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         fseek(reverse->fp, reverse->pos, SEEK_SET);
         if (fread((char *)obuf, sizeof(st_sample_t), len, reverse->fp) != len)
         {
-                st_fail("Reverse effect read error from temporary file\n");
+                st_fail("Reverse effect read error from temporary file");
                 return(ST_EOF);
         }
         for (i = 0, j = len-1; i < j; i++, j--) {

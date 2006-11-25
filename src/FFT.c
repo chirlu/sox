@@ -51,6 +51,8 @@
 #include <math.h>
 #include <assert.h>
 
+#include "st_i.h"
+
 #include "FFT.h"
 
 int **gFFTBitTable = NULL;
@@ -75,7 +77,7 @@ int NumberOfBitsNeeded(int PowerOfTwo)
    int i;
 
    if (PowerOfTwo < 2) {
-      fprintf(stderr, "Error: FFT called with size %d\n", PowerOfTwo);
+      st_debug("Error: FFT called with size %d", PowerOfTwo);
       exit(1);
    }
 
@@ -140,7 +142,7 @@ void FFT(int NumSamples,
    float tr, ti;                /* temp real, temp imaginary */
 
    if (!IsPowerOfTwo(NumSamples)) {
-      fprintf(stderr, "%d is not a power of two\n", NumSamples);
+      st_debug("%d is not a power of two", NumSamples);
       exit(1);
    }
 

@@ -101,13 +101,13 @@ int st_equalizer_start(eff_t effp)
   amp = pow( 10, eq->gain/40 );
   alpha = sin(w0)/( 2*eq->Q );
 
-  st_report("Debug: cfreq: %fHz", eq->cfreq);
-  st_report("Debug: Q: %f", eq->Q);
-  st_report("Debug: gain: %fdB", eq->gain);
-  st_report("Debug: rate: %f", eq->rate);
-  st_report("Debug: w0: %f", w0);
-  st_report("Debug: amp: %f", amp);
-  st_report("Debug: alpha: %f", alpha);
+  st_debug("cfreq: %fHz", eq->cfreq);
+  st_debug("Q: %f", eq->Q);
+  st_debug("gain: %fdB", eq->gain);
+  st_debug("rate: %f", eq->rate);
+  st_debug("w0: %f", w0);
+  st_debug("amp: %f", amp);
+  st_debug("alpha: %f", alpha);
 
   // Initialisation
   eq->b[0] =  1 + alpha*amp;

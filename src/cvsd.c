@@ -153,7 +153,7 @@ static void cvsdstartcommon(ft_t ft)
         p->bytes_written = 0;
         p->com.v_min = 1;
         p->com.v_max = -1;
-        st_report("cvsd: bit rate %dbit/s, bits from %s\n", p->cvsd_rate,
+        st_report("cvsd: bit rate %dbit/s, bits from %s", p->cvsd_rate,
                p->swapbits ? "msb to lsb" : "lsb to msb");
 }
 
@@ -215,7 +215,7 @@ int st_cvsdstopwrite(ft_t ft)
                 st_writeb(ft, p->bit.shreg);
                 p->bytes_written++;
         }
-        st_report("cvsd: min slope %f, max slope %f\n", 
+        st_debug("cvsd: min slope %f, max slope %f", 
                p->com.v_min, p->com.v_max);     
 
         return (ST_SUCCESS);
@@ -227,7 +227,7 @@ int st_cvsdstopread(ft_t ft)
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 
-        st_report("cvsd: min value %f, max value %f\n", 
+        st_debug("cvsd: min value %f, max value %f", 
                p->com.v_min, p->com.v_max);
 
         return(ST_SUCCESS);
@@ -496,7 +496,7 @@ static int dvms_read_header(ft_t ft, struct dvms_header *hdr)
         hdr->Crc = get16(&pch);
         if (sum != hdr->Crc) 
         {
-                st_report("DVMS header checksum error, read %u, calculated %u\n",
+                st_report("DVMS header checksum error, read %u, calculated %u",
                      hdr->Crc, sum);
                 return (ST_EOF);
         }
@@ -543,7 +543,7 @@ static int dvms_write_header(ft_t ft, struct dvms_header *hdr)
         }
         if (st_writebuf(ft, hdrbuf, sizeof(hdrbuf), 1) != 1)
         {
-                st_report("%s\n",strerror(errno));
+                st_report("%s",strerror(errno));
                 return (ST_EOF);
         }
         return (ST_SUCCESS);
@@ -585,25 +585,25 @@ int st_dvmsstartread(ft_t ft)
 
         rc = dvms_read_header(ft, &hdr);
         if (rc){
-            st_fail_errno(ft,ST_EHDR,"unable to read DVMS header\n");
+            st_fail_errno(ft,ST_EHDR,"unable to read DVMS header");
             return rc;
         }
 
-        st_report("DVMS header of source file \"%s\":");
-        st_report("  filename  \"%.14s\"",ft->filename);
-        st_report("  id        0x%x", hdr.Filename);
-        st_report("  state     0x%x", hdr.Id, hdr.State);
-        st_report("  time      %s",ctime(&hdr.Unixtime)); /* ctime generates lf */
-        st_report("  usender   %u", hdr.Usender);
-        st_report("  ureceiver %u", hdr.Ureceiver);
-        st_report("  length    %u", hdr.Length);
-        st_report("  srate     %u", hdr.Srate);
-        st_report("  days      %u", hdr.Days);
-        st_report("  custom1   %u", hdr.Custom1);
-        st_report("  custom2   %u", hdr.Custom2);
-        st_report("  info      \"%.16s\"\n", hdr.Info);
+        st_debug("DVMS header of source file \"%s\":");
+        st_debug("  filename  \"%.14s\"",ft->filename);
+        st_debug("  id        0x%x", hdr.Filename);
+        st_debug("  state     0x%x", hdr.Id, hdr.State);
+        st_debug("  time      %s",ctime(&hdr.Unixtime)); /* ctime generates lf */
+        st_debug("  usender   %u", hdr.Usender);
+        st_debug("  ureceiver %u", hdr.Ureceiver);
+        st_debug("  length    %u", hdr.Length);
+        st_debug("  srate     %u", hdr.Srate);
+        st_debug("  days      %u", hdr.Days);
+        st_debug("  custom1   %u", hdr.Custom1);
+        st_debug("  custom2   %u", hdr.Custom2);
+        st_debug("  info      \"%.16s\"", hdr.Info);
         ft->info.rate = (hdr.Srate < 240) ? 16000 : 32000;
-        st_report("DVMS rate %dbit/s using %dbit/s deviation %d%%\n", 
+        st_debug("DVMS rate %dbit/s using %dbit/s deviation %d%%", 
                hdr.Srate*100, ft->info.rate, 
                ((ft->info.rate - hdr.Srate*100) * 100) / ft->info.rate);
         rc = st_cvsdstartread(ft);
@@ -629,7 +629,7 @@ int st_dvmsstartwrite(ft_t ft)
         make_dvms_hdr(ft, &hdr);
         rc = dvms_write_header(ft, &hdr);
         if (rc){
-                st_fail_errno(ft,rc,"cannot write DVMS header\n");
+                st_fail_errno(ft,rc,"cannot write DVMS header");
             return rc;
         }
 
@@ -661,7 +661,7 @@ int st_dvmsstopwrite(ft_t ft)
         make_dvms_hdr(ft, &hdr);
         rc = dvms_write_header(ft, &hdr);
         if(rc){
-            st_fail_errno(ft,rc,"cannot write DVMS header\n");
+            st_fail_errno(ft,rc,"cannot write DVMS header");
             return rc;
         }       
         return rc;

@@ -99,7 +99,7 @@ static int st_auencodingandsize(int sun_encoding, signed char *encoding, signed 
             *size = ST_SIZE_32BIT;
             break;
     default:
-            st_report("encoding: 0x%lx", encoding);
+            st_debug("encoding: 0x%lx", encoding);
             return(ST_EOF);
     }
     return(ST_SUCCESS);
@@ -171,17 +171,17 @@ int st_austartread(ft_t ft)
                  * endianess.  Its not hurting though.
                  */
                 ft->swap = ft->swap ? 0 : 1;
-                st_report("Found inverted DEC magic word.  Swapping bytes.");
+                st_debug("Found inverted DEC magic word.  Swapping bytes.");
         }
         else if (magic == SUN_INV_MAGIC) {
                 ft->swap = ft->swap ? 0 : 1;
-                st_report("Found inverted Sun/NeXT magic word. Swapping bytes.");
+                st_debug("Found inverted Sun/NeXT magic word. Swapping bytes.");
         }
         else if (magic == SUN_MAGIC) {
-                st_report("Found Sun/NeXT magic word");
+                st_debug("Found Sun/NeXT magic word");
         }
         else if (magic == DEC_MAGIC) {
-                st_report("Found DEC magic word");
+                st_debug("Found DEC magic word");
         }
         else
         {
@@ -424,7 +424,7 @@ static void auwriteheader(ft_t ft, st_size_t data_size)
         if ((encoding = st_ausunencoding(ft->info.size, ft->info.encoding)) == -1) {
                 st_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
                 st_report("Only U-law, A-law signed bytes, and signed words are supported.");
-                st_report("Defaulting to 8khz u-law\n");
+                st_report("Defaulting to 8khz u-law");
                 encoding = SUN_ULAW;
                 ft->info.encoding = ST_ENCODING_ULAW;
                 ft->info.size = ST_SIZE_BYTE;

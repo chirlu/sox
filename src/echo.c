@@ -123,40 +123,40 @@ int st_echo_start(eff_t effp)
         echo->maxsamples = 0L;
         if ( echo->in_gain < 0.0 )
         {
-                st_fail("echo: gain-in must be positive!\n");
+                st_fail("echo: gain-in must be positive!");
                 return (ST_EOF);
         }
         if ( echo->in_gain > 1.0 )
         {
-                st_fail("echo: gain-in must be less than 1.0!\n");
+                st_fail("echo: gain-in must be less than 1.0!");
                 return (ST_EOF);
         }
         if ( echo->out_gain < 0.0 )
         {
-                st_fail("echo: gain-in must be positive!\n");
+                st_fail("echo: gain-in must be positive!");
                 return (ST_EOF);
         }
         for ( i = 0; i < echo->num_delays; i++ ) {
                 echo->samples[i] = echo->delay[i] * effp->ininfo.rate / 1000.0;
                 if ( echo->samples[i] < 1 )
                 {
-                    st_fail("echo: delay must be positive!\n");
+                    st_fail("echo: delay must be positive!");
                     return (ST_EOF);
                 }
                 if ( echo->samples[i] > DELAY_BUFSIZ )
                 {
-                        st_fail("echo: delay must be less than %g seconds!\n",
+                        st_fail("echo: delay must be less than %g seconds!",
                                 DELAY_BUFSIZ / (float) effp->ininfo.rate );
                         return (ST_EOF);
                 }
                 if ( echo->decay[i] < 0.0 )
                 {
-                    st_fail("echo: decay must be positive!\n" );
+                    st_fail("echo: decay must be positive!" );
                     return (ST_EOF);
                 }
                 if ( echo->decay[i] > 1.0 )
                 {
-                    st_fail("echo: decay must be less than 1.0!\n" );
+                    st_fail("echo: decay must be less than 1.0!" );
                     return (ST_EOF);
                 }
                 if ( echo->samples[i] > echo->maxsamples )
@@ -164,7 +164,7 @@ int st_echo_start(eff_t effp)
         }
         if (! (echo->delay_buf = (double *) malloc(sizeof (double) * echo->maxsamples)))
         {
-                st_fail("echo: Cannot malloc %d bytes!\n", 
+                st_fail("echo: Cannot malloc %d bytes!", 
                         sizeof(long) * echo->maxsamples);
                 return (ST_EOF);
         }

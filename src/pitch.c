@@ -148,8 +148,7 @@ static char * fadeoptname(int opt)
 
 static void debug(pitch_t pitch, char * where)
 {
-  fprintf(stderr, 
-  "%s: ind=%d sz=%ld step=%d o=%d rate=%f ia=%d st=%d fo=%s\n", 
+  st_debug("%s: ind=%d sz=%ld step=%d o=%d rate=%f ia=%d st=%d fo=%s", 
   where, pitch->index, pitch->size, pitch->step, pitch->overlap, 
   pitch->rate, pitch->iacc, pitch->state, fadeoptname(pitch->fadeopt));
 }

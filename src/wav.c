@@ -409,7 +409,7 @@ static int findChunk(ft_t ft, const char *Label, st_size_t *len)
                           Label);
             return ST_EOF;
         }
-        st_report("WAV Chunk %s", magic);
+        st_debug("WAV Chunk %s", magic);
         if (st_readdw(ft, len) == ST_EOF)
         {
             st_fail_errno(ft, ST_EHDR, "WAVE file %s chunk is to short", 
@@ -474,7 +474,7 @@ int st_wavstartread(ft_t ft)
     /* RIFX is a Big-endian RIFF */
     if (strncmp("RIFX", magic, 4) == 0) 
     {
-        st_report("Found RIFX header, swapping bytes");
+        st_debug("Found RIFX header, swapping bytes");
         ft->swap = ft->swap ? 0 : 1;
     }
 
@@ -728,7 +728,7 @@ int st_wavstartread(ft_t ft)
 
         st_readw(ft, &(wav->nCoefs));
         if (wav->nCoefs < 7 || wav->nCoefs > 0x100) {
-            st_fail_errno(ft,ST_EOF,"ADPCM file nCoefs (%.4hx) makes no sense\n", wav->nCoefs);
+            st_fail_errno(ft,ST_EOF,"ADPCM file nCoefs (%.4hx) makes no sense", wav->nCoefs);
             return ST_EOF;
         }
         wav->packet = (unsigned char *)malloc(wav->blockAlign);
@@ -766,7 +766,7 @@ int st_wavstartread(ft_t ft)
                 st_readw(ft, (unsigned short *)&(wav->iCoefs[i]));
                 len -= 2;
                 if (i<14) errct += (wav->iCoefs[i] != iCoef[i/2][i%2]);
-                /* fprintf(stderr,"iCoefs[%2d] %4d\n",i,wav->iCoefs[i]); */
+                /* st_debug("iCoefs[%2d] %4d",i,wav->iCoefs[i]); */
             }
             if (errct) st_warn("base iCoefs differ in %d/14 positions",errct);
         }
@@ -925,7 +925,7 @@ int st_wavstartread(ft_t ft)
         wav->numSamples = 
             AdpcmSamplesIn(dwDataLength, ft->info.channels, 
                            wav->blockAlign, wav->samplesPerBlock);
-        /*st_report("datalen %d, numSamples %d",dwDataLength, wav->numSamples);*/
+        /*st_debug("datalen %d, numSamples %d",dwDataLength, wav->numSamples);*/
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
         ft->length = wav->numSamples*ft->info.channels;
         break;
@@ -936,7 +936,7 @@ int st_wavstartread(ft_t ft)
         wav->numSamples = 
             ImaSamplesIn(dwDataLength, ft->info.channels, 
                          wav->blockAlign, wav->samplesPerBlock);
-        /*st_report("datalen %d, numSamples %d",dwDataLength, wav->numSamples);*/
+        /*st_debug("datalen %d, numSamples %d",dwDataLength, wav->numSamples);*/
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
         initImaTable();
         ft->length = wav->numSamples*ft->info.channels;
@@ -955,36 +955,36 @@ int st_wavstartread(ft_t ft)
         ft->length = wav->numSamples*ft->info.channels;
     }
 
-    st_report("Reading Wave file: %s format, %d channel%s, %d samp/sec",
+    st_debug("Reading Wave file: %s format, %d channel%s, %d samp/sec",
            wav_format_str(wav->formatTag), ft->info.channels,
            wChannels == 1 ? "" : "s", dwSamplesPerSecond);
-    st_report("        %d byte/sec, %d block align, %d bits/samp, %u data bytes",
+    st_debug("        %d byte/sec, %d block align, %d bits/samp, %u data bytes",
            dwAvgBytesPerSec, wav->blockAlign, wBitsPerSample, dwDataLength);
 
     /* Can also report extended fmt information */
     switch (wav->formatTag)
     {
         case WAVE_FORMAT_ADPCM:
-            st_report("        %d Extsize, %d Samps/block, %d bytes/block %d Num Coefs, %d Samps/chan",
+            st_debug("        %d Extsize, %d Samps/block, %d bytes/block %d Num Coefs, %d Samps/chan",
                       wExtSize,wav->samplesPerBlock,bytesPerBlock,wav->nCoefs,
                       wav->numSamples);
             break;
 
         case WAVE_FORMAT_IMA_ADPCM:
-            st_report("        %d Extsize, %d Samps/block, %d bytes/block %d Samps/chan",
+            st_debug("        %d Extsize, %d Samps/block, %d bytes/block %d Samps/chan",
                       wExtSize, wav->samplesPerBlock, bytesPerBlock, 
                       wav->numSamples);
             break;
 
 #ifdef ENABLE_GSM
         case WAVE_FORMAT_GSM610:
-            st_report("GSM .wav: %d Extsize, %d Samps/block, %d Samples/chan",
+            st_debug("GSM .wav: %d Extsize, %d Samps/block, %d Samples/chan",
                       wExtSize, wav->samplesPerBlock, wav->numSamples);
             break;
 #endif
 
         default:
-            st_report("        %d Samps/chans", wav->numSamples);
+            st_debug("        %d Samps/chans", wav->numSamples);
     }
 
     /* Horrible way to find Cool Edit marker points. Taken from Quake source*/
@@ -1015,12 +1015,12 @@ int st_wavstartread(ft_t ft)
                 if (strncmp(magic, "INFO", 4) == 0)
                 {
                     /*Skip*/
-                    st_report("Type INFO");
+                    st_debug("Type INFO");
                 }
                 else if (strncmp(magic, "adtl", 4) == 0)
                 {
                     /* Skip */
-                    st_report("Type adtl");
+                    st_debug("Type adtl");
                 }
                 else
                 {
@@ -1028,10 +1028,10 @@ int st_wavstartread(ft_t ft)
                         break;
                     if (strncmp(magic,"ICRD",4) == 0)
                     {
-                        st_report("Chunk ICRD");
+                        st_debug("Chunk ICRD");
                         if (len > 254)
                         {
-                            st_warn("Possible buffer overflow hack attack (ICRD)!\n");
+                            st_warn("Possible buffer overflow hack attack (ICRD)!");
                             break;
                         }
                         st_reads(ft,text,len);
@@ -1047,10 +1047,10 @@ int st_wavstartread(ft_t ft)
                     } 
                     else if (strncmp(magic,"ISFT",4) == 0)
                     {
-                        st_report("Chunk ISFT");
+                        st_debug("Chunk ISFT");
                         if (len > 254)
                         {
-                            st_warn("Possible buffer overflow hack attack (ISFT)!\n");
+                            st_warn("Possible buffer overflow hack attack (ISFT)!");
                             break;
                         }
                         st_reads(ft,text,len);
@@ -1066,14 +1066,14 @@ int st_wavstartread(ft_t ft)
                     } 
                     else if (strncmp(magic,"cue ",4) == 0)
                     {
-                        st_report("Chunk cue ");
+                        st_debug("Chunk cue ");
                         st_seeki(ft,len-4,SEEK_CUR);
                         st_readdw(ft,&dwLoopPos);
                         ft->loops[0].start = dwLoopPos;
                     } 
                     else if (strncmp(magic,"ltxt",4) == 0)
                     {
-                        st_report("Chunk ltxt");
+                        st_debug("Chunk ltxt");
                         st_readdw(ft,&dwLoopPos);
                         ft->loops[0].length = dwLoopPos - ft->loops[0].start;
                         if (len > 4)
@@ -1081,7 +1081,7 @@ int st_wavstartread(ft_t ft)
                     } 
                     else 
                     {
-                        st_report("Attempting to seek beyond unsupported chunk '%c%c%c%c' of length %d bytes\n", magic[0], magic[1], magic[2], magic[3], len);
+                        st_debug("Attempting to seek beyond unsupported chunk '%c%c%c%c' of length %d bytes", magic[0], magic[1], magic[2], magic[3], len);
                         len = (len + 1) & ~1;
                         st_seeki(ft, len, SEEK_CUR);
                     }
@@ -1493,7 +1493,7 @@ static int wavwritehdr(ft_t ft, int second_header)
         case ST_ENCODING_IMA_ADPCM:
             if (wChannels>16)
             {
-                st_fail_errno(ft,ST_EOF,"Channels(%d) must be <= 16\n",wChannels);
+                st_fail_errno(ft,ST_EOF,"Channels(%d) must be <= 16",wChannels);
                 return ST_EOF;
             }
             wFormatTag = WAVE_FORMAT_IMA_ADPCM;
@@ -1505,7 +1505,7 @@ static int wavwritehdr(ft_t ft, int second_header)
         case ST_ENCODING_ADPCM:
             if (wChannels>16)
             {
-                st_fail_errno(ft,ST_EOF,"Channels(%d) must be <= 16\n",wChannels);
+                st_fail_errno(ft,ST_EOF,"Channels(%d) must be <= 16",wChannels);
                 return ST_EOF;
             }
             wFormatTag = WAVE_FORMAT_ADPCM;
@@ -1518,7 +1518,7 @@ static int wavwritehdr(ft_t ft, int second_header)
 #ifdef ENABLE_GSM
             if (wChannels!=1)
             {
-                st_report("Overriding GSM audio from %d channel to 1\n",wChannels);
+                st_report("Overriding GSM audio from %d channel to 1",wChannels);
                 wChannels = ft->info.channels = 1;
             }
             wFormatTag = WAVE_FORMAT_GSM610;
@@ -1657,17 +1657,17 @@ static int wavwritehdr(ft_t ft, int second_header)
     st_writedw(ft, dwDataLength);               /* data chunk size */
 
     if (!second_header) {
-        st_report("Writing Wave file: %s format, %d channel%s, %d samp/sec",
+        st_debug("Writing Wave file: %s format, %d channel%s, %d samp/sec",
                 wav_format_str(wFormatTag), wChannels,
                 wChannels == 1 ? "" : "s", dwSamplesPerSecond);
-        st_report("        %d byte/sec, %d block align, %d bits/samp",
+        st_debug("        %d byte/sec, %d block align, %d bits/samp",
                 dwAvgBytesPerSec, wBlockAlign, wBitsPerSample);
     } else {
-        st_report("Finished writing Wave file, %u data bytes %u samples\n",
+        st_debug("Finished writing Wave file, %u data bytes %u samples",
                 dwDataLength,wav->numSamples);
 #ifdef ENABLE_GSM
         if (wFormatTag == WAVE_FORMAT_GSM610){
-            st_report("GSM6.10 format: %u blocks %u padded samples %u padded data bytes\n",
+            st_debug("GSM6.10 format: %u blocks %u padded samples %u padded data bytes",
                     blocksWritten, dwSamplesWritten, dwDataLength);
             if (wav->gsmbytecount != dwDataLength)
                 st_warn("help ! internal inconsistency - data_written %u gsmbytecount %u",

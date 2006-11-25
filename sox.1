@@ -154,13 +154,48 @@ processed in terms of audio running time instead of samples.
 .TP 10
 \fB--version\fR
 Print version number and exit.
-.TP 10
-\fB-V\fR
-Print a description of processing phases.
+.IP "\fB\-V[level]\fP"
+Set verbosity.
+.I Sox
+prints messages to the console (stderr) according to the following
+verbosity levels:
+.IP
+.RS
+.IP 0
+No messages are printed at all; use the exit status to determine
+if an error has ocurred.
+.IP 1
+Only error messages are printed. These are generated if
+.I SoX
+cannot complete the requested commands.
+.IP 2
+Warning messages are also printed.  These are generated if
+.I SoX
+can complete the requested commands,
+but not exactly according to the requested command parameters,
+or if clipping occurs.
+.IP 3
+Descriptions of
+.I SoX's
+processing phases are also printed.
 Useful for figuring out exactly how
 .I SoX
-.PP
 is mangling your sound samples.
+.IP "4 and above"
+Messages to help with debugging
+.I SoX
+are also printed.
+.RE
+.IP
+By default, the verbosity level is set to 2.  Each occurrence of the \fI-V\fR
+option increases the verbosity level by 1.  Alternatively, the verbosity
+level can be set to an absolute number by specifying it immediately after
+the
+.I -V
+e.g.
+.I -V0
+sets it to 0.
+.IP
 .PP
 \fBFormat options:\fR
 .PP

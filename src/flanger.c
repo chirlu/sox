@@ -123,47 +123,47 @@ int st_flanger_start(eff_t effp)
 
         if ( flanger->in_gain < 0.0 )
         {
-            st_fail("flanger: gain-in must be positive!\n");
+            st_fail("flanger: gain-in must be positive!");
             return (ST_EOF);
         }
         if ( flanger->in_gain > 1.0 )
         {
-            st_fail("flanger: gain-in must be less than 1.0!\n");
+            st_fail("flanger: gain-in must be less than 1.0!");
             return (ST_EOF);
         }
         if ( flanger->out_gain < 0.0 )
         {
-            st_fail("flanger: gain-out must be positive!\n");
+            st_fail("flanger: gain-out must be positive!");
             return (ST_EOF);
         }
         if ( flanger->delay < 0.0 )
         {
-            st_fail("flanger: delay must be positive!\n");
+            st_fail("flanger: delay must be positive!");
             return (ST_EOF);
         }
         if ( flanger->delay > 5.0 )
         {
-            st_fail("flanger: delay must be less than 5.0 msec!\n");
+            st_fail("flanger: delay must be less than 5.0 msec!");
             return (ST_EOF);
         }
         if ( flanger->speed < 0.1 )
         {
-            st_fail("flanger: speed must be more than 0.1 Hz!\n");
+            st_fail("flanger: speed must be more than 0.1 Hz!");
             return (ST_EOF);
         }
         if ( flanger->speed > 2.0 )
         {
-            st_fail("flanger: speed must be less than 2.0 Hz!\n");
+            st_fail("flanger: speed must be less than 2.0 Hz!");
             return (ST_EOF);
         }
         if ( flanger->decay < 0.0 )
         {
-            st_fail("flanger: decay must be positive!\n" );
+            st_fail("flanger: decay must be positive!" );
             return (ST_EOF);
         }
         if ( flanger->decay > 1.0 )
         {
-            st_fail("flanger: decay must be less that 1.0!\n" );
+            st_fail("flanger: decay must be less that 1.0!" );
             return (ST_EOF);
         }
         /* Be nice and check the hint with warning, if... */
@@ -175,7 +175,7 @@ int st_flanger_start(eff_t effp)
         if (! (flanger->flangerbuf = 
                 (double *) malloc(sizeof (double) * flanger->maxsamples)))
         {
-                st_fail("flanger: Cannot malloc %d bytes!\n", 
+                st_fail("flanger: Cannot malloc %d bytes!", 
                         sizeof(double) * flanger->maxsamples);
                 return (ST_EOF);
         }
@@ -184,7 +184,7 @@ int st_flanger_start(eff_t effp)
         if (! (flanger->lookup_tab = 
                 (int *) malloc(sizeof (int) * flanger->length)))
         {
-                st_fail("flanger: Cannot malloc %d bytes!\n", 
+                st_fail("flanger: Cannot malloc %d bytes!", 
                         sizeof(int) * flanger->length);
                 return(ST_EOF);
         }

@@ -72,7 +72,7 @@ int st_wvestartread(ft_t ft)
         /* Check the magic word (null-terminated) */
         st_reads(ft, magic, 16);
         if (strncmp(magic, PSION_MAGIC, 15)==0) {
-                st_report("Found Psion magic word");
+                st_debug("Found Psion magic word");
         }
         else
         {
@@ -90,11 +90,11 @@ int st_wvestartread(ft_t ft)
                  * it doesn't hurt.
                  */
                 ft->swap = ft->swap ? 0 : 1;
-                st_report("Found inverted PSION magic word.  Swapping bytes.");
+                st_debug("Found inverted PSION magic word.  Swapping bytes.");
         }
         else if (version == PSION_VERSION)
         {
-            st_report("Found PSION magic word");
+            st_debug("Found PSION magic word");
         }
         else
         {

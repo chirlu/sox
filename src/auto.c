@@ -185,7 +185,7 @@ int st_autostartread(ft_t ft)
 
     if(!type)
     {
-        st_fail_errno(ft,ST_EFMT, "Could not determine file type.\n");
+        st_fail_errno(ft,ST_EFMT, "Could not determine file type.");
         return (ST_EOF);
     }
     free(ft->filetype);
@@ -193,11 +193,11 @@ int st_autostartread(ft_t ft)
     rc = st_gettype(ft); /* Change ft->h to the new format */
     if(rc != ST_SUCCESS)
     {
-        st_fail_errno(ft,ST_EFMT,"Do not understand format type: %s\n",type);
+        st_fail_errno(ft,ST_EFMT,"Do not understand format type: %s",type);
         return (rc);
     }
 
-    st_report("Detected file format type: %s\n", type);
+    st_report("Detected file format type: %s", type);
     return ((* ft->h->startread)(ft));
 }
 

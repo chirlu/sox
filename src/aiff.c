@@ -366,7 +366,7 @@ int st_aiffstartread(ft_t ft)
                         if (st_eof(ft))
                                 break;
                         buf[4] = 0;
-                        st_report("AIFFstartread: ignoring '%s' chunk\n", buf);
+                        st_debug("AIFFstartread: ignoring '%s' chunk", buf);
                         st_readdw(ft, &chunksize);
                         if (st_eof(ft))
                                 break;
@@ -441,7 +441,7 @@ int st_aiffstartread(ft_t ft)
                         || (ft->info.rate == 0)
                         || (ft->info.encoding == -1)
                         || (ft->info.size == -1)) {
-                  st_report("You must specify # channels, sample rate, signed/unsigned,\n");
+                  st_report("You must specify # channels, sample rate, signed/unsigned,");
                   st_report("and 8/16 on the command line.");
                   st_fail_errno(ft,ST_EFMT,"Bogus AIFF file: no COMM section.");
                   return(ST_EOF);
@@ -460,12 +460,12 @@ int st_aiffstartread(ft_t ft)
         
         if (foundmark && !foundinstr)
         {
-            st_report("Ignoring MARK chunk since no INSTR found.");
+            st_debug("Ignoring MARK chunk since no INSTR found.");
             foundmark = 0;
         }
         if (!foundmark && foundinstr)
         {
-            st_report("Ignoring INSTR chunk since no MARK found.");
+            st_debug("Ignoring INSTR chunk since no MARK found.");
             foundinstr = 0;
         }
         if (foundmark && foundinstr) {
@@ -524,7 +524,7 @@ static void reportInstrument(ft_t ft)
   int loopNum;
 
   if(ft->instr.nloops > 0)
-    st_report("AIFF Loop markers:\n");
+    st_report("AIFF Loop markers:");
   for(loopNum  = 0; loopNum < ft->instr.nloops; loopNum++) {
     if (ft->loops[loopNum].count) {
       st_report("Loop %d: start: %6d", loopNum, ft->loops[loopNum].start);
@@ -533,15 +533,15 @@ static void reportInstrument(ft_t ft)
       st_report(" count: %6d", ft->loops[loopNum].count);
       st_report(" type:  ");
       switch(ft->loops[loopNum].type & ~ST_LOOP_SUSTAIN_DECAY) {
-      case 0: st_report("off\n"); break;
-      case 1: st_report("forward\n"); break;
-      case 2: st_report("forward/backward\n"); break;
+      case 0: st_report("off"); break;
+      case 1: st_report("forward"); break;
+      case 2: st_report("forward/backward"); break;
       }
     }
   }
-  st_report("Unity MIDI Note: %d\n", ft->instr.MIDInote);
-  st_report("Low   MIDI Note: %d\n", ft->instr.MIDIlow);
-  st_report("High  MIDI Note: %d\n", ft->instr.MIDIhi);
+  st_report("Unity MIDI Note: %d", ft->instr.MIDInote);
+  st_report("Low   MIDI Note: %d", ft->instr.MIDIlow);
+  st_report("High  MIDI Note: %d", ft->instr.MIDIhi);
 }
 
 /* Process a text chunk, allocate memory, display it if verbose and return */
@@ -572,7 +572,7 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft)
                         return(ST_EOF);
                 }
         }
-  st_report("%-10s   \"%s\"\n", chunkDescription, *text);
+  st_debug("%-10s   \"%s\"", chunkDescription, *text);
   return(ST_SUCCESS);
 }
 
@@ -626,7 +626,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
         }
     }
   }
-  st_report("%-10s   \"%s\"\n", chunkDescription, *text);
+  st_debug("%-10s   \"%s\"", chunkDescription, *text);
   /* make sure we read the whole chunk */
   if (totalReadLength < chunksize) {
        int i;
@@ -671,10 +671,10 @@ int st_aiffstopread(ft_t ft)
                 if (st_eof(ft))
                         break;
                 buf[4] = '\0';
-                st_warn("Ignoring AIFF tail chunk: '%s', %d bytes long\n", 
+                st_warn("Ignoring AIFF tail chunk: '%s', %d bytes long", 
                         buf, chunksize);
                 if (! strcmp(buf, "MARK") || ! strcmp(buf, "INST"))
-                        st_warn("       You're stripping MIDI/loop info!\n");
+                        st_warn("       You're stripping MIDI/loop info!");
                 while (chunksize-- > 0) 
                 {
                         if (st_readb(ft, (unsigned char *)&trash) == ST_EOF)
@@ -1042,7 +1042,7 @@ static void write_ieee_extended(ft_t ft, double x)
         char buf[10];
         ConvertToIeeeExtended(x, buf);
         /*
-        st_report("converted %g to %o %o %o %o %o %o %o %o %o %o",
+        st_debug("converted %g to %o %o %o %o %o %o %o %o %o %o",
                 x,
                 buf[0], buf[1], buf[2], buf[3], buf[4],
                 buf[5], buf[6], buf[7], buf[8], buf[9]);

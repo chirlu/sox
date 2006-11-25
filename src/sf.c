@@ -137,7 +137,7 @@ int st_sfstartread(ft_t ft)
                         samplesize = sizeof(float);
                         break;
                 default:
-                        st_fail("Soundfile input: unknown format 0x%x\n",
+                        st_fail("Soundfile input: unknown format 0x%x",
                                 sf->info.sf_packmode);
                         return(ST_EOF);
         }

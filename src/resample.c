@@ -163,9 +163,9 @@ int st_resample_getopts(eff_t effp, int n, char **argv)
         }
         else if (r->beta <= 2.0) {
           r->beta = 0;
-                st_report("resample opts: Nuttall window, cutoff %f\n", r->rolloff);
+                st_debug("resample opts: Nuttall window, cutoff %f", r->rolloff);
         } else {
-                st_report("resample opts: Kaiser window, cutoff %f, beta %f\n", r->rolloff, r->beta);
+                st_debug("resample opts: Kaiser window, cutoff %f, beta %f", r->rolloff, r->beta);
         }
         return (ST_SUCCESS);
 }
@@ -214,15 +214,15 @@ int st_resample_start(eff_t effp)
         i = makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq, 1);
         if (i <= 0)
         {
-                st_fail("resample: Unable to make filter\n");
+                st_fail("resample: Unable to make filter");
                 return (ST_EOF);
         }
 
-        /*st_report("Nmult: %ld, Nwing: %ld, Nq: %ld\n",r->Nmult,r->Nwing,r->Nq);*/
+        /*st_debug("Nmult: %ld, Nwing: %ld, Nq: %ld",r->Nmult,r->Nwing,r->Nq);*/
 
         if (r->quadr < 0) { /* exact coeff's method */
                 r->Xh = r->Nwing/r->b;
-          st_report("resample: rate ratio %ld:%ld, coeff interpolation not needed\n", r->a, r->b);
+          st_debug("resample: rate ratio %ld:%ld, coeff interpolation not needed", r->a, r->b);
         } else {
           r->dhb = Np;  /* Fixed-point Filter sampling-time-increment */
           if (r->Factor<1.0) r->dhb = r->Factor*Np + 0.5;
@@ -252,7 +252,7 @@ int st_resample_start(eff_t effp)
         
         r->Xsize = 2*Xoff + i/(1.0+r->Factor);
         r->Ysize = BUFFSIZE - r->Xsize;
-        /* st_report("Xsize %d, Ysize %d, Xoff %d",r->Xsize,r->Ysize,r->Xoff); */
+        /* st_debug("Xsize %d, Ysize %d, Xoff %d",r->Xsize,r->Ysize,r->Xoff); */
 
         r->X = (Float *) malloc(sizeof(Float) * (BUFFSIZE));
         r->Y = r->X + r->Xsize;
@@ -274,7 +274,7 @@ int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         long i, last, Nout, Nx, Nproc;
 
         /* constrain amount we actually process */
-        /*fprintf(stderr,"Xp %d, Xread %d, isamp %d, ",r->Xp, r->Xread,*isamp);*/
+        /*st_debug("Xp %d, Xread %d, isamp %d, ",r->Xp, r->Xread,*isamp);*/
 
         Nproc = r->Xsize - r->Xp;
 
@@ -290,7 +290,7 @@ int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         }
         if ((unsigned long)Nx > *isamp)
                 Nx = *isamp;
-        /*fprintf(stderr,"Nx %d\n",Nx);*/
+        st_debug("Nx %d",Nx);
 
         if (ibuf == NULL) {
                 for(i = r->Xread; i < Nx + r->Xread  ; i++) 
@@ -312,7 +312,7 @@ int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         if (r->quadr < 0) { /* exact coeff's method */
                 long creep; 
                 Nout = SrcEX(r, Nproc);
-                /*fprintf(stderr,"Nproc %d --> %d\n",Nproc,Nout);*/
+                st_debug("Nproc %d --> %d",Nproc,Nout);
                 /* Move converter Nproc samples back in time */
                 r->t -= Nproc * r->b;
                 /* Advance by number of samples processed */
@@ -323,12 +323,12 @@ int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 {
                   r->t -= creep * r->b;  /* Remove time accumulation   */
                   r->Xp += creep;        /* and add it to read pointer */
-                  /*fprintf(stderr,"Nproc %ld, creep %ld\n",Nproc,creep);*/
+                  /*st_debug("Nproc %ld, creep %ld",Nproc,creep);*/
                 }
         } else { /* approx coeff's method */
                 long creep; 
                 Nout = SrcUD(r, Nproc);
-                /*fprintf(stderr,"Nproc %d --> %d\n",Nproc,Nout);*/
+                /*st_debug("Nproc %d --> %d",Nproc,Nout);*/
                 /* Move converter Nproc samples back in time */
                 r->Time -= Nproc;
                 /* Advance by number of samples processed */
@@ -339,7 +339,7 @@ int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 {
                   r->Time -= creep;   /* Remove time accumulation   */
                   r->Xp += creep;     /* and add it to read pointer */
-                  /* fprintf(stderr,"Nproc %ld, creep %ld\n",Nproc,creep); */
+                  /* st_debug("Nproc %ld, creep %ld",Nproc,creep); */
                 }
         }
 
@@ -347,7 +347,7 @@ int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         long i,k;
         /* Copy back portion of input signal that must be re-used */
         k = r->Xp - r->Xoff;
-        /*fprintf(stderr,"k %d, last %d\n",k,last);*/
+        /*st_debug("k %d, last %d",k,last);*/
         for (i=0; i<last - k; i++) 
             r->X[i] = r->X[i+k];
 
@@ -380,7 +380,7 @@ int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         st_sample_t *Obuf;
         int rc;
 
-        /* fprintf(stderr,"Xoff %d  <--- DRAIN\n",r->Xoff); */
+        /* st_debug("Xoff %d  <--- DRAIN",r->Xoff); */
 
         /* stuff end with Xoff zeros */
         isamp_res = r->Xoff;
@@ -393,16 +393,16 @@ int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 rc = st_resample_flow(effp, NULL, Obuf, (st_size_t *)&Isamp, (st_size_t *)&Osamp);
                 if (rc)
                     return rc;
-                /* fprintf(stderr,"DRAIN isamp,osamp  (%d,%d) -> (%d,%d)\n",
+                /* st_debug("DRAIN isamp,osamp  (%d,%d) -> (%d,%d)",
                         isamp_res,osamp_res,Isamp,Osamp); */
                 Obuf += Osamp;
                 osamp_res -= Osamp;
                 isamp_res -= Isamp;
         }
         *osamp -= osamp_res;
-        /* fprintf(stderr,"DRAIN osamp %d\n", *osamp); */
+        /* st_debug("DRAIN osamp %d", *osamp); */
         if (isamp_res)
-                st_warn("drain overran obuf by %d\n", isamp_res); fflush(stderr);
+                st_warn("drain overran obuf by %d", isamp_res);
         /* FIXME: This is very picky.  IF obuf is not big enough to
          * drain remaining samples, they will be lost.
          */
@@ -498,12 +498,12 @@ static long SrcUD(resample_t r, long Nx)
    Factor = r->Factor;
    time = r->Time;
    dt = 1.0/Factor;        /* Output sampling period */
-   /*fprintf(stderr,"Factor %f, dt %f, ",Factor,dt); */
-   /*fprintf(stderr,"Time %f, ",r->Time);*/
+   /*st_debug("Factor %f, dt %f, ",Factor,dt); */
+   /*st_debug("Time %f, ",r->Time);*/
    /* (Xh * dhb)>>La is max index into Imp[] */
-   /*fprintf(stderr,"ct=%d\n",ct);*/
-   /*fprintf(stderr,"ct=%.2f %d\n",(double)r->Nwing*Na/r->dhb, r->Xh);*/
-   /*fprintf(stderr,"ct=%ld, T=%.6f, dhb=%6f, dt=%.6f\n",
+   /*st_debug("ct=%d",ct);*/
+   /*st_debug("ct=%.2f %d",(double)r->Nwing*Na/r->dhb, r->Xh);*/
+   /*st_debug("ct=%ld, T=%.6f, dhb=%6f, dt=%.6f",
                          r->Xh, time-floor(time),(double)r->dhb/Na,dt);*/
    Ystart = Y = r->Y;
    n = (int)ceil((double)Nx/dt);
@@ -525,7 +525,7 @@ static long SrcUD(resample_t r, long Nx)
       time += dt;            /* Move to next sample by time increment */
       }
    r->Time = time;
-   /*fprintf(stderr,"Time %f\n",r->Time);*/
+   /*st_debug("Time %f",r->Time);*/
    return (Y - Ystart);        /* Return the number of output samples */
 }
 
@@ -612,7 +612,7 @@ int makeFilter(Float Imp[], long Nwing, double Froll, double Beta,
       for (i=Dh; i<Mwing; i+=Dh)
          DCgain += ImpR[i];
       DCgain = 2*DCgain + ImpR[0];    /* DC gain of real coefficients */
-      /*st_report("DCgain err=%.12f",DCgain-1.0);*/
+      /*st_debug("DCgain err=%.12f",DCgain-1.0);*/
   
       DCgain = 1.0/DCgain;
       for (i=0; i<Mwing; i++)

@@ -452,7 +452,7 @@ st_ssize_t st_alsawrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
         {
             if (xrun_recovery(alsa->pcm_handle, err) < 0)
             {
-                st_fail_errno(ft, ST_EPERM, "ALSA write error\n");
+                st_fail_errno(ft, ST_EPERM, "ALSA write error");
                 return ST_EOF;
             }
         }

@@ -124,7 +124,7 @@ int st_compand_getopts(eff_t effp, int n, char **argv)
       if (commas % 2 == 0) /* There must be an even number of
                               transfer parameters */
       {
-        st_fail("compander: Odd number of transfer function parameters\n"
+        st_fail("compander: Odd number of transfer function parameters"
              "Each input value in dB must have a corresponding output value");
         return (ST_EOF);
       }
@@ -196,26 +196,22 @@ int st_compand_start(eff_t effp)
   compand_t l = (compand_t) effp->priv;
   int i;
 
-# ifdef DEBUG
-  {
-    fprintf(stderr, "Starting compand effect\n");
-    fprintf(stderr, "\nRate %ld, size %d, encoding %d, output gain %g.\n",
-           effp->outinfo.rate, effp->outinfo.size, effp->outinfo.encoding,
-           l->outgain);
-    fprintf(stderr, "%d input channel(s) expected: actually %d\n",
-           l->expectedChannels, effp->outinfo.channels);
-    fprintf(stderr, "\nAttack and decay rates\n"
-             "======================\n");
-    for (i = 0; i < l->expectedChannels; ++i)
-      fprintf(stderr, "Channel %d: attack = %-12g decay = %-12g\n",
-             i, l->attackRate[i], l->decayRate[i]);
-    fprintf(stderr, "\nTransfer function (linear values)\n"
-             "=================  =============\n");
-    for (i = 0; i < l->transferPoints; ++i)
-      fprintf(stderr, "%12g -> %-12g\n",
-             l->transferIns[i], l->transferOuts[i]);
-  }
-# endif
+  st_debug("Starting compand effect");
+  st_debug("Rate %ld, size %d, encoding %d, output gain %g.",
+         effp->outinfo.rate, effp->outinfo.size, effp->outinfo.encoding,
+         l->outgain);
+  st_debug("%d input channel(s) expected: actually %d",
+         l->expectedChannels, effp->outinfo.channels);
+  st_debug("Attack and decay rates"
+           "======================");
+  for (i = 0; i < l->expectedChannels; ++i)
+    st_debug("Channel %d: attack = %-12g decay = %-12g",
+           i, l->attackRate[i], l->decayRate[i]);
+  st_debug("Transfer function (linear values)"
+           "=================  =============");
+  for (i = 0; i < l->transferPoints; ++i)
+    st_debug("%12g -> %-12g",
+           l->transferIns[i], l->transferOuts[i]);
   
   /* Convert attack and decay rates using number of samples */
 

@@ -62,7 +62,7 @@ int st_lowp_start(eff_t effp)
         lowp_t lowp = (lowp_t) effp->priv;
         if (lowp->cutoff > effp->ininfo.rate / 2)
         {
-                st_fail("Lowpass: cutoff must be < sample rate / 2 (Nyquest rate)\n");
+                st_fail("Lowpass: cutoff must be < sample rate / 2 (Nyquest rate)");
                 return (ST_EOF);
         }
 

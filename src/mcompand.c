@@ -311,7 +311,7 @@ static int st_mcompand_getopts_1(comp_band_t l, int n, char **argv)
         l->transferIns[i]  = pow(10.0, atof(s)/20.0);
         if (l->transferIns[i] > 1.0)
         {
-          st_fail("dB values are relative to maximum input, and, ipso facto, "
+          st_fail("dB values are relative to maximum input, and, ipso facto, \n"
                "cannot exceed 0");
           return (ST_EOF);
         }
@@ -319,7 +319,7 @@ static int st_mcompand_getopts_1(comp_band_t l, int n, char **argv)
           --(l->transferPoints);
         if (i > 0 && l->transferIns[i] <= l->transferIns[i-1])
         {
-          st_fail("Transfer function points don't have strictly ascending "
+          st_fail("Transfer function points don't have strictly ascending \n"
                "input amplitude");
           return (ST_EOF);
         }

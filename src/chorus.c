@@ -146,17 +146,17 @@ int st_chorus_start(eff_t effp)
 
         if ( chorus->in_gain < 0.0 )
         {
-                st_fail("chorus: gain-in must be positive!\n");
+                st_fail("chorus: gain-in must be positive!");
                 return (ST_EOF);
         }
         if ( chorus->in_gain > 1.0 )
         {
-                st_fail("chorus: gain-in must be less than 1.0!\n");
+                st_fail("chorus: gain-in must be less than 1.0!");
                 return (ST_EOF);
         }
         if ( chorus->out_gain < 0.0 )
         {
-                st_fail("chorus: gain-out must be positive!\n");
+                st_fail("chorus: gain-out must be positive!");
                 return (ST_EOF);
         }
         for ( i = 0; i < chorus->num_chorus; i++ ) {
@@ -167,49 +167,49 @@ int st_chorus_start(eff_t effp)
 
                 if ( chorus->delay[i] < 20.0 )
                 {
-                        st_fail("chorus: delay must be more than 20.0 msec!\n");
+                        st_fail("chorus: delay must be more than 20.0 msec!");
                         return (ST_EOF);
                 }
                 if ( chorus->delay[i] > 100.0 )
                 {
-                        st_fail("chorus: delay must be less than 100.0 msec!\n");
+                        st_fail("chorus: delay must be less than 100.0 msec!");
                         return (ST_EOF);
                 }
                 if ( chorus->speed[i] < 0.1 )
                 {
-                        st_fail("chorus: speed must be more than 0.1 Hz!\n");
+                        st_fail("chorus: speed must be more than 0.1 Hz!");
                         return (ST_EOF);
                 }
                 if ( chorus->speed[i] > 5.0 )
                 {
-                        st_fail("chorus: speed must be less than 5.0 Hz!\n");
+                        st_fail("chorus: speed must be less than 5.0 Hz!");
                         return (ST_EOF);
                 }
                 if ( chorus->depth[i] < 0.0 )
                 {
-                        st_fail("chorus: delay must be more positive!\n");
+                        st_fail("chorus: delay must be more positive!");
                         return (ST_EOF);
                 }
                 if ( chorus->depth[i] > 10.0 )
                 {
-                    st_fail("chorus: delay must be less than 10.0 msec!\n");
+                    st_fail("chorus: delay must be less than 10.0 msec!");
                     return (ST_EOF);
                 }
                 if ( chorus->decay[i] < 0.0 )
                 {
-                        st_fail("chorus: decay must be positive!\n" );
+                        st_fail("chorus: decay must be positive!" );
                         return (ST_EOF);
                 }
                 if ( chorus->decay[i] > 1.0 )
                 {
-                        st_fail("chorus: decay must be less that 1.0!\n" );
+                        st_fail("chorus: decay must be less that 1.0!" );
                         return (ST_EOF);
                 }
                 chorus->length[i] = effp->ininfo.rate / chorus->speed[i];
                 if (! (chorus->lookup_tab[i] = 
                         (int *) malloc(sizeof (int) * chorus->length[i])))
                 {
-                        st_fail("chorus: Cannot malloc %d bytes!\n", 
+                        st_fail("chorus: Cannot malloc %d bytes!", 
                                 sizeof(int) * chorus->length[i]);
                         return (ST_EOF);
                 }
@@ -238,7 +238,7 @@ int st_chorus_start(eff_t effp)
         if (! (chorus->chorusbuf = 
                 (float *) malloc(sizeof (float) * chorus->maxsamples)))
         {
-                st_fail("chorus: Cannot malloc %d bytes!\n", 
+                st_fail("chorus: Cannot malloc %d bytes!", 
                         sizeof(float) * chorus->maxsamples);
                 return (ST_EOF);
         }

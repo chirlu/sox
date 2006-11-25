@@ -117,20 +117,20 @@ static int st_xastartread(ft_t ft)
     if (st_readw(ft, &xa->header.bits) != ST_SUCCESS) return ST_EOF;
 
     /* Output the data from the header */
-    st_report("XA Header:");
-    st_report(" szID:          %02x %02x %02x %02x  |%c%c%c%c|",
+    st_debug("XA Header:");
+    st_debug(" szID:          %02x %02x %02x %02x  |%c%c%c%c|",
         magic[0], magic[1], magic[2], magic[3],
         (magic[0] >= 0x20 && magic[0] <= 0x7e) ? magic[0] : '.',
         (magic[1] >= 0x20 && magic[1] <= 0x7e) ? magic[1] : '.',
         (magic[2] >= 0x20 && magic[2] <= 0x7e) ? magic[2] : '.',
         (magic[3] >= 0x20 && magic[3] <= 0x7e) ? magic[3] : '.');
-    st_report(" dwOutSize:     %u", xa->header.outSize);
-    st_report(" wTag:          0x%04x", xa->header.tag);
-    st_report(" wChannels:     %u", xa->header.channels);
-    st_report(" dwSampleRate:  %u", xa->header.sampleRate);
-    st_report(" dwAvgByteRate: %u", xa->header.avgByteRate);
-    st_report(" wAlign:        %u", xa->header.align);
-    st_report(" wBits:         %u", xa->header.bits);
+    st_debug(" dwOutSize:     %u", xa->header.outSize);
+    st_debug(" wTag:          0x%04x", xa->header.tag);
+    st_debug(" wChannels:     %u", xa->header.channels);
+    st_debug(" dwSampleRate:  %u", xa->header.sampleRate);
+    st_debug(" dwAvgByteRate: %u", xa->header.avgByteRate);
+    st_debug(" wAlign:        %u", xa->header.align);
+    st_debug(" wBits:         %u", xa->header.bits);
 
     /* Populate the st_soundstream structure */
     ft->info.encoding = ST_ENCODING_SIGN2;
