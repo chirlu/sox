@@ -227,8 +227,7 @@ When specified after the last input file name (so that it applies
 to the output file)
 it allows you to avoid giving an output file name and will not
 produce an output file.  It will apply any specified effects
-to the input file.  This is mainly useful with the \fBstat\fR effect
-but can be used.
+to the input file.  This is mainly useful with the \fBstat\fR effect.
 .TP 10
 \fB-r \fIrate\fR
 Gives the sample rate in Hertz of the file.  To cause the output file to have
@@ -392,7 +391,7 @@ CD-R. CD-R files are used in mastering music on Compact Disks.
 The audio data on a CD-R disk is a raw audio file
 with a format of stereo 16-bit signed samples at a 44kHz sample
 rate.  There is a special blocking/padding oddity at the end
-of the audio file and is why it needs its own handler.
+of the audio file, which is why it needs its own handler.
 .TP 10
 .B .cvs
 Continuously Variable Slope Delta modulation. 
@@ -1329,7 +1328,7 @@ is one octave higher.
 0.5 halves speed thus time length doubles and pitch is one octave lower. 
 If the optional -c parameter is used then the factor is specified in "cents".
 .TP 10
-stat [ \fI-s n\fB ] [\fI-rms\fB ] [ \fI-v\fB ] [ \fI-d\fB ]
+stat [ \fI-s N\fB ] [\fI-rms\fB ] [\fI-freq\fB ] [ \fI-v\fB ] [ \fI-d\fB ]
 Do a statistical check on the input file,
 and print results on the standard error file.  Audio data is passed
 unmodified from input to output file unless used along with the
@@ -1359,6 +1358,10 @@ The
 .B -rms
 option will convert all output average values to \fIroot mean square\fR
 format.
+
+The
+.B -freq
+option calculates the input's power spectrum and prints it to standard error.
 
 There is also an optional parameter
 .B -d
