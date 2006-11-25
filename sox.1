@@ -97,7 +97,7 @@ into a Microsoft .WAV file, while
 .br
 does the same format translation but also 
 lowers the amplitude by 1/2, changes
-the sampling rate to 12000 hertz, and applies the \fBmask\fR sound effect
+the sampling rate to 12000 Hz, and applies the \fBmask\fR sound effect
 to the audio data.
 .P
 The following will mix two sound files together to to produce a single sound
@@ -137,15 +137,8 @@ without actually processing any audio.  E.g.
 .br
 	octave plot.m
 .TP 10
-\fB-p\fR
-Run in preview mode and run fast.  This will somewhat speed up
-SoX when the output format has a different number of channels and
-a different rate than the input file.  Currently, this defaults to
-using the \fBrate\fR effect instead of the \fBresample\fR effect for sample
-rate changes.
-.TP 10
 \fB-q\fR
-Run in quite mode when SoX wouldn't otherwise do that.  Inverse of \fB-S\fR
+Run in quiet mode when SoX wouldn't otherwise do that.  Inverse of \fB-S\fR
 option.
 .TP
 \fB-S\fR
@@ -230,13 +223,14 @@ produce an output file.  It will apply any specified effects
 to the input file.  This is mainly useful with the \fBstat\fR effect.
 .TP 10
 \fB-r \fIrate\fR
-Gives the sample rate in Hertz of the file.  To cause the output file to have
+Gives the sample rate in Hz of the file.  To cause the output file to have
 a different sample rate than the input file, include this option as a part
 of the output format options.
 .br
 If the input and output files have
 different rates then a sample rate change effect must be ran.  Since SoX has
-multiple rate changing effects, the user can specify which to use as an effect.  If no rate change effect is specified then a default one will be chosen.
+multiple rate changing effects, the user can specify which to use as an effect.
+If no rate change effect is specified then a default one will be chosen.
 .TP 10
 \fB-t \fIfiletype\fR
 gives the file type of the sound sample file.  Useful when file extension 
@@ -1081,9 +1075,7 @@ polyphase [ \fI-w \fR< \fInut\fR / \fIham\fR > ]
 .TP 10
           [ \fI-cutoff # \fR ]
 Translate input sampling rate to output sampling rate via polyphase
-interpolation, a DSP algorithm.  This method is slow and uses lots
-of RAM, but gives much better results than 
-.B rate.
+interpolation, a DSP algorithm.  This method is relatively slow and memory intensive.
 
 .br
 -w < nut / ham > : select either a Nuttall (~90 dB stopband) or Hamming
@@ -1115,49 +1107,34 @@ this is a float.
 
 .TP 10
 rabbit [ \fI-c0\fR | \fI-c1\fR | \fI-c2\fR | \fI-c3\fR | \fI-c4\fR ]
-Resample using libsamplerate, aka Secret Rabbit Code. This effect is optional
-and must have been selected at compile time of \fISoX\fR.
-See http://www.mega-nerd.com/SRC/ for details of the algorithm. Algorithms
+Resample using libsamplerate, aka Secret Rabbit Code. This effect is
+optional and must have been selected at compile time of \fISoX\fR. See
+http://www.mega-nerd.com/SRC/ for details of the algorithm. Algorithms
 0 through 2 are progressively faster and lower quality versions of the
 sinc algorithm; the default is \fI-c0\fR, which is probably the best
 quality algorithm for general use currently available in sox.
-Algorithm 3 is zero-order hold, and 4 is linear interpolation, which
-is only included for completeness. See the \fIresample\fR effect for
-more discussion of resampling.
+Algorithm 3 is zero-order hold, and 4 is linear interpolation. See the
+\fIresample\fR effect for more discussion of resampling.
 
 .TP 10
 rate
-Translate input sampling rate to output sampling rate
-via linear interpolation to the Least Common Multiple
-of the two sampling rates.
-This is the default effect 
-if the two files have different sampling rates and the preview options
-was specified.
-This is fast but noisy:
-the spectrum of the original sound will be shifted upwards
-and duplicated faintly when up-translating by a multiple.
+Does the same as \fBresample\fR with no arguments; it exists for
+backwards compatibility.
 
-Lerp-ing is acceptable for cheap 8-bit sound hardware,
-but for CD-quality sound you should instead use either
-.B resample,
-.B rabbit
-or
-.B polyphase.
-If you are wondering which rate changing effects to use, you will want to read a
-detailed analysis of all of them at http://leute.server.de/wilde/resample.html
 .TP 10
 repeat \fIcount\fR
 Repeats the audio data \fIcount\fR times.  Requires disk space to store the data to be repeated.
 .TP 10
 resample [ \fI-qs\fR | \fI-q\fR | \fI-ql\fR ] [ \fIrolloff\fR [ \fIbeta\fR ] ]
-Translate input sampling rate to output sampling rate
-via simulated analog filtration.
-This method is slower than 
-.B rate,
-but gives much better results.
+Translate input sampling rate to output sampling rate via simulated
+analog filtration. Other rate changing effects available are
+\fBpolyphase\fR and \fBrabbit\fR. There is a detailed analysis of
+\fBresample\fR and \fBpolyphase\fR at
+http://leute.server.de/wilde/resample.html; see \fBrabbit\fR for a
+pointer to its own documentation.
 
 By default, linear interpolation is used,
-with a window width about 45 samples at the lower of the two rate.
+with a window width about 45 samples at the lower of the two rates.
 This gives an accuracy of about 16 bits, but insufficient stopband rejection
 in the case that you want to have rolloff greater than about 0.80 of
 the Nyquist frequency.
@@ -1249,7 +1226,6 @@ To be precise, this is done when
                       &&
 .br
   output_rate/gcd(input_rate,output_rate) <= 511
-.br
 .TP 10
 reverb \fIgain-out reverb-time delay \fR[ \fIdelay ... \fR]
 Add reverberation to a sound sample.  Each delay is given 

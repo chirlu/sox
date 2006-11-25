@@ -77,7 +77,6 @@ static int soxmix = 0;          /* non-zero if running as soxmix */
  
 static int clipped = 0;         /* Volume change clipping errors */
 static int writing = 1;         /* are we writing to a file? assume yes. */
-static int soxpreview = 0;      /* preview mode */
 static st_globalinfo_t globalinfo;
 
 static int user_abort = 0;
@@ -347,10 +346,6 @@ static void doopts(file_options_t *fo, int argc, char **argv)
 
             case 'o':
                 globalinfo.octave_plot_effect = true;
-                break;
-
-            case 'p':
-                soxpreview++;
                 break;
 
             case 'h':
@@ -936,7 +931,6 @@ static void parse_effects(int argc, char **argv)
             exit(2);
         }
 
-
         /* Skip past effect name */
         optind++;
 
@@ -1047,10 +1041,7 @@ static void check_effects(void)
     if (needrate && !(hasrate) &&
         (file_desc[0]->info.rate > file_desc[file_count-1]->info.rate))
     {
-        if (soxpreview)
-            st_geteffect(&efftab[neffects], "rate");
-        else
-            st_geteffect(&efftab[neffects], "resample");
+        st_geteffect(&efftab[neffects], "resample");
 
         /* set up & give default opts for added effects */
         status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
@@ -1111,10 +1102,7 @@ static void check_effects(void)
      */
     if (needrate && !(effects_mask & ST_EFF_RATE))
     {
-        if (soxpreview)
-            st_geteffect(&efftab[neffects], "rate");
-        else
-            st_geteffect(&efftab[neffects], "resample");
+        st_geteffect(&efftab[neffects], "resample");
 
         /* set up & give default opts for added effects */
         status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
@@ -1754,13 +1742,12 @@ static void usage(char *opt)
 "\n"
 "-h              print version number and usage information\n"
 "--help          same as -h\n"
-"--help-efffect=name\n"
+"--help-effect=name\n"
 "                print usage of specified effect.  use 'all' to print all\n"
-"-p              run in preview mode and run fast\n"
-"-q              run in quite mode.  Inverse of -S option\n"
+"-q              run in quiet mode.  Inverse of -S option\n"
 "-S              print status while processing audio data.\n"
 "--version       print version number of SoX and exit\n"
-"-V              verbose mode.  print a description during processing phase\n"
+"-V [level]      increase verbosity (or set level).\n"
 "\n"
 "Format options (fopts):\n"
 "\n"

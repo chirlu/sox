@@ -50,6 +50,10 @@ sox-12.18.3
   o Add AIFF-C output support.  (shashimoto)
   o -V now gives only user-relevant messages, use -V -V to get
     developer-relevant messages.  (robs)
+  o Old and new rate code removed; the "rate" effect is implemented
+    for backwards compatibility by "resample".
+  o Preview mode now removed, as all it did was use rate rather than
+    resample, and rate has been removed.
 
 sox-12.18.2
 -----------
