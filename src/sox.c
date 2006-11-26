@@ -656,7 +656,7 @@ static void process(void) {
     /* Try to save some time if first effect is "trim" by seeking */
     optimize_trim();
 
-    if (!soxmix) {
+    if (soxmix) {
       for (f = 0; f < input_count; f++)
         {
           /* Treat overall length the same as longest input file. */
