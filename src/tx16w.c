@@ -276,7 +276,7 @@ int st_txwstartwrite(ft_t ft)
     return(ST_SUCCESS);
 }
 
-st_ssize_t st_txwwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_txwwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
 {
     int i;
     unsigned int w1,w2;
@@ -377,7 +377,7 @@ int st_txwstopwrite(ft_t ft)
 }
 
 /* Yamaha TX16W and SY99 waves */
-static char *txwnames[] = {
+static const char *txwnames[] = {
   "txw",
   NULL
 };

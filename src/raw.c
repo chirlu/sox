@@ -754,7 +754,7 @@ static void writeflush(ft_t ft)
  * functions will cause a loss of data!  Need to have sox implement
  * a consistent buffering protocol.
  */
-st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
+st_ssize_t st_rawwrite(ft_t ft, const st_sample_t *buf, st_ssize_t nsamp)
 {
     st_ssize_t len, done = 0;
     void (*write_buf)(char *, st_sample_t const *, st_ssize_t, char) = 0;
@@ -944,7 +944,7 @@ void rawdefaults(ft_t ft)
                 ft->info.channels = 1;
 }
 
-static char *rawnames[] = {
+static const char *rawnames[] = {
   "raw",
   NULL
 };
@@ -968,7 +968,7 @@ const st_format_t *st_raw_format_fn(void)
 }
 
 /* a-law byte raw */
-static char *alnames[] = {
+static const char *alnames[] = {
   "al",
   NULL
 };
@@ -992,7 +992,7 @@ const st_format_t *st_al_format_fn(void)
 }
 
 /* inverse a-law byte raw */
-static char *lanames[] = {
+static const char *lanames[] = {
   "la",
   NULL
 };
@@ -1016,7 +1016,7 @@ const st_format_t *st_la_format_fn(void)
 }
 
 /* inverse u-law byte raw */
-static char *lunames[] = {
+static const char *lunames[] = {
   "lu",
   NULL
 };
@@ -1039,7 +1039,7 @@ const st_format_t *st_lu_format_fn(void)
     return &st_lu_format;
 }
 
-static char *sbnames[] = {
+static const char *sbnames[] = {
   "sb",
   NULL
 };
@@ -1066,7 +1066,7 @@ const st_format_t *st_sb_format_fn(void)
 
 /* Unsigned 4 byte raw; used for testing only; not documented in the man page */
 
-static char *u4names[] = {
+static const char *u4names[] = {
   "u4",
   NULL,
 };
@@ -1091,7 +1091,7 @@ const st_format_t *st_u4_format_fn(void)
 
 
 
-static char *slnames[] = {
+static const char *slnames[] = {
   "sl",
   NULL,
 };
@@ -1114,7 +1114,7 @@ const st_format_t *st_sl_format_fn(void)
     return &st_sl_format;
 }
 
-static char *swnames[] = {
+static const char *swnames[] = {
   "sw",
   NULL
 };
@@ -1141,7 +1141,7 @@ const st_format_t *st_sw_format_fn(void)
 
 /* Signed 3 byte raw; used for testing only; not documented in the man page */
 
-static char *s3names[] = {
+static const char *s3names[] = {
   "s3",
   NULL
 };
@@ -1166,7 +1166,7 @@ const st_format_t *st_s3_format_fn(void)
 
 
 
-static char *ubnames[] = {
+static const char *ubnames[] = {
   "ub",
   "sou",
   "fssd",
@@ -1191,7 +1191,7 @@ const st_format_t *st_ub_format_fn(void)
     return &st_ub_format;
 }
 
-static char *ulnames[] = {
+static const char *ulnames[] = {
   "ul",
   NULL
 };
@@ -1214,7 +1214,7 @@ const st_format_t *st_ul_format_fn(void)
     return &st_ul_format;
 }
 
-static char *uwnames[] = {
+static const char *uwnames[] = {
   "uw",
   NULL
 };
@@ -1241,7 +1241,7 @@ const st_format_t *st_uw_format_fn(void)
 
 /* Unsigned 3 byte raw; used for testing only; not documented in the man page */
 
-static char *u3names[] = {
+static const char *u3names[] = {
   "u3",
   NULL
 };

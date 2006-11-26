@@ -156,7 +156,7 @@ int st_is_littleendian(void)
         return 0;
 }
 
-int strcmpcase(char *s1, char *s2)
+int strcmpcase(const char *s1, const char *s2)
 {
         while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
                 s1++, s2++;
@@ -168,7 +168,7 @@ int strcmpcase(char *s1, char *s2)
  */
 int st_gettype(ft_t formp)
 {
-    char **list;
+    const char * const *list;
     int i;
     const st_format_t *f;
 
@@ -180,8 +180,8 @@ int st_gettype(ft_t formp)
     }
     for(i = 0; st_format_fns[i]; i++) {
         f = st_format_fns[i]();
-        for(list = f->names; *list; list++) {
-            char *s1 = *list, *s2 = formp->filetype;
+        for (list = f->names; *list; list++) {
+            const char *s1 = *list, *s2 = formp->filetype;
             if (! strcmpcase(s1, s2))
                 break;  /* not a match */
         }
@@ -261,12 +261,12 @@ int st_geteffect_opt(eff_t effp, int argc, char **argv)
  * Returns -1 on on failure.
  */
 
-int st_geteffect(eff_t effp, char *effect_name)
+int st_geteffect(eff_t effp, const char *effect_name)
 {
     int i;
 
     for(i = 0; st_effect_fns[i]; i++) {
-        char *s1, *s2;
+        const char *s1, *s2;
         const st_effect_t *e = st_effect_fns[i]();
 
         if (!e || !e->name)
@@ -294,12 +294,12 @@ int st_geteffect(eff_t effp, char *effect_name)
  * Check that we have a known effect name.  Return ST_SUCESS if found, else
  * return ST_EOF.
  */
-int st_checkeffect(char *effect_name)
+int st_checkeffect(const char *effect_name)
 {
     int i;
 
     for(i = 0; st_effect_fns[i]; i++) {
-        char *s1, *s2;
+        const char *s1, *s2;
         const st_effect_t *e = st_effect_fns[i]();
 
         if (!e || !e->name)
@@ -330,7 +330,7 @@ int st_checkeffect(char *effect_name)
  * calls.
  */
 
-int st_updateeffect(eff_t effp, st_signalinfo_t *in, st_signalinfo_t *out, 
+int st_updateeffect(eff_t effp, const st_signalinfo_t *in, const st_signalinfo_t *out, 
                     int effect_mask)
 {
     effp->ininfo = *in;
@@ -383,14 +383,14 @@ int st_updateeffect(eff_t effp, st_signalinfo_t *in, st_signalinfo_t *out,
  * st_parsesamples
  *
  * Parse a string for # of samples.  If string ends with a 's'
- * then string is interrepted as a user calculated # of samples.
+ * then the string is interpreted as a user calculated # of samples.
  * If string contains ':' or '.' or if it ends with a 't' then its
  * treated as an amount of time.  This is converted into seconds and
  * fraction of seconds and then use the sample rate to calculate
  * # of samples.
  * Returns ST_EOF on error.
  */
-int st_parsesamples(st_rate_t rate, char *str, st_size_t *samples, char def)
+int st_parsesamples(st_rate_t rate, const char *str, st_size_t *samples, char def)
 {
     int found_samples = 0, found_time = 0;
     int time = 0;

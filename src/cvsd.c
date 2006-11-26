@@ -325,7 +325,7 @@ st_ssize_t st_cvsdread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 
 /* ---------------------------------------------------------------------- */
 
-st_ssize_t st_cvsdwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp) 
+st_ssize_t st_cvsdwrite(ft_t ft, const st_sample_t *buf, st_ssize_t nsamp) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         int done = 0;
@@ -670,7 +670,7 @@ int st_dvmsstopwrite(ft_t ft)
 /* ---------------------------------------------------------------------- */
 
 /* Cont. Variable Slope Delta */
-static char *cvsdnames[] = {
+static const char *cvsdnames[] = {
   "cvs",
   "cvsd",
   NULL
@@ -694,7 +694,7 @@ const st_format_t *st_cvsd_format_fn(void)
     return &st_cvsd_format;
 }
 /* Cont. Variable Solot Delta */
-static char *dvmsnames[] = {
+static const char *dvmsnames[] = {
   "vms",
   "dvms",
   NULL

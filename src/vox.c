@@ -267,7 +267,7 @@ int  st_voxstartwrite (ft_t ft)
  * Notes      : 
  ******************************************************************************/
 
-st_ssize_t st_voxwrite (ft_t ft,st_sample_t *buffer,st_ssize_t length) 
+st_ssize_t st_voxwrite (ft_t ft,const st_sample_t *buffer,st_ssize_t length) 
            { vox_t    state = (vox_t) ft->priv;
              int      count = 0;
              uint8_t  byte  = state->store.byte;
@@ -442,7 +442,7 @@ static short devox (uint8_t code,vox_t state)
         return (sample);
       }
 
-static char *voxnames[] = {
+static const char *voxnames[] = {
   "vox",
   NULL
 };

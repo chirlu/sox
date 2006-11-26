@@ -70,7 +70,7 @@ int st_nulstartwrite(ft_t ft)
     return(ST_SUCCESS);
 }
 
-st_ssize_t st_nulwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_nulwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len) 
 {
     return len;    
 }
@@ -81,7 +81,7 @@ int st_nulstopwrite(ft_t ft)
     return (ST_SUCCESS);
 }
 
-static char *nulnames[] = {
+static const char *nulnames[] = {
   "nul",
   NULL,
 };

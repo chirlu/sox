@@ -466,7 +466,7 @@ int st_vocstartwrite(ft_t ft)
 /*-----------------------------------------------------------------
  * st_vocstartread() -- start reading a VOC file
  *-----------------------------------------------------------------*/
-st_ssize_t st_vocwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_vocwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
 {
         vs_t v = (vs_t) ft->priv;
         unsigned char uc;
@@ -826,7 +826,7 @@ static void blockstop(ft_t ft)
 }
 
 /* Sound Blaster .VOC */
-static char *vocnames[] = {
+static const char *vocnames[] = {
   "voc",
   NULL
 };

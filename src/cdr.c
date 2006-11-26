@@ -121,7 +121,7 @@ int st_cdrstartwrite(ft_t ft)
         return(ST_SUCCESS);
 }
 
-st_ssize_t st_cdrwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_cdrwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len) 
 {
         cdr_t cdr = (cdr_t) ft->priv;
 
@@ -160,7 +160,7 @@ int st_cdrstopwrite(ft_t ft)
         return(ST_SUCCESS);
 }
 
-static char *cdrnames[] = {
+static const char *cdrnames[] = {
   "cdr",
   NULL
 };

@@ -217,7 +217,7 @@ int st_ossdspstartwrite(ft_t ft)
 }
 
 /* OSS /dev/dsp player */
-static char *ossdspnames[] = {
+static const char *ossdspnames[] = {
   "ossdsp",
   NULL
 };

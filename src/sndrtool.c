@@ -200,7 +200,7 @@ return(ST_SUCCESS);
 /*                         SNDTWRITE                                     */
 /*======================================================================*/
 
-st_ssize_t st_sndtwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_sndtwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
 {
         snd_t p = (snd_t ) ft->priv;
         p->nsamples += len;
@@ -257,7 +257,7 @@ static void sndtwriteheader(ft_t ft, st_size_t nsamples)
 }
 
 /* Sndtool Sound File */
-static char *sndtnames[] = {
+static const char *sndtnames[] = {
   "sndt",
   NULL
 };

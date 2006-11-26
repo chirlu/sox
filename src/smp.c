@@ -397,7 +397,7 @@ int st_smpstartwrite(ft_t ft)
         return(ST_SUCCESS);
 }
 
-st_ssize_t st_smpwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_smpwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len) 
 {
         smp_t smp = (smp_t) ft->priv;
         register int datum;
@@ -432,7 +432,7 @@ int st_smpstopwrite(ft_t ft)
 }
 
 /* SampleVision sound */
-static char *smpnames[] = {
+static const char *smpnames[] = {
   "smp",
   NULL,
 };

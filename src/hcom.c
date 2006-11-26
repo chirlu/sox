@@ -307,7 +307,7 @@ int st_hcomstartwrite(ft_t ft)
         return (ST_SUCCESS);
 }
 
-st_ssize_t st_hcomwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_hcomwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
 {
         register struct writepriv *p = (struct writepriv *) ft->priv;
         st_sample_t datum;
@@ -571,7 +571,7 @@ int st_hcomstopwrite(ft_t ft)
 }
 
 /* Mac FSSD/HCOM */
-static char *hcomnames[] = {
+static const char *hcomnames[] = {
   "hcom",
   NULL
 };

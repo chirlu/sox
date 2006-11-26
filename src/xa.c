@@ -312,7 +312,7 @@ static int st_xastartwrite(ft_t ft)
     return ST_EOF;
 }
 
-static st_ssize_t st_xawrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
+static st_ssize_t st_xawrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
 {
     st_fail_errno(ft, ST_ENOTSUP, ".XA writing not supported");
     return ST_EOF;
@@ -330,7 +330,7 @@ static int st_xaseek(ft_t ft, st_size_t offset)
 }
 
 /* Maxis .xa */
-static char *xanames[] = {
+static const char *xanames[] = {
     "xa",
     NULL
 };

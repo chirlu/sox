@@ -168,7 +168,7 @@ st_ssize_t st_prcread(ft_t ft, st_sample_t *buf, st_ssize_t samp)
         return st_rawread(ft, buf, samp);
 }
 
-st_ssize_t st_prcwrite(ft_t ft, st_sample_t *buf, st_ssize_t samp)
+st_ssize_t st_prcwrite(ft_t ft, const st_sample_t *buf, st_ssize_t samp)
 {
         prc_t p = (prc_t ) ft->priv;
         p->length += samp * ft->info.size;
@@ -211,7 +211,7 @@ static void prcwriteheader(ft_t ft)
 }
 
 /* Psion .prc */
-static char *prcnames[] = {
+static const char *prcnames[] = {
   "prc",
   NULL
 };

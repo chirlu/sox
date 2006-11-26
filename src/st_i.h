@@ -231,7 +231,7 @@ int st_rawstartread(ft_t ft);
 st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp);
 int st_rawstopread(ft_t ft);
 int st_rawstartwrite(ft_t ft);
-st_ssize_t st_rawwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp);
+st_ssize_t st_rawwrite(ft_t ft, const st_sample_t *buf, st_ssize_t nsamp);
 int st_rawstopwrite(ft_t ft);
 int st_rawseek(ft_t ft, st_size_t offset);
 
@@ -239,7 +239,8 @@ int st_rawseek(ft_t ft, st_size_t offset);
  * a file handler or effect doesn't need to do anything special
  */
 int st_format_nothing(ft_t ft);
-st_ssize_t st_format_nothing_io(ft_t ft, st_sample_t *buf, st_ssize_t len);
+st_ssize_t st_format_nothing_read_io(ft_t ft, st_sample_t *buf, st_ssize_t len);
+st_ssize_t st_format_nothing_write_io(ft_t ft, const st_sample_t *buf, st_ssize_t len);
 int st_format_nothing_seek(ft_t ft, st_size_t offset);
 int st_effect_nothing(eff_t effp);
 int st_effect_nothing_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);

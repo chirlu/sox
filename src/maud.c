@@ -284,7 +284,7 @@ int st_maudstartwrite(ft_t ft)
         return (ST_SUCCESS);
 }
 
-st_ssize_t st_maudwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_maudwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len) 
 {
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         
@@ -389,7 +389,7 @@ static void maudwriteheader(ft_t ft)
 }
 
 /* Amiga MAUD */
-static char *maudnames[] = {
+static const char *maudnames[] = {
   "maud",
   NULL,
 };

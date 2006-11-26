@@ -360,7 +360,7 @@ st_ssize_t st_auread(ft_t ft, st_sample_t *buf, st_ssize_t samp)
         return done;
 }
 
-st_ssize_t st_auwrite(ft_t ft, st_sample_t *buf, st_ssize_t samp)
+st_ssize_t st_auwrite(ft_t ft, const st_sample_t *buf, st_ssize_t samp)
 {
         au_t p = (au_t ) ft->priv;
         p->data_size += samp * ft->info.size;
@@ -471,7 +471,7 @@ static void auwriteheader(ft_t ft, st_size_t data_size)
 }
 
 /* SPARC .au w/header */
-static char *aunames[] = {
+static const char *aunames[] = {
   "au",
   "snd",
   NULL

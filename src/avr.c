@@ -260,7 +260,7 @@ int st_avrstartwrite(ft_t ft)
   return(ST_SUCCESS);
 }
 
-st_ssize_t st_avrwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp) 
+st_ssize_t st_avrwrite(ft_t ft, const st_sample_t *buf, st_ssize_t nsamp) 
 {
   avr_t avr = (avr_t)ft->priv;
 
@@ -291,7 +291,7 @@ int st_avrstopwrite(ft_t ft)
   return(ST_SUCCESS);
 }
 
-static char *avrnames[] = {
+static const char *avrnames[] = {
   "avr",
   NULL
 };

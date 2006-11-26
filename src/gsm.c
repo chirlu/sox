@@ -187,7 +187,7 @@ static int gsmflush(ft_t ft)
         return (ST_SUCCESS);
 }
 
-st_ssize_t st_gsmwrite(ft_t ft, st_sample_t *buf, st_ssize_t samp)
+st_ssize_t st_gsmwrite(ft_t ft, const st_sample_t *buf, st_ssize_t samp)
 {
         int done = 0;
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
@@ -239,7 +239,7 @@ int st_gsmstopwrite(ft_t ft)
 }
 
 /* GSM 06.10 */
-static char *gsmnames[] = {
+static const char *gsmnames[] = {
   "gsm",
   NULL
 };

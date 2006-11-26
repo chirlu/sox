@@ -223,7 +223,7 @@ int st_sfstartwrite(ft_t ft)
 
 /* Read and write are supplied by raw.c */
 /* IRCAM Sound File */
-static char *sfnames[] = {
+static const char *sfnames[] = {
   "sf",
   NULL
 };

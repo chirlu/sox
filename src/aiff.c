@@ -735,7 +735,7 @@ int st_aiffstartwrite(ft_t ft)
         return(aiffwriteheader(ft, 0x7f000000L / (ft->info.size*ft->info.channels)));
 }
 
-st_ssize_t st_aiffwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_aiffwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         aiff->nsamples += len;
@@ -1226,7 +1226,7 @@ static double ConvertFromIeeeExtended(unsigned char *bytes)
 }
 
 
-static char *aiffnames[] = {
+static const char *aiffnames[] = {
   "aiff",
   "aif",
   NULL
@@ -1250,7 +1250,7 @@ const st_format_t *st_aiff_format_fn(void)
     return &st_aiff_format;
 }
 
-static char *aifcnames[] = {
+static const char *aifcnames[] = {
   "aifc",
   "aiffc",
   NULL

@@ -9,7 +9,6 @@
  */
 
 
-
 #include "st_i.h"
 
 #if defined(HAVE_LIBFLAC)
@@ -18,16 +17,6 @@
 #include <string.h>
 
 #include <FLAC/all.h>
-
-/* FIXME 
- * There are things that should be const but can't be because
- * of lack of const correctness elsewhere in SoX. 
- * Once Sox has been fixed up, then replace all occurences of 
- * const_ with const and remove this comment and the following
- * line.
- */
-#define const_
-
 
 
 typedef struct
@@ -434,7 +423,7 @@ static int st_format_start_write(ft_t const format)
 
 
 
-static st_ssize_t st_format_write(ft_t const format, st_sample_t const_ * const sampleBuffer, st_ssize_t const len)
+static st_ssize_t st_format_write(ft_t const format, st_sample_t const * const sampleBuffer, st_ssize_t const len)
 {
   Encoder * encoder = (Encoder *) format->priv;
   unsigned i;
@@ -473,7 +462,7 @@ static int st_format_stop_write(ft_t const format)
 
 
 
-static char const_ * const_ st_format_names[] =
+static char const * const st_format_names[] =
 {
   "flac",
   NULL

@@ -207,7 +207,7 @@ int st_autostartwrite(ft_t ft)
         return(ST_EOF);
 }
 
-static char *autonames[] = {
+static const char *autonames[] = {
   "auto",
   NULL
 };
@@ -217,10 +217,10 @@ static st_format_t st_auto_format = {
   NULL,
   ST_FILE_STEREO,
   st_autostartread,
-  st_format_nothing_io,
+  st_format_nothing_read_io,
   st_format_nothing,
   st_autostartwrite,
-  st_format_nothing_io,
+  st_format_nothing_write_io,
   st_format_nothing,
   st_format_nothing_seek
 };

@@ -329,7 +329,7 @@ st_ssize_t st_read(ft_t ft, st_sample_t *buf, st_ssize_t len)
     return (*ft->h->read)(ft, buf, len);
 }
 
-st_ssize_t st_write(ft_t ft, st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_write(ft_t ft, const st_sample_t *buf, st_ssize_t len)
 {
     return (*ft->h->write)(ft, buf, len);
 }

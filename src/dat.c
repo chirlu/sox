@@ -138,7 +138,7 @@ st_ssize_t st_datread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
     return (done);
 }
 
-st_ssize_t st_datwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
+st_ssize_t st_datwrite(ft_t ft, const st_sample_t *buf, st_ssize_t nsamp)
 {
     dat_t dat = (dat_t) ft->priv;
     int done = 0;
@@ -168,7 +168,7 @@ st_ssize_t st_datwrite(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
 }
 
 /* Text data samples */
-static char *datnames[] = {
+static const char *datnames[] = {
   "dat",
   NULL
 };

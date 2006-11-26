@@ -290,7 +290,7 @@ int st_svxstartwrite(ft_t ft)
 /*                         8SVXWRITE                                    */
 /*======================================================================*/
 
-st_ssize_t st_svxwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_svxwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
 {
         svx_t p = (svx_t ) ft->priv;
 
@@ -391,7 +391,7 @@ static void svxwriteheader(ft_t ft, st_ssize_t nsamples)
 }
 
 /* Amiga 8SVX */
-static char *svxnames[] = {
+static const char *svxnames[] = {
   "8svx",
   NULL
 };

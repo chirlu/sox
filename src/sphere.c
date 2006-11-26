@@ -244,7 +244,7 @@ int st_spherestartwrite(ft_t ft)
         
 }
 
-st_ssize_t st_spherewrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_spherewrite(ft_t ft, const st_sample_t *buf, st_ssize_t len) 
 {
     sphere_t sphere = (sphere_t) ft->priv;
 
@@ -307,7 +307,7 @@ int st_spherestopwrite(ft_t ft)
 }
 
 /* NIST Sphere File */
-static char *spherenames[] = {
+static const char *spherenames[] = {
   "sph",
   NULL
 };

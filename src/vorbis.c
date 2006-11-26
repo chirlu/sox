@@ -402,7 +402,7 @@ int st_vorbisstartwrite(ft_t ft)
         return(ST_SUCCESS);     
 }
 
-st_ssize_t st_vorbiswrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_ssize_t len) 
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;
@@ -469,7 +469,7 @@ int st_vorbisstopwrite(ft_t ft)
         return (ST_SUCCESS);
 }
 
-static char *vorbisnames[] = {
+static const char *vorbisnames[] = {
   "vorbis",
   "ogg",
   NULL

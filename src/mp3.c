@@ -431,7 +431,7 @@ int st_mp3startwrite(ft_t ft)
   return(ST_SUCCESS);
 }
 
-st_ssize_t st_mp3write(ft_t ft, st_sample_t *buf, st_ssize_t samp)
+st_ssize_t st_mp3write(ft_t ft, const st_sample_t *buf, st_ssize_t samp)
 {
     struct mp3priv *p = (struct mp3priv *)ft->priv;
     char *mp3buffer;
@@ -566,7 +566,7 @@ int st_mp3stopwrite(ft_t ft)
 #endif /* HAVE_LAME */
 
 /* MP3 */
-static char *mp3names[] = {
+static const char *mp3names[] = {
   "mp3",
   "mp2",
   NULL,

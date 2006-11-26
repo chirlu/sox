@@ -208,14 +208,14 @@ typedef struct st_fileinfo
 typedef struct st_soundstream *ft_t;
 
 typedef struct st_format {
-    char         **names;
+    const char   * const *names;
     char         *usage;
     unsigned int flags;
     int          (*startread)(ft_t ft);
     st_ssize_t   (*read)(ft_t ft, st_sample_t *buf, st_ssize_t len);
     int          (*stopread)(ft_t ft);
     int          (*startwrite)(ft_t ft);
-    st_ssize_t   (*write)(ft_t ft, st_sample_t *buf, st_ssize_t len);
+    st_ssize_t   (*write)(ft_t ft, const st_sample_t *buf, st_ssize_t len);
     int          (*stopwrite)(ft_t ft);
     int          (*seek)(ft_t ft, st_size_t offset);
 } st_format_t;
@@ -342,19 +342,19 @@ extern ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
                                 const st_instrinfo_t *instr,
                                 const st_loopinfo_t *loops);
 extern st_ssize_t st_read(ft_t ft, st_sample_t *buf, st_ssize_t len);
-extern st_ssize_t st_write(ft_t ft, st_sample_t *buf, st_ssize_t len);
+extern st_ssize_t st_write(ft_t ft, const st_sample_t *buf, st_ssize_t len);
 extern int st_close(ft_t ft);
 
 #define ST_SEEK_SET 0
 extern int st_seek(ft_t ft, st_size_t offset, int whence);
 
 int st_geteffect_opt(eff_t, int, char **);
-int st_geteffect(eff_t, char *);
-int st_checkeffect(char *);
-int st_updateeffect(eff_t, st_signalinfo_t *in, st_signalinfo_t *out, int);
+int st_geteffect(eff_t, const char *);
+int st_checkeffect(const char *);
+int st_updateeffect(eff_t, const st_signalinfo_t *in, const st_signalinfo_t *out, int);
 int st_gettype(ft_t);
 ft_t st_initformat(void);
-int st_parsesamples(st_rate_t rate, char *str, st_size_t *samples, char def);
+int st_parsesamples(st_rate_t rate, const char *str, st_size_t *samples, char def);
 
 extern char const * st_message_filename;
 

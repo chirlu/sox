@@ -350,7 +350,7 @@ static int wavgsmflush(ft_t ft)
     return (ST_SUCCESS);
 }
 
-st_ssize_t wavgsmwrite(ft_t ft, st_sample_t *buf, st_ssize_t len)
+st_ssize_t wavgsmwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
 {
     wav_t       wav = (wav_t) ft->priv;
     int done = 0;
@@ -1679,7 +1679,7 @@ static int wavwritehdr(ft_t ft, int second_header)
     return ST_SUCCESS;
 }
 
-st_ssize_t st_wavwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_wavwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len) 
 {
         wav_t   wav = (wav_t) ft->priv;
         st_ssize_t total_len = len;
@@ -1858,7 +1858,7 @@ int st_wavseek(ft_t ft, st_size_t offset)
 }
 
 /* Microsoftt RIFF */
-static char *wavnames[] = {
+static const char *wavnames[] = {
   "wav",
   NULL
 };
