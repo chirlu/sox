@@ -365,13 +365,10 @@ int st_vorbisstartwrite(ft_t ft)
 
         vorbis_info_init(&ve->vi);
 
-        /* DEBUG */
+        /* TODO */
         rate = ft->info.rate;
-
         if (rate)
-        {
             st_fail_errno(ft, ST_EHDR, "Error setting up Ogg Vorbis encorder - make sure you've specied a sane rate and number of channels");
-        }
 
         /* Use encoding to average bit rate of VBR as specified by the -C option */
         if (ft->info.compression != HUGE_VAL)
