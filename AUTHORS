@@ -1,4 +1,4 @@
-This is an incomplerte list of contributors to sox. Your name could be
+This is an incomplete list of contributors to SoX. Your name could be
 here, too! I've probably lost a few, and several people fixed the same
 bugs.
 
@@ -87,3 +87,7 @@ Contributors:
 		Multiple effects from command line.
 	Reuben Thomas		rrt@sc3d.org
 		Much cleaning up, Secret Rabbit Code resampling.
+	Rob Sykes		robs@users.sourceforge.net
+		Bass & treble effects, FLAC support, initial 24bit
+		support, Octave plotting for filters,
+		various small fixes, enchancements and clean-ups.
