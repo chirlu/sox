@@ -19,11 +19,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#ifdef __STDC__
 #include <stdarg.h>
-#else
-#include <varargs.h>
-#endif
 
 struct st_output_message_s
 {
@@ -122,12 +118,6 @@ ST_MESSAGE_FUNCTION(st_debug_most , 6)
 
 #undef ST_MESSAGE_FUNCTION
 
-
-
-/* Warning: no error checking is done with errstr.  Be sure not to
- * go over the array limit ourself!  vsnprint does not seem to be
- * on all platforms so not using that.
- */
 void st_fail_errno(ft_t ft, int st_errno, const char *fmt, ...)
 {
         va_list args;
@@ -135,7 +125,7 @@ void st_fail_errno(ft_t ft, int st_errno, const char *fmt, ...)
         ft->st_errno = st_errno;
 
         va_start(args, fmt);
-        vsprintf(ft->st_errstr, fmt, args);
+        vsnprintf(ft->st_errstr, sizeof(ft->st_errstr), fmt, args);
         va_end(args);
         ft->st_errstr[255] = '\0';
 }
