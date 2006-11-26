@@ -913,9 +913,9 @@ static void parse_effects(int argc, char **argv)
     {
         if (nuser_effects >= MAX_USER_EFF)
         {
-            st_fail("Too many effects specified.");
+            st_fail("too many effects specified (at most %d allowed)", MAX_USER_EFF);
             cleanup();
-            exit(2);
+            exit(1);
         }
 
         argc_effect = st_geteffect_opt(&user_efftab[nuser_effects],
@@ -923,9 +923,9 @@ static void parse_effects(int argc, char **argv)
 
         if (argc_effect == ST_EOF)
         {
-            st_fail("Effect '%s' is not known!", argv[optind]);
+            st_fail("Effect '%s' does not exist!", argv[optind]);
             cleanup();
-            exit(2);
+            exit(1);
         }
 
         /* Skip past effect name */
@@ -982,12 +982,12 @@ static void check_effects(void)
 
     if (haschan > 1)
     {
-        st_fail("Can not specify multiple effects that modify channel #");
+        st_fail("Cannot specify multiple effects that modify channel #");
         cleanup();
         exit(2);
     }
     if (hasrate > 1)
-        st_report("Can not specify multiple effects that change sample rate");
+        st_report("Cannot specify multiple effects that change sample rate");
 
     /* If not writing output then do not worry about adding
      * channel and rate effects.  This is just to speed things
