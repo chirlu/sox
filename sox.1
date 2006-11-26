@@ -35,10 +35,7 @@ sox \- Sound eXchange : universal sound sample translator
     [ \fIeffect\fR [ \fIeffect options\fR ] ... ]
 .SH DESCRIPTION
 .I SoX
-is a command line program that can convert most popular audio files
-to most other popular audio file formats.  It can optionally change
-the audio sample data type and apply one or more
-sound effects to the file during this translation.  
+audio file transformer that can read and write most popular audio formats and optionally apply effects to them. It can also play and record sound files.
 .P
 If more than one input file is specified then they are concatenated into the
 output file.  In this case, it has a restriction that all input files
@@ -50,6 +47,8 @@ is functionally the same as the command line program
 except that it takes two or more files as input and mixes the audio together
 to produce a single file as output.  It has a restriction that all
 input files must be of the same data type and sample rates.
+.P
+Exit status is 0 for no error, 1 if there is a problem with the command-line arguments, and 2 if an error occurs during file processing.
 .P
 There are two types of audio file formats that
 .I SoX
@@ -285,7 +284,7 @@ A-law and u-law data is sometimes encoded using a reversed bit-ordering
 (i.e. MSB becomes LSB).  Internally, SoX understands how to work with
 this encoding but there is currently no command line option to
 specify it.  If you need this support then you can use the pseudo
-file types of ".la" and ".lu" to inform sox of the encoding.  See
+file types of ".la" and ".lu" to inform SoX of the encoding.  See
 supported file types for more information.
 
 ADPCM is a form of sound compression that has a good
@@ -1112,7 +1111,7 @@ optional and must have been selected at compile time of \fISoX\fR. See
 http://www.mega-nerd.com/SRC/ for details of the algorithm. Algorithms
 0 through 2 are progressively faster and lower quality versions of the
 sinc algorithm; the default is \fI-c0\fR, which is probably the best
-quality algorithm for general use currently available in sox.
+quality algorithm for general use currently available in SoX.
 Algorithm 3 is zero-order hold, and 4 is linear interpolation. See the
 \fIresample\fR effect for more discussion of resampling.
 
@@ -1473,7 +1472,8 @@ Please report any bugs found in this version of SoX mailing list (sox-users@list
 .LP
 The SoX web page at http://sox.sourceforge.net/
 .SH LICENSE
-Copyright 2006 by Chris Bagwell
+Copyright 1991 Lance Norskog and Sundry Contributors.
+Copyright 1998-2006 by Chris Bagwell and SoX Contributors.
 .LP
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -1487,5 +1487,5 @@ GNU General Public License for more details.
 .SH AUTHORS
 Chris Bagwell (cbagwell@users.sourceforge.net).  
 .P
-Additional authors and contributors are listed in the Changelog file that
+Additional authors and contributors are listed in the AUTHORS file that
 is distributed with the source code.
