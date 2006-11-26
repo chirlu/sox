@@ -1,4 +1,12 @@
 /*
+ * util.c.
+ * Incorporate Jimen Ching's fixes for real library operation: Aug 3, 1994.
+ * Redo all work from scratch, unfortunately.
+ * Separate out all common variables used by effects & handlers,
+ * and utility routines for other main programs to use.
+ */
+
+/*
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for
@@ -17,17 +25,6 @@
 #include <varargs.h>
 #endif
 
-/*
- * util.c.
- * Incorporate Jimen Ching's fixes for real library operation: Aug 3, 1994.
- * Redo all work from scratch, unfortunately.
- * Separate out all common variables used by effects & handlers,
- * and utility routines for other main programs to use.
- */
-
-
-
-
 struct st_output_message_s
 {
   char const * filename;
@@ -35,11 +32,8 @@ struct st_output_message_s
   va_list      ap;
 };
 
-
-
 st_output_message_handler_t st_output_message_handler = NULL;
-
-
+int st_output_verbosity_level = 2;
 
 void st_output_message(FILE * file, st_output_message_t message)
 {

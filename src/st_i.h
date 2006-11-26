@@ -106,6 +106,7 @@ struct st_output_message_s;
 typedef struct st_output_message_s * st_output_message_t;
 typedef void (* st_output_message_handler_t)(int level, st_output_message_t);
 extern st_output_message_handler_t st_output_message_handler;
+extern int st_output_verbosity_level;
 void st_output_message(FILE * file, st_output_message_t);
 
 void st_fail(const char *, ...);

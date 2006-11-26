@@ -164,21 +164,18 @@ static int input_eff_eof;                /* has input_eff reached EOF? */
 static struct st_effect user_efftab[MAX_USER_EFF];
 static int nuser_effects;
 
-static int verbosity_level = 2;        /* be noisy on stderr */
 static char * myname = 0;
-
 
 
 static void sox_output_message(int level, st_output_message_t m)
 {
-  if (verbosity_level >= level)
+  if (st_output_verbosity_level >= level)
   {
     fprintf(stderr, "%s ", myname);
     st_output_message(stderr, m);
     fprintf(stderr, "\n");
   }
 }
-
 
 
 int main(int argc, char **argv)
@@ -467,9 +464,9 @@ static void doopts(file_options_t *fo, int argc, char **argv)
                 str = optarg;
                 if (optarg == NULL)
                 {
-                  ++verbosity_level;
+                  ++st_output_verbosity_level;
                 }
-                else if (sscanf(str, "%i", &verbosity_level) == 0)
+                else if (sscanf(str, "%i", &st_output_verbosity_level) == 0)
                 {
                   st_fail("argument for -V must be an integer");
                   cleanup();
@@ -1250,9 +1247,7 @@ static int flow_effect_out(void)
            */
           if (efftab[e].odone < efftab[e].olen)
           {
-#if 0
-              fprintf(stderr, "Breaking out of loop to flush buffer\n");
-#endif
+              st_debug("Breaking out of loop to flush buffer");
               break;
           }
       }
@@ -1375,9 +1370,7 @@ static int flow_effect_out(void)
      */
     if (input_eff > 0)
     {
-#if 0
-        fprintf(stderr, "Effect return ST_EOF\n");
-#endif
+        st_debug("Effect return ST_EOF\n");
         return ST_EOF;
     }
 
@@ -1399,9 +1392,7 @@ static int flow_effect(int e)
     /* I have no input data ? */
     if (efftab[e-1].odone == efftab[e-1].olen)
     {
-#if 0
-        fprintf(stderr, "%s no data to pull to me!\n", efftab[e].name);
-#endif
+        st_debug("%s no data to pull to me!\n", efftab[e].name);
         return 0;
     }
 
@@ -1411,10 +1402,8 @@ static int flow_effect(int e)
          */
         idone = efftab[e-1].olen - efftab[e-1].odone;
         odone = ST_BUFSIZ - efftab[e].olen;
-#if 0
-        fprintf(stderr, "pre %s idone=%d, odone=%d\n", efftab[e].name, idone, odone);
-        fprintf(stderr, "pre %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
-#endif
+        st_debug("pre %s idone=%d, odone=%d\n", efftab[e].name, idone, odone);
+        st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
 
         effstatus = (* efftab[e].h->flow)(&efftab[e],
                                           &efftab[e-1].obuf[efftab[e-1].odone],
@@ -1426,10 +1415,8 @@ static int flow_effect(int e)
         /* Leave efftab[e].odone were it was since we didn't consume data */
         /*efftab[e].odone = 0;*/
         efftab[e].olen += odone; 
-#if 0
-        fprintf(stderr, "post %s idone=%d, odone=%d\n", efftab[e].name, idone, odone); 
-        fprintf(stderr, "post %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
-#endif
+        st_debug("post %s idone=%d, odone=%d\n", efftab[e].name, idone, odone); 
+        st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
 
         done = idone + odone;
     } 
@@ -1450,10 +1437,8 @@ static int flow_effect(int e)
         /* left */
         idonel = (idone + 1)/2;         /* odd-length logic */
         odonel = odone/2;
-#if 0
-        fprintf(stderr, "pre %s idone=%d, odone=%d\n", efftab[e].name, idone, odone);
-        fprintf(stderr, "pre %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
-#endif
+        st_debug("pre %s idone=%d, odone=%d\n", efftab[e].name, idone, odone);
+        st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
 
         effstatusl = (* efftab[e].h->flow)(&efftab[e],
                                           ibufl, obufl, (st_size_t *)&idonel, 
@@ -1478,10 +1463,8 @@ static int flow_effect(int e)
         /* Don't clear since nothng has been consumed yet */
         /*efftab[e].odone = 0;*/
         efftab[e].olen += odonel + odoner;
-#if 0
-        fprintf(stderr, "post %s idone=%d, odone=%d\n", efftab[e].name, idone, odone); 
-        fprintf(stderr, "post %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
-#endif
+        st_debug("post %s idone=%d, odone=%d\n", efftab[e].name, idone, odone); 
+        st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
 
         done = idonel + idoner + odonel + odoner;
 
@@ -1747,7 +1730,14 @@ static void usage(char *opt)
 "-q              run in quiet mode.  Inverse of -S option\n"
 "-S              print status while processing audio data.\n"
 "--version       print version number of SoX and exit\n"
-"-V [level]      increase verbosity (or set level).\n"
+"-V [level]      increase verbosity (or set level). Default is 2. Levels are:\n"
+"\n"
+"                  1: failure messages\n"
+"                  2: warnings\n"
+"                  3: process reporting\n"
+"                  4-6: increasing levels of debug messages\n"
+"\n"
+"                each level includes messages from lower levels.\n"
 "\n"
 "Format options (fopts):\n"
 "\n"

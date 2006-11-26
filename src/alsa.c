@@ -44,9 +44,6 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     int err;
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
     snd_pcm_hw_params_t *hw_params = NULL;
-#if 0
-    snd_pcm_sw_params_t *sw_params;
-#endif
     unsigned int min_rate, max_rate;
     unsigned int min_chan, max_chan;
     unsigned int rate;

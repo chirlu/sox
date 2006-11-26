@@ -35,7 +35,7 @@
 #include <sys/types.h>
 #include <math.h>
 #include <stdio.h>
-#include "stconfig.h"
+#include "st_i.h"
 #include "adpcm.h"
 
 typedef struct MsState {
@@ -173,8 +173,7 @@ static int AdpcmMashS(
         const SAMPL *ibuff,  /* ibuff[] is interleaved input samples */
         int n,               /* samples to encode PER channel */
         int *iostep,         /* input/output step, REQUIRE 16 <= *st <= 0x7fff */
-        unsigned char *obuff,       /* output buffer[blockAlign], or NULL for no output  */
-        int sho              /* nonzero for debug printout */
+        unsigned char *obuff /* output buffer[blockAlign], or NULL for no output  */
 )
 {
         const SAMPL *ip, *itop;
@@ -231,10 +230,9 @@ static int AdpcmMashS(
                 d2 += d*d; /* update square-error */
 
                 if (op) {   /* if we want output, put it in proper place */
-                        /* FIXME: does c<<0 work properly? */
                         op[ox>>3] |= (ox&4)? c:(c<<4);
                         ox += 4*chans;
-                        /* if (sho) fprintf(stderr,"%.1x",c); */
+                        st_debug_more("%.1x",c);
 
                 }
 
@@ -243,65 +241,12 @@ static int AdpcmMashS(
                 if (step < 16) step = 16;
 
         }
-        /* if (sho && op) fprintf(stderr,"\n");*/
+        if (op) st_debug_more("\n");
         d2 /= n; /* be sure it's non-negative */
-#ifdef DEBUG
-        if (sho) {
-                fprintf(stderr, "ch%d: st %d->%d, d %.1f\n", ch, *iostep, step, sqrt(d2));
-                fflush(stderr);
-        }
-#endif
+        st_debug_more("ch%d: st %d->%d, d %.1f\n", ch, *iostep, step, sqrt(d2));
         *iostep = step;
         return (int) sqrt(d2);
 }
-
-#if 0
-
-static long AvgDelta(int ch, int chans, const SAMPL *ibuff, int n)
-{
-        const SAMPL *ip, *itop;
-        long v0;
-        long d1;
-
-        ip = ibuff + ch;
-        itop = ip + n*chans;
-        d1 = 0;
-        v0 = *ip;
-        ip += chans;
-        for ( ; ip < itop; ip+=chans) {
-                long v1;
-
-                v1 = *ip;
-                d1 = abs(v1-v0);
-                v0 = v1;
-        }
-        return (d1/(n-1));
-}
-
-static long ReAvgDelta(int ch, int chans, const SAMPL *ibuff, int n, int step)
-{
-        const SAMPL *ip, *itop;
-        long v0;
-        long d1;
-
-        ip = ibuff + ch;
-        itop = ip + n*chans;
-        d1 = 0;
-        v0 = *ip;
-        ip += chans;
-        for ( ; ip < itop; ip+=chans) {
-                long v1, c;
-
-                v1 = *ip;
-                c = abs(v1-v0);
-                if (step && c>2*step) c=2*step;
-                d1 += c;
-                v0 = v1;
-        }
-        return (d1/(n-1));
-}
-
-#endif
 
 inline void AdpcmMashChannel(
         int ch,             /* channel number to encode, REQUIRE 0 <= ch < chans  */
@@ -318,12 +263,6 @@ inline void AdpcmMashChannel(
         int d,dmin,k,kmin;
 
         n0 = n/2; if (n0>32) n0=32;
-#if 0
-        s0=ReAvgDelta(ch, chans, ip, n, 0);
-        s1=ReAvgDelta(ch, chans, ip, n, s0);
-        fprintf(stderr, "ReAvg%d: %d->%d (%d)\n", ch, s0,s1,*st);
-        fflush(stderr);
-#endif
         if (*st<16) *st = 16;
         v[1] = ip[ch];
         v[0] = ip[ch+chans];
@@ -336,13 +275,13 @@ inline void AdpcmMashChannel(
         for (k=0; k<7; k++) {
                 int d0,d1;
                 ss = s0 = *st;
-                d0=AdpcmMashS(ch, chans, v, iCoef[k], ip, n, &ss, NULL, 0); /* with step s0 */
+                d0=AdpcmMashS(ch, chans, v, iCoef[k], ip, n, &ss, NULL); /* with step s0 */
 
                 s1 = s0;
-                AdpcmMashS(ch, chans, v, iCoef[k], ip, n0, &s1, NULL, 0);
-                /* fprintf(stderr," s32 %d\n",s1); */
+                AdpcmMashS(ch, chans, v, iCoef[k], ip, n0, &s1, NULL);
+                st_debug_more(" s32 %d\n",s1);
                 ss = s1 = (3*s0+s1)/4;
-                d1=AdpcmMashS(ch, chans, v, iCoef[k], ip, n, &ss, NULL, 0); /* with step s1 */
+                d1=AdpcmMashS(ch, chans, v, iCoef[k], ip, n, &ss, NULL); /* with step s1 */
                 if (!k || d0<dmin || d1<dmin) {
                         kmin = k;
                         if (d0<=d1) {
@@ -355,12 +294,8 @@ inline void AdpcmMashChannel(
                 }
         }
         *st = smin;
-#ifdef DEBUG
-        fprintf(stderr,"kmin %d, smin %5d, ",kmin,smin);
-        d=AdpcmMashS(ch, chans, v, iCoef[kmin], ip, n, st, obuff, 1);
-#else
-        d=AdpcmMashS(ch, chans, v, iCoef[kmin], ip, n, st, obuff, 0);
-#endif
+        st_debug_more("kmin %d, smin %5d, ",kmin,smin);
+        d=AdpcmMashS(ch, chans, v, iCoef[kmin], ip, n, st, obuff);
         obuff[ch] = kmin;
 }
 
@@ -377,8 +312,8 @@ void AdpcmBlockMashI(
         int ch;
         unsigned char *p;
 
-        /*fprintf(stderr,"AdpcmMashI(chans %d, ip %p, n %d, st %p, obuff %p, bA %d)\n",
-                                                                 chans, ip, n, st, obuff, blockAlign);*/
+        st_debug("AdpcmMashI(chans %d, ip %p, n %d, st %p, obuff %p, bA %d)\n",
+                                                                 chans, ip, n, st, obuff, blockAlign);
 
         for (p=obuff+7*chans; p<obuff+blockAlign; p++) *p=0;
 
@@ -417,7 +352,6 @@ st_size_t AdpcmSamplesIn(
                 n += m;
         }
         return n;
-        /* wSamplesPerBlock = 2*(wBlockAlign - 7*wChannels)/wChannels + 2; */
 }
 
 st_size_t AdpcmBytesPerBlock(
