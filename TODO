@@ -115,3 +115,9 @@ use the raw driver for reading and writing.
     already lowpass-filtered to the output Nyquist freqency. Get the
     idea? :) Also, the original algorithm has apparently been updated,
     and might usefully be updated in SoX too.
+
+  o WAV handler needs to handle (ignore if nothing else) non-audio
+    chunks (except LIST which is already handled), especially at the
+    end of the file.
+
+  o Merging, e.g. two mono files to one stereo file.
