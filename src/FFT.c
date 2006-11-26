@@ -78,7 +78,7 @@ int NumberOfBitsNeeded(int PowerOfTwo)
 
    if (PowerOfTwo < 2) {
       st_debug("Error: FFT called with size %d", PowerOfTwo);
-      exit(1);
+      exit(2);
    }
 
    for (i = 0;; i++)
@@ -143,7 +143,7 @@ void FFT(int NumSamples,
 
    if (!IsPowerOfTwo(NumSamples)) {
       st_debug("%d is not a power of two", NumSamples);
-      exit(1);
+      exit(2);
    }
 
    if (!gFFTBitTable)
