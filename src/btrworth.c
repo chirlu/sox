@@ -1,5 +1,4 @@
 /*
-
     Butterworth effect file for SoX
     Copyright (C) 1999 Jan Paul Schmidt <jps@fundament.org>
 
@@ -29,7 +28,6 @@
     Charles Dodge, Thomas A. Jerse
     [2nd ed.]
     Page 214
-
  */
 
 #include <math.h>
@@ -92,12 +90,6 @@ int st_butterworth_flow (eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
   for (done = 0; done < len; done++) {
     in = *ibuf++;
-
-    /*
-     * Substituting butterworth->a [x] and butterworth->b [x] with
-     * variables, which are set outside of the loop, did not increased
-     * speed on my AMD Box. GCC seems to do a good job :o)
-     */
 
     out =
       butterworth->a [0] * in +
