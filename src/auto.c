@@ -190,14 +190,14 @@ int st_autostartread(ft_t ft)
     }
     free(ft->filetype);
     ft->filetype = strdup(type);
-    rc = st_gettype(ft); /* Change ft->h to the new format */
+    rc = st_gettype(ft, true); /* Change ft->h to the new format */
     if(rc != ST_SUCCESS)
     {
         st_fail_errno(ft,ST_EFMT,"Do not understand format type: %s",type);
         return (rc);
     }
 
-    st_report("Detected file format type: %s", type);
+    st_debug("Detected file format type: %s", type);
     return ((* ft->h->startread)(ft));
 }
 
@@ -215,7 +215,7 @@ static const char *autonames[] = {
 static st_format_t st_auto_format = {
   autonames,
   NULL,
-  ST_FILE_STEREO,
+  ST_FILE_STEREO | ST_FILE_NOFEXT,
   st_autostartread,
   st_format_nothing_read_io,
   st_format_nothing,
