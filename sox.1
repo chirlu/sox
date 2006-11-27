@@ -816,22 +816,22 @@ introduces noise in the shape of the filter,
 i.e. peaking at the 
 .I center
 frequency and settling around it.
-See \fBfilter\fR for a bandpass effect with steeper shoulders.
 
 This effect supports the \fI-o\fR option (see above).
 
+See \fBfilter\fR for a bandpass filter with steeper shoulders.
 .TP 10
-bandpass \fIfrequency bandwidth\fB
-Butterworth bandpass filter. Description coming soon!
+bandpass|bandreject \fIfrequency bandwidth\fR
+Apply a two-pole Butterworth band-pass or band-reject filter with
+central frequency (in Hz) \fIfrequency\fR,
+and bandwidth (in Hz, and as determined by the 3dB points)
+\fIbandwidth\fR.
+The filter rolls off at 6dB per octave (20dB per decade).
 
-This effect supports the \fI-o\fR option (see above).
-
+These effects support the \fI-o\fR option (see above).
 .TP 10
-bandreject \fIfrequency bandwidth\fB
-Butterworth bandreject filter.  Description coming soon!
-
-This effect supports the \fI-o\fR option (see above).
-
+bandreject \fIfrequency bandwidth\fR
+See \fI bandpass\fR.
 .TP 10
 bass|treble \fIgain\fR [\fIfrequency\fR] [\fIslope\fR]
 Boost or cut the bass (lower) or treble (upper) frequencies of
@@ -1009,39 +1009,27 @@ speed in Hz.
 The modulation is either sinusoidal (-s) or triangular
 (-t).  Gain-out is the volume of the output.
 .TP 10
-highp \fIfrequency\fR
-Apply a single pole recursive high-pass filter.
-The frequency response drops logarithmically with 
-I frequency 
-in the middle of the drop.
-The slope of the filter is quite gentle.
-See \fBfilter\fR for a highpass effect with sharper cutoff.
+highp|lowp \fIfrequency\fR
+Apply a single-pole recursive high-pass or low-pass filter with
+3dB point \fIfrequency\fR.
+The filter rolls off at 6dB per octave (20dB per decade).
 
-This effect supports the \fI-o\fR option (see above).
+These effects support the \fI-o\fR option (see above).
 
+See \fBfilter\fR for filters with a sharper cutoff.
 .TP 10
-highpass \fIfrequency\fB
-Butterworth highpass filter.  Description coming soon!
+highpass|lowpass \fIfrequency\fR
+Apply a two-pole Butterworth high-pass or low-pass filter with
+3dB point \fIfrequency\fR.
+The filter rolls off at 12dB per octave (40dB per decade).
 
-This effect supports the \fI-o\fR option (see above).
-
+These effects support the \fI-o\fR option (see above).
 .TP 10
 lowp \fIfrequency\fR
-Apply a single pole recursive low-pass filter.
-The frequency response drops logarithmically with 
-.I frequency 
-in the middle of the drop.
-The slope of the filter is quite gentle.
-See \fBfilter\fR for a lowpass effect with sharper cutoff.
-
-This effect supports the \fI-o\fR option (see above).
-
+See \fIhighp\fR.
 .TP 10
 lowpass \fIfrequency\fB
-Butterworth lowpass filter.  Description coming soon!
-
-This effect supports the \fI-o\fR option (see above).
-
+See \fIhighpass\fR.
 .TP 10
 mask
 Add "masking noise" to signal.
