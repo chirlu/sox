@@ -130,32 +130,6 @@ void st_fail_errno(ft_t ft, int st_errno, const char *fmt, ...)
         ft->st_errstr[255] = '\0';
 }
 
-int st_is_bigendian(void)
-{
-    int b;
-    char *p;
-
-    b = 1;
-    p = (char *) &b;
-    if (!*p)
-        return 1;
-    else
-        return 0;
-}
-
-int st_is_littleendian(void)
-{
-    int b;
-    char *p;
-
-    b = 1;
-    p = (char *) &b;
-    if (*p)
-        return 1;
-    else
-        return 0;
-}
-
 int strcmpcase(const char *s1, const char *s2)
 {
         while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
@@ -166,7 +140,7 @@ int strcmpcase(const char *s1, const char *s2)
 /*
  * Check that we have a known format suffix string.
  */
-int st_gettype(ft_t formp)
+int st_gettype(ft_t formp, bool is_file_extension)
 {
     const char * const *list;
     int i;
@@ -180,6 +154,8 @@ int st_gettype(ft_t formp)
     }
     for(i = 0; st_format_fns[i]; i++) {
         f = st_format_fns[i]();
+        if (is_file_extension && (f->flags & ST_FILE_NOFEXT))
+          continue; /* don't match special device names in real file names */
         for (list = f->names; *list; list++) {
             const char *s1 = *list, *s2 = formp->filetype;
             if (! strcmpcase(s1, s2))
