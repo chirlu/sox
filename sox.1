@@ -34,11 +34,12 @@ sox \- Sound eXchange : universal sound sample translator
 .br
     [ \fIeffect\fR [ \fIeffect options\fR ] ... ]
 .SH DESCRIPTION
+The
 .I SoX
-audio file transformer that can read and write most popular audio formats and optionally apply effects to them. It can also play and record sound files.
+audio file transformer can read and write most popular audio formats and optionally apply effects to them. It can also play and record sound files.
 .P
 If more than one input file is specified then they are concatenated into the
-output file.  In this case, it has a restriction that all input files
+output file.  In this case, there is the restriction that all input files
 must be of the same data type and sample rates.
 .P
 .I soxmix
@@ -50,16 +51,19 @@ input files must be of the same data type and sample rates.
 .P
 Exit status is 0 for no error, 1 if there is a problem with the command-line arguments, and 2 if an error occurs during file processing.
 .P
-There are two types of audio file formats that
+There are two types of audio file format that
 .I SoX
-can work with.  The first are self-describing file formats.  These
-contain a header that completely describe the characteristics of
+can work with.  The first is "self-describing".  Such formats
+include a header that completely describe the characteristics of
 the audio data that follows.
 .P
-The second type are header-less data, often called raw data.  A
+The second type is header-less data, often called raw data.
+For this type, a
 user must pass enough information to
 .I SoX
-on the command line so that it knows what type of data it contains.
+on the command line so that it knows what type of data it contains,
+though in some cases, the audio filename extension may imply some
+of this information.
 .P
 Audio data can usually be totally described by four characteristics:
 .TP 10
@@ -79,9 +83,9 @@ How many channels are contained in the audio data.  Mono (1) and stereo (2) are 
 Please refer to the
 .B soxexam(1)
 manual page for a long description with examples on how to use SoX with
-various types of file formats.
+various file formats.
 .SH OPTIONS
-The option syntax is a little grotty, but in essence:
+The option syntax is somewhat complex, but in essence:
 .P
 .br
 	sox file.au file.wav
@@ -105,12 +109,29 @@ file.
 .br
 	soxmix music.wav voice.wav mixed.wav
 .PP
-\fBFilenames:\fR
-.PP
-SoX can be used as a part of pipe operations by using the special
-filenames of "-".  If specified as an input name, it will read data
-from stdin.  If specified as an output name, it will send data
-to stdout.
+\fBSpecial Filenames:\fR
+.TP 10
+\fB-\fR
+SoX can be used in pipeline operations by using the special
+filename "-" which,
+if used in place of input filename, will cause
+.I SoX
+will read data from stdin,
+and which,
+if used in place of output filename, will cause
+.I SoX
+will send data to stdout.
+.TP 10
+\fB-n\fR
+This can be used in place of an input or output filename
+to specify that the "null" file type should be used. See
+.B null
+below for further information.
+.TP 10
+\fB-e\fR
+This is just an alias of
+.I -n
+but is left here for historical reasons.
 .PP
 \fBGlobal options:\fR
 .TP 10
@@ -121,7 +142,7 @@ Print version number and usage information.
 Same as \fB-h\fR
 .TP 10
 \fB--help-effect=name\fR
-Prints usage information on the specified effect.  The name
+Print usage information on the specified effect.  The name
 \fBall\fR can be used to disable usage on all effects.
 .TP 10
 \fB-o\fR
@@ -132,7 +153,7 @@ that supports the \fI-o\fR option, SoX will output Octave
 commands to plot the effect's transfer function, and then exit
 without actually processing any audio.  E.g.
 
-	sox -o input-file -e highpass 1320 > plot.m
+	sox -o input-file -n highpass 1320 > plot.m
 .br
 	octave plot.m
 .TP 10
@@ -148,7 +169,7 @@ processed in terms of audio running time instead of samples.
 Print version number and exit.
 .IP "\fB\-V[level]\fP"
 Set verbosity.
-.I Sox
+.I SoX
 prints messages to the console (stderr) according to the following
 verbosity levels:
 .IP
@@ -214,13 +235,6 @@ If this option is not given, then a default compression factor will apply.
 The compression factor is interpreted differently for different compressing file formats.
 See the description of the file formats that use this parameter for more information.
 .TP 10
-\fB-e\fR
-When specified after the last input file name (so that it applies
-to the output file)
-it allows you to avoid giving an output file name and will not
-produce an output file.  It will apply any specified effects
-to the input file.  This is mainly useful with the \fBstat\fR effect.
-.TP 10
 \fB-r \fIrate\fR
 Gives the sample rate in Hz of the file.  To cause the output file to have
 a different sample rate than the input file, include this option as a part
@@ -234,6 +248,15 @@ If no rate change effect is specified then a default one will be chosen.
 \fB-t \fIfiletype\fR
 gives the file type of the sound sample file.  Useful when file extension 
 is not standard or can not be determined by looking at the header of the file.
+.ti +3
+The 
+.I -t
+option can also be used to override the type implied by an input filename
+extension, but if overriding with a type that has a header,
+.I SoX
+will exit with an appropriate error message if such a header is not
+actually present.
+.ti +3
 See the section \fRFILE TYPES\fR for a list of supported file types.
 .TP 10
 \fB-v \fIvolume\fR
@@ -310,22 +333,32 @@ The sample data size is 1, 2, 3, or 4 bytes.
 The sample data size is in bytes, 16-bit words, 32-bit long words, 
 or 64-bit double long (long long) words.
 .SH FILE TYPES
+.B Determining The File Type
+.br
 .I SoX
-attempts to determine the file type of input files automatically by looking 
-at the header of the audio file.  When it is unable to detect the file
-type or if it's an output file
-then it uses the file extension of the file to determine what type of file 
-format handler to use.  This can be overridden by specifying the
-"-t" option on the command line.
+uses the following method to determine the type of audio in a given
+input file:
+.ti +3
+If
+.I -n
+or
+.I -t
+has been given, then the associated or given type will be used.
+(Note that if using stdin or stdout ("\fI-\fR"), then
+.I -t
+must be given.)
+Otherwise,
+.I SoX
+will try first using the file header (input files only), and then
+the filename extension to determine the file type.
+If the file type cannot be determined, then
+.I SoX
+will exit with an error.
 .P
-The input and output files may be read from standard in and out.  This
-is done by specifying '-' as the file name.
-.P
-File formats which have headers are checked, 
-if that header doesn't seem right,
-the program exits with an appropriate message.
-.P
-The following file formats are supported:
+.B Supported File Types
+.br
+Note: a file type that can be determined
+by filename extension is listed with its name preceded by a dot.
 .PP
 .TP 10
 .B .8svx
@@ -340,7 +373,7 @@ AIFF files are multimedia archives and
 can have multiple audio and picture chunks.
 You may need a separate archiver to work with them.
 .TP 10
-.B .alsa
+.B alsa
 ALSA default device driver.
 This is a pseudo-file type and can be optionally compiled into SoX.  Run
 .B sox -h
@@ -496,12 +529,38 @@ see if there is support for Mp3 run \fBsox -h\fR
 and look for it under the list of supported file formats as "mp3".
 
 .TP 10
-.B .nul
-Null file handler.  This is a fake file handler that act as if it's reading
-a stream of 0's from a while or fake writing output to a file.  This
-is not a very useful file handler in most cases.  It might be useful in
-some scripts were you do not want to read or write from a real file
-but would like to specify a file name for consistency.
+.B null
+Null file type.
+This is a special file type that can be used when normal
+file reading or writing is not needed to use a particular effect.
+It is selected by using the
+special filename
+.I -n
+in place of an input or output filename.
+.ti +3
+Using this type to input audio is equivalent to
+using a normal audio file that contains an infinite amount
+of silence, and as such is not generally useful unless used
+with an effect that specifies a finite time length
+(such as \fBtrim\fR or \fBsynth\fR).
+.ti +3
+Using this type to output audio amounts to discarding the audio
+and is useful mainly with effects that produce information about the
+audio instead of affecting it
+(such as \fBnoiseprof\fR or \fBstat\fR).
+.ti +3
+The number of channels and the sampling rate associated with a null file
+are by default 2 and 44.1kHz respectively, but these can be overriden
+if necessary by using appropriate \fBFormat Options\fR.
+.ti +3
+One other use of the null file type is to use it in conjunction
+with
+.I -V
+to display information from the audio file header
+without having to read any further into the audio file. E.g.
+.B sox -V *.wav -n
+will display header information for each "wav" file in the current
+directory.
 .TP 10
 .B .ogg
 Ogg Vorbis Compressed Audio. 
@@ -674,11 +733,6 @@ with no header and fixed at a sample rate of 8000 Hz.
 (Certain sound management software cheerfully ignores the headers.)
 Similarly, most Mac sound files are in unsigned byte format with
 a sample rate of 11025 or 22050 Hz.
-.TP 10
-.B .auto
-This is a "meta-type" and is the default file type if the user does not specify one. This file type attempts to guess the real type by looking for magic words in the header. If the type can't be guessed, the program
-exits with an error message.  The input must be a plain file, not a
-pipe.  This type can't be used for output files.
 .SH EFFECTS
 Multiple effects may be applied to the audio data by specifying them
 one after another at the end of the command line.
@@ -1307,7 +1361,7 @@ stat [ \fI-s N\fB ] [\fI-rms\fB ] [\fI-freq\fB ] [ \fI-v\fB ] [ \fI-d\fB ]
 Do a statistical check on the input file,
 and print results on the standard error file.  Audio data is passed
 unmodified from input to output file unless used along with the
-.B -e
+.B -n
 option.
 
 The "Volume Adjustment:" field in the statistics
@@ -1370,12 +1424,41 @@ feature is that you may duplicate a given channel by overwriting another.
 This is done by repeating an output channel on the command line.  For example,
 swap 2 2 will overwrite channel 1 with channel 2's data; creating a stereo
 file with both channels containing the same audio data.
+
 .TP 10
-synth [ \fIlength\fR ] \fItype mix\fR [ \fIfreq\fR [ \fI-freq2\fR ] [ \fIoff\fR ] [ \fIph\fR ] [ \fIp1\fR ] [ \fIp2\fR ] [ \fIp3\fR ]
-The synth effect will generate various types of audio data.  Although
-this effect is used to generate audio data, an input file must be specified.
-The length of the input audio file determines the length of the output
-audio file.
+synth [\fIlength\fR] {[\fItype] [mix\fR] [\fIfreq\fR[\fI-freq2\fR]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
+This effect can be used to generate fixed or swept frequency audio tones
+with various wave shapes, or to generate wideband noise of various
+"colours".
+Audio for each channel in a multi-channel sound file can be synthesised
+independently.
+.ti +3
+Though this effect is used to generate audio data, an input file must
+still be specified.  This can be used to set the synthesised audio
+length, the number of channels, and the sampling rate, however since the
+input file's audio data is not needed, the
+.I null
+file "\fI-n\fR" is usually used instead (and the length specified
+as a parameter after \fIsynth\fR).
+.ti +3
+For example, the following will synthesise a 3 second, 44.1kHz,
+stereo audio file with a swept sine-wave in one channel:
+
+	sox -n output.au synth 3 sine 300-3300
+
+The following produces an 8kHz mono version:
+
+	sox -r 8000 -c 1 -n output.au synth 3 sine 300-3300
+
+Multiple channels are synthesised by repeating the set of
+parameters shown between braces ({}) multiple times.
+The following synthesises stereo audio:
+
+	sox -n output.au synth 3 sine 300-3300 sine 4321-432
+
+A detailed description of each
+.I synth
+parameter follows:
 
 \fIlength\fR length in sec or hh:mm:ss.frac, 0=inputlength, default=0
 
