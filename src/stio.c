@@ -104,7 +104,7 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
     if (!ft->filename || !ft->filetype)
         goto input_error;
 
-    if (st_gettype(ft) != ST_SUCCESS)
+    if (st_gettype(ft, false) != ST_SUCCESS)
     {
         st_warn("Unknown input file format for '%s':  %s", 
                 ft->filename, 
@@ -188,6 +188,7 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
 {
     ft_t ft;
     int i;
+    bool no_filetype_given = filetype == NULL;
 
     ft = (ft_t)calloc(sizeof(struct st_soundstream), 1);
 
@@ -195,6 +196,12 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
         return NULL;
 
     ft->filename = strdup(path);
+
+    if (!ft->filename)
+    {
+        st_fail_errno(ft,ST_ENOMEM,"st_open_write_instr");
+        goto output_error;
+    }
 
     /* Let auto effect do the work if user is not overriding. */
     if (!filetype)
@@ -221,13 +228,7 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
     else
         ft->filetype = strdup(filetype);
 
-    if (!ft->filename)
-    {
-        st_warn("Unknown output file format for 'NULL'.");
-        goto output_error;
-    }
-
-    if (!ft->filetype || st_gettype(ft) != ST_SUCCESS)
+    if (!ft->filetype || st_gettype(ft, no_filetype_given) != ST_SUCCESS)
     {
         st_warn("Unknown output file format for '%s':  %s", 
                 ft->filename, 
