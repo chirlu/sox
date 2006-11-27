@@ -124,7 +124,7 @@ int  st_voxstartread (ft_t ft)
        ft->file.eof      = 0;
 
            ft->info.size     = ST_SIZE_WORD;
-       ft->info.encoding = ST_ENCODING_SIGN2;
+       ft->info.encoding = ST_ENCODING_OKI_ADPCM;
        ft->info.channels = 1;
 
        // ... initialise CODEC state
@@ -241,7 +241,7 @@ int  st_voxstartwrite (ft_t ft)
        ft->file.eof      = 0;
 
            ft->info.size     = ST_SIZE_WORD;
-       ft->info.encoding = ST_ENCODING_SIGN2;
+       ft->info.encoding = ST_ENCODING_OKI_ADPCM;
        ft->info.channels = 1;
 
        // ... initialise CODEC state

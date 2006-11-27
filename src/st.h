@@ -274,7 +274,8 @@ struct st_soundstream {
 #define ST_ENCODING_MP3         11/* MP3 compression */
 #define ST_ENCODING_VORBIS      12/* Vorbis compression */
 #define ST_ENCODING_FLAC        13/* FLAC compression */
-#define ST_ENCODING_MAX         13 
+#define ST_ENCODING_OKI_ADPCM   14/* Compressed PCM */
+#define ST_ENCODING_MAX         14 
 
 /* declared in misc.c */
 extern const char *st_sizes_str[];

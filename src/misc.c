@@ -62,14 +62,15 @@ const char *st_encodings_str[] = {
         "u-law",
         "a-law",
         "floating point",
-        "adpcm",
-        "ima_adpcm",
-        "gsm",
+        "ADPCM",
+        "IMA-ADPCM",
+        "GSM",
         "inversed u-law",
         "inversed A-law",
         "MPEG audio (layer I, II or III)",
         "Vorbis",
-        "FLAC"
+        "FLAC",
+        "OKI-ADPCM"
 };
 
 static const char readerr[] = "Premature EOF while reading sample file.";
