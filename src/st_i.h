@@ -132,8 +132,8 @@ int st_is_littleendian(void);
 #define ST_IS_BIGENDIAN 1
 #define ST_IS_LITTLEENDIAN 0
 #else
-#define ST_IS_BIGENDIAN st_is_bigendian()
-#define ST_IS_LITTLEENDIAN st_is_littleendian()
+#define ST_IS_BIGENDIAN 0
+#define ST_IS_LITTLEENDIAN 1
 #endif
 
 /* Warning, this is a MAX value used in the library.  Each format and
