@@ -200,7 +200,7 @@ return(ST_SUCCESS);
 /*                         SNDTWRITE                                     */
 /*======================================================================*/
 
-st_ssize_t st_sndtwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_sndtwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
         snd_t p = (snd_t ) ft->priv;
         p->nsamples += len;

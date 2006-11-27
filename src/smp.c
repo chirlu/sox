@@ -333,7 +333,7 @@ int st_smpstartread(ft_t ft)
  * Place in buf[].
  * Return number of samples read.
  */
-st_ssize_t st_smpread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_smpread(ft_t ft, st_sample_t *buf, st_size_t len) 
 {
         smp_t smp = (smp_t) ft->priv;
         unsigned short datum;
@@ -397,7 +397,7 @@ int st_smpstartwrite(ft_t ft)
         return(ST_SUCCESS);
 }
 
-st_ssize_t st_smpwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_smpwrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
 {
         smp_t smp = (smp_t) ft->priv;
         register int datum;

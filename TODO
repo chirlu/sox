@@ -26,8 +26,6 @@ use the raw driver for reading and writing.
     so that you don't have to put 100% in each channel.  Similar
     for 2->4.
 
-  o Remove FFT code from stat effect and use new FFT.c code.
-
   o Modify noiseprof and noisered so that they can read
     and write from stdin/out.  This would allow to run
     them in scripts without intermediate files required.
@@ -85,8 +83,6 @@ use the raw driver for reading and writing.
 
   o Add a FIFO/buffer to audio drivers to prevent losing audio data.
     Perhaps mpg123 could be used as an example.
-
-  o Add new PRC format in to auto.c.
 
   o Lots of effects are using "double" to prevent overflow of
     st_sample_t math.  With ststdint.h we now have a portable way

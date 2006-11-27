@@ -68,7 +68,7 @@ int st_skelstartread(ft_t ft)
  * Place in buf[].
  * Return number of samples read.
  */
-st_ssize_t st_skelread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_skelread(ft_t ft, st_sample_t *buf, st_size_t len) 
 {
     skel_t sk = (skel_t)ft->priv;
     int done = 0;
@@ -145,10 +145,10 @@ int st_skelstartwrite(ft_t ft)
 
 }
 
-st_ssize_t st_skelwrite(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_skelwrite(ft_t ft, st_sample_t *buf, st_size_t len) 
 {
     skel_t sk = (skel_t) ft->priv;
-    st_ssize_t len = 0;
+    st_size_t len = 0;
 
     switch (ft->info.size)
     {

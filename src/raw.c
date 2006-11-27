@@ -140,7 +140,7 @@ int st_rawstartwrite(ft_t ft)
     return ST_SUCCESS;
 }
 
-void st_ub_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
+void st_ub_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -154,7 +154,7 @@ void st_ub_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char s
     }
 }
 
-void st_sb_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
+void st_sb_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -168,7 +168,7 @@ void st_sb_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char s
     }
 }
 
-void st_ulaw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len,
+void st_ulaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len,
                       char swap)
 {
     while (len)
@@ -183,7 +183,7 @@ void st_ulaw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len,
     }
 }
 
-void st_alaw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len,
+void st_alaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len,
                       char swap)
 {
     while (len)
@@ -198,7 +198,7 @@ void st_alaw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len,
     }
 }
 
-void st_inv_ulaw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len,
+void st_inv_ulaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len,
                           char swap)
 {
     while (len)
@@ -213,7 +213,7 @@ void st_inv_ulaw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len,
     }
 }
 
-void st_inv_alaw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len,
+void st_inv_alaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len,
                           char swap)
 {
     while (len)
@@ -229,7 +229,7 @@ void st_inv_alaw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len,
 }
 
 
-void st_uw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
+void st_uw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -245,7 +245,7 @@ void st_uw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char s
     }
 }
 
-void st_sw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
+void st_sw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -281,7 +281,7 @@ static int24_t st_24_read_one(char const * * buffer, char swap)
 
 
 
-void st_u24_read_buf(st_sample_t * buf1, char const * buf2, st_ssize_t len, char const swap)
+void st_u24_read_buf(st_sample_t * buf1, char const * buf2, st_size_t len, char const swap)
 {
   while (len--)
   {
@@ -292,7 +292,7 @@ void st_u24_read_buf(st_sample_t * buf1, char const * buf2, st_ssize_t len, char
 
 
 
-void st_s24_read_buf(st_sample_t * buf1, char const * buf2, st_ssize_t len, char const swap)
+void st_s24_read_buf(st_sample_t * buf1, char const * buf2, st_size_t len, char const swap)
 {
   while (len--)
   {
@@ -303,7 +303,7 @@ void st_s24_read_buf(st_sample_t * buf1, char const * buf2, st_ssize_t len, char
 
 
 
-void st_udw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
+void st_udw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -319,7 +319,7 @@ void st_udw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char 
     }
 }
 
-void st_dw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
+void st_dw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -335,7 +335,7 @@ void st_dw_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char s
     }
 }
 
-void st_f32_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
+void st_f32_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -351,7 +351,7 @@ void st_f32_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char 
     }
 }
 
-void st_f64_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char swap)
+void st_f64_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -376,10 +376,10 @@ void st_f64_read_buf(st_sample_t *buf1, char const * buf2, st_ssize_t len, char 
  * functions will cause a loss of data!  Need to have sox implement
  * a consistent buffering protocol.
  */
-st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
+st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 {
-    st_ssize_t len, done = 0;
-    void (*read_buf)(st_sample_t *, char const *, st_ssize_t, char) = 0;
+    st_size_t len, done = 0;
+    void (*read_buf)(st_sample_t *, char const *, st_size_t, char) = 0;
     size_t i;
 
     if (nsamp < 0)
@@ -537,7 +537,7 @@ int st_rawstopread(ft_t ft)
         return ST_SUCCESS;
 }
 
-void st_ub_write_buf(char* buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
+void st_ub_write_buf(char* buf1, st_sample_t const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -546,7 +546,7 @@ void st_ub_write_buf(char* buf1, st_sample_t const * buf2, st_ssize_t len, char 
     }
 }
 
-void st_sb_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
+void st_sb_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -555,7 +555,7 @@ void st_sb_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char 
     }
 }
 
-void st_ulaw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len,
+void st_ulaw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len,
                        char swap)
 {
     while (len)
@@ -565,7 +565,7 @@ void st_ulaw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len,
     }
 }
 
-void st_alaw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len,
+void st_alaw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len,
                        char swap)
 {
     while (len)
@@ -575,7 +575,7 @@ void st_alaw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len,
     }
 }
 
-void st_inv_ulaw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len,
+void st_inv_ulaw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len,
                            char swap)
 {
     while (len)
@@ -585,7 +585,7 @@ void st_inv_ulaw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len,
     }
 }
 
-void st_inv_alaw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len,
+void st_inv_alaw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len,
                            char swap)
 {
     while (len)
@@ -595,7 +595,7 @@ void st_inv_alaw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len,
     }
 }
 
-void st_uw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
+void st_uw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -611,7 +611,7 @@ void st_uw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char 
     }
 }
 
-void st_sw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
+void st_sw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -649,7 +649,7 @@ static void st_24_write_one(char * * const buf1, int24_t datum, char const swap)
 
 
 
-void st_u24_write_buf(char * buf1, st_sample_t const * buf2, st_ssize_t len, char const swap)
+void st_u24_write_buf(char * buf1, st_sample_t const * buf2, st_size_t len, char const swap)
 {
   while (len--)
   {
@@ -660,7 +660,7 @@ void st_u24_write_buf(char * buf1, st_sample_t const * buf2, st_ssize_t len, cha
 
 
 
-void st_s24_write_buf(char * buf1, st_sample_t const * buf2, st_ssize_t len, char const swap)
+void st_s24_write_buf(char * buf1, st_sample_t const * buf2, st_size_t len, char const swap)
 {
   while (len--)
   {
@@ -671,7 +671,7 @@ void st_s24_write_buf(char * buf1, st_sample_t const * buf2, st_ssize_t len, cha
 
 
 
-void st_udw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
+void st_udw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -687,7 +687,7 @@ void st_udw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char
     }
 }
 
-void st_dw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
+void st_dw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -703,7 +703,7 @@ void st_dw_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char 
     }
 }
 
-void st_f32_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
+void st_f32_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -719,7 +719,7 @@ void st_f32_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char
     }
 }
 
-void st_f64_write_buf(char *buf1, st_sample_t const * buf2, st_ssize_t len, char swap)
+void st_f64_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap)
 {
     while (len)
     {
@@ -754,10 +754,10 @@ static void writeflush(ft_t ft)
  * functions will cause a loss of data!  Need to have sox implement
  * a consistent buffering protocol.
  */
-st_ssize_t st_rawwrite(ft_t ft, const st_sample_t *buf, st_ssize_t nsamp)
+st_ssize_t st_rawwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
 {
-    st_ssize_t len, done = 0;
-    void (*write_buf)(char *, st_sample_t const *, st_ssize_t, char) = 0;
+    st_size_t len, done = 0;
+    void (*write_buf)(char *, st_sample_t const *, st_size_t, char) = 0;
 
     switch(ft->info.size) {
         case ST_SIZE_BYTE:

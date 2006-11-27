@@ -22,7 +22,7 @@ typedef struct svxpriv {
         FILE *ch[4];
 }*svx_t;
 
-static void svxwriteheader(ft_t, st_ssize_t);
+static void svxwriteheader(ft_t, st_size_t);
 
 /*======================================================================*/
 /*                         8SVXSTARTREAD                                */
@@ -213,7 +213,7 @@ int st_svxstartread(ft_t ft)
 /*======================================================================*/
 /*                         8SVXREAD                                     */
 /*======================================================================*/
-st_ssize_t st_svxread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp) 
+st_ssize_t st_svxread(ft_t ft, st_sample_t *buf, st_size_t nsamp) 
 {
         unsigned char datum;
         int done = 0;
@@ -290,7 +290,7 @@ int st_svxstartwrite(ft_t ft)
 /*                         8SVXWRITE                                    */
 /*======================================================================*/
 
-st_ssize_t st_svxwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_svxwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
         svx_t p = (svx_t ) ft->priv;
 
@@ -356,7 +356,7 @@ int st_svxstopwrite(ft_t ft)
 /*                         8SVXWRITEHEADER                              */
 /*======================================================================*/
 #define SVXHEADERSIZE 100
-static void svxwriteheader(ft_t ft, st_ssize_t nsamples)
+static void svxwriteheader(ft_t ft, st_size_t nsamples)
 {
         int32_t formsize =  nsamples + SVXHEADERSIZE - 8;
 

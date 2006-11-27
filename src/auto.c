@@ -25,12 +25,9 @@
 
 int st_autostartread(ft_t ft)
 {
-    char *type;
+    char *type = NULL;
     char header[20];
-    int rc;
-    int loop;
-
-    type = 0;
+    int rc, loop;
 
     /* Attempt to auto-detect filetype using magic values.  Abort loop
      * and use file extension if any errors are detected.
@@ -50,9 +47,7 @@ int st_autostartread(ft_t ft)
                  (strncmp(header+1, "ds.", 3) == 0)) ||
                 ((strncmp(header, "sd.", 3) == 0) && 
                  (header[3] == '\0')))
-            {
                 type = "au";
-            }
             else if (strncmp(header, "FORM", 4) == 0) 
             {
                 /* Need to read more data to see what type of FORM file */
@@ -71,18 +66,14 @@ int st_autostartread(ft_t ft)
             else if (strncmp(header, "RIFF", 4) == 0)
             {
                 if (st_readbuf(ft, header, 1, 8) == 8)
-                {
                     if (strncmp(header + 4, "WAVE", 4) == 0)
                         type = "wav";
-                }
             }
             else if (strncmp(header, "Crea", 4) == 0) 
             {
                 if (st_readbuf(ft, header, 1, 15) == 15)
-                {
                     if (strncmp(header, "tive Voice File", 15) == 0) 
                         type = "voc";
-                }
             }
             else if (strncmp(header, "SOUN", 4) == 0)
             {
@@ -102,72 +93,59 @@ int st_autostartread(ft_t ft)
                 }
             }
             else if (strncmp(header, "2BIT", 4) == 0) 
-            {
                 type = "avr";
-            }
             else if (strncmp(header, "NIST", 4) == 0) 
             {
                 if (st_readbuf(ft, header, 1, 3) == 3)
-                {
                     if (strncmp(header, "_1A", 3) == 0) 
                         type = "sph";
-                }
             }
             else if (strncmp(header, "ALaw", 4) == 0)
             {
                 if (st_readbuf(ft, header, 1, 11) == 11)
-                {
                     if (strncmp(header, "SoundFile**", 11) == 0)
-                    {
                         type = "wve";
-                    }
-                }
             }
             else if (strncmp(header, "Ogg", 3) == 0)
-            {
                 type = "ogg";
-            }
             else if (strncmp(header, "fLaC", 4) == 0)
-            {
                 type = "flac";
-            }
             else if ((memcmp(header, "XAI\0", 4) == 0) ||
                      (memcmp(header, "XAJ\0", 4) == 0) ||
                      (memcmp(header, "XA\0\0", 4) == 0))
-            {
                 type = "xa";
-            }
         } /* read 4-byte header */
 
         /* If we didn't find type yet then start looking for file
          * formats that the magic header is deeper in the file.
          */
-        if (type == 0)
+        if (type == NULL)
         {
-            loop = 61;
-            while (loop--)
-            {
+            for (loop = 0; loop < 60; loop++)
                 if (st_readbuf(ft, header, 1, 1) != 1)
-                    loop = 0;
-            }
+                    break;
             if (st_readbuf(ft, header, 1, 4) == 4 && 
                 strncmp(header, "FSSD", 4) == 0)
             {
-                loop = 63;
-                while (loop--)
-                {
+                for (loop = 0; loop < 62; loop++)
                     if (st_readbuf(ft, header, 1, 1) != 1)
-                        loop = 0;
-                }
+                        break;
                 if (st_readbuf(ft, header, 1, 4) == 0 && 
                     strncmp(header, "HCOM", 4) == 0)
                     type = "hcom";
             }
         }
+
         st_rewind(ft);
+
+        if (type == NULL) {
+          if (prc_checkheader(ft, header))
+            type = "prc";
+          st_rewind(ft);
+        }        
     } /* if (seekable) */
 
-    if (type == 0)
+    if (type == NULL)
     {
         /* Use filename extension to determine audio type. */
 
@@ -183,7 +161,7 @@ int st_autostartread(ft_t ft)
             type = NULL;
     }
 
-    if(!type)
+    if (type == NULL)
     {
         st_fail_errno(ft,ST_EFMT, "Could not determine file type.");
         return (ST_EOF);

@@ -176,7 +176,7 @@ static int skipbytes(ft_t ft, int n)
         return(ST_SUCCESS);
 }
 
-st_ssize_t st_hcomread(ft_t ft, st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_hcomread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
         register struct readpriv *p = (struct readpriv *) ft->priv;
         int done = 0;
@@ -307,7 +307,7 @@ int st_hcomstartwrite(ft_t ft)
         return (ST_SUCCESS);
 }
 
-st_ssize_t st_hcomwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_hcomwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
         register struct writepriv *p = (struct writepriv *) ft->priv;
         st_sample_t datum;

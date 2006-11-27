@@ -151,7 +151,7 @@ int  st_voxstartread (ft_t ft)
  * Notes      : 
  ******************************************************************************/
 
-st_ssize_t st_voxread (ft_t ft,st_sample_t *buffer,st_ssize_t length) 
+st_ssize_t st_voxread (ft_t ft,st_sample_t *buffer,st_size_t length) 
            { vox_t    state = (vox_t) ft->priv;
                  int      count = 0;
              int      N;
@@ -267,7 +267,7 @@ int  st_voxstartwrite (ft_t ft)
  * Notes      : 
  ******************************************************************************/
 
-st_ssize_t st_voxwrite (ft_t ft,const st_sample_t *buffer,st_ssize_t length) 
+st_ssize_t st_voxwrite (ft_t ft,const st_sample_t *buffer,st_size_t length) 
            { vox_t    state = (vox_t) ft->priv;
              int      count = 0;
              uint8_t  byte  = state->store.byte;

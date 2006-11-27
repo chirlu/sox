@@ -28,8 +28,6 @@
 
 #include "st_i.h"
 
-#if defined(ENABLE_GSM)
-
 #if defined(EXTERNAL_GSM)
 #include <gsm/gsm.h>
 #else
@@ -109,7 +107,7 @@ int st_gsmstartwrite(ft_t ft)
  * Return number of samples read.
  */
 
-st_ssize_t st_gsmread(ft_t ft, st_sample_t *buf, st_ssize_t samp)
+st_ssize_t st_gsmread(ft_t ft, st_sample_t *buf, st_size_t samp)
 {
         int done = 0;
         int r, ch, chans;
@@ -187,7 +185,7 @@ static int gsmflush(ft_t ft)
         return (ST_SUCCESS);
 }
 
-st_ssize_t st_gsmwrite(ft_t ft, const st_sample_t *buf, st_ssize_t samp)
+st_ssize_t st_gsmwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
         int done = 0;
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
@@ -261,4 +259,3 @@ const st_format_t *st_gsm_format_fn(void)
 {
     return &st_gsm_format;
 }
-#endif /* ENABLE_GSM */

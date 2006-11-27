@@ -282,7 +282,7 @@ void wavgsmdestroy(ft_t ft)
     free(wav->gsmsample);
 }
 
-st_ssize_t wavgsmread(ft_t ft, st_sample_t *buf, st_ssize_t len)
+st_ssize_t wavgsmread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
     wav_t       wav = (wav_t) ft->priv;
     int done=0;
@@ -350,7 +350,7 @@ static int wavgsmflush(ft_t ft)
     return (ST_SUCCESS);
 }
 
-st_ssize_t wavgsmwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
+st_ssize_t wavgsmwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
     wav_t       wav = (wav_t) ft->priv;
     int done = 0;
@@ -1102,7 +1102,7 @@ int st_wavstartread(ft_t ft)
  * Return number of samples read.
  */
 
-st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_size_t len) 
 {
         wav_t   wav = (wav_t) ft->priv;
         st_ssize_t done;
@@ -1679,7 +1679,7 @@ static int wavwritehdr(ft_t ft, int second_header)
     return ST_SUCCESS;
 }
 
-st_ssize_t st_wavwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_wavwrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
 {
         wav_t   wav = (wav_t) ft->priv;
         st_ssize_t total_len = len;

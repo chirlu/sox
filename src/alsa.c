@@ -29,14 +29,14 @@ typedef struct alsa_priv
 
 static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt);
 
-extern void st_ub_write_buf(char* buf1, const st_sample_t *buf2, st_ssize_t len, char swap);
-extern void st_sb_write_buf(char *buf1, const st_sample_t *buf2, st_ssize_t len, char swap);
-extern void st_uw_write_buf(char *buf1, const st_sample_t *buf2, st_ssize_t len, char swap);
-extern void st_sw_write_buf(char *buf1, const st_sample_t *buf2, st_ssize_t len, char swap);
-extern void st_ub_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap);
-extern void st_sb_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap);
-extern void st_uw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap);
-extern void st_sw_read_buf(st_sample_t *buf1, char *buf2, st_ssize_t len, char swap);
+extern void st_ub_write_buf(char* buf1, const st_sample_t *buf2, st_size_t len, char swap);
+extern void st_sb_write_buf(char *buf1, const st_sample_t *buf2, st_size_t len, char swap);
+extern void st_uw_write_buf(char *buf1, const st_sample_t *buf2, st_size_t len, char swap);
+extern void st_sw_write_buf(char *buf1, const st_sample_t *buf2, st_size_t len, char swap);
+extern void st_ub_read_buf(st_sample_t *buf1, char *buf2, st_size_t len, char swap);
+extern void st_sb_read_buf(st_sample_t *buf1, char *buf2, st_size_t len, char swap);
+extern void st_uw_read_buf(st_sample_t *buf1, char *buf2, st_size_t len, char swap);
+extern void st_sw_read_buf(st_sample_t *buf1, char *buf2, st_size_t len, char swap);
 
 int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
 {
@@ -302,12 +302,12 @@ int st_alsastartread(ft_t ft)
     return st_alsasetup(ft, SND_PCM_STREAM_CAPTURE);
 }
 
-st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
+st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 {
-    st_ssize_t len;
+    st_size_t len;
     int err;
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
-    void (*read_buf)(st_sample_t *, char *, st_ssize_t, char) = 0;
+    void (*read_buf)(st_sample_t *, char *, st_size_t, char) = 0;
 
     switch(ft->info.size) {
         case ST_SIZE_BYTE:
@@ -390,12 +390,12 @@ int st_alsastartwrite(ft_t ft)
     return st_alsasetup(ft, SND_PCM_STREAM_PLAYBACK);
 }
 
-st_ssize_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_ssize_t nsamp)
+st_ssize_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
 {
-    st_ssize_t len;
+    st_size_t len;
     int err;
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
-    void (*write_buf)(char *, const st_sample_t *, st_ssize_t, char) = 0;
+    void (*write_buf)(char *, const st_sample_t *, st_size_t, char) = 0;
 
     switch(ft->info.size) {
         case ST_SIZE_BYTE:

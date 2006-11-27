@@ -638,7 +638,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
   return(ST_SUCCESS);
 }
 
-st_ssize_t st_aiffread(ft_t ft, st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_aiffread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         st_ssize_t done;
@@ -735,7 +735,7 @@ int st_aiffstartwrite(ft_t ft)
         return(aiffwriteheader(ft, 0x7f000000L / (ft->info.size*ft->info.channels)));
 }
 
-st_ssize_t st_aiffwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_aiffwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         aiff->nsamples += len;

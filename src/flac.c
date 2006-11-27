@@ -176,7 +176,7 @@ static int st_format_start_read(ft_t const format)
 }
 
 
-static st_ssize_t st_format_read(ft_t const format, st_sample_t * sampleBuffer, st_ssize_t const requested)
+static st_ssize_t st_format_read(ft_t const format, st_sample_t * sampleBuffer, st_size_t const requested)
 {
   Decoder * decoder = (Decoder *) format->priv;
   int actual = 0;
@@ -423,7 +423,7 @@ static int st_format_start_write(ft_t const format)
 
 
 
-static st_ssize_t st_format_write(ft_t const format, st_sample_t const * const sampleBuffer, st_ssize_t const len)
+static st_ssize_t st_format_write(ft_t const format, st_sample_t const * const sampleBuffer, st_size_t const len)
 {
   Encoder * encoder = (Encoder *) format->priv;
   unsigned i;

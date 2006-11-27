@@ -1,15 +1,27 @@
 /*
- * Psion record.app format (format of files needed for Revo,Revo+,Mako in 
- * System/Alarms to provide new alarm sounds. Note that the file normally
+ * Psion Record format (format of files used for Revo,Revo+,Mako in 
+ * System/Alarms to provide alarm sounds. Note that the file normally
  * has no extension, so I've made it .prc for now (Psion ReCord), until
- * somebody can come up with a better one. Also, I have absolutely no idea
- * what the header format is, I just looked at a few files, saw they all
- * had identical headers except for two places where the length words go,
- * so its very likely that most of this is wrong. It has worked for me,
- * however.
+ * somebody can come up with a better one.
  * Based (heavily) on the wve.c format file. 
  * Hacked by Bert van Leeuwen (bert@e.co.za)
- */
+ * Header check truncated to first 16 bytes (i.e. EPOC file header)
+ * and other improvements by Reuben Thomas <rrt@sc3d.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library. If not, write to the Free Software
+ * Foundation, Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301,
+ * USA.  */
 
 #include "st_i.h"
 #include "g72x.h"
@@ -17,9 +29,6 @@
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
-
-/* Magic numbers used in Psion audio files */
-#define PSION_PRC_HDRSIZE   72
 
 typedef struct prcpriv
     {
@@ -30,15 +39,18 @@ typedef struct prcpriv
         st_size_t dataStart;
     } *prc_t;
 
-char header[]={
+/* 16 bytes header = 3 UIDs plus checksum, standard Symbian/EPOC file
+   header */
+static const char prc_header[]={
   0x37,0x00,0x00,0x10,0x6d,0x00,0x00,0x10,
-  0x7e,0x00,0x00,0x10,0xcf,0xac,0x08,0x55,
-  0x14,0x00,0x00,0x00,0x04,0x52,0x00,0x00,
-  0x10,0x34,0x00,0x00,0x00,0x89,0x00,0x00,
-  0x10,0x25,0x00,0x00,0x00,0x7e,0x00,0x00,
-  0x10,0x2a,0x52,0x65,0x63,0x6f,0x72,0x64,
-  0x2e,0x61,0x70,0x70
+  0x7e,0x00,0x00,0x10,0xcf,0xac,0x08,0x55
 };
+
+int prc_checkheader(ft_t ft, char *head)
+{
+  st_readbuf(ft, head, 1, sizeof(prc_header));
+  return memcmp(head, prc_header, sizeof(prc_header)) == 0;
+}
 
 static void prcwriteheader(ft_t ft);
 
@@ -48,7 +60,7 @@ int st_prcseek(ft_t ft, st_size_t offset)
     st_size_t new_offset, channel_block, alignment;
 
     new_offset = offset * ft->info.size;
-    /* Make sure request aligns to a channel block (ie left+right) */
+    /* Make sure request aligns to a channel block (i.e. left+right) */
     channel_block = ft->info.channels * ft->info.size;
     alignment = new_offset % channel_block;
     /* Most common mistaken is to compute something like
@@ -65,7 +77,7 @@ int st_prcseek(ft_t ft, st_size_t offset)
 int st_prcstartread(ft_t ft)
 {
         prc_t p = (prc_t ) ft->priv;
-        char head[sizeof(header)];
+        char head[sizeof(prc_header)];
         int rc;
 
         uint16_t len;
@@ -84,10 +96,8 @@ int st_prcstartread(ft_t ft)
         }
 
         /* Check the header */
-        st_readbuf(ft, head,1, sizeof(header));
-        if (memcmp(head, header, sizeof(header))==0) {
-                st_debug("Found Psion record.app header");
-        }
+        if (prc_checkheader(ft, head))
+                st_debug("Found Psion Record header");
         else
         {
                 st_fail_errno(ft,ST_EHDR,"Psion header doesn't start with the correct bytes\nTry the '.al' (A-law raw) file type with '-t al -r 8000 filename'");
@@ -163,12 +173,12 @@ int st_prcstartwrite(ft_t ft)
         return ST_SUCCESS;
 }
 
-st_ssize_t st_prcread(ft_t ft, st_sample_t *buf, st_ssize_t samp)
+st_ssize_t st_prcread(ft_t ft, st_sample_t *buf, st_size_t samp)
 {
         return st_rawread(ft, buf, samp);
 }
 
-st_ssize_t st_prcwrite(ft_t ft, const st_sample_t *buf, st_ssize_t samp)
+st_ssize_t st_prcwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
         prc_t p = (prc_t ) ft->priv;
         p->length += samp * ft->info.size;
@@ -203,7 +213,7 @@ static void prcwriteheader(ft_t ft)
 
   st_debug("Final length=%d",p->length);
   memset(nullbuf,0,14);
-  st_writebuf(ft, header, 1, sizeof(header));
+  st_writebuf(ft, prc_header, 1, sizeof(prc_header));
   st_writew(ft, p->length);
   st_writebuf(ft, nullbuf,1,14);
   st_writew(ft, p->length);

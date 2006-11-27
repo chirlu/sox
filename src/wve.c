@@ -174,12 +174,7 @@ int st_wvestartwrite(ft_t ft)
         return ST_SUCCESS;
 }
 
-st_ssize_t st_wveread(ft_t ft, st_sample_t *buf, st_ssize_t samp)
-{
-        return st_rawread(ft, buf, samp);
-}
-
-st_ssize_t st_wvewrite(ft_t ft, const st_sample_t *buf, st_ssize_t samp)
+st_ssize_t st_wvewrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
         wve_t p = (wve_t ) ft->priv;
         p->length += samp * ft->info.size;
@@ -243,7 +238,7 @@ static st_format_t st_wve_format = {
   NULL,
   ST_FILE_SEEK,
   st_wvestartread,
-  st_wveread,
+  st_rawread,
   st_rawstopread,
   st_wvestartwrite,
   st_wvewrite,

@@ -81,7 +81,7 @@ static const char writerr[] = "Error writing sample file.  You are probably out 
  * Returns number of elements read, not bytes read.
  */
 
-st_ssize_t st_readbuf(ft_t ft, void *buf, size_t size, st_ssize_t len)
+st_ssize_t st_readbuf(ft_t ft, void *buf, size_t size, st_size_t len)
 {
     return fread(buf, size, len, ft->fp);
 }
@@ -90,7 +90,7 @@ st_ssize_t st_readbuf(ft_t ft, void *buf, size_t size, st_ssize_t len)
  * Returns number of elements writen, not bytes writen.
  */
 
-st_ssize_t st_writebuf(ft_t ft, void const *buf, size_t size, st_ssize_t len)
+st_ssize_t st_writebuf(ft_t ft, void const *buf, size_t size, st_size_t len)
 {
     return fwrite(buf, size, len, ft->fp);
 }
@@ -140,7 +140,7 @@ void st_clearerr(ft_t ft)
 /* Read n-char string (and possibly null-terminating).
  * Stop reading and null-terminate string if either a 0 or \n is reached.
  */
-int st_reads(ft_t ft, char *c, st_ssize_t len)
+int st_reads(ft_t ft, char *c, st_size_t len)
 {
     char *sc;
     char in;
@@ -357,8 +357,8 @@ double st_swapd(double df)
 
 /* dummy format routines for do-nothing functions */
 int st_format_nothing(ft_t ft) { return(ST_SUCCESS); }
-st_ssize_t st_format_nothing_read_io(ft_t ft, st_sample_t *buf, st_ssize_t len) { return(0); }
-st_ssize_t st_format_nothing_write_io(ft_t ft, const st_sample_t *buf, st_ssize_t len) { return(0); }
+st_ssize_t st_format_nothing_read_io(ft_t ft, st_sample_t *buf, st_size_t len) { return(0); }
+st_ssize_t st_format_nothing_write_io(ft_t ft, const st_sample_t *buf, st_size_t len) { return(0); }
 int st_format_nothing_seek(ft_t ft, st_size_t offset) { st_fail_errno(ft, ST_ENOTSUP, "operation not supported"); return(ST_EOF); }
 
 /* dummy effect routine for do-nothing functions */
@@ -439,7 +439,7 @@ void st_initrand(void) {
 
 /* This was very painful.  We need a sine library. */
 
-void st_sine(int *buf, st_ssize_t len, int max, int depth)
+void st_sine(int *buf, st_size_t len, int max, int depth)
 {
     st_ssize_t i;
     int offset;
@@ -452,7 +452,7 @@ void st_sine(int *buf, st_ssize_t len, int max, int depth)
     }
 }
 
-void st_triangle(int *buf, st_ssize_t len, int max, int depth)
+void st_triangle(int *buf, st_size_t len, int max, int depth)
 {
     st_ssize_t i;
     int offset;

@@ -317,7 +317,7 @@ int st_vocstartread(ft_t ft)
  * ANN:  Major changes here to support multi-part files and files
  *       that do not have audio in block 9's.
  *-----------------------------------------------------------------*/
-st_ssize_t st_vocread(ft_t ft, st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_vocread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
         vs_t v = (vs_t) ft->priv;
         int done = 0;
@@ -466,7 +466,7 @@ int st_vocstartwrite(ft_t ft)
 /*-----------------------------------------------------------------
  * st_vocstartread() -- start reading a VOC file
  *-----------------------------------------------------------------*/
-st_ssize_t st_vocwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_vocwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
         vs_t v = (vs_t) ft->priv;
         unsigned char uc;

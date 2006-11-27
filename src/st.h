@@ -212,10 +212,10 @@ typedef struct st_format {
     char         *usage;
     unsigned int flags;
     int          (*startread)(ft_t ft);
-    st_ssize_t   (*read)(ft_t ft, st_sample_t *buf, st_ssize_t len);
+    st_ssize_t   (*read)(ft_t ft, st_sample_t *buf, st_size_t len);
     int          (*stopread)(ft_t ft);
     int          (*startwrite)(ft_t ft);
-    st_ssize_t   (*write)(ft_t ft, const st_sample_t *buf, st_ssize_t len);
+    st_ssize_t   (*write)(ft_t ft, const st_sample_t *buf, st_size_t len);
     int          (*stopwrite)(ft_t ft);
     int          (*seek)(ft_t ft, st_size_t offset);
 } st_format_t;
@@ -342,8 +342,8 @@ extern ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
                                 const char *filetype, const char *comment, 
                                 const st_instrinfo_t *instr,
                                 const st_loopinfo_t *loops);
-extern st_ssize_t st_read(ft_t ft, st_sample_t *buf, st_ssize_t len);
-extern st_ssize_t st_write(ft_t ft, const st_sample_t *buf, st_ssize_t len);
+extern st_ssize_t st_read(ft_t ft, st_sample_t *buf, st_size_t len);
+extern st_ssize_t st_write(ft_t ft, const st_sample_t *buf, st_size_t len);
 extern int st_close(ft_t ft);
 
 #define ST_SEEK_SET 0

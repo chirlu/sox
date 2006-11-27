@@ -210,7 +210,7 @@ static int st_xastartread(ft_t ft)
  * Read up to len samples from a file, converted to signed longs.
  * Return the number of samples read.
  */
-static st_ssize_t st_xaread(ft_t ft, st_sample_t *buf, st_ssize_t len)
+static st_ssize_t st_xaread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
     xa_t xa = (xa_t) ft->priv;
     st_ssize_t done;
@@ -312,7 +312,7 @@ static int st_xastartwrite(ft_t ft)
     return ST_EOF;
 }
 
-static st_ssize_t st_xawrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
+static st_ssize_t st_xawrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
     st_fail_errno(ft, ST_ENOTSUP, ".XA writing not supported");
     return ST_EOF;

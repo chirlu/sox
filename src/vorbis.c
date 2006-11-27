@@ -230,7 +230,7 @@ int refill_buffer (vorbis_t vb)
  * Return number of samples read.
  */
 
-st_ssize_t st_vorbisread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_vorbisread(ft_t ft, st_sample_t *buf, st_size_t len) 
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         int i;
@@ -399,7 +399,7 @@ int st_vorbisstartwrite(ft_t ft)
         return(ST_SUCCESS);     
 }
 
-st_ssize_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;

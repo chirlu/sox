@@ -191,7 +191,7 @@ int st_spherestartread(ft_t ft)
  * Return number of samples read.
  */
 
-st_ssize_t st_sphereread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_sphereread(ft_t ft, st_sample_t *buf, st_size_t len) 
 {
     sphere_t sphere = (sphere_t) ft->priv;
 
@@ -244,7 +244,7 @@ int st_spherestartwrite(ft_t ft)
         
 }
 
-st_ssize_t st_spherewrite(ft_t ft, const st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_spherewrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
 {
     sphere_t sphere = (sphere_t) ft->priv;
 

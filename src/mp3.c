@@ -279,7 +279,7 @@ error:
  * Place in buf[].
  * Return number of samples read.
  */
-st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_size_t len)
 {
     struct mp3priv *p = (struct mp3priv *) ft->priv;
     st_ssize_t donow,i,done=0;
@@ -365,7 +365,7 @@ int st_mp3startread(ft_t ft)
   return ST_EOF;
 }
 
-st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_ssize_t samp)
+st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_size_t samp)
 {
   st_fail_errno(ft,ST_EOF,"SoX was compiled without MP3 decoding support");
   return ST_EOF;
@@ -431,7 +431,7 @@ int st_mp3startwrite(ft_t ft)
   return(ST_SUCCESS);
 }
 
-st_ssize_t st_mp3write(ft_t ft, const st_sample_t *buf, st_ssize_t samp)
+st_ssize_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
     struct mp3priv *p = (struct mp3priv *)ft->priv;
     char *mp3buffer;

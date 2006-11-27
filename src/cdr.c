@@ -78,7 +78,7 @@ int st_cdrstartread(ft_t ft)
  * Return number of samples read.
  */
 
-st_ssize_t st_cdrread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_cdrread(ft_t ft, st_sample_t *buf, st_size_t len) 
 {
 
         return st_rawread(ft, buf, len);
@@ -121,7 +121,7 @@ int st_cdrstartwrite(ft_t ft)
         return(ST_SUCCESS);
 }
 
-st_ssize_t st_cdrwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_cdrwrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
 {
         cdr_t cdr = (cdr_t) ft->priv;
 

@@ -186,7 +186,7 @@ int st_txwstartread(ft_t ft)
  * Return number of samples read.
  */
 
-st_ssize_t st_txwread(ft_t ft, st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_txwread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
     txw_t sk = (txw_t) ft->priv;
     int done = 0;
@@ -276,7 +276,7 @@ int st_txwstartwrite(ft_t ft)
     return(ST_SUCCESS);
 }
 
-st_ssize_t st_txwwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len)
+st_ssize_t st_txwwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
     int i;
     unsigned int w1,w2;

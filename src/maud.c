@@ -227,7 +227,7 @@ int st_maudstartread(ft_t ft)
  * Return number of samples read.
  */
 
-st_ssize_t st_maudread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_maudread(ft_t ft, st_sample_t *buf, st_size_t len) 
 {
         return (st_rawread(ft, buf, len));
 }
@@ -284,7 +284,7 @@ int st_maudstartwrite(ft_t ft)
         return (ST_SUCCESS);
 }
 
-st_ssize_t st_maudwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len) 
+st_ssize_t st_maudwrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
 {
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         
