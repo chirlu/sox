@@ -57,9 +57,8 @@ use the raw driver for reading and writing.
 
   o Add MP3 support to WAV handler. Can copy most work from mp3.c.
 
-  o Document how the synth effect is meant to be used (with nul file
-    handler).
-    26 Nov 06, robs: in progress, will do the butterworths as well.
+  o Document the butterworth filter effects.
+    27 Nov 06, robs: in progress.
 
   o Implement speex (http://www.speex.org).
   

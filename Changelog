@@ -54,6 +54,8 @@ sox-12.18.3
     for backwards compatibility by "resample".
   o Preview mode now removed, as all it did was use rate rather than
     resample, and rate has been removed.
+  o Improved synth usage (by introducing -n option) and improved synth
+    entry in the man-page.  (robs)
 
 sox-12.18.2
 -----------
