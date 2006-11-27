@@ -95,6 +95,8 @@ struct cvsdpriv {
         char swapbits;
 };
 
+static int debug_count = 0;
+
 /* ---------------------------------------------------------------------- */
 
 static float float_conv(float *fp1, float *fp2,int n)
@@ -235,40 +237,12 @@ int st_cvsdstopread(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-#undef DEBUG
-
-#ifdef DEBUG
-static struct {
-        FILE *f1;
-        FILE *f2;
-        int cnt
-} dbg = { NULL, NULL, 0 };
-#endif
-
 st_ssize_t st_cvsdread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         int done = 0;
         float oval;
         
-#ifdef DEBUG
-        if (!dbg.f1) {
-                if (!(dbg.f1 = fopen("dbg1", "w")))
-                {
-                        st_fail_errno(ft,errno,"debugging");
-                        return (0);
-                }
-                fprintf(dbg.f1, "\"input\"\n");
-        }
-        if (!dbg.f2) {
-                if (!(dbg.f2 = fopen("dbg2", "w")))
-                {
-                        st_fail_errno(ft,errno,"debugging");
-                        return (0);
-                }
-                fprintf(dbg.f2, "\"recon\"\n");
-        }
-#endif
         while (done < nsamp) {
                 if (!p->bit.cnt) {
                         if (st_readb(ft, &(p->bit.shreg)) == ST_EOF)
@@ -304,13 +278,10 @@ st_ssize_t st_cvsdread(ft_t ft, st_sample_t *buf, st_ssize_t nsamp)
                                           (p->cvsd_rate < 24000) ? 
                                           dec_filter_16 : dec_filter_32, 
                                           DEC_FILTERLEN);
-#ifdef DEBUG
-                        fprintf(dbg.f1, "%f %f\n", (double)dbg.cnt, 
-                                (double)p->com.mla_int);
-                        fprintf(dbg.f2, "%f %f\n", (double)dbg.cnt, 
-                                (double)oval);
-                        dbg.cnt++;
-#endif          
+                        st_debug_more("input %d %f\n", debug_count, p->com.mla_int);
+                        st_debug_more("recon %d %f\n", debug_count, oval);
+                        debug_count++;
+
                         if (oval > p->com.v_max)
                                 p->com.v_max = oval;
                         if (oval < p->com.v_min)
@@ -331,24 +302,6 @@ st_ssize_t st_cvsdwrite(ft_t ft, const st_sample_t *buf, st_ssize_t nsamp)
         int done = 0;
         float inval;
 
-#ifdef DEBUG
-        if (!dbg.f1) {
-                if (!(dbg.f1 = fopen("dbg1", "w")))
-                {
-                        st_fail_errno(ft,errno,"debugging");
-                        return (0);
-                }
-                fprintf(dbg.f1, "\"input\"\n");
-        }
-        if (!dbg.f2) {
-                if (!(dbg.f2 = fopen("dbg2", "w")))
-                {
-                        st_fail_errno(ft,errno,"debugging");
-                        return (0);
-                }
-                fprintf(dbg.f2, "\"recon\"\n");
-        }
-#endif
         for(;;) {
                 /*
                  * check if the next input is due
@@ -398,12 +351,9 @@ st_ssize_t st_cvsdwrite(ft_t ft, const st_sample_t *buf, st_ssize_t nsamp)
                                 p->bit.mask <<= 1;
                 }
                 p->com.phase += p->com.phase_inc;
-#ifdef DEBUG
-                fprintf(dbg.f1, "%f %f\n", (double)dbg.cnt, (double)inval);
-                fprintf(dbg.f2, "%f %f\n", (double)dbg.cnt, 
-                        (double)p->c.enc.recon_int);
-                dbg.cnt++;
-#endif  
+                st_debug_more("input %d %f\n", debug_count, inval);
+                st_debug_more("recon %d %f\n", debug_count, p->c.enc.recon_int);
+                debug_count++;
         }
 }
 
