@@ -8,94 +8,56 @@
  */
 
 /*
- * Sound Tools nul file format driver.
+ * Sound Tools null file format driver.
  * Written by Carsten Borchardt 
  * The author is not responsible for the consequences 
  * of using this software
  */
 
 #include "st_i.h"
+#include <string.h>
 
-/* No private data needed for nul file */
- 
-/*
- * Do anything required before you start reading samples.
- * Read file header. 
- *      Find out sampling rate, 
- *      size and encoding of samples, 
- *      mono/stereo/quad.
- */
 int st_nulstartread(ft_t ft) 
 {
-    /* If format parameters are not given, set defaults: */
-    if (ft->info.rate     ==  0) ft->info.rate     = 44100;
-    if (ft->info.size     == -1) ft->info.size     = ST_SIZE_WORD;
-    if (ft->info.encoding == -1) ft->info.encoding = ST_ENCODING_SIGN2;
-    if (ft->info.channels == -1) ft->info.channels = 2;
+  /* If format parameters are not given, set somewhat arbitrary
+   * (but commonly used) defaults: */
+  if (ft->info.rate     ==  0) ft->info.rate     = 44100;
+  if (ft->info.channels == -1) ft->info.channels = 2;
+  if (ft->info.size     == -1) ft->info.size     = ST_SIZE_WORD;
+  if (ft->info.encoding == -1) ft->info.encoding = ST_ENCODING_SIGN2;
 
-    ft->comment = "nul file";
-
-    return (ST_SUCCESS);
+  return ST_SUCCESS;
 }
-
-/*
- * Read up to len samples, we read always '0'
- * Convert to signed longs.
- * Place in buf[].
- * Return number of samples read.
- */
 
 st_ssize_t st_nulread(ft_t ft, st_sample_t *buf, st_ssize_t len) 
 {
-    st_ssize_t done = 0;
-    for(; done < len; done++)
-    {
-        buf[done] = 0;
-    }
-    return done;
-}
-
-/*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
- * .. nothing to be done
- */
-int st_nulstopread(ft_t ft) 
-{ 
-    return (ST_SUCCESS);
-}
-
-int st_nulstartwrite(ft_t ft) 
-{
-    return(ST_SUCCESS);
+  /* Reading from null generates silence i.e. (st_sample_t)0. */
+  memset(buf, 0, sizeof(st_sample_t) * len);
+  return len; /* Return number of samples "read". */
 }
 
 st_ssize_t st_nulwrite(ft_t ft, const st_sample_t *buf, st_ssize_t len) 
 {
-    return len;    
-}
-
-int st_nulstopwrite(ft_t ft) 
-{
-    /* nothing to do */
-    return (ST_SUCCESS);
+  /* Writing to null just discards the samples */
+  return len; /* Return number of samples "written". */
 }
 
 static const char *nulnames[] = {
-  "nul",
+  "null",
+  "nul",  /* For backwards compatibility with when -n did not exist */
   NULL,
 };
 
 static st_format_t st_nul_format = {
   nulnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_NOSTDIO,
+  ST_FILE_STEREO | ST_FILE_NOSTDIO | ST_FILE_NOFEXT,
   st_nulstartread,
   st_nulread,
-  st_nulstopread,
-  st_nulstartwrite,
+  st_format_nothing,
+  st_format_nothing,
   st_nulwrite,
-  st_nulstopwrite,
+  st_format_nothing,
   st_format_nothing_seek
 };
 
