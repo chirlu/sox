@@ -469,40 +469,10 @@ void st_triangle(int *buf, st_size_t len, int max, int depth)
     }
 }
 
-const char *st_version()
+const char *st_version(void)
 {
-    static char versionstr[20];
-
-    sprintf(versionstr, "%d.%d.%d",
-            (ST_LIB_VERSION_CODE & 0xff0000) >> 16,
-            (ST_LIB_VERSION_CODE & 0x00ff00) >> 8,
-            (ST_LIB_VERSION_CODE & 0x0000ff));
-    return(versionstr);
+  return PACKAGE_VERSION;
 }
-
-
-#ifndef HAVE_STRERROR
-#ifdef __cplusplus
-extern "C" int sys_nerr;
-extern "C" char *sys_errlist[];
-#else
-extern int sys_nerr;
-extern char *sys_errlist[];
-#endif
-/* strerror function */
-char *strerror(int errcode)
-{
-        static char  nomesg[30];
-
-        if (errcode < sys_nerr)
-                return (sys_errlist[errcode]);
-        else
-        {
-                sprintf (nomesg, "Undocumented error %d", errcode);
-                return (nomesg);
-        }
-}
-#endif
 
 /* Implements traditional fseek() behavior.  Meant to abstract out
  * file operations so that they could one day also work on memory

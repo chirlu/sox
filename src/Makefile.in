@@ -37,7 +37,6 @@ NEED_OSS     = @NEED_OSS@
 NEED_SUNAU   = @NEED_SUNAU@
 NEED_ALSA    = @NEED_ALSA@
 PLAY_SUPPORT = @PLAY_SUPPORT@
-GSM_SUPPORT  = @GSM_SUPPORT@
 
 # Objects.
 
@@ -55,9 +54,7 @@ EOBJ	= avg.o band.o bandpass.o biquad.o breject.o btrworth.o chorus.o \
 	  reverb.o reverse.o silence.o speed.o stat.o \
 	  stretch.o swap.o synth.o tone.o trim.o vibro.o vol.o
 
-
-GSMOBJ_0 =
-GSMOBJ_1 =  libgsm/add.o libgsm/code.o libgsm/decode.o libgsm/long_term.o \
+GSMOBJ   =  libgsm/add.o libgsm/code.o libgsm/decode.o libgsm/long_term.o \
 	    libgsm/lpc.o libgsm/preprocess.o libgsm/rpe.o \
 	    libgsm/gsm_destroy.o libgsm/gsm_decode.o libgsm/gsm_encode.o \
 	    libgsm/gsm_create.o libgsm/gsm_option.o libgsm/short_term.o \
@@ -69,7 +66,7 @@ SUNAUOBJ_0  =
 SUNAUOBJ_1  = sunaudio.o
 ALSAOBJ_0   =
 ALSAOBJ_1   = alsa.o
-EXTRAOBJS   = $(OSSOBJ_$(NEED_OSS)) $(SUNAUOBJ_$(NEED_SUNAU)) $(ALSAOBJ_$(NEED_ALSA)) $(GSMOBJ_$(GSM_SUPPORT))
+EXTRAOBJS   = $(OSSOBJ_$(NEED_OSS)) $(SUNAUOBJ_$(NEED_SUNAU)) $(ALSAOBJ_$(NEED_ALSA)) $(GSMOBJ)
 
 LIBOBJS = $(FOBJ) $(EOBJ) getopt.o getopt1.o handlers.o misc.o stio.o \
 	  util.o $(EXTRAOBJS)
@@ -79,15 +76,14 @@ LIBOBJS = $(FOBJ) $(EOBJ) getopt.o getopt1.o handlers.o misc.o stio.o \
 # only so that they can be included inside libst.  This semi-fake
 # target is just an easy way to make sure that makefile builds
 # the objects instead of this makefile.
-GSM_0     =
-GSM_1     = libgsm/libgsm.a
+GSM       = libgsm/libgsm.a
 GSM_ext   = 
 PLAY_0    =
 PLAY_1    = play
 
 all: sox $(PLAY_$(PLAY_SUPPORT))
 
-sox: $(GSM_$(GSM_SUPPORT)) libst.a sox.o
+sox: $(GSM) libst.a sox.o
 	$(CC) $(LDFLAGS) -o sox sox.o $(LIBS)
 	$(RM) soxmix
 	$(LN_S) sox soxmix

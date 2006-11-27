@@ -3,7 +3,7 @@ dnl
 dnl configure.in
 dnl
 
-AC_INIT(sox, 12.18.3, cbagwell@users.sourceforge.net, "sox-12.18.3")
+AC_INIT(SoX, 12.18.3, cbagwell@users.sourceforge.net)
 
 AC_CONFIG_SRCDIR(sox.1)
 
@@ -61,7 +61,6 @@ AC_PROG_CC
 AC_PROG_RANLIB
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_PROG_CPP
 
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = yes; then

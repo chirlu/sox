@@ -11,17 +11,9 @@
  * the consequences of using this software.
  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "ststdint.h"
-
-/* Release 12.18.2 of libst */
-#define ST_LIB_VERSION_CODE 0x0c1202
-#define ST_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 /* C language enhancements: */
 
@@ -373,9 +365,5 @@ const char *st_version(void);                   /* return version number */
 #define ST_ENOTSUP 2005         /* Operation not supported */
 #define ST_EINVAL 2006          /* Invalid argument */
 #define ST_EFFMT 2007           /* Unsupported file format */
-
-#ifdef __cplusplus
-} /* end of extern "C" */
-#endif
 
 #endif

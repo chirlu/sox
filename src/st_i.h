@@ -16,10 +16,6 @@
 #include "stconfig.h"
 #include "st.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifdef HAVE_BYTESWAP_H
 #include <byteswap.h>
 #endif
@@ -310,9 +306,5 @@ extern const st_effect_t *st_vol_effect_fn(void);
  */
 st_size_t st_trim_get_start(eff_t effp);
 void st_trim_clear_start(eff_t effp);
-
-#ifdef __cplusplus
-} /* end of extern "C" */
-#endif
 
 #endif
