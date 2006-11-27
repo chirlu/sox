@@ -26,9 +26,7 @@
 #include "st_i.h"
 #include "g72x.h"
 #include <string.h>
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
 
 typedef struct prcpriv
     {

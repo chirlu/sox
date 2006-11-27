@@ -1,16 +1,16 @@
 /*
+ * Sound Tools raw format file.
+ *
+ * Includes .ub, .uw, .sb, .sw, and .ul formats at end
+ */
+
+/*
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained.
  * Lance Norskog And Sundry Contributors are not responsible for
  * the consequences of using this software.
- */
-
-/*
- * Sound Tools raw format file.
- *
- * Includes .ub, .uw, .sb, .sw, and .ul formats at end
  */
 
 /*
@@ -24,13 +24,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
-
-#ifndef HAVE_MEMMOVE
-#define memmove(dest, src, len) bcopy((src), (dest), (len))
-#endif
 
 #define MAXWSPEED 1
 

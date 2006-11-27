@@ -14,26 +14,14 @@
 
 static st_effect_t st_vol_effect;
 
-/* type used for computations. 
- */
-#ifndef VOL_FLOAT
-#define VOL_FLOAT float
-#define VOL_FLOAT_SCAN "%f"
-#endif
-
-/* constants
- */
-#define ZERO      ((VOL_FLOAT)(0.0e0))
-#define LOG_10_20 ((VOL_FLOAT)(0.1151292546497022842009e0))
-#define ONE       ((VOL_FLOAT)(1.0e0))
-#define TWENTY    ((VOL_FLOAT)(20.0e0))
+#define LOG_10_20 ((double)(0.1151292546497022842009e0))
 
 typedef struct {
-    VOL_FLOAT gain; /* amplitude gain. */
+    double gain; /* amplitude gain. */
     
     int uselimiter; /* boolean: are we using the limiter? */
-    VOL_FLOAT limiterthreshhold;
-    VOL_FLOAT limitergain; /* limiter gain. */
+    double limiterthreshhold;
+    double limitergain; /* limiter gain. */
     int limited; /* number of limited values to report. */
     int totalprocessed;
     
@@ -46,10 +34,10 @@ typedef struct {
 int st_vol_getopts(eff_t effp, int n, char **argv) 
 {
     vol_t vol = (vol_t) effp->priv; 
-    vol->gain = ONE; /* default is no change */
+    vol->gain = 1.0; /* default is no change */
     vol->uselimiter = 0; /* default is no limiter */
     
-    if (n && (!sscanf(argv[0], VOL_FLOAT_SCAN, &vol->gain)))
+    if (n && (!sscanf(argv[0], "%lf", &vol->gain)))
     {
         st_fail(st_vol_effect.usage);
         return ST_EOF;
@@ -66,7 +54,7 @@ int st_vol_getopts(eff_t effp, int n, char **argv)
             break;
         case 'p':
         case 'P': /* power to amplitude, keep phase change */
-            if (vol->gain > ZERO)
+            if (vol->gain > 0.0)
                 vol->gain = sqrt(vol->gain);
             else
                 vol->gain = -sqrt(-vol->gain);
@@ -81,7 +69,7 @@ int st_vol_getopts(eff_t effp, int n, char **argv)
 
     if (n>2)
     {
-        if ((fabs(vol->gain) < ONE) || !sscanf(argv[2], VOL_FLOAT_SCAN, &vol->limitergain) || !((vol->limitergain > ZERO) && (vol->limitergain < ONE)))
+        if ((fabs(vol->gain) < 1.0) || !sscanf(argv[2], "%lf", &vol->limitergain) || !((vol->limitergain > 0.0) && (vol->limitergain < 1.0)))
         {
                 st_fail(st_vol_effect.usage);
                 return ST_EOF;                  
@@ -94,7 +82,7 @@ int st_vol_getopts(eff_t effp, int n, char **argv)
          * when the limiter is activated. */
         /* (NOTE: There **WILL** be a discontinuity in the slope 
          * of the output amplitudes when using the limiter.) */
-        vol->limiterthreshhold = ST_SAMPLE_MAX * (ONE - vol->limitergain) / (fabs(vol->gain) - vol->limitergain);
+        vol->limiterthreshhold = ST_SAMPLE_MAX * (1.0 - vol->limitergain) / (fabs(vol->gain) - vol->limitergain);
     }
     
 
@@ -135,9 +123,9 @@ int st_vol_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 st_size_t *isamp, st_size_t *osamp)
 {
     vol_t vol = (vol_t) effp->priv;
-    register VOL_FLOAT gain = vol->gain;
-    register VOL_FLOAT limiterthreshhold = vol->limiterthreshhold;
-    register VOL_FLOAT sample;
+    register double gain = vol->gain;
+    register double limiterthreshhold = vol->limiterthreshhold;
+    register double sample;
     register st_size_t len;
     
     len = min(*osamp, *isamp);

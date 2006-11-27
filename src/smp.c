@@ -1,13 +1,4 @@
 /*
- * June 30, 1992
- * Copyright 1992 Leigh Smith And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Leigh Smith And Sundry Contributors are not responsible for 
- * the consequences of using this software.
- */
-
-/*
  * Sound Tools SampleVision file format driver.
  * Output is always in little-endian (80x86/VAX) order.
  * 
@@ -16,11 +7,18 @@
  * Add: Loop point verbose info.  It's a start, anyway.
  */
 
+/*
+ * June 30, 1992
+ * Copyright 1992 Leigh Smith And Sundry Contributors
+ * This source code is freely redistributable and may be used for
+ * any purpose.  This copyright notice must be maintained. 
+ * Leigh Smith And Sundry Contributors are not responsible for 
+ * the consequences of using this software.
+ */
+
 #include "st_i.h"
 #include <string.h>
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
 
 #define NAMELEN    30           /* Size of Samplevision name */
 #define COMMENTLEN 60           /* Size of Samplevision comment, not shared */
@@ -290,13 +288,8 @@ int st_smpstartread(ft_t ft)
 
         st_report("SampleVision trailer:");
         for(i = 0; i < 8; i++) if (1 || trailer.loops[i].count) {
-#ifdef __alpha__
                 st_report("Loop %d: start: %6d", i, trailer.loops[i].start);
                 st_report(" end:   %6d", trailer.loops[i].end);
-#else
-                st_report("Loop %d: start: %6ld", i, trailer.loops[i].start);
-                st_report(" end:   %6ld", trailer.loops[i].end);
-#endif
                 st_report(" count: %6d", trailer.loops[i].count);
                 switch(trailer.loops[i].type) {
                     case 0: st_report("type:  off"); break;

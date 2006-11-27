@@ -13,6 +13,7 @@ bindir = @bindir@
 libdir = @libdir@
 mandir = @mandir@
 includedir = @includedir@
+datarootdir = @datarootdir@
 
 # Shell commands.
 

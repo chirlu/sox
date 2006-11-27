@@ -19,7 +19,3 @@
 
 #define WINDOWSIZE 2048
 #define FREQCOUNT (WINDOWSIZE/2+1)
-
-#ifndef min
-#define min(s1,s2) ((s1)<(s2)?(s1):(s2))
-#endif

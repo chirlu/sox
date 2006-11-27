@@ -9,6 +9,7 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 libdir = @libdir@
 mandir = @mandir@
+datarootdir = @datarootdir@
 
 # Shell commands.
 

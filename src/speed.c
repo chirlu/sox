@@ -18,21 +18,6 @@
 
 static st_effect_t st_speed_effect;
 
-/* type used for computations.
- */
-#ifndef SPEED_FLOAT
-#define SPEED_FLOAT float
-#define SPEED_FLOAT_SCAN "%f"
-#endif
-
-/* constants
- */
-#define FOUR               ((SPEED_FLOAT)(4.0e0))
-#define ONE                ((SPEED_FLOAT)(1.0e0))
-#define HALF               ((SPEED_FLOAT)(0.5e0))
-#define ONESIXTH           ((SPEED_FLOAT)(1.0e0/6.0e0))
-#define ZERO               ((SPEED_FLOAT)(0.0e0))
-
 /* automaton status
  */
 typedef enum { sp_input, sp_transfer, sp_compute } buffer_state_t;
@@ -43,18 +28,18 @@ typedef struct
 {
     /* options
      */
-    SPEED_FLOAT factor;   /* speed factor. */
+    double factor;   /* speed factor. */
 
     /* internals.
      */
-    SPEED_FLOAT rate;     /* rate of buffer sweep */
+    double rate;     /* rate of buffer sweep */
 
     int compression;      /* integer compression of the signal. */
     int index;            /* how much of the input buffer is filled */
     st_sample_t *ibuf;    /* small internal input buffer for compression */
 
-    SPEED_FLOAT cbuf[4];  /* computation buffer for interpolation */
-    SPEED_FLOAT frac;     /* current index position in cbuf */
+    double cbuf[4];  /* computation buffer for interpolation */
+    double frac;     /* current index position in cbuf */
     int icbuf;            /* available position in cbuf */
 
     buffer_state_t state; /* automaton status */
@@ -72,19 +57,19 @@ static void debug(char * where, speed_t s)
 
 /* compute f(x) with a cubic interpolation...
  */
-static SPEED_FLOAT cub(
-  SPEED_FLOAT fm1, /* f(-1) */
-  SPEED_FLOAT f0,  /* f(0)  */
-  SPEED_FLOAT f1,  /* f(1)  */
-  SPEED_FLOAT f2,  /* f(2)  */
-  SPEED_FLOAT x)   /* 0.0 <= x < 1.0 */
+static double cub(
+  double fm1, /* f(-1) */
+  double f0,  /* f(0)  */
+  double f1,  /* f(1)  */
+  double f2,  /* f(2)  */
+  double x)   /* 0.0 <= x < 1.0 */
 {
     /* a x^3 + b x^2 + c x + d */
-    register SPEED_FLOAT a, b, c, d;
+    register double a, b, c, d;
 
     d = f0;
-    b = HALF * (f1+fm1) - f0;
-    a = ONESIXTH * (f2-f1+fm1-f0-FOUR*b);
+    b = 0.5 * (f1+fm1) - f0;
+    a = (1.0/6.0) * (f2-f1+fm1-f0-4.0*b);
     c = f1 - a - b - d;
     
     return ((a * x + b) * x + c) * x + d;
@@ -96,7 +81,7 @@ int st_speed_getopts(eff_t effp, int n, char **argv)
     speed_t speed = (speed_t) effp->priv;
     int cent = 0;
 
-    speed->factor = ONE; /* default */
+    speed->factor = 1.0; /* default */
 
     if (n>0 && !strcmp(argv[0], "-c"))
     {
@@ -104,8 +89,8 @@ int st_speed_getopts(eff_t effp, int n, char **argv)
         argv++; n--;
     }
 
-    if (n && (!sscanf(argv[0], SPEED_FLOAT_SCAN, &speed->factor) ||
-              (cent==0 && speed->factor<=ZERO)))
+    if (n && (!sscanf(argv[0], "%lf", &speed->factor) ||
+              (cent==0 && speed->factor<=0.0)))
     {
         st_debug("n = %d cent = %d speed = %f",n,cent,speed->factor);
         st_fail(st_speed_effect.usage);
@@ -125,7 +110,7 @@ int st_speed_start(eff_t effp)
 {
     speed_t speed = (speed_t) effp->priv;
 
-    if (speed->factor >= ONE)
+    if (speed->factor >= 1.0)
     {
         speed->compression = (int) speed->factor; /* floor */
         speed->rate = speed->factor / speed->compression;
@@ -141,9 +126,9 @@ int st_speed_start(eff_t effp)
     speed->index  = 0;
 
     speed->state = sp_input;
-    speed->cbuf[0] = ZERO; /* default previous value for interpolation */
+    speed->cbuf[0] = 0.0; /* default previous value for interpolation */
     speed->icbuf = 1;
-    speed->frac = ZERO;
+    speed->frac = 0.0;
 
     if (!speed->ibuf) {
         st_fail("malloc failed");
@@ -158,12 +143,12 @@ int st_speed_start(eff_t effp)
 static void transfer(speed_t speed)
 {
     register int i;
-    register SPEED_FLOAT s = ZERO;
+    register double s = 0.0;
 
     for (i=0; i<speed->index; i++)
-        s += (SPEED_FLOAT) speed->ibuf[i];
+        s += (double) speed->ibuf[i];
     
-    speed->cbuf[speed->icbuf++] = s / ((SPEED_FLOAT) speed->index);
+    speed->cbuf[speed->icbuf++] = s / ((double) speed->index);
     
     if (speed->icbuf == 4)
         speed->state = sp_compute;
@@ -180,7 +165,7 @@ static st_size_t compute(eff_t effp, speed_t speed, st_sample_t *obuf, st_size_t
     st_size_t i;
 
     for(i = 0;
-        i<olen && speed->frac < ONE;
+        i<olen && speed->frac < 1.0;
         i++, speed->frac += speed->rate)
     {
         float f;
@@ -192,9 +177,9 @@ static st_size_t compute(eff_t effp, speed_t speed, st_sample_t *obuf, st_size_t
         obuf[i] = f;
     }
     
-    if (speed->frac >= ONE)
+    if (speed->frac >= 1.0)
     {
-        speed->frac -= ONE;
+        speed->frac -= 1.0;
         speed->cbuf[0] = speed->cbuf[1];
         speed->cbuf[1] = speed->cbuf[2];
         speed->cbuf[2] = speed->cbuf[3];
@@ -258,7 +243,7 @@ int st_speed_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     {
         if (speed->state==sp_input)
         {
-            speed->ibuf[speed->index++] = ZERO;
+            speed->ibuf[speed->index++] = 0.0;
             i++;
             if (speed->index==speed->compression)
                 speed->state = sp_transfer;

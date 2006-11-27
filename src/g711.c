@@ -2150,8 +2150,8 @@ uint8_t _st_14linear2ulaw[0x4000] = {
 };
 
 /* The following code was used to generate the lookup tables */
-#if 0
-int main()
+#ifdef GENERATE_TABLES
+int main(void)
 {
     int x, y, find2a = 0;
 

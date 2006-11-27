@@ -29,13 +29,6 @@
 
 static st_effect_t st_filter_effect;
 
-#ifndef HAVE_MEMMOVE
-#define memmove(dest,src,len) bcopy((src),(dest),(len))
-#endif
-
-/* this Float MUST match that in resample.h */
-#define Float double/*float*/
-
 #define ISCALE 0x10000
 #define BUFFSIZE 8192
 
@@ -46,15 +39,15 @@ typedef struct filterstuff {
         st_sample_t freq1;/* high corner freq */
         double beta;/* >2 is kaiser window beta, <=2 selects nuttall window */
         long Nwin;
-        Float *Fp;/* [Xh+1] Filter coefficients */
+        double *Fp;/* [Xh+1] Filter coefficients */
         long Xh;/* number of past/future samples needed by filter  */
         long Xt;/* target to enter new data into X */
-        Float *X, *Y;/* I/O buffers */
+        double *X, *Y;/* I/O buffers */
 } *filter_t;
 
 /* makeFilter() declared in resample.c */
 extern int 
-makeFilter(Float Fp[], long Nwing, double Froll, double Beta, long Num, int Normalize);
+makeFilter(double Fp[], long Nwing, double Froll, double Beta, long Num, int Normalize);
 
 static void FiltWin(filter_t f, long Nx);
 
@@ -114,7 +107,7 @@ int st_filter_getopts(eff_t effp, int n, char **argv)
 int st_filter_start(eff_t effp)
 {
         filter_t f = (filter_t) effp->priv;
-        Float *Fp0, *Fp1;
+        double *Fp0, *Fp1;
         long Xh0, Xh1, Xh;
         int i;
 
@@ -132,7 +125,7 @@ int st_filter_start(eff_t effp)
         }
         
         Xh = f->Nwin/2;
-        Fp0 = (Float *) malloc(sizeof(Float) * (Xh + 2)) + 1;
+        Fp0 = (double *) malloc(sizeof(double) * (Xh + 2)) + 1;
         if (f->freq0 > f->rate/200) {
                 Xh0 = makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, 1, 0);
                 if (Xh0 <= 1)
@@ -143,7 +136,7 @@ int st_filter_start(eff_t effp)
         } else {
                 Xh0 = 0;
         }
-        Fp1 = (Float *) malloc(sizeof(Float) * (Xh + 2)) + 1;
+        Fp1 = (double *) malloc(sizeof(double) * (Xh + 2)) + 1;
         /* need Fp[-1] and Fp[Xh] for makeFilter */
         if (f->freq1 < f->rate/2) {
                 Xh1 = makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, 1, 0);
@@ -159,7 +152,7 @@ int st_filter_start(eff_t effp)
         /* now subtract Fp0[] from Fp1[] */
         Xh = (Xh0>Xh1)?  Xh0:Xh1; /* >=1, by above */
         for (i=0; i<Xh; i++) {
-                Float c0,c1;
+                double c0,c1;
                 c0 = (i<Xh0)? Fp0[i]:0;
                 c1 = (i<Xh1)? Fp1[i]:0;
                 Fp1[i] = c1-c0;
@@ -176,7 +169,7 @@ int st_filter_start(eff_t effp)
         f->Xh = Xh;
         f->Xt = Xh;
 
-        f->X = (Float *) malloc(sizeof(Float) * (2*BUFFSIZE + 2*Xh));
+        f->X = (double *) malloc(sizeof(double) * (2*BUFFSIZE + 2*Xh));
         f->Y = f->X + BUFFSIZE + 2*Xh;
 
         /* Need Xh zeros at beginning of X */
@@ -203,12 +196,12 @@ int st_filter_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         *isamp = Nx;
 
         {
-                Float *xp, *xtop;
+                double *xp, *xtop;
                 xp = f->X + f->Xt;
                 xtop = xp + Nx;
                 if (ibuf != NULL) {
                         while (xp < xtop)
-                                *xp++ = (Float)(*ibuf++) / ISCALE;
+                                *xp++ = (double)(*ibuf++) / ISCALE;
                 } else {
                         while (xp < xtop)
                                 *xp++ = 0;
@@ -228,7 +221,7 @@ int st_filter_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         /* Copy back portion of input signal that must be re-used */
         Nx += f->Xt;
         if (f->Xh)
-                memmove(f->X, f->X + Nx - 2*f->Xh, sizeof(Float)*2*f->Xh); 
+                memmove(f->X, f->X + Nx - 2*f->Xh, sizeof(double)*2*f->Xh); 
         f->Xt = 2*f->Xh;
 
         for (i = 0; i < Nproc; i++)
@@ -287,9 +280,9 @@ int st_filter_stop(eff_t effp)
         return (ST_SUCCESS);
 }
 
-static double jprod(const Float *Fp, const Float *Xp, long ct)
+static double jprod(const double *Fp, const double *Xp, long ct)
 {
-        const Float *fp, *xp, *xq;
+        const double *fp, *xp, *xq;
         double v = 0;
         
         fp = Fp + ct;   /* so sum starts with smaller coef's */
@@ -305,8 +298,8 @@ static double jprod(const Float *Fp, const Float *Xp, long ct)
 
 static void FiltWin(filter_t f, long Nx)
 {
-        Float *Y;
-        Float *X, *Xend;
+        double *Y;
+        double *X, *Xend;
 
         Y = f->Y;
         X = f->X + f->Xh;                       /* Ptr to current input sample */

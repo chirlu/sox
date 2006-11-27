@@ -4,7 +4,7 @@
  * Deemphases Filter
  *
  * Fixed deemphasis filter for processing pre-emphasized audio cd samples
- * 09/02/98 (c) Heiko Eiﬂfeldt
+ * 09/02/98 (c) Heiko Eissfeldt
  * License: LGPL (Lesser Gnu Public License)
  *
  * This implements the inverse filter of the optional pre-emphasis stage as

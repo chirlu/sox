@@ -1,11 +1,3 @@
-/*
- * Copyright 1997 Chris Bagwell And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained.
- * Rick Richardson, Lance Norskog And Sundry Contributors are not
- * responsible for the consequences of using this software.
- */
-
 /* Direct to Sun Audio Driver
  *
  * Added by Chris Bagwell (cbagwell@sprynet.com) on 2/26/96
@@ -15,27 +7,31 @@
  *
  */
 
+/*
+ * Copyright 1997 Chris Bagwell And Sundry Contributors
+ * This source code is freely redistributable and may be used for
+ * any purpose.  This copyright notice must be maintained.
+ * Rick Richardson, Lance Norskog And Sundry Contributors are not
+ * responsible for the consequences of using this software.
+ */
+
 #include "st_i.h"
 
-#if     defined(HAVE_SUNAUDIO)
+#ifdef HAVE_SUNAUDIO
 
 #include <sys/ioctl.h>
-#if defined(__SVR4) || defined(__NetBSD__) || defined(__OpenBSD__)
-#if defined(__NetBSD__) || defined(__OpenBSD__)
-#include <sys/types.h>  /* This should be in audioio.h itself but its not */
-#endif
-#include <sys/audioio.h>
-#else
+#include <sys/types.h>
+#ifdef HAVE_SUN_AUDIOIO_H
 #include <sun/audioio.h>
 #endif
-#ifdef HAVE_ERRNO_H
-#include <errno.h>
+#else
+#ifdef HAVE_SYS_AUDIOIO_H
+#include <sys/audioio.h>
 #endif
+#endif
+#include <errno.h>
 #if !defined(__NetBSD__) && !defined(__OpenBSD__)
 #include <stropts.h>
-#endif
-#ifdef _HAVE_MALLOC_H
-#include <malloc.h>
 #endif
 #include <unistd.h>
 #include <stdlib.h>

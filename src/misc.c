@@ -18,9 +18,7 @@
 #include <time.h>
 #include <string.h>
 #include <ctype.h>
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
 /* for fstat */
 #include <sys/stat.h>
 #ifdef HAVE_UNISTD_H
@@ -408,25 +406,6 @@ char *strdup(const char *s)
     dups = (char *)malloc(strlen(s)+1);
     strcpy(dups, s);
     return dups;
-}
-#endif
-
-#ifndef HAVE_RAND
-/*
- * Portable random generator as defined by ANSI C Standard.
- * Don't ask me why not all C libraries include it.
- */
-
-static long rand_seed = 1;
-
-int rand(void) {
-    rand_seed = (rand_seed * 1103515245L) + 12345L;
-    return ((unsigned int)(rand_seed/65536L) % 32768L);
-}
-
-void srand(unsigned int seed)
-{
-    rand_seed = seed;
 }
 #endif
 

@@ -39,9 +39,7 @@
 #include <string.h>
 #include <stdlib.h>             /* for malloc() */
 #include <signal.h>
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>             /* for unlink() */
 #endif

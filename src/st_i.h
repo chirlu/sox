@@ -48,15 +48,7 @@ int strcasecmp(const char *s1, const char *s2);
 char *strdup(const char *s);
 #endif
 
-#ifndef HAVE_RAND
-int rand(void);
-void srand(unsigned int seed);
-#endif
 void st_initrand(void);
-
-#ifndef HAVE_STRERROR
-char *strerror(int errorcode);
-#endif
 
 /* Read and write basic data types from "ft" stream.  Uses ft->swap for
  * possible byte swapping.
@@ -85,7 +77,7 @@ int st_error(ft_t ft);
 void st_rewind(ft_t ft);
 void st_clearerr(ft_t ft);
 
-/* Utilities to byte-swap values, use libc optimized macro's if possible  */
+/* Utilities to byte-swap values, use libc optimized macros if possible  */
 #ifdef HAVE_BYTESWAP_H
 #define st_swapw(x) bswap_16(x)
 #define st_swapdw(x) bswap_32(x)
@@ -182,9 +174,7 @@ extern const st_format_t *st_dat_format_fn(void);
 #ifdef HAVE_LIBFLAC
 extern const st_format_t *st_flac_format_fn(void);
 #endif
-#ifdef ENABLE_GSM
 extern const st_format_t *st_gsm_format_fn(void);
-#endif
 extern const st_format_t *st_hcom_format_fn(void);
 extern const st_format_t *st_maud_format_fn(void);
 extern const st_format_t *st_mp3_format_fn(void);

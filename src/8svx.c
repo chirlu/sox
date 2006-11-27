@@ -5,9 +5,7 @@
 #include "st_i.h"
 
 #include <math.h>
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>

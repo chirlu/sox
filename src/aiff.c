@@ -51,9 +51,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>     /* For SEEK_* defines if not found in stdio */
 #endif
@@ -1060,7 +1058,7 @@ static void write_ieee_extended(ft_t ft, double x)
  *
  * Machine-independent I/O routines for IEEE floating-point numbers.
  *
- * NaN's and infinities are converted to HUGE_VAL or HUGE, which
+ * NaN's and infinities are converted to HUGE_VAL, which
  * happens to be infinity on IEEE machines.  Unfortunately, it is
  * impossible to preserve NaN's in a machine-independent way.
  * Infinities are, however, preserved on IEEE machines.
@@ -1086,11 +1084,7 @@ static void write_ieee_extended(ft_t ft, double x)
  * NaN's, and denormalized numbers.
  */
 
-#ifndef HUGE_VAL
-# define HUGE_VAL HUGE
-#endif /*HUGE_VAL*/
-
-# define FloatToUnsigned(f) ((uint32_t)(((int32_t)(f - 2147483648.0)) + 2147483647L) + 1)
+#define FloatToUnsigned(f) ((uint32_t)(((int32_t)(f - 2147483648.0)) + 2147483647L) + 1)
 
 static void ConvertToIeeeExtended(double num, char *bytes)
 {
@@ -1153,7 +1147,7 @@ static void ConvertToIeeeExtended(double num, char *bytes)
  *
  * Machine-independent I/O routines for IEEE floating-point numbers.
  *
- * NaN's and infinities are converted to HUGE_VAL or HUGE, which
+ * NaN's and infinities are converted to HUGE_VAL, which
  * happens to be infinity on IEEE machines.  Unfortunately, it is
  * impossible to preserve NaN's in a machine-independent way.
  * Infinities are, however, preserved on IEEE machines.
@@ -1179,11 +1173,7 @@ static void ConvertToIeeeExtended(double num, char *bytes)
  * NaN's, and denormalized numbers.
  */
 
-#ifndef HUGE_VAL
-# define HUGE_VAL HUGE
-#endif /*HUGE_VAL*/
-
-# define UnsignedToFloat(u)         (((double)((int32_t)(u - 2147483647L - 1))) + 2147483648.0)
+#define UnsignedToFloat(u)         (((double)((int32_t)(u - 2147483647L - 1))) + 2147483648.0)
 
 /****************************************************************
  * Extended precision IEEE floating-point conversion routine.

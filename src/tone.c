@@ -11,13 +11,9 @@
  * See LICENSE file for further copyright information.
  */
 
-
-
 #include "biquad.h"
 
-#include <memory.h>
-
-
+#include <string.h>
 
 static int getopts(eff_t effp, int n, char **argv, double fc, int dcNormalise)
 {

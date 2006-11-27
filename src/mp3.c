@@ -16,11 +16,11 @@
 
 #if defined(HAVE_LIBMAD) || defined(HAVE_LAME)
 
-#if defined(HAVE_LIBMAD)
+#ifdef HAVE_LIBMAD
 #include <mad.h>
 #endif
 
-#if defined(HAVE_LAME)
+#ifdef HAVE_LAME
 #include <lame/lame.h>
 #include <math.h>
 #endif
@@ -29,7 +29,7 @@
 
 /* Private data */
 struct mp3priv {
-#if defined(HAVE_LIBMAD)
+#ifdef HAVE_LIBMAD
         struct mad_stream       *Stream;
         struct mad_frame        *Frame;
         struct mad_synth        *Synth;
@@ -38,12 +38,12 @@ struct mp3priv {
         st_ssize_t              cursamp;
         st_size_t               FrameCount;
 #endif /*HAVE_LIBMAD*/
-#if defined(HAVE_LAME)
+#ifdef HAVE_LAME
         lame_global_flags       *gfp;
 #endif /*HAVE_LAME*/
 };
 
-#if defined(HAVE_LIBMAD)
+#ifdef HAVE_LIBMAD
 
 /* This function merges the functions tagtype() and id3_tag_query()
    from MAD's libid3tag, so we don't have to link to it
@@ -378,7 +378,7 @@ int st_mp3stopread(ft_t ft)
 }
 #endif /*HAVE_LIBMAD*/
 
-#if defined (HAVE_LAME)
+#ifdef HAVE_LAME
 void null_error_func(const char* string, va_list va){
   return;
 }

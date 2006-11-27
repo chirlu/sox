@@ -70,13 +70,14 @@ fi
 dnl Check for system dependent features.
 AC_C_BIGENDIAN
 AC_C_INLINE
-AC_TYPE_SIZE_T
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(fcntl.h limits.h malloc.h unistd.h byteswap.h errno.h)
+AC_CHECK_HEADERS(fcntl.h unistd.h byteswap.h)
 
-dnl Checks for libraries.
+dnl Checks for library functions.
+
+AC_CHECK_FUNCS(getopt_long strcasecmp strdup)
 
 dnl Check if math library is needed.
 
@@ -92,12 +93,7 @@ dnl Initial values for exported symbols.
 NEED_OSS=0
 NEED_SUNAU=0
 NEED_ALSA=0
-GSM_SUPPORT=0
 PLAY_SUPPORT=0
-
-dnl Checks for library functions.
-
-AC_CHECK_FUNCS(getopt_long strerror memmove rand strcasecmp strdup)
 
 dnl Test for Ogg Vorbis libraries.
 
@@ -227,16 +223,8 @@ then
 
     if test "$found_libgsm" = yes
     then
-        AC_CHECK_LIB(gsm, gsm_create,
-                     LIBS="$LIBS -lgsm"
-                     GSM_SUPPORT=ext
-        )
-    fi
-
-    if test "$GSM_SUPPORT" = 0
-    then
-        dnl use internal libgsm
-        GSM_SUPPORT=1
+        AC_CHECK_LIB(gsm, gsm_create, LIBS="$LIBS -lgsm")
+        AC_DEFINE([EXTERNAL_GSM], 1, [Define if you are using an external GSM library])
     fi
 fi
 

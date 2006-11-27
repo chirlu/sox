@@ -16,10 +16,6 @@
 #include "st_i.h"
 #include "sfircam.h"
 
-#ifndef SIZEOF_BSD_HEADER
-#define SIZEOF_BSD_HEADER 1024
-#endif
-
 #include <string.h>
 #include <stdlib.h>
 
@@ -214,7 +210,7 @@ int st_sfstartwrite(ft_t ft)
         sfcodep->code = SF_END;
         sfcodep->bsize = sizeof(SFCODE);
         sfcharp = (char *) sfcodep + sizeof(SFCODE);
-        while(sfcharp < (char *) &sfhead + SIZEOF_BSD_HEADER)
+        while(sfcharp < (char *) &sfhead + SIZEOF_HEADER)
                 *sfcharp++ = '\0';
         st_writebuf(ft, &sfhead, 1, sizeof(SFHEADER));
 

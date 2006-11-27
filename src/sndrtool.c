@@ -12,22 +12,13 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>     /* For SEEK_* defines if not found in stdio */
-#endif
 
 /* Private data used by writer */
 typedef struct sndpriv {
         st_size_t nsamples;
         st_size_t dataStart;
 } *snd_t;
-
-#ifndef SEEK_CUR
-#define SEEK_CUR        1
-#endif
 
 static void  sndtwriteheader(ft_t ft, st_size_t nsamples);
 

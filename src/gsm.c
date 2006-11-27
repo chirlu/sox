@@ -28,15 +28,13 @@
 
 #include "st_i.h"
 
-#if defined(EXTERNAL_GSM)
+#ifdef EXTERNAL_GSM
 #include <gsm/gsm.h>
 #else
 #include "libgsm/gsm.h"
 #endif
 
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
 
 #define MAXCHANS 16
 

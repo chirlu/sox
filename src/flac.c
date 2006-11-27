@@ -11,7 +11,7 @@
 
 #include "st_i.h"
 
-#if defined(HAVE_LIBFLAC)
+#ifdef HAVE_LIBFLAC
 
 #include <math.h>
 #include <string.h>

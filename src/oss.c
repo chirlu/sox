@@ -27,7 +27,7 @@
 
 #include "st_i.h"
 
-#if     defined(HAVE_OSS)
+#ifdef HAVE_OSS
 
 #include <unistd.h>
 #include <stdlib.h>

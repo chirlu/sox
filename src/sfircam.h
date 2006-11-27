@@ -15,7 +15,7 @@
 /* Definition of SF_MACHINE and SF_MAGIC
  *
  * Note that SF_MAGIC always has SF_MAGIC1 as its first byte, SF_MAGIC2 as its
- * second, SF_MACHINE as its third, and zero as its fourth.  Separate define's
+ * second, SF_MACHINE as its third, and zero as its fourth.  Separate defines
  * are needed because byte order is different on different machines.
  */
 #define SF_VAX 1

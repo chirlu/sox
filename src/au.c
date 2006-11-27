@@ -23,9 +23,7 @@
 #include "g72x.h"
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
 
 /* Magic numbers used in Sun and NeXT audio files */
 #define SUN_MAGIC       0x2e736e64              /* Really '.snd' */

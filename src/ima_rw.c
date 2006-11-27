@@ -109,7 +109,6 @@ static void ImaExpandS(
                 c = cm & 0x07;
                 state = imaStateAdjustTable[state][c];
 
-#               ifdef STRICT_IMA
                 dp = 0;
                 if (c & 4) dp += step;
                 step = step >> 1;
@@ -118,9 +117,7 @@ static void ImaExpandS(
                 if (c & 1) dp += step;
                 step = step >> 1;
                 dp += step;
-#               else
-                dp = ((c+c+1) * step) >> 3; /* faster than bit-test & add on my cpu */
-#               endif
+
                 if (c != cm) {
                         val -= dp;
                         if (val<-0x8000) val = -0x8000;
@@ -219,7 +216,6 @@ static int ImaMashS(
                         i = (i+1) & 0x07;
                 }
 
-#               ifdef STRICT_IMA
                 dp = 0;
                 if (c & 4) dp += step;
                 step = step >> 1;
@@ -228,9 +224,7 @@ static int ImaMashS(
                 if (c & 1) dp += step;
                 step = step >> 1;
                 dp += step;
-#               else
-                dp = ((c+c+1) * step) >> 3; /* faster than bit-test & add on my cpu */
-#               endif
+
                 if (d<0) {
                         val -= dp;
                         if (val<-0x8000) val = -0x8000;
@@ -251,10 +245,7 @@ static int ImaMashS(
 }
 
 /* mash one channel... if you want to use opt>0, 9 is a reasonable value */
-#ifdef __GNUC__
-inline
-#endif
-static void ImaMashChannel(
+inline static void ImaMashChannel(
         int ch,             /* channel number to encode, REQUIRE 0 <= ch < chans  */
         int chans,          /* total channels */
         const SAMPL *ip,    /* ip[] is interleaved input samples */

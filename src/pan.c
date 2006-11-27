@@ -8,7 +8,7 @@
  * 
  * Volume is kept constant (?). 
  * Beware of saturations!
- * Operations are carried out on floats.
+ * Operations are carried out on doubles.
  * Can handle different number of channels.
  * Cannot handle rate change.
  *
@@ -20,35 +20,10 @@
 
 static st_effect_t st_pan_effect;
 
-/* type for computations.
-   float mantissa is okay for 8 or 16 bits signals.
-   maybe a little bit short for 24 bits.
-   switch to double if you're not happy.
- */
-#ifndef PAN_FLOAT
-#define PAN_FLOAT float /* float or double */
-#define PAN_FLOAT_SCAN "%f" /* "%f" or "%lf" */
-#endif
-
-/* constants */
-
-#define TWO      ((PAN_FLOAT)(2.0e0))
-#define ONEHALF  ((PAN_FLOAT)(1.5e0))
-#define ONE      ((PAN_FLOAT)(1.0e0))
-#define MONE     ((PAN_FLOAT)(-1.0e0))
-#define HALF     ((PAN_FLOAT)(0.5e0))
-#define QUARTER  ((PAN_FLOAT)(0.25e0))
-#define ZERO     ((PAN_FLOAT)(0.0e0))
-
 /* structure to hold pan parameter */
 
 typedef struct {
-    /* pan option
-     */
-    PAN_FLOAT dir; /* direction, from left (-1.0) to right (1.0) */
-
-    /* local data
-     */
+    double dir; /* direction, from left (-1.0) to right (1.0) */
 } * pan_t;
 
 /*
@@ -58,10 +33,10 @@ int st_pan_getopts(eff_t effp, int n, char **argv)
 {
     pan_t pan = (pan_t) effp->priv; 
     
-    pan->dir = ZERO; /* default is no change */
+    pan->dir = 0.0; /* default is no change */
     
-    if (n && (!sscanf(argv[0], PAN_FLOAT_SCAN, &pan->dir) || 
-              pan->dir < MONE || pan->dir > ONE))
+    if (n && (!sscanf(argv[0], "%lf", &pan->dir) || 
+              pan->dir < -1.0 || pan->dir > 1.0))
     {
         st_fail(st_pan_effect.usage);
         return ST_EOF;
@@ -103,12 +78,12 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     register st_size_t len;
     st_size_t done;
     char ich, och;
-    register PAN_FLOAT left, right, dir, hdir;
+    register double left, right, dir, hdir;
     
     dir   = pan->dir;    /* -1   <=  dir  <= 1   */
-    hdir  = HALF * dir;  /* -0.5 <=  hdir <= 0.5 */
-    left  = HALF - hdir; /*  0   <=  left <= 1   */
-    right = HALF + hdir; /*  0   <= right <= 1   */
+    hdir  = 0.5 * dir;  /* -0.5 <=  hdir <= 0.5 */
+    left  = 0.5 - hdir; /*  0   <=  left <= 1   */
+    right = 0.5 + hdir; /*  0   <= right <= 1   */
 
     ich = effp->ininfo.channels;
     och = effp->outinfo.channels;
@@ -130,8 +105,8 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         case 2: /* average 2 */
             for (done=0; done<len; done++)
             {
-                float f;
-                f = HALF*ibuf[0] + HALF*ibuf[1];
+                double f;
+                f = 0.5*ibuf[0] + 0.5*ibuf[1];
                 ST_EFF_SAMPLE_CLIP_COUNT(f);
                 *obuf++ = f;
                 ibuf += 2;
@@ -140,9 +115,9 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         case 4: /* average 4 */
             for (done=0; done<len; done++)
             {
-                float f;
-                f = QUARTER*ibuf[0] + QUARTER*ibuf[1] + 
-                        QUARTER*ibuf[2] + QUARTER*ibuf[3];
+                double f;
+                f = 0.25*ibuf[0] + 0.25*ibuf[1] + 
+                        0.25*ibuf[2] + 0.25*ibuf[3];
                 ST_EFF_SAMPLE_CLIP_COUNT(f);
                 *obuf++ = f;
                 ibuf += 4;
@@ -158,7 +133,7 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         case 1: /* linear */
             for (done=0; done<len; done++)
             {
-                float f;
+                double f;
 
                 f = left * ibuf[0];
                 ST_EFF_SAMPLE_CLIP_COUNT(f);
@@ -173,18 +148,18 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         case 2: /* linear panorama. 
                  * I'm not sure this is the right way to do it.
                  */
-            if (dir <= ZERO) /* to the left */
+            if (dir <= 0.0) /* to the left */
             {
-                register PAN_FLOAT volume, cll, clr, cr;
+                register double volume, cll, clr, cr;
 
-                volume = ONE - HALF*dir;
-                cll = volume*(ONEHALF-left);
-                clr = volume*(left-HALF);
-                cr  = volume*(ONE+dir);
+                volume = 1.0 - 0.5*dir;
+                cll = volume*(1.5-left);
+                clr = volume*(left-0.5);
+                cr  = volume*(1.0+dir);
 
                 for (done=0; done<len; done++)
                 {
-                    float f;
+                    double f;
 
                     f = cll * ibuf[0] + clr * ibuf[1];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
@@ -198,16 +173,16 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             }
             else /* to the right */
             {
-                register PAN_FLOAT volume, cl, crl, crr;
+                register double volume, cl, crl, crr;
 
-                volume = ONE + HALF*dir;
-                cl  = volume*(ONE-dir);
-                crl = volume*(right-HALF);
-                crr = volume*(ONEHALF-right);
+                volume = 1.0 + 0.5*dir;
+                cl  = volume*(1.0-dir);
+                crl = volume*(right-0.5);
+                crr = volume*(1.5-right);
 
                 for (done=0; done<len; done++)
                 {
-                    float f;
+                    double f;
 
                     f = cl * ibuf[0];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
@@ -221,22 +196,22 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             }
             break;
         case 4:
-            if (dir <= ZERO) /* to the left */
+            if (dir <= 0.0) /* to the left */
             {
-                register PAN_FLOAT volume, cll, clr, cr;
+                register double volume, cll, clr, cr;
 
-                volume = ONE - HALF*dir;
-                cll = volume*(ONEHALF-left);
-                clr = volume*(left-HALF);
-                cr  = volume*(ONE+dir);
+                volume = 1.0 - 0.5*dir;
+                cll = volume*(1.5-left);
+                clr = volume*(left-0.5);
+                cr  = volume*(1.0+dir);
 
                 for (done=0; done<len; done++)
                 {
-                    register PAN_FLOAT ibuf0, ibuf1, f;
+                    register double ibuf0, ibuf1, f;
 
                     /* build stereo signal */
-                    ibuf0 = HALF*ibuf[0] + HALF*ibuf[2];
-                    ibuf1 = HALF*ibuf[1] + HALF*ibuf[3];
+                    ibuf0 = 0.5*ibuf[0] + 0.5*ibuf[2];
+                    ibuf1 = 0.5*ibuf[1] + 0.5*ibuf[3];
 
                     /* pan it */
                     f = cll * ibuf0 + clr * ibuf1;
@@ -251,19 +226,19 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             }
             else /* to the right */
             {
-                register PAN_FLOAT volume, cl, crl, crr;
+                register double volume, cl, crl, crr;
 
-                volume = ONE + HALF*dir;
-                cl  = volume*(ONE-dir);
-                crl = volume*(right-HALF);
-                crr = volume*(ONEHALF-right);
+                volume = 1.0 + 0.5*dir;
+                cl  = volume*(1.0-dir);
+                crl = volume*(right-0.5);
+                crr = volume*(1.5-right);
 
                 for (done=0; done<len; done++)
                 {
-                    register PAN_FLOAT ibuf0, ibuf1, f;
+                    register double ibuf0, ibuf1, f;
 
-                    ibuf0 = HALF*ibuf[0] + HALF*ibuf[2];
-                    ibuf1 = HALF*ibuf[1] + HALF*ibuf[3];
+                    ibuf0 = 0.5*ibuf[0] + 0.5*ibuf[2];
+                    ibuf1 = 0.5*ibuf[1] + 0.5*ibuf[3];
 
                     f = cl * ibuf0;
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
@@ -285,14 +260,14 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         switch (ich) {
         case 1: /* linear */
             {
-                register PAN_FLOAT cr, cl;
+                register double cr, cl;
 
-                cl = HALF*left;
-                cr = HALF*right;
+                cl = 0.5*left;
+                cr = 0.5*right;
 
                 for (done=0; done<len; done++)
                 {
-                    float f;
+                    double f;
 
                     f = cl * ibuf[0];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
@@ -306,18 +281,18 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             }
             break;
         case 2: /* simple linear panorama */
-            if (dir <= ZERO) /* to the left */
+            if (dir <= 0.0) /* to the left */
             {
-                register PAN_FLOAT volume, cll, clr, cr;
+                register double volume, cll, clr, cr;
 
-                volume = HALF - QUARTER*dir;
-                cll = volume * (ONEHALF-left);
-                clr = volume * (left-HALF);
-                cr  = volume * (ONE+dir);
+                volume = 0.5 - 0.25*dir;
+                cll = volume * (1.5-left);
+                clr = volume * (left-0.5);
+                cr  = volume * (1.0+dir);
 
                 for (done=0; done<len; done++)
                 {
-                    float f;
+                    double f;
 
                     f = cll * ibuf[0] + clr * ibuf[1];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
@@ -331,16 +306,16 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             }
             else /* to the right */
             {
-                register PAN_FLOAT volume, cl, crl, crr;
+                register double volume, cl, crl, crr;
 
-                volume = HALF + QUARTER*dir;
-                cl  = volume * (ONE-dir);
-                crl = volume * (right-HALF);
-                crr = volume * (ONEHALF-right);
+                volume = 0.5 + 0.25*dir;
+                cl  = volume * (1.0-dir);
+                crl = volume * (right-0.5);
+                crr = volume * (1.5-right);
 
                 for (done=0; done<len; done++)
                 {
-                    float f;
+                    double f;
 
                     f = cl * ibuf[0];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
@@ -357,16 +332,16 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             /* maybe I could improve the formula to reverse...
                also, turn only by quarters.
              */
-            if (dir <= ZERO) /* to the left */
+            if (dir <= 0.0) /* to the left */
             {
-                register PAN_FLOAT cown, cright;
+                register double cown, cright;
 
                 cright = -dir;
-                cown = ONE + dir;
+                cown = 1.0 + dir;
 
                 for (done=0; done<len; done++)
                 {
-                    float f;
+                    double f;
 
                     f = cown*ibuf[0] + cright*ibuf[1];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
@@ -386,14 +361,14 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             }
             else /* to the right */
             {
-                register PAN_FLOAT cleft, cown;
+                register double cleft, cown;
 
                 cleft = dir;
-                cown = ONE - dir;
+                cown = 1.0 - dir;
 
                 for (done=0; done<len; done++)
                 {
-                    float f;
+                    double f;
 
                     f = cleft*ibuf[2] + cown*ibuf[0];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);

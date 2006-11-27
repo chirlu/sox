@@ -20,18 +20,6 @@
 
 static st_effect_t st_silence_effect;
 
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
-
-#ifndef min
-#define min(s1,s2) ((s1)<(s2)?(s1):(s2))
-#endif
-
 /* Private data for silence effect. */
 
 #define SILENCE_TRIM        0
@@ -102,7 +90,7 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
     }
 
     /* Parse data related to trimming front side */
-    silence->start = FALSE;
+    silence->start = false;
     if (sscanf(argv[0], "%d", &silence->start_periods) != 1)
     {
         st_fail(st_silence_effect.usage);
@@ -118,7 +106,7 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
 
     if (silence->start_periods > 0)
     {
-        silence->start = TRUE;
+        silence->start = true;
         if (n < 2)
         {
             st_fail(st_silence_effect.usage);
@@ -159,7 +147,7 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
         n--; n--;
     }
 
-    silence->stop = FALSE;
+    silence->stop = false;
     /* Parse data needed for trimming of backside */
     if (n > 0)
     {
@@ -180,7 +168,7 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
         }
         else
             silence->restart = 0;
-        silence->stop = TRUE;
+        silence->stop = true;
         argv++;
         n--;
 

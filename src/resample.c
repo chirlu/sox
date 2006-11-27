@@ -105,8 +105,6 @@
 
 static st_effect_t st_resample_effect;
 
-/* this Float MUST match that in filter.c */
-#define Float double/*float*/
 #define ISCALE 0x10000
 
 /* largest factor for which exact-coefficients upsampling will be used */
@@ -123,7 +121,7 @@ typedef struct resamplestuff {
    long Nmult;
    long Nwing;
    long Nq;
-   Float *Imp;        /* impulse [Nwing+1] Filter coefficients */
+   double *Imp;        /* impulse [Nwing+1] Filter coefficients */
 
    double Time;       /* Current time/pos in input sample */
    long dhb;
@@ -135,8 +133,8 @@ typedef struct resamplestuff {
    long Xoff;         /* Xh plus some room for creep  */
    long Xread;        /* X[Xread] is start-position to enter new samples */
    long Xp;           /* X[Xp] is position to start filter application   */
-   unsigned long Xsize,Ysize; /* size (Floats) of X[],Y[]         */
-   Float *X, *Y;      /* I/O buffers */
+   unsigned long Xsize,Ysize; /* size (doubles) of X[],Y[]         */
+   double *X, *Y;      /* I/O buffers */
 } *resample_t;
 
 static void LpFilter(double c[],
@@ -146,7 +144,7 @@ static void LpFilter(double c[],
                      long Num);
 
 /* makeFilter is used by filter.c */
-int makeFilter(Float Imp[],
+int makeFilter(double Imp[],
                long Nwing,
                double Froll,
                double Beta,
@@ -244,16 +242,15 @@ int st_resample_start(eff_t effp)
         }
 
         /* Check for illegal constants */
-# if 0
-        if (Lp >= 16) st_fail("Error: Lp>=16");
-        if (Nb+Nhg+NLpScl >= 32) st_fail("Error: Nb+Nhg+NLpScl>=32");
-        if (Nh+Nb > 32) st_fail("Error: Nh+Nb>32");
-# endif
+        if (Lp >= 16) {
+          st_fail("Error: Lp>=16");
+          return (ST_EOF);
+        }
 
         /* Nwing: # of filter coeffs in right wing */
         r->Nwing = r->Nq * (r->Nmult/2+1) + 1;
 
-        r->Imp = (Float *)malloc(sizeof(Float) * (r->Nwing+2)) + 1;
+        r->Imp = (double *)malloc(sizeof(double) * (r->Nwing+2)) + 1;
         /* need Imp[-1] and Imp[Nwing] for quadratic interpolation */
         /* returns error # <=0, or adjusted wing-len > 0 */
         i = makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq, 1);
@@ -263,7 +260,7 @@ int st_resample_start(eff_t effp)
                 return (ST_EOF);
         }
 
-        /*st_debug("Nmult: %ld, Nwing: %ld, Nq: %ld",r->Nmult,r->Nwing,r->Nq);*/
+        st_debug("Nmult: %ld, Nwing: %ld, Nq: %ld",r->Nmult,r->Nwing,r->Nq);
 
         if (r->quadr < 0) { /* exact coeff's method */
                 r->Xh = r->Nwing/r->b;
@@ -299,7 +296,7 @@ int st_resample_start(eff_t effp)
         r->Ysize = BUFFSIZE - r->Xsize;
         /* st_debug("Xsize %d, Ysize %d, Xoff %d",r->Xsize,r->Ysize,r->Xoff); */
 
-        r->X = (Float *) malloc(sizeof(Float) * (BUFFSIZE));
+        r->X = (double *) malloc(sizeof(double) * (BUFFSIZE));
         r->Y = r->X + r->Xsize;
 
         /* Need Xoff zeros at beginning of sample */
@@ -342,7 +339,7 @@ int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                         r->X[i] = 0;
         } else {
                 for(i = r->Xread; i < Nx + r->Xread  ; i++) 
-                        r->X[i] = (Float)(*ibuf++)/ISCALE;
+                        r->X[i] = (double)(*ibuf++)/ISCALE;
         }
         last = i;
         Nproc = last - r->Xoff - r->Xp;
@@ -402,7 +399,7 @@ int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
         for(i=0; i < Nout; i++) { 
                 // orig: *obuf++ = r->Y[i] * ISCALE;
-                Float ftemp = r->Y[i] * ISCALE;
+                double ftemp = r->Y[i] * ISCALE;
 
                 ST_EFF_SAMPLE_CLIP_COUNT(ftemp);
                 *obuf++ = ftemp;
@@ -470,7 +467,7 @@ int st_resample_stop(eff_t effp)
 
 /* over 90% of CPU time spent in this iprodUD() function */
 /* quadratic interpolation */
-static double qprodUD(const Float Imp[], const Float *Xp, long Inc, double T0, 
+static double qprodUD(const double Imp[], const double *Xp, long Inc, double T0, 
                       long dhb, long ct)
 {
   const double f = 1.0/(1<<La);
@@ -478,16 +475,16 @@ static double qprodUD(const Float Imp[], const Float *Xp, long Inc, double T0,
   long Ho;
 
   Ho = T0 * dhb;
-  Ho += (ct-1)*dhb; /* so Float sum starts with smallest coef's */
+  Ho += (ct-1)*dhb; /* so double sum starts with smallest coef's */
   Xp += (ct-1)*Inc;
   v = 0;
   do {
-    Float coef;
+    double coef;
     long Hoh;
     Hoh = Ho>>La;
     coef = Imp[Hoh];
     {
-      Float dm,dp,t;
+      double dm,dp,t;
       dm = coef - Imp[Hoh-1];
       dp = Imp[Hoh+1] - coef;
       t =(Ho & Amask) * f;
@@ -502,7 +499,7 @@ static double qprodUD(const Float Imp[], const Float *Xp, long Inc, double T0,
 }
 
 /* linear interpolation */
-static double iprodUD(const Float Imp[], const Float *Xp, long Inc, 
+static double iprodUD(const double Imp[], const double *Xp, long Inc, 
                       double T0, long dhb, long ct)
 {
   const double f = 1.0/(1<<La);
@@ -510,11 +507,11 @@ static double iprodUD(const Float Imp[], const Float *Xp, long Inc,
   long Ho;
 
   Ho = T0 * dhb;
-  Ho += (ct-1)*dhb; /* so Float sum starts with smallest coef's */
+  Ho += (ct-1)*dhb; /* so double sum starts with smallest coef's */
   Xp += (ct-1)*Inc;
   v = 0;
   do {
-    Float coef;
+    double coef;
     long Hoh;
     Hoh = Ho>>La;
     /* if (Hoh >= End) break; */
@@ -532,11 +529,11 @@ static double iprodUD(const Float Imp[], const Float *Xp, long Inc,
 
 static long SrcUD(resample_t r, long Nx)
 {
-   Float *Ystart, *Y;
+   double *Ystart, *Y;
    double Factor;
    double dt;                  /* Step through input signal */
    double time;
-   double (*prodUD)(const Float[], const Float *, long, double, long, long);
+   double (*prodUD)(const double[], const double *, long, double, long, long);
    int n;
 
    prodUD = (r->quadr)? qprodUD:iprodUD; /* quadratic or linear interp */
@@ -554,7 +551,7 @@ static long SrcUD(resample_t r, long Nx)
    n = (int)ceil((double)Nx/dt);
    while(n--)
       {
-      Float *Xp;
+      double *Xp;
       double v;
       double T;
       T = time-floor(time);        /* fractional part of Time */
@@ -575,13 +572,13 @@ static long SrcUD(resample_t r, long Nx)
 }
 
 /* exact coeff's */
-static double prodEX(const Float Imp[], const Float *Xp, 
+static double prodEX(const double Imp[], const double *Xp, 
                      long Inc, long T0, long dhb, long ct)
 {
   double v;
-  const Float *Cp;
+  const double *Cp;
 
-  Cp  = Imp + (ct-1)*dhb + T0; /* so Float sum starts with smallest coef's */
+  Cp  = Imp + (ct-1)*dhb + T0; /* so double sum starts with smallest coef's */
   Xp += (ct-1)*Inc;
   v = 0;
   do {
@@ -594,7 +591,7 @@ static double prodEX(const Float Imp[], const Float *Xp,
 
 static long SrcEX(resample_t r, long Nx)
 {
-   Float *Ystart, *Y;
+   double *Ystart, *Y;
    double Factor;
    long a,b;
    long time;
@@ -608,7 +605,7 @@ static long SrcEX(resample_t r, long Nx)
    n = (Nx*b + (a-1))/a;
    while(n--)
       {
-        Float *Xp;
+        double *Xp;
         double v;
         long T;
         T = time % b;              /* fractional part of Time */
@@ -627,7 +624,7 @@ static long SrcEX(resample_t r, long Nx)
    return (Y - Ystart);        /* Return the number of output samples */
 }
 
-int makeFilter(Float Imp[], long Nwing, double Froll, double Beta, 
+int makeFilter(double Imp[], long Nwing, double Froll, double Beta, 
                long Num, int Normalize)
 {
    double *ImpR;

@@ -21,7 +21,7 @@
  */
 #include "st_i.h"
 
-#if defined(HAVE_LIBVORBIS)
+#ifdef HAVE_LIBVORBIS
 #include <stdio.h>
 #include <math.h>
 #include <string.h>

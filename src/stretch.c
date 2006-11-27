@@ -26,24 +26,10 @@
 
 static st_effect_t st_stretch_effect;
 
-#ifndef STRETCH_FLOAT
-#define STRETCH_FLOAT float
-#define STRETCH_FLOAT_SCAN "%f"
-#endif
+#define DEFAULT_SLOW_SHIFT_RATIO        0.8
+#define DEFAULT_FAST_SHIFT_RATIO        1.0
 
-/* ok, it looks stupid to have such constant.
-   this is because of the cast, if floats are switched to doubles.
- */
-#define ZERO                            ((STRETCH_FLOAT)(0.0e0))
-#define HALF                            ((STRETCH_FLOAT)(0.5e0))
-#define ONE                             ((STRETCH_FLOAT)(1.0e0))
-#define MONE                            ((STRETCH_FLOAT)(-1.0e0))
-#define ONETHOUSANDS                    ((STRETCH_FLOAT)(0.001e0))
-
-#define DEFAULT_SLOW_SHIFT_RATIO        ((STRETCH_FLOAT)(0.8e0))
-#define DEFAULT_FAST_SHIFT_RATIO        ONE
-
-#define DEFAULT_STRETCH_WINDOW          ((STRETCH_FLOAT)(20.0e0))  /* ms */
+#define DEFAULT_STRETCH_WINDOW          20.0  /* ms */
 
 /* I'm planing to put some common fading stuff outside. 
    It's also used in pitch.c
@@ -59,11 +45,11 @@ typedef struct
     /* options
      * Q: maybe shift could be allowed > 1.0 with factor < 1.0 ???
      */
-    STRETCH_FLOAT factor;   /* strech factor. 1.0 means copy. */
-    STRETCH_FLOAT window;   /* window in ms */
+    double factor;   /* strech factor. 1.0 means copy. */
+    double window;   /* window in ms */
     st_fading_t fade;       /* type of fading */
-    STRETCH_FLOAT shift;    /* shift ratio wrt window. <1.0 */
-    STRETCH_FLOAT fading;   /* fading ratio wrt window. <0.5 */
+    double shift;    /* shift ratio wrt window. <1.0 */
+    double fading;   /* fading ratio wrt window. <0.5 */
 
     /* internal stuff 
      */
@@ -75,11 +61,11 @@ typedef struct
     int ishift;             /* input shift */
 
     int oindex;             /* next evailable element */
-    STRETCH_FLOAT * obuf;   /* output buffer */
+    double * obuf;   /* output buffer */
     int oshift;             /* output shift */
 
     int fsize;              /* fading size */
-    STRETCH_FLOAT * fbuf;   /* fading, 1.0 -> 0.0 */
+    double * fbuf;   /* fading, 1.0 -> 0.0 */
 
 } * stretch_t;
 
@@ -104,18 +90,18 @@ int st_stretch_getopts(eff_t effp, int n, char **argv)
     stretch_t stretch = (stretch_t) effp->priv; 
     
     /* default options */
-    stretch->factor = ONE; /* default is no change */
+    stretch->factor = 1.0; /* default is no change */
     stretch->window = DEFAULT_STRETCH_WINDOW;
     stretch->fade   = st_linear_fading;
 
-    if (n>0 && !sscanf(argv[0], STRETCH_FLOAT_SCAN, &stretch->factor))
+    if (n>0 && !sscanf(argv[0], "%lf", &stretch->factor))
     {
         sprintf (usage, "%s\n\terror while parsing factor", st_stretch_effect.usage);
         st_fail(usage);
         return ST_EOF;
     }
 
-    if (n>1 && !sscanf(argv[1], STRETCH_FLOAT_SCAN, &stretch->window))
+    if (n>1 && !sscanf(argv[1], "%lf", &stretch->window))
     {
         sprintf (usage, "%s\n\terror while parsing window size", st_stretch_effect.usage);
         st_fail(usage);
@@ -138,17 +124,17 @@ int st_stretch_getopts(eff_t effp, int n, char **argv)
     }
 
     /* default shift depends whether we go slower or faster */
-    stretch->shift = (stretch->factor <= ONE) ?
+    stretch->shift = (stretch->factor <= 1.0) ?
         DEFAULT_FAST_SHIFT_RATIO: DEFAULT_SLOW_SHIFT_RATIO;
  
-    if (n>3 && !sscanf(argv[3], STRETCH_FLOAT_SCAN, &stretch->shift))
+    if (n>3 && !sscanf(argv[3], "%lf", &stretch->shift))
     {
         sprintf (usage, "%s\n\terror while parsing shift ratio", st_stretch_effect.usage);
         st_fail(usage);
         return ST_EOF;
     }
 
-    if (stretch->shift > ONE || stretch->shift <= ZERO)
+    if (stretch->shift > 1.0 || stretch->shift <= 0.0)
     {
         sprintf (usage, "%s\n\terror with shift ratio value", st_stretch_effect.usage);
         st_fail(usage);
@@ -158,20 +144,20 @@ int st_stretch_getopts(eff_t effp, int n, char **argv)
     /* default fading stuff... 
        it makes sense for factor >= 0.5
     */
-    if (stretch->factor<ONE)
-        stretch->fading = ONE - (stretch->factor*stretch->shift);
+    if (stretch->factor<1.0)
+        stretch->fading = 1.0 - (stretch->factor*stretch->shift);
     else
-        stretch->fading = ONE - stretch->shift;
-    if (stretch->fading > HALF) stretch->fading = HALF;
+        stretch->fading = 1.0 - stretch->shift;
+    if (stretch->fading > 0.5) stretch->fading = 0.5;
 
-    if (n>4 && !sscanf(argv[4], STRETCH_FLOAT_SCAN, &stretch->fading))
+    if (n>4 && !sscanf(argv[4], "%lf", &stretch->fading))
     {
         sprintf (usage, "%s\n\terror while parsing fading ratio", st_stretch_effect.usage);
         st_fail(usage);
         return ST_EOF;
     }
 
-    if (stretch->fading > HALF || stretch->fading < ZERO)
+    if (stretch->fading > 0.5 || stretch->fading < 0.0)
     {
         sprintf (usage, "%s\n\terror with fading ratio value", st_stretch_effect.usage);
         st_fail(usage);
@@ -206,7 +192,7 @@ int st_stretch_start(eff_t effp)
 
     stretch->state = input_state;
 
-    stretch->size = (int)(effp->outinfo.rate * ONETHOUSANDS * stretch->window);
+    stretch->size = (int)(effp->outinfo.rate * 0.001 * stretch->window);
     /* start in the middle of an input to avoid initial fading... */
     stretch->index = stretch->size/2;
     stretch->ibuf  = (st_sample_t *) malloc(stretch->size * 
@@ -215,7 +201,7 @@ int st_stretch_start(eff_t effp)
     /* the shift ratio deal with the longest of ishift/oshift
        hence ishift<=size and oshift<=size. should be asserted.
      */
-    if (stretch->factor < ONE)
+    if (stretch->factor < 1.0)
     {
         stretch->ishift = (int) (stretch->shift * stretch->size);
         stretch->oshift = (int) (stretch->factor * stretch->ishift);
@@ -227,13 +213,13 @@ int st_stretch_start(eff_t effp)
     }
 
     stretch->oindex = stretch->index; /* start as synchronized */
-    stretch->obuf = (STRETCH_FLOAT *)
-        malloc(stretch->size * sizeof(STRETCH_FLOAT));
+    stretch->obuf = (double *)
+        malloc(stretch->size * sizeof(double));
     
     stretch->fsize = (int) (stretch->fading * stretch->size);
 
-    stretch->fbuf = (STRETCH_FLOAT *)
-        malloc(stretch->fsize * sizeof(STRETCH_FLOAT));
+    stretch->fbuf = (double *)
+        malloc(stretch->fsize * sizeof(double));
         
     if (!stretch->ibuf || !stretch->obuf || !stretch->fbuf) 
     {
@@ -247,18 +233,18 @@ int st_stretch_start(eff_t effp)
         stretch->ibuf[i] = 0;
 
     for (i=0; i<stretch->size; i++)
-        stretch->obuf[i] = ZERO;
+        stretch->obuf[i] = 0.0;
 
     if (stretch->fsize>1)
     {
-        register STRETCH_FLOAT slope = ONE / (stretch->fsize - 1);
+        register double slope = 1.0 / (stretch->fsize - 1);
         
-        stretch->fbuf[0] = ONE;
+        stretch->fbuf[0] = 1.0;
         for (i=1; i<stretch->fsize-1; i++)
             stretch->fbuf[i] = slope * (stretch->fsize-i-1);
-        stretch->fbuf[stretch->fsize-1] = ZERO;
+        stretch->fbuf[stretch->fsize-1] = 0.0;
     } else if (stretch->fsize==1)
-        stretch->fbuf[0] = ONE;
+        stretch->fbuf[0] = 1.0;
 
     /* debug(stretch, "start"); */
 
@@ -349,7 +335,7 @@ int st_stretch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
 
                 /* pad with 0 */
                 for (; i<stretch->size; i++)
-                    stretch->obuf[i] = ZERO;
+                    stretch->obuf[i] = 0.0;
                     
                 stretch->state = input_state;
             }

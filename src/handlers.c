@@ -19,7 +19,7 @@ st_format_fn_t st_format_fns[] = {
   st_aiff_format_fn,
   st_aifc_format_fn,
   st_al_format_fn,
-#if     defined(HAVE_ALSA)
+#ifdef HAVE_ALSA
   st_alsa_format_fn,
 #endif
   st_au_format_fn,
@@ -32,9 +32,7 @@ st_format_fn_t st_format_fns[] = {
 #ifdef HAVE_LIBFLAC
   st_flac_format_fn,
 #endif
-#ifdef ENABLE_GSM
   st_gsm_format_fn,
-#endif
   st_hcom_format_fn,
   st_la_format_fn,
   st_lu_format_fn,
@@ -43,7 +41,7 @@ st_format_fn_t st_format_fns[] = {
   st_mp3_format_fn,
 #endif
   st_nul_format_fn,
-#if     defined(HAVE_OSS)
+#ifdef HAVE_OSS
   st_ossdsp_format_fn,
 #endif
   st_prc_format_fn,
@@ -55,7 +53,7 @@ st_format_fn_t st_format_fns[] = {
   st_smp_format_fn,
   st_snd_format_fn,
   st_sphere_format_fn,
-#if     defined(HAVE_SUNAUDIO)
+#ifdef HAVE_SUNAUDIO
   st_sun_format_fn,
 #endif
   st_svx_format_fn,

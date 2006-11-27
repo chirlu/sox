@@ -17,38 +17,23 @@
 
 static st_effect_t st_dcshift_effect;
 
-/* type used for computations.
- */
-#ifndef DCSHIFT_FLOAT
-#define DCSHIFT_FLOAT float
-#define DCSHIFT_FLOAT_SCAN "%f"
-#endif
-
-/* constants
- */
-#define ZERO      ((DCSHIFT_FLOAT)(0.0e0))
-#define LOG_10_20 ((DCSHIFT_FLOAT)(0.1151292546497022842009e0))
-#define ONE       ((DCSHIFT_FLOAT)(1.0e0))
-#define TWENTY    ((DCSHIFT_FLOAT)(20.0e0))
-
-
 typedef struct {
-    DCSHIFT_FLOAT dcshift; /* DC shift. */
+    double dcshift; /* DC shift. */
     int uselimiter; /* boolean: are we using the limiter? */
-    DCSHIFT_FLOAT limiterthreshhold;
-    DCSHIFT_FLOAT limitergain; /* limiter gain. */
+    double limiterthreshhold;
+    double limitergain; /* limiter gain. */
     int limited; /* number of limited values to report. */
     int totalprocessed;
     int clipped;    /* number of clipped values to report. */
 } * dcs_t;
 
 /*
- * Process options: dcshift (float) type (amplitude, power, dB)
+ * Process options: dcshift (double) type (amplitude, power, dB)
  */
 int st_dcshift_getopts(eff_t effp, int n, char **argv)
 {
     dcs_t dcs = (dcs_t) effp->priv;
-    dcs->dcshift = ONE; /* default is no change */
+    dcs->dcshift = 1.0; /* default is no change */
     dcs->uselimiter = 0; /* default is no limiter */
 
     if (n < 1)
@@ -57,7 +42,7 @@ int st_dcshift_getopts(eff_t effp, int n, char **argv)
         return ST_EOF;
     }
 
-    if (n && (!sscanf(argv[0], DCSHIFT_FLOAT_SCAN, &dcs->dcshift)))
+    if (n && (!sscanf(argv[0], "%lf", &dcs->dcshift)))
     {
         st_fail(st_dcshift_effect.usage);
         return ST_EOF;
@@ -65,7 +50,7 @@ int st_dcshift_getopts(eff_t effp, int n, char **argv)
 
     if (n>1)
     {
-        if (!sscanf(argv[1], DCSHIFT_FLOAT_SCAN, &dcs->limitergain))
+        if (!sscanf(argv[1], "%lf", &dcs->limitergain))
         {
                 st_fail(st_dcshift_effect.usage);
                 return ST_EOF;
@@ -78,7 +63,7 @@ int st_dcshift_getopts(eff_t effp, int n, char **argv)
          * when the limiter is activated. */
         /* (NOTE: There **WILL** be a discontinuity in the slope of the 
          * output amplitudes when using the limiter.) */
-        dcs->limiterthreshhold = ST_SAMPLE_MAX * (ONE - (fabs(dcs->dcshift) - dcs->limitergain));
+        dcs->limiterthreshhold = ST_SAMPLE_MAX * (1.0 - (fabs(dcs->dcshift) - dcs->limitergain));
     }
 
     return ST_SUCCESS;
@@ -118,11 +103,11 @@ int st_dcshift_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                     st_size_t *isamp, st_size_t *osamp)
 {
     dcs_t dcs = (dcs_t) effp->priv;
-    register DCSHIFT_FLOAT dcshift = dcs->dcshift;
-    register DCSHIFT_FLOAT limitergain = dcs->limitergain;
-    register DCSHIFT_FLOAT limiterthreshhold = dcs->limiterthreshhold;
-    register DCSHIFT_FLOAT sample;
-    register st_size_t len;
+    double dcshift = dcs->dcshift;
+    double limitergain = dcs->limitergain;
+    double limiterthreshhold = dcs->limiterthreshhold;
+    double sample;
+    st_size_t len;
 
     len = min(*osamp, *isamp);
 
@@ -167,7 +152,7 @@ int st_dcshift_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         /* quite basic, with clipping */
         for (;len>0; len--)
         {
-                float f;
+                double f;
 
                 f = dcshift * ST_SAMPLE_MAX + *ibuf++;
                 ST_SAMPLE_CLIP_COUNT(f, dcs->clipped);

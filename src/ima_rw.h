@@ -22,18 +22,8 @@
 #include "st.h"
 
 #ifndef SAMPL
-#	define SAMPL short
+#define SAMPL short
 #endif
-
-/* #undef STRICT_IMA makes code a bit faster, but not
- * strictly compatible with the real IMA spec, which
- * defines an encoding on approximate multiply/divide
- * using shift/adds instead of the (now) faster mult/div
- * Probably the roundof inexactness is inaudibly small,
- * so you might consider it worthwhile to #undef STRICT_IMA
- */
-#define STRICT_IMA
-/* #undef STRICT_IMA */
 
 /*
  * call initImaTable() before any other Ima* functions,

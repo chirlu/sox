@@ -2,18 +2,12 @@
 #include "st_i.h"
 #include "stconfig.h"
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
-
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
-
 #include <stdlib.h>
-
 #include <sys/types.h> /* for fstat() */
 #include <sys/stat.h> /* for fstat() */
+
 #ifdef _MSC_VER
 /*
  * __STDC__ is defined, so these symbols aren't created.
@@ -25,14 +19,14 @@
 
 /* Based from zlib's minigzip: */
 #if defined(WIN32) || defined(__NT__)
-#  include <fcntl.h>
-#  include <io.h>
+#include <fcntl.h>
+#include <io.h>
 #ifndef O_BINARY
 #define O_BINARY _O_BINARY
 #endif
-#  define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
+#define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
 #else
-#  define SET_BINARY_MODE(file)
+#define SET_BINARY_MODE(file)
 #endif
 
 static int is_seekable(ft_t ft)

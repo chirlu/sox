@@ -13,10 +13,9 @@
 
 #include <math.h>
 #include <string.h>
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
-/* Private data for SKEL file */
+
+/* Private data for sphere file */
 typedef struct spherestuff {
         char      shorten_check[4];
         st_size_t numSamples;

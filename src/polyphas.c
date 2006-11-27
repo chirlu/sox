@@ -156,14 +156,6 @@ static const unsigned short primes[] = {
   0
 };
 
-#ifndef max
-#define max(x,y) ((x > y) ? x : y)
-#endif
-
-#ifndef min
-#define min(x,y) ((x < y) ? x : y)
-#endif
-
 static int prime(int n, int *q0)
 {
   const unsigned short *p;
@@ -291,10 +283,6 @@ static int optimize_factors(int numer, int denom, int *l1, int *l2)
   return u_min;
 }
 
-#ifndef PI
-#define PI 3.14159265358979
-#endif
-
 /* Calculate a Nuttall window of a given length.
    Buffer must already be allocated to appropriate size.
    */
@@ -314,9 +302,9 @@ static void nuttall(Float *buffer, int length)
 
   for(j = 0; j < length; j++) {
     buffer[j] = 0.3635819 +
-      0.4891775 * cos(2*PI*1*(j - N1) / N) +
-      0.1365995 * cos(2*PI*2*(j - N1) / N) +
-      0.0106411 * cos(2*PI*3*(j - N1) / N);
+      0.4891775 * cos(2*M_PI*1*(j - N1) / N) +
+      0.1365995 * cos(2*M_PI*2*(j - N1) / N) +
+      0.0106411 * cos(2*M_PI*3*(j - N1) / N);
   }
 }
 /* Calculate a Hamming window of given length.
@@ -333,7 +321,7 @@ static void hamming(Float *buffer, int length)
 
     N1 = length/2;
     for(j=0;j<length;j++)
-      buffer[j] = 0.5 - 0.46 * cos(PI*j/N1);
+      buffer[j] = 0.5 - 0.46 * cos(M_PI*j/N1);
 }
 
 /* Calculate the sinc function properly */
@@ -354,7 +342,7 @@ static void fir_design(Float *buffer, int length, Float cutoff)
     int j;
     double sum;
 
-    if(buffer == NULL || length < 0 || cutoff < 0 || cutoff > PI)
+    if(buffer == NULL || length < 0 || cutoff < 0 || cutoff > M_PI)
       st_fail("Illegal buffer %p, length %d, or cutoff %f.",buffer,length,cutoff);
 
     /* Use the user-option of window type */
@@ -367,7 +355,7 @@ static void fir_design(Float *buffer, int length, Float cutoff)
     /* Design filter:  windowed sinc function */
     sum = 0.0;
     for(j=0;j<length;j++) {
-      buffer[j] *= sinc(PI*cutoff*(j-length/2)); /* center at length/2 */
+      buffer[j] *= sinc(M_PI*cutoff*(j-length/2)); /* center at length/2 */
       /* st_debug("%.1f %.6f",(float)j,buffer[j]); */
       sum += buffer[j];
     }

@@ -16,7 +16,7 @@
 
 #include "st_i.h"
 
-#if defined(HAVE_ALSA)
+#ifdef HAVE_ALSA
 
 #include <alsa/asoundlib.h>
 

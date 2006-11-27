@@ -44,15 +44,6 @@
 
 static st_effect_t st_pitch_effect;
 
-/* float type for the computations.
-   should be common to all effects?
-   I use such trick in vol, pan, speed, pitch and stretch...
- */
-#ifndef PITCH_FLOAT
-#define PITCH_FLOAT double
-#define PITCH_FLOAT_SCAN "%lf"
-#endif
-
 /* cross fading options for transitions
  */
 #define PITCH_FADE_COS 0 /* cosine */
@@ -71,26 +62,13 @@ static st_effect_t st_pitch_effect;
 
 /* default window width
  */
-#define PITCH_DEFAULT_WIDTH ((PITCH_FLOAT)(20.0e0)) /* 20 ms */
-
-/* constants.
- */
-#define OCTAVA             ((PITCH_FLOAT)(1200.0e0)) /* in cents */
-#define THOUSAND           ((PITCH_FLOAT)(1000.0e0)) /* in units */
-#define HUNDRED            ((PITCH_FLOAT)(100.0e0))
-#define FOUR               ((PITCH_FLOAT)(4.0e0))
-#define TWO                ((PITCH_FLOAT)(2.0e0))
-#define ONE                ((PITCH_FLOAT)(1.0e0))
-#define HALF               ((PITCH_FLOAT)(0.5e0))
-#define QUARTER            ((PITCH_FLOAT)(0.25e0))
-#define ONESIXTH           ((PITCH_FLOAT)(1.0e0/6.0e0))
-#define ZERO               ((PITCH_FLOAT)(0.0e0))
+#define PITCH_DEFAULT_WIDTH ((double)(20.0e0)) /* 20 ms */
 
 /* linear factors for the Hamming window
    0<=i<=n: HAM_n(i) = HAM0 + HAM1*cos(i*PI/n)
  */
-#define HAM1               ((PITCH_FLOAT)(0.46e0))
-#define HAM0               ((PITCH_FLOAT)(0.54e0))
+#define HAM1               ((double)(0.46e0))
+#define HAM0               ((double)(0.54e0))
 
 /* state of buffer management... */
 typedef enum { pi_input, pi_compute, pi_output } pitch_state_t;
@@ -100,27 +78,27 @@ typedef struct
 {
     /* OPTIONS
      */
-    PITCH_FLOAT shift;   /* shift in cents, >0 to treble, <0 to bass */
+    double shift;   /* shift in cents, >0 to treble, <0 to bass */
 
-    PITCH_FLOAT width;   /* sweep size in ms */
+    double width;   /* sweep size in ms */
 
     int interopt;        /* interpole option */
 
     int fadeopt;         /* fade option */
-    PITCH_FLOAT coef;    /* coefficient used by trapezoid */
+    double coef;    /* coefficient used by trapezoid */
     /* what about coef1/coef2 for hamming... */
 
     /* COMPUTATION
      */
-    PITCH_FLOAT rate;    /* sweep rate, around 1.0 */
+    double rate;    /* sweep rate, around 1.0 */
 
     unsigned int step;   /* size of half a sweep, rounded to integer... */
-    PITCH_FLOAT * fade;  /* fading factors table lookup, ~ 1.0 -> ~ 0.0 */
+    double * fade;  /* fading factors table lookup, ~ 1.0 -> ~ 0.0 */
 
     int overlap;         /* needed overlap */
 
-    PITCH_FLOAT * tmp;   /* temporary buffer */
-    PITCH_FLOAT * acc;   /* accumulation buffer */
+    double * tmp;   /* temporary buffer */
+    double * acc;   /* accumulation buffer */
 
     unsigned int iacc;   /* part of acc already output */
 
@@ -156,29 +134,29 @@ static void debug(pitch_t pitch, char * where)
 
 /* compute f(x) as a linear interpolation...
  */
-static PITCH_FLOAT lin(
-  PITCH_FLOAT f0,  /* f(0)  */
-  PITCH_FLOAT f1,  /* f(1)  */
-  PITCH_FLOAT x)   /* 0.0 <= x < 1.0 */
+static double lin(
+  double f0,  /* f(0)  */
+  double f1,  /* f(1)  */
+  double x)   /* 0.0 <= x < 1.0 */
 {
-    return f0 * (ONE - x) + f1 * x;
+    return f0 * (1.0 - x) + f1 * x;
 }
 
 /* compute f(x) as a cubic function...
  */
-static PITCH_FLOAT cub(
-  PITCH_FLOAT fm1, /* f(-1) */
-  PITCH_FLOAT f0,  /* f(0)  */
-  PITCH_FLOAT f1,  /* f(1)  */
-  PITCH_FLOAT f2,  /* f(2)  */
-  PITCH_FLOAT x)   /* 0.0 <= x < 1.0 */
+static double cub(
+  double fm1, /* f(-1) */
+  double f0,  /* f(0)  */
+  double f1,  /* f(1)  */
+  double f2,  /* f(2)  */
+  double x)   /* 0.0 <= x < 1.0 */
 {
     /* a x^3 + b x^2 + c x + d */
-    register PITCH_FLOAT a, b, c, d;
+    register double a, b, c, d;
 
     d = f0;
-    b = HALF * (f1+fm1) - f0;
-    a = ONESIXTH * (f2-f1+fm1-f0-FOUR*b);
+    b = 0.5 * (f1+fm1) - f0;
+    a = (1.0/6.0) * (f2-f1+fm1-f0-4.0*b);
     c = f1 - a - b - d;
     
     return ((a * x + b) * x + c) * x + d;
@@ -192,30 +170,30 @@ static PITCH_FLOAT cub(
 static void interpolation(
   pitch_t pitch,
   st_sample_t *ibuf, int ilen, 
-  PITCH_FLOAT * out, int olen,
-  PITCH_FLOAT rate) /* signed */
+  double * out, int olen,
+  double rate) /* signed */
 {
     register int i, size;
-    register PITCH_FLOAT index;
+    register double index;
 
     size = pitch->step; /* size == olen? */
 
     if (rate>0) /* sweep forwards */
     {
-        for (index=ZERO, i=0; i<olen; i++, index+=rate)
+        for (index=0.0, i=0; i<olen; i++, index+=rate)
         {
             register int ifl = (int) index; /* FLOOR */
-            register PITCH_FLOAT frac = index - ifl;
+            register double frac = index - ifl;
 
             if (pitch->interopt==PITCH_INTERPOLE_LIN)
-                out[i] = lin((PITCH_FLOAT) ibuf[ifl], 
-                             (PITCH_FLOAT) ibuf[ifl+1],
+                out[i] = lin((double) ibuf[ifl], 
+                             (double) ibuf[ifl+1],
                              frac);
             else
-                out[i] = cub((PITCH_FLOAT) ibuf[ifl-1], 
-                             (PITCH_FLOAT) ibuf[ifl], 
-                             (PITCH_FLOAT) ibuf[ifl+1], 
-                             (PITCH_FLOAT) ibuf[ifl+2],
+                out[i] = cub((double) ibuf[ifl-1], 
+                             (double) ibuf[ifl], 
+                             (double) ibuf[ifl+1], 
+                             (double) ibuf[ifl+2],
                              frac);
         }
     }
@@ -224,17 +202,17 @@ static void interpolation(
         for (index=ilen-1, i=olen-1; i>=0; i--, index+=rate)
         {
             register int ifl = (int) index; /* FLOOR */
-            register PITCH_FLOAT frac = index - ifl;
+            register double frac = index - ifl;
 
             if (pitch->interopt==PITCH_INTERPOLE_LIN)
-                out[i] = lin((PITCH_FLOAT) ibuf[ifl], 
-                             (PITCH_FLOAT) ibuf[ifl+1],
+                out[i] = lin((double) ibuf[ifl], 
+                             (double) ibuf[ifl+1],
                              frac);
             else
-                out[i] = cub((PITCH_FLOAT) ibuf[ifl-1], 
-                             (PITCH_FLOAT) ibuf[ifl], 
-                             (PITCH_FLOAT) ibuf[ifl+1], 
-                             (PITCH_FLOAT) ibuf[ifl+2],
+                out[i] = cub((double) ibuf[ifl-1], 
+                             (double) ibuf[ifl], 
+                             (double) ibuf[ifl+1], 
+                             (double) ibuf[ifl+2],
                              frac);
         }
     }
@@ -273,9 +251,9 @@ int st_pitch_getopts(eff_t effp, int n, char **argv)
     pitch_t pitch = (pitch_t) effp->priv; 
     
     /* get pitch shift */
-    pitch->shift = ZERO; /* default is no change */
+    pitch->shift = 0.0; /* default is no change */
 
-    if (n && !sscanf(argv[0], PITCH_FLOAT_SCAN, &pitch->shift))
+    if (n && !sscanf(argv[0], "%lf", &pitch->shift))
     {
         st_fail(st_pitch_effect.usage);
         return ST_EOF;
@@ -283,7 +261,7 @@ int st_pitch_getopts(eff_t effp, int n, char **argv)
 
     /* sweep size in ms */
     pitch->width = PITCH_DEFAULT_WIDTH;
-    if (n>1 && !sscanf(argv[1], PITCH_FLOAT_SCAN, &pitch->width))
+    if (n>1 && !sscanf(argv[1], "%lf", &pitch->width))
     {
         st_fail(st_pitch_effect.usage);
         return ST_EOF;
@@ -337,9 +315,9 @@ int st_pitch_getopts(eff_t effp, int n, char **argv)
         }
     }
     
-    pitch->coef = QUARTER;
-    if (n>4 && (!sscanf(argv[4], PITCH_FLOAT_SCAN, &pitch->coef) ||
-                pitch->coef<ZERO || pitch->coef>HALF))
+    pitch->coef = 0.25;
+    if (n>4 && (!sscanf(argv[4], "%lf", &pitch->coef) ||
+                pitch->coef<0.0 || pitch->coef>0.5))
     {
         st_fail(st_pitch_effect.usage);
         return ST_EOF;
@@ -378,29 +356,29 @@ int st_pitch_start(eff_t effp)
     pitch->state = pi_input;
 
     /* Should I trust pow?
-     * BTW, the twelve's root of two is 1.0594630943592952645618252,
+     * BTW, the twelfth root of two is 1.0594630943592952645618252,
      * if we consider an equal temperament.
      */
-    pitch->rate = pow(TWO, pitch->shift/OCTAVA);
+    pitch->rate = pow(2.0, pitch->shift/1200.0);
 
     /* size is half of the actual target window size, because of symetry.
      */
-    pitch->step = ((pitch->width*(HALF/THOUSAND))*sample_rate);
+    pitch->step = ((pitch->width*(0.0005))*sample_rate);
 
     /* make size odd? do we care? */
     /* if (!(size & 1)) size++; */
 
     /* security for safe cubic interpolation */
-    if (pitch->rate > ONE)
-        pitch->overlap = (int) ((pitch->rate-ONE)*pitch->step) + 2;
+    if (pitch->rate > 1.0)
+        pitch->overlap = (int) ((pitch->rate-1.0)*pitch->step) + 2;
     else
         pitch->overlap = 2; 
 
     pitch->size = pitch->step + 2*pitch->overlap;
 
-    pitch->fade = (PITCH_FLOAT *) malloc(pitch->step*sizeof(PITCH_FLOAT));
-    pitch->tmp  = (PITCH_FLOAT *) malloc(pitch->step*sizeof(PITCH_FLOAT));
-    pitch->acc  = (PITCH_FLOAT *) malloc(pitch->step*sizeof(PITCH_FLOAT));
+    pitch->fade = (double *) malloc(pitch->step*sizeof(double));
+    pitch->tmp  = (double *) malloc(pitch->step*sizeof(double));
+    pitch->acc  = (double *) malloc(pitch->step*sizeof(double));
     pitch->buf  = (st_sample_t *) malloc(pitch->size*sizeof(st_sample_t));
 
     if (!pitch->fade || !pitch->tmp || !pitch->acc || !pitch->buf)
@@ -418,43 +396,43 @@ int st_pitch_start(eff_t effp)
     if (pitch->fadeopt == PITCH_FADE_HAM)
     {
         /* does it make sense to have such an option? */
-        register PITCH_FLOAT pi_step = M_PI / (pitch->step-1);
+        register double pi_step = M_PI / (pitch->step-1);
         
         for (i=0; i<pitch->step; i++)
-            pitch->fade[i] = (PITCH_FLOAT) (HAM0 + HAM1*cos(pi_step*i));
+            pitch->fade[i] = (double) (HAM0 + HAM1*cos(pi_step*i));
     }
     else if (pitch->fadeopt == PITCH_FADE_COS)
     {
-        register PITCH_FLOAT pi_2_step = M_PI_2 / (pitch->step-1);
+        register double pi_2_step = M_PI_2 / (pitch->step-1);
 
-        pitch->fade[0] = ONE; /* cos(0) == 1.0 */
+        pitch->fade[0] = 1.0; /* cos(0) == 1.0 */
         for (i=1; i<pitch->step-1; i++)
-            pitch->fade[i]  = (PITCH_FLOAT) cos(pi_2_step*i);
-        pitch->fade[pitch->step-1] = ZERO; /* cos(PI/2) == 0.0 */
+            pitch->fade[i]  = (double) cos(pi_2_step*i);
+        pitch->fade[pitch->step-1] = 0.0; /* cos(PI/2) == 0.0 */
     }
     else if (pitch->fadeopt == PITCH_FADE_LIN)
     {
-        register PITCH_FLOAT stepth = ONE / (pitch->step-1);
+        register double stepth = 1.0 / (pitch->step-1);
 
-        pitch->fade[0] = ONE;
+        pitch->fade[0] = 1.0;
         for (i=1; i<pitch->step-1; i++)
             pitch->fade[i] = (pitch->step-i-1) * stepth;
-        pitch->fade[pitch->step-1] = ZERO;
+        pitch->fade[pitch->step-1] = 0.0;
     }
     else if (pitch->fadeopt == PITCH_FADE_TRA)
     {
         /* 0 <= coef <= 0.5 */
         register unsigned int plat = (int) (pitch->step*pitch->coef);
-        register PITCH_FLOAT slope = ONE / (pitch->step - 2*plat);
+        register double slope = 1.0 / (pitch->step - 2*plat);
 
         for (i=0; i<plat; i++)
-            pitch->fade[i] = ONE;
+            pitch->fade[i] = 1.0;
 
         for (; i<pitch->step-plat; i++)
             pitch->fade[i] = slope * (pitch->step-plat-i-1);
 
         for (; i<pitch->step; i++)
-            pitch->fade[i] = ZERO;
+            pitch->fade[i] = 0.0;
     }
     else
     {

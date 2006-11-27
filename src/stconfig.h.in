@@ -1,7 +1,7 @@
 /* src/stconfig.h.in.  Generated from configure.in by autoheader.  */
 
-/* Define if you want to use internal GSM library */
-#undef ENABLE_GSM
+/* Define if you want to use external GSM library */
+#undef EXTERNAL_GSM
 
 /* Define if you have ALSA library installed */
 #undef HAVE_ALSA
@@ -9,23 +9,29 @@
 /* Define to 1 if you have the <alsa/asoundlib.h> header file. */
 #undef HAVE_ALSA_ASOUNDLIB_H
 
+/* Define to 1 if you have the <machine/soundcard.h> header file. */
+#undef HAVE_MACHINE_SOUNDCARD_H
+
+/* Define if you have OSS installed */
+#undef HAVE_OSS
+
 /* Define to 1 if you have the <byteswap.h> header file. */
 #undef HAVE_BYTESWAP_H
-
-/* Define to 1 if you have the <errno.h> header file. */
-#undef HAVE_ERRNO_H
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 
-/* Define if you have FLAC Library installed */
-#undef HAVE_LIBFLAC
-
 /* Define to 1 if you have the `getopt_long' function. */
 #undef HAVE_GETOPT_LONG
 
-/* Define to 1 if you have the <inttypes.h> header file. */
-#undef HAVE_INTTYPES_H
+/* Define to 1 if you have the `m' library (-lm). */
+#undef HAVE_LIBM
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define if you have FLAC Library installed */
+#undef HAVE_LIBFLAC
 
 /* Define if you have LAME (LAME Ain't an MP3 Encoder) library installed */
 #undef HAVE_LAME
@@ -33,56 +39,17 @@
 /* Define if you have libsamplerate (Secret Rabbit Code) library installed */
 #undef HAVE_SAMPLERATE
 
-/* Define to 1 if you have the `m' library (-lm). */
-#undef HAVE_LIBM
-
 /* Define if you have MAD (MP3 Audio Decoder) Library installed */
 #undef HAVE_LIBMAD
 
 /* Define if you have Ogg Vorbis Library installed */
 #undef HAVE_LIBVORBIS
 
-/* Define to 1 if you have the <limits.h> header file. */
-#undef HAVE_LIMITS_H
-
-/* Define to 1 if you have the <machine/soundcard.h> header file. */
-#undef HAVE_MACHINE_SOUNDCARD_H
-
-/* Define to 1 if you have the <malloc.h> header file. */
-#undef HAVE_MALLOC_H
-
-/* Define to 1 if you have the `memmove' function. */
-#undef HAVE_MEMMOVE
-
-/* Define to 1 if you have the <memory.h> header file. */
-#undef HAVE_MEMORY_H
-
-/* Define if you have OSS installed */
-#undef HAVE_OSS
-
-/* Define to 1 if you have the `rand' function. */
-#undef HAVE_RAND
-
-/* Define to 1 if you have the <stdint.h> header file. */
-#undef HAVE_STDINT_H
-
-/* Define to 1 if you have the <stdlib.h> header file. */
-#undef HAVE_STDLIB_H
-
 /* Define to 1 if you have the `strcasecmp' function. */
 #undef HAVE_STRCASECMP
 
 /* Define to 1 if you have the `strdup' function. */
 #undef HAVE_STRDUP
-
-/* Define to 1 if you have the `strerror' function. */
-#undef HAVE_STRERROR
-
-/* Define to 1 if you have the <strings.h> header file. */
-#undef HAVE_STRINGS_H
-
-/* Define to 1 if you have the <string.h> header file. */
-#undef HAVE_STRING_H
 
 /* Define if you have Sun /dev/audio installed */
 #undef HAVE_SUNAUDIO
@@ -119,9 +86,6 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
-
-/* Define to 1 if you have the ANSI C header files. */
-#undef STDC_HEADERS
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
