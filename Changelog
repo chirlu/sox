@@ -56,6 +56,7 @@ sox-12.18.3
     resample, and rate has been removed.
   o Improved synth usage (by introducing -n option) and improved synth
     entry in the man-page.  (robs)
+  o Documented the butterworth filter effects.  (robs)
 
 sox-12.18.2
 -----------

@@ -35,9 +35,6 @@ use the raw driver for reading and writing.
     Make some common routines to buffer up a window of data
     instead of requiring each effect to reimplement this.
 
-  o VOX format says its reading/writing SIGN2 data when its
-    really OKI ADPCM.
-
   o Add an interface to libst so that applications can query
     what size/encoding/rate/channels a given format handles.
     Then applications could modify parameters before an error
@@ -54,9 +51,6 @@ use the raw driver for reading and writing.
   o Make resample effects idempotent when rates are the same.
 
   o Add MP3 support to WAV handler. Can copy most work from mp3.c.
-
-  o Document the butterworth filter effects.
-    27 Nov 06, robs: in progress.
 
   o Implement speex (http://www.speex.org).
   
