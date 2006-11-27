@@ -254,6 +254,7 @@ struct st_soundstream {
 #define ST_FILE_INSTR   4  /* does file format support instrument specs? */
 #define ST_FILE_SEEK    8  /* does file format support seeking? */
 #define ST_FILE_NOSTDIO 16 /* does not use stdio routines */
+#define ST_FILE_NOFEXT  32 /* does not use file extensions */
 
 /* Size field */
 #define ST_SIZE_BYTE    1
@@ -352,7 +353,7 @@ int st_geteffect_opt(eff_t, int, char **);
 int st_geteffect(eff_t, const char *);
 int st_checkeffect(const char *);
 int st_updateeffect(eff_t, const st_signalinfo_t *in, const st_signalinfo_t *out, int);
-int st_gettype(ft_t);
+int st_gettype(ft_t, bool);
 ft_t st_initformat(void);
 int st_parsesamples(st_rate_t rate, const char *str, st_size_t *samples, char def);
 

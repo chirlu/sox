@@ -637,7 +637,7 @@ static const char *alsanames[] = {
 static st_format_t st_alsa_format = {
    alsanames,
    NULL,
-   ST_FILE_STEREO | ST_FILE_NOSTDIO,
+   ST_FILE_STEREO | ST_FILE_NOSTDIO | ST_FILE_NOFEXT,
    st_alsastartread,
    st_alsaread,
    st_alsastopread,
