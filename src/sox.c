@@ -103,7 +103,7 @@ typedef struct file_options
 } file_options_t;
 
 /* local forward declarations */
-static void doopts(file_options_t *fo, int, char **);
+static bool doopts(file_options_t *fo, int, char **);
 static void usage(char *) NORET;
 static void usage_effect(char *) NORET;
 static void process(void);
@@ -202,55 +202,31 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        /*
-         * Its possible to not specify the output filename by using
-         * "-e" option. This allows effects to be ran on data but
-         * no output file to be written.
-         */
-        if (strcmp(argv[optind], "-e") == 0)
+        fo = (file_options_t *)calloc(sizeof(file_options_t), 1);
+        fo->info.size = -1;
+        fo->info.encoding = -1;
+        fo->info.channels = -1;
+        fo->info.compression = HUGE_VAL;
+        fo->volume = 1.0;
+        file_opts[file_count++] = fo;
+
+        if (doopts(fo, argc, argv) == true) /* is null file? */
         {
-            /* -e option found.  Only thing valid after an -e
-             * option are effects.
-             */
-            optind++;
-            if (optind >= argc ||
-                st_checkeffect(argv[optind]) == ST_SUCCESS)
-            {
-                writing = 0;
-            }
-            else
-            {
-                usage("Can only specify \"-e\" for output filenames");
-            }
+          if (fo->filetype != NULL && strcmp(fo->filetype, "null") != 0)
+            st_warn("Ignoring \"-t %s\".", fo->filetype);
+          fo->filetype = "null";
+          fo->filename = strdup(fo->filetype);
         }
         else
         {
-            fo = (file_options_t *)calloc(sizeof(file_options_t), 1);
-            fo->info.size = -1;
-            fo->info.encoding = -1;
-            fo->info.channels = -1;
-            fo->info.compression = HUGE_VAL;
-            fo->volume = 1.0;
-            file_opts[file_count++] = fo;
-
-            doopts(fo, argc, argv);
-
-            if (optind < argc)
-            {
-                fo->filename = strdup(argv[optind]);
-                optind++;
-            }
-            else
-                usage("missing filename");
+          if (optind >= argc)
+            usage("missing filename"); /* No return */
+          fo->filename = strdup(argv[optind++]);
         }
     } /* while (commandline options) */
 
-    if (writing)
-        input_count = file_count - 1;
-    else
-        input_count = file_count;
-
     /* Make sure we got at least the required # of input filenames */
+    input_count = file_count - 1;
     if (input_count < (soxmix ? 2 : 1))
         usage("Not enough input or output filenames specified");
 
@@ -288,6 +264,17 @@ int main(int argc, char **argv)
     /* Loop through the reset of the arguments looking for effects */
     parse_effects(argc, argv);
 
+    /* If output file is null and no effects have been specified,
+     * then drop back to super-lean output processing.
+     */
+    if (file_opts[file_count-1]->filetype &&
+        strcmp(file_opts[file_count-1]->filetype, "null") == 0 &&
+        !nuser_effects)
+    {
+      free(file_opts[--file_count]);
+      writing = 0;
+    }
+
     signal(SIGINT, sigint);
     signal(SIGTERM, sigint);
 
@@ -308,7 +295,7 @@ int main(int argc, char **argv)
     return(0);
 }
 
-static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lfdxV::Sqo";
+static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lfdxV::Sqoen";
 
 static struct option long_options[] =
 {
@@ -318,7 +305,7 @@ static struct option long_options[] =
     {NULL, 0, NULL, 0}
 };
 
-static void doopts(file_options_t *fo, int argc, char **argv)
+static bool doopts(file_options_t *fo, int argc, char **argv)
 {
     int c, i;
     int option_index;
@@ -340,6 +327,9 @@ static void doopts(file_options_t *fo, int argc, char **argv)
                 }
                 /* no return from above */
                 break;
+
+            case 'e': case 'n':
+                return true; /* is null file */
 
             case 'o':
                 globalinfo.octave_plot_effect = true;
@@ -490,6 +480,7 @@ static void doopts(file_options_t *fo, int argc, char **argv)
                 break;
         }
     }
+    return false; /* is not null file */
 }
 
 static int compare_input(ft_t ft1, ft_t ft2)
@@ -1719,6 +1710,11 @@ static void usage(char *opt)
         fprintf(stderr, "Failed: %s\n\n", opt);
     printf("Usage: %s\n\n", usagestr);
     printf(
+"Special filenames (ifile, ofile):\n"
+"\n"
+"-               use stdin or stdout\n"
+"-n/-e           use the null file handler; for use with e.g. synth & stat.\n"
+"\n"
 "Global options (gopts):\n"
 "\n"
 "Global options can be specified anywhere on the command\n"
@@ -1730,7 +1726,7 @@ static void usage(char *opt)
 "-q              run in quiet mode.  Inverse of -S option\n"
 "-S              print status while processing audio data.\n"
 "--version       print version number of SoX and exit\n"
-"-V [level]      increase verbosity (or set level). Default is 2. Levels are:\n"
+"-V[level]       increase verbosity (or set level). Default is 2. Levels are:\n"
 "\n"
 "                  1: failure messages\n"
 "                  2: warnings\n"
@@ -1741,15 +1737,13 @@ static void usage(char *opt)
 "\n"
 "Format options (fopts):\n"
 "\n"
-"Format options only need to be supplied on input files that are\n"
+"Format options are only need to be supplied on input files that are\n"
 "headerless otherwise they are obtained from the audio data's header.\n"
 "Output files will default to the same format options as the input\n"
 "file unless overriden on the command line.\n"
 "\n"
 "-c channels     number of channels in audio data\n"
 "-C compression  compression factor for variably compressing output formats\n"
-"-e              skip processing of this filename.  useful only\n"
-"                on output filename to prevent writing data.\n"
 "-r rate         sample rate of audio\n"
 "-t filetype     file type of audio\n"
 "-v volume       volume adjustment factor (floating point)\n"
