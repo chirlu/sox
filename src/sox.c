@@ -1369,7 +1369,8 @@ static int flow_effect_out(void)
 static int flow_effect(int e)
 {
     st_ssize_t i, done, idone, odone, idonel, odonel, idoner, odoner;
-    st_sample_t *ibuf, *obuf;
+    const st_sample_t *ibuf;
+    st_sample_t *obuf;
     int effstatus, effstatusl, effstatusr;
 
     /* Do not attempt to do any more effect processing during

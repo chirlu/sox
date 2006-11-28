@@ -109,7 +109,7 @@ static void collect_data(profdata_t data, chandata_t* chan) {
 /*
  * Grab what we can from ibuf, and process if we have a whole window.
  */
-int st_noiseprof_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_noiseprof_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                     st_size_t *isamp, st_size_t *osamp)
 {
     profdata_t data = (profdata_t) effp->priv;

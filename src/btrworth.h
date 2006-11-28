@@ -33,7 +33,7 @@
 
 int st_butterworth_start (eff_t effp);
 void st_butterworth_plot (eff_t effp);
-int st_butterworth_flow (eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+int st_butterworth_flow (eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                          st_size_t *isamp, st_size_t *osamp);
 
 typedef struct butterworth {

@@ -192,13 +192,17 @@ static st_size_t compute(eff_t effp, speed_t speed, st_sample_t *obuf, st_size_t
 
 /* handle a flow.
  */
-int st_speed_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_speed_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                   st_size_t *isamp, st_size_t *osamp)
 {
     speed_t speed;
-    register st_size_t len, iindex, oindex;
+    st_size_t len, iindex, oindex;
+    st_sample_t *ibuf_copy;
 
     speed = (speed_t) effp->priv;
+
+    ibuf_copy = (st_sample_t *)malloc(*isamp * sizeof(st_sample_t));
+    memcpy(ibuf_copy, ibuf, *isamp * sizeof(st_sample_t));
 
     len = min(*isamp, *osamp);
     iindex = 0;
@@ -209,7 +213,7 @@ int st_speed_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         /* store to input buffer. */
         if (speed->state==sp_input)
         {
-            speed->ibuf[speed->index++] = ibuf[iindex++];
+            speed->ibuf[speed->index++] = ibuf_copy[iindex++];
             if (speed->index==speed->compression)
                 speed->state = sp_transfer;
         }
@@ -226,6 +230,8 @@ int st_speed_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     *isamp = iindex;
     *osamp = oindex;
 
+    free(ibuf_copy);
+    
     return ST_SUCCESS;
 }
 

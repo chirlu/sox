@@ -119,7 +119,7 @@ int st_vol_start(eff_t effp)
 /*
  * Process data.
  */
-int st_vol_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_vol_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                 st_size_t *isamp, st_size_t *osamp)
 {
     vol_t vol = (vol_t) effp->priv;

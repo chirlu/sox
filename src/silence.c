@@ -385,7 +385,7 @@ static void update_rms(eff_t effp, st_sample_t sample)
 
 /* Process signed long samples from ibuf to obuf. */
 /* Return number of samples processed in isamp and osamp. */
-int st_silence_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_silence_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                     st_size_t *isamp, st_size_t *osamp)
 {
     silence_t silence = (silence_t) effp->priv;

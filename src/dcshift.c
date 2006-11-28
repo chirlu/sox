@@ -99,7 +99,7 @@ int st_dcshift_start(eff_t effp)
 /*
  * Process data.
  */
-int st_dcshift_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_dcshift_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                     st_size_t *isamp, st_size_t *osamp)
 {
     dcs_t dcs = (dcs_t) effp->priv;

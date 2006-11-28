@@ -301,7 +301,7 @@ typedef struct
 
     int (*getopts)(eff_t effp, int argc, char **argv);
     int (*start)(eff_t effp);
-    int (*flow)(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+    int (*flow)(eff_t effp, const const st_sample_t *ibuf, st_sample_t *obuf,
                 st_size_t *isamp, st_size_t *osamp);
     int (*drain)(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
     int (*stop)(eff_t effp);

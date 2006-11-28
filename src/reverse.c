@@ -67,7 +67,7 @@ int st_reverse_start(eff_t effp)
  * Effect flow: a degenerate case: write input samples on temporary file,
  * don't generate any output samples.
  */
-int st_reverse_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_reverse_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                     st_size_t *isamp, st_size_t *osamp)
 {
         reverse_t reverse = (reverse_t) effp->priv;

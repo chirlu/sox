@@ -17,6 +17,7 @@
  */
 
 #include "st_i.h"
+#include <string.h>
 
 static st_effect_t st_pan_effect;
 
@@ -66,20 +67,24 @@ int st_pan_start(eff_t effp)
 
 #define UNEXPECTED_CHANNELS \
     st_fail("unexpected number of channels (in=%d, out=%d)", ich, och); \
+    free(ibuf_copy); \
     return ST_EOF
 
 /*
  * Process either isamp or osamp samples, whichever is smaller.
  */
-int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                 st_size_t *isamp, st_size_t *osamp)
 {
     pan_t pan = (pan_t) effp->priv;
-    register st_size_t len;
-    st_size_t done;
+    st_size_t len, done;
+    st_sample_t *ibuf_copy;
     char ich, och;
-    register double left, right, dir, hdir;
+    double left, right, dir, hdir;
     
+    ibuf_copy = (st_sample_t *)malloc(*isamp * sizeof(st_sample_t));
+    memcpy(ibuf_copy, ibuf, *isamp * sizeof(st_sample_t));
+
     dir   = pan->dir;    /* -1   <=  dir  <= 1   */
     hdir  = 0.5 * dir;  /* -0.5 <=  hdir <= 0.5 */
     left  = 0.5 - hdir; /*  0   <=  left <= 1   */
@@ -100,27 +105,27 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         switch (ich) {
         case 1: /* simple copy */
             for (done=0; done<len; done++)
-                *obuf++ = *ibuf++;
+                *obuf++ = *ibuf_copy++;
             break;
         case 2: /* average 2 */
             for (done=0; done<len; done++)
             {
                 double f;
-                f = 0.5*ibuf[0] + 0.5*ibuf[1];
+                f = 0.5*ibuf_copy[0] + 0.5*ibuf_copy[1];
                 ST_EFF_SAMPLE_CLIP_COUNT(f);
                 *obuf++ = f;
-                ibuf += 2;
+                ibuf_copy += 2;
             }
             break;
         case 4: /* average 4 */
             for (done=0; done<len; done++)
             {
                 double f;
-                f = 0.25*ibuf[0] + 0.25*ibuf[1] + 
-                        0.25*ibuf[2] + 0.25*ibuf[3];
+                f = 0.25*ibuf_copy[0] + 0.25*ibuf_copy[1] + 
+                        0.25*ibuf_copy[2] + 0.25*ibuf_copy[3];
                 ST_EFF_SAMPLE_CLIP_COUNT(f);
                 *obuf++ = f;
-                ibuf += 4;
+                ibuf_copy += 4;
             }
             break;
         default:
@@ -135,14 +140,14 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
             {
                 double f;
 
-                f = left * ibuf[0];
+                f = left * ibuf_copy[0];
                 ST_EFF_SAMPLE_CLIP_COUNT(f);
                 obuf[0] = f;
-                f = right * ibuf[0];
+                f = right * ibuf_copy[0];
                 ST_EFF_SAMPLE_CLIP_COUNT(f);
                 obuf[1] = f;
                 obuf += 2;
-                ibuf++;
+                ibuf_copy++;
             }
             break;
         case 2: /* linear panorama. 
@@ -161,14 +166,14 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 {
                     double f;
 
-                    f = cll * ibuf[0] + clr * ibuf[1];
+                    f = cll * ibuf_copy[0] + clr * ibuf_copy[1];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[0] = f;
-                    f = cr * ibuf[1];
+                    f = cr * ibuf_copy[1];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[1] = f;
                     obuf += 2;
-                    ibuf += 2;
+                    ibuf_copy += 2;
                 }
             }
             else /* to the right */
@@ -184,14 +189,14 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 {
                     double f;
 
-                    f = cl * ibuf[0];
+                    f = cl * ibuf_copy[0];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[0] = f;
-                    f = crl * ibuf[0] + crr * ibuf[1];
+                    f = crl * ibuf_copy[0] + crr * ibuf_copy[1];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[1] = f;
                     obuf += 2;
-                    ibuf += 2;
+                    ibuf_copy += 2;
                 }
             }
             break;
@@ -210,8 +215,8 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                     register double ibuf0, ibuf1, f;
 
                     /* build stereo signal */
-                    ibuf0 = 0.5*ibuf[0] + 0.5*ibuf[2];
-                    ibuf1 = 0.5*ibuf[1] + 0.5*ibuf[3];
+                    ibuf0 = 0.5*ibuf_copy[0] + 0.5*ibuf_copy[2];
+                    ibuf1 = 0.5*ibuf_copy[1] + 0.5*ibuf_copy[3];
 
                     /* pan it */
                     f = cll * ibuf0 + clr * ibuf1;
@@ -221,7 +226,7 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[1] = f;
                     obuf += 2;
-                    ibuf += 4;
+                    ibuf_copy += 4;
                 }
             }
             else /* to the right */
@@ -237,8 +242,8 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 {
                     register double ibuf0, ibuf1, f;
 
-                    ibuf0 = 0.5*ibuf[0] + 0.5*ibuf[2];
-                    ibuf1 = 0.5*ibuf[1] + 0.5*ibuf[3];
+                    ibuf0 = 0.5*ibuf_copy[0] + 0.5*ibuf_copy[2];
+                    ibuf1 = 0.5*ibuf_copy[1] + 0.5*ibuf_copy[3];
 
                     f = cl * ibuf0;
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
@@ -247,7 +252,7 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[1] = f;
                     obuf += 2;
-                    ibuf += 4;
+                    ibuf_copy += 4;
                 }
             }
             break;
@@ -269,14 +274,14 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 {
                     double f;
 
-                    f = cl * ibuf[0];
+                    f = cl * ibuf_copy[0];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[2] = obuf[0] = f;
-                    f = cr * ibuf[0];
+                    f = cr * ibuf_copy[0];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
-                    ibuf[3] = obuf[1] = f;
+                    ibuf_copy[3] = obuf[1] = f;
                     obuf += 4;
-                    ibuf++;
+                    ibuf_copy++;
                 }
             }
             break;
@@ -294,14 +299,14 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 {
                     double f;
 
-                    f = cll * ibuf[0] + clr * ibuf[1];
+                    f = cll * ibuf_copy[0] + clr * ibuf_copy[1];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[2] = obuf[0] = f;
-                    f = cr * ibuf[1];
+                    f = cr * ibuf_copy[1];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
-                    ibuf[3] = obuf[1] = f;
+                    ibuf_copy[3] = obuf[1] = f;
                     obuf += 4;
-                    ibuf += 2;
+                    ibuf_copy += 2;
                 }
             }
             else /* to the right */
@@ -317,14 +322,14 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 {
                     double f;
 
-                    f = cl * ibuf[0];
+                    f = cl * ibuf_copy[0];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[2] = obuf[0] =f ;
-                    f = crl * ibuf[0] + crr * ibuf[1];
+                    f = crl * ibuf_copy[0] + crr * ibuf_copy[1];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
-                    ibuf[3] = obuf[1] = f;
+                    ibuf_copy[3] = obuf[1] = f;
                     obuf += 4;
-                    ibuf += 2;
+                    ibuf_copy += 2;
                 }
             }
             break;
@@ -343,20 +348,20 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 {
                     double f;
 
-                    f = cown*ibuf[0] + cright*ibuf[1];
+                    f = cown*ibuf_copy[0] + cright*ibuf_copy[1];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[0] = f;
-                    f = cown*ibuf[1] + cright*ibuf[3];
+                    f = cown*ibuf_copy[1] + cright*ibuf_copy[3];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[1] = f;
-                    f = cown*ibuf[2] + cright*ibuf[0];
+                    f = cown*ibuf_copy[2] + cright*ibuf_copy[0];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[2] = f;
-                    f = cown*ibuf[3] + cright*ibuf[2];
+                    f = cown*ibuf_copy[3] + cright*ibuf_copy[2];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[3] = f;
                     obuf += 4;
-                    ibuf += 4;              
+                    ibuf_copy += 4;              
                 }
             }
             else /* to the right */
@@ -370,20 +375,20 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
                 {
                     double f;
 
-                    f = cleft*ibuf[2] + cown*ibuf[0];
+                    f = cleft*ibuf_copy[2] + cown*ibuf_copy[0];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[0] = f;
-                    f = cleft*ibuf[0] + cown*ibuf[1];
+                    f = cleft*ibuf_copy[0] + cown*ibuf_copy[1];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[1] = f;
-                    f = cleft*ibuf[3] + cown*ibuf[2];
+                    f = cleft*ibuf_copy[3] + cown*ibuf_copy[2];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[2] = f;
-                    f = cleft*ibuf[1] + cown*ibuf[3];
+                    f = cleft*ibuf_copy[1] + cown*ibuf_copy[3];
                     ST_EFF_SAMPLE_CLIP_COUNT(f);
                     obuf[3] = f;
                     obuf += 4;
-                    ibuf += 4;
+                    ibuf_copy += 4;
                 }
             }
             break;
@@ -397,6 +402,8 @@ int st_pan_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
         break;
     } /* end switch out channel */
 
+    free(ibuf_copy);
+    
     return ST_SUCCESS;
 }
 

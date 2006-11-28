@@ -215,7 +215,7 @@ int st_fade_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_fade_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_fade_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                  st_size_t *isamp, st_size_t *osamp)
 {
     fade_t fade = (fade_t) effp->priv;

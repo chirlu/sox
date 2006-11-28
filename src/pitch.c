@@ -169,7 +169,7 @@ static double cub(
  */
 static void interpolation(
   pitch_t pitch,
-  st_sample_t *ibuf, int ilen, 
+  const st_sample_t *ibuf, int ilen, 
   double * out, int olen,
   double rate) /* signed */
 {
@@ -445,7 +445,7 @@ int st_pitch_start(eff_t effp)
 
 /* Processes input.
  */
-int st_pitch_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_pitch_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                 st_size_t *isamp, st_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;

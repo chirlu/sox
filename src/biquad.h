@@ -19,7 +19,7 @@ typedef struct biquad
   double o1, o2;           /* Filter memory */
 } * biquad_t;
 
-int st_biquad_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_biquad_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                         st_size_t *isamp, st_size_t *osamp);
 
 assert_static(sizeof(struct biquad) <= ST_MAX_EFFECT_PRIVSIZE, 

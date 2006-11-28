@@ -9,7 +9,7 @@
  
 int st_resample_getopts(eff_t effp, int n, char **argv);
 int st_resample_start(eff_t effp);
-int st_resample_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                      st_size_t *isamp, st_size_t *osamp);
 int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_resample_stop(eff_t effp);

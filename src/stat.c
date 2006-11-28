@@ -152,7 +152,7 @@ static void print_power_spectrum(unsigned samples, float rate, float *re_in, flo
  * Return number of samples processed.
  */
 
-int st_stat_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
+int st_stat_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                  st_size_t *isamp, st_size_t *osamp)
 {
         stat_t stat = (stat_t) effp->priv;

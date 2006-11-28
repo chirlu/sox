@@ -100,7 +100,7 @@ int st_highp_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_highp_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_highp_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                   st_size_t *isamp, st_size_t *osamp)
 {
         highp_t highp = (highp_t) effp->priv;

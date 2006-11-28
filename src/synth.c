@@ -678,7 +678,7 @@ static st_sample_t do_synth(st_sample_t iv, synth_t synth, int c){
 /*
  * Processed signed long samples from ibuf to obuf.
  */
-int st_synth_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_synth_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                   st_size_t *isamp, st_size_t *osamp)
 {
     synth_t synth = (synth_t) effp->priv;

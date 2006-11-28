@@ -264,7 +264,7 @@ static void doVolume(double *v, double samp, compand_t l, int chan)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_compand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_compand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                     st_size_t *isamp, st_size_t *osamp)
 {
   compand_t l = (compand_t) effp->priv;

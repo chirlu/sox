@@ -135,7 +135,7 @@ int st_band_start(eff_t effp)
  * Return number of samples processed.
  */
 
-int st_band_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_band_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                  st_size_t *isamp, st_size_t *osamp)
 {
         band_t band = (band_t) effp->priv;

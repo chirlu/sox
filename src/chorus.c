@@ -254,7 +254,7 @@ int st_chorus_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_chorus_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_chorus_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                    st_size_t *isamp, st_size_t *osamp)
 {
         chorus_t chorus = (chorus_t) effp->priv;

@@ -246,7 +246,7 @@ static int process_window(eff_t effp, reddata_t data, int chan_num, int num_chan
 /*
  * Read in windows, and call process_window once we get a whole one.
  */
-int st_noisered_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_noisered_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                     st_size_t *isamp, st_size_t *osamp)
 {
     reddata_t data = (reddata_t) effp->priv;

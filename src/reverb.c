@@ -208,7 +208,7 @@ int st_reverb_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_reverb_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_reverb_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                    st_size_t *isamp, st_size_t *osamp)
 {
         reverb_t reverb = (reverb_t) effp->priv;

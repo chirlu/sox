@@ -207,7 +207,7 @@ int st_flanger_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_flanger_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_flanger_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                     st_size_t *isamp, st_size_t *osamp)
 {
         flanger_t flanger = (flanger_t) effp->priv;

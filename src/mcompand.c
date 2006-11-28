@@ -67,7 +67,7 @@
  *   the companders have different prediction intervals (volume
  *   application delays).  Note that the predictive mode of the
  *   limiter needs some TLC - in fact, a rewrite - since what's really
- *   useful is to assure that a waveform won't be clipped, be slewing
+ *   useful is to assure that a waveform won't be clipped, by slewing
  *   the volume in advance so that the peak is at limit (or below, if
  *   there's a higher subsequent peak visible in the lookahead window)
  *   once it's reached.  */
@@ -172,7 +172,6 @@ static int lowpass_flow(eff_t effp, butterworth_crossover_t butterworth, int nCh
 
       *lowbufptr = out;
 
-
       out =
         butterworth->a_high[0] * in +
         butterworth->a_high [1] * butterworth->xy_high[chan].x [0] +
@@ -223,7 +222,7 @@ typedef struct {
   int nBands;
   st_sample_t *band_buf1, *band_buf2, *band_buf3;
   int band_buf_len;
-  st_ssize_t delay_buf_size;/* Size of delay_buf in samples */
+  st_size_t delay_buf_size;/* Size of delay_buf in samples */
   struct comp_band *bands;
 } *compand_t;
 
@@ -497,7 +496,7 @@ static void doVolume(double *v, double samp, comp_band_t l, int chan)
     *v += delta * l->decayRate[chan];
 }
 
-static int st_mcompand_flow_1(compand_t c, comp_band_t l, st_sample_t *ibuf, st_sample_t *obuf, int len, int filechans)
+static int st_mcompand_flow_1(compand_t c, comp_band_t l, const st_sample_t *ibuf, st_sample_t *obuf, int len, int filechans)
 {
   int done, chan;
 
@@ -542,9 +541,9 @@ static int st_mcompand_flow_1(compand_t c, comp_band_t l, st_sample_t *ibuf, st_
       if (c->delay_buf_size <= 0)
         obuf[done++] = ibuf[chan]*(outv/v)*l->outgain;
       else {
-
-
-        /* note that this lookahead algorithm is really lame.  the response to a peak is released before the peak arrives.  fix! */
+        /* FIXME: note that this lookahead algorithm is really lame:
+           the response to a peak is released before the peak
+           arrives. */
 
         /* because volume application delays differ band to band, but
            total delay doesn't, the volume is applied in an iteration
@@ -574,13 +573,13 @@ static int st_mcompand_flow_1(compand_t c, comp_band_t l, st_sample_t *ibuf, st_
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_mcompand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_mcompand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                      st_size_t *isamp, st_size_t *osamp) {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
-  int len = ((*isamp > *osamp) ? *osamp : *isamp);
+  int len = min(*isamp, *osamp);
   int band, i;
-  st_sample_t *abuf, *bbuf, *cbuf, *oldabuf;
+  st_sample_t *abuf, *bbuf, *cbuf, *oldabuf, *ibuf_copy;
   double out;
 
   if (c->band_buf_len < len) {
@@ -593,10 +592,13 @@ int st_mcompand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
     c->band_buf_len = len;
   }
 
+  ibuf_copy = (st_sample_t *)malloc(*isamp * sizeof(st_sample_t));
+  memcpy(ibuf_copy, ibuf, *isamp * sizeof(st_sample_t));
+
   /* split ibuf into bands using butterworths, pipe each band through st_mcompand_flow_1, then add back together and write to obuf */
 
   memset(obuf,0,len * sizeof *obuf);
-  for (band=0,abuf=ibuf,bbuf=c->band_buf2,cbuf=c->band_buf1;band<c->nBands;++band) {
+  for (band=0,abuf=ibuf_copy,bbuf=c->band_buf2,cbuf=c->band_buf1;band<c->nBands;++band) {
     l = &c->bands[band];
 
     if (l->topfreq)
@@ -605,7 +607,7 @@ int st_mcompand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
       bbuf = abuf;
       abuf = cbuf;
     }
-    if (abuf == ibuf)
+    if (abuf == ibuf_copy)
       abuf = c->band_buf3;
     (void)st_mcompand_flow_1(c,l,bbuf,abuf,len,effp->outinfo.channels);
     for (i=0;i<len;++i)
@@ -620,6 +622,8 @@ int st_mcompand_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf,
   }
 
   *isamp = *osamp = len;
+
+  free(ibuf_copy);
 
   return ST_SUCCESS;
 }

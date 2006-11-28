@@ -508,7 +508,7 @@ int st_avg_start(eff_t effp)
  * Process either isamp or osamp samples, whichever is smaller.
  */
 
-int st_avg_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, 
+int st_avg_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                 st_size_t *isamp, st_size_t *osamp)
 {
     avg_t avg = (avg_t) effp->priv;
