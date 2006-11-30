@@ -490,7 +490,15 @@ int st_synth_start(eff_t effp)
             default:
                 break;
         }
+
+        st_debug("type=%i, mix=%i, length=%u, f1=%g, f2=%g",
+                synth->type[c], synth->mix[c], 
+                synth->length, synth->freq[c], synth->freq2[c]);
+        st_debug("p0=%g, p1=%g, p2=%g, p3=%g, p4=%g",
+                synth->par[c][0], synth->par[c][1],
+                synth->par[c][2], synth->par[c][3], synth->par[c][4]);
     }
+    st_debug("inchan=%i, rate=%i", (int)effp->ininfo.channels,synth->rate);
     return (ST_SUCCESS);
 }
 
