@@ -16,6 +16,26 @@
 #include <ctype.h>
 #include "st_i.h"
 
+typedef struct {char const *text; int value;} enum_item;
+#define ENUM_ITEM(prefix, item) {#item, prefix##item},
+
+static enum_item const * find(char const * text, enum_item const * enum_items)
+{
+  enum_item const * result = NULL; /* Assume not found */
+
+  while (enum_items->text)
+  {
+    if (strncasecmp(text, enum_items->text, strlen(text)) == 0)
+    {
+      if (result != NULL && result->value != enum_items->value)
+        return NULL;        /* Found ambiguity */
+      result = enum_items;  /* Found match */
+    }
+    ++enum_items;
+  }
+  return result;
+}
+
 static st_effect_t st_synth_effect;
 
 #define PCOUNT 5
@@ -24,17 +44,40 @@ static st_effect_t st_synth_effect;
 #define SYNTH_SQUARE     1
 #define SYNTH_SAWTOOTH   2
 #define SYNTH_TRIANGLE   3
-#define SYNTH_TRAPETZ    4
+#define SYNTH_TRAPEZIUM  4
+#define SYNTH_TRAPETZ    SYNTH_TRAPEZIUM /* Deprecated name for trapezium */
 #define SYNTH_WHITENOISE 5
+#define SYNTH_NOISE      SYNTH_WHITENOISE /* Just a handy alias */
 #define SYNTH_PINKNOISE  6
 #define SYNTH_BROWNNOISE 7
-#define SYNTH_VOICENOISE 8
-#define SYNTH_EXP        9
+#define SYNTH_EXP        8
 
 #define SYNTH_CREATE    0x000
 #define SYNTH_MIX       0x100
 #define SYNTH_AMOD      0x200
 #define SYNTH_FMOD      0x400
+
+enum_item const synth_type[] = {
+  ENUM_ITEM(SYNTH_,SINE      )
+  ENUM_ITEM(SYNTH_,SQUARE    )
+  ENUM_ITEM(SYNTH_,SAWTOOTH  )
+  ENUM_ITEM(SYNTH_,TRIANGLE  )
+  ENUM_ITEM(SYNTH_,TRAPEZIUM )
+  ENUM_ITEM(SYNTH_,TRAPETZ   )
+  ENUM_ITEM(SYNTH_,WHITENOISE)
+  ENUM_ITEM(SYNTH_,NOISE     )
+  ENUM_ITEM(SYNTH_,PINKNOISE )
+  ENUM_ITEM(SYNTH_,BROWNNOISE)
+  ENUM_ITEM(SYNTH_,EXP       )
+  {0}};
+
+enum_item const combine_type[] = {
+  ENUM_ITEM(SYNTH_,CREATE)
+  ENUM_ITEM(SYNTH_,MIX   )
+  ENUM_ITEM(SYNTH_,AMOD  )
+  ENUM_ITEM(SYNTH_,FMOD  )
+  {0}};
+
 /* do not ask me for the colored noise, i copied the 
  * algorithm somewhere...
  */
@@ -271,121 +314,64 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
         argn++;
     }
     /* for one or more channel */
-    /* type [mix] [f1[-f2]] [p0] [p1] [p2] [p3] [p4] */
-    for(c=0;c<MAXCHAN;c++){
-        if(n > argn){
-            /* next par must be type */
-            if( strcasecmp(argv[argn],"sine")==0){
-                synth->type[c]=SYNTH_SINE;
-                argn++; /* 1 */
-            }else if( strcasecmp(argv[argn],"square")==0){
-                synth->type[c]=SYNTH_SQUARE;
-                argn++; /* 1 */
-            }else if( strcasecmp(argv[argn],"sawtooth")==0){
-                synth->type[c]=SYNTH_SAWTOOTH;
-                argn++; /* 1 */
-            }else if( strcasecmp(argv[argn],"triangle")==0){
-                synth->type[c]=SYNTH_TRIANGLE;
-                argn++; /* 1 */
-            }else if( strcasecmp(argv[argn],"exp")==0){
-                synth->type[c]=SYNTH_EXP;
-                argn++; /* 1 */
-            }else if( strcasecmp(argv[argn],"trapetz")==0){
-                synth->type[c]=SYNTH_TRAPETZ;
-                argn++;
-            }else if( strcasecmp(argv[argn],"whitenoise")==0){
-                synth->type[c]=SYNTH_WHITENOISE;
-                argn++; /* 1 */
-            }else if( strcasecmp(argv[argn],"noise")==0){
-                synth->type[c]=SYNTH_WHITENOISE;
-                argn++; /* 1 */
-            }else if( strcasecmp(argv[argn],"pinknoise")==0){
-                synth->type[c]=SYNTH_PINKNOISE;
-                argn++; /* 1 */
-            }else if( strcasecmp(argv[argn],"brownnoise")==0){
-                synth->type[c]=SYNTH_BROWNNOISE;
-                argn++; /* 1 */
-            }else if( strcasecmp(argv[argn],"voicenoise")==0){
-                synth->type[c]=SYNTH_VOICENOISE;
-                argn++; /* 1 */
-            }else{
-                /* type not given, error */
-                st_warn("synth: no type given");
-                st_fail(st_synth_effect.usage);
-                return(ST_EOF);
-            }
-            if(n > argn){
-                /* maybe there is a mix-type in next arg */
-                if(strcasecmp(argv[argn],"create")==0){
-                    synth->mix[c]=SYNTH_CREATE;
-                    argn++;
-                }else if(strcasecmp(argv[argn],"mix")==0){
-                    synth->mix[c]=SYNTH_MIX;
-                argn++;
-                }else if(strcasecmp(argv[argn],"amod")==0){
-                    synth->mix[c]=SYNTH_AMOD;
-                    argn++;
-                }else if(strcasecmp(argv[argn],"fmod")==0){
-                    synth->mix[c]=SYNTH_FMOD;
-                    argn++;
-                }
-                if(n > argn){
-                    /* read frequency's if given */
-                    synth->freq[c]= StringToFreq(argv[argn],&hlp);
-                    synth->freq2[c] = synth->freq[c];
-                    if(synth->freq[c] < 0.0){
-                        st_warn("synth: illegal freq");
-                        st_fail(st_synth_effect.usage);
-                        return(ST_EOF);
-                    }
-                    if(*hlp=='-') {
-                        /* freq2 given ! */
-                        char *hlp2;
-                        synth->freq2[c]=StringToFreq(hlp+1,&hlp2);
-                        if(synth->freq2[c] < 0.0){
-                            st_warn("synth: illegal freq2");
-                            st_fail(st_synth_effect.usage);
-                            return(ST_EOF);
-                        }
-                    }
-                    argn++;
-                    i=0; 
-                    /* read rest of parameters */
-                    while(n > argn){
-                        if( ! isdigit((int)argv[argn][0]) ){
-                            /* not a digit, must be type of next channel */
-                            break;
-                        }
-                        if( i >= PCOUNT) {
-                            st_warn("synth: too many parameters");
-                            st_fail(st_synth_effect.usage);
-                            return(ST_EOF);
-                            
-                        }
-                        synth->par[c][i]=strtod(argv[argn],&hlp);
-                        if(hlp==argv[argn]){
-                                /* error in number */
-                            st_warn("synth: parameter error");
-                            st_fail(st_synth_effect.usage);
-                            return(ST_EOF);
-                        } 
-                        i++;
-                        argn++;
-                    }/* .. while */
-                    if(n > argn){
-                        /* got here by 'break', scan parms for next chan */
-                    }else{
-                        break;
-                    }
-                }
-            }
-        } /* if n > argn */
-    }/* for .. */
+    /* type [combine] [f1[-f2]] [p0] [p1] [p2] [p3] [p4] */
+    for (c = 0; c < MAXCHAN && n > argn; c++) {
+      enum_item const * p = find(argv[argn], synth_type);
+      if (p == NULL) {
+        st_fail("no type given");
+        return ST_EOF;
+      }
+      synth->type[c] = p->value;
+      if (++argn == n) break;
+
+      /* maybe there is a combine-type in next arg */
+      p = find(argv[argn], combine_type);
+      if (p != NULL) {
+        synth->mix[c] = p->value;
+        if (++argn == n) break;
+      }
+
+      /* read frequencies if given */
+      if (isdigit((int)argv[argn][0]) || argv[argn][0] == '%') {
+        synth->freq2[c] = synth->freq[c] = StringToFreq(argv[argn], &hlp);
+        if (synth->freq[c] < 0) {
+          st_fail("invalid freq");
+          return ST_EOF;
+        }
+        if (*hlp == '-') { /* freq2 given? */
+          char * hlp2;
+          synth->freq2[c] = StringToFreq(hlp + 1, &hlp2);
+          if (synth->freq2[c] < 0) {
+            st_fail("invalid freq2");
+            return ST_EOF;
+          }
+          if (synth->length_str == NULL) {
+            st_fail("length must be given when using freq2");
+            return ST_EOF;
+          }
+        }
+        if (++argn == n) break;
+      }
+
+      /* read rest of parameters */
+      for (i = 0; argn < n && isdigit((int)argv[argn][0]); ++i, ++argn) {
+        if (i == PCOUNT) {
+          st_fail("too many parameters");
+          return ST_EOF;
+        }
+        synth->par[c][i] = strtod(argv[argn], &hlp);
+        if (hlp == argv[argn]) {
+          st_fail("parameter error");
+          return ST_EOF;
+        }
+      }
+      if (argn == n) break;
+    }
 
     /* make some intelligent parameter initialization for channels
      * where no parameters were given
      *
-     * - of only parms for one channel were given, copy to ther channels
+     * - if only parms for one channel were given, copy to other channels
      * - if parm for 2 channels were given, copy to channel 1->3, 2->4
      * - if parm for 3 channels were given, copy 2->4
      */
@@ -491,6 +477,16 @@ int st_synth_start(eff_t effp)
                 /* Initialize pink noise signals with different numbers of rows. */
                 InitializePinkNoise( &(synth->pinkn[c]),10+2*c);
                 break;
+            case SYNTH_EXP:
+                /* p2 is position of maximum*/
+                if (synth->par[c][2] < 0)
+                  synth->par[c][2] = 0.5;
+
+                /* p2 is amplitude */
+                if (synth->par[c][3] < 0)
+                  synth->par[c][3] = 1;
+                break;
+
             default:
                 break;
         }
@@ -737,20 +733,20 @@ int st_synth_stop(eff_t effp)
 
 static st_effect_t st_synth_effect = {
   "synth",
-  "Usage: synth [length] type mix [freq[-freq2]] [off] [ph] [p1] [p2] [p3]\n"
-  "       <length> length in sec or hh:mm:ss.frac, 0=inputlength, default=0\n"
-  "       <type>   is sine, square, triangle, sawtooth, trapetz, exp,\n"
-  "                whitenoise, pinknoise, brownnoise, default=sine\n"
-  "       <mix>    is create, mix, amod, default=create\n"
-  "       <freq>   frequency at beginning in Hz, not used  for noise..\n"
-  "       <freq2>  frequency at end in Hz, not used for noise..\n"
-  "                <freq/2> can be given as %%n, where 'n' is the number of\n"
-  "                half notes in respect to A (440Hz)\n"
-  "       <off>    Bias (DC-offset)  of signal in percent, default=0\n"
-  "       <ph>     phase shift 0..100 shift phase 0..2*Pi, not used for noise..\n"
-  "       <p1>     square: Ton/Toff, triangle+trapetz: rising slope time (0..100)\n"
-  "       <p2>     trapetz: ON time (0..100)\n"
-  "       <p3>     trapetz: falling slope position (0..100)",
+  "Usage: synth [len] {[type] [combine] [freq[-freq2]] [off] [ph] [p1] [p2] [p3]}\n"
+  "  length  length in sec or hh:mm:ss.frac, 0=inputlength, default=0\n"
+  "  type    is sine, square, triangle, sawtooth, trapezium, exp,\n"
+  "          [white]noise, pinknoise, brownnoise; default=sine\n"
+  "  combine is create, mix, amod, fmod; default=create\n"
+  "  freq    frequency at beginning in Hz, not used for noise..\n"
+  "  freq2   frequency at end in Hz, not used for noise..\n"
+  "          freqs can be given as %n, where 'n' is the number of\n"
+  "          half notes relative to A (440Hz)\n"
+  "  off     Bias (DC-offset)  of signal in percent; default=0\n"
+  "  ph      phase shift 0..100 shift phase 0..2*Pi, not used for noise..\n"
+  "  p1      square: Ton, triangle+trapezium+exp: rising slope time (0..100)\n"
+  "  p2      trapezium: ON time, exp: amplitude (0..100)\n"
+  "  p3      trapezium: falling slope position (0..100)",
   ST_EFF_MCHAN,
   st_synth_getopts,
   st_synth_start,
