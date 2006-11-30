@@ -324,7 +324,7 @@ st_ssize_t st_hcomwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
                 }
         }
 
-        while (--len >= 0) {
+        while (len-- > 0) {
                 datum = *buf++;
                 datum >>= 24;
                 datum ^= 128;
