@@ -36,7 +36,9 @@ sox \- Sound eXchange : universal sound sample translator
 .SH DESCRIPTION
 The
 .I SoX
-audio file transformer can read and write most popular audio formats and optionally apply effects to them. It can also play and record sound files.
+audio file transformer can read and write most popular audio formats and
+optionally apply effects to them; it includes a simple audio synthesiser,
+and on unix-like systems, can also play and record sound files.
 .P
 If more than one input file is specified then they are concatenated into the
 output file.  In this case, there is the restriction that all input files
@@ -286,11 +288,10 @@ finding the maximum volume adjustment that can be done with this option
 without causing audio data to be clipped.
 .TP 10
 \fB-x\fR
-The sample data is in XINU format; that is,
-it comes from a machine with the opposite word order 
+The sample data comes from a machine with the opposite word order 
 than yours and must
 be swapped according to the word-size given above.
-Only 16-bit and 32-bit integer data may be swapped.
+Only 16-bit, 24-bit, and 32-bit integer data may be swapped.
 Machine-format floating-point data is not portable.
 .TP 10
 \fB-s/-u/-U/-A/-a/-i/-g/-f\fR
@@ -336,8 +337,8 @@ or 64-bit double long (long long) words.
 .B Determining The File Type
 .br
 .I SoX
-uses the following method to determine the type of audio in a given
-input file:
+uses the following method to determine the type of audio to use for
+each input file and the output file:
 .ti +3
 If
 .I -n
@@ -538,7 +539,7 @@ special filename
 .I -n
 in place of an input or output filename.
 .ti +3
-Using this type to input audio is equivalent to
+Using this file type to input audio is equivalent to
 using a normal audio file that contains an infinite amount
 of silence, and as such is not generally useful unless used
 with an effect that specifies a finite time length
@@ -609,7 +610,6 @@ IRCAM Sound Files. Sound Files are used by academic music software
 such as the CSound package, and the MixView sound sample editor.
 .TP 10
 .B .sph
-.br
 SPHERE (SPeech HEader Resources) is a file format defined by NIST
 (National Institute of Standards and Technology) and is used with
 speech audio.  SoX can read these files when they contain
@@ -1012,7 +1012,7 @@ The modulation is either sinusoidal (-s) or triangular
 highp|lowp \fIfrequency\fR
 Apply a single-pole recursive high-pass or low-pass filter with
 3dB point \fIfrequency\fR.
-The filter rolls off at 6dB per octave (20dB per decade).
+The filters roll off at 6dB per octave (20dB per decade).
 
 These effects support the \fI-o\fR option (see above).
 
@@ -1021,15 +1021,15 @@ See \fBfilter\fR for filters with a sharper cutoff.
 highpass|lowpass \fIfrequency\fR
 Apply a two-pole Butterworth high-pass or low-pass filter with
 3dB point \fIfrequency\fR.
-The filter rolls off at 12dB per octave (40dB per decade).
+The filters roll off at 12dB per octave (40dB per decade).
 
 These effects support the \fI-o\fR option (see above).
 .TP 10
 lowp \fIfrequency\fR
-See \fIhighp\fR.
+See the description of the \fIhighp\fR effect for details.
 .TP 10
 lowpass \fIfrequency\fB
-See \fIhighpass\fR.
+See the description of the \fIhighpass\fR effect for details.
 .TP 10
 mask
 Add "masking noise" to signal.
@@ -1414,10 +1414,14 @@ swap 2 2 will overwrite channel 1 with channel 2's data; creating a stereo
 file with both channels containing the same audio data.
 
 .TP 10
-synth [\fIlength\fR] {[\fItype] [mix\fR] [\fIfreq\fR[\fI-freq2\fR]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
+synth [\fIlen\fR] {[\fItype] [combine\fR] [\fIfreq\fR[\fI-freq2\fR]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
 This effect can be used to generate fixed or swept frequency audio tones
 with various wave shapes, or to generate wideband noise of various
 "colours".
+Multiple synth effects can be cascaded to produce more complex
+waveforms; at each stage it is possible to choose whether the generated
+waveform will be mixed with, or modulated onto
+the output from the previous stage.
 Audio for each channel in a multi-channel sound file can be synthesised
 independently.
 .ti +3
@@ -1427,49 +1431,73 @@ length, the number of channels, and the sampling rate, however since the
 input file's audio data is not needed, the
 .I null
 file "\fI-n\fR" is usually used instead (and the length specified
-as a parameter after \fIsynth\fR).
+as a parameter to \fIsynth\fR).
 .ti +3
-For example, the following will synthesise a 3 second, 44.1kHz,
-stereo audio file containing a swept sine-wave:
+For example, the following produces a 3 second, 44.1kHz,
+stereo audio file containing a sine-wave swept from 300 to 3300 Hz.
 
 	sox -n output.au synth 3 sine 300-3300
 
-The following produces an 8kHz mono version:
+This produces an 8kHz mono version:
 
 	sox -r 8000 -c 1 -n output.au synth 3 sine 300-3300
 
-Multiple channels are synthesised by repeating the set of
-parameters shown between braces ({}) multiple times.
-The following synthesises stereo audio:
+Multiple channels can be synthesised by specifying the set of
+parameters shown between braces ({}) multiple times;
+the following puts the swept tone in the left channel and "brown"
+noise in the right:
 
-	sox -n output.au synth 3 sine 300-3300 sine 4321-432
+	sox -n output.au synth 3 sine 300-3300 brownnoise
+
+The following example shows how two synth effects can be cascaded
+to create a more complex waveform:
+
+	sox -n output.au synth .5 sine 200-500 synth .5 sine fmod 700-100
+
+Frequencies can also specied in terms of musical semitones relative to
+"middle A" (440Hz);  the following could be used to help tune
+a guitar's "low E" string (on a system that supports
+\fBalsa\fR):
+
+	sox -n -t alsa default synth sine %-5
 
 A detailed description of each
 .I synth
 parameter follows:
 
-\fIlength\fR length in sec or hh:mm:ss.frac, 0=inputlength, default=0
+\fIlen\fR is the length of audio to synthesise expressed as a time
+or as a number of samples;
+0=inputlength, default=0.
+.ti +3
+The format for specifying lengths in time is hh:mm:ss.frac.  The format
+for specifying sample counts is the number of samples with the letter
+'s' appended to it.
 
-\fItype\fR is sine, square, triangle, sawtooth, trapetz, exp,
-whitenoise, pinknoise, brownnoise, default=sine
+\fItype\fR is one of sine, square, triangle, sawtooth, trapezium, exp,
+[white]noise, pinknoise, brownnoise; default=sine
 
-\fImix\fR is create, mix, amod, default=create
+\fIcombine\fR is one of create, mix, amod (amplitude modulation), fmod
+(frequency modulation); default=create
 
-\fIfreq\fR frequency at beginning in Hz, not used  for noise..
+\fIfreq\fR/\fIfreq2\fR are the frequencies at the beginning/end of
+synthesis in Hz or, if prepended with '%', semitones relative to A
+(440Hz); for both, default=%0.  Not used for noise.
 
-\fIfreq2\fR frequency at end in Hz, not used for noise..
-<freq/2> can be given as %%n, where 'n' is the number of
-half notes in respect to A (440Hz)
+\fIoff\fR is the bias (DC-offset) of the signal in percent; default=0.
 
-\fIoff\fR Bias (DC-offset) of signal in percent, default=0
+\fIph\fR is the phase shift in percentage of 1 cycle; default=0.  Not
+used for noise.
 
-\fIph\fR phase shift 0..100 shift phase 0..2*Pi, not used for noise..
+\fIp1\fR is the percentage of each cycle that is "on" (square), or
+"rising" (triangle, exp, trapezium); default=50 (square, triangle, exp),
+default=10 (trapezium).
 
-\fIp1\fR square: Ton/Toff, triangle+trapetz: rising slope time (0..100)
+\fIp2\fR trapezium: the percentage through each cycle at which "falling"
+begins; default=50. exp: the amplitude in percent; default=100.
 
-\fIp2\fR trapezium: ON time (0..100)
+\fIp3\fR trapezium: the percentage through each cycle at which "falling"
+ends; default=60.
 
-\fIp3\fR trapezium: falling slope position (0..100)
 .TP 10
 treble \fIgain\fR [\fIfrequency\fR] [\fIslope\fR]
 See the description of the \fIbass\fR effect for details.
