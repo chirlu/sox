@@ -54,20 +54,20 @@ unsigned char cswap[256] = {
   0x3F, 0xBF, 0x7F, 0xFF
 };
 
-#define ST_ULAW_BYTE_TO_SAMPLE(d) ((st_sample_t)(st_ulaw2linear16(d)) << 16)
-#define ST_ALAW_BYTE_TO_SAMPLE(d) ((st_sample_t)(st_alaw2linear16(d)) << 16)
-#define ST_SAMPLE_TO_ULAW_BYTE(d) (st_14linear2ulaw((int16_t)((d) >> 18)))
-#define ST_SAMPLE_TO_ALAW_BYTE(d) (st_13linear2alaw((int16_t)((d) >> 19)))
+#define ST_ULAW_BYTE_TO_SAMPLE(d) ST_SIGNED_WORD_TO_SAMPLE(st_ulaw2linear16(d))
+#define ST_ALAW_BYTE_TO_SAMPLE(d) ST_SIGNED_WORD_TO_SAMPLE(st_alaw2linear16(d))
+#define ST_SAMPLE_TO_ULAW_BYTE(d) st_14linear2ulaw(ST_SAMPLE_TO_SIGNED_WORD(d) >> 2)
+#define ST_SAMPLE_TO_ALAW_BYTE(d) st_13linear2alaw(ST_SAMPLE_TO_SIGNED_WORD(d) >> 3)
 
 /* Some hardware sends MSB last. These account for that */
 #define ST_INVERT_ULAW_BYTE_TO_SAMPLE(d) \
-    ((st_sample_t)(st_ulaw2linear16(cswap[d])) << 16)
+    ST_SIGNED_WORD_TO_SAMPLE(st_ulaw2linear16(cswap[d]))
 #define ST_INVERT_ALAW_BYTE_TO_SAMPLE(d) \
-    ((st_sample_t)(st_alaw2linear16(cswap[d])) << 16)
+    ST_SIGNED_WORD_TO_SAMPLE(st_alaw2linear16(cswap[d]))
 #define ST_SAMPLE_TO_INVERT_ULAW_BYTE(d) \
-    (cswap[st_14linear2ulaw((int16_t)((d) >> 18))])
+    cswap[st_14linear2ulaw(ST_SAMPLE_TO_SIGNED_WORD(d) >> 2)]
 #define ST_SAMPLE_TO_INVERT_ALAW_BYTE(d) \
-    (cswap[st_13linear2alaw((int16_t)((d) >> 19))])
+    cswap[st_13linear2alaw(ST_SAMPLE_TO_SIGNED_WORD(d) >> 3)]
 
 static void rawdefaults(ft_t ft);
 

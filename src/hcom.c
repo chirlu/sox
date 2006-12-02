@@ -190,7 +190,7 @@ st_ssize_t st_hcomread(ft_t ft, st_sample_t *buf, st_size_t len)
                         return (0);
                 }
                 p->sample = sample_rate;
-                *buf++ = (p->sample - 128) * 0x1000000L;
+                *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(p->sample);
                 p->huffcount--;
                 p->nrbits = 0;
                 done++;
@@ -227,9 +227,9 @@ st_ssize_t st_hcomread(ft_t ft, st_sample_t *buf, st_size_t len)
                         p->sample = (p->sample + datum) & 0xff;
                         p->huffcount--;
                         if (p->sample == 0)
-                                *buf++ = -127 * 0x1000000L;
+                                *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(1);
                         else
-                                *buf++ = (p->sample - 128) * 0x1000000L;
+                                *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(p->sample);
                         p->dictentry = 0;
                         done++;
                         len--;
@@ -326,9 +326,7 @@ st_ssize_t st_hcomwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 
         while (len-- > 0) {
                 datum = *buf++;
-                datum >>= 24;
-                datum ^= 128;
-                p->data[p->pos++] = datum;
+                p->data[p->pos++] = ST_SAMPLE_TO_UNSIGNED_BYTE(datum);
         }
 
         return (save_len - len);
