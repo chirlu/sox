@@ -192,7 +192,7 @@ int main(int argc, char **argv)
     /* Loop over arguments and filenames, stop when an effect name is 
      * found.
      */
-    while (optind < argc && st_checkeffect(argv[optind]) != ST_SUCCESS)
+    while (optind < argc && !is_effect_name(argv[optind]))
     {
         if (file_count >= MAX_FILES)
         {

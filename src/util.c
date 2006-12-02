@@ -130,13 +130,6 @@ void st_fail_errno(ft_t ft, int st_errno, const char *fmt, ...)
         ft->st_errstr[255] = '\0';
 }
 
-int strcmpcase(const char *s1, const char *s2)
-{
-        while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
-                s1++, s2++;
-        return *s1 - *s2;
-}
-
 /*
  * Check that we have a known format suffix string.
  */
@@ -158,7 +151,7 @@ int st_gettype(ft_t formp, bool is_file_extension)
           continue; /* don't match special device names in real file names */
         for (list = f->names; *list; list++) {
             const char *s1 = *list, *s2 = formp->filetype;
-            if (! strcmpcase(s1, s2))
+            if (! strcasecmp(s1, s2))
                 break;  /* not a match */
         }
         if (! *list)
@@ -184,48 +177,27 @@ int st_geteffect_opt(eff_t effp, int argc, char **argv)
 
     for (i = 0; st_effect_fns[i]; i++)
     {
-        char *s1, *s2;
         const st_effect_t *e = st_effect_fns[i]();
 
-        if (!e || !e->name)
-            continue;
-
-        s1 = e->name;
-        s2 = argv[0];
-
-        while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
-            s1++, s2++;
-        if (*s1 || *s2)
-            continue;       /* not a match */
-
-        /* Found it! */
-        effp->name = e->name;
-        effp->h = e;
-
-        optind = 1;
-
-        while (optind < argc)
-        {
-            for (i = 0; st_effect_fns[i]; i++)
-            {
-                const st_effect_t *e = st_effect_fns[i]();
-                char *s1 = e->name, *s2 = argv[optind];
-                while (*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
-                    s1++, s2++;
-                if (*s1 || *s2)
-                    continue;
-
-                /* Found it! */
-                return (optind - 1);
-            }
-            /* Didn't find a match, try the next argument. */
-            optind++;
+        if (e && e->name && strcasecmp(e->name, argv[0]) == 0) {
+          effp->name = e->name;
+          effp->h = e;
+          for (optind = 1; optind < argc; optind++)
+          {
+              for (i = 0; st_effect_fns[i]; i++)
+              {
+                  const st_effect_t *e = st_effect_fns[i]();
+                  if (e && e->name && strcasecmp(e->name, argv[optind]) == 0)
+                    return (optind - 1);
+              }
+              /* Didn't find a match, try the next argument. */
+          }
+          /*
+           * No matches found, all the following arguments are
+           * for this effect passed in.
+           */
+          return (optind - 1);
         }
-        /*
-         * No matches found, all the following arguments are
-         * for this effect passed in.
-         */
-        return (optind - 1);
     }
 
     return (ST_EOF);
@@ -242,56 +214,33 @@ int st_geteffect(eff_t effp, const char *effect_name)
     int i;
 
     for(i = 0; st_effect_fns[i]; i++) {
-        const char *s1, *s2;
         const st_effect_t *e = st_effect_fns[i]();
 
-        if (!e || !e->name)
-            continue;
-
-        s1 = e->name;
-        s2 = effect_name;
-
-        while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
-            s1++, s2++;
-        if (*s1 || *s2)
-            continue;       /* not a match */
-
-        /* Found it! */
-        effp->name = e->name;
-        effp->h = e;
-
-        return ST_SUCCESS;
+        if (e && e->name && strcasecmp(e->name, effect_name) == 0) {
+          effp->name = e->name;
+          effp->h = e;
+          return ST_SUCCESS;
+        }
     }
 
     return (ST_EOF);
 }
 
 /*
- * Check that we have a known effect name.  Return ST_SUCESS if found, else
- * return ST_EOF.
+ * Check if we have a known effect name.
  */
-int st_checkeffect(const char *effect_name)
+bool is_effect_name(char const * text)
 {
     int i;
 
     for(i = 0; st_effect_fns[i]; i++) {
-        const char *s1, *s2;
         const st_effect_t *e = st_effect_fns[i]();
 
-        if (!e || !e->name)
-            continue;
-
-        s1 = e->name;
-        s2 = effect_name;
-        while(*s1 && *s2 && (tolower(*s1) == tolower(*s2)))
-            s1++, s2++;
-        if (*s1 || *s2)
-            continue;       /* not a match */
-
-        return ST_SUCCESS;
+        if (e && e->name && strcasecmp(e->name, text) == 0)
+          return true;
     }
 
-    return (ST_EOF);
+    return false;
 }
 
 /*
