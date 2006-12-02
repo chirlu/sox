@@ -44,7 +44,7 @@ st_ssize_t st_nulwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 
 static const char *nulnames[] = {
   "null",
-  "nul",  /* For backwards compatibility with when -n did not exist */
+  "nul",  /* For backwards compatibility with scripts that used -t nul. */
   NULL,
 };
 
