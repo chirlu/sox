@@ -337,7 +337,7 @@ static char * read_comment_file(char const * const filename)
   return result;
 }
 
-static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lfdxV::Sqoen";
+static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lf8dxV::Sqoen";
 
 static struct option long_options[] =
 {
