@@ -468,7 +468,7 @@ static bool doopts(file_options_t *fo, int argc, char **argv)
             case '4': case 'l':
                 fo->info.size = ST_SIZE_DWORD;
                 break;
-            case 'd':
+            case '8': case 'd':
                 fo->info.size = ST_SIZE_DDWORD;
                 break;
             case 's':
@@ -1808,15 +1808,18 @@ static void usage(char *opt)
 "\n"
 "-c channels     number of channels in audio data\n"
 "-C compression  compression factor for variably compressing output formats\n"
+"--comment text  Specify comment text for the output file\n"
+"--comment-file filename\n"
+"                Specify file containing comment text for the output file\n"
 "-r rate         sample rate of audio\n"
 "-t filetype     file type of audio\n"
 "-v volume       volume adjustment factor (floating point)\n"
 "-x              invert auto-detected endianess of data\n"
 "-s/-u/-U/-A/    sample encoding.  signed/unsigned/u-law/A-law\n"
 "  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point\n"
-"-1/-2/-3/-4     sample size in bytes\n"
-"-b/-w/-l/-d     sample size. byte(8-bits)/word(16-bits)/\n"
-"                long(32-bits)/double long(64-bits)\n"
+"-1/-2/-3/-4/-8  sample size in bytes\n"
+"-b/-w/-l/-d     aliases for -1/-2/-4/-8.  abbreviations of:\n"
+"                byte, word, long, double-long.\n"
 "\n");
 
     printf("Supported file formats: ");
