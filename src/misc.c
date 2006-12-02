@@ -29,7 +29,7 @@
 #include <byteswap.h>
 #endif
 
-const char *st_sizes_str[] = {
+const char * const st_sizes_str[] = {
         "NONSENSE!",
         "bytes",
         "shorts",
@@ -41,7 +41,7 @@ const char *st_sizes_str[] = {
         "long longs"
 };
 
-const char *st_size_bits_str[] = {
+const char * const st_size_bits_str[] = {
         "NONSENSE!",
         "8-bits",
         "16-bits",
@@ -53,7 +53,7 @@ const char *st_size_bits_str[] = {
         "64-bits"
 };
 
-const char *st_encodings_str[] = {
+const char * const st_encodings_str[] = {
         "NONSENSE!",
         "unsigned",
         "signed (2's complement)",
@@ -70,6 +70,9 @@ const char *st_encodings_str[] = {
         "FLAC",
         "OKI-ADPCM"
 };
+
+assert_static(array_length(st_encodings_str) == ST_ENCODINGS,
+    SIZE_MISMATCH_BETWEEN_st_encodings_t_AND_st_encodings_str);
 
 static const char readerr[] = "Premature EOF while reading sample file.";
 static const char writerr[] = "Error writing sample file.  You are probably out of disk space.";
@@ -386,24 +389,16 @@ st_sample_t st_lcm(st_sample_t a, st_sample_t b)
  */
 int strcasecmp(const char *s1, const char *s2)
 {
-    for (; toupper(*s1) == toupper(*s2); ++s1, ++s2)
-    {
-        if (*s1 == '\0')
-            return(0);
-    }
-    return ((*(unsigned char *)s1 < *(unsigned char *)s2) ? -1 : +1);
+  while (*s1 && (toupper(*s1) == toupper(*s2)))
+    s1++, s2++;
+  return toupper(*s1) - toupper(*s2);
 }
 
 int strncasecmp(char const * s1, char const * s2, size_t n)
 {
-  for (; n != 0; --n, ++s1, ++s2)
-  {
-    if (toupper(*s1) != toupper(*s2))
-      return toupper(*s1) - toupper(*s2);
-    if (*s1 == '\0')
-      return 0;
-  }
-  return 0;
+  while (--n && *s1 && (toupper(*s1) == toupper(*s2)))
+    s1++, s2++;
+  return toupper(*s1) - toupper(*s2);
 }
 #endif
 

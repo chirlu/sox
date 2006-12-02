@@ -123,6 +123,26 @@ typedef uint32_t uint24_t;
 #define ST_SSIZE_MAX 0x7fffffffL
 #define ST_SSIZE_MIN (-ST_SSIZE_MAX - 1L)
 
+typedef enum {
+  ST_ENCODING_UNKNOWN   ,
+  ST_ENCODING_UNSIGNED  , /* unsigned linear: Sound Blaster */
+  ST_ENCODING_SIGN2     , /* signed linear 2's comp: Mac */
+  ST_ENCODING_ULAW      , /* u-law signed logs: US telephony, SPARC */
+  ST_ENCODING_ALAW      , /* A-law signed logs: non-US telephony */
+  ST_ENCODING_FLOAT     , /* 32-bit float */
+  ST_ENCODING_ADPCM     , /* Compressed PCM */
+  ST_ENCODING_IMA_ADPCM , /* Compressed PCM */
+  ST_ENCODING_GSM       , /* GSM 6.10 33byte frame lossy compression */
+  ST_ENCODING_INV_ULAW  , /* Inversed bit-order u-law */
+  ST_ENCODING_INV_ALAW  , /* Inversed bit-order A-law */
+  ST_ENCODING_MP3       , /* MP3 compression */
+  ST_ENCODING_VORBIS    , /* Vorbis compression */
+  ST_ENCODING_FLAC      , /* FLAC compression */
+  ST_ENCODING_OKI_ADPCM , /* Compressed PCM */
+
+  ST_ENCODINGS            /* End of list marker */
+} st_encoding_t;
+
 /* Global parameters */
 
 typedef struct  st_globalinfo
@@ -136,7 +156,7 @@ typedef struct  st_signalinfo
 {
     st_rate_t rate;       /* sampling rate */
     signed char size;     /* word length of data */
-    signed char encoding; /* format of sample numbers */
+    st_encoding_t encoding; /* format of sample numbers */
     signed char channels; /* number of sound channels */
     char swap;            /* do byte- or word-swap */
     double compression;   /* compression factor (where applicable) */
@@ -260,27 +280,10 @@ struct st_soundstream {
 #define ST_SIZE_64BIT   8
 #define ST_INFO_SIZE_MAX     8
 
-/* Style field */
-#define ST_ENCODING_UNSIGNED    1 /* unsigned linear: Sound Blaster */
-#define ST_ENCODING_SIGN2       2 /* signed linear 2's comp: Mac */
-#define ST_ENCODING_ULAW        3 /* u-law signed logs: US telephony, SPARC */
-#define ST_ENCODING_ALAW        4 /* A-law signed logs: non-US telephony */
-#define ST_ENCODING_FLOAT       5 /* 32-bit float */
-#define ST_ENCODING_ADPCM       6 /* Compressed PCM */
-#define ST_ENCODING_IMA_ADPCM   7 /* Compressed PCM */
-#define ST_ENCODING_GSM         8 /* GSM 6.10 33byte frame lossy compression */
-#define ST_ENCODING_INV_ULAW    9 /* Inversed bit-order u-law */
-#define ST_ENCODING_INV_ALAW    10/* Inversed bit-order A-law */
-#define ST_ENCODING_MP3         11/* MP3 compression */
-#define ST_ENCODING_VORBIS      12/* Vorbis compression */
-#define ST_ENCODING_FLAC        13/* FLAC compression */
-#define ST_ENCODING_OKI_ADPCM   14/* Compressed PCM */
-#define ST_ENCODING_MAX         14 
-
 /* declared in misc.c */
-extern const char *st_sizes_str[];
-extern const char *st_size_bits_str[];
-extern const char *st_encodings_str[];
+extern const char * const st_sizes_str[];
+extern const char * const st_size_bits_str[];
+extern const char * const st_encodings_str[];
 
 #define ST_EFF_CHAN     1               /* Effect can mix channels up/down */
 #define ST_EFF_RATE     2               /* Effect can alter data rate */
@@ -344,7 +347,7 @@ extern int st_seek(ft_t ft, st_size_t offset, int whence);
 
 int st_geteffect_opt(eff_t, int, char **);
 int st_geteffect(eff_t, const char *);
-int st_checkeffect(const char *);
+bool is_effect_name(char const * text);
 int st_updateeffect(eff_t, const st_signalinfo_t *in, const st_signalinfo_t *out, int);
 int st_gettype(ft_t, bool);
 ft_t st_initformat(void);
