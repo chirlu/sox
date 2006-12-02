@@ -57,6 +57,8 @@ sox-12.18.3
   o Improved synth usage (by introducing -n option) and improved synth
     entry in the man-page.  (robs)
   o Documented the butterworth filter effects.  (robs)
+  o Added command line options for specifying the output file
+    comment.  (robs)
 
 sox-12.18.2
 -----------

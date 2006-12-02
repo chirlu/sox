@@ -267,10 +267,7 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
         ft->seekable = is_seekable(ft);
     }
 
-    if (ft->comment == NULL && comment != NULL)
-        ft->comment = strdup(comment);
-    else
-        ft->comment = strdup("Processed by SoX");
+    ft->comment = comment;
 
     if (loops)
     {

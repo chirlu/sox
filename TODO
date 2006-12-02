@@ -88,8 +88,6 @@ use the raw driver for reading and writing.
     side having 1 more value then positive side.  That means instead
     of -1:1 range, its more like -0.999:1 or -1:0.9999.
 
-  o Add command line option to override comment string.
-
   o WAV handler is not using world alignment for at least the
     main data chunk (expect for GSM).
 

@@ -253,7 +253,14 @@ int main(int argc, char **argv)
 
         if (file_opts[i]->info.compression != HUGE_VAL)
         {
-            st_fail("-C only allowed for output file");
+            st_fail("A compression factor can only be given for an output file");
+            cleanup();
+            exit(1);
+        }
+
+        if (file_opts[i]->comment != NULL)
+        {
+            st_fail("A comment can only be given for an output file");
             cleanup();
             exit(1);
         }
@@ -293,6 +300,43 @@ int main(int argc, char **argv)
     return(0);
 }
 
+static char * read_comment_file(char const * const filename)
+{
+  bool file_error;
+  long file_length;
+  char * result;
+  FILE * file = fopen(filename, "rt");
+
+  if (file == NULL) {
+    st_fail("Cannot open comment file %s", filename);
+    exit(1);
+  }
+  file_error = fseek(file, 0, SEEK_END);
+  if (!file_error) {
+    file_length = ftell(file);
+    file_error |= file_length < 0;
+    if (!file_error) {
+      result = malloc(file_length + 1);
+      if (result == NULL) {
+        st_fail("Out of memory reading comment file %s", filename);
+        exit(1);
+      }
+      rewind(file);
+      file_error |= fread(result, file_length, 1, file) != 1;
+    }
+  }
+  if (file_error) {
+    st_fail("Error reading comment file %s", filename);
+    exit(1);
+  }
+  fclose(file);
+
+  while (file_length && result[file_length - 1] == '\n')
+    --file_length;
+  result[file_length] = '\0';
+  return result;
+}
+
 static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lfdxV::Sqoen";
 
 static struct option long_options[] =
@@ -300,6 +344,8 @@ static struct option long_options[] =
     {"version", 0, NULL, 0},
     {"help", 0, NULL, 'h'},
     {"help-effect", 1, NULL, 0},
+    {"comment", required_argument, NULL, 0},
+    {"comment-file", required_argument, NULL, 0},
     {NULL, 0, NULL, 0}
 };
 
@@ -313,7 +359,17 @@ static bool doopts(file_options_t *fo, int argc, char **argv)
                             long_options, &option_index)) != -1) {
         switch(c) {
             case 0:
-                if (strncmp("help-effect", long_options[option_index].name,
+                if (option_index == 3)
+                {
+                  fo->comment = strdup(optarg);
+                  break;
+                }
+                else if (option_index == 4)
+                {
+                  fo->comment = read_comment_file(optarg);
+                  break;
+                }
+                else if (strncmp("help-effect", long_options[option_index].name,
                             11) == 0)
                     usage_effect(optarg);
                 else if (strncmp("version", long_options[option_index].name,
@@ -563,17 +619,26 @@ static void process(void) {
         st_loopinfo_t loops[ST_MAX_NLOOPS];
         double factor;
         int i;
+        file_options_t * options = file_opts[file_count-1];
+        char const * comment = NULL;
 
-        if (file_opts[file_count-1]->info.rate == 0)
-            file_opts[file_count-1]->info.rate = file_desc[0]->info.rate;
-        if (file_opts[file_count-1]->info.size == -1)
-            file_opts[file_count-1]->info.size = file_desc[0]->info.size;
-        if (file_opts[file_count-1]->info.encoding == -1)
-            file_opts[file_count-1]->info.encoding = 
-                file_desc[0]->info.encoding;
-        if (file_opts[file_count-1]->info.channels == -1)
-            file_opts[file_count-1]->info.channels = 
-                file_desc[0]->info.channels;
+        if (options->info.rate == 0)
+            options->info.rate = file_desc[0]->info.rate;
+        if (options->info.size == -1)
+            options->info.size = file_desc[0]->info.size;
+        if (options->info.encoding == -1)
+            options->info.encoding = file_desc[0]->info.encoding;
+        if (options->info.channels == -1)
+            options->info.channels = file_desc[0]->info.channels;
+
+        if (options->comment != NULL)
+        {
+          if (*options->comment == '\0')
+            free(options->comment);
+          else comment = options->comment;
+        }
+        else comment = strdup(file_desc[0]->comment? file_desc[0]->comment :
+            "Processed by SoX");
 
         /*
          * copy loop info, resizing appropriately
@@ -581,7 +646,7 @@ static void process(void) {
          * FIXME: This doesn't work for multi-file processing or
          * effects that change file length.
          */
-        factor = (double) file_opts[file_count-1]->info.rate / (double) 
+        factor = (double) options->info.rate / (double) 
             file_desc[0]->info.rate;
         for(i = 0; i < ST_MAX_NLOOPS; i++) {
             loops[i].start = file_desc[0]->loops[i].start * factor;
@@ -591,10 +656,10 @@ static void process(void) {
         }
 
         file_desc[file_count-1] = 
-            st_open_write_instr(file_opts[file_count-1]->filename,
-                                &file_opts[file_count-1]->info, 
-                                file_opts[file_count-1]->filetype,
-                                file_desc[0]->comment,
+            st_open_write_instr(options->filename,
+                                &options->info, 
+                                options->filetype,
+                                comment,
                                 &file_desc[0]->instr,
                                 loops);
 

@@ -58,6 +58,8 @@ There are two types of audio file format that
 can work with.  The first is "self-describing".  Such formats
 include a header that completely describe the characteristics of
 the audio data that follows.
+The header may also allow the inclusion of textual "comments" that can
+be used to describe the audio in some way.
 .P
 The second type is header-less data, often called raw data.
 For this type, a
@@ -212,7 +214,7 @@ e.g.
 sets it to 0.
 .IP
 .PP
-\fBFormat options:\fR
+\fBInput And Output File Format Options:\fR
 .PP
 Format options effect the input or output file that they immediately precede.
 .PP
@@ -230,12 +232,6 @@ file, include this option with the output file options.
 If the input and output file have a different number of channels then the
 avg effect must be used.  If the avg effect is not specified on the 
 command line it will be invoked internally with default parameters.
-.TP 10
-\fB-C \fIcompression-factor\fR
-The compression factor for variably compressing output file formats.
-If this option is not given, then a default compression factor will apply.
-The compression factor is interpreted differently for different compressing file formats.
-See the description of the file formats that use this parameter for more information.
 .TP 10
 \fB-r \fIrate\fR
 Gives the sample rate in Hz of the file.  To cause the output file to have
@@ -333,6 +329,23 @@ The sample data size is 1, 2, 3, or 4 bytes.
 \fB-b/-w/-l/-d\fR
 The sample data size is in bytes, 16-bit words, 32-bit long words, 
 or 64-bit double long (long long) words.
+.PP
+\fBOutput File Format Options:\fR
+.PP
+These options may precede only the output file.
+.TP 10
+\fB--comment \fItext\fR
+Specify the comment text to store in the output file header (where applicable).
+.TP 10
+\fB--comment-file \fIfilename\fR
+Specify a file containing the comment text to store in the output
+file header (where applicable).
+.TP 10
+\fB-C \fIcompression-factor\fR
+The compression factor for variably compressing output file formats.
+If this option is not given, then a default compression factor will apply.
+The compression factor is interpreted differently for different compressing file formats.
+See the description of the file formats that use this parameter for more information.
 .SH FILE TYPES
 .B Determining The File Type
 .br
