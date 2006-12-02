@@ -374,6 +374,13 @@ AIFF files are multimedia archives and
 can have multiple audio and picture chunks.
 You may need a separate archiver to work with them.
 .TP 10
+.B .aifc
+AIFF-C (not compressed, linear), defined in DAVIC 1.4 Part 9 Annex B.
+This format is referred from ARIB STD-B24, which is specified for
+Japanese data broadcasting. Any private chunks are not supported.
+.br
+Note: The infile is processed as .aiff currently.
+.TP 10
 .B alsa
 ALSA default device driver.
 This is a pseudo-file type and can be optionally compiled into SoX.  Run
