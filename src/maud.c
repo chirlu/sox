@@ -342,7 +342,9 @@ static void maudwriteheader(ft_t ft)
                 st_writew(ft, (int) 8); /* number of bits per sample as stored in MDAT */
                 st_writew(ft, (int) 16); /* number of bits per sample after decompression */
                 break;
-                
+
+        default:
+                break;
         }
         
         st_writedw(ft, ft->info.rate); /* clock source frequency */
@@ -371,7 +373,9 @@ static void maudwriteheader(ft_t ft)
         case ST_ENCODING_ALAW:
                 st_writew(ft, (int) 2);
                 break;
-                
+
+        default:
+                break;
         }
         
         st_writedw(ft, 0); /* reserved */

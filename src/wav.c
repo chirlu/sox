@@ -1499,6 +1499,8 @@ static int wavwritehdr(ft_t ft, int second_header)
             wExtSize=2;        /* length of format extension */
             wSamplesPerBlock = 320;
             break;
+        default:
+                break;
     }
     wav->formatTag = wFormatTag;
     wav->blockAlign = wBlockAlign;

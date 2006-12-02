@@ -562,6 +562,8 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
                     ft->info.encoding = ST_ENCODING_SIGN2;
                 }
                 break;
+            default:
+                    break;
         }
         switch (ft->info.encoding)
         {
@@ -581,6 +583,8 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
                 }
                 *fmt = SND_PCM_FORMAT_U8;
                 break;
+            default:
+                    break;
         }
     }
     else if (ft->info.size == ST_SIZE_WORD) {
@@ -600,6 +604,8 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
                     ft->info.encoding = ST_ENCODING_SIGN2;
                 }
                 break;
+            default:
+                    break;
         }
         switch (ft->info.encoding)
         {
@@ -619,6 +625,8 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
                 }
                 *fmt = SND_PCM_FORMAT_U16_LE;
                 break;
+            default:
+                    break;
         }
     }
     else {

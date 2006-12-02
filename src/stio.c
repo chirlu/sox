@@ -68,7 +68,7 @@ static int st_checkformat(ft_t ft)
                 return ST_EOF;
         }
 
-        if (ft->info.encoding <= 0  || ft->info.encoding > ST_ENCODING_MAX)
+        if (ft->info.encoding <= 0  || ft->info.encoding >= ST_ENCODINGS)
         {
                 st_fail_errno(ft,ST_EFMT,"data encoding %i is invalid");
                 return ST_EOF;
