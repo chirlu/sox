@@ -423,6 +423,12 @@ int st_aiffstartread(ft_t ft)
                     if (bits < 16)
                         st_report("Forcing data size from %d bits to 16 bits",bits);
                 }
+                else if (bits <= 24)
+                {
+                    ft->info.size = ST_SIZE_24BIT;
+                    if (bits < 24)
+                        st_report("Forcing data size from %d bits to 24 bits",bits);
+                }
                 else if (bits <= 32)
                 {
                     ft->info.size = ST_SIZE_DWORD;
@@ -790,6 +796,9 @@ static int aiffwriteheader(ft_t ft, st_size_t nframes)
                  ft->info.size == ST_SIZE_WORD)
                 bits = 16;
         else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
+                 ft->info.size == ST_SIZE_24BIT)
+                bits = 24;
+        else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
                  ft->info.size == ST_SIZE_DWORD)
                 bits = 32;
         else
@@ -981,6 +990,9 @@ static int aifcwriteheader(ft_t ft, st_size_t nframes)
         else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
                  ft->info.size == ST_SIZE_WORD)
                 bits = 16;
+        else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
+                 ft->info.size == ST_SIZE_24BIT)
+                bits = 24;
         else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
                  ft->info.size == ST_SIZE_DWORD)
                 bits = 32;

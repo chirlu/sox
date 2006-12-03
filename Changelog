@@ -40,7 +40,7 @@ sox-12.18.3
   o Fix wav file handler discarding the last PCM sample in certain
     circumstances. (robs)
   o Add support for 24-bit PCM raw, wav (WAVE_FORMAT_EXTENSIBLE) [FR# 801015],
-    & flac files. (robs)
+    aiff, & flac files. (robs)
   o Added alias -1 (for -b), -2 (for -w), -4 (for -l), -8 (for -d). (robs)
   o Remove old, optional rate change and alaw/ulaw conversion code.
     (Reuben Thomas)

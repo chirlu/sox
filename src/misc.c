@@ -344,9 +344,9 @@ float st_swapf(float f)
 }
 
 
-uint32_t st_swap24(uint32_t udw)
+uint32_t st_swap24(uint24_t udw)
 {
-    return (udw >> 16) | (udw & 0xff00) | ((udw << 16) & 0xff0000L);
+    return ((udw >> 16) & 0xff) | (udw & 0xff00) | ((udw << 16) & 0xff0000L);
 }
 
 double st_swapd(double df)
