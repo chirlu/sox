@@ -1018,4 +1018,4 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
-m4_include([aclocal/stdint.m4])
+m4_include([m4/stdint.m4])

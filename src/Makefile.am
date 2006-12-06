@@ -19,38 +19,22 @@ effects = avg.c band.c bandpass.c biquad.c breject.c btrworth.c chorus.c \
 	  reverb.c reverse.c silence.c speed.c stat.c \
 	  stretch.c swap.c synth.c tone.c trim.c vibro.c vol.c
 
-GSMOBJ   =  libgsm/add.o libgsm/code.o libgsm/decode.o libgsm/long_term.o \
-	    libgsm/lpc.o libgsm/preprocess.o libgsm/rpe.o \
-	    libgsm/gsm_destroy.o libgsm/gsm_decode.o libgsm/gsm_encode.o \
-	    libgsm/gsm_create.o libgsm/gsm_option.o libgsm/short_term.o \
-	    libgsm/table.o
-
-# Building libgsm.a is kinda a hack.  It switches to a different
-# makefile with hardcoded options.  We really want the object files
-# only so that they can be included inside libst.  This semi-fake
-# target is just an easy way to make sure that makefile builds
-# the objects instead of this makefile.
-GSM       = libgsm/libgsm.a
 PLAY_0    =
 PLAY_1    = play
 
-OSSOBJ_0    =
-OSSOBJ_1    = oss.o
-SUNAUOBJ_0  =
-SUNAUOBJ_1  = sunaudio.o
-ALSAOBJ_0   =
-ALSAOBJ_1   = alsa.o
-EXTRAOBJS   = $(OSSOBJ_$(NEED_OSS)) $(SUNAUOBJ_$(NEED_SUNAU)) $(ALSAOBJ_$(NEED_ALSA)) $(GSMOBJ)
-
-libst_a_SOURCES = $(formats) $(effects) $(extra_SOURCES) handlers.c misc.c stio.c util.c
-
-if GETOPT_LONG
-else
-libst_a_LIBADD = getopt.o getopt1.o $(EXTRAOBJS)
+libst_a_SOURCES = $(formats) $(effects) handlers.c misc.c stio.c util.c
+if OSS
+libst_a_SOURCES += oss.c
+endif
+if ALSA
+libst_a_SOURCES += alsa.c
+endif
+if SUNAU
+libst_a_SOURCES += sunaudio.c
 endif
 
 sox_SOURCES = sox.c
-sox_LDADD = libst.a
+sox_LDADD = libst.a libgsm/libgsm.a
 sox_LDFLAGS = @SAMPLERATE_LIBS@
 
 all: sox soxmix $(PLAY_$(PLAY_SUPPORT))
@@ -104,8 +88,6 @@ uninstall-lib:
 
 clean:
 	$(RM) *.o libst.a
-	cd libgsm && $(RM) *.o libgsm.a
 
 distclean-local:
 	$(RM) *.raw *.sf libst-config stconfig.h ststdint.h
-	cd libgsm && $(RM) *~ *.o core libgsm.a Makefile

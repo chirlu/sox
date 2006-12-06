@@ -685,9 +685,12 @@ GETOPT_LONG_FALSE
 PKG_CONFIG
 SAMPLERATE_CFLAGS
 SAMPLERATE_LIBS
-NEED_OSS
-NEED_SUNAU
-NEED_ALSA
+ALSA_TRUE
+ALSA_FALSE
+OSS_TRUE
+OSS_FALSE
+SUNAU_TRUE
+SUNAU_FALSE
 PLAY_SUPPORT
 LTLIBOBJS'
 ac_subst_files=''
@@ -5315,7 +5318,7 @@ done
 
 
 
-if text x$getopt_long = xtrue; then
+if test x$getopt_long = xtrue; then
   GETOPT_LONG_TRUE=
   GETOPT_LONG_FALSE='#'
 else
@@ -6182,9 +6185,6 @@ fi
 
 
 
-NEED_OSS=0
-NEED_SUNAU=0
-NEED_ALSA=0
 PLAY_SUPPORT=0
 
 
@@ -7671,7 +7671,6 @@ fi
 echo "${ECHO_T}$ac_cv_lib_asound_snd_pcm_open" >&6; }
 if test $ac_cv_lib_asound_snd_pcm_open = yes; then
   LIBS="$LIBS -lasound"
-                     NEED_ALSA=1
                      PLAY_SUPPORT=1
 
 cat >>confdefs.h <<\_ACEOF
@@ -7686,6 +7685,16 @@ fi
         enable_alsa_dsp=no
     fi
 fi
+
+
+if test x$enable_alsa_dsp = xyes; then
+  ALSA_TRUE=
+  ALSA_FALSE='#'
+else
+  ALSA_TRUE='#'
+  ALSA_FALSE=
+fi
+
 
 if test "$enable_oss_dsp" = yes
 then
@@ -7867,12 +7876,21 @@ cat >>confdefs.h <<\_ACEOF
 #define HAVE_OSS 1
 _ACEOF
 
-	NEED_OSS=1
 	PLAY_SUPPORT=1
     else
         enable_oss_dsp=no
     fi
 fi
+
+
+if test x$enable_oss_dsp = xyes; then
+  OSS_TRUE=
+  OSS_FALSE='#'
+else
+  OSS_TRUE='#'
+  OSS_FALSE=
+fi
+
 
 if test "$enable_sun_audio" = yes
 then
@@ -8054,12 +8072,21 @@ cat >>confdefs.h <<\_ACEOF
 #define HAVE_SUNAUDIO 1
 _ACEOF
 
-	NEED_SUNAU=1
 	PLAY_SUPPORT=1
     else
         enable_sun_audio=no
     fi
 fi
+
+
+if test x$enable_sun_audio = xyes; then
+  SUNAU_TRUE=
+  SUNAU_FALSE='#'
+else
+  SUNAU_TRUE='#'
+  SUNAU_FALSE=
+fi
+
 
 if test "$enable_external_gsm" = yes
 then
@@ -8327,9 +8354,6 @@ fi
 
 
 
-
-
-
 ac_config_files="$ac_config_files Makefile src/libst-config src/Makefile src/libgsm/Makefile"
 
 ac_config_files="$ac_config_files src/play"
@@ -8449,6 +8473,27 @@ if test -z "${GETOPT_LONG_TRUE}" && test -z "${GETOPT_LONG_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"GETOPT_LONG\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"GETOPT_LONG\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ALSA_TRUE}" && test -z "${ALSA_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ALSA\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ALSA\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${OSS_TRUE}" && test -z "${OSS_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"OSS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"OSS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${SUNAU_TRUE}" && test -z "${SUNAU_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"SUNAU\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"SUNAU\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -9059,14 +9104,17 @@ GETOPT_LONG_FALSE!$GETOPT_LONG_FALSE$ac_delim
 PKG_CONFIG!$PKG_CONFIG$ac_delim
 SAMPLERATE_CFLAGS!$SAMPLERATE_CFLAGS$ac_delim
 SAMPLERATE_LIBS!$SAMPLERATE_LIBS$ac_delim
-NEED_OSS!$NEED_OSS$ac_delim
-NEED_SUNAU!$NEED_SUNAU$ac_delim
-NEED_ALSA!$NEED_ALSA$ac_delim
+ALSA_TRUE!$ALSA_TRUE$ac_delim
+ALSA_FALSE!$ALSA_FALSE$ac_delim
+OSS_TRUE!$OSS_TRUE$ac_delim
+OSS_FALSE!$OSS_FALSE$ac_delim
+SUNAU_TRUE!$SUNAU_TRUE$ac_delim
+SUNAU_FALSE!$SUNAU_FALSE$ac_delim
 PLAY_SUPPORT!$PLAY_SUPPORT$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 90; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 93; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

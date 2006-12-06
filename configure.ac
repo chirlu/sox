@@ -77,7 +77,7 @@ dnl Checks for library functions.
 
 AC_CHECK_FUNCS(strcasecmp strdup)
 AC_REPLACE_FUNCS(getopt_long)
-AM_CONDITIONAL(GETOPT_LONG, text x$getopt_long = xtrue)
+AM_CONDITIONAL(GETOPT_LONG, test x$getopt_long = xtrue)
 
 dnl Check if math library is needed.
 
@@ -94,9 +94,6 @@ AC_FUNC_FSEEKO
       
 dnl Initial values for exported symbols.
 
-NEED_OSS=0
-NEED_SUNAU=0
-NEED_ALSA=0
 PLAY_SUPPORT=0
 
 dnl Test for Ogg Vorbis libraries.
@@ -181,7 +178,6 @@ then
     then
         AC_CHECK_LIB(asound, snd_pcm_open,
                      LIBS="$LIBS -lasound"
-                     NEED_ALSA=1
                      PLAY_SUPPORT=1
                      AC_DEFINE([HAVE_ALSA], 1, 
 		               [Define if you have ALSA library installed]),
@@ -190,6 +186,7 @@ then
         enable_alsa_dsp=no
     fi
 fi
+AM_CONDITIONAL(ALSA, test x$enable_alsa_dsp = xyes)
 
 if test "$enable_oss_dsp" = yes
 then
@@ -199,12 +196,12 @@ then
     then
         AC_DEFINE([HAVE_OSS], 1, 
                   [Define if you have OSS installed])
-	NEED_OSS=1
 	PLAY_SUPPORT=1
     else
         enable_oss_dsp=no
     fi
 fi
+AM_CONDITIONAL(OSS, test x$enable_oss_dsp = xyes)
 
 if test "$enable_sun_audio" = yes
 then
@@ -214,12 +211,12 @@ then
     then
         AC_DEFINE([HAVE_SUNAUDIO], 1, 
                   [Define if you have Sun /dev/audio installed])
-	NEED_SUNAU=1
 	PLAY_SUPPORT=1
     else
         enable_sun_audio=no
     fi
 fi
+AM_CONDITIONAL(SUNAU, test x$enable_sun_audio = xyes)
 
 if test "$enable_external_gsm" = yes
 then
@@ -232,9 +229,6 @@ then
     fi
 fi
 
-AC_SUBST(NEED_OSS)
-AC_SUBST(NEED_SUNAU)
-AC_SUBST(NEED_ALSA)
 AC_SUBST(PLAY_SUPPORT)
 
 dnl Generate output files...
