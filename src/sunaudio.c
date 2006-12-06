@@ -23,7 +23,6 @@
 #include <sys/types.h>
 #ifdef HAVE_SUN_AUDIOIO_H
 #include <sun/audioio.h>
-#endif
 #else
 #ifdef HAVE_SYS_AUDIOIO_H
 #include <sys/audioio.h>
@@ -332,4 +331,5 @@ const st_format_t *st_sun_format_fn(void)
 {
     return &st_sun_format;
 }
+
 #endif
