@@ -4,8 +4,6 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/rpe.c,v 1.2 2006/12/06 17:35:26 rrt Exp $ */
-
 #include <stdio.h>
 #include <assert.h>
 

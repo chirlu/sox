@@ -4,8 +4,6 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/gsm_decode.c,v 1.2 2006/12/06 17:29:36 rrt Exp $ */
-
 #include "private.h"
 
 #include "gsm.h"

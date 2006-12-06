@@ -4,8 +4,6 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/lpc.c,v 1.2 2006/12/06 18:08:33 rrt Exp $ */
-
 #include <stdio.h>
 #include <assert.h>
 

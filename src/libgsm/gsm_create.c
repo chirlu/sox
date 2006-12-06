@@ -4,8 +4,6 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-static char const	ident[] = "$Header: /cvsroot/sox/sox/src/libgsm/Attic/gsm_create.c,v 1.1 2006/08/27 23:04:56 cbagwell Exp $";
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
