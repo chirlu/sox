@@ -241,12 +241,6 @@ int st_resample_start(eff_t effp)
                 r->Nq = Nc; /* for now */
         }
 
-        /* Check for illegal constants */
-        if (Lp >= 16) {
-          st_fail("Error: Lp>=16");
-          return (ST_EOF);
-        }
-
         /* Nwing: # of filter coeffs in right wing */
         r->Nwing = r->Nq * (r->Nmult/2+1) + 1;
 
