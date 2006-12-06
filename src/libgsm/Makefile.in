@@ -26,16 +26,9 @@ MULHACK = -DUSE_FLOAT_MUL
 ######### Define this if your host multiplies floats faster than integers,
 ######### e.g. on a SPARCstation.
 
-# LTP_CUT	= -DLTP_CUT
-LTP_CUT	=
-######### Define to enable the GSM library's long-term correlation 
-######### approximation option---faster, but worse; works for
-######### both integer and floating point multiplications.
-######### This flag is still in the experimental stage.
-
 # Build macros.
 
-CFLAGS	= @CFLAGS@ @DEFS@ $(SASR) $(MULHAC) $(FAST) $(LTP_CUT) -I$(top_srcdir)/gsm
+CFLAGS	= @CFLAGS@ @DEFS@ $(SASR) $(MULHAC) -I$(top_srcdir)/gsm
 LDFLAGS	= @LDFLAGS@
 LIBS	= @LIBS@
 
