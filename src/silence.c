@@ -325,18 +325,23 @@ int aboveThreshold(eff_t effp, st_sample_t value, double threshold, char unit)
 {
     double ratio;
     int rc;
+    st_sample_t dummy_clipped_count = 0;
 
     /* When scaling low bit data, noise values got scaled way up */
     /* Only consider the original bits when looking for silence */
     switch(effp->ininfo.size)
     {
         case ST_SIZE_BYTE:
-            value = ST_SAMPLE_TO_SIGNED_BYTE(value);
+            value = ST_SAMPLE_TO_SIGNED_BYTE(value, dummy_clipped_count);
             ratio = (double)abs(value) / (double)ST_INT8_MAX;
             break;
         case ST_SIZE_WORD:
-            value = ST_SAMPLE_TO_SIGNED_WORD(value);
+            value = ST_SAMPLE_TO_SIGNED_WORD(value, dummy_clipped_count);
             ratio = (double)abs(value) / (double)ST_INT16_MAX;
+            break;
+        case ST_SIZE_24BIT:
+            value = ST_SAMPLE_TO_SIGNED_24BIT(value, dummy_clipped_count);
+            ratio = (double)abs(value) / (double)ST_INT24_MAX;
             break;
         case ST_SIZE_DWORD:
             value = ST_SAMPLE_TO_SIGNED_DWORD(value);

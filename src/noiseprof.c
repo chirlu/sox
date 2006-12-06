@@ -130,7 +130,7 @@ int st_noiseprof_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         int j;
         for (j = 0; j < ncopy; j ++) {
             chan->window[j+data->bufdata] =
-                ST_SAMPLE_TO_FLOAT_DWORD(ibuf[i+j*tracks]);
+                ST_SAMPLE_TO_FLOAT_DWORD(ibuf[i+j*tracks], effp->clippedCount);
         }
         if (ncopy + data->bufdata == WINDOWSIZE) {
             collect_data(data, chan);

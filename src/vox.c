@@ -275,7 +275,7 @@ st_ssize_t st_voxwrite (ft_t ft,const st_sample_t *buffer,st_size_t length)
              short    word;
 
              while (count < length)
-                   { word   = ST_SAMPLE_TO_SIGNED_WORD (*buffer++);
+                   { word   = ST_SAMPLE_TO_SIGNED_WORD (*buffer++, ft->clippedCount);
                      word  /= 16;
 
                      byte <<= 4;

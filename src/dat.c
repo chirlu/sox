@@ -25,9 +25,6 @@
 #include "st_i.h"
 #include <string.h>
 
-/* float output normalized to approx 1.0 */
-#define FLOATTOLONG (2.147483648e9)
-#define LONGTOFLOAT (1 / FLOATTOLONG)
 #define LINEWIDTH 256
 
 /* Private data for dat file */
@@ -129,7 +126,7 @@ st_ssize_t st_datread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
           st_fail_errno(ft,ST_EOF,"Unable to read sample.");
           return (ST_EOF);
         }
-        sampval *= FLOATTOLONG;
+        sampval *= ST_SAMPLE_MAX;
         *buf++ = ST_ROUND_CLIP_COUNT(sampval, ft->clippedCount);
         done++;
       }
@@ -154,8 +151,7 @@ st_ssize_t st_datwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
       sprintf(s," %15.8g ",dat->timevalue);
       st_writes(ft, s);
       for (i=0; i<ft->info.channels; i++) {
-        sampval = *buf++ ;
-        sampval = sampval * LONGTOFLOAT;
+        sampval = ST_SAMPLE_TO_FLOAT_DDWORD(*buf++, ft->clippedCount);
         sprintf(s," %15.8g", sampval);
         st_writes(ft, s);
         done++;

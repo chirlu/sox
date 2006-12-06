@@ -276,7 +276,7 @@ int st_chorus_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                         chorus->maxsamples] * chorus->decay[i];
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * chorus->out_gain;
-                out = ST_EFF_24BIT_CLIP_COUNT((st_sample_t) d_out);
+                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clippedCount);
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 chorus->chorusbuf[chorus->counter] = d_in;
@@ -313,7 +313,7 @@ int st_chorus_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 chorus->maxsamples] * chorus->decay[i];
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * chorus->out_gain;
-                out = ST_EFF_24BIT_CLIP_COUNT((st_sample_t) d_out);
+                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clippedCount);
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 chorus->chorusbuf[chorus->counter] = d_in;

@@ -112,7 +112,7 @@ int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
             {
                 double f;
                 f = 0.5*ibuf_copy[0] + 0.5*ibuf_copy[1];
-                ST_EFF_SAMPLE_CLIP_COUNT(f);
+                ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                 *obuf++ = f;
                 ibuf_copy += 2;
             }
@@ -123,7 +123,7 @@ int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 double f;
                 f = 0.25*ibuf_copy[0] + 0.25*ibuf_copy[1] + 
                         0.25*ibuf_copy[2] + 0.25*ibuf_copy[3];
-                ST_EFF_SAMPLE_CLIP_COUNT(f);
+                ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                 *obuf++ = f;
                 ibuf_copy += 4;
             }
@@ -141,10 +141,10 @@ int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 double f;
 
                 f = left * ibuf_copy[0];
-                ST_EFF_SAMPLE_CLIP_COUNT(f);
+                ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                 obuf[0] = f;
                 f = right * ibuf_copy[0];
-                ST_EFF_SAMPLE_CLIP_COUNT(f);
+                ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                 obuf[1] = f;
                 obuf += 2;
                 ibuf_copy++;
@@ -167,10 +167,10 @@ int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                     double f;
 
                     f = cll * ibuf_copy[0] + clr * ibuf_copy[1];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[0] = f;
                     f = cr * ibuf_copy[1];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[1] = f;
                     obuf += 2;
                     ibuf_copy += 2;
@@ -190,10 +190,10 @@ int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                     double f;
 
                     f = cl * ibuf_copy[0];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[0] = f;
                     f = crl * ibuf_copy[0] + crr * ibuf_copy[1];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[1] = f;
                     obuf += 2;
                     ibuf_copy += 2;
@@ -220,10 +220,10 @@ int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 
                     /* pan it */
                     f = cll * ibuf0 + clr * ibuf1;
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[0] = f;
                     f = cr * ibuf1;
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[1] = f;
                     obuf += 2;
                     ibuf_copy += 4;
@@ -246,10 +246,10 @@ int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                     ibuf1 = 0.5*ibuf_copy[1] + 0.5*ibuf_copy[3];
 
                     f = cl * ibuf0;
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[0] = f;
                     f = crl * ibuf0 + crr * ibuf1;
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[1] = f;
                     obuf += 2;
                     ibuf_copy += 4;
@@ -275,10 +275,10 @@ int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                     double f;
 
                     f = cl * ibuf_copy[0];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[2] = obuf[0] = f;
                     f = cr * ibuf_copy[0];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     ibuf_copy[3] = obuf[1] = f;
                     obuf += 4;
                     ibuf_copy++;
@@ -300,10 +300,10 @@ int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                     double f;
 
                     f = cll * ibuf_copy[0] + clr * ibuf_copy[1];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[2] = obuf[0] = f;
                     f = cr * ibuf_copy[1];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     ibuf_copy[3] = obuf[1] = f;
                     obuf += 4;
                     ibuf_copy += 2;
@@ -323,10 +323,10 @@ int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                     double f;
 
                     f = cl * ibuf_copy[0];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[2] = obuf[0] =f ;
                     f = crl * ibuf_copy[0] + crr * ibuf_copy[1];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     ibuf_copy[3] = obuf[1] = f;
                     obuf += 4;
                     ibuf_copy += 2;
@@ -349,16 +349,16 @@ int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                     double f;
 
                     f = cown*ibuf_copy[0] + cright*ibuf_copy[1];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[0] = f;
                     f = cown*ibuf_copy[1] + cright*ibuf_copy[3];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[1] = f;
                     f = cown*ibuf_copy[2] + cright*ibuf_copy[0];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[2] = f;
                     f = cown*ibuf_copy[3] + cright*ibuf_copy[2];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[3] = f;
                     obuf += 4;
                     ibuf_copy += 4;              
@@ -376,16 +376,16 @@ int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                     double f;
 
                     f = cleft*ibuf_copy[2] + cown*ibuf_copy[0];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[0] = f;
                     f = cleft*ibuf_copy[0] + cown*ibuf_copy[1];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[1] = f;
                     f = cleft*ibuf_copy[3] + cown*ibuf_copy[2];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[2] = f;
                     f = cleft*ibuf_copy[1] + cown*ibuf_copy[3];
-                    ST_EFF_SAMPLE_CLIP_COUNT(f);
+                    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                     obuf[3] = f;
                     obuf += 4;
                     ibuf_copy += 4;

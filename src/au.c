@@ -80,6 +80,10 @@ static int st_auencodingandsize(int sun_encoding, st_encoding_t * encoding, sign
             *encoding = ST_ENCODING_SIGN2;
             *size = ST_SIZE_WORD;
             break;
+    case SUN_LIN_24:
+            *encoding = ST_ENCODING_SIGN2;
+            *size = ST_SIZE_24BIT;
+            break;
     case SUN_G721:
             *encoding = ST_ENCODING_SIGN2;
             *size = ST_SIZE_WORD;
@@ -402,6 +406,8 @@ static int st_ausunencoding(int size, int encoding)
                 sun_encoding = SUN_LIN_8;
         else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_WORD)
                 sun_encoding = SUN_LIN_16;
+        else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_24BIT)
+                sun_encoding = SUN_LIN_24;
         else if (encoding == ST_ENCODING_FLOAT && size == ST_SIZE_32BIT)
                 sun_encoding = SUN_FLOAT;
         else
@@ -421,7 +427,7 @@ static void auwriteheader(ft_t ft, st_size_t data_size)
 
         if ((encoding = st_ausunencoding(ft->info.size, ft->info.encoding)) == -1) {
                 st_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
-                st_report("Only U-law, A-law signed bytes, and signed words are supported.");
+                st_report("Only U-law, A-law, and signed bytes/words/tri-bytes are supported.");
                 st_report("Defaulting to 8khz u-law");
                 encoding = SUN_ULAW;
                 ft->info.encoding = ST_ENCODING_ULAW;

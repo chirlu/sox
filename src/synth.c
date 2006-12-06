@@ -270,7 +270,6 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
     /* set default parameters */
     synth->length = 0; /* use length of input file */
     synth->length_str = 0;
-    synth->max = ST_SAMPLE_MAX;
     for(c=0;c<MAXCHAN;c++){
         synth->freq[c] = 440.0;
         synth->freq2[c] = 440.0;
@@ -398,6 +397,9 @@ int st_synth_start(eff_t effp)
     int i;
     int c;
     synth_t synth = (synth_t) effp->priv;
+    int shift_for_max = (4 - min(effp->outinfo.size, 4)) << 3;
+
+    synth->max = (ST_SAMPLE_MAX >> shift_for_max) << shift_for_max;
 
     st_initrand();
 

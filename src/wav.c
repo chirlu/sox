@@ -349,7 +349,7 @@ st_ssize_t wavgsmwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
     while (done < len) {
         while ((wav->gsmindex < 160*2) && (done < len))
             wav->gsmsample[(wav->gsmindex)++] = 
-                ST_SAMPLE_TO_SIGNED_WORD(buf[done++]);
+                ST_SAMPLE_TO_SIGNED_WORD(buf[done++], ft->clippedCount);
 
         if (wav->gsmindex < 160*2)
             break;

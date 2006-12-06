@@ -496,7 +496,7 @@ int st_pitch_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 float f;
 
                 f = pitch->acc[pitch->iacc++];
-                ST_EFF_SAMPLE_CLIP_COUNT(f);
+                ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
                 obuf[oindex++] = f;
             }
 
@@ -549,7 +549,7 @@ int st_pitch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         float f;
 
         f = pitch->acc[pitch->iacc++];
-        ST_EFF_SAMPLE_CLIP_COUNT(f);
+        ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
         obuf[i++] = f;
     }
 

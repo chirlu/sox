@@ -54,20 +54,20 @@ unsigned char cswap[256] = {
   0x3F, 0xBF, 0x7F, 0xFF
 };
 
-#define ST_ULAW_BYTE_TO_SAMPLE(d) ST_SIGNED_WORD_TO_SAMPLE(st_ulaw2linear16(d))
-#define ST_ALAW_BYTE_TO_SAMPLE(d) ST_SIGNED_WORD_TO_SAMPLE(st_alaw2linear16(d))
-#define ST_SAMPLE_TO_ULAW_BYTE(d) st_14linear2ulaw(ST_SAMPLE_TO_SIGNED_WORD(d) >> 2)
-#define ST_SAMPLE_TO_ALAW_BYTE(d) st_13linear2alaw(ST_SAMPLE_TO_SIGNED_WORD(d) >> 3)
+#define ST_ULAW_BYTE_TO_SAMPLE(d)   ST_SIGNED_WORD_TO_SAMPLE(st_ulaw2linear16(d))
+#define ST_ALAW_BYTE_TO_SAMPLE(d)   ST_SIGNED_WORD_TO_SAMPLE(st_alaw2linear16(d))
+#define ST_SAMPLE_TO_ULAW_BYTE(d,c) st_14linear2ulaw(ST_SAMPLE_TO_SIGNED_WORD(d,c) >> 2)
+#define ST_SAMPLE_TO_ALAW_BYTE(d,c) st_13linear2alaw(ST_SAMPLE_TO_SIGNED_WORD(d,c) >> 3)
 
 /* Some hardware sends MSB last. These account for that */
 #define ST_INVERT_ULAW_BYTE_TO_SAMPLE(d) \
     ST_SIGNED_WORD_TO_SAMPLE(st_ulaw2linear16(cswap[d]))
 #define ST_INVERT_ALAW_BYTE_TO_SAMPLE(d) \
     ST_SIGNED_WORD_TO_SAMPLE(st_alaw2linear16(cswap[d]))
-#define ST_SAMPLE_TO_INVERT_ULAW_BYTE(d) \
-    cswap[st_14linear2ulaw(ST_SAMPLE_TO_SIGNED_WORD(d) >> 2)]
-#define ST_SAMPLE_TO_INVERT_ALAW_BYTE(d) \
-    cswap[st_13linear2alaw(ST_SAMPLE_TO_SIGNED_WORD(d) >> 3)]
+#define ST_SAMPLE_TO_INVERT_ULAW_BYTE(d,c) \
+    cswap[st_14linear2ulaw(ST_SAMPLE_TO_SIGNED_WORD(d,c) >> 2)]
+#define ST_SAMPLE_TO_INVERT_ALAW_BYTE(d,c) \
+    cswap[st_13linear2alaw(ST_SAMPLE_TO_SIGNED_WORD(d,c) >> 3)]
 
 static void rawdefaults(ft_t ft);
 
@@ -134,7 +134,7 @@ int st_rawstartwrite(ft_t ft)
     return ST_SUCCESS;
 }
 
-void st_ub_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
+void st_ub_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
@@ -148,7 +148,7 @@ void st_ub_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char sw
     }
 }
 
-void st_sb_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
+void st_sb_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
@@ -162,8 +162,7 @@ void st_sb_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char sw
     }
 }
 
-void st_ulaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len,
-                      char swap)
+void st_ulaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
@@ -177,8 +176,7 @@ void st_ulaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len,
     }
 }
 
-void st_alaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len,
-                      char swap)
+void st_alaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
@@ -192,8 +190,7 @@ void st_alaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len,
     }
 }
 
-void st_inv_ulaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len,
-                          char swap)
+void st_inv_ulaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
@@ -207,8 +204,7 @@ void st_inv_ulaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len,
     }
 }
 
-void st_inv_alaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len,
-                          char swap)
+void st_inv_alaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
@@ -223,7 +219,7 @@ void st_inv_alaw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len,
 }
 
 
-void st_uw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
+void st_uw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
@@ -239,7 +235,7 @@ void st_uw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char sw
     }
 }
 
-void st_sw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
+void st_sw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
@@ -275,7 +271,7 @@ static int24_t st_24_read_one(char const * * buffer, char swap)
 
 
 
-void st_u24_read_buf(st_sample_t * buf1, char const * buf2, st_size_t len, char const swap)
+void st_u24_read_buf(st_sample_t * buf1, char const * buf2, st_size_t len, char const swap, st_size_t * clippedCount)
 {
   while (len--)
   {
@@ -286,7 +282,7 @@ void st_u24_read_buf(st_sample_t * buf1, char const * buf2, st_size_t len, char 
 
 
 
-void st_s24_read_buf(st_sample_t * buf1, char const * buf2, st_size_t len, char const swap)
+void st_s24_read_buf(st_sample_t * buf1, char const * buf2, st_size_t len, char const swap, st_size_t * clippedCount)
 {
   while (len--)
   {
@@ -297,7 +293,7 @@ void st_s24_read_buf(st_sample_t * buf1, char const * buf2, st_size_t len, char 
 
 
 
-void st_udw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
+void st_udw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
@@ -313,7 +309,7 @@ void st_udw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char s
     }
 }
 
-void st_dw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
+void st_dw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
@@ -329,7 +325,7 @@ void st_dw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char sw
     }
 }
 
-void st_f32_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
+void st_f32_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
@@ -340,12 +336,12 @@ void st_f32_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char s
         if (swap)
             datum = st_swapf(datum);
 
-        *buf1++ = ST_FLOAT_DWORD_TO_SAMPLE(datum);
+        *buf1++ = ST_FLOAT_DWORD_TO_SAMPLE(datum, *clippedCount);
         len--;
     }
 }
 
-void st_f64_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap)
+void st_f64_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
@@ -357,7 +353,7 @@ void st_f64_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char s
         if (swap)
             datum = st_swapd(datum);
 
-        *buf1++ = ST_FLOAT_DDWORD_TO_SAMPLE(datum);
+        *buf1++ = ST_FLOAT_DDWORD_TO_SAMPLE(datum, *clippedCount);
         len--;
     }
 }
@@ -373,7 +369,7 @@ void st_f64_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char s
 st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 {
     st_size_t len, done = 0;
-    void (*read_buf)(st_sample_t *, char const *, st_size_t, char) = 0;
+    void (*read_buf)(st_sample_t *, char const *, st_size_t, char, st_size_t *) = 0;
     size_t i;
 
     if (nsamp < 0)
@@ -478,7 +474,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
     len = min((st_size_t)nsamp,(ft->file.count-ft->file.pos)/ft->info.size);
     if (len)
     {
-        read_buf(buf + done, ft->file.buf + ft->file.pos, len, ft->swap);
+        read_buf(buf + done, ft->file.buf + ft->file.pos, len, ft->swap, &ft->clippedCount);
         ft->file.pos += (len*ft->info.size);
         done += len;
     }
@@ -510,7 +506,7 @@ st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
         len = min((st_size_t)nsamp - done,(ft->file.count-ft->file.pos)/ft->info.size);
         if (len)
         {
-            read_buf(buf + done, ft->file.buf + ft->file.pos, len, ft->swap);
+            read_buf(buf + done, ft->file.buf + ft->file.pos, len, ft->swap, &ft->clippedCount);
             ft->file.pos += (len*ft->info.size);
             done += len;
         }
@@ -531,71 +527,71 @@ int st_rawstopread(ft_t ft)
         return ST_SUCCESS;
 }
 
-void st_ub_write_buf(char* buf1, st_sample_t const * buf2, st_size_t len, char swap)
+void st_ub_write_buf(char* buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
-        *(uint8_t *)buf1++ = ST_SAMPLE_TO_UNSIGNED_BYTE(*buf2++);
+        *(uint8_t *)buf1++ = ST_SAMPLE_TO_UNSIGNED_BYTE(*buf2++, *clippedCount);
         len--;
     }
 }
 
-void st_sb_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap)
+void st_sb_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
-        *(int8_t *)buf1++ = ST_SAMPLE_TO_SIGNED_BYTE(*buf2++);
+        *(int8_t *)buf1++ = ST_SAMPLE_TO_SIGNED_BYTE(*buf2++, *clippedCount);
         len--;
     }
 }
 
 void st_ulaw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len,
-                       char swap)
+                       char swap, st_size_t * clippedCount)
 {
     while (len)
     {
-        *(uint8_t *)buf1++ = ST_SAMPLE_TO_ULAW_BYTE(*buf2++);
+        *(uint8_t *)buf1++ = ST_SAMPLE_TO_ULAW_BYTE(*buf2++, *clippedCount);
         len--;
     }
 }
 
 void st_alaw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len,
-                       char swap)
+                       char swap, st_size_t * clippedCount)
 {
     while (len)
     {
-        *(uint8_t *)buf1++ = ST_SAMPLE_TO_ALAW_BYTE(*buf2++);
+        *(uint8_t *)buf1++ = ST_SAMPLE_TO_ALAW_BYTE(*buf2++, *clippedCount);
         len--;
     }
 }
 
 void st_inv_ulaw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len,
-                           char swap)
+                           char swap, st_size_t * clippedCount)
 {
     while (len)
     {
-        *(uint8_t *)buf1++ = ST_SAMPLE_TO_INVERT_ULAW_BYTE(*buf2++);
+        *(uint8_t *)buf1++ = ST_SAMPLE_TO_INVERT_ULAW_BYTE(*buf2++, *clippedCount);
         len--;
     }
 }
 
 void st_inv_alaw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len,
-                           char swap)
+                           char swap, st_size_t * clippedCount)
 {
     while (len)
     {
-        *(uint8_t *)buf1++ = ST_SAMPLE_TO_INVERT_ALAW_BYTE(*buf2++);
+        *(uint8_t *)buf1++ = ST_SAMPLE_TO_INVERT_ALAW_BYTE(*buf2++, *clippedCount);
         len--;
     }
 }
 
-void st_uw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap)
+void st_uw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
         uint16_t datum;
 
-        datum = ST_SAMPLE_TO_UNSIGNED_WORD(*buf2++);
+        datum = ST_SAMPLE_TO_UNSIGNED_WORD(*buf2++, *clippedCount);
         if (swap)
             datum = st_swapw(datum);
         *(uint16_t *)buf1 = datum;
@@ -605,13 +601,13 @@ void st_uw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char s
     }
 }
 
-void st_sw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap)
+void st_sw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
         int16_t datum;
 
-        datum = ST_SAMPLE_TO_SIGNED_WORD(*buf2++);
+        datum = ST_SAMPLE_TO_SIGNED_WORD(*buf2++, *clippedCount);
         if (swap)
             datum = st_swapw(datum);
         *(int16_t *)buf1 = datum;
@@ -643,29 +639,29 @@ static void st_24_write_one(char * * const buf1, int24_t datum, char const swap)
 
 
 
-void st_u24_write_buf(char * buf1, st_sample_t const * buf2, st_size_t len, char const swap)
+void st_u24_write_buf(char * buf1, st_sample_t const * buf2, st_size_t len, char const swap, st_size_t * clippedCount)
 {
   while (len--)
   {
-    int24_t datum = ST_SAMPLE_TO_UNSIGNED_24BIT(*buf2++);
+    int24_t datum = ST_SAMPLE_TO_UNSIGNED_24BIT(*buf2++, *clippedCount);
     st_24_write_one(&buf1, datum, swap);
   }
 }
 
 
 
-void st_s24_write_buf(char * buf1, st_sample_t const * buf2, st_size_t len, char const swap)
+void st_s24_write_buf(char * buf1, st_sample_t const * buf2, st_size_t len, char const swap, st_size_t * clippedCount)
 {
   while (len--)
   {
-    int24_t datum = ST_SAMPLE_TO_SIGNED_24BIT(*buf2++);
+    int24_t datum = ST_SAMPLE_TO_SIGNED_24BIT(*buf2++, *clippedCount);
     st_24_write_one(&buf1, datum, swap);
   }
 }
 
 
 
-void st_udw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap)
+void st_udw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
@@ -681,7 +677,7 @@ void st_udw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char 
     }
 }
 
-void st_dw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap)
+void st_dw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
@@ -697,13 +693,13 @@ void st_dw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char s
     }
 }
 
-void st_f32_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap)
+void st_f32_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
         float datum;
 
-        datum = ST_SAMPLE_TO_FLOAT_DWORD(*buf2++);
+        datum = ST_SAMPLE_TO_FLOAT_DWORD(*buf2++, *clippedCount);
         if (swap)
             datum = st_swapf(datum);
         *(float *)buf1 = datum;
@@ -713,13 +709,13 @@ void st_f32_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char 
     }
 }
 
-void st_f64_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap)
+void st_f64_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
 {
     while (len)
     {
         double datum;
 
-        datum = ST_SAMPLE_TO_FLOAT_DDWORD(*buf2++);
+        datum = ST_SAMPLE_TO_FLOAT_DDWORD(*buf2++, *clippedCount);
         if (swap)
             datum = st_swapf(datum);
         *(double *)buf1 = datum;
@@ -751,7 +747,7 @@ static void writeflush(ft_t ft)
 st_ssize_t st_rawwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
 {
     st_size_t len, done = 0;
-    void (*write_buf)(char *, st_sample_t const *, st_size_t, char) = 0;
+    void (*write_buf)(char *, st_sample_t const *, st_size_t, char, st_size_t *) = 0;
 
     switch(ft->info.size) {
         case ST_SIZE_BYTE:
@@ -856,7 +852,7 @@ st_ssize_t st_rawwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
         len = min(nsamp-done,(ft->file.size-ft->file.pos)/ft->info.size);
         if (len)
         {
-            write_buf(ft->file.buf + ft->file.pos, buf+done, len, ft->swap);
+            write_buf(ft->file.buf + ft->file.pos, buf+done, len, ft->swap, &ft->clippedCount);
             ft->file.pos += (len*ft->info.size);
             done += len;
         }

@@ -40,7 +40,7 @@ sox-12.18.3
   o Fix wav file handler discarding the last PCM sample in certain
     circumstances. (robs)
   o Add support for 24-bit PCM raw, wav (WAVE_FORMAT_EXTENSIBLE) [FR# 801015],
-    aiff, & flac files. (robs)
+    au, aiff, & flac files. (robs)
   o Added alias -1 (for -b), -2 (for -w), -4 (for -l), -8 (for -d). (robs)
   o Remove old, optional rate change and alaw/ulaw conversion code.
     (Reuben Thomas)
@@ -59,6 +59,8 @@ sox-12.18.3
   o Documented the butterworth filter effects.  (robs)
   o Added command line options for specifying the output file
     comment.  (robs)
+  o Improved the accuracy of integer and floating point PCM
+    conversions.  (robs)
 
 sox-12.18.2
 -----------

@@ -170,7 +170,7 @@ int st_stat_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         {
             for (x = 0; x < len; x++)
             {
-                stat->re_in[stat->fft_offset++] = ST_SAMPLE_TO_FLOAT_DWORD(ibuf[x]);
+                stat->re_in[stat->fft_offset++] = ST_SAMPLE_TO_FLOAT_DWORD(ibuf[x], effp->clippedCount);
 
                 if (stat->fft_offset >= stat->fft_size)
                 {

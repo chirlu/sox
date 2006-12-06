@@ -300,7 +300,7 @@ st_ssize_t st_svxwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 
         while(done < len) {
                 for (i = 0; i < ft->info.channels; i++) {
-                        datum = ST_SAMPLE_TO_SIGNED_BYTE(*buf++);
+                        datum = ST_SAMPLE_TO_SIGNED_BYTE(*buf++, ft->clippedCount);
                         /* FIXME: Needs to pass ft struct and not FILE */
                         putc(datum, p->ch[i]);
                 }

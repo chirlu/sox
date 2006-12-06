@@ -158,7 +158,7 @@ st_ssize_t st_skelwrite(ft_t ft, st_sample_t *buf, st_size_t len)
                 case ST_ENCODING_UNSIGNED:
                     while(len--)
                     {
-                        len = st_writeb(ft, ST_SAMPLE_TO_UNSIGNED_BYTE(*buff++));
+                        len = st_writeb(ft, ST_SAMPLE_TO_UNSIGNED_BYTE(*buff++, ft->clippedCount));
                         if (len == ST_EOF)
                             break;
                     }

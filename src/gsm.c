@@ -192,7 +192,7 @@ st_ssize_t st_gsmwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
         {
                 while ((p->samplePtr < p->sampleTop) && (done < samp))
                         *(p->samplePtr)++ = 
-                            ST_SAMPLE_TO_SIGNED_WORD(buf[done++]);
+                            ST_SAMPLE_TO_SIGNED_WORD(buf[done++], ft->clippedCount);
 
                 if (p->samplePtr == p->sampleTop)
                 {

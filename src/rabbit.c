@@ -123,7 +123,7 @@ int st_rabbit_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
   }
 
   for (i = 0 ; i < *isamp; i++)
-    r->data->data_in[r->samples + i] = ST_SAMPLE_TO_FLOAT_DWORD(ibuf[i]);
+    r->data->data_in[r->samples + i] = ST_SAMPLE_TO_FLOAT_DWORD(ibuf[i], effp->clippedCount);
 
   r->samples = newsamples;
   r->data->input_frames = r->samples / channels;
@@ -186,7 +186,7 @@ int st_rabbit_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 
   outsamps = min(r->data->output_frames_gen * channels - r->outsamp, *osamp);
   for (i = 0; i < outsamps; i++)
-    obuf[i] = ST_FLOAT_DWORD_TO_SAMPLE(r->data->data_out[r->outsamp + i]);
+    obuf[i] = ST_FLOAT_DWORD_TO_SAMPLE(r->data->data_out[r->outsamp + i], effp->clippedCount);
   *osamp = (st_size_t)outsamps;
   r->outsamp += outsamps;
 

@@ -53,13 +53,16 @@ input files must be of the same data type and sample rates.
 .P
 Exit status is 0 for no error, 1 if there is a problem with the command-line arguments, and 2 if an error occurs during file processing.
 .P
+\fBFile Format Types\fR
+.br
 There are two types of audio file format that
 .I SoX
 can work with.  The first is "self-describing".  Such formats
 include a header that completely describe the characteristics of
 the audio data that follows.
 The header may also allow the inclusion of textual "comments" that can
-be used to describe the audio in some way.
+be used to describe the audio in some way, e.g. for music, the title,
+the author, etc.
 .P
 The second type is header-less data, often called raw data.
 For this type, a
@@ -82,12 +85,62 @@ data encoding
 What encoding the data type uses.  Examples are u-law, ADPCM, or signed linear data.
 .TP 10
 channels
-How many channels are contained in the audio data.  Mono (1) and stereo (2) are the two most common.
+The number of audio channels contained in the file.  1 ("mono") and 2
+("stereo") are widely used.
 .P
 Please refer to the
 .B soxexam(1)
 manual page for a long description with examples on how to use SoX with
 various file formats.
+.P
+\fBFormat Conversion\fR
+.br
+Converting an audio file from one format to another with
+.I SoX
+is "lossless"
+(i.e. converting back again would yield an exact copy of the original
+audio signal)
+where it
+can be, i.e. when not using "lossy" compression (e.g. A-law, mp3, etc.)
+and the number of bits used in the destination format is not less than
+in the source format.
+
+E.g. converting from an 8-bit PCM format to a 16-bit PCM format is
+lossless but converting from a 24-bit PCM format to a 16-bit PCM format isn't.
+When performing a lossy conversion,
+.I SoX
+uses rounding to retain as much accuracy as possible in the
+audio signal.
+.P
+\fBClipping\fR
+.br
+Clipping is distortion that occurs when an audio signal
+level exceeds the range of the chosen representation.
+Clipping is rarely desirable and so should usually be corrected by
+adjusting the audio volume prior to the point at which clipping occurs.
+
+In \fISoX\fR, clipping could occur, as you might expect, when using the
+.I vol
+effect to increase the audio volume, but could also occur with many
+other effects, when converting one format to another, and even when
+simply playing the audio.
+
+Playing an audio file often involves reampling, and processing by
+analogue components that can introduce a small DC offset and/or
+amplification, all of which can produce distortion if the audio signal
+level was intially too close to the clipping point.
+
+For these reasons, it is usual to make sure that a digital audio
+file's signal level does not exceed around 70% of the maximum (linear)
+range available, as this will avoid the majority of clipping problems.
+\fISoX\fR's
+.I stat
+effect can assist here by displaying the signal level in an audio file.
+
+If clipping occurrs at any point during processing, then
+.I SoX
+will display a warning message to that effect.
+
 .SH OPTIONS
 The option syntax is somewhat complex, but in essence:
 .P
@@ -1464,7 +1517,7 @@ This produces an 8kHz mono version:
 
 Multiple channels can be synthesised by specifying the set of
 parameters shown between braces ({}) multiple times;
-the following puts the swept tone in the left channel and "brown"
+the following puts the swept tone in the left channel and adds "brown"
 noise in the right:
 
 	sox -n output.au synth 3 sine 300-3300 brownnoise

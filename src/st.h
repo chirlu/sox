@@ -15,6 +15,10 @@
 #include <stdlib.h>
 #include "ststdint.h"
 
+#ifndef __GNUC__
+#  define  __attribute__(x)  /*NOTHING*/
+#endif
+
 /* C language enhancements: */
 
 /* Boolean type, compatible with C++ */
@@ -37,42 +41,87 @@ typedef enum {false, true} bool;
 /* Array-length operator */
 #define array_length(a) (sizeof(a)/sizeof(a[0]))
 
+typedef int32_t int24_t;     /* But beware of the extra byte. */
+typedef uint32_t uint24_t;   /* ditto */
+
+#define ST_INT_MIN(bits) (1L <<((bits)-1))
+#define ST_INT_MAX(bits) (-1UL>>(33-(bits)))
+#define ST_UINT_MAX(bits) (ST_INT_MIN(bits)|ST_INT_MAX(bits))
+
+#define ST_INT8_MAX  ST_INT_MAX(8)
+#define ST_INT16_MAX ST_INT_MAX(16)
+#define ST_INT24_MAX ST_INT_MAX(24)
+#define ST_INT32_MAX ST_INT_MAX(32)
+#define ST_INT64_MAX 0x7fffffffffffffffLL /* Not in use yet */
+
 typedef int32_t st_sample_t;
-typedef uint32_t st_size_t;
-typedef int32_t st_ssize_t;
-typedef uint32_t st_rate_t;
-
-typedef int32_t int24_t;
-typedef uint32_t uint24_t;
-
 /* Minimum and maximum values a sample can hold. */
-#define ST_SAMPLE_MAX 2147483647L
-#define ST_SAMPLE_MIN (-ST_SAMPLE_MAX - 1L)
-#define ST_SAMPLE_FLOAT_SCALE 2147483648.0
+#define ST_SAMPLE_MAX (st_sample_t)ST_INT_MAX(32)
+#define ST_SAMPLE_MIN (st_sample_t)ST_INT_MIN(32)
 
-#define ST_UNSIGNED_BYTE_TO_SAMPLE(d) ((st_sample_t)((d) ^ 0x80) << 24)
-#define ST_SIGNED_BYTE_TO_SAMPLE(d) ((st_sample_t)(d) << 24)
-#define ST_UNSIGNED_WORD_TO_SAMPLE(d) ((st_sample_t)((d) ^ 0x8000) << 16)
-#define ST_SIGNED_WORD_TO_SAMPLE(d) ((st_sample_t)(d) << 16)
-#define ST_UNSIGNED_24BIT_TO_SAMPLE(d) ((st_sample_t)((d) ^ 0x800000L) << 8)
-#define ST_SIGNED_24BIT_TO_SAMPLE(d) ((st_sample_t)(d) << 8)
-#define ST_UNSIGNED_DWORD_TO_SAMPLE(d) ((st_sample_t)((d) ^ 0x80000000L))
-#define ST_SIGNED_DWORD_TO_SAMPLE(d) ((st_sample_t)d)
-#define ST_FLOAT_DWORD_TO_SAMPLE(d) (d==1? ST_SAMPLE_MAX : (st_sample_t)(d*ST_SAMPLE_FLOAT_SCALE))
-#define ST_FLOAT_DDWORD_TO_SAMPLE ST_FLOAT_DWORD_TO_SAMPLE
-#define ST_SAMPLE_TO_UNSIGNED_BYTE(d) ((uint8_t)((d) >> 24) ^ 0x80)
-#define ST_SAMPLE_TO_SIGNED_BYTE(d) ((int8_t)((d) >> 24))
-#define ST_SAMPLE_TO_UNSIGNED_WORD(d) ((uint16_t)((d) >> 16) ^ 0x8000)
-#define ST_SAMPLE_TO_SIGNED_WORD(d) ((int16_t)((d) >> 16))
-#define ST_SAMPLE_TO_UNSIGNED_24BIT(d) ((uint24_t)((d) >> 8) ^ 0x800000L)
-#define ST_SAMPLE_TO_SIGNED_24BIT(d) ((int24_t)((d) >> 8))
-#define ST_SAMPLE_TO_UNSIGNED_DWORD(d) ((uint32_t)(d) ^ 0x80000000L)
-#define ST_SAMPLE_TO_SIGNED_DWORD(d) ((int32_t)(d))
-/* FIXME: This is an approximation because its impossible to
- * to reach 1.
+
+
+/*                Conversions: Linear PCM <--> st_sample_t
+ *
+ *   I/O       I/O     st_sample_t  Clips?    I/O     st_sample_t  Clips? 
+ *  Format   Minimum     Minimum     I O    Maximum     Maximum     I O      
+ *  ------  ---------  ------------ -- --   --------  ------------ -- --  
+ *  Float      -1     -1.00000000047 y y       1           1        y n         
+ *  Byte      -128        -128       n n      127     127.9999999   n y   
+ *  Word     -32768      -32768      n n     32767    32767.99998   n y   
+ *  24bit   -8388608    -8388608     n n    8388607   8388607.996   n y   
+ *  Dword  -2147483648 -2147483648   n n   2147483647 2147483647    n n   
+ *
+ * Conversions are as accurate as possible (with rounding).
+ *
+ * Rounding: halves toward +inf, all others to nearest integer.
+ *
+ * Clips? shows whether on not there is the possibility of a conversion
+ * clipping to the minimum or maximum value when inputing from or outputing 
+ * to a given type.
+ *
+ * Unsigned integers are converted to and from signed integers by flipping
+ * the upper-most bit then treating them as signed integers.
  */
-#define ST_SAMPLE_TO_FLOAT_DWORD(d) ((float)(d/(ST_SAMPLE_FLOAT_SCALE)))
-#define ST_SAMPLE_TO_FLOAT_DDWORD(d) ((double)((double)d/(ST_SAMPLE_FLOAT_SCALE)))
+
+/* Temporary variables to prevent multiple evaluation of macro arguments: */
+static st_sample_t st_macro_temp_sample __attribute__((unused));
+static double st_macro_temp_double __attribute__((unused));
+
+#define ST_SAMPLE_NEG ST_INT_MIN(32)
+#define ST_SAMPLE_TO_UNSIGNED(bits,d,clips) \
+  (uint##bits##_t)( \
+    st_macro_temp_sample=d, \
+    st_macro_temp_sample>(st_sample_t)(ST_SAMPLE_MAX-(1UL<<(31-bits)))? \
+      ++(clips),ST_UINT_MAX(bits): \
+      ((uint32_t)(st_macro_temp_sample^ST_SAMPLE_NEG)+(1UL<<(31-bits)))>>(32-bits))
+#define ST_SAMPLE_TO_SIGNED(bits,d,clips) \
+  (int##bits##_t)(ST_SAMPLE_TO_UNSIGNED(bits,d,clips)^ST_INT_MIN(bits))
+#define ST_SIGNED_TO_SAMPLE(bits,d)((st_sample_t)(d)<<(32-bits))
+#define ST_UNSIGNED_TO_SAMPLE(bits,d)(ST_SIGNED_TO_SAMPLE(bits,d)^ST_SAMPLE_NEG)
+
+#define ST_UNSIGNED_BYTE_TO_SAMPLE(d) ST_UNSIGNED_TO_SAMPLE(8,d)
+#define ST_SIGNED_BYTE_TO_SAMPLE(d) ST_SIGNED_TO_SAMPLE(8,d)
+#define ST_UNSIGNED_WORD_TO_SAMPLE(d) ST_UNSIGNED_TO_SAMPLE(16,d)
+#define ST_SIGNED_WORD_TO_SAMPLE(d) ST_SIGNED_TO_SAMPLE(16,d)
+#define ST_UNSIGNED_24BIT_TO_SAMPLE(d) ST_UNSIGNED_TO_SAMPLE(24,d)
+#define ST_SIGNED_24BIT_TO_SAMPLE(d) ST_SIGNED_TO_SAMPLE(24,d)
+#define ST_UNSIGNED_DWORD_TO_SAMPLE(d) (st_sample_t)((d)^ST_SAMPLE_NEG)
+#define ST_SIGNED_DWORD_TO_SAMPLE(d) (st_sample_t)(d)
+#define ST_FLOAT_DWORD_TO_SAMPLE ST_FLOAT_DDWORD_TO_SAMPLE
+#define ST_FLOAT_DDWORD_TO_SAMPLE(d,clips) (st_macro_temp_double=d,st_macro_temp_double<-1?++(clips),(-ST_SAMPLE_MAX):st_macro_temp_double>1?++(clips),ST_SAMPLE_MAX:(st_sample_t)((uint32_t)((double)(st_macro_temp_double)*ST_SAMPLE_MAX+(ST_SAMPLE_MAX+.5))-ST_SAMPLE_MAX))
+#define ST_SAMPLE_TO_UNSIGNED_BYTE(d,clips) ST_SAMPLE_TO_UNSIGNED(8,d,clips)
+#define ST_SAMPLE_TO_SIGNED_BYTE(d,clips) ST_SAMPLE_TO_SIGNED(8,d,clips)
+#define ST_SAMPLE_TO_UNSIGNED_WORD(d,clips) ST_SAMPLE_TO_UNSIGNED(16,d,clips)
+#define ST_SAMPLE_TO_SIGNED_WORD(d,clips) ST_SAMPLE_TO_SIGNED(16,d,clips)
+#define ST_SAMPLE_TO_UNSIGNED_24BIT(d,clips) ST_SAMPLE_TO_UNSIGNED(24,d,clips)
+#define ST_SAMPLE_TO_SIGNED_24BIT(d,clips) ST_SAMPLE_TO_SIGNED(24,d,clips)
+#define ST_SAMPLE_TO_UNSIGNED_DWORD(d) (uint32_t)((d)^ST_SAMPLE_NEG)
+#define ST_SAMPLE_TO_SIGNED_DWORD(d) (int32_t)(d)
+#define ST_SAMPLE_TO_FLOAT_DWORD (float)ST_SAMPLE_TO_FLOAT_DDWORD
+#define ST_SAMPLE_TO_FLOAT_DDWORD(d,clips) (st_macro_temp_sample=d,st_macro_temp_sample==ST_SAMPLE_MIN?++(clips),-1.0:((double)(st_macro_temp_sample)*(1.0/ST_SAMPLE_MAX)))
+
+
 
 /* MACRO to clip a data type that is greater then st_sample_t to
  * st_sample_t's limits and increment a counter if clipping occurs..
@@ -99,29 +148,22 @@ typedef uint32_t uint24_t;
   ((l) >= ((st_sample_t)1 << 23)? ++(clips), ((st_sample_t)1 << 23) - 1 : \
    (l) <=-((st_sample_t)1 << 23)? ++(clips),-((st_sample_t)1 << 23) + 1 : (l))
 
-/* MACRO to clip a normalized floating point data between 1.0 and -1.0
- * to those limits and increment a counter when clipping occurs.
- */
-#define ST_NORMALIZED_CLIP_COUNT(samp, clips) \
-  do { \
-    if (samp > 1) \
-      { samp = 1; clips++; } \
-    else if (samp < -1) \
-      { samp = -1; clips++; } \
-  } while (0)
 
-/* MACROs for effects where standard clip counting and reporting is used. */
-#define ST_EFF_SAMPLE_CLIP_COUNT(s) ST_SAMPLE_CLIP_COUNT(s, effp->clippedCount)
-#define ST_EFF_24BIT_CLIP_COUNT(s) ST_24BIT_CLIP_COUNT(s, effp->clippedCount)
-#define ST_EFF_ROUND_CLIP_COUNT(s) ST_ROUND_CLIP_COUNT(s, effp->clippedCount)
-#define ST_EFF_NORMALIZED_CLIP_COUNT(s) ST_NORMALIZED_CLIP_COUNT(s, effp->clippedCount)
 
+typedef uint32_t st_size_t;
 /* Maximum value size type can hold. (Minimum is 0). */
 #define ST_SIZE_MAX 0xffffffffL
 
+typedef int32_t st_ssize_t;
 /* Minimum and maximum value signed size type can hold. */
 #define ST_SSIZE_MAX 0x7fffffffL
 #define ST_SSIZE_MIN (-ST_SSIZE_MAX - 1L)
+
+typedef uint32_t st_rate_t;
+/* Warning, this is a MAX value used in the library.  Each format and
+ * effect may have its own limitations of rate.
+ */
+#define ST_MAXRATE      (50UL * 1024) /* maximum sample rate in library */
 
 typedef enum {
   ST_ENCODING_UNKNOWN   ,

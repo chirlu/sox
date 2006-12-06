@@ -226,10 +226,7 @@ st_ssize_t st_hcomread(ft_t ft, st_sample_t *buf, st_size_t len)
                                 p->sample = 0;
                         p->sample = (p->sample + datum) & 0xff;
                         p->huffcount--;
-                        if (p->sample == 0)
-                                *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(1);
-                        else
-                                *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(p->sample);
+                        *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(p->sample);
                         p->dictentry = 0;
                         done++;
                         len--;
@@ -326,7 +323,7 @@ st_ssize_t st_hcomwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 
         while (len-- > 0) {
                 datum = *buf++;
-                p->data[p->pos++] = ST_SAMPLE_TO_UNSIGNED_BYTE(datum);
+                p->data[p->pos++] = ST_SAMPLE_TO_UNSIGNED_BYTE(datum, ft->clippedCount);
         }
 
         return (save_len - len);

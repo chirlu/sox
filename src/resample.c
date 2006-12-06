@@ -401,7 +401,7 @@ int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 // orig: *obuf++ = r->Y[i] * ISCALE;
                 double ftemp = r->Y[i] * ISCALE;
 
-                ST_EFF_SAMPLE_CLIP_COUNT(ftemp);
+                ST_SAMPLE_CLIP_COUNT(ftemp, effp->clippedCount);
                 *obuf++ = ftemp;
         }
 

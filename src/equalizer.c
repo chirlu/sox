@@ -173,7 +173,7 @@ int st_equalizer_flow(eff_t effp, const st_sample_t *ibuf,
            );
     eq->y[0] = out;
 
-    ST_EFF_SAMPLE_CLIP_COUNT(out);
+    ST_SAMPLE_CLIP_COUNT(out, effp->clippedCount);
     *obuf++ = out;
   }
 

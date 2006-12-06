@@ -173,7 +173,7 @@ static st_size_t compute(eff_t effp, speed_t speed, st_sample_t *obuf, st_size_t
         f = cub(speed->cbuf[0], speed->cbuf[1],
                 speed->cbuf[2], speed->cbuf[3], 
                 speed->frac);
-        ST_EFF_SAMPLE_CLIP_COUNT(f);
+        ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
         obuf[i] = f;
     }
     

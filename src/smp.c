@@ -397,7 +397,7 @@ st_ssize_t st_smpwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
         st_ssize_t done = 0;
 
         while(done < len) {
-                datum = (int) ST_SAMPLE_TO_SIGNED_WORD(*buf++);
+                datum = (int) ST_SAMPLE_TO_SIGNED_WORD(*buf++, ft->clippedCount);
                 st_writew(ft, datum);
                 smp->NoOfSamps++;
                 done++;

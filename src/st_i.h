@@ -42,6 +42,7 @@ st_sample_t st_lcm(st_sample_t a, st_sample_t b) REGPARM(2);
 
 #ifndef HAVE_STRCASECMP
 int strcasecmp(const char *s1, const char *s2);
+int strncasecmp(char const * s1, char const * s2, size_t n);
 #endif
 
 #ifndef HAVE_STRDUP
@@ -124,22 +125,12 @@ int st_is_littleendian(void);
 #define ST_IS_LITTLEENDIAN 1
 #endif
 
-/* Warning, this is a MAX value used in the library.  Each format and
- * effect may have its own limitations of rate.
- */
-#define ST_MAXRATE      50L * 1024 /* maximum sample rate in library */
-
 #ifndef M_PI
 #define M_PI    3.14159265358979323846
 #endif
 #ifndef M_PI_2
 #define M_PI_2  1.57079632679489661923  /* pi/2 */
 #endif
-
-#define ST_INT8_MAX (127)
-#define ST_INT16_MAX (32676)
-#define ST_INT32_MAX (2147483647)
-#define ST_INT64_MAX (9223372036854775807)
 
 /* The following is used at times in libst when alloc()ing buffers
  * to perform file I/O.  It can be useful to pass in similar sized

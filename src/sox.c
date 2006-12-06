@@ -938,12 +938,17 @@ static void process(void) {
         {
           /* We no longer have any info about this file as we've just
            * st_close'd it, so just refer to file number: */
-          st_warn("Input file # %i reported an error whilst it was being closed.", f);
+          st_warn("Input file # %i reported an error whilst it was being closed.", f + 1);
         }
     }
 
     if (writing)
     {
+        if (file_desc[f]->clippedCount != 0)
+        {
+          st_warn("%s: %u values clipped on output", file_desc[f]->filename, file_desc[f]->clippedCount);
+        }
+
         /* problem closing output file, just warn user since we
          * are exiting anyways.
          */

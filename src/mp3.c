@@ -482,8 +482,8 @@ st_ssize_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
         j=0;
         for (i=0; i<nsamples; i++)
         {
-            buffer_l[i]=ST_SAMPLE_TO_SIGNED_WORD(buf[j++]);
-            buffer_r[i]=ST_SAMPLE_TO_SIGNED_WORD(buf[j++]);
+            buffer_l[i]=ST_SAMPLE_TO_SIGNED_WORD(buf[j++], ft->clippedCount);
+            buffer_r[i]=ST_SAMPLE_TO_SIGNED_WORD(buf[j++], ft->clippedCount);
         }
     }
     else
@@ -491,7 +491,7 @@ st_ssize_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
         j=0;
         for (i=0; i<nsamples; i++)
         {
-            buffer_l[i]=ST_SAMPLE_TO_SIGNED_WORD(buf[j++]); 
+            buffer_l[i]=ST_SAMPLE_TO_SIGNED_WORD(buf[j++], ft->clippedCount); 
         }
     }
 

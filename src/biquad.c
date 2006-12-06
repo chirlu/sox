@@ -14,7 +14,7 @@ int st_biquad_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     double o0 = *ibuf*p->b0 +p->i1*p->b1 +p->i2*p->b2 -p->o1*p->a1 -p->o2*p->a2;
     p->i2 = p->i1, p->i1 = *ibuf++;
     p->o2 = p->o1, p->o1 = o0;
-    *obuf++ = ST_EFF_ROUND_CLIP_COUNT(o0);
+    *obuf++ = ST_ROUND_CLIP_COUNT(o0, effp->clippedCount);
   }
   return ST_SUCCESS;
 }

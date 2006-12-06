@@ -227,7 +227,7 @@ int st_flanger_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         flanger->maxsamples] * flanger->decay;
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * flanger->out_gain;
-                out = ST_EFF_24BIT_CLIP_COUNT((st_sample_t) d_out);
+                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clippedCount);
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 flanger->flangerbuf[flanger->counter] = d_in;
@@ -260,7 +260,7 @@ int st_flanger_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         flanger->maxsamples] * flanger->decay;
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * flanger->out_gain;
-                out = ST_EFF_24BIT_CLIP_COUNT((st_sample_t) d_out);
+                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clippedCount);
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 flanger->flangerbuf[flanger->counter] = d_in;
