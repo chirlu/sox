@@ -19,25 +19,13 @@ effects = avg.c band.c bandpass.c biquad.c breject.c btrworth.c chorus.c \
 	  reverb.c reverse.c silence.c speed.c stat.c \
 	  stretch.c swap.c synth.c tone.c trim.c vibro.c vol.c
 
-PLAY_0    =
-PLAY_1    = play
-
-libst_a_SOURCES = $(formats) $(effects) handlers.c misc.c stio.c util.c
-if OSS
-libst_a_SOURCES += oss.c
-endif
-if ALSA
-libst_a_SOURCES += alsa.c
-endif
-if SUNAU
-libst_a_SOURCES += sunaudio.c
-endif
+libst_a_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c misc.c stio.c util.c
 
 sox_SOURCES = sox.c
 sox_LDADD = libst.a libgsm/libgsm.a
 sox_LDFLAGS = @SAMPLERATE_LIBS@
 
-all: sox soxmix $(PLAY_$(PLAY_SUPPORT))
+all: sox soxmix play
 
 soxmix: sox
 	$(RM) soxmix
@@ -46,18 +34,12 @@ soxmix: sox
 libgsm/libgsm.a:
 	cd libgsm && $(MAKE)
 
-PLAY_INSTALL_0    =
-PLAY_INSTALL_1    = install-play
-
-install: sox $(PLAY_INSTALL_$(PLAY_SUPPORT))
+install: sox play
 	$(top_srcdir)/mkinstalldirs $(bindir)
 	$(INSTALL) -c -m 755 sox $(bindir)
 	$(RM) $(bindir)/soxmix
 	cd $(bindir) && $(LN_S) sox soxmix
-
-install-play:
 	if [ -f $(bindir)/rec ] ; then $(RM) $(bindir)/rec; fi
-	$(top_srcdir)/mkinstalldirs $(bindir)
 	$(INSTALL) -c -m 755 play $(bindir)
 	cd $(bindir) && $(LN_S) play rec
 
@@ -70,14 +52,9 @@ install-lib: libst.a
 	$(INSTALL) -c -m 644 $(srcdir)/st.h $(includedir)
 	$(INSTALL) -c -m 644 ststdint.h $(includedir)
 
-PLAY_UNINSTALL_0    =
-PLAY_UNINSTALL_1    = uninstall-play
-
-uninstall: $(PLAY_UNINSTALL_$(PLAY_SUPPORT))
+uninstall: 
 	$(RM) $(bindir)/sox
 	$(RM) $(bindir)/soxmix
-
-uninstall-play:
 	$(RM) $(bindir)/play
 	$(RM) $(bindir)/rec
 

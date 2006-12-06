@@ -36,9 +36,6 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 bin_PROGRAMS = sox$(EXEEXT)
-@OSS_TRUE@am__append_1 = oss.c
-@ALSA_TRUE@am__append_2 = alsa.c
-@SUNAU_TRUE@am__append_3 = sunaudio.c
 subdir = src
 DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/libst-config.in $(srcdir)/play.in \
@@ -64,19 +61,6 @@ AR = ar
 ARFLAGS = cru
 libst_a_AR = $(AR) $(ARFLAGS)
 libst_a_LIBADD =
-am__libst_a_SOURCES_DIST = 8svx.c adpcm.c aiff.c au.c auto.c avr.c \
-	cdr.c cvsd.c dat.c flac.c g711.c g721.c g723_16.c g723_24.c \
-	g723_40.c g72x.c gsm.c hcom.c ima_rw.c maud.c mp3.c nulfile.c \
-	prc.c raw.c sf.c smp.c sndrtool.c sphere.c tx16w.c voc.c \
-	vorbis.c vox.c wav.c wve.c xa.c avg.c band.c bandpass.c \
-	biquad.c breject.c btrworth.c chorus.c compand.c copy.c \
-	dcshift.c deemphas.c earwax.c echo.c echos.c equalizer.c \
-	fade.c FFT.c filter.c flanger.c highp.c highpass.c lowp.c \
-	lowpass.c mask.c mcompand.c noiseprof.c noisered.c pan.c \
-	phaser.c pitch.c polyphas.c rabbit.c rate.c repeat.c \
-	resample.c reverb.c reverse.c silence.c speed.c stat.c \
-	stretch.c swap.c synth.c tone.c trim.c vibro.c vol.c \
-	handlers.c misc.c stio.c util.c oss.c alsa.c sunaudio.c
 am__objects_1 = 8svx.$(OBJEXT) adpcm.$(OBJEXT) aiff.$(OBJEXT) \
 	au.$(OBJEXT) auto.$(OBJEXT) avr.$(OBJEXT) cdr.$(OBJEXT) \
 	cvsd.$(OBJEXT) dat.$(OBJEXT) flac.$(OBJEXT) g711.$(OBJEXT) \
@@ -103,13 +87,9 @@ am__objects_2 = avg.$(OBJEXT) band.$(OBJEXT) bandpass.$(OBJEXT) \
 	stat.$(OBJEXT) stretch.$(OBJEXT) swap.$(OBJEXT) \
 	synth.$(OBJEXT) tone.$(OBJEXT) trim.$(OBJEXT) vibro.$(OBJEXT) \
 	vol.$(OBJEXT)
-@OSS_TRUE@am__objects_3 = oss.$(OBJEXT)
-@ALSA_TRUE@am__objects_4 = alsa.$(OBJEXT)
-@SUNAU_TRUE@am__objects_5 = sunaudio.$(OBJEXT)
-am_libst_a_OBJECTS = $(am__objects_1) $(am__objects_2) \
-	handlers.$(OBJEXT) misc.$(OBJEXT) stio.$(OBJEXT) \
-	util.$(OBJEXT) $(am__objects_3) $(am__objects_4) \
-	$(am__objects_5)
+am_libst_a_OBJECTS = $(am__objects_1) $(am__objects_2) alsa.$(OBJEXT) \
+	oss.$(OBJEXT) sunaudio.$(OBJEXT) handlers.$(OBJEXT) \
+	misc.$(OBJEXT) stio.$(OBJEXT) util.$(OBJEXT)
 libst_a_OBJECTS = $(am_libst_a_OBJECTS)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
@@ -124,7 +104,7 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libst_a_SOURCES) $(sox_SOURCES)
-DIST_SOURCES = $(am__libst_a_SOURCES_DIST) $(sox_SOURCES)
+DIST_SOURCES = $(libst_a_SOURCES) $(sox_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-exec-recursive install-info-recursive \
@@ -136,8 +116,6 @@ CTAGS = ctags
 DIST_SUBDIRS = $(SUBDIRS)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
-ALSA_FALSE = @ALSA_FALSE@
-ALSA_TRUE = @ALSA_TRUE@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
@@ -172,8 +150,6 @@ LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 OBJEXT = @OBJEXT@
-OSS_FALSE = @OSS_FALSE@
-OSS_TRUE = @OSS_TRUE@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -182,15 +158,12 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
-PLAY_SUPPORT = @PLAY_SUPPORT@
 RANLIB = @RANLIB@
 SAMPLERATE_CFLAGS = @SAMPLERATE_CFLAGS@
 SAMPLERATE_LIBS = @SAMPLERATE_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-SUNAU_FALSE = @SUNAU_FALSE@
-SUNAU_TRUE = @SUNAU_TRUE@
 VERSION = @VERSION@
 ac_ct_CC = @ac_ct_CC@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
@@ -243,17 +216,10 @@ effects = avg.c band.c bandpass.c biquad.c breject.c btrworth.c chorus.c \
 	  reverb.c reverse.c silence.c speed.c stat.c \
 	  stretch.c swap.c synth.c tone.c trim.c vibro.c vol.c
 
-PLAY_0 = 
-PLAY_1 = play
-libst_a_SOURCES = $(formats) $(effects) handlers.c misc.c stio.c \
-	util.c $(am__append_1) $(am__append_2) $(am__append_3)
+libst_a_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c misc.c stio.c util.c
 sox_SOURCES = sox.c
 sox_LDADD = libst.a libgsm/libgsm.a
 sox_LDFLAGS = @SAMPLERATE_LIBS@
-PLAY_INSTALL_0 = 
-PLAY_INSTALL_1 = install-play
-PLAY_UNINSTALL_0 = 
-PLAY_UNINSTALL_1 = uninstall-play
 all: stconfig.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -753,7 +719,7 @@ uninstall-info: uninstall-info-recursive
 	uninstall-libLIBRARIES
 
 
-all: sox soxmix $(PLAY_$(PLAY_SUPPORT))
+all: sox soxmix play
 
 soxmix: sox
 	$(RM) soxmix
@@ -762,15 +728,12 @@ soxmix: sox
 libgsm/libgsm.a:
 	cd libgsm && $(MAKE)
 
-install: sox $(PLAY_INSTALL_$(PLAY_SUPPORT))
+install: sox play
 	$(top_srcdir)/mkinstalldirs $(bindir)
 	$(INSTALL) -c -m 755 sox $(bindir)
 	$(RM) $(bindir)/soxmix
 	cd $(bindir) && $(LN_S) sox soxmix
-
-install-play:
 	if [ -f $(bindir)/rec ] ; then $(RM) $(bindir)/rec; fi
-	$(top_srcdir)/mkinstalldirs $(bindir)
 	$(INSTALL) -c -m 755 play $(bindir)
 	cd $(bindir) && $(LN_S) play rec
 
@@ -783,11 +746,9 @@ install-lib: libst.a
 	$(INSTALL) -c -m 644 $(srcdir)/st.h $(includedir)
 	$(INSTALL) -c -m 644 ststdint.h $(includedir)
 
-uninstall: $(PLAY_UNINSTALL_$(PLAY_SUPPORT))
+uninstall: 
 	$(RM) $(bindir)/sox
 	$(RM) $(bindir)/soxmix
-
-uninstall-play:
 	$(RM) $(bindir)/play
 	$(RM) $(bindir)/rec
 
