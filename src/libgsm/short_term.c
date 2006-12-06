@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/short_term.c,v 1.1 2006/08/27 23:04:56 cbagwell Exp $ */
+/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/short_term.c,v 1.2 2006/12/06 18:08:33 rrt Exp $ */
 
 #include <stdio.h>
 #include <assert.h>
@@ -222,45 +222,6 @@ static void Short_term_analysis_filtering (
 	}
 }
 
-#if defined(USE_FLOAT_MUL) && defined(FAST)
-
-static void Fast_Short_term_analysis_filtering (
-	struct gsm_state * S,
-	register word	* rp,	/* [0..7]	IN	*/
-	register int 	k_n, 	/*   k_end - k_start	*/
-	register word	* s	/* [0..n-1]	IN/OUT	*/
-)
-{
-	register word		* u = S->u;
-	register int		i;
-
-	float 	  uf[8],
-		 rpf[8];
-
-	register float scalef = 3.0517578125e-5;
-	register float		sav, di, temp;
-
-	for (i = 0; i < 8; ++i) {
-		uf[i]  = u[i];
-		rpf[i] = rp[i] * scalef;
-	}
-	for (; k_n--; s++) {
-		sav = di = *s;
-		for (i = 0; i < 8; ++i) {
-			register float rpfi = rpf[i];
-			register float ufi  = uf[i];
-
-			uf[i] = sav;
-			temp  = rpfi * di + ufi;
-			di   += rpfi * ufi;
-			sav   = temp;
-		}
-		*s = di;
-	}
-	for (i = 0; i < 8; ++i) u[i] = uf[i];
-}
-#endif /* ! (defined (USE_FLOAT_MUL) && defined (FAST)) */
-
 static void Short_term_synthesis_filtering (
 	struct gsm_state * S,
 	register word	* rrp,	/* [0..7]	IN	*/
@@ -302,46 +263,6 @@ static void Short_term_synthesis_filtering (
 	}
 }
 
-
-#if defined(FAST) && defined(USE_FLOAT_MUL)
-
-static void Fast_Short_term_synthesis_filtering (
-	struct gsm_state * S,
-	register word	* rrp,	/* [0..7]	IN	*/
-	register int	k,	/* k_end - k_start	*/
-	register word	* wt,	/* [0..k-1]	IN	*/
-	register word	* sr	/* [0..k-1]	OUT	*/
-)
-{
-	register word		* v = S->v;
-	register int		i;
-
-	float va[9], rrpa[8];
-	register float scalef = 3.0517578125e-5, temp;
-
-	for (i = 0; i < 8; ++i) {
-		va[i]   = v[i];
-		rrpa[i] = (float)rrp[i] * scalef;
-	}
-	while (k--) {
-		register float sri = *wt++;
-		for (i = 8; i--;) {
-			sri -= rrpa[i] * va[i];
-			if     (sri < -32768.) sri = -32768.;
-			else if (sri > 32767.) sri =  32767.;
-
-			temp = va[i] + rrpa[i] * sri;
-			if     (temp < -32768.) temp = -32768.;
-			else if (temp > 32767.) temp =  32767.;
-			va[i+1] = temp;
-		}
-		*sr++ = va[0] = sri;
-	}
-	for (i = 0; i < 9; ++i) v[i] = va[i];
-}
-
-#endif /* defined(FAST) && defined(USE_FLOAT_MUL) */
-
 void Gsm_Short_Term_Analysis_Filter (
 
 	struct gsm_state * S,
@@ -356,14 +277,7 @@ void Gsm_Short_Term_Analysis_Filter (
 	word		LARp[8];
 
 #undef	FILTER
-#if 	defined(FAST) && defined(USE_FLOAT_MUL)
-# 	define	FILTER 	(* (S->fast			\
-			   ? Fast_Short_term_analysis_filtering	\
-		    	   : Short_term_analysis_filtering	))
-
-#else
-# 	define	FILTER	Short_term_analysis_filtering
-#endif
+#define	FILTER	Short_term_analysis_filtering
 
 	Decoding_of_the_coded_Log_Area_Ratios( LARc, LARpp_j );
 
@@ -399,14 +313,7 @@ void Gsm_Short_Term_Synthesis_Filter (
 	word		LARp[8];
 
 #undef	FILTER
-#if 	defined(FAST) && defined(USE_FLOAT_MUL)
-
-# 	define	FILTER 	(* (S->fast			\
-			   ? Fast_Short_term_synthesis_filtering	\
-		    	   : Short_term_synthesis_filtering	))
-#else
-#	define	FILTER	Short_term_synthesis_filtering
-#endif
+#define	FILTER	Short_term_synthesis_filtering
 
 	Decoding_of_the_coded_Log_Area_Ratios( LARcr, LARpp_j );
 
