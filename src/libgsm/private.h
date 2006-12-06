@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/*$Header: /cvsroot/sox/sox/src/libgsm/Attic/private.h,v 1.1 2006/08/27 23:04:56 cbagwell Exp $*/
+/*$Header: /cvsroot/sox/sox/src/libgsm/Attic/private.h,v 1.2 2006/12/06 17:29:36 rrt Exp $*/
 
 #ifndef	PRIVATE_H
 #define	PRIVATE_H
@@ -33,7 +33,6 @@ struct gsm_state {
 	word		msr;		/* decoder.c,	Postprocessing	*/
 
 	char		verbose;	/* only used if !NDEBUG		*/
-	char		fast;		/* only used if FAST		*/
 
 	char		wav_fmt;	/* only used if WAV49 defined	*/
 	unsigned char	frame_index;	/*            odd/even chaining	*/

@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/gsm_encode.c,v 1.1 2006/08/27 23:04:56 cbagwell Exp $ */
+/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/gsm_encode.c,v 1.2 2006/12/06 17:29:36 rrt Exp $ */
 
 #include "private.h"
 #include "gsm.h"
@@ -101,8 +101,6 @@ void gsm_encode (gsm s, gsm_signal * source, gsm_byte * c)
 		xmc[50]		3
 		xmc[51]		3
 	*/
-
-#ifdef WAV49
 
 	if (s->wav_fmt) {
 		s->frame_index = !s->frame_index;
@@ -342,7 +340,6 @@ void gsm_encode (gsm s, gsm_signal * source, gsm_byte * c)
 
 	else
 
-#endif	/* WAV49 */
 	{
 
 		*c++ =   ((GSM_MAGIC & 0xF) << 4)		/* 1 */

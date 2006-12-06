@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/gsm_decode.c,v 1.1 2006/08/27 23:04:56 cbagwell Exp $ */
+/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/gsm_decode.c,v 1.2 2006/12/06 17:29:36 rrt Exp $ */
 
 #include "private.h"
 
@@ -14,7 +14,6 @@ int gsm_decode (gsm s, gsm_byte * c, gsm_signal * target)
 {
 	word  	LARc[8], Nc[4], Mc[4], bc[4], xmaxc[4], xmc[13*4];
 
-#ifdef WAV49
 	if (s->wav_fmt) {
 
 		uword sr = 0;
@@ -247,7 +246,6 @@ int gsm_decode (gsm s, gsm_byte * c, gsm_signal * target)
 		}
 	}
 	else
-#endif
 	{
 		/* GSM_MAGIC  = (*c >> 4) & 0xF; */
 

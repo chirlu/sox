@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/*$Header: /cvsroot/sox/sox/src/libgsm/Attic/gsm.h,v 1.2 2006/12/06 17:10:51 rrt Exp $*/
+/*$Header: /cvsroot/sox/sox/src/libgsm/Attic/gsm.h,v 1.3 2006/12/06 17:29:36 rrt Exp $*/
 
 #ifndef	GSM_H
 #define	GSM_H
@@ -26,8 +26,6 @@ typedef gsm_byte 		gsm_frame[33];		/* 33 * 8 bits	 */
 #define	GSM_MAJOR		1
 
 #define	GSM_OPT_VERBOSE		1
-#define	GSM_OPT_FAST		2
-#define	GSM_OPT_LTP_CUT		3
 #define	GSM_OPT_WAV49		4
 #define	GSM_OPT_FRAME_INDEX	5
 #define	GSM_OPT_FRAME_CHAIN	6
