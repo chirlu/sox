@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/rpe.c,v 1.1 2006/08/27 23:04:56 cbagwell Exp $ */
+/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/rpe.c,v 1.2 2006/12/06 17:35:26 rrt Exp $ */
 
 #include <stdio.h>
 #include <assert.h>
@@ -66,19 +66,6 @@ static void Weighting_filter (
 		 *  Do you?
 		 */
 
-#ifdef	STUPID_COMPILER
-		L_result += STEP(	0, 	-134 ) ;
-		L_result += STEP(	1, 	-374 )  ;
-	               /* + STEP(	2, 	0    )  */
-		L_result += STEP(	3, 	2054 ) ;
-		L_result += STEP(	4, 	5741 ) ;
-		L_result += STEP(	5, 	8192 ) ;
-		L_result += STEP(	6, 	5741 ) ;
-		L_result += STEP(	7, 	2054 ) ;
-	 	       /* + STEP(	8, 	0    )  */
-		L_result += STEP(	9, 	-374 ) ;
-		L_result += STEP(	10, 	-134 ) ;
-#else
 		L_result +=
 		  STEP(	0, 	-134 ) 
 		+ STEP(	1, 	-374 ) 
@@ -92,7 +79,6 @@ static void Weighting_filter (
 		+ STEP(	9, 	-374 ) 
 		+ STEP(10, 	-134 )
 		;
-#endif
 
 		/* L_result = GSM_L_ADD( L_result, L_result ); (* scaling(x2) *)
 		 * L_result = GSM_L_ADD( L_result, L_result ); (* scaling(x4) *)
