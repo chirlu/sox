@@ -412,4 +412,11 @@ const char *st_version(void);                   /* return version number */
 #define ST_EINVAL 2006          /* Invalid argument */
 #define ST_EFFMT 2007           /* Unsupported file format */
 
+/* Define fseeko and ftello for platforms lacking them */
+#ifndef HAVE_FSEEKO
+#define fseeko fseek
+#define ftello ftell
+#define off_t long
+#endif
+
 #endif

@@ -11,14 +11,14 @@
  * "reverse" effect, uses a temporary file created by tmpfile().
  */
 
+#include "st_i.h"
+
 #include <math.h>
 #include <stdio.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>     /* For SEEK_* defines if not found in stdio */
 #endif
-
-#include "st_i.h"
 
 static st_effect_t st_reverse_effect;
 
@@ -100,8 +100,8 @@ int st_reverse_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 
         if (reverse->phase == WRITING) {
                 fflush(reverse->fp);
-                fseek(reverse->fp, 0L, SEEK_END);
-                reverse->pos = ftell(reverse->fp);
+                fseeko(reverse->fp, 0L, SEEK_END);
+                reverse->pos = ftello(reverse->fp);
                 if (reverse->pos % sizeof(st_sample_t) != 0)
                 {
                         st_fail("Reverse effect finds odd temporary file");
@@ -116,7 +116,7 @@ int st_reverse_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 len = nbytes / sizeof(st_sample_t);
         }
         reverse->pos -= nbytes;
-        fseek(reverse->fp, reverse->pos, SEEK_SET);
+        fseeko(reverse->fp, reverse->pos, SEEK_SET);
         if (fread((char *)obuf, sizeof(st_sample_t), len, reverse->fp) != len)
         {
                 st_fail("Reverse effect read error from temporary file");

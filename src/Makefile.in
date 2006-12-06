@@ -38,16 +38,15 @@ POST_UNINSTALL = :
 bin_PROGRAMS = sox$(EXEEXT)
 subdir = src
 DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/libst-config.in $(srcdir)/play.in \
-	$(srcdir)/stconfig.h.in
+	$(srcdir)/libst-config.in $(srcdir)/stconfig.h.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/stdint.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_create_stdint_h.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = stconfig.h
-CONFIG_CLEAN_FILES = libst-config play
+CONFIG_CLEAN_FILES = libst-config
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -272,8 +271,6 @@ $(srcdir)/stconfig.h.in:  $(am__configure_deps)
 distclean-hdr:
 	-rm -f stconfig.h stamp-h1
 libst-config: $(top_builddir)/config.status $(srcdir)/libst-config.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-play: $(top_builddir)/config.status $(srcdir)/play.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 install-libLIBRARIES: $(lib_LIBRARIES)
 	@$(NORMAL_INSTALL)

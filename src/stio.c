@@ -9,15 +9,13 @@
 #include <sys/stat.h> /* for fstat() */
 
 #ifdef _MSC_VER
-/*
- * __STDC__ is defined, so these symbols aren't created.
- */
+/* __STDC__ is defined, so these symbols aren't created. */
 #define S_IFMT   _S_IFMT
 #define S_IFREG  _S_IFREG
 #define fstat _fstat
 #endif
 
-/* Based from zlib's minigzip: */
+/* Based on zlib's minigzip: */
 #if defined(WIN32) || defined(__NT__)
 #include <fcntl.h>
 #include <io.h>
@@ -100,8 +98,8 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
 
     if (st_gettype(ft, false) != ST_SUCCESS)
     {
-        st_warn("Unknown input file format for '%s':  %s", 
-                ft->filename, 
+        st_warn("Unknown input file format for '%s':  %s",
+                ft->filename,
                 ft->st_errstr);
         goto input_error;
     }
@@ -224,8 +222,8 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
 
     if (!ft->filetype || st_gettype(ft, no_filetype_given) != ST_SUCCESS)
     {
-        st_warn("Unknown output file format for '%s':  %s", 
-                ft->filename, 
+        st_warn("Unknown output file format for '%s':  %s",
+                ft->filename,
                 ft->st_errstr);
         goto output_error;
     }
@@ -267,7 +265,7 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
         ft->seekable = is_seekable(ft);
     }
 
-    ft->comment = comment;
+    ft->comment = strdup(comment);
 
     if (loops)
     {
@@ -354,11 +352,9 @@ int st_close(ft_t ft)
 
 int st_seek(ft_t ft, st_size_t offset, int whence)
 {
-    /* One day, ST_SEEK_CUR and ST_SEEK_END should be impelemented */
+    /* FIXME: Implement ST_SEEK_CUR and ST_SEEK_END. */
     if (whence != ST_SEEK_SET)
-        return ST_EOF;
-    /* FIXME: Should return this */
-/*        return ST_EINVAL; */
+        return ST_EOF; /* FIXME: return ST_EINVAL */
 
     /* If file is a seekable file and this handler supports seeking,
      * the invoke handlers function.
@@ -366,7 +362,5 @@ int st_seek(ft_t ft, st_size_t offset, int whence)
     if (ft->seekable  && (ft->h->flags & ST_FILE_SEEK))
         return (*ft->h->seek)(ft, offset);
     else
-        return ST_EOF;
-    /* FIXME: Should return this */
-/*        return ST_EBADF; */
+        return ST_EOF; /* FIXME: return ST_EBADF */
 }

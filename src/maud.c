@@ -103,7 +103,7 @@ int st_maudstartread(ft_t ft)
                             return(ST_EOF);
                         }
                         
-                        /* fseek(ft->fp,12,SEEK_CUR); */
+                        /* fseeko(ft->fp,12,SEEK_CUR); */
 
                         /* number of samples stored in MDAT */
                         st_readdw(ft, &(p->nsamples));

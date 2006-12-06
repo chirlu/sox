@@ -112,12 +112,8 @@ AC_SUBST(SAMPLERATE_LIBS)
 
 dnl Generate output files...
 
-AC_CONFIG_FILES([Makefile src/libst-config src/Makefile src/libgsm/Makefile])
-AC_CONFIG_FILES([src/play], [chmod +x src/play])
-
-AC_OUTPUT()
-
 AX_CREATE_STDINT_H(src/ststdint.h)
+AC_OUTPUT(Makefile src/Makefile src/libgsm/Makefile src/libst-config)
 
 if test ! -f src/tests.sh; then cp ${srcdir}/src/tests.sh src/tests.sh; fi
 if test ! -f src/testall.sh; then cp ${srcdir}/src/testall.sh src/testall.sh; fi

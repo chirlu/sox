@@ -113,7 +113,7 @@ int st_flush(ft_t ft)
 
 st_size_t st_tell(ft_t ft)
 {
-  return (st_size_t)ftell(ft->fp);
+  return (st_size_t)ftello(ft->fp);
 }
 
 int st_eof(ft_t ft)
@@ -125,7 +125,7 @@ int st_error(ft_t ft)
 {
   return ferror(ft->fp);
 }
- 
+
 void st_rewind(ft_t ft)
 {
   rewind(ft->fp);
@@ -365,7 +365,7 @@ int st_format_nothing_seek(ft_t ft, st_size_t offset) { st_fail_errno(ft, ST_ENO
 
 /* dummy effect routine for do-nothing functions */
 int st_effect_nothing(eff_t effp) { return(ST_SUCCESS); }
-int st_effect_nothing_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp) 
+int st_effect_nothing_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
   { /* Inform no more samples to drain */ *osamp = 0; return(ST_EOF); }
 
 /* here for linear interp.  might be useful for other things */
@@ -461,44 +461,42 @@ const char *st_version(void)
   return PACKAGE_VERSION;
 }
 
-/* Implements traditional fseek() behavior.  Meant to abstract out
+/* Implements traditional fseeko() behavior.  Meant to abstract out
  * file operations so that they could one day also work on memory
  * buffers.
- * Offset is in bytes as apposed to st_seek() which is in samples.
+ *
+ * Offset is in bytes as opposed to st_seek() which is in samples.
+ *
+ * N.B. Can only seek forwards!
  */
 int st_seeki(ft_t ft, st_size_t offset, int whence)
 {
-    if( ft->seekable == 0 ){
-        /*
-         * If a stream peel off chars else
-         * EPERM        "Operation not permitted"
-         */
-        if(whence == SEEK_CUR ){
-            while ( offset > 0 && !feof(ft->fp) )
-            {
+    if (ft->seekable == 0) {
+        /* If a stream peel off chars else EPERM */
+        if (whence == SEEK_CUR) {
+            while (offset > 0 && !feof(ft->fp)) {
                 getc(ft->fp);
                 offset--;
             }
-            if(offset)
-                st_fail_errno(ft,ST_EOF,"offset past eof");
+            if (offset)
+                st_fail_errno(ft,ST_EOF, "offset past EOF");
             else
                 ft->st_errno = ST_SUCCESS;
-        } else {
-            st_fail_errno(ft,ST_EPERM,"File not seekable");
-        }
+        } else
+            st_fail_errno(ft,ST_EPERM, "file not seekable");
     } else {
-        if( fseek(ft->fp,offset,whence) == -1 )
+        if (fseeko(ft->fp, offset, whence) == -1)
             st_fail_errno(ft,errno,strerror(errno));
         else
             ft->st_errno = ST_SUCCESS;
     }
 
     /* Empty the st file buffer */
-    if( ft->st_errno == ST_SUCCESS ){
+    if (ft->st_errno == ST_SUCCESS) {
         ft->file.count = 0;
         ft->file.pos = 0;
         ft->file.eof = 0;
     }
 
-    return(ft->st_errno);
+    return ft->st_errno;
 }

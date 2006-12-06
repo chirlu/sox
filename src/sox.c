@@ -311,9 +311,9 @@ static char * read_comment_file(char const * const filename)
     st_fail("Cannot open comment file %s", filename);
     exit(1);
   }
-  file_error = fseek(file, 0, SEEK_END);
+  file_error = fseeko(file, 0, SEEK_END);
   if (!file_error) {
-    file_length = ftell(file);
+    file_length = ftello(file);
     file_error |= file_length < 0;
     if (!file_error) {
       result = malloc(file_length + 1);
@@ -637,8 +637,7 @@ static void process(void) {
             free(options->comment);
           else comment = options->comment;
         }
-        else comment = strdup(file_desc[0]->comment? file_desc[0]->comment :
-            "Processed by SoX");
+        else comment = file_desc[0]->comment ? file_desc[0]->comment : "Processed by SoX";
 
         /*
          * copy loop info, resizing appropriately

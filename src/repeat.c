@@ -1,5 +1,4 @@
 /*
-
     Repeat effect file for SoX
     Copyright (C) 2004 Jan Paul Schmidt <jps@fundament.org>
 
@@ -7,22 +6,22 @@
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
     version 2 of the License, or (at your option) any later version.
- 
+
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
     Lesser General Public License for more details.
- 
+
     You should have received a copy of the GNU Lesser General Public
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
  */
+
+#include "st_i.h"
 
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
-#include "st_i.h"
 
 static st_effect_t st_repeat_effect;
 
@@ -34,7 +33,7 @@ typedef struct repeatstuff {
         int repeats;
 } *repeat_t;
 
-int st_repeat_getopts(eff_t effp, int n, char **argv) 
+int st_repeat_getopts(eff_t effp, int n, char **argv)
 {
         repeat_t repeat = (repeat_t)effp->priv;
 
@@ -66,7 +65,7 @@ int st_repeat_start(eff_t effp)
         }
 
         repeat->first_drain = 1;
-        
+
         return (ST_SUCCESS);
 }
 
@@ -98,18 +97,18 @@ int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         if (repeat->first_drain == 1) {
                 repeat->first_drain = 0;
 
-                fseek(repeat->fp, 0L, SEEK_END);
-                repeat->total = ftell(repeat->fp);
+                fseeko(repeat->fp, 0L, SEEK_END);
+                repeat->total = ftello(repeat->fp);
 
                 if ((repeat->total % sizeof(st_sample_t)) != 0) {
                         st_fail("repeat: corrupted temporary file");
                         return (ST_EOF);
                 }
-        
+
                 repeat->total /= sizeof(st_sample_t);
                 repeat->remaining = repeat->total;
-                
-                fseek(repeat->fp, 0L, SEEK_SET);
+
+                fseeko(repeat->fp, 0L, SEEK_SET);
         }
 
         if (repeat->remaining == 0) {
@@ -119,7 +118,7 @@ int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 }
                 else {
                         repeat->repeats--;
-                        fseek(repeat->fp, 0L, SEEK_SET);
+                        fseeko(repeat->fp, 0L, SEEK_SET);
                         repeat->remaining = repeat->total;
                 }
         }
@@ -141,7 +140,7 @@ int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 
                 while (repeat->repeats > 0) {
                         repeat->repeats--;
-                        fseek(repeat->fp, 0L, SEEK_SET);
+                        fseeko(repeat->fp, 0L, SEEK_SET);
 
                         if (repeat->total >= *osamp - done) {
                                 samp = *osamp - done;
@@ -154,7 +153,7 @@ int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                         }
 
                         repeat->remaining = repeat->total - samp;
-                        
+
                         read = fread((char *)buf, sizeof(st_sample_t), samp,
                                         repeat->fp);
                         if (read != samp) {
@@ -193,7 +192,7 @@ int st_repeat_stop(eff_t effp)
         repeat_t repeat = (repeat_t)effp->priv;
 
         fclose(repeat->fp);
-        
+
         return (ST_SUCCESS);
 }
 

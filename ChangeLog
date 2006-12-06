@@ -61,6 +61,7 @@ sox-12.18.3
     comment.  (robs)
   o Improved the accuracy of integer and floating point PCM
     conversions.  (robs)
+  o Added large file support.  (Reuben Thomas)
 
 sox-12.18.2
 -----------

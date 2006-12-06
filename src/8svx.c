@@ -32,7 +32,7 @@ int st_svxstartread(ft_t ft)
 
         char buf[12];
         char *chunk_buf;
- 
+
         uint32_t totalsize;
         uint32_t chunksize;
 
@@ -102,7 +102,7 @@ int st_svxstartread(ft_t ft)
                             st_fail_errno(ft, ST_ENOMEM, "Unable to alloc memory");
                             return(ST_EOF);
                         }
-                        if (st_readbuf(ft, chunk_buf,1,(size_t)chunksize) 
+                        if (st_readbuf(ft, chunk_buf,1,(size_t)chunksize)
                                         != chunksize)
                         {
                                 st_fail_errno(ft, ST_EHDR, "Couldn't read all of header");
@@ -125,7 +125,7 @@ int st_svxstartread(ft_t ft)
                             st_fail_errno(ft, ST_ENOMEM, "Unable to alloc memory");
                             return(ST_EOF);
                         }
-                        if (st_readbuf(ft, chunk_buf,1,(size_t)chunksize) 
+                        if (st_readbuf(ft, chunk_buf,1,(size_t)chunksize)
                                         != chunksize)
                         {
                                 st_fail_errno(ft, ST_EHDR, "Couldn't read all of header");
@@ -140,15 +140,15 @@ int st_svxstartread(ft_t ft)
 
                 if (strncmp(buf,"CHAN",4) == 0) {
                         st_readdw(ft, &chunksize);
-                        if (chunksize != 4) 
+                        if (chunksize != 4)
                         {
                                 st_fail_errno(ft, ST_EHDR, "Couldn't read all of header");
                                 return(ST_EOF);
                         }
                         st_readdw(ft, &channels);
-                        channels = (channels & 0x01) + 
+                        channels = (channels & 0x01) +
                                         ((channels & 0x02) >> 1) +
-                                        ((channels & 0x04) >> 2) + 
+                                        ((channels & 0x04) >> 2) +
                                         ((channels & 0x08) >> 3);
 
                         continue;
@@ -183,7 +183,7 @@ int st_svxstartread(ft_t ft)
 
         /* open files to channels */
         p->ch[0] = ft->fp;
-        chan1_pos = ftell(p->ch[0]);
+        chan1_pos = st_tell(ft);
 
         for (i = 1; i < channels; i++) {
                 if ((p->ch[i] = fopen(ft->filename, "rb")) == NULL)
@@ -194,12 +194,12 @@ int st_svxstartread(ft_t ft)
                 }
 
                 /* position channel files */
-                if (fseek(p->ch[i],chan1_pos,SEEK_SET))
+                if (fseeko(p->ch[i],chan1_pos,SEEK_SET))
                 {
                     st_fail_errno (ft,errno,"Can't position channel %d",i);
                     return(ST_EOF);
                 }
-                if (fseek(p->ch[i],p->nsamples/channels*i,SEEK_CUR))
+                if (fseeko(p->ch[i],p->nsamples/channels*i,SEEK_CUR))
                 {
                     st_fail_errno (ft,errno,"Can't seek channel %d",i);
                     return(ST_EOF);
@@ -211,7 +211,7 @@ int st_svxstartread(ft_t ft)
 /*======================================================================*/
 /*                         8SVXREAD                                     */
 /*======================================================================*/
-st_ssize_t st_svxread(ft_t ft, st_sample_t *buf, st_size_t nsamp) 
+st_ssize_t st_svxread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 {
         unsigned char datum;
         int done = 0;
@@ -324,7 +324,7 @@ int st_svxstopwrite(ft_t ft)
         /* append all channel pieces to channel 0 */
         /* close temp files */
         for (i = 1; i < ft->info.channels; i++) {
-                if (fseek(p->ch[i], 0L, 0))
+                if (fseeko(p->ch[i], 0L, 0))
                 {
                         st_fail_errno (ft,errno,"Can't rewind channel output file %d",i);
                         return(ST_EOF);

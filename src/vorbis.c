@@ -5,15 +5,15 @@
  * Portions from oggenc, (c) Michael Smith <msmith@labyrinth.net.au>,
  * ogg123, (c) Kenneth Arnold <kcarnold@yahoo.com>, and
  * libvorbisfile (c) Xiphophorus Company
- * 
+ *
  * May 9, 2001 - Stan Seibert (indigo@aztec.asu.edu)
  * Ogg Vorbis driver initially written.
  *
  * July 5, 1991 - Skeleton file
  * Copyright 1991 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
+ * any purpose.  This copyright notice must be maintained.
+ * Lance Norskog And Sundry Contributors are not responsible for
  * the consequences of using this software.
  *
  * TODO: When reading in comments, it doesn't understand how to read
@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <errno.h>
 
 #include <ogg/ogg.h>
 #include <vorbis/codec.h>
@@ -45,7 +46,7 @@ typedef struct vorbis_enc {
         ogg_stream_state os;
         ogg_page         og;
         ogg_packet       op;
-        
+
         vorbis_dsp_state vd;
         vorbis_block     vb;
         vorbis_info      vi;
@@ -71,10 +72,11 @@ int myclose (void *datasource)
         return 0;
 }
 
-/* Taken from vorbisfile.c in libvorbis source code */
-static int _fseek64_wrap(FILE *f,ogg_int64_t off,int whence){
-  if(f==NULL)return(-1);
-  return fseek(f,(int)off,whence);
+static int _fseeko64_wrap(FILE *f, ogg_int64_t off, int whence) {
+  int ret = fseeko(f, (long)off, whence);
+  if (ret == EBADF)
+    ret = -1;
+  return ret;
 }
 
 /********************* End callbacks *****************************/
@@ -82,12 +84,12 @@ static int _fseek64_wrap(FILE *f,ogg_int64_t off,int whence){
 
 /*
  * Do anything required before you start reading samples.
- * Read file header. 
- *      Find out sampling rate, 
- *      size and encoding of samples, 
+ * Read file header.
+ *      Find out sampling rate,
+ *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-int st_vorbisstartread(ft_t ft) 
+int st_vorbisstartread(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_info *vi;
@@ -97,16 +99,14 @@ int st_vorbisstartread(ft_t ft)
 
         ov_callbacks callbacks = {
                 (size_t (*)(void *, size_t, size_t, void *))  fread,
-                (int (*)(void *, ogg_int64_t, int))           _fseek64_wrap,
+                (int (*)(void *, ogg_int64_t, int))           _fseeko64_wrap,
                 (int (*)(void *))                             myclose,
-                (long (*)(void *))                            ftell
+                (long (*)(void *))                            ftello
         };
 
-        
-        
         /* Allocate space for decoding structure */
         vb->vf = (OggVorbis_File *)malloc(sizeof(OggVorbis_File));
-        if (vb->vf == NULL) 
+        if (vb->vf == NULL)
         {
             st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
             return (ST_EOF);
@@ -136,28 +136,28 @@ int st_vorbisstartread(ft_t ft)
          */
         if (ft->seekable)
             ft->length = ov_pcm_total(vb->vf, -1) * ft->info.channels;
-        
+
         /* Record comments */
         if (vc->comments == 0)
                 ft->comment = NULL;
-        else 
+        else
         {
                 comment_size = 0;
 
                 for (i = 0; i < vc->comments; i++)
                         comment_size += vc->comment_lengths[i] + 1;
 
-                if ((ft->comment = (char *)calloc(comment_size, sizeof(char))) 
+                if ((ft->comment = (char *)calloc(comment_size, sizeof(char)))
                      == NULL)
                 {
                         ov_clear(vb->vf);
                         free(vb->vf);
 
-                        st_fail_errno(ft, ST_ENOMEM, 
+                        st_fail_errno(ft, ST_ENOMEM,
                                       "Could not allocate memory");
                         return (ST_EOF);
                 }
-                
+
                 offset = 0;
                 for (i = 0; i < vc->comments; i++)
                 {
@@ -205,9 +205,9 @@ int refill_buffer (vorbis_t vb)
         while (vb->end < vb->buf_len)
         {
                 num_read = ov_read(vb->vf, vb->buf + vb->end,
-                                   vb->buf_len - vb->end, 0, 2, 1, 
+                                   vb->buf_len - vb->end, 0, 2, 1,
                                    &vb->current_section);
-                
+
                 if (num_read == 0)
                         return (BUF_EOF);
                 else if (num_read == OV_HOLE)
@@ -216,7 +216,7 @@ int refill_buffer (vorbis_t vb)
                         return (BUF_ERROR);
                 else
                         vb->end += num_read;
-                        
+
         }
 
         return (BUF_DATA);
@@ -230,7 +230,7 @@ int refill_buffer (vorbis_t vb)
  * Return number of samples read.
  */
 
-st_ssize_t st_vorbisread(ft_t ft, st_sample_t *buf, st_size_t len) 
+st_ssize_t st_vorbisread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         int i;
@@ -252,7 +252,7 @@ st_ssize_t st_vorbisread(ft_t ft, st_sample_t *buf, st_size_t len)
                         }
                 }
 
-                l = (vb->buf[vb->start+1]<<24) 
+                l = (vb->buf[vb->start+1]<<24)
                         | (0xffffff &  (vb->buf[vb->start]<<16));
                 *(buf + i) = l;
                 vb->start += 2;
@@ -262,10 +262,10 @@ st_ssize_t st_vorbisread(ft_t ft, st_sample_t *buf, st_size_t len)
 }
 
 /*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
+ * Do anything required when you stop reading samples.
+ * Don't close input file!
  */
-int st_vorbisstopread(ft_t ft) 
+int st_vorbisstopread(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
 
@@ -275,7 +275,7 @@ int st_vorbisstopread(ft_t ft)
         return (ST_SUCCESS);
 }
 
-/* Write a page of ogg data to a file.  Taken directly from encode.c in 
+/* Write a page of ogg data to a file.  Taken directly from encode.c in
    oggenc.   Returns the number of bytes written. */
 int oe_write_page(ogg_page *page, ft_t ft)
 {
@@ -306,7 +306,7 @@ int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
 
         /* We check if there is a FIELD=value pair already in the comment
          * if not, add one */
-        if (strchr(ft->comment,'=') == NULL) 
+        if (strchr(ft->comment,'=') == NULL)
         {
             comment = (char *)calloc(1,strlen(ft->comment)+strlen("COMMENT=")+1);
             strncpy(comment,"COMMENT=",strlen("COMMENT="));
@@ -324,12 +324,12 @@ int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
                                   &header_main,
                                   &header_comments,
                                   &header_codebooks);
-        
+
         /* And stream them out */
         ogg_stream_packetin(&ve->os,&header_main);
         ogg_stream_packetin(&ve->os,&header_comments);
         ogg_stream_packetin(&ve->os,&header_codebooks);
-        
+
         while((result = ogg_stream_flush(&ve->os, &ve->og)))
         {
                 if(!result) break;
@@ -345,7 +345,7 @@ int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
         return HEADER_OK;
 }
 
-int st_vorbisstartwrite(ft_t ft) 
+int st_vorbisstartwrite(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve;
@@ -385,25 +385,25 @@ int st_vorbisstartwrite(ft_t ft)
 
         vorbis_analysis_init(&ve->vd, &ve->vi);
         vorbis_block_init(&ve->vd, &ve->vb);
-       
+
         st_initrand();
         ogg_stream_init(&ve->os, rand()); /* Random serial number */
-        
+
         if (write_vorbis_header(ft, ve) == HEADER_ERROR)
         {
             st_fail_errno(ft,ST_EHDR,
                           "Error writing header for Ogg Vorbis audio stream");
             return (ST_EOF);
         }
-        
-        return(ST_SUCCESS);     
+
+        return(ST_SUCCESS);
 }
 
-st_ssize_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
+st_ssize_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;
-        st_ssize_t samples = len / ft->info.channels;   
+        st_ssize_t samples = len / ft->info.channels;
         float **buffer = vorbis_analysis_buffer(&ve->vd, samples);
         st_ssize_t i, j;
         int ret;
@@ -412,11 +412,11 @@ st_ssize_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len)
         /* Copy samples into vorbis buffer */
         for (i = 0; i < samples; i++)
                 for (j = 0; j < ft->info.channels; j++)
-                        buffer[j][i] = buf[i*ft->info.channels + j] 
+                        buffer[j][i] = buf[i*ft->info.channels + j]
                                 / ((float)ST_SAMPLE_MAX);
 
         vorbis_analysis_wrote(&ve->vd, samples);
-        
+
         while(vorbis_analysis_blockout(&ve->vd,&ve->vb)==1)
         {
                 /* Do the main analysis, creating a packet */
@@ -424,19 +424,19 @@ st_ssize_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len)
                 vorbis_bitrate_addblock(&ve->vb);
 
                 /* Add packet to bitstream */
-                while (vorbis_bitrate_flushpacket(&ve->vd, &ve->op)) 
+                while (vorbis_bitrate_flushpacket(&ve->vd, &ve->op))
                 {
                     ogg_stream_packetin(&ve->os,&ve->op);
-                
+
                     /* If we've gone over a page boundary, we can do actual
-                     * output, so do so (for however many pages are available) 
+                     * output, so do so (for however many pages are available)
                      */
-                
+
                     while(!eos)
                     {
                         int result = ogg_stream_pageout(&ve->os,&ve->og);
                         if(!result) break;
-                        
+
                         ret = oe_write_page(&ve->og, ft);
                         if(!ret)
                             return (ST_EOF);
@@ -447,10 +447,10 @@ st_ssize_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len)
                 }
         }
 
-        return (len);    
+        return (len);
 }
 
-int st_vorbisstopwrite(ft_t ft) 
+int st_vorbisstopwrite(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;
