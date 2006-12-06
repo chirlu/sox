@@ -1,6 +1,6 @@
-/* src/stconfig.h.in.  Generated from configure.in by autoheader.  */
+/* src/stconfig.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define if you want to use external GSM library */
+/* Define if you are using an external GSM library */
 #undef EXTERNAL_GSM
 
 /* Define if you have ALSA library installed */
@@ -9,35 +9,32 @@
 /* Define to 1 if you have the <alsa/asoundlib.h> header file. */
 #undef HAVE_ALSA_ASOUNDLIB_H
 
-/* Define to 1 if you have the <machine/soundcard.h> header file. */
-#undef HAVE_MACHINE_SOUNDCARD_H
-
-/* Define if you have OSS installed */
-#undef HAVE_OSS
-
 /* Define to 1 if you have the <byteswap.h> header file. */
 #undef HAVE_BYTESWAP_H
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 
+/* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
+#undef HAVE_FSEEKO
+
 /* Define to 1 if you have the `getopt_long' function. */
 #undef HAVE_GETOPT_LONG
 
-/* Define to 1 if you have the `m' library (-lm). */
-#undef HAVE_LIBM
+/* Define to 1 if you have the <gsm/gsm.h> header file. */
+#undef HAVE_GSM_GSM_H
 
-/* Define to 1 if you have the <stdint.h> header file. */
-#undef HAVE_STDINT_H
-
-/* Define if you have FLAC Library installed */
-#undef HAVE_LIBFLAC
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
 
 /* Define if you have LAME (LAME Ain't an MP3 Encoder) library installed */
 #undef HAVE_LAME
 
-/* Define if you have libsamplerate (Secret Rabbit Code) library installed */
-#undef HAVE_SAMPLERATE
+/* Define if you have FLAC Library installed */
+#undef HAVE_LIBFLAC
+
+/* Define to 1 if you have the `m' library (-lm). */
+#undef HAVE_LIBM
 
 /* Define if you have MAD (MP3 Audio Decoder) Library installed */
 #undef HAVE_LIBMAD
@@ -45,11 +42,35 @@
 /* Define if you have Ogg Vorbis Library installed */
 #undef HAVE_LIBVORBIS
 
+/* Define to 1 if you have the <machine/soundcard.h> header file. */
+#undef HAVE_MACHINE_SOUNDCARD_H
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define if you have OSS installed */
+#undef HAVE_OSS
+
+/* Set to 1 if you have libsamplerate. */
+#undef HAVE_SAMPLERATE
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
 /* Define to 1 if you have the `strcasecmp' function. */
 #undef HAVE_STRCASECMP
 
 /* Define to 1 if you have the `strdup' function. */
 #undef HAVE_STRDUP
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
 
 /* Define if you have Sun /dev/audio installed */
 #undef HAVE_SUNAUDIO
@@ -72,6 +93,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Name of package */
+#undef PACKAGE
+
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
 
@@ -87,15 +111,42 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* The size of `char', as computed by sizeof. */
+#undef SIZEOF_CHAR
+
+/* The size of `int', as computed by sizeof. */
+#undef SIZEOF_INT
+
+/* The size of `long', as computed by sizeof. */
+#undef SIZEOF_LONG
+
+/* The size of `short', as computed by sizeof. */
+#undef SIZEOF_SHORT
+
+/* The size of `void*', as computed by sizeof. */
+#undef SIZEOF_VOIDP
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Version number of package */
+#undef VERSION
+
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #undef WORDS_BIGENDIAN
+
+/* Number of bits in a file offset, on hosts where this is settable. */
+#undef _FILE_OFFSET_BITS
+
+/* Define to 1 to make fseeko visible on some hosts (e.g. glibc 2.2). */
+#undef _LARGEFILE_SOURCE
+
+/* Define for large files, on AIX-style hosts. */
+#undef _LARGE_FILES
 
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
 #undef inline
 #endif
-
-/* Define to `unsigned' if <sys/types.h> does not define. */
-#undef size_t
