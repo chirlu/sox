@@ -7,4 +7,5 @@ restrictive LGPL.
 
 Note that some of the external packages that can be linked in to libst
 are GPLed and/or may have licensing problems, so they can be disabled
-at configure time with the relevant--with-* options.
+at configure time with the relevant--with-* options. If libst is built
+with such libraries, it must be distributed under the GPL.
