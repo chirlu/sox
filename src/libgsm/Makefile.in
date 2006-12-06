@@ -26,7 +26,8 @@ MULHACK = -DUSE_FLOAT_MUL
 ######### Define this if your host multiplies floats faster than integers,
 ######### e.g. on a SPARCstation.
 
-FAST	= -DFAST
+#FAST	= -DFAST
+FAST =
 ######### Define together with USE_FLOAT_MUL to enable the GSM library's
 ######### approximation option for incorrect, but good-enough results.
 
