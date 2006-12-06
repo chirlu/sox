@@ -1,3 +1,4 @@
 Makefile
 autom4te.cache
 config.log config.status
+aclocal

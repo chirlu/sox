@@ -2,3 +2,5 @@ Makefile
 libst-config
 play sox soxmix
 stconfig.h ststdint.h
+.deps
+stamp-h1

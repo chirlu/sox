@@ -1,9 +1,10 @@
 dnl Process this file with autoconf to produce a configure script.
-dnl
-dnl configure.in
-dnl
 
 AC_INIT(SoX, 12.18.3, cbagwell@users.sourceforge.net)
+AM_INIT_AUTOMAKE
+
+dnl create a config.h file (Automake will add -DHAVE_CONFIG_H)
+AM_CONFIG_HEADER(src/stconfig.h)
 
 AC_CONFIG_SRCDIR(sox.1)
 
@@ -53,9 +54,6 @@ AC_ARG_ENABLE(samplerate,
         [enable_samplerate=$enableval],
         [enable_samplerate=yes])
 
-dnl Set host type
-AC_CANONICAL_SYSTEM
-
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_RANLIB
@@ -77,7 +75,9 @@ AC_CHECK_HEADERS(fcntl.h unistd.h byteswap.h)
 
 dnl Checks for library functions.
 
-AC_CHECK_FUNCS(getopt_long strcasecmp strdup)
+AC_CHECK_FUNCS(strcasecmp strdup)
+AC_REPLACE_FUNCS(getopt_long)
+AM_CONDITIONAL(GETOPT_LONG, text x$getopt_long = xtrue)
 
 dnl Check if math library is needed.
 
@@ -88,6 +88,13 @@ then
   AC_CHECK_LIB(m, pow)
 fi
 
+dnl Large File Support
+AC_SYS_LARGEFILE
+if test "$ac_cv_sys_large_files" = yes
+then
+  AC_FUNC_FSEEKO
+fi
+      
 dnl Initial values for exported symbols.
 
 NEED_OSS=0
@@ -235,14 +242,12 @@ AC_SUBST(PLAY_SUPPORT)
 
 dnl Generate output files...
 
-AC_CONFIG_HEADER(src/stconfig.h)
-
 AC_CONFIG_FILES([Makefile src/libst-config src/Makefile src/libgsm/Makefile])
 AC_CONFIG_FILES([src/play], [chmod +x src/play])
 
 AC_OUTPUT()
 
-AC_CREATE_STDINT_H(src/ststdint.h)
+AX_CREATE_STDINT_H(src/ststdint.h)
 
 if test ! -f src/tests.sh; then cp ${srcdir}/src/tests.sh src/tests.sh; fi
 if test ! -f src/testall.sh; then cp ${srcdir}/src/testall.sh src/testall.sh; fi
