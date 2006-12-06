@@ -38,26 +38,18 @@ void st_output_message(FILE * file, st_output_message_t message)
   char const * dot_pos;
  
   drivername = strrchr(message->filename, '/');
-  if (drivername != NULL)
-  {
+  if (drivername != NULL) {
     ++drivername;
-  }
-  else
-  {
+  } else {
     drivername = strrchr(message->filename, '\\');
     if (drivername != NULL)
-    {
       ++drivername;
-    }
     else
-    {
       drivername = message->filename;
-    }
   }
 
   dot_pos = strrchr(drivername, '.');
-  if (dot_pos != NULL && dot_pos - drivername <= sizeof(buffer) - 1)
-  {
+  if (dot_pos != NULL && dot_pos - drivername <= sizeof(buffer) - 1) {
     strncpy(buffer, drivername, dot_pos - drivername);
     buffer[dot_pos - drivername] = '\0';
     drivername = buffer;
