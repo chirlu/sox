@@ -90,10 +90,7 @@ fi
 
 dnl Large File Support
 AC_SYS_LARGEFILE
-if test "$ac_cv_sys_large_files" = yes
-then
-  AC_FUNC_FSEEKO
-fi
+AC_FUNC_FSEEKO
       
 dnl Initial values for exported symbols.
 

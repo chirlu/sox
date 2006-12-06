@@ -5964,9 +5964,7 @@ fi
 rm -f conftest*
 fi
 
-if test "$ac_cv_sys_large_files" = yes
-then
-  { echo "$as_me:$LINENO: checking for _LARGEFILE_SOURCE value needed for large files" >&5
+{ echo "$as_me:$LINENO: checking for _LARGEFILE_SOURCE value needed for large files" >&5
 echo $ECHO_N "checking for _LARGEFILE_SOURCE value needed for large files... $ECHO_C" >&6; }
 if test "${ac_cv_sys_largefile_source+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -6182,7 +6180,6 @@ _ACEOF
 
 fi
 
-fi
 
 
 NEED_OSS=0
