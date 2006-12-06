@@ -4,33 +4,11 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/*$Header: /cvsroot/sox/sox/src/libgsm/Attic/gsm.h,v 1.1 2006/08/27 23:04:56 cbagwell Exp $*/
+/*$Header: /cvsroot/sox/sox/src/libgsm/Attic/gsm.h,v 1.2 2006/12/06 17:10:51 rrt Exp $*/
 
 #ifndef	GSM_H
 #define	GSM_H
 
-#ifdef __cplusplus
-#	define	NeedFunctionPrototypes	1
-#endif
-
-#if __STDC__
-#	define	NeedFunctionPrototypes	1
-#endif
-
-#ifdef _NO_PROTO
-#	undef	NeedFunctionPrototypes
-#endif
-
-#ifdef NeedFunctionPrototypes
-#   include	<stdio.h>		/* for FILE * 	*/
-#endif
-
-#undef GSM_P
-#if NeedFunctionPrototypes
-#	define	GSM_P( protos )	protos
-#else
-#	define  GSM_P( protos )	( /* protos */ )
-#endif
 
 /*
  *	Interface
@@ -54,14 +32,12 @@ typedef gsm_byte 		gsm_frame[33];		/* 33 * 8 bits	 */
 #define	GSM_OPT_FRAME_INDEX	5
 #define	GSM_OPT_FRAME_CHAIN	6
 
-extern gsm  gsm_create 	GSM_P((void));
-extern void gsm_destroy GSM_P((gsm));	
+extern gsm  gsm_create(void);
+extern void gsm_destroy(gsm);	
 
-extern int  gsm_option  GSM_P((gsm, int, int *));
+extern int  gsm_option(gsm, int, int *);
 
-extern void gsm_encode  GSM_P((gsm, gsm_signal *, gsm_byte  *));
-extern int  gsm_decode  GSM_P((gsm, gsm_byte   *, gsm_signal *));
-
-#undef	GSM_P
+extern void gsm_encode(gsm, gsm_signal *, gsm_byte  *);
+extern int  gsm_decode(gsm, gsm_byte   *, gsm_signal *);
 
 #endif	/* GSM_H */
