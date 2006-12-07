@@ -552,7 +552,7 @@ int st_mp3startwrite(ft_t ft)
   return ST_EOF;
 }
 
-st_ssize_t st_mp3write(ft_t ft, st_sample_t *buf, st_ssize_t samp)
+st_ssize_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
   st_fail_errno(ft,ST_EOF,"Sorry, no MP3 encoding support");
   return ST_EOF;
