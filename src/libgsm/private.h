@@ -44,36 +44,26 @@ struct gsm_state {
 #define	MIN_LONGWORD	(-2147483647 - 1)
 #define	MAX_LONGWORD	  2147483647
 
-#ifdef	SASR		/* flag: >> is a signed arithmetic shift right */
-#undef	SASR
-#define	SASR(x, by)	((x) >> (by))
-#else
-#define	SASR(x, by)	((x) >= 0 ? (x) >> (by) : (~(-((x) + 1) >> (by))))
-#endif	/* SASR */
+#define	SASR(x, by)	(((x) >> (by)) | (-((x) < 0) << (by)))
 
 /*
  *	Prototypes from add.c
  */
 extern word	gsm_mult 	(word a, word b);
-extern longword gsm_L_mult 	(word a, word b);
 extern word	gsm_mult_r	(word a, word b);
 
 extern word	gsm_div  	(word num, word denum);
 
 extern word	gsm_add 	( word a, word b );
-extern longword gsm_L_add 	( longword a, longword b );
 
 extern word	gsm_sub 	(word a, word b);
-extern longword gsm_L_sub 	(longword a, longword b);
 
 extern word	gsm_abs 	(word a);
 
 extern word	gsm_norm 	( longword a );
 
-extern longword gsm_L_asl  	(longword a, int n);
 extern word	gsm_asl 	(word a, int n);
 
-extern longword gsm_L_asr  	(longword a, int n);
 extern word	gsm_asr  	(word a, int n);
 
 /*

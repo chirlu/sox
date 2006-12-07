@@ -1,8 +1,5 @@
 man_MANS = gsm.3 gsm_option.3
 
-# Define SASR if >> is a signed on signed types (-1 >> 1 == -1)
-SASR	= -DSASR
-
 AM_CFLAGS = $(SASR)
 
 lib_LIBRARIES = libgsm.a
