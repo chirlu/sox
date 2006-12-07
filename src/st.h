@@ -113,9 +113,7 @@ static double st_macro_temp_double __attribute__((unused));
 #define ST_SAMPLE_TO_UNSIGNED_BYTE(d,clips) ST_SAMPLE_TO_UNSIGNED(8,d,clips)
 #define ST_SAMPLE_TO_SIGNED_BYTE(d,clips) ST_SAMPLE_TO_SIGNED(8,d,clips)
 #define ST_SAMPLE_TO_UNSIGNED_WORD(d,clips) ST_SAMPLE_TO_UNSIGNED(16,d,clips)
-
 #define ST_SAMPLE_TO_SIGNED_WORD(d,clips) ST_SAMPLE_TO_SIGNED(16,d,clips)
-
 #define ST_SAMPLE_TO_UNSIGNED_24BIT(d,clips) ST_SAMPLE_TO_UNSIGNED(24,d,clips)
 #define ST_SAMPLE_TO_SIGNED_24BIT(d,clips) ST_SAMPLE_TO_SIGNED(24,d,clips)
 #define ST_SAMPLE_TO_UNSIGNED_DWORD(d) (uint32_t)((d)^ST_SAMPLE_NEG)
