@@ -1,13 +1,9 @@
-man_MANS = gsm.3 gsm_options.3
+man_MANS = gsm.3 gsm_option.3
 
-# Define SASR if >> is a signed arithmetic shift (-1 >> 1 == -1)
+# Define SASR if >> is a signed on signed types (-1 >> 1 == -1)
 SASR	= -DSASR
 
-# Build macros.
-
-CFLAGS	= @CFLAGS@ @DEFS@ $(SASR) -I$(top_srcdir)/libgsm
-
-# Objects.
+AM_CFLAGS = $(SASR)
 
 lib_LIBRARIES = libgsm.a
 libgsm_a_SOURCES = add.c code.c decode.c long_term.c lpc.c preprocess.c	\

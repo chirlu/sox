@@ -30,10 +30,6 @@ static void Autocorrelation (
 
 	word		temp, smax, scalauto;
 
-#ifdef	USE_FLOAT_MUL
-	float		float_s[160];
-#endif
-
 	/*  Dynamic scaling of the array  s[0..159]
 	 */
 
@@ -58,18 +54,10 @@ static void Autocorrelation (
 
 	if (scalauto > 0) {
 
-# ifdef USE_FLOAT_MUL
-#   define SCALE(n)	\
-	case n: for (k = 0; k <= 159; k++) \
-			float_s[k] = (float)	\
-				(s[k] = GSM_MULT_R(s[k], 16384 >> (n-1)));\
-		break;
-# else 
 #   define SCALE(n)	\
 	case n: for (k = 0; k <= 159; k++) \
 			s[k] = GSM_MULT_R( s[k], 16384 >> (n-1) );\
 		break;
-# endif /* USE_FLOAT_MUL */
 
 		switch (scalauto) {
 		SCALE(1)
@@ -79,24 +67,14 @@ static void Autocorrelation (
 		}
 # undef	SCALE
 	}
-# ifdef	USE_FLOAT_MUL
-	else for (k = 0; k <= 159; k++) float_s[k] = (float) s[k];
-# endif
 
 	/*  Compute the L_ACF[..].
 	 */
 	{
-# ifdef	USE_FLOAT_MUL
-		register float * sp = float_s;
-		register float   sl = *sp;
-
-#		define STEP(k)	 L_ACF[k] += (longword)(sl * sp[ -(k) ]);
-# else
 		word  * sp = s;
 		word    sl = *sp;
 
 #		define STEP(k)	 L_ACF[k] += ((longword)sl * sp[ -(k) ]);
-# endif
 
 #	define NEXTI	 sl = *++sp
 

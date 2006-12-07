@@ -30,7 +30,7 @@ struct gsm_state {
 	word		v[9];		/* short_term.c, synthesis	*/
 	word		msr;		/* decoder.c,	Postprocessing	*/
 
-	char		verbose;	/* only used if !NDEBUG		*/
+	char		verbose;
 
 	char		wav_fmt;	/* only used if WAV49 defined	*/
 	unsigned char	frame_index;	/*            odd/even chaining	*/
@@ -228,8 +228,6 @@ extern void Gsm_Update_of_reconstructed_short_time_residual_signal (
 /*
  *  Tables from table.c
  */
-#ifndef	GSM_TABLE_C
-
 extern word gsm_A[8], gsm_B[8], gsm_MIC[8], gsm_MAC[8];
 extern word gsm_INVA[8];
 extern word gsm_DLB[4], gsm_QLB[4];
@@ -237,25 +235,12 @@ extern word gsm_H[11];
 extern word gsm_NRFAC[8];
 extern word gsm_FAC[8];
 
-#endif	/* GSM_TABLE_C */
-
 /*
  *  Debugging
  */
-#ifdef NDEBUG
-
-#	define	gsm_debug_words(a, b, c, d)		/* nil */
-#	define	gsm_debug_longwords(a, b, c, d)		/* nil */
-#	define	gsm_debug_word(a, b)			/* nil */
-#	define	gsm_debug_longword(a, b)		/* nil */
-
-#else	/* !NDEBUG => DEBUG */
-
-	extern void  gsm_debug_words     (char * name, int, int, word *);
-	extern void  gsm_debug_longwords (char * name, int, int, longword *);
-	extern void  gsm_debug_longword  (char * name, longword);
-	extern void  gsm_debug_word      (char * name, word);
-
-#endif /* !NDEBUG */
+extern void  gsm_debug_words     (char * name, int, int, word *);
+extern void  gsm_debug_longwords (char * name, int, int, longword *);
+extern void  gsm_debug_longword  (char * name, longword);
+extern void  gsm_debug_word      (char * name, word);
 
 #endif	/* PRIVATE_H */
