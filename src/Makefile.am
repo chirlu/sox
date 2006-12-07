@@ -1,7 +1,5 @@
 SUBDIRS = libgsm
 
-# Objects.
-
 bin_PROGRAMS = sox
 lib_LIBRARIES = libst.a
 
