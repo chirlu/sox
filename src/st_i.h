@@ -78,6 +78,16 @@ int st_error(ft_t ft);
 void st_rewind(ft_t ft);
 void st_clearerr(ft_t ft);
 
+/* defined in raw.c */
+void st_ub_write_buf(char* buf1, const st_sample_t *buf2, st_size_t len, char swap, st_size_t * clippedCount);
+void st_sb_write_buf(char *buf1, const st_sample_t *buf2, st_size_t len, char swap, st_size_t * clippedCount);
+void st_uw_write_buf(char *buf1, const st_sample_t *buf2, st_size_t len, char swap, st_size_t * clippedCount);
+void st_sw_write_buf(char *buf1, const st_sample_t *buf2, st_size_t len, char swap, st_size_t * clippedCount);
+void st_ub_read_buf(st_sample_t *buf1, char const *buf2, st_size_t len, char swap, st_size_t * clippedCount);
+void st_sb_read_buf(st_sample_t *buf1, char const *buf2, st_size_t len, char swap, st_size_t * clippedCount);
+void st_uw_read_buf(st_sample_t *buf1, char const *buf2, st_size_t len, char swap, st_size_t * clippedCount);
+void st_sw_read_buf(st_sample_t *buf1, char const *buf2, st_size_t len, char swap, st_size_t * clippedCount);
+
 /* Utilities to byte-swap values, use libc optimized macros if possible  */
 #ifdef HAVE_BYTESWAP_H
 #define st_swapw(x) bswap_16(x)

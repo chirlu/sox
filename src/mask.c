@@ -86,7 +86,7 @@ int st_mask_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                                 *obuf++ = l;
                         }
                         break;
-                        default:
+                        default: /* Mask (dither) not needed at >= 24 bits */
                         for(done = 0; done < len; done++) {
                                 *obuf++ = *ibuf++;
                         }
