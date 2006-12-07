@@ -35,21 +35,6 @@ word gsm_mult (word a, word b)
 	else return SASR( (longword)a * (longword)b, 15 );
 }
 
-word gsm_mult_r (word a, word b)
-{
-	if (b == MIN_WORD && a == MIN_WORD) return MAX_WORD;
-	else {
-		longword prod = (longword)a * (longword)b + 16384;
-		prod >>= 15;
-		return prod & 0xFFFF;
-	}
-}
-
-word gsm_abs (word a)
-{
-	return a < 0 ? (a == MIN_WORD ? MAX_WORD : -a) : a;
-}
-
 static unsigned char const bitoff[ 256 ] = {
 	 8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4,
 	 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,

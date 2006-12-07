@@ -50,15 +50,12 @@ struct gsm_state {
  *	Prototypes from add.c
  */
 extern word	gsm_mult 	(word a, word b);
-extern word	gsm_mult_r	(word a, word b);
 
 extern word	gsm_div  	(word num, word denum);
 
 extern word	gsm_add 	( word a, word b );
 
 extern word	gsm_sub 	(word a, word b);
-
-extern word	gsm_abs 	(word a);
 
 extern word	gsm_norm 	( longword a );
 
@@ -91,13 +88,6 @@ extern word	gsm_asr  	(word a, int n);
 	          : (utmp = (ulongword)(a) + (ulongword)(b)) >= MAX_LONGWORD \
 		    ? MAX_LONGWORD : utmp))
 
-/*
- * # define GSM_ADD(a, b)	\
- * 	((ltmp = (longword)(a) + (longword)(b)) >= MAX_WORD \
- * 	? MAX_WORD : ltmp <= MIN_WORD ? MIN_WORD : ltmp)
- */
-/* Nonportable, but faster: */
-
 #define	GSM_ADD(a, b)	\
 	((ulongword)((ltmp = (longword)(a) + (longword)(b)) - MIN_WORD) > \
 		MAX_WORD - MIN_WORD ? (ltmp > 0 ? MAX_WORD : MIN_WORD) : ltmp)
@@ -107,20 +97,6 @@ extern word	gsm_asr  	(word a, int n);
 	? MAX_WORD : ltmp <= MIN_WORD ? MIN_WORD : ltmp)
 
 # define GSM_ABS(a)	((a) < 0 ? ((a) == MIN_WORD ? MAX_WORD : -(a)) : (a))
-
-/* Use these if necessary:
-
-# define GSM_MULT_R(a, b)	gsm_mult_r(a, b)
-# define GSM_MULT(a, b)		gsm_mult(a, b)
-# define GSM_L_MULT(a, b)	gsm_L_mult(a, b)
-
-# define GSM_L_ADD(a, b)	gsm_L_add(a, b)
-# define GSM_ADD(a, b)		gsm_add(a, b)
-# define GSM_SUB(a, b)		gsm_sub(a, b)
-
-# define GSM_ABS(a)		gsm_abs(a)
-
-*/
 
 /*
  *  More prototypes from implementations..
