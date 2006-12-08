@@ -31,6 +31,7 @@ convertToAndFrom () {
     ./sox -c $channels -r $rate -n $format1Flags input.$format1 synth $samples's' sin 300-3300 noise
     ./sox $verbose -r $rate -c $channels $format1Flags input.$format1 $format2Flags intermediate.$1
     ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$1 $format1Flags output.$format1
+
     if cmp -s input.$format1 output.$format1
     then
       echo "ok     channels=$channels \"$format1Text\" <--> \"$format2Text\"."
@@ -79,9 +80,12 @@ do_singlechannel_formats () {
 
 rate=44100
 samples=23493
-channels=2 do_multichannel_formats
-channels=1 do_multichannel_formats
-channels=1 do_singlechannel_formats
+channels=2 
+do_multichannel_formats
+channels=1 
+do_multichannel_formats
+channels=1 
+do_singlechannel_formats
 
 ./sox -c 1 -n output.ub synth .01 sine
 if [ `wc -c <output.ub` = 441 ]; then
