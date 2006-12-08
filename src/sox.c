@@ -226,7 +226,7 @@ int main(int argc, char **argv)
     /* Make sure we got at least the required # of input filenames */
     input_count = file_count - 1;
     if (input_count < (soxmix ? 2 : 1))
-        usage("Not enough input or output filenames specified");
+        usage("Not enough input filenames specified");
 
     for (i = 0; i < input_count; i++)
     {
