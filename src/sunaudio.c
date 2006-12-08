@@ -103,32 +103,32 @@ int st_sunstartread(ft_t ft)
         if (ft->info.encoding != ST_ENCODING_ULAW &&
             ft->info.encoding != ST_ENCODING_ALAW &&
             ft->info.encoding != ST_ENCODING_SIGN2) {
-            st_fail_errno(ft,ST_EFMT,"Sun Audio driver only supports ULAW, ALAW, and Signed Linear for bytes.");
+            st_fail_errno(ft,ST_EFMT,"Sun audio driver only supports ULAW, ALAW, and signed linear for bytes.");
                 return (ST_EOF);
         }
         if ((ft->info.encoding == ST_ENCODING_ULAW ||
              ft->info.encoding == ST_ENCODING_ALAW) && ft->info.channels == 2)
         {
-            st_report("Warning: only support mono for ULAW and ALAW data.  Forcing to mono");
-            ft->info.channels = 2;
+            st_report("Warning: only support mono for ULAW and ALAW data.  Forcing to mono.");
+            ft->info.channels = 1;
         }
     }
     else if (ft->info.size == ST_SIZE_WORD) {
         samplesize = 16;
         if (ft->info.encoding != ST_ENCODING_SIGN2) {
-            st_fail_errno(ft,ST_EFMT,"Sun Audio driver only supports Signed Linear for words.");
+            st_fail_errno(ft,ST_EFMT,"Sun audio driver only supports signed linear for words.");
             return(ST_EOF);
         }
     }
     else {
-        st_fail_errno(ft,ST_EFMT,"Sun Audio driver only supports bytes and words");
+        st_fail_errno(ft,ST_EFMT,"Sun audio driver only supports bytes and words");
         return(ST_EOF);
     }
 
     if (ft->info.channels == -1) ft->info.channels = 1;
     else if (ft->info.channels > 1) {
-        st_report("Warning: some sun audio devices can not play stereo");
-        st_report("at all or sometime only with signed words.  If the");
+        st_report("Warning: some Sun audio devices can not play stereo");
+        st_report("at all or sometimes only with signed words.  If the");
         st_report("sound seems sluggish then this is probably the case.");
         st_report("Try forcing output to signed words or use the avg");
         st_report("filter to reduce the number of channels.");
@@ -247,8 +247,8 @@ int st_sunstartwrite(ft_t ft)
         if ((ft->info.encoding == ST_ENCODING_ULAW ||
              ft->info.encoding == ST_ENCODING_ALAW) && ft->info.channels == 2)
         {
-            st_report("Warning: only support mono for ULAW and ALAW data.  Forcing to mono");
-            ft->info.channels = 2;
+            st_report("Warning: only support mono for ULAW and ALAW data.  Forcing to mono.");
+            ft->info.channels = 1;
         }
 
     }
