@@ -110,25 +110,22 @@ fi
 AC_SUBST(SAMPLERATE_CFLAGS)
 AC_SUBST(SAMPLERATE_LIBS)
 
-dnl Generate output files...
-
+dnl Generate output files.
 AX_CREATE_STDINT_H(src/ststdint.h)
-AC_OUTPUT(Makefile src/Makefile src/libgsm/Makefile src/libst-config)
+AC_SUBST(with_alsa with_oss) dnl For play.in
+AC_CONFIG_FILES(Makefile src/Makefile src/libgsm/Makefile src/libst-config src/play)
+AC_OUTPUT
 
-if test ! -f src/tests.sh; then cp ${srcdir}/src/tests.sh src/tests.sh; fi
-if test ! -f src/testall.sh; then cp ${srcdir}/src/testall.sh src/testall.sh; fi
-if test ! -f src/monkey.au; then cp ${srcdir}/src/monkey.au src/monkey.au; fi
-if test ! -f src/monkey.wav; then cp ${srcdir}/src/monkey.wav src/monkey.wav; fi
-
+dnl Report configuration.
 echo
-echo "ALSA Driver.......................   $with_alsa"
-echo "OSS Driver........................   $with_oss"
-echo "SUN /dev/audio....................   $with_sun_audio"
-echo "Ogg Vorbis support................   $with_ogg_vorbis"
-echo "FLAC support......................   $with_flac"
-echo "MAD MP3 Decoder...................   $with_mad"
-echo "LAME MP3 Encoder..................   $with_lame"
-echo "Secret Rabbit Code resampling.....   $with_samplerate"
+echo "ALSA Driver....................... $with_alsa"
+echo "OSS Driver........................ $with_oss"
+echo "SUN /dev/audio.................... $with_sun_audio"
+echo "Ogg Vorbis support................ $with_ogg_vorbis"
+echo "FLAC support...................... $with_flac"
+echo "MAD MP3 Decoder................... $with_mad"
+echo "LAME MP3 Encoder.................. $with_lame"
+echo "Secret Rabbit Code resampling..... $with_samplerate"
 echo
 echo "Configure finished.  Do 'make; make install' to compile and install SoX."
 echo

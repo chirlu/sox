@@ -20,9 +20,8 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
 
-HAVE_ALSA=@NEED_ALSA@
-HAVE_OSS=@NEED_OSS@
-HAVE_SUNAU=@NEED_ALSA@
+HAVE_ALSA=@with_alsa@
+HAVE_OSS=@with_oss@
 
 # Look for sox in install directory first and then in current direction
 # if not found.
@@ -154,11 +153,7 @@ while [ $# -ne 0 ]; do
 	    ;;
 	--file=*)
             if [ $rec_mode = "yes" ]; then
-	        if [ -z "$filename" ]; then
-                    filename=`echo $1 | sed 's/.*=//'`
-                else
-                    echo "Filename already given.  Ignoring extra name: $1" 1>&2
-	        fi
+                filename=`echo $1 | sed 's/.*=//'`
             else
                 filename=`echo $1 | sed 's/.*=//'`
                 play_opts="$play_opts $fopts $fopts2 \"$filename\""
@@ -209,18 +204,18 @@ while [ $# -ne 0 ]; do
 done
 
 # If user sets AUDIODEV environment variable then force output device
-# to by that.  Solaris SunRay's make use of this for sure.
+# to be that.  Solaris SunRays make use of this for sure.
 if [ -n "$AUDIODEV" ]; then
     device="$AUDIODEV"
 fi
 
-if [ "$HAVE_ALSA" = "1" ]; then
+if [ "$HAVE_ALSA" = "yes" ]; then
     arch_defines="-t alsa"
     if [ -z "$device" ]; then
 	device="default"
     fi
 else
-    if [ "$HAVE_OSS" = "1" ]; then
+    if [ "$HAVE_OSS" = "yes" ]; then
         arch_defines="-t ossdsp"
         if [ -z "$device" ]; then
             device="/dev/dsp"
@@ -250,6 +245,7 @@ else
                 device="/dev/audio"
             fi
             ;;
+
         esac
     fi
 fi
@@ -257,16 +253,10 @@ fi
 # If name is "rec" then record else assume user is wanting to play
 # a sound file.
 if [ "$rec_mode" = "yes" ]; then
-
-    # Don't send data to stdout if they are reading from it.
-    if [ "$filename" = "-" ]; then
-      echo "Send break (control-c) to end recording" 1>&2
-    else
-      echo "Send break (control-c) to end recording"
-    fi
+    echo "Send break (control-c) to end recording" 1>&2
     # $fopts are specified on both sides because audio driver
     # may not support the given format and might pick
-    # something close to it.  Asume user really wants the
+    # something close to it.  Assume user really wants the
     # file to be in the specified format and so request
     # sox to do any conversions.
     sox $gopts $arch_defines $fopts $device $fopts $fopts2 "$filename" $effects 
