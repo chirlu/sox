@@ -30,8 +30,10 @@
 # define _NO_PROTO
 #endif
 
+#if 0
 #ifdef HAVE_CONFIG_H
 # include <config.h>
+#endif
 #endif
 
 #if !defined __STDC__ || !__STDC__
