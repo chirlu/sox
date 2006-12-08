@@ -17,7 +17,7 @@ effects = avg.c band.c bandpass.c biquad.c breject.c btrworth.c chorus.c \
 	  reverb.c reverse.c silence.c speed.c stat.c \
 	  stretch.c swap.c synth.c tone.c trim.c vibro.c vol.c
 
-libst_a_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c misc.c stio.c util.c
+libst_a_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c misc.c stio.c util.c getopt.c getopt1.c
 
 sox_SOURCES = sox.c
 sox_LDADD = libst.a libgsm/libgsm.a
