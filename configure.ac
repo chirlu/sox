@@ -32,6 +32,13 @@ AC_CHECK_FUNCS(strcasecmp strdup)
 AC_REPLACE_FUNCS(getopt_long)
 AM_CONDITIONAL(GETOPT_LONG, test x$getopt_long = xtrue)
 
+dnl Check if math library is needed.
+AC_CHECKING(if math library is required during link)
+AC_CHECK_FUNC(pow)
+if test "$ac_cv_func_pow" = no; then
+  AC_CHECK_LIB(m, pow)
+fi
+
 dnl Large File Support
 AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
@@ -42,7 +49,7 @@ AC_CHECK_HEADERS(alsa/asoundlib.h,
     AC_CHECK_LIB(asound, snd_pcm_open,, with_alsa=no)],
     with_alsa=no)
 if test "$with_alsa" = yes; then
-   AC_DEFINE(HAVE_ALSA, 1, [Set to 1 if you have ALSA.]),
+   AC_DEFINE(HAVE_ALSA, 1, [Define to 1 if you have ALSA.]),
 fi
 
 dnl Check for OSS audio
@@ -50,7 +57,7 @@ with_oss=no
 AC_CHECK_HEADERS(sys/soundcard.h, with_oss=yes)
 AC_CHECK_HEADERS(machine/soundcard.h, with_oss=yes)
 if test "$with_oss" = yes; then
-   AC_DEFINE(HAVE_OSS, 1, [Set to 1 if you have OSS.]),
+   AC_DEFINE(HAVE_OSS, 1, [Define to 1 if you have OSS.]),
 fi
 
 dnl Check for Sun-style audio

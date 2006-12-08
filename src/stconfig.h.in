@@ -1,6 +1,6 @@
 /* src/stconfig.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Set to 1 if you have ALSA. */
+/* Define to 1 if you have ALSA. */
 #undef HAVE_ALSA
 
 /* Define to 1 if you have the <alsa/asoundlib.h> header file. */
@@ -27,6 +27,9 @@
 /* Define to 1 if you have the `FLAC' library (-lFLAC). */
 #undef HAVE_LIBFLAC
 
+/* Define to 1 if you have the `m' library (-lm). */
+#undef HAVE_LIBM
+
 /* Define to 1 if you have the `mad' library (-lmad). */
 #undef HAVE_LIBMAD
 
@@ -48,7 +51,7 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
-/* Set to 1 if you have OSS. */
+/* Define to 1 if you have OSS. */
 #undef HAVE_OSS
 
 /* Set to 1 if you have libsamplerate. */
