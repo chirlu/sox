@@ -1,5 +1,5 @@
 /*
- * Sox - The Swiss Army Knife of Audio Manipulation.
+ * SoX - The Swiss Army Knife of Audio Manipulation.
  *
  * This is the main function for the command line sox program.
  *

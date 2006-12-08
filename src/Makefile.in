@@ -651,6 +651,8 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+clean: clean-recursive
+
 clean-am: clean-binPROGRAMS clean-generic clean-libLIBRARIES \
 	mostlyclean-am
 
@@ -756,9 +758,6 @@ uninstall-lib:
 	$(RM) $(libdir)/libst.a
 	$(RM) $(includedir)/st.h
 	$(RM) $(includedir)/ststdint.h
-
-clean:
-	$(RM) *.o libst.a
 
 distclean-local:
 	$(RM) *.raw *.sf libst-config stconfig.h ststdint.h

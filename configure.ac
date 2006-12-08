@@ -38,7 +38,8 @@ AC_FUNC_FSEEKO
       
 dnl Check for ALSA audio
 AC_CHECK_HEADERS(alsa/asoundlib.h,
-    [AC_CHECK_LIB(asound, snd_pcm_open, with_alsa=yes, with_alsa=no)],
+    [with_alsa=yes
+    AC_CHECK_LIB(asound, snd_pcm_open,, with_alsa=no)],
     with_alsa=no)
 
 dnl Check for OSS audio
@@ -53,7 +54,7 @@ AC_CHECK_HEADERS(sun/audioio.h, with_sun_audio=yes)
 
 dnl Check for Ogg Vorbis libraries
 AC_CHECK_HEADER(vorbis/codec.h,
-    [AC_CHECK_LIB(vorbis, vorbis_analysis_init, with_ogg_vorbis=yes, with_ogg_vorbis=no, -logg)
+    [with_ogg_vorbis=yes
     AC_CHECK_LIB(ogg, ogg_packet_clear,, with_ogg_vorbis=no)
     AC_CHECK_LIB(vorbisfile, ov_clear,, with_ogg_vorbis=no)
     AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr,, with_ogg_vorbis=no)],

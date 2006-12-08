@@ -18,6 +18,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the `asound' library (-lasound). */
+#undef HAVE_LIBASOUND
+
 /* Define to 1 if you have the `FLAC' library (-lFLAC). */
 #undef HAVE_LIBFLAC
 

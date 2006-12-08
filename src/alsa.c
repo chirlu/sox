@@ -16,7 +16,7 @@
 
 #include "st_i.h"
 
-#ifdef HAVE_ALSA
+#ifdef HAVE_ALSA_ASOUNDLIB_H
 
 #include <alsa/asoundlib.h>
 
@@ -650,4 +650,5 @@ const st_format_t *st_alsa_format_fn(void)
 {
     return &st_alsa_format;
 }
-#endif /* HAVE_ALSA */
+
+#endif /* HAVE_ALSA_ASOUNDLIB_H */

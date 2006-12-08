@@ -61,8 +61,5 @@ uninstall-lib:
 	$(RM) $(includedir)/st.h
 	$(RM) $(includedir)/ststdint.h
 
-clean:
-	$(RM) *.o libst.a
-
 distclean-local:
 	$(RM) *.raw *.sf libst-config stconfig.h ststdint.h
