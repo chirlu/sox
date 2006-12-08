@@ -5669,6 +5669,13 @@ fi
 
 done
 
+if test "$with_alsa" = yes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_ALSA 1
+_ACEOF
+,
+fi
 
 with_oss=no
 
@@ -5961,6 +5968,13 @@ fi
 
 done
 
+if test "$with_oss" = yes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_OSS 1
+_ACEOF
+,
+fi
 
 with_sun_audio=no
 
@@ -6618,8 +6632,7 @@ if test "${with_flac+set}" = set; then
   withval=$with_flac;
 fi
 
-if test "$with_flac" = yes
-then
+if test "$with_flac" = yes; then
     if test "${ac_cv_header_FLAC_file_encoder_h+set}" = set; then
   { echo "$as_me:$LINENO: checking for FLAC/file_encoder.h" >&5
 echo $ECHO_N "checking for FLAC/file_encoder.h... $ECHO_C" >&6; }
@@ -6838,8 +6851,7 @@ if test "${with_mad+set}" = set; then
   withval=$with_mad;
 fi
 
-if test "$with_mad" = yes
-then
+if test "$with_mad" = yes; then
     if test "${ac_cv_header_mad_h+set}" = set; then
   { echo "$as_me:$LINENO: checking for mad.h" >&5
 echo $ECHO_N "checking for mad.h... $ECHO_C" >&6; }
@@ -7058,8 +7070,7 @@ if test "${with_lame+set}" = set; then
   withval=$with_lame;
 fi
 
-if test "$with_lame" = yes
-then
+if test "$with_lame" = yes; then
     if test "${ac_cv_header_lame_lame_h+set}" = set; then
   { echo "$as_me:$LINENO: checking for lame/lame.h" >&5
 echo $ECHO_N "checking for lame/lame.h... $ECHO_C" >&6; }
@@ -7278,8 +7289,7 @@ if test "${with_samplerate+set}" = set; then
   withval=$with_samplerate;
 fi
 
-if test "$with_samplerate" = yes
-then
+if test "$with_samplerate" = yes; then
 
 
 if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
@@ -7470,7 +7480,7 @@ else
         { echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6; }
 
-cat >>confdefs.h <<_ACEOF
+cat >>confdefs.h <<\_ACEOF
 #define HAVE_SAMPLERATE 1
 _ACEOF
 

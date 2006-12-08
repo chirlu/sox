@@ -41,11 +41,17 @@ AC_CHECK_HEADERS(alsa/asoundlib.h,
     [with_alsa=yes
     AC_CHECK_LIB(asound, snd_pcm_open,, with_alsa=no)],
     with_alsa=no)
+if test "$with_alsa" = yes; then
+   AC_DEFINE(HAVE_ALSA, 1, [Set to 1 if you have ALSA.]),
+fi
 
 dnl Check for OSS audio
 with_oss=no
 AC_CHECK_HEADERS(sys/soundcard.h, with_oss=yes)
 AC_CHECK_HEADERS(machine/soundcard.h, with_oss=yes)
+if test "$with_oss" = yes; then
+   AC_DEFINE(HAVE_OSS, 1, [Set to 1 if you have OSS.]),
+fi
 
 dnl Check for Sun-style audio
 with_sun_audio=no
@@ -65,8 +71,7 @@ with_flac=yes
 AC_ARG_WITH(flac,
     AS_HELP_STRING([--with-flac],
         [Use FLAC if present (default is YES)]))
-if test "$with_flac" = yes
-then
+if test "$with_flac" = yes; then
     AC_CHECK_HEADER(FLAC/file_encoder.h,
         [AC_CHECK_LIB(FLAC, FLAC__file_encoder_new,,with_flac=no)],
         with_flac=no)
@@ -77,8 +82,7 @@ with_mad=yes
 AC_ARG_WITH(mad,
     AS_HELP_STRING([--with-mad],
         [Use MAD (MP3 Audio Decoder) if present (default is YES)]))
-if test "$with_mad" = yes
-then
+if test "$with_mad" = yes; then
     AC_CHECK_HEADER(mad.h,
         [AC_CHECK_LIB(mad, mad_stream_buffer,,with_mad=no)],
         with_mad=no)
@@ -89,8 +93,7 @@ with_lame=yes
 AC_ARG_WITH(lame,
     AS_HELP_STRING([--with-lame],
         [Use LAME (LAME Ain't an MP3 Encoder) if present (default is YES)]))
-if test "$with_lame" = yes
-then
+if test "$with_lame" = yes; then
     AC_CHECK_HEADER(lame/lame.h,
         [AC_CHECK_LIB(mp3lame, lame_init,,with_lame=no)],
         with_lame=no)
@@ -101,11 +104,9 @@ with_samplerate=yes
 AC_ARG_WITH(samplerate,
     AS_HELP_STRING([--with-samplerate],
         [Use libsamplerate (aka Secret Rabbit Code) if present (default is YES)]))
-if test "$with_samplerate" = yes
-then
+if test "$with_samplerate" = yes; then
     PKG_CHECK_MODULES(SAMPLERATE, samplerate >= 0.0.15,
-        AC_DEFINE_UNQUOTED([HAVE_SAMPLERATE],1,
-            [Set to 1 if you have libsamplerate.]),
+        AC_DEFINE(HAVE_SAMPLERATE, 1, [Set to 1 if you have libsamplerate.]),
         with_samplerate=no)
 fi
 AC_SUBST(SAMPLERATE_CFLAGS)

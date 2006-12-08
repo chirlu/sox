@@ -19,7 +19,7 @@ st_format_fn_t st_format_fns[] = {
   st_aiff_format_fn,
   st_aifc_format_fn,
   st_al_format_fn,
-#ifdef HAVE_ALSA_ASOUNDLIB_H
+#ifdef HAVE_ALSA
   st_alsa_format_fn,
 #endif
   st_au_format_fn,
