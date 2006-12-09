@@ -3,7 +3,7 @@
  *
  * Written by Chris Bagwell (cbagwell@sprynet.com) - March 16, 1999
  *
-  * Copyright 1999 Chris Bagwell And Sundry Contributors
+ * Copyright 1999 Chris Bagwell And Sundry Contributors
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained. 
  * Chris Bagwell And Sundry Contributors are not responsible for 
@@ -13,10 +13,13 @@
 
 #include "st_i.h"
 
-/* Private data for SKEL file */
+/* Private data for effect */
 typedef struct skelleffstuff {
         int  localdata;
 } *skeleff_t;
+
+assert_static(sizeof(struct skelleffstuff) <= ST_MAX_EFFECT_PRIVSIZE, 
+    /* else */ skelleff_PRIVSIZE_too_big);
 
 /*
  * Process options

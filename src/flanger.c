@@ -1,306 +1,326 @@
-/*
- * August 24, 1998
- * Copyright (C) 1998 Juergen Mueller And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Juergen Mueller And Sundry Contributors are not responsible for 
- * the consequences of using this software.
+/*  Sound Tools Effect: Stereo Flanger
+ *
+ *  (c) 2006 robs@users.sourceforge.net
+ *
+ *  See LICENSE file for further copyright information.
  */
 
-/*
- *      Flanger effect.
- * 
- * Flow diagram scheme:
- *
- *                                                 * gain-in  ___
- * ibuff -----+--------------------------------------------->|   |
- *            |      _______                                 |   |
- *            |     |       |                      * decay   |   |
- *            +---->| delay |------------------------------->| + |
- *                  |_______|                                |   |
- *                     /|\                                   |   |
- *                      |                                    |___|
- *                      |                                      | 
- *              +---------------+      +------------------+    | * gain-out
- *              | Delay control |<-----| modulation speed |    |
- *              +---------------+      +------------------+    +----->obuff
- *
- *
- * The delay is controled by a sine or triangle modulation.
- *
- * Usage: 
- *   flanger gain-in gain-out delay decay speed [ -s | -t ]
- *
- * Where:
- *   gain-in, decay :  0.0 ... 1.0      volume
- *   gain-out :  0.0 ...      volume
- *   delay :  0.0 ... 5.0 msec
- *   speed :  0.1 ... 2.0 Hz       modulation
- *   -s : modulation by sine (default)
- *   -t : modulation by triangle
- *
- * Note:
- *   when decay is close to 1.0, the samples may begin clipping or the output
- *   can saturate! 
- *
- * Hint:
- *   1 / out-gain > gain-in * ( 1 + decay )
- *
-*/
+static char const st_flanger_usage[] =
+  "Usage: \n"
+  "                  .\n"
+  "                 /|regen\n"
+  "                / |\n"
+  "            +--(  |------------+\n"
+  "            |   \\ |            |   .\n"
+  "           _V_   \\|  _______   |   |\\ width   ___\n"
+  "          |   |   ' |       |  |   | \\       |   |\n"
+  "      +-->| + |---->| DELAY |--+-->|  )----->|   |\n"
+  "      |   |___|     |_______|      | /       |   |\n"
+  "      |           delay : depth    |/        |   |\n"
+  "  In  |                 : interp   '         |   | Out\n"
+  "  --->+               __:__                  | + |--->\n"
+  "      |              |     |speed            |   |\n"
+  "      |              |  ~  |shape            |   |\n"
+  "      |              |_____|phase            |   |\n"
+  "      +------------------------------------->|   |\n"
+  "                                             |___|\n"
+  "\n"
+  "Usage: flanger [delay depth regen width speed shape phase interp]\n"
+  "\n"
+  "       RANGE DEFAULT DESCRIPTION\n"
+  "delay   0 10    0    base delay in milliseconds\n"
+  "depth   0 10    2    added swept delay in milliseconds\n"
+  "regen -95 +95   0    percentage regeneration (delayed signal feedback)\n"
+  "width   0 100   71   percentage of delayed signal mixed with original\n"
+  "speed  0.1 10  0.5   sweeps per second (Hz) \n"
+  "shape    --    sin   swept wave shape: sine|triangle\n"
+  "phase   0 100   25   swept wave percentage phase-shift for multi-channel\n"
+  "                     (e.g. stereo) flange; 0 = 100 = same phase on each channel\n"
+  "interp   --    lin   delay-line interpolation: linear|quadratic";
 
-/*
- * Sound Tools flanger effect file.
- */
+/* TODO: Slide in the delay at the start? */
 
-#include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
+
+
+#include "st_i.h"
 #include <math.h>
 #include <string.h>
-#include "st_i.h"
 
-static st_effect_t st_flanger_effect;
 
-#define MOD_SINE        0
-#define MOD_TRIANGLE    1
 
-/* Private data for SKEL file */
-typedef struct flangerstuff {
-        int     modulation;
-        int     counter;                        
-        int     phase;
-        double  *flangerbuf;
-        float   in_gain, out_gain;
-        float   delay, decay;
-        float   speed;
-        st_size_t length;
-        int     *lookup_tab;
-        st_size_t maxsamples, fade_out;
-} *flanger_t;
+typedef enum {INTERP_LINEAR, INTERP_QUADRATIC} interp_t;
 
-/* Private data for SKEL file */
+#define MAX_CHANNELS 4
 
-/*
- * Process options
- */
-int st_flanger_getopts(eff_t effp, int n, char **argv) 
-{
-        flanger_t flanger = (flanger_t) effp->priv;
 
-        if (!((n == 5) || (n == 6)))
-        {
-            st_fail(st_flanger_effect.usage);
-            return (ST_EOF);
-        }
 
-        sscanf(argv[0], "%f", &flanger->in_gain);
-        sscanf(argv[1], "%f", &flanger->out_gain);
-        sscanf(argv[2], "%f", &flanger->delay);
-        sscanf(argv[3], "%f", &flanger->decay);
-        sscanf(argv[4], "%f", &flanger->speed);
-        flanger->modulation = MOD_SINE;
-        if ( n == 6 ) {
-                if ( !strcmp(argv[5], "-s"))
-                        flanger->modulation = MOD_SINE;
-                else if ( ! strcmp(argv[5], "-t"))
-                        flanger->modulation = MOD_TRIANGLE;
-                else
-                {
-                        st_fail(st_flanger_effect.usage);
-                        return (ST_EOF);
-                }
-        }
-        return (ST_SUCCESS);
+typedef struct flanger {
+  /* Parameters */
+  double     delay_min;
+  double     delay_depth;
+  double     feedback_gain;
+  double     delay_gain;
+  double     speed;
+  st_wave_t  wave_shape;
+  double     channel_phase;
+  interp_t   interpolation;
+            
+  /* Delay buffers */
+  double *   delay_bufs[MAX_CHANNELS];
+  st_size_t  delay_buf_length;
+  st_size_t  delay_buf_pos;
+  double     delay_last[MAX_CHANNELS];
+            
+  /* Low Frequency Oscillator */
+  float *    lfo;
+  st_size_t  lfo_length;
+  st_size_t  lfo_pos;
+            
+  /* Balancing */
+  double     in_gain;
+} * flanger_t;
+
+assert_static(sizeof(struct flanger) <= ST_MAX_EFFECT_PRIVSIZE,
+              /* else */ flanger_PRIVSIZE_too_big);
+
+
+
+static enum_item const interp_enum[] = {
+  ENUM_ITEM(INTERP_,LINEAR)
+  ENUM_ITEM(INTERP_,QUADRATIC)
+  {0}};
+
+
+
+#define NUMERIC_PARAMETER(p, min, max) { \
+  char * end_ptr; \
+  double d; \
+  if (argc == 0) break; \
+  d = strtod(*argv, &end_ptr); \
+  if (end_ptr != *argv) { \
+    if (d < min || d > max || *end_ptr != '\0') { \
+      st_fail(effp->h->usage); \
+      return ST_EOF; \
+    } \
+    f->p = d; \
+    --argc, ++argv; \
+  } \
 }
 
-/*
- * Prepare for processing.
- */
-int st_flanger_start(eff_t effp)
-{
-        flanger_t flanger = (flanger_t) effp->priv;
-        unsigned int i;
 
-        flanger->maxsamples = flanger->delay * effp->ininfo.rate / 1000.0;
 
-        if ( flanger->in_gain < 0.0 )
-        {
-            st_fail("flanger: gain-in must be positive!");
-            return (ST_EOF);
-        }
-        if ( flanger->in_gain > 1.0 )
-        {
-            st_fail("flanger: gain-in must be less than 1.0!");
-            return (ST_EOF);
-        }
-        if ( flanger->out_gain < 0.0 )
-        {
-            st_fail("flanger: gain-out must be positive!");
-            return (ST_EOF);
-        }
-        if ( flanger->delay < 0.0 )
-        {
-            st_fail("flanger: delay must be positive!");
-            return (ST_EOF);
-        }
-        if ( flanger->delay > 5.0 )
-        {
-            st_fail("flanger: delay must be less than 5.0 msec!");
-            return (ST_EOF);
-        }
-        if ( flanger->speed < 0.1 )
-        {
-            st_fail("flanger: speed must be more than 0.1 Hz!");
-            return (ST_EOF);
-        }
-        if ( flanger->speed > 2.0 )
-        {
-            st_fail("flanger: speed must be less than 2.0 Hz!");
-            return (ST_EOF);
-        }
-        if ( flanger->decay < 0.0 )
-        {
-            st_fail("flanger: decay must be positive!" );
-            return (ST_EOF);
-        }
-        if ( flanger->decay > 1.0 )
-        {
-            st_fail("flanger: decay must be less that 1.0!" );
-            return (ST_EOF);
-        }
-        /* Be nice and check the hint with warning, if... */
-        if ( flanger->in_gain * ( 1.0 + flanger->decay ) > 1.0 / flanger->out_gain )
-                st_warn("flanger: warning >>> gain-out can cause saturation or clipping of output <<<");
-
-        flanger->length = effp->ininfo.rate / flanger->speed;
-
-        if (! (flanger->flangerbuf = 
-                (double *) malloc(sizeof (double) * flanger->maxsamples)))
-        {
-                st_fail("flanger: Cannot malloc %d bytes!", 
-                        sizeof(double) * flanger->maxsamples);
-                return (ST_EOF);
-        }
-        for ( i = 0; i < flanger->maxsamples; i++ )
-                flanger->flangerbuf[i] = 0.0;
-        if (! (flanger->lookup_tab = 
-                (int *) malloc(sizeof (int) * flanger->length)))
-        {
-                st_fail("flanger: Cannot malloc %d bytes!", 
-                        sizeof(int) * flanger->length);
-                return(ST_EOF);
-        }
-
-        if ( flanger->modulation == MOD_SINE )
-                st_sine(flanger->lookup_tab, flanger->length, 
-                        flanger->maxsamples - 1,
-                        flanger->maxsamples - 1);
-        else
-                st_triangle(flanger->lookup_tab, flanger->length, 
-                        (flanger->maxsamples - 1) * 2, 
-                        flanger->maxsamples - 1);
-        flanger->counter = 0;
-        flanger->phase = 0;
-        flanger->fade_out = flanger->maxsamples;
-        return (ST_SUCCESS);
+#define TEXTUAL_PARAMETER(p, enum_table) { \
+  enum_item const * e; \
+  if (argc == 0) break; \
+  e = find_enum_text(*argv, enum_table); \
+  if (e != NULL) { \
+    f->p = e->value; \
+    --argc, ++argv; \
+  } \
 }
 
-/*
- * Processed signed long samples from ibuf to obuf.
- * Return number of samples processed.
- */
-int st_flanger_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                    st_size_t *isamp, st_size_t *osamp)
-{
-        flanger_t flanger = (flanger_t) effp->priv;
-        int len, done;
-        
-        double d_in, d_out;
-        st_sample_t out;
 
-        len = ((*isamp > *osamp) ? *osamp : *isamp);
-        for(done = 0; done < len; done++) {
-                /* Store delays as 24-bit signed longs */
-                d_in = (double) *ibuf++ / 256;
-                /* Compute output first */
-                d_out = d_in * flanger->in_gain;
-                d_out += flanger->flangerbuf[(flanger->maxsamples + 
-        flanger->counter - flanger->lookup_tab[flanger->phase]) % 
-        flanger->maxsamples] * flanger->decay;
-                /* Adjust the output volume and size to 24 bit */
-                d_out = d_out * flanger->out_gain;
-                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clippedCount);
-                *obuf++ = out * 256;
-                /* Mix decay of delay and input */
-                flanger->flangerbuf[flanger->counter] = d_in;
-                flanger->counter = 
-                        ( flanger->counter + 1 ) % flanger->maxsamples;
-                flanger->phase  = ( flanger->phase + 1 ) % flanger->length;
-        }
-        /* processed all samples */
-        return (ST_SUCCESS);
+
+static int st_flanger_getopts(eff_t effp, int argc, char const * const * argv)
+{
+  flanger_t f = (flanger_t) effp->priv;
+
+  /* Set non-zero defaults: */
+  f->delay_depth  = 2;
+  f->delay_gain   = 71;
+  f->speed        = 0.5;
+  f->channel_phase= 25;
+
+  do { /* break-able block */
+    NUMERIC_PARAMETER(delay_min    , 0  , 10 )
+    NUMERIC_PARAMETER(delay_depth  , 0  , 10 )
+    NUMERIC_PARAMETER(feedback_gain,-95 , 95 )
+    NUMERIC_PARAMETER(delay_gain   , 0  , 100)
+    NUMERIC_PARAMETER(speed        , 0.1, 10 )
+    TEXTUAL_PARAMETER(wave_shape, st_wave_enum)
+    NUMERIC_PARAMETER(channel_phase, 0  , 100)
+    TEXTUAL_PARAMETER(interpolation, interp_enum)
+  } while (0);
+
+  if (argc != 0) {
+    st_fail(effp->h->usage);
+    return ST_EOF;
+  }
+
+  st_report("parameters:\n"
+      "delay = %gms\n"
+      "depth = %gms\n"
+      "regen = %g%%\n"
+      "width = %g%%\n"
+      "speed = %gHz\n"
+      "shape = %s\n"
+      "phase = %g%%\n"
+      "interp= %s",
+      f->delay_min,
+      f->delay_depth,
+      f->feedback_gain,
+      f->delay_gain,
+      f->speed,
+      st_wave_enum[f->wave_shape].text,
+      f->channel_phase,
+      interp_enum[f->interpolation].text);
+
+  return ST_SUCCESS;
 }
 
-/*
- * Drain out reverb lines. 
- */
-int st_flanger_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
-{
-        flanger_t flanger = (flanger_t) effp->priv;
-        st_size_t done;
-        
-        double d_in, d_out;
-        st_sample_t out;
 
-        done = 0;
-        while ( ( done < *osamp ) && ( done < flanger->fade_out ) ) {
-                d_in = 0;
-                d_out = 0;
-                /* Compute output first */
-                d_out += flanger->flangerbuf[(flanger->maxsamples + 
-        flanger->counter - flanger->lookup_tab[flanger->phase]) % 
-        flanger->maxsamples] * flanger->decay;
-                /* Adjust the output volume and size to 24 bit */
-                d_out = d_out * flanger->out_gain;
-                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clippedCount);
-                *obuf++ = out * 256;
-                /* Mix decay of delay and input */
-                flanger->flangerbuf[flanger->counter] = d_in;
-                flanger->counter = 
-                        ( flanger->counter + 1 ) % flanger->maxsamples;
-                flanger->phase  = ( flanger->phase + 1 ) % flanger->length;
-                done++;
-                flanger->fade_out--;
-        }
-        /* samples playd, it remains */
-        *osamp = done;
-        return (ST_SUCCESS);
+
+static int st_flanger_start(eff_t effp)
+{
+  flanger_t f = (flanger_t) effp->priv;
+  int c, channels = effp->ininfo.channels;
+
+  if (channels > MAX_CHANNELS) {
+    st_fail("Can not operate with more than %i channels", MAX_CHANNELS);
+    return ST_EOF;
+  }
+
+  /* Scale percentages to unity: */
+  f->feedback_gain /= 100;
+  f->delay_gain    /= 100;
+  f->channel_phase /= 100;
+
+  /* Balance output: */
+  f->in_gain = 1 / (1 + f->delay_gain);
+  f->delay_gain  /= 1 + f->delay_gain;
+
+  /* Balance feedback loop: */
+  f->delay_gain *= 1 - fabs(f->feedback_gain);
+
+  st_debug("in_gain=%g feedback_gain=%g delay_gain=%g\n",
+      f->in_gain, f->feedback_gain, f->delay_gain);
+
+  /* Create the delay buffers, one for each channel: */
+  f->delay_buf_length =
+    (f->delay_min + f->delay_depth) / 1000 * effp->ininfo.rate + 0.5;
+  ++f->delay_buf_length;  /* Need 0 to n, i.e. n + 1. */
+  ++f->delay_buf_length;  /* Quadratic interpolator needs one more. */
+  for (c = 0; c < channels; ++c) {
+    f->delay_bufs[c] = calloc(f->delay_buf_length, sizeof(*f->delay_bufs[0]));
+    if (f->delay_bufs[c] == NULL)
+    {
+      st_fail("Cannot allocate memory for delay_bufs");
+      return ST_EOF;
+    }
+  }
+
+  /* Create the LFO lookup table: */
+  f->lfo_length = effp->ininfo.rate / f->speed;
+  f->lfo = calloc(f->lfo_length, sizeof(*f->lfo));
+  if (f->lfo == NULL) {
+    st_fail("Cannot allocate memory for lfo");
+    return ST_EOF;
+  }
+  st_generate_wave_table(
+      f->wave_shape,
+      ST_FLOAT,
+      f->lfo,
+      f->lfo_length,
+      (st_size_t)(f->delay_min / 1000 * effp->ininfo.rate + .5),
+      f->delay_buf_length - 2,
+      3 * M_PI_2);  /* Start the sweep at minimum delay (for mono at least) */
+
+  st_debug("delay_buf_length=%u lfo_length=%u\n",
+      f->delay_buf_length, f->lfo_length);
+
+  return ST_SUCCESS;
 }
 
-/*
- * Clean up flanger effect.
- */
-int st_flanger_stop(eff_t effp)
-{
-        flanger_t flanger = (flanger_t) effp->priv;
 
-        free((char *) flanger->flangerbuf);
-        flanger->flangerbuf = (double *) -1;   /* guaranteed core dump */
-        free((char *) flanger->lookup_tab);
-        flanger->lookup_tab = (int *) -1;   /* guaranteed core dump */
-        return (ST_SUCCESS);
+
+static int st_flanger_flow(eff_t effp, st_sample_t const * ibuf,
+    st_sample_t * obuf, st_size_t * isamp, st_size_t * osamp)
+{
+  flanger_t f = (flanger_t) effp->priv;
+  int c, channels = effp->ininfo.channels;
+  st_size_t len = (*isamp > *osamp ? *osamp : *isamp) / channels;
+
+  *isamp = *osamp = len * channels;
+
+  while (len--) {
+    f->delay_buf_pos =
+      (f->delay_buf_pos + f->delay_buf_length - 1) % f->delay_buf_length;
+    for (c = 0; c < channels; ++c) {
+      double delayed_0, delayed_1;
+      double delayed;
+      double in, out;
+      st_size_t channel_phase = c * f->lfo_length * f->channel_phase + .5;
+      double delay = f->lfo[(f->lfo_pos + channel_phase) % f->lfo_length];
+      double frac_delay = modf(delay, &delay);
+      st_size_t int_delay = (size_t)delay;
+
+      in = *ibuf++;
+      f->delay_bufs[c][f->delay_buf_pos] = in + f->delay_last[c] * f->feedback_gain;
+
+      delayed_0 = f->delay_bufs[c]
+        [(f->delay_buf_pos + int_delay++) % f->delay_buf_length];
+      delayed_1 = f->delay_bufs[c]
+        [(f->delay_buf_pos + int_delay++) % f->delay_buf_length];
+
+      if (f->interpolation == INTERP_LINEAR)
+        delayed = delayed_0 + (delayed_1 - delayed_0) * frac_delay;
+      else /* if (f->interpolation == INTERP_QUADRATIC) */
+      {
+        double a, b;
+        double delayed_2 = f->delay_bufs[c]
+          [(f->delay_buf_pos + int_delay++) % f->delay_buf_length];
+        delayed_2 -= delayed_0;
+        delayed_1 -= delayed_0;
+        a = delayed_2 *.5 - delayed_1;
+        b = delayed_1 * 2 - delayed_2 *.5;
+        delayed = delayed_0 + (a * frac_delay + b) * frac_delay;
+      }
+
+      f->delay_last[c] = delayed;
+      out = in * f->in_gain + delayed * f->delay_gain;
+      *obuf++ = ST_ROUND_CLIP_COUNT(out, effp->clippedCount);
+    }
+    f->lfo_pos = (f->lfo_pos + 1) % f->lfo_length;
+  }
+
+  return ST_SUCCESS;
 }
+
+
+
+static int st_flanger_stop(eff_t effp)
+{
+  flanger_t f = (flanger_t) effp->priv;
+  int c, channels = effp->ininfo.channels;
+
+  for (c = 0; c < channels; ++c)
+    if (f->delay_bufs[c] != NULL)
+      free(f->delay_bufs[c]);
+
+  if (f->lfo != NULL)
+    free(f->lfo);
+
+  memset(f, 0, sizeof(*f));
+
+  return ST_SUCCESS;
+}
+
+
 
 static st_effect_t st_flanger_effect = {
   "flanger",
-  "Usage: flanger gain-in gain-out delay decay speed [ -s | -t ]",
-  0,
+  st_flanger_usage,
+  ST_EFF_MCHAN,
   st_flanger_getopts,
   st_flanger_start,
   st_flanger_flow,
-  st_flanger_drain,
+  st_effect_nothing_drain,
   st_flanger_stop
 };
 
-const st_effect_t *st_flanger_effect_fn(void)
+
+
+st_effect_t const * st_flanger_effect_fn(void)
 {
-    return &st_flanger_effect;
+  return &st_flanger_effect;
 }

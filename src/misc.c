@@ -424,37 +424,58 @@ void st_initrand(void) {
     srand(t);
 }
 
-/* This was very painful.  We need a sine library. */
 
-void st_sine(int *buf, st_size_t len, int max, int depth)
+
+void st_generate_wave_table(
+    st_wave_t wave_type,
+    st_data_t data_type,
+    void * table,
+    uint32_t table_size,
+    double min,
+    double max,
+    double phase)
 {
-    st_ssize_t i;
-    int offset;
-    double val;
+  uint32_t t;
+  uint32_t phase_offset = phase / M_PI / 2 * table_size + 0.5;
 
-    offset = max - depth;
-    for (i = 0; i < len; i++) {
-        val = sin((double)i/(double)len * 2.0 * M_PI);
-        buf[i] = (int) ((1.0 + val) * depth / 2.0);
+  for (t = 0; t < table_size; t++)
+  {
+    uint32_t point = (t + phase_offset) % table_size;
+    double d;
+    switch (wave_type)
+    {
+      case ST_WAVE_SINE:
+      d = (sin((double)point / table_size * 2 * M_PI) + 1) / 2;
+      break;
+
+      case ST_WAVE_TRIANGLE:
+      d = (double)point * 2 / table_size;
+      switch (4 * point / table_size)
+      {
+        case 0:         d = d + 0.5; break;
+        case 1: case 2: d = 1.5 - d; break;
+        case 3:         d = d - 1.5; break;
+      }
+      break;
     }
+    d  = d * (max - min) + min;
+    switch (data_type)
+    {
+      case ST_FLOAT : *(float  *)table = d; table += sizeof(float ); continue;
+      case ST_DOUBLE: *(double *)table = d; table += sizeof(double); continue;
+      default: break;
+    }
+    d += d < 0? -0.5 : +0.5;
+    switch (data_type)
+    {
+      case ST_SHORT : *(short  *)table = d; table += sizeof(short ); continue;
+      case ST_INT   : *(int    *)table = d; table += sizeof(int   ); continue;
+      default: break;
+    }
+  }
 }
 
-void st_triangle(int *buf, st_size_t len, int max, int depth)
-{
-    st_ssize_t i;
-    int offset;
-    double val;
 
-    offset = max - 2 * depth;
-    for (i = 0; i < len / 2; i++) {
-        val = i * 2.0 / len;
-        buf[i] = offset + (int) (val * 2.0 * (double)depth);
-    }
-    for (i = len / 2; i < len ; i++) {
-        val = (len - i) * 2.0 / len;
-        buf[i] = offset + (int) (val * 2.0 * (double)depth);
-    }
-}
 
 const char *st_version(void)
 {
@@ -500,3 +521,26 @@ int st_seeki(ft_t ft, st_size_t offset, int whence)
 
     return ft->st_errno;
 }
+
+enum_item const * find_enum_text(char const * text, enum_item const * enum_items)
+{
+  enum_item const * result = NULL; /* Assume not found */
+
+  while (enum_items->text)
+  {
+    if (strncasecmp(text, enum_items->text, strlen(text)) == 0)
+    {
+      if (result != NULL && result->value != enum_items->value)
+        return NULL;        /* Found ambiguity */
+      result = enum_items;  /* Found match */
+    }
+    ++enum_items;
+  }
+  return result;
+}
+
+enum_item const st_wave_enum[] = {
+  ENUM_ITEM(ST_WAVE_,SINE)
+  ENUM_ITEM(ST_WAVE_,TRIANGLE)
+  {0}};
+

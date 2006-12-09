@@ -16,26 +16,6 @@
 #include <ctype.h>
 #include "st_i.h"
 
-typedef struct {char const *text; int value;} enum_item;
-#define ENUM_ITEM(prefix, item) {#item, prefix##item},
-
-static enum_item const * find(char const * text, enum_item const * enum_items)
-{
-  enum_item const * result = NULL; /* Assume not found */
-
-  while (enum_items->text)
-  {
-    if (strncasecmp(text, enum_items->text, strlen(text)) == 0)
-    {
-      if (result != NULL && result->value != enum_items->value)
-        return NULL;        /* Found ambiguity */
-      result = enum_items;  /* Found match */
-    }
-    ++enum_items;
-  }
-  return result;
-}
-
 static st_effect_t st_synth_effect;
 
 #define PCOUNT 5
@@ -315,7 +295,7 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
     /* for one or more channel */
     /* type [combine] [f1[-f2]] [p0] [p1] [p2] [p3] [p4] */
     for (c = 0; c < MAXCHAN && n > argn; c++) {
-      enum_item const * p = find(argv[argn], synth_type);
+      enum_item const * p = find_enum_text(argv[argn], synth_type);
       if (p == NULL) {
         st_fail("no type given");
         return ST_EOF;
@@ -324,7 +304,7 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
       if (++argn == n) break;
 
       /* maybe there is a combine-type in next arg */
-      p = find(argv[argn], combine_type);
+      p = find_enum_text(argv[argn], combine_type);
       if (p != NULL) {
         synth->mix[c] = p->value;
         if (++argn == n) break;

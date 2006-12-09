@@ -34,8 +34,22 @@
 #endif
 
 /* declared in misc.c */
-void st_sine(int *buf, st_size_t len, int max, int depth);
-void st_triangle(int *buf, st_size_t len, int max, int depth);
+typedef struct {char const *text; int value;} enum_item;
+#define ENUM_ITEM(prefix, item) {#item, prefix##item},
+enum_item const * find_enum_text(
+    char const * text, enum_item const * enum_items);
+
+typedef enum {ST_SHORT, ST_INT, ST_FLOAT, ST_DOUBLE} st_data_t;
+typedef enum {ST_WAVE_SINE, ST_WAVE_TRIANGLE} st_wave_t;
+extern enum_item const st_wave_enum[];
+void st_generate_wave_table(
+    st_wave_t wave_type,
+    st_data_t data_type,
+    void * table,
+    uint32_t table_size,
+    double min,
+    double max,
+    double phase);
 
 st_sample_t st_gcd(st_sample_t a, st_sample_t b) REGPARM(2);
 st_sample_t st_lcm(st_sample_t a, st_sample_t b) REGPARM(2);

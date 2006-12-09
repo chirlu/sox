@@ -1074,13 +1074,38 @@ You can select a Nuttall window by specifying anything <= 2.0 here.
 For more discussion of beta, look under the \fBresample\fR effect.
 
 .TP 10
-flanger \fIgain-in gain-out delay decay speed\fR < -s | -t >
-Add a flanger to a sound sample.  Each triple
-delay/decay/speed gives the delay in milliseconds
-and the decay (relative to gain-in) with a modulation
-speed in Hz.
-The modulation is either sinusoidal (-s) or triangular
-(-t).  Gain-out is the volume of the output.
+flanger [\fIdelay depth regen width speed shape phase interp\fR]
+Apply a flanging effect to the signal.
+All parameters are optional (right to left).
+
+       RANGE DEFAULT DESCRIPTION
+.RS
+.TP 21
+\fIdelay\fR   0 10    0
+Base delay in milliseconds.
+.TP 21
+\fIdepth\fR   0 10    2
+Added swept delay in milliseconds.
+.TP 21
+\fIregen\fR -95 +95   0
+Percentage regeneration (delayed signal feedback).
+.TP 21
+\fIwidth\fR   0 100   71
+Percentage of delayed signal mixed with original.
+.TP 21
+\fIspeed\fR  0.1 10  0.5
+Sweeps per second (Hz).
+.TP 21
+\fIshape\fR    --    sin
+Swept wave shape: sine | triangle.
+.TP 21
+\fIphase\fR   0 100   25
+Swept wave percentage phase-shift for multi-channel
+(e.g. stereo) flange; 0 = 100 = same phase on each channel.
+.TP 21
+\fIinterp\fR   --    lin
+Delay-line interpolation: linear | quadratic.
+.RE
 .TP 10
 highp|lowp \fIfrequency\fR
 Apply a single-pole recursive high-pass or low-pass filter with

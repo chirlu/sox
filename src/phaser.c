@@ -176,14 +176,12 @@ int st_phaser_start(eff_t effp)
                 return (ST_EOF);
         }
 
-        if ( phaser->modulation == MOD_SINE )
-                st_sine(phaser->lookup_tab, phaser->length, 
-                        phaser->maxsamples - 1,
-                        phaser->maxsamples - 1);
+        if (phaser->modulation == MOD_SINE)
+          st_generate_wave_table(ST_WAVE_SINE, ST_INT, phaser->lookup_tab,
+              phaser->length, 0, phaser->maxsamples - 1, 0);
         else
-                st_triangle(phaser->lookup_tab, phaser->length, 
-                        (phaser->maxsamples - 1) * 2,
-                        phaser->maxsamples - 1);
+          st_generate_wave_table(ST_WAVE_TRIANGLE, ST_INT, phaser->lookup_tab,
+              phaser->length, 0, 2 * (phaser->maxsamples - 1), 3 * M_PI_2);
         phaser->counter = 0;
         phaser->phase = 0;
         phaser->fade_out = phaser->maxsamples;

@@ -340,28 +340,17 @@ including changes of the speed.
 The flanger effect is widely used in funk and soul music, where the guitar 
 sound varies frequently slow or a bit faster.
 .P
-The typical delay is around 3ms to 5ms, the speed of the modulation is best
-near 0.5Hz.
+Enter \fIsox --help-effect flanger\fR to see the default settings.
 .P
 Now, let's groove the sample:
 .P
 .BR
-	play file.xxx flanger 0.6 0.87 3.0 0.9 0.5 -s
+	play file.xxx flanger
 .P
 listen carefully between the difference of sinusoidal and triangular modulation:
 .P
 .BR
-	play file.xxx flanger 0.6 0.87 3.0 0.9 0.5 -t
-.P
-If the decay is a bit lower, than the effect sounds more popular:
-.P
-.BR
-	play file.xxx flanger 0.8 0.88 3.0 0.4 0.5 -t
-.P
-The drunken loudspeaker system:
-.P
-.BR
-	play file.xxx flanger 0.9 0.9 4.0 0.23 1.3 -s
+	play file.xxx flanger triangle
 .P
 .B Reverb
 .P

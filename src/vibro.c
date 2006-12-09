@@ -63,22 +63,6 @@ int st_vibro_getopts(eff_t effp, int n, char **argv)
         return (ST_SUCCESS);
 }
 
-/* This was very painful.  We need a sine library. */
-/* SJB: this is somewhat different than st_sine()  */
-/* FIXME: move to misc.c */
-static void sine(short *buf, int len, float depth)
-{
-        int i;
-        int scale = depth * 128;
-        int base = (1.0 - depth) * 128;
-        double val;
-
-        for (i = 0; i < len; i++) {
-                val = sin((float)i/(float)len * 2.0 * M_PI);
-                buf[i] = (val + 1.0) * scale + base * 2;
-        }
-}
-
 /*
  * Prepare processing.
  */
@@ -94,7 +78,8 @@ int st_vibro_start(eff_t effp)
                 return (ST_EOF);
         }
 
-        sine(vibro->sinetab, vibro->length, vibro->depth);
+        st_generate_wave_table(ST_WAVE_SINE, ST_SHORT,
+            vibro->sinetab, vibro->length, (1 - vibro->depth) * 256, 256, 0);
         vibro->counter = 0;
         return (ST_SUCCESS);
 }

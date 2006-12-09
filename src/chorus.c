@@ -213,14 +213,14 @@ int st_chorus_start(eff_t effp)
                                 sizeof(int) * chorus->length[i]);
                         return (ST_EOF);
                 }
-                if ( chorus->modulation[i] == MOD_SINE )
-                        st_sine(chorus->lookup_tab[i], chorus->length[i], 
-                                chorus->depth_samples[i] - 1,
-                                chorus->depth_samples[i]);
-                else
-                        st_triangle(chorus->lookup_tab[i], chorus->length[i], 
-                                chorus->samples[i] - 1,
-                                chorus->depth_samples[i]);
+    if (chorus->modulation[i] == MOD_SINE)
+      st_generate_wave_table(ST_WAVE_SINE, ST_INT, chorus->lookup_tab[i],
+          chorus->length[i], 0, chorus->depth_samples[i], 0);
+    else
+      st_generate_wave_table(ST_WAVE_TRIANGLE, ST_INT, chorus->lookup_tab[i], 
+          chorus->length[i],
+          chorus->samples[i] - 1 - 2 * chorus->depth_samples[i],
+          chorus->samples[i] - 1, 3 * M_PI_2);
                 chorus->phase[i] = 0;
 
                 if ( chorus->samples[i] > chorus->maxsamples )
