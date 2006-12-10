@@ -65,7 +65,7 @@ st_format_fn_t st_format_fns[] = {
   st_ul_format_fn,
   st_uw_format_fn,
   st_voc_format_fn,
-#ifdef HAVE_LIBVORBIS
+#if defined HAVE_LIBVORBISENC && defined HAVE_LIBVORBISFILE
   st_vorbis_format_fn,
 #endif
   st_vox_format_fn,

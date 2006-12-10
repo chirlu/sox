@@ -21,7 +21,7 @@
  */
 #include "st_i.h"
 
-#ifdef HAVE_LIBVORBIS
+#if defined HAVE_LIBVORBISENC && defined HAVE_LIBVORBISFILE
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
@@ -489,4 +489,4 @@ const st_format_t *st_vorbis_format_fn(void)
 {
     return &st_vorbis_format;
 }
-#endif /* HAVE_LIBVORBIS */
+#endif

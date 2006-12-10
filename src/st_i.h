@@ -221,7 +221,7 @@ extern const st_format_t *st_sun_format_fn(void);
 extern const st_format_t *st_svx_format_fn(void);
 extern const st_format_t *st_txw_format_fn(void);
 extern const st_format_t *st_voc_format_fn(void);
-#ifdef HAVE_LIBVORBIS
+#if defined HAVE_LIBVORBISENC && defined HAVE_LIBVORBISFILE
 extern const st_format_t *st_vorbis_format_fn(void);
 #endif
 extern const st_format_t *st_vox_format_fn(void);
