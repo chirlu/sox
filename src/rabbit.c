@@ -41,7 +41,7 @@ typedef struct {
 /*
  * Process options
  */
-int st_rabbit_getopts(eff_t effp, int n, char **argv)
+static int st_rabbit_getopts(eff_t effp, int n, char **argv)
 {
   rabbit_t r = (rabbit_t) effp->priv;
 
@@ -77,7 +77,7 @@ int st_rabbit_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare processing.
  */
-int st_rabbit_start(eff_t effp)
+static int st_rabbit_start(eff_t effp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
 
@@ -104,7 +104,7 @@ int st_rabbit_start(eff_t effp)
 /*
  * Read all the data.
  */
-int st_rabbit_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
+static int st_rabbit_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf UNUSED,
                    st_size_t *isamp, st_size_t *osamp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
@@ -137,7 +137,7 @@ int st_rabbit_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 /*
  * Process samples and write output.
  */
-int st_rabbit_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_rabbit_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
   int channels = effp->ininfo.channels;
@@ -147,8 +147,7 @@ int st_rabbit_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
   if (r->data->data_out == NULL) {
     /* Guess maximum number of possible output frames */
     st_size_t outframes = r->data->input_frames * (r->data->src_ratio + 0.01) + 8;
-    int error, i;
-    double max_amp = 0.0;
+    int error;
 
     if (outframes > INT_MAX) {
       st_fail("too many output frames (%d) for libsamplerate", outframes);
@@ -166,16 +165,6 @@ int st_rabbit_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
       st_fail("libsamplerate processing failed: %s", src_strerror(error));
       return (ST_EOF);
     }
-
-    /* Find the scaling coefficient needed to avoid any values with
-       amplitude > 1.0 */
-    for (i = 0; i < r->data->output_frames_gen * channels; i++)
-      max_amp = max(max_amp, fabs(r->data->data_out[i]));
-
-    /* Rescale */
-    if (max_amp > 1.0)
-      for (i = 0; i < r->data->output_frames_gen * channels; i++)
-        r->data->data_out[i] /= max_amp;
   }
 
   /* Return the data one bufferful at a time */
@@ -197,7 +186,7 @@ int st_rabbit_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-int st_rabbit_stop(eff_t effp)
+static int st_rabbit_stop(eff_t effp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
 
