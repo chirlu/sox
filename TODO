@@ -107,3 +107,6 @@ use the raw driver for reading and writing.
     end of the file.
 
   o Merging, e.g. two mono files to one stereo file.
+
+  o All option-parsers should fail if extraneous charcters or arguments
+    are present. e.g. -v 1dB, vol 3mW, speed 2 3, should all fail.
