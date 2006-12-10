@@ -48,7 +48,7 @@ synth		n	n
 treble		see bass
 trim		n	n
 vibro		n	n
-vol		y	c
+vol		y	y
 
 -v		y	c
 

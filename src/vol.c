@@ -24,8 +24,6 @@ typedef struct {
     double limitergain; /* limiter gain. */
     int limited; /* number of limited values to report. */
     int totalprocessed;
-    
-    int clipped;    /* number of clipped values to report. */
 } * vol_t;
 
 /*
@@ -109,7 +107,6 @@ int st_vol_start(eff_t effp)
         return ST_EOF;
     }
 
-    vol->clipped = 0;
     vol->limited = 0;
     vol->totalprocessed = 0;
 
@@ -162,7 +159,7 @@ int st_vol_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                         sample = gain * sample;
                 }
 
-                ST_SAMPLE_CLIP_COUNT(sample, vol->clipped);
+                ST_SAMPLE_CLIP_COUNT(sample, effp->clippedCount);
                *obuf++ = sample;
             }
     }
@@ -172,7 +169,7 @@ int st_vol_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         for (;len>0; len--)
         {
                 sample = gain * *ibuf++;
-                ST_SAMPLE_CLIP_COUNT(sample, vol->clipped);
+                ST_SAMPLE_CLIP_COUNT(sample, effp->clippedCount);
                 *obuf++ = sample;
         }
     }
@@ -188,13 +185,8 @@ int st_vol_stop(eff_t effp)
     vol_t vol = (vol_t) effp->priv;
     if (vol->limited)
     {
-        st_warn("VOL limited %d values (%d percent).", 
+        st_warn("limited %d values (%d percent).", 
              vol->limited, (int) (vol->limited * 100.0 / vol->totalprocessed));
-    }
-    if (vol->clipped) 
-    {
-        st_warn("VOL clipped %d values, amplitude gain=%f too high...", 
-             vol->clipped, vol->gain);
     }
     return ST_SUCCESS;
 }
