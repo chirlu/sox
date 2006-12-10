@@ -1286,7 +1286,7 @@ static int flow_effect_out(void)
           flowstatus  = flow_effect(e);
           if (flowstatus == ST_EOF)
           {
-              input_eff = e+1;
+              input_eff = e;
               /* Assume next effect hasn't reach EOF yet */
               input_eff_eof = 0;
           }

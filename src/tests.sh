@@ -87,7 +87,7 @@ do_multichannel_formats
 channels=1 
 do_singlechannel_formats
 
-./sox -c 1 -n output.ub synth .01 sine
+./sox -c 1 -n output.ub synth .01 vol .5
 if [ `wc -c <output.ub` = 441 ]; then
   echo "ok     synth size"
 else
