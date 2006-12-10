@@ -1,8 +1,5 @@
 Clipping Counting & Reporting Implementation Status 
 
-As of 24th Nov '06, this aspect of the implementation is
-believed to be complete.
-
 1st column: effect/format name
 2nd column: could clip (in theory)
 3rd column: CLIP_COUNT reporting implemented: yes, no, or (yes) custom
@@ -28,7 +25,7 @@ highp		n	y
 highpass	see bandpass
 lowp		n	y
 lowpass		see bandpass
-mask		n	n
+mask		y	n     TODO
 mcompand	y	y
 noiseprof	n	n
 noisered	n	y

@@ -18,6 +18,9 @@ use the raw driver for reading and writing.
     will prevent corrupt files from causing sox to go into
     an infinite loop trying to read just a couple more bytes.
 
+  o Make "dither" an alias of "mask" since that's  how most
+    people refer to this process.
+
   o Make "mix" an alias of "avg" since that's closer to what it
     really is.  For 2->2 mixes, make a 2 option L->L and R->R
     shortcut.  Similar 4 option for 4->4.
