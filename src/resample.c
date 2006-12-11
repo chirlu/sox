@@ -158,7 +158,7 @@ static long SrcEX(resample_t r, long Nx);
 /*
  * Process options
  */
-int st_resample_getopts(eff_t effp, int n, char **argv) 
+int st_resample_getopts(eff_t effp, int n, char **argv)
 {
         resample_t r = (resample_t) effp->priv;
 
@@ -392,7 +392,6 @@ int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         r->Xp = r->Xoff;
 
         for(i=0; i < Nout; i++) { 
-                // orig: *obuf++ = r->Y[i] * ISCALE;
                 double ftemp = r->Y[i] * ISCALE;
 
                 ST_SAMPLE_CLIP_COUNT(ftemp, effp->clippedCount);

@@ -128,8 +128,8 @@ static void sigint(int s);
 /* Array's tracking input and output files */
 static file_options_t *file_opts[MAX_FILES];
 static ft_t file_desc[MAX_FILES];
-static int file_count = 0;
-static int input_count = 0;
+static size_t file_count = 0;
+static size_t input_count = 0;
 
 /* We parse effects into a temporary effects table and then place into
  * the real effects table.  This makes it easier to reorder some effects
@@ -179,7 +179,7 @@ static void sox_output_message(int level, st_output_message_t m)
 int main(int argc, char **argv)
 {
     file_options_t *fo;
-    int i;
+    size_t i;
 
     myname = argv[0];
 
@@ -202,8 +202,8 @@ int main(int argc, char **argv)
 
         fo = (file_options_t *)calloc(sizeof(file_options_t), 1);
         fo->info.size = -1;
-        fo->info.encoding = -1;
-        fo->info.channels = -1;
+        fo->info.encoding = ST_ENCODING_UNKNOWN;
+        fo->info.channels = 0;
         fo->info.compression = HUGE_VAL;
         fo->volume = 1.0;
         file_opts[file_count++] = fo;
@@ -551,7 +551,7 @@ static int compare_input(ft_t ft1, ft_t ft2)
     return ST_SUCCESS;
 }
 
-void optimize_trim(void)
+static void optimize_trim(void)
 {
     /* Speed hack.  If the "trim" effect is the first effect then
      * peak inside its "effect descriptor" and see what the
@@ -585,9 +585,9 @@ void optimize_trim(void)
  */
 
 static void process(void) {
-    int e, f, flowstatus = ST_SUCCESS;
-    int current_input;
-    st_size_t s;
+    int e, flowstatus = ST_SUCCESS;
+    size_t current_input;
+    st_size_t s, f;
     st_ssize_t ilen[MAX_INPUT_FILES];
     st_sample_t *ibuf[MAX_INPUT_FILES];
 
@@ -626,9 +626,9 @@ static void process(void) {
             options->info.rate = file_desc[0]->info.rate;
         if (options->info.size == -1)
             options->info.size = file_desc[0]->info.size;
-        if (options->info.encoding == -1)
+        if (options->info.encoding == ST_ENCODING_UNKNOWN)
             options->info.encoding = file_desc[0]->info.encoding;
-        if (options->info.channels == -1)
+        if (options->info.channels == 0)
             options->info.channels = file_desc[0]->info.channels;
 
         if (options->comment != NULL)
@@ -1263,7 +1263,7 @@ static void reserve_effect_buf(void)
 static int flow_effect_out(void)
 {
     int e, havedata, flowstatus = 0;
-    int len, total;
+    size_t len, total;
 
     do {
       /* run entire chain BACKWARDS: pull, don't push.*/
@@ -1330,9 +1330,9 @@ static int flow_effect_out(void)
 
               len = st_write(file_desc[file_count-1], 
                              &efftab[neffects-1].obuf[total],
-                             (st_ssize_t)efftab[neffects-1].olen-total);
+                             efftab[neffects-1].olen-total);
 
-              if (len < 0 || file_desc[file_count-1]->file.eof)
+              if (len != efftab[neffects-1].olen-total || file_desc[file_count-1]->file.eof)
               {
                   st_warn("Error writing: %s",
                           file_desc[file_count-1]->st_errstr);
@@ -1877,7 +1877,7 @@ static void usage_effect(char *effect)
  
 void cleanup(void) 
 {
-    int i;
+    size_t i;
     struct stat st;
     char *fn;
 

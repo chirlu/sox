@@ -70,7 +70,7 @@ typedef struct {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-int st_compand_getopts(eff_t effp, int n, char **argv) 
+static int st_compand_getopts(eff_t effp, int n, char **argv) 
 {
     compand_t l = (compand_t) effp->priv;
 
@@ -191,7 +191,7 @@ int st_compand_getopts(eff_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-int st_compand_start(eff_t effp)
+static int st_compand_start(eff_t effp)
 {
   compand_t l = (compand_t) effp->priv;
   int i;
@@ -264,14 +264,14 @@ static void doVolume(double *v, double samp, compand_t l, int chan)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_compand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_compand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                     st_size_t *isamp, st_size_t *osamp)
 {
   compand_t l = (compand_t) effp->priv;
   int len =  (*isamp > *osamp) ? *osamp : *isamp;
   int filechans = effp->outinfo.channels;
   int idone,odone;
-  int64_t checkbuf; //if st_sample_t of type int32_t
+  int64_t checkbuf; /* if st_sample_t of type int32_t */
 
   for (idone = 0,odone = 0; idone < len; ibuf += filechans) {
     int chan;
@@ -326,7 +326,7 @@ int st_compand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
       {
         if (l->delay_buf_cnt >= l->delay_buf_size)
         {
-            l->delay_buf_full=1; //delay buffer is now definetly full
+            l->delay_buf_full=1; /* delay buffer is now definetly full */
             checkbuf = l->delay_buf[l->delay_buf_ptr]*(outv/v)*l->outgain;
             ST_SAMPLE_CLIP_COUNT(checkbuf, effp->clippedCount);
             obuf[odone] = checkbuf;
@@ -337,7 +337,7 @@ int st_compand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         else
         {
             l->delay_buf_cnt++;
-            idone++; //no "odone++" because we did not fill obuf[...]
+            idone++; /* no "odone++" because we did not fill obuf[...] */
         }
         l->delay_buf[l->delay_buf_ptr++] = ibuf[chan];
         l->delay_buf_ptr %= l->delay_buf_size;
@@ -352,7 +352,7 @@ int st_compand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 /*
  * Drain out compander delay lines.
  */
-int st_compand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_compand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
   compand_t l = (compand_t) effp->priv;
   st_size_t done;
@@ -380,7 +380,7 @@ int st_compand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 /*
  * Clean up compander effect.
  */
-int st_compand_stop(eff_t effp)
+static int st_compand_stop(eff_t effp)
 {
   compand_t l = (compand_t) effp->priv;
 

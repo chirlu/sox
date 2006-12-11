@@ -5,38 +5,38 @@
  *  See LICENSE file for further copyright information.
  */
 
-static char const st_flanger_usage[] =
-  "Usage: \n"
-  "                  .\n"
-  "                 /|regen\n"
-  "                / |\n"
-  "            +--(  |------------+\n"
-  "            |   \\ |            |   .\n"
-  "           _V_   \\|  _______   |   |\\ width   ___\n"
-  "          |   |   ' |       |  |   | \\       |   |\n"
-  "      +-->| + |---->| DELAY |--+-->|  )----->|   |\n"
-  "      |   |___|     |_______|      | /       |   |\n"
-  "      |           delay : depth    |/        |   |\n"
-  "  In  |                 : interp   '         |   | Out\n"
-  "  --->+               __:__                  | + |--->\n"
-  "      |              |     |speed            |   |\n"
-  "      |              |  ~  |shape            |   |\n"
-  "      |              |_____|phase            |   |\n"
-  "      +------------------------------------->|   |\n"
-  "                                             |___|\n"
-  "\n"
-  "Usage: flanger [delay depth regen width speed shape phase interp]\n"
-  "\n"
-  "       RANGE DEFAULT DESCRIPTION\n"
-  "delay   0 10    0    base delay in milliseconds\n"
-  "depth   0 10    2    added swept delay in milliseconds\n"
-  "regen -95 +95   0    percentage regeneration (delayed signal feedback)\n"
-  "width   0 100   71   percentage of delayed signal mixed with original\n"
-  "speed  0.1 10  0.5   sweeps per second (Hz) \n"
-  "shape    --    sin   swept wave shape: sine|triangle\n"
-  "phase   0 100   25   swept wave percentage phase-shift for multi-channel\n"
-  "                     (e.g. stereo) flange; 0 = 100 = same phase on each channel\n"
-  "interp   --    lin   delay-line interpolation: linear|quadratic";
+#define st_flanger_usage \
+  "Usage: \n" \
+  "                  .\n" \
+  "                 /|regen\n" \
+  "                / |\n" \
+  "            +--(  |------------+\n" \
+  "            |   \\ |            |   .\n" \
+  "           _V_   \\|  _______   |   |\\ width   ___\n" \
+  "          |   |   ' |       |  |   | \\       |   |\n" \
+  "      +-->| + |---->| DELAY |--+-->|  )----->|   |\n" \
+  "      |   |___|     |_______|      | /       |   |\n" \
+  "      |           delay : depth    |/        |   |\n" \
+  "  In  |                 : interp   '         |   | Out\n" \
+  "  --->+               __:__                  | + |--->\n" \
+  "      |              |     |speed            |   |\n" \
+  "      |              |  ~  |shape            |   |\n" \
+  "      |              |_____|phase            |   |\n" \
+  "      +------------------------------------->|   |\n" \
+  "                                             |___|\n" \
+  "\n" \
+  "Usage: flanger [delay depth regen width speed shape phase interp]\n" \
+  "\n" \
+  "       RANGE DEFAULT DESCRIPTION\n" \
+  "delay   0 10    0    base delay in milliseconds\n" \
+  "depth   0 10    2    added swept delay in milliseconds\n" \
+  "regen -95 +95   0    percentage regeneration (delayed signal feedback)\n" \
+  "width   0 100   71   percentage of delayed signal mixed with original\n" \
+  "speed  0.1 10  0.5   sweeps per second (Hz) \n" \
+  "shape    --    sin   swept wave shape: sine|triangle\n" \
+  "phase   0 100   25   swept wave percentage phase-shift for multi-channel\n" \
+  "                     (e.g. stereo) flange; 0 = 100 = same phase on each channel\n" \
+  "interp   --    lin   delay-line interpolation: linear|quadratic"
 
 /* TODO: Slide in the delay at the start? */
 
@@ -88,7 +88,7 @@ assert_static(sizeof(struct flanger) <= ST_MAX_EFFECT_PRIVSIZE,
 static enum_item const interp_enum[] = {
   ENUM_ITEM(INTERP_,LINEAR)
   ENUM_ITEM(INTERP_,QUADRATIC)
-  {0}};
+  {0, 0}};
 
 
 
@@ -121,7 +121,7 @@ static enum_item const interp_enum[] = {
 
 
 
-static int st_flanger_getopts(eff_t effp, int argc, char const * const * argv)
+static int st_flanger_getopts(eff_t effp, int argc, char *argv[])
 {
   flanger_t f = (flanger_t) effp->priv;
 

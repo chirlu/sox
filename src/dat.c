@@ -1,25 +1,13 @@
-
 /*
- * July 5, 1991
- * Copyright 1991 Lance Norskog And Sundry Contributors
+ * Sound Tools text format file.  Tom Littlejohn, March 93.
+ *
+ * Reads/writes sound files as text for use with FFT and graph.
+ *
+ * Copyright 1998-2006 Chris Bagwell and SoX Contributors
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained. 
  * Lance Norskog And Sundry Contributors are not responsible for 
  * the consequences of using this software.
- */
-
-/*
- * Sound Tools text format file.  Tom Littlejohn, March 93.
- *
- * Reads/writes sound files as text for use with fft and graph.
- *
- * June 28, 93: force output to mono.
- *
- * September 24, 1998: cbagwell - Set up extra output format info so that 
- * reports are accurate.  Also warn user when forcing to mono.
- *
- * November 25, 2005: tomchristie - Work with multiple channels
- *
  */
 
 #include "st_i.h"
@@ -34,7 +22,7 @@ typedef struct dat {
     char prevline[LINEWIDTH]; 
 } *dat_t;
 
-int st_datstartread(ft_t ft)
+static int st_datstartread(ft_t ft)
 {
     char inpstr[LINEWIDTH];
     long rate;
@@ -61,7 +49,7 @@ int st_datstartread(ft_t ft)
     }
 
     /* Default channels to 1 if not found */
-    if (ft->info.channels == -1)
+    if (ft->info.channels == 0)
        ft->info.channels = 1;
 
     ft->info.size = ST_SIZE_64BIT;
@@ -70,7 +58,7 @@ int st_datstartread(ft_t ft)
     return (ST_SUCCESS);
 }
 
-int st_datstartwrite(ft_t ft)
+static int st_datstartwrite(ft_t ft)
 {
     dat_t dat = (dat_t) ft->priv;
     char s[LINEWIDTH];
@@ -88,7 +76,7 @@ int st_datstartwrite(ft_t ft)
     return (ST_SUCCESS);
 }
 
-st_ssize_t st_datread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
+static st_size_t st_datread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 {
     char inpstr[LINEWIDTH];
     int  inpPtr = 0;
@@ -96,8 +84,8 @@ st_ssize_t st_datread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
     double sampval = 0.0;
     int retc = 0;
     char sc = 0;
-    int done = 0;
-    int i=0;
+    st_size_t done = 0;
+    st_size_t i=0;
 
     /* Always read a complete set of channels */
     nsamp -= (nsamp % ft->info.channels);
@@ -135,13 +123,13 @@ st_ssize_t st_datread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
     return (done);
 }
 
-st_ssize_t st_datwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
+static st_size_t st_datwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
 {
     dat_t dat = (dat_t) ft->priv;
-    int done = 0;
+    st_size_t done = 0;
     double sampval=0.0;
     char s[LINEWIDTH];
-    int i=0;
+    st_size_t i=0;
 
     /* Always write a complete set of channels */
     nsamp -= (nsamp % ft->info.channels);

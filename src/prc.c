@@ -40,8 +40,8 @@ typedef struct prcpriv
 /* 16 bytes header = 3 UIDs plus checksum, standard Symbian/EPOC file
    header */
 static const char prc_header[]={
-  0x37,0x00,0x00,0x10,0x6d,0x00,0x00,0x10,
-  0x7e,0x00,0x00,0x10,0xcf,0xac,0x08,0x55
+  '\x37','\x00','\x00','\x10','\x6d','\x00','\x00','\x10',
+  '\x7e','\x00','\x00','\x10','\xcf','\xac','\x08','\x55'
 };
 
 int prc_checkheader(ft_t ft, char *head)
@@ -52,7 +52,7 @@ int prc_checkheader(ft_t ft, char *head)
 
 static void prcwriteheader(ft_t ft);
 
-int st_prcseek(ft_t ft, st_size_t offset)
+static int st_prcseek(ft_t ft, st_size_t offset)
 {
     prc_t prc = (prc_t ) ft->priv;
     st_size_t new_offset, channel_block, alignment;
@@ -72,7 +72,7 @@ int st_prcseek(ft_t ft, st_size_t offset)
     return st_seeki(ft, new_offset, SEEK_SET);
 }
 
-int st_prcstartread(ft_t ft)
+static int st_prcstartread(ft_t ft)
 {
         prc_t p = (prc_t ) ft->priv;
         char head[sizeof(prc_header)];
@@ -116,7 +116,7 @@ int st_prcstartread(ft_t ft)
             st_report("PRC must use 8000 sample rate.  Overriding");
         ft->info.rate = 8000;
 
-        if (ft->info.channels != -1 && ft->info.channels != 1)
+        if (ft->info.channels != ST_ENCODING_UNKNOWN && ft->info.channels != 0)
             st_report("PRC must only supports 1 channel.  Overriding");
         ft->info.channels = 1;
 
@@ -135,7 +135,7 @@ int st_prcstartread(ft_t ft)
    if it is not, the unspecified size remains in the header
    (this is illegal). */
 
-int st_prcstartwrite(ft_t ft)
+static int st_prcstartwrite(ft_t ft)
 {
         prc_t p = (prc_t ) ft->priv;
         int rc;
@@ -160,7 +160,7 @@ int st_prcstartwrite(ft_t ft)
         if (ft->info.rate != 0)
             st_report("PRC must use 8000 sample rate.  Overriding");
 
-        if (ft->info.channels != -1 && ft->info.channels != 1)
+        if (ft->info.channels != ST_ENCODING_UNKNOWN && ft->info.channels != 0)
             st_report("PRC must only supports 1 channel.  Overriding");
 
         ft->info.encoding = ST_ENCODING_ALAW;
@@ -171,12 +171,7 @@ int st_prcstartwrite(ft_t ft)
         return ST_SUCCESS;
 }
 
-st_ssize_t st_prcread(ft_t ft, st_sample_t *buf, st_size_t samp)
-{
-        return st_rawread(ft, buf, samp);
-}
-
-st_ssize_t st_prcwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
+static st_size_t st_prcwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
         prc_t p = (prc_t ) ft->priv;
         p->length += samp * ft->info.size;
@@ -184,7 +179,7 @@ st_ssize_t st_prcwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
         return st_rawwrite(ft, buf, samp);
 }
 
-int st_prcstopwrite(ft_t ft)
+static int st_prcstopwrite(ft_t ft)
 {
         /* Call before seeking to flush buffer */
         st_rawstopwrite(ft);
@@ -229,7 +224,7 @@ static st_format_t st_prc_format = {
   NULL,
   ST_FILE_SEEK,
   st_prcstartread,
-  st_prcread,
+  st_rawread,
   st_rawstopread,
   st_prcstartwrite,
   st_prcwrite,

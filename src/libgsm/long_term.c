@@ -198,9 +198,6 @@ static void Long_term_analysis_filtering (
 }
 
 void Gsm_Long_Term_Predictor ( 	/* 4x for 160 samples */
-
-	struct gsm_state	* S,
-
 	word	* d,	/* [0..39]   residual signal	IN	*/
 	word	* dp,	/* [-120..-1] d'		IN	*/
 

@@ -29,7 +29,7 @@ typedef struct {
 /*
  * Process options: gain (float) type (amplitude, power, dB)
  */
-int st_vol_getopts(eff_t effp, int n, char **argv) 
+static int st_vol_getopts(eff_t effp, int n, char **argv) 
 {
     vol_t vol = (vol_t) effp->priv; 
     vol->gain = 1.0; /* default is no change */
@@ -90,7 +90,7 @@ int st_vol_getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-int st_vol_start(eff_t effp)
+static int st_vol_start(eff_t effp)
 {
     vol_t vol = (vol_t) effp->priv;
     
@@ -116,7 +116,7 @@ int st_vol_start(eff_t effp)
 /*
  * Process data.
  */
-int st_vol_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_vol_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                 st_size_t *isamp, st_size_t *osamp)
 {
     vol_t vol = (vol_t) effp->priv;
@@ -180,7 +180,7 @@ int st_vol_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_vol_stop(eff_t effp)
+static int st_vol_stop(eff_t effp)
 {
     vol_t vol = (vol_t) effp->priv;
     if (vol->limited)

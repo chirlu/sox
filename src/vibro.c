@@ -43,7 +43,7 @@ typedef struct vibrostuff {
 /*
  * Process options
  */
-int st_vibro_getopts(eff_t effp, int n, char **argv) 
+static int st_vibro_getopts(eff_t effp, int n, char **argv) 
 {
         vibro_t vibro = (vibro_t) effp->priv;
 
@@ -66,7 +66,7 @@ int st_vibro_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare processing.
  */
-int st_vibro_start(eff_t effp)
+static int st_vibro_start(eff_t effp)
 {
         vibro_t vibro = (vibro_t) effp->priv;
 
@@ -89,7 +89,7 @@ int st_vibro_start(eff_t effp)
  * Return number of samples processed.
  */
 
-int st_vibro_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_vibro_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                   st_size_t *isamp, st_size_t *osamp)
 {
         vibro_t vibro = (vibro_t) effp->priv;
@@ -112,16 +112,6 @@ int st_vibro_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         /* processed all samples */
         *isamp = *osamp = len;
         return (ST_SUCCESS);
-}
-
-/*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
- */
-int st_vibro_stop(eff_t effp)
-{
-        /* nothing to do */
-    return (ST_SUCCESS);
 }
 
 static st_effect_t st_vibro_effect = {

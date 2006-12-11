@@ -74,7 +74,7 @@ static st_size_t writedone=0;
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-int st_txwstartread(ft_t ft)
+static int st_txwstartread(ft_t ft)
 {
     int c;
     char filetype[7];
@@ -186,10 +186,10 @@ int st_txwstartread(ft_t ft)
  * Return number of samples read.
  */
 
-st_ssize_t st_txwread(ft_t ft, st_sample_t *buf, st_size_t len)
+static st_size_t st_txwread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
     txw_t sk = (txw_t) ft->priv;
-    int done = 0;
+    st_size_t done = 0;
     unsigned char uc1,uc2,uc3;
     unsigned short s1,s2;
 
@@ -236,16 +236,7 @@ st_ssize_t st_txwread(ft_t ft, st_sample_t *buf, st_size_t len)
     return done;
 }
 
-/*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
- */
-int st_txwstopread(ft_t ft)
-{
-    return(ST_SUCCESS);
-}
-
-int st_txwstartwrite(ft_t ft)
+static int st_txwstartwrite(ft_t ft)
 {
     struct WaveHeader_ WH;
 
@@ -276,9 +267,9 @@ int st_txwstartwrite(ft_t ft)
     return(ST_SUCCESS);
 }
 
-st_ssize_t st_txwwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
+static st_size_t st_txwwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
-    int i;
+    st_size_t i;
     unsigned int w1,w2;
 
     tx16w_len += len;
@@ -299,7 +290,7 @@ st_ssize_t st_txwwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
     return(len);
 }
 
-int st_txwstopwrite(ft_t ft)
+static int st_txwstopwrite(ft_t ft)
 {
     struct WaveHeader_ WH;
     int AttackLength, LoopLength, i;
@@ -388,7 +379,7 @@ static st_format_t st_txw_format = {
    0,
    st_txwstartread,
    st_txwread,
-   st_txwstopread,
+   st_format_nothing,
    st_txwstartwrite,
    st_txwwrite,
    st_txwstopwrite,

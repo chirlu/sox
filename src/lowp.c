@@ -42,7 +42,7 @@ typedef struct lowpstuff {
 /*
  * Process options
  */
-int st_lowp_getopts(eff_t effp, int n, char **argv) 
+static int st_lowp_getopts(eff_t effp, int n, char **argv) 
 {
         lowp_t lowp = (lowp_t) effp->priv;
 
@@ -57,7 +57,7 @@ int st_lowp_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare processing.
  */
-int st_lowp_start(eff_t effp)
+static int st_lowp_start(eff_t effp)
 {
         lowp_t lowp = (lowp_t) effp->priv;
         if (lowp->cutoff > effp->ininfo.rate / 2)
@@ -96,7 +96,7 @@ int st_lowp_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_lowp_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_lowp_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                  st_size_t *isamp, st_size_t *osamp)
 {
         lowp_t lowp = (lowp_t) effp->priv;
@@ -118,16 +118,6 @@ int st_lowp_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         return (ST_SUCCESS);
 }
 
-/*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
- */
-int st_lowp_stop(eff_t effp)
-{
-        /* nothing to do */
-    return (ST_SUCCESS);
-}
-
 static st_effect_t st_lowp_effect = {
   "lowp",
   "Usage: lowp cutoff",
@@ -136,7 +126,7 @@ static st_effect_t st_lowp_effect = {
   st_lowp_start,
   st_lowp_flow,
   st_effect_nothing_drain,
-  st_lowp_stop
+  st_effect_nothing
 };
 
 const st_effect_t *st_lowp_effect_fn(void)

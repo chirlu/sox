@@ -29,7 +29,7 @@ static st_effect_t st_mask_effect;
 /*
  * Process options
  */
-int st_mask_getopts(eff_t effp, int n, char **argv) 
+static int st_mask_getopts(eff_t effp UNUSED, int n, char **argv UNUSED)
 {
         if (n)
         {
@@ -46,7 +46,7 @@ int st_mask_getopts(eff_t effp, int n, char **argv)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_mask_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_mask_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                  st_size_t *isamp, st_size_t *osamp)
 {
         int len, done;

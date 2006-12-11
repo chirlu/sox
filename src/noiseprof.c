@@ -39,7 +39,7 @@ typedef struct profdata {
 /*
  * Get the filename, if any. We don't open it until st_noiseprof_start.
  */
-int st_noiseprof_getopts(eff_t effp, int n, char **argv) 
+static int st_noiseprof_getopts(eff_t effp, int n, char **argv) 
 {
     profdata_t data = (profdata_t) effp->priv;
 
@@ -57,7 +57,7 @@ int st_noiseprof_getopts(eff_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-int st_noiseprof_start(eff_t effp)
+static int st_noiseprof_start(eff_t effp)
 {
     profdata_t data = (profdata_t) effp->priv;
     int channels = effp->ininfo.channels;
@@ -88,7 +88,7 @@ int st_noiseprof_start(eff_t effp)
 }
 
 /* Collect statistics from the complete window on channel chan. */
-static void collect_data(profdata_t data, chandata_t* chan) {
+static void collect_data(chandata_t* chan) {
     float *out = (float*)calloc(FREQCOUNT, sizeof(float));
 
     int i;
@@ -109,13 +109,13 @@ static void collect_data(profdata_t data, chandata_t* chan) {
 /*
  * Grab what we can from ibuf, and process if we have a whole window.
  */
-int st_noiseprof_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_noiseprof_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                     st_size_t *isamp, st_size_t *osamp)
 {
     profdata_t data = (profdata_t) effp->priv;
     int samp = min(*isamp, *osamp);
     int tracks = effp->ininfo.channels;
-    int track_samples = samp / tracks;
+    st_size_t track_samples = samp / tracks;
     int ncopy = 0;
     int i;
 
@@ -133,7 +133,7 @@ int st_noiseprof_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 ST_SAMPLE_TO_FLOAT_DWORD(ibuf[i+j*tracks], effp->clippedCount);
         }
         if (ncopy + data->bufdata == WINDOWSIZE) {
-            collect_data(data, chan);
+            collect_data(chan);
         }
     }
 
@@ -152,7 +152,7 @@ int st_noiseprof_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
  * Finish off the last window.
  */
 
-int st_noiseprof_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_noiseprof_drain(eff_t effp, st_sample_t *obuf UNUSED, st_size_t *osamp)
 {
     profdata_t data = (profdata_t) effp->priv;
     int tracks = effp->ininfo.channels;
@@ -169,7 +169,7 @@ int st_noiseprof_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         for (j = data->bufdata+1; j < WINDOWSIZE; j ++) {
             data->chandata[i].window[j] = 0;
         }
-        collect_data(data, &(data->chandata[i]));
+        collect_data(&(data->chandata[i]));
     }
 
     if (data->bufdata == WINDOWSIZE || data->bufdata == 0)
@@ -181,10 +181,10 @@ int st_noiseprof_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 /*
  * Print profile and clean up.
  */
-int st_noiseprof_stop(eff_t effp)
+static int st_noiseprof_stop(eff_t effp)
 {
     profdata_t data = (profdata_t) effp->priv;
-    int i;
+    st_size_t i;
 
     for (i = 0; i < effp->ininfo.channels; i ++) {
         int j;

@@ -29,7 +29,7 @@ static st_effect_t st_fade_effect;
 /* Private data for fade file */
 typedef struct fadestuff
 { /* These are measured as samples */
-    st_size_t in_start,  in_stop, out_start, out_stop, samplesdone;
+    st_size_t in_start, in_stop, out_start, out_stop, samplesdone;
     char *in_stop_str, *out_start_str, *out_stop_str;
     char in_fadetype, out_fadetype;
     char do_out;
@@ -46,7 +46,7 @@ static double fade_gain(st_size_t index, st_size_t range, char fadetype);
  * The 'info' fields are not yet filled in.
  */
 
-int st_fade_getopts(eff_t effp, int n, char **argv)
+static int st_fade_getopts(eff_t effp, int n, char **argv)
 {
 
     fade_t fade = (fade_t) effp->priv;
@@ -143,7 +143,7 @@ int st_fade_getopts(eff_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-int st_fade_start(eff_t effp)
+static int st_fade_start(eff_t effp)
 {
     fade_t fade = (fade_t) effp->priv;
 
@@ -201,12 +201,11 @@ int st_fade_start(eff_t effp)
         return(ST_EOF);
     } /* endif fade time sanity */
 
-    /* If lead-in is required it is handled as negative sample numbers */
-    fade->samplesdone = (fade->in_start < 0 ? fade->in_start :0);
+    fade->samplesdone = fade->in_start;
 
     fade->endpadwarned = 0;
 
-    /* st_debug("fade: in_start = %d in_stop = %d out_start = %d out_stop = %d", fade->in_start, fade->in_stop, fade->out_start, fade->out_stop); */
+    st_debug("fade: in_start = %d in_stop = %d out_start = %d out_stop = %d", fade->in_start, fade->in_stop, fade->out_start, fade->out_stop);
 
     return(ST_SUCCESS);
 }
@@ -215,13 +214,14 @@ int st_fade_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_fade_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_fade_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                  st_size_t *isamp, st_size_t *osamp)
 {
     fade_t fade = (fade_t) effp->priv;
     /* len is total samples, chcnt counts channels */
-    int len = 0, chcnt = 0, t_output = 1, more_output = 1;
+    int len = 0, t_output = 1, more_output = 1;
     st_sample_t t_ibuf;
+    st_size_t chcnt = 0;
 
     len = ((*isamp > *osamp) ? *osamp : *isamp);
 
@@ -230,7 +230,7 @@ int st_fade_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 
     for(; len && more_output; len--)
     {
-        t_ibuf = (fade->samplesdone < 0 ? 0 : *ibuf);
+        t_ibuf = *ibuf;
 
         if ((fade->samplesdone >= fade->in_start) &&
             (!fade->do_out || fade->samplesdone < fade->out_stop))
@@ -265,14 +265,8 @@ int st_fade_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
             t_output = 0;
         } /* endif something to output */
 
-        /* samplesdone < 0 means we are inventing samples right now
-         * and so not consuming (happens when in_start < 0).
-         */
-        if (fade->samplesdone >= 0 )
-        { /* Something to input  */
-            *isamp += 1;
-            ibuf++;
-        } /* endif something accepted as input */
+        *isamp += 1;
+        ibuf++;
 
         if (t_output)
         { /* Output generated, update pointers and counters */
@@ -301,10 +295,11 @@ int st_fade_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 /*
  * Drain out remaining samples if the effect generates any.
  */
-int st_fade_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_fade_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     fade_t fade = (fade_t) effp->priv;
-    int len, t_chan = 0;
+    int len;
+    st_size_t t_chan = 0;
 
     len = *osamp;
     *osamp = 0;
@@ -341,7 +336,7 @@ int st_fade_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
  * Do anything required when you stop reading samples.
  *      (free allocated memory, etc.)
  */
-int st_fade_stop(eff_t effp)
+static int st_fade_stop(eff_t effp)
 {
     fade_t fade = (fade_t) effp->priv;
 

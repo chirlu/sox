@@ -54,7 +54,7 @@ static int st_checkformat(ft_t ft)
                 return ST_EOF;
         }
 
-        if (ft->info.encoding == -1)
+        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
         {
                 st_fail_errno(ft,ST_EFMT,"data encoding was not specified");
                 return ST_EOF;
@@ -105,8 +105,8 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
     }
 
     ft->info.size = -1;
-    ft->info.encoding = -1;
-    ft->info.channels = -1;
+    ft->info.encoding = ST_ENCODING_UNKNOWN;
+    ft->info.channels = 0;
     if (info)
         ft->info = *info;
     /* FIXME: Remove ft->swap from code */
@@ -145,7 +145,7 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
      * This is because libst usually doesn't set this for mono file
      * formats (for historical reasons).
      */
-    if (ft->info.channels == -1)
+    if (ft->info.channels == 0)
         ft->info.channels = 1;
 
     if (st_checkformat(ft) )
@@ -229,8 +229,8 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
     }
 
     ft->info.size = -1;
-    ft->info.encoding = -1;
-    ft->info.channels = -1;
+    ft->info.encoding = ST_ENCODING_UNKNOWN;
+    ft->info.channels = 0;
     if (info)
         ft->info = *info;
     ft->mode = 'w';
@@ -314,12 +314,12 @@ ft_t st_open_write(const char *path, const st_signalinfo_t *info,
     return st_open_write_instr(path, info, filetype, comment, NULL, NULL);
 }
 
-st_ssize_t st_read(ft_t ft, st_sample_t *buf, st_size_t len)
+st_size_t st_read(ft_t ft, st_sample_t *buf, st_size_t len)
 {
     return (*ft->h->read)(ft, buf, len);
 }
 
-st_ssize_t st_write(ft_t ft, const st_sample_t *buf, st_size_t len)
+st_size_t st_write(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
     return (*ft->h->write)(ft, buf, len);
 }

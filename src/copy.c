@@ -19,7 +19,7 @@ static st_effect_t st_copy_effect;
 /*
  * Process options
  */
-int st_copy_getopts(eff_t effp, int n, char **argv) 
+static int st_copy_getopts(eff_t effp UNUSED, int n, char **argv UNUSED) 
 {
         if (n)
         {
@@ -32,11 +32,11 @@ int st_copy_getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-int st_copy_start(eff_t effp)
+static int st_copy_start(eff_t effp UNUSED)
 {
         /* nothing to do */
         /* stuff data into delaying effects here */
-    return (ST_SUCCESS);
+        return (ST_SUCCESS);
 }
 
 /*
@@ -45,7 +45,7 @@ int st_copy_start(eff_t effp)
  * Place in buf[].
  * Return number of samples read.
  */
-int st_copy_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_copy_flow(eff_t effp UNUSED, const st_sample_t *ibuf, st_sample_t *obuf, 
                  st_size_t *isamp, st_size_t *osamp)
 {
         int done;
@@ -54,16 +54,6 @@ int st_copy_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         memcpy(obuf, ibuf, done * sizeof(st_sample_t));
         *isamp = *osamp = done;
         return (ST_SUCCESS);
-}
-
-/*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
- */
-int st_copy_stop(eff_t effp)
-{
-        /* nothing to do */
-    return (ST_SUCCESS);
 }
 
 static st_effect_t st_copy_effect = {

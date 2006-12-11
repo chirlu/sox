@@ -30,7 +30,7 @@ typedef struct {
 /*
  * Process options: dcshift (double) type (amplitude, power, dB)
  */
-int st_dcshift_getopts(eff_t effp, int n, char **argv)
+static int st_dcshift_getopts(eff_t effp, int n, char **argv)
 {
     dcs_t dcs = (dcs_t) effp->priv;
     dcs->dcshift = 1.0; /* default is no change */
@@ -72,7 +72,7 @@ int st_dcshift_getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-int st_dcshift_start(eff_t effp)
+static int st_dcshift_start(eff_t effp)
 {
     dcs_t dcs = (dcs_t) effp->priv;
 
@@ -99,7 +99,7 @@ int st_dcshift_start(eff_t effp)
 /*
  * Process data.
  */
-int st_dcshift_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_dcshift_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                     st_size_t *isamp, st_size_t *osamp)
 {
     dcs_t dcs = (dcs_t) effp->priv;
@@ -166,7 +166,7 @@ int st_dcshift_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-int st_dcshift_stop(eff_t effp)
+static int st_dcshift_stop(eff_t effp)
 {
     dcs_t dcs = (dcs_t) effp->priv;
 

@@ -38,7 +38,7 @@ typedef struct reddata {
  * Get the options. Filename is mandatory, though a reasonable default would
  * be stdin (if the input file isn't coming from there, of course!)
  */
-int st_noisered_getopts(eff_t effp, int n, char **argv) 
+static int st_noisered_getopts(eff_t effp, int n, char **argv) 
 {
     reddata_t data = (reddata_t) effp->priv;
 
@@ -67,7 +67,7 @@ int st_noisered_getopts(eff_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-int st_noisered_start(eff_t effp)
+static int st_noisered_start(eff_t effp)
 {
     reddata_t data = (reddata_t) effp->priv;
     int fchannels = 0;
@@ -245,17 +245,17 @@ static int process_window(eff_t effp, reddata_t data, int chan_num, int num_chan
 /*
  * Read in windows, and call process_window once we get a whole one.
  */
-int st_noisered_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_noisered_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                     st_size_t *isamp, st_size_t *osamp)
 {
     reddata_t data = (reddata_t) effp->priv;
-    int samp = min(*isamp, *osamp);
-    int tracks = effp->ininfo.channels;
-    int track_samples = samp / tracks;
-    int ncopy = min(track_samples, WINDOWSIZE-data->bufdata);
-    int whole_window = (ncopy + data->bufdata == WINDOWSIZE);
+    st_size_t samp = min(*isamp, *osamp);
+    st_size_t tracks = effp->ininfo.channels;
+    st_size_t track_samples = samp / tracks;
+    st_size_t ncopy = min(track_samples, WINDOWSIZE-data->bufdata);
+    st_size_t whole_window = (ncopy + data->bufdata == WINDOWSIZE);
     int oldbuf = data->bufdata;
-    int i;
+    st_size_t i;
     assert(effp->ininfo.channels == effp->outinfo.channels);
 
     if (whole_window) {
@@ -267,7 +267,7 @@ int st_noisered_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     /* Reduce noise on every channel. */
     for (i = 0; i < tracks; i ++) {
         chandata_t* chan = &(data->chandata[i]);
-        int j;
+        st_size_t j;
         if (chan->window == NULL) {
             chan->window = (float*)calloc(WINDOWSIZE, sizeof(float));
         }
@@ -298,7 +298,7 @@ int st_noisered_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
  * We have up to half a window left to dump.
  */
 
-int st_noisered_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_noisered_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     reddata_t data = (reddata_t)effp->priv;
     int i;
@@ -315,10 +315,10 @@ int st_noisered_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 /*
  * Clean up.
  */
-int st_noisered_stop(eff_t effp)
+static int st_noisered_stop(eff_t effp)
 {
     reddata_t data = (reddata_t) effp->priv;
-    int i;
+    st_size_t i;
 
     for (i = 0; i < effp->ininfo.channels; i ++) {
         chandata_t* chan = &(data->chandata[i]);

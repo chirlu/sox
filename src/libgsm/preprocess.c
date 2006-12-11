@@ -90,7 +90,7 @@ void Gsm_Preprocess (
 
 		L_s2  += GSM_MULT_R( lsp, 32735 );
 		L_temp = (longword)msp * 32735; /* GSM_L_MULT(msp,32735) >> 1;*/
-		L_z2   = GSM_L_ADD( L_temp, L_s2 );
+                L_z2   = GSM_L_ADD( L_temp, L_s2 );
 
 		/*    Compute sof[k] with rounding
 		 */

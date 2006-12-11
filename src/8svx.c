@@ -26,7 +26,7 @@ static void svxwriteheader(ft_t, st_size_t);
 /*                         8SVXSTARTREAD                                */
 /*======================================================================*/
 
-int st_svxstartread(ft_t ft)
+static int st_svxstartread(ft_t ft)
 {
         svx_t p = (svx_t ) ft->priv;
 
@@ -211,11 +211,10 @@ int st_svxstartread(ft_t ft)
 /*======================================================================*/
 /*                         8SVXREAD                                     */
 /*======================================================================*/
-st_ssize_t st_svxread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
+static st_size_t st_svxread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 {
         unsigned char datum;
-        int done = 0;
-        int i;
+        size_t done = 0, i;
 
         svx_t p = (svx_t ) ft->priv;
 
@@ -236,9 +235,9 @@ st_ssize_t st_svxread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 /*======================================================================*/
 /*                         8SVXSTOPREAD                                 */
 /*======================================================================*/
-int st_svxstopread(ft_t ft)
+static int st_svxstopread(ft_t ft)
 {
-        int i;
+        size_t i;
 
         svx_t p = (svx_t ) ft->priv;
 
@@ -252,10 +251,10 @@ int st_svxstopread(ft_t ft)
 /*======================================================================*/
 /*                         8SVXSTARTWRITE                               */
 /*======================================================================*/
-int st_svxstartwrite(ft_t ft)
+static int st_svxstartwrite(ft_t ft)
 {
         svx_t p = (svx_t ) ft->priv;
-        int i;
+        size_t i;
 
         /* 8svx is in big endian format.  Swaps wahst
          * read in on little endian machines.
@@ -288,13 +287,12 @@ int st_svxstartwrite(ft_t ft)
 /*                         8SVXWRITE                                    */
 /*======================================================================*/
 
-st_ssize_t st_svxwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
+static st_size_t st_svxwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
         svx_t p = (svx_t ) ft->priv;
 
         unsigned char datum;
-        int done = 0;
-        int i;
+        size_t done = 0, i;
 
         p->nsamples += len;
 
@@ -313,12 +311,11 @@ st_ssize_t st_svxwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 /*                         8SVXSTOPWRITE                                */
 /*======================================================================*/
 
-int st_svxstopwrite(ft_t ft)
+static int st_svxstopwrite(ft_t ft)
 {
         svx_t p = (svx_t ) ft->priv;
 
-        int i;
-        int len;
+        size_t i, len;
         char svxbuf[512];
 
         /* append all channel pieces to channel 0 */

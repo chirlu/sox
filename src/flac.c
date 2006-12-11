@@ -58,8 +58,7 @@ static void FLAC__decoder_metadata_callback(FLAC__FileDecoder const * const flac
   }
   else if (metadata->type == FLAC__METADATA_TYPE_VORBIS_COMMENT)
   {
-    int i;
-    int comment_size = 0;
+    size_t i, comment_size = 0;
 
     if (metadata->data.vorbis_comment.num_comments == 0)
     {
@@ -176,10 +175,10 @@ static int st_format_start_read(ft_t const format)
 }
 
 
-static st_ssize_t st_format_read(ft_t const format, st_sample_t * sampleBuffer, st_size_t const requested)
+static st_size_t st_format_read(ft_t const format, st_sample_t * sampleBuffer, st_size_t const requested)
 {
   Decoder * decoder = (Decoder *) format->priv;
-  int actual = 0;
+  size_t actual = 0;
 
   while (!decoder->eof && actual < requested)
   {
@@ -247,7 +246,7 @@ assert_static(sizeof(Encoder) <= ST_MAX_FILE_PRIVSIZE, /* else */ Encoder__PRIVS
 
 
 
-FLAC__StreamEncoderWriteStatus flac_stream_encoder_write_callback(FLAC__StreamEncoder const * const flac, const FLAC__byte buffer[], unsigned const bytes, unsigned const samples, unsigned const current_frame, void * const client_data)
+static FLAC__StreamEncoderWriteStatus flac_stream_encoder_write_callback(FLAC__StreamEncoder const * const flac, const FLAC__byte buffer[], unsigned const bytes, unsigned const samples, unsigned const current_frame, void * const client_data)
 {
   ft_t const format = (ft_t) client_data;
   (void) flac, (void) samples, (void) current_frame;
@@ -257,7 +256,7 @@ FLAC__StreamEncoderWriteStatus flac_stream_encoder_write_callback(FLAC__StreamEn
 
 
 
-void flac_stream_encoder_metadata_callback(FLAC__StreamEncoder const * encoder, FLAC__StreamMetadata const * metadata, void * client_data)
+static void flac_stream_encoder_metadata_callback(FLAC__StreamEncoder const * encoder, FLAC__StreamMetadata const * metadata, void * client_data)
 {
   (void) encoder, (void) metadata, (void) client_data;
 }
@@ -341,7 +340,7 @@ static int st_format_start_write(ft_t const format)
   { /* Check if rate is streamable: */
     static const unsigned streamable_rates[] =
       {8000, 16000, 22050, 24000, 32000, 44100, 48000, 96000};
-    int i;
+    size_t i;
     bool streamable = false;
     for (i = 0; !streamable && i < array_length(streamable_rates); ++i)
     {
@@ -356,7 +355,7 @@ static int st_format_start_write(ft_t const format)
 
   if (format->length != 0)
   {
-    FLAC__stream_encoder_set_total_samples_estimate(encoder->flac, format->length);
+    FLAC__stream_encoder_set_total_samples_estimate(encoder->flac, (FLAC__uint64)format->length);
   }
 
   if (format->comment != NULL && * format->comment != '\0')
@@ -423,7 +422,7 @@ static int st_format_start_write(ft_t const format)
 
 
 
-static st_ssize_t st_format_write(ft_t const format, st_sample_t const * const sampleBuffer, st_size_t const len)
+static st_size_t st_format_write(ft_t const format, st_sample_t const * const sampleBuffer, st_size_t const len)
 {
   Encoder * encoder = (Encoder *) format->priv;
   unsigned i;
@@ -439,7 +438,7 @@ static st_ssize_t st_format_write(ft_t const format, st_sample_t const * const s
     }
   }
   FLAC__stream_encoder_process_interleaved(encoder->flac, encoder->decoded_samples, len / format->info.channels);
-  return FLAC__stream_encoder_get_state(encoder->flac) == FLAC__STREAM_ENCODER_OK ? len : -1;
+  return FLAC__stream_encoder_get_state(encoder->flac) == FLAC__STREAM_ENCODER_OK ? len : 0;
 }
 
 

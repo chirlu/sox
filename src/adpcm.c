@@ -72,7 +72,7 @@ const short iCoef[7][2] = {
                         { 392,-232}
 };
 
-inline st_sample_t AdpcmDecode(st_sample_t c, MsState_t *state,
+static inline st_sample_t AdpcmDecode(st_sample_t c, MsState_t *state,
                                st_sample_t sample1, st_sample_t sample2)
 {
         st_sample_t vlin;
@@ -248,14 +248,13 @@ static int AdpcmMashS(
         return (int) sqrt(d2);
 }
 
-inline void AdpcmMashChannel(
+static inline void AdpcmMashChannel(
         int ch,             /* channel number to encode, REQUIRE 0 <= ch < chans  */
         int chans,          /* total channels */
         const SAMPL *ip,    /* ip[] is interleaved input samples */
         int n,              /* samples to encode PER channel, REQUIRE */
         int *st,            /* input/output steps, 16<=st[i] */
-        unsigned char *obuff,      /* output buffer[blockAlign] */
-        int opt             /* non-zero allows some cpu-intensive code to improve output */
+        unsigned char *obuff /* output buffer[blockAlign] */
 )
 {
         SAMPL v[2];
@@ -305,8 +304,7 @@ void AdpcmBlockMashI(
         int n,              /* samples to encode PER channel */
         int *st,            /* input/output steps, 16<=st[i] */
         unsigned char *obuff,      /* output buffer[blockAlign]     */
-        int blockAlign,     /* >= 7*chans + chans*(n-2)/2.0    */
-        int opt             /* non-zero allows some cpu-intensive code to improve output */
+        int blockAlign      /* >= 7*chans + chans*(n-2)/2.0    */
 )
 {
         int ch;
@@ -318,7 +316,7 @@ void AdpcmBlockMashI(
         for (p=obuff+7*chans; p<obuff+blockAlign; p++) *p=0;
 
         for (ch=0; ch<chans; ch++)
-                AdpcmMashChannel(ch, chans, ip, n, st+ch, obuff, opt);
+                AdpcmMashChannel(ch, chans, ip, n, st+ch, obuff);
 }
 
 /*
@@ -334,8 +332,7 @@ st_size_t AdpcmSamplesIn(
         unsigned short chans,
         unsigned short blockAlign,
         unsigned short samplesPerBlock
-)
-{
+){
         st_size_t m, n;
 
         if (samplesPerBlock) {
@@ -345,7 +342,7 @@ st_size_t AdpcmSamplesIn(
                 n = 0;
                 m = blockAlign;
         }
-        if (m >= 7*chans) {
+        if (m >= (size_t)(7*chans)) {
                 m -= 7*chans;          /* bytes beyond block-header */
                 m = (2*m)/chans + 2;   /* nibbles/chans + 2 in header */
                 if (samplesPerBlock && m > samplesPerBlock) m = samplesPerBlock;

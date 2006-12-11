@@ -51,7 +51,7 @@ static int ossdspinit(ft_t ft)
     if (ft->info.size == ST_SIZE_BYTE) {
         sampletype = AFMT_U8;
         samplesize = 8;
-        if (ft->info.encoding == -1)
+        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
             ft->info.encoding = ST_ENCODING_UNSIGNED;
         if (ft->info.encoding != ST_ENCODING_UNSIGNED) {
             st_report("OSS driver only supports unsigned with bytes");
@@ -62,7 +62,7 @@ static int ossdspinit(ft_t ft)
     else if (ft->info.size == ST_SIZE_WORD) {
         sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
-        if (ft->info.encoding == -1)
+        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
             ft->info.encoding = ST_ENCODING_SIGN2;
         if (ft->info.encoding != ST_ENCODING_SIGN2) {
             st_report("OSS driver only supports signed with words");
@@ -79,7 +79,7 @@ static int ossdspinit(ft_t ft)
         st_report("Forcing to signed linear word");
     }
 
-    if (ft->info.channels == -1) ft->info.channels = 1;
+    if (ft->info.channels == 0) ft->info.channels = 1;
     else if (ft->info.channels > 2) ft->info.channels = 2;
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_RESET, 0) < 0)
@@ -204,14 +204,14 @@ static int ossdspinit(ft_t ft)
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-int st_ossdspstartread(ft_t ft)
+static int st_ossdspstartread(ft_t ft)
 {
     int rc;
     rc = ossdspinit(ft);
     return rc;
 }
 
-int st_ossdspstartwrite(ft_t ft)
+static int st_ossdspstartwrite(ft_t ft)
 {
     return ossdspinit(ft);
 }

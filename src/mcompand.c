@@ -199,7 +199,7 @@ static int lowpass_flow(eff_t effp, butterworth_crossover_t butterworth, int nCh
 }
 
 typedef struct comp_band {
-  int expectedChannels; /* Also flags that channels aren't to be treated
+  st_size_t expectedChannels; /* Also flags that channels aren't to be treated
                            individually when = 1 and input not mono */
   int transferPoints;   /* Number of points specified on the transfer
                            function */
@@ -213,9 +213,9 @@ typedef struct comp_band {
   double topfreq;       /* upper bound crossover frequency */
   struct butterworth_crossover filter;
   st_sample_t *delay_buf;   /* Old samples, used for delay processing */
-  st_ssize_t delay_size;    /* lookahead for this band (in samples) - function of delay, above */
+  st_size_t delay_size;    /* lookahead for this band (in samples) - function of delay, above */
   st_ssize_t delay_buf_ptr; /* Index into delay_buf */
-  st_ssize_t delay_buf_cnt; /* No. of active entries in delay_buf */
+  st_size_t delay_buf_cnt; /* No. of active entries in delay_buf */
 } *comp_band_t;
 
 typedef struct {
@@ -235,7 +235,7 @@ typedef struct {
 static int st_mcompand_getopts_1(comp_band_t l, int n, char **argv)
 {
       char *s;
-      int rates, tfers, i, commas;
+      st_size_t rates, tfers, i, commas;
 
       /* Start by checking the attack and decay rates */
 
@@ -379,7 +379,7 @@ static int parse_subarg(char *s, char **subargv, int *subargc) {
       return ST_SUCCESS;
 }
 
-int st_mcompand_getopts(eff_t effp, int n, char **argv) 
+static int st_mcompand_getopts(eff_t effp, int n, char **argv) 
 {
   char *subargv[6], *cp;
   int subargc, i, len;
@@ -431,11 +431,12 @@ int st_mcompand_getopts(eff_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-int st_mcompand_start(eff_t effp)
+static int st_mcompand_start(eff_t effp)
 {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
-  int band, i;
+  st_size_t i;
+  int band;
   
   for (band=0;band<c->nBands;++band) {
     l = &c->bands[band];
@@ -573,7 +574,7 @@ static int st_mcompand_flow_1(compand_t c, comp_band_t l, const st_sample_t *ibu
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_mcompand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_mcompand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                      st_size_t *isamp, st_size_t *osamp) {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
@@ -628,7 +629,7 @@ int st_mcompand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
   return ST_SUCCESS;
 }
 
-static int st_mcompand_drain_1(eff_t effp, compand_t c, comp_band_t l, st_sample_t *obuf, int maxdrain, int band)
+static int st_mcompand_drain_1(eff_t effp, compand_t c, comp_band_t l, st_sample_t *obuf, int maxdrain)
 {
   int done;
   double out;
@@ -652,7 +653,7 @@ static int st_mcompand_drain_1(eff_t effp, compand_t c, comp_band_t l, st_sample
 /*
  * Drain out compander delay lines. 
  */
-int st_mcompand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_mcompand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
   int band, drained, mostdrained = 0;
   compand_t c = (compand_t)effp->priv;
@@ -661,7 +662,7 @@ int st_mcompand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
   memset(obuf,0,*osamp * sizeof *obuf);
   for (band=0;band<c->nBands;++band) {
     l = &c->bands[band];
-    drained = st_mcompand_drain_1(effp, c,l,obuf,*osamp,0);
+    drained = st_mcompand_drain_1(effp, c,l,obuf,*osamp);
     if (drained > mostdrained)
       mostdrained = drained;
   }
@@ -677,7 +678,7 @@ int st_mcompand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 /*
  * Clean up compander effect.
  */
-int st_mcompand_stop(eff_t effp)
+static int st_mcompand_stop(eff_t effp)
 {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;

@@ -64,7 +64,7 @@ static void readcodes(ft_t ft, SFHEADER *sfhead)
                 ft->comment = commentbuf;
 }
 
-int st_sfseek(ft_t ft, st_size_t offset)
+static int st_sfseek(ft_t ft, st_size_t offset)
 {
     st_size_t new_offset, channel_block, alignment;
 
@@ -91,7 +91,7 @@ int st_sfseek(ft_t ft, st_size_t offset)
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-int st_sfstartread(ft_t ft)
+static int st_sfstartread(ft_t ft)
 {
         sf_t sf = (sf_t) ft->priv;
         SFHEADER sfhead;
@@ -139,7 +139,7 @@ int st_sfstartread(ft_t ft)
         }
         ft->info.channels = (int) sf->info.sf_chans;
 
-        if (ft->info.channels == -1)
+        if (ft->info.channels == 0)
             ft->info.channels = 1;
 
         /* Read codes and print as comments. */
@@ -159,7 +159,7 @@ int st_sfstartread(ft_t ft)
         return(rc);
 }
 
-int st_sfstartwrite(ft_t ft)
+static int st_sfstartwrite(ft_t ft)
 {
         sf_t sf = (sf_t) ft->priv;
         SFHEADER sfhead;

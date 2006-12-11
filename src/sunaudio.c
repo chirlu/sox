@@ -63,7 +63,7 @@ int st_sunstartread(ft_t ft)
 
     if (ft->info.rate == 0.0) ft->info.rate = 8000;
     if (ft->info.size == -1) ft->info.size = ST_SIZE_BYTE;
-    if (ft->info.encoding == -1) ft->info.encoding = ST_ENCODING_ULAW;
+    if (ft->info.encoding == ST_ENCODING_UNKNOWN) ft->info.encoding = ST_ENCODING_ULAW;
 
 #ifdef __SVR4
     /* Read in old values, change to what we need and then send back */
@@ -78,7 +78,7 @@ int st_sunstartread(ft_t ft)
     }
 #endif
 
-    // If simple hardware detected in force data to ulaw.
+    /* If simple hardware detected in force data to ulaw. */
     if (simple_hw)
     {
         if (ft->info.size == ST_SIZE_BYTE)
@@ -125,7 +125,7 @@ int st_sunstartread(ft_t ft)
         return(ST_EOF);
     }
 
-    if (ft->info.channels == -1) ft->info.channels = 1;
+    if (ft->info.channels == 0) ft->info.channels = 1;
     else if (ft->info.channels > 1) {
         st_report("Warning: some Sun audio devices can not play stereo");
         st_report("at all or sometimes only with signed words.  If the");
@@ -233,7 +233,7 @@ int st_sunstartwrite(ft_t ft)
 
     if (ft->info.rate == 0.0) ft->info.rate = 8000;
     if (ft->info.size == -1) ft->info.size = ST_SIZE_BYTE;
-    if (ft->info.encoding == -1) ft->info.encoding = ST_ENCODING_ULAW;
+    if (ft->info.encoding == ST_ENCODING_UNKNOWN) ft->info.encoding = ST_ENCODING_ULAW;
 
     if (ft->info.size == ST_SIZE_BYTE) {
         samplesize = 8;
@@ -266,7 +266,7 @@ int st_sunstartwrite(ft_t ft)
         samplesize = 16;
     }
 
-    if (ft->info.channels == -1) ft->info.channels = 1;
+    if (ft->info.channels == 0) ft->info.channels = 1;
     else if (ft->info.channels > 1) ft->info.channels = 2;
 
     /* Read in old values, change to what we need and then send back */

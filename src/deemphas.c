@@ -112,22 +112,6 @@ typedef struct deemphstuff {
 assert_static(sizeof(struct deemphstuff) <= ST_MAX_EFFECT_PRIVSIZE, 
     /* else */ deemph_PRIVSIZE_too_big);
 
-/*
- * Process options
- *
- * Don't do initialization now.
- * The 'info' fields are not yet filled in.
- */
-int st_deemph_getopts(eff_t effp, int n, char **argv)
-{
-     if (n)
-     {
-          st_fail(st_deemph_effect.usage);
-          return (ST_EOF);
-     }
-     return (ST_SUCCESS);
-}
-
 /* filter coefficients */
 #define a1      -0.62786881719628784282
 #define b0      0.45995451989513153057
@@ -137,7 +121,7 @@ int st_deemph_getopts(eff_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-int st_deemph_start(eff_t effp)
+static int st_deemph_start(eff_t effp)
 {
      /* check the input format */
 
@@ -188,7 +172,7 @@ int st_deemph_start(eff_t effp)
  * Return number of samples processed.
  */
 
-int st_deemph_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_deemph_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                    st_size_t *isamp, st_size_t *osamp)
 {
      deemph_t deemph = (deemph_t) effp->priv;
@@ -208,35 +192,15 @@ int st_deemph_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
      return (ST_SUCCESS);
 }
 
-/*
- * Drain out remaining samples if the effect generates any.
- */
-
-int st_deemph_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
-{
-     /* nothing to do */
-    return (ST_EOF);
-}
-
-/*
- * Do anything required when you stop reading samples.
- *   (free allocated memory, etc.)
- */
-int st_deemph_stop(eff_t effp)
-{
-     /* nothing to do */
-    return (ST_SUCCESS);
-}
-
 static st_effect_t st_deemph_effect = {
   "deemph",
   "Usage: Deemphasis filtering effect takes no options",
   0,
-  st_deemph_getopts,
+  st_effect_nothing_getopts,
   st_deemph_start,
   st_deemph_flow,
   st_effect_nothing_drain,
-  st_deemph_stop
+  st_effect_nothing
 };
 
 const st_effect_t *st_deemph_effect_fn(void)

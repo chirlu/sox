@@ -164,8 +164,7 @@ static int ImaMashS(
         const SAMPL *ibuff, /* ibuff[] is interleaved input samples */
         int n,              /* samples to encode PER channel, REQUIRE n % 8 == 1 */
         int *st,            /* input/output state, REQUIRE 0 <= *st <= ISSTMAX */
-        unsigned char *obuff, /* output buffer[blockAlign], or NULL for no output  */
-        int sho             /* nonzero for debug printout */
+        unsigned char *obuff /* output buffer[blockAlign], or NULL for no output  */
 )
 {
         const SAMPL *ip, *itop;
@@ -258,14 +257,13 @@ inline static void ImaMashChannel(
         int snext,d;
         int s0,d0;
         int s32,d32;
-        int sho = 0;
 
         s32 = s0 = *st;
         if (opt>0) {
                 int low,hi,w;
                 int low0,hi0;
                 snext = s0;
-                d32 = d0 = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL, sho);
+                d32 = d0 = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL);
 
                 w = 0;
                 low=hi=s0;
@@ -275,7 +273,7 @@ inline static void ImaMashChannel(
                         if (!w && low>low0) {
                                 int d;
                                 snext = --low;
-                                d = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL, sho);
+                                d = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL);
                                 if (d<d0) {
                                         d0=d; s0=low;
                                         low0 = low-opt; if (low0<0) low0=0;
@@ -285,7 +283,7 @@ inline static void ImaMashChannel(
                         if (w && hi<hi0) {
                                 int d;
                                 snext = ++hi;
-                                d = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL, sho);
+                                d = ImaMashS(ch, chans, ip[0], ip,n,&snext, NULL);
                                 if (d<d0) {
                                         d0=d; s0=hi;
                                         low0 = hi-opt; if (low0<0) low0=0;
@@ -296,7 +294,7 @@ inline static void ImaMashChannel(
                 }
                 *st = s0;
         }
-        d = ImaMashS(ch, chans, ip[0], ip,n,st, obuff, 0);
+        d = ImaMashS(ch, chans, ip[0], ip,n,st, obuff);
 }
 
 /* mash one block.  if you want to use opt>0, 9 is a reasonable value */

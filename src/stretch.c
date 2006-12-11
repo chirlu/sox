@@ -55,36 +55,24 @@ typedef struct
      */
     stretch_status_t state; /* automaton status */
 
-    int size;               /* buffer size */
-    int index;              /* next available element */
+    st_size_t size;         /* buffer size */
+    st_size_t index;        /* next available element */
     st_sample_t *ibuf;      /* input buffer */
     int ishift;             /* input shift */
 
-    int oindex;             /* next evailable element */
+    st_size_t oindex;       /* next evailable element */
     double * obuf;   /* output buffer */
-    int oshift;             /* output shift */
+    st_size_t oshift;       /* output shift */
 
-    int fsize;              /* fading size */
+    st_size_t fsize;        /* fading size */
     double * fbuf;   /* fading, 1.0 -> 0.0 */
 
 } * stretch_t;
 
 /*
-static void debug(stretch_t s, char * where)
-{
-    st_debug(
-            "%s: (f=%.2f w=%.2f r=%.2f f=%.2f)"
-            " st=%d s=%d ii=%d is=%d oi=%d os=%d fs=%d\n",
-            where, s->factor, s->window, s->shift, s->fading,
-            s->state, s->size, s->index, s->ishift,
-            s->oindex, s->oshift, s->fsize);
-}
-*/
-
-/*
  * Process options
  */
-int st_stretch_getopts(eff_t effp, int n, char **argv) 
+static int st_stretch_getopts(eff_t effp, int n, char **argv) 
 {
     char usage[1024];
     stretch_t stretch = (stretch_t) effp->priv; 
@@ -170,10 +158,10 @@ int st_stretch_getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-int st_stretch_start(eff_t effp)
+static int st_stretch_start(eff_t effp)
 {
     stretch_t stretch = (stretch_t) effp->priv;
-    register int i;
+    st_size_t i;
 
     /* not necessary. taken care by effect processing? */
     if (effp->outinfo.channels != effp->ininfo.channels)
@@ -199,7 +187,7 @@ int st_stretch_start(eff_t effp)
                                             sizeof(st_sample_t));
 
     /* the shift ratio deal with the longest of ishift/oshift
-       hence ishift<=size and oshift<=size. should be asserted.
+       hence ishift<=size and oshift<=size. FIXME: should be asserted.
      */
     if (stretch->factor < 1.0)
     {
@@ -246,7 +234,11 @@ int st_stretch_start(eff_t effp)
     } else if (stretch->fsize==1)
         stretch->fbuf[0] = 1.0;
 
-    /* debug(stretch, "start"); */
+    st_debug("start: (f=%.2f w=%.2f r=%.2f f=%.2f)"
+             " st=%d s=%d ii=%d is=%d oi=%d os=%d fs=%d\n",
+             stretch->factor, stretch->window, stretch->shift, stretch->fading,
+             stretch->state, stretch->size, stretch->index, stretch->ishift,
+             stretch->oindex, stretch->oshift, stretch->fsize);
 
     return ST_SUCCESS;
 }
@@ -276,12 +268,12 @@ static void combine(stretch_t stretch)
 /*
  * Processes flow.
  */
-int st_stretch_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_stretch_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                     st_size_t *isamp, st_size_t *osamp)
 {
     stretch_t stretch = (stretch_t) effp->priv;
     st_size_t iindex, oindex;
-    int i;
+    st_size_t i;
 
     iindex = 0;
     oindex = 0;
@@ -353,10 +345,10 @@ int st_stretch_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
  * Drain buffer at the end
  * maybe not correct ? end might be artificially faded?
  */
-int st_stretch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_stretch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     stretch_t stretch = (stretch_t) effp->priv;
-    register int i;
+    st_size_t i;
     st_size_t oindex;
 
     oindex = 0;
@@ -393,7 +385,7 @@ int st_stretch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_stretch_stop(eff_t effp)
+static int st_stretch_stop(eff_t effp)
 {
     stretch_t stretch = (stretch_t) effp->priv;
 

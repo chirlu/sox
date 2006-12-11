@@ -61,7 +61,7 @@ typedef struct bandstuff {
 /*
  * Process options
  */
-int st_band_getopts(eff_t effp, int n, char **argv) 
+static int st_band_getopts(eff_t effp, int n, char **argv) 
 {
         band_t band = (band_t) effp->priv;
 
@@ -88,7 +88,7 @@ int st_band_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare processing.
  */
-int st_band_start(eff_t effp)
+static int st_band_start(eff_t effp)
 {
         band_t band = (band_t) effp->priv;
         if (band->center > effp->ininfo.rate/2)
@@ -135,7 +135,7 @@ int st_band_start(eff_t effp)
  * Return number of samples processed.
  */
 
-int st_band_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_band_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                  st_size_t *isamp, st_size_t *osamp)
 {
         band_t band = (band_t) effp->priv;
@@ -162,7 +162,7 @@ int st_band_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_band_stop(eff_t effp)
+static int st_band_stop(eff_t effp UNUSED)
 {
         return (ST_SUCCESS);    /* nothing to do */
 }

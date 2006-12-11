@@ -107,7 +107,7 @@ static int st_auencodingandsize(int sun_encoding, st_encoding_t * encoding, sign
     return(ST_SUCCESS);
 }
 
-int st_auseek(ft_t ft, st_size_t offset) 
+static int st_auseek(ft_t ft, st_size_t offset) 
 {
     au_t au = (au_t ) ft->priv;
 
@@ -137,7 +137,7 @@ int st_auseek(ft_t ft, st_size_t offset)
     return(ft->st_errno);
 }
 
-int st_austartread(ft_t ft) 
+static int st_austartread(ft_t ft) 
 {
         /* The following 6 variables represent a Sun sound header on disk.
            The numbers are written as big-endians.
@@ -245,8 +245,8 @@ int st_austartread(ft_t ft)
 
         /* Read the number of channels */
         st_readdw(ft, &channels);
-        if (ft->info.channels == -1 || ft->info.channels == (int) channels)
-            ft->info.channels = (int) channels;
+        if (ft->info.channels == 0 || ft->info.channels == channels)
+            ft->info.channels = channels;
         else
             st_report("User options overriding channels read in .au header");
 
@@ -297,7 +297,7 @@ int st_austartread(ft_t ft)
    if it is not, the unspecified size remains in the header
    (this is legal). */
 
-int st_austartwrite(ft_t ft) 
+static int st_austartwrite(ft_t ft) 
 {
         au_t p = (au_t ) ft->priv;
         int rc;
@@ -344,7 +344,7 @@ static int unpack_input(ft_t ft, unsigned char *code)
         return (p->in_bits > 0);
 }
 
-st_ssize_t st_auread(ft_t ft, st_sample_t *buf, st_size_t samp)
+static st_size_t st_auread(ft_t ft, st_sample_t *buf, st_size_t samp)
 {
         au_t p = (au_t ) ft->priv;
         unsigned char code;
@@ -362,14 +362,14 @@ st_ssize_t st_auread(ft_t ft, st_sample_t *buf, st_size_t samp)
         return done;
 }
 
-st_ssize_t st_auwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
+static st_size_t st_auwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
         au_t p = (au_t ) ft->priv;
         p->data_size += samp * ft->info.size;
         return(st_rawwrite(ft, buf, samp));
 }
 
-int st_austopwrite(ft_t ft)
+static int st_austopwrite(ft_t ft)
 {
         au_t p = (au_t ) ft->priv;
         int rc;
@@ -411,7 +411,7 @@ static int st_ausunencoding(int size, int encoding)
         else if (encoding == ST_ENCODING_FLOAT && size == ST_SIZE_32BIT)
                 sun_encoding = SUN_FLOAT;
         else
-                sun_encoding = -1;
+                sun_encoding = ST_ENCODING_UNKNOWN;
         return sun_encoding;
 }
 

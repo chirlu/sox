@@ -30,7 +30,7 @@ typedef struct {
 /*
  * Process options
  */
-int st_pan_getopts(eff_t effp, int n, char **argv) 
+static int st_pan_getopts(eff_t effp, int n, char **argv) 
 {
     pan_t pan = (pan_t) effp->priv; 
     
@@ -49,7 +49,7 @@ int st_pan_getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-int st_pan_start(eff_t effp)
+static int st_pan_start(eff_t effp)
 {
     if (effp->outinfo.channels==1)
         st_warn("PAN onto a mono channel...");
@@ -73,7 +73,7 @@ int st_pan_start(eff_t effp)
 /*
  * Process either isamp or osamp samples, whichever is smaller.
  */
-int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                 st_size_t *isamp, st_size_t *osamp)
 {
     pan_t pan = (pan_t) effp->priv;
@@ -408,15 +408,8 @@ int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 }
 
 /*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
- *
- * Should have statistics on right, left, and output amplitudes.
+ * FIXME: Add a stop function with statistics on right, left, and output amplitudes.
  */
-int st_pan_stop(eff_t effp)
-{
-    return ST_SUCCESS;
-}
 
 static st_effect_t st_pan_effect = {
   "pan",
@@ -426,7 +419,7 @@ static st_effect_t st_pan_effect = {
   st_pan_start,
   st_pan_flow,
   st_effect_nothing_drain,
-  st_pan_stop
+  st_effect_nothing
 };
 
 const st_effect_t *st_pan_effect_fn(void)

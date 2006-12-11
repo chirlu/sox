@@ -76,7 +76,7 @@ static double cub(
 }
 
 /* get options. */
-int st_speed_getopts(eff_t effp, int n, char **argv)
+static int st_speed_getopts(eff_t effp, int n, char **argv)
 {
     speed_t speed = (speed_t) effp->priv;
     int cent = 0;
@@ -106,7 +106,7 @@ int st_speed_getopts(eff_t effp, int n, char **argv)
 }
 
 /* start processing. */
-int st_speed_start(eff_t effp)
+static int st_speed_start(eff_t effp)
 {
     speed_t speed = (speed_t) effp->priv;
 
@@ -192,7 +192,7 @@ static st_size_t compute(eff_t effp, speed_t speed, st_sample_t *obuf, st_size_t
 
 /* handle a flow.
  */
-int st_speed_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_speed_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                   st_size_t *isamp, st_size_t *osamp)
 {
     speed_t speed;
@@ -237,7 +237,7 @@ int st_speed_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 
 /* end of stuff. 
  */
-int st_speed_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_speed_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     speed_t speed = (speed_t) effp->priv;
     st_size_t i, oindex;
@@ -274,7 +274,7 @@ int st_speed_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 
 /* stop processing. report overflows. 
  */
-int st_speed_stop(eff_t effp)
+static int st_speed_stop(eff_t effp)
 {
     speed_t speed = (speed_t) effp->priv;
 

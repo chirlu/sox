@@ -141,7 +141,7 @@ static int st_xastartread(ft_t ft)
         st_report("User options overriding size read in .xa header");
     }
     
-    if (ft->info.channels == -1 || ft->info.channels == xa->header.channels) {
+    if (ft->info.channels == 0 || ft->info.channels == xa->header.channels) {
         ft->info.channels = xa->header.channels;
     } else {
         st_report("User options overriding channels read in .xa header");
@@ -210,14 +210,12 @@ static int st_xastartread(ft_t ft)
  * Read up to len samples from a file, converted to signed longs.
  * Return the number of samples read.
  */
-static st_ssize_t st_xaread(ft_t ft, st_sample_t *buf, st_size_t len)
+static st_size_t st_xaread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
     xa_t xa = (xa_t) ft->priv;
-    st_ssize_t done;
-    st_ssize_t bytes;
     int32_t sample;
     unsigned char inByte;
-    unsigned int i;
+    size_t i, done, bytes;
 
     ft->st_errno = ST_SUCCESS;
     done = 0;
@@ -312,7 +310,7 @@ static int st_xastartwrite(ft_t ft)
     return ST_EOF;
 }
 
-static st_ssize_t st_xawrite(ft_t ft, const st_sample_t *buf, st_size_t len)
+static st_size_t st_xawrite(ft_t ft, const st_sample_t *buf UNUSED, st_size_t len UNUSED)
 {
     st_fail_errno(ft, ST_ENOTSUP, ".XA writing not supported");
     return ST_EOF;

@@ -33,7 +33,7 @@ typedef struct repeatstuff {
         int repeats;
 } *repeat_t;
 
-int st_repeat_getopts(eff_t effp, int n, char **argv)
+static int st_repeat_getopts(eff_t effp, int n, char **argv)
 {
         repeat_t repeat = (repeat_t)effp->priv;
 
@@ -55,7 +55,7 @@ int st_repeat_getopts(eff_t effp, int n, char **argv)
         return (ST_SUCCESS);
 }
 
-int st_repeat_start(eff_t effp)
+static int st_repeat_start(eff_t effp)
 {
         repeat_t repeat = (repeat_t)effp->priv;
 
@@ -69,7 +69,7 @@ int st_repeat_start(eff_t effp)
         return (ST_SUCCESS);
 }
 
-int st_repeat_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
+static int st_repeat_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf UNUSED,
                 st_size_t *isamp, st_size_t *osamp)
 {
         repeat_t repeat = (repeat_t)effp->priv;
@@ -85,7 +85,7 @@ int st_repeat_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         return (ST_SUCCESS);
 }
 
-int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
         size_t read = 0;
         st_sample_t *buf;
@@ -187,7 +187,7 @@ int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
             return ST_SUCCESS;
 }
 
-int st_repeat_stop(eff_t effp)
+static int st_repeat_stop(eff_t effp)
 {
         repeat_t repeat = (repeat_t)effp->priv;
 

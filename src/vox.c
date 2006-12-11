@@ -26,10 +26,6 @@
  *                                                                      *
  ************************************************************************/
 
-  ///////////////////////////////////////////
- // ORIGINAL SOX COPYRIGHT AND DISCLAIMER //
-///////////////////////////////////////////
-
 /************************************************************************
  * July 5, 1991                                                         *
  *                                                                      *
@@ -43,29 +39,18 @@
  *                                                                      *
  ************************************************************************/
 
-  ///////////////////
- // INCLUDE FILES //
-///////////////////
-
 #include "st_i.h"
 
-  //////////////
- // TYPEDEFS //
-//////////////
 
-typedef struct voxstuff { struct { short    last;                       // ADPCM codec state
+typedef struct voxstuff { struct { short    last;                       /* ADPCM codec state */
                                    short    index;
                                  } state; 
 
-                          struct { uint8_t  byte;                       // write store
+                          struct { uint8_t  byte;                       /* write store */
                                    uint8_t  flag;
                                  } store;
                         } *vox_t;
 
-
-  ///////////////
- // CONSTANTS //
-///////////////
 
 static short STEPSIZE[49] = { 16,  17,  19,  21,  23,  25,  28, 
                               31,  34,  37,  41,  45,  50,  55, 
@@ -79,17 +64,9 @@ static short STEPSIZE[49] = { 16,  17,  19,  21,  23,  25,  28,
 static short STEPADJUST[8] = { -1,-1,-1,-1,2,4,6,8 };
   
 
-  /////////////////////////
- // FUNCTION PROTOTYPES //
-/////////////////////////
-
 static uint8_t envox       (short,  vox_t);
 static short   devox       (uint8_t,vox_t);
 
-
-  ////////////////////
- // IMPLEMENTATION //
-////////////////////
 
 /******************************************************************************
  * Function   : st_voxstartread 
@@ -104,11 +81,11 @@ static short   devox       (uint8_t,vox_t);
  *                 rates but the codecs allows any user specified rate. 
  ******************************************************************************/
 
-int  st_voxstartread (ft_t ft) 
+static int  st_voxstartread (ft_t ft) 
      { vox_t state = (vox_t) ft->priv;
 
 
-           // ... setup file info
+       /* ... setup file info */
 
        ft->file.buf = (char *)malloc(ST_BUFSIZ);
     
@@ -123,11 +100,11 @@ int  st_voxstartread (ft_t ft)
        ft->file.pos      = 0;
        ft->file.eof      = 0;
 
-           ft->info.size     = ST_SIZE_WORD;
+       ft->info.size     = ST_SIZE_WORD;
        ft->info.encoding = ST_ENCODING_OKI_ADPCM;
        ft->info.channels = 1;
 
-       // ... initialise CODEC state
+       /* ... initialise CODEC state */
 
        state->state.last  = 0;
        state->state.index = 0;
@@ -151,22 +128,22 @@ int  st_voxstartread (ft_t ft)
  * Notes      : 
  ******************************************************************************/
 
-st_ssize_t st_voxread (ft_t ft,st_sample_t *buffer,st_size_t length) 
+static st_size_t st_voxread (ft_t ft,st_sample_t *buffer,st_size_t length) 
            { vox_t    state = (vox_t) ft->priv;
-                 int      count = 0;
+             int      count = 0;
              int      N;
              uint8_t  byte;
              short    word;
 
-             // ... round length down to nearest even number
+             /* ... round length down to nearest even number */
 
              N  = length/2;
              N *=2;
 
-             // ... loop until buffer full or EOF
+             /* ... loop until buffer full or EOF */
 
              while (count < N) 
-                   { // ... refill buffer 
+               {     /* ... refill buffer */
 
                      if (ft->file.pos >= ft->file.count)
                         { ft->file.count = st_readbuf (ft,ft->file.buf,1,ft->file.size);
@@ -176,7 +153,7 @@ st_ssize_t st_voxread (ft_t ft,st_sample_t *buffer,st_size_t length)
                              break;
                         }
 
-                     // ... decode two nibbles stored as a byte
+                     /* ... decode two nybbles stored as a byte */
 
                      byte      = ft->file.buf[ft->file.pos++];
 
@@ -201,7 +178,7 @@ st_ssize_t st_voxread (ft_t ft,st_sample_t *buffer,st_size_t length)
  * Notes      : 
  ******************************************************************************/
 
-int  st_voxstopread (ft_t ft) 
+static int  st_voxstopread (ft_t ft) 
      { free (ft->file.buf);
      
        return (ST_SUCCESS);
@@ -221,11 +198,11 @@ int  st_voxstopread (ft_t ft)
  *                 rates but the codecs allows any user specified rate. 
  ******************************************************************************/
 
-int  st_voxstartwrite (ft_t ft) 
+static int  st_voxstartwrite (ft_t ft) 
      { vox_t state = (vox_t) ft->priv;
 
 
-           // ... setup file info
+       /* ... setup file info */
 
        ft->file.buf = (char *)malloc(ST_BUFSIZ);
     
@@ -244,7 +221,7 @@ int  st_voxstartwrite (ft_t ft)
        ft->info.encoding = ST_ENCODING_OKI_ADPCM;
        ft->info.channels = 1;
 
-       // ... initialise CODEC state
+       /* ... initialise CODEC state */
 
        state->state.last  = 0;
        state->state.index = 0;
@@ -267,9 +244,9 @@ int  st_voxstartwrite (ft_t ft)
  * Notes      : 
  ******************************************************************************/
 
-st_ssize_t st_voxwrite (ft_t ft,const st_sample_t *buffer,st_size_t length) 
+static st_size_t st_voxwrite (ft_t ft,const st_sample_t *buffer,st_size_t length) 
            { vox_t    state = (vox_t) ft->priv;
-             int      count = 0;
+             st_size_t count = 0;
              uint8_t  byte  = state->store.byte;
              uint8_t  flag  = state->store.flag;
              short    word;
@@ -297,7 +274,7 @@ st_ssize_t st_voxwrite (ft_t ft,const st_sample_t *buffer,st_size_t length)
                      count++;
                    }
 
-             // ... keep last byte across calls
+             /* ... keep last byte across calls */
 
              state->store.byte = byte;
              state->store.flag = flag;
@@ -315,12 +292,12 @@ st_ssize_t st_voxwrite (ft_t ft,const st_sample_t *buffer,st_size_t length)
  * Notes      : 
  ******************************************************************************/
 
-int  st_voxstopwrite (ft_t ft) 
+static int  st_voxstopwrite (ft_t ft) 
      { vox_t    state = (vox_t) ft->priv;
        uint8_t  byte  = state->store.byte;
        uint8_t  flag  = state->store.flag;
 
-       // ... flush remaining samples
+       /* ... flush remaining samples */
 
        if (flag != 0)
           { byte <<= 4;
@@ -331,8 +308,6 @@ int  st_voxstopwrite (ft_t ft)
 
        if (ft->file.count > 0)
           st_writebuf (ft,ft->file.buf,1,ft->file.count);
-
-       // ... free buffer
 
        free (ft->file.buf);
      
@@ -377,7 +352,8 @@ static uint8_t envox (short sample,vox_t state)
              { code = code | 0x01;
              }
 
-          // ... use decoder to set the estimate of last sample and adjust the step index
+          /* ... use decoder to set the estimate of last sample and
+             adjust the step index */
     
           state->state.last = devox (code,state);
     
@@ -418,7 +394,7 @@ static short devox (uint8_t code,vox_t state)
 
         sample = state->state.last + dn;
 
-        // ... clip to 12 bits
+        /* ... clip to 12 bits */
 
         if (sample > 2047)
            sample = 2047;
@@ -426,7 +402,7 @@ static short devox (uint8_t code,vox_t state)
         if (sample < -2048)
            sample = -2048;
 
-        // ... adjust step size
+        /* ... adjust step size */
 
         state->state.last   = sample;
         state->state.index += STEPADJUST[code & 0x07];
@@ -437,7 +413,7 @@ static short devox (uint8_t code,vox_t state)
         if (state->state.index > 48) 
            state->state.index = 48;
 
-        // ... done
+        /* ... done */
 
         return (sample);
       }

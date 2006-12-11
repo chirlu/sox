@@ -23,7 +23,7 @@
 #define LASTCHAR '/'
 #endif
 
-int st_autostartread(ft_t ft)
+static int st_autostartread(ft_t ft)
 {
     char *type = NULL;
     char header[20];
@@ -179,7 +179,7 @@ int st_autostartread(ft_t ft)
     return ((* ft->h->startread)(ft));
 }
 
-int st_autostartwrite(ft_t ft) 
+static int st_autostartwrite(ft_t ft) 
 {
         st_fail_errno(ft,ST_EFMT,"Type AUTO can only be used for input!");
         return(ST_EOF);

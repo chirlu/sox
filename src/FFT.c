@@ -62,7 +62,7 @@ const int MaxFastBits = 16;
 static int IsPowerOfTwo(int x);
 static int NumberOfBitsNeeded(int PowerOfTwo);
 static int ReverseBits(int index, int NumBits);
-static void InitFFT();
+static void InitFFT(void);
 
 int IsPowerOfTwo(int x)
 {
@@ -103,7 +103,7 @@ int ReverseBits(int index, int NumBits)
  * freed, to use as a lookup table for bit-reversal. The good news is that
  * we bascially need this until the very end, so the fact that it's not freed
  * is OK. */
-void InitFFT()
+void InitFFT(void)
 {
    int len, b;
 

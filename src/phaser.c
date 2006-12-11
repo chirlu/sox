@@ -81,7 +81,7 @@ typedef struct phaserstuff {
 /*
  * Process options
  */
-int st_phaser_getopts(eff_t effp, int n, char **argv) 
+static int st_phaser_getopts(eff_t effp, int n, char **argv) 
 {
         phaser_t phaser = (phaser_t) effp->priv;
 
@@ -114,7 +114,7 @@ int st_phaser_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare for processing.
  */
-int st_phaser_start(eff_t effp)
+static int st_phaser_start(eff_t effp)
 {
         phaser_t phaser = (phaser_t) effp->priv;
         unsigned int i;
@@ -192,7 +192,7 @@ int st_phaser_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_phaser_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_phaser_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                    st_size_t *isamp, st_size_t *osamp)
 {
         phaser_t phaser = (phaser_t) effp->priv;
@@ -227,7 +227,7 @@ int st_phaser_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 /*
  * Drain out reverb lines. 
  */
-int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
         phaser_t phaser = (phaser_t) effp->priv;
         st_size_t done;
@@ -266,7 +266,7 @@ int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 /*
  * Clean up phaser effect.
  */
-int st_phaser_stop(eff_t effp)
+static int st_phaser_stop(eff_t effp)
 {
         phaser_t phaser = (phaser_t) effp->priv;
 

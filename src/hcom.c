@@ -50,7 +50,7 @@ struct readpriv {
 
 static int skipbytes(ft_t, int);
 
-int st_hcomstartread(ft_t ft)
+static int st_hcomstartread(ft_t ft)
 {
         struct readpriv *p = (struct readpriv *) ft->priv;
         int i;
@@ -174,7 +174,7 @@ static int skipbytes(ft_t ft, int n)
         return(ST_SUCCESS);
 }
 
-st_ssize_t st_hcomread(ft_t ft, st_sample_t *buf, st_size_t len)
+static st_size_t st_hcomread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
         register struct readpriv *p = (struct readpriv *) ft->priv;
         int done = 0;
@@ -238,7 +238,7 @@ st_ssize_t st_hcomread(ft_t ft, st_sample_t *buf, st_size_t len)
         return done;
 }
 
-int st_hcomstopread(ft_t ft)
+static int st_hcomstopread(ft_t ft)
 {
         register struct readpriv *p = (struct readpriv *) ft->priv;
 
@@ -265,7 +265,7 @@ struct writepriv {
 
 #define BUFINCR (10*BUFSIZ)
 
-int st_hcomstartwrite(ft_t ft)
+static int st_hcomstartwrite(ft_t ft)
 {
         register struct writepriv *p = (struct writepriv *) ft->priv;
 
@@ -302,7 +302,7 @@ int st_hcomstartwrite(ft_t ft)
         return (ST_SUCCESS);
 }
 
-st_ssize_t st_hcomwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
+static st_size_t st_hcomwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
         register struct writepriv *p = (struct writepriv *) ft->priv;
         st_sample_t datum;
@@ -514,7 +514,7 @@ static void padbytes(ft_t ft, int n)
 
 /* End of hcom utility routines */
 
-int st_hcomstopwrite(ft_t ft)
+static int st_hcomstopwrite(ft_t ft)
 {
         register struct writepriv *p = (struct writepriv *) ft->priv;
         unsigned char *compressed_data = p->data;

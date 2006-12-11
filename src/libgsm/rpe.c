@@ -430,9 +430,6 @@ void Gsm_Update_of_reconstructed_short_time_residual_signal P3((dpp, ep, dp),
 #endif	/* Has been inlined in code.c */
 
 void Gsm_RPE_Encoding (
-
-	struct gsm_state * S,
-
 	word	* e,		/* -5..-1][0..39][40..44	IN/OUT  */
 	word	* xmaxc,	/* 				OUT */
 	word	* Mc,		/* 			  	OUT */
@@ -453,8 +450,6 @@ void Gsm_RPE_Encoding (
 }
 
 void Gsm_RPE_Decoding (
-	struct gsm_state	* S,
-
 	word 		xmaxcr,
 	word		Mcr,
 	word		* xMcr,  /* [0..12], 3 bits 		IN	*/

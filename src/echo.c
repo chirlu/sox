@@ -82,7 +82,7 @@ typedef struct echostuff {
 /*
  * Process options
  */
-int st_echo_getopts(eff_t effp, int n, char **argv) 
+static int st_echo_getopts(eff_t effp, int n, char **argv) 
 {
         echo_t echo = (echo_t) effp->priv;
         int i;
@@ -113,7 +113,7 @@ int st_echo_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare for processing.
  */
-int st_echo_start(eff_t effp)
+static int st_echo_start(eff_t effp)
 {
         echo_t echo = (echo_t) effp->priv;
         int i;
@@ -143,7 +143,7 @@ int st_echo_start(eff_t effp)
                     st_fail("echo: delay must be positive!");
                     return (ST_EOF);
                 }
-                if ( echo->samples[i] > DELAY_BUFSIZ )
+                if ( echo->samples[i] > (st_ssize_t)DELAY_BUFSIZ )
                 {
                         st_fail("echo: delay must be less than %g seconds!",
                                 DELAY_BUFSIZ / (float) effp->ininfo.rate );
@@ -185,7 +185,7 @@ int st_echo_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_echo_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_echo_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                  st_size_t *isamp, st_size_t *osamp)
 {
         echo_t echo = (echo_t) effp->priv;
@@ -222,7 +222,7 @@ int st_echo_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 /*
  * Drain out reverb lines. 
  */
-int st_echo_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_echo_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
         echo_t echo = (echo_t) effp->priv;
         double d_in, d_out;
@@ -262,7 +262,7 @@ int st_echo_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 /*
  * Clean up reverb effect.
  */
-int st_echo_stop(eff_t effp)
+static int st_echo_stop(eff_t effp)
 {
         echo_t echo = (echo_t) effp->priv;
 

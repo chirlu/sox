@@ -246,7 +246,7 @@ static void process_intput_buffer(pitch_t pitch)
 /*
  * Process options
  */
-int st_pitch_getopts(eff_t effp, int n, char **argv) 
+static int st_pitch_getopts(eff_t effp, int n, char **argv) 
 {
     pitch_t pitch = (pitch_t) effp->priv; 
     
@@ -329,7 +329,7 @@ int st_pitch_getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-int st_pitch_start(eff_t effp)
+static int st_pitch_start(eff_t effp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
     register int sample_rate = effp->outinfo.rate;
@@ -445,7 +445,7 @@ int st_pitch_start(eff_t effp)
 
 /* Processes input.
  */
-int st_pitch_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_pitch_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                 st_size_t *isamp, st_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
@@ -522,7 +522,7 @@ int st_pitch_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 
 /* at the end...
  */
-int st_pitch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_pitch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
     st_size_t i;
@@ -566,7 +566,7 @@ int st_pitch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_pitch_stop(eff_t effp)
+static int st_pitch_stop(eff_t effp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
 

@@ -23,13 +23,13 @@
 typedef struct alsa_priv
 {
     snd_pcm_t *pcm_handle;
-    void *buf;
-    st_ssize_t buf_size;
+    char *buf;
+    st_size_t buf_size;
 } *alsa_priv_t;
 
 static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt);
 
-int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
+static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
 {
     int fmt = SND_PCM_FORMAT_S16;
     int err;
@@ -85,7 +85,7 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
 
     snd_pcm_hw_params_get_channels_min(hw_params, &min_chan);
     snd_pcm_hw_params_get_channels_max(hw_params, &max_chan);
-    if (ft->info.channels == -1) 
+    if (ft->info.channels == 0) 
         ft->info.channels = min_chan;
     else 
         if (ft->info.channels > max_chan) 
@@ -113,11 +113,8 @@ int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     snd_pcm_hw_params_get_rate_min(hw_params, &min_rate, &dir);
     snd_pcm_hw_params_get_rate_max(hw_params, &max_rate, &dir);
 
-    if (min_rate != -1 && rate < min_rate) 
-        rate = min_rate;
-    else 
-        if (max_rate != -1 && rate > max_rate) 
-            rate = max_rate;
+    rate = max(rate, min_rate);
+    rate = min(rate, max_rate);
     if (rate != ft->info.rate)
     {
         st_report("alsa: Hardware does not support %d.  Forcing sample rate to %d.", ft->info.rate, rate);
@@ -288,12 +285,12 @@ static int xrun_recovery(snd_pcm_t *handle, int err)
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-int st_alsastartread(ft_t ft)
+static int st_alsastartread(ft_t ft)
 {
     return st_alsasetup(ft, SND_PCM_STREAM_CAPTURE);
 }
 
-st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
+static st_size_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 {
     st_size_t len;
     int err;
@@ -364,8 +361,7 @@ st_ssize_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
     return len;
 }
 
-int st_alsastopread(ft)
-ft_t ft;
+static int st_alsastopread(ft_t ft)
 {
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
 
@@ -376,12 +372,12 @@ ft_t ft;
     return ST_SUCCESS;
 }
 
-int st_alsastartwrite(ft_t ft)
+static int st_alsastartwrite(ft_t ft)
 {
     return st_alsasetup(ft, SND_PCM_STREAM_PLAYBACK);
 }
 
-st_ssize_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
+static st_size_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
 {
     st_size_t len;
     int err;
@@ -452,8 +448,7 @@ st_ssize_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
 }
 
 
-int st_alsastopwrite(ft)
-ft_t ft;
+static int st_alsastopwrite(ft_t ft)
 {
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
 
@@ -472,7 +467,7 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
     if (ft->info.size == -1)
         ft->info.size = ST_SIZE_WORD;
 
-    if (ft->info.encoding == -1)
+    if (ft->info.encoding == ST_ENCODING_UNKNOWN)
     {
         if (ft->info.size == ST_SIZE_WORD)
             ft->info.encoding = ST_ENCODING_SIGN2;

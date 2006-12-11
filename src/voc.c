@@ -200,7 +200,6 @@ typedef struct vocstuff {
 /* Prototypes for internal functions */
 static int getblock(ft_t);
 static void blockstart(ft_t);
-static void blockstop(ft_t);
 
 /* Conversion macros (from raw.c) */
 #define ST_ALAW_BYTE_TO_SAMPLE(d) ((st_sample_t)(st_alaw2linear16(d)) << 16)
@@ -210,7 +209,7 @@ static void blockstop(ft_t);
 /*-----------------------------------------------------------------
  * st_vocstartread() -- start reading a VOC file
  *-----------------------------------------------------------------*/
-int st_vocstartread(ft_t ft)
+static int st_vocstartread(ft_t ft)
 {
         int rtn = ST_SUCCESS;
         char header[20];
@@ -306,7 +305,7 @@ int st_vocstartread(ft_t ft)
         }
 
         /* setup number of channels */
-        if (ft->info.channels == -1)
+        if (ft->info.channels == 0)
                 ft->info.channels = v->channels;
 
         return(ST_SUCCESS);
@@ -317,10 +316,10 @@ int st_vocstartread(ft_t ft)
  * ANN:  Major changes here to support multi-part files and files
  *       that do not have audio in block 9's.
  *-----------------------------------------------------------------*/
-st_ssize_t st_vocread(ft_t ft, st_sample_t *buf, st_size_t len)
+static st_size_t st_vocread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
         vs_t v = (vs_t) ft->priv;
-        int done = 0;
+        st_size_t done = 0;
         int rc = 0;
         int16_t sw;
         unsigned char  uc;
@@ -405,15 +404,6 @@ st_ssize_t st_vocread(ft_t ft, st_sample_t *buf, st_size_t len)
         return done;
 }
 
-/*-----------------------------------------------------------------
- * st_vocstartread() -- start reading a VOC file
- * nothing to do
- *-----------------------------------------------------------------*/
-int st_vocstopread(ft_t ft)
-{
-    return(ST_SUCCESS);
-}
-
 /* When saving samples in VOC format the following outline is followed:
  * If an 8-bit mono sample then use a VOC_DATA header.
  * If an 8-bit stereo sample then use a VOC_EXTENDED header followed
@@ -427,7 +417,7 @@ int st_vocstopread(ft_t ft)
  * which will work with the oldest software (eg. an 8-bit mono sample
  * will be able to be played with a really old SB VOC player.)
  */
-int st_vocstartwrite(ft_t ft)
+static int st_vocstartwrite(ft_t ft)
 {
         vs_t v = (vs_t) ft->priv;
 
@@ -457,21 +447,21 @@ int st_vocstartwrite(ft_t ft)
           ft->info.encoding = ST_ENCODING_UNSIGNED;
         else
           ft->info.encoding = ST_ENCODING_SIGN2;
-        if (ft->info.channels == -1)
+        if (ft->info.channels == 0)
                 ft->info.channels = 1;
 
         return(ST_SUCCESS);
 }
 
 /*-----------------------------------------------------------------
- * st_vocstartread() -- start reading a VOC file
+ * st_vocwrite() -- write a VOC file
  *-----------------------------------------------------------------*/
-st_ssize_t st_vocwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
+static st_size_t st_vocwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
         vs_t v = (vs_t) ft->priv;
         unsigned char uc;
         int16_t sw;
-        st_ssize_t done = 0;
+        st_size_t done = 0;
 
         if (v->samples == 0) {
           /* No silence packing yet. */
@@ -493,9 +483,39 @@ st_ssize_t st_vocwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 }
 
 /*-----------------------------------------------------------------
+ * blockstop() -- stop an output block
+ * End the current data or silence block.
+ *-----------------------------------------------------------------*/
+static void blockstop(ft_t ft)
+{
+        vs_t v = (vs_t) ft->priv;
+        st_sample_t datum;
+
+        st_writeb(ft, 0);                     /* End of file block code */
+        st_seeki(ft, v->blockseek, 0);         /* seek back to block length */
+        st_seeki(ft, 1, 1);                    /* seek forward one */
+        if (v->silent) {
+                st_writew(ft, v->samples);
+        } else {
+          if (ft->info.size == ST_SIZE_BYTE) {
+            if (ft->info.channels > 1) {
+              st_seeki(ft, 8, 1); /* forward 7 + 1 for new block header */
+            }
+          }
+                v->samples += 2;                /* adjustment: SBDK pp. 3-5 */
+                datum = (v->samples * ft->info.size) & 0xff;
+                st_writeb(ft, (int)datum);       /* low byte of length */
+                datum = ((v->samples * ft->info.size) >> 8) & 0xff;
+                st_writeb(ft, (int)datum);  /* middle byte of length */
+                datum = ((v->samples  * ft->info.size)>> 16) & 0xff;
+                st_writeb(ft, (int)datum); /* high byte of length */
+        }
+}
+
+/*-----------------------------------------------------------------
  * st_vocstopwrite() -- stop writing a VOC file
  *-----------------------------------------------------------------*/
-int st_vocstopwrite(ft_t ft)
+static int st_vocstopwrite(ft_t ft)
 {
         blockstop(ft);
         return(ST_SUCCESS);
@@ -795,36 +815,6 @@ static void blockstart(ft_t ft)
         }
 }
 
-/*-----------------------------------------------------------------
- * blockstop() -- stop an output block
- * End the current data or silence block.
- *-----------------------------------------------------------------*/
-static void blockstop(ft_t ft)
-{
-        vs_t v = (vs_t) ft->priv;
-        st_sample_t datum;
-
-        st_writeb(ft, 0);                     /* End of file block code */
-        st_seeki(ft, v->blockseek, 0);         /* seek back to block length */
-        st_seeki(ft, 1, 1);                    /* seek forward one */
-        if (v->silent) {
-                st_writew(ft, v->samples);
-        } else {
-          if (ft->info.size == ST_SIZE_BYTE) {
-            if (ft->info.channels > 1) {
-              st_seeki(ft, 8, 1); /* forward 7 + 1 for new block header */
-            }
-          }
-                v->samples += 2;                /* adjustment: SBDK pp. 3-5 */
-                datum = (v->samples * ft->info.size) & 0xff;
-                st_writeb(ft, (int)datum);       /* low byte of length */
-                datum = ((v->samples * ft->info.size) >> 8) & 0xff;
-                st_writeb(ft, (int)datum);  /* middle byte of length */
-                datum = ((v->samples  * ft->info.size)>> 16) & 0xff;
-                st_writeb(ft, (int)datum); /* high byte of length */
-        }
-}
-
 /* Sound Blaster .VOC */
 static const char *vocnames[] = {
   "voc",
@@ -837,7 +827,7 @@ static st_format_t st_voc_format = {
   ST_FILE_STEREO,
   st_vocstartread,
   st_vocread,
-  st_vocstopread,
+  st_format_nothing,
   st_vocstartwrite,
   st_vocwrite,
   st_vocstopwrite,

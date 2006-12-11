@@ -63,7 +63,7 @@ typedef struct avrstuff {
  */
 
 
-int st_avrstartread(ft_t ft) 
+static int st_avrstartread(ft_t ft) 
 {
   avr_t avr = (avr_t)ft->priv;
   int rc;
@@ -148,7 +148,7 @@ int st_avrstartread(ft_t ft)
   return(ST_SUCCESS);
 }
 
-int st_avrstartwrite(ft_t ft) 
+static int st_avrstartwrite(ft_t ft) 
 {
   avr_t avr = (avr_t)ft->priv;
   int rc;
@@ -260,7 +260,7 @@ int st_avrstartwrite(ft_t ft)
   return(ST_SUCCESS);
 }
 
-st_ssize_t st_avrwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp) 
+static st_size_t st_avrwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp) 
 {
   avr_t avr = (avr_t)ft->priv;
 
@@ -269,7 +269,7 @@ st_ssize_t st_avrwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
   return (st_rawwrite (ft, buf, nsamp));
 }
 
-int st_avrstopwrite(ft_t ft) 
+static int st_avrstopwrite(ft_t ft) 
 {
   avr_t avr = (avr_t)ft->priv;
   int rc;

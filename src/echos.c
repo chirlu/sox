@@ -52,7 +52,7 @@
 
 static st_effect_t st_echos_effect;
 
-#define DELAY_BUFSIZ ( 50L * ST_MAXRATE )
+#define DELAY_BUFSIZ ( 50 * ST_MAXRATE )
 #define MAX_ECHOS 7     /* 24 bit x ( 1 + MAX_ECHOS ) = */
                         /* 24 bit x 8 = 32 bit !!!      */
 
@@ -72,7 +72,7 @@ typedef struct echosstuff {
 /*
  * Process options
  */
-int st_echos_getopts(eff_t effp, int n, char **argv) 
+static int st_echos_getopts(eff_t effp, int n, char **argv) 
 {
         echos_t echos = (echos_t) effp->priv;
         int i;
@@ -107,7 +107,7 @@ int st_echos_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare for processing.
  */
-int st_echos_start(eff_t effp)
+static int st_echos_start(eff_t effp)
 {
         echos_t echos = (echos_t) effp->priv;
         int i;
@@ -136,7 +136,7 @@ int st_echos_start(eff_t effp)
                     st_fail("echos: delay must be positive!");
                     return (ST_EOF);
                 }
-                if ( echos->samples[i] > DELAY_BUFSIZ )
+                if ( echos->samples[i] > (st_ssize_t)DELAY_BUFSIZ )
                 {
                         st_fail("echos: delay must be less than %g seconds!",
                                 DELAY_BUFSIZ / (float) effp->ininfo.rate );
@@ -177,7 +177,7 @@ int st_echos_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_echos_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_echos_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                 st_size_t *isamp, st_size_t *osamp)
 {
         echos_t echos = (echos_t) effp->priv;
@@ -220,7 +220,7 @@ int st_echos_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 /*
  * Drain out reverb lines. 
  */
-int st_echos_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_echos_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
         echos_t echos = (echos_t) effp->priv;
         double d_in, d_out;
@@ -266,7 +266,7 @@ int st_echos_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 /*
  * Clean up echos effect.
  */
-int st_echos_stop(eff_t effp)
+static int st_echos_stop(eff_t effp)
 {
         echos_t echos = (echos_t) effp->priv;
 

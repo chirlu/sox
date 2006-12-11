@@ -1,58 +1,10 @@
 /*
  * Microsoft's WAVE sound format driver
  *
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
- * the consequences of using this software.
- *
- * Change History:
- *
- * November  23, 1999 - Stan Brooks (stabro@megsinet.com)
- *   Merged in gsm support patches from Stuart Daines...
- *   Since we had simultaneously made similar changes in
- *   wavwritehdr() and wavstartread(), this was some
- *   work.  Hopefully the result is cleaner than either
- *   version, and nothing broke.
- *
- * November  20, 1999 - Stan Brooks (stabro@megsinet.com)
- *   Mods for faster adpcm decoding and addition of IMA_ADPCM
- *   and ADPCM  writing... low-level codex functions moved to
- *   external modules ima_rw.c and adpcm.c. Some general cleanup,
- *   consistent with writing adpcm and other output formats.
- *   Headers written for adpcm include the 'fact' subchunk.
- *
- * September 11, 1998 - Chris Bagwell (cbagwell@sprynet.com)
- *   Fixed length bug for IMA and MS ADPCM files.
- *
- * June 1, 1998 - Chris Bagwell (cbagwell@sprynet.com)
- *   Fixed some compiler warnings as reported by Kjetil Torgrim Homme
- *   <kjetilho@ifi.uio.no>.
- *   Fixed bug that caused crashes when reading mono MS ADPCM files. Patch
- *   was sent from Michael Brown (mjb@pootle.demon.co.uk).
- *
- * March 15, 1998 - Chris Bagwell (cbagwell@sprynet.com)
- *   Added support for Microsoft's ADPCM and IMA (or better known as
- *   DVI) ADPCM format for wav files.  Thanks goes to Mark Podlipec's
- *   XAnim code.  It gave some real life understanding of how the ADPCM
- *   format is processed.  Actual code was implemented based off of
- *   various sources from the net.
- *
- * NOTE: Previous maintainers weren't very good at providing contact
- * information.
- *
- * Copyright 1992 Rick Richardson
+ * Copyright 1998-2006 Chris Bagwell and SoX Contributors
  * Copyright 1991 Lance Norskog And Sundry Contributors
- *
- * Fixed by various contributors previous to 1998:
- * 1) Little-endian handling
- * 2) Skip other kinds of file data
- * 3) Handle 16-bit formats correctly
- * 4) Not go into infinite loop
- *
- * User options should override file header - we assumed user knows what
- * they are doing if they specify options.
- * Enhancements and clean up by Graeme W. Gill, 93/5/17
+ * Copyright 1992 Rick Richardson
+ * Copyright 1997 Graeme W. Gill, 93/5/17
  *
  * Info for format tags can be found at:
  *   http://www.microsoft.com/asf/resources/draft-ietf-fleischman-codec-subtree-01.txt
@@ -122,7 +74,7 @@ static int wavwritehdr(ft_t, int);
  * ImaAdpcmReadBlock - Grab and decode complete block of samples
  *
  */
-unsigned short  ImaAdpcmReadBlock(ft_t ft)
+static unsigned short  ImaAdpcmReadBlock(ft_t ft)
 {
     wav_t       wav = (wav_t) ft->priv;
     int bytesRead;
@@ -162,7 +114,7 @@ unsigned short  ImaAdpcmReadBlock(ft_t ft)
  * AdpcmReadBlock - Grab and decode complete block of samples
  *
  */
-unsigned short  AdpcmReadBlock(ft_t ft)
+static unsigned short  AdpcmReadBlock(ft_t ft)
 {
     wav_t       wav = (wav_t) ft->priv;
     int bytesRead;
@@ -211,7 +163,7 @@ static int xxxAdpcmWriteBlock(ft_t ft)
         for (p = wav->samplePtr; p < wav->sampleTop; p++) *p=0;
         /* compress the samples to wav->packet */
         if (wav->formatTag == WAVE_FORMAT_ADPCM) {
-            AdpcmBlockMashI(chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, wav->blockAlign,9);
+            AdpcmBlockMashI(chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, wav->blockAlign);
         }else{ /* WAVE_FORMAT_IMA_ADPCM */
             ImaBlockMashI(chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, 9);
         }
@@ -236,7 +188,7 @@ static int xxxAdpcmWriteBlock(ft_t ft)
 /* WAV GSM6.10 support functions                                            */
 /****************************************************************************/
 /* create the gsm object, malloc buffer for 160*2 samples */
-int wavgsminit(ft_t ft)
+static int wavgsminit(ft_t ft)
 {       
     int valueP=1;
     wav_t       wav = (wav_t) ft->priv;
@@ -263,21 +215,21 @@ int wavgsminit(ft_t ft)
 }
 
 /*destroy the gsm object and free the buffer */
-void wavgsmdestroy(ft_t ft)
+static void wavgsmdestroy(ft_t ft)
 {       
     wav_t       wav = (wav_t) ft->priv;
     gsm_destroy(wav->gsmhandle);
     free(wav->gsmsample);
 }
 
-st_ssize_t wavgsmread(ft_t ft, st_sample_t *buf, st_size_t len)
+static st_size_t wavgsmread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
     wav_t       wav = (wav_t) ft->priv;
-    int done=0;
+    size_t done=0;
     int bytes;
     gsm_byte    frame[65];
 
-        ft->st_errno = ST_SUCCESS;
+    ft->st_errno = ST_SUCCESS;
 
   /* copy out any samples left from the last call */
     while(wav->gsmindex && (wav->gsmindex<160*2) && (done < len))
@@ -338,13 +290,13 @@ static int wavgsmflush(ft_t ft)
     return (ST_SUCCESS);
 }
 
-st_ssize_t wavgsmwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
+static st_size_t wavgsmwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
-    wav_t       wav = (wav_t) ft->priv;
-    int done = 0;
+    wav_t wav = (wav_t) ft->priv;
+    size_t done = 0;
     int rc;
 
-        ft->st_errno = ST_SUCCESS;
+    ft->st_errno = ST_SUCCESS;
 
     while (done < len) {
         while ((wav->gsmindex < 160*2) && (done < len))
@@ -362,7 +314,7 @@ st_ssize_t wavgsmwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 
 }
 
-void wavgsmstopwrite(ft_t ft)
+static void wavgsmstopwrite(ft_t ft)
 {
     wav_t       wav = (wav_t) ft->priv;
 
@@ -425,7 +377,7 @@ static int findChunk(ft_t ft, const char *Label, st_size_t *len)
  *      size and encoding of samples, 
  *      mono/stereo/quad.
  */
-int st_wavstartread(ft_t ft) 
+static int st_wavstartread(ft_t ft) 
 {
     wav_t       wav = (wav_t) ft->priv;
     char        magic[5];
@@ -537,7 +489,7 @@ int st_wavstartread(ft_t ft)
         
     case WAVE_FORMAT_PCM:
         /* Default (-1) depends on sample size.  Set that later on. */
-        if (ft->info.encoding != -1 && ft->info.encoding != ST_ENCODING_UNSIGNED &&
+        if (ft->info.encoding != ST_ENCODING_UNKNOWN && ft->info.encoding != ST_ENCODING_UNSIGNED &&
             ft->info.encoding != ST_ENCODING_SIGN2)
             st_report("User options overriding encoding read in .wav header");
 
@@ -549,21 +501,21 @@ int st_wavstartread(ft_t ft)
         break;
         
     case WAVE_FORMAT_IMA_ADPCM:
-        if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_IMA_ADPCM)
+        if (ft->info.encoding == ST_ENCODING_UNKNOWN || ft->info.encoding == ST_ENCODING_IMA_ADPCM)
             ft->info.encoding = ST_ENCODING_IMA_ADPCM;
         else
             st_report("User options overriding encoding read in .wav header");
         break;
 
     case WAVE_FORMAT_ADPCM:
-        if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_ADPCM)
+        if (ft->info.encoding == ST_ENCODING_UNKNOWN || ft->info.encoding == ST_ENCODING_ADPCM)
             ft->info.encoding = ST_ENCODING_ADPCM;
         else
             st_report("User options overriding encoding read in .wav header");
         break;
 
     case WAVE_FORMAT_IEEE_FLOAT:
-        if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_FLOAT)
+        if (ft->info.encoding == ST_ENCODING_UNKNOWN || ft->info.encoding == ST_ENCODING_FLOAT)
             ft->info.encoding = ST_ENCODING_FLOAT;
         else
             st_report("User options overriding encoding read in .wav header");
@@ -576,7 +528,7 @@ int st_wavstartread(ft_t ft)
         break;
         
     case WAVE_FORMAT_ALAW:
-        if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_ALAW)
+        if (ft->info.encoding == ST_ENCODING_UNKNOWN || ft->info.encoding == ST_ENCODING_ALAW)
             ft->info.encoding = ST_ENCODING_ALAW;
         else
             st_report("User options overriding encoding read in .wav header");
@@ -589,7 +541,7 @@ int st_wavstartread(ft_t ft)
         break;
         
     case WAVE_FORMAT_MULAW:
-        if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_ULAW)
+        if (ft->info.encoding == ST_ENCODING_UNKNOWN || ft->info.encoding == ST_ENCODING_ULAW)
             ft->info.encoding = ST_ENCODING_ULAW;
         else
             st_report("User options overriding encoding read in .wav header");
@@ -614,7 +566,7 @@ int st_wavstartread(ft_t ft)
         st_fail_errno(ft,ST_EHDR,"Sorry, this WAV file is in Dolby AC2 format.");
         return ST_EOF;
     case WAVE_FORMAT_GSM610:
-        if (ft->info.encoding == -1 || ft->info.encoding == ST_ENCODING_GSM )
+        if (ft->info.encoding == ST_ENCODING_UNKNOWN || ft->info.encoding == ST_ENCODING_GSM )
             ft->info.encoding = ST_ENCODING_GSM;
         else
             st_report("User options overriding encoding read in .wav header");
@@ -648,7 +600,7 @@ int st_wavstartread(ft_t ft)
     }
 
     /* User options take precedence */
-    if (ft->info.channels == -1 || ft->info.channels == wChannels)
+    if (ft->info.channels == 0 || ft->info.channels == wChannels)
         ft->info.channels = wChannels;
     else
         st_report("User options overriding channels read in .wav header");
@@ -839,7 +791,7 @@ int st_wavstartread(ft_t ft)
             st_warn("User options overriding size read in .wav header");
 
         /* Now we have enough information to set default encodings. */
-        if (ft->info.encoding == -1)
+        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
             ft->info.encoding = ST_ENCODING_UNSIGNED;
         break;
         
@@ -850,7 +802,7 @@ int st_wavstartread(ft_t ft)
             st_warn("User options overriding size read in .wav header");
 
         /* Now we have enough information to set default encodings. */
-        if (ft->info.encoding == -1)
+        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
             ft->info.encoding = ST_ENCODING_SIGN2;
         break;
         
@@ -861,7 +813,7 @@ int st_wavstartread(ft_t ft)
             st_warn("User options overriding size read in .wav header");
 
         /* Now we have enough information to set default encodings. */
-        if (ft->info.encoding == -1)
+        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
             ft->info.encoding = ST_ENCODING_SIGN2;
         break;
         
@@ -872,7 +824,7 @@ int st_wavstartread(ft_t ft)
             st_warn("User options overriding size read in .wav header");
 
         /* Now we have enough information to set default encodings. */
-        if (ft->info.encoding == -1)
+        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
             ft->info.encoding = ST_ENCODING_SIGN2;
         break;
         
@@ -1078,10 +1030,10 @@ int st_wavstartread(ft_t ft)
  * Return number of samples read.
  */
 
-st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_size_t len) 
+static st_size_t st_wavread(ft_t ft, st_sample_t *buf, st_size_t len) 
 {
         wav_t   wav = (wav_t) ft->priv;
-        st_ssize_t done;
+        st_size_t done;
 
         ft->st_errno = ST_SUCCESS;
         
@@ -1116,7 +1068,7 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_size_t len)
                 /* Copy interleaved data into buf, converting to st_sample_t */
                 {
                     short *p, *top;
-                    int ct;
+                    size_t ct;
                     ct = len-done;
                     if (ct > (wav->blockSamplesRemaining*ft->info.channels))
                         ct = (wav->blockSamplesRemaining*ft->info.channels);
@@ -1186,7 +1138,7 @@ st_ssize_t st_wavread(ft_t ft, st_sample_t *buf, st_size_t len)
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_wavstopread(ft_t ft) 
+static int st_wavstopread(ft_t ft) 
 {
     wav_t       wav = (wav_t) ft->priv;
     int         rc = ST_SUCCESS;
@@ -1218,7 +1170,7 @@ int st_wavstopread(ft_t ft)
     return rc;
 }
 
-int st_wavstartwrite(ft_t ft) 
+static int st_wavstartwrite(ft_t ft) 
 {
     wav_t wav = (wav_t) ft->priv;
     int rc;
@@ -1252,7 +1204,7 @@ int st_wavstartwrite(ft_t ft)
     wav->iCoefs = NULL;
     switch (wav->formatTag)
     {
-        int ch, sbsize;
+        size_t ch, sbsize;
 
         case WAVE_FORMAT_IMA_ADPCM:
             initImaTable();
@@ -1572,7 +1524,7 @@ static int wavwritehdr(ft_t ft, int second_header)
 
     if (isExtensible)
     {
-      int i;
+      size_t i;
       static const char guid[14] = "\x00\x00\x00\x00\x10\x00\x80\x00\x00\xAA\x00\x38\x9B\x71";
       st_writew(ft, 22);
       st_writew(ft, wBitsPerSample); /* No padding in container */
@@ -1640,7 +1592,7 @@ static int wavwritehdr(ft_t ft, int second_header)
     return ST_SUCCESS;
 }
 
-st_ssize_t st_wavwrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
+static st_size_t st_wavwrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
 {
         wav_t   wav = (wav_t) ft->priv;
         st_ssize_t total_len = len;
@@ -1681,7 +1633,7 @@ st_ssize_t st_wavwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
         }
 }
 
-int st_wavstopwrite(ft_t ft) 
+static int st_wavstopwrite(ft_t ft) 
 {
         wav_t   wav = (wav_t) ft->priv;
 
@@ -1778,7 +1730,7 @@ static char *wav_format_str(unsigned wFormatTag)
         }
 }
 
-int st_wavseek(ft_t ft, st_size_t offset) 
+static int st_wavseek(ft_t ft, st_size_t offset) 
 {
     wav_t   wav = (wav_t) ft->priv;
     int new_offset, channel_block, alignment;

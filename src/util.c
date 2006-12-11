@@ -16,9 +16,9 @@
  */
 
 #include "st_i.h"
+#include <stddef.h>
 #include <string.h>
 #include <ctype.h>
-
 #include <stdarg.h>
 
 struct st_output_message_s
@@ -49,8 +49,8 @@ void st_output_message(FILE * file, st_output_message_t message)
   }
 
   dot_pos = strrchr(drivername, '.');
-  if (dot_pos != NULL && dot_pos - drivername <= sizeof(buffer) - 1) {
-    strncpy(buffer, drivername, dot_pos - drivername);
+  if (dot_pos != NULL && dot_pos - drivername <= (ptrdiff_t)(sizeof(buffer) - 1)) {
+    strncpy(buffer, drivername, (size_t)(dot_pos - drivername));
     buffer[dot_pos - drivername] = '\0';
     drivername = buffer;
   }

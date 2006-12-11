@@ -19,6 +19,9 @@
 #  define  __attribute__(x)  /*NOTHING*/
 #endif
 
+/* Avoid warnings about unused parameters. */
+#define UNUSED __attribute__ ((unused))
+
 /* C language enhancements: */
 
 /* Boolean type, compatible with C++ */
@@ -85,8 +88,8 @@ typedef int32_t st_sample_t;
  */
 
 /* Temporary variables to prevent multiple evaluation of macro arguments: */
-static st_sample_t st_macro_temp_sample __attribute__((unused));
-static double st_macro_temp_double __attribute__((unused));
+static st_sample_t st_macro_temp_sample UNUSED;
+static double st_macro_temp_double UNUSED;
 
 #define ST_SAMPLE_NEG ST_INT_MIN(32)
 #define ST_SAMPLE_TO_UNSIGNED(bits,d,clips) \
@@ -199,7 +202,7 @@ typedef struct  st_signalinfo
     st_rate_t rate;       /* sampling rate */
     signed char size;     /* word length of data */
     st_encoding_t encoding; /* format of sample numbers */
-    signed char channels; /* number of sound channels */
+    unsigned channels;    /* number of sound channels */
     char swap;            /* do byte- or word-swap */
     double compression;   /* compression factor (where applicable) */
 } st_signalinfo_t;
@@ -263,13 +266,13 @@ typedef struct st_soundstream *ft_t;
 
 typedef struct st_format {
     const char   * const *names;
-    char         *usage;
+    const char   *usage;
     unsigned int flags;
     int          (*startread)(ft_t ft);
-    st_ssize_t   (*read)(ft_t ft, st_sample_t *buf, st_size_t len);
+    st_size_t    (*read)(ft_t ft, st_sample_t *buf, st_size_t len);
     int          (*stopread)(ft_t ft);
     int          (*startwrite)(ft_t ft);
-    st_ssize_t   (*write)(ft_t ft, const st_sample_t *buf, st_size_t len);
+    st_size_t    (*write)(ft_t ft, const st_sample_t *buf, st_size_t len);
     int          (*stopwrite)(ft_t ft);
     int          (*seek)(ft_t ft, st_size_t offset);
 } st_format_t;
@@ -344,7 +347,7 @@ typedef struct
     char    *usage;
     unsigned int flags;
 
-    int (*getopts)(eff_t effp, int argc, char **argv);
+    int (*getopts)(eff_t effp, int argc, char *argv[]);
     int (*start)(eff_t effp);
     int (*flow)(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 st_size_t *isamp, st_size_t *osamp);
@@ -363,7 +366,7 @@ struct st_effect
     st_size_t       odone, olen;    /* consumed, total length */
     st_size_t       clippedCount;   /* increment if clipping occurs */
     /* The following is a portable trick to align this variable on
-     * an 8-byte bounder.  Once this is done, the buffer alloced
+     * an 8-byte boundary.  Once this is done, the buffer alloced
      * after it should be align on an 8-byte boundery as well.
      * This lets you cast any structure over the private area
      * without concerns of alignment.
@@ -380,8 +383,8 @@ extern ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
                                 const char *filetype, const char *comment, 
                                 const st_instrinfo_t *instr,
                                 const st_loopinfo_t *loops);
-extern st_ssize_t st_read(ft_t ft, st_sample_t *buf, st_size_t len);
-extern st_ssize_t st_write(ft_t ft, const st_sample_t *buf, st_size_t len);
+extern st_size_t st_read(ft_t ft, st_sample_t *buf, st_size_t len);
+extern st_size_t st_write(ft_t ft, const st_sample_t *buf, st_size_t len);
 extern int st_close(ft_t ft);
 
 #define ST_SEEK_SET 0

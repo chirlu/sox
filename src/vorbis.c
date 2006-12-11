@@ -66,7 +66,7 @@ typedef struct vorbisstuff {
 } *vorbis_t;
 
 /******** Callback functions used in ov_open_callbacks ************/
-int myclose (void *datasource)
+static int myclose (void *datasource UNUSED)
 {
         /* Do nothing so sox can close the file for us */
         return 0;
@@ -89,7 +89,7 @@ static int _fseeko64_wrap(FILE *f, ogg_int64_t off, int whence) {
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-int st_vorbisstartread(ft_t ft)
+static int st_vorbisstartread(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_info *vi;
@@ -195,7 +195,7 @@ int st_vorbisstartread(ft_t ft)
 /* Refill the buffer with samples.  Returns BUF_EOF if the end of the
    vorbis data was reached while the buffer was being filled,
    BUF_ERROR is something bad happens, and BUF_DATA otherwise */
-int refill_buffer (vorbis_t vb)
+static int refill_buffer (vorbis_t vb)
 {
         int num_read;
 
@@ -230,10 +230,10 @@ int refill_buffer (vorbis_t vb)
  * Return number of samples read.
  */
 
-st_ssize_t st_vorbisread(ft_t ft, st_sample_t *buf, st_size_t len)
+static st_size_t st_vorbisread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
-        int i;
+        st_size_t i;
         int ret;
         st_sample_t l;
 
@@ -265,7 +265,7 @@ st_ssize_t st_vorbisread(ft_t ft, st_sample_t *buf, st_size_t len)
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-int st_vorbisstopread(ft_t ft)
+static int st_vorbisstopread(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
 
@@ -277,7 +277,7 @@ int st_vorbisstopread(ft_t ft)
 
 /* Write a page of ogg data to a file.  Taken directly from encode.c in
    oggenc.   Returns the number of bytes written. */
-int oe_write_page(ogg_page *page, ft_t ft)
+static int oe_write_page(ogg_page *page, ft_t ft)
 {
         int written;
         written = st_writebuf(ft, page->header,1,page->header_len);
@@ -289,7 +289,7 @@ int oe_write_page(ogg_page *page, ft_t ft)
 /* Write out the header packets.  Derived mostly from encode.c in
    oggenc.  Returns HEADER_ERROR if the header cannot be written and
    HEADER_OK otherwise. */
-int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
+static int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
 {
         ogg_packet header_main;
         ogg_packet header_comments;
@@ -345,7 +345,7 @@ int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
         return HEADER_OK;
 }
 
-int st_vorbisstartwrite(ft_t ft)
+static int st_vorbisstartwrite(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve;
@@ -399,13 +399,13 @@ int st_vorbisstartwrite(ft_t ft)
         return(ST_SUCCESS);
 }
 
-st_ssize_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len)
+static st_size_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;
-        st_ssize_t samples = len / ft->info.channels;
+        st_size_t samples = len / ft->info.channels;
         float **buffer = vorbis_analysis_buffer(&ve->vd, samples);
-        st_ssize_t i, j;
+        st_size_t i, j;
         int ret;
         int eos = 0;
 
@@ -450,7 +450,7 @@ st_ssize_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len)
         return (len);
 }
 
-int st_vorbisstopwrite(ft_t ft)
+static int st_vorbisstopwrite(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;

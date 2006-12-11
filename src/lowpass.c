@@ -26,7 +26,7 @@
 
 static st_effect_t st_lowpass_effect;
 
-int st_lowpass_getopts(eff_t effp, int n, char **argv)
+static int st_lowpass_getopts(eff_t effp, int n, char **argv)
 {
   butterworth_t butterworth = (butterworth_t)effp->priv;
 
@@ -44,7 +44,7 @@ int st_lowpass_getopts(eff_t effp, int n, char **argv)
   return (ST_SUCCESS);
 }
 
-int st_lowpass_start(eff_t effp)
+static int st_lowpass_start(eff_t effp)
 {
   butterworth_t butterworth = (butterworth_t) effp->priv;
   double c;

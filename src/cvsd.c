@@ -153,7 +153,7 @@ static void cvsdstartcommon(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-int st_cvsdstartread(ft_t ft) 
+static int st_cvsdstartread(ft_t ft) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         float *fp1;
@@ -179,7 +179,7 @@ int st_cvsdstartread(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-int st_cvsdstartwrite(ft_t ft) 
+static int st_cvsdstartwrite(ft_t ft) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         float *fp1;
@@ -201,7 +201,7 @@ int st_cvsdstartwrite(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-int st_cvsdstopwrite(ft_t ft)
+static int st_cvsdstopwrite(ft_t ft)
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 
@@ -217,7 +217,7 @@ int st_cvsdstopwrite(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-int st_cvsdstopread(ft_t ft)
+static int st_cvsdstopread(ft_t ft)
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 
@@ -229,10 +229,10 @@ int st_cvsdstopread(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-st_ssize_t st_cvsdread(ft_t ft, st_sample_t *buf, st_size_t nsamp) 
+static st_size_t st_cvsdread(ft_t ft, st_sample_t *buf, st_size_t nsamp) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
-        int done = 0;
+        st_size_t done = 0;
         float oval;
         
         while (done < nsamp) {
@@ -288,10 +288,10 @@ st_ssize_t st_cvsdread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 
 /* ---------------------------------------------------------------------- */
 
-st_ssize_t st_cvsdwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp) 
+static st_size_t st_cvsdwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
-        int done = 0;
+        st_size_t done = 0;
         float inval;
 
         for(;;) {
@@ -519,7 +519,7 @@ static void make_dvms_hdr(ft_t ft, struct dvms_header *hdr)
 
 /* ---------------------------------------------------------------------- */
 
-int st_dvmsstartread(ft_t ft) 
+static int st_dvmsstartread(ft_t ft) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         struct dvms_header hdr;
@@ -558,7 +558,7 @@ int st_dvmsstartread(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-int st_dvmsstartwrite(ft_t ft) 
+static int st_dvmsstartwrite(ft_t ft) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         struct dvms_header hdr;
@@ -584,7 +584,7 @@ int st_dvmsstartwrite(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-int st_dvmsstopwrite(ft_t ft)
+static int st_dvmsstopwrite(ft_t ft)
 {
         struct dvms_header hdr;
         int rc;

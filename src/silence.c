@@ -78,7 +78,7 @@ static void clear_rms(eff_t effp)
     silence->rms_sum = 0;
 }
 
-int st_silence_getopts(eff_t effp, int n, char **argv)
+static int st_silence_getopts(eff_t effp, int n, char **argv)
 {
     silence_t   silence = (silence_t) effp->priv;
     int parse_count;
@@ -250,7 +250,7 @@ int st_silence_getopts(eff_t effp, int n, char **argv)
     return(ST_SUCCESS);
 }
 
-int st_silence_start(eff_t effp)
+static int st_silence_start(eff_t effp)
 {
         silence_t       silence = (silence_t) effp->priv;
 
@@ -321,7 +321,7 @@ int st_silence_start(eff_t effp)
         return(ST_SUCCESS);
 }
 
-int aboveThreshold(eff_t effp, st_sample_t value, double threshold, char unit)
+static int aboveThreshold(eff_t effp, st_sample_t value, double threshold, char unit)
 {
     double ratio;
     int rc;
@@ -390,12 +390,12 @@ static void update_rms(eff_t effp, st_sample_t sample)
 
 /* Process signed long samples from ibuf to obuf. */
 /* Return number of samples processed in isamp and osamp. */
-int st_silence_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_silence_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                     st_size_t *isamp, st_size_t *osamp)
 {
     silence_t silence = (silence_t) effp->priv;
-    int threshold, j;
-    st_size_t i;
+    int threshold;
+    st_size_t i, j;
     st_size_t nrOfTicks, nrOfInSamplesRead, nrOfOutSamplesWritten;
 
     nrOfInSamplesRead = 0;
@@ -640,7 +640,7 @@ silence_copy_flush:
         return (ST_SUCCESS);
 }
 
-int st_silence_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_silence_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
     silence_t silence = (silence_t) effp->priv;
     st_size_t i;
@@ -676,7 +676,7 @@ int st_silence_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         return ST_SUCCESS;
 }
 
-int st_silence_stop(eff_t effp)
+static int st_silence_stop(eff_t effp)
 {
     silence_t silence = (silence_t) effp->priv;
 

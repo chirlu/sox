@@ -37,7 +37,7 @@ typedef struct
 /*
  * Process options
  */
-int st_trim_getopts(eff_t effp, int n, char **argv) 
+static int st_trim_getopts(eff_t effp, int n, char **argv) 
 {
     trim_t trim = (trim_t) effp->priv;
 
@@ -88,7 +88,7 @@ int st_trim_getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-int st_trim_start(eff_t effp)
+static int st_trim_start(eff_t effp)
 {
     trim_t trim = (trim_t) effp->priv;
 
@@ -128,7 +128,7 @@ int st_trim_start(eff_t effp)
  * Place in buf[].
  * Return number of samples read.
  */
-int st_trim_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_trim_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                  st_size_t *isamp, st_size_t *osamp)
 {
     int finished = 0;
@@ -195,7 +195,7 @@ int st_trim_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_trim_stop(eff_t effp)
+static int st_trim_stop(eff_t effp)
 {
     trim_t trim = (trim_t) effp->priv;
 
@@ -227,7 +227,7 @@ static st_effect_t st_trim_effect = {
   st_trim_start,
   st_trim_flow,
   st_effect_nothing_drain,
-  st_effect_nothing
+  st_trim_stop
 };
 
 const st_effect_t *st_trim_effect_fn(void)

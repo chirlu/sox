@@ -25,7 +25,7 @@ typedef struct wvepriv
 
 static void wvewriteheader(ft_t ft);
 
-int st_wveseek(ft_t ft, st_size_t offset)
+static int st_wveseek(ft_t ft, st_size_t offset)
 {
     int new_offset, channel_block, alignment;
     wve_t wve = (wve_t ) ft->priv;
@@ -45,7 +45,7 @@ int st_wveseek(ft_t ft, st_size_t offset)
     return st_seeki(ft, offset, SEEK_SET);
 }
 
-int st_wvestartread(ft_t ft)
+static int st_wvestartread(ft_t ft)
 {
         wve_t p = (wve_t ) ft->priv;
         char magic[16];
@@ -117,7 +117,7 @@ int st_wvestartread(ft_t ft)
             st_report("WVE must use 8000 sample rate.  Overriding");
         ft->info.rate = 8000;
 
-        if (ft->info.channels != -1 && ft->info.channels != 1)
+        if (ft->info.channels != ST_ENCODING_UNKNOWN && ft->info.channels != 1)
             st_report("WVE must only supports 1 channel.  Overriding");
         ft->info.channels = 1;
 
@@ -136,7 +136,7 @@ int st_wvestartread(ft_t ft)
    if it is not, the unspecified size remains in the header
    (this is illegal). */
 
-int st_wvestartwrite(ft_t ft)
+static int st_wvestartwrite(ft_t ft)
 {
         wve_t p = (wve_t ) ft->priv;
         int rc;
@@ -161,7 +161,7 @@ int st_wvestartwrite(ft_t ft)
         if (ft->info.rate != 0)
             st_report("WVE must use 8000 sample rate.  Overriding");
 
-        if (ft->info.channels != -1 && ft->info.channels != 1)
+        if (ft->info.channels != 0 && ft->info.channels != 1)
             st_report("WVE must only supports 1 channel.  Overriding");
 
         ft->info.encoding = ST_ENCODING_ALAW;
@@ -172,14 +172,14 @@ int st_wvestartwrite(ft_t ft)
         return ST_SUCCESS;
 }
 
-st_ssize_t st_wvewrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
+static st_size_t st_wvewrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
         wve_t p = (wve_t ) ft->priv;
         p->length += samp * ft->info.size;
         return st_rawwrite(ft, buf, samp);
 }
 
-int st_wvestopwrite(ft_t ft)
+static int st_wvestopwrite(ft_t ft)
 {
 
         /* Call before seeking to flush buffer */

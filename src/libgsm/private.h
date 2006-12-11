@@ -86,7 +86,7 @@ extern word	gsm_asr  	(word a, int n);
 		   >= MAX_LONGWORD ? MIN_LONGWORD : -(longword)utmp-2 )   \
 	: ((b) <= 0 ? (a) + (b)   \
 	          : (utmp = (ulongword)(a) + (ulongword)(b)) >= MAX_LONGWORD \
-		    ? MAX_LONGWORD : utmp))
+		    ? MAX_LONGWORD : (longword)utmp))
 
 #define	GSM_ADD(a, b)	\
 	((ulongword)((ltmp = (longword)(a) + (longword)(b)) - MIN_WORD) > \
@@ -112,7 +112,6 @@ extern void Gsm_Coder (
 		word	* xMc	/* [13*4] normalized RPE samples OUT	*/);
 
 extern void Gsm_Long_Term_Predictor (		/* 4x for 160 samples */
-		struct gsm_state * S,
 		word	* d,	/* [0..39]   residual signal	IN	*/
 		word	* dp,	/* [-120..-1] d'		IN	*/
 		word	* e,	/* [0..40] 			OUT	*/
@@ -121,7 +120,6 @@ extern void Gsm_Long_Term_Predictor (		/* 4x for 160 samples */
 		word	* bc	/* gain factor			OUT	*/);
 
 extern void Gsm_LPC_Analysis (
-		struct gsm_state * S,
 		word * s,	 /* 0..159 signals	IN/OUT	*/
 	        word * LARc);   /* 0..7   LARc's	OUT	*/
 
@@ -167,14 +165,12 @@ extern void Gsm_Long_Term_Synthesis_Filtering (
 		word	* drp); 	/* [-120..-1] IN, [0..40] OUT 	*/
 
 void Gsm_RPE_Decoding (
-	struct gsm_state *S,
 		word xmaxcr,
 		word Mcr,
 		word * xMcr,  /* [0..12], 3 bits             IN      */
 		word * erp); /* [0..39]                     OUT     */
 
 void Gsm_RPE_Encoding (
-		struct gsm_state * S,
 		word    * e,            /* -5..-1][0..39][40..44     IN/OUT  */
 		word    * xmaxc,        /*                              OUT */
 		word    * Mc,           /*                              OUT */

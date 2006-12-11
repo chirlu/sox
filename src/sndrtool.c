@@ -20,9 +20,27 @@ typedef struct sndpriv {
         st_size_t dataStart;
 } *snd_t;
 
-static void  sndtwriteheader(ft_t ft, st_size_t nsamples);
+static void sndtwriteheader(ft_t ft, st_size_t nsamples)
+{
+    char name_buf[97];
 
-int st_sndseek(ft_t ft, st_size_t offset) 
+    /* sndtool header */
+    st_writes(ft, "SOUND"); /* magic */
+    st_writeb(ft, 0x1a);
+    st_writew (ft,0);  /* hGSound */
+    st_writedw (ft,nsamples);
+    st_writedw (ft,0);
+    st_writedw (ft,nsamples);
+    st_writew (ft,(int) ft->info.rate);
+    st_writew (ft,0);
+    st_writew (ft,10);
+    st_writew (ft,4);
+    memset (name_buf, 0, 96);
+    sprintf (name_buf,"%.62s - File created by SoX",ft->filename);
+    st_writebuf(ft, name_buf, 1, 96);
+}
+
+static int st_sndseek(ft_t ft, st_size_t offset) 
 {
     st_size_t new_offset, channel_block, alignment;
     snd_t snd = (snd_t ) ft->priv;
@@ -41,11 +59,8 @@ int st_sndseek(ft_t ft, st_size_t offset)
 
     return st_seeki(ft, new_offset, SEEK_SET);
 }
-/*======================================================================*/
-/*                         SNDSTARTREAD                                */
-/*======================================================================*/
 
-int st_sndtstartread(ft_t ft)
+static int st_sndtstartread(ft_t ft)
 {
         snd_t snd = (snd_t ) ft->priv;
 
@@ -122,10 +137,7 @@ int st_sndtstartread(ft_t ft)
         return (ST_SUCCESS);
 }
 
-/*======================================================================*/
-/*                         SNDTSTARTWRITE                               */
-/*======================================================================*/
-int st_sndtstartwrite(ft_t ft)
+static int st_sndtstartwrite(ft_t ft)
 {
         snd_t p = (snd_t ) ft->priv;
         int rc;
@@ -143,66 +155,24 @@ int st_sndtstartwrite(ft_t ft)
                 ft->swap = ft->swap ? 0 : 1;
         }
 
-/* write header */
-ft->info.channels = 1;
-ft->info.encoding = ST_ENCODING_UNSIGNED;
-ft->info.size = ST_SIZE_BYTE;
-p->nsamples = 0;
-sndtwriteheader(ft, 0);
+        /* write header */
+        ft->info.channels = 1;
+        ft->info.encoding = ST_ENCODING_UNSIGNED;
+        ft->info.size = ST_SIZE_BYTE;
+        p->nsamples = 0;
+        sndtwriteheader(ft, 0);
 
-return(ST_SUCCESS);
+        return(ST_SUCCESS);
 }
 
-/*======================================================================*/
-/*                         SNDRSTARTWRITE                               */
-/*======================================================================*/
-int st_sndrstartwrite(ft_t ft)
-{
-        int rc;
-
-        /* Needed for rawread() */
-        rc = st_rawstartread(ft);
-        if (rc)
-            return rc;
-
-        /* sndr is in little endian format so
-         * swap bytes on big endian machines
-         */
-        if (ST_IS_BIGENDIAN)
-        {
-                ft->swap = ft->swap ? 0 : 1;
-        }
-
-/* write header */
-ft->info.channels = 1;
-ft->info.encoding = ST_ENCODING_UNSIGNED;
-ft->info.size = ST_SIZE_BYTE;
-
-/* sounder header */
-st_writew (ft,0); /* sample size code */
-st_writew (ft,(int) ft->info.rate);     /* sample rate */
-st_writew (ft,10);        /* volume */
-st_writew (ft,4); /* shift */
-
-return(ST_SUCCESS);
-}
-
-/*======================================================================*/
-/*                         SNDTWRITE                                     */
-/*======================================================================*/
-
-st_ssize_t st_sndtwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
+static st_size_t st_sndtwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
         snd_t p = (snd_t ) ft->priv;
         p->nsamples += len;
         return st_rawwrite(ft, buf, len);
 }
 
-/*======================================================================*/
-/*                         SNDTSTOPWRITE                                */
-/*======================================================================*/
-
-int st_sndtstopwrite(ft_t ft)
+static int st_sndtstopwrite(ft_t ft)
 {
         snd_t p = (snd_t ) ft->priv;
         int rc;
@@ -222,29 +192,6 @@ int st_sndtstopwrite(ft_t ft)
                 
 
         return(ST_SUCCESS);
-}
-
-/*======================================================================*/
-/*                         SNDTWRITEHEADER                              */
-/*======================================================================*/
-static void sndtwriteheader(ft_t ft, st_size_t nsamples)
-{
-    char name_buf[97];
-
-    /* sndtool header */
-    st_writes(ft, "SOUND"); /* magic */
-    st_writeb(ft, 0x1a);
-    st_writew (ft,0);  /* hGSound */
-    st_writedw (ft,nsamples);
-    st_writedw (ft,0);
-    st_writedw (ft,nsamples);
-    st_writew (ft,(int) ft->info.rate);
-    st_writew (ft,0);
-    st_writew (ft,10);
-    st_writew (ft,4);
-    memset (name_buf, 0, 96);
-    sprintf (name_buf,"%.62s - File created by Sound Exchange",ft->filename);
-    st_writebuf(ft, name_buf, 1, 96);
 }
 
 /* Sndtool Sound File */

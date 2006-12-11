@@ -1,8 +1,6 @@
 /*
  * NIST Sphere file format handler.
- */
-
-/*
+ *
  * August 7, 2000
  *
  * Copyright (C) 2000 Chris Bagwell (cbagwell@sprynet.com)
@@ -28,7 +26,7 @@ typedef struct spherestuff {
  *      size and encoding of samples, 
  *      mono/stereo/quad.
  */
-int st_spherestartread(ft_t ft) 
+static int st_spherestartread(ft_t ft) 
 {
         sphere_t sphere = (sphere_t) ft->priv;
         int rc;
@@ -85,7 +83,7 @@ int st_spherestartread(ft_t ft)
                 ft->info.size = i;
             }
             if (strncmp(buf, "channel_count", 13) == 0 && 
-                ft->info.channels == -1)
+                ft->info.channels == 0)
             {
                 sscanf(buf, "%63s %15s %d", fldname, fldtype, &i);
                 ft->info.channels = i;
@@ -96,7 +94,7 @@ int st_spherestartread(ft_t ft)
                 /* Only bother looking for ulaw flag.  All others
                  * should be caught below by default PCM check
                  */
-                if (ft->info.encoding == -1 && 
+                if (ft->info.encoding == ST_ENCODING_UNKNOWN && 
                     strncmp(fldsval,"ulaw",4) == 0)
                 {
                     ft->info.encoding = ST_ENCODING_ULAW;
@@ -146,7 +144,7 @@ int st_spherestartread(ft_t ft)
          * This means encoding is signed if size = word or
          * unsigned if size = byte.
          */
-        if (ft->info.encoding == -1)
+        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
         {
             if (ft->info.size == 1)
                 ft->info.encoding = ST_ENCODING_UNSIGNED;
@@ -190,7 +188,7 @@ int st_spherestartread(ft_t ft)
  * Return number of samples read.
  */
 
-st_ssize_t st_sphereread(ft_t ft, st_sample_t *buf, st_size_t len) 
+static st_size_t st_sphereread(ft_t ft, st_sample_t *buf, st_size_t len) 
 {
     sphere_t sphere = (sphere_t) ft->priv;
 
@@ -204,7 +202,7 @@ st_ssize_t st_sphereread(ft_t ft, st_sample_t *buf, st_size_t len)
     return st_rawread(ft, buf, len);
 }
 
-int st_spherestartwrite(ft_t ft) 
+static int st_spherestartwrite(ft_t ft) 
 {
     int rc;
     int x;
@@ -243,7 +241,7 @@ int st_spherestartwrite(ft_t ft)
         
 }
 
-st_ssize_t st_spherewrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
+static st_size_t st_spherewrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
 {
     sphere_t sphere = (sphere_t) ft->priv;
 
@@ -251,7 +249,7 @@ st_ssize_t st_spherewrite(ft_t ft, const st_sample_t *buf, st_size_t len)
     return st_rawwrite(ft, buf, len);
 }
 
-int st_spherestopwrite(ft_t ft) 
+static int st_spherestopwrite(ft_t ft) 
 {
     int rc;
     char buf[128];

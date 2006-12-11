@@ -104,18 +104,18 @@ static st_effect_t st_reverb_effect;
 /* Private data for SKEL file */
 typedef struct reverbstuff {
         int     counter;                        
-        int     numdelays;
+        size_t  numdelays;
         float   *reverbbuf;
         float   in_gain, out_gain, time;
         float   delay[MAXREVERBS], decay[MAXREVERBS];
-        long    samples[MAXREVERBS], maxsamples;
+        size_t  samples[MAXREVERBS], maxsamples;
         st_sample_t pl, ppl, pppl;
 } *reverb_t;
 
 /*
  * Process options
  */
-int st_reverb_getopts(eff_t effp, int n, char **argv) 
+static int st_reverb_getopts(eff_t effp, int n, char **argv) 
 {
         reverb_t reverb = (reverb_t) effp->priv;
         int i;
@@ -150,10 +150,10 @@ int st_reverb_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare for processing.
  */
-int st_reverb_start(eff_t effp)
+static int st_reverb_start(eff_t effp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
-        int i;
+        size_t i;
 
         reverb->in_gain = 1.0;
 
@@ -208,12 +208,12 @@ int st_reverb_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_reverb_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_reverb_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                    st_size_t *isamp, st_size_t *osamp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
-        int len, done;
-        int i, j;
+        size_t len, done;
+        size_t i, j;
         
         float d_in, d_out;
         st_sample_t out;
@@ -243,12 +243,12 @@ reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsam
 /*
  * Drain out reverb lines. 
  */
-int st_reverb_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_reverb_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
         float d_in, d_out;
         st_sample_t out, l;
-        int i, j;
+        size_t i, j;
         st_size_t done;
 
         i = reverb->counter;
@@ -280,7 +280,7 @@ reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsam
 /*
  * Clean up reverb effect.
  */
-int st_reverb_stop(eff_t effp)
+static int st_reverb_stop(eff_t effp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
 

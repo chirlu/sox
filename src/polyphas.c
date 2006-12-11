@@ -80,7 +80,7 @@ static int win_type  = 0;
 static int win_width = 1024;
 static Float cutoff = 0.95;
 
-int st_poly_getopts(eff_t effp, int n, char **argv)
+static int st_poly_getopts(eff_t effp UNUSED, int n, char **argv)
 {
   /* 0: nuttall
      1: hamming */
@@ -179,9 +179,9 @@ static int prime(int n, int *q0)
   return (q-q0);
 }
 
-static int permute(int *m, int *l, int ct, int ct1, int amalg)
+static int permute(int *m, int *l, int ct, int ct1, size_t amalg)
 {
-  int k, n;
+  size_t k, n;
   int *p;
   int *q;
 
@@ -221,7 +221,7 @@ static int permute(int *m, int *l, int ct, int ct1, int amalg)
 static int optimize_factors(int numer, int denom, int *l1, int *l2)
 {
   int f_min,c_min,u_min,ct1,ct2;
-  int amalg;
+  size_t amalg;
   int k;
   static int m1[MF],m2[MF];
   static int b1[MF],b2[MF];
@@ -239,7 +239,7 @@ static int optimize_factors(int numer, int denom, int *l1, int *l2)
   ct1 = prime(numer,l1);
   ct2 = prime(denom,l2);
 
-  for (amalg = max(9,l2[0]); amalg<= 9+l2[ct2-1]; amalg++) {
+  for (amalg = max(9,l2[0]); amalg <= (size_t)(9+l2[ct2-1]); amalg++) {
     for (k = 0; k<100000; k++) {
       int u,u1,u2,j,f,cost;
       cost = 0;
@@ -369,7 +369,7 @@ static void fir_design(Float *buffer, int length, Float cutoff)
 
 #define RIBLEN 2048
 
-int st_poly_start(eff_t effp)
+static int st_poly_start(eff_t effp)
 {
     poly_t rate = (poly_t) effp->priv;
     static int l1[MF], l2[MF];
@@ -523,7 +523,7 @@ static void update_hist(Float *hist, int hist_size, int in_size)
 
 }
 
-int st_poly_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
+static int st_poly_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                  st_size_t *isamp, st_size_t *osamp)
 {
   poly_t rate = (poly_t) effp->priv;
@@ -534,7 +534,7 @@ int st_poly_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
   s0 = rate->stage[0];            /* the first stage */
   s1 = rate->stage[rate->total];  /* the 'last' stage is output buffer */
   {
-    int in_size, gap, k;
+    st_size_t in_size, gap, k;
 
     in_size = *isamp;
     gap = s0->size - s0->held; /* space available in this 'input' buffer */
@@ -558,7 +558,7 @@ int st_poly_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
   }
 
   if (s0->held == s0->size && s1->held == 0) {
-    int k;
+    st_size_t k;
     /* input buffer full, output buffer empty, so do process */
 
     for(k=0; k<rate->total; k++) {
@@ -587,7 +587,7 @@ int st_poly_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     st_size_t out_size;
     st_size_t oskip;
     Float *out_buf;
-    int k;
+    st_size_t k;
 
     oskip = rate->oskip;
                 out_size = s1->held;
@@ -626,7 +626,7 @@ int st_poly_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 /*
  * Process tail of input samples.
  */
-int st_poly_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_poly_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
   st_size_t in_size;
   /* Call "flow" with NULL input. */
@@ -638,11 +638,11 @@ int st_poly_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-int st_poly_stop(eff_t effp)
+static int st_poly_stop(eff_t effp)
 {
     poly_t rate = (poly_t) effp->priv;
     polystage *s;
-    int k;
+    st_size_t k;
 
     for(k = 0; k <= rate->total; k++) {
       s = rate->stage[k];

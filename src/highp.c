@@ -44,7 +44,7 @@ typedef struct highpstuff {
 /*
  * Process options
  */
-int st_highp_getopts(eff_t effp, int n, char **argv) 
+static int st_highp_getopts(eff_t effp, int n, char **argv) 
 {
         highp_t highp = (highp_t) effp->priv;
 
@@ -59,7 +59,7 @@ int st_highp_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare processing.
  */
-int st_highp_start(eff_t effp)
+static int st_highp_start(eff_t effp)
 {
         highp_t highp = (highp_t) effp->priv;
         if (highp->cutoff > effp->ininfo.rate/2)
@@ -100,7 +100,7 @@ int st_highp_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_highp_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_highp_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                   st_size_t *isamp, st_size_t *osamp)
 {
         highp_t highp = (highp_t) effp->priv;
@@ -125,16 +125,6 @@ int st_highp_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         return (ST_SUCCESS);
 }
 
-/*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
- */
-int st_highp_stop(eff_t effp)
-{
-        /* nothing to do */
-    return (ST_SUCCESS);
-}
-
 static st_effect_t st_highp_effect = {
   "highp",
   "Usage: highp cutoff",
@@ -143,7 +133,7 @@ static st_effect_t st_highp_effect = {
   st_highp_start,
   st_highp_flow,
   st_effect_nothing_drain,
-  st_highp_stop
+  st_effect_nothing
 };
 
 const st_effect_t *st_highp_effect_fn(void)

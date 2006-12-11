@@ -55,17 +55,17 @@ static st_effect_t st_equalizer_effect;
 
 /* Filter parameters */
 typedef struct filterparams {
-  float rate;  // Sample rate
-  float Q;     // Q-factor
-  float cfreq; // Central frequency (Hz)
-  float gain;  // Gain (dB)
-  double x[3]; // In where x[2] <=> x[ n - 2 ]
-  double y[3]; // Out
-  double b[3]; // From this point, equation constants...
+  float rate;  /* Sample rate */
+  float Q;     /* Q-factor */
+  float cfreq; /* Central frequency (Hz) */
+  float gain;  /* Gain (dB) */
+  double x[3]; /* In where x[2] <=> x[ n - 2 ] */
+  double y[3]; /* Out */
+  double b[3]; /* From this point, equation constants... */
   double a[3];
 } *equalizer_t;
 
-int st_equalizer_getopts(eff_t effp, int n, char **argv) 
+static int st_equalizer_getopts(eff_t effp, int n, char **argv) 
 {
   equalizer_t eq = (equalizer_t) effp->priv;
   int i;
@@ -81,20 +81,20 @@ int st_equalizer_getopts(eff_t effp, int n, char **argv)
   sscanf(argv[i++], "%f", &eq->Q);
   sscanf(argv[i++], "%f", &eq->gain);
 
-  // TODO: Would be nice to validate the params..
+  /* FIXME: Would be nice to validate the params.. */
 
   return (ST_SUCCESS);
 }
 
-// Set the filter constants
-int st_equalizer_start(eff_t effp)
+/* Set the filter constants */
+static int st_equalizer_start(eff_t effp)
 {
   equalizer_t eq = (equalizer_t) effp->priv;
   double w0;
   double amp;
   double alpha;
 
-  // Sample rate
+  /* Sample rate */
   eq->rate = effp->ininfo.rate;
 
   w0 = 2*M_PI*eq->cfreq/eq->rate;
@@ -109,7 +109,7 @@ int st_equalizer_start(eff_t effp)
   st_debug("amp: %f", amp);
   st_debug("alpha: %f", alpha);
 
-  // Initialisation
+  /* Initialisation */
   eq->b[0] =  1 + alpha*amp;
   eq->b[1] = -2*cos(w0);
   eq->b[2] =  1 - alpha*amp;
@@ -117,12 +117,12 @@ int st_equalizer_start(eff_t effp)
   eq->a[1] = -2*cos(w0);
   eq->a[2] =  1 - alpha/amp;
 
-  eq->x[0] = 0; // x[n]
-  eq->x[1] = 0; // x[n-1]
-  eq->x[2] = 0; // x[n-2]
-  eq->y[0] = 0; // y[n]
-  eq->y[1] = 0; // y[n-1]
-  eq->y[2] = 0; // y[n-2]
+  eq->x[0] = 0; /* x[n] */
+  eq->x[1] = 0; /* x[n-1] */
+  eq->x[2] = 0; /* x[n-2] */
+  eq->y[0] = 0; /* y[n] */
+  eq->y[1] = 0; /* y[n-1] */
+  eq->y[2] = 0; /* y[n-2] */
 
   if (effp->globalinfo.octave_plot_effect)
   {
@@ -147,7 +147,7 @@ int st_equalizer_start(eff_t effp)
   return (ST_SUCCESS);
 }
 
-int st_equalizer_flow(eff_t effp, const st_sample_t *ibuf,
+static int st_equalizer_flow(eff_t effp, const st_sample_t *ibuf,
                       st_sample_t *obuf, st_size_t *isamp,
                       st_size_t *osamp)
 {

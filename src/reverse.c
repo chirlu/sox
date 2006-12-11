@@ -33,24 +33,10 @@ typedef struct reversestuff {
 #define READING 1
 
 /*
- * Process options: none in our case.
- */
-
-int st_reverse_getopts(eff_t effp, int n, char **argv) 
-{
-        if (n)
-        {
-                st_fail(st_reverse_effect.usage);
-                return (ST_EOF);
-        }
-        return(ST_SUCCESS);
-}
-
-/*
  * Prepare processing: open temporary file.
  */
 
-int st_reverse_start(eff_t effp)
+static int st_reverse_start(eff_t effp)
 {
         reverse_t reverse = (reverse_t) effp->priv;
         reverse->fp = tmpfile();
@@ -67,7 +53,7 @@ int st_reverse_start(eff_t effp)
  * Effect flow: a degenerate case: write input samples on temporary file,
  * don't generate any output samples.
  */
-int st_reverse_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_reverse_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf UNUSED, 
                     st_size_t *isamp, st_size_t *osamp)
 {
         reverse_t reverse = (reverse_t) effp->priv;
@@ -91,7 +77,7 @@ int st_reverse_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
  * Effect drain: generate the actual samples in reverse order.
  */
 
-int st_reverse_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_reverse_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
         reverse_t reverse = (reverse_t) effp->priv;
         st_size_t len, nbytes;
@@ -137,7 +123,7 @@ int st_reverse_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 /*
  * Close and unlink the temporary file.
  */
-int st_reverse_stop(eff_t effp)
+static int st_reverse_stop(eff_t effp)
 {
         reverse_t reverse = (reverse_t) effp->priv;
 
@@ -149,7 +135,7 @@ static st_effect_t st_reverse_effect = {
   "reverse",
   "Usage: Reverse effect takes no options",
   0,
-  st_reverse_getopts,
+  st_effect_nothing_getopts,
   st_reverse_start,
   st_reverse_flow,
   st_reverse_drain,

@@ -1,5 +1,4 @@
 /*
-
     High-pass effect file for SoX
     Copyright (C) 1999 Jan Paul Schmidt <jps@fundament.org>
 
@@ -38,7 +37,7 @@
 
 static st_effect_t st_highpass_effect;
 
-int st_highpass_getopts(eff_t effp, int n, char **argv) 
+static int st_highpass_getopts(eff_t effp, int n, char **argv) 
 {
   butterworth_t butterworth = (butterworth_t)effp->priv;
 
@@ -56,9 +55,7 @@ int st_highpass_getopts(eff_t effp, int n, char **argv)
   return (ST_SUCCESS);
 }
 
-
-
-int st_highpass_start(eff_t effp)
+static int st_highpass_start(eff_t effp)
 {
   butterworth_t butterworth = (butterworth_t) effp->priv;
   double c;

@@ -269,7 +269,6 @@ static void Quantization_and_coding (
 }
 
 void Gsm_LPC_Analysis (
-	struct gsm_state *S,
 	word 		 * s,		/* 0..159 signals	IN/OUT	*/
         word 		 * LARc)	/* 0..7   LARc's	OUT	*/
 {

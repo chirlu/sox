@@ -1,20 +1,13 @@
 /*
- * July 5, 1991
- * Copyright 1991 Lance Norskog And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
- * the consequences of using this software.
- */
-
-/*
  * Sound Tools MAUD file format driver, by Lutz Vieweg 1993
  *
  * supports: mono and stereo, linear, a-law and u-law reading and writing
  *
- * March 3, 1999 - cbagwell
- *   Changed to use rawread for reading.
- *
+ * Copyright 1998-2006 Chris Bagwell and SoX Contributors
+ * This source code is freely redistributable and may be used for
+ * any purpose.  This copyright notice must be maintained. 
+ * Lance Norskog And Sundry Contributors are not responsible for 
+ * the consequences of using this software.
  */
 
 #include "st_i.h"
@@ -40,7 +33,7 @@ static void maudwriteheader(ft_t);
  *      size and encoding of samples, 
  *      mono/stereo/quad.
  */
-int st_maudstartread(ft_t ft) 
+static int st_maudstartread(ft_t ft) 
 {
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         
@@ -218,29 +211,7 @@ int st_maudstartread(ft_t ft)
         return(ST_SUCCESS);
 }
 
-/*
- * Read up to len samples from file.
- * Convert to signed longs.
- * Place in buf[].
- * Return number of samples read.
- */
-
-st_ssize_t st_maudread(ft_t ft, st_sample_t *buf, st_size_t len) 
-{
-        return (st_rawread(ft, buf, len));
-}
-
-/*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
- */
-int st_maudstopread(ft_t ft) 
-{
-        /* Needed because of rawread() */
-        return st_rawstopread(ft);
-}
-
-int st_maudstartwrite(ft_t ft) 
+static int st_maudstartwrite(ft_t ft) 
 {
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         int rc;
@@ -282,7 +253,7 @@ int st_maudstartwrite(ft_t ft)
         return (ST_SUCCESS);
 }
 
-st_ssize_t st_maudwrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
+static st_size_t st_maudwrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
 {
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         
@@ -291,7 +262,7 @@ st_ssize_t st_maudwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
         return st_rawwrite(ft, buf, len);
 }
 
-int st_maudstopwrite(ft_t ft) 
+static int st_maudstopwrite(ft_t ft) 
 {
         int rc;
 
@@ -401,8 +372,8 @@ static st_format_t st_maud_format = {
   NULL,
   ST_FILE_STEREO,
   st_maudstartread,
-  st_maudread,
-  st_maudstopread,
+  st_rawread,
+  st_rawstopread,
   st_maudstartwrite,
   st_maudwrite,
   st_maudstopwrite,

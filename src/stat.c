@@ -45,7 +45,7 @@ typedef struct statstuff {
 /*
  * Process options
  */
-int st_stat_getopts(eff_t effp, int n, char **argv)
+static int st_stat_getopts(eff_t effp, int n, char **argv)
 {
         stat_t stat = (stat_t) effp->priv;
 
@@ -96,7 +96,7 @@ int st_stat_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare processing.
  */
-int st_stat_start(eff_t effp)
+static int st_stat_start(eff_t effp)
 {
         stat_t stat = (stat_t) effp->priv;
         int i;
@@ -152,7 +152,7 @@ static void print_power_spectrum(unsigned samples, float rate, float *re_in, flo
  * Return number of samples processed.
  */
 
-int st_stat_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
+static int st_stat_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                  st_size_t *isamp, st_size_t *osamp)
 {
         stat_t stat = (stat_t) effp->priv;
@@ -231,7 +231,7 @@ int st_stat_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 /*
  * Process tail of input samples.
  */
-int st_stat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_stat_drain(eff_t effp, st_sample_t *obuf UNUSED, st_size_t *osamp)
 {
     stat_t stat = (stat_t) effp->priv;
 
@@ -256,7 +256,7 @@ int st_stat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-int st_stat_stop(eff_t effp)
+static int st_stat_stop(eff_t effp)
 {
         stat_t stat = (stat_t) effp->priv;
         double amp, scale, rms = 0, freq;

@@ -50,7 +50,7 @@ typedef struct avgstuff {
 /*
  * Process options
  */
-int st_avg_getopts(eff_t effp, int n, char **argv) 
+static int st_avg_getopts(eff_t effp, int n, char **argv) 
 {
     avg_t avg = (avg_t) effp->priv;
     double* pans = &avg->sources[0][0];
@@ -118,7 +118,7 @@ int st_avg_getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-int st_avg_start(eff_t effp)
+static int st_avg_start(eff_t effp)
 {
     /*
        Hmmm, this is tricky.  Lemme think:
@@ -508,7 +508,7 @@ int st_avg_start(eff_t effp)
  * Process either isamp or osamp samples, whichever is smaller.
  */
 
-int st_avg_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_avg_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                 st_size_t *isamp, st_size_t *osamp)
 {
     avg_t avg = (avg_t) effp->priv;
@@ -542,7 +542,7 @@ int st_avg_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
  *
  * Should have statistics on right, left, and output amplitudes.
  */
-int st_avg_stop(eff_t effp)
+static int st_avg_stop(eff_t effp UNUSED)
 {
     return (ST_SUCCESS); /* nothing to do */
 }

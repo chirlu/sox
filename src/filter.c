@@ -54,7 +54,7 @@ static void FiltWin(filter_t f, long Nx);
 /*
  * Process options
  */
-int st_filter_getopts(eff_t effp, int n, char **argv)
+static int st_filter_getopts(eff_t effp, int n, char **argv)
 {
         filter_t f = (filter_t) effp->priv;
 
@@ -104,7 +104,7 @@ int st_filter_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare processing.
  */
-int st_filter_start(eff_t effp)
+static int st_filter_start(eff_t effp)
 {
         filter_t f = (filter_t) effp->priv;
         double *Fp0, *Fp1;
@@ -114,7 +114,7 @@ int st_filter_start(eff_t effp)
         f->rate = effp->ininfo.rate;
 
         /* adjust upper frequency to Nyquist if necessary */
-        if (f->freq1 > f->rate/2 || f->freq1 <= 0)
+        if (f->freq1 > (st_sample_t)f->rate/2 || f->freq1 <= 0)
                 f->freq1 = f->rate/2;
 
         if ((f->freq0 < 0) || (f->freq0 > f->freq1))
@@ -126,7 +126,7 @@ int st_filter_start(eff_t effp)
         
         Xh = f->Nwin/2;
         Fp0 = (double *) malloc(sizeof(double) * (Xh + 2)) + 1;
-        if (f->freq0 > f->rate/200) {
+        if (f->freq0 > (st_sample_t)f->rate/200) {
                 Xh0 = makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, 1, 0);
                 if (Xh0 <= 1)
                 {
@@ -138,7 +138,7 @@ int st_filter_start(eff_t effp)
         }
         Fp1 = (double *) malloc(sizeof(double) * (Xh + 2)) + 1;
         /* need Fp[-1] and Fp[Xh] for makeFilter */
-        if (f->freq1 < f->rate/2) {
+        if (f->freq1 < (st_sample_t)f->rate/2) {
                 Xh1 = makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, 1, 0);
                 if (Xh1 <= 1)
                 {
@@ -182,11 +182,11 @@ int st_filter_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_filter_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_filter_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                    st_size_t *isamp, st_size_t *osamp)
 {
         filter_t f = (filter_t) effp->priv;
-        long i, Nx, Nproc;
+        st_size_t i, Nx, Nproc;
 
         /* constrain amount we actually process */
         /* st_debug("Xh %d, Xt %d, isamp %d, ",f->Xh, f->Xt, *isamp); */
@@ -234,7 +234,7 @@ int st_filter_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 /*
  * Process tail of input samples.
  */
-int st_filter_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_filter_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
         filter_t f = (filter_t) effp->priv;
         long isamp_res, osamp_res;
@@ -271,7 +271,7 @@ int st_filter_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_filter_stop(eff_t effp)
+static int st_filter_stop(eff_t effp)
 {
         filter_t f = (filter_t) effp->priv;
 

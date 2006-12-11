@@ -37,7 +37,7 @@ st_format_fn_t st_format_fns[] = {
   st_la_format_fn,
   st_lu_format_fn,
   st_maud_format_fn,
-#if defined(HAVE_LIBMAD) || defined(HAVE_LAME)
+#if defined(HAVE_LIBMAD) || defined(HAVE_LIBMP3LAME)
   st_mp3_format_fn,
 #endif
   st_nul_format_fn,

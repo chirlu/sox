@@ -63,7 +63,7 @@ static int gsmstart_rw(ft_t ft, int w)
         if (!ft->info.rate)
                 ft->info.rate = 8000;
 
-        if (ft->info.channels == -1)
+        if (ft->info.channels == 0)
             ft->info.channels = 1;
 
         p->channels = ft->info.channels;
@@ -88,12 +88,12 @@ static int gsmstart_rw(ft_t ft, int w)
         return (ST_SUCCESS);
 }
 
-int st_gsmstartread(ft_t ft) 
+static int st_gsmstartread(ft_t ft) 
 {
         return gsmstart_rw(ft,0);
 }
 
-int st_gsmstartwrite(ft_t ft)
+static int st_gsmstartwrite(ft_t ft)
 {
         return gsmstart_rw(ft,1);
 }
@@ -105,9 +105,9 @@ int st_gsmstartwrite(ft_t ft)
  * Return number of samples read.
  */
 
-st_ssize_t st_gsmread(ft_t ft, st_sample_t *buf, st_size_t samp)
+static st_size_t st_gsmread(ft_t ft, st_sample_t *buf, st_size_t samp)
 {
-        int done = 0;
+        size_t done = 0;
         int r, ch, chans;
         gsm_signal *gbuff;
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
@@ -183,9 +183,9 @@ static int gsmflush(ft_t ft)
         return (ST_SUCCESS);
 }
 
-st_ssize_t st_gsmwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
+static st_size_t st_gsmwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
-        int done = 0;
+        size_t done = 0;
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
 
         while (done < samp)
@@ -206,7 +206,7 @@ st_ssize_t st_gsmwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
         return done;
 }
 
-int st_gsmstopread(ft_t ft)
+static int st_gsmstopread(ft_t ft)
 {
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
         int ch;
@@ -219,7 +219,7 @@ int st_gsmstopread(ft_t ft)
         return (ST_SUCCESS);
 }
 
-int st_gsmstopwrite(ft_t ft)
+static int st_gsmstopwrite(ft_t ft)
 {
         int rc;
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;

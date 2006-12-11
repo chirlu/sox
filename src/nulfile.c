@@ -17,26 +17,26 @@
 #include "st_i.h"
 #include <string.h>
 
-int st_nulstartread(ft_t ft) 
+static int st_nulstartread(ft_t ft) 
 {
   /* If format parameters are not given, set somewhat arbitrary
    * (but commonly used) defaults: */
   if (ft->info.rate     ==  0) ft->info.rate     = 44100;
-  if (ft->info.channels == -1) ft->info.channels = 2;
+  if (ft->info.channels == 0) ft->info.channels = 2;
   if (ft->info.size     == -1) ft->info.size     = ST_SIZE_WORD;
-  if (ft->info.encoding == -1) ft->info.encoding = ST_ENCODING_SIGN2;
+  if (ft->info.encoding == ST_ENCODING_UNKNOWN) ft->info.encoding = ST_ENCODING_SIGN2;
 
   return ST_SUCCESS;
 }
 
-st_ssize_t st_nulread(ft_t ft, st_sample_t *buf, st_size_t len) 
+static st_size_t st_nulread(ft_t ft UNUSED, st_sample_t *buf, st_size_t len) 
 {
   /* Reading from null generates silence i.e. (st_sample_t)0. */
   memset(buf, 0, sizeof(st_sample_t) * len);
   return len; /* Return number of samples "read". */
 }
 
-st_ssize_t st_nulwrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
+static st_size_t st_nulwrite(ft_t ft UNUSED, const st_sample_t *buf UNUSED, st_size_t len) 
 {
   /* Writing to null just discards the samples */
   return len; /* Return number of samples "written". */

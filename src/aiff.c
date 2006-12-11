@@ -74,7 +74,7 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft);
 static int commentChunk(char **text, char *chunkDescription, ft_t ft);
 static void reportInstrument(ft_t ft);
 
-int st_aiffseek(ft_t ft, st_size_t offset) 
+static int st_aiffseek(ft_t ft, st_size_t offset) 
 {
     aiff_t aiff = (aiff_t ) ft->priv;
     st_size_t new_offset, channel_block, alignment;
@@ -99,7 +99,7 @@ int st_aiffseek(ft_t ft, st_size_t offset)
     return(ft->st_errno);
 }
 
-int st_aiffstartread(ft_t ft) 
+static int st_aiffstartread(ft_t ft) 
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         char buf[5];
@@ -408,7 +408,7 @@ int st_aiffstartread(ft_t ft)
         if (foundcomm) {
                 ft->info.channels = channels;
                 ft->info.rate = rate;
-                if (ft->info.encoding != -1 && ft->info.encoding != ST_ENCODING_SIGN2)
+                if (ft->info.encoding != ST_ENCODING_UNKNOWN && ft->info.encoding != ST_ENCODING_SIGN2)
                     st_report("AIFF only supports signed data.  Forcing to signed.");
                 ft->info.encoding = ST_ENCODING_SIGN2;
                 if (bits <= 8)
@@ -441,9 +441,9 @@ int st_aiffstartread(ft_t ft)
                     return(ST_EOF);
                 }
         } else  {
-                if ((ft->info.channels == -1)
+                if ((ft->info.channels == 0)
                         || (ft->info.rate == 0)
-                        || (ft->info.encoding == -1)
+                        || (ft->info.encoding == ST_ENCODING_UNKNOWN)
                         || (ft->info.size == -1)) {
                   st_report("You must specify # channels, sample rate, signed/unsigned,");
                   st_report("and 8/16 on the command line.");
@@ -633,7 +633,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
   st_debug("%-10s   \"%s\"", chunkDescription, *text);
   /* make sure we read the whole chunk */
   if (totalReadLength < chunksize) {
-       int i;
+       size_t i;
        char c;
        for (i=0; i < chunksize - totalReadLength; i++ ) {
                st_readbuf(ft, &c, 1, 1);
@@ -642,14 +642,12 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
   return(ST_SUCCESS);
 }
 
-st_ssize_t st_aiffread(ft_t ft, st_sample_t *buf, st_size_t len)
+static st_size_t st_aiffread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         st_ssize_t done;
 
-        if (len < 0)
-            return ST_EOF;
-        else if ((st_size_t)len > aiff->nsamples)
+        if ((st_size_t)len > aiff->nsamples)
                 len = aiff->nsamples;
         done = st_rawread(ft, buf, len);
         if (done == 0 && aiff->nsamples != 0)
@@ -658,7 +656,7 @@ st_ssize_t st_aiffread(ft_t ft, st_sample_t *buf, st_size_t len)
         return done;
 }
 
-int st_aiffstopread(ft_t ft) 
+static int st_aiffstopread(ft_t ft) 
 {
         char buf[5];
         uint32_t chunksize;
@@ -701,7 +699,7 @@ int st_aiffstopread(ft_t ft)
    Strictly spoken this is not legal, but the playaiff utility
    will still be able to play the resulting file. */
 
-int st_aiffstartwrite(ft_t ft)
+static int st_aiffstartwrite(ft_t ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         int rc;
@@ -726,7 +724,7 @@ int st_aiffstartwrite(ft_t ft)
                 ft->info.encoding = ST_ENCODING_SIGN2;
                 ft->info.size = ST_SIZE_WORD;
         }
-        if (ft->info.encoding != -1 && ft->info.encoding != ST_ENCODING_SIGN2)
+        if (ft->info.encoding != ST_ENCODING_UNKNOWN && ft->info.encoding != ST_ENCODING_SIGN2)
             st_report("AIFF only supports signed data.  Forcing to signed.");
         ft->info.encoding = ST_ENCODING_SIGN2; /* We have a fixed encoding */
 
@@ -739,7 +737,7 @@ int st_aiffstartwrite(ft_t ft)
         return(aiffwriteheader(ft, 0x7f000000L / (ft->info.size*ft->info.channels)));
 }
 
-st_ssize_t st_aiffwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
+static st_size_t st_aiffwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         aiff->nsamples += len;
@@ -747,7 +745,7 @@ st_ssize_t st_aiffwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
         return(len);
 }
 
-int st_aiffstopwrite(ft_t ft)
+static int st_aiffstopwrite(ft_t ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         int rc;
@@ -914,7 +912,7 @@ static int aiffwriteheader(ft_t ft, st_size_t nframes)
         return(ST_SUCCESS);
 }
 
-int st_aifcstartwrite(ft_t ft)
+static int st_aifcstartwrite(ft_t ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         int rc;
@@ -939,7 +937,7 @@ int st_aifcstartwrite(ft_t ft)
                 ft->info.encoding = ST_ENCODING_SIGN2;
                 ft->info.size = ST_SIZE_WORD;
         }
-        if (ft->info.encoding != -1 && ft->info.encoding != ST_ENCODING_SIGN2)
+        if (ft->info.encoding != ST_ENCODING_UNKNOWN && ft->info.encoding != ST_ENCODING_SIGN2)
             st_report("AIFC only supports signed data.  Forcing to signed.");
         ft->info.encoding = ST_ENCODING_SIGN2; /* We have a fixed encoding */
 
@@ -952,7 +950,7 @@ int st_aifcstartwrite(ft_t ft)
         return(aifcwriteheader(ft, 0x7f000000L / (ft->info.size*ft->info.channels)));
 }
 
-int st_aifcstopwrite(ft_t ft)
+static int st_aifcstopwrite(ft_t ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         int rc;

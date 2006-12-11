@@ -14,13 +14,13 @@
 
 #include <string.h>
 
-#if defined(HAVE_LIBMAD) || defined(HAVE_LAME)
+#if defined(HAVE_LIBMAD) || defined(HAVE_LIBMP3LAME)
 
 #ifdef HAVE_LIBMAD
 #include <mad.h>
 #endif
 
-#ifdef HAVE_LAME
+#ifdef HAVE_LIBMP3LAME
 #include <lame/lame.h>
 #include <math.h>
 #endif
@@ -38,9 +38,9 @@ struct mp3priv {
         st_ssize_t              cursamp;
         st_size_t               FrameCount;
 #endif /*HAVE_LIBMAD*/
-#ifdef HAVE_LAME
+#ifdef HAVE_LIBMP3LAME
         lame_global_flags       *gfp;
-#endif /*HAVE_LAME*/
+#endif /*HAVE_LIBMP3LAME*/
 };
 
 #ifdef HAVE_LIBMAD
@@ -159,7 +159,7 @@ static int st_mp3_inputtag(ft_t ft)
     return rc;
 }
 
-int st_mp3startread(ft_t ft) 
+static int st_mp3startread(ft_t ft) 
 {
     struct mp3priv *p = (struct mp3priv *) ft->priv;
     size_t ReadSize;
@@ -279,12 +279,12 @@ error:
  * Place in buf[].
  * Return number of samples read.
  */
-st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_size_t len)
+static st_size_t st_mp3read(ft_t ft, st_sample_t *buf, st_size_t len)
 {
     struct mp3priv *p = (struct mp3priv *) ft->priv;
-    st_ssize_t donow,i,done=0;
+    st_size_t donow,i,done=0;
     mad_fixed_t sample;
-    int chan;
+    size_t chan;
 
     do {
         donow=min(len,(p->Synth->pcm.length - p->cursamp)*ft->info.channels);
@@ -342,7 +342,7 @@ st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_size_t len)
     return done;
 }
 
-int st_mp3stopread(ft_t ft)
+static int st_mp3stopread(ft_t ft)
 {
   struct mp3priv *p=(struct mp3priv*) ft->priv;
 
@@ -359,7 +359,7 @@ int st_mp3stopread(ft_t ft)
   return ST_SUCCESS;
 }
 #else /*HAVE_LIBMAD*/
-int st_mp3startread(ft_t ft)
+static int st_mp3startread(ft_t ft)
 {
   st_fail_errno(ft,ST_EOF,"SoX was compiled without MP3 decoding support");
   return ST_EOF;
@@ -378,17 +378,18 @@ int st_mp3stopread(ft_t ft)
 }
 #endif /*HAVE_LIBMAD*/
 
-#ifdef HAVE_LAME
-void null_error_func(const char* string, va_list va){
+#ifdef HAVE_LIBMP3LAME
+static void null_error_func(const char* string UNUSED, va_list va UNUSED)
+{
   return;
 }
 
-int st_mp3startwrite(ft_t ft)
+static int st_mp3startwrite(ft_t ft)
 {
   struct mp3priv *p = (struct mp3priv *) ft->priv;
   
-  if (ft->info.encoding != ST_ENCODING_MP3){
-    if(ft->info.encoding != -1)
+  if (ft->info.encoding != ST_ENCODING_MP3) {
+    if(ft->info.encoding != ST_ENCODING_UNKNOWN)
       st_report("Encoding forced to MP3");
     ft->info.encoding = ST_ENCODING_MP3;
   }
@@ -399,7 +400,7 @@ int st_mp3startwrite(ft_t ft)
     return(ST_EOF);
   }
 
-  if (ft->info.channels != -1){
+  if (ft->info.channels != ST_ENCODING_UNKNOWN) {
     if ( (lame_set_num_channels(p->gfp,ft->info.channels)) < 0) {
         st_fail_errno(ft,ST_EOF,"Unsupported number of channels");
         return(ST_EOF);
@@ -431,16 +432,16 @@ int st_mp3startwrite(ft_t ft)
   return(ST_SUCCESS);
 }
 
-st_ssize_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
+static st_size_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
     struct mp3priv *p = (struct mp3priv *)ft->priv;
     char *mp3buffer;
-    int mp3buffer_size;
+    st_size_t mp3buffer_size;
     short signed int *buffer_l, *buffer_r = NULL;
     int nsamples = samp/ft->info.channels;
     int i,j;
     st_ssize_t done = 0;
-    int written;
+    st_size_t written;
 
     /* NOTE: This logic assumes that "short int" is 16-bits
      * on all platforms.  It happens to be for all that I know
@@ -504,7 +505,7 @@ st_ssize_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
 
     if ((written = lame_encode_buffer(p->gfp,buffer_l, buffer_r,
                                       nsamples, (unsigned char *)mp3buffer,
-                                      mp3buffer_size)) < 0){
+                                      mp3buffer_size)) < mp3buffer_size){
         st_fail_errno(ft,ST_EOF,"Encoding failed");
         goto end;
     }
@@ -528,7 +529,7 @@ end4:
     return done;
 }
 
-int st_mp3stopwrite(ft_t ft)
+static int st_mp3stopwrite(ft_t ft)
 {
   struct mp3priv *p = (struct mp3priv *) ft->priv;
   char mp3buffer[7200];
@@ -537,7 +538,7 @@ int st_mp3stopwrite(ft_t ft)
   if ( (written=lame_encode_flush(p->gfp, (unsigned char *)mp3buffer, 7200)) <0){
     st_fail_errno(ft,ST_EOF,"Encoding failed");
   }
-  else if (st_writebuf(ft, mp3buffer, 1, written) < written){
+  else if ((int)st_writebuf(ft, mp3buffer, 1, written) < written){
     st_fail_errno(ft,ST_EOF,"File write failed");
   }
 
@@ -545,25 +546,25 @@ int st_mp3stopwrite(ft_t ft)
   return ST_SUCCESS;
 }
 
-#else /* HAVE_LAME */
-int st_mp3startwrite(ft_t ft)
+#else /* HAVE_LIBMP3LAME */
+static int st_mp3startwrite(ft_t ft UNUSED)
 {
-  st_fail_errno(ft,ST_EOF,"Sorry, no MP3 encoding support");
+  st_fail_errno(ft,ST_EOF,"SoX was compiled without MP3 encoding support");
   return ST_EOF;
 }
 
-st_ssize_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
+static st_size_t st_mp3write(ft_t ft UNUSED, const st_sample_t *buf UNUSED, st_size_t samp UNUSED)
 {
-  st_fail_errno(ft,ST_EOF,"Sorry, no MP3 encoding support");
-  return ST_EOF;
+  st_fail_errno(ft,ST_EOF,"SoX was compiled without MP3 encoding support");
+  return 0;
 }
 
-int st_mp3stopwrite(ft_t ft)
+static int st_mp3stopwrite(ft_t ft)
 {
-  st_fail_errno(ft,ST_EOF,"Sorry, no MP3 encoding support");
+  st_fail_errno(ft,ST_EOF,"SoX was compiled without MP3 encoding support");
   return ST_EOF;
 }
-#endif /* HAVE_LAME */
+#endif /* HAVE_LIBMP3LAME */
 
 /* MP3 */
 static const char *mp3names[] = {

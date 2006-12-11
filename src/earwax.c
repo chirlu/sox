@@ -1,13 +1,4 @@
 /*
- * November 9, 2000
- * Copyright (C) 2000 Edward Beingessner And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Edward Beingessner And Sundry Contributors are not responsible for 
- * the consequences of using this software.
- */
-
-/*
  * earwax - makes listening to headphones easier
  * 
  * This effect takes a stereo sound that is meant to be listened to
@@ -23,7 +14,13 @@
  * Note:
  *   This filter only works for 44.1 kHz stereo signals (cd format)
  * 
-*/
+ * November 9, 2000
+ * Copyright (C) 2000 Edward Beingessner And Sundry Contributors
+ * This source code is freely redistributable and may be used for
+ * any purpose.  This copyright notice must be maintained. 
+ * Edward Beingessner And Sundry Contributors are not responsible for 
+ * the consequences of using this software.
+ */
 
 #include "st_i.h"
 
@@ -76,22 +73,9 @@ typedef struct earwaxstuff {
 } *earwax_t;
 
 /*
- * Process options
- */
-int st_earwax_getopts(eff_t effp, int n, char **argv) 
-{
-  /* no options */
-  if (n){
-    st_fail(st_earwax_effect.usage);
-    return (ST_EOF);
-  }
-  return (ST_SUCCESS);
-}
-
-/*
  * Prepare for processing.
  */
-int st_earwax_start(eff_t effp)
+static int st_earwax_start(eff_t effp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int i;
@@ -125,7 +109,7 @@ int st_earwax_start(eff_t effp)
  * Return number of samples processed.
  */
 
-int st_earwax_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_earwax_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                    st_size_t *isamp, st_size_t *osamp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
@@ -157,7 +141,7 @@ int st_earwax_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 /*
  * Drain out taps.
  */
-int st_earwax_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int st_earwax_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int i,j;
@@ -178,7 +162,7 @@ int st_earwax_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 /*
  * Clean up taps.
  */
-int st_earwax_stop(eff_t effp)
+static int st_earwax_stop(eff_t effp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
 
@@ -191,7 +175,7 @@ static st_effect_t st_earwax_effect = {
   "earwax",
   "Usage: The earwax filtering effect takes no options",
   ST_EFF_MCHAN,
-  st_earwax_getopts,
+  st_effect_nothing_getopts,
   st_earwax_start,
   st_earwax_flow,
   st_earwax_drain,

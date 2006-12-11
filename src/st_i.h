@@ -21,17 +21,8 @@
 #endif
 
 /* various gcc optimizations and portablity defines */
-#ifdef __GNUC__
 #define NORET __attribute__((noreturn))
-#else
-#define NORET
-#endif
-
-#ifdef USE_REGPARM
 #define REGPARM(n) __attribute__((regparm(n)))
-#else
-#define REGPARM(n)
-#endif
 
 /* declared in misc.c */
 typedef struct {char const *text; int value;} enum_item;
@@ -45,14 +36,14 @@ extern enum_item const st_wave_enum[];
 void st_generate_wave_table(
     st_wave_t wave_type,
     st_data_t data_type,
-    void * table,
+    void *table,
     uint32_t table_size,
     double min,
     double max,
     double phase);
 
-st_sample_t st_gcd(st_sample_t a, st_sample_t b) REGPARM(2);
-st_sample_t st_lcm(st_sample_t a, st_sample_t b) REGPARM(2);
+REGPARM(2) st_sample_t st_gcd(st_sample_t a, st_sample_t b);
+REGPARM(2) st_sample_t st_lcm(st_sample_t a, st_sample_t b);
 
 #ifndef HAVE_STRCASECMP
 int strcasecmp(const char *s1, const char *s2);
@@ -69,8 +60,8 @@ void st_initrand(void);
  * possible byte swapping.
  */
 /* declared in misc.c */
-st_ssize_t st_readbuf(ft_t ft, void *buf, size_t size, st_size_t len);
-st_ssize_t st_writebuf(ft_t ft, void const *buf, size_t size, st_size_t len);
+size_t st_readbuf(ft_t ft, void *buf, size_t size, st_size_t len);
+size_t st_writebuf(ft_t ft, void const *buf, size_t size, st_size_t len);
 int st_reads(ft_t ft, char *c, st_size_t len);
 int st_writes(ft_t ft, char *c);
 int st_readb(ft_t ft, uint8_t *ub);
@@ -232,10 +223,10 @@ extern const st_format_t *st_xa_format_fn(void);
 /* Raw I/O
  */
 int st_rawstartread(ft_t ft);
-st_ssize_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp);
+st_size_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp);
 int st_rawstopread(ft_t ft);
 int st_rawstartwrite(ft_t ft);
-st_ssize_t st_rawwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp);
+st_size_t st_rawwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp);
 int st_rawstopwrite(ft_t ft);
 int st_rawseek(ft_t ft, st_size_t offset);
 
@@ -243,11 +234,12 @@ int st_rawseek(ft_t ft, st_size_t offset);
  * a file handler or effect doesn't need to do anything special
  */
 int st_format_nothing(ft_t ft);
-st_ssize_t st_format_nothing_read_io(ft_t ft, st_sample_t *buf, st_size_t len);
-st_ssize_t st_format_nothing_write_io(ft_t ft, const st_sample_t *buf, st_size_t len);
+st_size_t st_format_nothing_read_io(ft_t ft, st_sample_t *buf, st_size_t len);
+st_size_t st_format_nothing_write_io(ft_t ft, const st_sample_t *buf, st_size_t len);
 int st_format_nothing_seek(ft_t ft, st_size_t offset);
 int st_effect_nothing(eff_t effp);
 int st_effect_nothing_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
+int st_effect_nothing_getopts(eff_t effp, int n, char **argv UNUSED);
 
 /*=============================================================================
  * Effects
@@ -307,9 +299,15 @@ extern const st_effect_t *st_trim_effect_fn(void);
 extern const st_effect_t *st_vibro_effect_fn(void);
 extern const st_effect_t *st_vol_effect_fn(void);
 
-/* Needed in sox.c
- */
+/* Needed in sox.c */
 st_size_t st_trim_get_start(eff_t effp);
 void st_trim_clear_start(eff_t effp);
+
+/* Needed in rate.c */
+int st_resample_start(eff_t effp);
+int st_resample_getopts(eff_t effp, int n, char **argv);
+int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, st_size_t *isamp, st_size_t *osamp);
+int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
+int st_resample_stop(eff_t effp);
 
 #endif

@@ -49,14 +49,14 @@ enum_item const synth_type[] = {
   ENUM_ITEM(SYNTH_,PINKNOISE )
   ENUM_ITEM(SYNTH_,BROWNNOISE)
   ENUM_ITEM(SYNTH_,EXP       )
-  {0}};
+  {0, 0}};
 
 enum_item const combine_type[] = {
   ENUM_ITEM(SYNTH_,CREATE)
   ENUM_ITEM(SYNTH_,MIX   )
   ENUM_ITEM(SYNTH_,AMOD  )
   ENUM_ITEM(SYNTH_,FMOD  )
-  {0}};
+  {0, 0}};
 
 /* do not ask me for the colored noise, i copied the 
  * algorithm somewhere...
@@ -97,7 +97,7 @@ typedef struct{
 } PinkNoise;
 
 /* Setup PinkNoise structure for N rows of generators. */
-void InitializePinkNoise( PinkNoise *pink, int numRows )
+static void InitializePinkNoise( PinkNoise *pink, int numRows )
 {
         int i;
         long pmax;
@@ -112,7 +112,7 @@ void InitializePinkNoise( PinkNoise *pink, int numRows )
 }
 
 /* Generate Pink noise values between -1.0 and +1.0 */
-float GeneratePinkNoise( PinkNoise *pink )
+static float GeneratePinkNoise( PinkNoise *pink )
 {
         long newRandom;
         long sum;
@@ -238,7 +238,7 @@ static void parmcopy(synth_t sy, int s, int d){
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-int st_synth_getopts(eff_t effp, int n, char **argv) 
+static int st_synth_getopts(eff_t effp, int n, char **argv) 
 {
     int argn;
     char *hlp;
@@ -372,7 +372,7 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-int st_synth_start(eff_t effp)
+static int st_synth_start(eff_t effp)
 {
     int i;
     int c;
@@ -664,7 +664,7 @@ static st_sample_t do_synth(st_sample_t iv, synth_t synth, int c){
 /*
  * Processed signed long samples from ibuf to obuf.
  */
-int st_synth_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int st_synth_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                   st_size_t *isamp, st_size_t *osamp)
 {
     synth_t synth = (synth_t) effp->priv;
@@ -701,26 +701,6 @@ int st_synth_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     return result;
 }
 
-/*
- * Drain out remaining samples if the effect generates any.
- */
-
-int st_synth_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
-{
-    *osamp = 0;
-    return ST_EOF;
-}
-
-/*
- * Do anything required when you stop reading samples.  
- *      (free allocated memory, etc.)
- */
-int st_synth_stop(eff_t effp)
-{
-    /* nothing to do */
-    return (ST_SUCCESS);
-}
-
 static st_effect_t st_synth_effect = {
   "synth",
   "Usage: synth [len] {[type] [combine] [freq[-freq2]] [off] [ph] [p1] [p2] [p3]}\n"
@@ -741,8 +721,8 @@ static st_effect_t st_synth_effect = {
   st_synth_getopts,
   st_synth_start,
   st_synth_flow,
-  st_synth_drain,
-  st_synth_stop
+  st_effect_nothing_drain,
+  st_effect_nothing
 };
 
 const st_effect_t *st_synth_effect_fn(void)

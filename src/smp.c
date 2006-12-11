@@ -169,7 +169,7 @@ static int writetrailer(ft_t ft, struct smptrailer *trailer)
         return(ST_SUCCESS);
 }
 
-int st_smpseek(ft_t ft, st_size_t offset) 
+static int st_smpseek(ft_t ft, st_size_t offset) 
 {
     int new_offset, channel_block, alignment;
     smp_t smp = (smp_t) ft->priv;
@@ -200,7 +200,7 @@ int st_smpseek(ft_t ft, st_size_t offset)
  *      size and encoding of samples, 
  *      mono/stereo/quad.
  */
-int st_smpstartread(ft_t ft) 
+static int st_smpstartread(ft_t ft) 
 {
         smp_t smp = (smp_t) ft->priv;
         int i;
@@ -326,11 +326,11 @@ int st_smpstartread(ft_t ft)
  * Place in buf[].
  * Return number of samples read.
  */
-st_ssize_t st_smpread(ft_t ft, st_sample_t *buf, st_size_t len) 
+static st_size_t st_smpread(ft_t ft, st_sample_t *buf, st_size_t len) 
 {
         smp_t smp = (smp_t) ft->priv;
         unsigned short datum;
-        int done = 0;
+        st_size_t done = 0;
         
         for(; done < len && smp->NoOfSamps; done++, smp->NoOfSamps--) {
                 st_readw(ft, &datum);
@@ -340,16 +340,7 @@ st_ssize_t st_smpread(ft_t ft, st_sample_t *buf, st_size_t len)
         return done;
 }
 
-/*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
- */
-int st_smpstopread(ft_t ft) 
-{
-    return(ST_SUCCESS);
-}
-
-int st_smpstartwrite(ft_t ft) 
+static int st_smpstartwrite(ft_t ft) 
 {
         smp_t smp = (smp_t) ft->priv;
         struct smpheader header;
@@ -390,11 +381,11 @@ int st_smpstartwrite(ft_t ft)
         return(ST_SUCCESS);
 }
 
-st_ssize_t st_smpwrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
+static st_size_t st_smpwrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
 {
         smp_t smp = (smp_t) ft->priv;
-        register int datum;
-        st_ssize_t done = 0;
+        int datum;
+        st_size_t done = 0;
 
         while(done < len) {
                 datum = (int) ST_SAMPLE_TO_SIGNED_WORD(*buf++, ft->clippedCount);
@@ -406,7 +397,7 @@ st_ssize_t st_smpwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
         return(done);
 }
 
-int st_smpstopwrite(ft_t ft) 
+static int st_smpstopwrite(ft_t ft) 
 {
         smp_t smp = (smp_t) ft->priv;
         struct smptrailer trailer;
@@ -436,7 +427,7 @@ static st_format_t st_smp_format = {
   ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK,
   st_smpstartread,
   st_smpread,
-  st_smpstopread,
+  st_format_nothing,
   st_smpstartwrite,
   st_smpwrite,
   st_smpstopwrite,

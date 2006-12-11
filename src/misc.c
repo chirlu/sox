@@ -15,6 +15,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <time.h>
 #include <string.h>
 #include <ctype.h>
@@ -83,16 +84,16 @@ static const char writerr[] = "Error writing sample file.  You are probably out 
  * Returns number of elements read, not bytes read.
  */
 
-st_ssize_t st_readbuf(ft_t ft, void *buf, size_t size, st_size_t len)
+size_t st_readbuf(ft_t ft, void *buf, size_t size, st_size_t len)
 {
     return fread(buf, size, len, ft->fp);
 }
 
 /* Write a buffer of data of length len and each element is size bytes.
- * Returns number of elements writen, not bytes writen.
+ * Returns number of elements writen, not bytes written.
  */
 
-st_ssize_t st_writebuf(ft_t ft, void const *buf, size_t size, st_size_t len)
+size_t st_writebuf(ft_t ft, void const *buf, size_t size, st_size_t len)
 {
     return fwrite(buf, size, len, ft->fp);
 }
@@ -157,13 +158,11 @@ int st_reads(ft_t ft, char *c, st_size_t len)
             return (ST_EOF);
         }
         if (in == 0 || in == '\n')
-        {
             break;
-        }
 
         *sc = in;
         sc++;
-    } while (sc - c < len);
+    } while (sc - c < (ptrdiff_t)len);
     *sc = 0;
     return(ST_SUCCESS);
 }
@@ -306,7 +305,7 @@ int st_writedf(ft_t ft, double d)
 }
 
 /* generic swap routine. Swap l and place in to f (datatype length = n) */
-void st_swapb(char *l, char *f, int n)
+static void st_swapb(char *l, char *f, int n)
 {
     register int i;
 
@@ -358,18 +357,28 @@ double st_swapd(double df)
 
 
 /* dummy format routines for do-nothing functions */
-int st_format_nothing(ft_t ft) { return(ST_SUCCESS); }
-st_ssize_t st_format_nothing_read_io(ft_t ft, st_sample_t *buf, st_size_t len) { return(0); }
-st_ssize_t st_format_nothing_write_io(ft_t ft, const st_sample_t *buf, st_size_t len) { return(0); }
-int st_format_nothing_seek(ft_t ft, st_size_t offset) { st_fail_errno(ft, ST_ENOTSUP, "operation not supported"); return(ST_EOF); }
+int st_format_nothing(ft_t ft UNUSED) { return(ST_SUCCESS); }
+st_size_t st_format_nothing_read_io(ft_t ft UNUSED, st_sample_t *buf UNUSED, st_size_t len UNUSED) { return(0); }
+st_size_t st_format_nothing_write_io(ft_t ft UNUSED, const st_sample_t *buf UNUSED, st_size_t len UNUSED) { return(0); }
+int st_format_nothing_seek(ft_t ft UNUSED, st_size_t offset UNUSED) { st_fail_errno(ft, ST_ENOTSUP, "operation not supported"); return(ST_EOF); }
 
 /* dummy effect routine for do-nothing functions */
-int st_effect_nothing(eff_t effp) { return(ST_SUCCESS); }
-int st_effect_nothing_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+int st_effect_nothing(eff_t effp UNUSED) { return(ST_SUCCESS); }
+int st_effect_nothing_drain(eff_t effp UNUSED, st_sample_t *obuf UNUSED, st_size_t *osamp)
   { /* Inform no more samples to drain */ *osamp = 0; return(ST_EOF); }
 
+int st_effect_nothing_getopts(eff_t effp, int n, char **argv UNUSED)
+{
+     if (n) {
+          st_fail(effp->h->usage);
+          return (ST_EOF);
+     }
+     return (ST_SUCCESS);
+}
+
+
 /* here for linear interp.  might be useful for other things */
-st_sample_t st_gcd(st_sample_t a, st_sample_t b)
+REGPARM(2) st_sample_t st_gcd(st_sample_t a, st_sample_t b)
 {
         if (b == 0)
                 return a;
@@ -377,7 +386,7 @@ st_sample_t st_gcd(st_sample_t a, st_sample_t b)
                 return st_gcd(b, a % b);
 }
 
-st_sample_t st_lcm(st_sample_t a, st_sample_t b)
+REGPARM(2) st_sample_t st_lcm(st_sample_t a, st_sample_t b)
 {
     /* parenthesize this way to avoid st_sample_t overflow in product term */
     return a * (b / st_gcd(a, b));
@@ -429,7 +438,7 @@ void st_initrand(void) {
 void st_generate_wave_table(
     st_wave_t wave_type,
     st_data_t data_type,
-    void * table,
+    void *table,
     uint32_t table_size,
     double min,
     double max,
@@ -457,19 +466,47 @@ void st_generate_wave_table(
         case 3:         d = d - 1.5; break;
       }
       break;
+
+      default: /* Oops! FIXME */
+        d = 0.0; /* Make sure we have a value */
+      break;
     }
     d  = d * (max - min) + min;
     switch (data_type)
     {
-      case ST_FLOAT : *(float  *)table = d; table += sizeof(float ); continue;
-      case ST_DOUBLE: *(double *)table = d; table += sizeof(double); continue;
+      case ST_FLOAT:
+        {
+          float *fp = (float *)table;
+          *fp++ = (float)d;
+          table = fp;
+          continue;
+        }
+      case ST_DOUBLE:
+        {
+          double *dp = (double *)table;
+          *dp++ = d;
+          table = dp;
+          continue;
+        }
       default: break;
     }
     d += d < 0? -0.5 : +0.5;
     switch (data_type)
     {
-      case ST_SHORT : *(short  *)table = d; table += sizeof(short ); continue;
-      case ST_INT   : *(int    *)table = d; table += sizeof(int   ); continue;
+      case ST_SHORT:
+        {
+          short *sp = table;
+          *sp++ = (short)d;
+          table = sp;
+          continue;
+        }
+      case ST_INT:
+        {
+          int *ip = table;
+          *ip++ = (int)d;
+          table = ip;
+          continue;
+        }
       default: break;
     }
   }
@@ -542,5 +579,5 @@ enum_item const * find_enum_text(char const * text, enum_item const * enum_items
 enum_item const st_wave_enum[] = {
   ENUM_ITEM(ST_WAVE_,SINE)
   ENUM_ITEM(ST_WAVE_,TRIANGLE)
-  {0}};
+  {0, 0}};
 

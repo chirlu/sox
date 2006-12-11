@@ -26,8 +26,7 @@ extern void AdpcmBlockMashI(
 	int n,              /* samples to encode PER channel, REQUIRE */
 	int *st,            /* input/output steps, 16<=st[i] */
 	unsigned char *obuff,      /* output buffer[blockAlign] */
-	int blockAlign,     /* >= 7*chans + n/2          */
-	int opt             /* non-zero allows some cpu-intensive code to improve output */
+	int blockAlign      /* >= 7*chans + n/2          */
 );
 
 /* Some helper functions for computing samples/block and blockalign */
