@@ -85,6 +85,12 @@ int st_error(ft_t ft);
 void st_rewind(ft_t ft);
 void st_clearerr(ft_t ft);
 
+/* Utilities to read/write values endianness-independently */
+uint32_t get32_le(unsigned char **p);
+uint16_t get16_le(unsigned char **p);
+void put32_le(unsigned char **p, uint32_t val);
+void put16_le(unsigned char **p, int16_t val);
+
 /* Utilities to byte-swap values, use libc optimized macros if possible  */
 #ifdef HAVE_BYTESWAP_H
 #define st_swapw(x) bswap_16(x)

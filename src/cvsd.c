@@ -373,37 +373,6 @@ struct dvms_header {
 #define DVMS_HEADER_LEN 120
 
 /* ---------------------------------------------------------------------- */
-/* FIXME: Move these to misc.c */
-static uint32_t get32(unsigned char **p)
-{
-        uint32_t val = (((*p)[3]) << 24) | (((*p)[2]) << 16) | 
-                (((*p)[1]) << 8) | (**p);
-        (*p) += 4;
-        return val;
-}
-
-static uint16_t get16(unsigned char **p)
-{
-        unsigned val = (((*p)[1]) << 8) | (**p);
-        (*p) += 2;
-        return val;
-}
-
-static void put32(unsigned char **p, uint32_t val)
-{
-        *(*p)++ = val & 0xff;
-        *(*p)++ = (val >> 8) & 0xff;
-        *(*p)++ = (val >> 16) & 0xff;
-        *(*p)++ = (val >> 24) & 0xff;
-}
-
-static void put16(unsigned char **p, int16_t val)
-{
-        *(*p)++ = val & 0xff;
-        *(*p)++ = (val >> 8) & 0xff;
-}
-
-/* ---------------------------------------------------------------------- */
 
 static int dvms_read_header(ft_t ft, struct dvms_header *hdr)
 {
@@ -421,21 +390,21 @@ static int dvms_read_header(ft_t ft, struct dvms_header *hdr)
         pch = hdrbuf;
         memcpy(hdr->Filename, pch, sizeof(hdr->Filename));
         pch += sizeof(hdr->Filename);
-        hdr->Id = get16(&pch);
-        hdr->State = get16(&pch);
-        hdr->Unixtime = get32(&pch);
-        hdr->Usender = get16(&pch);
-        hdr->Ureceiver = get16(&pch);
-        hdr->Length = get32(&pch);
-        hdr->Srate = get16(&pch);
-        hdr->Days = get16(&pch);
-        hdr->Custom1 = get16(&pch);
-        hdr->Custom2 = get16(&pch);
+        hdr->Id = get16_le(&pch);
+        hdr->State = get16_le(&pch);
+        hdr->Unixtime = get32_le(&pch);
+        hdr->Usender = get16_le(&pch);
+        hdr->Ureceiver = get16_le(&pch);
+        hdr->Length = get32_le(&pch);
+        hdr->Srate = get16_le(&pch);
+        hdr->Days = get16_le(&pch);
+        hdr->Custom1 = get16_le(&pch);
+        hdr->Custom2 = get16_le(&pch);
         memcpy(hdr->Info, pch, sizeof(hdr->Info));
         pch += sizeof(hdr->Info);
         memcpy(hdr->extend, pch, sizeof(hdr->extend));
         pch += sizeof(hdr->extend);
-        hdr->Crc = get16(&pch);
+        hdr->Crc = get16_le(&pch);
         if (sum != hdr->Crc) 
         {
                 st_report("DVMS header checksum error, read %u, calculated %u",
@@ -460,16 +429,16 @@ static int dvms_write_header(ft_t ft, struct dvms_header *hdr)
 
         memcpy(pch, hdr->Filename, sizeof(hdr->Filename));
         pch += sizeof(hdr->Filename);
-        put16(&pch, hdr->Id);
-        put16(&pch, hdr->State);
-        put32(&pch, hdr->Unixtime);
-        put16(&pch, hdr->Usender);
-        put16(&pch, hdr->Ureceiver);
-        put32(&pch, hdr->Length);
-        put16(&pch, hdr->Srate);
-        put16(&pch, hdr->Days);
-        put16(&pch, hdr->Custom1);
-        put16(&pch, hdr->Custom2);
+        put16_le(&pch, hdr->Id);
+        put16_le(&pch, hdr->State);
+        put32_le(&pch, hdr->Unixtime);
+        put16_le(&pch, hdr->Usender);
+        put16_le(&pch, hdr->Ureceiver);
+        put32_le(&pch, hdr->Length);
+        put16_le(&pch, hdr->Srate);
+        put16_le(&pch, hdr->Days);
+        put16_le(&pch, hdr->Custom1);
+        put16_le(&pch, hdr->Custom2);
         memcpy(pch, hdr->Info, sizeof(hdr->Info));
         pch += sizeof(hdr->Info);
         memcpy(pch, hdr->extend, sizeof(hdr->extend));
@@ -477,7 +446,7 @@ static int dvms_write_header(ft_t ft, struct dvms_header *hdr)
         for(i = sizeof(hdrbuf), sum = 0; i > /*2*/3; i--) /* Deti bug */
                 sum += *pchs++;
         hdr->Crc = sum;
-        put16(&pch, hdr->Crc);
+        put16_le(&pch, hdr->Crc);
         if (st_seeki(ft, 0, SEEK_SET) < 0)
         {
                 st_report("seek failed\n: %s",strerror(errno));

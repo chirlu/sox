@@ -332,6 +332,36 @@ int st_writedf(ft_t ft, double d)
         return (ST_SUCCESS);
 }
 
+
+uint32_t get32_le(unsigned char **p)
+{
+        uint32_t val = (((*p)[3]) << 24) | (((*p)[2]) << 16) | 
+                (((*p)[1]) << 8) | (**p);
+        (*p) += 4;
+        return val;
+}
+
+uint16_t get16_le(unsigned char **p)
+{
+        unsigned val = (((*p)[1]) << 8) | (**p);
+        (*p) += 2;
+        return val;
+}
+
+void put32_le(unsigned char **p, uint32_t val)
+{
+        *(*p)++ = val & 0xff;
+        *(*p)++ = (val >> 8) & 0xff;
+        *(*p)++ = (val >> 16) & 0xff;
+        *(*p)++ = (val >> 24) & 0xff;
+}
+
+void put16_le(unsigned char **p, int16_t val)
+{
+        *(*p)++ = val & 0xff;
+        *(*p)++ = (val >> 8) & 0xff;
+}
+
 /* generic swap routine. Swap l and place in to f (datatype length = n) */
 static void st_swapb(char *l, char *f, int n)
 {
