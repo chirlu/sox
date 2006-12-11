@@ -14,9 +14,27 @@ AC_PROG_RANLIB
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
+dnl Debugging
+AC_MSG_CHECKING([if we want a debug build])
+AC_ARG_ENABLE(debug,
+AC_HELP_STRING([--enable-debug], [make a debug build]),
+[
+if test $enableval = yes; then
+        CFLAGS="-g"
+        if test "$GCC" = "yes"; then
+          CFLAGS="$CFLAGS -ggdb"
+        fi
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
+], [
+AC_MSG_RESULT(no)
+])
+
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = yes; then
-    CFLAGS="$CFLAGS -Wall"
+    CFLAGS="$CFLAGS -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic"
 fi
 
 dnl Check for system dependent features.
@@ -49,7 +67,7 @@ AC_CHECK_HEADERS(alsa/asoundlib.h,
     AC_CHECK_LIB(asound, snd_pcm_open,, with_alsa=no)],
     with_alsa=no)
 if test "$with_alsa" = yes; then
-   AC_DEFINE(HAVE_ALSA, 1, [Define to 1 if you have ALSA.]),
+   AC_DEFINE(HAVE_ALSA, 1, [Define to 1 if you have ALSA.])
 fi
 
 dnl Check for OSS audio
@@ -57,7 +75,7 @@ with_oss=no
 AC_CHECK_HEADERS(sys/soundcard.h, with_oss=yes)
 AC_CHECK_HEADERS(machine/soundcard.h, with_oss=yes)
 if test "$with_oss" = yes; then
-   AC_DEFINE(HAVE_OSS, 1, [Define to 1 if you have OSS.]),
+   AC_DEFINE(HAVE_OSS, 1, [Define to 1 if you have OSS.])
 fi
 
 dnl Check for Sun-style audio
