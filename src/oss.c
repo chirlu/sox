@@ -40,11 +40,13 @@
 #include <machine/soundcard.h>
 #endif
 #include <sys/ioctl.h>
+
 /* common r/w initialization code */
 static int ossdspinit(ft_t ft)
 {
     int sampletype, samplesize, dsp_stereo;
     int tmp, rc;
+    st_fileinfo_t *file = (st_fileinfo_t *)ft->priv;
 
     if (ft->info.rate == 0.0) ft->info.rate = 8000;
     if (ft->info.size == -1) ft->info.size = ST_SIZE_BYTE;
@@ -173,18 +175,18 @@ static int ossdspinit(ft_t ft)
     /* Find out block size to use last because the driver could compute
      * its size based on specific rates/formats.
      */
-    ft->file.size = 0;
-    ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &ft->file.size);
-    if (ft->file.size < 4 || ft->file.size > 65536) {
-            st_fail_errno(ft,ST_EOF,"Invalid audio buffer size %d", ft->file.size);
+    file->size = 0;
+    ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &file->size);
+    if (file->size < 4 || file->size > 65536) {
+            st_fail_errno(ft,ST_EOF,"Invalid audio buffer size %d", file->size);
             return (ST_EOF);
     }
-    ft->file.count = 0;
-    ft->file.pos = 0;
-    ft->file.eof = 0;
+    file->count = 0;
+    file->pos = 0;
+    file->eof = 0;
 
-    if ((ft->file.buf = (char *)malloc(ft->file.size)) == NULL) {
-        st_fail_errno(ft,ST_EOF,"Unable to allocate input/output buffer of size %d", ft->file.size);
+    if ((file->buf = (char *)malloc(file->size)) == NULL) {
+        st_fail_errno(ft,ST_EOF,"Unable to allocate input/output buffer of size %d", file->size);
         return (ST_EOF);
     }
 
@@ -194,9 +196,10 @@ static int ossdspinit(ft_t ft)
     }
 
     /* Change to non-buffered I/O */
-    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
+    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * file->size);
     return(ST_SUCCESS);
 }
+
 /*
  * Do anything required before you start reading samples.
  * Read file header.

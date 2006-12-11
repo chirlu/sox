@@ -291,7 +291,7 @@ struct st_soundstream {
     char            *filetype;            /* type of file */
     char            *comment;             /* comment string */
     FILE            *fp;                  /* File stream pointer */
-    st_fileinfo_t   file;                 /* File data block */
+    unsigned char   eof;                  /* Marker that EOF has been reached */
     int             st_errno;             /* Failure error codes */
     char            st_errstr[256];       /* Extend Failure text */
     const st_format_t *h;                 /* format struct for this file */

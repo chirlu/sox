@@ -1332,7 +1332,7 @@ static int flow_effect_out(void)
                              &efftab[neffects-1].obuf[total],
                              efftab[neffects-1].olen-total);
 
-              if (len != efftab[neffects-1].olen-total || file_desc[file_count-1]->file.eof)
+              if (len != efftab[neffects-1].olen-total || file_desc[file_count-1]->eof)
               {
                   st_warn("Error writing: %s", file_desc[file_count-1]->st_errstr);
                   return ST_EOF;

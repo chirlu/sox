@@ -229,7 +229,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     {
         st_fail_errno(ft,ST_ENOMEM,
                       "unable to allocate output buffer of size %d", 
-                      ft->file.size);
+                      alsa->buf_size);
         return(ST_EOF);
     }
 

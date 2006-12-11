@@ -103,22 +103,14 @@ int st_rawseek(ft_t ft, st_size_t offset)
 
 int st_rawstartread(ft_t ft)
 {
-    ft->file.eof = 0;
+    ft->eof = 0;
 
     return ST_SUCCESS;
 }
 
 int st_rawstartwrite(ft_t ft)
 {
-    ft->file.buf = (char *)malloc(ST_BUFSIZ);
-    if (!ft->file.buf)
-    {
-        st_fail_errno(ft, ST_ENOMEM, "Unable to allocate memory");
-        return ST_EOF;
-    }
-    ft->file.size = ST_BUFSIZ;
-    ft->file.pos = 0;
-    ft->file.eof = 0;
+    ft->eof = 0;
 
     return ST_SUCCESS;
 }
@@ -269,16 +261,12 @@ st_size_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 
 int st_rawstopread(ft_t ft)
 {
-        free(ft->file.buf);
-
-        return ST_SUCCESS;
+  return ST_SUCCESS;
 }
 
 static void writeflush(ft_t ft)
 {
-        if (st_writebuf(ft, ft->file.buf, 1, ft->file.pos) != ft->file.pos)
-            ft->file.eof = ST_EOF;
-        ft->file.pos = 0;
+  ft->eof = ST_EOF;
 }
 
 
@@ -296,7 +284,6 @@ st_size_t st_rawwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
 int st_rawstopwrite(ft_t ft)
 {
         writeflush(ft);
-        free(ft->file.buf);
         return ST_SUCCESS;
 }
 

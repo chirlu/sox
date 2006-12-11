@@ -568,11 +568,8 @@ int st_seeki(ft_t ft, st_size_t offset, int whence)
     }
 
     /* Empty the st file buffer */
-    if (ft->st_errno == ST_SUCCESS) {
-        ft->file.count = 0;
-        ft->file.pos = 0;
-        ft->file.eof = 0;
-    }
+    if (ft->st_errno == ST_SUCCESS)
+        ft->eof = 0;
 
     return ft->st_errno;
 }

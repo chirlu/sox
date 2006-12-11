@@ -49,6 +49,7 @@ typedef struct voxstuff { struct { short    last;                       /* ADPCM
                           struct { uint8_t  byte;                       /* write store */
                                    uint8_t  flag;
                                  } store;
+                          st_fileinfo_t file;
                         } *vox_t;
 
 
@@ -84,21 +85,20 @@ static short   devox       (uint8_t,vox_t);
 static int  st_voxstartread (ft_t ft) 
      { vox_t state = (vox_t) ft->priv;
 
-
        /* ... setup file info */
 
-       ft->file.buf = (char *)malloc(ST_BUFSIZ);
+       state->file.buf = (char *)malloc(ST_BUFSIZ);
     
-       if (!ft->file.buf)
+       if (!state->file.buf)
           { st_fail_errno (ft,ST_ENOMEM,"Unable to allocate internal buffer memory");
             
             return(ST_EOF);
           }
 
-       ft->file.size     = ST_BUFSIZ;
-       ft->file.count    = 0;
-       ft->file.pos      = 0;
-       ft->file.eof      = 0;
+       state->file.size     = ST_BUFSIZ;
+       state->file.count    = 0;
+       state->file.pos      = 0;
+       state->file.eof      = 0;
 
        ft->info.size     = ST_SIZE_WORD;
        ft->info.encoding = ST_ENCODING_OKI_ADPCM;
@@ -145,17 +145,17 @@ static st_size_t st_voxread (ft_t ft,st_sample_t *buffer,st_size_t length)
              while (count < N) 
                {     /* ... refill buffer */
 
-                     if (ft->file.pos >= ft->file.count)
-                        { ft->file.count = st_readbuf (ft,ft->file.buf,1,ft->file.size);
-                          ft->file.pos   = 0;
+                     if (state->file.pos >= state->file.count)
+                        { state->file.count = st_readbuf (ft,state->file.buf,1,state->file.size);
+                          state->file.pos   = 0;
 
-                          if (ft->file.count == 0)
+                          if (state->file.count == 0)
                              break;
                         }
 
                      /* ... decode two nybbles stored as a byte */
 
-                     byte      = ft->file.buf[ft->file.pos++];
+                     byte      = state->file.buf[state->file.pos++];
 
                      word      = devox ((uint8_t) ((byte >> 4) & 0x0F),state);
                      *buffer++ = ST_SIGNED_WORD_TO_SAMPLE (word * 16,);
@@ -179,7 +179,8 @@ static st_size_t st_voxread (ft_t ft,st_sample_t *buffer,st_size_t length)
  ******************************************************************************/
 
 static int  st_voxstopread (ft_t ft) 
-     { free (ft->file.buf);
+     { vox_t    state = (vox_t) ft->priv;
+       free (state->file.buf);
      
        return (ST_SUCCESS);
      }
@@ -204,18 +205,18 @@ static int  st_voxstartwrite (ft_t ft)
 
        /* ... setup file info */
 
-       ft->file.buf = (char *)malloc(ST_BUFSIZ);
+       state->file.buf = (char *)malloc(ST_BUFSIZ);
     
-       if (!ft->file.buf)
+       if (!state->file.buf)
           { st_fail_errno (ft,ST_ENOMEM,"Unable to allocate internal buffer memory");
             
             return(ST_EOF);
           }
 
-       ft->file.size     = ST_BUFSIZ;
-       ft->file.count    = 0;
-       ft->file.pos      = 0;
-       ft->file.eof      = 0;
+       state->file.size     = ST_BUFSIZ;
+       state->file.count    = 0;
+       state->file.pos      = 0;
+       state->file.eof      = 0;
 
            ft->info.size     = ST_SIZE_WORD;
        ft->info.encoding = ST_ENCODING_OKI_ADPCM;
@@ -262,12 +263,12 @@ static st_size_t st_voxwrite (ft_t ft,const st_sample_t *buffer,st_size_t length
                      flag %= 2;
 
                      if (flag == 0)
-                        { ft->file.buf[ft->file.count++] = byte;
+                        { state->file.buf[state->file.count++] = byte;
 
-                          if (ft->file.count >= ft->file.size)
-                             { st_writebuf (ft,ft->file.buf,1,ft->file.count);
+                          if (state->file.count >= state->file.size)
+                             { st_writebuf (ft,state->file.buf,1,state->file.count);
 
-                               ft->file.count = 0;
+                               state->file.count = 0;
                              }
                         }
 
@@ -303,13 +304,13 @@ static int  st_voxstopwrite (ft_t ft)
           { byte <<= 4;
             byte  |= envox (0,state) & 0x0F;
 
-            ft->file.buf[ft->file.count++] = byte;
+            state->file.buf[state->file.count++] = byte;
           }
 
-       if (ft->file.count > 0)
-          st_writebuf (ft,ft->file.buf,1,ft->file.count);
+       if (state->file.count > 0)
+          st_writebuf (ft,state->file.buf,1,state->file.count);
 
-       free (ft->file.buf);
+       free (state->file.buf);
      
        return (ST_SUCCESS);
      }
