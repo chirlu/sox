@@ -261,7 +261,7 @@ if [ "$rec_mode" = "yes" ]; then
     # sox to do any conversions.
     sox $gopts $arch_defines $fopts $device $fopts $fopts2 "$filename" $effects 
 else
-    # Eval is needed to recongnize the quotes around filename
+    # Eval is needed to recognize the quotes around filename
     # and let them be passed to program as 1 option (in case
     # filename has spaces).
     eval sox $gopts $play_opts $arch_defines $device $effects
