@@ -1,17 +1,15 @@
-/*
- * Copyright 1997-2005 Jimen Ching And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained.
- * Jimen Ching And Sundry Contributors are not
- * responsible for the consequences of using this software.
- */
-
 /* ALSA sound driver
  *
  * converted to alsalib cbagwell 20050914
  * added by Jimen Ching (jching@flex.com) 19990207
  * based on info grabed from aplay.c in alsa-utils package.
  * Updated for ALSA 0.9.X API 20020824.
+ *
+ * Copyright 1997-2005 Jimen Ching And Sundry Contributors
+ * This source code is freely redistributable and may be used for
+ * any purpose.  This copyright notice must be maintained.
+ * Jimen Ching And Sundry Contributors are not
+ * responsible for the consequences of using this software.
  */
 
 #include "st_i.h"

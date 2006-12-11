@@ -119,9 +119,9 @@ static double st_macro_temp_double UNUSED;
 #define ST_SAMPLE_TO_SIGNED_WORD(d,clips) ST_SAMPLE_TO_SIGNED(16,d,clips)
 #define ST_SAMPLE_TO_UNSIGNED_24BIT(d,clips) ST_SAMPLE_TO_UNSIGNED(24,d,clips)
 #define ST_SAMPLE_TO_SIGNED_24BIT(d,clips) ST_SAMPLE_TO_SIGNED(24,d,clips)
-#define ST_SAMPLE_TO_UNSIGNED_DWORD(d) (uint32_t)((d)^ST_SAMPLE_NEG)
-#define ST_SAMPLE_TO_SIGNED_DWORD(d) (int32_t)(d)
-#define ST_SAMPLE_TO_FLOAT_DWORD (float)ST_SAMPLE_TO_FLOAT_DDWORD
+#define ST_SAMPLE_TO_UNSIGNED_DWORD(d,clips) (uint32_t)((d)^ST_SAMPLE_NEG)
+#define ST_SAMPLE_TO_SIGNED_DWORD(d,clips) (int32_t)(d)
+#define ST_SAMPLE_TO_FLOAT_DWORD ST_SAMPLE_TO_FLOAT_DDWORD
 #define ST_SAMPLE_TO_FLOAT_DDWORD(d,clips) (st_macro_temp_sample=d,st_macro_temp_sample==ST_SAMPLE_MIN?++(clips),-1.0:((double)(st_macro_temp_sample)*(1.0/ST_SAMPLE_MAX)))
 
 

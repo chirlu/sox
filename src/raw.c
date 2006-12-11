@@ -124,7 +124,7 @@ int st_rawstartwrite(ft_t ft)
 }
 
 #define READ_FUNC(size, sign, ctype, uctype, cast) \
-  static st_size_t st_ ## sign ## size ## _read_buf(st_sample_t *buf1, ft_t ft, st_size_t len, st_size_t *clippedCount UNUSED) \
+  static st_size_t st_ ## sign ## size ## _read_buf(st_sample_t *buf, ft_t ft, st_size_t len, st_size_t *clippedCount UNUSED) \
   { \
     st_size_t n; \
     for (n = 0; n < len; n++) { \
@@ -132,7 +132,7 @@ int st_rawstartwrite(ft_t ft)
       int ret = st_read ## size(ft, (uctype *)&datum); \
       if (ret != ST_SUCCESS) \
         break; \
-      *buf1++ = ST_ ## cast ## _TO_SAMPLE(datum, *clippedCount); \
+      *buf++ = ST_ ## cast ## _TO_SAMPLE(datum, *clippedCount); \
     } \
     return n; \
   }
@@ -152,85 +152,96 @@ READ_FUNC(dw, , int32_t, uint32_t, SIGNED_DWORD)
 READ_FUNC(f, , float, float, FLOAT_DWORD)
 READ_FUNC(df, , double, double, FLOAT_DDWORD)
 
-/* Read a stream of some type into SoX's internal buffer format. */
-st_size_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
-{
-    st_size_t done = 0;
-    st_size_t (*read_buf)(st_sample_t *, ft_t ft, st_size_t, st_size_t *) = NULL;
+#define WRITE_FUNC(size, sign, cast) \
+  static st_size_t st_ ## sign ## size ## _write_buf(st_sample_t *buf, ft_t ft, st_size_t len, st_size_t *clippedCount UNUSED) \
+  { \
+    st_size_t n; \
+    for (n = 0; n < len; n++) { \
+      int ret = st_write ## size(ft, ST_SAMPLE_TO_ ## cast(*buf++, *clippedCount)); \
+      if (ret != ST_SUCCESS) \
+        break; \
+    } \
+    return n; \
+  }
 
+WRITE_FUNC(b, u, UNSIGNED_BYTE)
+WRITE_FUNC(b, s, SIGNED_BYTE)
+WRITE_FUNC(b, ulaw, ULAW_BYTE)
+WRITE_FUNC(b, alaw, ALAW_BYTE)
+WRITE_FUNC(b, inv_ulaw, INVERT_ULAW_BYTE)
+WRITE_FUNC(b, inv_alaw, INVERT_ALAW_BYTE)
+WRITE_FUNC(w, u, UNSIGNED_WORD)
+WRITE_FUNC(w, s, SIGNED_WORD)
+WRITE_FUNC(3, u, UNSIGNED_24BIT)
+WRITE_FUNC(3, s, SIGNED_24BIT)
+WRITE_FUNC(dw, u, UNSIGNED_DWORD)
+WRITE_FUNC(dw, , SIGNED_DWORD)
+WRITE_FUNC(f, , FLOAT_DWORD)
+WRITE_FUNC(df, , FLOAT_DDWORD)
+
+typedef st_size_t (ft_io_fun)(st_sample_t *buf, ft_t ft, st_size_t len, st_size_t *clippedCount);
+
+static ft_io_fun *check_format(ft_t ft, bool write)
+{
     switch (ft->info.size) {
     case ST_SIZE_BYTE:
-      switch(ft->info.encoding) {
+      switch (ft->info.encoding) {
       case ST_ENCODING_SIGN2:
-        read_buf = st_sb_read_buf;
-        break;
+        return write ? st_sb_write_buf : st_sb_read_buf;
       case ST_ENCODING_UNSIGNED:
-        read_buf = st_ub_read_buf;
-        break;
+        return write ? st_ub_write_buf : st_ub_read_buf;
       case ST_ENCODING_ULAW:
-        read_buf = st_ulawb_read_buf;
-        break;
+        return write ? st_ulawb_write_buf : st_ulawb_read_buf;
       case ST_ENCODING_ALAW:
-        read_buf = st_alawb_read_buf;
-        break;
+        return write ? st_alawb_write_buf : st_alawb_read_buf;
       case ST_ENCODING_INV_ULAW:
-        read_buf = st_inv_ulawb_read_buf;
-        break;
+        return write ? st_inv_ulawb_write_buf : st_inv_ulawb_read_buf;
       case ST_ENCODING_INV_ALAW:
-        read_buf = st_inv_alawb_read_buf;
-        break;
+        return write ? st_inv_alawb_write_buf : st_inv_alawb_read_buf;
       default:
         break;
       }
       break;
       
     case ST_SIZE_WORD: 
-      switch(ft->info.encoding) {
+      switch (ft->info.encoding) {
       case ST_ENCODING_SIGN2:
-        read_buf = st_sw_read_buf;
-        break;
+        return write ? st_sw_write_buf : st_sw_read_buf;
       case ST_ENCODING_UNSIGNED:
-        read_buf = st_uw_read_buf;
-        break;
+        return write ? st_uw_write_buf : st_uw_read_buf;
       default:
         break;
       }
       break;
 
     case ST_SIZE_24BIT:
-      switch(ft->info.encoding) {
+      switch (ft->info.encoding) {
       case ST_ENCODING_SIGN2:
-        read_buf = st_s3_read_buf;
-        break;
+        return write ? st_s3_write_buf : st_s3_read_buf;
       case ST_ENCODING_UNSIGNED:
-        read_buf = st_u3_read_buf;
-        break;
+        return write ? st_u3_write_buf: st_u3_read_buf;
       default:
         break;
       }
       break;
       
     case ST_SIZE_DWORD:
-      switch(ft->info.encoding) {
+      switch (ft->info.encoding) {
       case ST_ENCODING_SIGN2:
-        read_buf = st_dw_read_buf;
-        break;
+        return write ? st_dw_write_buf : st_dw_read_buf;
       case ST_ENCODING_UNSIGNED:
-        read_buf = st_udw_read_buf;
-        break;
+        return write ? st_udw_write_buf : st_udw_read_buf;
       case ST_ENCODING_FLOAT:
-        read_buf = st_f_read_buf;
-        break;
+        return write ? st_f_write_buf : st_f_read_buf;
       default:
         break;
       }
       break;
       
     case ST_SIZE_DDWORD:
-      switch(ft->info.encoding) {
+      switch (ft->info.encoding) {
       case ST_ENCODING_FLOAT:
-        read_buf = st_df_read_buf;
-        break;
+        return write ? st_df_write_buf : st_df_read_buf;
       default:
         break;
       }
@@ -238,18 +249,22 @@ st_size_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 
     default:
       st_fail_errno(ft,ST_EFMT,"this handler does not support this data size");
-      return ST_EOF;
+      return NULL;
     }
 
-    if (read_buf == NULL) {
-        st_fail_errno(ft,ST_EFMT,"this encoding is not supported for this data size");
-        return ST_EOF;
-    }
-    
-    if (nsamp)
-        done += read_buf(buf + done, ft, nsamp, &ft->clippedCount);
+    st_fail_errno(ft,ST_EFMT,"this encoding is not supported for this data size");
+    return NULL;
+}
 
-    return done;
+/* Read a stream of some type into SoX's internal buffer format. */
+st_size_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
+{
+    st_size_t (*read_buf)(st_sample_t *, ft_t, st_size_t, st_size_t *) = check_format(ft, false);
+
+    if (read_buf && nsamp)
+      return read_buf(buf, ft, nsamp, &ft->clippedCount);
+
+    return 0;
 }
 
 int st_rawstopread(ft_t ft)
@@ -259,315 +274,23 @@ int st_rawstopread(ft_t ft)
         return ST_SUCCESS;
 }
 
-static void st_ub_write_buf(char* buf1, st_sample_t const * buf2, st_size_t len, st_size_t * clippedCount)
-{
-    while (len)
-    {
-        *(uint8_t *)buf1++ = ST_SAMPLE_TO_UNSIGNED_BYTE(*buf2++, *clippedCount);
-        len--;
-    }
-}
-
-static void st_sb_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, st_size_t * clippedCount)
-{
-    while (len)
-    {
-        *(int8_t *)buf1++ = ST_SAMPLE_TO_SIGNED_BYTE(*buf2++, *clippedCount);
-        len--;
-    }
-}
-
-static void st_ulaw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, st_size_t * clippedCount)
-{
-    while (len)
-    {
-        *(uint8_t *)buf1++ = ST_SAMPLE_TO_ULAW_BYTE(*buf2++, *clippedCount);
-        len--;
-    }
-}
-
-static void st_alaw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, st_size_t * clippedCount)
-{
-    while (len)
-    {
-        *(uint8_t *)buf1++ = ST_SAMPLE_TO_ALAW_BYTE(*buf2++, *clippedCount);
-        len--;
-    }
-}
-
-static void st_inv_ulaw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, st_size_t * clippedCount)
-{
-    while (len)
-    {
-        *(uint8_t *)buf1++ = ST_SAMPLE_TO_INVERT_ULAW_BYTE(*buf2++, *clippedCount);
-        len--;
-    }
-}
-
-static void st_inv_alaw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, st_size_t * clippedCount)
-{
-    while (len)
-    {
-        *(uint8_t *)buf1++ = ST_SAMPLE_TO_INVERT_ALAW_BYTE(*buf2++, *clippedCount);
-        len--;
-    }
-}
-
-static void st_uw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, st_size_t * clippedCount)
-{
-    while (len)
-    {
-        uint16_t datum;
-
-        datum = ST_SAMPLE_TO_UNSIGNED_WORD(*buf2++, *clippedCount);
-        *(uint16_t *)buf1 = datum;
-        buf1++; buf1++;
-
-        len--;
-    }
-}
-
-static void st_sw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, st_size_t * clippedCount)
-{
-    while (len)
-    {
-        int16_t datum;
-
-        datum = ST_SAMPLE_TO_SIGNED_WORD(*buf2++, *clippedCount);
-        *(int16_t *)buf1 = datum;
-        buf1++; buf1++;
-
-        len--;
-    }
-}
-
-
-
-static void st_24_write_one(char * * const buf1, int24_t datum)
-{
-  if (ST_IS_BIGENDIAN)
-    datum <<= 8;
-
-  /* N.B. overwrites an extra byte; however SoX buffers are 2^n bytes long and
-   * since 2^n != 0 (mod 3), there will always be an extra byte to write to. */
-  *(int24_t *)*buf1 = datum;
-
-  *buf1 += 3;
-}
-
-
-
-static void st_u24_write_buf(char * buf1, st_sample_t const * buf2, st_size_t len, st_size_t * clippedCount)
-{
-  while (len--)
-  {
-    int24_t datum = ST_SAMPLE_TO_UNSIGNED_24BIT(*buf2++, *clippedCount);
-    st_24_write_one(&buf1, datum);
-  }
-}
-
-
-
-static void st_s24_write_buf(char * buf1, st_sample_t const * buf2, st_size_t len, st_size_t * clippedCount)
-{
-  while (len--)
-  {
-    int24_t datum = ST_SAMPLE_TO_SIGNED_24BIT(*buf2++, *clippedCount);
-    st_24_write_one(&buf1, datum);
-  }
-}
-
-
-
-static void st_udw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, st_size_t * clippedCount UNUSED)
-{
-    while (len)
-    {
-        uint32_t datum;
-
-        datum = ST_SAMPLE_TO_UNSIGNED_DWORD(*buf2++);
-        *(uint32_t *)buf1 = datum;
-        buf1++; buf1++; buf1++; buf1++;
-
-        len--;
-    }
-}
-
-static void st_dw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, st_size_t * clippedCount UNUSED)
-{
-    while (len)
-    {
-        int32_t datum;
-
-        datum = ST_SAMPLE_TO_SIGNED_DWORD(*buf2++);
-        *(int32_t *)buf1 = datum;
-        buf1++; buf1++; buf1++; buf1++;
-
-        len--;
-    }
-}
-
-static void st_f32_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, st_size_t * clippedCount)
-{
-    while (len)
-    {
-        float datum;
-
-        datum = ST_SAMPLE_TO_FLOAT_DWORD(*buf2++, *clippedCount);
-        *(float *)buf1 = datum;
-        buf1++; buf1++; buf1++; buf1++;
-
-        len--;
-    }
-}
-
-static void st_f64_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, st_size_t * clippedCount)
-{
-    while (len)
-    {
-        double datum;
-
-        datum = ST_SAMPLE_TO_FLOAT_DDWORD(*buf2++, *clippedCount);
-        *(double *)buf1 = datum;
-        buf1++; buf1++; buf1++; buf1++;
-        buf1++; buf1++; buf1++; buf1++;
-
-        len--;
-    }
-}
-
-
 static void writeflush(ft_t ft)
 {
         if (st_writebuf(ft, ft->file.buf, 1, ft->file.pos) != ft->file.pos)
-        {
             ft->file.eof = ST_EOF;
-        }
         ft->file.pos = 0;
 }
 
 
-/* Writes SoX's internal buffer format to buffer of various data types.
- */
-/* FIXME:  This function adds buffering on top of stdio's buffering.
- * Mixing st_rawwrites's and fwrites or even SoX's other util
- * functions will cause a loss of data!  Need to have sox implement
- * a consistent buffering protocol.
- */
+/* Writes SoX's internal buffer format to buffer of various data types. */
 st_size_t st_rawwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
 {
-    st_size_t len, done = 0;
-    void (*write_buf)(char *, st_sample_t const *, st_size_t, st_size_t *) = 0;
+    ft_io_fun *write_buf = check_format(ft, true);
 
-    switch(ft->info.size) {
-        case ST_SIZE_BYTE:
-            switch(ft->info.encoding)
-            {
-                case ST_ENCODING_SIGN2:
-                    write_buf = st_sb_write_buf;
-                    break;
-                case ST_ENCODING_UNSIGNED:
-                    write_buf = st_ub_write_buf;
-                    break;
-                case ST_ENCODING_ULAW:
-                    write_buf = st_ulaw_write_buf;
-                    break;
-                case ST_ENCODING_ALAW:
-                    write_buf = st_alaw_write_buf;
-                    break;
-                case ST_ENCODING_INV_ULAW:
-                    write_buf = st_inv_ulaw_write_buf;
-                    break;
-                case ST_ENCODING_INV_ALAW:
-                    write_buf = st_inv_alaw_write_buf;
-                    break;
-                default:
-                    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return ST_EOF;
-            }
-            break;
+    if (write_buf && nsamp)
+      return write_buf((st_sample_t *)buf, ft, nsamp, &ft->clippedCount);
 
-        case ST_SIZE_WORD:
-            switch(ft->info.encoding)
-            {
-                case ST_ENCODING_SIGN2:
-                    write_buf = st_sw_write_buf;
-                    break;
-                case ST_ENCODING_UNSIGNED:
-                    write_buf = st_uw_write_buf;
-                    break;
-                default:
-                    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return ST_EOF;
-            }
-            break;
-
-        case ST_SIZE_24BIT:
-            switch(ft->info.encoding)
-            {
-                case ST_ENCODING_SIGN2:
-                    write_buf = st_s24_write_buf;
-                    break;
-                case ST_ENCODING_UNSIGNED:
-                    write_buf = st_u24_write_buf;
-                    break;
-                default:
-                    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return ST_EOF;
-            }
-            break;
-
-        case ST_SIZE_DWORD:
-            switch(ft->info.encoding)
-            {
-                case ST_ENCODING_SIGN2:
-                    write_buf = st_dw_write_buf;
-                    break;
-                case ST_ENCODING_UNSIGNED:
-                    write_buf = st_udw_write_buf;
-                    break;
-                case ST_ENCODING_FLOAT:
-                    write_buf = st_f32_write_buf;
-                    break;
-                default:
-                    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return ST_EOF;
-            }
-            break;
-
-        case ST_SIZE_DDWORD:
-            switch(ft->info.encoding)
-            {
-                case ST_ENCODING_FLOAT:
-                    write_buf = st_f64_write_buf;
-                    break;
-                default:
-                    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return ST_EOF;
-            }
-            break;
-
-        default:
-            st_fail_errno(ft,ST_EFMT,"Do not support this data size for this handler");
-            return ST_EOF;
-    }
-
-    while (done < nsamp && !ft->file.eof)
-    {
-        if (ft->file.pos > (ft->file.size-ft->info.size))
-        {
-            writeflush(ft);
-        }
-
-        len = min(nsamp-done,(ft->file.size-ft->file.pos)/ft->info.size);
-        if (len)
-        {
-            write_buf(ft->file.buf + ft->file.pos, buf+done, len, &ft->clippedCount);
-            ft->file.pos += (len*ft->info.size);
-            done += len;
-        }
-    }
-    return done;
+    return 0;
 }
 
 int st_rawstopwrite(ft_t ft)

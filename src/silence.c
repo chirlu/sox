@@ -344,7 +344,7 @@ static int aboveThreshold(eff_t effp, st_sample_t value, double threshold, char 
             ratio = (double)abs(value) / (double)ST_INT24_MAX;
             break;
         case ST_SIZE_DWORD:
-            value = ST_SAMPLE_TO_SIGNED_DWORD(value);
+            value = ST_SAMPLE_TO_SIGNED_DWORD(value,);
             ratio = (double)labs(value) / (double)ST_INT32_MAX;
             break;
         default:
