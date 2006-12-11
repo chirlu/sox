@@ -101,14 +101,9 @@ int st_rawseek(ft_t ft, st_size_t offset)
     return ft->st_errno;
 }
 
-int st_rawstartread(ft_t ft)
-{
-    ft->eof = 0;
-
-    return ST_SUCCESS;
-}
-
-int st_rawstartwrite(ft_t ft)
+/* Works nicely for starting read and write; st_rawstart{read,write}
+   are #defined in st_i.h */
+int st_rawstart(ft_t ft)
 {
     ft->eof = 0;
 
@@ -257,11 +252,6 @@ st_size_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
       return read_buf(buf, ft, nsamp, &ft->clippedCount);
 
     return 0;
-}
-
-int st_rawstopread(ft_t ft)
-{
-  return ST_SUCCESS;
 }
 
 static void writeflush(ft_t ft)

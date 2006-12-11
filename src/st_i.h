@@ -233,6 +233,11 @@ int st_effect_nothing(eff_t effp);
 int st_effect_nothing_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_effect_nothing_getopts(eff_t effp, int n, char **argv UNUSED);
 
+#define st_rawstopread st_format_nothing
+int st_rawstart(ft_t ft);
+#define st_rawstartread st_rawstart
+#define st_rawstartwrite st_rawstart
+
 /*=============================================================================
  * Effects
  *=============================================================================
