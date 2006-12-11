@@ -199,10 +199,10 @@ static st_size_t st_format_read(ft_t const format, st_sample_t * sampleBuffer, s
         FLAC__int32 d = decoder->decoded_wide_samples[channel][decoder->wide_sample_number];
         switch (decoder->bits_per_sample)
         {
-          case  8: *sampleBuffer++ = ST_SIGNED_BYTE_TO_SAMPLE(d); break;
-          case 16: *sampleBuffer++ = ST_SIGNED_WORD_TO_SAMPLE(d); break;
-          case 24: *sampleBuffer++ = ST_SIGNED_24BIT_TO_SAMPLE(d); break;
-          case 32: *sampleBuffer++ = ST_SIGNED_DWORD_TO_SAMPLE(d); break;
+          case  8: *sampleBuffer++ = ST_SIGNED_BYTE_TO_SAMPLE(d,); break;
+          case 16: *sampleBuffer++ = ST_SIGNED_WORD_TO_SAMPLE(d,); break;
+          case 24: *sampleBuffer++ = ST_SIGNED_24BIT_TO_SAMPLE(d,); break;
+          case 32: *sampleBuffer++ = ST_SIGNED_DWORD_TO_SAMPLE(d,); break;
         }
         ++actual;
       }

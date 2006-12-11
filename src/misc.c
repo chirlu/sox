@@ -183,7 +183,7 @@ int st_readb(ft_t ft, uint8_t *ub)
 {
         if (st_readbuf(ft, ub, 1, 1) != 1)
         {
-                st_fail_errno(ft,errno,readerr);
+            st_fail_errno(ft,errno,readerr);
             return(ST_EOF);
         }
         return ST_SUCCESS;
@@ -205,7 +205,7 @@ int st_readw(ft_t ft, uint16_t *uw)
 {
         if (st_readbuf(ft, uw, 2, 1) != 1)
         {
-                st_fail_errno(ft,errno,readerr);
+            st_fail_errno(ft,errno,readerr);
             return (ST_EOF);
         }
         if (ft->swap)
@@ -226,12 +226,38 @@ int st_writew(ft_t ft, uint16_t uw)
         return(ST_SUCCESS);
 }
 
+/* Read three bytes. */
+int st_read3(ft_t ft, uint24_t *u3)
+{
+        if (st_readbuf(ft, u3, 3, 1) != 1)
+        {
+            st_fail_errno(ft,errno,readerr);
+            return (ST_EOF);
+        }
+        if (ft->swap)
+                *u3 = st_swap24(*u3);
+        return ST_SUCCESS;
+}
+
+/* Write three bytes. */
+int st_write3(ft_t ft, uint24_t u3)
+{
+        if (ft->swap)
+                u3 = st_swap24(u3);
+        if (st_writebuf(ft, &u3, 2, 1) != 1)
+        {
+                st_fail_errno(ft,errno,writerr);
+                return (ST_EOF);
+        }
+        return(ST_SUCCESS);
+}
+
 /* Read double word. */
 int st_readdw(ft_t ft, uint32_t *udw)
 {
         if (st_readbuf(ft, udw, 4, 1) != 1)
         {
-                st_fail_errno(ft,errno,readerr);
+            st_fail_errno(ft,errno,readerr);
             return (ST_EOF);
         }
         if (ft->swap)
@@ -257,6 +283,7 @@ int st_readf(ft_t ft, float *f)
 {
         if (st_readbuf(ft, f, sizeof(float), 1) != 1)
         {
+            st_fail_errno(ft,errno,readerr);
             return(ST_EOF);
         }
         if (ft->swap)
@@ -284,6 +311,7 @@ int st_readdf(ft_t ft, double *d)
 {
         if (st_readbuf(ft, d, sizeof(double), 1) != 1)
         {
+            st_fail_errno(ft,errno,readerr);
             return(ST_EOF);
         }
         if (ft->swap)
@@ -313,20 +341,10 @@ static void st_swapb(char *l, char *f, int n)
         f[i]= l[n-i-1];
 }
 
-
-/* Byte swappers, use libc optimized macro's if possible */
+/* Byte swappers, use optimized macros if available */
 #ifndef HAVE_BYTESWAP_H
-
-uint16_t st_swapw(uint16_t uw)
-{
-    return ((uw >> 8) | (uw << 8)) & 0xffff;
-}
-
-uint32_t st_swapdw(uint32_t udw)
-{
-    return (udw >> 24) | ((udw >> 8) & 0xff00) | ((udw << 8) & 0xff0000L) | (udw << 24);
-}
-
+#define st_swapw(uw) (((uw >> 8) | (uw << 8)) & 0xffff)
+#define st_swapdw(udw) ((udw >> 24) | ((udw >> 8) & 0xff00) | ((udw << 8) & 0xff0000L) | (udw << 24))
 #endif
 
 /* return swapped 32-bit float */

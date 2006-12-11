@@ -258,7 +258,7 @@ static st_size_t st_xaread(ft_t ft, st_sample_t *buf, st_size_t len)
                 xa->state[i].prevSample = xa->state[i].curSample;
                 xa->state[i].curSample = sample;
                 
-                buf[done++] = ST_SIGNED_WORD_TO_SAMPLE(sample);
+                buf[done++] = ST_SIGNED_WORD_TO_SAMPLE(sample,);
                 xa->bytesDecoded += ft->info.size;
             }
             for (i = 0; i < ft->info.channels && done < len; i++) {
@@ -272,7 +272,7 @@ static st_size_t st_xaread(ft_t ft, st_sample_t *buf, st_size_t len)
                 xa->state[i].prevSample = xa->state[i].curSample;
                 xa->state[i].curSample = sample;
                 
-                buf[done++] = ST_SIGNED_WORD_TO_SAMPLE(sample);
+                buf[done++] = ST_SIGNED_WORD_TO_SAMPLE(sample,);
                 xa->bytesDecoded += ft->info.size;
             }
 

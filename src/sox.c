@@ -1310,7 +1310,7 @@ static int flow_effect_out(void)
           }
       }
 
-      /* If outputing and output data was generated then write it */
+      /* If outputting and output data was generated then write it */
       if (writing && (efftab[neffects-1].olen>efftab[neffects-1].odone))
       {
           /* Change the volume of this output data if needed. */
@@ -1334,8 +1334,7 @@ static int flow_effect_out(void)
 
               if (len != efftab[neffects-1].olen-total || file_desc[file_count-1]->file.eof)
               {
-                  st_warn("Error writing: %s",
-                          file_desc[file_count-1]->st_errstr);
+                  st_warn("Error writing: %s", file_desc[file_count-1]->st_errstr);
                   return ST_EOF;
               }
               total += len;

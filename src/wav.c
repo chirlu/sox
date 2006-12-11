@@ -233,7 +233,7 @@ static st_size_t wavgsmread(ft_t ft, st_sample_t *buf, st_size_t len)
 
   /* copy out any samples left from the last call */
     while(wav->gsmindex && (wav->gsmindex<160*2) && (done < len))
-        buf[done++]=ST_SIGNED_WORD_TO_SAMPLE(wav->gsmsample[wav->gsmindex++]);
+        buf[done++]=ST_SIGNED_WORD_TO_SAMPLE(wav->gsmsample[wav->gsmindex++],);
 
   /* read and decode loop, possibly leaving some samples in wav->gsmsample */
     while (done < len) {
@@ -259,7 +259,7 @@ static st_size_t wavgsmread(ft_t ft, st_sample_t *buf, st_size_t len)
         }
 
         while ((wav->gsmindex <160*2) && (done < len)){
-            buf[done++]=ST_SIGNED_WORD_TO_SAMPLE(wav->gsmsample[(wav->gsmindex)++]);
+            buf[done++]=ST_SIGNED_WORD_TO_SAMPLE(wav->gsmsample[(wav->gsmindex)++],);
         }
     }
 
@@ -1079,7 +1079,7 @@ static st_size_t st_wavread(ft_t ft, st_sample_t *buf, st_size_t len)
                     top = p+ct;
                     /* Output is already signed */
                     while (p<top)
-                        *buf++ = ST_SIGNED_WORD_TO_SAMPLE((*p++));
+                        *buf++ = ST_SIGNED_WORD_TO_SAMPLE((*p++),);
 
                     wav->samplePtr = p;
                 }

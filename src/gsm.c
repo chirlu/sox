@@ -118,7 +118,7 @@ static st_size_t st_gsmread(ft_t ft, st_sample_t *buf, st_size_t samp)
         {
                 while (p->samplePtr < p->sampleTop && done < samp)
                         buf[done++] = 
-                            ST_SIGNED_WORD_TO_SAMPLE(*(p->samplePtr)++);
+                            ST_SIGNED_WORD_TO_SAMPLE(*(p->samplePtr)++,);
 
                 if (done>=samp) break;
 

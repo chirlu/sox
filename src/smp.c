@@ -335,7 +335,7 @@ static st_size_t st_smpread(ft_t ft, st_sample_t *buf, st_size_t len)
         for(; done < len && smp->NoOfSamps; done++, smp->NoOfSamps--) {
                 st_readw(ft, &datum);
                 /* scale signed up to long's range */
-                *buf++ = ST_SIGNED_WORD_TO_SAMPLE(datum);
+                *buf++ = ST_SIGNED_WORD_TO_SAMPLE(datum,);
         }
         return done;
 }

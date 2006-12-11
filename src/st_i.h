@@ -68,6 +68,8 @@ int st_readb(ft_t ft, uint8_t *ub);
 int st_writeb(ft_t ft, uint8_t ub);
 int st_readw(ft_t ft, uint16_t *uw);
 int st_writew(ft_t ft, uint16_t uw);
+int st_read3(ft_t ft, uint24_t *u3);
+int st_write3(ft_t ft, uint24_t u3);
 int st_readdw(ft_t ft, uint32_t *udw);
 int st_writedw(ft_t ft, uint32_t udw);
 int st_readf(ft_t ft, float *f);
@@ -82,16 +84,6 @@ int st_eof(ft_t ft);
 int st_error(ft_t ft);
 void st_rewind(ft_t ft);
 void st_clearerr(ft_t ft);
-
-/* defined in raw.c */
-void st_ub_write_buf(char* buf1, const st_sample_t *buf2, st_size_t len, char swap, st_size_t * clippedCount);
-void st_sb_write_buf(char *buf1, const st_sample_t *buf2, st_size_t len, char swap, st_size_t * clippedCount);
-void st_uw_write_buf(char *buf1, const st_sample_t *buf2, st_size_t len, char swap, st_size_t * clippedCount);
-void st_sw_write_buf(char *buf1, const st_sample_t *buf2, st_size_t len, char swap, st_size_t * clippedCount);
-void st_ub_read_buf(st_sample_t *buf1, char const *buf2, st_size_t len, char swap, st_size_t * clippedCount);
-void st_sb_read_buf(st_sample_t *buf1, char const *buf2, st_size_t len, char swap, st_size_t * clippedCount);
-void st_uw_read_buf(st_sample_t *buf1, char const *buf2, st_size_t len, char swap, st_size_t * clippedCount);
-void st_sw_read_buf(st_sample_t *buf1, char const *buf2, st_size_t len, char swap, st_size_t * clippedCount);
 
 /* Utilities to byte-swap values, use libc optimized macros if possible  */
 #ifdef HAVE_BYTESWAP_H

@@ -225,7 +225,7 @@ static st_size_t st_svxread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
                         if (feof(p->ch[i]))
                                 return done;
                         /* scale signed up to long's range */
-                        *buf++ = ST_SIGNED_BYTE_TO_SAMPLE(datum);
+                        *buf++ = ST_SIGNED_BYTE_TO_SAMPLE(datum,);
                 }
                 done += ft->info.channels;
         }

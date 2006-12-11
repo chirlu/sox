@@ -381,7 +381,7 @@ static st_size_t st_vocread(ft_t ft, st_sample_t *buf, st_size_t len)
                     } else if (v->format == VOC_FMT_ALAW) {
                         *buf++ =  ST_ALAW_BYTE_TO_SAMPLE(uc);
                     } else {
-                        *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(uc);
+                        *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(uc,);
                     }
                     break;
                 case ST_SIZE_WORD:
@@ -392,7 +392,7 @@ static st_size_t st_vocread(ft_t ft, st_sample_t *buf, st_size_t len)
                             v->rest = 0;
                             return done;
                         }
-                    *buf++ = ST_SIGNED_WORD_TO_SAMPLE(sw);
+                    *buf++ = ST_SIGNED_WORD_TO_SAMPLE(sw,);
                     v->rest--; /* Processed 2 bytes so update */
                     break;
                 }

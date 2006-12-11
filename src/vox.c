@@ -158,10 +158,10 @@ static st_size_t st_voxread (ft_t ft,st_sample_t *buffer,st_size_t length)
                      byte      = ft->file.buf[ft->file.pos++];
 
                      word      = devox ((uint8_t) ((byte >> 4) & 0x0F),state);
-                     *buffer++ = ST_SIGNED_WORD_TO_SAMPLE (word * 16);
+                     *buffer++ = ST_SIGNED_WORD_TO_SAMPLE (word * 16,);
 
                      word      = devox ((uint8_t) (byte & 0x0F),state);
-                     *buffer++ = ST_SIGNED_WORD_TO_SAMPLE (word * 16);
+                     *buffer++ = ST_SIGNED_WORD_TO_SAMPLE (word * 16,);
 
                      count += 2;
                        }

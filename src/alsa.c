@@ -199,14 +199,14 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     dir = 0;
     if (snd_pcm_hw_params_set_buffer_size_near(alsa->pcm_handle, hw_params, 
                                                &buffer_size) < 0) {
-        st_fail_errno(ft, ST_EPERM, "Error setting buffersize.");
+        st_fail_errno(ft, ST_EPERM, "Error setting buffer size.");
         goto open_error;
     }
 
     snd_pcm_hw_params_get_buffer_size(hw_params, &buffer_size);
     if (period_size*2 > buffer_size)
     {
-        st_fail_errno(ft, ST_EPERM, "Buffer to small. Could not use.");
+        st_fail_errno(ft, ST_EPERM, "Buffer too small. Could not use.");
         goto open_error;
     }
 
@@ -290,6 +290,44 @@ static int st_alsastartread(ft_t ft)
     return st_alsasetup(ft, SND_PCM_STREAM_CAPTURE);
 }
 
+static void st_ub_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap UNUSED, st_size_t * clippedCount UNUSED)
+{
+    while (len--)
+        *buf1++ = ST_UNSIGNED_BYTE_TO_SAMPLE(*((unsigned char *)buf2++),);
+}
+
+static void st_sb_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap UNUSED, st_size_t * clippedCount UNUSED)
+{
+    while (len--)
+        *buf1++ = ST_SIGNED_BYTE_TO_SAMPLE(*((int8_t *)buf2++),);
+}
+
+static void st_uw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount UNUSED)
+{
+    while (len--)
+    {
+        uint16_t datum = *((uint16_t *)buf2);
+        buf2++; buf2++;
+        if (swap)
+            datum = st_swapw(datum);
+
+        *buf1++ = ST_UNSIGNED_WORD_TO_SAMPLE(datum,);
+    }
+}
+
+static void st_sw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount UNUSED)
+{
+    while (len--)
+    {
+        int16_t datum = *((int16_t *)buf2);
+        buf2++; buf2++;
+        if (swap)
+            datum = st_swapw(datum);
+
+        *buf1++ = ST_SIGNED_WORD_TO_SAMPLE(datum,);
+    }
+}
+
 static st_size_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 {
     st_size_t len;
@@ -341,8 +379,6 @@ static st_size_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
         /* ALSA library takes "frame" counts. */
         err = snd_pcm_readi(alsa->pcm_handle, alsa->buf, 
                             (nsamp-len)/ft->info.channels);
-        if (err == -EAGAIN)
-            continue;
         if (err < 0)
         {
             if (xrun_recovery(alsa->pcm_handle, err) < 0)
@@ -377,16 +413,51 @@ static int st_alsastartwrite(ft_t ft)
     return st_alsasetup(ft, SND_PCM_STREAM_PLAYBACK);
 }
 
+static void st_ub_write_buf(char* buf1, st_sample_t const * buf2, st_size_t len, char swap UNUSED, st_size_t * clippedCount)
+{
+    while (len--)
+        *(uint8_t *)buf1++ = ST_SAMPLE_TO_UNSIGNED_BYTE(*buf2++, *clippedCount);
+}
+
+static void st_sb_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap UNUSED, st_size_t * clippedCount)
+{
+    while (len--)
+        *(int8_t *)buf1++ = ST_SAMPLE_TO_SIGNED_BYTE(*buf2++, *clippedCount);
+}
+
+static void st_uw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
+{
+    while (len--)
+    {
+        uint16_t datum = ST_SAMPLE_TO_UNSIGNED_WORD(*buf2++, *clippedCount);
+        if (swap)
+            datum = st_swapw(datum);
+        *(uint16_t *)buf1 = datum;
+        buf1++; buf1++;
+    }
+}
+
+static void st_sw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
+{
+    while (len--)
+    {
+        int16_t datum = ST_SAMPLE_TO_SIGNED_WORD(*buf2++, *clippedCount);
+        if (swap)
+            datum = st_swapw(datum);
+        *(int16_t *)buf1 = datum;
+        buf1++; buf1++;
+    }
+}
+
 static st_size_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
 {
-    st_size_t len;
-    int err;
+    st_size_t osamp, done;
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
     void (*write_buf)(char *, const st_sample_t *, st_size_t, char, st_size_t *) = 0;
 
     switch(ft->info.size) {
         case ST_SIZE_BYTE:
-            switch(ft->info.encoding)
+            switch (ft->info.encoding)
             {
                 case ST_ENCODING_SIGN2:
                     write_buf = st_sb_write_buf;
@@ -395,12 +466,12 @@ static st_size_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
                     write_buf = st_ub_write_buf;
                     break;
                 default:
-                    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return ST_EOF;
+                    st_fail_errno(ft,ST_EFMT,"this encoding is not supported for this data size");
+                    return 0;
             }
             break;
         case ST_SIZE_WORD:
-            switch(ft->info.encoding)
+            switch (ft->info.encoding)
             {
                 case ST_ENCODING_SIGN2:
                     write_buf = st_sw_write_buf;
@@ -409,42 +480,36 @@ static st_size_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
                     write_buf = st_uw_write_buf;
                     break;
                 default:
-                    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return ST_EOF;
+                    st_fail_errno(ft,ST_EFMT,"this encoding is not supported for this data size");
+                    return 0;
             }
             break;
         default:
-            st_fail_errno(ft,ST_EFMT,"Do not support this data size for this handler");
-            return ST_EOF;
+            st_fail_errno(ft,ST_EFMT,"this data size is not supported by this handler");
+            return 0;
     }
 
-    /* Prevent overflow */
-    if (nsamp > alsa->buf_size/ft->info.size)
-        nsamp = (alsa->buf_size/ft->info.size);
-    len = 0;
+    for (done = 0; done < nsamp; done += osamp) {
+      int err;
+      st_size_t len;
+      
+      osamp = min(nsamp - done, alsa->buf_size / ft->info.size);
+      write_buf(alsa->buf, buf, osamp, ft->swap, &ft->clippedCount);
+      buf += osamp;
 
-    write_buf(alsa->buf, buf, nsamp, ft->swap, &ft->clippedCount);
-
-    while (len < nsamp)
-    {
+      for (len = 0; len < osamp;) {
         err = snd_pcm_writei(alsa->pcm_handle, 
-                             alsa->buf+(len*ft->info.size), 
-                             (nsamp-len)/ft->info.channels);
-        if (err == -EAGAIN)
-            continue;
-        if (err < 0)
-        {
-            if (xrun_recovery(alsa->pcm_handle, err) < 0)
-            {
-                st_fail_errno(ft, ST_EPERM, "ALSA write error");
-                return ST_EOF;
-            }
-        }
-        else
-            len += err * ft->info.channels;
+                             alsa->buf + (len * ft->info.size), 
+                             (osamp - len) / ft->info.channels);
+        if (err < 0 && xrun_recovery(alsa->pcm_handle, err) < 0) {
+          st_fail_errno(ft, ST_EPERM, "ALSA write error");
+          return 0;
+        } else
+          len += err * ft->info.channels;
+      }
     }
 
-    return len;
+    return nsamp;
 }
 
 
