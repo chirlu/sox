@@ -406,12 +406,6 @@ static void st_swapb(char *l, char *f, int n)
         f[i]= l[n-i-1];
 }
 
-/* Byte swappers, use optimized macros if available */
-#ifndef HAVE_BYTESWAP_H
-#define st_swapw(uw) (((uw >> 8) | (uw << 8)) & 0xffff)
-#define st_swapdw(udw) ((udw >> 24) | ((udw >> 8) & 0xff00) | ((udw << 8) & 0xff0000L) | (udw << 24))
-#endif
-
 /* return swapped 32-bit float */
 float st_swapf(float f)
 {

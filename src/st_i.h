@@ -100,8 +100,8 @@ void put16_be(unsigned char **p, short val);
 #define st_swapw(x) bswap_16(x)
 #define st_swapdw(x) bswap_32(x)
 #else
-uint16_t st_swapw(uint16_t uw);
-uint32_t st_swapdw(uint32_t udw);
+#define st_swapw(uw) (((uw >> 8) | (uw << 8)) & 0xffff)
+#define st_swapdw(udw) ((udw >> 24) | ((udw >> 8) & 0xff00) | ((udw << 8) & 0xff0000L) | (udw << 24))
 #endif
 float st_swapf(float f);
 uint32_t st_swap24(uint32_t udw);
