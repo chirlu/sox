@@ -238,6 +238,7 @@ typedef struct
   unsigned number_of_samples;
 
   FLAC__StreamEncoder * flac;
+  FLAC__StreamMetadata *metadata;
 } Encoder;
 
 
@@ -364,8 +365,7 @@ static int st_format_start_write(ft_t const format)
     FLAC__StreamMetadata_VorbisComment_Entry entry;
     char * comments, * comment, * end_of_comment;
 
-    /* FIXME This is never deleted; does it matter? */
-    metadata[0] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT);
+    encoder->metadata = metadata[0] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT);
 
     /* Check if there is a FIELD=value pair already in the comment; if not, add one */
     if (strchr(format->comment, '=') == NULL) 
@@ -448,6 +448,7 @@ static int st_format_stop_write(ft_t const format)
   Encoder * encoder = (Encoder *) format->priv;
   FLAC__StreamEncoderState state = FLAC__stream_encoder_get_state(encoder->flac);
 
+  FLAC__metadata_object_delete(encoder->metadata);
   FLAC__stream_encoder_finish(encoder->flac);
   FLAC__stream_encoder_delete(encoder->flac);
   free(encoder->decoded_samples);
