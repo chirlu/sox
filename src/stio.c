@@ -252,7 +252,6 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
 
         /* stdout tends to be line-buffered.  Override this */
         /* to be Full Buffering. */
-        /* FIXME: Use buffer size from ft structure */
         if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char)*ST_BUFSIZ))
         {
             st_warn("Can't set write buffer");
