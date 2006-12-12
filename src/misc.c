@@ -479,9 +479,9 @@ int strcasecmp(const char *s1, const char *s2)
   return toupper(*s1) - toupper(*s2);
 }
 
-int strncasecmp(char const * s1, char const * s2, size_t n)
+int strncasecmp(char const *s1, char const * s2, size_t n)
 {
-  while (--n && *s1 && (toupper(*s1) == toupper(*s2)))
+  while (n-- && *s1 && (toupper(*s1) == toupper(*s2)))
     s1++, s2++;
   return toupper(*s1) - toupper(*s2);
 }
