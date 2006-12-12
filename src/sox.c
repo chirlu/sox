@@ -551,34 +551,6 @@ static int compare_input(ft_t ft1, ft_t ft2)
     return ST_SUCCESS;
 }
 
-static void optimize_trim(void)
-{
-    /* Speed hack.  If the "trim" effect is the first effect then
-     * peak inside its "effect descriptor" and see what the
-     * start location is.  This has to be done after its start()
-     * is called to have the correct location.
-     * Also, only do this when only working with one input file.
-     * This is because the logic to do it for multiple files is
-     * complex and problably never used.
-     */
-    if (input_count == 1 && neffects > 1 && 
-        strcmp(efftab[1].name, "trim") == 0)
-    {
-        if ((file_desc[0]->h->flags & ST_FILE_SEEK) && file_desc[0]->seekable)
-        {
-            if (st_seek(file_desc[0], st_trim_get_start(&efftab[1]),
-                        ST_SEEK_SET) != ST_EOF)
-            {
-                /* Assuming a failed seek stayed where it was.  If the
-                 * seek worked then reset the start location of
-                 * trim so that it thinks user didn't request a skip.
-                 */
-                st_trim_clear_start(&efftab[1]);
-            }
-        }
-    }
-}
-
 /*
  * Process input file -> effect table -> output file
  *      one buffer at a time
@@ -705,9 +677,6 @@ static void process(void) {
 
     /* Reserve an output buffer for all effects */
     reserve_effect_buf();
-
-    /* Try to save some time if first effect is "trim" by seeking */
-    optimize_trim();
 
     if (soxmix) {
       for (f = 0; f < input_count; f++)

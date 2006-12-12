@@ -599,8 +599,6 @@ const char *st_version(void)
  * file operations so that they could one day also work on memory
  * buffers.
  *
- * Offset is in bytes as opposed to st_seek() which is in samples.
- *
  * N.B. Can only seek forwards!
  */
 int st_seeki(ft_t ft, st_size_t offset, int whence)
