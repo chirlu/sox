@@ -53,7 +53,7 @@ st_format_fn_t st_format_fns[] = {
   st_smp_format_fn,
   st_snd_format_fn,
   st_sphere_format_fn,
-#ifdef HAVE_SUNAUDIO
+#ifdef HAVE_SUN_AUDIO
   st_sun_format_fn,
 #endif
   st_svx_format_fn,

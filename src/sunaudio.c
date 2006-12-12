@@ -35,6 +35,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <string.h>
+
 /*
  * Do anything required before you start reading samples.
  * Read file header.
@@ -42,22 +44,23 @@
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-int st_sunstartread(ft_t ft)
+static int st_sunstartread(ft_t ft)
 {
-    int samplesize, encoding;
+    st_fileinfo_t *file = (st_fileinfo_t *)ft->priv;
+    st_size_t samplesize, encoding;
     audio_info_t audio_if;
 #ifdef __SVR4
     audio_device_t audio_dev;
 #endif
     char simple_hw=0;
 
-    /* Hard code for now. */
-    ft->file.count = 0;
-    ft->file.pos = 0;
-    ft->file.eof = 0;
-    ft->file.size = 1024;
-    if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
-        st_fail_errno(ft,ST_ENOMEM,"unable to allocate input buffer of size %d", ft->file.size);
+    /* Hard-code for now. */
+    file->count = 0;
+    file->pos = 0;
+    file->eof = 0;
+    file->size = 1024;
+    if ((file->buf = malloc (file->size)) == NULL) {
+        st_fail_errno(ft,ST_ENOMEM,"unable to allocate input buffer of size %d", file->size);
         return ST_EOF;
     }
 
@@ -175,27 +178,28 @@ int st_sunstartread(ft_t ft)
     ioctl(fileno(ft->fp), I_FLUSH, FLUSHR);
 #endif
     /* Change to non-buffered I/O*/
-    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
+    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * file->size);
 
     return (ST_SUCCESS);
 }
 
-int st_sunstartwrite(ft_t ft)
+static int st_sunstartwrite(ft_t ft)
 {
-    int samplesize, encoding;
+    st_fileinfo_t *file = (st_fileinfo_t *)ft->priv;
+    st_size_t samplesize, encoding;
     audio_info_t audio_if;
 #ifdef __SVR4
     audio_device_t audio_dev;
 #endif
     char simple_hw=0;
 
-    /* Hard code for now. */
-    ft->file.count = 0;
-    ft->file.pos = 0;
-    ft->file.eof = 0;
-    ft->file.size = 1024;
-    if ((ft->file.buf = malloc (ft->file.size)) == NULL) {
-        st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", ft->file.size);
+    /* Hard-code for now. */
+    file->count = 0;
+    file->pos = 0;
+    file->eof = 0;
+    file->size = 1024;
+    if ((file->buf = malloc (file->size)) == NULL) {
+        st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", file->size);
         return(ST_EOF);
     }
 
@@ -303,13 +307,13 @@ int st_sunstartwrite(ft_t ft)
         return(ST_EOF);
     }
     /* Change to non-buffered I/O */
-    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * ft->file.size);
+    setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * file->size);
 
     return (ST_SUCCESS);
 }
 
 /* Sun /dev/audio player */
-static char *sunnames[] = {
+static const char *sunnames[] = {
   "sunau",
   NULL
 };

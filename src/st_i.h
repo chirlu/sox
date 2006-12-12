@@ -208,7 +208,7 @@ extern const st_format_t *st_sf_format_fn(void);
 extern const st_format_t *st_smp_format_fn(void);
 extern const st_format_t *st_snd_format_fn(void);
 extern const st_format_t *st_sphere_format_fn(void);
-#ifdef HAVE_SUNAUDIO
+#ifdef HAVE_SUN_AUDIO
 extern const st_format_t *st_sun_format_fn(void);
 #endif
 extern const st_format_t *st_svx_format_fn(void);
