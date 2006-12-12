@@ -266,12 +266,8 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
     ft->comment = strdup(comment);
 
     if (loops)
-    {
         for (i = 0; i < ST_MAX_NLOOPS; i++)
-        {
             ft->loops[i] = loops[i];
-        }
-    }
 
     /* leave SMPTE # alone since it's absolute */
     if (instr)
