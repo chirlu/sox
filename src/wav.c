@@ -1179,9 +1179,6 @@ static int st_wavstartwrite(ft_t ft)
 
     if (ST_IS_BIGENDIAN) ft->info.swap = ft->info.swap ? 0 : 1;
 
-    /* FIXME: This reserves memory but things could fail
-     * later on and not release this memory.
-     */
     if (ft->info.encoding != ST_ENCODING_ADPCM &&
         ft->info.encoding != ST_ENCODING_IMA_ADPCM &&
         ft->info.encoding != ST_ENCODING_GSM)
