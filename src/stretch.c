@@ -23,6 +23,7 @@
 
 #include <stdlib.h> /* malloc and free */
 #include <string.h> /* memcpy() */
+#include <assert.h>
 
 static st_effect_t st_stretch_effect;
 
@@ -187,7 +188,7 @@ static int st_stretch_start(eff_t effp)
                                             sizeof(st_sample_t));
 
     /* the shift ratio deal with the longest of ishift/oshift
-       hence ishift<=size and oshift<=size. FIXME: should be asserted.
+       hence ishift<=size and oshift<=size.
      */
     if (stretch->factor < 1.0)
     {
@@ -199,6 +200,8 @@ static int st_stretch_start(eff_t effp)
         stretch->oshift = (int) (stretch->shift * stretch->size);
         stretch->ishift = (int) (stretch->oshift / stretch->factor);
     }
+    assert(stretch->ishift <= stretch->size);
+    assert(stretch->oshift <= stretch->size);
 
     stretch->oindex = stretch->index; /* start as synchronized */
     stretch->obuf = (double *)
