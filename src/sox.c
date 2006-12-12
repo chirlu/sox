@@ -586,7 +586,7 @@ static void optimize_trim(void)
 
 static void process(void) {
     int e, flowstatus = ST_SUCCESS;
-    size_t current_input;
+    size_t current_input = 0;
     st_size_t s, f;
     st_ssize_t ilen[MAX_INPUT_FILES];
     st_sample_t *ibuf[MAX_INPUT_FILES];
