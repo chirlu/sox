@@ -75,6 +75,9 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
+/* Define to 1 if you have Sun /dev/audio. */
+#undef HAVE_SUN_AUDIO
+
 /* Define to 1 if you have the <sun/audioio.h> header file. */
 #undef HAVE_SUN_AUDIOIO_H
 

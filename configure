@@ -6455,6 +6455,13 @@ fi
 
 done
 
+if test "$with_sun_audio" = yes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_SUN_AUDIO 1
+_ACEOF
+
+fi
 
 if test "${ac_cv_header_vorbis_codec_h+set}" = set; then
   { echo "$as_me:$LINENO: checking for vorbis/codec.h" >&5
