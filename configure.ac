@@ -82,6 +82,9 @@ dnl Check for Sun-style audio
 with_sun_audio=no
 AC_CHECK_HEADERS(sys/audioio.h, with_sun_audio=yes)
 AC_CHECK_HEADERS(sun/audioio.h, with_sun_audio=yes)
+if test "$with_sun_audio" = yes; then
+   AC_DEFINE(HAVE_SUN_AUDIO, 1, [Define to 1 if you have Sun /dev/audio.])
+fi
 
 dnl Check for Ogg Vorbis libraries
 AC_CHECK_HEADER(vorbis/codec.h,
