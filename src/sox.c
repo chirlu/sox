@@ -186,7 +186,7 @@ int main(int argc, char **argv)
     i = strlen(myname);
     if (i >= sizeof("soxmix") - 1)
       soxmix = strcmp(myname + i - (sizeof("soxmix") - 1), "soxmix") == 0;
-    
+
     st_output_message_handler = sox_output_message;
 
     /* Loop over arguments and filenames, stop when an effect name is 
@@ -224,7 +224,7 @@ int main(int argc, char **argv)
     } /* while (commandline options) */
 
     /* Make sure we got at least the required # of input filenames */
-    input_count = file_count - 1;
+    input_count = file_count ? file_count - 1 : 0;
     if (input_count < (soxmix ? 2 : 1))
         usage("Not enough input filenames specified");
 
@@ -240,32 +240,32 @@ int main(int argc, char **argv)
             file_opts[i]->volume = 1.0 / input_count;
       }
       
-        file_desc[i] = st_open_read(file_opts[i]->filename,
-                                    &file_opts[i]->info, 
-                                    file_opts[i]->filetype);
-        if (!file_desc[i])
+      file_desc[i] = st_open_read(file_opts[i]->filename,
+                                  &file_opts[i]->info, 
+                                  file_opts[i]->filetype);
+      if (!file_desc[i])
         {
-            /* st_open_read() will call st_warn for most errors.
-             * Rely on that printing something.
-             */
-            exit(2);
+          /* st_open_read() will call st_warn for most errors.
+           * Rely on that printing something.
+           */
+          exit(2);
+        }
+      
+      if (file_opts[i]->info.compression != HUGE_VAL)
+        {
+          st_fail("A compression factor can only be given for an output file");
+          cleanup();
+          exit(1);
         }
 
-        if (file_opts[i]->info.compression != HUGE_VAL)
+      if (file_opts[i]->comment != NULL)
         {
-            st_fail("A compression factor can only be given for an output file");
-            cleanup();
-            exit(1);
-        }
-
-        if (file_opts[i]->comment != NULL)
-        {
-            st_fail("A comment can only be given for an output file");
-            cleanup();
-            exit(1);
+          st_fail("A comment can only be given for an output file");
+          cleanup();
+          exit(1);
         }
     }
-
+    
     /* Loop through the reset of the arguments looking for effects */
     parse_effects(argc, argv);
 
