@@ -137,7 +137,7 @@ static int st_aiffstartread(ft_t ft)
         /* Endian machines.                                            */
         if (ST_IS_LITTLEENDIAN)
         {
-            ft->swap = ft->swap ? 0 : 1;
+            ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         /* FORM chunk */
@@ -459,7 +459,7 @@ static int st_aiffstartread(ft_t ft)
         if (is_sowt)
         {
                 aiff->nsamples -= 4;
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
         
         if (foundmark && !foundinstr)
@@ -713,7 +713,7 @@ static int st_aiffstartwrite(ft_t ft)
         /* Endian machines.                                            */
         if (ST_IS_LITTLEENDIAN)
         {
-            ft->swap = ft->swap ? 0 : 1;
+            ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         aiff->nsamples = 0;
@@ -926,7 +926,7 @@ static int st_aifcstartwrite(ft_t ft)
         /* Endian machines.                                            */
         if (ST_IS_LITTLEENDIAN)
         {
-            ft->swap = ft->swap ? 0 : 1;
+            ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         aiff->nsamples = 0;

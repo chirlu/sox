@@ -162,7 +162,7 @@ static int st_austartread(ft_t ft)
          */
         if (ST_IS_LITTLEENDIAN)
         {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         /* Check the magic word */
@@ -172,11 +172,11 @@ static int st_austartread(ft_t ft)
                  * left over from pre-standardize period of testing for
                  * endianess.  Its not hurting though.
                  */
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
                 st_debug("Found inverted DEC magic word.  Swapping bytes.");
         }
         else if (magic == SUN_INV_MAGIC) {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
                 st_debug("Found inverted Sun/NeXT magic word. Swapping bytes.");
         }
         else if (magic == SUN_MAGIC) {
@@ -312,7 +312,7 @@ static int st_austartwrite(ft_t ft)
          */
         if (ST_IS_LITTLEENDIAN)
         {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         p->data_size = 0;

@@ -223,7 +223,7 @@ static int st_vocstartread(ft_t ft)
         /* Big Endian mahcines.                                   */
         if (ST_IS_BIGENDIAN)
         {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
 
@@ -425,7 +425,7 @@ static int st_vocstartwrite(ft_t ft)
         /* in on Big Endian machines.                       */
         if (ST_IS_BIGENDIAN)
         {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         if (! ft->seekable)

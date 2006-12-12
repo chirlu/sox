@@ -120,8 +120,8 @@ static void cvsdstartcommon(ft_t ft)
         ft->info.channels = 1;
         ft->info.size = ST_SIZE_WORD; /* make output format default to words */
         ft->info.encoding = ST_ENCODING_SIGN2;
-        p->swapbits = ft->swap;
-        ft->swap = 0;
+        p->swapbits = ft->info.swap;
+        ft->info.swap = 0;
         /*
          * initialize the decoder
          */

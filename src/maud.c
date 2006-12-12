@@ -60,7 +60,7 @@ static int st_maudstartread(ft_t ft)
          */
         if (ST_IS_LITTLEENDIAN)
         {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
         
         /* read FORM chunk */
@@ -226,7 +226,7 @@ static int st_maudstartwrite(ft_t ft)
          */
         if (ST_IS_LITTLEENDIAN)
         {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
         
         /* If you have to seek around the output file */

@@ -123,7 +123,7 @@ static int ossdspinit(ft_t ft)
                 if ((tmp & sampletype) == 0)
                 {
                     sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
-                    ft->swap = ft->swap ? 0 : 1;
+                    ft->info.swap = ft->info.swap ? 0 : 1;
                 }
             }
         }

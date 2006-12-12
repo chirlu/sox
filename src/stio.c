@@ -109,8 +109,6 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
     ft->info.channels = 0;
     if (info)
         ft->info = *info;
-    /* FIXME: Remove ft->swap from code */
-    ft->swap = ft->info.swap;
     ft->mode = 'r';
 
     if (!(ft->h->flags & ST_FILE_NOSTDIO))
@@ -278,9 +276,6 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
     /* leave SMPTE # alone since it's absolute */
     if (instr)
         ft->instr = *instr;
-
-    /* FIXME: Remove ft->swap from code */
-    ft->swap = ft->info.swap;
 
     /* Read and write starters can change their formats. */
     if ((*ft->h->startwrite)(ft) != ST_SUCCESS)

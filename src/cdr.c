@@ -52,7 +52,7 @@ static int st_cdrstartread(ft_t ft)
         /* Little Endian machines.                             */
         if (ST_IS_LITTLEENDIAN)
         { 
-            ft->swap = ft->swap ? 0 : 1;
+            ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         ft->info.rate = 44100L;
@@ -103,7 +103,7 @@ static int st_cdrstartwrite(ft_t ft)
         /* Little Endian Machines.                                 */
         if (ST_IS_LITTLEENDIAN)
         {
-            ft->swap = ft->swap ? 0 : 1;
+            ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         /* Needed because of rawwrite() */

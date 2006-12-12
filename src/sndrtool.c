@@ -79,7 +79,7 @@ static int st_sndtstartread(ft_t ft)
          */
         if (ST_IS_BIGENDIAN)
         {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         rate = 0;
@@ -152,7 +152,7 @@ static int st_sndtstartwrite(ft_t ft)
          */
         if (ST_IS_BIGENDIAN)
         {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         /* write header */

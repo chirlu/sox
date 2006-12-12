@@ -281,7 +281,6 @@ struct st_soundstream {
     st_signalinfo_t info;                 /* signal specifications */
     st_instrinfo_t  instr;                /* instrument specification */
     st_loopinfo_t   loops[ST_MAX_NLOOPS]; /* Looping specification */
-    char            swap;                 /* do byte- or word-swap */
     char            seekable;             /* can seek on this file */
     char            mode;                 /* read or write mode */
     /* Total samples per channel of file.  Zero if unknown. */

@@ -105,7 +105,7 @@ static int st_xastartread(ft_t ft)
     }
     
     /* Byte-swap on big-endian systems */
-    if (ST_IS_BIGENDIAN) ft->swap = ft->swap ? 0 : 1;
+    if (ST_IS_BIGENDIAN) ft->info.swap = ft->info.swap ? 0 : 1;
 
     /* Read the rest of the header */
     if (st_readdw(ft, &xa->header.outSize) != ST_SUCCESS) return ST_EOF;

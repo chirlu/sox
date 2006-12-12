@@ -114,7 +114,7 @@ static int st_spherestartread(ft_t ft)
                     /* Data is in little endian. */
                     if (ST_IS_BIGENDIAN)
                     {
-                        ft->swap = ft->swap ? 0 : 1;
+                        ft->info.swap = ft->info.swap ? 0 : 1;
                     }
                 }
                 else if (strncmp(fldsval,"10",2) == 0)
@@ -122,7 +122,7 @@ static int st_spherestartread(ft_t ft)
                     /* Data is in big endian. */
                     if (ST_IS_LITTLEENDIAN)
                     {
-                        ft->swap = ft->swap ? 0 : 1;
+                        ft->info.swap = ft->info.swap ? 0 : 1;
                     }
                 }
             }
@@ -279,7 +279,7 @@ static int st_spherestopwrite(ft_t ft)
     sprintf(buf, "channel_count -i %d\n", ft->info.channels);
     st_writes(ft, buf);
 
-    if (ft->swap)
+    if (ft->info.swap)
     {
         sprintf(buf, "sample_byte_format -s2 %s\n", ST_IS_BIGENDIAN ? "01" : "10");
     }

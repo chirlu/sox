@@ -72,7 +72,7 @@ static int st_avrstartread(ft_t ft)
   /* Endian machines.                                          */
   if (ST_IS_LITTLEENDIAN)
   {
-          ft->swap = ft->swap ? 0 : 1;
+          ft->info.swap = ft->info.swap ? 0 : 1;
   }
 
   st_reads(ft, avr->magic, 4);
@@ -157,7 +157,7 @@ static int st_avrstartwrite(ft_t ft)
   /* Endian machines.                                          */
   if (ST_IS_LITTLEENDIAN)
   {
-          ft->swap = ft->swap ? 0 : 1;
+          ft->info.swap = ft->info.swap ? 0 : 1;
   }
 
   if (!ft->seekable) {

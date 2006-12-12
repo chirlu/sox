@@ -90,7 +90,7 @@ static int st_prcstartread(ft_t ft)
          */
         if (ST_IS_LITTLEENDIAN)
         {
-                ft->swap = ft->swap ? 1 : 0;
+                ft->info.swap = ft->info.swap ? 1 : 0;
         }
 
         /* Check the header */
@@ -150,7 +150,7 @@ static int st_prcstartwrite(ft_t ft)
          */
         if (ST_IS_LITTLEENDIAN)
         {
-                ft->swap = ft->swap ? 1 : 0;
+                ft->info.swap = ft->info.swap ? 1 : 0;
         }
 
         p->length = 0;

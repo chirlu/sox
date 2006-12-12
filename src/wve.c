@@ -64,7 +64,7 @@ static int st_wvestartread(ft_t ft)
          */
         if (ST_IS_LITTLEENDIAN)
         {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         /* Check the magic word (null-terminated) */
@@ -87,7 +87,7 @@ static int st_wvestartread(ft_t ft)
                  * testing for endianess was standardized.  Leaving since
                  * it doesn't hurt.
                  */
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
                 st_debug("Found inverted PSION magic word.  Swapping bytes.");
         }
         else if (version == PSION_VERSION)
@@ -151,7 +151,7 @@ static int st_wvestartwrite(ft_t ft)
          */
         if (ST_IS_LITTLEENDIAN)
         {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         p->length = 0;

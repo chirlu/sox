@@ -401,7 +401,7 @@ static int st_wavstartread(ft_t ft)
 
         ft->st_errno = ST_SUCCESS;
 
-    if (ST_IS_BIGENDIAN) ft->swap = ft->swap ? 0 : 1;
+    if (ST_IS_BIGENDIAN) ft->info.swap = ft->info.swap ? 0 : 1;
 
     if (st_reads(ft, magic, 4) == ST_EOF || (strncmp("RIFF", magic, 4) != 0 &&
                                              strncmp("RIFX", magic, 4) != 0))
@@ -414,7 +414,7 @@ static int st_wavstartread(ft_t ft)
     if (strncmp("RIFX", magic, 4) == 0) 
     {
         st_debug("Found RIFX header, swapping bytes");
-        ft->swap = ft->swap ? 0 : 1;
+        ft->info.swap = ft->info.swap ? 0 : 1;
     }
 
     st_readdw(ft, &dwRiffLength);
@@ -1177,7 +1177,7 @@ static int st_wavstartwrite(ft_t ft)
 
     ft->st_errno = ST_SUCCESS;
 
-    if (ST_IS_BIGENDIAN) ft->swap = ft->swap ? 0 : 1;
+    if (ST_IS_BIGENDIAN) ft->info.swap = ft->info.swap ? 0 : 1;
 
     /* FIXME: This reserves memory but things could fail
      * later on and not release this memory.
@@ -1502,8 +1502,8 @@ static int wavwritehdr(ft_t ft, int second_header)
     /* If user specified opposite swap then we think, assume they are
      * asking to write a RIFX file.
      */
-    if ((!ST_IS_BIGENDIAN && ft->swap) || 
-        (ST_IS_BIGENDIAN && !ft->swap))
+    if ((!ST_IS_BIGENDIAN && ft->info.swap) || 
+        (ST_IS_BIGENDIAN && !ft->info.swap))
     {
         if (!second_header)
             st_report("Requested to swap bytes so writing  RIFX header");

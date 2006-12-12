@@ -213,7 +213,7 @@ static int st_smpstartread(ft_t ft)
         /* Big Endian machines.                                   */
         if (ST_IS_BIGENDIAN)
         {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         /* If you need to seek around the input file. */
@@ -349,7 +349,7 @@ static int st_smpstartwrite(ft_t ft)
         /* Big Endian machines.                                   */
         if (ST_IS_BIGENDIAN)
         {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         /* If you have to seek around the output file */

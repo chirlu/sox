@@ -64,7 +64,7 @@ static int st_hcomstartread(ft_t ft)
          */
         if (ST_IS_LITTLEENDIAN)
         {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         /* Skip first 65 bytes of header */
@@ -258,7 +258,7 @@ static int st_hcomstartwrite(ft_t ft)
          */
         if (ST_IS_LITTLEENDIAN)
         {
-                ft->swap = ft->swap ? 0 : 1;
+                ft->info.swap = ft->info.swap ? 0 : 1;
         }
 
         switch (ft->info.rate) {
