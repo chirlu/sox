@@ -61,6 +61,8 @@ void st_initrand(void);
  */
 /* declared in misc.c */
 size_t st_readbuf(ft_t ft, void *buf, size_t size, st_size_t len);
+int st_skipbytes(ft_t ft, st_size_t n);
+int st_padbytes(ft_t ft, st_size_t n);
 size_t st_writebuf(ft_t ft, void const *buf, size_t size, st_size_t len);
 int st_reads(ft_t ft, char *c, st_size_t len);
 int st_writes(ft_t ft, char *c);
@@ -90,6 +92,8 @@ uint32_t get32_le(unsigned char **p);
 uint16_t get16_le(unsigned char **p);
 void put32_le(unsigned char **p, uint32_t val);
 void put16_le(unsigned char **p, int16_t val);
+void put32_be(unsigned char **p, int32_t val);
+void put16_be(unsigned char **p, short val);
 
 /* Utilities to byte-swap values, use libc optimized macros if possible  */
 #ifdef HAVE_BYTESWAP_H

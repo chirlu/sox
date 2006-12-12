@@ -83,10 +83,31 @@ static const char writerr[] = "Error writing sample file.  You are probably out 
 /* Read in a buffer of data of length len and each element is size bytes.
  * Returns number of elements read, not bytes read.
  */
-
 size_t st_readbuf(ft_t ft, void *buf, size_t size, st_size_t len)
 {
     return fread(buf, size, len, ft->fp);
+}
+
+/* Skip input without seeking. */
+int st_skipbytes(ft_t ft, st_size_t n)
+{
+  unsigned char trash;
+
+  while (n--)
+    if (st_readb(ft, &trash) == ST_EOF)
+      return (ST_EOF);
+  
+  return (ST_SUCCESS);
+}
+
+/* Pad output. */
+int st_padbytes(ft_t ft, st_size_t n)
+{
+  while (n--)
+    if (st_writeb(ft, '\0') == ST_EOF)
+      return (ST_EOF);
+
+  return (ST_SUCCESS);
 }
 
 /* Write a buffer of data of length len and each element is size bytes.
@@ -362,6 +383,20 @@ void put16_le(unsigned char **p, int16_t val)
         *(*p)++ = (val >> 8) & 0xff;
 }
 
+void put32_be(unsigned char **p, int32_t val)
+{
+  *(*p)++ = (val >> 24) & 0xff;
+  *(*p)++ = (val >> 16) & 0xff;
+  *(*p)++ = (val >> 8) & 0xff;
+  *(*p)++ = val & 0xff;
+}
+
+void put16_be(unsigned char **p, short val)
+{
+  *(*p)++ = (val >> 8) & 0xff;
+  *(*p)++ = val & 0xff;
+}
+
 /* generic swap routine. Swap l and place in to f (datatype length = n) */
 static void st_swapb(char *l, char *f, int n)
 {
@@ -389,7 +424,6 @@ float st_swapf(float f)
     u.dw= (u.dw>>24) | ((u.dw>>8)&0xff00) | ((u.dw<<8)&0xff0000L) | (u.dw<<24);
     return u.f;
 }
-
 
 uint32_t st_swap24(uint24_t udw)
 {
@@ -567,7 +601,7 @@ const char *st_version(void)
   return PACKAGE_VERSION;
 }
 
-/* Implements traditional fseeko() behavior.  Meant to abstract out
+/* Implements traditional fseek() behavior.  Meant to abstract out
  * file operations so that they could one day also work on memory
  * buffers.
  *

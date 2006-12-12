@@ -48,8 +48,6 @@ struct readpriv {
         short sample;
 };
 
-static int skipbytes(ft_t, int);
-
 static int st_hcomstartread(ft_t ft)
 {
         struct readpriv *p = (struct readpriv *) ft->priv;
@@ -70,7 +68,7 @@ static int st_hcomstartread(ft_t ft)
         }
 
         /* Skip first 65 bytes of header */
-        rc = skipbytes(ft, 65);
+        rc = st_skipbytes(ft, 65);
         if (rc)
             return rc;
 
@@ -82,7 +80,7 @@ static int st_hcomstartread(ft_t ft)
         }
 
         /* Skip to byte 83 */
-        rc = skipbytes(ft, 83-69);
+        rc = st_skipbytes(ft, 83-69);
         if (rc)
             return rc;
 
@@ -91,7 +89,7 @@ static int st_hcomstartread(ft_t ft)
         st_readdw(ft, &rsrcsize); /* bytes 87-90 */
 
         /* Skip the rest of the header (total 128 bytes) */
-        rc = skipbytes(ft, 128-91);
+        rc = st_skipbytes(ft, 128-91);
         if (rc != 0)
             return rc;
 
@@ -143,7 +141,7 @@ static int st_hcomstartread(ft_t ft)
                        p->dictionary[i].dict_rightson);
                        */
         }
-        rc = skipbytes(ft, 1); /* skip pad byte */
+        rc = st_skipbytes(ft, 1); /* skip pad byte */
         if (rc)
             return rc;
 
@@ -158,20 +156,6 @@ static int st_hcomstartread(ft_t ft)
         p->nrbits = -1; /* Special case to get first byte */
 
         return (ST_SUCCESS);
-}
-
-/* FIXME: Move to misc.c */
-static int skipbytes(ft_t ft, int n)
-{
-    unsigned char trash;
-        while (--n >= 0) {
-                if (st_readb(ft, &trash) == ST_EOF)
-                {
-                        st_fail_errno(ft,ST_EOF,"unexpected EOF in Mac header");
-                        return(ST_EOF);
-                }
-        }
-        return(ST_SUCCESS);
 }
 
 static st_size_t st_hcomread(ft_t ft, st_sample_t *buf, st_size_t len)
@@ -359,21 +343,6 @@ static void makecodes(int e, int c, int s, int b)
 static int nbits;
 static int32_t curword;
 
-/* FIXME: Place in misc.c */
-static void putlong(unsigned char *c, int32_t v)
-{
-  *c++ = (v >> 24) & 0xff;
-  *c++ = (v >> 16) & 0xff;
-  *c++ = (v >> 8) & 0xff;
-  *c++ = v & 0xff;
-}
-
-static void putshort(unsigned char *c, short v)
-{
-  *c++ = (v >> 8) & 0xff;
-  *c++ = v & 0xff;
-}
-
 
 static void putcode(unsigned char c, unsigned char **df)
 {
@@ -387,9 +356,8 @@ int i;
     if(code & 1) curword += 1;
     nbits++;
     if(nbits == 32) {
-      putlong(*df, curword);
+      put32_be(df, curword);
       checksum += curword;
-      (*df) += 4;
       nbits = 0;
       curword = 0;
     }
@@ -401,7 +369,7 @@ static int compress(unsigned char **df, int32_t *dl, float fr)
 {
   int32_t samplerate;
   unsigned char *datafork = *df;
-  unsigned char *ddf;
+  unsigned char *ddf, *p;
   short dictsize;
   int frequtable[256];
   int i, sample, j, k, d, l, frequcount;
@@ -475,10 +443,8 @@ static int compress(unsigned char **df, int32_t *dl, float fr)
   }
   ddf = datafork + 22;
   for(i = 0; i < dictsize; i++) {
-    putshort(ddf, dictionary[i].dict_leftson);
-    ddf += 2;
-    putshort(ddf, dictionary[i].dict_rightson);
-    ddf += 2;
+    put16_be(&ddf, dictionary[i].dict_leftson);
+    put16_be(&ddf, dictionary[i].dict_rightson);
   }
   *ddf++ = 0;
   *ddf++ = *(*df)++;
@@ -492,25 +458,18 @@ static int compress(unsigned char **df, int32_t *dl, float fr)
     putcode(0, &ddf);
   }
   strncpy((char *) datafork, "HCOM", 4);
-  putlong(datafork + 4, *dl);
-  putlong(datafork + 8, checksum);
-  putlong(datafork + 12, 1L);
+  p = datafork + 4;
+  put32_be(&p, *dl);
+  put32_be(&p, checksum);
+  put32_be(&p, 1L);
   samplerate = 22050 / (int32_t)fr;
-  putlong(datafork + 16, samplerate);
-  putshort(datafork + 20, dictsize);
+  put32_be(&p, samplerate);
+  put16_be(&p, dictsize);
   *df = datafork;               /* reassign passed pointer to new datafork */
   *dl = l;                      /* and its compressed length */
 
   return (ST_SUCCESS);
 }
-
-/* FIXME: Place in misc.c */
-static void padbytes(ft_t ft, int n)
-{
-        while (--n >= 0)
-            st_writeb(ft, '\0');
-}
-
 
 /* End of hcom utility routines */
 
@@ -532,12 +491,12 @@ static int st_hcomstopwrite(ft_t ft)
 
         /* Write the header */
         st_writebuf(ft, (void *)"\000\001A", 1, 3); /* Dummy file name "A" */
-        padbytes(ft, 65-3);
+        st_padbytes(ft, 65-3);
         st_writes(ft, "FSSD");
-        padbytes(ft, 83-69);
+        st_padbytes(ft, 83-69);
         st_writedw(ft, (uint32_t) compressed_len); /* compressed_data size */
         st_writedw(ft, (uint32_t) 0); /* rsrc size */
-        padbytes(ft, 128 - 91);
+        st_padbytes(ft, 128 - 91);
         if (st_error(ft))
         {
                 st_fail_errno(ft,errno,"write error in HCOM header");
@@ -558,7 +517,7 @@ static int st_hcomstopwrite(ft_t ft)
             return rc;
 
         /* Pad the compressed_data fork to a multiple of 128 bytes */
-        padbytes(ft, 128 - (int) (compressed_len%128));
+        st_padbytes(ft, 128 - (int) (compressed_len%128));
 
         return (ST_SUCCESS);
 }
