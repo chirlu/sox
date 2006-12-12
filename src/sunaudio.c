@@ -17,7 +17,7 @@
 
 #include "st_i.h"
 
-#ifdef HAVE_SUNAUDIO
+#ifdef HAVE_SUN_AUDIO
 
 #include <sys/ioctl.h>
 #include <sys/types.h>
