@@ -2,7 +2,7 @@ SoX: Sound eXchange Installation
 
 This distribution will compile and run on most UNIX systems.
 It was originally developed on a UNIX/386 machine running AT&T V.3.2
-but its currently developed under Linux.  With little work it should
+but it's currently developed under Linux.  With little work it should
 work with most UNIX-like systems.
 
 Compiling
@@ -25,25 +25,6 @@ for a complete list of options.
 If your system works with the "configure" script then you may skip
 to the Optional Compiling section.
 
-If your system does not work with the configure scripts then there are
-several canned "Makefile"'s that you can use inside the src directory.  
-The following systems have a canned Makefile:
-
-    DOS        Makefile.dos (Borland or Turbo C)
-    WIN95/NT   Makefile.dos (Needs modifying for Visual C++)
-    OS/2       Makefile.gcc (using EMX GCC compiler)
-
-To use a canned Makefile, a few steps need to be completed.  First up,
-you need to make a copy of stconfig.h.in and call it stconfig.h.  Modify
-this file to reflect your environment.
-
-FIXME: A file called ststdint.h needs to be created as well.  This
-is the same as stdint.h if your system has it.
-
-After that, copy either Makefile.dos or Makefile.gcc to a file
-called Makefile.  This needs to be done in both the src directory 
-and the src/gsm directory.  This file also needs to be modified to reflect
-your environment.
 
 Optional Compile Features
 -------------------------
@@ -78,6 +59,7 @@ can use runtime routines to perform u-law/A-law conversions.
 This is slower then the default lookup tables but results in the
 same answers.  To save this memory, specify --disable-fast-ulaw and
 --disable-fast-alaw.
+
 
 Testing
 -------
