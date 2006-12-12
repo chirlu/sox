@@ -220,7 +220,7 @@ static int st_vocstartread(ft_t ft)
         unsigned char uc;
 
         /* VOC is in Little Endian format.  Swap bytes read in on */
-        /* Big Endian mahcines.                                   */
+        /* Big Endian machines.                                   */
         if (ST_IS_BIGENDIAN)
         {
                 ft->info.swap = ft->info.swap ? 0 : 1;
