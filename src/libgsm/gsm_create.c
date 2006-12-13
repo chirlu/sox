@@ -13,7 +13,7 @@
 
 gsm gsm_create ()
 {
-	gsm = (gsm)calloc(sizeof(struct gsm_state));
+	gsm r = (gsm)calloc(1, sizeof(struct gsm_state));
 
         if (r)
           r->nrp = 40;
