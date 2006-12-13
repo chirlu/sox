@@ -178,9 +178,9 @@ static int st_skelstopwrite(ft_t ft)
     return ST_SUCCESS;
 }
 
-/* Foo format */
+/* Format file suffixes */
 static const char *skel_names[] = {
-  "wav",
+  "skel",
   NULL
 };
 
