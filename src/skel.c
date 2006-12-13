@@ -1,38 +1,46 @@
 /*
- * July 5, 1991
- * Copyright 1991 Lance Norskog And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
- * the consequences of using this software.
- */
-
-/*
  * Sound Tools skeleton file format driver.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library. If not, write to the Free Software
+ * Foundation, Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301,
+ * USA.  */
  */
 
 #include "st_i.h"
 
 /* Private data for SKEL file */
-typedef struct skelstuff 
+typedef struct skel
 {
     st_size_t samples_remaining;
 } *skel_t;
 
+/* Note that if any of your methods doesn't need to do anything, you
+   can instead use the relevant st_*_nothing* method */
+
 /*
  * Do anything required before you start reading samples.
- * Read file header. 
- *      Find out sampling rate, 
- *      size and encoding of samples, 
+ * Read file header.
+ *      Find out sampling rate,
+ *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-int st_skelstartread(ft_t ft) 
+static int st_skelstartread(ft_t ft)
 {
     skel_t sk = (skel_t) ft->priv;
 
     /* If you need to seek around the input file. */
-    if (!ft->seekable)
-    {
+    if (!ft->seekable) {
         st_fail_errno(ft,ST_EVALUE,"SKEL input file must be a file, not a pipe");
         return (ST_EOF);
     }
@@ -68,10 +76,10 @@ int st_skelstartread(ft_t ft)
  * Place in buf[].
  * Return number of samples read.
  */
-st_ssize_t st_skelread(ft_t ft, st_sample_t *buf, st_size_t len) 
+static st_size_t st_skelread(ft_t ft, st_sample_t *buf, st_size_t len)
 {
     skel_t sk = (skel_t)ft->priv;
-    int done = 0;
+    st_size_t done = 0;
     st_sample_t l;
 
     /* Always return a full frame of audio data */
@@ -82,11 +90,9 @@ st_ssize_t st_skelread(ft_t ft, st_sample_t *buf, st_size_t len)
         if no more samples
             break
         get a sample
-        switch (ft->info.size)
-        {
+        switch (ft->info.size) {
             case ST_SIZE_BYTE:
-                switch (ft->info.encoding)
-                {
+                switch (ft->info.encoding) {
                     case ST_ENCODING_UNSIGNED;
                         *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(sample);
                         break;
@@ -95,69 +101,60 @@ st_ssize_t st_skelread(ft_t ft, st_sample_t *buf, st_size_t len)
         }
     }
 
-    if (done == 0)
-        return ST_EOF;
-    else
-        return done;
+    return done;
 }
 
 /*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
+ * Do anything required when you stop reading samples.
+ * Don't close input file!
  */
-int skelstopread(ft_t ft) 
+static int st_skelstopread(ft_t ft)
 {
-    return (ST_SUCCESS);
+    return ST_SUCCESS;
 }
 
-int st_skelstartwrite(ft_t ft) 
+static int st_skelstartwrite(ft_t ft)
 {
     skel_t sk = (skel_t) ft->priv;
 
     /* If you have to seek around the output file. */
     /* If header contains a length value then seeking will be
-     * required.  Instead of failing, its sometimes nice to
+     * required.  Instead of failing, it's sometimes nice to
      * just set the length to max value and not fail.
      */
-    if (!ft->seekable) 
-    {
+    if (!ft->seekable) {
         st_fail_errno(ft, ST_EVALUE, "Output .skel file must be a file, not a pipe");
-        return (ST_EOF);
+        return ST_EOF;
     }
 
     if (ft->info.rate != 44100L)
-    {
-        st_fail_errno(ft, ST_EVALUE, "Output. skel file must have a sample rate of 44100");
+        st_fail_errno(ft, ST_EVALUE, "Output .skel file must have a sample rate of 44100");
+
+    if (ft->info.size == -1) {
+        st_fail_errno(ft, ST_EVALUE, "Did not specify a size for .skel output file");
+        return ST_EOF;
     }
 
-    if (ft->info.size == -1)
-    {
-        st_fail_errno(ft, ST_EVALUE, "Did not specify a size for .skel output file");
-        return (ST_EOF);
-    }
     error check ft->info.encoding;
     error check ft->info.channels;
 
     /* Write file header, if any */
     /* Write comment field, if any */
 
-    return(ST_SUCCESS);
+    return ST_SUCCESS;
 
 }
 
-st_ssize_t st_skelwrite(ft_t ft, st_sample_t *buf, st_size_t len) 
+static st_size_t st_skelwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
     skel_t sk = (skel_t) ft->priv;
     st_size_t len = 0;
 
-    switch (ft->info.size)
-    {
+    switch (ft->info.size) {
         case ST_SIZE_BYTE:
-            switch (ft->info.encoding)
-            {
+            switch (ft->info.encoding) {
                 case ST_ENCODING_UNSIGNED:
-                    while(len--)
-                    {
+                    while (len--) {
                         len = st_writeb(ft, ST_SAMPLE_TO_UNSIGNED_BYTE(*buff++, ft->clippedCount));
                         if (len == ST_EOF)
                             break;
@@ -167,18 +164,37 @@ st_ssize_t st_skelwrite(ft_t ft, st_sample_t *buf, st_size_t len)
             break;
     }
 
-    if (len == ST_EOF)
-        return ST_EOF;
-    else
-        return ST_SUCCESS;
-
+    return len;
 }
 
-int st_skelstopwrite(ft_t ft) 
+static int st_skelstopwrite(ft_t ft)
 {
     /* All samples are already written out. */
     /* If file header needs fixing up, for example it needs the */
     /* the number of samples in a field, seek back and write them here. */
-    return (ST_SUCCESS);
+    return ST_SUCCESS;
 }
 
+/* Foo format */
+static const char *skel_names[] = {
+  "wav",
+  NULL
+};
+
+static st_format_t st_skel_format = {
+  skel_names,
+  NULL,
+  ST_FILE_STEREO | ST_FILE_SEEK,
+  st_skelstartread,
+  st_skelread,
+  st_skelstopread,
+  st_skelstartwrite,
+  st_skelwrite,
+  st_skelstopwrite,
+  st_skelseek
+};
+
+const st_format_t *st_skel_format_fn()
+{
+    return &st_skel_format;
+}
