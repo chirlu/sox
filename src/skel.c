@@ -1,8 +1,6 @@
 /*
  * Sound Tools skeleton file format driver.
  *
- * Written by Chris Bagwell (cbagwell@sprynet.com) - March 16, 1999
- *
  * Copyright 1999 Chris Bagwell And Sundry Contributors
  *
  * This library is free software; you can redistribute it and/or
