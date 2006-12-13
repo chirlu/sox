@@ -59,7 +59,7 @@ typedef struct
     st_size_t size;         /* buffer size */
     st_size_t index;        /* next available element */
     st_sample_t *ibuf;      /* input buffer */
-    int ishift;             /* input shift */
+    st_size_t ishift;       /* input shift */
 
     st_size_t oindex;       /* next evailable element */
     double * obuf;   /* output buffer */
@@ -190,15 +190,12 @@ static int st_stretch_start(eff_t effp)
     /* the shift ratio deal with the longest of ishift/oshift
        hence ishift<=size and oshift<=size.
      */
-    if (stretch->factor < 1.0)
-    {
-        stretch->ishift = (int) (stretch->shift * stretch->size);
-        stretch->oshift = (int) (stretch->factor * stretch->ishift);
-    }
-    else
-    {
-        stretch->oshift = (int) (stretch->shift * stretch->size);
-        stretch->ishift = (int) (stretch->oshift / stretch->factor);
+    if (stretch->factor < 1.0) {
+        stretch->ishift = stretch->shift * stretch->size;
+        stretch->oshift = stretch->factor * stretch->ishift;
+    } else {
+        stretch->oshift = stretch->shift * stretch->size;
+        stretch->ishift = stretch->oshift / stretch->factor;
     }
     assert(stretch->ishift <= stretch->size);
     assert(stretch->oshift <= stretch->size);
