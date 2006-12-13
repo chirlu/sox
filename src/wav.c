@@ -1728,7 +1728,7 @@ static int st_wavseek(ft_t ft, st_size_t offset)
     return(ft->st_errno);
 }
 
-/* Microsoftt RIFF */
+/* Microsoft RIFF */
 static const char *wavnames[] = {
   "wav",
   NULL
