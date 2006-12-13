@@ -59,9 +59,6 @@ use the raw driver for reading and writing.
 
   o Implement speex (http://www.speex.org).
   
-  o Support 24-bit formats where the 24-bits are stored in a 32-bit
-    integer. (Done for WAV.)
-
   o Modify .dat handler to support stereo data... Probably should remove
     time offset column since it's not real useful (could be added by
     a simple post-processor).  Also, should store information in
