@@ -21,11 +21,11 @@
 #include "st_i.h"
 
 /* Private data for effect */
-typedef struct skelleffstuff {
+typedef struct skeleff {
         int  localdata;
 } *skeleff_t;
 
-assert_static(sizeof(struct skelleffstuff) <= ST_MAX_EFFECT_PRIVSIZE, 
+assert_static(sizeof(struct skeleff) <= ST_MAX_EFFECT_PRIVSIZE, 
     /* else */ skelleff_PRIVSIZE_too_big);
 
 /*
