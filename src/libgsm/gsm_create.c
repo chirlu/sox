@@ -13,13 +13,10 @@
 
 gsm gsm_create ()
 {
-	gsm  r;
+	gsm = (gsm)calloc(sizeof(struct gsm_state));
 
-	r = (gsm)malloc(sizeof(struct gsm_state));
-	if (!r) return r;
-
-	memset((char *)r, 0, sizeof(*r));
-	r->nrp = 40;
+        if (r)
+          r->nrp = 40;
 
 	return r;
 }
