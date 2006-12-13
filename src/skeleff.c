@@ -1,5 +1,5 @@
 /*
- * skeleff - Skelton Effect.  Use as sample for new effects.
+ * skeleff - Skeleton Effect.  Use as sample for new effects.
  *
  * Copyright 1999 Chris Bagwell And Sundry Contributors
  *
@@ -26,7 +26,7 @@ typedef struct skeleff {
 } *skeleff_t;
 
 assert_static(sizeof(struct skeleff) <= ST_MAX_EFFECT_PRIVSIZE, 
-    /* else */ skelleff_PRIVSIZE_too_big);
+    /* else */ skeleff_PRIVSIZE_too_big);
 
 /*
  * Process options
