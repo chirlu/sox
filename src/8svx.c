@@ -96,12 +96,7 @@ static int st_svxstartread(ft_t ft)
                         st_readdw(ft, &chunksize);
                         if (chunksize & 1)
                                 chunksize++;
-                        chunk_buf = (char *) malloc(chunksize + 2);
-                        if (chunk_buf == 0)
-                        {
-                            st_fail_errno(ft, ST_ENOMEM, "Unable to alloc memory");
-                            return(ST_EOF);
-                        }
+                        chunk_buf = (char *) xmalloc(chunksize + 2);
                         if (st_readbuf(ft, chunk_buf,1,(size_t)chunksize)
                                         != chunksize)
                         {
@@ -119,12 +114,7 @@ static int st_svxstartread(ft_t ft)
                         st_readdw(ft, &chunksize);
                         if (chunksize & 1)
                                 chunksize++;
-                        chunk_buf = (char *) malloc(chunksize + 1);
-                        if (chunk_buf == 0)
-                        {
-                            st_fail_errno(ft, ST_ENOMEM, "Unable to alloc memory");
-                            return(ST_EOF);
-                        }
+                        chunk_buf = (char *) xmalloc(chunksize + 1);
                         if (st_readbuf(ft, chunk_buf,1,(size_t)chunksize)
                                         != chunksize)
                         {

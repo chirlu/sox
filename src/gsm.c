@@ -81,8 +81,8 @@ static int gsmstart_rw(ft_t ft, int w)
                         return (ST_EOF);
                 }
         }
-        p->frames = (gsm_byte*) malloc(p->channels*FRAMESIZE);
-        p->samples = (gsm_signal*) malloc(BLOCKSIZE * (p->channels+1) * sizeof(gsm_signal));
+        p->frames = (gsm_byte*) xmalloc(p->channels*FRAMESIZE);
+        p->samples = (gsm_signal*) xmalloc(BLOCKSIZE * (p->channels+1) * sizeof(gsm_signal));
         p->sampleTop = p->samples + BLOCKSIZE*p->channels;
         p->samplePtr = (w)? p->samples : p->sampleTop;
         return (ST_SUCCESS);

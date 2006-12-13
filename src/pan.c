@@ -82,7 +82,7 @@ static int st_pan_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     char ich, och;
     double left, right, dir, hdir;
     
-    ibuf_copy = (st_sample_t *)malloc(*isamp * sizeof(st_sample_t));
+    ibuf_copy = (st_sample_t *)xmalloc(*isamp * sizeof(st_sample_t));
     memcpy(ibuf_copy, ibuf, *isamp * sizeof(st_sample_t));
 
     dir   = pan->dir;    /* -1   <=  dir  <= 1   */

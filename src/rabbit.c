@@ -90,10 +90,7 @@ static int st_rabbit_start(eff_t effp)
     return (ST_EOF);
   }
 
-  if ((r->data = (SRC_DATA *)calloc(1, sizeof(SRC_DATA))) == NULL) {
-    st_fail("could not allocate SRC_DATA buffer");
-    return (ST_EOF);
-  }
+  r->data = (SRC_DATA *)xcalloc(1, sizeof(SRC_DATA));
   r->data->src_ratio = (double)effp->outinfo.rate / effp->ininfo.rate;
   r->data->input_frames_used = 0;
   r->data->output_frames_gen = 0;
@@ -117,10 +114,7 @@ static int st_rabbit_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf
       return (ST_EOF);
   }
 
-  if ((r->data->data_in = (float *)realloc(r->data->data_in, newsamples * sizeof(float))) == NULL) {
-    st_fail("unable to allocate input buffer of size %d", newsamples);
-    return (ST_EOF);
-  }
+  r->data->data_in = (float *)xrealloc(r->data->data_in, newsamples * sizeof(float));
 
   for (i = 0 ; i < *isamp; i++)
     r->data->data_in[r->samples + i] = ST_SAMPLE_TO_FLOAT_DWORD(ibuf[i], effp->clippedCount);
@@ -154,11 +148,7 @@ static int st_rabbit_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
       return (ST_EOF);
     }
     r->data->output_frames = outframes;
-    r->data->data_out = (float *)malloc(r->data->output_frames * channels * sizeof(float));
-    if (r->data->data_out == NULL) {
-      st_fail("unable to allocate output frames buffer of size %d", r->data->output_frames);
-      return (ST_EOF);
-    }
+    r->data->data_out = (float *)xmalloc(r->data->output_frames * channels * sizeof(float));
 
     /* Process the data */
     if ((error = src_simple(r->data, r->converter_type, channels))) {

@@ -56,12 +56,7 @@ static int st_spherestartread(ft_t ft)
 
         /* Determine header size, and allocate a buffer large enough to hold it. */
         sscanf(fldsval, "%d", &header_size);
-        buf = (char *)malloc(header_size);
-        if (buf == NULL)
-        {
-            st_fail_errno(ft,ST_ENOMEM,"Unable to allocate memory");
-            return(ST_ENOMEM);
-        }
+        buf = (char *)xmalloc(header_size);
 
         /* Skip what we have read so far */
         header_size -= 16;

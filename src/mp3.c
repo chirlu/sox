@@ -170,18 +170,11 @@ static int st_mp3startread(ft_t ft)
     p->Timer = NULL;
     p->InputBuffer = NULL;
 
-    p->Stream=(struct mad_stream *)malloc(sizeof(struct mad_stream));
-    p->Frame=(struct mad_frame *)malloc(sizeof(struct mad_frame));
-    p->Synth=(struct mad_synth *)malloc(sizeof(struct mad_synth));
-    p->Timer=(mad_timer_t *)malloc(sizeof(mad_timer_t));
-    p->InputBuffer=(unsigned char *)malloc(INPUT_BUFFER_SIZE);
-
-    if (!p->Stream || !p->Frame || !p->Synth || 
-        !p->Timer || !p->InputBuffer)
-    {
-        st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
-        goto error;
-    }
+    p->Stream=(struct mad_stream *)xmalloc(sizeof(struct mad_stream));
+    p->Frame=(struct mad_frame *)xmalloc(sizeof(struct mad_frame));
+    p->Synth=(struct mad_synth *)xmalloc(sizeof(struct mad_synth));
+    p->Timer=(mad_timer_t *)xmalloc(sizeof(mad_timer_t));
+    p->InputBuffer=(unsigned char *)xmalloc(INPUT_BUFFER_SIZE);
 
     mad_stream_init(p->Stream);
     mad_frame_init(p->Frame);
@@ -262,15 +255,6 @@ static int st_mp3startread(ft_t ft)
     p->cursamp = 0;
 
     return ST_SUCCESS;
-
-error:
-    if (p->Stream) free(p->Stream);
-    if (p->Frame) free(p->Frame);
-    if (p->Synth) free(p->Synth);
-    if (p->Timer) free(p->Timer);
-    if (p->InputBuffer) free(p->InputBuffer);
-
-    return ST_EOF;
 }
 
 /*
@@ -456,16 +440,10 @@ static st_size_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
      * different scalling between 32-bit and 64-bit CPU's.
      *
      * We might as well scale it ourselfs to 16-bit to allow
-     * malloc()'ing a smaller buffer and call a consistent
+     * xmalloc()'ing a smaller buffer and call a consistent
      * interface.
      */
-    if ((buffer_l = 
-         (short signed int *)malloc(nsamples*
-                                    sizeof(short signed int))) == NULL)
-    {
-        st_fail_errno(ft, ST_ENOMEM, "Memory allocation failed");
-        goto end4;
-    }
+    buffer_l = (short signed int *)xmalloc(nsamples * sizeof(short signed int));
 
     if (ft->info.channels == 2)
     {
@@ -473,7 +451,7 @@ static st_size_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
          * them out into seperate buffers.
          */
         if ((buffer_r = 
-             (short signed int *)malloc(nsamples*
+             (short signed int *)xmalloc(nsamples*
                                           sizeof(short signed int))) == NULL)
         {
             st_fail_errno(ft,ST_ENOMEM,"Memory allocation failed");
@@ -497,7 +475,7 @@ static st_size_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
     }
 
     mp3buffer_size = 1.25 * nsamples + 7200;
-    if ((mp3buffer=(char *)malloc(mp3buffer_size)) == NULL)
+    if ((mp3buffer=(char *)xmalloc(mp3buffer_size)) == NULL)
     {
         st_fail_errno(ft,ST_ENOMEM,"Memory allocation failed");
         goto end2;
@@ -525,7 +503,7 @@ end2:
         free(buffer_r);
 end3:
     free(buffer_l);
-end4:
+
     return done;
 }
 

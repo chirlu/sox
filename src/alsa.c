@@ -91,7 +91,8 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
         else if (ft->info.channels < min_chan) 
             ft->info.channels = min_chan;
 
-    snd_pcm_format_mask_malloc(&fmask);
+    if (snd_pcm_format_mask_malloc(&fmask) < 0)
+        goto open_error;
     snd_pcm_hw_params_get_format_mask(hw_params, fmask);
 
     if (get_format(ft, fmask, &fmt) < 0)
@@ -224,14 +225,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     }
 
     alsa->buf_size = buffer_size * ft->info.size * ft->info.channels;
-
-    if ((alsa->buf = malloc(alsa->buf_size)) == NULL) 
-    {
-        st_fail_errno(ft,ST_ENOMEM,
-                      "unable to allocate output buffer of size %d", 
-                      alsa->buf_size);
-        return(ST_EOF);
-    }
+    alsa->buf = xmalloc(alsa->buf_size);
 
     return (ST_SUCCESS);
 

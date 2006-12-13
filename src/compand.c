@@ -96,13 +96,9 @@ static int st_compand_getopts(eff_t effp, int n, char **argv)
       }
 
       rates = 1 + commas/2;
-      if ((l->attackRate = (double *)malloc(sizeof(double) * rates)) == NULL ||
-          (l->decayRate  = (double *)malloc(sizeof(double) * rates)) == NULL ||
-          (l->volume     = (double *)malloc(sizeof(double) * rates)) == NULL)
-      {
-        st_fail("Out of memory");
-        return (ST_EOF);
-      }
+      l->attackRate = (double *)xmalloc(sizeof(double) * rates);
+      l->decayRate = (double *)xmalloc(sizeof(double) * rates);
+      l->volume = (double *)xmalloc(sizeof(double) * rates);
       l->expectedChannels = rates;
       l->delay_buf = NULL;
 
@@ -130,12 +126,8 @@ static int st_compand_getopts(eff_t effp, int n, char **argv)
       }
 
       tfers = 3 + commas/2; /* 0, 0 at start; 1, 1 at end */
-      if ((l->transferIns  = (double *)malloc(sizeof(double) * tfers)) == NULL ||
-          (l->transferOuts = (double *)malloc(sizeof(double) * tfers)) == NULL)
-      {
-        st_fail("Out of memory");
-        return (ST_EOF);
-      }
+      l->transferIns = (double *)xmalloc(sizeof(double) * tfers);
+      l->transferOuts = (double *)xmalloc(sizeof(double) * tfers);
       l->transferPoints = tfers;
       l->transferIns[0] = 0.0; l->transferOuts[0] = 0.0;
       l->transferIns[tfers-1] = 1.0; l->transferOuts[tfers-1] = 1.0;
@@ -230,11 +222,8 @@ static int st_compand_start(eff_t effp)
 
   /* Allocate the delay buffer */
   l->delay_buf_size = l->delay * effp->outinfo.rate * effp->outinfo.channels;
-  if (l->delay_buf_size > 0
-   && (l->delay_buf = (st_sample_t *)malloc(sizeof(long) * l->delay_buf_size)) == NULL) {
-    st_fail("Out of memory");
-    return (ST_EOF);
-  }
+  if (l->delay_buf_size > 0)
+    l->delay_buf = (st_sample_t *)xmalloc(sizeof(long) * l->delay_buf_size);
   for (i = 0;  i < l->delay_buf_size;  i++)
     l->delay_buf[i] = 0;
   l->delay_buf_ptr = 0;

@@ -89,8 +89,8 @@ am__objects_2 = avg.$(OBJEXT) band.$(OBJEXT) bandpass.$(OBJEXT) \
 	vol.$(OBJEXT)
 am_libst_a_OBJECTS = $(am__objects_1) $(am__objects_2) alsa.$(OBJEXT) \
 	oss.$(OBJEXT) sunaudio.$(OBJEXT) handlers.$(OBJEXT) \
-	misc.$(OBJEXT) stio.$(OBJEXT) util.$(OBJEXT) getopt.$(OBJEXT) \
-	getopt1.$(OBJEXT)
+	misc.$(OBJEXT) stio.$(OBJEXT) util.$(OBJEXT) xmalloc.$(OBJEXT) \
+	getopt.$(OBJEXT) getopt1.$(OBJEXT)
 libst_a_OBJECTS = $(am_libst_a_OBJECTS)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
@@ -217,7 +217,9 @@ effects = avg.c band.c bandpass.c biquad.c breject.c btrworth.c chorus.c \
 	  reverb.c reverse.c silence.c speed.c stat.c \
 	  stretch.c swap.c synth.c tone.c trim.c vibro.c vol.c
 
-libst_a_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c misc.c stio.c util.c getopt.c getopt1.c
+libst_a_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c misc.c \
+	  stio.c util.c xmalloc.c getopt.c getopt1.c
+
 sox_SOURCES = sox.c
 sox_LDADD = libst.a libgsm/libgsm.a
 sox_LDFLAGS = @SAMPLERATE_LIBS@
@@ -434,6 +436,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wav.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wve.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xa.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmalloc.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

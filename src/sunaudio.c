@@ -59,10 +59,7 @@ static int st_sunstartread(ft_t ft)
     file->pos = 0;
     file->eof = 0;
     file->size = 1024;
-    if ((file->buf = malloc (file->size)) == NULL) {
-        st_fail_errno(ft,ST_ENOMEM,"unable to allocate input buffer of size %d", file->size);
-        return ST_EOF;
-    }
+    file->buf = xmalloc (file->size);
 
     if (ft->info.rate == 0.0) ft->info.rate = 8000;
     if (ft->info.size == -1) ft->info.size = ST_SIZE_BYTE;
@@ -198,10 +195,7 @@ static int st_sunstartwrite(ft_t ft)
     file->pos = 0;
     file->eof = 0;
     file->size = 1024;
-    if ((file->buf = malloc (file->size)) == NULL) {
-        st_fail_errno(ft,ST_ENOMEM,"unable to allocate output buffer of size %d", file->size);
-        return(ST_EOF);
-    }
+    file->buf = xmalloc (file->size);
 
 #ifdef __SVR4
     /* Read in old values, change to what we need and then send back */

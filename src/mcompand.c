@@ -94,16 +94,8 @@ typedef struct butterworth_crossover {
 static int lowpass_setup (butterworth_crossover_t butterworth, double frequency, st_rate_t rate, int nchan) {
   double c;
 
-  if (! (butterworth->xy_low = (struct xy *)malloc(nchan * sizeof(struct xy)))) {
-    st_fail("Out of memory");
-    return (ST_EOF);
-  }
-  memset(butterworth->xy_low,0,nchan * sizeof(struct xy));
-  if (! (butterworth->xy_high = (struct xy *)malloc(nchan * sizeof(struct xy)))) {
-    st_fail("Out of memory");
-    return (ST_EOF);
-  }
-  memset(butterworth->xy_high,0,nchan * sizeof(struct xy));
+  butterworth->xy_low = (struct xy *)xcalloc(nchan, sizeof(struct xy));
+  butterworth->xy_high = (struct xy *)xcalloc(nchan, sizeof(struct xy));
 
   /* lowpass setup */
   butterworth->frequency_low = frequency/1.3;
@@ -250,21 +242,10 @@ static int st_mcompand_getopts_1(comp_band_t l, int n, char **argv)
       }
 
       rates = 1 + commas/2;
-      if ((l->attackRate = (double *)malloc(sizeof(double) * rates)) == NULL ||
-          (l->decayRate  = (double *)malloc(sizeof(double) * rates)) == NULL)
-      {
-        st_fail("Out of memory");
-        return (ST_EOF);
-      }
-
-      if ((l->volume = (double *)malloc(sizeof(double) * rates)) == NULL)
-      {
-        st_fail("Out of memory");
-        return (ST_EOF);
-      }
-
+      l->attackRate = (double *)xmalloc(sizeof(double) * rates);
+      l->decayRate  = (double *)xmalloc(sizeof(double) * rates);
+      l->volume = (double *)xmalloc(sizeof(double) * rates);
       l->expectedChannels = rates;
-
       l->delay_buf = NULL;
 
       /* Now tokenise the rates string and set up these arrays.  Keep
@@ -291,12 +272,8 @@ static int st_mcompand_getopts_1(comp_band_t l, int n, char **argv)
       }
 
       tfers = 3 + commas/2; /* 0, 0 at start; 1, 1 at end */
-      if ((l->transferIns  = (double *)malloc(sizeof(double) * tfers)) == NULL ||
-          (l->transferOuts = (double *)malloc(sizeof(double) * tfers)) == NULL)
-      {
-        st_fail("Out of memory");
-        return (ST_EOF);
-      }
+      l->transferIns  = (double *)xmalloc(sizeof(double) * tfers);
+      l->transferOuts = (double *)xmalloc(sizeof(double) * tfers);
       l->transferPoints = tfers;
       l->transferIns[0] = 0.0; l->transferOuts[0] = 0.0;
       l->transferIns[tfers-1] = 1.0; l->transferOuts[tfers-1] = 1.0;
@@ -397,11 +374,7 @@ static int st_mcompand_getopts(eff_t effp, int n, char **argv)
   }
   c->nBands = (n+1)>>1;
 
-  if (! (c->bands = (struct comp_band *)malloc(c->nBands * sizeof(struct comp_band)))) {
-    st_fail("Out of memory");
-    return ST_EOF;
-  }
-  memset(c->bands,0,c->nBands * sizeof(struct comp_band));
+  c->bands = (struct comp_band *)xcalloc(c->nBands, sizeof(struct comp_band));
 
   for (i=0;i<c->nBands;++i) {
     len = strlen(argv[i<<1]);
@@ -463,15 +436,8 @@ static int st_mcompand_start(eff_t effp)
     }
 
     /* Allocate the delay buffer */
-    if (c->delay_buf_size > 0) {
-      if ((l->delay_buf = (st_sample_t *)malloc(sizeof(long) * c->delay_buf_size)) == NULL) {
-        st_fail("Out of memory");
-        return (ST_EOF);
-      }
-      for (i = 0;  i < c->delay_buf_size;  i++)
-        l->delay_buf[i] = 0;
-
-    }
+    if (c->delay_buf_size > 0)
+      l->delay_buf = (st_sample_t *)xcalloc(sizeof(long), c->delay_buf_size);
     l->delay_buf_ptr = 0;
     l->delay_buf_cnt = 0;
 
@@ -584,16 +550,13 @@ static int st_mcompand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *ob
   double out;
 
   if (c->band_buf_len < len) {
-    if ((! (c->band_buf1 = (st_sample_t *)realloc(c->band_buf1,len*sizeof(st_sample_t)))) ||
-        (! (c->band_buf2 = (st_sample_t *)realloc(c->band_buf2,len*sizeof(st_sample_t)))) ||
-        (! (c->band_buf3 = (st_sample_t *)realloc(c->band_buf3,len*sizeof(st_sample_t))))) {
-      st_fail("Out of memory");
-      return (ST_EOF);
-    }
+    c->band_buf1 = (st_sample_t *)xrealloc(c->band_buf1,len*sizeof(st_sample_t));
+    c->band_buf2 = (st_sample_t *)xrealloc(c->band_buf2,len*sizeof(st_sample_t));
+    c->band_buf3 = (st_sample_t *)xrealloc(c->band_buf3,len*sizeof(st_sample_t));
     c->band_buf_len = len;
   }
 
-  ibuf_copy = (st_sample_t *)malloc(*isamp * sizeof(st_sample_t));
+  ibuf_copy = (st_sample_t *)xmalloc(*isamp * sizeof(st_sample_t));
   memcpy(ibuf_copy, ibuf, *isamp * sizeof(st_sample_t));
 
   /* split ibuf into bands using butterworths, pipe each band through st_mcompand_flow_1, then add back together and write to obuf */

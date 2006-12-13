@@ -276,12 +276,7 @@ static int st_synth_getopts(eff_t effp, int n, char **argv)
 
     /* read length if given ( if first par starts with digit )*/
     if( isdigit((int)argv[argn][0]) || argv[argn][0] == '.') {
-        synth->length_str = (char *)malloc(strlen(argv[argn])+1);
-        if (!synth->length_str)
-        {
-            st_fail("Could not allocate memeory");
-            return(ST_EOF);
-        }
+        synth->length_str = (char *)xmalloc(strlen(argv[argn])+1);
         strcpy(synth->length_str,argv[argn]);
         /* Do a dummy parse of to see if it will fail */
         if (st_parsesamples(0, synth->length_str, &synth->length, 't') !=

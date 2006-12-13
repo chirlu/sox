@@ -47,7 +47,7 @@ int st_skelstartread(ft_t ft)
     ft->info.size = ST_SIZE_BYTE or WORD ...;
     ft->info.encoding = ST_ENCODING_UNSIGNED or SIGN2 ...;
     ft->info.channels = 1 or 2 or 4;
-    ft->comment = malloc(size_of_comment);
+    ft->comment = xmalloc(size_of_comment);
     strcpy(ft->comment, "any comment in file header.");
 
     /* If your format doesn't have a header then samples_in_file

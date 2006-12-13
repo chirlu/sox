@@ -105,12 +105,7 @@ static int st_vorbisstartread(ft_t ft)
         };
 
         /* Allocate space for decoding structure */
-        vb->vf = (OggVorbis_File *)malloc(sizeof(OggVorbis_File));
-        if (vb->vf == NULL)
-        {
-            st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
-            return (ST_EOF);
-        }
+        vb->vf = (OggVorbis_File *)xmalloc(sizeof(OggVorbis_File));
 
         /* Init the decoder */
         if (ov_open_callbacks((void *)ft->fp,vb->vf,NULL,0,callbacks) < 0)
@@ -147,16 +142,7 @@ static int st_vorbisstartread(ft_t ft)
                 for (i = 0; i < vc->comments; i++)
                         comment_size += vc->comment_lengths[i] + 1;
 
-                if ((ft->comment = (char *)calloc(comment_size, sizeof(char)))
-                     == NULL)
-                {
-                        ov_clear(vb->vf);
-                        free(vb->vf);
-
-                        st_fail_errno(ft, ST_ENOMEM,
-                                      "Could not allocate memory");
-                        return (ST_EOF);
-                }
+                ft->comment = (char *)xcalloc(comment_size, sizeof(char));
 
                 offset = 0;
                 for (i = 0; i < vc->comments; i++)
@@ -175,13 +161,7 @@ static int st_vorbisstartread(ft_t ft)
 
         /* Setup buffer */
         vb->buf_len = DEF_BUF_LEN;
-        if ((vb->buf = (char *)calloc(vb->buf_len, sizeof(char))) == NULL )
-        {
-                ov_clear(vb->vf);
-                free(vb->vf);
-                st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
-                return (ST_EOF);
-        }
+        vb->buf = (char *)xcalloc(vb->buf_len, sizeof(char));
         vb->start = vb->end = 0;
 
         /* Fill in other info */
@@ -300,19 +280,22 @@ static int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
         char *comment;
 
         /* Make the comment structure */
-        vc.user_comments = (char **)calloc(1, sizeof(char *));
-        vc.comment_lengths = (int *)calloc(1, sizeof(int));
+        vc.user_comments = (char **)xcalloc(1, sizeof(char *));
+        vc.comment_lengths = (int *)xcalloc(1, sizeof(int));
         vc.comments = 1;
 
         /* We check if there is a FIELD=value pair already in the comment
          * if not, add one */
         if (strchr(ft->comment,'=') == NULL)
         {
-            comment = (char *)calloc(1,strlen(ft->comment)+strlen("COMMENT=")+1);
+            comment = (char *)xcalloc(1,strlen(ft->comment)+strlen("COMMENT=")+1);
             strncpy(comment,"COMMENT=",strlen("COMMENT="));
         }
         else
-            comment = (char *)calloc(1,strlen(ft->comment)+1);
+            comment = (char *)xcalloc(1,strlen(ft->comment)+1);
+        
+        if (!comment)
+            return HEADER_ERROR;
 
         strcat(comment,ft->comment);
 
@@ -332,9 +315,10 @@ static int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
 
         while((result = ogg_stream_flush(&ve->os, &ve->og)))
         {
-                if(!result) break;
+                if (!result)
+                  break;
                 ret = oe_write_page(&ve->og, ft);
-                if(!ret)
+                if (!ret)
                 {
                     free(comment);
                     return HEADER_ERROR;
@@ -356,12 +340,7 @@ static int st_vorbisstartwrite(ft_t ft)
         ft->info.encoding = ST_ENCODING_VORBIS;
 
         /* Allocate memory for all of the structures */
-        ve = vb->vorbis_enc_data = (vorbis_enc_t *)malloc(sizeof(vorbis_enc_t));
-        if (ve == NULL)
-        {
-            st_fail_errno(ft, ST_ENOMEM, "Could not allocate memory");
-            return (ST_EOF);
-        }
+        ve = vb->vorbis_enc_data = (vorbis_enc_t *)xmalloc(sizeof(vorbis_enc_t));
 
         vorbis_info_init(&ve->vi);
 

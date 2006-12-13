@@ -78,12 +78,7 @@ static int st_fade_getopts(eff_t effp, int n, char **argv)
         fade->out_fadetype = 'l';
     }
 
-    fade->in_stop_str = (char *)malloc(strlen(argv[0])+1);
-    if (!fade->in_stop_str)
-    {
-        st_fail("Could not allocate memory");
-        return (ST_EOF);
-    }
+    fade->in_stop_str = (char *)xmalloc(strlen(argv[0])+1);
     strcpy(fade->in_stop_str,argv[0]);
     /* Do a dummy parse to see if it will fail */
     if (st_parsesamples(0, fade->in_stop_str, &fade->in_stop, 't') !=
@@ -100,39 +95,27 @@ static int st_fade_getopts(eff_t effp, int n, char **argv)
         /* See if there is fade-in/fade-out times/curves specified. */
         if(t_argno == 1)
         {
-            fade->out_stop_str = (char *)malloc(strlen(argv[t_argno])+1);
-            if (!fade->out_stop_str)
-            {
-                st_fail("Could not allocate memory");
-                return (ST_EOF);
-            }
-             strcpy(fade->out_stop_str,argv[t_argno]);
+            fade->out_stop_str = (char *)xmalloc(strlen(argv[t_argno])+1);
+            strcpy(fade->out_stop_str,argv[t_argno]);
 
-             /* Do a dummy parse to see if it will fail */
-             if (st_parsesamples(0, fade->out_stop_str, 
-                         &fade->out_stop, 't') != ST_SUCCESS)
-             {
-                 st_fail(st_fade_effect.usage);
-                 return(ST_EOF);
-             }
+            /* Do a dummy parse to see if it will fail */
+            if (st_parsesamples(0, fade->out_stop_str, 
+                                &fade->out_stop, 't') != ST_SUCCESS) {
+              st_fail(st_fade_effect.usage);
+              return(ST_EOF);
+            }
         }
         else
         {
-            fade->out_start_str = (char *)malloc(strlen(argv[t_argno])+1);
-            if (!fade->out_start_str)
-            {
-                st_fail("Could not allocate memory");
-                return (ST_EOF);
-            }
-             strcpy(fade->out_start_str,argv[t_argno]);
+            fade->out_start_str = (char *)xmalloc(strlen(argv[t_argno])+1);
+            strcpy(fade->out_start_str,argv[t_argno]);
 
-             /* Do a dummy parse to see if it will fail */
-             if (st_parsesamples(0, fade->out_start_str, 
-                         &fade->out_start, 't') != ST_SUCCESS)
-             {
-                 st_fail(st_fade_effect.usage);
-                 return(ST_EOF);
-             }
+            /* Do a dummy parse to see if it will fail */
+            if (st_parsesamples(0, fade->out_start_str, 
+                                &fade->out_start, 't') != ST_SUCCESS) {
+              st_fail(st_fade_effect.usage);
+              return(ST_EOF);
+            }
         }
     } /* End for(t_argno) */
 

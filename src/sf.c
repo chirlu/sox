@@ -49,13 +49,12 @@ static void readcodes(ft_t ft, SFHEADER *sfhead)
                         finished = 1;
                         break;
                 case SF_COMMENT:
-                        if((commentbuf = (char *) malloc(bsize + 1)) != NULL) {
-                                memcpy(commentbuf, sfcharp, bsize);
-                                st_report("IRCAM comment: %s", sfcharp);
-                                commentbuf[bsize] = '\0';
-                                if((newline = strchr(commentbuf, '\n')) != NULL)
-                                        *newline = '\0';
-                        }
+                        commentbuf = (char *) xmalloc(bsize + 1);
+                        memcpy(commentbuf, sfcharp, bsize);
+                        st_report("IRCAM comment: %s", sfcharp);
+                        commentbuf[bsize] = '\0';
+                        if((newline = strchr(commentbuf, '\n')) != NULL)
+                                *newline = '\0';
                         break;
                 }
                 sfcodep = (SFCODE *) (sfcharp + bsize);

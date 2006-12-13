@@ -87,14 +87,7 @@ static int  st_voxstartread (ft_t ft)
 
        /* ... setup file info */
 
-       state->file.buf = (char *)malloc(ST_BUFSIZ);
-    
-       if (!state->file.buf)
-          { st_fail_errno (ft,ST_ENOMEM,"Unable to allocate internal buffer memory");
-            
-            return(ST_EOF);
-          }
-
+       state->file.buf = (char *)xmalloc(ST_BUFSIZ);
        state->file.size     = ST_BUFSIZ;
        state->file.count    = 0;
        state->file.pos      = 0;
@@ -205,14 +198,7 @@ static int  st_voxstartwrite (ft_t ft)
 
        /* ... setup file info */
 
-       state->file.buf = (char *)malloc(ST_BUFSIZ);
-    
-       if (!state->file.buf)
-          { st_fail_errno (ft,ST_ENOMEM,"Unable to allocate internal buffer memory");
-            
-            return(ST_EOF);
-          }
-
+       state->file.buf = (char *)xmalloc(ST_BUFSIZ);
        state->file.size     = ST_BUFSIZ;
        state->file.count    = 0;
        state->file.pos      = 0;

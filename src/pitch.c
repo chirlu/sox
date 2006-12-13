@@ -37,8 +37,8 @@
 
 #include "st_i.h"
 
-#include <stdlib.h> /* malloc(), free() */
-#include <string.h> /* memcpy() */
+#include <stdlib.h>
+#include <string.h>
 
 #include <math.h>   /* cos(), pow() */
 
@@ -376,17 +376,10 @@ static int st_pitch_start(eff_t effp)
 
     pitch->size = pitch->step + 2*pitch->overlap;
 
-    pitch->fade = (double *) malloc(pitch->step*sizeof(double));
-    pitch->tmp  = (double *) malloc(pitch->step*sizeof(double));
-    pitch->acc  = (double *) malloc(pitch->step*sizeof(double));
-    pitch->buf  = (st_sample_t *) malloc(pitch->size*sizeof(st_sample_t));
-
-    if (!pitch->fade || !pitch->tmp || !pitch->acc || !pitch->buf)
-    {
-        st_fail("malloc failed in st_pitch_start");
-        return ST_EOF;
-    }
-
+    pitch->fade = (double *) xmalloc(pitch->step*sizeof(double));
+    pitch->tmp  = (double *) xmalloc(pitch->step*sizeof(double));
+    pitch->acc  = (double *) xmalloc(pitch->step*sizeof(double));
+    pitch->buf  = (st_sample_t *) xmalloc(pitch->size*sizeof(st_sample_t));
     pitch->index = pitch->overlap;
 
     /* default initial signal */

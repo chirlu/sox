@@ -71,12 +71,7 @@ static int st_vibro_start(eff_t effp)
         vibro_t vibro = (vibro_t) effp->priv;
 
         vibro->length = effp->ininfo.rate / vibro->speed;
-        if (! (vibro->sinetab = (short*) malloc(vibro->length * sizeof(short))))
-        {
-                st_fail("Vibro: Cannot malloc %d bytes",
-                        vibro->length * sizeof(short));
-                return (ST_EOF);
-        }
+        vibro->sinetab = (short*) xmalloc(vibro->length * sizeof(short));
 
         st_generate_wave_table(ST_WAVE_SINE, ST_SHORT,
             vibro->sinetab, vibro->length, (1 - vibro->depth) * 256, 256, 0);

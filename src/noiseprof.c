@@ -74,23 +74,20 @@ static int st_noiseprof_start(eff_t effp)
         data->output_file = stderr;
     }
 
-    data->chandata = (chandata_t*)calloc(channels, sizeof(*(data->chandata)));
-    for (i = 0; i < channels; i ++) {
-        data->chandata[i].sum          =
-            (float*)calloc(FREQCOUNT, sizeof(float));
-        data->chandata[i].profilecount =
-            (int*)calloc(FREQCOUNT, sizeof(int));
-        data->chandata[i].window       =
-            (float*)calloc(WINDOWSIZE, sizeof(float));
-    }
+    data->chandata = (chandata_t*)xcalloc(channels, sizeof(*(data->chandata)));
     data->bufdata = 0;
-    return (ST_SUCCESS);
+    for (i = 0; i < channels; i ++) {
+        data->chandata[i].sum = (float*)xcalloc(FREQCOUNT, sizeof(float));
+        data->chandata[i].profilecount = (int*)xcalloc(FREQCOUNT, sizeof(int));
+        data->chandata[i].window = (float*)xcalloc(WINDOWSIZE, sizeof(float));
+    }
+
+    return ST_SUCCESS;
 }
 
 /* Collect statistics from the complete window on channel chan. */
 static void collect_data(chandata_t* chan) {
-    float *out = (float*)calloc(FREQCOUNT, sizeof(float));
-
+    float *out = (float*)xcalloc(FREQCOUNT, sizeof(float));
     int i;
 
     PowerSpectrum(WINDOWSIZE, chan->window, out);
@@ -132,9 +129,8 @@ static int st_noiseprof_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *o
             chan->window[j+data->bufdata] =
                 ST_SAMPLE_TO_FLOAT_DWORD(ibuf[i+j*tracks], effp->clippedCount);
         }
-        if (ncopy + data->bufdata == WINDOWSIZE) {
+        if (ncopy + data->bufdata == WINDOWSIZE)
             collect_data(chan);
-        }
     }
 
     data->bufdata += ncopy;

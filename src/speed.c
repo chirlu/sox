@@ -121,7 +121,7 @@ static int st_speed_start(eff_t effp)
         speed->rate = speed->factor;
     }
 
-    speed->ibuf   = (st_sample_t *) malloc(speed->compression*
+    speed->ibuf   = (st_sample_t *) xmalloc(speed->compression*
                                            sizeof(st_sample_t));
     speed->index  = 0;
 
@@ -129,11 +129,6 @@ static int st_speed_start(eff_t effp)
     speed->cbuf[0] = 0.0; /* default previous value for interpolation */
     speed->icbuf = 1;
     speed->frac = 0.0;
-
-    if (!speed->ibuf) {
-        st_fail("malloc failed");
-        return ST_EOF;
-    }
 
     return ST_SUCCESS;
 }
@@ -201,7 +196,7 @@ static int st_speed_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 
     speed = (speed_t) effp->priv;
 
-    ibuf_copy = (st_sample_t *)malloc(*isamp * sizeof(st_sample_t));
+    ibuf_copy = (st_sample_t *)xmalloc(*isamp * sizeof(st_sample_t));
     memcpy(ibuf_copy, ibuf, *isamp * sizeof(st_sample_t));
 
     len = min(*isamp, *osamp);

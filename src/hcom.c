@@ -132,12 +132,7 @@ static int st_hcomstartread(ft_t ft)
         ft->info.channels = 1;
 
         /* Allocate memory for the dictionary */
-        p->dictionary = (dictent *) malloc(511 * sizeof(dictent));
-        if (p->dictionary == NULL)
-        {
-                st_fail_errno(ft,ST_ENOMEM,"can't malloc memory for Huffman dictionary");
-                return (ST_EOF);
-        }
+        p->dictionary = (dictent *) xmalloc(511 * sizeof(dictent));
 
         /* Read dictionary */
         for(i = 0; i < dictsize; i++) {
@@ -250,7 +245,7 @@ static int st_hcomstopread(ft_t ft)
 }
 
 struct writepriv {
-        unsigned char *data;    /* Buffer allocated with malloc */
+        unsigned char *data;    /* Buffer allocated with xmalloc */
         unsigned int size;      /* Size of allocated buffer */
         unsigned int pos;       /* Where next byte goes */
 };
@@ -285,12 +280,7 @@ static int st_hcomstartwrite(ft_t ft)
 
         p->size = BUFINCR;
         p->pos = 0;
-        p->data = (unsigned char *) malloc(p->size);
-        if (p->data == NULL)
-        {
-                st_fail_errno(ft,ST_ENOMEM,"can't malloc buffer for uncompressed HCOM data");
-                return (ST_EOF);
-        }
+        p->data = (unsigned char *) xmalloc(p->size);
         return (ST_SUCCESS);
 }
 
@@ -305,12 +295,7 @@ static st_size_t st_hcomwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 
         if (p->pos + len > p->size) {
                 p->size = ((p->pos + len) / BUFINCR + 1) * BUFINCR;
-                p->data = (unsigned char *) realloc(p->data, p->size);
-                if (p->data == NULL)
-                {
-                    st_fail_errno(ft,ST_ENOMEM,"can't realloc buffer for uncompressed HCOM data");
-                    return (0);
-                }
+                p->data = (unsigned char *) xrealloc(p->data, p->size);
         }
 
         while (len-- > 0) {
@@ -361,7 +346,7 @@ static void putcode(ft_t ft, unsigned char c, unsigned char **df)
   }
 }
 
-static int compress(ft_t ft, unsigned char **df, int32_t *dl, float fr)
+static void compress(ft_t ft, unsigned char **df, int32_t *dl, float fr)
 {
   struct readpriv *p = (struct readpriv *) ft->priv;
   int32_t samplerate;
@@ -434,10 +419,7 @@ static int compress(ft_t ft, unsigned char **df, int32_t *dl, float fr)
   l = (((l + 31) >> 5) << 2) + 24 + dictsize * 4;
   st_debug("  Original size: %6d bytes", *dl);
   st_debug("Compressed size: %6d bytes", l);
-  if((datafork = (unsigned char *)malloc((unsigned)l)) == NULL)
-  {
-    return (ST_ENOMEM);
-  }
+  datafork = (unsigned char *)xmalloc((unsigned)l);
   ddf = datafork + 22;
   for(i = 0; i < dictsize; i++) {
     put16_be(&ddf, p->dictionary[i].dict_leftson);
@@ -465,8 +447,6 @@ static int compress(ft_t ft, unsigned char **df, int32_t *dl, float fr)
   put16_be(&dfp, dictsize);
   *df = datafork;               /* reassign passed pointer to new datafork */
   *dl = l;                      /* and its compressed length */
-
-  return (ST_SUCCESS);
 }
 
 /* End of hcom utility routines */
@@ -479,13 +459,8 @@ static int st_hcomstopwrite(ft_t ft)
         int rc;
 
         /* Compress it all at once */
-        rc = compress(ft, &compressed_data, (int32_t *)&compressed_len, (double) ft->info.rate);
+        compress(ft, &compressed_data, (int32_t *)&compressed_len, (double) ft->info.rate);
         free((char *) p->data);
-
-        if (rc){
-        st_fail_errno(ft, rc,"can't malloc buffer for compressed HCOM data");
-            return 0;
-        }
 
         /* Write the header */
         st_writebuf(ft, (void *)"\000\001A", 1, 3); /* Dummy file name "A" */

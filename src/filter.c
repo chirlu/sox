@@ -125,7 +125,7 @@ static int st_filter_start(eff_t effp)
         }
         
         Xh = f->Nwin/2;
-        Fp0 = (double *) malloc(sizeof(double) * (Xh + 2)) + 1;
+        Fp0 = (double *) xmalloc(sizeof(double) * (Xh + 2)) + 1;
         if (f->freq0 > (st_sample_t)f->rate/200) {
                 Xh0 = makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, 1, 0);
                 if (Xh0 <= 1)
@@ -136,7 +136,7 @@ static int st_filter_start(eff_t effp)
         } else {
                 Xh0 = 0;
         }
-        Fp1 = (double *) malloc(sizeof(double) * (Xh + 2)) + 1;
+        Fp1 = (double *) xmalloc(sizeof(double) * (Xh + 2)) + 1;
         /* need Fp[-1] and Fp[Xh] for makeFilter */
         if (f->freq1 < (st_sample_t)f->rate/2) {
                 Xh1 = makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, 1, 0);
@@ -169,7 +169,7 @@ static int st_filter_start(eff_t effp)
         f->Xh = Xh;
         f->Xt = Xh;
 
-        f->X = (double *) malloc(sizeof(double) * (2*BUFFSIZE + 2*Xh));
+        f->X = (double *) xmalloc(sizeof(double) * (2*BUFFSIZE + 2*Xh));
         f->Y = f->X + BUFFSIZE + 2*Xh;
 
         /* Need Xh zeros at beginning of X */

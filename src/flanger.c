@@ -200,22 +200,12 @@ static int st_flanger_start(eff_t effp)
     (f->delay_min + f->delay_depth) / 1000 * effp->ininfo.rate + 0.5;
   ++f->delay_buf_length;  /* Need 0 to n, i.e. n + 1. */
   ++f->delay_buf_length;  /* Quadratic interpolator needs one more. */
-  for (c = 0; c < channels; ++c) {
-    f->delay_bufs[c] = calloc(f->delay_buf_length, sizeof(*f->delay_bufs[0]));
-    if (f->delay_bufs[c] == NULL)
-    {
-      st_fail("Cannot allocate memory for delay_bufs");
-      return ST_EOF;
-    }
-  }
+  for (c = 0; c < channels; ++c)
+    f->delay_bufs[c] = xcalloc(f->delay_buf_length, sizeof(*f->delay_bufs[0]));
 
   /* Create the LFO lookup table: */
   f->lfo_length = effp->ininfo.rate / f->speed;
-  f->lfo = calloc(f->lfo_length, sizeof(*f->lfo));
-  if (f->lfo == NULL) {
-    st_fail("Cannot allocate memory for lfo");
-    return ST_EOF;
-  }
+  f->lfo = xcalloc(f->lfo_length, sizeof(*f->lfo));
   st_generate_wave_table(
       f->wave_shape,
       ST_FLOAT,

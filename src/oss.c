@@ -184,11 +184,7 @@ static int ossdspinit(ft_t ft)
     file->count = 0;
     file->pos = 0;
     file->eof = 0;
-
-    if ((file->buf = (char *)malloc(file->size)) == NULL) {
-        st_fail_errno(ft,ST_EOF,"Unable to allocate input/output buffer of size %d", file->size);
-        return (ST_EOF);
-    }
+    file->buf = (char *)xmalloc(file->size);
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_SYNC, NULL) < 0) {
         st_fail_errno(ft,ST_EOF,"Unable to sync dsp");

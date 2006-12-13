@@ -37,7 +37,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>             /* for malloc() */
+#include <stdlib.h>
 #include <signal.h>
 #include <errno.h>
 #ifdef HAVE_UNISTD_H
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        fo = (file_options_t *)calloc(sizeof(file_options_t), 1);
+        fo = (file_options_t *)xcalloc(sizeof(file_options_t), 1);
         fo->info.size = -1;
         fo->info.encoding = ST_ENCODING_UNKNOWN;
         fo->info.channels = 0;
@@ -316,11 +316,7 @@ static char * read_comment_file(char const * const filename)
     file_length = ftello(file);
     file_error |= file_length < 0;
     if (!file_error) {
-      result = malloc(file_length + 1);
-      if (result == NULL) {
-        st_fail("Out of memory reading comment file %s", filename);
-        exit(1);
-      }
+      result = xmalloc(file_length + 1);
       rewind(file);
       file_error |= fread(result, file_length, 1, file) != 1;
     }
@@ -685,13 +681,7 @@ static void process(void) {
           if (file_desc[f]->length > input_samples)
             input_samples = file_desc[f]->length;
           
-          ibuf[f] = (st_sample_t *)malloc(ST_BUFSIZ * sizeof(st_sample_t));
-          if (!ibuf[f])
-            {
-              st_fail("could not allocate memory");
-              cleanup();
-              exit(1);
-            }
+          ibuf[f] = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
           
           if (status)
             print_input_status(f);
@@ -1207,7 +1197,7 @@ static void reserve_effect_buf(void)
 
     for(e = 0; e < neffects; e++)
     {
-        efftab[e].obuf = (st_sample_t *)malloc(ST_BUFSIZ * 
+        efftab[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * 
                                                 sizeof(st_sample_t));
         if (efftab[e].obuf == NULL)
         {
@@ -1217,7 +1207,7 @@ static void reserve_effect_buf(void)
         }
         if (efftabR[e].name)
         {
-            efftabR[e].obuf = (st_sample_t *)malloc(ST_BUFSIZ * 
+            efftabR[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * 
                                                      sizeof(st_sample_t));
             if (efftabR[e].obuf == NULL)
             {

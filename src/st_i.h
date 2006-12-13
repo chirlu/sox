@@ -16,6 +16,8 @@
 #include "stconfig.h"
 #include "st.h"
 
+#include "xmalloc.h"
+
 #ifdef HAVE_BYTESWAP_H
 #include <byteswap.h>
 #endif

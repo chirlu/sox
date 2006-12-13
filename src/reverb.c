@@ -30,7 +30,7 @@
  * the difference in its defintion.
  * The idea of the echoplexer is modified and enhanceb by an automatic
  * setting of each decay for realistic reverb.
- * Some bugs are fixed concerning malloc and fade-outs.
+ * Some bugs are fixed concerning xmalloc and fade-outs.
  * Added an output volume (gain-out) avoiding saturation or clipping.
  *
  *
@@ -187,12 +187,7 @@ static int st_reverb_start(eff_t effp)
                 if ( reverb->samples[i] > reverb->maxsamples )
                     reverb->maxsamples = reverb->samples[i];
         }
-        if (! (reverb->reverbbuf = (float *) malloc(sizeof (float) * reverb->maxsamples)))
-        {
-                st_fail("reverb: Cannot malloc %d bytes!", 
-                        sizeof(float) * reverb->maxsamples);
-                return(ST_EOF);
-        }
+        reverb->reverbbuf = (float *) xmalloc(sizeof (float) * reverb->maxsamples);
         for ( i = 0; i < reverb->maxsamples; ++i )
                 reverb->reverbbuf[i] = 0.0;
         reverb->pppl = reverb->ppl = reverb->pl = 0x7fffff;             /* fade-outs */

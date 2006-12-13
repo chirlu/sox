@@ -23,8 +23,8 @@
 /* Thanks to Valery V. Anisimovsky <samael@avn.mccme.ru> for the 
  * "Maxis XA Audio File Format Description", dated 5-01-2002. */
 
-#include <string.h>             /* Included for strncmp */
-#include <stdlib.h>             /* Included for malloc and free */
+#include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #ifdef HAVE_UNISTD_H
@@ -182,14 +182,14 @@ static int st_xastartread(ft_t ft)
     xa->bufPos = xa->blockSize;
 
     /* Allocate memory for the block buffer */
-    xa->buf = (unsigned char *) calloc(1, xa->blockSize);
+    xa->buf = (unsigned char *) xcalloc(1, xa->blockSize);
     if (xa->buf == NULL) {
         st_fail_errno(ft, ST_ENOMEM, "Unable to allocate block buffer");
         return ST_EOF;
     }
     
     /* Allocate memory for the state */
-    xa->state = (xa_state_t *) calloc(sizeof(xa_state_t), ft->info.channels);
+    xa->state = (xa_state_t *) xcalloc(sizeof(xa_state_t), ft->info.channels);
     if (xa->state == NULL) {
         /* Free xa->buf */
         free(xa->buf);

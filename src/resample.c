@@ -244,7 +244,7 @@ int st_resample_start(eff_t effp)
         /* Nwing: # of filter coeffs in right wing */
         r->Nwing = r->Nq * (r->Nmult/2+1) + 1;
 
-        r->Imp = (double *)malloc(sizeof(double) * (r->Nwing+2)) + 1;
+        r->Imp = (double *)xmalloc(sizeof(double) * (r->Nwing+2)) + 1;
         /* need Imp[-1] and Imp[Nwing] for quadratic interpolation */
         /* returns error # <=0, or adjusted wing-len > 0 */
         i = makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq, 1);
@@ -290,7 +290,7 @@ int st_resample_start(eff_t effp)
         r->Ysize = BUFFSIZE - r->Xsize;
         /* st_debug("Xsize %d, Ysize %d, Xoff %d",r->Xsize,r->Ysize,r->Xoff); */
 
-        r->X = (double *) malloc(sizeof(double) * (BUFFSIZE));
+        r->X = (double *) xmalloc(sizeof(double) * (BUFFSIZE));
         r->Y = r->X + r->Xsize;
 
         /* Need Xoff zeros at beginning of sample */
@@ -634,7 +634,7 @@ int makeFilter(double Imp[], long Nwing, double Froll, double Beta,
    if (Mwing==0)
       return(-4);
 
-   ImpR = (double *) malloc(sizeof(double) * Mwing);
+   ImpR = (double *) xmalloc(sizeof(double) * Mwing);
 
    /* Design a Nuttall or Kaiser windowed Sinc low-pass filter */
    LpFilter(ImpR, Mwing, Froll, Beta, Num);

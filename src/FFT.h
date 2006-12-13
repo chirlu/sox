@@ -1,5 +1,4 @@
 /*
- *
  * FFT.h
  *
  * Based on FFT.h from Audacity, with the following permission from

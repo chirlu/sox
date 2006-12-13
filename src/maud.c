@@ -174,12 +174,7 @@ static int st_maudstartread(ft_t ft)
                         st_readdw(ft, &chunksize);
                         if (chunksize & 1)
                                 chunksize++;
-                        chunk_buf = (char *) malloc(chunksize + 1);
-                        if (!chunk_buf)
-                        {
-                            st_fail_errno(ft,ST_ENOMEM,"Couldn't alloc resources");
-                            return(ST_EOF);
-                        }
+                        chunk_buf = (char *) xmalloc(chunksize + 1);
                         if (st_readbuf(ft, chunk_buf, 1, (int)chunksize) 
                             != chunksize)
                         {

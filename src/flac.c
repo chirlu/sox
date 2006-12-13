@@ -76,12 +76,7 @@ static void FLAC__decoder_metadata_callback(FLAC__FileDecoder const * const flac
       comment_size += metadata->data.vorbis_comment.comments[i].length + 1;
     }
 
-    if ((format->comment = (char *) calloc(comment_size, sizeof(char))) == NULL)
-    {
-      st_fail_errno(format, ST_ENOMEM, "FLAC: Could not allocate memory");
-      decoder->eof = true;
-      return;
-    }
+    format->comment = (char *) xcalloc(comment_size, sizeof(char));
 
     for (i = 0; i < metadata->data.vorbis_comment.num_comments; ++i)
     {
@@ -271,12 +266,12 @@ static int st_format_start_write(ft_t const format)
 
   memset(encoder, 0, sizeof(*encoder));
   encoder->flac = FLAC__stream_encoder_new();
-  encoder->decoded_samples = malloc(ST_BUFSIZ * sizeof(FLAC__int32));
-  if (encoder->flac == NULL || encoder->decoded_samples == NULL)
+  if (encoder->flac == NULL)
   {
     st_fail_errno(format, ST_ENOMEM, "FLAC ERROR creating the encoder instance");
     return ST_EOF;
   }
+  encoder->decoded_samples = xmalloc(ST_BUFSIZ * sizeof(FLAC__int32));
 
   {     /* Select and set FLAC encoder options: */
     static struct
@@ -371,12 +366,9 @@ static int st_format_start_write(ft_t const format)
     if (strchr(format->comment, '=') == NULL) 
     {
       static const char prepend[] = "COMMENT=";
-      comments = malloc(strlen(format->comment) + sizeof(prepend));
-      if (comments != NULL)
-      {
-        strcpy(comments, prepend);
-        strcat(comments, format->comment);
-      }
+      comments = xmalloc(strlen(format->comment) + sizeof(prepend));
+      strcpy(comments, prepend);
+      strcat(comments, format->comment);
     }
     else
     {

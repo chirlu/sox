@@ -21,8 +21,8 @@
  */
 #include "st_i.h"
 
-#include <stdlib.h> /* malloc and free */
-#include <string.h> /* memcpy() */
+#include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 static st_effect_t st_stretch_effect;
@@ -184,8 +184,7 @@ static int st_stretch_start(eff_t effp)
     stretch->size = (int)(effp->outinfo.rate * 0.001 * stretch->window);
     /* start in the middle of an input to avoid initial fading... */
     stretch->index = stretch->size/2;
-    stretch->ibuf  = (st_sample_t *) malloc(stretch->size * 
-                                            sizeof(st_sample_t));
+    stretch->ibuf  = (st_sample_t *) xmalloc(stretch->size * sizeof(st_sample_t));
 
     /* the shift ratio deal with the longest of ishift/oshift
        hence ishift<=size and oshift<=size.
@@ -201,20 +200,10 @@ static int st_stretch_start(eff_t effp)
     assert(stretch->oshift <= stretch->size);
 
     stretch->oindex = stretch->index; /* start as synchronized */
-    stretch->obuf = (double *)
-        malloc(stretch->size * sizeof(double));
-    
+    stretch->obuf = (double *)xmalloc(stretch->size * sizeof(double));
     stretch->fsize = (int) (stretch->fading * stretch->size);
-
-    stretch->fbuf = (double *)
-        malloc(stretch->fsize * sizeof(double));
+    stretch->fbuf = (double *)xmalloc(stretch->fsize * sizeof(double));
         
-    if (!stretch->ibuf || !stretch->obuf || !stretch->fbuf) 
-    {
-        st_fail("some malloc failed");
-        return ST_EOF;
-    }
-
     /* initialize buffers
      */
     for (i=0; i<stretch->size; i++)

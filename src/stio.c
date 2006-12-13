@@ -78,12 +78,7 @@ static int st_checkformat(ft_t ft)
 ft_t st_open_read(const char *path, const st_signalinfo_t *info,
                   const char *filetype)
 {
-    ft_t ft;
-
-    ft = (ft_t)calloc(sizeof(struct st_soundstream), 1);
-
-    if (!ft)
-        return NULL;
+    ft_t ft = (ft_t)xcalloc(sizeof(struct st_soundstream), 1);
 
     ft->filename = strdup(path);
 
@@ -176,14 +171,9 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
                          const st_instrinfo_t *instr,
                          const st_loopinfo_t *loops)
 {
-    ft_t ft;
+    ft_t ft = (ft_t)xcalloc(sizeof(struct st_soundstream), 1);
     int i;
     bool no_filetype_given = filetype == NULL;
-
-    ft = (ft_t)calloc(sizeof(struct st_soundstream), 1);
-
-    if (!ft )
-        return NULL;
 
     ft->filename = strdup(path);
 

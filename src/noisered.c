@@ -75,13 +75,13 @@ static int st_noisered_start(eff_t effp)
     int i;
     FILE* ifd;
 
-    data->chandata = (chandata_t*)calloc(channels, sizeof(*(data->chandata)));
+    data->chandata = (chandata_t*)xcalloc(channels, sizeof(*(data->chandata)));
+    data->bufdata = 0;
     for (i = 0; i < channels; i ++) {
-        data->chandata[i].noisegate = (float*)calloc(FREQCOUNT, sizeof(float));
-        data->chandata[i].smoothing = (float*)calloc(FREQCOUNT, sizeof(float));
+        data->chandata[i].noisegate = (float*)xcalloc(FREQCOUNT, sizeof(float));
+        data->chandata[i].smoothing = (float*)xcalloc(FREQCOUNT, sizeof(float));
         data->chandata[i].lastwindow = NULL;
     }
-    data->bufdata = 0;
 
     /* Here we actually open the input file. */
     ifd = fopen(data->profile_filename, "r");
@@ -128,20 +128,18 @@ static int st_noisered_start(eff_t effp)
  * due to overlapping windows. */
 static void reduce_noise(chandata_t* chan, float* window, float level)
 {
-    float *inr   = (float*)calloc(WINDOWSIZE, sizeof(float));
-    float *ini   = (float*)calloc(WINDOWSIZE, sizeof(float));
-    float *outr  = (float*)calloc(WINDOWSIZE, sizeof(float));
-    float *outi  = (float*)calloc(WINDOWSIZE, sizeof(float));
-    float *power = (float*)calloc(WINDOWSIZE, sizeof(float));
+    float *inr, *ini, *outr, *outi, *power;
     float *smoothing = chan->smoothing;
-    static int callnum = 0;
     int i;
 
-    callnum ++;
-
-    for (i = 0; i < FREQCOUNT; i ++) {
+    inr = (float*)xcalloc(WINDOWSIZE * 5, sizeof(float));
+    ini = inr + WINDOWSIZE;
+    outr = ini + WINDOWSIZE;
+    outi = outr + WINDOWSIZE;
+    power = outi + WINDOWSIZE;
+    
+    for (i = 0; i < FREQCOUNT; i ++)
         assert(smoothing[i] >= 0 && smoothing[i] <= 1);
-    }
 
     memcpy(inr, window, WINDOWSIZE*sizeof(float));
 
@@ -151,7 +149,7 @@ static void reduce_noise(chandata_t* chan, float* window, float level)
     WindowFunc(HANNING, WINDOWSIZE, inr);
     PowerSpectrum(WINDOWSIZE, inr, power);
 
-    for(i = 0; i < FREQCOUNT; i ++) {
+    for (i = 0; i < FREQCOUNT; i ++) {
         float smooth;
         float plog;
         plog = log(power[i]);
@@ -159,10 +157,10 @@ static void reduce_noise(chandata_t* chan, float* window, float level)
             smooth = 0.0;
         else
             smooth = 1.0;
-
+        
         smoothing[i] = smooth * 0.5 + smoothing[i] * 0.5;
     }
-
+    
     /* Audacity says this code will eliminate tinkle bells.
      * I have no idea what that means. */
     for (i = 2; i < FREQCOUNT - 2; i ++) {
@@ -174,7 +172,7 @@ static void reduce_noise(chandata_t* chan, float* window, float level)
             smoothing[i+2]<0.1)
             smoothing[i] = 0.0;
     }
-
+    
     outr[0] *= smoothing[0];
     outi[0] *= smoothing[0];
     outr[FREQCOUNT-1] *= smoothing[FREQCOUNT-1];
@@ -183,27 +181,22 @@ static void reduce_noise(chandata_t* chan, float* window, float level)
     for (i = 1; i < FREQCOUNT-1; i ++) {
         int j = WINDOWSIZE - i;
         float smooth = smoothing[i];
-
+        
         outr[i] *= smooth;
         outi[i] *= smooth;
         outr[j] *= smooth;
         outi[j] *= smooth;
     }
-
+    
     FFT(WINDOWSIZE, 1, outr, outi, inr, ini);
     WindowFunc(HANNING, WINDOWSIZE, inr);
-
+    
     memcpy(window, inr, WINDOWSIZE*sizeof(float));
 
-    free(inr);
-    free(ini);
-    free(outr);
-    free(outi);
-    free(power);
-
-    for (i = 0; i < FREQCOUNT; i ++) {
+    for (i = 0; i < FREQCOUNT; i ++)
         assert(smoothing[i] >= 0 && smoothing[i] <= 1);
-    }
+
+    free(inr);
 }
 
 /* Do window management once we have a complete window, including mangling
@@ -216,12 +209,13 @@ static int process_window(eff_t effp, reddata_t data, int chan_num, int num_chan
     chandata_t *chan = &(data->chandata[chan_num]);
     int first = (chan->lastwindow == NULL);
 
-    nextwindow = (float*)calloc(WINDOWSIZE, sizeof(float));
+    if ((nextwindow = (float*)xcalloc(WINDOWSIZE, sizeof(float))) == NULL)
+        return ST_EOF;
+    
     memcpy(nextwindow, chan->window+WINDOWSIZE/2,
            sizeof(float)*(WINDOWSIZE/2));
 
     reduce_noise(chan, chan->window, data->threshold);
-        
     if (!first) {
         for (j = 0; j < use; j ++) {
             float s = chan->window[j] + chan->lastwindow[WINDOWSIZE/2 + j];
@@ -238,7 +232,7 @@ static int process_window(eff_t effp, reddata_t data, int chan_num, int num_chan
     }
     chan->lastwindow = chan->window;
     chan->window = nextwindow;
-
+    
     return use;
 }
 
@@ -256,42 +250,39 @@ static int st_noisered_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *ob
     st_size_t whole_window = (ncopy + data->bufdata == WINDOWSIZE);
     int oldbuf = data->bufdata;
     st_size_t i;
+
     assert(effp->ininfo.channels == effp->outinfo.channels);
 
-    if (whole_window) {
+    if (whole_window)
         data->bufdata = WINDOWSIZE/2;
-    } else {
+    else
         data->bufdata += ncopy;
-    }
 
     /* Reduce noise on every channel. */
     for (i = 0; i < tracks; i ++) {
         chandata_t* chan = &(data->chandata[i]);
         st_size_t j;
-        if (chan->window == NULL) {
-            chan->window = (float*)calloc(WINDOWSIZE, sizeof(float));
-        }
+
+        if (chan->window == NULL)
+            chan->window = (float*)xcalloc(WINDOWSIZE, sizeof(float));
         
-        for (j = 0; j < ncopy; j ++) {
+        for (j = 0; j < ncopy; j ++)
             chan->window[oldbuf + j] =
                 ST_SAMPLE_TO_FLOAT_DWORD(ibuf[i + tracks * j], effp->clippedCount);
-        }
 
         if (!whole_window)
             continue;
-        else {
+        else
             process_window(effp, data, i, tracks, obuf, oldbuf + ncopy);
-        }
     }
     
     *isamp = tracks*ncopy;
-    if (whole_window) {
+    if (whole_window)
         *osamp = tracks*(WINDOWSIZE/2);
-    } else {
+    else
         *osamp = 0;
-    }
-    
-    return (ST_SUCCESS);
+
+    return ST_SUCCESS;
 }
 
 /*
@@ -303,9 +294,9 @@ static int st_noisered_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     reddata_t data = (reddata_t)effp->priv;
     int i;
     int tracks = effp->ininfo.channels;
-    for (i = 0; i < tracks; i ++) {
+    for (i = 0; i < tracks; i ++)
         *osamp = process_window(effp, data, i, tracks, obuf, data->bufdata);
-    }
+
     /* FIXME: This is very picky.  osamp needs to be big enough to get all
      * remaining data or it will be discarded.
      */

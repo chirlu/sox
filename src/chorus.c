@@ -206,25 +206,20 @@ static int st_chorus_start(eff_t effp)
                         return (ST_EOF);
                 }
                 chorus->length[i] = effp->ininfo.rate / chorus->speed[i];
-                if (! (chorus->lookup_tab[i] = 
-                        (int *) malloc(sizeof (int) * chorus->length[i])))
-                {
-                        st_fail("chorus: Cannot malloc %d bytes!", 
-                                sizeof(int) * chorus->length[i]);
-                        return (ST_EOF);
-                }
-    if (chorus->modulation[i] == MOD_SINE)
-      st_generate_wave_table(ST_WAVE_SINE, ST_INT, chorus->lookup_tab[i],
-          chorus->length[i], 0, chorus->depth_samples[i], 0);
-    else
-      st_generate_wave_table(ST_WAVE_TRIANGLE, ST_INT, chorus->lookup_tab[i], 
-          chorus->length[i],
-          chorus->samples[i] - 1 - 2 * chorus->depth_samples[i],
-          chorus->samples[i] - 1, 3 * M_PI_2);
-                chorus->phase[i] = 0;
+                chorus->lookup_tab[i] = (int *) xmalloc(sizeof (int) * chorus->length[i]);
 
+                if (chorus->modulation[i] == MOD_SINE)
+                  st_generate_wave_table(ST_WAVE_SINE, ST_INT, chorus->lookup_tab[i],
+                                         chorus->length[i], 0, chorus->depth_samples[i], 0);
+                else
+                  st_generate_wave_table(ST_WAVE_TRIANGLE, ST_INT, chorus->lookup_tab[i], 
+                                         chorus->length[i],
+                                         chorus->samples[i] - 1 - 2 * chorus->depth_samples[i],
+                                         chorus->samples[i] - 1, 3 * M_PI_2);
+                chorus->phase[i] = 0;
+                
                 if ( chorus->samples[i] > chorus->maxsamples )
-                        chorus->maxsamples = chorus->samples[i];
+                  chorus->maxsamples = chorus->samples[i];
         }
 
         /* Be nice and check the hint with warning, if... */
@@ -235,13 +230,7 @@ static int st_chorus_start(eff_t effp)
         st_warn("chorus: warning >>> gain-out can cause saturation or clipping of output <<<");
 
 
-        if (! (chorus->chorusbuf = 
-                (float *) malloc(sizeof (float) * chorus->maxsamples)))
-        {
-                st_fail("chorus: Cannot malloc %d bytes!", 
-                        sizeof(float) * chorus->maxsamples);
-                return (ST_EOF);
-        }
+        chorus->chorusbuf = (float *) xmalloc(sizeof (float) * chorus->maxsamples);
         for ( i = 0; i < chorus->maxsamples; i++ )
                 chorus->chorusbuf[i] = 0.0;
 

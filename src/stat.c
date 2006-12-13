@@ -120,15 +120,8 @@ static int st_stat_start(eff_t effp)
         if (stat->fft)
         {
             stat->fft_offset = 0;
-
-            stat->re_in = (float *)malloc(sizeof(float) * stat->fft_size);
-            stat->re_out = (float *)malloc(sizeof(float) * (stat->fft_size / 2));
-
-            if (!stat->re_in || !stat->re_out)
-            {
-                st_fail("Unable to allocate memory for FFT buffers.");
-                return (ST_EOF);
-            }
+            stat->re_in = (float *)xmalloc(sizeof(float) * stat->fft_size);
+            stat->re_out = (float *)xmalloc(sizeof(float) * (stat->fft_size / 2));
         }
 
         return (ST_SUCCESS);

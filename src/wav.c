@@ -11,8 +11,8 @@
  *
  */
 
-#include <string.h>             /* Included for strncmp */
-#include <stdlib.h>             /* Included for malloc and free */
+#include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #ifdef HAVE_UNISTD_H
@@ -205,11 +205,7 @@ static int wavgsminit(ft_t ft)
         return (ST_EOF);
     }
 
-    wav->gsmsample=(gsm_signal*)malloc(sizeof(gsm_signal)*160*2);
-    if (wav->gsmsample == NULL){
-        st_fail_errno(ft,ST_ENOMEM,"error allocating memory for gsm buffer");
-        return (ST_EOF);
-    }
+    wav->gsmsample=(gsm_signal*)xmalloc(sizeof(gsm_signal)*160*2);
     wav->gsmindex=0;
     return (ST_SUCCESS);
 }
@@ -665,12 +661,7 @@ static int st_wavstartread(ft_t ft)
             st_fail_errno(ft,ST_EOF,"ADPCM file nCoefs (%.4hx) makes no sense", wav->nCoefs);
             return ST_EOF;
         }
-        wav->packet = (unsigned char *)malloc(wav->blockAlign);
-        if (!wav->packet)
-        {
-            st_fail_errno(ft,ST_EOF,"Unable to alloc resources");
-            return ST_EOF;
-        }
+        wav->packet = (unsigned char *)xmalloc(wav->blockAlign);
 
         len -= 4;
 
@@ -680,20 +671,10 @@ static int st_wavstartread(ft_t ft)
             return ST_EOF;
         }
 
-        wav->samples = (short *)malloc(wChannels*wav->samplesPerBlock*sizeof(short));
-        if (!wav->samples)
-        {
-            st_fail_errno(ft,ST_EOF,"Unable to alloc resources");
-            return ST_EOF;
-        }
+        wav->samples = (short *)xmalloc(wChannels*wav->samplesPerBlock*sizeof(short));
 
         /* nCoefs, iCoefs used by adpcm.c */
-        wav->iCoefs = (short *)malloc(wav->nCoefs * 2 * sizeof(short));
-        if (!wav->iCoefs)
-        {
-            st_fail_errno(ft,ST_EOF,"Unable to alloc resources");
-            return ST_EOF;
-        }
+        wav->iCoefs = (short *)xmalloc(wav->nCoefs * 2 * sizeof(short));
         {
             int i, errct=0;
             for (i=0; len>=2 && i < 2*wav->nCoefs; i++) {
@@ -731,20 +712,10 @@ static int st_wavstartread(ft_t ft)
             return ST_EOF;
         }
 
-        wav->packet = (unsigned char *)malloc(wav->blockAlign);
-        if (!wav->packet)
-        {
-            st_fail_errno(ft,ST_EOF,"Unable to alloc resources");
-            return ST_EOF;
-        }
+        wav->packet = (unsigned char *)xmalloc(wav->blockAlign);
         len -= 2;
 
-        wav->samples = (short *)malloc(wChannels*wav->samplesPerBlock*sizeof(short));
-        if (!wav->samples)
-        {
-            st_fail_errno(ft,ST_EOF,"Unable to alloc resources");
-            return ST_EOF;
-        }
+        wav->samples = (short *)xmalloc(wChannels*wav->samplesPerBlock*sizeof(short));
 
         bytespersample = ST_SIZE_WORD;  /* AFTER de-compression */
         break;
@@ -927,7 +898,7 @@ static int st_wavstartread(ft_t ft)
             findChunk(ft, "LIST", &len) != ST_EOF)
         {
             wav->found_cooledit = 1;
-            ft->comment = (char*)malloc(256);
+            ft->comment = (char*)xmalloc(256);
             /* Initialize comment to a NULL string */
             ft->comment[0] = 0;
             while(!st_eof(ft))
@@ -1211,13 +1182,8 @@ static int st_wavstartwrite(ft_t ft)
             for (ch=0; ch<ft->info.channels; ch++)
                 wav->state[ch] = 0;
             sbsize = ft->info.channels * wav->samplesPerBlock;
-            wav->packet = (unsigned char *)malloc(wav->blockAlign);
-            wav->samples = (short *)malloc(sbsize*sizeof(short));
-            if (!wav->packet || !wav->samples)
-            {
-                st_fail_errno(ft,ST_EOF,"Unable to alloc resources");
-                return ST_EOF;
-            }
+            wav->packet = (unsigned char *)xmalloc(wav->blockAlign);
+            wav->samples = (short *)xmalloc(sbsize*sizeof(short));
             wav->sampleTop = wav->samples + sbsize;
             wav->samplePtr = wav->samples;
             break;

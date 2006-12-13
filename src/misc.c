@@ -493,11 +493,7 @@ int strncasecmp(char const *s1, char const * s2, size_t n)
  */
 char *strdup(const char *s)
 {
-    char *dups;
-
-    dups = (char *)malloc(strlen(s)+1);
-    strcpy(dups, s);
-    return dups;
+    return strcpy((char *)xmalloc(strlen(s) + 1), s);
 }
 #endif
 

@@ -156,12 +156,7 @@ static int st_echos_start(eff_t effp)
                 echos->pointer[i] = echos->sumsamples;
                 echos->sumsamples += echos->samples[i];
         }
-        if (! (echos->delay_buf = (double *) malloc(sizeof (double) * echos->sumsamples)))
-        {
-                st_fail("echos: Cannot malloc %d bytes!", 
-                        sizeof(double) * echos->sumsamples);
-                return(ST_EOF);
-        }
+        echos->delay_buf = (double *) xmalloc(sizeof (double) * echos->sumsamples);
         for ( j = 0; j < echos->sumsamples; ++j )
                 echos->delay_buf[j] = 0.0;
         /* Be nice and check the hint with warning, if... */

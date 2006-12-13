@@ -419,7 +419,7 @@ static int st_poly_start(eff_t effp)
       int j, prod, f_cutoff, f_len;
       polystage *s;
 
-      rate->stage[k] = s = (polystage*) malloc(sizeof(polystage));
+      rate->stage[k] = s = (polystage*) xmalloc(sizeof(polystage));
       s->up = l1[k];
       s->down = l2[k];
       f_cutoff = max(s->up, s->down);
@@ -433,8 +433,8 @@ static int st_poly_start(eff_t effp)
       st_debug("Poly:  stage %d:  Up by %d, down by %d,  i_samps %d, hsize %d",
               k+1,s->up,s->down,size, s->hsize);
       s->filt_len = f_len;
-      s->filt_array = (Float *) malloc(sizeof(Float) * f_len);
-      s->window = (Float *) malloc(sizeof(Float) * (s->hsize+size));
+      s->filt_array = (Float *) xmalloc(sizeof(Float) * f_len);
+      s->window = (Float *) xmalloc(sizeof(Float) * (s->hsize+size));
       /* zero past_history section of window */
       for(j = 0; j < s->hsize; j++)
         s->window[j] = 0.0;
@@ -455,14 +455,14 @@ static int st_poly_start(eff_t effp)
     rate->oskip = skip/2;
                 { /* bogus last stage is for output buffering */
       polystage *s;
-      rate->stage[k] = s = (polystage*) malloc(sizeof(polystage));
+      rate->stage[k] = s = (polystage*) xmalloc(sizeof(polystage));
       s->up = s->down = 0;
       s->size = size;
       s->hsize = 0;
       s->held = 0;
       s->filt_len = 0;
       s->filt_array = NULL;
-      s->window = (Float *) malloc(sizeof(Float) * size);
+      s->window = (Float *) xmalloc(sizeof(Float) * size);
     }
     st_debug("Poly:  output samples %d, oskip %d",size, rate->oskip);
     return (ST_SUCCESS);

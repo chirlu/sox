@@ -89,12 +89,7 @@ static int st_earwax_start(eff_t effp)
   }
 
   /* allocate tap memory */
-  earwax->tap = (st_sample_t*)malloc( sizeof(st_sample_t) * EARWAX_NUMTAPS );
-  if( !earwax->tap ){
-    st_fail("earwax: Cannot malloc %d bytes!", 
-            sizeof(st_sample_t) * EARWAX_NUMTAPS );
-    return (ST_EOF);
-  }
+  earwax->tap = (st_sample_t*)xmalloc( sizeof(st_sample_t) * EARWAX_NUMTAPS );
 
   /* zero out the delayed taps */
   for(i=0; i < EARWAX_NUMTAPS; i++ ){

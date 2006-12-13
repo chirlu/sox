@@ -46,12 +46,7 @@ static int st_trim_getopts(eff_t effp, int n, char **argv)
      */
     switch (n) {
         case 2:
-            trim->length_str = (char *)malloc(strlen(argv[1])+1);
-            if (!trim->length_str)
-            {
-                st_fail("Could not allocate memory");
-                return(ST_EOF);
-            }
+            trim->length_str = (char *)xmalloc(strlen(argv[1])+1);
             strcpy(trim->length_str,argv[1]);
             /* Do a dummy parse to see if it will fail */
             if (st_parsesamples(0, trim->length_str,
@@ -61,12 +56,7 @@ static int st_trim_getopts(eff_t effp, int n, char **argv)
                 return(ST_EOF);
             }
         case 1:
-            trim->start_str = (char *)malloc(strlen(argv[0])+1);
-            if (!trim->start_str)
-            {
-                st_fail("Could not allocate memory");
-                return(ST_EOF);
-            }
+            trim->start_str = (char *)xmalloc(strlen(argv[0])+1);
             strcpy(trim->start_str,argv[0]);
             /* Do a dummy parse to see if it will fail */
             if (st_parsesamples(0, trim->start_str,

@@ -117,12 +117,7 @@ static int st_silence_getopts(eff_t effp, int n, char **argv)
          * parse the duration info yet.  So save argument off
          * for future processing.
          */
-        silence->start_duration_str = (char *)malloc(strlen(argv[0])+1);
-        if (!silence->start_duration_str)
-        {
-            st_fail("Could not allocate memory");
-            return(ST_EOF);
-        }
+        silence->start_duration_str = (char *)xmalloc(strlen(argv[0])+1);
         strcpy(silence->start_duration_str,argv[0]);
         /* Perform a fake parse to do error checking */
         if (st_parsesamples(0,silence->start_duration_str,
@@ -176,12 +171,7 @@ static int st_silence_getopts(eff_t effp, int n, char **argv)
          * parse the duration info yet.  So save argument off
          * for future processing.
          */
-        silence->stop_duration_str = (char *)malloc(strlen(argv[0])+1);
-        if (!silence->stop_duration_str)
-        {
-            st_fail("Could not allocate memory");
-            return(ST_EOF);
-        }
+        silence->stop_duration_str = (char *)xmalloc(strlen(argv[0])+1);
         strcpy(silence->stop_duration_str,argv[0]);
         /* Perform a fake parse to do error checking */
         if (st_parsesamples(0,silence->stop_duration_str,
@@ -260,14 +250,8 @@ static int st_silence_start(eff_t effp)
          */
         silence->window_size = (effp->ininfo.rate / 50) * 
                                effp->ininfo.channels;
-        silence->window = (double *)malloc(silence->window_size *
+        silence->window = (double *)xmalloc(silence->window_size *
                                            sizeof(double));
-
-        if (!silence->window)
-        {
-            st_fail("Unable to allocate memory");
-            return(ST_EOF);
-        }
 
         clear_rms(effp);
 
@@ -298,22 +282,12 @@ static int st_silence_start(eff_t effp)
         else
             silence->mode = SILENCE_COPY;
 
-        silence->start_holdoff = (st_sample_t *)malloc(sizeof(st_sample_t)*silence->start_duration);
-        if (!silence->start_holdoff)
-        {
-            st_fail("Could not allocate memory");
-            return(ST_EOF);
-        }
+        silence->start_holdoff = (st_sample_t *)xmalloc(sizeof(st_sample_t)*silence->start_duration);
         silence->start_holdoff_offset = 0;
         silence->start_holdoff_end = 0;
         silence->start_found_periods = 0;
 
-        silence->stop_holdoff = (st_sample_t *)malloc(sizeof(st_sample_t)*silence->stop_duration);
-        if (!silence->stop_holdoff)
-        {
-            st_fail("Could not allocate memory");
-            return(ST_EOF);
-        }
+        silence->stop_holdoff = (st_sample_t *)xmalloc(sizeof(st_sample_t)*silence->stop_duration);
         silence->stop_holdoff_offset = 0;
         silence->stop_holdoff_end = 0;
         silence->stop_found_periods = 0;

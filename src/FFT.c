@@ -58,13 +58,7 @@
 int **gFFTBitTable = NULL;
 const int MaxFastBits = 16;
 
-/* Declare Static functions */
-static int IsPowerOfTwo(int x);
-static int NumberOfBitsNeeded(int PowerOfTwo);
-static int ReverseBits(int index, int NumBits);
-static void InitFFT(void);
-
-int IsPowerOfTwo(int x)
+static int IsPowerOfTwo(int x)
 {
    if (x < 2)
       return 0;
@@ -72,7 +66,7 @@ int IsPowerOfTwo(int x)
    return !(x & (x-1));         /* Thanks to 'byang' for this cute trick! */
 }
 
-int NumberOfBitsNeeded(int PowerOfTwo)
+static int NumberOfBitsNeeded(int PowerOfTwo)
 {
    int i;
 
@@ -86,7 +80,7 @@ int NumberOfBitsNeeded(int PowerOfTwo)
          return i;
 }
 
-int ReverseBits(int index, int NumBits)
+static int ReverseBits(int index, int NumBits)
 {
    int i, rev;
 
@@ -99,25 +93,19 @@ int ReverseBits(int index, int NumBits)
 }
 
 
-/* This function allocates about 250k (actually (2**16)-2 ints) which is never
- * freed, to use as a lookup table for bit-reversal. The good news is that
- * we bascially need this until the very end, so the fact that it's not freed
- * is OK. */
-void InitFFT(void)
+/* This function permanently allocates about 250Kb (actually (2**16)-2 ints). */
+static void InitFFT(void)
 {
    int len, b;
-
-   gFFTBitTable = (int**)calloc(MaxFastBits, sizeof(*gFFTBitTable));
    
-   len = 2;
-   for (b = 1; b <= MaxFastBits; b++) {
+   gFFTBitTable = (int**)xcalloc(MaxFastBits, sizeof(*gFFTBitTable));
+   
+   for (b = 1, len = 2; b <= MaxFastBits; b++) {
       int i;
 
-      gFFTBitTable[b - 1] = (int*)calloc(len, sizeof(**gFFTBitTable));
-
-      for (i = 0; i < len; i++) {
+      gFFTBitTable[b - 1] = (int*)xcalloc(len, sizeof(**gFFTBitTable));
+      for (i = 0; i < len; i++)
         gFFTBitTable[b - 1][i] = ReverseBits(i, b);
-      }
 
       len <<= 1;
    }
@@ -129,7 +117,6 @@ void InitFFT(void)
 /*
  * Complex Fast Fourier Transform
  */
-
 void FFT(int NumSamples,
          int InverseTransform,
          const float *RealIn, float *ImagIn, float *RealOut, float *ImagOut)
@@ -243,21 +230,18 @@ void FFT(int NumSamples,
 void RealFFT(int NumSamples, const float *RealIn, float *RealOut, float *ImagOut)
 {
    int Half = NumSamples / 2;
-   int i;
-
+   int i, i3;
    float theta = M_PI / Half;
    float wtemp = (float) sin(0.5 * theta);
    float wpr = -2.0 * wtemp * wtemp;
    float wpi = (float) sin(theta);
    float wr = 1.0 + wpr;
    float wi = wpi;
-
-   int i3;
-
    float h1r, h1i, h2r, h2i;
+   float *tmpReal, *tmpImag;
 
-   float *tmpReal = (float*)calloc(Half, sizeof(float));
-   float *tmpImag = (float*)calloc(Half, sizeof(float));
+   tmpReal = (float*)xcalloc(NumSamples, sizeof(float));
+   tmpImag = tmpReal + Half;
 
    for (i = 0; i < Half; i++) {
       tmpReal[i] = RealIn[2 * i];
@@ -267,29 +251,28 @@ void RealFFT(int NumSamples, const float *RealIn, float *RealOut, float *ImagOut
    FFT(Half, 0, tmpReal, tmpImag, RealOut, ImagOut);
 
    for (i = 1; i < Half / 2; i++) {
-      i3 = Half - i;
-
-      h1r = 0.5 * (RealOut[i] + RealOut[i3]);
-      h1i = 0.5 * (ImagOut[i] - ImagOut[i3]);
-      h2r = 0.5 * (ImagOut[i] + ImagOut[i3]);
-      h2i = -0.5 * (RealOut[i] - RealOut[i3]);
-
-      RealOut[i] = h1r + wr * h2r - wi * h2i;
-      ImagOut[i] = h1i + wr * h2i + wi * h2r;
-      RealOut[i3] = h1r - wr * h2r + wi * h2i;
-      ImagOut[i3] = -h1i + wr * h2i + wi * h2r;
-
-      wtemp = wr;
-      wr = wr * wpr - wi * wpi + wr;
-      wi = wi * wpr + wtemp * wpi + wi;
+     i3 = Half - i;
+       
+     h1r = 0.5 * (RealOut[i] + RealOut[i3]);
+     h1i = 0.5 * (ImagOut[i] - ImagOut[i3]);
+     h2r = 0.5 * (ImagOut[i] + ImagOut[i3]);
+     h2i = -0.5 * (RealOut[i] - RealOut[i3]);
+       
+     RealOut[i] = h1r + wr * h2r - wi * h2i;
+     ImagOut[i] = h1i + wr * h2i + wi * h2r;
+     RealOut[i3] = h1r - wr * h2r + wi * h2i;
+     ImagOut[i3] = -h1i + wr * h2i + wi * h2r;
+       
+     wtemp = wr;
+     wr = wr * wpr - wi * wpi + wr;
+     wi = wi * wpr + wtemp * wpi + wi;
    }
-
+     
    h1r = RealOut[0];
    RealOut[0] += ImagOut[0];
    ImagOut[0] = h1r - ImagOut[0];
 
    free(tmpReal);
-   free(tmpImag);
 }
 
 /*
@@ -318,10 +301,10 @@ void PowerSpectrum(int NumSamples, const float *In, float *Out)
 
   theta = M_PI / Half;
 
-  tmpReal = (float*)calloc(Half, sizeof(float));
-  tmpImag = (float*)calloc(Half, sizeof(float));
-  RealOut = (float*)calloc(Half, sizeof(float));
-  ImagOut = (float*)calloc(Half, sizeof(float));
+  tmpReal = (float*)xcalloc(Half * 4, sizeof(float));
+  tmpImag = tmpReal + Half;
+  RealOut = tmpImag + Half;
+  ImagOut = RealOut + Half;
 
   for (i = 0; i < Half; i++) {
     tmpReal[i] = In[2 * i];
@@ -329,16 +312,16 @@ void PowerSpectrum(int NumSamples, const float *In, float *Out)
   }
 
   FFT(Half, 0, tmpReal, tmpImag, RealOut, ImagOut);
-
+  
   wtemp = (float) sin(0.5 * theta);
 
   wpr = -2.0 * wtemp * wtemp;
   wpi = (float) sin(theta);
   wr = 1.0 + wpr;
   wi = wpi;
-
+    
   for (i = 1; i < Half / 2; i++) {
-
+      
     i3 = Half - i;
     
     h1r = 0.5 * (RealOut[i] + RealOut[i3]);
@@ -369,9 +352,6 @@ void PowerSpectrum(int NumSamples, const float *In, float *Out)
   Out[Half / 2] = rt * rt + it * it;
   
   free(tmpReal);
-  free(tmpImag);
-  free(RealOut);
-  free(ImagOut);
 }
 
 /*

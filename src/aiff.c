@@ -554,12 +554,7 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft)
   uint32_t chunksize;
   st_readdw(ft, &chunksize);
   /* allocate enough memory to hold the text including a terminating \0 */
-  *text = (char *) malloc((size_t) chunksize + 1);
-  if (*text == NULL)
-  {
-    st_fail_errno(ft,ST_ENOMEM,"AIFF: Couldn't allocate %s header", chunkDescription);
-    return(ST_EOF);
-  }
+  *text = (char *) xmalloc((size_t) chunksize + 1);
   if (st_readbuf(ft, *text, 1, chunksize) != chunksize)
   {
     st_fail_errno(ft,ST_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
@@ -605,16 +600,12 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
     totalCommentLength += commentLength;
     /* allocate enough memory to hold the text including a terminating \0 */
     if(commentIndex == 0) {
-      *text = (char *) malloc((size_t) totalCommentLength + 1);
+      *text = (char *) xmalloc((size_t) totalCommentLength + 1);
     }
     else {
-      *text = realloc(*text, (size_t) totalCommentLength + 1);
+      *text = xrealloc(*text, (size_t) totalCommentLength + 1);
     }
 
-    if (*text == NULL) {
-        st_fail_errno(ft,ST_ENOMEM,"AIFF: Couldn't allocate %s header", chunkDescription);
-        return(ST_EOF);
-    }
     if (st_readbuf(ft, *text + totalCommentLength - commentLength, 1, commentLength) != commentLength) {
         st_fail_errno(ft,ST_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
         return(ST_EOF);

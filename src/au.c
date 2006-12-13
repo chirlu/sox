@@ -255,7 +255,8 @@ static int st_austartread(ft_t ft)
         hdr_size -= SUN_HDRSIZE; /* #bytes already read */
         if (hdr_size > 0) {
                 /* Allocate comment buffer */
-                buf = (char *) malloc(hdr_size+1);              
+                buf = (char *) xmalloc(hdr_size+1);
+                
                 for(i = 0; i < hdr_size; i++) {
                         st_readb(ft, (unsigned char *)&(buf[i]));
                         if (st_eof(ft))
@@ -265,7 +266,7 @@ static int st_austartread(ft_t ft)
                         }
                 }
                 /* Buffer should already be null terminated but
-                 * just in case we malloced an extra byte and 
+                 * just in case we xmalloced an extra byte and 
                  * force the last byte to be 0 anyways.
                  * This should help work with a greater array of
                  * software.

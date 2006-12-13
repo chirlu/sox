@@ -158,23 +158,10 @@ static int st_phaser_start(eff_t effp)
                 st_warn("phaser: warning >>> gain-out can cause saturation or clipping of output <<<");
 
         phaser->length = effp->ininfo.rate / phaser->speed;
-
-        if (! (phaser->phaserbuf = 
-                (double *) malloc(sizeof (double) * phaser->maxsamples)))
-        {
-                st_fail("phaser: Cannot malloc %d bytes!", 
-                        sizeof(double) * phaser->maxsamples);
-                return (ST_EOF);
-        }
+        phaser->phaserbuf = (double *) xmalloc(sizeof (double) * phaser->maxsamples);
         for ( i = 0; i < phaser->maxsamples; i++ )
                 phaser->phaserbuf[i] = 0.0;
-        if (! (phaser->lookup_tab = 
-                (int *) malloc(sizeof (int) * phaser->length)))
-        {
-                st_fail("phaser: Cannot malloc %d bytes!", 
-                        sizeof(int) * phaser->length);
-                return (ST_EOF);
-        }
+        phaser->lookup_tab = (int *) xmalloc(sizeof (int) * phaser->length);
 
         if (phaser->modulation == MOD_SINE)
           st_generate_wave_table(ST_WAVE_SINE, ST_INT, phaser->lookup_tab,

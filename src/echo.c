@@ -9,7 +9,7 @@
 
 /*
  * This is the "echo.c" while the old "echo.c" from version 12 moves to
- * "reverb.c" satisfying the defintions made in the Guitar FX FAQ.
+ * "reverb.c" satisfying the definitions made in the Guitar FX FAQ.
  *
  *
  * Echo effect for dsp.
@@ -162,12 +162,7 @@ static int st_echo_start(eff_t effp)
                 if ( echo->samples[i] > echo->maxsamples )
                         echo->maxsamples = echo->samples[i];
         }
-        if (! (echo->delay_buf = (double *) malloc(sizeof (double) * echo->maxsamples)))
-        {
-                st_fail("echo: Cannot malloc %d bytes!", 
-                        sizeof(long) * echo->maxsamples);
-                return (ST_EOF);
-        }
+        echo->delay_buf = (double *) xmalloc(sizeof (double) * echo->maxsamples);
         for ( j = 0; j < echo->maxsamples; ++j )
                 echo->delay_buf[j] = 0.0;
         /* Be nice and check the hint with warning, if... */
