@@ -1,6 +1,10 @@
 /*
  * Sound Tools skeleton file format driver.
  *
+ * Written by Chris Bagwell (cbagwell@sprynet.com) - March 16, 1999
+ *
+ * Copyright 1999 Chris Bagwell And Sundry Contributors
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -15,7 +19,6 @@
  * License along with this library. If not, write to the Free Software
  * Foundation, Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301,
  * USA.  */
- */
 
 #include "st_i.h"
 
