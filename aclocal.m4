@@ -149,8 +149,7 @@ installed software in a non-standard prefix.
 
 _PKG_TEXT
 ])],
-		[AC_MSG_RESULT([no])
-                $4])
+		[$4])
 elif test $pkg_failed = untried; then
 	ifelse([$4], , [AC_MSG_FAILURE(dnl
 [The pkg-config script could not be found or is too old.  Make sure it

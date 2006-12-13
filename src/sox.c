@@ -75,7 +75,7 @@ static int soxmix = 0;          /* non-zero if running as soxmix */
  
 static int clipped = 0;         /* Volume change clipping errors */
 static int writing = 1;         /* are we writing to a file? assume yes. */
-static st_globalinfo_t globalinfo;
+static st_globalinfo_t globalinfo = {false, 1};
 
 static int user_abort = 0;
 
@@ -665,6 +665,10 @@ static void process(void) {
                       file_desc[file_count-1]->comment);
     }
 
+    /* Set the input rate for the speed effect */
+    for (f = 0; f < input_count; ++f)
+      file_desc[f]->info.rate = file_desc[f]->info.rate * globalinfo.speed + .5;
+
     /* build efftab */
     check_effects();
 
@@ -948,6 +952,7 @@ static void parse_effects(int argc, char **argv)
         /* Skip past effect name */
         optind++;
 
+        user_efftab[nuser_effects].globalinfo = &globalinfo;
         effect_rc = (*user_efftab[nuser_effects].h->getopts)
             (&user_efftab[nuser_effects],
              argc_effect,
@@ -972,10 +977,18 @@ static void parse_effects(int argc, char **argv)
  */
 static void check_effects(void)
 {
-    int i;
+    int i, j;
     int needchan = 0, needrate = 0, haschan = 0, hasrate = 0;
     int effects_mask = 0;
     int status;
+
+    /* Remove any null effects: */
+    for (i = 0; i < nuser_effects; ++i)
+      if (user_efftab[i].h->flags & ST_EFF_NULL) {
+        --nuser_effects;
+        for (j = i--; j < nuser_effects; ++j)
+          user_efftab[j] = user_efftab[j + 1];
+      }
 
     if (writing)
     {
@@ -985,8 +998,6 @@ static void check_effects(void)
 
     for (i = 0; i < nuser_effects; i++)
     {
-        user_efftab[i].globalinfo = globalinfo;
-
         if (user_efftab[i].h->flags & ST_EFF_CHAN)
         {
             haschan++;
@@ -1031,6 +1042,7 @@ static void check_effects(void)
         st_geteffect(&efftab[neffects], "avg");
 
         /* give default opts for added effects */
+        efftab[neffects].globalinfo = &globalinfo;
         status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
                                                  (char **)0);
 
@@ -1058,6 +1070,7 @@ static void check_effects(void)
         st_geteffect(&efftab[neffects], "resample");
 
         /* set up & give default opts for added effects */
+        efftab[neffects].globalinfo = &globalinfo;
         status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
                                                  (char **)0);
 
@@ -1119,6 +1132,7 @@ static void check_effects(void)
         st_geteffect(&efftab[neffects], "resample");
 
         /* set up & give default opts for added effects */
+        efftab[neffects].globalinfo = &globalinfo;
         status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
                                                   (char **)0);
 
@@ -1154,6 +1168,7 @@ static void check_effects(void)
         st_geteffect(&efftab[neffects], "avg");
 
         /* set up & give default opts for added effects */
+        efftab[neffects].globalinfo = &globalinfo;
         status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
                                                  (char **)0);
         if (status == ST_EOF)
@@ -1419,8 +1434,8 @@ static int flow_effect(int e)
          */
         idone = efftab[e-1].olen - efftab[e-1].odone;
         odone = ST_BUFSIZ - efftab[e].olen;
-        st_debug("pre %s idone=%d, odone=%d\n", efftab[e].name, idone, odone);
-        st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
+        st_debug("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
+        st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
 
         effstatus = (* efftab[e].h->flow)(&efftab[e],
                                           &efftab[e-1].obuf[efftab[e-1].odone],
@@ -1432,8 +1447,8 @@ static int flow_effect(int e)
         /* Leave efftab[e].odone were it was since we didn't consume data */
         /*efftab[e].odone = 0;*/
         efftab[e].olen += odone; 
-        st_debug("post %s idone=%d, odone=%d\n", efftab[e].name, idone, odone); 
-        st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
+        st_debug("post %s idone=%d, odone=%d", efftab[e].name, idone, odone); 
+        st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
 
         done = idone + odone;
     } 
@@ -1454,8 +1469,8 @@ static int flow_effect(int e)
         /* left */
         idonel = (idone + 1)/2;         /* odd-length logic */
         odonel = odone/2;
-        st_debug("pre %s idone=%d, odone=%d\n", efftab[e].name, idone, odone);
-        st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
+        st_debug("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
+        st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
 
         effstatusl = (* efftab[e].h->flow)(&efftab[e],
                                           ibufl, obufl, (st_size_t *)&idonel, 
@@ -1480,8 +1495,8 @@ static int flow_effect(int e)
         /* Don't clear since nothng has been consumed yet */
         /*efftab[e].odone = 0;*/
         efftab[e].olen += odonel + odoner;
-        st_debug("post %s idone=%d, odone=%d\n", efftab[e].name, idone, odone); 
-        st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d\n", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
+        st_debug("post %s idone=%d, odone=%d", efftab[e].name, idone, odone); 
+        st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
 
         done = idonel + idoner + odonel + odoner;
 
@@ -1623,7 +1638,8 @@ static void print_input_status(int input)
     fprintf(stderr, "Sample Encoding: %s\n", 
             st_encodings_str[file_desc[input]->info.encoding]);
     fprintf(stderr, "Channels       : %d\n", file_desc[input]->info.channels);
-    fprintf(stderr, "Sample Rate    : %d\n", file_desc[input]->info.rate);
+    fprintf(stderr, "Sample Rate    : %d\n",
+       (int)(file_desc[input]->info.rate / globalinfo.speed + 0.5));
 
     if (file_desc[input]->comment && *file_desc[input]->comment)
         fprintf(stderr, "Comments       :\n%s\n", file_desc[input]->comment);

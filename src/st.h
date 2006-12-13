@@ -192,7 +192,8 @@ typedef enum {
 
 typedef struct  st_globalinfo
 {
-    bool octave_plot_effect;/* to help user choose effect & options */
+    bool octave_plot_effect;/* To help user choose effect & options */
+    double speed;         /* Gather up all speed changes here, then resample */
 } st_globalinfo_t;
 
 /* Signal parameters */
@@ -332,7 +333,8 @@ extern const char * const st_encodings_str[];
 #define ST_EFF_CHAN     1               /* Effect can mix channels up/down */
 #define ST_EFF_RATE     2               /* Effect can alter data rate */
 #define ST_EFF_MCHAN    4               /* Effect can handle multi-channel */
-#define ST_EFF_REPORT   8               /* Effect does nothing */
+#define ST_EFF_REPORT   8               /* Effect does not affect the audio */
+#define ST_EFF_NULL    16               /* Effect does nothing */
 
 /*
  * Handler structure for each effect.
@@ -357,7 +359,7 @@ typedef struct
 struct st_effect
 {
     char            *name;          /* effect name */
-    struct st_globalinfo globalinfo;/* global ST parameters */
+    struct st_globalinfo * globalinfo;/* global ST parameters */
     struct st_signalinfo ininfo;    /* input signal specifications */
     struct st_signalinfo outinfo;   /* output signal specifications */
     const st_effect_t *h;           /* effects driver */

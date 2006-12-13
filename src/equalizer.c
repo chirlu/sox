@@ -124,7 +124,7 @@ static int st_equalizer_start(eff_t effp)
   eq->y[1] = 0; /* y[n-1] */
   eq->y[2] = 0; /* y[n-2] */
 
-  if (effp->globalinfo.octave_plot_effect)
+  if (effp->globalinfo->octave_plot_effect)
   {
     printf(
       "title('SoX effect: %s gain=%g centre=%g Q=%g (rate=%u)')\n"

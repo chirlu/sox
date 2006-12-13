@@ -120,7 +120,7 @@ static int st_biquad_shelf_start(eff_t effp)
     p->b2 = normalise * p->b2;
   }
 
-  if (effp->globalinfo.octave_plot_effect)
+  if (effp->globalinfo->octave_plot_effect)
   {
     printf(
       "title('SoX effect: %s gain=%g centre=%g slope=%g (rate=%u)')\n"

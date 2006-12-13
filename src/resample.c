@@ -221,6 +221,8 @@ int st_resample_start(eff_t effp)
         resample_t r = (resample_t) effp->priv;
         long Xoff, gcdrate;
         int i;
+  double in_rate = floor(effp->ininfo.rate / effp->globalinfo->speed + .5)
+    * effp->globalinfo->speed;/* Make speedr more accurate (st_rate_t is int) */
 
         if (effp->ininfo.rate == effp->outinfo.rate)
         {
@@ -228,7 +230,7 @@ int st_resample_start(eff_t effp)
             return(ST_EOF);
         }
                 
-        r->Factor = (double)effp->outinfo.rate / (double)effp->ininfo.rate;
+        r->Factor = (double)effp->outinfo.rate / in_rate;
 
         gcdrate = st_gcd((long)effp->ininfo.rate, (long)effp->outinfo.rate);
         r->a = effp->ininfo.rate / gcdrate;

@@ -80,6 +80,8 @@ static int st_rabbit_getopts(eff_t effp, int n, char **argv)
 static int st_rabbit_start(eff_t effp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
+  double in_rate = floor(effp->ininfo.rate / effp->globalinfo->speed + .5)
+    * effp->globalinfo->speed;/* Make speedr more accurate (st_rate_t is int) */
 
   if (effp->ininfo.rate == effp->outinfo.rate) {
     st_fail("Input and Output rates must be different to use rabbit effect");
@@ -91,7 +93,7 @@ static int st_rabbit_start(eff_t effp)
   }
 
   r->data = (SRC_DATA *)xcalloc(1, sizeof(SRC_DATA));
-  r->data->src_ratio = (double)effp->outinfo.rate / effp->ininfo.rate;
+  r->data->src_ratio = (double)effp->outinfo.rate / in_rate;
   r->data->input_frames_used = 0;
   r->data->output_frames_gen = 0;
 

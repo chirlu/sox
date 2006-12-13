@@ -80,9 +80,12 @@ the data type and sample rates.
                                (only works with 16-bit and 32-bit integer data)
       --file=FILENAME          specify filename
 
-EFFECTs are one or more of the following:  avg, band, chorus, copy, cut, 
-deemph, echo, echos, flanger, highp, lowp, map, mask, phaser, pick,
-polyphase, rate, repeat, resample, reverb, reverse, split, stat, vibro.
+EFFECTs are one or more of the following: avg, band, bandpass, bandreject,
+bass, chorus, compand, copy, dcshift, deemph, earwax, echo, echos,
+equalizer, fade, filter, flanger, highpass, highp, lowpass, lowp, mask,
+mcompand, noiseprof, noisered, pan, phaser, pick, pitch, polyphase,
+rabbit, rate, repeat, resample, reverb, reverse, silence, speed, speedr,
+stat, stretch, swap, synth, treble, trim, vibro, vol.
 
 See sox man page for detailed information on supported file types, data
 formats, and effect options."
@@ -92,7 +95,7 @@ formats, and effect options."
 # loop over arguments
 while [ $# -ne 0 ]; do
     case "$1" in
-	avg|band|bandpass|bandreject|bass|chorus|compand|copy|cut|deemph|earwax|echo|echos|fade|filter|flanger|highp|highpass|lowp|lowpass|map|mask|mcompand|noiseprof|noisered|pan|phaser|pick|pitch|polyphase|rate|repeat|resample|reverb|reverse|silence|speed|split|stat|stretch|swap|treble|trim|vibro|vol)
+	avg|band|bandpass|bandreject|bass|chorus|compand|copy|dcshift|deemph|earwax|echo|echos|equalizer|fade|filter|flanger|highpass|highp|lowpass|lowp|mask|mcompand|noiseprof|noisered|pan|phaser|pick|pitch|polyphase|rabbit|rate|repeat|resample|reverb|reverse|silence|speed|speedr|stat|stretch|swap|synth|treble|trim|vibro|vol)
 	    effects="$@"
 	    break
 	    ;;

@@ -50,7 +50,7 @@ void st_butterworth_plot (eff_t effp)
 {
   butterworth_t butterworth = (butterworth_t) effp->priv;
 
-  if (effp->globalinfo.octave_plot_effect)
+  if (effp->globalinfo->octave_plot_effect)
   {
     printf(
       "title('SoX effect: %s centre=%g width=%g (rate=%u)')\n"

@@ -70,7 +70,7 @@ static int st_lowp_start(eff_t effp)
         lowp->A = 1 - lowp->B;
         lowp->outm1 = 0.0;
 
-        if (effp->globalinfo.octave_plot_effect)
+        if (effp->globalinfo->octave_plot_effect)
         {
           printf(
             "title('SoX effect: %s cutoff=%g (rate=%u)')\n"

@@ -106,7 +106,7 @@ static int st_band_start(eff_t effp)
         else
                 band->A = sqrt(1-band->B*band->B/(4*band->C))*(1-band->C);
         band->out1 = band->out2 = 0.0;
-        if (effp->globalinfo.octave_plot_effect)
+        if (effp->globalinfo->octave_plot_effect)
         {
           printf(
             "title('SoX effect: %s centre=%g width=%g (rate=%u)')\n"

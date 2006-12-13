@@ -145,7 +145,7 @@ static int st_deemph_start(eff_t effp)
           deemph->lastin = 0;
           deemph->lastout = 0.0;
      }
-     if (effp->globalinfo.octave_plot_effect)
+     if (effp->globalinfo->octave_plot_effect)
      {
        printf(
          "title('SoX effect: %s (rate=%u)')\n"

@@ -1442,6 +1442,24 @@ and is the default.
 is one octave higher. 
 0.5 halves speed thus time length doubles and pitch is one octave lower. 
 If the optional -c parameter is used then the factor is specified in "cents".
+
+This effect is fast but of low quality; see also \fBspeedr\fR.
+.TP 10
+speedr \fIfactor\fR[\fIc\fR]
+Use resampling to adjust the audio speed (pitch and tempo
+together).  \fIfactor\fR is either the ratio of the new
+speed to the old speed: > 1 speeds up, < 1 slows down, or, if
+appended with `\fIc\fR', the number of cents (i.e 100ths of a
+semitone) by which the pitch (and tempo) should be adjusted:
+> 0 increases, < 0 decreases.
+.ti +3
+By default, the speed change is performed by the \fBresample\fR
+effect with its default parameters.  For higher quality
+resampling, in addition to the \fBspeedr\fR effect, specify
+either the \fBresample\fR or the \fBrabbit\fR effect with
+appropriate parameters.
+
+See also \fBspeed\fR.
 .TP 10
 stat [ \fI-s N\fB ] [\fI-rms\fB ] [\fI-freq\fB ] [ \fI-v\fB ] [ \fI-d\fB ]
 Do a statistical check on the input file,
