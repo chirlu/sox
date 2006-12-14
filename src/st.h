@@ -15,12 +15,10 @@
 #include <stdlib.h>
 #include "ststdint.h"
 
-#ifndef __GNUC__
-#  define  __attribute__(x)  /*NOTHING*/
-#endif
-
 /* Avoid warnings about unused parameters. */
+#ifdef __GNUC__
 #define UNUSED __attribute__ ((unused))
+#endif
 
 /* C language enhancements: */
 
