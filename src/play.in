@@ -23,8 +23,7 @@ bindir=@bindir@
 HAVE_ALSA=@with_alsa@
 HAVE_OSS=@with_oss@
 
-# Look for sox in install directory first and then in current direction
-# if not found.
+# Look for sox in install directory first and then in current directory.
 PATH="$bindir:.:$PATH"
 
 program_name=`basename $0`

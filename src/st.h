@@ -58,6 +58,8 @@ typedef uint32_t uint24_t;   /* ditto */
 #define ST_INT64_MAX 0x7fffffffffffffffLL /* Not in use yet */
 
 typedef int32_t st_sample_t;
+typedef uint32_t st_usample_t; /* FIXME: this naming is different from
+                                  other types */
 /* Minimum and maximum values a sample can hold. */
 #define ST_SAMPLE_MAX (st_sample_t)ST_INT_MAX(32)
 #define ST_SAMPLE_MIN (st_sample_t)ST_INT_MIN(32)

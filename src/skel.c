@@ -38,7 +38,7 @@ typedef struct skel
  */
 static int st_skelstartread(ft_t ft)
 {
-    skel_t sk = (skel_t) ft->priv;
+    skel_t sk = (skel_t)ft->priv;
 
     /* If you need to seek around the input file. */
     if (!ft->seekable) {
@@ -116,7 +116,7 @@ static int st_skelstopread(ft_t ft)
 
 static int st_skelstartwrite(ft_t ft)
 {
-    skel_t sk = (skel_t) ft->priv;
+    skel_t sk = (skel_t)ft->priv;
 
     /* If you have to seek around the output file. */
     /* If header contains a length value then seeking will be
@@ -148,7 +148,7 @@ static int st_skelstartwrite(ft_t ft)
 
 static st_size_t st_skelwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
-    skel_t sk = (skel_t) ft->priv;
+    skel_t sk = (skel_t)ft->priv;
     st_size_t len = 0;
 
     switch (ft->info.size) {

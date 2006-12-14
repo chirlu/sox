@@ -14,6 +14,7 @@
 
 @SET_MAKE@
 
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -35,7 +36,8 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 subdir = src/libgsm
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(dist_man_MANS) $(include_HEADERS) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_create_stdint_h.m4 \
 	$(top_srcdir)/configure.ac
@@ -50,7 +52,8 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(man3dir)"
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(man3dir)" \
+	"$(DESTDIR)$(includedir)"
 libLIBRARIES_INSTALL = $(INSTALL_DATA)
 LIBRARIES = $(lib_LIBRARIES)
 AR = ar
@@ -74,7 +77,9 @@ SOURCES = $(libgsm_a_SOURCES)
 DIST_SOURCES = $(libgsm_a_SOURCES)
 man3dir = $(mandir)/man3
 NROFF = nroff
-MANS = $(man_MANS)
+MANS = $(dist_man_MANS)
+includeHEADERS_INSTALL = $(INSTALL_HEADER)
+HEADERS = $(include_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -111,6 +116,10 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+LUA = @LUA@
+LUAC = @LUAC@
+LUA_INCLUDES = @LUA_INCLUDES@
+LUA_LIBS = @LUA_LIBS@
 MAKEINFO = @MAKEINFO@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -163,12 +172,13 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-man_MANS = gsm.3 gsm_option.3
+dist_man_MANS = gsm.3 gsm_option.3
 AM_CFLAGS = $(SASR)
 lib_LIBRARIES = libgsm.a
+include_HEADERS = gsm.h
 libgsm_a_SOURCES = add.c code.c decode.c long_term.c lpc.c preprocess.c	\
 		rpe.c gsm_destroy.c gsm_decode.c gsm_encode.c gsm_create.c \
-		gsm_option.c short_term.c table.c
+		gsm_option.c short_term.c table.c private.h
 
 all: all-am
 
@@ -317,6 +327,23 @@ uninstall-man3:
 	  echo " rm -f '$(DESTDIR)$(man3dir)/$$inst'"; \
 	  rm -f "$(DESTDIR)$(man3dir)/$$inst"; \
 	done
+install-includeHEADERS: $(include_HEADERS)
+	@$(NORMAL_INSTALL)
+	test -z "$(includedir)" || $(mkdir_p) "$(DESTDIR)$(includedir)"
+	@list='$(include_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(includeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(includedir)/$$f'"; \
+	  $(includeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(includedir)/$$f"; \
+	done
+
+uninstall-includeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(include_HEADERS)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(includedir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(includedir)/$$f"; \
+	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -395,9 +422,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LIBRARIES) $(MANS)
+all-am: Makefile $(LIBRARIES) $(MANS) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(man3dir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(man3dir)" "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -444,7 +471,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-man
+install-data-am: install-includeHEADERS install-man
 
 install-exec-am: install-libLIBRARIES
 
@@ -471,7 +498,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libLIBRARIES uninstall-man
+uninstall-am: uninstall-includeHEADERS uninstall-info-am \
+	uninstall-libLIBRARIES uninstall-man
 
 uninstall-man: uninstall-man3
 
@@ -479,12 +507,13 @@ uninstall-man: uninstall-man3
 	clean-libLIBRARIES ctags distclean distclean-compile \
 	distclean-generic distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
-	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-libLIBRARIES install-man install-man3 \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-info-am \
+	install-data-am install-exec install-exec-am \
+	install-includeHEADERS install-info install-info-am \
+	install-libLIBRARIES install-man install-man3 install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-includeHEADERS uninstall-info-am \
 	uninstall-libLIBRARIES uninstall-man uninstall-man3
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

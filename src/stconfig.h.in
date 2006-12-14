@@ -45,6 +45,15 @@
 /* Define to 1 if you have the `vorbisfile' library (-lvorbisfile). */
 #undef HAVE_LIBVORBISFILE
 
+/* Define to 1 if you have Lua. */
+#undef HAVE_LUA
+
+/* Define to 1 if you have the <lualib.h> header file. */
+#undef HAVE_LUALIB_H
+
+/* Define to 1 if you have the <lua.h> header file. */
+#undef HAVE_LUA_H
+
 /* Define to 1 if you have the <machine/soundcard.h> header file. */
 #undef HAVE_MACHINE_SOUNDCARD_H
 

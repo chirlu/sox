@@ -283,6 +283,9 @@ extern const st_effect_t *st_highpass_effect_fn(void);
 extern const st_effect_t *st_highp_effect_fn(void);
 extern const st_effect_t *st_lowpass_effect_fn(void);
 extern const st_effect_t *st_lowp_effect_fn(void);
+#ifdef HAVE_LUA
+extern const st_effect_t *st_lua_effect_fn(void);
+#endif
 extern const st_effect_t *st_mask_effect_fn(void);
 extern const st_effect_t *st_mcompand_effect_fn(void);
 extern const st_effect_t *st_noiseprof_effect_fn(void);
@@ -312,15 +315,18 @@ extern const st_effect_t *st_trim_effect_fn(void);
 extern const st_effect_t *st_vibro_effect_fn(void);
 extern const st_effect_t *st_vol_effect_fn(void);
 
-/* Needed in sox.c */
-st_size_t st_trim_get_start(eff_t effp);
-void st_trim_clear_start(eff_t effp);
-
 /* Needed in rate.c */
 int st_resample_start(eff_t effp);
 int st_resample_getopts(eff_t effp, int n, char **argv);
 int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, st_size_t *isamp, st_size_t *osamp);
 int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_resample_stop(eff_t effp);
+
+#ifdef HAVE_LUA
+#include <lua.h>
+/* Needed in lua.c */
+LUALIB_API int luaopen_int (lua_State *L);
+void createmeta(lua_State *L, const char *name);
+#endif
 
 #endif

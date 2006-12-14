@@ -34,12 +34,12 @@ assert_static(sizeof(struct skeleff) <= ST_MAX_EFFECT_PRIVSIZE,
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-static int st_skeleff_getopts(eff_t effp, int n, char **argv) 
+static int st_skeleff_getopts(eff_t effp, int n, char **argv)
 {
-    skeleff_t skeleff = (skeleff_t) effp->priv;
+    skeleff_t skeleff = (skeleff_t)effp->priv;
 
     if (n && n != 1) {
-      st_fail("Usage: skeleff [option]");
+      st_fail(effp->h->usage);
       return ST_EOF;
     }
 
@@ -66,10 +66,10 @@ static int st_skeleff_start(eff_t effp)
  * Return number of samples processed.
  */
 static int st_skeleff_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                    st_size_t *isamp, st_size_t *osamp)
+                           st_size_t *isamp, st_size_t *osamp)
 {
-    skeleff_t skeleff = (skeleff_t) effp->priv;
-    int len, done;
+    skeleff_t skeleff = (skeleff_t)effp->priv;
+    st_size_t len, done;
 
     switch (effp->outinfo.channels) {
     case 2:
@@ -127,7 +127,7 @@ static int st_skeleff_stop(eff_t effp)
  */
 static st_effect_t st_skel_effect = {
   "skel",
-  "Usage: skel -x",
+  "Usage: skel [option]",
   ST_EFF_MCHAN,
   st_skel_getopts,
   st_skel_start,

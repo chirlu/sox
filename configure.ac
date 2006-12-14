@@ -140,6 +140,129 @@ fi
 AC_SUBST(SAMPLERATE_CFLAGS)
 AC_SUBST(SAMPLERATE_LIBS)
 
+
+dnl LUA, LUAC, LUA_INCLUDES, LUA_LIBS
+
+have_lua=yes
+
+AC_SUBST(LUA)
+AC_SUBST(LUAC)
+AC_SUBST(LUA_INCLUDES)
+AC_SUBST(LUA_LIBS)
+
+dnl Arguments
+AC_ARG_WITH([lua-prefix],
+            [AS_HELP_STRING([--with-lua-prefix=DIR],
+                            [Lua files are in DIR])])
+AC_ARG_WITH([lua-includes],
+            [AS_HELP_STRING([--with-lua-includes=DIR],
+                            [Lua include files are in DIR])])
+AC_ARG_WITH([lua-libraries],
+            [AS_HELP_STRING([--with-lua-libraries=DIR],
+                            [Lua library files are in DIR])])
+AC_ARG_WITH([lua-suffix],
+            [AS_HELP_STRING([--with-lua-suffix=ARG],
+                            [Lua binary and library files are suffixed with
+                             ARG])])
+
+dnl LUA
+if test "x$with_lua_prefix" = x; then
+    lua_search_path="$PATH"
+else
+    lua_search_path="$with_lua_prefix/bin"
+fi
+if test "x$LUA" = x; then
+    AC_PATH_PROG([LUA], [lua$with_lua_suffix], [], [$lua_search_path])
+    test "x$LUA" = x && AC_MSG_ERROR([*** Can't build ion without lua])
+fi
+
+dnl lua_version
+AC_MSG_CHECKING([for lua version >= 5.1])
+lua_version=$($LUA -v 2>&1 | head -n 1 | cut -d' ' -f2)
+case $lua_version in
+0.* | 1.* | 2.* | 3.* | 4.* | 5.0)
+    AC_MSG_RESULT([no (found $lua_version)])
+    have_lua=no
+    ;;
+*)
+    AC_MSG_RESULT([yes (found $lua_version)])
+    ;;
+esac
+dnl
+
+dnl dnl LUAC
+dnl if test "x$LUAC" = x; then
+dnl     AC_PATH_PROG([LUAC], [luac$with_lua_suffix], [], [$lua_search_path])
+dnl     test "x$LUAC" = x && exit 1
+dnl fi
+
+dnl dnl luac_version
+dnl AC_MSG_CHECKING([for lua version = luac version])
+dnl luac_version=$($LUAC -v 2>&1 | head -n 1 | cut -d' ' -f2)
+dnl if test "x$lua_version" = "x$luac_version"; then
+dnl     AC_MSG_RESULT([yes (found $luac_version)])
+dnl else
+dnl     AC_MSG_RESULT([no (found $luac_version)])
+dnl     exit 1
+dnl fi
+
+dnl LUA_INCLUDES
+if test "x$with_lua_includes" != x; then
+    LUA_INCLUDES="-I$with_lua_includes"
+elif test "x$with_lua_prefix" != x; then
+    LUA_INCLUDES="-I$with_lua_prefix/include"
+fi
+save_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS $LUA_INCLUDES"
+AC_CHECK_HEADERS([lua.h lualib.h], [], [have_lua=no], [])
+CFLAGS="$save_CFLAGS"
+
+dnl LUA_LIBS
+if test "x$with_lua_libraries" != x; then
+    LUA_LIBS="-L$with_lua_libraries"
+elif test "x$with_lua_prefix" != x; then
+    LUA_LIBS="-L$with_lua_prefix/lib"
+fi
+AC_CHECK_LIB([m], [exp], [lua_extra_libs="$lua_extra_libs -lm"], [])
+AC_CHECK_LIB([dl], [dlopen], [lua_extra_libs="$lua_extra_libs -ldl"], [])
+AC_CHECK_LIB([lua$with_lua_suffix],
+             [lua_call],
+             [LUA_LIBS="$LUA_LIBS -llua$with_lua_suffix $lua_extra_libs"],
+             [have_lua=no],
+             [$LUA_LIBS $lua_extra_libs])
+
+dnl liblua_version
+AC_MSG_CHECKING([for liblua version >= 5.1])
+save_CFLAGS="$CFLAGS"
+save_LIBS="$LIBS"
+CFLAGS="$CFLAGS $LUA_INCLUDES"
+LIBS="$LIBS $LUA_LIBS"
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
+
+#include <lua.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+int main()
+{
+    printf("(found %s, %d)... ", LUA_VERSION, LUA_VERSION_NUM);
+    if(LUA_VERSION_NUM >= 501)
+        exit(EXIT_SUCCESS);
+    exit(EXIT_FAILURE);
+}
+
+]])],
+              [AC_MSG_RESULT([yes])],
+              [AC_MSG_RESULT([no])])
+CFLAGS="$save_CFLAGS"
+LIBS="$save_LIBS"
+
+if test "$have_lua" = yes; then
+   AC_DEFINE(HAVE_LUA, 1, [Define to 1 if you have Lua.])
+fi
+
+
 dnl Generate output files.
 AX_CREATE_STDINT_H(src/ststdint.h)
 AC_SUBST(with_alsa with_oss) dnl For play.in
@@ -156,6 +279,7 @@ echo "FLAC support...................... $with_flac"
 echo "MAD MP3 Decoder................... $with_mad"
 echo "LAME MP3 Encoder.................. $with_lame"
 echo "Secret Rabbit Code resampling..... $with_samplerate"
+echo "Lua scripting..................... $with_lua"
 echo
 echo "Configure finished.  Do 'make; make install' to compile and install SoX."
 echo

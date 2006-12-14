@@ -34,10 +34,11 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(top_srcdir)/configure AUTHORS COPYING \
-	ChangeLog INSTALL NEWS TODO config.guess config.sub depcomp \
-	install-sh missing mkinstalldirs
+DIST_COMMON = README $(am__configure_deps) $(dist_man_MANS) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
+	TODO config.guess config.sub depcomp install-sh missing \
+	mkinstalldirs
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_create_stdint_h.m4 \
 	$(top_srcdir)/configure.ac
@@ -60,7 +61,7 @@ man1dir = $(mandir)/man1
 am__installdirs = "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man3dir)"
 man3dir = $(mandir)/man3
 NROFF = nroff
-MANS = $(man_MANS)
+MANS = $(dist_man_MANS)
 ETAGS = etags
 CTAGS = ctags
 DIST_SUBDIRS = $(SUBDIRS)
@@ -108,6 +109,10 @@ LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+LUA = @LUA@
+LUAC = @LUAC@
+LUA_INCLUDES = @LUA_INCLUDES@
+LUA_LIBS = @LUA_LIBS@
 MAKEINFO = @MAKEINFO@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -162,7 +167,10 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = src
-man_MANS = sox.1 soxexam.1 play.1 libst.3
+
+# man pages are not considered to be sources, so need to add "dist_"
+# prefix to ensure they are added to the distribution.
+dist_man_MANS = sox.1 soxexam.1 play.1 libst.3
 all: all-recursive
 
 .SUFFIXES:
