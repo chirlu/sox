@@ -197,18 +197,6 @@ static int st_trim_stop(eff_t effp)
     return (ST_SUCCESS);
 }
 
-st_size_t st_trim_get_start(eff_t effp)
-{
-    trim_t trim = (trim_t)effp->priv;
-    return trim->start;
-}
-
-void st_trim_clear_start(eff_t effp)
-{
-    trim_t trim = (trim_t)effp->priv;
-    trim->start = 0;
-}
-
 static st_effect_t st_trim_effect = {
   "trim",
   "Usage: trim start [length]",
