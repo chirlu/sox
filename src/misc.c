@@ -454,7 +454,7 @@ int st_effect_nothing_getopts(eff_t effp, int n, char **argv UNUSED)
 
 
 /* here for linear interp.  might be useful for other things */
-REGPARM(2) st_sample_t st_gcd(st_sample_t a, st_sample_t b)
+st_sample_t st_gcd(st_sample_t a, st_sample_t b)
 {
         if (b == 0)
                 return a;
@@ -462,7 +462,7 @@ REGPARM(2) st_sample_t st_gcd(st_sample_t a, st_sample_t b)
                 return st_gcd(b, a % b);
 }
 
-REGPARM(2) st_sample_t st_lcm(st_sample_t a, st_sample_t b)
+st_sample_t st_lcm(st_sample_t a, st_sample_t b)
 {
     /* parenthesize this way to avoid st_sample_t overflow in product term */
     return a * (b / st_gcd(a, b));

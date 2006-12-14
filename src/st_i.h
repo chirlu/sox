@@ -23,8 +23,11 @@
 #endif
 
 /* various gcc optimizations and portablity defines */
+#ifdef __GNUC__
 #define NORET __attribute__((noreturn))
-#define REGPARM(n) __attribute__((regparm(n)))
+#else
+#define NORET
+#endif
 
 /* declared in misc.c */
 typedef struct {char const *text; int value;} enum_item;
@@ -44,8 +47,8 @@ void st_generate_wave_table(
     double max,
     double phase);
 
-REGPARM(2) st_sample_t st_gcd(st_sample_t a, st_sample_t b);
-REGPARM(2) st_sample_t st_lcm(st_sample_t a, st_sample_t b);
+st_sample_t st_gcd(st_sample_t a, st_sample_t b);
+st_sample_t st_lcm(st_sample_t a, st_sample_t b);
 
 #ifndef HAVE_STRCASECMP
 int strcasecmp(const char *s1, const char *s2);
