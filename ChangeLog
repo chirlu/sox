@@ -62,6 +62,7 @@ sox-12.18.3
   o Improved the accuracy of integer and floating point PCM
     conversions.  (robs)
   o Added large file support.  (Reuben Thomas)
+  o Higher quality audio speed adjustment.  (robs)
 
 sox-12.18.2
 -----------
