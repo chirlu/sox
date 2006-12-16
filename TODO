@@ -102,5 +102,5 @@ use the raw driver for reading and writing.
     chunks (except LIST which is already handled), especially at the
     end of the file.
 
-  o All option-parsers should fail if extraneous charcters or arguments
-    are present. e.g. -v 1dB, vol 3mW, speed 2 3, should all fail.
+  o Effects option-parsers should fail if extraneous characters or arguments
+    are present. e.g. vol 3mW, speed 2 3, etc. should all fail.

@@ -338,199 +338,152 @@ static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lf8dxV::Sqoen";
 static struct option long_options[] =
 {
     {"version", 0, NULL, 0},
-    {"help", 0, NULL, 'h'},
-    {"help-effect", 1, NULL, 0},
+    {"help-effect", required_argument, NULL, 0},
     {"comment", required_argument, NULL, 0},
     {"comment-file", required_argument, NULL, 0},
+
+    {"help", 0, NULL, 'h'},
     {NULL, 0, NULL, 0}
 };
 
-static bool doopts(file_options_t *fo, int argc, char **argv)
+static bool doopts(file_options_t * fo, int argc, char **argv)
 {
-    int c, i;
+  while (true) {
+    int i;          /* Needed since scanf %u allows negative numbers :( */
+    char dummy;     /* To check for extraneous chars in optarg. */
     int option_index;
-    char *str;
+    int c = getopt_long(argc, argv, getoptstr, long_options, &option_index);
 
-    while ((c = getopt_long(argc, argv, getoptstr, 
-                            long_options, &option_index)) != -1) {
-        switch(c) {
-            case 0:
-                if (option_index == 3)
-                {
-                  fo->comment = strdup(optarg);
-                  break;
-                }
-                else if (option_index == 4)
-                {
-                  fo->comment = read_comment_file(optarg);
-                  break;
-                }
-                else if (strncmp("help-effect", long_options[option_index].name,
-                            11) == 0)
-                    usage_effect(optarg);
-                else if (strncmp("version", long_options[option_index].name,
-                            7) == 0)
-                {
-                    printf("%s: ", myname);
-                    printf("v%s\n", st_version());
-                    exit(0);
-                }
-                /* no return from above */
-                break;
+    if (c == -1)    /* No more options. */
+      return false; /* Is not null file. */
 
-            case 'e': case 'n':
-                return true; /* is null file */
+    switch (c) {
+      case 0:       /* Long options with no short equivalent. */
+        switch (option_index) {
+          case 0:
+            printf("%s: v%s\n", myname, st_version());
+            exit(0);
+            break;
 
-            case 'o':
-                globalinfo.octave_plot_effect = true;
-                break;
+          case 1:
+            usage_effect(optarg);
+            break;
 
-            case 'h':
-                usage((char *)0);
-                /* no return from above */
-                break;
+          case 2:
+            fo->comment = strdup(optarg);
+            break;
 
-            case 't':
-                fo->filetype = optarg;
-                if (fo->filetype[0] == '.')
-                    fo->filetype++;
-                break;
-
-            case 'r':
-                str = optarg;
-                if ((!sscanf(optarg, "%u", &fo->info.rate)) ||
-                    (fo->info.rate <= 0))
-                {
-                    st_fail("-r must be given a positive integer");
-                    cleanup();
-                    exit(1);
-                }
-                break;
-            case 'v':
-                str = optarg;
-                if (!sscanf(str, "%lf", &fo->volume))
-                {
-                    st_fail("Volume value '%s' is not a number",
-                            optarg);
-                    cleanup();
-                    exit(1);
-                }
-                fo->uservolume = 1;
-                if (fo->volume < 0.0)
-                    st_report("Volume adjustment is negative.  This will result in a phase change");
-                break;
-
-            case 'c':
-                str = optarg;
-                if (!sscanf(str, "%d", &i))
-                {
-                    st_fail("-c must be given a number");
-                    cleanup();
-                    exit(1);
-                }
-                /* Since we use -1 as a special internal value,
-                 * we must do some extra logic so user doesn't
-                 * get confused when we translate -1 to mean
-                 * something valid.
-                 */
-                if (i < 1)
-                {
-                    st_fail("-c must be given a positive number");
-                    cleanup();
-                    exit(1);
-                }
-                fo->info.channels = i;
-                break;
-
-            case 'C':
-                str = optarg;
-                if (!sscanf(str, "%lf", &fo->info.compression))
-                {
-                    st_fail("-C must be given a number");
-                    cleanup();
-                    exit(1);
-                }
-                break;
-
-            case '1': case 'b':
-                fo->info.size = ST_SIZE_BYTE;
-                break;
-            case '2': case 'w':
-                fo->info.size = ST_SIZE_WORD;
-                break;
-            case '3':
-                fo->info.size = ST_SIZE_24BIT;
-                break;
-            case '4': case 'l':
-                fo->info.size = ST_SIZE_DWORD;
-                break;
-            case '8': case 'd':
-                fo->info.size = ST_SIZE_DDWORD;
-                break;
-            case 's':
-                fo->info.encoding = ST_ENCODING_SIGN2;
-                break;
-            case 'u':
-                fo->info.encoding = ST_ENCODING_UNSIGNED;
-                break;
-            case 'U':
-                fo->info.encoding = ST_ENCODING_ULAW;
-                if (fo->info.size == -1)
-                    fo->info.size = ST_SIZE_BYTE;
-                break;
-            case 'A':
-                fo->info.encoding = ST_ENCODING_ALAW;
-                if (fo->info.size == -1)
-                    fo->info.size = ST_SIZE_BYTE;
-                break;
-            case 'f':
-                fo->info.encoding = ST_ENCODING_FLOAT;
-                break;
-            case 'a':
-                fo->info.encoding = ST_ENCODING_ADPCM;
-                break;
-            case 'i':
-                fo->info.encoding = ST_ENCODING_IMA_ADPCM;
-                break;
-            case 'g':
-                fo->info.encoding = ST_ENCODING_GSM;
-                break;
-
-            case 'x':
-                fo->info.swap = 1;
-                break;
-
-            case 'V':
-                str = optarg;
-                if (optarg == NULL)
-                {
-                  ++st_output_verbosity_level;
-                }
-                else if (sscanf(str, "%i", &st_output_verbosity_level) == 0)
-                {
-                  st_fail("argument for -V must be an integer");
-                  cleanup();
-                  exit(1);
-                }
-                break;
-
-            case 'S':
-                status = 1;
-                quiet = 0;
-                break;
-
-            case 'q':
-                status = 0;
-                quiet = 1;
-                break;
-
-            case '?':
-                usage((char *)0);
-                /* no return from above */
-                break;
+          case 3:
+            fo->comment = read_comment_file(optarg);
+            break;
         }
+        break;
+
+      case 'e': case 'n':
+        return true;            /* Is null file. */
+
+      case 'o':
+        globalinfo.octave_plot_effect = true;
+        break;
+
+      case 'h': case '?':
+        usage((char *) 0);      /* No return */
+        break;
+
+      case 't':
+        fo->filetype = optarg;
+        if (fo->filetype[0] == '.')
+          fo->filetype++;
+        break;
+
+      case 'r':
+        if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
+          st_fail("Rate value '%s' is not a positive integer", optarg);
+          cleanup();
+          exit(1);
+        }
+        fo->info.rate = i;
+        break;
+
+      case 'v':
+        if (sscanf(optarg, "%lf %c", &fo->volume, &dummy) != 1) {
+          st_fail("Volume value '%s' is not a number", optarg);
+          cleanup();
+          exit(1);
+        }
+        fo->uservolume = 1;
+        if (fo->volume < 0.0)
+          st_report("Volume adjustment is negative; "
+                    "this will result in a phase change");
+        break;
+
+      case 'c':
+        if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
+          st_fail("Channels value '%s' is not a positive integer", optarg);
+          cleanup();
+          exit(1);
+        }
+        fo->info.channels = i;
+        break;
+
+      case 'C':
+        if (sscanf(optarg, "%lf %c", &fo->info.compression, &dummy) != 1) {
+          st_fail("Compression value '%s' is not a number", optarg);
+          cleanup();
+          exit(1);
+        }
+        break;
+
+      case '1': case 'b': fo->info.size = ST_SIZE_BYTE;   break;
+      case '2': case 'w': fo->info.size = ST_SIZE_WORD;   break;
+      case '3':           fo->info.size = ST_SIZE_24BIT;  break;
+      case '4': case 'l': fo->info.size = ST_SIZE_DWORD;  break;
+      case '8': case 'd': fo->info.size = ST_SIZE_DDWORD; break;
+
+      case 's': fo->info.encoding = ST_ENCODING_SIGN2;     break;
+      case 'u': fo->info.encoding = ST_ENCODING_UNSIGNED;  break;
+      case 'f': fo->info.encoding = ST_ENCODING_FLOAT;     break;
+      case 'a': fo->info.encoding = ST_ENCODING_ADPCM;     break;
+      case 'i': fo->info.encoding = ST_ENCODING_IMA_ADPCM; break;
+      case 'g': fo->info.encoding = ST_ENCODING_GSM;       break;
+
+      case 'U': fo->info.encoding = ST_ENCODING_ULAW;
+        if (fo->info.size == -1)
+          fo->info.size = ST_SIZE_BYTE;
+        break;
+
+      case 'A': fo->info.encoding = ST_ENCODING_ALAW;
+        if (fo->info.size == -1)
+          fo->info.size = ST_SIZE_BYTE;
+        break;
+
+      case 'x':
+        fo->info.swap = 1;
+        break;
+
+      case 'V':
+        if (optarg == NULL)
+          ++st_output_verbosity_level;
+        else if (sscanf(optarg, "%i %c", &st_output_verbosity_level, &dummy)
+            != 1 || st_output_verbosity_level < 0) {
+          st_output_verbosity_level = 2;
+          st_fail("Verbosity value '%s' is not an integer >= 0", optarg);
+          cleanup();
+          exit(1);
+        }
+        break;
+
+      case 'S':
+        status = 1;
+        quiet = 0;
+        break;
+
+      case 'q':
+        status = 0;
+        quiet = 1;
+        break;
     }
-    return false; /* is not null file */
+  }
 }
 
 static int compare_input(ft_t ft1, ft_t ft2)
