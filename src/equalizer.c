@@ -94,6 +94,9 @@ static int st_equalizer_start(eff_t effp)
   double amp;
   double alpha;
 
+  if (eq->gain == 0)
+    return ST_EFF_NULL;
+
   /* Sample rate */
   eq->rate = effp->ininfo.rate;
 

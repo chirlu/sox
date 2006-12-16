@@ -51,8 +51,6 @@ use the raw driver for reading and writing.
     of drain (ie. can't run the "reverse" effect twice
     on the same command line and have a good output file).
 
-  o Make resample effects idempotent when rates are the same.
-
   o Add MP3 support to WAV handler. Can copy most work from mp3.c.
 
   o Implement speex (http://www.speex.org).

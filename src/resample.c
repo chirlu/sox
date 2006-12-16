@@ -225,10 +225,7 @@ int st_resample_start(eff_t effp)
     * effp->globalinfo->speed;/* Make speedr more accurate (st_rate_t is int) */
 
         if (effp->ininfo.rate == effp->outinfo.rate)
-        {
-            st_fail("Input and Output rates must be different to use resample effect");
-            return(ST_EOF);
-        }
+          return ST_EFF_NULL;
                 
         r->Factor = (double)effp->outinfo.rate / in_rate;
 

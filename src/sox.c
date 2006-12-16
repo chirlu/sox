@@ -1180,16 +1180,25 @@ static void check_effects(void)
 
 static int start_effects(void)
 {
-    int e, ret = ST_SUCCESS;
+    int e, j, ret = ST_SUCCESS;
 
     for(e = 1; e < neffects; e++) {
         efftab[e].clippedCount = 0;
         if ((ret = (*efftab[e].h->start)(&efftab[e])) == ST_EOF)
             break;
-        if (efftabR[e].name)
+        if (ret == ST_EFF_NULL) {
+          st_report("'%s' has no effect in this configuration.",efftab[e].name);
+          --neffects;
+          for (j = e--; j < neffects; ++j) {
+            efftab[j] = efftab[j + 1];
+            efftabR[j] = efftabR[j + 1];
+          }
+          ret = ST_SUCCESS;
+        }
+        else if (efftabR[e].name)
         {
             efftabR[e].clippedCount = 0;
-            if ((ret = (*efftabR[e].h->start)(&efftabR[e])) == ST_EOF)
+            if ((ret = (*efftabR[e].h->start)(&efftabR[e])) != ST_SUCCESS)
                 break;
         }
     }

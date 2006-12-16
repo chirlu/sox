@@ -97,6 +97,9 @@ static int st_biquad_shelf_start(eff_t effp)
   double alpha = sin(w0)/2 * sqrt( (A + 1/A)*(1/p->oomph - 1) + 2 );
   double a0;
 
+  if (p->gain == 0)
+    return ST_EFF_NULL;
+
   /* Calculate filter coefficients: */
   p->b0 =    A*( (A+1) - (A-1)*cos(w0) + 2*sqrt(A)*alpha );  /* Numerator. */
   p->b1 =  2*A*( (A-1) - (A+1)*cos(w0)                   );

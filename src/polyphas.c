@@ -378,10 +378,7 @@ static int st_poly_start(eff_t effp)
     int k;
 
     if (effp->ininfo.rate == effp->outinfo.rate)
-    {
-        st_fail("Input and Output rate must not be the same to use polyphase effect");
-        return(ST_EOF);
-    }
+      return ST_EFF_NULL;
 
     st_initrand();
 

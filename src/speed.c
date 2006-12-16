@@ -110,6 +110,9 @@ static int st_speed_start(eff_t effp)
 {
     speed_t speed = (speed_t) effp->priv;
 
+    if (speed->factor == 1)
+      return ST_EFF_NULL;
+
     if (speed->factor >= 1.0)
     {
         speed->compression = (int) speed->factor; /* floor */
