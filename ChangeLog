@@ -63,6 +63,7 @@ sox-12.18.3
     conversions.  (robs)
   o Added large file support.  (Reuben Thomas)
   o Higher quality audio speed adjustment.  (robs)
+  o Added ability to merge e.g. 2 mono files to 1 stereo file.  (robs)
 
 sox-12.18.2
 -----------

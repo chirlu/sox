@@ -90,4 +90,5 @@ Contributors:
 	Rob Sykes		robs@users.sourceforge.net
 		Bass & treble effects, FLAC support, initial 24bit
 		support, Octave plotting for filters, new flanger,
-		various small fixes, enchancements and clean-ups.
+                file merging, various small fixes, enchancements
+                and clean-ups.

@@ -25,8 +25,6 @@ use the raw driver for reading and writing.
     really is.  For 2->2 mixes, make a 2 option L->L and R->R
     shortcut.  Similar 4 option for 4->4.
 
-  o Merging, e.g. two mono files to one stereo file.
-
   o In avg effect, going from 1->2 should have a 2 number shortcut
     so that you don't have to put 100% in each channel.  Similar
     for 2->4.

@@ -202,6 +202,17 @@ Same as \fB-h\fR
 Print usage information on the specified effect.  The name
 \fBall\fR can be used to disable usage on all effects.
 .TP 10
+\fB\-m\fR, \fB\-\-mix\fR
+Behave as \fBsoxmix\fR, i.e. mix multiple input files instead of
+concatenating them.
+.TP 10
+\fB\-M\fR, \fB\-\-merge\fR
+Merge multiple input files instead of concatenating them.
+Input files must have the same data format characteristics.
+This can be used for example to merge two mono files into one
+stereo file; the first and second mono files become
+the left and right channels of the stereo file.
+.TP 10
 \fB-o\fR
 Run in a mode that can be used, in conjunction with the GNU
 Octave program, to assist with the selection and configuration
@@ -215,7 +226,7 @@ without actually processing any audio.  E.g.
 	octave plot.m
 .TP 10
 \fB-q\fR
-Run in quiet mode when SoX wouldn't otherwise do that.  Inverse of \fB-S\fR
+Run in quiet mode when SoX wouldn't otherwise do so.  Inverse of \fB-S\fR
 option.
 .TP
 \fB-S\fR

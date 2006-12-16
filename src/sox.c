@@ -71,8 +71,7 @@
  * Rewrite for multiple effects: Aug 24, 1994.
  */
 
-static int soxmix = 0;          /* non-zero if running as soxmix */
- 
+static enum {SOX_CONCAT, SOX_MIX, SOX_MERGE} mode = SOX_CONCAT;
 static int clipped = 0;         /* Volume change clipping errors */
 static int writing = 1;         /* are we writing to a file? assume yes. */
 static st_globalinfo_t globalinfo = {false, 1};
@@ -184,8 +183,9 @@ int main(int argc, char **argv)
     myname = argv[0];
 
     i = strlen(myname);
-    if (i >= sizeof("soxmix") - 1)
-      soxmix = strcmp(myname + i - (sizeof("soxmix") - 1), "soxmix") == 0;
+    if (i >= sizeof("soxmix") - 1 &&
+        strcmp(myname + i - (sizeof("soxmix") - 1), "soxmix") == 0)
+      mode = SOX_MIX;
 
     st_output_message_handler = sox_output_message;
 
@@ -225,12 +225,12 @@ int main(int argc, char **argv)
 
     /* Make sure we got at least the required # of input filenames */
     input_count = file_count ? file_count - 1 : 0;
-    if (input_count < (soxmix ? 2 : 1))
+    if (input_count < (mode == SOX_CONCAT ? 1 : 2))
         usage("Not enough input filenames specified");
 
     for (i = 0; i < input_count; i++)
     {
-      if (soxmix) {
+      if (mode == SOX_MIX) {
         /* When mixing audio, default to input side volume
          * adjustments that will make sure no clipping will
          * occur.  Users most likely won't be happy with
@@ -333,7 +333,7 @@ static char * read_comment_file(char const * const filename)
   return result;
 }
 
-static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lf8dxV::Sqoen";
+static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lf8dxV::SqoenmM";
 
 static struct option long_options[] =
 {
@@ -342,7 +342,9 @@ static struct option long_options[] =
     {"comment", required_argument, NULL, 0},
     {"comment-file", required_argument, NULL, 0},
 
-    {"help", 0, NULL, 'h'},
+    {"help", no_argument, NULL, 'h'},
+    {"mix", no_argument, NULL, 'm'},
+    {"merge", no_argument, NULL, 'M'},
     {NULL, 0, NULL, 0}
 };
 
@@ -378,6 +380,14 @@ static bool doopts(file_options_t * fo, int argc, char **argv)
             break;
         }
         break;
+
+      case 'm':
+         mode = SOX_MIX;
+         break;
+
+      case 'M':
+         mode = SOX_MERGE;
+         break;
 
       case 'e': case 'n':
         return true;            /* Is null file. */
@@ -526,9 +536,11 @@ static void process(void) {
                       file_desc[f]->filename, file_desc[f]->comment);
     }
 
-    for (f = 1; f < input_count; f++)
+    for (f = 0; f < input_count; f++)
     {
-        if (compare_input(file_desc[0], file_desc[f]) != ST_SUCCESS)
+        if (mode == SOX_MERGE)
+          file_desc[f]->info.channels *= input_count;
+        if (f && compare_input(file_desc[0], file_desc[f]) != ST_SUCCESS)
         {
             st_fail("Input files must have the same rate, channels, data size, and encoding");
             exit(1);
@@ -618,7 +630,7 @@ static void process(void) {
                       file_desc[file_count-1]->comment);
     }
 
-    /* Set the input rate for the speed effect */
+    /* Adjust the input rate for the speed effect */
     for (f = 0; f < input_count; ++f)
       file_desc[f]->info.rate = file_desc[f]->info.rate * globalinfo.speed + .5;
 
@@ -631,14 +643,19 @@ static void process(void) {
     /* Reserve an output buffer for all effects */
     reserve_effect_buf();
 
-    if (soxmix) {
+    if (mode != SOX_CONCAT) {
       for (f = 0; f < input_count; f++)
         {
+          st_size_t alloc_size = ST_BUFSIZ * sizeof(st_sample_t);
           /* Treat overall length the same as longest input file. */
           if (file_desc[f]->length > input_samples)
             input_samples = file_desc[f]->length;
           
-          ibuf[f] = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
+          if (mode == SOX_MERGE) {
+            alloc_size /= input_count;
+            file_desc[f]->info.channels /= input_count;
+          }
+          ibuf[f] = (st_sample_t *)xmalloc(alloc_size);
           
           if (status)
             print_input_status(f);
@@ -675,7 +692,7 @@ static void process(void) {
        * (or ST_EOF).
        */
       do {
-        if (!soxmix) {
+        if (mode == SOX_CONCAT) {
           ilen[0] = st_read(file_desc[current_input], efftab[0].obuf, 
                          (st_ssize_t)ST_BUFSIZ);
           if (ilen[0] > ST_BUFSIZ)
@@ -723,7 +740,7 @@ static void process(void) {
             clipped += volumechange(efftab[0].obuf, 
                                     efftab[0].olen,
                                     file_opts[current_input]->volume);
-        } else /* soxmix */ {
+        } else if (mode == SOX_MIX) {
           for (f = 0; f < input_count; f++)
             {
               ilen[f] = st_read(file_desc[f], ibuf[f], (st_ssize_t)ST_BUFSIZ);
@@ -783,7 +800,28 @@ static void process(void) {
                       }
                 }
             }
+        } else {                 /* mode == SOX_MERGE */
+          efftab[0].olen = 0;
+          for (f = 0; f < input_count; ++f) {
+            ilen[f] = st_read(file_desc[f], ibuf[f], ST_BUFSIZ / input_count);
+            if (ilen[f] == ST_EOF) {
+              ilen[f] = 0;
+              if (file_desc[f]->st_errno)
+                fprintf(stderr, file_desc[f]->st_errstr);
+            }
+            if ((st_size_t)ilen[f] > efftab[0].olen)
+              efftab[0].olen = ilen[f];
+          }
+          
+          for (s = 0; s < efftab[0].olen; s++)
+            for (f = 0; f < input_count; f++)
+              efftab[0].obuf[s * input_count + f] =
+                (s < (st_size_t)ilen[f]) * ibuf[f][s];
+
+          read_samples += efftab[0].olen;
+          efftab[0].olen *= input_count;
         }
+
         efftab[0].odone = 0;
 
         /* If not writing and no effects are occuring then not much
@@ -823,7 +861,7 @@ static void process(void) {
       fputs("\n\n", stderr);
     }
 
-    if (soxmix)
+    if (mode != SOX_CONCAT)
       /* Free input buffers now that they are not used */
       for (f = 0; f < input_count; f++)
         {
@@ -1608,7 +1646,7 @@ static void update_status(void)
     double out_size;
     char unit;
 
-    /* Currently, for both sox and soxmix, all input files must have
+    /* Currently, for all sox modes, all input files must have
      * the same sample rate.  So we can always just use the rate
      * of the first input file to compute time.
      */
@@ -1694,7 +1732,7 @@ static void usage(char *opt)
     const st_effect_t *e;
     static char *usagestr;
 
-    if (soxmix)
+    if (mode != SOX_CONCAT)
       usagestr = "[ gopts ] [ fopts ] ifile1 [fopts] ifile2 [ fopts ] ofile [ effect [ effopts ] ]";
     else
       usagestr = "[ gopts ] [ fopts ] ifile [ fopts ] ofile [ effect [ effopts ] ]";
@@ -1708,7 +1746,7 @@ static void usage(char *opt)
 "Special filenames (ifile, ofile):\n"
 "\n"
 "-               use stdin or stdout\n"
-"-n/-e           use the null file handler; for use with e.g. synth & stat.\n"
+"-n, -e          use the null file handler; for use with e.g. synth & stat.\n"
 "\n"
 "Global options (gopts):\n"
 "\n"
@@ -1718,6 +1756,9 @@ static void usage(char *opt)
 "--help          same as -h\n"
 "--help-effect=name\n"
 "                print usage of specified effect.  use 'all' to print all\n"
+"-m, --mix       mix multiple input files (instead of concatenating)\n"
+"-M, --merge     merge multiple input files (instead of concatenating)\n"
+"-o              generate Octave commands to plot response of filter effect\n"
 "-q              run in quiet mode.  Inverse of -S option\n"
 "-S              print status while processing audio data.\n"
 "--version       print version number of SoX and exit\n"
