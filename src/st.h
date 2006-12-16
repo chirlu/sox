@@ -344,8 +344,8 @@ typedef struct st_effect *eff_t;
 
 typedef struct
 {
-    char    *name;                  /* effect name */
-    char    *usage;
+    char    const * name;           /* effect name */
+    char    const * usage;
     unsigned int flags;
 
     int (*getopts)(eff_t effp, int argc, char *argv[]);
@@ -358,7 +358,7 @@ typedef struct
 
 struct st_effect
 {
-    char            *name;          /* effect name */
+    char    const * name;           /* effect name */
     struct st_globalinfo * globalinfo;/* global ST parameters */
     struct st_signalinfo ininfo;    /* input signal specifications */
     struct st_signalinfo outinfo;   /* output signal specifications */

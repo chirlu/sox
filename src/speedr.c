@@ -51,6 +51,7 @@ static int getopts(eff_t effp, int n, char * * argv)
 
 st_effect_t const * st_speedr_effect_fn(void)
 {
-  static st_effect_t driver = {"speedr", usage, ST_EFF_NULL, getopts};
+  static st_effect_t driver =
+    {"speedr", usage, ST_EFF_NULL, getopts, NULL, NULL, NULL, NULL};
   return &driver;
 }
