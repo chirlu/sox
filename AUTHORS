@@ -4,7 +4,7 @@ bugs.
 
 
 Creator:
-	Lance Norskog		thinman@meer.net (inactive currently)
+	Lance Norskog		thinman@meer.net (emeritus)
 
 Mantainer:
 	Chris Bagwell		cbagwell@sprynet.com
@@ -14,79 +14,79 @@ Contributors:
 		chorus, echo, echos, flanger, phaser, and reverb
 		effects.
 	Guido Van Rossum	guido@cwi.nl
-		AU, AIFF, AUTO, HCOM, reverse,
-		many bug fixes
+		AU, AIFF, AUTO, HCOM, reverse, many bug fixes.
 	Jef Poskanzer		jef@well.sf.ca.us
 		original code for u-law and delay line
 	Bill Neisius		bill%solaria@hac2arpa.hac.com 
-		DOS port, 8SVX, Sounder, Soundtool formats
-		Apollo fixes, stat with auto-picker
+		DOS port, 8SVX, Sounder, Soundtool formats,
+		Apollo fixes, stat with auto-picker.
 	Rick Richardson		rick@digibd.com
-		WAV and SB driver handlers, fixes
+		WAV and SB driver handlers, fixes.
 	David Champion		dgc3@midway.uchicago.edu
-		Amiga port 
+		Amiga port.
 	Pace Willisson		pace@blitz.com
-		Fixes for ESIX
+		Fixes for ESIX.
 	Leigh Smith		leigh@psychokiller.dialix.oz.au
-		SMP and comment movement support.
-		AIFF Loop/MIDI support
+		SMP and comment movement support, AIFF Loop/MIDI
+		support.
 	David Sanderson		dws@ssec.wisc.edu
-		AIX3.1 fixes
+		AIX3.1 fixes.
 	Glenn Lewis		glewis@pcocd2.intel.com
-		AIFF chunking fixes
+		AIFF chunking fixes.
 	Brian Campbell		brianc@quantum.qnx.com
-		QNX port and 16-bit fixes
+		QNX port and 16-bit fixes.
 	Chris Adams		gt8741@prism.gatech.edu
-		DOS port fixes
+		DOS port fixes.
 	John Kohl		jtkohl@kolvir.elcr.ca.us
-		BSD386 port, VOC stereo support
+		BSD386 port, VOC stereo support.
 	Ken Kubo		ken@hmcvax.claremont.edu
-		VMS port, VOC stereo support
+		VMS port, VOC stereo support.
 	Frank Gadegast 		<phade@cs.tu-berlin.de>
-		Microsoft C 7.0 & C Borland 3.0 ports
+		Microsoft C 7.0 & C Borland 3.0 ports.
 	David Elliot		<dce@scmc.sony.com>
-		CD-R format support
+		CD-R format support.
 	David Sears		<dns@essnj3.essnjay.com>
-		Linux support
+		Linux support.
 	Tom Littlejohn          <tlit@seq1.loc.gov>
 		Raw textual data
 	Boisy G. Pitre 		boisy@microware.com
-		OS9 port
+		OS9 port.
         Sun Microsystems, Guido Van Rossum
 	        CCITT G.711, G.721, G.723 implementation
 	Graeme Gill		graeme@labtam.labtam.oz.au
-		A-LAW format, Good .WAV handling,
-		avg channel expansion
+		A-LAW format, Good .WAV handling, avg channel
+		expansion.
 	Allen Grider		grider@hfsi.hfsi.com
 		VOC stereo mode, WAV file handling
 	Michel Fingerhut 	Michel.Fingerhut@ircam.fr
-		Upgrade 'sf' format to current IRCAM format.
-		Float file support.
+		Upgrade 'sf' format to current IRCAM format,
+		float file support.
 	Chris Knight
-		Achimedes Acorn support
+		Acorn Archimedes support.
 	Richard Caley 		R.Caley@ed.ac.uk
-		Psion WVE handler
+		Psion WVE handler.
 	Lutz Vieweg		lkv@mania.RoBIN.de
 		MAUD (Amiga) file handler
 	Tim Gardner		timg@tpi.com
-		Windows NT port for V7
+		Windows NT port for V7.
 	Jimen Ching 		jiching@wiliki.eng.hawaii.edu
-		Libst porting bugs
+		Libst porting bugs.
 	Lauren Weinstein	lauren@vortex.com
-		DOS porting, scripts, professional use
+		DOS porting, scripts, professional use.
 	Stan Brooks		stabro@megsinet.net
-		Rewrite of resample and polyphase code.
-		DSP filter effect.  Some test code/scripts.
+		Rewrite of resample and polyphase code,
+		DSP filter effect, some test code/scripts.
 	Stuart Daines <sjd.u-net.com>
-	  Patches for r/w support of gsm-encoded wav files,
-		Cleanup of wav.c.
+		Patches for r/w support of gsm-encoded wav files,
+		cleanup of wav.c.
 	Chris Bagwell		cbagwell@sprynet.com
 		OSS and Sun players, bugfixes, ADPCM support,
 		patch collection and maintance.
 	Matthias Nutt
 		Multiple effects from command line.
 	Reuben Thomas		rrt@sc3d.org
-		Much cleaning up, Secret Rabbit Code resampling.
+		Build system makeover, Lua scripting, Secret Rabbit
+                Code resampling, much cleanup.
 	Rob Sykes		robs@users.sourceforge.net
 		Bass & treble effects, FLAC support, initial 24bit
 		support, Octave plotting for filters, new flanger,
