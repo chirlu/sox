@@ -23,8 +23,8 @@ static int getopts(eff_t effp, int n, char * * argv)
     is_cents = true, ++argv, --n;
 
   if (n == 1) {
-    char c;
-    int scanned = sscanf(*argv, "%lf%c%*c", &speed, &c);
+    char c, dummy;
+    int scanned = sscanf(*argv, "%lf%c %c", &speed, &c, &dummy);
     if (scanned == 1 || (scanned == 2 && c == 'c')) {
       is_cents |= scanned == 2;
       if (is_cents || speed > 0) {
