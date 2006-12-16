@@ -1,25 +1,13 @@
-/*  Sound Tools Effect: speedr
+/*  Sound Tools Effect: Adjust the audio speed (pitch and tempo together)
  *
  *  (c) 2006 robs@users.sourceforge.net
  *
  *  See LICENSE file for further copyright information.
+ *
+ *  Adjustment is given as the ratio of the new speed to the old speed,
+ *  or as a number of cents (100ths of a semitone) to change.  Speed change
+ *  is actually performed by whichever resampling effect is in effect.
  */
-
-static char const usage[] =
-  "\n"
-  "Usage: speedr factor[c]\n"
-  "\n"
-  "Use resampling to adjust the audio  speed  (pitch  and  tempo\n"
-  "together).  ‘factor’ is  either the ratio of the new speed to\n"
-  "the old speed: > 1 speeds up, < 1 slows down, or, if appended\n"
-  "with  ‘c’,  the number of cents (i.e 100ths of a semitone) by\n"
-  "which  the  pitch  (and  tempo)  should  be  adjusted:  >   0\n"
-  "increases, < 0 decreases.\n"
-  "   By  default, the speed change is performed by the resample\n"
-  "effect with  its  default  parameters.   For  higher  quality\n"
-  "resampling,  in addition to the speedr effect, specify either\n"
-  "the resample or the rabbit effect  with  appropriate  parame-\n"
-  "ters.";
 
 #include "st_i.h"
 #include <math.h>
@@ -51,7 +39,8 @@ static int getopts(eff_t effp, int n, char * * argv)
 
 st_effect_t const * st_speedr_effect_fn(void)
 {
-  static st_effect_t driver =
-    {"speedr", usage, ST_EFF_NULL, getopts, NULL, NULL, NULL, NULL};
+  static st_effect_t driver = {
+    "speedr", "Usage: speedr factor[c]", ST_EFF_NULL,
+    getopts, NULL, NULL, NULL, NULL};
   return &driver;
 }
