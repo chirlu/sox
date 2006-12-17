@@ -38,14 +38,18 @@ enum_item const * find_enum_text(
 typedef enum {ST_SHORT, ST_INT, ST_FLOAT, ST_DOUBLE} st_data_t;
 typedef enum {ST_WAVE_SINE, ST_WAVE_TRIANGLE} st_wave_t;
 extern enum_item const st_wave_enum[];
+
+/* Digitise one cycle of a wave and store it as
+ * a table of samples of a specified data-type.
+ */
 void st_generate_wave_table(
     st_wave_t wave_type,
     st_data_t data_type,
-    void *table,
-    uint32_t table_size,
-    double min,
-    double max,
-    double phase);
+    void * table,       /* Really of type indicated by data_type. */
+    uint32_t table_size,/* Number of points on the x-axis. */
+    double min,         /* Minimum value on the y-axis. (e.g. -1) */
+    double max,         /* Maximum value on the y-axis. (e.g. +1) */
+    double phase);      /* Phase at 1st point; 0..2pi. (e.g. pi/2 for cosine) */
 
 st_sample_t st_gcd(st_sample_t a, st_sample_t b);
 st_sample_t st_lcm(st_sample_t a, st_sample_t b);
