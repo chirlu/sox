@@ -118,7 +118,7 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
         }
         else if ((ft->fp = fopen(ft->filename, "rb")) == NULL)
         {
-            st_warn("Can't open input file '%s': %s", ft->filename,
+            st_warn("Can't open input file `%s': %s", ft->filename,
                     strerror(errno));
             goto input_error;
         }
@@ -130,7 +130,7 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
     /* Read and write starters can change their formats. */
     if ((*ft->h->startread)(ft) != ST_SUCCESS)
     {
-        st_warn("Failed reading %s: %s", ft->filename, ft->st_errstr);
+        st_warn("Failed reading `%s': %s", ft->filename, ft->st_errstr);
         goto input_error;
     }
 
