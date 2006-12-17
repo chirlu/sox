@@ -160,7 +160,7 @@ lowers the amplitude by 1/2, changes
 the sampling rate to 12000 Hz, and applies the \fBdither\fR sound effect
 to the audio data.
 .P
-The following will mix two sound files together to to produce a single sound
+The following will mix two sound files together to produce a single sound
 file.
 .P
 .br
@@ -280,13 +280,13 @@ sets it to 0.
 .PP
 \fBInput And Output File Format Options:\fR
 .PP
-Format options effect the input or output file that they immediately precede.
+Format options affect the input or output file that they immediately precede.
 .PP
-Self describing input files can obtain all the format information directly from the header and so don't generally need format options.  Header-less input files lack this information and so format options must be used to inform SoX of the file's data type, sample rate, and number of channels.
+Self describing input files can contain all the format information in the header and so don't generally need format options.  Headerless input files lack this information and so format options must be used to inform SoX of the file's data type, sample rate, and number of channels.
 .PP
 By default, SoX attempts to write audio data using the same data type, sample rate, and channel count as the input data.  If the user wants the output file to be of a different format then format options can be used to specify the differences.
 .PP
-If an output file format doesn't support the same data type, sample rate, or channel count as the input file format, then SoX will auto select the closest values it does support so that the user does not have to specify these format change options manually.
+If an output file format doesn't support the same data type, sample rate, or channel count as the input file format, then SoX will automatically select the closest values it does support so that the user does not have to specify these format change options manually.
 .TP 10
 \fB-c \fIchannels\fR
 The number of sound channels in the data file.
@@ -303,7 +303,7 @@ a different sample rate than the input file, include this option as a part
 of the output format options.
 .br
 If the input and output files have
-different rates then a sample rate change effect must be ran.  Since SoX has
+different rates then a sample rate change effect must be run.  Since SoX has
 multiple rate changing effects, the user can specify which to use as an effect.
 If no rate change effect is specified then a default one will be chosen.
 .TP 10
