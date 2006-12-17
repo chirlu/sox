@@ -14,6 +14,7 @@ compand		y	y
 copy		n	n
 dcshift		y	c
 deemph		n	n
+dither		see mask
 earwax		?	n
 echo		y	y
 echos		y	y
@@ -25,7 +26,7 @@ highp		n	y
 highpass	see bandpass
 lowp		n	y
 lowpass		see bandpass
-mask		y	n     TODO
+mask		y	y
 mcompand	y	y
 noiseprof	n	n
 noisered	n	y
