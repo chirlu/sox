@@ -67,15 +67,17 @@ do_multichannel_formats () {
   convertToAndFrom Wav aiff aifc au avr dat maud sf flac
   samples=23492 convertToAndFrom 8svx  # Even number of samples only
   rate=8000 convertToAndFrom voc       # Fixed rate
-
-  format1=wve
-  convertToAndFrom al sw uw sl raw Raw dat
 }
 
 do_singlechannel_formats () {
   format1=Wav
   convertToAndFrom smp
-  rate=5512 convertToAndFrom hcom      # Fixed rate
+  # FIXME
+  # rate=5512 convertToAndFrom hcom      # Fixed rate
+
+  rate=8000
+  format1=wve
+  convertToAndFrom al sw uw sl raw Raw dat
 }
 
 rate=44100
