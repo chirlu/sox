@@ -94,12 +94,12 @@ static st_sample_t obufr[ST_BUFSIZ/2];
 
 typedef struct file_options
 {
-    char *filename;
-    char *filetype;
-    st_signalinfo_t info;
-    double volume;
-    st_size_t volume_clips;
-    char *comment;
+  char *filename;
+  char *filetype;
+  st_signalinfo_t info;
+  double volume;
+  st_size_t volume_clips;
+  char *comment;
 } * file_options_t;
 
 /* local forward declarations */
@@ -120,8 +120,6 @@ static int drain_effect_out(void);
 static int drain_effect(int);
 static void release_effect_buf(void);
 static void stop_effects(void);
-void cleanup(void);
-static void sigint(int s);
 
 #define MAX_INPUT_FILES 32
 #define MAX_FILES MAX_INPUT_FILES + 1
@@ -163,158 +161,176 @@ static int input_eff_eof;                /* has input_eff reached EOF? */
 static struct st_effect user_efftab[MAX_USER_EFF];
 static int nuser_effects;
 
-static char * myname = 0;
+static char *myname = NULL;
 
 
 static void sox_output_message(int level, st_output_message_t m)
 {
-  if (st_output_verbosity_level >= level)
-  {
+  if (st_output_verbosity_level >= level) {
     fprintf(stderr, "%s ", myname);
     st_output_message(stderr, m);
     fprintf(stderr, "\n");
   }
 }
 
-
-int main(int argc, char **argv)
+ 
+/* Cleanup atexit() function, hence always called. */
+static void cleanup(void) 
 {
-    file_options_t fo;
-    size_t i;
+  size_t i;
 
-    myname = argv[0];
-
-    i = strlen(myname);
-    if (i >= sizeof("soxmix") - 1 &&
-        strcmp(myname + i - (sizeof("soxmix") - 1), "soxmix") == 0)
-      mode = SOX_MIX;
-
-    st_output_message_handler = sox_output_message;
-
-    /* Loop over arguments and filenames, stop when an effect name is 
-     * found.
-     */
-    while (optind < argc && !is_effect_name(argv[optind]))
-    {
-        if (file_count >= MAX_FILES)
-        {
-            st_fail("too many filenames. max of %d input files and 1 output file", MAX_INPUT_FILES);
-            exit(1);
-        }
-
-        fo = xcalloc(sizeof(*fo), 1);
-        fo->info.size = -1;
-        fo->info.encoding = ST_ENCODING_UNKNOWN;
-        fo->info.channels = 0;
-        fo->info.compression = HUGE_VAL;
-        fo->volume = 1.0;
-        fo->volume_clips = 0;
-        file_opts[file_count++] = fo;
-
-        if (doopts(fo, argc, argv) == true) /* is null file? */
-        {
-          if (fo->filetype != NULL && strcmp(fo->filetype, "null") != 0)
-            st_warn("Ignoring \"-t %s\".", fo->filetype);
-          fo->filetype = "null";
-          fo->filename = strdup(fo->filetype);
-        }
-        else
-        {
-          if (optind >= argc)
-            usage("missing filename"); /* No return */
-          fo->filename = strdup(argv[optind++]);
-        }
-    } /* while (commandline options) */
-
-    /* Make sure we got at least the required # of input filenames */
-    input_count = file_count ? file_count - 1 : 0;
-    if (input_count < (mode == SOX_CONCAT ? 1 : 2))
-        usage("Not enough input filenames specified");
-
-    for (i = 0; i < input_count; i++)
-    {
-      /* When mixing audio, default to input side volume
-       * adjustments that will make sure no clipping will
-       * occur.  Users most likely won't be happy with
-       * this and will want to override it.
-       */
-      if (mode == SOX_MIX && !uservolume)
-        file_opts[i]->volume = 1.0 / input_count;
-      
-      file_desc[i] = st_open_read(file_opts[i]->filename,
-                                  &file_opts[i]->info, 
-                                  file_opts[i]->filetype);
-      if (!file_desc[i])
-        {
-          /* st_open_read() will call st_warn for most errors.
-           * Rely on that printing something.
-           */
-          exit(2);
-        }
-      
-      if (file_opts[i]->info.compression != HUGE_VAL)
-        {
-          st_fail("A compression factor can only be given for an output file");
-          cleanup();
-          exit(1);
-        }
-
-      if (file_opts[i]->comment != NULL)
-        {
-          st_fail("A comment can only be given for an output file");
-          cleanup();
-          exit(1);
-        }
-    }
-    
-    /* Loop through the reset of the arguments looking for effects */
-    parse_effects(argc, argv);
-
-    /* If output file is null and no effects have been specified,
-     * then drop back to super-lean output processing.
-     */
-    if (file_opts[file_count-1]->filetype &&
-        strcmp(file_opts[file_count-1]->filetype, "null") == 0 &&
-        !nuser_effects)
-    {
-      free(file_opts[--file_count]);
-      writing = 0;
-    }
-
-    if (repeatable_random)
-      st_debug("Not reseeding PRNG; randomness is repeatable");
-    else {
-      time_t t;
-
-      time(&t);
-      srand(t);
-    }
-
-    signal(SIGINT, sigint);
-    signal(SIGTERM, sigint);
-
-    process();
-
-    if (mixing_clips > 0)
-      st_warn("-m (soxmix) clipped %u samples; decrease volume?", mixing_clips);
-
-    for (i = 0; i < file_count; i++) {
-      if (file_opts[i]->volume_clips > 0)
-        st_warn("%s: -v clipped %u samples; decrease volume?", file_opts[i]->filename,
-            file_opts[i]->volume_clips);
-      free(file_opts[i]);
+  /* Close the input and output files before exiting. */
+  for (i = 0; i < input_count; i++)
+    if (file_desc[i]) {
+      st_close(file_desc[i]);
       free(file_desc[i]);
     }
 
-    if (status)
-    {
-        if (user_abort)
-            fprintf(stderr, "Aborted.\n");
-        else
-            fprintf(stderr, "Done.\n");
+  if (writing && file_desc[file_count - 1]) {
+    char *fn;
+    struct stat st;
+
+    fstat(fileno(file_desc[file_count - 1]->fp), &st);
+    fn = strdup(file_desc[file_count - 1]->filename);
+    st_close(file_desc[file_count - 1]);
+    
+    /* Remove the output file because we failed, if we created it. */
+    if ((st.st_mode & S_IFMT) == S_IFREG)
+      unlink(fn);
+    free(fn);
+    if (file_desc[file_count - 1])
+      free(file_desc[file_count - 1]);
+  }
+}
+
+static void sigint(int s)
+{
+  if (s == SIGINT || s == SIGTERM)
+    user_abort = 1;
+}
+
+int main(int argc, char **argv)
+{
+  file_options_t fo;
+  size_t i;
+
+  myname = argv[0];
+
+  atexit(cleanup);
+  
+  i = strlen(myname);
+  if (i >= sizeof("soxmix") - 1 &&
+      strcmp(myname + i - (sizeof("soxmix") - 1), "soxmix") == 0)
+    mode = SOX_MIX;
+
+  st_output_message_handler = sox_output_message;
+
+  /* Loop over arguments and filenames, stop when an effect name is 
+   * found.
+   */
+  while (optind < argc && !is_effect_name(argv[optind])) {
+    if (file_count >= MAX_FILES) {
+      st_fail("too many filenames. max of %d input files and 1 output file", MAX_INPUT_FILES);
+      exit(1);
     }
 
-    return(0);
+    fo = xcalloc(sizeof(*fo), 1);
+    fo->info.size = -1;
+    fo->info.encoding = ST_ENCODING_UNKNOWN;
+    fo->info.channels = 0;
+    fo->info.compression = HUGE_VAL;
+    fo->volume = 1.0;
+    fo->volume_clips = 0;
+    file_opts[file_count++] = fo;
+    
+    if (doopts(fo, argc, argv) == true) { /* is null file? */
+      if (fo->filetype != NULL && strcmp(fo->filetype, "null") != 0)
+        st_warn("Ignoring \"-t %s\".", fo->filetype);
+      fo->filetype = "null";
+      fo->filename = strdup(fo->filetype);
+    } else {
+      if (optind >= argc)
+        usage("missing filename"); /* No return */
+      fo->filename = strdup(argv[optind++]);
+    }
+  }
+
+  /* Make sure we got at least the required # of input filenames */
+  input_count = file_count ? file_count - 1 : 0;
+  if (input_count < (mode == SOX_CONCAT ? 1 : 2))
+    usage("Not enough input filenames specified");
+
+  for (i = 0; i < input_count; i++) {
+    /* When mixing audio, default to input side volume
+     * adjustments that will make sure no clipping will
+     * occur.  Users most likely won't be happy with
+     * this and will want to override it.
+     */
+    if (mode == SOX_MIX && !uservolume)
+      file_opts[i]->volume = 1.0 / input_count;
+      
+    file_desc[i] = st_open_read(file_opts[i]->filename,
+                                &file_opts[i]->info, 
+                                file_opts[i]->filetype);
+    if (!file_desc[i])
+      /* st_open_read() will call st_warn for most errors.
+       * Rely on that printing something. */
+      exit(2);
+      
+    if (file_opts[i]->info.compression != HUGE_VAL) {
+      st_fail("A compression factor can only be given for an output file");
+      exit(1);
+    }
+
+    if (file_opts[i]->comment != NULL) {
+      st_fail("A comment can only be given for an output file");
+      exit(1);
+    }
+  }
+    
+  /* Loop through the reset of the arguments looking for effects */
+  parse_effects(argc, argv);
+
+  /* If output file is null and no effects have been specified,
+   * then drop back to super-lean output processing.
+   */
+  if (file_opts[file_count-1]->filetype &&
+      strcmp(file_opts[file_count-1]->filetype, "null") == 0 &&
+      !nuser_effects) {
+    free(file_opts[--file_count]);
+    writing = 0;
+  }
+
+  if (repeatable_random)
+    st_debug("Not reseeding PRNG; randomness is repeatable");
+  else {
+    time_t t;
+
+    time(&t);
+    srand(t);
+  }
+
+  signal(SIGINT, sigint);
+  signal(SIGTERM, sigint);
+
+  process();
+
+  if (mixing_clips > 0)
+    st_warn("-m (soxmix) clipped %u samples; decrease volume?", mixing_clips);
+
+  for (i = 0; i < file_count; i++)
+    if (file_opts[i]->volume_clips > 0)
+      st_warn("%s: -v clipped %u samples; decrease volume?", file_opts[i]->filename,
+              file_opts[i]->volume_clips);
+
+  if (status) {
+    if (user_abort)
+      fprintf(stderr, "Aborted.\n");
+    else
+      fprintf(stderr, "Done.\n");
+  }
+
+  return 0;
 }
 
 static char * read_comment_file(char const * const filename)
@@ -353,7 +369,7 @@ static char * read_comment_file(char const * const filename)
 static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lf8dxV::SqoenmMR";
 
 static struct option long_options[] =
-{
+  {
     {"version", 0, NULL, 0},
     {"help-effect", required_argument, NULL, 0},
     {"comment", required_argument, NULL, 0},
@@ -363,7 +379,7 @@ static struct option long_options[] =
     {"mix", no_argument, NULL, 'm'},
     {"merge", no_argument, NULL, 'M'},
     {NULL, 0, NULL, 0}
-};
+  };
 
 static bool doopts(file_options_t fo, int argc, char **argv)
 {
@@ -377,158 +393,153 @@ static bool doopts(file_options_t fo, int argc, char **argv)
       return false; /* Is not null file. */
 
     switch (c) {
-      case 0:       /* Long options with no short equivalent. */
-        switch (option_index) {
-          case 0:
-            printf("%s: v%s\n", myname, st_version());
-            exit(0);
-            break;
-
-          case 1:
-            usage_effect(optarg);
-            break;
-
-          case 2:
-            fo->comment = strdup(optarg);
-            break;
-
-          case 3:
-            fo->comment = read_comment_file(optarg);
-            break;
-        }
+    case 0:       /* Long options with no short equivalent. */
+      switch (option_index) {
+      case 0:
+        printf("%s: v%s\n", myname, st_version());
+        exit(0);
         break;
 
-      case 'm':
-        mode = SOX_MIX;
+      case 1:
+        usage_effect(optarg);
         break;
 
-      case 'M':
-        mode = SOX_MERGE;
+      case 2:
+        fo->comment = strdup(optarg);
         break;
 
-      case 'R': /* Useful for regression testing; not in man page. */
-        repeatable_random = true;
+      case 3:
+        fo->comment = read_comment_file(optarg);
         break;
+      }
+      break;
 
-      case 'e': case 'n':
-        return true;            /* Is null file. */
+    case 'm':
+      mode = SOX_MIX;
+      break;
 
-      case 'o':
-        globalinfo.octave_plot_effect = true;
-        break;
+    case 'M':
+      mode = SOX_MERGE;
+      break;
 
-      case 'h': case '?':
-        usage((char *) 0);      /* No return */
-        break;
+    case 'R': /* Useful for regression testing; not in man page. */
+      repeatable_random = true;
+      break;
 
-      case 't':
-        fo->filetype = optarg;
-        if (fo->filetype[0] == '.')
-          fo->filetype++;
-        break;
+    case 'e': case 'n':
+      return true;            /* Is null file. */
 
-      case 'r':
-        if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
-          st_fail("Rate value '%s' is not a positive integer", optarg);
-          cleanup();
-          exit(1);
-        }
-        fo->info.rate = i;
-        break;
+    case 'o':
+      globalinfo.octave_plot_effect = true;
+      break;
 
-      case 'v':
-        if (sscanf(optarg, "%lf %c", &fo->volume, &dummy) != 1) {
-          st_fail("Volume value '%s' is not a number", optarg);
-          cleanup();
-          exit(1);
-        }
-        uservolume = 1;
-        if (fo->volume < 0.0)
-          st_report("Volume adjustment is negative; "
-                    "this will result in a phase change");
-        break;
+    case 'h': case '?':
+      usage((char *) 0);      /* No return */
+      break;
 
-      case 'c':
-        if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
-          st_fail("Channels value '%s' is not a positive integer", optarg);
-          cleanup();
-          exit(1);
-        }
-        fo->info.channels = i;
-        break;
+    case 't':
+      fo->filetype = optarg;
+      if (fo->filetype[0] == '.')
+        fo->filetype++;
+      break;
 
-      case 'C':
-        if (sscanf(optarg, "%lf %c", &fo->info.compression, &dummy) != 1) {
-          st_fail("Compression value '%s' is not a number", optarg);
-          cleanup();
-          exit(1);
-        }
-        break;
+    case 'r':
+      if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
+        st_fail("Rate value '%s' is not a positive integer", optarg);
+        exit(1);
+      }
+      fo->info.rate = i;
+      break;
 
-      case '1': case 'b': fo->info.size = ST_SIZE_BYTE;   break;
-      case '2': case 'w': fo->info.size = ST_SIZE_WORD;   break;
-      case '3':           fo->info.size = ST_SIZE_24BIT;  break;
-      case '4': case 'l': fo->info.size = ST_SIZE_DWORD;  break;
-      case '8': case 'd': fo->info.size = ST_SIZE_DDWORD; break;
+    case 'v':
+      if (sscanf(optarg, "%lf %c", &fo->volume, &dummy) != 1) {
+        st_fail("Volume value '%s' is not a number", optarg);
+        exit(1);
+      }
+      uservolume = 1;
+      if (fo->volume < 0.0)
+        st_report("Volume adjustment is negative; "
+                  "this will result in a phase change");
+      break;
 
-      case 's': fo->info.encoding = ST_ENCODING_SIGN2;     break;
-      case 'u': fo->info.encoding = ST_ENCODING_UNSIGNED;  break;
-      case 'f': fo->info.encoding = ST_ENCODING_FLOAT;     break;
-      case 'a': fo->info.encoding = ST_ENCODING_ADPCM;     break;
-      case 'i': fo->info.encoding = ST_ENCODING_IMA_ADPCM; break;
-      case 'g': fo->info.encoding = ST_ENCODING_GSM;       break;
+    case 'c':
+      if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
+        st_fail("Channels value '%s' is not a positive integer", optarg);
+        exit(1);
+      }
+      fo->info.channels = i;
+      break;
 
-      case 'U': fo->info.encoding = ST_ENCODING_ULAW;
-        if (fo->info.size == -1)
-          fo->info.size = ST_SIZE_BYTE;
-        break;
+    case 'C':
+      if (sscanf(optarg, "%lf %c", &fo->info.compression, &dummy) != 1) {
+        st_fail("Compression value '%s' is not a number", optarg);
+        exit(1);
+      }
+      break;
 
-      case 'A': fo->info.encoding = ST_ENCODING_ALAW;
-        if (fo->info.size == -1)
-          fo->info.size = ST_SIZE_BYTE;
-        break;
+    case '1': case 'b': fo->info.size = ST_SIZE_BYTE;   break;
+    case '2': case 'w': fo->info.size = ST_SIZE_WORD;   break;
+    case '3':           fo->info.size = ST_SIZE_24BIT;  break;
+    case '4': case 'l': fo->info.size = ST_SIZE_DWORD;  break;
+    case '8': case 'd': fo->info.size = ST_SIZE_DDWORD; break;
 
-      case 'x':
-        fo->info.swap = 1;
-        break;
+    case 's': fo->info.encoding = ST_ENCODING_SIGN2;     break;
+    case 'u': fo->info.encoding = ST_ENCODING_UNSIGNED;  break;
+    case 'f': fo->info.encoding = ST_ENCODING_FLOAT;     break;
+    case 'a': fo->info.encoding = ST_ENCODING_ADPCM;     break;
+    case 'i': fo->info.encoding = ST_ENCODING_IMA_ADPCM; break;
+    case 'g': fo->info.encoding = ST_ENCODING_GSM;       break;
 
-      case 'V':
-        if (optarg == NULL)
-          ++st_output_verbosity_level;
-        else if (sscanf(optarg, "%i %c", &st_output_verbosity_level, &dummy)
-            != 1 || st_output_verbosity_level < 0) {
-          st_output_verbosity_level = 2;
-          st_fail("Verbosity value '%s' is not an integer >= 0", optarg);
-          cleanup();
-          exit(1);
-        }
-        break;
+    case 'U': fo->info.encoding = ST_ENCODING_ULAW;
+      if (fo->info.size == -1)
+        fo->info.size = ST_SIZE_BYTE;
+      break;
 
-      case 'S':
-        status = 1;
-        quiet = 0;
-        break;
+    case 'A': fo->info.encoding = ST_ENCODING_ALAW;
+      if (fo->info.size == -1)
+        fo->info.size = ST_SIZE_BYTE;
+      break;
 
-      case 'q':
-        status = 0;
-        quiet = 1;
-        break;
+    case 'x':
+      fo->info.swap = 1;
+      break;
+
+    case 'V':
+      if (optarg == NULL)
+        ++st_output_verbosity_level;
+      else if (sscanf(optarg, "%i %c", &st_output_verbosity_level, &dummy)
+               != 1 || st_output_verbosity_level < 0) {
+        st_output_verbosity_level = 2;
+        st_fail("Verbosity value '%s' is not an integer >= 0", optarg);
+        exit(1);
+      }
+      break;
+
+    case 'S':
+      status = 1;
+      quiet = 0;
+      break;
+
+    case 'q':
+      status = 0;
+      quiet = 1;
+      break;
     }
   }
 }
 
 static int compare_input(ft_t ft1, ft_t ft2)
 {
-    if (ft1->info.rate != ft2->info.rate)
-        return ST_EOF;
-    if (ft1->info.size != ft2->info.size)
-        return ST_EOF;
-    if (ft1->info.encoding != ft2->info.encoding)
-        return ST_EOF;
-    if (ft1->info.channels != ft2->info.channels)
-        return ST_EOF;
+  if (ft1->info.rate != ft2->info.rate)
+    return ST_EOF;
+  if (ft1->info.size != ft2->info.size)
+    return ST_EOF;
+  if (ft1->info.encoding != ft2->info.encoding)
+    return ST_EOF;
+  if (ft1->info.channels != ft2->info.channels)
+    return ST_EOF;
 
-    return ST_SUCCESS;
+  return ST_SUCCESS;
 }
 
 /*
@@ -537,436 +548,375 @@ static int compare_input(ft_t ft1, ft_t ft2)
  */
 
 static void process(void) {
-    int e, flowstatus = ST_SUCCESS;
-    size_t current_input = 0;
-    st_size_t s, f;
-    st_ssize_t ilen[MAX_INPUT_FILES];
-    st_sample_t *ibuf[MAX_INPUT_FILES];
+  int e, flowstatus = ST_SUCCESS;
+  size_t current_input = 0;
+  st_size_t s, f;
+  st_ssize_t ilen[MAX_INPUT_FILES];
+  st_sample_t *ibuf[MAX_INPUT_FILES];
 
-    for (f = 0; f < input_count; f++)
-    {
-        st_report("Input file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s, volume %g",
-                  file_desc[f]->filename, file_desc[f]->info.rate,
-                  st_sizes_str[(unsigned char)file_desc[f]->info.size],
-                  st_encodings_str[(unsigned char)file_desc[f]->info.encoding],
-                  file_desc[f]->info.channels,
-                  (file_desc[f]->info.channels > 1) ? "channels" : "channel",
-                  file_opts[f]->volume);
+  for (f = 0; f < input_count; f++) {
+    st_report("Input file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s, volume %g",
+              file_desc[f]->filename, file_desc[f]->info.rate,
+              st_sizes_str[(unsigned char)file_desc[f]->info.size],
+              st_encodings_str[(unsigned char)file_desc[f]->info.encoding],
+              file_desc[f]->info.channels,
+              (file_desc[f]->info.channels > 1) ? "channels" : "channel",
+              file_opts[f]->volume);
+    
+    if (file_desc[f]->comment)
+      st_report("Input file %s: comment \"%s\"",
+                file_desc[f]->filename, file_desc[f]->comment);
+  }
 
-        if (file_desc[f]->comment)
-            st_report("Input file %s: comment \"%s\"",
-                      file_desc[f]->filename, file_desc[f]->comment);
+  for (f = 0; f < input_count; f++) {
+    if (mode == SOX_MERGE)
+      file_desc[f]->info.channels *= input_count;
+    if (f && compare_input(file_desc[0], file_desc[f]) != ST_SUCCESS) {
+      st_fail("Input files must have the same rate, channels, data size, and encoding");
+      exit(1);
     }
-
-    for (f = 0; f < input_count; f++)
-    {
-        if (mode == SOX_MERGE)
-          file_desc[f]->info.channels *= input_count;
-        if (f && compare_input(file_desc[0], file_desc[f]) != ST_SUCCESS)
-        {
-            st_fail("Input files must have the same rate, channels, data size, and encoding");
-            exit(1);
-        }
+  }
+  
+  if (writing) {
+    st_loopinfo_t loops[ST_MAX_NLOOPS];
+    double factor;
+    int i;
+    file_options_t options = file_opts[file_count-1];
+    char const * comment = NULL;
+    
+    if (options->info.rate == 0)
+      options->info.rate = file_desc[0]->info.rate;
+    if (options->info.size == -1)
+      options->info.size = file_desc[0]->info.size;
+    if (options->info.encoding == ST_ENCODING_UNKNOWN)
+      options->info.encoding = file_desc[0]->info.encoding;
+    if (options->info.channels == 0)
+      options->info.channels = file_desc[0]->info.channels;
+    
+    if (options->comment != NULL) {
+      if (*options->comment == '\0')
+        free(options->comment);
+      else
+        comment = options->comment;
+    } else
+      comment = file_desc[0]->comment ? file_desc[0]->comment : "Processed by SoX";
+    
+    /*
+     * copy loop info, resizing appropriately
+     * it's in samples, so # channels don't matter
+     * FIXME: This doesn't work for multi-file processing or
+     * effects that change file length.
+     */
+    factor = (double) options->info.rate / (double) 
+      file_desc[0]->info.rate;
+    for (i = 0; i < ST_MAX_NLOOPS; i++) {
+      loops[i].start = file_desc[0]->loops[i].start * factor;
+      loops[i].length = file_desc[0]->loops[i].length * factor;
+      loops[i].count = file_desc[0]->loops[i].count;
+      loops[i].type = file_desc[0]->loops[i].type;
     }
+    
+    file_desc[file_count-1] = 
+      st_open_write_instr(options->filename,
+                          &options->info, 
+                          options->filetype,
+                          comment,
+                          &file_desc[0]->instr,
+                          loops);
+    
+    if (!file_desc[file_count - 1])
+      /* st_open_write() will call st_warn for most errors.
+       * Rely on that printing something. */
+      exit(2);
+    
+    /* When writing to an audio device, auto turn on the
+     * status display to match behavior of ogg123 status,
+     * unless the user requested us not to display anything. */
+    if ((strcmp(file_desc[file_count - 1]->filetype, "alsa") == 0 ||
+        strcmp(file_desc[file_count - 1]->filetype, "ossdsp") == 0 ||
+         strcmp(file_desc[file_count - 1]->filetype, "sunau") == 0) &&
+        !quiet)
+      status = 1;
 
-    if (writing)
-    {
-        st_loopinfo_t loops[ST_MAX_NLOOPS];
-        double factor;
-        int i;
-        file_options_t options = file_opts[file_count-1];
-        char const * comment = NULL;
+    st_report("Output file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s, volume %g",
+              file_desc[file_count-1]->filename, 
+              file_desc[file_count-1]->info.rate,
+              st_sizes_str[(unsigned char)file_desc[file_count-1]->info.size],
+              st_encodings_str[(unsigned char)file_desc[file_count-1]->info.encoding],
+              file_desc[file_count-1]->info.channels,
+              (file_desc[file_count-1]->info.channels > 1) ? "channels" : "channel",
+              file_opts[file_count-1]->volume);
+    
+    if (file_desc[file_count-1]->comment)
+      st_report("Output file: comment \"%s\"", 
+                file_desc[file_count-1]->comment);
+  }
+  
+  /* Adjust the input rate for the speed effect */
+  for (f = 0; f < input_count; ++f)
+    file_desc[f]->info.rate = file_desc[f]->info.rate * globalinfo.speed + .5;
 
-        if (options->info.rate == 0)
-            options->info.rate = file_desc[0]->info.rate;
-        if (options->info.size == -1)
-            options->info.size = file_desc[0]->info.size;
-        if (options->info.encoding == ST_ENCODING_UNKNOWN)
-            options->info.encoding = file_desc[0]->info.encoding;
-        if (options->info.channels == 0)
-            options->info.channels = file_desc[0]->info.channels;
+  /* build efftab */
+  check_effects();
 
-        if (options->comment != NULL)
-        {
-          if (*options->comment == '\0')
-            free(options->comment);
-          else comment = options->comment;
-        }
-        else comment = file_desc[0]->comment ? file_desc[0]->comment : "Processed by SoX";
+  /* Start all effects */
+  flowstatus = start_effects();
 
-        /*
-         * copy loop info, resizing appropriately
-         * it's in samples, so # channels don't matter
-         * FIXME: This doesn't work for multi-file processing or
-         * effects that change file length.
-         */
-        factor = (double) options->info.rate / (double) 
-            file_desc[0]->info.rate;
-        for(i = 0; i < ST_MAX_NLOOPS; i++) {
-            loops[i].start = file_desc[0]->loops[i].start * factor;
-            loops[i].length = file_desc[0]->loops[i].length * factor;
-            loops[i].count = file_desc[0]->loops[i].count;
-            loops[i].type = file_desc[0]->loops[i].type;
-        }
+  /* Reserve an output buffer for all effects */
+  reserve_effect_buf();
 
-        file_desc[file_count-1] = 
-            st_open_write_instr(options->filename,
-                                &options->info, 
-                                options->filetype,
-                                comment,
-                                &file_desc[0]->instr,
-                                loops);
-
-        if (!file_desc[file_count-1])
-        {
-            /* st_open_write() will call st_warn for most errors.
-             * Rely on that printing something.
-             */
-            cleanup();
-            exit(2);
-        }
-
-        /* When writing to an audio device, auto turn on the
-         * status display to match behavior of ogg123 status.
-         * That is unless user requested us not to display]
-         * anything.
-         */
-        if (strcmp(file_desc[file_count-1]->filetype, "alsa") == 0 ||
-            strcmp(file_desc[file_count-1]->filetype, "ossdsp") == 0 ||
-            strcmp(file_desc[file_count-1]->filetype, "sunau") == 0)
-        {
-            if (!quiet)
-                status = 1;
-        }
-
-        st_report("Output file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s, volume %g",
-                  file_desc[file_count-1]->filename, 
-                  file_desc[file_count-1]->info.rate,
-                  st_sizes_str[(unsigned char)file_desc[file_count-1]->info.size],
-                  st_encodings_str[(unsigned char)file_desc[file_count-1]->info.encoding],
-                  file_desc[file_count-1]->info.channels,
-                  (file_desc[file_count-1]->info.channels > 1) ? "channels" : "channel",
-                  file_opts[file_count-1]->volume);
-
-        if (file_desc[file_count-1]->comment)
-            st_report("Output file: comment \"%s\"", 
-                      file_desc[file_count-1]->comment);
-    }
-
-    /* Adjust the input rate for the speed effect */
-    for (f = 0; f < input_count; ++f)
-      file_desc[f]->info.rate = file_desc[f]->info.rate * globalinfo.speed + .5;
-
-    /* build efftab */
-    check_effects();
-
-    /* Start all effects */
-    flowstatus = start_effects();
-
-    /* Reserve an output buffer for all effects */
-    reserve_effect_buf();
-
-    if (mode != SOX_CONCAT) {
-      for (f = 0; f < input_count; f++)
-        {
-          st_size_t alloc_size = ST_BUFSIZ * sizeof(st_sample_t);
-          /* Treat overall length the same as longest input file. */
-          if (file_desc[f]->length > input_samples)
-            input_samples = file_desc[f]->length;
-          
-          if (mode == SOX_MERGE) {
-            alloc_size /= input_count;
-            file_desc[f]->info.channels /= input_count;
-          }
-          ibuf[f] = (st_sample_t *)xmalloc(alloc_size);
-          
-          if (status)
-            print_input_status(f);
-        }
-    } else {
-      current_input = 0;
-      input_samples = file_desc[current_input]->length;
+  if (mode != SOX_CONCAT) {
+    for (f = 0; f < input_count; f++) {
+      st_size_t alloc_size = ST_BUFSIZ * sizeof(st_sample_t);
+      /* Treat overall length the same as longest input file. */
+      if (file_desc[f]->length > input_samples)
+        input_samples = file_desc[f]->length;
+      
+      if (mode == SOX_MERGE) {
+        alloc_size /= input_count;
+        file_desc[f]->info.channels /= input_count;
+      }
+      ibuf[f] = (st_sample_t *)xmalloc(alloc_size);
       
       if (status)
-        print_input_status(current_input);
+        print_input_status(f);
     }
-
-    /*
-     * Just like errno, we must set st_errno to known values before
-     * calling I/O operations.
-     */
-    for (f = 0; f < file_count; f++)
-        file_desc[f]->st_errno = 0;
-
-    input_eff = 0;
-    input_eff_eof = 0;
-
-    /* mark chain as empty */
-    for(e = 1; e < neffects; e++)
-        efftab[e].odone = efftab[e].olen = 0;
-
-    /* If start functions set flowstatus to ST_EOF, skip both flow and
-       drain; we have to have this "if" because after flow flowstatus is
-       supposed to be ST_EOF, so we can't test that in order to know
-       whether to drain. */
-    if (flowstatus == 0) {
-    
-      /* Run input data through effects and get more until olen == 0 
-       * (or ST_EOF).
-       */
-      do {
-        if (mode == SOX_CONCAT) {
-          ilen[0] = st_read(file_desc[current_input], efftab[0].obuf, 
-                         (st_ssize_t)ST_BUFSIZ);
-          if (ilen[0] > ST_BUFSIZ) {
-              st_warn("WARNING: Corrupt value of %d!  Assuming 0 bytes read.", ilen);
-              ilen[0] = 0;
-          }
-          
-          if (ilen[0] == ST_EOF) {
-              efftab[0].olen = 0;
-              if (file_desc[current_input]->st_errno)
-                  fprintf(stderr, file_desc[current_input]->st_errstr);
-          } else
-            efftab[0].olen = ilen[0];
-          
-          read_samples += efftab[0].olen;
-          
-          /* Some file handlers claim 0 bytes instead of returning
-           * ST_EOF.  In either case, attempt to go to the next
-           * input file.
-           */
-          if (ilen[0] == ST_EOF || efftab[0].olen == 0)
-            {
-              if (current_input < input_count-1)
-                {
-                  current_input++;
-                  input_samples = file_desc[current_input]->length;
-                  read_samples = 0;
-                  
-                  if (status)
-                    print_input_status(current_input);
-                  
-                  continue;
-                }
-            }
-          volumechange(efftab[0].obuf, efftab[0].olen,file_opts[current_input]);
-        } else if (mode == SOX_MIX) {
-          for (f = 0; f < input_count; f++)
-            {
-              ilen[f] = st_read(file_desc[f], ibuf[f], (st_ssize_t)ST_BUFSIZ);
-              
-              if (ilen[f] == ST_EOF)
-                {
-                  ilen[f] = 0;
-                  if (file_desc[f]->st_errno)
-                    {
-                      fprintf(stderr, file_desc[f]->st_errstr);
-                    }
-                }
-              
-              /* Only count read samples for first file in mix */
-              if (f == 0)
-                read_samples += efftab[0].olen;
-              
-              volumechange(ibuf[f], ilen[f], file_opts[f]);
-            }
-          
-          /* FIXME: Should report if the size of the reads are not
-           * the same.
-           */
-          efftab[0].olen = 0;
-          for (f = 0; f < input_count; f++)
-            if ((st_size_t)ilen[f] > efftab[0].olen)
-              efftab[0].olen = ilen[f];
-          
-          for (s = 0; s < efftab[0].olen; s++)
-            {
-              /* Mix data together by summing samples together.
-               * It is assumed that input side volume adjustments
-               * will take care of any possible overflow.
-               * By default, SoX sets the volume adjustment
-               * to 1/input_count but the user can override this.
-               * They probably will and some clipping will probably
-               * occur because of this.
-               */
-              for (f = 0; f < input_count; f++)
-                {
-                  if (f == 0)
-                    efftab[0].obuf[s] =
-                      (s<(st_size_t)ilen[f]) ? ibuf[f][s] : 0;
-                  else
-                    if (s < (st_size_t)ilen[f])
-                      {
-                        double sample = efftab[0].obuf[s];
-                        sample += ibuf[f][s]; /* DON'T COMBINE WITH PREV LINE */
-                        efftab[0].obuf[s] =
-                            ST_ROUND_CLIP_COUNT(sample, mixing_clips);
-                      }
-                }
-            }
-        } else {                 /* mode == SOX_MERGE */
-          efftab[0].olen = 0;
-          for (f = 0; f < input_count; ++f) {
-            ilen[f] = st_read(file_desc[f], ibuf[f], ST_BUFSIZ / input_count);
-            if (ilen[f] == ST_EOF) {
-              ilen[f] = 0;
-              if (file_desc[f]->st_errno)
-                fprintf(stderr, file_desc[f]->st_errstr);
-            }
-            if ((st_size_t)ilen[f] > efftab[0].olen)
-              efftab[0].olen = ilen[f];
-            volumechange(ibuf[f], ilen[f], file_opts[f]);
-          }
-          
-          for (s = 0; s < efftab[0].olen; s++)
-            for (f = 0; f < input_count; f++)
-              efftab[0].obuf[s * input_count + f] =
-                (s < (st_size_t)ilen[f]) * ibuf[f][s];
-
-          read_samples += efftab[0].olen;
-          efftab[0].olen *= input_count;
-        }
-
-        efftab[0].odone = 0;
-
-        /* If not writing and no effects are occuring then not much
-         * reason to continue reading.  This allows this case.  Mainly
-         * useful to print out info about input file header and quiet.
-         */
-        if (!writing && neffects == 1)
-          efftab[0].olen = 0;
-
-        if (efftab[0].olen == 0)
-          break;
-
-        flowstatus = flow_effect_out();
-
-        if (status)
-          update_status();
-
-        /* Quit reading/writing on user aborts.  This will close
-         * done the files nicely as if an EOF was reached on read.
-         */
-        if (user_abort)
-          break;
-
-        /* If writing and there's an error, don't try to write more. */
-        if (writing && file_desc[file_count-1]->st_errno)
-          break;
-      } while (flowstatus == 0);
-
-      /* This will drain the effects */
-      /* Don't write if output is indicating errors. */
-      if (writing && file_desc[file_count-1]->st_errno == 0)
-        drain_effect_out();
-    }
-
+  } else {
+    current_input = 0;
+    input_samples = file_desc[current_input]->length;
+        
     if (status)
-    {
-      fputs("\n\n", stderr);
-    }
-
-    if (mode != SOX_CONCAT)
-      /* Free input buffers now that they are not used */
-      for (f = 0; f < input_count; f++)
-        {
-          free(ibuf[f]);
-        }
-
-    /* Free output buffers now that they won't be used */
-    release_effect_buf();
-
-    /* Very Important:
-     * Effect stop is called BEFORE files close.
-     * Effect may write out more data after.
+      print_input_status(current_input);
+  }
+      
+  /*
+   * Just like errno, we must set st_errno to known values before
+   * calling I/O operations.
+   */
+  for (f = 0; f < file_count; f++)
+    file_desc[f]->st_errno = 0;
+      
+  input_eff = 0;
+  input_eff_eof = 0;
+      
+  /* mark chain as empty */
+  for(e = 1; e < neffects; e++)
+    efftab[e].odone = efftab[e].olen = 0;
+      
+  /* If start functions set flowstatus to ST_EOF, skip both flow and
+     drain; we have to have this "if" because after flow flowstatus is
+     supposed to be ST_EOF, so we can't test that in order to know
+     whether to drain. */
+  if (flowstatus == 0) {
+        
+    /* Run input data through effects and get more until olen == 0 
+     * (or ST_EOF).
      */
-    stop_effects();
+    do {
+      if (mode == SOX_CONCAT) {
+        ilen[0] = st_read(file_desc[current_input], efftab[0].obuf, 
+                          (st_ssize_t)ST_BUFSIZ);
+        if (ilen[0] > ST_BUFSIZ) {
+          st_warn("WARNING: Corrupt value of %d!  Assuming 0 bytes read.", ilen);
+          ilen[0] = 0;
+        }
+            
+        if (ilen[0] == ST_EOF) {
+          efftab[0].olen = 0;
+          if (file_desc[current_input]->st_errno)
+            fprintf(stderr, file_desc[current_input]->st_errstr);
+        } else
+          efftab[0].olen = ilen[0];
+            
+        read_samples += efftab[0].olen;
+            
+        /* Some file handlers claim 0 bytes instead of returning
+         * ST_EOF.  In either case, attempt to go to the next
+         * input file.
+         */
+        if (ilen[0] == ST_EOF || efftab[0].olen == 0) {
+          if (current_input < input_count - 1) {
+            current_input++;
+            input_samples = file_desc[current_input]->length;
+            read_samples = 0;
+                    
+            if (status)
+              print_input_status(current_input);
+            
+            continue;
+          }
+        }
+        volumechange(efftab[0].obuf, efftab[0].olen,file_opts[current_input]);
+      } else if (mode == SOX_MIX) {
+        for (f = 0; f < input_count; f++) {
+          ilen[f] = st_read(file_desc[f], ibuf[f], (st_ssize_t)ST_BUFSIZ);
+                
+          if (ilen[f] == ST_EOF) {
+            ilen[f] = 0;
+            if (file_desc[f]->st_errno) 
+              fprintf(stderr, file_desc[f]->st_errstr);
+          }
+                
+          /* Only count read samples for first file in mix */
+          if (f == 0)
+            read_samples += efftab[0].olen;
+          
+          volumechange(ibuf[f], ilen[f], file_opts[f]);
+        }
+        
+        /* FIXME: Should report if the size of the reads are not
+         * the same.
+         */
+        efftab[0].olen = 0;
+        for (f = 0; f < input_count; f++)
+          if ((st_size_t)ilen[f] > efftab[0].olen)
+            efftab[0].olen = ilen[f];
+            
+        for (s = 0; s < efftab[0].olen; s++) {
+          /* Mix data together by summing samples together.
+           * It is assumed that input side volume adjustments
+           * will take care of any possible overflow.
+           * By default, SoX sets the volume adjustment
+           * to 1/input_count but the user can override this.
+           * They probably will and some clipping will probably
+           * occur because of this.
+           */
+          for (f = 0; f < input_count; f++) {
+            if (f == 0)
+              efftab[0].obuf[s] =
+                (s<(st_size_t)ilen[f]) ? ibuf[f][s] : 0;
+            else if (s < (st_size_t)ilen[f]) {
+              double sample = efftab[0].obuf[s];
+              sample += ibuf[f][s]; /* DON'T COMBINE WITH PREV LINE */
+              efftab[0].obuf[s] =
+                ST_ROUND_CLIP_COUNT(sample, mixing_clips);
+            }
+          }
+        }
+      } else {                 /* mode == SOX_MERGE */
+        efftab[0].olen = 0;
+        for (f = 0; f < input_count; ++f) {
+          ilen[f] = st_read(file_desc[f], ibuf[f], ST_BUFSIZ / input_count);
+          if (ilen[f] == ST_EOF) {
+            ilen[f] = 0;
+            if (file_desc[f]->st_errno)
+              fprintf(stderr, file_desc[f]->st_errstr);
+          }
+          if ((st_size_t)ilen[f] > efftab[0].olen)
+            efftab[0].olen = ilen[f];
+          volumechange(ibuf[f], ilen[f], file_opts[f]);
+        }
+          
+        for (s = 0; s < efftab[0].olen; s++)
+          for (f = 0; f < input_count; f++)
+            efftab[0].obuf[s * input_count + f] =
+              (s < (st_size_t)ilen[f]) * ibuf[f][s];
 
+        read_samples += efftab[0].olen;
+        efftab[0].olen *= input_count;
+      }
+
+      efftab[0].odone = 0;
+
+      /* If not writing and no effects are occuring then not much
+       * reason to continue reading.  This allows this case.  Mainly
+       * useful to print out info about input file header and quiet.
+       */
+      if (!writing && neffects == 1)
+        efftab[0].olen = 0;
+
+      if (efftab[0].olen == 0)
+        break;
+
+      flowstatus = flow_effect_out();
+
+      if (status)
+        update_status();
+
+      /* Quit reading/writing on user aborts.  This will close
+       * done the files nicely as if an EOF was reached on read.
+       */
+      if (user_abort)
+        break;
+
+      /* If writing and there's an error, don't try to write more. */
+      if (writing && file_desc[file_count-1]->st_errno)
+        break;
+    } while (flowstatus == 0);
+
+    /* This will drain the effects */
+    /* Don't write if output is indicating errors. */
+    if (writing && file_desc[file_count-1]->st_errno == 0)
+      drain_effect_out();
+  }
+
+  if (status)
+    fputs("\n\n", stderr);
+
+  if (mode != SOX_CONCAT)
+    /* Free input buffers now that they are not used */
     for (f = 0; f < input_count; f++)
-    {
-        if (file_desc[f]->clippedCount != 0)
-          st_warn("%s: input clipped %u samples", file_desc[f]->filename,
+      free(ibuf[f]);
+
+  /* Free output buffers now that they won't be used */
+  release_effect_buf();
+
+  /* Very Important:
+   * Effect stop is called BEFORE files close.
+   * Effect may write out more data after.
+   */
+  stop_effects();
+
+  for (f = 0; f < input_count; f++)
+    if (file_desc[f]->clippedCount != 0)
+      st_warn("%s: input clipped %u samples", file_desc[f]->filename,
               file_desc[f]->clippedCount);
 
-        /* If problems closing input file, just warn user since
-         * we are exiting anyways.
-         */
-        if (st_close(file_desc[f]) == ST_EOF)
-        {
-          /* We no longer have any info about this file as we've just
-           * st_close'd it, so just refer to file number: */
-          st_warn("Input file # %i reported an error whilst it was being closed.", f + 1);
-        }
-    }
-
-    if (writing)
-    {
-        if (file_desc[f]->clippedCount != 0)
-        {
-          st_warn("%s: output clipped %u samples; decrease volume?",
-             (file_desc[f]->h->flags & ST_FILE_NOFEXT)?
-             file_desc[f]->h->names[0] : file_desc[f]->filename,
-             file_desc[f]->clippedCount);
-        }
-
-        /* problem closing output file, just warn user since we
-         * are exiting anyways.
-         */
-        if (st_close(file_desc[file_count-1]) == ST_EOF)
-        {
-          /* We no longer have any info about this file as we've just
-           * st_close'd it, so just refer to it as the "Output file": */
-          st_warn("Output file reported an error whilst it was being closed.");
-        }
-    }
+  if (writing)
+    if (file_desc[f]->clippedCount != 0)
+      st_warn("%s: output clipped %u samples; decrease volume?",
+              (file_desc[f]->h->flags & ST_FILE_NOFEXT)?
+              file_desc[f]->h->names[0] : file_desc[f]->filename,
+              file_desc[f]->clippedCount);
 }
-
+  
 static void parse_effects(int argc, char **argv)
 {
-    int argc_effect;
-    int effect_rc;
+  int argc_effect;
+  int effect_rc;
 
-    nuser_effects = 0;
+  nuser_effects = 0;
 
-    while (optind < argc)
-    {
-        if (nuser_effects >= MAX_USER_EFF)
-        {
-            st_fail("too many effects specified (at most %d allowed)", MAX_USER_EFF);
-            cleanup();
-            exit(1);
-        }
-
-        argc_effect = st_geteffect_opt(&user_efftab[nuser_effects],
-                                       argc - optind, &argv[optind]);
-
-        if (argc_effect == ST_EOF)
-        {
-            st_fail("Effect '%s' does not exist!", argv[optind]);
-            cleanup();
-            exit(1);
-        }
-
-        /* Skip past effect name */
-        optind++;
-
-        user_efftab[nuser_effects].globalinfo = &globalinfo;
-        effect_rc = (*user_efftab[nuser_effects].h->getopts)
-            (&user_efftab[nuser_effects],
-             argc_effect,
-             &argv[optind]);
-
-        if (effect_rc == ST_EOF)
-        {
-            cleanup();
-            exit(2);
-        }
-
-        /* Skip past the effect arguments */
-        optind += argc_effect;
-        nuser_effects++;
+  while (optind < argc) {
+    if (nuser_effects >= MAX_USER_EFF) {
+      st_fail("too many effects specified (at most %d allowed)", MAX_USER_EFF);
+      exit(1);
     }
+
+    argc_effect = st_geteffect_opt(&user_efftab[nuser_effects],
+                                   argc - optind, &argv[optind]);
+
+    if (argc_effect == ST_EOF) {
+      st_fail("Effect '%s' does not exist!", argv[optind]);
+      exit(1);
+    }
+
+    /* Skip past effect name */
+    optind++;
+    
+    user_efftab[nuser_effects].globalinfo = &globalinfo;
+    effect_rc = (*user_efftab[nuser_effects].h->getopts)
+      (&user_efftab[nuser_effects],
+       argc_effect,
+       &argv[optind]);
+    
+    if (effect_rc == ST_EOF) 
+      exit(2);
+
+    /* Skip past the effect arguments */
+    optind += argc_effect;
+    nuser_effects++;
+  }
 }
 
 /*
@@ -976,743 +926,658 @@ static void parse_effects(int argc, char **argv)
  */
 static void check_effects(void)
 {
-    int i, j;
-    int needchan = 0, needrate = 0, haschan = 0, hasrate = 0;
-    int effects_mask = 0;
-    int status;
+  int i, j;
+  int needchan = 0, needrate = 0, haschan = 0, hasrate = 0;
+  int effects_mask = 0;
+  int status;
 
-    /* Remove any null effects: */
-    for (i = 0; i < nuser_effects; ++i)
-      if (user_efftab[i].h->flags & ST_EFF_NULL) {
-        --nuser_effects;
-        for (j = i--; j < nuser_effects; ++j)
-          user_efftab[j] = user_efftab[j + 1];
-      }
-
-    if (writing)
-    {
-        needrate = (file_desc[0]->info.rate != file_desc[file_count-1]->info.rate);
-        needchan = (file_desc[0]->info.channels != file_desc[file_count-1]->info.channels);
+  /* Remove any null effects: */
+  for (i = 0; i < nuser_effects; ++i)
+    if (user_efftab[i].h->flags & ST_EFF_NULL) {
+      --nuser_effects;
+      for (j = i--; j < nuser_effects; ++j)
+        user_efftab[j] = user_efftab[j + 1];
     }
 
-    for (i = 0; i < nuser_effects; i++)
-    {
-        if (user_efftab[i].h->flags & ST_EFF_CHAN)
-        {
-            haschan++;
-        }
-        if (user_efftab[i].h->flags & ST_EFF_RATE)
-        {
-            hasrate++;
-        }
-    }
+  if (writing) {
+    needrate = (file_desc[0]->info.rate != file_desc[file_count-1]->info.rate);
+    needchan = (file_desc[0]->info.channels != file_desc[file_count-1]->info.channels);
+  }
 
-    if (haschan > 1)
-    {
-        st_fail("Cannot specify multiple effects that modify channel #");
-        cleanup();
-        exit(2);
-    }
-    if (hasrate > 1)
-        st_report("Cannot specify multiple effects that change sample rate");
+  for (i = 0; i < nuser_effects; i++) {
+    if (user_efftab[i].h->flags & ST_EFF_CHAN)
+      haschan++;
+    if (user_efftab[i].h->flags & ST_EFF_RATE)
+      hasrate++;
+  }
 
-    /* If not writing output then do not worry about adding
-     * channel and rate effects.  This is just to speed things
-     * up.
+  if (haschan > 1) {
+    st_fail("Cannot specify multiple effects that modify channel #");
+    exit(2);
+  }
+  if (hasrate > 1)
+    st_report("Cannot specify multiple effects that change sample rate");
+
+  /* If not writing output then do not worry about adding
+   * channel and rate effects.  This is just to speed things
+   * up.
+   */
+  if (!writing) {
+    needchan = 0;
+    needrate = 0;
+  }
+
+  /* --------- add the effects ------------------------ */
+
+  /* efftab[0] is always the input stream and always exists */
+  neffects = 1;
+
+  /* If reducing channels then its faster to run all effects
+   * after the avg effect.
+   */
+  if (needchan && !(haschan) &&
+      (file_desc[0]->info.channels > file_desc[file_count-1]->info.channels)) {
+    /* Find effect and update initial pointers */
+    st_geteffect(&efftab[neffects], "avg");
+    
+    /* give default opts for added effects */
+    efftab[neffects].globalinfo = &globalinfo;
+    status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+                                             (char **)0);
+    
+    if (status == ST_EOF)
+      exit(2);
+    
+    /* Copy format info to effect table */
+    effects_mask = st_updateeffect(&efftab[neffects], 
+                                   &file_desc[0]->info,
+                                   &file_desc[file_count-1]->info, 
+                                   effects_mask);
+    
+    neffects++;
+  }
+
+  /* If reducing the number of samples, its faster to run all effects
+   * after the resample effect.
+   */
+  if (needrate && !(hasrate) &&
+      (file_desc[0]->info.rate > file_desc[file_count-1]->info.rate)) {
+    st_geteffect(&efftab[neffects], "resample");
+
+    /* set up & give default opts for added effects */
+    efftab[neffects].globalinfo = &globalinfo;
+    status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+                                             (char **)0);
+    
+    if (status == ST_EOF)
+      exit(2);
+
+    /* Copy format info to effect table */
+    effects_mask = st_updateeffect(&efftab[neffects], 
+                                   &file_desc[0]->info,
+                                   &file_desc[file_count-1]->info, 
+                                   effects_mask);
+    
+    /* Rate can't handle multiple channels so be sure and
+     * account for that.
      */
-    if (!writing)
-    {
-        needchan = 0;
-        needrate = 0;
-    }
+    if (efftab[neffects].ininfo.channels > 1)
+        memcpy(&efftabR[neffects], &efftab[neffects], sizeof(struct st_effect));
 
-    /* --------- add the effects ------------------------ */
+    neffects++;
+  }
 
-    /* efftab[0] is always the input stream and always exists */
-    neffects = 1;
+  /* Copy over user specified effects into real efftab */
+  for (i = 0; i < nuser_effects; i++) {
+    memcpy(&efftab[neffects], &user_efftab[i], sizeof(struct st_effect));
 
-    /* If reducing channels then its faster to run all effects
-     * after the avg effect.
+    /* Copy format info to effect table */
+    effects_mask = st_updateeffect(&efftab[neffects], 
+                                   &file_desc[0]->info,
+                                   &file_desc[file_count-1]->info, 
+                                   effects_mask);
+    
+    /* If this effect can't handle multiple channels then
+     * account for this.
      */
-    if (needchan && !(haschan) &&
-        (file_desc[0]->info.channels > file_desc[file_count-1]->info.channels))
-    {
-        /* Find effect and update initial pointers */
-        st_geteffect(&efftab[neffects], "avg");
+    if ((efftab[neffects].ininfo.channels > 1) &&
+        !(efftab[neffects].h->flags & ST_EFF_MCHAN))
+      memcpy(&efftabR[neffects], &efftab[neffects],
+             sizeof(struct st_effect));
 
-        /* give default opts for added effects */
-        efftab[neffects].globalinfo = &globalinfo;
-        status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                                 (char **)0);
+    neffects++;
+  }
 
-        if (status == ST_EOF)
-        {
-            cleanup();
-            exit(2);
-        }
+  /* If rate effect hasn't been added by now then add it here.
+   * Check adding rate before avg because its faster to run
+   * rate on less channels then more.
+   */
+  if (needrate && !(effects_mask & ST_EFF_RATE)) {
+    st_geteffect(&efftab[neffects], "resample");
 
-        /* Copy format info to effect table */
-        effects_mask = st_updateeffect(&efftab[neffects], 
-                                       &file_desc[0]->info,
-                                       &file_desc[file_count-1]->info, 
-                                       effects_mask);
-
-        neffects++;
-    }
-
-    /* If reducing the number of samples, its faster to run all effects
-     * after the resample effect.
+    /* set up & give default opts for added effects */
+    efftab[neffects].globalinfo = &globalinfo;
+    status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+                                             (char **)0);
+    
+    if (status == ST_EOF)
+      exit(2);
+    
+    /* Copy format info to effect table */
+    effects_mask = st_updateeffect(&efftab[neffects], 
+                                   &file_desc[0]->info,
+                                   &file_desc[file_count-1]->info, 
+                                   effects_mask);
+    
+    /* Rate can't handle multiple channels so be sure and
+     * account for that.
      */
-    if (needrate && !(hasrate) &&
-        (file_desc[0]->info.rate > file_desc[file_count-1]->info.rate))
-    {
-        st_geteffect(&efftab[neffects], "resample");
+    if (efftab[neffects].ininfo.channels > 1)
+      memcpy(&efftabR[neffects], &efftab[neffects],
+             sizeof(struct st_effect));
+     
+    neffects++;
+  }
 
-        /* set up & give default opts for added effects */
-        efftab[neffects].globalinfo = &globalinfo;
-        status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                                 (char **)0);
+  /* If code up until now still hasn't added avg effect then
+   * do it now.
+   */
+  if (needchan && !(effects_mask & ST_EFF_CHAN)) {
+    st_geteffect(&efftab[neffects], "avg");
 
-        if (status == ST_EOF)
-        {
-            cleanup();
-            exit(2);
-        }
+    /* set up & give default opts for added effects */
+    efftab[neffects].globalinfo = &globalinfo;
+    status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
+                                             (char **)0);
+    if (status == ST_EOF)
+      exit(2);
 
-        /* Copy format info to effect table */
-        effects_mask = st_updateeffect(&efftab[neffects], 
-                                       &file_desc[0]->info,
-                                       &file_desc[file_count-1]->info, 
-                                       effects_mask);
-
-        /* Rate can't handle multiple channels so be sure and
-         * account for that.
-         */
-        if (efftab[neffects].ininfo.channels > 1)
-        {
-            memcpy(&efftabR[neffects], &efftab[neffects],
-                   sizeof(struct st_effect));
-        }
-
-        neffects++;
-    }
-
-    /* Copy over user specified effects into real efftab */
-    for(i = 0; i < nuser_effects; i++)
-    {
-        memcpy(&efftab[neffects], &user_efftab[i],
-               sizeof(struct st_effect));
-
-        /* Copy format info to effect table */
-        effects_mask = st_updateeffect(&efftab[neffects], 
-                                       &file_desc[0]->info,
-                                       &file_desc[file_count-1]->info, 
-                                       effects_mask);
-
-        /* If this effect can't handle multiple channels then
-         * account for this.
-         */
-        if ((efftab[neffects].ininfo.channels > 1) &&
-            !(efftab[neffects].h->flags & ST_EFF_MCHAN))
-        {
-            memcpy(&efftabR[neffects], &efftab[neffects],
-                   sizeof(struct st_effect));
-        }
-
-        neffects++;
-    }
-
-    /* If rate effect hasn't been added by now then add it here.
-     * Check adding rate before avg because its faster to run
-     * rate on less channels then more.
-     */
-    if (needrate && !(effects_mask & ST_EFF_RATE))
-    {
-        st_geteffect(&efftab[neffects], "resample");
-
-        /* set up & give default opts for added effects */
-        efftab[neffects].globalinfo = &globalinfo;
-        status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                                  (char **)0);
-
-        if (status == ST_EOF)
-        {
-            cleanup();
-            exit(2);
-        }
-
-        /* Copy format info to effect table */
-        effects_mask = st_updateeffect(&efftab[neffects], 
-                                       &file_desc[0]->info,
-                                       &file_desc[file_count-1]->info, 
-                                       effects_mask);
-
-        /* Rate can't handle multiple channels so be sure and
-         * account for that.
-         */
-        if (efftab[neffects].ininfo.channels > 1)
-        {
-            memcpy(&efftabR[neffects], &efftab[neffects],
-                   sizeof(struct st_effect));
-        }
-
-        neffects++;
-    }
-
-    /* If code up until now still hasn't added avg effect then
-     * do it now.
-     */
-    if (needchan && !(effects_mask & ST_EFF_CHAN))
-    {
-        st_geteffect(&efftab[neffects], "avg");
-
-        /* set up & give default opts for added effects */
-        efftab[neffects].globalinfo = &globalinfo;
-        status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                                 (char **)0);
-        if (status == ST_EOF)
-        {
-            cleanup();
-            exit(2);
-        }
-
-        /* Copy format info to effect table */
-        effects_mask = st_updateeffect(&efftab[neffects], 
-                                       &file_desc[0]->info,
-                                       &file_desc[file_count-1]->info, 
-                                       effects_mask);
-
-        neffects++;
-    }
+    /* Copy format info to effect table */
+    effects_mask = st_updateeffect(&efftab[neffects], 
+                                   &file_desc[0]->info,
+                                   &file_desc[file_count-1]->info, 
+                                   effects_mask);
+    
+    neffects++;
+  }
 }
 
 static int start_effects(void)
 {
-    int e, j, ret = ST_SUCCESS;
+  int e, j, ret = ST_SUCCESS;
 
-    for(e = 1; e < neffects; e++) {
-        efftab[e].clippedCount = 0;
-        if ((ret = (*efftab[e].h->start)(&efftab[e])) == ST_EOF)
-            break;
-        if (ret == ST_EFF_NULL) {
-          st_report("'%s' has no effect in this configuration.",efftab[e].name);
-          --neffects;
-          for (j = e--; j < neffects; ++j) {
-            efftab[j] = efftab[j + 1];
-            efftabR[j] = efftabR[j + 1];
-          }
-          ret = ST_SUCCESS;
-        }
-        else if (efftabR[e].name)
-        {
-            efftabR[e].clippedCount = 0;
-            if ((ret = (*efftabR[e].h->start)(&efftabR[e])) != ST_SUCCESS)
-                break;
-        }
+  for (e = 1; e < neffects; e++) {
+    efftab[e].clippedCount = 0;
+    if ((ret = (*efftab[e].h->start)(&efftab[e])) == ST_EOF)
+      break;
+    if (ret == ST_EFF_NULL) {
+      st_report("'%s' has no effect in this configuration.",efftab[e].name);
+      --neffects;
+      for (j = e--; j < neffects; ++j) {
+        efftab[j] = efftab[j + 1];
+        efftabR[j] = efftabR[j + 1];
+      }
+      ret = ST_SUCCESS;
+    } else if (efftabR[e].name) {
+      efftabR[e].clippedCount = 0;
+      if ((ret = (*efftabR[e].h->start)(&efftabR[e])) != ST_SUCCESS)
+        break;
     }
+  }
 
-    return ret;
+  return ret;
 }
 
 static void reserve_effect_buf(void)
 {
-    int e;
+  int e;
 
-    for(e = 0; e < neffects; e++)
-    {
-        efftab[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * 
-                                                sizeof(st_sample_t));
-        if (efftab[e].obuf == NULL)
-        {
-            st_fail("could not allocate memory");
-            cleanup();
-            exit(2);
-        }
-        if (efftabR[e].name)
-        {
-            efftabR[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * 
-                                                     sizeof(st_sample_t));
-            if (efftabR[e].obuf == NULL)
-            {
-                st_fail("could not allocate memory");
-                cleanup();
-                exit(2);
-            }
-        }
+  for (e = 0; e < neffects; e++) {
+    efftab[e].obuf = (st_sample_t *)malloc(ST_BUFSIZ * sizeof(st_sample_t));
+    if (efftab[e].obuf == NULL) {
+      st_fail("could not allocate memory");
+      exit(2);
     }
+    if (efftabR[e].name) {
+      efftabR[e].obuf = (st_sample_t *)malloc(ST_BUFSIZ * sizeof(st_sample_t));
+      if (efftabR[e].obuf == NULL) {
+        st_fail("could not allocate memory");
+        exit(2);
+      }
+    }
+  }
 }
 
 static int flow_effect_out(void)
 {
-    int e, havedata, flowstatus = 0;
-    size_t len, total;
+  int e, havedata, flowstatus = 0;
+  size_t len, total;
 
-    do {
-      /* run entire chain BACKWARDS: pull, don't push.*/
-      /* this is because buffering system isn't a nice queueing system */
-      for(e = neffects - 1; e >= input_eff; e--)
-      {
-          /* Do not call flow effect on input if its reported
-           * EOF already as thats a waste of time and may
-           * do bad things.
-           */
-          if (e == input_eff && input_eff_eof)
-              continue;
-
-          /* flow_effect returns ST_EOF when it will not process
-           * any more samples.  This is used to bail out early.
-           * Since we are "pulling" data, it is OK that we are not
-           * calling any more previous effects since their output
-           * would not be looked at anyways.
-           */
-          flowstatus  = flow_effect(e);
-          if (flowstatus == ST_EOF)
-          {
-              input_eff = e;
-              /* Assume next effect hasn't reach EOF yet */
-              input_eff_eof = 0;
-          }
-
-          /* If this buffer contains more input data then break out
-           * of this loop now.  This will allow us to loop back around
-           * and reprocess the rest of this input buffer.
-           * I suppose this could be an issue with some effects
-           * if they crash when given small input buffers.
-           * But I was more concerned that we would need to do
-           * some type of garbage collection otherwise.  By this I
-           * mean that if we went ahead and processed an effect
-           * lower in the chain, it might only have like 2 bytes
-           * left at the end of this buffer to place its data in.
-           * Software is more likely to refuse to handle that.
-           */
-          if (efftab[e].odone < efftab[e].olen)
-          {
-              st_debug("Breaking out of loop to flush buffer");
-              break;
-          }
-      }
-
-      /* If outputting and output data was generated then write it */
-      if (writing && (efftab[neffects-1].olen>efftab[neffects-1].odone))
-      {
-          /* Change the volume of this output data if needed. */
-          volumechange(efftab[neffects-1].obuf, efftab[neffects-1].olen,
-                                      file_opts[file_count-1]);
-
-          total = 0;
-          do
-          {
-              /* Do not do any more writing during user aborts as
-               * we may be stuck in an infinite writing loop.
-               */
-              if (user_abort)
-                  return ST_EOF;
-
-              len = st_write(file_desc[file_count - 1], 
-                             &efftab[neffects - 1].obuf[total],
-                             efftab[neffects - 1].olen - total);
-
-              if (len != efftab[neffects - 1].olen - total || file_desc[file_count - 1]->eof) {
-                  st_warn("Error writing: %s", file_desc[file_count - 1]->st_errstr);
-                  return ST_EOF;
-              }
-              total += len;
-          } while (total < efftab[neffects-1].olen);
-          output_samples += (total / file_desc[file_count-1]->info.channels);
-          efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
-      }
-      else
-      {
-          /* Make it look like everything was consumed */
-          output_samples += (efftab[neffects-1].olen / 
-                             file_desc[file_count-1]->info.channels);
-          efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
-      }
-
-      /* if stuff still in pipeline, set up to flow effects again */
-      /* When all effects have reported ST_EOF then this check will
-       * show no more data.
+  do {
+    /* run entire chain BACKWARDS: pull, don't push.*/
+    /* this is because buffering system isn't a nice queueing system */
+    for (e = neffects - 1; e >= input_eff; e--) {
+      /* Do not call flow effect on input if its reported
+       * EOF already as thats a waste of time and may
+       * do bad things.
        */
-      havedata = 0;
-      for(e = neffects - 1; e >= input_eff; e--)
-      {
-          /* If odone and olen are the same then this buffer
-           * can be reused.
-           */
-          if (efftab[e].odone == efftab[e].olen)
-              efftab[e].odone = efftab[e].olen = 0;
+      if (e == input_eff && input_eff_eof)
+        continue;
 
-          if (efftab[e].odone < efftab[e].olen) 
-          {
-              /* Only mark that we have more data if a full
-               * frame that can be written.
-               * FIXME: If this error case happens for the
-               * input buffer then the data will be lost and
-               * will cause stereo channels to be inversed.
-               */
-              if ((efftab[e].olen - efftab[e].odone) >= 
-                  file_desc[file_count-1]->info.channels)
-                  havedata = 1;
-              else
-                  st_warn("Received buffer with incomplete amount of samples.");
-              /* Don't break out because other things are being
-               * done in loop.
-               */
-          }
+      /* flow_effect returns ST_EOF when it will not process
+       * any more samples.  This is used to bail out early.
+       * Since we are "pulling" data, it is OK that we are not
+       * calling any more previous effects since their output
+       * would not be looked at anyways.
+       */
+      flowstatus  = flow_effect(e);
+      if (flowstatus == ST_EOF) {
+        input_eff = e;
+        /* Assume next effect hasn't reach EOF yet */
+        input_eff_eof = 0;
       }
 
-      if (!havedata && input_eff > 0)
-      {
-          /* When EOF has been detected, skip to the next input
-           * before looking for more data.
-           */
-          if (input_eff_eof)
-          {
-              input_eff++;
-              input_eff_eof = 0;
-          }
-
-          /* If the input file is not returning data then
-           * we must prime the pump using the drain effect.
-           * After its primed, the loop will suck the data
-           * threw.  Once an input_eff stop reporting samples,
-           * we will continue to the next until all are drained.
-           */
-          while (input_eff < neffects)
-          {
-              int rc;
-
-              rc = drain_effect(input_eff);
-
-              if (efftab[input_eff].olen == 0)
-              {
-                  input_eff++;
-                  /* Assume next effect hasn't reached EOF yet. */
-                  input_eff_eof = 0;
-              }
-              else
-              {
-                  havedata = 1;
-                  input_eff_eof = (rc == ST_EOF) ? 1 : 0;
-                  break;
-              }
-          }
+      /* If this buffer contains more input data then break out
+       * of this loop now.  This will allow us to loop back around
+       * and reprocess the rest of this input buffer.
+       * I suppose this could be an issue with some effects
+       * if they crash when given small input buffers.
+       * But I was more concerned that we would need to do
+       * some type of garbage collection otherwise.  By this I
+       * mean that if we went ahead and processed an effect
+       * lower in the chain, it might only have like 2 bytes
+       * left at the end of this buffer to place its data in.
+       * Software is more likely to refuse to handle that.
+       */
+      if (efftab[e].odone < efftab[e].olen) {
+        st_debug("Breaking out of loop to flush buffer");
+        break;
       }
-    } while (havedata);
-
-    /* If input_eff isn't pointing at fake first entry then there
-     * is no need to read any more data from disk.  Return this
-     * fact to caller.
-     */
-    if (input_eff > 0)
-    {
-        st_debug("Effect return ST_EOF");
-        return ST_EOF;
     }
 
-    return ST_SUCCESS;
+    /* If outputting and output data was generated then write it */
+    if (writing && (efftab[neffects-1].olen>efftab[neffects-1].odone)) {
+      /* Change the volume of this output data if needed. */
+      volumechange(efftab[neffects-1].obuf, efftab[neffects-1].olen,
+                   file_opts[file_count-1]);
+
+      total = 0;
+      do {
+        /* Do not do any more writing during user aborts as
+         * we may be stuck in an infinite writing loop.
+         */
+        if (user_abort)
+          return ST_EOF;
+            
+        len = st_write(file_desc[file_count - 1], 
+                       &efftab[neffects - 1].obuf[total],
+                       efftab[neffects - 1].olen - total);
+            
+        if (len != efftab[neffects - 1].olen - total || file_desc[file_count - 1]->eof) {
+          st_warn("Error writing: %s", file_desc[file_count - 1]->st_errstr);
+          return ST_EOF;
+        }
+        total += len;
+      } while (total < efftab[neffects-1].olen);
+      output_samples += (total / file_desc[file_count-1]->info.channels);
+      efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
+    } else {
+      /* Make it look like everything was consumed */
+      output_samples += (efftab[neffects-1].olen / 
+                         file_desc[file_count-1]->info.channels);
+      efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
+    }
+
+    /* if stuff still in pipeline, set up to flow effects again */
+    /* When all effects have reported ST_EOF then this check will
+     * show no more data.
+     */
+    havedata = 0;
+    for (e = neffects - 1; e >= input_eff; e--) {
+      /* If odone and olen are the same then this buffer
+       * can be reused.
+       */
+      if (efftab[e].odone == efftab[e].olen)
+        efftab[e].odone = efftab[e].olen = 0;
+      
+      if (efftab[e].odone < efftab[e].olen) {
+        /* Only mark that we have more data if a full
+         * frame that can be written.
+         * FIXME: If this error case happens for the
+         * input buffer then the data will be lost and
+         * will cause stereo channels to be inversed.
+         */
+        if ((efftab[e].olen - efftab[e].odone) >= 
+            file_desc[file_count-1]->info.channels)
+          havedata = 1;
+        else
+          st_warn("Received buffer with incomplete amount of samples.");
+        /* Don't break out because other things are being
+         * done in loop.
+         */
+      }
+    }
+
+    if (!havedata && input_eff > 0) {
+      /* When EOF has been detected, skip to the next input
+       * before looking for more data.
+       */
+      if (input_eff_eof) {
+        input_eff++;
+        input_eff_eof = 0;
+      }
+
+      /* If the input file is not returning data then
+       * we must prime the pump using the drain effect.
+       * After its primed, the loop will suck the data
+       * threw.  Once an input_eff stop reporting samples,
+       * we will continue to the next until all are drained.
+       */
+      while (input_eff < neffects) {
+        int rc = drain_effect(input_eff);
+        
+        if (efftab[input_eff].olen == 0) {
+          input_eff++;
+          /* Assume next effect hasn't reached EOF yet. */
+          input_eff_eof = 0;
+        } else {
+          havedata = 1;
+          input_eff_eof = (rc == ST_EOF) ? 1 : 0;
+          break;
+        }
+      }
+    }
+  } while (havedata);
+
+  /* If input_eff isn't pointing at fake first entry then there
+   * is no need to read any more data from disk.  Return this
+   * fact to caller.
+   */
+  if (input_eff > 0) {
+    st_debug("Effect return ST_EOF");
+    return ST_EOF;
+  }
+
+  return ST_SUCCESS;
 }
 
 static int flow_effect(int e)
 {
-    st_ssize_t i, done, idone, odone, idonel, odonel, idoner, odoner;
-    const st_sample_t *ibuf;
-    st_sample_t *obuf;
-    int effstatus, effstatusl, effstatusr;
+  st_size_t i, done, idone, odone, idonel, odonel, idoner, odoner;
+  const st_sample_t *ibuf;
+  st_sample_t *obuf;
+  int effstatus, effstatusl, effstatusr;
 
-    /* Do not attempt to do any more effect processing during
-     * user aborts as we may be stuck in an infinit flow loop.
+  /* Do not attempt to do any more effect processing during
+   * user aborts as we may be stuck in an infinit flow loop.
+   */
+  if (user_abort)
+    return ST_EOF;
+
+  /* I have no input data ? */
+  if (efftab[e-1].odone == efftab[e-1].olen) {
+    st_debug("%s no data to pull to me!", efftab[e].name);
+    return 0;
+  }
+
+  if (! efftabR[e].name) {
+    /* No stereo data, or effect can handle stereo data so
+     * run effect over entire buffer.
      */
-    if (user_abort)
-        return ST_EOF;
+    idone = efftab[e-1].olen - efftab[e-1].odone;
+    odone = ST_BUFSIZ - efftab[e].olen;
+    st_debug("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
+    st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
 
-    /* I have no input data ? */
-    if (efftab[e-1].odone == efftab[e-1].olen)
-    {
-        st_debug("%s no data to pull to me!", efftab[e].name);
-        return 0;
+    effstatus = (* efftab[e].h->flow)(&efftab[e],
+                                      &efftab[e-1].obuf[efftab[e-1].odone],
+                                      &efftab[e].obuf[efftab[e].olen], 
+                                      (st_size_t *)&idone, 
+                                      (st_size_t *)&odone);
+
+    efftab[e-1].odone += idone;
+    /* Leave efftab[e].odone were it was since we didn't consume data */
+    /*efftab[e].odone = 0;*/
+    efftab[e].olen += odone; 
+    st_debug("post %s idone=%d, odone=%d", efftab[e].name, idone, odone); 
+    st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
+
+    done = idone + odone;
+  } else {
+    /* Put stereo data in two seperate buffers and run effect
+     * on each of them.
+     */
+    idone = efftab[e-1].olen - efftab[e-1].odone;
+    odone = ST_BUFSIZ - efftab[e].olen;
+    
+    ibuf = &efftab[e-1].obuf[efftab[e-1].odone];
+    for (i = 0; i < idone; i += 2) {
+      ibufl[i/2] = *ibuf++;
+      ibufr[i/2] = *ibuf++;
     }
-
-    if (! efftabR[e].name) {
-        /* No stereo data, or effect can handle stereo data so
-         * run effect over entire buffer.
-         */
-        idone = efftab[e-1].olen - efftab[e-1].odone;
-        odone = ST_BUFSIZ - efftab[e].olen;
-        st_debug("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-        st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
-
-        effstatus = (* efftab[e].h->flow)(&efftab[e],
-                                          &efftab[e-1].obuf[efftab[e-1].odone],
-                                          &efftab[e].obuf[efftab[e].olen], 
-                                          (st_size_t *)&idone, 
-                                          (st_size_t *)&odone);
-
-        efftab[e-1].odone += idone;
-        /* Leave efftab[e].odone were it was since we didn't consume data */
-        /*efftab[e].odone = 0;*/
-        efftab[e].olen += odone; 
-        st_debug("post %s idone=%d, odone=%d", efftab[e].name, idone, odone); 
-        st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
-
-        done = idone + odone;
-    } 
-    else 
-    {
-        /* Put stereo data in two seperate buffers and run effect
-         * on each of them.
-         */
-        idone = efftab[e-1].olen - efftab[e-1].odone;
-        odone = ST_BUFSIZ - efftab[e].olen;
-
-        ibuf = &efftab[e-1].obuf[efftab[e-1].odone];
-        for(i = 0; i < idone; i += 2) {
-            ibufl[i/2] = *ibuf++;
-            ibufr[i/2] = *ibuf++;
-        }
-
-        /* left */
-        idonel = (idone + 1)/2;         /* odd-length logic */
-        odonel = odone/2;
-        st_debug("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-        st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
-
-        effstatusl = (* efftab[e].h->flow)(&efftab[e],
-                                          ibufl, obufl, (st_size_t *)&idonel, 
-                                          (st_size_t *)&odonel);
-
-        /* right */
-        idoner = idone/2;               /* odd-length logic */
-        odoner = odone/2;
-        effstatusr = (* efftabR[e].h->flow)(&efftabR[e],
-                                           ibufr, obufr, (st_size_t *)&idoner, 
-                                           (st_size_t *)&odoner);
-
-        obuf = &efftab[e].obuf[efftab[e].olen];
-         /* This loop implies left and right effect will always output
-          * the same amount of data.
-          */
-        for(i = 0; i < odoner; i++) {
-            *obuf++ = obufl[i];
-            *obuf++ = obufr[i];
-        }
-        efftab[e-1].odone += idonel + idoner;
-        /* Don't clear since nothng has been consumed yet */
-        /*efftab[e].odone = 0;*/
-        efftab[e].olen += odonel + odoner;
-        st_debug("post %s idone=%d, odone=%d", efftab[e].name, idone, odone); 
-        st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
-
-        done = idonel + idoner + odonel + odoner;
-
-        if (effstatusl)
-            effstatus = effstatusl;
-        else
-            effstatus = effstatusr;
+    
+    /* left */
+    idonel = (idone + 1)/2;         /* odd-length logic */
+    odonel = odone/2;
+    st_debug("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
+    st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
+    
+    effstatusl = (* efftab[e].h->flow)(&efftab[e],
+                                       ibufl, obufl, (st_size_t *)&idonel, 
+                                       (st_size_t *)&odonel);
+    
+    /* right */
+    idoner = idone/2;               /* odd-length logic */
+    odoner = odone/2;
+    effstatusr = (* efftabR[e].h->flow)(&efftabR[e],
+                                        ibufr, obufr, (st_size_t *)&idoner, 
+                                        (st_size_t *)&odoner);
+    
+    obuf = &efftab[e].obuf[efftab[e].olen];
+    /* This loop implies left and right effect will always output
+     * the same amount of data.
+     */
+    for (i = 0; i < odoner; i++) {
+      *obuf++ = obufl[i];
+      *obuf++ = obufr[i];
     }
-    if (effstatus == ST_EOF)
-    {
-        return ST_EOF;
-    }
-    if (done == 0)
-    {
-        st_fail("Effect took & gave no samples!");
-        cleanup();
-        exit(2);
-    }
-    return ST_SUCCESS;
+    efftab[e-1].odone += idonel + idoner;
+    /* Don't zero efftab[e].odone since nothing has been consumed yet */
+    efftab[e].olen += odonel + odoner;
+    st_debug("post %s idone=%d, odone=%d", efftab[e].name, idone, odone); 
+    st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
+    
+    done = idonel + idoner + odonel + odoner;
+    
+    if (effstatusl)
+      effstatus = effstatusl;
+    else
+      effstatus = effstatusr;
+  }
+  if (effstatus == ST_EOF)
+    return ST_EOF;
+  if (done == 0) {
+    st_fail("Effect took & gave no samples!");
+    exit(2);
+  }
+  return ST_SUCCESS;
 }
 
 static int drain_effect_out(void)
 {
-    /* Skip past input effect since we know thats not needed */
-    if (input_eff == 0)
-    {
-        input_eff = 1;
-        /* Assuming next effect hasn't reached EOF yet. */
-        input_eff_eof = 0;
+  /* Skip past input effect since we know thats not needed */
+  if (input_eff == 0) {
+    input_eff = 1;
+    /* Assuming next effect hasn't reached EOF yet. */
+    input_eff_eof = 0;
+  }
+
+  /* Try to prime the pump with some data */
+  while (input_eff < neffects) {
+    int rc = drain_effect(input_eff);
+    
+    if (efftab[input_eff].olen == 0) {
+      input_eff++;
+      /* Assuming next effect hasn't reached EOF yet. */
+      input_eff_eof = 0;
+    } else {
+      input_eff_eof = (rc == ST_EOF) ? 1 : 0;
+      break;
     }
+  }
 
-    /* Try to prime the pump with some data */
-    while (input_eff < neffects)
-    {
-        int rc;
-
-        rc = drain_effect(input_eff);
-
-        if (efftab[input_eff].olen == 0)
-        {
-            input_eff++;
-            /* Assuming next effect hasn't reached EOF yet. */
-            input_eff_eof = 0;
-        }
-        else
-        {
-            input_eff_eof = (rc == ST_EOF) ? 1 : 0;
-            break;
-        }
-    }
-
-    /* Just do standard flow routines after the priming. */
-    return flow_effect_out();
+  /* Just do standard flow routines after the priming. */
+  return flow_effect_out();
 }
 
 static int drain_effect(int e)
 {
-    st_ssize_t i, olen, olenl, olenr;
-    st_sample_t *obuf;
-    int rc;
+  st_ssize_t i, olen, olenl, olenr;
+  st_sample_t *obuf;
+  int rc;
 
-    if (! efftabR[e].name) {
-        efftab[e].olen = ST_BUFSIZ;
-        rc = (* efftab[e].h->drain)(&efftab[e],efftab[e].obuf,
-                                    &efftab[e].olen);
-        efftab[e].odone = 0;
+  if (! efftabR[e].name) {
+    efftab[e].olen = ST_BUFSIZ;
+    rc = (* efftab[e].h->drain)(&efftab[e],efftab[e].obuf,
+                                &efftab[e].olen);
+    efftab[e].odone = 0;
+  } else {
+    int rc_l, rc_r;
+
+    olen = ST_BUFSIZ;
+
+    /* left */
+    olenl = olen/2;
+    rc_l = (* efftab[e].h->drain)(&efftab[e], obufl, 
+                                  (st_size_t *)&olenl);
+
+    /* right */
+    olenr = olen/2;
+    rc_r = (* efftab[e].h->drain)(&efftabR[e], obufr, 
+                                  (st_size_t *)&olenr);
+
+    if (rc_l == ST_EOF || rc_r == ST_EOF)
+      rc = ST_EOF;
+    else
+      rc = ST_SUCCESS;
+
+    obuf = efftab[e].obuf;
+    /* This loop implies left and right effect will always output
+     * the same amount of data.
+     */
+    for(i = 0; i < olenr; i++) {
+      *obuf++ = obufl[i];
+      *obuf++ = obufr[i];
     }
-    else {
-        int rc_l, rc_r;
-
-        olen = ST_BUFSIZ;
-
-        /* left */
-        olenl = olen/2;
-        rc_l = (* efftab[e].h->drain)(&efftab[e], obufl, 
-                                      (st_size_t *)&olenl);
-
-        /* right */
-        olenr = olen/2;
-        rc_r = (* efftab[e].h->drain)(&efftabR[e], obufr, 
-                                      (st_size_t *)&olenr);
-
-        if (rc_l == ST_EOF || rc_r == ST_EOF)
-            rc = ST_EOF;
-        else
-            rc = ST_SUCCESS;
-
-        obuf = efftab[e].obuf;
-        /* This loop implies left and right effect will always output
-         * the same amount of data.
-         */
-        for(i = 0; i < olenr; i++) {
-            *obuf++ = obufl[i];
-            *obuf++ = obufr[i];
-        }
-        efftab[e].olen = olenl + olenr;
-        efftab[e].odone = 0;
-    }
-    return rc;
+    efftab[e].olen = olenl + olenr;
+    efftab[e].odone = 0;
+  }
+  return rc;
 }
 
 static void release_effect_buf(void)
 {
-    int e;
+  int e;
     
-    for(e = 0; e < neffects; e++)
-    {
-        free(efftab[e].obuf);
-        if (efftabR[e].obuf)
-            free(efftabR[e].obuf);
-    }
+  for (e = 0; e < neffects; e++) {
+    free(efftab[e].obuf);
+    if (efftabR[e].obuf)
+      free(efftabR[e].obuf);
+  }
 }
 
 static void stop_effects(void)
 {
-    int e;
+  int e;
 
-    for (e = 1; e < neffects; e++) {
-        st_size_t clippedCount;
-        (*efftab[e].h->stop)(&efftab[e]);
-        clippedCount = efftab[e].clippedCount;
-        if (efftabR[e].name)
-        {
-            (* efftabR[e].h->stop)(&efftabR[e]);
-            clippedCount += efftab[e].clippedCount;
-        }
-        if (clippedCount != 0)
-          st_warn("%s clipped %u samples; decrease volume?", efftab[e].name,
-              clippedCount);
+  for (e = 1; e < neffects; e++) {
+    st_size_t clippedCount;
+    (*efftab[e].h->stop)(&efftab[e]);
+    clippedCount = efftab[e].clippedCount;
+    if (efftabR[e].name) {
+      (* efftabR[e].h->stop)(&efftabR[e]);
+      clippedCount += efftab[e].clippedCount;
     }
+    if (clippedCount != 0)
+      st_warn("%s clipped %u samples; decrease volume?", efftab[e].name,
+              clippedCount);
+  }
 }
 
 static void print_input_status(int input)
 {
-    fprintf(stderr, "\nInput Filename : %s\n", file_desc[input]->filename);
-    fprintf(stderr, "Sample Size    : %s\n", 
-            st_size_bits_str[file_desc[input]->info.size]);
-    fprintf(stderr, "Sample Encoding: %s\n", 
-            st_encodings_str[file_desc[input]->info.encoding]);
-    fprintf(stderr, "Channels       : %d\n", file_desc[input]->info.channels);
-    fprintf(stderr, "Sample Rate    : %d\n",
-       (int)(file_desc[input]->info.rate / globalinfo.speed + 0.5));
+  fprintf(stderr, "\nInput Filename : %s\n", file_desc[input]->filename);
+  fprintf(stderr, "Sample Size    : %s\n", 
+          st_size_bits_str[file_desc[input]->info.size]);
+  fprintf(stderr, "Sample Encoding: %s\n", 
+          st_encodings_str[file_desc[input]->info.encoding]);
+  fprintf(stderr, "Channels       : %d\n", file_desc[input]->info.channels);
+  fprintf(stderr, "Sample Rate    : %d\n",
+          (int)(file_desc[input]->info.rate / globalinfo.speed + 0.5));
 
-    if (file_desc[input]->comment && *file_desc[input]->comment)
-        fprintf(stderr, "Comments       :\n%s\n", file_desc[input]->comment);
-    fprintf(stderr, "\n");
+  if (file_desc[input]->comment && *file_desc[input]->comment)
+    fprintf(stderr, "Comments       :\n%s\n", file_desc[input]->comment);
+  fprintf(stderr, "\n");
 }
  
 static void update_status(void)
 {
-    int read_min, left_min, in_min;
-    double read_sec, left_sec, in_sec;
-    double read_time, left_time, in_time;
-    float completed;
-    double out_size;
-    char unit;
+  int read_min, left_min, in_min;
+  double read_sec, left_sec, in_sec;
+  double read_time, left_time, in_time;
+  float completed;
+  double out_size;
+  char unit;
 
-    /* Currently, for all sox modes, all input files must have
-     * the same sample rate.  So we can always just use the rate
-     * of the first input file to compute time.
-     */
-    read_time = (double)read_samples / (double)file_desc[0]->info.rate /
-                (double)file_desc[0]->info.channels;
+  /* Currently, for all sox modes, all input files must have
+   * the same sample rate.  So we can always just use the rate
+   * of the first input file to compute time.
+   */
+  read_time = (double)read_samples / (double)file_desc[0]->info.rate /
+    (double)file_desc[0]->info.channels;
 
-    read_min = read_time / 60;
-    read_sec = (double)read_time - 60.0f * (double)read_min;
+  read_min = read_time / 60;
+  read_sec = (double)read_time - 60.0f * (double)read_min;
 
-    out_size = output_samples / 1000000000.0;
+  out_size = output_samples / 1000000000.0;
+  if (out_size >= 1.0)
+    unit = 'G';
+  else {
+    out_size = output_samples / 1000000.0;
     if (out_size >= 1.0)
-        unit = 'G';
-    else
-    {
-        out_size = output_samples / 1000000.0;
-        if (out_size >= 1.0)
-            unit = 'M';
-        else
-        {
-            out_size = output_samples / 1000.0;
-            if (out_size >= 1.0)
-                unit = 'K';
-            else
-                unit = ' ';
-        }
+      unit = 'M';
+    else {
+      out_size = output_samples / 1000.0;
+      if (out_size >= 1.0)
+        unit = 'K';
+      else
+        unit = ' ';
     }
+  }
 
-    if (input_samples)
-    {
-        in_time = (double)input_samples / (double)file_desc[0]->info.rate /
-                  (double)file_desc[0]->info.channels;
-        left_time = in_time - read_time;
-        if (left_time < 0)
-            left_time = 0;
+  if (input_samples) {
+    in_time = (double)input_samples / (double)file_desc[0]->info.rate /
+      (double)file_desc[0]->info.channels;
+    left_time = in_time - read_time;
+    if (left_time < 0)
+      left_time = 0;
+    
+    completed = ((double)read_samples / (double)input_samples) * 100;
+    if (completed < 0)
+      completed = 0;
+  } else {
+    in_time = 0;
+    left_time = 0;
+    completed = 0;
+  }
 
-        completed = ((double)read_samples / (double)input_samples) * 100;
-        if (completed < 0)
-            completed = 0;
-    }
-    else
-    {
-        in_time = 0;
-        left_time = 0;
-        completed = 0;
-    }
+  left_min = left_time / 60;
+  left_sec = (double)left_time - 60.0f * (double)left_min;
 
-    left_min = left_time / 60;
-    left_sec = (double)left_time - 60.0f * (double)left_min;
+  in_min = in_time / 60;
+  in_sec = (double)in_time - 60.0f * (double)in_min;
 
-    in_min = in_time / 60;
-    in_sec = (double)in_time - 60.0f * (double)in_min;
-
-    fprintf(stderr, "\rTime: %02i:%05.2f [%02i:%05.2f] of %02i:%05.2f (% 5.1f%%) Output Buffer:% 7.2f%c", read_min, read_sec, left_min, left_sec, in_min, in_sec, completed, out_size, unit);
+  fprintf(stderr, "\rTime: %02i:%05.2f [%02i:%05.2f] of %02i:%05.2f (% 5.1f%%) Output Buffer:% 7.2f%c", read_min, read_sec, left_min, left_sec, in_min, in_sec, completed, out_size, unit);
 }
 
 /* Adjust volume based on value specified by the -v option for this file. */
@@ -1727,155 +1592,110 @@ static void volumechange(st_sample_t * buf, st_ssize_t len, file_options_t fo)
 
 static void usage(char *opt)
 {
-    int i;
-    const st_format_t *f;
-    const st_effect_t *e;
-    static char *usagestr;
+  int i;
+  const st_format_t *f;
+  const st_effect_t *e;
+  static char *usagestr;
 
-    if (mode != SOX_CONCAT)
-      usagestr = "[ gopts ] [ fopts ] ifile1 [fopts] ifile2 [ fopts ] ofile [ effect [ effopts ] ]";
-    else
-      usagestr = "[ gopts ] [ fopts ] ifile [ fopts ] ofile [ effect [ effopts ] ]";
+  if (mode != SOX_CONCAT)
+    usagestr = "[ gopts ] [ fopts ] ifile1 [fopts] ifile2 [ fopts ] ofile [ effect [ effopts ] ]";
+  else
+    usagestr = "[ gopts ] [ fopts ] ifile [ fopts ] ofile [ effect [ effopts ] ]";
 
-    printf("%s: ", myname);
-    printf("Version %s\n\n", st_version());
-    if (opt)
-        fprintf(stderr, "Failed: %s\n\n", opt);
-    printf("Usage: %s\n\n", usagestr);
-    printf(
-"Special filenames (ifile, ofile):\n"
-"\n"
-"-               use stdin or stdout\n"
-"-n, -e          use the null file handler; for use with e.g. synth & stat.\n"
-"\n"
-"Global options (gopts):\n"
-"\n"
-"Global options can be specified anywhere on the command\n"
-"\n"
-"-h              print version number and usage information\n"
-"--help          same as -h\n"
-"--help-effect=name\n"
-"                print usage of specified effect.  use 'all' to print all\n"
-"-m, --mix       mix multiple input files (instead of concatenating)\n"
-"-M, --merge     merge multiple input files (instead of concatenating)\n"
-"-o              generate Octave commands to plot response of filter effect\n"
-"-q              run in quiet mode.  Inverse of -S option\n"
-"-S              print status while processing audio data.\n"
-"--version       print version number of SoX and exit\n"
-"-V[level]       increase verbosity (or set level). Default is 2. Levels are:\n"
-"\n"
-"                  1: failure messages\n"
-"                  2: warnings\n"
-"                  3: process reporting\n"
-"                  4-6: increasing levels of debug messages\n"
-"\n"
-"                each level includes messages from lower levels.\n"
-"\n"
-"Format options (fopts):\n"
-"\n"
-"Format options are only need to be supplied on input files that are\n"
-"headerless otherwise they are obtained from the audio data's header.\n"
-"Output files will default to the same format options as the input\n"
-"file unless overriden on the command line.\n"
-"\n"
-"-c channels     number of channels in audio data\n"
-"-C compression  compression factor for variably compressing output formats\n"
-"--comment text  Specify comment text for the output file\n"
-"--comment-file filename\n"
-"                Specify file containing comment text for the output file\n"
-"-r rate         sample rate of audio\n"
-"-t filetype     file type of audio\n"
-"-v volume       volume adjustment factor (floating point)\n"
-"-x              invert auto-detected endianess of data\n"
-"-s/-u/-U/-A/    sample encoding.  signed/unsigned/u-law/A-law\n"
-"  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point\n"
-"-1/-2/-3/-4/-8  sample size in bytes\n"
-"-b/-w/-l/-d     aliases for -1/-2/-4/-8.  abbreviations of:\n"
-"                byte, word, long, double-long.\n"
-"\n");
+  printf("%s: ", myname);
+  printf("Version %s\n\n", st_version());
+  if (opt)
+    fprintf(stderr, "Failed: %s\n\n", opt);
+  printf("Usage: %s\n\n", usagestr);
+  printf(
+         "Special filenames (ifile, ofile):\n"
+         "\n"
+         "-               use stdin or stdout\n"
+         "-n, -e          use the null file handler; for use with e.g. synth & stat.\n"
+         "\n"
+         "Global options (gopts):\n"
+         "\n"
+         "Global options can be specified anywhere on the command\n"
+         "\n"
+         "-h              print version number and usage information\n"
+         "--help          same as -h\n"
+         "--help-effect=name\n"
+         "                print usage of specified effect.  use 'all' to print all\n"
+         "-m, --mix       mix multiple input files (instead of concatenating)\n"
+         "-M, --merge     merge multiple input files (instead of concatenating)\n"
+         "-o              generate Octave commands to plot response of filter effect\n"
+         "-q              run in quiet mode.  Inverse of -S option\n"
+         "-S              print status while processing audio data.\n"
+         "--version       print version number of SoX and exit\n"
+         "-V[level]       increase verbosity (or set level). Default is 2. Levels are:\n"
+         "\n"
+         "                  1: failure messages\n"
+         "                  2: warnings\n"
+         "                  3: process reporting\n"
+         "                  4-6: increasing levels of debug messages\n"
+         "\n"
+         "                each level includes messages from lower levels.\n"
+         "\n"
+         "Format options (fopts):\n"
+         "\n"
+         "Format options are only need to be supplied on input files that are\n"
+         "headerless otherwise they are obtained from the audio data's header.\n"
+         "Output files will default to the same format options as the input\n"
+         "file unless overriden on the command line.\n"
+         "\n"
+         "-c channels     number of channels in audio data\n"
+         "-C compression  compression factor for variably compressing output formats\n"
+         "--comment text  Specify comment text for the output file\n"
+         "--comment-file filename\n"
+         "                Specify file containing comment text for the output file\n"
+         "-r rate         sample rate of audio\n"
+         "-t filetype     file type of audio\n"
+         "-v volume       volume adjustment factor (floating point)\n"
+         "-x              invert auto-detected endianess of data\n"
+         "-s/-u/-U/-A/    sample encoding.  signed/unsigned/u-law/A-law\n"
+         "  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point\n"
+         "-1/-2/-3/-4/-8  sample size in bytes\n"
+         "-b/-w/-l/-d     aliases for -1/-2/-4/-8.  abbreviations of:\n"
+         "                byte, word, long, double-long.\n"
+         "\n");
 
-    printf("Supported file formats: ");
-    for (i = 0; st_format_fns[i]; i++) {
-        f = st_format_fns[i]();
-        if (f && f->names)
-        {
-            /* only print the first name */
-            printf("%s ", f->names[0]);
-        }
-    }
+  printf("Supported file formats: ");
+  for (i = 0; st_format_fns[i]; i++) {
+    f = st_format_fns[i]();
+    if (f && f->names)
+      printf("%s ", f->names[0]); /* only print the first name */
+  }
 
-    printf("\n\nSupported effects: ");
-    for (i = 0; st_effect_fns[i]; i++) {
-        e = st_effect_fns[i]();
-        if (e && e->name)
-        {
-            printf("%s ", e->name);
-        }
-    }
+  printf("\n\nSupported effects: ");
+  for (i = 0; st_effect_fns[i]; i++) {
+    e = st_effect_fns[i]();
+    if (e && e->name)
+      printf("%s ", e->name);
+  }
 
-    printf( "\n\neffopts: depends on effect\n\n");
-    exit(1);
+  printf( "\n\neffopts: depends on effect\n\n");
+  exit(1);
 }
 
 static void usage_effect(char *effect)
 {
-    int i;
-    const st_effect_t *e;
+  int i;
+  const st_effect_t *e;
 
-    printf("%s: ", myname);
-    printf("v%s\n\n", st_version());
+  printf("%s: ", myname);
+  printf("v%s\n\n", st_version());
 
-    printf("Effect usage:\n\n");
+  printf("Effect usage:\n\n");
 
-    for (i = 0; st_effect_fns[i]; i++)
-    {
-        e = st_effect_fns[i]();
-        if (e && e->name &&
-            (!strcmp("all", effect) ||  !strcmp(e->name, effect)))
-        {
-            char *p = strstr(e->usage, "Usage: ");
-            printf("%s\n\n", p ? p + 7 : e->usage);
-        }
+  for (i = 0; st_effect_fns[i]; i++) {
+    e = st_effect_fns[i]();
+    if (e && e->name && (!strcmp("all", effect) ||  !strcmp(e->name, effect))) {
+      char *p = strstr(e->usage, "Usage: ");
+      printf("%s\n\n", p ? p + 7 : e->usage);
     }
+  }
 
-    if (!effect)
-        printf("see --help-effect=effect for effopts ('all' for effopts of all effects)\n\n");
-    exit(1);
-}
- 
-void cleanup(void) 
-{
-    size_t i;
-    struct stat st;
-    char *fn;
-
-    /* Close the input file and outputfile before exiting*/
-    for (i = 0; i < input_count; i++)
-    {
-        if (file_desc[i])
-        {
-            st_close(file_desc[i]);
-            free(file_desc[i]);
-        }
-    }
-    if (writing && file_desc[file_count-1])
-    {
-        fstat(fileno(file_desc[file_count-1]->fp), &st);
-        fn = strdup(file_desc[file_count-1]->filename);
-        st_close(file_desc[file_count-1]);
-
-        /* remove the output file because we failed, if it's ours. */
-        /* Don't if its not a regular file. */
-        if ((st.st_mode & S_IFMT) == S_IFREG)
-            unlink(fn);
-        free(fn);
-        if (file_desc[file_count-1])
-            free(file_desc[file_count-1]);
-    }
-}
-
-static void sigint(int s)
-{
-    if (s == SIGINT || s == SIGTERM)
-      user_abort = 1;
+  if (!effect)
+    printf("see --help-effect=effect for effopts ('all' for effopts of all effects)\n\n");
+  exit(1);
 }
