@@ -244,9 +244,9 @@ static int st_hcomstopread(ft_t ft)
 }
 
 struct writepriv {
-        unsigned char *data;    /* Buffer allocated with xmalloc */
-        unsigned int size;      /* Size of allocated buffer */
-        unsigned int pos;       /* Where next byte goes */
+  unsigned char *data;          /* Buffer allocated with xmalloc */
+  st_size_t size;               /* Size of allocated buffer */
+  st_size_t pos;                /* Where next byte goes */
 };
 
 #define BUFINCR (10*BUFSIZ)
@@ -255,13 +255,8 @@ static int st_hcomstartwrite(ft_t ft)
 {
         register struct writepriv *p = (struct writepriv *) ft->priv;
 
-        /* hcom is inbigendian format.  Swap whats
-         * read in on little endian machines.
-         */
         if (ST_IS_LITTLEENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
+          ft->info.swap = ft->info.swap ? 0 : 1;
 
         switch (ft->info.rate) {
         case 22050:
@@ -285,29 +280,25 @@ static int st_hcomstartwrite(ft_t ft)
 
 static st_size_t st_hcomwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
-        register struct writepriv *p = (struct writepriv *) ft->priv;
-        st_sample_t datum;
-        st_ssize_t save_len = len;
+  struct writepriv *p = (struct writepriv *) ft->priv;
+  st_sample_t datum;
+  st_size_t i;
 
-        if (len == 0)
-            return (0);
+  if (len == 0)
+    return 0;
 
-        if (p->pos + len > p->size) {
-                p->size = ((p->pos + len) / BUFINCR + 1) * BUFINCR;
-                p->data = (unsigned char *) xrealloc(p->data, p->size);
-        }
+  if (p->pos + len > p->size) {
+    p->size = ((p->pos + len) / BUFINCR + 1) * BUFINCR;
+    p->data = (unsigned char *)xrealloc(p->data, p->size);
+  }
 
-        while (len-- > 0) {
-                datum = *buf++;
-                p->data[p->pos++] = ST_SAMPLE_TO_UNSIGNED_BYTE(datum, ft->clippedCount);
-        }
+  for (i = 0; i < len; i++) {
+    datum = *buf++;
+    p->data[p->pos++] = ST_SAMPLE_TO_UNSIGNED_BYTE(datum, ft->clippedCount);
+  }
 
-        return (save_len - len);
+  return len;
 }
-
-/* Some global compression stuff hcom uses.  hcom currently has problems */
-/* compiling here.  It could really use some cleaning up by someone that */
-/* understands this format. */
 
 static void makecodes(ft_t ft, int e, int c, int s, int b)
 {
@@ -433,7 +424,7 @@ static void compress(ft_t ft, unsigned char **df, int32_t *dl, float fr)
     p->codesize[0] = 32 - p->nbits;
     putcode(ft, 0, &ddf);
   }
-  strncpy((char *) datafork, "HCOM", 4);
+  strncpy((char *)datafork, "HCOM", 4);
   dfp = datafork + 4;
   put32_be(&dfp, *dl);
   put32_be(&dfp, p->new_checksum);
@@ -453,46 +444,38 @@ static void compress(ft_t ft, unsigned char **df, int32_t *dl, float fr)
 
 static int st_hcomstopwrite(ft_t ft)
 {
-        register struct writepriv *p = (struct writepriv *) ft->priv;
-        unsigned char *compressed_data = p->data;
-        uint32_t compressed_len = p->pos;
-        int rc;
+  struct writepriv *p = (struct writepriv *) ft->priv;
+  unsigned char *compressed_data = p->data;
+  st_size_t compressed_len = p->pos;
+  int rc = ST_SUCCESS;
 
-        /* Compress it all at once */
-        compress(ft, &compressed_data, (int32_t *)&compressed_len, (double) ft->info.rate);
-        free((char *) p->data);
+  /* Compress it all at once */
+  compress(ft, &compressed_data, (int32_t *)&compressed_len, (double) ft->info.rate);
+  free((char *) p->data);
 
-        /* Write the header */
-        st_writebuf(ft, (void *)"\000\001A", 1, 3); /* Dummy file name "A" */
-        st_padbytes(ft, 65-3);
-        st_writes(ft, "FSSD");
-        st_padbytes(ft, 83-69);
-        st_writedw(ft, (uint32_t) compressed_len); /* compressed_data size */
-        st_writedw(ft, (uint32_t) 0); /* rsrc size */
-        st_padbytes(ft, 128 - 91);
-        if (st_error(ft))
-        {
-                st_fail_errno(ft,errno,"write error in HCOM header");
-                return (ST_EOF);
-        }
+  /* Write the header */
+  st_writebuf(ft, (void *)"\000\001A", 1, 3); /* Dummy file name "A" */
+  st_padbytes(ft, 65-3);
+  st_writes(ft, "FSSD");
+  st_padbytes(ft, 83-69);
+  st_writedw(ft, (uint32_t)compressed_len); /* compressed_data size */
+  st_writedw(ft, 0); /* rsrc size */
+  st_padbytes(ft, 128 - 91);
+  if (st_error(ft)) {
+    st_fail_errno(ft, errno, "write error in HCOM header");
+    rc = ST_EOF;
+  } else if (st_writebuf(ft, compressed_data, 1, compressed_len) != compressed_len) {
+    /* Write the compressed_data fork */
+    st_fail_errno(ft, errno, "can't write compressed HCOM data");
+    rc = ST_EOF;
+  }
+  free((char *)compressed_data);
 
-        /* Write the compressed_data fork */
-        if (st_writebuf(ft, compressed_data, 1, (int)compressed_len) != compressed_len)
-        {
-                st_fail_errno(ft,errno,"can't write compressed HCOM data");
-                rc = ST_EOF;
-        }
-        else
-            rc = ST_SUCCESS;
-        free((char *) compressed_data);
+  if (rc == ST_SUCCESS)
+    /* Pad the compressed_data fork to a multiple of 128 bytes */
+    st_padbytes(ft, 128 - (int) (compressed_len%128));
 
-        if (rc)
-            return rc;
-
-        /* Pad the compressed_data fork to a multiple of 128 bytes */
-        st_padbytes(ft, 128 - (int) (compressed_len%128));
-
-        return (ST_SUCCESS);
+  return rc;
 }
 
 /* Mac FSSD/HCOM */
