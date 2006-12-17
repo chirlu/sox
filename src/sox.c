@@ -73,10 +73,11 @@
  */
 
 static enum {SOX_CONCAT, SOX_MIX, SOX_MERGE} mode = SOX_CONCAT;
-static int clipped = 0;         /* Volume change clipping errors */
+static st_size_t mixing_clips = 0;
 static int writing = 1;         /* are we writing to a file? assume yes. */
 static bool repeatable_random = false;  /* Whether to invoke srand. */
 static st_globalinfo_t globalinfo = {false, 1};
+static char uservolume = 0;
 
 static int user_abort = 0;
 
@@ -97,19 +98,18 @@ typedef struct file_options
     char *filetype;
     st_signalinfo_t info;
     double volume;
-    char uservolume;
+    st_size_t volume_clips;
     char *comment;
-} file_options_t;
+} * file_options_t;
 
 /* local forward declarations */
-static bool doopts(file_options_t *fo, int, char **);
+static bool doopts(file_options_t fo, int, char **);
 static void usage(char *) NORET;
 static void usage_effect(char *) NORET;
 static void process(void);
 static void print_input_status(int input);
 static void update_status(void);
-static void statistics(void);
-static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct, double vol);
+static void volumechange(st_sample_t * buf, st_ssize_t len, file_options_t fo);
 static void parse_effects(int argc, char **argv);
 static void check_effects(void);
 static int start_effects(void);
@@ -127,7 +127,7 @@ static void sigint(int s);
 #define MAX_FILES MAX_INPUT_FILES + 1
 
 /* Array's tracking input and output files */
-static file_options_t *file_opts[MAX_FILES];
+static file_options_t file_opts[MAX_FILES];
 static ft_t file_desc[MAX_FILES];
 static size_t file_count = 0;
 static size_t input_count = 0;
@@ -179,7 +179,7 @@ static void sox_output_message(int level, st_output_message_t m)
 
 int main(int argc, char **argv)
 {
-    file_options_t *fo;
+    file_options_t fo;
     size_t i;
 
     myname = argv[0];
@@ -202,12 +202,13 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        fo = (file_options_t *)xcalloc(sizeof(file_options_t), 1);
+        fo = xcalloc(sizeof(*fo), 1);
         fo->info.size = -1;
         fo->info.encoding = ST_ENCODING_UNKNOWN;
         fo->info.channels = 0;
         fo->info.compression = HUGE_VAL;
         fo->volume = 1.0;
+        fo->volume_clips = 0;
         file_opts[file_count++] = fo;
 
         if (doopts(fo, argc, argv) == true) /* is null file? */
@@ -232,15 +233,13 @@ int main(int argc, char **argv)
 
     for (i = 0; i < input_count; i++)
     {
-      if (mode == SOX_MIX) {
-        /* When mixing audio, default to input side volume
-         * adjustments that will make sure no clipping will
-         * occur.  Users most likely won't be happy with
-         * this and will want to override it.
-         */
-        if (!file_opts[i]->uservolume)
-            file_opts[i]->volume = 1.0 / input_count;
-      }
+      /* When mixing audio, default to input side volume
+       * adjustments that will make sure no clipping will
+       * occur.  Users most likely won't be happy with
+       * this and will want to override it.
+       */
+      if (mode == SOX_MIX && !uservolume)
+        file_opts[i]->volume = 1.0 / input_count;
       
       file_desc[i] = st_open_read(file_opts[i]->filename,
                                   &file_opts[i]->info, 
@@ -295,10 +294,17 @@ int main(int argc, char **argv)
     signal(SIGTERM, sigint);
 
     process();
-    statistics();
 
-    for (i = 0; i < file_count; i++)
-        free(file_desc[i]);
+    if (mixing_clips > 0)
+      st_warn("-m (soxmix) clipped %u samples; decrease volume?", mixing_clips);
+
+    for (i = 0; i < file_count; i++) {
+      if (file_opts[i]->volume_clips > 0)
+        st_warn("%s: -v clipped %u samples; decrease volume?", file_opts[i]->filename,
+            file_opts[i]->volume_clips);
+      free(file_opts[i]);
+      free(file_desc[i]);
+    }
 
     if (status)
     {
@@ -359,7 +365,7 @@ static struct option long_options[] =
     {NULL, 0, NULL, 0}
 };
 
-static bool doopts(file_options_t * fo, int argc, char **argv)
+static bool doopts(file_options_t fo, int argc, char **argv)
 {
   while (true) {
     int i;          /* Needed since scanf %u allows negative numbers :( */
@@ -436,7 +442,7 @@ static bool doopts(file_options_t * fo, int argc, char **argv)
           cleanup();
           exit(1);
         }
-        fo->uservolume = 1;
+        uservolume = 1;
         if (fo->volume < 0.0)
           st_report("Volume adjustment is negative; "
                     "this will result in a phase change");
@@ -539,12 +545,13 @@ static void process(void) {
 
     for (f = 0; f < input_count; f++)
     {
-        st_report("Input file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
+        st_report("Input file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s, volume %g",
                   file_desc[f]->filename, file_desc[f]->info.rate,
                   st_sizes_str[(unsigned char)file_desc[f]->info.size],
                   st_encodings_str[(unsigned char)file_desc[f]->info.encoding],
                   file_desc[f]->info.channels,
-                  (file_desc[f]->info.channels > 1) ? "channels" : "channel");
+                  (file_desc[f]->info.channels > 1) ? "channels" : "channel",
+                  file_opts[f]->volume);
 
         if (file_desc[f]->comment)
             st_report("Input file %s: comment \"%s\"",
@@ -567,7 +574,7 @@ static void process(void) {
         st_loopinfo_t loops[ST_MAX_NLOOPS];
         double factor;
         int i;
-        file_options_t * options = file_opts[file_count-1];
+        file_options_t options = file_opts[file_count-1];
         char const * comment = NULL;
 
         if (options->info.rate == 0)
@@ -632,13 +639,14 @@ static void process(void) {
                 status = 1;
         }
 
-        st_report("Output file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
+        st_report("Output file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s, volume %g",
                   file_desc[file_count-1]->filename, 
                   file_desc[file_count-1]->info.rate,
                   st_sizes_str[(unsigned char)file_desc[file_count-1]->info.size],
                   st_encodings_str[(unsigned char)file_desc[file_count-1]->info.encoding],
                   file_desc[file_count-1]->info.channels,
-                  (file_desc[file_count-1]->info.channels > 1) ? "channels" : "channel");
+                  (file_desc[file_count-1]->info.channels > 1) ? "channels" : "channel",
+                  file_opts[file_count-1]->volume);
 
         if (file_desc[file_count-1]->comment)
             st_report("Output file: comment \"%s\"", 
@@ -747,14 +755,7 @@ static void process(void) {
                   continue;
                 }
             }
-          
-          /* Adjust input side volume based on value specified
-           * by user for this file.
-           */
-          if (file_opts[current_input]->volume != 1.0)
-            clipped += volumechange(efftab[0].obuf, 
-                                    efftab[0].olen,
-                                    file_opts[current_input]->volume);
+          volumechange(efftab[0].obuf, efftab[0].olen,file_opts[current_input]);
         } else if (mode == SOX_MIX) {
           for (f = 0; f < input_count; f++)
             {
@@ -773,13 +774,7 @@ static void process(void) {
               if (f == 0)
                 read_samples += efftab[0].olen;
               
-              /* Adjust input side volume based on value specified
-               * by user for this file.
-               */
-              if (file_opts[f]->volume != 1.0)
-                clipped += volumechange(ibuf[f], 
-                                        ilen[f],
-                                        file_opts[f]->volume);
+              volumechange(ibuf[f], ilen[f], file_opts[f]);
             }
           
           /* FIXME: Should report if the size of the reads are not
@@ -808,10 +803,10 @@ static void process(void) {
                   else
                     if (s < (st_size_t)ilen[f])
                       {
-                        double sample;
-                        sample = efftab[0].obuf[s] + ibuf[f][s];
-                        ST_SAMPLE_CLIP_COUNT(sample, clipped);
-                        efftab[0].obuf[s] = sample;
+                        double sample = efftab[0].obuf[s];
+                        sample += ibuf[f][s]; /* DON'T COMBINE WITH PREV LINE */
+                        efftab[0].obuf[s] =
+                            ST_ROUND_CLIP_COUNT(sample, mixing_clips);
                       }
                 }
             }
@@ -826,6 +821,7 @@ static void process(void) {
             }
             if ((st_size_t)ilen[f] > efftab[0].olen)
               efftab[0].olen = ilen[f];
+            volumechange(ibuf[f], ilen[f], file_opts[f]);
           }
           
           for (s = 0; s < efftab[0].olen; s++)
@@ -895,9 +891,8 @@ static void process(void) {
     for (f = 0; f < input_count; f++)
     {
         if (file_desc[f]->clippedCount != 0)
-        {
-          st_warn("%s: %u values clipped on input", file_desc[f]->filename, file_desc[f]->clippedCount);
-        }
+          st_warn("%s: input clipped %u samples", file_desc[f]->filename,
+              file_desc[f]->clippedCount);
 
         /* If problems closing input file, just warn user since
          * we are exiting anyways.
@@ -914,7 +909,10 @@ static void process(void) {
     {
         if (file_desc[f]->clippedCount != 0)
         {
-          st_warn("%s: %u values clipped on output", file_desc[f]->filename, file_desc[f]->clippedCount);
+          st_warn("%s: output clipped %u samples; decrease volume?",
+             (file_desc[f]->h->flags & ST_FILE_NOFEXT)?
+             file_desc[f]->h->names[0] : file_desc[f]->filename,
+             file_desc[f]->clippedCount);
         }
 
         /* problem closing output file, just warn user since we
@@ -1303,10 +1301,8 @@ static int flow_effect_out(void)
       if (writing && (efftab[neffects-1].olen>efftab[neffects-1].odone))
       {
           /* Change the volume of this output data if needed. */
-          if (writing && file_opts[file_count-1]->volume != 1.0)
-              clipped += volumechange(efftab[neffects-1].obuf, 
-                                      efftab[neffects-1].olen,
-                                      file_opts[file_count-1]->volume);
+          volumechange(efftab[neffects-1].obuf, efftab[neffects-1].olen,
+                                      file_opts[file_count-1]);
 
           total = 0;
           do
@@ -1416,7 +1412,7 @@ static int flow_effect_out(void)
      */
     if (input_eff > 0)
     {
-        st_debug("Effect return ST_EOF\n");
+        st_debug("Effect return ST_EOF");
         return ST_EOF;
     }
 
@@ -1439,7 +1435,7 @@ static int flow_effect(int e)
     /* I have no input data ? */
     if (efftab[e-1].odone == efftab[e-1].olen)
     {
-        st_debug("%s no data to pull to me!\n", efftab[e].name);
+        st_debug("%s no data to pull to me!", efftab[e].name);
         return 0;
     }
 
@@ -1639,9 +1635,8 @@ static void stop_effects(void)
             clippedCount += efftab[e].clippedCount;
         }
         if (clippedCount != 0)
-        {
-          st_warn("%s: %u values clipped, maybe adjust volume?", efftab[e].name, clippedCount);
-        }
+          st_warn("%s clipped %u samples; decrease volume?", efftab[e].name,
+              clippedCount);
     }
 }
 
@@ -1726,27 +1721,14 @@ static void update_status(void)
     fprintf(stderr, "\rTime: %02i:%05.2f [%02i:%05.2f] of %02i:%05.2f (% 5.1f%%) Output Buffer:% 7.2f%c", read_min, read_sec, left_min, left_sec, in_min, in_sec, completed, out_size, unit);
 }
 
-static void statistics(void) 
+/* Adjust volume based on value specified by the -v option for this file. */
+static void volumechange(st_sample_t * buf, st_ssize_t len, file_options_t fo)
 {
-    if (clipped > 0)
-        st_warn("Volume change clipped %d samples", clipped);
-}
-
-static st_sample_t volumechange(st_sample_t *buf, st_ssize_t ct, 
-                                double vol)
-{
-        double y;
-        st_sample_t *p,*top;
-        st_ssize_t clips=0;
-
-        p = buf;
-        top = buf+ct;
-        while (p < top) {
-            y = vol * *p;
-            ST_SAMPLE_CLIP_COUNT(y, clips);
-            *p++ = y;
-        }
-        return clips;
+  if (fo->volume != 1)
+    while (len--) {
+      double d = fo->volume * *buf;
+      *buf++ = ST_ROUND_CLIP_COUNT(d, fo->volume_clips);
+    }
 }
 
 static void usage(char *opt)
