@@ -1594,6 +1594,11 @@ a guitar's "low E" string (on a system that supports
 
 	sox -n -t alsa default synth sine %-5
 
+N.B.  This effect generates audio at maximum volume, which means that there
+is a high chance of clipping when using the audio subsequently, so
+in most cases, you will want to follow this effect with the \fBvol\fR
+effect to select a suitable attenuation.
+
 A detailed description of each
 .I synth
 parameter follows:
