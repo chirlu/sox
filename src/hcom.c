@@ -15,13 +15,14 @@
  * April 28, 1998 - Chris Bagwell (cbagwell@sprynet.com)
  *
  *  Rearranged some functions so that they are declared before they are
- *  used.  Clears up some compiler warnings.  Because this functions passed
- *  foats, it helped out some dump compilers pass stuff on the stack
- *  correctly.
+ *  used, clearing up some compiler warnings.  Because these functions
+ *  passed floats, it helped some dumb compilers pass stuff on the
+ *  stack correctly.
  *
  */
 
 #include "st_i.h"
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -47,10 +48,10 @@ struct readpriv {
         uint32_t current;
         short sample;
         /* Dictionary */
-        dictent newdict[511];
+        dictent *newdict;
         dictent *de;
-        long codes[256];
-        long codesize[256];
+        long *codes;
+        long *codesize;
         int32_t new_checksum;
         int nbits;
         int32_t curword;
@@ -132,17 +133,15 @@ static int st_hcomstartread(ft_t ft)
         ft->info.channels = 1;
 
         /* Allocate memory for the dictionary */
-        p->dictionary = (dictent *) xmalloc(511 * sizeof(dictent));
+        p->dictionary = (dictent *)xmalloc(511 * sizeof(dictent));
 
         /* Read dictionary */
         for(i = 0; i < dictsize; i++) {
                 st_readw(ft, (unsigned short *)&(p->dictionary[i].dict_leftson));
                 st_readw(ft, (unsigned short *)&(p->dictionary[i].dict_rightson));
-                /*
                 st_debug("%d %d",
                        p->dictionary[i].dict_leftson,
                        p->dictionary[i].dict_rightson);
-                       */
         }
         rc = st_skipbytes(ft, 1); /* skip pad byte */
         if (rc)
@@ -312,13 +311,13 @@ static st_size_t st_hcomwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 
 static void makecodes(ft_t ft, int e, int c, int s, int b)
 {
-  struct readpriv *p = (struct readpriv *) ft->priv;
-  if(p->dictionary[e].dict_leftson < 0) {
-    p->codes[p->dictionary[e].dict_rightson] = c;
-    p->codesize[p->dictionary[e].dict_rightson] = s;
+  struct readpriv *p = (struct readpriv *)ft->priv;
+  if(p->newdict[e].dict_leftson < 0) {
+    p->codes[p->newdict[e].dict_rightson] = c;
+    p->codesize[p->newdict[e].dict_rightson] = s;
   } else {
-    makecodes(ft, p->dictionary[e].dict_leftson, c, s + 1, b << 1);
-    makecodes(ft, p->dictionary[e].dict_rightson, c + b, s + 1, b << 1);
+    makecodes(ft, p->newdict[e].dict_leftson, c, s + 1, b << 1);
+    makecodes(ft, p->newdict[e].dict_rightson, c + b, s + 1, b << 1);
   }
 }
 
@@ -356,74 +355,71 @@ static void compress(ft_t ft, unsigned char **df, int32_t *dl, float fr)
   int frequtable[256];
   int i, sample, j, k, d, l, frequcount;
 
+  p->newdict = (dictent *)xmalloc(511 * sizeof(dictent));
+  p->codes = (long *)xcalloc(256, sizeof(long));
+  p->codesize = (long *)xcalloc(256, sizeof(long));
+  
   sample = *datafork;
-  for(i = 0; i < 256; i++) frequtable[i] = 0;
-  for(i = 1; i < *dl; i++) {
+  memset(frequtable, 0, sizeof(int) * 256);
+  for (i = 1; i < *dl; i++) {
     d = (datafork[i] - (sample & 0xff)) & 0xff; /* creates absolute entries LMS */
     sample = datafork[i];
     datafork[i] = d;
-    if(d < 0 || d > 255) /* checking our table is accessed correctly */
-      st_debug("d is outside array bounds %d", d);
+    assert(d >= 0 && d <= 255); /* check our table is accessed correctly */
     frequtable[d]++;
   }
-  p->de = p->dictionary;
-  for(i = 0; i < 256; i++) if(frequtable[i] != 0) {
-    p->de->frequ = -frequtable[i];
-    p->de->dict_leftson = -1;
-    p->de->dict_rightson = i;
-    p->de++;
-  }
-  frequcount = p->de - p->dictionary;
-  for(i = 0; i < frequcount; i++) {
-    for(j = i + 1; j < frequcount; j++) {
-      if (p->dictionary[i].frequ > p->dictionary[j].frequ) {
-        k = p->dictionary[i].frequ;
-        p->dictionary[i].frequ = p->dictionary[j].frequ;
-        p->dictionary[j].frequ = k;
-        k = p->dictionary[i].dict_leftson;
-        p->dictionary[i].dict_leftson = p->dictionary[j].dict_leftson;
-        p->dictionary[j].dict_leftson = k;
-        k = p->dictionary[i].dict_rightson;
-        p->dictionary[i].dict_rightson = p->dictionary[j].dict_rightson;
-        p->dictionary[j].dict_rightson = k;
+  p->de = p->newdict;
+  for (i = 0; i < 256; i++)
+    if (frequtable[i] != 0) {
+      p->de->frequ = -frequtable[i];
+      p->de->dict_leftson = -1;
+      p->de->dict_rightson = i;
+      p->de++;
+    }
+  frequcount = p->de - p->newdict;
+  for (i = 0; i < frequcount; i++) {
+    for (j = i + 1; j < frequcount; j++) {
+      if (p->newdict[i].frequ > p->newdict[j].frequ) {
+        k = p->newdict[i].frequ;
+        p->newdict[i].frequ = p->newdict[j].frequ;
+        p->newdict[j].frequ = k;
+        k = p->newdict[i].dict_leftson;
+        p->newdict[i].dict_leftson = p->newdict[j].dict_leftson;
+        p->newdict[j].dict_leftson = k;
+        k = p->newdict[i].dict_rightson;
+        p->newdict[i].dict_rightson = p->newdict[j].dict_rightson;
+        p->newdict[j].dict_rightson = k;
       }
     }
   }
-  while(frequcount > 1) {
+  while (frequcount > 1) {
     j = frequcount - 1;
-    p->de->frequ = p->dictionary[j - 1].frequ;
-    p->de->dict_leftson = p->dictionary[j - 1].dict_leftson;
-    p->de->dict_rightson = p->dictionary[j - 1].dict_rightson;
-    l = p->dictionary[j - 1].frequ + p->dictionary[j].frequ;
-    for(i = j - 2; i >= 0; i--) {
-      if(l >= p->dictionary[i].frequ) break;
-      p->dictionary[i + 1] = p->dictionary[i];
-    }
+    p->de->frequ = p->newdict[j - 1].frequ;
+    p->de->dict_leftson = p->newdict[j - 1].dict_leftson;
+    p->de->dict_rightson = p->newdict[j - 1].dict_rightson;
+    l = p->newdict[j - 1].frequ + p->newdict[j].frequ;
+    for (i = j - 2; i >= 0 && l < p->newdict[i].frequ; i--)
+      p->newdict[i + 1] = p->newdict[i];
     i = i + 1;
-    p->dictionary[i].frequ = l;
-    p->dictionary[i].dict_leftson = j;
-    p->dictionary[i].dict_rightson = p->de - p->dictionary;
+    p->newdict[i].frequ = l;
+    p->newdict[i].dict_leftson = j;
+    p->newdict[i].dict_rightson = p->de - p->newdict;
     p->de++;
     frequcount--;
   }
-  dictsize = p->de - p->dictionary;
-  for (i = 0; i < 256; i++) {
-    p->codes[i] = 0;
-    p->codesize[i] = 0;
-  }
+  dictsize = p->de - p->newdict;
   makecodes(ft, 0, 0, 0, 1);
   l = 0;
-  for(i = 0; i < 256; i++) {
-          l += frequtable[i] * p->codesize[i];
-  }
+  for (i = 0; i < 256; i++)
+    l += frequtable[i] * p->codesize[i];
   l = (((l + 31) >> 5) << 2) + 24 + dictsize * 4;
   st_debug("  Original size: %6d bytes", *dl);
   st_debug("Compressed size: %6d bytes", l);
   datafork = (unsigned char *)xmalloc((unsigned)l);
   ddf = datafork + 22;
   for(i = 0; i < dictsize; i++) {
-    put16_be(&ddf, p->dictionary[i].dict_leftson);
-    put16_be(&ddf, p->dictionary[i].dict_rightson);
+    put16_be(&ddf, p->newdict[i].dict_leftson);
+    put16_be(&ddf, p->newdict[i].dict_rightson);
   }
   *ddf++ = 0;
   *ddf++ = *(*df)++;
@@ -447,6 +443,10 @@ static void compress(ft_t ft, unsigned char **df, int32_t *dl, float fr)
   put16_be(&dfp, dictsize);
   *df = datafork;               /* reassign passed pointer to new datafork */
   *dl = l;                      /* and its compressed length */
+
+  free(p->newdict);
+  free(p->codes);
+  free(p->codesize);
 }
 
 /* End of hcom utility routines */
