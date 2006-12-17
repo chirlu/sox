@@ -314,9 +314,7 @@ int st_close(ft_t ft)
         rc = (*ft->h->stopwrite)(ft);
 
     if (!(ft->h->flags & ST_FILE_NOSTDIO))
-    {
         fclose(ft->fp);
-    }
     if (ft->filename)
         free(ft->filename);
     if (ft->filetype)
