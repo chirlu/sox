@@ -72,8 +72,7 @@ do_multichannel_formats () {
 do_singlechannel_formats () {
   format1=Wav
   convertToAndFrom smp
-  # FIXME
-  # rate=5512 convertToAndFrom hcom      # Fixed rate
+  rate=5512 convertToAndFrom hcom      # Fixed rate
 
   rate=8000
   format1=wve
