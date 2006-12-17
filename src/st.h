@@ -1,5 +1,3 @@
-#ifndef ST_H
-#define ST_H
 /*
  * Sound Tools Library - October 11, 1999
  *
@@ -10,6 +8,9 @@
  * Chris Bagwell And Sundry Contributors are not responsible for
  * the consequences of using this software.
  */
+
+#ifndef ST_H
+#define ST_H
 
 #include <stdio.h>
 #include <stdlib.h>
