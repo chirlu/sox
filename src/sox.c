@@ -80,6 +80,7 @@ static st_globalinfo_t globalinfo = {false, 1};
 static char uservolume = 0;
 
 static int user_abort = 0;
+static int success = 0;
 
 static int quiet = 0;
 static int status = 0;
@@ -124,7 +125,7 @@ static void stop_effects(void);
 #define MAX_INPUT_FILES 32
 #define MAX_FILES MAX_INPUT_FILES + 1
 
-/* Array's tracking input and output files */
+/* Arrays tracking input and output files */
 static file_options_t file_opts[MAX_FILES];
 static ft_t file_desc[MAX_FILES];
 static size_t file_count = 0;
@@ -194,8 +195,8 @@ static void cleanup(void)
     fn = strdup(file_desc[file_count - 1]->filename);
     st_close(file_desc[file_count - 1]);
     
-    /* Remove the output file because we failed, if we created it. */
-    if ((st.st_mode & S_IFMT) == S_IFREG)
+    /* If we didn't succeed, Remove the output file, if we created it. */
+    if (!success && (st.st_mode & S_IFMT) == S_IFREG)
       unlink(fn);
     free(fn);
     if (file_desc[file_count - 1])
@@ -330,6 +331,9 @@ int main(int argc, char **argv)
       fprintf(stderr, "Done.\n");
   }
 
+  success = 1; /* Signal success to cleanup so the output file is not
+                  removed. */
+  
   return 0;
 }
 
@@ -616,7 +620,7 @@ static void process(void) {
       loops[i].type = file_desc[0]->loops[i].type;
     }
     
-    file_desc[file_count-1] = 
+    file_desc[file_count - 1] = 
       st_open_write_instr(options->filename,
                           &options->info, 
                           options->filetype,
@@ -647,13 +651,13 @@ static void process(void) {
               (file_desc[file_count-1]->info.channels > 1) ? "channels" : "channel",
               file_opts[file_count-1]->volume);
     
-    if (file_desc[file_count-1]->comment)
+    if (file_desc[file_count - 1]->comment)
       st_report("Output file: comment \"%s\"", 
-                file_desc[file_count-1]->comment);
+                file_desc[file_count - 1]->comment);
   }
   
   /* Adjust the input rate for the speed effect */
-  for (f = 0; f < input_count; ++f)
+  for (f = 0; f < input_count; f++)
     file_desc[f]->info.rate = file_desc[f]->info.rate * globalinfo.speed + .5;
 
   /* build efftab */
@@ -662,7 +666,7 @@ static void process(void) {
   /* Start all effects */
   flowstatus = start_effects();
 
-  /* Reserve an output buffer for all effects */
+  /* Allocate output buffers for effects */
   reserve_effect_buf();
 
   if (mode != SOX_CONCAT) {
@@ -746,7 +750,7 @@ static void process(void) {
             continue;
           }
         }
-        volumechange(efftab[0].obuf, efftab[0].olen,file_opts[current_input]);
+        volumechange(efftab[0].obuf, efftab[0].olen, file_opts[current_input]);
       } else if (mode == SOX_MIX) {
         for (f = 0; f < input_count; f++) {
           ilen[f] = st_read(file_desc[f], ibuf[f], (st_ssize_t)ST_BUFSIZ);
@@ -820,7 +824,7 @@ static void process(void) {
 
       /* If not writing and no effects are occuring then not much
        * reason to continue reading.  This allows this case.  Mainly
-       * useful to print out info about input file header and quiet.
+       * useful to print out info about input file header.
        */
       if (!writing && neffects == 1)
         efftab[0].olen = 0;
@@ -972,61 +976,6 @@ static void check_effects(void)
   /* efftab[0] is always the input stream and always exists */
   neffects = 1;
 
-  /* If reducing channels then its faster to run all effects
-   * after the avg effect.
-   */
-  if (needchan && !(haschan) &&
-      (file_desc[0]->info.channels > file_desc[file_count-1]->info.channels)) {
-    /* Find effect and update initial pointers */
-    st_geteffect(&efftab[neffects], "avg");
-    
-    /* give default opts for added effects */
-    efftab[neffects].globalinfo = &globalinfo;
-    status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                             (char **)0);
-    
-    if (status == ST_EOF)
-      exit(2);
-    
-    /* Copy format info to effect table */
-    effects_mask = st_updateeffect(&efftab[neffects], 
-                                   &file_desc[0]->info,
-                                   &file_desc[file_count-1]->info, 
-                                   effects_mask);
-    
-    neffects++;
-  }
-
-  /* If reducing the number of samples, its faster to run all effects
-   * after the resample effect.
-   */
-  if (needrate && !(hasrate) &&
-      (file_desc[0]->info.rate > file_desc[file_count-1]->info.rate)) {
-    st_geteffect(&efftab[neffects], "resample");
-
-    /* set up & give default opts for added effects */
-    efftab[neffects].globalinfo = &globalinfo;
-    status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                             (char **)0);
-    
-    if (status == ST_EOF)
-      exit(2);
-
-    /* Copy format info to effect table */
-    effects_mask = st_updateeffect(&efftab[neffects], 
-                                   &file_desc[0]->info,
-                                   &file_desc[file_count-1]->info, 
-                                   effects_mask);
-    
-    /* Rate can't handle multiple channels so be sure and
-     * account for that.
-     */
-    if (efftab[neffects].ininfo.channels > 1)
-        memcpy(&efftabR[neffects], &efftab[neffects], sizeof(struct st_effect));
-
-    neffects++;
-  }
-
   /* Copy over user specified effects into real efftab */
   for (i = 0; i < nuser_effects; i++) {
     memcpy(&efftab[neffects], &user_efftab[i], sizeof(struct st_effect));
@@ -1049,7 +998,7 @@ static void check_effects(void)
   }
 
   /* If rate effect hasn't been added by now then add it here.
-   * Check adding rate before avg because its faster to run
+   * Check adding rate before avg because it's faster to run
    * rate on less channels then more.
    */
   if (needrate && !(effects_mask & ST_EFF_RATE)) {
@@ -1057,30 +1006,28 @@ static void check_effects(void)
 
     /* set up & give default opts for added effects */
     efftab[neffects].globalinfo = &globalinfo;
-    status = (* efftab[neffects].h->getopts)(&efftab[neffects],(int)0,
-                                             (char **)0);
-    
+    status = (* efftab[neffects].h->getopts)(&efftab[neffects], 0, NULL);
+
     if (status == ST_EOF)
       exit(2);
-    
+
     /* Copy format info to effect table */
     effects_mask = st_updateeffect(&efftab[neffects], 
                                    &file_desc[0]->info,
                                    &file_desc[file_count-1]->info, 
                                    effects_mask);
-    
+
     /* Rate can't handle multiple channels so be sure and
      * account for that.
      */
     if (efftab[neffects].ininfo.channels > 1)
       memcpy(&efftabR[neffects], &efftab[neffects],
              sizeof(struct st_effect));
-     
+
     neffects++;
   }
 
-  /* If code up until now still hasn't added avg effect then
-   * do it now.
+  /* If we haven't added avg effect yet then do it now.
    */
   if (needchan && !(effects_mask & ST_EFF_CHAN)) {
     st_geteffect(&efftab[neffects], "avg");
@@ -1133,18 +1080,9 @@ static void reserve_effect_buf(void)
   int e;
 
   for (e = 0; e < neffects; e++) {
-    efftab[e].obuf = (st_sample_t *)malloc(ST_BUFSIZ * sizeof(st_sample_t));
-    if (efftab[e].obuf == NULL) {
-      st_fail("could not allocate memory");
-      exit(2);
-    }
-    if (efftabR[e].name) {
-      efftabR[e].obuf = (st_sample_t *)malloc(ST_BUFSIZ * sizeof(st_sample_t));
-      if (efftabR[e].obuf == NULL) {
-        st_fail("could not allocate memory");
-        exit(2);
-      }
-    }
+    efftab[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
+    if (efftabR[e].name)
+      efftabR[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
   }
 }
 
@@ -1156,9 +1094,9 @@ static int flow_effect_out(void)
   do {
     /* run entire chain BACKWARDS: pull, don't push.*/
     /* this is because buffering system isn't a nice queueing system */
-    for (e = neffects - 1; e >= input_eff; e--) {
-      /* Do not call flow effect on input if its reported
-       * EOF already as thats a waste of time and may
+    for (e = neffects - 1; e && e >= input_eff; e--) {
+      /* Do not call flow effect on input if it has reported
+       * EOF already as that's a waste of time and may
        * do bad things.
        */
       if (e == input_eff && input_eff_eof)
@@ -1170,7 +1108,7 @@ static int flow_effect_out(void)
        * calling any more previous effects since their output
        * would not be looked at anyways.
        */
-      flowstatus  = flow_effect(e);
+      flowstatus = flow_effect(e);
       if (flowstatus == ST_EOF) {
         input_eff = e;
         /* Assume next effect hasn't reach EOF yet */
@@ -1179,15 +1117,9 @@ static int flow_effect_out(void)
 
       /* If this buffer contains more input data then break out
        * of this loop now.  This will allow us to loop back around
-       * and reprocess the rest of this input buffer.
-       * I suppose this could be an issue with some effects
-       * if they crash when given small input buffers.
-       * But I was more concerned that we would need to do
-       * some type of garbage collection otherwise.  By this I
-       * mean that if we went ahead and processed an effect
-       * lower in the chain, it might only have like 2 bytes
-       * left at the end of this buffer to place its data in.
-       * Software is more likely to refuse to handle that.
+       * and reprocess the rest of this input buffer: we finish each
+       * effect before moving on to the next, so that each effect
+       * starts with an empty output buffer.
        */
       if (efftab[e].odone < efftab[e].olen) {
         st_debug("Breaking out of loop to flush buffer");
@@ -1196,10 +1128,10 @@ static int flow_effect_out(void)
     }
 
     /* If outputting and output data was generated then write it */
-    if (writing && (efftab[neffects-1].olen>efftab[neffects-1].odone)) {
+    if (writing && (efftab[neffects - 1].olen > efftab[neffects - 1].odone)) {
       /* Change the volume of this output data if needed. */
-      volumechange(efftab[neffects-1].obuf, efftab[neffects-1].olen,
-                   file_opts[file_count-1]);
+      volumechange(efftab[neffects - 1].obuf, efftab[neffects - 1].olen,
+                   file_opts[file_count - 1]);
 
       total = 0;
       do {
@@ -1269,8 +1201,8 @@ static int flow_effect_out(void)
 
       /* If the input file is not returning data then
        * we must prime the pump using the drain effect.
-       * After its primed, the loop will suck the data
-       * threw.  Once an input_eff stop reporting samples,
+       * After it's primed, the loop will suck the data
+       * through.  Once an input_eff stops reporting samples,
        * we will continue to the next until all are drained.
        */
       while (input_eff < neffects) {
@@ -1309,66 +1241,65 @@ static int flow_effect(int e)
   int effstatus, effstatusl, effstatusr;
 
   /* Do not attempt to do any more effect processing during
-   * user aborts as we may be stuck in an infinit flow loop.
+   * user aborts as we may be stuck in an infinite flow loop.
    */
   if (user_abort)
     return ST_EOF;
 
   /* I have no input data ? */
-  if (efftab[e-1].odone == efftab[e-1].olen) {
+  if (efftab[e - 1].odone == efftab[e - 1].olen) {
     st_debug("%s no data to pull to me!", efftab[e].name);
     return 0;
   }
 
-  if (! efftabR[e].name) {
+  if (!efftabR[e].name) {
     /* No stereo data, or effect can handle stereo data so
      * run effect over entire buffer.
      */
-    idone = efftab[e-1].olen - efftab[e-1].odone;
+    idone = efftab[e - 1].olen - efftab[e - 1].odone;
     odone = ST_BUFSIZ - efftab[e].olen;
     st_debug("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
     st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
 
     effstatus = (* efftab[e].h->flow)(&efftab[e],
-                                      &efftab[e-1].obuf[efftab[e-1].odone],
+                                      &efftab[e - 1].obuf[efftab[e - 1].odone],
                                       &efftab[e].obuf[efftab[e].olen], 
                                       (st_size_t *)&idone, 
                                       (st_size_t *)&odone);
 
-    efftab[e-1].odone += idone;
-    /* Leave efftab[e].odone were it was since we didn't consume data */
-    /*efftab[e].odone = 0;*/
+    efftab[e - 1].odone += idone;
+    /* Don't update efftab[e].odone as we didn't consume data */
     efftab[e].olen += odone; 
     st_debug("post %s idone=%d, odone=%d", efftab[e].name, idone, odone); 
     st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
 
     done = idone + odone;
   } else {
-    /* Put stereo data in two seperate buffers and run effect
+    /* Put stereo data in two separate buffers and run effect
      * on each of them.
      */
-    idone = efftab[e-1].olen - efftab[e-1].odone;
+    idone = efftab[e - 1].olen - efftab[e - 1].odone;
     odone = ST_BUFSIZ - efftab[e].olen;
     
-    ibuf = &efftab[e-1].obuf[efftab[e-1].odone];
+    ibuf = &efftab[e - 1].obuf[efftab[e - 1].odone];
     for (i = 0; i < idone; i += 2) {
-      ibufl[i/2] = *ibuf++;
-      ibufr[i/2] = *ibuf++;
+      ibufl[i / 2] = *ibuf++;
+      ibufr[i / 2] = *ibuf++;
     }
     
     /* left */
-    idonel = (idone + 1)/2;         /* odd-length logic */
-    odonel = odone/2;
+    idonel = (idone + 1) / 2;   /* odd-length logic */
+    odonel = odone / 2;
     st_debug("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-    st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
+    st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e - 1].odone, efftab[e - 1].olen, efftab[e].odone, efftab[e].olen); 
     
     effstatusl = (* efftab[e].h->flow)(&efftab[e],
                                        ibufl, obufl, (st_size_t *)&idonel, 
                                        (st_size_t *)&odonel);
     
     /* right */
-    idoner = idone/2;               /* odd-length logic */
-    odoner = odone/2;
+    idoner = idone / 2;               /* odd-length logic */
+    odoner = odone / 2;
     effstatusr = (* efftabR[e].h->flow)(&efftabR[e],
                                         ibufr, obufr, (st_size_t *)&idoner, 
                                         (st_size_t *)&odoner);
@@ -1385,7 +1316,7 @@ static int flow_effect(int e)
     /* Don't zero efftab[e].odone since nothing has been consumed yet */
     efftab[e].olen += odonel + odoner;
     st_debug("post %s idone=%d, odone=%d", efftab[e].name, idone, odone); 
-    st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
+    st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e - 1].odone, efftab[e - 1].olen, efftab[e].odone, efftab[e].olen);
     
     done = idonel + idoner + odonel + odoner;
     
@@ -1465,7 +1396,7 @@ static int drain_effect(int e)
     /* This loop implies left and right effect will always output
      * the same amount of data.
      */
-    for(i = 0; i < olenr; i++) {
+    for (i = 0; i < olenr; i++) {
       *obuf++ = obufl[i];
       *obuf++ = obufr[i];
     }
