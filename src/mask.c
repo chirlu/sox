@@ -9,108 +9,109 @@
 
 /*
  * Sound Tools masking noise effect file.
+ *
+ * TODO: does triangular noise, could do local shaping
  */
 
 #include <stdlib.h>
 #include <math.h>
 #include "st_i.h"
 
-static st_effect_t st_mask_effect;
+typedef struct mask {
+  double amount;
+} * mask_t;
 
-#define HALFABIT 1.44                   /* square root of 2 */
+assert_static(sizeof(struct mask) <= ST_MAX_EFFECT_PRIVSIZE,
+              /* else */ mask_PRIVSIZE_too_big);
 
-/*
- * Problems:
- *      1) doesn't allow specification of noise depth
- *      2) does triangular noise, could do local shaping
- *      3) can run over 32 bits.
- */
-
-/*
- * Process options
- */
-static int st_mask_getopts(eff_t effp UNUSED, int n, char **argv UNUSED)
+static int st_mask_getopts(eff_t effp, int n, char * * argv)
 {
-        if (n)
-        {
-                st_fail(st_mask_effect.usage);
-                return (ST_EOF);
-        }
-        /* should take # of bits */
+  mask_t mask = (mask_t) effp->priv;
 
-        st_initrand();
-        return (ST_SUCCESS);
+  if (n > 1) {
+    st_fail(effp->h->usage);
+    return ST_EOF;
+  }
+  
+  mask->amount = M_SQRT2;   /* Default to half a bit. */
+  if (n == 1) {
+    double amount;
+    char dummy;
+    int scanned = sscanf(*argv, "%lf %c", &amount, &dummy);
+    if (scanned == 1 && amount > 0)
+      mask->amount *= amount;
+    else {
+      st_fail(effp->h->usage);
+      return ST_EOF;
+    }
+  }
+
+  return ST_SUCCESS;
 }
 
-/*
- * Processed signed long samples from ibuf to obuf.
- * Return number of samples processed.
- */
-static int st_mask_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                 st_size_t *isamp, st_size_t *osamp)
+static int st_mask_start(eff_t effp)
 {
-        int len, done;
-        
-        st_sample_t l;
-        st_sample_t tri16;      /* 16 signed bits of triangular noise */
+  mask_t mask = (mask_t) effp->priv;
 
-        len = ((*isamp > *osamp) ? *osamp : *isamp);
-        switch (effp->outinfo.encoding) {
-                case ST_ENCODING_ULAW:
-                case ST_ENCODING_ALAW:
-                        for(done = 0; done < len; done++) {
-                                tri16 = 
-                                  ((rand()%32768L) + (rand()%32768L)) - 32767;
+  if (effp->outinfo.encoding == ST_ENCODING_ULAW ||
+      effp->outinfo.encoding == ST_ENCODING_ALAW) {
+    mask->amount *= 16;
+    return ST_SUCCESS;
+  }
+  if (effp->outinfo.size == ST_SIZE_BYTE) {
+    mask->amount *= 256;
+    return ST_SUCCESS;
+  }
+  if (effp->outinfo.size == ST_SIZE_WORD)
+    return ST_SUCCESS;
 
-                                l = *ibuf++ + tri16*16*HALFABIT;  /* 2^4.5 */
-                                *obuf++ = l;
-                        }
-                        break;
-                default:
-                switch (effp->outinfo.size) {
-                        case ST_SIZE_BYTE:
-                        for(done = 0; done < len; done++) {
-                                tri16 = 
-                                  ((rand()%32768L) + (rand()%32768L)) - 32767;
+  return ST_EFF_NULL;   /* Dithering not needed at >= 24 bits */
+}
 
-                                l = *ibuf++ + tri16*256*HALFABIT;  /* 2^8.5 */
-                                *obuf++ = l;
-                        }
-                        break;
-                        case ST_SIZE_WORD:
-                        for(done = 0; done < len; done++) {
-                                tri16 = 
-                                  ((rand()%32768L) + (rand()%32768L)) - 32767;
+static int st_mask_flow(eff_t effp, const st_sample_t * ibuf,
+    st_sample_t * obuf, st_size_t * isamp, st_size_t * osamp)
+{
+  mask_t mask = (mask_t) effp->priv;
+  st_size_t len = *isamp > *osamp ? *osamp : *isamp;
 
-                                l = *ibuf++ + tri16*HALFABIT;  /* 2^.5 */
-                                *obuf++ = l;
-                        }
-                        break;
-                        default: /* Mask (dither) not needed at >= 24 bits */
-                        for(done = 0; done < len; done++) {
-                                *obuf++ = *ibuf++;
-                        }
-                        break;
-                }
-        }
-
-        *isamp = done;
-        *osamp = done;
-        return (ST_SUCCESS);
+  *isamp = *osamp = len;
+  while (len--)
+  {                     /* 16 signed bits of triangular noise */
+    int tri16 = ((rand() % 32768L) + (rand() % 32768L)) - 32767;
+    double l = *ibuf++ + tri16 * mask->amount;
+    *obuf++ = ST_ROUND_CLIP_COUNT(l, effp->clippedCount);
+  }
+  return ST_SUCCESS;
 }
 
 static st_effect_t st_mask_effect = {
   "mask",
-  "Usage: Mask effect takes no options",
+  "Usage: mask [amount]",
   ST_EFF_MCHAN,
   st_mask_getopts,
-  st_effect_nothing,
+  st_mask_start,
   st_mask_flow,
   st_effect_nothing_drain,
   st_effect_nothing
 };
 
-const st_effect_t *st_mask_effect_fn(void)
+st_effect_t const * st_mask_effect_fn(void)
 {
-    return &st_mask_effect;
+  return &st_mask_effect;
+}
+
+static st_effect_t st_dither_effect = {
+  "dither",
+  "Usage: dither [amount]",
+  ST_EFF_MCHAN,
+  st_mask_getopts,
+  st_mask_start,
+  st_mask_flow,
+  st_effect_nothing_drain,
+  st_effect_nothing
+};
+
+st_effect_t const * st_dither_effect_fn(void)
+{
+  return &st_dither_effect;
 }
