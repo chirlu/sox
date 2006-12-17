@@ -718,21 +718,16 @@ static void process(void) {
         if (mode == SOX_CONCAT) {
           ilen[0] = st_read(file_desc[current_input], efftab[0].obuf, 
                          (st_ssize_t)ST_BUFSIZ);
-          if (ilen[0] > ST_BUFSIZ)
-            {
+          if (ilen[0] > ST_BUFSIZ) {
               st_warn("WARNING: Corrupt value of %d!  Assuming 0 bytes read.", ilen);
               ilen[0] = 0;
-            }
+          }
           
-          if (ilen[0] == ST_EOF)
-            {
+          if (ilen[0] == ST_EOF) {
               efftab[0].olen = 0;
               if (file_desc[current_input]->st_errno)
-                {
                   fprintf(stderr, file_desc[current_input]->st_errstr);
-                }
-            }
-          else
+          } else
             efftab[0].olen = ilen[0];
           
           read_samples += efftab[0].olen;
@@ -1313,13 +1308,12 @@ static int flow_effect_out(void)
               if (user_abort)
                   return ST_EOF;
 
-              len = st_write(file_desc[file_count-1], 
-                             &efftab[neffects-1].obuf[total],
-                             efftab[neffects-1].olen-total);
+              len = st_write(file_desc[file_count - 1], 
+                             &efftab[neffects - 1].obuf[total],
+                             efftab[neffects - 1].olen - total);
 
-              if (len != efftab[neffects-1].olen-total || file_desc[file_count-1]->eof)
-              {
-                  st_warn("Error writing: %s", file_desc[file_count-1]->st_errstr);
+              if (len != efftab[neffects - 1].olen - total || file_desc[file_count - 1]->eof) {
+                  st_warn("Error writing: %s", file_desc[file_count - 1]->st_errstr);
                   return ST_EOF;
               }
               total += len;
