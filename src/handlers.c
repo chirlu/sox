@@ -95,6 +95,7 @@ st_effect_fn_t st_effect_fns[] = {
   st_copy_effect_fn,
   st_dcshift_effect_fn,
   st_deemph_effect_fn,
+  st_dither_effect_fn,
   st_earwax_effect_fn,
   st_echo_effect_fn,
   st_echos_effect_fn,

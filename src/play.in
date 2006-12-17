@@ -80,7 +80,7 @@ the data type and sample rates.
       --file=FILENAME          specify filename
 
 EFFECTs are one or more of the following: avg, band, bandpass, bandreject,
-bass, chorus, compand, copy, dcshift, deemph, earwax, echo, echos,
+bass, chorus, compand, copy, dcshift, deemph, dither, earwax, echo, echos,
 equalizer, fade, filter, flanger, highpass, highp, lowpass, lowp, mask,
 mcompand, noiseprof, noisered, pan, phaser, pick, pitch, polyphase,
 rabbit, rate, repeat, resample, reverb, reverse, silence, speed, speedr,
@@ -94,7 +94,7 @@ formats, and effect options."
 # loop over arguments
 while [ $# -ne 0 ]; do
     case "$1" in
-	avg|band|bandpass|bandreject|bass|chorus|compand|copy|dcshift|deemph|earwax|echo|echos|equalizer|fade|filter|flanger|highpass|highp|lowpass|lowp|mask|mcompand|noiseprof|noisered|pan|phaser|pick|pitch|polyphase|rabbit|rate|repeat|resample|reverb|reverse|silence|speed|speedr|stat|stretch|swap|synth|treble|trim|vibro|vol)
+	avg|band|bandpass|bandreject|bass|chorus|compand|copy|dcshift|deemph|dither|earwax|echo|echos|equalizer|fade|filter|flanger|highpass|highp|lowpass|lowp|mask|mcompand|noiseprof|noisered|pan|phaser|pick|pitch|polyphase|rabbit|rate|repeat|resample|reverb|reverse|silence|speed|speedr|stat|stretch|swap|synth|treble|trim|vibro|vol)
 	    effects="$@"
 	    break
 	    ;;

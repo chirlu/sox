@@ -152,12 +152,12 @@ translates a sound file in SUN Sparc .AU format
 into a Microsoft .WAV file, while
 .P
 .br
-	sox -v 0.5 file.au -r 12000 file.wav mask
+	sox -v 0.5 file.au -r 12000 file.wav dither
 .P
 .br
 does the same format translation but also 
 lowers the amplitude by 1/2, changes
-the sampling rate to 12000 Hz, and applies the \fBmask\fR sound effect
+the sampling rate to 12000 Hz, and applies the \fBdither\fR sound effect
 to the audio data.
 .P
 The following will mix two sound files together to to produce a single sound
@@ -1020,6 +1020,17 @@ standard document ISO 908.
 This effect supports the \fI-o\fR option (see above).
 
 .TP 10
+dither [\fIdepth\fR]
+Dithering deliberately adds white noise to the signal
+in order to mask audible quantization effects that
+can occur if the output sample size is less than 24 bits.
+By default, the amount of noise added is 1/2 bit;
+the optional \fIdepth\fR parameter is a (linear or voltage)
+multiplier of this amount.
+
+This effect should not be followed by any other effect that
+affects the audio.
+.TP 10
 earwax
 Makes sound easier to listen to on headphones.
 Adds audio-cues to samples in audio CD format so that
@@ -1140,14 +1151,9 @@ See the description of the \fIhighp\fR effect for details.
 lowpass \fIfrequency\fB
 See the description of the \fIhighpass\fR effect for details.
 .TP 10
-mask
-Add "masking noise" to signal.
-This effect deliberately adds white noise to a sound 
-in order to mask quantization effects,
-created by the process of playing a sound digitally.
-It tends to mask buzzing voices, for example.
-It adds 1/2 bit of noise to the sound file at the
-output bit depth.
+mask [\fIdepth\fR]
+This effect is just an alias of the "dither" effect but is left
+here for historical reasons.
 .TP
 mcompand "\fIattack1,decay1\fR[,\fIattack2,decay2\fR...]
 .TP 

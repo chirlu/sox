@@ -41,7 +41,9 @@ sox-12.18.3
     circumstances. (robs)
   o Add support for 24-bit PCM raw, wav (WAVE_FORMAT_EXTENSIBLE) [FR# 801015],
     au, aiff, & flac files. (robs)
-  o Added alias -1 (for -b), -2 (for -w), -4 (for -l), -8 (for -d). (robs)
+  o Added aliases -1 (for -b), -2 (for -w), -4 (for -l), -8 (for -d),
+    dither (for mask). (robs)
+  o Dither/mask amount now specifiable.  (robs)
   o Remove old, optional rate change and alaw/ulaw conversion code.
     (Reuben Thomas)
   o Make sox and soxmix a single binary.  (Reuben Thomas)
