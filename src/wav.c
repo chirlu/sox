@@ -347,7 +347,7 @@ static int findChunk(ft_t ft, const char *Label, st_size_t *len)
         st_debug("WAV Chunk %s", magic);
         if (st_readdw(ft, len) == ST_EOF)
         {
-            st_fail_errno(ft, ST_EHDR, "WAVE file %s chunk is to short", 
+            st_fail_errno(ft, ST_EHDR, "WAVE file %s chunk is too short", 
                           magic);
             return ST_EOF;
         }
