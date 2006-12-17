@@ -59,8 +59,6 @@ int strncasecmp(char const * s1, char const * s2, size_t n);
 char *strdup(const char *s);
 #endif
 
-void st_initrand(void);
-
 /* Read and write basic data types from "ft" stream.  Uses ft->swap for
  * possible byte swapping.
  */
@@ -272,6 +270,7 @@ extern const st_effect_t *st_compand_effect_fn(void);
 extern const st_effect_t *st_copy_effect_fn(void);
 extern const st_effect_t *st_dcshift_effect_fn(void);
 extern const st_effect_t *st_deemph_effect_fn(void);
+extern const st_effect_t *st_dither_effect_fn(void);
 extern const st_effect_t *st_earwax_effect_fn(void);
 extern const st_effect_t *st_echo_effect_fn(void);
 extern const st_effect_t *st_echos_effect_fn(void);
