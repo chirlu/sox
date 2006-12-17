@@ -501,7 +501,19 @@ static int st_avg_start(eff_t effp)
          return ST_EOF;
      }
 
-     return (ST_SUCCESS);
+#if 0  /* TODO: test the following: */
+     if (effp->ininfo.channels != effp->outinfo.channels)
+       return ST_SUCCESS;
+
+     for (i = 0; i < (int)effp->ininfo.channels; ++i)
+       for (j = 0; j < (int)effp->outinfo.channels; ++j)
+         if (avg->sources[i][j] != (i == j))
+           return ST_SUCCESS;
+
+     return ST_EFF_NULL;
+#else
+     return ST_SUCCESS;
+#endif
 }
 
 /*
