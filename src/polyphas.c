@@ -380,8 +380,6 @@ static int st_poly_start(eff_t effp)
     if (effp->ininfo.rate == effp->outinfo.rate)
       return ST_EFF_NULL;
 
-    st_initrand();
-
     rate->lcmrate = st_lcm((st_sample_t)effp->ininfo.rate,
                            (st_sample_t)effp->outinfo.rate);
 

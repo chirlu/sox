@@ -39,6 +39,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <time.h>
 #include <errno.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>             /* for unlink() */
@@ -74,6 +75,7 @@
 static enum {SOX_CONCAT, SOX_MIX, SOX_MERGE} mode = SOX_CONCAT;
 static int clipped = 0;         /* Volume change clipping errors */
 static int writing = 1;         /* are we writing to a file? assume yes. */
+static bool repeatable_random = false;  /* Whether to invoke srand. */
 static st_globalinfo_t globalinfo = {false, 1};
 
 static int user_abort = 0;
@@ -280,6 +282,15 @@ int main(int argc, char **argv)
       writing = 0;
     }
 
+    if (repeatable_random)
+      st_debug("Not reseeding PRNG; randomness is repeatable");
+    else {
+      time_t t;
+
+      time(&t);
+      srand(t);
+    }
+
     signal(SIGINT, sigint);
     signal(SIGTERM, sigint);
 
@@ -333,7 +344,7 @@ static char * read_comment_file(char const * const filename)
   return result;
 }
 
-static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lf8dxV::SqoenmM";
+static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lf8dxV::SqoenmMR";
 
 static struct option long_options[] =
 {
@@ -382,12 +393,16 @@ static bool doopts(file_options_t * fo, int argc, char **argv)
         break;
 
       case 'm':
-         mode = SOX_MIX;
-         break;
+        mode = SOX_MIX;
+        break;
 
       case 'M':
-         mode = SOX_MERGE;
-         break;
+        mode = SOX_MERGE;
+        break;
+
+      case 'R': /* Useful for regression testing; not in man page. */
+        repeatable_random = true;
+        break;
 
       case 'e': case 'n':
         return true;            /* Is null file. */

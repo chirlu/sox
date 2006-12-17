@@ -16,7 +16,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include <time.h>
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
@@ -265,7 +264,7 @@ int st_write3(ft_t ft, uint24_t u3)
 {
         if (ft->info.swap)
                 u3 = st_swap24(u3);
-        if (st_writebuf(ft, &u3, 2, 1) != 1)
+        if (st_writebuf(ft, &u3, 3, 1) != 1)
         {
                 st_fail_errno(ft,errno,writerr);
                 return (ST_EOF);
@@ -496,14 +495,6 @@ char *strdup(const char *s)
     return strcpy((char *)xmalloc(strlen(s) + 1), s);
 }
 #endif
-
-/* Util to set initial seed so that we are a little less non-random */
-void st_initrand(void) {
-    time_t t;
-
-    time(&t);
-    srand(t);
-}
 
 
 

@@ -376,8 +376,6 @@ static int st_synth_start(eff_t effp)
 
     synth->max = (ST_SAMPLE_MAX >> shift_for_max) << shift_for_max;
 
-    st_initrand();
-
     if (synth->length_str)
     {
         if (st_parsesamples(effp->ininfo.rate, synth->length_str,
