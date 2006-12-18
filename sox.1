@@ -1471,32 +1471,19 @@ silence in the middle of the sound file.
 
 The \fIperiod\fR counts are in units of samples.  \fIDuration\fR counts may be in the format of hh:mm:ss.frac, or the exact count of samples.  \fIThreshold\fR numbers may be suffixed with d to indicate the value is in decibels, or % to indicate a percentage of maximum value of the sample value (0% specifies pure digital silence).
 .TP 10
-speed [ -c ] \fIfactor\fB
-Speed up or down the sound, as a magnetic tape with a speed control. 
-It affects both pitch and time. A factor of 1.0 means no change, 
-and is the default. 
-2.0 doubles speed, thus time length is cut by a half and pitch 
-is one octave higher. 
-0.5 halves speed thus time length doubles and pitch is one octave lower. 
-If the optional -c parameter is used then the factor is specified in "cents".
-
-This effect is fast but of low quality; see also \fBspeedr\fR.
-.TP 10
-speedr \fIfactor\fR[\fIc\fR]
-Use resampling to adjust the audio speed (pitch and tempo
-together).  \fIfactor\fR is either the ratio of the new
-speed to the old speed: > 1 speeds up, < 1 slows down, or, if
-appended with `\fIc\fR', the number of cents (i.e. 100ths of a
-semitone) by which the pitch (and tempo) should be adjusted:
-> 0 increases, < 0 decreases.
+speed \fIfactor\fR[\fIc\fR]
+Adjust the audio speed (pitch and tempo together).  \fIfactor\fR
+is either the ratio of the new speed to the old speed: greater
+than 1 speeds up, less than 1 slows down, or, if appended with
+`\fIc\fR', the number of cents (i.e. 100ths of a semitone) by
+which the pitch (and tempo) should be adjusted: greater than 0
+increases, less than 0 decreases.
 
 By default, the speed change is performed by the \fBresample\fR
 effect with its default parameters.  For higher quality
 resampling, in addition to the \fBspeedr\fR effect, specify
 either the \fBresample\fR or the \fBrabbit\fR effect with
 appropriate parameters.
-
-See also \fBspeed\fR.
 .TP 10
 stat [ \fI-s N\fB ] [\fI-rms\fB ] [\fI-freq\fB ] [ \fI-v\fB ] [ \fI-d\fB ]
 Do a statistical check on the input file,

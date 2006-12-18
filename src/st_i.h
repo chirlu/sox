@@ -308,7 +308,6 @@ extern const st_effect_t *st_reverb_effect_fn(void);
 extern const st_effect_t *st_reverse_effect_fn(void);
 extern const st_effect_t *st_silence_effect_fn(void);
 extern const st_effect_t *st_speed_effect_fn(void);
-extern const st_effect_t *st_speedr_effect_fn(void);
 extern const st_effect_t *st_stat_effect_fn(void);
 extern const st_effect_t *st_stretch_effect_fn(void);
 extern const st_effect_t *st_swap_effect_fn(void);
