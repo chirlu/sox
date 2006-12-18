@@ -129,7 +129,6 @@ st_effect_fn_t st_effect_fns[] = {
   st_reverse_effect_fn,
   st_silence_effect_fn,
   st_speed_effect_fn,
-  st_speedr_effect_fn,
   st_stat_effect_fn,
   st_stretch_effect_fn,
   st_swap_effect_fn,

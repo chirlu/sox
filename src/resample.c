@@ -222,7 +222,7 @@ int st_resample_start(eff_t effp)
         long Xoff, gcdrate;
         int i;
   double in_rate = floor(effp->ininfo.rate / effp->globalinfo->speed + .5)
-    * effp->globalinfo->speed;/* Make speedr more accurate (st_rate_t is int) */
+    * effp->globalinfo->speed;/* Make "speed" more accurate (st_rate_t is int)*/
 
         if (effp->ininfo.rate == effp->outinfo.rate)
           return ST_EFF_NULL;

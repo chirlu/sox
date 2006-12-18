@@ -20,7 +20,7 @@ effects = avg.c band.c bandpass.c biquad.c biquad.h breject.c btrworth.c \
 	  highp.c highpass.c lowp.c lowpass.c lua.c lintlib.c mask.c \
 	  mcompand.c noiseprof.c noisered.c noisered.h pan.c \
 	  phaser.c pitch.c polyphas.c rabbit.c rate.c repeat.c resample.c \
-	  reverb.c reverse.c silence.c speed.c speedr.c stat.c \
+	  reverb.c reverse.c silence.c speed.c stat.c \
 	  stretch.c swap.c synth.c tone.c trim.c vibro.c vol.c
 
 libst_a_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c misc.c \
