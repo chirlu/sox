@@ -87,10 +87,9 @@ am__objects_2 = avg.$(OBJEXT) band.$(OBJEXT) bandpass.$(OBJEXT) \
 	phaser.$(OBJEXT) pitch.$(OBJEXT) polyphas.$(OBJEXT) \
 	rabbit.$(OBJEXT) rate.$(OBJEXT) repeat.$(OBJEXT) \
 	resample.$(OBJEXT) reverb.$(OBJEXT) reverse.$(OBJEXT) \
-	silence.$(OBJEXT) speed.$(OBJEXT) speedr.$(OBJEXT) \
-	stat.$(OBJEXT) stretch.$(OBJEXT) swap.$(OBJEXT) \
-	synth.$(OBJEXT) tone.$(OBJEXT) trim.$(OBJEXT) vibro.$(OBJEXT) \
-	vol.$(OBJEXT)
+	silence.$(OBJEXT) speed.$(OBJEXT) stat.$(OBJEXT) \
+	stretch.$(OBJEXT) swap.$(OBJEXT) synth.$(OBJEXT) \
+	tone.$(OBJEXT) trim.$(OBJEXT) vibro.$(OBJEXT) vol.$(OBJEXT)
 am_libst_a_OBJECTS = $(am__objects_1) $(am__objects_2) alsa.$(OBJEXT) \
 	oss.$(OBJEXT) sunaudio.$(OBJEXT) handlers.$(OBJEXT) \
 	misc.$(OBJEXT) stio.$(OBJEXT) util.$(OBJEXT) xmalloc.$(OBJEXT) \
@@ -158,7 +157,6 @@ LIBS = @LIBS@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 LUA = @LUA@
-LUAC = @LUAC@
 LUA_INCLUDES = @LUA_INCLUDES@
 LUA_LIBS = @LUA_LIBS@
 MAKEINFO = @MAKEINFO@
@@ -230,7 +228,7 @@ effects = avg.c band.c bandpass.c biquad.c biquad.h breject.c btrworth.c \
 	  highp.c highpass.c lowp.c lowpass.c lua.c lintlib.c mask.c \
 	  mcompand.c noiseprof.c noisered.c noisered.h pan.c \
 	  phaser.c pitch.c polyphas.c rabbit.c rate.c repeat.c resample.c \
-	  reverb.c reverse.c silence.c speed.c speedr.c stat.c \
+	  reverb.c reverse.c silence.c speed.c stat.c \
 	  stretch.c swap.c synth.c tone.c trim.c vibro.c vol.c
 
 libst_a_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c misc.c \
@@ -455,7 +453,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sndrtool.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sox.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/speed.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/speedr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sphere.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stat.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stio.Po@am__quote@

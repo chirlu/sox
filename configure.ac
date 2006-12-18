@@ -141,12 +141,11 @@ AC_SUBST(SAMPLERATE_CFLAGS)
 AC_SUBST(SAMPLERATE_LIBS)
 
 
-dnl LUA, LUAC, LUA_INCLUDES, LUA_LIBS
+dnl LUA, LUA_INCLUDES, LUA_LIBS
 
 with_lua=yes
 
 AC_SUBST(LUA)
-AC_SUBST(LUAC)
 AC_SUBST(LUA_INCLUDES)
 AC_SUBST(LUA_LIBS)
 
@@ -189,22 +188,6 @@ case $lua_version in
     ;;
 esac
 dnl
-
-dnl dnl LUAC
-dnl if test "x$LUAC" = x; then
-dnl     AC_PATH_PROG([LUAC], [luac$with_lua_suffix], [], [$lua_search_path])
-dnl     test "x$LUAC" = x && exit 1
-dnl fi
-
-dnl dnl luac_version
-dnl AC_MSG_CHECKING([for lua version = luac version])
-dnl luac_version=$($LUAC -v 2>&1 | head -n 1 | cut -d' ' -f2)
-dnl if test "x$lua_version" = "x$luac_version"; then
-dnl     AC_MSG_RESULT([yes (found $luac_version)])
-dnl else
-dnl     AC_MSG_RESULT([no (found $luac_version)])
-dnl     exit 1
-dnl fi
 
 dnl LUA_INCLUDES
 if test "x$with_lua_includes" != x; then

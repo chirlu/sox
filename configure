@@ -701,7 +701,6 @@ PKG_CONFIG
 SAMPLERATE_CFLAGS
 SAMPLERATE_LIBS
 LUA
-LUAC
 LUA_INCLUDES
 LUA_LIBS
 with_alsa with_oss
@@ -7702,7 +7701,6 @@ with_lua=yes
 
 
 
-
 # Check whether --with-lua-prefix was given.
 if test "${with_lua_prefix+set}" = set; then
   withval=$with_lua_prefix;
@@ -7792,8 +7790,6 @@ echo "${ECHO_T}no (found $lua_version)" >&6; }
 echo "${ECHO_T}yes (found $lua_version)" >&6; }
     ;;
 esac
-
-
 
 if test "x$with_lua_includes" != x; then
     LUA_INCLUDES="-I$with_lua_includes"
@@ -11830,7 +11826,6 @@ PKG_CONFIG!$PKG_CONFIG$ac_delim
 SAMPLERATE_CFLAGS!$SAMPLERATE_CFLAGS$ac_delim
 SAMPLERATE_LIBS!$SAMPLERATE_LIBS$ac_delim
 LUA!$LUA$ac_delim
-LUAC!$LUAC$ac_delim
 LUA_INCLUDES!$LUA_INCLUDES$ac_delim
 LUA_LIBS!$LUA_LIBS$ac_delim
 with_alsa!$with_alsa$ac_delim
@@ -11838,7 +11833,7 @@ with_oss!$with_oss$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 92; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 91; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
