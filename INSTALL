@@ -1,12 +1,19 @@
 SoX: Sound eXchange Installation
 
 This distribution will compile and run on most UNIX systems.
-It was originally developed on a UNIX/386 machine running AT&T V.3.2
-but it's currently developed under Linux.  With little work it should
-work with most UNIX-like systems.
+It was originally developed on a UNIX/386 machine running AT&T V3.2
+but it's currently developed under Linux.  With a little work it should
+work with most POSIX systems.
+
 
 Compiling
 ---------
+
+[Only if you're compiling the CVS sources, first make sure you have
+the GNU autotools installed (automake 1.9, autoconf >= 2.59) and run
+
+	./autogen.sh
+]
 
 The preferred method for compiling SoX is to use the "configure" scripts
 compatible with most UNIX systems that contain "/bin/sh" or equivalent
@@ -14,9 +21,9 @@ compatible with most UNIX systems that contain "/bin/sh" or equivalent
 
 To compile and install SoX on these platforms run the following commands:
 
-    ./configure
-    make
-    make install
+	./configure
+	make
+	make install
 
 There are several optional parameters that you may pass to the configure
 script to customize SoX for your applications.  Run "./configure --help"
