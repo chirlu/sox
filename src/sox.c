@@ -72,7 +72,12 @@
  * Rewrite for multiple effects: Aug 24, 1994.
  */
 
-static enum {SOX_CONCAT, SOX_MIX, SOX_MERGE} mode = SOX_CONCAT;
+/* True if invoked as soxmix; probably not needed anymore,
+ * users could just alias soxmix to sox -m
+ */
+static bool soxmix = false;
+
+static enum {SOX_CONCAT, SOX_MIX, SOX_MERGE} combine_method = SOX_CONCAT;
 static st_size_t mixing_clips = 0;
 static int writing = 1;         /* are we writing to a file? assume yes. */
 static bool repeatable_random = false;  /* Whether to invoke srand. */
@@ -105,7 +110,7 @@ typedef struct file_options
 
 /* local forward declarations */
 static bool doopts(file_options_t fo, int, char **);
-static void usage(char *) NORET;
+static void usage(char const *) NORET;
 static void usage_effect(char *) NORET;
 static void process(void);
 static void print_input_status(int input);
@@ -221,8 +226,10 @@ int main(int argc, char **argv)
   
   i = strlen(myname);
   if (i >= sizeof("soxmix") - 1 &&
-      strcmp(myname + i - (sizeof("soxmix") - 1), "soxmix") == 0)
-    mode = SOX_MIX;
+      strcmp(myname + i - (sizeof("soxmix") - 1), "soxmix") == 0) {
+    combine_method = SOX_MIX;
+    soxmix = true;
+  }
 
   st_output_message_handler = sox_output_message;
 
@@ -240,7 +247,7 @@ int main(int argc, char **argv)
     fo->info.encoding = ST_ENCODING_UNKNOWN;
     fo->info.channels = 0;
     fo->info.compression = HUGE_VAL;
-    fo->volume = 1.0;
+    fo->volume = HUGE_VAL;
     fo->volume_clips = 0;
     file_opts[file_count++] = fo;
     
@@ -258,16 +265,27 @@ int main(int argc, char **argv)
 
   /* Make sure we got at least the required # of input filenames */
   input_count = file_count ? file_count - 1 : 0;
-  if (input_count < (mode == SOX_CONCAT ? 1 : 2))
+  if (input_count < (combine_method == SOX_CONCAT ? 1 : 2))
     usage("Not enough input filenames specified");
 
+  /* Check for misplaced input/output-specific options: */
+  for (i = 0; i < input_count; ++i) {
+    if (file_opts[i]->info.compression != HUGE_VAL)
+      usage("A compression factor can only be given for an output file");
+    if (file_opts[i]->comment != NULL)
+      usage("A comment can only be given for an output file");
+  }
+  if (file_opts[i]->volume != HUGE_VAL)
+    usage("-v can only be given for an input file;\n"
+            "\tuse 'vol' to set the output file volume");
+  
   for (i = 0; i < input_count; i++) {
     /* When mixing audio, default to input side volume
      * adjustments that will make sure no clipping will
      * occur.  Users most likely won't be happy with
      * this and will want to override it.
      */
-    if (mode == SOX_MIX && !uservolume)
+    if (combine_method == SOX_MIX && !uservolume)
       file_opts[i]->volume = 1.0 / input_count;
       
     file_desc[i] = st_open_read(file_opts[i]->filename,
@@ -277,16 +295,6 @@ int main(int argc, char **argv)
       /* st_open_read() will call st_warn for most errors.
        * Rely on that printing something. */
       exit(2);
-      
-    if (file_opts[i]->info.compression != HUGE_VAL) {
-      st_fail("A compression factor can only be given for an output file");
-      exit(1);
-    }
-
-    if (file_opts[i]->comment != NULL) {
-      st_fail("A comment can only be given for an output file");
-      exit(1);
-    }
   }
     
   /* Loop through the reset of the arguments looking for effects */
@@ -419,11 +427,11 @@ static bool doopts(file_options_t fo, int argc, char **argv)
       break;
 
     case 'm':
-      mode = SOX_MIX;
+      combine_method = SOX_MIX;
       break;
 
     case 'M':
-      mode = SOX_MERGE;
+      combine_method = SOX_MERGE;
       break;
 
     case 'R': /* Useful for regression testing; not in man page. */
@@ -511,8 +519,8 @@ static bool doopts(file_options_t fo, int argc, char **argv)
     case 'V':
       if (optarg == NULL)
         ++st_output_verbosity_level;
-      else if (sscanf(optarg, "%i %c", &st_output_verbosity_level, &dummy)
-               != 1 || st_output_verbosity_level < 0) {
+      else if (sscanf(optarg, "%i %c", &st_output_verbosity_level, &dummy) != 1
+          || st_output_verbosity_level < 0) {
         st_output_verbosity_level = 2;
         st_fail("Verbosity value '%s' is not an integer >= 0", optarg);
         exit(1);
@@ -535,10 +543,6 @@ static bool doopts(file_options_t fo, int argc, char **argv)
 static int compare_input(ft_t ft1, ft_t ft2)
 {
   if (ft1->info.rate != ft2->info.rate)
-    return ST_EOF;
-  if (ft1->info.size != ft2->info.size)
-    return ST_EOF;
-  if (ft1->info.encoding != ft2->info.encoding)
     return ST_EOF;
   if (ft1->info.channels != ft2->info.channels)
     return ST_EOF;
@@ -565,7 +569,7 @@ static void process(void) {
               st_encodings_str[(unsigned char)file_desc[f]->info.encoding],
               file_desc[f]->info.channels,
               (file_desc[f]->info.channels > 1) ? "channels" : "channel",
-              file_opts[f]->volume);
+              file_opts[f]->volume == HUGE_VAL? 1 : file_opts[f]->volume);
     
     if (file_desc[f]->comment)
       st_report("Input file %s: comment \"%s\"",
@@ -573,10 +577,10 @@ static void process(void) {
   }
 
   for (f = 0; f < input_count; f++) {
-    if (mode == SOX_MERGE)
+    if (combine_method == SOX_MERGE)
       file_desc[f]->info.channels *= input_count;
     if (f && compare_input(file_desc[0], file_desc[f]) != ST_SUCCESS) {
-      st_fail("Input files must have the same rate, channels, data size, and encoding");
+      st_fail("Input files must have the same rate and # of channels");
       exit(1);
     }
   }
@@ -642,14 +646,13 @@ static void process(void) {
         !quiet)
       status = 1;
 
-    st_report("Output file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s, volume %g",
+    st_report("Output file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
               file_desc[file_count-1]->filename, 
               file_desc[file_count-1]->info.rate,
               st_sizes_str[(unsigned char)file_desc[file_count-1]->info.size],
               st_encodings_str[(unsigned char)file_desc[file_count-1]->info.encoding],
               file_desc[file_count-1]->info.channels,
-              (file_desc[file_count-1]->info.channels > 1) ? "channels" : "channel",
-              file_opts[file_count-1]->volume);
+              (file_desc[file_count-1]->info.channels > 1) ? "channels" : "channel");
     
     if (file_desc[file_count - 1]->comment)
       st_report("Output file: comment \"%s\"", 
@@ -669,14 +672,14 @@ static void process(void) {
   /* Allocate output buffers for effects */
   reserve_effect_buf();
 
-  if (mode != SOX_CONCAT) {
+  if (combine_method != SOX_CONCAT) {
     for (f = 0; f < input_count; f++) {
       st_size_t alloc_size = ST_BUFSIZ * sizeof(st_sample_t);
       /* Treat overall length the same as longest input file. */
       if (file_desc[f]->length > input_samples)
         input_samples = file_desc[f]->length;
       
-      if (mode == SOX_MERGE) {
+      if (combine_method == SOX_MERGE) {
         alloc_size /= input_count;
         file_desc[f]->info.channels /= input_count;
       }
@@ -717,7 +720,7 @@ static void process(void) {
      * (or ST_EOF).
      */
     do {
-      if (mode == SOX_CONCAT) {
+      if (combine_method == SOX_CONCAT) {
         ilen[0] = st_read(file_desc[current_input], efftab[0].obuf, 
                           (st_ssize_t)ST_BUFSIZ);
         if (ilen[0] > ST_BUFSIZ) {
@@ -751,7 +754,7 @@ static void process(void) {
           }
         }
         volumechange(efftab[0].obuf, efftab[0].olen, file_opts[current_input]);
-      } else if (mode == SOX_MIX) {
+      } else if (combine_method == SOX_MIX) {
         for (f = 0; f < input_count; f++) {
           ilen[f] = st_read(file_desc[f], ibuf[f], (st_ssize_t)ST_BUFSIZ);
                 
@@ -790,14 +793,13 @@ static void process(void) {
               efftab[0].obuf[s] =
                 (s<(st_size_t)ilen[f]) ? ibuf[f][s] : 0;
             else if (s < (st_size_t)ilen[f]) {
-              double sample = efftab[0].obuf[s];
-              sample += ibuf[f][s]; /* DON'T COMBINE WITH PREV LINE */
-              efftab[0].obuf[s] =
-                ST_ROUND_CLIP_COUNT(sample, mixing_clips);
+              /* Cast to double prevents integer overflow */
+              double sample = efftab[0].obuf[s] + (double)ibuf[f][s];
+              efftab[0].obuf[s] = ST_ROUND_CLIP_COUNT(sample, mixing_clips);
             }
           }
         }
-      } else {                 /* mode == SOX_MERGE */
+      } else {                 /* combine_method == SOX_MERGE */
         efftab[0].olen = 0;
         for (f = 0; f < input_count; ++f) {
           ilen[f] = st_read(file_desc[f], ibuf[f], ST_BUFSIZ / input_count);
@@ -857,7 +859,7 @@ static void process(void) {
   if (status)
     fputs("\n\n", stderr);
 
-  if (mode != SOX_CONCAT)
+  if (combine_method != SOX_CONCAT)
     /* Free input buffers now that they are not used */
     for (f = 0; f < input_count; f++)
       free(ibuf[f]);
@@ -1129,10 +1131,6 @@ static int flow_effect_out(void)
 
     /* If outputting and output data was generated then write it */
     if (writing && (efftab[neffects - 1].olen > efftab[neffects - 1].odone)) {
-      /* Change the volume of this output data if needed. */
-      volumechange(efftab[neffects - 1].obuf, efftab[neffects - 1].olen,
-                   file_opts[file_count - 1]);
-
       total = 0;
       do {
         /* Do not do any more writing during user aborts as
@@ -1514,29 +1512,29 @@ static void update_status(void)
 /* Adjust volume based on value specified by the -v option for this file. */
 static void volumechange(st_sample_t * buf, st_ssize_t len, file_options_t fo)
 {
-  if (fo->volume != 1)
+  if (fo->volume != HUGE_VAL && fo->volume != 1)
     while (len--) {
       double d = fo->volume * *buf;
       *buf++ = ST_ROUND_CLIP_COUNT(d, fo->volume_clips);
     }
 }
 
-static void usage(char *opt)
+static void usage(char const * message)
 {
   int i;
   const st_format_t *f;
   const st_effect_t *e;
   static char *usagestr;
 
-  if (mode != SOX_CONCAT)
+  if (soxmix)
     usagestr = "[ gopts ] [ fopts ] ifile1 [fopts] ifile2 [ fopts ] ofile [ effect [ effopts ] ]";
   else
     usagestr = "[ gopts ] [ fopts ] ifile [ fopts ] ofile [ effect [ effopts ] ]";
 
   printf("%s: ", myname);
   printf("Version %s\n\n", st_version());
-  if (opt)
-    fprintf(stderr, "Failed: %s\n\n", opt);
+  if (message)
+    fprintf(stderr, "Failed: %s\n\n", message);
   printf("Usage: %s\n\n", usagestr);
   printf(
          "Special filenames (ifile, ofile):\n"
@@ -1544,20 +1542,17 @@ static void usage(char *opt)
          "-               use stdin or stdout\n"
          "-n, -e          use the null file handler; for use with e.g. synth & stat.\n"
          "\n"
-         "Global options (gopts):\n"
+         "Global options (gopts) (can be specified at any point before the first effect):\n"
          "\n"
-         "Global options can be specified anywhere on the command\n"
-         "\n"
-         "-h              print version number and usage information\n"
-         "--help          same as -h\n"
+         "-h, --help      display version number and usage information\n"
          "--help-effect=name\n"
-         "                print usage of specified effect.  use 'all' to print all\n"
+         "                display usage of specified effect.  use 'all' to display all\n"
          "-m, --mix       mix multiple input files (instead of concatenating)\n"
          "-M, --merge     merge multiple input files (instead of concatenating)\n"
          "-o              generate Octave commands to plot response of filter effect\n"
          "-q              run in quiet mode.  Inverse of -S option\n"
-         "-S              print status while processing audio data.\n"
-         "--version       print version number of SoX and exit\n"
+         "-S              display status while processing audio data.\n"
+         "--version       display version number of SoX and exit\n"
          "-V[level]       increase verbosity (or set level). Default is 2. Levels are:\n"
          "\n"
          "                  1: failure messages\n"
@@ -1569,10 +1564,10 @@ static void usage(char *opt)
          "\n"
          "Format options (fopts):\n"
          "\n"
-         "Format options are only need to be supplied on input files that are\n"
-         "headerless otherwise they are obtained from the audio data's header.\n"
+         "Format options only need to be supplied for input files that are\n"
+         "headerless, otherwise they are obtained from the audio data's header.\n"
          "Output files will default to the same format options as the input\n"
-         "file unless overriden on the command line.\n"
+         "file unless overriden using the following.\n"
          "\n"
          "-c channels     number of channels in audio data\n"
          "-C compression  compression factor for variably compressing output formats\n"
@@ -1581,13 +1576,14 @@ static void usage(char *opt)
          "                Specify file containing comment text for the output file\n"
          "-r rate         sample rate of audio\n"
          "-t filetype     file type of audio\n"
-         "-v volume       volume adjustment factor (floating point)\n"
          "-x              invert auto-detected endianess of data\n"
          "-s/-u/-U/-A/    sample encoding.  signed/unsigned/u-law/A-law\n"
          "  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point\n"
          "-1/-2/-3/-4/-8  sample size in bytes\n"
          "-b/-w/-l/-d     aliases for -1/-2/-4/-8.  abbreviations of:\n"
          "                byte, word, long, double-long.\n"
+         "\n"
+         "-v volume       input file volume adjustment factor (floating point)\n"
          "\n");
 
   printf("Supported file formats: ");

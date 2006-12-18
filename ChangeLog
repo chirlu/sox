@@ -70,6 +70,8 @@ sox-12.18.3
   o Several effects are now optimised in situations where they need
     do nothing, e.g. changing rate from 8000 to 8000, or changing volume
     by 0dB [Bug# 1395781].  (robs)
+  o Removed (for output file only) the potentially
+    problematic -v option.  Use the vol effect instead.  (robs)
 
 sox-12.18.2
 -----------
