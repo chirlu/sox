@@ -143,7 +143,7 @@ AC_SUBST(SAMPLERATE_LIBS)
 
 dnl LUA, LUAC, LUA_INCLUDES, LUA_LIBS
 
-have_lua=yes
+with_lua=yes
 
 AC_SUBST(LUA)
 AC_SUBST(LUAC)
@@ -182,7 +182,7 @@ lua_version=$($LUA -v 2>&1 | head -n 1 | cut -d' ' -f2)
 case $lua_version in
 0.* | 1.* | 2.* | 3.* | 4.* | 5.0)
     AC_MSG_RESULT([no (found $lua_version)])
-    have_lua=no
+    with_lua=no
     ;;
 *)
     AC_MSG_RESULT([yes (found $lua_version)])
@@ -214,7 +214,7 @@ elif test "x$with_lua_prefix" != x; then
 fi
 save_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS $LUA_INCLUDES"
-AC_CHECK_HEADERS([lua.h lualib.h], [], [have_lua=no], [])
+AC_CHECK_HEADERS([lua.h lualib.h], [], [with_lua=no], [])
 CFLAGS="$save_CFLAGS"
 
 dnl LUA_LIBS
@@ -228,7 +228,7 @@ AC_CHECK_LIB([dl], [dlopen], [lua_extra_libs="$lua_extra_libs -ldl"], [])
 AC_CHECK_LIB([lua$with_lua_suffix],
              [lua_call],
              [LUA_LIBS="$LUA_LIBS -llua$with_lua_suffix $lua_extra_libs"],
-             [have_lua=no],
+             [with_lua=no],
              [$LUA_LIBS $lua_extra_libs])
 
 dnl liblua_version
@@ -258,7 +258,7 @@ int main()
 CFLAGS="$save_CFLAGS"
 LIBS="$save_LIBS"
 
-if test "$have_lua" = yes; then
+if test "$with_lua" = yes; then
    AC_DEFINE(HAVE_LUA, 1, [Define to 1 if you have Lua.])
 fi
 
