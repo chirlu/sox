@@ -19,8 +19,6 @@
  * USA.  */
 
  
-/* TODO: Allow Lua to process an array of samples directly. */
-
 /* TODO: If efficiency is still a problem, move the call of the Lua
    script into the flow phase. Instrument the Lua environment
    so that scripts can still be written naively: reading beyond the
@@ -90,7 +88,7 @@ typedef struct {
   st_sample_t *data;
 } st_sample_t_array_t;
 
-static const char *handle = "st_sample_t *";
+static const char *handle = "st_sample_t array";
 
 static int newarr(lua_State *L, st_sample_t_array_t arr)
 {
@@ -104,8 +102,8 @@ static int newarr(lua_State *L, st_sample_t_array_t arr)
 static int arr_index(lua_State *L)
   /* array, key -> value */
 {
-  lua_Integer k = luaL_checkinteger(L, -1);
-  st_sample_t_array_t *p = luaL_checkudata(L, -2, handle);
+  st_sample_t_array_t *p = luaL_checkudata(L, 1, handle);
+  lua_Integer k = luaL_checkinteger(L, 2);
 
   if ((st_size_t)k >= p->size)
     lua_pushnil(L);
@@ -118,9 +116,9 @@ static int arr_index(lua_State *L)
 static int arr_newindex(lua_State *L)
   /* array, key, value -> */
 {
-  lua_Integer v = luaL_checkinteger(L, -1);
-  lua_Integer k = luaL_checkinteger(L, -1);
-  st_sample_t_array_t *p = luaL_checkudata(L, -2, handle);
+  st_sample_t_array_t *p = luaL_checkudata(L, 1, handle);
+  lua_Integer k = luaL_checkinteger(L, 2);
+  lua_Integer v = luaL_checkinteger(L, 3);
 
   /* FIXME: Have some indication for out of range */
   if ((st_size_t)k < p->size)
@@ -129,10 +127,11 @@ static int arr_newindex(lua_State *L)
   return 0;
 }
 
-static int arr_getn(lua_State *L)
+static int arr_len(lua_State *L)
   /* array -> #array */
 {
-  st_sample_t_array_t *p = luaL_checkudata(L, -2, handle);
+  st_sample_t_array_t *p;
+  p = luaL_checkudata(L, 1, handle);
   lua_pushinteger(L, (lua_Integer)p->size);
   return 1;
 }
@@ -156,7 +155,7 @@ static int arr_tostring(lua_State *L)
 static const luaL_reg meta[] = {
   {"__index", arr_index},
   {"__newindex", arr_newindex},
-  {"__getn", arr_getn},
+  {"__len", arr_len},
   {"__tostring", arr_tostring},
   {NULL, NULL}
 };
@@ -204,10 +203,10 @@ static int st_lua_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf UN
                        st_size_t *isamp, st_size_t *osamp)
 {
   lua_t lua = (lua_t)effp->priv;
-  st_size_t newsamp = lua->nsamp + *isamp;
 
-  lua->data = (st_sample_t *)xrealloc(lua->data, newsamp * sizeof(st_sample_t));
+  lua->data = (st_sample_t *)xrealloc(lua->data, (lua->nsamp + *isamp) * sizeof(st_sample_t));
   memcpy(lua->data + lua->nsamp, ibuf, *isamp * sizeof(st_sample_t));
+  lua->nsamp += *isamp;
 
   *osamp = 0;           /* Signal that we didn't produce any output */
 
