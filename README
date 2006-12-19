@@ -1,12 +1,15 @@
 SoX: Sound eXchange
 -------------------
 
-SoX (also known as Sound eXchange) translates sound files between
-different file formats, and optionally applies various sound effects.
+SoX (Sound eXchange) is the Swiss Army knife of sound processing
+tools: it translates sound files between many different file formats,
+and can apply many sound effects and transforms, as well as doing
+basic analysis and providing input to more capable analysis and
+plotting tools.
 
-SoX is intended as the Swiss Army knife of sound processing tools. It
-doesn't do anything very well, but sooner or later it comes in very
-handy.
+Send bug fixes, enhancements and feature requests to
+sox-devel@lists.sourceforge.net, or post them to the relevant tracker
+at http://sourceforge.net/projects/sox/.
 
 This release understands:
 
@@ -14,7 +17,7 @@ This release understands:
   o Raw textual data
   o Amiga 8svx files
   o Apple/SGI AIFF files
-  o SUN .au style files
+  o SUN .au files
     o PCM, u-law, A-law
     o G7xx ADPCM files (read only)
     o mutant DEC .au files
@@ -28,9 +31,9 @@ This release understands:
   o MP3 files (with optional external library)
   o IRCAM SoundFile files
   o NIST SPHERE files
-  o Turtle beach SampleVision files.
+  o Turtle beach SampleVision files
   o Soundtool (DOS) files
-  o Yamaha TX-16W sampler files.
+  o Yamaha TX-16W sampler files
   o Sound Blaster .VOC files
   o Ogg Vorbis files (with optional external library)
   o FLAC files (with optional external library)
@@ -44,7 +47,7 @@ This release understands:
   o Maxis XA Audio files
     o EA ADPCM (read support only, for now)
   o Pseudo-file formats that allow direct playing/recording
-    from some audio devices under UNIX.
+    from some audio devices under UNIX
   o Pseudo-nul file that reads and writes from/to nowhere
 
 The sound effects include:
@@ -53,10 +56,10 @@ The sound effects include:
   o Band-pass filters
   o Band-reject filter
   o Bass tone control
-  o Compress and Expand (compand) the dynamic range of a sample.
+  o Compress and Expand (compand) the dynamic range of a sample
   o Chorus effect
-  o DCShift audio.  Useful to get the best volume adjustments.
-  o Deemphases filter
+  o DCShift audio - useful to get the best volume adjustments
+  o De-emphasis filter
   o Move sound stage of CD audio to in front of you (for headphone
     use)
   o Add an echo 
@@ -83,42 +86,43 @@ The sound effects include:
     motor on a tape recorder)
   o Display general stats on a sound sample
   o Stretch/shorten the duration of a sound file (without affecting
-    pitch).
+    pitch)
   o Swap stereo channels
-  o Create sounds with a simple synthesizer.
+  o Create sounds with a simple synthesizer
   o Treble tone control
-  o Trim audio data from beginning and end of file.
+  o Trim audio data from beginning and end of file
   o Add the world-famous Fender Vibro-Champ effect
   o Adjust volume of samples
   o Noise elimination using frequency profiling
   o Resample using libsamplerate (aka Secret Rabbit code, optional
-    external library).
+    external library)
 
-Installing:
+Unless you're using a pre-compiled binary version, you will need to
+compile SoX as described in the INSTALL file.
 
-Unless your using a pre-compiled binary version, you will need to
-compile SoX as described in the INSTALL file. Please read that file
-for further instructions.
-
-SoX is distributed with two text files named sox.txt and soxexam.txt.
-These files give a background on how SoX deals with sound files and
-what command line options are available to convert a sound file to
-another file format and how to apply sound effects.
+SoX is distributed with man pages, and for those on systems without
+man, the files sox.txt and soxexam.txt contain plain text versions of
+the two most important pages: they describe how SoX deals with sound
+files, the command line options available to convert a sound file to
+another format, and how to apply sound effects.
 
 SoX has an auto-detect feature that attempts to figure out the nature
 of a sound file. It does this by looking for 'magic values' in the
 header of the audio file. If it is unable to detect the format of the
-sound file then the user must use command line options to inform SoX.
+sound file then the user must use command-line options to inform SoX.
 
-I hope to inspire the creation of a common base of sound processing
-tools for computer multimedia work, similar to the PBM toolkit for
-image manipulation.
+We hope to make SoX a common base of sound processing tools for
+computer multimedia work, similar to the PBM toolkit for image
+manipulation. The majority of SoX features and source code are
+contributed by you the user. Thank you very much for making SoX a
+success! If you're interested in helping with SoX, read on...
 
-If you have bug fixes/enhancements, please send it to me as I would
-like to coordinate the releases. Please document your changes. I do
-not possess every kind of computer currently sold, and SoX is now
-beyond the phase where I can understand and test most of your
-contributions.
+SoX includes skeleton format files to assist you in supporting new
+formats, sound effect loops, and special-purpose programs. The full
+skeleton format, skel.c, helps you write a driver for a new format
+which has data structures. skeleff.c is a starting point for writing a
+sound effect loop. sox.c is a good starting point for new programs.
+(Someone finally did this and told me what was wrong...)
 
-The majority of SoX features and source code are contributed by you
-the user. Thank you very much for making SoX a success!
+In handlers.c, note that many formats set up the header and then
+use the raw driver for reading and writing.  

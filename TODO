@@ -1,17 +1,6 @@
-People are encouraged to pick some of these and implement it. Send all
-patches to cbagwell@users.sourceforge.net, or post them on the patches
-tracker at http://sf.net/projects/sox/.
-
-SOX includes skeleton format files to assist you in supporting new 
-formats, sound effect loops, and special-purpose programs.
-The full skeleton format, skel.c, helps you write a driver 
-for a new format which has data structures.  skeleff.c is
-a starting point for writing a sound effect loop.  Sox.c is
-a good starting point for new programs.  (Someone finally
-did this and told me what was wrong...)
-
-In handlers.c, note that many formats set up the header and then
-use the raw driver for reading and writing.  
+Users are encouraged to implement these. Send all patches to
+sox-devel@lists.sourceforge.net, or post them on the patches tracker
+at http://sf.net/projects/sox/.
 
   o Update all read routines to be like WAV handler and only
     return data in multiples of sample_size*channels.  This
