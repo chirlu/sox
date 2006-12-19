@@ -193,19 +193,20 @@ static void cleanup(void)
     }
 
   if (writing && file_desc[file_count - 1]) {
-    char *fn;
-    struct stat st;
+    if (!(file_desc[file_count - 1]->h->flags & ST_FILE_NOSTDIO)) {
+      char *fn;
+      struct stat st;
 
-    fstat(fileno(file_desc[file_count - 1]->fp), &st);
-    fn = strdup(file_desc[file_count - 1]->filename);
-    st_close(file_desc[file_count - 1]);
-    
-    /* If we didn't succeed, Remove the output file, if we created it. */
-    if (!success && (st.st_mode & S_IFMT) == S_IFREG)
-      unlink(fn);
-    free(fn);
-    if (file_desc[file_count - 1])
-      free(file_desc[file_count - 1]);
+      fstat(fileno(file_desc[file_count - 1]->fp), &st);
+      fn = strdup(file_desc[file_count - 1]->filename);
+      st_close(file_desc[file_count - 1]);
+      
+      /* If we didn't succeed, Remove the output file, if we created it. */
+      if (!success && (st.st_mode & S_IFMT) == S_IFREG)
+        unlink(fn);
+      free(fn);
+    }
+    free(file_desc[file_count - 1]);
   }
 }
 
