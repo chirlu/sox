@@ -1,4 +1,4 @@
-Makefile
+Makefile Makefile.in
 libst-config
 play sox soxmix
 stconfig.h ststdint.h
