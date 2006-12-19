@@ -59,7 +59,7 @@ static int st_repeat_start(eff_t effp)
 {
         repeat_t repeat = (repeat_t)effp->priv;
 
-        if (repeat->repeats == 1)
+        if (repeat->repeats == 0)
           return ST_EFF_NULL;
 
         if ((repeat->fp = tmpfile()) == NULL) {
