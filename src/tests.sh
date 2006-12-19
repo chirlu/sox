@@ -26,20 +26,22 @@ getFormat () {
   
 convertToAndFrom () {
   while [ $# != 0 ]; do
-    getFormat $format1; format1Text=$formatText; format1Flags=$formatFlags
-    getFormat       $1; format2Text=$formatText; format2Flags=$formatFlags
-    ./sox -c $channels -r $rate -n $format1Flags input.$format1 synth $samples's' sin 300-3300 noise
-    ./sox $verbose -r $rate -c $channels $format1Flags input.$format1 $format2Flags intermediate.$1
-    ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$1 $format1Flags output.$format1
+    if ! echo $skip|tr " " "\n"|grep -Eq "^$format1$|^$1$"; then
+      getFormat $format1; format1Text=$formatText; format1Flags=$formatFlags
+      getFormat       $1; format2Text=$formatText; format2Flags=$formatFlags
+      ./sox -c $channels -r $rate -n $format1Flags input.$format1 synth $samples's' sin 300-3300 noise
+      ./sox $verbose -r $rate -c $channels $format1Flags input.$format1 $format2Flags intermediate.$1
+      ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$1 $format1Flags output.$format1
 
-    if cmp -s input.$format1 output.$format1
-    then
-      echo "ok     channels=$channels \"$format1Text\" <--> \"$format2Text\"."
-    else
-      echo "*FAIL* channels=$channels \"$format1Text\" <--> \"$format2Text\"."
-      exit 1    # This allows failure inspection.
+      if cmp -s input.$format1 output.$format1
+      then
+	echo "ok     channels=$channels \"$format1Text\" <--> \"$format2Text\"."
+      else
+	echo "*FAIL* channels=$channels \"$format1Text\" <--> \"$format2Text\"."
+	exit 1    # This allows failure inspection.
+      fi
+      rm -f input.$format1 intermediate.$1 output.$format1
     fi
-    rm -f input.$format1 intermediate.$1 output.$format1
     shift
   done
 }
@@ -65,19 +67,20 @@ do_multichannel_formats () {
 
   format1=Wav
   convertToAndFrom Wav aiff aifc au avr dat maud sf flac
-  samples=23492 convertToAndFrom 8svx  # Even number of samples only
-  rate=8000 convertToAndFrom voc       # Fixed rate
+  (samples=23492; convertToAndFrom 8svx)  # Even number of samples only
+  (rate=8000; convertToAndFrom voc)       # Fixed rate
 }
 
 do_singlechannel_formats () {
   format1=Wav
   convertToAndFrom smp
-  rate=5512 convertToAndFrom hcom      # Fixed rate
+  (rate=5512; convertToAndFrom hcom)      # Fixed rate
 
-  rate=8000
   format1=wve
-  convertToAndFrom al sw uw sl raw Raw dat
+  (rate=8000; convertToAndFrom al sw uw sl raw Raw dat)      # Fixed rate
 }
+
+grep -q "^#define HAVE_LIBFLAC" stconfig.h || skip="flac $skip"
 
 rate=44100
 samples=23493
@@ -85,7 +88,6 @@ channels=2
 do_multichannel_formats
 channels=1 
 do_multichannel_formats
-channels=1 
 do_singlechannel_formats
 
 ./sox -c 1 -n output.ub synth .01 vol .5
@@ -95,3 +97,5 @@ else
   echo "*FAIL* synth size"
 fi
 rm output.ub
+
+test -n "$skip" && echo "Skipped: $skip"
