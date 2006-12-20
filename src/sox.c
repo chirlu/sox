@@ -184,6 +184,7 @@ static void sox_output_message(int level, st_output_message_t m)
 static void cleanup(void) 
 {
   size_t i;
+  ft_t ft = file_desc[file_count - 1];
 
   /* Close the input and output files before exiting. */
   for (i = 0; i < input_count; i++)
@@ -192,21 +193,19 @@ static void cleanup(void)
       free(file_desc[i]);
     }
 
-  if (writing && file_desc[file_count - 1]) {
-    if (!(file_desc[file_count - 1]->h->flags & ST_FILE_NOSTDIO)) {
-      char *fn;
+  if (writing && ft) {
+    if (!(ft->h->flags & ST_FILE_NOSTDIO)) {
       struct stat st;
-
-      fstat(fileno(file_desc[file_count - 1]->fp), &st);
-      fn = strdup(file_desc[file_count - 1]->filename);
-      st_close(file_desc[file_count - 1]);
-      
-      /* If we didn't succeed, Remove the output file, if we created it. */
+      fstat(fileno(ft->fp), &st);
+    
+      /* If we didn't succeed and we created an output file, remove it. */
       if (!success && (st.st_mode & S_IFMT) == S_IFREG)
-        unlink(fn);
-      free(fn);
+        unlink(ft->filename);
     }
-    free(file_desc[file_count - 1]);
+
+    /* Assumption: we can unlink a file before st_closing it. */
+    st_close(ft);
+    free(ft);
   }
 }
 
@@ -1411,8 +1410,7 @@ static void release_effect_buf(void)
     
   for (e = 0; e < neffects; e++) {
     free(efftab[e].obuf);
-    if (efftabR[e].obuf)
-      free(efftabR[e].obuf);
+    free(efftabR[e].obuf);
   }
 }
 
