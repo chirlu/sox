@@ -242,7 +242,7 @@ static int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 done++;
                 phaser->fade_out--;
         }
-        /* samples playd, it remains */
+        /* samples played, it remains */
         *osamp = done;
         if (phaser->fade_out == 0)
             return ST_EOF;
@@ -257,10 +257,8 @@ static int st_phaser_stop(eff_t effp)
 {
         phaser_t phaser = (phaser_t) effp->priv;
 
-        free((char *) phaser->phaserbuf);
-        phaser->phaserbuf = (double *) -1;   /* guaranteed core dump */
-        free((char *) phaser->lookup_tab);
-        phaser->lookup_tab = (int *) -1;   /* guaranteed core dump */
+        free(phaser->phaserbuf);
+        free(phaser->lookup_tab);
         return (ST_SUCCESS);
 }
 

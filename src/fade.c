@@ -326,12 +326,9 @@ static int st_fade_stop(eff_t effp)
 {
     fade_t fade = (fade_t) effp->priv;
 
-    if (fade->in_stop_str)
-        free(fade->in_stop_str);
-    if (fade->out_start_str)
-        free(fade->out_start_str);
-    if (fade->out_stop_str)
-        free(fade->out_stop_str);
+    free(fade->in_stop_str);
+    free(fade->out_start_str);
+    free(fade->out_stop_str);
     return (ST_SUCCESS);
 }
 
@@ -342,41 +339,37 @@ static double fade_gain(st_size_t index, st_size_t range, char type)
 {
     double retval = 0.0, findex = 0.0;
 
-    findex = 1.0 * index / range;
+    /* TODO: does it really have to be contrained to [0.0, 1.0]? */
+    findex = max(0.0, min(1.0, 1.0 * index / range));
 
-    /* todo: are these really needed */
-    findex = (findex < 0 ? 0.0 : findex);
-    findex = (findex > 1.0 ? 1.0 : findex);
+    switch (type) {
+    case FADE_TRI :             /* triangle */
+      retval = findex;
+      break;
 
-    switch (type)
-    {
-        case FADE_TRI : /* triangle  */
-            retval = findex;
-            break;
+    case FADE_QUARTER :         /* quarter of sinewave */
+      retval = sin(findex * M_PI / 2);
+      break;
 
-        case FADE_QUARTER : /*  quarter of sinewave */
-            retval = sin(findex * M_PI / 2);
-            break;
+    case FADE_HALF :          /* half of sinewave... eh cosine wave */
+      retval = (1 - cos(findex * M_PI )) / 2 ;
+      break;
 
-        case FADE_HALF : /* half of sinewave... eh cosine wave */
-            retval = (1 - cos(findex * M_PI )) / 2 ;
-            break;
+    case FADE_LOG :             /* logarithmic */
+      /* 5 means 100 db attenuation. */
+      /* TODO: should this be adopted with bit depth */
+      retval =  pow(0.1, (1 - findex) * 5);
+      break;
 
-        case FADE_LOG : /* logaritmic */
-            /* 5 means 100 db attenuation. */
-            /* todo: should this be adopted with bit depth        */
-            retval =  pow(0.1, (1 - findex) * 5);
-            break;
+    case FADE_PAR :             /* inverted parabola */
+      retval = (1 - (1 - findex)  * (1 - findex));
+      break;
 
-        case FADE_PAR : /* inverted parabola */
-            retval = (1 - (1 - findex)  * (1 - findex));
-            break;
-
-            /* todo: more fade curves? */
-        default : /* Error indicating wrong fade curve */
-            retval = -1.0;
-            break;
-    } /* endswitch */
+    /* TODO: more fade curves? */
+    default :                  /* Error indicating wrong fade curve */
+      retval = -1.0;
+      break;
+    }
 
     return retval;
 }

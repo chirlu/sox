@@ -189,10 +189,8 @@ static int st_trim_stop(eff_t effp)
 {
     trim_t trim = (trim_t) effp->priv;
 
-    if (trim->start_str)
-        free(trim->start_str);
-    if (trim->length_str)
-        free(trim->length_str);
+    free(trim->start_str);
+    free(trim->length_str);
 
     return (ST_SUCCESS);
 }

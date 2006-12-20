@@ -20,8 +20,6 @@
 
 #include "st_i.h"
 
-#ifdef HAVE_LUA_H
-
 #include <lua.h>
 #include <lauxlib.h>
 #include <luaconf.h>
@@ -165,5 +163,3 @@ LUALIB_API int luaopen_int (lua_State *L) {
   luaL_register(L, STRING(LIBNAME), funcs);
   return 1;
 }
-
-#endif

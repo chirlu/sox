@@ -32,8 +32,6 @@
  
 #include "st_i.h"
 
-#ifdef HAVE_LUA
-
 #include <assert.h>
 #include <string.h>
 #include <lua.h>
@@ -280,5 +278,3 @@ const st_effect_t *st_lua_effect_fn(void)
 {
   return &st_lua_effect;
 }
-
-#endif

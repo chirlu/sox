@@ -152,10 +152,8 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
 
 input_error:
 
-    if (ft->filename)
-        free(ft->filename);
-    if (ft->filetype)
-        free(ft->filetype);
+    free(ft->filename);
+    free(ft->filetype);
     free(ft);
     return NULL;
 }
@@ -280,10 +278,8 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
 
 output_error:
 
-    if (ft->filename)
-        free(ft->filename);
-    if (ft->filetype)
-        free(ft->filetype);
+    free(ft->filename);
+    free(ft->filetype);
     free(ft);
     return NULL;
 }
@@ -304,6 +300,7 @@ st_size_t st_write(ft_t ft, const st_sample_t *buf, st_size_t len)
     return (*ft->h->write)(ft, buf, len);
 }
 
+/* N.B. The file (if any) may already have been deleted. */
 int st_close(ft_t ft)
 {
     int rc;
@@ -315,14 +312,11 @@ int st_close(ft_t ft)
 
     if (!(ft->h->flags & ST_FILE_NOSTDIO))
         fclose(ft->fp);
-    if (ft->filename)
-        free(ft->filename);
-    if (ft->filetype)
-        free(ft->filetype);
+    free(ft->filename);
+    free(ft->filetype);
     /* Currently, since startread() mallocs comments, stopread
-     * is expected to also free it.
-     */
-    if (ft->mode == 'w' && ft->comment)
+     * is expected to also free it. */
+    if (ft->mode == 'w')
         free(ft->comment);
 
     return rc;

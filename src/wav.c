@@ -1116,15 +1116,11 @@ static int st_wavstopread(ft_t ft)
 
         ft->st_errno = ST_SUCCESS;
 
-    if (wav->packet) free(wav->packet);
-    if (wav->samples) free(wav->samples);
-    if (wav->iCoefs) free(wav->iCoefs);
-
-    if (ft->comment) 
-    {
-        free(ft->comment);
-        ft->comment = 0;
-    }
+    free(wav->packet);
+    free(wav->samples);
+    free(wav->iCoefs);
+    free(ft->comment);
+    ft->comment = NULL;
 
     switch (ft->info.encoding)
     {
@@ -1614,17 +1610,15 @@ static int st_wavstopwrite(ft_t ft)
             wavgsmstopwrite(ft);
             break;
         }
-        if (wav->packet) free(wav->packet);
-        if (wav->samples) free(wav->samples);
-        if (wav->iCoefs) free(wav->iCoefs);
+        free(wav->packet);
+        free(wav->samples);
+        free(wav->iCoefs);
 
         /* Flush any remaining data */
         if (wav->formatTag != WAVE_FORMAT_IMA_ADPCM &&
             wav->formatTag != WAVE_FORMAT_ADPCM &&
             wav->formatTag != WAVE_FORMAT_GSM610)
-        {
             st_rawstopwrite(ft);
-        }
 
         /* All samples are already written out. */
         /* If file header needs fixing up, for example it needs the */

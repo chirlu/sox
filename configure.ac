@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(SoX, 12.18.3, cbagwell@users.sourceforge.net)
+AC_INIT(SoX, 12.18.3, sox-devel@lists.sourceforge.net)
 AM_INIT_AUTOMAKE
 
 dnl create a config.h file (Automake will add -DHAVE_CONFIG_H)
@@ -143,12 +143,6 @@ AC_SUBST(SAMPLERATE_LIBS)
 
 dnl LUA, LUA_INCLUDES, LUA_LIBS
 
-with_lua=yes
-
-AC_SUBST(LUA)
-AC_SUBST(LUA_INCLUDES)
-AC_SUBST(LUA_LIBS)
-
 dnl Arguments
 AC_ARG_WITH([lua-prefix],
             [AS_HELP_STRING([--with-lua-prefix=DIR],
@@ -164,6 +158,22 @@ AC_ARG_WITH([lua-suffix],
                             [Lua binary and library files are suffixed with
                              ARG])])
 
+dnl Default to built-in Lua; if external Lua supplied, test it
+if test "x$with_lua_prefix" = x && test "x$with_lua_includes" = x && \
+   test "x$with_lua_libraries" = x && test "x$with_lua_suffix" = x; then
+   AC_MSG_WARN("Using built-in Lua")
+   with_lua_prefix=./lua
+   want_internal_lua=yes
+   LUA="$with_lua_prefix/src/lua"
+   LUA_INCLUDES="-I$with_lua_prefix/src"
+   LUA_LIBS="-L$with_lua_prefix/src -llua"
+else
+   want_internal_lua=no
+
+AC_SUBST(LUA)
+AC_SUBST(LUA_INCLUDES)
+AC_SUBST(LUA_LIBS)
+
 dnl LUA
 if test "x$with_lua_prefix" = x; then
     lua_search_path="$PATH"
@@ -172,19 +182,19 @@ else
 fi
 if test "x$LUA" = x; then
     AC_PATH_PROG([LUA], [lua$with_lua_suffix], [], [$lua_search_path])
-    test "x$LUA" = x && AC_MSG_ERROR([*** Can't build ion without lua])
+    test "x$LUA" = x && AC_MSG_FAILURE([*** Can't build SoX without Lua])
 fi
 
 dnl lua_version
-AC_MSG_CHECKING([for lua version >= 5.1])
+AC_MSG_CHECKING([for Lua version == 5.1])
 lua_version=$($LUA -v 2>&1 | head -n 1 | cut -d' ' -f2)
 case $lua_version in
-0.* | 1.* | 2.* | 3.* | 4.* | 5.0)
-    AC_MSG_RESULT([no (found $lua_version)])
-    with_lua=no
+5.1*)
+    AC_MSG_RESULT([yes (found $lua_version)])
     ;;
 *)
-    AC_MSG_RESULT([yes (found $lua_version)])
+    AC_MSG_RESULT([no (found $lua_version)])
+    AC_MSG_FAILURE([*** Can't build SoX without Lua])
     ;;
 esac
 dnl
@@ -197,7 +207,7 @@ elif test "x$with_lua_prefix" != x; then
 fi
 save_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS $LUA_INCLUDES"
-AC_CHECK_HEADERS([lua.h lualib.h], [], [with_lua=no], [])
+AC_CHECK_HEADERS([lua.h lualib.h], [], [AC_MSG_FAILURE([*** Can't build SoX without Lua])], [])
 CFLAGS="$save_CFLAGS"
 
 dnl LUA_LIBS
@@ -211,26 +221,23 @@ AC_CHECK_LIB([dl], [dlopen], [lua_extra_libs="$lua_extra_libs -ldl"], [])
 AC_CHECK_LIB([lua$with_lua_suffix],
              [lua_call],
              [LUA_LIBS="$LUA_LIBS -llua$with_lua_suffix $lua_extra_libs"],
-             [with_lua=no],
+             [AC_MSG_FAILURE([*** Can't build SoX without Lua])],
              [$LUA_LIBS $lua_extra_libs])
 
 dnl liblua_version
-AC_MSG_CHECKING([for liblua version >= 5.1])
+AC_MSG_CHECKING([for liblua version == 5.1])
 save_CFLAGS="$CFLAGS"
 save_LIBS="$LIBS"
 CFLAGS="$CFLAGS $LUA_INCLUDES"
 LIBS="$LIBS $LUA_LIBS"
 AC_RUN_IFELSE([AC_LANG_SOURCE([[
-
 #include <lua.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
-
 int main()
 {
     printf("(found %s, %d)... ", LUA_VERSION, LUA_VERSION_NUM);
-    if(LUA_VERSION_NUM >= 501)
+    if (LUA_VERSION_NUM == 501)
         exit(EXIT_SUCCESS);
     exit(EXIT_FAILURE);
 }
@@ -241,14 +248,16 @@ int main()
 CFLAGS="$save_CFLAGS"
 LIBS="$save_LIBS"
 
-if test "$with_lua" = yes; then
-   AC_DEFINE(HAVE_LUA, 1, [Define to 1 if you have Lua.])
-fi
+fi dnl Check external Lua
+
+dnl Build internal Lua if needed
+AM_CONDITIONAL([INTERNAL_LUA], [test "$want_internal_lua" = yes])
 
 
 dnl Generate output files.
 AX_CREATE_STDINT_H(src/ststdint.h)
-AC_SUBST(with_alsa with_oss) dnl For play.in
+AC_SUBST(with_alsa) dnl for play.in
+AC_SUBST(with_oss)  dnl for play.in
 AC_CONFIG_FILES(Makefile src/Makefile src/libgsm/Makefile src/libst-config src/play)
 AC_OUTPUT
 
@@ -262,7 +271,6 @@ echo "FLAC support...................... $with_flac"
 echo "MAD MP3 Decoder................... $with_mad"
 echo "LAME MP3 Encoder.................. $with_lame"
 echo "Secret Rabbit Code resampling..... $with_samplerate"
-echo "Lua scripting..................... $with_lua"
 echo
 echo "Configure finished.  Do 'make; make install' to compile and install SoX."
 echo

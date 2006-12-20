@@ -647,28 +647,21 @@ static int st_mcompand_stop(eff_t effp)
   comp_band_t l;
   int band;
 
-  if (c->band_buf1) {
-    free(c->band_buf1);
-    c->band_buf1 = 0;
-  }
-  if (c->band_buf2) {
-    free(c->band_buf2);
-    c->band_buf2 = 0;
-  }
-  if (c->band_buf3) {
-    free(c->band_buf3);
-    c->band_buf3 = 0;
-  }
+  free(c->band_buf1);
+  c->band_buf1 = NULL;
+  free(c->band_buf2);
+  c->band_buf2 = NULL;
+  free(c->band_buf3);
+  c->band_buf3 = NULL;
 
-  for (band=0;band<c->nBands;++band) {
+  for (band = 0; band < c->nBands; band++) {
     l = &c->bands[band];
-    free((char *) l->transferOuts);
-    free((char *) l->transferIns);
-    free((char *) l->decayRate);
-    free((char *) l->attackRate);
-    if (l->delay_buf)
-      free((char *) l->delay_buf);
-    free((char *) l->volume);
+    free(l->transferOuts);
+    free(l->transferIns);
+    free(l->decayRate);
+    free(l->attackRate);
+    free(l->delay_buf);
+    free(l->volume);
     if (l->topfreq != 0) {
       free(l->filter.xy_low);
       free(l->filter.xy_high);
@@ -677,7 +670,7 @@ static int st_mcompand_stop(eff_t effp)
   free(c->bands);
   c->bands = 0;
 
-  return (ST_SUCCESS);
+  return ST_SUCCESS;
 }
 
 static st_effect_t st_mcompand_effect = {

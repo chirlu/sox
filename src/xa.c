@@ -182,23 +182,10 @@ static int st_xastartread(ft_t ft)
     xa->bufPos = xa->blockSize;
 
     /* Allocate memory for the block buffer */
-    xa->buf = (unsigned char *) xcalloc(1, xa->blockSize);
-    if (xa->buf == NULL) {
-        st_fail_errno(ft, ST_ENOMEM, "Unable to allocate block buffer");
-        return ST_EOF;
-    }
+    xa->buf = (unsigned char *)xcalloc(1, xa->blockSize);
     
     /* Allocate memory for the state */
-    xa->state = (xa_state_t *) xcalloc(sizeof(xa_state_t), ft->info.channels);
-    if (xa->state == NULL) {
-        /* Free xa->buf */
-        free(xa->buf);
-        xa->buf = NULL;
-        
-        /* Return error */
-        st_fail_errno(ft, ST_ENOMEM, "Unable to allocate state variables");
-        return ST_EOF;
-    }
+    xa->state = (xa_state_t *)xcalloc(sizeof(xa_state_t), ft->info.channels);
     
     /* Final initialization */
     xa->bytesDecoded = 0;
@@ -292,14 +279,10 @@ static int st_xastopread(ft_t ft)
     ft->st_errno = ST_SUCCESS;
 
     /* Free memory */
-    if (xa->buf != NULL) {
-        free(xa->buf);
-        xa->buf = NULL;
-    }
-    if (xa->state != NULL) {
-        free(xa->state);
-        xa->state = NULL;
-    }
+    free(xa->buf);
+    xa->buf = NULL;
+    free(xa->state);
+    xa->state = NULL;
     
     return ST_SUCCESS;
 }

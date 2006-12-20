@@ -654,12 +654,9 @@ static int st_silence_stop(eff_t effp)
 {
     silence_t silence = (silence_t) effp->priv;
 
-    if (silence->window)
-        free(silence->window);
-    if (silence->start_holdoff)
-        free(silence->start_holdoff);
-    if (silence->stop_holdoff)
-        free(silence->stop_holdoff);
+    free(silence->window);
+    free(silence->start_holdoff);
+    free(silence->stop_holdoff);
     return(ST_SUCCESS);
 }
 

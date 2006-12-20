@@ -45,7 +45,7 @@ void *xrealloc(void *ptr, size_t newsize)
 }
 
 /*
- * Perform a calloc, and abort if not possible.
+ * Perform a calloc; abort if not possible.
  */
 void *xcalloc(size_t nmemb, size_t size)
 {

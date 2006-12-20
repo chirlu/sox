@@ -284,11 +284,9 @@ static int st_flanger_stop(eff_t effp)
   int c, channels = effp->ininfo.channels;
 
   for (c = 0; c < channels; ++c)
-    if (f->delay_bufs[c] != NULL)
-      free(f->delay_bufs[c]);
+    free(f->delay_bufs[c]);
 
-  if (f->lfo != NULL)
-    free(f->lfo);
+  free(f->lfo);
 
   memset(f, 0, sizeof(*f));
 

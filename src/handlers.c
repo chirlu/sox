@@ -107,9 +107,7 @@ st_effect_fn_t st_effect_fns[] = {
   st_highp_effect_fn,
   st_lowpass_effect_fn,
   st_lowp_effect_fn,
-#ifdef HAVE_LUA
   st_lua_effect_fn,
-#endif
   st_mask_effect_fn,
   st_mcompand_effect_fn,
   st_noiseprof_effect_fn,

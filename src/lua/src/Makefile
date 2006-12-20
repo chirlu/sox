@@ -5,7 +5,7 @@
 # == CHANGE THE SETTINGS BELOW TO SUIT YOUR ENVIRONMENT =======================
 
 # Your platform. See PLATS for possible values.
-PLAT= none
+PLAT= generic
 
 CC= gcc
 CFLAGS= -O2 -Wall $(MYCFLAGS)

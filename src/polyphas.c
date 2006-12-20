@@ -635,17 +635,16 @@ static int st_poly_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
  */
 static int st_poly_stop(eff_t effp)
 {
-    poly_t rate = (poly_t) effp->priv;
-    polystage *s;
+    poly_t rate = (poly_t)effp->priv;
     st_size_t k;
 
-    for(k = 0; k <= rate->total; k++) {
-      s = rate->stage[k];
-      free((void *) s->window);
-      if (s->filt_array) free((void *) s->filt_array);
-      free((void *) s);
+    for (k = 0; k <= rate->total; k++) {
+      free(rate->stage[k]->window);
+      free(rate->stage[k]->filt_array);
+      free(rate->stage[k]);
     }
-    return (ST_SUCCESS);
+
+    return ST_SUCCESS;
 }
 
 static st_effect_t st_polyphase_effect = {

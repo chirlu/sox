@@ -222,8 +222,3 @@ const st_effect_t *st_noiseprof_effect_fn(void)
 {
     return &st_noiseprof_effect;
 }
-
-/* For Emacs:
-   Local Variables:
-   c-basic-offset: 4
-*/

@@ -27,10 +27,10 @@ libst_a_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c misc.
 	  st_i.h stio.c util.c xmalloc.c xmalloc.h getopt.c getopt1.c getopt.h
 
 AM_CFLAGS = $(LUA_INCLUDES)
-AM_LDFLAGS = $(LUA_LIBS) @SAMPLERATE_LIBS@
+AM_LDFLAGS = @SAMPLERATE_LIBS@
 
 sox_SOURCES = sox.c
-sox_LDADD = libst.a libgsm/libgsm.a
+sox_LDADD = libst.a libgsm/libgsm.a $(LUA_LIBS)
 
 all: sox soxmix play rec
 

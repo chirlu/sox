@@ -313,12 +313,8 @@ static int st_noisered_stop(eff_t effp)
 
     for (i = 0; i < effp->ininfo.channels; i ++) {
         chandata_t* chan = &(data->chandata[i]);
-        if (chan->lastwindow != NULL) {
-            free(chan->lastwindow);
-        }
-        if (chan->window != NULL) {
-            free(chan->window);
-        }
+        free(chan->lastwindow);
+        free(chan->window);
         free(chan->smoothing);
         free(chan->noisegate);
     }
@@ -343,8 +339,3 @@ const st_effect_t *st_noisered_effect_fn(void)
 {
     return &st_noisered_effect;
 }
-
-/* For Emacs:
-  Local Variables:
-  c-basic-offset: 4
-*/
