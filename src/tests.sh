@@ -26,8 +26,10 @@ getFormat () {
   
 convertToAndFrom () {
   while [ $# != 0 ]; do
-      format1_skip=`echo ${format1} | grep $skip`
-      from_skip=`echo ${1} | grep ${skip}`
+      if [ "${skip}x" != "x" ] ; then
+        format1_skip=`echo ${format1} | grep ${skip}`
+        from_skip=`echo ${1} | grep ${skip}`
+      fi
       if [ "${format1_skip}x" = "x" -a "${from_skip}x" = "x" ] ; then
         getFormat ${format1}; format1Text=$formatText; format1Flags=$formatFlags
         getFormat       $1; format2Text=$formatText; format2Flags=$formatFlags
