@@ -64,12 +64,13 @@ sox-12.18.3
   o Improved the accuracy of integer and floating point PCM
     conversions.  (robs)
   o Added large file support.  (Reuben Thomas)
-  o Higher quality audio speed adjustment.  (robs)
+  o Higher quality audio speed adjustment; also fixes [1155364].  (robs)
+  o Replacement flanger effect; also fixes [1393245].  (robs)
   o Added ability to merge e.g. 2 mono files to 1 stereo file
     [FR# 1297076].  (robs)
   o Added Lua effect, which allows arbitrary processing by a Lua script.
     (Reuben Thomas)
-  o Several effects are now optimised in situations where they need
+  o Several effects are now optimised out in situations where they need
     do nothing, e.g. changing rate from 8000 to 8000, or changing volume
     by 0dB [Bug# 1395781].  (robs)
   o Removed (for output file only) the potentially
