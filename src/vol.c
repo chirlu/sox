@@ -2,7 +2,6 @@
  * (c) 20/03/2000 Fabien COELHO <fabien@coelho.net> for sox.
  *
  * Change volume of sound file, with basic linear amplitude formula.
- * Pretty redundant with -v general option.
  * Beware of saturations! clipping is checked and reported.
  * Cannot handle different number of channels.
  * Cannot handle rate change.
