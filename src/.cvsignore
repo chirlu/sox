@@ -1,6 +1,6 @@
 Makefile Makefile.in
 libst-config
 play sox soxmix
-stconfig.h ststdint.h
+stconfig.h.in stconfig.h ststdint.h
 .deps
 stamp-h1
