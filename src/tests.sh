@@ -26,23 +26,25 @@ getFormat () {
   
 convertToAndFrom () {
   while [ $# != 0 ]; do
-    if ! echo $skip|tr " " "\n"|grep -Eq "^$format1$|^$1$"; then
-      getFormat $format1; format1Text=$formatText; format1Flags=$formatFlags
-      getFormat       $1; format2Text=$formatText; format2Flags=$formatFlags
-      ./sox -c $channels -r $rate -n $format1Flags input.$format1 synth $samples's' sin 300-3300 noise
-      ./sox $verbose -r $rate -c $channels $format1Flags input.$format1 $format2Flags intermediate.$1
-      ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$1 $format1Flags output.$format1
+      format1_skip=`echo ${format1} | grep $skip`
+      from_skip=`echo ${1} | grep ${skip}`
+      if [ "${format1_skip}x" = "x" -a "${from_skip}x" = "x" ] ; then
+        getFormat ${format1}; format1Text=$formatText; format1Flags=$formatFlags
+        getFormat       $1; format2Text=$formatText; format2Flags=$formatFlags
+        ./sox -c $channels -r $rate -n $format1Flags input.$format1 synth $samples's' sin 300-3300 noise
+        ./sox $verbose -r $rate -c $channels $format1Flags input.$format1 $format2Flags intermediate.$1
+        ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$1 $format1Flags output.$format1
 
-      if cmp -s input.$format1 output.$format1
-      then
-	echo "ok     channels=$channels \"$format1Text\" <--> \"$format2Text\"."
-      else
-	echo "*FAIL* channels=$channels \"$format1Text\" <--> \"$format2Text\"."
-	exit 1    # This allows failure inspection.
+        if cmp -s input.$format1 output.$format1
+        then
+	  echo "ok     channels=$channels \"$format1Text\" <--> \"$format2Text\"."
+        else
+	  echo "*FAIL* channels=$channels \"$format1Text\" <--> \"$format2Text\"."
+	  exit 1    # This allows failure inspection.
+        fi
+        rm -f input.$format1 intermediate.$1 output.$format1
       fi
-      rm -f input.$format1 intermediate.$1 output.$format1
-    fi
-    shift
+      shift
   done
 }
 
