@@ -74,6 +74,8 @@ sox-12.18.3
     by 0dB [Bug# 1395781].  (robs)
   o Removed (for output file only) the potentially
     problematic -v option.  Use the vol effect instead.  (robs)
+  o Added prompt to overwrite pre-existing output file (unless overridden
+    with --force).  (robs)
 
 sox-12.18.2
 -----------

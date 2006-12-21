@@ -379,12 +379,15 @@ struct st_effect
 
 extern ft_t st_open_read(const char *path, const st_signalinfo_t *info, 
                          const char *filetype);
-extern ft_t st_open_write(const char *path, const st_signalinfo_t *info,
-                          const char *filetype, const char *comment);
-extern ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
-                                const char *filetype, const char *comment, 
-                                const st_instrinfo_t *instr,
-                                const st_loopinfo_t *loops);
+ft_t st_open_write_instr(
+    bool (*overwrite_permitted)(char const * filename),
+    const char *path,
+    const st_signalinfo_t *info,
+    const char *filetype,
+    const char *comment,
+    const st_instrinfo_t *instr,
+    const st_loopinfo_t *loops);
+#define st_open_write(a,b,c,d,e) st_open_write_instr(a,b,c,d,e,NULL,NULL)
 extern st_size_t st_read(ft_t ft, st_sample_t *buf, st_size_t len);
 extern st_size_t st_write(ft_t ft, const st_sample_t *buf, st_size_t len);
 extern int st_close(ft_t ft);

@@ -61,6 +61,8 @@
 #define S_IFREG  _S_IFREG
 #define fstat _fstat
 #define strdup _strdup
+#define isatty _isatty
+#include <io.h>
 #endif
 
 /*
@@ -81,6 +83,7 @@ static enum {SOX_CONCAT, SOX_MIX, SOX_MERGE} combine_method = SOX_CONCAT;
 static st_size_t mixing_clips = 0;
 static int writing = 1;         /* are we writing to a file? assume yes. */
 static bool repeatable_random = false;  /* Whether to invoke srand. */
+static bool force_overwrite = false;
 static st_globalinfo_t globalinfo = {false, 1};
 static char uservolume = 0;
 
@@ -104,8 +107,9 @@ typedef struct file_options
   char *filetype;
   st_signalinfo_t info;
   double volume;
-  st_size_t volume_clips;
   char *comment;
+
+  st_size_t volume_clips;  /* not actually an option */
 } * file_options_t;
 
 /* local forward declarations */
@@ -179,7 +183,22 @@ static void sox_output_message(int level, st_output_message_t m)
   }
 }
 
- 
+static bool overwrite_permitted(char const * filename)
+{
+  char c;
+
+  if (force_overwrite) {
+    st_report("Overwriting '%s'", filename);
+    return true;
+  }
+  st_warn("Output file '%s' already exists", filename);
+  if (!isatty(fileno(stdin)))
+    return false;
+  do fprintf(stderr, "%s sox: overwrite '%s' (y/n)? ", myname, filename);
+  while (scanf(" %c%*[^\n]", &c) != 1 || !strchr("yYnN", c));
+  return c == 'y' || c == 'Y';
+}
+
 /* Cleanup atexit() function, hence always called. */
 static void cleanup(void) 
 {
@@ -217,7 +236,6 @@ static void sigint(int s)
 
 int main(int argc, char **argv)
 {
-  file_options_t fo;
   size_t i;
 
   myname = argv[0];
@@ -237,8 +255,11 @@ int main(int argc, char **argv)
    * found.
    */
   while (optind < argc && !is_effect_name(argv[optind])) {
+    file_options_t fo;
+    struct file_options fo_none;
+
     if (file_count >= MAX_FILES) {
-      st_fail("too many filenames. max of %d input files and 1 output file", MAX_INPUT_FILES);
+      st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
       exit(1);
     }
 
@@ -249,7 +270,7 @@ int main(int argc, char **argv)
     fo->info.compression = HUGE_VAL;
     fo->volume = HUGE_VAL;
     fo->volume_clips = 0;
-    file_opts[file_count++] = fo;
+    fo_none = *fo;
     
     if (doopts(fo, argc, argv) == true) { /* is null file? */
       if (fo->filetype != NULL && strcmp(fo->filetype, "null") != 0)
@@ -257,10 +278,15 @@ int main(int argc, char **argv)
       fo->filetype = "null";
       fo->filename = strdup(fo->filetype);
     } else {
-      if (optind >= argc)
-        usage("missing filename"); /* No return */
+      if (optind >= argc) {
+        if (memcmp(fo, &fo_none, sizeof(fo_none)) != 0)
+          usage("missing filename"); /* No return */
+        free(fo);
+        continue;
+      }
       fo->filename = strdup(argv[optind++]);
     }
+    file_opts[file_count++] = fo;
   }
 
   /* Make sure we got at least the required # of input filenames */
@@ -318,9 +344,6 @@ int main(int argc, char **argv)
     time(&t);
     srand(t);
   }
-
-  signal(SIGINT, sigint);
-  signal(SIGTERM, sigint);
 
   process();
 
@@ -386,6 +409,7 @@ static struct option long_options[] =
     {"help-effect", required_argument, NULL, 0},
     {"comment", required_argument, NULL, 0},
     {"comment-file", required_argument, NULL, 0},
+    {"force", no_argument, NULL, 0},
 
     {"help", no_argument, NULL, 'h'},
     {"mix", no_argument, NULL, 'm'},
@@ -422,6 +446,10 @@ static bool doopts(file_options_t fo, int argc, char **argv)
 
       case 3:
         fo->comment = read_comment_file(optarg);
+        break;
+
+      case 4:
+        force_overwrite = true;
         break;
       }
       break;
@@ -625,7 +653,8 @@ static void process(void) {
     }
     
     file_desc[file_count - 1] = 
-      st_open_write_instr(options->filename,
+      st_open_write_instr(overwrite_permitted,
+                          options->filename,
                           &options->info, 
                           options->filetype,
                           comment,
@@ -715,10 +744,11 @@ static void process(void) {
      supposed to be ST_EOF, so we can't test that in order to know
      whether to drain. */
   if (flowstatus == 0) {
-        
     /* Run input data through effects and get more until olen == 0 
-     * (or ST_EOF).
+     * (or ST_EOF) or user-abort.
      */
+    signal(SIGINT, sigint);
+    signal(SIGTERM, sigint);
     do {
       if (combine_method == SOX_CONCAT) {
         ilen[0] = st_read(file_desc[current_input], efftab[0].obuf, 
@@ -1543,6 +1573,7 @@ static void usage(char const * message)
          "\n"
          "Global options (gopts) (can be specified at any point before the first effect):\n"
          "\n"
+         "--force         overwrite output file without first prompting\n"
          "-h, --help      display version number and usage information\n"
          "--help-effect=name\n"
          "                display usage of specified effect.  use 'all' to display all\n"

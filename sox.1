@@ -11,7 +11,7 @@
 ..
 .TH SoX 1 "November 14, 2006" "sox" "Sound eXchange"
 .SH NAME
-sox \- Sound eXchange : universal sound sample translator
+SoX \- Sound eXchange : universal sound sample translator and processor
 .SH SYNOPSIS
 .P
 \fBsox\fR \fIinfile1\fR [ \fIinfile2\fR ... ] \fIoutfile\fR
@@ -34,63 +34,52 @@ sox \- Sound eXchange : universal sound sample translator
 .br
     [ \fIeffect\fR [ \fIeffect options\fR ] ... ]
 .SH DESCRIPTION
-The
 .I SoX
-audio file transformer can read and write most popular audio formats and
-optionally apply effects to them; it includes a simple audio synthesiser,
-and on unix-like systems, can also play and record sound files.
+reads and writes most popular audio formats and can optionally apply
+effects to them; it includes a basic audio synthesiser, and on unix-like
+systems, can play and record sound files.
 .P
-Multiple input files can be combined to form the output file using one
-of three methods: `concatenate', `mix', or `merge'.  There is currently
-the restriction that multiple input files must have the same number of
-channels and the same sample rate (though not necessarily the same file
-format).
-.P
-The default combining method for \fBsox\fR is `concatenate';
-\fBsoxmix\fR is an alias for \fBsox\fR for which the the default
-combining method is `mix'.
-.P
-Exit status is 0 for no error, 1 if there is a problem with the command-line arguments, and 2 if an error occurs during file processing.
+.I SoX
+can also combine multiple input files (with the same sample rate and
+number of channels) to form one output file using one of three methods:
+`concatenate' (the default), `mix', or `merge'.  \fBsoxmix\fR is an
+alias for \fBsox\fR for which the the default combining method is `mix'.
 .P
 \fBFile Format Types\fR
 .br
 There are two types of audio file format that
 .I SoX
-can work with.  The first is "self-describing".  Such formats
-include a header that completely describe the characteristics of
-the audio data that follows.
-The header may also allow the inclusion of textual "comments" that can
-be used to describe the audio in some way, e.g. for music, the title,
-the author, etc.
-.P
-The second type is headerless data, often called raw data.
-For this type, a
-user must pass enough information to
+can work with.  The first is "self-describing".  Such formats include a
+header that completely describes the characteristics of the audio data
+that follows.
+The second type is "headerless" data, often called raw data.  For a file
+of this type, the audio data characteristics are sometimes described by
+the filename extension, sometimes by giving options on the
 .I SoX
-on the command line so that it knows what type of data it contains,
-though in some cases, the audio filename extension may imply some
-of this information.
+command line, and sometimes by a combination of the two.
 .P
-Audio data can usually be totally described by four characteristics:
+The following four characteristics are usually sufficent to describe
+audio data so that it can be processed with \fISoX\fR:
 .TP 10
 rate
 The sample rate is in samples per second.  For example, CDs use 44,100 samples per second.
 .TP 10 
 data size
-The precision the data is stored in.  Most popular are 8-bit bytes or 16-bit 
-words.
+The number of bits (or bytes) used to store each sample.  Most popular are
+8-bit (i.e. one byte) and 16-bit (i.e. two bytes, or one "word").
 .TP 10
 data encoding
-What encoding the data type uses.  Examples are u-law, ADPCM, or signed linear data.
+The way in which each audio sample is stored (or "encoded").
+Some encodings involve an element of "compression".
+Commonly-used encoding types include: floating-point, u-law, ADPCM, signed
+linear, FLAC, etc.
 .TP 10
 channels
 The number of audio channels contained in the file.  1 ("mono") and 2
 ("stereo") are widely used.
 .P
-Refer to the
-.B soxexam(1)
-manual page for a long description with examples on how to use SoX with
-various file formats.
+The term "bit-rate" is sometimes used as an overall measure of an audio
+format and usually includes elements of all of the above.
 .P
 \fBFormat Conversion\fR
 .br
@@ -100,12 +89,12 @@ is "lossless"
 (i.e. converting back again would yield an exact copy of the original
 audio signal)
 where it
-can be, i.e. when not using "lossy" compression (e.g. A-law, MP3, etc.)
+can be, i.e. when not using "lossy" compression (A-law, MP3, etc.)
 and the number of bits used in the destination format is not less than
 in the source format.
 
 E.g. converting from an 8-bit PCM format to a 16-bit PCM format is
-lossless but converting from a 24-bit PCM format to a 16-bit PCM format isn't.
+lossless but converting from a 8-bit PCM format to (8-bit) A-law isn't.
 When performing a lossy conversion,
 .I SoX
 uses rounding to retain as much accuracy as possible in the
@@ -115,7 +104,7 @@ audio signal.
 .br
 Clipping is distortion that occurs when an audio signal
 level exceeds the range of the chosen representation.
-Clipping is nearly always undesirable and so should usually be corrected by
+It is nearly always undesirable and so should usually be corrected by
 adjusting the audio volume prior to the point at which clipping occurs.
 
 In \fISoX\fR, clipping could occur, as you might expect, when using the
@@ -124,7 +113,7 @@ effect to increase the audio volume, but could also occur with many
 other effects, when converting one format to another, and even when
 simply playing the audio.
 
-Playing an audio file often involves reampling, and processing by
+Playing an audio file often involves resampling, and processing by
 analogue components that can introduce a small DC offset and/or
 amplification, all of which can produce distortion if the audio signal
 level was intially too close to the clipping point.
@@ -134,7 +123,13 @@ file's signal level does not exceed around 70% of the maximum (linear)
 range available, as this will avoid the majority of clipping problems.
 \fISoX\fR's
 .I stat
-effect can assist here by displaying the signal level in an audio file.
+effect can assist in determining the signal level in an audio file; the
+.B vol
+effect can be used to preventing clipping e.g.
+
+	sox tinny.au better.au vol -6 dB bass +6
+
+guarantees that the bass boost will not clip.
 
 If clipping occurs at any point during processing, then
 .I SoX
@@ -171,6 +166,11 @@ concatenates two sound files to produce a single file, whilst
 .P
 .br
 mixes together two sound files.
+.P
+Refer to the
+.B soxexam(1)
+manual page for a long description with examples on how to use SoX with
+various file formats and options.
 .PP
 \fBSpecial Filenames\fR
 .TP 10
@@ -197,13 +197,20 @@ This is just an alias of
 but is left here for historical reasons.
 .PP
 \fBGlobal Options\fR
+.br
+These options can be specified on the command line at any point
+before the first effect name.
+.TP 10
+\fB\fB\-\-force\fR
+Force \fISoX\fR to overwrite an existing file with the same name as that
+given for the output file without first prompting to do so.
 .TP 10
 \fB\-h\fR, \fB\-\-help\fR
-Print version number and usage information.
+Show version number and usage information.
 .TP 10
 \fB--help-effect=name\fR
-Display usage information on the specified effect.  The name
-\fBall\fR can be used to display usage on all effects.
+Show usage information on the specified effect.  The name
+\fBall\fR can be used to show usage on all effects.
 .TP 10
 \fB\-m\fR, \fB\-\-mix\fR
 Set the input file combining method to `mix'.
@@ -244,7 +251,7 @@ Display status while processing audio data.  Shows how much of audio data has be
 processed in terms of audio running time instead of samples.
 .TP 10
 \fB--version\fR
-Print version number and exit.
+Show version number and exit.
 .IP "\fB\-V[level]\fP"
 Set verbosity.
 .I SoX
@@ -318,21 +325,27 @@ is given, then in addition to the volume adjustment, the audio signal
 will be inverted.
 
 See the \fBstat\fR effect for information on how to find
-the maximum volume of an audio file to help with setting
+the maximum volume of an audio file; this can be used to help select
 suitable values for this option.
 .P
-The \fB-V\fR option will show what input file volume adjustments
-have been selected (either manually or automatically).
+The \fB-V\fR option can be used to show the input file volume adjustments
+that have been selected (either manually or automatically).
 .PP
 \fBInput And Output File Format Options\fR
 .br
-These options apply to the input or output file that they immediately precede.
+These options apply to the input or output file whose name they
+immediately precede on the command line.
 .PP
 Self describing input files can contain all the format information in the header and so don't generally need format options.  Headerless input files lack this information and so format options must be used to inform SoX of the file's data type, sample rate, and number of channels.
 .PP
-By default, SoX attempts to write audio data using the same data type, sample rate, and channel count as the input data.  If the user wants the output file to be of a different format then format options can be used to specify the differences.
+By default, SoX attempts to write audio data using the same data type,
+sample rate, and channel count as the input data.  If this is not what
+is wanted, then format options can be used to specify the differences.
 .PP
-If an output file format doesn't support the same data type, sample rate, or channel count as the input file format, then SoX will automatically select the closest values it does support so that the user does not have to specify these format change options manually.
+If an output file format does not support the same data type, sample
+rate, or channel count as the input file format, then unless overriden
+on the command line, SoX will automatically select the closest values
+that the format does support.
 .TP 10
 \fB-c \fIchannels\fR
 The number of sound channels in the data file.
@@ -354,8 +367,9 @@ multiple rate changing effects, the user can specify which to use as an effect.
 If no rate change effect is specified then a default one will be chosen.
 .TP 10
 \fB-t \fIfiletype\fR
-gives the file type of the sound sample file.  Useful when file extension 
-is not standard or can not be determined by looking at the header of the file.
+Gives the file type of the sound sample file.  This is useful when the
+file extension is non-standard or when the type can not be determined by
+looking at the header of the file.
 
 The 
 .I -t
@@ -365,7 +379,7 @@ extension, but if overriding with a type that has a header,
 will exit with an appropriate error message if such a header is not
 actually present.
 
-See the section \fRFILE TYPES\fR for a list of supported file types.
+See \fBFILE TYPES\fR below for a list of supported file types.
 .TP 10
 \fB-x\fR
 The sample data comes from a machine with the opposite word order 
@@ -381,8 +395,8 @@ ADPCM, IMA_ADPCM, GSM, or Floating-point.
 
 U-law (actually shorthand for mu-law) and A-law are the U.S. and
 international standards for logarithmic telephone sound compression.
-When uncompressed u-law has roughly the precision of 14-bit PCM audio
-and A-law has roughly the precision of 13-bit PCM audio.
+When uncompressed u-law has roughly the precision of 13-bit PCM audio
+and A-law has roughly the precision of 14-bit PCM audio.
 
 A-law and u-law data is sometimes encoded using a reversed bit-ordering
 (i.e. MSB becomes LSB).  Internally, SoX understands how to work with
@@ -403,9 +417,12 @@ IMA ADPCM is a specific form of ADPCM compression, slightly simpler
 and slightly lower fidelity than Microsoft's flavor of ADPCM.
 IMA ADPCM is also called DVI ADPCM.
 
-GSM is a standard used for telephone sound compression in
-European countries and it's gaining popularity because of its
-quality.  It usually is CPU intensive to work with GSM audio data.
+GSM is currently used for the vast majority of the world's digital
+wireless telephone calls.  It utilises several audio
+formats with different bit-rates and associated speech quality.
+.I SoX
+has support for GSM's original 13kbps "Full Rate" audio format.
+It is usually CPU intensive to work with GSM audio data.
 .TP 10
 \fB-1/-2/-3/-4/-8\fR
 The sample data size is 1, 2, 3, 4, or 8 bytes; i.e 8, 16, 24, 32, or 64 bits.
@@ -416,9 +433,13 @@ Abbreviations of: byte, word, long word, double long (long long) word.
 .PP
 \fBOutput File Format Options\fR
 .br
-These options apply to and may precede only the output file.
+These options apply to only the output file and may only precede the output
+filename on the command line.
 .TP 10
 \fB--comment \fItext\fR
+  (The header may also allow the inclusion of textual
+"comments" that can be used to describe the audio in some way, e.g. for
+music, the title, the author, etc.)
 Specify the comment text to store in the output file header (where applicable).
 .TP 10
 \fB--comment-file \fIfilename\fR
@@ -426,10 +447,11 @@ Specify a file containing the comment text to store in the output
 file header (where applicable).
 .TP 10
 \fB-C \fIcompression-factor\fR
-The compression factor for variably compressing output file formats.
-If this option is not given, then a default compression factor will apply.
-The compression factor is interpreted differently for different compressing file formats.
-See the description of the file formats that use this parameter for more information.
+The compression factor for variably compressing output file formats.  If
+this option is not given, then a default compression factor will apply.
+The compression factor is interpreted differently for different
+compressing file formats.  See the description of the file formats that
+use this option for more information.
 .SH FILE TYPES
 .B Determining The File Type
 .br
@@ -550,14 +572,14 @@ music. It is similar to MP3 and Ogg Vorbis, but lossless,
 meaning that audio is compressed in FLAC without any loss in
 quality. 
 
-.B SoX
+.I SoX
 can decode native FLAC files (.flac) but not Ogg FLAC files (.ogg).
 [But see 
 .B .ogg
 below for information relating to support for Ogg
 Vorbis files.]
 
-.B SoX
+.I SoX
 has rudimentary support for writing FLAC files: it can encode to
 native FLAC using compression levels 0 to 8. 8 is the default
 compression level and gives the best (but slowest) compression;
@@ -567,24 +589,24 @@ level can be selected using the
 option (see above) with a whole number from 0 to 8.
 
 Note that Replay Gain information is not used by
-.B SoX
+.I SoX
 if present in FLAC input files and is not generated by
-.B SoX
+.I SoX
 for FLAC
 output files, however
-.B SoX
+.I SoX
 will copy input file "comments" (which can be used to hold Replay
 Gain information) to output files that
 support comments, so FLAC output files may contain Replay Gain
 information if some was present in the input file. In this case the
 Replay Gain information in the output file is likely to be incorrect and so should
 be recalculated using a tool that supports this (not
-.B SoX
+.I SoX
 ).
 .br
 
 FLAC support in
-.B SoX
+.I SoX
 is optional and requires optional FLAC libraries.  To
 see if there is support for FLAC run \fBsox -h\fR and look for
 it under the list of supported file formats as "flac".
@@ -622,9 +644,11 @@ in mono and stereo.
 .TP 10
 .B .mp3
 MP3 Compressed Audio. MP3 (MPEG Layer 3) is part of the
-MPEG standards for audio and video compression. It is a lossy
+MPEG standards for audio and video compression.  It is a lossy
 compression format that achieves good compression rates with little
-quality loss. Also see Ogg Vorbis for a similar format.
+quality loss.  See also
+.B Ogg Vorbis
+for a similar format.
 
 MP3 support in
 .B SoX
@@ -672,7 +696,9 @@ Ogg Vorbis Compressed Audio.
 Ogg Vorbis is a open, patent-free CODEC designed for compressing music
 and streaming audio.  It is a lossy compression format (similar to MP3,
 VQF & AAC) that achieves good compression rates with a minimum amount of
-quality loss.  Also see MP3 for a similar format.
+quality loss.  See also
+.B MP3
+ for a similar format.
 
 .B SoX
 can decode all types of Ogg Vorbis files, and can encode at different
@@ -935,21 +961,23 @@ The filter rolls off at 6dB per octave (20dB per decade).
 These effects support the \fI-o\fR option (see above).
 .TP 10
 bandreject \fIfrequency bandwidth\fR
-See \fI bandpass\fR.
+Apply a band-reject filter.
+
+See the description of the \fBbandpass\fR effect for details.
 .TP 10
 bass|treble \fIgain\fR [\fIfrequency\fR] [\fIslope\fR]
-Boost or cut the bass (lower) or treble (upper) frequencies of
-the audio signal using a two-pole shelving filter with (by
-default) a response similar to that of a standard hi-fi's
-(Baxandall) tone controls.
+Boost or cut the bass (lower) or treble (upper) frequencies of the audio
+signal using a two-pole shelving filter with a response similar to that
+of a standard hi-fi's (Baxandall) tone controls.  This is also
+known as shelving equalisation or EQ.
 
 \fIgain\fR gives the dB gain at 0Hz (for \fIbass\fR), or whichever is
-the lower of ~22kHz and the Nyquist frequency (for \fItreble\fR). Its
+the lower of ~22kHz and the Nyquist frequency (for \fItreble\fR).  Its
 useful range is about -20.0 (for a large cut) to +20.0 (for a large
-boost). N.B. When using a positive \fIgain\fR, in order to prevent
-clipping, it may be necessary to precede this effect with a suitable
-attenuation using the \fI-v\fR option or the \fIvol\fR effect. SoX
-will display a warning message should clipping occur.
+boost).
+Beware of
+.B Clipping
+when using a positive \fIgain\fR.
 
 If desired, the filter can be fine-tuned using the following
 optional parameters (in either order):
@@ -964,9 +992,9 @@ steep the filter's shelf transition is.  Its useful range is
 about 0.3 (for a gentle slope) to 1 (for a steep slope).  The
 default value is 0.5.
 
-The \fIbass\fR and \fItreble\fR effects support the \fI-o\fR
-option (see above).
+These effects support the \fI-o\fR option (see above).
 
+See \fBequalizer\fR for a peaking equalisation effect.
 .TP
 chorus \fIgain-in gain-out delay decay speed depth 
 .TP 10
@@ -1015,11 +1043,6 @@ Specifying a delay approximately equal to the attack/decay times
 allows the compander to effectively operate in a "predictive" rather than a
 reactive mode.
 .TP 10
-copy
-Copy the input file to the output file.
-This is the default effect if both files have the same 
-sampling rate.
-.TP 10
 dcshift \fIshift\fR [ \fIlimitergain\fR ]
 DC Shift the audio data, with basic linear amplitude formula.
 This is most useful if your audio data tends to not be centered around
@@ -1041,6 +1064,7 @@ This effect supports the \fI-o\fR option (see above).
 
 .TP 10
 dither [\fIdepth\fR]
+Apply dithering to the audio signal.
 Dithering deliberately adds white noise to the signal
 in order to mask audible quantization effects that
 can occur if the output sample size is less than 24 bits.
@@ -1074,11 +1098,25 @@ and the decay (relative to gain-in) of that echo.
 Gain-out is the volume of the output.
 .TP 10
 equalizer \fIcentral\-frequency\fR \fIQ\fR \fIgain\fR
-Apply an equalizer effect which allows you to modify the amplitude (\fIgain\fR) of a signal at and around (\fIQ\-factor\fR) a central frequency (\fIcentral\-frequency\fR), leaving all other frequencies untouched (unlike regular bandpass/bandreject filters).
+Apply a two-pole peaking equalisation (EQ) filter.
+This allows modification (\fIgain\fR) of the signal level at and
+around (\fIQ\-factor\fR) a central frequency (\fIcentral\-frequency\fR),
+leaving all other frequencies untouched (unlike
+bandpass/bandreject filters).
  
-\fIcentral\-frequency\fR gives the central frequency in Hz, \fIQ\fR is the Q\-factor (see http://en.wikipedia.org/wiki/Q_factor), and \fIgain\fR is the gain or attenuation in dB.
+\fIcentral\-frequency\fR is the filter's central frequency in Hz, \fIQ\fR
+its Q\-factor (see http://en.wikipedia.org/wiki/Q_factor), and
+\fIgain\fR is the gain or attenuation in dB.
+Beware of
+.B Clipping
+when using a positive \fIgain\fR.
+
+In order to produce complex equalisation curves, this effect
+can be given several times, each with a different central frequency.
 
 This effect supports the \fI-o\fR option (see above).
+
+See \fBbass\fR and \fBtreble\fR for shelving equalisation effects.
 .TP 10
 fade [ \fItype\fR ] \fIfade-in-length\fR [ \fIstop-time\fR [ \fIfade-out-length\fR ] ]
 Add a fade effect to the beginning, end, or both of the audio data.  
@@ -1166,13 +1204,17 @@ The filters roll off at 12dB per octave (40dB per decade).
 These effects support the \fI-o\fR option (see above).
 .TP 10
 lowp \fIfrequency\fR
-See the description of the \fIhighp\fR effect for details.
+Apply a low-pass filter.
+
+See the description of the \fBhighp\fR effect for details.
 .TP 10
 lowpass \fIfrequency\fB
-See the description of the \fIhighpass\fR effect for details.
+Apply a low-pass filter.
+
+See the description of the \fBhighpass\fR effect for details.
 .TP 10
 mask [\fIdepth\fR]
-This effect is just an alias of the "dither" effect but is left
+This effect is just an alias of the \fBdither\fR effect but is left
 here for historical reasons.
 .TP
 mcompand "\fIattack1,decay1\fR[,\fIattack2,decay2\fR...]
@@ -1645,8 +1687,9 @@ ends; default=60.
 
 .TP 10
 treble \fIgain\fR [\fIfrequency\fR] [\fIslope\fR]
-See the description of the \fIbass\fR effect for details.
+Apply a treble tone control effect.
 
+See the description of the \fBbass\fR effect for details.
 .TP 10
 trim \fIstart\fR [ \fIlength\fR ]
 Trim can trim off unwanted audio data from the beginning and end of the
@@ -1707,6 +1750,9 @@ then 1.0 (i.e. 0.05 or 0.02) and is used only on peaks to prevent clipping.
 Not specifying this parameter will cause no limiter to be used.  In verbose
 mode, this effect will display the percentage of audio data that needed to be
 limited.
+.SH DIAGNOSTICS
+Exit status is 0 for no error, 1 if there is a problem with the
+command-line arguments, or 2 if an error occurs during file processing.
 .SH BUGS
 Please report any bugs found in this version of SoX to the mailing list
 (sox-users@lists.sourceforge.net).

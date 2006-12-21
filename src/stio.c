@@ -164,10 +164,14 @@ input_error:
 #define LASTCHAR '/'
 #endif
 
-ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
-                         const char *filetype, const char *comment,
-                         const st_instrinfo_t *instr,
-                         const st_loopinfo_t *loops)
+ft_t st_open_write_instr(
+    bool (*overwrite_permitted)(char const * filename),
+    const char *path,
+    const st_signalinfo_t *info,
+    const char *filetype,
+    const char *comment,
+    const st_instrinfo_t *instr,
+    const st_loopinfo_t *loops)
 {
     ft_t ft = (ft_t)xcalloc(sizeof(struct st_soundstream), 1);
     int i;
@@ -208,7 +212,7 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
 
     if (!ft->filetype || st_gettype(ft, no_filetype_given) != ST_SUCCESS)
     {
-        st_warn("Unknown output file format for '%s':  %s",
+        st_fail("Unknown output file format for '%s':  %s",
                 ft->filename,
                 ft->st_errstr);
         goto output_error;
@@ -231,18 +235,24 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
             SET_BINARY_MODE(stdout);
             ft->fp = stdout;
         }
-        else if ((ft->fp = fopen(ft->filename, "wb")) == NULL)
-        {
-            st_warn("Can't open output file '%s': %s", ft->filename,
+        else {
+          struct stat st;
+          if (!stat(ft->filename, &st) && !overwrite_permitted(ft->filename)) {
+            st_fail("Permission to overwrite '%s' denied", ft->filename);
+            goto output_error;
+          }
+          if ((ft->fp = fopen(ft->filename, "wb")) == NULL) {
+            st_fail("Can't open output file '%s': %s", ft->filename,
                     strerror(errno));
             goto output_error;
+          }
         }
 
         /* stdout tends to be line-buffered.  Override this */
         /* to be Full Buffering. */
         if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char)*ST_BUFSIZ))
         {
-            st_warn("Can't set write buffer");
+            st_fail("Can't set write buffer");
             goto output_error;
         }
 
@@ -263,13 +273,13 @@ ft_t st_open_write_instr(const char *path, const st_signalinfo_t *info,
     /* Read and write starters can change their formats. */
     if ((*ft->h->startwrite)(ft) != ST_SUCCESS)
     {
-        st_warn("Failed writing %s: %s", ft->filename, ft->st_errstr);
+        st_fail("Failed writing %s: %s", ft->filename, ft->st_errstr);
         goto output_error;
     }
 
     if (st_checkformat(ft) )
     {
-        st_warn("bad output format for file %s: %s", ft->filename,
+        st_fail("bad output format for file %s: %s", ft->filename,
                 ft->st_errstr);
         goto output_error;
     }
@@ -282,12 +292,6 @@ output_error:
     free(ft->filetype);
     free(ft);
     return NULL;
-}
-
-ft_t st_open_write(const char *path, const st_signalinfo_t *info,
-                         const char *filetype, const char *comment)
-{
-    return st_open_write_instr(path, info, filetype, comment, NULL, NULL);
 }
 
 st_size_t st_read(ft_t ft, st_sample_t *buf, st_size_t len)
