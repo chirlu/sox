@@ -315,7 +315,7 @@ static const char *sunnames[] = {
 static st_format_t st_sun_format = {
   sunnames,
   NULL,
-  ST_FILE_STEREO,
+  ST_FILE_STEREO | ST_FILE_NOFEXT,
   st_sunstartread,
   st_rawread,
   st_rawstopread,

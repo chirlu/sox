@@ -224,7 +224,7 @@ static const char *ossdspnames[] = {
 static st_format_t st_ossdsp_format = {
   ossdspnames,
   NULL,
-  ST_FILE_STEREO,
+  ST_FILE_STEREO | ST_FILE_NOFEXT,
   st_ossdspstartread,
   st_rawread,
   st_rawstopread,
