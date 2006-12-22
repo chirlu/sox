@@ -71,7 +71,7 @@ audio data so that it can be processed with \fISoX\fR:
 sample rate
 The sample rate in samples per second (or Hz).  For example, digital telephony
 tradionally uses a ample rate of 8000Hz; CDs use 44,100Hz.
-.TP 10 
+.TP 10
 sample size
 The number of bits (or bytes) used to store each sample.  Most popular are
 8-bit (i.e. one byte) and 16-bit (i.e. two bytes, or one `word').
@@ -204,15 +204,15 @@ The command line syntax can seem complex, but in essence:
 	sox file.au file.wav
 .P
 .br
-translates an audio file in SUN Sparc .AU format 
+translates an audio file in SUN Sparc .AU format
 into a Microsoft .WAV file, while
 .P
 .br
 	sox file.au -r 12000 -1 file.wav vol 0.5 dither
 .P
 .br
-does the same format translation but also 
-changes the sampling rate to 12000 Hz, 
+does the same format translation but also
+changes the sampling rate to 12000 Hz,
 the sample size to 1 byte (8 bits),
 and applies the \fBvol\fR and \fBdither\fR effects
 to the audio.
@@ -389,7 +389,7 @@ See also \fBInput File Balancing\fR above.
 .br
 These options apply to the input or output file whose name they
 immediately precede on the command line; they are used mainly when
-working with headerless file formats or when specifying a format 
+working with headerless file formats or when specifying a format
 for the output file that is different to that of the input file.
 .TP 10
 \fB-c \fIchannels\fR
@@ -401,7 +401,7 @@ If the input and output file have a different number of channels then the
 .B avg
 effect must be used.  If the
 .B avg
-effect is not specified on the 
+effect is not specified on the
 command line it will be invoked internally with default parameters.
 .TP 10
 \fB-r \fIrate\fR
@@ -421,7 +421,7 @@ Gives the type of the audio file.  This is useful when the
 file extension is non-standard or when the type can not be determined by
 looking at the header of the file.
 
-The 
+The
 .B -t
 option can also be used to override the type implied by an input filename
 extension, but if overriding with a type that has a header,
@@ -432,7 +432,7 @@ actually present.
 See \fBFILE TYPES\fR below for a list of supported file types.
 .TP 10
 \fB-x\fR
-The audio data comes from a machine with the opposite word order 
+The audio data comes from a machine with the opposite word order
 than yours and must
 be swapped according to the word-size given above.
 Only 16-bit, 24-bit, and 32-bit integer data may be swapped.
@@ -511,7 +511,7 @@ Amiga 8SVX musical instrument description format.
 .B .aiff
 AIFF files used on Apple IIc/IIgs and SGI.
 Note: the AIFF format supports only one SSND chunk.
-It does not support multiple audio chunks, 
+It does not support multiple audio chunks,
 or the 8SVX musical instrument description format.
 AIFF files are multimedia archives and
 can have multiple audio and picture chunks.
@@ -541,20 +541,20 @@ the highest quality format your ALSA system can handle.  Example:
 SUN Microsystems AU files.
 There are apparently many types of .au files;
 DEC has invented its own with a different magic number
-and word order.  
+and word order.
 The .au handler can read these files but will not write them.
 Some .au files have valid AU headers and some do not.
 The latter are probably original SUN u-law 8000 Hz files.
-These can be dealt with using the 
+These can be dealt with using the
 .B .ul
 format (see below).
-.br
-   It is possible to override .au file header information
+
+It is possible to override .au file header information
 with the
 .B -r
 and
 .B -c
-options, in which case 
+options, in which case
 .I SoX
 will issue a warning to that effect.
 .TP 10
@@ -571,11 +571,11 @@ rate.  There is a special blocking/padding oddity at the end
 of the audio file, which is why it needs its own handler.
 .TP 10
 .B .cvs
-Continuously Variable Slope Delta modulation. 
+Continuously Variable Slope Delta modulation.
 Used to compress speech audio for applications such as voice mail.
 .TP 10
-.B .dat      
-Text Data files. 
+.B .dat
+Text Data files.
 These files contain a textual representation of the
 sample data.  There is one line at the beginning
 that contains the sample rate.  Subsequent lines
@@ -594,11 +594,11 @@ Free Lossless Audio Codec compressed audio
 FLAC is an open, patent-free CODEC designed for compressing
 music. It is similar to MP3 and Ogg Vorbis, but lossless,
 meaning that audio is compressed in FLAC without any loss in
-quality. 
+quality.
 
 .I SoX
 can decode native FLAC files (.flac) but not Ogg FLAC files (.ogg).
-[But see 
+[But see
 .B .ogg
 below for information relating to support for Ogg
 Vorbis files.]
@@ -633,7 +633,7 @@ see if there is support for FLAC run \fBsox -h\fR and look for
 it under the list of supported file formats as `flac'.
 .TP 10
 .B .gsm
-GSM 06.10 Lossy Speech Compression. 
+GSM 06.10 Lossy Speech Compression.
 A lossy format for compressing speech which is used in the
 Global Standard for Mobile telecommunications (GSM).  It's good
 for its purpose, shrinking audio data size, but it will introduce
@@ -673,7 +673,7 @@ for a similar format.
 
 MP3 support in
 .I SoX
-is optional and requires access to either or both the external 
+is optional and requires access to either or both the external
 libmad and libmp3lame libraries.  To
 see if there is support for Mp3 run \fBsox -h\fR
 and look for it under the list of supported file formats as `mp3'.
@@ -713,13 +713,13 @@ will display header information for each `WAV' file in the current
 directory.
 .TP 10
 .B .ogg
-Ogg Vorbis compressed audio. 
+Ogg Vorbis compressed audio.
 Ogg Vorbis is a open, patent-free CODEC designed for compressing music
 and streaming audio.  It is a lossy compression format (similar to MP3,
 VQF & AAC) that achieves good compression rates with a minimum amount of
 quality loss.  See also
 .B MP3
- for a similar format.
+for a similar format.
 
 .I SoX
 can decode all types of Ogg Vorbis files, and can encode at different
@@ -757,7 +757,7 @@ Psion Record. Used in some Psion devices for System alarms and recordings made b
 the .wve format that is used in some Psion devices.
 .TP 10
 .B .sf
-IRCAM Sound Files. Used by academic music software 
+IRCAM Sound Files. Used by academic music software
 such as the `CSound' package, and the `MixView sound sample editor'.
 .TP 10
 .B .sph
@@ -849,7 +849,7 @@ will written appropriately.
 \fISoX\fR currently can read PCM, ULAW, ALAW, MS ADPCM, and IMA (or DVI) ADPCM.
 It can write all of these formats including the ADPCM encoding.
 Big endian versions of RIFF files, called RIFX, can also be read
-and written.  To write a RIFX file, use the 
+and written.  To write a RIFX file, use the
 .B -x
 option with the output file options.
 .TP 10
@@ -865,7 +865,7 @@ difficult.
 .TP 10
 .B .raw
 Raw files (no header).
-The sample rate, size (byte, word, etc), 
+The sample rate, size (byte, word, etc),
 and encoding (signed, unsigned, etc.)
 of the audio file must be given.
 The number of channels defaults to 1.
@@ -897,7 +897,7 @@ the number of channels it is possible to manually specify the
 .B avg
 effect and use the \fI-l\fR, \fI-r\fR, \fI-f\fR, \fI-b\fR,
 \fI-1\fR, \fI-2\fR, \fI-3\fR, \fI-4\fR, options to select only
-the left, right, front, back channel(s) or specific channel 
+the left, right, front, back channel(s) or specific channel
 for the output instead of averaging the channels.
 The \fI-l\fR, and \fI-r\fR options will do averaging
 in quad-channel files so select the exact channel to prevent this.
@@ -905,7 +905,7 @@ in quad-channel files so select the exact channel to prevent this.
 The
 .B avg
 effect can also be invoked with up to 16 double-precision
-numbers, separated by commas, which specify the proportion (0.0 = 0% and 1.0 = 100%) 
+numbers, separated by commas, which specify the proportion (0.0 = 0% and 1.0 = 100%)
 of each input channel that is to be mixed into each output channel.
 In two-channel mode, 4 numbers are given: l->l, l->r, r->l, and r->r,
 respectively.
@@ -949,7 +949,7 @@ frequency.
 The
 .I width
 gives the slope of the drop.
-The frequencies at 
+The frequencies at
 .I "center + width"
 and
 .I "center - width"
@@ -957,7 +957,7 @@ will be half of their original amplitudes.
 .B Band
 defaults to a mode oriented to pitched audio,
 i.e. voice, singing, or instrumental music.
-The 
+The
 .I -n
 (for noise) option uses the alternate mode
 for un-pitched audio e.g. percussion.
@@ -967,7 +967,7 @@ introduces a power-gain of about 11dB in the filter, so beware
 of output clipping.
 .B Band
 introduces noise in the shape of the filter,
-i.e. peaking at the 
+i.e. peaking at the
 .I center
 frequency and settling around it.
 
@@ -1020,7 +1020,7 @@ These effects support the \fB-o\fR option (see above).
 
 See \fBequalizer\fR for a peaking equalisation effect.
 .TP
-chorus \fIgain-in gain-out delay decay speed depth 
+chorus \fIgain-in gain-out delay decay speed depth
 .TP 10
        -s \fR| \fI-t [ \fIdelay decay speed depth -s \fR| \fI-t ... \fR]
 Add a chorus effect to the audio.  Each four-tuple
@@ -1031,7 +1031,7 @@ The modulation is either sinusoidal (-s) or triangular
 (-t).  Gain-out is the volume of the output.
 .TP
 compand \fIattack1,decay1\fR[,\fIattack2,decay2\fR...]
-.TP 
+.TP
         \fIin-dB1,out-dB1\fR[,\fIin-dB2,out-dB2\fR...]
 .TP 10
         [\fIgain\fR [\fIinitial-volume\fR [\fIdelay\fR ] ] ]
@@ -1105,19 +1105,19 @@ Adds `cues' to audio in audio-CD format so that
 when listened to on headphones the stereo image is
 moved from inside
 your head (standard for headphones) to outside and in front of the
-listener (standard for speakers). See 
+listener (standard for speakers). See
 http://www.geocities.com/beinges
 for a full explanation.
 .TP 10
 echo \fIgain-in gain-out delay decay \fR[ \fIdelay decay ... \fR]
 Add echoing to the audio.
-Each delay/decay part gives the delay in milliseconds 
+Each delay/decay part gives the delay in milliseconds
 and the decay (relative to gain-in) of that echo.
 Gain-out is the volume of the output.
 .TP 10
 echos \fIgain-in gain-out delay decay \fR[ \fIdelay decay ... \fR]
 Add a sequence of echos to the audio.
-Each delay/decay part gives the delay in milliseconds 
+Each delay/decay part gives the delay in milliseconds
 and the decay (relative to gain-in) of that echo.
 Gain-out is the volume of the output.
 .TP 10
@@ -1127,7 +1127,7 @@ This allows modification (\fIgain\fR) of the signal level at and
 around (\fIQ\-factor\fR) a central frequency (\fIcentral\-frequency\fR),
 leaving all other frequencies untouched (unlike
 bandpass/bandreject filters).
- 
+
 \fIcentral\-frequency\fR is the filter's central frequency in Hz, \fIQ\fR
 its Q\-factor (see http://en.wikipedia.org/wiki/Q_factor), and
 \fIgain\fR is the gain or attenuation in dB.
@@ -1143,7 +1143,7 @@ This effect supports the \fB-o\fR option (see above).
 See \fBbass\fR and \fBtreble\fR for shelving equalisation effects.
 .TP 10
 fade [ \fItype\fR ] \fIfade-in-length\fR [ \fIstop-time\fR [ \fIfade-out-length\fR ] ]
-Add a fade effect to the beginning, end, or both of the audio.  
+Add a fade effect to the beginning, end, or both of the audio.
 
 For fade-ins, this starts from the first sample and ramps the volume of the audio from 0 to full volume over \fIfade-in-length\fR seconds.  Specify 0 seconds if no fade-in is wanted.
 
@@ -1242,7 +1242,7 @@ This effect is just an alias of the \fBdither\fR effect but is left
 here for historical reasons.
 .TP
 mcompand "\fIattack1,decay1\fR[,\fIattack2,decay2\fR...]
-.TP 
+.TP
          \fIin-dB1,out-dB1\fR[,\fIin-dB2,out-dB2\fR...]
 .TP 10
          [\fIgain\fR [\fIinitial-volume\fR [\fIdelay\fR ] ] ]" \fIxover_freq\fR
@@ -1280,7 +1280,7 @@ channel and fades-in on another.  If the number of input channels is
 different then the number of output channels then this effect tries to
 intelligently handle this.  For instance, if the input contains 1 channel
 and the output contains 2 channels, then it will create the missing channel
-itself.  The 
+itself.  The
 .I direction
 is a value from -1.0 to 1.0.  -1.0 represents
 far left and 1.0 represents far right.  Numbers in between will start the
@@ -1316,9 +1316,9 @@ option, can be `cubic' or `linear'. Default is `cubic'.  The
 option, can be `cos', `hamming', `linear' or `trapezoid'.
 Default is `cos'.
 .TP
-polyphase [ \fI-w \fR< \fInut\fR / \fIham\fR > ] 
+polyphase [ \fI-w \fR< \fInut\fR / \fIham\fR > ]
 .TP
-          [ \fI -width \fR< \fI long \fR / \fIshort \fR / \fI# \fR> ] 
+          [ \fI -width \fR< \fI long \fR / \fIshort \fR / \fI# \fR> ]
 .TP 10
           [ \fI-cutoff # \fR ]
 Translate input sampling rate to output sampling rate via polyphase
@@ -1344,9 +1344,9 @@ recommended, as it produces poor quality results.
 
 .br
 -cutoff # : specify the filter cutoff frequency in terms of fraction of
-frequency bandwidth, also know as the Nyquist frequency.  See 
+frequency bandwidth, also know as the Nyquist frequency.  See
 the \fBresample\fR effect for
-further information on Nyquist frequency.  If up-sampling, then this is the 
+further information on Nyquist frequency.  If up-sampling, then this is the
 fraction of the original signal
 that should go through.  If down-sampling, this is the fraction of the
 signal left after down-sampling.  Default is 0.95.  Note that
@@ -1396,7 +1396,7 @@ rolloff and beta parameters when using the \fI-q*\fR options.
 Following is a table of the reasonable defaults which are built-in to
 \fISoX\fR:
 
-.br 
+.br
    \fBOption  Window rolloff beta interpolation\fR
 .br
    \fB------  ------ ------- ---- -------------\fR
@@ -1408,7 +1408,7 @@ Following is a table of the reasonable defaults which are built-in to
      -q      75    0.875   16    quadratic
 .br
      -ql    149    0.94    16    quadratic
-.br 
+.br
    \fB------  ------ ------- ---- -------------\fR
 
 \fI-qs\fR, \fI-q\fR, or \fI-ql\fR use window lengths of 45, 75, or 149
@@ -1429,17 +1429,17 @@ will actually appear as lower frequencies to the A/D converter and
 is called aliasing.  Normally, A/D converts run the signal through
 a highpass filter first to avoid these problems.
 
-Similar problems will happen in software when reducing the sample rate of 
+Similar problems will happen in software when reducing the sample rate of
 an audio file (frequencies above the new Nyquist frequency can be aliased
 to lower frequencies).  Therefore, a good resample effect
 will remove all frequency information above the new Nyquist frequency.
 
 The \fIrolloff\fR refers to how close to the Nyquist frequency this cutoff
 is, with closer being better.  When increasing the sample rate of an
-audio file you would not expect to have any frequencies exist that are 
-past the original Nyquist frequency.  Because of resampling properties, it 
-is common to have aliasing artefacts created above the old 
-Nyquist frequency.  In that case the \fIrolloff\fR refers to how close 
+audio file you would not expect to have any frequencies exist that are
+past the original Nyquist frequency.  Because of resampling properties, it
+is common to have aliasing artefacts created above the old
+Nyquist frequency.  In that case the \fIrolloff\fR refers to how close
 to the original Nyquist frequency to use a highpass filter to remove
 these artefacts, with closer also being better.
 
@@ -1476,14 +1476,14 @@ To be precise, this is done when
   output_rate/gcd(input_rate,output_rate) <= 511
 .TP 10
 reverb \fIgain-out reverb-time delay \fR[ \fIdelay ... \fR]
-Add reverberation to the audio.  Each delay is given 
+Add reverberation to the audio.  Each delay is given
 in milliseconds and its feedback is depending on the
-reverb-time in milliseconds.  Each delay should be in 
+reverb-time in milliseconds.  Each delay should be in
 the range of half to quarter of reverb-time to get
 a realistic reverberation.  Gain-out is the volume of the
 output.
 .TP 10
-reverse 
+reverse
 Reverse the audio completely.
 Included for finding Satanic subliminals.
 .TP 10
@@ -1491,43 +1491,43 @@ silence \fIabove_periods\fR [ \fIduration threshold\fR[ \fId\fR | \fI%\fR ] [ \f
 
 Removes silence from the beginning, middle, or end of the audio.  Silence is anything below a specified threshold.
 
-The \fIabove_periods\fR value is used to indicate if audio should be trimmed at 
-the beginning of the audio.  A value of zero indicates no silence 
+The \fIabove_periods\fR value is used to indicate if audio should be trimmed at
+the beginning of the audio.  A value of zero indicates no silence
 should be trimmed from the beginning.  When specifying an non-zero
 \fIabove_periods\fR, it trims audio up until it finds non-silence.
-Normally, when trimming silence from 
-beginning of audio the \fIabove_periods\fR will be 1 but it can be increased to 
-higher values to trim all audio up to a specific count of non-silence periods.  
-For example, if you had an audio file with two songs that each contained 
+Normally, when trimming silence from
+beginning of audio the \fIabove_periods\fR will be 1 but it can be increased to
+higher values to trim all audio up to a specific count of non-silence periods.
+For example, if you had an audio file with two songs that each contained
 2 seconds of silence before the song, you could specify an \fIabove_period\fR
 of 2 to strip out both silence periods and the first song.
 
-When \fIabove_periods\fR is non-zero, you must also specify a \fIduration\fR and 
-\fIthreshold\fR.  \fIDuration\fR indications the amount of time that non-silence must be 
+When \fIabove_periods\fR is non-zero, you must also specify a \fIduration\fR and
+\fIthreshold\fR.  \fIDuration\fR indications the amount of time that non-silence must be
 detected before it stops trimming audio.  By increasing the duration, burst of noise can be treated as silence and trimmed off.
 
-\fIThreshold\fR is used to indicate what sample value you should treat as 
-silence.  For digital audio, a value of 0 may be fine but for audio 
-recorded from analog, you may wish to increase the value to account 
+\fIThreshold\fR is used to indicate what sample value you should treat as
+silence.  For digital audio, a value of 0 may be fine but for audio
+recorded from analog, you may wish to increase the value to account
 for background noise.
 
 When optionally trimming silence from the end of the audio, you specify
 a \fIbelow_periods\fR count.  In this case, \fIbelow_period\fR means
-to remove all audio after silence is detected. 
+to remove all audio after silence is detected.
 Normally, this will be a value 1 of but it can
 be increased to skip over periods of silence that are wanted.  For example,
 if you have a song with 2 seconds of silence in the middle and 2 second
 at the end, you could set below_period to a value of 2 to skip over the
-silence in the middle of the audio.  
+silence in the middle of the audio.
 
 For \fIbelow_periods\fR, \fIduration\fR specifies a period of silence
 that must exist before audio is not copied any more.  By specifying
 a higher duration, silence that is wanted can be left in the audio.
-For example, if you have a song with an expected 1 second of silence 
+For example, if you have a song with an expected 1 second of silence
 in the middle and 2 seconds of silence at the end, a duration of 2
 seconds could be used to skip over the middle silence.
 
-Unfortunately, you must know the length of the silence at the 
+Unfortunately, you must know the length of the silence at the
 end of your audio file to trim off silence reliably.  A work around is
 to use the \fBsilence\fR effect in combination with the \fBreverse\fR effect.
 By first reversing the audio, you can use the \fIabove_periods\fR
@@ -1537,7 +1537,7 @@ Then reverse the file again to get back to normal.
 To remove silence from the middle of a file, specify a
 \fIbelow_periods\fR that is negative.  This value is then
 treated as a positive value and is also used to indicate the
-effect should restart processing as specified by the 
+effect should restart processing as specified by the
 \fIabove_periods\fR, making it suitable for removing periods of
 silence in the middle of the audio.
 
@@ -1562,13 +1562,13 @@ Do a statistical check on the input file,
 and print results on the standard error file.  Audio is passed
 unmodified throught the
 .I SoX
- processing chain.
+processing chain.
 
 The `Volume Adjustment:' field in the statistics
 gives you the argument to the
 .B -v
 .I number
-which will make the audio as loud as possible without clipping. 
+which will make the audio as loud as possible without clipping.
 Note: See the discussion on
 .B Clipping
 above for reasons why it is rarely a good idea to actually do this.
@@ -1577,7 +1577,7 @@ The option
 .B -v
 will print out the `Volume Adjustment:' field's value only and
 return.  This could be of use in scripts to auto convert the
-volume.  
+volume.
 
 The
 .B -s n
@@ -1604,7 +1604,7 @@ creep in to \fISoX\fR on cross-platform versions.
 
 .TP 10
 stretch \fIfactor [window fade shift fading]\fB
-Time stretch the audio by the given factor. Changes duration without affecting the pitch. 
+Time stretch the audio by the given factor. Changes duration without affecting the pitch.
 .I factor
 of stretching: >1.0 lengthen, <1.0 shorten duration.
 .I window
@@ -1621,7 +1621,7 @@ and shift.
 swap [ \fI1 2\fB | \fI1 2 3 4\fB ]
 Swap channels in multi-channel audio files.  Optionally, you may
 specify the channel order you would like the output in.  This defaults
-to output channel 2 and then 1 for stereo and 2, 1, 4, 3 for quad-channels.  
+to output channel 2 and then 1 for stereo and 2, 1, 4, 3 for quad-channels.
 An interesting
 feature is that you may duplicate a given channel by overwriting another.
 This is done by repeating an output channel on the command line.  For example,
@@ -1745,7 +1745,7 @@ starting to process audio.
 vibro \fIspeed \fB [ \fIdepth\fB ]
 Add a vibrato effect to the audio.
 This effect uses a low frequency oscillator to modulate the volume (amplitude) of the audio.
-.B Speed 
+.B Speed
 gives the frequency of modulation in Hz.
 This must be under 30.
 .B Depth
@@ -1834,7 +1834,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 .SH AUTHORS
-Chris Bagwell (cbagwell@users.sourceforge.net).  
+Chris Bagwell (cbagwell@users.sourceforge.net).
 .P
 Additional authors and contributors are listed in the AUTHORS file that
 is distributed with the source code.
