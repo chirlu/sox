@@ -401,7 +401,7 @@ bool is_effect_name(char const * text);
 int st_updateeffect(eff_t, const st_signalinfo_t *in, const st_signalinfo_t *out, int);
 int st_gettype(ft_t, bool);
 ft_t st_initformat(void);
-int st_parsesamples(st_rate_t rate, const char *str, st_size_t *samples, char def);
+char const * st_parsesamples(st_rate_t rate, const char *str, st_size_t *samples, char def);
 
 extern char const * st_message_filename;
 

@@ -305,18 +305,31 @@ int st_updateeffect(eff_t effp, const st_signalinfo_t *in, const st_signalinfo_t
  * treated as an amount of time.  This is converted into seconds and
  * fraction of seconds and then use the sample rate to calculate
  * # of samples.
- * Returns ST_EOF on error.
+ * Returns NULL on error, pointer to next char to parse otherwise.
  */
-int st_parsesamples(st_rate_t rate, const char *str, st_size_t *samples, char def)
+char const * st_parsesamples(st_rate_t rate, const char *str, st_size_t *samples, char def)
 {
     int found_samples = 0, found_time = 0;
     int time = 0;
     long long_samples;
     float frac = 0;
+    char const * end;
+    char const * pos;
+    bool found_colon, found_dot;
 
-    if (strchr(str, ':') || strchr(str, '.') || str[strlen(str)-1] == 't')
+    for (end = str; *end && strchr("0123456789:.ts", *end); ++end);
+    if (end == str)
+      return NULL;
+
+    pos = strchr(str, ':');
+    found_colon = pos && pos < end;
+    
+    pos = strchr(str, '.');
+    found_dot = pos && pos < end;
+
+    if (found_colon || found_dot || *(end-1) == 't')
         found_time = 1;
-    else if (str[strlen(str)-1] == 's')
+    else if (*(end-1) == 's')
         found_samples = 1;
 
     if (found_time || (def == 't' && !found_samples))
@@ -326,7 +339,7 @@ int st_parsesamples(st_rate_t rate, const char *str, st_size_t *samples, char de
         while(1)
         {
             if (str[0] != '.' && sscanf(str, "%d", &time) != 1)
-                return ST_EOF;
+                return NULL;
             *samples += time;
 
             while (*str != ':' && *str != '.' && *str != 0)
@@ -343,19 +356,19 @@ int st_parsesamples(st_rate_t rate, const char *str, st_size_t *samples, char de
         if (*str == '.')
         {
             if (sscanf(str, "%f", &frac) != 1)
-                return ST_EOF;
+                return NULL;
         }
 
         *samples *= rate;
         *samples += (rate * frac) + 0.5;
-        return ST_SUCCESS;
+        return end;
     }
     if (found_samples || (def == 's' && !found_time))
     {
         if (sscanf(str, "%ld", &long_samples) != 1)
-            return ST_EOF;
+            return NULL;
         *samples = long_samples;
-        return ST_SUCCESS;
+        return end;
     }
-    return ST_EOF;
+    return NULL;
 }

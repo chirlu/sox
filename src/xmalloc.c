@@ -56,3 +56,16 @@ void *xcalloc(size_t nmemb, size_t size)
 
   return ptr;
 }
+
+/*
+ * Perform a strdup; abort if not possible.
+ */
+char * xstrdup(char const * s)
+{
+  char * ptr = strdup(s);
+
+  if (ptr == NULL)
+    st_fail("out of memory");
+
+  return ptr;
+}

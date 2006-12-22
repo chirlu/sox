@@ -82,9 +82,9 @@ the data type and sample rates.
 EFFECTs are one or more of the following: avg, band, bandpass, bandreject,
 bass, chorus, compand, copy, dcshift, deemph, dither, earwax, echo, echos,
 equalizer, fade, filter, flanger, highpass, highp, lowpass, lowp, mask,
-mcompand, noiseprof, noisered, pan, phaser, pick, pitch, polyphase, rabbit,
-rate, repeat, resample, reverb, reverse, silence, speed, stat, stretch,
-swap, synth, treble, trim, vibro, vol.
+mcompand, noiseprof, noisered, pad, pan, phaser, pick, pitch, polyphase,
+rabbit, rate, repeat, resample, reverb, reverse, silence, speed, stat,
+stretch, swap, synth, treble, trim, vibro, vol.
 
 See sox man page for detailed information on supported file types, data
 formats, and effect options."
@@ -94,7 +94,7 @@ formats, and effect options."
 # loop over arguments
 while [ $# -ne 0 ]; do
     case "$1" in
-	avg|band|bandpass|bandreject|bass|chorus|compand|copy|dcshift|deemph|dither|earwax|echo|echos|equalizer|fade|filter|flanger|highpass|highp|lowpass|lowp|mask|mcompand|noiseprof|noisered|pan|phaser|pick|pitch|polyphase|rabbit|rate|repeat|resample|reverb|reverse|silence|speed|stat|stretch|swap|synth|treble|trim|vibro|vol)
+	avg|band|bandpass|bandreject|bass|chorus|compand|copy|dcshift|deemph|dither|earwax|echo|echos|equalizer|fade|filter|flanger|highpass|highp|lowpass|lowp|mask|mcompand|noiseprof|noisered|pad|pan|phaser|pick|pitch|polyphase|rabbit|rate|repeat|resample|reverb|reverse|silence|speed|stat|stretch|swap|synth|treble|trim|vibro|vol)
 	    effects="$@"
 	    break
 	    ;;

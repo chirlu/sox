@@ -77,6 +77,7 @@ sox-12.18.3
     problematic -v option.  Use the vol effect instead.  (robs)
   o Added prompt to overwrite pre-existing output file (unless overridden
     with --force).  (robs)
+  o Added silence padding effect.  (robs)
 
 sox-12.18.2
 -----------

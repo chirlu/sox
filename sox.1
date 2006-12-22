@@ -36,7 +36,7 @@ SoX \- Sound eXchange : universal audio file translator and processor
 .SH DESCRIPTION
 .I SoX
 reads and writes most popular audio formats and can optionally apply
-effects to them; it includes a basic audio synthesiser, and on unix-like
+effects to them; it includes a basic audio synthesiser, and on Unix-like
 systems, can play and record audio files.
 .P
 .I SoX
@@ -61,7 +61,7 @@ header that completely describes the characteristics of the audio data
 that follows.
 The second type is `headerless', often called raw data.  For a file
 of this type, the audio data characteristics are sometimes described by
-the filename extension, sometimes by giving format options on the
+the file-name extension, sometimes by giving format options on the
 .I SoX
 command line, and otherwise by a combination of the two.
 .P
@@ -70,7 +70,7 @@ audio data so that it can be processed with \fISoX\fR:
 .TP 10
 sample rate
 The sample rate in samples per second (or Hz).  For example, digital telephony
-tradionally uses a ample rate of 8000Hz; CDs use 44,100Hz.
+traditionally uses a sample rate of 8000Hz; CDs use 44,100Hz.
 .TP 10
 sample size
 The number of bits (or bytes) used to store each sample.  Most popular are
@@ -83,7 +83,7 @@ Commonly-used encoding types include: floating-point, u-law, ADPCM, signed
 linear, FLAC, etc.
 .TP 10
 channels
-The number of audio channels contained in the file.  1 (`mono') and 2
+The number of audio channels contained in the file.  One (`mono') and two
 (`stereo') are widely used.
 .P
 The term `bit-rate' is sometimes used as an overall measure of an audio
@@ -99,7 +99,7 @@ sample rate, and channel count as the input data.  If that is not what
 is wanted, then format options can be used to specify the differences.
 .PP
 If an output file format does not support the same data type, sample
-rate, or channel count as the input file format, then unless overriden
+rate, or channel count as the input file format, then unless overridden
 on the command line, \fISoX\fR will automatically select the closest values
 that the format does support.
 .P
@@ -112,7 +112,7 @@ or \fB-t\fR), then the given type will be used,
 otherwise,
 .I SoX
 will try first using the file header (input files only), and then
-the filename extension to determine the file type.
+the file-name extension to determine the file type.
 If the file type cannot be determined, then
 .I SoX
 will exit with an error.
@@ -148,10 +148,10 @@ effect to increase the audio volume, but could also occur with many
 other effects, when converting one format to another, and even when
 simply playing the audio.
 
-Playing an audio file often involves resampling, and processing by
+Playing an audio file often involves re-sampling, and processing by
 analogue components that can introduce a small DC offset and/or
 amplification, all of which can produce distortion if the audio signal
-level was intially too close to the clipping point.
+level was initially too close to the clipping point.
 
 For these reasons, it is usual to make sure that an audio
 file's signal level does not exceed around 70% of the maximum (linear)
@@ -233,24 +233,24 @@ See the
 .B soxexam(1)
 manual page for a more detailed description of
 .I SoX
-and futher examples on how to use
+and further examples on how to use
 .I SoX
 with various file formats and effects.
 .PP
 .SH OPTIONS
-\fBSpecial Filename Options\fR
+\fBSpecial File-name Options\fR
 .br
 Each of these options is used in special circumstances in place of a normal
-filename on the command line.
+file-name on the command line.
 .TP 10
 \fB-\fR
 \fISoX\fR can be used in pipeline operations by using the special
-filename `-' which,
-if used in place of input filename, will cause
+file-name `-' which,
+if used in place of input file-name, will cause
 .I SoX
 will read audio data from stdin,
 and which,
-if used in place of output filename, will cause
+if used in place of output file-name, will cause
 .I SoX
 will send audio data to stdout.
 Note that when using this option,
@@ -258,7 +258,7 @@ Note that when using this option,
 must also be given.
 .TP 10
 \fB-n\fR
-This can be used in place of an input or output filename
+This can be used in place of an input or output file-name
 to specify that the `null' file type should be used. See
 .B null
 below for further information.
@@ -333,7 +333,7 @@ verbosity levels:
 .RS
 .IP 0
 No messages are printed at all; use the exit status to determine
-if an error has ocurred.
+if an error has occurred.
 .IP 1
 Only error messages are printed. These are generated if
 .I SoX
@@ -370,7 +370,7 @@ sets it to 0.
 \fBInput File Options\fR
 .br
 These options apply to only input files and may only precede input
-filenames on the command line.
+file-names on the command line.
 .TP 10
 \fB-v \fIvolume\fR
 Adjust volume by a factor of \fIvolume\fR.
@@ -416,14 +416,14 @@ has
 multiple rate changing effects, the user can specify which to use as an effect.
 If no rate change effect is specified then a default one will be chosen.
 .TP 10
-\fB-t \fIfiletype\fR
+\fB-t \fIfile-type\fR
 Gives the type of the audio file.  This is useful when the
 file extension is non-standard or when the type can not be determined by
 looking at the header of the file.
 
 The
 .B -t
-option can also be used to override the type implied by an input filename
+option can also be used to override the type implied by an input file-name
 extension, but if overriding with a type that has a header,
 .I SoX
 will exit with an appropriate error message if such a header is not
@@ -484,13 +484,13 @@ Abbreviations of: byte, word, long word, double long (long long) word.
 \fBOutput File Format Options\fR
 .br
 These options apply to only the output file and may only precede the output
-filename on the command line.
+file-name on the command line.
 .TP 10
 \fB--comment \fItext\fR
 Specify the comment text to store in the output file header (where
 applicable).
 .TP 10
-\fB--comment-file \fIfilename\fR
+\fB--comment-file \fIfile-name\fR
 Specify a file containing the comment text to store in the output
 file header (where applicable).
 .TP 10
@@ -502,7 +502,7 @@ compressing file formats.  See the description of the file formats that
 use this option for more information.
 .SH FILE TYPES
 Note: a file type that can be determined
-by filename extension is listed with its name preceded by a dot.
+by file-name extension is listed with its name preceded by a dot.
 .PP
 .TP 10
 .B .8svx
@@ -644,7 +644,7 @@ It is rather CPU intensive.
 GSM in
 .I SoX
 is optional and requires access to an external GSM library.  To see
-if there is support for gsm run \fBsox -h\fR
+if there is support for GSM run \fBsox -h\fR
 and look for it under the list of supported file formats.
 .TP 10
 .B .hcom
@@ -657,7 +657,7 @@ Mac users will need your usual arsenal of file converters
 to deal with an HCOM file under Unix or DOS.
 .TP 10
 .B .maud
-An IFF-conformant audio file type, registered by
+An IFF-conforming audio file type, registered by
 MS MacroSystem Computer GmbH, published along
 with the `Toccata' sound-card on the Amiga.
 Allows 8bit linear, 16bit linear, A-Law, u-law
@@ -684,9 +684,9 @@ Null file type.
 This is a special file type that can be used when normal
 file reading or writing is not needed to use a particular effect.
 It is selected by using the
-special filename
+special file-name
 .B -n
-in place of an input or output filename.
+in place of an input or output file-name.
 
 Using this file type to input audio is equivalent to
 using a normal audio file that contains an infinite amount
@@ -700,7 +700,7 @@ audio instead of affecting it
 (such as \fBnoiseprof\fR or \fBstat\fR).
 
 The number of channels and the sampling rate associated with a null file
-are by default 2 and 44.1kHz respectively, but these can be overriden
+are by default 2 and 44.1kHz respectively, but these can be overridden
 if necessary by using appropriate \fBFormat Options\fR.
 
 One other use of the null file type is to use it in conjunction
@@ -1273,6 +1273,35 @@ noise but present a greater possibility of distorting the desired audio signal.
 Experiment with different threshold values to find the optimal one for your
 sample.
 .TP 10
+pad {\fIlength\fR[\fI@position\fR]}
+Pad the audio with silence, at the beginning, the end, or any
+specified points through the audio.
+Both
+.I length
+and
+.I position
+can specify a time or, if appended with an `s', a number of samples.
+.I length
+is the amount of silence to insert and
+.I position
+the position in the input audio stream at which to insert it.
+Any number of lengths and positions may be specified, provided that
+a specified position is not less that the previous one.
+.I position
+is optional for the first and last lengths specified and
+if omitted correspond to the beginning and the end of the audio respectively.
+For example:
+
+	pad 1.5 1.5
+
+adds 1.5 seconds of silence padding at each end of the audio, whilst
+
+	pad 4000s@3:00
+
+inserts 4000 samples of silence 3 minutes into the audio.
+If silence is wanted only at the end of the audio, specify either the end
+position or specify a zero-length pad at the start.
+.TP 10
 pan \fIdirection\fB
 Pan the audio from one channel to another.  This is done by
 changing the volume of the input channels so that it fades out on one
@@ -1301,7 +1330,7 @@ Pick a subset of channels to be copied into the output file.  This effect is jus
 effect
 but is left here for historical reasons.
 .TP 10
-pitch \fIshift [ width interpole fade ]\fB
+pitch \fIshift [ width interpolate fade ]\fB
 Change the pitch of file without affecting its duration by cross-fading
 shifted samples.
 .I shift
@@ -1310,7 +1339,7 @@ Default shift is 0.
 .I width
 of window is in ms. Default width is 20ms. Try 30ms to lower pitch,
 and 10ms to raise pitch.
-.I interpole
+.I interpolate
 option, can be `cubic' or `linear'. Default is `cubic'.  The
 .I fade
 option, can be `cos', `hamming', `linear' or `trapezoid'.
@@ -1325,8 +1354,8 @@ Translate input sampling rate to output sampling rate via polyphase
 interpolation, a DSP algorithm.  This method is relatively slow and memory intensive.
 
 .br
--w < nut / ham > : select either a Nuttall (~90 dB stopband) or Hamming
-(~43 dB stopband) window.  Default is
+-w < nut / ham > : select either a Nuttall (~90 dB stop-band) or Hamming
+(~43 dB stop-band) window.  Default is
 .I nut.
 
 .br
@@ -1382,16 +1411,16 @@ pointer to its own documentation.
 
 By default, linear interpolation is used,
 with a window width about 45 samples at the lower of the two rates.
-This gives an accuracy of about 16 bits, but insufficient stopband rejection
-in the case that you want to have rolloff greater than about 0.80 of
+This gives an accuracy of about 16 bits, but insufficient stop-band rejection
+in the case that you want to have roll-off greater than about 0.80 of
 the Nyquist frequency.
 
-The \fI-q*\fR options will change the default values for rolloff and beta
+The \fI-q*\fR options will change the default values for roll-off and beta
 as well as use quadratic interpolation of filter
 coefficients, resulting in about 24 bits precision.
 The \fI-qs\fR, \fI-q\fR, or \fI-ql\fR options specify increased accuracy
 at the cost of lower execution speed.  It is optional to specify
-rolloff and beta parameters when using the \fI-q*\fR options.
+roll-off and beta parameters when using the \fI-q*\fR options.
 
 Following is a table of the reasonable defaults which are built-in to
 \fISoX\fR:
@@ -1419,7 +1448,7 @@ slower execution times.
 \fIrolloff\fR refers to the cut-off frequency of the
 low pass filter and is given in terms of the
 Nyquist frequency for the lower sample rate.  rolloff therefore should
-be something between 0.0 and 1.0, in practice 0.8-0.95.  The defaults are
+be something between 0.0 and 1.0, in practise 0.8-0.95.  The defaults are
 indicated above.
 
 The \fINyquist frequency\fR is equal to (sample rate / 2).  Logically,
@@ -1438,10 +1467,10 @@ The \fIrolloff\fR refers to how close to the Nyquist frequency this cutoff
 is, with closer being better.  When increasing the sample rate of an
 audio file you would not expect to have any frequencies exist that are
 past the original Nyquist frequency.  Because of resampling properties, it
-is common to have aliasing artefacts created above the old
+is common to have aliasing artifacts created above the old
 Nyquist frequency.  In that case the \fIrolloff\fR refers to how close
 to the original Nyquist frequency to use a highpass filter to remove
-these artefacts, with closer also being better.
+these artifacts, with closer also being better.
 
 The \fIbeta\fR parameter
 determines the type of filter window used.  Any value greater than 2.0 is
@@ -1449,7 +1478,7 @@ the beta for a Kaiser window.  Beta <= 2.0 selects a Nuttall window.
 If unspecified, the default is a Kaiser window with beta 16.
 
 In the case of Kaiser window (beta > 2.0), lower betas produce a somewhat
-faster transition from passband to stopband, at the cost of noticeable artifacts.
+faster transition from pass-band to stop-band, at the cost of noticeable artifacts.
 A beta of 16 is the default, beta less than 10 is not recommended.  If you want
 a sharper cutoff, don't use low beta's, use a longer sample window.
 A Nuttall window is selected by specifying any 'beta' <= 2, and the
@@ -1459,7 +1488,7 @@ just curious about comparing the effects of Nuttall vs. Kaiser windows.
 
 This is the default effect if the two files have different sampling rates.
 Default parameters are, as indicated above, Kaiser window of length 45,
-rolloff 0.80, beta 16, linear interpolation.
+roll-off 0.80, beta 16, linear interpolation.
 
 \fBNOTE:\fR \fI-qs\fR is only slightly slower, but more accurate for
 16-bit or higher precision.
@@ -1560,7 +1589,7 @@ appropriate parameters.
 stat [ \fI-s N\fB ] [\fI-rms\fB ] [\fI-freq\fB ] [ \fI-v\fB ] [ \fI-d\fB ]
 Do a statistical check on the input file,
 and print results on the standard error file.  Audio is passed
-unmodified throught the
+unmodified through the
 .I SoX
 processing chain.
 
@@ -1631,7 +1660,7 @@ file with both channels containing the same audio.
 .TP 10
 synth [\fIlen\fR] {[\fItype] [combine\fR] [\fIfreq\fR[\fI-freq2\fR]] [\fIoff\fR] [\fIph\fR] [\fIp1\fR] [\fIp2\fR] [\fIp3\fR]}
 This effect can be used to generate fixed or swept frequency audio tones
-with various wave shapes, or to generate wideband noise of various
+with various wave shapes, or to generate wide-band noise of various
 `colours'.
 Multiple synth effects can be cascaded to produce more complex
 waveforms; at each stage it is possible to choose whether the generated
@@ -1669,7 +1698,7 @@ to create a more complex waveform:
 
 	sox -n output.au synth .5 sine 200-500 synth .5 sine fmod 700-100
 
-Frequencies can also specied in terms of musical semitones relative to
+Frequencies can also specified in terms of musical semitones relative to
 `middle A' (440Hz);  the following could be used to help tune
 a guitar's `low E' string (on a system that supports
 \fBalsa\fR):

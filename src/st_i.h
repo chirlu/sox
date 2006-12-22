@@ -291,6 +291,7 @@ extern const st_effect_t *st_mask_effect_fn(void);
 extern const st_effect_t *st_mcompand_effect_fn(void);
 extern const st_effect_t *st_noiseprof_effect_fn(void);
 extern const st_effect_t *st_noisered_effect_fn(void);
+extern const st_effect_t *st_pad_effect_fn(void);
 extern const st_effect_t *st_pan_effect_fn(void);
 extern const st_effect_t *st_phaser_effect_fn(void);
 extern const st_effect_t *st_pick_effect_fn(void);

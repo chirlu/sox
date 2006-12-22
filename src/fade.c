@@ -81,8 +81,7 @@ static int st_fade_getopts(eff_t effp, int n, char **argv)
     fade->in_stop_str = (char *)xmalloc(strlen(argv[0])+1);
     strcpy(fade->in_stop_str,argv[0]);
     /* Do a dummy parse to see if it will fail */
-    if (st_parsesamples(0, fade->in_stop_str, &fade->in_stop, 't') !=
-            ST_SUCCESS)
+    if (st_parsesamples(0, fade->in_stop_str, &fade->in_stop, 't') == NULL)
     {
         st_fail(st_fade_effect.usage);
         return(ST_EOF);
@@ -100,7 +99,7 @@ static int st_fade_getopts(eff_t effp, int n, char **argv)
 
             /* Do a dummy parse to see if it will fail */
             if (st_parsesamples(0, fade->out_stop_str, 
-                                &fade->out_stop, 't') != ST_SUCCESS) {
+                                &fade->out_stop, 't') == NULL) {
               st_fail(st_fade_effect.usage);
               return(ST_EOF);
             }
@@ -112,7 +111,7 @@ static int st_fade_getopts(eff_t effp, int n, char **argv)
 
             /* Do a dummy parse to see if it will fail */
             if (st_parsesamples(0, fade->out_start_str, 
-                                &fade->out_start, 't') != ST_SUCCESS) {
+                                &fade->out_start, 't') == NULL) {
               st_fail(st_fade_effect.usage);
               return(ST_EOF);
             }
@@ -133,7 +132,7 @@ static int st_fade_start(eff_t effp)
     /* converting time values to samples */
     fade->in_start = 0;
     if (st_parsesamples(effp->ininfo.rate, fade->in_stop_str,
-                        &fade->in_stop, 't') != ST_SUCCESS)
+                        &fade->in_stop, 't') == NULL)
     {
         st_fail(st_fade_effect.usage);
         return(ST_EOF);
@@ -145,7 +144,7 @@ static int st_fade_start(eff_t effp)
     {
         fade->do_out = 1;
         if (st_parsesamples(effp->ininfo.rate, fade->out_stop_str,
-                            &fade->out_stop, 't') != ST_SUCCESS)
+                            &fade->out_stop, 't') == NULL)
         {
             st_fail(st_fade_effect.usage);
             return(ST_EOF);
@@ -155,7 +154,7 @@ static int st_fade_start(eff_t effp)
         if (fade->out_start_str)
         {
             if (st_parsesamples(effp->ininfo.rate, fade->out_start_str,
-                        &fade->out_start, 't') != ST_SUCCESS)
+                        &fade->out_start, 't') == NULL)
             {
                 st_fail(st_fade_effect.usage);
                 return(ST_EOF);

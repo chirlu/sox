@@ -121,8 +121,7 @@ static int st_silence_getopts(eff_t effp, int n, char **argv)
         strcpy(silence->start_duration_str,argv[0]);
         /* Perform a fake parse to do error checking */
         if (st_parsesamples(0,silence->start_duration_str,
-                    &silence->start_duration,'s') !=
-                ST_SUCCESS)
+                    &silence->start_duration,'s') == NULL)
         {
             st_fail(st_silence_effect.usage);
             return(ST_EOF);
@@ -175,8 +174,7 @@ static int st_silence_getopts(eff_t effp, int n, char **argv)
         strcpy(silence->stop_duration_str,argv[0]);
         /* Perform a fake parse to do error checking */
         if (st_parsesamples(0,silence->stop_duration_str,
-                    &silence->stop_duration,'s') !=
-                ST_SUCCESS)
+                    &silence->stop_duration,'s') == NULL)
         {
             st_fail(st_silence_effect.usage);
             return(ST_EOF);
@@ -259,8 +257,7 @@ static int st_silence_start(eff_t effp)
         if (silence->start)
         {
             if (st_parsesamples(effp->ininfo.rate, silence->start_duration_str,
-                                &silence->start_duration, 's') !=
-                    ST_SUCCESS)
+                                &silence->start_duration, 's') == NULL)
             {
                 st_fail(st_silence_effect.usage);
                 return(ST_EOF);
@@ -269,8 +266,7 @@ static int st_silence_start(eff_t effp)
         if (silence->stop)
         {
             if (st_parsesamples(effp->ininfo.rate,silence->stop_duration_str,
-                                &silence->stop_duration,'s') !=
-                    ST_SUCCESS)
+                                &silence->stop_duration,'s') == NULL)
             {
                 st_fail(st_silence_effect.usage);
                 return(ST_EOF);

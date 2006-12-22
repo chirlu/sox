@@ -49,8 +49,7 @@ static int st_trim_getopts(eff_t effp, int n, char **argv)
             trim->length_str = (char *)xmalloc(strlen(argv[1])+1);
             strcpy(trim->length_str,argv[1]);
             /* Do a dummy parse to see if it will fail */
-            if (st_parsesamples(0, trim->length_str,
-                                &trim->length, 't') != ST_SUCCESS)
+            if (st_parsesamples(0, trim->length_str, &trim->length, 't') == NULL)
             {
                 st_fail(st_trim_effect.usage);
                 return(ST_EOF);
@@ -59,8 +58,7 @@ static int st_trim_getopts(eff_t effp, int n, char **argv)
             trim->start_str = (char *)xmalloc(strlen(argv[0])+1);
             strcpy(trim->start_str,argv[0]);
             /* Do a dummy parse to see if it will fail */
-            if (st_parsesamples(0, trim->start_str,
-                                &trim->start, 't') != ST_SUCCESS)
+            if (st_parsesamples(0, trim->start_str, &trim->start, 't') == NULL)
             {
                 st_fail(st_trim_effect.usage);
                 return(ST_EOF);
@@ -83,7 +81,7 @@ static int st_trim_start(eff_t effp)
     trim_t trim = (trim_t) effp->priv;
 
     if (st_parsesamples(effp->ininfo.rate, trim->start_str,
-                        &trim->start, 't') != ST_SUCCESS)
+                        &trim->start, 't') == NULL)
     {
         st_fail(st_trim_effect.usage);
         return(ST_EOF);
@@ -94,7 +92,7 @@ static int st_trim_start(eff_t effp)
     if (trim->length_str)
     {
         if (st_parsesamples(effp->ininfo.rate, trim->length_str,
-                    &trim->length, 't') != ST_SUCCESS)
+                    &trim->length, 't') == NULL)
         {
             st_fail(st_trim_effect.usage);
             return(ST_EOF);

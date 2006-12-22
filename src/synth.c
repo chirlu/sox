@@ -279,8 +279,7 @@ static int st_synth_getopts(eff_t effp, int n, char **argv)
         synth->length_str = (char *)xmalloc(strlen(argv[argn])+1);
         strcpy(synth->length_str,argv[argn]);
         /* Do a dummy parse of to see if it will fail */
-        if (st_parsesamples(0, synth->length_str, &synth->length, 't') !=
-                ST_SUCCESS)
+        if (st_parsesamples(0, synth->length_str, &synth->length, 't') == NULL)
         {
             st_fail(st_synth_effect.usage);
             return (ST_EOF);
@@ -379,7 +378,7 @@ static int st_synth_start(eff_t effp)
     if (synth->length_str)
     {
         if (st_parsesamples(effp->ininfo.rate, synth->length_str,
-                            &synth->length, 't') != ST_SUCCESS)
+                            &synth->length, 't') == NULL)
         {
             st_fail(st_synth_effect.usage);
             return(ST_EOF);
