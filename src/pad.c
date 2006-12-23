@@ -12,7 +12,7 @@ typedef struct pad
 {
   int npads;         /* Number of pads requested */
   struct {
-    char * str;      /* Comman-line argument to parse for this pad */
+    char * str;      /* Command-line argument to parse for this pad */
     st_size_t start; /* Start padding when in_pos equals this */
     st_size_t pad;   /* Number of samples to pad */
   } * pads;
