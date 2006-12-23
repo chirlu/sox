@@ -1,5 +1,5 @@
 Makefile Makefile.in
 autom4te.cache
 configure config.log config.status
-aclocal
+aclocal.m4
 sox*.tar.gz
