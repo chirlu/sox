@@ -171,7 +171,6 @@ ft_t st_open_write(
     int i;
     bool no_filetype_given = filetype == NULL;
 
-    fprintf(stderr, "%s %s\n", filetype, path);
     ft->filename = xstrdup(path);
 
     /* Let auto effect do the work if user is not overriding. */
@@ -282,7 +281,11 @@ output_error:
 
 st_size_t st_read(ft_t ft, st_sample_t *buf, st_size_t len)
 {
-    return (*ft->h->read)(ft, buf, len);
+  len -= len % ft->info.channels; /* We need a whole number of "wide" samples */
+  len = (*ft->h->read)(ft, buf, len);
+  if (len != ST_EOF)
+    len -= len % ft->info.channels; /* Belt & braces */
+  return len;
 }
 
 st_size_t st_write(ft_t ft, const st_sample_t *buf, st_size_t len)

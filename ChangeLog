@@ -78,6 +78,7 @@ sox-12.18.3
   o Added prompt to overwrite pre-existing output file (unless overridden
     with --force).  (robs)
   o Added silence padding effect.  (robs)
+  o Improved multi-channel file reading; fixes [1599990].  (robs)
 
 sox-12.18.2
 -----------

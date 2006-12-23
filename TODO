@@ -2,11 +2,6 @@ Users are encouraged to implement these. Send all patches to
 sox-devel@lists.sourceforge.net, or post them on the patches tracker
 at http://sf.net/projects/sox/.
 
-  o Update all read routines to be like WAV handler and only
-    return data in multiples of sample_size*channels.  This
-    will prevent corrupt files from causing sox to go into
-    an infinite loop trying to read just a couple more bytes.
-
   o Make "mix" an alias of "avg" since that's closer to what it
     really is.  For 2->2 mixes, make a 2 option L->L and R->R
     shortcut.  Similar 4 option for 4->4.
@@ -86,5 +81,3 @@ at http://sf.net/projects/sox/.
 
   o Effects option-parsers should fail if extraneous characters or arguments
     are present. e.g. vol 3mW, speed 2 3, etc. should all fail.
-
-  o Fix the multi-channel bug in trim.

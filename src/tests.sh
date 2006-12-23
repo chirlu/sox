@@ -33,9 +33,9 @@ convertToAndFrom () {
       if [ "${format1_skip}x" = "x" -a "${from_skip}x" = "x" ] ; then
         getFormat ${format1}; format1Text=$formatText; format1Flags=$formatFlags
         getFormat       $1; format2Text=$formatText; format2Flags=$formatFlags
-        ./sox -c $channels -r $rate -n $format1Flags input.$format1 synth $samples's' sin 300-3300 noise
-        ./sox $verbose -r $rate -c $channels $format1Flags input.$format1 $format2Flags intermediate.$1
-        ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$1 $format1Flags output.$format1
+        ./sox --force -c $channels -r $rate -n $format1Flags input.$format1 synth $samples's' sin 300-3300 noise trapezium
+        ./sox --force $verbose -r $rate -c $channels $format1Flags input.$format1 $format2Flags intermediate.$1
+        ./sox --force $verbose -r $rate -c $channels $format2Flags intermediate.$1 $format1Flags output.$format1
 
         if cmp -s input.$format1 output.$format1
         then
@@ -70,28 +70,37 @@ do_multichannel_formats () {
   convertToAndFrom ul sw uw sl raw Raw dat
 
   format1=Wav
-  convertToAndFrom Wav aiff aifc au avr dat maud sf flac
-  (samples=23492; convertToAndFrom 8svx)  # Even number of samples only
-  (rate=8000; convertToAndFrom voc)       # Fixed rate
+  convertToAndFrom Wav aiff aifc au dat sf flac
+}
+
+do_twochannel_formats () {
+  format1=Wav
+  convertToAndFrom avr maud
+  (rate=8000; convertToAndFrom voc) || exit 1      # Fixed rate
+  (samples=23492; convertToAndFrom 8svx) || exit 1 # Even number of samples only
 }
 
 do_singlechannel_formats () {
   format1=Wav
   convertToAndFrom smp
-  (rate=5512; convertToAndFrom hcom)      # Fixed rate
+  (rate=5512; convertToAndFrom hcom) || exit 1     # Fixed rate
 
   format1=wve
-  (rate=8000; convertToAndFrom al sw uw sl raw Raw dat)      # Fixed rate
+  (rate=8000; convertToAndFrom al sw uw sl raw Raw dat) || exit 1 # Fixed rate
 }
 
 grep -q "^#define HAVE_LIBFLAC" stconfig.h || skip="flac $skip"
 
 rate=44100
 samples=23493
+channels=3 
+do_multichannel_formats
 channels=2 
 do_multichannel_formats
+do_twochannel_formats
 channels=1 
 do_multichannel_formats
+do_twochannel_formats
 do_singlechannel_formats
 
 ./sox -c 1 -n output.ub synth .01 vol .5
