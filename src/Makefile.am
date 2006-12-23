@@ -4,7 +4,7 @@ SUBDIRS = libgsm
 
 bin_PROGRAMS = sox
 bin_SCRIPTS = play libst-config
-lib_LIBRARIES = libst.a
+lib_LTLIBRARIES = libst.la
 include_HEADERS = st.h stconfig.h ststdint.h
 
 formats = 8svx.c adpcm.c adpcm.h aiff.c au.c auto.c avr.c cdr.c \
@@ -23,18 +23,18 @@ effects = avg.c band.c bandpass.c biquad.c biquad.h breject.c btrworth.c \
 	  reverb.c reverse.c silence.c speed.c stat.c \
 	  stretch.c swap.c synth.c tone.c trim.c vibro.c vol.c
 
-libst_a_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c misc.c \
+libst_la_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c misc.c \
 	  st_i.h stio.c util.c xmalloc.c xmalloc.h getopt.c getopt1.c getopt.h
 
 AM_CFLAGS = $(LUA_INCLUDES)
 AM_LDFLAGS = @SAMPLERATE_LIBS@
 
 sox_SOURCES = sox.c
-sox_LDADD = libst.a libgsm/libgsm.a $(LUA_LIBS)
+sox_LDADD = libst.a libgsm/libgsm.la $(LUA_LIBS)
 
 all: sox soxmix play rec
 
-libgsm/libgsm.a:
+libgsm/libgsm.la:
 	$(MAKE) -C libgsm
 
 soxmix: sox
