@@ -131,28 +131,26 @@ int st_gettype(ft_t formp, bool is_file_extension)
     int i;
     const st_format_t *f;
 
-    if (! formp->filetype){
-        st_fail_errno(formp,
-                      ST_EFMT,
-                      "Filetype was not specified");
-        return(ST_EFMT);
+    if (!formp->filetype) {
+        st_fail_errno(formp, ST_EFMT, "Filetype was not specified");
+        return ST_EFMT;
     }
-    for(i = 0; st_format_fns[i]; i++) {
+    for (i = 0; st_format_fns[i]; i++) {
         f = st_format_fns[i]();
         if (is_file_extension && (f->flags & ST_FILE_NOFEXT))
           continue; /* don't match special device names in real file names */
         for (list = f->names; *list; list++) {
             const char *s1 = *list, *s2 = formp->filetype;
-            if (! strcasecmp(s1, s2))
+            if (!strcasecmp(s1, s2))
                 break;  /* not a match */
         }
-        if (! *list)
+        if (!*list)
             continue;
         /* Found it! */
         formp->h = f;
         return ST_SUCCESS;
     }
-    st_fail_errno(formp, ST_EFMT, "File type '%s' is not known",
+    st_fail_errno(formp, ST_EFMT, "File type `%s' is not known",
                   formp->filetype);
     return ST_EFMT;
 }
