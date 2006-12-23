@@ -1,6 +1,6 @@
 Makefile Makefile.in
 autom4te.cache
-configure config.log config.status
+configure config.log config.status confdefs.h
 aclocal.m4
 libtool
 sox*.tar.gz
