@@ -1,4 +1,5 @@
-SoX: Sound eXchange Installation
+                           SoX Installation
+                           ----------------
 
 This distribution will compile and run on most UNIX systems.
 It was originally developed on a UNIX/386 machine running AT&T V3.2
@@ -17,7 +18,7 @@ the GNU autotools installed (automake 1.9, autoconf >= 2.59) and run
 
 The preferred method for compiling SoX is to use the "configure" scripts
 compatible with most UNIX systems that contain "/bin/sh" or equivalent
-(even the Window's Cygwin setup will work with this).
+(it can also be used on Windows with Cygwin).
 
 To compile and install SoX on these platforms run the following commands:
 
@@ -26,11 +27,11 @@ To compile and install SoX on these platforms run the following commands:
 	make install
 
 There are several optional parameters that you may pass to the configure
-script to customize SoX for your applications.  Run "./configure --help"
-for a complete list of options.
+script to customize SoX for your applications.  Run
 
-If your system works with the "configure" script then you may skip
-to the Optional Compiling section.
+	./configure --help
+
+for a complete list of options.
 
 
 Optional Compile Features
@@ -38,12 +39,10 @@ Optional Compile Features
 
 A GSM library is included with SoX.  More information on this library
 can be obtained from http://www.cs.tu-berlin.de/~jutta/toast.html.
-If this library fails to compile on your system, you can specify
---disable-gsm to prevent it from being compiled in.
 
 SoX can make use of Ogg Vorbis libraries to read and write Ogg
 Vorbis files.  Normally, the configure script will auto detect
-this library and enable support for Ogg Vorbis.  Ogg Vorbis library 
+this library and enable support for Ogg Vorbis.  The Ogg Vorbis library 
 can be obtained from http://www.vorbis.com
 
 SoX can make use of MP3 libraries to read and write MP3 files.
