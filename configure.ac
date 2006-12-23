@@ -10,9 +10,10 @@ AC_CONFIG_SRCDIR(sox.1)
 
 dnl Checks for programs.
 AC_PROG_CC
-AC_PROG_RANLIB
 AC_PROG_INSTALL
 AC_PROG_LN_S
+AC_PROG_LIBTOOL
+AC_SUBST(LIBTOOL_DEPS)
 
 dnl Debugging
 AC_MSG_CHECKING([if we want a debug build])
@@ -161,10 +162,10 @@ AC_ARG_WITH([lua-suffix],
 dnl Default to built-in Lua; if external Lua supplied, test it
 if test "x$with_lua_prefix" = x && test "x$with_lua_includes" = x && \
    test "x$with_lua_libraries" = x && test "x$with_lua_suffix" = x; then
-   AC_MSG_WARN("Using built-in Lua")
-   with_lua_prefix=./lua
+   AC_MSG_NOTICE("Using built-in Lua")
+   with_lua_prefix=../lua
    want_internal_lua=yes
-   LUA="$with_lua_prefix/src/lua"
+   LUA="$with_lua_prefix/lua"
    LUA_INCLUDES="-I$with_lua_prefix/src"
    LUA_LIBS="-L$with_lua_prefix/src -llua"
 else
@@ -259,6 +260,7 @@ AX_CREATE_STDINT_H(src/ststdint.h)
 AC_SUBST(with_alsa) dnl for play.in
 AC_SUBST(with_oss)  dnl for play.in
 AC_CONFIG_FILES(Makefile src/Makefile src/libgsm/Makefile src/libst-config src/play)
+AC_CONFIG_SUBDIRS([lua])
 AC_OUTPUT
 
 dnl Report configuration.
