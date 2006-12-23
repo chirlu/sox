@@ -130,7 +130,7 @@ static int st_trim_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     done = ((*isamp < *osamp) ? *isamp : *osamp);
 
     if (done % effp->ininfo.channels) {
-      st_fail("FIXME: multi-channel not implemented properly");
+      st_fail("FIXME: multi-channel not implemented properly.");
       *isamp = *osamp = 0;
       return ST_EOF;
     }
