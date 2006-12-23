@@ -1,0 +1,5 @@
+Makefile Makefile.in
+lua luac
+.libs *.lo *.la
+.deps
+luaconf.h.template
