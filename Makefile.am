@@ -3,7 +3,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
 if INTERNAL_LUA
-  MAYBE_LUA = src/lua
+  MAYBE_LUA = lua
 endif
 
 SUBDIRS = $(MAYBE_LUA) src
@@ -16,3 +16,7 @@ dist_pkgdata_DATA = sox.txt soxexam.txt
 # Rule for making plain text man pages
 %.txt: %.1
 	nroff -man $(srcdir)/$< | col -b > $@
+
+# Automatically update libtool script if it gets out-of-date
+libtool: $(LIBTOOL_DEPS)
+	$(SHELL) ./config.status --recheck
