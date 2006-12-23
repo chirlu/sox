@@ -1,2 +1,5 @@
 Makefile Makefile.in
-configure depcomp missing stamp-h1 libtool install-sh
+configure depcomp missing stamp-h1 libtool ltmain.sh install-sh
+autom4te.cache
+configure config.log config.status config.guess config.h config.h.in config.sub
+aclocal.m4
