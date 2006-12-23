@@ -371,14 +371,8 @@ static int st_format_start_write(ft_t const format)
       strcat(comments, format->comment);
     }
     else
-    {
       comments = strdup(format->comment);
-    }
-    if (comments == NULL)
-    {
-      st_fail_errno(format, ST_ENOMEM, "FLAC ERROR initialising encoder");
-      return ST_EOF;
-    }
+
     comment = comments;
 
     do

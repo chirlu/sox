@@ -1,6 +1,4 @@
-#include "st.h"
 #include "st_i.h"
-#include "stconfig.h"
 
 #include <string.h>
 #include <errno.h>
@@ -80,20 +78,16 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
 {
     ft_t ft = (ft_t)xcalloc(sizeof(struct st_soundstream), 1);
 
-    ft->filename = strdup(path);
+    ft->filename = xstrdup(path);
 
     /* Let auto effect do the work if user is not overriding. */
     if (!filetype)
-        ft->filetype = strdup("auto");
+        ft->filetype = xstrdup("auto");
     else
-        ft->filetype = strdup(filetype);
+        ft->filetype = xstrdup(filetype);
 
-    if (!ft->filename || !ft->filetype)
-        goto input_error;
-
-    if (st_gettype(ft, false) != ST_SUCCESS)
-    {
-        st_warn("Unknown input file format for '%s':  %s",
+    if (st_gettype(ft, false) != ST_SUCCESS) {
+        st_warn("Unknown input file format for `%s':  %s",
                 ft->filename,
                 ft->st_errstr);
         goto input_error;
@@ -164,8 +158,8 @@ input_error:
 #define LASTCHAR '/'
 #endif
 
-ft_t st_open_write_instr(
-    bool (*overwrite_permitted)(char const * filename),
+ft_t st_open_write(
+    bool (*overwrite_permitted)(const char *filename),
     const char *path,
     const st_signalinfo_t *info,
     const char *filetype,
@@ -177,17 +171,11 @@ ft_t st_open_write_instr(
     int i;
     bool no_filetype_given = filetype == NULL;
 
-    ft->filename = strdup(path);
-
-    if (!ft->filename)
-    {
-        st_fail_errno(ft,ST_ENOMEM,"st_open_write_instr");
-        goto output_error;
-    }
+    fprintf(stderr, "%s %s\n", filetype, path);
+    ft->filename = xstrdup(path);
 
     /* Let auto effect do the work if user is not overriding. */
-    if (!filetype)
-    {
+    if (!filetype) {
         char *chop;
         int len;
 
@@ -201,14 +189,12 @@ ft_t st_open_write_instr(
         while (chop > ft->filename && *chop != LASTCHAR && *chop != '.')
             chop--;
 
-        if (*chop == '.')
-        {
+        if (*chop == '.') {
             chop++;
-            ft->filetype = strdup(chop);
+            ft->filetype = xstrdup(chop);
         }
-    }
-    else
-        ft->filetype = strdup(filetype);
+    } else
+        ft->filetype = xstrdup(filetype);
 
     if (!ft->filetype || st_gettype(ft, no_filetype_given) != ST_SUCCESS)
     {
@@ -237,7 +223,7 @@ ft_t st_open_write_instr(
         }
         else {
           struct stat st;
-          if (!stat(ft->filename, &st) && !overwrite_permitted(ft->filename)) {
+          if (!stat(ft->filename, &st) && !(overwrite_permitted(ft->filename)) {
             st_fail("Permission to overwrite '%s' denied", ft->filename);
             goto output_error;
           }
@@ -260,7 +246,7 @@ ft_t st_open_write_instr(
         ft->seekable = is_seekable(ft);
     }
 
-    ft->comment = strdup(comment);
+    ft->comment = xstrdup(comment);
 
     if (loops)
         for (i = 0; i < ST_MAX_NLOOPS; i++)

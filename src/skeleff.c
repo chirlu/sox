@@ -22,28 +22,28 @@
 
 /* Private data for effect */
 typedef struct skeleff {
-        int  localdata;
+  int  localdata;
 } *skeleff_t;
 
 assert_static(sizeof(struct skeleff) <= ST_MAX_EFFECT_PRIVSIZE, 
-    /* else */ skeleff_PRIVSIZE_too_big);
+              /* else */ skeleff_PRIVSIZE_too_big);
 
 /*
- * Process options
+ * Process command-line options
  *
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
 static int st_skeleff_getopts(eff_t effp, int n, char **argv)
 {
-    skeleff_t skeleff = (skeleff_t)effp->priv;
+  skeleff_t skeleff = (skeleff_t)effp->priv;
 
-    if (n && n != 1) {
-      st_fail(effp->h->usage);
-      return ST_EOF;
-    }
+  if (n && n != 1) {
+    st_fail(effp->h->usage);
+    return ST_EOF;
+  }
 
-    return ST_SUCCESS;
+  return ST_SUCCESS;
 }
 
 /*
@@ -53,12 +53,12 @@ static int st_skeleff_getopts(eff_t effp, int n, char **argv)
  */
 static int st_skeleff_start(eff_t effp)
 {
-    if (effp->outinfo.channels == 1) {
-        st_fail("Can't run skeleff on mono data.");
-        return ST_EOF;
-    }
+  if (effp->outinfo.channels == 1) {
+    st_fail("Can't run skeleff on mono data.");
+    return ST_EOF;
+  }
 
-    return ST_SUCCESS;
+  return ST_SUCCESS;
 }
 
 /*
@@ -68,31 +68,31 @@ static int st_skeleff_start(eff_t effp)
 static int st_skeleff_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                            st_size_t *isamp, st_size_t *osamp)
 {
-    skeleff_t skeleff = (skeleff_t)effp->priv;
-    st_size_t len, done;
+  skeleff_t skeleff = (skeleff_t)effp->priv;
+  st_size_t len, done;
 
-    switch (effp->outinfo.channels) {
-    case 2:
-        /* Length to process will be buffer length / 2 since we
-         * work with two samples at a time.
-         */
-        len = ((*isamp > *osamp) ? *osamp : *isamp) / 2;
-        for(done = 0; done < len; done++)
-        {
-            obuf[0] = ibuf[0];
-            obuf[1] = ibuf[1];
-            /* Advance buffer by 2 samples */
-            ibuf += 2;
-            obuf += 2;
-        }
+  switch (effp->outinfo.channels) {
+  case 2:
+    /* Length to process will be buffer length / 2 since we
+     * work with two samples at a time.
+     */
+    len = min(*isamp, *osamp) / 2;
+    for (done = 0; done < len; done++)
+      {
+        obuf[0] = ibuf[0];
+        obuf[1] = ibuf[1];
+        /* Advance buffer by 2 samples */
+        ibuf += 2;
+        obuf += 2;
+      }
         
-        *isamp = len * 2;
-        *osamp = len * 2;
+    *isamp = len * 2;
+    *osamp = len * 2;
         
-        break;
-    }
+    break;
+  }
 
-    return ST_SUCCESS;
+  return ST_SUCCESS;
 }
 
 /*
@@ -101,12 +101,12 @@ static int st_skeleff_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obu
  */
 static int st_skeleff_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
-        *osamp = 0;
-        /* Help out application and return ST_EOF when drain
-         * will not return any mre information.  *osamp == 0
-         * also indicates that.
-         */
-        return ST_EOF;
+  *osamp = 0;
+  /* Help out application and return ST_EOF when drain
+   * will not return any mre information.  *osamp == 0
+   * also indicates that.
+   */
+  return ST_EOF;
 }
 
 /*
@@ -116,7 +116,7 @@ static int st_skeleff_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
  */
 static int st_skeleff_stop(eff_t effp)
 {
-    return ST_SUCCESS;
+  return ST_SUCCESS;
 }
 
 

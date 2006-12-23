@@ -276,7 +276,7 @@ int main(int argc, char **argv)
       if (fo->filetype != NULL && strcmp(fo->filetype, "null") != 0)
         st_warn("Ignoring \"-t %s\".", fo->filetype);
       fo->filetype = "null";
-      fo->filename = strdup(fo->filetype);
+      fo->filename = xstrdup(fo->filetype);
     } else {
       if (optind >= argc) {
         if (memcmp(fo, &fo_none, sizeof(fo_none)) != 0)
@@ -284,7 +284,7 @@ int main(int argc, char **argv)
         free(fo);
         continue;
       }
-      fo->filename = strdup(argv[optind++]);
+      fo->filename = xstrdup(argv[optind++]);
     }
     file_opts[file_count++] = fo;
   }
@@ -441,7 +441,7 @@ static bool doopts(file_options_t fo, int argc, char **argv)
         break;
 
       case 2:
-        fo->comment = strdup(optarg);
+        fo->comment = xstrdup(optarg);
         break;
 
       case 3:
@@ -653,7 +653,7 @@ static void process(void) {
     }
     
     file_desc[file_count - 1] = 
-      st_open_write_instr(overwrite_permitted,
+      st_open_write(overwrite_permitted,
                           options->filename,
                           &options->info, 
                           options->filetype,

@@ -1,7 +1,7 @@
 /*
  * Sound Tools text format file.  Tom Littlejohn, March 93.
  *
- * Reads/writes sound files as text for use with FFT and graph.
+ * Reads/writes sound files as text.
  *
  * Copyright 1998-2006 Chris Bagwell and SoX Contributors
  * This source code is freely redistributable and may be used for

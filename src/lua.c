@@ -19,15 +19,15 @@
  * USA.  */
 
  
-/* TODO: If efficiency is still a problem, move the call of the Lua
-   script into the flow phase. Instrument the Lua environment
-   so that scripts can still be written naively: reading beyond the
-   end of the input array yields to read more data, and writing output
-   similarly. In order not to need nonetheless to buffer all input and
-   output until finished, need low-water-marks that the script can
-   update to signal that it has finished reading and writing
-   respectively. Alternatively, assume that each location can only be
-   read/written once. */
+/* TODO: If efficiency is a problem, move the call of the Lua script
+   into the flow phase. Instrument the Lua environment so that scripts
+   can still be written naively: reading beyond the end of the input
+   array yields to read more data, and writing output similarly. In
+   order not to need nonetheless to buffer all input and output until
+   finished, need low-water-marks that the script can update to signal
+   that it has finished reading and writing respectively.
+   Alternatively, assume that each location can only be read/written
+   once. */
 
  
 #include "st_i.h"
@@ -49,22 +49,29 @@ typedef struct lua {
 assert_static(sizeof(struct lua) <= ST_MAX_EFFECT_PRIVSIZE, 
               /* else */ lua_PRIVSIZE_too_big);
 
+
 /*
- * Process options
- *
- * Don't do initialization now.
- * The 'info' fields are not yet filled in.
+ * Process command-line options
  */
 static int st_lua_getopts(eff_t effp, int n, char **argv) 
 {
   lua_t lua = (lua_t)effp->priv;
+  int i;
 
-  if (n != 1) {
+  if (n < 1) {
     st_fail(effp->h->usage);
     return ST_EOF;
   }
 
-  lua->file = strdup(argv[0]);
+  /* Collect options into global arg table */
+  lua_createtable(lua->L, n - 1, 0);
+  for (i = 1; i < n; i++) {
+    lua_pushstring(lua->L, argv[i]);
+    lua_rawseti(lua->L, -2, i);
+  }
+  lua_setglobal(lua->L, "arg");
+
+  lua->file = xstrdup(argv[0]);
   return ST_SUCCESS;
 }
 
@@ -73,8 +80,7 @@ static void *lua_alloc(void *ud UNUSED, void *ptr, size_t osize UNUSED, size_t n
   if (nsize == 0) {
     free(ptr);
     return NULL;
-  }
-  else
+  } else
     return xrealloc(ptr, nsize);
 }
 
@@ -261,7 +267,7 @@ static int st_lua_stop(eff_t effp)
  */
 static st_effect_t st_lua_effect = {
   "lua",
-  "Usage: lua script",
+  "Usage: lua script [options]",
   ST_EFF_MCHAN,
   st_lua_getopts,
   st_lua_start,

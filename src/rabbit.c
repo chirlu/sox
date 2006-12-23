@@ -17,6 +17,11 @@
  * Foundation, Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301,
  * USA.  */
 
+/* FIXME: Make more efficient by resampling piece by piece rather than
+   all in one go. The code is as it is at present because before SoX
+   had global clipping detection, rabbit used to do its own based on
+   sndfile-resample. */
+ 
 #include "st_i.h"
 
 #ifdef HAVE_SAMPLERATE
@@ -68,10 +73,10 @@ static int st_rabbit_getopts(eff_t effp, int n, char **argv)
 
   if (n >= 1) {
     st_fail(st_rabbit_effect.usage);
-    return (ST_EOF);
+    return ST_EOF;
   }
 
-  return (ST_SUCCESS);
+  return ST_SUCCESS;
 }
 
 /*
@@ -81,14 +86,14 @@ static int st_rabbit_start(eff_t effp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
   double in_rate = floor(effp->ininfo.rate / effp->globalinfo->speed + .5)
-    * effp->globalinfo->speed;/* Make "speed" more accurate (st_rate_t is int)*/
+    * effp->globalinfo->speed; /* FIXME: Make "speed" more accurate (st_rate_t is int) */
 
   if (effp->ininfo.rate == effp->outinfo.rate)
     return ST_EFF_NULL;
 
   if (effp->ininfo.channels != effp->outinfo.channels) {
     st_fail("number of Input and Output channels must be equal to use rabbit effect");
-    return (ST_EOF);
+    return ST_EOF;
   }
 
   r->data = (SRC_DATA *)xcalloc(1, sizeof(SRC_DATA));
@@ -96,7 +101,7 @@ static int st_rabbit_start(eff_t effp)
   r->data->input_frames_used = 0;
   r->data->output_frames_gen = 0;
 
-  return (ST_SUCCESS);
+  return ST_SUCCESS;
 }
 
 /*
@@ -112,7 +117,7 @@ static int st_rabbit_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf
   newsamples = r->samples + *isamp;
   if (newsamples / channels > INT_MAX) {
       st_fail("input data size %d too large for libsamplerate", newsamples);
-      return (ST_EOF);
+      return ST_EOF;
   }
 
   r->data->data_in = (float *)xrealloc(r->data->data_in, newsamples * sizeof(float));
@@ -126,7 +131,7 @@ static int st_rabbit_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf
 
   *osamp = 0;           /* Signal that we didn't produce any output */
 
-  return (ST_SUCCESS);
+  return ST_SUCCESS;
 }
 
 /*
@@ -146,7 +151,7 @@ static int st_rabbit_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 
     if (outframes > INT_MAX) {
       st_fail("too many output frames (%d) for libsamplerate", outframes);
-      return (ST_EOF);
+      return ST_EOF;
     }
     r->data->output_frames = outframes;
     r->data->data_out = (float *)xmalloc(r->data->output_frames * channels * sizeof(float));
@@ -154,14 +159,14 @@ static int st_rabbit_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     /* Process the data */
     if ((error = src_simple(r->data, r->converter_type, channels))) {
       st_fail("libsamplerate processing failed: %s", src_strerror(error));
-      return (ST_EOF);
+      return ST_EOF;
     }
   }
 
   /* Return the data one bufferful at a time */
   if (*osamp > INT_MAX) {
     st_fail("output buffer size %d too large for libsamplerate", *osamp);
-    return (ST_EOF);
+    return ST_EOF;
   }
 
   outsamps = min(r->data->output_frames_gen * channels - r->outsamp, *osamp);
@@ -170,7 +175,7 @@ static int st_rabbit_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
   *osamp = (st_size_t)outsamps;
   r->outsamp += outsamps;
 
-  return (ST_SUCCESS);
+  return ST_SUCCESS;
 }
 
 /*
@@ -183,7 +188,7 @@ static int st_rabbit_stop(eff_t effp)
 
   free(r->data);
   src_delete(r->state);
-  return (ST_SUCCESS);
+  return ST_SUCCESS;
 }
 
 static st_effect_t st_rabbit_effect = {

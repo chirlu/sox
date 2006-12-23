@@ -443,7 +443,7 @@ static void auwriteheader(ft_t ft, st_size_t data_size)
          * useful when there is no comments.
          */
         if (ft->comment == NULL)
-                ft->comment = strdup("SOX");
+                ft->comment = xstrdup("SOX");
 
         hdr_size = SUN_HDRSIZE;
 
