@@ -315,12 +315,15 @@ without actually processing any audio.  E.g.
 	octave plot.m
 .TP 10
 \fB-q\fR
-Run in quiet mode when \fISoX\fR wouldn't otherwise do so.  Inverse of \fB-S\fR
-option.
+Run in quiet mode when \fISoX\fR wouldn't otherwise do so;
+this is the converse of the \fB-S\fR option.
 .TP
 \fB-S\fR
-Display status while processing the audio.  Shows how much audio has been
-processed in terms of running time instead of samples.
+Display input file format/header information and input file(s)
+processing progress in terms of elapsed/remaining time and percentage.
+This option is enabled by default when using
+.I SoX
+to play or record audio.
 .TP 10
 \fB--version\fR
 Show version number and exit.
@@ -1772,15 +1775,15 @@ it. A value of 8000s will wait until 8000 samples are read before
 starting to process audio.
 .TP 10
 vibro \fIspeed \fB [ \fIdepth\fB ]
-Add a vibrato effect to the audio.
-This effect uses a low frequency oscillator to modulate the volume (amplitude) of the audio.
-.B Speed
-gives the frequency of modulation in Hz.
-This must be under 30.
-.B Depth
-gives the amount the volume is cut into
-by the sine wave,
-ranging 0 to 1 and defaulting to 0.5.
+Apply low frequency sinusoidal amplitude modulation to the audio.
+Otherwise known as `tremolo', in the guitar world
+this effect is often referred to as `vibrato' (which in fact
+varies pitch, not amplitude).
+The modulation frequency in Hz is given by
+.I speed
+(0 to 30), and the modulation depth by
+.I depth
+(0 to 1, default 0.5).
 .TP 10
 vol \fIgain\fR [ \fItype\fB [ \fIlimitergain\fR ] ]
 Apply an amplification or an attenuation to the audio signal.
@@ -1808,20 +1811,20 @@ When
 .I type
 is `amplitude' or `power', a
 .I gain
-of 1 keeps the volume the same,
-0 to < 1 gives a decrease in volume,
-and greater than 1 gives an increase in volume;
+of 1 leaves the volume unchanged,
+less than 1 decreases it,
+and greater than 1 increases it;
 a negative
 .I gain
-gives the same volume adjustment whilst also inverting the audio signal.
+inverts the audio signal in addition to adjusting its volume.
 
 When
 .I type
 is `dB', a
 .I gain
-of 0 will keep the volume the same,
-less than 0 will give a decrease in volume,
-and greater than 0 gives an increase in volume.
+of 0 leaves the volume unchanged,
+less than 0 decreases it,
+and greater than 0 increases it.
 
 See http://en.wikipedia.org/wiki/Decibel
 for a detailed discussion on electrical (and hence audio signal)

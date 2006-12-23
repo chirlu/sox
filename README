@@ -48,7 +48,7 @@ This release understands:
     o EA ADPCM (read support only, for now)
   o Pseudo-file formats that allow direct playing/recording
     from some audio devices under UNIX
-  o Pseudo-nul file that reads and writes from/to nowhere
+  o The "null" pseudo-file that reads and writes from/to nowhere
 
 The sound effects include:
 
@@ -71,6 +71,7 @@ The sound effects include:
   o Apply an equalizer effect
   o Add dithering/masking noise to a signal
   o Multi-band compander
+  o Pad with silence
   o Pan sound between channels
   o Apply a phaser effect
   o Change the pitch of a sound file without affecting its speed
@@ -91,8 +92,8 @@ The sound effects include:
   o Create sounds with a simple synthesizer
   o Treble tone control
   o Trim audio data from beginning and end of file
-  o Add the world-famous Fender Vibro-Champ effect
-  o Adjust volume of samples
+  o Apply a tremolo (a.k.a. vibrato) effect
+  o Volume adjustment
   o Noise elimination using frequency profiling
   o Resample using libsamplerate (aka Secret Rabbit code, optional
     external library)
