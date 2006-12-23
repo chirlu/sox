@@ -129,6 +129,12 @@ static int st_trim_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     /* Compute the most samples we can process this time */
     done = ((*isamp < *osamp) ? *isamp : *osamp);
 
+    if (done % effp->ininfo.channels) {
+      st_fail("FIXME: multi-channel not implemented properly");
+      *isamp = *osamp = 0;
+      return ST_EOF;
+    }
+
     /* Quick check to see if we are trimming off the back side yet.
      * If so then we can skip trimming from the front side.
      */
