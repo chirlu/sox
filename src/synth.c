@@ -65,7 +65,6 @@ enum_item const combine_type[] = {
 #define PINKNOISE_FAC   (5000.0/32768.0)
 #define LOG_10_20     0.1151292546497022842009e0
 
-/*#define TIMERES 1000*/
 #define MAXCHAN 4
 
 
