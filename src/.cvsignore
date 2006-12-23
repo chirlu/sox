@@ -4,3 +4,4 @@ play sox soxmix
 stconfig.h.in stconfig.h ststdint.h
 .deps
 stamp-h1
+*.lo
