@@ -13,7 +13,7 @@ Compiling
 [Only if you're compiling the CVS sources, first make sure you have
 the GNU autotools installed (automake 1.9, autoconf >= 2.59) and run
 
-	./autogen.sh
+	autoreconf -i
 ]
 
 The preferred method for compiling SoX is to use the "configure" scripts
