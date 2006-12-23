@@ -33,7 +33,7 @@
 void *xrealloc(void *ptr, size_t newsize)
 {
   /* Behaviour in this case is unspecified for malloc */
-  if (newsize == 0)
+  if (ptr && newsize == 0)
     return NULL;
 
   if ((ptr = realloc(ptr, newsize)) == NULL) {
@@ -51,8 +51,10 @@ void *xcalloc(size_t nmemb, size_t size)
 {
   void *ptr = calloc(nmemb, size);
 
-  if (ptr == NULL)
+  if (ptr == NULL) {
     st_fail("out of memory");
+    exit(2);
+  }
 
   return ptr;
 }
@@ -60,12 +62,14 @@ void *xcalloc(size_t nmemb, size_t size)
 /*
  * Perform a strdup; abort if not possible.
  */
-char * xstrdup(char const * s)
+void *xstrdup(const char *s)
 {
-  char * ptr = strdup(s);
+  void *t = strdup(s);
 
-  if (ptr == NULL)
+  if (t == NULL) {
     st_fail("out of memory");
+    exit(2);
+  }
 
   return ptr;
 }

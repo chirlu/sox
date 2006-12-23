@@ -27,6 +27,6 @@
 
 void *xcalloc(size_t nmemb, size_t size);
 void *xrealloc(void *ptr, size_t newsize);
-char * xstrdup(char const * s);
+char *xstrdup(const char *s);
 
 #endif
