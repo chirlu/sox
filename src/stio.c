@@ -223,7 +223,7 @@ ft_t st_open_write(
         }
         else {
           struct stat st;
-          if (!stat(ft->filename, &st) && !(overwrite_permitted(ft->filename)) {
+          if (!stat(ft->filename, &st) && !overwrite_permitted(ft->filename)) {
             st_fail("Permission to overwrite '%s' denied", ft->filename);
             goto output_error;
           }

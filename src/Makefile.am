@@ -30,7 +30,7 @@ AM_CFLAGS = $(LUA_INCLUDES)
 AM_LDFLAGS = @SAMPLERATE_LIBS@
 
 sox_SOURCES = sox.c
-sox_LDADD = libst.a libgsm/libgsm.la $(LUA_LIBS)
+sox_LDADD = libst.la libgsm/libgsm.la $(LUA_LIBS)
 
 all: sox soxmix play rec
 
