@@ -1,10 +1,10 @@
                            SoX Installation
                            ----------------
 
-This distribution will compile and run on most UNIX systems.
-It was originally developed on a UNIX/386 machine running AT&T V3.2
-but it's currently developed under Linux.  With a little work it should
-work with most POSIX systems.
+This distribution will compile and run on most UNIX systems. It was
+originally developed on a UNIX/386 machine running AT&T V3.2 but it's
+currently developed under Linux. With a little work it should work
+with most POSIX systems.
 
 
 Compiling
@@ -16,18 +16,19 @@ the GNU autotools installed (automake 1.9, autoconf >= 2.59) and run
 	autoreconf -i
 ]
 
-The preferred method for compiling SoX is to use the "configure" scripts
-compatible with most UNIX systems that contain "/bin/sh" or equivalent
-(it can also be used on Windows with Cygwin).
+The preferred method for compiling SoX is to use the "configure"
+scripts compatible with most UNIX systems that contain "/bin/sh" or
+equivalent (it can also be used on Windows with Cygwin).
 
-To compile and install SoX on these platforms run the following commands:
+To compile and install SoX on these platforms run the following
+commands:
 
 	./configure
 	make
 	make install
 
-There are several optional parameters that you may pass to the configure
-script to customize SoX for your applications.  Run
+There are several optional parameters that you may pass to the
+configure script to customize SoX for your applications. Run
 
 	./configure --help
 
@@ -37,55 +38,54 @@ for a complete list of options.
 Optional Compile Features
 -------------------------
 
-A GSM library is included with SoX.  More information on this library
-can be obtained from http://www.cs.tu-berlin.de/~jutta/toast.html.
+For some optional features you need pkg-config; if you don't have it,
+these features won't be available even if the relevant packages are
+installed.
 
-SoX can make use of Ogg Vorbis libraries to read and write Ogg
-Vorbis files.  Normally, the configure script will auto detect
-this library and enable support for Ogg Vorbis.  The Ogg Vorbis library 
-can be obtained from http://www.vorbis.com
+SoX can make use of Ogg Vorbis libraries to read and write Ogg Vorbis
+files. Normally, the configure script will auto detect this library
+and enable support for Ogg Vorbis. The Ogg Vorbis library can be
+obtained from http://www.vorbis.com
 
 SoX can make use of MP3 libraries to read and write MP3 files.
 Normally, the configure script will auto detect these libraries and
-enable support for MP3.  SoX requires libmad for reading MP3 files
-and lame for writing MP3 files.  Libmad can be obtained from
+enable support for MP3. SoX requires libmad for reading MP3 files and
+lame for writing MP3 files. Libmad can be obtained from
 http://www.underbit.com/products/mad/ and lame can be obtained from
 http://mitiok.cjb.net/
 
-If any libraries are installed in a non-standard locations in your 
-system then you can use the CPPFLAGS and LDFLAGS variables to allow 
-configure to find 
-them.  For example:
+If any libraries are installed in a non-standard locations in your
+system then you can use the CPPFLAGS and LDFLAGS variables to allow
+configure to find them. For example:
 
 ./configure CPPFLAGS="-I/home/sox/include -I/usr/local/multimedia/include" LDFLAGS="-L/home/sox/lib -L/usr/local/multimedia/lib"
 
-If you're not processing lots of u-law or A-law files and would
-like to save around 64K of memory when SoX is executed then you
-can use runtime routines to perform u-law/A-law conversions.
-This is slower then the default lookup tables but results in the
-same answers.  To save this memory, specify --disable-fast-ulaw and
---disable-fast-alaw.
+If you're not processing lots of u-law or A-law files and would like
+to save around 64K of memory when SoX is executed then you can use
+runtime routines to perform u-law/A-law conversions. This is slower
+then the default lookup tables but results in the same answers. To
+save this memory, specify --disable-fast-ulaw and --disable-fast-alaw.
 
 
 Testing
 -------
 
-After successfully compiling SoX, try translating a sound file.
-If you can play one of the supported sound file formats,
-translate 'monkey.wav' to your format (we'll use 'xxx'):
+After successfully compiling SoX, try translating a sound file. If you
+can play one of the supported sound file formats, translate
+'monkey.wav' to your format (we'll use 'xxx'):
 
         cd src
 	./sox monkey.wav monkey.xxx
 
-You may have to give the word size and rate for the file.
-For example, this command will make a sound file with a data rate of
-12,500 samples per second and the data formatted as signed shorts:
+You may have to give the word size and rate for the file. For example,
+this command will make a sound file with a data rate of 12,500 samples
+per second and the data formatted as signed shorts:
 
 	./sox monkey.voc -r 12500 -s -w monkey.xxx 
 
 If monkey.xxx plays properly (it's a very short monkey screech),
-congratulations!  SoX works.
+congratulations! SoX works.
 
-After that, running "tests.sh" and "testall.sh" ("tests.bat" and 
-"testall.bat" for DOS) tests most of the  implemented file handlers to
+After that, running "tests.sh" and "testall.sh" ("tests.bat" and
+"testall.bat" for DOS) tests most of the implemented file handlers to
 make sure that some portability issue haven't popped up.
