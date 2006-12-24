@@ -15,7 +15,7 @@ SoX \- Sound eXchange: The Swiss Army knife of audio manipulation
     \fB[\fR\fIformat options\fR\fB]\fR \fIinfile2\fR
     \fB[ [\fR\fIformat options\fR\fB]\fR \fIinfile3\fR \fB...]\fR
     \fB[\fR\fIformat options\fR\fB]\fR \fIoutfile\fR
-    \fB[\fR\fIeffect\fR \fB[\fR\fIeffect options\fR\fB] ]...\fR
+    \fB[\fR\fIeffect\fR \fB[\fR\fIeffect options\fR\fB] ...]\fR
 .fi
 .SH DESCRIPTION
 SoX reads and writes most popular audio formats and can optionally apply
@@ -30,7 +30,7 @@ alias for \fBsox\fR for which the default combining method is `mix'.
 The overall SoX processing chain can be summarised as follows:
 
 .ce
-Input(s) \[->] Combiner \[->] Effects \[->] Output
+Input(s) \-> Combiner \-> Effects \-> Output
 .SS File Formats
 There are two types of audio file format that SoX can work with.  The
 first is `self-describing'.  Such formats include a header that
@@ -830,11 +830,11 @@ The
 effect can also be invoked with up to 16
 numbers, separated by commas, which specify the proportion (0 = 0% and 1 = 100%)
 of each input channel that is to be mixed into each output channel.
-In two-channel mode, 4 numbers are given: l\[->]l, l\[->]r, r\[->]l, and r\[->]r,
+In two-channel mode, 4 numbers are given: l \-> l, l \-> r, r \-> l, and r \-> r,
 respectively.
 In four-channel mode, the first 4 numbers give the proportions for the
-left-front output channel, as follows: lf\[->]lf, rf\[->]lf, lb\[->]lf, and
-rb\[->]rf.
+left-front output channel, as follows: lf \-> lf, rf \-> lf, lb \-> lf, and
+rb \-> rf.
 The next 4 give the right-front output in the same order, then
 left-back and right-back.
 
@@ -847,11 +847,11 @@ for certain input/output channel combinations.
 center box ;
 cB cB cB lB
 c c c l .
-In Ch	Out	Ch	Num Mappings
-2	1	2	l\[->]l, r\[->]l
+In Ch	Out Ch	Num	Mappings
+2	1	2	l \-> l, r \-> l
 2	2	1	adjust balance
-4	1	4	lf\[->]l, rf\[->]l, lb\[->]l, rb\[->]l
-4	2	2	lf\[->]l&rf\[->]r, lb\[->]l&rb\[->]r
+4	1	4	lf \-> l, rf \-> l, lb \-> l, rb \-> l
+4	2	2	lf \-> l&rf \-> r, lb \-> l&rb \-> r
 4	4	1	adjust balance
 4	4	2	front balance, back balance
 .TE
@@ -1321,7 +1321,8 @@ Does the same as \fBresample\fR with no parameters; it exists for
 backwards compatibility.
 .TP
 repeat \fIcount\fR
-Repeat the entire audio \fIcount\fR times.  Requires disk space to store the data to be repeated.
+Repeat the entire audio \fIcount\fR times.
+Requires disk space to store the data to be repeated.
 Note that repeating once yields two copies: the orignal audio and the
 repeated audio.
 .TP
@@ -1440,6 +1441,7 @@ is the volume of the output.
 .TP
 reverse
 Reverse the audio completely.
+Requires disk space to store the data to be reversed.
 .TP
 silence \fIabove-periods\fR \fB[\fR\fIduration threshold\fR\fB[\fRd\fB\^|\^\fR%\fB] [\fR\fIbelow-periods duration threshold\fR\fB[\fRd\fB\^|\^\fR%\fB] ]\fR
 
