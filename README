@@ -7,6 +7,12 @@ and can apply many sound effects and transforms, as well as doing
 basic analysis and providing input to more capable analysis and
 plotting tools.
 
+SoX is distributed under the GNU GPL and GNU LGPL. To be precise: the
+sox program is distributed under the GPL, while the library libst, in
+which most of SoX's functionality resides, is dual-licensed. Note that
+some optional components of libst are GPL only: if you use these, you
+must use libst under the GPL.
+
 Send bug fixes, enhancements and feature requests to
 sox-devel@lists.sourceforge.net, or post them to the relevant tracker
 at http://sourceforge.net/projects/sox/.
@@ -127,3 +133,7 @@ sound effect loop. sox.c is a good starting point for new programs.
 
 In handlers.c, note that many formats set up the header and then
 use the raw driver for reading and writing.  
+
+There are many new features wanted for SoX, listed on the feature
+request tracker at http://sf.net/projects/sox/. Users are encouraged
+to implement them!
