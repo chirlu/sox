@@ -278,10 +278,10 @@ int main(int argc, char **argv)
       fo->filetype = "null";
       fo->filename = xstrdup(fo->filetype);
     } else {
-      if (optind >= argc) {
-        if (memcmp(fo, &fo_none, sizeof(fo_none)) != 0)
+      if (optind >= argc || is_effect_name(argv[optind])) {
+        if (memcmp(fo, &fo_none, sizeof(fo_none)) != 0) /* fopts but no file */
           usage("missing filename"); /* No return */
-        free(fo);
+        free(fo); /* No file opts and no filename, so that's okay */
         continue;
       }
       fo->filename = xstrdup(argv[optind++]);
