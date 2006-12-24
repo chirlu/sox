@@ -10,30 +10,31 @@
  * at ftp://ccrma-ftp.stanford.edu/pub/NeXT/
  * under the name of resample-version.number.tar.Z
  *
- */
-
-/*
+ *
+ * FILE: resample.h
+ *   BY: Julius Smith (at CCRMA, Stanford U)
+ * C BY: translated from SAIL to C by Christopher Lee Fraley
+ *          (cf0v@andrew.cmu.edu)
+ * DATE: 7-JUN-88
+ * VERS: 2.0  (17-JUN-88, 3:00pm)
+ *
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained. 
  * Lance Norskog And Sundry Contributors are not responsible for 
  * the consequences of using this software.
- */
-
-/* Fixed bug: roll off frequency was wrong, too high by 2 when upsampling,
- * too low by 2 when downsampling.
- * Andreas Wilde, 12. Feb. 1999, andreas@eakaw2.et.tu-dresden.de
-*/
-
-/*
- * October 29, 1999
- * Various changes, bugfixes(?), increased precision, by Stan Brooks.
  *
  * This source code is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
+ * Fixed bug: roll off frequency was wrong, too high by 2 when upsampling,
+ * too low by 2 when downsampling.
+ * Andreas Wilde, 12. Feb. 1999, andreas@eakaw2.et.tu-dresden.de
+ *
+ * October 29, 1999
+ * Various changes, bugfixes(?), increased precision, by Stan Brooks.
  */
 
 #include <math.h>
@@ -41,24 +42,6 @@
 #include <string.h>
 #include "st_i.h"
 
-/*
- * FILE: resample.h
- *   BY: Julius Smith (at CCRMA, Stanford U)
- * C BY: translated from SAIL to C by Christopher Lee Fraley
- *          (cf0v@andrew.cmu.edu)
- * DATE: 7-JUN-88
- * VERS: 2.0  (17-JUN-88, 3:00pm)
- */
-
-/*
- * October 29, 1999
- * Various changes, bugfixes(?), increased precision, by Stan Brooks.
- *
- * This source code is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- */
 
 /* Conversion constants */
 #define Lc        7
@@ -168,8 +151,7 @@ int st_resample_getopts(eff_t effp, int n, char **argv)
         r->quadr = 0;
         r->Nmult = 45;
 
-        /* This used to fail, but with sox-12.15 it works. AW */
-        if ((n >= 1)) {
+        if (n >= 1) {
                 if (!strcmp(argv[0], "-qs")) {
                         r->quadr = 1;
                         n--; argv++;
@@ -188,28 +170,22 @@ int st_resample_getopts(eff_t effp, int n, char **argv)
                 }
         }
 
-        if ((n >= 1) && (sscanf(argv[0], "%lf", &r->rolloff) != 1))
-        {
+        if ((n >= 1) && (sscanf(argv[0], "%lf", &r->rolloff) != 1)) {
           st_fail(st_resample_effect.usage);
           return (ST_EOF);
-        }
-        else if ((r->rolloff <= 0.01) || (r->rolloff >= 1.0))
-        {
+        } else if ((r->rolloff <= 0.01) || (r->rolloff >= 1.0)) {
           st_fail("resample: rolloff factor (%f) no good, should be 0.01<x<1.0", r->rolloff);
           return(ST_EOF);
         }
 
-        if ((n >= 2) && !sscanf(argv[1], "%lf", &r->beta))
-        {
-          st_fail(st_resample_effect.usage);
-          return (ST_EOF);
-        }
-        else if (r->beta <= 2.0) {
-          r->beta = 0;
+        if ((n >= 2) && !sscanf(argv[1], "%lf", &r->beta)) {
+        	st_fail(st_resample_effect.usage);
+          	return (ST_EOF);
+        } else if (r->beta <= 2.0) {
+        	r->beta = 0;
                 st_debug("resample opts: Nuttall window, cutoff %f", r->rolloff);
-        } else {
+        } else
                 st_debug("resample opts: Kaiser window, cutoff %f, beta %f", r->rolloff, r->beta);
-        }
         return (ST_SUCCESS);
 }
 
@@ -234,11 +210,10 @@ int st_resample_start(eff_t effp)
         r->b = effp->outinfo.rate / gcdrate;
 
         if (r->a <= r->b && r->b <= NQMAX) {
-                r->quadr = -1; /* exact coeff's   */
-                r->Nq = r->b;  /* MAX(r->a,r->b);       */
-        } else {
+                r->quadr = -1; /* exact coeffs */
+                r->Nq = r->b;  /* max(r->a,r->b) */
+        } else
                 r->Nq = Nc; /* for now */
-        }
 
         /* Nwing: # of filter coeffs in right wing */
         r->Nwing = r->Nq * (r->Nmult/2+1) + 1;
@@ -287,7 +262,7 @@ int st_resample_start(eff_t effp)
         
         r->Xsize = 2*Xoff + i/(1.0+r->Factor);
         r->Ysize = BUFFSIZE - r->Xsize;
-        /* st_debug("Xsize %d, Ysize %d, Xoff %d",r->Xsize,r->Ysize,r->Xoff); */
+        st_debug("Xsize %d, Ysize %d, Xoff %d",r->Xsize,r->Ysize,r->Xoff);
 
         r->X = (double *) xmalloc(sizeof(double) * (BUFFSIZE));
         r->Y = r->X + r->Xsize;
@@ -308,9 +283,9 @@ int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         resample_t r = (resample_t) effp->priv;
         long i, last, Nout, Nx, Nproc;
 
-        /* constrain amount we actually process */
-        /*st_debug("Xp %d, Xread %d, isamp %d, ",r->Xp, r->Xread,*isamp);*/
+        st_debug("Xp %d, Xread %d, isamp %d, ",r->Xp, r->Xread,*isamp);
 
+        /* constrain amount we actually process */
         Nproc = r->Xsize - r->Xp;
 
         i = (r->Ysize < *osamp)? r->Ysize : *osamp;
@@ -358,12 +333,12 @@ int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 {
                   r->t -= creep * r->b;  /* Remove time accumulation   */
                   r->Xp += creep;        /* and add it to read pointer */
-                  /*st_debug("Nproc %ld, creep %ld",Nproc,creep);*/
+                  st_debug("Nproc %ld, creep %ld",Nproc,creep);
                 }
         } else { /* approx coeff's method */
                 long creep; 
                 Nout = SrcUD(r, Nproc);
-                /*st_debug("Nproc %d --> %d",Nproc,Nout);*/
+                st_debug("Nproc %d --> %d",Nproc,Nout);
                 /* Move converter Nproc samples back in time */
                 r->Time -= Nproc;
                 /* Advance by number of samples processed */
@@ -374,7 +349,7 @@ int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 {
                   r->Time -= creep;   /* Remove time accumulation   */
                   r->Xp += creep;     /* and add it to read pointer */
-                  /* st_debug("Nproc %ld, creep %ld",Nproc,creep); */
+                  st_debug("Nproc %ld, creep %ld",Nproc,creep);
                 }
         }
 
@@ -382,7 +357,7 @@ int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         long i,k;
         /* Copy back portion of input signal that must be re-used */
         k = r->Xp - r->Xoff;
-        /*st_debug("k %d, last %d",k,last);*/
+        st_debug("k %d, last %d",k,last);
         for (i=0; i<last - k; i++) 
             r->X[i] = r->X[i+k];
 
@@ -414,7 +389,7 @@ int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         st_sample_t *Obuf;
         int rc;
 
-        /* st_debug("Xoff %d  <--- DRAIN",r->Xoff); */
+        st_debug("Xoff %d  <--- DRAIN",r->Xoff);
 
         /* stuff end with Xoff zeros */
         isamp_res = r->Xoff;
@@ -427,14 +402,14 @@ int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 rc = st_resample_flow(effp, NULL, Obuf, (st_size_t *)&Isamp, (st_size_t *)&Osamp);
                 if (rc)
                     return rc;
-                /* st_debug("DRAIN isamp,osamp  (%d,%d) -> (%d,%d)",
-                        isamp_res,osamp_res,Isamp,Osamp); */
+                st_debug("DRAIN isamp,osamp  (%d,%d) -> (%d,%d)",
+                         isamp_res,osamp_res,Isamp,Osamp);
                 Obuf += Osamp;
                 osamp_res -= Osamp;
                 isamp_res -= Isamp;
         }
         *osamp -= osamp_res;
-        /* st_debug("DRAIN osamp %d", *osamp); */
+        st_debug("DRAIN osamp %d", *osamp);
         if (isamp_res)
                 st_warn("drain overran obuf by %d", isamp_res);
         /* FIXME: This is very picky.  IF obuf is not big enough to
@@ -532,13 +507,12 @@ static long SrcUD(resample_t r, long Nx)
    Factor = r->Factor;
    time = r->Time;
    dt = 1.0/Factor;        /* Output sampling period */
-   /*st_debug("Factor %f, dt %f, ",Factor,dt); */
-   /*st_debug("Time %f, ",r->Time);*/
+   st_debug("Factor %f, dt %f, ",Factor,dt);
+   st_debug("Time %f, ",r->Time);
    /* (Xh * dhb)>>La is max index into Imp[] */
-   /*st_debug("ct=%d",ct);*/
-   /*st_debug("ct=%.2f %d",(double)r->Nwing*Na/r->dhb, r->Xh);*/
-   /*st_debug("ct=%ld, T=%.6f, dhb=%6f, dt=%.6f",
-                         r->Xh, time-floor(time),(double)r->dhb/Na,dt);*/
+   st_debug("ct=%.2f %d",(double)r->Nwing*Na/r->dhb, r->Xh);
+   st_debug("ct=%ld, T=%.6f, dhb=%6f, dt=%.6f",
+                         r->Xh, time-floor(time),(double)r->dhb/Na,dt);
    Ystart = Y = r->Y;
    n = (int)ceil((double)Nx/dt);
    while(n--)
@@ -559,7 +533,7 @@ static long SrcUD(resample_t r, long Nx)
       time += dt;            /* Move to next sample by time increment */
       }
    r->Time = time;
-   /*st_debug("Time %f",r->Time);*/
+   st_debug("Time %f",r->Time);
    return (Y - Ystart);        /* Return the number of output samples */
 }
 
@@ -646,7 +620,7 @@ int makeFilter(double Imp[], long Nwing, double Froll, double Beta,
       for (i=Dh; i<Mwing; i+=Dh)
          DCgain += ImpR[i];
       DCgain = 2*DCgain + ImpR[0];    /* DC gain of real coefficients */
-      /*st_debug("DCgain err=%.12f",DCgain-1.0);*/
+      st_debug("DCgain err=%.12f",DCgain-1.0);
   
       DCgain = 1.0/DCgain;
       for (i=0; i<Mwing; i++)
