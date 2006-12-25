@@ -32,7 +32,6 @@
 # with cfi_.
 
 SOX=../src/sox
-SOXMIX=../src/soxmix
 
 if [ "$3" == "" ]; then
     echo "Usage: $0 crossfade_seconds first_file second_file [ fadeout ] [ fadein ]"
@@ -116,7 +115,7 @@ $SOX fadein1.wav fadein2.wav $fade_second_opts
 
 # Mix the crossfade files together at full volume
 echo "Crossfading..."
-$SOXMIX -v 1.0 fadeout2.wav -v 1.0 fadein2.wav crossfade.wav
+$SOX -m -v 1.0 fadeout2.wav -v 1.0 fadein2.wav crossfade.wav
 
 echo "Spliting crossfade into $crossfade_split_length lengths"
 $SOX crossfade.wav crossfade1.wav trim 0 $crossfade_split_length

@@ -61,7 +61,10 @@ fi
 dnl Large File Support
 AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
-      
+
+dnl Test for pkg-config; some library tests rely on this
+AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+
 dnl Check for ALSA audio
 AC_CHECK_HEADERS(alsa/asoundlib.h,
     [with_alsa=yes
@@ -130,13 +133,17 @@ fi
 
 dnl Test for libsamplerate.
 with_samplerate=yes
-AC_ARG_WITH(samplerate,
-    AS_HELP_STRING([--with-samplerate],
-        [Use libsamplerate (aka Secret Rabbit Code) if present (default is YES)]))
-if test "$with_samplerate" = yes; then
-    PKG_CHECK_MODULES(SAMPLERATE, samplerate >= 0.0.15,
-        AC_DEFINE(HAVE_SAMPLERATE, 1, [Set to 1 if you have libsamplerate.]),
-        with_samplerate=no)
+if test x$PKG_CONFIG != xno ; then
+  AC_ARG_WITH(samplerate,
+      AS_HELP_STRING([--with-samplerate],
+          [Use libsamplerate (aka Secret Rabbit Code) if present (default is YES)]))
+  if test "$with_samplerate" = yes; then
+      PKG_CHECK_MODULES(SAMPLERATE, samplerate >= 0.0.15,
+          AC_DEFINE(HAVE_SAMPLERATE, 1, [Set to 1 if you have libsamplerate.]),
+          with_samplerate=no)
+  fi
+else
+  with_samplerate=no
 fi
 AC_SUBST(SAMPLERATE_CFLAGS)
 AC_SUBST(SAMPLERATE_LIBS)

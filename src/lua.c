@@ -168,7 +168,6 @@ static const luaL_reg meta[] = {
 /*
  * Prepare processing.
  * Do all initializations.
- * If there's nothing to do, use st_effect_nothing instead.
  */
 static int st_lua_start(eff_t effp)
 {

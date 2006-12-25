@@ -32,20 +32,16 @@ AM_LDFLAGS = @SAMPLERATE_LIBS@
 sox_SOURCES = sox.c
 sox_LDADD = libst.la libgsm/libgsm.la $(LUA_LIBS)
 
-all: sox soxmix play rec
+all: sox play rec
 
 libgsm/libgsm.la:
 	$(MAKE) -C libgsm
-
-soxmix: sox
-	$(RM) soxmix && $(LN_S) sox soxmix
 
 rec: play
 	$(RM) play && $(LN_S) play rec
 
 install-exec-hook:
 	cd $(DESTDIR)$(bindir) && \
-	$(RM) soxmix && $(LN_S) sox soxmix && \
 	$(RM) rec && $(LN_S) play rec
 
 distclean-local:

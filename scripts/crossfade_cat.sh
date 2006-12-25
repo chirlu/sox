@@ -24,7 +24,6 @@
 # Crossfaded file is created as "mix.wav".
 
 SOX=../src/sox
-SOXMIX=../src/soxmix
 
 if [ "$3" == "" ]; then
     echo "Usage: $0 crossfade_seconds first_file second_file [ fadeout ] [ fadein ]"
@@ -107,7 +106,7 @@ $SOX fadein1.wav fadein2.wav $fade_second_opts
 
 # Mix the crossfade files together at full volume
 echo "Crossfading..."
-$SOXMIX -v 1.0 fadeout2.wav -v 1.0 fadein2.wav crossfade.wav
+$SOX -m -v 1.0 fadeout2.wav -v 1.0 fadein2.wav crossfade.wav
 
 echo "Trimming off crossfade sections from original files..."
 

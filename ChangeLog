@@ -46,7 +46,7 @@ sox-12.18.3
   o Dither/mask amount now specifiable.  (robs)
   o Remove old, optional rate change and alaw/ulaw conversion code.
     (Reuben Thomas)
-  o Make sox and soxmix a single binary.  (Reuben Thomas)
+  o Remove soxmix.  (Reuben Thomas)
   o Consistent (and hopefully complete) clipping detection and
     reporting.  (robs)
   o Add AIFF-C output support.  (shashimoto)

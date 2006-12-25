@@ -33,18 +33,14 @@ trim.obj vibro.obj vol.obj
 LIBOBJS = $(FOBJ) $(EOBJ) handlers.obj misc.obj stio.obj getopt.obj util.obj
 #VORBISLIB = -logg -lvorbis -lvorbisfile -lvorbisenc
 
-all: .SYMBOLIC sox.exe soxmix.exe
+all: .SYMBOLIC sox.exe
 
 LINK_CMD = wlink SYS NT F $[@ L st.lib N $@
 sox.exe: sox.obj st.lib
 	$(LINK_CMD)
-soxmix.exe: soxmix.obj st.lib
-	$(LINK_CMD)
 
 sox.obj: sox.c
 	$(CC) $[@ -bc -bt=NT $(CFLAGS) -fo=$@
-soxmix.obj: sox.c
-	$(CC) $[@ -bc -bt=NT -dSOXMIX $(CFLAGS) -fo=$@
 
 st.lib: $(LIBOBJS)
 	%create st.lbc
