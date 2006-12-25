@@ -1099,7 +1099,7 @@ cI c c l.
 \ 	Range	Default	Description
 delay	0 \- 10	0	Base delay in milliseconds.
 depth	0 \- 10	2	Added swept delay in milliseconds.
-regen	\-95 \- +95	0	T{
+regen	\-95 \- 95	0	T{
 .na
 Percentage regeneration (delayed signal feedback).
 T}
@@ -1404,7 +1404,7 @@ To be precise, this is done when
 
 .ce 3
 input-rate < output-rate
-&&
+and
 output-rate / gcd(input-rate, output-rate) <= 511
 .TP
 reverb \fIgain-out reverb-time delay\fR \fB[\fR\fIdelay\fR \fB... ]\fR
@@ -1623,7 +1623,7 @@ a guitar's `low E' string (on a system that supports
 
 The following produces a chord with a pipe-organ sound:
 
-	sox \-c4 \-n \-c1 Am7.au synth sin %0 sin %4 sin %7 sin %10 avg fade q .1 1 .1
+	sox \-c4 \-n \-c1 Am7.au synth sin %0 sin %3 sin %7 sin %10 avg fade q .1 1 .1
 
 N.B.  This effect generates audio at maximum volume, which means that there
 is a high chance of clipping when using the audio subsequently, so
