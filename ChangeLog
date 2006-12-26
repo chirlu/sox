@@ -79,7 +79,8 @@ sox-12.18.3
     with --force).  (robs)
   o Added silence padding effect.  (robs)
   o Improved multi-channel file reading; fixes [1599990].  (robs)
-  o New options for specifying endian-ness [FR# 1621702].  (robs)
+  o New options for specifying endianness (and separate option for
+    bit reversal) [FR# 1621702].  (robs)
 
 sox-12.18.2
 -----------

@@ -24,8 +24,6 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#define MAXWSPEED 1
-
 /* Lookup table to reverse the bit order of a byte. ie MSB become LSB */
 unsigned char cswap[256] = {
   0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0, 0x10, 0x90, 0x50, 0xD0,

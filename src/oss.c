@@ -132,7 +132,7 @@ static int ossdspinit(ft_t ft)
     }
 
     if (samplesize == 16)
-      ft->info.swap = ST_IS_BIGENDIAN != (sampletype == AFMT_S16_BE);
+      ft->info.swap_bytes = ST_IS_BIGENDIAN != (sampletype == AFMT_S16_BE);
 
     if (ft->info.channels == 2) dsp_stereo = 1;
     else dsp_stereo = 0;

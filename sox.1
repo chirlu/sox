@@ -257,11 +257,11 @@ without actually processing any audio.  E.g.
 .br
 	octave plot.m
 .TP
-\fB\-q\fR, \fB\-\-no-show-progress\fR
+\fB\-q\fR, \fB\-\-no\-show\-progress\fR
 Run in quiet mode when SoX wouldn't otherwise do so;
 this is the converse of the \fB\-S\fR option.
 .TP
-\fB\-S\fR, \fB\-\--show-progress\fR
+\fB\-S\fR, \fB\-\-show\-progress\fR
 Display input file format/header information and input file(s)
 processing progress in terms of elapsed/remaining time and percentage.
 This option is enabled by default when using
@@ -383,6 +383,10 @@ endian-setting option may be ignored for an input file whose header
 contains a specific endian-ness identifier, or for an output file that
 is actually an audio device.
 .TP
+\fB\-X\fR, \fB\-\-reverse\-bits\fR
+Specified that the bit ordering should be reversed; available for use
+with few formats.
+.TP
 \fB\-s\fR\^/\fB\-u\fR\^/\fB\-U\fR\^/\fB\-A\fR\^/\fB\-a\fR\^/\fB\-i\fR\^/\fB\-g\fR\^/\fB\-f\fR
 The audio data encoding is signed linear (2's complement),
 unsigned linear, u-law (logarithmic), A-law (logarithmic),
@@ -390,8 +394,8 @@ ADPCM, IMA-ADPCM, GSM, or Floating-point.
 .SP
 U-law (actually short for mu-law) and A-law are the U.S. and
 international standards for logarithmic telephone audio compression.
-When uncompressed u-law has roughly the precision of 13-bit PCM audio
-and A-law has roughly the precision of 14-bit PCM audio.
+When uncompressed u-law has roughly the precision of 14-bit PCM audio
+and A-law has roughly the precision of 13-bit PCM audio.
 .SP
 A-law and u-law data is sometimes encoded using a reversed bit-ordering
 (i.e. MSB becomes LSB).  Internally, SoX understands how to work with
@@ -514,6 +518,11 @@ of the audio file, which is why it needs its own handler.
 .B .cvs
 Continuously Variable Slope Delta modulation.
 Used to compress speech audio for applications such as voice mail.
+This format can use the
+.B -X
+format option to set the bit-order; if the
+.B -V
+option is given then the selected bit-order can be viewed.
 .TP
 .B .dat
 Text Data files.
@@ -773,7 +782,7 @@ SoX currently can read PCM, ULAW, ALAW, MS ADPCM, and IMA (or DVI) ADPCM.
 It can write all of these formats including the ADPCM encoding.
 Big endian versions of RIFF files, called RIFX, can also be read
 and written.  To write a RIFX file, use the
-.B \-x
+.B \-B
 option with the output file options.
 .TP
 .B .wve

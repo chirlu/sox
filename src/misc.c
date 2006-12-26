@@ -228,7 +228,7 @@ int st_readw(ft_t ft, uint16_t *uw)
             st_fail_errno(ft,errno,readerr);
             return (ST_EOF);
         }
-        if (ft->info.swap)
+        if (ft->info.swap_bytes)
                 *uw = st_swapw(*uw);
         return ST_SUCCESS;
 }
@@ -236,7 +236,7 @@ int st_readw(ft_t ft, uint16_t *uw)
 /* Write word. */
 int st_writew(ft_t ft, uint16_t uw)
 {
-        if (ft->info.swap)
+        if (ft->info.swap_bytes)
                 uw = st_swapw(uw);
         if (st_writebuf(ft, &uw, 2, 1) != 1)
         {
@@ -254,7 +254,7 @@ int st_read3(ft_t ft, uint24_t *u3)
             st_fail_errno(ft,errno,readerr);
             return (ST_EOF);
         }
-        if (ft->info.swap)
+        if (ft->info.swap_bytes)
                 *u3 = st_swap24(*u3);
         return ST_SUCCESS;
 }
@@ -262,7 +262,7 @@ int st_read3(ft_t ft, uint24_t *u3)
 /* Write three bytes. */
 int st_write3(ft_t ft, uint24_t u3)
 {
-        if (ft->info.swap)
+        if (ft->info.swap_bytes)
                 u3 = st_swap24(u3);
         if (st_writebuf(ft, &u3, 3, 1) != 1)
         {
@@ -280,7 +280,7 @@ int st_readdw(ft_t ft, uint32_t *udw)
             st_fail_errno(ft,errno,readerr);
             return (ST_EOF);
         }
-        if (ft->info.swap)
+        if (ft->info.swap_bytes)
                 *udw = st_swapdw(*udw);
         return ST_SUCCESS;
 }
@@ -288,7 +288,7 @@ int st_readdw(ft_t ft, uint32_t *udw)
 /* Write double word. */
 int st_writedw(ft_t ft, uint32_t udw)
 {
-        if (ft->info.swap)
+        if (ft->info.swap_bytes)
                 udw = st_swapdw(udw);
         if (st_writebuf(ft, &udw, 4, 1) != 1)
         {
@@ -306,7 +306,7 @@ int st_readf(ft_t ft, float *f)
             st_fail_errno(ft,errno,readerr);
             return(ST_EOF);
         }
-        if (ft->info.swap)
+        if (ft->info.swap_bytes)
                 *f = st_swapf(*f);
         return ST_SUCCESS;
 }
@@ -316,7 +316,7 @@ int st_writef(ft_t ft, float f)
 {
         float t = f;
 
-        if (ft->info.swap)
+        if (ft->info.swap_bytes)
                 t = st_swapf(t);
         if (st_writebuf(ft, &t, sizeof(float), 1) != 1)
         {
@@ -334,7 +334,7 @@ int st_readdf(ft_t ft, double *d)
             st_fail_errno(ft,errno,readerr);
             return(ST_EOF);
         }
-        if (ft->info.swap)
+        if (ft->info.swap_bytes)
                 *d = st_swapd(*d);
         return ST_SUCCESS;
 }
@@ -342,7 +342,7 @@ int st_readdf(ft_t ft, double *d)
 /* Write double. */
 int st_writedf(ft_t ft, double d)
 {
-        if (ft->info.swap)
+        if (ft->info.swap_bytes)
                 d = st_swapd(d);
         if (st_writebuf(ft, &d, sizeof(double), 1) != 1)
         {

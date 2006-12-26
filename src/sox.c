@@ -232,7 +232,7 @@ int main(int argc, char **argv)
     fo->info.size = -1;
     fo->info.encoding = ST_ENCODING_UNKNOWN;
     fo->info.channels = 0;
-    fo->info.swap = ST_SWAP_DEFAULT;
+    fo->info.swap_bytes = ST_SWAP_DEFAULT;
     fo->info.compression = HUGE_VAL;
     fo->volume = HUGE_VAL;
     fo->volume_clips = 0;
@@ -356,7 +356,7 @@ static char * read_comment_file(char const * const filename)
   return result;
 }
 
-static char *getoptstr = "+r:v:t:c:C:hsuUAaig1b2w34lf8dxV::SqoenmMRLB";
+static char *getoptstr = "+r:v:t:c:C:hsuUAaig1b2w34lf8dxV::SqoenmMRLBX";
 
 static struct option long_options[] =
   {
@@ -375,6 +375,7 @@ static struct option long_options[] =
     {"no-show-progress",       no_argument, NULL, 'q'},
     {"octave"          ,       no_argument, NULL, 'o'},
     {"rate"            , required_argument, NULL, 'r'},
+    {"reverse-bits"    ,       no_argument, NULL, 'X'},
     {"show-progress"   ,       no_argument, NULL, 'S'},
     {"type"            ,       no_argument, NULL, 't'},
     {"volume"          , required_argument, NULL, 'v'},
@@ -406,11 +407,11 @@ static bool doopts(file_options_t fo, int argc, char **argv)
 
       case 2:
         if (!strcmp(optarg, "little"))
-          fo->info.swap = ST_IS_BIGENDIAN;
+          fo->info.swap_bytes = ST_IS_BIGENDIAN;
         else if (!strcmp(optarg, "big"))
-          fo->info.swap = ST_IS_LITTLEENDIAN;
+          fo->info.swap_bytes = ST_IS_LITTLEENDIAN;
         else if (!strcmp(optarg, "swap"))
-          fo->info.swap = true;
+          fo->info.swap_bytes = true;
         break;
 
       case 3:
@@ -515,15 +516,19 @@ static bool doopts(file_options_t fo, int argc, char **argv)
       break;
 
     case 'L':
-      fo->info.swap = ST_IS_BIGENDIAN;
+      fo->info.swap_bytes = ST_IS_BIGENDIAN;
       break;
 
     case 'B':
-      fo->info.swap = ST_IS_LITTLEENDIAN;
+      fo->info.swap_bytes = ST_IS_LITTLEENDIAN;
       break;
 
     case 'x':
-      fo->info.swap = 1;
+      fo->info.swap_bytes = ST_SWAP_YES;
+      break;
+
+    case 'X':
+      fo->info.reverse_bits = true;
       break;
 
     case 'V':

@@ -205,7 +205,8 @@ typedef struct  st_signalinfo
     signed char size;     /* word length of data */
     st_encoding_t encoding; /* format of sample numbers */
     unsigned channels;    /* number of sound channels */
-    enum {ST_SWAP_NO, ST_SWAP_YES, ST_SWAP_DEFAULT} swap;  /* byte-ordering */
+    enum {ST_SWAP_NO, ST_SWAP_YES, ST_SWAP_DEFAULT} swap_bytes; /* endian */
+    bool reverse_bits;
     double compression;   /* compression factor (where applicable) */
 } st_signalinfo_t;
 

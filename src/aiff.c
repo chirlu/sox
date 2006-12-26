@@ -452,7 +452,7 @@ static int st_aiffstartread(ft_t ft)
         if (is_sowt)
         {
                 aiff->nsamples -= 4;
-                ft->info.swap = !ft->info.swap;
+                ft->info.swap_bytes = !ft->info.swap_bytes;
         }
         
         if (foundmark && !foundinstr)

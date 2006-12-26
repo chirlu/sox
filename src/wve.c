@@ -79,7 +79,7 @@ static int st_wvestartread(ft_t ft)
                  * testing for endianess was standardized.  Leaving since
                  * it doesn't hurt.
                  */
-                ft->info.swap = !ft->info.swap;
+                ft->info.swap_bytes = !ft->info.swap_bytes;
                 st_debug("Found inverted PSION magic word.  Swapping bytes.");
         }
         else if (version == PSION_VERSION)

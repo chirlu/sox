@@ -27,11 +27,11 @@
 
 void set_swap_if_not_already_set(ft_t ft)
 {
-  if (ft->info.swap == ST_SWAP_DEFAULT) {
+  if (ft->info.swap_bytes == ST_SWAP_DEFAULT) {
     if (ft->h->flags & ST_FILE_ENDIAN)
-      ft->info.swap = ST_IS_LITTLEENDIAN != !(ft->h->flags & ST_FILE_ENDBIG);
+      ft->info.swap_bytes = ST_IS_LITTLEENDIAN != !(ft->h->flags & ST_FILE_ENDBIG);
     else
-      ft->info.swap = ST_SWAP_NO;
+      ft->info.swap_bytes = ST_SWAP_NO;
   }
 }
 

@@ -39,7 +39,7 @@ static void readcodes(ft_t ft, SFHEADER *sfhead)
         sfcodep = (SFCODE *) &sfcodes(sfhead);
         do {
                 sfcharp = (char *) sfcodep + sizeof(SFCODE);
-                if (ft->info.swap) {
+                if (ft->info.swap_bytes) {
                         sfcodep->bsize = st_swapdw(sfcodep->bsize);
                         sfcodep->code = st_swapdw(sfcodep->code);
                 }
@@ -103,7 +103,7 @@ static int st_sfstartread(ft_t ft)
                 return(ST_EOF);
         }
         memcpy(&sf->info, &sfhead.sfinfo, sizeof(struct sfinfo));
-        if (ft->info.swap) {
+        if (ft->info.swap_bytes) {
                 sf->info.sf_srate = st_swapf(sf->info.sf_srate);
                 sf->info.sf_packmode = st_swapdw(sf->info.sf_packmode);
                 sf->info.sf_chans = st_swapdw(sf->info.sf_chans);
