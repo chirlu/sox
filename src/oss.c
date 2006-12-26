@@ -118,14 +118,8 @@ static int ossdspinit(ft_t ft)
                 samplesize = 16;
             }
             /* determine which 16-bit format to use */
-            if (samplesize == 16)
-            {
-                if ((tmp & sampletype) == 0)
-                {
-                    sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
-                    ft->info.swap = ft->info.swap ? 0 : 1;
-                }
-            }
+            if (samplesize == 16 && (tmp & sampletype) == 0)
+              sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
         }
         tmp = sampletype;
         rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SETFMT, &tmp);
@@ -136,6 +130,9 @@ static int ossdspinit(ft_t ft)
         st_fail_errno(ft,ST_EOF,"Unable to set the sample size to %d", samplesize);
         return (ST_EOF);
     }
+
+    if (samplesize == 16)
+      ft->info.swap = ST_IS_BIGENDIAN != (sampletype == AFMT_S16_BE);
 
     if (ft->info.channels == 2) dsp_stereo = 1;
     else dsp_stereo = 0;

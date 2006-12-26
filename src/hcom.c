@@ -65,14 +65,6 @@ static int st_hcomstartread(ft_t ft)
         int rc;
 
 
-        /* hcom is in big endian format.  Swap whats
-         * read in on little machine
-         */
-        if (ST_IS_LITTLEENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-
         /* Skip first 65 bytes of header */
         rc = st_skipbytes(ft, 65);
         if (rc)
@@ -251,9 +243,6 @@ struct writepriv {
 static int st_hcomstartwrite(ft_t ft)
 {
         register struct writepriv *p = (struct writepriv *) ft->priv;
-
-        if (ST_IS_LITTLEENDIAN)
-          ft->info.swap = ft->info.swap ? 0 : 1;
 
         switch (ft->info.rate) {
         case 22050:
@@ -482,7 +471,7 @@ static const char *hcomnames[] = {
 static st_format_t st_hcom_format = {
   hcomnames,
   NULL,
-  0,
+  ST_FILE_BIG_END,
   st_hcomstartread,
   st_hcomread,
   st_hcomstopread,

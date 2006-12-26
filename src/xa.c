@@ -104,9 +104,6 @@ static int st_xastartread(ft_t ft)
         return ST_EOF;
     }
     
-    /* Byte-swap on big-endian systems */
-    if (ST_IS_BIGENDIAN) ft->info.swap = ft->info.swap ? 0 : 1;
-
     /* Read the rest of the header */
     if (st_readdw(ft, &xa->header.outSize) != ST_SUCCESS) return ST_EOF;
     if (st_readw(ft, &xa->header.tag) != ST_SUCCESS) return ST_EOF;
@@ -319,7 +316,7 @@ static const char *xanames[] = {
 st_format_t st_xa_format = {
   xanames,
   NULL,
-  ST_FILE_STEREO,
+  ST_FILE_STEREO | ST_FILE_LIT_END,
   st_xastartread,
   st_xaread,
   st_xastopread,

@@ -157,14 +157,6 @@ static int st_austartread(ft_t ft)
 
         int rc;
 
-        /* AU is in big endian format.  Swap whats read
-         * in onlittle endian machines.
-         */
-        if (ST_IS_LITTLEENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-
         /* Check the magic word */
         st_readdw(ft, &magic);
         if (magic == DEC_INV_MAGIC) {
@@ -172,11 +164,11 @@ static int st_austartread(ft_t ft)
                  * left over from pre-standardize period of testing for
                  * endianess.  Its not hurting though.
                  */
-                ft->info.swap = ft->info.swap ? 0 : 1;
+                ft->info.swap = !ft->info.swap;
                 st_debug("Found inverted DEC magic word.  Swapping bytes.");
         }
         else if (magic == SUN_INV_MAGIC) {
-                ft->info.swap = ft->info.swap ? 0 : 1;
+                ft->info.swap = !ft->info.swap;
                 st_debug("Found inverted Sun/NeXT magic word. Swapping bytes.");
         }
         else if (magic == SUN_MAGIC) {
@@ -307,14 +299,6 @@ static int st_austartwrite(ft_t ft)
         rc = st_rawstartwrite(ft);
         if (rc)
             return rc;
-
-        /* AU is in big endian format.  Swap whats read in
-         * on little endian machines.
-         */
-        if (ST_IS_LITTLEENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
 
         p->data_size = 0;
         auwriteheader(ft, SUN_UNSPEC);
@@ -485,7 +469,7 @@ static const char *aunames[] = {
 static st_format_t st_au_format = {
   aunames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_SEEK,
+  ST_FILE_STEREO | ST_FILE_SEEK | ST_FILE_BIG_END,
   st_austartread,
   st_auread,
   st_rawstopread,

@@ -59,14 +59,6 @@ static int st_wvestartread(ft_t ft)
         if (rc)
             return rc;
 
-        /* WVE is in big endian format.  Swap whats read in
-         * on little endian machines.
-         */
-        if (ST_IS_LITTLEENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-
         /* Check the magic word (null-terminated) */
         st_reads(ft, magic, 16);
         if (strncmp(magic, PSION_MAGIC, 15)==0) {
@@ -87,7 +79,7 @@ static int st_wvestartread(ft_t ft)
                  * testing for endianess was standardized.  Leaving since
                  * it doesn't hurt.
                  */
-                ft->info.swap = ft->info.swap ? 0 : 1;
+                ft->info.swap = !ft->info.swap;
                 st_debug("Found inverted PSION magic word.  Swapping bytes.");
         }
         else if (version == PSION_VERSION)
@@ -145,14 +137,6 @@ static int st_wvestartwrite(ft_t ft)
         rc = st_rawstartwrite(ft);
         if (rc)
             return ST_EOF;
-
-        /* wve is in big endian format.  Swap whats read in
-         * on little endian machines.
-         */
-        if (ST_IS_LITTLEENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
 
         p->length = 0;
         if (p->repeats == 0)
@@ -234,7 +218,7 @@ static const char *wvenames[] = {
 static st_format_t st_wve_format = {
   wvenames,
   NULL,
-  ST_FILE_SEEK,
+  ST_FILE_SEEK | ST_FILE_BIG_END,
   st_wvestartread,
   st_rawread,
   st_rawstopread,

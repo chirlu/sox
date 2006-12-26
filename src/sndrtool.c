@@ -74,14 +74,6 @@ static int st_sndtstartread(ft_t ft)
         if (rc)
             return rc;
 
-        /* sndt is in little endian format so 
-         * swap bytes on big endian machines.
-         */
-        if (ST_IS_BIGENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-
         rate = 0;
 
         /* determine file type */
@@ -147,14 +139,6 @@ static int st_sndtstartwrite(ft_t ft)
         if (rc)
             return rc;
 
-        /* sndt is in little endian format so
-         * swap bytes on big endian machines
-         */
-        if (ST_IS_BIGENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-
         /* write header */
         ft->info.channels = 1;
         ft->info.encoding = ST_ENCODING_UNSIGNED;
@@ -203,7 +187,7 @@ static const char *sndtnames[] = {
 const st_format_t st_snd_format = {
   sndtnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_SEEK,
+  ST_FILE_STEREO | ST_FILE_SEEK | ST_FILE_LIT_END,
   st_sndtstartread,
   st_rawread,
   st_rawstopread,

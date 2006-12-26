@@ -232,6 +232,7 @@ int main(int argc, char **argv)
     fo->info.size = -1;
     fo->info.encoding = ST_ENCODING_UNKNOWN;
     fo->info.channels = 0;
+    fo->info.swap = ST_SWAP_DEFAULT;
     fo->info.compression = HUGE_VAL;
     fo->volume = HUGE_VAL;
     fo->volume_clips = 0;
@@ -355,19 +356,29 @@ static char * read_comment_file(char const * const filename)
   return result;
 }
 
-static char *getoptstr = "+r:v:t:c:C:phsuUAaig1b2w34lf8dxV::SqoenmMR";
+static char *getoptstr = "+r:v:t:c:C:hsuUAaig1b2w34lf8dxV::SqoenmMRLB";
 
 static struct option long_options[] =
   {
-    {"version", 0, NULL, 0},
-    {"help-effect", required_argument, NULL, 0},
-    {"comment", required_argument, NULL, 0},
-    {"comment-file", required_argument, NULL, 0},
-    {"force", no_argument, NULL, 0},
+    {"comment-file"    , required_argument, NULL, 0},
+    {"comment"         , required_argument, NULL, 0},
+    {"endian"          , required_argument, NULL, 0},
+    {"force"           ,       no_argument, NULL, 0},
+    {"help-effect"     , required_argument, NULL, 0},
+    {"version"         ,       no_argument, NULL, 0},
 
-    {"help", no_argument, NULL, 'h'},
-    {"mix", no_argument, NULL, 'm'},
-    {"merge", no_argument, NULL, 'M'},
+    {"channels"        , required_argument, NULL, 'c'},
+    {"compression"     , required_argument, NULL, 'C'},
+    {"help"            ,       no_argument, NULL, 'h'},
+    {"merge"           ,       no_argument, NULL, 'M'},
+    {"mix"             ,       no_argument, NULL, 'm'},
+    {"no-show-progress",       no_argument, NULL, 'q'},
+    {"octave"          ,       no_argument, NULL, 'o'},
+    {"rate"            , required_argument, NULL, 'r'},
+    {"show-progress"   ,       no_argument, NULL, 'S'},
+    {"type"            ,       no_argument, NULL, 't'},
+    {"volume"          , required_argument, NULL, 'v'},
+
     {NULL, 0, NULL, 0}
   };
 
@@ -386,24 +397,33 @@ static bool doopts(file_options_t fo, int argc, char **argv)
     case 0:       /* Long options with no short equivalent. */
       switch (option_index) {
       case 0:
-        printf("%s: v%s\n", myname, st_version());
-        exit(0);
-        break;
-
-      case 1:
-        usage_effect(optarg);
-        break;
-
-      case 2:
-        fo->comment = xstrdup(optarg);
-        break;
-
-      case 3:
         fo->comment = read_comment_file(optarg);
         break;
 
-      case 4:
+      case 1:
+        fo->comment = xstrdup(optarg);
+        break;
+
+      case 2:
+        if (!strcmp(optarg, "little"))
+          fo->info.swap = ST_IS_BIGENDIAN;
+        else if (!strcmp(optarg, "big"))
+          fo->info.swap = ST_IS_LITTLEENDIAN;
+        else if (!strcmp(optarg, "swap"))
+          fo->info.swap = true;
+        break;
+
+      case 3:
         force_overwrite = true;
+        break;
+
+      case 4:
+        usage_effect(optarg);
+        break;
+
+      case 5:
+        printf("%s: v%s\n", myname, st_version());
+        exit(0);
         break;
       }
       break;
@@ -492,6 +512,14 @@ static bool doopts(file_options_t fo, int argc, char **argv)
     case 'A': fo->info.encoding = ST_ENCODING_ALAW;
       if (fo->info.size == -1)
         fo->info.size = ST_SIZE_BYTE;
+      break;
+
+    case 'L':
+      fo->info.swap = ST_IS_BIGENDIAN;
+      break;
+
+    case 'B':
+      fo->info.swap = ST_IS_LITTLEENDIAN;
       break;
 
     case 'x':

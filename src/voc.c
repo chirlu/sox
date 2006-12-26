@@ -219,14 +219,6 @@ static int st_vocstartread(ft_t ft)
         int ii;  /* for getting rid of lseek */
         unsigned char uc;
 
-        /* VOC is in Little Endian format.  Swap bytes read in on */
-        /* Big Endian machines.                                   */
-        if (ST_IS_BIGENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-
-
         if (st_readbuf(ft, header, 1, 20) != 20)
         {
                 st_fail_errno(ft,ST_EHDR,"unexpected EOF in VOC header");
@@ -420,13 +412,6 @@ static st_size_t st_vocread(ft_t ft, st_sample_t *buf, st_size_t len)
 static int st_vocstartwrite(ft_t ft)
 {
         vs_t v = (vs_t) ft->priv;
-
-        /* VOC is in Little Endian format.  Swap whats read */
-        /* in on Big Endian machines.                       */
-        if (ST_IS_BIGENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
 
         if (! ft->seekable)
         {
@@ -824,7 +809,7 @@ static const char *vocnames[] = {
 static st_format_t st_voc_format = {
   vocnames,
   NULL,
-  ST_FILE_STEREO,
+  ST_FILE_STEREO | ST_FILE_LIT_END,
   st_vocstartread,
   st_vocread,
   st_format_nothing,

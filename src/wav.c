@@ -397,8 +397,6 @@ static int st_wavstartread(ft_t ft)
 
         ft->st_errno = ST_SUCCESS;
 
-    if (ST_IS_BIGENDIAN) ft->info.swap = ft->info.swap ? 0 : 1;
-
     if (st_reads(ft, magic, 4) == ST_EOF || (strncmp("RIFF", magic, 4) != 0 &&
                                              strncmp("RIFX", magic, 4) != 0))
     {
@@ -410,7 +408,7 @@ static int st_wavstartread(ft_t ft)
     if (strncmp("RIFX", magic, 4) == 0) 
     {
         st_debug("Found RIFX header, swapping bytes");
-        ft->info.swap = ft->info.swap ? 0 : 1;
+        ft->info.swap = ST_IS_LITTLEENDIAN;
     }
 
     st_readdw(ft, &dwRiffLength);
@@ -1144,8 +1142,6 @@ static int st_wavstartwrite(ft_t ft)
 
     ft->st_errno = ST_SUCCESS;
 
-    if (ST_IS_BIGENDIAN) ft->info.swap = ft->info.swap ? 0 : 1;
-
     if (ft->info.encoding != ST_ENCODING_ADPCM &&
         ft->info.encoding != ST_ENCODING_IMA_ADPCM &&
         ft->info.encoding != ST_ENCODING_GSM)
@@ -1461,8 +1457,7 @@ static int wavwritehdr(ft_t ft, int second_header)
     /* If user specified opposite swap then we think, assume they are
      * asking to write a RIFX file.
      */
-    if ((!ST_IS_BIGENDIAN && ft->info.swap) || 
-        (ST_IS_BIGENDIAN && !ft->info.swap))
+    if (ft->info.swap != ST_IS_BIGENDIAN)
     {
         if (!second_header)
             st_report("Requested to swap bytes so writing  RIFX header");
@@ -1731,7 +1726,7 @@ static const char *wavnames[] = {
 static st_format_t st_wav_format = {
   wavnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_SEEK,
+  ST_FILE_STEREO | ST_FILE_SEEK | ST_FILE_LIT_END,
   st_wavstartread,
   st_wavread,
   st_wavstopread,

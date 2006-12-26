@@ -55,14 +55,6 @@ static int st_maudstartread(ft_t ft)
         if (rc)
             return rc;
 
-        /* maud is in big endian format.  Swap whats read in
-         * on little endian machines.
-         */
-        if (ST_IS_LITTLEENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-        
         /* read FORM chunk */
         if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "FORM", 4) != 0)
         {
@@ -216,14 +208,6 @@ static int st_maudstartwrite(ft_t ft)
         if (rc)
             return rc;
 
-        /* maud is in big endian format.  Swap whats read in
-         * on little endian machines.
-         */
-        if (ST_IS_LITTLEENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-        
         /* If you have to seek around the output file */
         if (! ft->seekable) 
         {
@@ -365,7 +349,7 @@ static const char *maudnames[] = {
 static st_format_t st_maud_format = {
   maudnames,
   NULL,
-  ST_FILE_STEREO,
+  ST_FILE_STEREO | ST_FILE_BIG_END,
   st_maudstartread,
   st_rawread,
   st_rawstopread,

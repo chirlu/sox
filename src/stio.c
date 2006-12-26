@@ -25,6 +25,16 @@
 #define SET_BINARY_MODE(file)
 #endif
 
+void set_swap_if_not_already_set(ft_t ft)
+{
+  if (ft->info.swap == ST_SWAP_DEFAULT) {
+    if (ft->h->flags & ST_FILE_ENDIAN)
+      ft->info.swap = ST_IS_LITTLEENDIAN != !(ft->h->flags & ST_FILE_ENDBIG);
+    else
+      ft->info.swap = ST_SWAP_NO;
+  }
+}
+
 static int is_seekable(ft_t ft)
 {
         struct stat st;
@@ -121,6 +131,9 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
         ft->seekable = is_seekable(ft);
     }
 
+    if (filetype)
+      set_swap_if_not_already_set(ft);
+
     /* Read and write starters can change their formats. */
     if ((*ft->h->startread)(ft) != ST_SUCCESS)
     {
@@ -141,7 +154,6 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
                 ft->st_errstr);
         goto input_error;
     }
-
     return ft;
 
 input_error:
@@ -222,7 +234,8 @@ ft_t st_open_write(
         }
         else {
           struct stat st;
-          if (!stat(ft->filename, &st) && !overwrite_permitted(ft->filename)) {
+          if (!stat(ft->filename, &st) && (st.st_mode & S_IFMT) == S_IFREG &&
+              !overwrite_permitted(ft->filename)) {
             st_fail("Permission to overwrite '%s' denied", ft->filename);
             goto output_error;
           }
@@ -254,6 +267,8 @@ ft_t st_open_write(
     /* leave SMPTE # alone since it's absolute */
     if (instr)
         ft->instr = *instr;
+
+    set_swap_if_not_already_set(ft);
 
     /* Read and write starters can change their formats. */
     if ((*ft->h->startwrite)(ft) != ST_SUCCESS)

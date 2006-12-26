@@ -46,14 +46,6 @@ static int st_svxstartread(ft_t ft)
                 st_fail_errno(ft,ST_EINVAL,"8svx input file must be a file, not a pipe");
                 return (ST_EOF);
         }
-        /* 8svx is in big endian format. Swap whats
-         * read in on little endian machines.
-         */
-        if (ST_IS_LITTLEENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-
         rate = 0;
         channels = 1;
 
@@ -246,14 +238,6 @@ static int st_svxstartwrite(ft_t ft)
         svx_t p = (svx_t ) ft->priv;
         size_t i;
 
-        /* 8svx is in big endian format.  Swaps wahst
-         * read in on little endian machines.
-         */
-        if (ST_IS_LITTLEENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-
         /* open channel output files */
         p->ch[0] = ft->fp;
         for (i = 1; i < ft->info.channels; i++) {
@@ -384,7 +368,7 @@ static const char *svxnames[] = {
 static st_format_t st_svx_format = {
   svxnames,
   NULL,
-  ST_FILE_STEREO,
+  ST_FILE_STEREO | ST_FILE_BIG_END,
   st_svxstartread,
   st_svxread,
   st_svxstopread,

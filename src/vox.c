@@ -96,6 +96,10 @@ static int  st_voxstartread (ft_t ft)
        ft->info.size     = ST_SIZE_WORD;
        ft->info.encoding = ST_ENCODING_OKI_ADPCM;
        ft->info.channels = 1;
+       if (ft->info.rate == 0) {
+         st_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
+         ft->info.rate = 8000;
+       }
 
        /* ... initialise CODEC state */
 

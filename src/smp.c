@@ -209,13 +209,6 @@ static int st_smpstartread(ft_t ft)
         struct smpheader header;
         struct smptrailer trailer;
 
-        /* SMP is in Little Endian format.  Swap whats read in on */
-        /* Big Endian machines.                                   */
-        if (ST_IS_BIGENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-
         /* If you need to seek around the input file. */
         if (! ft->seekable)
         {
@@ -345,13 +338,6 @@ static int st_smpstartwrite(ft_t ft)
         smp_t smp = (smp_t) ft->priv;
         struct smpheader header;
 
-        /* SMP is in Little Endian format.  Swap whats read in on */
-        /* Big Endian machines.                                   */
-        if (ST_IS_BIGENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-
         /* If you have to seek around the output file */
         if (! ft->seekable)
         {
@@ -424,7 +410,7 @@ static const char *smpnames[] = {
 static st_format_t st_smp_format = {
   smpnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK,
+  ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK | ST_FILE_LIT_END,
   st_smpstartread,
   st_smpread,
   st_format_nothing,

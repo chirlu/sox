@@ -176,7 +176,8 @@ static int st_autostartread(ft_t ft)
     }
 
     st_debug("Detected file format type: %s", type);
-    return ((* ft->h->startread)(ft));
+    set_swap_if_not_already_set(ft);
+    return (* ft->h->startread)(ft);
 }
 
 static int st_autostartwrite(ft_t ft) 

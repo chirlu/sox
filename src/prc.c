@@ -85,14 +85,6 @@ static int st_prcstartread(ft_t ft)
         if (rc)
             return rc;
 
-        /* PRC is in little endian format.  Swap whats read in
-         * on big endian machines.
-         */
-        if (ST_IS_LITTLEENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 1 : 0;
-        }
-
         /* Check the header */
         if (prc_checkheader(ft, head))
                 st_debug("Found Psion Record header");
@@ -144,14 +136,6 @@ static int st_prcstartwrite(ft_t ft)
         rc = st_rawstartwrite(ft);
         if (rc)
             return ST_EOF;
-
-        /* prc is in little endian format.  Swap whats read in
-         * on big endian machines.
-         */
-        if (ST_IS_LITTLEENDIAN)
-        {
-                ft->info.swap = ft->info.swap ? 1 : 0;
-        }
 
         p->length = 0;
         if (p->repeats == 0)
@@ -222,7 +206,7 @@ static const char *prcnames[] = {
 static st_format_t st_prc_format = {
   prcnames,
   NULL,
-  ST_FILE_SEEK,
+  ST_FILE_SEEK | ST_FILE_BIG_END,
   st_prcstartread,
   st_rawread,
   st_rawstopread,

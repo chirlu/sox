@@ -105,21 +105,9 @@ static int st_spherestartread(ft_t ft)
             {
                 sscanf(buf, "%53s %15s %127s", fldname, fldtype, fldsval);
                 if (strncmp(fldsval,"01",2) == 0)
-                {
-                    /* Data is in little endian. */
-                    if (ST_IS_BIGENDIAN)
-                    {
-                        ft->info.swap = ft->info.swap ? 0 : 1;
-                    }
-                }
+                  ft->info.swap = ST_IS_BIGENDIAN; /* Data is little endian. */
                 else if (strncmp(fldsval,"10",2) == 0)
-                {
-                    /* Data is in big endian. */
-                    if (ST_IS_LITTLEENDIAN)
-                    {
-                        ft->info.swap = ft->info.swap ? 0 : 1;
-                    }
-                }
+                  ft->info.swap = ST_IS_LITTLEENDIAN; /* Data is big endian. */
             }
 
             if (st_reads(ft, buf, header_size) == ST_EOF)
@@ -274,14 +262,8 @@ static int st_spherestopwrite(ft_t ft)
     sprintf(buf, "channel_count -i %d\n", ft->info.channels);
     st_writes(ft, buf);
 
-    if (ft->info.swap)
-    {
-        sprintf(buf, "sample_byte_format -s2 %s\n", ST_IS_BIGENDIAN ? "01" : "10");
-    }
-    else
-    {
-        sprintf(buf, "sample_byte_format -s2 %s\n", ST_IS_BIGENDIAN ? "10" : "01");
-    }
+    sprintf(buf, "sample_byte_format -s2 %s\n",
+        ft->info.swap != ST_IS_BIGENDIAN ? "10" : "01");
     st_writes(ft, buf);
 
     rate = ft->info.rate;

@@ -133,13 +133,6 @@ static int st_aiffstartread(ft_t ft)
 
         int rc;
 
-        /* AIFF is in Big Endian format.  Swap whats read in on Little */
-        /* Endian machines.                                            */
-        if (ST_IS_LITTLEENDIAN)
-        {
-            ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-
         /* FORM chunk */
         if (st_reads(ft, buf, 4) == ST_EOF || strncmp(buf, "FORM", 4) != 0)
         {
@@ -459,7 +452,7 @@ static int st_aiffstartread(ft_t ft)
         if (is_sowt)
         {
                 aiff->nsamples -= 4;
-                ft->info.swap = ft->info.swap ? 0 : 1;
+                ft->info.swap = !ft->info.swap;
         }
         
         if (foundmark && !foundinstr)
@@ -700,13 +693,6 @@ static int st_aiffstartwrite(ft_t ft)
         if (rc)
             return rc;
 
-        /* AIFF is in Big Endian format.  Swap what's read in on Little */
-        /* Endian machines.                                            */
-        if (ST_IS_LITTLEENDIAN)
-        {
-            ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-
         aiff->nsamples = 0;
         if ((ft->info.encoding == ST_ENCODING_ULAW ||
              ft->info.encoding == ST_ENCODING_ALAW) && 
@@ -912,13 +898,6 @@ static int st_aifcstartwrite(ft_t ft)
         rc = st_rawstartwrite(ft);
         if (rc)
             return rc;
-
-        /* AIFC is in Big Endian format.  Swap what's read in on Little */
-        /* Endian machines.                                            */
-        if (ST_IS_LITTLEENDIAN)
-        {
-            ft->info.swap = ft->info.swap ? 0 : 1;
-        }
 
         aiff->nsamples = 0;
         if ((ft->info.encoding == ST_ENCODING_ULAW ||
@@ -1226,7 +1205,7 @@ static const char *aiffnames[] = {
 static st_format_t st_aiff_format = {
   aiffnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK,
+  ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK | ST_FILE_BIG_END,
   st_aiffstartread,
   st_aiffread,
   st_aiffstopread,
@@ -1250,7 +1229,7 @@ static const char *aifcnames[] = {
 static st_format_t st_aifc_format = {
   aifcnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK,
+  ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK | ST_FILE_BIG_END,
   st_aiffstartread,
   st_aiffread,
   st_aiffstopread,

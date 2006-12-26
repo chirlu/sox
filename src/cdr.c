@@ -48,13 +48,6 @@ static int st_cdrstartread(ft_t ft)
         if (rc)
             return rc;
 
-        /* CDR is in Big Endian format.  Swap whats read in on */
-        /* Little Endian machines.                             */
-        if (ST_IS_LITTLEENDIAN)
-        { 
-            ft->info.swap = ft->info.swap ? 0 : 1;
-        }
-
         ft->info.rate = 44100L;
         ft->info.size = ST_SIZE_WORD;
         ft->info.encoding = ST_ENCODING_SIGN2;
@@ -98,13 +91,6 @@ static int st_cdrstartwrite(ft_t ft)
 {
         cdr_t cdr = (cdr_t) ft->priv;
         int rc;
-
-        /* CDR is in Big Endian format.  Swap whats written out on */
-        /* Little Endian Machines.                                 */
-        if (ST_IS_LITTLEENDIAN)
-        {
-            ft->info.swap = ft->info.swap ? 0 : 1;
-        }
 
         /* Needed because of rawwrite() */
         rc = st_rawstartwrite(ft);
@@ -168,7 +154,7 @@ static const char *cdrnames[] = {
 static st_format_t st_cdr_format = {
   cdrnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_SEEK,
+  ST_FILE_STEREO | ST_FILE_SEEK | ST_FILE_BIG_END,
   st_cdrstartread,
   st_cdrread,
   st_cdrstopread,

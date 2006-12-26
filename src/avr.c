@@ -68,13 +68,6 @@ static int st_avrstartread(ft_t ft)
   avr_t avr = (avr_t)ft->priv;
   int rc;
 
-  /* AVR is a Big Endian format.  Swap whats read in on Little */
-  /* Endian machines.                                          */
-  if (ST_IS_LITTLEENDIAN)
-  {
-          ft->info.swap = ft->info.swap ? 0 : 1;
-  }
-
   st_reads(ft, avr->magic, 4);
 
   if (strncmp (avr->magic, AVR_MAGIC, 4)) {
@@ -152,13 +145,6 @@ static int st_avrstartwrite(ft_t ft)
 {
   avr_t avr = (avr_t)ft->priv;
   int rc;
-
-  /* AVR is a Big Endian format.  Swap whats read in on Little */
-  /* Endian machines.                                          */
-  if (ST_IS_LITTLEENDIAN)
-  {
-          ft->info.swap = ft->info.swap ? 0 : 1;
-  }
 
   if (!ft->seekable) {
     st_fail_errno(ft,ST_EOF,"AVR: file is not seekable");
@@ -299,7 +285,7 @@ static const char *avrnames[] = {
 static st_format_t st_avr_format = {
   avrnames,
   NULL,
-  ST_FILE_STEREO,
+  ST_FILE_STEREO | ST_FILE_BIG_END,
   st_avrstartread,
   st_rawread,
   st_format_nothing,

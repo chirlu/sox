@@ -205,7 +205,7 @@ typedef struct  st_signalinfo
     signed char size;     /* word length of data */
     st_encoding_t encoding; /* format of sample numbers */
     unsigned channels;    /* number of sound channels */
-    char swap;            /* do byte- or word-swap */
+    enum {ST_SWAP_NO, ST_SWAP_YES, ST_SWAP_DEFAULT} swap;  /* byte-ordering */
     double compression;   /* compression factor (where applicable) */
 } st_signalinfo_t;
 
@@ -313,6 +313,12 @@ struct st_soundstream {
 #define ST_FILE_SEEK    8  /* does file format support seeking? */
 #define ST_FILE_NOSTDIO 16 /* does not use stdio routines */
 #define ST_FILE_NOFEXT  32 /* does not use file extensions */
+/* These two for use by SoX: */
+#define ST_FILE_ENDIAN  64 /* is file format endian? */
+#define ST_FILE_ENDBIG  128/* if so, is it big endian? */
+/* These two for use within stlib: */
+#define ST_FILE_LIT_END  (0   + 64)
+#define ST_FILE_BIG_END  (128 + 64)
 
 /* Size field */
 #define ST_SIZE_BYTE    1
@@ -377,6 +383,7 @@ struct st_effect
     char priv[ST_MAX_EFFECT_PRIVSIZE]; /* private area for effect */
 };
 
+void set_swap_if_not_already_set(ft_t ft);
 extern ft_t st_open_read(const char *path, const st_signalinfo_t *info, 
                          const char *filetype);
 ft_t st_open_write(
