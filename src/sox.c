@@ -97,12 +97,10 @@ static void volumechange(st_sample_t * buf, st_ssize_t len, file_options_t fo);
 static void parse_effects(int argc, char **argv);
 static void check_effects(void);
 static int start_effects(void);
-static void reserve_effect_buf(void);
 static int flow_effect_out(void);
 static int flow_effect(int);
 static int drain_effect_out(void);
 static int drain_effect(int);
-static void release_effect_buf(void);
 static void stop_effects(void);
 
 #define MAX_INPUT_FILES 32
@@ -685,7 +683,11 @@ static void process(void) {
   flowstatus = start_effects();
 
   /* Allocate output buffers for effects */
-  reserve_effect_buf();
+  for (e = 0; e < neffects; e++) {
+    efftab[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
+    if (efftabR[e].name)
+      efftabR[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
+  }
 
   if (combine_method != SOX_CONCAT) {
     for (f = 0; f < input_count; f++) {
@@ -871,7 +873,10 @@ static void process(void) {
       free(ibuf[f]);
 
   /* Free output buffers now that they won't be used */
-  release_effect_buf();
+  for (e = 0; e < neffects; e++) {
+    free(efftab[e].obuf);
+    free(efftabR[e].obuf);
+  }
 
   /* N.B. more data may be written during stop_effects */
   stop_effects();
@@ -1113,17 +1118,6 @@ static int start_effects(void)
   }
 
   return ret;
-}
-
-static void reserve_effect_buf(void)
-{
-  int e;
-
-  for (e = 0; e < neffects; e++) {
-    efftab[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
-    if (efftabR[e].name)
-      efftabR[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
-  }
 }
 
 static int flow_effect_out(void)
@@ -1440,16 +1434,6 @@ static int drain_effect(int e)
     efftab[e].odone = 0;
   }
   return rc;
-}
-
-static void release_effect_buf(void)
-{
-  int e;
-    
-  for (e = 0; e < neffects; e++) {
-    free(efftab[e].obuf);
-    free(efftabR[e].obuf);
-  }
 }
 
 static void stop_effects(void)
