@@ -20,6 +20,7 @@ static int getopts(eff_t effp, int n, char **argv, double fc, int dcNormalise)
   bool isFcSet = false;
   double opt1 = HUGE_VAL, opt2 = HUGE_VAL;
   biquad_t p = (biquad_t) effp->priv;
+  int ret = ST_SUCCESS;
   
   /* Zero all numbers, set all bools to false: */
   memset(p, 0, sizeof(*p));
@@ -40,44 +41,40 @@ static int getopts(eff_t effp, int n, char **argv, double fc, int dcNormalise)
      sscanf(argv[0], "%lf", &p->gain) &&
      (n < 2 || sscanf(argv[1], "%lf", &opt1))  &&
      (n < 3 || sscanf(argv[2], "%lf", &opt2))  &&
-     (n < 4))
-  do {
-    if (opt1 != HUGE_VAL)
-    {
-      if (opt1 > 1)
-      {
-        p->fc = opt1;
-        isFcSet = true;
-      }
-      else if (opt1 > 0)
-      {
-        p->oomph = opt1;
-      }
-      else break; /* error */
-      if (opt2 != HUGE_VAL)
-      {
-        if (opt2 > 1)
-        {
-          if (isFcSet) break; /* error */
-          p->fc = opt2;
+     (n < 4)) {
+    if (opt1 != HUGE_VAL) {
+      if (opt1 <= 0)
+        ret = ST_EOF;
+      else {
+        if (opt1 > 1) {
+          p->fc = opt1;
+          isFcSet = true;
+        } else
+          p->oomph = opt1;
+        if (opt2 != HUGE_VAL) {
+          if (opt2 > 1) {
+            if (isFcSet)
+              ret = ST_EOF;
+            else
+              p->fc = opt2;
+          } else if (opt2 > 0) {
+            if (!isFcSet)
+              ret = ST_EOF;
+            else
+              p->oomph = opt2;
+          } else
+            ret = ST_EOF;
         }
-        else if (opt2 > 0)
-        {
-          if (!isFcSet) break; /* error */
-          p->oomph = opt2;
-        }
-        else break; /* error */
       }
     }
     if (dcNormalise)
-    {
       p->gain = -p->gain;
-    }
-    return ST_SUCCESS;
-  } while (0);
+  }
 
-  st_fail(effp->h->usage);
-  return ST_EOF;
+  if (ret == ST_EOF)
+    st_fail(effp->h->usage);
+
+  return ret;
 }
 
 
@@ -96,9 +93,6 @@ static int st_biquad_shelf_start(eff_t effp)
   double w0 = 2 * M_PI * p->fc / effp->ininfo.rate;
   double alpha = sin(w0)/2 * sqrt( (A + 1/A)*(1/p->oomph - 1) + 2 );
   double a0;
-
-  if (p->gain == 0)
-    return ST_EFF_NULL;
 
   /* Calculate filter coefficients: */
   p->b0 =    A*( (A+1) - (A-1)*cos(w0) + 2*sqrt(A)*alpha );  /* Numerator. */
