@@ -201,7 +201,8 @@ static st_effect_t st_trim_effect = {
   st_trim_start,
   st_trim_flow,
   st_effect_nothing_drain,
-  st_trim_stop
+  st_trim_stop,
+st_effect_nothing
 };
 
 const st_effect_t *st_trim_effect_fn(void)

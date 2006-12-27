@@ -205,7 +205,8 @@ static st_effect_t st_vol_effect = {
   st_vol_start,
   st_vol_flow,
   st_effect_nothing_drain,
-  st_vol_stop
+  st_vol_stop,
+st_effect_nothing
 };
 
 const st_effect_t *st_vol_effect_fn(void)

@@ -111,10 +111,19 @@ static int st_skeleff_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 
 /*
  * Do anything required when you stop reading samples.  
- *      (free allocated memory, etc.)
  * If there's nothing to do, use st_effect_nothing instead.
  */
 static int st_skeleff_stop(eff_t effp)
+{
+  return ST_SUCCESS;
+}
+
+/*
+ * Do anything required when you delete an effect.  
+ *      (free allocated memory, etc.)
+ * If there's nothing to do, use st_effect_nothing instead.
+ */
+static int st_skeleff_delete(eff_t effp)
 {
   return ST_SUCCESS;
 }
@@ -133,7 +142,8 @@ static st_effect_t st_skel_effect = {
   st_skel_start,
   st_skel_flow,
   st_skel_drain,
-  st_skel_stop
+  st_skel_stop,
+  st_skel_delete,
 };
 
 /*

@@ -126,7 +126,8 @@ static st_effect_t st_pad_effect = {
   st_pad_start,
   st_pad_flow,
   st_pad_drain,
-  st_pad_stop
+  st_pad_stop,
+st_effect_nothing
 };
 
 const st_effect_t *st_pad_effect_fn(void)

@@ -204,7 +204,8 @@ static st_effect_t st_dcshift_effect = {
    st_dcshift_start,
    st_dcshift_flow,
    st_effect_nothing_drain,
-   st_dcshift_stop
+   st_dcshift_stop,
+st_effect_nothing
 };
 
 const st_effect_t *st_dcshift_effect_fn(void)

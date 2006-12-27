@@ -1443,9 +1443,11 @@ static void stop_effects(void)
     st_size_t clippedCount;
     (*efftab[e].h->stop)(&efftab[e]);
     clippedCount = efftab[e].clippedCount;
+    (*efftab[e].h->delete)(&efftab[e]);
     if (efftabR[e].name) {
-      (* efftabR[e].h->stop)(&efftabR[e]);
+      (*efftabR[e].h->stop)(&efftabR[e]);
       clippedCount += efftab[e].clippedCount;
+      (*efftabR[e].h->delete)(&efftabR[e]);
     }
     if (clippedCount != 0)
       st_warn("%s clipped %u samples; decrease volume?", efftab[e].name,

@@ -664,7 +664,8 @@ static st_effect_t st_silence_effect = {
   st_silence_start,
   st_silence_flow,
   st_silence_drain,
-  st_silence_stop
+  st_silence_stop,
+st_effect_nothing
 };
 
 const st_effect_t *st_silence_effect_fn(void)

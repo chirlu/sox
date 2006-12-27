@@ -174,7 +174,8 @@ static st_effect_t st_earwax_effect = {
   st_earwax_start,
   st_earwax_flow,
   st_earwax_drain,
-  st_earwax_stop
+  st_earwax_stop,
+st_effect_nothing
 };
 
 const st_effect_t *st_earwax_effect_fn(void)

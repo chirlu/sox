@@ -584,7 +584,8 @@ static st_effect_t st_pitch_effect = {
   st_pitch_start,
   st_pitch_flow,
   st_pitch_drain,
-  st_pitch_stop
+  st_pitch_stop,
+st_effect_nothing
 };
 
 const st_effect_t *st_pitch_effect_fn(void)

@@ -139,7 +139,8 @@ static st_effect_t st_reverse_effect = {
   st_reverse_start,
   st_reverse_flow,
   st_reverse_drain,
-  st_reverse_stop
+  st_reverse_stop,
+st_effect_nothing
 };
 
 const st_effect_t *st_reverse_effect_fn(void)

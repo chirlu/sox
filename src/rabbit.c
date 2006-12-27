@@ -199,7 +199,8 @@ static st_effect_t st_rabbit_effect = {
   st_rabbit_start,
   st_rabbit_flow,
   st_rabbit_drain,
-  st_rabbit_stop
+  st_rabbit_stop,
+st_effect_nothing
 };
 
 const st_effect_t *st_rabbit_effect_fn(void)
