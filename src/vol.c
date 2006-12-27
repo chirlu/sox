@@ -93,19 +93,15 @@ static int st_vol_start(eff_t effp)
 {
     vol_t vol = (vol_t) effp->priv;
     
-    if (vol->gain == 1)
-      return ST_EFF_NULL;
-
-    if (effp->outinfo.channels != effp->ininfo.channels)
-    {
-        st_warn("VOL cannot handle different channels (in=%d, out=%d)"
+    if (effp->outinfo.channels != effp->ininfo.channels) {
+        st_fail("vol cannot handle different channels (in %d, out %d)"
              " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
+        return ST_EOF;
     }
 
-    if (effp->outinfo.rate != effp->ininfo.rate)
-    {
-        st_fail("VOL cannot handle different rates (in=%ld, out=%ld)"
-             " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
+    if (effp->outinfo.rate != effp->ininfo.rate) {
+        st_fail("vol cannot handle different rates (in %ld, out %ld)"
+             " use resample", effp->ininfo.rate, effp->outinfo.rate);
         return ST_EOF;
     }
 
@@ -157,9 +153,7 @@ static int st_vol_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                             sample = ST_SAMPLE_MIN;
                         vol->limited++;
                 } else
-                {
                         sample = gain * sample;
-                }
 
                 ST_SAMPLE_CLIP_COUNT(sample, effp->clippedCount);
                *obuf++ = sample;
