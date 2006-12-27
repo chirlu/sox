@@ -50,10 +50,19 @@ assert_static(sizeof(struct lua) <= ST_MAX_EFFECT_PRIVSIZE,
               /* else */ lua_PRIVSIZE_too_big);
 
 
+static void *lua_alloc(void *ud UNUSED, void *ptr, size_t osize UNUSED, size_t nsize)
+{
+  if (nsize == 0) {
+    free(ptr);
+    return NULL;
+  } else
+    return xrealloc(ptr, nsize);
+}
+
 /*
  * Process command-line options
  */
-static int st_lua_getopts(eff_t effp, int n, char **argv) 
+static int lua_getopts(eff_t effp, int n, char **argv) 
 {
   lua_t lua = (lua_t)effp->priv;
   int i;
@@ -62,6 +71,10 @@ static int st_lua_getopts(eff_t effp, int n, char **argv)
     st_fail(effp->h->usage);
     return ST_EOF;
   }
+
+  /* Since the allocator quits if it fails, this should always
+     succeed if it returns. */
+  assert((lua->L = lua_newstate(lua_alloc, NULL)));
 
   /* Collect options into global arg table */
   lua_createtable(lua->L, n - 1, 0);
@@ -73,15 +86,6 @@ static int st_lua_getopts(eff_t effp, int n, char **argv)
 
   lua->file = xstrdup(argv[0]);
   return ST_SUCCESS;
-}
-
-static void *lua_alloc(void *ud UNUSED, void *ptr, size_t osize UNUSED, size_t nsize)
-{
-  if (nsize == 0) {
-    free(ptr);
-    return NULL;
-  } else
-    return xrealloc(ptr, nsize);
 }
 
 
@@ -169,16 +173,12 @@ static const luaL_reg meta[] = {
  * Prepare processing.
  * Do all initializations.
  */
-static int st_lua_start(eff_t effp)
+static int lua_start(eff_t effp)
 {
   lua_t lua = (lua_t)effp->priv;
   int ret;
 
   lua->data = NULL;
-
-  /* Since the allocator quits if it fails, this should always
-     succeed if it returns. */
-  assert((lua->L = lua_newstate(lua_alloc, NULL)));
 
   /* TODO: If concerned about security, lock down here: in particular,
      don't open the io library. */
@@ -202,7 +202,7 @@ static int st_lua_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int st_lua_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf UNUSED, 
+static int lua_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf UNUSED, 
                        st_size_t *isamp, st_size_t *osamp)
 {
   lua_t lua = (lua_t)effp->priv;
@@ -220,7 +220,7 @@ static int st_lua_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf UN
  * Drain out remaining samples if the effect generates any.
  * If there's nothing to do, use st_effect_nothing_drain instead.
  */
-static int st_lua_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int lua_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
   lua_t lua = (lua_t)effp->priv;
   int ret;
@@ -245,11 +245,9 @@ static int st_lua_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 }
 
 /*
- * Do anything required when you stop reading samples.  
- *      (free allocated memory, etc.)
- * If there's nothing to do, use st_effect_nothing instead.
+ * Clean up state.
  */
-static int st_lua_stop(eff_t effp)
+static int lua_delete(eff_t effp)
 {
   lua_t lua = (lua_t)effp->priv;
 
@@ -268,12 +266,12 @@ static st_effect_t st_lua_effect = {
   "lua",
   "Usage: lua script [options]",
   ST_EFF_MCHAN,
-  st_lua_getopts,
-  st_lua_start,
-  st_lua_flow,
-  st_lua_drain,
-  st_lua_stop,
-  st_effect_nothing
+  lua_getopts,
+  lua_start,
+  lua_flow,
+  lua_drain,
+  st_effect_nothing,
+  lua_delete
 };
 
 /*
