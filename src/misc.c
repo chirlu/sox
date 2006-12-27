@@ -438,33 +438,49 @@ st_size_t st_format_nothing_write_io(ft_t ft UNUSED, const st_sample_t *buf UNUS
 int st_format_nothing_seek(ft_t ft UNUSED, st_size_t offset UNUSED) { st_fail_errno(ft, ST_ENOTSUP, "operation not supported"); return(ST_EOF); }
 
 /* dummy effect routine for do-nothing functions */
-int st_effect_nothing(eff_t effp UNUSED) { return(ST_SUCCESS); }
+int st_effect_nothing(eff_t effp UNUSED)
+{
+  return ST_SUCCESS;
+}
+
+int st_effect_nothing_flow(eff_t effp UNUSED, st_sample_t *ibuf UNUSED, st_sample_t *obuf UNUSED, st_size_t *isamp, st_size_t *osamp)
+{
+  /* Pass through samples verbatim */
+  *isamp = *osamp = min(*isamp, *osamp);
+  memcpy(obuf, ibuf, *isamp * sizeof(st_sample_t));
+  return ST_SUCCESS;
+}
+
 int st_effect_nothing_drain(eff_t effp UNUSED, st_sample_t *obuf UNUSED, st_size_t *osamp)
-  { /* Inform no more samples to drain */ *osamp = 0; return(ST_EOF); }
+{
+  /* Inform no more samples to drain */
+  *osamp = 0;
+  return ST_EOF;
+}
 
 int st_effect_nothing_getopts(eff_t effp, int n, char **argv UNUSED)
 {
-     if (n) {
-          st_fail(effp->h->usage);
-          return (ST_EOF);
-     }
-     return (ST_SUCCESS);
+  if (n) {
+    st_fail(effp->h->usage);
+    return (ST_EOF);
+  }
+  return (ST_SUCCESS);
 }
 
 
 /* here for linear interp.  might be useful for other things */
 st_sample_t st_gcd(st_sample_t a, st_sample_t b)
 {
-        if (b == 0)
-                return a;
-        else
-                return st_gcd(b, a % b);
+  if (b == 0)
+    return a;
+  else
+    return st_gcd(b, a % b);
 }
 
 st_sample_t st_lcm(st_sample_t a, st_sample_t b)
 {
-    /* parenthesize this way to avoid st_sample_t overflow in product term */
-    return a * (b / st_gcd(a, b));
+  /* parenthesize this way to avoid st_sample_t overflow in product term */
+  return a * (b / st_gcd(a, b));
 }
 
 #ifndef HAVE_STRCASECMP

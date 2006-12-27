@@ -37,10 +37,17 @@ static int getopts(eff_t effp, int n, char * * argv)
   return ST_EOF;
 }
 
-st_effect_t const * st_speed_effect_fn(void)
+st_effect_t const *st_speed_effect_fn(void)
 {
   static st_effect_t driver = {
-    "speed", "Usage: speed factor[c]", ST_EFF_NULL,
-    getopts, NULL, NULL, NULL, NULL, NULL};
+    "speed", "Usage: speed factor[c]",
+    ST_EFF_MCHAN,
+    getopts,
+    st_effect_nothing,
+    st_effect_nothing_flow,
+    st_effect_nothing_drain,
+    st_effect_nothing,
+    st_effect_nothing
+  };
   return &driver;
 }

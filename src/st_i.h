@@ -247,6 +247,7 @@ st_size_t st_format_nothing_read_io(ft_t ft, st_sample_t *buf, st_size_t len);
 st_size_t st_format_nothing_write_io(ft_t ft, const st_sample_t *buf, st_size_t len);
 int st_format_nothing_seek(ft_t ft, st_size_t offset);
 int st_effect_nothing(eff_t effp);
+int st_effect_nothing_flow(eff_t effp, st_sample_t *ibuf, st_sample_t *obuf, st_size_t *isamp, st_size_t *osamp);
 int st_effect_nothing_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_effect_nothing_getopts(eff_t effp, int n, char **argv UNUSED);
 
