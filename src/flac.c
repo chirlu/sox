@@ -178,28 +178,20 @@ static st_size_t st_format_read(ft_t const format, st_sample_t * sampleBuffer, s
   while (!decoder->eof && actual < requested)
   {
     if (decoder->wide_sample_number >= decoder->number_of_wide_samples)
-    {
       FLAC__file_decoder_process_single(decoder->flac);
-    }
     if (decoder->wide_sample_number >= decoder->number_of_wide_samples)
-    {
       decoder->eof = true;
-    }
-    else
-    {
+    else {
       unsigned channel;
 
-      for (channel = 0; channel < decoder->channels; ++channel)
-      {
+      for (channel = 0; channel < decoder->channels; channel++, actual++) {
         FLAC__int32 d = decoder->decoded_wide_samples[channel][decoder->wide_sample_number];
-        switch (decoder->bits_per_sample)
-        {
-          case  8: *sampleBuffer++ = ST_SIGNED_BYTE_TO_SAMPLE(d,); break;
-          case 16: *sampleBuffer++ = ST_SIGNED_WORD_TO_SAMPLE(d,); break;
-          case 24: *sampleBuffer++ = ST_SIGNED_24BIT_TO_SAMPLE(d,); break;
-          case 32: *sampleBuffer++ = ST_SIGNED_DWORD_TO_SAMPLE(d,); break;
+        switch (decoder->bits_per_sample) {
+        case  8: *sampleBuffer++ = ST_SIGNED_BYTE_TO_SAMPLE(d,); break;
+        case 16: *sampleBuffer++ = ST_SIGNED_WORD_TO_SAMPLE(d,); break;
+        case 24: *sampleBuffer++ = ST_SIGNED_24BIT_TO_SAMPLE(d,); break;
+        case 32: *sampleBuffer++ = ST_SIGNED_DWORD_TO_SAMPLE(d,); break;
         }
-        ++actual;
       }
       ++decoder->wide_sample_number;
     }
