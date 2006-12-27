@@ -2,9 +2,9 @@
  * (c) march/april 2000 Fabien COELHO <fabien@coelho.net> for sox.
  *
  * Basic time stretcher.
- * cross fade samples so as to go slower of faster.
+ * cross fade samples so as to go slower or faster.
  *
- * The automaton is based on 6 parameters:
+ * The filter is based on 6 parameters:
  * - stretch factor f
  * - window size w
  * - input step i
@@ -43,117 +43,108 @@ typedef enum { input_state, output_state } stretch_status_t;
 
 typedef struct 
 {
-    /* options
-     * Q: maybe shift could be allowed > 1.0 with factor < 1.0 ???
-     */
-    double factor;   /* strech factor. 1.0 means copy. */
-    double window;   /* window in ms */
-    st_fading_t fade;       /* type of fading */
-    double shift;    /* shift ratio wrt window. <1.0 */
-    double fading;   /* fading ratio wrt window. <0.5 */
+  /* options
+   * FIXME: maybe shift could be allowed > 1.0 with factor < 1.0 ???
+   */
+  double factor;   /* strech factor. 1.0 means copy. */
+  double window;   /* window in ms */
+  st_fading_t fade;       /* type of fading */
+  double shift;    /* shift ratio wrt window. <1.0 */
+  double fading;   /* fading ratio wrt window. <0.5 */
 
-    /* internal stuff 
-     */
-    stretch_status_t state; /* automaton status */
+  /* internal stuff */
+  stretch_status_t state; /* automaton status */
 
-    st_size_t size;         /* buffer size */
-    st_size_t index;        /* next available element */
-    st_sample_t *ibuf;      /* input buffer */
-    st_size_t ishift;       /* input shift */
-
-    st_size_t oindex;       /* next evailable element */
-    double * obuf;   /* output buffer */
-    st_size_t oshift;       /* output shift */
-
-    st_size_t fsize;        /* fading size */
-    double * fbuf;   /* fading, 1.0 -> 0.0 */
-
-} * stretch_t;
+  st_size_t size;         /* buffer size */
+  st_size_t index;        /* next available element */
+  st_sample_t *ibuf;      /* input buffer */
+  st_size_t ishift;       /* input shift */
+  
+  st_size_t oindex;       /* next evailable element */
+  double * obuf;   /* output buffer */
+  st_size_t oshift;       /* output shift */
+  
+  st_size_t fsize;        /* fading size */
+  double * fbuf;   /* fading, 1.0 -> 0.0 */
+  
+} *stretch_t;
 
 /*
  * Process options
  */
 static int st_stretch_getopts(eff_t effp, int n, char **argv) 
 {
-    char usage[1024];
-    stretch_t stretch = (stretch_t) effp->priv; 
+  char usage[1024];
+  stretch_t stretch = (stretch_t) effp->priv; 
     
-    /* default options */
-    stretch->factor = 1.0; /* default is no change */
-    stretch->window = DEFAULT_STRETCH_WINDOW;
-    stretch->fade   = st_linear_fading;
+  /* default options */
+  stretch->factor = 1.0; /* default is no change */
+  stretch->window = DEFAULT_STRETCH_WINDOW;
+  stretch->fade = st_linear_fading;
 
-    if (n>0 && !sscanf(argv[0], "%lf", &stretch->factor))
-    {
-        sprintf (usage, "%s\n\terror while parsing factor", st_stretch_effect.usage);
-        st_fail(usage);
-        return ST_EOF;
+  if (n > 0 && !sscanf(argv[0], "%lf", &stretch->factor)) {
+    sprintf(usage, "%s\n\terror while parsing factor", st_stretch_effect.usage);
+    st_fail(usage);
+    return ST_EOF;
+  }
+
+  if (n > 1 && !sscanf(argv[1], "%lf", &stretch->window)) {
+    sprintf(usage, "%s\n\terror while parsing window size", st_stretch_effect.usage);
+    st_fail(usage);
+    return ST_EOF;
+  }
+
+  if (n > 2) {
+    switch (argv[2][0]) {
+    case 'l':
+    case 'L':
+      stretch->fade = st_linear_fading;
+      break;
+    default:
+      sprintf (usage, "%s\n\terror while parsing fade type", st_stretch_effect.usage);
+      st_fail(usage);
+      return ST_EOF;
     }
+  }
 
-    if (n>1 && !sscanf(argv[1], "%lf", &stretch->window))
-    {
-        sprintf (usage, "%s\n\terror while parsing window size", st_stretch_effect.usage);
-        st_fail(usage);
-        return ST_EOF;
-    }
-
-    if (n>2) 
-    {
-        switch (argv[2][0])
-        {
-        case 'l':
-        case 'L':
-            stretch->fade = st_linear_fading;
-            break;
-        default:
-            sprintf (usage, "%s\n\terror while parsing fade type", st_stretch_effect.usage);
-            st_fail(usage);
-            return ST_EOF;
-        }
-    }
-
-    /* default shift depends whether we go slower or faster */
-    stretch->shift = (stretch->factor <= 1.0) ?
-        DEFAULT_FAST_SHIFT_RATIO: DEFAULT_SLOW_SHIFT_RATIO;
+  /* default shift depends whether we go slower or faster */
+  stretch->shift = (stretch->factor <= 1.0) ?
+    DEFAULT_FAST_SHIFT_RATIO: DEFAULT_SLOW_SHIFT_RATIO;
  
-    if (n>3 && !sscanf(argv[3], "%lf", &stretch->shift))
-    {
-        sprintf (usage, "%s\n\terror while parsing shift ratio", st_stretch_effect.usage);
-        st_fail(usage);
-        return ST_EOF;
-    }
+  if (n > 3 && !sscanf(argv[3], "%lf", &stretch->shift)) {
+    sprintf (usage, "%s\n\terror while parsing shift ratio", st_stretch_effect.usage);
+    st_fail(usage);
+    return ST_EOF;
+  }
 
-    if (stretch->shift > 1.0 || stretch->shift <= 0.0)
-    {
-        sprintf (usage, "%s\n\terror with shift ratio value", st_stretch_effect.usage);
-        st_fail(usage);
-        return ST_EOF;
-    }
+  if (stretch->shift > 1.0 || stretch->shift <= 0.0) {
+    sprintf(usage, "%s\n\terror with shift ratio value", st_stretch_effect.usage);
+    st_fail(usage);
+    return ST_EOF;
+  }
 
-    /* default fading stuff... 
-       it makes sense for factor >= 0.5
-    */
-    if (stretch->factor<1.0)
-        stretch->fading = 1.0 - (stretch->factor*stretch->shift);
-    else
-        stretch->fading = 1.0 - stretch->shift;
-    if (stretch->fading > 0.5) stretch->fading = 0.5;
+  /* default fading stuff... 
+     it makes sense for factor >= 0.5 */
+  if (stretch->factor < 1.0)
+    stretch->fading = 1.0 - (stretch->factor * stretch->shift);
+  else
+    stretch->fading = 1.0 - stretch->shift;
+  if (stretch->fading > 0.5)
+    stretch->fading = 0.5;
+  
+  if (n > 4 && !sscanf(argv[4], "%lf", &stretch->fading)) {
+    sprintf(usage, "%s\n\terror while parsing fading ratio", st_stretch_effect.usage);
+    st_fail(usage);
+    return ST_EOF;
+  }
 
-    if (n>4 && !sscanf(argv[4], "%lf", &stretch->fading))
-    {
-        sprintf (usage, "%s\n\terror while parsing fading ratio", st_stretch_effect.usage);
-        st_fail(usage);
-        return ST_EOF;
-    }
-
-    if (stretch->fading > 0.5 || stretch->fading < 0.0)
-    {
-        sprintf (usage, "%s\n\terror with fading ratio value", st_stretch_effect.usage);
-        st_fail(usage);
-        return ST_EOF;
-    }
-
-    return ST_SUCCESS;
+  if (stretch->fading > 0.5 || stretch->fading < 0.0) {
+    sprintf(usage, "%s\n\terror with fading ratio value", st_stretch_effect.usage);
+    st_fail(usage);
+    return ST_EOF;
+  }
+  
+  return ST_SUCCESS;
 }
 
 /*
@@ -161,100 +152,90 @@ static int st_stretch_getopts(eff_t effp, int n, char **argv)
  */
 static int st_stretch_start(eff_t effp)
 {
-    stretch_t stretch = (stretch_t) effp->priv;
-    st_size_t i;
+  stretch_t stretch = (stretch_t)effp->priv;
+  st_size_t i;
 
-    if (stretch->factor == 1)
-      return ST_EFF_NULL;
+  /* FIXME: not necessary. taken care by effect processing? */
+  if (effp->outinfo.channels != effp->ininfo.channels) {
+    st_fail("stretch cannot handle different channels (in=%d, out=%d)"
+            " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
+    return ST_EOF;
+  }
 
-    /* not necessary. taken care by effect processing? */
-    if (effp->outinfo.channels != effp->ininfo.channels)
-    {
-        st_fail("STRETCH cannot handle different channels (in=%d, out=%d)"
-             " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
-        return ST_EOF;
-    }
+  if (effp->outinfo.rate != effp->ininfo.rate) {
+    st_fail("stretch cannot handle different rates (in=%ld, out=%ld)"
+            " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
+    return ST_EOF;
+  }
 
-    if (effp->outinfo.rate != effp->ininfo.rate)
-    {
-        st_fail("STRETCH cannot handle different rates (in=%ld, out=%ld)"
-             " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
-        return ST_EOF;
-    }
+  stretch->state = input_state;
 
-    stretch->state = input_state;
+  stretch->size = (int)(effp->outinfo.rate * 0.001 * stretch->window);
+  /* start in the middle of an input to avoid initial fading... */
+  stretch->index = stretch->size / 2;
+  stretch->ibuf = (st_sample_t *)xmalloc(stretch->size * sizeof(st_sample_t));
 
-    stretch->size = (int)(effp->outinfo.rate * 0.001 * stretch->window);
-    /* start in the middle of an input to avoid initial fading... */
-    stretch->index = stretch->size/2;
-    stretch->ibuf  = (st_sample_t *) xmalloc(stretch->size * sizeof(st_sample_t));
+  /* the shift ratio deal with the longest of ishift/oshift
+     hence ishift<=size and oshift<=size. */
+  if (stretch->factor < 1.0) {
+    stretch->ishift = stretch->shift * stretch->size;
+    stretch->oshift = stretch->factor * stretch->ishift;
+  } else {
+    stretch->oshift = stretch->shift * stretch->size;
+    stretch->ishift = stretch->oshift / stretch->factor;
+  }
+  assert(stretch->ishift <= stretch->size);
+  assert(stretch->oshift <= stretch->size);
 
-    /* the shift ratio deal with the longest of ishift/oshift
-       hence ishift<=size and oshift<=size.
-     */
-    if (stretch->factor < 1.0) {
-        stretch->ishift = stretch->shift * stretch->size;
-        stretch->oshift = stretch->factor * stretch->ishift;
-    } else {
-        stretch->oshift = stretch->shift * stretch->size;
-        stretch->ishift = stretch->oshift / stretch->factor;
-    }
-    assert(stretch->ishift <= stretch->size);
-    assert(stretch->oshift <= stretch->size);
-
-    stretch->oindex = stretch->index; /* start as synchronized */
-    stretch->obuf = (double *)xmalloc(stretch->size * sizeof(double));
-    stretch->fsize = (int) (stretch->fading * stretch->size);
-    stretch->fbuf = (double *)xmalloc(stretch->fsize * sizeof(double));
+  stretch->oindex = stretch->index; /* start as synchronized */
+  stretch->obuf = (double *)xmalloc(stretch->size * sizeof(double));
+  stretch->fsize = (int)(stretch->fading * stretch->size);
+  stretch->fbuf = (double *)xmalloc(stretch->fsize * sizeof(double));
         
-    /* initialize buffers
-     */
-    for (i=0; i<stretch->size; i++)
-        stretch->ibuf[i] = 0;
+  /* initialize buffers */
+  for (i = 0; i<stretch->size; i++)
+    stretch->ibuf[i] = 0;
 
-    for (i=0; i<stretch->size; i++)
-        stretch->obuf[i] = 0.0;
+  for (i = 0; i<stretch->size; i++)
+    stretch->obuf[i] = 0.0;
 
-    if (stretch->fsize>1)
-    {
-        register double slope = 1.0 / (stretch->fsize - 1);
-        
-        stretch->fbuf[0] = 1.0;
-        for (i=1; i<stretch->fsize-1; i++)
-            stretch->fbuf[i] = slope * (stretch->fsize-i-1);
-        stretch->fbuf[stretch->fsize-1] = 0.0;
-    } else if (stretch->fsize==1)
-        stretch->fbuf[0] = 1.0;
+  if (stretch->fsize>1) {
+    double slope = 1.0 / (stretch->fsize - 1);
+    stretch->fbuf[0] = 1.0;
+    for (i = 1; i < stretch->fsize - 1; i++)
+      stretch->fbuf[i] = slope * (stretch->fsize - i - 1);
+    stretch->fbuf[stretch->fsize - 1] = 0.0;
+  } else if (stretch->fsize == 1)
+    stretch->fbuf[0] = 1.0;
 
-    st_debug("start: (f=%.2f w=%.2f r=%.2f f=%.2f)"
-             " st=%d s=%d ii=%d is=%d oi=%d os=%d fs=%d\n",
-             stretch->factor, stretch->window, stretch->shift, stretch->fading,
-             stretch->state, stretch->size, stretch->index, stretch->ishift,
-             stretch->oindex, stretch->oshift, stretch->fsize);
+  st_debug("start: (f=%.2f w=%.2f r=%.2f f=%.2f)"
+           " st=%d s=%d ii=%d is=%d oi=%d os=%d fs=%d\n",
+           stretch->factor, stretch->window, stretch->shift, stretch->fading,
+           stretch->state, stretch->size, stretch->index, stretch->ishift,
+           stretch->oindex, stretch->oshift, stretch->fsize);
 
-    return ST_SUCCESS;
+  return ST_SUCCESS;
 }
 
-/* accumulates input ibuf to output obuf with fading fbuf
- */
+/* accumulates input ibuf to output obuf with fading fbuf */
 static void combine(stretch_t stretch)
 {
-    register int i, size, fsize;
+  int i, size, fsize;
 
-    size = stretch->size;
-    fsize = stretch->fsize;
+  size = stretch->size;
+  fsize = stretch->fsize;
 
-    /* fade in */
-    for (i=0; i<fsize; i++)
-        stretch->obuf[i] += stretch->fbuf[fsize-i-1]*stretch->ibuf[i];
+  /* fade in */
+  for (i = 0; i < fsize; i++)
+    stretch->obuf[i] += stretch->fbuf[fsize - i - 1] * stretch->ibuf[i];
 
-    /* steady state */
-    for (; i<size-fsize; i++)
-        stretch->obuf[i] += stretch->ibuf[i];
+  /* steady state */
+  for (; i < size - fsize; i++)
+    stretch->obuf[i] += stretch->ibuf[i];
 
-    /* fade out */
-    for (; i<size; i++)
-        stretch->obuf[i] += stretch->fbuf[i-size+fsize]*stretch->ibuf[i];
+  /* fade out */
+  for (; i<size; i++)
+    stretch->obuf[i] += stretch->fbuf[i - size + fsize] * stretch->ibuf[i];
 }
 
 /*
@@ -263,73 +244,63 @@ static void combine(stretch_t stretch)
 static int st_stretch_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                     st_size_t *isamp, st_size_t *osamp)
 {
-    stretch_t stretch = (stretch_t) effp->priv;
-    st_size_t iindex, oindex;
-    st_size_t i;
+  stretch_t stretch = (stretch_t) effp->priv;
+  st_size_t iindex = 0, oindex = 0;
+  st_size_t i;
 
-    iindex = 0;
-    oindex = 0;
+  while (iindex<*isamp && oindex<*osamp) {
+    if (stretch->state == input_state) {
+      st_size_t tocopy = min(*isamp-iindex, 
+                             stretch->size-stretch->index);
 
-    while (iindex<*isamp && oindex<*osamp)
-    {
-        if (stretch->state == input_state)
-        {
-            st_size_t tocopy = min(*isamp-iindex, 
-                                   stretch->size-stretch->index);
+      memcpy(stretch->ibuf + stretch->index, ibuf + iindex, tocopy * sizeof(st_sample_t));
+      
+      iindex += tocopy;
+      stretch->index += tocopy;
 
-            memcpy(stretch->ibuf+stretch->index, 
-                   ibuf+iindex, tocopy*sizeof(st_sample_t));
+      if (stretch->index == stretch->size) {
+        /* compute */
+        combine(stretch);
 
-            iindex += tocopy;
-            stretch->index += tocopy; 
+        /* shift input */
+        for (i = 0; i + stretch->ishift < stretch->size; i++)
+          stretch->ibuf[i] = stretch->ibuf[i+stretch->ishift];
 
-            if (stretch->index == stretch->size)
-            {
-                /* compute */
-                combine(stretch);
-
-                /* shift input */
-                for (i=0; i+stretch->ishift<stretch->size; i++)
-                    stretch->ibuf[i] = stretch->ibuf[i+stretch->ishift];
-
-                stretch->index -= stretch->ishift;
-
-                /* switch to output state */
-                stretch->state = output_state;
-            }
-        }
-
-        if (stretch->state == output_state)
-        {
-            while (stretch->oindex<stretch->oshift && oindex<*osamp)
-            {
-                float f;
-                f = stretch->obuf[stretch->oindex++];
-                ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
-                obuf[oindex++] = f;
-            }
-
-            if (stretch->oindex >= stretch->oshift && oindex<*osamp)
-            {
-                stretch->oindex -= stretch->oshift;
-
-                /* shift internal output buffer */
-                for (i=0; i+stretch->oshift<stretch->size; i++)
-                    stretch->obuf[i] = stretch->obuf[i+stretch->oshift];
-
-                /* pad with 0 */
-                for (; i<stretch->size; i++)
-                    stretch->obuf[i] = 0.0;
-                    
-                stretch->state = input_state;
-            }
-        }
+        stretch->index -= stretch->ishift;
+        
+        /* switch to output state */
+        stretch->state = output_state;
+      }
     }
 
-    *isamp = iindex;
-    *osamp = oindex;
+    if (stretch->state == output_state) {
+      while (stretch->oindex < stretch->oshift && oindex < *osamp) {
+        float f;
+        f = stretch->obuf[stretch->oindex++];
+        ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
+        obuf[oindex++] = f;
+      }
 
-    return ST_SUCCESS;
+      if (stretch->oindex >= stretch->oshift && oindex<*osamp) {
+        stretch->oindex -= stretch->oshift;
+
+        /* shift internal output buffer */
+        for (i = 0; i + stretch->oshift < stretch->size; i++)
+          stretch->obuf[i] = stretch->obuf[i + stretch->oshift];
+
+        /* pad with 0 */
+        for (; i < stretch->size; i++)
+          stretch->obuf[i] = 0.0;
+                    
+        stretch->state = input_state;
+      }
+    }
+  }
+
+  *isamp = iindex;
+  *osamp = oindex;
+
+  return ST_SUCCESS;
 }
 
 
@@ -339,37 +310,31 @@ static int st_stretch_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obu
  */
 static int st_stretch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
-    stretch_t stretch = (stretch_t) effp->priv;
-    st_size_t i;
-    st_size_t oindex;
-
-    oindex = 0;
-
-    if (stretch->state == input_state)
-    {
-        for (i=stretch->index; i<stretch->size; i++)
-            stretch->ibuf[i] = 0;
-
-        combine(stretch);
-        
-        stretch->state = output_state;
-    }
-
-    for (; oindex<*osamp && stretch->oindex<stretch->index;)
-    {
-        float f;
-
-        f = stretch->obuf[stretch->oindex++];
-        ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
-        obuf[oindex++] = f;
-    }
+  stretch_t stretch = (stretch_t) effp->priv;
+  st_size_t i;
+  st_size_t oindex = 0;
+  
+  if (stretch->state == input_state) {
+    for (i=stretch->index; i<stretch->size; i++)
+      stretch->ibuf[i] = 0;
     
-    *osamp = oindex;
+    combine(stretch);
+    
+    stretch->state = output_state;
+  }
+  
+  while (oindex<*osamp && stretch->oindex<stretch->index) {
+    float f = stretch->obuf[stretch->oindex++];
+    ST_SAMPLE_CLIP_COUNT(f, effp->clippedCount);
+    obuf[oindex++] = f;
+  }
+    
+  *osamp = oindex;
 
-    if (stretch->oindex == stretch->index)
-        return ST_EOF;
-    else
-        return ST_SUCCESS;
+  if (stretch->oindex == stretch->index)
+    return ST_EOF;
+  else
+    return ST_SUCCESS;
 }
 
 
@@ -379,13 +344,13 @@ static int st_stretch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
  */
 static int st_stretch_stop(eff_t effp)
 {
-    stretch_t stretch = (stretch_t) effp->priv;
+  stretch_t stretch = (stretch_t) effp->priv;
 
-    free(stretch->ibuf);
-    free(stretch->obuf);
-    free(stretch->fbuf);
+  free(stretch->ibuf);
+  free(stretch->obuf);
+  free(stretch->fbuf);
 
-    return ST_SUCCESS;
+  return ST_SUCCESS;
 }
 
 static st_effect_t st_stretch_effect = {
@@ -404,5 +369,5 @@ static st_effect_t st_stretch_effect = {
 
 const st_effect_t *st_stretch_effect_fn(void)
 {
-    return &st_stretch_effect;
+  return &st_stretch_effect;
 }
