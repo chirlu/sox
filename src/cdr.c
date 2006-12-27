@@ -147,6 +147,7 @@ static int st_cdrstopwrite(ft_t ft)
 }
 
 static const char *cdrnames[] = {
+  "cdda",
   "cdr",
   NULL
 };

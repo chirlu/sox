@@ -384,8 +384,10 @@ contains a specific endian-ness identifier, or for an output file that
 is actually an audio device.
 .TP
 \fB\-X\fR, \fB\-\-reverse\-bits\fR
-Specified that the bit ordering should be reversed; available for use
-with few formats.
+Specifies that the bit ordering should be reversed; currently only used
+with the
+.B cvsd
+format.
 .TP
 \fB\-s\fR\^/\fB\-u\fR\^/\fB\-U\fR\^/\fB\-A\fR\^/\fB\-a\fR\^/\fB\-i\fR\^/\fB\-g\fR\^/\fB\-f\fR
 The audio data encoding is signed linear (2's complement),
@@ -508,14 +510,14 @@ Audio Visual Research.
 The AVR format is produced by a number of commercial packages
 on the Mac.
 .TP
-.B .cdr
-CD-R.  CD-R files are used in mastering music on Compact Disks.
-The audio data on a CD-R disk is a raw audio file
-with a format of stereo 16-bit signed samples at a 44.1kHz sample
-rate.  There is a special blocking/padding oddity at the end
-of the audio file, which is why it needs its own handler.
+\&\fB.cdda\fR, \fB.cdr\fR
+`Red Book' Compact Disc Digital Audio.
+CDDA has two audio channels formatted as 16-bit
+signed integers at a sample rate of 44.1kHz.  The number of (stereo)
+samples in each CDDA track is always a multiple of 588 which is why it
+needs its own handler.
 .TP
-.B .cvs
+\&\fB.cvsd\fR, \fB.cvs\fR
 Continuously Variable Slope Delta modulation.
 Used to compress speech audio for applications such as voice mail.
 This format can use the
@@ -551,8 +553,8 @@ SoX can decode native FLAC files (.flac) but not Ogg FLAC files (.ogg).
 below for information relating to support for Ogg
 Vorbis files.]
 .SP
-SoX has rudimentary support for writing FLAC files: it can encode to
-native FLAC using compression levels 0 to 8. 8 is the default
+SoX has basic support for writing FLAC files: it can encode to
+native FLAC using compression levels 0 to 8.  8 is the default
 compression level and gives the best (but slowest) compression;
 0 gives the least (but fastest) compression.  The compression
 level can be selected using the
