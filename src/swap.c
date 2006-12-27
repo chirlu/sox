@@ -122,11 +122,7 @@ static int st_swap_start(eff_t effp)
 
     }
 
-    for (i = 0; i < (int)effp->outinfo.channels; ++i)
-      if (swap->order[i] != i)
-        return ST_SUCCESS;
-
-    return ST_EFF_NULL;
+    return ST_SUCCESS;
 }
 
 /*
