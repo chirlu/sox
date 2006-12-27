@@ -135,13 +135,13 @@ static int st_txwstartread(ft_t ft)
 
     switch( sample_rate ) {
         case 1:
-            ft->info.rate = 33333;
+            ft->signal.rate = 33333;
             break;
         case 2:
-            ft->info.rate = 50000;
+            ft->signal.rate = 50000;
             break;
         case 3:
-            ft->info.rate = 16667;
+            ft->signal.rate = 16667;
             break;
         default:
             blewIt = 1;
@@ -149,32 +149,32 @@ static int st_txwstartread(ft_t ft)
                 case 0x06:
                     if ( (gunk[5] & 0xFE) == 0x52 ) {
                         blewIt = 0;
-                        ft->info.rate = 33333;
+                        ft->signal.rate = 33333;
                     }
                     break;
                 case 0x10:
                     if ( (gunk[5] & 0xFE) == 0x00 ) {
                         blewIt = 0;
-                        ft->info.rate = 50000;
+                        ft->signal.rate = 50000;
                     }
                     break;
                 case 0xF6:
                     if ( (gunk[5] & 0xFE) == 0x52 ) {
                         blewIt = 0;
-                        ft->info.rate = 16667;
+                        ft->signal.rate = 16667;
                     }
                     break;
             }
             if ( blewIt ) {
                 st_debug("Invalid sample rate identifier found %d", (int)sample_rate);
-                ft->info.rate = 33333;
+                ft->signal.rate = 33333;
             }
     }
-    st_debug("Sample rate = %ld",ft->info.rate);
+    st_debug("Sample rate = %ld",ft->signal.rate);
 
-    ft->info.channels = 1 ; /* not sure about stereo sample data yet ??? */
-    ft->info.size = ST_SIZE_WORD; /* this is close enough */
-    ft->info.encoding = ST_ENCODING_SIGN2;
+    ft->signal.channels = 1 ; /* not sure about stereo sample data yet ??? */
+    ft->signal.size = ST_SIZE_WORD; /* this is close enough */
+    ft->signal.encoding = ST_ENCODING_SIGN2;
 
     return(ST_SUCCESS);
 }
@@ -244,13 +244,13 @@ static int st_txwstartwrite(ft_t ft)
 
     memset(&WH, 0, sizeof(struct WaveHeader_));
 
-    if (ft->info.channels != 1)
+    if (ft->signal.channels != 1)
         st_report("tx16w is overriding output format to 1 channel.");
-    ft->info.channels = 1 ; /* not sure about stereo sample data yet ??? */
-    if (ft->info.size != ST_SIZE_WORD || ft->info.encoding != ST_ENCODING_SIGN2)
+    ft->signal.channels = 1 ; /* not sure about stereo sample data yet ??? */
+    if (ft->signal.size != ST_SIZE_WORD || ft->signal.encoding != ST_ENCODING_SIGN2)
         st_report("tx16w is overriding output format to size Signed Word format.");
-    ft->info.size = ST_SIZE_WORD; /* this is close enough */
-    ft->info.encoding = ST_ENCODING_SIGN2;
+    ft->signal.size = ST_SIZE_WORD; /* this is close enough */
+    ft->signal.encoding = ST_ENCODING_SIGN2;
 
     /* If you have to seek around the output file */
     if (! ft->seekable)
@@ -312,8 +312,8 @@ static int st_txwstopwrite(ft_t ft)
     WH.format = 0xC9;   /* loop off */
 
     /* the actual sample rate is not that important ! */  
-    if (ft->info.rate < 24000)      WH.sample_rate = 3;
-    else if (ft->info.rate < 41000) WH.sample_rate = 1;
+    if (ft->signal.rate < 24000)      WH.sample_rate = 3;
+    else if (ft->signal.rate < 41000) WH.sample_rate = 1;
     else                            WH.sample_rate = 2;
 
     if (tx16w_len >= TXMAXLEN) {

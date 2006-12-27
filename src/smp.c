@@ -174,9 +174,9 @@ static int st_smpseek(ft_t ft, st_size_t offset)
     int new_offset, channel_block, alignment;
     smp_t smp = (smp_t) ft->priv;
 
-    new_offset = offset * ft->info.size;
+    new_offset = offset * ft->signal.size;
     /* Make sure request aligns to a channel block (ie left+right) */
-    channel_block = ft->info.channels * ft->info.size;
+    channel_block = ft->signal.channels * ft->signal.size;
     alignment = new_offset % channel_block;
     /* Most common mistaken is to compute something like
      * "skip everthing upto and including this sample" so
@@ -189,7 +189,7 @@ static int st_smpseek(ft_t ft, st_size_t offset)
     ft->st_errno = st_seeki(ft, new_offset, SEEK_SET);
 
     if( ft->st_errno == ST_SUCCESS )
-        smp->NoOfSamps = ft->length - (new_offset / ft->info.size);
+        smp->NoOfSamps = ft->length - (new_offset / ft->signal.size);
 
     return(ft->st_errno);
 }
@@ -272,10 +272,10 @@ static int st_smpstartread(ft_t ft)
                 return(ST_EOF);
         }
 
-        ft->info.rate = (int) trailer.rate;
-        ft->info.size = ST_SIZE_WORD;
-        ft->info.encoding = ST_ENCODING_SIGN2;
-        ft->info.channels = 1;
+        ft->signal.rate = (int) trailer.rate;
+        ft->signal.size = ST_SIZE_WORD;
+        ft->signal.encoding = ST_ENCODING_SIGN2;
+        ft->signal.channels = 1;
         smp->dataStart = samplestart;
         ft->length = smp->NoOfSamps;
 
@@ -346,9 +346,9 @@ static int st_smpstartwrite(ft_t ft)
         }
 
         /* If your format specifies any of the following info. */
-        ft->info.size = ST_SIZE_WORD;
-        ft->info.encoding = ST_ENCODING_SIGN2;
-        ft->info.channels = 1;
+        ft->signal.size = ST_SIZE_WORD;
+        ft->signal.encoding = ST_ENCODING_SIGN2;
+        ft->signal.channels = 1;
 
         strcpy(header.Id, SVmagic);
         strcpy(header.version, SVvers);
@@ -389,7 +389,7 @@ static int st_smpstopwrite(ft_t ft)
         struct smptrailer trailer;
 
         /* Assign the trailer data */
-        settrailer(ft, &trailer, ft->info.rate);
+        settrailer(ft, &trailer, ft->signal.rate);
         writetrailer(ft, &trailer);
         if (st_seeki(ft, 112, 0) == -1)
         {

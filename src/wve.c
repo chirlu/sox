@@ -30,9 +30,9 @@ static int st_wveseek(ft_t ft, st_size_t offset)
     int new_offset, channel_block, alignment;
     wve_t wve = (wve_t ) ft->priv;
 
-    new_offset = offset * ft->info.size;
+    new_offset = offset * ft->signal.size;
     /* Make sure request aligns to a channel block (ie left+right) */
-    channel_block = ft->info.channels * ft->info.size;
+    channel_block = ft->signal.channels * ft->signal.size;
     alignment = new_offset % channel_block;
     /* Most common mistaken is to compute something like
      * "skip everthing upto and including this sample" so
@@ -79,7 +79,7 @@ static int st_wvestartread(ft_t ft)
                  * testing for endianess was standardized.  Leaving since
                  * it doesn't hurt.
                  */
-                ft->info.swap_bytes = !ft->info.swap_bytes;
+                ft->signal.swap_bytes = !ft->signal.swap_bytes;
                 st_debug("Found inverted PSION magic word.  Swapping bytes.");
         }
         else if (version == PSION_VERSION)
@@ -102,19 +102,19 @@ static int st_wvestartread(ft_t ft)
         (void)st_readw(ft, (unsigned short *)&trash16);
         (void)st_readw(ft, (unsigned short *)&trash16);
 
-        ft->info.encoding = ST_ENCODING_ALAW;
-        ft->info.size = ST_SIZE_BYTE;
+        ft->signal.encoding = ST_ENCODING_ALAW;
+        ft->signal.size = ST_SIZE_BYTE;
 
-        if (ft->info.rate != 0)
+        if (ft->signal.rate != 0)
             st_report("WVE must use 8000 sample rate.  Overriding");
-        ft->info.rate = 8000;
+        ft->signal.rate = 8000;
 
-        if (ft->info.channels != ST_ENCODING_UNKNOWN && ft->info.channels != 1)
+        if (ft->signal.channels != ST_ENCODING_UNKNOWN && ft->signal.channels != 1)
             st_report("WVE must only supports 1 channel.  Overriding");
-        ft->info.channels = 1;
+        ft->signal.channels = 1;
 
         p->dataStart = st_tell(ft);
-        ft->length = p->length/ft->info.size;
+        ft->length = p->length/ft->signal.size;
 
         return (ST_SUCCESS);
 }
@@ -142,15 +142,15 @@ static int st_wvestartwrite(ft_t ft)
         if (p->repeats == 0)
             p->repeats = 1;
 
-        if (ft->info.rate != 0)
+        if (ft->signal.rate != 0)
             st_report("WVE must use 8000 sample rate.  Overriding");
 
-        if (ft->info.channels != 0 && ft->info.channels != 1)
+        if (ft->signal.channels != 0 && ft->signal.channels != 1)
             st_report("WVE must only supports 1 channel.  Overriding");
 
-        ft->info.encoding = ST_ENCODING_ALAW;
-        ft->info.size = ST_SIZE_BYTE;
-        ft->info.rate = 8000;
+        ft->signal.encoding = ST_ENCODING_ALAW;
+        ft->signal.size = ST_SIZE_BYTE;
+        ft->signal.rate = 8000;
 
         wvewriteheader(ft);
         return ST_SUCCESS;
@@ -159,7 +159,7 @@ static int st_wvestartwrite(ft_t ft)
 static st_size_t st_wvewrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
         wve_t p = (wve_t ) ft->priv;
-        p->length += samp * ft->info.size;
+        p->length += samp * ft->signal.size;
         return st_rawwrite(ft, buf, samp);
 }
 

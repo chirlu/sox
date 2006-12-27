@@ -75,24 +75,24 @@ static st_sample_t ibufr[ST_BUFSIZ / 2];
 static st_sample_t obufl[ST_BUFSIZ / 2];
 static st_sample_t obufr[ST_BUFSIZ / 2];
 
-typedef struct file_options
+typedef struct file_info
 {
   char *filename;
   char *filetype;
-  st_signalinfo_t info;
+  st_signalinfo_t signal;
   double volume;
   char *comment;
   st_size_t volume_clips;
-} * file_options_t;
+} *file_info_t;
 
 /* local forward declarations */
-static bool doopts(file_options_t fo, int, char **);
+static bool doopts(file_info_t fo, int, char **);
 static void usage(char const *) NORET;
 static void usage_effect(char *) NORET;
 static void process(void);
 static void print_input_status(int input);
 static void update_status(void);
-static void volumechange(st_sample_t * buf, st_ssize_t len, file_options_t fo);
+static void volumechange(st_sample_t * buf, st_ssize_t len, file_info_t fo);
 static void parse_effects(int argc, char **argv);
 static void check_effects(void);
 static int start_effects(void);
@@ -106,7 +106,7 @@ static void stop_effects(void);
 #define MAX_FILES MAX_INPUT_FILES + 1
 
 /* Arrays tracking input and output files */
-static file_options_t file_opts[MAX_FILES];
+static file_info_t file_opts[MAX_FILES];
 static ft_t file_desc[MAX_FILES];
 static size_t file_count = 0;
 static size_t input_count = 0;
@@ -217,8 +217,8 @@ int main(int argc, char **argv)
   /* Loop over arguments and filenames, stop when an effect name is 
    * found. */
   while (optind < argc && !is_effect_name(argv[optind])) {
-    file_options_t fo;
-    struct file_options fo_none;
+    file_info_t fo;
+    struct file_info fo_none;
 
     if (file_count >= MAX_FILES) {
       st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
@@ -226,11 +226,11 @@ int main(int argc, char **argv)
     }
 
     fo = xcalloc(sizeof(*fo), 1);
-    fo->info.size = -1;
-    fo->info.encoding = ST_ENCODING_UNKNOWN;
-    fo->info.channels = 0;
-    fo->info.swap_bytes = ST_SWAP_DEFAULT;
-    fo->info.compression = HUGE_VAL;
+    fo->signal.size = -1;
+    fo->signal.encoding = ST_ENCODING_UNKNOWN;
+    fo->signal.channels = 0;
+    fo->signal.swap_bytes = ST_SWAP_DEFAULT;
+    fo->signal.compression = HUGE_VAL;
     fo->volume = HUGE_VAL;
     fo->volume_clips = 0;
     fo_none = *fo;
@@ -259,7 +259,7 @@ int main(int argc, char **argv)
 
   /* Check for misplaced input/output-specific options */
   for (i = 0; i < input_count; ++i) {
-    if (file_opts[i]->info.compression != HUGE_VAL)
+    if (file_opts[i]->signal.compression != HUGE_VAL)
       usage("A compression factor can only be given for an output file");
     if (file_opts[i]->comment != NULL)
       usage("A comment can only be given for an output file");
@@ -277,7 +277,7 @@ int main(int argc, char **argv)
       file_opts[i]->volume = 1.0 / input_count;
       
     file_desc[i] = st_open_read(file_opts[i]->filename,
-                                &file_opts[i]->info, 
+                                &file_opts[i]->signal, 
                                 file_opts[i]->filetype);
     if (!file_desc[i])
       /* st_open_read() will call st_warn for most errors.
@@ -380,7 +380,7 @@ static struct option long_options[] =
     {NULL, 0, NULL, 0}
   };
 
-static bool doopts(file_options_t fo, int argc, char **argv)
+static bool doopts(file_info_t fo, int argc, char **argv)
 {
   while (true) {
     int i;          /* Needed since scanf %u allows negative numbers :( */
@@ -404,11 +404,11 @@ static bool doopts(file_options_t fo, int argc, char **argv)
 
       case 2:
         if (!strcmp(optarg, "little"))
-          fo->info.swap_bytes = ST_IS_BIGENDIAN;
+          fo->signal.swap_bytes = ST_IS_BIGENDIAN;
         else if (!strcmp(optarg, "big"))
-          fo->info.swap_bytes = ST_IS_LITTLEENDIAN;
+          fo->signal.swap_bytes = ST_IS_LITTLEENDIAN;
         else if (!strcmp(optarg, "swap"))
-          fo->info.swap_bytes = true;
+          fo->signal.swap_bytes = true;
         break;
 
       case 3:
@@ -460,7 +460,7 @@ static bool doopts(file_options_t fo, int argc, char **argv)
         st_fail("Rate value '%s' is not a positive integer", optarg);
         exit(1);
       }
-      fo->info.rate = i;
+      fo->signal.rate = i;
       break;
 
     case 'v':
@@ -479,53 +479,53 @@ static bool doopts(file_options_t fo, int argc, char **argv)
         st_fail("Channels value '%s' is not a positive integer", optarg);
         exit(1);
       }
-      fo->info.channels = i;
+      fo->signal.channels = i;
       break;
 
     case 'C':
-      if (sscanf(optarg, "%lf %c", &fo->info.compression, &dummy) != 1) {
+      if (sscanf(optarg, "%lf %c", &fo->signal.compression, &dummy) != 1) {
         st_fail("Compression value '%s' is not a number", optarg);
         exit(1);
       }
       break;
 
-    case '1': case 'b': fo->info.size = ST_SIZE_BYTE;   break;
-    case '2': case 'w': fo->info.size = ST_SIZE_WORD;   break;
-    case '3':           fo->info.size = ST_SIZE_24BIT;  break;
-    case '4': case 'l': fo->info.size = ST_SIZE_DWORD;  break;
-    case '8': case 'd': fo->info.size = ST_SIZE_DDWORD; break;
+    case '1': case 'b': fo->signal.size = ST_SIZE_BYTE;   break;
+    case '2': case 'w': fo->signal.size = ST_SIZE_WORD;   break;
+    case '3':           fo->signal.size = ST_SIZE_24BIT;  break;
+    case '4': case 'l': fo->signal.size = ST_SIZE_DWORD;  break;
+    case '8': case 'd': fo->signal.size = ST_SIZE_DDWORD; break;
 
-    case 's': fo->info.encoding = ST_ENCODING_SIGN2;     break;
-    case 'u': fo->info.encoding = ST_ENCODING_UNSIGNED;  break;
-    case 'f': fo->info.encoding = ST_ENCODING_FLOAT;     break;
-    case 'a': fo->info.encoding = ST_ENCODING_ADPCM;     break;
-    case 'i': fo->info.encoding = ST_ENCODING_IMA_ADPCM; break;
-    case 'g': fo->info.encoding = ST_ENCODING_GSM;       break;
+    case 's': fo->signal.encoding = ST_ENCODING_SIGN2;     break;
+    case 'u': fo->signal.encoding = ST_ENCODING_UNSIGNED;  break;
+    case 'f': fo->signal.encoding = ST_ENCODING_FLOAT;     break;
+    case 'a': fo->signal.encoding = ST_ENCODING_ADPCM;     break;
+    case 'i': fo->signal.encoding = ST_ENCODING_IMA_ADPCM; break;
+    case 'g': fo->signal.encoding = ST_ENCODING_GSM;       break;
 
-    case 'U': fo->info.encoding = ST_ENCODING_ULAW;
-      if (fo->info.size == -1)
-        fo->info.size = ST_SIZE_BYTE;
+    case 'U': fo->signal.encoding = ST_ENCODING_ULAW;
+      if (fo->signal.size == -1)
+        fo->signal.size = ST_SIZE_BYTE;
       break;
 
-    case 'A': fo->info.encoding = ST_ENCODING_ALAW;
-      if (fo->info.size == -1)
-        fo->info.size = ST_SIZE_BYTE;
+    case 'A': fo->signal.encoding = ST_ENCODING_ALAW;
+      if (fo->signal.size == -1)
+        fo->signal.size = ST_SIZE_BYTE;
       break;
 
     case 'L':
-      fo->info.swap_bytes = ST_IS_BIGENDIAN;
+      fo->signal.swap_bytes = ST_IS_BIGENDIAN;
       break;
 
     case 'B':
-      fo->info.swap_bytes = ST_IS_LITTLEENDIAN;
+      fo->signal.swap_bytes = ST_IS_LITTLEENDIAN;
       break;
 
     case 'x':
-      fo->info.swap_bytes = ST_SWAP_YES;
+      fo->signal.swap_bytes = ST_SWAP_YES;
       break;
 
     case 'X':
-      fo->info.reverse_bits = true;
+      fo->signal.reverse_bits = true;
       break;
 
     case 'V':
@@ -554,9 +554,9 @@ static bool doopts(file_options_t fo, int argc, char **argv)
 
 static int compare_input(ft_t ft1, ft_t ft2)
 {
-  if (ft1->info.rate != ft2->info.rate)
+  if (ft1->signal.rate != ft2->signal.rate)
     return ST_EOF;
-  if (ft1->info.channels != ft2->info.channels)
+  if (ft1->signal.channels != ft2->signal.channels)
     return ST_EOF;
 
   return ST_SUCCESS;
@@ -575,11 +575,11 @@ static void process(void) {
 
   for (f = 0; f < input_count; f++) {
     st_report("Input file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s, volume %g",
-              file_desc[f]->filename, file_desc[f]->info.rate,
-              st_sizes_str[(unsigned char)file_desc[f]->info.size],
-              st_encodings_str[(unsigned char)file_desc[f]->info.encoding],
-              file_desc[f]->info.channels,
-              (file_desc[f]->info.channels > 1) ? "channels" : "channel",
+              file_desc[f]->filename, file_desc[f]->signal.rate,
+              st_sizes_str[(unsigned char)file_desc[f]->signal.size],
+              st_encodings_str[(unsigned char)file_desc[f]->signal.encoding],
+              file_desc[f]->signal.channels,
+              (file_desc[f]->signal.channels > 1) ? "channels" : "channel",
               file_opts[f]->volume == HUGE_VAL? 1 : file_opts[f]->volume);
     
     if (file_desc[f]->comment)
@@ -589,7 +589,7 @@ static void process(void) {
 
   for (f = 0; f < input_count; f++) {
     if (combine_method == SOX_MERGE)
-      file_desc[f]->info.channels *= input_count;
+      file_desc[f]->signal.channels *= input_count;
     if (f && compare_input(file_desc[0], file_desc[f]) != ST_SUCCESS) {
       st_fail("Input files must have the same rate and # of channels");
       exit(1);
@@ -600,23 +600,23 @@ static void process(void) {
     st_loopinfo_t loops[ST_MAX_NLOOPS];
     double factor;
     int i;
-    file_options_t options = file_opts[file_count-1];
-    char const * comment = NULL;
+    file_info_t info = file_opts[file_count - 1];
+    char const *comment = NULL;
     
-    if (options->info.rate == 0)
-      options->info.rate = file_desc[0]->info.rate;
-    if (options->info.size == -1)
-      options->info.size = file_desc[0]->info.size;
-    if (options->info.encoding == ST_ENCODING_UNKNOWN)
-      options->info.encoding = file_desc[0]->info.encoding;
-    if (options->info.channels == 0)
-      options->info.channels = file_desc[0]->info.channels;
+    if (info->signal.rate == 0)
+      info->signal.rate = file_desc[0]->signal.rate;
+    if (info->signal.size == -1)
+      info->signal.size = file_desc[0]->signal.size;
+    if (info->signal.encoding == ST_ENCODING_UNKNOWN)
+      info->signal.encoding = file_desc[0]->signal.encoding;
+    if (info->signal.channels == 0)
+      info->signal.channels = file_desc[0]->signal.channels;
     
-    if (options->comment != NULL) {
-      if (*options->comment == '\0')
-        free(options->comment);
+    if (info->comment != NULL) {
+      if (*info->comment == '\0')
+        free(info->comment);
       else
-        comment = options->comment;
+        comment = info->comment;
     } else
       comment = file_desc[0]->comment ? file_desc[0]->comment : "Processed by SoX";
     
@@ -626,8 +626,8 @@ static void process(void) {
      * FIXME: This doesn't work for multi-file processing or
      * effects that change file length.
      */
-    factor = (double) options->info.rate / (double) 
-      file_desc[0]->info.rate;
+    factor = (double) info->signal.rate / (double) 
+      file_desc[0]->signal.rate;
     for (i = 0; i < ST_MAX_NLOOPS; i++) {
       loops[i].start = file_desc[0]->loops[i].start * factor;
       loops[i].length = file_desc[0]->loops[i].length * factor;
@@ -637,9 +637,9 @@ static void process(void) {
     
     file_desc[file_count - 1] = 
       st_open_write(overwrite_permitted,
-                          options->filename,
-                          &options->info, 
-                          options->filetype,
+                          info->filename,
+                          &info->signal, 
+                          info->filetype,
                           comment,
                           &file_desc[0]->instr,
                           loops);
@@ -660,11 +660,11 @@ static void process(void) {
 
     st_report("Output file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
               file_desc[file_count-1]->filename, 
-              file_desc[file_count-1]->info.rate,
-              st_sizes_str[(unsigned char)file_desc[file_count-1]->info.size],
-              st_encodings_str[(unsigned char)file_desc[file_count-1]->info.encoding],
-              file_desc[file_count-1]->info.channels,
-              (file_desc[file_count-1]->info.channels > 1) ? "channels" : "channel");
+              file_desc[file_count-1]->signal.rate,
+              st_sizes_str[(unsigned char)file_desc[file_count-1]->signal.size],
+              st_encodings_str[(unsigned char)file_desc[file_count-1]->signal.encoding],
+              file_desc[file_count-1]->signal.channels,
+              (file_desc[file_count-1]->signal.channels > 1) ? "channels" : "channel");
     
     if (file_desc[file_count - 1]->comment)
       st_report("Output file: comment \"%s\"", 
@@ -673,7 +673,7 @@ static void process(void) {
   
   /* Adjust the input rate for the speed effect */
   for (f = 0; f < input_count; f++)
-    file_desc[f]->info.rate = file_desc[f]->info.rate * globalinfo.speed + .5;
+    file_desc[f]->signal.rate = file_desc[f]->signal.rate * globalinfo.speed + .5;
 
   /* build efftab */
   check_effects();
@@ -697,7 +697,7 @@ static void process(void) {
       
       if (combine_method == SOX_MERGE) {
         alloc_size /= input_count;
-        file_desc[f]->info.channels /= input_count;
+        file_desc[f]->signal.channels /= input_count;
       }
       ibuf[f] = (st_sample_t *)xmalloc(alloc_size);
       
@@ -949,8 +949,8 @@ static void check_effects(void)
         user_efftab[j] = user_efftab[j + 1];
     }
 
-  needrate = (file_desc[0]->info.rate != file_desc[file_count-1]->info.rate);
-  needchan = (file_desc[0]->info.channels != file_desc[file_count-1]->info.channels);
+  needrate = (file_desc[0]->signal.rate != file_desc[file_count-1]->signal.rate);
+  needchan = (file_desc[0]->signal.channels != file_desc[file_count-1]->signal.channels);
 
   for (i = 0; i < nuser_effects; i++) {
     if (user_efftab[i].h->flags & ST_EFF_CHAN)
@@ -975,7 +975,7 @@ static void check_effects(void)
    * after the avg effect.      
    */   
   if (needchan && !(haschan) &&
-      (file_desc[0]->info.channels > file_desc[file_count-1]->info.channels))
+      (file_desc[0]->signal.channels > file_desc[file_count-1]->signal.channels))
   { 
       /* Find effect and update initial pointers */
       st_geteffect(&efftab[neffects], "avg");
@@ -990,8 +990,8 @@ static void check_effects(void)
 
       /* Copy format info to effect table */
       effects_mask = st_updateeffect(&efftab[neffects], 
-                                     &file_desc[0]->info,
-                                     &file_desc[file_count-1]->info,
+                                     &file_desc[0]->signal,
+                                     &file_desc[file_count-1]->signal,
                                      effects_mask);
 
       neffects++;
@@ -1001,7 +1001,7 @@ static void check_effects(void)
    * after the resample effect. 
    */
   if (needrate && !(hasrate) &&
-      (file_desc[0]->info.rate > file_desc[file_count-1]->info.rate)) 
+      (file_desc[0]->signal.rate > file_desc[file_count-1]->signal.rate)) 
   {
       st_geteffect(&efftab[neffects], "resample");
 
@@ -1015,8 +1015,8 @@ static void check_effects(void)
 
       /* Copy format info to effect table */ 
       effects_mask = st_updateeffect(&efftab[neffects],
-                                     &file_desc[0]->info,
-                                     &file_desc[file_count-1]->info,
+                                     &file_desc[0]->signal,
+                                     &file_desc[file_count-1]->signal,
                                      effects_mask);
 
       /* Rate can't handle multiple channels so be sure and
@@ -1035,8 +1035,8 @@ static void check_effects(void)
 
     /* Copy format info to effect table */
     effects_mask = st_updateeffect(&efftab[neffects], 
-                                   &file_desc[0]->info,
-                                   &file_desc[file_count - 1]->info, 
+                                   &file_desc[0]->signal,
+                                   &file_desc[file_count - 1]->signal, 
                                    effects_mask);
     
     /* If this effect can't handle multiple channels then
@@ -1065,8 +1065,8 @@ static void check_effects(void)
 
     /* Copy format info to effect table */
     effects_mask = st_updateeffect(&efftab[neffects], 
-                                   &file_desc[0]->info,
-                                   &file_desc[file_count - 1]->info, 
+                                   &file_desc[0]->signal,
+                                   &file_desc[file_count - 1]->signal, 
                                    effects_mask);
 
     /* Rate can't handle multiple channels so be sure and
@@ -1091,8 +1091,8 @@ static void check_effects(void)
 
     /* Copy format info to effect table */
     effects_mask = st_updateeffect(&efftab[neffects], 
-                                   &file_desc[0]->info,
-                                   &file_desc[file_count - 1]->info, 
+                                   &file_desc[0]->signal,
+                                   &file_desc[file_count - 1]->signal, 
                                    effects_mask);
     
     neffects++;
@@ -1180,12 +1180,12 @@ static int flow_effect_out(void)
         }
         total += len;
       } while (total < efftab[neffects-1].olen);
-      output_samples += (total / file_desc[file_count - 1]->info.channels);
+      output_samples += (total / file_desc[file_count - 1]->signal.channels);
       efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
     } else {
       /* Make it look like everything was consumed */
       output_samples += (efftab[neffects-1].olen / 
-                         file_desc[file_count - 1]->info.channels);
+                         file_desc[file_count - 1]->signal.channels);
       efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
     }
 
@@ -1209,7 +1209,7 @@ static int flow_effect_out(void)
          * will cause stereo channels to be inversed.
          */
         if ((efftab[e].olen - efftab[e].odone) >= 
-            file_desc[file_count - 1]->info.channels)
+            file_desc[file_count - 1]->signal.channels)
           havedata = 1;
         else
           st_warn("Received buffer with incomplete amount of samples.");
@@ -1457,12 +1457,12 @@ static void print_input_status(int input)
 {
   fprintf(stderr, "\nInput Filename : %s\n", file_desc[input]->filename);
   fprintf(stderr, "Sample Size    : %s\n", 
-          st_size_bits_str[file_desc[input]->info.size]);
+          st_size_bits_str[file_desc[input]->signal.size]);
   fprintf(stderr, "Sample Encoding: %s\n", 
-          st_encodings_str[file_desc[input]->info.encoding]);
-  fprintf(stderr, "Channels       : %d\n", file_desc[input]->info.channels);
+          st_encodings_str[file_desc[input]->signal.encoding]);
+  fprintf(stderr, "Channels       : %d\n", file_desc[input]->signal.channels);
   fprintf(stderr, "Sample Rate    : %d\n",
-          (int)(file_desc[input]->info.rate / globalinfo.speed + 0.5));
+          (int)(file_desc[input]->signal.rate / globalinfo.speed + 0.5));
 
   if (file_desc[input]->comment && *file_desc[input]->comment)
     fprintf(stderr, "Comments       :\n%s\n", file_desc[input]->comment);
@@ -1481,8 +1481,8 @@ static void update_status(void)
   /* Currently, for all sox modes, all input files must have
    * the same sample rate.  So we can always just use the rate
    * of the first input file to compute time. */
-  read_time = (double)read_samples / (double)file_desc[0]->info.rate /
-    (double)file_desc[0]->info.channels;
+  read_time = (double)read_samples / (double)file_desc[0]->signal.rate /
+    (double)file_desc[0]->signal.channels;
 
   read_min = read_time / 60;
   read_sec = (double)read_time - 60.0f * (double)read_min;
@@ -1504,8 +1504,8 @@ static void update_status(void)
   }
 
   if (input_samples) {
-    in_time = (double)input_samples / (double)file_desc[0]->info.rate /
-      (double)file_desc[0]->info.channels;
+    in_time = (double)input_samples / (double)file_desc[0]->signal.rate /
+      (double)file_desc[0]->signal.channels;
     left_time = in_time - read_time;
     if (left_time < 0)
       left_time = 0;
@@ -1529,7 +1529,7 @@ static void update_status(void)
 }
 
 /* Adjust volume based on value specified by the -v option for this file. */
-static void volumechange(st_sample_t * buf, st_ssize_t len, file_options_t fo)
+static void volumechange(st_sample_t * buf, st_ssize_t len, file_info_t fo)
 {
   if (fo->volume != HUGE_VAL && fo->volume != 1)
     while (len--) {

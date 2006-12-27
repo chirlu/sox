@@ -71,7 +71,7 @@ int st_rawseek(ft_t ft, st_size_t offset)
 {
     st_size_t new_offset, channel_block, alignment;
 
-    switch(ft->info.size) {
+    switch(ft->signal.size) {
         case ST_SIZE_BYTE:
         case ST_SIZE_WORD:
         case ST_SIZE_24BIT:
@@ -83,9 +83,9 @@ int st_rawseek(ft_t ft, st_size_t offset)
             return ft->st_errno;
     }
 
-    new_offset = offset * ft->info.size;
+    new_offset = offset * ft->signal.size;
     /* Make sure request aligns to a channel block (ie left+right) */
-    channel_block = ft->info.channels * ft->info.size;
+    channel_block = ft->signal.channels * ft->signal.size;
     alignment = new_offset % channel_block;
     /* Most common mistaken is to compute something like
      * "skip everthing upto and including this sample" so
@@ -168,9 +168,9 @@ typedef st_size_t (ft_io_fun)(st_sample_t *buf, ft_t ft, st_size_t len, st_size_
 
 static ft_io_fun *check_format(ft_t ft, bool write)
 {
-    switch (ft->info.size) {
+    switch (ft->signal.size) {
     case ST_SIZE_BYTE:
-      switch (ft->info.encoding) {
+      switch (ft->signal.encoding) {
       case ST_ENCODING_SIGN2:
         return write ? st_sb_write_buf : st_sb_read_buf;
       case ST_ENCODING_UNSIGNED:
@@ -189,7 +189,7 @@ static ft_io_fun *check_format(ft_t ft, bool write)
       break;
       
     case ST_SIZE_WORD: 
-      switch (ft->info.encoding) {
+      switch (ft->signal.encoding) {
       case ST_ENCODING_SIGN2:
         return write ? st_sw_write_buf : st_sw_read_buf;
       case ST_ENCODING_UNSIGNED:
@@ -200,7 +200,7 @@ static ft_io_fun *check_format(ft_t ft, bool write)
       break;
 
     case ST_SIZE_24BIT:
-      switch (ft->info.encoding) {
+      switch (ft->signal.encoding) {
       case ST_ENCODING_SIGN2:
         return write ? st_s3_write_buf : st_s3_read_buf;
       case ST_ENCODING_UNSIGNED:
@@ -211,7 +211,7 @@ static ft_io_fun *check_format(ft_t ft, bool write)
       break;
       
     case ST_SIZE_DWORD:
-      switch (ft->info.encoding) {
+      switch (ft->signal.encoding) {
       case ST_ENCODING_SIGN2:
         return write ? st_dw_write_buf : st_dw_read_buf;
       case ST_ENCODING_UNSIGNED:
@@ -224,7 +224,7 @@ static ft_io_fun *check_format(ft_t ft, bool write)
       break;
       
     case ST_SIZE_DDWORD:
-      switch (ft->info.encoding) {
+      switch (ft->signal.encoding) {
       case ST_ENCODING_FLOAT:
         return write ? st_df_write_buf : st_df_read_buf;
       default:
@@ -283,8 +283,8 @@ int st_rawstopwrite(ft_t ft)
 #define STARTREAD(NAME,SIZE,STYLE) \
 static int NAME(ft_t ft) \
 { \
-        ft->info.size = SIZE; \
-        ft->info.encoding = STYLE; \
+        ft->signal.size = SIZE; \
+        ft->signal.encoding = STYLE; \
         rawdefaults(ft); \
         return st_rawstartread(ft); \
 }
@@ -292,8 +292,8 @@ static int NAME(ft_t ft) \
 #define STARTWRITE(NAME,SIZE,STYLE)\
 static int NAME(ft_t ft) \
 { \
-        ft->info.size = SIZE; \
-        ft->info.encoding = STYLE; \
+        ft->signal.size = SIZE; \
+        ft->signal.encoding = STYLE; \
         rawdefaults(ft); \
         return st_rawstartwrite(ft); \
 }
@@ -336,10 +336,10 @@ STARTWRITE(st_lastartwrite,ST_SIZE_BYTE,ST_ENCODING_INV_ALAW)
 
 void rawdefaults(ft_t ft)
 {
-        if (ft->info.rate == 0)
-                ft->info.rate = 8000;
-        if (ft->info.channels == 0)
-                ft->info.channels = 1;
+        if (ft->signal.rate == 0)
+                ft->signal.rate = 8000;
+        if (ft->signal.channels == 0)
+                ft->signal.channels = 1;
 }
 
 static const char *rawnames[] = {

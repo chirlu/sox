@@ -88,7 +88,7 @@ static unsigned short  ImaAdpcmReadBlock(ft_t ft)
         /* If it looks like a valid header is around then try and */
         /* work with partial blocks.  Specs say it should be null */
         /* padded but I guess this is better than trailing quiet. */
-        samplesThisBlock = ImaSamplesIn(0, ft->info.channels, bytesRead, 0);
+        samplesThisBlock = ImaSamplesIn(0, ft->signal.channels, bytesRead, 0);
         if (samplesThisBlock == 0) 
         {
             st_warn("Premature EOF on .wav input file");
@@ -100,7 +100,7 @@ static unsigned short  ImaAdpcmReadBlock(ft_t ft)
     
     /* For a full block, the following should be true: */
     /* wav->samplesPerBlock = blockAlign - 8byte header + 1 sample in header */
-    ImaBlockExpandI(ft->info.channels, wav->packet, wav->samples, samplesThisBlock);
+    ImaBlockExpandI(ft->signal.channels, wav->packet, wav->samples, samplesThisBlock);
     return samplesThisBlock;
 
 }
@@ -129,7 +129,7 @@ static unsigned short  AdpcmReadBlock(ft_t ft)
         /* If it looks like a valid header is around then try and */
         /* work with partial blocks.  Specs say it should be null */
         /* padded but I guess this is better than trailing quiet. */
-        samplesThisBlock = AdpcmSamplesIn(0, ft->info.channels, bytesRead, 0);
+        samplesThisBlock = AdpcmSamplesIn(0, ft->signal.channels, bytesRead, 0);
         if (samplesThisBlock == 0) 
         {
             st_warn("Premature EOF on .wav input file");
@@ -137,7 +137,7 @@ static unsigned short  AdpcmReadBlock(ft_t ft)
         }
     }
     
-    errmsg = AdpcmBlockExpandI(ft->info.channels, wav->nCoefs, wav->iCoefs, wav->packet, wav->samples, samplesThisBlock);
+    errmsg = AdpcmBlockExpandI(ft->signal.channels, wav->nCoefs, wav->iCoefs, wav->packet, wav->samples, samplesThisBlock);
 
     if (errmsg)
         st_warn((char*)errmsg);
@@ -155,7 +155,7 @@ static int xxxAdpcmWriteBlock(ft_t ft)
     int chans, ct;
     short *p;
 
-    chans = ft->info.channels;
+    chans = ft->signal.channels;
     p = wav->samplePtr;
     ct = p - wav->samples;
     if (ct>=chans) { 
@@ -408,7 +408,7 @@ static int st_wavstartread(ft_t ft)
     if (strncmp("RIFX", magic, 4) == 0) 
     {
         st_debug("Found RIFX header, swapping bytes");
-        ft->info.swap_bytes = ST_IS_LITTLEENDIAN;
+        ft->signal.swap_bytes = ST_IS_LITTLEENDIAN;
     }
 
     st_readdw(ft, &dwRiffLength);
@@ -483,8 +483,8 @@ static int st_wavstartread(ft_t ft)
         
     case WAVE_FORMAT_PCM:
         /* Default (-1) depends on sample size.  Set that later on. */
-        if (ft->info.encoding != ST_ENCODING_UNKNOWN && ft->info.encoding != ST_ENCODING_UNSIGNED &&
-            ft->info.encoding != ST_ENCODING_SIGN2)
+        if (ft->signal.encoding != ST_ENCODING_UNKNOWN && ft->signal.encoding != ST_ENCODING_UNSIGNED &&
+            ft->signal.encoding != ST_ENCODING_SIGN2)
             st_report("User options overriding encoding read in .wav header");
 
         /* Needed by rawread() functions */
@@ -495,22 +495,22 @@ static int st_wavstartread(ft_t ft)
         break;
         
     case WAVE_FORMAT_IMA_ADPCM:
-        if (ft->info.encoding == ST_ENCODING_UNKNOWN || ft->info.encoding == ST_ENCODING_IMA_ADPCM)
-            ft->info.encoding = ST_ENCODING_IMA_ADPCM;
+        if (ft->signal.encoding == ST_ENCODING_UNKNOWN || ft->signal.encoding == ST_ENCODING_IMA_ADPCM)
+            ft->signal.encoding = ST_ENCODING_IMA_ADPCM;
         else
             st_report("User options overriding encoding read in .wav header");
         break;
 
     case WAVE_FORMAT_ADPCM:
-        if (ft->info.encoding == ST_ENCODING_UNKNOWN || ft->info.encoding == ST_ENCODING_ADPCM)
-            ft->info.encoding = ST_ENCODING_ADPCM;
+        if (ft->signal.encoding == ST_ENCODING_UNKNOWN || ft->signal.encoding == ST_ENCODING_ADPCM)
+            ft->signal.encoding = ST_ENCODING_ADPCM;
         else
             st_report("User options overriding encoding read in .wav header");
         break;
 
     case WAVE_FORMAT_IEEE_FLOAT:
-        if (ft->info.encoding == ST_ENCODING_UNKNOWN || ft->info.encoding == ST_ENCODING_FLOAT)
-            ft->info.encoding = ST_ENCODING_FLOAT;
+        if (ft->signal.encoding == ST_ENCODING_UNKNOWN || ft->signal.encoding == ST_ENCODING_FLOAT)
+            ft->signal.encoding = ST_ENCODING_FLOAT;
         else
             st_report("User options overriding encoding read in .wav header");
 
@@ -522,8 +522,8 @@ static int st_wavstartread(ft_t ft)
         break;
         
     case WAVE_FORMAT_ALAW:
-        if (ft->info.encoding == ST_ENCODING_UNKNOWN || ft->info.encoding == ST_ENCODING_ALAW)
-            ft->info.encoding = ST_ENCODING_ALAW;
+        if (ft->signal.encoding == ST_ENCODING_UNKNOWN || ft->signal.encoding == ST_ENCODING_ALAW)
+            ft->signal.encoding = ST_ENCODING_ALAW;
         else
             st_report("User options overriding encoding read in .wav header");
 
@@ -535,8 +535,8 @@ static int st_wavstartread(ft_t ft)
         break;
         
     case WAVE_FORMAT_MULAW:
-        if (ft->info.encoding == ST_ENCODING_UNKNOWN || ft->info.encoding == ST_ENCODING_ULAW)
-            ft->info.encoding = ST_ENCODING_ULAW;
+        if (ft->signal.encoding == ST_ENCODING_UNKNOWN || ft->signal.encoding == ST_ENCODING_ULAW)
+            ft->signal.encoding = ST_ENCODING_ULAW;
         else
             st_report("User options overriding encoding read in .wav header");
 
@@ -560,8 +560,8 @@ static int st_wavstartread(ft_t ft)
         st_fail_errno(ft,ST_EHDR,"Sorry, this WAV file is in Dolby AC2 format.");
         return ST_EOF;
     case WAVE_FORMAT_GSM610:
-        if (ft->info.encoding == ST_ENCODING_UNKNOWN || ft->info.encoding == ST_ENCODING_GSM )
-            ft->info.encoding = ST_ENCODING_GSM;
+        if (ft->signal.encoding == ST_ENCODING_UNKNOWN || ft->signal.encoding == ST_ENCODING_GSM )
+            ft->signal.encoding = ST_ENCODING_GSM;
         else
             st_report("User options overriding encoding read in .wav header");
         break;
@@ -594,13 +594,13 @@ static int st_wavstartread(ft_t ft)
     }
 
     /* User options take precedence */
-    if (ft->info.channels == 0 || ft->info.channels == wChannels)
-        ft->info.channels = wChannels;
+    if (ft->signal.channels == 0 || ft->signal.channels == wChannels)
+        ft->signal.channels = wChannels;
     else
         st_report("User options overriding channels read in .wav header");
 
-    if (ft->info.rate == 0 || ft->info.rate == dwSamplesPerSecond)
-        ft->info.rate = dwSamplesPerSecond;
+    if (ft->signal.rate == 0 || ft->signal.rate == dwSamplesPerSecond)
+        ft->signal.rate = dwSamplesPerSecond;
     else
         st_report("User options overriding rate read in .wav header");
     
@@ -646,7 +646,7 @@ static int st_wavstartread(ft_t ft)
         }
 
         st_readw(ft, &(wav->samplesPerBlock));
-        bytesPerBlock = AdpcmBytesPerBlock(ft->info.channels, wav->samplesPerBlock);
+        bytesPerBlock = AdpcmBytesPerBlock(ft->signal.channels, wav->samplesPerBlock);
         if (bytesPerBlock > wav->blockAlign)
         {
             st_fail_errno(ft,ST_EOF,"format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
@@ -702,7 +702,7 @@ static int st_wavstartread(ft_t ft)
         }
 
         st_readw(ft, &(wav->samplesPerBlock));
-        bytesPerBlock = ImaBytesPerBlock(ft->info.channels, wav->samplesPerBlock);
+        bytesPerBlock = ImaBytesPerBlock(ft->signal.channels, wav->samplesPerBlock);
         if (bytesPerBlock > wav->blockAlign || wav->samplesPerBlock%8 != 1)
         {
             st_fail_errno(ft,ST_EOF,"format[%s]: samplesPerBlock(%d) incompatible with blockAlign(%d)",
@@ -754,47 +754,47 @@ static int st_wavstartread(ft_t ft)
         
     case ST_SIZE_BYTE:
         /* User options take precedence */
-        if (ft->info.size == -1 || ft->info.size == ST_SIZE_BYTE)
-            ft->info.size = ST_SIZE_BYTE;
+        if (ft->signal.size == -1 || ft->signal.size == ST_SIZE_BYTE)
+            ft->signal.size = ST_SIZE_BYTE;
         else
             st_warn("User options overriding size read in .wav header");
 
         /* Now we have enough information to set default encodings. */
-        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
-            ft->info.encoding = ST_ENCODING_UNSIGNED;
+        if (ft->signal.encoding == ST_ENCODING_UNKNOWN)
+            ft->signal.encoding = ST_ENCODING_UNSIGNED;
         break;
         
     case ST_SIZE_WORD:
-        if (ft->info.size == -1 || ft->info.size == ST_SIZE_WORD)
-            ft->info.size = ST_SIZE_WORD;
+        if (ft->signal.size == -1 || ft->signal.size == ST_SIZE_WORD)
+            ft->signal.size = ST_SIZE_WORD;
         else
             st_warn("User options overriding size read in .wav header");
 
         /* Now we have enough information to set default encodings. */
-        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
-            ft->info.encoding = ST_ENCODING_SIGN2;
+        if (ft->signal.encoding == ST_ENCODING_UNKNOWN)
+            ft->signal.encoding = ST_ENCODING_SIGN2;
         break;
         
     case ST_SIZE_24BIT:
-        if (ft->info.size == -1 || ft->info.size == ST_SIZE_24BIT)
-            ft->info.size = ST_SIZE_24BIT;
+        if (ft->signal.size == -1 || ft->signal.size == ST_SIZE_24BIT)
+            ft->signal.size = ST_SIZE_24BIT;
         else
             st_warn("User options overriding size read in .wav header");
 
         /* Now we have enough information to set default encodings. */
-        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
-            ft->info.encoding = ST_ENCODING_SIGN2;
+        if (ft->signal.encoding == ST_ENCODING_UNKNOWN)
+            ft->signal.encoding = ST_ENCODING_SIGN2;
         break;
         
     case ST_SIZE_DWORD:
-        if (ft->info.size == -1 || ft->info.size == ST_SIZE_DWORD)
-            ft->info.size = ST_SIZE_DWORD;
+        if (ft->signal.size == -1 || ft->signal.size == ST_SIZE_DWORD)
+            ft->signal.size = ST_SIZE_DWORD;
         else
             st_warn("User options overriding size read in .wav header");
 
         /* Now we have enough information to set default encodings. */
-        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
-            ft->info.encoding = ST_ENCODING_SIGN2;
+        if (ft->signal.encoding == ST_ENCODING_UNKNOWN)
+            ft->signal.encoding = ST_ENCODING_SIGN2;
         break;
         
     default:
@@ -824,38 +824,38 @@ static int st_wavstartread(ft_t ft)
 
     case WAVE_FORMAT_ADPCM:
         wav->numSamples = 
-            AdpcmSamplesIn(dwDataLength, ft->info.channels, 
+            AdpcmSamplesIn(dwDataLength, ft->signal.channels, 
                            wav->blockAlign, wav->samplesPerBlock);
         /*st_debug("datalen %d, numSamples %d",dwDataLength, wav->numSamples);*/
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
-        ft->length = wav->numSamples*ft->info.channels;
+        ft->length = wav->numSamples*ft->signal.channels;
         break;
 
     case WAVE_FORMAT_IMA_ADPCM:
         /* Compute easiest part of number of samples.  For every block, there
            are samplesPerBlock samples to read. */
         wav->numSamples = 
-            ImaSamplesIn(dwDataLength, ft->info.channels, 
+            ImaSamplesIn(dwDataLength, ft->signal.channels, 
                          wav->blockAlign, wav->samplesPerBlock);
         /*st_debug("datalen %d, numSamples %d",dwDataLength, wav->numSamples);*/
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
         initImaTable();
-        ft->length = wav->numSamples*ft->info.channels;
+        ft->length = wav->numSamples*ft->signal.channels;
         break;
 
     case WAVE_FORMAT_GSM610:
         wav->numSamples = ((dwDataLength / wav->blockAlign) * wav->samplesPerBlock);
         wavgsminit(ft);
-        ft->length = wav->numSamples*ft->info.channels;
+        ft->length = wav->numSamples*ft->signal.channels;
         break;
 
     default:
-        wav->numSamples = dwDataLength/ft->info.size/ft->info.channels;
-        ft->length = wav->numSamples*ft->info.channels;
+        wav->numSamples = dwDataLength/ft->signal.size/ft->signal.channels;
+        ft->length = wav->numSamples*ft->signal.channels;
     }
 
     st_debug("Reading Wave file: %s format, %d channel%s, %d samp/sec",
-           wav_format_str(wav->formatTag), ft->info.channels,
+           wav_format_str(wav->formatTag), ft->signal.channels,
            wChannels == 1 ? "" : "s", dwSamplesPerSecond);
     st_debug("        %d byte/sec, %d block align, %d bits/samp, %u data bytes",
            dwAvgBytesPerSec, wav->blockAlign, wBitsPerSample, dwDataLength);
@@ -1008,14 +1008,14 @@ static st_size_t st_wavread(ft_t ft, st_sample_t *buf, st_size_t len)
         
         /* If file is in ADPCM encoding then read in multiple blocks else */
         /* read as much as possible and return quickly. */
-        switch (ft->info.encoding)
+        switch (ft->signal.encoding)
         {
         case ST_ENCODING_IMA_ADPCM:
         case ST_ENCODING_ADPCM:
 
             /* See reason for cooledit check in comments below */
-            if (wav->found_cooledit && len > (wav->numSamples*ft->info.channels)) 
-                len = (wav->numSamples*ft->info.channels);
+            if (wav->found_cooledit && len > (wav->numSamples*ft->signal.channels)) 
+                len = (wav->numSamples*ft->signal.channels);
 
             done = 0;
             while (done < len) { /* Still want data? */
@@ -1039,11 +1039,11 @@ static st_size_t st_wavread(ft_t ft, st_sample_t *buf, st_size_t len)
                     short *p, *top;
                     size_t ct;
                     ct = len-done;
-                    if (ct > (wav->blockSamplesRemaining*ft->info.channels))
-                        ct = (wav->blockSamplesRemaining*ft->info.channels);
+                    if (ct > (wav->blockSamplesRemaining*ft->signal.channels))
+                        ct = (wav->blockSamplesRemaining*ft->signal.channels);
 
                     done += ct;
-                    wav->blockSamplesRemaining -= (ct/ft->info.channels);
+                    wav->blockSamplesRemaining -= (ct/ft->signal.channels);
                     p = wav->samplePtr;
                     top = p+ct;
                     /* Output is already signed */
@@ -1057,14 +1057,14 @@ static st_size_t st_wavread(ft_t ft, st_sample_t *buf, st_size_t len)
              * total samples procesed.  The only way to take care of that
              * is to return here and not fall thru.
              */
-            wav->numSamples -= (done / ft->info.channels);
+            wav->numSamples -= (done / ft->signal.channels);
             return done;
             break;
 
         case ST_ENCODING_GSM:
             /* See reason for cooledit check in comments below */
-            if (wav->found_cooledit && len > wav->numSamples*ft->info.channels) 
-                len = (wav->numSamples*ft->info.channels);
+            if (wav->found_cooledit && len > wav->numSamples*ft->signal.channels) 
+                len = (wav->numSamples*ft->signal.channels);
 
             done = wavgsmread(ft, buf, len);
             if (done == 0 && wav->numSamples != 0)
@@ -1082,8 +1082,8 @@ static st_size_t st_wavread(ft_t ft, st_sample_t *buf, st_size_t len)
              * greater then 2Gig and can't be represented
              * by the 32-bit size field.
              */
-            if (wav->found_cooledit && len > wav->numSamples*ft->info.channels) 
-                len = (wav->numSamples*ft->info.channels);
+            if (wav->found_cooledit && len > wav->numSamples*ft->signal.channels) 
+                len = (wav->numSamples*ft->signal.channels);
 
             done = st_rawread(ft, buf, len);
             /* If software thinks there are more samples but I/O */
@@ -1095,11 +1095,11 @@ static st_size_t st_wavread(ft_t ft, st_sample_t *buf, st_size_t len)
         /* Only return buffers that contain a totally playable
          * amount of audio.
          */
-        done -= done % ft->info.channels;
-        if (done/ft->info.channels > wav->numSamples)
+        done -= done % ft->signal.channels;
+        if (done/ft->signal.channels > wav->numSamples)
             wav->numSamples = 0;
         else
-            wav->numSamples -= (done/ft->info.channels);
+            wav->numSamples -= (done/ft->signal.channels);
         return done;
 }
 
@@ -1120,7 +1120,7 @@ static int st_wavstopread(ft_t ft)
     free(ft->comment);
     ft->comment = NULL;
 
-    switch (ft->info.encoding)
+    switch (ft->signal.encoding)
     {
     case ST_ENCODING_GSM:
         wavgsmdestroy(ft);
@@ -1142,9 +1142,9 @@ static int st_wavstartwrite(ft_t ft)
 
     ft->st_errno = ST_SUCCESS;
 
-    if (ft->info.encoding != ST_ENCODING_ADPCM &&
-        ft->info.encoding != ST_ENCODING_IMA_ADPCM &&
-        ft->info.encoding != ST_ENCODING_GSM)
+    if (ft->signal.encoding != ST_ENCODING_ADPCM &&
+        ft->signal.encoding != ST_ENCODING_IMA_ADPCM &&
+        ft->signal.encoding != ST_ENCODING_GSM)
     {
         rc = st_rawstartwrite(ft);
         if (rc)
@@ -1171,9 +1171,9 @@ static int st_wavstartwrite(ft_t ft)
         /* intentional case fallthru! */
         case WAVE_FORMAT_ADPCM:
             /* #channels already range-checked for overflow in wavwritehdr() */
-            for (ch=0; ch<ft->info.channels; ch++)
+            for (ch=0; ch<ft->signal.channels; ch++)
                 wav->state[ch] = 0;
-            sbsize = ft->info.channels * wav->samplesPerBlock;
+            sbsize = ft->signal.channels * wav->samplesPerBlock;
             wav->packet = (unsigned char *)xmalloc(wav->blockAlign);
             wav->samples = (short *)xmalloc(sbsize*sizeof(short));
             wav->sampleTop = wav->samples + sbsize;
@@ -1279,76 +1279,76 @@ static int wavwritehdr(ft_t ft, int second_header)
     long blocksWritten = 0;
     bool isExtensible = false;    /* WAVE_FORMAT_EXTENSIBLE? */
 
-    dwSamplesPerSecond = ft->info.rate;
-    wChannels = ft->info.channels;
+    dwSamplesPerSecond = ft->signal.rate;
+    wChannels = ft->signal.channels;
 
     /* Check to see if encoding is ADPCM or not.  If ADPCM
      * possibly override the size to be bytes.  It isn't needed
      * by this routine will look nicer (and more correct)
      * on verbose output.
      */
-    if ((ft->info.encoding == ST_ENCODING_ADPCM ||
-         ft->info.encoding == ST_ENCODING_IMA_ADPCM ||
-         ft->info.encoding == ST_ENCODING_GSM) &&
-         ft->info.size != ST_SIZE_BYTE)
+    if ((ft->signal.encoding == ST_ENCODING_ADPCM ||
+         ft->signal.encoding == ST_ENCODING_IMA_ADPCM ||
+         ft->signal.encoding == ST_ENCODING_GSM) &&
+         ft->signal.size != ST_SIZE_BYTE)
     {
         st_report("Overriding output size to bytes for compressed data.");
-        ft->info.size = ST_SIZE_BYTE;
+        ft->signal.size = ST_SIZE_BYTE;
     }
 
-    switch (ft->info.size)
+    switch (ft->signal.size)
     {
         case ST_SIZE_BYTE:
             wBitsPerSample = 8;
-            if (ft->info.encoding != ST_ENCODING_UNSIGNED &&
-                    ft->info.encoding != ST_ENCODING_ULAW &&
-                    ft->info.encoding != ST_ENCODING_ALAW &&
-                    ft->info.encoding != ST_ENCODING_GSM &&
-                    ft->info.encoding != ST_ENCODING_ADPCM &&
-                    ft->info.encoding != ST_ENCODING_IMA_ADPCM)
+            if (ft->signal.encoding != ST_ENCODING_UNSIGNED &&
+                    ft->signal.encoding != ST_ENCODING_ULAW &&
+                    ft->signal.encoding != ST_ENCODING_ALAW &&
+                    ft->signal.encoding != ST_ENCODING_GSM &&
+                    ft->signal.encoding != ST_ENCODING_ADPCM &&
+                    ft->signal.encoding != ST_ENCODING_IMA_ADPCM)
             {
-                st_report("Do not support %s with 8-bit data.  Forcing to unsigned",st_encodings_str[(unsigned char)ft->info.encoding]);
-                ft->info.encoding = ST_ENCODING_UNSIGNED;
+                st_report("Do not support %s with 8-bit data.  Forcing to unsigned",st_encodings_str[(unsigned char)ft->signal.encoding]);
+                ft->signal.encoding = ST_ENCODING_UNSIGNED;
             }
             break;
         case ST_SIZE_WORD:
             wBitsPerSample = 16;
-            if (ft->info.encoding != ST_ENCODING_SIGN2)
+            if (ft->signal.encoding != ST_ENCODING_SIGN2)
             {
-                st_report("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
-                ft->info.encoding = ST_ENCODING_SIGN2;
+                st_report("Do not support %s with 16-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->signal.encoding]);
+                ft->signal.encoding = ST_ENCODING_SIGN2;
             }
             break;
         case ST_SIZE_24BIT:
             wBitsPerSample = 24;
-            if (ft->info.encoding != ST_ENCODING_SIGN2)
+            if (ft->signal.encoding != ST_ENCODING_SIGN2)
             {
-                st_report("Do not support %s with 24-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
-                ft->info.encoding = ST_ENCODING_SIGN2;
+                st_report("Do not support %s with 24-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->signal.encoding]);
+                ft->signal.encoding = ST_ENCODING_SIGN2;
             }
             break;
 
         case ST_SIZE_DWORD:
             wBitsPerSample = 32;
-            if (ft->info.encoding != ST_ENCODING_SIGN2 &&
-                ft->info.encoding != ST_ENCODING_FLOAT)
+            if (ft->signal.encoding != ST_ENCODING_SIGN2 &&
+                ft->signal.encoding != ST_ENCODING_FLOAT)
             {
-                st_report("Do not support %s with 32-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->info.encoding]);
-                ft->info.encoding = ST_ENCODING_SIGN2;
+                st_report("Do not support %s with 32-bit data.  Forcing to Signed.",st_encodings_str[(unsigned char)ft->signal.encoding]);
+                ft->signal.encoding = ST_ENCODING_SIGN2;
             }
 
             break;
         default:
-            st_report("Do not support %s in WAV files.  Forcing to Signed Words.",st_sizes_str[(unsigned char)ft->info.size]);
-            ft->info.encoding = ST_ENCODING_SIGN2;
-            ft->info.size = ST_SIZE_WORD;
+            st_report("Do not support %s in WAV files.  Forcing to Signed Words.",st_sizes_str[(unsigned char)ft->signal.size]);
+            ft->signal.encoding = ST_ENCODING_SIGN2;
+            ft->signal.size = ST_SIZE_WORD;
             wBitsPerSample = 16;
             break;
     }
 
     wSamplesPerBlock = 1;       /* common default for PCM data */
 
-    switch (ft->info.encoding)
+    switch (ft->signal.encoding)
     {
         case ST_ENCODING_UNSIGNED:
         case ST_ENCODING_SIGN2:
@@ -1397,7 +1397,7 @@ static int wavwritehdr(ft_t ft, int second_header)
             if (wChannels!=1)
             {
                 st_report("Overriding GSM audio from %d channel to 1",wChannels);
-                wChannels = ft->info.channels = 1;
+                wChannels = ft->signal.channels = 1;
             }
             wFormatTag = WAVE_FORMAT_GSM610;
             /* dwAvgBytesPerSec = 1625*(dwSamplesPerSecond/8000.)+0.5; */
@@ -1449,7 +1449,7 @@ static int wavwritehdr(ft_t ft, int second_header)
         wRiffLength += (8+dwFactSize);
 
     /* dwAvgBytesPerSec <-- this is BEFORE compression, isn't it? guess not. */
-    dwAvgBytesPerSec = (double)wBlockAlign*ft->info.rate / (double)wSamplesPerBlock + 0.5;
+    dwAvgBytesPerSec = (double)wBlockAlign*ft->signal.rate / (double)wSamplesPerBlock + 0.5;
 
     /* figured out header info, so write it */
 
@@ -1457,7 +1457,7 @@ static int wavwritehdr(ft_t ft, int second_header)
     /* If user specified opposite swap then we think, assume they are
      * asking to write a RIFX file.
      */
-    if (ft->info.swap_bytes != ST_IS_BIGENDIAN)
+    if (ft->signal.swap_bytes != ST_IS_BIGENDIAN)
     {
         if (!second_header)
             st_report("Requested to swap bytes so writing  RIFX header");
@@ -1576,13 +1576,13 @@ static st_size_t st_wavwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 
         case WAVE_FORMAT_GSM610:
             len = wavgsmwrite(ft, buf, len);
-            wav->numSamples += (len/ft->info.channels);
+            wav->numSamples += (len/ft->signal.channels);
             return len;
             break;
 
         default:
             len = st_rawwrite(ft, buf, len);
-            wav->numSamples += (len/ft->info.channels);
+            wav->numSamples += (len/ft->signal.channels);
             return len;
         }
 }
@@ -1695,9 +1695,9 @@ static int st_wavseek(ft_t ft, st_size_t offset)
             st_fail_errno(ft,ST_ENOTSUP,"Only PCM Supported");
             break;
         default:
-            new_offset = offset * ft->info.size;
+            new_offset = offset * ft->signal.size;
             /* Make sure request aligns to a channel block (ie left+right) */
-            channel_block = ft->info.channels * ft->info.size;
+            channel_block = ft->signal.channels * ft->signal.size;
             alignment = new_offset % channel_block;
             /* Most common mistaken is to compute something like
              * "skip everthing upto and including this sample" so
@@ -1710,8 +1710,8 @@ static int st_wavseek(ft_t ft, st_size_t offset)
             ft->st_errno = st_seeki(ft, new_offset, SEEK_SET);
 
             if( ft->st_errno == ST_SUCCESS )
-                wav->numSamples = (ft->length / ft->info.channels) -
-                                  (new_offset / ft->info.size / ft->info.channels);
+                wav->numSamples = (ft->length / ft->signal.channels) -
+                                  (new_offset / ft->signal.size / ft->signal.channels);
     }
 
     return(ft->st_errno);

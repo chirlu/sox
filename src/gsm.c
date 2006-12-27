@@ -58,18 +58,18 @@ static int gsmstart_rw(ft_t ft, int w)
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
         int ch;
         
-        ft->info.encoding = ST_ENCODING_GSM;
-        ft->info.size = ST_SIZE_BYTE;
-        if (!ft->info.rate)
-                ft->info.rate = 8000;
+        ft->signal.encoding = ST_ENCODING_GSM;
+        ft->signal.size = ST_SIZE_BYTE;
+        if (!ft->signal.rate)
+                ft->signal.rate = 8000;
 
-        if (ft->info.channels == 0)
-            ft->info.channels = 1;
+        if (ft->signal.channels == 0)
+            ft->signal.channels = 1;
 
-        p->channels = ft->info.channels;
+        p->channels = ft->signal.channels;
         if (p->channels > MAXCHANS || p->channels <= 0)
         {
-                st_fail_errno(ft,ST_EFMT,"gsm: channels(%d) must be in 1-16", ft->info.channels);
+                st_fail_errno(ft,ST_EFMT,"gsm: channels(%d) must be in 1-16", ft->signal.channels);
                 return(ST_EOF);
         }
 

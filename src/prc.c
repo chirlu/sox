@@ -57,9 +57,9 @@ static int st_prcseek(ft_t ft, st_size_t offset)
     prc_t prc = (prc_t ) ft->priv;
     st_size_t new_offset, channel_block, alignment;
 
-    new_offset = offset * ft->info.size;
+    new_offset = offset * ft->signal.size;
     /* Make sure request aligns to a channel block (i.e. left+right) */
-    channel_block = ft->info.channels * ft->info.size;
+    channel_block = ft->signal.channels * ft->signal.size;
     alignment = new_offset % channel_block;
     /* Most common mistaken is to compute something like
      * "skip everthing upto and including this sample" so
@@ -101,19 +101,19 @@ static int st_prcstartread(ft_t ft)
         /* dummy read rest */
         st_readbuf(ft, head,1,14+2+2);
 
-        ft->info.encoding = ST_ENCODING_ALAW;
-        ft->info.size = ST_SIZE_BYTE;
+        ft->signal.encoding = ST_ENCODING_ALAW;
+        ft->signal.size = ST_SIZE_BYTE;
 
-        if (ft->info.rate != 0)
+        if (ft->signal.rate != 0)
             st_report("PRC must use 8000 sample rate.  Overriding");
-        ft->info.rate = 8000;
+        ft->signal.rate = 8000;
 
-        if (ft->info.channels != ST_ENCODING_UNKNOWN && ft->info.channels != 0)
+        if (ft->signal.channels != ST_ENCODING_UNKNOWN && ft->signal.channels != 0)
             st_report("PRC must only supports 1 channel.  Overriding");
-        ft->info.channels = 1;
+        ft->signal.channels = 1;
 
         p->dataStart = st_tell(ft);
-        ft->length = p->length/ft->info.size;
+        ft->length = p->length/ft->signal.size;
 
         return (ST_SUCCESS);
 }
@@ -141,15 +141,15 @@ static int st_prcstartwrite(ft_t ft)
         if (p->repeats == 0)
             p->repeats = 1;
 
-        if (ft->info.rate != 0)
+        if (ft->signal.rate != 0)
             st_report("PRC must use 8000 sample rate.  Overriding");
 
-        if (ft->info.channels != ST_ENCODING_UNKNOWN && ft->info.channels != 0)
+        if (ft->signal.channels != ST_ENCODING_UNKNOWN && ft->signal.channels != 0)
             st_report("PRC must only supports 1 channel.  Overriding");
 
-        ft->info.encoding = ST_ENCODING_ALAW;
-        ft->info.size = ST_SIZE_BYTE;
-        ft->info.rate = 8000;
+        ft->signal.encoding = ST_ENCODING_ALAW;
+        ft->signal.size = ST_SIZE_BYTE;
+        ft->signal.rate = 8000;
 
         prcwriteheader(ft);
         return ST_SUCCESS;
@@ -158,7 +158,7 @@ static int st_prcstartwrite(ft_t ft)
 static st_size_t st_prcwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
         prc_t p = (prc_t ) ft->priv;
-        p->length += samp * ft->info.size;
+        p->length += samp * ft->signal.size;
         st_debug("length now = %d", p->length);
         return st_rawwrite(ft, buf, samp);
 }

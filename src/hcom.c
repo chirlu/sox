@@ -116,10 +116,10 @@ static int st_hcomstartread(ft_t ft)
         st_readw(ft, &dictsize);
 
         /* Translate to sox parameters */
-        ft->info.encoding = ST_ENCODING_UNSIGNED;
-        ft->info.size = ST_SIZE_BYTE;
-        ft->info.rate = 22050 / divisor;
-        ft->info.channels = 1;
+        ft->signal.encoding = ST_ENCODING_UNSIGNED;
+        ft->signal.size = ST_SIZE_BYTE;
+        ft->signal.rate = 22050 / divisor;
+        ft->signal.channels = 1;
 
         /* Allocate memory for the dictionary */
         p->dictionary = (dictent *)xmalloc(511 * sizeof(dictent));
@@ -244,7 +244,7 @@ static int st_hcomstartwrite(ft_t ft)
 {
         register struct writepriv *p = (struct writepriv *) ft->priv;
 
-        switch (ft->info.rate) {
+        switch (ft->signal.rate) {
         case 22050:
         case 22050/2:
         case 22050/3:
@@ -254,9 +254,9 @@ static int st_hcomstartwrite(ft_t ft)
                 st_fail_errno(ft,ST_EFMT,"unacceptable output rate for HCOM: try 5512, 7350, 11025 or 22050 hertz");
                 return (ST_EOF);
         }
-        ft->info.size = ST_SIZE_BYTE;
-        ft->info.encoding = ST_ENCODING_UNSIGNED;
-        ft->info.channels = 1;
+        ft->signal.size = ST_SIZE_BYTE;
+        ft->signal.encoding = ST_ENCODING_UNSIGNED;
+        ft->signal.channels = 1;
 
         p->size = BUFINCR;
         p->pos = 0;
@@ -434,7 +434,7 @@ static int st_hcomstopwrite(ft_t ft)
 
   /* Compress it all at once */
   if (compressed_len)
-    compress(ft, &compressed_data, (int32_t *)&compressed_len, (double) ft->info.rate);
+    compress(ft, &compressed_data, (int32_t *)&compressed_len, (double) ft->signal.rate);
   free((char *)p->data);
 
   /* Write the header */

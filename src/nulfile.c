@@ -21,10 +21,10 @@ static int st_nulstartread(ft_t ft)
 {
   /* If format parameters are not given, set somewhat arbitrary
    * (but commonly used) defaults: */
-  if (ft->info.rate     == 0) ft->info.rate     = 44100;
-  if (ft->info.channels == 0) ft->info.channels = 2;
-  if (ft->info.size     ==-1) ft->info.size     = ST_SIZE_WORD;
-  if (ft->info.encoding == ST_ENCODING_UNKNOWN) ft->info.encoding = ST_ENCODING_SIGN2;
+  if (ft->signal.rate     == 0) ft->signal.rate     = 44100;
+  if (ft->signal.channels == 0) ft->signal.channels = 2;
+  if (ft->signal.size     ==-1) ft->signal.size     = ST_SIZE_WORD;
+  if (ft->signal.encoding == ST_ENCODING_UNKNOWN) ft->signal.encoding = ST_ENCODING_SIGN2;
 
   return ST_SUCCESS;
 }

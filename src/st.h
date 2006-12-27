@@ -281,7 +281,7 @@ typedef struct st_format {
 } st_format_t;
 
 struct st_soundstream {
-    st_signalinfo_t info;                 /* signal specifications */
+    st_signalinfo_t signal;                 /* signal specifications */
     st_instrinfo_t  instr;                /* instrument specification */
     st_loopinfo_t   loops[ST_MAX_NLOOPS]; /* Looping specification */
     char            seekable;             /* can seek on this file */

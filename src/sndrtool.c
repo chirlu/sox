@@ -31,7 +31,7 @@ static void sndtwriteheader(ft_t ft, st_size_t nsamples)
     st_writedw (ft,nsamples);
     st_writedw (ft,0);
     st_writedw (ft,nsamples);
-    st_writew (ft,(int) ft->info.rate);
+    st_writew (ft,(int) ft->signal.rate);
     st_writew (ft,0);
     st_writew (ft,10);
     st_writew (ft,4);
@@ -45,9 +45,9 @@ static int st_sndseek(ft_t ft, st_size_t offset)
     st_size_t new_offset, channel_block, alignment;
     snd_t snd = (snd_t ) ft->priv;
 
-    new_offset = offset * ft->info.size;
+    new_offset = offset * ft->signal.size;
     /* Make sure request aligns to a channel block (ie left+right) */
-    channel_block = ft->info.channels * ft->info.size;
+    channel_block = ft->signal.channels * ft->signal.size;
     alignment = new_offset % channel_block;
     /* Most common mistaken is to compute something like
      * "skip everthing upto and including this sample" so
@@ -118,10 +118,10 @@ static int st_sndtstartread(ft_t ft)
         st_debug("%s",buf);
         }
 
-        ft->info.channels = 1;
-        ft->info.rate = rate;
-        ft->info.encoding = ST_ENCODING_UNSIGNED;
-        ft->info.size = ST_SIZE_BYTE;
+        ft->signal.channels = 1;
+        ft->signal.rate = rate;
+        ft->signal.encoding = ST_ENCODING_UNSIGNED;
+        ft->signal.size = ST_SIZE_BYTE;
 
         snd->dataStart = st_tell(ft);
         ft->length = st_filelength(ft) - snd->dataStart;
@@ -140,9 +140,9 @@ static int st_sndtstartwrite(ft_t ft)
             return rc;
 
         /* write header */
-        ft->info.channels = 1;
-        ft->info.encoding = ST_ENCODING_UNSIGNED;
-        ft->info.size = ST_SIZE_BYTE;
+        ft->signal.channels = 1;
+        ft->signal.encoding = ST_ENCODING_UNSIGNED;
+        ft->signal.size = ST_SIZE_BYTE;
         p->nsamples = 0;
         sndtwriteheader(ft, 0);
 

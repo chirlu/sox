@@ -48,41 +48,41 @@ static int ossdspinit(ft_t ft)
     int tmp, rc;
     st_fileinfo_t *file = (st_fileinfo_t *)ft->priv;
 
-    if (ft->info.rate == 0.0) ft->info.rate = 8000;
-    if (ft->info.size == -1) ft->info.size = ST_SIZE_BYTE;
-    if (ft->info.size == ST_SIZE_BYTE) {
+    if (ft->signal.rate == 0.0) ft->signal.rate = 8000;
+    if (ft->signal.size == -1) ft->signal.size = ST_SIZE_BYTE;
+    if (ft->signal.size == ST_SIZE_BYTE) {
         sampletype = AFMT_U8;
         samplesize = 8;
-        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
-            ft->info.encoding = ST_ENCODING_UNSIGNED;
-        if (ft->info.encoding != ST_ENCODING_UNSIGNED) {
+        if (ft->signal.encoding == ST_ENCODING_UNKNOWN)
+            ft->signal.encoding = ST_ENCODING_UNSIGNED;
+        if (ft->signal.encoding != ST_ENCODING_UNSIGNED) {
             st_report("OSS driver only supports unsigned with bytes");
             st_report("Forcing to unsigned");
-            ft->info.encoding = ST_ENCODING_UNSIGNED;
+            ft->signal.encoding = ST_ENCODING_UNSIGNED;
         }
     }
-    else if (ft->info.size == ST_SIZE_WORD) {
+    else if (ft->signal.size == ST_SIZE_WORD) {
         sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
-        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
-            ft->info.encoding = ST_ENCODING_SIGN2;
-        if (ft->info.encoding != ST_ENCODING_SIGN2) {
+        if (ft->signal.encoding == ST_ENCODING_UNKNOWN)
+            ft->signal.encoding = ST_ENCODING_SIGN2;
+        if (ft->signal.encoding != ST_ENCODING_SIGN2) {
             st_report("OSS driver only supports signed with words");
             st_report("Forcing to signed linear");
-            ft->info.encoding = ST_ENCODING_SIGN2;
+            ft->signal.encoding = ST_ENCODING_SIGN2;
         }
     }
     else {
         sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
-        ft->info.size = ST_SIZE_WORD;
-        ft->info.encoding = ST_ENCODING_SIGN2;
+        ft->signal.size = ST_SIZE_WORD;
+        ft->signal.encoding = ST_ENCODING_SIGN2;
         st_report("OSS driver only supports bytes and words");
         st_report("Forcing to signed linear word");
     }
 
-    if (ft->info.channels == 0) ft->info.channels = 1;
-    else if (ft->info.channels > 2) ft->info.channels = 2;
+    if (ft->signal.channels == 0) ft->signal.channels = 1;
+    else if (ft->signal.channels > 2) ft->signal.channels = 2;
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_RESET, 0) < 0)
     {
@@ -100,8 +100,8 @@ static int ossdspinit(ft_t ft)
             if (samplesize == 16 && (tmp & (AFMT_S16_LE|AFMT_S16_BE)) == 0)
             {
                 /* Must not like 16-bits, try 8-bits */
-                ft->info.size = ST_SIZE_BYTE;
-                ft->info.encoding = ST_ENCODING_UNSIGNED;
+                ft->signal.size = ST_SIZE_BYTE;
+                ft->signal.encoding = ST_ENCODING_UNSIGNED;
                 st_report("OSS driver doesn't like signed words");
                 st_report("Forcing to unsigned bytes");
                 tmp = sampletype = AFMT_U8;
@@ -110,8 +110,8 @@ static int ossdspinit(ft_t ft)
             /* is 8-bit supported */
             else if (samplesize == 8 && (tmp & AFMT_U8) == 0)
             {
-                ft->info.size = ST_SIZE_WORD;
-                ft->info.encoding = ST_ENCODING_SIGN2;
+                ft->signal.size = ST_SIZE_WORD;
+                ft->signal.encoding = ST_ENCODING_SIGN2;
                 st_report("OSS driver doesn't like unsigned bytes");
                 st_report("Forcing to signed words");
                 sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
@@ -132,9 +132,9 @@ static int ossdspinit(ft_t ft)
     }
 
     if (samplesize == 16)
-      ft->info.swap_bytes = ST_IS_BIGENDIAN != (sampletype == AFMT_S16_BE);
+      ft->signal.swap_bytes = ST_IS_BIGENDIAN != (sampletype == AFMT_S16_BE);
 
-    if (ft->info.channels == 2) dsp_stereo = 1;
+    if (ft->signal.channels == 2) dsp_stereo = 1;
     else dsp_stereo = 0;
 
     tmp = dsp_stereo;
@@ -147,12 +147,12 @@ static int ossdspinit(ft_t ft)
     if (tmp != dsp_stereo)
     {
         st_warn("Sound card appears to only support %d channels.  Overriding format", tmp+1);
-        ft->info.channels = tmp + 1;
+        ft->signal.channels = tmp + 1;
     }
 
-    tmp = ft->info.rate;
+    tmp = ft->signal.rate;
     if (ioctl (fileno(ft->fp), SNDCTL_DSP_SPEED, &tmp) < 0 || 
-        (int)ft->info.rate != tmp) {
+        (int)ft->signal.rate != tmp) {
         /* If the rate the sound card is using is not within 1% of what
          * the user specified then override the user setting.
          * The only reason not to always override this is because of
@@ -161,11 +161,11 @@ static int ossdspinit(ft_t ft)
          * this and having strange output file rates for something that
          * we can't hear anyways.
          */
-        if ((int)ft->info.rate - tmp > (tmp * .01) || 
-            tmp - (int)ft->info.rate > (tmp * .01)) {
+        if ((int)ft->signal.rate - tmp > (tmp * .01) || 
+            tmp - (int)ft->signal.rate > (tmp * .01)) {
             st_warn("Unable to set audio speed to %d (set to %d)",
-                     ft->info.rate, tmp);
-            ft->info.rate = tmp;
+                     ft->signal.rate, tmp);
+            ft->signal.rate = tmp;
         }
     }
 

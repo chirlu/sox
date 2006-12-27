@@ -27,11 +27,11 @@
 
 void set_swap_if_not_already_set(ft_t ft)
 {
-  if (ft->info.swap_bytes == ST_SWAP_DEFAULT) {
+  if (ft->signal.swap_bytes == ST_SWAP_DEFAULT) {
     if (ft->h->flags & ST_FILE_ENDIAN)
-      ft->info.swap_bytes = ST_IS_LITTLEENDIAN != !(ft->h->flags & ST_FILE_ENDBIG);
+      ft->signal.swap_bytes = ST_IS_LITTLEENDIAN != !(ft->h->flags & ST_FILE_ENDBIG);
     else
-      ft->info.swap_bytes = ST_SWAP_NO;
+      ft->signal.swap_bytes = ST_SWAP_NO;
   }
 }
 
@@ -50,31 +50,31 @@ static int st_checkformat(ft_t ft)
 
         ft->st_errno = ST_SUCCESS;
 
-        if (ft->info.rate == 0)
+        if (ft->signal.rate == 0)
         {
                 st_fail_errno(ft,ST_EFMT,"sampling rate was not specified");
                 return ST_EOF;
         }
 
-        if (ft->info.size == -1)
+        if (ft->signal.size == -1)
         {
                 st_fail_errno(ft,ST_EFMT,"data size was not specified");
                 return ST_EOF;
         }
 
-        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
+        if (ft->signal.encoding == ST_ENCODING_UNKNOWN)
         {
                 st_fail_errno(ft,ST_EFMT,"data encoding was not specified");
                 return ST_EOF;
         }
 
-        if ((ft->info.size <= 0) || (ft->info.size > ST_INFO_SIZE_MAX))
+        if ((ft->signal.size <= 0) || (ft->signal.size > ST_INFO_SIZE_MAX))
         {
                 st_fail_errno(ft,ST_EFMT,"data size %i is invalid");
                 return ST_EOF;
         }
 
-        if (ft->info.encoding <= 0  || ft->info.encoding >= ST_ENCODINGS)
+        if (ft->signal.encoding <= 0  || ft->signal.encoding >= ST_ENCODINGS)
         {
                 st_fail_errno(ft,ST_EFMT,"data encoding %i is invalid");
                 return ST_EOF;
@@ -103,11 +103,11 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
         goto input_error;
     }
 
-    ft->info.size = -1;
-    ft->info.encoding = ST_ENCODING_UNKNOWN;
-    ft->info.channels = 0;
+    ft->signal.size = -1;
+    ft->signal.encoding = ST_ENCODING_UNKNOWN;
+    ft->signal.channels = 0;
     if (info)
-        ft->info = *info;
+        ft->signal = *info;
     ft->mode = 'r';
 
     if (!(ft->h->flags & ST_FILE_NOSTDIO))
@@ -145,8 +145,8 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
      * This is because libst usually doesn't set this for mono file
      * formats (for historical reasons).
      */
-    if (ft->info.channels == 0)
-        ft->info.channels = 1;
+    if (ft->signal.channels == 0)
+        ft->signal.channels = 1;
 
     if (st_checkformat(ft) )
     {
@@ -215,11 +215,11 @@ ft_t st_open_write(
         goto output_error;
     }
 
-    ft->info.size = -1;
-    ft->info.encoding = ST_ENCODING_UNKNOWN;
-    ft->info.channels = 0;
+    ft->signal.size = -1;
+    ft->signal.encoding = ST_ENCODING_UNKNOWN;
+    ft->signal.channels = 0;
     if (info)
-        ft->info = *info;
+        ft->signal = *info;
     ft->mode = 'w';
 
     if (!(ft->h->flags & ST_FILE_NOSTDIO))
@@ -296,10 +296,10 @@ output_error:
 
 st_size_t st_read(ft_t ft, st_sample_t *buf, st_size_t len)
 {
-  len -= len % ft->info.channels; /* We need a whole number of "wide" samples */
+  len -= len % ft->signal.channels; /* We need a whole number of "wide" samples */
   len = (*ft->h->read)(ft, buf, len);
   if (len != ST_EOF)
-    len -= len % ft->info.channels; /* Belt & braces */
+    len -= len % ft->signal.channels; /* Belt & braces */
   return len;
 }
 

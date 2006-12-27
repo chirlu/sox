@@ -130,43 +130,43 @@ static int st_xastartread(ft_t ft)
     st_debug(" wBits:         %u", xa->header.bits);
 
     /* Populate the st_soundstream structure */
-    ft->info.encoding = ST_ENCODING_SIGN2;
+    ft->signal.encoding = ST_ENCODING_SIGN2;
     
-    if (ft->info.size == -1 || ft->info.size == (xa->header.bits >> 3)) {
-        ft->info.size = xa->header.bits >> 3;
+    if (ft->signal.size == -1 || ft->signal.size == (xa->header.bits >> 3)) {
+        ft->signal.size = xa->header.bits >> 3;
     } else {
         st_report("User options overriding size read in .xa header");
     }
     
-    if (ft->info.channels == 0 || ft->info.channels == xa->header.channels) {
-        ft->info.channels = xa->header.channels;
+    if (ft->signal.channels == 0 || ft->signal.channels == xa->header.channels) {
+        ft->signal.channels = xa->header.channels;
     } else {
         st_report("User options overriding channels read in .xa header");
     }
     
-    if (ft->info.rate == 0 || ft->info.rate == xa->header.sampleRate) {
-        ft->info.rate = xa->header.sampleRate;
+    if (ft->signal.rate == 0 || ft->signal.rate == xa->header.sampleRate) {
+        ft->signal.rate = xa->header.sampleRate;
     } else {
         st_report("User options overriding rate read in .xa header");
     }
     
     /* Check for supported formats */
-    if (ft->info.size != 2) {
+    if (ft->signal.size != 2) {
         st_fail_errno(ft, ST_EFMT, "%d-bit sample resolution not supported.",
-            ft->info.size << 3);
+            ft->signal.size << 3);
         return ST_EOF;
     }
     
     /* Validate the header */
-    if (xa->header.bits != ft->info.size << 3) {
+    if (xa->header.bits != ft->signal.size << 3) {
         st_report("Invalid sample resolution %d bits.  Assuming %d bits.",
-            xa->header.bits, ft->info.size << 3);
-        xa->header.bits = ft->info.size << 3;
+            xa->header.bits, ft->signal.size << 3);
+        xa->header.bits = ft->signal.size << 3;
     }
-    if (xa->header.align != ft->info.size * xa->header.channels) {
+    if (xa->header.align != ft->signal.size * xa->header.channels) {
         st_report("Invalid sample alignment value %d.  Assuming %d.",
-            xa->header.align, ft->info.size * xa->header.channels);
-        xa->header.align = ft->info.size * xa->header.channels;
+            xa->header.align, ft->signal.size * xa->header.channels);
+        xa->header.align = ft->signal.size * xa->header.channels;
     }
     if (xa->header.avgByteRate != (xa->header.align * xa->header.sampleRate)) {
         st_report("Invalid dwAvgByteRate value %d.  Assuming %d.",
@@ -175,14 +175,14 @@ static int st_xastartread(ft_t ft)
     }
 
     /* Set up the block buffer */
-    xa->blockSize = ft->info.channels * 0xf;
+    xa->blockSize = ft->signal.channels * 0xf;
     xa->bufPos = xa->blockSize;
 
     /* Allocate memory for the block buffer */
     xa->buf = (unsigned char *)xcalloc(1, xa->blockSize);
     
     /* Allocate memory for the state */
-    xa->state = (xa_state_t *)xcalloc(sizeof(xa_state_t), ft->info.channels);
+    xa->state = (xa_state_t *)xcalloc(sizeof(xa_state_t), ft->signal.channels);
     
     /* Final initialization */
     xa->bytesDecoded = 0;
@@ -222,16 +222,16 @@ static st_size_t st_xaread(ft_t ft, st_sample_t *buf, st_size_t len)
             }
             xa->bufPos = 0;
             
-            for (i = 0; i < ft->info.channels; i++) {
+            for (i = 0; i < ft->signal.channels; i++) {
                 inByte = xa->buf[i];
                 xa->state[i].c1 = EA_ADPCM_Table[HNIBBLE(inByte)];
                 xa->state[i].c2 = EA_ADPCM_Table[HNIBBLE(inByte) + 4];
                 xa->state[i].shift = LNIBBLE(inByte) + 8;
             }
-            xa->bufPos += ft->info.channels;
+            xa->bufPos += ft->signal.channels;
         } else {
             /* Process the block */
-            for (i = 0; i < ft->info.channels && done < len; i++) {
+            for (i = 0; i < ft->signal.channels && done < len; i++) {
                 /* high nibble */
                 sample = HNIBBLE(xa->buf[xa->bufPos+i]);
                 sample = (sample << 28) >> xa->state[i].shift;
@@ -243,9 +243,9 @@ static st_size_t st_xaread(ft_t ft, st_sample_t *buf, st_size_t len)
                 xa->state[i].curSample = sample;
                 
                 buf[done++] = ST_SIGNED_WORD_TO_SAMPLE(sample,);
-                xa->bytesDecoded += ft->info.size;
+                xa->bytesDecoded += ft->signal.size;
             }
-            for (i = 0; i < ft->info.channels && done < len; i++) {
+            for (i = 0; i < ft->signal.channels && done < len; i++) {
                 /* low nibble */
                 sample = LNIBBLE(xa->buf[xa->bufPos+i]);
                 sample = (sample << 28) >> xa->state[i].shift;
@@ -257,10 +257,10 @@ static st_size_t st_xaread(ft_t ft, st_sample_t *buf, st_size_t len)
                 xa->state[i].curSample = sample;
                 
                 buf[done++] = ST_SIGNED_WORD_TO_SAMPLE(sample,);
-                xa->bytesDecoded += ft->info.size;
+                xa->bytesDecoded += ft->signal.size;
             }
 
-            xa->bufPos += ft->info.channels;
+            xa->bufPos += ft->signal.channels;
         }
     }
     if (done == 0) {

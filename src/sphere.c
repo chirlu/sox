@@ -72,16 +72,16 @@ static int st_spherestartread(ft_t ft)
 
         while (strncmp(buf, "end_head", 8) != 0)
         {
-            if (strncmp(buf, "sample_n_bytes", 14) == 0 && ft->info.size == -1)
+            if (strncmp(buf, "sample_n_bytes", 14) == 0 && ft->signal.size == -1)
             {
                 sscanf(buf, "%63s %15s %d", fldname, fldtype, &i);
-                ft->info.size = i;
+                ft->signal.size = i;
             }
             if (strncmp(buf, "channel_count", 13) == 0 && 
-                ft->info.channels == 0)
+                ft->signal.channels == 0)
             {
                 sscanf(buf, "%63s %15s %d", fldname, fldtype, &i);
-                ft->info.channels = i;
+                ft->signal.channels = i;
             }
             if (strncmp(buf, "sample_coding", 13) == 0)
             {
@@ -89,25 +89,25 @@ static int st_spherestartread(ft_t ft)
                 /* Only bother looking for ulaw flag.  All others
                  * should be caught below by default PCM check
                  */
-                if (ft->info.encoding == ST_ENCODING_UNKNOWN && 
+                if (ft->signal.encoding == ST_ENCODING_UNKNOWN && 
                     strncmp(fldsval,"ulaw",4) == 0)
                 {
-                    ft->info.encoding = ST_ENCODING_ULAW;
+                    ft->signal.encoding = ST_ENCODING_ULAW;
                 }
             }
             if (strncmp(buf, "sample_rate ", 12) == 0 &&
-                ft->info.rate == 0)
+                ft->signal.rate == 0)
             {
                 sscanf(buf, "%53s %15s %ld", fldname, fldtype, &rate);
-                ft->info.rate = rate;
+                ft->signal.rate = rate;
             }
             if (strncmp(buf, "sample_byte_format", 18) == 0)
             {
                 sscanf(buf, "%53s %15s %127s", fldname, fldtype, fldsval);
                 if (strncmp(fldsval,"01",2) == 0)
-                  ft->info.swap_bytes = ST_IS_BIGENDIAN; /* Data is little endian. */
+                  ft->signal.swap_bytes = ST_IS_BIGENDIAN; /* Data is little endian. */
                 else if (strncmp(fldsval,"10",2) == 0)
-                  ft->info.swap_bytes = ST_IS_LITTLEENDIAN; /* Data is big endian. */
+                  ft->signal.swap_bytes = ST_IS_LITTLEENDIAN; /* Data is big endian. */
             }
 
             if (st_reads(ft, buf, header_size) == ST_EOF)
@@ -120,19 +120,19 @@ static int st_spherestartread(ft_t ft)
             header_size -= (strlen(buf) + 1);
         }
 
-        if (ft->info.size == -1)
-            ft->info.size = ST_SIZE_BYTE;
+        if (ft->signal.size == -1)
+            ft->signal.size = ST_SIZE_BYTE;
 
         /* sample_coding is optional and is PCM if missing.
          * This means encoding is signed if size = word or
          * unsigned if size = byte.
          */
-        if (ft->info.encoding == ST_ENCODING_UNKNOWN)
+        if (ft->signal.encoding == ST_ENCODING_UNKNOWN)
         {
-            if (ft->info.size == 1)
-                ft->info.encoding = ST_ENCODING_UNSIGNED;
+            if (ft->signal.size == 1)
+                ft->signal.encoding = ST_ENCODING_UNSIGNED;
             else
-                ft->info.encoding = ST_ENCODING_SIGN2;
+                ft->signal.encoding = ST_ENCODING_SIGN2;
         }
 
         while (header_size)
@@ -197,7 +197,7 @@ static int st_spherestartwrite(ft_t ft)
         return (ST_EOF);
     }
 
-    switch (ft->info.encoding)
+    switch (ft->signal.encoding)
     {
         case ST_ENCODING_ULAW:
         case ST_ENCODING_SIGN2:
@@ -252,25 +252,25 @@ static int st_spherestopwrite(ft_t ft)
     st_writes(ft, "NIST_1A\n");
     st_writes(ft, "   1024\n");
 
-    samples = sphere->numSamples/ft->info.channels;
+    samples = sphere->numSamples/ft->signal.channels;
     sprintf(buf, "sample_count -i %ld\n", samples);
     st_writes(ft, buf);
 
-    sprintf(buf, "sample_n_bytes -i %d\n", ft->info.size);
+    sprintf(buf, "sample_n_bytes -i %d\n", ft->signal.size);
     st_writes(ft, buf);
 
-    sprintf(buf, "channel_count -i %d\n", ft->info.channels);
+    sprintf(buf, "channel_count -i %d\n", ft->signal.channels);
     st_writes(ft, buf);
 
     sprintf(buf, "sample_byte_format -s2 %s\n",
-        ft->info.swap_bytes != ST_IS_BIGENDIAN ? "10" : "01");
+        ft->signal.swap_bytes != ST_IS_BIGENDIAN ? "10" : "01");
     st_writes(ft, buf);
 
-    rate = ft->info.rate;
+    rate = ft->signal.rate;
     sprintf(buf, "sample_rate -i %ld\n", rate);
     st_writes(ft, buf);
 
-    if (ft->info.encoding == ST_ENCODING_ULAW)
+    if (ft->signal.encoding == ST_ENCODING_ULAW)
         st_writes(ft, "sample_coding -s4 ulaw\n");
     else
         st_writes(ft, "sample_coding -s3 pcm\n");

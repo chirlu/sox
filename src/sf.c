@@ -39,7 +39,7 @@ static void readcodes(ft_t ft, SFHEADER *sfhead)
         sfcodep = (SFCODE *) &sfcodes(sfhead);
         do {
                 sfcharp = (char *) sfcodep + sizeof(SFCODE);
-                if (ft->info.swap_bytes) {
+                if (ft->signal.swap_bytes) {
                         sfcodep->bsize = st_swapdw(sfcodep->bsize);
                         sfcodep->code = st_swapdw(sfcodep->code);
                 }
@@ -68,9 +68,9 @@ static int st_sfseek(ft_t ft, st_size_t offset)
     st_size_t new_offset, channel_block, alignment;
 
     sf_t sf = (sf_t ) ft->priv;
-    new_offset = offset * ft->info.size;
+    new_offset = offset * ft->signal.size;
     /* Make sure request aligns to a channel block (ie left+right) */
-    channel_block = ft->info.channels * ft->info.size;
+    channel_block = ft->signal.channels * ft->signal.size;
     alignment = new_offset % channel_block;
     /* Most common mistaken is to compute something like
      * "skip everthing upto and including this sample" so
@@ -103,7 +103,7 @@ static int st_sfstartread(ft_t ft)
                 return(ST_EOF);
         }
         memcpy(&sf->info, &sfhead.sfinfo, sizeof(struct sfinfo));
-        if (ft->info.swap_bytes) {
+        if (ft->signal.swap_bytes) {
                 sf->info.sf_srate = st_swapf(sf->info.sf_srate);
                 sf->info.sf_packmode = st_swapdw(sf->info.sf_packmode);
                 sf->info.sf_chans = st_swapdw(sf->info.sf_chans);
@@ -119,16 +119,16 @@ static int st_sfstartread(ft_t ft)
          * If your format specifies or your file header contains
          * any of the following information.
          */
-        ft->info.rate = sf->info.sf_srate;
+        ft->signal.rate = sf->info.sf_srate;
         switch(sf->info.sf_packmode) {
                 case SF_SHORT:
-                        ft->info.size = ST_SIZE_WORD;
-                        ft->info.encoding = ST_ENCODING_SIGN2;
-                        samplesize = ft->info.size;
+                        ft->signal.size = ST_SIZE_WORD;
+                        ft->signal.encoding = ST_ENCODING_SIGN2;
+                        samplesize = ft->signal.size;
                         break;
                 case SF_FLOAT:
-                        ft->info.size = ST_SIZE_DWORD;
-                        ft->info.encoding = ST_ENCODING_FLOAT;
+                        ft->signal.size = ST_SIZE_DWORD;
+                        ft->signal.encoding = ST_ENCODING_FLOAT;
                         samplesize = sizeof(float);
                         break;
                 default:
@@ -136,10 +136,10 @@ static int st_sfstartread(ft_t ft)
                                 sf->info.sf_packmode);
                         return(ST_EOF);
         }
-        ft->info.channels = (int) sf->info.sf_chans;
+        ft->signal.channels = (int) sf->info.sf_chans;
 
-        if (ft->info.channels == 0)
-            ft->info.channels = 1;
+        if (ft->signal.channels == 0)
+            ft->signal.channels = 1;
 
         /* Read codes and print as comments. */
         readcodes(ft, &sfhead);
@@ -181,18 +181,18 @@ static int st_sfstartwrite(ft_t ft)
         else
             sf->info.magic_union._magic_bytes.sf_machine = SF_SUN;
 
-        sf->info.sf_srate = ft->info.rate;
-        if (ft->info.size == ST_SIZE_DWORD &&
-            ft->info.encoding == ST_ENCODING_FLOAT) {
+        sf->info.sf_srate = ft->signal.rate;
+        if (ft->signal.size == ST_SIZE_DWORD &&
+            ft->signal.encoding == ST_ENCODING_FLOAT) {
                 sf->info.sf_packmode = SF_FLOAT;
         } else {
                 sf->info.sf_packmode = SF_SHORT;
                 /* Default to signed words */
-                ft->info.size = ST_SIZE_WORD;
-                ft->info.encoding = ST_ENCODING_SIGN2;
+                ft->signal.size = ST_SIZE_WORD;
+                ft->signal.encoding = ST_ENCODING_SIGN2;
         }
 
-        sf->info.sf_chans = ft->info.channels;
+        sf->info.sf_chans = ft->signal.channels;
 
         /* Clean out structure so unused areas will remain constain  */
         /* between different coverts and not rely on memory contents */

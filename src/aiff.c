@@ -79,9 +79,9 @@ static int st_aiffseek(ft_t ft, st_size_t offset)
     aiff_t aiff = (aiff_t ) ft->priv;
     st_size_t new_offset, channel_block, alignment;
 
-    new_offset = offset * ft->info.size;
+    new_offset = offset * ft->signal.size;
     /* Make sure request aligns to a channel block (ie left+right) */
-    channel_block = ft->info.channels * ft->info.size;
+    channel_block = ft->signal.channels * ft->signal.size;
     alignment = new_offset % channel_block;
     /* Most common mistaken is to compute something like
      * "skip everthing upto and including this sample" so
@@ -94,7 +94,7 @@ static int st_aiffseek(ft_t ft, st_size_t offset)
     ft->st_errno = st_seeki(ft, new_offset, SEEK_SET);
 
     if (ft->st_errno == ST_SUCCESS)
-        aiff->nsamples = ft->length - (new_offset / ft->info.size);
+        aiff->nsamples = ft->length - (new_offset / ft->signal.size);
 
     return(ft->st_errno);
 }
@@ -399,32 +399,32 @@ static int st_aiffstartread(ft_t ft)
         }
 
         if (foundcomm) {
-                ft->info.channels = channels;
-                ft->info.rate = rate;
-                if (ft->info.encoding != ST_ENCODING_UNKNOWN && ft->info.encoding != ST_ENCODING_SIGN2)
+                ft->signal.channels = channels;
+                ft->signal.rate = rate;
+                if (ft->signal.encoding != ST_ENCODING_UNKNOWN && ft->signal.encoding != ST_ENCODING_SIGN2)
                     st_report("AIFF only supports signed data.  Forcing to signed.");
-                ft->info.encoding = ST_ENCODING_SIGN2;
+                ft->signal.encoding = ST_ENCODING_SIGN2;
                 if (bits <= 8)
                 {
-                    ft->info.size = ST_SIZE_BYTE;
+                    ft->signal.size = ST_SIZE_BYTE;
                     if (bits < 8)
                         st_report("Forcing data size from %d bits to 8 bits",bits);
                 }
                 else if (bits <= 16)
                 {
-                    ft->info.size = ST_SIZE_WORD;
+                    ft->signal.size = ST_SIZE_WORD;
                     if (bits < 16)
                         st_report("Forcing data size from %d bits to 16 bits",bits);
                 }
                 else if (bits <= 24)
                 {
-                    ft->info.size = ST_SIZE_24BIT;
+                    ft->signal.size = ST_SIZE_24BIT;
                     if (bits < 24)
                         st_report("Forcing data size from %d bits to 24 bits",bits);
                 }
                 else if (bits <= 32)
                 {
-                    ft->info.size = ST_SIZE_DWORD;
+                    ft->signal.size = ST_SIZE_DWORD;
                     if (bits < 32)
                         st_report("Forcing data size from %d bits to 32 bits",bits);
                 }
@@ -434,10 +434,10 @@ static int st_aiffstartread(ft_t ft)
                     return(ST_EOF);
                 }
         } else  {
-                if ((ft->info.channels == 0)
-                        || (ft->info.rate == 0)
-                        || (ft->info.encoding == ST_ENCODING_UNKNOWN)
-                        || (ft->info.size == -1)) {
+                if ((ft->signal.channels == 0)
+                        || (ft->signal.rate == 0)
+                        || (ft->signal.encoding == ST_ENCODING_UNKNOWN)
+                        || (ft->signal.size == -1)) {
                   st_report("You must specify # channels, sample rate, signed/unsigned,");
                   st_report("and 8/16 on the command line.");
                   st_fail_errno(ft,ST_EFMT,"Bogus AIFF file: no COMM section.");
@@ -446,13 +446,13 @@ static int st_aiffstartread(ft_t ft)
 
         }
 
-        aiff->nsamples = ssndsize / ft->info.size;
+        aiff->nsamples = ssndsize / ft->signal.size;
 
         /* Cope with 'sowt' CD tracks as read on Macs */
         if (is_sowt)
         {
                 aiff->nsamples -= 4;
-                ft->info.swap_bytes = !ft->info.swap_bytes;
+                ft->signal.swap_bytes = !ft->signal.swap_bytes;
         }
         
         if (foundmark && !foundinstr)
@@ -694,16 +694,16 @@ static int st_aiffstartwrite(ft_t ft)
             return rc;
 
         aiff->nsamples = 0;
-        if ((ft->info.encoding == ST_ENCODING_ULAW ||
-             ft->info.encoding == ST_ENCODING_ALAW) && 
-            ft->info.size == ST_SIZE_BYTE) {
+        if ((ft->signal.encoding == ST_ENCODING_ULAW ||
+             ft->signal.encoding == ST_ENCODING_ALAW) && 
+            ft->signal.size == ST_SIZE_BYTE) {
                 st_report("expanding 8-bit u-law to signed 16 bits");
-                ft->info.encoding = ST_ENCODING_SIGN2;
-                ft->info.size = ST_SIZE_WORD;
+                ft->signal.encoding = ST_ENCODING_SIGN2;
+                ft->signal.size = ST_SIZE_WORD;
         }
-        if (ft->info.encoding != ST_ENCODING_UNKNOWN && ft->info.encoding != ST_ENCODING_SIGN2)
+        if (ft->signal.encoding != ST_ENCODING_UNKNOWN && ft->signal.encoding != ST_ENCODING_SIGN2)
             st_report("AIFF only supports signed data.  Forcing to signed.");
-        ft->info.encoding = ST_ENCODING_SIGN2; /* We have a fixed encoding */
+        ft->signal.encoding = ST_ENCODING_SIGN2; /* We have a fixed encoding */
 
         /* Compute the "very large number" so that a maximum number
            of samples can be transmitted through a pipe without the
@@ -711,7 +711,7 @@ static int st_aiffstartwrite(ft_t ft)
            At 48 kHz, 16 bits stereo, this gives ~3 hours of music.
            Sorry, the AIFF format does not provide for an "infinite"
            number of samples. */
-        return(aiffwriteheader(ft, 0x7f000000L / (ft->info.size*ft->info.channels)));
+        return(aiffwriteheader(ft, 0x7f000000L / (ft->signal.size*ft->signal.channels)));
 }
 
 static st_size_t st_aiffwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
@@ -744,7 +744,7 @@ static int st_aiffstopwrite(ft_t ft)
                 st_fail_errno(ft,errno,"can't rewind output file to rewrite AIFF header");
                 return(ST_EOF);
         }
-        return(aiffwriteheader(ft, aiff->nsamples / ft->info.channels));
+        return(aiffwriteheader(ft, aiff->nsamples / ft->signal.channels));
 }
 
 static int aiffwriteheader(ft_t ft, st_size_t nframes)
@@ -764,17 +764,17 @@ static int aiffwriteheader(ft_t ft, st_size_t nframes)
           hsize += 8 /* INST hdr */ + 20; /* INST chunk */
         }
 
-        if (ft->info.encoding == ST_ENCODING_SIGN2 && 
-            ft->info.size == ST_SIZE_BYTE)
+        if (ft->signal.encoding == ST_ENCODING_SIGN2 && 
+            ft->signal.size == ST_SIZE_BYTE)
                 bits = 8;
-        else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
-                 ft->info.size == ST_SIZE_WORD)
+        else if (ft->signal.encoding == ST_ENCODING_SIGN2 && 
+                 ft->signal.size == ST_SIZE_WORD)
                 bits = 16;
-        else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
-                 ft->info.size == ST_SIZE_24BIT)
+        else if (ft->signal.encoding == ST_ENCODING_SIGN2 && 
+                 ft->signal.size == ST_SIZE_24BIT)
                 bits = 24;
-        else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
-                 ft->info.size == ST_SIZE_DWORD)
+        else if (ft->signal.encoding == ST_ENCODING_SIGN2 && 
+                 ft->signal.size == ST_SIZE_DWORD)
                 bits = 32;
         else
         {
@@ -799,7 +799,7 @@ static int aiffwriteheader(ft_t ft, st_size_t nframes)
 
         st_writes(ft, "FORM"); /* IFF header */
         /* file size */
-        st_writedw(ft, hsize + nframes * ft->info.size * ft->info.channels); 
+        st_writedw(ft, hsize + nframes * ft->signal.size * ft->signal.channels); 
         st_writes(ft, "AIFF"); /* File type */
 
         /* Now we write the COMT comment chunk using the precomputed sizes */
@@ -829,10 +829,10 @@ static int aiffwriteheader(ft_t ft, st_size_t nframes)
         /* COMM chunk -- describes encoding (and #frames) */
         st_writes(ft, "COMM");
         st_writedw(ft, 18); /* COMM chunk size */
-        st_writew(ft, ft->info.channels); /* nchannels */
+        st_writew(ft, ft->signal.channels); /* nchannels */
         st_writedw(ft, nframes); /* number of frames */
         st_writew(ft, bits); /* sample width, in bits */
-        write_ieee_extended(ft, (double)ft->info.rate);
+        write_ieee_extended(ft, (double)ft->signal.rate);
 
         /* MARK chunk -- set markers */
         if (ft->instr.nloops) {
@@ -883,7 +883,7 @@ static int aiffwriteheader(ft_t ft, st_size_t nframes)
         /* SSND chunk -- describes data */
         st_writes(ft, "SSND");
         /* chunk size */
-        st_writedw(ft, 8 + nframes * ft->info.channels * ft->info.size); 
+        st_writedw(ft, 8 + nframes * ft->signal.channels * ft->signal.size); 
         st_writedw(ft, 0); /* offset */
         st_writedw(ft, 0); /* block size */
         return(ST_SUCCESS);
@@ -900,16 +900,16 @@ static int st_aifcstartwrite(ft_t ft)
             return rc;
 
         aiff->nsamples = 0;
-        if ((ft->info.encoding == ST_ENCODING_ULAW ||
-             ft->info.encoding == ST_ENCODING_ALAW) && 
-            ft->info.size == ST_SIZE_BYTE) {
+        if ((ft->signal.encoding == ST_ENCODING_ULAW ||
+             ft->signal.encoding == ST_ENCODING_ALAW) && 
+            ft->signal.size == ST_SIZE_BYTE) {
                 st_report("expanding 8-bit u-law to signed 16 bits");
-                ft->info.encoding = ST_ENCODING_SIGN2;
-                ft->info.size = ST_SIZE_WORD;
+                ft->signal.encoding = ST_ENCODING_SIGN2;
+                ft->signal.size = ST_SIZE_WORD;
         }
-        if (ft->info.encoding != ST_ENCODING_UNKNOWN && ft->info.encoding != ST_ENCODING_SIGN2)
+        if (ft->signal.encoding != ST_ENCODING_UNKNOWN && ft->signal.encoding != ST_ENCODING_SIGN2)
             st_report("AIFC only supports signed data.  Forcing to signed.");
-        ft->info.encoding = ST_ENCODING_SIGN2; /* We have a fixed encoding */
+        ft->signal.encoding = ST_ENCODING_SIGN2; /* We have a fixed encoding */
 
         /* Compute the "very large number" so that a maximum number
            of samples can be transmitted through a pipe without the
@@ -917,7 +917,7 @@ static int st_aifcstartwrite(ft_t ft)
            At 48 kHz, 16 bits stereo, this gives ~3 hours of music.
            Sorry, the AIFC format does not provide for an "infinite"
            number of samples. */
-        return(aifcwriteheader(ft, 0x7f000000L / (ft->info.size*ft->info.channels)));
+        return(aifcwriteheader(ft, 0x7f000000L / (ft->signal.size*ft->signal.channels)));
 }
 
 static int st_aifcstopwrite(ft_t ft)
@@ -942,7 +942,7 @@ static int st_aifcstopwrite(ft_t ft)
                 st_fail_errno(ft,errno,"can't rewind output file to rewrite AIFC header");
                 return(ST_EOF);
         }
-        return(aifcwriteheader(ft, aiff->nsamples / ft->info.channels));
+        return(aifcwriteheader(ft, aiff->nsamples / ft->signal.channels));
 }
 
 static int aifcwriteheader(ft_t ft, st_size_t nframes)
@@ -952,17 +952,17 @@ static int aifcwriteheader(ft_t ft, st_size_t nframes)
                 8 /*SSND hdr*/ + 12 /*SSND chunk*/;
         int bits = 0;
 
-        if (ft->info.encoding == ST_ENCODING_SIGN2 && 
-            ft->info.size == ST_SIZE_BYTE)
+        if (ft->signal.encoding == ST_ENCODING_SIGN2 && 
+            ft->signal.size == ST_SIZE_BYTE)
                 bits = 8;
-        else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
-                 ft->info.size == ST_SIZE_WORD)
+        else if (ft->signal.encoding == ST_ENCODING_SIGN2 && 
+                 ft->signal.size == ST_SIZE_WORD)
                 bits = 16;
-        else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
-                 ft->info.size == ST_SIZE_24BIT)
+        else if (ft->signal.encoding == ST_ENCODING_SIGN2 && 
+                 ft->signal.size == ST_SIZE_24BIT)
                 bits = 24;
-        else if (ft->info.encoding == ST_ENCODING_SIGN2 && 
-                 ft->info.size == ST_SIZE_DWORD)
+        else if (ft->signal.encoding == ST_ENCODING_SIGN2 && 
+                 ft->signal.size == ST_SIZE_DWORD)
                 bits = 32;
         else
         {
@@ -972,7 +972,7 @@ static int aifcwriteheader(ft_t ft, st_size_t nframes)
 
         st_writes(ft, "FORM"); /* IFF header */
         /* file size */
-        st_writedw(ft, hsize + nframes * ft->info.size * ft->info.channels); 
+        st_writedw(ft, hsize + nframes * ft->signal.size * ft->signal.channels); 
         st_writes(ft, "AIFC"); /* File type */
 
         /* FVER chunk */
@@ -983,10 +983,10 @@ static int aifcwriteheader(ft_t ft, st_size_t nframes)
         /* COMM chunk -- describes encoding (and #frames) */
         st_writes(ft, "COMM");
         st_writedw(ft, 18+4+1+15); /* COMM chunk size */
-        st_writew(ft, ft->info.channels); /* nchannels */
+        st_writew(ft, ft->signal.channels); /* nchannels */
         st_writedw(ft, nframes); /* number of frames */
         st_writew(ft, bits); /* sample width, in bits */
-        write_ieee_extended(ft, (double)ft->info.rate);
+        write_ieee_extended(ft, (double)ft->signal.rate);
 
         st_writes(ft, "NONE"); /*compression_type*/
         st_writeb(ft, 14);
@@ -996,7 +996,7 @@ static int aifcwriteheader(ft_t ft, st_size_t nframes)
         /* SSND chunk -- describes data */
         st_writes(ft, "SSND");
         /* chunk size */
-        st_writedw(ft, 8 + nframes * ft->info.channels * ft->info.size); 
+        st_writedw(ft, 8 + nframes * ft->signal.channels * ft->signal.size); 
         st_writedw(ft, 0); /* offset */
         st_writedw(ft, 0); /* block size */
 

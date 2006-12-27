@@ -79,18 +79,18 @@ static int st_avrstartread(ft_t ft)
 
   st_readw (ft, &(avr->mono));
   if (avr->mono) {
-    ft->info.channels = 2;
+    ft->signal.channels = 2;
   }
   else {
-    ft->info.channels = 1;
+    ft->signal.channels = 1;
   }
 
   st_readw (ft, &(avr->rez));
   if (avr->rez == 8) {
-    ft->info.size = ST_SIZE_BYTE;
+    ft->signal.size = ST_SIZE_BYTE;
   }
   else if (avr->rez == 16) {
-    ft->info.size = ST_SIZE_WORD;
+    ft->signal.size = ST_SIZE_WORD;
   }
   else {
     st_fail_errno(ft,ST_EFMT,"AVR: unsupported sample resolution");
@@ -99,10 +99,10 @@ static int st_avrstartread(ft_t ft)
 
   st_readw (ft, &(avr->sign));
   if (avr->sign) {
-    ft->info.encoding = ST_ENCODING_SIGN2;
+    ft->signal.encoding = ST_ENCODING_SIGN2;
   }
   else {
-    ft->info.encoding = ST_ENCODING_UNSIGNED;
+    ft->signal.encoding = ST_ENCODING_UNSIGNED;
   }
 
   st_readw (ft, &(avr->loop));
@@ -116,7 +116,7 @@ static int st_avrstartread(ft_t ft)
    *
    * Just masking the upper byte out.
    */
-  ft->info.rate = (avr->rate & 0x00ffffff);
+  ft->signal.rate = (avr->rate & 0x00ffffff);
 
   st_readdw (ft, &(avr->size));
 
@@ -169,10 +169,10 @@ static int st_avrstartwrite(ft_t ft)
   st_writeb(ft, 0);
 
   /* mono */
-  if (ft->info.channels == 1) {
+  if (ft->signal.channels == 1) {
     st_writew (ft, 0);
   }
-  else if (ft->info.channels == 2) {
+  else if (ft->signal.channels == 2) {
     st_writew (ft, 0xffff);
   }
   else {
@@ -181,10 +181,10 @@ static int st_avrstartwrite(ft_t ft)
   }
 
   /* rez */
-  if (ft->info.size == ST_SIZE_BYTE) {
+  if (ft->signal.size == ST_SIZE_BYTE) {
     st_writew (ft, 8);
   }
-  else if (ft->info.size == ST_SIZE_WORD) {
+  else if (ft->signal.size == ST_SIZE_WORD) {
     st_writew (ft, 16);
   }
   else {
@@ -193,10 +193,10 @@ static int st_avrstartwrite(ft_t ft)
   }
 
   /* sign */
-  if (ft->info.encoding == ST_ENCODING_SIGN2) {
+  if (ft->signal.encoding == ST_ENCODING_SIGN2) {
     st_writew (ft, 0xffff);
   }
-  else if (ft->info.encoding == ST_ENCODING_UNSIGNED) {
+  else if (ft->signal.encoding == ST_ENCODING_UNSIGNED) {
     st_writew (ft, 0);
   }
   else {
@@ -211,7 +211,7 @@ static int st_avrstartwrite(ft_t ft)
   st_writew (ft, 0xffff);
 
   /* rate */
-  st_writedw (ft, ft->info.rate);
+  st_writedw (ft, ft->signal.rate);
 
   /* size */
   /* Don't know the size yet. */
@@ -260,7 +260,7 @@ static int st_avrstopwrite(ft_t ft)
   avr_t avr = (avr_t)ft->priv;
   int rc;
 
-  int size = avr->size / ft->info.channels;
+  int size = avr->size / ft->signal.channels;
 
   rc = st_rawstopwrite(ft);
   if (rc)

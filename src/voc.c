@@ -258,12 +258,12 @@ static int st_vocstartread(ft_t ft)
         }
 
         /* setup word length of data */
-        ft->info.size = v->size;
+        ft->signal.size = v->size;
 
         /* ANN:  Check VOC format and map to the proper ST format value */
         switch (v->format) {
         case VOC_FMT_LIN8U:      /*     0    8 bit unsigned linear PCM */
-            ft->info.encoding = ST_ENCODING_UNSIGNED;
+            ft->signal.encoding = ST_ENCODING_UNSIGNED;
             break;
         case VOC_FMT_CRLADPCM4:  /*     1    Creative 8-bit to 4-bit ADPCM */
             st_fail ("Unsupported VOC format CRLADPCM4 %d", v->format);
@@ -278,13 +278,13 @@ static int st_vocstartread(ft_t ft)
             rtn=ST_EOF;
             break;
         case VOC_FMT_LIN16:      /*     4    16-bit signed PCM */
-            ft->info.encoding = ST_ENCODING_SIGN2;
+            ft->signal.encoding = ST_ENCODING_SIGN2;
             break;
         case VOC_FMT_ALAW:       /*     6    CCITT a-Law 8-bit PCM */
-            ft->info.encoding = ST_ENCODING_ALAW;
+            ft->signal.encoding = ST_ENCODING_ALAW;
             break;
         case VOC_FMT_MU255:      /*     7    CCITT u-Law 8-bit PCM */
-            ft->info.encoding = ST_ENCODING_ULAW;
+            ft->signal.encoding = ST_ENCODING_ULAW;
             break;
         case VOC_FMT_CRLADPCM4A: /*0x200    Creative 16-bit to 4-bit ADPCM */
             st_fail ("Unsupported VOC format CRLADPCM4A %d", v->format);
@@ -297,8 +297,8 @@ static int st_vocstartread(ft_t ft)
         }
 
         /* setup number of channels */
-        if (ft->info.channels == 0)
-                ft->info.channels = v->channels;
+        if (ft->signal.channels == 0)
+                ft->signal.channels = v->channels;
 
         return(ST_SUCCESS);
 }
@@ -428,12 +428,12 @@ static int st_vocstartwrite(ft_t ft)
         st_writew(ft, 0x10a);              /* major/minor version number */
         st_writew(ft, 0x1129);          /* checksum of version number */
 
-        if (ft->info.size == ST_SIZE_BYTE)
-          ft->info.encoding = ST_ENCODING_UNSIGNED;
+        if (ft->signal.size == ST_SIZE_BYTE)
+          ft->signal.encoding = ST_ENCODING_UNSIGNED;
         else
-          ft->info.encoding = ST_ENCODING_SIGN2;
-        if (ft->info.channels == 0)
-                ft->info.channels = 1;
+          ft->signal.encoding = ST_ENCODING_SIGN2;
+        if (ft->signal.channels == 0)
+                ft->signal.channels = 1;
 
         return(ST_SUCCESS);
 }
@@ -455,7 +455,7 @@ static st_size_t st_vocwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
         }
         v->samples += len;
         while(done < len) {
-          if (ft->info.size == ST_SIZE_BYTE) {
+          if (ft->signal.size == ST_SIZE_BYTE) {
             uc = ST_SAMPLE_TO_UNSIGNED_BYTE(*buf++, ft->clippedCount);
             st_writeb(ft, uc);
           } else {
@@ -482,17 +482,17 @@ static void blockstop(ft_t ft)
         if (v->silent) {
                 st_writew(ft, v->samples);
         } else {
-          if (ft->info.size == ST_SIZE_BYTE) {
-            if (ft->info.channels > 1) {
+          if (ft->signal.size == ST_SIZE_BYTE) {
+            if (ft->signal.channels > 1) {
               st_seeki(ft, 8, 1); /* forward 7 + 1 for new block header */
             }
           }
                 v->samples += 2;                /* adjustment: SBDK pp. 3-5 */
-                datum = (v->samples * ft->info.size) & 0xff;
+                datum = (v->samples * ft->signal.size) & 0xff;
                 st_writeb(ft, (int)datum);       /* low byte of length */
-                datum = ((v->samples * ft->info.size) >> 8) & 0xff;
+                datum = ((v->samples * ft->signal.size) >> 8) & 0xff;
                 st_writeb(ft, (int)datum);  /* middle byte of length */
-                datum = ((v->samples  * ft->info.size)>> 16) & 0xff;
+                datum = ((v->samples  * ft->signal.size)>> 16) & 0xff;
                 st_writeb(ft, (int)datum); /* high byte of length */
         }
 }
@@ -577,7 +577,7 @@ static int getblock(ft_t ft)
                             return(ST_EOF);
                           }
                           v->rate = uc;
-                          ft->info.rate = 1000000.0/(256 - v->rate);
+                          ft->signal.rate = 1000000.0/(256 - v->rate);
                           v->channels = 1;
                         }
                         st_readb(ft, &uc);
@@ -608,7 +608,7 @@ static int getblock(ft_t ft)
                             return(ST_EOF);
                         }
                         v->rate = new_rate_32;
-                        ft->info.rate = new_rate_32;
+                        ft->signal.rate = new_rate_32;
                         st_readb(ft, &uc);
                         switch (uc)
                         {
@@ -725,11 +725,11 @@ static int getblock(ft_t ft)
                         }
                         st_readb(ft, &uc);
                         if (uc)
-                                ft->info.channels = 2;  /* Stereo */
+                                ft->signal.channels = 2;  /* Stereo */
                         /* Needed number of channels before finishing
                            compute for rate */
-                        ft->info.rate = (256000000L/(65536L - v->rate))/
-                            ft->info.channels;
+                        ft->signal.rate = (256000000L/(65536L - v->rate))/
+                            ft->signal.channels;
                         /* An extended block must be followed by a data */
                         /* block to be valid so loop back to top so it  */
                         /* can be grabed.                               */
@@ -758,19 +758,19 @@ static void blockstart(ft_t ft)
                 st_writeb(ft, 0);               /* Period length */
                 st_writeb(ft, v->rate);         /* Rate code */
         } else {
-          if (ft->info.size == ST_SIZE_BYTE) {
+          if (ft->signal.size == ST_SIZE_BYTE) {
             /* 8-bit sample section.  By always setting the correct     */
             /* rate value in the DATA block (even when its preceeded    */
             /* by an EXTENDED block) old software can still play stereo */
             /* files in mono by just skipping over the EXTENDED block.  */
             /* Prehaps the rate should be doubled though to make up for */
             /* double amount of samples for a given time????            */
-            if (ft->info.channels > 1) {
+            if (ft->signal.channels > 1) {
               st_writeb(ft, VOC_EXTENDED);      /* Voice Extended block code */
               st_writeb(ft, 4);                /* block length = 4 */
               st_writeb(ft, 0);                /* block length = 4 */
               st_writeb(ft, 0);                /* block length = 4 */
-                  v->rate = 65536L - (256000000.0/(2*(float)ft->info.rate));
+                  v->rate = 65536L - (256000000.0/(2*(float)ft->signal.rate));
               st_writew(ft,v->rate);    /* Rate code */
               st_writeb(ft, 0);         /* File is not packed */
               st_writeb(ft, 1);         /* samples are in stereo */
@@ -779,7 +779,7 @@ static void blockstart(ft_t ft)
             st_writeb(ft, 0);           /* block length (for now) */
             st_writeb(ft, 0);           /* block length (for now) */
             st_writeb(ft, 0);           /* block length (for now) */
-            v->rate = 256 - (1000000.0/(float)ft->info.rate);
+            v->rate = 256 - (1000000.0/(float)ft->signal.rate);
             st_writeb(ft, (int) v->rate);/* Rate code */
             st_writeb(ft, 0);           /* 8-bit raw data */
         } else {
@@ -787,10 +787,10 @@ static void blockstart(ft_t ft)
             st_writeb(ft, 0);           /* block length (for now) */
             st_writeb(ft, 0);           /* block length (for now) */
             st_writeb(ft, 0);           /* block length (for now) */
-            v->rate = ft->info.rate;
+            v->rate = ft->signal.rate;
             st_writedw(ft, v->rate);    /* Rate code */
             st_writeb(ft, 16);          /* Sample Size */
-            st_writeb(ft, ft->info.channels);   /* Sample Size */
+            st_writeb(ft, ft->signal.channels);   /* Sample Size */
             st_writew(ft, 0x0004);      /* Encoding */
             st_writeb(ft, 0);           /* Unused */
             st_writeb(ft, 0);           /* Unused */

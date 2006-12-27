@@ -107,15 +107,15 @@ static int st_maudstartread(ft_t ft)
                             return (ST_EOF);
                         }
                         
-                        ft->info.rate = nom / denom;
+                        ft->signal.rate = nom / denom;
                         
                         st_readw(ft, &chaninf); /* channel information */
                         switch (chaninf) {
                         case 0:
-                                ft->info.channels = 1;
+                                ft->signal.channels = 1;
                                 break;
                         case 1:
-                                ft->info.channels = 2;
+                                ft->signal.channels = 2;
                                 break;
                         default:
                                 st_fail_errno(ft,ST_EFMT,"MAUD: unsupported number of channels in file");
@@ -123,7 +123,7 @@ static int st_maudstartread(ft_t ft)
                         }
                         
                         st_readw(ft, &chaninf); /* number of channels (mono: 1, stereo: 2, ...) */
-                        if (chaninf != ft->info.channels) 
+                        if (chaninf != ft->signal.channels) 
                         {
                                 st_fail_errno(ft,ST_EFMT,"MAUD: unsupported number of channels in file");
                             return(ST_EOF);
@@ -136,20 +136,20 @@ static int st_maudstartread(ft_t ft)
                         st_readdw(ft, &trash32);
                         
                         if (bitpersam == 8 && chaninf == 0) {
-                                ft->info.size = ST_SIZE_BYTE;
-                                ft->info.encoding = ST_ENCODING_UNSIGNED;
+                                ft->signal.size = ST_SIZE_BYTE;
+                                ft->signal.encoding = ST_ENCODING_UNSIGNED;
                         }
                         else if (bitpersam == 8 && chaninf == 2) {
-                                ft->info.size = ST_SIZE_BYTE;
-                                ft->info.encoding = ST_ENCODING_ALAW;
+                                ft->signal.size = ST_SIZE_BYTE;
+                                ft->signal.encoding = ST_ENCODING_ALAW;
                         }
                         else if (bitpersam == 8 && chaninf == 3) {
-                                ft->info.size = ST_SIZE_BYTE;
-                                ft->info.encoding = ST_ENCODING_ULAW;
+                                ft->signal.size = ST_SIZE_BYTE;
+                                ft->signal.encoding = ST_ENCODING_ULAW;
                         }
                         else if (bitpersam == 16 && chaninf == 0) {
-                                ft->info.size = ST_SIZE_WORD;
-                                ft->info.encoding = ST_ENCODING_SIGN2;
+                                ft->signal.size = ST_SIZE_WORD;
+                                ft->signal.encoding = ST_ENCODING_SIGN2;
                         }
                         else 
                         {
@@ -215,16 +215,16 @@ static int st_maudstartwrite(ft_t ft)
             return (ST_EOF);
         }
         
-        if (ft->info.channels != 1 && ft->info.channels != 2) {
+        if (ft->signal.channels != 1 && ft->signal.channels != 2) {
                 st_fail_errno(ft,ST_EFMT,"MAUD: unsupported number of channels, unable to store");
                 return(ST_EOF);
         }
-        if (ft->info.size == ST_SIZE_WORD) ft->info.encoding = ST_ENCODING_SIGN2;
-        if (ft->info.encoding == ST_ENCODING_ULAW || 
-            ft->info.encoding == ST_ENCODING_ALAW) ft->info.size = ST_SIZE_BYTE;
-        if (ft->info.size == ST_SIZE_BYTE && 
-            ft->info.encoding == ST_ENCODING_SIGN2) 
-            ft->info.encoding = ST_ENCODING_UNSIGNED;
+        if (ft->signal.size == ST_SIZE_WORD) ft->signal.encoding = ST_ENCODING_SIGN2;
+        if (ft->signal.encoding == ST_ENCODING_ULAW || 
+            ft->signal.encoding == ST_ENCODING_ALAW) ft->signal.size = ST_SIZE_BYTE;
+        if (ft->signal.size == ST_SIZE_BYTE && 
+            ft->signal.encoding == ST_ENCODING_SIGN2) 
+            ft->signal.encoding = ST_ENCODING_UNSIGNED;
         
         p->nsamples = 0x7f000000L;
         maudwriteheader(ft);
@@ -268,14 +268,14 @@ static void maudwriteheader(ft_t ft)
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         
         st_writes(ft, "FORM");
-        st_writedw(ft, (p->nsamples*ft->info.size) + MAUDHEADERSIZE);  /* size of file */
+        st_writedw(ft, (p->nsamples*ft->signal.size) + MAUDHEADERSIZE);  /* size of file */
         st_writes(ft, "MAUD"); /* File type */
         
         st_writes(ft, "MHDR");
         st_writedw(ft,  8*4); /* number of bytes to follow */
         st_writedw(ft, p->nsamples);  /* number of samples stored in MDAT */
         
-        switch (ft->info.encoding) {
+        switch (ft->signal.encoding) {
                 
         case ST_ENCODING_UNSIGNED:
                 st_writew(ft, (int) 8); /* number of bits per sample as stored in MDAT */
@@ -297,10 +297,10 @@ static void maudwriteheader(ft_t ft)
                 break;
         }
         
-        st_writedw(ft, ft->info.rate); /* clock source frequency */
+        st_writedw(ft, ft->signal.rate); /* clock source frequency */
         st_writew(ft, (int) 1); /* clock devide */
         
-        if (ft->info.channels == 1) {
+        if (ft->signal.channels == 1) {
                 st_writew(ft, (int) 0); /* channel information */
                 st_writew(ft, (int) 1); /* number of channels (mono: 1, stereo: 2, ...) */
         }
@@ -309,7 +309,7 @@ static void maudwriteheader(ft_t ft)
                 st_writew(ft, (int) 2);
         }
         
-        switch (ft->info.encoding) {
+        switch (ft->signal.encoding) {
                 
         case ST_ENCODING_UNSIGNED:
         case ST_ENCODING_SIGN2:
@@ -337,7 +337,7 @@ static void maudwriteheader(ft_t ft)
         st_writes(ft, "file create by Sound eXchange ");
         
         st_writes(ft, "MDAT");
-        st_writedw(ft, p->nsamples * ft->info.size ); /* samples in file */
+        st_writedw(ft, p->nsamples * ft->signal.size ); /* samples in file */
 }
 
 /* Amiga MAUD */

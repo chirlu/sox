@@ -181,8 +181,8 @@ static int st_mp3startread(ft_t ft)
     mad_synth_init(p->Synth);
     mad_timer_reset(p->Timer);
 
-    ft->info.encoding = ST_ENCODING_MP3;
-    ft->info.size = ST_SIZE_WORD;
+    ft->signal.encoding = ST_ENCODING_MP3;
+    ft->signal.size = ST_SIZE_WORD;
 
     /* Decode at least one valid frame to find out the input
      * format.  The decoded frame will be saved off so that it
@@ -239,7 +239,7 @@ static int st_mp3startread(ft_t ft)
         case MAD_MODE_DUAL_CHANNEL:
         case MAD_MODE_JOINT_STEREO:
         case MAD_MODE_STEREO:
-            ft->info.channels = MAD_NCHANNELS(&p->Frame->header);
+            ft->signal.channels = MAD_NCHANNELS(&p->Frame->header);
             break;
         default:
             st_fail_errno(ft, ST_EFMT, "Cannot determine number of channels");
@@ -250,7 +250,7 @@ static int st_mp3startread(ft_t ft)
 
     mad_timer_add(p->Timer,p->Frame->header.duration);
     mad_synth_frame(p->Synth,p->Frame);
-    ft->info.rate=p->Synth->pcm.samplerate;
+    ft->signal.rate=p->Synth->pcm.samplerate;
 
     p->cursamp = 0;
 
@@ -271,10 +271,10 @@ static st_size_t st_mp3read(ft_t ft, st_sample_t *buf, st_size_t len)
     size_t chan;
 
     do {
-        donow=min(len,(p->Synth->pcm.length - p->cursamp)*ft->info.channels);
+        donow=min(len,(p->Synth->pcm.length - p->cursamp)*ft->signal.channels);
         i=0;
         while(i<donow){
-            for(chan=0;chan<ft->info.channels;chan++){
+            for(chan=0;chan<ft->signal.channels;chan++){
                 sample=p->Synth->pcm.samples[chan][p->cursamp];
                 if (sample < -MAD_F_ONE)
                     sample=-MAD_F_ONE;
@@ -372,10 +372,10 @@ static int st_mp3startwrite(ft_t ft)
 {
   struct mp3priv *p = (struct mp3priv *) ft->priv;
   
-  if (ft->info.encoding != ST_ENCODING_MP3) {
-    if(ft->info.encoding != ST_ENCODING_UNKNOWN)
+  if (ft->signal.encoding != ST_ENCODING_MP3) {
+    if(ft->signal.encoding != ST_ENCODING_UNKNOWN)
       st_report("Encoding forced to MP3");
-    ft->info.encoding = ST_ENCODING_MP3;
+    ft->signal.encoding = ST_ENCODING_MP3;
   }
 
   p->gfp = lame_init();
@@ -384,16 +384,16 @@ static int st_mp3startwrite(ft_t ft)
     return(ST_EOF);
   }
 
-  if (ft->info.channels != ST_ENCODING_UNKNOWN) {
-    if ( (lame_set_num_channels(p->gfp,ft->info.channels)) < 0) {
+  if (ft->signal.channels != ST_ENCODING_UNKNOWN) {
+    if ( (lame_set_num_channels(p->gfp,ft->signal.channels)) < 0) {
         st_fail_errno(ft,ST_EOF,"Unsupported number of channels");
         return(ST_EOF);
     }
   }
   else
-    ft->info.channels = lame_get_num_channels(p->gfp); /* LAME default */
+    ft->signal.channels = lame_get_num_channels(p->gfp); /* LAME default */
 
-  lame_set_in_samplerate(p->gfp,ft->info.rate);
+  lame_set_in_samplerate(p->gfp,ft->signal.rate);
 
   lame_set_bWriteVbrTag(p->gfp, 0); /* disable writing VBR tag */
 
@@ -403,7 +403,7 @@ static int st_mp3startwrite(ft_t ft)
   /* FIXME: Someone who knows about lame could implement adjustable compression
      here.  E.g. by using the -C value as an index into a table of params or
      as a compressed bit-rate. */
-  if (ft->info.compression != HUGE_VAL)
+  if (ft->signal.compression != HUGE_VAL)
       st_warn("-C option not supported for mp3; using default compression rate");
   if (lame_init_params(p->gfp) < 0){
         st_fail_errno(ft,ST_EOF,"LAME initialization failed");
@@ -422,7 +422,7 @@ static st_size_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
     char *mp3buffer;
     st_size_t mp3buffer_size;
     short signed int *buffer_l, *buffer_r = NULL;
-    int nsamples = samp/ft->info.channels;
+    int nsamples = samp/ft->signal.channels;
     int i,j;
     st_ssize_t done = 0;
     st_size_t written;
@@ -445,7 +445,7 @@ static st_size_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
      */
     buffer_l = (short signed int *)xmalloc(nsamples * sizeof(short signed int));
 
-    if (ft->info.channels == 2)
+    if (ft->signal.channels == 2)
     {
         /* lame doesn't support iterleaved samples so we must break
          * them out into seperate buffers.
@@ -494,12 +494,12 @@ static st_size_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
         goto end;
     }
 
-    done = nsamples*ft->info.channels;
+    done = nsamples*ft->signal.channels;
 
 end:
     free(mp3buffer);
 end2:
-    if (ft->info.channels == 2)
+    if (ft->signal.channels == 2)
         free(buffer_r);
 end3:
     free(buffer_l);

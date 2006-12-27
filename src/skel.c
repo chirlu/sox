@@ -52,17 +52,17 @@ static int st_skelstartread(ft_t ft)
    * If your format contains a header with format information
    * then you should set it here.
    */
-  ft->info.rate =  44100L;
-  ft->info.size = ST_SIZE_BYTE or WORD ...;
-  ft->info.encoding = ST_ENCODING_UNSIGNED or SIGN2 ...;
-  ft->info.channels = 1 or 2 or 4;
+  ft->signal.rate =  44100L;
+  ft->signal.size = ST_SIZE_BYTE or WORD ...;
+  ft->signal.encoding = ST_ENCODING_UNSIGNED or SIGN2 ...;
+  ft->signal.channels = 1 or 2 or 4;
   ft->comment = xmalloc(size_of_comment);
   strcpy(ft->comment, "any comment in file header.");
 
   /* If your format doesn't have a header then samples_in_file
    * can be determined by the file size.
    */
-  samples_in_file = st_filelength(ft)/ft->info.size;
+  samples_in_file = st_filelength(ft)/ft->signal.size;
 
   /* If you can detect the length of your file, record it here. */
   ft->length = samples_in_file;
@@ -84,16 +84,16 @@ static st_size_t st_skelread(ft_t ft, st_sample_t *buf, st_size_t len)
   st_sample_t l;
 
   /* Always return a full frame of audio data */
-  if (len % ft->info.size)
-    len -= (len % ft->info.size);
+  if (len % ft->signal.size)
+    len -= (len % ft->signal.size);
 
   for (done = 0; done < len; done++) {
     if no more samples
             break
             get a sample
-            switch (ft->info.size) {
+            switch (ft->signal.size) {
             case ST_SIZE_BYTE:
-              switch (ft->info.encoding) {
+              switch (ft->signal.encoding) {
                 case ST_ENCODING_UNSIGNED;
                 *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(sample);
                 break;
@@ -128,16 +128,16 @@ static int st_skelstartwrite(ft_t ft)
     return ST_EOF;
   }
 
-  if (ft->info.rate != 44100L)
+  if (ft->signal.rate != 44100L)
     st_fail_errno(ft, ST_EVALUE, "Output .skel file must have a sample rate of 44100");
 
-  if (ft->info.size == -1) {
+  if (ft->signal.size == -1) {
     st_fail_errno(ft, ST_EVALUE, "Did not specify a size for .skel output file");
     return ST_EOF;
   }
 
-  error check ft->info.encoding;
-  error check ft->info.channels;
+  error check ft->signal.encoding;
+  error check ft->signal.channels;
 
   /* Write file header, if any */
   /* Write comment field, if any */
@@ -151,9 +151,9 @@ static st_size_t st_skelwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
   skel_t sk = (skel_t)ft->priv;
   st_size_t len = 0;
 
-  switch (ft->info.size) {
+  switch (ft->signal.size) {
   case ST_SIZE_BYTE:
-    switch (ft->info.encoding) {
+    switch (ft->signal.encoding) {
     case ST_ENCODING_UNSIGNED:
       while (len--) {
         len = st_writeb(ft, ST_SAMPLE_TO_UNSIGNED_BYTE(*buff++, ft->clippedCount));

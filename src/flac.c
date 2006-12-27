@@ -161,10 +161,10 @@ static int st_format_start_read(ft_t const format)
     return ST_EOF;
   }
 
-  format->info.encoding = ST_ENCODING_FLAC;
-  format->info.rate = decoder->sample_rate;
-  format->info.size = decoder->bits_per_sample >> 3;
-  format->info.channels = decoder->channels;
+  format->signal.encoding = ST_ENCODING_FLAC;
+  format->signal.rate = decoder->sample_rate;
+  format->signal.size = decoder->bits_per_sample >> 3;
+  format->signal.channels = decoder->channels;
   format->length = decoder->total_samples * decoder->channels;
   return ST_SUCCESS;
 }
@@ -296,10 +296,10 @@ static int st_format_start_write(ft_t const format)
     };
     unsigned compression_level = array_length(options) - 1; /* Default to "best" */
 
-    if (format->info.compression != HUGE_VAL)
+    if (format->signal.compression != HUGE_VAL)
     {
-      compression_level = format->info.compression;
-      if (compression_level != format->info.compression || 
+      compression_level = format->signal.compression;
+      if (compression_level != format->signal.compression || 
           compression_level >= array_length(options))
       {
         st_fail_errno(format, ST_EINVAL,
@@ -318,7 +318,7 @@ static int st_format_start_write(ft_t const format)
     SET_OPTION(max_lpc_order);
     SET_OPTION(max_residual_partition_order);
     SET_OPTION(min_residual_partition_order);
-    if (format->info.channels == 2)
+    if (format->signal.channels == 2)
     {
       SET_OPTION(do_mid_side_stereo);
       SET_OPTION(loose_mid_side_stereo);
@@ -326,12 +326,12 @@ static int st_format_start_write(ft_t const format)
 #undef SET_OPTION
   }
 
-  encoder->bits_per_sample = (format->info.size > 4 ? 4 : format->info.size) << 3;
+  encoder->bits_per_sample = (format->signal.size > 4 ? 4 : format->signal.size) << 3;
   st_report("FLAC encoding at %i bits per sample", encoder->bits_per_sample);
 
-  FLAC__stream_encoder_set_channels(encoder->flac, format->info.channels);
+  FLAC__stream_encoder_set_channels(encoder->flac, format->signal.channels);
   FLAC__stream_encoder_set_bits_per_sample(encoder->flac, encoder->bits_per_sample);
-  FLAC__stream_encoder_set_sample_rate(encoder->flac, format->info.rate);
+  FLAC__stream_encoder_set_sample_rate(encoder->flac, format->signal.rate);
 
   { /* Check if rate is streamable: */
     static const unsigned streamable_rates[] =
@@ -340,7 +340,7 @@ static int st_format_start_write(ft_t const format)
     bool streamable = false;
     for (i = 0; !streamable && i < array_length(streamable_rates); ++i)
     {
-       streamable = (streamable_rates[i] == format->info.rate);
+       streamable = (streamable_rates[i] == format->signal.rate);
     }
     if (!streamable)
     {
@@ -423,7 +423,7 @@ static st_size_t st_format_write(ft_t const format, st_sample_t const * const sa
       case 32: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_DWORD(sampleBuffer[i],); break;
     }
   }
-  FLAC__stream_encoder_process_interleaved(encoder->flac, encoder->decoded_samples, len / format->info.channels);
+  FLAC__stream_encoder_process_interleaved(encoder->flac, encoder->decoded_samples, len / format->signal.channels);
   return FLAC__stream_encoder_get_state(encoder->flac) == FLAC__STREAM_ENCODER_OK ? len : 0;
 }
 

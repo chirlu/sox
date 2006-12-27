@@ -35,9 +35,9 @@ static int st_datstartread(ft_t ft)
       inpstr[LINEWIDTH-1] = 0;
       if ((sscanf(inpstr," %c", &sc) != 0) && (sc != ';')) break;
       if (sscanf(inpstr," ; Sample Rate %ld", &rate)) {
-        ft->info.rate=rate;
+        ft->signal.rate=rate;
       } else if (sscanf(inpstr," ; Channels %d", &chan)) {
-        ft->info.channels=chan;
+        ft->signal.channels=chan;
       }
     }
     /* Hold a copy of the last line we read (first non-comment) */
@@ -49,11 +49,11 @@ static int st_datstartread(ft_t ft)
     }
 
     /* Default channels to 1 if not found */
-    if (ft->info.channels == 0)
-       ft->info.channels = 1;
+    if (ft->signal.channels == 0)
+       ft->signal.channels = 1;
 
-    ft->info.size = ST_SIZE_64BIT;
-    ft->info.encoding = ST_ENCODING_FLOAT;
+    ft->signal.size = ST_SIZE_64BIT;
+    ft->signal.encoding = ST_ENCODING_FLOAT;
 
     return (ST_SUCCESS);
 }
@@ -63,14 +63,14 @@ static int st_datstartwrite(ft_t ft)
     dat_t dat = (dat_t) ft->priv;
     char s[LINEWIDTH];
 
-    ft->info.size = ST_SIZE_64BIT;
-    ft->info.encoding = ST_ENCODING_FLOAT;
+    ft->signal.size = ST_SIZE_64BIT;
+    ft->signal.encoding = ST_ENCODING_FLOAT;
     dat->timevalue = 0.0;
-    dat->deltat = 1.0 / (double)ft->info.rate;
+    dat->deltat = 1.0 / (double)ft->signal.rate;
     /* Write format comments to start of file */
-    sprintf(s,"; Sample Rate %ld\015\n", (long)ft->info.rate);
+    sprintf(s,"; Sample Rate %ld\015\n", (long)ft->signal.rate);
     st_writes(ft, s);
-    sprintf(s,"; Channels %d\015\n", (int)ft->info.channels);
+    sprintf(s,"; Channels %d\015\n", (int)ft->signal.channels);
     st_writes(ft, s);
 
     return (ST_SUCCESS);
@@ -88,7 +88,7 @@ static st_size_t st_datread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
     st_size_t i=0;
 
     /* Always read a complete set of channels */
-    nsamp -= (nsamp % ft->info.channels);
+    nsamp -= (nsamp % ft->signal.channels);
 
     while (done < nsamp) {
 
@@ -107,7 +107,7 @@ static st_size_t st_datread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 
       /* Read a complete set of channels */
       sscanf(inpstr," %*s%n", &inpPtr);
-      for (i=0; i<ft->info.channels; i++) {
+      for (i=0; i<ft->signal.channels; i++) {
         retc = sscanf(&inpstr[inpPtr]," %lg%n", &sampval, &inpPtrInc);
         inpPtr += inpPtrInc;
         if (retc != 1) {
@@ -132,13 +132,13 @@ static st_size_t st_datwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
     st_size_t i=0;
 
     /* Always write a complete set of channels */
-    nsamp -= (nsamp % ft->info.channels);
+    nsamp -= (nsamp % ft->signal.channels);
 
     /* Write time, then sample values, then CRLF newline */
     while(done < nsamp) {
       sprintf(s," %15.8g ",dat->timevalue);
       st_writes(ft, s);
-      for (i=0; i<ft->info.channels; i++) {
+      for (i=0; i<ft->signal.channels; i++) {
         sampval = ST_SAMPLE_TO_FLOAT_DDWORD(*buf++, ft->clippedCount);
         sprintf(s," %15.8g", sampval);
         st_writes(ft, s);

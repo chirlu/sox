@@ -119,9 +119,9 @@ static int st_auseek(ft_t ft, st_size_t offset)
     {
         st_size_t new_offset, channel_block, alignment;
 
-        new_offset = offset * ft->info.size;
+        new_offset = offset * ft->signal.size;
         /* Make sure request aligns to a channel block (ie left+right) */
-        channel_block = ft->info.channels * ft->info.size;
+        channel_block = ft->signal.channels * ft->signal.size;
         alignment = new_offset % channel_block;
         /* Most common mistaken is to compute something like
          * "skip everthing upto and including this sample" so
@@ -164,11 +164,11 @@ static int st_austartread(ft_t ft)
                  * left over from pre-standardize period of testing for
                  * endianess.  Its not hurting though.
                  */
-                ft->info.swap_bytes = !ft->info.swap_bytes;
+                ft->signal.swap_bytes = !ft->signal.swap_bytes;
                 st_debug("Found inverted DEC magic word.  Swapping bytes.");
         }
         else if (magic == SUN_INV_MAGIC) {
-                ft->info.swap_bytes = !ft->info.swap_bytes;
+                ft->signal.swap_bytes = !ft->signal.swap_bytes;
                 st_debug("Found inverted Sun/NeXT magic word. Swapping bytes.");
         }
         else if (magic == SUN_MAGIC) {
@@ -203,8 +203,8 @@ static int st_austartread(ft_t ft)
         p->dec_routine = NULL;
         p->in_buffer = 0;
         p->in_bits = 0;
-        if(st_auencodingandsize(encoding, &(ft->info.encoding),
-                             &(ft->info.size)) == ST_EOF)
+        if(st_auencodingandsize(encoding, &(ft->signal.encoding),
+                             &(ft->signal.size)) == ST_EOF)
         {
             st_fail_errno(ft,ST_EFMT,"Unsupported encoding in Sun/NeXT header.\nOnly U-law, signed bytes, signed words, ADPCM, and 32-bit floats are supported.");
             return(ST_EOF);
@@ -230,15 +230,15 @@ static int st_austartread(ft_t ft)
 
         /* Read the sampling rate */
         st_readdw(ft, &sample_rate);
-        if (ft->info.rate == 0 || ft->info.rate == sample_rate)
-            ft->info.rate = sample_rate;
+        if (ft->signal.rate == 0 || ft->signal.rate == sample_rate)
+            ft->signal.rate = sample_rate;
         else
             st_report("User options overriding rate read in .au header");
 
         /* Read the number of channels */
         st_readdw(ft, &channels);
-        if (ft->info.channels == 0 || ft->info.channels == channels)
-            ft->info.channels = channels;
+        if (ft->signal.channels == 0 || ft->signal.channels == channels)
+            ft->signal.channels = channels;
         else
             st_report("User options overriding channels read in .au header");
 
@@ -269,7 +269,7 @@ static int st_austartread(ft_t ft)
                 st_report("Input file %s: Sun header info: %s", ft->filename, buf);
         }
         /* Needed for seeking */
-        ft->length = data_size/ft->info.size;
+        ft->length = data_size/ft->signal.size;
         if(ft->seekable)
                 p->dataStart = st_tell(ft);
 
@@ -350,7 +350,7 @@ static st_size_t st_auread(ft_t ft, st_sample_t *buf, st_size_t samp)
 static st_size_t st_auwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
         au_t p = (au_t ) ft->priv;
-        p->data_size += samp * ft->info.size;
+        p->data_size += samp * ft->signal.size;
         return(st_rawwrite(ft, buf, samp));
 }
 
@@ -410,14 +410,14 @@ static void auwriteheader(ft_t ft, st_size_t data_size)
         int   x;
         int   comment_size;
 
-        if ((encoding = st_ausunencoding(ft->info.size, ft->info.encoding)) == -1) {
+        if ((encoding = st_ausunencoding(ft->signal.size, ft->signal.encoding)) == -1) {
                 st_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
                 st_report("Only U-law, A-law, and signed bytes/words/tri-bytes are supported.");
                 st_report("Defaulting to 8khz u-law");
                 encoding = SUN_ULAW;
-                ft->info.encoding = ST_ENCODING_ULAW;
-                ft->info.size = ST_SIZE_BYTE;
-                ft->info.rate = 8000;  /* strange but true */
+                ft->signal.encoding = ST_ENCODING_ULAW;
+                ft->signal.size = ST_SIZE_BYTE;
+                ft->signal.rate = 8000;  /* strange but true */
         }
 
         magic = SUN_MAGIC;
@@ -443,10 +443,10 @@ static void auwriteheader(ft_t ft, st_size_t data_size)
 
         st_writedw(ft, encoding);
 
-        sample_rate = ft->info.rate;
+        sample_rate = ft->signal.rate;
         st_writedw(ft, sample_rate);
 
-        channels = ft->info.channels;
+        channels = ft->signal.channels;
         st_writedw(ft, channels);
 
         st_writes(ft, ft->comment);

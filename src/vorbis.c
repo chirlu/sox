@@ -120,17 +120,17 @@ static int st_vorbisstartread(ft_t ft)
         vc = ov_comment(vb->vf, -1);
 
         /* Record audio info */
-        ft->info.rate = vi->rate;
-        ft->info.size = ST_SIZE_16BIT;
-        ft->info.encoding = ST_ENCODING_VORBIS;
-        ft->info.channels = vi->channels;
+        ft->signal.rate = vi->rate;
+        ft->signal.size = ST_SIZE_16BIT;
+        ft->signal.encoding = ST_ENCODING_VORBIS;
+        ft->signal.channels = vi->channels;
 
         /* ov_pcm_total doesn't work on non-seekable files so
          * skip that step in that case.  Also, it reports
          * "frame"-ish results so we must * channels.
          */
         if (ft->seekable)
-            ft->length = ov_pcm_total(vb->vf, -1) * ft->info.channels;
+            ft->length = ov_pcm_total(vb->vf, -1) * ft->signal.channels;
 
         /* Record comments */
         if (vc->comments == 0)
@@ -336,8 +336,8 @@ static int st_vorbisstartwrite(ft_t ft)
         long rate;
         double quality = 3; /* Default compression quality gives ~112kbps */
 
-        ft->info.size = ST_SIZE_16BIT;
-        ft->info.encoding = ST_ENCODING_VORBIS;
+        ft->signal.size = ST_SIZE_16BIT;
+        ft->signal.encoding = ST_ENCODING_VORBIS;
 
         /* Allocate memory for all of the structures */
         ve = vb->vorbis_enc_data = (vorbis_enc_t *)xmalloc(sizeof(vorbis_enc_t));
@@ -345,22 +345,22 @@ static int st_vorbisstartwrite(ft_t ft)
         vorbis_info_init(&ve->vi);
 
         /* TODO */
-        rate = ft->info.rate;
+        rate = ft->signal.rate;
         if (rate)
             st_fail_errno(ft, ST_EHDR, "Error setting up Ogg Vorbis encorder - make sure you've specied a sane rate and number of channels");
 
         /* Use encoding to average bit rate of VBR as specified by the -C option */
-        if (ft->info.compression != HUGE_VAL)
+        if (ft->signal.compression != HUGE_VAL)
         {
-            if (ft->info.compression < -1 || ft->info.compression > 10)
+            if (ft->signal.compression < -1 || ft->signal.compression > 10)
             {
                 st_fail_errno(ft,ST_EINVAL,
                               "Vorbis compression quality nust be between -1 and 10");
                 return ST_EOF;
             }
-            quality = ft->info.compression;
+            quality = ft->signal.compression;
         }
-        vorbis_encode_init_vbr(&ve->vi, ft->info.channels, ft->info.rate, quality / 10);
+        vorbis_encode_init_vbr(&ve->vi, ft->signal.channels, ft->signal.rate, quality / 10);
 
         vorbis_analysis_init(&ve->vd, &ve->vi);
         vorbis_block_init(&ve->vd, &ve->vb);
@@ -381,7 +381,7 @@ static st_size_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;
-        st_size_t samples = len / ft->info.channels;
+        st_size_t samples = len / ft->signal.channels;
         float **buffer = vorbis_analysis_buffer(&ve->vd, samples);
         st_size_t i, j;
         int ret;
@@ -389,8 +389,8 @@ static st_size_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 
         /* Copy samples into vorbis buffer */
         for (i = 0; i < samples; i++)
-                for (j = 0; j < ft->info.channels; j++)
-                        buffer[j][i] = buf[i*ft->info.channels + j]
+                for (j = 0; j < ft->signal.channels; j++)
+                        buffer[j][i] = buf[i*ft->signal.channels + j]
                                 / ((float)ST_SAMPLE_MAX);
 
         vorbis_analysis_wrote(&ve->vd, samples);

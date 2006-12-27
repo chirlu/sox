@@ -158,10 +158,10 @@ static int st_svxstartread(ft_t ft)
         st_readdw(ft, &(p->nsamples));
 
         ft->length = p->nsamples;
-        ft->info.channels = channels;
-        ft->info.rate = rate;
-        ft->info.encoding = ST_ENCODING_SIGN2;
-        ft->info.size = ST_SIZE_BYTE;
+        ft->signal.channels = channels;
+        ft->signal.rate = rate;
+        ft->signal.encoding = ST_ENCODING_SIGN2;
+        ft->signal.size = ST_SIZE_BYTE;
 
         /* open files to channels */
         p->ch[0] = ft->fp;
@@ -201,7 +201,7 @@ static st_size_t st_svxread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
         svx_t p = (svx_t ) ft->priv;
 
         while (done < nsamp) {
-                for (i = 0; i < ft->info.channels; i++) {
+                for (i = 0; i < ft->signal.channels; i++) {
                         /* FIXME: don't pass FILE pointers! */
                         datum = getc(p->ch[i]);
                         if (feof(p->ch[i]))
@@ -209,7 +209,7 @@ static st_size_t st_svxread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
                         /* scale signed up to long's range */
                         *buf++ = ST_SIGNED_BYTE_TO_SAMPLE(datum,);
                 }
-                done += ft->info.channels;
+                done += ft->signal.channels;
         }
         return done;
 }
@@ -224,7 +224,7 @@ static int st_svxstopread(ft_t ft)
         svx_t p = (svx_t ) ft->priv;
 
         /* close channel files */
-        for (i = 1; i < ft->info.channels; i++) {
+        for (i = 1; i < ft->signal.channels; i++) {
                 fclose (p->ch[i]);
         }
         return(ST_SUCCESS);
@@ -240,7 +240,7 @@ static int st_svxstartwrite(ft_t ft)
 
         /* open channel output files */
         p->ch[0] = ft->fp;
-        for (i = 1; i < ft->info.channels; i++) {
+        for (i = 1; i < ft->signal.channels; i++) {
                 if ((p->ch[i] = tmpfile()) == NULL)
                 {
                         st_fail_errno(ft,errno,"Can't open channel output file");
@@ -249,8 +249,8 @@ static int st_svxstartwrite(ft_t ft)
         }
 
         /* write header (channel 0) */
-        ft->info.encoding = ST_ENCODING_SIGN2;
-        ft->info.size = ST_SIZE_BYTE;
+        ft->signal.encoding = ST_ENCODING_SIGN2;
+        ft->signal.size = ST_SIZE_BYTE;
 
         p->nsamples = 0;
         svxwriteheader(ft, p->nsamples);
@@ -271,12 +271,12 @@ static st_size_t st_svxwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
         p->nsamples += len;
 
         while(done < len) {
-                for (i = 0; i < ft->info.channels; i++) {
+                for (i = 0; i < ft->signal.channels; i++) {
                         datum = ST_SAMPLE_TO_SIGNED_BYTE(*buf++, ft->clippedCount);
                         /* FIXME: Needs to pass ft struct and not FILE */
                         putc(datum, p->ch[i]);
                 }
-                done += ft->info.channels;
+                done += ft->signal.channels;
         }
         return (done);
 }
@@ -294,7 +294,7 @@ static int st_svxstopwrite(ft_t ft)
 
         /* append all channel pieces to channel 0 */
         /* close temp files */
-        for (i = 1; i < ft->info.channels; i++) {
+        for (i = 1; i < ft->signal.channels; i++) {
                 if (fseeko(p->ch[i], 0L, 0))
                 {
                         st_fail_errno (ft,errno,"Can't rewind channel output file %d",i);
@@ -338,10 +338,10 @@ static void svxwriteheader(ft_t ft, st_size_t nsamples)
 
         st_writes(ft, "VHDR");
         st_writedw(ft, 20); /* number of bytes to follow */
-        st_writedw(ft, nsamples/ft->info.channels);  /* samples, 1-shot */
+        st_writedw(ft, nsamples/ft->signal.channels);  /* samples, 1-shot */
         st_writedw(ft, 0);  /* samples, repeat */
         st_writedw(ft, 0);  /* samples per repeat cycle */
-        st_writew(ft, (int) ft->info.rate); /* samples per second */
+        st_writew(ft, (int) ft->signal.rate); /* samples per second */
         st_writeb(ft,1); /* number of octabes */
         st_writeb(ft,0); /* data compression (none) */
         st_writew(ft,1); st_writew(ft,0); /* volume */
@@ -352,8 +352,8 @@ static void svxwriteheader(ft_t ft, st_size_t nsamples)
 
         st_writes(ft, "CHAN");
         st_writedw(ft, 4);
-        st_writedw(ft, (ft->info.channels == 2) ? 6 :
-                   (ft->info.channels == 4) ? 15 : 2);
+        st_writedw(ft, (ft->signal.channels == 2) ? 6 :
+                   (ft->signal.channels == 4) ? 15 : 2);
 
         st_writes(ft, "BODY");
         st_writedw(ft, nsamples); /* samples in file */

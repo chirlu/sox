@@ -93,12 +93,12 @@ static int  st_voxstartread (ft_t ft)
        state->file.pos      = 0;
        state->file.eof      = 0;
 
-       ft->info.size     = ST_SIZE_WORD;
-       ft->info.encoding = ST_ENCODING_OKI_ADPCM;
-       ft->info.channels = 1;
-       if (ft->info.rate == 0) {
+       ft->signal.size     = ST_SIZE_WORD;
+       ft->signal.encoding = ST_ENCODING_OKI_ADPCM;
+       ft->signal.channels = 1;
+       if (ft->signal.rate == 0) {
          st_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
-         ft->info.rate = 8000;
+         ft->signal.rate = 8000;
        }
 
        /* ... initialise CODEC state */
@@ -208,9 +208,9 @@ static int  st_voxstartwrite (ft_t ft)
        state->file.pos      = 0;
        state->file.eof      = 0;
 
-           ft->info.size     = ST_SIZE_WORD;
-       ft->info.encoding = ST_ENCODING_OKI_ADPCM;
-       ft->info.channels = 1;
+           ft->signal.size     = ST_SIZE_WORD;
+       ft->signal.encoding = ST_ENCODING_OKI_ADPCM;
+       ft->signal.channels = 1;
 
        /* ... initialise CODEC state */
 

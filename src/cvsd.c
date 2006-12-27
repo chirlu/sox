@@ -115,12 +115,12 @@ static void cvsdstartcommon(ft_t ft)
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         
-        p->cvsd_rate = (ft->info.rate <= 24000) ? 16000 : 32000;
-        ft->info.rate = 8000;
-        ft->info.channels = 1;
-        ft->info.size = ST_SIZE_WORD; /* make output format default to words */
-        ft->info.encoding = ST_ENCODING_SIGN2;
-        p->swapbits = ft->info.reverse_bits;
+        p->cvsd_rate = (ft->signal.rate <= 24000) ? 16000 : 32000;
+        ft->signal.rate = 8000;
+        ft->signal.channels = 1;
+        ft->signal.size = ST_SIZE_WORD; /* make output format default to words */
+        ft->signal.encoding = ST_ENCODING_SIGN2;
+        p->swapbits = ft->signal.reverse_bits;
         /*
          * initialize the decoder
          */
@@ -512,10 +512,10 @@ static int st_dvmsstartread(ft_t ft)
         st_debug("  custom1   %u", hdr.Custom1);
         st_debug("  custom2   %u", hdr.Custom2);
         st_debug("  info      \"%.16s\"", hdr.Info);
-        ft->info.rate = (hdr.Srate < 240) ? 16000 : 32000;
+        ft->signal.rate = (hdr.Srate < 240) ? 16000 : 32000;
         st_debug("DVMS rate %dbit/s using %dbit/s deviation %d%%", 
-               hdr.Srate*100, ft->info.rate, 
-               ((ft->info.rate - hdr.Srate*100) * 100) / ft->info.rate);
+               hdr.Srate*100, ft->signal.rate, 
+               ((ft->signal.rate - hdr.Srate*100) * 100) / ft->signal.rate);
         rc = st_cvsdstartread(ft);
         if (rc)
             return rc;
