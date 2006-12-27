@@ -82,8 +82,7 @@ typedef struct file_options
   st_signalinfo_t info;
   double volume;
   char *comment;
-
-  st_size_t volume_clips;  /* not actually an option */
+  st_size_t volume_clips;
 } * file_options_t;
 
 /* local forward declarations */
