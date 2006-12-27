@@ -352,7 +352,7 @@ typedef struct st_effect *eff_t;
 
 typedef struct
 {
-    char const *name;           /* effect name */
+    char const *name;                /* effect name */
     char const *usage;
     unsigned int flags;
 
