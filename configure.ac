@@ -101,7 +101,7 @@ AC_CHECK_HEADER(vorbis/codec.h,
 dnl Check for FLAC libraries
 with_flac=yes
 AC_ARG_WITH(flac,
-    AS_HELP_STRING([--with-flac],
+    AC_HELP_STRING([--with-flac],
         [Use FLAC if present (default is YES)]))
 if test "$with_flac" = yes; then
     AC_CHECK_HEADER(FLAC/file_encoder.h,
@@ -112,7 +112,7 @@ fi
 dnl Check for MAD libraries
 with_mad=yes
 AC_ARG_WITH(mad,
-    AS_HELP_STRING([--with-mad],
+    AC_HELP_STRING([--with-mad],
         [Use MAD (MP3 Audio Decoder) if present (default is YES)]))
 if test "$with_mad" = yes; then
     AC_CHECK_HEADER(mad.h,
@@ -123,7 +123,7 @@ fi
 dnl Test for LAME library.
 with_lame=yes
 AC_ARG_WITH(lame,
-    AS_HELP_STRING([--with-lame],
+    AC_HELP_STRING([--with-lame],
         [Use LAME (LAME Ain't an MP3 Encoder) if present (default is YES)]))
 if test "$with_lame" = yes; then
     AC_CHECK_HEADER(lame/lame.h,
@@ -135,7 +135,7 @@ dnl Test for libsamplerate.
 with_samplerate=yes
 if test x$PKG_CONFIG != xno ; then
   AC_ARG_WITH(samplerate,
-      AS_HELP_STRING([--with-samplerate],
+      AC_HELP_STRING([--with-samplerate],
           [Use libsamplerate (aka Secret Rabbit Code) if present (default is YES)]))
   if test "$with_samplerate" = yes; then
       PKG_CHECK_MODULES(SAMPLERATE, samplerate >= 0.0.15,
@@ -153,16 +153,16 @@ dnl LUA, LUA_INCLUDES, LUA_LIBS
 
 dnl Arguments
 AC_ARG_WITH([lua-prefix],
-            [AS_HELP_STRING([--with-lua-prefix=DIR],
+            [AC_HELP_STRING([--with-lua-prefix=DIR],
                             [Lua files are in DIR])])
 AC_ARG_WITH([lua-includes],
-            [AS_HELP_STRING([--with-lua-includes=DIR],
+            [AC_HELP_STRING([--with-lua-includes=DIR],
                             [Lua include files are in DIR])])
 AC_ARG_WITH([lua-libraries],
-            [AS_HELP_STRING([--with-lua-libraries=DIR],
+            [AC_HELP_STRING([--with-lua-libraries=DIR],
                             [Lua library files are in DIR])])
 AC_ARG_WITH([lua-suffix],
-            [AS_HELP_STRING([--with-lua-suffix=ARG],
+            [AC_HELP_STRING([--with-lua-suffix=ARG],
                             [Lua binary and library files are suffixed with
                              ARG])])
 
