@@ -59,9 +59,6 @@ static int st_repeat_start(eff_t effp)
 {
         repeat_t repeat = (repeat_t)effp->priv;
 
-        if (repeat->repeats == 0)
-          return ST_EFF_NULL;
-
         if ((repeat->fp = tmpfile()) == NULL) {
                 st_fail("repeat: could not create temporary file");
                 return (ST_EOF);
@@ -118,8 +115,7 @@ static int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 if (repeat->repeats == 0) {
                         *osamp = 0;
                         return (ST_EOF);
-                }
-                else {
+                } else {
                         repeat->repeats--;
                         fseeko(repeat->fp, 0L, SEEK_SET);
                         repeat->remaining = repeat->total;
@@ -133,7 +129,7 @@ static int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                                 repeat->fp);
                 if (read != samp) {
                         perror(strerror(errno));
-                        st_fail("repeat1: read error on temporary file");
+                        st_fail("repeat: read error on temporary file");
                         return(ST_EOF);
                 }
 
@@ -147,12 +143,10 @@ static int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 
                         if (repeat->total >= *osamp - done) {
                                 samp = *osamp - done;
-                        }
-                        else {
+                        } else {
                                 samp = repeat->total;
-                                if (samp > *osamp - done) {
+                                if (samp > *osamp - done)
                                         samp = *osamp - done;
-                                }
                         }
 
                         repeat->remaining = repeat->total - samp;
@@ -167,9 +161,8 @@ static int st_repeat_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                         }
 
                         done += samp;
-                        if (done == *osamp) {
+                        if (done == *osamp)
                                 break;
-                        }
                 }
                 *osamp = done;
         }

@@ -88,9 +88,6 @@ static int st_rabbit_start(eff_t effp)
   double in_rate = floor(effp->ininfo.rate / effp->globalinfo->speed + .5)
     * effp->globalinfo->speed; /* FIXME: Make "speed" more accurate (st_rate_t is int) */
 
-  if (effp->ininfo.rate == effp->outinfo.rate)
-    return ST_EFF_NULL;
-
   if (effp->ininfo.channels != effp->outinfo.channels) {
     st_fail("number of Input and Output channels must be equal to use rabbit effect");
     return ST_EOF;
