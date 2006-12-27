@@ -36,7 +36,7 @@ typedef struct skel
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int st_skelstartread(ft_t ft)
+static int skel_startread(ft_t ft)
 {
   skel_t sk = (skel_t)ft->priv;
 
@@ -77,7 +77,7 @@ static int st_skelstartread(ft_t ft)
  * Place in buf[].
  * Return number of samples read.
  */
-static st_size_t st_skelread(ft_t ft, st_sample_t *buf, st_size_t len)
+static st_size_t skel_read(ft_t ft, st_sample_t *buf, st_size_t len)
 {
   skel_t sk = (skel_t)ft->priv;
   st_size_t done;
@@ -109,12 +109,12 @@ static st_size_t st_skelread(ft_t ft, st_sample_t *buf, st_size_t len)
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int st_skelstopread(ft_t ft)
+static int skel_stopread(ft_t ft)
 {
   return ST_SUCCESS;
 }
 
-static int st_skelstartwrite(ft_t ft)
+static int skel_startwrite(ft_t ft)
 {
   skel_t sk = (skel_t)ft->priv;
 
@@ -146,7 +146,7 @@ static int st_skelstartwrite(ft_t ft)
 
 }
 
-static st_size_t st_skelwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
+static st_size_t skel_write(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
   skel_t sk = (skel_t)ft->priv;
   st_size_t len = 0;
@@ -168,7 +168,7 @@ static st_size_t st_skelwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
   return len;
 }
 
-static int st_skelstopwrite(ft_t ft)
+static int skel_stopwrite(ft_t ft)
 {
   /* All samples are already written out. */
   /* If file header needs fixing up, for example it needs the */
@@ -186,13 +186,13 @@ static st_format_t st_skel_format = {
   skel_names,
   NULL,
   ST_FILE_STEREO | ST_FILE_SEEK,
-  st_skelstartread,
-  st_skelread,
-  st_skelstopread,
-  st_skelstartwrite,
-  st_skelwrite,
-  st_skelstopwrite,
-  st_skelseek
+  skel_startread,
+  skel_read,
+  skel_stopread,
+  skel_startwrite,
+  skel_write,
+  skel_stopwrite,
+  skel_seek
 };
 
 const st_format_t *st_skel_format_fn()
