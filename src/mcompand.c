@@ -667,8 +667,16 @@ static int st_mcompand_stop(eff_t effp)
       free(l->filter.xy_high);
     }
   }
+
+  return ST_SUCCESS;
+}
+
+static int st_mcompand_delete(eff_t effp)
+{
+  compand_t c = (compand_t) effp->priv;
+
   free(c->bands);
-  c->bands = 0;
+  c->bands = NULL;
 
   return ST_SUCCESS;
 }
@@ -688,7 +696,7 @@ static st_effect_t st_mcompand_effect = {
   st_mcompand_flow,
   st_mcompand_drain,
   st_mcompand_stop,
-  st_effect_nothing
+  st_mcompand_delete
 };
 
 const st_effect_t *st_mcompand_effect_fn(void)
