@@ -1,10 +1,10 @@
-AC_PREREQ(2.59)
+AC_PREREQ(2.57)
 AC_INIT([Autotoolized Lua], [5.1], [], [lua-at])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/lapi.c])
 
-AM_INIT_AUTOMAKE([1.9 foreign])
+AM_INIT_AUTOMAKE([1.7.6 foreign])
 
 AC_PROG_CC
 AC_PROG_LIBTOOL
