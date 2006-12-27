@@ -126,6 +126,7 @@ static st_effect_t st_lowp_effect = {
   st_lowp_start,
   st_lowp_flow,
   st_effect_nothing_drain,
+  st_effect_nothing,
   st_effect_nothing
 };
 

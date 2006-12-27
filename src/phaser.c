@@ -271,7 +271,7 @@ static st_effect_t st_phaser_effect = {
   st_phaser_flow,
   st_phaser_drain,
   st_phaser_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_phaser_effect_fn(void)

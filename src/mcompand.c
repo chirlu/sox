@@ -688,7 +688,7 @@ static st_effect_t st_mcompand_effect = {
   st_mcompand_flow,
   st_mcompand_drain,
   st_mcompand_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_mcompand_effect_fn(void)

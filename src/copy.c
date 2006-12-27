@@ -64,6 +64,7 @@ static st_effect_t st_copy_effect = {
   st_copy_start,
   st_copy_flow,
   st_effect_nothing_drain,
+  st_effect_nothing,
   st_effect_nothing
 };
 

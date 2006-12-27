@@ -729,7 +729,7 @@ static st_effect_t st_resample_effect = {
    st_resample_flow,
    st_resample_drain,
    st_resample_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_resample_effect_fn(void)

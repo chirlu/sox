@@ -304,7 +304,7 @@ static st_effect_t st_flanger_effect = {
   st_flanger_flow,
   st_effect_nothing_drain,
   st_flanger_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 

@@ -327,7 +327,7 @@ static st_effect_t st_stat_effect = {
   st_stat_flow,
   st_stat_drain,
   st_stat_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_stat_effect_fn(void)

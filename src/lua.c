@@ -273,7 +273,7 @@ static st_effect_t st_lua_effect = {
   st_lua_flow,
   st_lua_drain,
   st_lua_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 /*

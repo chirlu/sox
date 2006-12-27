@@ -69,6 +69,7 @@ static st_effect_t st_lowpass_effect = {
   st_lowpass_start,
   st_butterworth_flow,
   st_effect_nothing_drain,
+  st_effect_nothing,
   st_effect_nothing
 };
 

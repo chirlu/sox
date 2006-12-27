@@ -80,6 +80,7 @@ static st_effect_t st_highpass_effect = {
   st_highpass_start,
   st_butterworth_flow,
   st_effect_nothing_drain,
+  st_effect_nothing,
   st_effect_nothing
 };
 

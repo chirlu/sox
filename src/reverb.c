@@ -293,7 +293,7 @@ static st_effect_t st_reverb_effect = {
   st_reverb_flow,
   st_reverb_drain,
   st_reverb_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_reverb_effect_fn(void)

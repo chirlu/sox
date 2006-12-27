@@ -155,6 +155,7 @@ static st_effect_t st_bass_effect = {
   st_biquad_shelf_start,
   st_biquad_flow,
   st_effect_nothing_drain,
+  st_effect_nothing,
   st_effect_nothing
 };
 
@@ -175,6 +176,7 @@ static st_effect_t st_treble_effect = {
   st_biquad_shelf_start,
   st_biquad_flow,
   st_effect_nothing_drain,
+  st_effect_nothing,
   st_effect_nothing
 };
 

@@ -348,7 +348,7 @@ static st_effect_t st_chorus_effect = {
   st_chorus_flow,
   st_chorus_drain,
   st_chorus_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_chorus_effect_fn(void)

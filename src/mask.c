@@ -92,6 +92,7 @@ static st_effect_t st_mask_effect = {
   st_mask_start,
   st_mask_flow,
   st_effect_nothing_drain,
+  st_effect_nothing,
   st_effect_nothing
 };
 
@@ -108,6 +109,7 @@ static st_effect_t st_dither_effect = {
   st_mask_start,
   st_mask_flow,
   st_effect_nothing_drain,
+  st_effect_nothing,
   st_effect_nothing
 };
 

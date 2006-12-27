@@ -279,7 +279,7 @@ static st_effect_t st_echos_effect = {
   st_echos_flow,
   st_echos_drain,
   st_echos_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_echos_effect_fn(void)

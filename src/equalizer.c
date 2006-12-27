@@ -190,8 +190,11 @@ static st_effect_t st_equalizer_effect = {
   "equalizer",
   "Usage: equalizer central-frequency Q gain",
   0,
-  st_equalizer_getopts, st_equalizer_start,
-  st_equalizer_flow, st_effect_nothing_drain,
+  st_equalizer_getopts,
+  st_equalizer_start,
+  st_equalizer_flow,
+  st_effect_nothing_drain,
+  st_effect_nothing,
   st_effect_nothing
 };
 

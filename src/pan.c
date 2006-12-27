@@ -419,6 +419,7 @@ static st_effect_t st_pan_effect = {
   st_pan_start,
   st_pan_flow,
   st_effect_nothing_drain,
+  st_effect_nothing,
   st_effect_nothing
 };
 

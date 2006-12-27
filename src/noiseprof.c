@@ -216,7 +216,7 @@ static st_effect_t st_noiseprof_effect = {
   st_noiseprof_flow,
   st_noiseprof_drain,
   st_noiseprof_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_noiseprof_effect_fn(void)

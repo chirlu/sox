@@ -208,7 +208,7 @@ static st_effect_t st_repeat_effect = {
   st_repeat_flow,
   st_repeat_drain,
   st_repeat_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_repeat_effect_fn(void)

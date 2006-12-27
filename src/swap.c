@@ -191,7 +191,8 @@ static st_effect_t st_swap_effect = {
   st_swap_start,
   st_swap_flow,
   st_effect_nothing_drain,
-  st_effect_nothing
+  st_effect_nothing,
+  st_effect_nothing  
 };
 
 const st_effect_t *st_swap_effect_fn(void)

@@ -663,7 +663,7 @@ static st_effect_t st_polyphase_effect = {
   st_poly_flow,
   st_poly_drain,
   st_poly_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_polyphase_effect_fn(void)

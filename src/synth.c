@@ -713,6 +713,7 @@ static st_effect_t st_synth_effect = {
   st_synth_start,
   st_synth_flow,
   st_effect_nothing_drain,
+  st_effect_nothing,
   st_effect_nothing
 };
 

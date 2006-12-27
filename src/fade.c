@@ -384,7 +384,7 @@ static st_effect_t st_fade_effect = {
   st_fade_flow,
   st_fade_drain,
   st_fade_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_fade_effect_fn(void)

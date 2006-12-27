@@ -568,7 +568,7 @@ static st_effect_t st_avg_effect = {
   st_avg_flow,
   st_effect_nothing_drain,
   st_avg_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 static st_effect_t st_pick_effect = {
@@ -580,7 +580,7 @@ static st_effect_t st_pick_effect = {
   st_avg_flow,
   st_effect_nothing_drain,
   st_avg_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_avg_effect_fn(void)

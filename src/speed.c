@@ -41,6 +41,6 @@ st_effect_t const * st_speed_effect_fn(void)
 {
   static st_effect_t driver = {
     "speed", "Usage: speed factor[c]", ST_EFF_NULL,
-    getopts, NULL, NULL, NULL, NULL};
+    getopts, NULL, NULL, NULL, NULL, NULL};
   return &driver;
 }

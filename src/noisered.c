@@ -333,7 +333,7 @@ static st_effect_t st_noisered_effect = {
   st_noisered_flow,
   st_noisered_drain,
   st_noisered_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_noisered_effect_fn(void)

@@ -319,7 +319,7 @@ static st_effect_t st_filter_effect = {
   st_filter_flow,
   st_filter_drain,
   st_filter_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_filter_effect_fn(void)

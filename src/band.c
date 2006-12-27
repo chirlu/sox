@@ -176,7 +176,7 @@ static st_effect_t st_band_effect = {
    st_band_flow,
    st_effect_nothing_drain,
    st_band_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_band_effect_fn(void)

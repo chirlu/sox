@@ -133,6 +133,7 @@ static st_effect_t st_highp_effect = {
   st_highp_start,
   st_highp_flow,
   st_effect_nothing_drain,
+  st_effect_nothing,
   st_effect_nothing
 };
 

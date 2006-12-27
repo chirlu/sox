@@ -1,5 +1,4 @@
 /*
-
   Band-pass effect file for SoX
   Copyright (C) 1999 Jan Paul Schmidt <jps@fundament.org>
 
@@ -88,6 +87,7 @@ static st_effect_t st_bandpass_effect = {
   st_bandpass_start,
   st_butterworth_flow,
   st_effect_nothing_drain,
+  st_effect_nothing,
   st_effect_nothing
 };
 

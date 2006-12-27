@@ -298,7 +298,7 @@ st_size_t st_read(ft_t ft, st_sample_t *buf, st_size_t len)
 {
   len -= len % ft->signal.channels; /* We need a whole number of "wide" samples */
   len = (*ft->h->read)(ft, buf, len);
-  if (len != ST_EOF)
+  if (len != 0)
     len -= len % ft->signal.channels; /* Belt & braces */
   return len;
 }

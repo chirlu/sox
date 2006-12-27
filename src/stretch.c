@@ -399,7 +399,7 @@ static st_effect_t st_stretch_effect = {
   st_stretch_flow,
   st_stretch_drain,
   st_stretch_stop,
-st_effect_nothing
+  st_effect_nothing
 };
 
 const st_effect_t *st_stretch_effect_fn(void)
