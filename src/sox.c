@@ -962,16 +962,68 @@ static void check_effects(void)
   if (hasrate > 1)
     st_report("Cannot specify multiple effects that change sample rate");
 
-  /* If not writing output then do not worry about adding
-   * channel and rate effects.  This is just to speed things
-   * up. */
-  needchan = 0;
-  needrate = 0;
-
   /* --------- add the effects ------------------------ */
 
   /* efftab[0] is always the input stream and always exists */
   neffects = 1;
+
+  /* If reducing channels then its faster to run all effects     
+   * after the avg effect.      
+   */   
+  if (needchan && !(haschan) &&
+      (file_desc[0]->info.channels > file_desc[file_count-1]->info.channels))
+  { 
+      /* Find effect and update initial pointers */
+      st_geteffect(&efftab[neffects], "avg");
+
+      /* give default opts for added effects */
+      efftab[neffects].globalinfo = &globalinfo;
+      status = (* efftab[neffects].h->getopts)(&efftab[neffects], (int)0,
+                                               (char **)0);
+
+      if (status == ST_EOF)
+          exit(2);
+
+      /* Copy format info to effect table */
+      effects_mask = st_updateeffect(&efftab[neffects], 
+                                     &file_desc[0]->info,
+                                     &file_desc[file_count-1]->info,
+                                     effects_mask);
+
+      neffects++;
+  }
+
+  /* If reducing the number of samples, its faster to run all effects 
+   * after the resample effect. 
+   */
+  if (needrate && !(hasrate) &&
+      (file_desc[0]->info.rate > file_desc[file_count-1]->info.rate)) 
+  {
+      st_geteffect(&efftab[neffects], "resample");
+
+      /* set up & give default opts for added effects */ 
+      efftab[neffects].globalinfo = &globalinfo;
+      status = (* efftab[neffects].h->getopts)(&efftab[neffects], (int)0,
+                                               (char **)0);
+
+      if (status == ST_EOF)
+          exit(2);
+
+      /* Copy format info to effect table */ 
+      effects_mask = st_updateeffect(&efftab[neffects],
+                                     &file_desc[0]->info,
+                                     &file_desc[file_count-1]->info,
+                                     effects_mask);
+
+      /* Rate can't handle multiple channels so be sure and
+       * account for that.
+       */ 
+      if (efftab[neffects].ininfo.channels > 1)   
+          memcpy(&efftabR[neffects], &efftab[neffects], 
+                 sizeof(struct st_effect));
+
+      neffects++;
+  } 
 
   /* Copy over user specified effects into real efftab */
   for (i = 0; i < nuser_effects; i++) {
