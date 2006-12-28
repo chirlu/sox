@@ -57,7 +57,7 @@
 static enum {SOX_CONCAT, SOX_MIX, SOX_MERGE} combine_method = SOX_CONCAT;
 static st_size_t mixing_clips = 0;
 static bool repeatable_random = false;  /* Whether to invoke srand. */
-static bool force_overwrite = false;
+static bool interactive = false;
 static st_globalinfo_t globalinfo = {false, 1};
 static char uservolume = 0;
 
@@ -158,7 +158,7 @@ static bool overwrite_permitted(char const * filename)
 {
   char c;
 
-  if (force_overwrite) {
+  if (!interactive) {
     st_report("Overwriting '%s'", filename);
     return true;
   }
@@ -360,7 +360,7 @@ static struct option long_options[] =
     {"comment-file"    , required_argument, NULL, 0},
     {"comment"         , required_argument, NULL, 0},
     {"endian"          , required_argument, NULL, 0},
-    {"force"           ,       no_argument, NULL, 0},
+    {"interactive"     ,       no_argument, NULL, 0},
     {"help-effect"     , required_argument, NULL, 0},
     {"version"         ,       no_argument, NULL, 0},
 
@@ -412,7 +412,7 @@ static bool doopts(file_info_t fo, int argc, char **argv)
         break;
 
       case 3:
-        force_overwrite = true;
+        interactive = true;
         break;
 
       case 4:
