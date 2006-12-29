@@ -33,9 +33,9 @@ convertToAndFrom () {
       if [ "${format1_skip}x" = "x" -a "${from_skip}x" = "x" ] ; then
         getFormat ${format1}; format1Text=$formatText; format1Flags=$formatFlags
         getFormat       $1; format2Text=$formatText; format2Flags=$formatFlags
-        ./sox --force -c $channels -r $rate -n $format1Flags input.$format1 synth $samples's' sin 300-3300 noise trapezium
-        ./sox --force $verbose -r $rate -c $channels $format1Flags input.$format1 $format2Flags intermediate.$1
-        ./sox --force $verbose -r $rate -c $channels $format2Flags intermediate.$1 $format1Flags output.$format1
+        ./sox -c $channels -r $rate -n $format1Flags input.$format1 synth $samples's' sin 300-3300 noise trapezium
+        ./sox $verbose -r $rate -c $channels $format1Flags input.$format1 $format2Flags intermediate.$1
+        ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$1 $format1Flags output.$format1
 
         if cmp -s input.$format1 output.$format1
         then
@@ -61,13 +61,13 @@ do_multichannel_formats () {
   convertToAndFrom s3 u3 sl u4 raw Raw wav aiff aifc flac
 
   format1=sl
-  convertToAndFrom sl u4 Raw wav
+  convertToAndFrom sl u4 Raw wav aiff aifc
 
   format1=al
-  convertToAndFrom al sw uw sl raw Raw dat
+  convertToAndFrom al sw uw sl raw Raw dat aiff aifc
 
   format1=ul
-  convertToAndFrom ul sw uw sl raw Raw dat
+  convertToAndFrom ul sw uw sl raw Raw dat aiff aifc
 
   format1=Wav
   convertToAndFrom Wav aiff aifc au dat sf flac
