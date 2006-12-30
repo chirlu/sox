@@ -318,7 +318,15 @@ static int st_format_start_write(ft_t const format)
 #undef SET_OPTION
   }
 
+  /* FIXME: FLAC should not need to know about this oddity */
+  if (format->signal.encoding == ST_ENCODING_ULAW ||
+      format->signal.encoding == ST_ENCODING_ALAW ||
+      format->signal.encoding == ST_ENCODING_INV_ULAW ||
+      format->signal.encoding == ST_ENCODING_INV_ALAW)
+    format->signal.size = ST_SIZE_WORD;
+
   encoder->bits_per_sample = (format->signal.size > 4 ? 4 : format->signal.size) << 3;
+
   st_report("FLAC encoding at %i bits per sample", encoder->bits_per_sample);
 
   FLAC__stream_encoder_set_channels(encoder->flac, format->signal.channels);

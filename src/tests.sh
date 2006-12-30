@@ -3,6 +3,7 @@
 # SoX Regression Test script.
 #
 # This script is just a quick sanity check of SoX on lossless format conversions.
+# TODO sndt sph
 
 # verbose options
 #verbose=-V
@@ -64,10 +65,10 @@ do_multichannel_formats () {
   convertToAndFrom sl u4 Raw wav aiff aifc
 
   format1=al
-  convertToAndFrom al sw uw sl raw Raw dat aiff aifc
+  convertToAndFrom al sw uw sl raw Raw dat aiff aifc flac
 
   format1=ul
-  convertToAndFrom ul sw uw sl raw Raw dat aiff aifc
+  convertToAndFrom ul sw uw sl raw Raw dat aiff aifc flac
 
   format1=Wav
   convertToAndFrom Wav aiff aifc au dat sf flac
@@ -87,17 +88,25 @@ do_singlechannel_formats () {
 
   format1=wve
   (rate=8000; convertToAndFrom al sw uw sl raw Raw dat) || exit 1 # Fixed rate
+
+  format1=prc
+  (rate=8000; convertToAndFrom al sw uw sl raw Raw dat) || exit 1 # Fixed rate
 }
 
 grep -q "^#define HAVE_LIBFLAC" stconfig.h || skip="flac $skip"
 
 rate=44100
 samples=23493
+
 channels=3 
 do_multichannel_formats
+
 channels=2 
 do_multichannel_formats
 do_twochannel_formats
+format1=cdda         # 2-channel only
+convertToAndFrom sw u3 aiff
+
 channels=1 
 do_multichannel_formats
 do_twochannel_formats
