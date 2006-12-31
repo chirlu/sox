@@ -81,10 +81,8 @@ static int st_earwax_start(eff_t effp)
   int i;
 
   /* check the input format */
-  if (effp->ininfo.encoding != ST_ENCODING_SIGN2
-      || effp->ininfo.rate != 44100
-      || effp->ininfo.channels != 2){
-    st_fail("the earwax effect works only with audio cd (44.1 kHz, twos-complement signed linear, stereo) samples.");
+  if (effp->ininfo.rate != 44100 || effp->ininfo.channels != 2) {
+    st_fail("The earwax effect works only with 44.1 kHz, stereo audio.");
     return (ST_EOF);
   }
 

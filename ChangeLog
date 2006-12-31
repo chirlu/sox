@@ -37,6 +37,8 @@ sox-12.18.3
   o Fix synth length accuracy. (robs)
   o Fix broken audio when downmixing with any of the following
     effects: synth, deemph, vibro. (robs)
+  o Fixed deemph & earwax effects to work with MP3, vorbis,
+    & FLAC.  (robs)
   o Fix wav file handler discarding the last PCM sample in certain
     circumstances. (robs)
   o Add support for 24-bit PCM raw, wav (WAVE_FORMAT_EXTENSIBLE) [FR# 801015],
@@ -75,8 +77,8 @@ sox-12.18.3
     by 0dB [Bug# 1395781].  (robs)
   o Removed (for output file only) the potentially
     problematic -v option.  Use the vol effect instead.  (robs)
-  o Added prompt to overwrite pre-existing output file (unless overridden
-    with --force).  (robs)
+  o Added --interactive option to prompt to overwrite pre-existing
+    output file.  (robs)
   o Added silence padding effect.  (robs)
   o Improved multi-channel file reading; fixes [1599990].  (robs)
   o New options for specifying endianness (and separate option for
@@ -98,7 +100,7 @@ sox-12.18.2
     samples to be written out instead of an approximate amount.
   o Fix hangup when attempting to write stereo MP3 files.
     (1512218) Kendrick Shaw
-  o Deemp effect would lose stereo sepeartion. (1479249)
+  o Deemp effect would lose stereo separation. (1479249)
   o Adding cross-platform support for getopt_long
   o Make help screens print much more information and add
     new --help-effect option.  (Originally from Dirk).
