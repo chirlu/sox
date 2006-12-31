@@ -91,7 +91,7 @@ static int st_highp_start(eff_t effp)
             , effp->ininfo.rate, effp->ininfo.rate
             , highp->A0, highp->A1, -highp->B1
             );
-          exit(0);
+          return ST_EOF;
         }
         return (ST_SUCCESS);
 }

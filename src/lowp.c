@@ -87,7 +87,7 @@ static int st_lowp_start(eff_t effp)
             , effp->ininfo.rate, effp->ininfo.rate
             , lowp->A, -lowp->B
             );
-          exit(0);
+          return ST_EOF;
         }
         return (ST_SUCCESS);
 }

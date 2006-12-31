@@ -162,7 +162,7 @@ static int st_deemph_start(eff_t effp)
          , effp->ininfo.rate, effp->ininfo.rate
          , b0, b1, a1
          );
-       exit(0);
+       return ST_EOF;
      }
      return (ST_SUCCESS);
 }

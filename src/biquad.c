@@ -38,7 +38,7 @@ int st_biquad_start(eff_t effp, char const * width_name)
       , effp->ininfo.rate, effp->ininfo.rate
       , p->b0, p->b1, p->b2, p->a1, p->a2
       );
-    exit(0);
+    return ST_EOF;
   }
 
   p->o2 = p->o1 = p->i2 = p-> i1 = 0;

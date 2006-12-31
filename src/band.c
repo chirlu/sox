@@ -125,7 +125,7 @@ static int st_band_start(eff_t effp)
             , band->B
             , band->C
             );
-          exit(0);
+          return ST_EOF;
         }
         return (ST_SUCCESS);
 }
