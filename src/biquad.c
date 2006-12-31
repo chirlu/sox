@@ -2,6 +2,51 @@
 
 
 
+int st_biquad_start(eff_t effp, char const * width_name)
+{
+  biquad_t p = (biquad_t) effp->priv;
+
+  /* Simplify: */
+  p->b2 = p->b2/p->a0;
+  p->b1 = p->b1/p->a0;
+  p->b0 = p->b0/p->a0;
+  p->a2 = p->a2/p->a0;
+  p->a1 = p->a1/p->a0;
+
+  if (p->dcNormalise) /* Normalise to AV = 0dB at DC: */
+  {
+    double normalise = (1 + p->a1 + p->a2) / (p->b0 + p->b1 + p->b2);
+    p->b0 = normalise * p->b0;
+    p->b1 = normalise * p->b1;
+    p->b2 = normalise * p->b2;
+  }
+
+  if (effp->globalinfo->octave_plot_effect)
+  {
+    printf(
+      "title('SoX effect: %s gain=%g centre=%g %s=%g (rate=%u)')\n"
+      "xlabel('Frequency (Hz)')\n"
+      "ylabel('Amplitude Response (dB)')\n"
+      "Fs=%u;minF=10;maxF=Fs/2;\n"
+      "axis([minF maxF -25 25])\n"
+      "sweepF=logspace(log10(minF),log10(maxF),200);\n"
+      "grid on\n"
+      "[h,w]=freqz([%f %f %f],[1 %f %f],sweepF,Fs);\n"
+      "semilogx(w,20*log10(h),'b')\n"
+      "pause\n"
+      , effp->name, p->gain, p->fc, width_name, p->width.q
+      , effp->ininfo.rate, effp->ininfo.rate
+      , p->b0, p->b1, p->b2, p->a1, p->a2
+      );
+    exit(0);
+  }
+
+  p->o2 = p->o1 = p->i2 = p-> i1 = 0;
+  return ST_SUCCESS;
+}
+
+
+  
 int st_biquad_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                         st_size_t *isamp, st_size_t *osamp)
 {
