@@ -1,12 +1,23 @@
-/*  Sound Tools Effect: Pad With Silence
+/*
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
  *
- *  (c) 2006 robs@users.sourceforge.net
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *  See LICENSE file for further copyright information.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library.  If not, write to the Free Software
+ * Foundation, Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301,
+ * USA.
  */
 
+/* Effect: Pad With Silence   (c) 2006 robs@users.sourceforge.net */
+
 #include "st_i.h"
-#include <string.h>
 
 typedef struct pad
 {
@@ -25,7 +36,7 @@ typedef struct pad
 assert_static(sizeof(struct pad) <= ST_MAX_EFFECT_PRIVSIZE,
               /* else */ pad_PRIVSIZE_too_big);
 
-static int parse(eff_t effp, char **argv, st_rate_t rate)
+static int parse(eff_t effp, char * * argv, st_rate_t rate)
 {
   pad_t p = (pad_t) effp->priv;
   char const * next;
@@ -52,14 +63,14 @@ static int parse(eff_t effp, char **argv, st_rate_t rate)
   return ST_SUCCESS;
 }
 
-static int st_pad_getopts(eff_t effp, int n, char **argv)
+static int create(eff_t effp, int n, char * * argv)
 {
   pad_t p = (pad_t) effp->priv;
   p->pads = xcalloc(p->npads = n, sizeof(*p->pads));
-  return parse(effp, argv, ST_MAXRATE); /* No rate yet, parse with dummy */
+  return parse(effp, argv, ST_MAXRATE); /* No rate yet; parse with dummy */
 }
 
-static int st_pad_start(eff_t effp)
+static int start(eff_t effp)
 {
   pad_t p = (pad_t) effp->priv;
   int i;
@@ -72,7 +83,8 @@ static int st_pad_start(eff_t effp)
   return ST_EFF_NULL;
 }
 
-static int st_pad_flow(eff_t effp, const st_sample_t * ibuf, st_sample_t * obuf, st_size_t * isamp, st_size_t * osamp)
+static int flow(eff_t effp, const st_sample_t * ibuf, st_sample_t * obuf,
+                st_size_t * isamp, st_size_t * osamp)
 {
   pad_t p = (pad_t) effp->priv;
   st_size_t c, idone = 0, odone = 0;
@@ -100,37 +112,38 @@ static int st_pad_flow(eff_t effp, const st_sample_t * ibuf, st_sample_t * obuf,
   return ST_SUCCESS;
 }
 
-static int st_pad_drain(eff_t effp, st_sample_t * obuf, st_size_t * osamp)
+static int drain(eff_t effp, st_sample_t * obuf, st_size_t * osamp)
 {
   static st_size_t isamp = 0;
   pad_t p = (pad_t) effp->priv;
   if (p->pads_pos != p->npads && p->in_pos != p->pads[p->pads_pos].start)
     p->in_pos = ST_SIZE_MAX;  /* Invoke the final pad (with no given start) */
-  return st_pad_flow(effp, 0, obuf, &isamp, osamp);
+  return flow(effp, 0, obuf, &isamp, osamp);
 }
 
-static int st_pad_stop(eff_t effp)
+static int stop(eff_t effp)
 {
   pad_t p = (pad_t) effp->priv;
   if (p->pads_pos != p->npads)
     st_warn("Input audio too short; pads not applied: %i",p->npads-p->pads_pos);
-  /* Don't free stuff from getopts; start & stop must be symmetric */
   return ST_SUCCESS;
 }
 
-static st_effect_t st_pad_effect = {
-  "pad",
-  "Usage: pad {length[@position]}",
-  ST_EFF_MCHAN,
-  st_pad_getopts,
-  st_pad_start,
-  st_pad_flow,
-  st_pad_drain,
-  st_pad_stop,
-  st_effect_nothing
-};
-
-const st_effect_t *st_pad_effect_fn(void)
+static int delete(eff_t effp)
 {
-  return &st_pad_effect;
+  pad_t p = (pad_t) effp->priv;
+  int i;
+  for (i = 0; i < p->npads; ++i)
+    free(p->pads[i].str);
+  free(p->pads);
+  return ST_SUCCESS;
+}
+
+st_effect_t const * st_pad_effect_fn(void)
+{
+  static st_effect_t driver = {
+    "pad", "Usage: pad {length[@position]}", ST_EFF_MCHAN,
+    create, start, flow, drain, stop, delete
+  };
+  return &driver;
 }
