@@ -92,7 +92,6 @@ st_effect_fn_t st_effect_fns[] = {
   st_bass_effect_fn,
   st_chorus_effect_fn,
   st_compand_effect_fn,
-  st_copy_effect_fn,
   st_dcshift_effect_fn,
   st_deemph_effect_fn,
   st_dither_effect_fn,

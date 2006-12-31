@@ -272,7 +272,6 @@ extern const st_effect_t *st_bandreject_effect_fn(void);
 extern const st_effect_t *st_bass_effect_fn(void);
 extern const st_effect_t *st_chorus_effect_fn(void);
 extern const st_effect_t *st_compand_effect_fn(void);
-extern const st_effect_t *st_copy_effect_fn(void);
 extern const st_effect_t *st_dcshift_effect_fn(void);
 extern const st_effect_t *st_deemph_effect_fn(void);
 extern const st_effect_t *st_dither_effect_fn(void);

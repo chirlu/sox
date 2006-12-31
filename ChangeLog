@@ -49,6 +49,8 @@ sox-12.18.3
   o Remove old, optional rate change and alaw/ulaw conversion code.
     (Reuben Thomas)
   o Remove soxmix.  (Reuben Thomas)
+  o Removed the old internally invoked (but mentioned in the man page)
+    copy effect.  (robs)
   o Consistent (and hopefully complete) clipping detection and
     reporting.  (robs)
   o Add AIFF-C output support.  (shashimoto)

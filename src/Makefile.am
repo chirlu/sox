@@ -15,7 +15,7 @@ formats = 8svx.c adpcm.c adpcm.h aiff.c au.c auto.c avr.c cdr.c \
 	  vox.c wav.c wav.h wve.c xa.c
 
 effects = avg.c band.c bandpass.c biquad.c biquad.h breject.c btrworth.c \
-	  btrworth.h chorus.c compand.c copy.c dcshift.c deemphas.c earwax.c \
+	  btrworth.h chorus.c compand.c dcshift.c deemphas.c earwax.c \
 	  echo.c echos.c equalizer.c fade.c FFT.c FFT.h filter.c flanger.c \
 	  highp.c highpass.c lowp.c lowpass.c lua.c lintlib.c mask.c \
 	  mcompand.c noiseprof.c noisered.c noisered.h pad.c pan.c \
