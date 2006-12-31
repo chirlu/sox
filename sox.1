@@ -26,7 +26,7 @@ The overall SoX processing chain can be summarised as follows:
 Input(s) \-> Combiner \-> Effects \-> Output
 .SS File Formats
 There are two types of audio file format that SoX can work with.  The
-first is `self-describing'.  Such formats include a header that
+first is `self-describing'.  These formats include a header that
 completely describes the characteristics of the audio data that follows.
 The second type is `headerless', often called raw data.  For a file of
 this type, the audio data characteristics are sometimes described by the
@@ -34,11 +34,11 @@ file-name extension, sometimes by giving format options on the SoX
 command line, and otherwise by a combination of the two.
 .SP
 The following four characteristics are sufficient to describe
-audio data so that it can be processed with SoX:
+the format of audio data so that it can be processed with SoX:
 .TP
 sample rate
 The sample rate in samples per second (or Hz).  For example, digital telephony
-traditionally uses a sample rate of 8000Hz; CDs use 44,100Hz.
+traditionally uses a sample rate of 8000Hz; audio Compact Discs use 44,100Hz.
 .TP
 sample size
 The number of bits (or bytes) used to store each sample.  Most popular are
@@ -60,44 +60,47 @@ The number of audio channels contained in the file.  One (`mono') and two
 The term `bit-rate' is sometimes used as an overall measure of an audio
 format and may incorporate elements of all of the above.
 .SP
-Most `self-describing' file formats also allow textual `comments' to be
+Most self-describing formats also allow textual `comments' to be
 embedded in the file that can be used to describe the audio in some way,
 e.g. for music, the title, the author, etc.
+.SS Determining & Setting The File Format
+There are several mechanisms available for SoX to use to determine or set the
+format characteristics of an audio file.  Depending on the circumstances,
+individual characteristics may be determined or set using different mechanisms.
 .SP
-.\" FIXME rework needed
-By default, SoX attempts to write audio data using the same data type,
-sample rate, and channel count as the input data.  If that is not what
-is wanted, then format options can be used to specify the differences.
+To determine the format of an input file, SoX will use, in order of
+precedence and as given or available:
 .SP
-If an output file format does not support the same data type, sample
-rate, or channel count as the input file format, then unless overridden
-on the command line, SoX will automatically select the closest values
-that the format does support.
+	1.	Command-line format options
+.br
+	2.	The contents of the file header
+.br
+	3.	The file-name extension.
 .SP
-SoX uses the following method to determine the type of audio to use for
-each input file and the output file:
-If a type has been given (with
-.B \-n
-or \fB\-t\fR), then the given type will be used,
-otherwise,
-SoX will try first using the file header (input files only), and then
-the file-name extension to determine the file type.
-If the file type cannot be determined, then
-SoX will exit with an error.
-.\" FIXME ends
+To set the output file format, SoX will use, in order of
+precedence and as given or available:
 .SP
-Translating an audio file from one format to another with
-SoX is `lossless'
-(i.e. translating back again would yield an exact copy of the original
-audio data)
-where it
-can be, i.e. when not using `lossy' compression (A-law, MP3, etc.)
-and the number of bits used in the destination format is not less than
-in the source format.
+	1.	Command-line format options
+.br
+	2.	The file-name extension.
+.br
+	3.	The input file format characteristics, or the closest
+.br
+		to them that is supported by the output file type.
 .SP
-E.g. translating from an 8-bit PCM format to a 16-bit PCM format is
-lossless but translating from a 8-bit PCM format to (8-bit) A-law isn't.
-When performing a lossy translation,
+For all files, SoX will exit with an error
+if the file type cannot be determined; command-line format options may
+need to be added or changed to resolve the problem.
+.SS File Conversion
+Converting an audio file from one format to another with SoX is
+`lossless' (i.e. converting back again would yield an exact copy of the
+original audio data) where it can be, i.e. when not using `lossy'
+compression (A-law, MP3, etc.) and the number of bits used in the
+destination format is not less than in the source format.
+.SP
+E.g. converting from an 8-bit PCM format to a 16-bit PCM format is
+lossless but converting from an 8-bit PCM format to (8-bit) A-law isn't.
+When performing a lossy conversion,
 SoX uses rounding to retain as much accuracy as possible in the
 audio data.
 .SS Clipping
@@ -126,7 +129,7 @@ effect can assist in determining the signal level in an audio file; the
 .B vol
 effect can be used to prevent clipping e.g.
 .SP
-	sox tinny.au better.au vol \-6 dB treble +6
+	sox dull.au bright.au vol \-6 dB treble +6
 .SP
 guarantees that the treble boost will not clip.
 .SP
