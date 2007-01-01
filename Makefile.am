@@ -15,7 +15,7 @@ dist_pkgdata_DATA = sox.txt soxexam.txt
 
 # Rule for making plain text man pages
 %.txt: %.1
-	nroff -man $(srcdir)/$< | col -b > $@
+	tbl $(srcdir)/$< | nroff -man -Tascii | col -b > $@
 
 # Automatically update libtool script if it gets out-of-date
 libtool: $(LIBTOOL_DEPS)

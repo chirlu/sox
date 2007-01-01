@@ -1,3 +1,5 @@
+'\" t
+'\" The line above instructs SunOS/Solaris man to invoke tbl
 .de SP
 .if t .sp .5
 .if n .sp
@@ -71,22 +73,27 @@ individual characteristics may be determined or set using different mechanisms.
 To determine the format of an input file, SoX will use, in order of
 precedence and as given or available:
 .SP
-	1.	Command-line format options
-.br
-	2.	The contents of the file header
-.br
-	3.	The file-name extension.
+.TS
+tab (@);
+l l l.
+@1@Command-line format options
+@2@The contents of the file header
+@3@The file-name extension.
+.TE
 .SP
 To set the output file format, SoX will use, in order of
 precedence and as given or available:
 .SP
-	1.	Command-line format options
-.br
-	2.	The file-name extension.
-.br
-	3.	The input file format characteristics, or the closest
-.br
-		to them that is supported by the output file type.
+.TS
+tab (@);
+l l lw(6i).
+@1@Command-line format options
+@2@The file-name extension.
+@3@T{
+The input file format characteristics, or the closest
+to them that is supported by the output file type.
+T}
+.TE
 .SP
 For all files, SoX will exit with an error
 if the file type cannot be determined; command-line format options may
@@ -219,16 +226,16 @@ but is left here for historical reasons.
 These options can be specified on the command line at any point
 before the first effect name.
 .TP
-\fB\fB\-\-force\fR
-Force SoX to overwrite an existing file with the same name as that
-given for the output file without first prompting to do so.
-.TP
 \fB\-h\fR, \fB\-\-help\fR
 Show version number and usage information.
 .TP
 \fB\-\-help\-effect=name\fR
 Show usage information on the specified effect.  The name
 \fBall\fR can be used to show usage on all effects.
+.TP
+\fB\fB\-\-interactive\fR
+Prompt before overwriting an existing file with the same name as that
+given for the output file.
 .TP
 \fB\-m\fR, \fB\-\-mix\fR
 Set the input file combining method to `mix'.
@@ -378,12 +385,12 @@ See \fBFILE TYPES\fR below for a list of supported file types.
 \ 
 These options specify whether the byte-order of the audio data is,
 respectively, `little endian', `big endian', or the opposite to that of
-the system on which SoX is being used.  Endian-ness applies only to data
+the system on which SoX is being used.  Endianness applies only to data
 encoded as signed or unsigned integers of 16 or more bits.  It is often
 necessary to specify one of these options for headerless files, and
 sometimes necessary for (otherwise) self-describing files.  A given
 endian-setting option may be ignored for an input file whose header
-contains a specific endian-ness identifier, or for an output file that
+contains a specific endianness identifier, or for an output file that
 is actually an audio device.
 .TP
 \fB\-X\fR, \fB\-\-reverse\-bits\fR
@@ -453,14 +460,19 @@ The compression factor is interpreted differently for different
 compressing file formats.  See the description of the file formats that
 use this option for more information.
 .SH FILE TYPES
-Note: a file type that can be determined
-by file-name extension is listed with its name preceded by a dot.
+File types can be set by the file-name extension, the
+.B -t
+option, or the
+.B -n
+option (see above for details).
+File types that can be determined
+by a file-name extension are listed with their names preceded by a dot.
 .SP
 .TP
 .B .8svx
 Amiga 8SVX musical instrument description format.
 .TP
-.B .aiff
+\&\fB.aiff\fR, \fB.aif\fR
 AIFF files used on Apple IIc/IIgs and SGI.
 Note: the AIFF format supports only one SSND chunk.
 It does not support multiple audio chunks,
@@ -469,7 +481,7 @@ AIFF files are multimedia archives and
 can have multiple audio and picture chunks.
 You may need a separate archiver to work with them.
 .TP
-.B .aifc
+\&\fB.aiffc\fR, \fB.aifc\fR
 AIFF-C (not compressed, linear), defined in DAVIC 1.4 Part 9 Annex B.
 This format is referred from ARIB STD-B24, which is specified for
 Japanese data broadcasting.  Any private chunks are not supported.
@@ -489,19 +501,19 @@ input file.  It is suggested to always override the output values to use
 the highest quality format your ALSA system can handle.  Example:
 .B sox infile \-t alsa default
 .TP
-.B .au
+\&\fB.au\fR, \fB.snd\fR
 SUN Microsystems AU files.
-There are apparently many types of .au files;
+There are many types of AU file;
 DEC has invented its own with a different magic number
 and word order.
-The .au handler can read these files but will not write them.
-Some .au files have valid AU headers and some do not.
-The latter are probably original SUN u-law 8000 Hz files.
-These can be dealt with using the
+SoX can read these files but will not write them.
+Some .au files are known to have invalid AU headers; these
+are probably original SUN u-law 8000 Hz files and
+can be dealt with using the
 .B .ul
 format (see below).
 .SP
-It is possible to override .au file header information
+It is possible to override AU file header information
 with the
 .B \-r
 and
@@ -542,6 +554,12 @@ create data files for external programs such as
 FFT analysers or graph routines.  SoX can also convert
 a file in this format back into one of the other file
 formats.
+.TP
+\&\fB.dvms\fR, \fB.vms\fR
+.\" FIXME: Need more info.
+Used to compress speech audio for applications such as voice mail.
+A variant of
+.BR cvsd .
 .TP
 .B .flac
 Free Lossless Audio Codec compressed audio.
@@ -609,7 +627,7 @@ with the `Toccata' sound-card on the Amiga.
 Allows 8bit linear, 16bit linear, A-Law, u-law
 in mono and stereo.
 .TP
-.B .mp3
+\&\fB.mp3\fR, \fB.mp2\fR
 MP3 compressed audio.  MP3 (MPEG Layer 3) is part of the
 MPEG standards for audio and video compression.  It is a lossy
 compression format that achieves good compression rates with little
@@ -657,7 +675,7 @@ without having to read any further into the file.  E.g.
 will display header information for each `WAV' file in the current
 directory.
 .TP
-.B .ogg
+\&\fB.ogg\fR, \fB.vorbis\fR
 Ogg Vorbis compressed audio.
 Ogg Vorbis is a open, patent-free CODEC designed for compressing music
 and streaming audio.  It is a lossy compression format (similar to MP3,
@@ -719,9 +737,13 @@ Softworks.  This package is for communication to several MIDI samplers.  All
 sample rates are supported by the package, although not all are supported by
 the samplers themselves.  Currently loop points are ignored.
 .TP
+.B .snd
+See
+.B .au
+format.
+.TP
 .B .sndt
-SoundTool files. This is an older DOS file format. The suffix
-\fB.snd\fR can also be used.
+SoundTool files. This is an older DOS file format.
 .TP
 .B sunau
 Sun /dev/audio device driver.
@@ -748,8 +770,9 @@ other bytes in the attack/loop length fields, and defaulting to
 33kHz if the sample rate is still unknown.
 .TP
 .B .vms
-.\" FIXME: Need more info.
-Used to compress speech audio for applications such as voice mail.
+See
+.B .dvms
+format.
 .TP
 .B .voc
 Sound Blaster VOC files.
@@ -762,7 +785,7 @@ On output, silence is not detected, nor are impossible sample rates.
 Note, this version now supports playing VOC files with multiple
 blocks and supports playing files containing u-law and A-law samples.
 .TP
-.B vorbis
+.B .vorbis
 See
 .B .ogg
 format.
@@ -1682,7 +1705,7 @@ for specifying sample counts is the number of samples with the letter
 (frequency modulation); default=create
 .SP
 \fIfreq\fR/\fIfreq2\fR are the frequencies at the beginning/end of
-synthesis in Hz or, if prepended with `%', semitones relative to A
+synthesis in Hz or, if preceded with `%', semitones relative to A
 (440Hz); for both, default=%0.  Not used for noise.
 .SP
 \fIoff\fR is the bias (DC-offset) of the signal in percent; default=0.
@@ -1800,7 +1823,7 @@ Please report any bugs found in this version of SoX to the mailing list
 The SoX web page at http://sox.sourceforge.net
 .SH LICENSE
 Copyright 1991 Lance Norskog and Sundry Contributors.
-Copyright 1998\-2006 by Chris Bagwell and SoX Contributors.
+Copyright 1998\-2007 by Chris Bagwell and SoX Contributors.
 .SP
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
