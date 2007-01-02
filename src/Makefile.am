@@ -2,6 +2,9 @@
 
 SUBDIRS = libgsm
 
+AM_CFLAGS = $(LUA_INCLUDES)
+AM_LDFLAGS = @SAMPLERATE_LIBS@
+
 bin_PROGRAMS = sox
 bin_SCRIPTS = play libst-config
 lib_LTLIBRARIES = libst.la
@@ -26,9 +29,6 @@ effects = avg.c band.c bandpass.c biquad.c biquad.h breject.c btrworth.c \
 libst_la_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c misc.c \
 	  st_i.h stio.c util.c xmalloc.c xmalloc.h getopt.c getopt1.c getopt.h
 
-AM_CFLAGS = $(LUA_INCLUDES)
-AM_LDFLAGS = @SAMPLERATE_LIBS@
-
 sox_SOURCES = sox.c
 sox_LDADD = libst.la libgsm/libgsm.la $(LUA_LIBS)
 
@@ -38,7 +38,7 @@ libgsm/libgsm.la:
 	$(MAKE) -C libgsm
 
 rec: play
-	$(RM) play && $(LN_S) play rec
+	$(RM) rec && $(LN_S) play rec
 
 install-exec-hook:
 	cd $(DESTDIR)$(bindir) && \
