@@ -29,7 +29,7 @@ luac_DEPENDENCIES = liblua.la
 # don't get exported to the shared object
 luac_LDFLAGS = -static
 
-EXTRA_DIST = luaconf.h.template.in
+EXTRA_DIST = luaconf.h.template.in luaconf.h.template
 BUILT_SOURCES = luaconf.h
 CLEANFILES = luaconf.h
 
