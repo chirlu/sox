@@ -168,3 +168,5 @@
 #undef size_t
 
 #define stat _stat
+#define UNUSED
+#define PACKAGE_VERSION "12.18.3"

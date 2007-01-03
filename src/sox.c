@@ -211,7 +211,6 @@ int main(int argc, char **argv)
 
   myname = argv[0];
   atexit(cleanup);
-  i = strlen(myname);
   st_output_message_handler = sox_output_message;
 
   /* Loop over arguments and filenames, stop when an effect name is 

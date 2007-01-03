@@ -117,7 +117,11 @@ void st_fail_errno(ft_t ft, int st_errno, const char *fmt, ...)
         ft->st_errno = st_errno;
 
         va_start(args, fmt);
+#ifdef _MSC_VER
+        vsprintf(ft->st_errstr, fmt, args);
+#else
         vsnprintf(ft->st_errstr, sizeof(ft->st_errstr), fmt, args);
+#endif
         va_end(args);
         ft->st_errstr[255] = '\0';
 }

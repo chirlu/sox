@@ -133,9 +133,9 @@ READ_FUNC(w, s, int16_t, uint16_t, SIGNED_WORD)
 READ_FUNC(3, u, uint24_t, uint24_t, UNSIGNED_24BIT)
 READ_FUNC(3, s, int24_t, uint24_t, SIGNED_24BIT)
 READ_FUNC(dw, u, uint32_t, uint32_t, UNSIGNED_DWORD)
-READ_FUNC(dw, , int32_t, uint32_t, SIGNED_DWORD)
-READ_FUNC(f, , float, float, FLOAT_DWORD)
-READ_FUNC(df, , double, double, FLOAT_DDWORD)
+READ_FUNC(dw, s, int32_t, uint32_t, SIGNED_DWORD)
+READ_FUNC(f, su, float, float, FLOAT_DWORD)
+READ_FUNC(df, su, double, double, FLOAT_DDWORD)
 
 #define WRITE_FUNC(size, sign, cast) \
   static st_size_t st_ ## sign ## size ## _write_buf(st_sample_t *buf, ft_t ft, st_size_t len, st_size_t *clippedCount UNUSED) \
@@ -160,9 +160,9 @@ WRITE_FUNC(w, s, SIGNED_WORD)
 WRITE_FUNC(3, u, UNSIGNED_24BIT)
 WRITE_FUNC(3, s, SIGNED_24BIT)
 WRITE_FUNC(dw, u, UNSIGNED_DWORD)
-WRITE_FUNC(dw, , SIGNED_DWORD)
-WRITE_FUNC(f, , FLOAT_DWORD)
-WRITE_FUNC(df, , FLOAT_DDWORD)
+WRITE_FUNC(dw, s, SIGNED_DWORD)
+WRITE_FUNC(f, su, FLOAT_DWORD)
+WRITE_FUNC(df, su, FLOAT_DDWORD)
 
 typedef st_size_t (ft_io_fun)(st_sample_t *buf, ft_t ft, st_size_t len, st_size_t *clippedCount);
 
@@ -213,11 +213,11 @@ static ft_io_fun *check_format(ft_t ft, bool write)
     case ST_SIZE_DWORD:
       switch (ft->signal.encoding) {
       case ST_ENCODING_SIGN2:
-        return write ? st_dw_write_buf : st_dw_read_buf;
+        return write ? st_sdw_write_buf : st_sdw_read_buf;
       case ST_ENCODING_UNSIGNED:
         return write ? st_udw_write_buf : st_udw_read_buf;
       case ST_ENCODING_FLOAT:
-        return write ? st_f_write_buf : st_f_read_buf;
+        return write ? st_suf_write_buf : st_suf_read_buf;
       default:
         break;
       }
@@ -226,7 +226,7 @@ static ft_io_fun *check_format(ft_t ft, bool write)
     case ST_SIZE_DDWORD:
       switch (ft->signal.encoding) {
       case ST_ENCODING_FLOAT:
-        return write ? st_df_write_buf : st_df_read_buf;
+        return write ? st_sudf_write_buf : st_sudf_read_buf;
       default:
         break;
       }

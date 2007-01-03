@@ -25,7 +25,9 @@
 #include <luaconf.h>
 
 #include <assert.h>
+#ifndef _MSC_VER
 #include <inttypes.h>
+#endif
 
 
 /* Library configuration */

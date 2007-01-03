@@ -33,7 +33,7 @@ static int st_mask_getopts(eff_t effp, int n, char * * argv)
     return ST_EOF;
   }
   
-  mask->amount = M_SQRT2;   /* Default to half a bit. */
+  mask->amount = sqrt(2); /* M_SQRT2 missing in some places */   /* Default to half a bit. */
   if (n == 1) {
     double amount;
     char dummy;
