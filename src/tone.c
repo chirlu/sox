@@ -1,14 +1,28 @@
 /*
- * Sound Tools Tone Control Effects: bass & treble
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
  *
- * The bass and treble effects approximate to the venerable
- * Baxandall circuit used in the analogue world.
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
  *
- * Filter design by Robert Bristow-Johnson  <rbj@audioimagination.com>
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, write to the Free Software Foundation,
+ * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
+ */
+
+/* Sound Tools Tone Control Effects: bass & treble
+ *
+ * The bass and treble effects approximate to the venerable Baxandall
+ * circuit used in the analogue world.
+ *
+ * Filter design by Robert Bristow-Johnson <rbj@audioimagination.com>
+ * see http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
  *
  * This implementation (c) 2006 robs@users.sourceforge.net
- *
- * See LICENSE file for further copyright information.
  */
 
 #include "biquad.h"

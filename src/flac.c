@@ -1,12 +1,22 @@
 /*
- * Sound Tools File Format: FLAC
+ * This library is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
  *
- * Support for FLAC input and rudimentary support for FLAC output.
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * (c) 2006 robs@users.sourceforge.net
- *
- * See LICENSE file for further copyright information.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library.  If not, write to the Free Software
+ * Foundation, Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301,
+ * USA.
  */
+
+/* File format: FLAC   (c) 2006 robs@users.sourceforge.net */
+
 
 
 #include "st_i.h"
@@ -17,6 +27,7 @@
 #include <string.h>
 
 #include <FLAC/all.h>
+
 
 
 typedef struct

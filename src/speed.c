@@ -1,12 +1,26 @@
-/*  Sound Tools Effect: Adjust the audio speed (pitch and tempo together)
+/*
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
  *
- *  (c) 2006 robs@users.sourceforge.net
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
  *
- *  See LICENSE file for further copyright information.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, write to the Free Software Foundation,
+ * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
+ */
+
+/* Sound Tools Effect: Adjust the audio speed (pitch and tempo together)
  *
- *  Adjustment is given as the ratio of the new speed to the old speed,
- *  or as a number of cents (100ths of a semitone) to change.  Speed change
- *  is actually performed by whichever resampling effect is in effect.
+ * (c) 2006 robs@users.sourceforge.net
+ *
+ * Adjustment is given as the ratio of the new speed to the old speed, or as
+ * a number of cents (100ths of a semitone) to change.  Speed change is
+ * actually performed by whichever resampling effect is in effect.
  */
 
 #include "st_i.h"
