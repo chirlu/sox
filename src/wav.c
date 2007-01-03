@@ -1691,9 +1691,32 @@ static int st_wavseek(ft_t ft, st_size_t offset)
     {
         case WAVE_FORMAT_IMA_ADPCM:
         case WAVE_FORMAT_ADPCM:
-        case WAVE_FORMAT_GSM610:
             st_fail_errno(ft,ST_ENOTSUP,"Only PCM Supported");
             break;
+
+        case WAVE_FORMAT_GSM610:
+            {   
+                st_size_t gsmoff;
+
+                /* rounding bytes to blockAlign so that we
+                 * don't have to decode partial block. */
+                gsmoff = offset * wav->blockAlign / wav->samplesPerBlock + 
+                         wav->blockAlign * ft->signal.channels / 2;
+                gsmoff -= gsmoff % (wav->blockAlign * ft->signal.channels);
+
+                ft->st_errno = st_seeki(ft, gsmoff + wav->dataStart, SEEK_SET);
+                if (ft->st_errno != ST_SUCCESS)
+                    return ST_EOF;
+
+                /* offset is in samples */
+                new_offset = offset;
+                alignment = offset % wav->samplesPerBlock;                
+                if (alignment != 0)
+                    new_offset += (wav->samplesPerBlock - alignment);
+                wav->numSamples = ft->length - (new_offset / ft->signal.channels);
+            }
+            break;
+
         default:
             new_offset = offset * ft->signal.size;
             /* Make sure request aligns to a channel block (ie left+right) */

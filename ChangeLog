@@ -85,6 +85,7 @@ sox-12.18.3
   o Improved multi-channel file reading; fixes [1599990].  (robs)
   o New options for specifying endianness (and separate option for
     bit reversal) [FR# 1621702].  (robs)
+  o Add seek support for GSM data in WAV files. Rafal Maszkowski
 
 sox-12.18.2
 -----------
