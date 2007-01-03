@@ -1691,7 +1691,7 @@ static int st_wavseek(ft_t ft, st_size_t offset)
     {
         case WAVE_FORMAT_IMA_ADPCM:
         case WAVE_FORMAT_ADPCM:
-            st_fail_errno(ft,ST_ENOTSUP,"Only PCM Supported");
+            st_fail_errno(ft,ST_ENOTSUP,"ADPCM not supported");
             break;
 
         case WAVE_FORMAT_GSM610:
