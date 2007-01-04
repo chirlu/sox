@@ -134,7 +134,10 @@ AC_ARG_WITH(samplerate,
     AC_HELP_STRING([--with-samplerate],
         [Use libsamplerate (aka Rabbit Code) if present (default is YES)]))
 if test "$with_samplerate" = yes; then
-  SOX_PATH_SAMPLERATE(, [AC_MSG_ERROR([Could not find a usable libsamplerate])])
+  SOX_PATH_SAMPLERATE([AC_DEFINE(HAVE_SAMPLERATE, 1, 
+                      [Set to 1 if you have libsamplerate.])], 
+                      [with_samplerate=no
+                       AC_MSG_NOTICE([Could not find a usable libsamplerate])])
 fi
 AC_SUBST(SAMPLERATE_CFLAGS)
 AC_SUBST(SAMPLERATE_LIBS)
