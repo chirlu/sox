@@ -18,7 +18,7 @@ SAMPLERATE_LIBS=""
 # Step 1: Use pkg-config if available
 m4_ifdef([PKG_CHECK_MODULES],
   [# PKG_CHECK_MODULES available
-  PKG_CHECK_MODULES([SAMPLERATE], [samplerate])
+  PKG_CHECK_MODULES([SAMPLERATE], [samplerate], [$1], [$2])
   have_samplerate="maybe"],
   [# PKG_CHECK_MODULES is unavailable, search for pkg-config program
   AC_PATH_PROG([PKGCONFIG], [pkg-config], [none])
@@ -53,7 +53,7 @@ then
   CFLAGS="$CFLAGS $SAMPLERATE_CFLAGS"
   LIBS="$LIBS $SAMPLERATE_LIBS"
   AC_CHECK_HEADER([samplerate.h], [
-    AC_DEFINE([HAVE_SAMPLERATE_SAMPLERATE_H], 1, [Define if you have <samplerate.h>])
+    AC_DEFINE([HAVE_SAMPLERATE_H], 1, [Define if you have <samplerate.h>])
     AC_CHECK_FUNC([src_new], [
       ifelse([$1], , :, [$1])
       have_samplerate="yes"

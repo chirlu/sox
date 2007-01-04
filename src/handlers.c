@@ -117,7 +117,7 @@ st_effect_fn_t st_effect_fns[] = {
   st_pick_effect_fn,
   st_pitch_effect_fn,
   st_polyphase_effect_fn,
-#ifdef HAVE_SAMPLERATE
+#ifdef HAVE_SAMPLERATE_H
   st_rabbit_effect_fn,
 #endif
   st_rate_effect_fn,

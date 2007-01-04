@@ -24,7 +24,7 @@
  
 #include "st_i.h"
 
-#ifdef HAVE_SAMPLERATE
+#ifdef HAVE_SAMPLERATE_H
 
 #include <limits.h>
 #include <stdlib.h>

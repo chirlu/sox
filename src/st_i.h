@@ -297,7 +297,7 @@ extern const st_effect_t *st_phaser_effect_fn(void);
 extern const st_effect_t *st_pick_effect_fn(void);
 extern const st_effect_t *st_pitch_effect_fn(void);
 extern const st_effect_t *st_polyphase_effect_fn(void);
-#ifdef HAVE_SAMPLERATE
+#ifdef HAVE_SAMPLERATE_H
 extern const st_effect_t *st_rabbit_effect_fn(void);
 #endif
 extern const st_effect_t *st_rate_effect_fn(void);
