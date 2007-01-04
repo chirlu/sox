@@ -1,12 +1,15 @@
 '\" t
-'\" The line above instructs SunOS/Solaris man to invoke tbl
+'\" The line above instructs some `man' programs to invoke tbl
 .de SP
 .if t .sp .5
 .if n .sp
 ..
-.TH SoX 1 "December 24, 2006" "sox" "Sound eXchange"
+.ie n .ds EM " - 
+.el .ds EM \(em
+.ds RA \(->
+.TH SoX 1 "January 31, 2007" "sox" "Sound eXchange"
 .SH NAME
-SoX \- Sound eXchange: The Swiss Army knife of audio manipulation
+SoX\*(EMSound eXchange\*(EMThe Swiss Army knife of audio manipulation
 .SH SYNOPSIS
 .nf
 \fBsox [\fR\fIglobal-options\fR\fB] [\fR\fIformat-options\fR\fB]\fR \fIinfile1\fR
@@ -14,9 +17,9 @@ SoX \- Sound eXchange: The Swiss Army knife of audio manipulation
     \fB[\fR\fIeffect\fR \fB[\fR\fIeffect-options\fR\fB] ...]\fR
 .fi
 .SH DESCRIPTION
-SoX reads and writes most popular audio formats and can optionally apply
-effects to them; it includes a basic audio synthesiser, and, on many
-systems, can play and record audio files.
+SoX reads and writes audio files in most popular formats and can
+optionally apply effects to them; it includes a basic audio synthesiser,
+and, on many systems, can play and record audio files.
 .SP
 SoX can also combine multiple input files (with the same sample rate and
 number of channels) to form one output file using one of three methods:
@@ -25,22 +28,23 @@ number of channels) to form one output file using one of three methods:
 The overall SoX processing chain can be summarised as follows:
 .SP
 .ce
-Input(s) \-> Combiner \-> Effects \-> Output
+Input(s) \*(RA Combiner \*(RA Effects \*(RA Output
 .SS File Formats
 There are two types of audio file format that SoX can work with.  The
-first is `self-describing'.  These formats include a header that
+first is `self-describing'; these formats include a header that
 completely describes the characteristics of the audio data that follows.
-The second type is `headerless', often called raw data.  For a file of
-this type, the audio data characteristics are sometimes described by the
-file-name extension, sometimes by giving format options on the SoX
-command line, and otherwise by a combination of the two.
+The second type is `headerless' (or `raw data'); here,
+the audio data characteristics must be described using the
+SoX command line.
 .SP
 The following four characteristics are sufficient to describe
 the format of audio data so that it can be processed with SoX:
 .TP
 sample rate
-The sample rate in samples per second (or Hz).  For example, digital telephony
-traditionally uses a sample rate of 8000Hz; audio Compact Discs use 44,100Hz.
+The sample rate in samples per second (i.e. `Hertz' or `Hz').  For
+example, digital telephony traditionally uses a sample rate of 8000Hz
+(8kHz);
+audio Compact Discs use 44100Hz (44.1kHz).
 .TP
 sample size
 The number of bits (or bytes) used to store each sample.  Most popular are
@@ -52,7 +56,7 @@ encodings have variants with different byte-orderings or bit-orderings;
 some `compress' the audio data, i.e. the stored audio data takes up less
 space (i.e. disk-space or transmission band-width) than the other format
 parameters and the number of samples would imply.  Commonly-used
-encoding types include: floating-point, u-law, ADPCM, signed linear,
+encoding types include: floating-point, \(*m-law, ADPCM, signed linear,
 FLAC, etc.
 .TP
 channels
@@ -76,9 +80,9 @@ precedence and as given or available:
 .TS
 tab (@);
 l l l.
-@1@Command-line format options
-@2@The contents of the file header
-@3@The file-name extension.
+@1.@Command-line format options.
+@2.@The contents of the file header.
+@3.@The file-name extension.
 .TE
 .SP
 To set the output file format, SoX will use, in order of
@@ -87,9 +91,9 @@ precedence and as given or available:
 .TS
 tab (@);
 l l lw(6i).
-@1@Command-line format options
-@2@The file-name extension.
-@3@T{
+@1.@Command-line format options.
+@2.@The file-name extension.
+@3.@T{
 The input file format characteristics, or the closest
 to them that is supported by the output file type.
 T}
@@ -98,17 +102,17 @@ T}
 For all files, SoX will exit with an error
 if the file type cannot be determined; command-line format options may
 need to be added or changed to resolve the problem.
-.SS File Conversion
+.SS Accuracy
 Many file formats that compress audio discard some of the audio signal
 information whilst doing so; converting to such a format then converting
-back again will not produce an exact copy of the original audio.
-This is the case for many formats used in telephony (e.g.  A-law, GSM)
-where reducing bandwidth is more important than perfect audio fidelity,
-and for many formats used in portable music players (e.g. MP3, Vorbis)
-where adequate fidelity can be retained with the large compression
-ratios that are needed to make portable players practical.
+back again will not produce an exact copy of the original audio.  This
+is the case for many formats used in telephony (e.g.  A-law, GSM) where
+low signal bandwidth is more important than high audio fidelity, and for
+many formats used in portable music players (e.g. MP3, Vorbis) where
+adequate fidelity can be retained even with the large compression ratios
+that are needed to make portable players practical.
 .SP
-Formats that discard audio signal information are often called `lossy',
+Formats that discard audio signal information are called `lossy',
 and formats that do not, `lossless'.  The term `quality' is used as a
 measure of how closely the original audio signal can be reproduced when
 using a lossy format.
@@ -119,18 +123,25 @@ destination format is not less than in the source format.  E.g.
 converting from an 8-bit PCM format to a 16-bit PCM format is lossless
 but converting from an 8-bit PCM format to (8-bit) A-law isn't.
 .SP
-Note that SoX internally converts audio files to an uncompressed
-format before any audio processing is done; this means that
-manipulating a file that is stored in a lossy format may
-cause further losses in audio fidelity.  E.g. with
-.SP
-	sox long.mp3 short.mp3 trim 10
-.SP
-SoX decompresses the MP3 file, applies the
+.I Note:
+SoX converts all audio files to an internal uncompressed
+format before performing any audio processing; this means that
+manipulating a file that is stored in a lossy format can cause further
+losses in audio fidelity.  E.g. with
+.BR "sox long.mp3 short.mp3 trim 10" ,
+SoX first decompresses the input MP3 file, then applies the
 .B trim
-effect, then
-creates the output MP3 file by recompressing the audio \[em] with a
-possible reduction in fidelity compared to that of the original file.
+effect, and finally creates the output MP3 file by recompressing the
+audio\*(EMwith a possible reduction in fidelity above that which
+occurred when the input file was created.
+Hence, if what is ultimately desired is lossily compressed audio, it is
+highly recommended to perform all audio processing using lossless file
+formats and then convert to the lossy format at the final stage.
+.SP
+.I Note:
+Applying multiple effects with a single SoX invocation will,
+in general, produce more accurate results than the equivalent using
+multiple SoX invocations; hence this is also recommended.
 .SS Clipping
 Clipping is distortion that occurs when an audio signal
 level (or `volume') exceeds the range of the chosen representation.
@@ -164,29 +175,41 @@ guarantees that the treble boost will not clip.
 If clipping occurs at any point during processing, then
 SoX will display a warning message to that effect.
 .SS Input File Balancing
-When multiple input files are given, SoX applies any specified
-effects (including, for example, volume adjustment) after the audio
-has been combined.  However, as with a traditional audio mixer, it is
-useful to be able to set the volume of (i.e. `balance') the inputs
-individually, before combining takes place.
+When multiple input files are given, SoX applies any specified effects
+(including, for example, the
+.B vol
+volume adjustment effect) after the audio has been combined; however, it
+is often useful to be able to set the volume of (i.e. `balance') the
+inputs individually, before combining takes place.
 .SP
-If the selected combining method is `mix' then, to guarantee that
-clipping does not occur at the mixing stage, SoX defaults to
-adjusting the amplitude of each input signal by a factor of 1/n, where n
-is the number of input files; if this results in audio that is perceived
-to be too quiet, then the volume adjustments can be set manually
-instead.  For the other combining methods, the default behaviour is for no
-input volume adjustments.
-.SP
-Manual input file volume adjustment is performed using the
+For all SoX combining methods (`concatenate', `mix', or `merge'), input
+file volume adjustments can be made manually using the
 .B \-v
-option (see below) which, as with format options, can be given for one
-or more input files; if it is given for only some of the input files
-then the others receive no volume adjustment (regardless of combining
-method)
+option (below) which can be given for one or more input files; if it is
+given for only some of the input files then the others receive no volume
+adjustment.  See the next section for a description of the automatic volume
+adjustments that can apply when mixing input files.
 .SP
 The \fB\-V\fR option (below) can be used to show the input file volume
 adjustments that have been selected (either manually or automatically).
+.SS Input File Mixing
+There are some special considerations that need to made when mixing
+input files:
+.SP
+Unlike `concatenate' and `merge', the `mix' combining method has the
+potential to cause clipping in the combiner if no balancing is
+performed.  So for `mix', if manual volume adjustments are not given, to
+ensure that clipping does not occur, SoX will automatically adjust the
+volume (amplitude) of each input signal by a factor of \(S1/\s-2n\s+2,
+where n is the number of input files.  If this results in audio that is
+too quiet or otherwise unbalanced then the input file volumes should be
+set manually as described above.
+.SP
+If mixed audio seems loud enough at some points through the audio but
+too quiet in others, then dynamic-range compression should be applied to
+correct this\*(EMsee the
+.B compand
+effect.
 .SS Examples
 The command line syntax can seem complex, but in essence:
 .SP
@@ -197,7 +220,7 @@ into a Microsoft .WAV file, while
 .SP
 	sox file.au \-r 12000 \-1 file.wav vol 0.5 dither
 .SP
-does the same format translation but also
+performs the same format translation but also
 changes the sampling rate to 12000 Hz,
 the sample size to 1 byte (8 bits),
 and applies the \fBvol\fR and \fBdither\fR effects
@@ -250,7 +273,7 @@ before the first effect name.
 \fB\-h\fR, \fB\-\-help\fR
 Show version number and usage information.
 .TP
-\fB\-\-help\-effect=name\fR
+\fB\-\-help\-effect=\fR\fIname\fR
 Show usage information on the specified effect.  The name
 \fBall\fR can be used to show usage on all effects.
 .TP
@@ -263,17 +286,22 @@ Set the input file combining method to `mix'.
 Two or more input files must be given,
 and will be mixed together (instead of concatenated)
 to form the output file.
+A mixed audio file cannot be un-mixed.
 .SP
-See also \fBInput File Balancing\fR above.
+See also \fBInput File Mixing\fR above.
 .TP
 \fB\-M\fR, \fB\-\-merge\fR
 Set the input file combining method to `merge'.
 Two or more input files must be given,
 and will be merged together (instead of concatenated)
 to form the output file.
+A merged audio file comprises all of the channels from all of the input
+files; a merged file could be un-merged using the
+.B pick
+effect.
 .SP
-This can be used for example to merge two mono files into one
-stereo file; the first and second mono files become
+For example, two mono files could be merged to form one
+stereo file; the first and second mono files would become
 the left and right channels of the stereo file.
 .TP
 \fB\-o\fR, \fB\-\-octave\fR
@@ -300,7 +328,7 @@ SoX to play or record audio.
 .TP
 \fB\-\-version\fR
 Show version number and exit.
-.IP \fB\-V\fB[\fRlevel\fB]\fR\fP
+.IP \fB\-V\fB[\fR\fIlevel\fR\fB]\fR\fP
 Set verbosity.
 SoX prints messages to the console (stderr) according to the following
 verbosity levels:
@@ -422,18 +450,18 @@ format.
 .TP
 \fB\-s\fR\^/\fB\-u\fR\^/\fB\-U\fR\^/\fB\-A\fR\^/\fB\-a\fR\^/\fB\-i\fR\^/\fB\-g\fR\^/\fB\-f\fR
 The audio data encoding is signed linear (2's complement),
-unsigned linear, u-law (logarithmic), A-law (logarithmic),
-ADPCM, IMA-ADPCM, GSM, or Floating-point.
+unsigned linear, \(*m-law (logarithmic), A-law (logarithmic),
+ADPCM, IMA-ADPCM, GSM, or floating-point.
 .SP
-U-law (actually short for mu-law) and A-law are the U.S. and
+\(*m-law (or mu-law) and A-law are the U.S. and
 international standards for logarithmic telephone audio compression.
-When uncompressed u-law has roughly the precision of 14-bit PCM audio
+When uncompressed \(*m-law has roughly the precision of 14-bit PCM audio
 and A-law has roughly the precision of 13-bit PCM audio.
 .SP
-A-law and u-law data is sometimes encoded using a reversed bit-ordering
+A-law and \(*m-law are sometimes encoded using reversed bit-ordering
 (i.e. MSB becomes LSB).  Internally, SoX understands how to work with
-this encoding but there is currently no command line option to
-specify it.  If you need this support then you can use the pseudo
+these encodings but there is currently no command line option to
+specify them.  If you need this support then you can use the pseudo
 file types of `.la' and `.lu' to inform SoX of the encoding.  See
 supported file types for more information.
 .SP
@@ -529,7 +557,7 @@ DEC has invented its own with a different magic number
 and word order.
 SoX can read these files but will not write them.
 Some .au files are known to have invalid AU headers; these
-are probably original SUN u-law 8000 Hz files and
+are probably original SUN \(*m-law 8000 Hz files and
 can be dealt with using the
 .B .ul
 format (see below).
@@ -645,7 +673,7 @@ to deal with an HCOM file on other systems.
 An IFF-conforming audio file type, registered by
 MS MacroSystem Computer GmbH, published along
 with the `Toccata' sound-card on the Amiga.
-Allows 8bit linear, 16bit linear, A-Law, u-law
+Allows 8bit linear, 16bit linear, A-Law, \(*m-law
 in mono and stereo.
 .TP
 \&\fB.mp3\fR, \fB.mp2\fR
@@ -745,9 +773,9 @@ such as the `CSound' package, and the `MixView sound sample editor'.
 SPHERE (SPeech HEader Resources) is a file format defined by NIST
 (National Institute of Standards and Technology) and is used with
 speech audio.  SoX can read these files when they contain
-u-law and PCM data.  It will ignore any header information that
+\(*m-law and PCM data.  It will ignore any header information that
 says the data is compressed using \fIshorten\fR compression and
-will treat the data as either u-law or PCM.  This will allow SoX
+will treat the data as either \(*m-law or PCM.  This will allow SoX
 and the command line \fIshorten\fR program to be run together using
 pipes to encompasses the data and then pass the result to SoX for processing.
 .TP
@@ -804,7 +832,7 @@ and sample data with a new sample rate is rejected.
 Silence with a different sample rate is generated appropriately.
 On output, silence is not detected, nor are impossible sample rates.
 Note, this version now supports playing VOC files with multiple
-blocks and supports playing files containing u-law and A-law samples.
+blocks and supports playing files containing \(*m-law and A-law samples.
 .TP
 .B .vorbis
 See
@@ -856,7 +884,7 @@ of headerless audio files.  Thus, \fBub\fR, \fBsb\fR, \fBuw\fR,
 \fBsw\fR, \fBul\fR, \fBal\fR, \fBlu\fR, \fBla\fR and \fBsl\fR indicate a
 file with a single audio channel, sample rate of 8000 Hz, and samples
 encoded as `unsigned byte', `signed byte', `unsigned word', `signed
-word', `u-law' (byte), `A-law' (byte), inverse bit order `u-law',
+word', `\(*m-law' (byte), `A-law' (byte), inverse bit order `\(*m-law',
 inverse bit order `A-law', or `signed long' respectively.  Command-line
 format options can also be given to modify the selected format if it
 does not provide an exact match for a particular file.
@@ -890,11 +918,11 @@ The
 effect can also be invoked with up to 16
 numbers, separated by commas, which specify the proportion (0 = 0% and 1 = 100%)
 of each input channel that is to be mixed into each output channel.
-In two-channel mode, 4 numbers are given: l \-> l, l \-> r, r \-> l, and r \-> r,
+In two-channel mode, 4 numbers are given: l \*(RA l, l \*(RA r, r \*(RA l, and r \*(RA r,
 respectively.
 In four-channel mode, the first 4 numbers give the proportions for the
-left-front output channel, as follows: lf \-> lf, rf \-> lf, lb \-> lf, and
-rb \-> rf.
+left-front output channel, as follows: lf \*(RA lf, rf \*(RA lf, lb \*(RA lf, and
+rb \*(RA rf.
 The next 4 give the right-front output in the same order, then
 left-back and right-back.
 .SP
@@ -908,10 +936,10 @@ center box ;
 cB cB cB lB
 c c c l .
 In Ch	Out Ch	Num	Mappings
-2	1	2	l \-> l, r \-> l
+2	1	2	l \*(RA l, r \*(RA l
 2	2	1	adjust balance
-4	1	4	lf \-> l, rf \-> l, lb \-> l, rb \-> l
-4	2	2	lf \-> l&rf \-> r, lb \-> l&rb \-> r
+4	1	4	lf \*(RA l, rf \*(RA l, lb \*(RA l, rb \*(RA l
+4	2	2	lf \*(RA l&rf \*(RA r, lb \*(RA l&rb \*(RA r
 4	4	1	adjust balance
 4	4	2	front balance, back balance
 .TE
