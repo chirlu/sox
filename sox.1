@@ -99,17 +99,38 @@ For all files, SoX will exit with an error
 if the file type cannot be determined; command-line format options may
 need to be added or changed to resolve the problem.
 .SS File Conversion
-Converting an audio file from one format to another with SoX is
-`lossless' (i.e. converting back again would yield an exact copy of the
-original audio data) where it can be, i.e. when not using `lossy'
-compression (A-law, MP3, etc.) and the number of bits used in the
-destination format is not less than in the source format.
+Many file formats that compress audio discard some of the audio signal
+information whilst doing so; converting to such a format then converting
+back again will not produce an exact copy of the original audio.
+This is the case for many formats used in telephony (e.g.  A-law, GSM)
+where reducing bandwidth is more important than perfect audio fidelity,
+and for many formats used in portable music players (e.g. MP3, Vorbis)
+where adequate fidelity can be retained with the large compression
+ratios that are needed to make portable players practical.
 .SP
-E.g. converting from an 8-bit PCM format to a 16-bit PCM format is
-lossless but converting from an 8-bit PCM format to (8-bit) A-law isn't.
-When performing a lossy conversion,
-SoX uses rounding to retain as much accuracy as possible in the
-audio data.
+Formats that discard audio signal information are often called `lossy',
+and formats that do not, `lossless'.  The term `quality' is used as a
+measure of how closely the original audio signal can be reproduced when
+using a lossy format.
+.SP
+Audio file conversion with SoX is lossless where it can be, i.e. when
+not using lossy compression and the number of bits used in the
+destination format is not less than in the source format.  E.g.
+converting from an 8-bit PCM format to a 16-bit PCM format is lossless
+but converting from an 8-bit PCM format to (8-bit) A-law isn't.
+.SP
+Note that SoX internally converts audio files to an uncompressed
+format before any audio processing is done; this means that
+manipulating a file that is stored in a lossy format may
+cause further losses in audio fidelity.  E.g. with
+.SP
+	sox long.mp3 short.mp3 trim 10
+.SP
+SoX decompresses the MP3 file, applies the
+.B trim
+effect, then
+creates the output MP3 file by recompressing the audio \[em] with a
+possible reduction in fidelity compared to that of the original file.
 .SS Clipping
 Clipping is distortion that occurs when an audio signal
 level (or `volume') exceeds the range of the chosen representation.
