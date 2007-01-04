@@ -1,229 +1,91 @@
-Copyright (C) 1994, 1995, 1996, 1999, 2000, 2001, 2002 Free Software
-Foundation, Inc.
+                           SoX Installation
+                           ----------------
 
-   This file is free documentation; the Free Software Foundation gives
-unlimited permission to copy, distribute and modify it.
+This distribution will compile and run on most UNIX systems. It was
+originally developed on a UNIX/386 machine running AT&T V3.2 but it's
+currently developed under Linux. With a little work it should work
+with most POSIX systems.
 
-Basic Installation
-==================
 
-   These are generic installation instructions.
+Compiling
+---------
 
-   The `configure' shell script attempts to guess correct values for
-various system-dependent variables used during compilation.  It uses
-those values to create a `Makefile' in each directory of the package.
-It may also create one or more `.h' files containing system-dependent
-definitions.  Finally, it creates a shell script `config.status' that
-you can run in the future to recreate the current configuration, and a
-file `config.log' containing compiler output (useful mainly for
-debugging `configure').
+[Only if you're compiling the CVS sources, first make sure you have
+the GNU autotools installed (automake 1.9, autoconf >= 2.59) and run
 
-   It can also use an optional file (typically called `config.cache'
-and enabled with `--cache-file=config.cache' or simply `-C') that saves
-the results of its tests to speed up reconfiguring.  (Caching is
-disabled by default to prevent problems with accidental use of stale
-cache files.)
+	autoreconf -i
+]
 
-   If you need to do unusual things to compile the package, please try
-to figure out how `configure' could check whether to do them, and mail
-diffs or instructions to the address given in the `README' so they can
-be considered for the next release.  If you are using the cache, and at
-some point `config.cache' contains results you don't want to keep, you
-may remove or edit it.
+The preferred method for compiling SoX is to use the "configure"
+scripts compatible with most UNIX systems that contain "/bin/sh" or
+equivalent (it can also be used on Windows with Cygwin).
 
-   The file `configure.ac' (or `configure.in') is used to create
-`configure' by a program called `autoconf'.  You only need
-`configure.ac' if you want to change it or regenerate `configure' using
-a newer version of `autoconf'.
+To compile and install SoX on these platforms run the following
+commands:
 
-The simplest way to compile this package is:
+	./configure
+	make
+	make install
 
-  1. `cd' to the directory containing the package's source code and type
-     `./configure' to configure the package for your system.  If you're
-     using `csh' on an old version of System V, you might need to type
-     `sh ./configure' instead to prevent `csh' from trying to execute
-     `configure' itself.
+There are several optional parameters that you may pass to the
+configure script to customize SoX for your applications. Run
 
-     Running `configure' takes awhile.  While running, it prints some
-     messages telling which features it is checking for.
+	./configure --help
 
-  2. Type `make' to compile the package.
+for a complete list of options.
 
-  3. Optionally, type `make check' to run any self-tests that come with
-     the package.
 
-  4. Type `make install' to install the programs and any data files and
-     documentation.
+Optional Compile Features
+-------------------------
 
-  5. You can remove the program binaries and object files from the
-     source code directory by typing `make clean'.  To also remove the
-     files that `configure' created (so you can compile the package for
-     a different kind of computer), type `make distclean'.  There is
-     also a `make maintainer-clean' target, but that is intended mainly
-     for the package's developers.  If you use it, you may have to get
-     all sorts of other programs in order to regenerate files that came
-     with the distribution.
+For some optional features you need pkg-config; if you don't have it,
+these features won't be available even if the relevant packages are
+installed.
 
-Compilers and Options
-=====================
+SoX can make use of Ogg Vorbis libraries to read and write Ogg Vorbis
+files. Normally, the configure script will auto detect this library
+and enable support for Ogg Vorbis. The Ogg Vorbis library can be
+obtained from http://www.vorbis.com
 
-   Some systems require unusual options for compilation or linking that
-the `configure' script does not know about.  Run `./configure --help'
-for details on some of the pertinent environment variables.
+SoX can make use of MP3 libraries to read and write MP3 files.
+Normally, the configure script will auto detect these libraries and
+enable support for MP3. SoX requires libmad for reading MP3 files and
+lame for writing MP3 files. Libmad can be obtained from
+http://www.underbit.com/products/mad/ and lame can be obtained from
+http://mitiok.cjb.net/
 
-   You can give `configure' initial values for configuration parameters
-by setting variables in the command line or in the environment.  Here
-is an example:
+If any libraries are installed in a non-standard locations in your
+system then you can use the CPPFLAGS and LDFLAGS variables to allow
+configure to find them. For example:
 
-     ./configure CC=c89 CFLAGS=-O2 LIBS=-lposix
+./configure CPPFLAGS="-I/home/sox/include -I/usr/local/multimedia/include" LDFLAGS="-L/home/sox/lib -L/usr/local/multimedia/lib"
 
-   *Note Defining Variables::, for more details.
+If you're not processing lots of u-law or A-law files and would like
+to save around 64K of memory when SoX is executed then you can use
+runtime routines to perform u-law/A-law conversions. This is slower
+then the default lookup tables but results in the same answers. To
+save this memory, specify --disable-fast-ulaw and --disable-fast-alaw.
 
-Compiling For Multiple Architectures
-====================================
 
-   You can compile the package for more than one kind of computer at the
-same time, by placing the object files for each architecture in their
-own directory.  To do this, you must use a version of `make' that
-supports the `VPATH' variable, such as GNU `make'.  `cd' to the
-directory where you want the object files and executables to go and run
-the `configure' script.  `configure' automatically checks for the
-source code in the directory that `configure' is in and in `..'.
+Testing
+-------
 
-   If you have to use a `make' that does not support the `VPATH'
-variable, you have to compile the package for one architecture at a
-time in the source code directory.  After you have installed the
-package for one architecture, use `make distclean' before reconfiguring
-for another architecture.
+After successfully compiling SoX, try translating a sound file. If you
+can play one of the supported sound file formats, translate
+'monkey.wav' to your format (we'll use 'xxx'):
 
-Installation Names
-==================
+        cd src
+	./sox monkey.wav monkey.xxx
 
-   By default, `make install' will install the package's files in
-`/usr/local/bin', `/usr/local/man', etc.  You can specify an
-installation prefix other than `/usr/local' by giving `configure' the
-option `--prefix=PATH'.
+You may have to give the word size and rate for the file. For example,
+this command will make a sound file with a data rate of 12,500 samples
+per second and the data formatted as signed shorts:
 
-   You can specify separate installation prefixes for
-architecture-specific files and architecture-independent files.  If you
-give `configure' the option `--exec-prefix=PATH', the package will use
-PATH as the prefix for installing programs and libraries.
-Documentation and other data files will still use the regular prefix.
+	./sox monkey.voc -r 12500 -s -w monkey.xxx 
 
-   In addition, if you use an unusual directory layout you can give
-options like `--bindir=PATH' to specify different values for particular
-kinds of files.  Run `configure --help' for a list of the directories
-you can set and what kinds of files go in them.
+If monkey.xxx plays properly (it's a very short monkey screech),
+congratulations! SoX works.
 
-   If the package supports it, you can cause programs to be installed
-with an extra prefix or suffix on their names by giving `configure' the
-option `--program-prefix=PREFIX' or `--program-suffix=SUFFIX'.
-
-Optional Features
-=================
-
-   Some packages pay attention to `--enable-FEATURE' options to
-`configure', where FEATURE indicates an optional part of the package.
-They may also pay attention to `--with-PACKAGE' options, where PACKAGE
-is something like `gnu-as' or `x' (for the X Window System).  The
-`README' should mention any `--enable-' and `--with-' options that the
-package recognizes.
-
-   For packages that use the X Window System, `configure' can usually
-find the X include and library files automatically, but if it doesn't,
-you can use the `configure' options `--x-includes=DIR' and
-`--x-libraries=DIR' to specify their locations.
-
-Specifying the System Type
-==========================
-
-   There may be some features `configure' cannot figure out
-automatically, but needs to determine by the type of machine the package
-will run on.  Usually, assuming the package is built to be run on the
-_same_ architectures, `configure' can figure that out, but if it prints
-a message saying it cannot guess the machine type, give it the
-`--build=TYPE' option.  TYPE can either be a short name for the system
-type, such as `sun4', or a canonical name which has the form:
-
-     CPU-COMPANY-SYSTEM
-
-where SYSTEM can have one of these forms:
-
-     OS KERNEL-OS
-
-   See the file `config.sub' for the possible values of each field.  If
-`config.sub' isn't included in this package, then this package doesn't
-need to know the machine type.
-
-   If you are _building_ compiler tools for cross-compiling, you should
-use the `--target=TYPE' option to select the type of system they will
-produce code for.
-
-   If you want to _use_ a cross compiler, that generates code for a
-platform different from the build platform, you should specify the
-"host" platform (i.e., that on which the generated programs will
-eventually be run) with `--host=TYPE'.
-
-Sharing Defaults
-================
-
-   If you want to set default values for `configure' scripts to share,
-you can create a site shell script called `config.site' that gives
-default values for variables like `CC', `cache_file', and `prefix'.
-`configure' looks for `PREFIX/share/config.site' if it exists, then
-`PREFIX/etc/config.site' if it exists.  Or, you can set the
-`CONFIG_SITE' environment variable to the location of the site script.
-A warning: not all `configure' scripts look for a site script.
-
-Defining Variables
-==================
-
-   Variables not defined in a site shell script can be set in the
-environment passed to `configure'.  However, some packages may run
-configure again during the build, and the customized values of these
-variables may be lost.  In order to avoid this problem, you should set
-them in the `configure' command line, using `VAR=value'.  For example:
-
-     ./configure CC=/usr/local2/bin/gcc
-
-will cause the specified gcc to be used as the C compiler (unless it is
-overridden in the site shell script).
-
-`configure' Invocation
-======================
-
-   `configure' recognizes the following options to control how it
-operates.
-
-`--help'
-`-h'
-     Print a summary of the options to `configure', and exit.
-
-`--version'
-`-V'
-     Print the version of Autoconf used to generate the `configure'
-     script, and exit.
-
-`--cache-file=FILE'
-     Enable the cache: use and save the results of the tests in FILE,
-     traditionally `config.cache'.  FILE defaults to `/dev/null' to
-     disable caching.
-
-`--config-cache'
-`-C'
-     Alias for `--cache-file=config.cache'.
-
-`--quiet'
-`--silent'
-`-q'
-     Do not print messages saying which checks are being made.  To
-     suppress all normal output, redirect it to `/dev/null' (any error
-     messages will still be shown).
-
-`--srcdir=DIR'
-     Look for the package's source code in directory DIR.  Usually
-     `configure' can determine that directory automatically.
-
-`configure' also accepts some other, not widely useful, options.  Run
-`configure --help' for more details.
-
+After that, running "tests.sh" and "testall.sh" ("tests.bat" and
+"testall.bat" for DOS) tests most of the implemented file handlers to
+make sure that some portability issue haven't popped up.
