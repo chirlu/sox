@@ -1,69 +1,55 @@
-.ie n .ds EM " - 
-.el .ds EM \(em
-.ds d \v'-.15m'.\v'+.15m'\" Decimal point set slightly raised
+'\" t
+'\" The line above instructs most `man' programs to invoke tbl
+'\"
+'\" Separate paragraphs; not the same as .PP which resets indent level.
+.de SP
+.if t .sp .5
+.if n .sp
+..
+'\"
+'\" Replacement em-dash for nroff (default is too short).
+.ie n .ds m " - 
+.el .ds m \(em
+'\"
+'\" Placeholder macro for if longer nroff arrow is needed.
+.ds RA \(->
+'\"
+'\" Decimal point set slightly raised
+.ds d \v'-.15m'.\v'+.15m'
+'\"
 .TH SoX 1 "January 31, 2007" "soxexam" "Sound eXchange"
 .SH NAME
-soxexam\*(EMSoX Examples
-.SH CONVERSIONS
-To convert from unsigned bytes to signed words:
-.P
-	sox filename.ub newfile.sw
-.P
-To convert from Apple's AIFF format to Microsoft's WAV format:
-.P
-	sox filename.aiff filename.wav
-.P
-To convert from mono raw 8000 Hz 8-bit unsigned PCM data to a WAV file:
-.P
-	sox \-r 8000 \-u \-b \-c 1 filename.raw filename.wav
-.P
-SoX may even be used to convert sample rates.  Downconverting will
-reduce the bandwidth of the audio, and reduce storage space on
-your disk.  All such conversions are lossy and will introduce some noise.
-You should really pass your sample through a low pass filter
-prior to downconverting as this will prevent alias signals (which
-would sound like additional noise).  For example to convert from a
-sample recorded at 11025 Hz to a \(*m-law file at 8000 Hz sample rate:
-.P
-	sox input.wav \-t au \-r 8000 \-U \-b \-c 1 output.au
-.P
-To add a low-pass filter (note use of stdout for output of
-the first stage and stdin for input on the second stage):
-.P
-	sox input.wav \-t raw \-s \-w \-c 1 \- lowpass 3700 |
-.br
-	sox \-t raw \-r 11025 \-s \-w \-c 1 \- \-t au \-r 8000 \-U \-b \-c 1 output.au
-.P
-If you hear some clicks and pops when converting to \(*m-law or A-law,
-reduce the output level slightly, for example this will decrease
-it by 20%:
-.P
-	sox input.wav \-t au \-r 8000 \-U \-b \-c 1 \-v 0\*d8 outputfile.au
-.P
-The following example applies various effects to an 8000 Hz ADPCM input
-file and then end up with the final file as 44100 Hz ADPCM.
-.P
-	sox firstfile.wav \-r 44100 \-s \-w secondfile.wav
-.br
-	sox secondfile.wav thirdfile.wav swap
-.br
-	sox thirdfile.wav \-a \-b finalfile.wav mask
-.SH EFFECTS
+soxexam\*mSoX Examples
+.SH SYNOPSIS
+.nf
+\fBsox\fR [\fIglobal-options\fR] [\fIformat-options\fR] \fIinfile1\fR
+    [ [\fIformat-options\fR] \fIinfile2\fR ] ... [\fIformat-options\fR] \fIoutfile\fR
+    [\fIeffect\fR [\fIeffect-options\fR] ] ...
+.SP
+\fBplay\fR [\fIgeneral-options\fR] [\fIformat-options\fR] \fIinfile1\fR
+    [ [\fIformat-options\fR] \fIinfile2\fR ] ...
+    [\fIeffect\fR [\fIeffect-options\fR] ] ...
+.SP
+\fBrec\fR [\fIgeneral-options\fR] [\fIformat-options\fR] \fIoutfile\fR
+    [\fIeffect\fR [\fIeffect-options\fR] ] ...
+.fi
+.SH DESCRIPTION
+.SS Introduction
 The core problem is that you need some experience in using effects
 in order to say `that any old sound file sounds with effects
 absolutely hip'. There isn't any rule-based system which tell you
 the correct setting of all the parameters for every effect.
 But after some time you will become an expert in using effects.
-.P
+.SP
 Here are some examples which can be used with any music sample.
 (For a sample where only a single instrument is playing, extreme
 parameter setting may make well-known `typically' or `classical'
 sounds. Likewise, for drums, vocals or guitars.)
-.P
+.SP
 Single effects will be explained and some given parameter settings
 that can be used to understand the theory by listening to the sound file
 with the added effect.
-.P
+.SP
 Using multiple effects in parallel or in series can result either
 in a very nice sound or (mostly) in a dramatic overloading in
 variations of sounds such that your ear may follow the sound but
@@ -72,36 +58,36 @@ try to compose them as minimally as possible. We don't regard the
 composition of effects in the examples because too many combinations
 are possible and you really need a very fast machine and a lot of
 memory to play them in real-time.
-.P
+.SP
 However, real-time playing of sounds will greatly speed up learning
 and/or tuning the parameter settings for your sounds in order to
 get that `perfect' effect.
-.P
+.SP
 Basically, we will use the `play' front-end of SoX since it is easier
 to listen sounds coming out of the speaker or earphone instead
 of looking at cryptic data in sound files.
-.P
+.SP
 For easy listening of file.xxx (`xxx' is any sound format):
-.P
+.SP
 	play file.xxx effect-name effect-parameters
-.P
+.SP
 Or more SoX-like (for `dsp' output on a UNIX/Linux computer):
-.P
+.SP
 	sox file.xxx \-t ossdsp \-w \-s /dev/dsp effect-name effect-parameters
-.P
+.SP
 or (for `au' output):
-.P
+.SP
 	sox file.xxx \-t sunau \-w \-s /dev/audio effect-name effect-parameters
-.P
+.SP
 And for date freaks:
-.P
+.SP
 	sox file.xxx file.yyy effect-name effect-parameters
-.P
+.SP
 Additional options can be used. However, in this case, for real-time
 playing you'll need a very fast machine.
-.P
+.SP
 Notes:
-.P
+.SP
 I played all examples in real-time on a Pentium 100 with 32 MB and
 Linux 2.0.30 using a self-recorded sample ( 3:15 min long in `wav'
 format with 44\*d1 kHz sample rate and stereo 16 bit ).
@@ -113,37 +99,37 @@ rhythm with their drums or funky-grooves, then take any other sample.
 in the sample is suitable. Likewise, the combination vocal, drums, bass
 and guitar.)
 .SS Echo
-.P
+.SP
 An echo effect can be naturally found in the mountains, standing somewhere
 on a mountain and shouting a single word will result in one or more repetitions
 of the word (if not, turn a bit around and try again, or climb to the next
 mountain).
-.P
+.SP
 However, the time difference between shouting and repeating is the delay
 (time), its loudness is the decay. Multiple echos can have different delays and
 decays.
-.P
+.SP
 It is very popular to use echos to play an instrument with itself together,
 like some guitar players (Brain May from Queen) or vocalists are doing.
 For music samples of more than one instrument, echo can be used to add a
 second sample shortly after the original one.
-.P
+.SP
 This will sound as if you are doubling the number of instruments playing
 in the same sample:
-.P
+.SP
 	play file.xxx echo 0\*d8 0\*d88 60 0\*d4
-.P
+.SP
 If the delay is very short, then it sound like a (metallic) robot playing
 music:
-.P
+.SP
 	play file.xxx echo 0\*d8 0\*d88 6 0\*d4
-.P
+.SP
 Longer delay will sound like an open air concert in the mountains:
-.P
+.SP
 	play file.xxx echo 0\*d8 0\*d9 1000 0\*d3
-.P
+.SP
 One mountain more, and:
-.P
+.SP
 	play file.xxx echo 0\*d8 0\*d9 1000 0\*d3 1800 0\*d25
 .SS Echos
 Like the echo effect, echos stand for `ECHO in Sequel', that is the first echos
@@ -151,58 +137,58 @@ takes the input, the second the input and the first echos, the third the input
 and the first and the second echos, ... and so on.
 Care should be taken using many echos (see introduction); a single echos
 has the same effect as a single echo.
-.P
+.SP
 The sample will be bounced twice in symmetric echos:
-.P
+.SP
 	play file.xxx echos 0\*d8 0\*d7 700 0\*d25 700 0\*d3
-.P
+.SP
 The sample will be bounced twice in asymmetric echos:
-.P
+.SP
 	play file.xxx echos 0\*d8 0\*d7 700 0\*d25 900 0\*d3
-.P
+.SP
 The sample will sound as if played in a garage:
-.P
+.SP
 	play file.xxx echos 0\*d8 0\*d7 40 0\*d25 63 0\*d3
 .SS Chorus
 The chorus effect has its name because it will often be used to make a single
 vocal sound like a chorus. But it can be applied to other instrument samples
 too.
-.P
+.SP
 It works like the echo effect with a short delay, but the delay isn't constant.
 The delay is varied using a sinusoidal or triangular modulation. The modulation
 depth defines the range the modulated delay is played before or after the
 delay. Hence the delayed sound will sound slower or faster, that is the delayed
 sound tuned around the original one, like in a chorus where some vocals are
 a bit out of tune.
-.P
+.SP
 The typical delay is around 40ms to 60ms, the speed of the modulation is best
 near 0\*d25Hz and the modulation depth around 2ms.
-.P
+.SP
 A single delay will make the sample more overloaded:
-.P
+.SP
 	play file.xxx chorus 0\*d7 0\*d9 55 0\*d4 0\*d25 2 \-t
-.P
+.SP
 Two delays of the original samples sound like this:
-.P
+.SP
 	play file.xxx chorus 0\*d6 0\*d9 50 0\*d4 0\*d25 2 \-t 60 0\*d32 0\*d4 1\*d3 \-s
-.P
+.SP
 A big chorus of the sample is (three additional samples):
-.P
+.SP
 	play file.xxx chorus 0\*d5 0\*d9 50 0\*d4 0\*d25 2 \-t 60 0\*d32 0\*d4 2\*d3 \-t 40 0\*d3 0\*d3 1\*d3 \-s
 .SS Flanger
 The flanger effect is like the chorus effect, but the delay varies between
 0ms and maximal 5ms. It sound like wind blowing, sometimes faster or slower
 including changes of the speed.
-.P
+.SP
 The flanger effect is widely used in funk and soul music, where the guitar
 sound varies frequently slow or a bit faster.
-.P
+.SP
 Now, let's groove the sample:
-.P
+.SP
 	play file.xxx flanger
-.P
+.SP
 listen carefully between the difference of sinusoidal and triangular modulation:
-.P
+.SP
 	play file.xxx flanger triangle
 .SS Reverb
 The reverb effect is often used in audience hall which are to small or contain
@@ -211,7 +197,7 @@ the walls.  Reverb will make the sound be perceived as if it were in
 a large hall.  You can try the reverb effect in your bathroom or garage or
 sport halls by shouting loud some words. You'll hear the words reflected from
 the walls.
-.P
+.SP
 The biggest problem in using the reverb effect is the correct setting of the
 (wall) delays such that the sound is realistic and doesn't sound like music
 playing in a tin can or has overloaded feedback which destroys any illusion
@@ -228,52 +214,52 @@ at `t/2'. You can try other distances as well, but it won't sound very realistic
 The walls shouldn't stand to close to each other and not in a multiple integer
 distance to each other ( so avoid wall like: 200 and 202, or something
 like 100 and 200 ).
-.P
+.SP
 Since audience halls do have a lot of walls, we will start designing one
 beginning with one wall:
-.P
+.SP
 	play file.xxx reverb 1 600 180
-.P
+.SP
 One wall more:
-.P
+.SP
 	play file.xxx reverb 1 600 180 200
-.P
+.SP
 Next two walls:
-.P
+.SP
 	play file.xxx reverb 1 600 180 200 220 240
-.P
+.SP
 Now, why not a futuristic hall with six walls:
-.P
+.SP
 	play file.xxx reverb 1 600 180 200 220 240 280 300
-.P
+.SP
 If you run out of machine power or memory, then stop as many applications
 as possible (every interrupt will consume a lot of CPU time which for
 bigger halls is absolutely necessary).
 .SS Phaser
 The phaser effect is like the flanger effect, but it uses a reverb instead of
 an echo and does phase shifting. You'll hear the difference in the examples
-comparing both effects (simply change the effect name).
+comparing both effects.
 The delay modulation can be sinusoidal or triangular, preferable is the
 later for multiple instruments. For single instrument sounds,
 the sinusoidal phaser effect will give a sharper phasing effect.
 The decay shouldn't be to close to 1 which will cause dramatic feedback.
 A good range is about 0\*d5 to 0\*d1 for the decay.
-.P
-We will take a parameter setting as for the flanger before (gain-out is
+.SP
+We will take a parameter setting as before (gain-out is
 lower since feedback can raise the output dramatically):
-.P
+.SP
 	play file.xxx phaser 0\*d8 0\*d74 3 0\*d4 0\*d5 \-t
-.P
+.SP
 The drunken loudspeaker system (now less alcohol):
-.P
+.SP
 	play file.xxx phaser 0\*d9 0\*d85 4 0\*d23 1\*d3 \-s
-.P
+.SP
 A popular sound of the sample is as follows:
-.P
+.SP
 	play file.xxx phaser 0\*d89 0\*d85 1 0\*d24 2 \-t
-.P
+.SP
 The sample sounds if ten springs are in your ears:
-.P
+.SP
 	play file.xxx phaser 0\*d6 0\*d66 3 0\*d6 2 \-t
 .SS Compander
 The compander effect allows the dynamic range of a signal to be
@@ -281,15 +267,15 @@ compressed or expanded.
 For most situations, the attack time (response to the music getting
 louder) should be shorter than the decay time because our ears are more
 sensitive to suddenly loud music than to suddenly soft music.
-.P
+.SP
 For example, suppose you are listening to Strauss' `Also Sprach
 Zarathustra' in a noisy environment such as a car.
 If you turn up the volume enough to hear the soft passages over the
 road noise, the loud sections will be too loud.
 You could try this:
-.P
+.SP
 	play file.xxx compand 0\*d3,1 \-90,\-90,\-70,\-70,\-60,\-20,0,0 \-5 0 0\*d2
-.P
+.SP
 The transfer function (`\-90,...') says that
 .I very
 soft sounds between \-90 and \-70 decibels (\-90 is about the limit of
@@ -309,39 +295,39 @@ the compander to react a bit more quickly to sudden volume changes.
 .SS Changing the Rate of Playback
 You can use stretch to change the rate of playback of an audio sample
 while preserving the pitch.  For example to play at half the speed:
-.P
+.SP
 	play file.wav stretch 2
-.P
+.SP
 To play a file at twice the speed:
-.P
+.SP
 	play file.wav stretch 0\*d5
-.P
+.SP
 Other related options are `speed' to change the speed of play
 (and changing the pitch accordingly), and pitch, to alter the
 pitch of a sample.  For example to speed a sample so it plays in
 half the time (for those Mickey Mouse voices):
-.P
+.SP
 	play file.wav speed 2
-.P
+.SP
 To raise the pitch of a sample 1 while note (100 cents):
-.P
+.SP
 	play file.wav pitch 100
-.P
+.SP
 .SS Reducing noise in a recording
-.P
+.SP
 First find a period of silence in your recording, such as the beginning or
 end of a piece. If the first 1\*d5 seconds of the recording are silent, do
-.P
+.SP
 	sox file.wav \-n trim 0 1\*d5 noiseprof /tmp/profile
-.P
+.SP
 Next, use the noisered effect to actually reduce the noise:
-.P
+.SP
 	play file.wav noisered /tmp/profile
 .SH SEE ALSO
 .BR sox (1),
 .BR play (1),
 .BR rec (1)
 .SH AUTHOR
-Juergen Mueller	(jmueller@uia.ua.ac.be).
-Additional authors and contributors are listed in the AUTHORS file that
+This manual was written by Juergen Mueller (jmueller@uia.ua.ac.be).
+Other SoX authors and contributors are listed in the AUTHORS file that
 is distributed with the source code.
