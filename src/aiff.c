@@ -244,6 +244,7 @@ static int st_aiffstartread(ft_t ft)
                                  */
                                 if (st_readb(ft, &len) != ST_SUCCESS)
                                     break;
+                                --chunksize;
                                 if (len > chunksize)
                                     len = chunksize;
                                 read_len = len;
