@@ -1,4 +1,6 @@
 /*
+ * Sound Tools rate change effect file.
+ *
  * July 14, 1998
  * Copyright 1998  K. Bradley, Carnegie Mellon University
  *
@@ -16,16 +18,9 @@
  *   License along with this library; if not, write to the Free Software
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- */
-
-/*
  * October 29, 1999
  * Various changes, bugfixes, speedups, by Stan Brooks.
  *
- */
-
-/*
- * Sound Tools rate change effect file.
  */
 
 #include <math.h>
@@ -384,7 +379,7 @@ static int st_poly_start(eff_t effp)
                            (st_sample_t)effp->outinfo.rate);
 
     /* Cursory check for LCM overflow.
-     * If both rate are below 65k, there should be no problem.
+     * If both rates are below 65k, there should be no problem.
      * 16 bits x 16 bits = 32 bits, which we can handle.
      */
 
