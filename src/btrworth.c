@@ -71,7 +71,6 @@ void st_butterworth_plot (eff_t effp)
       , butterworth->b[0]
       , butterworth->b[1]
       );
-    return ST_EOF;
   }
 }
 
