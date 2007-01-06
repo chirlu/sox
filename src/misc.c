@@ -443,7 +443,7 @@ int st_effect_nothing(eff_t effp UNUSED)
   return ST_SUCCESS;
 }
 
-int st_effect_nothing_flow(eff_t effp UNUSED, st_sample_t *ibuf UNUSED, st_sample_t *obuf UNUSED, st_size_t *isamp, st_size_t *osamp)
+int st_effect_nothing_flow(eff_t effp UNUSED, const st_sample_t *ibuf UNUSED, st_sample_t *obuf UNUSED, st_size_t *isamp, st_size_t *osamp)
 {
   /* Pass through samples verbatim */
   *isamp = *osamp = min(*isamp, *osamp);
