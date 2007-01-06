@@ -74,9 +74,6 @@ static int equalizer_start(eff_t effp)
   double amp;
   double alpha;
 
-  if (eq->gain == 0)
-    return ST_EFF_NULL;
-
   /* Set the filter constants */
   w0 = 2*M_PI*eq->fc/effp->ininfo.rate;
   amp = pow( 10, eq->gain/40 );

@@ -1,16 +1,15 @@
 /*
+ * Sound Tools masking noise effect file.
+ *
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained. 
  * Lance Norskog And Sundry Contributors are not responsible for 
  * the consequences of using this software.
- */
-
-/*
- * Sound Tools masking noise effect file.
  *
  * TODO: does triangular noise, could do local shaping
+ *
  */
 
 #include <stdlib.h>
@@ -49,34 +48,14 @@ static int st_mask_getopts(eff_t effp, int n, char * * argv)
   return ST_SUCCESS;
 }
 
-static int st_mask_start(eff_t effp)
-{
-  mask_t mask = (mask_t) effp->priv;
-
-  if (effp->outinfo.encoding == ST_ENCODING_ULAW ||
-      effp->outinfo.encoding == ST_ENCODING_ALAW) {
-    mask->amount *= 16;
-    return ST_SUCCESS;
-  }
-  if (effp->outinfo.size == ST_SIZE_BYTE) {
-    mask->amount *= 256;
-    return ST_SUCCESS;
-  }
-  if (effp->outinfo.size == ST_SIZE_WORD)
-    return ST_SUCCESS;
-
-  return ST_EFF_NULL;   /* Dithering not needed at >= 24 bits */
-}
-
 static int st_mask_flow(eff_t effp, const st_sample_t * ibuf,
     st_sample_t * obuf, st_size_t * isamp, st_size_t * osamp)
 {
-  mask_t mask = (mask_t) effp->priv;
-  st_size_t len = *isamp > *osamp ? *osamp : *isamp;
+  mask_t mask = (mask_t)effp->priv;
+  st_size_t len = min(*isamp, *osamp);
 
   *isamp = *osamp = len;
-  while (len--)
-  {                     /* 16 signed bits of triangular noise */
+  while (len--) {             /* 16 signed bits of triangular noise */
     int tri16 = ((rand() % 32768L) + (rand() % 32768L)) - 32767;
     double l = *ibuf++ + tri16 * mask->amount;
     *obuf++ = ST_ROUND_CLIP_COUNT(l, effp->clippedCount);
@@ -89,7 +68,7 @@ static st_effect_t st_mask_effect = {
   "Usage: mask [amount]",
   ST_EFF_MCHAN,
   st_mask_getopts,
-  st_mask_start,
+  st_effect_nothing,
   st_mask_flow,
   st_effect_nothing_drain,
   st_effect_nothing,
@@ -106,7 +85,7 @@ static st_effect_t st_dither_effect = {
   "Usage: dither [amount]",
   ST_EFF_MCHAN,
   st_mask_getopts,
-  st_mask_start,
+  st_effect_nothing,
   st_mask_flow,
   st_effect_nothing_drain,
   st_effect_nothing,

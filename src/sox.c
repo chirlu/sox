@@ -940,14 +940,6 @@ static void check_effects(void)
   int effects_mask = 0;
   int status;
 
-  /* Remove any null effects: */
-  for (i = 0; i < nuser_effects; ++i)
-    if (user_efftab[i].h->flags & ST_EFF_NULL) {
-      --nuser_effects;
-      for (j = i--; j < nuser_effects; ++j)
-        user_efftab[j] = user_efftab[j + 1];
-    }
-
   needrate = (file_desc[0]->signal.rate != file_desc[file_count-1]->signal.rate);
   needchan = (file_desc[0]->signal.channels != file_desc[file_count-1]->signal.channels);
 
@@ -1106,9 +1098,7 @@ static int start_effects(void)
     efftab[e].clippedCount = 0;
     if ((ret = (*efftab[e].h->start)(&efftab[e])) == ST_EOF)
       break;
-    if (ret == ST_EFF_NULL)
-      st_report("`%s' has no effect in this configuration", efftab[e].name);
-    else if (efftabR[e].name) {
+    if (efftabR[e].name) {
       efftabR[e].clippedCount = 0;
       if ((ret = (*efftabR[e].h->start)(&efftabR[e])) != ST_SUCCESS)
         break;

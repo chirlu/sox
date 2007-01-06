@@ -76,17 +76,13 @@ static int st_dcshift_start(eff_t effp)
 {
     dcs_t dcs = (dcs_t) effp->priv;
 
-    if (dcs->dcshift == 0)
-      return ST_EFF_NULL;
-
-    if (effp->outinfo.channels != effp->ininfo.channels)
-    {
-        st_warn("DCSHIFT cannot handle different channels (in=%d, out=%d)"
+    if (effp->outinfo.channels != effp->ininfo.channels) {
+        st_fail("DCSHIFT cannot handle different channels (in=%d, out=%d)"
              " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
+        return ST_EOF;
     }
 
-    if (effp->outinfo.rate != effp->ininfo.rate)
-    {
+    if (effp->outinfo.rate != effp->ininfo.rate) {
         st_fail("DCSHIFT cannot handle different rates (in=%ld, out=%ld)"
              " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
         return ST_EOF;

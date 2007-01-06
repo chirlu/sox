@@ -23,7 +23,7 @@ typedef struct pad
 {
   int npads;         /* Number of pads requested */
   struct {
-    char * str;      /* Command-line argument to parse for this pad */
+    char *str;       /* Command-line argument to parse for this pad */
     st_size_t start; /* Start padding when in_pos equals this */
     st_size_t pad;   /* Number of samples to pad */
   } * pads;
@@ -73,14 +73,10 @@ static int create(eff_t effp, int n, char * * argv)
 static int start(eff_t effp)
 {
   pad_t p = (pad_t) effp->priv;
-  int i;
 
   parse(effp, 0, effp->ininfo.rate); /* Re-parse now rate is known */
   p->in_pos = p->pad_pos = p->pads_pos = 0;
-  for (i = 0; i < p->npads; ++i)
-    if (p->pads[i].pad)
-      return ST_SUCCESS;
-  return ST_EFF_NULL;
+  return ST_SUCCESS;
 }
 
 static int flow(eff_t effp, const st_sample_t * ibuf, st_sample_t * obuf,

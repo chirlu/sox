@@ -433,9 +433,6 @@ static int st_pitch_start(eff_t effp)
         return ST_EOF;
     }
 
-    if (pitch->shift == 0)
-      return ST_EFF_NULL;
-
     return ST_SUCCESS;
 }
 
