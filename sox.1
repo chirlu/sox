@@ -10,7 +10,7 @@ SoX\*mSound eXchange\*mThe Swiss Army knife of audio manipulation
 .SH SYNOPSIS
 .nf
 \fBsox [\fR\fIglobal-options\fR\fB] [\fR\fIformat-options\fR\fB]\fR \fIinfile1\fR
-    \fB[ [\fR\fIformat-options\fR\fB]\fR \fIinfile2\fR \fB...] [\fR\fIformat-options\fR\fB]\fR \fIoutfile\fR
+    \fB[[\fR\fIformat-options\fR\fB]\fR \fIinfile2\fR \fB...] [\fR\fIformat-options\fR\fB]\fR \fIoutfile\fR
     \fB[\fR\fIeffect\fR \fB[\fR\fIeffect-options\fR\fB] ...]\fR
 .fi
 .SH DESCRIPTION
@@ -38,7 +38,7 @@ The following four characteristics are sufficient to describe
 the format of audio data so that it can be processed with SoX:
 .TP
 sample rate
-The sample rate in samples per second (i.e. `Hertz' or `Hz').  For
+The sample rate in samples per second (`Hertz' or `Hz').  For
 example, digital telephony traditionally uses a sample rate of 8000Hz
 (8kHz);
 audio Compact Discs use 44100Hz (44\*d1kHz).
@@ -212,13 +212,13 @@ The command line syntax can seem complex, but in essence:
 .P
 	sox file.au file.wav
 .P
-translates an audio file in SUN Sparc .AU format
-into a Microsoft .WAV file, while
+translates an audio file in Sun .au format
+into a Microsoft WAV file, while
 .P
 	sox file.au \-r 12000 \-1 file.wav vol 0\*d5 dither
 .P
 performs the same format translation but also
-changes the sampling rate to 12000 Hz,
+changes the sampling rate to 12000Hz,
 the sample size to 1 byte (8 bits),
 and applies the \fBvol\fR and \fBdither\fR effects
 to the audio.
@@ -259,9 +259,9 @@ to specify that the `null' file type should be used.  See
 below for further information.
 .TP
 \fB\-e\fR
-This is just an alias of
+This is an alias of
 .B \-n
-but is left here for historical reasons.
+which is retained for backwards compatibility only.
 .SS Global Options
 These options can be specified on the command line at any point
 before the first effect name.
@@ -531,7 +531,7 @@ AIFF-C (not compressed, linear), defined in DAVIC 1.4 Part 9 Annex B.
 This format is referred from ARIB STD-B24, which is specified for
 Japanese data broadcasting.  Any private chunks are not supported.
 .P
-Note: The infile is processed as .aiff currently.
+Note: The input file is currently processed as .aiff.
 .TP
 .B alsa
 ALSA default device driver.
@@ -547,13 +547,13 @@ the highest quality format your ALSA system can handle.  Example:
 .B sox infile \-t alsa default
 .TP
 \&\fB.au\fR, \fB.snd\fR
-SUN Microsystems AU files.
+Sun Microsystems AU files.
 There are many types of AU file;
 DEC has invented its own with a different magic number
 and word order.
 SoX can read these files but will not write them.
 Some .au files are known to have invalid AU headers; these
-are probably original SUN \(*m-law 8000 Hz files and
+are probably original Sun \(*m-law 8000Hz files and
 can be dealt with using the
 .B .ul
 format (see below).
@@ -607,7 +607,7 @@ A variant of
 .BR cvsd .
 .TP
 .B .flac
-Free Lossless Audio Codec compressed audio.
+Free Lossless Audio CODEC compressed audio.
 FLAC is an open, patent-free CODEC designed for compressing
 music.  It is similar to MP3 and Ogg Vorbis, but lossless,
 meaning that audio is compressed in FLAC without any loss in
@@ -762,8 +762,9 @@ recordings made by the built-in Record application. This format is
 newer then the .wve format that is also used in some Psion devices.
 .TP
 .B .sf
-IRCAM Sound Files.  Used by academic music software
-such as the `CSound' package, and the `MixView sound sample editor'.
+IRCAM SDIF (Institut de Recherche et Coordination Acoustique/Musique
+Sound Description Interchange Format). Used by academic music software
+such as the CSound package, and the MixView sound sample editor.
 .TP
 .B .sph
 SPHERE (SPeech HEader Resources) is a file format defined by NIST
@@ -809,7 +810,7 @@ for older sun equipment.
 .B .txw
 Yamaha TX-16W sampler.
 A file format from a Yamaha sampling keyboard which wrote IBM-PC
-format 3\*d5" floppies.  Handles reading of files which do not have
+format 3\*d5\(dq floppies.  Handles reading of files which do not have
 the sample rate field set to one of the expected by looking at some
 other bytes in the attack/loop length fields, and defaulting to
 33kHz if the sample rate is still unknown.
@@ -878,7 +879,7 @@ The number of channels defaults to 1.
 These file-name extensions serve as shorthand for identifying the format
 of headerless audio files.  Thus, \fBub\fR, \fBsb\fR, \fBuw\fR,
 \fBsw\fR, \fBul\fR, \fBal\fR, \fBlu\fR, \fBla\fR and \fBsl\fR indicate a
-file with a single audio channel, sample rate of 8000 Hz, and samples
+file with a single audio channel, sample rate of 8000Hz, and samples
 encoded as `unsigned byte', `signed byte', `unsigned word', `signed
 word', `\(*m-law' (byte), `A-law' (byte), inverse bit order `\(*m-law',
 inverse bit order `A-law', or `signed long' respectively.  Command-line
@@ -886,7 +887,7 @@ format options can also be given to modify the selected format if it
 does not provide an exact match for a particular file.
 Headerless audio files on a `Sparc' computer are likely to be of format
 \fBul\fR;  on a `Mac' computer, they're likely to be \fBub\fR but with a
-sample rate of 11025 or 22050 Hz.
+sample rate of 11025 or 22050Hz.
 .SH EFFECTS
 Multiple effects may be applied to the audio by specifying them
 one after another at the end of the command line.
@@ -1247,8 +1248,7 @@ Apply a low-pass filter.
 See the description of the \fBhighpass\fR effect for details.
 .TP
 mask \fB[\fR\fIdepth\fR\fB]\fR
-This effect is just an alias of the \fBdither\fR effect but is left
-here for historical reasons.
+This effect is just a deprecated alias for the \fBdither\fR effect, left for historical reasons.
 .TP
 mcompand "\fIattack1,decay1\fR\fB[\fR,\fIattack2,decay2\fR\fB...]\fR
 \fIin-dB1,out-dB1\fR\fB[\fR,\fIin-dB2,out-dB2\fR\fB...]\fR
@@ -1333,7 +1333,7 @@ pick \fB[\fR\-1\fB\^|\^\fR\-2\fB\^|\^\fR\-3\fB\^|\^\fR\-4\fB\^|\^\fR\-l\fB\^|\^\
 Pick a subset of channels to be copied into the output file.  This effect is just an alias of the
 .B avg
 effect
-but is left here for historical reasons.
+which is retained for backwards compatibility only.
 .TP
 pitch \fIshift\fR \fB[\fR\fIwidth interpolate fade\fR\fB]\fR
 Change the pitch of file without affecting its duration by cross-fading
@@ -1694,7 +1694,7 @@ file `\fB\-n\fR' is usually used instead (and the length specified
 as a parameter to \fBsynth\fR).
 .P
 For example, the following produces a 3 second, 44\*d1kHz,
-stereo audio file containing a sine-wave swept from 300 to 3300 Hz.
+stereo audio file containing a sine-wave swept from 300 to 3300Hz.
 .P
 	sox \-n output.au synth 3 sine 300\-3300
 .P
@@ -1880,5 +1880,5 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 .SH AUTHORS
 Chris Bagwell (cbagwell@users.sourceforge.net).
-Additional authors and contributors are listed in the AUTHORS file that
+Other authors and contributors are listed in the AUTHORS file that
 is distributed with the source code.
