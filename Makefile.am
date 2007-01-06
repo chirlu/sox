@@ -17,6 +17,12 @@ dist_pkgdata_DATA = sox.txt soxexam.txt
 %.txt: %.1
 	tbl $(srcdir)/$< | nroff -man -Tascii | col -b > $@
 
+# Rule for making PDF man pages
+%.pdf: %.1
+	tbl $(srcdir)/$< | groff -man -Tps | ps2pdf - $@
+
+pdf: sox.pdf soxexam.pdf
+
 # Automatically update libtool script if it gets out-of-date
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
