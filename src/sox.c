@@ -935,7 +935,7 @@ static void parse_effects(int argc, char **argv)
  */
 static void check_effects(void)
 {
-  int i, j;
+  int i;
   int needchan = 0, needrate = 0, haschan = 0, hasrate = 0;
   int effects_mask = 0;
   int status;
@@ -988,7 +988,7 @@ static void check_effects(void)
       neffects++;
   }
 
-  /* If reducing the number of samples, its faster to run all effects 
+  /* If reducing the number of samples, it's faster to run all effects 
    * after the resample effect. 
    */
   if (needrate && !(hasrate) &&
