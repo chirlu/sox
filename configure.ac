@@ -62,6 +62,13 @@ dnl Large File Support
 AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
 
+dnl Allow libtool to be silenced
+AC_ARG_ENABLE(silent-libtool,
+    AC_HELP_STRING([--enable-silent-libtool],
+        [Pass --silent to libtool.]),
+	LIBTOOLFLAGS=--silent)
+AC_SUBST(LIBTOOLFLAGS)
+
 dnl Check for ALSA audio
 AC_CHECK_HEADERS(alsa/asoundlib.h,
     [with_alsa=yes

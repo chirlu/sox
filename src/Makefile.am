@@ -5,6 +5,9 @@ SUBDIRS = libgsm
 AM_CFLAGS = $(LUA_INCLUDES)
 AM_LDFLAGS = @SAMPLERATE_LIBS@
 
+# Pass flags from --enable-silent-libtool
+LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
+
 bin_PROGRAMS = sox
 bin_SCRIPTS = play libst-config
 lib_LTLIBRARIES = libst.la
