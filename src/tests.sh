@@ -82,6 +82,9 @@ do_twochannel_formats () {
 }
 
 do_singlechannel_formats () {
+  format1=vox
+  convertToAndFrom vox sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac
+
   format1=Wav
   convertToAndFrom smp
   (rate=5512; convertToAndFrom hcom) || exit 1     # Fixed rate
