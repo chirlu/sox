@@ -87,6 +87,7 @@ sox-12.18.3
     bit reversal) [FR# 1621702].  (robs)
   o Add seek support for GSM data in WAV files. Rafal Maszkowski
   o Fix [1627972] AIFF read bug when MARK chunk present.  (Richard Fuller)
+  o Fix [1160154] VOX to WAV conversion problem.  (robs)
 
 sox-12.18.2
 -----------

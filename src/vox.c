@@ -1,3 +1,4 @@
+
 /************************************************************************
  *                                   SOX                                *
  *                                                                      *
@@ -5,24 +6,14 @@
  *                                                                      *
  * Project : SOX                                                        *
  * File    : vox.c                                                      *
- * Version : V12.17.4                                                   *
  *                                                                      *
  * Version History : V12.17.4 - Tony Seebregts                          *
  *                              5 May 2004                              *
- *                              1. Original                             *
  *                                                                      *
  * Description : SOX file format handler for Dialogic/Oki ADPCM VOX     *
  *               files.                                                 *
  *                                                                      *
- * Notes : 1. Based on the vox/devox code samples at:                   *
- *                                                                      *
- *              http://www.cis.ksu.edu/~tim/vox                         *
- *                                                                      *
- *         2. Coded from SOX skeleton code supplied with SOX source.    *
- *                                                                      *
- *         3. Tested under:                                             *
- *            - Windows 2000 SP3/Visual C++ V6.0                        *
- *            - Windows 2000 SP3/Digital Mars V7.51                     *
+ * Notes : Coded from SOX skeleton code supplied with SOX source.       *
  *                                                                      *
  ************************************************************************/
 
@@ -39,34 +30,19 @@
  *                                                                      *
  ************************************************************************/
 
+#include "adpcms.h"
 #include "st_i.h"
 
+typedef struct voxstuff
+{
+  struct adpcm_struct encoder;
 
-typedef struct voxstuff { struct { short    last;                       /* ADPCM codec state */
-                                   short    index;
-                                 } state; 
-
-                          struct { uint8_t  byte;                       /* write store */
-                                   uint8_t  flag;
-                                 } store;
-                          st_fileinfo_t file;
-                        } *vox_t;
-
-
-static short STEPSIZE[49] = { 16,  17,  19,  21,  23,  25,  28, 
-                              31,  34,  37,  41,  45,  50,  55, 
-                              60,  66,  73,  80,  88,  97,  107, 
-                              118, 130, 143, 157, 173, 190, 209, 
-                              230, 253, 279, 307, 337, 371, 408, 
-                              449, 494, 544, 598, 658, 724, 796, 
-                              876, 963, 1060,1166,1282,1411,1552 
-                            };
-
-static short STEPADJUST[8] = { -1,-1,-1,-1,2,4,6,8 };
-  
-
-static uint8_t envox       (short,  vox_t);
-static short   devox       (uint8_t,vox_t);
+  struct {
+    uint8_t byte;               /* write store */
+    uint8_t flag;
+  } store;
+  st_fileinfo_t file;
+} *vox_t;
 
 
 /******************************************************************************
@@ -82,34 +58,33 @@ static short   devox       (uint8_t,vox_t);
  *                 rates but the codecs allows any user specified rate. 
  ******************************************************************************/
 
-static int  st_voxstartread (ft_t ft) 
-     { vox_t state = (vox_t) ft->priv;
+static int st_voxstartread(ft_t ft)
+{
+  vox_t state = (vox_t) ft->priv;
 
-       /* ... setup file info */
+  /* ... setup file info */
 
-       state->file.buf = (char *)xmalloc(ST_BUFSIZ);
-       state->file.size     = ST_BUFSIZ;
-       state->file.count    = 0;
-       state->file.pos      = 0;
-       state->file.eof      = 0;
+  state->file.buf = (char *) xmalloc(ST_BUFSIZ);
+  state->file.size = ST_BUFSIZ;
+  state->file.count = 0;
+  state->file.pos = 0;
+  state->file.eof = 0;
 
-       ft->signal.size     = ST_SIZE_WORD;
-       ft->signal.encoding = ST_ENCODING_OKI_ADPCM;
-       ft->signal.channels = 1;
-       if (ft->signal.rate == 0) {
-         st_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
-         ft->signal.rate = 8000;
-       }
+  ft->signal.size = ST_SIZE_WORD;
+  ft->signal.encoding = ST_ENCODING_OKI_ADPCM;
+  ft->signal.channels = 1;
+  if (ft->signal.rate == 0) {
+    st_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
+    ft->signal.rate = 8000;
+  }
 
-       /* ... initialise CODEC state */
+  adpcm_init(&state->encoder, 1);
 
-       state->state.last  = 0;
-       state->state.index = 0;
-       state->store.byte  = 0;
-       state->store.flag  = 0;
+  state->store.byte = 0;
+  state->store.flag = 0;
 
-           return (ST_SUCCESS);
-    }
+  return (ST_SUCCESS);
+}
 
 
 /******************************************************************************
@@ -125,46 +100,21 @@ static int  st_voxstartread (ft_t ft)
  * Notes      : 
  ******************************************************************************/
 
-static st_size_t st_voxread (ft_t ft,st_sample_t *buffer,st_size_t length) 
-           { vox_t    state = (vox_t) ft->priv;
-             int      count = 0;
-             int      N;
-             uint8_t  byte;
-             short    word;
+static st_size_t st_voxread(ft_t ft, st_sample_t * buffer, st_size_t len)
+{
+  vox_t state = (vox_t) ft->priv;
+  st_size_t n;
+  uint8_t byte;
 
-             /* ... round length down to nearest even number */
+  for (n = 0; n < (len&~1) && st_readb(ft, &byte) == ST_SUCCESS; n += 2) {
+    short word = adpcm_decode(byte >> 4, &state->encoder);
+    *buffer++ = ST_SIGNED_WORD_TO_SAMPLE(word, ft->clippedCount);
 
-             N  = length/2;
-             N *=2;
-
-             /* ... loop until buffer full or EOF */
-
-             while (count < N) 
-               {     /* ... refill buffer */
-
-                     if (state->file.pos >= state->file.count)
-                        { state->file.count = st_readbuf (ft,state->file.buf,1,state->file.size);
-                          state->file.pos   = 0;
-
-                          if (state->file.count == 0)
-                             break;
-                        }
-
-                     /* ... decode two nybbles stored as a byte */
-
-                     byte      = state->file.buf[state->file.pos++];
-
-                     word      = devox ((uint8_t) ((byte >> 4) & 0x0F),state);
-                     *buffer++ = ST_SIGNED_WORD_TO_SAMPLE (word * 16,);
-
-                     word      = devox ((uint8_t) (byte & 0x0F),state);
-                     *buffer++ = ST_SIGNED_WORD_TO_SAMPLE (word * 16,);
-
-                     count += 2;
-                       }
-               
-             return count;
-           }
+    word = adpcm_decode(byte, &state->encoder);
+    *buffer++ = ST_SIGNED_WORD_TO_SAMPLE(word, ft->clippedCount);
+  }
+  return n;
+}
 
 /******************************************************************************
  * Function   : st_voxstopread 
@@ -175,12 +125,14 @@ static st_size_t st_voxread (ft_t ft,st_sample_t *buffer,st_size_t length)
  * Notes      : 
  ******************************************************************************/
 
-static int  st_voxstopread (ft_t ft) 
-     { vox_t    state = (vox_t) ft->priv;
-       free (state->file.buf);
-     
-       return (ST_SUCCESS);
-     }
+static int st_voxstopread(ft_t ft)
+{
+  vox_t state = (vox_t) ft->priv;
+
+  free(state->file.buf);
+
+  return (ST_SUCCESS);
+}
 
 
 /******************************************************************************
@@ -196,31 +148,30 @@ static int  st_voxstopread (ft_t ft)
  *                 rates but the codecs allows any user specified rate. 
  ******************************************************************************/
 
-static int  st_voxstartwrite (ft_t ft) 
-     { vox_t state = (vox_t) ft->priv;
+static int st_voxstartwrite(ft_t ft)
+{
+  vox_t state = (vox_t) ft->priv;
 
 
-       /* ... setup file info */
+  /* ... setup file info */
 
-       state->file.buf = (char *)xmalloc(ST_BUFSIZ);
-       state->file.size     = ST_BUFSIZ;
-       state->file.count    = 0;
-       state->file.pos      = 0;
-       state->file.eof      = 0;
+  state->file.buf = (char *) xmalloc(ST_BUFSIZ);
+  state->file.size = ST_BUFSIZ;
+  state->file.count = 0;
+  state->file.pos = 0;
+  state->file.eof = 0;
 
-           ft->signal.size     = ST_SIZE_WORD;
-       ft->signal.encoding = ST_ENCODING_OKI_ADPCM;
-       ft->signal.channels = 1;
+  ft->signal.size = ST_SIZE_WORD;
+  ft->signal.encoding = ST_ENCODING_OKI_ADPCM;
+  ft->signal.channels = 1;
 
-       /* ... initialise CODEC state */
+  adpcm_init(&state->encoder, 1);
 
-       state->state.last  = 0;
-       state->state.index = 0;
-       state->store.byte  = 0;
-       state->store.flag  = 0;
+  state->store.byte = 0;
+  state->store.flag = 0;
 
-           return (ST_SUCCESS);
-    }
+  return (ST_SUCCESS);
+}
 
 /******************************************************************************
  * Function   : st_voxwrite
@@ -235,43 +186,43 @@ static int  st_voxstartwrite (ft_t ft)
  * Notes      : 
  ******************************************************************************/
 
-static st_size_t st_voxwrite (ft_t ft,const st_sample_t *buffer,st_size_t length) 
-           { vox_t    state = (vox_t) ft->priv;
-             st_size_t count = 0;
-             uint8_t  byte  = state->store.byte;
-             uint8_t  flag  = state->store.flag;
-             short    word;
+static st_size_t st_voxwrite(ft_t ft, const st_sample_t * buffer, st_size_t length)
+{
+  vox_t state = (vox_t) ft->priv;
+  st_size_t count = 0;
+  uint8_t byte = state->store.byte;
+  uint8_t flag = state->store.flag;
+  short word;
 
-             while (count < length)
-                   { word   = ST_SAMPLE_TO_SIGNED_WORD (*buffer++, ft->clippedCount);
-                     word  /= 16;
+  while (count < length) {
+    word = ST_SAMPLE_TO_SIGNED_WORD(*buffer++, ft->clippedCount);
 
-                     byte <<= 4;
-                     byte  |= envox (word,state) & 0x0F;
+    byte <<= 4;
+    byte |= adpcm_encode(word, &state->encoder) & 0x0F;
 
-                     flag++;
-                     flag %= 2;
+    flag++;
+    flag %= 2;
 
-                     if (flag == 0)
-                        { state->file.buf[state->file.count++] = byte;
+    if (flag == 0) {
+      state->file.buf[state->file.count++] = byte;
 
-                          if (state->file.count >= state->file.size)
-                             { st_writebuf (ft,state->file.buf,1,state->file.count);
+      if (state->file.count >= state->file.size) {
+        st_writebuf(ft, state->file.buf, 1, state->file.count);
 
-                               state->file.count = 0;
-                             }
-                        }
+        state->file.count = 0;
+      }
+    }
 
-                     count++;
-                   }
+    count++;
+  }
 
-             /* ... keep last byte across calls */
+  /* ... keep last byte across calls */
 
-             state->store.byte = byte;
-             state->store.flag = flag;
-        
-             return (count);
-           }
+  state->store.byte = byte;
+  state->store.flag = flag;
+
+  return (count);
+}
 
 /******************************************************************************
  * Function   : st_voxstopwrite
@@ -283,131 +234,28 @@ static st_size_t st_voxwrite (ft_t ft,const st_sample_t *buffer,st_size_t length
  * Notes      : 
  ******************************************************************************/
 
-static int  st_voxstopwrite (ft_t ft) 
-     { vox_t    state = (vox_t) ft->priv;
-       uint8_t  byte  = state->store.byte;
-       uint8_t  flag  = state->store.flag;
+static int st_voxstopwrite(ft_t ft)
+{
+  vox_t state = (vox_t) ft->priv;
+  uint8_t byte = state->store.byte;
+  uint8_t flag = state->store.flag;
 
-       /* ... flush remaining samples */
+  /* ... flush remaining samples */
 
-       if (flag != 0)
-          { byte <<= 4;
-            byte  |= envox (0,state) & 0x0F;
+  if (flag != 0) {
+    byte <<= 4;
+    byte |= adpcm_encode(0, &state->encoder) & 0x0F;
 
-            state->file.buf[state->file.count++] = byte;
-          }
+    state->file.buf[state->file.count++] = byte;
+  }
 
-       if (state->file.count > 0)
-          st_writebuf (ft,state->file.buf,1,state->file.count);
+  if (state->file.count > 0)
+    st_writebuf(ft, state->file.buf, 1, state->file.count);
 
-       free (state->file.buf);
-     
-       return (ST_SUCCESS);
-     }
+  free(state->file.buf);
 
-/******************************************************************************
- * Function   : envox
- * Description: Internal utility routine to encode 12 bit signed PCM to 
- *              OKI ADPCM code
- * Parameters : sample  - 12 bit linear PCM sample
- *              state   - CODEC state
- * Returns    : uint8_t - ADPCM nibble (in low order nibble)
- * Exceptions :
- * Notes      : 
- ******************************************************************************/
-
-static uint8_t envox (short sample,vox_t state)
-        { uint8_t code;
-          short   dn;
-          short   ss;
-
-          ss   = STEPSIZE[state->state.index];
-          code = 0x00;
-
-          if ((dn = sample - state->state.last) < 0)
-             { code = 0x08;
-               dn   = -dn;
-             }
-          
-          if (dn >= ss) 
-             { code = code | 0x04;
-               dn  -= ss;
-             }
-
-          if (dn >= ss/2)
-             { code = code | 0x02;
-               dn  -= ss/2;
-             }
-
-          if (dn >= ss/4)
-             { code = code | 0x01;
-             }
-
-          /* ... use decoder to set the estimate of last sample and
-             adjust the step index */
-    
-          state->state.last = devox (code,state);
-    
-          return (code);
-        }
-
-
-/******************************************************************************
- * Function   : devox
- * Description: Internal utility routine to decode OKI ADPCM 4-bit samples to 
- *              12-bit signed PCM.
- * Parameters : code   - ADPCM code (nibble)
- *              state  - CODEC state
- * Returns    : short  - 12 bit signed PCM sample
- * Exceptions :
- * Notes      : 
- ******************************************************************************/
-
-static short devox (uint8_t code,vox_t state) 
-      { short dn;
-        short ss;
-        short sample;
-
-        ss = STEPSIZE[state->state.index];
-        dn = ss/8;
-
-        if (code & 0x01)
-           dn += ss/4;
-    
-        if (code & 0x02)
-           dn += ss/2;
-    
-        if (code & 0x04)
-           dn += ss;
-
-        if (code & 0x08)
-           dn = -dn;
-
-        sample = state->state.last + dn;
-
-        /* ... clip to 12 bits */
-
-        if (sample > 2047)
-           sample = 2047;
-
-        if (sample < -2048)
-           sample = -2048;
-
-        /* ... adjust step size */
-
-        state->state.last   = sample;
-        state->state.index += STEPADJUST[code & 0x07];
-    
-        if (state->state.index < 0) 
-           state->state.index = 0;
-
-        if (state->state.index > 48) 
-           state->state.index = 48;
-
-        /* ... done */
-
-        return (sample);
-      }
+  return (ST_SUCCESS);
+}
 
 static const char *voxnames[] = {
   "vox",
@@ -429,5 +277,5 @@ static st_format_t st_vox_format = {
 
 const st_format_t *st_vox_format_fn(void)
 {
-    return &st_vox_format;
+  return &st_vox_format;
 }

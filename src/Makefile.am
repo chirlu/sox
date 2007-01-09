@@ -13,12 +13,12 @@ bin_SCRIPTS = libst-config
 lib_LTLIBRARIES = libst.la
 include_HEADERS = st.h stconfig.h ststdint.h
 
-formats = 8svx.c adpcm.c adpcm.h aiff.c au.c auto.c avr.c cdr.c \
-	  cvsd.c cvsdfilt.h dat.c flac.c g711.c g711.h g721.c \
+formats = 8svx.c adpcm.c adpcm.h adpcms.c adpcms.h aiff.c au.c auto.c avr.c \
+	  cdr.c cvsd.c cvsdfilt.h dat.c flac.c g711.c g711.h g721.c \
 	  g723_16.c g723_24.c g723_40.c g72x.c g72x.h gsm.c hcom.c \
-	  ima_rw.c ima_rw.h maud.c mp3.c nulfile.c prc.c raw.c \
-	  sf.c sfircam.h smp.c sndrtool.c sphere.c tx16w.c voc.c vorbis.c \
-	  vox.c wav.c wav.h wve.c xa.c
+	  ima_rw.c ima_rw.h maud.c mp3.c nulfile.c prc.c \
+	  raw.c sf.c sfircam.h smp.c sndrtool.c sphere.c tx16w.c voc.c \
+	  vorbis.c vox.c wav.c wav.h wve.c xa.c
 
 effects = avg.c band.c bandpass.c biquad.c biquad.h breject.c btrworth.c \
 	  btrworth.h chorus.c compand.c dcshift.c deemphas.c earwax.c \
