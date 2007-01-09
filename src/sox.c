@@ -86,7 +86,7 @@ typedef struct file_info
 } *file_info_t;
 
 /* local forward declarations */
-static bool doopts(file_info_t fo, int, char **);
+static bool doopts(file_info_t fo, int, char **, bool *play, bool *record);
 static void usage(char const *) NORET;
 static void usage_effect(char *) NORET;
 static void process(void);
@@ -103,7 +103,7 @@ static int drain_effect(int);
 static void stop_effects(void);
 
 #define MAX_INPUT_FILES 32
-#define MAX_FILES MAX_INPUT_FILES + 1
+#define MAX_FILES MAX_INPUT_FILES + 2 /* 1 output file plus record input */
 
 /* Arrays tracking input and output files */
 static file_info_t file_opts[MAX_FILES];
@@ -205,18 +205,57 @@ static void sigint(int s)
     user_abort = 1;
 }
 
+static file_info_t make_file_info(void)
+{
+  file_info_t fo = xcalloc(sizeof(*fo), 1);
+
+  fo->signal.size = -1;
+  fo->signal.encoding = ST_ENCODING_UNKNOWN;
+  fo->signal.channels = 0;
+  fo->signal.swap_bytes = ST_SWAP_DEFAULT;
+  fo->signal.compression = HUGE_VAL;
+  fo->volume = HUGE_VAL;
+  fo->volume_clips = 0;
+
+  return fo;
+}
+
+static void set_device(file_info_t fo)
+{
+#if defined(HAVE_ALSA)
+    fo->filetype = "alsa";
+    fo->filename = xstrdup("default");
+#elif defined(HAVE_OSS)
+    fo->filetype = "ossdsp";
+    fo->filename = xstrdup("/dev/dsp");
+#elif defined (HAVE_SUN_AUDIO)
+    fo->filetype = "sunau";
+    fo->filename = xstrdup("/dev/audio");
+#endif
+}
+
 int main(int argc, char **argv)
 {
   size_t i;
+  bool play = false, record = false;
 
   myname = argv[0];
   atexit(cleanup);
   st_output_message_handler = sox_output_message;
 
+  i = strlen(myname);
+  if (i >= sizeof("play") - 1 &&
+      strcmp(myname + i - (sizeof("play") - 1), "play") == 0) {
+    play = true;
+  } else if (i >= sizeof("rec") - 1 &&
+      strcmp(myname + i - (sizeof("record") - 1), "record") == 0) {
+    record = true;
+  }
+
   /* Loop over arguments and filenames, stop when an effect name is 
    * found. */
   while (optind < argc && !is_effect_name(argv[optind])) {
-    file_info_t fo;
+    file_info_t fo = make_file_info();
     struct file_info fo_none;
 
     if (file_count >= MAX_FILES) {
@@ -224,17 +263,9 @@ int main(int argc, char **argv)
       exit(1);
     }
 
-    fo = xcalloc(sizeof(*fo), 1);
-    fo->signal.size = -1;
-    fo->signal.encoding = ST_ENCODING_UNKNOWN;
-    fo->signal.channels = 0;
-    fo->signal.swap_bytes = ST_SWAP_DEFAULT;
-    fo->signal.compression = HUGE_VAL;
-    fo->volume = HUGE_VAL;
-    fo->volume_clips = 0;
     fo_none = *fo;
     
-    if (doopts(fo, argc, argv) == true) { /* is null file? */
+    if (doopts(fo, argc, argv, &play, &record)) { /* is null file? */
       if (fo->filetype != NULL && strcmp(fo->filetype, "null") != 0)
         st_warn("Ignoring \"-t %s\".", fo->filetype);
       fo->filetype = "null";
@@ -251,6 +282,35 @@ int main(int argc, char **argv)
     file_opts[file_count++] = fo;
   }
 
+  if (record) {
+    file_info_t fo = make_file_info();
+    st_size_t i;
+
+    if (file_count >= MAX_FILES) {
+      st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
+      exit(1);
+    }
+    file_count++;
+
+    for (i = 0; i < file_count; i++)
+      file_opts[i + 1] = file_opts[i];
+
+    set_device(fo);
+    file_opts[0] = fo;
+  }
+
+  if (play) {
+    file_info_t fo = make_file_info();
+
+    if (file_count >= MAX_FILES) {
+      st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
+      exit(1);
+    }
+
+    set_device(fo);
+    file_opts[file_count++] = fo;
+  }
+  
   /* Make sure we got at least the required # of input filenames */
   input_count = file_count ? file_count - 1 : 0;
   if (input_count < (combine_method == SOX_CONCAT ? 1 : 2))
@@ -361,6 +421,8 @@ static struct option long_options[] =
     {"endian"          , required_argument, NULL, 0},
     {"interactive"     ,       no_argument, NULL, 0},
     {"help-effect"     , required_argument, NULL, 0},
+    {"play"	       ,       no_argument, NULL, 0},
+    {"record"	       ,       no_argument, NULL, 0},
     {"version"         ,       no_argument, NULL, 0},
 
     {"channels"        , required_argument, NULL, 'c'},
@@ -379,16 +441,14 @@ static struct option long_options[] =
     {NULL, 0, NULL, 0}
   };
 
-static bool doopts(file_info_t fo, int argc, char **argv)
+static bool doopts(file_info_t fo, int argc, char **argv, bool *play, bool *record)
 {
-  while (true) {
+  bool isnull = false;
+  int option_index, c;
+
+  while ((c = getopt_long(argc, argv, getoptstr, long_options, &option_index)) != -1) {
     int i;          /* Needed since scanf %u allows negative numbers :( */
     char dummy;     /* To check for extraneous chars in optarg. */
-    int option_index;
-    int c = getopt_long(argc, argv, getoptstr, long_options, &option_index);
-
-    if (c == -1)    /* No more options. */
-      return false; /* Is not null file. */
 
     switch (c) {
     case 0:       /* Long options with no short equivalent. */
@@ -419,6 +479,14 @@ static bool doopts(file_info_t fo, int argc, char **argv)
         break;
 
       case 5:
+        *play = true;
+        break;
+
+      case 6:
+        *record = true;
+        break;
+        
+      case 7:
         printf("%s: v%s\n", myname, st_version());
         exit(0);
         break;
@@ -438,14 +506,15 @@ static bool doopts(file_info_t fo, int argc, char **argv)
       break;
 
     case 'e': case 'n':
-      return true;            /* Is null file. */
+      isnull = true;            /* Is null file. */
+      break;
 
     case 'o':
       globalinfo.octave_plot_effect = true;
       break;
 
     case 'h': case '?':
-      usage((char *) 0);      /* No return */
+      usage(NULL);              /* No return */
       break;
 
     case 't':
@@ -549,16 +618,17 @@ static bool doopts(file_info_t fo, int argc, char **argv)
       break;
     }
   }
+
+  return isnull;
 }
 
 static int compare_input(ft_t ft1, ft_t ft2)
 {
-  if (ft1->signal.rate != ft2->signal.rate)
-    return ST_EOF;
-  if (ft1->signal.channels != ft2->signal.channels)
-    return ST_EOF;
+  if ((ft1->signal.rate == ft2->signal.rate) &&
+      (ft1->signal.channels == ft2->signal.channels))
+    return ST_SUCCESS;
 
-  return ST_SUCCESS;
+  return ST_EOF;
 }
 
 /*
@@ -1556,7 +1626,9 @@ static void usage(char const * message)
          "-m, --mix       mix multiple input files (instead of concatenating)\n"
          "-M, --merge     merge multiple input files (instead of concatenating)\n"
          "-o              generate Octave commands to plot response of filter effect\n"
+         "--play          output to the default sound device; set if SoX run as `play'\n"
          "-q              run in quiet mode; opposite of -S\n"
+         "--record        input from the default sound device; set if SoX run as `rec'\n"
          "-S              display status while processing audio data\n"
          "--version       display version number of SoX and exit\n"
          "-V[level]       increment or set verbosity level (default 2); levels are:\n"
