@@ -86,7 +86,7 @@ typedef struct file_info
 } *file_info_t;
 
 /* local forward declarations */
-static bool doopts(file_info_t fo, int, char **, bool *play, bool *record);
+static bool doopts(file_info_t fo, int, char **, bool *play, bool *rec);
 static void usage(char const *) NORET;
 static void usage_effect(char *) NORET;
 static void process(void);
@@ -223,21 +223,22 @@ static file_info_t make_file_info(void)
 static void set_device(file_info_t fo)
 {
 #if defined(HAVE_ALSA)
-    fo->filetype = "alsa";
-    fo->filename = xstrdup("default");
+  fo->filetype = "alsa";
+  fo->filename = xstrdup("default");
 #elif defined(HAVE_OSS)
-    fo->filetype = "ossdsp";
-    fo->filename = xstrdup("/dev/dsp");
+  fo->filetype = "ossdsp";
+  fo->filename = xstrdup("/dev/dsp");
 #elif defined (HAVE_SUN_AUDIO)
-    fo->filetype = "sunau";
-    fo->filename = xstrdup("/dev/audio");
+  char *device = getenv("AUDIODEV");
+  fo->filetype = "sunau";
+  fo->filename = xstrdup(device ? device : "/dev/audio");
 #endif
 }
 
 int main(int argc, char **argv)
 {
   size_t i;
-  bool play = false, record = false;
+  bool play = false, rec = false;
 
   myname = argv[0];
   atexit(cleanup);
@@ -248,8 +249,8 @@ int main(int argc, char **argv)
       strcmp(myname + i - (sizeof("play") - 1), "play") == 0) {
     play = true;
   } else if (i >= sizeof("rec") - 1 &&
-      strcmp(myname + i - (sizeof("record") - 1), "record") == 0) {
-    record = true;
+      strcmp(myname + i - (sizeof("rec") - 1), "rec") == 0) {
+    rec = true;
   }
 
   /* Loop over arguments and filenames, stop when an effect name is 
@@ -265,7 +266,7 @@ int main(int argc, char **argv)
 
     fo_none = *fo;
     
-    if (doopts(fo, argc, argv, &play, &record)) { /* is null file? */
+    if (doopts(fo, argc, argv, &play, &rec)) { /* is null file? */
       if (fo->filetype != NULL && strcmp(fo->filetype, "null") != 0)
         st_warn("Ignoring \"-t %s\".", fo->filetype);
       fo->filetype = "null";
@@ -282,7 +283,7 @@ int main(int argc, char **argv)
     file_opts[file_count++] = fo;
   }
 
-  if (record) {
+  if (rec) {
     file_info_t fo = make_file_info();
     st_size_t i;
 
@@ -421,8 +422,9 @@ static struct option long_options[] =
     {"endian"          , required_argument, NULL, 0},
     {"interactive"     ,       no_argument, NULL, 0},
     {"help-effect"     , required_argument, NULL, 0},
+    {"octave"          ,       no_argument, NULL, 0},
     {"play"	       ,       no_argument, NULL, 0},
-    {"record"	       ,       no_argument, NULL, 0},
+    {"rec"	       ,       no_argument, NULL, 0},
     {"version"         ,       no_argument, NULL, 0},
 
     {"channels"        , required_argument, NULL, 'c'},
@@ -431,7 +433,6 @@ static struct option long_options[] =
     {"merge"           ,       no_argument, NULL, 'M'},
     {"mix"             ,       no_argument, NULL, 'm'},
     {"no-show-progress",       no_argument, NULL, 'q'},
-    {"octave"          ,       no_argument, NULL, 'o'},
     {"rate"            , required_argument, NULL, 'r'},
     {"reverse-bits"    ,       no_argument, NULL, 'X'},
     {"show-progress"   ,       no_argument, NULL, 'S'},
@@ -441,7 +442,7 @@ static struct option long_options[] =
     {NULL, 0, NULL, 0}
   };
 
-static bool doopts(file_info_t fo, int argc, char **argv, bool *play, bool *record)
+static bool doopts(file_info_t fo, int argc, char **argv, bool *play, bool *rec)
 {
   bool isnull = false;
   int option_index, c;
@@ -479,14 +480,18 @@ static bool doopts(file_info_t fo, int argc, char **argv, bool *play, bool *reco
         break;
 
       case 5:
-        *play = true;
+        globalinfo.octave_plot_effect = true;
         break;
 
       case 6:
-        *record = true;
+        *play = true;
+        break;
+
+      case 7:
+        *rec = true;
         break;
         
-      case 7:
+      case 8:
         printf("%s: v%s\n", myname, st_version());
         exit(0);
         break;
@@ -507,10 +512,6 @@ static bool doopts(file_info_t fo, int argc, char **argv, bool *play, bool *reco
 
     case 'e': case 'n':
       isnull = true;            /* Is null file. */
-      break;
-
-    case 'o':
-      globalinfo.octave_plot_effect = true;
       break;
 
     case 'h': case '?':
@@ -1628,7 +1629,7 @@ static void usage(char const * message)
          "-o              generate Octave commands to plot response of filter effect\n"
          "--play          output to the default sound device; set if SoX run as `play'\n"
          "-q              run in quiet mode; opposite of -S\n"
-         "--record        input from the default sound device; set if SoX run as `rec'\n"
+         "--rec           input from the default sound device; set if SoX run as `rec'\n"
          "-S              display status while processing audio data\n"
          "--version       display version number of SoX and exit\n"
          "-V[level]       increment or set verbosity level (default 2); levels are:\n"

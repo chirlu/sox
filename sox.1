@@ -23,8 +23,13 @@ SoX\*mSound eXchange\*mThe Swiss Army knife of audio manipulation
 .SH SYNOPSIS
 .nf
 \fBsox\fR [\fIglobal-options\fR] [\fIformat-options\fR] \fIinfile1\fR
-    [ [\fIformat-options\fR] \fIinfile2\fR ] ... [\fIformat-options\fR] \fIoutfile\fR
-    [\fIeffect\fR [\fIeffect-options\fR] ] ...
+    [[\fIformat-options\fR] \fIinfile2\fR] ... [\fIformat-options\fR] \fIoutfile\fR
+    [\fIeffect\fR [\fIeffect-options\fR]] ...
+\fBplay\fR [\fIglobal-options\fR] [\fIformat-options\fR] \fIinfile1\fR
+    [[\fIformat-options\fR] \fIinfile2\fR] ... [\fIformat-options\fR]
+    [\fIeffect\fR [\fIeffect-options\fR]] ...
+\fBrec\fR [\fIglobal-options\fR] [\fIformat-options\fR] \fIoutfile\fR
+    [\fIeffect\fR [\fIeffect-options\fR]] ...
 .fi
 .SH DESCRIPTION
 SoX reads and writes audio files in most popular formats and can
@@ -34,6 +39,9 @@ and, on many systems, can play and record audio files.
 SoX can also combine multiple input files (with the same sample rate and
 number of channels) to form one output file using one of three methods:
 `concatenate' (the default), `mix', or `merge'.
+.SP
+If invoked as `play', the output file is the default sound device. If
+invoked as `rec', the input device is the default sound device.
 .SP
 The overall SoX processing chain can be summarised as follows:
 .SP
@@ -53,8 +61,7 @@ the format of audio data so that it can be processed with SoX:
 sample rate
 The sample rate in samples per second (`Hertz' or `Hz').  For
 example, digital telephony traditionally uses a sample rate of 8000Hz
-(8kHz);
-audio Compact Discs use 44100Hz (44\*d1kHz).
+(8kHz); audio Compact Discs use 44100Hz (44\*d1kHz).
 .TP
 sample size
 The number of bits (or bytes) used to store each sample.  Most popular are
@@ -66,8 +73,8 @@ encodings have variants with different byte-orderings or bit-orderings;
 some `compress' the audio data, i.e. the stored audio data takes up less
 space (i.e. disk-space or transmission band-width) than the other format
 parameters and the number of samples would imply.  Commonly-used
-encoding types include: floating-point, \(*m-law, ADPCM, signed linear,
-FLAC, etc.
+encoding types include floating-point, \(*m-law, ADPCM, signed linear,
+and FLAC.
 .TP
 channels
 The number of audio channels contained in the file.  One (`mono') and two
@@ -329,7 +336,7 @@ For example, two mono files could be merged to form one
 stereo file; the first and second mono files would become
 the left and right channels of the stereo file.
 .TP
-\fB\-o\fR, \fB\-\-octave\fR
+\fB\-\-octave\fR
 Run in a mode that can be used, in conjunction with the GNU
 Octave program, to assist with the selection and configuration
 of many of the filtering effects.  For the first given effect
@@ -341,9 +348,15 @@ without actually processing any audio.  E.g.
 .br
 	octave plot.m
 .TP
+\fB\-\-play\fR
+The same as invoking SoX as `play'.
+.TP
 \fB\-q\fR, \fB\-\-no\-show\-progress\fR
 Run in quiet mode when SoX wouldn't otherwise do so;
 this is the converse of the \fB\-S\fR option.
+.TP
+\fB\-\-rec\fR
+The same as invoking SoX as `rec'.
 .TP
 \fB\-S\fR, \fB\-\-show\-progress\fR
 Display input file format/header information and input file(s)
@@ -881,7 +894,7 @@ You had better know what you are doing! Output format
 options will cause a format conversion, and the \fB.wav\fR
 will written appropriately.
 .SP
-SoX currently can read PCM, ULAW, ALAW, MS ADPCM, and IMA (or DVI) ADPCM.
+SoX currently can read PCM, \(*m-law, A-law, MS ADPCM, and IMA (or DVI) ADPCM.
 It can write all of these formats including the ADPCM encoding.
 Big endian versions of RIFF files, called RIFX, can also be read
 and written.  To write a RIFX file, use the

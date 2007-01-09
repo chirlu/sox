@@ -263,9 +263,7 @@ AM_CONDITIONAL([INTERNAL_LUA], [test "$want_internal_lua" = yes])
 
 dnl Generate output files.
 AX_CREATE_STDINT_H(src/ststdint.h)
-AC_SUBST(with_alsa) dnl for play.in
-AC_SUBST(with_oss)  dnl for play.in
-AC_CONFIG_FILES(Makefile src/Makefile src/libgsm/Makefile src/libst-config src/play)
+AC_CONFIG_FILES(Makefile src/Makefile src/libgsm/Makefile src/libst-config)
 AC_CONFIG_SUBDIRS([lua])
 AC_OUTPUT
 

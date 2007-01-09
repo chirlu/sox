@@ -9,7 +9,7 @@ AM_LDFLAGS = @SAMPLERATE_LIBS@
 LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
 
 bin_PROGRAMS = sox
-bin_SCRIPTS = play libst-config
+bin_SCRIPTS = libst-config
 lib_LTLIBRARIES = libst.la
 include_HEADERS = st.h stconfig.h ststdint.h
 
@@ -40,12 +40,12 @@ all: sox play rec
 libgsm/libgsm.la:
 	$(MAKE) -C libgsm
 
-rec: play
-	$(RM) rec && $(LN_S) play rec
+play rec: sox
+	$(RM) $@ && $(LN_S) sox $@
 
 install-exec-hook:
-	cd $(DESTDIR)$(bindir) && \
-	$(RM) rec && $(LN_S) play rec
+	cd $(DESTDIR)$(bindir) && $(RM) play && $(LN_S) sox play
+	cd $(DESTDIR)$(bindir) && $(RM) rec && $(LN_S) sox rec
 
 distclean-local:
 	$(RM) *.raw *.sf ststdint.h
