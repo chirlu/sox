@@ -6,6 +6,7 @@
  */
 
 #define st_flanger_usage \
+  "Usage: flanger [delay depth regen width speed shape phase interp]\n"
 /*
   "                  .\n" \
   "                 /|regen\n" \
@@ -24,9 +25,7 @@
   "      |              |_____|phase            |   |\n" \
   "      +------------------------------------->|   |\n" \
   "                                             |___|\n" \
-*/
-  "Usage: flanger [delay depth regen width speed shape phase interp]\n"
-/*  "\n" \
+  "\n" \
   "       RANGE DEFAULT DESCRIPTION\n" \
   "delay   0 10    0    base delay in milliseconds\n" \
   "depth   0 10    2    added swept delay in milliseconds\n" \
