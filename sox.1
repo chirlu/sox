@@ -348,15 +348,9 @@ without actually processing any audio.  E.g.
 .br
 	octave plot.m
 .TP
-\fB\-\-play\fR
-The same as invoking SoX as `play'.
-.TP
 \fB\-q\fR, \fB\-\-no\-show\-progress\fR
 Run in quiet mode when SoX wouldn't otherwise do so;
 this is the converse of the \fB\-S\fR option.
-.TP
-\fB\-\-rec\fR
-The same as invoking SoX as `rec'.
 .TP
 \fB\-S\fR, \fB\-\-show\-progress\fR
 Display input file format/header information and input file(s)
@@ -746,8 +740,7 @@ with an effect that specifies a finite time length
 .SP
 Using this type to output audio amounts to discarding the audio
 and is useful mainly with effects that produce information about the
-audio instead of affecting it
-(such as \fBnoiseprof\fR or \fBstat\fR).
+audio instead of affecting it (such as \fBnoiseprof\fR or \fBstat\fR).
 .SP
 The number of channels and the sampling rate associated with a null file
 are by default 2 and 44\*d1kHz respectively, but these can be overridden
@@ -757,7 +750,7 @@ One other use of the null file type is to use it in conjunction
 with
 .B \-V
 to display information from the audio file header
-without having to read any further into the file.  E.g.
+without having to read any further into the file, e.g.
 .B sox \-V *.wav \-n
 will display header information for each `WAV' file in the current
 directory.
