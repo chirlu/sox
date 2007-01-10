@@ -86,7 +86,7 @@ typedef struct file_info
 } *file_info_t;
 
 /* local forward declarations */
-static bool doopts(file_info_t fo, int, char **, bool *play, bool *rec);
+static bool doopts(file_info_t fo, int, char **);
 static void usage(char const *) NORET;
 static void usage_effect(char *) NORET;
 static void process(void);
@@ -266,7 +266,7 @@ int main(int argc, char **argv)
 
     fo_none = *fo;
     
-    if (doopts(fo, argc, argv, &play, &rec)) { /* is null file? */
+    if (doopts(fo, argc, argv)) { /* is null file? */
       if (fo->filetype != NULL && strcmp(fo->filetype, "null") != 0)
         st_warn("Ignoring \"-t %s\".", fo->filetype);
       fo->filetype = "null";
@@ -423,8 +423,6 @@ static struct option long_options[] =
     {"interactive"     ,       no_argument, NULL, 0},
     {"help-effect"     , required_argument, NULL, 0},
     {"octave"          ,       no_argument, NULL, 0},
-    {"play"	       ,       no_argument, NULL, 0},
-    {"rec"	       ,       no_argument, NULL, 0},
     {"version"         ,       no_argument, NULL, 0},
 
     {"channels"        , required_argument, NULL, 'c'},
@@ -442,7 +440,7 @@ static struct option long_options[] =
     {NULL, 0, NULL, 0}
   };
 
-static bool doopts(file_info_t fo, int argc, char **argv, bool *play, bool *rec)
+static bool doopts(file_info_t fo, int argc, char **argv)
 {
   bool isnull = false;
   int option_index, c;
@@ -483,14 +481,6 @@ static bool doopts(file_info_t fo, int argc, char **argv, bool *play, bool *rec)
         globalinfo.octave_plot_effect = true;
         break;
 
-      case 6:
-        *play = true;
-        break;
-
-      case 7:
-        *rec = true;
-        break;
-        
       case 8:
         printf("%s: v%s\n", myname, st_version());
         exit(0);
