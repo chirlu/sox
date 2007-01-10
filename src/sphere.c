@@ -105,9 +105,9 @@ static int st_spherestartread(ft_t ft)
             {
                 sscanf(buf, "%53s %15s %127s", fldname, fldtype, fldsval);
                 if (strncmp(fldsval,"01",2) == 0)
-                  ft->signal.swap_bytes = ST_IS_BIGENDIAN; /* Data is little endian. */
+                  ft->signal.reverse_bytes = ST_IS_BIGENDIAN; /* Data is little endian. */
                 else if (strncmp(fldsval,"10",2) == 0)
-                  ft->signal.swap_bytes = ST_IS_LITTLEENDIAN; /* Data is big endian. */
+                  ft->signal.reverse_bytes = ST_IS_LITTLEENDIAN; /* Data is big endian. */
             }
 
             if (st_reads(ft, buf, header_size) == ST_EOF)
@@ -263,7 +263,7 @@ static int st_spherestopwrite(ft_t ft)
     st_writes(ft, buf);
 
     sprintf(buf, "sample_byte_format -s2 %s\n",
-        ft->signal.swap_bytes != ST_IS_BIGENDIAN ? "10" : "01");
+        ft->signal.reverse_bytes != ST_IS_BIGENDIAN ? "10" : "01");
     st_writes(ft, buf);
 
     rate = ft->signal.rate;

@@ -453,7 +453,7 @@ static int st_aiffstartread(ft_t ft)
         if (is_sowt)
         {
                 aiff->nsamples -= 4;
-                ft->signal.swap_bytes = !ft->signal.swap_bytes;
+                ft->signal.reverse_bytes = !ft->signal.reverse_bytes;
         }
         
         if (foundmark && !foundinstr)
@@ -695,10 +695,9 @@ static int st_aiffstartwrite(ft_t ft)
             return rc;
 
         aiff->nsamples = 0;
-        if ((ft->signal.encoding == ST_ENCODING_ULAW ||
-             ft->signal.encoding == ST_ENCODING_ALAW) && 
+        if (ft->signal.encoding < ST_ENCODING_SIZE_IS_WORD && 
             ft->signal.size == ST_SIZE_BYTE) {
-                st_report("expanding 8-bit u-law to signed 16 bits");
+                st_report("expanding compressed bytes to signed 16 bits");
                 ft->signal.encoding = ST_ENCODING_SIGN2;
                 ft->signal.size = ST_SIZE_WORD;
         }
@@ -901,10 +900,9 @@ static int st_aifcstartwrite(ft_t ft)
             return rc;
 
         aiff->nsamples = 0;
-        if ((ft->signal.encoding == ST_ENCODING_ULAW ||
-             ft->signal.encoding == ST_ENCODING_ALAW) && 
+        if (ft->signal.encoding < ST_ENCODING_SIZE_IS_WORD && 
             ft->signal.size == ST_SIZE_BYTE) {
-                st_report("expanding 8-bit u-law to signed 16 bits");
+                st_report("expanding compressed bytes to signed 16 bits");
                 ft->signal.encoding = ST_ENCODING_SIGN2;
                 ft->signal.size = ST_SIZE_WORD;
         }

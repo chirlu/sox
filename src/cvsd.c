@@ -84,7 +84,6 @@ struct cvsdpriv {
         } bit;
         unsigned bytes_written;
         unsigned cvsd_rate;
-        char swapbits;
 };
 
 static int debug_count = 0;
@@ -120,7 +119,6 @@ static void cvsdstartcommon(ft_t ft)
         ft->signal.channels = 1;
         ft->signal.size = ST_SIZE_WORD; /* make output format default to words */
         ft->signal.encoding = ST_ENCODING_SIGN2;
-        p->swapbits = ft->signal.reverse_bits;
         /*
          * initialize the decoder
          */
@@ -139,7 +137,7 @@ static void cvsdstartcommon(ft_t ft)
          * initialize bit shift register
          */
         p->bit.shreg = p->bit.cnt = 0;
-        p->bit.mask = p->swapbits ? 0x80 : 1;
+        p->bit.mask = 1;
         /*
          * count the bytes written
          */
@@ -147,7 +145,7 @@ static void cvsdstartcommon(ft_t ft)
         p->com.v_min = 1;
         p->com.v_max = -1;
         st_report("cvsd: bit rate %dbit/s, bits from %s", p->cvsd_rate,
-               p->swapbits ? "msb to lsb" : "lsb to msb");
+               ft->signal.reverse_bits ? "msb to lsb" : "lsb to msb");
 }
 
 /* ---------------------------------------------------------------------- */
@@ -239,7 +237,7 @@ static st_size_t st_cvsdread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
                         if (st_readb(ft, &(p->bit.shreg)) == ST_EOF)
                                 return done;
                         p->bit.cnt = 8;
-                        p->bit.mask = p->swapbits ? 0x80 : 1;
+                        p->bit.mask = 1;
                 }
                 /*
                  * handle one bit
@@ -247,10 +245,7 @@ static st_size_t st_cvsdread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
                 p->bit.cnt--;
                 p->com.overload = ((p->com.overload << 1) | 
                                    (!!(p->bit.shreg & p->bit.mask))) & 7;
-                if (p->swapbits)
-                        p->bit.mask >>= 1;
-                else
-                        p->bit.mask <<= 1;
+                p->bit.mask <<= 1;
                 p->com.mla_int *= p->com.mla_tc0;
                 if ((p->com.overload == 0) || (p->com.overload == 7))
                         p->com.mla_int += p->com.mla_tc1;
@@ -334,13 +329,9 @@ static st_size_t st_cvsdwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
                         st_writeb(ft, p->bit.shreg);
                         p->bytes_written++;
                         p->bit.shreg = p->bit.cnt = 0;
-                        p->bit.mask = p->swapbits ? 0x80 : 1;
-                } else {
-                        if (p->swapbits)
-                                p->bit.mask >>= 1;
-                        else
-                                p->bit.mask <<= 1;
-                }
+                        p->bit.mask = 1;
+                } else
+                        p->bit.mask <<= 1;
                 p->com.phase += p->com.phase_inc;
                 st_debug_more("input %d %f\n", debug_count, inval);
                 st_debug_more("recon %d %f\n", debug_count, p->c.enc.recon_int);
@@ -489,7 +480,6 @@ static void make_dvms_hdr(ft_t ft, struct dvms_header *hdr)
 
 static int st_dvmsstartread(ft_t ft) 
 {
-        struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         struct dvms_header hdr;
         int rc;
 
@@ -520,7 +510,6 @@ static int st_dvmsstartread(ft_t ft)
         if (rc)
             return rc;
 
-        p->swapbits = 0;
         return(ST_SUCCESS);
 }
 
@@ -528,7 +517,6 @@ static int st_dvmsstartread(ft_t ft)
 
 static int st_dvmsstartwrite(ft_t ft) 
 {
-        struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         struct dvms_header hdr;
         int rc;
         
@@ -546,7 +534,6 @@ static int st_dvmsstartwrite(ft_t ft)
         if (!ft->seekable)
                st_warn("Length in output .DVMS header will wrong since can't seek to fix it");
 
-        p->swapbits = 0;
         return(ST_SUCCESS);
 }
 

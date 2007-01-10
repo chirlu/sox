@@ -330,10 +330,7 @@ static int st_format_start_write(ft_t const format)
   }
 
   /* FIXME: FLAC should not need to know about this oddity */
-  if (format->signal.encoding == ST_ENCODING_ULAW ||
-      format->signal.encoding == ST_ENCODING_ALAW ||
-      format->signal.encoding == ST_ENCODING_INV_ULAW ||
-      format->signal.encoding == ST_ENCODING_INV_ALAW)
+  if (format->signal.encoding < ST_ENCODING_SIZE_IS_WORD)
     format->signal.size = ST_SIZE_WORD;
 
   encoder->bits_per_sample = (format->signal.size > 4 ? 4 : format->signal.size) << 3;

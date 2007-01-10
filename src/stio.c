@@ -25,14 +25,18 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-void set_swap_if_not_already_set(ft_t ft)
+void set_endianness_if_not_already_set(ft_t ft)
 {
-  if (ft->signal.swap_bytes == ST_SWAP_DEFAULT) {
+  if (ft->signal.reverse_bytes == ST_REVERSE_DEFAULT) {
     if (ft->h->flags & ST_FILE_ENDIAN)
-      ft->signal.swap_bytes = ST_IS_LITTLEENDIAN != !(ft->h->flags & ST_FILE_ENDBIG);
+      ft->signal.reverse_bytes = ST_IS_LITTLEENDIAN != !(ft->h->flags & ST_FILE_ENDBIG);
     else
-      ft->signal.swap_bytes = ST_SWAP_NO;
+      ft->signal.reverse_bytes = ST_REVERSE_NO;
   }
+  if (ft->signal.reverse_nibbles == ST_REVERSE_DEFAULT)
+    ft->signal.reverse_nibbles = ST_REVERSE_NO;
+  if (ft->signal.reverse_bits == ST_REVERSE_DEFAULT)
+    ft->signal.reverse_bits = ST_REVERSE_NO;
 }
 
 static int is_seekable(ft_t ft)
@@ -132,7 +136,7 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
     }
 
     if (filetype)
-      set_swap_if_not_already_set(ft);
+      set_endianness_if_not_already_set(ft);
 
     /* Read and write starters can change their formats. */
     if ((*ft->h->startread)(ft) != ST_SUCCESS)
@@ -268,7 +272,7 @@ ft_t st_open_write(
     if (instr)
         ft->instr = *instr;
 
-    set_swap_if_not_already_set(ft);
+    set_endianness_if_not_already_set(ft);
 
     /* Read and write starters can change their formats. */
     if ((*ft->h->startwrite)(ft) != ST_SUCCESS)

@@ -381,7 +381,7 @@ static st_size_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
         }
         else
         {
-            read_buf(buf+(len*sizeof(st_sample_t)), alsa->buf, err, ft->signal.swap_bytes, &ft->clippedCount);
+            read_buf(buf+(len*sizeof(st_sample_t)), alsa->buf, err, ft->signal.reverse_bytes, &ft->clippedCount);
             len += err * ft->signal.channels;
         }
     }
@@ -486,7 +486,7 @@ static st_size_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
       st_size_t len;
       
       osamp = min(nsamp - done, alsa->buf_size / ft->signal.size);
-      write_buf(alsa->buf, buf, osamp, ft->signal.swap_bytes, &ft->clippedCount);
+      write_buf(alsa->buf, buf, osamp, ft->signal.reverse_bytes, &ft->clippedCount);
       buf += osamp;
 
       for (len = 0; len < osamp;) {

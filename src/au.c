@@ -164,11 +164,11 @@ static int st_austartread(ft_t ft)
                  * left over from pre-standardize period of testing for
                  * endianess.  Its not hurting though.
                  */
-                ft->signal.swap_bytes = !ft->signal.swap_bytes;
+                ft->signal.reverse_bytes = !ft->signal.reverse_bytes;
                 st_debug("Found inverted DEC magic word.  Swapping bytes.");
         }
         else if (magic == SUN_INV_MAGIC) {
-                ft->signal.swap_bytes = !ft->signal.swap_bytes;
+                ft->signal.reverse_bytes = !ft->signal.reverse_bytes;
                 st_debug("Found inverted Sun/NeXT magic word. Swapping bytes.");
         }
         else if (magic == SUN_MAGIC) {

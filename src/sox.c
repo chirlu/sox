@@ -108,6 +108,7 @@ static void stop_effects(void);
 /* Arrays tracking input and output files */
 static file_info_t file_opts[MAX_FILES];
 static ft_t file_desc[MAX_FILES];
+#define ofile file_desc[file_count - 1]
 static size_t file_count = 0;
 static size_t input_count = 0;
 
@@ -174,7 +175,7 @@ static bool overwrite_permitted(char const * filename)
 static void cleanup(void) 
 {
   size_t i;
-  ft_t ft = file_desc[file_count - 1];
+  ft_t ft = ofile;
 
   /* Close the input and output files before exiting. */
   for (i = 0; i < input_count; i++)
@@ -212,7 +213,9 @@ static file_info_t make_file_info(void)
   fo->signal.size = -1;
   fo->signal.encoding = ST_ENCODING_UNKNOWN;
   fo->signal.channels = 0;
-  fo->signal.swap_bytes = ST_SWAP_DEFAULT;
+  fo->signal.reverse_bytes = ST_REVERSE_DEFAULT;
+  fo->signal.reverse_nibbles = ST_REVERSE_DEFAULT;
+  fo->signal.reverse_bits = ST_REVERSE_DEFAULT;
   fo->signal.compression = HUGE_VAL;
   fo->volume = HUGE_VAL;
   fo->volume_clips = 0;
@@ -413,7 +416,7 @@ static char * read_comment_file(char const * const filename)
   return result;
 }
 
-static char *getoptstr = "+r:v:t:c:C:hsuUAaig1b2w34lf8dxV::SqoenmMRLBX";
+static char *getoptstr = "+abc:defghilmnoqr:st:uv:wxABC:DLMNRSUV::X12348";
 
 static struct option long_options[] =
   {
@@ -433,6 +436,7 @@ static struct option long_options[] =
     {"no-show-progress",       no_argument, NULL, 'q'},
     {"rate"            , required_argument, NULL, 'r'},
     {"reverse-bits"    ,       no_argument, NULL, 'X'},
+    {"reverse-nibbles" ,       no_argument, NULL, 'N'},
     {"show-progress"   ,       no_argument, NULL, 'S'},
     {"type"            ,       no_argument, NULL, 't'},
     {"volume"          , required_argument, NULL, 'v'},
@@ -462,11 +466,11 @@ static bool doopts(file_info_t fo, int argc, char **argv)
 
       case 2:
         if (!strcmp(optarg, "little"))
-          fo->signal.swap_bytes = ST_IS_BIGENDIAN;
+          fo->signal.reverse_bytes = ST_IS_BIGENDIAN;
         else if (!strcmp(optarg, "big"))
-          fo->signal.swap_bytes = ST_IS_LITTLEENDIAN;
+          fo->signal.reverse_bytes = ST_IS_LITTLEENDIAN;
         else if (!strcmp(optarg, "swap"))
-          fo->signal.swap_bytes = true;
+          fo->signal.reverse_bytes = true;
         break;
 
       case 3:
@@ -558,7 +562,9 @@ static bool doopts(file_info_t fo, int argc, char **argv)
     case 'u': fo->signal.encoding = ST_ENCODING_UNSIGNED;  break;
     case 'f': fo->signal.encoding = ST_ENCODING_FLOAT;     break;
     case 'a': fo->signal.encoding = ST_ENCODING_ADPCM;     break;
+    case 'D': fo->signal.encoding = ST_ENCODING_MS_ADPCM;  break; /* WIP */
     case 'i': fo->signal.encoding = ST_ENCODING_IMA_ADPCM; break;
+    case 'o': fo->signal.encoding = ST_ENCODING_OKI_ADPCM; break; /* WIP */
     case 'g': fo->signal.encoding = ST_ENCODING_GSM;       break;
 
     case 'U': fo->signal.encoding = ST_ENCODING_ULAW;
@@ -572,19 +578,23 @@ static bool doopts(file_info_t fo, int argc, char **argv)
       break;
 
     case 'L':
-      fo->signal.swap_bytes = ST_IS_BIGENDIAN;
+      fo->signal.reverse_bytes = ST_IS_BIGENDIAN;
       break;
 
     case 'B':
-      fo->signal.swap_bytes = ST_IS_LITTLEENDIAN;
+      fo->signal.reverse_bytes = ST_IS_LITTLEENDIAN;
       break;
 
     case 'x':
-      fo->signal.swap_bytes = ST_SWAP_YES;
+      fo->signal.reverse_bytes = ST_REVERSE_YES;
       break;
 
     case 'X':
-      fo->signal.reverse_bits = true;
+      fo->signal.reverse_bits = ST_REVERSE_YES;
+      break;
+
+    case 'N':
+      fo->signal.reverse_nibbles = ST_REVERSE_YES;
       break;
 
     case 'V':
@@ -622,6 +632,32 @@ static int compare_input(ft_t ft1, ft_t ft2)
   return ST_EOF;
 }
 
+static void report_file(ft_t f)
+{
+  static char const * const no_yes[] = {"no", "yes"};
+
+  st_report("\n\n%s: %s\n"
+    "Sample Size    : %s\n"
+    "Sample Encoding: %s\n"
+    "Channels       : %u\n"
+    "Sample Rate    : %lu\n"
+    "Endian Type    : %s\n"
+    "Reverse Nibbles: %s\n"
+    "Reverse Bits   : %s\n"
+    "Comment        : \"%s%c\n", /* Deliberate \n to get blank line */
+    f->mode == 'r'? "Input Filename " : "Output Filename",
+    f->filename, 
+    st_sizes_str[(unsigned char)f->signal.size],
+    st_encodings_str[(unsigned char)f->signal.encoding],
+    f->signal.channels,
+    f->signal.rate,
+    f->signal.size == 1? "N/A" : 
+      f->signal.reverse_bytes != ST_IS_BIGENDIAN? "big" : "little",
+    no_yes[f->signal.reverse_nibbles],
+    no_yes[f->signal.reverse_bits],
+    f->comment? f->comment : "\bnone", f->comment? '"' : ' ');
+}
+
 /*
  * Process input file -> effect table -> output file one buffer at a time
  */
@@ -634,17 +670,10 @@ static void process(void) {
   st_sample_t *ibuf[MAX_INPUT_FILES];
 
   for (f = 0; f < input_count; f++) {
-    st_report("Input file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s, volume %g",
-              file_desc[f]->filename, file_desc[f]->signal.rate,
-              st_sizes_str[(unsigned char)file_desc[f]->signal.size],
-              st_encodings_str[(unsigned char)file_desc[f]->signal.encoding],
-              file_desc[f]->signal.channels,
-              (file_desc[f]->signal.channels > 1) ? "channels" : "channel",
-              file_opts[f]->volume == HUGE_VAL? 1 : file_opts[f]->volume);
-    
-    if (file_desc[f]->comment)
-      st_report("Input file %s: comment \"%s\"",
-                file_desc[f]->filename, file_desc[f]->comment);
+    report_file(file_desc[f]);
+    if (file_opts[f]->volume != HUGE_VAL && file_opts[f]->volume != 1)
+      st_report("%s input level %g",
+              file_desc[f]->filename, file_opts[f]->volume);
   }
 
   for (f = 0; f < input_count; f++) {
@@ -695,8 +724,7 @@ static void process(void) {
       loops[i].type = file_desc[0]->loops[i].type;
     }
     
-    file_desc[file_count - 1] = 
-      st_open_write(overwrite_permitted,
+    ofile = st_open_write(overwrite_permitted,
                           info->filename,
                           &info->signal, 
                           info->filetype,
@@ -704,7 +732,7 @@ static void process(void) {
                           &file_desc[0]->instr,
                           loops);
     
-    if (!file_desc[file_count - 1])
+    if (!ofile)
       /* st_open_write() will call st_warn for most errors.
        * Rely on that printing something. */
       exit(2);
@@ -712,23 +740,13 @@ static void process(void) {
     /* When writing to an audio device, auto turn on the
      * status display to match behavior of ogg123 status,
      * unless the user requested us not to display anything. */
-    if ((strcmp(file_desc[file_count - 1]->filetype, "alsa") == 0 ||
-        strcmp(file_desc[file_count - 1]->filetype, "ossdsp") == 0 ||
-         strcmp(file_desc[file_count - 1]->filetype, "sunau") == 0) &&
+    if ((strcmp(ofile->filetype, "alsa") == 0 ||
+        strcmp(ofile->filetype, "ossdsp") == 0 ||
+         strcmp(ofile->filetype, "sunau") == 0) &&
         !quiet)
       status = 1;
 
-    st_report("Output file %s: using sample rate %lu\n\tsize %s, encoding %s, %d %s",
-              file_desc[file_count-1]->filename, 
-              file_desc[file_count-1]->signal.rate,
-              st_sizes_str[(unsigned char)file_desc[file_count-1]->signal.size],
-              st_encodings_str[(unsigned char)file_desc[file_count-1]->signal.encoding],
-              file_desc[file_count-1]->signal.channels,
-              (file_desc[file_count-1]->signal.channels > 1) ? "channels" : "channel");
-    
-    if (file_desc[file_count - 1]->comment)
-      st_report("Output file: comment \"%s\"", 
-                file_desc[file_count - 1]->comment);
+    report_file(ofile);
   }
   
   /* Adjust the input rate for the speed effect */
@@ -914,12 +932,12 @@ static void process(void) {
         break;
 
       /* If there's an error, don't try to write more. */
-      if (file_desc[file_count - 1]->st_errno)
+      if (ofile->st_errno)
         break;
     } while (flowstatus == 0);
 
     /* Drain the effects; don't write if output is indicating errors. */
-    if (file_desc[file_count - 1]->st_errno == 0)
+    if (ofile->st_errno == 0)
       drain_effect_out();
   }
 
@@ -1001,8 +1019,8 @@ static void check_effects(void)
   int effects_mask = 0;
   int status;
 
-  needrate = (file_desc[0]->signal.rate != file_desc[file_count-1]->signal.rate);
-  needchan = (file_desc[0]->signal.channels != file_desc[file_count-1]->signal.channels);
+  needrate = (file_desc[0]->signal.rate != ofile->signal.rate);
+  needchan = (file_desc[0]->signal.channels != ofile->signal.channels);
 
   for (i = 0; i < nuser_effects; i++) {
     if (user_efftab[i].h->flags & ST_EFF_CHAN)
@@ -1027,7 +1045,7 @@ static void check_effects(void)
    * after the avg effect.      
    */   
   if (needchan && !(haschan) &&
-      (file_desc[0]->signal.channels > file_desc[file_count-1]->signal.channels))
+      (file_desc[0]->signal.channels > ofile->signal.channels))
   { 
       /* Find effect and update initial pointers */
       st_geteffect(&efftab[neffects], "avg");
@@ -1043,7 +1061,7 @@ static void check_effects(void)
       /* Copy format info to effect table */
       effects_mask = st_updateeffect(&efftab[neffects], 
                                      &file_desc[0]->signal,
-                                     &file_desc[file_count-1]->signal,
+                                     &ofile->signal,
                                      effects_mask);
 
       neffects++;
@@ -1053,7 +1071,7 @@ static void check_effects(void)
    * after the resample effect. 
    */
   if (needrate && !(hasrate) &&
-      (file_desc[0]->signal.rate > file_desc[file_count-1]->signal.rate)) 
+      (file_desc[0]->signal.rate > ofile->signal.rate)) 
   {
       st_geteffect(&efftab[neffects], "resample");
 
@@ -1068,7 +1086,7 @@ static void check_effects(void)
       /* Copy format info to effect table */ 
       effects_mask = st_updateeffect(&efftab[neffects],
                                      &file_desc[0]->signal,
-                                     &file_desc[file_count-1]->signal,
+                                     &ofile->signal,
                                      effects_mask);
 
       /* Rate can't handle multiple channels so be sure and
@@ -1088,7 +1106,7 @@ static void check_effects(void)
     /* Copy format info to effect table */
     effects_mask = st_updateeffect(&efftab[neffects], 
                                    &file_desc[0]->signal,
-                                   &file_desc[file_count - 1]->signal, 
+                                   &ofile->signal, 
                                    effects_mask);
     
     /* If this effect can't handle multiple channels then
@@ -1118,7 +1136,7 @@ static void check_effects(void)
     /* Copy format info to effect table */
     effects_mask = st_updateeffect(&efftab[neffects], 
                                    &file_desc[0]->signal,
-                                   &file_desc[file_count - 1]->signal, 
+                                   &ofile->signal, 
                                    effects_mask);
 
     /* Rate can't handle multiple channels so be sure and
@@ -1144,7 +1162,7 @@ static void check_effects(void)
     /* Copy format info to effect table */
     effects_mask = st_updateeffect(&efftab[neffects], 
                                    &file_desc[0]->signal,
-                                   &file_desc[file_count - 1]->signal, 
+                                   &ofile->signal, 
                                    effects_mask);
     
     neffects++;
@@ -1220,22 +1238,22 @@ static int flow_effect_out(void)
         if (user_abort)
           return ST_EOF;
             
-        len = st_write(file_desc[file_count - 1], 
+        len = st_write(ofile, 
                        &efftab[neffects - 1].obuf[total],
                        efftab[neffects - 1].olen - total);
             
-        if (len != efftab[neffects - 1].olen - total || file_desc[file_count - 1]->eof) {
-          st_warn("Error writing: %s", file_desc[file_count - 1]->st_errstr);
+        if (len != efftab[neffects - 1].olen - total || ofile->eof) {
+          st_warn("Error writing: %s", ofile->st_errstr);
           return ST_EOF;
         }
         total += len;
       } while (total < efftab[neffects-1].olen);
-      output_samples += (total / file_desc[file_count - 1]->signal.channels);
+      output_samples += (total / ofile->signal.channels);
       efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
     } else {
       /* Make it look like everything was consumed */
       output_samples += (efftab[neffects-1].olen / 
-                         file_desc[file_count - 1]->signal.channels);
+                         ofile->signal.channels);
       efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
     }
 
@@ -1259,7 +1277,7 @@ static int flow_effect_out(void)
          * will cause stereo channels to be inversed.
          */
         if ((efftab[e].olen - efftab[e].odone) >= 
-            file_desc[file_count - 1]->signal.channels)
+            ofile->signal.channels)
           havedata = 1;
         else
           st_warn("Received buffer with incomplete amount of samples.");
@@ -1643,7 +1661,8 @@ static void usage(char const * message)
          "                Specify file containing comment text for the output file\n"
          "-r rate         sample rate of audio\n"
          "-t filetype     file type of audio\n"
-         "-x              invert auto-detected endianess of data\n"
+         "-x/-N/-X        invert auto-detected endianness/nibble-order/bit-order of data\n"
+         "-B/-L           force endian type to big/little\n"
          "-s/-u/-U/-A/    sample encoding: signed/unsigned/u-law/A-law\n"
          "  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point\n"
          "-1/-2/-3/-4/-8  sample size in bytes\n"

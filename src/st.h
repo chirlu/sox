@@ -171,20 +171,23 @@ typedef uint32_t st_rate_t;
 
 typedef enum {
   ST_ENCODING_UNKNOWN   ,
-  ST_ENCODING_UNSIGNED  , /* unsigned linear: Sound Blaster */
-  ST_ENCODING_SIGN2     , /* signed linear 2's comp: Mac */
+
   ST_ENCODING_ULAW      , /* u-law signed logs: US telephony, SPARC */
   ST_ENCODING_ALAW      , /* A-law signed logs: non-US telephony */
+  ST_ENCODING_ADPCM     , /* G72x Compressed PCM */
+  ST_ENCODING_MS_ADPCM  , /* Microsoft Compressed PCM */
+  ST_ENCODING_IMA_ADPCM , /* IMA Compressed PCM */
+  ST_ENCODING_OKI_ADPCM , /* Dialogic/OKI Compressed PCM */
+
+  ST_ENCODING_SIZE_IS_WORD, /* FIXME: marks raw types (above) that mis-report size. st_signalinfo_t really needs a precision_in_bits item */
+
+  ST_ENCODING_UNSIGNED  , /* unsigned linear: Sound Blaster */
+  ST_ENCODING_SIGN2     , /* signed linear 2's comp: Mac */
   ST_ENCODING_FLOAT     , /* 32-bit float */
-  ST_ENCODING_ADPCM     , /* Compressed PCM */
-  ST_ENCODING_IMA_ADPCM , /* Compressed PCM */
   ST_ENCODING_GSM       , /* GSM 6.10 33byte frame lossy compression */
-  ST_ENCODING_INV_ULAW  , /* Inversed bit-order u-law */
-  ST_ENCODING_INV_ALAW  , /* Inversed bit-order A-law */
   ST_ENCODING_MP3       , /* MP3 compression */
   ST_ENCODING_VORBIS    , /* Vorbis compression */
   ST_ENCODING_FLAC      , /* FLAC compression */
-  ST_ENCODING_OKI_ADPCM , /* Compressed PCM */
 
   ST_ENCODINGS            /* End of list marker */
 } st_encoding_t;
@@ -197,6 +200,8 @@ typedef struct  st_globalinfo
     double speed;         /* Gather up all speed changes here, then resample */
 } st_globalinfo_t;
 
+typedef enum {ST_REVERSE_NO, ST_REVERSE_YES, ST_REVERSE_DEFAULT} st_reverse_t;
+
 /* Signal parameters */
 
 typedef struct  st_signalinfo
@@ -205,8 +210,9 @@ typedef struct  st_signalinfo
     signed char size;     /* word length of data */
     st_encoding_t encoding; /* format of sample numbers */
     unsigned channels;    /* number of sound channels */
-    enum {ST_SWAP_NO, ST_SWAP_YES, ST_SWAP_DEFAULT} swap_bytes; /* endian */
-    bool reverse_bits;
+    st_reverse_t reverse_bytes;    /* endiannesses... */
+    st_reverse_t reverse_nibbles;
+    st_reverse_t reverse_bits;
     double compression;   /* compression factor (where applicable) */
 } st_signalinfo_t;
 
@@ -384,7 +390,7 @@ struct st_effect
     char priv[ST_MAX_EFFECT_PRIVSIZE]; /* private area for effect */
 };
 
-void set_swap_if_not_already_set(ft_t ft);
+void set_endianness_if_not_already_set(ft_t ft);
 extern ft_t st_open_read(const char *path, const st_signalinfo_t *info, 
                          const char *filetype);
 ft_t st_open_write(

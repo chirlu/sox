@@ -408,7 +408,7 @@ static int st_wavstartread(ft_t ft)
     if (strncmp("RIFX", magic, 4) == 0) 
     {
         st_debug("Found RIFX header, swapping bytes");
-        ft->signal.swap_bytes = ST_IS_LITTLEENDIAN;
+        ft->signal.reverse_bytes = ST_IS_LITTLEENDIAN;
     }
 
     st_readdw(ft, &dwRiffLength);
@@ -1457,7 +1457,7 @@ static int wavwritehdr(ft_t ft, int second_header)
     /* If user specified opposite swap then we think, assume they are
      * asking to write a RIFX file.
      */
-    if (ft->signal.swap_bytes != ST_IS_BIGENDIAN)
+    if (ft->signal.reverse_bytes != ST_IS_BIGENDIAN)
     {
         if (!second_header)
             st_report("Requested to swap bytes so writing  RIFX header");
