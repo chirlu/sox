@@ -4,4 +4,4 @@ configure config.log config.status confdefs.h
 aclocal.m4
 libtool
 sox*.tar.gz
-*.txt
+*.txt *.pdf
