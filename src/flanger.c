@@ -6,7 +6,7 @@
  */
 
 #define st_flanger_usage \
-  "Usage: \n" \
+/*
   "                  .\n" \
   "                 /|regen\n" \
   "                / |\n" \
@@ -24,9 +24,9 @@
   "      |              |_____|phase            |   |\n" \
   "      +------------------------------------->|   |\n" \
   "                                             |___|\n" \
-  "\n" \
-  "Usage: flanger [delay depth regen width speed shape phase interp]\n" \
-  "\n" \
+*/
+  "Usage: flanger [delay depth regen width speed shape phase interp]\n"
+/*  "\n" \
   "       RANGE DEFAULT DESCRIPTION\n" \
   "delay   0 10    0    base delay in milliseconds\n" \
   "depth   0 10    2    added swept delay in milliseconds\n" \
@@ -37,6 +37,7 @@
   "phase   0 100   25   swept wave percentage phase-shift for multi-channel\n" \
   "                     (e.g. stereo) flange; 0 = 100 = same phase on each channel\n" \
   "interp   --    lin   delay-line interpolation: linear|quadratic"
+*/
 
 /* TODO: Slide in the delay at the start? */
 
