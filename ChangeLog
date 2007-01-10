@@ -83,8 +83,8 @@ sox-12.18.3
     output file.  (robs)
   o Added silence padding effect.  (robs)
   o Improved multi-channel file reading; fixes [1599990].  (robs)
-  o New options for specifying endianness (and separate option for
-    bit reversal) [FR# 1621702].  (robs)
+  o New options for specifying endianness (and separate options for
+    nibble & bit reversal) [FR# 1621702].  (robs)
   o Add seek support for GSM data in WAV files. Rafal Maszkowski
   o Fix [1627972] AIFF read bug when MARK chunk present.  (Richard Fuller)
   o Fix [1160154] VOX to WAV conversion problem.  (robs)

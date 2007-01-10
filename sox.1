@@ -473,12 +473,41 @@ sometimes necessary for (otherwise) self-describing files.  A given
 endian-setting option may be ignored for an input file whose header
 contains a specific endianness identifier, or for an output file that
 is actually an audio device.
+.SP
+.B N.B.
+Unlike normal format characteristics, the endianness (byte, nibble, &
+bit ordering) of the input file is not automatically used for the output
+file; so, for example, when the following is run on a little-endian system:
+.SP
+	sox -B audio.uw trimmed.uw trim 2
+.SP
+trimmed.uw will be created as little-endian;
+.SP
+	sox -B audio.uw -B trimmed.uw trim 2
+.SP
+must be used to preserve big-endianness in the output file.
+.SP
+The
+.B -V
+option can be used to check the selected orderings.
+.TP
+\fB\-N\fR, \fB\-\-reverse\-nibbles\fR
+Specifies that the nibble ordering (i.e. the 2 halves of a byte) of the samples should be reversed;
+sometimes useful with ADPCM-based formats.
+.SP
+.B N.B.
+See also N.B. in section on
+.B -x
+above.
 .TP
 \fB\-X\fR, \fB\-\-reverse\-bits\fR
-Specifies that the bit ordering should be reversed; currently used only
-with the
-.B cvsd
-format.
+Specifies that the bit ordering of the samples should be reversed;
+sometimes useful with a few (mostly headerless) formats.
+.SP
+.B N.B.
+See also N.B. in section on
+.B -x
+above.
 .TP
 \fB\-s\fR\^/\fB\-u\fR\^/\fB\-U\fR\^/\fB\-A\fR\^/\fB\-a\fR\^/\fB\-i\fR\^/\fB\-g\fR\^/\fB\-f\fR
 The audio data encoding is signed linear (2's complement),
@@ -615,12 +644,10 @@ needs its own handler.
 .TP
 \&\fB.cvsd\fR, \fB.cvs\fR
 Continuously Variable Slope Delta modulation.
-Used to compress speech audio for applications such as voice mail.
-This format can use the
+A headerless format used to compress speech audio for applications such as voice mail.
+This format is sometimes used with bit-reversed samples\*ethe
 .B -X
-format option to set the bit-order; if the
-.B -V
-option is given then the selected bit-order can be viewed.
+format option can be used to set the bit-order.
 .TP
 .B .dat
 Text Data files.
@@ -639,7 +666,7 @@ formats.
 \&\fB.dvms\fR, \fB.vms\fR
 .\" FIXME: Need more info.
 Used to compress speech audio for applications such as voice mail.
-A variant of
+A `self-describing' variant of
 .BR cvsd .
 .TP
 .B .flac
@@ -677,6 +704,11 @@ FLAC support in
 SoX is optional and requires optional FLAC libraries.  To
 see if there is support for FLAC run \fBsox \-h\fR and look for
 it under the list of supported file formats as `flac'.
+.TP
+.B .fssd
+An alias for the
+.B .ub
+format.
 .TP
 .B .gsm
 GSM 06.10 Lossy Speech Compression.
@@ -825,6 +857,11 @@ format.
 .TP
 .B .sndt
 SoundTool files. This is an older DOS file format.
+.TP
+.B .sou
+An alias for the
+.B .ub
+format.
 .TP
 .B sunau
 Sun /dev/audio device driver.
