@@ -20,10 +20,12 @@
 
 #include "st_i.h"
 
+#include <string.h>
+
 /* Private data for SKEL file */
 typedef struct skelform
 {
-  st_size_t samples_remaining;
+  st_size_t remaining_samples;
 } *skelform_t;
 
 assert_static(sizeof(struct skelform) <= ST_MAX_FILE_PRIVSIZE, 
@@ -42,11 +44,12 @@ assert_static(sizeof(struct skelform) <= ST_MAX_FILE_PRIVSIZE,
 static int skel_startread(ft_t ft)
 {
   skelform_t sk = (skelform_t)ft->priv;
+  st_size_t samples_in_file;
 
   /* If you need to seek around the input file. */
   if (!ft->seekable) {
-    st_fail_errno(ft,ST_EVALUE,"SKEL input file must be a file, not a pipe");
-    return (ST_EOF);
+    st_fail_errno(ft, ST_EOF, "skel inputfile must be a file");
+    return ST_EOF;
   }
 
   /*
@@ -56,11 +59,14 @@ static int skel_startread(ft_t ft)
    * then you should set it here.
    */
   ft->signal.rate =  44100L;
-  ft->signal.size = ST_SIZE_BYTE or WORD ...;
-  ft->signal.encoding = ST_ENCODING_UNSIGNED or SIGN2 ...;
-  ft->signal.channels = 1 or 2 or 4;
-  ft->comment = xmalloc(size_of_comment);
-  strcpy(ft->comment, "any comment in file header.");
+  ft->signal.size = ST_SIZE_BYTE; /* or WORD ... */
+  ft->signal.encoding = ST_ENCODING_UNSIGNED; /* or SIGN2 ... */
+  ft->signal.channels = 1; /* or 2 or 4 */
+  {
+    char *comment = "any comment in file header.";
+    ft->comment = xmalloc(sizeof(comment));
+    strcpy(ft->comment, comment);
+  }
 
   /* If your format doesn't have a header then samples_in_file
    * can be determined by the file size.
@@ -71,7 +77,7 @@ static int skel_startread(ft_t ft)
   ft->length = samples_in_file;
   sk->remaining_samples = samples_in_file;
 
-  return (ST_SUCCESS);
+  return ST_SUCCESS;
 }
 
 /*
@@ -82,25 +88,31 @@ static st_size_t skel_read(ft_t ft, st_sample_t *buf, st_size_t len)
 {
   skelform_t sk = (skelform_t)ft->priv;
   st_size_t done;
-  st_sample_t l;
+  unsigned char sample;
 
   /* Always return a full frame of audio data */
   if (len % ft->signal.size)
     len -= (len % ft->signal.size);
 
   for (done = 0; done < len; done++) {
-    if no more samples
-            break
-            get a sample
-            switch (ft->signal.size) {
-            case ST_SIZE_BYTE:
-              switch (ft->signal.encoding) {
-                case ST_ENCODING_UNSIGNED;
-                *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(sample);
-                break;
-              }
-              break;
-            }
+    if (feof(ft->fp)) /* no more samples */
+      break;
+    sample = fgetc(ft->fp);
+    switch (ft->signal.size) {
+    case ST_SIZE_BYTE:
+      switch (ft->signal.encoding) {
+      case ST_ENCODING_UNSIGNED:
+        *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(sample,);
+        break;
+      default:
+        st_fail("Undetected sample encoding in skel_read!");
+        exit(2);
+      }
+      break;
+    default:
+      st_fail("Undetected bad sample size in skel_read!");
+      exit(2);
+    }
   }
 
   return done;
@@ -125,20 +137,20 @@ static int skel_startwrite(ft_t ft)
    * just set the length to max value and not fail.
    */
   if (!ft->seekable) {
-    st_fail_errno(ft, ST_EVALUE, "Output .skel file must be a file, not a pipe");
+    st_fail("Output .skel file must be a file, not a pipe");
     return ST_EOF;
   }
 
   if (ft->signal.rate != 44100L)
-    st_fail_errno(ft, ST_EVALUE, "Output .skel file must have a sample rate of 44100");
+    st_fail("Output .skel file must have a sample rate of 44100Hz");
 
   if (ft->signal.size == -1) {
-    st_fail_errno(ft, ST_EVALUE, "Did not specify a size for .skel output file");
+    st_fail("Did not specify a size for .skel output file");
     return ST_EOF;
   }
 
-  error check ft->signal.encoding;
-  error check ft->signal.channels;
+  /* error check ft->signal.encoding */
+  /* error check ft->signal.channels */
 
   /* Write file header, if any */
   /* Write comment field, if any */
@@ -154,20 +166,25 @@ static int skel_startwrite(ft_t ft)
 static st_size_t skel_write(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
   skelform_t sk = (skelform_t)ft->priv;
-  st_size_t len = 0;
 
   switch (ft->signal.size) {
   case ST_SIZE_BYTE:
     switch (ft->signal.encoding) {
     case ST_ENCODING_UNSIGNED:
       while (len--) {
-        len = st_writeb(ft, ST_SAMPLE_TO_UNSIGNED_BYTE(*buff++, ft->clippedCount));
-        if (len == ST_EOF)
+        len = st_writeb(ft, ST_SAMPLE_TO_UNSIGNED_BYTE(*buf++, ft->clippedCount));
+        if (len == 0)
           break;
       }
       break;
+    default:
+      st_fail("Undetected bad sample encoding in skel_read!");
+      exit(2);
     }
     break;
+  default:
+    st_fail("Undetected bad sample size in skel_read!");
+    exit(2);
   }
 
   return len;
@@ -207,7 +224,7 @@ static st_format_t st_skel_format = {
   skel_seek
 };
 
-const st_format_t *st_skel_format_fn()
+const st_format_t *st_skel_format_fn(void)
 {
   return &st_skel_format;
 }
