@@ -1,6 +1,7 @@
 Makefile Makefile.in
 autom4te.cache
 configure config.log config.status confdefs.h
+config.guess config.sub depcomp install-sh missing
 aclocal.m4
 libtool
 sox*.tar.gz
