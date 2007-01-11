@@ -43,13 +43,7 @@ The function \fBst_write\fR writes \fIlen\fR samples from \fIbuf\fR using the fo
 .P
 The \fBst_close\fR function dissociates the named \fIft_t\fR from its underlying file or set of functions.  If the format handler was being used for output, any buffered data is written first.
 .P
-Sound Tools includes skeleton C
-files to assist you in writing new formats and effects.  
-The full skeleton driver, skel.c, helps you write drivers 
-for a new format which has data structures.  
-The simple skeleton drivers
-help you write a new driver for raw (headerless) formats, or
-for formats which just have a simple header followed by raw data.
+Sound Tools includes skeleton C files to assist you in writing new formats (skelform.c) and effects (skeleff.c).
 .SH RETURN VALUE
 Upon successful completion \fBst_open_input\fR and \fBst_open_output\fR return a ft_t (which is a pointer).  Otherwise, NULL is returned.  TODO: Need a what to return reason for failures.  Currently, relies on st_warn to print information.
 .P

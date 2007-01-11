@@ -21,10 +21,13 @@
 #include "st_i.h"
 
 /* Private data for SKEL file */
-typedef struct skel
+typedef struct skelform
 {
   st_size_t samples_remaining;
-} *skel_t;
+} *skelform_t;
+
+assert_static(sizeof(struct skelform) <= ST_MAX_FILE_PRIVSIZE, 
+              /* else */ skel_PRIVSIZE_too_big);
 
 /* Note that if any of your methods doesn't need to do anything, you
    can instead use the relevant st_*_nothing* method */
@@ -38,7 +41,7 @@ typedef struct skel
  */
 static int skel_startread(ft_t ft)
 {
-  skel_t sk = (skel_t)ft->priv;
+  skelform_t sk = (skelform_t)ft->priv;
 
   /* If you need to seek around the input file. */
   if (!ft->seekable) {
@@ -62,7 +65,7 @@ static int skel_startread(ft_t ft)
   /* If your format doesn't have a header then samples_in_file
    * can be determined by the file size.
    */
-  samples_in_file = st_filelength(ft)/ft->signal.size;
+  samples_in_file = st_filelength(ft) / ft->signal.size;
 
   /* If you can detect the length of your file, record it here. */
   ft->length = samples_in_file;
@@ -72,14 +75,12 @@ static int skel_startread(ft_t ft)
 }
 
 /*
- * Read up to len samples from file.
- * Convert to st_sample_t.
- * Place in buf[].
+ * Read up to len samples of type st_sample_t from file into buf[].
  * Return number of samples read.
  */
 static st_size_t skel_read(ft_t ft, st_sample_t *buf, st_size_t len)
 {
-  skel_t sk = (skel_t)ft->priv;
+  skelform_t sk = (skelform_t)ft->priv;
   st_size_t done;
   st_sample_t l;
 
@@ -116,7 +117,7 @@ static int skel_stopread(ft_t ft)
 
 static int skel_startwrite(ft_t ft)
 {
-  skel_t sk = (skel_t)ft->priv;
+  skelform_t sk = (skelform_t)ft->priv;
 
   /* If you have to seek around the output file. */
   /* If header contains a length value then seeking will be
@@ -146,9 +147,13 @@ static int skel_startwrite(ft_t ft)
 
 }
 
+/*
+ * Write len samples of type st_sample_t from buf[] to file.
+ * Return number of samples written.
+ */
 static st_size_t skel_write(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
-  skel_t sk = (skel_t)ft->priv;
+  skelform_t sk = (skelform_t)ft->priv;
   st_size_t len = 0;
 
   switch (ft->signal.size) {
@@ -171,8 +176,14 @@ static st_size_t skel_write(ft_t ft, const st_sample_t *buf, st_size_t len)
 static int skel_stopwrite(ft_t ft)
 {
   /* All samples are already written out. */
-  /* If file header needs fixing up, for example it needs the */
-  /* the number of samples in a field, seek back and write them here. */
+  /* If file header needs fixing up, for example it needs the number
+     of samples in a field, seek back and write them here. */
+  return ST_SUCCESS;
+}
+
+static int skel_seek(ft_t ft, st_size_t offset)
+{
+  /* Seek relative to current position. */
   return ST_SUCCESS;
 }
 
@@ -182,6 +193,7 @@ static const char *skel_names[] = {
   NULL
 };
 
+/* Format descriptor */
 static st_format_t st_skel_format = {
   skel_names,
   NULL,

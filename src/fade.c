@@ -1,7 +1,6 @@
-/* This code is based in skel.c
+/*
+ * Ari Moisio <armoi@sci.fi> Aug 29 2000, based on skeleton effect
  * Written by Chris Bagwell (cbagwell@sprynet.com) - March 16, 1999
- * Non-skel parts written by
- * Ari Moisio <armoi@sci.fi> Aug 29 2000.
  *
  * Copyright 1999 Chris Bagwell And Sundry Contributors
  * This source code is freely redistributable and may be used for

@@ -204,7 +204,7 @@ typedef enum {ST_REVERSE_NO, ST_REVERSE_YES, ST_REVERSE_DEFAULT} st_reverse_t;
 
 /* Signal parameters */
 
-typedef struct  st_signalinfo
+typedef struct st_signalinfo
 {
     st_rate_t rate;       /* sampling rate */
     signed char size;     /* word length of data */
@@ -214,6 +214,7 @@ typedef struct  st_signalinfo
     st_reverse_t reverse_nibbles;
     st_reverse_t reverse_bits;
     double compression;   /* compression factor (where applicable) */
+    char *lua_script;      /* Lua script to use for Lua pseudo-file */
 } st_signalinfo_t;
 
 /* Loop parameters */

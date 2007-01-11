@@ -23,10 +23,10 @@ formats = 8svx.c adpcm.c adpcm.h adpcms.c adpcms.h aiff.c au.c auto.c avr.c \
 effects = avg.c band.c bandpass.c biquad.c biquad.h breject.c btrworth.c \
 	  btrworth.h chorus.c compand.c dcshift.c deemphas.c earwax.c \
 	  echo.c echos.c equalizer.c fade.c FFT.c FFT.h filter.c flanger.c \
-	  highp.c highpass.c lowp.c lowpass.c luaeff.c lintlib.c mask.c \
-	  mcompand.c noiseprof.c noisered.c noisered.h pad.c pan.c \
-	  phaser.c pitch.c polyphas.c rabbit.c rate.c repeat.c resample.c \
-	  reverb.c reverse.c silence.c speed.c stat.c \
+	  highp.c highpass.c lowp.c lowpass.c luaeff.c luaform.c \
+	  lintlib.c mask.c mcompand.c noiseprof.c noisered.c noisered.h \
+	  pad.c pan.c phaser.c pitch.c polyphas.c rabbit.c rate.c repeat.c \
+	  resample.c reverb.c reverse.c silence.c speed.c stat.c stlua.c \
 	  stretch.c swap.c synth.c tone.c trim.c vibro.c vol.c
 
 libst_la_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c misc.c \

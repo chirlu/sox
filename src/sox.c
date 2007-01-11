@@ -208,33 +208,33 @@ static void sigint(int s)
 
 static file_info_t make_file_info(void)
 {
-  file_info_t fo = xcalloc(sizeof(*fo), 1);
+  file_info_t fi = xcalloc(sizeof(*fi), 1);
 
-  fo->signal.size = -1;
-  fo->signal.encoding = ST_ENCODING_UNKNOWN;
-  fo->signal.channels = 0;
-  fo->signal.reverse_bytes = ST_REVERSE_DEFAULT;
-  fo->signal.reverse_nibbles = ST_REVERSE_DEFAULT;
-  fo->signal.reverse_bits = ST_REVERSE_DEFAULT;
-  fo->signal.compression = HUGE_VAL;
-  fo->volume = HUGE_VAL;
-  fo->volume_clips = 0;
+  fi->signal.size = -1;
+  fi->signal.encoding = ST_ENCODING_UNKNOWN;
+  fi->signal.channels = 0;
+  fi->signal.reverse_bytes = ST_REVERSE_DEFAULT;
+  fi->signal.reverse_nibbles = ST_REVERSE_DEFAULT;
+  fi->signal.reverse_bits = ST_REVERSE_DEFAULT;
+  fi->signal.compression = HUGE_VAL;
+  fi->volume = HUGE_VAL;
+  fi->volume_clips = 0;
 
-  return fo;
+  return fi;
 }
 
-static void set_device(file_info_t fo)
+static void set_device(file_info_t fi)
 {
 #if defined(HAVE_ALSA)
-  fo->filetype = "alsa";
-  fo->filename = xstrdup("default");
+  fi->filetype = "alsa";
+  fi->filename = xstrdup("default");
 #elif defined(HAVE_OSS)
-  fo->filetype = "ossdsp";
-  fo->filename = xstrdup("/dev/dsp");
+  fi->filetype = "ossdsp";
+  fi->filename = xstrdup("/dev/dsp");
 #elif defined (HAVE_SUN_AUDIO)
   char *device = getenv("AUDIODEV");
-  fo->filetype = "sunau";
-  fo->filename = xstrdup(device ? device : "/dev/audio");
+  fi->filetype = "sunau";
+  fi->filename = xstrdup(device ? device : "/dev/audio");
 #endif
 }
 
@@ -259,31 +259,31 @@ int main(int argc, char **argv)
   /* Loop over arguments and filenames, stop when an effect name is 
    * found. */
   while (optind < argc && !is_effect_name(argv[optind])) {
-    file_info_t fo = make_file_info();
-    struct file_info fo_none;
+    file_info_t fi = make_file_info();
+    struct file_info fi_none;
 
     if (file_count >= MAX_FILES) {
       st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
       exit(1);
     }
 
-    fo_none = *fo;
+    fi_none = *fi;
     
-    if (doopts(fo, argc, argv)) { /* is null file? */
-      if (fo->filetype != NULL && strcmp(fo->filetype, "null") != 0)
-        st_warn("Ignoring \"-t %s\".", fo->filetype);
-      fo->filetype = "null";
-      fo->filename = xstrdup(fo->filetype);
+    if (doopts(fi, argc, argv)) { /* is null file? */
+      if (fi->filetype != NULL && strcmp(fi->filetype, "null") != 0)
+        st_warn("Ignoring \"-t %s\".", fi->filetype);
+      fi->filetype = "null";
+      fi->filename = xstrdup(fi->filetype);
     } else {
       if (optind >= argc || is_effect_name(argv[optind])) {
-        if (memcmp(fo, &fo_none, sizeof(fo_none)) != 0) /* fopts but no file */
+        if (memcmp(fi, &fi_none, sizeof(fi_none)) != 0) /* fopts but no file */
           usage("missing filename"); /* No return */
-        free(fo); /* No file opts and no filename, so that's okay */
+        free(fi); /* No file opts and no filename, so that's okay */
         continue;
       }
-      fo->filename = xstrdup(argv[optind++]);
+      fi->filename = xstrdup(argv[optind++]);
     }
-    file_opts[file_count++] = fo;
+    file_opts[file_count++] = fi;
   }
 
   if (rec) {
@@ -425,6 +425,7 @@ static struct option long_options[] =
     {"endian"          , required_argument, NULL, 0},
     {"interactive"     ,       no_argument, NULL, 0},
     {"help-effect"     , required_argument, NULL, 0},
+    {"lua-script"      , required_argument, NULL, 0},
     {"octave"          ,       no_argument, NULL, 0},
     {"version"         ,       no_argument, NULL, 0},
 
@@ -444,7 +445,7 @@ static struct option long_options[] =
     {NULL, 0, NULL, 0}
   };
 
-static bool doopts(file_info_t fo, int argc, char **argv)
+static bool doopts(file_info_t fi, int argc, char **argv)
 {
   bool isnull = false;
   int option_index, c;
@@ -457,20 +458,20 @@ static bool doopts(file_info_t fo, int argc, char **argv)
     case 0:       /* Long options with no short equivalent. */
       switch (option_index) {
       case 0:
-        fo->comment = read_comment_file(optarg);
+        fi->comment = read_comment_file(optarg);
         break;
 
       case 1:
-        fo->comment = xstrdup(optarg);
+        fi->comment = xstrdup(optarg);
         break;
 
       case 2:
         if (!strcmp(optarg, "little"))
-          fo->signal.reverse_bytes = ST_IS_BIGENDIAN;
+          fi->signal.reverse_bytes = ST_IS_BIGENDIAN;
         else if (!strcmp(optarg, "big"))
-          fo->signal.reverse_bytes = ST_IS_LITTLEENDIAN;
+          fi->signal.reverse_bytes = ST_IS_LITTLEENDIAN;
         else if (!strcmp(optarg, "swap"))
-          fo->signal.reverse_bytes = true;
+          fi->signal.reverse_bytes = true;
         break;
 
       case 3:
@@ -482,10 +483,14 @@ static bool doopts(file_info_t fo, int argc, char **argv)
         break;
 
       case 5:
+        fi->signal.lua_script = xstrdup(optarg);
+        break;
+        
+      case 6:
         globalinfo.octave_plot_effect = true;
         break;
 
-      case 8:
+      case 7:
         printf("%s: v%s\n", myname, st_version());
         exit(0);
         break;
@@ -513,9 +518,9 @@ static bool doopts(file_info_t fo, int argc, char **argv)
       break;
 
     case 't':
-      fo->filetype = optarg;
-      if (fo->filetype[0] == '.')
-        fo->filetype++;
+      fi->filetype = optarg;
+      if (fi->filetype[0] == '.')
+        fi->filetype++;
       break;
 
     case 'r':
@@ -523,16 +528,16 @@ static bool doopts(file_info_t fo, int argc, char **argv)
         st_fail("Rate value '%s' is not a positive integer", optarg);
         exit(1);
       }
-      fo->signal.rate = i;
+      fi->signal.rate = i;
       break;
 
     case 'v':
-      if (sscanf(optarg, "%lf %c", &fo->volume, &dummy) != 1) {
+      if (sscanf(optarg, "%lf %c", &fi->volume, &dummy) != 1) {
         st_fail("Volume value '%s' is not a number", optarg);
         exit(1);
       }
       uservolume = 1;
-      if (fo->volume < 0.0)
+      if (fi->volume < 0.0)
         st_report("Volume adjustment is negative; "
                   "this will result in a phase change");
       break;
@@ -542,59 +547,59 @@ static bool doopts(file_info_t fo, int argc, char **argv)
         st_fail("Channels value '%s' is not a positive integer", optarg);
         exit(1);
       }
-      fo->signal.channels = i;
+      fi->signal.channels = i;
       break;
 
     case 'C':
-      if (sscanf(optarg, "%lf %c", &fo->signal.compression, &dummy) != 1) {
+      if (sscanf(optarg, "%lf %c", &fi->signal.compression, &dummy) != 1) {
         st_fail("Compression value '%s' is not a number", optarg);
         exit(1);
       }
       break;
 
-    case '1': case 'b': fo->signal.size = ST_SIZE_BYTE;   break;
-    case '2': case 'w': fo->signal.size = ST_SIZE_WORD;   break;
-    case '3':           fo->signal.size = ST_SIZE_24BIT;  break;
-    case '4': case 'l': fo->signal.size = ST_SIZE_DWORD;  break;
-    case '8': case 'd': fo->signal.size = ST_SIZE_DDWORD; break;
+    case '1': case 'b': fi->signal.size = ST_SIZE_BYTE;   break;
+    case '2': case 'w': fi->signal.size = ST_SIZE_WORD;   break;
+    case '3':           fi->signal.size = ST_SIZE_24BIT;  break;
+    case '4': case 'l': fi->signal.size = ST_SIZE_DWORD;  break;
+    case '8': case 'd': fi->signal.size = ST_SIZE_DDWORD; break;
 
-    case 's': fo->signal.encoding = ST_ENCODING_SIGN2;     break;
-    case 'u': fo->signal.encoding = ST_ENCODING_UNSIGNED;  break;
-    case 'f': fo->signal.encoding = ST_ENCODING_FLOAT;     break;
-    case 'a': fo->signal.encoding = ST_ENCODING_ADPCM;     break;
-    case 'D': fo->signal.encoding = ST_ENCODING_MS_ADPCM;  break; /* WIP */
-    case 'i': fo->signal.encoding = ST_ENCODING_IMA_ADPCM; break;
-    case 'o': fo->signal.encoding = ST_ENCODING_OKI_ADPCM; break; /* WIP */
-    case 'g': fo->signal.encoding = ST_ENCODING_GSM;       break;
+    case 's': fi->signal.encoding = ST_ENCODING_SIGN2;     break;
+    case 'u': fi->signal.encoding = ST_ENCODING_UNSIGNED;  break;
+    case 'f': fi->signal.encoding = ST_ENCODING_FLOAT;     break;
+    case 'a': fi->signal.encoding = ST_ENCODING_ADPCM;     break;
+    case 'D': fi->signal.encoding = ST_ENCODING_MS_ADPCM;  break; /* WIP */
+    case 'i': fi->signal.encoding = ST_ENCODING_IMA_ADPCM; break;
+    case 'o': fi->signal.encoding = ST_ENCODING_OKI_ADPCM; break; /* WIP */
+    case 'g': fi->signal.encoding = ST_ENCODING_GSM;       break;
 
-    case 'U': fo->signal.encoding = ST_ENCODING_ULAW;
-      if (fo->signal.size == -1)
-        fo->signal.size = ST_SIZE_BYTE;
+    case 'U': fi->signal.encoding = ST_ENCODING_ULAW;
+      if (fi->signal.size == -1)
+        fi->signal.size = ST_SIZE_BYTE;
       break;
 
-    case 'A': fo->signal.encoding = ST_ENCODING_ALAW;
-      if (fo->signal.size == -1)
-        fo->signal.size = ST_SIZE_BYTE;
+    case 'A': fi->signal.encoding = ST_ENCODING_ALAW;
+      if (fi->signal.size == -1)
+        fi->signal.size = ST_SIZE_BYTE;
       break;
 
     case 'L':
-      fo->signal.reverse_bytes = ST_IS_BIGENDIAN;
+      fi->signal.reverse_bytes = ST_IS_BIGENDIAN;
       break;
 
     case 'B':
-      fo->signal.reverse_bytes = ST_IS_LITTLEENDIAN;
+      fi->signal.reverse_bytes = ST_IS_LITTLEENDIAN;
       break;
 
     case 'x':
-      fo->signal.reverse_bytes = ST_REVERSE_YES;
+      fi->signal.reverse_bytes = ST_REVERSE_YES;
       break;
 
     case 'X':
-      fo->signal.reverse_bits = ST_REVERSE_YES;
+      fi->signal.reverse_bits = ST_REVERSE_YES;
       break;
 
     case 'N':
-      fo->signal.reverse_nibbles = ST_REVERSE_YES;
+      fi->signal.reverse_nibbles = ST_REVERSE_YES;
       break;
 
     case 'V':
@@ -1599,12 +1604,12 @@ static void update_status(void)
 }
 
 /* Adjust volume based on value specified by the -v option for this file. */
-static void volumechange(st_sample_t * buf, st_ssize_t len, file_info_t fo)
+static void volumechange(st_sample_t * buf, st_ssize_t len, file_info_t fi)
 {
-  if (fo->volume != HUGE_VAL && fo->volume != 1)
+  if (fi->volume != HUGE_VAL && fi->volume != 1)
     while (len--) {
-      double d = fo->volume * *buf;
-      *buf++ = ST_ROUND_CLIP_COUNT(d, fo->volume_clips);
+      double d = fi->volume * *buf;
+      *buf++ = ST_ROUND_CLIP_COUNT(d, fi->volume_clips);
     }
 }
 
@@ -1657,8 +1662,8 @@ static void usage(char const * message)
          "-c channels     number of channels in audio data\n"
          "-C compression  compression factor for variably compressing output formats\n"
          "--comment text  Specify comment text for the output file\n"
-         "--comment-file filename\n"
-         "                Specify file containing comment text for the output file\n"
+         "--comment-file filename  file containing comment text for the output file\n"
+         "--lua-script filename  file containing script for Lua pseudo-file\n"
          "-r rate         sample rate of audio\n"
          "-t filetype     file type of audio\n"
          "-x/-N/-X        invert auto-detected endianness/nibble-order/bit-order of data\n"
@@ -1667,7 +1672,6 @@ static void usage(char const * message)
          "  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point\n"
          "-1/-2/-3/-4/-8  sample size in bytes\n"
          "-b/-w/-l/-d     aliases for -1/-2/-4/-8 (byte, word, long, double-long)\n"
-         "\n"
          "-v volume       input file volume adjustment factor (real number)\n"
          "-R              use default random numbers (same on each run of SoX)\n"
          "\n");

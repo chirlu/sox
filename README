@@ -126,7 +126,7 @@ success! If you're interested in helping with SoX, read on...
 
 SoX includes skeleton format files to assist you in supporting new
 formats, sound effect loops, and special-purpose programs. The full
-skeleton format, skel.c, helps you write a driver for a new format
+skeleton format, skelform.c, helps you write a driver for a new format
 which has data structures. skeleff.c is a starting point for writing a
 sound effect loop. sox.c is a good starting point for new programs.
 (Someone finally did this and told me what was wrong...)

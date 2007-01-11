@@ -16,6 +16,8 @@
 #include "stconfig.h"
 #include "st.h"
 
+#include <lua.h>
+
 #include "xmalloc.h"
 
 #ifdef HAVE_BYTESWAP_H
@@ -202,6 +204,7 @@ extern const st_format_t *st_raw_format_fn(void);
 extern const st_format_t *st_al_format_fn(void);
 extern const st_format_t *st_la_format_fn(void);
 extern const st_format_t *st_lu_format_fn(void);
+extern const st_format_t *st_lua_format_fn(void);
 extern const st_format_t *st_s3_format_fn(void);
 extern const st_format_t *st_sb_format_fn(void);
 extern const st_format_t *st_sl_format_fn(void);
@@ -255,6 +258,14 @@ int st_rawstart(ft_t ft, bool default_rate, bool default_channels, st_encoding_t
 #define st_rawstartread(ft) st_rawstart(ft, false, false, ST_ENCODING_UNKNOWN, -1, ST_REVERSE_DEFAULT)
 #define st_rawstartwrite st_rawstartread
 #define st_rawstopread st_format_nothing
+
+/* Lua functions and types in stlua.c */
+typedef struct {
+  st_size_t size;
+  st_sample_t *data;
+} st_sample_t_array_t;
+int st_lua_newarr(lua_State *L, st_sample_t_array_t arr);
+void *st_lua_new(void);
 
 
 /*=============================================================================
