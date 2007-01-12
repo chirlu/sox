@@ -120,10 +120,11 @@ void *st_lua_new(void)
   /* TODO: If concerned about security, lock down here: in particular,
      don't open the io library. */
   luaL_openlibs(L);
-
   luaopen_int(L);
 
   /* Create st_sample_t array userdata type */
   createmeta(L, handle);
   luaL_register(L, NULL, meta);
+
+  return L;
 }
