@@ -54,7 +54,10 @@ static int lua_start(ft_t ft)
 
   lua->L = st_lua_new();
 
-  if ((ret = luaL_loadfile(lua->L, ft->signal.lua_script)) != 0) {
+  if (!ft->signal.lua_script) {
+    st_fail("no Lua script given");
+    return ST_EOF;
+  } else if ((ret = luaL_loadfile(lua->L, ft->signal.lua_script)) != 0) {
     st_fail("cannot load Lua script %s: error %d", ft->signal.lua_script, ret);
     return ST_EOF;
   }
