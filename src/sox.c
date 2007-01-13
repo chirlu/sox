@@ -242,6 +242,8 @@ int main(int argc, char **argv)
 {
   size_t i;
   bool play = false, rec = false;
+  file_info_t fi = NULL;
+  struct file_info fi_none;
 
   myname = argv[0];
   atexit(cleanup);
@@ -259,8 +261,8 @@ int main(int argc, char **argv)
   /* Loop over arguments and filenames, stop when an effect name is 
    * found. */
   while (optind < argc && !is_effect_name(argv[optind])) {
-    file_info_t fi = make_file_info();
-    struct file_info fi_none = *fi;
+    fi = make_file_info();
+    fi_none = *fi;
 
     if (file_count >= MAX_FILES) {
       st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
@@ -273,15 +275,29 @@ int main(int argc, char **argv)
       fi->filetype = "null";
       fi->filename = xstrdup("--");
     } else {
-      if (optind >= argc || is_effect_name(argv[optind])) {
-        if (memcmp(fi, &fi_none, sizeof(fi_none)) != 0) /* fopts but no file */
-          usage("missing filename"); /* No return */
-        free(fi); /* No file opts and no filename, so that's okay */
-        continue;
-      }
+      if (optind >= argc || is_effect_name(argv[optind]))
+        break;
       fi->filename = xstrdup(argv[optind++]);
     }
     file_opts[file_count++] = fi;
+    fi = NULL;
+  }
+
+  if (play) {
+    file_info_t fo = fi? fi : make_file_info();
+
+    if (file_count >= MAX_FILES) {
+      st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
+      exit(1);
+    }
+
+    set_device(fo);
+    file_opts[file_count++] = fo;
+  }
+  else if (fi) {
+    if (memcmp(fi, &fi_none, sizeof(*fi)) != 0) /* fopts but no file */
+      usage("missing filename"); /* No return */
+    free(fi); /* No file opts and no filename, so that's okay */
   }
 
   if (rec) {
@@ -299,18 +315,6 @@ int main(int argc, char **argv)
 
     set_device(fo);
     file_opts[0] = fo;
-  }
-
-  if (play) {
-    file_info_t fo = make_file_info();
-
-    if (file_count >= MAX_FILES) {
-      st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
-      exit(1);
-    }
-
-    set_device(fo);
-    file_opts[file_count++] = fo;
   }
   
   /* Make sure we got at least the required # of input filenames */
@@ -450,7 +454,7 @@ static bool doopts(file_info_t fi, int argc, char **argv)
     int i;          /* Needed since scanf %u allows negative numbers :( */
     char dummy;     /* To check for extraneous chars in optarg. */
 
-    if (strcmp(argv[optind], "--") == 0) {
+    if (optind < argc && strcmp(argv[optind], "--") == 0) {
       ++optind;
       return true;  /* I.e. is null file. */
     }
@@ -475,6 +479,10 @@ static bool doopts(file_info_t fi, int argc, char **argv)
           fi->signal.reverse_bytes = ST_IS_LITTLEENDIAN;
         else if (!strcmp(optarg, "swap"))
           fi->signal.reverse_bytes = true;
+        else {
+          st_fail("Endian type '%s' is not little|big|swap", optarg);
+          exit(1);
+        }
         break;
 
       case 3:
