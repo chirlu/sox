@@ -308,11 +308,11 @@ int main(int argc, char **argv)
       st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
       exit(1);
     }
-    file_count++;
 
     for (i = 0; i < file_count; i++)
       file_opts[i + 1] = file_opts[i];
 
+    file_count++;
     set_device(fo);
     file_opts[0] = fo;
   }
@@ -341,10 +341,29 @@ int main(int argc, char **argv)
     if (combine_method == SOX_MIX && !uservolume)
       file_opts[i]->volume = 1.0 / input_count;
       
-    file_desc[i] = st_open_read(file_opts[i]->filename,
+    if (!rec || i) {
+      file_desc[i] = st_open_read(file_opts[i]->filename,
                                 &file_opts[i]->signal, 
                                 file_opts[i]->filetype);
-    if (!file_desc[i])
+      if (!file_desc[i])
+        /* st_open_read() will call st_warn for most errors.
+         * Rely on that printing something. */
+        exit(2);
+    }
+  }
+  if (rec) { /* Set the recording sample rate & # of channels: */
+    if (input_count > 1) {   /* Get them from the next input file: */
+      file_opts[0]->signal.rate = file_desc[1]->signal.rate;
+      file_opts[0]->signal.channels = file_desc[1]->signal.channels;
+    }
+    else { /* Get them from the output file (which is not open yet): */
+      file_opts[0]->signal.rate = file_opts[1]->signal.rate;
+      file_opts[0]->signal.channels = file_opts[1]->signal.channels;
+    }
+    file_desc[0] = st_open_read(file_opts[0]->filename,
+                              &file_opts[0]->signal, 
+                              file_opts[0]->filetype);
+    if (!file_desc[0])
       /* st_open_read() will call st_warn for most errors.
        * Rely on that printing something. */
       exit(2);
