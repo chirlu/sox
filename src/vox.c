@@ -46,7 +46,7 @@ typedef struct voxstuff
 
 
 /******************************************************************************
- * Function   : st_voxstartread 
+ * Function   : st_voxstart
  * Description: Initialises the file parameters and ADPCM codec state.
  * Parameters : ft  - file info structure
  * Returns    : int - ST_SUCCESS
@@ -58,37 +58,46 @@ typedef struct voxstuff
  *                 rates but the codecs allows any user specified rate. 
  ******************************************************************************/
 
-static int st_voxstartread(ft_t ft)
+static int voxstart(ft_t ft)
 {
   vox_t state = (vox_t) ft->priv;
 
   /* ... setup file info */
-
   state->file.buf = (char *) xmalloc(ST_BUFSIZ);
   state->file.size = ST_BUFSIZ;
   state->file.count = 0;
   state->file.pos = 0;
   state->file.eof = 0;
-
-  ft->signal.size = ST_SIZE_WORD;
-  ft->signal.encoding = ST_ENCODING_OKI_ADPCM;
-  ft->signal.channels = 1;
-  if (ft->signal.rate == 0) {
-    st_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
-    ft->signal.rate = 8000;
-  }
-
-  adpcm_init(&state->encoder, 1);
-
   state->store.byte = 0;
   state->store.flag = 0;
 
-  return (ST_SUCCESS);
+  adpcm_init(&state->encoder, 1);
+  ft->signal.channels = 1;
+  return st_rawstart(ft, true, false, ST_ENCODING_OKI_ADPCM, ST_SIZE_WORD, ST_REVERSE_DEFAULT);
+}
+
+
+static int imastart(ft_t ft)
+{
+  vox_t state = (vox_t) ft->priv;
+
+  /* ... setup file info */
+  state->file.buf = (char *) xmalloc(ST_BUFSIZ);
+  state->file.size = ST_BUFSIZ;
+  state->file.count = 0;
+  state->file.pos = 0;
+  state->file.eof = 0;
+  state->store.byte = 0;
+  state->store.flag = 0;
+
+  adpcm_init(&state->encoder, 0);
+  ft->signal.channels = 1;
+  return st_rawstart(ft, true, false, ST_ENCODING_IMA_ADPCM, ST_SIZE_WORD, ST_REVERSE_DEFAULT);
 }
 
 
 /******************************************************************************
- * Function   : st_voxread 
+ * Function   : read 
  * Description: Fills an internal buffer from the VOX file, converts the 
  *              OKI ADPCM 4-bit samples to 12-bit signed PCM and then scales 
  *              the samples to full range 16 bit PCM.
@@ -100,7 +109,7 @@ static int st_voxstartread(ft_t ft)
  * Notes      : 
  ******************************************************************************/
 
-static st_size_t st_voxread(ft_t ft, st_sample_t * buffer, st_size_t len)
+static st_size_t read(ft_t ft, st_sample_t * buffer, st_size_t len)
 {
   vox_t state = (vox_t) ft->priv;
   st_size_t n;
@@ -117,7 +126,7 @@ static st_size_t st_voxread(ft_t ft, st_sample_t * buffer, st_size_t len)
 }
 
 /******************************************************************************
- * Function   : st_voxstopread 
+ * Function   : stopread 
  * Description: Frees the internal buffer allocated in st_voxstartread.
  * Parameters : ft   - file info structure
  * Returns    : int  - ST_SUCCESS
@@ -125,7 +134,7 @@ static st_size_t st_voxread(ft_t ft, st_sample_t * buffer, st_size_t len)
  * Notes      : 
  ******************************************************************************/
 
-static int st_voxstopread(ft_t ft)
+static int stopread(ft_t ft)
 {
   vox_t state = (vox_t) ft->priv;
 
@@ -136,45 +145,7 @@ static int st_voxstopread(ft_t ft)
 
 
 /******************************************************************************
- * Function   : st_voxstartwrite
- * Description: Initialises the file parameters and ADPCM codec state.
- * Parameters : ft  - file info structure
- * Returns    : int - ST_SUCCESS
- *                    ST_EOF
- * Exceptions :
- * Notes      : 1. VOX file format is 4-bit OKI ADPCM that decodes to 
- *                 to 12 bit signed linear PCM.
- *              2. Dialogic only supports 6kHz, 8kHz and 11 kHz sampling
- *                 rates but the codecs allows any user specified rate. 
- ******************************************************************************/
-
-static int st_voxstartwrite(ft_t ft)
-{
-  vox_t state = (vox_t) ft->priv;
-
-
-  /* ... setup file info */
-
-  state->file.buf = (char *) xmalloc(ST_BUFSIZ);
-  state->file.size = ST_BUFSIZ;
-  state->file.count = 0;
-  state->file.pos = 0;
-  state->file.eof = 0;
-
-  ft->signal.size = ST_SIZE_WORD;
-  ft->signal.encoding = ST_ENCODING_OKI_ADPCM;
-  ft->signal.channels = 1;
-
-  adpcm_init(&state->encoder, 1);
-
-  state->store.byte = 0;
-  state->store.flag = 0;
-
-  return (ST_SUCCESS);
-}
-
-/******************************************************************************
- * Function   : st_voxwrite
+ * Function   : write
  * Description: Converts the supplied buffer to 12 bit linear PCM and encodes
  *              to OKI ADPCM 4-bit samples (packed a two nibbles per byte).
  * Parameters : ft     - file info structure
@@ -186,7 +157,7 @@ static int st_voxstartwrite(ft_t ft)
  * Notes      : 
  ******************************************************************************/
 
-static st_size_t st_voxwrite(ft_t ft, const st_sample_t * buffer, st_size_t length)
+static st_size_t write(ft_t ft, const st_sample_t * buffer, st_size_t length)
 {
   vox_t state = (vox_t) ft->priv;
   st_size_t count = 0;
@@ -225,7 +196,7 @@ static st_size_t st_voxwrite(ft_t ft, const st_sample_t * buffer, st_size_t leng
 }
 
 /******************************************************************************
- * Function   : st_voxstopwrite
+ * Function   : stopwrite
  * Description: Flushes any leftover samples and frees the internal buffer 
  *              allocated in st_voxstartwrite.
  * Parameters : ft   - file info structure
@@ -234,7 +205,7 @@ static st_size_t st_voxwrite(ft_t ft, const st_sample_t * buffer, st_size_t leng
  * Notes      : 
  ******************************************************************************/
 
-static int st_voxstopwrite(ft_t ft)
+static int stopwrite(ft_t ft)
 {
   vox_t state = (vox_t) ft->priv;
   uint8_t byte = state->store.byte;
@@ -257,25 +228,26 @@ static int st_voxstopwrite(ft_t ft)
   return (ST_SUCCESS);
 }
 
-static const char *voxnames[] = {
-  "vox",
-  NULL
-};
-
-static st_format_t st_vox_format = {
-  voxnames,
-  NULL,
-  0,
-  st_voxstartread,
-  st_voxread,
-  st_voxstopread,
-  st_voxstartwrite,
-  st_voxwrite,
-  st_voxstopwrite,
-  st_format_nothing_seek
-};
-
 const st_format_t *st_vox_format_fn(void)
 {
-  return &st_vox_format;
+  static char const * names[] = {"vox", NULL};
+  static st_format_t driver = {
+    names, NULL, 0,
+    voxstart, read, stopread,
+    voxstart, write, stopwrite,
+    st_format_nothing_seek
+  };
+  return &driver;
+}
+
+const st_format_t *st_ima_format_fn(void)
+{
+  static char const * names[] = {"ima", NULL};
+  static st_format_t driver = {
+    names, NULL, 0,
+    imastart, read, stopread,
+    imastart, write, stopwrite,
+    st_format_nothing_seek
+  };
+  return &driver;
 }
