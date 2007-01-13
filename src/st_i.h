@@ -193,6 +193,7 @@ extern const st_format_t *st_flac_format_fn(void);
 #endif
 extern const st_format_t *st_gsm_format_fn(void);
 extern const st_format_t *st_hcom_format_fn(void);
+extern const st_format_t *st_ima_format_fn(void);
 extern const st_format_t *st_maud_format_fn(void);
 extern const st_format_t *st_mp3_format_fn(void);
 extern const st_format_t *st_nul_format_fn(void);

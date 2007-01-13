@@ -260,15 +260,13 @@ int main(int argc, char **argv)
    * found. */
   while (optind < argc && !is_effect_name(argv[optind])) {
     file_info_t fi = make_file_info();
-    struct file_info fi_none;
+    struct file_info fi_none = *fi;
 
     if (file_count >= MAX_FILES) {
       st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
       exit(1);
     }
 
-    fi_none = *fi;
-    
     if (doopts(fi, argc, argv)) { /* is null file? */
       if (fi->filetype != NULL && strcmp(fi->filetype, "null") != 0)
         st_warn("Ignoring \"-t %s\".", fi->filetype);
@@ -416,7 +414,7 @@ static char * read_comment_file(char const * const filename)
   return result;
 }
 
-static char *getoptstr = "+abc:defghilmnoqr:st:uv:wxABC:DLMNRSUV::X12348";
+static char *getoptstr = "+abc:defghilmoqr:st:uv:wxABC:DLMNRSUV::X12348";
 
 static struct option long_options[] =
   {
@@ -447,15 +445,20 @@ static struct option long_options[] =
 
 static bool doopts(file_info_t fi, int argc, char **argv)
 {
-  bool isnull = false;
-  int option_index, c;
-
-  while ((c = getopt_long(argc, argv, getoptstr, long_options, &option_index)) != -1) {
+  while (true) {
+    int option_index;
     int i;          /* Needed since scanf %u allows negative numbers :( */
     char dummy;     /* To check for extraneous chars in optarg. */
 
-    switch (c) {
-    case 0:       /* Long options with no short equivalent. */
+    if (strcmp(argv[optind], "--") == 0) {
+      ++optind;
+      return true;  /* I.e. is null file. */
+    }
+    switch (getopt_long(argc, argv, getoptstr, long_options, &option_index)) {
+    case -1:        /* @ one of: file-name, effect name, or end of arg-list. */
+      return false; /* I.e. not null file. */
+
+    case 0:         /* Long options with no short equivalent. */
       switch (option_index) {
       case 0:
         fi->comment = read_comment_file(optarg);
@@ -509,8 +512,8 @@ static bool doopts(file_info_t fi, int argc, char **argv)
       repeatable_random = true;
       break;
 
-    case 'e': case 'n':
-      isnull = true;            /* Is null file. */
+    case 'e': /* Deprecated in favour of -- */
+      return true;  /* I.e. is null file. */
       break;
 
     case 'h': case '?':
@@ -624,8 +627,6 @@ static bool doopts(file_info_t fi, int argc, char **argv)
       break;
     }
   }
-
-  return isnull;
 }
 
 static int compare_input(ft_t ft1, ft_t ft2)
@@ -1623,13 +1624,13 @@ static void usage(char const * message)
   printf("Version %s\n\n", st_version());
   if (message)
     fprintf(stderr, "Failed: %s\n\n", message);
-  printf("Usage: [gopts] [fopts] %s outfile [effect [effopts]...]\n\n",
+  printf("Usage summary: [gopts] [fopts] %s outfile [effect [effopts]...]\n\n",
          combine_method == SOX_MIX ? "infile1 [fopts] infile2 [fopts]" : "infile [fopts]");
   printf(
          "Special filenames:\n"
          "\n"
          "-               stdin (infile) or stdout (outfile)\n"
-         "-n, -e          use the null file handler; for use with e.g. synth & stat\n"
+         "--              use the null file handler; for use with e.g. synth & stat\n"
          "\n"
          "Global options (gopts) (can be specified at any point before the first effect):\n"
          "\n"
@@ -1639,7 +1640,7 @@ static void usage(char const * message)
          "                display usage of specified effect.  use 'all' to display all\n"
          "-m, --mix       mix multiple input files (instead of concatenating)\n"
          "-M, --merge     merge multiple input files (instead of concatenating)\n"
-         "-o              generate Octave commands to plot response of filter effect\n"
+         "--octave        generate Octave commands to plot response of filter effect\n"
          "--play          output to the default sound device; set if SoX run as `play'\n"
          "-q              run in quiet mode; opposite of -S\n"
          "--rec           input from the default sound device; set if SoX run as `rec'\n"
@@ -1670,6 +1671,7 @@ static void usage(char const * message)
          "-B/-L           force endian type to big/little\n"
          "-s/-u/-U/-A/    sample encoding: signed/unsigned/u-law/A-law\n"
          "  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point\n"
+
          "-1/-2/-3/-4/-8  sample size in bytes\n"
          "-b/-w/-l/-d     aliases for -1/-2/-4/-8 (byte, word, long, double-long)\n"
          "-v volume       input file volume adjustment factor (real number)\n"

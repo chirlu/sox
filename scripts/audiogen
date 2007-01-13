@@ -2,8 +2,8 @@
 #
 # usage:audiogen <rate> <channels> <filename> <length> <audio generator options>
 #
-# Example of using the "nul" file handler along with "synth" effect
-# to generate audio data.  Nul file handler pipes a stream of null
+# Example of using the "null" file handler along with "synth" effect
+# to generate audio data.  Null file handler pipes a stream of null
 # data non-stop.  Synth effect overrides it with its own data and
 # stops based on length parameter.
 
@@ -21,4 +21,4 @@ shift
 filename=$1
 shift
 
-sox -s -w -t nul -r $rate -c $channels /dev/null $filename synth $*
+sox -s -w -r $rate -c $channels -- $filename synth $*

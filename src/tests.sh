@@ -34,7 +34,7 @@ convertToAndFrom () {
       if [ "${format1_skip}x" = "x" -a "${from_skip}x" = "x" ] ; then
         getFormat ${format1}; format1Text=$formatText; format1Flags=$formatFlags
         getFormat       $1; format2Text=$formatText; format2Flags=$formatFlags
-        ./sox -c $channels -r $rate -n $format1Flags input.$format1 synth $samples's' sin 300-3300 noise trapezium
+        ./sox -c $channels -r $rate -- $format1Flags input.$format1 synth $samples's' sin 300-3300 noise trapezium
         ./sox $verbose -r $rate -c $channels $format1Flags input.$format1 $format2Flags intermediate.$1
         ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$1 $format1Flags output.$format1
 
@@ -115,7 +115,7 @@ do_multichannel_formats
 do_twochannel_formats
 do_singlechannel_formats
 
-./sox -c 1 -n output.ub synth .01 vol .5
+./sox -c 1 -- output.ub synth .01 vol .5
 if [ `wc -c <output.ub` = 441 ]; then
   echo "ok     synth size"
 else

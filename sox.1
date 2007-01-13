@@ -1,7 +1,7 @@
 '\" t
 '\" The line above instructs most `man' programs to invoke tbl
 '\"
-'\" Separate paragraphs; not the same as .PP which resets indent level.
+'\" Separate paragraphs; not the same as PP which resets indent level.
 .de SP
 .if t .sp .5
 .if n .sp
@@ -271,10 +271,9 @@ More examples can found thoughout this manual and in the
 separate
 .BR soxexam (1)
 manual.
-.SH OPTIONS
-.SS Special File-name Options
-Each of these options is used in certain circumstances in place of a normal
-file-name on the command line.
+.SH FILE-NAMES
+The following may be used in certain circumstances in place of a normal
+file-name on the command line:
 .TP
 \fB\-\fR
 SoX can be used in pipeline operations by using the special
@@ -288,16 +287,24 @@ Note that when using this option, the file-type (see
 .B \-t
 below) must also be given.
 .TP
-\fB\-n\fR
+\fB\-\-\fR
 This can be used in place of an input or output file-name
-to specify that the `null' file type should be used.  See
+to specify that a `null' file is to be used.  See
 .B null
 below for further information.
 .TP
 \fB\-e\fR
 This is an alias of
-.B \-n
+.B \-\-
 and is retained for backwards compatibility only.
+.PP
+.B N.B.
+Giving SoX an input or output file-name that is the same as a SoX
+effect-name will not work since SoX will treat it as an effect
+specification.  The only work-around to this is to avoid such
+file-names; however, this is generally not difficult since most audio
+file-names have a file-name `extension', whilst effect-names do not.
+.SH OPTIONS
 .SS Global Options
 These options can be specified on the command line at any point
 before the first effect name.
@@ -340,11 +347,11 @@ the left and right channels of the stereo file.
 Run in a mode that can be used, in conjunction with the GNU
 Octave program, to assist with the selection and configuration
 of many of the filtering effects.  For the first given effect
-that supports the \fB\-o\fR option, SoX will output Octave
+that supports the \fB\-\-octave\fR option, SoX will output Octave
 commands to plot the effect's transfer function, and then exit
 without actually processing any audio.  E.g.
 .SP
-	sox \-o input-file \-n highpass 1320 > plot.m
+	sox \-\-octave input-file \-\- highpass 1320 > plot.m
 .br
 	octave plot.m
 .TP
@@ -766,7 +773,7 @@ This is a special file type that can be used when normal
 file reading or writing is not needed to use a particular effect.
 It is selected by using the
 special file-name
-.B \-n
+.B \-\-
 in place of an input or output file-name.
 .SP
 Using this file type to input audio is equivalent to
@@ -788,7 +795,7 @@ with
 .B \-V
 to display information from the audio file header
 without having to read any further into the file, e.g.
-.B sox \-V *.wav \-n
+.B sox \-V *.wav \-\-
 will display header information for each `WAV' file in the current
 directory.
 .TP
@@ -1052,7 +1059,7 @@ i.e. peaking at the
 .I center
 frequency and settling around it.
 .SP
-This effect supports the \fB\-o\fR global option (see above).
+This effect supports the \fB\-\-octave\fR global option (see above).
 .SP
 See also \fBfilter\fR for a bandpass filter with steeper shoulders.
 .TP
@@ -1063,7 +1070,7 @@ and bandwidth (in Hz, and as determined by the 3dB points)
 \fIbandwidth\fR.
 The filter rolls off at 6dB per octave (20dB per decade).
 .SP
-These effects support the \fB\-o\fR global option (see above).
+These effects support the \fB\-\-octave\fR global option (see above).
 .TP
 \fBbandreject \fIfrequency bandwidth\fR
 Apply a band-reject filter.
@@ -1072,8 +1079,8 @@ See the description of the \fBbandpass\fR effect for details.
 \fBbass\fR\^|\^\fBtreble \fIgain\fR [\fIfrequency\fR] [\fIslope\fR]
 Boost or cut the bass (lower) or treble (upper) frequencies of the audio
 using a two-pole shelving filter with a response similar to that
-of a standard hi-fi's (Baxandall) tone controls.  This is also
-known as shelving equalisation or EQ.
+of a standard hi-fi's (Baxandall) tone-controls.  This is also
+known as shelving equalisation (EQ).
 .SP
 \fIgain\fR gives the dB gain at 0Hz (for \fBbass\fR), or whichever is
 the lower of \(ap22kHz and the Nyquist frequency (for \fBtreble\fR).  Its
@@ -1096,7 +1103,7 @@ steep the filter's shelf transition is.  Its useful range is
 about 0\*d3 (for a gentle slope) to 1 (for a steep slope).  The
 default value is 0\*d5.
 .SP
-These effects support the \fB\-o\fR global option (see above).
+These effects support the \fB\-\-octave\fR global option (see above).
 .SP
 See also \fBequalizer\fR for a peaking equalisation effect.
 .TP
@@ -1169,7 +1176,7 @@ audio-CD format.  The frequency response of pre-emphasized
 recordings is rectified.  The filtering is defined in the
 standard document ISO 908.
 .SP
-This effect supports the \fB\-o\fR global option (see above).
+This effect supports the \fB\-\-octave\fR global option (see above).
 .SP
 .TP
 \fBdither\fR [\fIdepth\fR]
@@ -1210,16 +1217,16 @@ pair gives the delay in milliseconds
 and the decay (relative to gain-in) of that echo.
 Gain-out is the volume of the output.
 .TP
-\fBequalizer \fIcentral-frequency Q gain\fR
+\fBequalizer \fIfrequency Q gain\fR
 Apply a two-pole peaking equalisation (EQ) filter.
-This allows modification (\fIgain\fR) of the signal level at and
-around (\fIQ\fR) a central frequency (\fIcentral-frequency\fR),
-leaving all other frequencies untouched (unlike
-bandpass/bandreject filters).
+With this filter, the signal-level at and around a selected frequency
+can be increased or decreased, whilst (unlike band-pass and band-reject
+filters) that at all other frequencies is unchanged.
 .SP
-\fIcentral-frequency\fR is the filter's central frequency in Hz, \fIQ\fR
-its `Q-factor' (see http://en.wikipedia.org/wiki/Q_factor), and
-\fIgain\fR is the gain or attenuation in dB.
+\fIfrequency\fR gives the filter's central frequency in Hz, \fIQ\fR its
+band-width specified as a `Q-factor' (see
+http://en.wikipedia.org/wiki/Q_factor), and \fIgain\fR the required gain
+or attenuation in dB.
 Beware of
 .B Clipping
 when using a positive \fIgain\fR.
@@ -1227,7 +1234,7 @@ when using a positive \fIgain\fR.
 In order to produce complex equalisation curves, this effect
 can be given several times, each with a different central frequency.
 .SP
-This effect supports the \fB\-o\fR global option (see above).
+This effect supports the \fB\-\-octave\fR global option (see above).
 .SP
 See also \fBbass\fR and \fBtreble\fR for shelving equalisation effects.
 .TP
@@ -1310,7 +1317,7 @@ Apply a single-pole recursive high-pass or low-pass filter with
 3dB point \fIfrequency\fR.
 The filters roll off at 6dB per octave (20dB per decade).
 .SP
-These effects support the \fB\-o\fR global option (see above).
+These effects support the \fB\-\-octave\fR global option (see above).
 .SP
 See also \fBfilter\fR for filters with a sharper cutoff.
 .TP
@@ -1319,7 +1326,7 @@ Apply a two-pole Butterworth high-pass or low-pass filter with
 3dB point \fIfrequency\fR.
 The filters roll off at 12dB per octave (40dB per decade).
 .SP
-These effects support the \fB\-o\fR global option (see above).
+These effects support the \fB\-\-octave\fR global option (see above).
 .TP
 \fBlowp \fIfrequency\fR
 Apply a low-pass filter.
@@ -1771,45 +1778,49 @@ still be specified.  This can be used to set the synthesised audio
 length, the number of channels, and the sampling rate, however since the
 input file's audio is not needed, the
 .B null
-file `\fB\-n\fR' is usually used instead (and the length specified
-as a parameter to \fBsynth\fR).
+file `\fB\-\-\fR' is usually used instead (and the length specified
+as a parameter to \fBsynth\fR or by another given effect that can has an
+associated length).
 .SP
 For example, the following produces a 3 second, 44\*d1kHz,
 stereo audio file containing a sine-wave swept from 300 to 3300Hz.
 .SP
-	sox \-n output.au synth 3 sine 300\-3300
+	sox \-\- output.au synth 3 sine 300\-3300
 .SP
 This produces an 8kHz mono version:
 .SP
-	sox \-r 8000 \-c 1 \-n output.au synth 3 sine 300\-3300
+	sox \-r 8000 \-c 1 \-\- output.au synth 3 sine 300\-3300
 .SP
 Multiple channels can be synthesised by specifying the set of
 parameters shown between braces multiple times;
 the following puts the swept tone in the left channel and adds `brown'
 noise in the right:
 .SP
-	sox \-n output.au synth 3 sine 300\-3300 brownnoise
+	sox \-\- output.au synth 3 sine 300\-3300 brownnoise
 .SP
 The following example shows how two synth effects can be cascaded
 to create a more complex waveform:
 .SP
-	sox \-n output.au synth 0\*d5 sine 200\-500 synth 0\*d5 sine fmod 700\-100
+	sox \-\- output.au synth 0\*d5 sine 200\-500 synth 0\*d5 sine fmod 700\-100
 .SP
 Frequencies can also specified in terms of musical semitones relative to
 `middle A' (440Hz);  the following could be used to help tune
 a guitar's `low E' string (on a system that supports
 \fBalsa\fR):
 .SP
-	sox \-n \-t alsa default synth sine %\-5
+	sox \-\- \-t alsa default synth sine %\-5
 .SP
 The following produces a chord with a pipe-organ sound:
 .SP
-	sox \-c4 \-n \-c1 Am7.au synth sin %0 sin %3 sin %7 sin %10 avg fade q 0\*d1 1 0\*d1
+	sox \-c4 \-\- \-c1 Am7.au synth sin %0 sin %3 sin %7 sin %10 avg fade q 0\*d1 1 0\*d1
 .SP
-N.B.  This effect generates audio at maximum volume, which means that there
+.B N.B.
+This effect generates audio at maximum volume, which means that there
 is a high chance of clipping when using the audio subsequently, so
 in most cases, you will want to follow this effect with the \fBvol\fR
-effect to select a suitable attenuation.
+effect to prevent this from happening. (See also
+.B Clipping
+above.)
 .SP
 A detailed description of each
 .B synth
@@ -1831,7 +1842,12 @@ for specifying sample counts is the number of samples with the letter
 .SP
 \fIfreq\fR/\fIfreq2\fR are the frequencies at the beginning/end of
 synthesis in Hz or, if preceded with `%', semitones relative to A
-(440Hz); for both, default=%0.  Not used for noise.
+(440Hz); for both, default=%0.  If
+.I freq2
+is given, then
+.I len
+must also have been given.
+Not used for noise.
 .SP
 \fIoff\fR is the bias (DC-offset) of the signal in percent; default=0.
 .SP
@@ -1849,7 +1865,7 @@ begins; default=50. exp: the amplitude in percent; default=100.
 ends; default=60.
 .TP
 \fBtreble \fIgain\fR [\fIfrequency\fR] [\fIslope\fR]
-Apply a treble tone control effect.
+Apply a treble tone-control effect.
 See the description of the \fBbass\fR effect for details.
 .TP
 \fBtrim \fIstart\fR [\fIlength\fR]
