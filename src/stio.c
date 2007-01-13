@@ -27,16 +27,16 @@
 
 void set_endianness_if_not_already_set(ft_t ft)
 {
-  if (ft->signal.reverse_bytes == ST_REVERSE_DEFAULT) {
+  if (ft->signal.reverse_bytes == ST_OPTION_DEFAULT) {
     if (ft->h->flags & ST_FILE_ENDIAN)
       ft->signal.reverse_bytes = ST_IS_LITTLEENDIAN != !(ft->h->flags & ST_FILE_ENDBIG);
     else
-      ft->signal.reverse_bytes = ST_REVERSE_NO;
+      ft->signal.reverse_bytes = ST_OPTION_NO;
   }
-  if (ft->signal.reverse_nibbles == ST_REVERSE_DEFAULT)
-    ft->signal.reverse_nibbles = ST_REVERSE_NO;
-  if (ft->signal.reverse_bits == ST_REVERSE_DEFAULT)
-    ft->signal.reverse_bits = ST_REVERSE_NO;
+  if (ft->signal.reverse_nibbles == ST_OPTION_DEFAULT)
+    ft->signal.reverse_nibbles = ST_OPTION_NO;
+  if (ft->signal.reverse_bits == ST_OPTION_DEFAULT)
+    ft->signal.reverse_bits = ST_OPTION_NO;
 }
 
 static int is_seekable(ft_t ft)

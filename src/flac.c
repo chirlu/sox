@@ -468,7 +468,7 @@ static st_format_t const st_format =
 {
   st_format_names,
   NULL,
-  ST_FILE_STEREO,
+  0,
   st_format_start_read,
   st_format_read,
   st_format_stop_read,

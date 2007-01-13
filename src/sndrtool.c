@@ -187,7 +187,7 @@ static const char *sndtnames[] = {
 const st_format_t st_snd_format = {
   sndtnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_SEEK | ST_FILE_LIT_END,
+  ST_FILE_SEEK | ST_FILE_LIT_END,
   st_sndtstartread,
   st_rawread,
   st_rawstopread,

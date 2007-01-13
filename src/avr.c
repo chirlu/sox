@@ -285,7 +285,7 @@ static const char *avrnames[] = {
 static st_format_t st_avr_format = {
   avrnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_BIG_END,
+  ST_FILE_BIG_END,
   st_avrstartread,
   st_rawread,
   st_format_nothing,

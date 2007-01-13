@@ -194,7 +194,7 @@ static const char *autonames[] = {
 static st_format_t st_auto_format = {
   autonames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_NOFEXT,
+  ST_FILE_DEVICE | ST_FILE_PHONY,
   st_autostartread,
   st_format_nothing_read_io,
   st_format_nothing,

@@ -200,7 +200,7 @@ typedef struct  st_globalinfo
     double speed;         /* Gather up all speed changes here, then resample */
 } st_globalinfo_t;
 
-typedef enum {ST_REVERSE_NO, ST_REVERSE_YES, ST_REVERSE_DEFAULT} st_reverse_t;
+typedef enum {ST_OPTION_NO, ST_OPTION_YES, ST_OPTION_DEFAULT} st_option_t;
 
 /* Signal parameters */
 
@@ -210,9 +210,9 @@ typedef struct st_signalinfo
     signed char size;     /* word length of data */
     st_encoding_t encoding; /* format of sample numbers */
     unsigned channels;    /* number of sound channels */
-    st_reverse_t reverse_bytes;    /* endiannesses... */
-    st_reverse_t reverse_nibbles;
-    st_reverse_t reverse_bits;
+    st_option_t reverse_bytes;    /* endiannesses... */
+    st_option_t reverse_nibbles;
+    st_option_t reverse_bits;
     double compression;   /* compression factor (where applicable) */
     char *lua_script;      /* Lua script to use for Lua pseudo-file */
 } st_signalinfo_t;
@@ -315,12 +315,12 @@ struct st_soundstream {
 };
 
 /* file flags field */
-#define ST_FILE_STEREO  1  /* does file format support stereo? */
-#define ST_FILE_LOOPS   2  /* does file format support loops? */
-#define ST_FILE_INSTR   4  /* does file format support instrument specs? */
-#define ST_FILE_SEEK    8  /* does file format support seeking? */
-#define ST_FILE_NOSTDIO 16 /* does not use stdio routines */
-#define ST_FILE_NOFEXT  32 /* does not use file extensions */
+#define ST_FILE_LOOPS   1  /* does file format support loops? */
+#define ST_FILE_INSTR   2  /* does file format support instrument specs? */
+#define ST_FILE_SEEK    4  /* does file format support seeking? */
+#define ST_FILE_NOSTDIO 8  /* does not use stdio routines */
+#define ST_FILE_DEVICE  16 /* file is an audio device */
+#define ST_FILE_PHONY   32 /* phony file/device */
 /* These two for use by stlib clients: */
 #define ST_FILE_ENDIAN  64 /* is file format endian? */
 #define ST_FILE_ENDBIG  128/* if so, is it big endian? */

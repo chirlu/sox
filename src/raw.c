@@ -55,7 +55,7 @@ int st_rawseek(ft_t ft, st_size_t offset)
 
 /* Works nicely for starting read and write; st_rawstart{read,write}
    are #defined in st_i.h */
-int st_rawstart(ft_t ft, bool default_rate, bool default_channels, st_encoding_t encoding, signed char size, st_reverse_t rev_bits)
+int st_rawstart(ft_t ft, bool default_rate, bool default_channels, st_encoding_t encoding, signed char size, st_option_t rev_bits)
 {
   if (default_rate && ft->signal.rate == 0) {
     st_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
@@ -82,9 +82,9 @@ int st_rawstart(ft_t ft, bool default_rate, bool default_channels, st_encoding_t
     else ft->signal.size = size;
   }
 
-  if (rev_bits != ST_REVERSE_DEFAULT) {
+  if (rev_bits != ST_OPTION_DEFAULT) {
     if (ft->mode == 'r' &&
-        ft->signal.reverse_bits != ST_REVERSE_DEFAULT &&
+        ft->signal.reverse_bits != ST_OPTION_DEFAULT &&
         ft->signal.reverse_bits != rev_bits)
       st_report("'%s': Format options overriding file-type bit-order", ft->filename);
     else ft->signal.reverse_bits = rev_bits;
@@ -256,12 +256,12 @@ int st_rawstopwrite(ft_t ft)
 }
 
 static int raw_start(ft_t ft) {
-  return st_rawstart(ft,false,false,ST_ENCODING_UNKNOWN,-1,ST_REVERSE_DEFAULT);
+  return st_rawstart(ft,false,false,ST_ENCODING_UNKNOWN,-1,ST_OPTION_DEFAULT);
 }
 st_format_t const * st_raw_format_fn(void) {
   static char const * names[] = {"raw", NULL};
   static st_format_t driver = {
-    names, NULL, ST_FILE_STEREO | ST_FILE_SEEK,
+    names, NULL, ST_FILE_SEEK,
     raw_start, st_rawread , st_rawstopread,
     raw_start, st_rawwrite, st_rawstopwrite,
     st_rawseek
@@ -271,12 +271,12 @@ st_format_t const * st_raw_format_fn(void) {
 
 #define RAW_FORMAT(id,alt1,alt2,size,rev_bits,encoding) \
 static int id##_start(ft_t ft) { \
-  return st_rawstart(ft,true,true,ST_ENCODING_##encoding,ST_SIZE_##size,ST_REVERSE_##rev_bits); \
+  return st_rawstart(ft,true,true,ST_ENCODING_##encoding,ST_SIZE_##size,ST_OPTION_##rev_bits); \
 } \
 st_format_t const * st_##id##_format_fn(void) { \
   static char const * names[] = {#id, alt1, alt2, NULL}; \
   static st_format_t driver = { \
-    names, NULL, ST_FILE_STEREO, \
+    names, NULL, 0, \
     id##_start, st_rawread , st_rawstopread, \
     id##_start, st_rawwrite, st_rawstopwrite, \
     st_format_nothing_seek \

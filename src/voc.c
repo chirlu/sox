@@ -809,7 +809,7 @@ static const char *vocnames[] = {
 static st_format_t st_voc_format = {
   vocnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_LIT_END,
+  ST_FILE_LIT_END,
   st_vocstartread,
   st_vocread,
   st_format_nothing,

@@ -155,7 +155,7 @@ static const char *cdrnames[] = {
 static st_format_t st_cdr_format = {
   cdrnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_SEEK | ST_FILE_BIG_END,
+  ST_FILE_SEEK | ST_FILE_BIG_END,
   st_cdrstartread,
   st_cdrread,
   st_cdrstopread,

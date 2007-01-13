@@ -554,7 +554,7 @@ static const char *mp3names[] = {
 static st_format_t st_mp3_format = {
   mp3names,
   NULL,
-  ST_FILE_STEREO,
+  0,
   st_mp3startread,
   st_mp3read,
   st_mp3stopread,

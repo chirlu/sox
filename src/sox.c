@@ -64,8 +64,7 @@ static char uservolume = 0;
 static int user_abort = 0;
 static int success = 0;
 
-static int quiet = 0;
-static int status = 0;
+static st_option_t show_progress = ST_OPTION_DEFAULT;
 static unsigned long input_samples = 0;
 static unsigned long read_samples = 0;
 static unsigned long output_samples = 0;
@@ -213,9 +212,9 @@ static file_info_t make_file_info(void)
   fi->signal.size = -1;
   fi->signal.encoding = ST_ENCODING_UNKNOWN;
   fi->signal.channels = 0;
-  fi->signal.reverse_bytes = ST_REVERSE_DEFAULT;
-  fi->signal.reverse_nibbles = ST_REVERSE_DEFAULT;
-  fi->signal.reverse_bits = ST_REVERSE_DEFAULT;
+  fi->signal.reverse_bytes = ST_OPTION_DEFAULT;
+  fi->signal.reverse_nibbles = ST_OPTION_DEFAULT;
+  fi->signal.reverse_bits = ST_OPTION_DEFAULT;
   fi->signal.compression = HUGE_VAL;
   fi->volume = HUGE_VAL;
   fi->volume_clips = 0;
@@ -309,8 +308,8 @@ int main(int argc, char **argv)
       exit(1);
     }
 
-    for (i = 0; i < file_count; i++)
-      file_opts[i + 1] = file_opts[i];
+    for (i = file_count; i > 0; -- i)
+      file_opts[i] = file_opts[i - 1];
 
     file_count++;
     set_device(fo);
@@ -334,42 +333,37 @@ int main(int argc, char **argv)
             "\tuse 'vol' to set the output file volume");
   
   for (i = 0; i < input_count; i++) {
+    int j = input_count - 1 - i;
+    file_info_t fi = file_opts[j];
     /* When mixing audio, default to input side volume
      * adjustments that will make sure no clipping will
      * occur.  Users most likely won't be happy with
      * this and will want to override it. */
     if (combine_method == SOX_MIX && !uservolume)
-      file_opts[i]->volume = 1.0 / input_count;
+      file_opts[j]->volume = 1.0 / input_count;
       
-    if (!rec || i) {
-      file_desc[i] = st_open_read(file_opts[i]->filename,
-                                &file_opts[i]->signal, 
-                                file_opts[i]->filetype);
-      if (!file_desc[i])
-        /* st_open_read() will call st_warn for most errors.
-         * Rely on that printing something. */
-        exit(2);
+    if (rec && !j) { /* Set the recording sample rate & # of channels: */
+      if (input_count > 1) {   /* Get them from the next input file: */
+        fi->signal.rate = file_desc[1]->signal.rate;
+        fi->signal.channels = file_desc[1]->signal.channels;
+      }
+      else { /* Get them from the output file (which is not open yet): */
+        fi->signal.rate = file_opts[1]->signal.rate;
+        fi->signal.channels = file_opts[1]->signal.channels;
+      }
     }
-  }
-  if (rec) { /* Set the recording sample rate & # of channels: */
-    if (input_count > 1) {   /* Get them from the next input file: */
-      file_opts[0]->signal.rate = file_desc[1]->signal.rate;
-      file_opts[0]->signal.channels = file_desc[1]->signal.channels;
-    }
-    else { /* Get them from the output file (which is not open yet): */
-      file_opts[0]->signal.rate = file_opts[1]->signal.rate;
-      file_opts[0]->signal.channels = file_opts[1]->signal.channels;
-    }
-    file_desc[0] = st_open_read(file_opts[0]->filename,
-                              &file_opts[0]->signal, 
-                              file_opts[0]->filetype);
-    if (!file_desc[0])
+    file_desc[j] = st_open_read(fi->filename, &fi->signal, fi->filetype);
+    if (!file_desc[j])
       /* st_open_read() will call st_warn for most errors.
        * Rely on that printing something. */
       exit(2);
+    if (show_progress == ST_OPTION_DEFAULT &&
+        (file_desc[j]->h->flags & ST_FILE_DEVICE) != 0 &&
+        (file_desc[j]->h->flags & ST_FILE_PHONY) == 0)
+      show_progress = ST_OPTION_YES;
   }
     
-  /* Loop through the reset of the arguments looking for effects */
+  /* Loop through the rest of the arguments looking for effects */
   parse_effects(argc, argv);
 
   if (repeatable_random)
@@ -391,7 +385,7 @@ int main(int argc, char **argv)
       st_warn("%s: -v clipped %u samples; decrease volume?", file_opts[i]->filename,
               file_opts[i]->volume_clips);
 
-  if (status) {
+  if (show_progress) {
     if (user_abort)
       fprintf(stderr, "Aborted.\n");
     else
@@ -621,15 +615,15 @@ static bool doopts(file_info_t fi, int argc, char **argv)
       break;
 
     case 'x':
-      fi->signal.reverse_bytes = ST_REVERSE_YES;
+      fi->signal.reverse_bytes = ST_OPTION_YES;
       break;
 
     case 'X':
-      fi->signal.reverse_bits = ST_REVERSE_YES;
+      fi->signal.reverse_bits = ST_OPTION_YES;
       break;
 
     case 'N':
-      fi->signal.reverse_nibbles = ST_REVERSE_YES;
+      fi->signal.reverse_nibbles = ST_OPTION_YES;
       break;
 
     case 'V':
@@ -644,13 +638,11 @@ static bool doopts(file_info_t fi, int argc, char **argv)
       break;
 
     case 'S':
-      status = 1;
-      quiet = 0;
+      show_progress = ST_OPTION_YES;
       break;
 
     case 'q':
-      status = 0;
-      quiet = 1;
+      show_progress = ST_OPTION_NO;
       break;
     }
   }
@@ -671,7 +663,7 @@ static void report_file(ft_t f)
   char const * type =
     (strcmp(f->filename, "-") == 0 ||
      strcmp(f->filename, "--") == 0 ||
-          f->h->flags & ST_FILE_NOFEXT)? 
+          f->h->flags & ST_FILE_DEVICE)? 
           f->h->names[0] : "\b ";
 
   st_report("\n\n%s: \"%s\" (%s%c\n"
@@ -773,13 +765,11 @@ static void process(void) {
       exit(2);
     
     /* When writing to an audio device, auto turn on the
-     * status display to match behavior of ogg123 status,
+     * progress display to match behavior of ogg123,
      * unless the user requested us not to display anything. */
-    if ((strcmp(ofile->filetype, "alsa") == 0 ||
-        strcmp(ofile->filetype, "ossdsp") == 0 ||
-         strcmp(ofile->filetype, "sunau") == 0) &&
-        !quiet)
-      status = 1;
+    if (show_progress == ST_OPTION_DEFAULT)
+      show_progress = (ofile->h->flags & ST_FILE_DEVICE) != 0 &&
+                      (ofile->h->flags & ST_FILE_PHONY) == 0;
 
     report_file(ofile);
   }
@@ -814,14 +804,14 @@ static void process(void) {
       }
       ibuf[f] = (st_sample_t *)xmalloc(alloc_size);
       
-      if (status)
+      if (show_progress)
         print_input_status(f);
     }
   } else {
     current_input = 0;
     input_samples = file_desc[current_input]->length;
         
-    if (status)
+    if (show_progress)
       print_input_status(current_input);
   }
       
@@ -877,7 +867,7 @@ static void process(void) {
             input_samples = file_desc[current_input]->length;
             read_samples = 0;
                     
-            if (status)
+            if (show_progress)
               print_input_status(current_input);
             
             continue;
@@ -958,7 +948,7 @@ static void process(void) {
 
       flowstatus = flow_effect_out();
 
-      if (status)
+      if (show_progress)
         update_status();
 
       /* Quit reading/writing on user aborts.  This will close
@@ -976,7 +966,7 @@ static void process(void) {
       drain_effect_out();
   }
 
-  if (status)
+  if (show_progress)
     fputs("\n\n", stderr);
 
   if (combine_method != SOX_CONCAT)
@@ -1000,7 +990,7 @@ static void process(void) {
 
   if (file_desc[f]->clips != 0)
     st_warn("%s: output clipped %u samples; decrease volume?",
-            (file_desc[f]->h->flags & ST_FILE_NOFEXT)?
+            (file_desc[f]->h->flags & ST_FILE_DEVICE)?
             file_desc[f]->h->names[0] : file_desc[f]->filename,
             file_desc[f]->clips);
 }
@@ -1560,6 +1550,8 @@ static void stop_effects(void)
 
 static void print_input_status(int input)
 {
+  if (st_output_verbosity_level > 2)
+    return;
   fprintf(stderr, "\nInput Filename : %s\n", file_desc[input]->filename);
   fprintf(stderr, "Sample Size    : %s\n", 
           st_size_bits_str[file_desc[input]->signal.size]);
@@ -1646,7 +1638,6 @@ static void volumechange(st_sample_t * buf, st_ssize_t len, file_info_t fi)
 static void usage(char const * message)
 {
   int i;
-  const st_format_t *f;
   const st_effect_t *e;
 
   printf("%s: ", myname);
@@ -1673,7 +1664,7 @@ static void usage(char const * message)
          "--play          output to the default sound device; set if SoX run as `play'\n"
          "-q              run in quiet mode; opposite of -S\n"
          "--rec           input from the default sound device; set if SoX run as `rec'\n"
-         "-S              display status while processing audio data\n"
+         "-S              display progress while processing audio data\n"
          "--version       display version number of SoX and exit\n"
          "-V[level]       increment or set verbosity level (default 2); levels are:\n"
          "\n"
@@ -1707,11 +1698,11 @@ static void usage(char const * message)
          "-R              use default random numbers (same on each run of SoX)\n"
          "\n");
 
-  printf("Supported file formats: ");
+  printf("Supported file formats:");
   for (i = 0; st_format_fns[i]; i++) {
-    f = st_format_fns[i]();
-    if (f && f->names)
-      printf("%s ", f->names[0]); /* only print the first name */
+    char const * const * names = st_format_fns[i]()->names;
+    if (!(st_format_fns[i]()->flags & ST_FILE_PHONY))
+      while (*names) printf(" %s", *names++);
   }
 
   printf("\n\nSupported effects: ");

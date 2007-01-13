@@ -1204,7 +1204,7 @@ static const char *aiffnames[] = {
 static st_format_t st_aiff_format = {
   aiffnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK | ST_FILE_BIG_END,
+  ST_FILE_LOOPS | ST_FILE_SEEK | ST_FILE_BIG_END,
   st_aiffstartread,
   st_aiffread,
   st_aiffstopread,
@@ -1228,7 +1228,7 @@ static const char *aifcnames[] = {
 static st_format_t st_aifc_format = {
   aifcnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK | ST_FILE_BIG_END,
+  ST_FILE_LOOPS | ST_FILE_SEEK | ST_FILE_BIG_END,
   st_aiffstartread,
   st_aiffread,
   st_aiffstopread,

@@ -226,7 +226,7 @@ static const char *sfnames[] = {
 static st_format_t st_sf_format = {
   sfnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_SEEK,
+  ST_FILE_SEEK,
   st_sfstartread,
   st_rawread,
   st_rawstopread,

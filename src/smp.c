@@ -410,7 +410,7 @@ static const char *smpnames[] = {
 static st_format_t st_smp_format = {
   smpnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_LOOPS | ST_FILE_SEEK | ST_FILE_LIT_END,
+  ST_FILE_LOOPS | ST_FILE_SEEK | ST_FILE_LIT_END,
   st_smpstartread,
   st_smpread,
   st_format_nothing,

@@ -349,7 +349,7 @@ static const char *maudnames[] = {
 static st_format_t st_maud_format = {
   maudnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_BIG_END,
+  ST_FILE_BIG_END,
   st_maudstartread,
   st_rawread,
   st_rawstopread,

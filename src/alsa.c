@@ -686,16 +686,16 @@ static const char *alsanames[] = {
 };
 
 static st_format_t st_alsa_format = {
-   alsanames,
-   NULL,
-   ST_FILE_STEREO | ST_FILE_NOSTDIO | ST_FILE_NOFEXT,
-   st_alsastartread,
-   st_alsaread,
-   st_alsastopread,
-   st_alsastartwrite,
-   st_alsawrite,
-   st_alsastopwrite,
-   st_format_nothing_seek
+  alsanames,
+  NULL,
+  ST_FILE_DEVICE | ST_FILE_NOSTDIO,
+  st_alsastartread,
+  st_alsaread,
+  st_alsastopread,
+  st_alsastartwrite,
+  st_alsawrite,
+  st_alsastopwrite,
+  st_format_nothing_seek
 };
 
 const st_format_t *st_alsa_format_fn(void)

@@ -141,8 +141,8 @@ int st_gettype(ft_t formp, bool is_file_extension)
     }
     for (i = 0; st_format_fns[i]; i++) {
         f = st_format_fns[i]();
-        if (is_file_extension && (f->flags & ST_FILE_NOFEXT))
-          continue; /* don't match special device names in real file names */
+        if (is_file_extension && (f->flags & ST_FILE_DEVICE))
+          continue; /* don't match device names in real file names */
         for (list = f->names; *list; list++) {
             const char *s1 = *list, *s2 = formp->filetype;
             if (!strcasecmp(s1, s2))

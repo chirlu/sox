@@ -469,7 +469,7 @@ static const char *aunames[] = {
 static st_format_t st_au_format = {
   aunames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_SEEK | ST_FILE_BIG_END,
+  ST_FILE_SEEK | ST_FILE_BIG_END,
   st_austartread,
   st_auread,
   st_rawstopread,

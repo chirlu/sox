@@ -453,7 +453,7 @@ static const char *vorbisnames[] = {
 static st_format_t st_vorbis_format = {
   vorbisnames,
   NULL,
-  ST_FILE_STEREO,
+  0,
   st_vorbisstartread,
   st_vorbisread,
   st_vorbisstopread,

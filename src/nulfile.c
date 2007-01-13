@@ -51,7 +51,7 @@ static const char *nulnames[] = {
 static st_format_t st_nul_format = {
   nulnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_NOSTDIO | ST_FILE_NOFEXT,
+  ST_FILE_DEVICE | ST_FILE_PHONY | ST_FILE_NOSTDIO,
   st_nulstartread,
   st_nulread,
   st_format_nothing,

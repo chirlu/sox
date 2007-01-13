@@ -316,7 +316,7 @@ static const char *xanames[] = {
 st_format_t st_xa_format = {
   xanames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_LIT_END,
+  ST_FILE_LIT_END,
   st_xastartread,
   st_xaread,
   st_xastopread,

@@ -289,7 +289,7 @@ static const char *spherenames[] = {
 static st_format_t st_sphere_format = {
   spherenames,
   NULL,
-  ST_FILE_STEREO,
+  0,
   st_spherestartread,
   st_sphereread,
   st_rawstopread,

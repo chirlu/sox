@@ -1749,7 +1749,7 @@ static const char *wavnames[] = {
 static st_format_t st_wav_format = {
   wavnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_SEEK | ST_FILE_LIT_END,
+  ST_FILE_SEEK | ST_FILE_LIT_END,
   st_wavstartread,
   st_wavread,
   st_wavstopread,

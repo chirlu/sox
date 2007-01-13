@@ -214,7 +214,7 @@ static const char *skel_names[] = {
 static st_format_t st_skel_format = {
   skel_names,
   NULL,
-  ST_FILE_STEREO | ST_FILE_SEEK,
+  ST_FILE_SEEK,
   skel_startread,
   skel_read,
   skel_stopread,

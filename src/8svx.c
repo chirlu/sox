@@ -368,7 +368,7 @@ static const char *svxnames[] = {
 static st_format_t st_svx_format = {
   svxnames,
   NULL,
-  ST_FILE_STEREO | ST_FILE_BIG_END,
+  ST_FILE_BIG_END,
   st_svxstartread,
   st_svxread,
   st_svxstopread,
