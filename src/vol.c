@@ -155,7 +155,7 @@ static int st_vol_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 } else
                         sample = gain * sample;
 
-                ST_SAMPLE_CLIP_COUNT(sample, effp->clippedCount);
+                ST_SAMPLE_CLIP_COUNT(sample, effp->clips);
                *obuf++ = sample;
             }
     }
@@ -165,7 +165,7 @@ static int st_vol_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         for (;len>0; len--)
         {
                 sample = gain * *ibuf++;
-                ST_SAMPLE_CLIP_COUNT(sample, effp->clippedCount);
+                ST_SAMPLE_CLIP_COUNT(sample, effp->clips);
                 *obuf++ = sample;
         }
     }

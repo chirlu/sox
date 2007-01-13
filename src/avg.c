@@ -527,7 +527,7 @@ static int st_avg_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
             samp = 0.0;
             for (i = 0; i < ichan; i++)
                 samp += ibuf[i] * avg->sources[i][j];
-            ST_SAMPLE_CLIP_COUNT(samp, effp->clippedCount);
+            ST_SAMPLE_CLIP_COUNT(samp, effp->clips);
             obuf[j] = samp;
         }
     }

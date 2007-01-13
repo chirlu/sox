@@ -456,10 +456,10 @@ static st_size_t st_vocwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
         v->samples += len;
         while(done < len) {
           if (ft->signal.size == ST_SIZE_BYTE) {
-            uc = ST_SAMPLE_TO_UNSIGNED_BYTE(*buf++, ft->clippedCount);
+            uc = ST_SAMPLE_TO_UNSIGNED_BYTE(*buf++, ft->clips);
             st_writeb(ft, uc);
           } else {
-            sw = (int) ST_SAMPLE_TO_SIGNED_WORD(*buf++, ft->clippedCount);
+            sw = (int) ST_SAMPLE_TO_SIGNED_WORD(*buf++, ft->clips);
             st_writew(ft,sw);
           }
           done++;

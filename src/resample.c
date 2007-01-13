@@ -194,80 +194,83 @@ int st_resample_getopts(eff_t effp, int n, char **argv)
  */
 int st_resample_start(eff_t effp)
 {
-        resample_t r = (resample_t) effp->priv;
-        long Xoff, gcdrate;
-        int i;
-        double in_rate = floor(effp->ininfo.rate / effp->globalinfo->speed + .5)
-          * effp->globalinfo->speed;/* Make "speed" more accurate (st_rate_t is int)*/
+  resample_t r = (resample_t) effp->priv;
+  long Xoff, gcdrate;
+  int i;
 
-        r->Factor = (double)effp->outinfo.rate / in_rate;
+  /* The next line makes the "speed" effect accurate; it's needed because
+   * ininfo.rate (st_rate_t) isn't floating point (but it's probably not worth
+   * changing st_rate_t just because of this): */
+  double in_rate = floor(effp->ininfo.rate / effp->globalinfo->speed + .5)
+    * effp->globalinfo->speed;
 
-        gcdrate = st_gcd((long)effp->ininfo.rate, (long)effp->outinfo.rate);
-        r->a = effp->ininfo.rate / gcdrate;
-        r->b = effp->outinfo.rate / gcdrate;
+  r->Factor = (double) effp->outinfo.rate / in_rate;
 
-        if (r->a <= r->b && r->b <= NQMAX) {
-                r->quadr = -1; /* exact coeffs */
-                r->Nq = r->b;  /* max(r->a,r->b) */
-        } else
-                r->Nq = Nc; /* for now */
+  gcdrate = st_gcd((long) effp->ininfo.rate, (long) effp->outinfo.rate);
+  r->a = effp->ininfo.rate / gcdrate;
+  r->b = effp->outinfo.rate / gcdrate;
 
-        /* Nwing: # of filter coeffs in right wing */
-        r->Nwing = r->Nq * (r->Nmult/2+1) + 1;
+  if (r->a <= r->b && r->b <= NQMAX) {
+    r->quadr = -1;      /* exact coeffs */
+    r->Nq = r->b;       /* max(r->a,r->b) */
+  } else
+    r->Nq = Nc; /* for now */
 
-        r->Imp = (double *)xmalloc(sizeof(double) * (r->Nwing+2)) + 1;
-        /* need Imp[-1] and Imp[Nwing] for quadratic interpolation */
-        /* returns error # <=0, or adjusted wing-len > 0 */
-        i = makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq, 1);
-        if (i <= 0)
-        {
-                st_fail("resample: Unable to make filter");
-                return (ST_EOF);
-        }
+  /* Nwing: # of filter coeffs in right wing */
+  r->Nwing = r->Nq * (r->Nmult / 2 + 1) + 1;
 
-        st_debug("Nmult: %ld, Nwing: %ld, Nq: %ld",r->Nmult,r->Nwing,r->Nq);
+  r->Imp = (double *) xmalloc(sizeof(double) * (r->Nwing + 2)) + 1;
+  /* need Imp[-1] and Imp[Nwing] for quadratic interpolation */
+  /* returns error # <=0, or adjusted wing-len > 0 */
+  i = makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq, 1);
+  if (i <= 0) {
+    st_fail("resample: Unable to make filter");
+    return (ST_EOF);
+  }
 
-        if (r->quadr < 0) { /* exact coeff's method */
-                r->Xh = r->Nwing/r->b;
-          st_debug("resample: rate ratio %ld:%ld, coeff interpolation not needed", r->a, r->b);
-        } else {
-          r->dhb = Np;  /* Fixed-point Filter sampling-time-increment */
-          if (r->Factor<1.0) r->dhb = r->Factor*Np + 0.5;
-          r->Xh = (r->Nwing<<La)/r->dhb;
-          /* (Xh * dhb)>>La is max index into Imp[] */
-        }
+  st_debug("Nmult: %ld, Nwing: %ld, Nq: %ld", r->Nmult, r->Nwing, r->Nq);
 
-        /* reach of LP filter wings + some creeping room */
-        Xoff = r->Xh + 10;
-        r->Xoff = Xoff;
+  if (r->quadr < 0) {     /* exact coeff's method */
+    r->Xh = r->Nwing / r->b;
+    st_debug("resample: rate ratio %ld:%ld, coeff interpolation not needed", r->a, r->b);
+  } else {
+    r->dhb = Np;        /* Fixed-point Filter sampling-time-increment */
+    if (r->Factor < 1.0)
+      r->dhb = r->Factor * Np + 0.5;
+    r->Xh = (r->Nwing << La) / r->dhb;
+    /* (Xh * dhb)>>La is max index into Imp[] */
+  }
 
-        /* Current "now"-sample pointer for input to filter */
-        r->Xp = Xoff;
-        /* Position in input array to read into */
-        r->Xread = Xoff;
-        /* Current-time pointer for converter */
-        r->Time = Xoff;
-        if (r->quadr < 0) { /* exact coeff's method */
-                r->t = Xoff*r->Nq;
-        }
-        i = BUFFSIZE - 2*Xoff;
-        if (i < r->Factor + 1.0/r->Factor)      /* Check input buffer size */
-        {
-                st_fail("Factor is too small or large for BUFFSIZE");
-                return (ST_EOF);
-        }
-        
-        r->Xsize = 2*Xoff + i/(1.0+r->Factor);
-        r->Ysize = BUFFSIZE - r->Xsize;
-        st_debug("Xsize %d, Ysize %d, Xoff %d",r->Xsize,r->Ysize,r->Xoff);
+  /* reach of LP filter wings + some creeping room */
+  Xoff = r->Xh + 10;
+  r->Xoff = Xoff;
 
-        r->X = (double *) xmalloc(sizeof(double) * (BUFFSIZE));
-        r->Y = r->X + r->Xsize;
+  /* Current "now"-sample pointer for input to filter */
+  r->Xp = Xoff;
+  /* Position in input array to read into */
+  r->Xread = Xoff;
+  /* Current-time pointer for converter */
+  r->Time = Xoff;
+  if (r->quadr < 0) {     /* exact coeff's method */
+    r->t = Xoff * r->Nq;
+  }
+  i = BUFFSIZE - 2 * Xoff;
+  if (i < r->Factor + 1.0 / r->Factor) {  /* Check input buffer size */
+    st_fail("Factor is too small or large for BUFFSIZE");
+    return (ST_EOF);
+  }
 
-        /* Need Xoff zeros at beginning of sample */
-        for (i=0; i<Xoff; i++)
-                r->X[i] = 0;
-        return (ST_SUCCESS);
+  r->Xsize = 2 * Xoff + i / (1.0 + r->Factor);
+  r->Ysize = BUFFSIZE - r->Xsize;
+  st_debug("Xsize %d, Ysize %d, Xoff %d", r->Xsize, r->Ysize, r->Xoff);
+
+  r->X = (double *) xmalloc(sizeof(double) * (BUFFSIZE));
+  r->Y = r->X + r->Xsize;
+
+  /* Need Xoff zeros at beginning of sample */
+  for (i = 0; i < Xoff; i++)
+    r->X[i] = 0;
+  return (ST_SUCCESS);
 }
 
 /*
@@ -365,7 +368,7 @@ int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         for(i=0; i < Nout; i++) { 
                 double ftemp = r->Y[i] * ISCALE;
 
-                ST_SAMPLE_CLIP_COUNT(ftemp, effp->clippedCount);
+                ST_SAMPLE_CLIP_COUNT(ftemp, effp->clips);
                 *obuf++ = ftemp;
         }
 

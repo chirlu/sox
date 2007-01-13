@@ -193,7 +193,7 @@ static int st_echos_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 }
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * echos->out_gain;
-                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clippedCount);
+                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 /* Mix decay of delays and input */
                 for ( j = 0; j < echos->num_delays; j++ ) {
@@ -233,7 +233,7 @@ static int st_echos_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 }
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * echos->out_gain;
-                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clippedCount);
+                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 /* Mix decay of delays and input */
                 for ( j = 0; j < echos->num_delays; j++ ) {

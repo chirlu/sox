@@ -220,14 +220,14 @@ static int process_window(eff_t effp, reddata_t data, int chan_num, int num_chan
         for (j = 0; j < use; j ++) {
             float s = chan->window[j] + chan->lastwindow[WINDOWSIZE/2 + j];
             obuf[chan_num + num_chans * j] =
-                ST_FLOAT_DWORD_TO_SAMPLE(s, effp->clippedCount);
+                ST_FLOAT_DWORD_TO_SAMPLE(s, effp->clips);
         }
         free(chan->lastwindow);
     } else {
         for (j = 0; j < use; j ++) {
             assert(chan->window[j] >= -1 && chan->window[j] <= 1);
             obuf[chan_num + num_chans * j] =
-                ST_FLOAT_DWORD_TO_SAMPLE(chan->window[j], effp->clippedCount);
+                ST_FLOAT_DWORD_TO_SAMPLE(chan->window[j], effp->clips);
         }
     }
     chan->lastwindow = chan->window;
@@ -268,7 +268,7 @@ static int st_noisered_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *ob
         
         for (j = 0; j < ncopy; j ++)
             chan->window[oldbuf + j] =
-                ST_SAMPLE_TO_FLOAT_DWORD(ibuf[i + tracks * j], effp->clippedCount);
+                ST_SAMPLE_TO_FLOAT_DWORD(ibuf[i + tracks * j], effp->clips);
 
         if (!whole_window)
             continue;

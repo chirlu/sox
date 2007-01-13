@@ -160,7 +160,7 @@ static int lowpass_flow(eff_t effp, butterworth_crossover_t butterworth, int nCh
       butterworth->xy_low[chan].y [1] = butterworth->xy_low[chan].y [0];
       butterworth->xy_low[chan].y [0] = out;
 
-      ST_SAMPLE_CLIP_COUNT(out, effp->clippedCount);
+      ST_SAMPLE_CLIP_COUNT(out, effp->clips);
 
       *lowbufptr = out;
 
@@ -176,7 +176,7 @@ static int lowpass_flow(eff_t effp, butterworth_crossover_t butterworth, int nCh
       butterworth->xy_high[chan].y [1] = butterworth->xy_high[chan].y [0];
       butterworth->xy_high[chan].y [0] = out;
 
-      ST_SAMPLE_CLIP_COUNT(out, effp->clippedCount);
+      ST_SAMPLE_CLIP_COUNT(out, effp->clips);
 
       /* don't forget polarity reversal of high pass! */
 
@@ -577,7 +577,7 @@ static int st_mcompand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *ob
     for (i=0;i<len;++i)
     {
       out = obuf[i] + abuf[i];
-      ST_SAMPLE_CLIP_COUNT(out, effp->clippedCount);
+      ST_SAMPLE_CLIP_COUNT(out, effp->clips);
       obuf[i] = out;
     }
     oldabuf = abuf;
@@ -602,7 +602,7 @@ static int st_mcompand_drain_1(eff_t effp, compand_t c, comp_band_t l, st_sample
    */
   for (done = 0;  done < maxdrain  &&  l->delay_buf_cnt > 0;  done++) {
     out = obuf[done] + l->delay_buf[l->delay_buf_ptr++];
-    ST_SAMPLE_CLIP_COUNT(out, effp->clippedCount);
+    ST_SAMPLE_CLIP_COUNT(out, effp->clips);
     obuf[done] = out;
     l->delay_buf_ptr %= c->delay_buf_size;
     l->delay_buf_cnt--;

@@ -279,10 +279,10 @@ file-name on the command line:
 SoX can be used in pipeline operations by using the special
 file-name `\-' which,
 if used in place of an input file-name, will cause
-SoX will read audio data from stdin,
+SoX will read audio data from `standard input' (stdin),
 and which,
 if used in place of the output file-name, will cause
-SoX will send audio data to stdout.
+SoX will send audio data to `standard output' (stdout).
 Note that when using this option, the file-type (see
 .B \-t
 below) must also be given.
@@ -565,6 +565,12 @@ file-name on the command line.
 \fB\-\-comment \fItext\fR
 Specify the comment text to store in the output file header (where
 applicable).
+.SP
+SoX will provide a default comment if this option (or
+.BR \-\-comment\-file )
+is not given; to specify that no comment should be stored in the output file,
+use 
+.BR "\-\-comment \(dq\(dq" .
 .TP
 \fB\-\-comment\-file \fIfile-name\fR
 Specify a file containing the comment text to store in the output

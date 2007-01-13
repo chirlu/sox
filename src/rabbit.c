@@ -85,8 +85,12 @@ static int st_rabbit_getopts(eff_t effp, int n, char **argv)
 static int st_rabbit_start(eff_t effp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
+
+  /* The next line makes the "speed" effect accurate; it's needed because
+   * ininfo.rate (st_rate_t) isn't floating point (but it's probably not worth
+   * changing st_rate_t just because of this): */
   double in_rate = floor(effp->ininfo.rate / effp->globalinfo->speed + .5)
-    * effp->globalinfo->speed; /* FIXME: Make "speed" more accurate (st_rate_t is int) */
+    * effp->globalinfo->speed;
 
   if (effp->ininfo.channels != effp->outinfo.channels) {
     st_fail("number of Input and Output channels must be equal to use rabbit effect");
@@ -120,7 +124,7 @@ static int st_rabbit_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf
   r->data->data_in = (float *)xrealloc(r->data->data_in, newsamples * sizeof(float));
 
   for (i = 0 ; i < *isamp; i++)
-    r->data->data_in[r->samples + i] = ST_SAMPLE_TO_FLOAT_DWORD(ibuf[i], effp->clippedCount);
+    r->data->data_in[r->samples + i] = ST_SAMPLE_TO_FLOAT_DWORD(ibuf[i], effp->clips);
 
   r->samples = newsamples;
   r->data->input_frames = r->samples / channels;
@@ -168,7 +172,7 @@ static int st_rabbit_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 
   outsamps = min(r->data->output_frames_gen * channels - r->outsamp, *osamp);
   for (i = 0; i < outsamps; i++)
-    obuf[i] = ST_FLOAT_DWORD_TO_SAMPLE(r->data->data_out[r->outsamp + i], effp->clippedCount);
+    obuf[i] = ST_FLOAT_DWORD_TO_SAMPLE(r->data->data_out[r->outsamp + i], effp->clips);
   *osamp = (st_size_t)outsamps;
   r->outsamp += outsamps;
 

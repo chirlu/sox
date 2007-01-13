@@ -172,7 +172,7 @@ static st_size_t skel_write(ft_t ft, const st_sample_t *buf, st_size_t len)
     switch (ft->signal.encoding) {
     case ST_ENCODING_UNSIGNED:
       while (len--) {
-        len = st_writeb(ft, ST_SAMPLE_TO_UNSIGNED_BYTE(*buf++, ft->clippedCount));
+        len = st_writeb(ft, ST_SAMPLE_TO_UNSIGNED_BYTE(*buf++, ft->clips));
         if (len == 0)
           break;
       }

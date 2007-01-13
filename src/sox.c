@@ -271,7 +271,7 @@ int main(int argc, char **argv)
       if (fi->filetype != NULL && strcmp(fi->filetype, "null") != 0)
         st_warn("Ignoring \"-t %s\".", fi->filetype);
       fi->filetype = "null";
-      fi->filename = xstrdup(fi->filetype);
+      fi->filename = xstrdup("--");
     } else {
       if (optind >= argc || is_effect_name(argv[optind])) {
         if (memcmp(fi, &fi_none, sizeof(fi_none)) != 0) /* fopts but no file */
@@ -641,8 +641,13 @@ static int compare_input(ft_t ft1, ft_t ft2)
 static void report_file(ft_t f)
 {
   static char const * const no_yes[] = {"no", "yes"};
+  char const * type =
+    (strcmp(f->filename, "-") == 0 ||
+     strcmp(f->filename, "--") == 0 ||
+          f->h->flags & ST_FILE_NOFEXT)? 
+          f->h->names[0] : "\b ";
 
-  st_report("\n\n%s: %s\n"
+  st_report("\n\n%s: \"%s\" (%s%c\n"
     "Sample Size    : %s\n"
     "Sample Encoding: %s\n"
     "Channels       : %u\n"
@@ -651,8 +656,8 @@ static void report_file(ft_t f)
     "Reverse Nibbles: %s\n"
     "Reverse Bits   : %s\n"
     "Comment        : \"%s%c\n", /* Deliberate \n to get blank line */
-    f->mode == 'r'? "Input Filename " : "Output Filename",
-    f->filename, 
+    f->mode == 'r'? "Input File     " : "Output File    ",
+    f->filename, type, *type == '\b'? ' ' : ')',
     st_sizes_str[(unsigned char)f->signal.size],
     st_encodings_str[(unsigned char)f->signal.encoding],
     f->signal.channels,
@@ -707,13 +712,10 @@ static void process(void) {
     if (info->signal.channels == 0)
       info->signal.channels = file_desc[0]->signal.channels;
     
-    if (info->comment != NULL) {
-      if (*info->comment == '\0')
-        free(info->comment);
-      else
-        comment = info->comment;
-    } else
+    if (info->comment == NULL)
       comment = file_desc[0]->comment ? file_desc[0]->comment : "Processed by SoX";
+    else if (*info->comment != '\0')
+        comment = info->comment;
     
     /*
      * copy loop info, resizing appropriately
@@ -965,15 +967,15 @@ static void process(void) {
   stop_effects();
 
   for (f = 0; f < input_count; f++)
-    if (file_desc[f]->clippedCount != 0)
+    if (file_desc[f]->clips != 0)
       st_warn("%s: input clipped %u samples", file_desc[f]->filename,
-              file_desc[f]->clippedCount);
+              file_desc[f]->clips);
 
-  if (file_desc[f]->clippedCount != 0)
+  if (file_desc[f]->clips != 0)
     st_warn("%s: output clipped %u samples; decrease volume?",
             (file_desc[f]->h->flags & ST_FILE_NOFEXT)?
             file_desc[f]->h->names[0] : file_desc[f]->filename,
-            file_desc[f]->clippedCount);
+            file_desc[f]->clips);
 }
   
 static void parse_effects(int argc, char **argv)
@@ -1180,11 +1182,11 @@ static int start_effects(void)
   int e, ret = ST_SUCCESS;
 
   for (e = 1; e < neffects; e++) {
-    efftab[e].clippedCount = 0;
+    efftab[e].clips = 0;
     if ((ret = (*efftab[e].h->start)(&efftab[e])) == ST_EOF)
       break;
     if (efftabR[e].name) {
-      efftabR[e].clippedCount = 0;
+      efftabR[e].clips = 0;
       if ((ret = (*efftabR[e].h->start)(&efftabR[e])) != ST_SUCCESS)
         break;
     }
@@ -1514,18 +1516,18 @@ static void stop_effects(void)
   int e;
 
   for (e = 1; e < neffects; e++) {
-    st_size_t clippedCount;
+    st_size_t clips;
     (*efftab[e].h->stop)(&efftab[e]);
-    clippedCount = efftab[e].clippedCount;
+    clips = efftab[e].clips;
     (*efftab[e].h->delete)(&efftab[e]);
     if (efftabR[e].name) {
       (*efftabR[e].h->stop)(&efftabR[e]);
-      clippedCount += efftab[e].clippedCount;
+      clips += efftab[e].clips;
       (*efftabR[e].h->delete)(&efftabR[e]);
     }
-    if (clippedCount != 0)
+    if (clips != 0)
       st_warn("%s clipped %u samples; decrease volume?", efftab[e].name,
-              clippedCount);
+              clips);
   }
 }
 

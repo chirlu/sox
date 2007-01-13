@@ -224,7 +224,7 @@ static int st_reverb_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf
                         d_in +=
 reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsamples] * reverb->decay[j];
                 d_out = d_in * reverb->out_gain;
-                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clippedCount);
+                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 reverb->reverbbuf[i] = d_in;
                 i++;            /* XXX need a % maxsamples here ? */
@@ -256,10 +256,10 @@ static int st_reverb_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                         d_in += 
 reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsamples] * reverb->decay[j];
                 d_out = d_in * reverb->out_gain;
-                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clippedCount);
+                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clips);
                 obuf[done++] = out * 256;
                 reverb->reverbbuf[i] = d_in;
-                l = ST_24BIT_CLIP_COUNT((st_sample_t) d_in, effp->clippedCount);
+                l = ST_24BIT_CLIP_COUNT((st_sample_t) d_in, effp->clips);
                 reverb->pppl = reverb->ppl;
                 reverb->ppl = reverb->pl;
                 reverb->pl = l;

@@ -117,10 +117,10 @@ static st_size_t read(ft_t ft, st_sample_t * buffer, st_size_t len)
 
   for (n = 0; n < (len&~1) && st_readb(ft, &byte) == ST_SUCCESS; n += 2) {
     short word = adpcm_decode(byte >> 4, &state->encoder);
-    *buffer++ = ST_SIGNED_WORD_TO_SAMPLE(word, ft->clippedCount);
+    *buffer++ = ST_SIGNED_WORD_TO_SAMPLE(word, ft->clips);
 
     word = adpcm_decode(byte, &state->encoder);
-    *buffer++ = ST_SIGNED_WORD_TO_SAMPLE(word, ft->clippedCount);
+    *buffer++ = ST_SIGNED_WORD_TO_SAMPLE(word, ft->clips);
   }
   return n;
 }
@@ -166,7 +166,7 @@ static st_size_t write(ft_t ft, const st_sample_t * buffer, st_size_t length)
   short word;
 
   while (count < length) {
-    word = ST_SAMPLE_TO_SIGNED_WORD(*buffer++, ft->clippedCount);
+    word = ST_SAMPLE_TO_SIGNED_WORD(*buffer++, ft->clips);
 
     byte <<= 4;
     byte |= adpcm_encode(word, &state->encoder) & 0x0F;

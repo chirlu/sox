@@ -57,7 +57,7 @@ const char * const st_encodings_str[] = {
         "NONSENSE!",
 
         "u-law",
-        "a-law",
+        "A-law",
         "G72x-ADPCM",
         "MS-ADPCM",
         "IMA-ADPCM",

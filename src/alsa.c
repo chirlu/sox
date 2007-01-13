@@ -282,19 +282,19 @@ static int st_alsastartread(ft_t ft)
     return st_alsasetup(ft, SND_PCM_STREAM_CAPTURE);
 }
 
-static void st_ub_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap UNUSED, st_size_t * clippedCount UNUSED)
+static void st_ub_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap UNUSED, st_size_t * clips UNUSED)
 {
     while (len--)
         *buf1++ = ST_UNSIGNED_BYTE_TO_SAMPLE(*((unsigned char *)buf2++),);
 }
 
-static void st_sb_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap UNUSED, st_size_t * clippedCount UNUSED)
+static void st_sb_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap UNUSED, st_size_t * clips UNUSED)
 {
     while (len--)
         *buf1++ = ST_SIGNED_BYTE_TO_SAMPLE(*((int8_t *)buf2++),);
 }
 
-static void st_uw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount UNUSED)
+static void st_uw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clips UNUSED)
 {
     while (len--)
     {
@@ -307,7 +307,7 @@ static void st_uw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, 
     }
 }
 
-static void st_sw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clippedCount UNUSED)
+static void st_sw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clips UNUSED)
 {
     while (len--)
     {
@@ -381,7 +381,7 @@ static st_size_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
         }
         else
         {
-            read_buf(buf+(len*sizeof(st_sample_t)), alsa->buf, err, ft->signal.reverse_bytes, &ft->clippedCount);
+            read_buf(buf+(len*sizeof(st_sample_t)), alsa->buf, err, ft->signal.reverse_bytes, &ft->clips);
             len += err * ft->signal.channels;
         }
     }
@@ -405,23 +405,23 @@ static int st_alsastartwrite(ft_t ft)
     return st_alsasetup(ft, SND_PCM_STREAM_PLAYBACK);
 }
 
-static void st_ub_write_buf(char* buf1, st_sample_t const * buf2, st_size_t len, char swap UNUSED, st_size_t * clippedCount)
+static void st_ub_write_buf(char* buf1, st_sample_t const * buf2, st_size_t len, char swap UNUSED, st_size_t * clips)
 {
     while (len--)
-        *(uint8_t *)buf1++ = ST_SAMPLE_TO_UNSIGNED_BYTE(*buf2++, *clippedCount);
+        *(uint8_t *)buf1++ = ST_SAMPLE_TO_UNSIGNED_BYTE(*buf2++, *clips);
 }
 
-static void st_sb_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap UNUSED, st_size_t * clippedCount)
+static void st_sb_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap UNUSED, st_size_t * clips)
 {
     while (len--)
-        *(int8_t *)buf1++ = ST_SAMPLE_TO_SIGNED_BYTE(*buf2++, *clippedCount);
+        *(int8_t *)buf1++ = ST_SAMPLE_TO_SIGNED_BYTE(*buf2++, *clips);
 }
 
-static void st_uw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
+static void st_uw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clips)
 {
     while (len--)
     {
-        uint16_t datum = ST_SAMPLE_TO_UNSIGNED_WORD(*buf2++, *clippedCount);
+        uint16_t datum = ST_SAMPLE_TO_UNSIGNED_WORD(*buf2++, *clips);
         if (swap)
             datum = st_swapw(datum);
         *(uint16_t *)buf1 = datum;
@@ -429,11 +429,11 @@ static void st_uw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len,
     }
 }
 
-static void st_sw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clippedCount)
+static void st_sw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clips)
 {
     while (len--)
     {
-        int16_t datum = ST_SAMPLE_TO_SIGNED_WORD(*buf2++, *clippedCount);
+        int16_t datum = ST_SAMPLE_TO_SIGNED_WORD(*buf2++, *clips);
         if (swap)
             datum = st_swapw(datum);
         *(int16_t *)buf1 = datum;
@@ -486,7 +486,7 @@ static st_size_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
       st_size_t len;
       
       osamp = min(nsamp - done, alsa->buf_size / ft->signal.size);
-      write_buf(alsa->buf, buf, osamp, ft->signal.reverse_bytes, &ft->clippedCount);
+      write_buf(alsa->buf, buf, osamp, ft->signal.reverse_bytes, &ft->clips);
       buf += osamp;
 
       for (len = 0; len < osamp;) {

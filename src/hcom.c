@@ -280,7 +280,7 @@ static st_size_t st_hcomwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 
   for (i = 0; i < len; i++) {
     datum = *buf++;
-    p->data[p->pos++] = ST_SAMPLE_TO_UNSIGNED_BYTE(datum, ft->clippedCount);
+    p->data[p->pos++] = ST_SAMPLE_TO_UNSIGNED_BYTE(datum, ft->clips);
   }
 
   return len;

@@ -305,7 +305,7 @@ static int st_compand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obu
       if (l->delay_buf_size <= 0)
       {
         checkbuf = ibuf[chan]*(outv/v)*l->outgain;
-        ST_SAMPLE_CLIP_COUNT(checkbuf, effp->clippedCount);
+        ST_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
         obuf[odone] = checkbuf;
 
         idone++;
@@ -317,7 +317,7 @@ static int st_compand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obu
         {
             l->delay_buf_full=1; /* delay buffer is now definetly full */
             checkbuf = l->delay_buf[l->delay_buf_ptr]*(outv/v)*l->outgain;
-            ST_SAMPLE_CLIP_COUNT(checkbuf, effp->clippedCount);
+            ST_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
             obuf[odone] = checkbuf;
 
             odone++;

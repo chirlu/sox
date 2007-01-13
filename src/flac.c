@@ -425,9 +425,9 @@ static st_size_t st_format_write(ft_t const format, st_sample_t const * const sa
   {
     switch (encoder->bits_per_sample)
     {
-      case  8: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_BYTE(sampleBuffer[i], format->clippedCount); break;
-      case 16: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_WORD(sampleBuffer[i], format->clippedCount); break;
-      case 24: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_24BIT(sampleBuffer[i],format->clippedCount); break;
+      case  8: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_BYTE(sampleBuffer[i], format->clips); break;
+      case 16: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_WORD(sampleBuffer[i], format->clips); break;
+      case 24: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_24BIT(sampleBuffer[i],format->clips); break;
       case 32: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_DWORD(sampleBuffer[i],); break;
     }
   }

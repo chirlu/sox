@@ -64,8 +64,12 @@ void *xcalloc(size_t nmemb, size_t size)
  */
 char *xstrdup(const char *s)
 {
-  char *t = strdup(s);
+  char * t;
 
+  if (s == NULL)
+    return NULL;
+
+  t = strdup(s);
   if (t == NULL) {
     st_fail("out of memory");
     exit(2);

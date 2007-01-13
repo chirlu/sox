@@ -104,7 +104,7 @@ int st_rawstart(ft_t ft, bool default_rate, bool default_channels, st_encoding_t
       int ret = st_read ## size(ft, (uctype *)&datum); \
       if (ret != ST_SUCCESS) \
         break; \
-      *buf++ = ST_ ## cast ## _TO_SAMPLE(datum, ft->clippedCount); \
+      *buf++ = ST_ ## cast ## _TO_SAMPLE(datum, ft->clips); \
     } \
     return n; \
   }
@@ -128,7 +128,7 @@ READ_FUNC(df, su, double, double, FLOAT_DDWORD)
   { \
     st_size_t n; \
     for (n = 0; n < len; n++) { \
-      int ret = st_write ## size(ft, ST_SAMPLE_TO_ ## cast(*buf++, ft->clippedCount)); \
+      int ret = st_write ## size(ft, ST_SAMPLE_TO_ ## cast(*buf++, ft->clips)); \
       if (ret != ST_SUCCESS) \
         break; \
     } \

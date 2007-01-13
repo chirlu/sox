@@ -288,14 +288,14 @@ typedef struct st_format {
 } st_format_t;
 
 struct st_soundstream {
-    st_signalinfo_t signal;                 /* signal specifications */
+    st_signalinfo_t signal;               /* signal specifications */
     st_instrinfo_t  instr;                /* instrument specification */
     st_loopinfo_t   loops[ST_MAX_NLOOPS]; /* Looping specification */
     char            seekable;             /* can seek on this file */
     char            mode;                 /* read or write mode */
     /* Total samples per channel of file.  Zero if unknown. */
     st_size_t       length;    
-    st_size_t       clippedCount;         /* increment if clipping occurs */
+    st_size_t       clips;                /* increment if clipping occurs */
     char            *filename;            /* file name */
     char            *filetype;            /* type of file */
     char            *comment;             /* comment string */
@@ -305,7 +305,7 @@ struct st_soundstream {
     char            st_errstr[256];       /* Extend Failure text */
     const st_format_t *h;                 /* format struct for this file */
     /* The following is a portable trick to align this variable on
-     * an 8-byte bounder.  Once this is done, the buffer alloced
+     * an 8-byte boundery.  Once this is done, the buffer alloced
      * after it should be align on an 8-byte boundery as well.
      * This lets you cast any structure over the private area
      * without concerns of alignment.
@@ -321,7 +321,7 @@ struct st_soundstream {
 #define ST_FILE_SEEK    8  /* does file format support seeking? */
 #define ST_FILE_NOSTDIO 16 /* does not use stdio routines */
 #define ST_FILE_NOFEXT  32 /* does not use file extensions */
-/* These two for use by SoX: */
+/* These two for use by stlib clients: */
 #define ST_FILE_ENDIAN  64 /* is file format endian? */
 #define ST_FILE_ENDBIG  128/* if so, is it big endian? */
 /* These two for use within stlib: */
@@ -380,7 +380,7 @@ struct st_effect
     const st_effect_t *h;           /* effects driver */
     st_sample_t     *obuf;          /* output buffer */
     st_size_t       odone, olen;    /* consumed, total length */
-    st_size_t       clippedCount;   /* increment if clipping occurs */
+    st_size_t       clips;   /* increment if clipping occurs */
     /* The following is a portable trick to align this variable on
      * an 8-byte boundary.  Once this is done, the buffer alloced
      * after it should be align on an 8-byte boundery as well.

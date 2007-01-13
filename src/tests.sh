@@ -1,12 +1,12 @@
 #!/bin/sh
 #
-# SoX Regression Test script.
+# SoX Regression Test script: Lossless file conversion
 #
-# This script is just a quick sanity check of SoX on lossless format conversions.
 # TODO sndt sph
 
-# verbose options
+# Options:
 #verbose=-V
+#all=all
 
 getFormat () {
   formatText=$1; formatFlags=""
@@ -105,14 +105,18 @@ channels=3
 do_multichannel_formats
 
 channels=2 
-do_multichannel_formats
+if [ "$all" = "all" ]; then
+  do_multichannel_formats
+fi
 do_twochannel_formats
 format1=cdda         # 2-channel only
 convertToAndFrom sw u3 aiff
 
 channels=1 
-do_multichannel_formats
-do_twochannel_formats
+if [ "$all" = "all" ]; then
+  do_multichannel_formats
+  do_twochannel_formats
+fi
 do_singlechannel_formats
 
 ./sox -c 1 -- output.ub synth .01 vol .5
