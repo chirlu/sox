@@ -266,7 +266,6 @@ static int st_austartread(ft_t ft)
                 buf[hdr_size] = '\0';
 
                 ft->comment = buf;
-                st_report("Input file %s: Sun header info: %s", ft->filename, buf);
         }
         /* Needed for seeking */
         ft->length = data_size/ft->signal.size;

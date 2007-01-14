@@ -269,7 +269,7 @@ int main(int argc, char **argv)
 
     if (doopts(fi, argc, argv)) { /* is null file? */
       if (fi->filetype != NULL && strcmp(fi->filetype, "null") != 0)
-        st_warn("Ignoring \"-t %s\".", fi->filetype);
+        st_warn("Ignoring '-t %s'.", fi->filetype);
       fi->filetype = "null";
       fi->filename = xstrdup("--");
     } else {

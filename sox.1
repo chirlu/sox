@@ -25,9 +25,11 @@ SoX\*mSound eXchange\*mThe Swiss Army knife of audio manipulation
 \fBsox\fR [\fIglobal-options\fR] [\fIformat-options\fR] \fIinfile1\fR
     [[\fIformat-options\fR] \fIinfile2\fR] ... [\fIformat-options\fR] \fIoutfile\fR
     [\fIeffect\fR [\fIeffect-options\fR]] ...
+.SP
 \fBplay\fR [\fIglobal-options\fR] [\fIformat-options\fR] \fIinfile1\fR
     [[\fIformat-options\fR] \fIinfile2\fR] ... [\fIformat-options\fR]
     [\fIeffect\fR [\fIeffect-options\fR]] ...
+.SP
 \fBrec\fR [\fIglobal-options\fR] [\fIformat-options\fR] \fIoutfile\fR
     [\fIeffect\fR [\fIeffect-options\fR]] ...
 .fi
@@ -269,7 +271,7 @@ mixes together two audio files.
 .SP
 More examples can found thoughout this manual and in the
 separate
-.BR soxexam (1)
+.BR soxexam (7)
 manual.
 .SH FILE-NAMES
 The following may be used in certain circumstances in place of a normal
@@ -289,9 +291,29 @@ below) must also be given.
 .TP
 \fB\-\-\fR
 This can be used in place of an input or output file-name
-to specify that a `null' file is to be used.  See
-.B null
-below for further information.
+to specify that a `null' file is to be used.
+.SP
+Using a null file to input audio is equivalent to
+using a normal audio file that contains an infinite amount
+of silence, and as such is not generally useful unless used
+with an effect that specifies a finite time length
+(such as \fBtrim\fR or \fBsynth\fR).
+.SP
+Using a null file to output audio amounts to discarding the audio
+and is useful mainly with effects that produce information about the
+audio instead of affecting it (such as \fBnoiseprof\fR or \fBstat\fR).
+.SP
+The number of channels and the sampling rate associated with a null file
+are by default 2 and 44\*d1kHz respectively, but these can be overridden
+if necessary by using appropriate command-line format options.
+.SP
+One other use of \fB\-\-\fR is to use it in conjunction with
+.B \-V
+to display information from the audio file header
+without having to read any further into the file, e.g.
+.B sox \-V *.wav \-\-
+will display header information for each `WAV' file in the current
+directory.
 .TP
 \fB\-e\fR
 This is an alias of
@@ -583,10 +605,8 @@ The compression factor is interpreted differently for different
 compressing file formats.  See the description of the file formats that
 use this option for more information.
 .SH FILE TYPES
-File types can be set by the file-name extension, the
+File types can be set by the file-name extension or the
 .B -t
-option, or the
-.B -n
 option (see above for details).
 File types that can be determined
 by a file-name extension are listed with their names preceded by a dot.
@@ -772,38 +792,6 @@ libmad and libmp3lame libraries.  To
 see if there is support for Mp3 run \fBsox \-h\fR
 and look for it under the list of supported file formats as `mp3'.
 .SP
-.TP
-.B null
-Null file type.
-This is a special file type that can be used when normal
-file reading or writing is not needed to use a particular effect.
-It is selected by using the
-special file-name
-.B \-\-
-in place of an input or output file-name.
-.SP
-Using this file type to input audio is equivalent to
-using a normal audio file that contains an infinite amount
-of silence, and as such is not generally useful unless used
-with an effect that specifies a finite time length
-(such as \fBtrim\fR or \fBsynth\fR).
-.SP
-Using this type to output audio amounts to discarding the audio
-and is useful mainly with effects that produce information about the
-audio instead of affecting it (such as \fBnoiseprof\fR or \fBstat\fR).
-.SP
-The number of channels and the sampling rate associated with a null file
-are by default 2 and 44\*d1kHz respectively, but these can be overridden
-if necessary by using appropriate command-line format options.
-.SP
-One other use of the null file type is to use it in conjunction
-with
-.B \-V
-to display information from the audio file header
-without having to read any further into the file, e.g.
-.B sox \-V *.wav \-\-
-will display header information for each `WAV' file in the current
-directory.
 .TP
 \&\fB.ogg\fR, \fB.vorbis\fR
 Ogg Vorbis compressed audio.
@@ -1780,11 +1768,10 @@ Audio for each channel in a multi-channel audio file can be synthesised
 independently.
 .SP
 Though this effect is used to generate audio, an input file must
-still be specified.  This can be used to set the synthesised audio
+still be given.  This can be used to set the synthesised audio
 length, the number of channels, and the sampling rate, however since the
-input file's audio is not needed, the
-.B null
-file `\fB\-\-\fR' is usually used instead (and the length specified
+input file's audio is not needed, the null
+file `\fB\-\-\fR' is usually given instead (and the length specified
 as a parameter to \fBsynth\fR or by another given effect that can has an
 associated length).
 .SP
@@ -1811,10 +1798,9 @@ to create a more complex waveform:
 .SP
 Frequencies can also specified in terms of musical semitones relative to
 `middle A' (440Hz);  the following could be used to help tune
-a guitar's `low E' string (on a system that supports
-\fBalsa\fR):
+a guitar's `low E' string:
 .SP
-	sox \-\- \-t alsa default synth sine %\-5
+	play \-\- synth sine %\-5
 .SP
 The following produces a chord with a pipe-organ sound:
 .SP
@@ -1963,9 +1949,8 @@ command-line parameters, or 2 if an error occurs during file processing.
 Please report any bugs found in this version of SoX to the mailing list
 (sox-users@lists.sourceforge.net).
 .SH SEE ALSO
-.BR play (1),
-.BR rec (1),
-.BR soxexam (1)
+.BR soxexam (7),
+.BR libst (3)
 .SP
 The SoX web page at http://sox.sourceforge.net
 .SH LICENSE
