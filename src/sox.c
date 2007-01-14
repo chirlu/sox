@@ -54,6 +54,7 @@
 #include <io.h>
 #endif
 
+static bool play = false, rec = false;
 static enum {SOX_CONCAT, SOX_MIX, SOX_MERGE} combine_method = SOX_CONCAT;
 static st_size_t mixing_clips = 0;
 static bool repeatable_random = false;  /* Whether to invoke srand. */
@@ -240,7 +241,6 @@ static void set_device(file_info_t fi)
 int main(int argc, char **argv)
 {
   size_t i;
-  bool play = false, rec = false;
   file_info_t fi = NULL;
   struct file_info fi_none;
 
@@ -660,11 +660,8 @@ static int compare_input(ft_t ft1, ft_t ft2)
 static void report_file(ft_t f)
 {
   static char const * const no_yes[] = {"no", "yes"};
-  char const * type =
-    (strcmp(f->filename, "-") == 0 ||
-     strcmp(f->filename, "--") == 0 ||
-          f->h->flags & ST_FILE_DEVICE)? 
-          f->h->names[0] : "\b ";
+  char const * type = strcmp(f->filename, "-") == 0 ||
+    (f->h->flags & ST_FILE_DEVICE) ?  f->h->names[0] : "\b ";
 
   st_report("\n\n%s: \"%s\" (%s%c\n"
     "Sample Size    : %s\n"
@@ -1644,41 +1641,34 @@ static void usage(char const * message)
   printf("Version %s\n\n", st_version());
   if (message)
     fprintf(stderr, "Failed: %s\n\n", message);
-  printf("Usage summary: [gopts] [fopts] %s outfile [effect [effopts]...]\n\n",
-         combine_method == SOX_MIX ? "infile1 [fopts] infile2 [fopts]" : "infile [fopts]");
+  printf("Usage summary: [gopts] [[fopts] infile]... [fopts]%s [effect [effopts]]...\n\n",
+         play? "" : " outfile");
   printf(
-         "Special filenames:\n"
-         "\n"
+         "SPECIAL FILENAMES:\n"
          "-               stdin (infile) or stdout (outfile)\n"
          "--              use the null file handler; for use with e.g. synth & stat\n"
          "\n"
-         "Global options (gopts) (can be specified at any point before the first effect):\n"
-         "\n"
-         "--force         overwrite output file without first prompting\n"
+         "GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):\n"
          "-h, --help      display version number and usage information\n"
-         "--help-effect=name\n"
-         "                display usage of specified effect.  use 'all' to display all\n"
+         "--help-effect=name  display usage of specified effect; use 'all' to display all\n"
+         "--interactive   prompt to overwrite output file\n"
          "-m, --mix       mix multiple input files (instead of concatenating)\n"
          "-M, --merge     merge multiple input files (instead of concatenating)\n"
          "--octave        generate Octave commands to plot response of filter effect\n"
-         "--play          output to the default sound device; set if SoX run as `play'\n"
          "-q              run in quiet mode; opposite of -S\n"
-         "--rec           input from the default sound device; set if SoX run as `rec'\n"
+         "-R              use default random numbers (same on each run of SoX)\n"
          "-S              display progress while processing audio data\n"
          "--version       display version number of SoX and exit\n"
          "-V[level]       increment or set verbosity level (default 2); levels are:\n"
-         "\n"
          "                  1: failure messages\n"
          "                  2: warnings\n"
          "                  3: details of processing\n"
          "                  4-6: increasing levels of debug messages\n"
          "\n"
-         "Format options (fopts):\n"
-         "\n"
-         "Format options only need to be supplied for input files that are\n"
-         "headerless, otherwise they are obtained automatically.\n"
-         "Output files will default to the same format options as the input\n"
-         "file unless otherwise specified.\n"
+         "FORMAT OPTIONS (fopts):\n"
+         "Format options only need to be supplied for input files that are headerless,\n"
+         "otherwise they are obtained automatically.  Output files will default to the\n"
+         "same format options as the input file unless otherwise specified.\n"
          "\n"
          "-c channels     number of channels in audio data\n"
          "-C compression  compression factor for variably compressing output formats\n"
@@ -1695,7 +1685,6 @@ static void usage(char const * message)
          "-1/-2/-3/-4/-8  sample size in bytes\n"
          "-b/-w/-l/-d     aliases for -1/-2/-4/-8 (byte, word, long, double-long)\n"
          "-v volume       input file volume adjustment factor (real number)\n"
-         "-R              use default random numbers (same on each run of SoX)\n"
          "\n");
 
   printf("Supported file formats:");
