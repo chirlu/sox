@@ -49,6 +49,13 @@ The overall SoX processing chain can be summarised as follows:
 .SP
 .ce
 Input(s) \*(RA Combiner \*(RA Effects \*(RA Output
+.SP
+To get the most from SoX, it pays to be aware of some of the intricacies
+of audio file formats and of audio processing; so it best to read this
+manual through before using SoX for the first time; however, readers who
+are eager to see SoX in action right-away might want to start at the
+.B Examples
+section.
 .SS File Formats
 There are two types of audio file format that SoX can work with.  The
 first is `self-describing'; these formats include a header that
@@ -249,7 +256,7 @@ the number of channels to one (mono),
 and applies the \fBvol\fR and \fBdither\fR effects
 to the audio.
 .SP
-Further examples:
+Furthermore:
 .SP
 	sox \-r 8000 \-u \-b \-c 1 voice-memo.raw voice-memo.wav
 .SP
@@ -268,6 +275,24 @@ concatenates two audio files, and
 	sox \-m music.mp3 voice.wav mixed.flac
 .SP
 mixes together two audio files.
+.SP
+	play "01 - The Power Of Love.ogg" bass +3
+.SP
+plays an audio file (through the default sound device) whilst applying a
+bass boosting effect,
+.SP
+	play \-c4 \-\- \-c1 synth sin %0 sin %3 sin %7 sin %10 vol 0\*d7 avg fade q 0\*d1 1 0\*d1
+.SP
+plays a synthesised A-minor-seventh chord with a pipe-organ sound,
+.SP
+	rec test.aiff trim 0 10
+.SP
+records 10 seconds of audio using default parameters, and
+.SP
+	rec -c 2 take1.aiff
+.SP
+starts a stereo recording that will finish when the interrupt key (often
+Ctrl-C) is pressed.
 .SP
 More examples can found thoughout this manual and in the
 separate
@@ -1801,10 +1826,6 @@ Frequencies can also specified in terms of musical semitones relative to
 a guitar's `low E' string:
 .SP
 	play \-\- synth sine %\-5
-.SP
-The following produces a chord with a pipe-organ sound:
-.SP
-	sox \-c4 \-\- \-c1 Am7.au synth sin %0 sin %3 sin %7 sin %10 avg fade q 0\*d1 1 0\*d1
 .SP
 .B N.B.
 This effect generates audio at maximum volume, which means that there
