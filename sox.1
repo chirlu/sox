@@ -276,25 +276,25 @@ concatenates two audio files, and
 .SP
 mixes together two audio files.
 .SP
-	play "01 - The Power Of Love.ogg" bass +3
+	play \(dq01 \- The Power Of Love.ogg\(dq bass +3
 .SP
 plays an audio file (through the default sound device) whilst applying a
 bass boosting effect,
 .SP
-	play \-c4 \-\- \-c1 synth sin %0 sin %3 sin %7 sin %10 vol 0\*d7 avg fade q 0\*d1 1 0\*d1
+	play \-c 4 \-\- \-c 1 synth sin %\-12 sin %\-9 sin %\-5 sin %\-2 vol 0\*d7 avg fade q 0\*d1 1 0\*d1
 .SP
-plays a synthesised A-minor-seventh chord with a pipe-organ sound,
+plays a synthesised `A minor seventh' chord with a pipe-organ sound,
 .SP
 	rec test.aiff trim 0 10
 .SP
 records 10 seconds of audio using default parameters, and
 .SP
-	rec -c 2 take1.aiff
+	rec \-c 2 take1.aiff
 .SP
 starts a stereo recording that will finish when the interrupt key (often
 Ctrl-C) is pressed.
 .SP
-More examples can found thoughout this manual and in the
+Other examples can found thoughout this manual and in the
 separate
 .BR soxexam (7)
 manual.
@@ -1821,11 +1821,11 @@ to create a more complex waveform:
 .SP
 	sox \-\- output.au synth 0\*d5 sine 200\-500 synth 0\*d5 sine fmod 700\-100
 .SP
-Frequencies can also specified in terms of musical semitones relative to
-`middle A' (440Hz);  the following could be used to help tune
-a guitar's `low E' string:
+Frequencies can also be given as a number of musical semitones relative
+to `middle A' (440Hz) by prefixing a `%' character;  for example, the
+following could be used to help tune a guitar's `E' strings:
 .SP
-	play \-\- synth sine %\-5
+	play \-\- synth sine %\-17
 .SP
 .B N.B.
 This effect generates audio at maximum volume, which means that there
