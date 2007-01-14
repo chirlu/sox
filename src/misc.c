@@ -33,7 +33,7 @@ const char * const st_sizes_str[] = {
         "NONSENSE!",
         "bytes",
         "shorts",
-        "24 bits",
+        "tri-bytes",
         "longs",
         "NONSENSE",
         "NONSENSE",
@@ -43,14 +43,14 @@ const char * const st_sizes_str[] = {
 
 const char * const st_size_bits_str[] = {
         "NONSENSE!",
-        "8-bits",
-        "16-bits",
-        "24-bits",
-        "32-bits",
+        "8-bit",
+        "16-bit",
+        "24-bit",
+        "32-bit",
         "NONSENSE",
         "NONSENSE",
         "NONSENSE",
-        "64-bits"
+        "64-bit"
 };
 
 const char * const st_encodings_str[] = {

@@ -60,7 +60,7 @@ static st_size_t mixing_clips = 0;
 static bool repeatable_random = false;  /* Whether to invoke srand. */
 static bool interactive = false;
 static st_globalinfo_t globalinfo = {false, 1};
-static char uservolume = 0;
+static bool uservolume = false;
 
 static int user_abort = 0;
 static int success = 0;
@@ -90,7 +90,6 @@ static bool doopts(file_info_t fo, int, char **);
 static void usage(char const *) NORET;
 static void usage_effect(char *) NORET;
 static void process(void);
-static void print_input_status(int input);
 static void update_status(void);
 static void volumechange(st_sample_t * buf, st_ssize_t len, file_info_t fo);
 static void parse_effects(int argc, char **argv);
@@ -333,12 +332,12 @@ int main(int argc, char **argv)
             "\tuse 'vol' to set the output file volume");
   
   for (i = 0; i < input_count; i++) {
-    int j = input_count - 1 - i;
+    int j = input_count - 1 - i; /* Open in reverse order 'cos of rec (below) */
     file_info_t fi = file_opts[j];
-    /* When mixing audio, default to input side volume
-     * adjustments that will make sure no clipping will
-     * occur.  Users most likely won't be happy with
-     * this and will want to override it. */
+
+    /* When mixing audio, default to input side volume adjustments that will
+     * make sure no clipping will occur.  Users probably won't be happy with
+     * this, and will override it, possibly causing clipping to occur. */
     if (combine_method == SOX_MIX && !uservolume)
       file_opts[j]->volume = 1.0 / input_count;
       
@@ -392,9 +391,7 @@ int main(int argc, char **argv)
       fprintf(stderr, "Done.\n");
   }
 
-  success = 1; /* Signal success to cleanup so the output file is not
-                  removed. */
-  
+  success = 1; /* Signal success to cleanup so the output file isn't removed. */
   return 0;
 }
 
@@ -472,7 +469,7 @@ static bool doopts(file_info_t fi, int argc, char **argv)
       return true;  /* I.e. is null file. */
     }
     switch (getopt_long(argc, argv, getoptstr, long_options, &option_index)) {
-    case -1:        /* @ one of: file-name, effect name, or end of arg-list. */
+    case -1:        /* @ one of: file-name, effect name, end of arg-list. */
       return false; /* I.e. not null file. */
 
     case 0:         /* Long options with no short equivalent. */
@@ -560,7 +557,7 @@ static bool doopts(file_info_t fi, int argc, char **argv)
         st_fail("Volume value '%s' is not a number", optarg);
         exit(1);
       }
-      uservolume = 1;
+      uservolume = true;
       if (fi->volume < 0.0)
         st_report("Volume adjustment is negative; "
                   "this will result in a phase change");
@@ -606,25 +603,14 @@ static bool doopts(file_info_t fi, int argc, char **argv)
         fi->signal.size = ST_SIZE_BYTE;
       break;
 
-    case 'L':
-      fi->signal.reverse_bytes = ST_IS_BIGENDIAN;
-      break;
+    case 'L': fi->signal.reverse_bytes   = ST_IS_BIGENDIAN;    break;
+    case 'B': fi->signal.reverse_bytes   = ST_IS_LITTLEENDIAN; break;
+    case 'x': fi->signal.reverse_bytes   = ST_OPTION_YES;      break;
+    case 'X': fi->signal.reverse_bits    = ST_OPTION_YES;      break;
+    case 'N': fi->signal.reverse_nibbles = ST_OPTION_YES;      break;
 
-    case 'B':
-      fi->signal.reverse_bytes = ST_IS_LITTLEENDIAN;
-      break;
-
-    case 'x':
-      fi->signal.reverse_bytes = ST_OPTION_YES;
-      break;
-
-    case 'X':
-      fi->signal.reverse_bits = ST_OPTION_YES;
-      break;
-
-    case 'N':
-      fi->signal.reverse_nibbles = ST_OPTION_YES;
-      break;
+    case 'S': show_progress = ST_OPTION_YES; break;
+    case 'q': show_progress = ST_OPTION_NO;  break;
 
     case 'V':
       if (optarg == NULL)
@@ -636,55 +622,64 @@ static bool doopts(file_info_t fi, int argc, char **argv)
         exit(1);
       }
       break;
-
-    case 'S':
-      show_progress = ST_OPTION_YES;
-      break;
-
-    case 'q':
-      show_progress = ST_OPTION_NO;
-      break;
     }
   }
 }
 
-static int compare_input(ft_t ft1, ft_t ft2)
-{
-  if ((ft1->signal.rate == ft2->signal.rate) &&
-      (ft1->signal.channels == ft2->signal.channels))
-    return ST_SUCCESS;
-
-  return ST_EOF;
-}
-
-static void report_file(ft_t f)
+static void display_file_info(ft_t f, double volume, double speed, bool full)
 {
   static char const * const no_yes[] = {"no", "yes"};
-  char const * type = strcmp(f->filename, "-") == 0 ||
-    (f->h->flags & ST_FILE_DEVICE) ?  f->h->names[0] : "\b ";
 
-  st_report("\n\n%s: \"%s\" (%s%c\n"
-    "Sample Size    : %s\n"
+  fprintf(stderr, "\n%s: '%s'",
+    f->mode == 'r'? "Input File     " : "Output File    ", f->filename);
+  if (strcmp(f->filename, "-") == 0 || (f->h->flags & ST_FILE_DEVICE))
+    fprintf(stderr, " (%s)", f->h->names[0]);
+
+  fprintf(stderr, "\n"
+    "Sample Size    : %s (%s)\n"
     "Sample Encoding: %s\n"
     "Channels       : %u\n"
-    "Sample Rate    : %lu\n"
-    "Endian Type    : %s\n"
-    "Reverse Nibbles: %s\n"
-    "Reverse Bits   : %s\n"
-    "Comment        : \"%s%c\n", /* Deliberate \n to get blank line */
-    f->mode == 'r'? "Input File     " : "Output File    ",
-    f->filename, type, *type == '\b'? ' ' : ')',
-    st_sizes_str[(unsigned char)f->signal.size],
-    st_encodings_str[(unsigned char)f->signal.encoding],
+    "Sample Rate    : %u\n",
+    st_size_bits_str[f->signal.size], st_sizes_str[f->signal.size],
+    st_encodings_str[f->signal.encoding],
     f->signal.channels,
-    f->signal.rate,
-    f->signal.size == 1? "N/A" : 
-      f->signal.reverse_bytes != ST_IS_BIGENDIAN? "big" : "little",
-    no_yes[f->signal.reverse_nibbles],
-    no_yes[f->signal.reverse_bits],
-    f->comment? f->comment : "\bnone", f->comment? '"' : ' ');
+    (int)(f->signal.rate / speed + 0.5));
+
+  if (full)
+    fprintf(stderr,
+      "Endian Type    : %s\n"
+      "Reverse Nibbles: %s\n"
+      "Reverse Bits   : %s\n",
+      f->signal.size == 1? "N/A" : 
+        f->signal.reverse_bytes != ST_IS_BIGENDIAN? "big" : "little",
+      no_yes[f->signal.reverse_nibbles],
+      no_yes[f->signal.reverse_bits]);
+
+  if (volume != HUGE_VAL && volume != 1)
+    fprintf(stderr, "Level adjust   : %g (linear gain)\n" , volume);
+
+  if (!(f->h->flags & ST_FILE_DEVICE) && f->comment) {
+    if (strchr(f->comment, '\n'))
+      fprintf(stderr, "Comments       : \n%s\n", f->comment);
+    else
+      fprintf(stderr, "Comment        : '%s'\n", f->comment);
+  }
+  fprintf(stderr, "\n");
 }
 
+static void report_file_info(ft_t f, double volume)
+{
+  if (st_output_verbosity_level > 2)
+    display_file_info(f, volume, 1, true);
+}
+
+static void show_file_progress(int f)
+{
+  if (show_progress && (st_output_verbosity_level < 3 ||
+                        (combine_method == SOX_CONCAT && input_count > 1)))
+    display_file_info(file_desc[f], 1, globalinfo.speed, false);
+}
+ 
 /*
  * Process input file -> effect table -> output file one buffer at a time
  */
@@ -696,21 +691,17 @@ static void process(void) {
   st_ssize_t ilen[MAX_INPUT_FILES];
   st_sample_t *ibuf[MAX_INPUT_FILES];
 
-  for (f = 0; f < input_count; f++) {
-    report_file(file_desc[f]);
-    if (file_opts[f]->volume != HUGE_VAL && file_opts[f]->volume != 1)
-      st_report("%s input level %g",
-              file_desc[f]->filename, file_opts[f]->volume);
-  }
-
-  for (f = 0; f < input_count; f++) {
+  for (f = 0; f < input_count; f++) { /* Report all inputs first, then check */
+    report_file_info(file_desc[f], file_opts[f]->volume);
     if (combine_method == SOX_MERGE)
       file_desc[f]->signal.channels *= input_count;
-    if (f && compare_input(file_desc[0], file_desc[f]) != ST_SUCCESS) {
+  }
+  for (f = 1; f < input_count; f++)
+    if (file_desc[0]->signal.rate     != file_desc[f]->signal.rate ||
+        file_desc[0]->signal.channels != file_desc[f]->signal.channels) {
       st_fail("Input files must have the same rate and # of channels");
       exit(1);
     }
-  }
   
   {
     st_loopinfo_t loops[ST_MAX_NLOOPS];
@@ -768,7 +759,7 @@ static void process(void) {
       show_progress = (ofile->h->flags & ST_FILE_DEVICE) != 0 &&
                       (ofile->h->flags & ST_FILE_PHONY) == 0;
 
-    report_file(ofile);
+    report_file_info(ofile, 1);
   }
   
   /* Adjust the input rate for the speed effect */
@@ -800,16 +791,12 @@ static void process(void) {
         file_desc[f]->signal.channels /= input_count;
       }
       ibuf[f] = (st_sample_t *)xmalloc(alloc_size);
-      
-      if (show_progress)
-        print_input_status(f);
+      show_file_progress(f);
     }
   } else {
     current_input = 0;
     input_samples = file_desc[current_input]->length;
-        
-    if (show_progress)
-      print_input_status(current_input);
+    show_file_progress(current_input);
   }
       
   /*
@@ -863,10 +850,7 @@ static void process(void) {
             current_input++;
             input_samples = file_desc[current_input]->length;
             read_samples = 0;
-                    
-            if (show_progress)
-              print_input_status(current_input);
-            
+            show_file_progress(current_input);
             continue;
           }
         }
@@ -897,13 +881,8 @@ static void process(void) {
             efftab[0].olen = ilen[f];
             
         for (s = 0; s < efftab[0].olen; s++) {
-          /* Mix data together by summing samples together.
-           * It is assumed that input side volume adjustments
-           * will take care of any possible overflow.
-           * By default, SoX sets the volume adjustment
-           * to 1/input_count but the user can override this.
-           * They probably will and some clipping will probably
-           * occur because of this. */
+          /* Mix audio by summing samples together. 
+           * Input side volume changes are performed above. */
           for (f = 0; f < input_count; f++) {
             if (f == 0)
               efftab[0].obuf[s] =
@@ -1545,24 +1524,6 @@ static void stop_effects(void)
   }
 }
 
-static void print_input_status(int input)
-{
-  if (st_output_verbosity_level > 2)
-    return;
-  fprintf(stderr, "\nInput Filename : %s\n", file_desc[input]->filename);
-  fprintf(stderr, "Sample Size    : %s\n", 
-          st_size_bits_str[file_desc[input]->signal.size]);
-  fprintf(stderr, "Sample Encoding: %s\n", 
-          st_encodings_str[file_desc[input]->signal.encoding]);
-  fprintf(stderr, "Channels       : %d\n", file_desc[input]->signal.channels);
-  fprintf(stderr, "Sample Rate    : %d\n",
-          (int)(file_desc[input]->signal.rate / globalinfo.speed + 0.5));
-
-  if (file_desc[input]->comment && *file_desc[input]->comment)
-    fprintf(stderr, "Comments       :\n%s\n", file_desc[input]->comment);
-  fprintf(stderr, "\n");
-}
- 
 static void update_status(void)
 {
   int read_min, left_min, in_min;
@@ -1638,7 +1599,7 @@ static void usage(char const * message)
   const st_effect_t *e;
 
   printf("%s: ", myname);
-  printf("Version %s\n\n", st_version());
+  printf("SoX Version %s\n\n", st_version());
   if (message)
     fprintf(stderr, "Failed: %s\n\n", message);
   printf("Usage summary: [gopts] [[fopts] infile]... [fopts]%s [effect [effopts]]...\n\n",

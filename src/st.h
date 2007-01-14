@@ -163,7 +163,7 @@ typedef int32_t st_ssize_t;
 #define ST_SSIZE_MAX 0x7fffffffL
 #define ST_SSIZE_MIN (-ST_SSIZE_MAX - 1L)
 
-typedef uint32_t st_rate_t;
+typedef unsigned st_rate_t;
 /* Warning, this is a MAX value used in the library.  Each format and
  * effect may have its own limitations of rate.
  */
