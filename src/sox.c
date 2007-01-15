@@ -1635,7 +1635,7 @@ static void usage(char const * message)
          "-C compression  compression factor for variably compressing output formats\n"
          "--comment=text  Specify comment text for the output file\n"
          "--comment-file=filename  file containing comment text for the output file\n"
-         "--lua-script=filename  file containing script for Lua pseudo-file\n"
+         "--lua-script=filename  file containing script for a `-t lua' format\n"
          "-r rate         sample rate of audio\n"
          "-t filetype     file type of audio\n"
          "-x/-N/-X        invert auto-detected endianness/nibble-order/bit-order of data\n"
