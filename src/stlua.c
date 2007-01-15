@@ -25,11 +25,12 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+
 /* st_sample_t arrays */
 
 static const char *handle = "st_sample_t array";
 
-int st_lua_newarr(lua_State *L, st_sample_t_array_t arr)
+int st_lua_pusharray(lua_State *L, st_sample_t_array_t arr)
 {
   lua_newuserdata(L, sizeof(st_sample_t_array_t));
   *(st_sample_t_array_t *)lua_touserdata(L, -1) = arr;
@@ -109,7 +110,8 @@ static void *lua_alloc(void *ud UNUSED, void *ptr, size_t osize UNUSED, size_t n
     return xrealloc(ptr, nsize);
 }
 
-void *st_lua_new(void)
+/* Create a Lua state and set it up for libst use */
+lua_State *st_lua_new(void)
 {
   lua_State *L;
 
@@ -126,5 +128,19 @@ void *st_lua_new(void)
   createmeta(L, handle);
   luaL_register(L, NULL, meta);
 
+  /* Stop file handles being GCed */
+  luaL_getmetatable(L, LUA_FILEHANDLE);
+  lua_pushnil(L);
+  lua_setfield(L, -2, "__gc");
+
   return L;
+}
+
+/* Push a FILE * as a Lua file handle */
+void st_lua_pushfile(lua_State *L, FILE *fp)
+{
+  FILE **pf = lua_newuserdata(L, sizeof *pf);
+  *pf = fp;
+  luaL_getmetatable(L, LUA_FILEHANDLE);
+  lua_setmetatable(L, -2);
 }

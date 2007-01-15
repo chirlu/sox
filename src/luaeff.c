@@ -111,8 +111,8 @@ static int lua_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
   outarr.size = *osamp;
   outarr.data = obuf;
 
-  st_lua_newarr(lua->L, inarr);
-  st_lua_newarr(lua->L, outarr);
+  st_lua_pusharray(lua->L, inarr);
+  st_lua_pusharray(lua->L, outarr);
   if ((ret = lua_pcall(lua->L, 2, 0, 0)) != 0)
     st_fail("error in Lua script: %d", ret);
 

@@ -265,8 +265,9 @@ typedef struct {
   st_size_t size;
   st_sample_t *data;
 } st_sample_t_array_t;
-int st_lua_newarr(lua_State *L, st_sample_t_array_t arr);
-void *st_lua_new(void);
+int st_lua_pusharray(lua_State *L, st_sample_t_array_t arr);
+lua_State *st_lua_new(void);
+void st_lua_pushfile(lua_State *L, FILE *fp);
 
 
 /*=============================================================================

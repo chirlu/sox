@@ -61,8 +61,26 @@ static int lua_start(ft_t ft)
     st_fail("cannot load Lua script %s: error %d", ft->signal.lua_script, ret);
     return ST_EOF;
   }
+  /* FIXME: Store script function for reuse! */
 
   return ST_SUCCESS;
+}
+
+/*
+ * Call Lua script with (action, fp, array), and return return value
+ * (an st_size_t) to the caller.
+ */
+static st_size_t lua_callscript(lua_State *L)
+{
+  st_size_t done;
+  int ret;
+
+  if ((ret = lua_pcall(L, 3, 1, 0)) != 0)
+    st_fail("error in Lua script: %d", ret);
+  done = lua_tointeger(L, -1);
+  lua_pop(L, 1);
+
+  return done;
 }
 
 /*
@@ -72,21 +90,16 @@ static int lua_start(ft_t ft)
 static st_size_t lua_read(ft_t ft, st_sample_t *buf, st_size_t len)
 {
   lua_t lua = (lua_t)ft->priv;
-  st_size_t done;
-  int ret;
   st_sample_t_array_t inarr;
 
   inarr.size = len;
   inarr.data = buf;
 
   lua_pushstring(lua->L, "read");
-  st_lua_newarr(lua->L, inarr);
-  if ((ret = lua_pcall(lua->L, 2, 1, 0)) != 0)
-    st_fail("error in Lua script: %d", ret);
-  done = lua_tointeger(lua->L, -1);
-  lua_pop(lua->L, 1);
+  st_lua_pushfile(lua->L, ft->fp);
+  st_lua_pusharray(lua->L, inarr);
 
-  return done;
+  return lua_callscript(lua->L);
 }
 
 /*
@@ -96,18 +109,16 @@ static st_size_t lua_read(ft_t ft, st_sample_t *buf, st_size_t len)
 static st_size_t lua_write(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
   lua_t lua = (lua_t)ft->priv;
-  int ret;
   st_sample_t_array_t outarr;
 
   outarr.size = len;
   outarr.data = (st_sample_t *)buf;
 
   lua_pushstring(lua->L, "write");
-  st_lua_newarr(lua->L, outarr);
-  if ((ret = lua_pcall(lua->L, 2, 1, 0)) != 0)
-    st_fail("error in Lua script: %d", ret);
+  st_lua_pushfile(lua->L, ft->fp);
+  st_lua_pusharray(lua->L, outarr);
 
-  return len;
+  return lua_callscript(lua->L);
 }
 
 /*
@@ -122,18 +133,16 @@ static int lua_stop(ft_t ft)
   return ST_SUCCESS;
 }
 
+/* Seek relative to current position. */
 static int lua_seek(ft_t ft, st_size_t offset)
 {
   lua_t lua = (lua_t)ft->priv;
-  int ret;
 
   lua_pushstring(lua->L, "seek");
+  st_lua_pushfile(lua->L, ft->fp);
   lua_pushinteger(lua->L, offset);
-  if ((ret = lua_pcall(lua->L, 2, 1, 0)) != 0)
-    st_fail("error in Lua script: %d", ret);
-  /* Seek relative to current position. */
 
-  return ret;
+  return lua_callscript(lua->L);
 }
 
 /* Format file suffixes */
