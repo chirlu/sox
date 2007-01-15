@@ -72,8 +72,8 @@ sox-12.18.3
   o Replacement flanger effect; also fixes [1393245].  (robs)
   o Added ability to merge e.g. 2 mono files to 1 stereo file
     [FR# 1297076].  (robs)
-  o Added Lua effect, which allows arbitrary processing by a Lua script.
-    (Reuben Thomas)
+  o Added Lua scripting, allowing effects and format to be implemented
+    in Lua (http://www.lua.org/).  (Reuben Thomas)
   o Several effects are now optimised out in situations where they need
     do nothing, e.g. changing rate from 8000 to 8000, or changing volume
     by 0dB [Bug# 1395781].  (robs)
@@ -89,6 +89,8 @@ sox-12.18.3
   o Fix [1627972] AIFF read bug when MARK chunk present.  (Richard Fuller)
   o Fix [1160154] VOX to WAV conversion problem.  (robs)
   o New .ima file format for raw IMA ADPCM.  (robs)
+  o Build system overhaul to use the full set of GNU autotools.
+    (Reuben Thomas)
 
 sox-12.18.2
 -----------
@@ -434,7 +436,7 @@ sox-12.17.3
   o Changed Floats into a type of encoding instead of a size of audio data.
   o Put a flush at the end of OSS driver so that no old data would be
     left in internal buffers after changing audio format parameters.
-  o Fixed problem were play script wasn't installed correctly if you
+  o Fixed problem where play script wasn't installed correctly if you
     build from another directory (pointed out by Mike Castle).
   o Made GSM support internal to libst (no external library required).
   o Change configure script to enable ulaw/alaw lookup tables and GSM
