@@ -40,8 +40,9 @@ all: sox play rec
 libgsm/libgsm.la:
 	$(MAKE) -C libgsm
 
-play rec: sox
-	$(RM) $@ && $(LN_S) sox $@
+play rec: sox .libs/lt-sox
+	ln -sf .libs/lt-sox rec
+	ln -sf .libs/lt-sox play
 
 install-exec-hook:
 	cd $(DESTDIR)$(bindir) && $(RM) play && $(LN_S) sox play
