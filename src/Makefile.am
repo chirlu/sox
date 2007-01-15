@@ -40,7 +40,8 @@ all: sox play rec
 libgsm/libgsm.la:
 	$(MAKE) -C libgsm
 
-play rec: sox .libs/lt-sox
+play rec: sox
+	sox > /dev/null 2>&1
 	ln -sf .libs/lt-sox rec
 	ln -sf .libs/lt-sox play
 
