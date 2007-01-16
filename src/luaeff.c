@@ -19,17 +19,16 @@
  * USA.  */
 
  
-/* TODO: If efficiency is a problem, move the call of the Lua script
-   into the flow phase. Instrument the Lua environment so that scripts
-   can still be written naively: reading beyond the end of the input
-   array yields to read more data, and writing output similarly. In
-   order not to need nonetheless to buffer all input and output until
-   finished, need low-water-marks that the script can update to signal
-   that it has finished reading and writing respectively.
-   Alternatively, assume that each location can only be read/written
-   once. */
+/* TODO: To increase speed, move the call of the Lua script into the
+   flow phase. Instrument the Lua environment so that scripts can
+   still be written naively: have script called as a coroutine, and
+   make reading beyond the end of the input array yields to read more
+   data, and writing output similarly. In order not to need
+   nonetheless to buffer all input and output until finished, add
+   low-water-marks that the script can update to signal that it has
+   finished reading and writing respectively. */
 
- 
+
 #include "st_i.h"
 
 #include <string.h>
@@ -38,9 +37,12 @@
 
 /* Private data for effect */
 typedef struct luaeff {
-  char *script;                   /* Script filename */
   lua_State *L;                 /* Lua state */
-  st_size_t nsamp;              /* Number of samples in input */
+  char *script;                 /* Script filename */
+  bool gotdata;                 /* Script has been run */
+  st_size_t isamp;              /* Number of samples in input */
+  st_size_t osamp;              /* Number of samples in output */
+  st_size_t ostart;             /* Next sample to output */
   st_sample_t *data;            /* Input data */
 } *luaeff_t;
 
@@ -88,9 +90,9 @@ static int lua_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf UNUSE
 {
   luaeff_t lua = (luaeff_t)effp->priv;
 
-  lua->data = (st_sample_t *)xrealloc(lua->data, (lua->nsamp + *isamp) * sizeof(st_sample_t));
-  memcpy(lua->data + lua->nsamp, ibuf, *isamp * sizeof(st_sample_t));
-  lua->nsamp += *isamp;
+  lua->data = (st_sample_t *)xrealloc(lua->data, (lua->isamp + *isamp) * sizeof(st_sample_t));
+  memcpy(lua->data + lua->isamp, ibuf, *isamp * sizeof(st_sample_t));
+  lua->isamp += *isamp;
 
   *osamp = 0;           /* Signal that we didn't produce any output */
 
@@ -103,21 +105,43 @@ static int lua_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf UNUSE
 static int lua_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
   luaeff_t lua = (luaeff_t)effp->priv;
-  int ret;
-  st_sample_t_array_t inarr, outarr;
+  int ret, i;
+  st_sample_t_array_t inarr;
 
-  inarr.size = lua->nsamp;
-  inarr.data = lua->data;
-  outarr.size = *osamp;
-  outarr.data = obuf;
+  if (!lua->gotdata) {
+    inarr.size = lua->isamp;
+    inarr.data = lua->data;
+    st_lua_pusharray(lua->L, inarr);
+    
+    if ((ret = lua_pcall(lua->L, 1, 1, 0)) != 0) {
+      st_fail("error in Lua script: %d", ret);
+      return ST_EOF;
+    } else if (lua_type(lua->L, -1) != LUA_TTABLE) {
+    st_fail("Lua script did not return an array");
+    return ST_EOF;
+    }
+    lua->gotdata = true;
+    lua->osamp = lua_objlen(lua->L, -1);
+    lua->ostart = 0;
+  }
 
-  st_lua_pusharray(lua->L, inarr);
-  st_lua_pusharray(lua->L, outarr);
-  if ((ret = lua_pcall(lua->L, 2, 0, 0)) != 0)
-    st_fail("error in Lua script: %d", ret);
+  *osamp = min(*osamp, lua->osamp);
+  if (*osamp > INT_MAX) {
+    st_fail("output buffer size %d too large for Lua", *osamp);
+    return ST_EOF;
+  }
+  for (i = 0; i < (int)*osamp; i++) {
+    lua_rawgeti(lua->L, -1, i);
+    obuf[i] = lua_tointeger(lua->L, -1);
+    lua_pop(lua->L, 1);
+  }
+  lua->osamp -= *osamp;
+  lua->ostart += *osamp;
 
-  *osamp = 0;
-  return ST_EOF;
+  if (lua->osamp > 0)
+    return ST_SUCCESS;
+  else
+    return ST_EOF;
 }
 
 /*
@@ -151,7 +175,7 @@ static int lua_delete(eff_t effp)
  */
 static st_effect_t st_lua_effect = {
   "lua",
-  "Usage: lua script [options]",
+  "Usage: lua lua-script [option...]",
   ST_EFF_MCHAN,
   lua_getopts,
   st_effect_nothing,
