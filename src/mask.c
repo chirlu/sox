@@ -48,6 +48,32 @@ static int st_mask_getopts(eff_t effp, int n, char * * argv)
   return ST_SUCCESS;
 }
 
+static int st_mask_start(eff_t effp)
+{
+  mask_t mask = (mask_t) effp->priv;
+
+  if (effp->outinfo.encoding == ST_ENCODING_ULAW ||
+      effp->outinfo.encoding == ST_ENCODING_ALAW) {
+    mask->amount *= 16;
+    return ST_SUCCESS;
+  } else if (effp->outinfo.size == ST_SIZE_BYTE) {
+    mask->amount *= 256;
+    return ST_SUCCESS;
+  } else if (effp->outinfo.size == ST_SIZE_WORD)
+    return ST_SUCCESS;
+  else if (effp->outinfo.size == ST_SIZE_24BIT) {
+    mask->amount /= 256;
+    return ST_SUCCESS;
+  } else if (effp->outinfo.size == ST_SIZE_DDWORD) {
+    mask->amount /= 16384;
+    return ST_SUCCESS;
+  }
+
+  st_fail("Invalid size %d", effp->outinfo.size);
+  return ST_EOF;
+}
+
+/* FIXME: Scale noise more sensibly for sizes >= 24 bits */
 static int st_mask_flow(eff_t effp, const st_sample_t * ibuf,
     st_sample_t * obuf, st_size_t * isamp, st_size_t * osamp)
 {
@@ -85,7 +111,7 @@ static st_effect_t st_dither_effect = {
   "Usage: dither [amount]",
   ST_EFF_MCHAN,
   st_mask_getopts,
-  st_effect_nothing,
+  st_mask_start,
   st_mask_flow,
   st_effect_nothing_drain,
   st_effect_nothing,
