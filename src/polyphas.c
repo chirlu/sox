@@ -54,7 +54,11 @@ typedef struct polyphase {
   int win_type;
   int win_width;
   Float cutoff;
+  int m1[MF], m2[MF], b1[MF], b2[MF]; /* arrays used in optimize_factors */
 } *poly_t;
+
+assert_static(sizeof(struct polyphase) <= ST_MAX_EFFECT_PRIVSIZE, 
+              /* else */ skeleff_PRIVSIZE_too_big);
 
 /*
  * Process options
@@ -185,18 +189,16 @@ static int permute(int *m, int *l, int ct, int ct1, size_t amalg)
   return (p-m);
 }
 
-static int optimize_factors(int numer, int denom, int *l1, int *l2)
+static int optimize_factors(poly_t rate, int numer, int denom, int *l1, int *l2)
 {
   int f_min,c_min,u_min,ct1,ct2;
   size_t amalg;
   int k;
-  static int m1[MF],m2[MF];
-  static int b1[MF],b2[MF];
 
-  memset(m1,0,sizeof(int)*MF);
-  memset(m2,0,sizeof(int)*MF);
-  memset(b1,0,sizeof(int)*MF);
-  memset(b2,0,sizeof(int)*MF);
+  memset(rate->m1,0,sizeof(int)*MF);
+  memset(rate->m2,0,sizeof(int)*MF);
+  memset(rate->b1,0,sizeof(int)*MF);
+  memset(rate->b2,0,sizeof(int)*MF);
 
   f_min = numer; if (f_min>denom) f_min = denom;
   c_min = 1<<30;
@@ -213,16 +215,16 @@ static int optimize_factors(int numer, int denom, int *l1, int *l2)
       f = denom;
       u = min(ct1,ct2) + 1;
       /*st_debug("pfacts(%d): ", numer);*/
-      u1 = permute(m1,l1,ct1,u,amalg);
+      u1 = permute(rate->m1,l1,ct1,u,amalg);
       /*st_debug("pfacts(%d): ", denom);*/
-      u2 = permute(m2,l2,ct2,u,amalg);
+      u2 = permute(rate->m2,l2,ct2,u,amalg);
       u = max(u1,u2);
       for (j=0; j<u; j++) {
-        if (j>=u1) m1[j]=1;
-        if (j>=u2) m2[j]=1;
-        f = (f * m1[j])/m2[j];
+        if (j>=u1) rate->m1[j]=1;
+        if (j>=u2) rate->m2[j]=1;
+        f = (f * rate->m1[j])/rate->m2[j];
         if (f < f_min) goto fail;
-        cost += f + m1[j]*m2[j];
+        cost += f + rate->m1[j]*rate->m2[j];
       }
       if (c_min>cost) {
         c_min = cost;
@@ -230,11 +232,11 @@ static int optimize_factors(int numer, int denom, int *l1, int *l2)
         if (st_output_verbosity_level >= 4) {
           st_debug("c_min %d, [%d-%d]:",c_min,numer,denom);
           for (j=0; j<u; j++)
-            st_debug(" (%d,%d)",m1[j],m2[j]);
+            st_debug(" (%d,%d)",rate->m1[j],rate->m2[j]);
           st_debug("");
         }
-        memcpy(b1,m1,u*sizeof(int));
-        memcpy(b2,m2,u*sizeof(int));
+        memcpy(rate->b1,rate->m1,u*sizeof(int));
+        memcpy(rate->b2,rate->m2,u*sizeof(int));
       }
      fail:
         ;;
@@ -242,8 +244,8 @@ static int optimize_factors(int numer, int denom, int *l1, int *l2)
     if (u_min) break;
   }
   if (u_min) {
-    memcpy(l1,b1,u_min*sizeof(int));
-    memcpy(l2,b2,u_min*sizeof(int));
+    memcpy(l1,rate->b1,u_min*sizeof(int));
+    memcpy(l2,rate->b2,u_min*sizeof(int));
   }
   l1[u_min] = 0;
   l2[u_min] = 0;
@@ -363,7 +365,7 @@ static int st_poly_start(eff_t effp)
     }
 
     /* Find the prime factors of inskip and outskip */
-    total = optimize_factors(rate->inskip, rate->outskip, l1, l2);
+    total = optimize_factors(rate, rate->inskip, rate->outskip, l1, l2);
     rate->total = total;
     /* l1 and l2 are now lists of the up/down factors for conversion */
 
