@@ -271,7 +271,7 @@ int main(int argc, char **argv)
       if (fi->filetype != NULL && strcmp(fi->filetype, "null") != 0)
         st_warn("Ignoring '-t %s'.", fi->filetype);
       fi->filetype = "null";
-      fi->filename = xstrdup("--");
+      fi->filename = xstrdup("-n");
     } else {
       if (optind >= argc || is_effect_name(argv[optind]))
         break;
@@ -428,7 +428,7 @@ static char * read_comment_file(char const * const filename)
   return result;
 }
 
-static char *getoptstr = "+abc:defghilmoqr:st:uv:wxABC:DLMNRSUV::X12348";
+static char *getoptstr = "+abc:defghilmnoqr:st:uv:wxABC:DLMNRSUV::X12348";
 
 static struct option long_options[] =
   {
@@ -464,10 +464,6 @@ static bool doopts(file_info_t fi, int argc, char **argv)
     int i;          /* Needed since scanf %u allows negative numbers :( */
     char dummy;     /* To check for extraneous chars in optarg. */
 
-    if (optind < argc && strcmp(argv[optind], "--") == 0) {
-      ++optind;
-      return true;  /* I.e. is null file. */
-    }
     switch (getopt_long(argc, argv, getoptstr, long_options, &option_index)) {
     case -1:        /* @ one of: file-name, effect name, end of arg-list. */
       return false; /* I.e. not null file. */
@@ -530,7 +526,7 @@ static bool doopts(file_info_t fi, int argc, char **argv)
       repeatable_random = true;
       break;
 
-    case 'e': /* Deprecated in favour of -- */
+    case 'e': case 'n':
       return true;  /* I.e. is null file. */
       break;
 
@@ -1607,7 +1603,7 @@ static void usage(char const *message)
   printf(
          "SPECIAL FILENAMES:\n"
          "-               stdin (infile) or stdout (outfile)\n"
-         "--              use the null file handler; for use with e.g. synth & stat\n"
+         "-n              use the null file handler; for use with e.g. synth & stat\n"
          "\n"
          "GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):\n"
          "-h, --help      display version number and usage information\n"

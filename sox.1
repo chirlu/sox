@@ -285,7 +285,7 @@ mixes together two audio files.
 plays an audio file (through the default sound device) whilst applying a
 bass boosting effect,
 .SP
-	play \-c 4 \-\- \-c 1 synth sin %\-12 sin %\-9 sin %\-5 sin %\-2 vol 0\*d7 avg fade q 0\*d1 1 0\*d1
+	play \-c 4 \-n \-c 1 synth sin %\-12 sin %\-9 sin %\-5 sin %\-2 vol 0\*d7 avg fade q 0\*d1 1 0\*d1
 .SP
 plays a synthesised `A minor seventh' chord with a pipe-organ sound,
 .SP
@@ -318,7 +318,7 @@ Note that when using this option, the file-type (see
 .B \-t
 below) must also be given.
 .TP
-\fB\-\-\fR
+\fB\-n\fR
 This can be used in place of an input or output filename
 to specify that a `null' file is to be used.
 .SP
@@ -336,17 +336,17 @@ The number of channels and the sampling rate associated with a null file
 are by default 2 and 44\*d1kHz respectively, but these can be overridden
 if necessary by using appropriate command-line format options.
 .SP
-One other use of \fB\-\-\fR is to use it in conjunction with
+One other use of \fB\-n\fR is to use it in conjunction with
 .B \-V
 to display information from the audio file header
 without having to read any further into the file, e.g.
-.B sox \-V *.wav \-\-
+.B sox \-V *.wav \-n
 will display header information for each `WAV' file in the current
 directory.
 .TP
 \fB\-e\fR
 This is an alias of
-.B \-\-
+.B \-n
 and is retained for backwards compatibility only.
 .PP
 .B N.B.
@@ -402,7 +402,7 @@ that supports the \fB\-\-octave\fR option, SoX will output Octave
 commands to plot the effect's transfer function, and then exit
 without actually processing any audio.  E.g.
 .SP
-	sox \-\-octave input-file \-\- highpass 1320 > plot.m
+	sox \-\-octave input-file \-n highpass 1320 > plot.m
 .br
 	octave plot.m
 .TP
@@ -1823,36 +1823,36 @@ Though this effect is used to generate audio, an input file must
 still be given.  This can be used to set the synthesised audio
 length, the number of channels, and the sampling rate, however since the
 input file's audio is not needed, the null
-file `\fB\-\-\fR' is usually given instead (and the length specified
+file `\fB\-n\fR' is usually given instead (and the length specified
 as a parameter to \fBsynth\fR or by another given effect that can has an
 associated length).
 .SP
 For example, the following produces a 3 second, 44\*d1kHz,
 stereo audio file containing a sine-wave swept from 300 to 3300Hz.
 .SP
-	sox \-\- output.au synth 3 sine 300\-3300
+	sox \-n output.au synth 3 sine 300\-3300
 .SP
 This produces an 8kHz mono version:
 .SP
-	sox \-r 8000 \-c 1 \-\- output.au synth 3 sine 300\-3300
+	sox \-r 8000 \-c 1 \-n output.au synth 3 sine 300\-3300
 .SP
 Multiple channels can be synthesised by specifying the set of
 parameters shown between braces multiple times;
 the following puts the swept tone in the left channel and adds `brown'
 noise in the right:
 .SP
-	sox \-\- output.au synth 3 sine 300\-3300 brownnoise
+	sox \-n output.au synth 3 sine 300\-3300 brownnoise
 .SP
 The following example shows how two synth effects can be cascaded
 to create a more complex waveform:
 .SP
-	sox \-\- output.au synth 0\*d5 sine 200\-500 synth 0\*d5 sine fmod 700\-100
+	sox \-n output.au synth 0\*d5 sine 200\-500 synth 0\*d5 sine fmod 700\-100
 .SP
 Frequencies can also be given as a number of musical semitones relative
 to `middle A' (440Hz) by prefixing a `%' character;  for example, the
 following could be used to help tune a guitar's `E' strings:
 .SP
-	play \-\- synth sine %\-17
+	play \-n synth sine %\-17
 .SP
 .B N.B.
 This effect generates audio at maximum volume, which means that there
