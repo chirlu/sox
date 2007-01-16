@@ -19,17 +19,6 @@
  * USA.  */
 
  
-/* TODO: If efficiency is a problem, move the call of the Lua script
-   into the read/write phase. Instrument the Lua environment so that
-   scripts can still be written naively: reading beyond the end of the
-   input array yields to read more data, and writing output similarly.
-   In order not to need nonetheless to buffer all input and output
-   until finished, need low-water-marks that the script can update to
-   signal that it has finished reading and writing respectively.
-   Alternatively, assume that each location can only be read/written
-   once. */
-
-
 #include "st_i.h"
 
 #include <string.h>
@@ -39,6 +28,7 @@
 /* Private data */
 typedef struct luafile {
   lua_State *L;                 /* Lua state */
+  int scriptref;                /* reference to script function */
 } *lua_t;
 
 assert_static(sizeof(struct luafile) <= ST_MAX_FILE_PRIVSIZE, 
@@ -61,7 +51,8 @@ static int lua_start(ft_t ft)
     st_fail("cannot load Lua script %s: error %d", ft->signal.lua_script, ret);
     return ST_EOF;
   }
-  /* FIXME: Store script function for reuse! */
+  fprintf(stderr, "type %d\n", lua_type(lua->L, -1));
+  lua->scriptref = luaL_ref(lua->L, LUA_REGISTRYINDEX);
 
   return ST_SUCCESS;
 }
@@ -70,15 +61,16 @@ static int lua_start(ft_t ft)
  * Call Lua script with (action, fp, array), and return return value
  * (an st_size_t) to the caller.
  */
-static st_size_t lua_callscript(lua_State *L)
+static st_size_t lua_callscript(lua_t lua)
 {
   st_size_t done;
   int ret;
 
-  if ((ret = lua_pcall(L, 3, 1, 0)) != 0)
+  lua_rawgeti(lua->L, LUA_REGISTRYINDEX, lua->scriptref);
+  if ((ret = lua_pcall(lua->L, 3, 1, 0)) != 0)
     st_fail("error in Lua script: %d", ret);
-  done = lua_tointeger(L, -1);
-  lua_pop(L, 1);
+  done = lua_tointeger(lua->L, -1);
+  lua_pop(lua->L, 1);
 
   return done;
 }
@@ -99,7 +91,7 @@ static st_size_t lua_read(ft_t ft, st_sample_t *buf, st_size_t len)
   st_lua_pushfile(lua->L, ft->fp);
   st_lua_pusharray(lua->L, inarr);
 
-  return lua_callscript(lua->L);
+  return lua_callscript(lua);
 }
 
 /*
@@ -118,7 +110,7 @@ static st_size_t lua_write(ft_t ft, const st_sample_t *buf, st_size_t len)
   st_lua_pushfile(lua->L, ft->fp);
   st_lua_pusharray(lua->L, outarr);
 
-  return lua_callscript(lua->L);
+  return lua_callscript(lua);
 }
 
 /*
@@ -142,7 +134,7 @@ static int lua_seek(ft_t ft, st_size_t offset)
   st_lua_pushfile(lua->L, ft->fp);
   lua_pushinteger(lua->L, offset);
 
-  return lua_callscript(lua->L);
+  return lua_callscript(lua);
 }
 
 /* Format file suffixes */
