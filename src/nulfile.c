@@ -23,7 +23,7 @@ static int st_nulstartread(ft_t ft)
    * (but commonly used) defaults: */
   if (ft->signal.rate     == 0) ft->signal.rate     = 44100;
   if (ft->signal.channels == 0) ft->signal.channels = 2;
-  if (ft->signal.size     ==-1) ft->signal.size     = ST_SIZE_WORD;
+  if (ft->signal.size     ==-1) ft->signal.size     = ST_SIZE_16BIT;
   if (ft->signal.encoding == ST_ENCODING_UNKNOWN) ft->signal.encoding = ST_ENCODING_SIGN2;
 
   return ST_SUCCESS;

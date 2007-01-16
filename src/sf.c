@@ -122,12 +122,12 @@ static int st_sfstartread(ft_t ft)
         ft->signal.rate = sf->info.sf_srate;
         switch(sf->info.sf_packmode) {
                 case SF_SHORT:
-                        ft->signal.size = ST_SIZE_WORD;
+                        ft->signal.size = ST_SIZE_16BIT;
                         ft->signal.encoding = ST_ENCODING_SIGN2;
                         samplesize = ft->signal.size;
                         break;
                 case SF_FLOAT:
-                        ft->signal.size = ST_SIZE_DWORD;
+                        ft->signal.size = ST_SIZE_32BIT;
                         ft->signal.encoding = ST_ENCODING_FLOAT;
                         samplesize = sizeof(float);
                         break;
@@ -182,13 +182,13 @@ static int st_sfstartwrite(ft_t ft)
             sf->info.magic_union._magic_bytes.sf_machine = SF_SUN;
 
         sf->info.sf_srate = ft->signal.rate;
-        if (ft->signal.size == ST_SIZE_DWORD &&
+        if (ft->signal.size == ST_SIZE_32BIT &&
             ft->signal.encoding == ST_ENCODING_FLOAT) {
                 sf->info.sf_packmode = SF_FLOAT;
         } else {
                 sf->info.sf_packmode = SF_SHORT;
                 /* Default to signed words */
-                ft->signal.size = ST_SIZE_WORD;
+                ft->signal.size = ST_SIZE_16BIT;
                 ft->signal.encoding = ST_ENCODING_SIGN2;
         }
 

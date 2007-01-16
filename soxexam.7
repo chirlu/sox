@@ -60,11 +60,11 @@ For easy listening of file.xxx (`xxx' is any sound format):
 .SP
 Or more SoX-like (for `dsp' output on a UNIX/Linux computer):
 .SP
-	sox file.xxx \-t ossdsp \-w \-s /dev/dsp effect-name effect-parameters
+	sox file.xxx \-t ossdsp \-2 \-s /dev/dsp effect-name effect-parameters
 .SP
 or (for `au' output):
 .SP
-	sox file.xxx \-t sunau \-w \-s /dev/audio effect-name effect-parameters
+	sox file.xxx \-t sunau \-2 \-s /dev/audio effect-name effect-parameters
 .SP
 And for date freaks:
 .SP
@@ -97,7 +97,7 @@ However, the time difference between shouting and repeating is the delay
 decays.
 .SP
 It is very popular to use echos to play an instrument with itself together,
-like some guitar players (Brain May from Queen) or vocalists are doing.
+like some guitar players (Queen's Brain May) or vocalists do.
 For music samples of more than one instrument, echo can be used to add a
 second sample shortly after the original one.
 .SP
@@ -182,7 +182,7 @@ The reverb effect is often used in audience hall which are to small or contain
 too many many visitors which disturb (dampen) the reflection of sound at
 the walls.  Reverb will make the sound be perceived as if it were in
 a large hall.  You can try the reverb effect in your bathroom or garage or
-sport halls by shouting loud some words. You'll hear the words reflected from
+sport hall by shouting loud some words. You'll hear the words reflected from
 the walls.
 .SP
 The biggest problem in using the reverb effect is the correct setting of the

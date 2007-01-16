@@ -173,7 +173,7 @@ static int st_txwstartread(ft_t ft)
     st_debug("Sample rate = %ld",ft->signal.rate);
 
     ft->signal.channels = 1 ; /* not sure about stereo sample data yet ??? */
-    ft->signal.size = ST_SIZE_WORD; /* this is close enough */
+    ft->signal.size = ST_SIZE_16BIT; /* this is close enough */
     ft->signal.encoding = ST_ENCODING_SIGN2;
 
     return(ST_SUCCESS);
@@ -247,9 +247,9 @@ static int st_txwstartwrite(ft_t ft)
     if (ft->signal.channels != 1)
         st_report("tx16w is overriding output format to 1 channel.");
     ft->signal.channels = 1 ; /* not sure about stereo sample data yet ??? */
-    if (ft->signal.size != ST_SIZE_WORD || ft->signal.encoding != ST_ENCODING_SIGN2)
+    if (ft->signal.size != ST_SIZE_16BIT || ft->signal.encoding != ST_ENCODING_SIGN2)
         st_report("tx16w is overriding output format to size Signed Word format.");
-    ft->signal.size = ST_SIZE_WORD; /* this is close enough */
+    ft->signal.size = ST_SIZE_16BIT; /* this is close enough */
     ft->signal.encoding = ST_ENCODING_SIGN2;
 
     /* If you have to seek around the output file */

@@ -579,10 +579,10 @@ static bool doopts(file_info_t fi, int argc, char **argv)
       break;
 
     case '1': case 'b': fi->signal.size = ST_SIZE_BYTE;   break;
-    case '2': case 'w': fi->signal.size = ST_SIZE_WORD;   break;
+    case '2': case 'w': fi->signal.size = ST_SIZE_16BIT;   break;
     case '3':           fi->signal.size = ST_SIZE_24BIT;  break;
-    case '4': case 'l': fi->signal.size = ST_SIZE_DWORD;  break;
-    case '8': case 'd': fi->signal.size = ST_SIZE_DDWORD; break;
+    case '4': case 'l': fi->signal.size = ST_SIZE_32BIT;  break;
+    case '8': case 'd': fi->signal.size = ST_SIZE_64BIT; break;
 
     case 's': fi->signal.encoding = ST_ENCODING_SIGN2;     break;
     case 'u': fi->signal.encoding = ST_ENCODING_UNSIGNED;  break;
@@ -1642,9 +1642,7 @@ static void usage(char const *message)
          "-B/-L           force endian type to big/little\n"
          "-s/-u/-U/-A/    sample encoding: signed/unsigned/u-law/A-law\n"
          "  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point\n"
-
          "-1/-2/-3/-4/-8  sample size in bytes\n"
-         "-b/-w/-l/-d     aliases for -1/-2/-4/-8 (byte, word, long, double-long)\n"
          "-v volume       input file volume adjustment factor (real number)\n"
          "\n");
 

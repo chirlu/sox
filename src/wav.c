@@ -684,7 +684,7 @@ static int st_wavstartread(ft_t ft)
             if (errct) st_warn("base iCoefs differ in %d/14 positions",errct);
         }
 
-        bytespersample = ST_SIZE_WORD;  /* AFTER de-compression */
+        bytespersample = ST_SIZE_16BIT;  /* AFTER de-compression */
         break;
 
     case WAVE_FORMAT_IMA_ADPCM:
@@ -715,7 +715,7 @@ static int st_wavstartread(ft_t ft)
 
         wav->samples = (short *)xmalloc(wChannels*wav->samplesPerBlock*sizeof(short));
 
-        bytespersample = ST_SIZE_WORD;  /* AFTER de-compression */
+        bytespersample = ST_SIZE_16BIT;  /* AFTER de-compression */
         break;
 
     /* GSM formats have extended fmt chunk.  Check for those cases. */
@@ -740,7 +740,7 @@ static int st_wavstartread(ft_t ft)
                     wav_format_str(wav->formatTag), wav->samplesPerBlock, 320);
             return ST_EOF;
         }
-        bytespersample = ST_SIZE_WORD;  /* AFTER de-compression */
+        bytespersample = ST_SIZE_16BIT;  /* AFTER de-compression */
         len -= 2;
         break;
 
@@ -764,9 +764,9 @@ static int st_wavstartread(ft_t ft)
             ft->signal.encoding = ST_ENCODING_UNSIGNED;
         break;
         
-    case ST_SIZE_WORD:
-        if (ft->signal.size == -1 || ft->signal.size == ST_SIZE_WORD)
-            ft->signal.size = ST_SIZE_WORD;
+    case ST_SIZE_16BIT:
+        if (ft->signal.size == -1 || ft->signal.size == ST_SIZE_16BIT)
+            ft->signal.size = ST_SIZE_16BIT;
         else
             st_warn("User options overriding size read in .wav header");
 
@@ -786,9 +786,9 @@ static int st_wavstartread(ft_t ft)
             ft->signal.encoding = ST_ENCODING_SIGN2;
         break;
         
-    case ST_SIZE_DWORD:
-        if (ft->signal.size == -1 || ft->signal.size == ST_SIZE_DWORD)
-            ft->signal.size = ST_SIZE_DWORD;
+    case ST_SIZE_32BIT:
+        if (ft->signal.size == -1 || ft->signal.size == ST_SIZE_32BIT)
+            ft->signal.size = ST_SIZE_32BIT;
         else
             st_warn("User options overriding size read in .wav header");
 
@@ -1311,7 +1311,7 @@ static int wavwritehdr(ft_t ft, int second_header)
                 ft->signal.encoding = ST_ENCODING_UNSIGNED;
             }
             break;
-        case ST_SIZE_WORD:
+        case ST_SIZE_16BIT:
             wBitsPerSample = 16;
             if (ft->signal.encoding != ST_ENCODING_SIGN2)
             {
@@ -1328,7 +1328,7 @@ static int wavwritehdr(ft_t ft, int second_header)
             }
             break;
 
-        case ST_SIZE_DWORD:
+        case ST_SIZE_32BIT:
             wBitsPerSample = 32;
             if (ft->signal.encoding != ST_ENCODING_SIGN2 &&
                 ft->signal.encoding != ST_ENCODING_FLOAT)
@@ -1341,7 +1341,7 @@ static int wavwritehdr(ft_t ft, int second_header)
         default:
             st_report("Do not support %s in WAV files.  Forcing to Signed Words.",st_sizes_str[(unsigned char)ft->signal.size]);
             ft->signal.encoding = ST_ENCODING_SIGN2;
-            ft->signal.size = ST_SIZE_WORD;
+            ft->signal.size = ST_SIZE_16BIT;
             wBitsPerSample = 16;
             break;
     }

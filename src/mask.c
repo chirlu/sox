@@ -59,12 +59,12 @@ static int st_mask_start(eff_t effp)
   } else if (effp->outinfo.size == ST_SIZE_BYTE) {
     mask->amount *= 256;
     return ST_SUCCESS;
-  } else if (effp->outinfo.size == ST_SIZE_WORD)
+  } else if (effp->outinfo.size == ST_SIZE_16BIT)
     return ST_SUCCESS;
   else if (effp->outinfo.size == ST_SIZE_24BIT) {
     mask->amount /= 256;
     return ST_SUCCESS;
-  } else if (effp->outinfo.size == ST_SIZE_DDWORD) {
+  } else if (effp->outinfo.size == ST_SIZE_64BIT) {
     mask->amount /= 16384;
     return ST_SUCCESS;
   }

@@ -305,7 +305,7 @@ static int aboveThreshold(eff_t effp, st_sample_t value, double threshold, char 
             value = ST_SAMPLE_TO_SIGNED_BYTE(value, dummy_clipped_count);
             ratio = (double)abs(value) / (double)ST_INT8_MAX;
             break;
-        case ST_SIZE_WORD:
+        case ST_SIZE_16BIT:
             value = ST_SAMPLE_TO_SIGNED_WORD(value, dummy_clipped_count);
             ratio = (double)abs(value) / (double)ST_INT16_MAX;
             break;
@@ -313,7 +313,7 @@ static int aboveThreshold(eff_t effp, st_sample_t value, double threshold, char 
             value = ST_SAMPLE_TO_SIGNED_24BIT(value, dummy_clipped_count);
             ratio = (double)abs(value) / (double)ST_INT24_MAX;
             break;
-        case ST_SIZE_DWORD:
+        case ST_SIZE_32BIT:
             value = ST_SAMPLE_TO_SIGNED_DWORD(value,);
             ratio = (double)labs(value) / (double)ST_INT32_MAX;
             break;

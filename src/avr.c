@@ -90,7 +90,7 @@ static int st_avrstartread(ft_t ft)
     ft->signal.size = ST_SIZE_BYTE;
   }
   else if (avr->rez == 16) {
-    ft->signal.size = ST_SIZE_WORD;
+    ft->signal.size = ST_SIZE_16BIT;
   }
   else {
     st_fail_errno(ft,ST_EFMT,"AVR: unsupported sample resolution");
@@ -184,7 +184,7 @@ static int st_avrstartwrite(ft_t ft)
   if (ft->signal.size == ST_SIZE_BYTE) {
     st_writew (ft, 8);
   }
-  else if (ft->signal.size == ST_SIZE_WORD) {
+  else if (ft->signal.size == ST_SIZE_16BIT) {
     st_writew (ft, 16);
   }
   else {

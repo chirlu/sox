@@ -78,7 +78,7 @@ static int st_auencodingandsize(int sun_encoding, st_encoding_t * encoding, sign
             break;
     case SUN_LIN_16:
             *encoding = ST_ENCODING_SIGN2;
-            *size = ST_SIZE_WORD;
+            *size = ST_SIZE_16BIT;
             break;
     case SUN_LIN_24:
             *encoding = ST_ENCODING_SIGN2;
@@ -86,15 +86,15 @@ static int st_auencodingandsize(int sun_encoding, st_encoding_t * encoding, sign
             break;
     case SUN_G721:
             *encoding = ST_ENCODING_SIGN2;
-            *size = ST_SIZE_WORD;
+            *size = ST_SIZE_16BIT;
             break;
     case SUN_G723_3:
             *encoding = ST_ENCODING_SIGN2;
-            *size = ST_SIZE_WORD;
+            *size = ST_SIZE_16BIT;
             break;
     case SUN_G723_5:
             *encoding = ST_ENCODING_SIGN2;
-            *size = ST_SIZE_WORD;
+            *size = ST_SIZE_16BIT;
             break;
     case SUN_FLOAT:
             *encoding = ST_ENCODING_FLOAT;
@@ -388,7 +388,7 @@ static int st_ausunencoding(int size, int encoding)
                 sun_encoding = SUN_ALAW;
         else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_BYTE)
                 sun_encoding = SUN_LIN_8;
-        else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_WORD)
+        else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_16BIT)
                 sun_encoding = SUN_LIN_16;
         else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_24BIT)
                 sun_encoding = SUN_LIN_24;

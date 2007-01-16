@@ -376,7 +376,7 @@ static st_size_t st_vocread(ft_t ft, st_sample_t *buf, st_size_t len)
                         *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(uc,);
                     }
                     break;
-                case ST_SIZE_WORD:
+                case ST_SIZE_16BIT:
                     st_readw(ft, (unsigned short *)&sw);
                     if (st_eof(ft))
                         {
@@ -613,7 +613,7 @@ static int getblock(ft_t ft)
                         switch (uc)
                         {
                             case 8:     v->size = ST_SIZE_BYTE; break;
-                            case 16:    v->size = ST_SIZE_WORD; break;
+                            case 16:    v->size = ST_SIZE_16BIT; break;
                             default:
                                 st_fail_errno(ft,ST_EFMT,
                                               "Don't understand size %d", uc);

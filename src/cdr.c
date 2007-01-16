@@ -49,14 +49,14 @@ static int st_cdrstartread(ft_t ft)
             return rc;
 
         ft->signal.rate = 44100L;
-        ft->signal.size = ST_SIZE_WORD;
+        ft->signal.size = ST_SIZE_16BIT;
         ft->signal.encoding = ST_ENCODING_SIGN2;
         ft->signal.channels = 2;
         ft->comment = NULL;
 
 /* Need length for seeking */
         if(ft->seekable){
-                ft->length = st_filelength(ft)/ST_SIZE_WORD;
+                ft->length = st_filelength(ft)/ST_SIZE_16BIT;
         } else {
                 ft->length = 0;
         }
@@ -100,7 +100,7 @@ static int st_cdrstartwrite(ft_t ft)
         cdr->samples = 0;
 
         ft->signal.rate = 44100L;
-        ft->signal.size = ST_SIZE_WORD;
+        ft->signal.size = ST_SIZE_16BIT;
         ft->signal.encoding = ST_ENCODING_SIGN2;
         ft->signal.channels = 2;
 

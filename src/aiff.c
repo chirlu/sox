@@ -413,7 +413,7 @@ static int st_aiffstartread(ft_t ft)
                 }
                 else if (bits <= 16)
                 {
-                    ft->signal.size = ST_SIZE_WORD;
+                    ft->signal.size = ST_SIZE_16BIT;
                     if (bits < 16)
                         st_report("Forcing data size from %d bits to 16 bits",bits);
                 }
@@ -425,7 +425,7 @@ static int st_aiffstartread(ft_t ft)
                 }
                 else if (bits <= 32)
                 {
-                    ft->signal.size = ST_SIZE_DWORD;
+                    ft->signal.size = ST_SIZE_32BIT;
                     if (bits < 32)
                         st_report("Forcing data size from %d bits to 32 bits",bits);
                 }
@@ -699,7 +699,7 @@ static int st_aiffstartwrite(ft_t ft)
             ft->signal.size == ST_SIZE_BYTE) {
                 st_report("expanding compressed bytes to signed 16 bits");
                 ft->signal.encoding = ST_ENCODING_SIGN2;
-                ft->signal.size = ST_SIZE_WORD;
+                ft->signal.size = ST_SIZE_16BIT;
         }
         if (ft->signal.encoding != ST_ENCODING_UNKNOWN && ft->signal.encoding != ST_ENCODING_SIGN2)
             st_report("AIFF only supports signed data.  Forcing to signed.");
@@ -768,13 +768,13 @@ static int aiffwriteheader(ft_t ft, st_size_t nframes)
             ft->signal.size == ST_SIZE_BYTE)
                 bits = 8;
         else if (ft->signal.encoding == ST_ENCODING_SIGN2 && 
-                 ft->signal.size == ST_SIZE_WORD)
+                 ft->signal.size == ST_SIZE_16BIT)
                 bits = 16;
         else if (ft->signal.encoding == ST_ENCODING_SIGN2 && 
                  ft->signal.size == ST_SIZE_24BIT)
                 bits = 24;
         else if (ft->signal.encoding == ST_ENCODING_SIGN2 && 
-                 ft->signal.size == ST_SIZE_DWORD)
+                 ft->signal.size == ST_SIZE_32BIT)
                 bits = 32;
         else
         {
@@ -904,7 +904,7 @@ static int st_aifcstartwrite(ft_t ft)
             ft->signal.size == ST_SIZE_BYTE) {
                 st_report("expanding compressed bytes to signed 16 bits");
                 ft->signal.encoding = ST_ENCODING_SIGN2;
-                ft->signal.size = ST_SIZE_WORD;
+                ft->signal.size = ST_SIZE_16BIT;
         }
         if (ft->signal.encoding != ST_ENCODING_UNKNOWN && ft->signal.encoding != ST_ENCODING_SIGN2)
             st_report("AIFC only supports signed data.  Forcing to signed.");
@@ -955,13 +955,13 @@ static int aifcwriteheader(ft_t ft, st_size_t nframes)
             ft->signal.size == ST_SIZE_BYTE)
                 bits = 8;
         else if (ft->signal.encoding == ST_ENCODING_SIGN2 && 
-                 ft->signal.size == ST_SIZE_WORD)
+                 ft->signal.size == ST_SIZE_16BIT)
                 bits = 16;
         else if (ft->signal.encoding == ST_ENCODING_SIGN2 && 
                  ft->signal.size == ST_SIZE_24BIT)
                 bits = 24;
         else if (ft->signal.encoding == ST_ENCODING_SIGN2 && 
-                 ft->signal.size == ST_SIZE_DWORD)
+                 ft->signal.size == ST_SIZE_32BIT)
                 bits = 32;
         else
         {

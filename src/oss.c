@@ -61,7 +61,7 @@ static int ossdspinit(ft_t ft)
             ft->signal.encoding = ST_ENCODING_UNSIGNED;
         }
     }
-    else if (ft->signal.size == ST_SIZE_WORD) {
+    else if (ft->signal.size == ST_SIZE_16BIT) {
         sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
         if (ft->signal.encoding == ST_ENCODING_UNKNOWN)
@@ -75,7 +75,7 @@ static int ossdspinit(ft_t ft)
     else {
         sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
-        ft->signal.size = ST_SIZE_WORD;
+        ft->signal.size = ST_SIZE_16BIT;
         ft->signal.encoding = ST_ENCODING_SIGN2;
         st_report("OSS driver only supports bytes and words");
         st_report("Forcing to signed linear word");
@@ -110,7 +110,7 @@ static int ossdspinit(ft_t ft)
             /* is 8-bit supported */
             else if (samplesize == 8 && (tmp & AFMT_U8) == 0)
             {
-                ft->signal.size = ST_SIZE_WORD;
+                ft->signal.size = ST_SIZE_16BIT;
                 ft->signal.encoding = ST_ENCODING_SIGN2;
                 st_report("OSS driver doesn't like unsigned bytes");
                 st_report("Forcing to signed words");

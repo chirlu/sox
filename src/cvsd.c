@@ -117,7 +117,7 @@ static void cvsdstartcommon(ft_t ft)
         p->cvsd_rate = (ft->signal.rate <= 24000) ? 16000 : 32000;
         ft->signal.rate = 8000;
         ft->signal.channels = 1;
-        ft->signal.size = ST_SIZE_WORD; /* make output format default to words */
+        ft->signal.size = ST_SIZE_16BIT; /* make output format default to words */
         ft->signal.encoding = ST_ENCODING_SIGN2;
         /*
          * initialize the decoder

@@ -182,7 +182,7 @@ static int st_mp3startread(ft_t ft)
     mad_timer_reset(p->Timer);
 
     ft->signal.encoding = ST_ENCODING_MP3;
-    ft->signal.size = ST_SIZE_WORD;
+    ft->signal.size = ST_SIZE_16BIT;
 
     /* Decode at least one valid frame to find out the input
      * format.  The decoded frame will be saved off so that it

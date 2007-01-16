@@ -27,10 +27,10 @@ int st_rawseek(ft_t ft, st_size_t offset)
 
     switch(ft->signal.size) {
         case ST_SIZE_BYTE:
-        case ST_SIZE_WORD:
+        case ST_SIZE_16BIT:
         case ST_SIZE_24BIT:
-        case ST_SIZE_DWORD:
-        case ST_SIZE_DDWORD:
+        case ST_SIZE_32BIT:
+        case ST_SIZE_64BIT:
             break;
         default:
             st_fail_errno(ft,ST_ENOTSUP,"Can't seek this data size");
@@ -168,7 +168,7 @@ static ft_io_fun *check_format(ft_t ft, bool write)
       }
       break;
       
-    case ST_SIZE_WORD: 
+    case ST_SIZE_16BIT: 
       switch (ft->signal.encoding) {
       case ST_ENCODING_SIGN2:
         return write ? st_sw_write_buf : st_sw_read_buf;
@@ -190,7 +190,7 @@ static ft_io_fun *check_format(ft_t ft, bool write)
       }
       break;
       
-    case ST_SIZE_DWORD:
+    case ST_SIZE_32BIT:
       switch (ft->signal.encoding) {
       case ST_ENCODING_SIGN2:
         return write ? st_sdw_write_buf : st_sdw_read_buf;
@@ -203,7 +203,7 @@ static ft_io_fun *check_format(ft_t ft, bool write)
       }
       break;
       
-    case ST_SIZE_DDWORD:
+    case ST_SIZE_64BIT:
       switch (ft->signal.encoding) {
       case ST_ENCODING_FLOAT:
         return write ? st_sudf_write_buf : st_sudf_read_buf;
@@ -284,15 +284,15 @@ st_format_t const * st_##id##_format_fn(void) { \
   return &driver; \
 }
 
-RAW_FORMAT(sb,NULL ,NULL  ,BYTE ,DEFAULT,SIGN2)
-RAW_FORMAT(sl,NULL ,NULL  ,DWORD,DEFAULT,SIGN2)
-RAW_FORMAT(s3,NULL ,NULL  ,24BIT,DEFAULT,SIGN2)
-RAW_FORMAT(sw,NULL ,NULL  ,WORD ,DEFAULT,SIGN2)
+RAW_FORMAT(sb,NULL ,NULL  ,BYTE , DEFAULT,SIGN2)
+RAW_FORMAT(sl,NULL ,NULL  ,32BIT, DEFAULT,SIGN2)
+RAW_FORMAT(s3,NULL ,NULL  ,24BIT, DEFAULT,SIGN2)
+RAW_FORMAT(sw,NULL ,NULL  ,16BIT, DEFAULT,SIGN2)
                    
-RAW_FORMAT(ub,"sou","fssd",BYTE ,DEFAULT,UNSIGNED)
-RAW_FORMAT(uw,NULL ,NULL  ,WORD ,DEFAULT,UNSIGNED)
-RAW_FORMAT(u3,NULL ,NULL  ,24BIT,DEFAULT,UNSIGNED)
-RAW_FORMAT(u4,NULL ,NULL  ,DWORD,DEFAULT,UNSIGNED)
+RAW_FORMAT(ub,"sou","fssd",BYTE , DEFAULT,UNSIGNED)
+RAW_FORMAT(uw,NULL ,NULL  ,16BIT, DEFAULT,UNSIGNED)
+RAW_FORMAT(u3,NULL ,NULL  ,24BIT, DEFAULT,UNSIGNED)
+RAW_FORMAT(u4,NULL ,NULL  ,32BIT, DEFAULT,UNSIGNED)
                    
 RAW_FORMAT(al,NULL ,NULL  ,BYTE ,NO     ,ALAW)
 RAW_FORMAT(ul,NULL ,NULL  ,BYTE ,NO     ,ULAW)

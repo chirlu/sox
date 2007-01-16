@@ -342,7 +342,7 @@ static st_size_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
                     return ST_EOF;
             }
             break;
-        case ST_SIZE_WORD:
+        case ST_SIZE_16BIT:
             switch(ft->signal.encoding)
             {
                 case ST_ENCODING_SIGN2:
@@ -462,7 +462,7 @@ static st_size_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
                     return 0;
             }
             break;
-        case ST_SIZE_WORD:
+        case ST_SIZE_16BIT:
             switch (ft->signal.encoding)
             {
                 case ST_ENCODING_SIGN2:
@@ -522,27 +522,27 @@ static int st_alsastopwrite(ft_t ft)
 static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
 {
     if (ft->signal.size == -1)
-        ft->signal.size = ST_SIZE_WORD;
+        ft->signal.size = ST_SIZE_16BIT;
 
     if (ft->signal.encoding == ST_ENCODING_UNKNOWN)
     {
-        if (ft->signal.size == ST_SIZE_WORD)
+        if (ft->signal.size == ST_SIZE_16BIT)
             ft->signal.encoding = ST_ENCODING_SIGN2;
         else
             ft->signal.encoding = ST_ENCODING_UNSIGNED;
     }
 
-    if (ft->signal.size != ST_SIZE_WORD &&
+    if (ft->signal.size != ST_SIZE_16BIT &&
         ft->signal.size != ST_SIZE_BYTE)
     {
         st_report("driver only supports byte and word samples.  Changing to word.");
-        ft->signal.size = ST_SIZE_WORD;
+        ft->signal.size = ST_SIZE_16BIT;
     }
 
     if (ft->signal.encoding != ST_ENCODING_SIGN2 &&
         ft->signal.encoding != ST_ENCODING_UNSIGNED)
     {
-        if (ft->signal.size == ST_SIZE_WORD)
+        if (ft->signal.size == ST_SIZE_16BIT)
         {
             st_report("driver only supports signed and unsigned samples.  Changing to signed.");
             ft->signal.encoding = ST_ENCODING_SIGN2;
@@ -561,10 +561,10 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
             !(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S8)))
         {
             st_report("driver doesn't supported byte samples.  Changing to words.");
-            ft->signal.size = ST_SIZE_WORD;
+            ft->signal.size = ST_SIZE_16BIT;
         }
     }
-    else if (ft->signal.size == ST_SIZE_WORD)
+    else if (ft->signal.size == ST_SIZE_16BIT)
     {
         if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)) && 
             !(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
@@ -579,7 +579,7 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
             (snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
         {
             st_report("driver doesn't supported %s samples.  Changing to words.", st_sizes_str[(unsigned char)ft->signal.size]);
-            ft->signal.size = ST_SIZE_WORD;
+            ft->signal.size = ST_SIZE_16BIT;
         }
         else
         {
@@ -630,7 +630,7 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
                     break;
         }
     }
-    else if (ft->signal.size == ST_SIZE_WORD) {
+    else if (ft->signal.size == ST_SIZE_16BIT) {
         switch (ft->signal.encoding)
         {
             case ST_ENCODING_SIGN2:

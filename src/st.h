@@ -331,12 +331,9 @@ struct st_soundstream {
 /* Size field */
 #define ST_SIZE_BYTE    1
 #define ST_SIZE_8BIT    1
-#define ST_SIZE_WORD    2
 #define ST_SIZE_16BIT   2
 #define ST_SIZE_24BIT   3
-#define ST_SIZE_DWORD   4
 #define ST_SIZE_32BIT   4
-#define ST_SIZE_DDWORD  8
 #define ST_SIZE_64BIT   8
 #define ST_INFO_SIZE_MAX     8
 

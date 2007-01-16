@@ -273,7 +273,7 @@ static int st_smpstartread(ft_t ft)
         }
 
         ft->signal.rate = (int) trailer.rate;
-        ft->signal.size = ST_SIZE_WORD;
+        ft->signal.size = ST_SIZE_16BIT;
         ft->signal.encoding = ST_ENCODING_SIGN2;
         ft->signal.channels = 1;
         smp->dataStart = samplestart;
@@ -346,7 +346,7 @@ static int st_smpstartwrite(ft_t ft)
         }
 
         /* If your format specifies any of the following info. */
-        ft->signal.size = ST_SIZE_WORD;
+        ft->signal.size = ST_SIZE_16BIT;
         ft->signal.encoding = ST_ENCODING_SIGN2;
         ft->signal.channels = 1;
 

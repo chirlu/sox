@@ -90,7 +90,7 @@ static int st_sunstartread(ft_t ft)
                 ft->signal.encoding = ST_ENCODING_ULAW;
             }
         }
-        else if (ft->signal.size == ST_SIZE_WORD)
+        else if (ft->signal.size == ST_SIZE_16BIT)
         {
             st_report("Warning: Detected simple hardware.  Forcing output to ULAW");
             ft->signal.size = ST_SIZE_BYTE;
@@ -114,7 +114,7 @@ static int st_sunstartread(ft_t ft)
             ft->signal.channels = 1;
         }
     }
-    else if (ft->signal.size == ST_SIZE_WORD) {
+    else if (ft->signal.size == ST_SIZE_16BIT) {
         samplesize = 16;
         if (ft->signal.encoding != ST_ENCODING_SIGN2) {
             st_fail_errno(ft,ST_EFMT,"Sun audio driver only supports signed linear for words.");
@@ -222,7 +222,7 @@ static int st_sunstartwrite(ft_t ft)
                 ft->signal.encoding = ST_ENCODING_ULAW;
             }
         }
-        else if (ft->signal.size == ST_SIZE_WORD)
+        else if (ft->signal.size == ST_SIZE_16BIT)
         {
             st_report("Warning: Detected simple hardware.  Forcing output to ULAW");
             ft->signal.size = ST_SIZE_BYTE;
@@ -254,7 +254,7 @@ static int st_sunstartwrite(ft_t ft)
         }
 
     }
-    else if (ft->signal.size == ST_SIZE_WORD) {
+    else if (ft->signal.size == ST_SIZE_16BIT) {
         samplesize = 16;
         if (ft->signal.encoding != ST_ENCODING_SIGN2) {
             st_report("Sun Audio driver only supports Signed Linear for words.");
@@ -264,7 +264,7 @@ static int st_sunstartwrite(ft_t ft)
     }
     else {
         st_report("Sun Audio driver only supports bytes and words");
-        ft->signal.size = ST_SIZE_WORD;
+        ft->signal.size = ST_SIZE_16BIT;
         samplesize = 16;
     }
 

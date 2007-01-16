@@ -73,7 +73,7 @@ static int voxstart(ft_t ft)
 
   adpcm_init(&state->encoder, 1);
   ft->signal.channels = 1;
-  return st_rawstart(ft, true, false, ST_ENCODING_OKI_ADPCM, ST_SIZE_WORD, ST_OPTION_DEFAULT);
+  return st_rawstart(ft, true, false, ST_ENCODING_OKI_ADPCM, ST_SIZE_16BIT, ST_OPTION_DEFAULT);
 }
 
 
@@ -92,7 +92,7 @@ static int imastart(ft_t ft)
 
   adpcm_init(&state->encoder, 0);
   ft->signal.channels = 1;
-  return st_rawstart(ft, true, false, ST_ENCODING_IMA_ADPCM, ST_SIZE_WORD, ST_OPTION_DEFAULT);
+  return st_rawstart(ft, true, false, ST_ENCODING_IMA_ADPCM, ST_SIZE_16BIT, ST_OPTION_DEFAULT);
 }
 
 

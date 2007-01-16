@@ -148,7 +148,7 @@ static int st_maudstartread(ft_t ft)
                                 ft->signal.encoding = ST_ENCODING_ULAW;
                         }
                         else if (bitpersam == 16 && chaninf == 0) {
-                                ft->signal.size = ST_SIZE_WORD;
+                                ft->signal.size = ST_SIZE_16BIT;
                                 ft->signal.encoding = ST_ENCODING_SIGN2;
                         }
                         else 
@@ -219,7 +219,7 @@ static int st_maudstartwrite(ft_t ft)
                 st_fail_errno(ft,ST_EFMT,"MAUD: unsupported number of channels, unable to store");
                 return(ST_EOF);
         }
-        if (ft->signal.size == ST_SIZE_WORD) ft->signal.encoding = ST_ENCODING_SIGN2;
+        if (ft->signal.size == ST_SIZE_16BIT) ft->signal.encoding = ST_ENCODING_SIGN2;
         if (ft->signal.encoding == ST_ENCODING_ULAW || 
             ft->signal.encoding == ST_ENCODING_ALAW) ft->signal.size = ST_SIZE_BYTE;
         if (ft->signal.size == ST_SIZE_BYTE && 

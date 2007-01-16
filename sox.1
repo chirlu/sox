@@ -73,8 +73,12 @@ example, digital telephony traditionally uses a sample rate of 8000Hz
 (8kHz); audio Compact Discs use 44100Hz (44\*d1kHz).
 .TP
 sample size
-The number of bits (or bytes) used to store each sample.  Most popular are
-8-bit (i.e. one byte) and 16-bit (i.e. two bytes, or one `word').
+The number of bits used to store each sample. Most popular are 8-bit
+(one byte) and 16-bit (two bytes). (Since many now-common sound
+formats were invented when most computers used a 16-bit word, two
+bytes is often called a `word', but since current personal computers
+overwhelmingly have 32-bit or 64-bit words, this usage is confusing,
+and is not used in the SoX documentation.)
 .TP
 data encoding
 The way in which each audio sample is represented (or `encoded').  Some
@@ -616,12 +620,14 @@ SoX has support for GSM's original 13kbps `Full Rate' audio format.
 It is usually CPU intensive to work with GSM audio.
 .TP
 \fB\-1\fR\^/\fB\-2\fR\^/\fB\-3\fR\^/\fB\-4\fR\^/\fB\-8\fR
-The sample datum size is 1, 2, 3, 4, or 8 bytes; i.e 8, 16, 24, 32, or 64 bits.
+The sample datum size is 1, 2, 3, 4, or 8 bytes; i.e. 8, 16, 24, 32, or 64 bits.
 .TP
+The flags
 \fB\-b\fR\^/\fB\-w\fR\^/\fB\-l\fR\^/\fB\-d\fR
-Aliases for
-\fB\-1\fR\^/\fB\-2\fR\^/\fB\-4\fR\^/\fB\-8\fR.
-Abbreviations of: byte, word, long word, double long (long long) word.
+which are respectively aliases for
+\fB\-1\fR\^/\fB\-2\fR\^/\fB\-4\fR\^/\fB\-8\fR,
+and abbreviate byte, word, long word, double long (long long) word,
+are retained for backwards compatibility only.
 .SS Output File Format Options
 These options apply only to the output file and may precede only the output
 filename on the command line.
@@ -675,7 +681,7 @@ the highest quality format your ALSA system can handle.  Example:
 Sun Microsystems AU files.
 There are many types of AU file;
 DEC has invented its own with a different magic number
-and word order.
+and byte order.
 SoX can read these files but will not write them.
 Some .au files are known to have invalid AU headers; these
 are probably original Sun \(*m-law 8000Hz files and
