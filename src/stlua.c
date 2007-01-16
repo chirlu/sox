@@ -39,36 +39,36 @@ int st_lua_pusharray(lua_State *L, st_sample_t_array_t arr)
   return 1;
 }
 
+/* array, key -> value */
 static int arr_index(lua_State *L)
-  /* array, key -> value */
 {
   st_sample_t_array_t *p = luaL_checkudata(L, 1, handle);
   lua_Integer k = luaL_checkinteger(L, 2);
 
-  if ((st_size_t)k >= p->size)
+  if ((st_size_t)k == 0 || (st_size_t)k > p->size)
     lua_pushnil(L);
   else
-    lua_pushinteger(L, (lua_Integer)p->data[k]);
+    lua_pushinteger(L, (lua_Integer)p->data[k - 1]);
     
   return 1;
 }
 
+/* array, key, value -> */
 static int arr_newindex(lua_State *L)
-  /* array, key, value -> */
 {
   st_sample_t_array_t *p = luaL_checkudata(L, 1, handle);
   lua_Integer k = luaL_checkinteger(L, 2);
   lua_Integer v = luaL_checkinteger(L, 3);
 
   /* FIXME: Have some indication for out of range */
-  if ((st_size_t)k < p->size)
-    p->data[k] = v;
+  if ((st_size_t)k > 0 && (st_size_t)k <= p->size)
+    p->data[k - 1] = v;
     
   return 0;
 }
 
+/* array -> #array */
 static int arr_len(lua_State *L)
-  /* array -> #array */
 {
   st_sample_t_array_t *p;
   p = luaL_checkudata(L, 1, handle);
@@ -140,7 +140,11 @@ lua_State *st_lua_new(void)
 void st_lua_pushfile(lua_State *L, FILE *fp)
 {
   FILE **pf = lua_newuserdata(L, sizeof *pf);
-  *pf = fp;
+  *pf = NULL; /* Avoid potential GC before we're fully initialised */
+  /* This step is currently unnecessary as we've disabled the __gc method,
+     but if sox.c were rewritten in Lua, that wouldn't be needed, and
+     this step would be. */
   luaL_getmetatable(L, LUA_FILEHANDLE);
   lua_setmetatable(L, -2);
+  *pf = fp;
 }
