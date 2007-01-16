@@ -108,7 +108,7 @@ tab (@);
 l l l.
 @1.@Command-line format options.
 @2.@The contents of the file header.
-@3.@The file-name extension.
+@3.@The filename extension.
 .TE
 .SP
 To set the output file format, SoX will use, in order of
@@ -118,7 +118,7 @@ precedence and as given or available:
 tab (@);
 l l lw(6i).
 @1.@Command-line format options.
-@2.@The file-name extension.
+@2.@The filename extension.
 @3.@T{
 The input file format characteristics, or the closest
 to them that is supported by the output file type.
@@ -298,24 +298,24 @@ Other examples can found thoughout this manual and in the
 separate
 .BR soxexam (7)
 manual.
-.SH FILE-NAMES
+.SH FILENAMES
 The following may be used in certain circumstances in place of a normal
-file-name on the command line:
+filename on the command line:
 .TP
 \fB\-\fR
 SoX can be used in pipeline operations by using the special
-file-name `\-' which,
-if used in place of an input file-name, will cause
+filename `\-' which,
+if used in place of an input filename, will cause
 SoX will read audio data from `standard input' (stdin),
 and which,
-if used in place of the output file-name, will cause
+if used in place of the output filename, will cause
 SoX will send audio data to `standard output' (stdout).
 Note that when using this option, the file-type (see
 .B \-t
 below) must also be given.
 .TP
 \fB\-\-\fR
-This can be used in place of an input or output file-name
+This can be used in place of an input or output filename
 to specify that a `null' file is to be used.
 .SP
 Using a null file to input audio is equivalent to
@@ -346,11 +346,11 @@ This is an alias of
 and is retained for backwards compatibility only.
 .PP
 .B N.B.
-Giving SoX an input or output file-name that is the same as a SoX
+Giving SoX an input or output filename that is the same as a SoX
 effect-name will not work since SoX will treat it as an effect
 specification.  The only work-around to this is to avoid such
-file-names; however, this is generally not difficult since most audio
-file-names have a file-name `extension', whilst effect-names do not.
+filenames; however, this is generally not difficult since most audio
+filenames have a filename `extension', whilst effect-names do not.
 .SH OPTIONS
 .SS Global Options
 These options can be specified on the command line at any point
@@ -452,7 +452,7 @@ sets it to 0.
 .IP
 .SS Input File Options
 These options apply only to input files and may precede only input
-file-names on the command line.
+filenames on the command line.
 .TP
 \fB\-v \fIvolume\fR, \fB\-\-volume=\fIvolume\fR
 Adjust volume by a factor of \fIvolume\fR.
@@ -484,6 +484,25 @@ effect must be used.  If the
 effect is not specified on the
 command line it will be invoked internally with default parameters.
 .TP
+\fB\-\-comment \fItext\fR
+Specify the comment text to store in the output file header (where
+applicable).
+.SP
+SoX will provide a default comment if this option (or
+.BR \-\-comment\-file )
+is not given; to specify that no comment should be stored in the output file,
+use 
+.BR "\-\-comment \(dq\(dq" .
+.TP
+\fB\-\-comment\-file \fIfilename\fR
+Specify a file containing the comment text to store in the output
+file header (where applicable).
+.TP
+\fB\-\-lua\-script \fIfilename\fR
+Specify the Lua script to use for a `lua' format. See
+.BR soxlua (7)
+for details.
+.TP
 \fB\-r \fIrate\fR, \fB\-\-rate=\fIrate\fR
 Gives the sample rate in Hz of the file.  To cause the output file to have
 a different sample rate than the input file, include this option with
@@ -500,12 +519,10 @@ Gives the type of the audio file.  This is useful when the
 file extension is non-standard or when the type can not be determined by
 looking at the header of the file.
 .SP
-The
-.B \-t
-option can also be used to override the type implied by an input file-name
-extension, but if overriding with a type that has a header,
-SoX will exit with an appropriate error message if such a header is not
-actually present.
+The \fB\-t\fR option can also be used to override the type implied by
+an input filename extension, but if overriding with a type that has a
+header, SoX will exit with an appropriate error message if such a
+header is not actually present.
 .SP
 See \fBFILE TYPES\fR below for a list of supported file types.
 .PP
@@ -607,21 +624,7 @@ Aliases for
 Abbreviations of: byte, word, long word, double long (long long) word.
 .SS Output File Format Options
 These options apply only to the output file and may precede only the output
-file-name on the command line.
-.TP
-\fB\-\-comment \fItext\fR
-Specify the comment text to store in the output file header (where
-applicable).
-.SP
-SoX will provide a default comment if this option (or
-.BR \-\-comment\-file )
-is not given; to specify that no comment should be stored in the output file,
-use 
-.BR "\-\-comment \(dq\(dq" .
-.TP
-\fB\-\-comment\-file \fIfile-name\fR
-Specify a file containing the comment text to store in the output
-file header (where applicable).
+filename on the command line.
 .TP
 \fB\-C \fIcompression-factor\fR, \fB\-\-compression=\fIcompression-factor\fR
 The compression factor for variably compressing output file formats.  If
@@ -630,11 +633,10 @@ The compression factor is interpreted differently for different
 compressing file formats.  See the description of the file formats that
 use this option for more information.
 .SH FILE TYPES
-File types can be set by the file-name extension or the
+File types can be set by the filename extension or the
 .B -t
-option (see above for details).
-File types that can be determined
-by a file-name extension are listed with their names preceded by a dot.
+option (see above). File types that can be determined
+by a filename extension are listed with their names preceded by a dot.
 .SP
 .TP
 .B .8svx
@@ -724,7 +726,7 @@ formats.
 \&\fB.dvms\fR, \fB.vms\fR
 .\" FIXME: Need more info.
 Used to compress speech audio for applications such as voice mail.
-A `self-describing' variant of
+A self-describing variant of
 .BR cvsd .
 .TP
 .B .flac
@@ -795,6 +797,11 @@ to deal with an HCOM file on other systems.
 A headerless file of IMA ADPCM audio data. IMA ADPCM claims 16-bit precision
 packed into only 4 bits, but in fact sounds no better than
 .BR .vox .
+.TP
+.B .lua
+A pseudo-format which allows formats to be implemented in Lua. See
+.BR soxlua (7)
+for details.
 .TP
 .B .maud
 An IFF-conforming audio file type, registered by
@@ -977,7 +984,7 @@ encoding must be given using command-line format options; the number of
 channels defaults to 1.
 .TP
 .B .ub .sb .uw .sw .ul .al .lu .la .sl
-These file-name extensions serve as shorthand for identifying the format
+These filename extensions serve as shorthand for identifying the format
 of headerless audio files.  Thus, \fBub\fR, \fBsb\fR, \fBuw\fR,
 \fBsw\fR, \fBul\fR, \fBal\fR, \fBlu\fR, \fBla\fR and \fBsl\fR indicate a
 file with a single audio channel, sample rate of 8000Hz, and samples
@@ -1355,6 +1362,11 @@ See the description of the \fBhighp\fR effect for details.
 Apply a low-pass filter.
 See the description of the \fBhighpass\fR effect for details.
 .TP
+\fBlua\fR \fIlua-script\fR [\fIoption...\fR]
+This effect allows effects to be implemented in Lua. See
+.BR soxlua (7)
+for details.
+.TP
 \fBmask\fR [\fIdepth\fR]
 This effect is just a deprecated alias for the \fBdither\fR effect, left for historical reasons.
 .TP
@@ -1363,9 +1375,13 @@ This effect is just a deprecated alias for the \fBdither\fR effect, left for his
 .br
 [\fIgain\fR [\fIinitial-volume\fR [\fIdelay\fR] ] ]\fB" \fIxover-freq\fR
 .SP
-Multi-band compander is similar to the single band compander but
-the audio is first divided up into bands and then the compander
-is run on each band.  See the \fBcompand\fR effect for the definition of its options.  Compand options are specified between double quotes and the crossover frequency for that band is specified separately with \fIxover-fre\fR.  This can be repeated multiple times to create multiple bands.
+Multi-band compander is similar to the single band compander but the
+audio is first divided up into bands and then the compander is run on
+each band. See the \fBcompand\fR effect for the definition of its
+options. Compand options are specified between double quotes and the
+crossover frequency for that band is specified separately with
+\fIxover-fre\fR. This can be repeated multiple times to create
+multiple bands.
 .TP
 \fBnoiseprof\fR [\fIprofile-file\fR]
 Calculate a profile of the audio for use in noise reduction.
@@ -1465,16 +1481,7 @@ If the \fB\-w\fR parameter is \fBnut\fR, then a Nuttall (~90 dB
 stop-band) window will be used; \fBham\fR selects a Hamming (~43
 dB stop-band) window.  The default is Nutall.
 .SP
-The \fB\-width\fR parameter specifies the (approximate) width of the filter.
-.B long
-is 1024 samples;
-.B short
-is 128 samples.  Alternatively, an exact number (\fIn\fR) can be used.
-The default is
-.B long.
-The
-.B short
-option is not recommended, as it produces poor quality results.
+The \fB\-width\fR parameter specifies the (approximate) width of the filter. The default is 1024 samples, which produces reasonable results.
 .SP
 The \fB\-cutoff\fR value (\fIc\fR) specifies the filter cutoff frequency in terms of fraction of
 frequency bandwidth, also know as the Nyquist frequency.  See
@@ -1971,6 +1978,7 @@ Please report any bugs found in this version of SoX to the mailing list
 (sox-users@lists.sourceforge.net).
 .SH SEE ALSO
 .BR soxexam (7),
+.BR soxlua (7),
 .BR libst (3)
 .SP
 The SoX web page at http://sox.sourceforge.net
