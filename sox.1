@@ -1344,25 +1344,39 @@ T}
 .TE
 .SP
 .TP
-\fBhighp\fR\^|\^\fBlowp \fIfrequency\fR
-Apply a single-pole recursive high-pass or low-pass filter with
-3dB point \fIfrequency\fR.
-The filters roll off at 6dB per octave (20dB per decade).
+\fBhighp\fR \fIfrequency\fR
+Apply a high-pass filter.
+This effect is just an alias for the
+.B highpass
+effect used with its
+.B -1
+option; it is retained for backwards compatibilty only.
+.TP
+\fBhighpass\fR\^|\^\fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR [\fIQ\fR]
+Apply a high-pass or low-pass filter with 3dB point \fIfrequency\fR.
+The filter can be either single-pole (with
+.BR -1 ),
+or double-pole (with
+.B -2
+or if unspecified).
+.I Q
+applies only to double-pole filters; its default value is 0\*d707 and gives
+a Butterworth response.  The single-pole and double-pole filters roll off at
+6 and 12 dB per octave (20 and 40 dB per decade) respectively.  See
+http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt for a detailed
+discussion of the double-pole filters.
 .SP
 These effects support the \fB\-\-octave\fR global option (see above).
 .SP
 See also \fBfilter\fR for filters with a sharper cutoff.
 .TP
-\fBhighpass\fR\^|\^\fBlowpass \fIfrequency\fR
-Apply a two-pole Butterworth high-pass or low-pass filter with
-3dB point \fIfrequency\fR.
-The filters roll off at 12dB per octave (40dB per decade).
-.SP
-These effects support the \fB\-\-octave\fR global option (see above).
-.TP
 \fBlowp \fIfrequency\fR
 Apply a low-pass filter.
-See the description of the \fBhighp\fR effect for details.
+This effect is just an alias for the
+.B lowpass
+effect used with its
+.B -1
+option; it is retained for backwards compatibilty only.
 .TP
 \fBlowpass \fIfrequency\fR
 Apply a low-pass filter.

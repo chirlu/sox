@@ -20,14 +20,14 @@ sox-12.18.3
   o Add FLAC support (robs@users.sf.net)
   o Allow encoding quality to be specified (works for Ogg too, but not
     MP3).
-  o bass and treble altering effects. (robs@users.sf.net)
-  o Visualisation of various filters' frequency response via Octave.
-    (robs@users.sf.net)
   o Allow the rate and number of channels of .au files to be overridden
     by command-line arguments. (robs@users.sf.net)
   o More and better self-tests. (robs@users.sf.net)
   o Support Maxis's XA format. (Dwayne C. Litzenberger)
   o Add equalizer effect (Pascal Giard)
+  o bass and treble altering effects.  (robs)
+  o Documented the butterworth filter effects; added variable Q.  (robs)
+  o Visualisation of various filters' frequency response via Octave.  (robs)
   o Fix rounding error when reading command-line time
     parameters. (robs)
   o Allow command-line time parameters of < 1 sec to omit the
@@ -62,7 +62,6 @@ sox-12.18.3
     resample, and rate has been removed.
   o Improved synth usage (by introducing --) and improved the synth
     entry in the man-page.  (robs)
-  o Documented the butterworth filter effects.  (robs)
   o Added command line options for specifying the output file
     comment.  (robs)
   o Improved the accuracy of integer and floating point PCM
