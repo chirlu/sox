@@ -34,7 +34,7 @@
 #define MF 30
 
 typedef struct {
-  int up,down;    /* up/down conversion factors for this stage      */
+  int up, down;   /* up/down conversion factors for this stage      */
   int filt_len;   /* # coefficients in filter_array                 */
   Float *filt_array; /* filter coefficients                         */
   int held;       /* # samples held in input but not yet processed  */
@@ -44,7 +44,6 @@ typedef struct {
 } polystage;
 
 typedef struct polyphase {
-
   st_rate_t lcmrate;             /* least common multiple of rates */
   st_rate_t inskip, outskip;     /* LCM increments for I & O rates */
   double Factor;                 /* out_rate/in_rate               */
@@ -52,51 +51,29 @@ typedef struct polyphase {
   st_size_t oskip;               /* output samples to skip at start*/
   double inpipe;                 /* output samples 'in the pipe'   */
   polystage *stage[MF];          /* array of pointers to polystage structs */
-
+  int win_type;
+  int win_width;
+  Float cutoff;
 } *poly_t;
 
 /*
  * Process options
  */
-
-/* Options:
-
-   -w <nut / ham>        :  window type
-   -width <short / long> :  window width
-                            short = 128 samples
-                            long  = 1024 samples
-   <num>                    num:  explicit number
-
-   -cutoff <float>       :  frequency cutoff for base bandwidth.
-                            Default = 0.95 = 95%
-*/
-
-static int win_type  = 0;
-static int win_width = 1024;
-static Float cutoff = 0.95;
-
-static int st_poly_getopts(eff_t effp UNUSED, int n, char **argv)
+static int st_poly_getopts(eff_t effp, int n, char **argv)
 {
-  /* 0: nuttall
-     1: hamming */
-  win_type = 0;
+  poly_t rate = (poly_t) effp->priv;
 
-  /* width:  short = 128
-             long = 1024 (default) */
-  win_width = 1024;
+  rate->win_type = 0;           /* 0: nuttall, 1: hamming */
+  rate->win_width = 1024;
+  rate->cutoff = 0.95;
 
-  /* cutoff:  frequency cutoff of base bandwidth in percentage. */
-  cutoff = 0.95;
-
-  while(n >= 2) {
-
+  while (n >= 2) {
     /* Window type check */
     if(!strcmp(argv[0], "-w")) {
       if(!strcmp(argv[1], "ham"))
-        win_type = 1;
+        rate->win_type = 1;
       if(!strcmp(argv[1], "nut"))
-        win_type = 0;
-
+        rate->win_type = 0;
       argv += 2;
       n -= 2;
       continue;
@@ -104,13 +81,7 @@ static int st_poly_getopts(eff_t effp UNUSED, int n, char **argv)
 
     /* Window width check */
     if(!strcmp(argv[0], "-width")) {
-      if(!strcmp(argv[1], "short"))
-        win_width = 128;
-      else if(!strcmp(argv[1], "long"))
-        win_width = 1024;
-      else
-        win_width = atoi(argv[1]);
-
+        rate->win_width = atoi(argv[1]);
       argv += 2;
       n -= 2;
       continue;
@@ -118,16 +89,17 @@ static int st_poly_getopts(eff_t effp UNUSED, int n, char **argv)
 
     /* Cutoff frequency check */
     if(!strcmp(argv[0], "-cutoff")) {
-      cutoff = atof(argv[1]);
+      rate->cutoff = atof(argv[1]);
       argv += 2;
       n -= 2;
       continue;
     }
 
     st_fail("Polyphase: unknown argument (%s %s)!", argv[0], argv[1]);
-    return (ST_EOF);
+    return ST_EOF;
   }
-  return (ST_SUCCESS);
+  
+  return ST_SUCCESS;
 }
 
 /*
@@ -332,7 +304,7 @@ static Float sinc(Float value)
 
    buffer must already be allocated.
 */
-static void fir_design(Float *buffer, int length, Float cutoff)
+static void fir_design(poly_t rate, Float *buffer, int length, Float cutoff)
 {
     int j;
     double sum;
@@ -341,7 +313,7 @@ static void fir_design(Float *buffer, int length, Float cutoff)
       st_fail("Illegal buffer %p, length %d, or cutoff %f.",buffer,length,cutoff);
 
     /* Use the user-option of window type */
-    if(win_type == 0)
+    if (rate->win_type == 0)
       nuttall(buffer, length); /* Design Nuttall window:  ** dB cutoff */
     else
       hamming(buffer,length);  /* Design Hamming window:  43 dB cutoff */
@@ -398,7 +370,7 @@ static int st_poly_start(eff_t effp)
     st_debug("Poly:  input rate %d, output rate %d.  %d stages.",
             effp->ininfo.rate, effp->outinfo.rate,total);
     st_debug("Poly:  window: %s  size: %d  cutoff: %f.",
-            (win_type == 0) ? ("nut") : ("ham"), win_width, cutoff);
+            (rate->win_type == 0) ? ("nut") : ("ham"), rate->win_width, rate->cutoff);
 
     /* Create an array of filters and past history */
     uprate = effp->ininfo.rate;
@@ -410,7 +382,7 @@ static int st_poly_start(eff_t effp)
       s->up = l1[k];
       s->down = l2[k];
       f_cutoff = max(s->up, s->down);
-      f_len = max(20 * f_cutoff, win_width);
+      f_len = max(20 * f_cutoff, rate->win_width);
       prod = s->up * s->down;
       if (prod > 2*f_len) prod = s->up;
       f_len = ((f_len+prod-1)/prod) * prod; /* reduces rounding-errors in polyphase() */
@@ -428,19 +400,18 @@ static int st_poly_start(eff_t effp)
 
       uprate *= s->up;
       st_debug("Poly:         :  filt_len %d, cutoff freq %.1f",
-              f_len, uprate*cutoff/f_cutoff);
+              f_len, uprate * rate->cutoff / f_cutoff);
       uprate /= s->down;
-      fir_design(s->filt_array, f_len, cutoff/f_cutoff);
-      /* s->filt_array[f_len-1]=0; */
+      fir_design(rate, s->filt_array, f_len, rate->cutoff / f_cutoff);
 
-                        skip *= s->up;
-                        skip += f_len;
-                        skip /= s->down;
-
-                        size = (size * s->up) / s->down;  /* this is integer */
+      skip *= s->up;
+      skip += f_len;
+      skip /= s->down;
+      
+      size = (size * s->up) / s->down;  /* this is integer */
     }
     rate->oskip = skip/2;
-                { /* bogus last stage is for output buffering */
+    { /* bogus last stage is for output buffering */
       polystage *s;
       rate->stage[k] = s = (polystage*) xmalloc(sizeof(polystage));
       s->up = s->down = 0;
@@ -641,14 +612,10 @@ static int st_poly_stop(eff_t effp)
 
 static st_effect_t st_polyphase_effect = {
   "polyphase",
-  "Usage: -w <nut / ham>        :  window type\n"
-  "       -width <short / long> :  window width\n"
-  "                                short = 128 samples\n"
-  "                                long  = 1024 samples\n"
-  "       <num>                    num:  explicit number\n"
+  "Usage: -w {nut|ham}   window type\n"
+  "       -width n       window width in samples [default 1024]\n"
   "\n"
-  "       -cutoff <float>       :  frequency cutoff for base bandwidth.\n"
-  "                                Default = 0.95 = 95%",
+  "       -cutoff float  frequency cutoff for base bandwidth [default 0.95]",
   ST_EFF_RATE,
   st_poly_getopts,
   st_poly_start,
