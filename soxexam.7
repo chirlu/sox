@@ -20,20 +20,7 @@
 .TH SoX 7 "January 31, 2007" "soxexam" "Sound eXchange"
 .SH NAME
 soxexam\*mSoX Examples
-.SH SYNOPSIS
-.nf
-\fBsox\fR [\fIglobal-options\fR] [\fIformat-options\fR] \fIinfile1\fR
-    [ [\fIformat-options\fR] \fIinfile2\fR ] ... [\fIformat-options\fR] \fIoutfile\fR
-    [\fIeffect\fR [\fIeffect-options\fR] ] ...
-.SP
-\fBplay\fR [\fIgeneral-options\fR] [\fIformat-options\fR] \fIinfile1\fR
-    [ [\fIformat-options\fR] \fIinfile2\fR ] ... [\fIformat-options\fR]
-    [\fIeffect\fR [\fIeffect-options\fR] ] ...
-.SP
-\fBrec\fR [\fIgeneral-options\fR] [\fIformat-options\fR] \fIoutfile\fR
-    [\fIeffect\fR [\fIeffect-options\fR] ] ...
-.fi
-.SH DESCRIPTION
+.SH EXAMPLES
 .SS Introduction
 The core problem is that you need some experience in using effects
 in order to say `that any old sound file sounds with effects
@@ -325,8 +312,9 @@ Next, use the noisered effect to actually reduce the noise:
 	play file.wav noisered /tmp/profile
 .SH SEE ALSO
 .BR sox (1),
+.BR soxlua (7),
 .BR libst (3)
-.SH AUTHOR
-This manual was written by Juergen Mueller (jmueller@uia.ua.ac.be).
+.SH AUTHORS
+This man page was written by Juergen Mueller (jmueller@uia.ua.ac.be).
 Other SoX authors and contributors are listed in the AUTHORS file that
 is distributed with the source code.
