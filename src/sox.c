@@ -1593,7 +1593,7 @@ static void volumechange(st_sample_t * buf, st_ssize_t len, file_info_t fi)
     }
 }
 
-static void usage(char const * message)
+static void usage(char const *message)
 {
   int i;
   const st_effect_t *e;
@@ -1611,7 +1611,7 @@ static void usage(char const * message)
          "\n"
          "GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):\n"
          "-h, --help      display version number and usage information\n"
-         "--help-effect=name  display usage of specified effect; use 'all' to display all\n"
+         "--help-effect name  display usage of specified effect; use 'all' to display all\n"
          "--interactive   prompt to overwrite output file\n"
          "-m, --mix       mix multiple input files (instead of concatenating)\n"
          "-M, --merge     merge multiple input files (instead of concatenating)\n"
@@ -1631,13 +1631,13 @@ static void usage(char const * message)
          "otherwise they are obtained automatically.  Output files will default to the\n"
          "same format options as the input file unless otherwise specified.\n"
          "\n"
-         "-c channels     number of channels in audio data\n"
+         "-c, --channels channels  number of channels in audio data\n"
          "-C compression  compression factor for variably compressing output formats\n"
-         "--comment=text  Specify comment text for the output file\n"
-         "--comment-file=filename  file containing comment text for the output file\n"
-         "--lua-script=filename  file containing script for a `-t lua' format\n"
-         "-r rate         sample rate of audio\n"
-         "-t filetype     file type of audio\n"
+         "--comment text  Specify comment text for the output file\n"
+         "--comment-file filename  file containing comment text for the output file\n"
+         "--lua-script filename  file containing script for a `lua' format\n"
+         "-r, --rate rate  sample rate of audio\n"
+         "-t, --type filetype  file type of audio\n"
          "-x/-N/-X        invert auto-detected endianness/nibble-order/bit-order of data\n"
          "-B/-L           force endian type to big/little\n"
          "-s/-u/-U/-A/    sample encoding: signed/unsigned/u-law/A-law\n"
@@ -1663,7 +1663,11 @@ static void usage(char const * message)
   }
 
   printf( "\n\neffopts: depends on effect\n");
-  exit(1);
+
+  if (message)
+    exit(1);
+  else
+    exit(0);
 }
 
 static void usage_effect(char *effect)
