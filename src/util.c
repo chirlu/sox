@@ -163,7 +163,7 @@ int st_gettype(ft_t formp, bool is_file_extension)
  * Check that we have a known effect name.  If found, copy name of
  * effect into structure and place a pointer to internal data.
  * Returns -1 on error else it turns the total number of arguments
- * that should be passed to this effects getopt() function.
+ * that should be passed to this effect's getopt() function.
  */
 int st_geteffect_opt(eff_t effp, int argc, char **argv)
 {
