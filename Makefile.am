@@ -10,8 +10,8 @@ SUBDIRS = $(MAYBE_LUA) src
 
 # man pages are not considered to be sources, so need to add "dist_"
 # prefix to ensure they are added to the distribution.
-dist_man_MANS = sox.1 soxexam.7 libst.3 play.1 rec.1
-dist_pkgdata_DATA = sox.txt soxexam.txt libst.txt
+dist_man_MANS = sox.1 soxexam.7 soxlua.7 libst.3 play.1 rec.1
+dist_pkgdata_DATA = sox.txt soxexam.txt soxlua.txt libst.txt
 
 play.1 rec.1: sox.1
 	$(RM) $@ && $(LN_S) $< $@
