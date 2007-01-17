@@ -25,7 +25,6 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-
 /* st_sample_t arrays */
 
 static const char *handle = "st_sample_t array";
@@ -122,16 +121,18 @@ lua_State *st_lua_new(void)
   /* TODO: If concerned about security, lock down here: in particular,
      don't open the io library. */
   luaL_openlibs(L);
-  luaopen_int(L);
+  lua_cpcall(L, luaopen_int, NULL);
 
   /* Create st_sample_t array userdata type */
   createmeta(L, handle);
   luaL_register(L, NULL, meta);
+  lua_pop(L, 1);
 
   /* Stop file handles being GCed */
   luaL_getmetatable(L, LUA_FILEHANDLE);
   lua_pushnil(L);
   lua_setfield(L, -2, "__gc");
+  lua_pop(L, 1);
 
   return L;
 }
