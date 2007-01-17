@@ -671,7 +671,7 @@ ALSA default device driver.
 This is a pseudo-file type and can be optionally compiled into SoX.  Run
 .B sox \-h
 to see if you have support for this file type.  When this driver is used
-it allows you to open up the ALSA /dev/snd/pcmCxDxp file and configure it to
+it allows you to open up a ALSA device and configure it to
 use the same data format as passed in to SoX.
 It works for both playing and recording audio files.  When playing audio
 files it attempts to set up the ALSA driver to use the same format as the
@@ -863,7 +863,7 @@ OSS /dev/dsp device driver.
 This is a pseudo-file that can be optionally compiled into SoX.  Run
 .B sox \-h
 to see if it is supported. When this driver is used it allows you to
-open play and record sounds on supported systems. When playing audio
+play and record sounds on supported systems. When playing audio
 files it attempts to set up the OSS driver to use the same format as
 the input file. It is suggested to always override the output values
 to use the highest quality format your OSS system can handle. Example:
