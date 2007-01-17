@@ -41,7 +41,7 @@ assert_static(sizeof(struct skelform) <= ST_MAX_FILE_PRIVSIZE,
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int skel_startread(ft_t ft)
+static int startread(ft_t ft)
 {
   skelform_t sk = (skelform_t)ft->priv;
   st_size_t samples_in_file;
@@ -84,7 +84,7 @@ static int skel_startread(ft_t ft)
  * Read up to len samples of type st_sample_t from file into buf[].
  * Return number of samples read.
  */
-static st_size_t skel_read(ft_t ft, st_sample_t *buf, st_size_t len)
+static st_size_t read(ft_t ft, st_sample_t *buf, st_size_t len)
 {
   skelform_t sk = (skelform_t)ft->priv;
   st_size_t done;
@@ -105,12 +105,12 @@ static st_size_t skel_read(ft_t ft, st_sample_t *buf, st_size_t len)
         *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(sample,);
         break;
       default:
-        st_fail("Undetected sample encoding in skel_read!");
+        st_fail("Undetected sample encoding in read!");
         exit(2);
       }
       break;
     default:
-      st_fail("Undetected bad sample size in skel_read!");
+      st_fail("Undetected bad sample size in read!");
       exit(2);
     }
   }
@@ -122,12 +122,12 @@ static st_size_t skel_read(ft_t ft, st_sample_t *buf, st_size_t len)
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int skel_stopread(ft_t ft)
+static int stopread(ft_t ft)
 {
   return ST_SUCCESS;
 }
 
-static int skel_startwrite(ft_t ft)
+static int startwrite(ft_t ft)
 {
   skelform_t sk = (skelform_t)ft->priv;
 
@@ -163,7 +163,7 @@ static int skel_startwrite(ft_t ft)
  * Write len samples of type st_sample_t from buf[] to file.
  * Return number of samples written.
  */
-static st_size_t skel_write(ft_t ft, const st_sample_t *buf, st_size_t len)
+static st_size_t write(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
   skelform_t sk = (skelform_t)ft->priv;
 
@@ -178,19 +178,19 @@ static st_size_t skel_write(ft_t ft, const st_sample_t *buf, st_size_t len)
       }
       break;
     default:
-      st_fail("Undetected bad sample encoding in skel_read!");
+      st_fail("Undetected bad sample encoding in write!");
       exit(2);
     }
     break;
   default:
-    st_fail("Undetected bad sample size in skel_read!");
+    st_fail("Undetected bad sample size in write!");
     exit(2);
   }
 
   return len;
 }
 
-static int skel_stopwrite(ft_t ft)
+static int stopwrite(ft_t ft)
 {
   /* All samples are already written out. */
   /* If file header needs fixing up, for example it needs the number
@@ -198,30 +198,30 @@ static int skel_stopwrite(ft_t ft)
   return ST_SUCCESS;
 }
 
-static int skel_seek(ft_t ft, st_size_t offset)
+static int seek(ft_t ft, st_size_t offset)
 {
   /* Seek relative to current position. */
   return ST_SUCCESS;
 }
 
 /* Format file suffixes */
-static const char *skel_names[] = {
+static const char *names[] = {
   "skel",
   NULL
 };
 
 /* Format descriptor */
 static st_format_t st_skel_format = {
-  skel_names,
+  names,
   NULL,
   ST_FILE_SEEK,
-  skel_startread,
-  skel_read,
-  skel_stopread,
-  skel_startwrite,
-  skel_write,
-  skel_stopwrite,
-  skel_seek
+  startread,
+  read,
+  stopread,
+  startwrite,
+  write,
+  stopwrite,
+  seek
 };
 
 const st_format_t *st_skel_format_fn(void)
