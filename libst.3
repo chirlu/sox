@@ -30,39 +30,86 @@ libst \- Sound Tools : sound sample file and effects libraries.
 .B cc \fIfile.c\fB -o \fIfile \fBlibst.a
 .SH DESCRIPTION
 .I Sound\ Tools
-is a library of sound sample file format readers/writers
-and sound effects processors.  It is mainly developed for use by SoX but is useful for any sound application.
+is a library of sound sample file format readers/writers and sound
+effects processors. It is mainly developed for use by SoX but is
+useful for any sound application.
 .P
-\fBst_open_input\fR function opens the file for reading whose name is the string pointed to by \fIpath\fR and associates an ft_t with it. If \fIinfo\fR is non-NULL then it will be used to specify the data format of the input file.  This is normally only needed for headerless audio files since the information is not stored in the file.  If \fIfiletype\fR is non-NULL then it will be used to specify the file type.  If this is not specified then the file type is attempted to be derived by looking at the file header and/or the filename extension.  A special name of "-" can be used to read data from stdin.
+\fBst_open_input\fR function opens the file for reading whose name is
+the string pointed to by \fIpath\fR and associates an ft_t with it. If
+\fIinfo\fR is non-NULL then it will be used to specify the data format
+of the input file. This is normally only needed for headerless audio
+files since the information is not stored in the file. If
+\fIfiletype\fR is non-NULL then it will be used to specify the file
+type. If this is not specified then the file type is attempted to be
+derived by looking at the file header and/or the filename extension. A
+special name of "-" can be used to read data from stdin.
 .P
-\fBst_open_output\fR function opens the file for writing whose name is the string pointed to by \fIpath\fR and associates an ft_t with it.  If \fIinfo\fR is non-NULL then it will be used to specify the data format of the output file.  Since most file formats can write data in different data formats, this generally has to be specified.  The info structure from the input format handler can be specified to copy data over in the same format.  If \fIcomment\fR is non-NULL, it will be written in the file header for formats that support comments. If \fIfiletype\fR is non-NULL then it will be used to specify the file type.  If this is not specified then the file type is attempted to be derived by looking at the filename extension.  A special name of "-" can be used to write data to stdout.
+\fBst_open_output\fR function opens the file for writing whose name is
+the string pointed to by \fIpath\fR and associates an ft_t with it. If
+\fIinfo\fR is non-NULL then it will be used to specify the data format
+of the output file. Since most file formats can write data in
+different data formats, this generally has to be specified. The info
+structure from the input format handler can be specified to copy data
+over in the same format. If \fIcomment\fR is non-NULL, it will be
+written in the file header for formats that support comments. If
+\fIfiletype\fR is non-NULL then it will be used to specify the file
+type. If this is not specified then the file type is attempted to be
+derived by looking at the filename extension. A special name of "-"
+can be used to write data to stdout.
 .P
-The function \fBst_read\fR reads \fIlen\fR samples in to \fIbuf\fR using the format handler specified by \fIft\fR.  All data read is converted to 32-bit signed samples before being placed in to \fIbuf\fR.  The value of \fIlen\fR is specified in total samples.  If its value is not evenly divisable by the number of channels, undefined behavior will occur.
+The function \fBst_read\fR reads \fIlen\fR samples in to \fIbuf\fR
+using the format handler specified by \fIft\fR. All data read is
+converted to 32-bit signed samples before being placed in to
+\fIbuf\fR. The value of \fIlen\fR is specified in total samples. If
+its value is not evenly divisable by the number of channels, undefined
+behavior will occur.
 .P
-The function \fBst_write\fR writes \fIlen\fR samples from \fIbuf\fR using the format handler specified by \fIft\fR.  Data in \fIbuf\fR must be 32-bit signed samples and will be converted during the write process.  The value of \fIlen\fR is specified in total samples.  If its value is not evenly divisable by the number of channels, undefined behavior will occur.
+The function \fBst_write\fR writes \fIlen\fR samples from \fIbuf\fR
+using the format handler specified by \fIft\fR. Data in \fIbuf\fR must
+be 32-bit signed samples and will be converted during the write
+process. The value of \fIlen\fR is specified in total samples. If its
+value is not evenly divisable by the number of channels, undefined
+behavior will occur.
 .P
-The \fBst_close\fR function dissociates the named \fIft_t\fR from its underlying file or set of functions.  If the format handler was being used for output, any buffered data is written first.
+The \fBst_close\fR function dissociates the named \fIft_t\fR from its
+underlying file or set of functions. If the format handler was being
+used for output, any buffered data is written first.
 .P
-Sound Tools includes skeleton C files to assist you in writing new formats (skelform.c) and effects (skeleff.c).
+SoX includes skeleton C files to assist you in writing new
+formats (skelform.c) and effects (skeleff.c). sox.c itself is a good
+starting point for new programs. Note that new formats can often just
+deal with the header and then use raw.c's routines for reading and
+writing.
 .SH RETURN VALUE
-Upon successful completion \fBst_open_input\fR and \fBst_open_output\fR return a ft_t (which is a pointer).  Otherwise, NULL is returned.  TODO: Need a what to return reason for failures.  Currently, relies on st_warn to print information.
+Upon successful completion \fBst_open_input\fR and
+\fBst_open_output\fR return a ft_t (which is a pointer). Otherwise,
+NULL is returned. TODO: Need a what to return reason for failures.
+Currently, relies on st_warn to print information.
 .P
-\fBst_read\fR and \fBst_write\fR return the number of samples successfully read or written.  If an error occurs, or the end-of-file is reached, the return value is a short item count or ST_EOF. TODO: \fBst_read\fR does not distiguish between end-of-ifle and error.  Need an feof() and ferror() concept to determine which occured.
+\fBst_read\fR and \fBst_write\fR return the number of samples
+successfully read or written. If an error occurs, or the end-of-file
+is reached, the return value is a short item count or ST_EOF. TODO:
+\fBst_read\fR does not distiguish between end-of-ifle and error. Need
+an feof() and ferror() concept to determine which occured.
 .P
-Upon successful completion \fBst_close\fR returns 0.  Otherwise, ST_EOF is returned.  In either case, any further access (including another call to \fBst_close\fR()) to the handler results in undefined behavior. TODO: Need a way to return reason for failures.  Currently, relies on st_warn to print information.
+Upon successful completion \fBst_close\fR returns 0. Otherwise, ST_EOF
+is returned. In either case, any further access (including another
+call to \fBst_close\fR()) to the handler results in undefined
+behavior. TODO: Need a way to return reason for failures. Currently,
+relies on st_warn to print information.
 .P
-Upon successful completion \fBst_seek\fR returns 0.  Otherwise, ST_EOF is returned.  TODO Need to set a global error and implement st_tell.
+Upon successful completion \fBst_seek\fR returns 0. Otherwise, ST_EOF
+is returned. TODO Need to set a global error and implement st_tell.
 .SH ERRORS
 TODO
 .SH INTERNALS
-The Sound Tools formats and effects operate on an internal buffer format
-of signed 32-bit longs.
-The data processing routines are called with buffers of these
-samples, and buffer sizes which refer to the number of samples
-processed, not the number of bytes.
-File readers translate the input samples to signed 32-bit integers
-and return the number of samples read.
-For example, data in linear signed byte format is left-shifted 24 bits.
+SoX's formats and effects operate on an internal buffer format of
+signed 32-bit longs. The data processing routines are called with
+buffers of these samples, and buffer sizes which refer to the number
+of samples processed, not the number of bytes. File readers translate
+the input samples to signed 32-bit integers and return the number of
+samples read. For example, data in linear signed byte format is
+left-shifted 24 bits.
 .P
 This does cause problems in processing the data.  
 For example:
@@ -189,10 +236,10 @@ may generate output samples on its own.
 See echo.c for how to do this, 
 and see that what it does is absolutely bogus.
 .SH BUGS
-The HCOM format is not re-entrant; it can only be used once in a program.
-.P
-On errors, the effects currently invoke st_fail and rely on that
-calling exit().  They do not currently gracefully fail.
-.P
 The program/library interface is pretty weak.
-
+.SH SEE ALSO
+.BR soxexam (7),
+.BR soxlua (7),
+.BR libst (3)
+.SH AUTHORS
+No idea.

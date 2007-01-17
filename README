@@ -56,6 +56,8 @@ This release understands:
     from some audio devices under UNIX
   o The "null" pseudo-file that reads and writes from/to nowhere
 
+Most sound formats are auto-detected.
+
 The sound effects include:
 
   o Channel averaging, duplication, and removal (general mixer)
@@ -107,33 +109,11 @@ The sound effects include:
 Unless you're using a pre-compiled binary version, you will need to
 compile SoX as described in the INSTALL file.
 
-SoX is distributed with man pages, and for those on systems without
-man, the files sox.txt and soxexam.txt contain plain text versions of
-the two most important pages: they describe how SoX deals with sound
-files, the command line options available to convert a sound file to
-another format, and how to apply sound effects.
+SoX is distributed with man pages, with plain text versions for those
+on systems without man.
 
-SoX has an auto-detect feature that attempts to figure out the nature
-of a sound file. It does this by looking for 'magic values' in the
-header of the audio file. If it is unable to detect the format of the
-sound file then the user must use command-line options to inform SoX.
-
-We hope to make SoX a common base of sound processing tools for
-computer multimedia work, similar to the PBM toolkit for image
-manipulation. The majority of SoX features and source code are
-contributed by you the user. Thank you very much for making SoX a
-success! If you're interested in helping with SoX, read on...
-
-SoX includes skeleton format files to assist you in supporting new
-formats, sound effect loops, and special-purpose programs. The full
-skeleton format, skelform.c, helps you write a driver for a new format
-which has data structures. skeleff.c is a starting point for writing a
-sound effect loop. sox.c is a good starting point for new programs.
-(Someone finally did this and told me what was wrong...)
-
-In handlers.c, note that many formats set up the header and then
-use the raw driver for reading and writing.  
-
-There are many new features wanted for SoX, listed on the feature
-request tracker at http://sf.net/projects/sox/. Users are encouraged
-to implement them!
+The majority of SoX features and source code are contributed by users.
+Thank you very much for making SoX a success! There are many new
+features wanted for SoX, listed on the feature request tracker at
+http://sourceforge.net/projects/sox/. Users are encouraged to
+implement them!
