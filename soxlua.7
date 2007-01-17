@@ -27,7 +27,7 @@ uses Lua 5.1, whose manual can be found at
 http://www.lua.org/manual/5.1/manual.html. For details of the workings
 of SoX effects and formats, see
 .BR libst (3) .
-The Lua programming interface is very similar to that for C.
+The Lua programming interface is a simplified version of that for C.
 .SH GENERAL
 SoX embeds a Lua interpreter with all the standard libraries
 available. This might change in future to make SoX more secure; in
@@ -40,9 +40,28 @@ used like normal Lua tables, but are of fixed size. As normal in Lua,
 they are one-based, that is, the valid incides for an array `a' are
 from 1 to #a inclusive.
 .SH EFFECTS
-To be written.
+Effects are extremely simple: the Lua script is passed all its input
+as a single st_sample_t array, and should return its output as a
+normal Lua table. The output values should be of the same type (i.e.
+32-bit signed integers), though in fact Lua stores all numbers as
+floating point, typically as type double. This is not a problem, as
+the mantissa of double normally holds more than 32 bits.
 .SH FORMATS
-To be written.
+A format is a table containing three functions, thus:
+.SP
+	{
+	  read = function (fh, ibuf) ... return isamp ... end,
+	  write = function (fh, obuf) ... return osamp ... end,
+	  seek = function (fh, offset) ... return ret ... end,
+	}
+.SP
+where \fIfh\fR is a file handle, \fIibuf\fR and \fIobuf\fR are arrays
+of st_sample_t to read into or out of, respectively, the length of the
+arrays indicating how many items should be read or written at most,
+and \fIoffset\fR is the number of samples to seek by relative to the
+current position. The return values indicate respectively how many
+samples were read or written, and for the `seek' method, a boolean
+indicating whether the seek was successful.
 .SH SEE ALSO
 .BR sox (1),
 .BR libst (3)
