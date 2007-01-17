@@ -109,10 +109,12 @@ static int lua_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
   st_sample_t_array_t inarr;
 
   if (!lua->gotdata) {
+    /* Function is left on stack by getopts */
+
     inarr.size = lua->isamp;
     inarr.data = lua->data;
     st_lua_pusharray(lua->L, inarr);
-    
+
     if ((ret = lua_pcall(lua->L, 1, 1, 0)) != 0) {
       st_fail("error in Lua script: %d", ret);
       return ST_EOF;
