@@ -132,7 +132,8 @@ static int lua_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     st_fail("output buffer size %d too large for Lua", *osamp);
     return ST_EOF;
   }
-  for (i = 0; i < (int)*osamp; i++) {
+  /* Read output: Lua array is 1-based */
+  for (i = 1; i <= (int)*osamp; i++) {
     lua_rawgeti(lua->L, -1, i);
     obuf[i] = lua_tointeger(lua->L, -1);
     lua_pop(lua->L, 1);
