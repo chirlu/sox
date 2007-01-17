@@ -12,6 +12,7 @@ bin_PROGRAMS = sox
 bin_SCRIPTS = libst-config
 lib_LTLIBRARIES = libst.la
 include_HEADERS = st.h stconfig.h ststdint.h
+dist_pkgdata_DATA = skeleff.lua skelform.lua
 
 formats = 8svx.c adpcm.c adpcm.h adpcms.c adpcms.h aiff.c au.c auto.c avr.c \
 	  cdr.c cvsd.c cvsdfilt.h dat.c flac.c g711.c g711.h g721.c \
