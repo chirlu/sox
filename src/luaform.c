@@ -81,9 +81,9 @@ static int lua_start(ft_t ft)
   } else if (lua_type(lua->L, -1) != LUA_TTABLE) {
     st_fail("Lua script %s did not return a table", ft->signal.lua_script);
     return ST_EOF;
-  } else if (!get_method(lua->L, ft->signal.lua_script, "rea", &lua->readref) ||
-        !get_method(lua->L, ft->signal.lua_script, "writ", &lua->writeref) ||
-        !get_method(lua->L, ft->signal.lua_script, "see", &lua->seekref))
+  } else if (!get_method(lua->L, ft->signal.lua_script, "read", &lua->readref) ||
+        !get_method(lua->L, ft->signal.lua_script, "write", &lua->writeref) ||
+        !get_method(lua->L, ft->signal.lua_script, "seek", &lua->seekref))
     return ST_EOF;
   lua_pop(lua->L, 1);           /* Discard function */
 
@@ -135,7 +135,6 @@ static st_size_t lua_write(ft_t ft, const st_sample_t *buf, st_size_t len)
   if ((ret = lua_pcall(lua->L, 2, 1, 0)) != 0)
     st_fail("error in Lua script's write method: %d", ret);
   done = lua_tointeger(lua->L, -1);
-  fprintf(stderr, "done %d\n", done);
   lua_pop(lua->L, 1);
 
   return done;
