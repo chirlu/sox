@@ -28,11 +28,36 @@
 /* Private data */
 typedef struct luafile {
   lua_State *L;                 /* Lua state */
-  int scriptref;                /* reference to script function */
+  int readref;                  /* reference to read method */
+  int writeref;                 /* reference to write method */
+  int seekref;                  /* reference to seek method */
 } *lua_t;
 
 assert_static(sizeof(struct luafile) <= ST_MAX_FILE_PRIVSIZE, 
               /* else */ skel_PRIVSIZE_too_big);
+
+/*
+ * Get the given method, checking that it is a function
+ */          
+static bool get_method(lua_State *L, const char *lua_script, const char *meth, int *ref)
+{
+  int ty;
+
+  lua_getfield(L, -1, meth);
+  if ((ty = lua_type(L, -1)) == LUA_TNIL) {
+    st_fail("Lua script %s does not have a %s method", lua_script, meth);
+    lua_pop(L, 1);
+    return false;
+  } else if (ty != LUA_TFUNCTION) {
+    st_fail("Lua script %s's %s method is not a function", lua_script, meth);
+    lua_pop(L, 1);
+    return false;
+  }
+
+  *ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+  return true;
+}
 
 /*
  * Set up Lua state and read script.
@@ -50,29 +75,19 @@ static int lua_start(ft_t ft)
   } else if ((ret = luaL_loadfile(lua->L, ft->signal.lua_script)) != 0) {
     st_fail("cannot load Lua script %s: error %d", ft->signal.lua_script, ret);
     return ST_EOF;
-  }
-  fprintf(stderr, "type %d\n", lua_type(lua->L, -1));
-  lua->scriptref = luaL_ref(lua->L, LUA_REGISTRYINDEX);
+  } else if ((ret = lua_pcall(lua->L, 0, 1, 0)) != 0) {
+    st_fail("cannot get methods from Lua script %s: error %d", ft->signal.lua_script, ret);
+    return ST_EOF;
+  } else if (lua_type(lua->L, -1) != LUA_TTABLE) {
+    st_fail("Lua script %s did not return a table", ft->signal.lua_script);
+    return ST_EOF;
+  } else if (!get_method(lua->L, ft->signal.lua_script, "rea", &lua->readref) ||
+        !get_method(lua->L, ft->signal.lua_script, "writ", &lua->writeref) ||
+        !get_method(lua->L, ft->signal.lua_script, "see", &lua->seekref))
+    return ST_EOF;
+  lua_pop(lua->L, 1);           /* Discard function */
 
   return ST_SUCCESS;
-}
-
-/*
- * Call Lua script with (action, fp, array), and return return value
- * (an st_size_t) to the caller.
- */
-static st_size_t lua_callscript(lua_t lua)
-{
-  st_size_t done;
-  int ret;
-
-  lua_rawgeti(lua->L, LUA_REGISTRYINDEX, lua->scriptref);
-  if ((ret = lua_pcall(lua->L, 3, 1, 0)) != 0)
-    st_fail("error in Lua script: %d", ret);
-  done = lua_tointeger(lua->L, -1);
-  lua_pop(lua->L, 1);
-
-  return done;
 }
 
 /*
@@ -83,15 +98,21 @@ static st_size_t lua_read(ft_t ft, st_sample_t *buf, st_size_t len)
 {
   lua_t lua = (lua_t)ft->priv;
   st_sample_t_array_t inarr;
+  st_size_t done;
+  int ret;
 
   inarr.size = len;
   inarr.data = buf;
 
-  lua_pushstring(lua->L, "read");
+  lua_rawgeti(lua->L, LUA_REGISTRYINDEX, lua->readref);
   st_lua_pushfile(lua->L, ft->fp);
   st_lua_pusharray(lua->L, inarr);
+  if ((ret = lua_pcall(lua->L, 2, 1, 0)) != 0)
+    st_fail("error in Lua script's read method: %d", ret);
+  done = lua_tointeger(lua->L, -1);
+  lua_pop(lua->L, 1);
 
-  return lua_callscript(lua);
+  return done;
 }
 
 /*
@@ -102,15 +123,22 @@ static st_size_t lua_write(ft_t ft, const st_sample_t *buf, st_size_t len)
 {
   lua_t lua = (lua_t)ft->priv;
   st_sample_t_array_t outarr;
+  st_size_t done;
+  int ret;
 
   outarr.size = len;
   outarr.data = (st_sample_t *)buf;
 
-  lua_pushstring(lua->L, "write");
+  lua_rawgeti(lua->L, LUA_REGISTRYINDEX, lua->writeref);
   st_lua_pushfile(lua->L, ft->fp);
   st_lua_pusharray(lua->L, outarr);
+  if ((ret = lua_pcall(lua->L, 2, 1, 0)) != 0)
+    st_fail("error in Lua script's write method: %d", ret);
+  done = lua_tointeger(lua->L, -1);
+  fprintf(stderr, "done %d\n", done);
+  lua_pop(lua->L, 1);
 
-  return lua_callscript(lua);
+  return done;
 }
 
 /*
@@ -129,12 +157,18 @@ static int lua_stop(ft_t ft)
 static int lua_seek(ft_t ft, st_size_t offset)
 {
   lua_t lua = (lua_t)ft->priv;
+  int ret;
+  st_size_t done;
 
-  lua_pushstring(lua->L, "seek");
+  lua_rawgeti(lua->L, LUA_REGISTRYINDEX, lua->seekref);
   st_lua_pushfile(lua->L, ft->fp);
   lua_pushinteger(lua->L, offset);
+  if ((ret = lua_pcall(lua->L, 2, 1, 0)) != 0)
+    st_fail("error in Lua script's seek method: %d", ret);
+  done = lua_toboolean(lua->L, -1);
+  lua_pop(lua->L, 1);
 
-  return lua_callscript(lua);
+  return done;
 }
 
 /* Format file suffixes */
