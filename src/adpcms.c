@@ -17,7 +17,7 @@
 /* ADPCM CODECs: IMA, OKI.   (c) 2007 robs@users.sourceforge.net */
 
 #include "adpcms.h"
-#include "st.h"
+#include "st_i.h"
 
 #define range_limit(x,min,max)((x)<(min)?(min):(x)>(max)?(max):(x))
 

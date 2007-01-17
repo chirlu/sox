@@ -31,6 +31,25 @@
 #define NORET
 #endif
 
+/* C language enhancements: */
+
+/* Compile-time ("static") assertion */
+/*   e.g. assert_static(sizeof(int) >= 4, int_type_too_small)    */
+#define assert_static(e,f) enum {assert_static__##f = 1/(e)}
+
+#ifdef min
+#undef min
+#endif
+#define min(a, b) ((a) <= (b) ? (a) : (b))
+
+#ifdef max
+#undef max
+#endif
+#define max(a, b) ((a) >= (b) ? (a) : (b))
+
+/* Array-length operator */
+#define array_length(a) (sizeof(a)/sizeof(a[0]))
+
 /* declared in misc.c */
 typedef struct {char const *text; int value;} enum_item;
 #define ENUM_ITEM(prefix, item) {#item, prefix##item},
@@ -40,6 +59,13 @@ enum_item const * find_enum_text(
 typedef enum {ST_SHORT, ST_INT, ST_FLOAT, ST_DOUBLE} st_data_t;
 typedef enum {ST_WAVE_SINE, ST_WAVE_TRIANGLE} st_wave_t;
 extern enum_item const st_wave_enum[];
+
+/* Define fseeko and ftello for platforms lacking them */
+#ifndef HAVE_FSEEKO
+#define fseeko fseek
+#define ftello ftell
+#define off_t long
+#endif
 
 /* Digitise one cycle of a wave and store it as
  * a table of samples of a specified data-type.
