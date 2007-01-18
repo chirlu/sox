@@ -398,7 +398,7 @@ int main(int argc, char **argv)
 static char * read_comment_file(char const * const filename)
 {
   bool file_error;
-  long file_length;
+  long file_length = 0;
   char * result;
   FILE * file = fopen(filename, "rt");
 
