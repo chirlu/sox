@@ -41,9 +41,12 @@ all: sox play rec
 libgsm/libgsm.la:
 	$(MAKE) -C libgsm
 
-play rec: sox
+play: sox
 	./sox --help > /dev/null
 	ln -sf .libs/lt-sox rec
+
+rec: sox
+	./sox --help > /dev/null
 	ln -sf .libs/lt-sox play
 
 install-exec-hook:
