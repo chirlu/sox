@@ -16,15 +16,15 @@ dist_pkgdata_DATA = sox.txt soxexam.txt soxlua.txt libst.txt
 play.1 rec.1: sox.1
 	$(RM) $@ && $(LN_S) $< $@
 
-# Rule for making plain text man pages
-%.txt: %.[1-9]
-	tbl $(srcdir)/$< | nroff -man -Tascii | col -b > $@
+# Rule for making text man pages
+.1.txt .3.txt .7.txt:
+	tbl $(srcdir)/$< | nroff -man | col -b > $@
 
 # Rule for making PDF man pages
-%.pdf: %.[1-9]
+.1.pdf .3.pdf .7.pdf:
 	tbl $(srcdir)/$< | groff -man -Tps | ps2pdf - $@
 
-pdf: sox.pdf soxexam.pdf libst.pdf
+pdf: sox.pdf soxexam.pdf soxlua.pdf libst.pdf
 
 install-exec-hook:
 	cd $(DESTDIR)$(bindir) && $(RM) play.1 && $(LN_S) sox.1 play.1
