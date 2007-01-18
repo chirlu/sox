@@ -41,13 +41,9 @@ all: sox$(EXEEXT) play rec
 libgsm/libgsm.la:
 	$(MAKE) -C libgsm
 
-play: sox$(EXEEXT)
+play rec: sox$(EXEEXT)
 	./sox --help > /dev/null
-	$(LN_S) .libs/lt-sox play
-
-rec: sox$(EXEEXT)
-	./sox --help > /dev/null
-	$(LN_S) .libs/lt-sox rec
+	$(RM) $@ && $(LN_S) .libs/lt-sox $@
 
 install-exec-hook:
 	cd $(DESTDIR)$(bindir) && $(RM) play && $(LN_S) sox play
