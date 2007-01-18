@@ -2,7 +2,7 @@
 
 SUBDIRS = libgsm
 
-AM_CFLAGS = $(LUA_INCLUDES)
+AM_CPPFLAGS = $(LUA_INCLUDES)
 AM_LDFLAGS = @SAMPLERATE_LIBS@
 
 # Pass flags from --enable-silent-libtool
@@ -36,16 +36,16 @@ libst_la_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c misc
 sox_SOURCES = sox.c
 sox_LDADD = libst.la libgsm/libgsm.la $(LUA_LIBS)
 
-all: sox play rec
+all: sox$(EXEEXT) play rec
 
 libgsm/libgsm.la:
 	$(MAKE) -C libgsm
 
-play: sox
+play: sox$(EXEEXT)
 	./sox --help > /dev/null
 	$(LN_S) .libs/lt-sox play
 
-rec: sox
+rec: sox$(EXEEXT)
 	./sox --help > /dev/null
 	$(LN_S) .libs/lt-sox rec
 
