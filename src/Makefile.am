@@ -43,11 +43,11 @@ libgsm/libgsm.la:
 
 play: sox
 	./sox --help > /dev/null
-	ln -sf .libs/lt-sox rec
+	ln -sf .libs/lt-sox play
 
 rec: sox
 	./sox --help > /dev/null
-	ln -sf .libs/lt-sox play
+	ln -sf .libs/lt-sox rec
 
 install-exec-hook:
 	cd $(DESTDIR)$(bindir) && $(RM) play && $(LN_S) sox play
