@@ -1,0 +1,29 @@
+Source: sox
+Section: sound
+Priority: optional
+Maintainer: Pascal Giard <pascal@debian.org>
+Uploaders: Guenter Geiger (Debian/GNU) <geiger@debian.org>
+Build-Depends: debhelper (>= 1.2.64), libvorbis-dev, libmad0-dev, cdbs, libasound2-dev [!kfreebsd-i386]
+Standards-Version: 3.7.2
+
+Package: sox
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: A universal sound sample translator
+ SOX (SOund eXchange) is a generic utility for translating
+ sound files from one format to another, possibly performing
+ a sound effect at the same time. Sox is able to handle formats
+ like .ogg (vorbis), mp3, wav, aiff, voc, snd, au, gsm and several
+ more.
+ .
+ Homepage: http://sox.sourceforge.net
+
+Package: sox-dev
+Architecture: any
+Section: devel
+Depends: sox (=${Source-Version}), ${shlibs:Depends}
+Replaces: sox
+Conflicts: libst-dev
+Description: Soundfile library from sox
+ This is the  soundfile  reading/writing library used by the sox soundfile
+ converter program.

@@ -1,0 +1,5 @@
+build-tree/sox*/src/{play,rec,sox,soxmix} usr/bin
+build-tree/sox*/{soxmix.1,sox.1} usr/share/man/man1
+build-tree/sox*/src/{play,rec} usr/bin
+build-tree/sox*/{play.1,rec.1} usr/share/man/man1
+
