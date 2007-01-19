@@ -29,7 +29,7 @@ typedef struct biquad
   double gain;
   double fc;               /* Centre/corner/cutoff frequency */
   union {double q, bandwidth, slope;} width; /* Depending on filter type */
-  bool dcNormalise;        /* A treble filter should normalise at DC */
+  st_bool dcNormalise;        /* A treble filter should normalise at DC */
 
   double b2, b1, b0;       /* Filter coefficients */
   double a2, a1, a0;       /* Filter coefficients */

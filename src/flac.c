@@ -146,7 +146,7 @@ static int st_format_start_read(ft_t const format)
     return ST_EOF;
   }
 
-  FLAC__file_decoder_set_md5_checking(decoder->flac, true);
+  FLAC__file_decoder_set_md5_checking(decoder->flac, st_true);
   FLAC__file_decoder_set_filename(decoder->flac, format->filename);
   FLAC__file_decoder_set_write_callback(decoder->flac, FLAC__frame_decode_callback);
   FLAC__file_decoder_set_metadata_callback(decoder->flac, FLAC__decoder_metadata_callback);
@@ -191,7 +191,7 @@ static st_size_t st_format_read(ft_t const format, st_sample_t * sampleBuffer, s
     if (decoder->wide_sample_number >= decoder->number_of_wide_samples)
       FLAC__file_decoder_process_single(decoder->flac);
     if (decoder->wide_sample_number >= decoder->number_of_wide_samples)
-      decoder->eof = true;
+      decoder->eof = st_true;
     else {
       unsigned channel;
 
@@ -287,15 +287,15 @@ static int st_format_start_write(ft_t const format)
       int max_residual_partition_order;
       int min_residual_partition_order;
     } const options[] = {
-      {1152, false, false, false, 0, 2, 2},
-      {1152, false, true, true, 0, 2, 2},
-      {1152, false, true, false, 0, 3, 0},
-      {4608, false, false, false, 6, 3, 3},
-      {4608, false, true, true, 8, 3, 3},
-      {4608, false, true, false, 8, 3, 3},
-      {4608, false, true, false, 8, 4, 0},
-      {4608, true, true, false, 8, 6, 0},
-      {4608, true, true, false, 12, 6, 0},
+      {1152, st_false, st_false, st_false, 0, 2, 2},
+      {1152, st_false, st_true, st_true, 0, 2, 2},
+      {1152, st_false, st_true, st_false, 0, 3, 0},
+      {4608, st_false, st_false, st_false, 6, 3, 3},
+      {4608, st_false, st_true, st_true, 8, 3, 3},
+      {4608, st_false, st_true, st_false, 8, 3, 3},
+      {4608, st_false, st_true, st_false, 8, 4, 0},
+      {4608, st_true, st_true, st_false, 8, 6, 0},
+      {4608, st_true, st_true, st_false, 12, 6, 0},
     };
     unsigned compression_level = array_length(options) - 1; /* Default to "best" */
 
@@ -345,7 +345,7 @@ static int st_format_start_write(ft_t const format)
     static const unsigned streamable_rates[] =
       {8000, 16000, 22050, 24000, 32000, 44100, 48000, 96000};
     size_t i;
-    bool streamable = false;
+    st_bool streamable = st_false;
     for (i = 0; !streamable && i < array_length(streamable_rates); ++i)
     {
        streamable = (streamable_rates[i] == format->signal.rate);
@@ -353,7 +353,7 @@ static int st_format_start_write(ft_t const format)
     if (!streamable)
     {
       st_report("FLAC: non-standard rate; output may not be streamable");
-      FLAC__stream_encoder_set_streamable_subset(encoder->flac, false);
+      FLAC__stream_encoder_set_streamable_subset(encoder->flac, st_false);
     }
   }
 
@@ -394,7 +394,7 @@ static int st_format_start_write(ft_t const format)
       }
       entry.length = strlen((char const *) entry.entry);
 
-      FLAC__metadata_object_vorbiscomment_append_comment(metadata[0], entry, /*copy= */ true);
+      FLAC__metadata_object_vorbiscomment_append_comment(metadata[0], entry, /*copy= */ st_true);
     } while (end_of_comment != NULL);
 
     FLAC__stream_encoder_set_metadata(encoder->flac, metadata, 1);

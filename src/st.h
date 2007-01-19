@@ -24,7 +24,7 @@
 /* C language enhancements: */
 
 /* Boolean type, compatible with C++ */
-typedef enum {false, true} bool;
+typedef enum {st_false, st_true} st_bool;
 
 typedef int32_t int24_t;     /* But beware of the extra byte. */
 typedef uint32_t uint24_t;   /* ditto */
@@ -179,7 +179,7 @@ typedef enum {
 
 typedef struct  st_globalinfo
 {
-    bool octave_plot_effect;/* To help user choose effect & options */
+    st_bool octave_plot_effect;/* To help user choose effect & options */
     double speed;         /* Gather up all speed changes here, then resample */
 } st_globalinfo_t;
 
@@ -375,7 +375,7 @@ void set_endianness_if_not_already_set(ft_t ft);
 extern ft_t st_open_read(const char *path, const st_signalinfo_t *info, 
                          const char *filetype);
 ft_t st_open_write(
-    bool (*overwrite_permitted)(const char *filename),
+    st_bool (*overwrite_permitted)(const char *filename),
     const char *path,
     const st_signalinfo_t *info,
     const char *filetype,
@@ -391,9 +391,9 @@ extern int st_seek(ft_t ft, st_size_t offset, int whence);
 
 int st_geteffect_opt(eff_t, int, char **);
 int st_geteffect(eff_t, const char *);
-bool is_effect_name(char const * text);
+st_bool is_effect_name(char const * text);
 int st_updateeffect(eff_t, const st_signalinfo_t *in, const st_signalinfo_t *out, int);
-int st_gettype(ft_t, bool);
+int st_gettype(ft_t, st_bool);
 ft_t st_initformat(void);
 char const * st_parsesamples(st_rate_t rate, const char *str, st_size_t *samples, char def);
 

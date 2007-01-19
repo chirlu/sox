@@ -39,7 +39,7 @@ assert_static(sizeof(struct luafile) <= ST_MAX_FILE_PRIVSIZE,
 /*
  * Get the given method, checking that it is a function
  */          
-static bool get_method(lua_State *L, const char *lua_script, const char *meth, int *ref)
+static st_bool get_method(lua_State *L, const char *lua_script, const char *meth, int *ref)
 {
   int ty;
 
@@ -47,16 +47,16 @@ static bool get_method(lua_State *L, const char *lua_script, const char *meth, i
   if ((ty = lua_type(L, -1)) == LUA_TNIL) {
     st_fail("Lua script %s does not have a %s method", lua_script, meth);
     lua_pop(L, 1);
-    return false;
+    return st_false;
   } else if (ty != LUA_TFUNCTION) {
     st_fail("Lua script %s's %s method is not a function", lua_script, meth);
     lua_pop(L, 1);
-    return false;
+    return st_false;
   }
 
   *ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-  return true;
+  return st_true;
 }
 
 /*

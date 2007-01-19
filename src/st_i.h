@@ -279,8 +279,8 @@ int st_effect_nothing_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obu
 int st_effect_nothing_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_effect_nothing_getopts(eff_t effp, int n, char **argv UNUSED);
 
-int st_rawstart(ft_t ft, bool default_rate, bool default_channels, st_encoding_t encoding, signed char size, st_option_t rev_bits);
-#define st_rawstartread(ft) st_rawstart(ft, false, false, ST_ENCODING_UNKNOWN, -1, ST_OPTION_DEFAULT)
+int st_rawstart(ft_t ft, st_bool default_rate, st_bool default_channels, st_encoding_t encoding, signed char size, st_option_t rev_bits);
+#define st_rawstartread(ft) st_rawstart(ft, st_false, st_false, ST_ENCODING_UNKNOWN, -1, ST_OPTION_DEFAULT)
 #define st_rawstartwrite st_rawstartread
 #define st_rawstopread st_format_nothing
 

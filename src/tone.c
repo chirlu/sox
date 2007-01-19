@@ -31,7 +31,7 @@
 
 static int getopts(eff_t effp, int n, char **argv, double fc, int dcNormalise)
 {
-  bool isFcSet = false;
+  st_bool isFcSet = st_false;
   double opt1 = HUGE_VAL, opt2 = HUGE_VAL;
   biquad_t p = (biquad_t) effp->priv;
   int ret = ST_SUCCESS;
@@ -60,7 +60,7 @@ static int getopts(eff_t effp, int n, char **argv, double fc, int dcNormalise)
       else {
         if (opt1 > 1) {
           p->fc = opt1;
-          isFcSet = true;
+          isFcSet = st_true;
         } else
           p->width.slope = opt1;
         if (opt2 != HUGE_VAL) {

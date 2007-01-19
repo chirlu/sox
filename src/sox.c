@@ -54,13 +54,13 @@
 #include <io.h>
 #endif
 
-static bool play = false, rec = false;
+static st_bool play = st_false, rec = st_false;
 static enum {SOX_CONCAT, SOX_MIX, SOX_MERGE} combine_method = SOX_CONCAT;
 static st_size_t mixing_clips = 0;
-static bool repeatable_random = false;  /* Whether to invoke srand. */
-static bool interactive = false;
-static st_globalinfo_t globalinfo = {false, 1};
-static bool uservolume = false;
+static st_bool repeatable_random = st_false;  /* Whether to invoke srand. */
+static st_bool interactive = st_false;
+static st_globalinfo_t globalinfo = {st_false, 1};
+static st_bool uservolume = st_false;
 
 static int user_abort = 0;
 static int success = 0;
@@ -86,7 +86,7 @@ typedef struct file_info
 } *file_info_t;
 
 /* local forward declarations */
-static bool doopts(file_info_t fo, int, char **);
+static st_bool doopts(file_info_t fo, int, char **);
 static void usage(char const *) NORET;
 static void usage_effect(char *) NORET;
 static void process(void);
@@ -154,17 +154,17 @@ static void sox_output_message(int level, const char *filename, const char *fmt,
   }
 }
 
-static bool overwrite_permitted(char const * filename)
+static st_bool overwrite_permitted(char const * filename)
 {
   char c;
 
   if (!interactive) {
     st_report("Overwriting '%s'", filename);
-    return true;
+    return st_true;
   }
   st_warn("Output file '%s' already exists", filename);
   if (!isatty(fileno(stdin)))
-    return false;
+    return st_false;
   do fprintf(stderr, "%s sox: overwrite '%s' (y/n)? ", myname, filename);
   while (scanf(" %c%*[^\n]", &c) != 1 || !strchr("yYnN", c));
   return c == 'y' || c == 'Y';
@@ -250,10 +250,10 @@ int main(int argc, char **argv)
   i = strlen(myname);
   if (i >= sizeof("play") - 1 &&
       strcmp(myname + i - (sizeof("play") - 1), "play") == 0) {
-    play = true;
+    play = st_true;
   } else if (i >= sizeof("rec") - 1 &&
       strcmp(myname + i - (sizeof("rec") - 1), "rec") == 0) {
-    rec = true;
+    rec = st_true;
   }
 
   /* Loop over arguments and filenames, stop when an effect name is 
@@ -397,7 +397,7 @@ int main(int argc, char **argv)
 
 static char * read_comment_file(char const * const filename)
 {
-  bool file_error;
+  st_bool file_error;
   long file_length = 0;
   char * result;
   FILE * file = fopen(filename, "rt");
@@ -457,16 +457,16 @@ static struct option long_options[] =
     {NULL, 0, NULL, 0}
   };
 
-static bool doopts(file_info_t fi, int argc, char **argv)
+static st_bool doopts(file_info_t fi, int argc, char **argv)
 {
-  while (true) {
+  while (st_true) {
     int option_index;
     int i;          /* Needed since scanf %u allows negative numbers :( */
     char dummy;     /* To check for extraneous chars in optarg. */
 
     switch (getopt_long(argc, argv, getoptstr, long_options, &option_index)) {
     case -1:        /* @ one of: file-name, effect name, end of arg-list. */
-      return false; /* I.e. not null file. */
+      return st_false; /* I.e. not null file. */
 
     case 0:         /* Long options with no short equivalent. */
       switch (option_index) {
@@ -484,7 +484,7 @@ static bool doopts(file_info_t fi, int argc, char **argv)
         else if (!strcmp(optarg, "big"))
           fi->signal.reverse_bytes = ST_IS_LITTLEENDIAN;
         else if (!strcmp(optarg, "swap"))
-          fi->signal.reverse_bytes = true;
+          fi->signal.reverse_bytes = st_true;
         else {
           st_fail("Endian type '%s' is not little|big|swap", optarg);
           exit(1);
@@ -492,7 +492,7 @@ static bool doopts(file_info_t fi, int argc, char **argv)
         break;
 
       case 3:
-        interactive = true;
+        interactive = st_true;
         break;
 
       case 4:
@@ -504,7 +504,7 @@ static bool doopts(file_info_t fi, int argc, char **argv)
         break;
         
       case 6:
-        globalinfo.octave_plot_effect = true;
+        globalinfo.octave_plot_effect = st_true;
         break;
 
       case 7:
@@ -523,11 +523,11 @@ static bool doopts(file_info_t fi, int argc, char **argv)
       break;
 
     case 'R': /* Useful for regression testing. */
-      repeatable_random = true;
+      repeatable_random = st_true;
       break;
 
     case 'e': case 'n':
-      return true;  /* I.e. is null file. */
+      return st_true;  /* I.e. is null file. */
       break;
 
     case 'h': case '?':
@@ -553,7 +553,7 @@ static bool doopts(file_info_t fi, int argc, char **argv)
         st_fail("Volume value '%s' is not a number", optarg);
         exit(1);
       }
-      uservolume = true;
+      uservolume = st_true;
       if (fi->volume < 0.0)
         st_report("Volume adjustment is negative; "
                   "this will result in a phase change");
@@ -622,7 +622,7 @@ static bool doopts(file_info_t fi, int argc, char **argv)
   }
 }
 
-static void display_file_info(ft_t f, double volume, double speed, bool full)
+static void display_file_info(ft_t f, double volume, double speed, st_bool full)
 {
   static char const * const no_yes[] = {"no", "yes"};
 
@@ -666,14 +666,14 @@ static void display_file_info(ft_t f, double volume, double speed, bool full)
 static void report_file_info(ft_t f, double volume)
 {
   if (st_output_verbosity_level > 2)
-    display_file_info(f, volume, 1, true);
+    display_file_info(f, volume, 1, st_true);
 }
 
 static void show_file_progress(int f)
 {
   if (show_progress && (st_output_verbosity_level < 3 ||
                         (combine_method == SOX_CONCAT && input_count > 1)))
-    display_file_info(file_desc[f], 1, globalinfo.speed, false);
+    display_file_info(file_desc[f], 1, globalinfo.speed, st_false);
 }
  
 /*

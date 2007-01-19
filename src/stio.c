@@ -100,7 +100,7 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
     else
         ft->filetype = xstrdup(filetype);
 
-    if (st_gettype(ft, false) != ST_SUCCESS) {
+    if (st_gettype(ft, st_false) != ST_SUCCESS) {
         st_warn("Unknown input file format for `%s':  %s",
                 ft->filename,
                 ft->st_errstr);
@@ -175,7 +175,7 @@ input_error:
 #endif
 
 ft_t st_open_write(
-    bool (*overwrite_permitted)(const char *filename),
+    st_bool (*overwrite_permitted)(const char *filename),
     const char *path,
     const st_signalinfo_t *info,
     const char *filetype,
@@ -185,7 +185,7 @@ ft_t st_open_write(
 {
     ft_t ft = (ft_t)xcalloc(sizeof(struct st_soundstream), 1);
     int i;
-    bool no_filetype_given = filetype == NULL;
+    st_bool no_filetype_given = filetype == NULL;
 
     ft->filename = xstrdup(path);
 

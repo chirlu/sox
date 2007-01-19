@@ -39,7 +39,7 @@
 typedef struct luaeff {
   lua_State *L;                 /* Lua state */
   char *script;                 /* Script filename */
-  bool gotdata;                 /* Script has been run */
+  st_bool gotdata;                 /* Script has been run */
   st_size_t isamp;              /* Number of samples in input */
   st_size_t osamp;              /* Number of samples in output */
   st_size_t ostart;             /* Next sample to output */
@@ -122,7 +122,7 @@ static int lua_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     st_fail("Lua script did not return an array");
     return ST_EOF;
     }
-    lua->gotdata = true;
+    lua->gotdata = st_true;
     lua->osamp = lua_objlen(lua->L, -1);
     lua->ostart = 0;
   }

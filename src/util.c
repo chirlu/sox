@@ -116,7 +116,7 @@ void st_fail_errno(ft_t ft, int st_errno, const char *fmt, ...)
 /*
  * Check that we have a known format suffix string.
  */
-int st_gettype(ft_t formp, bool is_file_extension)
+int st_gettype(ft_t formp, st_bool is_file_extension)
 {
     const char * const *list;
     int i;
@@ -210,7 +210,7 @@ int st_geteffect(eff_t effp, const char *effect_name)
 /*
  * Check if we have a known effect name.
  */
-bool is_effect_name(char const * text)
+st_bool is_effect_name(char const * text)
 {
     int i;
 
@@ -218,10 +218,10 @@ bool is_effect_name(char const * text)
         const st_effect_t *e = st_effect_fns[i]();
 
         if (e && e->name && strcasecmp(e->name, text) == 0)
-          return true;
+          return st_true;
     }
 
-    return false;
+    return st_false;
 }
 
 /*
@@ -304,7 +304,7 @@ char const * st_parsesamples(st_rate_t rate, const char *str, st_size_t *samples
     float frac = 0;
     char const * end;
     char const * pos;
-    bool found_colon, found_dot;
+    st_bool found_colon, found_dot;
 
     for (end = str; *end && strchr("0123456789:.ts", *end); ++end);
     if (end == str)

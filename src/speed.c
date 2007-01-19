@@ -29,12 +29,12 @@
 
 static int getopts(eff_t effp, int n, char * * argv)
 {
-  bool is_cents = false;
+  st_bool is_cents = st_false;
   double speed;
 
   /* Be quietly compatible with the old speed effect: */
   if (n != 0 && strcmp(*argv, "-c") == 0)
-    is_cents = true, ++argv, --n;
+    is_cents = st_true, ++argv, --n;
 
   if (n == 1) {
     char c, dummy;

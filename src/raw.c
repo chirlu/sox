@@ -55,7 +55,7 @@ int st_rawseek(ft_t ft, st_size_t offset)
 
 /* Works nicely for starting read and write; st_rawstart{read,write}
    are #defined in st_i.h */
-int st_rawstart(ft_t ft, bool default_rate, bool default_channels, st_encoding_t encoding, signed char size, st_option_t rev_bits)
+int st_rawstart(ft_t ft, st_bool default_rate, st_bool default_channels, st_encoding_t encoding, signed char size, st_option_t rev_bits)
 {
   if (default_rate && ft->signal.rate == 0) {
     st_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
@@ -150,7 +150,7 @@ WRITE_FUNC(df, su, FLOAT_DDWORD)
 
 typedef st_size_t (ft_io_fun)(ft_t ft, st_sample_t *buf, st_size_t len);
 
-static ft_io_fun *check_format(ft_t ft, bool write)
+static ft_io_fun *check_format(ft_t ft, st_bool write)
 {
     switch (ft->signal.size) {
     case ST_SIZE_BYTE:
@@ -224,7 +224,7 @@ static ft_io_fun *check_format(ft_t ft, bool write)
 /* Read a stream of some type into SoX's internal buffer format. */
 st_size_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 {
-    ft_io_fun * read_buf = check_format(ft, false);
+    ft_io_fun * read_buf = check_format(ft, st_false);
 
     if (read_buf && nsamp)
       return read_buf(ft, buf, nsamp);
@@ -241,7 +241,7 @@ static void writeflush(ft_t ft)
 /* Writes SoX's internal buffer format to buffer of various data types. */
 st_size_t st_rawwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
 {
-    ft_io_fun *write_buf = check_format(ft, true);
+    ft_io_fun *write_buf = check_format(ft, st_true);
 
     if (write_buf && nsamp)
       return write_buf(ft, (st_sample_t *)buf, nsamp);
@@ -256,7 +256,7 @@ int st_rawstopwrite(ft_t ft)
 }
 
 static int raw_start(ft_t ft) {
-  return st_rawstart(ft,false,false,ST_ENCODING_UNKNOWN,-1,ST_OPTION_DEFAULT);
+  return st_rawstart(ft,st_false,st_false,ST_ENCODING_UNKNOWN,-1,ST_OPTION_DEFAULT);
 }
 st_format_t const * st_raw_format_fn(void) {
   static char const * names[] = {"raw", NULL};
@@ -271,7 +271,7 @@ st_format_t const * st_raw_format_fn(void) {
 
 #define RAW_FORMAT(id,alt1,alt2,size,rev_bits,encoding) \
 static int id##_start(ft_t ft) { \
-  return st_rawstart(ft,true,true,ST_ENCODING_##encoding,ST_SIZE_##size,ST_OPTION_##rev_bits); \
+  return st_rawstart(ft,st_true,st_true,ST_ENCODING_##encoding,ST_SIZE_##size,ST_OPTION_##rev_bits); \
 } \
 st_format_t const * st_##id##_format_fn(void) { \
   static char const * names[] = {#id, alt1, alt2, NULL}; \

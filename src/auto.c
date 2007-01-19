@@ -168,7 +168,7 @@ static int st_autostartread(ft_t ft)
     }
     free(ft->filetype);
     ft->filetype = strdup(type);
-    rc = st_gettype(ft, true); /* Change ft->h to the new format */
+    rc = st_gettype(ft, st_true); /* Change ft->h to the new format */
     if(rc != ST_SUCCESS)
     {
         st_fail_errno(ft,ST_EFMT,"Do not understand format type: %s",type);

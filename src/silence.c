@@ -90,7 +90,7 @@ static int st_silence_getopts(eff_t effp, int n, char **argv)
     }
 
     /* Parse data related to trimming front side */
-    silence->start = false;
+    silence->start = st_false;
     if (sscanf(argv[0], "%d", &silence->start_periods) != 1)
     {
         st_fail(st_silence_effect.usage);
@@ -106,7 +106,7 @@ static int st_silence_getopts(eff_t effp, int n, char **argv)
 
     if (silence->start_periods > 0)
     {
-        silence->start = true;
+        silence->start = st_true;
         if (n < 2)
         {
             st_fail(st_silence_effect.usage);
@@ -141,7 +141,7 @@ static int st_silence_getopts(eff_t effp, int n, char **argv)
         n--; n--;
     }
 
-    silence->stop = false;
+    silence->stop = st_false;
     /* Parse data needed for trimming of backside */
     if (n > 0)
     {
@@ -162,7 +162,7 @@ static int st_silence_getopts(eff_t effp, int n, char **argv)
         }
         else
             silence->restart = 0;
-        silence->stop = true;
+        silence->stop = st_true;
         argv++;
         n--;
 

@@ -30,7 +30,7 @@
 #endif
 
 /* To allow padding to samplesPerBlock. Works, but currently never true. */
-static st_size_t pad_nsamps = false;
+static st_size_t pad_nsamps = st_false;
 
 /* Private data for .wav file */
 typedef struct wavstuff {
@@ -1277,7 +1277,7 @@ static int wavwritehdr(ft_t ft, int second_header)
     /* internal variables, intermediate values etc */
     int bytespersample; /* (uncompressed) bytes per sample (per channel) */
     long blocksWritten = 0;
-    bool isExtensible = false;    /* WAVE_FORMAT_EXTENSIBLE? */
+    st_bool isExtensible = st_false;    /* WAVE_FORMAT_EXTENSIBLE? */
 
     dwSamplesPerSecond = ft->signal.rate;
     wChannels = ft->signal.channels;
@@ -1438,7 +1438,7 @@ static int wavwritehdr(ft_t ft, int second_header)
 
     if ((wFormatTag == WAVE_FORMAT_PCM && wBitsPerSample > 16) || wChannels > 2)
     {
-      isExtensible = true;
+      isExtensible = st_true;
       wFmtSize += 2 + 22;
     }
     else if (wFormatTag != WAVE_FORMAT_PCM)
