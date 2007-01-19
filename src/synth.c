@@ -694,20 +694,7 @@ static int st_synth_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 
 static st_effect_t st_synth_effect = {
   "synth",
-  "Usage: synth [len] {[type] [combine] [freq[-freq2]] [off] [ph] [p1] [p2] [p3]}\n"
-  "  length  length in sec or hh:mm:ss.frac, 0=inputlength, default=0\n"
-  "  type    is sine, square, triangle, sawtooth, trapezium, exp,\n"
-  "          [white]noise, pinknoise, brownnoise; default=sine\n"
-  "  combine is create, mix, amod, fmod; default=create\n"
-  "  freq    frequency at beginning in Hz, not used for noise..\n"
-  "  freq2   frequency at end in Hz, not used for noise..\n"
-  "          freqs can be given as %n, where 'n' is the number of\n"
-  "          half notes relative to A (440Hz)\n"
-  "  off     Bias (DC-offset)  of signal in percent; default=0\n"
-  "  ph      phase shift 0..100 shift phase 0..2*Pi, not used for noise..\n"
-  "  p1      square: Ton, triangle+trapezium+exp: rising slope time (0..100)\n"
-  "  p2      trapezium: ON time, exp: amplitude (0..100)\n"
-  "  p3      trapezium: falling slope position (0..100)",
+  "Usage: synth [len] {[type] [combine] [freq[-freq2]] [off] [ph] [p1] [p2] [p3]}\n",
   ST_EFF_MCHAN,
   st_synth_getopts,
   st_synth_start,
