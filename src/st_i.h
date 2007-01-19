@@ -143,12 +143,10 @@ uint32_t st_swap24(uint32_t udw);
 double st_swapd(double d);
 
 /* util.c */
-struct st_output_message_s;
-typedef struct st_output_message_s * st_output_message_t;
-typedef void (* st_output_message_handler_t)(int level, st_output_message_t);
+typedef void (*st_output_message_handler_t)(int level, const char *filename, const char *fmt, va_list ap);
 extern st_output_message_handler_t st_output_message_handler;
 extern int st_output_verbosity_level;
-void st_output_message(FILE * file, st_output_message_t);
+void st_output_message(FILE *file, const char *filename, const char *fmt, va_list ap);
 
 void st_fail(const char *, ...);
 void st_warn(const char *, ...);

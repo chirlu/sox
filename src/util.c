@@ -21,31 +21,24 @@
 #include <ctype.h>
 #include <stdarg.h>
 
-struct st_output_message_s
-{
-  char const * filename;
-  char const * fmt;
-  va_list      ap;
-};
-
 st_output_message_handler_t st_output_message_handler = NULL;
 int st_output_verbosity_level = 2;
 
-void st_output_message(FILE * file, st_output_message_t message)
+void st_output_message(FILE *file, const char *filename, const char *fmt, va_list ap)
 {
   char buffer[10];
   char const * drivername;
   char const * dot_pos;
  
-  drivername = strrchr(message->filename, '/');
+  drivername = strrchr(filename, '/');
   if (drivername != NULL) {
     ++drivername;
   } else {
-    drivername = strrchr(message->filename, '\\');
+    drivername = strrchr(filename, '\\');
     if (drivername != NULL)
       ++drivername;
     else
-      drivername = message->filename;
+      drivername = filename;
   }
 
   dot_pos = strrchr(drivername, '.');
@@ -56,7 +49,7 @@ void st_output_message(FILE * file, st_output_message_t message)
   }
 
   fprintf(file, "%s: ", drivername);
-  vfprintf(file, message->fmt, message->ap);
+  vfprintf(file, fmt, ap);
 }
 
 
@@ -70,16 +63,10 @@ char const * st_message_filename = 0;
 
 
 
-static void st_emit_message(int level, char const * fmt, va_list ap)
+static void st_emit_message(int level, char const *fmt, va_list ap)
 {
   if (st_output_message_handler != NULL)
-  {
-    struct st_output_message_s m;
-    m.filename = st_message_filename;
-    m.fmt = fmt;
-    m.ap = ap;
-    (*st_output_message_handler)(level, &m);
-  }
+    (*st_output_message_handler)(level, st_message_filename, fmt, ap);
 }
 
 

@@ -145,11 +145,11 @@ static int nuser_effects;
 static char *myname = NULL;
 
 
-static void sox_output_message(int level, st_output_message_t m)
+static void sox_output_message(int level, const char *filename, const char *fmt, va_list ap)
 {
   if (st_output_verbosity_level >= level) {
     fprintf(stderr, "%s ", myname);
-    st_output_message(stderr, m);
+    st_output_message(stderr, filename, fmt, ap);
     fprintf(stderr, "\n");
   }
 }
