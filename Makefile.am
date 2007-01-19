@@ -11,7 +11,7 @@ SUBDIRS = $(MAYBE_LUA) src
 # man pages are not considered to be sources, so need to add "dist_"
 # prefix to ensure they are added to the distribution.
 dist_man_MANS = sox.1 soxexam.7 soxlua.7 libst.3
-dist_pkgdata_DATA = sox.txt soxexam.txt soxlua.txt libst.txt
+EXTRA_DIST = sox.txt soxexam.txt soxlua.txt libst.txt
 
 play.1 rec.1: sox.1
 	$(RM) $@ && $(LN_S) $< $@
@@ -19,6 +19,8 @@ play.1 rec.1: sox.1
 # Rule for making text man pages
 .1.txt .3.txt .7.txt:
 	tbl $(srcdir)/$< | nroff -man | col -b > $@
+
+txt: sox.txt soxexam.txt soxlua.txt libst.txt
 
 # Rule for making PDF man pages
 .1.pdf .3.pdf .7.pdf:
