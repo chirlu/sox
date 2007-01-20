@@ -694,7 +694,7 @@ static int st_synth_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 
 static st_effect_t st_synth_effect = {
   "synth",
-  "Usage: synth [len] {[type] [combine] [freq[-freq2]] [off] [ph] [p1] [p2] [p3]}\n",
+  "Usage: synth [len] {[type] [combine] [freq[-freq2]] [off] [ph] [p1] [p2] [p3]}",
   ST_EFF_MCHAN,
   st_synth_getopts,
   st_synth_start,
