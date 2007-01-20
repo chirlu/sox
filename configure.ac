@@ -169,11 +169,11 @@ dnl Default to built-in Lua; if external Lua supplied, test it
 if test "x$with_lua_prefix" = x && test "x$with_lua_includes" = x && \
    test "x$with_lua_libraries" = x && test "x$with_lua_suffix" = x; then
    AC_MSG_NOTICE("Using built-in Lua")
-   with_lua_prefix=../lua
+   with_lua_prefix="\$(top_srcdir)/lua"
    want_internal_lua=yes
    LUA="$with_lua_prefix/lua"
-   LUA_INCLUDES="-I$with_lua_prefix/src"
-   LUA_LIBS="-L$with_lua_prefix/src -llua"
+   LUA_INCLUDES="-I$with_lua_prefix/src -I\$(top_builddir)/lua/src"
+   LUA_LIBS="-L\$(top_builddir)/lua/src -llua"
 else
    want_internal_lua=no
 
