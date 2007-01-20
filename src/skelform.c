@@ -91,8 +91,7 @@ static st_size_t read(ft_t ft, st_sample_t *buf, st_size_t len)
   unsigned char sample;
 
   /* Always return a full frame of audio data */
-  if (len % ft->signal.size)
-    len -= (len % ft->signal.size);
+  len -= len % ft->signal.size;
 
   for (done = 0; done < len; done++) {
     if (feof(ft->fp)) /* no more samples */
