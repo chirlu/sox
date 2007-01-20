@@ -279,6 +279,31 @@ inexact, and was derived by experimentation).
 The 0 for the initial volume will work fine for a clip that starts
 with a bit of silence, and the delay of 0\*d2 has the effect of causing
 the compander to react a bit more quickly to sudden volume changes.
+.SP
+The following (one long) command shows how multi-band companding is
+typically used in FM radio:
+.SP
+	play file.xxx
+.br
+	vol \-3 db filter 8000\- 32 100 mcompand \(dq0\*d005,0\*d1
+.br
+	\-47,\-40,\-34,\-34,\-17,\-33 0 0 0\(dq 100 \(dq0\*d003,0\*d05
+.br
+	\-47,\-40,\-34,\-34,\-17,\-33 0 0 0\(dq 400 \(dq0\*d000625,0\*d0125
+.br
+	\-47,\-40,\-34,\-34,\-15,\-33 0 0 0\(dq 1600 \(dq0\*d0001,0\*d025
+.br
+	\-47,\-40,\-34,\-34,\-31,\-31,\-0,\-30 0 0 0\(dq 6400
+.br
+	\(dq0,0\*d025 \-38,\-31,\-28,\-28,\-0,\-25 0 0 0\(dq vol 27 db vol \-12
+.br
+	db highpass 22 highpass 22 filter \-17500 256 vol +12 db
+.br
+	vol \-3 db lowp 17801
+.SP
+The audio is file is played with a simulated FM radio sound (or broadcast
+signal condition if the lowp at the end is skipped).
+Note that the pipeline is set up with US-style 75us preemphasis.
 .SS Changing the Rate of Playback
 You can use stretch to change the rate of playback of an audio sample
 while preserving the pitch.  For example to play at half the speed:
@@ -301,7 +326,6 @@ To raise the pitch of a sample 1 while note (100 cents):
 	play file.wav pitch 100
 .SP
 .SS Reducing noise in a recording
-.SP
 First find a period of silence in your recording, such as the beginning or
 end of a piece. If the first 1\*d5 seconds of the recording are silent, do
 .SP
@@ -310,6 +334,18 @@ end of a piece. If the first 1\*d5 seconds of the recording are silent, do
 Next, use the noisered effect to actually reduce the noise:
 .SP
 	play file.wav noisered /tmp/profile
+.SS Making a recording
+Thanks to Douglas Held for the following suggestion:
+.SP
+	rec \fIparameters filename other-effects\fR silence 1 5 2%
+.SP
+This use of the
+.B silence
+effect allows you to start a recording session but only start writing
+to disk once non-silence is detect. For example, use this to
+start your favorite command line for recording and walk
+over to your record player and start the song.  No periods
+of silence will be recorded.
 .SH SEE ALSO
 .BR sox (1),
 .BR soxlua (7),
