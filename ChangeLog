@@ -28,6 +28,9 @@ sox-12.18.3
   o bass and treble altering effects.  (robs)
   o Documented the butterworth filter effects; added variable Q.  (robs)
   o Visualisation of various filters' frequency response via Octave.  (robs)
+  o Added allpass filter effect.  (robs)
+  o Can now specify width of many 2nd-order filters as: Hz, octaves,
+    or Q.  (robs)
   o Fix rounding error when reading command-line time
     parameters. (robs)
   o Allow command-line time parameters of < 1 sec to omit the

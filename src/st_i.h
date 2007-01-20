@@ -315,6 +315,7 @@ typedef const st_effect_t *(*st_effect_fn_t)(void);
 
 extern st_effect_fn_t st_effect_fns[];
 
+extern const st_effect_t *st_allpass_effect_fn(void);
 extern const st_effect_t *st_avg_effect_fn(void);
 extern const st_effect_t *st_band_effect_fn(void);
 extern const st_effect_t *st_bandpass_effect_fn(void);

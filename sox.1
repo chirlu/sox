@@ -1015,8 +1015,18 @@ Brackets [ ] are used to denote parameters that are optional, braces
 and angle brackets < > to denote those that are repeatable but not
 optional.
 .TP
+\fBallpass\fR \fIfrequency width\fR[\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]
+Apply a two-pole all-pass filter with central frequency (in Hz)
+\fIfrequency\fR, and filter-width \fIwidth\fR: in Hz (the default, or if
+appended with `\fBh\fR'), in octaves (if appended with `\fBo\fR'), or as
+a Q-factor (if appended with `\fBq\fR').  An all-pass filter changes the
+audio's frequency to phase relationship without changing its frequency
+to amplitude relationship.  The filter is described in detail in [1].
+.SP
+This effect supports the \fB\-\-octave\fR global option.
+.TP
 \fBavg\fR [ \fB\-l\fR\^|\^\fB\-r\fR\^|\^\fB\-f\fR\^|\^\fB\-b\fR\^|\^\fB\-1\fR\^|\^\fB\-2\fR\^|\^\fB\-3\fR\^|\^\fB\-4\fR\^|\^\fIn\fR{\fB,\fIn\fR} ]
-Reduce the number of channels by averaging the samples,
+Reduce the number of audio channels by mixing or selecting channels,
 or duplicate channels to increase the number of channels.
 This effect is automatically used when the number of input
 channels differ from the number of output channels.  When reducing
@@ -1061,7 +1071,7 @@ In Ch	Out Ch	Num	Mappings
 .TE
 .SP
 .TP
-\fBband\fR [\fB\-n\fR] \fIcenter\fR [\fIwidth\fR]
+\fBband\fR [\fB\-n\fR] \fIcenter\fR [width\fR[\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]]
 Apply a band-pass filter.
 The frequency response drops logarithmically
 around the
@@ -1069,6 +1079,8 @@ around the
 frequency.
 The
 .I width
+in Hz (the default, or if appended with `\fBh\fR'), in octaves (if
+appended with `\fBo\fR'), or as a Q-factor (if appended with `\fBq\fR'),
 gives the slope of the drop.
 The frequencies at
 .I center
@@ -1093,24 +1105,33 @@ i.e. peaking at the
 .I center
 frequency and settling around it.
 .SP
-This effect supports the \fB\-\-octave\fR global option (see above).
+This effect supports the \fB\-\-octave\fR global option.
 .SP
 See also \fBfilter\fR for a bandpass filter with steeper shoulders.
 .TP
-\fBbandpass\fR\^|\^\fBbandreject \fIfrequency bandwidth\fR
+\fBbandpass\fR\^|\^\fBbandreject\fR [\fB\-c\fR] \fIfrequency width\fR[\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]
 Apply a two-pole Butterworth band-pass or band-reject filter with
-central frequency (in Hz) \fIfrequency\fR,
-and bandwidth (in Hz, and as determined by the 3dB points)
-\fIbandwidth\fR.
-The filter rolls off at 6dB per octave (20dB per decade).
+central frequency (in Hz) \fIfrequency\fR, and (3dB-point) band-width
+\fIwidth\fR: in Hz (the default, or if appended with `\fBh\fR'), in
+octaves (if appended with `\fBo\fR'), or as a Q-factor (if appended with
+`\fBq\fR').  The
+.B \-c
+option applies only to
+.B bandpass
+and selects a constant skirt gain (peak gain = Q) instead of the
+default: constant 0dB peak gain.
+The filters roll off at 6dB per octave (20dB per decade)
+and are described in detail in [1].
 .SP
-These effects support the \fB\-\-octave\fR global option (see above).
+These effects support the \fB\-\-octave\fR global option.
+.SP
+See also \fBfilter\fR for a bandpass filter with steeper shoulders.
 .TP
-\fBbandreject \fIfrequency bandwidth\fR
+\fBbandreject \fIfrequency width\fR[\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]
 Apply a band-reject filter.
 See the description of the \fBbandpass\fR effect for details.
 .TP
-\fBbass\fR\^|\^\fBtreble \fIgain\fR [\fIfrequency\fR] [\fIslope\fR]
+\fBbass\fR\^|\^\fBtreble \fIgain\fR [\fIfrequency\fR [\fIwidth\fR[\fBs\fR\^|\^\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]]]
 Boost or cut the bass (lower) or treble (upper) frequencies of the audio
 using a two-pole shelving filter with a response similar to that
 of a standard hi-fi's (Baxandall) tone-controls.  This is also
@@ -1125,19 +1146,27 @@ Beware of
 when using a positive \fIgain\fR.
 .SP
 If desired, the filter can be fine-tuned using the following
-optional parameters (in either order):
+optional parameters:
 .SP
-\fIfrequency\fR sets the filter's center frequency and so can be
+\fIfrequency\fR sets the filter's central frequency and so can be
 used to extend or reduce the frequency range to be boosted or
 cut.  The default value is 100Hz (for \fBbass\fR) or 3kHz (for
 \fBtreble\fR).
 .SP
-\fIslope\fR is a number between 0 and 1 that determines how
-steep the filter's shelf transition is.  Its useful range is
-about 0\*d3 (for a gentle slope) to 1 (for a steep slope).  The
+\fIwidth\fR 
+determines how
+steep the filter's shelf transition is and can be expressed as:
+a `slope' (the default, or if appended with `\fBs\fR'),
+a Q-factor (if appended with `\fBq\fR'),
+the transition width in octaves (if appended with `\fBo\fR'),
+or the transition width in Hz (if appended with `\fBh\fR').
+The useful range of `slope' is
+about 0\*d3, for a gentle slope, to 1 (the maximum), for a steep slope; the
 default value is 0\*d5.
 .SP
-These effects support the \fB\-\-octave\fR global option (see above).
+The filters are described in detail in [1].
+.SP
+These effects support the \fB\-\-octave\fR global option.
 .SP
 See also \fBequalizer\fR for a peaking equalisation effect.
 .TP
@@ -1207,11 +1236,12 @@ can be specified as well.  It should have a value much less than 1
 \fBdeemph\fR
 Apply a treble attenuation shelving filter to audio in
 audio-CD format.  The frequency response of pre-emphasized
-recordings is rectified.  The filtering is defined in the
+recordings is rectified.  The filter is defined in the
 standard document ISO 908.
 .SP
-This effect supports the \fB\-\-octave\fR global option (see above).
+This effect supports the \fB\-\-octave\fR global option.
 .SP
+See also the \fBbass\fR and \fBtreble\fR shelving equalisation effects.
 .TP
 \fBdither\fR [\fIdepth\fR]
 Apply dithering to the audio.
@@ -1251,15 +1281,18 @@ pair gives the delay in milliseconds
 and the decay (relative to gain-in) of that echo.
 Gain-out is the volume of the output.
 .TP
-\fBequalizer \fIfrequency Q gain\fR
+\fBequalizer \fIfrequency width\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR] \fIgain\fR
 Apply a two-pole peaking equalisation (EQ) filter.
 With this filter, the signal-level at and around a selected frequency
 can be increased or decreased, whilst (unlike band-pass and band-reject
 filters) that at all other frequencies is unchanged.
 .SP
-\fIfrequency\fR gives the filter's central frequency in Hz, \fIQ\fR its
-band-width specified as a `Q-factor' (see
-http://en.wikipedia.org/wiki/Q_factor), and \fIgain\fR the required gain
+\fIfrequency\fR gives the filter's central frequency in Hz,
+\fIwidth\fR, the band-width,
+as a Q-factor [2] (the default, or if appended with `\fBq\fR'),
+in octaves (if appended with `\fBo\fR'),
+or in Hz (if appended with `\fBh\fR'),
+and \fIgain\fR the required gain
 or attenuation in dB.
 Beware of
 .B Clipping
@@ -1268,7 +1301,9 @@ when using a positive \fIgain\fR.
 In order to produce complex equalisation curves, this effect
 can be given several times, each with a different central frequency.
 .SP
-This effect supports the \fB\-\-octave\fR global option (see above).
+The filter is described in detail in [1].
+.SP
+This effect supports the \fB\-\-octave\fR global option.
 .SP
 See also \fBbass\fR and \fBtreble\fR for shelving equalisation effects.
 .TP
@@ -1345,6 +1380,7 @@ Digital delay-line interpolation: \fBlinear\fR\^|\^\fBquadratic\fR.
 T}
 .TE
 .SP
+See [3] for a detailed description of flanging.
 .TP
 \fBhighp\fR \fIfrequency\fR
 Apply a high-pass filter.
@@ -1354,23 +1390,23 @@ effect used with its
 .B -1
 option; it is retained for backwards compatibilty only.
 .TP
-\fBhighpass\fR\^|\^\fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR [\fIQ\fR]
+\fBhighpass\fR\^|\^\fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR]]
 Apply a high-pass or low-pass filter with 3dB point \fIfrequency\fR.
 The filter can be either single-pole (with
 .BR -1 ),
-or double-pole (with
-.B -2
-or if unspecified).
-.I Q
-applies only to double-pole filters; its default value is 0\*d707 and gives
-a Butterworth response.  The filters roll off at
-6dB per pole per octave (20dB per pole per decade).  See
-http://musicdsp.org/files/Audio-EQ-Cookbook.txt for a detailed
-description of the double-pole filters.
+or double-pole (the default, or with
+.BR -2 ).
+.I width
+applies only to double-pole filters and is the filter-width: as a
+Q-factor (the default, or if appended with `\fBq\fR'), in octaves (if
+appended with `\fBo\fR'), or in Hz (if appended with `\fBh\fR');
+the default Q is 0\*d707 and gives a Butterworth response.  The filters
+roll off at 6dB per pole per octave (20dB per pole per decade).  The
+double-pole filters are described in detail in [1].
 .SP
-These effects support the \fB\-\-octave\fR global option (see above).
+These effects support the \fB\-\-octave\fR global option.
 .SP
-See also \fBfilter\fR for filters with a sharper cutoff.
+See also \fBfilter\fR for filters with a steeper roll-off.
 .TP
 \fBlowp \fIfrequency\fR
 Apply a low-pass filter.
@@ -1906,7 +1942,7 @@ begins; default=50. exp: the amplitude in percent; default=100.
 \fIp3\fR (trapezium): the percentage through each cycle at which `falling'
 ends; default=60.
 .TP
-\fBtreble \fIgain\fR [\fIfrequency\fR] [\fIslope\fR]
+\fBtreble \fIgain\fR [\fIfrequency\fR [\fIwidth\fR[\fBs\fR\^|\^\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]]]
 Apply a treble tone-control effect.
 See the description of the \fBbass\fR effect for details.
 .TP
@@ -1978,7 +2014,7 @@ of 0 leaves the volume unchanged,
 less than 0 decreases it,
 and greater than 0 increases it.
 .SP
-See http://en.wikipedia.org/wiki/Decibel
+See [4]
 for a detailed discussion on electrical (and hence audio signal)
 voltage and power ratios.
 .SP
@@ -2004,6 +2040,27 @@ Please report any bugs found in this version of SoX to the mailing list
 .BR libst (3)
 .SP
 The SoX web page at http://sox.sourceforge.net
+.SS References
+.TP
+[1]
+R. Bristow-Johnson,
+.IR "Cookbook formulae for audio EQ biquad filter coefficients" ,
+http://musicdsp.org/files/Audio-EQ-Cookbook.txt
+.TP
+[2]
+Wikipedia,
+.IR "Q-factor" ,
+http://en.wikipedia.org/wiki/Q_factor
+.TP
+[3]
+Scott Lehman,
+.IR "Flanging" ,
+http://harmony-central.com/Effects/Articles/Flanging
+.TP
+[4]
+Wikipedia,
+.IR "Decibel" ,
+http://en.wikipedia.org/wiki/Decibel
 .SH LICENSE
 Copyright 1991 Lance Norskog and Sundry Contributors.
 Copyright 1998\-2007 by Chris Bagwell and SoX Contributors.

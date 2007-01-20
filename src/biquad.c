@@ -14,13 +14,48 @@
  * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
-/* Biquad filter common functions   (c) 2006 robs@users.sourceforge.net */
+/* Biquad filter common functions   (c) 2006-7 robs@users.sourceforge.net */
+
 
 #include "biquad.h"
+#include <string.h>
 
 
+static char const * const width_str[] = {
+  "band-width(Hz)",
+  "band-width(Hz, no warp)", /* deprecated */
+  "band-width(octaves)",
+  "Q",
+  "slope",
+};
+static char const all_width_types[] = "hboqs";
 
-int st_biquad_start(eff_t effp, char const * width_name)
+
+int st_biquad_getopts(eff_t effp, int n, char **argv,
+    int min_args, int max_args, int fc_pos, int width_pos, int gain_pos,
+    char const * allowed_width_types, filter_t filter_type)
+{
+  biquad_t p = (biquad_t) effp->priv;
+  char width_type = *allowed_width_types;
+  char dummy;     /* To check for extraneous chars. */
+
+  p->filter_type = filter_type;
+  if (n < min_args || n > max_args ||
+      (n > fc_pos    && (sscanf(argv[fc_pos], "%lf %c", &p->fc, &dummy) != 1 || p->fc <= 0)) ||
+      (n > width_pos && ((unsigned)(sscanf(argv[width_pos], "%lf%c %c", &p->width, &width_type, &dummy)-1) > 1 || p->width <= 0)) ||
+      (n > gain_pos  && sscanf(argv[gain_pos], "%lf %c", &p->gain, &dummy) != 1) ||
+      !strchr(allowed_width_types, width_type) || (width_type == 's' && p->width > 1)) {
+    st_fail(effp->h->usage);
+    return ST_EOF;
+  }
+  p->width_type = strchr(all_width_types, width_type) - all_width_types;
+  if (p->width_type >= strlen(all_width_types))
+    p->width_type = 0;
+  return ST_SUCCESS;
+}
+
+
+int st_biquad_start(eff_t effp)
 {
   biquad_t p = (biquad_t) effp->priv;
 
@@ -31,28 +66,19 @@ int st_biquad_start(eff_t effp, char const * width_name)
   p->a2 = p->a2/p->a0;
   p->a1 = p->a1/p->a0;
 
-  if (p->dcNormalise) /* Normalise to AV = 0dB at DC: */
-  {
-    double normalise = (1 + p->a1 + p->a2) / (p->b0 + p->b1 + p->b2);
-    p->b0 = normalise * p->b0;
-    p->b1 = normalise * p->b1;
-    p->b2 = normalise * p->b2;
-  }
-
-  if (effp->globalinfo->octave_plot_effect)
-  {
+  if (effp->globalinfo->octave_plot_effect) {
     printf(
-      "title('SoX effect: %s gain=%g centre=%g %s=%g (rate=%u)')\n"
+      "title('SoX effect: %s gain=%g frequency=%g %s=%g (rate=%u)')\n"
       "xlabel('Frequency (Hz)')\n"
       "ylabel('Amplitude Response (dB)')\n"
       "Fs=%u;minF=10;maxF=Fs/2;\n"
-      "axis([minF maxF -25 25])\n"
+      "axis([minF maxF -35 25])\n"
       "sweepF=logspace(log10(minF),log10(maxF),200);\n"
       "grid on\n"
-      "[h,w]=freqz([%f %f %f],[1 %f %f],sweepF,Fs);\n"
+      "[h,w]=freqz([%g %g %g],[1 %g %g],sweepF,Fs);\n"
       "semilogx(w,20*log10(h),'b')\n"
       "pause\n"
-      , effp->name, p->gain, p->fc, width_name, p->width.q
+      , effp->name, p->gain, p->fc, width_str[p->width_type], p->width
       , effp->ininfo.rate, effp->ininfo.rate
       , p->b0, p->b1, p->b2, p->a1, p->a2
       );
@@ -64,9 +90,8 @@ int st_biquad_start(eff_t effp, char const * width_name)
 }
 
 
-  
-int st_biquad_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                        st_size_t *isamp, st_size_t *osamp)
+int st_biquad_flow(eff_t effp, const st_sample_t *ibuf,
+    st_sample_t *obuf, st_size_t *isamp, st_size_t *osamp)
 {
   biquad_t p = (biquad_t) effp->priv;
   st_size_t len = (*isamp > *osamp)? *osamp : *isamp;

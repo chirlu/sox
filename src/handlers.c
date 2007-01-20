@@ -8,7 +8,6 @@
  */
 
 #include "st_i.h"
-#include "btrworth.h"
 
 /*
  * Sound Tools file format and effect tables.
@@ -90,6 +89,7 @@ st_format_fn_t st_format_fns[] = {
  */
 
 st_effect_fn_t st_effect_fns[] = {
+  st_allpass_effect_fn,
   st_avg_effect_fn,
   st_band_effect_fn,
   st_bandpass_effect_fn,

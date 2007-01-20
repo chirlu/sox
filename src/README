@@ -4,10 +4,11 @@ Clipping Counting & Reporting Implementation Status
 2nd column: could clip (in theory)
 3rd column: CLIP_COUNT reporting implemented: yes, no, or (yes) custom
 
+allpass		y	y
 avg		y	y
-band		n	n
-bandpass	n	y
-bandreject	see bandpass
+band		y	y
+bandpass	y	y
+bandreject	y	y
 bass		y	y
 chorus		y	y
 compand		y	y
@@ -17,13 +18,13 @@ dither		see mask
 earwax		?	n
 echos		y	y
 echo		y	y
-equalizer	see bass
+equalizer	y	y
 fade		n	n
 filter		n	n
 flanger		y	y
-highpass	see bandpass
+highpass	y	y
 highp		n	y
-lowpass		see bandpass
+lowpass		n	y
 lowp		n	y
 lua		y	n	TODO
 mask		y	y
@@ -48,7 +49,7 @@ stat		n	n
 stretch		y	y
 swap		n	n
 synth		n	n
-treble		see bass
+treble		y	y
 trim		n	n
 vibro		n	n
 vol		y	y
