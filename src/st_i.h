@@ -242,6 +242,9 @@ extern const st_format_t *st_uw_format_fn(void);
 extern const st_format_t *st_sf_format_fn(void);
 extern const st_format_t *st_smp_format_fn(void);
 extern const st_format_t *st_snd_format_fn(void);
+#ifdef HAVE_SNDFILE_H
+extern const st_format_t *st_sndfile_format_fn(void);
+#endif
 extern const st_format_t *st_sphere_format_fn(void);
 #ifdef HAVE_SUN_AUDIO
 extern const st_format_t *st_sun_format_fn(void);
@@ -257,8 +260,7 @@ extern const st_format_t *st_wav_format_fn(void);
 extern const st_format_t *st_wve_format_fn(void);
 extern const st_format_t *st_xa_format_fn(void);
 
-/* Raw I/O
- */
+/* Raw I/O */
 int st_rawstartread(ft_t ft);
 st_size_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp);
 int st_rawstopread(ft_t ft);
@@ -266,6 +268,16 @@ int st_rawstartwrite(ft_t ft);
 st_size_t st_rawwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp);
 int st_rawstopwrite(ft_t ft);
 int st_rawseek(ft_t ft, st_size_t offset);
+
+/* libsndfile I/O */
+int st_sndfile_startread(ft_t ft);
+st_size_t st_sndfile_read(ft_t ft, st_sample_t *buf, st_size_t len);
+int st_sndfile_stopread(ft_t ft);
+int st_sndfile_startwrite(ft_t ft);
+st_size_t st_sndfile_write(ft_t ft, const st_sample_t *buf, st_size_t len);
+int st_sndfile_stopwrite(ft_t ft);
+int st_sndfile_seek(ft_t ft, st_size_t offset);
+
 
 /* The following functions can be used to simply return success if
  * a file handler or effect doesn't need to do anything special

@@ -90,6 +90,7 @@ sox-12.18.3
   o New .ima file format for raw IMA ADPCM.  (robs)
   o Build system overhaul to use the full set of GNU autotools.
     (Reuben Thomas)
+  o New file formats via libsndfile.  (Reuben Thomas)
 
 sox-12.18.2
 -----------

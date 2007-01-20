@@ -54,6 +54,9 @@ st_format_fn_t st_format_fns[] = {
   st_sl_format_fn,
   st_smp_format_fn,
   st_snd_format_fn,
+#ifdef HAVE_SNDFILE_H
+  st_sndfile_format_fn,
+#endif
   st_sphere_format_fn,
 #ifdef HAVE_SUN_AUDIO
   st_sun_format_fn,

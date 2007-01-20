@@ -94,6 +94,19 @@ if test "$with_sun_audio" = yes; then
    AC_DEFINE(HAVE_SUN_AUDIO, 1, [Define to 1 if you have Sun /dev/audio.])
 fi
 
+dnl Check for libsndfile
+with_sndfile=yes
+AC_ARG_WITH(sndfile,
+    AC_HELP_STRING([--with-sndfile],
+        [Use libsndfile if present (default is YES)]))
+if test "$with_sndfile" = yes; then
+  SOX_PATH_SNDFILE(, 
+                      [with_sndfile=no
+                       AC_MSG_NOTICE([Could not find a usable libsndfile])])
+fi
+AC_SUBST(SNDFILE_CFLAGS)
+AC_SUBST(SNDFILE_LIBS)
+        
 dnl Check for Ogg Vorbis libraries
 AC_CHECK_HEADER(vorbis/codec.h,
     [with_ogg_vorbis=yes
@@ -139,7 +152,7 @@ dnl Test for libsamplerate.
 with_samplerate=yes
 AC_ARG_WITH(samplerate,
     AC_HELP_STRING([--with-samplerate],
-        [Use libsamplerate (aka Rabbit Code) if present (default is YES)]))
+        [Use libsamplerate (aka Secret Rabbit Code) if present (default is YES)]))
 if test "$with_samplerate" = yes; then
   SOX_PATH_SAMPLERATE(, 
                       [with_samplerate=no
@@ -272,6 +285,7 @@ echo
 echo "ALSA Driver....................... $with_alsa"
 echo "OSS Driver........................ $with_oss"
 echo "SUN /dev/audio.................... $with_sun_audio"
+echo "libsndfile support................ $with_sndfile"
 echo "Ogg Vorbis support................ $with_ogg_vorbis"
 echo "FLAC support...................... $with_flac"
 echo "MAD MP3 Decoder................... $with_mad"
