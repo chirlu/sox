@@ -1633,12 +1633,14 @@ static void usage(char const *message)
          "--lua-script filename  file containing script for a `lua' format\n"
          "-r, --rate rate  sample rate of audio\n"
          "-t, --type filetype  file type of audio\n"
-         "-x/-N/-X        invert auto-detected endianness/nibble-order/bit-order of data\n"
-         "-B/-L           force endian type to big/little\n"
+         "-x              invert auto-detected endianness\n"
+         "-N, --reverse-nibbles  nibble-order\n"
+         "-X, --reverse-bits  bit-order of data\n"
+         "-B/-L           force endianness to big/little\n"
          "-s/-u/-U/-A/    sample encoding: signed/unsigned/u-law/A-law\n"
          "  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point\n"
          "-1/-2/-3/-4/-8  sample size in bytes\n"
-         "-v volume       input file volume adjustment factor (real number)\n"
+         "-v, --volume volume input file volume adjustment factor (real number)\n"
          "\n");
 
   printf("Supported file formats:");
