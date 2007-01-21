@@ -1582,9 +1582,15 @@ static void volumechange(st_sample_t * buf, st_ssize_t len, file_info_t fi)
     }
 }
 
+static int strcmp_p(const void *p1, const void *p2)
+{
+  return strcmp(*(const char **)p1, *(const char **)p2);
+}
+
 static void usage(char const *message)
 {
-  int i;
+  size_t i, formats;
+  const char **format_list;
   const st_effect_t *e;
 
   printf("%s: ", myname);
@@ -1636,17 +1642,27 @@ static void usage(char const *message)
          "\n");
 
   printf("Supported file formats:");
-  for (i = 0; st_format_fns[i]; i++) {
-    char const * const * names = st_format_fns[i]()->names;
-    if (!(st_format_fns[i]()->flags & ST_FILE_PHONY))
-      while (*names) printf(" %s", *names++);
+  for (i = 0, formats = 0; st_format_fns[i]; i++) {
+    char const * const *names = st_format_fns[i]()->names;
+    while (*names++)
+      formats++;
   }
+  format_list = (const char **)xmalloc(formats * sizeof(char *));
+  for (i = 0, formats = 0; st_format_fns[i]; i++) {
+    char const * const *names = st_format_fns[i]()->names;
+    while (*names)
+      format_list[formats++] = *names++;
+  }
+  qsort(format_list, formats, sizeof(char *), strcmp_p);
+  for (i = 0; i < formats; i++)
+    printf(" %s", format_list[i]);
+  free(format_list);
 
-  printf("\n\nSupported effects: ");
+  printf("\n\nSupported effects:");
   for (i = 0; st_effect_fns[i]; i++) {
     e = st_effect_fns[i]();
     if (e && e->name)
-      printf("%s ", e->name);
+      printf(" %s", e->name);
   }
 
   printf( "\n\neffopts: depends on effect\n");
