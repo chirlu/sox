@@ -93,8 +93,8 @@ static void process(void);
 static void update_status(void);
 static void volumechange(st_sample_t * buf, st_ssize_t len, file_info_t fo);
 static void parse_effects(int argc, char **argv);
-static void check_effects(void);
-static int start_effects(void);
+static void build_effects_table(void);
+static int start_all_effects(void);
 static int flow_effect_out(void);
 static int flow_effect(int);
 static int drain_effect_out(void);
@@ -681,7 +681,7 @@ static void show_file_progress(int f)
  */
 
 static void process(void) {
-  int e, flowstatus = ST_SUCCESS;
+  int e, flowstatus;
   size_t current_input = 0;
   st_size_t s, f;
   st_ssize_t ilen[MAX_INPUT_FILES];
@@ -762,11 +762,10 @@ static void process(void) {
   for (f = 0; f < input_count; f++)
     file_desc[f]->signal.rate = file_desc[f]->signal.rate * globalinfo.speed + .5;
 
-  /* build efftab */
-  check_effects();
+  build_effects_table();
 
-  /* Start all effects */
-  flowstatus = start_effects();
+  if (start_all_effects() != ST_SUCCESS)
+    exit(2); /* Failing effect should have displayed an error message */
 
   /* Allocate output buffers for effects */
   for (e = 0; e < neffects; e++) {
@@ -809,134 +808,128 @@ static void process(void) {
   for(e = 1; e < neffects; e++)
     efftab[e].odone = efftab[e].olen = 0;
       
-  /* If start functions set flowstatus to ST_EOF, skip both flow and
-     drain; we have to have this "if" because after flow flowstatus is
-     supposed to be ST_EOF, so we can't test that in order to know
-     whether to drain. */
-  if (flowstatus == 0) {
-    /* Run input data through effects and get more until olen == 0 
-     * (or ST_EOF) or user-abort.
-     */
-    signal(SIGINT, sigint);
-    signal(SIGTERM, sigint);
-    do {
-      if (combine_method == SOX_CONCAT) {
-        ilen[0] = st_read(file_desc[current_input], efftab[0].obuf, 
-                          (st_ssize_t)ST_BUFSIZ);
-        if (ilen[0] > ST_BUFSIZ) {
-          st_warn("WARNING: Corrupt value of %d!  Assuming 0 bytes read.", ilen);
-          ilen[0] = 0;
-        }
-            
-        if (ilen[0] == ST_EOF) {
-          efftab[0].olen = 0;
-          if (file_desc[current_input]->st_errno)
-            fprintf(stderr, file_desc[current_input]->st_errstr);
-        } else
-          efftab[0].olen = ilen[0];
-            
-        read_samples += efftab[0].olen;
-            
-        /* Some file handlers claim 0 bytes instead of returning
-         * ST_EOF.  In either case, attempt to go to the next
-         * input file.
-         */
-        if (ilen[0] == ST_EOF || efftab[0].olen == 0) {
-          if (current_input < input_count - 1) {
-            current_input++;
-            input_samples = file_desc[current_input]->length;
-            read_samples = 0;
-            show_file_progress(current_input);
-            continue;
-          }
-        }
-        volumechange(efftab[0].obuf, efftab[0].olen, file_opts[current_input]);
-      } else if (combine_method == SOX_MIX) {
-        for (f = 0; f < input_count; f++) {
-          ilen[f] = st_read(file_desc[f], ibuf[f], (st_ssize_t)ST_BUFSIZ);
-                
-          if (ilen[f] == ST_EOF) {
-            ilen[f] = 0;
-            if (file_desc[f]->st_errno) 
-              fprintf(stderr, file_desc[f]->st_errstr);
-          }
-                
-          /* Only count read samples for first file in mix */
-          if (f == 0)
-            read_samples += efftab[0].olen;
-          
-          volumechange(ibuf[f], ilen[f], file_opts[f]);
-        }
-        
-        /* FIXME: Should report if the size of the reads are not
-         * the same.
-         */
-        efftab[0].olen = 0;
-        for (f = 0; f < input_count; f++)
-          if ((st_size_t)ilen[f] > efftab[0].olen)
-            efftab[0].olen = ilen[f];
-            
-        for (s = 0; s < efftab[0].olen; s++) {
-          /* Mix audio by summing samples together. 
-           * Input side volume changes are performed above. */
-          for (f = 0; f < input_count; f++) {
-            if (f == 0)
-              efftab[0].obuf[s] =
-                (s<(st_size_t)ilen[f]) ? ibuf[f][s] : 0;
-            else if (s < (st_size_t)ilen[f]) {
-              /* Cast to double prevents integer overflow */
-              double sample = efftab[0].obuf[s] + (double)ibuf[f][s];
-              efftab[0].obuf[s] = ST_ROUND_CLIP_COUNT(sample, mixing_clips);
-            }
-          }
-        }
-      } else {                 /* combine_method == SOX_MERGE */
-        efftab[0].olen = 0;
-        for (f = 0; f < input_count; ++f) {
-          ilen[f] = st_read(file_desc[f], ibuf[f], ST_BUFSIZ / input_count);
-          if (ilen[f] == ST_EOF) {
-            ilen[f] = 0;
-            if (file_desc[f]->st_errno)
-              fprintf(stderr, file_desc[f]->st_errstr);
-          }
-          if ((st_size_t)ilen[f] > efftab[0].olen)
-            efftab[0].olen = ilen[f];
-          volumechange(ibuf[f], ilen[f], file_opts[f]);
-        }
-          
-        for (s = 0; s < efftab[0].olen; s++)
-          for (f = 0; f < input_count; f++)
-            efftab[0].obuf[s * input_count + f] =
-              (s < (st_size_t)ilen[f]) * ibuf[f][s];
-
-        read_samples += efftab[0].olen;
-        efftab[0].olen *= input_count;
+  /* Run input data through effects and get more until olen == 0 
+   * (or ST_EOF) or user-abort.
+   */
+  signal(SIGINT, sigint);
+  signal(SIGTERM, sigint);
+  do {
+    if (combine_method == SOX_CONCAT) {
+      ilen[0] = st_read(file_desc[current_input], efftab[0].obuf, 
+                        (st_ssize_t)ST_BUFSIZ);
+      if (ilen[0] > ST_BUFSIZ) {
+        st_warn("WARNING: Corrupt value of %d!  Assuming 0 bytes read.", ilen);
+        ilen[0] = 0;
       }
+          
+      if (ilen[0] == ST_EOF) {
+        efftab[0].olen = 0;
+        if (file_desc[current_input]->st_errno)
+          fprintf(stderr, file_desc[current_input]->st_errstr);
+      } else
+        efftab[0].olen = ilen[0];
+          
+      read_samples += efftab[0].olen;
+          
+      /* Some file handlers claim 0 bytes instead of returning
+       * ST_EOF.  In either case, attempt to go to the next
+       * input file.
+       */
+      if (ilen[0] == ST_EOF || efftab[0].olen == 0) {
+        if (current_input < input_count - 1) {
+          current_input++;
+          input_samples = file_desc[current_input]->length;
+          read_samples = 0;
+          show_file_progress(current_input);
+          continue;
+        }
+      }
+      volumechange(efftab[0].obuf, efftab[0].olen, file_opts[current_input]);
+    } else if (combine_method == SOX_MIX) {
+      for (f = 0; f < input_count; f++) {
+        ilen[f] = st_read(file_desc[f], ibuf[f], (st_ssize_t)ST_BUFSIZ);
+              
+        if (ilen[f] == ST_EOF) {
+          ilen[f] = 0;
+          if (file_desc[f]->st_errno) 
+            fprintf(stderr, file_desc[f]->st_errstr);
+        }
+              
+        /* Only count read samples for first file in mix */
+        if (f == 0)
+          read_samples += efftab[0].olen;
+        
+        volumechange(ibuf[f], ilen[f], file_opts[f]);
+      }
+      
+      /* FIXME: Should report if the size of the reads are not
+       * the same.
+       */
+      efftab[0].olen = 0;
+      for (f = 0; f < input_count; f++)
+        if ((st_size_t)ilen[f] > efftab[0].olen)
+          efftab[0].olen = ilen[f];
+          
+      for (s = 0; s < efftab[0].olen; s++) {
+        /* Mix audio by summing samples together. 
+         * Input side volume changes are performed above. */
+        for (f = 0; f < input_count; f++) {
+          if (f == 0)
+            efftab[0].obuf[s] =
+              (s<(st_size_t)ilen[f]) ? ibuf[f][s] : 0;
+          else if (s < (st_size_t)ilen[f]) {
+            /* Cast to double prevents integer overflow */
+            double sample = efftab[0].obuf[s] + (double)ibuf[f][s];
+            efftab[0].obuf[s] = ST_ROUND_CLIP_COUNT(sample, mixing_clips);
+          }
+        }
+      }
+    } else {                 /* combine_method == SOX_MERGE */
+      efftab[0].olen = 0;
+      for (f = 0; f < input_count; ++f) {
+        ilen[f] = st_read(file_desc[f], ibuf[f], ST_BUFSIZ / input_count);
+        if (ilen[f] == ST_EOF) {
+          ilen[f] = 0;
+          if (file_desc[f]->st_errno)
+            fprintf(stderr, file_desc[f]->st_errstr);
+        }
+        if ((st_size_t)ilen[f] > efftab[0].olen)
+          efftab[0].olen = ilen[f];
+        volumechange(ibuf[f], ilen[f], file_opts[f]);
+      }
+        
+      for (s = 0; s < efftab[0].olen; s++)
+        for (f = 0; f < input_count; f++)
+          efftab[0].obuf[s * input_count + f] =
+            (s < (st_size_t)ilen[f]) * ibuf[f][s];
 
-      efftab[0].odone = 0;
+      read_samples += efftab[0].olen;
+      efftab[0].olen *= input_count;
+    }
 
-      if (efftab[0].olen == 0)
-        break;
+    efftab[0].odone = 0;
 
-      flowstatus = flow_effect_out();
+    if (efftab[0].olen == 0)
+      break;
 
-      if (show_progress)
-        update_status();
+    flowstatus = flow_effect_out();
 
-      /* Quit reading/writing on user aborts.  This will close
-       * the files nicely as if an EOF was reached on read. */
-      if (user_abort)
-        break;
+    if (show_progress)
+      update_status();
 
-      /* If there's an error, don't try to write more. */
-      if (ofile->st_errno)
-        break;
-    } while (flowstatus == 0);
+    /* Quit reading/writing on user aborts.  This will close
+     * the files nicely as if an EOF was reached on read. */
+    if (user_abort)
+      break;
 
-    /* Drain the effects; don't write if output is indicating errors. */
-    if (ofile->st_errno == 0)
-      drain_effect_out();
-  }
+    /* If there's an error, don't try to write more. */
+    if (ofile->st_errno)
+      break;
+  } while (flowstatus == 0);
+
+  /* Drain the effects; don't write if output is indicating errors. */
+  if (ofile->st_errno == 0)
+    drain_effect_out();
 
   if (show_progress)
     fputs("\n\n", stderr);
@@ -1009,7 +1002,7 @@ static void parse_effects(int argc, char **argv)
  * Smart ruleset for multiple effects in sequence.
  *      Puts user-specified effect in right place.
  */
-static void check_effects(void)
+static void build_effects_table(void)
 {
   int i;
   int needchan = 0, needrate = 0, haschan = 0, hasrate = 0;
@@ -1166,7 +1159,7 @@ static void check_effects(void)
   }
 }
 
-static int start_effects(void)
+static int start_all_effects(void)
 {
   int e, ret = ST_SUCCESS;
 
