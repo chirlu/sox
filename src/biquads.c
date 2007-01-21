@@ -299,15 +299,24 @@ static int start(eff_t effp)
 }
 
 
-BIQUAD_EFFECT(highp,     hilo1,    "cutoff-frequency")
-BIQUAD_EFFECT(lowp,      hilo1,    "cutoff-frequency")
-BIQUAD_EFFECT(highpass,  hilo2,    "[-1|-2] frequency [width[q|o|h]]")
-BIQUAD_EFFECT(lowpass,   hilo2,    "[-1|-2] frequency [width[q|o|h]]")
-BIQUAD_EFFECT(bandpass,  bandpass, "[-c] frequency width[h|q|o]")
-BIQUAD_EFFECT(bandreject,bandrej,  "frequency width[h|q|o]")
-BIQUAD_EFFECT(allpass,   allpass,  "frequency width[h|q|o]")
-BIQUAD_EFFECT(bass,      tone,     "gain [frequency [width[s|h|q|o]]]")
-BIQUAD_EFFECT(treble,    tone,     "gain [frequency [width[s|h|q|o]]]")
-BIQUAD_EFFECT(equalizer, equalizer,"frequency width[q|o|h] gain")
-BIQUAD_EFFECT(band,      band,     "[-n] center [width[h|q|o]]")
-BIQUAD_EFFECT(deemph,    deemph,   "takes no options")
+#define BIQUAD_EFFECT(name,group,usage,flags) \
+st_effect_t const * st_##name##_effect_fn(void) { \
+  static st_effect_t driver = { \
+    #name, "Usage: " #name " " usage, flags, \
+    group##_getopts, start, st_biquad_flow, 0, 0, 0, \
+  }; \
+  return &driver; \
+}
+
+BIQUAD_EFFECT(highp,     hilo1,    "cutoff-frequency", ST_EFF_DEPRECATED)
+BIQUAD_EFFECT(lowp,      hilo1,    "cutoff-frequency", ST_EFF_DEPRECATED)
+BIQUAD_EFFECT(highpass,  hilo2,    "[-1|-2] frequency [width[q|o|h]]", 0)
+BIQUAD_EFFECT(lowpass,   hilo2,    "[-1|-2] frequency [width[q|o|h]]", 0)
+BIQUAD_EFFECT(bandpass,  bandpass, "[-c] frequency width[h|q|o]", 0)
+BIQUAD_EFFECT(bandreject,bandrej,  "frequency width[h|q|o]", 0)
+BIQUAD_EFFECT(allpass,   allpass,  "frequency width[h|q|o]", 0)
+BIQUAD_EFFECT(bass,      tone,     "gain [frequency [width[s|h|q|o]]]", 0)
+BIQUAD_EFFECT(treble,    tone,     "gain [frequency [width[s|h|q|o]]]", 0)
+BIQUAD_EFFECT(equalizer, equalizer,"frequency width[q|o|h] gain", 0)
+BIQUAD_EFFECT(band,      band,     "[-n] center [width[h|q|o]]", 0)
+BIQUAD_EFFECT(deemph,    deemph,   "takes no options", 0)

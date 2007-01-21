@@ -1,5 +1,5 @@
 /*
- * Sound Tools masking noise effect file.
+ * Sound Tools dithering noise effect file.
  *
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
@@ -16,29 +16,29 @@
 #include <math.h>
 #include "st_i.h"
 
-typedef struct mask {
+typedef struct dither {
   double amount;
-} * mask_t;
+} * dither_t;
 
-assert_static(sizeof(struct mask) <= ST_MAX_EFFECT_PRIVSIZE,
-              /* else */ mask_PRIVSIZE_too_big);
+assert_static(sizeof(struct dither) <= ST_MAX_EFFECT_PRIVSIZE,
+              /* else */ dither_PRIVSIZE_too_big);
 
-static int st_mask_getopts(eff_t effp, int n, char * * argv)
+static int getopts(eff_t effp, int n, char * * argv)
 {
-  mask_t mask = (mask_t) effp->priv;
+  dither_t dither = (dither_t) effp->priv;
 
   if (n > 1) {
     st_fail(effp->h->usage);
     return ST_EOF;
   }
   
-  mask->amount = sqrt(2); /* M_SQRT2 missing in some places */   /* Default to half a bit. */
+  dither->amount = sqrt(2); /* M_SQRT2 missing in some places */   /* Default to half a bit. */
   if (n == 1) {
     double amount;
     char dummy;
     int scanned = sscanf(*argv, "%lf %c", &amount, &dummy);
     if (scanned == 1 && amount > 0)
-      mask->amount *= amount;
+      dither->amount *= amount;
     else {
       st_fail(effp->h->usage);
       return ST_EOF;
@@ -48,24 +48,24 @@ static int st_mask_getopts(eff_t effp, int n, char * * argv)
   return ST_SUCCESS;
 }
 
-static int st_mask_start(eff_t effp)
+static int start(eff_t effp)
 {
-  mask_t mask = (mask_t) effp->priv;
+  dither_t dither = (dither_t) effp->priv;
 
   if (effp->outinfo.encoding == ST_ENCODING_ULAW ||
       effp->outinfo.encoding == ST_ENCODING_ALAW) {
-    mask->amount *= 16;
+    dither->amount *= 16;
     return ST_SUCCESS;
   } else if (effp->outinfo.size == ST_SIZE_BYTE) {
-    mask->amount *= 256;
+    dither->amount *= 256;
     return ST_SUCCESS;
   } else if (effp->outinfo.size == ST_SIZE_16BIT)
     return ST_SUCCESS;
   else if (effp->outinfo.size == ST_SIZE_24BIT) {
-    mask->amount /= 256;
+    dither->amount /= 256;
     return ST_SUCCESS;
   } else if (effp->outinfo.size == ST_SIZE_64BIT) {
-    mask->amount /= 16384;
+    dither->amount /= 16384;
     return ST_SUCCESS;
   }
 
@@ -74,51 +74,35 @@ static int st_mask_start(eff_t effp)
 }
 
 /* FIXME: Scale noise more sensibly for sizes >= 24 bits */
-static int st_mask_flow(eff_t effp, const st_sample_t * ibuf,
+static int flow(eff_t effp, const st_sample_t * ibuf,
     st_sample_t * obuf, st_size_t * isamp, st_size_t * osamp)
 {
-  mask_t mask = (mask_t)effp->priv;
+  dither_t dither = (dither_t)effp->priv;
   st_size_t len = min(*isamp, *osamp);
 
   *isamp = *osamp = len;
   while (len--) {             /* 16 signed bits of triangular noise */
     int tri16 = ((rand() % 32768L) + (rand() % 32768L)) - 32767;
-    double l = *ibuf++ + tri16 * mask->amount;
+    double l = *ibuf++ + tri16 * dither->amount;
     *obuf++ = ST_ROUND_CLIP_COUNT(l, effp->clips);
   }
   return ST_SUCCESS;
 }
 
-static st_effect_t st_mask_effect = {
-  "mask",
-  "Usage: mask [amount]",
-  ST_EFF_MCHAN,
-  st_mask_getopts,
-  st_effect_nothing,
-  st_mask_flow,
-  st_effect_nothing_drain,
-  st_effect_nothing,
-  st_effect_nothing
-};
+st_effect_t const * st_dither_effect_fn(void)
+{
+  static st_effect_t driver = {
+    "dither", "Usage: dither [amount]", ST_EFF_MCHAN,
+    getopts, start, flow, 0, 0, 0
+  };
+  return &driver;
+}
 
 st_effect_t const * st_mask_effect_fn(void)
 {
-  return &st_mask_effect;
-}
-
-static st_effect_t st_dither_effect = {
-  "dither",
-  "Usage: dither [amount]",
-  ST_EFF_MCHAN,
-  st_mask_getopts,
-  st_mask_start,
-  st_mask_flow,
-  st_effect_nothing_drain,
-  st_effect_nothing,
-  st_effect_nothing
-};
-
-st_effect_t const * st_dither_effect_fn(void)
-{
-  return &st_dither_effect;
+  static st_effect_t driver = {
+    "mask", "Usage: mask [amount]", ST_EFF_MCHAN | ST_EFF_DEPRECATED,
+    getopts, start, flow, 0, 0, 0
+  };
+  return &driver;
 }

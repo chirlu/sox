@@ -81,16 +81,6 @@ int st_biquad_start(eff_t effp);
 int st_biquad_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                         st_size_t *isamp, st_size_t *osamp);
 
-#define BIQUAD_EFFECT(name,group,usage) \
-st_effect_t const * st_##name##_effect_fn(void) { \
-  static st_effect_t driver = { \
-    #name, "Usage: " #name " " usage, 0, \
-    group##_getopts, start, st_biquad_flow, \
-    st_effect_nothing_drain, st_effect_nothing, st_effect_nothing \
-  }; \
-  return &driver; \
-}
-
 #undef st_fail
 #define st_fail st_message_filename=effp->name,st_fail
 

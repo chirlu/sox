@@ -287,7 +287,7 @@ mixes together two audio files.
 plays an audio file (through the default sound device) whilst applying a
 bass boosting effect,
 .SP
-	play \-c 4 \-n \-c 1 synth sin %\-12 sin %\-9 sin %\-5 sin %\-2 vol 0\*d7 avg fade q 0\*d1 1 0\*d1
+	play \-c 4 \-n \-c 1 synth sin %\-12 sin %\-9 sin %\-5 sin %\-2 vol 0\*d7 mixer fade q 0\*d1 1 0\*d1
 .SP
 plays a synthesised `A minor seventh' chord with a pipe-organ sound,
 .SP
@@ -388,8 +388,9 @@ Two or more input files must be given,
 and will be merged together (instead of concatenated)
 to form the output file.
 A merged audio file comprises all of the channels from all of the input
-files; a merged file could be un-merged using the
-.B pick
+files; a merged file could be un-merged by using multiple invocations of
+SoX with the
+.B mixer
 effect.
 .SP
 For example, two mono files could be merged to form one
@@ -484,9 +485,9 @@ This may be 1, 2, or 4; for mono, stereo, or quad audio.  To cause
 the output file to have a different number of channels than the input
 file, include this option with the output file options.
 If the input and output file have a different number of channels then the
-.B avg
+.B mixer
 effect must be used.  If the
-.B avg
+.B mixer
 effect is not specified on the
 command line it will be invoked internally with default parameters.
 .TP
@@ -1029,52 +1030,6 @@ to amplitude relationship.  The filter is described in detail in [1].
 .SP
 This effect supports the \fB\-\-octave\fR global option.
 .TP
-\fBavg\fR [ \fB\-l\fR\^|\^\fB\-r\fR\^|\^\fB\-f\fR\^|\^\fB\-b\fR\^|\^\fB\-1\fR\^|\^\fB\-2\fR\^|\^\fB\-3\fR\^|\^\fB\-4\fR\^|\^\fIn\fR{\fB,\fIn\fR} ]
-Reduce the number of audio channels by mixing or selecting channels,
-or duplicate channels to increase the number of channels.
-This effect is automatically used when the number of input
-channels differ from the number of output channels.  When reducing
-the number of channels it is possible to manually specify the
-.B avg
-effect and use the \fB\-l\fR, \fB\-r\fR, \fB\-f\fR, \fB\-b\fR,
-\fB\-1\fR, \fB\-2\fR, \fB\-3\fR, \fB\-4\fR, options to select only
-the left, right, front, back channel(s) or specific channel
-for the output instead of averaging the channels.
-The \fB\-l\fR, and \fB\-r\fR options will do averaging
-in quad-channel files so select the exact channel to prevent this.
-.SP
-The
-.B avg
-effect can also be invoked with up to 16
-numbers, separated by commas, which specify the proportion (0 = 0% and 1 = 100%)
-of each input channel that is to be mixed into each output channel.
-In two-channel mode, 4 numbers are given: l \*(RA l, l \*(RA r, r \*(RA l, and r \*(RA r,
-respectively.
-In four-channel mode, the first 4 numbers give the proportions for the
-left-front output channel, as follows: lf \*(RA lf, rf \*(RA lf, lb \*(RA lf, and
-rb \*(RA rf.
-The next 4 give the right-front output in the same order, then
-left-back and right-back.
-.SP
-It is also possible to use the 16 numbers to expand or reduce the
-channel count; just specify 0 for unused channels.
-.SP
-Finally, certain reduced combination of numbers can be specified
-for certain input/output channel combinations.
-.TS
-center box ;
-cB cB cB lB
-c c c l .
-In Ch	Out Ch	Num	Mappings
-2	1	2	l \*(RA l, r \*(RA l
-2	2	1	adjust balance
-4	1	4	lf \*(RA l, rf \*(RA l, lb \*(RA l, rb \*(RA l
-4	2	2	lf \*(RA l&rf \*(RA r, lb \*(RA l&rb \*(RA r
-4	4	1	adjust balance
-4	4	2	front balance, back balance
-.TE
-.SP
-.TP
 \fBband\fR [\fB\-n\fR] \fIcenter\fR [width\fR[\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]]
 Apply a band-pass filter.
 The frequency response drops logarithmically
@@ -1386,14 +1341,6 @@ T}
 .SP
 See [3] for a detailed description of flanging.
 .TP
-\fBhighp\fR \fIfrequency\fR
-Apply a high-pass filter.
-This effect is just an alias for the
-.B highpass
-effect used with its
-.B -1
-option; it is retained for backwards compatibilty only.
-.TP
 \fBhighpass\fR\^|\^\fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR]]
 Apply a high-pass or low-pass filter with 3dB point \fIfrequency\fR.
 The filter can be either single-pole (with
@@ -1412,15 +1359,7 @@ These effects support the \fB\-\-octave\fR global option.
 .SP
 See also \fBfilter\fR for filters with a steeper roll-off.
 .TP
-\fBlowp \fIfrequency\fR
-Apply a low-pass filter.
-This effect is just an alias for the
-.B lowpass
-effect used with its
-.B -1
-option; it is retained for backwards compatibilty only.
-.TP
-\fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR [\fIQ\fR]
+\fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR]]
 Apply a low-pass filter.
 See the description of the \fBhighpass\fR effect for details.
 .TP
@@ -1428,9 +1367,6 @@ See the description of the \fBhighpass\fR effect for details.
 This effect allows effects to be implemented in Lua. See
 .BR soxlua (7)
 for details.
-.TP
-\fBmask\fR [\fIdepth\fR]
-This effect is just a deprecated alias for the \fBdither\fR effect, left for historical reasons.
 .TP
 \fBmcompand "\fIattack1\fB,\fIdecay1\fR{\fB,\fIattack2\fB,\fIdecay2\fR}
 \fIin-dB1\fB,\fIout-dB1\fR{\fB,\fIin-dB2\fB,\fIout-dB2\fR}
@@ -1444,6 +1380,52 @@ options. Compand options are specified between double quotes and the
 crossover frequency for that band is specified separately with
 \fIxover-freq\fR. This can be repeated multiple times to create
 multiple bands.
+.TP
+\fBmixer\fR [ \fB\-l\fR\^|\^\fB\-r\fR\^|\^\fB\-f\fR\^|\^\fB\-b\fR\^|\^\fB\-1\fR\^|\^\fB\-2\fR\^|\^\fB\-3\fR\^|\^\fB\-4\fR\^|\^\fIn\fR{\fB,\fIn\fR} ]
+Reduce the number of audio channels by mixing or selecting channels,
+or duplicate channels to increase the number of channels.
+This effect is automatically used when the number of input
+channels differ from the number of output channels.  When reducing
+the number of channels it is possible to manually specify the
+.B mixer
+effect and use the \fB\-l\fR, \fB\-r\fR, \fB\-f\fR, \fB\-b\fR,
+\fB\-1\fR, \fB\-2\fR, \fB\-3\fR, \fB\-4\fR, options to select only
+the left, right, front, back channel(s) or specific channel
+for the output instead of averaging the channels.
+The \fB\-l\fR, and \fB\-r\fR options will do averaging
+in quad-channel files so select the exact channel to prevent this.
+.SP
+The
+.B mixer
+effect can also be invoked with up to 16
+numbers, separated by commas, which specify the proportion (0 = 0% and 1 = 100%)
+of each input channel that is to be mixed into each output channel.
+In two-channel mode, 4 numbers are given: l \*(RA l, l \*(RA r, r \*(RA l, and r \*(RA r,
+respectively.
+In four-channel mode, the first 4 numbers give the proportions for the
+left-front output channel, as follows: lf \*(RA lf, rf \*(RA lf, lb \*(RA lf, and
+rb \*(RA rf.
+The next 4 give the right-front output in the same order, then
+left-back and right-back.
+.SP
+It is also possible to use the 16 numbers to expand or reduce the
+channel count; just specify 0 for unused channels.
+.SP
+Finally, certain reduced combination of numbers can be specified
+for certain input/output channel combinations.
+.TS
+center box ;
+cB cB cB lB
+c c c l .
+In Ch	Out Ch	Num	Mappings
+2	1	2	l \*(RA l, r \*(RA l
+2	2	1	adjust balance
+4	1	4	lf \*(RA l, rf \*(RA l, lb \*(RA l, rb \*(RA l
+4	2	2	lf \*(RA l&rf \*(RA r, lb \*(RA l&rb \*(RA r
+4	4	1	adjust balance
+4	4	2	front balance, back balance
+.TE
+.SP
 .TP
 \fBnoiseprof\fR [\fIprofile-file\fR]
 Calculate a profile of the audio for use in noise reduction.
@@ -1515,11 +1497,6 @@ The modulation is either sinusoidal (\fB\-s\fR) or triangular
 (\fB\-t\fR).  The decay should be less than 0\*d5 to avoid
 feedback.  Gain-out is the volume of the output.
 .TP
-\fBpick\fR [ \fB\-l\fR\^|\^\fB\-r\fR\^|\^\fB\-f\fR\^|\^\fB\-b\fR\^|\^\fB\-1\fR\^|\^\fB\-2\fR\^|\^\fB\-3\fR\^|\^\fB\-4\fR\^|\^\fIn\fR{\fB,\fIn\fR} ]
-Pick a subset of channels to be copied into the output file.  This effect is just an alias of the
-.B avg
-effect and is retained for backwards compatibility only.
-.TP
 \fBpitch \fIshift\fR [\fIwidth interpolate fade\fR]
 Change the pitch of file without affecting its duration by cross-fading
 shifted samples.
@@ -1575,10 +1552,6 @@ and
 .B resample
 for other sample-rate changing effects, and see
 \fBresample\fR for more discussion of resampling.
-.TP
-\fBrate\fR
-Does the same as \fBresample\fR with no parameters; it exists for
-backwards compatibility.
 .TP
 \fBrepeat \fIcount\fR
 Repeat the entire audio \fIcount\fR times.
@@ -2032,6 +2005,46 @@ than 1 (e.g. 0\*d05 or 0\*d02) and is used only on peaks to prevent clipping.
 Not specifying this parameter will cause no limiter to be used.  In verbose
 mode, this effect will display the percentage of the audio that needed to be
 limited.
+.SS Deprecated Effects
+The following effects have ben renamed or have their functionality
+included in another effect.  They continue to work in this version of
+SoX but may be removed in future.
+.TP
+\fBavg\fR [ \fB\-l\fR\^|\^\fB\-r\fR\^|\^\fB\-f\fR\^|\^\fB\-b\fR\^|\^\fB\-1\fR\^|\^\fB\-2\fR\^|\^\fB\-3\fR\^|\^\fB\-4\fR\^|\^\fIn\fR{\fB,\fIn\fR} ]
+Reduce the number of audio channels by mixing or selecting channels,
+or duplicate channels to increase the number of channels.
+This effect is just an alias of the
+.B mixer
+effect and is retained for backwards compatibility only.
+.TP
+\fBhighp\fR \fIfrequency\fR
+Apply a high-pass filter.
+This effect is just an alias for the
+.B highpass
+effect used with its
+.B -1
+option; it is retained for backwards compatibilty only.
+.TP
+\fBlowp \fIfrequency\fR
+Apply a low-pass filter.
+This effect is just an alias for the
+.B lowpass
+effect used with its
+.B -1
+option; it is retained for backwards compatibilty only.
+.TP
+\fBmask\fR [\fIdepth\fR]
+This effect is just a deprecated alias for the \fBdither\fR effect, left for historical reasons.
+.TP
+\fBpick\fR [ \fB\-l\fR\^|\^\fB\-r\fR\^|\^\fB\-f\fR\^|\^\fB\-b\fR\^|\^\fB\-1\fR\^|\^\fB\-2\fR\^|\^\fB\-3\fR\^|\^\fB\-4\fR\^|\^\fIn\fR{\fB,\fIn\fR} ]
+Pick a subset of channels to be copied into the output file.
+This effect is just an alias of the
+.B mixer
+effect and is retained for backwards compatibility only.
+.TP
+\fBrate\fR
+Does the same as \fBresample\fR with no parameters; it exists for
+backwards compatibility.
 .SH DIAGNOSTICS
 Exit status is 0 for no error, 1 if there is a problem with the
 command-line parameters, or 2 if an error occurs during file processing.

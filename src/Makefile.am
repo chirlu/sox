@@ -22,9 +22,9 @@ formats = 8svx.c adpcm.c adpcm.h adpcms.c adpcms.h aiff.c au.c auto.c avr.c \
 	  sfircam.h skelform.c smp.c sndfile.c sndrtool.c sphere.c tx16w.c \
 	  voc.c vorbis.c vox.c wav.c wav.h wve.c xa.c
 
-effects = avg.c band.h biquad.c biquad.h biquads.c chorus.c compand.c dcshift.c\
-	  deemph.h earwax.c echo.c echos.c fade.c FFT.c FFT.h filter.c \
-	  flanger.c luaeff.c luaform.c lintlib.c mask.c mcompand.c noiseprof.c \
+effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c dcshift.c\
+	  deemph.h dither.c earwax.c echo.c echos.c fade.c FFT.c FFT.h filter.c\
+	  flanger.c luaeff.c luaform.c lintlib.c mcompand.c mixer.c noiseprof.c\
 	  noisered.c noisered.h pad.c pan.c phaser.c pitch.c polyphas.c \
 	  rabbit.c rate.c repeat.c resample.c reverb.c reverse.c silence.c \
 	  skeleff.c speed.c stat.c stretch.c swap.c synth.c trim.c vibro.c vol.c

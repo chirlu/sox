@@ -114,6 +114,7 @@ st_effect_fn_t st_effect_fns[] = {
   st_lua_effect_fn,
   st_mask_effect_fn,
   st_mcompand_effect_fn,
+  st_mixer_effect_fn,
   st_noiseprof_effect_fn,
   st_noisered_effect_fn,
   st_pad_effect_fn,

@@ -681,7 +681,7 @@ static void show_file_progress(int f)
  */
 
 static void process(void) {
-  int e, flowstatus;
+  int e, flowstatus = 0;
   size_t current_input = 0;
   st_size_t s, f;
   st_ssize_t ilen[MAX_INPUT_FILES];
@@ -963,200 +963,130 @@ static void process(void) {
 static void parse_effects(int argc, char **argv)
 {
   int argc_effect;
-  int effect_rc;
 
-  nuser_effects = 0;
+  for (nuser_effects = 0; optind < argc; ++nuser_effects) {
+    struct st_effect * e = &user_efftab[nuser_effects];
+    int (*getopts)(eff_t effp, int argc, char *argv[]);
 
-  while (optind < argc) {
     if (nuser_effects >= MAX_USER_EFF) {
-      st_fail("too many effects specified (at most %d allowed)", MAX_USER_EFF);
+      st_fail("too many effects specified (at most %i allowed)", MAX_USER_EFF);
       exit(1);
     }
 
-    argc_effect = st_geteffect_opt(&user_efftab[nuser_effects],
-                                   argc - optind, &argv[optind]);
-
+    argc_effect = st_geteffect_opt(e, argc - optind, &argv[optind]);
     if (argc_effect == ST_EOF) {
       st_fail("Effect `%s' does not exist!", argv[optind]);
       exit(1);
     }
 
-    /* Skip past effect name */
-    optind++;
-    
-    user_efftab[nuser_effects].globalinfo = &globalinfo;
-    effect_rc = (*user_efftab[nuser_effects].h->getopts)
-      (&user_efftab[nuser_effects], argc_effect, &argv[optind]);
-    
-    if (effect_rc == ST_EOF) 
+    optind++; /* Skip past effect name */
+    e->globalinfo = &globalinfo;
+    getopts = e->h->getopts?  e->h->getopts : st_effect_nothing_getopts;
+    if (getopts(e, argc_effect, &argv[optind]) == ST_EOF) 
       exit(2);
 
-    /* Skip past the effect arguments */
-    optind += argc_effect;
-    nuser_effects++;
+    optind += argc_effect; /* Skip past the effect arguments */
   }
 }
 
-/*
- * If no effect given, decide what it should be.
- * Smart ruleset for multiple effects in sequence.
- *      Puts user-specified effect in right place.
+static void add_effect(int * effects_mask)
+{ 
+  struct st_effect * e = &efftab[neffects];
+
+  /* Copy format info to effect table */
+  *effects_mask = 
+    st_updateeffect(e, &file_desc[0]->signal, &ofile->signal, *effects_mask);
+
+  /* If this effect can't handle multiple channels then account for this. */
+  if (e->ininfo.channels > 1 && !(e->h->flags & ST_EFF_MCHAN))
+    memcpy(&efftabR[neffects], e, sizeof(*e));
+
+  st_report("Effects chain:%10s %-6s %uHz", e->name,
+      e->ininfo.channels < 2? "mono" :
+      (e->h->flags & ST_EFF_MCHAN)? "multi" : "stereo", e->ininfo.rate);
+
+  ++neffects;
+}
+
+static void add_default_effect(char const * name, int * effects_mask)
+{ 
+  struct st_effect * e = &efftab[neffects];
+  int (*getopts)(eff_t effp, int argc, char *argv[]);
+
+  /* Find effect and update initial pointers */
+  st_geteffect(e, name);
+
+  /* Set up & give default opts for added effects */ 
+  e->globalinfo = &globalinfo;
+  getopts = e->h->getopts?  e->h->getopts : st_effect_nothing_getopts;
+  if (getopts(e, 0, NULL) == ST_EOF)
+    exit(2);
+
+  add_effect(effects_mask);
+}
+
+/* If needed effects are not given, auto-add at (performance) optimal point.
  */
 static void build_effects_table(void)
 {
   int i;
-  int needchan = 0, needrate = 0, haschan = 0, hasrate = 0;
   int effects_mask = 0;
-  int status;
+  st_bool need_rate = file_desc[0]->signal.rate     != ofile->signal.rate;
+  st_bool need_chan = file_desc[0]->signal.channels != ofile->signal.channels;
 
-  needrate = (file_desc[0]->signal.rate != ofile->signal.rate);
-  needchan = (file_desc[0]->signal.channels != ofile->signal.channels);
+  { /* Check if we have to add effects to change rate/chans or if the
+       user has specified effects to do this, in which case, check if
+       too many rate/channel-changing effects have been specified:     */
+    int user_chan_effects = 0, user_rate_effects = 0;
 
-  for (i = 0; i < nuser_effects; i++) {
-    if (user_efftab[i].h->flags & ST_EFF_CHAN)
-      haschan++;
-    if (user_efftab[i].h->flags & ST_EFF_RATE)
-      hasrate++;
+    for (i = 0; i < nuser_effects; i++) {
+      if (user_efftab[i].h->flags & ST_EFF_CHAN) {
+        need_chan = st_false;
+        ++user_chan_effects;
+      }
+      if (user_efftab[i].h->flags & ST_EFF_RATE) {
+        need_rate = st_false;
+        ++user_rate_effects;
+      }
+    }
+    if (user_chan_effects > 1) {
+      st_fail("Cannot specify multiple effects that change number of channels");
+      exit(2);
+    }
+    if (user_rate_effects > 1)
+      st_report("Cannot specify multiple effects that change sample rate");
+      /* FIXME: exit here or add comment as to why not */
   }
-
-  if (haschan > 1) {
-    st_fail("Cannot specify multiple effects that modify number of channels");
-    exit(2);
-  }
-  if (hasrate > 1)
-    st_report("Cannot specify multiple effects that change sample rate");
 
   /* --------- add the effects ------------------------ */
 
   /* efftab[0] is always the input stream and always exists */
   neffects = 1;
 
-  /* If reducing channels then its faster to run all effects     
-   * after the avg effect.      
-   */   
-  if (needchan && !(haschan) &&
-      (file_desc[0]->signal.channels > ofile->signal.channels))
-  { 
-      /* Find effect and update initial pointers */
-      st_geteffect(&efftab[neffects], "avg");
-
-      /* give default opts for added effects */
-      efftab[neffects].globalinfo = &globalinfo;
-      status = (* efftab[neffects].h->getopts)(&efftab[neffects], (int)0,
-                                               (char **)0);
-
-      if (status == ST_EOF)
-          exit(2);
-
-      /* Copy format info to effect table */
-      effects_mask = st_updateeffect(&efftab[neffects], 
-                                     &file_desc[0]->signal,
-                                     &ofile->signal,
-                                     effects_mask);
-
-      neffects++;
+  /* If reducing channels, it's faster to do so before all other effects: */
+  if (need_chan && file_desc[0]->signal.channels > ofile->signal.channels) {
+    add_default_effect("mixer", &effects_mask);
+    need_chan = st_false;
   }
-
-  /* If reducing the number of samples, it's faster to run all effects 
-   * after the resample effect. 
-   */
-  if (needrate && !(hasrate) &&
-      (file_desc[0]->signal.rate > ofile->signal.rate)) 
-  {
-      st_geteffect(&efftab[neffects], "resample");
-
-      /* set up & give default opts for added effects */ 
-      efftab[neffects].globalinfo = &globalinfo;
-      status = (* efftab[neffects].h->getopts)(&efftab[neffects], (int)0,
-                                               (char **)0);
-
-      if (status == ST_EOF)
-          exit(2);
-
-      /* Copy format info to effect table */ 
-      effects_mask = st_updateeffect(&efftab[neffects],
-                                     &file_desc[0]->signal,
-                                     &ofile->signal,
-                                     effects_mask);
-
-      /* Rate can't handle multiple channels so be sure and
-       * account for that.
-       */ 
-      if (efftab[neffects].ininfo.channels > 1)   
-          memcpy(&efftabR[neffects], &efftab[neffects], 
-                 sizeof(struct st_effect));
-
-      neffects++;
-  } 
-
-  /* Copy over user specified effects into real efftab */
+  /* If reducing rate, it's faster to do so before all other effects
+   * (except reducing channels): */
+  if (need_rate && file_desc[0]->signal.rate > ofile->signal.rate) {
+    add_default_effect("resample", &effects_mask);
+    need_rate = st_false;
+  }
+  /* Copy user specified effects into the real efftab */
   for (i = 0; i < nuser_effects; i++) {
-    memcpy(&efftab[neffects], &user_efftab[i], sizeof(struct st_effect));
-
-    /* Copy format info to effect table */
-    effects_mask = st_updateeffect(&efftab[neffects], 
-                                   &file_desc[0]->signal,
-                                   &ofile->signal, 
-                                   effects_mask);
-    
-    /* If this effect can't handle multiple channels then
-     * account for this. */
-    if ((efftab[neffects].ininfo.channels > 1) &&
-        !(efftab[neffects].h->flags & ST_EFF_MCHAN))
-      memcpy(&efftabR[neffects], &efftab[neffects],
-             sizeof(struct st_effect));
-
-    neffects++;
+    memcpy(&efftab[neffects], &user_efftab[i], sizeof(efftab[0]));
+    add_effect(&effects_mask);
   }
-
-  /* If rate effect hasn't been added by now then add it here.
-   * Check adding rate before avg because it's faster to run
-   * rate on less channels then more.
-   */
-  if (needrate && !(effects_mask & ST_EFF_RATE)) {
-    st_geteffect(&efftab[neffects], "resample");
-
-    /* Set up & give default opts for added effect */
-    efftab[neffects].globalinfo = &globalinfo;
-    status = (* efftab[neffects].h->getopts)(&efftab[neffects], 0, NULL);
-
-    if (status == ST_EOF)
-      exit(2);
-
-    /* Copy format info to effect table */
-    effects_mask = st_updateeffect(&efftab[neffects], 
-                                   &file_desc[0]->signal,
-                                   &ofile->signal, 
-                                   effects_mask);
-
-    /* Rate can't handle multiple channels so be sure and
-     * account for that. */
-    if (efftab[neffects].ininfo.channels > 1)
-      memcpy(&efftabR[neffects], &efftab[neffects],
-             sizeof(struct st_effect));
-
-    neffects++;
-  }
-
-  /* If we haven't added avg effect yet then do it now.
-   */
-  if (needchan && !(effects_mask & ST_EFF_CHAN)) {
-    st_geteffect(&efftab[neffects], "avg");
-
-    /* set up & give default opts for added effects */
-    efftab[neffects].globalinfo = &globalinfo;
-    status = (* efftab[neffects].h->getopts)(&efftab[neffects], 0, NULL);
-    if (status == ST_EOF)
-      exit(2);
-
-    /* Copy format info to effect table */
-    effects_mask = st_updateeffect(&efftab[neffects], 
-                                   &file_desc[0]->signal,
-                                   &ofile->signal, 
-                                   effects_mask);
-    
-    neffects++;
-  }
+  /* If rate/channels-changing effects are needed but haven't yet been
+   * added, then do it here.  Change rate before channels because it's
+   * faster to change rate on a smaller # of channels and # of channels
+   * can not be reduced, only increased, at this point. */
+  if (need_rate)
+    add_default_effect("resample", &effects_mask);
+  if (need_chan)
+    add_default_effect("mixer", &effects_mask);
 }
 
 static int start_all_effects(void)
@@ -1164,16 +1094,17 @@ static int start_all_effects(void)
   int e, ret = ST_SUCCESS;
 
   for (e = 1; e < neffects; e++) {
+    int (*start)(eff_t effp) = 
+       efftab[e].h->start? efftab[e].h->start : st_effect_nothing;
     efftab[e].clips = 0;
-    if ((ret = (*efftab[e].h->start)(&efftab[e])) == ST_EOF)
+    if ((ret = start(&efftab[e])) == ST_EOF)
       break;
     if (efftabR[e].name) {
       efftabR[e].clips = 0;
-      if ((ret = (*efftabR[e].h->start)(&efftabR[e])) != ST_SUCCESS)
+      if ((ret = start(&efftabR[e])) != ST_SUCCESS)
         break;
     }
   }
-
   return ret;
 }
 
@@ -1326,6 +1257,8 @@ static int flow_effect(int e)
   const st_sample_t *ibuf;
   st_sample_t *obuf;
   int effstatus, effstatusl, effstatusr;
+  int (*flow)(eff_t, st_sample_t const*, st_sample_t*, st_size_t*, st_size_t*) =
+    efftab[e].h->flow? efftab[e].h->flow : st_effect_nothing_flow;
 
   /* Do not attempt to do any more effect processing during
    * user aborts as we may be stuck in an infinite flow loop.
@@ -1348,11 +1281,11 @@ static int flow_effect(int e)
     st_debug("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
     st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen); 
 
-    effstatus = (* efftab[e].h->flow)(&efftab[e],
-                                      &efftab[e - 1].obuf[efftab[e - 1].odone],
-                                      &efftab[e].obuf[efftab[e].olen], 
-                                      (st_size_t *)&idone, 
-                                      (st_size_t *)&odone);
+    effstatus = flow(&efftab[e],
+                     &efftab[e - 1].obuf[efftab[e - 1].odone],
+                     &efftab[e].obuf[efftab[e].olen], 
+                     (st_size_t *)&idone, 
+                     (st_size_t *)&odone);
 
     efftab[e - 1].odone += idone;
     /* Don't update efftab[e].odone as we didn't consume data */
@@ -1380,16 +1313,16 @@ static int flow_effect(int e)
     st_debug("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
     st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e - 1].odone, efftab[e - 1].olen, efftab[e].odone, efftab[e].olen); 
     
-    effstatusl = (* efftab[e].h->flow)(&efftab[e],
-                                       ibufl, obufl, (st_size_t *)&idonel, 
-                                       (st_size_t *)&odonel);
+    effstatusl = flow(&efftab[e],
+                      ibufl, obufl, (st_size_t *)&idonel, 
+                      (st_size_t *)&odonel);
     
     /* right */
     idoner = idone / 2;               /* odd-length logic */
     odoner = odone / 2;
-    effstatusr = (* efftabR[e].h->flow)(&efftabR[e],
-                                        ibufr, obufr, (st_size_t *)&idoner, 
-                                        (st_size_t *)&odoner);
+    effstatusr = flow(&efftabR[e],
+                      ibufr, obufr, (st_size_t *)&idoner, 
+                      (st_size_t *)&odoner);
     
     obuf = &efftab[e].obuf[efftab[e].olen];
     /* This loop implies left and right effect will always output
@@ -1453,11 +1386,12 @@ static int drain_effect(int e)
   st_ssize_t i, olen, olenl, olenr;
   st_sample_t *obuf;
   int rc;
+  int (*drain)(eff_t effp, st_sample_t *obuf, st_size_t *osamp) =
+    efftab[e].h->drain? efftab[e].h->drain : st_effect_nothing_drain;
 
   if (! efftabR[e].name) {
     efftab[e].olen = ST_BUFSIZ;
-    rc = (* efftab[e].h->drain)(&efftab[e],efftab[e].obuf,
-                                &efftab[e].olen);
+    rc = drain(&efftab[e],efftab[e].obuf, &efftab[e].olen);
     efftab[e].odone = 0;
   } else {
     int rc_l, rc_r;
@@ -1466,13 +1400,11 @@ static int drain_effect(int e)
 
     /* left */
     olenl = olen/2;
-    rc_l = (* efftab[e].h->drain)(&efftab[e], obufl, 
-                                  (st_size_t *)&olenl);
+    rc_l = drain(&efftab[e], obufl, (st_size_t *)&olenl);
 
     /* right */
     olenr = olen/2;
-    rc_r = (* efftab[e].h->drain)(&efftabR[e], obufr, 
-                                  (st_size_t *)&olenr);
+    rc_r = drain(&efftabR[e], obufr, (st_size_t *)&olenr);
 
     if (rc_l == ST_EOF || rc_r == ST_EOF)
       rc = ST_EOF;
@@ -1499,17 +1431,22 @@ static void stop_effects(void)
 
   for (e = 1; e < neffects; e++) {
     st_size_t clips;
-    (*efftab[e].h->stop)(&efftab[e]);
+    int (*stop)(eff_t effp) = 
+       efftab[e].h->stop? efftab[e].h->stop : st_effect_nothing;
+    int (*delete)(eff_t effp) = 
+       efftab[e].h->delete? efftab[e].h->delete : st_effect_nothing;
+
+    stop(&efftab[e]);
     clips = efftab[e].clips;
-    (*efftab[e].h->delete)(&efftab[e]);
+    delete(&efftab[e]);
+    
     if (efftabR[e].name) {
-      (*efftabR[e].h->stop)(&efftabR[e]);
+      stop(&efftabR[e]);
       clips += efftab[e].clips;
-      (*efftabR[e].h->delete)(&efftabR[e]);
+      delete(&efftabR[e]);
     }
     if (clips != 0)
-      st_warn("%s clipped %u samples; decrease volume?", efftab[e].name,
-              clips);
+      st_warn("%s clipped %u samples; decrease volume?", efftab[e].name, clips);
   }
 }
 
@@ -1642,7 +1579,7 @@ static void usage(char const *message)
          "-v, --volume    volume input file volume adjustment factor (real number)\n"
          "\n");
 
-  printf("Supported file formats:");
+  printf("SUPPORTED FILE FORMATS:");
   for (i = 0, formats = 0; st_format_fns[i]; i++) {
     char const * const *names = st_format_fns[i]()->names;
     while (*names++)
@@ -1659,10 +1596,10 @@ static void usage(char const *message)
     printf(" %s", format_list[i]);
   free(format_list);
 
-  printf("\n\nSupported effects:");
+  printf("\n\nSUPPORTED EFFECTS:");
   for (i = 0; st_effect_fns[i]; i++) {
     e = st_effect_fns[i]();
-    if (e && e->name)
+    if (e && e->name && !(e->flags & ST_EFF_DEPRECATED))
       printf(" %s", e->name);
   }
 

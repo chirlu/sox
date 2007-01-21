@@ -17,7 +17,7 @@ int st_resample_stop(eff_t effp);
 static st_effect_t st_rate_effect = {
   "rate",
   "Usage: Rate effect takes no options",
-  ST_EFF_RATE,
+  ST_EFF_RATE | ST_EFF_DEPRECATED,
   st_resample_getopts,
   st_resample_start,
   st_resample_flow,

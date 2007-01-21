@@ -324,10 +324,11 @@ extern const char * const st_sizes_str[];
 extern const char * const st_size_bits_str[];
 extern const char * const st_encodings_str[];
 
-#define ST_EFF_CHAN     1               /* Effect can mix channels up/down */
-#define ST_EFF_RATE     2               /* Effect can alter data rate */
-#define ST_EFF_MCHAN    4               /* Effect can handle multi-channel */
-#define ST_EFF_REPORT   8               /* Effect does not affect the audio */
+#define ST_EFF_CHAN     1           /* Effect can mix channels up/down */
+#define ST_EFF_RATE     2           /* Effect can alter data rate */
+#define ST_EFF_MCHAN    4           /* Effect can handle multi-channel */
+#define ST_EFF_REPORT   8           /* Effect does not affect the audio */
+#define ST_EFF_DEPRECATED 16        /* Effect is living on borrowed time */
 
 /*
  * Handler structure for each effect.
@@ -337,7 +338,7 @@ typedef struct st_effect *eff_t;
 
 typedef struct
 {
-    char const *name;                /* effect name */
+    char const *name;               /* effect name */
     char const *usage;
     unsigned int flags;
 

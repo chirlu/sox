@@ -1,4 +1,3 @@
-
 /*
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
@@ -21,9 +20,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-static st_effect_t st_avg_effect;
+static st_effect_t st_mixer_effect;
 
-typedef struct avgstuff {
+typedef struct mixerstuff {
         /* How to generate each output channel.  sources[i][j] */
         /* represents the fraction of channel i that should be passed */
         /* through to channel j on output, and so forth.  Channel 0 is */
@@ -32,7 +31,7 @@ typedef struct avgstuff {
         double  sources[4][4];
         int     num_pans;
         int     mix;                    /* How are we mixing it? */
-} *avg_t;
+} *mixer_t;
 
 /* MIX_CENTER is shorthand to mix channels together at 50% each */
 #define MIX_CENTER      0
@@ -50,65 +49,65 @@ typedef struct avgstuff {
 /*
  * Process options
  */
-static int st_avg_getopts(eff_t effp, int n, char **argv) 
+static int getopts(eff_t effp, int n, char **argv) 
 {
-    avg_t avg = (avg_t) effp->priv;
-    double* pans = &avg->sources[0][0];
+    mixer_t mixer = (mixer_t) effp->priv;
+    double* pans = &mixer->sources[0][0];
     int i;
 
     for (i = 0;  i < 16;  i++)
         pans[i] = 0.0;
-    avg->mix = MIX_CENTER;
-    avg->num_pans = 0;
+    mixer->mix = MIX_CENTER;
+    mixer->num_pans = 0;
 
     /* Parse parameters.  Since we don't yet know the number of */
     /* input and output channels, we'll record the information for */
     /* later. */
     if (n == 1) {
         if(!strcmp(argv[0], "-l"))
-            avg->mix = MIX_LEFT;
+            mixer->mix = MIX_LEFT;
         else if (!strcmp(argv[0], "-r"))
-            avg->mix = MIX_RIGHT;
+            mixer->mix = MIX_RIGHT;
         else if (!strcmp(argv[0], "-f"))
-            avg->mix = MIX_FRONT;
+            mixer->mix = MIX_FRONT;
         else if (!strcmp(argv[0], "-b"))
-            avg->mix = MIX_BACK;
+            mixer->mix = MIX_BACK;
         else if (!strcmp(argv[0], "-1"))
-            avg->mix = MIX_LEFT_FRONT;
+            mixer->mix = MIX_LEFT_FRONT;
         else if (!strcmp(argv[0], "-2"))
-            avg->mix = MIX_RIGHT_FRONT;
+            mixer->mix = MIX_RIGHT_FRONT;
         else if (!strcmp(argv[0], "-3"))
-            avg->mix = MIX_LEFT_BACK;
+            mixer->mix = MIX_LEFT_BACK;
         else if (!strcmp(argv[0], "-4"))
-            avg->mix = MIX_RIGHT_BACK;
+            mixer->mix = MIX_RIGHT_BACK;
         else if (argv[0][0] == '-' && !isdigit((int)argv[0][1])
                 && argv[0][1] != '.') {
-            st_fail(st_avg_effect.usage);
+            st_fail(st_mixer_effect.usage);
             return (ST_EOF);
         }
         else {
             int commas;
             char *s;
-            avg->mix = MIX_SPECIFIED;
+            mixer->mix = MIX_SPECIFIED;
             pans[0] = atof(argv[0]);
             for (s = argv[0], commas = 0; *s; ++s) {
                 if (*s == ',') {
                     ++commas;
                     if (commas >= 16) {
-                        st_fail("avg can only take up to 16 pan values");
+                        st_fail("mixer can only take up to 16 pan values");
                         return (ST_EOF);
                     }
                     pans[commas] = atof(s+1);
                 }
             }
-            avg->num_pans = commas + 1;
+            mixer->num_pans = commas + 1;
         }
     }
     else if (n == 0) {
-        avg->mix = MIX_CENTER;
+        mixer->mix = MIX_CENTER;
     }
     else {
-        st_fail(st_avg_effect.usage);
+        st_fail(st_mixer_effect.usage);
         return ST_EOF;
     }
 
@@ -118,7 +117,7 @@ static int st_avg_getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-static int st_avg_start(eff_t effp)
+static int start(eff_t effp)
 {
     /*
        Hmmm, this is tricky.  Lemme think:
@@ -182,18 +181,18 @@ static int st_avg_start(eff_t effp)
 
        GHK 2000/11/28
      */
-     avg_t avg = (avg_t) effp->priv;
+     mixer_t mixer = (mixer_t) effp->priv;
      double pans[16];
      int i, j;
      int ichan, ochan;
 
      for (i = 0;  i < 16;  i++)
-         pans[i] = ((double*)&avg->sources[0][0])[i];
+         pans[i] = ((double*)&mixer->sources[0][0])[i];
 
      ichan = effp->ininfo.channels;
      ochan = effp->outinfo.channels;
      if (ochan == -1) {
-         st_fail("Output must have known number of channels to use avg effect");
+         st_fail("Output must have known number of channels to use mixer effect");
          return(ST_EOF);
      }
 
@@ -205,10 +204,10 @@ static int st_avg_start(eff_t effp)
      }
 
      /* Handle the special-case flags */
-     switch (avg->mix) {
+     switch (mixer->mix) {
          case MIX_CENTER:
              if (ichan == ochan) {
-                 st_fail("Output must have different number of channels to use avg effect");
+                 st_fail("Output must have different number of channels to use mixer effect");
                  return(ST_EOF);
              }
              break;             /* Code below will handle this case */
@@ -217,7 +216,7 @@ static int st_avg_start(eff_t effp)
              {
                  pans[0] = 1.0;
                  pans[1] = 0.0;
-                 avg->num_pans = 2;
+                 mixer->num_pans = 2;
              }
              else if (ichan == 4 && ochan == 1)
              {
@@ -225,7 +224,7 @@ static int st_avg_start(eff_t effp)
                  pans[1] = 0.0;
                  pans[2] = 0.5;
                  pans[3] = 0.0;
-                 avg->num_pans = 4;
+                 mixer->num_pans = 4;
              }
              else
              {
@@ -239,7 +238,7 @@ static int st_avg_start(eff_t effp)
              {
                  pans[0] = 0.0;
                  pans[1] = 1.0;
-                 avg->num_pans = 2;
+                 mixer->num_pans = 2;
              }
              else if (ichan == 4 && ochan == 1)
              {
@@ -247,7 +246,7 @@ static int st_avg_start(eff_t effp)
                  pans[1] = 0.5;
                  pans[2] = 0.0;
                  pans[3] = 0.5;
-                 avg->num_pans = 4;
+                 mixer->num_pans = 4;
              }
              else
              {
@@ -261,11 +260,11 @@ static int st_avg_start(eff_t effp)
              {
                  pans[0] = 1.0;
                  pans[1] = 0.0;
-                 avg->num_pans = 2;
+                 mixer->num_pans = 2;
              }
              else
              {
-                 st_fail("avg: -f option requires 4 channels input and 2 channel output");
+                 st_fail("-f option requires 4 channels input and 2 channel output");
                  return ST_EOF;
              }
              break;
@@ -274,11 +273,11 @@ static int st_avg_start(eff_t effp)
              {
                  pans[0] = 0.0;
                  pans[1] = 1.0;
-                 avg->num_pans = 2;
+                 mixer->num_pans = 2;
              }
              else
              {
-                 st_fail("avg: -b option requires 4 channels input and 2 channel output");
+                 st_fail("-b option requires 4 channels input and 2 channel output");
                  return ST_EOF;
              }
              break;
@@ -287,7 +286,7 @@ static int st_avg_start(eff_t effp)
              {
                  pans[0] = 1.0;
                  pans[1] = 0.0;
-                 avg->num_pans = 2;
+                 mixer->num_pans = 2;
              }
              else if (ichan == 4 && ochan == 1)
              {
@@ -295,11 +294,11 @@ static int st_avg_start(eff_t effp)
                  pans[1] = 0.0;
                  pans[2] = 0.0;
                  pans[3] = 0.0;
-                 avg->num_pans = 4;
+                 mixer->num_pans = 4;
              }
              else
              {
-                 st_fail("avg: -1 option requires 4 channels input and 1 channel output");
+                 st_fail("-1 option requires 4 channels input and 1 channel output");
                  return ST_EOF;
              }
              break;
@@ -308,7 +307,7 @@ static int st_avg_start(eff_t effp)
              {
                  pans[0] = 0.0;
                  pans[1] = 1.0;
-                 avg->num_pans = 2;
+                 mixer->num_pans = 2;
              }
              else if (ichan == 4 && ochan == 1)
              {
@@ -316,11 +315,11 @@ static int st_avg_start(eff_t effp)
                  pans[1] = 1.0;
                  pans[2] = 0.0;
                  pans[3] = 0.0;
-                 avg->num_pans = 4;
+                 mixer->num_pans = 4;
              }
              else
              {
-                 st_fail("avg: -2 option requires 4 channels input and 1 channel output");
+                 st_fail("-2 option requires 4 channels input and 1 channel output");
                  return ST_EOF;
              }
              break;
@@ -331,11 +330,11 @@ static int st_avg_start(eff_t effp)
                  pans[1] = 0.0;
                  pans[2] = 1.0;
                  pans[3] = 0.0;
-                 avg->num_pans = 4;
+                 mixer->num_pans = 4;
              }
              else
              {
-                 st_fail("avg: -3 option requires 4 channels input and 1 channel output");
+                 st_fail("-3 option requires 4 channels input and 1 channel output");
                  return ST_EOF;
              }
          case MIX_RIGHT_BACK:
@@ -345,11 +344,11 @@ static int st_avg_start(eff_t effp)
                  pans[1] = 0.0;
                  pans[2] = 0.0;
                  pans[3] = 1.0;
-                 avg->num_pans = 4;
+                 mixer->num_pans = 4;
              }
              else
              {
-                 st_fail("avg: -4 option requires 4 channels input and 1 channel output");
+                 st_fail("-4 option requires 4 channels input and 1 channel output");
                  return ST_EOF;
              }
 
@@ -365,13 +364,13 @@ static int st_avg_start(eff_t effp)
       * garbage in our sources[][] array.  Need to clear that
       * now that all data is stored in pans[] array.
       */
-     if (avg->num_pans <= 4)
+     if (mixer->num_pans <= 4)
      {
          for (i = 0; i < ichan; i++)
          {
              for (j = 0; j < ochan; j++) 
              {
-                 avg->sources[i][j] = 0;
+                 mixer->sources[i][j] = 0;
              }
          }
      }
@@ -379,125 +378,125 @@ static int st_avg_start(eff_t effp)
      /* If the number of pans given is 4 or fewer, handle the special */
      /* cases listed in the comments above.  The code is lengthy but */
      /* straightforward. */
-     if (avg->num_pans == 0) {
+     if (mixer->num_pans == 0) {
          /* CASE 1 */
          if (ichan == 1 && ochan > ichan) {
-             avg->sources[0][0] = 1.0;
-             avg->sources[0][1] = 1.0;
-             avg->sources[0][2] = 1.0;
-             avg->sources[0][3] = 1.0;
+             mixer->sources[0][0] = 1.0;
+             mixer->sources[0][1] = 1.0;
+             mixer->sources[0][2] = 1.0;
+             mixer->sources[0][3] = 1.0;
          }
          /* CASE 2 */
          else if (ichan == 2 && ochan == 1) {
-             avg->sources[0][0] = 0.5;
-             avg->sources[1][0] = 0.5;
+             mixer->sources[0][0] = 0.5;
+             mixer->sources[1][0] = 0.5;
          }
          /* CASE 5 */
          else if (ichan == 2 && ochan == 4) {
-             avg->sources[0][0] = 1.0;
-             avg->sources[0][2] = 1.0;
-             avg->sources[1][1] = 1.0;
-             avg->sources[1][3] = 1.0;
+             mixer->sources[0][0] = 1.0;
+             mixer->sources[0][2] = 1.0;
+             mixer->sources[1][1] = 1.0;
+             mixer->sources[1][3] = 1.0;
          }
          /* CASE 6 */
          else if (ichan == 4 && ochan == 1) {
-             avg->sources[0][0] = 0.25;
-             avg->sources[1][0] = 0.25;
-             avg->sources[2][0] = 0.25;
-             avg->sources[3][0] = 0.25;
+             mixer->sources[0][0] = 0.25;
+             mixer->sources[1][0] = 0.25;
+             mixer->sources[2][0] = 0.25;
+             mixer->sources[3][0] = 0.25;
          }
          /* CASE 7 */
          else if (ichan == 4 && ochan == 2) {
-             avg->sources[0][0] = 0.5;
-             avg->sources[1][1] = 0.5;
-             avg->sources[2][0] = 0.5;
-             avg->sources[3][1] = 0.5;
+             mixer->sources[0][0] = 0.5;
+             mixer->sources[1][1] = 0.5;
+             mixer->sources[2][0] = 0.5;
+             mixer->sources[3][1] = 0.5;
          }
          else {
-             st_fail("You must specify at least one mix level when using avg with an unusual number of channels.");
+             st_fail("You must specify at least one mix level when using mixer with an unusual number of channels.");
              return(ST_EOF);
          }
      }
-     else if (avg->num_pans == 1) {
+     else if (mixer->num_pans == 1) {
          /* Might be volume change or balance change */
          /* CASE 3 and CASE 8 */
          if ((ichan == 2 || ichan == 4) &&  ichan == ochan) {
              /* -1 is left only, 1 is right only */
              if (pans[0] <= 0.0) {
-                 avg->sources[1][1] = pans[0] + 1.0;
-                 if (avg->sources[1][1] < 0.0)
-                     avg->sources[1][1] = 0.0;
-                 avg->sources[0][0] = 1.0;
+                 mixer->sources[1][1] = pans[0] + 1.0;
+                 if (mixer->sources[1][1] < 0.0)
+                     mixer->sources[1][1] = 0.0;
+                 mixer->sources[0][0] = 1.0;
              }
              else {
-                 avg->sources[0][0] = 1.0 - pans[0];
-                 if (avg->sources[0][0] < 0.0)
-                     avg->sources[0][0] = 0.0;
-                 avg->sources[1][1] = 1.0;
+                 mixer->sources[0][0] = 1.0 - pans[0];
+                 if (mixer->sources[0][0] < 0.0)
+                     mixer->sources[0][0] = 0.0;
+                 mixer->sources[1][1] = 1.0;
              }
              if (ichan == 4) {
-                 avg->sources[2][2] = avg->sources[0][0];
-                 avg->sources[3][3] = avg->sources[1][1];
+                 mixer->sources[2][2] = mixer->sources[0][0];
+                 mixer->sources[3][3] = mixer->sources[1][1];
              }
          }
          else
          {
-             st_fail("Invalid options specified to avg while not mixing");
+             st_fail("Invalid options specified to mixer while not mixing");
              return ST_EOF;
          }
      }
-     else if (avg->num_pans == 2) {
+     else if (mixer->num_pans == 2) {
          /* CASE 2 */
          if (ichan == 2 && ochan == 1) {
-             avg->sources[0][0] = pans[0];
-             avg->sources[1][0] = pans[1];
+             mixer->sources[0][0] = pans[0];
+             mixer->sources[1][0] = pans[1];
          }
          /* CASE 7 */
          else if (ichan == 4 && ochan == 2) {
-             avg->sources[0][0] = pans[0];
-             avg->sources[1][1] = pans[0];
-             avg->sources[2][0] = pans[1];
-             avg->sources[3][1] = pans[1];
+             mixer->sources[0][0] = pans[0];
+             mixer->sources[1][1] = pans[0];
+             mixer->sources[2][0] = pans[1];
+             mixer->sources[3][1] = pans[1];
          }
          /* CASE 8 */
          else if (ichan == 4 && ochan == 4) {
              /* pans[0] is front -> front, pans[1] is for back */
-             avg->sources[0][0] = pans[0];
-             avg->sources[1][1] = pans[0];
-             avg->sources[2][2] = pans[1];
-             avg->sources[3][3] = pans[1];
+             mixer->sources[0][0] = pans[0];
+             mixer->sources[1][1] = pans[0];
+             mixer->sources[2][2] = pans[1];
+             mixer->sources[3][3] = pans[1];
          }
          else
          {
-             st_fail("Invalid options specified to avg for this channel combination");
+             st_fail("Invalid options specified to mixer for this channel combination");
              return ST_EOF;
          }
      }
-     else if (avg->num_pans == 4) {
+     else if (mixer->num_pans == 4) {
          /* CASE 4 */
          if (ichan == 2 && ochan == 2) {
              /* Shorthand for 2-channel case */
-             avg->sources[0][0] = pans[0];
-             avg->sources[0][1] = pans[1];
-             avg->sources[1][0] = pans[2];
-             avg->sources[1][1] = pans[3];
+             mixer->sources[0][0] = pans[0];
+             mixer->sources[0][1] = pans[1];
+             mixer->sources[1][0] = pans[2];
+             mixer->sources[1][1] = pans[3];
          }
          /* CASE 6 */
          else if (ichan == 4 && ochan == 1) {
-             avg->sources[0][0] = pans[0];
-             avg->sources[1][0] = pans[1];
-             avg->sources[2][0] = pans[2];
-             avg->sources[3][0] = pans[3];
+             mixer->sources[0][0] = pans[0];
+             mixer->sources[1][0] = pans[1];
+             mixer->sources[2][0] = pans[2];
+             mixer->sources[3][0] = pans[3];
          }
          else
          {
-             st_fail("Invalid options specified to avg for this channel combination");
+             st_fail("Invalid options specified to mixer for this channel combination");
              return ST_EOF;
          }
      }
      else
      {
-         st_fail("Invalid options specified to avg while not mixing");
+         st_fail("Invalid options specified to mixer while not mixing");
          return ST_EOF;
      }
 
@@ -508,10 +507,10 @@ static int st_avg_start(eff_t effp)
  * Process either isamp or osamp samples, whichever is smaller.
  */
 
-static int st_avg_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                 st_size_t *isamp, st_size_t *osamp)
 {
-    avg_t avg = (avg_t) effp->priv;
+    mixer_t mixer = (mixer_t) effp->priv;
     st_size_t len, done;
     int ichan, ochan;
     int i, j;
@@ -526,7 +525,7 @@ static int st_avg_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         for (j = 0; j < ochan; j++) {
             samp = 0.0;
             for (i = 0; i < ichan; i++)
-                samp += ibuf[i] * avg->sources[i][j];
+                samp += ibuf[i] * mixer->sources[i][j];
             ST_SAMPLE_CLIP_COUNT(samp, effp->clips);
             obuf[j] = samp;
         }
@@ -536,47 +535,35 @@ static int st_avg_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     return (ST_SUCCESS);
 }
 
-/*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
- *
- * Should have statistics on right, left, and output amplitudes.
- */
-static int st_avg_stop(eff_t effp UNUSED)
+st_effect_t const * st_mixer_effect_fn(void)
 {
-    return (ST_SUCCESS); /* nothing to do */
+  static st_effect_t driver = {
+    "mixer",
+    "Usage: mixer [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
+    ST_EFF_MCHAN | ST_EFF_CHAN,
+    getopts, start, flow, 0, 0, 0
+  };
+  return &driver;
 }
 
-static st_effect_t st_avg_effect = {
-  "avg",
-  "Usage: avg [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
-  ST_EFF_MCHAN | ST_EFF_CHAN,
-  st_avg_getopts,
-  st_avg_start,
-  st_avg_flow,
-  st_effect_nothing_drain,
-  st_avg_stop,
-  st_effect_nothing
-};
-
-static st_effect_t st_pick_effect = {
-  "pick",
-  "Usage: pick [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
-  ST_EFF_MCHAN | ST_EFF_CHAN,
-  st_avg_getopts,
-  st_avg_start,
-  st_avg_flow,
-  st_effect_nothing_drain,
-  st_avg_stop,
-  st_effect_nothing
-};
-
-const st_effect_t *st_avg_effect_fn(void)
+st_effect_t const * st_avg_effect_fn(void)
 {
-    return &st_avg_effect;
+  static st_effect_t driver = {
+    "avg",
+    "Usage: avg [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
+    ST_EFF_MCHAN | ST_EFF_CHAN | ST_EFF_DEPRECATED,
+    getopts, start, flow, 0, 0, 0
+  };
+  return &driver;
 }
 
-const st_effect_t *st_pick_effect_fn(void)
+st_effect_t const * st_pick_effect_fn(void)
 {
-    return &st_pick_effect;
+  static st_effect_t driver = {
+    "pick",
+    "Usage: pick [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
+    ST_EFF_MCHAN | ST_EFF_CHAN | ST_EFF_DEPRECATED,
+    getopts, start, flow, 0, 0, 0
+  };
+  return &driver;
 }

@@ -49,7 +49,6 @@ static int getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare processing.
  * Do all initializations.
- * If there's nothing to do, use st_effect_nothing instead.
  */
 static int start(eff_t effp)
 {
@@ -97,7 +96,6 @@ static int flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 
 /*
  * Drain out remaining samples if the effect generates any.
- * If there's nothing to do, use st_effect_nothing_drain instead.
  */
 static int drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
@@ -111,7 +109,6 @@ static int drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 
 /*
  * Do anything required when you stop reading samples.  
- * If there's nothing to do, use st_effect_nothing instead.
  */
 static int stop(eff_t effp)
 {
@@ -121,7 +118,6 @@ static int stop(eff_t effp)
 /*
  * Do anything required when you delete an effect.  
  *      (free allocated memory, etc.)
- * If there's nothing to do, use st_effect_nothing instead.
  */
 static int delete(eff_t effp)
 {
@@ -131,8 +127,9 @@ static int delete(eff_t effp)
 
 /*
  * Effect descriptor.
- * If one of the methods does nothing, use the relevant
- * st_effect_nothing* method.
+ * If no specific processing is needed for any of
+ * the 6 functions, then the function can be deleted
+ * and 0 used in place of the its name below.
  */
 static st_effect_t st_skel_effect = {
   "skel",
