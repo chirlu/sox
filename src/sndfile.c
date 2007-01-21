@@ -45,8 +45,11 @@ int st_sndfile_startread(ft_t ft)
   sndfile_t sf = (sndfile_t)ft->priv;
 
   sf->sf_info = (SF_INFO *)xcalloc(1, sizeof(SF_INFO));
+  /* We'd like to use sf_open, but auto file typing has already
+     invoked stdio buffering. */
   if ((sf->sf_file = sf_open(ft->filename, SFM_READ, sf->sf_info)) == NULL) {
     st_fail("sndfile cannot open file for reading: %s %x", sf_strerror(sf->sf_file), sf->sf_info->format);
+    free(sf->sf_file);
     return ST_EOF;
   }
 
