@@ -220,6 +220,7 @@ static int st_sfstartwrite(ft_t ft)
 /* IRCAM Sound File */
 static const char *sfnames[] = {
   "sf",
+  "ircam",
   NULL
 };
 
