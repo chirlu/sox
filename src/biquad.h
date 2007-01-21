@@ -37,7 +37,8 @@ typedef enum {
   filter_BPF_SPK, 
   filter_BPF_SPK_N,
   filter_AP1,
-  filter_AP2
+  filter_AP2,
+  filter_deemph
 } filter_t;
 
 

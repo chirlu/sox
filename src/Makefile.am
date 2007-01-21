@@ -23,7 +23,7 @@ formats = 8svx.c adpcm.c adpcm.h adpcms.c adpcms.h aiff.c au.c auto.c avr.c \
 	  voc.c vorbis.c vox.c wav.c wav.h wve.c xa.c
 
 effects = avg.c band.h biquad.c biquad.h biquads.c chorus.c compand.c dcshift.c\
-	  deemphas.c earwax.c echo.c echos.c fade.c FFT.c FFT.h filter.c \
+	  deemph.h earwax.c echo.c echos.c fade.c FFT.c FFT.h filter.c \
 	  flanger.c luaeff.c luaform.c lintlib.c mask.c mcompand.c noiseprof.c \
 	  noisered.c noisered.h pad.c pan.c phaser.c pitch.c polyphas.c \
 	  rabbit.c rate.c repeat.c resample.c reverb.c reverse.c silence.c \

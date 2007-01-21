@@ -129,6 +129,11 @@ static int band_getopts(eff_t effp, int n, char **argv) {
 }
 
 
+static int deemph_getopts(eff_t effp, int n, char **argv) {
+  return st_biquad_getopts(effp, n, argv, 0, 0, 0, 1, 2, "", filter_deemph);
+}
+
+
 static int start(eff_t effp)
 {
   biquad_t p = (biquad_t) effp->priv;
@@ -284,6 +289,11 @@ static int start(eff_t effp)
       p->a1 = -2 * cos(w0);
       p->a2 = 1 - sin(w0);
       break;
+
+    case filter_deemph: {
+      #include "deemph.h" /* Has own documentation */
+      break;
+    }
   }
   return st_biquad_start(effp);
 }
@@ -300,3 +310,4 @@ BIQUAD_EFFECT(bass,      tone,     "gain [frequency [width[s|h|q|o]]]")
 BIQUAD_EFFECT(treble,    tone,     "gain [frequency [width[s|h|q|o]]]")
 BIQUAD_EFFECT(equalizer, equalizer,"frequency width[q|o|h] gain")
 BIQUAD_EFFECT(band,      band,     "[-n] center [width[h|q|o]]")
+BIQUAD_EFFECT(deemph,    deemph,   "takes no options")
