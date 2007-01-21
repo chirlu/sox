@@ -89,6 +89,7 @@ Contributors:
                 Code resampling, much cleanup.
 	Rob Sykes		robs@users.sourceforge.net
 		Bass & treble effects, FLAC support, initial 24bit
-		support, Octave plotting for filters, new flanger,
+		support, filters makeover inc. octave plots, new flanger,
                 file merging, speed via resampling, pad effect,
-                various small fixes, enchancements and clean-ups.
+                various small fixes, enhancements and clean-ups,
+		much manual improvement and expansion.

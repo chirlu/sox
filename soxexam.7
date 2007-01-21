@@ -301,7 +301,7 @@ typically used in FM radio:
 .br
 	vol \-3 db lowp 17801
 .SP
-The audio is file is played with a simulated FM radio sound (or broadcast
+The audio file is played with a simulated FM radio sound (or broadcast
 signal condition if the lowp at the end is skipped).
 Note that the pipeline is set up with US-style 75us preemphasis.
 .SS Changing the Rate of Playback
@@ -346,11 +346,69 @@ to disk once non-silence is detect. For example, use this to
 start your favorite command line for recording and walk
 over to your record player and start the song.  No periods
 of silence will be recorded.
+.SS Scripting with SoX
+One of the benefits of a command-line tool is that it is easy to use it
+in scripts to perform more complex tasks.
+In marine radio, a Mayday emergency call is transmitted preceded by a
+30-second alert sound.  The alert sound comprises two audio tones at
+1300Hz and 2100Hz alternating at a rate of 4Hz.
+The following shows how SoX can be used in a script to construct an audio file
+containing the alert sound.
+The scripting language shown is `Bourne shell' (sh) but it should be
+simple to translate this to another scripting language if you do not
+have access to sh.
+.nf
+
+# Make sure we append to a file that's initially empty:
+rm \-f 2tones.raw
+
+for freq in 1300 2200; do
+  sox \-c1 \-r8000 \-n \-t raw \- synth 0\*d25 sine $freq vol 0\*d7 >> 2tones.raw
+  done
+
+# We need 60 copies of 2tones.raw (0\*d5 sec) to get 30 secs of audio:
+iterations=60
+
+# Make sure we append to a file that's initially empty:
+rm \-f alert.raw
+
+while [ $iterations \-ge 1 ]; do
+  cat 2tones.raw >> alert.raw
+  iterations=`expr $iterations \- 1`
+  done
+
+# Add a file header and save some disc space:
+sox \-sw \-c1 \-r8000 alert.raw alert.ogg
+
+play alert.ogg
+
+.fi
+If you try out the above script, you may want to hit Ctrl-C fairly soon
+after the alert tone starts playing\*mit's not a pleasant sound!  The
+.B synth
+effect is used to generate each of the tones;
+.B "\-c1 \-r8000"
+selects mono, 8kHz sampling-rate audio (i.e. relatively low fidelity,
+suitable for the marine radio transmission channel); each tone is
+generated at a length of 0\*d25 seconds to give the required 4Hz
+alternation.  Note the use of `raw' as the intermediary file format; a
+self-describing (header) format would just get in the way here.  The
+self-describing header is added only at the final stage; in this case,
+.B .ogg
+is chosen, since lossy compression is appropriate for this application.
+.SP
+There are further practical examples of scripting with SoX available to
+download from the SoX web-site [1].
 .SH SEE ALSO
 .BR sox (1),
 .BR soxlua (7),
 .BR libst (3)
+.SS References
+.TP
+[1]
+.IR "SoX\*mSound eXchange | Scripts" ,
+http://sox.sourceforge.net/Docs/Scripts
 .SH AUTHORS
-This man page was written by Juergen Mueller (jmueller@uia.ua.ac.be).
+This man page was written largely by Juergen Mueller (jmueller@uia.ua.ac.be).
 Other SoX authors and contributors are listed in the AUTHORS file that
 is distributed with the source code.
