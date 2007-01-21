@@ -28,8 +28,8 @@
  *
  * September 24, 1998
  * Forced output to mono signed words to match input.  It was basically
- * doing this anyways but now the user will see a display that its being
- * overriding.  cbagwell@sprynet.com
+ * doing this anyways but now the user will see a display that it's been
+ * overridden.  cbagwell@sprynet.com
  *
  */
 
