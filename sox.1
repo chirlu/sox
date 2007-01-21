@@ -300,7 +300,7 @@ records 10 seconds of audio using default parameters, and
 starts a stereo recording that will finish when the interrupt key (often
 Ctrl-C) is pressed.
 .SP
-Other examples can found thoughout this manual and in the
+Other examples can found throughout this manual and in the
 separate
 .BR soxexam (7)
 manual.
@@ -1446,7 +1446,7 @@ SoX again with the \fInoisered\fR filter.  The
 filter needs one parameter, \fIprofile-file\fR, which contains the noise profile
 from \fBnoiseprof\fR.  \fIthreshold\fR specifies how much noise should be removed, and
 may be between 0 and 1 with a default of 0\*d5.  Higher values will remove more
-noise but present a greater likelyhood of distorting the desired audio signal.
+noise but present a greater likelihood of distorting the desired audio signal.
 Experiment with different threshold values to find the optimal one for your
 audio.
 .TP
@@ -1518,7 +1518,7 @@ This method is relatively slow and memory intensive.
 .SP
 If the \fB\-w\fR parameter is \fBnut\fR, then a Nuttall (~90 dB
 stop-band) window will be used; \fBham\fR selects a Hamming (~43
-dB stop-band) window.  The default is Nutall.
+dB stop-band) window.  The default is Nuttall.
 .SP
 The \fB\-width\fR parameter specifies the (approximate) width of the filter. The default is 1024 samples, which produces reasonable results.
 .SP
@@ -1556,7 +1556,7 @@ for other sample-rate changing effects, and see
 \fBrepeat \fIcount\fR
 Repeat the entire audio \fIcount\fR times.
 Requires disk space to store the data to be repeated.
-Note that repeating once yields two copies: the orignal audio and the
+Note that repeating once yields two copies: the original audio and the
 repeated audio.
 .TP
 \fBresample\fR [\fB\-qs\fR\^|\^\fB\-q\fR\^|\^\fB\-ql\fR] [\fIrolloff\fR [\fIbeta\fR] ]
@@ -2006,7 +2006,7 @@ Not specifying this parameter will cause no limiter to be used.  In verbose
 mode, this effect will display the percentage of the audio that needed to be
 limited.
 .SS Deprecated Effects
-The following effects have ben renamed or have their functionality
+The following effects have been renamed or have their functionality
 included in another effect.  They continue to work in this version of
 SoX but may be removed in future.
 .TP
@@ -2023,7 +2023,7 @@ This effect is just an alias for the
 .B highpass
 effect used with its
 .B -1
-option; it is retained for backwards compatibilty only.
+option; it is retained for backwards compatibility only.
 .TP
 \fBlowp \fIfrequency\fR
 Apply a low-pass filter.
@@ -2031,7 +2031,7 @@ This effect is just an alias for the
 .B lowpass
 effect used with its
 .B -1
-option; it is retained for backwards compatibilty only.
+option; it is retained for backwards compatibility only.
 .TP
 \fBmask\fR [\fIdepth\fR]
 This effect is just a deprecated alias for the \fBdither\fR effect, left for historical reasons.
