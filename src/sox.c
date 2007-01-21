@@ -1599,8 +1599,7 @@ static void usage(char const *message)
     fprintf(stderr, "Failed: %s\n\n", message);
   printf("Usage summary: [gopts] [[fopts] infile]... [fopts]%s [effect [effopts]]...\n\n",
          play? "" : " outfile");
-  printf(
-         "SPECIAL FILENAMES:\n"
+  printf("SPECIAL FILENAMES:\n"
          "-               stdin (infile) or stdout (outfile)\n"
          "-n              use the null file handler; for use with e.g. synth & stat\n"
          "\n"
@@ -1667,7 +1666,7 @@ static void usage(char const *message)
       printf(" %s", e->name);
   }
 
-  printf( "\n\neffopts: depends on effect\n");
+  printf("\n\neffopts: depends on effect\n");
 
   if (message)
     exit(1);
