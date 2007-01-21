@@ -1640,7 +1640,7 @@ static void usage(char const *message)
          "-s/-u/-U/-A/    sample encoding: signed/unsigned/u-law/A-law\n"
          "  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point\n"
          "-1/-2/-3/-4/-8  sample size in bytes\n"
-         "-v, --volume volume input file volume adjustment factor (real number)\n"
+         "-v, --volume    volume input file volume adjustment factor (real number)\n"
          "\n");
 
   printf("Supported file formats:");
