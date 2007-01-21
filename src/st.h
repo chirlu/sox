@@ -274,10 +274,9 @@ struct st_soundstream {
     st_signalinfo_t signal;               /* signal specifications */
     st_instrinfo_t  instr;                /* instrument specification */
     st_loopinfo_t   loops[ST_MAX_NLOOPS]; /* Looping specification */
-    char            seekable;             /* can seek on this file */
+    st_bool         seekable;             /* can seek on this file */
     char            mode;                 /* read or write mode */
-    /* Total samples per channel of file.  Zero if unknown. */
-    st_size_t       length;    
+    st_size_t       length;               /* frames in file, or 0 if unknown. */
     st_size_t       clips;                /* increment if clipping occurs */
     char            *filename;            /* file name */
     char            *filetype;            /* type of file */
