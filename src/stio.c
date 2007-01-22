@@ -94,7 +94,7 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
 
     ft->filename = xstrdup(path);
 
-    /* Let auto effect do the work if user is not overriding. */
+    /* Let auto type do the work if user is not overriding. */
     if (!filetype)
         ft->filetype = xstrdup("auto");
     else
