@@ -1388,7 +1388,15 @@ multiple bands.
 .TP
 \fBmixer\fR [ \fB\-l\fR\^|\^\fB\-r\fR\^|\^\fB\-f\fR\^|\^\fB\-b\fR\^|\^\fB\-1\fR\^|\^\fB\-2\fR\^|\^\fB\-3\fR\^|\^\fB\-4\fR\^|\^\fIn\fR{\fB,\fIn\fR} ]
 Reduce the number of audio channels by mixing or selecting channels,
-or duplicate channels to increase the number of channels.
+or increase the number of channels by duplicating channels.
+Note: this effect operates on the audio
+.I channels
+within the SoX effects processing chain; it should not be confused with the 
+.B \-\-mix
+global option (where multiple
+.I files
+are mix-combined before entering the effects chain).
+.SP
 This effect is automatically used when the number of input
 channels differ from the number of output channels.  When reducing
 the number of channels it is possible to manually specify the
