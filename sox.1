@@ -48,7 +48,7 @@ invoked as `rec', the input device is the default sound device.
 The overall SoX processing chain can be summarised as follows:
 .SP
 .ce
-Input(s) \*(RA Combiner \*(RA Effects \*(RA Output
+Input(s) \*(RA Balancing \*(RA Combiner \*(RA Effects \*(RA Output
 .SP
 To get the most from SoX, it pays to be aware of some of the intricacies
 of audio file formats and of audio processing; so it best to read this
@@ -698,6 +698,11 @@ with the
 and
 .B \-c
 options, in which case SoX will issue a warning to that effect.
+.TP
+\fBauto\fR
+This format type name exists for backwards compatibility only.
+If given for an input file it will be silently ignored,
+if given for an output file it will cause SoX to exit with an error.
 .TP
 .B .avr
 Audio Visual Research.
