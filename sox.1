@@ -411,7 +411,7 @@ without actually processing any audio.  E.g.
 .TP
 \fB\-q\fR, \fB\-\-no\-show\-progress\fR
 Run in quiet mode when SoX wouldn't otherwise do so;
-this is the converse of the \fB\-S\fR option.
+this is the opposite of the \fB\-S\fR option.
 .PP
 \fB\-\-replay\-gain=track\fR
 .br
@@ -928,6 +928,14 @@ the samplers themselves.  Currently loop points are ignored.
 See
 .B .au
 format.
+.TP
+.B .sndfile
+This is a pseudo-type that forces libsndfile to be used, even for file
+types normally handled internally by SoX. For writing files, the
+actual file type is then taken from the output file name; for reading
+them, it is deduced from the file and any other format parameters.
+This pseudo-type depends on SoX having been built with optional
+libsndfile support.
 .TP
 .B .sndt
 SoundTool files. This is an older DOS file format.
