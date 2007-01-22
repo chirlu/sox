@@ -63,8 +63,9 @@ sox-12.18.3
     for backwards compatibility by "resample".
   o Preview mode now removed, as all it did was use rate rather than
     resample, and rate has been removed.
-  o Improved synth usage (by introducing --) and improved the synth
-    entry in the man-page.  (robs)
+  o Improved synth usage and improved the synth entry in the man-
+    page.  (robs)
+  o sox man-page overhaul, new soxexam man-page entries.  (robs)
   o Added command line options for specifying the output file
     comment.  (robs)
   o Improved the accuracy of integer and floating point PCM
@@ -94,6 +95,9 @@ sox-12.18.3
   o Build system overhaul to use the full set of GNU autotools.
     (Reuben Thomas)
   o New file formats via libsndfile.  (Reuben Thomas)
+  o Display (auto-)selected effects with -V.  (robs)
+  o Options to apply replay-gain on input; enabled by default
+    with `play'.  (robs)
 
 sox-12.18.2
 -----------

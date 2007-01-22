@@ -61,6 +61,8 @@ static st_bool repeatable_random = st_false;  /* Whether to invoke srand. */
 static st_bool interactive = st_false;
 static st_globalinfo_t globalinfo = {st_false, 1};
 static st_bool uservolume = st_false;
+typedef enum {RG_OFF, RG_TRACK, RG_ALBUM} rg_t;        
+static rg_t replay_gain_mode;        
 
 static int user_abort = 0;
 static int success = 0;
@@ -81,6 +83,7 @@ typedef struct file_info
   char *filetype;
   st_signalinfo_t signal;
   double volume;
+  double replay_gain;
   char *comment;
   st_size_t volume_clips;
 } *file_info_t;
@@ -217,6 +220,7 @@ static file_info_t make_file_info(void)
   fi->signal.reverse_bits = ST_OPTION_DEFAULT;
   fi->signal.compression = HUGE_VAL;
   fi->volume = HUGE_VAL;
+  fi->replay_gain = HUGE_VAL;
   fi->volume_clips = 0;
 
   return fi;
@@ -237,6 +241,27 @@ static void set_device(file_info_t fi)
 #endif
 }
 
+static void set_replay_gain(char const * comment, file_info_t fi)
+{
+  rg_t rg = replay_gain_mode;
+  int try = 2;
+
+  if (rg != RG_OFF) while (try--) {
+    char const * p = comment;
+    char const * target =
+      rg == RG_TRACK? "REPLAYGAIN_TRACK_GAIN=" : "REPLAYGAIN_ALBUM_GAIN=";
+    do {
+      if (strncasecmp(p, target, strlen(target)) == 0) {
+        fi->replay_gain = atof(p + strlen(target));
+        return;
+      }
+      while (*p && *p!= '\n') ++p;
+      while (*p && strchr("\r\n\t\f ", *p)) ++p;
+    } while (*p);
+    rg ^= RG_TRACK ^ RG_ALBUM;
+  }
+}
+
 int main(int argc, char **argv)
 {
   size_t i;
@@ -251,6 +276,7 @@ int main(int argc, char **argv)
   if (i >= sizeof("play") - 1 &&
       strcmp(myname + i - (sizeof("play") - 1), "play") == 0) {
     play = st_true;
+    replay_gain_mode = RG_TRACK;
   } else if (i >= sizeof("rec") - 1 &&
       strcmp(myname + i - (sizeof("rec") - 1), "rec") == 0) {
     rec = st_true;
@@ -339,7 +365,7 @@ int main(int argc, char **argv)
      * make sure no clipping will occur.  Users probably won't be happy with
      * this, and will override it, possibly causing clipping to occur. */
     if (combine_method == SOX_MIX && !uservolume)
-      file_opts[j]->volume = 1.0 / input_count;
+      fi->volume = 1.0 / input_count;
       
     if (rec && !j) { /* Set the recording sample rate & # of channels: */
       if (input_count > 1) {   /* Get them from the next input file: */
@@ -360,6 +386,8 @@ int main(int argc, char **argv)
         (file_desc[j]->h->flags & ST_FILE_DEVICE) != 0 &&
         (file_desc[j]->h->flags & ST_FILE_PHONY) == 0)
       show_progress = ST_OPTION_YES;
+    if (file_desc[j]->comment)
+      set_replay_gain(file_desc[j]->comment, fi);
   }
     
   /* Loop through the rest of the arguments looking for effects */
@@ -439,6 +467,7 @@ static struct option long_options[] =
     {"help-effect"     , required_argument, NULL, 0},
     {"lua-script"      , required_argument, NULL, 0},
     {"octave"          ,       no_argument, NULL, 0},
+    {"replay-gain"     , required_argument, NULL, 0},
     {"version"         ,       no_argument, NULL, 0},
 
     {"channels"        , required_argument, NULL, 'c'},
@@ -508,6 +537,19 @@ static st_bool doopts(file_info_t fi, int argc, char **argv)
         break;
 
       case 7:
+        if (!strcmp(optarg, "track"))
+          replay_gain_mode = RG_TRACK;
+        else if (!strcmp(optarg, "album"))
+          replay_gain_mode = RG_ALBUM;
+        else if (!strcmp(optarg, "off"))
+          replay_gain_mode = RG_OFF;
+        else {
+          st_fail("Replay gain '%s' is not track|album|off", optarg);
+          exit(1);
+        }
+        break;
+
+      case 8:
         printf("%s: v%s\n", myname, st_version());
         exit(0);
         break;
@@ -622,9 +664,11 @@ static st_bool doopts(file_info_t fi, int argc, char **argv)
   }
 }
 
-static void display_file_info(ft_t f, double volume, double speed, st_bool full)
+static void display_file_info(int file_no, double speed, st_bool full)
 {
   static char const * const no_yes[] = {"no", "yes"};
+  ft_t        f  = file_desc[file_no];
+  file_info_t fo = file_opts[file_no];
 
   fprintf(stderr, "\n%s: '%s'",
     f->mode == 'r'? "Input File     " : "Output File    ", f->filename);
@@ -651,8 +695,10 @@ static void display_file_info(ft_t f, double volume, double speed, st_bool full)
       no_yes[f->signal.reverse_nibbles],
       no_yes[f->signal.reverse_bits]);
 
-  if (volume != HUGE_VAL && volume != 1)
-    fprintf(stderr, "Level adjust   : %g (linear gain)\n" , volume);
+  if (fo->replay_gain != HUGE_VAL)
+    fprintf(stderr, "Replay gain    : %+g dB\n" , fo->replay_gain);
+  if (fo->volume != HUGE_VAL)
+    fprintf(stderr, "Level adjust   : %g (linear gain)\n" , fo->volume);
 
   if (!(f->h->flags & ST_FILE_DEVICE) && f->comment) {
     if (strchr(f->comment, '\n'))
@@ -663,17 +709,21 @@ static void display_file_info(ft_t f, double volume, double speed, st_bool full)
   fprintf(stderr, "\n");
 }
 
-static void report_file_info(ft_t f, double volume)
+static void report_file_info(int f)
 {
   if (st_output_verbosity_level > 2)
-    display_file_info(f, volume, 1, st_true);
+    display_file_info(f, 1, st_true);
 }
 
-static void show_file_progress(int f)
+static void progress_to_file(int f)
 {
   if (show_progress && (st_output_verbosity_level < 3 ||
                         (combine_method == SOX_CONCAT && input_count > 1)))
-    display_file_info(file_desc[f], 1, globalinfo.speed, st_false);
+    display_file_info(f, globalinfo.speed, st_false);
+  if (file_opts[f]->volume == HUGE_VAL)
+    file_opts[f]->volume = 1;
+  if (file_opts[f]->replay_gain != HUGE_VAL)
+    file_opts[f]->volume *= pow(10, file_opts[f]->replay_gain / 20);
 }
  
 /*
@@ -688,7 +738,7 @@ static void process(void) {
   st_sample_t *ibuf[MAX_INPUT_FILES];
 
   for (f = 0; f < input_count; f++) { /* Report all inputs first, then check */
-    report_file_info(file_desc[f], file_opts[f]->volume);
+    report_file_info(f);
     if (combine_method == SOX_MERGE)
       file_desc[f]->signal.channels *= input_count;
   }
@@ -755,7 +805,7 @@ static void process(void) {
       show_progress = (ofile->h->flags & ST_FILE_DEVICE) != 0 &&
                       (ofile->h->flags & ST_FILE_PHONY) == 0;
 
-    report_file_info(ofile, 1);
+    report_file_info(file_count - 1);
   }
   
   /* Adjust the input rate for the speed effect */
@@ -786,12 +836,12 @@ static void process(void) {
         file_desc[f]->signal.channels /= input_count;
       }
       ibuf[f] = (st_sample_t *)xmalloc(alloc_size);
-      show_file_progress(f);
+      progress_to_file(f);
     }
   } else {
     current_input = 0;
     input_samples = file_desc[current_input]->length;
-    show_file_progress(current_input);
+    progress_to_file(current_input);
   }
       
   /*
@@ -840,7 +890,7 @@ static void process(void) {
           current_input++;
           input_samples = file_desc[current_input]->length;
           read_samples = 0;
-          show_file_progress(current_input);
+          progress_to_file(current_input);
           continue;
         }
       }
@@ -1512,7 +1562,7 @@ static void update_status(void)
 /* Adjust volume based on value specified by the -v option for this file. */
 static void volumechange(st_sample_t * buf, st_ssize_t len, file_info_t fi)
 {
-  if (fi->volume != HUGE_VAL && fi->volume != 1)
+  if (fi->volume != 1)
     while (len--) {
       double d = fi->volume * *buf;
       *buf++ = ST_ROUND_CLIP_COUNT(d, fi->volume_clips);
@@ -1548,6 +1598,7 @@ static void usage(char const *message)
          "-M, --merge     merge multiple input files (instead of concatenating)\n"
          "--octave        generate Octave commands to plot response of filter effect\n"
          "-q, --quiet     run in quiet mode; opposite of -S\n"
+         "--replay-gain track|album|off  default: off (sox, rec), track (play)\n"
          "-R              use default random numbers (same on each run of SoX)\n"
          "-S, --show-progress  display progress while processing audio data\n"
          "--version       display version number of SoX and exit\n"
@@ -1566,6 +1617,7 @@ static void usage(char const *message)
          "-C compression  compression factor for variably compressing output formats\n"
          "--comment text  Specify comment text for the output file\n"
          "--comment-file filename  file containing comment text for the output file\n"
+         "--endian little|big|swap  set endianness; swap means opposite to default\n"
          "--lua-script filename  file containing script for a `lua' format\n"
          "-r, --rate rate  sample rate of audio\n"
          "-t, --type filetype  file type of audio\n"
