@@ -48,8 +48,7 @@ int st_sndfile_startread(ft_t ft)
   sf->sf_info = (SF_INFO *)xcalloc(1, sizeof(SF_INFO));
   /* We'd like to use sf_open, but auto file typing has already
      invoked stdio buffering. */
-  /* FIXME: Cope with raw files too: if format parameters are set,
-     assume file is raw. */
+  /* FIXME: If format parameters are set, assume file is raw. */
   if ((sf->sf_file = sf_open(ft->filename, SFM_READ, sf->sf_info)) == NULL) {
     st_fail("sndfile cannot open file for reading: %s %x", sf_strerror(sf->sf_file), sf->sf_info->format);
     free(sf->sf_file);
@@ -147,17 +146,70 @@ static int name_to_format(const char *name)
   return 0;
 }
 
+/* Make libsndfile subtype from sample encoding and size */
+static int sndfile_format(int encoding, int size)
+{
+  if (encoding < ST_ENCODING_SIZE_IS_WORD) {
+    switch (encoding) {
+    case ST_ENCODING_ULAW:
+      return SF_FORMAT_ULAW;
+    case ST_ENCODING_ALAW:
+      return SF_FORMAT_ALAW;
+    case ST_ENCODING_ADPCM:
+    case ST_ENCODING_MS_ADPCM:
+      return SF_FORMAT_MS_ADPCM;
+    case ST_ENCODING_IMA_ADPCM:
+      return SF_FORMAT_IMA_ADPCM;
+    case ST_ENCODING_OKI_ADPCM:
+      return SF_FORMAT_VOX_ADPCM;
+    default: /* Should be impossible */
+      return 0;
+    }
+  } else {
+    switch (encoding) {
+    case ST_ENCODING_UNSIGNED:
+      if (size == ST_SIZE_8BIT)
+        return SF_FORMAT_PCM_U8;
+      else
+        return 0;
+    case ST_ENCODING_SIGN2:
+    case ST_ENCODING_MP3:
+    case ST_ENCODING_VORBIS:
+    case ST_ENCODING_FLAC:
+      switch (size) {
+      case ST_SIZE_8BIT:
+        return SF_FORMAT_PCM_S8;
+      case ST_SIZE_16BIT:
+        return SF_FORMAT_PCM_16;
+      case ST_SIZE_24BIT:
+        return SF_FORMAT_PCM_24;
+      case ST_SIZE_32BIT:
+        return SF_FORMAT_PCM_32;
+      default: /* invalid size */
+        return 0;
+      }
+      break;
+    case ST_ENCODING_FLOAT:
+      return SF_FORMAT_FLOAT;
+    case ST_ENCODING_GSM:
+      return SF_FORMAT_GSM610;
+    default: /* Bad encoding */
+      return 0;
+    }
+  }
+}
+
 int st_sndfile_startwrite(ft_t ft)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
+  int subtype = sndfile_format(ft->signal.encoding, ft->signal.size);
   sf->sf_info = (SF_INFO *)xmalloc(sizeof(SF_INFO));
 
   /* Copy format info */
-  /* FIXME: Need to have a table of suitable default subtypes */
   if (strcmp(ft->filetype, "sndfile") == 0)
-    sf->sf_info->format = name_to_format(ft->filename) | SF_FORMAT_PCM_16;
+    sf->sf_info->format = name_to_format(ft->filename) | subtype;
   else
-    sf->sf_info->format = name_to_format(ft->filetype) | SF_FORMAT_PCM_16;
+    sf->sf_info->format = name_to_format(ft->filetype) | subtype;
   sf->sf_info->samplerate = ft->signal.rate;
   sf->sf_info->channels = ft->signal.channels;
   sf->sf_info->frames = ft->length / ft->signal.channels;
