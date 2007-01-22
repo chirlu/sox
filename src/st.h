@@ -1,11 +1,11 @@
 /*
- * Sound Tools Library - October 11, 1999
+ * Sound Tools Library
  *
- * Copyright 1999 Chris Bagwell
+ * Copyright 1999-2007 Chris Bagwell and SoX Contributors.
  *
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained.
- * Chris Bagwell And Sundry Contributors are not responsible for
+ * Chris Bagwell And SoX Contributors are not responsible for
  * the consequences of using this software.
  */
 

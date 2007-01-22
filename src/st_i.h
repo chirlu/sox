@@ -1,15 +1,16 @@
 /*
- * Sound Tools Internal - October 11, 2001
+ * Sound Tools Internal header
  *
  *   This file is meant for libst internal use only
  *
- * Copyright 2001 Chris Bagwell
+ * Copyright 2001-2007 Chris Bagwell and SoX Contributors
  *
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained.
- * Chris Bagwell And Sundry Contributors are not responsible for
+ * Chris Bagwell And SoX Contributors are not responsible for
  * the consequences of using this software.
  */
+
 #ifndef ST_I_H
 #define ST_I_H
 
