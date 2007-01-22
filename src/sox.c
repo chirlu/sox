@@ -4,7 +4,7 @@
  * This is the main function for the command line sox program.
  *
  * Copyright 1991 Lance Norskog And Sundry Contributors
- * Copyright 1998-2006 Chris Bagnall and SoX contributors
+ * Copyright 1998-2007 Chris Bagnall and SoX contributors
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -446,7 +446,7 @@ static struct option long_options[] =
     {"help"            ,       no_argument, NULL, 'h'},
     {"merge"           ,       no_argument, NULL, 'M'},
     {"mix"             ,       no_argument, NULL, 'm'},
-    {"no-show-progress",       no_argument, NULL, 'q'},
+    {"quiet"           ,       no_argument, NULL, 'q'},
     {"rate"            , required_argument, NULL, 'r'},
     {"reverse-bits"    ,       no_argument, NULL, 'X'},
     {"reverse-nibbles" ,       no_argument, NULL, 'N'},
@@ -1547,9 +1547,9 @@ static void usage(char const *message)
          "-m, --mix       mix multiple input files (instead of concatenating)\n"
          "-M, --merge     merge multiple input files (instead of concatenating)\n"
          "--octave        generate Octave commands to plot response of filter effect\n"
-         "-q              run in quiet mode; opposite of -S\n"
+         "-q, --quiet     run in quiet mode; opposite of -S\n"
          "-R              use default random numbers (same on each run of SoX)\n"
-         "-S              display progress while processing audio data\n"
+         "-S, --show-progress  display progress while processing audio data\n"
          "--version       display version number of SoX and exit\n"
          "-V[level]       increment or set verbosity level (default 2); levels are:\n"
          "                  1: failure messages\n"

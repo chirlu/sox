@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <sndfile.h>
 
 /* Private data for sndfile files */
@@ -47,6 +48,8 @@ int st_sndfile_startread(ft_t ft)
   sf->sf_info = (SF_INFO *)xcalloc(1, sizeof(SF_INFO));
   /* We'd like to use sf_open, but auto file typing has already
      invoked stdio buffering. */
+  /* FIXME: Cope with raw files too: if format parameters are set,
+     assume file is raw. */
   if ((sf->sf_file = sf_open(ft->filename, SFM_READ, sf->sf_info)) == NULL) {
     st_fail("sndfile cannot open file for reading: %s %x", sf_strerror(sf->sf_file), sf->sf_info->format);
     free(sf->sf_file);
@@ -91,49 +94,54 @@ static struct {
   int format;
 } format_map[] =
 {
-  { "aif",	3,	SF_FORMAT_AIFF	},
-  { "wav",	0,	SF_FORMAT_WAV	},
-  { "au",	0,	SF_FORMAT_AU	},
-  { "caf",	0,	SF_FORMAT_CAF	},
-  { "flac",	0,	SF_FORMAT_FLAC	},
-  { "snd",	0,	SF_FORMAT_AU	},
-  { "svx",	0,	SF_FORMAT_SVX	},
-  { "paf",	0,	SF_ENDIAN_BIG | SF_FORMAT_PAF	},
-  { "fap",	0,	SF_ENDIAN_LITTLE | SF_FORMAT_PAF },
-  { "gsm",	0,	SF_FORMAT_RAW	},
-  { "nist", 	0,	SF_FORMAT_NIST	},
-  { "ircam",	0,	SF_FORMAT_IRCAM	},
-  { "sf",	0, 	SF_FORMAT_IRCAM	},
-  { "voc",	0, 	SF_FORMAT_VOC	},
-  { "w64", 	0, 	SF_FORMAT_W64	},
-  { "raw",	0,	SF_FORMAT_RAW	},
-  { "mat4", 	0,	SF_FORMAT_MAT4	},
-  { "mat5", 	0, 	SF_FORMAT_MAT5 	},
-  { "mat",	0, 	SF_FORMAT_MAT4 	},
-  { "pvf",	0, 	SF_FORMAT_PVF 	},
-  { "sds",	0, 	SF_FORMAT_SDS 	},
-  { "sd2",	0, 	SF_FORMAT_SD2 	},
-  { "vox",	0, 	SF_FORMAT_RAW 	},
-  { "xi",	0, 	SF_FORMAT_XI 	}
+  { "aif",	3, SF_FORMAT_AIFF },
+  { "wav",	0, SF_FORMAT_WAV },
+  { "au",	0, SF_FORMAT_AU },
+  { "snd",	0, SF_FORMAT_AU },
+  { "caf",	0, SF_FORMAT_CAF },
+  { "flac",	0, SF_FORMAT_FLAC },
+  { "svx",	0, SF_FORMAT_SVX },
+  { "8svx",     0, SF_FORMAT_SVX },
+  { "paf",	0, SF_ENDIAN_BIG | SF_FORMAT_PAF },
+  { "fap",	0, SF_ENDIAN_LITTLE | SF_FORMAT_PAF },
+  { "gsm",	0, SF_FORMAT_RAW | SF_FORMAT_GSM610 },
+  { "nist", 	0, SF_FORMAT_NIST },
+  { "ircam",	0, SF_FORMAT_IRCAM },
+  { "sf",	0, SF_FORMAT_IRCAM },
+  { "voc",	0, SF_FORMAT_VOC },
+  { "w64", 	0, SF_FORMAT_W64 },
+  { "raw",	0, SF_FORMAT_RAW },
+  { "mat4", 	0, SF_FORMAT_MAT4 },
+  { "mat5", 	0, SF_FORMAT_MAT5 },
+  { "mat",	0, SF_FORMAT_MAT4 },
+  { "pvf",	0, SF_FORMAT_PVF },
+  { "sds",	0, SF_FORMAT_SDS },
+  { "sd2",	0, SF_FORMAT_SD2 },
+  { "vox",	0, SF_FORMAT_RAW | SF_FORMAT_VOX_ADPCM },
+  { "xi",	0, SF_FORMAT_XI }
 };
 
-static int guess_output_file_type(const char *type, int format)
+/* Convert file name or type to libsndfile format */
+static int name_to_format(const char *name)
 {
   int k;
+#define FILE_TYPE_BUFLEN 15
+  char buffer[FILE_TYPE_BUFLEN + 1], *cptr;
 
-  format &= SF_FORMAT_SUBMASK;
-
-  if (strcmp(type, "gsm") == 0)
-    return SF_FORMAT_RAW | SF_FORMAT_GSM610;
-
-  if (strcmp(type, "vox") == 0)
-    return SF_FORMAT_RAW | SF_FORMAT_VOX_ADPCM;
-
+  if ((cptr = strrchr(name, '.')) != NULL) {
+    strncpy(buffer, cptr + 1, FILE_TYPE_BUFLEN);
+    buffer[FILE_TYPE_BUFLEN] = 0;
+  
+    for (k = 0; buffer[k]; k++)
+      buffer[k] = tolower((buffer[k]));
+  } else
+    strncpy(buffer, name, FILE_TYPE_BUFLEN);
+  
   for (k = 0; k < (int)(sizeof(format_map) / sizeof(format_map [0])); k++) {
-    if (format_map[k].len > 0 && strncmp(type, format_map[k].ext, format_map[k].len) == 0)
-      return format_map[k].format | format;
-    else if (strcmp(type, format_map[k].ext) == 0)
-      return format_map[k].format | format;
+    if (format_map[k].len > 0 && strncmp(name, format_map[k].ext, format_map[k].len) == 0)
+      return format_map[k].format;
+    else if (strcmp(buffer, format_map[k].ext) == 0)
+      return format_map[k].format;
   }
 
   return 0;
@@ -146,7 +154,10 @@ int st_sndfile_startwrite(ft_t ft)
 
   /* Copy format info */
   /* FIXME: Need to have a table of suitable default subtypes */
-  sf->sf_info->format = guess_output_file_type(ft->filetype, SF_FORMAT_PCM_16);
+  if (strcmp(ft->filetype, "sndfile") == 0)
+    sf->sf_info->format = name_to_format(ft->filename) | SF_FORMAT_PCM_16;
+  else
+    sf->sf_info->format = name_to_format(ft->filetype) | SF_FORMAT_PCM_16;
   sf->sf_info->samplerate = ft->signal.rate;
   sf->sf_info->channels = ft->signal.channels;
   sf->sf_info->frames = ft->length / ft->signal.channels;
@@ -194,8 +205,9 @@ int st_sndfile_seek(ft_t ft, st_size_t offset)
 }
 
 /* Format file suffixes */
-/* For now, comment out formats built-in to SoX */
+/* For now, comment out formats built in to SoX */
 static const char *names[] = {
+  "sndfile", /* special type to force use of sndfile */
   /* "aif", */
   /* "wav", */
   /* "au", */
