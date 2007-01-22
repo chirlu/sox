@@ -475,7 +475,7 @@ static struct option long_options[] =
     {"help"            ,       no_argument, NULL, 'h'},
     {"merge"           ,       no_argument, NULL, 'M'},
     {"mix"             ,       no_argument, NULL, 'm'},
-    {"quiet"           ,       no_argument, NULL, 'q'},
+    {"no-show-progress",       no_argument, NULL, 'q'},
     {"rate"            , required_argument, NULL, 'r'},
     {"reverse-bits"    ,       no_argument, NULL, 'X'},
     {"reverse-nibbles" ,       no_argument, NULL, 'N'},
@@ -1597,7 +1597,7 @@ static void usage(char const *message)
          "-m, --mix       mix multiple input files (instead of concatenating)\n"
          "-M, --merge     merge multiple input files (instead of concatenating)\n"
          "--octave        generate Octave commands to plot response of filter effect\n"
-         "-q, --quiet     run in quiet mode; opposite of -S\n"
+         "-q, --no-show-progress  run in quiet mode; opposite of -S\n"
          "--replay-gain track|album|off  default: off (sox, rec), track (play)\n"
          "-R              use default random numbers (same on each run of SoX)\n"
          "-S, --show-progress  display progress while processing audio data\n"
