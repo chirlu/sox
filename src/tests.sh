@@ -53,25 +53,25 @@ convertToAndFrom () {
 
 do_multichannel_formats () {
   format1=ub
-  convertToAndFrom sb ub sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac
+  convertToAndFrom sb ub sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac caf
 
   format1=sw
-  convertToAndFrom sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac
+  convertToAndFrom sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac caf
 
   format1=u3
   convertToAndFrom s3 u3 sl u4 raw Raw wav aiff aifc flac
 
   format1=sl
-  convertToAndFrom sl u4 Raw wav aiff aifc
+  convertToAndFrom sl u4 Raw wav aiff aifc caf
 
   format1=al
-  convertToAndFrom al sw uw sl raw Raw dat aiff aifc flac
+  convertToAndFrom al sw uw sl raw Raw dat aiff aifc flac caf
 
   format1=ul
-  convertToAndFrom ul sw uw sl raw Raw dat aiff aifc flac
+  convertToAndFrom ul sw uw sl raw Raw dat aiff aifc flac caf
 
   format1=Wav
-  convertToAndFrom Wav aiff aifc au dat sf flac
+  convertToAndFrom Wav aiff aifc au dat sf flac caf
 }
 
 do_twochannel_formats () {
@@ -83,7 +83,7 @@ do_twochannel_formats () {
 
 do_singlechannel_formats () {
   format1=vox
-  convertToAndFrom vox sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac
+  convertToAndFrom vox sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac caf
 
   format1=Wav
   convertToAndFrom smp
