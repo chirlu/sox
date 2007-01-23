@@ -283,6 +283,7 @@ static int st_spherestopwrite(ft_t ft)
 /* NIST Sphere File */
 static const char *spherenames[] = {
   "sph",
+  "nist",
   NULL
 };
 
