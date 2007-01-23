@@ -45,6 +45,14 @@ number of channels) to form one output file using one of three methods:
 If invoked as `play', the output file is the default sound device. If
 invoked as `rec', the input device is the default sound device.
 .SP
+Usually SoX will complete its processing and exit automatically, however
+if desired, SoX's processing can be terminated early by pressing the
+keyboard interrupt key (usually Ctrl-C).  This is a natural requirement
+in some circumstances, e.g. when using SoX to make a recording.  Note
+that when using SoX to play multiple files, Ctrl-C behaves slightly
+differently: pressing it once causes SoX to skip to the next file;
+pressing it twice in quick succession causes SoX to exit.
+.SP
 The overall SoX processing chain can be summarised as follows:
 .SP
 .ce
@@ -297,16 +305,15 @@ records 10 seconds of audio using default parameters, and
 .SP
 	rec \-c 2 take1.aiff
 .SP
-starts a stereo recording that will finish when the interrupt key (often
-Ctrl-C) is pressed.
+begins a stereo recording that will end when Ctrl-C is pressed.
 .SP
 Other examples can found throughout this manual and in the
 separate
 .BR soxexam (7)
 manual.
 .SH FILENAMES
-The following may be used in certain circumstances in place of a normal
-filename on the command line:
+The following `special' filenames may be used in certain circumstances
+in place of a normal filename on the command line:
 .TP
 \fB\-\fR
 SoX can be used in pipeline operations by using the special
@@ -321,8 +328,10 @@ Note that when using this option, the file-type (see
 below) must also be given.
 .TP
 \fB\-n\fR
-This can be used in place of an input or output filename
-to specify that a `null' file is to be used.
+This can be used in place of an input or output filename to specify that
+a `null file' is to be used.  Note that here, `null file' refers to a
+SoX-specific mechanism and is not related to any operating-system
+mechanism with a similar name.
 .SP
 Using a null file to input audio is equivalent to
 using a normal audio file that contains an infinite amount
@@ -335,8 +344,9 @@ and is useful mainly with effects that produce information about the
 audio instead of affecting it (such as \fBnoiseprof\fR or \fBstat\fR).
 .SP
 The number of channels and the sampling rate associated with a null file
-are by default 2 and 44\*d1\ kHz respectively, but these can be overridden
-if necessary by using appropriate command-line format options.
+are by default 2 and 44\*d1\ kHz respectively, but, as with a normal
+file, these can be overridden if desired using command-line format
+options (see below).
 .SP
 One other use of \fB\-n\fR is to use it in conjunction with
 .B \-V
@@ -1904,20 +1914,20 @@ the output from the previous stage.
 Audio for each channel in a multi-channel audio file can be synthesised
 independently.
 .SP
-Though this effect is used to generate audio, an input file must
-still be given.  This can be used to set the synthesised audio
-length, the number of channels, and the sampling rate, however since the
-input file's audio is not needed, the null
-file `\fB\-n\fR' is usually given instead (and the length specified
-as a parameter to \fBsynth\fR or by another given effect that can has an
-associated length).
+Though this effect is used to generate audio, an input file must still
+be given, the characteristics of which will be used to set the
+synthesised audio length, the number of channels, and the sampling rate;
+however, since the input file's audio is not normally needed, a `null
+file' (with the special name \fB-n\fR) is often given instead (and the
+length specified as a parameter to \fBsynth\fR or by another given
+effect that can has an associated length).
 .SP
 For example, the following produces a 3 second, 44\*d1\ kHz,
-stereo audio file containing a sine-wave swept from 300 to 3300\ Hz.
+stereo audio file containing a sine-wave swept from 300 to 3300\ Hz:
 .SP
 	sox \-n output.au synth 3 sine 300\-3300
 .SP
-This produces an 8\ kHz mono version:
+and this produces an 8\ kHz mono version:
 .SP
 	sox \-r 8000 \-c 1 \-n output.au synth 3 sine 300\-3300
 .SP
