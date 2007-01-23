@@ -666,6 +666,26 @@ option (see above). File types that can be determined
 by a filename extension are listed with their names preceded by a dot.
 .SP
 .TP
+.B .raw
+Raw (headerless) audio files.  The sample rate, sample size, and data
+encoding must be given using command-line format options; the number of
+channels defaults to 1.
+.TP
+.B .ub .sb .uw .sw .ul .al .lu .la .sl
+These filename extensions serve as shorthand for identifying the format
+of headerless audio files.  Thus, \fBub\fR, \fBsb\fR, \fBuw\fR,
+\fBsw\fR, \fBul\fR, \fBal\fR, \fBlu\fR, \fBla\fR and \fBsl\fR indicate a
+file with a single audio channel, sample rate of 8000\ Hz, and samples
+encoded as `unsigned byte', `signed byte', `unsigned word', `signed
+word', `\(*m-law' (byte), `A-law' (byte), inverse bit order `\(*m-law',
+inverse bit order `A-law', or `signed long' respectively.  Command-line
+format options can also be given to modify the selected format if it
+does not provide an exact match for a particular file.
+.SP
+Headerless audio files on a SPARC computer are likely to be of format
+\fBul\fR;  on a Mac, they're likely to be \fBub\fR but with a
+sample rate of 11025 or 22050\ Hz.
+.TP
 .B .8svx
 Amiga 8SVX musical instrument description format.
 .TP
@@ -1021,26 +1041,6 @@ Maxis XA files.
 These are 16-bit ADPCM audio files used by Maxis games.  Writing .xa files is
 currently not supported, although adding write support should not be very
 difficult.
-.TP
-.B .raw
-Raw (headerless) audio files.  The sample rate, sample size, and data
-encoding must be given using command-line format options; the number of
-channels defaults to 1.
-.TP
-.B .ub .sb .uw .sw .ul .al .lu .la .sl
-These filename extensions serve as shorthand for identifying the format
-of headerless audio files.  Thus, \fBub\fR, \fBsb\fR, \fBuw\fR,
-\fBsw\fR, \fBul\fR, \fBal\fR, \fBlu\fR, \fBla\fR and \fBsl\fR indicate a
-file with a single audio channel, sample rate of 8000\ Hz, and samples
-encoded as `unsigned byte', `signed byte', `unsigned word', `signed
-word', `\(*m-law' (byte), `A-law' (byte), inverse bit order `\(*m-law',
-inverse bit order `A-law', or `signed long' respectively.  Command-line
-format options can also be given to modify the selected format if it
-does not provide an exact match for a particular file.
-.SP
-Headerless audio files on a SPARC computer are likely to be of format
-\fBul\fR;  on a Mac, they're likely to be \fBub\fR but with a
-sample rate of 11025 or 22050\ Hz.
 .SH EFFECTS
 Multiple effects may be applied to the audio by specifying them
 one after another at the end of the command line.
