@@ -50,7 +50,7 @@ int st_sndfile_startread(ft_t ft)
      invoked stdio buffering. */
   /* FIXME: If format parameters are set, assume file is raw. */
   if ((sf->sf_file = sf_open(ft->filename, SFM_READ, sf->sf_info)) == NULL) {
-    st_fail("sndfile cannot open file for reading: %s %x", sf_strerror(sf->sf_file), sf->sf_info->format);
+    st_fail("sndfile cannot open file for reading: %s", sf_strerror(sf->sf_file));
     free(sf->sf_file);
     return ST_EOF;
   }
@@ -219,8 +219,8 @@ int st_sndfile_startwrite(ft_t ft)
     SF_FORMAT_INFO format_info;
     int i, count;
 
+    st_warn("cannot use desired output encoding, choosing default");
     sf_command(sf->sf_file, SFC_GET_SIMPLE_FORMAT_COUNT, &count, sizeof(int));
-
     for (i = 0; i < count; i++) {
       format_info.format = i;
       sf_command(sf->sf_file, SFC_GET_SIMPLE_FORMAT, &format_info, sizeof(format_info));
@@ -228,13 +228,12 @@ int st_sndfile_startwrite(ft_t ft)
         sf->sf_info->format = format_info.format;
         /* FIXME: Print out exactly what we chose, needs sndfile ->
            sox encoding conversion functions */
-        st_warn("couldn't use desired output encoding, choosing default");
         break;
       }
     }
 
     if (!sf_format_check(sf->sf_info)) {
-      st_fail("invalid sndfile output format");
+      st_fail("cannot find a usable output encoding");
       return ST_EOF;
     }
   }
