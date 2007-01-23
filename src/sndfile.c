@@ -105,6 +105,7 @@ static struct {
   { "fap",	0, SF_ENDIAN_LITTLE | SF_FORMAT_PAF },
   { "gsm",	0, SF_FORMAT_RAW | SF_FORMAT_GSM610 },
   { "nist", 	0, SF_FORMAT_NIST },
+  { "sph",      0, SF_FORMAT_NIST },
   { "ircam",	0, SF_FORMAT_IRCAM },
   { "sf",	0, SF_FORMAT_IRCAM },
   { "voc",	0, SF_FORMAT_VOC },
@@ -289,7 +290,7 @@ static const char *names[] = {
   "paf",
   "fap",
   /* "gsm", */
-  "nist",
+  /* "nist", */
   /* "ircam", */
   /* "sf", */
   /* "voc", */
