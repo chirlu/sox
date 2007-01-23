@@ -662,16 +662,19 @@ use this option for more information.
 .SH FILE TYPES
 File types can be set by the filename extension or the
 .B -t
-option (see above). File types that can be determined
-by a filename extension are listed with their names preceded by a dot.
+option (see above). File types that can be determined by a filename
+extension are listed with their names preceded by a dot. File types
+that require optional libsndfile support are marked
+`\fB(libsndfile)\fR'. File types that can be handled by libsndfile
+using the \-\-sndfile option are marked `\fB(\-\-sndfile)\fR'.
 .SP
 .TP
-.B .raw
+.B .raw (\-\-sndfile)
 Raw (headerless) audio files.  The sample rate, sample size, and data
 encoding must be given using command-line format options; the number of
 channels defaults to 1.
 .TP
-.B .ub .sb .uw .sw .ul .al .lu .la .sl
+.B .ub .sb .uw .sw .ul .al .lu .la .sl (\-\-sndfile)
 These filename extensions serve as shorthand for identifying the format
 of headerless audio files.  Thus, \fBub\fR, \fBsb\fR, \fBuw\fR,
 \fBsw\fR, \fBul\fR, \fBal\fR, \fBlu\fR, \fBla\fR and \fBsl\fR indicate a
@@ -686,10 +689,10 @@ Headerless audio files on a SPARC computer are likely to be of format
 \fBul\fR;  on a Mac, they're likely to be \fBub\fR but with a
 sample rate of 11025 or 22050\ Hz.
 .TP
-.B .8svx
+.B .8svx (\-\-sndfile)
 Amiga 8SVX musical instrument description format.
 .TP
-\&\fB.aiff\fR, \fB.aif\fR
+\&\fB.aiff\fR, \fB.aif\fR \fB(\-\-sndfile)\fR
 AIFF files used on Apple IIc/IIgs and SGI.
 Note: the AIFF format supports only one SSND chunk.
 It does not support multiple audio chunks,
@@ -698,7 +701,7 @@ AIFF files are multimedia archives and
 can have multiple audio and picture chunks.
 You may need a separate archiver to work with them.
 .TP
-\&\fB.aiffc\fR, \fB.aifc\fR
+\&\fB.aiffc\fR, \fB.aifc\fR \fB(\-\-sndfile)\fR
 AIFF-C (not compressed, linear), defined in DAVIC 1.4 Part 9 Annex B.
 This format is referred from ARIB STD-B24, which is specified for
 Japanese data broadcasting.  Any private chunks are not supported.
@@ -718,7 +721,7 @@ input file.  It is suggested to always override the output values to use
 the highest quality format your ALSA system can handle.  Example:
 .B sox infile \-t alsa default
 .TP
-\&\fB.au\fR, \fB.snd\fR
+\&\fB.au\fR, \fB.snd\fR \fB(\-\-sndfile)\fR
 Sun Microsystems AU files.
 There are many types of AU file;
 DEC has invented its own with a different magic number
@@ -746,6 +749,9 @@ if given for an output file it will cause SoX to exit with an error.
 Audio Visual Research.
 The AVR format is produced by a number of commercial packages
 on the Mac.
+.TP
+.B .caf (libsndfile)
+Core Audio File format.
 .TP
 \&\fB.cdda\fR, \fB.cdr\fR
 `Red Book' Compact Disc Digital Audio.
@@ -781,7 +787,11 @@ Used to compress speech audio for applications such as voice mail.
 A self-describing variant of
 .BR cvsd .
 .TP
-.B .flac
+.B .fap (libsndfile)
+See
+.BR .paf .
+.TP
+.B .flac (\-\-sndfile)
 Free Lossless Audio CODEC compressed audio.
 FLAC is an open, patent-free CODEC designed for compressing
 music.  It is similar to MP3 and Ogg Vorbis, but lossless,
@@ -822,7 +832,7 @@ An alias for the
 .B .ub
 format.
 .TP
-.B .gsm
+.B .gsm (\-\-sndfile)
 GSM 06.10 Lossy Speech Compression.
 A lossy format for compressing speech which is used in the
 Global Standard for Mobile telecommunications (GSM).  It's good
@@ -845,11 +855,11 @@ handler apparently doesn't handle all the ones it should.
 Mac users will need their usual arsenal of file converters
 to deal with an HCOM file on other systems.
 .TP
-.B ircam
+.B ircam (\-\-sndfile)
 Another name for
 .BR .sf .
 .TP
-.B .ima
+.B .ima (\-\-sndfile)
 A headerless file of IMA ADPCM audio data. IMA ADPCM claims 16-bit precision
 packed into only 4 bits, but in fact sounds no better than
 .BR .vox .
@@ -858,6 +868,9 @@ packed into only 4 bits, but in fact sounds no better than
 A pseudo-format which allows formats to be implemented in Lua. See
 .BR soxlua (7)
 for details.
+.TP
+\&\fB.mat\fR, \fB.mat4\fR, \fB.mat5\fR \fB(libsndfile)\fR
+Matlab 4.2/5.0 (respectively GNU Octave 2.0/2.1) format (.mat is the same as .mat4).
 .TP
 .B .maud
 An IFF-conforming audio file type, registered by
@@ -880,6 +893,9 @@ libmad and libmp3lame libraries.  To
 see if there is support for Mp3 run \fBsox \-h\fR
 and look for it under the list of supported file formats as `mp3'.
 .SP
+.TP
+.B .nist (\-\-sndfile)
+See \fB.sph\fR.
 .TP
 \&\fB.ogg\fR, \fB.vorbis\fR
 Ogg Vorbis compressed audio.
@@ -917,17 +933,29 @@ the input file. It is suggested to always override the output values
 to use the highest quality format your OSS system can handle. Example:
 .B sox infile \-t ossdsp \-w \-s /dev/dsp
 .TP
+\&\fB.paf\fR, \fB.fap\fR \fB(libsndfile)\fR
+Ensoniq PARIS file format (big and little-endian respectively).
+.TP
 .B .prc
 Psion Record. Used in some Psion devices for System alarms and
 recordings made by the built-in Record application. This format is
 newer then the .wve format that is also used in some Psion devices.
 .TP
-.B .sf
+.B .pvf (libsndfile)
+Portable Voice Format.
+.TP
+.B .sd2 (libsndfile)
+Sound Designer 2 format.
+.TP
+.B .sds (libsndfile)
+MIDI Sample Dump Standard.
+.TP
+.B .sf (\-\-sndfile)
 IRCAM SDIF (Institut de Recherche et Coordination Acoustique/Musique
 Sound Description Interchange Format). Used by academic music software
 such as the CSound package, and the MixView sound sample editor.
 .TP
-.B .sph
+\&\fB.sph\fR, \fB.nist\fR \fB(\-\-sndfile)\fR
 SPHERE (SPeech HEader Resources) is a file format defined by NIST
 (National Institute of Standards and Technology) and is used with
 speech audio.  SoX can read these files when they contain
@@ -946,10 +974,9 @@ the samplers themselves.  Currently loop points are ignored.
 .TP
 .B .snd
 See
-.B .au
-format.
+.B .au .
 .TP
-.B .sndfile
+.B sndfile
 This is a pseudo-type that forces libsndfile to be used, even for file
 types normally handled internally by SoX. For writing files, the
 actual file type is then taken from the output file name; for reading
@@ -991,10 +1018,9 @@ other bytes in the attack/loop length fields, and defaulting to
 .TP
 .B .vms
 See
-.B .dvms
-format.
+.BR .dvms .
 .TP
-.B .voc
+.B .voc (\-\-sndfile)
 Sound Blaster VOC files.
 VOC files are multi-part and contain silence parts, looping, and
 different sample rates for different chunks.
@@ -1007,14 +1033,16 @@ blocks and supports playing files containing \(*m-law and A-law samples.
 .TP
 .B .vorbis
 See
-.B .ogg
-format.
+.BR .ogg .
 .TP
-.B .vox
+.B .vox (\-\-sndfile)
 A headerless file of Dialogic/OKI ADPCM audio data commonly comes with the
 extension .vox.  This ADPCM data has 12-bit precision packed into only 4-bits.
 .TP
-.B .wav
+.B .w64 (libsndfile)
+Sonic Foundry's 64-bit RIFF/WAV format.
+.TP
+.B .wav \fB(\-\-sndfile)\fR
 Microsoft .WAV RIFF files.
 This is the native audio file format of Windows, and widely used for uncompressed audio.
 .SP
@@ -1041,6 +1069,9 @@ Maxis XA files.
 These are 16-bit ADPCM audio files used by Maxis games.  Writing .xa files is
 currently not supported, although adding write support should not be very
 difficult.
+.TP
+.B .xi (libsndfile)
+Fasttracker 2 Extended Instrument format.
 .SH EFFECTS
 Multiple effects may be applied to the audio by specifying them
 one after another at the end of the command line.
@@ -1171,7 +1202,7 @@ The modulation is either sinusoidal (\fB\-s\fR) or triangular
 \fBcompand \fIattack1\fB,\fIdecay1\fR{\fB,\fIattack2\fB,\fIdecay2\fR}
 \fIin-dB1\fB,\fIout-dB1\fR{\fB,\fIin-dB2\fB,\fIout-dB2\fR}
 .br
-[\fIgain\fR [\fIinitial-volume\fR [\fIdelay\fR] ] ]
+[\fIgain\fR [\fIinitial-volume\fR [\fIdelay\fR]]]
 .SP
 Compand (compress or expand) the dynamic range of the audio.  The
 attack and decay time specify the integration time over which the
@@ -1297,7 +1328,7 @@ This effect supports the \fB\-\-octave\fR global option.
 .SP
 See also \fBbass\fR and \fBtreble\fR for shelving equalisation effects.
 .TP
-\fBfade\fR [\fItype\fR] \fIfade-in-length\fR [\fIstop-time\fR [\fIfade-out-length\fR] ]
+\fBfade\fR [\fItype\fR] \fIfade-in-length\fR [\fIstop-time\fR [\fIfade-out-length\fR]]
 Add a fade effect to the beginning, end, or both of the audio.
 .SP
 For fade-ins, this starts from the first sample and ramps the volume of the audio from 0 to full volume over \fIfade-in-length\fR seconds.  Specify 0 seconds if no fade-in is wanted.
@@ -1321,7 +1352,7 @@ to the sample count (for example `8000s').
 .SP
 An optional \fItype\fR can be specified to change the type of envelope.  Choices are \fBq\fR for quarter of a sine wave, \fBh\fR for half a sine wave, \fBt\fR for linear slope, \fBl\fR for logarithmic, and \fBp\fR for inverted parabola.  The default is a linear slope.
 .TP
-\fBfilter\fR [\fIlow\fR]\fB\-\fR[\fIhigh\fR] [\fIwindow-len\fR [\fIbeta\fR] ]
+\fBfilter\fR [\fIlow\fR]\fB\-\fR[\fIhigh\fR] [\fIwindow-len\fR [\fIbeta\fR]]
 Apply a sinc-windowed lowpass, highpass, or bandpass filter of given
 window length to the signal.
 \fIlow\fR refers to the frequency of the lower 6dB corner of the filter.
@@ -1402,7 +1433,7 @@ for details.
 \fBmcompand "\fIattack1\fB,\fIdecay1\fR{\fB,\fIattack2\fB,\fIdecay2\fR}
 \fIin-dB1\fB,\fIout-dB1\fR{\fB,\fIin-dB2\fB,\fIout-dB2\fR}
 .br
-[\fIgain\fR [\fIinitial-volume\fR [\fIdelay\fR] ] ]\fB" \fIxover-freq\fR
+[\fIgain\fR [\fIinitial-volume\fR [\fIdelay\fR]] ]\fB" \fIxover-freq\fR
 .SP
 Multi-band compander is similar to the single band compander but the
 audio is first divided up into bands and then the compander is run on
@@ -1598,7 +1629,7 @@ Requires disk space to store the data to be repeated.
 Note that repeating once yields two copies: the original audio and the
 repeated audio.
 .TP
-\fBresample\fR [\fB\-qs\fR\^|\^\fB\-q\fR\^|\^\fB\-ql\fR] [\fIrolloff\fR [\fIbeta\fR] ]
+\fBresample\fR [\fB\-qs\fR\^|\^\fB\-q\fR\^|\^\fB\-ql\fR] [\fIrolloff\fR [\fIbeta\fR]]
 Change the sampling rate using simulated
 analog filtration.  Other rate changing effects available are
 \fBpolyphase\fR and \fBrabbit\fR.  There is a detailed analysis of
@@ -1715,7 +1746,7 @@ is the volume of the output.
 Reverse the audio completely.
 Requires disk space to store the data to be reversed.
 .TP
-\fBsilence \fIabove-periods\fR [\fIduration threshold\fR[\fBd\fR\^|\^\fB%\fR] [\fIbelow-periods duration threshold\fR[\fBd\fR\^|\^\fB%\fR] ]
+\fBsilence \fIabove-periods\fR [\fIduration threshold\fR[\fBd\fR\^|\^\fB%\fR] [\fIbelow-periods duration threshold\fR[\fBd\fR\^|\^\fB%\fR]]
 .SP
 Removes silence from the beginning, middle, or end of the audio.  Silence is anything below a specified threshold.
 .SP
@@ -1991,7 +2022,7 @@ The modulation frequency in Hz is given by
 .I depth
 (0 to 1, default 0\*d5).
 .TP
-\fBvol \fIgain\fR [\fItype\fR [\fIlimitergain\fR] ]
+\fBvol \fIgain\fR [\fItype\fR [\fIlimitergain\fR]]
 Apply an amplification or an attenuation to the audio signal.
 Unlike the
 .B \-v
