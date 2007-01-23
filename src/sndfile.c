@@ -214,9 +214,29 @@ int st_sndfile_startwrite(ft_t ft)
   sf->sf_info->channels = ft->signal.channels;
   sf->sf_info->frames = ft->length / ft->signal.channels;
 
+  /* If output format is invalid, try to find a sensible default */
   if (!sf_format_check(sf->sf_info)) {
-    st_fail("invalid sndfile output format");
-    return ST_EOF;
+    SF_FORMAT_INFO format_info;
+    int i, count;
+
+    sf_command(sf->sf_file, SFC_GET_SIMPLE_FORMAT_COUNT, &count, sizeof(int));
+
+    for (i = 0; i < count; i++) {
+      format_info.format = i;
+      sf_command(sf->sf_file, SFC_GET_SIMPLE_FORMAT, &format_info, sizeof(format_info));
+      if ((format_info.format & SF_FORMAT_TYPEMASK) == (sf->sf_info->format & SF_FORMAT_TYPEMASK)) {
+        sf->sf_info->format = format_info.format;
+        /* FIXME: Print out exactly what we chose, needs sndfile ->
+           sox encoding conversion functions */
+        st_warn("couldn't use desired output encoding, choosing default");
+        break;
+      }
+    }
+
+    if (!sf_format_check(sf->sf_info)) {
+      st_fail("invalid sndfile output format");
+      return ST_EOF;
+    }
   }
 
   if ((sf->sf_file = sf_open(ft->filename, SFM_WRITE, sf->sf_info)) == NULL) {
