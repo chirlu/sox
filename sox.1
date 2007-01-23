@@ -71,8 +71,8 @@ the format of audio data so that it can be processed with SoX:
 .TP
 sample rate
 The sample rate in samples per second (`Hertz' or `Hz').  For
-example, digital telephony traditionally uses a sample rate of 8000Hz
-(8kHz); audio Compact Discs use 44100Hz (44\*d1kHz).
+example, digital telephony traditionally uses a sample rate of 8000\ Hz
+(8\ kHz); audio Compact Discs use 44100\ Hz (44\*d1\ kHz).
 .TP
 sample size
 The number of bits used to store each sample. Most popular are 8-bit
@@ -256,7 +256,7 @@ to a Microsoft WAV file, whilst:
 	sox recital.au \-r 12000 \-b \-c 1 recital.wav vol 0\*d7 dither
 .SP
 performs the same format translation, but also
-changes the sampling rate to 12000Hz,
+changes the sampling rate to 12000\ Hz,
 the sample size to one byte (8 bits),
 the number of channels to one (mono),
 and applies the \fBvol\fR and \fBdither\fR effects
@@ -335,7 +335,7 @@ and is useful mainly with effects that produce information about the
 audio instead of affecting it (such as \fBnoiseprof\fR or \fBstat\fR).
 .SP
 The number of channels and the sampling rate associated with a null file
-are by default 2 and 44\*d1kHz respectively, but these can be overridden
+are by default 2 and 44\*d1\ kHz respectively, but these can be overridden
 if necessary by using appropriate command-line format options.
 .SP
 One other use of \fB\-n\fR is to use it in conjunction with
@@ -705,7 +705,7 @@ DEC has invented its own with a different magic number
 and byte order.
 SoX can read these files but will not write them.
 Some .au files are known to have invalid AU headers; these
-are probably original Sun \(*m-law 8000Hz files and
+are probably original Sun \(*m-law 8000\ Hz files and
 can be dealt with using the
 .B .ul
 format (see below).
@@ -730,7 +730,7 @@ on the Mac.
 \&\fB.cdda\fR, \fB.cdr\fR
 `Red Book' Compact Disc Digital Audio.
 CDDA has two audio channels formatted as 16-bit
-signed integers at a sample rate of 44\*d1kHz.  The number of (stereo)
+signed integers at a sample rate of 44\*d1\ kHz.  The number of (stereo)
 samples in each CDDA track is always a multiple of 588 which is why it
 needs its own handler.
 .TP
@@ -967,7 +967,7 @@ A file format from a Yamaha sampling keyboard which wrote IBM-PC
 format 3\*d5\(dq floppies.  Handles reading of files which do not have
 the sample rate field set to one of the expected by looking at some
 other bytes in the attack/loop length fields, and defaulting to
-33kHz if the sample rate is still unknown.
+33\ kHz if the sample rate is still unknown.
 .TP
 .B .vms
 See
@@ -1031,7 +1031,7 @@ channels defaults to 1.
 These filename extensions serve as shorthand for identifying the format
 of headerless audio files.  Thus, \fBub\fR, \fBsb\fR, \fBuw\fR,
 \fBsw\fR, \fBul\fR, \fBal\fR, \fBlu\fR, \fBla\fR and \fBsl\fR indicate a
-file with a single audio channel, sample rate of 8000Hz, and samples
+file with a single audio channel, sample rate of 8000\ Hz, and samples
 encoded as `unsigned byte', `signed byte', `unsigned word', `signed
 word', `\(*m-law' (byte), `A-law' (byte), inverse bit order `\(*m-law',
 inverse bit order `A-law', or `signed long' respectively.  Command-line
@@ -1040,7 +1040,7 @@ does not provide an exact match for a particular file.
 .SP
 Headerless audio files on a SPARC computer are likely to be of format
 \fBul\fR;  on a Mac, they're likely to be \fBub\fR but with a
-sample rate of 11025 or 22050Hz.
+sample rate of 11025 or 22050\ Hz.
 .SH EFFECTS
 Multiple effects may be applied to the audio by specifying them
 one after another at the end of the command line.
@@ -1127,8 +1127,8 @@ using a two-pole shelving filter with a response similar to that
 of a standard hi-fi's (Baxandall) tone-controls.  This is also
 known as shelving equalisation (EQ).
 .SP
-\fIgain\fR gives the dB gain at 0Hz (for \fBbass\fR), or whichever is
-the lower of \(ap22kHz and the Nyquist frequency (for \fBtreble\fR).  Its
+\fIgain\fR gives the dB gain at 0\ Hz (for \fBbass\fR), or whichever is
+the lower of \(ap22\ kHz and the Nyquist frequency (for \fBtreble\fR).  Its
 useful range is about \-20 (for a large cut) to +20 (for a large
 boost).
 Beware of
@@ -1140,7 +1140,7 @@ optional parameters:
 .SP
 \fIfrequency\fR sets the filter's central frequency and so can be
 used to extend or reduce the frequency range to be boosted or
-cut.  The default value is 100Hz (for \fBbass\fR) or 3kHz (for
+cut.  The default value is 100\ Hz (for \fBbass\fR) or 3\ kHz (for
 \fBtreble\fR).
 .SP
 \fIwidth\fR 
@@ -1881,12 +1881,12 @@ file `\fB\-n\fR' is usually given instead (and the length specified
 as a parameter to \fBsynth\fR or by another given effect that can has an
 associated length).
 .SP
-For example, the following produces a 3 second, 44\*d1kHz,
-stereo audio file containing a sine-wave swept from 300 to 3300Hz.
+For example, the following produces a 3 second, 44\*d1\ kHz,
+stereo audio file containing a sine-wave swept from 300 to 3300\ Hz.
 .SP
 	sox \-n output.au synth 3 sine 300\-3300
 .SP
-This produces an 8kHz mono version:
+This produces an 8\ kHz mono version:
 .SP
 	sox \-r 8000 \-c 1 \-n output.au synth 3 sine 300\-3300
 .SP
@@ -1903,7 +1903,7 @@ to create a more complex waveform:
 	sox \-n output.au synth 0\*d5 sine 200\-500 synth 0\*d5 sine fmod 700\-100
 .SP
 Frequencies can also be given as a number of musical semitones relative
-to `middle A' (440Hz) by prefixing a `%' character;  for example, the
+to `middle A' (440\ Hz) by prefixing a `%' character;  for example, the
 following could be used to help tune a guitar's `E' strings:
 .SP
 	play \-n synth sine %\-17
@@ -1936,7 +1936,7 @@ for specifying sample counts is the number of samples with the letter
 .SP
 \fIfreq\fR/\fIfreq2\fR are the frequencies at the beginning/end of
 synthesis in Hz or, if preceded with `%', semitones relative to A
-(440Hz); for both, default=%0.  If
+(440\ Hz); for both, default=%0.  If
 .I freq2
 is given, then
 .I len
