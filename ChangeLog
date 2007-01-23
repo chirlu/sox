@@ -6,35 +6,86 @@ sox-11gamma.
 
 sox-12.18.3
 -----------
+
+  File formats:
+
+  o Support for .caf, .paf, .fap, .nist, .w64, .nist, Matlab 4.2/5.0
+    (Octave 2.0/2.1), .pvf, .sds, .sd2 and .xi file formats via libsndfile.
+    If available, libsndfile can also be used to handle all the other file
+    formats it understands.  (Reuben Thomas)
+  o Add FLAC support (robs@users.sf.net)
+  o Support Maxis's XA format. (Dwayne C. Litzenberger)
+  o Add support for 24-bit PCM raw, wav (WAVE_FORMAT_EXTENSIBLE) [FR# 801015],
+    au, aiff, & flac files. (robs)
+  o Add AIFF-C output support.  (shashimoto)
+  o New .ima file format for raw IMA ADPCM.  (robs)
+  o Allow the rate and number of channels of .au files to be overridden
+    by command-line arguments. (robs@users.sf.net)
+  o Add seek support for GSM data in WAV files. Rafal Maszkowski
+  o Allow encoding quality to be specified (works for Ogg too, but not
+    MP3).
+  o Rename -b to -1, -w to -2, -l to -4, -d to -8, and mask to dither.
+    (robs)
+  o New options for specifying endianness (and separate options for
+    nibble & bit reversal) [FR# 1621702].  (robs)
+  o Added large file support.  (Reuben Thomas)
+  o Improved multi-channel file reading; fixes [1599990].  (robs)
+
+  Effects:
+
+  o Equalizer effect (Pascal Giard)
+  o bass and treble altering effects.  (robs)
+  o New optional rabbit resample routine, using libsamplerate
+    (aka Secret Rabbit Code).  (Reuben Thomas)
+  o Added allpass filter effect.  (robs)
+  o Documented the butterworth filter effects; added variable Q.  (robs)
+  o "rate" effect made an alias for "resample".
+  o Visualisation of various filters' frequency response via Octave.  (robs)
+  o Can now specify width of many 2nd-order filters as: Hz, octaves,
+    or Q.  (robs)
+  o Dither/mask amount now specifiable.  (robs)
+  o Consistent (and hopefully complete) clipping detection and
+    reporting.  (robs)
+  o Allow command-line time parameters of < 1 sec to omit the
+    leading 0. (robs)
+  o Improved synth usage and improved the synth entry in the man-
+    page.  (robs)
+  o Higher quality audio speed adjustment; also fixes [1155364].  (robs)
+  o Replacement flanger effect; also fixes [1393245].  (robs)
+  o Added silence padding effect.  (robs)
+  o Added ability to merge e.g. 2 mono files to 1 stereo file
+    [FR# 1297076].  (robs)
+
+  Other new features:
+
+  o Added Lua scripting, allowing effects and format to be implemented
+    in Lua (http://www.lua.org/).  (Reuben Thomas)
+  o Remove soxmix.  (Reuben Thomas)
+  o Preview mode now removed, as all it did was use rate rather than
+    resample, and rate has been removed.
+  o -V now gives only user-relevant messages, use -V -V to get
+    developer-relevant messages.  (robs)
+  o sox man-page overhaul, new soxexam man-page entries.  (robs)
+  o Added command line options for specifying the output file
+    comment.  (robs)
+  o Options to apply replay-gain on input; enabled by default
+    with `play'.  (robs)
+  o Display (auto-)selected effects with -V.  (robs)
+  o Added --interactive option to prompt to overwrite pre-existing
+    output file.  (robs)
+
+  Bug fixes:
+
   o Fix writing MP3 files on AMD64 processors.
   o More fixes to MP3 tag reading.  Sometimes tags were
     detected as valid MP3 frames.
-  o Add new getopt1.c to win32 project file.
-  o New optional rabbit resample routine.  Uses libsamplerate
-    (aka Secret Rabbit Code) if installed.  (Reuben Thomas)
-  o Fix to pay attention when starting of effects fails.
+  o Fix to stop, avoiding a crash, when starting of effects fails.
     (Reuben Thomas)
   o Fixed a bug introduced in 12.18.2 that stopped the draining
     of effects from occuring.  This had stopped the reverse effect,
     among others, from working.  (Reuben Thomas)
-  o Add FLAC support (robs@users.sf.net)
-  o Allow encoding quality to be specified (works for Ogg too, but not
-    MP3).
-  o Allow the rate and number of channels of .au files to be overridden
-    by command-line arguments. (robs@users.sf.net)
-  o More and better self-tests. (robs@users.sf.net)
-  o Support Maxis's XA format. (Dwayne C. Litzenberger)
-  o Add equalizer effect (Pascal Giard)
-  o bass and treble altering effects.  (robs)
-  o Documented the butterworth filter effects; added variable Q.  (robs)
-  o Visualisation of various filters' frequency response via Octave.  (robs)
-  o Added allpass filter effect.  (robs)
-  o Can now specify width of many 2nd-order filters as: Hz, octaves,
-    or Q.  (robs)
   o Fix rounding error when reading command-line time
     parameters. (robs)
-  o Allow command-line time parameters of < 1 sec to omit the
-    leading 0. (robs)
   o Fix nul file hander ignoring other format options if rate
     option has not been given. (robs)
   o Fix synth length accuracy. (robs)
@@ -44,60 +95,23 @@ sox-12.18.3
     & FLAC.  (robs)
   o Fix wav file handler discarding the last PCM sample in certain
     circumstances. (robs)
-  o Add support for 24-bit PCM raw, wav (WAVE_FORMAT_EXTENSIBLE) [FR# 801015],
-    au, aiff, & flac files. (robs)
-  o Added aliases -1 (for -b), -2 (for -w), -4 (for -l), -8 (for -d),
-    dither (for mask). (robs)
-  o Dither/mask amount now specifiable.  (robs)
-  o Remove old, optional rate change and alaw/ulaw conversion code.
-    (Reuben Thomas)
-  o Remove soxmix.  (Reuben Thomas)
-  o Removed the old internally invoked (but mentioned in the man page)
-    copy effect.  (robs)
-  o Consistent (and hopefully complete) clipping detection and
-    reporting.  (robs)
-  o Add AIFF-C output support.  (shashimoto)
-  o -V now gives only user-relevant messages, use -V -V to get
-    developer-relevant messages.  (robs)
-  o Old and new rate code removed; the "rate" effect is implemented
-    for backwards compatibility by "resample".
-  o Preview mode now removed, as all it did was use rate rather than
-    resample, and rate has been removed.
-  o Improved synth usage and improved the synth entry in the man-
-    page.  (robs)
-  o sox man-page overhaul, new soxexam man-page entries.  (robs)
-  o Added command line options for specifying the output file
-    comment.  (robs)
-  o Improved the accuracy of integer and floating point PCM
-    conversions.  (robs)
-  o Added large file support.  (Reuben Thomas)
-  o Higher quality audio speed adjustment; also fixes [1155364].  (robs)
-  o Replacement flanger effect; also fixes [1393245].  (robs)
-  o Added ability to merge e.g. 2 mono files to 1 stereo file
-    [FR# 1297076].  (robs)
-  o Added Lua scripting, allowing effects and format to be implemented
-    in Lua (http://www.lua.org/).  (Reuben Thomas)
-  o Several effects are now optimised out in situations where they need
-    do nothing, e.g. changing rate from 8000 to 8000, or changing volume
-    by 0dB [Bug# 1395781].  (robs)
-  o Removed (for output file only) the potentially
-    problematic -v option.  Use the vol effect instead.  (robs)
-  o Added --interactive option to prompt to overwrite pre-existing
-    output file.  (robs)
-  o Added silence padding effect.  (robs)
-  o Improved multi-channel file reading; fixes [1599990].  (robs)
-  o New options for specifying endianness (and separate options for
-    nibble & bit reversal) [FR# 1621702].  (robs)
-  o Add seek support for GSM data in WAV files. Rafal Maszkowski
   o Fix [1627972] AIFF read bug when MARK chunk present.  (Richard Fuller)
   o Fix [1160154] VOX to WAV conversion problem.  (robs)
-  o New .ima file format for raw IMA ADPCM.  (robs)
+  o Removed (for output file only) the potentially
+    problematic -v option.  Use the vol effect instead.  (robs)
+  o Improved the accuracy of integer and floating point PCM
+    conversions.  (robs)
+
+  Internal improvements:
+
+  o More and better self-tests. (robs@users.sf.net)
   o Build system overhaul to use the full set of GNU autotools.
     (Reuben Thomas)
-  o New file formats via libsndfile.  (Reuben Thomas)
-  o Display (auto-)selected effects with -V.  (robs)
-  o Options to apply replay-gain on input; enabled by default
-    with `play'.  (robs)
+  o Add new getopt1.c to win32 project file.
+  o Remove old, optional rate change and alaw/ulaw conversion code.
+    (Reuben Thomas)
+  o Removed the old internally invoked (but mentioned in the man page)
+    copy effect.  (robs)
 
 sox-12.18.2
 -----------
