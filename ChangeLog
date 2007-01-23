@@ -22,8 +22,8 @@ sox-12.18.3
   o Allow the rate and number of channels of .au files to be overridden
     by command-line arguments. (robs@users.sf.net)
   o Add seek support for GSM data in WAV files. Rafal Maszkowski
-  o Allow encoding quality to be specified (works for Ogg too, but not
-    MP3).
+  o Allow encoding quality to be specified (FLAC & Ogg, but not
+    MP3 yet).  (robs)
   o Rename -b to -1, -w to -2, -l to -4, -d to -8, and mask to dither.
     (robs)
   o New options for specifying endianness (and separate options for
@@ -70,6 +70,8 @@ sox-12.18.3
     comment.  (robs)
   o Options to apply replay-gain on input; enabled by default
     with `play'.  (robs)
+  o Can now use Ctrl-C to skip to next track when playing multiple
+    files (e.g. play *.mp3); Ctrl-C twice to exit.  (robs)
   o Display (auto-)selected effects with -V.  (robs)
   o Added --interactive option to prompt to overwrite pre-existing
     output file.  (robs)
