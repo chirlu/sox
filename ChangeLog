@@ -58,8 +58,6 @@ sox-12.18.3
 
   Other new features:
 
-  o Added Lua scripting, allowing effects and format to be implemented
-    in Lua (http://www.lua.org/).  (Reuben Thomas)
   o Remove soxmix.  (Reuben Thomas)
   o Preview mode now removed, as all it did was use rate rather than
     resample, and rate has been removed.
