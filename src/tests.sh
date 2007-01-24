@@ -2,7 +2,7 @@
 #
 # SoX Regression Test script: Lossless file conversion
 #
-# TODO sndt sph
+# FIXME: Test sndt sph ogg
 
 # Options:
 #verbose=-V
@@ -97,6 +97,8 @@ do_singlechannel_formats () {
 }
 
 grep -q "^#define HAVE_LIBFLAC" stconfig.h || skip="flac $skip"
+grep -q "^#define HAVE_LIBOGG" stconfig.h || skip="ogg $skip"
+grep -q "^#define HAVE_SNDFILE_H" stconfig.h || skip="caf $skip"
 
 rate=44100
 samples=23493
