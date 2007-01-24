@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = libgsm
+SUBDIRS = @LIBGSM_DIR@
 
 AM_CFLAGS = @SNDFILE_CFLAGS@ @SAMPLERATE_CFLAGS@
 AM_LDFLAGS = @SNDFILE_LIBS@ @SAMPLERATE_LIBS@
@@ -32,7 +32,7 @@ libst_la_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c \
 		   getopt.c getopt1.c getopt.h stconfig.h
 
 sox_SOURCES = sox.c
-sox_LDADD = libst.la libgsm/libgsm.la
+sox_LDADD = libst.la @LIBGSM_LINK@
 
 all: sox$(EXEEXT) play rec
 

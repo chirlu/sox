@@ -86,7 +86,7 @@ if test "$with_oss" = yes; then
    AC_DEFINE(HAVE_OSS, 1, [Define to 1 if you have OSS.])
 fi
 
-dnl Check for Sun-style audio
+dnl Check for Sun audio
 with_sun_audio=no
 AC_CHECK_HEADERS(sys/audioio.h, with_sun_audio=yes)
 AC_CHECK_HEADERS(sun/audioio.h, with_sun_audio=yes)
@@ -94,14 +94,24 @@ if test "$with_sun_audio" = yes; then
    AC_DEFINE(HAVE_SUN_AUDIO, 1, [Define to 1 if you have Sun /dev/audio.])
 fi
 
+dnl Check for libgsm
+AC_CHECK_HEADERS(gsm/gsm.h, found_libgsm=yes)
+if test "$found_libgsm" = yes; then
+    AC_CHECK_LIB(gsm, gsm_create, LIBS="$LIBS -lgsm")
+    AC_DEFINE(EXTERNAL_GSM, 1, [Define if you are using an external GSM library])
+else
+    LIBGSM_DIR=libgsm
+    LIBGSM_LINK=$LIBGSM_DIR/libgsm.la
+fi
+AC_SUBST(LIBGSM_DIR)
+AC_SUBST(LIBGSM_LINK)
+      
 dnl Check for libsndfile
 with_sndfile=yes
-AC_ARG_WITH(sndfile,
-    AC_HELP_STRING([--with-sndfile],
-        [Use libsndfile if present (default is YES)]))
+AC_ARG_WITH(sndfile, AC_HELP_STRING([--with-sndfile],
+    [Use libsndfile if present (default is YES)]))
 if test "$with_sndfile" = yes; then
-  SOX_PATH_SNDFILE(, 
-                      [with_sndfile=no
+  SOX_PATH_SNDFILE(, [with_sndfile=no
                        AC_MSG_NOTICE([Could not find a usable libsndfile])])
 fi
 AC_SUBST(SNDFILE_CFLAGS)
@@ -168,15 +178,21 @@ AC_OUTPUT
 
 dnl Report configuration.
 echo
-echo "ALSA Driver....................... $with_alsa"
-echo "OSS Driver........................ $with_oss"
-echo "SUN /dev/audio.................... $with_sun_audio"
-echo "libsndfile support................ $with_sndfile"
-echo "Ogg Vorbis support................ $with_ogg_vorbis"
-echo "FLAC support...................... $with_flac"
-echo "MAD MP3 Decoder................... $with_mad"
-echo "LAME MP3 Encoder.................. $with_lame"
+echo "ALSA driver....................... $with_alsa"
+echo "OSS driver........................ $with_oss"
+echo "SUN audio driver.................. $with_sun_audio"
+echo -n "libgsm............................ "
+if test "$found_libgsm" = "yes"; then
+   echo external
+else
+   echo in-tree
+fi
+echo "libsndfile formats................ $with_sndfile"
+echo "Ogg Vorbis format................. $with_ogg_vorbis"
+echo "FLAC format....................... $with_flac"
+echo "MAD MP3 reader.................... $with_mad"
+echo "LAME MP3 writer................... $with_lame"
 echo "Secret Rabbit Code resampling..... $with_samplerate"
 echo
-echo "Configure finished.  Do 'make; make install' to compile and install SoX."
+echo "Configure finished.  Do 'make && make install' to compile and install SoX."
 echo
