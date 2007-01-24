@@ -26,7 +26,6 @@ highpass	y	y
 highp		n	y
 lowpass		n	y
 lowp		n	y
-lua		y	n	TODO
 mask		y	y
 mcompand	y	y
 noiseprof	n	n

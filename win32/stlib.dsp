@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /I "." /I "../lua/src" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /I "." /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /YX /FD /c
 # ADD BASE RSC /l 0x40d /d "NDEBUG"
 # ADD RSC /l 0x40d /d "NDEBUG"
 BSC32=bscmake.exe
@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /MTd /W3 /Gm /GX /ZI /Od /I "." /I "../lua/src" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /FR /YX /FD /GZ /c
+# ADD CPP /MTd /W3 /Gm /GX /ZI /Od /I "." /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x40d /d "_DEBUG"
 # ADD RSC /l 0x40d /d "_DEBUG"
 BSC32=bscmake.exe
@@ -83,134 +83,6 @@ LIB32=link.exe -lib
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
-# Begin Group "lua"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\lua\src\lapi.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lauxlib.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lbaselib.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lcode.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\ldblib.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\ldebug.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\ldo.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\ldump.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lfunc.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lgc.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\linit.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\liolib.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\llex.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lmathlib.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lmem.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\loadlib.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lobject.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lopcodes.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\loslib.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lparser.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lstate.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lstring.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lstrlib.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\ltable.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\ltablib.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\ltm.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\luac.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lundump.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lvm.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\lzio.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lua\src\print.c
-# End Source File
-# End Group
 # Begin Group "gsm"
 
 # PROP Default_Filter ""
@@ -458,10 +330,6 @@ SOURCE=..\src\lowp.c
 # Begin Source File
 
 SOURCE=..\src\lowpass.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\lua.c
 # End Source File
 # Begin Source File
 

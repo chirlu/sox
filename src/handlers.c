@@ -36,7 +36,6 @@ st_format_fn_t st_format_fns[] = {
   st_ima_format_fn,
   st_la_format_fn,
   st_lu_format_fn,
-  st_lua_format_fn,
   st_maud_format_fn,
 #if defined(HAVE_LIBMAD) || defined(HAVE_LIBMP3LAME)
   st_mp3_format_fn,
@@ -111,7 +110,6 @@ st_effect_fn_t st_effect_fns[] = {
   st_highp_effect_fn,
   st_lowpass_effect_fn,
   st_lowp_effect_fn,
-  st_lua_effect_fn,
   st_mask_effect_fn,
   st_mcompand_effect_fn,
   st_mixer_effect_fn,

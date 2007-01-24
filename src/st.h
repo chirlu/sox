@@ -197,7 +197,6 @@ typedef struct st_signalinfo
     st_option_t reverse_nibbles;
     st_option_t reverse_bits;
     double compression;   /* compression factor (where applicable) */
-    char *lua_script;      /* Lua script to use for Lua pseudo-file */
 } st_signalinfo_t;
 
 /* Loop parameters */

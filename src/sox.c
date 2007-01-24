@@ -461,7 +461,6 @@ static struct option long_options[] =
     {"endian"          , required_argument, NULL, 0},
     {"interactive"     ,       no_argument, NULL, 0},
     {"help-effect"     , required_argument, NULL, 0},
-    {"lua-script"      , required_argument, NULL, 0},
     {"octave"          ,       no_argument, NULL, 0},
     {"replay-gain"     , required_argument, NULL, 0},
     {"version"         ,       no_argument, NULL, 0},
@@ -525,14 +524,10 @@ static st_bool doopts(file_info_t fi, int argc, char **argv)
         break;
 
       case 5:
-        fi->signal.lua_script = xstrdup(optarg);
-        break;
-
-      case 6:
         globalinfo.octave_plot_effect = st_true;
         break;
 
-      case 7:
+      case 6:
         if (!strcmp(optarg, "track"))
           replay_gain_mode = RG_TRACK;
         else if (!strcmp(optarg, "album"))
@@ -545,7 +540,7 @@ static st_bool doopts(file_info_t fi, int argc, char **argv)
         }
         break;
 
-      case 8:
+      case 7:
         printf("%s: v%s\n", myname, st_version());
         exit(0);
         break;
@@ -1632,7 +1627,6 @@ static void usage(char const *message)
          "--comment text  Specify comment text for the output file\n"
          "--comment-file filename  file containing comment text for the output file\n"
          "--endian little|big|swap  set endianness; swap means opposite to default\n"
-         "--lua-script filename  file containing script for a `lua' format\n"
          "-r, --rate rate  sample rate of audio\n"
          "-t, --type filetype  file type of audio\n"
          "-x              invert auto-detected endianness\n"

@@ -533,11 +533,6 @@ use
 Specify a file containing the comment text to store in the output
 file header (where applicable).
 .TP
-\fB\-\-lua\-script \fIfilename\fR
-Specify the Lua script to use for a `lua' format. See
-.BR soxlua (7)
-for details.
-.TP
 \fB\-r \fIrate\fR, \fB\-\-rate=\fIrate\fR
 Gives the sample rate in Hz of the file.  To cause the output file to have
 a different sample rate than the input file, include this option with
@@ -873,11 +868,6 @@ Another name for
 A headerless file of IMA ADPCM audio data. IMA ADPCM claims 16-bit precision
 packed into only 4 bits, but in fact sounds no better than
 .BR .vox .
-.TP
-.B .lua
-A pseudo-format which allows formats to be implemented in Lua. See
-.BR soxlua (7)
-for details.
 .TP
 \&\fB.mat\fR, \fB.mat4\fR, \fB.mat5\fR \fB(libsndfile)\fR
 Matlab 4.2/5.0 (respectively GNU Octave 2.0/2.1) format (.mat is the same as .mat4).
@@ -1435,11 +1425,6 @@ See also \fBfilter\fR for filters with a steeper roll-off.
 Apply a low-pass filter.
 See the description of the \fBhighpass\fR effect for details.
 .TP
-\fBlua\fR \fIlua-script\fR [\fIoption...\fR]
-This effect allows effects to be implemented in Lua. See
-.BR soxlua (7)
-for details.
-.TP
 \fBmcompand "\fIattack1\fB,\fIdecay1\fR{\fB,\fIattack2\fB,\fIdecay2\fR}
 \fIin-dB1\fB,\fIout-dB1\fR{\fB,\fIin-dB2\fB,\fIout-dB2\fR}
 .br
@@ -1592,7 +1577,7 @@ option, can be \fBcubic\fR or \fBlinear\fR.  Default is \fBcubic\fR.  The
 option, can be \fBcos\fR, \fBhamming\fR, \fBlinear\fR or
 \fBtrapezoid\fR; the default is \fBcos\fR.
 .TP
-\fBpolyphase\fR [\fB\-w nut\fR\^|\^\fBham\fR] [\fB\-width long\fR\^|\^\fBshort\fR\^|\^\fIn\fR] [\fB\-cutoff \fIc\fR]
+\fBpolyphase\fR [\fB\-w nut\fR\^|\^\fBham\fR] [\fB\-width \fIn\fR] [\fB\-cutoff \fIc\fR]
 Change the sampling rate using `polyphase interpolation', a DSP algorithm.
 This method is relatively slow and memory intensive.
 .SP
@@ -2133,7 +2118,6 @@ Please report any bugs found in this version of SoX to the mailing list
 (sox-users@lists.sourceforge.net).
 .SH SEE ALSO
 .BR soxexam (7),
-.BR soxlua (7),
 .BR libst (3)
 .SP
 The SoX web page at http://sox.sourceforge.net

@@ -16,10 +16,9 @@
 
 #include "stconfig.h"
 #include "st.h"
-
-#include <lua.h>
-
 #include "xmalloc.h"
+
+#include <stdarg.h>
 
 #ifdef HAVE_BYTESWAP_H
 #include <byteswap.h>
@@ -230,7 +229,6 @@ extern const st_format_t *st_raw_format_fn(void);
 extern const st_format_t *st_al_format_fn(void);
 extern const st_format_t *st_la_format_fn(void);
 extern const st_format_t *st_lu_format_fn(void);
-extern const st_format_t *st_lua_format_fn(void);
 extern const st_format_t *st_s3_format_fn(void);
 extern const st_format_t *st_sb_format_fn(void);
 extern const st_format_t *st_sl_format_fn(void);
@@ -297,16 +295,6 @@ int st_rawstart(ft_t ft, st_bool default_rate, st_bool default_channels, st_enco
 #define st_rawstartwrite st_rawstartread
 #define st_rawstopread st_format_nothing
 
-/* Lua functions and types in stlua.c */
-typedef struct {
-  st_size_t size;
-  st_sample_t *data;
-} st_sample_t_array_t;
-int st_lua_pusharray(lua_State *L, st_sample_t_array_t arr);
-lua_State *st_lua_new(void);
-void st_lua_pushfile(lua_State *L, FILE *fp);
-
-
 /*=============================================================================
  * Effects
  *=============================================================================
@@ -338,7 +326,6 @@ extern const st_effect_t *st_highpass_effect_fn(void);
 extern const st_effect_t *st_highp_effect_fn(void);
 extern const st_effect_t *st_lowpass_effect_fn(void);
 extern const st_effect_t *st_lowp_effect_fn(void);
-extern const st_effect_t *st_lua_effect_fn(void);
 extern const st_effect_t *st_mask_effect_fn(void);
 extern const st_effect_t *st_mcompand_effect_fn(void);
 extern const st_effect_t *st_mixer_effect_fn(void);
@@ -375,10 +362,5 @@ int st_resample_getopts(eff_t effp, int n, char **argv);
 int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, st_size_t *isamp, st_size_t *osamp);
 int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
 int st_resample_stop(eff_t effp);
-
-#include <lua.h>
-/* Needed in lua.c */
-LUALIB_API int luaopen_int (lua_State *L);
-void createmeta(lua_State *L, const char *name);
 
 #endif
