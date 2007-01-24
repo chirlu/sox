@@ -70,8 +70,8 @@ static st_bool user_skip = st_false;
 static int success = 0;
 
 static st_option_t show_progress = ST_OPTION_DEFAULT;
-static unsigned long input_samples = 0;
-static unsigned long read_samples = 0;
+static unsigned long input_wide_samples = 0;
+static unsigned long read_wide_samples = 0;
 static unsigned long output_samples = 0;
 
 static st_sample_t ibufl[ST_BUFSIZ / 2]; /* Left/right interleave buffers */
@@ -88,15 +88,16 @@ typedef struct file_info
   double replay_gain;
   char *comment;
   st_size_t volume_clips;
-} *file_info_t;
+  ft_t desc;                              /* stlib file descriptor */
+} *file_t;
 
 /* local forward declarations */
-static st_bool doopts(file_info_t fo, int, char **);
+static st_bool doopts(file_t, int, char **);
 static void usage(char const *) NORET;
 static void usage_effect(char *) NORET;
 static void process(void);
 static void update_status(void);
-static void volumechange(st_sample_t * buf, st_ssize_t len, file_info_t fo);
+static void balance_input(st_sample_t * buf, st_ssize_t len, file_t);
 static void parse_effects(int argc, char **argv);
 static void build_effects_table(void);
 static int start_all_effects(void);
@@ -109,12 +110,11 @@ static void stop_effects(void);
 #define MAX_INPUT_FILES 32
 #define MAX_FILES MAX_INPUT_FILES + 2 /* 1 output file plus record input */
 
-/* Arrays tracking input and output files */
-static file_info_t file_opts[MAX_FILES];
-static ft_t file_desc[MAX_FILES];
-#define ofile file_desc[file_count - 1]
+static file_t files[MAX_FILES]; /* Array tracking input and output files */
+#define ofile files[file_count - 1]
 static size_t file_count = 0;
 static size_t input_count = 0;
+static st_signalinfo_t combiner;
 
 /* We parse effects into a temporary effects table and then place into
  * the real effects table.  This makes it easier to reorder some effects
@@ -179,65 +179,69 @@ static st_bool overwrite_permitted(char const * filename)
 static void cleanup(void)
 {
   size_t i;
-  ft_t ft = ofile;
 
   /* Close the input and output files before exiting. */
-  for (i = 0; i < input_count; i++)
-    if (file_desc[i]) {
-      st_close(file_desc[i]);
-      free(file_desc[i]);
+  for (i = 0; i < input_count; i++) {
+    if (files[i]->desc) {
+      st_close(files[i]->desc);
+      free(files[i]->desc);
     }
+    free(files[i]);
+  }
 
-  if (ft) {
-    if (!(ft->h->flags & ST_FILE_NOSTDIO)) {
-      struct stat st;
-      fstat(fileno(ft->fp), &st);
+  if (file_count) {
+    if (ofile->desc) {
+      if (!(ofile->desc->h->flags & ST_FILE_NOSTDIO)) {
+        struct stat st;
+        fstat(fileno(ofile->desc->fp), &st);
 
-      /* If we didn't succeed and we created an output file, remove it. */
-      if (!success && (st.st_mode & S_IFMT) == S_IFREG)
-        unlink(ft->filename);
+        /* If we didn't succeed and we created an output file, remove it. */
+        if (!success && (st.st_mode & S_IFMT) == S_IFREG)
+          unlink(ofile->desc->filename);
+      }
+
+      /* Assumption: we can unlink a file before st_closing it. */
+      st_close(ofile->desc);
+      free(ofile->desc);
     }
-
-    /* Assumption: we can unlink a file before st_closing it. */
-    st_close(ft);
-    free(ft);
+    free(ofile);
   }
 }
 
-static file_info_t make_file_info(void)
+static file_t new_file(void)
 {
-  file_info_t fi = xcalloc(sizeof(*fi), 1);
+  file_t f = xcalloc(sizeof(*f), 1);
 
-  fi->signal.size = -1;
-  fi->signal.encoding = ST_ENCODING_UNKNOWN;
-  fi->signal.channels = 0;
-  fi->signal.reverse_bytes = ST_OPTION_DEFAULT;
-  fi->signal.reverse_nibbles = ST_OPTION_DEFAULT;
-  fi->signal.reverse_bits = ST_OPTION_DEFAULT;
-  fi->signal.compression = HUGE_VAL;
-  fi->volume = HUGE_VAL;
-  fi->replay_gain = HUGE_VAL;
-  fi->volume_clips = 0;
+  f->signal.size = -1;
+  f->signal.encoding = ST_ENCODING_UNKNOWN;
+  f->signal.channels = 0;
+  f->signal.reverse_bytes = ST_OPTION_DEFAULT;
+  f->signal.reverse_nibbles = ST_OPTION_DEFAULT;
+  f->signal.reverse_bits = ST_OPTION_DEFAULT;
+  f->signal.compression = HUGE_VAL;
+  f->volume = HUGE_VAL;
+  f->replay_gain = HUGE_VAL;
+  f->volume_clips = 0;
 
-  return fi;
+  return f;
 }
 
-static void set_device(file_info_t fi)
+static void set_device(file_t f)
 {
 #if defined(HAVE_ALSA)
-  fi->filetype = "alsa";
-  fi->filename = xstrdup("default");
+  f->filetype = "alsa";
+  f->filename = xstrdup("default");
 #elif defined(HAVE_OSS)
-  fi->filetype = "ossdsp";
-  fi->filename = xstrdup("/dev/dsp");
+  f->filetype = "ossdsp";
+  f->filename = xstrdup("/dev/dsp");
 #elif defined (HAVE_SUN_AUDIO)
   char *device = getenv("AUDIODEV");
-  fi->filetype = "sunau";
-  fi->filename = xstrdup(device ? device : "/dev/audio");
+  f->filetype = "sunau";
+  f->filename = xstrdup(device ? device : "/dev/audio");
 #endif
 }
 
-static void set_replay_gain(char const * comment, file_info_t fi)
+static void set_replay_gain(char const * comment, file_t f)
 {
   rg_t rg = replay_gain_mode;
   int try = 2;
@@ -248,7 +252,7 @@ static void set_replay_gain(char const * comment, file_info_t fi)
       rg == RG_TRACK? "REPLAYGAIN_TRACK_GAIN=" : "REPLAYGAIN_ALBUM_GAIN=";
     do {
       if (strncasecmp(p, target, strlen(target)) == 0) {
-        fi->replay_gain = atof(p + strlen(target));
+        f->replay_gain = atof(p + strlen(target));
         return;
       }
       while (*p && *p!= '\n') ++p;
@@ -258,11 +262,71 @@ static void set_replay_gain(char const * comment, file_info_t fi)
   }
 }
 
+static void parse_options_and_filenames(int argc, char **argv)
+{
+  file_t f = NULL;
+  struct file_info fi_none;
+
+  while (optind < argc && !is_effect_name(argv[optind])) {
+    f = new_file();
+    fi_none = *f;
+
+    if (file_count >= MAX_FILES) {
+      st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
+      exit(1);
+    }
+
+    if (doopts(f, argc, argv)) { /* is null file? */
+      if (f->filetype != NULL && strcmp(f->filetype, "null") != 0)
+        st_warn("Ignoring '-t %s'.", f->filetype);
+      f->filetype = "null";
+      f->filename = xstrdup("-n");
+    } else {
+      if (optind >= argc || is_effect_name(argv[optind]))
+        break;
+      f->filename = xstrdup(argv[optind++]);
+    }
+    files[file_count++] = f;
+    f = NULL;
+  }
+
+  if (play) {
+    if (file_count >= MAX_FILES) {
+      st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
+      exit(1);
+    }
+
+    f = f? f : new_file();
+    set_device(f);
+    files[file_count++] = f;
+  }
+  else if (f) {
+    if (memcmp(f, &fi_none, sizeof(*f)) != 0) /* fopts but no file */
+      usage("missing filename"); /* No return */
+    free(f); /* No file opts and no filename, so that's okay */
+  }
+
+  if (rec) {
+    st_size_t i;
+
+    if (file_count >= MAX_FILES) {
+      st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
+      exit(1);
+    }
+
+    for (i = file_count; i > 0; -- i)
+      files[i] = files[i - 1];
+    file_count++;
+
+    f = new_file();
+    set_device(f);
+    files[0] = f;
+  }
+}
+
 int main(int argc, char **argv)
 {
   size_t i;
-  file_info_t fi = NULL;
-  struct file_info fi_none;
 
   myname = argv[0];
   atexit(cleanup);
@@ -277,65 +341,7 @@ int main(int argc, char **argv)
       strcmp(myname + i - (sizeof("rec") - 1), "rec") == 0) {
     rec = st_true;
   }
-
-  /* Loop over arguments and filenames, stop when an effect name is
-   * found. */
-  while (optind < argc && !is_effect_name(argv[optind])) {
-    fi = make_file_info();
-    fi_none = *fi;
-
-    if (file_count >= MAX_FILES) {
-      st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
-      exit(1);
-    }
-
-    if (doopts(fi, argc, argv)) { /* is null file? */
-      if (fi->filetype != NULL && strcmp(fi->filetype, "null") != 0)
-        st_warn("Ignoring '-t %s'.", fi->filetype);
-      fi->filetype = "null";
-      fi->filename = xstrdup("-n");
-    } else {
-      if (optind >= argc || is_effect_name(argv[optind]))
-        break;
-      fi->filename = xstrdup(argv[optind++]);
-    }
-    file_opts[file_count++] = fi;
-    fi = NULL;
-  }
-
-  if (play) {
-    file_info_t fo = fi? fi : make_file_info();
-
-    if (file_count >= MAX_FILES) {
-      st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
-      exit(1);
-    }
-
-    set_device(fo);
-    file_opts[file_count++] = fo;
-  }
-  else if (fi) {
-    if (memcmp(fi, &fi_none, sizeof(*fi)) != 0) /* fopts but no file */
-      usage("missing filename"); /* No return */
-    free(fi); /* No file opts and no filename, so that's okay */
-  }
-
-  if (rec) {
-    file_info_t fo = make_file_info();
-    st_size_t i;
-
-    if (file_count >= MAX_FILES) {
-      st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
-      exit(1);
-    }
-
-    for (i = file_count; i > 0; -- i)
-      file_opts[i] = file_opts[i - 1];
-
-    file_count++;
-    set_device(fo);
-    file_opts[0] = fo;
-  }
+  parse_options_and_filenames(argc, argv);
 
   /* Make sure we got at least the required # of input filenames */
   input_count = file_count ? file_count - 1 : 0;
@@ -344,46 +350,46 @@ int main(int argc, char **argv)
 
   /* Check for misplaced input/output-specific options */
   for (i = 0; i < input_count; ++i) {
-    if (file_opts[i]->signal.compression != HUGE_VAL)
+    if (files[i]->signal.compression != HUGE_VAL)
       usage("A compression factor can only be given for an output file");
-    if (file_opts[i]->comment != NULL)
+    if (files[i]->comment != NULL)
       usage("A comment can only be given for an output file");
   }
-  if (file_opts[i]->volume != HUGE_VAL)
+  if (ofile->volume != HUGE_VAL)
     usage("-v can only be given for an input file;\n"
             "\tuse 'vol' to set the output file volume");
 
   for (i = 0; i < input_count; i++) {
     int j = input_count - 1 - i; /* Open in reverse order 'cos of rec (below) */
-    file_info_t fi = file_opts[j];
+    file_t f = files[j];
 
     /* When mixing audio, default to input side volume adjustments that will
      * make sure no clipping will occur.  Users probably won't be happy with
      * this, and will override it, possibly causing clipping to occur. */
     if (combine_method == SOX_MIX && !uservolume)
-      fi->volume = 1.0 / input_count;
+      f->volume = 1.0 / input_count;
 
     if (rec && !j) { /* Set the recording sample rate & # of channels: */
       if (input_count > 1) {   /* Get them from the next input file: */
-        fi->signal.rate = file_desc[1]->signal.rate;
-        fi->signal.channels = file_desc[1]->signal.channels;
+        f->signal.rate = files[1]->desc->signal.rate;
+        f->signal.channels = files[1]->desc->signal.channels;
       }
       else { /* Get them from the output file (which is not open yet): */
-        fi->signal.rate = file_opts[1]->signal.rate;
-        fi->signal.channels = file_opts[1]->signal.channels;
+        f->signal.rate = files[1]->signal.rate;
+        f->signal.channels = files[1]->signal.channels;
       }
     }
-    file_desc[j] = st_open_read(fi->filename, &fi->signal, fi->filetype);
-    if (!file_desc[j])
+    files[j]->desc = st_open_read(f->filename, &f->signal, f->filetype);
+    if (!files[j]->desc)
       /* st_open_read() will call st_warn for most errors.
        * Rely on that printing something. */
       exit(2);
     if (show_progress == ST_OPTION_DEFAULT &&
-        (file_desc[j]->h->flags & ST_FILE_DEVICE) != 0 &&
-        (file_desc[j]->h->flags & ST_FILE_PHONY) == 0)
+        (files[j]->desc->h->flags & ST_FILE_DEVICE) != 0 &&
+        (files[j]->desc->h->flags & ST_FILE_PHONY) == 0)
       show_progress = ST_OPTION_YES;
-    if (file_desc[j]->comment)
-      set_replay_gain(file_desc[j]->comment, fi);
+    if (files[j]->desc->comment)
+      set_replay_gain(files[j]->desc->comment, f);
   }
 
   /* Loop through the rest of the arguments looking for effects */
@@ -404,9 +410,9 @@ int main(int argc, char **argv)
     st_warn("-m clipped %u samples; decrease volume?", mixing_clips);
 
   for (i = 0; i < file_count; i++)
-    if (file_opts[i]->volume_clips > 0)
-      st_warn("%s: -v clipped %u samples; decrease volume?", file_opts[i]->filename,
-              file_opts[i]->volume_clips);
+    if (files[i]->volume_clips > 0)
+      st_warn("%s: -v clipped %u samples; decrease volume?", files[i]->filename,
+              files[i]->volume_clips);
 
   if (show_progress) {
     if (user_abort)
@@ -481,7 +487,7 @@ static struct option long_options[] =
     {NULL, 0, NULL, 0}
   };
 
-static st_bool doopts(file_info_t fi, int argc, char **argv)
+static st_bool doopts(file_t f, int argc, char **argv)
 {
   while (st_true) {
     int option_index;
@@ -495,20 +501,20 @@ static st_bool doopts(file_info_t fi, int argc, char **argv)
     case 0:         /* Long options with no short equivalent. */
       switch (option_index) {
       case 0:
-        fi->comment = read_comment_file(optarg);
+        f->comment = read_comment_file(optarg);
         break;
 
       case 1:
-        fi->comment = xstrdup(optarg);
+        f->comment = xstrdup(optarg);
         break;
 
       case 2:
         if (!strcmp(optarg, "little"))
-          fi->signal.reverse_bytes = ST_IS_BIGENDIAN;
+          f->signal.reverse_bytes = ST_IS_BIGENDIAN;
         else if (!strcmp(optarg, "big"))
-          fi->signal.reverse_bytes = ST_IS_LITTLEENDIAN;
+          f->signal.reverse_bytes = ST_IS_LITTLEENDIAN;
         else if (!strcmp(optarg, "swap"))
-          fi->signal.reverse_bytes = st_true;
+          f->signal.reverse_bytes = st_true;
         else {
           st_fail("Endian type '%s' is not little|big|swap", optarg);
           exit(1);
@@ -568,9 +574,9 @@ static st_bool doopts(file_info_t fi, int argc, char **argv)
       break;
 
     case 't':
-      fi->filetype = optarg;
-      if (fi->filetype[0] == '.')
-        fi->filetype++;
+      f->filetype = optarg;
+      if (f->filetype[0] == '.')
+        f->filetype++;
       break;
 
     case 'r':
@@ -578,16 +584,16 @@ static st_bool doopts(file_info_t fi, int argc, char **argv)
         st_fail("Rate value '%s' is not a positive integer", optarg);
         exit(1);
       }
-      fi->signal.rate = i;
+      f->signal.rate = i;
       break;
 
     case 'v':
-      if (sscanf(optarg, "%lf %c", &fi->volume, &dummy) != 1) {
+      if (sscanf(optarg, "%lf %c", &f->volume, &dummy) != 1) {
         st_fail("Volume value '%s' is not a number", optarg);
         exit(1);
       }
       uservolume = st_true;
-      if (fi->volume < 0.0)
+      if (f->volume < 0.0)
         st_report("Volume adjustment is negative; "
                   "this will result in a phase change");
       break;
@@ -597,46 +603,46 @@ static st_bool doopts(file_info_t fi, int argc, char **argv)
         st_fail("Channels value '%s' is not a positive integer", optarg);
         exit(1);
       }
-      fi->signal.channels = i;
+      f->signal.channels = i;
       break;
 
     case 'C':
-      if (sscanf(optarg, "%lf %c", &fi->signal.compression, &dummy) != 1) {
+      if (sscanf(optarg, "%lf %c", &f->signal.compression, &dummy) != 1) {
         st_fail("Compression value '%s' is not a number", optarg);
         exit(1);
       }
       break;
 
-    case '1': case 'b': fi->signal.size = ST_SIZE_BYTE;   break;
-    case '2': case 'w': fi->signal.size = ST_SIZE_16BIT;   break;
-    case '3':           fi->signal.size = ST_SIZE_24BIT;  break;
-    case '4': case 'l': fi->signal.size = ST_SIZE_32BIT;  break;
-    case '8': case 'd': fi->signal.size = ST_SIZE_64BIT; break;
+    case '1': case 'b': f->signal.size = ST_SIZE_BYTE;   break;
+    case '2': case 'w': f->signal.size = ST_SIZE_16BIT;   break;
+    case '3':           f->signal.size = ST_SIZE_24BIT;  break;
+    case '4': case 'l': f->signal.size = ST_SIZE_32BIT;  break;
+    case '8': case 'd': f->signal.size = ST_SIZE_64BIT; break;
 
-    case 's': fi->signal.encoding = ST_ENCODING_SIGN2;     break;
-    case 'u': fi->signal.encoding = ST_ENCODING_UNSIGNED;  break;
-    case 'f': fi->signal.encoding = ST_ENCODING_FLOAT;     break;
-    case 'a': fi->signal.encoding = ST_ENCODING_ADPCM;     break;
-    case 'D': fi->signal.encoding = ST_ENCODING_MS_ADPCM;  break; /* WIP */
-    case 'i': fi->signal.encoding = ST_ENCODING_IMA_ADPCM; break;
-    case 'o': fi->signal.encoding = ST_ENCODING_OKI_ADPCM; break; /* WIP */
-    case 'g': fi->signal.encoding = ST_ENCODING_GSM;       break;
+    case 's': f->signal.encoding = ST_ENCODING_SIGN2;     break;
+    case 'u': f->signal.encoding = ST_ENCODING_UNSIGNED;  break;
+    case 'f': f->signal.encoding = ST_ENCODING_FLOAT;     break;
+    case 'a': f->signal.encoding = ST_ENCODING_ADPCM;     break;
+    case 'D': f->signal.encoding = ST_ENCODING_MS_ADPCM;  break; /* WIP */
+    case 'i': f->signal.encoding = ST_ENCODING_IMA_ADPCM; break;
+    case 'o': f->signal.encoding = ST_ENCODING_OKI_ADPCM; break; /* WIP */
+    case 'g': f->signal.encoding = ST_ENCODING_GSM;       break;
 
-    case 'U': fi->signal.encoding = ST_ENCODING_ULAW;
-      if (fi->signal.size == -1)
-        fi->signal.size = ST_SIZE_BYTE;
+    case 'U': f->signal.encoding = ST_ENCODING_ULAW;
+      if (f->signal.size == -1)
+        f->signal.size = ST_SIZE_BYTE;
       break;
 
-    case 'A': fi->signal.encoding = ST_ENCODING_ALAW;
-      if (fi->signal.size == -1)
-        fi->signal.size = ST_SIZE_BYTE;
+    case 'A': f->signal.encoding = ST_ENCODING_ALAW;
+      if (f->signal.size == -1)
+        f->signal.size = ST_SIZE_BYTE;
       break;
 
-    case 'L': fi->signal.reverse_bytes   = ST_IS_BIGENDIAN;    break;
-    case 'B': fi->signal.reverse_bytes   = ST_IS_LITTLEENDIAN; break;
-    case 'x': fi->signal.reverse_bytes   = ST_OPTION_YES;      break;
-    case 'X': fi->signal.reverse_bits    = ST_OPTION_YES;      break;
-    case 'N': fi->signal.reverse_nibbles = ST_OPTION_YES;      break;
+    case 'L': f->signal.reverse_bytes   = ST_IS_BIGENDIAN;    break;
+    case 'B': f->signal.reverse_bytes   = ST_IS_LITTLEENDIAN; break;
+    case 'x': f->signal.reverse_bytes   = ST_OPTION_YES;      break;
+    case 'X': f->signal.reverse_bits    = ST_OPTION_YES;      break;
+    case 'N': f->signal.reverse_nibbles = ST_OPTION_YES;      break;
 
     case 'S': show_progress = ST_OPTION_YES; break;
     case 'q': show_progress = ST_OPTION_NO;  break;
@@ -655,66 +661,64 @@ static st_bool doopts(file_info_t fi, int argc, char **argv)
   }
 }
 
-static void display_file_info(int file_no, double speed, st_bool full)
+static void display_file_info(file_t f, st_bool full)
 {
   static char const * const no_yes[] = {"no", "yes"};
-  ft_t        f  = file_desc[file_no];
-  file_info_t fo = file_opts[file_no];
 
   fprintf(stderr, "\n%s: '%s'",
-    f->mode == 'r'? "Input File     " : "Output File    ", f->filename);
-  if (strcmp(f->filename, "-") == 0 || (f->h->flags & ST_FILE_DEVICE))
-    fprintf(stderr, " (%s)", f->h->names[0]);
+    f->desc->mode == 'r'? "Input File     " : "Output File    ", f->desc->filename);
+  if (strcmp(f->desc->filename, "-") == 0 || (f->desc->h->flags & ST_FILE_DEVICE))
+    fprintf(stderr, " (%s)", f->desc->h->names[0]);
 
   fprintf(stderr, "\n"
     "Sample Size    : %s (%s)\n"
     "Sample Encoding: %s\n"
     "Channels       : %u\n"
     "Sample Rate    : %u\n",
-    st_size_bits_str[f->signal.size], st_sizes_str[f->signal.size],
-    st_encodings_str[f->signal.encoding],
-    f->signal.channels,
-    (int)(f->signal.rate / speed + 0.5));
+    st_size_bits_str[f->desc->signal.size], st_sizes_str[f->desc->signal.size],
+    st_encodings_str[f->desc->signal.encoding],
+    f->desc->signal.channels,
+    f->desc->signal.rate);
 
   if (full)
     fprintf(stderr,
       "Endian Type    : %s\n"
       "Reverse Nibbles: %s\n"
       "Reverse Bits   : %s\n",
-      f->signal.size == 1? "N/A" :
-        f->signal.reverse_bytes != ST_IS_BIGENDIAN? "big" : "little",
-      no_yes[f->signal.reverse_nibbles],
-      no_yes[f->signal.reverse_bits]);
+      f->desc->signal.size == 1? "N/A" :
+        f->desc->signal.reverse_bytes != ST_IS_BIGENDIAN? "big" : "little",
+      no_yes[f->desc->signal.reverse_nibbles],
+      no_yes[f->desc->signal.reverse_bits]);
 
-  if (fo->replay_gain != HUGE_VAL)
-    fprintf(stderr, "Replay gain    : %+g dB\n" , fo->replay_gain);
-  if (fo->volume != HUGE_VAL)
-    fprintf(stderr, "Level adjust   : %g (linear gain)\n" , fo->volume);
+  if (f->replay_gain != HUGE_VAL)
+    fprintf(stderr, "Replay gain    : %+g dB\n" , f->replay_gain);
+  if (f->volume != HUGE_VAL)
+    fprintf(stderr, "Level adjust   : %g (linear gain)\n" , f->volume);
 
-  if (!(f->h->flags & ST_FILE_DEVICE) && f->comment) {
-    if (strchr(f->comment, '\n'))
-      fprintf(stderr, "Comments       : \n%s\n", f->comment);
+  if (!(f->desc->h->flags & ST_FILE_DEVICE) && f->desc->comment) {
+    if (strchr(f->desc->comment, '\n'))
+      fprintf(stderr, "Comments       : \n%s\n", f->desc->comment);
     else
-      fprintf(stderr, "Comment        : '%s'\n", f->comment);
+      fprintf(stderr, "Comment        : '%s'\n", f->desc->comment);
   }
   fprintf(stderr, "\n");
 }
 
-static void report_file_info(int f)
+static void report_file_info(file_t f)
 {
   if (st_output_verbosity_level > 2)
-    display_file_info(f, 1, st_true);
+    display_file_info(f, st_true);
 }
 
-static void progress_to_file(int f)
+static void progress_to_file(file_t f)
 {
   if (show_progress && (st_output_verbosity_level < 3 ||
                         (combine_method == SOX_CONCAT && input_count > 1)))
-    display_file_info(f, globalinfo.speed, st_false);
-  if (file_opts[f]->volume == HUGE_VAL)
-    file_opts[f]->volume = 1;
-  if (file_opts[f]->replay_gain != HUGE_VAL)
-    file_opts[f]->volume *= pow(10, file_opts[f]->replay_gain / 20);
+    display_file_info(f, st_false);
+  if (f->volume == HUGE_VAL)
+    f->volume = 1;
+  if (f->replay_gain != HUGE_VAL)
+    f->volume *= pow(10, f->replay_gain / 20);
 }
 
 static void sigint(int s)
@@ -738,67 +742,86 @@ static void sigint(int s)
 static void process(void) {
   int e, flowstatus = 0;
   size_t current_input = 0;
-  st_size_t s, f;
+  st_size_t ws, s, i;
   st_ssize_t ilen[MAX_INPUT_FILES];
   st_sample_t *ibuf[MAX_INPUT_FILES];
+  {
+    st_size_t total_channels = 0;
+    st_size_t min_channels = ST_SIZE_MAX;
+    st_size_t max_channels = 0;
+    st_size_t min_rate = ST_SIZE_MAX;
+    st_size_t max_rate = 0;
 
-  for (f = 0; f < input_count; f++) { /* Report all inputs first, then check */
-    report_file_info(f);
-    if (combine_method == SOX_MERGE)
-      file_desc[f]->signal.channels *= input_count;
-  }
-  for (f = 1; f < input_count; f++)
-    if (file_desc[0]->signal.rate     != file_desc[f]->signal.rate ||
-        file_desc[0]->signal.channels != file_desc[f]->signal.channels) {
-      st_fail("Input files must have the same rate and # of channels");
-      exit(1);
+    for (i = 0; i < input_count; i++) { /* Report all inputs, then check */
+      report_file_info(files[i]);
+      total_channels += files[i]->desc->signal.channels;
+      min_channels = min(min_channels, files[i]->desc->signal.channels);
+      max_channels = max(max_channels, files[i]->desc->signal.channels);
+      min_rate = min(min_rate, files[i]->desc->signal.rate);
+      max_rate = max(max_rate, files[i]->desc->signal.rate);
     }
+    if (min_rate != max_rate)
+      st_fail("Input files do not have the same sample-rate");
+    if (min_channels != max_channels) {
+      if (combine_method == SOX_CONCAT) {
+        st_fail("Input files do not have the same # channels");
+        exit(1);
+      } else if (combine_method == SOX_MIX)
+        st_warn("Input files do not have the same # channels");
+    }
+    if (min_rate != max_rate)
+      exit(1);
+
+    combiner = files[0]->desc->signal;
+    combiner.channels = 
+      combine_method == SOX_MERGE? total_channels : max_channels;
+  }
+
+  if (ofile->signal.rate == 0)
+    ofile->signal.rate = combiner.rate;
+  if (ofile->signal.size == -1)
+    ofile->signal.size = combiner.size;
+  if (ofile->signal.encoding == ST_ENCODING_UNKNOWN)
+    ofile->signal.encoding = combiner.encoding;
+  if (ofile->signal.channels == 0)
+    ofile->signal.channels = combiner.channels;
+
+  combiner.rate = combiner.rate * globalinfo.speed + .5;
 
   {
     st_loopinfo_t loops[ST_MAX_NLOOPS];
     double factor;
     int i;
-    file_info_t info = file_opts[file_count - 1];
     char const *comment = NULL;
 
-    if (info->signal.rate == 0)
-      info->signal.rate = file_desc[0]->signal.rate;
-    if (info->signal.size == -1)
-      info->signal.size = file_desc[0]->signal.size;
-    if (info->signal.encoding == ST_ENCODING_UNKNOWN)
-      info->signal.encoding = file_desc[0]->signal.encoding;
-    if (info->signal.channels == 0)
-      info->signal.channels = file_desc[0]->signal.channels;
-
-    if (info->comment == NULL)
-      comment = file_desc[0]->comment ? file_desc[0]->comment : "Processed by SoX";
-    else if (*info->comment != '\0')
-        comment = info->comment;
+    if (ofile->comment == NULL)
+      comment = files[0]->desc->comment ? files[0]->desc->comment : "Processed by SoX";
+    else if (*ofile->comment != '\0')
+        comment = ofile->comment;
 
     /*
-     * copy loop info, resizing appropriately
+     * copy loop ofile, resizing appropriately
      * it's in samples, so # channels don't matter
      * FIXME: This doesn't work for multi-file processing or
      * effects that change file length.
      */
-    factor = (double) info->signal.rate / (double)
-      file_desc[0]->signal.rate;
+    factor = (double) ofile->signal.rate / combiner.rate;
     for (i = 0; i < ST_MAX_NLOOPS; i++) {
-      loops[i].start = file_desc[0]->loops[i].start * factor;
-      loops[i].length = file_desc[0]->loops[i].length * factor;
-      loops[i].count = file_desc[0]->loops[i].count;
-      loops[i].type = file_desc[0]->loops[i].type;
+      loops[i].start = files[0]->desc->loops[i].start * factor;
+      loops[i].length = files[0]->desc->loops[i].length * factor;
+      loops[i].count = files[0]->desc->loops[i].count;
+      loops[i].type = files[0]->desc->loops[i].type;
     }
 
-    ofile = st_open_write(overwrite_permitted,
-                          info->filename,
-                          &info->signal,
-                          info->filetype,
+    ofile->desc = st_open_write(overwrite_permitted,
+                          ofile->filename,
+                          &ofile->signal,
+                          ofile->filetype,
                           comment,
-                          &file_desc[0]->instr,
+                          &files[0]->desc->instr,
                           loops);
 
-    if (!ofile)
+    if (!ofile->desc)
       /* st_open_write() will call st_warn for most errors.
        * Rely on that printing something. */
       exit(2);
@@ -807,15 +830,11 @@ static void process(void) {
      * progress display to match behavior of ogg123,
      * unless the user requested us not to display anything. */
     if (show_progress == ST_OPTION_DEFAULT)
-      show_progress = (ofile->h->flags & ST_FILE_DEVICE) != 0 &&
-                      (ofile->h->flags & ST_FILE_PHONY) == 0;
+      show_progress = (ofile->desc->h->flags & ST_FILE_DEVICE) != 0 &&
+                      (ofile->desc->h->flags & ST_FILE_PHONY) == 0;
 
-    report_file_info(file_count - 1);
+    report_file_info(ofile);
   }
-
-  /* Adjust the input rate for the speed effect */
-  for (f = 0; f < input_count; f++)
-    file_desc[f]->signal.rate = file_desc[f]->signal.rate * globalinfo.speed + .5;
 
   build_effects_table();
 
@@ -829,32 +848,27 @@ static void process(void) {
       efftabR[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
   }
 
-  if (combine_method != SOX_CONCAT) {
-    for (f = 0; f < input_count; f++) {
-      st_size_t alloc_size = ST_BUFSIZ * sizeof(st_sample_t);
-      /* Treat overall length the same as longest input file. */
-      if (file_desc[f]->length > input_samples)
-        input_samples = file_desc[f]->length;
-
-      if (combine_method == SOX_MERGE) {
-        alloc_size /= input_count;
-        file_desc[f]->signal.channels /= input_count;
-      }
-      ibuf[f] = (st_sample_t *)xmalloc(alloc_size);
-      progress_to_file(f);
-    }
-  } else {
+  if (combine_method == SOX_CONCAT) {
     current_input = 0;
-    input_samples = file_desc[current_input]->length;
-    progress_to_file(current_input);
+    input_wide_samples = files[current_input]->desc->length / files[current_input]->desc->signal.channels;
+    progress_to_file(files[current_input]);
+  } else {
+    for (i = 0; i < input_count; i++) {
+      /* Treat overall length the same as longest input file. */
+      size_t wide_samples = files[i]->desc->length / files[i]->desc->signal.channels;
+      if (wide_samples > input_wide_samples)
+        input_wide_samples = wide_samples;
+      ibuf[i] = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
+      progress_to_file(files[i]);
+    }
   }
 
   /*
    * Just like errno, we must set st_errno to known values before
    * calling I/O operations.
    */
-  for (f = 0; f < file_count; f++)
-    file_desc[f]->st_errno = 0;
+  for (i = 0; i < file_count; i++)
+    files[i]->desc->st_errno = 0;
 
   input_eff = 0;
   input_eff_eof = 0;
@@ -875,7 +889,7 @@ static void process(void) {
         user_skip = st_false;
         fprintf(stderr, "\nSkipped.");
       } else {
-        ilen[0] = st_read(file_desc[current_input], efftab[0].obuf,
+        ilen[0] = st_read(files[current_input]->desc, efftab[0].obuf,
                           (st_ssize_t)ST_BUFSIZ);
         if (ilen[0] > ST_BUFSIZ) {
           st_warn("WARNING: Corrupt value of %d!  Assuming 0 bytes read.", ilen);
@@ -884,12 +898,12 @@ static void process(void) {
 
         if (ilen[0] == ST_EOF) {
           efftab[0].olen = 0;
-          if (file_desc[current_input]->st_errno)
-            fprintf(stderr, file_desc[current_input]->st_errstr);
+          if (files[current_input]->desc->st_errno)
+            fprintf(stderr, files[current_input]->desc->st_errstr);
         } else
           efftab[0].olen = ilen[0];
 
-        read_samples += efftab[0].olen;
+        read_wide_samples += efftab[0].olen / combiner.channels;
       }
       /* Some file handlers claim 0 bytes instead of returning
        * ST_EOF.  In either case, attempt to go to the next
@@ -898,73 +912,47 @@ static void process(void) {
       if (ilen[0] == ST_EOF || efftab[0].olen == 0) {
         if (current_input < input_count - 1) {
           current_input++;
-          input_samples = file_desc[current_input]->length;
-          read_samples = 0;
-          progress_to_file(current_input);
+          input_wide_samples = files[current_input]->desc->length / files[current_input]->desc->signal.channels;
+          read_wide_samples = 0;
+          progress_to_file(files[current_input]);
           continue;
         }
       }
-      volumechange(efftab[0].obuf, efftab[0].olen, file_opts[current_input]);
-    } else if (combine_method == SOX_MIX) {
-      for (f = 0; f < input_count; f++) {
-        ilen[f] = st_read(file_desc[f], ibuf[f], (st_ssize_t)ST_BUFSIZ);
-
-        if (ilen[f] == ST_EOF) {
-          ilen[f] = 0;
-          if (file_desc[f]->st_errno)
-            fprintf(stderr, file_desc[f]->st_errstr);
-        }
-
-        /* Only count read samples for first file in mix */
-        if (f == 0)
-          read_samples += efftab[0].olen;
-
-        volumechange(ibuf[f], ilen[f], file_opts[f]);
-      }
-
-      /* FIXME: Should report if the size of the reads are not
-       * the same.
-       */
+      balance_input(efftab[0].obuf, efftab[0].olen, files[current_input]);
+    } else {
+      st_sample_t * p = efftab[0].obuf;
       efftab[0].olen = 0;
-      for (f = 0; f < input_count; f++)
-        if ((st_size_t)ilen[f] > efftab[0].olen)
-          efftab[0].olen = ilen[f];
-
-      for (s = 0; s < efftab[0].olen; s++) {
-        /* Mix audio by summing samples together.
-         * Input side volume changes are performed above. */
-        for (f = 0; f < input_count; f++) {
-          if (f == 0)
-            efftab[0].obuf[s] =
-              (s<(st_size_t)ilen[f]) ? ibuf[f][s] : 0;
-          else if (s < (st_size_t)ilen[f]) {
-            /* Cast to double prevents integer overflow */
-            double sample = efftab[0].obuf[s] + (double)ibuf[f][s];
-            efftab[0].obuf[s] = ST_ROUND_CLIP_COUNT(sample, mixing_clips);
+      for (i = 0; i < input_count; ++i) {
+        ilen[i] = st_read(files[i]->desc, ibuf[i], ST_BUFSIZ / combiner.channels * files[i]->desc->signal.channels);
+        if (ilen[i] == ST_EOF) {
+          ilen[i] = 0;
+          if (files[i]->desc->st_errno)
+            fprintf(stderr, files[i]->desc->st_errstr);
+        }
+        balance_input(ibuf[i], ilen[i], files[i]);
+        ilen[i] /= files[i]->desc->signal.channels;
+        if ((st_size_t)ilen[i] > efftab[0].olen)
+          efftab[0].olen = ilen[i];
+      }
+      for (ws = 0; ws < efftab[0].olen; ++ws) /* wide samples */
+        if (combine_method == SOX_MIX) {          /* sum samples together */
+          for (s = 0; s < combiner.channels; ++s) {
+            *p = 0;
+            for (i = 0; i < input_count; ++i)
+              if (ws < (st_size_t)ilen[i] && s < files[i]->desc->signal.channels) {
+                /* Cast to double prevents integer overflow */
+                double sample = *p + (double)ibuf[i][ws * files[i]->desc->signal.channels + s];
+                *p = ST_ROUND_CLIP_COUNT(sample, mixing_clips);
+            }
+            ++p;
           }
-        }
+        } else { /* SOX_MERGE: like a multi-track recorder */
+          for (i = 0; i < input_count; ++i)
+            for (s = 0; s < files[i]->desc->signal.channels; ++s)
+              *p++ = (ws < (st_size_t)ilen[i]) * ibuf[i][ws * files[i]->desc->signal.channels + s];
       }
-    } else {                 /* combine_method == SOX_MERGE */
-      efftab[0].olen = 0;
-      for (f = 0; f < input_count; ++f) {
-        ilen[f] = st_read(file_desc[f], ibuf[f], ST_BUFSIZ / input_count);
-        if (ilen[f] == ST_EOF) {
-          ilen[f] = 0;
-          if (file_desc[f]->st_errno)
-            fprintf(stderr, file_desc[f]->st_errstr);
-        }
-        if ((st_size_t)ilen[f] > efftab[0].olen)
-          efftab[0].olen = ilen[f];
-        volumechange(ibuf[f], ilen[f], file_opts[f]);
-      }
-
-      for (s = 0; s < efftab[0].olen; s++)
-        for (f = 0; f < input_count; f++)
-          efftab[0].obuf[s * input_count + f] =
-            (s < (st_size_t)ilen[f]) * ibuf[f][s];
-
-      read_samples += efftab[0].olen;
-      efftab[0].olen *= input_count;
+      read_wide_samples += efftab[0].olen;
+      efftab[0].olen *= combiner.channels;
     }
 
     efftab[0].odone = 0;
@@ -983,12 +971,12 @@ static void process(void) {
       break;
 
     /* If there's an error, don't try to write more. */
-    if (ofile->st_errno)
+    if (ofile->desc->st_errno)
       break;
   } while (flowstatus == 0);
 
   /* Drain the effects; don't write if output is indicating errors. */
-  if (ofile->st_errno == 0)
+  if (ofile->desc->st_errno == 0)
     drain_effect_out();
 
   if (show_progress)
@@ -996,8 +984,8 @@ static void process(void) {
 
   if (combine_method != SOX_CONCAT)
     /* Free input buffers now that they are not used */
-    for (f = 0; f < input_count; f++)
-      free(ibuf[f]);
+    for (i = 0; i < input_count; i++)
+      free(ibuf[i]);
 
   /* Free output buffers now that they won't be used */
   for (e = 0; e < neffects; e++) {
@@ -1008,16 +996,16 @@ static void process(void) {
   /* N.B. more data may be written during stop_effects */
   stop_effects();
 
-  for (f = 0; f < input_count; f++)
-    if (file_desc[f]->clips != 0)
-      st_warn("%s: input clipped %u samples", file_desc[f]->filename,
-              file_desc[f]->clips);
+  for (i = 0; i < input_count; i++)
+    if (files[i]->desc->clips != 0)
+      st_warn("%s: input clipped %u samples", files[i]->desc->filename,
+              files[i]->desc->clips);
 
-  if (file_desc[f]->clips != 0)
+  if (files[i]->desc->clips != 0)
     st_warn("%s: output clipped %u samples; decrease volume?",
-            (file_desc[f]->h->flags & ST_FILE_DEVICE)?
-            file_desc[f]->h->names[0] : file_desc[f]->filename,
-            file_desc[f]->clips);
+            (files[i]->desc->h->flags & ST_FILE_DEVICE)?
+            files[i]->desc->h->names[0] : files[i]->desc->filename,
+            files[i]->desc->clips);
 }
 
 static void parse_effects(int argc, char **argv)
@@ -1055,7 +1043,7 @@ static void add_effect(int * effects_mask)
 
   /* Copy format info to effect table */
   *effects_mask =
-    st_updateeffect(e, &file_desc[0]->signal, &ofile->signal, *effects_mask);
+    st_updateeffect(e, &combiner, &ofile->desc->signal, *effects_mask);
 
   /* If this effect can't handle multiple channels then account for this. */
   if (e->ininfo.channels > 1 && !(e->h->flags & ST_EFF_MCHAN))
@@ -1091,8 +1079,8 @@ static void build_effects_table(void)
 {
   int i;
   int effects_mask = 0;
-  st_bool need_rate = file_desc[0]->signal.rate     != ofile->signal.rate;
-  st_bool need_chan = file_desc[0]->signal.channels != ofile->signal.channels;
+  st_bool need_rate = combiner.rate     != ofile->desc->signal.rate;
+  st_bool need_chan = combiner.channels != ofile->desc->signal.channels;
 
   { /* Check if we have to add effects to change rate/chans or if the
        user has specified effects to do this, in which case, check if
@@ -1124,13 +1112,13 @@ static void build_effects_table(void)
   neffects = 1;
 
   /* If reducing channels, it's faster to do so before all other effects: */
-  if (need_chan && file_desc[0]->signal.channels > ofile->signal.channels) {
+  if (need_chan && combiner.channels > ofile->desc->signal.channels) {
     add_default_effect("mixer", &effects_mask);
     need_chan = st_false;
   }
   /* If reducing rate, it's faster to do so before all other effects
    * (except reducing channels): */
-  if (need_rate && file_desc[0]->signal.rate > ofile->signal.rate) {
+  if (need_rate && combiner.rate > ofile->desc->signal.rate) {
     add_default_effect("resample", &effects_mask);
     need_rate = st_false;
   }
@@ -1219,22 +1207,22 @@ static int flow_effect_out(void)
         if (user_abort)
           return ST_EOF;
 
-        len = st_write(ofile,
+        len = st_write(ofile->desc,
                        &efftab[neffects - 1].obuf[total],
                        efftab[neffects - 1].olen - total);
 
-        if (len != efftab[neffects - 1].olen - total || ofile->eof) {
-          st_warn("Error writing: %s", ofile->st_errstr);
+        if (len != efftab[neffects - 1].olen - total || ofile->desc->eof) {
+          st_warn("Error writing: %s", ofile->desc->st_errstr);
           return ST_EOF;
         }
         total += len;
       } while (total < efftab[neffects-1].olen);
-      output_samples += (total / ofile->signal.channels);
+      output_samples += (total / ofile->desc->signal.channels);
       efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
     } else {
       /* Make it look like everything was consumed */
       output_samples += (efftab[neffects-1].olen /
-                         ofile->signal.channels);
+                         ofile->desc->signal.channels);
       efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
     }
 
@@ -1258,7 +1246,7 @@ static int flow_effect_out(void)
          * will cause stereo channels to be inversed.
          */
         if ((efftab[e].olen - efftab[e].odone) >=
-            ofile->signal.channels)
+            ofile->desc->signal.channels)
           havedata = 1;
         else
           st_warn("Received buffer with incomplete amount of samples.");
@@ -1522,8 +1510,7 @@ static void update_status(void)
   /* Currently, for all sox modes, all input files must have
    * the same sample rate.  So we can always just use the rate
    * of the first input file to compute time. */
-  read_time = (double)read_samples / (double)file_desc[0]->signal.rate /
-    (double)file_desc[0]->signal.channels;
+  read_time = (double)read_wide_samples / combiner.rate;
 
   read_min = read_time / 60;
   read_sec = (double)read_time - 60.0f * (double)read_min;
@@ -1544,14 +1531,13 @@ static void update_status(void)
     }
   }
 
-  if (input_samples) {
-    in_time = (double)input_samples / (double)file_desc[0]->signal.rate /
-      (double)file_desc[0]->signal.channels;
+  if (input_wide_samples) {
+    in_time = (double)input_wide_samples / combiner.rate;
     left_time = in_time - read_time;
     if (left_time < 0)
       left_time = 0;
 
-    completed = ((double)read_samples / (double)input_samples) * 100;
+    completed = (double)read_wide_samples / input_wide_samples * 100;
     if (completed < 0)
       completed = 0;
   } else {
@@ -1569,12 +1555,12 @@ static void update_status(void)
   fprintf(stderr, "\rTime: %02i:%05.2f [%02i:%05.2f] of %02i:%05.2f (% 5.1f%%) Output Buffer:% 7.2f%c", read_min, read_sec, left_min, left_sec, in_min, in_sec, completed, out_size, unit);
 }
 
-static void volumechange(st_sample_t * buf, st_ssize_t len, file_info_t fi)
+static void balance_input(st_sample_t * buf, st_ssize_t len, file_t f)
 {
-  if (fi->volume != 1)
+  if (f->volume != 1)
     while (len--) {
-      double d = fi->volume * *buf;
-      *buf++ = ST_ROUND_CLIP_COUNT(d, fi->volume_clips);
+      double d = f->volume * *buf;
+      *buf++ = ST_ROUND_CLIP_COUNT(d, f->volume_clips);
     }
 }
 

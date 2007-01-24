@@ -38,9 +38,8 @@ SoX reads and writes audio files in most popular formats and can
 optionally apply effects to them; it includes a basic audio synthesiser,
 and, on many systems, can play and record audio files.
 .SP
-SoX can also combine multiple input files (with the same sample rate and
-number of channels) to form one output file using one of three methods:
-`concatenate' (the default), `mix', or `merge'.
+SoX can also combine multiple input files to form one output file using
+one of three methods: `concatenate', `mix', or `merge'.
 .SP
 If invoked as `play', the output file is the default sound device. If
 invoked as `rec', the input device is the default sound device.
@@ -217,15 +216,41 @@ guarantees that the treble boost will not clip.
 .SP
 If clipping occurs at any point during processing, then
 SoX will display a warning message to that effect.
-.SS Input File Balancing
-When multiple input files are given, SoX applies any specified effects
+.SS Input File Combining 
+In order for SoX to combine multiple input files, they must all have the
+same sample-rate.
+The default combining method is concatenate; here the input files must
+also have the same number of channels.  For
+.BR play ,
+to concatenate multiple audio files means to play them in sequence.
+.SP
+If the `mix' combining method is selected (with \fB-m\fR) then two or
+more input files must be given and will be mixed together to form the
+output file.  The number of channels in each input file need not be the
+same, however, SoX will issue a warning if they are not and some
+channels in the output file will not contain audio from every input
+file.  A mixed audio file cannot be un-mixed.
+.SP
+If the `merge' combining method is selected (with \fB-M\fR), then two or
+more input files must be given and will be merged together to form the
+output file.  The number of channels in each input file need not be the
+same.  A merged audio file comprises all of the channels from all of the
+input files; un-merging is possible using multiple
+invocations of SoX with the
+.B mixer
+effect.
+For example, two mono files could be merged to form one stereo file; the
+first and second mono files would become the left and right channels of
+the stereo file.
+.SP
+When combining input files, SoX applies any specified effects
 (including, for example, the
 .B vol
 volume adjustment effect) after the audio has been combined; however, it
 is often useful to be able to set the volume of (i.e. `balance') the
 inputs individually, before combining takes place.
 .SP
-For all SoX combining methods (`concatenate', `mix', or `merge'), input
+For all combining methods, input
 file volume adjustments can be made manually using the
 .B \-v
 option (below) which can be given for one or more input files; if it is
@@ -235,7 +260,7 @@ adjustments that can apply when mixing input files.
 .SP
 The \fB\-V\fR option (below) can be used to show the input file volume
 adjustments that have been selected (either manually or automatically).
-.SS Input File Mixing
+.SP
 There are some special considerations that need to made when mixing
 input files:
 .SP
@@ -385,27 +410,13 @@ given for the output file.
 .TP
 \fB\-m\fR, \fB\-\-mix\fR
 Set the input file combining method to `mix'.
-Two or more input files must be given,
-and will be mixed together (instead of concatenated)
-to form the output file.
-A mixed audio file cannot be un-mixed.
 .SP
-See also \fBInput File Mixing\fR above.
+See also \fBInput File Combining\fR above.
 .TP
 \fB\-M\fR, \fB\-\-merge\fR
 Set the input file combining method to `merge'.
-Two or more input files must be given,
-and will be merged together (instead of concatenated)
-to form the output file.
-A merged audio file comprises all of the channels from all of the input
-files; a merged file could be un-merged by using multiple invocations of
-SoX with the
-.B mixer
-effect.
 .SP
-For example, two mono files could be merged to form one
-stereo file; the first and second mono files would become
-the left and right channels of the stereo file.
+See also \fBInput File Combining\fR above.
 .TP
 \fB\-\-octave\fR
 Run in a mode that can be used, in conjunction with the GNU

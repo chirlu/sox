@@ -53,6 +53,8 @@ sox-12.18.3
   o Higher quality audio speed adjustment; also fixes [1155364].  (robs)
   o Replacement flanger effect; also fixes [1393245].  (robs)
   o Added silence padding effect.  (robs)
+  o Removed the restriction whereby multiple input files had to have
+    the same data encoding & size.  (robs)
   o Added ability to merge e.g. 2 mono files to 1 stereo file
     [FR# 1297076].  (robs)
 
