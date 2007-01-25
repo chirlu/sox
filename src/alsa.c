@@ -20,7 +20,157 @@ typedef struct alsa_priv
     st_size_t buf_size;
 } *alsa_priv_t;
 
-static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt);
+static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
+{
+    if (ft->signal.size == -1)
+        ft->signal.size = ST_SIZE_16BIT;
+
+    if (ft->signal.size != ST_SIZE_16BIT)
+    {
+        st_report("trying for word samples.");
+        ft->signal.size = ST_SIZE_16BIT;
+    }
+
+    if (ft->signal.encoding != ST_ENCODING_SIGN2 &&
+        ft->signal.encoding != ST_ENCODING_UNSIGNED)
+    {
+        if (ft->signal.size == ST_SIZE_16BIT)
+        {
+            st_report("driver only supports signed and unsigned samples.  Changing to signed.");
+            ft->signal.encoding = ST_ENCODING_SIGN2;
+        }
+        else
+        {
+            st_report("driver only supports signed and unsigned samples.  Changing to unsigned.");
+            ft->signal.encoding = ST_ENCODING_UNSIGNED;
+        }
+    }
+
+    /* Some hardware only wants to work with 8-bit or 16-bit data */
+    if (ft->signal.size == ST_SIZE_BYTE)
+    {
+        if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U8)) && 
+            !(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S8)))
+        {
+            st_report("driver doesn't supported byte samples.  Changing to words.");
+            ft->signal.size = ST_SIZE_16BIT;
+        }
+    }
+    else if (ft->signal.size == ST_SIZE_16BIT)
+    {
+        if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)) && 
+            !(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
+        {
+            st_report("driver doesn't supported word samples.  Changing to bytes.");
+            ft->signal.size = ST_SIZE_BYTE;
+        }
+    }
+    else
+    {
+        if ((snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)) ||
+            (snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
+        {
+            st_report("driver doesn't supported %s samples.  Changing to words.", st_sizes_str[(unsigned char)ft->signal.size]);
+            ft->signal.size = ST_SIZE_16BIT;
+        }
+        else
+        {
+            st_report("driver doesn't supported %s samples.  Changing to bytes.", st_sizes_str[(unsigned char)ft->signal.size]);
+            ft->signal.size = ST_SIZE_BYTE;
+        }
+    }
+
+    if (ft->signal.size == ST_SIZE_BYTE) {
+        switch (ft->signal.encoding)
+        {
+            case ST_ENCODING_SIGN2:
+                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S8)))
+                {
+                    st_report("driver doesn't supported signed byte samples.  Changing to unsigned bytes.");
+                    ft->signal.encoding = ST_ENCODING_UNSIGNED;
+                }
+                break;
+            case ST_ENCODING_UNSIGNED:
+                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U8)))
+                {
+                    st_report("driver doesn't supported unsigned byte samples.  Changing to signed bytes.");
+                    ft->signal.encoding = ST_ENCODING_SIGN2;
+                }
+                break;
+            default:
+                    break;
+        }
+        switch (ft->signal.encoding)
+        {
+            case ST_ENCODING_SIGN2:
+                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S8)))
+                {
+                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support signed byte samples");
+                    return ST_EOF;
+                }
+                *fmt = SND_PCM_FORMAT_S8;
+                break;
+            case ST_ENCODING_UNSIGNED:
+                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U8)))
+                {
+                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support unsigned byte samples");
+                    return ST_EOF;
+                }
+                *fmt = SND_PCM_FORMAT_U8;
+                break;
+            default:
+                    break;
+        }
+    }
+    else if (ft->signal.size == ST_SIZE_16BIT) {
+        switch (ft->signal.encoding)
+        {
+            case ST_ENCODING_SIGN2:
+                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
+                {
+                    st_report("driver does not support signed word samples.  Changing to unsigned words.");
+                    ft->signal.encoding = ST_ENCODING_UNSIGNED;
+                }
+                break;
+            case ST_ENCODING_UNSIGNED:
+                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)))
+                {
+                    st_report("driver does not support unsigned word samples.  Changing to signed words.");
+                    ft->signal.encoding = ST_ENCODING_SIGN2;
+                }
+                break;
+            default:
+                    break;
+        }
+        switch (ft->signal.encoding)
+        {
+            case ST_ENCODING_SIGN2:
+                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
+                {
+                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support signed word samples");
+                    return ST_EOF;
+                }
+                *fmt = SND_PCM_FORMAT_S16_LE;
+                break;
+            case ST_ENCODING_UNSIGNED:
+                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)))
+                {
+                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support unsigned word samples");
+                    return ST_EOF;
+                }
+                *fmt = SND_PCM_FORMAT_U16_LE;
+                break;
+            default:
+                    break;
+        }
+    }
+    else {
+        st_fail_errno(ft,ST_EFMT,"ALSA driver does not support %s %s output",
+                      st_encodings_str[(unsigned char)ft->signal.encoding], st_sizes_str[(unsigned char)ft->signal.size]);
+        return ST_EOF;
+    }
+    return 0;
+}
 
 static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
 {
@@ -59,9 +209,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
 
 #if SND_LIB_VERSION >= 0x010009
     /* Turn off software resampling */
-    rate = 0;
-    err = snd_pcm_hw_params_set_rate_resample(alsa->pcm_handle, hw_params, 
-                                              rate);
+    err = snd_pcm_hw_params_set_rate_resample(alsa->pcm_handle, hw_params, 0);
     if (err < 0) {
         st_fail_errno(ft, ST_EPERM, "Resampling setup failed for playback");
         goto open_error;
@@ -103,12 +251,10 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
         goto open_error;
     }
 
-    rate = ft->signal.rate;
     snd_pcm_hw_params_get_rate_min(hw_params, &min_rate, &dir);
     snd_pcm_hw_params_get_rate_max(hw_params, &max_rate, &dir);
 
-    rate = max(rate, min_rate);
-    rate = min(rate, max_rate);
+    rate = min(max(ft->signal.rate, min_rate), max_rate);
     if (rate != ft->signal.rate)
     {
         st_report("hardware does not support sample-rate %i; changing to %i.", ft->signal.rate, rate);
@@ -143,7 +289,8 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
         goto open_error;
     }
 
-    buffer_size = (ST_BUFSIZ / ft->signal.size / ft->signal.channels);
+    /* Have a much larger buffer than ST_BUFSIZ to avoid underruns */
+    buffer_size = ST_BUFSIZ * 8 / ft->signal.size / ft->signal.channels;
 
     if (snd_pcm_hw_params_get_buffer_size_min(hw_params, &buffer_size_min) < 0)
     {
@@ -512,167 +659,6 @@ static int st_alsastopwrite(ft_t ft)
     free(alsa->buf);
 
     return ST_SUCCESS;
-}
-
-static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
-{
-    if (ft->signal.size == -1)
-        ft->signal.size = ST_SIZE_16BIT;
-
-    if (ft->signal.encoding == ST_ENCODING_UNKNOWN)
-    {
-        if (ft->signal.size == ST_SIZE_16BIT)
-            ft->signal.encoding = ST_ENCODING_SIGN2;
-        else
-            ft->signal.encoding = ST_ENCODING_UNSIGNED;
-    }
-
-    if (ft->signal.size != ST_SIZE_16BIT &&
-        ft->signal.size != ST_SIZE_BYTE)
-    {
-        st_report("driver only supports byte and word samples.  Changing to word.");
-        ft->signal.size = ST_SIZE_16BIT;
-    }
-
-    if (ft->signal.encoding != ST_ENCODING_SIGN2 &&
-        ft->signal.encoding != ST_ENCODING_UNSIGNED)
-    {
-        if (ft->signal.size == ST_SIZE_16BIT)
-        {
-            st_report("driver only supports signed and unsigned samples.  Changing to signed.");
-            ft->signal.encoding = ST_ENCODING_SIGN2;
-        }
-        else
-        {
-            st_report("driver only supports signed and unsigned samples.  Changing to unsigned.");
-            ft->signal.encoding = ST_ENCODING_UNSIGNED;
-        }
-    }
-
-    /* Some hardware only wants to work with 8-bit or 16-bit data */
-    if (ft->signal.size == ST_SIZE_BYTE)
-    {
-        if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U8)) && 
-            !(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S8)))
-        {
-            st_report("driver doesn't supported byte samples.  Changing to words.");
-            ft->signal.size = ST_SIZE_16BIT;
-        }
-    }
-    else if (ft->signal.size == ST_SIZE_16BIT)
-    {
-        if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)) && 
-            !(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
-        {
-            st_report("driver doesn't supported word samples.  Changing to bytes.");
-            ft->signal.size = ST_SIZE_BYTE;
-        }
-    }
-    else
-    {
-        if ((snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)) ||
-            (snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
-        {
-            st_report("driver doesn't supported %s samples.  Changing to words.", st_sizes_str[(unsigned char)ft->signal.size]);
-            ft->signal.size = ST_SIZE_16BIT;
-        }
-        else
-        {
-            st_report("driver doesn't supported %s samples.  Changing to bytes.", st_sizes_str[(unsigned char)ft->signal.size]);
-            ft->signal.size = ST_SIZE_BYTE;
-        }
-    }
-
-    if (ft->signal.size == ST_SIZE_BYTE) {
-        switch (ft->signal.encoding)
-        {
-            case ST_ENCODING_SIGN2:
-                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S8)))
-                {
-                    st_report("driver doesn't supported signed byte samples.  Changing to unsigned bytes.");
-                    ft->signal.encoding = ST_ENCODING_UNSIGNED;
-                }
-                break;
-            case ST_ENCODING_UNSIGNED:
-                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U8)))
-                {
-                    st_report("driver doesn't supported unsigned byte samples.  Changing to signed bytes.");
-                    ft->signal.encoding = ST_ENCODING_SIGN2;
-                }
-                break;
-            default:
-                    break;
-        }
-        switch (ft->signal.encoding)
-        {
-            case ST_ENCODING_SIGN2:
-                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S8)))
-                {
-                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support signed byte samples");
-                    return ST_EOF;
-                }
-                *fmt = SND_PCM_FORMAT_S8;
-                break;
-            case ST_ENCODING_UNSIGNED:
-                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U8)))
-                {
-                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support unsigned byte samples");
-                    return ST_EOF;
-                }
-                *fmt = SND_PCM_FORMAT_U8;
-                break;
-            default:
-                    break;
-        }
-    }
-    else if (ft->signal.size == ST_SIZE_16BIT) {
-        switch (ft->signal.encoding)
-        {
-            case ST_ENCODING_SIGN2:
-                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
-                {
-                    st_report("driver does not support signed word samples.  Changing to unsigned words.");
-                    ft->signal.encoding = ST_ENCODING_UNSIGNED;
-                }
-                break;
-            case ST_ENCODING_UNSIGNED:
-                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)))
-                {
-                    st_report("driver does not support unsigned word samples.  Changing to signed words.");
-                    ft->signal.encoding = ST_ENCODING_SIGN2;
-                }
-                break;
-            default:
-                    break;
-        }
-        switch (ft->signal.encoding)
-        {
-            case ST_ENCODING_SIGN2:
-                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
-                {
-                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support signed word samples");
-                    return ST_EOF;
-                }
-                *fmt = SND_PCM_FORMAT_S16_LE;
-                break;
-            case ST_ENCODING_UNSIGNED:
-                if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)))
-                {
-                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support unsigned word samples");
-                    return ST_EOF;
-                }
-                *fmt = SND_PCM_FORMAT_U16_LE;
-                break;
-            default:
-                    break;
-        }
-    }
-    else {
-        st_fail_errno(ft,ST_EFMT,"ALSA driver does not support %s %s output",
-                      st_encodings_str[(unsigned char)ft->signal.encoding], st_sizes_str[(unsigned char)ft->signal.size]);
-        return ST_EOF;
-    }
-    return 0;
 }
 
 static const char *alsanames[] = {
