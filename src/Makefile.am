@@ -1,7 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = @LIBGSM_DIR@
-
 AM_CFLAGS = @SNDFILE_CFLAGS@ @SAMPLERATE_CFLAGS@
 AM_LDFLAGS = @SNDFILE_LIBS@ @SAMPLERATE_LIBS@
 
@@ -30,9 +28,10 @@ effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c dcshift.c\
 libst_la_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c \
 		   misc.c st_i.h stio.c util.c xmalloc.c xmalloc.h \
 		   getopt.c getopt1.c getopt.h stconfig.h
+libst_la_LIBADD = libgsm/libgsm.la
 
 sox_SOURCES = sox.c
-sox_LDADD = libst.la @LIBGSM_LINK@
+sox_LDADD = libst.la
 
 all: sox$(EXEEXT) play rec
 
