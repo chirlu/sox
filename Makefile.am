@@ -24,7 +24,7 @@ txt: sox.txt soxexam.txt libst.txt
 
 pdf: sox.pdf soxexam.pdf libst.pdf
 
-install-exec-hook:
+install-data-hook:
 	cd $(DESTDIR)$(mandir)/man1 && $(RM) play.1 && $(LN_S) sox.1 play.1
 	cd $(DESTDIR)$(mandir)/man1 && $(RM) rec.1 && $(LN_S) sox.1 rec.1
 
