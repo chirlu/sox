@@ -56,7 +56,7 @@
 #endif
 
 static st_bool play = st_false, rec = st_false;
-static enum {SOX_CONCAT, SOX_MIX, SOX_MERGE} combine_method = SOX_CONCAT;
+static enum {SOX_SEQUENCE, SOX_CONCAT, SOX_MIX, SOX_MERGE} combine_method = SOX_CONCAT;
 static st_size_t mixing_clips = 0;
 static st_bool repeatable_random = st_false;  /* Whether to invoke srand. */
 static st_bool interactive = st_false;
@@ -114,7 +114,8 @@ static file_t files[MAX_FILES]; /* Array tracking input and output files */
 #define ofile files[file_count - 1]
 static size_t file_count = 0;
 static size_t input_count = 0;
-static st_signalinfo_t combiner;
+static size_t current_input = 0;
+static st_signalinfo_t combiner, ofile_signal;
 
 /* We parse effects into a temporary effects table and then place into
  * the real effects table.  This makes it easier to reorder some effects
@@ -238,6 +239,9 @@ static void set_device(file_t f)
   char *device = getenv("AUDIODEV");
   f->filetype = "sunau";
   f->filename = xstrdup(device ? device : "/dev/audio");
+#else
+  st_fail("Sorry, there is no default audio device configured");
+  exit(1);
 #endif
 }
 
@@ -337,6 +341,7 @@ int main(int argc, char **argv)
       strcmp(myname + i - (sizeof("play") - 1), "play") == 0) {
     play = st_true;
     replay_gain_mode = RG_TRACK;
+    combine_method = SOX_SEQUENCE;
   } else if (i >= sizeof("rec") - 1 &&
       strcmp(myname + i - (sizeof("rec") - 1), "rec") == 0) {
     rec = st_true;
@@ -345,7 +350,7 @@ int main(int argc, char **argv)
 
   /* Make sure we got at least the required # of input filenames */
   input_count = file_count ? file_count - 1 : 0;
-  if (input_count < (combine_method == SOX_CONCAT ? 1 : 2))
+  if (input_count < (combine_method <= SOX_CONCAT ? 1 : 2))
     usage("Not enough input filenames specified");
 
   /* Check for misplaced input/output-specific options */
@@ -404,7 +409,14 @@ int main(int argc, char **argv)
     srand(t);
   }
 
-  process();
+  ofile_signal = ofile->signal;
+  if (combine_method == SOX_SEQUENCE) do {
+    if (ofile->desc)
+      st_close(ofile->desc);
+    free(ofile->desc);
+    process();
+  } while (!user_abort && current_input < input_count);
+  else process();
 
   if (mixing_clips > 0)
     st_warn("-m clipped %u samples; decrease volume?", mixing_clips);
@@ -469,6 +481,7 @@ static struct option long_options[] =
     {"help-effect"     , required_argument, NULL, 0},
     {"octave"          ,       no_argument, NULL, 0},
     {"replay-gain"     , required_argument, NULL, 0},
+    {"sequence"        ,       no_argument, NULL, 0},
     {"version"         ,       no_argument, NULL, 0},
 
     {"channels"        , required_argument, NULL, 'c'},
@@ -547,6 +560,10 @@ static st_bool doopts(file_t f, int argc, char **argv)
         break;
 
       case 7:
+        combine_method = SOX_SEQUENCE;
+        break;
+
+      case 8:
         printf("%s: v%s\n", myname, st_version());
         exit(0);
         break;
@@ -713,7 +730,7 @@ static void report_file_info(file_t f)
 static void progress_to_file(file_t f)
 {
   if (show_progress && (st_output_verbosity_level < 3 ||
-                        (combine_method == SOX_CONCAT && input_count > 1)))
+                        (combine_method <= SOX_CONCAT && input_count > 1)))
     display_file_info(f, st_false);
   if (f->volume == HUGE_VAL)
     f->volume = 1;
@@ -728,7 +745,7 @@ static void sigint(int s)
   time_t secs;
   ftime(&now);
   secs = now.time - then.time;
-  if (show_progress && s == SIGINT && combine_method == SOX_CONCAT &&
+  if (show_progress && s == SIGINT && combine_method <= SOX_CONCAT &&
       (secs > 1 || 1000 * secs + now.millitm - then.millitm > 999))
     user_skip = st_true;
   else user_abort = st_true;
@@ -741,11 +758,12 @@ static void sigint(int s)
 
 static void process(void) {
   int e, flowstatus = 0;
-  size_t current_input = 0;
   st_size_t ws, s, i;
   st_ssize_t ilen[MAX_INPUT_FILES];
   st_sample_t *ibuf[MAX_INPUT_FILES];
-  {
+
+  combiner = files[current_input]->desc->signal;
+  if (combine_method != SOX_SEQUENCE) {
     st_size_t total_channels = 0;
     st_size_t min_channels = ST_SIZE_MAX;
     st_size_t max_channels = 0;
@@ -772,11 +790,11 @@ static void process(void) {
     if (min_rate != max_rate)
       exit(1);
 
-    combiner = files[0]->desc->signal;
     combiner.channels = 
       combine_method == SOX_MERGE? total_channels : max_channels;
   }
 
+  ofile->signal = ofile_signal;
   if (ofile->signal.rate == 0)
     ofile->signal.rate = combiner.rate;
   if (ofile->signal.size == -1)
@@ -848,8 +866,7 @@ static void process(void) {
       efftabR[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
   }
 
-  if (combine_method == SOX_CONCAT) {
-    current_input = 0;
+  if (combine_method <= SOX_CONCAT) {
     input_wide_samples = files[current_input]->desc->length / files[current_input]->desc->signal.channels;
     progress_to_file(files[current_input]);
   } else {
@@ -883,7 +900,7 @@ static void process(void) {
   signal(SIGINT, sigint);
   signal(SIGTERM, sigint);
   do {
-    if (combine_method == SOX_CONCAT) {
+    if (combine_method <= SOX_CONCAT) {
       if (user_skip) {
         ilen[0] = ST_EOF;
         user_skip = st_false;
@@ -910,12 +927,16 @@ static void process(void) {
        * input file.
        */
       if (ilen[0] == ST_EOF || efftab[0].olen == 0) {
-        if (current_input < input_count - 1) {
-          current_input++;
+        if (++current_input < input_count) {
           input_wide_samples = files[current_input]->desc->length / files[current_input]->desc->signal.channels;
           read_wide_samples = 0;
-          progress_to_file(files[current_input]);
-          continue;
+          if (combine_method == SOX_CONCAT ||
+              (files[current_input]->desc->signal.channels == files[current_input - 1]->desc->signal.channels &&
+               files[current_input]->desc->signal.rate     == files[current_input - 1]->desc->signal.rate    )) {
+            progress_to_file(files[current_input]);
+            continue;
+          }
+          else break;
         }
       }
       balance_input(efftab[0].obuf, efftab[0].olen, files[current_input]);
@@ -982,7 +1003,7 @@ static void process(void) {
   if (show_progress)
     fputs("\n\n", stderr);
 
-  if (combine_method != SOX_CONCAT)
+  if (combine_method > SOX_CONCAT)
     /* Free input buffers now that they are not used */
     for (i = 0; i < input_count; i++)
       free(ibuf[i]);
