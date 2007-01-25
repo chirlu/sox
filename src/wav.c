@@ -353,10 +353,10 @@ static int findChunk(ft_t ft, const char *Label, st_size_t *len)
         }
 
         if (strncmp(Label, magic, 4) == 0)
-            break; /* Found the data chunk */
+            break; /* Found the given chunk */
 
         /* skip to next chunk */
-        if (st_seeki(ft, *len, SEEK_CUR) != ST_SUCCESS)
+        if (*len == 0 || st_seeki(ft, *len, SEEK_CUR) != ST_SUCCESS)
         {
             st_fail_errno(ft,ST_EHDR, 
                           "WAV chunk appears to have invalid size %d.", *len);
