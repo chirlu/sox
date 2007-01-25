@@ -1,10 +1,5 @@
 /* ALSA sound driver
  *
- * converted to alsalib cbagwell 20050914
- * added by Jimen Ching (jching@flex.com) 19990207
- * based on info grabed from aplay.c in alsa-utils package.
- * Updated for ALSA 0.9.X API 20020824.
- *
  * Copyright 1997-2005 Jimen Ching And Sundry Contributors
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained.
@@ -148,7 +143,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
         goto open_error;
     }
 
-    buffer_size = (ST_BUFSIZ / sizeof(st_sample_t) / ft->signal.channels);
+    buffer_size = (ST_BUFSIZ / ft->signal.size / ft->signal.channels);
 
     if (snd_pcm_hw_params_get_buffer_size_min(hw_params, &buffer_size_min) < 0)
     {
@@ -203,7 +198,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     }
 
     snd_pcm_hw_params_get_buffer_size(hw_params, &buffer_size);
-    if (period_size*2 > buffer_size)
+    if (period_size * 2 > buffer_size)
     {
         st_fail_errno(ft, ST_EPERM, "Buffer too small. Could not use.");
         goto open_error;
@@ -240,15 +235,15 @@ open_error:
 }
 
 /*
- *   Underrun and suspend recovery
+ *   Over/underrun and suspend recovery
  */
 static int xrun_recovery(snd_pcm_t *handle, int err)
 {
     if (err == -EPIPE) 
-    {    /* under-run */
+    {   /* over/under-run */
         err = snd_pcm_prepare(handle);
         if (err < 0)
-            st_warn("Can't recovery from overrun, prepare failed: %s", snd_strerror(err));
+            st_warn("Can't recover from over/underrun, prepare failed: %s", snd_strerror(err));
         return 0;
     } 
     else 
@@ -370,7 +365,7 @@ static st_size_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
     {
         /* ALSA library takes "frame" counts. */
         err = snd_pcm_readi(alsa->pcm_handle, alsa->buf, 
-                            (nsamp-len)/ft->signal.channels);
+                            (nsamp - len)/ft->signal.channels);
         if (err < 0)
         {
             if (xrun_recovery(alsa->pcm_handle, err) < 0)
@@ -493,9 +488,11 @@ static st_size_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
         err = snd_pcm_writei(alsa->pcm_handle, 
                              alsa->buf + (len * ft->signal.size), 
                              (osamp - len) / ft->signal.channels);
-        if (err < 0 && xrun_recovery(alsa->pcm_handle, err) < 0) {
-          st_fail_errno(ft, ST_EPERM, "ALSA write error");
-          return 0;
+        if (err < 0) {
+          if (xrun_recovery(alsa->pcm_handle, err) < 0) {
+            st_fail_errno(ft, ST_EPERM, "ALSA write error");
+            return 0;
+          }
         } else
           len += err * ft->signal.channels;
       }
@@ -516,8 +513,6 @@ static int st_alsastopwrite(ft_t ft)
 
     return ST_SUCCESS;
 }
-
-#define EMSGFMT "ALSA driver does not support %s %s output"
 
 static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
 {
@@ -673,13 +668,13 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
         }
     }
     else {
-        st_fail_errno(ft,ST_EFMT,EMSGFMT,st_encodings_str[(unsigned char)ft->signal.encoding], st_sizes_str[(unsigned char)ft->signal.size]);
+        st_fail_errno(ft,ST_EFMT,"ALSA driver does not support %s %s output",
+                      st_encodings_str[(unsigned char)ft->signal.encoding], st_sizes_str[(unsigned char)ft->signal.size]);
         return ST_EOF;
     }
     return 0;
 }
 
-/* /dev/snd/pcmXX */
 static const char *alsanames[] = {
   "alsa",
   NULL
