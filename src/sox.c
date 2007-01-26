@@ -640,9 +640,9 @@ static st_bool doopts(file_t f, int argc, char **argv)
     case 'u': f->signal.encoding = ST_ENCODING_UNSIGNED;  break;
     case 'f': f->signal.encoding = ST_ENCODING_FLOAT;     break;
     case 'a': f->signal.encoding = ST_ENCODING_ADPCM;     break;
-    case 'D': f->signal.encoding = ST_ENCODING_MS_ADPCM;  break; /* WIP */
+    case 'D': f->signal.encoding = ST_ENCODING_MS_ADPCM;  break;
     case 'i': f->signal.encoding = ST_ENCODING_IMA_ADPCM; break;
-    case 'o': f->signal.encoding = ST_ENCODING_OKI_ADPCM; break; /* WIP */
+    case 'o': f->signal.encoding = ST_ENCODING_OKI_ADPCM; break;
     case 'g': f->signal.encoding = ST_ENCODING_GSM;       break;
 
     case 'U': f->signal.encoding = ST_ENCODING_ULAW;
