@@ -40,7 +40,7 @@ libgsm/libgsm.la:
 
 play rec: sox$(EXEEXT)
 	./sox --help > /dev/null
-	$(RM) $@ && $(LN_S) .libs/lt-sox $@
+	test -e .libs/lt-sox && ( $(RM) $@ && $(LN_S) .libs/lt-sox $@ ) || $(LN_S) sox$(EXEEXT) $@
 
 install-exec-hook:
 	cd $(DESTDIR)$(bindir) && $(RM) play && $(LN_S) sox play
