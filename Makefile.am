@@ -3,6 +3,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = @LIBGSM_SUBDIR@ src
+DIST_SUBDIRS = src/libgsm src
 
 # man pages are not considered to be sources, so need to add "dist_"
 # prefix to ensure they are added to the distribution.
