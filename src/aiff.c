@@ -1,47 +1,18 @@
 /*
- * September 25, 1991
- * Copyright 1991 Guido van Rossum And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Guido van Rossum And Sundry Contributors are not responsible for 
- * the consequences of using this software.
- */
-
-/*
  * Sound Tools SGI/Amiga AIFF format.
  * Used by SGI on 4D/35 and Indigo.
  * This is a subformat of the EA-IFF-85 format.
  * This is related to the IFF format used by the Amiga.
  * But, apparently, not the same.
+ * Also AIFF-C format output that is defined in DAVIC 1.4 Part 9 Annex B
+ * (usable for japanese-data-broadcasting, specified by ARIB STD-B24.)
  *
- * Jan 93: new version from Guido Van Rossum that 
- * correctly skips unwanted sections.
- *
- * Jan 94: add loop & marker support
- * Jul 97: added comments I/O by Leigh Smith
- * Nov 97: added verbose chunk comments
- *
- * June 1, 1998 - Chris Bagwell (cbagwell@sprynet.com)
- *   Fixed compile warnings reported by Kjetil Torgrim Homme
- *   <kjetilho@ifi.uio.no>
- *
- * Sept 9, 1998 - fixed loop markers.
- *
- * Feb. 9, 1999 - Small fix to work with invalid headers that include
- *   a INST block with markers that equal 0.  It should ingore those.
- *   Also fix endian problems when ran on Intel machines.  The check
- *   for endianness was being performed AFTER reading the header instead
- *   of before reading it.
- *
- * Nov 25, 1999 - internal functions made static
- *
- * Jul 12, 2000 - Leigh Smith <leigh@tomandandy.com>
- *   Replaced ANNO with COMT chunk writing headers and added COMT
- *   chunk reading
- *
- * Nov 24, 2006 - Shinji Hashimoto <sh@tw.tokai-tv.co.jp>
- *   added AIFF-C format output that is defined in DAVIC 1.4 Part 9 Annex B
- *   (usable for japanese-data-broadcasting, specified by ARIB STD-B24.)
+ * Copyright 1991-2007 Guido van Rossum And Sundry Contributors
+ * 
+ * This source code is freely redistributable and may be used for
+ * any purpose.  This copyright notice must be maintained. 
+ * Guido van Rossum And Sundry Contributors are not responsible for 
+ * the consequences of using this software.
  */
 
 #include "st_i.h"
@@ -727,6 +698,14 @@ static int st_aiffstopwrite(ft_t ft)
         aiff_t aiff = (aiff_t ) ft->priv;
         int rc;
 
+        /* If we've written an odd number of bytes, write a padding
+           NUL */
+        if (aiff->nsamples % 2 == 1 && ft->signal.size == 1 && ft->signal.channels == 1)
+        {
+            st_sample_t buf = 0;
+            st_rawwrite(ft, &buf, 1);
+        }
+
         /* Needed because of st_rawwrite().  Call now to flush
          * buffer now before seeking around below.
          */
@@ -923,6 +902,14 @@ static int st_aifcstopwrite(ft_t ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         int rc;
+
+        /* If we've written an odd number of bytes, write a padding
+           NUL */
+        if (aiff->nsamples % 2 == 1 && ft->signal.size == 1 && ft->signal.channels == 1)
+        {
+            st_sample_t buf = 0;
+            st_rawwrite(ft, &buf, 1);
+        }
 
         /* Needed because of st_rawwrite().  Call now to flush
          * buffer now before seeking around below.
