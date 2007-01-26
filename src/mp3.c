@@ -295,7 +295,7 @@ static st_size_t st_mp3read(ft_t ft, st_sample_t *buf, st_size_t len)
         if (p->Stream->error == MAD_ERROR_BUFLEN)
         {
             if (st_mp3_input(ft) == ST_EOF)
-                return ST_EOF;
+                return 0;
         }
 
         if (mad_frame_decode(p->Frame,p->Stream))

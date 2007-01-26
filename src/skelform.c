@@ -82,7 +82,7 @@ static int startread(ft_t ft)
 
 /*
  * Read up to len samples of type st_sample_t from file into buf[].
- * Return number of samples read.
+ * Return number of samples read, or 0 if at end of file.
  */
 static st_size_t read(ft_t ft, st_sample_t *buf, st_size_t len)
 {
