@@ -28,7 +28,6 @@ sox-12.18.3
     (robs)
   o New options for specifying endianness (and separate options for
     nibble & bit reversal) [FR# 1621702].  (robs)
-  o Added large file support.  (Reuben Thomas)
   o Improved multi-channel file reading; fixes [1599990].  (robs)
 
   Effects:
@@ -75,6 +74,7 @@ sox-12.18.3
   o Display (auto-)selected effects with -V.  (robs)
   o Added --interactive option to prompt to overwrite pre-existing
     output file.  (robs)
+  o Added large file support.  (Reuben Thomas)
 
   Bug fixes:
 
@@ -103,6 +103,9 @@ sox-12.18.3
     problematic -v option.  Use the vol effect instead.  (robs)
   o Improved the accuracy of integer and floating point PCM
     conversions.  (robs)
+  o Don't go into a loop on zero-padded WAVs.  (Jorge Serna)
+  o Fix to AIFF writing to avoid writing invalid files in some situations.
+    (Reuben Thomas)
 
   Internal improvements:
 
