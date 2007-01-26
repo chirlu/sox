@@ -28,7 +28,7 @@ effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c dcshift.c\
 libst_la_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c \
 		   misc.c st_i.h stio.c util.c xmalloc.c xmalloc.h \
 		   getopt.c getopt1.c getopt.h stconfig.h
-libst_la_LIBADD = libgsm/libgsm.la
+libst_la_LIBADD = @LIBGSM_LIBADD@
 
 sox_SOURCES = sox.c
 sox_LDADD = libst.la

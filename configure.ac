@@ -100,10 +100,12 @@ if test "$found_libgsm" = yes; then
     AC_CHECK_LIB(gsm, gsm_create, LIBS="$LIBS -lgsm")
     AC_DEFINE(EXTERNAL_GSM, 1, [Define if you are using an external GSM library])
 else
-    LIBGSM_DIR=src/libgsm
+    LIBGSM_SUBDIR=src/libgsm
+    LIBGSM_LIBADD=libgsm/libgsm.la
 fi
-AC_SUBST(LIBGSM_DIR)
-      
+AC_SUBST(LIBGSM_SUBDIR)
+AC_SUBST(LIBGSM_LIBADD)
+     
 dnl Check for libsndfile
 with_sndfile=yes
 AC_ARG_WITH(sndfile, AC_HELP_STRING([--with-sndfile],
