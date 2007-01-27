@@ -481,7 +481,7 @@ static st_size_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
                     break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return ST_EOF;
+                    return 0;
             }
             break;
         case ST_SIZE_16BIT:
@@ -495,12 +495,12 @@ static st_size_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
                     break;
                 default:
                     st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
-                    return ST_EOF;
+                    return 0;
             }
             break;
         default:
             st_fail_errno(ft,ST_EFMT,"Do not support this data size for this handler");
-            return ST_EOF;
+            return 0;
     }
 
     /* Prevent overflow */
@@ -518,7 +518,7 @@ static st_size_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
             if (xrun_recovery(alsa->pcm_handle, err) < 0)
             {
                 st_fail_errno(ft, ST_EPERM, "ALSA write error");
-                return ST_EOF;
+                return 0;
             }
         }
         else
@@ -635,6 +635,8 @@ static st_size_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
         err = snd_pcm_writei(alsa->pcm_handle, 
                              alsa->buf + (len * ft->signal.size), 
                              (osamp - len) / ft->signal.channels);
+        if (errno == EAGAIN) /* Happens naturally; don't report it */
+          errno = 0;
         if (err < 0) {
           if (xrun_recovery(alsa->pcm_handle, err) < 0) {
             st_fail_errno(ft, ST_EPERM, "ALSA write error");

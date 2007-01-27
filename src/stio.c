@@ -298,13 +298,10 @@ output_error:
     return NULL;
 }
 
-st_size_t st_read(ft_t ft, st_sample_t *buf, st_size_t len)
+st_size_t st_read(ft_t f, st_sample_t * buf, st_size_t len)
 {
-  len -= len % ft->signal.channels; /* We need a whole number of "wide" samples */
-  len = (*ft->h->read)(ft, buf, len);
-  if (len != 0)
-    len -= len % ft->signal.channels; /* Belt & braces */
-  return len;
+  st_size_t actual = (*f->h->read)(f, buf, len);
+  return (actual > len? 0 : actual);
 }
 
 st_size_t st_write(ft_t ft, const st_sample_t *buf, st_size_t len)

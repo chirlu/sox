@@ -56,14 +56,14 @@
 #endif
 
 static st_bool play = st_false, rec = st_false;
-static enum {SOX_SEQUENCE, SOX_CONCAT, SOX_MIX, SOX_MERGE} combine_method = SOX_CONCAT;
+static enum {SOX_sequence, SOX_concatenate, SOX_mix, SOX_merge} combine_method = SOX_concatenate;
 static st_size_t mixing_clips = 0;
 static st_bool repeatable_random = st_false;  /* Whether to invoke srand. */
 static st_bool interactive = st_false;
 static st_globalinfo_t globalinfo = {st_false, 1};
 static st_bool uservolume = st_false;
-typedef enum {RG_OFF, RG_TRACK, RG_ALBUM} rg_t;
-static rg_t replay_gain_mode;
+typedef enum {RG_off, RG_track, RG_album} rg_mode;
+static rg_mode replay_gain_mode = RG_off;
 
 static st_bool user_abort = st_false;
 static st_bool user_skip = st_false;
@@ -97,7 +97,7 @@ static void usage(char const *) NORET;
 static void usage_effect(char *) NORET;
 static void process(void);
 static void update_status(void);
-static void balance_input(st_sample_t * buf, st_ssize_t len, file_t);
+static void report_file_info(file_t f);
 static void parse_effects(int argc, char **argv);
 static void build_effects_table(void);
 static int start_all_effects(void);
@@ -149,7 +149,6 @@ static struct st_effect user_efftab[MAX_USER_EFF];
 static int nuser_effects;
 
 static char *myname = NULL;
-
 
 static void sox_output_message(int level, const char *filename, const char *fmt, va_list ap)
 {
@@ -247,13 +246,13 @@ static void set_device(file_t f)
 
 static void set_replay_gain(char const * comment, file_t f)
 {
-  rg_t rg = replay_gain_mode;
-  int try = 2;
+  rg_mode rg = replay_gain_mode;
+  int try = 2; /* Will try to find the other GAIN if preferred one not found */
 
-  if (rg != RG_OFF) while (try--) {
+  if (rg != RG_off) while (try--) {
     char const * p = comment;
     char const * target =
-      rg == RG_TRACK? "REPLAYGAIN_TRACK_GAIN=" : "REPLAYGAIN_ALBUM_GAIN=";
+      rg == RG_track? "REPLAYGAIN_TRACK_GAIN=" : "REPLAYGAIN_ALBUM_GAIN=";
     do {
       if (strncasecmp(p, target, strlen(target)) == 0) {
         f->replay_gain = atof(p + strlen(target));
@@ -262,7 +261,7 @@ static void set_replay_gain(char const * comment, file_t f)
       while (*p && *p!= '\n') ++p;
       while (*p && strchr("\r\n\t\f ", *p)) ++p;
     } while (*p);
-    rg ^= RG_TRACK ^ RG_ALBUM;
+    rg ^= RG_track ^ RG_album;
   }
 }
 
@@ -340,8 +339,8 @@ int main(int argc, char **argv)
   if (i >= sizeof("play") - 1 &&
       strcmp(myname + i - (sizeof("play") - 1), "play") == 0) {
     play = st_true;
-    replay_gain_mode = RG_TRACK;
-    combine_method = SOX_SEQUENCE;
+    replay_gain_mode = RG_track;
+    combine_method = SOX_sequence;
   } else if (i >= sizeof("rec") - 1 &&
       strcmp(myname + i - (sizeof("rec") - 1), "rec") == 0) {
     rec = st_true;
@@ -350,7 +349,7 @@ int main(int argc, char **argv)
 
   /* Make sure we got at least the required # of input filenames */
   input_count = file_count ? file_count - 1 : 0;
-  if (input_count < (combine_method <= SOX_CONCAT ? 1 : 2))
+  if (input_count < (combine_method <= SOX_concatenate ? 1 : 2))
     usage("Not enough input filenames specified");
 
   /* Check for misplaced input/output-specific options */
@@ -371,7 +370,7 @@ int main(int argc, char **argv)
     /* When mixing audio, default to input side volume adjustments that will
      * make sure no clipping will occur.  Users probably won't be happy with
      * this, and will override it, possibly causing clipping to occur. */
-    if (combine_method == SOX_MIX && !uservolume)
+    if (combine_method == SOX_mix && !uservolume)
       f->volume = 1.0 / input_count;
 
     if (rec && !j) { /* Set the recording sample rate & # of channels: */
@@ -400,17 +399,25 @@ int main(int argc, char **argv)
   /* Loop through the rest of the arguments looking for effects */
   parse_effects(argc, argv);
 
+  /* Not the greatest way for users to do this perhaps, but they're used
+   * to it, so it ought to stay until we replace it with something better. */
+  if (!nuser_effects && ofile->filetype && !strcmp(ofile->filetype, "null")) {
+    for (i = 0; i < input_count; i++)
+      report_file_info(files[i]);
+    exit(0);
+  }
+
   if (repeatable_random)
     st_debug("Not reseeding PRNG; randomness is repeatable");
   else {
     time_t t;
 
     time(&t);
-    srand(t);
+    srand((unsigned)t);
   }
 
   ofile_signal = ofile->signal;
-  if (combine_method == SOX_SEQUENCE) do {
+  if (combine_method == SOX_sequence) do {
     if (ofile->desc)
       st_close(ofile->desc);
     free(ofile->desc);
@@ -440,7 +447,7 @@ int main(int argc, char **argv)
 static char * read_comment_file(char const * const filename)
 {
   st_bool file_error;
-  long file_length = 0;
+  int file_length = 0;
   char * result;
   FILE * file = fopen(filename, "rt");
 
@@ -448,14 +455,14 @@ static char * read_comment_file(char const * const filename)
     st_fail("Cannot open comment file %s", filename);
     exit(1);
   }
-  file_error = fseeko(file, 0, SEEK_END);
+  file_error = fseeko(file, (off_t)0, SEEK_END);
   if (!file_error) {
     file_length = ftello(file);
     file_error |= file_length < 0;
     if (!file_error) {
-      result = xmalloc(file_length + 1);
+      result = xmalloc((unsigned)file_length + 1);
       rewind(file);
-      file_error |= fread(result, file_length, 1, file) != 1;
+      file_error |= fread(result, (unsigned)file_length, 1, file) != 1;
     }
   }
   if (file_error) {
@@ -474,6 +481,7 @@ static char *getoptstr = "+abc:defghilmnoqr:st:uv:wxABC:DLMNRSUV::X12348";
 
 static struct option long_options[] =
   {
+    {"combine"         , required_argument, NULL, 0},
     {"comment-file"    , required_argument, NULL, 0},
     {"comment"         , required_argument, NULL, 0},
     {"endian"          , required_argument, NULL, 0},
@@ -481,14 +489,11 @@ static struct option long_options[] =
     {"help-effect"     , required_argument, NULL, 0},
     {"octave"          ,       no_argument, NULL, 0},
     {"replay-gain"     , required_argument, NULL, 0},
-    {"sequence"        ,       no_argument, NULL, 0},
     {"version"         ,       no_argument, NULL, 0},
 
     {"channels"        , required_argument, NULL, 'c'},
     {"compression"     , required_argument, NULL, 'C'},
     {"help"            ,       no_argument, NULL, 'h'},
-    {"merge"           ,       no_argument, NULL, 'M'},
-    {"mix"             ,       no_argument, NULL, 'm'},
     {"no-show-progress",       no_argument, NULL, 'q'},
     {"rate"            , required_argument, NULL, 'r'},
     {"reverse-bits"    ,       no_argument, NULL, 'X'},
@@ -499,6 +504,45 @@ static struct option long_options[] =
 
     {NULL, 0, NULL, 0}
   };
+
+static enum_item const combine_methods[] = {
+  ENUM_ITEM(SOX_,sequence)
+  ENUM_ITEM(SOX_,concatenate)
+  ENUM_ITEM(SOX_,mix)
+  ENUM_ITEM(SOX_,merge)
+  {0, 0}};
+
+static enum_item const rg_modes[] = {
+  ENUM_ITEM(RG_,off)
+  ENUM_ITEM(RG_,track)
+  ENUM_ITEM(RG_,album)
+  {0, 0}};
+
+enum {ENDIAN_little, ENDIAN_big, ENDIAN_swap};
+static enum_item const endian_options[] = {
+  ENUM_ITEM(ENDIAN_,little)
+  ENUM_ITEM(ENDIAN_,big)
+  ENUM_ITEM(ENDIAN_,swap)
+  {0, 0}};
+
+static int enum_option(int option_index, enum_item const * items)
+{
+  enum_item const * p = find_enum_text(optarg, items);
+  if (p == NULL) {
+    unsigned len = 1;
+    char * set = xmalloc(len);
+    *set = 0;
+    for (p = items; p->text; ++p) {
+      set = xrealloc(set, len += 2 + strlen(p->text));
+      strcat(set, ", "); strcat(set, p->text);
+    }
+    st_fail("--%s: '%s' is not one of: %s.",
+        long_options[option_index].name, optarg, set + 2);
+    free(set);
+    exit(1);
+  }
+  return p->value;
+}
 
 static st_bool doopts(file_t f, int argc, char **argv)
 {
@@ -514,53 +558,39 @@ static st_bool doopts(file_t f, int argc, char **argv)
     case 0:         /* Long options with no short equivalent. */
       switch (option_index) {
       case 0:
-        f->comment = read_comment_file(optarg);
+        combine_method = enum_option(option_index, combine_methods);
         break;
 
       case 1:
-        f->comment = xstrdup(optarg);
+        f->comment = read_comment_file(optarg);
         break;
 
       case 2:
-        if (!strcmp(optarg, "little"))
-          f->signal.reverse_bytes = ST_IS_BIGENDIAN;
-        else if (!strcmp(optarg, "big"))
-          f->signal.reverse_bytes = ST_IS_LITTLEENDIAN;
-        else if (!strcmp(optarg, "swap"))
-          f->signal.reverse_bytes = st_true;
-        else {
-          st_fail("Endian type '%s' is not little|big|swap", optarg);
-          exit(1);
-        }
+        f->comment = xstrdup(optarg);
         break;
 
       case 3:
-        interactive = st_true;
-        break;
-
-      case 4:
-        usage_effect(optarg);
-        break;
-
-      case 5:
-        globalinfo.octave_plot_effect = st_true;
-        break;
-
-      case 6:
-        if (!strcmp(optarg, "track"))
-          replay_gain_mode = RG_TRACK;
-        else if (!strcmp(optarg, "album"))
-          replay_gain_mode = RG_ALBUM;
-        else if (!strcmp(optarg, "off"))
-          replay_gain_mode = RG_OFF;
-        else {
-          st_fail("Replay gain '%s' is not track|album|off", optarg);
-          exit(1);
+        switch (enum_option(option_index, endian_options)) {
+          case ENDIAN_little: f->signal.reverse_bytes = ST_IS_BIGENDIAN; break;
+          case ENDIAN_big: f->signal.reverse_bytes = ST_IS_LITTLEENDIAN; break;
+          case ENDIAN_swap: f->signal.reverse_bytes = st_true; break;
         }
         break;
 
+      case 4:
+        interactive = st_true;
+        break;
+
+      case 5:
+        usage_effect(optarg);
+        break;
+
+      case 6:
+        globalinfo.octave_plot_effect = st_true;
+        break;
+
       case 7:
-        combine_method = SOX_SEQUENCE;
+        replay_gain_mode = enum_option(option_index, rg_modes);
         break;
 
       case 8:
@@ -571,11 +601,11 @@ static st_bool doopts(file_t f, int argc, char **argv)
       break;
 
     case 'm':
-      combine_method = SOX_MIX;
+      combine_method = SOX_mix;
       break;
 
     case 'M':
-      combine_method = SOX_MERGE;
+      combine_method = SOX_merge;
       break;
 
     case 'R': /* Useful for regression testing. */
@@ -678,6 +708,16 @@ static st_bool doopts(file_t f, int argc, char **argv)
   }
 }
 
+static char const * str_time(double duration)
+{
+  static char string[16][50];
+  static int i;
+  int mins = duration / 60;
+  i = (i+1) & 15;
+  sprintf(string[i], "%02i:%05.2f", mins, duration - mins * 60);
+  return string[i];
+}
+
 static void display_file_info(file_t f, st_bool full)
 {
   static char const * const no_yes[] = {"no", "yes"};
@@ -697,7 +737,14 @@ static void display_file_info(file_t f, st_bool full)
     f->desc->signal.channels,
     f->desc->signal.rate);
 
-  if (full)
+  if (full) {
+    if (f->desc->length && f->desc->signal.channels && f->desc->signal.rate) {
+      st_size_t ws = f->desc->length / f->desc->signal.channels;
+      fprintf(stderr,
+        "Duration       : %s = %u samples = %g CDDA sectors\n",
+        str_time((double)ws / f->desc->signal.rate),
+        ws, (double)ws / 588);
+    }
     fprintf(stderr,
       "Endian Type    : %s\n"
       "Reverse Nibbles: %s\n"
@@ -706,6 +753,7 @@ static void display_file_info(file_t f, st_bool full)
         f->desc->signal.reverse_bytes != ST_IS_BIGENDIAN? "big" : "little",
       no_yes[f->desc->signal.reverse_nibbles],
       no_yes[f->desc->signal.reverse_bits]);
+  }
 
   if (f->replay_gain != HUGE_VAL)
     fprintf(stderr, "Replay gain    : %+g dB\n" , f->replay_gain);
@@ -729,13 +777,16 @@ static void report_file_info(file_t f)
 
 static void progress_to_file(file_t f)
 {
+  read_wide_samples = 0;
+  input_wide_samples = f->desc->length / f->desc->signal.channels;
   if (show_progress && (st_output_verbosity_level < 3 ||
-                        (combine_method <= SOX_CONCAT && input_count > 1)))
+                        (combine_method <= SOX_concatenate && input_count > 1)))
     display_file_info(f, st_false);
   if (f->volume == HUGE_VAL)
     f->volume = 1;
   if (f->replay_gain != HUGE_VAL)
-    f->volume *= pow(10, f->replay_gain / 20);
+    f->volume *= pow(10.0, f->replay_gain / 20);
+  f->desc->st_errno = errno = 0;
 }
 
 static void sigint(int s)
@@ -745,12 +796,39 @@ static void sigint(int s)
   time_t secs;
   gettimeofday(&now, NULL);
   secs = now.tv_sec - then.tv_sec;
-  if (show_progress && s == SIGINT && combine_method <= SOX_CONCAT &&
+  if (show_progress && s == SIGINT && combine_method <= SOX_concatenate &&
       (secs > 1 || 1000000 * secs + now.tv_usec - then.tv_usec > 999999))
     user_skip = st_true;
   else
     user_abort = st_true;
   then = now;
+}
+
+static st_bool can_segue(st_size_t i)
+{
+  return
+    files[i]->desc->signal.channels == files[i - 1]->desc->signal.channels &&
+    files[i]->desc->signal.rate     == files[i - 1]->desc->signal.rate;
+}
+
+static st_size_t st_read_wide(ft_t desc, st_sample_t * buf)
+{
+  st_size_t len = ST_BUFSIZ / combiner.channels;
+  len = st_read(desc, buf, len * desc->signal.channels) / desc->signal.channels;
+  if (!len && desc->st_errno)
+    st_fail("%s: %s (%s)", desc->filename, desc->st_errstr, strerror(desc->st_errno));
+  return len;
+}
+
+static void balance_input(st_sample_t * buf, st_size_t ws, file_t f)
+{
+  st_size_t s = ws * f->desc->signal.channels;
+
+  if (f->volume != 1)
+    while (s--) {
+      double d = f->volume * *buf;
+      *buf++ = ST_ROUND_CLIP_COUNT(d, f->volume_clips);
+    }
 }
 
 /*
@@ -760,11 +838,14 @@ static void sigint(int s)
 static void process(void) {
   int e, flowstatus = 0;
   st_size_t ws, s, i;
-  st_ssize_t ilen[MAX_INPUT_FILES];
+  st_size_t ilen[MAX_INPUT_FILES];
   st_sample_t *ibuf[MAX_INPUT_FILES];
 
   combiner = files[current_input]->desc->signal;
-  if (combine_method != SOX_SEQUENCE) {
+  if (combine_method == SOX_sequence) {
+    if (!current_input) for (i = 0; i < input_count; i++)
+      report_file_info(files[i]);
+  } else {
     st_size_t total_channels = 0;
     st_size_t min_channels = ST_SIZE_MAX;
     st_size_t max_channels = 0;
@@ -780,19 +861,19 @@ static void process(void) {
       max_rate = max(max_rate, files[i]->desc->signal.rate);
     }
     if (min_rate != max_rate)
-      st_fail("Input files do not have the same sample-rate");
+      st_fail("Input files must have the same sample-rate");
     if (min_channels != max_channels) {
-      if (combine_method == SOX_CONCAT) {
-        st_fail("Input files do not have the same # channels");
+      if (combine_method == SOX_concatenate) {
+        st_fail("Input files must have the same # channels");
         exit(1);
-      } else if (combine_method == SOX_MIX)
-        st_warn("Input files do not have the same # channels");
+      } else if (combine_method == SOX_mix)
+        st_warn("Input files don't have the same # channels");
     }
     if (min_rate != max_rate)
       exit(1);
 
     combiner.channels = 
-      combine_method == SOX_MERGE? total_channels : max_channels;
+      combine_method == SOX_merge? total_channels : max_channels;
   }
 
   ofile->signal = ofile_signal;
@@ -867,26 +948,17 @@ static void process(void) {
       efftabR[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
   }
 
-  if (combine_method <= SOX_CONCAT) {
-    input_wide_samples = files[current_input]->desc->length / files[current_input]->desc->signal.channels;
+  if (combine_method <= SOX_concatenate)
     progress_to_file(files[current_input]);
-  } else {
+  else {
+    ws = 0;
     for (i = 0; i < input_count; i++) {
-      /* Treat overall length the same as longest input file. */
-      size_t wide_samples = files[i]->desc->length / files[i]->desc->signal.channels;
-      if (wide_samples > input_wide_samples)
-        input_wide_samples = wide_samples;
       ibuf[i] = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
       progress_to_file(files[i]);
+      ws = max(ws, input_wide_samples);
     }
+    input_wide_samples = ws; /* Output length is that of longest input file. */
   }
-
-  /*
-   * Just like errno, we must set st_errno to known values before
-   * calling I/O operations.
-   */
-  for (i = 0; i < file_count; i++)
-    files[i]->desc->st_errno = 0;
 
   input_eff = 0;
   input_eff_eof = 0;
@@ -895,92 +967,56 @@ static void process(void) {
   for(e = 1; e < neffects; e++)
     efftab[e].odone = efftab[e].olen = 0;
 
-  /* Run input data through effects and get more until olen == 0
-   * (or ST_EOF) or user-abort.
-   */
   signal(SIGINT, sigint);
   signal(SIGTERM, sigint);
+  /* Run input data through effects until EOF (olen == 0) or user-abort. */
   do {
-    if (combine_method <= SOX_CONCAT) {
+    efftab[0].olen = 0;
+    if (combine_method <= SOX_concatenate) {
       if (user_skip) {
-        ilen[0] = ST_EOF;
         user_skip = st_false;
         fprintf(stderr, "\nSkipped.");
-      } else {
-        ilen[0] = st_read(files[current_input]->desc, efftab[0].obuf,
-                          (st_ssize_t)ST_BUFSIZ);
-        if (ilen[0] > ST_BUFSIZ) {
-          st_warn("WARNING: Corrupt value of %d!  Assuming 0 bytes read.", ilen);
-          ilen[0] = 0;
-        }
-
-        if (ilen[0] == ST_EOF) {
-          efftab[0].olen = 0;
-          if (files[current_input]->desc->st_errno)
-            fprintf(stderr, files[current_input]->desc->st_errstr);
-        } else
-          efftab[0].olen = ilen[0];
-
-        read_wide_samples += efftab[0].olen / combiner.channels;
-      }
-      /* Some file handlers claim 0 bytes instead of returning
-       * ST_EOF.  In either case, attempt to go to the next
-       * input file.
-       */
-      if (ilen[0] == ST_EOF || efftab[0].olen == 0) {
+      } else efftab[0].olen =
+        st_read_wide(files[current_input]->desc, efftab[0].obuf);
+      if (efftab[0].olen == 0) {   /* If EOF, go to the next input file. */
         if (++current_input < input_count) {
-          input_wide_samples = files[current_input]->desc->length / files[current_input]->desc->signal.channels;
-          read_wide_samples = 0;
-          if (combine_method == SOX_CONCAT ||
-              (files[current_input]->desc->signal.channels == files[current_input - 1]->desc->signal.channels &&
-               files[current_input]->desc->signal.rate     == files[current_input - 1]->desc->signal.rate    )) {
-            progress_to_file(files[current_input]);
-            continue;
-          }
-          else break;
+          if (combine_method == SOX_sequence && !can_segue(current_input))
+            break;
+          progress_to_file(files[current_input]);
+          continue;
         }
       }
       balance_input(efftab[0].obuf, efftab[0].olen, files[current_input]);
     } else {
       st_sample_t * p = efftab[0].obuf;
-      efftab[0].olen = 0;
       for (i = 0; i < input_count; ++i) {
-        ilen[i] = st_read(files[i]->desc, ibuf[i], ST_BUFSIZ / combiner.channels * files[i]->desc->signal.channels);
-        if (ilen[i] == ST_EOF) {
-          ilen[i] = 0;
-          if (files[i]->desc->st_errno)
-            fprintf(stderr, files[i]->desc->st_errstr);
-        }
+        ilen[i] = st_read_wide(files[i]->desc, ibuf[i]);
         balance_input(ibuf[i], ilen[i], files[i]);
-        ilen[i] /= files[i]->desc->signal.channels;
-        if ((st_size_t)ilen[i] > efftab[0].olen)
-          efftab[0].olen = ilen[i];
+        efftab[0].olen = max(efftab[0].olen, ilen[i]);
       }
       for (ws = 0; ws < efftab[0].olen; ++ws) /* wide samples */
-        if (combine_method == SOX_MIX) {          /* sum samples together */
-          for (s = 0; s < combiner.channels; ++s) {
+        if (combine_method == SOX_mix) {          /* sum samples together */
+          for (s = 0; s < combiner.channels; ++s, ++p) {
             *p = 0;
             for (i = 0; i < input_count; ++i)
-              if (ws < (st_size_t)ilen[i] && s < files[i]->desc->signal.channels) {
+              if (ws < ilen[i] && s < files[i]->desc->signal.channels) {
                 /* Cast to double prevents integer overflow */
                 double sample = *p + (double)ibuf[i][ws * files[i]->desc->signal.channels + s];
                 *p = ST_ROUND_CLIP_COUNT(sample, mixing_clips);
             }
-            ++p;
           }
-        } else { /* SOX_MERGE: like a multi-track recorder */
+        } else { /* SOX_merge: like a multi-track recorder */
           for (i = 0; i < input_count; ++i)
             for (s = 0; s < files[i]->desc->signal.channels; ++s)
-              *p++ = (ws < (st_size_t)ilen[i]) * ibuf[i][ws * files[i]->desc->signal.channels + s];
+              *p++ = (ws < ilen[i]) * ibuf[i][ws * files[i]->desc->signal.channels + s];
       }
-      read_wide_samples += efftab[0].olen;
-      efftab[0].olen *= combiner.channels;
     }
-
-    efftab[0].odone = 0;
-
     if (efftab[0].olen == 0)
       break;
+
+    efftab[0].odone = 0;
+    read_wide_samples += efftab[0].olen;
+    efftab[0].olen *= combiner.channels;
 
     flowstatus = flow_effect_out();
 
@@ -1004,7 +1040,7 @@ static void process(void) {
   if (show_progress)
     fputs("\n\n", stderr);
 
-  if (combine_method > SOX_CONCAT)
+  if (combine_method > SOX_concatenate)
     /* Free input buffers now that they are not used */
     for (i = 0; i < input_count; i++)
       free(ibuf[i]);
@@ -1070,8 +1106,9 @@ static void add_effect(int * effects_mask)
   /* If this effect can't handle multiple channels then account for this. */
   if (e->ininfo.channels > 1 && !(e->h->flags & ST_EFF_MCHAN))
     memcpy(&efftabR[neffects], e, sizeof(*e));
+  else memset(&efftabR[neffects], 0, sizeof(*e));
 
-  st_report("Effects chain:%10s %-6s %uHz", e->name,
+  st_report("Effects chain: %-10s %-6s %uHz", e->name,
       e->ininfo.channels < 2? "mono" :
       (e->h->flags & ST_EFF_MCHAN)? "multi" : "stereo", e->ininfo.rate);
 
@@ -1522,20 +1559,12 @@ static void stop_effects(void)
 
 static void update_status(void)
 {
-  int read_min, left_min, in_min;
-  double read_sec, left_sec, in_sec;
   double read_time, left_time, in_time;
   float completed;
   double out_size;
   char unit;
 
-  /* Currently, for all sox modes, all input files must have
-   * the same sample rate.  So we can always just use the rate
-   * of the first input file to compute time. */
   read_time = (double)read_wide_samples / combiner.rate;
-
-  read_min = read_time / 60;
-  read_sec = (double)read_time - 60.0f * (double)read_min;
 
   out_size = output_samples / 1000000000.0;
   if (out_size >= 1.0)
@@ -1568,22 +1597,9 @@ static void update_status(void)
     completed = 0;
   }
 
-  left_min = left_time / 60;
-  left_sec = (double)left_time - 60.0f * (double)left_min;
-
-  in_min = in_time / 60;
-  in_sec = (double)in_time - 60.0f * (double)in_min;
-
-  fprintf(stderr, "\rTime: %02i:%05.2f [%02i:%05.2f] of %02i:%05.2f (% 5.1f%%) Output Buffer:% 7.2f%c", read_min, read_sec, left_min, left_sec, in_min, in_sec, completed, out_size, unit);
-}
-
-static void balance_input(st_sample_t * buf, st_ssize_t len, file_t f)
-{
-  if (f->volume != 1)
-    while (len--) {
-      double d = f->volume * *buf;
-      *buf++ = ST_ROUND_CLIP_COUNT(d, f->volume_clips);
-    }
+  fprintf(stderr, "\rTime: %s [%s] of %s (% 5.1f%%) Output Buffer:% 7.2f%c",
+      str_time(read_time), str_time(left_time), str_time(in_time),
+      completed, out_size, unit);
 }
 
 static int strcmp_p(const void *p1, const void *p2)
@@ -1608,11 +1624,13 @@ static void usage(char const *message)
          "-n              use the null file handler; for use with e.g. synth & stat\n"
          "\n"
          "GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):\n"
+         "--combine concatenate  concatenate multiple input files (default for sox, rec)\n"
+         "--combine sequence  sequence multiple input files (default for play)\n"
          "-h, --help      display version number and usage information\n"
          "--help-effect name  display usage of specified effect; use 'all' to display all\n"
          "--interactive   prompt to overwrite output file\n"
-         "-m, --mix       mix multiple input files (instead of concatenating)\n"
-         "-M, --merge     merge multiple input files (instead of concatenating)\n"
+         "-m, --combine mix  mix multiple input files (instead of concatenating)\n"
+         "-M, --combine merge  merge multiple input files (instead of concatenating)\n"
          "--octave        generate Octave commands to plot response of filter effect\n"
          "-q, --no-show-progress  run in quiet mode; opposite of -S\n"
          "--replay-gain track|album|off  default: off (sox, rec), track (play)\n"
