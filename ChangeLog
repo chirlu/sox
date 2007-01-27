@@ -56,6 +56,8 @@ sox-12.18.3
     the same data encoding & size.  (robs)
   o Added ability to merge e.g. 2 mono files to 1 stereo file
     [FR# 1297076].  (robs)
+  o Added ability for noiseprof to use stdout and noisered to use stdin
+    [FR# 1621694].  (Reuben Thomas)
 
   Other new features:
 
