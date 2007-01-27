@@ -92,4 +92,5 @@ Contributors:
 		support, filters makeover inc. octave plots, new flanger,
                 file merging, speed via resampling, pad effect,
                 various small fixes, enhancements and clean-ups,
-		much manual improvement and expansion.
+		much manual improvement and expansion, play multiple
+                files with mixed format types.

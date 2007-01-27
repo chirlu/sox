@@ -52,10 +52,6 @@ sox-12.18.3
   o Higher quality audio speed adjustment; also fixes [1155364].  (robs)
   o Replacement flanger effect; also fixes [1393245].  (robs)
   o Added silence padding effect.  (robs)
-  o Removed the restriction whereby multiple input files had to have
-    the same data encoding & size.  (robs)
-  o Added ability to merge e.g. 2 mono files to 1 stereo file
-    [FR# 1297076].  (robs)
   o Added ability for noiseprof to use stdout and noisered to use stdin
     [FR# 1621694].  (Reuben Thomas)
 
@@ -66,14 +62,21 @@ sox-12.18.3
     resample, and rate has been removed.
   o -V now gives only user-relevant messages, use -V -V to get
     developer-relevant messages.  (robs)
+  o -V output much improved and expanded; now includes display of
+    (auto-)selected effects.  (robs)
   o sox man-page overhaul, new soxexam man-page entries.  (robs)
   o Added command line options for specifying the output file
     comment.  (robs)
+  o Added ability to merge e.g. 2 mono files to 1 stereo file
+    [FR# 1297076].  (robs)
+  o Removed the restrictions whereby multiple input files had to have
+    the same data encoding & size, and in most situations where they
+    had to have the same # of channels, and for play where they had
+    to have the same sampling-rate.  (robs)
   o Options to apply replay-gain on input; enabled by default
     with `play'.  (robs)
   o Can now use Ctrl-C to skip to next track when playing multiple
     files (e.g. play *.mp3); Ctrl-C twice to exit.  (robs)
-  o Display (auto-)selected effects with -V.  (robs)
   o Added --interactive option to prompt to overwrite pre-existing
     output file.  (robs)
   o Added large file support.  (Reuben Thomas)
