@@ -28,8 +28,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <sys/time.h>
 #include <time.h>
-#include <sys/timeb.h>
 #include <errno.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>             /* for unlink() */
@@ -740,15 +740,16 @@ static void progress_to_file(file_t f)
 
 static void sigint(int s)
 {
-  static struct timeb then;
-  struct timeb now;
+  static struct timeval then;
+  struct timeval now;
   time_t secs;
-  ftime(&now);
-  secs = now.time - then.time;
+  gettimeofday(&now, NULL);
+  secs = now.tv_sec - then.tv_sec;
   if (show_progress && s == SIGINT && combine_method <= SOX_CONCAT &&
-      (secs > 1 || 1000 * secs + now.millitm - then.millitm > 999))
+      (secs > 1 || 1000000 * secs + now.tv_usec - then.tv_usec > 999999))
     user_skip = st_true;
-  else user_abort = st_true;
+  else
+    user_abort = st_true;
   then = now;
 }
 

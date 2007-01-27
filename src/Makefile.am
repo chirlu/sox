@@ -33,6 +33,8 @@ libst_la_LIBADD = @LIBGSM_LIBADD@
 sox_SOURCES = sox.c
 sox_LDADD = libst.la
 
+EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat
+
 all: sox$(EXEEXT) play rec
 
 libgsm/libgsm.la:
