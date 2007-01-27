@@ -35,36 +35,77 @@ SoX\*mSound eXchange\*mThe Swiss Army knife of audio manipulation
 .fi
 .SH DESCRIPTION
 SoX reads and writes audio files in most popular formats and can
-optionally apply effects to them; it includes a basic audio synthesiser,
-and, on many systems, can play and record audio files.
+optionally apply effects to them; it can combine multiple input
+sources, synthesise audio, and, on many systems, act as a general
+purpose audio player or a multi-track audio recorder.
 .SP
-SoX can also combine multiple input files to form one output file using
-one of three methods: `concatenate', `mix', or `merge'.
+The entire SoX functionality is available using just the `sox' command,
+however, to simplify playing and recording audio, if SoX is invoked as
+`play', the output file is automatically set to be the default sound
+device and if invoked as `rec', the default sound device is used as an
+input source.
 .SP
-If invoked as `play', the output file is the default sound device. If
-invoked as `rec', the input device is the default sound device.
-.SP
-Usually SoX will complete its processing and exit automatically, however
-if desired, SoX's processing can be terminated early by pressing the
-keyboard interrupt key (usually Ctrl-C).  This is a natural requirement
-in some circumstances, e.g. when using SoX to make a recording.  Note
-that when using SoX to play multiple files, Ctrl-C behaves slightly
-differently: pressing it once causes SoX to skip to the next file;
-pressing it twice in quick succession causes SoX to exit.
+The heart of SoX is a library called `Sound Tools'.  Those interested in
+extending SoX or using it in other programs should refer to the Sound
+Tools manual page:
+.BR libst (3).
 .SP
 The overall SoX processing chain can be summarised as follows:
 .SP
 .ce
 Input(s) \*(RA Balancing \*(RA Combiner \*(RA Effects \*(RA Output
 .SP
-To get the most from SoX, it pays to be aware of some of the intricacies
-of audio file formats and of audio processing; so it best to read this
-manual through before using SoX for the first time; however, readers who
-are eager to see SoX in action right-away might want to start at the
-.B Examples
-section. Those interested in extending SoX or using it in other
-programs should read
-.BR libst (3).
+To show how this works in practise, here are some examples of how
+SoX might be used.  The simple:
+.SP
+	sox recital.au recital.wav
+.SP
+translates an audio file in Sun AU format to a Microsoft WAV file, whilst:
+.SP
+	sox recital.au \-r 12000 \-b \-c 1 recital.wav vol 0\*d7 dither
+.SP
+performs the same format translation, but also changes the audio
+sampling rate & sample size, down-mixes to mono, and applies
+the \fBvol\fR and \fBdither\fR effects.
+.SP
+	sox \-r 8000 \-u \-b \-c 1 voice-memo.raw voice-memo.wav
+.SP
+adds a header to a raw audio file,
+.SP
+	sox slow.aiff fixed.aiff speed 1\*d027 rabbit -c0
+.SP
+adjusts audio speed using the most accurate
+.B rabbit
+algorithm,
+.SP
+	sox short.au long.au longer.au
+.SP
+concatenates two audio files, and
+.SP
+	sox \-m music.mp3 voice.wav mixed.flac
+.SP
+mixes together two audio files.
+.SP
+	play \(dqThe Moonbeams/Greatest/*.ogg\(dq bass +3
+.SP
+plays a collection of audio files whilst applying a bass boosting effect,
+.SP
+	play \-c 4 \-n \-c 1 synth sin %\-12 sin %\-9 sin %\-5 sin %\-2 vol 0\*d7 mixer fade q 0\*d1 1 0\*d1
+.SP
+plays a synthesised `A minor seventh' chord with a pipe-organ sound,
+.SP
+	rec \-c 2 test.aiff trim 0 10
+.SP
+records 10 seconds of stereo audio, and
+.SP
+	rec -M take1.aiff take1-dub.aiff
+.SP
+records a new track in a multi-track recording.
+.SP
+Further examples are included throughout this manual;
+more-detailed examples can be found in the separate
+.BR soxexam (7)
+manual.
 .SS File Formats
 There are two types of audio file format that SoX can work with.  The
 first is `self-describing'; these formats include a header that
@@ -108,6 +149,15 @@ format and may incorporate elements of all of the above.
 Most self-describing formats also allow textual `comments' to be
 embedded in the file that can be used to describe the audio in some way,
 e.g. for music, the title, the author, etc.
+.SP
+One important use of audio file comments is to convey `Replay Gain'
+information.  SoX supports applying Replay Gain information, but not
+generating it.  Note that by default, SoX copies input file comments
+to output files that support comments, so output files may contain
+Replay Gain information if some was present in the input file.  In this
+case, if anything other than a simple format conversion was performed
+then the output file Replay Gain information is likely to be incorrect
+and so should be recalculated using a tool that supports this (not SoX).
 .SS Determining & Setting The File Format
 There are several mechanisms available for SoX to use to determine or set the
 format characteristics of an audio file.  Depending on the circumstances,
@@ -217,12 +267,32 @@ guarantees that the treble boost will not clip.
 If clipping occurs at any point during processing, then
 SoX will display a warning message to that effect.
 .SS Input File Combining 
-In order for SoX to combine multiple input files, they must all have the
-same sample-rate.
-The default combining method is concatenate; here the input files must
-also have the same number of channels.  For
+SoX's input combiner can combine multiple files using one of four
+different methods: `concatenate', `sequence', `mix', or `merge'.  The
+default method is `sequence' for
 .BR play ,
-to concatenate multiple audio files means to play them in sequence.
+and `concatenate' for
+.B rec
+and
+.BR sox .
+.SP
+For all methods other than `sequence', multiple input files must have
+the same sampling rate; if necessary, separate SoX invocations can be
+used to make sampling rate adjustments prior to combining.
+.SP
+If the `concatenate' combining method is selected (usually, this will be
+by default) then the input files must also have the same number of
+channels.  The audio from each input will be concatenated in the order
+given to form the output file.
+.SP
+The `sequence' combining method is selected automatically for
+.BR play .
+It is similar to `concatenate' in that the audio from each input file is
+sent serially to the output file, however here the output file may be
+closed and reopened at the corresponding transition between input
+files\*mthis may be just what is needed when sending audio to an output
+device, but is not generally useful when the output file is a normal
+file.
 .SP
 If the `mix' combining method is selected (with \fB-m\fR) then two or
 more input files must be given and will be mixed together to form the
@@ -255,8 +325,8 @@ file volume adjustments can be made manually using the
 .B \-v
 option (below) which can be given for one or more input files; if it is
 given for only some of the input files then the others receive no volume
-adjustment.  See the next section for a description of the automatic volume
-adjustments that can apply when mixing input files.
+adjustment.  In some circumstances, automatic volume
+adjustments may be applied (see below).
 .SP
 The \fB\-V\fR option (below) can be used to show the input file volume
 adjustments that have been selected (either manually or automatically).
@@ -264,9 +334,9 @@ adjustments that have been selected (either manually or automatically).
 There are some special considerations that need to made when mixing
 input files:
 .SP
-Unlike `concatenate' and `merge', the `mix' combining method has the
+Unlike the other methods, `mix' combining has the
 potential to cause clipping in the combiner if no balancing is
-performed.  So for `mix', if manual volume adjustments are not given, to
+performed.  So here, if manual volume adjustments are not given, to
 ensure that clipping does not occur, SoX will automatically adjust the
 volume (amplitude) of each input signal by a factor of \(S1/\s-2n\s+2,
 where n is the number of input files.  If this results in audio that is
@@ -278,64 +348,14 @@ too quiet in others, then dynamic-range compression should be applied to
 correct this\*msee the
 .B compand
 effect.
-.SS Examples
-The simple command:
-.SP
-	sox recital.au recital.wav
-.SP
-translates an audio file in Sun .au format
-to a Microsoft WAV file, whilst:
-.SP
-	sox recital.au \-r 12000 \-b \-c 1 recital.wav vol 0\*d7 dither
-.SP
-performs the same format translation, but also
-changes the sampling rate to 12000\ Hz,
-the sample size to one byte (8 bits),
-the number of channels to one (mono),
-and applies the \fBvol\fR and \fBdither\fR effects
-to the audio.
-.SP
-Furthermore:
-.SP
-	sox \-r 8000 \-u \-b \-c 1 voice-memo.raw voice-memo.wav
-.SP
-adds a header to a raw audio file,
-.SP
-	sox slow.aiff fixed.aiff speed 1\*d027 rabbit -c0
-.SP
-adjusts audio speed using the most accurate
-.B rabbit
-algorithm,
-.SP
-	sox short.au long.au longer.au
-.SP
-concatenates two audio files, and
-.SP
-	sox \-m music.mp3 voice.wav mixed.flac
-.SP
-mixes together two audio files.
-.SP
-	play \(dq01 \- The Power Of Love.ogg\(dq bass +3
-.SP
-plays an audio file (through the default sound device) whilst applying a
-bass boosting effect,
-.SP
-	play \-c 4 \-n \-c 1 synth sin %\-12 sin %\-9 sin %\-5 sin %\-2 vol 0\*d7 mixer fade q 0\*d1 1 0\*d1
-.SP
-plays a synthesised `A minor seventh' chord with a pipe-organ sound,
-.SP
-	rec test.aiff trim 0 10
-.SP
-records 10 seconds of audio using default parameters, and
-.SP
-	rec \-c 2 take1.aiff
-.SP
-begins a stereo recording that will end when Ctrl-C is pressed.
-.SP
-Other examples can found throughout this manual and in the
-separate
-.BR soxexam (7)
-manual.
+.SS Stopping SoX
+Usually SoX will complete its processing and exit automatically, however
+if desired, it can be terminated by pressing the
+keyboard interrupt key (usually Ctrl-C).  This is a natural requirement
+in some circumstances, e.g. when using SoX to make a recording.  Note
+that when using SoX to play multiple files, Ctrl-C behaves slightly
+differently: pressing it once causes SoX to skip to the next file;
+pressing it twice in quick succession causes SoX to exit.
 .SH FILENAMES
 The following `special' filenames may be used in certain circumstances
 in place of a normal filename on the command line:
@@ -407,16 +427,30 @@ Show usage information on the specified effect.  The name
 \fB\-\-interactive\fR
 Prompt before overwriting an existing file with the same name as that
 given for the output file.
-.TP
-\fB\-m\fR, \fB\-\-mix\fR
-Set the input file combining method to `mix'.
 .SP
-See also \fBInput File Combining\fR above.
-.TP
-\fB\-M\fR, \fB\-\-merge\fR
-Set the input file combining method to `merge'.
+.B N.B.
+Unintentionally overwriting a file is easier than you might think, for
+example, if you accidentally enter
 .SP
-See also \fBInput File Combining\fR above.
+	sox file1 file2 effect1 effect2 ...
+.SP
+when what you really meant was
+.SP
+	play file1 file2 effect1 effect2 ...
+.SP
+then, without this option, file2 will be overwritten.  Hence, using this
+option is strongly recommended; a `shell' alias, script, or batch file
+may be an appropriate way of permanently enabling it.
+.TP
+\fB\-m\fR\^|\^\fB\-M\fR\^|\^\fB\-\-combine=concatenate\fR\^|\^\fBmerge\fR\^|\^\fBmix\fR\^|\^\fBsequence\fR
+Select the input file combining method;
+.B \-m
+selects `mix',
+.B \-M
+selects `merge',
+.SP
+See \fBInput File Combining\fR above for a description of the different
+combining methods.
 .TP
 \fB\-\-octave\fR
 Run in a mode that can be used, in conjunction with the GNU
@@ -454,7 +488,8 @@ otherwise.
 .TP
 \fB\-S\fR, \fB\-\-show\-progress\fR
 Display input file format/header information and input file(s)
-processing progress in terms of elapsed/remaining time and percentage.
+processing progress in terms of elapsed/remaining time and percentage
+complete.
 This option is enabled by default when using
 SoX to play or record audio.
 .TP
@@ -480,7 +515,7 @@ or if clipping occurs.
 .IP 3
 Descriptions of
 SoX's processing phases are also printed.
-Useful for figuring out exactly how
+Useful for seeing exactly how
 SoX is mangling your audio.
 .IP "4 and above"
 Messages to help with debugging
@@ -827,16 +862,6 @@ compression level and gives the best (but slowest) compression;
 level can be selected using the
 .B \-C
 option (see above) with a whole number from 0 to 8.
-.SP
-Note that Replay Gain information is not used by
-SoX if present in FLAC input files and is not generated by
-SoX for FLAC output files, however
-SoX will copy input file `comments' (which can be used to hold Replay Gain
-information) to output files that support comments, so FLAC output files
-may contain Replay Gain information if some was present in the input
-file.  In this case the Replay Gain information in the output file is
-likely to be incorrect and so should be recalculated using a tool that
-supports this (not SoX).
 .SP
 FLAC support in
 SoX is optional and requires optional FLAC libraries.  To
