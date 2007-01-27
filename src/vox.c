@@ -46,7 +46,7 @@ typedef struct voxstuff
 
 
 /******************************************************************************
- * Function   : st_voxstart
+ * Function   : voxstart
  * Description: Initialises the file parameters and ADPCM codec state.
  * Parameters : ft  - file info structure
  * Returns    : int - ST_SUCCESS
