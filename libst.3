@@ -13,6 +13,7 @@
 .SH NAME
 libst \- Sound Tools : sound sample file and effects libraries.
 .SH SYNOPSIS
+.nf
 .B #include <st.h>
 .P
 .B ft_t st_open_input(const char *\fIpath\fB, const st_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB);
@@ -28,6 +29,7 @@ libst \- Sound Tools : sound sample file and effects libraries.
 .B int st_seek(ft_t \fIft\fB, st_size_t \fIoffset\fB, int \fIwhence\fB);
 .P
 .B cc \fIfile.c\fB -o \fIfile \fBlibst.a
+.fi
 .SH DESCRIPTION
 .I Sound\ Tools
 is a library of sound sample file format readers/writers and sound
