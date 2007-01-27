@@ -73,7 +73,7 @@ static int st_noisered_start(eff_t effp)
     int fchannels = 0;
     int channels = effp->ininfo.channels;
     int i;
-    FILE* ifd;
+    FILE* ifp;
 
     data->chandata = (chandata_t*)xcalloc(channels, sizeof(*(data->chandata)));
     data->bufdata = 0;
@@ -84,8 +84,11 @@ static int st_noisered_start(eff_t effp)
     }
 
     /* Here we actually open the input file. */
-    ifd = fopen(data->profile_filename, "r");
-    if (ifd == NULL) {
+    if (strcmp(data->profile_filename, "-") == 0)
+      ifp = stdin;
+    else
+      ifp = fopen(data->profile_filename, "r");
+    if (ifp == NULL) {
         st_fail("Couldn't open profile file %s: %s",
                 data->profile_filename, strerror(errno));            
         return ST_EOF;
@@ -94,7 +97,7 @@ static int st_noisered_start(eff_t effp)
     while (1) {
         int i1;
         float f1;
-        if (2 != fscanf(ifd, " Channel %d: %f", &i1, &f1))
+        if (2 != fscanf(ifp, " Channel %d: %f", &i1, &f1))
             break;
         if (i1 != fchannels) {
             st_fail("noisered: Got channel %d, expected channel %d.",
@@ -104,7 +107,7 @@ static int st_noisered_start(eff_t effp)
 
         data->chandata[fchannels].noisegate[0] = f1;
         for (i = 1; i < FREQCOUNT; i ++) {
-            if (1 != fscanf(ifd, ", %f", &f1)) {
+            if (1 != fscanf(ifp, ", %f", &f1)) {
                 st_fail("noisered: Not enough datums for channel %d "
                         "(expected %d, got %d)", fchannels, FREQCOUNT, i);
                 return ST_EOF;
@@ -118,7 +121,8 @@ static int st_noisered_start(eff_t effp)
                 channels, fchannels);
         return ST_EOF;
     }
-    fclose(ifd);
+    if (strcmp(data->profile_filename, "-") != 0)
+      fclose(ifp);
 
     return (ST_SUCCESS);
 }

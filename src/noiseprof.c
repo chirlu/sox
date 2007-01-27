@@ -64,7 +64,10 @@ static int st_noiseprof_start(eff_t effp)
     int i;
    
     if (data->output_filename != NULL) {
-        data->output_file = fopen(data->output_filename, "w");
+        if (strcmp(data->output_filename, "-") != 0)
+          data->output_file = fopen(data->output_filename, "w");
+        else
+          data->output_file = stdout;
         if (data->output_file == NULL) {
             st_fail("Couldn't open output file %s: %s",
                     data->output_filename, strerror(errno));            
@@ -200,9 +203,8 @@ static int st_noiseprof_stop(eff_t effp)
 
     free(data->chandata);
 
-    if (data->output_file != stderr && data->output_file != stdout) {
+    if (data->output_file != stderr && data->output_file != stdout)
         fclose(data->output_file);
-    }       
     
     return (ST_SUCCESS);
 }
