@@ -155,6 +155,9 @@ static int st_stretch_start(eff_t effp)
   stretch_t stretch = (stretch_t)effp->priv;
   st_size_t i;
 
+  if (stretch->factor == 1)
+    return ST_EFF_NULL;
+
   /* FIXME: not necessary. taken care by effect processing? */
   if (effp->outinfo.channels != effp->ininfo.channels) {
     st_fail("stretch cannot handle different channels (in=%d, out=%d)"

@@ -187,6 +187,9 @@ static int st_fade_start(eff_t effp)
 
     st_debug("fade: in_start = %d in_stop = %d out_start = %d out_stop = %d", fade->in_start, fade->in_stop, fade->out_start, fade->out_stop);
 
+    if (fade->in_start == fade->in_stop && fade->out_start == fade->out_stop)
+      return ST_EFF_NULL;
+
     return ST_SUCCESS;
 }
 

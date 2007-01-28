@@ -72,10 +72,14 @@ static int create(eff_t effp, int n, char * * argv)
 static int start(eff_t effp)
 {
   pad_t p = (pad_t) effp->priv;
+  int i;
 
   parse(effp, 0, effp->ininfo.rate); /* Re-parse now rate is known */
   p->in_pos = p->pad_pos = p->pads_pos = 0;
-  return ST_SUCCESS;
+  for (i = 0; i < p->npads; ++i)
+    if (p->pads[i].pad)
+      return ST_SUCCESS;
+  return ST_EFF_NULL;
 }
 
 static int flow(eff_t effp, const st_sample_t * ibuf, st_sample_t * obuf,

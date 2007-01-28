@@ -65,6 +65,7 @@ static int st_swap_getopts(eff_t effp, int n, char **argv)
 static int st_swap_start(eff_t effp)
 {
     swap_t swap = (swap_t) effp->priv;
+    int i;
 
     if (effp->outinfo.channels == 1)
     {
@@ -121,7 +122,11 @@ static int st_swap_start(eff_t effp)
 
     }
 
-    return ST_SUCCESS;
+    for (i = 0; i < (int)effp->outinfo.channels; ++i)
+      if (swap->order[i] != i)
+        return ST_SUCCESS;
+
+    return ST_EFF_NULL;
 }
 
 /*

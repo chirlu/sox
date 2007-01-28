@@ -93,6 +93,9 @@ static int st_vol_start(eff_t effp)
 {
     vol_t vol = (vol_t) effp->priv;
     
+    if (vol->gain == 1)
+      return ST_EFF_NULL;
+
     if (effp->outinfo.channels != effp->ininfo.channels) {
         st_fail("vol cannot handle different channels (in %d, out %d)"
              " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);

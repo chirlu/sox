@@ -342,6 +342,7 @@ extern const char * const st_encodings_str[];
 #define ST_EFF_MCHAN    4           /* Effect can handle multi-channel */
 #define ST_EFF_REPORT   8           /* Effect does not affect the audio */
 #define ST_EFF_DEPRECATED 16        /* Effect is living on borrowed time */
+#define ST_EFF_NULL     32          /* Effect does nothing */
 
 /*
  * Handler structure for each effect.

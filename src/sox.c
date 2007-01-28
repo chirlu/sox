@@ -1108,10 +1108,6 @@ static void add_effect(int * effects_mask)
     memcpy(&efftabR[neffects], e, sizeof(*e));
   else memset(&efftabR[neffects], 0, sizeof(*e));
 
-  st_report("Effects chain: %-10s %-6s %uHz", e->name,
-      e->ininfo.channels < 2? "mono" :
-      (e->h->flags & ST_EFF_MCHAN)? "multi" : "stereo", e->ininfo.rate);
-
   ++neffects;
 }
 
@@ -1198,21 +1194,48 @@ static void build_effects_table(void)
 
 static int start_all_effects(void)
 {
-  int e, ret = ST_SUCCESS;
+  int i, j, ret = ST_SUCCESS;
 
-  for (e = 1; e < neffects; e++) {
-    int (*start)(eff_t effp) =
-       efftab[e].h->start? efftab[e].h->start : st_effect_nothing;
-    efftab[e].clips = 0;
-    if ((ret = start(&efftab[e])) == ST_EOF)
-      break;
-    if (efftabR[e].name) {
-      efftabR[e].clips = 0;
-      if ((ret = start(&efftabR[e])) != ST_SUCCESS)
-        break;
+  for (i = 1; i < neffects; i++) {
+    struct st_effect * e = &efftab[i];
+    st_bool is_always_null = (e->h->flags & ST_EFF_NULL) != 0;
+    int (*start)(eff_t effp) = e->h->start? e->h->start : st_effect_nothing;
+
+    if (is_always_null)
+      st_report("'%s' has no effect (is a proxy effect)", e->name);
+    else {
+      e->clips = 0;
+      ret = start(e);
+      if (ret == ST_EFF_NULL)
+        st_warn("'%s' has no effect in this configuration", e->name);
+      else if (ret != ST_SUCCESS)
+        return ST_EOF;
+    }
+    if (is_always_null || ret == ST_EFF_NULL) { /* remove from the chain */
+      int (*delete)(eff_t effp) = e->h->delete? e->h->delete: st_effect_nothing;
+
+      /* No left & right delete as there is no left & right getopts */
+      delete(e);
+      --neffects;
+      for (j = i--; j < neffects; ++j) {
+        efftab[j] = efftab[j + 1];
+        efftabR[j] = efftabR[j + 1];
+      }
+    }
+    /* No null checks here; the left channel looks after this */
+    else if (efftabR[i].name) {
+      efftabR[i].clips = 0;
+      if (start(&efftabR[i]) != ST_SUCCESS)
+        return ST_EOF;
     }
   }
-  return ret;
+  for (i = 1; i < neffects; ++i) {
+    struct st_effect * e = &efftab[i];
+    st_report("Effects chain: %-10s %-6s %uHz", e->name,
+        e->ininfo.channels < 2 ? "mono" :
+        (e->h->flags & ST_EFF_MCHAN)? "multi" : "stereo", e->ininfo.rate);
+  }
+  return ST_SUCCESS;
 }
 
 static int flow_effect_out(void)
@@ -1545,15 +1568,16 @@ static void stop_effects(void)
 
     stop(&efftab[e]);
     clips = efftab[e].clips;
-    delete(&efftab[e]);
 
     if (efftabR[e].name) {
       stop(&efftabR[e]);
       clips += efftab[e].clips;
-      delete(&efftabR[e]);
     }
     if (clips != 0)
-      st_warn("%s clipped %u samples; decrease volume?", efftab[e].name, clips);
+      st_warn("'%s' clipped %u samples; decrease volume?",efftab[e].name,clips);
+
+    /* No left & right delete as there is no left & right getopts */
+    delete(&efftab[e]);
   }
 }
 

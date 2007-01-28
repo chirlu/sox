@@ -227,6 +227,8 @@ static int start(eff_t effp)
       break;
 
     case filter_peakingEQ: /* H(s) = (s^2 + s*(A/Q) + 1) / (s^2 + s/(A*Q) + 1) */
+      if (A == 1)
+        return ST_EFF_NULL;
       p->b0 =   1 + alpha*A;
       p->b1 =  -2*cos(w0);
       p->b2 =   1 - alpha*A;
@@ -236,6 +238,8 @@ static int start(eff_t effp)
       break;
 
     case filter_lowShelf: /* H(s) = A * (s^2 + (sqrt(A)/Q)*s + A)/(A*s^2 + (sqrt(A)/Q)*s + 1) */
+      if (A == 1)
+        return ST_EFF_NULL;
       p->b0 =    A*( (A+1) - (A-1)*cos(w0) + 2*sqrt(A)*alpha );
       p->b1 =  2*A*( (A-1) - (A+1)*cos(w0)                   );
       p->b2 =    A*( (A+1) - (A-1)*cos(w0) - 2*sqrt(A)*alpha );
@@ -245,6 +249,8 @@ static int start(eff_t effp)
       break;
 
     case filter_highShelf: /* H(s) = A * (A*s^2 + (sqrt(A)/Q)*s + 1)/(s^2 + (sqrt(A)/Q)*s + A) */
+      if (!A)
+        return ST_EFF_NULL;
       p->b0 =    A*( (A+1) + (A-1)*cos(w0) + 2*sqrt(A)*alpha );
       p->b1 = -2*A*( (A-1) + (A+1)*cos(w0)                   );
       p->b2 =    A*( (A+1) + (A-1)*cos(w0) - 2*sqrt(A)*alpha );

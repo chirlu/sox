@@ -61,19 +61,10 @@ static int start(eff_t effp)
     return ST_SUCCESS;
   } else if (effp->outinfo.size == ST_SIZE_16BIT)
     return ST_SUCCESS;
-  else if (effp->outinfo.size == ST_SIZE_24BIT) {
-    dither->amount /= 256;
-    return ST_SUCCESS;
-  } else if (effp->outinfo.size == ST_SIZE_64BIT) {
-    dither->amount /= 16384;
-    return ST_SUCCESS;
-  }
 
-  st_fail("Invalid size %d", effp->outinfo.size);
-  return ST_EOF;
+  return ST_EFF_NULL;   /* Dithering not needed at >= 24 bits */
 }
 
-/* FIXME: Scale noise more sensibly for sizes >= 24 bits */
 static int flow(eff_t effp, const st_sample_t * ibuf,
     st_sample_t * obuf, st_size_t * isamp, st_size_t * osamp)
 {

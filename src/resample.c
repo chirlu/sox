@@ -204,6 +204,9 @@ int st_resample_start(eff_t effp)
   double in_rate = floor(effp->ininfo.rate / effp->globalinfo->speed + .5)
     * effp->globalinfo->speed;
 
+  if (in_rate == effp->outinfo.rate)
+    return ST_EFF_NULL;
+          
   r->Factor = (double) effp->outinfo.rate / in_rate;
 
   gcdrate = st_gcd((long) effp->ininfo.rate, (long) effp->outinfo.rate);

@@ -206,10 +206,8 @@ static int start(eff_t effp)
      /* Handle the special-case flags */
      switch (mixer->mix) {
          case MIX_CENTER:
-             if (ichan == ochan) {
-                 st_fail("Output must have different number of channels to use mixer effect");
-                 return(ST_EOF);
-             }
+             if (ichan == ochan)
+               return ST_EFF_NULL;
              break;             /* Code below will handle this case */
          case MIX_LEFT:
              if (ichan == 2 && ochan == 1)
@@ -500,7 +498,19 @@ static int start(eff_t effp)
          return ST_EOF;
      }
 
+#if 0  /* TODO: test the following: */
+     if (effp->ininfo.channels != effp->outinfo.channels)
+       return ST_SUCCESS;
+
+     for (i = 0; i < (int)effp->ininfo.channels; ++i)
+       for (j = 0; j < (int)effp->outinfo.channels; ++j)
+         if (avg->sources[i][j] != (i == j))
+           return ST_SUCCESS;
+
+     return ST_EFF_NULL;
+#else
      return ST_SUCCESS;
+#endif
 }
 
 /*
