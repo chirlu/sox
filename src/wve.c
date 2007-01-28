@@ -27,7 +27,7 @@ static void wvewriteheader(ft_t ft);
 static int st_wveseek(ft_t ft, st_size_t offset)
 {
     int new_offset, channel_block, alignment;
-    wve_t wve = (wve_t ) ft->priv;
+    wve_t wve = (wve_t)ft->priv;
 
     new_offset = offset * ft->signal.size;
     /* Make sure request aligns to a channel block (ie left+right) */
@@ -46,7 +46,7 @@ static int st_wveseek(ft_t ft, st_size_t offset)
 
 static int st_wvestartread(ft_t ft)
 {
-        wve_t p = (wve_t ) ft->priv;
+        wve_t p = (wve_t)ft->priv;
         char magic[16];
         short version;
         int rc;
@@ -118,7 +118,7 @@ static int st_wvestartread(ft_t ft)
 
 static int st_wvestartwrite(ft_t ft)
 {
-        wve_t p = (wve_t ) ft->priv;
+        wve_t p = (wve_t)ft->priv;
         int rc;
 
         /* Needed for rawwrite() */
@@ -146,7 +146,7 @@ static int st_wvestartwrite(ft_t ft)
 
 static st_size_t st_wvewrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
-        wve_t p = (wve_t ) ft->priv;
+        wve_t p = (wve_t)ft->priv;
         p->length += samp * ft->signal.size;
         return st_rawwrite(ft, buf, samp);
 }
@@ -155,7 +155,7 @@ static int st_wvestopwrite(ft_t ft)
 {
 
         /* Call before seeking to flush buffer */
-        return st_rawstopwrite(ft);
+        st_rawstopwrite(ft);
 
         if (!ft->seekable)
         {
@@ -177,7 +177,7 @@ static void wvewriteheader(ft_t ft)
     char magic[16];
     short version;
     short zero;
-    wve_t p = (wve_t ) ft->priv;
+    wve_t p = (wve_t)ft->priv;
 
     strcpy(magic,PSION_MAGIC);
     version=PSION_VERSION;
@@ -188,6 +188,7 @@ static void wvewriteheader(ft_t ft)
     st_writeb(ft, 0);
 
     st_writew(ft, version);
+
     st_writedw(ft, p->length);
     st_writew(ft, p->padding);
     st_writew(ft, p->repeats);
