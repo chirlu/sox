@@ -193,10 +193,24 @@ typedef struct st_signalinfo
     signed char size;     /* word length of data */
     st_encoding_t encoding; /* format of sample numbers */
     unsigned channels;    /* number of sound channels */
+    double compression;   /* compression factor (where applicable) */
+
+    /* There is a delineation between these vars being tri-state and
+     * effectively boolean.  Logically the line falls between setting
+     * them up (could be done in stlib, or by the stlib client) and
+     * using them (in stlib).  Stlib's logic to set them up includes
+     * knowledge of the machine default and the format default.  (The
+     * sox client logic adds to this a layer of overridability via user
+     * options.)  The physical delineation is in the somewhat
+     * snappily-named stlib function `set_endianness_if_not_already_set'
+     * which is called at the right times (as files are openned) by the
+     * stlib core, not by the file drivers themselves.  The file drivers
+     * indicate to the stlib core if they have a preference using
+     * ST_FILE_xxx flags.
+     */
     st_option_t reverse_bytes;    /* endiannesses... */
     st_option_t reverse_nibbles;
     st_option_t reverse_bits;
-    double compression;   /* compression factor (where applicable) */
 } st_signalinfo_t;
 
 /* Loop parameters */
@@ -302,10 +316,10 @@ struct st_soundstream {
 #define ST_FILE_NOSTDIO 8  /* does not use stdio routines */
 #define ST_FILE_DEVICE  16 /* file is an audio device */
 #define ST_FILE_PHONY   32 /* phony file/device */
-/* These two for use by stlib clients: */
+/* These two for use by the stlib core or stlib clients: */
 #define ST_FILE_ENDIAN  64 /* is file format endian? */
 #define ST_FILE_ENDBIG  128/* if so, is it big endian? */
-/* These two for use within stlib: */
+/* These two for use by stlib drivers: */
 #define ST_FILE_LIT_END  (0   + 64)
 #define ST_FILE_BIG_END  (128 + 64)
 
