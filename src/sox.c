@@ -750,7 +750,7 @@ static void display_file_info(file_t f, st_bool full)
       "Reverse Nibbles: %s\n"
       "Reverse Bits   : %s\n",
       f->desc->signal.size == 1? "N/A" :
-        f->desc->signal.reverse_bytes != ST_IS_BIGENDIAN? "big" : "little",
+        f->desc->signal.reverse_bytes != ST_IS_BIGENDIAN ? "big" : "little",
       no_yes[f->desc->signal.reverse_nibbles],
       no_yes[f->desc->signal.reverse_bits]);
   }
