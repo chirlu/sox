@@ -72,13 +72,9 @@ static int st_wvestartread(ft_t ft)
 
         st_readw(ft, (unsigned short *)&version);
 
-        /* Check for what type endian machine its read on */
+        /* Check for what type endian machine it's read on */
         if (version == PSION_INV_VERSION)
         {
-                /* This is probably left over from a time before
-                 * testing for endianess was standardized.  Leaving since
-                 * it doesn't hurt.
-                 */
                 ft->signal.reverse_bytes = !ft->signal.reverse_bytes;
                 st_debug("Found inverted PSION magic word.  Swapping bytes.");
         }
