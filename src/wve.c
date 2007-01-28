@@ -86,9 +86,9 @@ static int st_wvestartread(ft_t ft)
 
         st_readw(ft, (unsigned short *)&(p->repeats));
 
-        (void)st_readw(ft, (unsigned short *)&trash16);
-        (void)st_readw(ft, (unsigned short *)&trash16);
-        (void)st_readw(ft, (unsigned short *)&trash16);
+        st_readw(ft, (unsigned short *)&trash16);
+        st_readw(ft, (unsigned short *)&trash16);
+        st_readw(ft, (unsigned short *)&trash16);
 
         ft->signal.encoding = ST_ENCODING_ALAW;
         ft->signal.size = ST_SIZE_BYTE;
