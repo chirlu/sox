@@ -1,17 +1,25 @@
-.de Sh
-.br
-.ne 5
-.PP
-\fB\\$1\fR
-.PP
-..
-.de Sp
-.if t .sp .5v
+'\" t
+'\" The line above instructs most `man' programs to invoke tbl
+'\"
+'\" Separate paragraphs; not the same as PP which resets indent level.
+.de SP
+.if t .sp .5
 .if n .sp
 ..
+'\"
+'\" Replacement em-dash for nroff (default is too short).
+.ie n .ds m " - 
+.el .ds m \(em
+'\"
+'\" Placeholder macro for if longer nroff arrow is needed.
+.ds RA \(->
+'\"
+'\" Decimal point set slightly raised
+.ds d \v'-.15m'.\v'+.15m'
+'\"
 .TH ST 3 "January 31, 2007"
 .SH NAME
-libst \- Sound Tools : sound sample file and effects libraries.
+libst\*mSound Tools\*mAudio file-format and effect library
 .SH SYNOPSIS
 .nf
 .B #include <st.h>
@@ -238,9 +246,24 @@ may generate output samples on its own.
 See echo.c for how to do this, 
 and see that what it does is absolutely bogus.
 .SH BUGS
-The program/library interface is pretty weak.
+This manual page is both incomplete and out of date.
 .SH SEE ALSO
-.BR soxexam (7),
-.BR libst (3)
+.BR sox (1),
+.BR soxexam (7)
+.SH LICENSE
+Copyright 1991 Lance Norskog and Sundry Contributors.
+Copyright 1998\-2007 by Chris Bagwell and SoX Contributors.
+.SP
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation; either version 2.1, or (at your option)
+any later version.
+.SP
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
 .SH AUTHORS
-No idea.
+Chris Bagwell (cbagwell@users.sourceforge.net).
+Other authors and contributors are listed in the AUTHORS file that
+is distributed with the source code.

@@ -573,7 +573,9 @@ SoX will provide a default comment if this option (or
 .BR \-\-comment\-file )
 is not given; to specify that no comment should be stored in the output file,
 use 
-.BR "\-\-comment \(dq\(dq" .
+.B "\-\-comment \(dq\(dq"
+or 
+.BR \-\-comment= .
 .TP
 \fB\-\-comment\-file \fIfilename\fR
 Specify a file containing the comment text to store in the output
@@ -1010,7 +1012,7 @@ the samplers themselves.  Currently loop points are ignored.
 .TP
 .B .snd
 See
-.B .au .
+.BR .au .
 .TP
 .B sndfile
 This is a pseudo-type that forces libsndfile to be used, even for file
@@ -1480,7 +1482,7 @@ or increase the number of channels by duplicating channels.
 Note: this effect operates on the audio
 .I channels
 within the SoX effects processing chain; it should not be confused with the 
-.B \-\-mix
+.B \-m
 global option (where multiple
 .I files
 are mix-combined before entering the effects chain).
