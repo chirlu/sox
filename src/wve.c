@@ -11,7 +11,6 @@
 /* Magic numbers used in Psion audio files */
 #define PSION_MAGIC     "ALawSoundFile**"
 #define PSION_VERSION   ((short)3856)
-#define PSION_INV_VERSION   ((short)4111)
 #define PSION_HDRSIZE   32
 
 typedef struct wvepriv
@@ -72,16 +71,9 @@ static int st_wvestartread(ft_t ft)
 
         st_readw(ft, (unsigned short *)&version);
 
-        /* Check for what type endian machine it's read on */
-        if (version == PSION_INV_VERSION)
-        {
-                ft->signal.reverse_bytes = !ft->signal.reverse_bytes;
-                st_debug("Found inverted PSION magic word.  Swapping bytes.");
-        }
-        else if (version == PSION_VERSION)
-        {
-            st_debug("Found PSION magic word");
-        }
+        /* Check magic version */
+        if (version == PSION_VERSION)
+            st_debug("Found Psion magic word");
         else
         {
             st_fail_errno(ft,ST_EHDR,"Wrong version in Psion header");
