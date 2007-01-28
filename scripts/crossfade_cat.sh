@@ -2,10 +2,15 @@
 #
 # crossfade_cat.sh
 #
-# Original script from Kester Clegg.  Mods by Chris Bagwell to show
-# more examples of sox features.
 # Concatenates two files together with a crossfade of $1 seconds.
 # Filenames are specified as $2 and $3.
+#
+# $4 is optional and specifies if a fadeout should be performed on
+# first file.
+# $5 is optional and specifies if a fadein should be performed on
+# second file.
+#
+# Example: crossfade_cat.sh 10 infile1.wav infile2.wav auto auto
 #
 # By default, the script attempts to guess if the audio files
 # already have a fadein/out on them or if they just have really
@@ -16,12 +21,11 @@
 # The user may specify "yes" or "no" to force the fade in/out
 # to occur.  They can also specify "auto" which is the default.
 #
-# $4 is optional and specifies if a fadeout should be performed on
-# first file.
-# $5 is optional and specifies if a fadein should be performed on
-# second file.
-#
 # Crossfaded file is created as "mix.wav".
+#
+# Original script from Kester Clegg.  Mods by Chris Bagwell to show
+# more examples of sox features.
+#
 
 SOX=../src/sox
 
@@ -29,6 +33,8 @@ if [ "$3" == "" ]; then
     echo "Usage: $0 crossfade_seconds first_file second_file [ fadeout ] [ fadein ]"
     echo
     echo "If a fadeout or fadein is not desired then specify \"no\" for that option.  \"yes\" will force a fade and \"auto\" will try to detect if a fade should occur."
+    echo
+    echo "Example: $0 10 infile1.wav infile2.wav auto auto"
     exit 1
 fi
 

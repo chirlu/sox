@@ -2,9 +2,6 @@
 #
 # crossfade.sh
 #
-# Original script from Kester Clegg.  Mods by Chris Bagwell to show
-# more examples of sox features.
-#
 # Creates two new files that when played together have a crossfade
 # of $1 seconds.  This means that $1/2 of the crossfade is in
 # the 1st file and $1/2 in the second file.  Can be used to
@@ -13,6 +10,13 @@
 # around the CD with minimal loss of song.
 #
 # Filenames are specified as $2 and $3.
+#
+# $4 is optional and specifies if a fadeout should be performed on
+# first file.  Can be yes/no/auto.
+# $5 is optional and specifies if a fadein should be performed on
+# second file. Can be yes/no/auto
+#
+# Example: $0 10 infile1.wav infile2.wav auto auto
 #
 # By default, the script attempts to guess if the audio files
 # already have a fadein/out on them or if they just have really
@@ -23,13 +27,12 @@
 # The user may specify "yes" or "no" to force the fade in/out
 # to occur.  They can also specify "auto" which is the default.
 #
-# $4 is optional and specifies if a fadeout should be performed on
-# first file.
-# $5 is optional and specifies if a fadein should be performed on
-# second file.
-#
 # Crossfaded file $2 is prepended with cfo_ and $3 is prepended
 # with cfi_.
+#
+# Original script from Kester Clegg.  Mods by Chris Bagwell to show
+# more examples of sox features.
+#
 
 SOX=../src/sox
 
@@ -37,6 +40,8 @@ if [ "$3" == "" ]; then
     echo "Usage: $0 crossfade_seconds first_file second_file [ fadeout ] [ fadein ]"
     echo
     echo "If a fadeout or fadein is not desired then specify \"no\" for that option.  \"yes\" will force a fade and \"auto\" will try to detect if a fade should occur."
+    echo
+    echo "Example: $0 10 infile1.wav infile2.wav auto auto"
     exit 1
 fi
 
