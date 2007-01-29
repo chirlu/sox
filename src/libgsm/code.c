@@ -4,6 +4,8 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
+/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/code.c,v 1.4 2007/01/29 03:09:32 cbagwell Exp $ */
+
 #include	<stdlib.h>
 #include	<string.h>
 
@@ -54,19 +56,21 @@ void Gsm_Coder (
 	word	so[160];
 
 	Gsm_Preprocess			(S, s, so);
-	Gsm_LPC_Analysis		(so, LARc);
+	Gsm_LPC_Analysis		(S, so, LARc);
 	Gsm_Short_Term_Analysis_Filter	(S, LARc, so);
 
 	for (k = 0; k <= 3; k++, xMc += 13) {
 
-		Gsm_Long_Term_Predictor	(so+k*40, /* d      [0..39] IN	*/
+		Gsm_Long_Term_Predictor	( S,
+					 so+k*40, /* d      [0..39] IN	*/
 					 dp,	  /* dp  [-120..-1] IN	*/
-					 e + 5,	  /* e      [0..39] OUT	*/
-					 dpp,	  /* dpp    [0..39] OUT */
+					e + 5,	  /* e      [0..39] OUT	*/
+					dpp,	  /* dpp    [0..39] OUT */
 					 Nc++,
 					 bc++);
 
-		Gsm_RPE_Encoding	( e + 5,	/* e	  ][0..39][ IN/OUT */
+		Gsm_RPE_Encoding	( S,
+					e + 5,	/* e	  ][0..39][ IN/OUT */
 					  xmaxc++, Mc++, xMc );
 		/*
 		 * Gsm_Update_of_reconstructed_short_time_residual_signal

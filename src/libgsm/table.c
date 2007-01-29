@@ -4,6 +4,8 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
+/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/table.c,v 1.3 2007/01/29 03:09:33 cbagwell Exp $ */
+
 /*  Most of these tables are inlined at their point of use.
  */
 

@@ -4,6 +4,8 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
+/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/lpc.c,v 1.6 2007/01/29 03:09:33 cbagwell Exp $ */
+
 #include <stdio.h>
 #include <assert.h>
 
@@ -30,6 +32,10 @@ static void Autocorrelation (
 
 	word		temp, smax, scalauto;
 
+#ifdef	USE_FLOAT_MUL
+	float		float_s[160];
+#endif
+
 	/*  Dynamic scaling of the array  s[0..159]
 	 */
 
@@ -54,10 +60,18 @@ static void Autocorrelation (
 
 	if (scalauto > 0) {
 
+# ifdef USE_FLOAT_MUL
+#   define SCALE(n)	\
+	case n: for (k = 0; k <= 159; k++) \
+			float_s[k] = (float)	\
+				(s[k] = GSM_MULT_R(s[k], 16384 >> (n-1)));\
+		break;
+# else 
 #   define SCALE(n)	\
 	case n: for (k = 0; k <= 159; k++) \
 			s[k] = GSM_MULT_R( s[k], 16384 >> (n-1) );\
 		break;
+# endif /* USE_FLOAT_MUL */
 
 		switch (scalauto) {
 		SCALE(1)
@@ -67,14 +81,24 @@ static void Autocorrelation (
 		}
 # undef	SCALE
 	}
+# ifdef	USE_FLOAT_MUL
+	else for (k = 0; k <= 159; k++) float_s[k] = (float) s[k];
+# endif
 
 	/*  Compute the L_ACF[..].
 	 */
 	{
+# ifdef	USE_FLOAT_MUL
+		register float * sp = float_s;
+		register float   sl = *sp;
+
+#		define STEP(k)	 L_ACF[k] += (longword)(sl * sp[ -(k) ]);
+# else
 		word  * sp = s;
 		word    sl = *sp;
 
 #		define STEP(k)	 L_ACF[k] += ((longword)sl * sp[ -(k) ]);
+# endif
 
 #	define NEXTI	 sl = *++sp
 
@@ -116,6 +140,34 @@ static void Autocorrelation (
 		for (k = 160; k--; *s++ <<= scalauto) ;
 	}
 }
+
+#if defined(USE_FLOAT_MUL) && defined(FAST)
+
+static void Fast_Autocorrelation (
+	word * s,		/* [0..159]	IN/OUT  */
+ 	longword * L_ACF)	/* [0..8]	OUT     */
+{
+	register int	k, i;
+	float f_L_ACF[9];
+	float scale;
+
+	float          s_f[160];
+	register float *sf = s_f;
+
+	for (i = 0; i < 160; ++i) sf[i] = s[i];
+	for (k = 0; k <= 8; k++) {
+		register float L_temp2 = 0;
+		register float *sfl = sf - k;
+		for (i = k; i < 160; ++i) L_temp2 += sf[i] * sfl[i];
+		f_L_ACF[k] = L_temp2;
+	}
+	scale = MAX_LONGWORD / f_L_ACF[0];
+
+	for (k = 0; k <= 8; k++) {
+		L_ACF[k] = f_L_ACF[k] * scale;
+	}
+}
+#endif	/* defined (USE_FLOAT_MUL) && defined (FAST) */
 
 /* 4.2.5 */
 
@@ -269,11 +321,16 @@ static void Quantization_and_coding (
 }
 
 void Gsm_LPC_Analysis (
+	struct gsm_state *S,
 	word 		 * s,		/* 0..159 signals	IN/OUT	*/
         word 		 * LARc)	/* 0..7   LARc's	OUT	*/
 {
 	longword	L_ACF[9];
 
+#if defined(USE_FLOAT_MUL) && defined(FAST)
+	if (S->fast) Fast_Autocorrelation (s,	  L_ACF );
+	else
+#endif
 	Autocorrelation			  (s,	  L_ACF	);
 	Reflection_coefficients		  (L_ACF, LARc	);
 	Transformation_to_Log_Area_Ratios (LARc);

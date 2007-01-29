@@ -4,6 +4,8 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
+/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/decode.c,v 1.4 2007/01/29 03:09:32 cbagwell Exp $ */
+
 #include <stdio.h>
 
 #include	"private.h"
@@ -49,7 +51,7 @@ void Gsm_Decoder (
 
 	for (j=0; j <= 3; j++, xmaxcr++, bcr++, Ncr++, Mcr++, xMcr += 13) {
 
-		Gsm_RPE_Decoding( *xmaxcr, *Mcr, xMcr, erp );
+		Gsm_RPE_Decoding( S, *xmaxcr, *Mcr, xMcr, erp );
 		Gsm_Long_Term_Synthesis_Filtering( S, *Ncr, *bcr, erp, drp );
 
 		for (k = 0; k <= 39; k++) wt[ j * 40 + k ] =  drp[ k ];

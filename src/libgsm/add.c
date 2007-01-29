@@ -4,6 +4,8 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
+/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/add.c,v 1.5 2007/01/29 03:09:32 cbagwell Exp $ */
+
 /*
  *  See private.h for the more commonly used macro versions.
  */
@@ -33,6 +35,63 @@ word gsm_mult (word a, word b)
 {
 	if (a == MIN_WORD && b == MIN_WORD) return MAX_WORD;
 	else return SASR( (longword)a * (longword)b, 15 );
+}
+
+word gsm_mult_r (word a, word b)
+{
+	if (b == MIN_WORD && a == MIN_WORD) return MAX_WORD;
+	else {
+		longword prod = (longword)a * (longword)b + 16384;
+		prod >>= 15;
+		return prod & 0xFFFF;
+	}
+}
+
+word gsm_abs (word a)
+{
+	return a < 0 ? (a == MIN_WORD ? MAX_WORD : -a) : a;
+}
+
+longword gsm_L_mult (word a, word b)
+{
+	assert( a != MIN_WORD || b != MIN_WORD );
+	return ((longword)a * (longword)b) << 1;
+}
+
+longword gsm_L_add (longword a, longword b)
+{
+	if (a < 0) {
+		if (b >= 0) return a + b;
+		else {
+			ulongword A = (ulongword)-(a + 1) + (ulongword)-(b + 1);
+			return A >= MAX_LONGWORD ? MIN_LONGWORD :-(longword)A-2;
+		}
+	}
+	else if (b <= 0) return a + b;
+	else {
+		ulongword A = (ulongword)a + (ulongword)b;
+		return A > MAX_LONGWORD ? MAX_LONGWORD : A;
+	}
+}
+
+longword gsm_L_sub (longword a, longword b)
+{
+	if (a >= 0) {
+		if (b >= 0) return a - b;
+		else {
+			/* a>=0, b<0 */
+
+			ulongword A = (ulongword)a + -(b + 1);
+			return A >= MAX_LONGWORD ? MAX_LONGWORD : (A + 1);
+		}
+	}
+	else if (b <= 0) return a - b;
+	else {
+		/* a<0, b>0 */  
+
+		ulongword A = (ulongword)-(a + 1) + b;
+		return A >= MAX_LONGWORD ? MIN_LONGWORD : -(longword)A - 1;
+	}
 }
 
 static unsigned char const bitoff[ 256 ] = {
@@ -90,6 +149,14 @@ word gsm_norm (longword a )
 		  :  23 + bitoff[ 0xFF & a ] );
 }
 
+longword gsm_L_asl (longword a, int n)
+{
+	if (n >= 32) return 0;
+	if (n <= -32) return -(a < 0);
+	if (n < 0) return gsm_L_asr(a, -n);
+	return a << n;
+}
+
 word gsm_asl (word a, int n)
 {
 	if (n >= 16) return 0;
@@ -98,12 +165,32 @@ word gsm_asl (word a, int n)
 	return a << n;
 }
 
+longword gsm_L_asr (longword a, int n)
+{
+	if (n >= 32) return -(a < 0);
+	if (n <= -32) return 0;
+	if (n < 0) return a << -n;
+
+#	ifdef	SASR
+		return a >> n;
+#	else
+		if (a >= 0) return a >> n;
+		else return -(longword)( -(ulongword)a >> n );
+#	endif
+}
+
 word gsm_asr (word a, int n)
 {
 	if (n >= 16) return -(a < 0);
 	if (n <= -16) return 0;
 	if (n < 0) return a << -n;
-        return SASR(a, n);
+
+#	ifdef	SASR
+		return a >> n;
+#	else
+		if (a >= 0) return a >> n;
+		else return -(word)( -(uword)a >> n );
+#	endif
 }
 
 /* 

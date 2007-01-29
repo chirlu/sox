@@ -4,6 +4,8 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
+/*$Header: /cvsroot/sox/sox/src/libgsm/Attic/private.h,v 1.8 2007/01/29 03:09:33 cbagwell Exp $*/
+
 #ifndef	PRIVATE_H
 #define	PRIVATE_H
 
@@ -30,7 +32,8 @@ struct gsm_state {
 	word		v[9];		/* short_term.c, synthesis	*/
 	word		msr;		/* decoder.c,	Postprocessing	*/
 
-	char		verbose;
+	char		verbose;	/* only used if !NDEBUG		*/
+	char		fast;		/* only used if FAST		*/
 
 	char		wav_fmt;	/* only used if WAV49 defined	*/
 	unsigned char	frame_index;	/*            odd/even chaining	*/
@@ -44,23 +47,36 @@ struct gsm_state {
 #define	MIN_LONGWORD	(-2147483647 - 1)
 #define	MAX_LONGWORD	  2147483647
 
-#define	SASR(x, by)	(((x) >> (by)) | (-((x) < 0) << (by)))
+#ifdef	SASR		/* flag: >> is a signed arithmetic shift right */
+#undef	SASR
+#define	SASR(x, by)	((x) >> (by))
+#else
+#define	SASR(x, by)	((x) >= 0 ? (x) >> (by) : (~(-((x) + 1) >> (by))))
+#endif	/* SASR */
 
 /*
  *	Prototypes from add.c
  */
 extern word	gsm_mult 	(word a, word b);
+extern longword gsm_L_mult 	(word a, word b);
+extern word	gsm_mult_r	(word a, word b);
 
 extern word	gsm_div  	(word num, word denum);
 
 extern word	gsm_add 	( word a, word b );
+extern longword gsm_L_add 	( longword a, longword b );
 
 extern word	gsm_sub 	(word a, word b);
+extern longword gsm_L_sub 	(longword a, longword b);
+
+extern word	gsm_abs 	(word a);
 
 extern word	gsm_norm 	( longword a );
 
+extern longword gsm_L_asl  	(longword a, int n);
 extern word	gsm_asl 	(word a, int n);
 
+extern longword gsm_L_asr  	(longword a, int n);
 extern word	gsm_asr  	(word a, int n);
 
 /*
@@ -86,7 +102,14 @@ extern word	gsm_asr  	(word a, int n);
 		   >= MAX_LONGWORD ? MIN_LONGWORD : -(longword)utmp-2 )   \
 	: ((b) <= 0 ? (a) + (b)   \
 	          : (utmp = (ulongword)(a) + (ulongword)(b)) >= MAX_LONGWORD \
-		    ? MAX_LONGWORD : (longword)utmp))
+		    ? MAX_LONGWORD : utmp))
+
+/*
+ * # define GSM_ADD(a, b)	\
+ * 	((ltmp = (longword)(a) + (longword)(b)) >= MAX_WORD \
+ * 	? MAX_WORD : ltmp <= MIN_WORD ? MIN_WORD : ltmp)
+ */
+/* Nonportable, but faster: */
 
 #define	GSM_ADD(a, b)	\
 	((ulongword)((ltmp = (longword)(a) + (longword)(b)) - MIN_WORD) > \
@@ -97,6 +120,20 @@ extern word	gsm_asr  	(word a, int n);
 	? MAX_WORD : ltmp <= MIN_WORD ? MIN_WORD : ltmp)
 
 # define GSM_ABS(a)	((a) < 0 ? ((a) == MIN_WORD ? MAX_WORD : -(a)) : (a))
+
+/* Use these if necessary:
+
+# define GSM_MULT_R(a, b)	gsm_mult_r(a, b)
+# define GSM_MULT(a, b)		gsm_mult(a, b)
+# define GSM_L_MULT(a, b)	gsm_L_mult(a, b)
+
+# define GSM_L_ADD(a, b)	gsm_L_add(a, b)
+# define GSM_ADD(a, b)		gsm_add(a, b)
+# define GSM_SUB(a, b)		gsm_sub(a, b)
+
+# define GSM_ABS(a)		gsm_abs(a)
+
+*/
 
 /*
  *  More prototypes from implementations..
@@ -112,6 +149,7 @@ extern void Gsm_Coder (
 		word	* xMc	/* [13*4] normalized RPE samples OUT	*/);
 
 extern void Gsm_Long_Term_Predictor (		/* 4x for 160 samples */
+		struct gsm_state * S,
 		word	* d,	/* [0..39]   residual signal	IN	*/
 		word	* dp,	/* [-120..-1] d'		IN	*/
 		word	* e,	/* [0..40] 			OUT	*/
@@ -120,6 +158,7 @@ extern void Gsm_Long_Term_Predictor (		/* 4x for 160 samples */
 		word	* bc	/* gain factor			OUT	*/);
 
 extern void Gsm_LPC_Analysis (
+		struct gsm_state * S,
 		word * s,	 /* 0..159 signals	IN/OUT	*/
 	        word * LARc);   /* 0..7   LARc's	OUT	*/
 
@@ -165,12 +204,14 @@ extern void Gsm_Long_Term_Synthesis_Filtering (
 		word	* drp); 	/* [-120..-1] IN, [0..40] OUT 	*/
 
 void Gsm_RPE_Decoding (
+	struct gsm_state *S,
 		word xmaxcr,
 		word Mcr,
 		word * xMcr,  /* [0..12], 3 bits             IN      */
 		word * erp); /* [0..39]                     OUT     */
 
 void Gsm_RPE_Encoding (
+		struct gsm_state * S,
 		word    * e,            /* -5..-1][0..39][40..44     IN/OUT  */
 		word    * xmaxc,        /*                              OUT */
 		word    * Mc,           /*                              OUT */
@@ -190,6 +231,8 @@ extern void Gsm_Update_of_reconstructed_short_time_residual_signal (
 /*
  *  Tables from table.c
  */
+#ifndef	GSM_TABLE_C
+
 extern word gsm_A[8], gsm_B[8], gsm_MIC[8], gsm_MAC[8];
 extern word gsm_INVA[8];
 extern word gsm_DLB[4], gsm_QLB[4];
@@ -197,12 +240,25 @@ extern word gsm_H[11];
 extern word gsm_NRFAC[8];
 extern word gsm_FAC[8];
 
+#endif	/* GSM_TABLE_C */
+
 /*
  *  Debugging
  */
-extern void  gsm_debug_words     (char * name, int, int, word *);
-extern void  gsm_debug_longwords (char * name, int, int, longword *);
-extern void  gsm_debug_longword  (char * name, longword);
-extern void  gsm_debug_word      (char * name, word);
+#ifdef NDEBUG
+
+#	define	gsm_debug_words(a, b, c, d)		/* nil */
+#	define	gsm_debug_longwords(a, b, c, d)		/* nil */
+#	define	gsm_debug_word(a, b)			/* nil */
+#	define	gsm_debug_longword(a, b)		/* nil */
+
+#else	/* !NDEBUG => DEBUG */
+
+	extern void  gsm_debug_words     (char * name, int, int, word *);
+	extern void  gsm_debug_longwords (char * name, int, int, longword *);
+	extern void  gsm_debug_longword  (char * name, longword);
+	extern void  gsm_debug_word      (char * name, word);
+
+#endif /* !NDEBUG */
 
 #endif	/* PRIVATE_H */

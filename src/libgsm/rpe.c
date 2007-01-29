@@ -4,6 +4,8 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
+/* $Header: /cvsroot/sox/sox/src/libgsm/Attic/rpe.c,v 1.5 2007/01/29 03:09:33 cbagwell Exp $ */
+
 #include <stdio.h>
 #include <assert.h>
 
@@ -64,6 +66,19 @@ static void Weighting_filter (
 		 *  Do you?
 		 */
 
+#ifdef	STUPID_COMPILER
+		L_result += STEP(	0, 	-134 ) ;
+		L_result += STEP(	1, 	-374 )  ;
+	               /* + STEP(	2, 	0    )  */
+		L_result += STEP(	3, 	2054 ) ;
+		L_result += STEP(	4, 	5741 ) ;
+		L_result += STEP(	5, 	8192 ) ;
+		L_result += STEP(	6, 	5741 ) ;
+		L_result += STEP(	7, 	2054 ) ;
+	 	       /* + STEP(	8, 	0    )  */
+		L_result += STEP(	9, 	-374 ) ;
+		L_result += STEP(	10, 	-134 ) ;
+#else
 		L_result +=
 		  STEP(	0, 	-134 ) 
 		+ STEP(	1, 	-374 ) 
@@ -77,6 +92,7 @@ static void Weighting_filter (
 		+ STEP(	9, 	-374 ) 
 		+ STEP(10, 	-134 )
 		;
+#endif
 
 		/* L_result = GSM_L_ADD( L_result, L_result ); (* scaling(x2) *)
 		 * L_result = GSM_L_ADD( L_result, L_result ); (* scaling(x4) *)
@@ -430,6 +446,9 @@ void Gsm_Update_of_reconstructed_short_time_residual_signal P3((dpp, ep, dp),
 #endif	/* Has been inlined in code.c */
 
 void Gsm_RPE_Encoding (
+
+	struct gsm_state * S,
+
 	word	* e,		/* -5..-1][0..39][40..44	IN/OUT  */
 	word	* xmaxc,	/* 				OUT */
 	word	* Mc,		/* 			  	OUT */
@@ -450,6 +469,8 @@ void Gsm_RPE_Encoding (
 }
 
 void Gsm_RPE_Decoding (
+	struct gsm_state	* S,
+
 	word 		xmaxcr,
 	word		Mcr,
 	word		* xMcr,  /* [0..12], 3 bits 		IN	*/
