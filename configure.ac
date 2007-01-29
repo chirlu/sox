@@ -107,9 +107,10 @@ AC_SUBST(LIBGSM_SUBDIR)
 AC_SUBST(LIBGSM_LIBADD)
      
 dnl Check for libsndfile
-with_sndfile=yes
 AC_ARG_WITH(sndfile, AC_HELP_STRING([--with-sndfile],
-    [Use libsndfile if present (default is YES)]))
+    [Use libsndfile if present (default is yes)]),
+    [with_sndfile=$withval],
+    [with_sndfile=yes])
 if test "$with_sndfile" = yes; then
   SOX_PATH_SNDFILE(, [with_sndfile=no
                        AC_MSG_NOTICE([Could not find a usable libsndfile])])
@@ -126,10 +127,11 @@ AC_CHECK_HEADER(vorbis/codec.h,
     with_ogg_vorbis=no)
 
 dnl Check for FLAC libraries
-with_flac=yes
 AC_ARG_WITH(flac,
     AC_HELP_STRING([--with-flac],
-        [Use FLAC if present (default is YES)]))
+        [Use FLAC if present (default is yes)]),
+        [with_flac=$withval],
+        [with_flac=yes])
 if test "$with_flac" = yes; then
     AC_CHECK_HEADER(FLAC/file_encoder.h,
         [AC_CHECK_LIB(FLAC, FLAC__file_encoder_new,,with_flac=no)],
@@ -137,10 +139,11 @@ if test "$with_flac" = yes; then
 fi
 
 dnl Check for MAD libraries
-with_mad=yes
 AC_ARG_WITH(mad,
     AC_HELP_STRING([--with-mad],
-        [Use MAD (MP3 Audio Decoder) if present (default is YES)]))
+        [Use MAD (MP3 Audio Decoder) if present (default is yes)]),
+        [with_mad=$withval],
+        [with_mad=yes])
 if test "$with_mad" = yes; then
     AC_CHECK_HEADER(mad.h,
         [AC_CHECK_LIB(mad, mad_stream_buffer,,with_mad=no)],
@@ -148,10 +151,11 @@ if test "$with_mad" = yes; then
 fi
 
 dnl Test for LAME library.
-with_lame=yes
 AC_ARG_WITH(lame,
     AC_HELP_STRING([--with-lame],
-        [Use LAME (LAME Ain't an MP3 Encoder) if present (default is YES)]))
+        [Use LAME (LAME Ain't an MP3 Encoder) if present (default is yes)]),
+        [with_lame=$withval],
+        [with_lame=yes])
 if test "$with_lame" = yes; then
     AC_CHECK_HEADER(lame/lame.h,
         [AC_CHECK_LIB(mp3lame, lame_init,,with_lame=no)],
@@ -159,10 +163,11 @@ if test "$with_lame" = yes; then
 fi
 
 dnl Test for libsamplerate.
-with_samplerate=yes
 AC_ARG_WITH(samplerate,
     AC_HELP_STRING([--with-samplerate],
-        [Use libsamplerate (aka Secret Rabbit Code) if present (default is YES)]))
+        [Use libsamplerate (aka Secret Rabbit Code) if present (default is yes)]),
+        [with_samplerate=$withval],
+        [with_samplerate=yes])
 if test "$with_samplerate" = yes; then
   SOX_PATH_SAMPLERATE(, 
                       [with_samplerate=no
@@ -176,17 +181,18 @@ AX_CREATE_STDINT_H(src/ststdint.h)
 AC_CONFIG_FILES(Makefile src/Makefile src/libgsm/Makefile src/libst-config)
 AC_OUTPUT
 
+if test "$found_libgsm" = "yes"; then
+   gsm_option="external"
+else
+   gsm_option="in-tree"
+fi
+
 dnl Report configuration.
 echo
 echo "ALSA driver....................... $with_alsa"
 echo "OSS driver........................ $with_oss"
 echo "SUN audio driver.................. $with_sun_audio"
-echo -n "libgsm............................ "
-if test "$found_libgsm" = "yes"; then
-   echo external
-else
-   echo in-tree
-fi
+echo "libgsm............................ $gsm_option"
 echo "libsndfile formats................ $with_sndfile"
 echo "Ogg Vorbis format................. $with_ogg_vorbis"
 echo "FLAC format....................... $with_flac"
