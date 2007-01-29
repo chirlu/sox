@@ -95,7 +95,7 @@ typedef struct file_info
 static st_bool doopts(file_t, int, char **);
 static void usage(char const *) NORET;
 static void usage_effect(char *) NORET;
-static void process(void);
+static int process(void);
 static void update_status(void);
 static void report_file_info(file_t f);
 static void parse_effects(int argc, char **argv);
@@ -106,6 +106,7 @@ static int flow_effect(int);
 static int drain_effect_out(void);
 static int drain_effect(int);
 static void stop_effects(void);
+static void delete_effects(void);
 
 #define MAX_INPUT_FILES 32
 #define MAX_FILES MAX_INPUT_FILES + 2 /* 1 output file plus record input */
@@ -421,16 +422,25 @@ int main(int argc, char **argv)
     if (ofile->desc)
       st_close(ofile->desc);
     free(ofile->desc);
-    process();
-  } while (!user_abort && current_input < input_count);
+  } while (process() != ST_EOF && !user_abort && current_input < input_count);
   else process();
 
+  delete_effects();
+
+  for (i = 0; i < file_count; ++i)
+    if (files[i]->desc->clips != 0)
+      st_warn(i < input_count?"%s: input clipped %u samples" :
+                              "%s: output clipped %u samples; decrease volume?",
+          (files[i]->desc->h->flags & ST_FILE_DEVICE)?
+                       files[i]->desc->h->names[0] : files[i]->desc->filename,
+          files[i]->desc->clips);
+
   if (mixing_clips > 0)
-    st_warn("-m clipped %u samples; decrease volume?", mixing_clips);
+    st_warn("mix-combining clipped %u samples; decrease volume?", mixing_clips);
 
   for (i = 0; i < file_count; i++)
     if (files[i]->volume_clips > 0)
-      st_warn("%s: -v clipped %u samples; decrease volume?", files[i]->filename,
+      st_warn("%s: balancing clipped %u samples; decrease volume?", files[i]->filename,
               files[i]->volume_clips);
 
   if (show_progress) {
@@ -832,10 +842,10 @@ static void balance_input(st_sample_t * buf, st_size_t ws, file_t f)
 }
 
 /*
- * Process input file -> effect table -> output file one buffer at a time
+ * Process:   Input(s) -> Balancing -> Combiner -> Effects -> Output
  */
 
-static void process(void) {
+static int process(void) {
   int e, flowstatus = 0;
   st_size_t ws, s, i;
   st_size_t ilen[MAX_INPUT_FILES];
@@ -1053,17 +1063,7 @@ static void process(void) {
 
   /* N.B. more data may be written during stop_effects */
   stop_effects();
-
-  for (i = 0; i < input_count; i++)
-    if (files[i]->desc->clips != 0)
-      st_warn("%s: input clipped %u samples", files[i]->desc->filename,
-              files[i]->desc->clips);
-
-  if (files[i]->desc->clips != 0)
-    st_warn("%s: output clipped %u samples; decrease volume?",
-            (files[i]->desc->h->flags & ST_FILE_DEVICE)?
-            files[i]->desc->h->names[0] : files[i]->desc->filename,
-            files[i]->desc->clips);
+  return flowstatus;
 }
 
 static void parse_effects(int argc, char **argv)
@@ -1563,8 +1563,6 @@ static void stop_effects(void)
     st_size_t clips;
     int (*stop)(eff_t effp) =
        efftab[e].h->stop? efftab[e].h->stop : st_effect_nothing;
-    int (*delete)(eff_t effp) =
-       efftab[e].h->delete? efftab[e].h->delete : st_effect_nothing;
 
     stop(&efftab[e]);
     clips = efftab[e].clips;
@@ -1575,6 +1573,16 @@ static void stop_effects(void)
     }
     if (clips != 0)
       st_warn("'%s' clipped %u samples; decrease volume?",efftab[e].name,clips);
+  }
+}
+
+static void delete_effects(void)
+{
+  int e;
+
+  for (e = 1; e < neffects; e++) {
+    int (*delete)(eff_t effp) =
+       efftab[e].h->delete? efftab[e].h->delete : st_effect_nothing;
 
     /* No left & right delete as there is no left & right getopts */
     delete(&efftab[e]);

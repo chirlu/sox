@@ -179,11 +179,7 @@ static int st_trim_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         return (ST_SUCCESS);
 }
 
-/*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
- */
-static int st_trim_stop(eff_t effp)
+static int delete(eff_t effp)
 {
     trim_t trim = (trim_t) effp->priv;
 
@@ -201,8 +197,8 @@ static st_effect_t st_trim_effect = {
   st_trim_start,
   st_trim_flow,
   st_effect_nothing_drain,
-  st_trim_stop,
-  st_effect_nothing
+  st_effect_nothing,
+  delete
 };
 
 const st_effect_t *st_trim_effect_fn(void)
