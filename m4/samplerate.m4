@@ -11,15 +11,11 @@ dnl
 # Test for libsamplerate, and define SAMPLERATE_CFLAGS and SAMPLERATE_LIBS
 AC_DEFUN([SOX_PATH_SAMPLERATE],
 [dnl
-have_samplerate="no"
-SAMPLERATE_CFLAGS=""
-SAMPLERATE_LIBS=""
-
 # Step 1: Use pkg-config if available
 m4_ifdef([PKG_CHECK_MODULES],
   [# PKG_CHECK_MODULES available
-  PKG_CHECK_MODULES([SAMPLERATE], [samplerate], [$1], [$2])
-  have_samplerate="maybe"],
+  PKG_CHECK_MODULES(SAMPLERATE, samplerate, have_samplerate="maybe",
+                    have_samplerate="no")],
   [# PKG_CHECK_MODULES is unavailable, search for pkg-config program
   AC_PATH_PROG([PKGCONFIG], [pkg-config], [none])
   if test "$PKGCONFIG" != "none" && `$PKGCONFIG --exists samplerate`

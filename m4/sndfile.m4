@@ -11,15 +11,11 @@ dnl
 # Test for libsndfile, and define SNDFILE_CFLAGS and SNDFILE_LIBS
 AC_DEFUN([SOX_PATH_SNDFILE],
 [dnl
-have_sndfile="no"
-SNDFILE_CFLAGS=""
-SNDFILE_LIBS=""
-
 # Step 1: Use pkg-config if available
 m4_ifdef([PKG_CHECK_MODULES],
   [# PKG_CHECK_MODULES available
-  PKG_CHECK_MODULES([SNDFILE], [sndfile], [$1], [$2])
-  have_sndfile="maybe"],
+  PKG_CHECK_MODULES(SNDFILE, sndfile, have_sndfile="maybe", 
+                    have_sndfile="no")],
   [# PKG_CHECK_MODULES is unavailable, search for pkg-config program
   AC_PATH_PROG([PKGCONFIG], [pkg-config], [none])
   if test "$PKGCONFIG" != "none" && `$PKGCONFIG --exists sndfile`

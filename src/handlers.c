@@ -52,9 +52,6 @@ st_format_fn_t st_format_fns[] = {
   st_sl_format_fn,
   st_smp_format_fn,
   st_snd_format_fn,
-#ifdef HAVE_SNDFILE_H
-  st_sndfile_format_fn,
-#endif
   st_sphere_format_fn,
 #ifdef HAVE_SUN_AUDIO
   st_sun_format_fn,
@@ -75,6 +72,11 @@ st_format_fn_t st_format_fns[] = {
   st_wav_format_fn,
   st_wve_format_fn,
   st_xa_format_fn,
+  /* Prefer internal formats over libsndfile. Can be overridden
+   * by using -t sndfile. */
+#ifdef HAVE_SNDFILE_H
+  st_sndfile_format_fn,
+#endif
   NULL
 };
 
