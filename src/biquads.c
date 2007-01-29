@@ -138,7 +138,7 @@ static int start(eff_t effp)
 {
   biquad_t p = (biquad_t) effp->priv;
   double w0 = 2 * M_PI * p->fc / effp->ininfo.rate;
-  double A  = exp(p->gain / 40 * log(10));
+  double A  = exp(p->gain / 40 * log(10.));
   double alpha = 0;
 
   if (w0 > M_PI) {
@@ -160,7 +160,7 @@ static int start(eff_t effp)
       break;
 
     case width_bw_oct:
-      alpha = sin(w0)*sinh(log(2)/2 * p->width * w0/sin(w0));
+      alpha = sin(w0)*sinh(log(2.)/2 * p->width * w0/sin(w0));
       break;
 
     case width_bw_Hz:
@@ -276,7 +276,7 @@ static int start(eff_t effp)
         p->width = p->fc / 2;
       bw_Hz = p->width_type == width_Q?  p->fc / p->width :
         p->width_type == width_bw_Hz? p->width :
-        p->fc * (pow(2, p->width) - 1) * pow(2, -0.5 * p->width); /* bw_oct */
+        p->fc * (pow(2., p->width) - 1) * pow(2., -0.5 * p->width); /* bw_oct */
       #include "band.h" /* Has different licence */
       break;
     }

@@ -319,7 +319,7 @@ static int st_fade_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
  * Do anything required when you stop reading samples.
  *      (free allocated memory, etc.)
  */
-static int st_fade_stop(eff_t effp)
+static int delete(eff_t effp)
 {
     fade_t fade = (fade_t) effp->priv;
 
@@ -381,8 +381,8 @@ static st_effect_t st_fade_effect = {
   st_fade_start,
   st_fade_flow,
   st_fade_drain,
-  st_fade_stop,
-  st_effect_nothing
+  st_effect_nothing,
+  delete
 };
 
 const st_effect_t *st_fade_effect_fn(void)

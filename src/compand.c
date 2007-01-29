@@ -374,13 +374,22 @@ static int st_compand_stop(eff_t effp)
   compand_t l = (compand_t) effp->priv;
 
   free((char *) l->delay_buf);
+
+  l->delay_buf = NULL;
+
+  return (ST_SUCCESS);
+}
+
+static int delete(eff_t effp)
+{
+  compand_t l = (compand_t) effp->priv;
+
   free((char *) l->transferOuts);
   free((char *) l->transferIns);
   free((char *) l->volume);
   free((char *) l->decayRate);
   free((char *) l->attackRate);
 
-  l->delay_buf = NULL;
   l->transferOuts = NULL;
   l->transferIns = NULL;
   l->volume = NULL;
@@ -402,7 +411,7 @@ static st_effect_t st_compand_effect = {
    st_compand_flow,
    st_compand_drain,
    st_compand_stop,
-  st_effect_nothing
+  delete
 };
 
 const st_effect_t *st_compand_effect_fn(void)

@@ -656,6 +656,15 @@ static int st_silence_stop(eff_t effp)
     return(ST_SUCCESS);
 }
 
+static int delete(eff_t effp)
+{
+  silence_t silence = (silence_t) effp->priv;
+
+  free(silence->start_duration_str);
+  free(silence->stop_duration_str);
+  return ST_SUCCESS;
+}
+
 static st_effect_t st_silence_effect = {
   "silence",
   "Usage: silence above_periods [ duration thershold[d | %% ] ] [ below_periods duration threshold[ d | %% ]]",
@@ -665,7 +674,7 @@ static st_effect_t st_silence_effect = {
   st_silence_flow,
   st_silence_drain,
   st_silence_stop,
-  st_effect_nothing
+  delete
 };
 
 const st_effect_t *st_silence_effect_fn(void)

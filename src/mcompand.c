@@ -656,12 +656,7 @@ static int st_mcompand_stop(eff_t effp)
 
   for (band = 0; band < c->nBands; band++) {
     l = &c->bands[band];
-    free(l->transferOuts);
-    free(l->transferIns);
-    free(l->decayRate);
-    free(l->attackRate);
     free(l->delay_buf);
-    free(l->volume);
     if (l->topfreq != 0) {
       free(l->filter.xy_low);
       free(l->filter.xy_high);
@@ -674,7 +669,17 @@ static int st_mcompand_stop(eff_t effp)
 static int st_mcompand_delete(eff_t effp)
 {
   compand_t c = (compand_t) effp->priv;
+  comp_band_t l;
+  int band;
 
+  for (band = 0; band < c->nBands; band++) {
+    l = &c->bands[band];
+    free(l->transferOuts);
+    free(l->transferIns);
+    free(l->decayRate);
+    free(l->attackRate);
+    free(l->volume);
+  }
   free(c->bands);
   c->bands = NULL;
 
