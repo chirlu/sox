@@ -33,7 +33,7 @@ libst_la_LIBADD = @LIBGSM_LIBADD@
 sox_SOURCES = sox.c
 sox_LDADD = libst.la
 
-EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat
+EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav
 
 all: sox$(EXEEXT) play rec
 
