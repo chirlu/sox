@@ -38,21 +38,23 @@ for a complete list of options.
 Optional Compile Features
 -------------------------
 
-For some optional features you need pkg-config; if you don't have it,
-these features won't be available even if the relevant packages are
-installed.
+SoX can make use of some external libraries to obtain support
+for additional file formats and/or effects.  Some optional libraries
+may require pkg-config to be installed to be properly detected.
 
-SoX can make use of Ogg Vorbis libraries to read and write Ogg Vorbis
-files. Normally, the configure script will auto detect this library
-and enable support for Ogg Vorbis. The Ogg Vorbis library can be
-obtained from http://www.vorbis.com
+SoX can detect and use the following libraries:
 
-SoX can make use of MP3 libraries to read and write MP3 files.
-Normally, the configure script will auto detect these libraries and
-enable support for MP3. SoX requires libmad for reading MP3 files and
-lame for writing MP3 files. Libmad can be obtained from
-http://www.underbit.com/products/mad/ and lame can be obtained from
-http://mitiok.cjb.net/
+Ogg Vorbis - More information available at http://www.vorbis.com
+
+Lame MP3 encoder - http://lame.sourceforge.net/
+
+MAD MP3 decoder - http://www.underbit.com/products/mad/
+
+FLAC - http://flac.sourceforge.net/
+
+Secret Rabbit Code - http://www.mega-nerd.com/SRC/
+
+libsndfile - http://www.mega-nerd.com/libsndfile/
 
 If any libraries are installed in a non-standard locations in your
 system then you can use the CPPFLAGS and LDFLAGS variables to allow
@@ -60,12 +62,10 @@ configure to find them. For example:
 
 ./configure CPPFLAGS="-I/home/sox/include -I/usr/local/multimedia/include" LDFLAGS="-L/home/sox/lib -L/usr/local/multimedia/lib"
 
-If you're not processing lots of u-law or A-law files and would like
-to save around 64K of memory when SoX is executed then you can use
-runtime routines to perform u-law/A-law conversions. This is slower
-then the default lookup tables but results in the same answers. To
-save this memory, specify --disable-fast-ulaw and --disable-fast-alaw.
+If you are compiling under cygwin and would like to create a static
+sox.exe using mingw libraries then you can use the following:
 
+./configure CC="gcc -mno-cygwin" --disable-shared
 
 Testing
 -------
@@ -86,6 +86,7 @@ per second and the data formatted as signed shorts:
 If monkey.xxx plays properly (it's a very short monkey screech),
 congratulations! SoX works.
 
-After that, running "tests.sh" and "testall.sh" ("tests.bat" and
-"testall.bat" for DOS) tests most of the implemented file handlers to
-make sure that some portability issue haven't popped up.
+If your adding new features to SoX or want to perform advance tests
+on a new platform then you can use the scripts "tests.sh" and
+"testall.sh" to stress SoX.
+

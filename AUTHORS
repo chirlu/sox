@@ -4,10 +4,10 @@ bugs.
 
 
 Creator:
-	Lance Norskog		thinman@meer.net (emeritus)
+	Lance Norskog
 
 Mantainer:
-	Chris Bagwell		cbagwell@sprynet.com
+	Chris Bagwell		cbagwell@users.sourceforge.net
 
 Contributors:
 	Juergen Mueller		jmueller@uia.ua.ac.be
@@ -17,7 +17,7 @@ Contributors:
 		AU, AIFF, AUTO, HCOM, reverse, many bug fixes.
 	Jef Poskanzer		jef@well.sf.ca.us
 		original code for u-law and delay line
-	Bill Neisius		bill%solaria@hac2arpa.hac.com 
+	Bill Neisius
 		DOS port, 8SVX, Sounder, Soundtool formats,
 		Apollo fixes, stat with auto-picker.
 	Rick Richardson		rick@digibd.com
