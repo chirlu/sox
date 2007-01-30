@@ -374,7 +374,7 @@ rm \-f alert.raw
 
 while [ $iterations \-ge 1 ]; do
   cat 2tones.raw >> alert.raw
-  iterations=`expr $iterations \- 1`
+  iterations=\`expr $iterations \- 1\`
   done
 
 # Add a file header and save some disc space:
