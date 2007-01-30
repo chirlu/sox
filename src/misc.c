@@ -630,7 +630,13 @@ void st_generate_wave_table(
 
 const char *st_version(void)
 {
-  return PACKAGE_VERSION;
+    static char versionstr[20];
+
+    sprintf(versionstr, "%d.%d.%d",
+            (ST_LIB_VERSION_CODE & 0xff0000) >> 16,
+            (ST_LIB_VERSION_CODE & 0x00ff00) >> 8,
+            (ST_LIB_VERSION_CODE & 0x0000ff));
+    return(versionstr);
 }
 
 /* Implements traditional fseek() behavior.  Meant to abstract out

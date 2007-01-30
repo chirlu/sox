@@ -16,6 +16,14 @@
 #include <stdlib.h>
 #include "ststdint.h"
 
+/* The following is the API version of libst.  It is not meant
+ * to follow the version number of SoX but it has historically.
+ * Please do not count of these numbers being in sync.
+ * The following is at 13.0.0
+ */
+#define ST_LIB_VERSION_CODE 0x0d0000
+#define ST_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
+
 /* Avoid warnings about unused parameters. */
 #ifdef __GNUC__
 #define UNUSED __attribute__ ((unused))

@@ -604,7 +604,7 @@ static st_bool doopts(file_t f, int argc, char **argv)
         break;
 
       case 8:
-        printf("%s: v%s\n", myname, st_version());
+        printf("%s: v%s\n", myname, PACKAGE_VERSION);
         exit(0);
         break;
       }
@@ -1646,7 +1646,7 @@ static void usage(char const *message)
   const st_effect_t *e;
 
   printf("%s: ", myname);
-  printf("SoX Version %s\n\n", st_version());
+  printf("SoX Version %s\n\n", PACKAGE_VERSION);
   if (message)
     fprintf(stderr, "Failed: %s\n\n", message);
   printf("Usage summary: [gopts] [[fopts] infile]... [fopts]%s [effect [effopts]]...\n\n",
@@ -1735,7 +1735,7 @@ static void usage_effect(char *effect)
   const st_effect_t *e;
 
   printf("%s: ", myname);
-  printf("v%s\n\n", st_version());
+  printf("v%s\n\n", PACKAGE_VERSION);
 
   printf("Effect usage:\n\n");
 
