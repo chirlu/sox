@@ -509,7 +509,7 @@ static struct option long_options[] =
     {"reverse-bits"    ,       no_argument, NULL, 'X'},
     {"reverse-nibbles" ,       no_argument, NULL, 'N'},
     {"show-progress"   ,       no_argument, NULL, 'S'},
-    {"type"            ,       no_argument, NULL, 't'},
+    {"type"            , required_argument, NULL, 't'},
     {"volume"          , required_argument, NULL, 'v'},
 
     {NULL, 0, NULL, 0}
