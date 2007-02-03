@@ -23,6 +23,7 @@
 
 #ifdef HAVE_SNDFILE_H
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -37,6 +38,70 @@ typedef struct sndfile
 
 assert_static(sizeof(struct sndfile) <= ST_MAX_FILE_PRIVSIZE, 
               /* else */ sndfile_PRIVSIZE_too_big);
+
+/* Get sample encoding and size from libsndfile subtype; return value
+   is encoding if conversion was made, or ST_ENCODING_UNKNOWN for
+   invalid input. If the libsndfile subtype can't be represented in
+   SoX types, use 16-bit signed. */
+static st_encoding_t sox_encoding_and_size(int format, int *size)
+{
+  *size = -1;                   /* Default */
+  format &= SF_FORMAT_SUBMASK;
+  
+  switch (format) {
+  case SF_FORMAT_PCM_S8:
+    *size = ST_SIZE_8BIT;
+    return ST_ENCODING_SIGN2;
+  case SF_FORMAT_PCM_16:
+    *size = ST_SIZE_16BIT;
+    return ST_ENCODING_SIGN2;
+  case SF_FORMAT_PCM_24:
+    *size = ST_SIZE_24BIT;
+    return ST_ENCODING_SIGN2;
+  case SF_FORMAT_PCM_32:
+    *size = ST_SIZE_32BIT;
+    return ST_ENCODING_SIGN2;
+  case SF_FORMAT_PCM_U8:
+    *size = ST_SIZE_8BIT;
+    return ST_ENCODING_UNSIGNED;
+  case SF_FORMAT_FLOAT:
+    *size = ST_SIZE_32BIT;
+    return ST_ENCODING_FLOAT;
+  case SF_FORMAT_DOUBLE:
+    *size = ST_SIZE_64BIT;
+    return ST_ENCODING_FLOAT;
+  case SF_FORMAT_ULAW:
+    return ST_ENCODING_ULAW;
+  case SF_FORMAT_ALAW:
+    return ST_ENCODING_ALAW;
+  case SF_FORMAT_IMA_ADPCM:
+    return ST_ENCODING_IMA_ADPCM;
+  case SF_FORMAT_MS_ADPCM:
+    return ST_ENCODING_MS_ADPCM;
+  case SF_FORMAT_GSM610:
+    return ST_ENCODING_GSM;
+  case SF_FORMAT_VOX_ADPCM:
+    return ST_ENCODING_ADPCM;
+
+  /* For encodings we can't represent, have a sensible default */
+  case SF_FORMAT_G721_32:
+  case SF_FORMAT_G723_24:
+  case SF_FORMAT_G723_40:
+  case SF_FORMAT_DWVW_12:
+  case SF_FORMAT_DWVW_16:
+  case SF_FORMAT_DWVW_24:
+  case SF_FORMAT_DWVW_N:
+  case SF_FORMAT_DPCM_8:
+  case SF_FORMAT_DPCM_16:
+    return ST_ENCODING_SIGN2;
+
+  default: /* Invalid libsndfile subtype */
+    return ST_ENCODING_UNKNOWN;
+  }
+
+  assert(0); /* Should never reach here */
+  return ST_ENCODING_UNKNOWN;
+}
 
 /*
  * Open file in sndfile.
@@ -57,8 +122,7 @@ int st_sndfile_startread(ft_t ft)
 
   /* Copy format info */
   ft->signal.rate = sf->sf_info->samplerate;
-  ft->signal.size = ST_SIZE_32BIT;
-  ft->signal.encoding = ST_ENCODING_UNSIGNED;
+  ft->signal.encoding = sox_encoding_and_size(sf->sf_info->format, &ft->signal.size);
   ft->signal.channels = sf->sf_info->channels;
   ft->length = sf->sf_info->frames * sf->sf_info->channels;
 
