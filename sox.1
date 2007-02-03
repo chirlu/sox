@@ -720,6 +720,9 @@ extension are listed with their names preceded by a dot. File types
 that require optional libsndfile support are marked
 `\fB(libsndfile)\fR'. File types that can be handled by libsndfile
 using \fB\-t sndfile\fR are marked `\fB(also with \-t sndfile)\fR'.
+This might be useful if you have a file that doesn't work with SoX's
+default format readers and writers, and there's a libsndfile reader
+and writer for that format.
 .SP
 .TP
 .B .raw (also with \-t sndfile)
