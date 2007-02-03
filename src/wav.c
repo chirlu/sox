@@ -1454,13 +1454,13 @@ static int wavwritehdr(ft_t ft, int second_header)
     /* figured out header info, so write it */
 
 
-    /* If user specified opposite swap then we think, assume they are
+    /* If user specified opposite swap than we think, assume they are
      * asking to write a RIFX file.
      */
     if (ft->signal.reverse_bytes != ST_IS_BIGENDIAN)
     {
         if (!second_header)
-            st_report("Requested to swap bytes so writing  RIFX header");
+            st_report("Requested to swap bytes so writing RIFX header");
         st_writes(ft, "RIFX");
     }
     else
