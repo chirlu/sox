@@ -127,7 +127,7 @@ static st_size_t read(ft_t ft, st_sample_t * buffer, st_size_t len)
 
 /******************************************************************************
  * Function   : stopread 
- * Description: Frees the internal buffer allocated in st_voxstartread.
+ * Description: Frees the internal buffer allocated in voxstart/imastart.
  * Parameters : ft   - file info structure
  * Returns    : int  - ST_SUCCESS
  * Exceptions :
@@ -198,7 +198,7 @@ static st_size_t write(ft_t ft, const st_sample_t * buffer, st_size_t length)
 /******************************************************************************
  * Function   : stopwrite
  * Description: Flushes any leftover samples and frees the internal buffer 
- *              allocated in st_voxstartwrite.
+ *              allocated in voxstart/imastart.
  * Parameters : ft   - file info structure
  * Returns    : int  - ST_SUCCESS
  * Exceptions :
