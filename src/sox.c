@@ -1212,7 +1212,7 @@ static int start_all_effects(void)
         return ST_EOF;
     }
     if (is_always_null || ret == ST_EFF_NULL) { /* remove from the chain */
-      int (*delete)(eff_t effp) = e->h->delete? e->h->delete: st_effect_nothing;
+      int (*delete)(eff_t effp) = e->h->kill? e->h->kill: st_effect_nothing;
 
       /* No left & right delete as there is no left & right getopts */
       delete(e);
@@ -1582,7 +1582,7 @@ static void delete_effects(void)
 
   for (e = 1; e < neffects; e++) {
     int (*delete)(eff_t effp) =
-       efftab[e].h->delete? efftab[e].h->delete : st_effect_nothing;
+       efftab[e].h->kill? efftab[e].h->kill : st_effect_nothing;
 
     /* No left & right delete as there is no left & right getopts */
     delete(&efftab[e]);
