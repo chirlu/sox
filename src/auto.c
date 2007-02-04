@@ -26,7 +26,7 @@
 static int st_autostartread(ft_t ft)
 {
     char *type = NULL;
-    char header[20];
+    char header[256];
     int rc, loop;
 
     /* Attempt to auto-detect filetype using magic values.  Abort loop
