@@ -254,7 +254,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     snd_pcm_hw_params_get_rate_min(hw_params, &min_rate, &dir);
     snd_pcm_hw_params_get_rate_max(hw_params, &max_rate, &dir);
 
-    rate = min(max(ft->signal.rate, min_rate), max_rate);
+    rate = range_limit(ft->signal.rate, min_rate, max_rate);
     if (rate != ft->signal.rate)
     {
         st_report("hardware does not support sample-rate %i; changing to %i.", ft->signal.rate, rate);
