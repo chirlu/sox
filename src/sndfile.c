@@ -161,8 +161,10 @@ static struct {
   { "wav",	0, SF_FORMAT_WAV },
   { "au",	0, SF_FORMAT_AU },
   { "snd",	0, SF_FORMAT_AU },
+#ifdef HAVE_SNDFILE_1_0_12
   { "caf",	0, SF_FORMAT_CAF },
   { "flac",	0, SF_FORMAT_FLAC },
+#endif
   { "svx",	0, SF_FORMAT_SVX },
   { "8svx",     0, SF_FORMAT_SVX },
   { "paf",	0, SF_ENDIAN_BIG | SF_FORMAT_PAF },
@@ -240,6 +242,7 @@ static int sndfile_format(int encoding, int size)
     case ST_ENCODING_SIGN2:
     case ST_ENCODING_MP3:
     case ST_ENCODING_VORBIS:
+#ifdef HAVE_SNDFILE_1_0_12
     case ST_ENCODING_FLAC:
       switch (size) {
       case ST_SIZE_8BIT:
@@ -254,6 +257,7 @@ static int sndfile_format(int encoding, int size)
         return 0;
       }
       break;
+#endif
     case ST_ENCODING_FLOAT:
       return SF_FORMAT_FLOAT;
     case ST_ENCODING_GSM:
@@ -347,7 +351,9 @@ static const char *names[] = {
   /* "aif", */
   /* "wav", */
   /* "au", */
+#ifdef HAVE_SNDFILE_1_0_12
   "caf",
+#endif
   /* "flac", */
   /* "snd", */
   /* "svx", */
