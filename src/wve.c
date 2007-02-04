@@ -4,7 +4,6 @@
  */
 
 #include "st_i.h"
-#include "g72x.h"
 #include <string.h>
 #include <errno.h>
 
