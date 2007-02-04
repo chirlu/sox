@@ -370,7 +370,7 @@ typedef struct
                 st_size_t *isamp, st_size_t *osamp);
     int (*drain)(eff_t effp, st_sample_t *obuf, st_size_t *osamp);
     int (*stop)(eff_t effp);
-    int (*delete)(eff_t effp);
+    int (*kill)(eff_t effp);
 } st_effect_t;
 
 struct st_effect
