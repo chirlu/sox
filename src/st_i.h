@@ -47,6 +47,8 @@
 #endif
 #define max(a, b) ((a) >= (b) ? (a) : (b))
 
+#define range_limit(x, lower, upper) (min(max(x, lower), upper))
+
 /* Array-length operator */
 #define array_length(a) (sizeof(a)/sizeof(a[0]))
 
