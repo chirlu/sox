@@ -483,7 +483,7 @@ static st_size_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
 
     if ((written = lame_encode_buffer(p->gfp,buffer_l, buffer_r,
                                       nsamples, (unsigned char *)mp3buffer,
-                                      mp3buffer_size)) < mp3buffer_size){
+                                      mp3buffer_size)) > mp3buffer_size){
         st_fail_errno(ft,ST_EOF,"Encoding failed");
         goto end;
     }
