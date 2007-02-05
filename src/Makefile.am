@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-AM_CFLAGS = @SNDFILE_CFLAGS@ @SAMPLERATE_CFLAGS@
+AM_CFLAGS = @SNDFILE_CFLAGS@ @SAMPLERATE_CFLAGS@ -m32
 AM_LDFLAGS = @SNDFILE_LIBS@ @SAMPLERATE_LIBS@
 
 # Pass flags from --enable-silent-libtool
