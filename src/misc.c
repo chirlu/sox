@@ -31,14 +31,14 @@
 
 const char * const st_sizes_str[] = {
         "NONSENSE!",
-        "bytes",
-        "shorts",
-        "tri-bytes",
-        "longs",
+        "1 byte",
+        "2 bytes",
+        "3 bytes",
+        "4 bytes",
         "NONSENSE",
         "NONSENSE",
         "NONSENSE",
-        "long longs"
+        "8 bytes"
 };
 
 const char * const st_size_bits_str[] = {
