@@ -28,6 +28,10 @@
 
 #include <FLAC/all.h>
 
+/* Workaround for older flac versions */
+#define FLAC__metadata_object_vorbiscomment_append_comment(object, entry, copy)\
+  FLAC__metadata_object_vorbiscomment_insert_comment(object, object->data.vorbis_comment.num_comments, entry, copy)
+
 
 
 typedef struct
