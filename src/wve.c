@@ -29,11 +29,11 @@ static int st_wveseek(ft_t ft, st_size_t offset)
     wve_t wve = (wve_t)ft->priv;
 
     new_offset = offset * ft->signal.size;
-    /* Make sure request aligns to a channel block (ie left+right) */
+    /* Make sure request aligns to a channel block (i.e. left+right) */
     channel_block = ft->signal.channels * ft->signal.size;
     alignment = new_offset % channel_block;
-    /* Most common mistaken is to compute something like
-     * "skip everthing upto and including this sample" so
+    /* Most common mistake is to compute something like
+     * "skip everthing up to and including this sample" so
      * advance to next sample block in this case.
      */
     if (alignment != 0)
