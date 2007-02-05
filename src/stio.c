@@ -74,13 +74,13 @@ static int st_checkformat(ft_t ft)
 
         if ((ft->signal.size <= 0) || (ft->signal.size > ST_INFO_SIZE_MAX))
         {
-                st_fail_errno(ft,ST_EFMT,"data size %i is invalid");
+                st_fail_errno(ft,ST_EFMT,"data size %d is invalid", ft->signal.size);
                 return ST_EOF;
         }
 
         if (ft->signal.encoding <= 0  || ft->signal.encoding >= ST_ENCODINGS)
         {
-                st_fail_errno(ft,ST_EFMT,"data encoding %i is invalid");
+                st_fail_errno(ft,ST_EFMT,"data encoding %d is invalid", ft->signal.encoding);
                 return ST_EOF;
         }
 
