@@ -61,7 +61,7 @@
 
 static st_effect_t st_echo_effect;
 
-#define DELAY_BUFSIZ ( 50L * ST_MAXRATE )
+#define DELAY_BUFSIZ ( 50 * ST_MAXRATE )
 #define MAX_ECHOS 7     /* 24 bit x ( 1 + MAX_ECHOS ) = */
                         /* 24 bit x 8 = 32 bit !!!      */
 
@@ -120,7 +120,7 @@ static int st_echo_start(eff_t effp)
         float sum_in_volume;
         long j;
 
-        echo->maxsamples = 0L;
+        echo->maxsamples = 0;
         if ( echo->in_gain < 0.0 )
         {
                 st_fail("echo: gain-in must be positive!");

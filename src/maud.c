@@ -226,7 +226,7 @@ static int st_maudstartwrite(ft_t ft)
             ft->signal.encoding == ST_ENCODING_SIGN2) 
             ft->signal.encoding = ST_ENCODING_UNSIGNED;
         
-        p->nsamples = 0x7f000000L;
+        p->nsamples = 0x7f000000;
         maudwriteheader(ft);
         p->nsamples = 0;
         return (ST_SUCCESS);
@@ -252,7 +252,7 @@ static int st_maudstopwrite(ft_t ft)
 
         /* All samples are already written out. */
         
-        if (st_seeki(ft, 0L, 0) != 0) 
+        if (st_seeki(ft, 0, 0) != 0) 
         {
             st_fail_errno(ft,errno,"can't rewind output file to rewrite MAUD header");
             return(ST_EOF);

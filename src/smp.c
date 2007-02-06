@@ -254,7 +254,7 @@ static int st_smpstartread(ft_t ft)
 
         /* seek from the current position (the start of sample data) by */
         /* NoOfSamps * sizeof(int16_t) */
-        if (st_seeki(ft, smp->NoOfSamps * 2L, 1) == -1)
+        if (st_seeki(ft, smp->NoOfSamps * 2, 1) == -1)
         {
                 st_fail_errno(ft,errno,"SMP unable to seek to trailer");
                 return(ST_EOF);

@@ -527,9 +527,9 @@ static long SrcUD(resample_t r, long Nx)
       Xp = r->X + (long)time;      /* Ptr to current input sample */
 
       /* Past  inner product: */
-      v = (*prodUD)(r->Imp, Xp, -1L, T, r->dhb, r->Xh); /* needs Np*Nmult in 31 bits */
+      v = (*prodUD)(r->Imp, Xp, -1, T, r->dhb, r->Xh); /* needs Np*Nmult in 31 bits */
       /* Future inner product: */
-      v += (*prodUD)(r->Imp, Xp+1, 1L, (1.0-T), r->dhb, r->Xh); /* prefer even total */
+      v += (*prodUD)(r->Imp, Xp+1, 1, (1.0-T), r->dhb, r->Xh); /* prefer even total */
 
       if (Factor < 1) v *= Factor;
       *Y++ = v;              /* Deposit output */

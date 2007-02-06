@@ -37,8 +37,8 @@ typedef enum {st_false, st_true} st_bool;
 typedef int32_t int24_t;     /* But beware of the extra byte. */
 typedef uint32_t uint24_t;   /* ditto */
 
-#define ST_INT_MIN(bits) (1L <<((bits)-1))
-#define ST_INT_MAX(bits) (-1UL>>(33-(bits)))
+#define ST_INT_MIN(bits) (1 <<((bits)-1))
+#define ST_INT_MAX(bits) (-1U>>(33-(bits)))
 #define ST_UINT_MAX(bits) (ST_INT_MIN(bits)|ST_INT_MAX(bits))
 
 #define ST_INT8_MAX  ST_INT_MAX(8)
@@ -87,9 +87,9 @@ static double st_macro_temp_double UNUSED;
 #define ST_SAMPLE_TO_UNSIGNED(bits,d,clips) \
   (uint##bits##_t)( \
     st_macro_temp_sample=d, \
-    st_macro_temp_sample>(st_sample_t)(ST_SAMPLE_MAX-(1UL<<(31-bits)))? \
+    st_macro_temp_sample>(st_sample_t)(ST_SAMPLE_MAX-(1U<<(31-bits)))? \
       ++(clips),ST_UINT_MAX(bits): \
-      ((uint32_t)(st_macro_temp_sample^ST_SAMPLE_NEG)+(1UL<<(31-bits)))>>(32-bits))
+      ((uint32_t)(st_macro_temp_sample^ST_SAMPLE_NEG)+(1U<<(31-bits)))>>(32-bits))
 #define ST_SAMPLE_TO_SIGNED(bits,d,clips) \
   (int##bits##_t)(ST_SAMPLE_TO_UNSIGNED(bits,d,clips)^ST_INT_MIN(bits))
 #define ST_SIGNED_TO_SAMPLE(bits,d)((st_sample_t)(d)<<(32-bits))
@@ -147,18 +147,18 @@ static double st_macro_temp_double UNUSED;
 
 typedef uint32_t st_size_t;
 /* Maximum value size type can hold. (Minimum is 0). */
-#define ST_SIZE_MAX 0xffffffffL
+#define ST_SIZE_MAX 0xffffffff
 
 typedef int32_t st_ssize_t;
 /* Minimum and maximum value signed size type can hold. */
-#define ST_SSIZE_MAX 0x7fffffffL
-#define ST_SSIZE_MIN (-ST_SSIZE_MAX - 1L)
+#define ST_SSIZE_MAX 0x7fffffff
+#define ST_SSIZE_MIN (-ST_SSIZE_MAX - 1)
 
 typedef unsigned st_rate_t;
 /* Warning, this is a MAX value used in the library.  Each format and
  * effect may have its own limitations of rate.
  */
-#define ST_MAXRATE      (50UL * 1024) /* maximum sample rate in library */
+#define ST_MAXRATE      (50U * 1024) /* maximum sample rate in library */
 
 typedef enum {
   ST_ENCODING_UNKNOWN   ,

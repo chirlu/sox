@@ -167,7 +167,7 @@ static int st_sndtstopwrite(ft_t ft)
             return rc;
 
         /* fixup file sizes in header */
-        if (st_seeki(ft, 0L, 0) != 0){
+        if (st_seeki(ft, 0, 0) != 0){
                 st_fail_errno(ft,errno,"can't rewind output file to rewrite SND header");
                 return ST_EOF;
         }

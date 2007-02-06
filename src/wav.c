@@ -1271,7 +1271,7 @@ static int wavwritehdr(ft_t ft, int second_header)
     uint32_t dwSamplesWritten=0;  /* windows doesnt seem to use this*/
 
     /* data chunk */
-    uint32_t  dwDataLength=0x7ffff000L; /* length of sound data in bytes */
+    uint32_t  dwDataLength=0x7ffff000; /* length of sound data in bytes */
     /* end of variables written to header */
 
     /* internal variables, intermediate values etc */
@@ -1621,7 +1621,7 @@ static int st_wavstopwrite(ft_t ft)
         if (!ft->seekable)
                 return ST_EOF;
 
-        if (st_seeki(ft, 0L, SEEK_SET) != 0)
+        if (st_seeki(ft, 0, SEEK_SET) != 0)
         {
                 st_fail_errno(ft,ST_EOF,"Can't rewind output file to rewrite .wav header.");
                 return ST_EOF;

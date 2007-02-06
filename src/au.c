@@ -368,7 +368,7 @@ static int st_austopwrite(ft_t ft)
         /* Attempt to update header */
         if (ft->seekable)
         {
-          if (st_seeki(ft, 0L, 0) != 0)
+          if (st_seeki(ft, 0, 0) != 0)
           {
                 st_fail_errno(ft,errno,"Can't rewind output file to rewrite Sun header.");
                 return(ST_EOF);

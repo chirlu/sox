@@ -243,7 +243,7 @@ static int st_spherestopwrite(ft_t ft)
     if (rc)
         return rc;
 
-    if (st_seeki(ft, 0L, 0) != 0)
+    if (st_seeki(ft, 0, 0) != 0)
     {
         st_fail_errno(ft,errno,"Could not rewird output file to rewrite sphere header.");
         return (ST_EOF);

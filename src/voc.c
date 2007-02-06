@@ -332,7 +332,7 @@ static st_size_t st_vocread(ft_t ft, st_sample_t *buf, st_size_t len)
         if (v->silent) {
                 /* Fill in silence */
                 for(;v->rest && (done < len); v->rest--, done++)
-                        *buf++ = 0x80000000L;
+                        *buf++ = 0x80000000;
         }
         /* else, not silence, read the block */
         else {
@@ -728,7 +728,7 @@ static int getblock(ft_t ft)
                                 ft->signal.channels = 2;  /* Stereo */
                         /* Needed number of channels before finishing
                            compute for rate */
-                        ft->signal.rate = (256000000L/(65536L - v->rate))/
+                        ft->signal.rate = (256000000/(65536 - v->rate))/
                             ft->signal.channels;
                         /* An extended block must be followed by a data */
                         /* block to be valid so loop back to top so it  */
@@ -770,7 +770,7 @@ static void blockstart(ft_t ft)
               st_writeb(ft, 4);                /* block length = 4 */
               st_writeb(ft, 0);                /* block length = 4 */
               st_writeb(ft, 0);                /* block length = 4 */
-                  v->rate = 65536L - (256000000.0/(2*(float)ft->signal.rate));
+                  v->rate = 65536 - (256000000.0/(2*(float)ft->signal.rate));
               st_writew(ft,v->rate);    /* Rate code */
               st_writeb(ft, 0);         /* File is not packed */
               st_writeb(ft, 1);         /* samples are in stereo */

@@ -91,7 +91,7 @@ void g72x_init_state(struct g72x_state *state_ptr)
 {
         int             cnta;
 
-        state_ptr->yl = 34816L;
+        state_ptr->yl = 34816;
         state_ptr->yu = 544;
         state_ptr->dms = 0;
         state_ptr->dml = 0;
@@ -388,7 +388,7 @@ void update(int code_size, int y, int wi, int fi, int dq, int sr,
         } else if (sr > 0) {
                 exp = quan(sr, power2, 15);
                 state_ptr->sr[0] = (exp << 6) + ((sr << 6) >> exp);
-        } else if (sr > -32768L) {
+        } else if (sr > -32768) {
                 mag = -sr;
                 exp = quan(mag, power2, 15);
                 state_ptr->sr[0] =  (exp << 6) + ((mag << 6) >> exp) - 0x400;
@@ -453,7 +453,7 @@ int tandem_adjust_alaw(int sr, int se, int y, int i, int sign, short *qtab)
         int             im;     /* biased magnitude of i */
         int             imx;    /* biased magnitude of id */
 
-        if (sr <= -32768L)
+        if (sr <= -32768)
                 sr = -1;
         sp = st_13linear2alaw(((sr >> 1) << 3));/* short to A-law compression */
         dx = (st_alaw2linear16(sp) >> 2) - se;  /* 16-bit prediction error */
@@ -495,7 +495,7 @@ int tandem_adjust_ulaw(int sr, int se, int y, int i, int sign, short *qtab)
         int             im;     /* biased magnitude of i */
         int             imx;    /* biased magnitude of id */
 
-        if (sr <= -32768L)
+        if (sr <= -32768)
                 sr = 0;
         sp = st_14linear2ulaw((sr << 2));/* short to u-law compression */
         dx = (st_ulaw2linear16(sp) >> 2) - se;  /* 16-bit prediction error */

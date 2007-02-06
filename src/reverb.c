@@ -98,7 +98,7 @@
 static st_effect_t st_reverb_effect;
 
 #define REVERB_FADE_THRESH 10
-#define DELAY_BUFSIZ ( 50L * ST_MAXRATE )
+#define DELAY_BUFSIZ ( 50 * ST_MAXRATE )
 #define MAXREVERBS 8
 
 /* Private data for SKEL file */

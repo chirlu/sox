@@ -73,7 +73,7 @@ static int flow(eff_t effp, const st_sample_t * ibuf,
 
   *isamp = *osamp = len;
   while (len--) {             /* 16 signed bits of triangular noise */
-    int tri16 = ((rand() % 32768L) + (rand() % 32768L)) - 32767;
+    int tri16 = ((rand() % 32768) + (rand() % 32768)) - 32767;
     double l = *ibuf++ + tri16 * dither->amount;
     *obuf++ = ST_ROUND_CLIP_COUNT(l, effp->clips);
   }

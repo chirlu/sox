@@ -86,7 +86,7 @@ static int st_reverse_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 
         if (reverse->phase == WRITING) {
                 fflush(reverse->fp);
-                fseeko(reverse->fp, 0L, SEEK_END);
+                fseeko(reverse->fp, 0, SEEK_END);
                 reverse->pos = ftello(reverse->fp);
                 if (reverse->pos % sizeof(st_sample_t) != 0)
                 {

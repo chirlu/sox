@@ -164,7 +164,7 @@ static int permute(int *m, int *l, int ct, int ct1, size_t amalg)
   for (k=ct; k>1; ) {
     int tmp;
     unsigned long j;
-    j = (rand()%32768L) + ((rand()%32768L)<<13); /* reasonably big */
+    j = (rand()%32768) + ((rand()%32768)<<13); /* reasonably big */
     j = j % k; /* non-negative! */
     k--;
     if (j != k) {

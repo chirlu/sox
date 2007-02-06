@@ -185,7 +185,7 @@ static st_size_t st_hcomread(ft_t ft, st_sample_t *buf, st_size_t len)
                         p->cksum += p->current;
                         p->nrbits = 32;
                 }
-                if(p->current & 0x80000000L) {
+                if(p->current & 0x80000000) {
                         p->dictentry =
                                 p->dictionary[p->dictentry].dict_rightson;
                 } else {
@@ -415,7 +415,7 @@ static void compress(ft_t ft, unsigned char **df, int32_t *dl, float fr)
   dfp = datafork + 4;
   put32_be(&dfp, *dl);
   put32_be(&dfp, p->new_checksum);
-  put32_be(&dfp, 1L);
+  put32_be(&dfp, 1);
   samplerate = 22050 / (int32_t)fr;
   put32_be(&dfp, samplerate);
   put16_be(&dfp, dictsize);

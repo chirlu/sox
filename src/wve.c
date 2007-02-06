@@ -162,7 +162,7 @@ static int st_wvestopwrite(ft_t ft)
             return ST_SUCCESS;
         }
 
-        if (st_seeki(ft, 0L, 0) != 0)
+        if (st_seeki(ft, 0, 0) != 0)
         {
                 st_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
                 return(ST_EOF);

@@ -449,13 +449,13 @@ float st_swapf(float f)
     } u;
 
     u.f= f;
-    u.dw= (u.dw>>24) | ((u.dw>>8)&0xff00) | ((u.dw<<8)&0xff0000L) | (u.dw<<24);
+    u.dw= (u.dw>>24) | ((u.dw>>8)&0xff00) | ((u.dw<<8)&0xff0000) | (u.dw<<24);
     return u.f;
 }
 
 uint32_t st_swap24(uint24_t udw)
 {
-    return ((udw >> 16) & 0xff) | (udw & 0xff00) | ((udw << 16) & 0xff0000L);
+    return ((udw >> 16) & 0xff) | (udw & 0xff00) | ((udw << 16) & 0xff0000);
 }
 
 double st_swapd(double df)

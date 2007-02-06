@@ -93,7 +93,7 @@ static int st_aiffstartread(ft_t ft)
         unsigned short nmarks = 0;
         unsigned short sustainLoopBegin = 0, sustainLoopEnd = 0,
                        releaseLoopBegin = 0, releaseLoopEnd = 0;
-        st_size_t seekto = 0L, ssndsize = 0L;
+        st_size_t seekto = 0, ssndsize = 0;
         char *author;
         char *copyright;
         char *nametext;
@@ -682,7 +682,7 @@ static int st_aiffstartwrite(ft_t ft)
            At 48 kHz, 16 bits stereo, this gives ~3 hours of music.
            Sorry, the AIFF format does not provide for an "infinite"
            number of samples. */
-        return(aiffwriteheader(ft, 0x7f000000L / (ft->signal.size*ft->signal.channels)));
+        return(aiffwriteheader(ft, 0x7f000000 / (ft->signal.size*ft->signal.channels)));
 }
 
 static st_size_t st_aiffwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
@@ -718,7 +718,7 @@ static int st_aiffstopwrite(ft_t ft)
             st_fail_errno(ft,ST_EOF,"Non-seekable file.");
             return(ST_EOF);
         }
-        if (st_seeki(ft, 0L, SEEK_SET) != 0)
+        if (st_seeki(ft, 0, SEEK_SET) != 0)
         {
                 st_fail_errno(ft,errno,"can't rewind output file to rewrite AIFF header");
                 return(ST_EOF);
@@ -735,7 +735,7 @@ static int aiffwriteheader(ft_t ft, st_size_t nframes)
         int i;
         int padded_comment_size = 0;
         int comment_size = 0;
-        st_size_t comment_chunk_size = 0L;
+        st_size_t comment_chunk_size = 0;
 
         /* MARK and INST chunks */
         if (ft->instr.nloops) {
@@ -772,7 +772,7 @@ static int aiffwriteheader(ft_t ft, st_size_t nframes)
           padded_comment_size = ((comment_size % 2) == 0) ?
                                 comment_size : comment_size + 1;
           /* one comment, timestamp, marker ID and text count */
-          comment_chunk_size = (2L + 4 + 2 + 2 + padded_comment_size);
+          comment_chunk_size = (2 + 4 + 2 + 2 + padded_comment_size);
           hsize += 8 /* COMT hdr */ + comment_chunk_size; 
         }
 
@@ -792,7 +792,7 @@ static int aiffwriteheader(ft_t ft, st_size_t nframes)
 
           /* time stamp of comment, Unix knows of time from 1/1/1970,
              Apple knows time from 1/1/1904 */
-          st_writedw(ft, ((int32_t) time(NULL)) + 2082844800L);
+          st_writedw(ft, ((int32_t) time(NULL)) + 2082844800);
 
           /* A marker ID of 0 indicates the comment is not associated
              with a marker */
@@ -895,7 +895,7 @@ static int st_aifcstartwrite(ft_t ft)
            At 48 kHz, 16 bits stereo, this gives ~3 hours of music.
            Sorry, the AIFC format does not provide for an "infinite"
            number of samples. */
-        return(aifcwriteheader(ft, 0x7f000000L / (ft->signal.size*ft->signal.channels)));
+        return(aifcwriteheader(ft, 0x7f000000 / (ft->signal.size*ft->signal.channels)));
 }
 
 static int st_aifcstopwrite(ft_t ft)
@@ -923,7 +923,7 @@ static int st_aifcstopwrite(ft_t ft)
             st_fail_errno(ft,ST_EOF,"Non-seekable file.");
             return(ST_EOF);
         }
-        if (st_seeki(ft, 0L, SEEK_SET) != 0)
+        if (st_seeki(ft, 0, SEEK_SET) != 0)
         {
                 st_fail_errno(ft,errno,"can't rewind output file to rewrite AIFC header");
                 return(ST_EOF);
@@ -964,7 +964,7 @@ static int aifcwriteheader(ft_t ft, st_size_t nframes)
         /* FVER chunk */
         st_writes(ft, "FVER");
         st_writedw(ft, 4); /* FVER chunk size */
-        st_writedw(ft, 0xa2805140L); /* version_date(May23,1990,2:40pm) */
+        st_writedw(ft, 0xa2805140); /* version_date(May23,1990,2:40pm) */
 
         /* COMM chunk -- describes encoding (and #frames) */
         st_writes(ft, "COMM");
@@ -1050,7 +1050,7 @@ static void write_ieee_extended(ft_t ft, double x)
  * NaN's, and denormalized numbers.
  */
 
-#define FloatToUnsigned(f) ((uint32_t)(((int32_t)(f - 2147483648.0)) + 2147483647L) + 1)
+#define FloatToUnsigned(f) ((uint32_t)(((int32_t)(f - 2147483648.0)) + 2147483647) + 1)
 
 static void ConvertToIeeeExtended(double num, char *bytes)
 {
@@ -1139,7 +1139,7 @@ static void ConvertToIeeeExtended(double num, char *bytes)
  * NaN's, and denormalized numbers.
  */
 
-#define UnsignedToFloat(u)         (((double)((int32_t)(u - 2147483647L - 1))) + 2147483648.0)
+#define UnsignedToFloat(u)         (((double)((int32_t)(u - 2147483647 - 1))) + 2147483648.0)
 
 /****************************************************************
  * Extended precision IEEE floating-point conversion routine.

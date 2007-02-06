@@ -295,7 +295,7 @@ static int st_svxstopwrite(ft_t ft)
         /* append all channel pieces to channel 0 */
         /* close temp files */
         for (i = 1; i < ft->signal.channels; i++) {
-                if (fseeko(p->ch[i], 0L, 0))
+                if (fseeko(p->ch[i], 0, 0))
                 {
                         st_fail_errno (ft,errno,"Can't rewind channel output file %d",i);
                         return(ST_EOF);
@@ -312,7 +312,7 @@ static int st_svxstopwrite(ft_t ft)
             st_writeb(ft, '\0');
 
         /* fixup file sizes in header */
-        if (st_seeki(ft, 0L, 0) != 0)
+        if (st_seeki(ft, 0, 0) != 0)
         {
                 st_fail_errno(ft,errno,"can't rewind output file to rewrite 8SVX header");
                 return(ST_EOF);

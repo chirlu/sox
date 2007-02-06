@@ -550,7 +550,7 @@ static int st_dvmsstopwrite(ft_t ft)
             st_warn("File not seekable");
             return (ST_EOF);
         }
-        if (st_seeki(ft, 0L, 0) != 0)
+        if (st_seeki(ft, 0, 0) != 0)
         {
                 st_fail_errno(ft,errno,"Can't rewind output file to rewrite DVMS header.");
                 return(ST_EOF);

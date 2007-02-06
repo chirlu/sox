@@ -58,7 +58,7 @@ static int startread(ft_t ft)
    * If your format contains a header with format information
    * then you should set it here.
    */
-  ft->signal.rate =  44100L;
+  ft->signal.rate =  44100;
   ft->signal.size = ST_SIZE_BYTE; /* or WORD ... */
   ft->signal.encoding = ST_ENCODING_UNSIGNED; /* or SIGN2 ... */
   ft->signal.channels = 1; /* or 2 or 4 */
@@ -137,7 +137,7 @@ static int startwrite(ft_t ft)
     return ST_EOF;
   }
 
-  if (ft->signal.rate != 44100L)
+  if (ft->signal.rate != 44100)
     st_fail("Output .skel file must have a sample rate of 44100Hz");
 
   if (ft->signal.size == -1) {
