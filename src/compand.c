@@ -194,15 +194,11 @@ static int st_compand_start(eff_t effp)
          l->outgain);
   st_debug("%d input channel(s) expected: actually %d",
          l->expectedChannels, effp->outinfo.channels);
-  st_debug("Attack and decay rates"
-           "======================");
   for (i = 0; i < l->expectedChannels; ++i)
     st_debug("Channel %d: attack = %-12g decay = %-12g",
            i, l->attackRate[i], l->decayRate[i]);
-  st_debug("Transfer function (linear values)"
-           "=================  =============");
   for (i = 0; i < l->transferPoints; ++i)
-    st_debug("%12g -> %-12g",
+    st_debug("Transfer fn (linear): %12g -> %-12g",
            l->transferIns[i], l->transferOuts[i]);
   
   /* Convert attack and decay rates using number of samples */
@@ -240,7 +236,7 @@ static int st_compand_start(eff_t effp)
 
 static void doVolume(double *v, double samp, compand_t l, int chan)
 {
-  double s = samp/ST_SAMPLE_MAX;
+  double s = -samp / ST_SAMPLE_MIN;
   double delta = s - *v;
 
   if (delta > 0.0) /* increase volume according to attack rate */
@@ -285,26 +281,25 @@ static int st_compand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obu
     /* Volume memory is updated: perform compand */
 
     for (chan = 0; chan < filechans; ++chan) {
-      double v = l->expectedChannels > 1 ?
-        l->volume[chan] : l->volume[0];
+      double v = l->volume[l->expectedChannels > 1 ? chan : 0];
       double outv;
-      int piece;
 
-      for (piece = 1 /* yes, 1 */;
-           piece < l->transferPoints;
-           ++piece)
-        if (v >= l->transferIns[piece - 1] &&
-            v < l->transferIns[piece])
-          break;
+      if (v == 0)
+        outv = 1;
+      else {
+        int piece;
 
-      outv = l->transferOuts[piece-1] +
-        (l->transferOuts[piece] - l->transferOuts[piece-1]) *
-        (v - l->transferIns[piece-1]) /
-        (l->transferIns[piece] - l->transferIns[piece-1]);
+        for (piece = 1; v > l->transferIns[piece]; ++piece);
+        outv = (l->transferOuts[piece-1] +
+          (l->transferOuts[piece] - l->transferOuts[piece-1]) *
+          (v - l->transferIns[piece-1]) /
+          (l->transferIns[piece] - l->transferIns[piece-1])) / v;
+      }
+      outv *= l->outgain;
 
       if (l->delay_buf_size <= 0)
       {
-        checkbuf = ibuf[chan]*(outv/v)*l->outgain;
+        checkbuf = ibuf[chan] * outv;
         ST_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
         obuf[odone] = checkbuf;
 
@@ -316,7 +311,7 @@ static int st_compand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obu
         if (l->delay_buf_cnt >= l->delay_buf_size)
         {
             l->delay_buf_full=1; /* delay buffer is now definetly full */
-            checkbuf = l->delay_buf[l->delay_buf_ptr]*(outv/v)*l->outgain;
+            checkbuf = l->delay_buf[l->delay_buf_ptr] * outv;
             ST_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
             obuf[odone] = checkbuf;
 
