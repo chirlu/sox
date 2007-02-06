@@ -114,6 +114,8 @@ sox-13.0.0
   o Don't go into a loop on zero-padded WAVs.  (Jorge Serna)
   o Fix to AIFF writing to avoid writing invalid files in some situations.
     (Reuben Thomas)
+  o Fix compander effect bugs: [1613030] Compand fails to compress
+    clipping, [1181423] compand with 0 sec attack/release.  (robs)
 
   Internal improvements:
 
