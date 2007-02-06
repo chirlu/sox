@@ -3,7 +3,7 @@ Section: sound
 Priority: optional
 Maintainer: Pascal Giard <pascal@debian.org>
 Uploaders: Guenter Geiger (Debian/GNU) <geiger@debian.org>
-Build-Depends: debhelper (>= 1.2.64), libvorbis-dev, libmad0-dev, cdbs, libasound2-dev [!kfreebsd-i386]
+Build-Depends: debhelper (>= 1.2.64), libvorbis-dev, libmad0-dev, libgsm1-dev, libsndfile1-dev, cdbs, libasound2-dev [!kfreebsd-i386]
 Standards-Version: 3.7.2
 
 Package: sox

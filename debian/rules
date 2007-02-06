@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- mode: makefile; coding: utf-8 -*-
 
-DEB_TAR_SRCDIR := sox-12.18.3
+DEB_TAR_SRCDIR := sox-12.99.9
 
 include /usr/share/cdbs/1/rules/tarball.mk
 include /usr/share/cdbs/1/rules/debhelper.mk
@@ -9,7 +9,7 @@ include /usr/share/cdbs/1/class/autotools.mk
 include /usr/share/cdbs/1/rules/simple-patchsys.mk
 
 CFLAGS += -fPIC
-#DEB_CONFIGURE_EXTRA_FLAGS := --disable-lame
+DEB_CONFIGURE_EXTRA_FLAGS := --disable-lame
 DEB_MAKE_INSTALL_TARGET = all
 
 

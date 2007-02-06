@@ -1,11 +1,14 @@
-sox (12.18.2.99.cvs-1) experimental; urgency=low
+sox (12.99.9.cvs-1) experimental; urgency=low
 
   * CVS version of SoX.
-  * [debian/control]: Taking over the package. Guenter set as co-maintainer.
+  * [debian/control]:
+    - Added build-depends on libgsm1-dev and libsndfile1-dev.
+    - Taking over the package. Guenter set as co-maintainer.
+  * [debian/rules]: Changed version to 12.99.9.
   * [debian/patches]: No more patches, everything is fixed upstream.
   * [debian/README.Debian]: Added instructions to build from CVS.
 
- -- Pascal Giard <pascal@gmail.com>  Thu, 18 Jan 2007 03:55:45 -0500
+ -- Pascal Giard <pascal@gmail.com>  Tue, 06 Feb 2007 00:09:29 -0500
 
 sox (12.18.2-2) unstable; urgency=low
 
