@@ -5,7 +5,10 @@ sox (12.99.9.cvs-1) experimental; urgency=low
     - Added build-depends on libgsm1-dev and libsndfile1-dev.
     - Taking over the package. Guenter set as co-maintainer.
   * [debian/rules]: Changed version to 12.99.9.
-  * [debian/sox.install]: Added soxexam.7 and removed soxmix.1.
+  * [debian/sox.install]:
+    - Added soxexam.7 manpage.
+    - soxmix no longer exists, removed soxmix.1 manpage.
+    - play and rec no longer have their manpages, see sox.1.
   * [debian/patches]: No more patches, everything is fixed upstream.
   * [debian/README.Debian]: Added instructions to build from CVS.
 
