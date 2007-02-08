@@ -1307,7 +1307,7 @@ static int flow_effect_out(void)
        * starts with an empty output buffer.
        */
       if (efftab[e].odone < efftab[e].olen) {
-        st_debug("Breaking out of loop to flush buffer");
+        st_debug_more("Breaking out of loop to flush buffer");
         break;
       }
     }
@@ -1441,8 +1441,8 @@ static int flow_effect(int e)
      */
     idone = efftab[e - 1].olen - efftab[e - 1].odone;
     odone = ST_BUFSIZ - efftab[e].olen;
-    st_debug("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-    st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
+    st_debug_more("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
+    st_debug_more("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
 
     effstatus = flow(&efftab[e],
                      &efftab[e - 1].obuf[efftab[e - 1].odone],
@@ -1453,8 +1453,8 @@ static int flow_effect(int e)
     efftab[e - 1].odone += idone;
     /* Don't update efftab[e].odone as we didn't consume data */
     efftab[e].olen += odone;
-    st_debug("post %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-    st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
+    st_debug_more("post %s idone=%d, odone=%d", efftab[e].name, idone, odone);
+    st_debug_more("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
 
     done = idone + odone;
   } else {
@@ -1473,8 +1473,8 @@ static int flow_effect(int e)
     /* left */
     idonel = (idone + 1) / 2;   /* odd-length logic */
     odonel = odone / 2;
-    st_debug("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-    st_debug("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e - 1].odone, efftab[e - 1].olen, efftab[e].odone, efftab[e].olen);
+    st_debug_more("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
+    st_debug_more("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e - 1].odone, efftab[e - 1].olen, efftab[e].odone, efftab[e].olen);
 
     effstatusl = flow(&efftab[e],
                       ibufl, obufl, (st_size_t *)&idonel,
@@ -1498,8 +1498,8 @@ static int flow_effect(int e)
     efftab[e-1].odone += idonel + idoner;
     /* Don't zero efftab[e].odone since nothing has been consumed yet */
     efftab[e].olen += odonel + odoner;
-    st_debug("post %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-    st_debug("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e - 1].odone, efftab[e - 1].olen, efftab[e].odone, efftab[e].olen);
+    st_debug_more("post %s idone=%d, odone=%d", efftab[e].name, idone, odone);
+    st_debug_more("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e - 1].odone, efftab[e - 1].olen, efftab[e].odone, efftab[e].olen);
 
     done = idonel + idoner + odonel + odoner;
 
