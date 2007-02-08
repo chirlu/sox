@@ -554,6 +554,37 @@ static int enum_option(int option_index, enum_item const * items)
   return p->value;
 }
 
+static void optimize_trim(void)          
+{
+    /* Speed hack.  If the "trim" effect is the first effect then
+     * peak inside its "effect descriptor" and see what the
+     * start location is.  This has to be done after its start()
+     * is called to have the correct location.
+     * Also, only do this when only working with one input file.
+     * This is because the logic to do it for multiple files is
+     * complex and problably never used.
+     * This hack is a huge time savings when trimming
+     * gigs of audio data into managable chunks
+     */ 
+    if (input_count == 1 && neffects > 1 &&
+        strcmp(efftab[1].name, "trim") == 0)
+    {
+        if ((files[0]->desc->h->flags & ST_FILE_SEEK) &&
+            files[0]->desc->seekable)
+        { 
+            if (st_seek(files[0]->desc, st_trim_get_start(&efftab[1]), 
+                        ST_SEEK_SET) != ST_EOF)
+            { 
+                /* Assuming a failed seek stayed where it was.  If the 
+                 * seek worked then reset the start location of 
+                 * trim so that it thinks user didn't request a skip.
+                 */ 
+                st_trim_clear_start(&efftab[1]);
+            }    
+        }        
+    }    
+}
+
 static st_bool doopts(file_t f, int argc, char **argv)
 {
   while (st_true) {
@@ -969,6 +1000,8 @@ static int process(void) {
     }
     input_wide_samples = ws; /* Output length is that of longest input file. */
   }
+
+  optimize_trim();
 
   input_eff = 0;
   input_eff_eof = 0;

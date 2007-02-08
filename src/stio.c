@@ -330,3 +330,18 @@ int st_close(ft_t ft)
 
     return rc;
 }
+
+int st_seek(ft_t ft, st_size_t offset, int whence)       
+{       
+    /* FIXME: Implement ST_SEEK_CUR and ST_SEEK_END. */         
+    if (whence != ST_SEEK_SET)          
+        return ST_EOF; /* FIXME: return ST_EINVAL */    
+
+    /* If file is a seekable file and this handler supports seeking,    
+     * the invoke handlers function.    
+     */         
+    if (ft->seekable  && (ft->h->flags & ST_FILE_SEEK))         
+        return (*ft->h->seek)(ft, offset);      
+    else        
+        return ST_EOF; /* FIXME: return ST_EBADF */     
+}

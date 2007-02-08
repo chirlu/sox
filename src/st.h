@@ -419,6 +419,18 @@ int st_gettype(ft_t, st_bool);
 ft_t st_initformat(void);
 char const * st_parsesamples(st_rate_t rate, const char *str, st_size_t *samples, char def);
 
+/* The following routines are unique to the trim effect.
+ * st_trim_get_start can be used to find what is the start
+ * of the trim operation as specified by the user.
+ * st_trim_clear_start will reset what ever the user specified
+ * back to 0.
+ * These two can be used together to find out what the user
+ * wants to trim and use a st_seek() operation instead.  After
+ * st_seek()'ing, you should set the trim option to 0.
+ */
+st_size_t st_trim_get_start(eff_t effp);
+void st_trim_clear_start(eff_t effp);
+
 extern char const * st_message_filename;
 
 #define ST_EOF (-1)
