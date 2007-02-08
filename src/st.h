@@ -198,7 +198,7 @@ typedef enum {ST_OPTION_NO, ST_OPTION_YES, ST_OPTION_DEFAULT} st_option_t;
 typedef struct st_signalinfo
 {
     st_rate_t rate;       /* sampling rate */
-    signed char size;     /* word length of data */
+    int size;             /* compressed or uncompressed datum size */
     st_encoding_t encoding; /* format of sample numbers */
     unsigned channels;    /* number of sound channels */
     double compression;   /* compression factor (where applicable) */

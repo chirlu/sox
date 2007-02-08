@@ -71,8 +71,10 @@ static st_encoding_t sox_encoding_and_size(int format, int *size)
     *size = ST_SIZE_64BIT;
     return ST_ENCODING_FLOAT;
   case SF_FORMAT_ULAW:
+    *size = ST_SIZE_8BIT;
     return ST_ENCODING_ULAW;
   case SF_FORMAT_ALAW:
+    *size = ST_SIZE_8BIT;
     return ST_ENCODING_ALAW;
   case SF_FORMAT_IMA_ADPCM:
     return ST_ENCODING_IMA_ADPCM;

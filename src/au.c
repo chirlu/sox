@@ -61,7 +61,7 @@ typedef struct aupriv {
 
 static void auwriteheader(ft_t ft, st_size_t data_size);
 
-static int st_auencodingandsize(int sun_encoding, st_encoding_t * encoding, signed char *size)
+static int st_auencodingandsize(int sun_encoding, st_encoding_t * encoding, int * size)
 {
     switch (sun_encoding) {
     case SUN_ULAW:
