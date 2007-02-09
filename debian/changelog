@@ -1,11 +1,11 @@
-sox (12.99.9.cvs-1) experimental; urgency=low
+sox (12.99.10.cvs-1) experimental; urgency=low
 
   * CVS version of SoX.
   * [debian/control]:
     - Added build-depends on libsamplerate0-dev, libgsm1-dev and
       libsndfile1-dev.
     - Taking over the package. Guenter set as co-maintainer.
-  * [debian/rules]: Changed version to 12.99.9.
+  * [debian/rules]: Changed version to 12.99.10.
   * [debian/sox.install]:
     - Added soxexam.7 manpage.
     - soxmix no longer exists, removed soxmix.1 manpage.
@@ -14,7 +14,7 @@ sox (12.99.9.cvs-1) experimental; urgency=low
   * [debian/patches]: No more patches, everything is fixed upstream.
   * [debian/README.Debian]: Added instructions to build from CVS.
 
- -- Pascal Giard <pascal@gmail.com>  Tue, 06 Feb 2007 00:09:29 -0500
+ -- Pascal Giard <pascal@gmail.com>  Tue, 09 Feb 2007 00:01:56 -0500
 
 sox (12.18.2-2) unstable; urgency=low
 
