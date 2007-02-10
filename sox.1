@@ -115,7 +115,7 @@ the audio data characteristics must be described using the
 SoX command line.
 .SP
 The following four characteristics are sufficient to describe
-the format of audio data so that it can be processed with SoX:
+the format of audio data such that it can be processed with SoX:
 .TP
 sample rate
 The sample rate in samples per second (`Hertz' or `Hz').  For
@@ -2029,6 +2029,18 @@ ends; default=60.
 Apply a treble tone-control effect.
 See the description of the \fBbass\fR effect for details.
 .TP
+\fBtremolo \fIspeed\fR [\fIdepth\fR]
+Apply a tremolo (low frequency amplitude modulation) effect to the audio.
+The tremolo frequency in Hz is given by
+.IR speed ,
+and the depth as a percentage by
+.I depth
+(default 40).
+.SP
+Note: This effect is a special case of the
+.B synth
+effect.
+.TP
 \fBtrim \fIstart\fR [\fIlength\fR]
 Trim can trim off unwanted audio from the beginning and end of the
 audio.  Audio is not sent to the output stream until
@@ -2046,17 +2058,6 @@ thirty and \(12 seconds into the audio.  The format for specifying
 sample counts is the number of samples with the letter `s' appended to
 it.  A value of 8000s will wait until 8000 samples are read before
 starting to process audio.
-.TP
-\fBvibro \fIspeed\fR [\fIdepth\fR]
-Apply low frequency sinusoidal amplitude modulation to the audio.
-Otherwise known as `tremolo', in the guitar world
-this effect is often referred to as `vibrato' (which in fact
-varies pitch, not amplitude).
-The modulation frequency in Hz is given by
-.I speed
-(0 to 30), and the modulation depth by
-.I depth
-(0 to 1, default 0\*d5).
 .TP
 \fBvol \fIgain\fR [\fItype\fR [\fIlimitergain\fR]]
 Apply an amplification or an attenuation to the audio signal.
@@ -2151,6 +2152,11 @@ effect and is retained for backwards compatibility only.
 \fBrate\fR
 Does the same as \fBresample\fR with no parameters; it exists for
 backwards compatibility.
+.TP
+\fBvibro \fIspeed\fR [\fIdepth\fR]
+This is a deprecated alias for the
+.B tremolo
+effect.  It differs in that the depth parameter ranges from 0 to 1 and defaults to 0\*d5.
 .SH DIAGNOSTICS
 Exit status is 0 for no error, 1 if there is a problem with the
 command-line parameters, or 2 if an error occurs during file processing.

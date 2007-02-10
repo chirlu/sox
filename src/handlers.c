@@ -138,6 +138,7 @@ st_effect_fn_t st_effect_fns[] = {
   st_swap_effect_fn,
   st_synth_effect_fn,
   st_treble_effect_fn,
+  st_tremolo_effect_fn,
   st_trim_effect_fn,
   st_vibro_effect_fn,
   st_vol_effect_fn,

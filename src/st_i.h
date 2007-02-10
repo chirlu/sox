@@ -354,6 +354,7 @@ extern const st_effect_t *st_stretch_effect_fn(void);
 extern const st_effect_t *st_swap_effect_fn(void);
 extern const st_effect_t *st_synth_effect_fn(void);
 extern const st_effect_t *st_treble_effect_fn(void);
+extern const st_effect_t *st_tremolo_effect_fn(void);
 extern const st_effect_t *st_trim_effect_fn(void);
 extern const st_effect_t *st_vibro_effect_fn(void);
 extern const st_effect_t *st_vol_effect_fn(void);

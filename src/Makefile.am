@@ -23,7 +23,8 @@ effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c dcshift.c\
 	  flanger.c mcompand.c mixer.c noiseprof.c \
 	  noisered.c noisered.h pad.c pan.c phaser.c pitch.c polyphas.c \
 	  rabbit.c rate.c repeat.c resample.c reverb.c reverse.c silence.c \
-	  skeleff.c speed.c stat.c stretch.c swap.c synth.c trim.c vibro.c vol.c
+	  skeleff.c speed.c stat.c stretch.c swap.c synth.c synth.h tremolo.c \
+	  trim.c vibro.c vol.c
 
 libst_la_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c \
 		   misc.c st_i.h stio.c util.c xmalloc.c xmalloc.h \

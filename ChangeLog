@@ -54,6 +54,8 @@ sox-13.0.0
   o Added silence padding effect.  (robs)
   o Added ability for noiseprof to use stdout and noisered to use stdin
     [FR# 1621694].  (Reuben Thomas)
+  o vibro effect name deprecated in favour of tremolo; this effect
+    reimplemented as a special case of synth.  (robs)
 
   Other new features:
 

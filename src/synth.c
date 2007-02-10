@@ -14,7 +14,7 @@
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
-#include "st_i.h"
+#include "synth.h"
 
 static st_effect_t st_synth_effect;
 
@@ -237,7 +237,7 @@ static void parmcopy(synth_t sy, int s, int d){
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-static int st_synth_getopts(eff_t effp, int n, char **argv) 
+int st_synth_getopts(eff_t effp, int n, char **argv) 
 {
     int argn;
     char *hlp;
@@ -365,7 +365,7 @@ static int st_synth_getopts(eff_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-static int st_synth_start(eff_t effp)
+int st_synth_start(eff_t effp)
 {
     int i;
     int c;
@@ -643,7 +643,7 @@ static st_sample_t do_synth(st_sample_t iv, synth_t synth, int c){
             ov = iv * r ;
             break;
         default:
-            st_fail("synth: internel error 2");
+            st_fail("synth: internal error 2");
             break;
     }
 
@@ -655,7 +655,7 @@ static st_sample_t do_synth(st_sample_t iv, synth_t synth, int c){
 /*
  * Processed signed long samples from ibuf to obuf.
  */
-static int st_synth_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+int st_synth_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                   st_size_t *isamp, st_size_t *osamp)
 {
     synth_t synth = (synth_t) effp->priv;
