@@ -5,7 +5,6 @@ sox (12.99.10.cvs-1) experimental; urgency=low
     - Added build-depends on libsamplerate0-dev, libgsm1-dev and
       libsndfile1-dev.
     - Taking over the package. Guenter set as co-maintainer.
-  * [debian/rules]: Changed version to 12.99.10.
   * [debian/sox.install]:
     - Added soxexam.7 manpage.
     - soxmix no longer exists, removed soxmix.1 manpage.
