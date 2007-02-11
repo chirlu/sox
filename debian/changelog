@@ -1,4 +1,4 @@
-sox (12.99.10.cvs-1) experimental; urgency=low
+sox (13.0.0.cvs-1) experimental; urgency=low
 
   * CVS version of SoX.
   * [debian/control]:
