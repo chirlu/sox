@@ -257,7 +257,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     rate = range_limit(ft->signal.rate, min_rate, max_rate);
     if (rate != ft->signal.rate)
     {
-        st_report("hardware does not support sample-rate %i; changing to %i.", ft->signal.rate, rate);
+        st_report("hardware does not support sample rate %i; changing to %i.", ft->signal.rate, rate);
         ft->signal.rate = rate;
     }
     dir = 0;
