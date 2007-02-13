@@ -1622,30 +1622,55 @@ static void delete_effects(void)
   }
 }
 
+static st_size_t total_clips(void)
+{
+  int i;
+  st_size_t clips = 0;
+  for (i = 0; i < file_count; ++i)
+    clips += files[i]->desc->clips + files[i]->volume_clips;
+  clips += mixing_clips;
+  for (i = 1; i < neffects; ++i) {
+    clips += efftab[i].clips;
+    if (efftabR[i].name)
+      clips += efftab[i].clips;
+  }
+  return clips;
+}
+
+static double human_readable(st_size_t number, char * unit)
+{
+  double result;
+
+  result = number / 1000000000.0;
+  if (result >= 1)
+    *unit = 'G';
+  else {
+    result = number / 1000000.0;
+    if (result >= 1)
+      *unit = 'M';
+    else {
+      result = number / 1000.0;
+      if (result >= 1)
+        *unit = 'k';
+      else {
+        result = number;
+        *unit = ' ';
+      }
+    }
+  }
+  return result;
+}
+
 static void update_status(void)
 {
   double read_time, left_time, in_time;
   float completed;
-  double out_size;
-  char unit;
+  char out_unit;
+  double out_size = human_readable(output_samples, &out_unit);
+  char clips_unit;
+  double clips_size = human_readable(total_clips(), &clips_unit);
 
   read_time = (double)read_wide_samples / combiner.rate;
-
-  out_size = output_samples / 1000000000.0;
-  if (out_size >= 1.0)
-    unit = 'G';
-  else {
-    out_size = output_samples / 1000000.0;
-    if (out_size >= 1.0)
-      unit = 'M';
-    else {
-      out_size = output_samples / 1000.0;
-      if (out_size >= 1.0)
-        unit = 'K';
-      else
-        unit = ' ';
-    }
-  }
 
   if (input_wide_samples) {
     in_time = (double)input_wide_samples / combiner.rate;
@@ -1662,9 +1687,9 @@ static void update_status(void)
     completed = 0;
   }
 
-  fprintf(stderr, "\rTime: %s [%s] of %s (% 5.1f%%) Output Buffer:% 7.2f%c",
+  fprintf(stderr, "\rTime: %s [%s] of %s (% 5.1f%%) Output:% 7.2f%c Clips:% 7.2f%c",
       str_time(read_time), str_time(left_time), str_time(in_time),
-      completed, out_size, unit);
+      completed, out_size, out_unit, clips_size, clips_unit);
 }
 
 static int strcmp_p(const void *p1, const void *p2)
