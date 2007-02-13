@@ -557,7 +557,7 @@ static int enum_option(int option_index, enum_item const * items)
 static void optimize_trim(void)          
 {
     /* Speed hack.  If the "trim" effect is the first effect then
-     * peak inside its "effect descriptor" and see what the
+     * peek inside its "effect descriptor" and see what the
      * start location is.  This has to be done after its start()
      * is called to have the correct location.
      * Also, only do this when only working with one input file.
