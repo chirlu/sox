@@ -1,12 +1,12 @@
 /*
- * Psion Record format (format of files used for Revo,Revo+,Mako in 
- * System/Alarms to provide alarm sounds. Note that the file normally
- * has no extension, so I've made it .prc for now (Psion ReCord), until
- * somebody can come up with a better one.
+ * Psion Record format (format of sound files used for EPOC machines).
+ * The file normally has no extension, so SoX uses .prc (Psion ReCord).
  * Based (heavily) on the wve.c format file. 
  * Hacked by Bert van Leeuwen (bert@e.co.za)
- * Header check truncated to first 16 bytes (i.e. EPOC file header)
- * and other improvements by Reuben Thomas <rrt@sc3d.org>
+ * 
+ * Header check improved, ADPCM encoding added, and other improvements
+ * by Reuben Thomas <rrt@sc3d.org>, using file format info at
+ * http://software.frodo.looijaard.name/psiconv/formats/
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,28 +21,89 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library. If not, write to the Free Software
  * Foundation, Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301,
- * USA.  */
+ * USA.
+ *
+ * Includes code for ADPCM framing based on code carrying the
+ * following copyright:
+ *
+ *******************************************************************
+ Copyright 1992 by Stichting Mathematisch Centrum, Amsterdam, The
+ Netherlands.
+ 
+                        All Rights Reserved
 
+ Permission to use, copy, modify, and distribute this software and its
+ documentation for any purpose and without fee is hereby granted,
+ provided that the above copyright notice appear in all copies and that
+ both that copyright notice and this permission notice appear in 
+ supporting documentation, and that the names of Stichting Mathematisch
+ Centrum or CWI not be used in advertising or publicity pertaining to
+ distribution of the software without specific, written prior permission.
+
+ STICHTING MATHEMATISCH CENTRUM DISCLAIMS ALL WARRANTIES WITH REGARD TO
+ THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ FITNESS, IN NO EVENT SHALL STICHTING MATHEMATISCH CENTRUM BE LIABLE
+ FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
+ OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ ******************************************************************/
+
+ 
 #include "st_i.h"
-#include "g72x.h"
+
+#include "adpcms.h"
+
+#include <assert.h>
 #include <string.h>
 #include <errno.h>
+#include <limits.h>
 
-typedef struct prcpriv
-    {
-    uint32_t length;
-    short padding;
-    short repeats;
-      /*For seeking */
-        st_size_t dataStart;
-    } *prc_t;
+typedef struct prcpriv {
+  uint32_t nsamp, nbytes;
+  short padding;
+  short repeats;
+  st_size_t data_start;         /* for seeking */
+  struct adpcm_io adpcm;
+  unsigned frame_samp;     /* samples left to read in current frame */
+} *prc_t;
 
-/* 16 bytes header = 3 UIDs plus checksum, standard Symbian/EPOC file
-   header */
+/* File header. The first 4 words are fixed; the rest of the header
+   could theoretically be different, and this is the first place to
+   check with apparently invalid files.
+
+   N.B. All offsets are from start of file. */
 static const char prc_header[]={
-  '\x37','\x00','\x00','\x10','\x6d','\x00','\x00','\x10',
-  '\x7e','\x00','\x00','\x10','\xcf','\xac','\x08','\x55'
+  /* Header section */
+  '\x37','\x00','\x00','\x10', /* 0x00: File type (UID 1) */
+  '\x6d','\x00','\x00','\x10', /* 0x04: File kind (UID 2) */
+  '\x7e','\x00','\x00','\x10', /* 0x08: Application ID (UID 3) */
+  '\xcf','\xac','\x08','\x55', /* 0x0c: Checksum of UIDs 1-3 */
+  '\x14','\x00','\x00','\x00', /* 0x10: File offset of Section Table Section */
+  /* Section Table Section: a BListL, i.e. a list of longs preceded by
+     length byte.
+     The longs are in (ID, offset) pairs, each pair identifying a
+     section. */
+  '\x04',                      /* 0x14: List has 4 bytes, i.e. 2 pairs */
+  '\x52','\x00','\x00','\x10', /* 0x15: ID: Record Section */
+  '\x34','\x00','\x00','\x00', /* 0x19: Offset to Record Section */
+  '\x89','\x00','\x00','\x10', /* 0x1d: ID: Application ID Section */
+  '\x25','\x00','\x00','\x00', /* 0x21: Offset to Application ID Section */
+  '\x7e','\x00','\x00','\x10', /* 0x25: Application ID Section:
+                                  Record.app identifier */
+  /* Next comes the string, which can be either case. */
 };
+
+/* Format of the Record Section (offset 0x34):
+
+00 L Uncompressed data length
+04 ID a1 01 00 10 for ADPCM, 00 00 00 00 for A-law
+08 W number of times sound will be repeated (0 = played once)
+0a B Volume setting (01-05)
+0b B Always 00 (?)
+0c L Time between repeats in usec
+10 LListB (i.e. long giving number of bytes followed by bytes) Sound Data
+*/
 
 int prc_checkheader(ft_t ft, char *head)
 {
@@ -52,70 +113,198 @@ int prc_checkheader(ft_t ft, char *head)
 
 static void prcwriteheader(ft_t ft);
 
-static int st_prcseek(ft_t ft, st_size_t offset)
+static int seek(ft_t ft, st_size_t offset)
 {
-    prc_t prc = (prc_t ) ft->priv;
-    st_size_t new_offset, channel_block, alignment;
+  prc_t prc = (prc_t)ft->priv;
+  st_size_t new_offset, channel_block, alignment;
 
-    new_offset = offset * ft->signal.size;
-    /* Make sure request aligns to a channel block (i.e. left+right) */
-    channel_block = ft->signal.channels * ft->signal.size;
-    alignment = new_offset % channel_block;
-    /* Most common mistaken is to compute something like
-     * "skip everthing upto and including this sample" so
-     * advance to next sample block in this case.
-     */
-    if (alignment != 0)
-        new_offset += (channel_block - alignment);
-    new_offset += prc->dataStart;
+  new_offset = offset * ft->signal.size;
+  /* Make sure request aligns to a channel block (i.e. left+right) */
+  channel_block = ft->signal.channels * ft->signal.size;
+  alignment = new_offset % channel_block;
+  /* Most common mistake is to compute something like
+   * "skip everthing up to and including this sample" so
+   * advance to next sample block in this case.
+   */
+  if (alignment != 0)
+    new_offset += (channel_block - alignment);
+  new_offset += prc->data_start;
 
-    return st_seeki(ft, new_offset, SEEK_SET);
+  return st_seeki(ft, new_offset, SEEK_SET);
 }
 
-static int st_prcstartread(ft_t ft)
+static int startread(ft_t ft)
 {
-        prc_t p = (prc_t ) ft->priv;
-        char head[sizeof(prc_header)];
-        int rc;
+  prc_t p = (prc_t)ft->priv;
+  char head[sizeof(prc_header)];
+  uint8_t byte;
+  uint16_t reps;
+  uint32_t len, listlen, encoding, repgap;
+  unsigned char volume;
+  char appname[0x40]; /* Maximum possible length of name */
 
-        uint16_t len;
+  /* Check the header */
+  if (prc_checkheader(ft, head))
+    st_debug("Found Psion Record header");
+  else {
+      st_fail_errno(ft,ST_EHDR,"Not a Psion Record file");
+      return (ST_EOF);
+  }
 
-        /* Needed for rawread() */
-        rc = st_rawstartread(ft);
-        if (rc)
-            return rc;
+  st_readb(ft, &byte);
+  if ((byte & 0x3) != 0x2) {
+    st_fail_errno(ft, ST_EHDR, "Invalid length byte for application name string %d", (int)(byte));
+    return ST_EOF;
+  }
 
-        /* Check the header */
-        if (prc_checkheader(ft, head))
-                st_debug("Found Psion Record header");
-        else
-        {
-                st_fail_errno(ft,ST_EHDR,"Psion header doesn't start with the correct bytes\nTry the '.al' (A-law raw) file type with '-t al -r 8000 filename'");
-                return (ST_EOF);
-        }
+  byte >>= 2;
+  assert(byte < 64);
+  st_reads(ft, appname, byte);
+  if (strncasecmp(appname, "record.app", byte) != 0) {
+    st_fail_errno(ft, ST_EHDR, "Invalid application name string %.63s", appname);
+    return ST_EOF;
+  }
+        
+  st_readdw(ft, &len);
+  p->nsamp = len;
+  st_debug("Number of samples: %d", len);
 
-        st_readw(ft, &(len));
-        p->length=len;
-        st_debug("Found length=%d",len);
+  st_readdw(ft, &encoding);
+  st_debug("Encoding of samples: %x", encoding);
+  if (encoding == 0)
+    ft->signal.encoding = ST_ENCODING_ALAW;
+  else if (encoding == 0x100001a1)
+    ft->signal.encoding = ST_ENCODING_IMA_ADPCM;
+  else {
+    st_fail_errno(ft, ST_EHDR, "Unrecognised encoding");
+    return ST_EOF;
+  }
 
-        /* dummy read rest */
-        st_readbuf(ft, head,1,14+2+2);
+  st_readw(ft, &reps);    /* Number of repeats */
+  st_debug("Repeats: %d", reps);
+        
+  st_readb(ft, &volume);
+  st_debug("Volume: %d", (unsigned)volume);
+  if (volume < 1 || volume > 5)
+    st_warn("Volume %d outside range 1..5", volume);
 
-        ft->signal.encoding = ST_ENCODING_ALAW;
-        ft->signal.size = ST_SIZE_BYTE;
+  st_readb(ft, &byte);   /* Unused and seems always zero */
 
-        if (ft->signal.rate != 0)
-            st_report("PRC must use 8000 sample rate.  Overriding");
-        ft->signal.rate = 8000;
+  st_readdw(ft, &repgap); /* Time between repeats in usec */
+  st_debug("Time between repeats (usec): %ld", repgap);
 
-        if (ft->signal.channels != ST_ENCODING_UNKNOWN && ft->signal.channels != 0)
-            st_report("PRC must only supports 1 channel.  Overriding");
-        ft->signal.channels = 1;
+  st_readdw(ft, &listlen); /* Length of samples list */
+  st_debug("Number of bytes in samples list: %ld", listlen);
 
-        p->dataStart = st_tell(ft);
-        ft->length = p->length/ft->signal.size;
+  if (ft->signal.rate != 0 && ft->signal.rate != 8000)
+    st_report("PRC only supports 8 kHz; overriding.");
+  ft->signal.rate = 8000;
 
-        return (ST_SUCCESS);
+  if (ft->signal.channels != 1 && ft->signal.channels != 0)
+    st_report("PRC only supports 1 channel; overriding.");
+  ft->signal.channels = 1;
+
+  p->data_start = st_tell(ft);
+  ft->length = p->nsamp / ft->signal.channels;
+
+  if (ft->signal.encoding == ST_ENCODING_ALAW) {
+    ft->signal.size = ST_SIZE_BYTE;
+    if (st_rawstartread(ft))
+      return ST_EOF;
+  } else if (ft->signal.encoding == ST_ENCODING_IMA_ADPCM) {
+    p->frame_samp = 0;
+    if (st_adpcm_ima_start(ft, &p->adpcm))
+      return ST_EOF;
+  }
+
+  return (ST_SUCCESS);
+}
+
+/* Read a variable-length encoded count */
+/* Ignore return code of st_readb, as it doesn't really matter if EOF
+   is delayed until the caller. */
+static unsigned read_cardinal(ft_t ft)
+{
+  unsigned a;
+  uint8_t byte;
+
+  if (st_readb(ft, &byte) == ST_EOF)
+    return (unsigned)ST_EOF;
+  st_debug_more("Cardinal byte 1: %x", byte);
+  a = byte;
+  if (!(a & 1))
+    a >>= 1;
+  else {
+    if (st_readb(ft, &byte) == ST_EOF)
+      return (unsigned)ST_EOF;
+    st_debug_more("Cardinal byte 2: %x", byte);
+    a |= byte << 8;
+    if (!(a & 2))
+      a >>= 2;
+    else if (!(a & 4)) {
+      if (st_readb(ft, &byte) == ST_EOF)
+        return (unsigned)ST_EOF;
+      st_debug_more("Cardinal byte 3: %x", byte);
+      a |= byte << 16;
+      if (st_readb(ft, &byte) == ST_EOF)
+        return (unsigned)ST_EOF;
+      st_debug_more("Cardinal byte 4: %x", byte);
+      a |= byte << 24;
+      a >>= 3;
+    }
+  }
+
+  return a;
+}
+
+static st_size_t read(ft_t ft, st_sample_t *buf, st_size_t samp)
+{
+  prc_t p = (prc_t)ft->priv;
+
+  st_debug_more("length now = %d", p->nsamp);
+
+  if (ft->signal.encoding == ST_ENCODING_IMA_ADPCM) {
+    st_size_t nsamp, read;
+
+    if (p->frame_samp == 0) {
+      unsigned framelen = read_cardinal(ft);
+      uint32_t trash;
+
+      if (framelen == (unsigned)ST_EOF)
+        return 0;
+
+      st_debug_more("frame length %d", framelen);
+      p->frame_samp = framelen;
+
+      /* Discard length of compressed data */
+      st_debug_more("compressed length %d", read_cardinal(ft));
+      /* Discard length of BListL */
+      st_readdw(ft, &trash);
+      st_debug_more("list length %d", trash);
+
+      /* Reset CODEC for start of frame */
+      st_adpcm_reset(&p->adpcm, ft->signal.encoding);
+    }
+    nsamp = min(p->frame_samp, samp);
+    p->nsamp += nsamp;
+    read = st_adpcm_read(ft, &p->adpcm, buf, nsamp);
+    p->frame_samp -= read;
+    st_debug_more("samples left in this frame: %d", p->frame_samp);
+    return read;
+  } else {
+    p->nsamp += samp;
+    return st_rawread(ft, buf, samp);
+  }
+}
+
+static int stopread(ft_t ft)
+{
+  prc_t p = (prc_t)ft->priv;
+
+  if (ft->signal.encoding == ST_ENCODING_IMA_ADPCM)
+    return st_adpcm_stopread(ft, &p->adpcm);
+  else
+    return st_rawstopread(ft);
 }
 
 /* When writing, the header is supposed to contain the number of
@@ -127,74 +316,146 @@ static int st_prcstartread(ft_t ft)
    if it is not, the unspecified size remains in the header
    (this is illegal). */
 
-static int st_prcstartwrite(ft_t ft)
+static int startwrite(ft_t ft)
 {
-        prc_t p = (prc_t ) ft->priv;
-        int rc;
+  prc_t p = (prc_t)ft->priv;
 
-        /* Needed for rawwrite() */
-        rc = st_rawstartwrite(ft);
-        if (rc)
-            return ST_EOF;
+  if (ft->signal.encoding != ST_ENCODING_ALAW &&
+      ft->signal.encoding != ST_ENCODING_IMA_ADPCM) {
+    st_report("PRC only supports A-law and ADPCM encoding; choosing A-law");
+    ft->signal.encoding = ST_ENCODING_ALAW;
+  }
+        
+  if (ft->signal.encoding == ST_ENCODING_ALAW) {
+    if (st_rawstartwrite(ft))
+      return ST_EOF;
+  } else if (ft->signal.encoding == ST_ENCODING_IMA_ADPCM) {
+    if (st_adpcm_ima_start(ft, &p->adpcm))
+      return ST_EOF;
+  }
+        
+  p->nsamp = 0;
+  p->nbytes = 0;
+  if (p->repeats == 0)
+    p->repeats = 1;
 
-        p->length = 0;
-        if (p->repeats == 0)
-            p->repeats = 1;
+  if (ft->signal.rate != 0 && ft->signal.rate != 8000)
+    st_report("PRC only supports 8 kHz sample rate; overriding.");
+  ft->signal.rate = 8000;
 
-        if (ft->signal.rate != 0)
-            st_report("PRC must use 8000 sample rate.  Overriding");
+  if (ft->signal.channels != 1 && ft->signal.channels != 0)
+    st_report("PRC only supports 1 channel; overriding.");
+  ft->signal.channels = 1;
 
-        if (ft->signal.channels != ST_ENCODING_UNKNOWN && ft->signal.channels != 0)
-            st_report("PRC must only supports 1 channel.  Overriding");
+  ft->signal.size = ST_SIZE_BYTE;
 
-        ft->signal.encoding = ST_ENCODING_ALAW;
-        ft->signal.size = ST_SIZE_BYTE;
-        ft->signal.rate = 8000;
+  prcwriteheader(ft);
 
-        prcwriteheader(ft);
-        return ST_SUCCESS;
+  p->data_start = st_tell(ft);
+
+  return ST_SUCCESS;
 }
 
-static st_size_t st_prcwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
+static void write_cardinal(ft_t ft, unsigned a)
 {
-        prc_t p = (prc_t ) ft->priv;
-        p->length += samp * ft->signal.size;
-        st_debug("length now = %d", p->length);
-        return st_rawwrite(ft, buf, samp);
+  uint8_t byte;
+
+  if (a < 0x80) {
+    byte = a << 1;
+    st_debug_more("Cardinal byte 1: %x", byte);
+    st_writeb(ft, byte);
+  } else if (a < 0x8000) {
+    byte = (a << 2) | 1;
+    st_debug_more("Cardinal byte 1: %x", byte);
+    st_writeb(ft, byte);
+    byte = a >> 6;
+    st_debug_more("Cardinal byte 2: %x", byte);
+    st_writeb(ft, byte);
+  } else {
+    byte = (a << 3) | 3;
+    st_debug_more("Cardinal byte 1: %x", byte);
+    st_writeb(ft, byte);
+    byte = a >> 5;
+    st_debug_more("Cardinal byte 2: %x", byte);
+    st_writeb(ft, byte);
+    byte = a >> 13;
+    st_debug_more("Cardinal byte 3: %x", byte);
+    st_writeb(ft, byte);
+    byte = a >> 21;
+    st_debug_more("Cardinal byte 4: %x", byte);
+    st_writeb(ft, byte);
+  }
 }
 
-static int st_prcstopwrite(ft_t ft)
+static st_size_t write(ft_t ft, const st_sample_t *buf, st_size_t samp)
 {
-        /* Call before seeking to flush buffer */
-        st_rawstopwrite(ft);
+  prc_t p = (prc_t)ft->priv;
+  /* Psion Record seems not to be able to handle frames > 800 samples */
+  samp = min(samp, 800);
+  p->nsamp += samp;
+  st_debug_more("length now = %d", p->nsamp);
+  if (ft->signal.encoding == ST_ENCODING_IMA_ADPCM) {
+    st_size_t written;
 
-        if (!ft->seekable)
-        {
-            st_warn("Header will be have invalid file length since file is not seekable");
-            return ST_SUCCESS;
-        }
+    write_cardinal(ft, samp);
+    /* Write compressed length */
+    write_cardinal(ft, (samp / 2) + (samp % 2) + 4);
+    /* Write length again (seems to be a BListL) */
+    st_debug_more("list length %d", samp);
+    st_writedw(ft, samp);
+    st_adpcm_reset(&p->adpcm, ft->signal.encoding);
+    written = st_adpcm_write(ft, &p->adpcm, buf, samp);
+    st_adpcm_flush(ft, &p->adpcm);
+    return written;
+  } else
+    return st_rawwrite(ft, buf, samp);
+}
 
-        if (st_seeki(ft, 0, 0) != 0)
-        {
-                st_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
-                return(ST_EOF);
-        }
-        prcwriteheader(ft);
-        return ST_SUCCESS;
+static int stopwrite(ft_t ft)
+{
+  prc_t p = (prc_t)ft->priv;
+
+  /* Call before seeking to flush buffer (ADPCM has already been flushed) */
+  if (ft->signal.encoding != ST_ENCODING_IMA_ADPCM)
+    st_rawstopwrite(ft);
+
+  p->nbytes = st_tell(ft) - p->data_start;
+
+  if (!ft->seekable) {
+      st_warn("Header will have invalid file length since file is not seekable");
+      return ST_SUCCESS;
+  }
+
+  if (st_seeki(ft, 0, 0) != 0) {
+      st_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
+      return(ST_EOF);
+  }
+  prcwriteheader(ft);
+  return ST_SUCCESS;
 }
 
 static void prcwriteheader(ft_t ft)
 {
-  char nullbuf[15];
-  prc_t p = (prc_t ) ft->priv;
+  prc_t p = (prc_t)ft->priv;
 
-  st_debug("Final length=%d",p->length);
-  memset(nullbuf,0,14);
   st_writebuf(ft, prc_header, 1, sizeof(prc_header));
-  st_writew(ft, p->length);
-  st_writebuf(ft, nullbuf,1,14);
-  st_writew(ft, p->length);
-  st_writebuf(ft, nullbuf,1,2);
+  st_writes(ft, "\x2arecord.app");
+
+  st_debug("Number of samples: %d",p->nsamp);
+  st_writedw(ft, p->nsamp);
+
+  if (ft->signal.encoding == ST_ENCODING_ALAW)
+    st_writedw(ft, 0);
+  else
+    st_writedw(ft, 0x100001a1); /* ADPCM */
+  
+  st_writew(ft, 0);             /* Number of repeats */
+  st_writeb(ft, 3);             /* Volume: use default value of Record.app */
+  st_writeb(ft, 0);             /* Unused and seems always zero */
+  st_writedw(ft, 0);            /* Time between repeats in usec */
+
+  st_debug("Number of bytes: %d", p->nbytes);
+  st_writedw(ft, p->nbytes);    /* Number of bytes of data */
 }
 
 /* Psion .prc */
@@ -206,17 +467,17 @@ static const char *prcnames[] = {
 static st_format_t st_prc_format = {
   prcnames,
   NULL,
-  ST_FILE_SEEK | ST_FILE_BIG_END,
-  st_prcstartread,
-  st_rawread,
-  st_rawstopread,
-  st_prcstartwrite,
-  st_prcwrite,
-  st_prcstopwrite,
-  st_prcseek
+  ST_FILE_SEEK | ST_FILE_LIT_END,
+  startread,
+  read,
+  stopread,
+  startwrite,
+  write,
+  stopwrite,
+  seek
 };
 
 const st_format_t *st_prc_format_fn(void)
 {
-    return &st_prc_format;
+  return &st_prc_format;
 }

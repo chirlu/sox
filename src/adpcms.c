@@ -16,10 +16,8 @@
 
 /* ADPCM CODECs: IMA, OKI.   (c) 2007 robs@users.sourceforge.net */
 
-#include "adpcms.h"
 #include "st_i.h"
-
-#define range_limit(x,min,max)((x)<(min)?(min):(x)>(max)?(max):(x))
+#include "adpcms.h"
 
 static int const ima_steps[89] = { /* ~16-bit precision */
   7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45,
@@ -38,7 +36,7 @@ static int const oki_steps[49] = { /* ~12-bit precision */
 
 static int const step_changes[8] = {-1, -1, -1, -1, 2, 4, 6, 8};
 
-void adpcm_init(adpcm_t state, int type)
+static void adpcm_init(adpcm_t state, int type)
 {
   state->last_output = 0;
   state->step_index = 0;
@@ -47,20 +45,20 @@ void adpcm_init(adpcm_t state, int type)
   state->mask = type? ~15 : ~0;
 }
 
-int adpcm_decode(int code, adpcm_t state)
+static int adpcm_decode(int code, adpcm_t state)
 {
   int s = ((code & 7) << 1) | 1;
   s = ((state->steps[state->step_index] * s) >> 3) & state->mask;
   if (code & 8)
     s = -s;
-  s = state->last_output + s;
+  s += state->last_output;
   s = range_limit(s, -0x8000, 0x7fff);
   state->step_index += step_changes[code & 0x07];
   state->step_index = range_limit(state->step_index, 0, state->max_step_index);
   return state->last_output = s;
 }
 
-int adpcm_encode(int sample, adpcm_t state)
+static int adpcm_encode(int sample, adpcm_t state)
 {
   int delta = sample - state->last_output;
   int sign = 0;
@@ -73,4 +71,218 @@ int adpcm_encode(int sample, adpcm_t state)
   code = sign | min(code, 7);
   adpcm_decode(code, state); /* Update encoder state */
   return code;
+}
+
+
+/*
+ * Format methods
+ *
+ * Almost like the raw format functions, but cannot be used directly
+ * since they require an additional state parameter.
+ */
+
+/******************************************************************************
+ * Function   : st_adpcm_reset
+ * Description: Resets the ADPCM codec state.
+ * Parameters : state - ADPCM state structure
+ *              type - ST_ENCODING_OKI_ADPCM or ST_ENCODING_IMA_ADPCM
+ * Returns    :
+ * Exceptions :
+ * Notes      : 1. This function is used for framed ADPCM formats to reset
+ *                 the decoder between frames.
+ ******************************************************************************/
+
+void st_adpcm_reset(adpcm_io_t state, st_encoding_t type)
+{
+  state->file.count = 0;
+  state->file.pos = 0;
+  state->file.eof = 0;
+  state->store.byte = 0;
+  state->store.flag = 0;
+
+  adpcm_init(&state->encoder, (type == ST_ENCODING_OKI_ADPCM) ? 1 : 0);
+}
+
+/******************************************************************************
+ * Function   : adpcm_start
+ * Description: Initialises the file parameters and ADPCM codec state.
+ * Parameters : ft  - file info structure
+ *              state - ADPCM state structure
+ *              type - ST_ENCODING_OKI_ADPCM or ST_ENCODING_IMA_ADPCM
+ * Returns    : int - ST_SUCCESS
+ *                    ST_EOF
+ * Exceptions :
+ * Notes      : 1. This function can be used as a startread or
+ *                 startwrite method.
+ *              2. VOX file format is 4-bit OKI ADPCM that decodes to 
+ *                 to 12 bit signed linear PCM.
+ *              3. Dialogic only supports 6kHz, 8kHz and 11 kHz sampling
+ *                 rates but the codecs allows any user specified rate.
+ ******************************************************************************/
+
+static int adpcm_start(ft_t ft, adpcm_io_t state, st_encoding_t type)
+{
+  /* setup file info */
+  state->file.buf = (char *) xmalloc(ST_BUFSIZ);
+  state->file.size = ST_BUFSIZ;
+  ft->signal.channels = 1;
+
+  st_adpcm_reset(state, type);
+  
+  return st_rawstart(ft, st_true, st_false, type, ST_SIZE_16BIT, ST_OPTION_DEFAULT);
+}
+
+int st_adpcm_oki_start(ft_t ft, adpcm_io_t state)
+{
+  return adpcm_start(ft, state, ST_ENCODING_OKI_ADPCM);
+}
+
+int st_adpcm_ima_start(ft_t ft, adpcm_io_t state)
+{
+  return adpcm_start(ft, state, ST_ENCODING_IMA_ADPCM);
+}
+
+/******************************************************************************
+ * Function   : st_adpcm_read 
+ * Description: Fills an internal buffer from the VOX file, converts the 
+ *              OKI ADPCM 4-bit samples to 12-bit signed PCM and then scales 
+ *              the samples to full range 16 bit PCM.
+ * Parameters : ft     - file info structure
+ *              state  - ADPCM state structure
+ *              buffer - output buffer
+ *              length - size of output buffer
+ * Returns    : int    - number of samples returned in buffer
+ * Exceptions :
+ * Notes      : 
+ ******************************************************************************/
+
+st_size_t st_adpcm_read(ft_t ft, adpcm_io_t state, st_sample_t * buffer, st_size_t len)
+{
+  st_size_t n;
+  uint8_t byte;
+
+  for (n = 0; n < (len&~1) && st_readb(ft, &byte) == ST_SUCCESS; n += 2) {
+    short word = adpcm_decode(byte >> 4, &state->encoder);
+    *buffer++ = ST_SIGNED_WORD_TO_SAMPLE(word, ft->clips);
+
+    word = adpcm_decode(byte, &state->encoder);
+    *buffer++ = ST_SIGNED_WORD_TO_SAMPLE(word, ft->clips);
+  }
+  return n;
+}
+
+/******************************************************************************
+ * Function   : stopread 
+ * Description: Frees the internal buffer allocated in voxstart/imastart.
+ * Parameters : ft   - file info structure
+ *              state  - ADPCM state structure
+ * Returns    : int  - ST_SUCCESS
+ * Exceptions :
+ * Notes      : 
+ ******************************************************************************/
+
+int st_adpcm_stopread(ft_t ft UNUSED, adpcm_io_t state)
+{
+  free(state->file.buf);
+
+  return (ST_SUCCESS);
+}
+
+
+/******************************************************************************
+ * Function   : write
+ * Description: Converts the supplied buffer to 12 bit linear PCM and encodes
+ *              to OKI ADPCM 4-bit samples (packed a two nibbles per byte).
+ * Parameters : ft     - file info structure
+ *              state  - ADPCM state structure
+ *              buffer - output buffer
+ *              length - size of output buffer
+ * Returns    : int    - ST_SUCCESS
+ *                       ST_EOF
+ * Exceptions :
+ * Notes      : 
+ ******************************************************************************/
+
+st_size_t st_adpcm_write(ft_t ft, adpcm_io_t state, const st_sample_t * buffer, st_size_t length)
+{
+  st_size_t count = 0;
+  uint8_t byte = state->store.byte;
+  uint8_t flag = state->store.flag;
+  short word;
+
+  while (count < length) {
+    word = ST_SAMPLE_TO_SIGNED_WORD(*buffer++, ft->clips);
+
+    byte <<= 4;
+    byte |= adpcm_encode(word, &state->encoder) & 0x0F;
+
+    flag = !flag;
+
+    if (flag == 0) {
+      state->file.buf[state->file.count++] = byte;
+
+      if (state->file.count >= state->file.size) {
+        st_writebuf(ft, state->file.buf, 1, state->file.count);
+
+        state->file.count = 0;
+      }
+    }
+
+    count++;
+  }
+
+  /* keep last byte across calls */
+
+  state->store.byte = byte;
+  state->store.flag = flag;
+
+  return (count);
+}
+
+/******************************************************************************
+ * Function   : st_adpcm_flush
+ * Description: Flushes any leftover samples.
+ * Parameters : ft   - file info structure
+ *              state  - ADPCM state structure
+ * Returns    :
+ * Exceptions :
+ * Notes      : 1. Called directly for writing framed formats
+ ******************************************************************************/
+
+void st_adpcm_flush(ft_t ft, adpcm_io_t state)
+{
+  uint8_t byte = state->store.byte;
+  uint8_t flag = state->store.flag;
+
+  /* flush remaining samples */
+
+  if (flag != 0) {
+    byte <<= 4;
+    byte |= adpcm_encode(0, &state->encoder) & 0x0F;
+
+    state->file.buf[state->file.count++] = byte;
+  }
+
+  if (state->file.count > 0)
+    st_writebuf(ft, state->file.buf, 1, state->file.count);
+}
+
+/******************************************************************************
+ * Function   : st_adpcm_stopwrite
+ * Description: Flushes any leftover samples and frees the internal buffer 
+ *              allocated in voxstart/imastart.
+ * Parameters : ft   - file info structure
+ *              state  - ADPCM state structure
+ * Returns    : int  - ST_SUCCESS
+ * Exceptions :
+ * Notes      : 
+ ******************************************************************************/
+
+int st_adpcm_stopwrite(ft_t ft, adpcm_io_t state)
+{
+  st_adpcm_flush(ft, state);
+
+  free(state->file.buf);
+
+  return (ST_SUCCESS);
 }
