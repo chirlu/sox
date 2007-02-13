@@ -978,9 +978,13 @@ to use the highest quality format your OSS system can handle. Example:
 Ensoniq PARIS file format (big and little-endian respectively).
 .TP
 .B .prc
-Psion Record. Used in some Psion devices for System alarms and
-recordings made by the built-in Record application. This format is
-newer then the .wve format that is also used in some Psion devices.
+Psion Record. Used in Psion EPOC PDAs (Series 5, Revo and similar) for
+System alarms and recordings made by the built-in Record application.
+When writing, SoX defaults to A-law, which is recommended; if you must
+use ADPCM, then use the \fB\-i\fR switch. The sound quality is poor
+because Psion Record seems to insist on frames of 800 samples or
+fewer, so that the ADPCM CODEC has to be reset at every 800 frames,
+which causes the sound to glitch every tenth of a second.
 .TP
 .B .pvf (libsndfile)
 Portable Voice Format.
@@ -1103,7 +1107,7 @@ and written.  To write a RIFX file, use the
 option with the output file options.
 .TP
 .B .wve
-Psion 8-bit A-law.  Used on older Psion PDAs.
+Psion 8-bit A-law.  Used on Psion SIBO PDAs (Series 3 and similar).
 .TP
 .B .xa
 Maxis XA files.
