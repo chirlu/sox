@@ -6,6 +6,7 @@ AM_INIT_AUTOMAKE
 dnl create a config.h file (Automake will add -DHAVE_CONFIG_H)
 AM_CONFIG_HEADER(src/stconfig.h)
 
+dnl Check we have the right srcdir
 AC_CONFIG_SRCDIR(sox.1)
 
 dnl Checks for programs.
