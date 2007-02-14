@@ -1245,9 +1245,9 @@ The modulation is either sinusoidal (\fB\-s\fR) or triangular
 (\fB\-t\fR).  Gain-out is the volume of the output.
 .TP
 \fBcompand \fIattack1\fB,\fIdecay1\fR{\fB,\fIattack2\fB,\fIdecay2\fR}
-\fIin-dB1\fB,\fIout-dB1\fR{\fB,\fIin-dB2\fB,\fIout-dB2\fR}
+[\fIsoft-knee-dB\fB:\fR]\fIin-dB1\fR[\fB,\fIout-dB1\fR]{\fB,\fIin-dB2\fB,\fIout-dB2\fR}
 .br
-[\fIgain\fR [\fIinitial-volume\fR [\fIdelay\fR]]]
+[\fIgain\fR [\fIinitial-volume-dB\fR [\fIdelay\fR]]]
 .SP
 Compand (compress or expand) the dynamic range of the audio.  The
 attack and decay time specify the integration time over which the
@@ -1280,6 +1280,8 @@ it is delayed before being fed to the volume adjuster.
 Specifying a delay approximately equal to the attack/decay times
 allows the compander to effectively operate in a `predictive' rather than a
 reactive mode.
+.SP
+This effect supports the \fB\-\-octave\fR global option (for the transfer function).
 .SP
 See also
 .B mcompand

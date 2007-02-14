@@ -16,49 +16,21 @@
  * Compander Transfer Function: (c) 2007 robs@users.sourceforge.net
  */
 
-typedef struct {
-  double x, y;              /* 1st point in segment */
-  double a, b;              /* Quadratic coeffecients for rest of segment */
-} * segment_t;
-
-typedef struct {
-  segment_t segments;
-  double in_min_lin;
-  double out_min_lin;
-  double outgain_dB;        /* Post processor gain */
-  double curve_dB;
-} transfer_fn_t;
-
-static double transfer_fn(transfer_fn_t * t, double in_lin)
-{
-  segment_t s;
-  double in_log, out_log;
-
-  if (in_lin <= t->in_min_lin)
-    return t->out_min_lin;
-
-  in_log = log(in_lin);
-
-  for (s = t->segments + 1; in_log > s[1].x; ++s);
-
-  in_log -= s->x;
-  out_log = s->y + in_log * (s->a * in_log + s->b);
-
-  return exp(out_log);
-}
+#include "compandt.h"
+#include <string.h>
 
 #define LOG_TO_LOG10(x) ((x) * 20 / log(10.))
 
-static int show_transfer_fn(transfer_fn_t * t, st_bool plot)
+st_bool st_compandt_show(st_compandt_t * t, st_bool plot)
 {
   int i;
 
   for (i = 1; t->segments[i-1].x; ++i)
     st_debug("TF: %g %g %g %g",
-       LOG_TO_LOG10( t->segments[i].x),
-       LOG_TO_LOG10( t->segments[i].y),
-       LOG_TO_LOG10( t->segments[i].a),
-       LOG_TO_LOG10( t->segments[i].b));
+       LOG_TO_LOG10(t->segments[i].x),
+       LOG_TO_LOG10(t->segments[i].y),
+       LOG_TO_LOG10(t->segments[i].a),
+       LOG_TO_LOG10(t->segments[i].b));
 
   if (!plot)
     return st_true;
@@ -73,7 +45,7 @@ static int show_transfer_fn(transfer_fn_t * t, st_bool plot)
   for (i = -199; i <= 0; ++i) {
     double in = i/2.;
     double in_lin = pow(10., in/20);
-    printf("%g ", in + 20 * log10(transfer_fn(t, in_lin)));
+    printf("%g ", in + 20 * log10(st_compandt(t, in_lin)));
   }
   printf(
     "];\n"
@@ -83,7 +55,7 @@ static int show_transfer_fn(transfer_fn_t * t, st_bool plot)
   return st_false;
 }
 
-static void prepare_transfer_fn(transfer_fn_t * t)
+static void prepare_transfer_fn(st_compandt_t * t)
 {
   int i;
   double radius = t->curve_dB * log(10.) / 20;
@@ -160,17 +132,16 @@ static st_bool parse_transfer_value(char const * text, double * value)
   return st_true;
 }
 
-static st_bool parse_transfer_fn(transfer_fn_t * t, char * points, char * gain)
+st_bool st_compandt_parse(st_compandt_t * t, char * points, char * gain)
 {
   char const * text = points;
   unsigned i, j, num, pairs, commas = 0;
   char dummy;     /* To check for extraneous chars. */
 
-  if (sscanf(points, "%lf %c", &t->curve_dB, &dummy) == 2 && dummy == ':') {
+  if (sscanf(points, "%lf %c", &t->curve_dB, &dummy) == 2 && dummy == ':')
     points = strchr(points, ':') + 1;
-    t->curve_dB = max(t->curve_dB, .01);
-  } else
-    t->curve_dB = 5;
+  else t->curve_dB = 0;
+  t->curve_dB = max(t->curve_dB, .01);
 
   while (*text) commas += *text++ == ',';
   pairs = 1 + commas / 2;
@@ -192,10 +163,6 @@ static st_bool parse_transfer_fn(transfer_fn_t * t, char * points, char * gain)
       if (!parse_transfer_value(text, &s(i).y))
         return st_false;
       s(i).y -= s(i).x;
-      if (!i && fabs(s(i).y)) { /* fabs stops epsilon problems */
-        st_fail("first point in transfer function must have 0dB gain");
-        return st_false;
-      }
     }
     text = strtok(NULL, ",");
   }
@@ -211,7 +178,8 @@ static st_bool parse_transfer_fn(transfer_fn_t * t, char * points, char * gain)
   }
 
 #define s(n) t->segments[2*(n)]
-  s(0).x = s(1).x - 2 * t->curve_dB; /* Add a unity gain segment at the start */
+  s(0).x = s(1).x - 2 * t->curve_dB; /* Add a tail off segment at the start */
+  s(0).y = s(1).y;
   ++num;
 
   for (i = 2; i < num; ++i) { /* Join adjacent colinear segments */
@@ -229,7 +197,7 @@ static st_bool parse_transfer_fn(transfer_fn_t * t, char * points, char * gain)
   return st_true;
 }
 
-static void kill_transfer_fn(transfer_fn_t * p)
+void st_compandt_kill(st_compandt_t * p)
 {
   free(p->segments);
 }

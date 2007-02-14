@@ -7,8 +7,24 @@ sox-11gamma.
 sox-13.0.1
 ----------
 
+  File formats:
+
   o Added support for ADPCM-encoded PRC files, based on Danny Smith's
     rec2wav and sndcmp.
+
+  Effects:
+
+  o Add soft-knee companding.  (robs)
+
+  Other new features:
+
+  Bug fixes:
+
+  o Fix (m)compand transfer function non-linearities; fix compand
+    drain volume.  (robs)
+
+  Internal improvements:
+
 
 sox-13.0.0
 ----------

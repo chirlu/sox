@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-AM_CFLAGS = @SNDFILE_CFLAGS@ @SAMPLERATE_CFLAGS@
+AM_CFLAGS = @SNDFILE_CFLAGS@ @SAMPLERATE_CFLAGS@ -Wconversion
 AM_LDFLAGS = @SNDFILE_LIBS@ @SAMPLERATE_LIBS@
 
 # Pass flags from --enable-silent-libtool
@@ -18,7 +18,8 @@ formats = 8svx.c adpcm.c adpcm.h adpcms.c adpcms.h aiff.c au.c auto.c avr.c \
 	  sndfile.c sndrtool.c sphere.c tx16w.c voc.c vorbis.c vox.c wav.c \
 	  wav.h wve.c xa.c
 
-effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c dcshift.c\
+effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c \
+	  compandt.c compandt.h dcshift.c\
 	  deemph.h dither.c earwax.c echo.c echos.c fade.c FFT.c FFT.h filter.c\
 	  flanger.c mcompand.c mixer.c noiseprof.c \
 	  noisered.c noisered.h pad.c pan.c phaser.c pitch.c polyphas.c \

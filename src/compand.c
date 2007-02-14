@@ -13,8 +13,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <math.h>
-#include "st_i.h"
+#include "compandt.h"
 
 /*
  * Compressor/expander effect for Sound Tools.
@@ -32,21 +31,19 @@
  *          +----->| delay |-------------------------->|   |
  *                 |       |                            ---
  *                  -------
- *
- * Usage:
- *   compand attack1,decay1[,attack2,decay2...]
- *                  in-dB1,out-dB1[,in-dB2,out-dB2...]
- *                 [ gain [ initial-volume [ delay ] ] ]
- *
+ */
+#define compand_usage \
+  "Usage: compand attack1,decay1{,attack2,decay2} [soft-knee-dB:]in-dB1[,out-dB1]{,in-dB2,out-dB2} [gain [initial-volume-dB [delay]]]\n" \
+  "\twhere {} means optional and repeatable and [] means optional.\n" \
+  "\tdB values are floating point or -inf'; times are in seconds."
+/*
  * Note: clipping can occur if the transfer function pushes things too
  * close to 0 dB.  In that case, use a negative gain, or reduce the
  * output level of the transfer function.
  */
 
-#include "compand.h"
-
 typedef struct {
-  transfer_fn_t transfer_fn;
+  st_compandt_t transfer_fn;
 
   struct {
     double attack_times[2]; /* 0:attack_time, 1:decay_time */
@@ -99,7 +96,7 @@ static int getopts(eff_t effp, int n, char * * argv)
     }
   }
 
-  if (!parse_transfer_fn(&l->transfer_fn, argv[1], n>2 ? argv[2] : 0))
+  if (!st_compandt_parse(&l->transfer_fn, argv[1], n>2 ? argv[2] : 0))
     return ST_EOF;
 
   /* Set the initial "volume" to be attibuted to the input channels.
@@ -140,7 +137,7 @@ static int start(eff_t effp)
   for (i = 0; i < l->expectedChannels; ++i)
     st_debug("Channel %i: attack = %g decay = %g", i,
         l->channels[i].attack_times[0], l->channels[i].attack_times[1]);
-  if (!show_transfer_fn(&l->transfer_fn, effp->globalinfo->octave_plot_effect))
+  if (!st_compandt_show(&l->transfer_fn, effp->globalinfo->octave_plot_effect))
     return ST_EOF;
 
   /* Convert attack and decay rates using number of samples */
@@ -185,7 +182,6 @@ static int flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
   int len =  (*isamp > *osamp) ? *osamp : *isamp;
   int filechans = effp->outinfo.channels;
   int idone,odone;
-  double checkbuf;
 
   for (idone = 0,odone = 0; idone < len; ibuf += filechans) {
     int chan;
@@ -207,18 +203,17 @@ static int flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     }
 
     /* Volume memory is updated: perform compand */
-    for (chan = 0; chan < filechans; ++chan)
-    {
-      int c = l->expectedChannels > 1 ? chan : 0;
-      double level_in_lin = l->channels[c].volume;
-      double level_out_lin = transfer_fn(&l->transfer_fn, level_in_lin);
+    for (chan = 0; chan < filechans; ++chan) {
+      int ch = l->expectedChannels > 1 ? chan : 0;
+      double level_in_lin = l->channels[ch].volume;
+      double level_out_lin = st_compandt(&l->transfer_fn, level_in_lin);
+      double checkbuf;
 
       if (l->delay_buf_size <= 0) {
         checkbuf = ibuf[chan] * level_out_lin;
         ST_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
-        obuf[odone] = checkbuf;
+        obuf[odone++] = checkbuf;
         idone++;
-        odone++;
       } else {
         if (l->delay_buf_cnt >= l->delay_buf_size) {
           l->delay_buf_full=1; /* delay buffer is now definitely full */
@@ -252,7 +247,7 @@ static int drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     for (chan = 0; chan < effp->outinfo.channels; ++chan) {
       int c = l->expectedChannels > 1 ? chan : 0;
       double level_in_lin = l->channels[c].volume;
-      double level_out_lin = transfer_fn(&l->transfer_fn, level_in_lin);
+      double level_out_lin = st_compandt(&l->transfer_fn, level_in_lin);
       obuf[done++] = l->delay_buf[l->delay_buf_index++] * level_out_lin;
       l->delay_buf_index %= l->delay_buf_size;
       l->delay_buf_cnt--;
@@ -273,7 +268,7 @@ static int kill(eff_t effp)
 {
   compand_t l = (compand_t) effp->priv;
 
-  kill_transfer_fn(&l->transfer_fn);
+  st_compandt_kill(&l->transfer_fn);
   free(l->channels);
   return ST_SUCCESS;
 }
@@ -281,11 +276,8 @@ static int kill(eff_t effp)
 st_effect_t const * st_compand_effect_fn(void)
 {
   static st_effect_t driver = {
-    "compand",
-    "Usage: compand attack1,decay1{,attack2,decay2} in-dB1,out-dB1{,in-dB2,out-dB2} [gain [initial-volume-dB [delay]]]\n"
-    "\twhere {} means optional and repeatable and [] means optional.\n"
-    "\tdB values are floating point or -inf'; times are in seconds.",
-    ST_EFF_MCHAN, getopts, start, flow, drain, stop, kill
+    "compand", compand_usage, ST_EFF_MCHAN,
+    getopts, start, flow, drain, stop, kill
   };
   return &driver;
 }

@@ -16,8 +16,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <math.h>
-#include "st_i.h"
+#include "compandt.h"
 
 /*
  * Usage:
@@ -91,7 +90,7 @@ typedef struct butterworth_crossover {
   double bandwidth;
 } *butterworth_crossover_t;
 
-static int lowpass_setup (butterworth_crossover_t butterworth, double frequency, st_rate_t rate, int nchan) {
+static int lowpass_setup (butterworth_crossover_t butterworth, double frequency, st_rate_t rate, st_size_t nchan) {
   double c;
 
   butterworth->xy_low = (struct xy *)xcalloc(nchan, sizeof(struct xy));
@@ -124,12 +123,12 @@ static int lowpass_setup (butterworth_crossover_t butterworth, double frequency,
   return (ST_SUCCESS);
 }
 
-static int lowpass_flow(eff_t effp, butterworth_crossover_t butterworth, int nChan, st_sample_t *ibuf, st_sample_t *lowbuf, st_sample_t *highbuf,
-                         int len) {
-  int chan;
+static int lowpass_flow(eff_t effp, butterworth_crossover_t butterworth, st_size_t nChan, st_sample_t *ibuf, st_sample_t *lowbuf, st_sample_t *highbuf,
+                         st_size_t len) {
+  st_size_t chan;
   double in, out;
 
-  int done;
+  st_size_t done;
 
   st_sample_t *ibufptr, *lowbufptr, *highbufptr;
 
@@ -191,16 +190,13 @@ static int lowpass_flow(eff_t effp, butterworth_crossover_t butterworth, int nCh
 }
 
 typedef struct comp_band {
+  st_compandt_t transfer_fn;
+
   st_size_t expectedChannels; /* Also flags that channels aren't to be treated
                            individually when = 1 and input not mono */
-  int transferPoints;   /* Number of points specified on the transfer
-                           function */
   double *attackRate;   /* An array of attack rates */
   double *decayRate;    /*    ... and of decay rates */
-  double *transferIns;  /*    ... and points on the transfer function */
-  double *transferOuts;
   double *volume;       /* Current "volume" of each channel */
-  double outgain;       /* Post processor gain */
   double delay;         /* Delay to apply before companding */
   double topfreq;       /* upper bound crossover frequency */
   struct butterworth_crossover filter;
@@ -211,9 +207,9 @@ typedef struct comp_band {
 } *comp_band_t;
 
 typedef struct {
-  int nBands;
+  st_size_t nBands;
   st_sample_t *band_buf1, *band_buf2, *band_buf3;
-  int band_buf_len;
+  st_size_t band_buf_len;
   st_size_t delay_buf_size;/* Size of delay_buf in samples */
   struct comp_band *bands;
 } *compand_t;
@@ -224,10 +220,10 @@ typedef struct {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-static int st_mcompand_getopts_1(comp_band_t l, int n, char **argv)
+static int st_mcompand_getopts_1(comp_band_t l, st_size_t n, char **argv)
 {
       char *s;
-      st_size_t rates, tfers, i, commas;
+      st_size_t rates, i, commas;
 
       /* Start by checking the attack and decay rates */
 
@@ -258,57 +254,8 @@ static int st_mcompand_getopts_1(comp_band_t l, int n, char **argv)
         ++i;
       } while (s != NULL);
 
-      /* Same business, but this time for the transfer function */
-
-      for (s = argv[1], commas = 0; *s; ++s)
-        if (*s == ',') ++commas;
-
-      if (commas % 2 == 0) /* There must be an even number of
-                              transfer parameters */
-      {
-        st_fail("compander: Odd number of transfer function parameters\n"
-             "Each input value in dB must have a corresponding output value");
-        return (ST_EOF);
-      }
-
-      tfers = 3 + commas/2; /* 0, 0 at start; 1, 1 at end */
-      l->transferIns  = (double *)xmalloc(sizeof(double) * tfers);
-      l->transferOuts = (double *)xmalloc(sizeof(double) * tfers);
-      l->transferPoints = tfers;
-      l->transferIns[0] = 0.0; l->transferOuts[0] = 0.0;
-      l->transferIns[tfers-1] = 1.0; l->transferOuts[tfers-1] = 1.0;
-      s = strtok(argv[1], ","); i = 1;
-      do {
-        if (!strcmp(s, "-inf"))
-        {
-          st_fail("Input signals of zero level must always generate zero output");
-          return (ST_EOF);
-        }
-        l->transferIns[i]  = pow(10.0, atof(s)/20.0);
-        if (l->transferIns[i] > 1.0)
-        {
-          st_fail("dB values are relative to maximum input, and, ipso facto, \n"
-               "cannot exceed 0");
-          return (ST_EOF);
-        }
-        if (l->transferIns[i] == 1.0) /* Final point was explicit */
-          --(l->transferPoints);
-        if (i > 0 && l->transferIns[i] <= l->transferIns[i-1])
-        {
-          st_fail("Transfer function points don't have strictly ascending \n"
-               "input amplitude");
-          return (ST_EOF);
-        }
-        s = strtok(NULL, ",");
-        l->transferOuts[i] = strcmp(s, "-inf") ?
-                               pow(10.0, atof(s)/20.0) : 0;
-        s = strtok(NULL, ",");
-        ++i;
-      } while (s != NULL);
-      
-      /* If there is a postprocessor gain, store it */
-      if (n >= 3) l->outgain = pow(10.0, atof(argv[2])/20.0);
-      else l->outgain = 1.0;
+      if (!st_compandt_parse(&l->transfer_fn, argv[1], n>2 ? argv[2] : 0))
+        return ST_EOF;
 
       /* Set the initial "volume" to be attibuted to the input channels.
          Unless specified, choose 1.0 (maximum) otherwise clipping will
@@ -324,7 +271,7 @@ static int st_mcompand_getopts_1(comp_band_t l, int n, char **argv)
     return (ST_SUCCESS);
 }
 
-static int parse_subarg(char *s, char **subargv, int *subargc) {
+static int parse_subarg(char *s, char **subargv, st_size_t *subargc) {
   char **ap;
   char *s_p;
 
@@ -344,13 +291,10 @@ static int parse_subarg(char *s, char **subargv, int *subargc) {
 
   if (*subargc < 2 || *subargc > 5)
     {
-      st_fail("Wrong number of arguments for the compander effect within mcompand\n"
-           "Use: {<attack_time>,<decay_time>}+ {<dB_in>,<db_out>}+ "
-           "[<dB_postamp> [<initial-volume> [<delay_time]]]\n"
-           "where {}+ means `one or more in a comma-separated, "
-           "white-space-free list'\n"
-           "and [] indications possible omission.  dB values are floating\n"
-           "point or `-inf'; times are in seconds.");
+      st_fail("Wrong number of parameters for the compander effect within mcompand; usage:\n"
+  "\tattack1,decay1{,attack2,decay2} [soft-knee-dB:]in-dB1[,out-dB1]{,in-dB2,out-dB2} [gain [initial-volume-dB [delay]]]\n"
+  "\twhere {} means optional and repeatable and [] means optional.\n"
+  "\tdB values are floating point or -inf'; times are in seconds.");
       return (ST_EOF);
     } else
       return ST_SUCCESS;
@@ -359,7 +303,7 @@ static int parse_subarg(char *s, char **subargv, int *subargc) {
 static int st_mcompand_getopts(eff_t effp, int n, char **argv) 
 {
   char *subargv[6], *cp;
-  int subargc, i, len;
+  st_size_t subargc, i, len;
 
   compand_t c = (compand_t) effp->priv;
 
@@ -409,7 +353,7 @@ static int st_mcompand_start(eff_t effp)
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
   st_size_t i;
-  int band;
+  st_size_t band;
   
   for (band=0;band<c->nBands;++band) {
     l = &c->bands[band];
@@ -452,7 +396,7 @@ static int st_mcompand_start(eff_t effp)
  * value, the attack rate and decay rate
  */
 
-static void doVolume(double *v, double samp, comp_band_t l, int chan)
+static void doVolume(double *v, double samp, comp_band_t l, st_size_t chan)
 {
   double s = samp/(~((st_sample_t)1<<31));
   double delta = s - *v;
@@ -463,9 +407,9 @@ static void doVolume(double *v, double samp, comp_band_t l, int chan)
     *v += delta * l->decayRate[chan];
 }
 
-static int st_mcompand_flow_1(compand_t c, comp_band_t l, const st_sample_t *ibuf, st_sample_t *obuf, int len, int filechans)
+static int st_mcompand_flow_1(eff_t effp, compand_t c, comp_band_t l, const st_sample_t *ibuf, st_sample_t *obuf, st_size_t len, st_size_t filechans)
 {
-  int done, chan;
+  st_size_t done, chan;
 
   for (done = 0; done < len; ibuf += filechans) {
 
@@ -475,39 +419,29 @@ static int st_mcompand_flow_1(compand_t c, comp_band_t l, const st_sample_t *ibu
       /* User is expecting same compander for all channels */
       double maxsamp = 0.0;
       for (chan = 0; chan < filechans; ++chan) {
-        double rect = fabs(ibuf[chan]);
+        double rect = fabs((double)ibuf[chan]);
         if (rect > maxsamp)
           maxsamp = rect;
       }
       doVolume(&l->volume[0], maxsamp, l, 0);
     } else {
       for (chan = 0; chan < filechans; ++chan)
-        doVolume(&l->volume[chan], fabs(ibuf[chan]), l, chan);
+        doVolume(&l->volume[chan], fabs((double)ibuf[chan]), l, chan);
     }
 
     /* Volume memory is updated: perform compand */
-
     for (chan = 0; chan < filechans; ++chan) {
-      double v = l->expectedChannels > 1 ? 
-        l->volume[chan] : l->volume[0];
-      double outv;
-      int piece;
+      int ch = l->expectedChannels > 1 ? chan : 0;
+      double level_in_lin = l->volume[ch];
+      double level_out_lin = st_compandt(&l->transfer_fn, level_in_lin);
+      double checkbuf;
 
-      for (piece = 1 /* yes, 1 */;
-           piece < l->transferPoints;
-           ++piece)
-        if (v >= l->transferIns[piece - 1] &&
-            v < l->transferIns[piece])
-          break;
-      
-      outv = l->transferOuts[piece-1] +
-        (l->transferOuts[piece] - l->transferOuts[piece-1]) *
-        (v - l->transferIns[piece-1]) /
-        (l->transferIns[piece] - l->transferIns[piece-1]);
+      if (c->delay_buf_size <= 0) {
+        checkbuf = ibuf[chan] * level_out_lin;
+        ST_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
+        obuf[done++] = checkbuf;
 
-      if (c->delay_buf_size <= 0)
-        obuf[done++] = ibuf[chan]*(outv/v)*l->outgain;
-      else {
+      } else {
         /* FIXME: note that this lookahead algorithm is really lame:
            the response to a peak is released before the peak
            arrives. */
@@ -522,7 +456,9 @@ static int st_mcompand_flow_1(compand_t c, comp_band_t l, const st_sample_t *ibu
            band's delay and the longest delay of all the bands. */
 
         if (l->delay_buf_cnt >= l->delay_size)
-          l->delay_buf[(l->delay_buf_ptr + c->delay_buf_size - l->delay_size)%c->delay_buf_size] *= (outv/v)*l->outgain;
+          checkbuf = l->delay_buf[(l->delay_buf_ptr + c->delay_buf_size - l->delay_size)%c->delay_buf_size] * level_out_lin;
+          ST_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
+          l->delay_buf[(l->delay_buf_ptr + c->delay_buf_size - l->delay_size)%c->delay_buf_size] = checkbuf;
         if (l->delay_buf_cnt >= c->delay_buf_size)
           obuf[done++] = l->delay_buf[l->delay_buf_ptr];
         else
@@ -544,8 +480,8 @@ static int st_mcompand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *ob
                      st_size_t *isamp, st_size_t *osamp) {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
-  int len = min(*isamp, *osamp);
-  int band, i;
+  st_size_t len = min(*isamp, *osamp);
+  st_size_t band, i;
   st_sample_t *abuf, *bbuf, *cbuf, *oldabuf, *ibuf_copy;
   double out;
 
@@ -573,7 +509,7 @@ static int st_mcompand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *ob
     }
     if (abuf == ibuf_copy)
       abuf = c->band_buf3;
-    (void)st_mcompand_flow_1(c,l,bbuf,abuf,len,effp->outinfo.channels);
+    (void)st_mcompand_flow_1(effp, c,l,bbuf,abuf,len,effp->outinfo.channels);
     for (i=0;i<len;++i)
     {
       out = obuf[i] + abuf[i];
@@ -592,9 +528,9 @@ static int st_mcompand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *ob
   return ST_SUCCESS;
 }
 
-static int st_mcompand_drain_1(eff_t effp, compand_t c, comp_band_t l, st_sample_t *obuf, int maxdrain)
+static int st_mcompand_drain_1(eff_t effp, compand_t c, comp_band_t l, st_sample_t *obuf, st_size_t maxdrain)
 {
-  int done;
+  st_size_t done;
   double out;
 
   /*
@@ -618,7 +554,7 @@ static int st_mcompand_drain_1(eff_t effp, compand_t c, comp_band_t l, st_sample
  */
 static int st_mcompand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
 {
-  int band, drained, mostdrained = 0;
+  st_size_t band, drained, mostdrained = 0;
   compand_t c = (compand_t)effp->priv;
   comp_band_t l;
 
@@ -645,7 +581,7 @@ static int st_mcompand_stop(eff_t effp)
 {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
-  int band;
+  st_size_t band;
 
   free(c->band_buf1);
   c->band_buf1 = NULL;
@@ -670,12 +606,11 @@ static int st_mcompand_delete(eff_t effp)
 {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
-  int band;
+  st_size_t band;
 
   for (band = 0; band < c->nBands; band++) {
     l = &c->bands[band];
-    free(l->transferOuts);
-    free(l->transferIns);
+    st_compandt_kill(&l->transfer_fn);
     free(l->decayRate);
     free(l->attackRate);
     free(l->volume);
