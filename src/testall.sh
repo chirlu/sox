@@ -19,6 +19,7 @@ t dat
 t hcom -r 22050
 t maud
 t prc
+t prc -i
 t sf 
 t smp
 t sndt 
