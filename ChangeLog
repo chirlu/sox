@@ -4,6 +4,12 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-13.0.1
+----------
+
+  o Added support for ADPCM-encoded PRC files, based on Danny Smith's
+    wav2rec and sndcmp.
+
 sox-13.0.0
 ----------
 
