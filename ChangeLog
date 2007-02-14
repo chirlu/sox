@@ -8,7 +8,7 @@ sox-13.0.1
 ----------
 
   o Added support for ADPCM-encoded PRC files, based on Danny Smith's
-    wav2rec and sndcmp.
+    rec2wav and sndcmp.
 
 sox-13.0.0
 ----------
