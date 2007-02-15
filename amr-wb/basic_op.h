@@ -26,7 +26,7 @@ Word16 abs_s (Word16 var1);               /* Short abs,           1   */
 Word16 shl (Word16 var1, Word16 var2);    /* Short shift left,    1   */
 Word16 shr (Word16 var1, Word16 var2);    /* Short shift right,   1   */
 Word16 mult (Word16 var1, Word16 var2);   /* Short mult,          1   */
-//Word32 L_mult (Word16 var1, Word16 var2); /* Long mult,           1   */
+/*Word32 L_mult (Word16 var1, Word16 var2);*/ /* Long mult,           1   */
 #define L_mult(a,b) ((a)*(b)<<1)
 Word16 negate (Word16 var1);              /* Short negate,        1   */
 Word16 extract_h (Word32 L_var1);         /* Extract high,        1   */
