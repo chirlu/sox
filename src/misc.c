@@ -72,6 +72,7 @@ const char * const st_encodings_str[] = {
         "MPEG audio (layer I, II or III)",
         "Vorbis",
         "FLAC",
+        "AMR-WB",
 };
 
 assert_static(array_length(st_encodings_str) == ST_ENCODINGS,

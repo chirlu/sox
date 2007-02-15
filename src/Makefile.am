@@ -16,7 +16,7 @@ formats = 8svx.c adpcm.c adpcm.h adpcms.c adpcms.h aiff.c au.c auto.c avr.c \
 	  g723_40.c g72x.c g72x.h gsm.c hcom.c ima_rw.c ima_rw.h \
 	  maud.c mp3.c nulfile.c prc.c raw.c sf.c sfircam.h skelform.c smp.c \
 	  sndfile.c sndrtool.c sphere.c tx16w.c voc.c vorbis.c vox.c wav.c \
-	  wav.h wve.c xa.c
+	  wav.h wve.c xa.c amr-wb.c
 
 effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c \
 	  compandt.c compandt.h dcshift.c\
@@ -33,7 +33,7 @@ libst_la_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c \
 libst_la_LIBADD = @LIBGSM_LIBADD@
 
 sox_SOURCES = sox.c
-sox_LDADD = libst.la
+sox_LDADD = libst.la ../amr-wb/libamrwb.la
 
 EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav
 

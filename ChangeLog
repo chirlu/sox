@@ -12,6 +12,8 @@ sox-13.0.1
   o Added support for ADPCM-encoded PRC files, based on Danny Smith's
     rec2wav and sndcmp.
 
+  o Added AMR-WB format.  (robs)
+
   Effects:
 
   o Add soft-knee companding.  (robs)

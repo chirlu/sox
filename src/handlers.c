@@ -21,6 +21,7 @@ st_format_fn_t st_format_fns[] = {
 #ifdef HAVE_ALSA
   st_alsa_format_fn,
 #endif
+  st_amr_wb_format_fn,
   st_au_format_fn,
   st_auto_format_fn,
   st_avr_format_fn,

@@ -207,6 +207,7 @@ extern const st_format_t *st_aifc_format_fn(void);
 #ifdef HAVE_ALSA
 extern const st_format_t *st_alsa_format_fn(void);
 #endif
+extern const st_format_t *st_amr_wb_format_fn(void);
 extern const st_format_t *st_au_format_fn(void);
 extern const st_format_t *st_auto_format_fn(void);
 extern const st_format_t *st_avr_format_fn(void);

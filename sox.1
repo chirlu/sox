@@ -777,6 +777,17 @@ input file.  It is suggested to always override the output values to use
 the highest quality format your ALSA system can handle.  Example:
 .B sox infile \-t alsa default
 .TP
+\&\fB.amr\-wb\fR
+Adaptive Multi Rate\*mWideband speech codec; a lossy format used in 3rd
+generation mobile telephony and defined in 3GPP TS 26.173.
+.SP
+AMR-WB audio has a fixed sampling rate of 16 kHz and supports encoding
+to the following bit-rates (as selected by the
+.B -C
+option): 0 = 6\*d6 kbit/s, 1 = 8\*d85 kbit/s, 2 = 12\*d65 kbit/s, 3 =
+14\*d25 kbit/s, 4 = 15\*d85 kbit/s 5 = 18\*d25 kbit/s, 6 = 19\*d85
+kbit/s, 7 = 23\*d05 kbit/s, 8 = 23\*d85 kbit/s
+.TP
 \&\fB.au\fR, \fB.snd\fR \fB(also with \-t sndfile)\fR
 Sun Microsystems AU files.
 There are many types of AU file;

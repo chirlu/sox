@@ -180,7 +180,8 @@ AC_SUBST(SAMPLERATE_LIBS)
 
 dnl Generate output files.
 AX_CREATE_STDINT_H(src/ststdint.h)
-AC_CONFIG_FILES(Makefile src/Makefile src/libgsm/Makefile src/libst-config)
+AC_CONFIG_FILES(Makefile src/Makefile src/libgsm/Makefile
+		amr-wb/Makefile src/libst-config)
 AC_OUTPUT
 
 if test "$found_libgsm" = "yes"; then

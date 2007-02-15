@@ -179,6 +179,7 @@ typedef enum {
   ST_ENCODING_MP3       , /* MP3 compression */
   ST_ENCODING_VORBIS    , /* Vorbis compression */
   ST_ENCODING_FLAC      , /* FLAC compression */
+  ST_ENCODING_AMR_WB    , /* AMR-WB compression */
 
   ST_ENCODINGS            /* End of list marker */
 } st_encoding_t;
