@@ -1,18 +1,17 @@
 /*
- * This library is free software; you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
  *
  * This library is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library.  If not, write to the Free Software
- * Foundation, Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301,
- * USA.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, write to the Free Software Foundation,
+ * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
 /* File format: FLAC   (c) 2006 robs@users.sourceforge.net */
@@ -28,14 +27,23 @@
 
 #include <FLAC/all.h>
 
-/* Workaround for older flac versions */
+/* Workaround for flac versions < 1.1.2 */
 #define FLAC__metadata_object_vorbiscomment_append_comment(object, entry, copy)\
   FLAC__metadata_object_vorbiscomment_insert_comment(object, object->data.vorbis_comment.num_comments, entry, copy)
 
+#if !defined(FLAC_API_VERSION_CURRENT)
+#define FLAC_API_VERSION_CURRENT 7
+#define FLAC__StreamDecoder FLAC__FileDecoder
+#define FLAC__stream_decoder_new FLAC__file_decoder_new
+#define FLAC__stream_decoder_set_md5_checking FLAC__file_decoder_set_md5_checking
+#define FLAC__stream_decoder_process_until_end_of_metadata FLAC__file_decoder_process_until_end_of_metadata
+#define FLAC__stream_decoder_process_single FLAC__file_decoder_process_single
+#define FLAC__stream_decoder_finish FLAC__file_decoder_finish
+#define FLAC__stream_decoder_delete FLAC__file_decoder_delete
+#endif
 
 
-typedef struct
-{
+typedef struct {
   /* Info: */
   unsigned bits_per_sample;
   unsigned channels;
@@ -47,7 +55,7 @@ typedef struct
   unsigned number_of_wide_samples;
   unsigned wide_sample_number;
 
-  FLAC__FileDecoder * flac;
+  FLAC__StreamDecoder * flac;
   FLAC__bool eof;
 } Decoder;
 
@@ -57,56 +65,46 @@ assert_static(sizeof(Decoder) <= ST_MAX_FILE_PRIVSIZE, /* else */ Decoder__PRIVS
 
 
 
-static void FLAC__decoder_metadata_callback(FLAC__FileDecoder const * const flac, FLAC__StreamMetadata const * const metadata, void * const client_data)
+static void FLAC__decoder_metadata_callback(FLAC__StreamDecoder const * const flac, FLAC__StreamMetadata const * const metadata, void * const client_data)
 {
   ft_t format = (ft_t) client_data;
   Decoder * decoder = (Decoder *) format->priv;
 
   (void) flac;
 
-  if (metadata->type == FLAC__METADATA_TYPE_STREAMINFO)
-  {
+  if (metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
     decoder->bits_per_sample = metadata->data.stream_info.bits_per_sample;
     decoder->channels = metadata->data.stream_info.channels;
     decoder->sample_rate = metadata->data.stream_info.sample_rate;
     decoder->total_samples = metadata->data.stream_info.total_samples;
   }
-  else if (metadata->type == FLAC__METADATA_TYPE_VORBIS_COMMENT)
-  {
+  else if (metadata->type == FLAC__METADATA_TYPE_VORBIS_COMMENT) {
     size_t i, comment_size = 0;
 
     if (metadata->data.vorbis_comment.num_comments == 0)
-    {
       return;
-    }
 
-    if (format->comment != NULL)
-    {
+    if (format->comment != NULL) {
       st_warn("FLAC: multiple Vorbis comment block ignored");
       return;
     }
 
     for (i = 0; i < metadata->data.vorbis_comment.num_comments; ++i)
-    {
       comment_size += metadata->data.vorbis_comment.comments[i].length + 1;
-    }
 
     format->comment = (char *) xcalloc(comment_size, sizeof(char));
 
-    for (i = 0; i < metadata->data.vorbis_comment.num_comments; ++i)
-    {
+    for (i = 0; i < metadata->data.vorbis_comment.num_comments; ++i) {
       strcat(format->comment, (char const *) metadata->data.vorbis_comment.comments[i].entry);
       if (i != metadata->data.vorbis_comment.num_comments - 1)
-      {
         strcat(format->comment, "\n");
-      }
     }
   }
 }
 
 
 
-static void FLAC__decoder_error_callback(FLAC__FileDecoder const * const flac, FLAC__StreamDecoderErrorStatus const status, void * const client_data)
+static void FLAC__decoder_error_callback(FLAC__StreamDecoder const * const flac, FLAC__StreamDecoderErrorStatus const status, void * const client_data)
 {
   ft_t format = (ft_t) client_data;
 
@@ -117,15 +115,14 @@ static void FLAC__decoder_error_callback(FLAC__FileDecoder const * const flac, F
 
 
 
-static FLAC__StreamDecoderWriteStatus FLAC__frame_decode_callback(FLAC__FileDecoder const * const flac, FLAC__Frame const * const frame, FLAC__int32 const * const buffer[], void * const client_data)
+static FLAC__StreamDecoderWriteStatus FLAC__frame_decode_callback(FLAC__StreamDecoder const * const flac, FLAC__Frame const * const frame, FLAC__int32 const * const buffer[], void * const client_data)
 {
   ft_t format = (ft_t) client_data;
   Decoder * decoder = (Decoder *) format->priv;
 
   (void) flac;
 
-  if (frame->header.bits_per_sample != decoder->bits_per_sample || frame->header.channels != decoder->channels || frame->header.sample_rate != decoder->sample_rate)
-  {
+  if (frame->header.bits_per_sample != decoder->bits_per_sample || frame->header.channels != decoder->channels || frame->header.sample_rate != decoder->sample_rate) {
     st_fail_errno(format, ST_EINVAL, "FLAC ERROR: parameters differ between frame and header");
     return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
   }
@@ -138,40 +135,50 @@ static FLAC__StreamDecoderWriteStatus FLAC__frame_decode_callback(FLAC__FileDeco
 
 
 
-static int st_format_start_read(ft_t const format)
+static int start_read(ft_t const format)
 {
   Decoder * decoder = (Decoder *) format->priv;
 
   memset(decoder, 0, sizeof(*decoder));
-  decoder->flac = FLAC__file_decoder_new();
-  if (decoder->flac == NULL)
-  {
+  decoder->flac = FLAC__stream_decoder_new();
+  if (decoder->flac == NULL) {
     st_fail_errno(format, ST_ENOMEM, "FLAC ERROR creating the decoder instance");
     return ST_EOF;
   }
 
-  FLAC__file_decoder_set_md5_checking(decoder->flac, st_true);
+  FLAC__stream_decoder_set_md5_checking(decoder->flac, st_true);
+#if FLAC_API_VERSION_CURRENT <= 7
   FLAC__file_decoder_set_filename(decoder->flac, format->filename);
   FLAC__file_decoder_set_write_callback(decoder->flac, FLAC__frame_decode_callback);
   FLAC__file_decoder_set_metadata_callback(decoder->flac, FLAC__decoder_metadata_callback);
   FLAC__file_decoder_set_error_callback(decoder->flac, FLAC__decoder_error_callback);
   FLAC__file_decoder_set_metadata_respond_all(decoder->flac);
   FLAC__file_decoder_set_client_data(decoder->flac, format);
-
-  if (FLAC__file_decoder_init(decoder->flac) != FLAC__FILE_DECODER_OK)
-  {
+  if (FLAC__file_decoder_init(decoder->flac) != FLAC__FILE_DECODER_OK) {
+#else
+  if (FLAC__stream_decoder_init_file(
+    decoder->flac,
+    format->filename,
+    FLAC__frame_decode_callback,
+    FLAC__decoder_metadata_callback,
+    FLAC__decoder_error_callback,
+    format) != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
+#endif
     st_fail_errno(format, ST_EHDR, "FLAC ERROR initialising decoder");
     return ST_EOF;
   }
 
-  if (!FLAC__file_decoder_process_until_end_of_metadata(decoder->flac))
-  {
+
+  if (!FLAC__stream_decoder_process_until_end_of_metadata(decoder->flac)) {
     st_fail_errno(format, ST_EHDR, "FLAC ERROR whilst decoding metadata");
     return ST_EOF;
   }
 
-  if (FLAC__file_decoder_get_state(decoder->flac) != FLAC__FILE_DECODER_OK && FLAC__file_decoder_get_state(decoder->flac) != FLAC__FILE_DECODER_END_OF_FILE)
-  {
+#if FLAC_API_VERSION_CURRENT <= 7
+  if (FLAC__file_decoder_get_state(decoder->flac) != FLAC__FILE_DECODER_OK && FLAC__file_decoder_get_state(decoder->flac) != FLAC__FILE_DECODER_END_OF_FILE) {
+#else
+  if (FLAC__stream_decoder_get_state(decoder->flac) > FLAC__STREAM_DECODER_END_OF_STREAM) {
+#endif
     st_fail_errno(format, ST_EHDR, "FLAC ERROR during metadata decoding");
     return ST_EOF;
   }
@@ -185,15 +192,14 @@ static int st_format_start_read(ft_t const format)
 }
 
 
-static st_size_t st_format_read(ft_t const format, st_sample_t * sampleBuffer, st_size_t const requested)
+static st_size_t read(ft_t const format, st_sample_t * sampleBuffer, st_size_t const requested)
 {
   Decoder * decoder = (Decoder *) format->priv;
   size_t actual = 0;
 
-  while (!decoder->eof && actual < requested)
-  {
+  while (!decoder->eof && actual < requested) {
     if (decoder->wide_sample_number >= decoder->number_of_wide_samples)
-      FLAC__file_decoder_process_single(decoder->flac);
+      FLAC__stream_decoder_process_single(decoder->flac);
     if (decoder->wide_sample_number >= decoder->number_of_wide_samples)
       decoder->eof = st_true;
     else {
@@ -216,22 +222,19 @@ static st_size_t st_format_read(ft_t const format, st_sample_t * sampleBuffer, s
 
 
 
-static int st_format_stop_read(ft_t const format)
+static int stop_read(ft_t const format)
 {
   Decoder * decoder = (Decoder *) format->priv;
 
-  if (!FLAC__file_decoder_finish(decoder->flac) && decoder->eof)
-  {
+  if (!FLAC__stream_decoder_finish(decoder->flac) && decoder->eof)
     st_warn("FLAC decoder MD5 checksum mismatch.");
-  }
-  FLAC__file_decoder_delete(decoder->flac);
+  FLAC__stream_decoder_delete(decoder->flac);
   return ST_SUCCESS;
 }
 
 
 
-typedef struct
-{
+typedef struct {
   /* Info: */
   unsigned bits_per_sample;
 
@@ -266,23 +269,21 @@ static void flac_stream_encoder_metadata_callback(FLAC__StreamEncoder const * en
 
 
 
-static int st_format_start_write(ft_t const format)
+static int start_write(ft_t const format)
 {
   Encoder * encoder = (Encoder *) format->priv;
   FLAC__StreamEncoderState status;
 
   memset(encoder, 0, sizeof(*encoder));
   encoder->flac = FLAC__stream_encoder_new();
-  if (encoder->flac == NULL)
-  {
+  if (encoder->flac == NULL) {
     st_fail_errno(format, ST_ENOMEM, "FLAC ERROR creating the encoder instance");
     return ST_EOF;
   }
   encoder->decoded_samples = xmalloc(ST_BUFSIZ * sizeof(FLAC__int32));
 
   {     /* Select and set FLAC encoder options: */
-    static struct
-    {
+    static struct {
       int blocksize;
       FLAC__bool do_exhaustive_model_search;
       FLAC__bool do_mid_side_stereo;
@@ -303,12 +304,10 @@ static int st_format_start_write(ft_t const format)
     };
     unsigned compression_level = array_length(options) - 1; /* Default to "best" */
 
-    if (format->signal.compression != HUGE_VAL)
-    {
+    if (format->signal.compression != HUGE_VAL) {
       compression_level = format->signal.compression;
       if (compression_level != format->signal.compression || 
-          compression_level >= array_length(options))
-      {
+          compression_level >= array_length(options)) {
         st_fail_errno(format, ST_EINVAL,
                       "FLAC compression level must be a whole number from 0 to %i",
                       array_length(options) - 1);
@@ -325,8 +324,7 @@ static int st_format_start_write(ft_t const format)
     SET_OPTION(max_lpc_order);
     SET_OPTION(max_residual_partition_order);
     SET_OPTION(min_residual_partition_order);
-    if (format->signal.channels == 2)
-    {
+    if (format->signal.channels == 2) {
       SET_OPTION(do_mid_side_stereo);
       SET_OPTION(loose_mid_side_stereo);
     }
@@ -351,23 +349,17 @@ static int st_format_start_write(ft_t const format)
     size_t i;
     st_bool streamable = st_false;
     for (i = 0; !streamable && i < array_length(streamable_rates); ++i)
-    {
        streamable = (streamable_rates[i] == format->signal.rate);
-    }
-    if (!streamable)
-    {
+    if (!streamable) {
       st_report("FLAC: non-standard rate; output may not be streamable");
       FLAC__stream_encoder_set_streamable_subset(encoder->flac, st_false);
     }
   }
 
   if (format->length != 0)
-  {
     FLAC__stream_encoder_set_total_samples_estimate(encoder->flac, (FLAC__uint64)format->length);
-  }
 
-  if (format->comment != NULL && * format->comment != '\0')
-  {
+  if (format->comment != NULL && * format->comment != '\0') {
     FLAC__StreamMetadata * metadata[1];
     FLAC__StreamMetadata_VorbisComment_Entry entry;
     char * comments, * comment, * end_of_comment;
@@ -375,8 +367,7 @@ static int st_format_start_write(ft_t const format)
     encoder->metadata = metadata[0] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT);
 
     /* Check if there is a FIELD=value pair already in the comment; if not, add one */
-    if (strchr(format->comment, '=') == NULL) 
-    {
+    if (strchr(format->comment, '=') == NULL) {
       static const char prepend[] = "COMMENT=";
       comments = xmalloc(strlen(format->comment) + sizeof(prepend));
       strcpy(comments, prepend);
@@ -387,12 +378,10 @@ static int st_format_start_write(ft_t const format)
 
     comment = comments;
 
-    do
-    {
+    do {
       entry.entry = (FLAC__byte *) comment;
       end_of_comment = strchr(comment, '\n');
-      if (end_of_comment != NULL)
-      {
+      if (end_of_comment != NULL) {
         *end_of_comment = '\0';
         comment = end_of_comment + 1;
       }
@@ -405,13 +394,17 @@ static int st_format_start_write(ft_t const format)
     free(comments);
   }
 
+#if FLAC_API_VERSION_CURRENT <= 7
   FLAC__stream_encoder_set_write_callback(encoder->flac, flac_stream_encoder_write_callback);
   FLAC__stream_encoder_set_metadata_callback(encoder->flac, flac_stream_encoder_metadata_callback);
   FLAC__stream_encoder_set_client_data(encoder->flac, format);
-
   status = FLAC__stream_encoder_init(encoder->flac);
-  if (status != FLAC__STREAM_ENCODER_OK)
-  {
+#else
+  status = FLAC__stream_encoder_init_stream(encoder->flac, flac_stream_encoder_write_callback,
+      0, 0, flac_stream_encoder_metadata_callback, format);
+#endif
+
+  if (status != FLAC__STREAM_ENCODER_OK) {
     st_fail_errno(format, ST_EINVAL, "%s", FLAC__StreamEncoderStateString[status]);
     return ST_EOF;
   }
@@ -420,19 +413,17 @@ static int st_format_start_write(ft_t const format)
 
 
 
-static st_size_t st_format_write(ft_t const format, st_sample_t const * const sampleBuffer, st_size_t const len)
+static st_size_t write(ft_t const format, st_sample_t const * const sampleBuffer, st_size_t const len)
 {
   Encoder * encoder = (Encoder *) format->priv;
   unsigned i;
 
-  for (i = 0; i < len; ++i)
-  {
-    switch (encoder->bits_per_sample)
-    {
+  for (i = 0; i < len; ++i) {
+    switch (encoder->bits_per_sample) {
       case  8: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_BYTE(sampleBuffer[i], format->clips); break;
       case 16: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_WORD(sampleBuffer[i], format->clips); break;
       case 24: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_24BIT(sampleBuffer[i],format->clips); break;
-      case 32: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_DWORD(sampleBuffer[i],); break;
+      case 32: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_DWORD(sampleBuffer[i],format->clips); break;
     }
   }
   FLAC__stream_encoder_process_interleaved(encoder->flac, encoder->decoded_samples, len / format->signal.channels);
@@ -441,7 +432,7 @@ static st_size_t st_format_write(ft_t const format, st_sample_t const * const sa
 
 
 
-static int st_format_stop_write(ft_t const format)
+static int stop_write(ft_t const format)
 {
   Encoder * encoder = (Encoder *) format->priv;
   FLAC__StreamEncoderState state = FLAC__stream_encoder_get_state(encoder->flac);
@@ -450,8 +441,7 @@ static int st_format_stop_write(ft_t const format)
   FLAC__stream_encoder_finish(encoder->flac);
   FLAC__stream_encoder_delete(encoder->flac);
   free(encoder->decoded_samples);
-  if (state != FLAC__STREAM_ENCODER_OK)
-  {
+  if (state != FLAC__STREAM_ENCODER_OK) {
     st_fail_errno(format, ST_EINVAL, "FLAC ERROR: failed to encode to end of stream");
     return ST_EOF;
   }
@@ -460,33 +450,16 @@ static int st_format_stop_write(ft_t const format)
 
 
 
-static char const * const st_format_names[] =
-{
-  "flac",
-  NULL
-};
-
-
-
-static st_format_t const st_format =
-{
-  st_format_names,
-  NULL,
-  0,
-  st_format_start_read,
-  st_format_read,
-  st_format_stop_read,
-  st_format_start_write,
-  st_format_write,
-  st_format_stop_write,
-  st_format_nothing_seek
-};
-
-
-
 st_format_t const * st_flac_format_fn(void)
 {
-  return &st_format;
+  static char const * const names[] = {"flac", NULL};
+  static st_format_t const driver = {
+    names, NULL, 0,
+    start_read, read, stop_read,
+    start_write, write, stop_write,
+    0
+  };
+  return &driver;
 }
 
 

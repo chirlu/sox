@@ -135,8 +135,8 @@ AC_ARG_WITH(flac,
         [with_flac=$withval],
         [with_flac=yes])
 if test "$with_flac" = yes; then
-    AC_CHECK_HEADER(FLAC/file_encoder.h,
-        [AC_CHECK_LIB(FLAC, FLAC__file_encoder_new,,with_flac=no)],
+    AC_CHECK_HEADER(FLAC/all.h,
+        [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new,,with_flac=no)],
         with_flac=no)
 fi
 
