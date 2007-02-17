@@ -35,6 +35,7 @@
 #define FLAC_API_VERSION_CURRENT 7
 #define FLAC__StreamDecoder FLAC__FileDecoder
 #define FLAC__stream_decoder_new FLAC__file_decoder_new
+#define FLAC__stream_decoder_set_metadata_respond_all FLAC__file_decoder_set_metadata_respond_all
 #define FLAC__stream_decoder_set_md5_checking FLAC__file_decoder_set_md5_checking
 #define FLAC__stream_decoder_process_until_end_of_metadata FLAC__file_decoder_process_until_end_of_metadata
 #define FLAC__stream_decoder_process_single FLAC__file_decoder_process_single
@@ -147,7 +148,7 @@ static int start_read(ft_t const format)
   }
 
   FLAC__stream_decoder_set_md5_checking(decoder->flac, st_true);
-  FLAC__file_decoder_set_metadata_respond_all(decoder->flac);
+  FLAC__stream_decoder_set_metadata_respond_all(decoder->flac);
 #if FLAC_API_VERSION_CURRENT <= 7
   FLAC__file_decoder_set_filename(decoder->flac, format->filename);
   FLAC__file_decoder_set_write_callback(decoder->flac, FLAC__frame_decode_callback);
@@ -269,6 +270,39 @@ static void flac_stream_encoder_metadata_callback(FLAC__StreamEncoder const * en
 
 
 
+#if FLAC_API_VERSION_CURRENT >= 8
+static FLAC__StreamEncoderSeekStatus flac_stream_encoder_seek_callback(FLAC__StreamEncoder const * encoder, FLAC__uint64 absolute_byte_offset, void * client_data)
+{
+  ft_t const format = (ft_t) client_data;
+  (void) encoder;
+  if (!format->seekable)
+    return FLAC__STREAM_ENCODER_SEEK_STATUS_UNSUPPORTED;
+  else if (st_seeki(format, (st_size_t)absolute_byte_offset, SEEK_SET) != ST_SUCCESS)
+    return FLAC__STREAM_ENCODER_SEEK_STATUS_ERROR;
+  else
+    return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
+}
+
+
+
+static FLAC__StreamEncoderTellStatus flac_stream_encoder_tell_callback(FLAC__StreamEncoder const * encoder, FLAC__uint64 * absolute_byte_offset, void * client_data)
+{
+  ft_t const format = (ft_t) client_data;
+  off_t pos;
+  (void) encoder;
+  if (!format->seekable)
+    return FLAC__STREAM_ENCODER_TELL_STATUS_UNSUPPORTED;
+  else if ((pos = ftello(format->fp)) < 0)
+    return FLAC__STREAM_ENCODER_TELL_STATUS_ERROR;
+  else {
+    *absolute_byte_offset = (FLAC__uint64)pos;
+    return FLAC__STREAM_ENCODER_TELL_STATUS_OK;
+  }
+}
+#endif
+
+
+
 static int start_write(ft_t const format)
 {
   Encoder * encoder = (Encoder *) format->priv;
@@ -284,13 +318,13 @@ static int start_write(ft_t const format)
 
   {     /* Select and set FLAC encoder options: */
     static struct {
-      int blocksize;
+      unsigned blocksize;
       FLAC__bool do_exhaustive_model_search;
       FLAC__bool do_mid_side_stereo;
       FLAC__bool loose_mid_side_stereo;
       unsigned max_lpc_order;
-      int max_residual_partition_order;
-      int min_residual_partition_order;
+      unsigned max_residual_partition_order;
+      unsigned min_residual_partition_order;
     } const options[] = {
       {1152, st_false, st_false, st_false, 0, 2, 2},
       {1152, st_false, st_true, st_true, 0, 2, 2},
@@ -401,7 +435,7 @@ static int start_write(ft_t const format)
   status = FLAC__stream_encoder_init(encoder->flac);
 #else
   status = FLAC__stream_encoder_init_stream(encoder->flac, flac_stream_encoder_write_callback,
-      0, 0, flac_stream_encoder_metadata_callback, format);
+      flac_stream_encoder_seek_callback, flac_stream_encoder_tell_callback, flac_stream_encoder_metadata_callback, format);
 #endif
 
   if (status != FLAC__STREAM_ENCODER_OK) {
