@@ -18,6 +18,7 @@ sox-13.0.1
 
   o Added soft-knee companding.  (robs)
   o Show (with --octave) compand transfer function.  (robs)
+  o Allow e.g. "vol 6dB" (as well as "vol 6 dB").  (robs)
 
   Other new features:
 

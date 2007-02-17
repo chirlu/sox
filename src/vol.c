@@ -6,90 +6,100 @@
  * Cannot handle different number of channels.
  * Cannot handle rate change.
  */
+#define vol_usage \
+  "Usage: vol gain[[ ]type [limitergain]]\n" \
+  "\t(default type=amplitude: 1 is constant, < 0 change phase;\n" \
+  "\ttype=power 1 is constant; type=dB: 0 is constant, +6 doubles ampl.)\n" \
+  "\tThe peak limiter has a gain much less than 1 (e.g. 0.05 or 0.02) and is\n" \
+  "\tonly used on peaks (to prevent clipping); default is no limiter."
 
 #include "st_i.h"
 
 #include <math.h>   /* exp(), sqrt() */
-
-static st_effect_t st_vol_effect;
 
 #define LOG_10_20 ((double)(0.1151292546497022842009e0))
 
 typedef struct {
     double gain; /* amplitude gain. */
     
-    int uselimiter; /* boolean: are we using the limiter? */
+    st_bool uselimiter;
     double limiterthreshhold;
-    double limitergain; /* limiter gain. */
+    double limitergain;
     int limited; /* number of limited values to report. */
     int totalprocessed;
 } * vol_t;
 
+enum {VOL_amplitude, VOL_dB, VOL_power};
+
+static enum_item const vol_types[] = {
+  ENUM_ITEM(VOL_,amplitude)
+  ENUM_ITEM(VOL_,dB)
+  ENUM_ITEM(VOL_,power)
+  {0, 0}};
+
 /*
  * Process options: gain (float) type (amplitude, power, dB)
  */
-static int st_vol_getopts(eff_t effp, int n, char **argv) 
+static int getopts(eff_t effp, int n, char **argv) 
 {
-    vol_t vol = (vol_t) effp->priv; 
-    vol->gain = 1.0; /* default is no change */
-    vol->uselimiter = 0; /* default is no limiter */
-    
-    if (n && (!sscanf(argv[0], "%lf", &vol->gain)))
-    {
-        st_fail(st_vol_effect.usage);
-        return ST_EOF;
-    }
+  vol_t vol = (vol_t) effp->priv; 
+  char string[11];
+  char * q = string;
+  char dummy;          /* To check for extraneous chars. */
+  unsigned have_type;
 
-    /* adjust gain depending on type (what a great parser;-) */
-    if (n>1) 
-    {
-        switch (argv[1][0]) 
-        {
-        case 'd': /* decibels to amplitude */
-        case 'D':
-            vol->gain = exp(vol->gain*LOG_10_20);
-            break;
-        case 'p':
-        case 'P': /* power to amplitude, keep phase change */
-            if (vol->gain > 0.0)
-                vol->gain = sqrt(vol->gain);
-            else
-                vol->gain = -sqrt(-vol->gain);
-            break;
-        case 'a': /* amplitude */
-        case 'A':
-        default:
-            break;
-        }
-    }
-    
+  vol->gain = 1;       /* Default is no change. */
+  vol->uselimiter = st_false; /* Default is no limiter. */
+  
+  if (!n || (have_type = sscanf(argv[0], "%lf %10s %c", &vol->gain, string, &dummy) - 1) > 1) {
+    st_fail(effp->h->usage);
+    return ST_EOF;
+  }
+  ++argv, --n;
 
-    if (n>2)
-    {
-        if ((fabs(vol->gain) < 1.0) || !sscanf(argv[2], "%lf", &vol->limitergain) || !((vol->limitergain > 0.0) && (vol->limitergain < 1.0)))
-        {
-                st_fail(st_vol_effect.usage);
-                return ST_EOF;                  
-        }
-        
-        vol->uselimiter = 1; /* ok, we'll use it */
-        /* The following equation is derived so that there is no 
-         * discontinuity in output amplitudes */
-        /* and a ST_SAMPLE_MAX input always maps to a ST_SAMPLE_MAX output 
-         * when the limiter is activated. */
-        /* (NOTE: There **WILL** be a discontinuity in the slope 
-         * of the output amplitudes when using the limiter.) */
-        vol->limiterthreshhold = ST_SAMPLE_MAX * (1.0 - vol->limitergain) / (fabs(vol->gain) - vol->limitergain);
+  if (!have_type && n) {
+    ++have_type;
+    q = *argv;
+    ++argv, --n;
+  }
+
+  if (have_type) {
+    enum_item const * p = find_enum_text(q, vol_types);
+    if (!p) {
+      st_fail(effp->h->usage);
+      return ST_EOF;
+    }
+    switch (p->value) {
+      case VOL_dB: vol->gain = exp(vol->gain*LOG_10_20); break;
+      case VOL_power: /* power to amplitude, keep phase change */
+        vol->gain = vol->gain > 0 ? sqrt(vol->gain) : -sqrt(-vol->gain);
+        break;
+    }
+  }
+
+  if (n) {
+    if (fabs(vol->gain) < 1 || sscanf(*argv, "%lf %c", &vol->limitergain, &dummy) != 1 || vol->limitergain <= 0 || vol->limitergain >= 1) {
+      st_fail(effp->h->usage);
+      return ST_EOF;                  
     }
     
-
-    return ST_SUCCESS;
+    vol->uselimiter = st_true;
+    /* The following equation is derived so that there is no 
+     * discontinuity in output amplitudes */
+    /* and a ST_SAMPLE_MAX input always maps to a ST_SAMPLE_MAX output 
+     * when the limiter is activated. */
+    /* (NOTE: There **WILL** be a discontinuity in the slope 
+     * of the output amplitudes when using the limiter.) */
+    vol->limiterthreshhold = ST_SAMPLE_MAX * (1.0 - vol->limitergain) / (fabs(vol->gain) - vol->limitergain);
+  }
+  st_debug("mult=%g limit=%g", vol->gain, vol->limitergain);
+  return ST_SUCCESS;
 }
 
 /*
  * Start processing
  */
-static int st_vol_start(eff_t effp)
+static int start(eff_t effp)
 {
     vol_t vol = (vol_t) effp->priv;
     
@@ -117,7 +127,7 @@ static int st_vol_start(eff_t effp)
 /*
  * Process data.
  */
-static int st_vol_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
+static int flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
                 st_size_t *isamp, st_size_t *osamp)
 {
     vol_t vol = (vol_t) effp->priv;
@@ -175,38 +185,20 @@ static int st_vol_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     return ST_SUCCESS;
 }
 
-/*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
- */
-static int st_vol_stop(eff_t effp)
+static int stop(eff_t effp)
 {
-    vol_t vol = (vol_t) effp->priv;
-    if (vol->limited)
-    {
-        st_warn("limited %d values (%d percent).", 
-             vol->limited, (int) (vol->limited * 100.0 / vol->totalprocessed));
-    }
-    return ST_SUCCESS;
+  vol_t vol = (vol_t) effp->priv;
+  if (vol->limited) {
+    st_warn("limited %d values (%d percent).", 
+         vol->limited, (int) (vol->limited * 100.0 / vol->totalprocessed));
+  }
+  return ST_SUCCESS;
 }
 
-static st_effect_t st_vol_effect = {
-  "vol",
-  "Usage: vol gain [ type [ limitergain ] ]"
-  "       (default type=amplitude: 1.0 is constant, <0.0 change phase;\n"
-  "       type=power 1.0 is constant; type=dB: 0.0 is constant, +6 doubles ampl.)\n"
-  "       The peak limiter has a gain much less than 1.0 (ie 0.05 or 0.02) which is only\n"
-  "       used on peaks to prevent clipping. (default is no limiter)",
-  ST_EFF_MCHAN,
-  st_vol_getopts,
-  st_vol_start,
-  st_vol_flow,
-  st_effect_nothing_drain,
-  st_vol_stop,
-  st_effect_nothing
-};
-
-const st_effect_t *st_vol_effect_fn(void)
+st_effect_t const * st_vol_effect_fn(void)
 {
-    return &st_vol_effect;
+  static st_effect_t driver = {
+    "vol", vol_usage, ST_EFF_MCHAN, getopts, start, flow, 0, stop, 0
+  };
+  return &driver;
 }
