@@ -147,12 +147,12 @@ static int start_read(ft_t const format)
   }
 
   FLAC__stream_decoder_set_md5_checking(decoder->flac, st_true);
+  FLAC__file_decoder_set_metadata_respond_all(decoder->flac);
 #if FLAC_API_VERSION_CURRENT <= 7
   FLAC__file_decoder_set_filename(decoder->flac, format->filename);
   FLAC__file_decoder_set_write_callback(decoder->flac, FLAC__frame_decode_callback);
   FLAC__file_decoder_set_metadata_callback(decoder->flac, FLAC__decoder_metadata_callback);
   FLAC__file_decoder_set_error_callback(decoder->flac, FLAC__decoder_error_callback);
-  FLAC__file_decoder_set_metadata_respond_all(decoder->flac);
   FLAC__file_decoder_set_client_data(decoder->flac, format);
   if (FLAC__file_decoder_init(decoder->flac) != FLAC__FILE_DECODER_OK) {
 #else
