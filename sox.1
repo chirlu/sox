@@ -1531,18 +1531,18 @@ See also \fBfilter\fR for filters with a steeper roll-off.
 Apply a low-pass filter.
 See the description of the \fBhighpass\fR effect for details.
 .TP
-\fBmcompand "\fIattack1\fB,\fIdecay1\fR{\fB,\fIattack2\fB,\fIdecay2\fR}
-\fIin-dB1\fB,\fIout-dB1\fR{\fB,\fIin-dB2\fB,\fIout-dB2\fR}
+\fBmcompand\fR \(dq\fIattack1\fB,\fIdecay1\fR{\fB,\fIattack2\fB,\fIdecay2\fR}
+[\fIsoft-knee-dB\fB:\fR]\fIin-dB1\fR[\fB,\fIout-dB1\fR]{\fB,\fIin-dB2\fB,\fIout-dB2\fR}
 .br
-[\fIgain\fR [\fIinitial-volume\fR [\fIdelay\fR]] ]\fB" \fIxover-freq\fR
+[\fIgain\fR [\fIinitial-volume-dB\fR [\fIdelay\fR]]]\(dq {\fIxover-freq\fR \(dqattack1,...\(dq}
 .SP
-Multi-band compander is similar to the single band compander but the
-audio is first divided up into bands and then the compander is run on
-each band. See the \fBcompand\fR effect for the definition of its
-options. Compand options are specified between double quotes and the
-crossover frequency for that band is specified separately with
-\fIxover-freq\fR. This can be repeated multiple times to create
-multiple bands.
+The multi-band compander is similar to the single-band compander but the
+audio is first divided into bands using Butterworth cross-over filters
+and a separately specifiable compander run on each band.  See the
+\fBcompand\fR effect for the definition of its parameters.  Compand
+parameters are specified between double quotes and the crossover
+frequency for that band is given by \fIxover-freq\fR; these can be
+repeated to create multiple bands.
 .TP
 \fBmixer\fR [ \fB\-l\fR\^|\^\fB\-r\fR\^|\^\fB\-f\fR\^|\^\fB\-b\fR\^|\^\fB\-1\fR\^|\^\fB\-2\fR\^|\^\fB\-3\fR\^|\^\fB\-4\fR\^|\^\fIn\fR{\fB,\fIn\fR} ]
 Reduce the number of audio channels by mixing or selecting channels,
