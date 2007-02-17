@@ -15,11 +15,23 @@
 .ds RA \(->
 '\"
 '\" Decimal point set slightly raised
-.ds d \v'-.15m'.\v'+.15m'
+.if t .ds d \v'-.15m'.\v'+.15m'
+.if n .ds d .
 '\"
+'\" Enclosure macro for examples
+.de EX
+.SP
+.nf
+.ft CW
+..
+.de EE
+.ft R
+.SP
+.fi
+..
 .TH SoX 1 "January 31, 2007" "sox" "Sound eXchange"
 .SH NAME
-SoX\*mSound eXchange\*mThe Swiss Army knife of audio manipulation
+SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH SYNOPSIS
 .nf
 \fBsox\fR [\fIglobal-options\fR] [\fIformat-options\fR] \fIinfile1\fR
@@ -51,55 +63,59 @@ Tools manual page:
 .BR libst (3).
 .SP
 The overall SoX processing chain can be summarised as follows:
-.SP
-.ce
+.TS
+center;
+l.
 Input(s) \*(RA Balancing \*(RA Combiner \*(RA Effects \*(RA Output
+.TE
+.DT
 .SP
 To show how this works in practise, here are some examples of how
 SoX might be used.  The simple:
-.SP
+.EX
 	sox recital.au recital.wav
-.SP
+.EE
 translates an audio file in Sun AU format to a Microsoft WAV file, whilst:
-.SP
-	sox recital.au \-r 12000 \-b \-c 1 recital.wav vol 0\*d7 dither
-.SP
+.EX
+	sox recital.au -r 12000 -b -c 1 recital.wav vol 0.7 dither
+.EE
 performs the same format translation, but also changes the audio
 sampling rate & sample size, down-mixes to mono, and applies
 the \fBvol\fR and \fBdither\fR effects.
-.SP
-	sox \-r 8000 \-u \-b \-c 1 voice-memo.raw voice-memo.wav
-.SP
+.EX
+	sox -r 8000 -u -b -c 1 voice-memo.raw voice-memo.wav
+.EE
 adds a header to a raw audio file,
-.SP
-	sox slow.aiff fixed.aiff speed 1\*d027 rabbit -c0
-.SP
+.EX
+	sox slow.aiff fixed.aiff speed 1.027 rabbit -c0
+.EE
 adjusts audio speed using the most accurate
 .B rabbit
 algorithm,
-.SP
+.EX
 	sox short.au long.au longer.au
-.SP
+.EE
 concatenates two audio files, and
-.SP
-	sox \-m music.mp3 voice.wav mixed.flac
-.SP
+.EX
+	sox -m music.mp3 voice.wav mixed.flac
+.EE
 mixes together two audio files.
-.SP
+.EX
 	play \(dqThe Moonbeams/Greatest/*.ogg\(dq bass +3
-.SP
+.EE
 plays a collection of audio files whilst applying a bass boosting effect,
-.SP
-	play \-c 4 \-n \-c 1 synth sin %\-12 sin %\-9 sin %\-5 sin %\-2 vol 0\*d7 mixer fade q 0\*d1 1 0\*d1
-.SP
+.EX
+	play -c4 -n -c1 synth sin %-12 sin %-9 sin %-5 sin %-2 \(rs
+		vol 0.7 mixer fade q 0.1 1 0.1
+.EE
 plays a synthesised `A minor seventh' chord with a pipe-organ sound,
-.SP
-	rec \-c 2 test.aiff trim 0 10
-.SP
+.EX
+	rec -c 2 test.aiff trim 0 10
+.EE
 records 10 seconds of stereo audio, and
-.SP
+.EX
 	rec -M take1.aiff take1-dub.aiff
-.SP
+.EE
 records a new track in a multi-track recording.
 .SP
 Further examples are included throughout this manual;
@@ -173,6 +189,7 @@ l l l.
 @2.@The contents of the file header.
 @3.@The filename extension.
 .TE
+.DT
 .SP
 To set the output file format, SoX will use, in order of
 precedence and as given or available:
@@ -187,6 +204,7 @@ The input file format characteristics, or the closest
 to them that is supported by the output file type.
 T}
 .TE
+.DT
 .SP
 For all files, SoX will exit with an error
 if the file type cannot be determined; command-line format options may
@@ -218,9 +236,9 @@ SoX converts all audio files to an internal uncompressed
 format before performing any audio processing; this means that
 manipulating a file that is stored in a lossy format can cause further
 losses in audio fidelity.  E.g. with
-.SP
+.EX
 	sox long.mp3 short.mp3 trim 10
-.SP
+.EE
 SoX first decompresses the input MP3 file, then applies the
 .B trim
 effect, and finally creates the output MP3 file by recompressing the
@@ -259,9 +277,9 @@ SoX's
 effect can assist in determining the signal level in an audio file; the
 .B vol
 effect can be used to prevent clipping, e.g.
-.SP
-	sox dull.au bright.au vol \-6 dB treble +6
-.SP
+.EX
+	sox dull.au bright.au vol -6 dB treble +6
+.EE
 guarantees that the treble boost will not clip.
 .SP
 If clipping occurs at any point during processing, then
@@ -397,7 +415,9 @@ One other use of \fB\-n\fR is to use it in conjunction with
 .B \-V
 to display information from the audio file header
 without having to read any further into the file, e.g.
-.B sox \-V *.wav \-n
+.EX
+	sox \-V *.wav \-n
+.EE
 will display header information for each `WAV' file in the current
 directory.
 .TP
@@ -431,13 +451,13 @@ given for the output file.
 .B N.B.
 Unintentionally overwriting a file is easier than you might think, for
 example, if you accidentally enter
-.SP
+.EX
 	sox file1 file2 effect1 effect2 ...
-.SP
+.EE
 when what you really meant was
-.SP
+.EX
 	play file1 file2 effect1 effect2 ...
-.SP
+.EE
 then, without this option, file2 will be overwritten.  Hence, using this
 option is strongly recommended; a `shell' alias, script, or batch file
 may be an appropriate way of permanently enabling it.
@@ -459,10 +479,10 @@ of many of the filtering effects.  For the first given effect
 that supports the \fB\-\-octave\fR option, SoX will output Octave
 commands to plot the effect's transfer function, and then exit
 without actually processing any audio.  E.g.
-.SP
-	sox \-\-octave input-file \-n highpass 1320 > plot.m
-.br
+.EX
+	sox --octave input-file -n highpass 1320 > plot.m
 	octave plot.m
+.EE
 .TP
 \fB\-q\fR, \fB\-\-no\-show\-progress\fR
 Run in quiet mode when SoX wouldn't otherwise do so;
@@ -627,13 +647,13 @@ is actually an audio device.
 Unlike normal format characteristics, the endianness (byte, nibble, &
 bit ordering) of the input file is not automatically used for the output
 file; so, for example, when the following is run on a little-endian system:
-.SP
+.EX
 	sox -B audio.uw trimmed.uw trim 2
-.SP
+.EE
 trimmed.uw will be created as little-endian;
-.SP
+.EX
 	sox -B audio.uw -B trimmed.uw trim 2
-.SP
+.EE
 must be used to preserve big-endianness in the output file.
 .SP
 The
@@ -767,7 +787,9 @@ Note: The input file is currently processed as .aiff.
 .B alsa
 ALSA default device driver.
 This is a pseudo-file type and can be optionally compiled into SoX.  Run
-.B sox \-h
+.EX
+	sox -h
+.EE
 to see if you have support for this file type.  When this driver is used
 it allows you to open up a ALSA device and configure it to
 use the same data format as passed in to SoX.
@@ -775,7 +797,9 @@ It works for both playing and recording audio files.  When playing audio
 files it attempts to set up the ALSA driver to use the same format as the
 input file.  It is suggested to always override the output values to use
 the highest quality format your ALSA system can handle.  Example:
-.B sox infile \-t alsa default
+.EX
+	sox infile -t alsa default
+.EE
 .TP
 \&\fB.amr\-wb\fR
 Adaptive Multi Rate\*mWideband speech codec; a lossy format used in 3rd
@@ -830,8 +854,8 @@ needs its own handler.
 \&\fB.cvsd\fR, \fB.cvs\fR
 Continuously Variable Slope Delta modulation.
 A headerless format used to compress speech audio for applications such as voice mail.
-This format is sometimes used with bit-reversed samples\*ethe
-.B -X
+This format is sometimes used with bit-reversed samples\*mthe
+.B \-X
 format option can be used to set the bit-order.
 .TP
 .B .dat
@@ -881,7 +905,11 @@ option (see above) with a whole number from 0 to 8.
 .SP
 FLAC support in
 SoX is optional and requires optional FLAC libraries.  To
-see if there is support for FLAC run \fBsox \-h\fR and look for
+see if there is support for FLAC run
+.EX
+	sox -h
+.EE
+and look for
 it under the list of supported file formats as `flac'.
 .TP
 .B .fssd
@@ -900,7 +928,10 @@ It is rather CPU intensive.
 .SP
 GSM in
 SoX is optional and requires access to an external GSM library.  To see
-if there is support for GSM run \fBsox \-h\fR
+if there is support for GSM run
+.EX
+	sox -h
+.EE
 and look for it under the list of supported file formats.
 .TP
 .B .hcom
@@ -942,7 +973,10 @@ for a similar format.
 MP3 support in
 SoX is optional and requires access to either or both the external
 libmad and libmp3lame libraries.  To
-see if there is support for Mp3 run \fBsox \-h\fR
+see if there is support for Mp3 run
+.EX
+	sox -h
+.EE
 and look for it under the list of supported file formats as `mp3'.
 .SP
 .TP
@@ -971,19 +1005,26 @@ Decoding is somewhat CPU intensive and encoding is very CPU intensive.
 .SP
 Ogg Vorbis in
 SoX is optional and requires access to external Ogg Vorbis libraries.  To
-see if there is support for Ogg Vorbis run \fBsox \-h\fR
+see if there is support for Ogg Vorbis run
+.EX
+	sox -h
+.EE
 and look for it under the list of supported file formats as `vorbis'.
 .TP
 .B ossdsp
 OSS /dev/dsp device driver.
 This is a pseudo-file that can be optionally compiled into SoX.  Run
-.B sox \-h
+.EX
+	sox -h
+.EE
 to see if it is supported. When this driver is used it allows you to
 play and record sounds on supported systems. When playing audio
 files it attempts to set up the OSS driver to use the same format as
 the input file. It is suggested to always override the output values
 to use the highest quality format your OSS system can handle. Example:
-.B sox infile \-t ossdsp \-w \-s /dev/dsp
+.EX
+	sox infile -t ossdsp -w -s /dev/dsp
+.EE
 .TP
 \&\fB.paf\fR, \fB.fap\fR \fB(libsndfile)\fR
 Ensoniq PARIS file format (big and little-endian respectively).
@@ -1051,7 +1092,9 @@ format.
 .B sunau
 Sun /dev/audio device driver.
 This is a pseudo-file type and can be optionally compiled into SoX.  Run
-.B sox \-h
+.EX
+	sox -h
+.EE
 to see if you have support for this file type.  When this driver is used
 it allows you to open up a Sun /dev/audio file and configure it to
 use the same data type as passed in to SoX.
@@ -1059,9 +1102,13 @@ It works for both playing and recording audio files.  When playing audio
 files it attempts to set up the audio driver to use the same format as the
 input file.  It is suggested to always override the output values to use
 the highest quality format your hardware can handle.  Example:
-.B sox infile \-t sunau \-w \-s /dev/audio
+.EX
+	sox infile -t sunau -w -s /dev/audio
+.EE
 or
-.B sox infile \-t sunau \-U \-c 1 /dev/audio
+.EX
+	sox infile -t sunau -U -c 1 /dev/audio
+.EE
 for older sun equipment.
 .TP
 .B .txw
@@ -1458,6 +1505,7 @@ interp	\ 	lin	T{
 Digital delay-line interpolation: \fBlinear\fR\^|\^\fBquadratic\fR.
 T}
 .TE
+.DT
 .SP
 See [3] for a detailed description of flanging.
 .TP
@@ -1548,6 +1596,7 @@ In Ch	Out Ch	Num	Mappings
 4	4	1	adjust balance
 4	4	2	front balance, back balance
 .TE
+.DT
 .SP
 .TP
 \fBnoiseprof\fR [\fIprofile-file\fR]
@@ -1717,6 +1766,7 @@ Option	Window	Roll-off	Beta	Interpolation
 \-q	75	0\*d875	16	quadratic
 \-ql	149	0\*d94	16	quadratic
 .TE
+.DT
 .SP
 \fB\-qs\fR, \fB\-q\fR, or \fB\-ql\fR use window lengths of 45, 75, or 149
 samples, respectively, at the lower sample-rate of the two files.
@@ -1773,12 +1823,8 @@ Note: \fB\-qs\fR is only slightly slower, but more accurate for
 .SP
 Note: In many cases of up-sampling, no interpolation is needed,
 as exact filter coefficients can be computed in a reasonable amount of space.
-To be precise, this is done when
-.SP
-.ce 3
-input-rate < output-rate
-and
-output-rate \(di gcd(input-rate, output-rate) \(<= 511
+To be precise, this is done when both input-rate < output-rate, and
+output-rate \(di gcd(input-rate, output-rate) \(<= 511.
 .TP
 \fBreverb \fIgain-out reverb-time\fR <\fIdelay\fR>
 Add reverberation to the audio.  Each
@@ -1967,31 +2013,32 @@ effect that can has an associated length).
 .SP
 For example, the following produces a 3 second, 44\*d1\ kHz,
 stereo audio file containing a sine-wave swept from 300 to 3300\ Hz:
-.SP
-	sox \-n output.au synth 3 sine 300\-3300
-.SP
+.EX
+	sox -n output.au synth 3 sine 300-3300
+.EE
 and this produces an 8\ kHz mono version:
-.SP
-	sox \-r 8000 \-c 1 \-n output.au synth 3 sine 300\-3300
-.SP
+.EX
+	sox -r 8000 -c 1 -n output.au synth 3 sine 300-3300
+.EE
 Multiple channels can be synthesised by specifying the set of
 parameters shown between braces multiple times;
 the following puts the swept tone in the left channel and adds `brown'
 noise in the right:
-.SP
-	sox \-n output.au synth 3 sine 300\-3300 brownnoise
-.SP
+.EX
+	sox -n output.au synth 3 sine 300-3300 brownnoise
+.EE
 The following example shows how two synth effects can be cascaded
 to create a more complex waveform:
-.SP
-	sox \-n output.au synth 0\*d5 sine 200\-500 synth 0\*d5 sine fmod 700\-100
-.SP
+.EX
+	sox -n output.au synth 0\*d5 sine 200-500 \(rs
+		synth 0\*d5 sine fmod 700-100
+.EE
 Frequencies can also be given as a number of musical semitones relative
 to `middle A' (440\ Hz) by prefixing a `%' character;  for example, the
 following could be used to help tune a guitar's `E' strings:
-.SP
-	play \-n synth sine %\-17
-.SP
+.EX
+	play -n synth sine %-17
+.EE
 .B N.B.
 This effect generates audio at maximum volume, which means that there
 is a high chance of clipping when using the audio subsequently, so
