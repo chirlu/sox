@@ -16,9 +16,12 @@ sox-13.0.1
 
   Effects:
 
-  o Add soft-knee companding.  (robs)
+  o Added soft-knee companding.  (robs)
+  o Show (with --octave) compand transfer function.  (robs)
 
   Other new features:
+
+  o Show (with -S) if clipping is occurring.  (robs)
 
   Bug fixes:
 

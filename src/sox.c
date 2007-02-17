@@ -96,7 +96,7 @@ static st_bool doopts(file_t, int, char **);
 static void usage(char const *) NORET;
 static void usage_effect(char *) NORET;
 static int process(void);
-static void update_status(void);
+static void update_status(st_bool all_done);
 static void report_file_info(file_t f);
 static void parse_effects(int argc, char **argv);
 static void build_effects_table(void);
@@ -830,19 +830,26 @@ static void progress_to_file(file_t f)
   f->desc->st_errno = errno = 0;
 }
 
+static st_bool since(struct timeval * then, double secs, st_bool always_reset)
+{
+  st_bool ret;
+  struct timeval now;
+  time_t d;
+  gettimeofday(&now, NULL);
+  d = now.tv_sec - then->tv_sec;
+  ret = d > ceil(secs) || now.tv_usec - then->tv_usec + d * 1e6 >= secs * 1e6;
+  if (ret || always_reset)
+    *then = now;
+  return ret;
+}
+
 static void sigint(int s)
 {
   static struct timeval then;
-  struct timeval now;
-  time_t secs;
-  gettimeofday(&now, NULL);
-  secs = now.tv_sec - then.tv_sec;
   if (show_progress && s == SIGINT && combine_method <= SOX_concatenate &&
-      (secs > 1 || 1000000 * secs + now.tv_usec - then.tv_usec > 999999))
+      since(&then, 1., st_true))
     user_skip = st_true;
-  else
-    user_abort = st_true;
-  then = now;
+  else user_abort = st_true;
 }
 
 static st_bool can_segue(st_size_t i)
@@ -1064,7 +1071,7 @@ static int process(void) {
     flowstatus = flow_effect_out();
 
     if (show_progress)
-      update_status();
+      update_status(st_false);
 
     /* Quit reading/writing on user aborts.  This will close
      * the files nicely as if an EOF was reached on read. */
@@ -1081,7 +1088,7 @@ static int process(void) {
     drain_effect_out();
 
   if (show_progress)
-    fputs("\n\n", stderr);
+    update_status(st_true);
 
   if (combine_method > SOX_concatenate)
     /* Free input buffers now that they are not used */
@@ -1637,59 +1644,53 @@ static st_size_t total_clips(void)
   return clips;
 }
 
-static double human_readable(st_size_t number, char * unit)
+static char const * sigfigs3(st_size_t number)
 {
-  double result;
-
-  result = number / 1000000000.0;
-  if (result >= 1)
-    *unit = 'G';
+  if (!number)
+    return "0 ";
   else {
-    result = number / 1000000.0;
-    if (result >= 1)
-      *unit = 'M';
-    else {
-      result = number / 1000.0;
-      if (result >= 1)
-        *unit = 'k';
-      else {
-        result = number;
-        *unit = ' ';
-      }
-    }
+    static char const unit[] = " kMGTPE";
+    static char string[16][10];
+    static int i;
+    int unit_no = log10((double)number) / 3;
+    double d = (double)number / pow(10., 3. * unit_no);
+    int decimals = unit_no? 2 - min((int)log10(floor(d)), 2) : 0;
+    sprintf(string[i = (i+1) & 15], "%.*f%c", decimals, d, unit[unit_no]);
+    return string[i];
   }
-  return result;
 }
 
-static void update_status(void)
+static char const * sigfigs3p(double percentage)
 {
-  double read_time, left_time, in_time;
-  float completed;
-  char out_unit;
-  double out_size = human_readable(output_samples, &out_unit);
-  char clips_unit;
-  double clips_size = human_readable(total_clips(), &clips_unit);
-
-  read_time = (double)read_wide_samples / combiner.rate;
-
-  if (input_wide_samples) {
-    in_time = (double)input_wide_samples / combiner.rate;
-    left_time = in_time - read_time;
-    if (left_time < 0)
-      left_time = 0;
-
-    completed = (double)read_wide_samples / input_wide_samples * 100;
-    if (completed < 0)
-      completed = 0;
-  } else {
-    in_time = 0;
-    left_time = 0;
-    completed = 0;
+  if (!percentage)
+    return "0%";
+  else {
+    static char string[16][10];
+    static int i;
+    int decimals = 2 - range_limit((int)log10(floor(percentage)),0 , 2);
+    sprintf(string[i = (i+1) & 15], "%.*f%%", decimals, percentage);
+    return string[i];
   }
+}
 
-  fprintf(stderr, "\rTime: %s [%s] of %s (% 5.1f%%) Output:% 7.2f%c Clips:% 7.2f%c",
+static void update_status(st_bool all_done)
+{
+  static struct timeval then;
+  if (all_done || since(&then, .15, st_false)) {
+    double read_time = (double)read_wide_samples / combiner.rate;
+    double left_time = 0, in_time = 0, percentage = 0;
+
+    if (input_wide_samples) {
+      in_time = (double)input_wide_samples / combiner.rate;
+      left_time = max(in_time - read_time, 0);
+      percentage = max(100. * read_wide_samples / input_wide_samples, 0);
+    }
+    fprintf(stderr, "\rTime: %s [%s] of %s (%-5s) Samples out: %-6sClips: %-5s",
       str_time(read_time), str_time(left_time), str_time(in_time),
-      completed, out_size, out_unit, clips_size, clips_unit);
+      sigfigs3p(percentage), sigfigs3(output_samples), sigfigs3(total_clips()));
+  }
+  if (all_done)
+    fputs("\n\n", stderr);
 }
 
 static int strcmp_p(const void *p1, const void *p2)
