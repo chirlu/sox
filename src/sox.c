@@ -1023,12 +1023,14 @@ static int process(void) {
   do {
     efftab[0].olen = 0;
     if (combine_method <= SOX_concatenate) {
-      if (user_skip) {
-        user_skip = st_false;
-        fprintf(stderr, "\nSkipped.");
-      } else efftab[0].olen =
-        st_read_wide(files[current_input]->desc, efftab[0].obuf);
+      if (!user_skip)
+        efftab[0].olen = st_read_wide(files[current_input]->desc, efftab[0].obuf);
       if (efftab[0].olen == 0) {   /* If EOF, go to the next input file. */
+        update_status(st_true);
+        if (user_skip) {
+          user_skip = st_false;
+          fprintf(stderr, "Skipped.\n");
+        }
         if (++current_input < input_count) {
           if (combine_method == SOX_sequence && !can_segue(current_input))
             break;
@@ -1067,11 +1069,8 @@ static int process(void) {
     efftab[0].odone = 0;
     read_wide_samples += efftab[0].olen;
     efftab[0].olen *= combiner.channels;
-
     flowstatus = flow_effect_out();
-
-    if (show_progress)
-      update_status(st_false);
+    update_status(user_abort || ofile->desc->st_errno || flowstatus);
 
     /* Quit reading/writing on user aborts.  This will close
      * the files nicely as if an EOF was reached on read. */
@@ -1086,9 +1085,6 @@ static int process(void) {
   /* Drain the effects; don't write if output is indicating errors. */
   if (ofile->desc->st_errno == 0)
     drain_effect_out();
-
-  if (show_progress)
-    update_status(st_true);
 
   if (combine_method > SOX_concatenate)
     /* Free input buffers now that they are not used */
@@ -1676,6 +1672,8 @@ static char const * sigfigs3p(double percentage)
 static void update_status(st_bool all_done)
 {
   static struct timeval then;
+  if (!show_progress)
+    return;
   if (all_done || since(&then, .15, st_false)) {
     double read_time = (double)read_wide_samples / combiner.rate;
     double left_time = 0, in_time = 0, percentage = 0;
@@ -1690,7 +1688,7 @@ static void update_status(st_bool all_done)
       sigfigs3p(percentage), sigfigs3(output_samples), sigfigs3(total_clips()));
   }
   if (all_done)
-    fputs("\n\n", stderr);
+    fputc('\n', stderr);
 }
 
 static int strcmp_p(const void *p1, const void *p2)
