@@ -1,3 +1,2 @@
-build-tree/sox*/src/{sox,soxmix} usr/bin
-build-tree/sox*/sox.1 usr/share/man/man1
-build-tree/sox*/soxexam.7 usr/share/man/man7
+debian/tmp/usr/bin/{play,rec,sox} usr/bin/
+debian/tmp/usr/share/man/man{1,7} usr/share/man/

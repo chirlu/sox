@@ -3,13 +3,11 @@
 
 DEB_TAR_SRCDIR := sox-13.0.0
 
+CFLAGS += -fPIC
+#DEB_CONFIGURE_EXTRA_FLAGS := --disable-lame
+DEB_MAKE_INSTALL_TARGET := install
+
 include /usr/share/cdbs/1/rules/tarball.mk
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
 include /usr/share/cdbs/1/rules/simple-patchsys.mk
-
-CFLAGS += -fPIC
-DEB_CONFIGURE_EXTRA_FLAGS := --disable-lame
-DEB_MAKE_INSTALL_TARGET = all
-
-

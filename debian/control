@@ -3,27 +3,43 @@ Section: sound
 Priority: optional
 Maintainer: Pascal Giard <pascal@debian.org>
 Uploaders: Guenter Geiger (Debian/GNU) <geiger@debian.org>
-Build-Depends: debhelper (>= 1.2.64), libvorbis-dev, libmad0-dev, libgsm1-dev, libsndfile1-dev (>= 1.0.12), libsamplerate0-dev, cdbs, libasound2-dev [!kfreebsd-i386]
+Build-Depends: debhelper (>= 1.2.64), libvorbis-dev, libmad0-dev, libgsm1-dev, libsndfile1-dev (>= 1.0.12), libsamplerate0-dev, cdbs, libasound2-dev [!kfreebsd-i386 !kfreebsd-amd64]
 Standards-Version: 3.7.2
 
 Package: sox
 Architecture: any
 Depends: ${shlibs:Depends}
-Description: A universal sound sample translator
- SOX (SOund eXchange) is a generic utility for translating
- sound files from one format to another, possibly performing
- a sound effect at the same time. Sox is able to handle formats
- like .ogg (vorbis), mp3, wav, aiff, voc, snd, au, gsm and several
- more.
+Description: Swiss army knife of sound processing
+ SoX is a command line utility that can convert various formats of computer 
+ audio files in to other formats. It can also apply various effects to these 
+ sound files during the conversion. As an added bonus, SoX can play and record 
+ audio files on several unix-style platforms.
+ .
+ SoX is able to handle formats like .ogg (vorbis), mp3, wav, aiff, voc, snd, au,
+ gsm and several more.
  .
  Homepage: http://sox.sourceforge.net
 
-Package: sox-dev
+Package: libsox
 Architecture: any
 Section: devel
-Depends: sox (=${Source-Version}), ${shlibs:Depends}
-Replaces: sox
+Depends: ${shlibs:Depends}
+Conflicts: libst
+Description: SoX library
+ SoX is the swiss army knife of sound processing.
+ .
+ This package contains the SoX library.
+ .
+ Homepage: http://sox.sourceforge.net
+
+Package: libsox-dev
+Architecture: any
+Section: devel
+Depends: libsox (=${Source-Version}), ${shlibs:Depends}
 Conflicts: libst-dev
-Description: Soundfile library from sox
- This is the  soundfile  reading/writing library used by the sox soundfile
- converter program.
+Description: Development files for the SoX library
+ SoX is the swiss army knife of sound processing.
+ .
+ This package contains the development files for the SoX library.
+ .
+ Homepage: http://sox.sourceforge.net

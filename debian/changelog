@@ -1,19 +1,24 @@
-sox (13.0.0.cvs-1) experimental; urgency=low
+sox (13.0.0.cvs-1) unstable; urgency=low
 
-  * CVS version of SoX.
+  * New upstream version:
+    - Huge amount of changes (closes: #345726, #349178, #374096, #274519, 
+      #257525, #382275).
+    - Please see the upstream changelog.
+    - Warning: some scripts may break with this new version.
+    - sox-dev renamed to libsox-dev.
+    - Created libsox package that contains the SoX library.
+    - Guenter set as co-maintainer.
+    - soxmix no longer exists.
+  * Taking over the package with Guenter's permission.
+    - Thanks alot for all those years of maintenance!
   * [debian/control]:
     - Added build-depends on libsamplerate0-dev, libgsm1-dev and
       libsndfile1-dev.
-    - Taking over the package. Guenter set as co-maintainer.
-  * [debian/sox.install]:
-    - Added soxexam.7 manpage.
-    - soxmix no longer exists, removed soxmix.1 manpage.
-    - Creating symlinks to play and rec ourselves, see below.
-  * [debian/sox.links]: Fixed play and rec symlinks.
+    - Added !kfreebsd-amd64 to libasound2-dev (closes: #361487).
   * [debian/patches]: No more patches, everything is fixed upstream.
   * [debian/README.Debian]: Added instructions to build from CVS.
 
- -- Pascal Giard <pascal@gmail.com>  Tue, 09 Feb 2007 00:01:56 -0500
+ -- Pascal Giard <pascal@gmail.com>  Sat, 17 Feb 2007 13:42:33 -0500
 
 sox (12.18.2-2) unstable; urgency=low
 
