@@ -1,4 +1,4 @@
 debian/tmp/usr/bin/libst-config usr/bin/
-debian/tmp/usr/lib/libst.a usr/lib/
+debian/tmp/usr/lib/libst.{a,la} usr/lib/
 debian/tmp/usr/include/* usr/include/
 debian/tmp/usr/share/man/man3 usr/share/man/
