@@ -20,7 +20,7 @@ Description: Swiss army knife of sound processing
  .
  Homepage: http://sox.sourceforge.net
 
-Package: libsox
+Package: libsox0
 Architecture: any
 Section: devel
 Depends: ${shlibs:Depends}
