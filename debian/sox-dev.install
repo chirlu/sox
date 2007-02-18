@@ -1,5 +1,0 @@
-build-tree/sox*/src/libst-config usr/bin 
-build-tree/sox*/src/libst.a usr/lib
-build-tree/sox*/src/st.h usr/include
-build-tree/sox*/src/ststdint.h usr/include
-build-tree/sox*/libst.3 usr/share/man/man3
