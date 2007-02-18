@@ -1642,18 +1642,18 @@ static st_size_t total_clips(void)
 
 static char const * sigfigs3(st_size_t number)
 {
-  if (!number)
-    return "0 ";
-  else {
-    static char const unit[] = " kMGTPE";
-    static char string[16][10];
-    static int i;
-    int unit_no = log10((double)number) / 3;
-    double d = (double)number / pow(10., 3. * unit_no);
-    int decimals = unit_no? 2 - min((int)log10(floor(d)), 2) : 0;
-    sprintf(string[i = (i+1) & 15], "%.*f%c", decimals, d, unit[unit_no]);
-    return string[i];
+  static char string[16][10];
+  static unsigned n;
+  unsigned a, b, c = 2;
+  sprintf(string[n = (n+1) & 15], "%#.3g", (double)number);
+  if (sscanf(string[n], "%u.%ue%u", &a, &b, &c) == 3)
+    a = 100*a + b;
+  switch (c%3) {
+    case 0: sprintf(string[n], "%u.%02u%c", a/100,a%100, " kMGTPE"[c/3]); break;
+    case 1: sprintf(string[n], "%u.%u%c"  , a/10 ,a%10 , " kMGTPE"[c/3]); break;
+    case 2: sprintf(string[n], "%u%c"     , a          , " kMGTPE"[c/3]); break;
   }
+  return string[n];
 }
 
 static char const * sigfigs3p(double percentage)
