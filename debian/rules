@@ -3,7 +3,7 @@
 
 DEB_TAR_SRCDIR := sox-13.0.0
 
-CFLAGS += -fPIC
+CFLAGS += -fPIC -D_REENTRANT -Wl,-z
 #DEB_CONFIGURE_EXTRA_FLAGS := --disable-lame
 DEB_MAKE_INSTALL_TARGET := install
 
