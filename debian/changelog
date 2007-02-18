@@ -6,7 +6,7 @@ sox (13.0.0.cvs-1) unstable; urgency=low
     - Please see the upstream changelog.
     - Warning: some scripts may break with this new version.
     - sox-dev renamed to libsox-dev.
-    - Created libsox package that contains the SoX library.
+    - Created libsox0 package that contains the SoX library.
     - Guenter set as co-maintainer.
     - soxmix no longer exists.
   * Taking over the package with Guenter's permission.
@@ -16,6 +16,9 @@ sox (13.0.0.cvs-1) unstable; urgency=low
       libsndfile1-dev.
     - Added !kfreebsd-amd64 to libasound2-dev (closes: #361487).
   * [debian/patches]: No more patches, everything is fixed upstream.
+  * [debian/rules]: 
+    - Added -D_REENTRANT as required by policy on libraries.
+    - Added -Wl,-z to enforce symbol resolution at build time.
   * [debian/README.Debian]: Added instructions to build from CVS.
 
  -- Pascal Giard <pascal@gmail.com>  Sat, 17 Feb 2007 13:42:33 -0500
