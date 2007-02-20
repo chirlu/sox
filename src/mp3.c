@@ -10,7 +10,7 @@
  * written by Bertrand Petit <madlld@phoe.fmug.org>,
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 
 #include <string.h>
 
@@ -25,7 +25,7 @@
 #include <math.h>
 #endif
 
-#define INPUT_BUFFER_SIZE       (ST_BUFSIZ)
+#define INPUT_BUFFER_SIZE       (SOX_BUFSIZ)
 
 /* Private data */
 struct mp3priv {
@@ -35,8 +35,8 @@ struct mp3priv {
         struct mad_synth        *Synth;
         mad_timer_t             *Timer;
         unsigned char           *InputBuffer;
-        st_ssize_t              cursamp;
-        st_size_t               FrameCount;
+        sox_ssize_t              cursamp;
+        sox_size_t               FrameCount;
 #endif /*HAVE_LIBMAD*/
 #ifdef HAVE_LIBMP3LAME
         lame_global_flags       *gfp;
@@ -87,7 +87,7 @@ static int tagtype(const unsigned char *data, int length)
  * still exists in the buffer then they are first shifted to be
  * front of the stream buffer.
  */
-static int st_mp3_input(ft_t ft)
+static int sox_mp3_input(ft_t ft)
 {
     struct mp3priv *p = (struct mp3priv *) ft->priv;
     size_t bytes_read;
@@ -107,27 +107,27 @@ static int st_mp3_input(ft_t ft)
      */
     memmove(p->InputBuffer, p->Stream->next_frame, remaining);
 
-    bytes_read = st_readbuf(ft, p->InputBuffer+remaining, 1, 
+    bytes_read = sox_readbuf(ft, p->InputBuffer+remaining, 1, 
                             INPUT_BUFFER_SIZE-remaining);
     if (bytes_read == 0)
     {
-        return ST_EOF;
+        return SOX_EOF;
     }
 
     mad_stream_buffer(p->Stream, p->InputBuffer, bytes_read+remaining);
     p->Stream->error = 0;
 
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 }
 
 /* Attempts to read an ID3 tag at the current location in stream and
- * consume it all.  Returns ST_EOF if no tag is found.  Its up to
+ * consume it all.  Returns SOX_EOF if no tag is found.  Its up to
  * caller to recover.
  * */
-static int st_mp3_inputtag(ft_t ft)
+static int sox_mp3_inputtag(ft_t ft)
 {
     struct mp3priv *p = (struct mp3priv *) ft->priv;
-    int rc = ST_EOF;
+    int rc = SOX_EOF;
     size_t remaining;
     size_t tagsize;
 
@@ -147,7 +147,7 @@ static int st_mp3_inputtag(ft_t ft)
     if ((tagsize = tagtype(p->Stream->this_frame, remaining)))
     {
         mad_stream_skip(p->Stream, tagsize);
-        rc = ST_SUCCESS;
+        rc = SOX_SUCCESS;
     }
 
     /* We know that a valid frame hasn't been found yet
@@ -159,7 +159,7 @@ static int st_mp3_inputtag(ft_t ft)
     return rc;
 }
 
-static int st_mp3startread(ft_t ft) 
+static int sox_mp3startread(ft_t ft) 
 {
     struct mp3priv *p = (struct mp3priv *) ft->priv;
     size_t ReadSize;
@@ -181,21 +181,21 @@ static int st_mp3startread(ft_t ft)
     mad_synth_init(p->Synth);
     mad_timer_reset(p->Timer);
 
-    ft->signal.encoding = ST_ENCODING_MP3;
-    ft->signal.size = ST_SIZE_16BIT;
+    ft->signal.encoding = SOX_ENCODING_MP3;
+    ft->signal.size = SOX_SIZE_16BIT;
 
     /* Decode at least one valid frame to find out the input
      * format.  The decoded frame will be saved off so that it
      * can be processed later.
      */
-    ReadSize=st_readbuf(ft, p->InputBuffer, 1, INPUT_BUFFER_SIZE);
+    ReadSize=sox_readbuf(ft, p->InputBuffer, 1, INPUT_BUFFER_SIZE);
     if(ReadSize<=0)
     {
-        if(st_error(ft))
-            st_fail_errno(ft,ST_EOF,"read error on bitstream");
-        if(st_eof(ft))
-            st_fail_errno(ft,ST_EOF,"end of input stream");
-        return(ST_EOF);
+        if(sox_error(ft))
+            sox_fail_errno(ft,SOX_EOF,"read error on bitstream");
+        if(sox_eof(ft))
+            sox_fail_errno(ft,SOX_EOF,"end of input stream");
+        return(SOX_EOF);
     }
 
     mad_stream_buffer(p->Stream, p->InputBuffer, ReadSize);
@@ -210,14 +210,14 @@ static int st_mp3startread(ft_t ft)
         /* check whether input buffer needs a refill */
         if (p->Stream->error == MAD_ERROR_BUFLEN)
         {
-            if (st_mp3_input(ft) == ST_EOF)
-                return ST_EOF;
+            if (sox_mp3_input(ft) == SOX_EOF)
+                return SOX_EOF;
 
             continue;
         }
 
         /* Consume any ID3 tags */
-        st_mp3_inputtag(ft);
+        sox_mp3_inputtag(ft);
 
         /* FIXME: We should probably detect when we've read
          * a bunch of non-ID3 data and still haven't found a
@@ -229,8 +229,8 @@ static int st_mp3startread(ft_t ft)
 
     if (p->Stream->error)
     {
-        st_fail_errno(ft,ST_EOF,"No valid MP3 frame found");
-        return ST_EOF;
+        sox_fail_errno(ft,SOX_EOF,"No valid MP3 frame found");
+        return SOX_EOF;
     }
 
     switch(p->Frame->header.mode)
@@ -242,8 +242,8 @@ static int st_mp3startread(ft_t ft)
             ft->signal.channels = MAD_NCHANNELS(&p->Frame->header);
             break;
         default:
-            st_fail_errno(ft, ST_EFMT, "Cannot determine number of channels");
-            return ST_EOF;
+            sox_fail_errno(ft, SOX_EFMT, "Cannot determine number of channels");
+            return SOX_EOF;
     }
 
     p->FrameCount=1;
@@ -254,7 +254,7 @@ static int st_mp3startread(ft_t ft)
 
     p->cursamp = 0;
 
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 }
 
 /*
@@ -263,10 +263,10 @@ static int st_mp3startread(ft_t ft)
  * Place in buf[].
  * Return number of samples read.
  */
-static st_size_t st_mp3read(ft_t ft, st_sample_t *buf, st_size_t len)
+static sox_size_t sox_mp3read(ft_t ft, sox_sample_t *buf, sox_size_t len)
 {
     struct mp3priv *p = (struct mp3priv *) ft->priv;
-    st_size_t donow,i,done=0;
+    sox_size_t donow,i,done=0;
     mad_fixed_t sample;
     size_t chan;
 
@@ -280,7 +280,7 @@ static st_size_t st_mp3read(ft_t ft, st_sample_t *buf, st_size_t len)
                     sample=-MAD_F_ONE;
                 else if (sample >= MAD_F_ONE)
                     sample=MAD_F_ONE-1;
-                *buf++=(st_sample_t)(sample<<(32-1-MAD_F_FRACBITS));
+                *buf++=(sox_sample_t)(sample<<(32-1-MAD_F_FRACBITS));
                 i++;
             }
             p->cursamp++;
@@ -294,7 +294,7 @@ static st_size_t st_mp3read(ft_t ft, st_sample_t *buf, st_size_t len)
         /* check whether input buffer needs a refill */
         if (p->Stream->error == MAD_ERROR_BUFLEN)
         {
-            if (st_mp3_input(ft) == ST_EOF)
+            if (sox_mp3_input(ft) == SOX_EOF)
                 return 0;
         }
 
@@ -302,7 +302,7 @@ static st_size_t st_mp3read(ft_t ft, st_sample_t *buf, st_size_t len)
         {
             if(MAD_RECOVERABLE(p->Stream->error))
             {
-                st_mp3_inputtag(ft);
+                sox_mp3_inputtag(ft);
                 continue;
             }
             else
@@ -311,7 +311,7 @@ static st_size_t st_mp3read(ft_t ft, st_sample_t *buf, st_size_t len)
                     continue;
                 else
                 {
-                    st_report("unrecoverable frame level error (%s).",
+                    sox_report("unrecoverable frame level error (%s).",
                               mad_stream_errorstr(p->Stream));
                     return done;
                 }
@@ -326,7 +326,7 @@ static st_size_t st_mp3read(ft_t ft, st_sample_t *buf, st_size_t len)
     return done;
 }
 
-static int st_mp3stopread(ft_t ft)
+static int sox_mp3stopread(ft_t ft)
 {
   struct mp3priv *p=(struct mp3priv*) ft->priv;
 
@@ -340,25 +340,25 @@ static int st_mp3stopread(ft_t ft)
   free(p->Timer);
   free(p->InputBuffer);
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 #else /*HAVE_LIBMAD*/
-static int st_mp3startread(ft_t ft)
+static int sox_mp3startread(ft_t ft)
 {
-  st_fail_errno(ft,ST_EOF,"SoX was compiled without MP3 decoding support");
-  return ST_EOF;
+  sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
+  return SOX_EOF;
 }
 
-st_ssize_t st_mp3read(ft_t ft, st_sample_t *buf, st_size_t samp)
+sox_ssize_t sox_mp3read(ft_t ft, sox_sample_t *buf, sox_size_t samp)
 {
-  st_fail_errno(ft,ST_EOF,"SoX was compiled without MP3 decoding support");
-  return ST_EOF;
+  sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
+  return SOX_EOF;
 }
 
-int st_mp3stopread(ft_t ft)
+int sox_mp3stopread(ft_t ft)
 {
-  st_fail_errno(ft,ST_EOF,"SoX was compiled without MP3 decoding support");
-  return ST_EOF;
+  sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
+  return SOX_EOF;
 }
 #endif /*HAVE_LIBMAD*/
 
@@ -368,26 +368,26 @@ static void null_error_func(const char* string UNUSED, va_list va UNUSED)
   return;
 }
 
-static int st_mp3startwrite(ft_t ft)
+static int sox_mp3startwrite(ft_t ft)
 {
   struct mp3priv *p = (struct mp3priv *) ft->priv;
   
-  if (ft->signal.encoding != ST_ENCODING_MP3) {
-    if(ft->signal.encoding != ST_ENCODING_UNKNOWN)
-      st_report("Encoding forced to MP3");
-    ft->signal.encoding = ST_ENCODING_MP3;
+  if (ft->signal.encoding != SOX_ENCODING_MP3) {
+    if(ft->signal.encoding != SOX_ENCODING_UNKNOWN)
+      sox_report("Encoding forced to MP3");
+    ft->signal.encoding = SOX_ENCODING_MP3;
   }
 
   p->gfp = lame_init();
   if (p->gfp == NULL){
-    st_fail_errno(ft,ST_EOF,"Initialization of LAME library failed");
-    return(ST_EOF);
+    sox_fail_errno(ft,SOX_EOF,"Initialization of LAME library failed");
+    return(SOX_EOF);
   }
 
-  if (ft->signal.channels != ST_ENCODING_UNKNOWN) {
+  if (ft->signal.channels != SOX_ENCODING_UNKNOWN) {
     if ( (lame_set_num_channels(p->gfp,ft->signal.channels)) < 0) {
-        st_fail_errno(ft,ST_EOF,"Unsupported number of channels");
-        return(ST_EOF);
+        sox_fail_errno(ft,SOX_EOF,"Unsupported number of channels");
+        return(SOX_EOF);
     }
   }
   else
@@ -404,28 +404,28 @@ static int st_mp3startwrite(ft_t ft)
      here.  E.g. by using the -C value as an index into a table of params or
      as a compressed bit-rate. */
   if (ft->signal.compression != HUGE_VAL)
-      st_warn("-C option not supported for mp3; using default compression rate");
+      sox_warn("-C option not supported for mp3; using default compression rate");
   if (lame_init_params(p->gfp) < 0){
-        st_fail_errno(ft,ST_EOF,"LAME initialization failed");
-        return(ST_EOF);
+        sox_fail_errno(ft,SOX_EOF,"LAME initialization failed");
+        return(SOX_EOF);
   }
   lame_set_errorf(p->gfp,null_error_func);
   lame_set_debugf(p->gfp,null_error_func);
   lame_set_msgf  (p->gfp,null_error_func);
 
-  return(ST_SUCCESS);
+  return(SOX_SUCCESS);
 }
 
-static st_size_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
+static sox_size_t sox_mp3write(ft_t ft, const sox_sample_t *buf, sox_size_t samp)
 {
     struct mp3priv *p = (struct mp3priv *)ft->priv;
     char *mp3buffer;
-    st_size_t mp3buffer_size;
+    sox_size_t mp3buffer_size;
     short signed int *buffer_l, *buffer_r = NULL;
     int nsamples = samp/ft->signal.channels;
     int i,j;
-    st_ssize_t done = 0;
-    st_size_t written;
+    sox_ssize_t done = 0;
+    sox_size_t written;
 
     /* NOTE: This logic assumes that "short int" is 16-bits
      * on all platforms.  It happens to be for all that I know
@@ -454,15 +454,15 @@ static st_size_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
              (short signed int *)xmalloc(nsamples*
                                           sizeof(short signed int))) == NULL)
         {
-            st_fail_errno(ft,ST_ENOMEM,"Memory allocation failed");
+            sox_fail_errno(ft,SOX_ENOMEM,"Memory allocation failed");
             goto end3;
         }
 
         j=0;
         for (i=0; i<nsamples; i++)
         {
-            buffer_l[i]=ST_SAMPLE_TO_SIGNED_WORD(buf[j++], ft->clips);
-            buffer_r[i]=ST_SAMPLE_TO_SIGNED_WORD(buf[j++], ft->clips);
+            buffer_l[i]=SOX_SAMPLE_TO_SIGNED_WORD(buf[j++], ft->clips);
+            buffer_r[i]=SOX_SAMPLE_TO_SIGNED_WORD(buf[j++], ft->clips);
         }
     }
     else
@@ -470,27 +470,27 @@ static st_size_t st_mp3write(ft_t ft, const st_sample_t *buf, st_size_t samp)
         j=0;
         for (i=0; i<nsamples; i++)
         {
-            buffer_l[i]=ST_SAMPLE_TO_SIGNED_WORD(buf[j++], ft->clips); 
+            buffer_l[i]=SOX_SAMPLE_TO_SIGNED_WORD(buf[j++], ft->clips); 
         }
     }
 
     mp3buffer_size = 1.25 * nsamples + 7200;
     if ((mp3buffer=(char *)xmalloc(mp3buffer_size)) == NULL)
     {
-        st_fail_errno(ft,ST_ENOMEM,"Memory allocation failed");
+        sox_fail_errno(ft,SOX_ENOMEM,"Memory allocation failed");
         goto end2;
     }
 
     if ((written = lame_encode_buffer(p->gfp,buffer_l, buffer_r,
                                       nsamples, (unsigned char *)mp3buffer,
                                       mp3buffer_size)) > mp3buffer_size){
-        st_fail_errno(ft,ST_EOF,"Encoding failed");
+        sox_fail_errno(ft,SOX_EOF,"Encoding failed");
         goto end;
     }
 
-    if (st_writebuf(ft, mp3buffer, 1, written) < written)
+    if (sox_writebuf(ft, mp3buffer, 1, written) < written)
     {
-        st_fail_errno(ft,ST_EOF,"File write failed");
+        sox_fail_errno(ft,SOX_EOF,"File write failed");
         goto end;
     }
 
@@ -507,40 +507,40 @@ end3:
     return done;
 }
 
-static int st_mp3stopwrite(ft_t ft)
+static int sox_mp3stopwrite(ft_t ft)
 {
   struct mp3priv *p = (struct mp3priv *) ft->priv;
   char mp3buffer[7200];
   int written;
   
   if ( (written=lame_encode_flush(p->gfp, (unsigned char *)mp3buffer, 7200)) <0){
-    st_fail_errno(ft,ST_EOF,"Encoding failed");
+    sox_fail_errno(ft,SOX_EOF,"Encoding failed");
   }
-  else if ((int)st_writebuf(ft, mp3buffer, 1, written) < written){
-    st_fail_errno(ft,ST_EOF,"File write failed");
+  else if ((int)sox_writebuf(ft, mp3buffer, 1, written) < written){
+    sox_fail_errno(ft,SOX_EOF,"File write failed");
   }
 
   lame_close(p->gfp);
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 #else /* HAVE_LIBMP3LAME */
-static int st_mp3startwrite(ft_t ft UNUSED)
+static int sox_mp3startwrite(ft_t ft UNUSED)
 {
-  st_fail_errno(ft,ST_EOF,"SoX was compiled without MP3 encoding support");
-  return ST_EOF;
+  sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
+  return SOX_EOF;
 }
 
-static st_size_t st_mp3write(ft_t ft UNUSED, const st_sample_t *buf UNUSED, st_size_t samp UNUSED)
+static sox_size_t sox_mp3write(ft_t ft UNUSED, const sox_sample_t *buf UNUSED, sox_size_t samp UNUSED)
 {
-  st_fail_errno(ft,ST_EOF,"SoX was compiled without MP3 encoding support");
+  sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
   return 0;
 }
 
-static int st_mp3stopwrite(ft_t ft)
+static int sox_mp3stopwrite(ft_t ft)
 {
-  st_fail_errno(ft,ST_EOF,"SoX was compiled without MP3 encoding support");
-  return ST_EOF;
+  sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
+  return SOX_EOF;
 }
 #endif /* HAVE_LIBMP3LAME */
 
@@ -551,21 +551,21 @@ static const char *mp3names[] = {
   NULL,
 };
 
-static st_format_t st_mp3_format = {
+static sox_format_t sox_mp3_format = {
   mp3names,
   NULL,
   0,
-  st_mp3startread,
-  st_mp3read,
-  st_mp3stopread,
-  st_mp3startwrite,
-  st_mp3write,
-  st_mp3stopwrite,
-  st_format_nothing_seek
+  sox_mp3startread,
+  sox_mp3read,
+  sox_mp3stopread,
+  sox_mp3startwrite,
+  sox_mp3write,
+  sox_mp3stopwrite,
+  sox_format_nothing_seek
 };
 
-const st_format_t *st_mp3_format_fn(void)
+const sox_format_t *sox_mp3_format_fn(void)
 {
-    return &st_mp3_format;
+    return &sox_mp3_format;
 }
 #endif

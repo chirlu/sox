@@ -18,21 +18,21 @@
  * Foundation, Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301,
  * USA.  */
 
-#include "st_i.h"
+#include "sox_i.h"
 
 #include <string.h>
 
 /* Private data for SKEL file */
 typedef struct skelform
 {
-  st_size_t remaining_samples;
+  sox_size_t remaining_samples;
 } *skelform_t;
 
-assert_static(sizeof(struct skelform) <= ST_MAX_FILE_PRIVSIZE, 
+assert_static(sizeof(struct skelform) <= SOX_MAX_FILE_PRIVSIZE, 
               /* else */ skel_PRIVSIZE_too_big);
 
 /* Note that if any of your methods doesn't need to do anything, you
-   can instead use the relevant st_*_nothing* method */
+   can instead use the relevant sox_*_nothing* method */
 
 /*
  * Do anything required before you start reading samples.
@@ -44,12 +44,12 @@ assert_static(sizeof(struct skelform) <= ST_MAX_FILE_PRIVSIZE,
 static int startread(ft_t ft)
 {
   skelform_t sk = (skelform_t)ft->priv;
-  st_size_t samples_in_file;
+  sox_size_t samples_in_file;
 
   /* If you need to seek around the input file. */
   if (!ft->seekable) {
-    st_fail_errno(ft, ST_EOF, "skel inputfile must be a file");
-    return ST_EOF;
+    sox_fail_errno(ft, SOX_EOF, "skel inputfile must be a file");
+    return SOX_EOF;
   }
 
   /*
@@ -59,8 +59,8 @@ static int startread(ft_t ft)
    * then you should set it here.
    */
   ft->signal.rate =  44100;
-  ft->signal.size = ST_SIZE_BYTE; /* or WORD ... */
-  ft->signal.encoding = ST_ENCODING_UNSIGNED; /* or SIGN2 ... */
+  ft->signal.size = SOX_SIZE_BYTE; /* or WORD ... */
+  ft->signal.encoding = SOX_ENCODING_UNSIGNED; /* or SIGN2 ... */
   ft->signal.channels = 1; /* or 2 or 4 */
   {
     char *comment = "any comment in file header.";
@@ -71,23 +71,23 @@ static int startread(ft_t ft)
   /* If your format doesn't have a header then samples_in_file
    * can be determined by the file size.
    */
-  samples_in_file = st_filelength(ft) / ft->signal.size;
+  samples_in_file = sox_filelength(ft) / ft->signal.size;
 
   /* If you can detect the length of your file, record it here. */
   ft->length = samples_in_file;
   sk->remaining_samples = samples_in_file;
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /*
- * Read up to len samples of type st_sample_t from file into buf[].
+ * Read up to len samples of type sox_sample_t from file into buf[].
  * Return number of samples read, or 0 if at end of file.
  */
-static st_size_t read(ft_t ft, st_sample_t *buf, st_size_t len)
+static sox_size_t read(ft_t ft, sox_sample_t *buf, sox_size_t len)
 {
   skelform_t sk = (skelform_t)ft->priv;
-  st_size_t done;
+  sox_size_t done;
   unsigned char sample;
 
   for (done = 0; done < len; done++) {
@@ -95,18 +95,18 @@ static st_size_t read(ft_t ft, st_sample_t *buf, st_size_t len)
       break;
     sample = fgetc(ft->fp);
     switch (ft->signal.size) {
-    case ST_SIZE_BYTE:
+    case SOX_SIZE_BYTE:
       switch (ft->signal.encoding) {
-      case ST_ENCODING_UNSIGNED:
-        *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(sample,);
+      case SOX_ENCODING_UNSIGNED:
+        *buf++ = SOX_UNSIGNED_BYTE_TO_SAMPLE(sample,);
         break;
       default:
-        st_fail("Undetected sample encoding in read!");
+        sox_fail("Undetected sample encoding in read!");
         exit(2);
       }
       break;
     default:
-      st_fail("Undetected bad sample size in read!");
+      sox_fail("Undetected bad sample size in read!");
       exit(2);
     }
   }
@@ -120,7 +120,7 @@ static st_size_t read(ft_t ft, st_sample_t *buf, st_size_t len)
  */
 static int stopread(ft_t ft)
 {
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 static int startwrite(ft_t ft)
@@ -133,16 +133,16 @@ static int startwrite(ft_t ft)
    * just set the length to max value and not fail.
    */
   if (!ft->seekable) {
-    st_fail("Output .skel file must be a file, not a pipe");
-    return ST_EOF;
+    sox_fail("Output .skel file must be a file, not a pipe");
+    return SOX_EOF;
   }
 
   if (ft->signal.rate != 44100)
-    st_fail("Output .skel file must have a sample rate of 44100Hz");
+    sox_fail("Output .skel file must have a sample rate of 44100Hz");
 
   if (ft->signal.size == -1) {
-    st_fail("Did not specify a size for .skel output file");
-    return ST_EOF;
+    sox_fail("Did not specify a size for .skel output file");
+    return SOX_EOF;
   }
 
   /* error check ft->signal.encoding */
@@ -151,35 +151,35 @@ static int startwrite(ft_t ft)
   /* Write file header, if any */
   /* Write comment field, if any */
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 
 }
 
 /*
- * Write len samples of type st_sample_t from buf[] to file.
+ * Write len samples of type sox_sample_t from buf[] to file.
  * Return number of samples written.
  */
-static st_size_t write(ft_t ft, const st_sample_t *buf, st_size_t len)
+static sox_size_t write(ft_t ft, const sox_sample_t *buf, sox_size_t len)
 {
   skelform_t sk = (skelform_t)ft->priv;
 
   switch (ft->signal.size) {
-  case ST_SIZE_BYTE:
+  case SOX_SIZE_BYTE:
     switch (ft->signal.encoding) {
-    case ST_ENCODING_UNSIGNED:
+    case SOX_ENCODING_UNSIGNED:
       while (len--) {
-        len = st_writeb(ft, ST_SAMPLE_TO_UNSIGNED_BYTE(*buf++, ft->clips));
+        len = sox_writeb(ft, SOX_SAMPLE_TO_UNSIGNED_BYTE(*buf++, ft->clips));
         if (len == 0)
           break;
       }
       break;
     default:
-      st_fail("Undetected bad sample encoding in write!");
+      sox_fail("Undetected bad sample encoding in write!");
       exit(2);
     }
     break;
   default:
-    st_fail("Undetected bad sample size in write!");
+    sox_fail("Undetected bad sample size in write!");
     exit(2);
   }
 
@@ -191,13 +191,13 @@ static int stopwrite(ft_t ft)
   /* All samples are already written out. */
   /* If file header needs fixing up, for example it needs the number
      of samples in a field, seek back and write them here. */
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
-static int seek(ft_t ft, st_size_t offset)
+static int seek(ft_t ft, sox_size_t offset)
 {
   /* Seek relative to current position. */
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /* Format file suffixes */
@@ -207,10 +207,10 @@ static const char *names[] = {
 };
 
 /* Format descriptor */
-static st_format_t st_skel_format = {
+static sox_format_t sox_skel_format = {
   names,
   NULL,
-  ST_FILE_SEEK,
+  SOX_FILE_SEEK,
   startread,
   read,
   stopread,
@@ -220,7 +220,7 @@ static st_format_t st_skel_format = {
   seek
 };
 
-const st_format_t *st_skel_format_fn(void)
+const sox_format_t *sox_skel_format_fn(void)
 {
-  return &st_skel_format;
+  return &sox_skel_format;
 }

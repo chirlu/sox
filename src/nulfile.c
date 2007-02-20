@@ -14,29 +14,29 @@
  * of using this software
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include <string.h>
 
-static int st_nulstartread(ft_t ft) 
+static int sox_nulstartread(ft_t ft) 
 {
   /* If format parameters are not given, set somewhat arbitrary
    * (but commonly used) defaults: */
   if (ft->signal.rate     == 0) ft->signal.rate     = 44100;
   if (ft->signal.channels == 0) ft->signal.channels = 2;
-  if (ft->signal.size     ==-1) ft->signal.size     = ST_SIZE_16BIT;
-  if (ft->signal.encoding == ST_ENCODING_UNKNOWN) ft->signal.encoding = ST_ENCODING_SIGN2;
+  if (ft->signal.size     ==-1) ft->signal.size     = SOX_SIZE_16BIT;
+  if (ft->signal.encoding == SOX_ENCODING_UNKNOWN) ft->signal.encoding = SOX_ENCODING_SIGN2;
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
-static st_size_t st_nulread(ft_t ft UNUSED, st_sample_t *buf, st_size_t len) 
+static sox_size_t sox_nulread(ft_t ft UNUSED, sox_sample_t *buf, sox_size_t len) 
 {
-  /* Reading from null generates silence i.e. (st_sample_t)0. */
-  memset(buf, 0, sizeof(st_sample_t) * len);
+  /* Reading from null generates silence i.e. (sox_sample_t)0. */
+  memset(buf, 0, sizeof(sox_sample_t) * len);
   return len; /* Return number of samples "read". */
 }
 
-static st_size_t st_nulwrite(ft_t ft UNUSED, const st_sample_t *buf UNUSED, st_size_t len) 
+static sox_size_t sox_nulwrite(ft_t ft UNUSED, const sox_sample_t *buf UNUSED, sox_size_t len) 
 {
   /* Writing to null just discards the samples */
   return len; /* Return number of samples "written". */
@@ -48,20 +48,20 @@ static const char *nulnames[] = {
   NULL,
 };
 
-static st_format_t st_nul_format = {
+static sox_format_t sox_nul_format = {
   nulnames,
   NULL,
-  ST_FILE_DEVICE | ST_FILE_PHONY | ST_FILE_NOSTDIO,
-  st_nulstartread,
-  st_nulread,
-  st_format_nothing,
-  st_format_nothing,
-  st_nulwrite,
-  st_format_nothing,
-  st_format_nothing_seek
+  SOX_FILE_DEVICE | SOX_FILE_PHONY | SOX_FILE_NOSTDIO,
+  sox_nulstartread,
+  sox_nulread,
+  sox_format_nothing,
+  sox_format_nothing,
+  sox_nulwrite,
+  sox_format_nothing,
+  sox_format_nothing_seek
 };
 
-const st_format_t *st_nul_format_fn(void)
+const sox_format_t *sox_nul_format_fn(void)
 {
-    return &st_nul_format;
+    return &sox_nul_format;
 }

@@ -11,10 +11,10 @@
  * Sound Tools skeleton effect file.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include <string.h>
 
-static st_effect_t st_trim_effect;
+static sox_effect_t sox_trim_effect;
 
 /* Time resolutin one millisecond */
 #define TIMERES 1000
@@ -26,18 +26,18 @@ typedef struct
     char *length_str;
 
     /* options converted to values */
-    st_size_t start;
-    st_size_t length;
+    sox_size_t start;
+    sox_size_t length;
 
     /* internal stuff */
-    st_size_t index;
-    st_size_t trimmed;
+    sox_size_t index;
+    sox_size_t trimmed;
 } * trim_t;
 
 /*
  * Process options
  */
-static int st_trim_getopts(eff_t effp, int n, char **argv) 
+static int sox_trim_getopts(eff_t effp, int n, char **argv) 
 {
     trim_t trim = (trim_t) effp->priv;
 
@@ -49,53 +49,53 @@ static int st_trim_getopts(eff_t effp, int n, char **argv)
             trim->length_str = (char *)xmalloc(strlen(argv[1])+1);
             strcpy(trim->length_str,argv[1]);
             /* Do a dummy parse to see if it will fail */
-            if (st_parsesamples(0, trim->length_str, &trim->length, 't') == NULL)
+            if (sox_parsesamples(0, trim->length_str, &trim->length, 't') == NULL)
             {
-                st_fail(st_trim_effect.usage);
-                return(ST_EOF);
+                sox_fail(sox_trim_effect.usage);
+                return(SOX_EOF);
             }
         case 1:
             trim->start_str = (char *)xmalloc(strlen(argv[0])+1);
             strcpy(trim->start_str,argv[0]);
             /* Do a dummy parse to see if it will fail */
-            if (st_parsesamples(0, trim->start_str, &trim->start, 't') == NULL)
+            if (sox_parsesamples(0, trim->start_str, &trim->start, 't') == NULL)
             {
-                st_fail(st_trim_effect.usage);
-                return(ST_EOF);
+                sox_fail(sox_trim_effect.usage);
+                return(SOX_EOF);
             }
             break;
         default:
-            st_fail(st_trim_effect.usage);
-            return ST_EOF;
+            sox_fail(sox_trim_effect.usage);
+            return SOX_EOF;
             break;
 
     }
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
 /*
  * Start processing
  */
-static int st_trim_start(eff_t effp)
+static int sox_trim_start(eff_t effp)
 {
     trim_t trim = (trim_t) effp->priv;
 
-    if (st_parsesamples(effp->ininfo.rate, trim->start_str,
+    if (sox_parsesamples(effp->ininfo.rate, trim->start_str,
                         &trim->start, 't') == NULL)
     {
-        st_fail(st_trim_effect.usage);
-        return(ST_EOF);
+        sox_fail(sox_trim_effect.usage);
+        return(SOX_EOF);
     }
     /* Account for # of channels */
     trim->start *= effp->ininfo.channels;
 
     if (trim->length_str)
     {
-        if (st_parsesamples(effp->ininfo.rate, trim->length_str,
+        if (sox_parsesamples(effp->ininfo.rate, trim->length_str,
                     &trim->length, 't') == NULL)
         {
-            st_fail(st_trim_effect.usage);
-            return(ST_EOF);
+            sox_fail(sox_trim_effect.usage);
+            return(SOX_EOF);
         }
     }
     else
@@ -107,7 +107,7 @@ static int st_trim_start(eff_t effp)
     trim->index = 0;
     trim->trimmed = 0;
 
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
 /*
@@ -116,8 +116,8 @@ static int st_trim_start(eff_t effp)
  * Place in buf[].
  * Return number of samples read.
  */
-static int st_trim_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                 st_size_t *isamp, st_size_t *osamp)
+static int sox_trim_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                 sox_size_t *isamp, sox_size_t *osamp)
 {
     int finished = 0;
     int start_trim = 0;
@@ -140,7 +140,7 @@ static int st_trim_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
             *osamp = 0;
             *isamp = done;
             trim->index += done;
-            return (ST_SUCCESS);
+            return (SOX_SUCCESS);
         } else {
             start_trim = 1;
             /* We've read at least "start" samples.  Now find
@@ -164,19 +164,19 @@ static int st_trim_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         trim->trimmed += done;
     }
 
-    memcpy(obuf, ibuf+offset, done * sizeof(st_sample_t));
+    memcpy(obuf, ibuf+offset, done * sizeof(sox_sample_t));
 
     *osamp = done;
     *isamp = offset + done;
     trim->index += done;
 
-    /* return ST_EOF when nothing consumed and we detect
+    /* return SOX_EOF when nothing consumed and we detect
      * we are finished.
      */
     if (finished && !done)
-        return (ST_EOF);
+        return (SOX_EOF);
     else
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 static int delete(eff_t effp)
@@ -186,34 +186,34 @@ static int delete(eff_t effp)
     free(trim->start_str);
     free(trim->length_str);
 
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
-st_size_t st_trim_get_start(eff_t effp)          
+sox_size_t sox_trim_get_start(eff_t effp)          
 {        
     trim_t trim = (trim_t)effp->priv;    
     return trim->start;          
 }        
 
-void st_trim_clear_start(eff_t effp)     
+void sox_trim_clear_start(eff_t effp)     
 {        
     trim_t trim = (trim_t)effp->priv;    
     trim->start = 0;     
 }
 
-static st_effect_t st_trim_effect = {
+static sox_effect_t sox_trim_effect = {
   "trim",
   "Usage: trim start [length]",
-  ST_EFF_MCHAN,
-  st_trim_getopts,
-  st_trim_start,
-  st_trim_flow,
-  st_effect_nothing_drain,
-  st_effect_nothing,
+  SOX_EFF_MCHAN,
+  sox_trim_getopts,
+  sox_trim_start,
+  sox_trim_flow,
+  sox_effect_nothing_drain,
+  sox_effect_nothing,
   delete
 };
 
-const st_effect_t *st_trim_effect_fn(void)
+const sox_effect_t *sox_trim_effect_fn(void)
 {
-    return &st_trim_effect;
+    return &sox_trim_effect;
 }

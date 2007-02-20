@@ -19,7 +19,7 @@
 #include <string.h>
 #include <errno.h>
 
-static st_effect_t st_noiseprof_effect;
+static sox_effect_t sox_noiseprof_effect;
 
 typedef struct chandata {
     float *sum;
@@ -33,31 +33,31 @@ typedef struct profdata {
     FILE* output_file;
 
     chandata_t *chandata;
-    st_size_t bufdata;
+    sox_size_t bufdata;
 } * profdata_t;
 
 /*
- * Get the filename, if any. We don't open it until st_noiseprof_start.
+ * Get the filename, if any. We don't open it until sox_noiseprof_start.
  */
-static int st_noiseprof_getopts(eff_t effp, int n, char **argv) 
+static int sox_noiseprof_getopts(eff_t effp, int n, char **argv) 
 {
     profdata_t data = (profdata_t) effp->priv;
 
     if (n == 1) {
         data->output_filename = argv[0];
     } else if (n > 1) {
-        st_fail(st_noiseprof_effect.usage);
-        return (ST_EOF);
+        sox_fail(sox_noiseprof_effect.usage);
+        return (SOX_EOF);
     }
 
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
 /*
  * Prepare processing.
  * Do all initializations.
  */
-static int st_noiseprof_start(eff_t effp)
+static int sox_noiseprof_start(eff_t effp)
 {
     profdata_t data = (profdata_t) effp->priv;
     int channels = effp->ininfo.channels;
@@ -69,7 +69,7 @@ static int st_noiseprof_start(eff_t effp)
         else
           data->output_file = stdout;
         if (data->output_file == NULL) {
-            st_fail("Couldn't open output file %s: %s",
+            sox_fail("Couldn't open output file %s: %s",
                     data->output_filename, strerror(errno));            
         }
     } else {
@@ -85,7 +85,7 @@ static int st_noiseprof_start(eff_t effp)
         data->chandata[i].window = (float*)xcalloc(WINDOWSIZE, sizeof(float));
     }
 
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 }
 
 /* Collect statistics from the complete window on channel chan. */
@@ -109,13 +109,13 @@ static void collect_data(chandata_t* chan) {
 /*
  * Grab what we can from ibuf, and process if we have a whole window.
  */
-static int st_noiseprof_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                    st_size_t *isamp, st_size_t *osamp)
+static int sox_noiseprof_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                    sox_size_t *isamp, sox_size_t *osamp)
 {
     profdata_t data = (profdata_t) effp->priv;
     int samp = min(*isamp, *osamp);
     int tracks = effp->ininfo.channels;
-    st_size_t track_samples = samp / tracks;
+    sox_size_t track_samples = samp / tracks;
     int ncopy = 0;
     int i;
 
@@ -130,7 +130,7 @@ static int st_noiseprof_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *o
         int j;
         for (j = 0; j < ncopy; j ++) {
             chan->window[j+data->bufdata] =
-                ST_SAMPLE_TO_FLOAT_DWORD(ibuf[i+j*tracks], effp->clips);
+                SOX_SAMPLE_TO_FLOAT_DWORD(ibuf[i+j*tracks], effp->clips);
         }
         if (ncopy + data->bufdata == WINDOWSIZE)
             collect_data(chan);
@@ -144,14 +144,14 @@ static int st_noiseprof_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *o
     memcpy(obuf, ibuf, ncopy*tracks);
     *isamp = *osamp = ncopy*tracks;
 
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
 /*
  * Finish off the last window.
  */
 
-static int st_noiseprof_drain(eff_t effp, st_sample_t *obuf UNUSED, st_size_t *osamp)
+static int sox_noiseprof_drain(eff_t effp, sox_sample_t *obuf UNUSED, sox_size_t *osamp)
 {
     profdata_t data = (profdata_t) effp->priv;
     int tracks = effp->ininfo.channels;
@@ -160,7 +160,7 @@ static int st_noiseprof_drain(eff_t effp, st_sample_t *obuf UNUSED, st_size_t *o
     *osamp = 0;
 
     if (data->bufdata == 0) {
-        return ST_EOF;
+        return SOX_EOF;
     }
 
     for (i = 0; i < tracks; i ++) {
@@ -172,18 +172,18 @@ static int st_noiseprof_drain(eff_t effp, st_sample_t *obuf UNUSED, st_size_t *o
     }
 
     if (data->bufdata == WINDOWSIZE || data->bufdata == 0)
-        return ST_EOF;
+        return SOX_EOF;
     else
-        return ST_SUCCESS;
+        return SOX_SUCCESS;
 }
 
 /*
  * Print profile and clean up.
  */
-static int st_noiseprof_stop(eff_t effp)
+static int sox_noiseprof_stop(eff_t effp)
 {
     profdata_t data = (profdata_t) effp->priv;
-    st_size_t i;
+    sox_size_t i;
 
     for (i = 0; i < effp->ininfo.channels; i ++) {
         int j;
@@ -206,22 +206,22 @@ static int st_noiseprof_stop(eff_t effp)
     if (data->output_file != stderr && data->output_file != stdout)
         fclose(data->output_file);
     
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
-static st_effect_t st_noiseprof_effect = {
+static sox_effect_t sox_noiseprof_effect = {
   "noiseprof",
   "Usage: noiseprof [filename]",
-  ST_EFF_MCHAN | ST_EFF_REPORT,
-  st_noiseprof_getopts,
-  st_noiseprof_start,
-  st_noiseprof_flow,
-  st_noiseprof_drain,
-  st_noiseprof_stop,
-  st_effect_nothing
+  SOX_EFF_MCHAN | SOX_EFF_REPORT,
+  sox_noiseprof_getopts,
+  sox_noiseprof_start,
+  sox_noiseprof_flow,
+  sox_noiseprof_drain,
+  sox_noiseprof_stop,
+  sox_effect_nothing
 };
 
-const st_effect_t *st_noiseprof_effect_fn(void)
+const sox_effect_t *sox_noiseprof_effect_fn(void)
 {
-    return &st_noiseprof_effect;
+    return &sox_noiseprof_effect;
 }

@@ -22,7 +22,7 @@
  * USA.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -55,48 +55,48 @@
 #include <io.h>
 #endif
 
-static st_bool play = st_false, rec = st_false;
+static sox_bool play = sox_false, rec = sox_false;
 static enum {SOX_sequence, SOX_concatenate, SOX_mix, SOX_merge} combine_method = SOX_concatenate;
-static st_size_t mixing_clips = 0;
-static st_bool repeatable_random = st_false;  /* Whether to invoke srand. */
-static st_bool interactive = st_false;
-static st_globalinfo_t globalinfo = {st_false, 1};
-static st_bool uservolume = st_false;
+static sox_size_t mixing_clips = 0;
+static sox_bool repeatable_random = sox_false;  /* Whether to invoke srand. */
+static sox_bool interactive = sox_false;
+static sox_globalinfo_t globalinfo = {sox_false, 1};
+static sox_bool uservolume = sox_false;
 typedef enum {RG_off, RG_track, RG_album} rg_mode;
 static rg_mode replay_gain_mode = RG_off;
 
-static st_bool user_abort = st_false;
-static st_bool user_skip = st_false;
+static sox_bool user_abort = sox_false;
+static sox_bool user_skip = sox_false;
 static int success = 0;
 
-static st_option_t show_progress = ST_OPTION_DEFAULT;
+static sox_option_t show_progress = SOX_OPTION_DEFAULT;
 static unsigned long input_wide_samples = 0;
 static unsigned long read_wide_samples = 0;
 static unsigned long output_samples = 0;
 
-static st_sample_t ibufl[ST_BUFSIZ / 2]; /* Left/right interleave buffers */
-static st_sample_t ibufr[ST_BUFSIZ / 2];
-static st_sample_t obufl[ST_BUFSIZ / 2];
-static st_sample_t obufr[ST_BUFSIZ / 2];
+static sox_sample_t ibufl[SOX_BUFSIZ / 2]; /* Left/right interleave buffers */
+static sox_sample_t ibufr[SOX_BUFSIZ / 2];
+static sox_sample_t obufl[SOX_BUFSIZ / 2];
+static sox_sample_t obufr[SOX_BUFSIZ / 2];
 
 typedef struct file_info
 {
   char *filename;
   char *filetype;
-  st_signalinfo_t signal;
+  sox_signalinfo_t signal;
   double volume;
   double replay_gain;
   char *comment;
-  st_size_t volume_clips;
+  sox_size_t volume_clips;
   ft_t desc;                              /* stlib file descriptor */
 } *file_t;
 
 /* local forward declarations */
-static st_bool doopts(file_t, int, char **);
+static sox_bool doopts(file_t, int, char **);
 static void usage(char const *) NORET;
 static void usage_effect(char *) NORET;
 static int process(void);
-static void update_status(st_bool all_done);
+static void update_status(sox_bool all_done);
 static void report_file_info(file_t f);
 static void parse_effects(int argc, char **argv);
 static void build_effects_table(void);
@@ -116,7 +116,7 @@ static file_t files[MAX_FILES]; /* Array tracking input and output files */
 static size_t file_count = 0;
 static size_t input_count = 0;
 static size_t current_input = 0;
-static st_signalinfo_t combiner, ofile_signal;
+static sox_signalinfo_t combiner, ofile_signal;
 
 /* We parse effects into a temporary effects table and then place into
  * the real effects table.  This makes it easier to reorder some effects
@@ -137,40 +137,40 @@ static st_signalinfo_t combiner, ofile_signal;
  *
  * If one was to support effects for quad-channel files, there would
  * need to be an effect table for each channel to handle effects
- * that don't set ST_EFF_MCHAN.
+ * that don't set SOX_EFF_MCHAN.
  */
 
-static struct st_effect efftab[MAX_EFF]; /* left/mono channel effects */
-static struct st_effect efftabR[MAX_EFF];/* right channel effects */
+static struct sox_effect efftab[MAX_EFF]; /* left/mono channel effects */
+static struct sox_effect efftabR[MAX_EFF];/* right channel effects */
 static int neffects;                     /* # of effects to run on data */
 static int input_eff;                    /* last input effect with data */
 static int input_eff_eof;                /* has input_eff reached EOF? */
 
-static struct st_effect user_efftab[MAX_USER_EFF];
+static struct sox_effect user_efftab[MAX_USER_EFF];
 static int nuser_effects;
 
 static char *myname = NULL;
 
-static void sox_output_message(int level, const char *filename, const char *fmt, va_list ap)
+static void output_message(int level, const char *filename, const char *fmt, va_list ap)
 {
-  if (st_output_verbosity_level >= level) {
+  if (sox_output_verbosity_level >= level) {
     fprintf(stderr, "%s ", myname);
-    st_output_message(stderr, filename, fmt, ap);
+    sox_output_message(stderr, filename, fmt, ap);
     fprintf(stderr, "\n");
   }
 }
 
-static st_bool overwrite_permitted(char const * filename)
+static sox_bool overwrite_permitted(char const * filename)
 {
   char c;
 
   if (!interactive) {
-    st_report("Overwriting '%s'", filename);
-    return st_true;
+    sox_report("Overwriting '%s'", filename);
+    return sox_true;
   }
-  st_warn("Output file '%s' already exists", filename);
+  sox_warn("Output file '%s' already exists", filename);
   if (!isatty(fileno(stdin)))
-    return st_false;
+    return sox_false;
   do fprintf(stderr, "%s sox: overwrite '%s' (y/n)? ", myname, filename);
   while (scanf(" %c%*[^\n]", &c) != 1 || !strchr("yYnN", c));
   return c == 'y' || c == 'Y';
@@ -184,7 +184,7 @@ static void cleanup(void)
   /* Close the input and output files before exiting. */
   for (i = 0; i < input_count; i++) {
     if (files[i]->desc) {
-      st_close(files[i]->desc);
+      sox_close(files[i]->desc);
       free(files[i]->desc);
     }
     free(files[i]);
@@ -192,7 +192,7 @@ static void cleanup(void)
 
   if (file_count) {
     if (ofile->desc) {
-      if (!(ofile->desc->h->flags & ST_FILE_NOSTDIO)) {
+      if (!(ofile->desc->h->flags & SOX_FILE_NOSTDIO)) {
         struct stat st;
         fstat(fileno(ofile->desc->fp), &st);
 
@@ -201,8 +201,8 @@ static void cleanup(void)
           unlink(ofile->desc->filename);
       }
 
-      /* Assumption: we can unlink a file before st_closing it. */
-      st_close(ofile->desc);
+      /* Assumption: we can unlink a file before sox_closing it. */
+      sox_close(ofile->desc);
       free(ofile->desc);
     }
     free(ofile);
@@ -214,11 +214,11 @@ static file_t new_file(void)
   file_t f = xcalloc(sizeof(*f), 1);
 
   f->signal.size = -1;
-  f->signal.encoding = ST_ENCODING_UNKNOWN;
+  f->signal.encoding = SOX_ENCODING_UNKNOWN;
   f->signal.channels = 0;
-  f->signal.reverse_bytes = ST_OPTION_DEFAULT;
-  f->signal.reverse_nibbles = ST_OPTION_DEFAULT;
-  f->signal.reverse_bits = ST_OPTION_DEFAULT;
+  f->signal.reverse_bytes = SOX_OPTION_DEFAULT;
+  f->signal.reverse_nibbles = SOX_OPTION_DEFAULT;
+  f->signal.reverse_bits = SOX_OPTION_DEFAULT;
   f->signal.compression = HUGE_VAL;
   f->volume = HUGE_VAL;
   f->replay_gain = HUGE_VAL;
@@ -240,7 +240,7 @@ static void set_device(file_t f)
   f->filetype = "sunau";
   f->filename = xstrdup(device ? device : "/dev/audio");
 #else
-  st_fail("Sorry, there is no default audio device configured");
+  sox_fail("Sorry, there is no default audio device configured");
   exit(1);
 #endif
 }
@@ -276,13 +276,13 @@ static void parse_options_and_filenames(int argc, char **argv)
     fi_none = *f;
 
     if (file_count >= MAX_FILES) {
-      st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
+      sox_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
       exit(1);
     }
 
     if (doopts(f, argc, argv)) { /* is null file? */
       if (f->filetype != NULL && strcmp(f->filetype, "null") != 0)
-        st_warn("Ignoring '-t %s'.", f->filetype);
+        sox_warn("Ignoring '-t %s'.", f->filetype);
       f->filetype = "null";
       f->filename = xstrdup("-n");
     } else {
@@ -296,7 +296,7 @@ static void parse_options_and_filenames(int argc, char **argv)
 
   if (play) {
     if (file_count >= MAX_FILES) {
-      st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
+      sox_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
       exit(1);
     }
 
@@ -311,10 +311,10 @@ static void parse_options_and_filenames(int argc, char **argv)
   }
 
   if (rec) {
-    st_size_t i;
+    sox_size_t i;
 
     if (file_count >= MAX_FILES) {
-      st_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
+      sox_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
       exit(1);
     }
 
@@ -334,17 +334,17 @@ int main(int argc, char **argv)
 
   myname = argv[0];
   atexit(cleanup);
-  st_output_message_handler = sox_output_message;
+  sox_output_message_handler = output_message;
 
   i = strlen(myname);
   if (i >= sizeof("play") - 1 &&
       strcmp(myname + i - (sizeof("play") - 1), "play") == 0) {
-    play = st_true;
+    play = sox_true;
     replay_gain_mode = RG_track;
     combine_method = SOX_sequence;
   } else if (i >= sizeof("rec") - 1 &&
       strcmp(myname + i - (sizeof("rec") - 1), "rec") == 0) {
-    rec = st_true;
+    rec = sox_true;
   }
   parse_options_and_filenames(argc, argv);
 
@@ -384,15 +384,15 @@ int main(int argc, char **argv)
         f->signal.channels = files[1]->signal.channels;
       }
     }
-    files[j]->desc = st_open_read(f->filename, &f->signal, f->filetype);
+    files[j]->desc = sox_open_read(f->filename, &f->signal, f->filetype);
     if (!files[j]->desc)
-      /* st_open_read() will call st_warn for most errors.
+      /* sox_open_read() will call sox_warn for most errors.
        * Rely on that printing something. */
       exit(2);
-    if (show_progress == ST_OPTION_DEFAULT &&
-        (files[j]->desc->h->flags & ST_FILE_DEVICE) != 0 &&
-        (files[j]->desc->h->flags & ST_FILE_PHONY) == 0)
-      show_progress = ST_OPTION_YES;
+    if (show_progress == SOX_OPTION_DEFAULT &&
+        (files[j]->desc->h->flags & SOX_FILE_DEVICE) != 0 &&
+        (files[j]->desc->h->flags & SOX_FILE_PHONY) == 0)
+      show_progress = SOX_OPTION_YES;
     if (files[j]->desc->comment)
       set_replay_gain(files[j]->desc->comment, f);
   }
@@ -409,7 +409,7 @@ int main(int argc, char **argv)
   }
 
   if (repeatable_random)
-    st_debug("Not reseeding PRNG; randomness is repeatable");
+    sox_debug("Not reseeding PRNG; randomness is repeatable");
   else {
     time_t t;
 
@@ -420,27 +420,27 @@ int main(int argc, char **argv)
   ofile_signal = ofile->signal;
   if (combine_method == SOX_sequence) do {
     if (ofile->desc)
-      st_close(ofile->desc);
+      sox_close(ofile->desc);
     free(ofile->desc);
-  } while (process() != ST_EOF && !user_abort && current_input < input_count);
+  } while (process() != SOX_EOF && !user_abort && current_input < input_count);
   else process();
 
   delete_effects();
 
   for (i = 0; i < file_count; ++i)
     if (files[i]->desc->clips != 0)
-      st_warn(i < input_count?"%s: input clipped %u samples" :
+      sox_warn(i < input_count?"%s: input clipped %u samples" :
                               "%s: output clipped %u samples; decrease volume?",
-          (files[i]->desc->h->flags & ST_FILE_DEVICE)?
+          (files[i]->desc->h->flags & SOX_FILE_DEVICE)?
                        files[i]->desc->h->names[0] : files[i]->desc->filename,
           files[i]->desc->clips);
 
   if (mixing_clips > 0)
-    st_warn("mix-combining clipped %u samples; decrease volume?", mixing_clips);
+    sox_warn("mix-combining clipped %u samples; decrease volume?", mixing_clips);
 
   for (i = 0; i < file_count; i++)
     if (files[i]->volume_clips > 0)
-      st_warn("%s: balancing clipped %u samples; decrease volume?", files[i]->filename,
+      sox_warn("%s: balancing clipped %u samples; decrease volume?", files[i]->filename,
               files[i]->volume_clips);
 
   if (show_progress) {
@@ -456,13 +456,13 @@ int main(int argc, char **argv)
 
 static char * read_comment_file(char const * const filename)
 {
-  st_bool file_error;
+  sox_bool file_error;
   int file_length = 0;
   char * result;
   FILE * file = fopen(filename, "rt");
 
   if (file == NULL) {
-    st_fail("Cannot open comment file %s", filename);
+    sox_fail("Cannot open comment file %s", filename);
     exit(1);
   }
   file_error = fseeko(file, (off_t)0, SEEK_END);
@@ -476,7 +476,7 @@ static char * read_comment_file(char const * const filename)
     }
   }
   if (file_error) {
-    st_fail("Error reading comment file %s", filename);
+    sox_fail("Error reading comment file %s", filename);
     exit(1);
   }
   fclose(file);
@@ -546,7 +546,7 @@ static int enum_option(int option_index, enum_item const * items)
       set = xrealloc(set, len += 2 + strlen(p->text));
       strcat(set, ", "); strcat(set, p->text);
     }
-    st_fail("--%s: '%s' is not one of: %s.",
+    sox_fail("--%s: '%s' is not one of: %s.",
         long_options[option_index].name, optarg, set + 2);
     free(set);
     exit(1);
@@ -569,32 +569,32 @@ static void optimize_trim(void)
     if (input_count == 1 && neffects > 1 &&
         strcmp(efftab[1].name, "trim") == 0)
     {
-        if ((files[0]->desc->h->flags & ST_FILE_SEEK) &&
+        if ((files[0]->desc->h->flags & SOX_FILE_SEEK) &&
             files[0]->desc->seekable)
         { 
-            if (st_seek(files[0]->desc, st_trim_get_start(&efftab[1]), 
-                        ST_SEEK_SET) != ST_EOF)
+            if (sox_seek(files[0]->desc, sox_trim_get_start(&efftab[1]), 
+                        SOX_SEEK_SET) != SOX_EOF)
             { 
                 /* Assuming a failed seek stayed where it was.  If the 
                  * seek worked then reset the start location of 
                  * trim so that it thinks user didn't request a skip.
                  */ 
-                st_trim_clear_start(&efftab[1]);
+                sox_trim_clear_start(&efftab[1]);
             }    
         }        
     }    
 }
 
-static st_bool doopts(file_t f, int argc, char **argv)
+static sox_bool doopts(file_t f, int argc, char **argv)
 {
-  while (st_true) {
+  while (sox_true) {
     int option_index;
     int i;          /* Needed since scanf %u allows negative numbers :( */
     char dummy;     /* To check for extraneous chars in optarg. */
 
     switch (getopt_long(argc, argv, getoptstr, long_options, &option_index)) {
     case -1:        /* @ one of: file-name, effect name, end of arg-list. */
-      return st_false; /* I.e. not null file. */
+      return sox_false; /* I.e. not null file. */
 
     case 0:         /* Long options with no short equivalent. */
       switch (option_index) {
@@ -612,14 +612,14 @@ static st_bool doopts(file_t f, int argc, char **argv)
 
       case 3:
         switch (enum_option(option_index, endian_options)) {
-          case ENDIAN_little: f->signal.reverse_bytes = ST_IS_BIGENDIAN; break;
-          case ENDIAN_big: f->signal.reverse_bytes = ST_IS_LITTLEENDIAN; break;
-          case ENDIAN_swap: f->signal.reverse_bytes = st_true; break;
+          case ENDIAN_little: f->signal.reverse_bytes = SOX_IS_BIGENDIAN; break;
+          case ENDIAN_big: f->signal.reverse_bytes = SOX_IS_LITTLEENDIAN; break;
+          case ENDIAN_swap: f->signal.reverse_bytes = sox_true; break;
         }
         break;
 
       case 4:
-        interactive = st_true;
+        interactive = sox_true;
         break;
 
       case 5:
@@ -627,7 +627,7 @@ static st_bool doopts(file_t f, int argc, char **argv)
         break;
 
       case 6:
-        globalinfo.octave_plot_effect = st_true;
+        globalinfo.octave_plot_effect = sox_true;
         break;
 
       case 7:
@@ -650,11 +650,11 @@ static st_bool doopts(file_t f, int argc, char **argv)
       break;
 
     case 'R': /* Useful for regression testing. */
-      repeatable_random = st_true;
+      repeatable_random = sox_true;
       break;
 
     case 'e': case 'n':
-      return st_true;  /* I.e. is null file. */
+      return sox_true;  /* I.e. is null file. */
       break;
 
     case 'h': case '?':
@@ -669,7 +669,7 @@ static st_bool doopts(file_t f, int argc, char **argv)
 
     case 'r':
       if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
-        st_fail("Rate value '%s' is not a positive integer", optarg);
+        sox_fail("Rate value '%s' is not a positive integer", optarg);
         exit(1);
       }
       f->signal.rate = i;
@@ -677,18 +677,18 @@ static st_bool doopts(file_t f, int argc, char **argv)
 
     case 'v':
       if (sscanf(optarg, "%lf %c", &f->volume, &dummy) != 1) {
-        st_fail("Volume value '%s' is not a number", optarg);
+        sox_fail("Volume value '%s' is not a number", optarg);
         exit(1);
       }
-      uservolume = st_true;
+      uservolume = sox_true;
       if (f->volume < 0.0)
-        st_report("Volume adjustment is negative; "
+        sox_report("Volume adjustment is negative; "
                   "this will result in a phase change");
       break;
 
     case 'c':
       if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
-        st_fail("Channels value '%s' is not a positive integer", optarg);
+        sox_fail("Channels value '%s' is not a positive integer", optarg);
         exit(1);
       }
       f->signal.channels = i;
@@ -696,52 +696,52 @@ static st_bool doopts(file_t f, int argc, char **argv)
 
     case 'C':
       if (sscanf(optarg, "%lf %c", &f->signal.compression, &dummy) != 1) {
-        st_fail("Compression value '%s' is not a number", optarg);
+        sox_fail("Compression value '%s' is not a number", optarg);
         exit(1);
       }
       break;
 
-    case '1': case 'b': f->signal.size = ST_SIZE_BYTE;   break;
-    case '2': case 'w': f->signal.size = ST_SIZE_16BIT;   break;
-    case '3':           f->signal.size = ST_SIZE_24BIT;  break;
-    case '4': case 'l': f->signal.size = ST_SIZE_32BIT;  break;
-    case '8': case 'd': f->signal.size = ST_SIZE_64BIT; break;
+    case '1': case 'b': f->signal.size = SOX_SIZE_BYTE;   break;
+    case '2': case 'w': f->signal.size = SOX_SIZE_16BIT;   break;
+    case '3':           f->signal.size = SOX_SIZE_24BIT;  break;
+    case '4': case 'l': f->signal.size = SOX_SIZE_32BIT;  break;
+    case '8': case 'd': f->signal.size = SOX_SIZE_64BIT; break;
 
-    case 's': f->signal.encoding = ST_ENCODING_SIGN2;     break;
-    case 'u': f->signal.encoding = ST_ENCODING_UNSIGNED;  break;
-    case 'f': f->signal.encoding = ST_ENCODING_FLOAT;     break;
-    case 'a': f->signal.encoding = ST_ENCODING_ADPCM;     break;
-    case 'D': f->signal.encoding = ST_ENCODING_MS_ADPCM;  break;
-    case 'i': f->signal.encoding = ST_ENCODING_IMA_ADPCM; break;
-    case 'o': f->signal.encoding = ST_ENCODING_OKI_ADPCM; break;
-    case 'g': f->signal.encoding = ST_ENCODING_GSM;       break;
+    case 's': f->signal.encoding = SOX_ENCODING_SIGN2;     break;
+    case 'u': f->signal.encoding = SOX_ENCODING_UNSIGNED;  break;
+    case 'f': f->signal.encoding = SOX_ENCODING_FLOAT;     break;
+    case 'a': f->signal.encoding = SOX_ENCODING_ADPCM;     break;
+    case 'D': f->signal.encoding = SOX_ENCODING_MS_ADPCM;  break;
+    case 'i': f->signal.encoding = SOX_ENCODING_IMA_ADPCM; break;
+    case 'o': f->signal.encoding = SOX_ENCODING_OKI_ADPCM; break;
+    case 'g': f->signal.encoding = SOX_ENCODING_GSM;       break;
 
-    case 'U': f->signal.encoding = ST_ENCODING_ULAW;
+    case 'U': f->signal.encoding = SOX_ENCODING_ULAW;
       if (f->signal.size == -1)
-        f->signal.size = ST_SIZE_BYTE;
+        f->signal.size = SOX_SIZE_BYTE;
       break;
 
-    case 'A': f->signal.encoding = ST_ENCODING_ALAW;
+    case 'A': f->signal.encoding = SOX_ENCODING_ALAW;
       if (f->signal.size == -1)
-        f->signal.size = ST_SIZE_BYTE;
+        f->signal.size = SOX_SIZE_BYTE;
       break;
 
-    case 'L': f->signal.reverse_bytes   = ST_IS_BIGENDIAN;    break;
-    case 'B': f->signal.reverse_bytes   = ST_IS_LITTLEENDIAN; break;
-    case 'x': f->signal.reverse_bytes   = ST_OPTION_YES;      break;
-    case 'X': f->signal.reverse_bits    = ST_OPTION_YES;      break;
-    case 'N': f->signal.reverse_nibbles = ST_OPTION_YES;      break;
+    case 'L': f->signal.reverse_bytes   = SOX_IS_BIGENDIAN;    break;
+    case 'B': f->signal.reverse_bytes   = SOX_IS_LITTLEENDIAN; break;
+    case 'x': f->signal.reverse_bytes   = SOX_OPTION_YES;      break;
+    case 'X': f->signal.reverse_bits    = SOX_OPTION_YES;      break;
+    case 'N': f->signal.reverse_nibbles = SOX_OPTION_YES;      break;
 
-    case 'S': show_progress = ST_OPTION_YES; break;
-    case 'q': show_progress = ST_OPTION_NO;  break;
+    case 'S': show_progress = SOX_OPTION_YES; break;
+    case 'q': show_progress = SOX_OPTION_NO;  break;
 
     case 'V':
       if (optarg == NULL)
-        ++st_output_verbosity_level;
-      else if (sscanf(optarg, "%i %c", &st_output_verbosity_level, &dummy) != 1
-          || st_output_verbosity_level < 0) {
-        st_output_verbosity_level = 2;
-        st_fail("Verbosity value '%s' is not an integer >= 0", optarg);
+        ++sox_output_verbosity_level;
+      else if (sscanf(optarg, "%i %c", &sox_output_verbosity_level, &dummy) != 1
+          || sox_output_verbosity_level < 0) {
+        sox_output_verbosity_level = 2;
+        sox_fail("Verbosity value '%s' is not an integer >= 0", optarg);
         exit(1);
       }
       break;
@@ -759,13 +759,13 @@ static char const * str_time(double duration)
   return string[i];
 }
 
-static void display_file_info(file_t f, st_bool full)
+static void display_file_info(file_t f, sox_bool full)
 {
   static char const * const no_yes[] = {"no", "yes"};
 
   fprintf(stderr, "\n%s: '%s'",
     f->desc->mode == 'r'? "Input File     " : "Output File    ", f->desc->filename);
-  if (strcmp(f->desc->filename, "-") == 0 || (f->desc->h->flags & ST_FILE_DEVICE))
+  if (strcmp(f->desc->filename, "-") == 0 || (f->desc->h->flags & SOX_FILE_DEVICE))
     fprintf(stderr, " (%s)", f->desc->h->names[0]);
 
   fprintf(stderr, "\n"
@@ -773,14 +773,14 @@ static void display_file_info(file_t f, st_bool full)
     "Sample Encoding: %s\n"
     "Channels       : %u\n"
     "Sample Rate    : %u\n",
-    st_size_bits_str[f->desc->signal.size], st_sizes_str[f->desc->signal.size],
-    st_encodings_str[f->desc->signal.encoding],
+    sox_size_bits_str[f->desc->signal.size], sox_sizes_str[f->desc->signal.size],
+    sox_encodings_str[f->desc->signal.encoding],
     f->desc->signal.channels,
     f->desc->signal.rate);
 
   if (full) {
     if (f->desc->length && f->desc->signal.channels && f->desc->signal.rate) {
-      st_size_t ws = f->desc->length / f->desc->signal.channels;
+      sox_size_t ws = f->desc->length / f->desc->signal.channels;
       fprintf(stderr,
         "Duration       : %s = %u samples = %g CDDA sectors\n",
         str_time((double)ws / f->desc->signal.rate),
@@ -791,7 +791,7 @@ static void display_file_info(file_t f, st_bool full)
       "Reverse Nibbles: %s\n"
       "Reverse Bits   : %s\n",
       f->desc->signal.size == 1? "N/A" :
-        f->desc->signal.reverse_bytes != ST_IS_BIGENDIAN ? "big" : "little",
+        f->desc->signal.reverse_bytes != SOX_IS_BIGENDIAN ? "big" : "little",
       no_yes[f->desc->signal.reverse_nibbles],
       no_yes[f->desc->signal.reverse_bits]);
   }
@@ -801,7 +801,7 @@ static void display_file_info(file_t f, st_bool full)
   if (f->volume != HUGE_VAL)
     fprintf(stderr, "Level adjust   : %g (linear gain)\n" , f->volume);
 
-  if (!(f->desc->h->flags & ST_FILE_DEVICE) && f->desc->comment) {
+  if (!(f->desc->h->flags & SOX_FILE_DEVICE) && f->desc->comment) {
     if (strchr(f->desc->comment, '\n'))
       fprintf(stderr, "Comments       : \n%s\n", f->desc->comment);
     else
@@ -812,27 +812,27 @@ static void display_file_info(file_t f, st_bool full)
 
 static void report_file_info(file_t f)
 {
-  if (st_output_verbosity_level > 2)
-    display_file_info(f, st_true);
+  if (sox_output_verbosity_level > 2)
+    display_file_info(f, sox_true);
 }
 
 static void progress_to_file(file_t f)
 {
   read_wide_samples = 0;
   input_wide_samples = f->desc->length / f->desc->signal.channels;
-  if (show_progress && (st_output_verbosity_level < 3 ||
+  if (show_progress && (sox_output_verbosity_level < 3 ||
                         (combine_method <= SOX_concatenate && input_count > 1)))
-    display_file_info(f, st_false);
+    display_file_info(f, sox_false);
   if (f->volume == HUGE_VAL)
     f->volume = 1;
   if (f->replay_gain != HUGE_VAL)
     f->volume *= pow(10.0, f->replay_gain / 20);
-  f->desc->st_errno = errno = 0;
+  f->desc->sox_errno = errno = 0;
 }
 
-static st_bool since(struct timeval * then, double secs, st_bool always_reset)
+static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
 {
-  st_bool ret;
+  sox_bool ret;
   struct timeval now;
   time_t d;
   gettimeofday(&now, NULL);
@@ -847,35 +847,35 @@ static void sigint(int s)
 {
   static struct timeval then;
   if (show_progress && s == SIGINT && combine_method <= SOX_concatenate &&
-      since(&then, 1., st_true))
-    user_skip = st_true;
-  else user_abort = st_true;
+      since(&then, 1., sox_true))
+    user_skip = sox_true;
+  else user_abort = sox_true;
 }
 
-static st_bool can_segue(st_size_t i)
+static sox_bool can_segue(sox_size_t i)
 {
   return
     files[i]->desc->signal.channels == files[i - 1]->desc->signal.channels &&
     files[i]->desc->signal.rate     == files[i - 1]->desc->signal.rate;
 }
 
-static st_size_t st_read_wide(ft_t desc, st_sample_t * buf)
+static sox_size_t sox_read_wide(ft_t desc, sox_sample_t * buf)
 {
-  st_size_t len = ST_BUFSIZ / combiner.channels;
-  len = st_read(desc, buf, len * desc->signal.channels) / desc->signal.channels;
-  if (!len && desc->st_errno)
-    st_fail("%s: %s (%s)", desc->filename, desc->st_errstr, strerror(desc->st_errno));
+  sox_size_t len = SOX_BUFSIZ / combiner.channels;
+  len = sox_read(desc, buf, len * desc->signal.channels) / desc->signal.channels;
+  if (!len && desc->sox_errno)
+    sox_fail("%s: %s (%s)", desc->filename, desc->sox_errstr, strerror(desc->sox_errno));
   return len;
 }
 
-static void balance_input(st_sample_t * buf, st_size_t ws, file_t f)
+static void balance_input(sox_sample_t * buf, sox_size_t ws, file_t f)
 {
-  st_size_t s = ws * f->desc->signal.channels;
+  sox_size_t s = ws * f->desc->signal.channels;
 
   if (f->volume != 1)
     while (s--) {
       double d = f->volume * *buf;
-      *buf++ = ST_ROUND_CLIP_COUNT(d, f->volume_clips);
+      *buf++ = SOX_ROUND_CLIP_COUNT(d, f->volume_clips);
     }
 }
 
@@ -885,20 +885,20 @@ static void balance_input(st_sample_t * buf, st_size_t ws, file_t f)
 
 static int process(void) {
   int e, flowstatus = 0;
-  st_size_t ws, s, i;
-  st_size_t ilen[MAX_INPUT_FILES];
-  st_sample_t *ibuf[MAX_INPUT_FILES];
+  sox_size_t ws, s, i;
+  sox_size_t ilen[MAX_INPUT_FILES];
+  sox_sample_t *ibuf[MAX_INPUT_FILES];
 
   combiner = files[current_input]->desc->signal;
   if (combine_method == SOX_sequence) {
     if (!current_input) for (i = 0; i < input_count; i++)
       report_file_info(files[i]);
   } else {
-    st_size_t total_channels = 0;
-    st_size_t min_channels = ST_SIZE_MAX;
-    st_size_t max_channels = 0;
-    st_size_t min_rate = ST_SIZE_MAX;
-    st_size_t max_rate = 0;
+    sox_size_t total_channels = 0;
+    sox_size_t min_channels = SOX_SIZE_MAX;
+    sox_size_t max_channels = 0;
+    sox_size_t min_rate = SOX_SIZE_MAX;
+    sox_size_t max_rate = 0;
 
     for (i = 0; i < input_count; i++) { /* Report all inputs, then check */
       report_file_info(files[i]);
@@ -909,13 +909,13 @@ static int process(void) {
       max_rate = max(max_rate, files[i]->desc->signal.rate);
     }
     if (min_rate != max_rate)
-      st_fail("Input files must have the same sample-rate");
+      sox_fail("Input files must have the same sample-rate");
     if (min_channels != max_channels) {
       if (combine_method == SOX_concatenate) {
-        st_fail("Input files must have the same # channels");
+        sox_fail("Input files must have the same # channels");
         exit(1);
       } else if (combine_method == SOX_mix)
-        st_warn("Input files don't have the same # channels");
+        sox_warn("Input files don't have the same # channels");
     }
     if (min_rate != max_rate)
       exit(1);
@@ -929,7 +929,7 @@ static int process(void) {
     ofile->signal.rate = combiner.rate;
   if (ofile->signal.size == -1)
     ofile->signal.size = combiner.size;
-  if (ofile->signal.encoding == ST_ENCODING_UNKNOWN)
+  if (ofile->signal.encoding == SOX_ENCODING_UNKNOWN)
     ofile->signal.encoding = combiner.encoding;
   if (ofile->signal.channels == 0)
     ofile->signal.channels = combiner.channels;
@@ -937,7 +937,7 @@ static int process(void) {
   combiner.rate = combiner.rate * globalinfo.speed + .5;
 
   {
-    st_loopinfo_t loops[ST_MAX_NLOOPS];
+    sox_loopinfo_t loops[SOX_MAX_NLOOPS];
     double factor;
     int i;
     char const *comment = NULL;
@@ -954,14 +954,14 @@ static int process(void) {
      * effects that change file length.
      */
     factor = (double) ofile->signal.rate / combiner.rate;
-    for (i = 0; i < ST_MAX_NLOOPS; i++) {
+    for (i = 0; i < SOX_MAX_NLOOPS; i++) {
       loops[i].start = files[0]->desc->loops[i].start * factor;
       loops[i].length = files[0]->desc->loops[i].length * factor;
       loops[i].count = files[0]->desc->loops[i].count;
       loops[i].type = files[0]->desc->loops[i].type;
     }
 
-    ofile->desc = st_open_write(overwrite_permitted,
+    ofile->desc = sox_open_write(overwrite_permitted,
                           ofile->filename,
                           &ofile->signal,
                           ofile->filetype,
@@ -970,30 +970,30 @@ static int process(void) {
                           loops);
 
     if (!ofile->desc)
-      /* st_open_write() will call st_warn for most errors.
+      /* sox_open_write() will call sox_warn for most errors.
        * Rely on that printing something. */
       exit(2);
 
     /* When writing to an audio device, auto turn on the
      * progress display to match behavior of ogg123,
      * unless the user requested us not to display anything. */
-    if (show_progress == ST_OPTION_DEFAULT)
-      show_progress = (ofile->desc->h->flags & ST_FILE_DEVICE) != 0 &&
-                      (ofile->desc->h->flags & ST_FILE_PHONY) == 0;
+    if (show_progress == SOX_OPTION_DEFAULT)
+      show_progress = (ofile->desc->h->flags & SOX_FILE_DEVICE) != 0 &&
+                      (ofile->desc->h->flags & SOX_FILE_PHONY) == 0;
 
     report_file_info(ofile);
   }
 
   build_effects_table();
 
-  if (start_all_effects() != ST_SUCCESS)
+  if (start_all_effects() != SOX_SUCCESS)
     exit(2); /* Failing effect should have displayed an error message */
 
   /* Allocate output buffers for effects */
   for (e = 0; e < neffects; e++) {
-    efftab[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
+    efftab[e].obuf = (sox_sample_t *)xmalloc(SOX_BUFSIZ * sizeof(sox_sample_t));
     if (efftabR[e].name)
-      efftabR[e].obuf = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
+      efftabR[e].obuf = (sox_sample_t *)xmalloc(SOX_BUFSIZ * sizeof(sox_sample_t));
   }
 
   if (combine_method <= SOX_concatenate)
@@ -1001,7 +1001,7 @@ static int process(void) {
   else {
     ws = 0;
     for (i = 0; i < input_count; i++) {
-      ibuf[i] = (st_sample_t *)xmalloc(ST_BUFSIZ * sizeof(st_sample_t));
+      ibuf[i] = (sox_sample_t *)xmalloc(SOX_BUFSIZ * sizeof(sox_sample_t));
       progress_to_file(files[i]);
       ws = max(ws, input_wide_samples);
     }
@@ -1024,11 +1024,11 @@ static int process(void) {
     efftab[0].olen = 0;
     if (combine_method <= SOX_concatenate) {
       if (!user_skip)
-        efftab[0].olen = st_read_wide(files[current_input]->desc, efftab[0].obuf);
+        efftab[0].olen = sox_read_wide(files[current_input]->desc, efftab[0].obuf);
       if (efftab[0].olen == 0) {   /* If EOF, go to the next input file. */
-        update_status(st_true);
+        update_status(sox_true);
         if (user_skip) {
-          user_skip = st_false;
+          user_skip = sox_false;
           fprintf(stderr, "Skipped.\n");
         }
         if (++current_input < input_count) {
@@ -1040,9 +1040,9 @@ static int process(void) {
       }
       balance_input(efftab[0].obuf, efftab[0].olen, files[current_input]);
     } else {
-      st_sample_t * p = efftab[0].obuf;
+      sox_sample_t * p = efftab[0].obuf;
       for (i = 0; i < input_count; ++i) {
-        ilen[i] = st_read_wide(files[i]->desc, ibuf[i]);
+        ilen[i] = sox_read_wide(files[i]->desc, ibuf[i]);
         balance_input(ibuf[i], ilen[i], files[i]);
         efftab[0].olen = max(efftab[0].olen, ilen[i]);
       }
@@ -1054,7 +1054,7 @@ static int process(void) {
               if (ws < ilen[i] && s < files[i]->desc->signal.channels) {
                 /* Cast to double prevents integer overflow */
                 double sample = *p + (double)ibuf[i][ws * files[i]->desc->signal.channels + s];
-                *p = ST_ROUND_CLIP_COUNT(sample, mixing_clips);
+                *p = SOX_ROUND_CLIP_COUNT(sample, mixing_clips);
             }
           }
         } else { /* SOX_merge: like a multi-track recorder */
@@ -1070,7 +1070,7 @@ static int process(void) {
     read_wide_samples += efftab[0].olen;
     efftab[0].olen *= combiner.channels;
     flowstatus = flow_effect_out();
-    update_status(user_abort || ofile->desc->st_errno || flowstatus);
+    update_status(user_abort || ofile->desc->sox_errno || flowstatus);
 
     /* Quit reading/writing on user aborts.  This will close
      * the files nicely as if an EOF was reached on read. */
@@ -1078,12 +1078,12 @@ static int process(void) {
       break;
 
     /* If there's an error, don't try to write more. */
-    if (ofile->desc->st_errno)
+    if (ofile->desc->sox_errno)
       break;
   } while (flowstatus == 0);
 
   /* Drain the effects; don't write if output is indicating errors. */
-  if (ofile->desc->st_errno == 0)
+  if (ofile->desc->sox_errno == 0)
     drain_effect_out();
 
   if (combine_method > SOX_concatenate)
@@ -1107,24 +1107,24 @@ static void parse_effects(int argc, char **argv)
   int argc_effect;
 
   for (nuser_effects = 0; optind < argc; ++nuser_effects) {
-    struct st_effect * e = &user_efftab[nuser_effects];
+    struct sox_effect * e = &user_efftab[nuser_effects];
     int (*getopts)(eff_t effp, int argc, char *argv[]);
 
     if (nuser_effects >= MAX_USER_EFF) {
-      st_fail("too many effects specified (at most %i allowed)", MAX_USER_EFF);
+      sox_fail("too many effects specified (at most %i allowed)", MAX_USER_EFF);
       exit(1);
     }
 
-    argc_effect = st_geteffect_opt(e, argc - optind, &argv[optind]);
-    if (argc_effect == ST_EOF) {
-      st_fail("Effect `%s' does not exist!", argv[optind]);
+    argc_effect = sox_geteffect_opt(e, argc - optind, &argv[optind]);
+    if (argc_effect == SOX_EOF) {
+      sox_fail("Effect `%s' does not exist!", argv[optind]);
       exit(1);
     }
 
     optind++; /* Skip past effect name */
     e->globalinfo = &globalinfo;
-    getopts = e->h->getopts?  e->h->getopts : st_effect_nothing_getopts;
-    if (getopts(e, argc_effect, &argv[optind]) == ST_EOF)
+    getopts = e->h->getopts?  e->h->getopts : sox_effect_nothing_getopts;
+    if (getopts(e, argc_effect, &argv[optind]) == SOX_EOF)
       exit(2);
 
     optind += argc_effect; /* Skip past the effect arguments */
@@ -1133,14 +1133,14 @@ static void parse_effects(int argc, char **argv)
 
 static void add_effect(int * effects_mask)
 {
-  struct st_effect * e = &efftab[neffects];
+  struct sox_effect * e = &efftab[neffects];
 
   /* Copy format info to effect table */
   *effects_mask =
-    st_updateeffect(e, &combiner, &ofile->desc->signal, *effects_mask);
+    sox_updateeffect(e, &combiner, &ofile->desc->signal, *effects_mask);
 
   /* If this effect can't handle multiple channels then account for this. */
-  if (e->ininfo.channels > 1 && !(e->h->flags & ST_EFF_MCHAN))
+  if (e->ininfo.channels > 1 && !(e->h->flags & SOX_EFF_MCHAN))
     memcpy(&efftabR[neffects], e, sizeof(*e));
   else memset(&efftabR[neffects], 0, sizeof(*e));
 
@@ -1149,16 +1149,16 @@ static void add_effect(int * effects_mask)
 
 static void add_default_effect(char const * name, int * effects_mask)
 {
-  struct st_effect * e = &efftab[neffects];
+  struct sox_effect * e = &efftab[neffects];
   int (*getopts)(eff_t effp, int argc, char *argv[]);
 
   /* Find effect and update initial pointers */
-  st_geteffect(e, name);
+  sox_geteffect(e, name);
 
   /* Set up & give default opts for added effects */
   e->globalinfo = &globalinfo;
-  getopts = e->h->getopts?  e->h->getopts : st_effect_nothing_getopts;
-  if (getopts(e, 0, NULL) == ST_EOF)
+  getopts = e->h->getopts?  e->h->getopts : sox_effect_nothing_getopts;
+  if (getopts(e, 0, NULL) == SOX_EOF)
     exit(2);
 
   add_effect(effects_mask);
@@ -1170,8 +1170,8 @@ static void build_effects_table(void)
 {
   int i;
   int effects_mask = 0;
-  st_bool need_rate = combiner.rate     != ofile->desc->signal.rate;
-  st_bool need_chan = combiner.channels != ofile->desc->signal.channels;
+  sox_bool need_rate = combiner.rate     != ofile->desc->signal.rate;
+  sox_bool need_chan = combiner.channels != ofile->desc->signal.channels;
 
   { /* Check if we have to add effects to change rate/chans or if the
        user has specified effects to do this, in which case, check if
@@ -1179,21 +1179,21 @@ static void build_effects_table(void)
     int user_chan_effects = 0, user_rate_effects = 0;
 
     for (i = 0; i < nuser_effects; i++) {
-      if (user_efftab[i].h->flags & ST_EFF_CHAN) {
-        need_chan = st_false;
+      if (user_efftab[i].h->flags & SOX_EFF_CHAN) {
+        need_chan = sox_false;
         ++user_chan_effects;
       }
-      if (user_efftab[i].h->flags & ST_EFF_RATE) {
-        need_rate = st_false;
+      if (user_efftab[i].h->flags & SOX_EFF_RATE) {
+        need_rate = sox_false;
         ++user_rate_effects;
       }
     }
     if (user_chan_effects > 1) {
-      st_fail("Cannot specify multiple effects that change number of channels");
+      sox_fail("Cannot specify multiple effects that change number of channels");
       exit(2);
     }
     if (user_rate_effects > 1)
-      st_report("Cannot specify multiple effects that change sample rate");
+      sox_report("Cannot specify multiple effects that change sample rate");
       /* FIXME: exit here or add comment as to why not */
   }
 
@@ -1205,13 +1205,13 @@ static void build_effects_table(void)
   /* If reducing channels, it's faster to do so before all other effects: */
   if (need_chan && combiner.channels > ofile->desc->signal.channels) {
     add_default_effect("mixer", &effects_mask);
-    need_chan = st_false;
+    need_chan = sox_false;
   }
   /* If reducing rate, it's faster to do so before all other effects
    * (except reducing channels): */
   if (need_rate && combiner.rate > ofile->desc->signal.rate) {
     add_default_effect("resample", &effects_mask);
-    need_rate = st_false;
+    need_rate = sox_false;
   }
   /* Copy user specified effects into the real efftab */
   for (i = 0; i < nuser_effects; i++) {
@@ -1230,25 +1230,25 @@ static void build_effects_table(void)
 
 static int start_all_effects(void)
 {
-  int i, j, ret = ST_SUCCESS;
+  int i, j, ret = SOX_SUCCESS;
 
   for (i = 1; i < neffects; i++) {
-    struct st_effect * e = &efftab[i];
-    st_bool is_always_null = (e->h->flags & ST_EFF_NULL) != 0;
-    int (*start)(eff_t effp) = e->h->start? e->h->start : st_effect_nothing;
+    struct sox_effect * e = &efftab[i];
+    sox_bool is_always_null = (e->h->flags & SOX_EFF_NULL) != 0;
+    int (*start)(eff_t effp) = e->h->start? e->h->start : sox_effect_nothing;
 
     if (is_always_null)
-      st_report("'%s' has no effect (is a proxy effect)", e->name);
+      sox_report("'%s' has no effect (is a proxy effect)", e->name);
     else {
       e->clips = 0;
       ret = start(e);
-      if (ret == ST_EFF_NULL)
-        st_warn("'%s' has no effect in this configuration", e->name);
-      else if (ret != ST_SUCCESS)
-        return ST_EOF;
+      if (ret == SOX_EFF_NULL)
+        sox_warn("'%s' has no effect in this configuration", e->name);
+      else if (ret != SOX_SUCCESS)
+        return SOX_EOF;
     }
-    if (is_always_null || ret == ST_EFF_NULL) { /* remove from the chain */
-      int (*delete)(eff_t effp) = e->h->kill? e->h->kill: st_effect_nothing;
+    if (is_always_null || ret == SOX_EFF_NULL) { /* remove from the chain */
+      int (*delete)(eff_t effp) = e->h->kill? e->h->kill: sox_effect_nothing;
 
       /* No left & right delete as there is no left & right getopts */
       delete(e);
@@ -1261,17 +1261,17 @@ static int start_all_effects(void)
     /* No null checks here; the left channel looks after this */
     else if (efftabR[i].name) {
       efftabR[i].clips = 0;
-      if (start(&efftabR[i]) != ST_SUCCESS)
-        return ST_EOF;
+      if (start(&efftabR[i]) != SOX_SUCCESS)
+        return SOX_EOF;
     }
   }
   for (i = 1; i < neffects; ++i) {
-    struct st_effect * e = &efftab[i];
-    st_report("Effects chain: %-10s %-6s %uHz", e->name,
+    struct sox_effect * e = &efftab[i];
+    sox_report("Effects chain: %-10s %-6s %uHz", e->name,
         e->ininfo.channels < 2 ? "mono" :
-        (e->h->flags & ST_EFF_MCHAN)? "multi" : "stereo", e->ininfo.rate);
+        (e->h->flags & SOX_EFF_MCHAN)? "multi" : "stereo", e->ininfo.rate);
   }
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 static int flow_effect_out(void)
@@ -1290,14 +1290,14 @@ static int flow_effect_out(void)
       if (e == input_eff && input_eff_eof)
         continue;
 
-      /* flow_effect returns ST_EOF when it will not process
+      /* flow_effect returns SOX_EOF when it will not process
        * any more samples.  This is used to bail out early.
        * Since we are "pulling" data, it is OK that we are not
        * calling any more previous effects since their output
        * would not be looked at anyways.
        */
       flowstatus = flow_effect(e);
-      if (flowstatus == ST_EOF) {
+      if (flowstatus == SOX_EOF) {
         input_eff = e;
         /* Assume next effect hasn't reach EOF yet */
         input_eff_eof = 0;
@@ -1310,7 +1310,7 @@ static int flow_effect_out(void)
        * starts with an empty output buffer.
        */
       if (efftab[e].odone < efftab[e].olen) {
-        st_debug_more("Breaking out of loop to flush buffer");
+        sox_debug_more("Breaking out of loop to flush buffer");
         break;
       }
     }
@@ -1323,15 +1323,15 @@ static int flow_effect_out(void)
          * we may be stuck in an infinite writing loop.
          */
         if (user_abort)
-          return ST_EOF;
+          return SOX_EOF;
 
-        len = st_write(ofile->desc,
+        len = sox_write(ofile->desc,
                        &efftab[neffects - 1].obuf[total],
                        efftab[neffects - 1].olen - total);
 
         if (len == 0 || ofile->desc->eof) {
-          st_warn("Error writing: %s", ofile->desc->st_errstr);
-          return ST_EOF;
+          sox_warn("Error writing: %s", ofile->desc->sox_errstr);
+          return SOX_EOF;
         }
         total += len;
       } while (total < efftab[neffects-1].olen);
@@ -1345,7 +1345,7 @@ static int flow_effect_out(void)
     }
 
     /* if stuff still in pipeline, set up to flow effects again */
-    /* When all effects have reported ST_EOF then this check will
+    /* When all effects have reported SOX_EOF then this check will
      * show no more data.
      */
     havedata = 0;
@@ -1367,7 +1367,7 @@ static int flow_effect_out(void)
             ofile->desc->signal.channels)
           havedata = 1;
         else
-          st_warn("Received buffer with incomplete amount of samples.");
+          sox_warn("Received buffer with incomplete amount of samples.");
         /* Don't break out because other things are being
          * done in loop.
          */
@@ -1398,7 +1398,7 @@ static int flow_effect_out(void)
           input_eff_eof = 0;
         } else {
           havedata = 1;
-          input_eff_eof = (rc == ST_EOF) ? 1 : 0;
+          input_eff_eof = (rc == SOX_EOF) ? 1 : 0;
           break;
         }
       }
@@ -1410,31 +1410,31 @@ static int flow_effect_out(void)
    * fact to caller.
    */
   if (input_eff > 0) {
-    st_debug("Effect return ST_EOF");
-    return ST_EOF;
+    sox_debug("Effect return SOX_EOF");
+    return SOX_EOF;
   }
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 static int flow_effect(int e)
 {
-  st_size_t i, done, idone, odone, idonel, odonel, idoner, odoner;
-  const st_sample_t *ibuf;
-  st_sample_t *obuf;
+  sox_size_t i, done, idone, odone, idonel, odonel, idoner, odoner;
+  const sox_sample_t *ibuf;
+  sox_sample_t *obuf;
   int effstatus, effstatusl, effstatusr;
-  int (*flow)(eff_t, st_sample_t const*, st_sample_t*, st_size_t*, st_size_t*) =
-    efftab[e].h->flow? efftab[e].h->flow : st_effect_nothing_flow;
+  int (*flow)(eff_t, sox_sample_t const*, sox_sample_t*, sox_size_t*, sox_size_t*) =
+    efftab[e].h->flow? efftab[e].h->flow : sox_effect_nothing_flow;
 
   /* Do not attempt to do any more effect processing during
    * user aborts as we may be stuck in an infinite flow loop.
    */
   if (user_abort)
-    return ST_EOF;
+    return SOX_EOF;
 
   /* I have no input data ? */
   if (efftab[e - 1].odone == efftab[e - 1].olen) {
-    st_debug("%s no data to pull to me!", efftab[e].name);
+    sox_debug("%s no data to pull to me!", efftab[e].name);
     return 0;
   }
 
@@ -1443,21 +1443,21 @@ static int flow_effect(int e)
      * run effect over entire buffer.
      */
     idone = efftab[e - 1].olen - efftab[e - 1].odone;
-    odone = ST_BUFSIZ - efftab[e].olen;
-    st_debug_more("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-    st_debug_more("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
+    odone = SOX_BUFSIZ - efftab[e].olen;
+    sox_debug_more("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
+    sox_debug_more("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
 
     effstatus = flow(&efftab[e],
                      &efftab[e - 1].obuf[efftab[e - 1].odone],
                      &efftab[e].obuf[efftab[e].olen],
-                     (st_size_t *)&idone,
-                     (st_size_t *)&odone);
+                     (sox_size_t *)&idone,
+                     (sox_size_t *)&odone);
 
     efftab[e - 1].odone += idone;
     /* Don't update efftab[e].odone as we didn't consume data */
     efftab[e].olen += odone;
-    st_debug_more("post %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-    st_debug_more("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
+    sox_debug_more("post %s idone=%d, odone=%d", efftab[e].name, idone, odone);
+    sox_debug_more("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
 
     done = idone + odone;
   } else {
@@ -1465,7 +1465,7 @@ static int flow_effect(int e)
      * on each of them.
      */
     idone = efftab[e - 1].olen - efftab[e - 1].odone;
-    odone = ST_BUFSIZ - efftab[e].olen;
+    odone = SOX_BUFSIZ - efftab[e].olen;
 
     ibuf = &efftab[e - 1].obuf[efftab[e - 1].odone];
     for (i = 0; i < idone; i += 2) {
@@ -1476,19 +1476,19 @@ static int flow_effect(int e)
     /* left */
     idonel = (idone + 1) / 2;   /* odd-length logic */
     odonel = odone / 2;
-    st_debug_more("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-    st_debug_more("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e - 1].odone, efftab[e - 1].olen, efftab[e].odone, efftab[e].olen);
+    sox_debug_more("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
+    sox_debug_more("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e - 1].odone, efftab[e - 1].olen, efftab[e].odone, efftab[e].olen);
 
     effstatusl = flow(&efftab[e],
-                      ibufl, obufl, (st_size_t *)&idonel,
-                      (st_size_t *)&odonel);
+                      ibufl, obufl, (sox_size_t *)&idonel,
+                      (sox_size_t *)&odonel);
 
     /* right */
     idoner = idone / 2;               /* odd-length logic */
     odoner = odone / 2;
     effstatusr = flow(&efftabR[e],
-                      ibufr, obufr, (st_size_t *)&idoner,
-                      (st_size_t *)&odoner);
+                      ibufr, obufr, (sox_size_t *)&idoner,
+                      (sox_size_t *)&odoner);
 
     obuf = &efftab[e].obuf[efftab[e].olen];
     /* This loop implies left and right effect will always output
@@ -1501,8 +1501,8 @@ static int flow_effect(int e)
     efftab[e-1].odone += idonel + idoner;
     /* Don't zero efftab[e].odone since nothing has been consumed yet */
     efftab[e].olen += odonel + odoner;
-    st_debug_more("post %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-    st_debug_more("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e - 1].odone, efftab[e - 1].olen, efftab[e].odone, efftab[e].olen);
+    sox_debug_more("post %s idone=%d, odone=%d", efftab[e].name, idone, odone);
+    sox_debug_more("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e - 1].odone, efftab[e - 1].olen, efftab[e].odone, efftab[e].olen);
 
     done = idonel + idoner + odonel + odoner;
 
@@ -1511,13 +1511,13 @@ static int flow_effect(int e)
     else
       effstatus = effstatusr;
   }
-  if (effstatus == ST_EOF)
-    return ST_EOF;
+  if (effstatus == SOX_EOF)
+    return SOX_EOF;
   if (done == 0) {
-    st_fail("Effect took & gave no samples!");
+    sox_fail("Effect took & gave no samples!");
     exit(2);
   }
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 static int drain_effect_out(void)
@@ -1538,7 +1538,7 @@ static int drain_effect_out(void)
       /* Assuming next effect hasn't reached EOF yet. */
       input_eff_eof = 0;
     } else {
-      input_eff_eof = (rc == ST_EOF) ? 1 : 0;
+      input_eff_eof = (rc == SOX_EOF) ? 1 : 0;
       break;
     }
   }
@@ -1549,33 +1549,33 @@ static int drain_effect_out(void)
 
 static int drain_effect(int e)
 {
-  st_ssize_t i, olen, olenl, olenr;
-  st_sample_t *obuf;
+  sox_ssize_t i, olen, olenl, olenr;
+  sox_sample_t *obuf;
   int rc;
-  int (*drain)(eff_t effp, st_sample_t *obuf, st_size_t *osamp) =
-    efftab[e].h->drain? efftab[e].h->drain : st_effect_nothing_drain;
+  int (*drain)(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp) =
+    efftab[e].h->drain? efftab[e].h->drain : sox_effect_nothing_drain;
 
   if (! efftabR[e].name) {
-    efftab[e].olen = ST_BUFSIZ;
+    efftab[e].olen = SOX_BUFSIZ;
     rc = drain(&efftab[e],efftab[e].obuf, &efftab[e].olen);
     efftab[e].odone = 0;
   } else {
     int rc_l, rc_r;
 
-    olen = ST_BUFSIZ;
+    olen = SOX_BUFSIZ;
 
     /* left */
     olenl = olen/2;
-    rc_l = drain(&efftab[e], obufl, (st_size_t *)&olenl);
+    rc_l = drain(&efftab[e], obufl, (sox_size_t *)&olenl);
 
     /* right */
     olenr = olen/2;
-    rc_r = drain(&efftabR[e], obufr, (st_size_t *)&olenr);
+    rc_r = drain(&efftabR[e], obufr, (sox_size_t *)&olenr);
 
-    if (rc_l == ST_EOF || rc_r == ST_EOF)
-      rc = ST_EOF;
+    if (rc_l == SOX_EOF || rc_r == SOX_EOF)
+      rc = SOX_EOF;
     else
-      rc = ST_SUCCESS;
+      rc = SOX_SUCCESS;
 
     obuf = efftab[e].obuf;
     /* This loop implies left and right effect will always output
@@ -1596,9 +1596,9 @@ static void stop_effects(void)
   int e;
 
   for (e = 1; e < neffects; e++) {
-    st_size_t clips;
+    sox_size_t clips;
     int (*stop)(eff_t effp) =
-       efftab[e].h->stop? efftab[e].h->stop : st_effect_nothing;
+       efftab[e].h->stop? efftab[e].h->stop : sox_effect_nothing;
 
     stop(&efftab[e]);
     clips = efftab[e].clips;
@@ -1608,7 +1608,7 @@ static void stop_effects(void)
       clips += efftab[e].clips;
     }
     if (clips != 0)
-      st_warn("'%s' clipped %u samples; decrease volume?",efftab[e].name,clips);
+      sox_warn("'%s' clipped %u samples; decrease volume?",efftab[e].name,clips);
   }
 }
 
@@ -1618,17 +1618,17 @@ static void delete_effects(void)
 
   for (e = 1; e < neffects; e++) {
     int (*delete)(eff_t effp) =
-       efftab[e].h->kill? efftab[e].h->kill : st_effect_nothing;
+       efftab[e].h->kill? efftab[e].h->kill : sox_effect_nothing;
 
     /* No left & right delete as there is no left & right getopts */
     delete(&efftab[e]);
   }
 }
 
-static st_size_t total_clips(void)
+static sox_size_t total_clips(void)
 {
   int i;
-  st_size_t clips = 0;
+  sox_size_t clips = 0;
   for (i = 0; i < file_count; ++i)
     clips += files[i]->desc->clips + files[i]->volume_clips;
   clips += mixing_clips;
@@ -1640,7 +1640,7 @@ static st_size_t total_clips(void)
   return clips;
 }
 
-static char const * sigfigs3(st_size_t number)
+static char const * sigfigs3(sox_size_t number)
 {
   static char string[16][10];
   static unsigned n;
@@ -1669,12 +1669,12 @@ static char const * sigfigs3p(double percentage)
   }
 }
 
-static void update_status(st_bool all_done)
+static void update_status(sox_bool all_done)
 {
   static struct timeval then;
   if (!show_progress)
     return;
-  if (all_done || since(&then, .15, st_false)) {
+  if (all_done || since(&then, .15, sox_false)) {
     double read_time = (double)read_wide_samples / combiner.rate;
     double left_time = 0, in_time = 0, percentage = 0;
 
@@ -1700,7 +1700,7 @@ static void usage(char const *message)
 {
   size_t i, formats;
   const char **format_list;
-  const st_effect_t *e;
+  const sox_effect_t *e;
 
   printf("%s: ", myname);
   printf("SoX Version %s\n\n", PACKAGE_VERSION);
@@ -1755,14 +1755,14 @@ static void usage(char const *message)
          "\n");
 
   printf("SUPPORTED FILE FORMATS:");
-  for (i = 0, formats = 0; st_format_fns[i]; i++) {
-    char const * const *names = st_format_fns[i]()->names;
+  for (i = 0, formats = 0; sox_format_fns[i]; i++) {
+    char const * const *names = sox_format_fns[i]()->names;
     while (*names++)
       formats++;
   }
   format_list = (const char **)xmalloc(formats * sizeof(char *));
-  for (i = 0, formats = 0; st_format_fns[i]; i++) {
-    char const * const *names = st_format_fns[i]()->names;
+  for (i = 0, formats = 0; sox_format_fns[i]; i++) {
+    char const * const *names = sox_format_fns[i]()->names;
     while (*names)
       format_list[formats++] = *names++;
   }
@@ -1772,9 +1772,9 @@ static void usage(char const *message)
   free(format_list);
 
   printf("\n\nSUPPORTED EFFECTS:");
-  for (i = 0; st_effect_fns[i]; i++) {
-    e = st_effect_fns[i]();
-    if (e && e->name && !(e->flags & ST_EFF_DEPRECATED))
+  for (i = 0; sox_effect_fns[i]; i++) {
+    e = sox_effect_fns[i]();
+    if (e && e->name && !(e->flags & SOX_EFF_DEPRECATED))
       printf(" %s", e->name);
   }
 
@@ -1789,15 +1789,15 @@ static void usage(char const *message)
 static void usage_effect(char *effect)
 {
   int i;
-  const st_effect_t *e;
+  const sox_effect_t *e;
 
   printf("%s: ", myname);
   printf("v%s\n\n", PACKAGE_VERSION);
 
   printf("Effect usage:\n\n");
 
-  for (i = 0; st_effect_fns[i]; i++) {
-    e = st_effect_fns[i]();
+  for (i = 0; sox_effect_fns[i]; i++) {
+    e = sox_effect_fns[i]();
     if (e && e->name && (!strcmp("all", effect) ||  !strcmp(e->name, effect))) {
       char *p = strstr(e->usage, "Usage: ");
       printf("%s\n\n", p ? p + 7 : e->usage);

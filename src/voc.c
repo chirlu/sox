@@ -20,7 +20,7 @@
  * For sox-12-17 by Annonymous (see notes ANN)
  * Added comments and notes for each procedure.
  * Fixed so this now works with pipes, input does not have to
- * be seekable anymore (in st_vocstartread() )
+ * be seekable anymore (in sox_vocstartread() )
  * Added support for uLAW and aLaw (aLaw not tested).
  * Fixed support of multi-part VOC files, and files with
  * block 9 but no audio in the block....
@@ -157,7 +157,7 @@ BLOCK 9 - data block that supersedes blocks 1 and 8.
 
 ------------------------------------------------------------------------*/
 
-#include "st_i.h"
+#include "sox_i.h"
 #include "g711.h"
 #include <string.h>
 
@@ -202,16 +202,16 @@ static int getblock(ft_t);
 static void blockstart(ft_t);
 
 /* Conversion macros (from raw.c) */
-#define ST_ALAW_BYTE_TO_SAMPLE(d) ((st_sample_t)(st_alaw2linear16(d)) << 16)
-#define ST_ULAW_BYTE_TO_SAMPLE(d) ((st_sample_t)(st_ulaw2linear16(d)) << 16)
+#define SOX_ALAW_BYTE_TO_SAMPLE(d) ((sox_sample_t)(sox_alaw2linear16(d)) << 16)
+#define SOX_ULAW_BYTE_TO_SAMPLE(d) ((sox_sample_t)(sox_ulaw2linear16(d)) << 16)
 
 /* public VOC functions for SOX */
 /*-----------------------------------------------------------------
- * st_vocstartread() -- start reading a VOC file
+ * sox_vocstartread() -- start reading a VOC file
  *-----------------------------------------------------------------*/
-static int st_vocstartread(ft_t ft)
+static int sox_vocstartread(ft_t ft)
 {
-        int rtn = ST_SUCCESS;
+        int rtn = SOX_SUCCESS;
         char header[20];
         vs_t v = (vs_t) ft->priv;
         unsigned short sbseek;
@@ -219,25 +219,25 @@ static int st_vocstartread(ft_t ft)
         int ii;  /* for getting rid of lseek */
         unsigned char uc;
 
-        if (st_readbuf(ft, header, 1, 20) != 20)
+        if (sox_readbuf(ft, header, 1, 20) != 20)
         {
-                st_fail_errno(ft,ST_EHDR,"unexpected EOF in VOC header");
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EHDR,"unexpected EOF in VOC header");
+                return(SOX_EOF);
         }
         if (strncmp(header, "Creative Voice File\032", 19))
         {
-                st_fail_errno(ft,ST_EHDR,"VOC file header incorrect");
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EHDR,"VOC file header incorrect");
+                return(SOX_EOF);
         }
 
         /* read the offset to data, from start of file */
         /* after this read we have read 20 bytes of header + 2 */
-        st_readw(ft, &sbseek);
+        sox_readw(ft, &sbseek);
 
         /* ANN:  read to skip the header, instead of lseek */
         /* this should allow use with pipes.... */
         for (ii=22; ii<sbseek; ii++)
-            st_readb(ft, &uc);
+            sox_readb(ft, &uc);
 
         v->rate = -1;
         v->rest = 0;
@@ -253,8 +253,8 @@ static int st_vocstartread(ft_t ft)
         /* get rate of data */
         if (v->rate == -1)
         {
-                st_fail_errno(ft,ST_EOF,"Input .voc file had no sound!");
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EOF,"Input .voc file had no sound!");
+                return(SOX_EOF);
         }
 
         /* setup word length of data */
@@ -263,36 +263,36 @@ static int st_vocstartread(ft_t ft)
         /* ANN:  Check VOC format and map to the proper ST format value */
         switch (v->format) {
         case VOC_FMT_LIN8U:      /*     0    8 bit unsigned linear PCM */
-            ft->signal.encoding = ST_ENCODING_UNSIGNED;
+            ft->signal.encoding = SOX_ENCODING_UNSIGNED;
             break;
         case VOC_FMT_CRLADPCM4:  /*     1    Creative 8-bit to 4-bit ADPCM */
-            st_fail ("Unsupported VOC format CRLADPCM4 %d", v->format);
-            rtn=ST_EOF;
+            sox_fail ("Unsupported VOC format CRLADPCM4 %d", v->format);
+            rtn=SOX_EOF;
             break;
         case VOC_FMT_CRLADPCM3:  /*     2    Creative 8-bit to 3-bit ADPCM */
-            st_fail ("Unsupported VOC format CRLADPCM3 %d", v->format);
-            rtn=ST_EOF;
+            sox_fail ("Unsupported VOC format CRLADPCM3 %d", v->format);
+            rtn=SOX_EOF;
             break;
         case VOC_FMT_CRLADPCM2:  /*     3    Creative 8-bit to 2-bit ADPCM */
-            st_fail ("Unsupported VOC format CRLADPCM2 %d", v->format);
-            rtn=ST_EOF;
+            sox_fail ("Unsupported VOC format CRLADPCM2 %d", v->format);
+            rtn=SOX_EOF;
             break;
         case VOC_FMT_LIN16:      /*     4    16-bit signed PCM */
-            ft->signal.encoding = ST_ENCODING_SIGN2;
+            ft->signal.encoding = SOX_ENCODING_SIGN2;
             break;
         case VOC_FMT_ALAW:       /*     6    CCITT a-Law 8-bit PCM */
-            ft->signal.encoding = ST_ENCODING_ALAW;
+            ft->signal.encoding = SOX_ENCODING_ALAW;
             break;
         case VOC_FMT_MU255:      /*     7    CCITT u-Law 8-bit PCM */
-            ft->signal.encoding = ST_ENCODING_ULAW;
+            ft->signal.encoding = SOX_ENCODING_ULAW;
             break;
         case VOC_FMT_CRLADPCM4A: /*0x200    Creative 16-bit to 4-bit ADPCM */
-            st_fail ("Unsupported VOC format CRLADPCM4A %d", v->format);
-            rtn=ST_EOF;
+            sox_fail ("Unsupported VOC format CRLADPCM4A %d", v->format);
+            rtn=SOX_EOF;
             break;
         default:
-            st_fail ("Unknown VOC format %d", v->format);
-            rtn=ST_EOF;
+            sox_fail ("Unknown VOC format %d", v->format);
+            rtn=SOX_EOF;
             break;
         }
 
@@ -300,18 +300,18 @@ static int st_vocstartread(ft_t ft)
         if (ft->signal.channels == 0)
                 ft->signal.channels = v->channels;
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /*-----------------------------------------------------------------
- * st_vocread() -- read data from a VOC file
+ * sox_vocread() -- read data from a VOC file
  * ANN:  Major changes here to support multi-part files and files
  *       that do not have audio in block 9's.
  *-----------------------------------------------------------------*/
-static st_size_t st_vocread(ft_t ft, st_sample_t *buf, st_size_t len)
+static sox_size_t sox_vocread(ft_t ft, sox_sample_t *buf, sox_size_t len)
 {
         vs_t v = (vs_t) ft->priv;
-        st_size_t done = 0;
+        sox_size_t done = 0;
         int rc = 0;
         int16_t sw;
         unsigned char  uc;
@@ -360,31 +360,31 @@ static st_size_t st_vocread(ft_t ft, st_sample_t *buf, st_size_t len)
 
                 /* Read the data in the file */
                 switch(v->size) {
-                case ST_SIZE_BYTE:
-                    if (st_readb(ft, &uc) == ST_EOF) {
-                        st_warn("VOC input: short file");
+                case SOX_SIZE_BYTE:
+                    if (sox_readb(ft, &uc) == SOX_EOF) {
+                        sox_warn("VOC input: short file");
                         v->rest = 0;
                         return done;
                     }
                     /* IF uLaw,alaw, expand to linear, else convert??? */
                     /* ANN:  added uLaw and aLaw support */
                     if (v->format == VOC_FMT_MU255) {
-                        *buf++ =  ST_ULAW_BYTE_TO_SAMPLE(uc);
+                        *buf++ =  SOX_ULAW_BYTE_TO_SAMPLE(uc);
                     } else if (v->format == VOC_FMT_ALAW) {
-                        *buf++ =  ST_ALAW_BYTE_TO_SAMPLE(uc);
+                        *buf++ =  SOX_ALAW_BYTE_TO_SAMPLE(uc);
                     } else {
-                        *buf++ = ST_UNSIGNED_BYTE_TO_SAMPLE(uc,);
+                        *buf++ = SOX_UNSIGNED_BYTE_TO_SAMPLE(uc,);
                     }
                     break;
-                case ST_SIZE_16BIT:
-                    st_readw(ft, (unsigned short *)&sw);
-                    if (st_eof(ft))
+                case SOX_SIZE_16BIT:
+                    sox_readw(ft, (unsigned short *)&sw);
+                    if (sox_eof(ft))
                         {
-                            st_warn("VOC input: short file");
+                            sox_warn("VOC input: short file");
                             v->rest = 0;
                             return done;
                         }
-                    *buf++ = ST_SIGNED_WORD_TO_SAMPLE(sw,);
+                    *buf++ = SOX_SIGNED_WORD_TO_SAMPLE(sw,);
                     v->rest--; /* Processed 2 bytes so update */
                     break;
                 }
@@ -409,44 +409,44 @@ static st_size_t st_vocread(ft_t ft, st_sample_t *buf, st_size_t len)
  * which will work with the oldest software (eg. an 8-bit mono sample
  * will be able to be played with a really old SB VOC player.)
  */
-static int st_vocstartwrite(ft_t ft)
+static int sox_vocstartwrite(ft_t ft)
 {
         vs_t v = (vs_t) ft->priv;
 
         if (! ft->seekable)
         {
-                st_fail_errno(ft,ST_EOF,
+                sox_fail_errno(ft,SOX_EOF,
                               "Output .voc file must be a file, not a pipe");
-                return(ST_EOF);
+                return(SOX_EOF);
         }
 
         v->samples = 0;
 
         /* File format name and a ^Z (aborts printing under DOS) */
-        st_writes(ft, "Creative Voice File\032");
-        st_writew(ft, 26);                      /* size of header */
-        st_writew(ft, 0x10a);              /* major/minor version number */
-        st_writew(ft, 0x1129);          /* checksum of version number */
+        sox_writes(ft, "Creative Voice File\032");
+        sox_writew(ft, 26);                      /* size of header */
+        sox_writew(ft, 0x10a);              /* major/minor version number */
+        sox_writew(ft, 0x1129);          /* checksum of version number */
 
-        if (ft->signal.size == ST_SIZE_BYTE)
-          ft->signal.encoding = ST_ENCODING_UNSIGNED;
+        if (ft->signal.size == SOX_SIZE_BYTE)
+          ft->signal.encoding = SOX_ENCODING_UNSIGNED;
         else
-          ft->signal.encoding = ST_ENCODING_SIGN2;
+          ft->signal.encoding = SOX_ENCODING_SIGN2;
         if (ft->signal.channels == 0)
                 ft->signal.channels = 1;
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /*-----------------------------------------------------------------
- * st_vocwrite() -- write a VOC file
+ * sox_vocwrite() -- write a VOC file
  *-----------------------------------------------------------------*/
-static st_size_t st_vocwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
+static sox_size_t sox_vocwrite(ft_t ft, const sox_sample_t *buf, sox_size_t len)
 {
         vs_t v = (vs_t) ft->priv;
         unsigned char uc;
         int16_t sw;
-        st_size_t done = 0;
+        sox_size_t done = 0;
 
         if (v->samples == 0) {
           /* No silence packing yet. */
@@ -455,12 +455,12 @@ static st_size_t st_vocwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
         }
         v->samples += len;
         while(done < len) {
-          if (ft->signal.size == ST_SIZE_BYTE) {
-            uc = ST_SAMPLE_TO_UNSIGNED_BYTE(*buf++, ft->clips);
-            st_writeb(ft, uc);
+          if (ft->signal.size == SOX_SIZE_BYTE) {
+            uc = SOX_SAMPLE_TO_UNSIGNED_BYTE(*buf++, ft->clips);
+            sox_writeb(ft, uc);
           } else {
-            sw = (int) ST_SAMPLE_TO_SIGNED_WORD(*buf++, ft->clips);
-            st_writew(ft,sw);
+            sw = (int) SOX_SAMPLE_TO_SIGNED_WORD(*buf++, ft->clips);
+            sox_writew(ft,sw);
           }
           done++;
         }
@@ -474,36 +474,36 @@ static st_size_t st_vocwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 static void blockstop(ft_t ft)
 {
         vs_t v = (vs_t) ft->priv;
-        st_sample_t datum;
+        sox_sample_t datum;
 
-        st_writeb(ft, 0);                     /* End of file block code */
-        st_seeki(ft, v->blockseek, 0);         /* seek back to block length */
-        st_seeki(ft, 1, 1);                    /* seek forward one */
+        sox_writeb(ft, 0);                     /* End of file block code */
+        sox_seeki(ft, v->blockseek, 0);         /* seek back to block length */
+        sox_seeki(ft, 1, 1);                    /* seek forward one */
         if (v->silent) {
-                st_writew(ft, v->samples);
+                sox_writew(ft, v->samples);
         } else {
-          if (ft->signal.size == ST_SIZE_BYTE) {
+          if (ft->signal.size == SOX_SIZE_BYTE) {
             if (ft->signal.channels > 1) {
-              st_seeki(ft, 8, 1); /* forward 7 + 1 for new block header */
+              sox_seeki(ft, 8, 1); /* forward 7 + 1 for new block header */
             }
           }
                 v->samples += 2;                /* adjustment: SBDK pp. 3-5 */
                 datum = (v->samples * ft->signal.size) & 0xff;
-                st_writeb(ft, (int)datum);       /* low byte of length */
+                sox_writeb(ft, (int)datum);       /* low byte of length */
                 datum = ((v->samples * ft->signal.size) >> 8) & 0xff;
-                st_writeb(ft, (int)datum);  /* middle byte of length */
+                sox_writeb(ft, (int)datum);  /* middle byte of length */
                 datum = ((v->samples  * ft->signal.size)>> 16) & 0xff;
-                st_writeb(ft, (int)datum); /* high byte of length */
+                sox_writeb(ft, (int)datum); /* high byte of length */
         }
 }
 
 /*-----------------------------------------------------------------
- * st_vocstopwrite() -- stop writing a VOC file
+ * sox_vocstopwrite() -- stop writing a VOC file
  *-----------------------------------------------------------------*/
-static int st_vocstopwrite(ft_t ft)
+static int sox_vocstopwrite(ft_t ft)
 {
         blockstop(ft);
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /*-----------------------------------------------------------------
@@ -529,118 +529,118 @@ static int getblock(ft_t ft)
         while (v->rest == 0) {
                 /* IF EOF, return EOF
                  * ANN:  was returning SUCCESS */
-                if (st_eof(ft))
-                        return ST_EOF;
+                if (sox_eof(ft))
+                        return SOX_EOF;
 
-                if (st_readb(ft, &block) == ST_EOF)
-                        return ST_EOF;
+                if (sox_readb(ft, &block) == SOX_EOF)
+                        return SOX_EOF;
 
                 /* IF TERM block (end of file), return EOF */
                 if (block == VOC_TERM)
-                        return ST_EOF;
+                        return SOX_EOF;
 
                 /* IF EOF after reading block type, return EOF
                  * ANN:  was returning SUCCESS */
-                if (st_eof(ft))
-                        return ST_EOF;
+                if (sox_eof(ft))
+                        return SOX_EOF;
                 /*
                  * Size is an 24-bit value.  Currently there is no util
                  * func to read this so do it this cross-platform way
                  *
                  */
-                st_readb(ft, &uc);
+                sox_readb(ft, &uc);
                 sblen = uc;
-                st_readb(ft, &uc);
+                sox_readb(ft, &uc);
                 sblen |= ((uint32_t) uc) << 8;
-                st_readb(ft, &uc);
+                sox_readb(ft, &uc);
                 sblen |= ((uint32_t) uc) << 16;
 
                 /* Based on VOC block type, process the block */
                 /* audio may be in one or multiple blocks */
                 switch(block) {
                 case VOC_DATA:
-                        st_readb(ft, &uc);
+                        sox_readb(ft, &uc);
                         /* When DATA block preceeded by an EXTENDED     */
                         /* block, the DATA blocks rate value is invalid */
                         if (!v->extended) {
                           if (uc == 0)
                           {
-                            st_fail_errno(ft,ST_EFMT,
+                            sox_fail_errno(ft,SOX_EFMT,
                               "File %s: Sample rate is zero?");
-                            return(ST_EOF);
+                            return(SOX_EOF);
                           }
                           if ((v->rate != -1) && (uc != v->rate))
                           {
-                            st_fail_errno(ft,ST_EFMT,
+                            sox_fail_errno(ft,SOX_EFMT,
                               "File %s: sample rate codes differ: %d != %d",
                                  ft->filename,v->rate, uc);
-                            return(ST_EOF);
+                            return(SOX_EOF);
                           }
                           v->rate = uc;
                           ft->signal.rate = 1000000.0/(256 - v->rate);
                           v->channels = 1;
                         }
-                        st_readb(ft, &uc);
+                        sox_readb(ft, &uc);
                         if (uc != 0)
                         {
-                          st_fail_errno(ft,ST_EFMT,
+                          sox_fail_errno(ft,SOX_EFMT,
                             "File %s: only interpret 8-bit data!",
                                ft->filename);
-                          return(ST_EOF);
+                          return(SOX_EOF);
                         }
                         v->extended = 0;
                         v->rest = sblen - 2;
-                        v->size = ST_SIZE_BYTE;
-                        return (ST_SUCCESS);
+                        v->size = SOX_SIZE_BYTE;
+                        return (SOX_SUCCESS);
                 case VOC_DATA_16:
-                        st_readdw(ft, &new_rate_32);
+                        sox_readdw(ft, &new_rate_32);
                         if (new_rate_32 == 0)
                         {
-                            st_fail_errno(ft,ST_EFMT,
+                            sox_fail_errno(ft,SOX_EFMT,
                               "File %s: Sample rate is zero?",ft->filename);
-                            return(ST_EOF);
+                            return(SOX_EOF);
                         }
                         if ((v->rate != -1) && ((long)new_rate_32 != v->rate))
                         {
-                            st_fail_errno(ft,ST_EFMT,
+                            sox_fail_errno(ft,SOX_EFMT,
                               "File %s: sample rate codes differ: %d != %d",
                                 ft->filename, v->rate, new_rate_32);
-                            return(ST_EOF);
+                            return(SOX_EOF);
                         }
                         v->rate = new_rate_32;
                         ft->signal.rate = new_rate_32;
-                        st_readb(ft, &uc);
+                        sox_readb(ft, &uc);
                         switch (uc)
                         {
-                            case 8:     v->size = ST_SIZE_BYTE; break;
-                            case 16:    v->size = ST_SIZE_16BIT; break;
+                            case 8:     v->size = SOX_SIZE_BYTE; break;
+                            case 16:    v->size = SOX_SIZE_16BIT; break;
                             default:
-                                st_fail_errno(ft,ST_EFMT,
+                                sox_fail_errno(ft,SOX_EFMT,
                                               "Don't understand size %d", uc);
-                                return(ST_EOF);
+                                return(SOX_EOF);
                         }
-                        st_readb(ft, &(v->channels));
-                        st_readw(ft, &(v->format));  /* ANN: added format */
-                        st_readb(ft, (unsigned char *)&trash); /* notused */
-                        st_readb(ft, (unsigned char *)&trash); /* notused */
-                        st_readb(ft, (unsigned char *)&trash); /* notused */
-                        st_readb(ft, (unsigned char *)&trash); /* notused */
+                        sox_readb(ft, &(v->channels));
+                        sox_readw(ft, &(v->format));  /* ANN: added format */
+                        sox_readb(ft, (unsigned char *)&trash); /* notused */
+                        sox_readb(ft, (unsigned char *)&trash); /* notused */
+                        sox_readb(ft, (unsigned char *)&trash); /* notused */
+                        sox_readb(ft, (unsigned char *)&trash); /* notused */
                         v->rest = sblen - 12;
-                        return (ST_SUCCESS);
+                        return (SOX_SUCCESS);
                 case VOC_CONT:
                         v->rest = sblen;
-                        return (ST_SUCCESS);
+                        return (SOX_SUCCESS);
                 case VOC_SILENCE:
                         {
                         unsigned short period;
 
-                        st_readw(ft, &period);
-                        st_readb(ft, &uc);
+                        sox_readw(ft, &period);
+                        sox_readb(ft, &uc);
                         if (uc == 0)
                         {
-                                st_fail_errno(ft,ST_EFMT,
+                                sox_fail_errno(ft,SOX_EFMT,
                                   "File %s: Silence sample rate is zero");
-                                return(ST_EOF);
+                                return(SOX_EOF);
                         }
                         /*
                          * Some silence-packed files have gratuitously
@@ -653,11 +653,11 @@ static int getblock(ft_t ft)
                                 v->rate = uc;
                         v->rest = period;
                         v->silent = 1;
-                        return (ST_SUCCESS);
+                        return (SOX_SUCCESS);
                         }
                 case VOC_MARKER:
-                        st_readb(ft, &uc);
-                        st_readb(ft, &uc);
+                        sox_readb(ft, &uc);
+                        sox_readb(ft, &uc);
                         /* Falling! Falling! */
                 case VOC_TEXT:
                         { 
@@ -672,7 +672,7 @@ static int getblock(ft_t ft)
 
                           while (i--)
                           {
-                            st_readb(ft, (unsigned char *)&c);
+                            sox_readb(ft, (unsigned char *)&c);
                             /* FIXME: this needs to be tested but I couldn't
                              * find a voc file with a VOC_TEXT chunk :(
                             if (c != '\0' && c != '\r')
@@ -680,7 +680,7 @@ static int getblock(ft_t ft)
                             if (len && (c == '\0' || c == '\r' ||
                                 i == 0 || len == sizeof(line_buf) - 1))
                             {
-                              st_report("%s", line_buf);
+                              sox_report("%s", line_buf);
                               line_buf[len] = '\0';
                               len = 0;
                             }
@@ -690,9 +690,9 @@ static int getblock(ft_t ft)
                         continue;       /* get next block */
                 case VOC_LOOP:
                 case VOC_LOOPEND:
-                        st_debug("File %s: skipping repeat loop");
+                        sox_debug("File %s: skipping repeat loop");
                         for(i = 0; i < sblen; i++)
-                            st_readb(ft, (unsigned char *)&trash);
+                            sox_readb(ft, (unsigned char *)&trash);
                         break;
                 case VOC_EXTENDED:
                         /* An Extended block is followed by a data block */
@@ -700,30 +700,30 @@ static int getblock(ft_t ft)
                         /* value from the extended block and not the     */
                         /* data block.                                   */
                         v->extended = 1;
-                        st_readw(ft, &new_rate_16);
+                        sox_readw(ft, &new_rate_16);
                         if (new_rate_16 == 0)
                         {
-                           st_fail_errno(ft,ST_EFMT,
+                           sox_fail_errno(ft,SOX_EFMT,
                              "File %s: Sample rate is zero?");
-                           return(ST_EOF);
+                           return(SOX_EOF);
                         }
                         if ((v->rate != -1) && (new_rate_16 != v->rate))
                         {
-                           st_fail_errno(ft,ST_EFMT,
+                           sox_fail_errno(ft,SOX_EFMT,
                              "File %s: sample rate codes differ: %d != %d",
                                         ft->filename, v->rate, new_rate_16);
-                           return(ST_EOF);
+                           return(SOX_EOF);
                         }
                         v->rate = new_rate_16;
-                        st_readb(ft, &uc);
+                        sox_readb(ft, &uc);
                         if (uc != 0)
                         {
-                                st_fail_errno(ft,ST_EFMT,
+                                sox_fail_errno(ft,SOX_EFMT,
                                   "File %s: only interpret 8-bit data!",
                                         ft->filename);
-                                return(ST_EOF);
+                                return(SOX_EOF);
                         }
-                        st_readb(ft, &uc);
+                        sox_readb(ft, &uc);
                         if (uc)
                                 ft->signal.channels = 2;  /* Stereo */
                         /* Needed number of channels before finishing
@@ -735,13 +735,13 @@ static int getblock(ft_t ft)
                         /* can be grabed.                               */
                         continue;
                 default:
-                        st_debug("File %s: skipping unknown block code %d",
+                        sox_debug("File %s: skipping unknown block code %d",
                                 ft->filename, block);
                         for(i = 0; i < sblen; i++)
-                            st_readb(ft, (unsigned char *)&trash);
+                            sox_readb(ft, (unsigned char *)&trash);
                 }
         }
-        return ST_SUCCESS;
+        return SOX_SUCCESS;
 }
 
 /*-----------------------------------------------------------------
@@ -751,14 +751,14 @@ static void blockstart(ft_t ft)
 {
         vs_t v = (vs_t) ft->priv;
 
-        v->blockseek = st_tell(ft);
+        v->blockseek = sox_tell(ft);
         if (v->silent) {
-                st_writeb(ft, VOC_SILENCE);     /* Silence block code */
-                st_writeb(ft, 0);               /* Period length */
-                st_writeb(ft, 0);               /* Period length */
-                st_writeb(ft, v->rate);         /* Rate code */
+                sox_writeb(ft, VOC_SILENCE);     /* Silence block code */
+                sox_writeb(ft, 0);               /* Period length */
+                sox_writeb(ft, 0);               /* Period length */
+                sox_writeb(ft, v->rate);         /* Rate code */
         } else {
-          if (ft->signal.size == ST_SIZE_BYTE) {
+          if (ft->signal.size == SOX_SIZE_BYTE) {
             /* 8-bit sample section.  By always setting the correct     */
             /* rate value in the DATA block (even when its preceeded    */
             /* by an EXTENDED block) old software can still play stereo */
@@ -766,36 +766,36 @@ static void blockstart(ft_t ft)
             /* Prehaps the rate should be doubled though to make up for */
             /* double amount of samples for a given time????            */
             if (ft->signal.channels > 1) {
-              st_writeb(ft, VOC_EXTENDED);      /* Voice Extended block code */
-              st_writeb(ft, 4);                /* block length = 4 */
-              st_writeb(ft, 0);                /* block length = 4 */
-              st_writeb(ft, 0);                /* block length = 4 */
+              sox_writeb(ft, VOC_EXTENDED);      /* Voice Extended block code */
+              sox_writeb(ft, 4);                /* block length = 4 */
+              sox_writeb(ft, 0);                /* block length = 4 */
+              sox_writeb(ft, 0);                /* block length = 4 */
                   v->rate = 65536 - (256000000.0/(2*(float)ft->signal.rate));
-              st_writew(ft,v->rate);    /* Rate code */
-              st_writeb(ft, 0);         /* File is not packed */
-              st_writeb(ft, 1);         /* samples are in stereo */
+              sox_writew(ft,v->rate);    /* Rate code */
+              sox_writeb(ft, 0);         /* File is not packed */
+              sox_writeb(ft, 1);         /* samples are in stereo */
             }
-            st_writeb(ft, VOC_DATA);    /* Voice Data block code */
-            st_writeb(ft, 0);           /* block length (for now) */
-            st_writeb(ft, 0);           /* block length (for now) */
-            st_writeb(ft, 0);           /* block length (for now) */
+            sox_writeb(ft, VOC_DATA);    /* Voice Data block code */
+            sox_writeb(ft, 0);           /* block length (for now) */
+            sox_writeb(ft, 0);           /* block length (for now) */
+            sox_writeb(ft, 0);           /* block length (for now) */
             v->rate = 256 - (1000000.0/(float)ft->signal.rate);
-            st_writeb(ft, (int) v->rate);/* Rate code */
-            st_writeb(ft, 0);           /* 8-bit raw data */
+            sox_writeb(ft, (int) v->rate);/* Rate code */
+            sox_writeb(ft, 0);           /* 8-bit raw data */
         } else {
-            st_writeb(ft, VOC_DATA_16); /* Voice Data block code */
-            st_writeb(ft, 0);           /* block length (for now) */
-            st_writeb(ft, 0);           /* block length (for now) */
-            st_writeb(ft, 0);           /* block length (for now) */
+            sox_writeb(ft, VOC_DATA_16); /* Voice Data block code */
+            sox_writeb(ft, 0);           /* block length (for now) */
+            sox_writeb(ft, 0);           /* block length (for now) */
+            sox_writeb(ft, 0);           /* block length (for now) */
             v->rate = ft->signal.rate;
-            st_writedw(ft, v->rate);    /* Rate code */
-            st_writeb(ft, 16);          /* Sample Size */
-            st_writeb(ft, ft->signal.channels);   /* Sample Size */
-            st_writew(ft, 0x0004);      /* Encoding */
-            st_writeb(ft, 0);           /* Unused */
-            st_writeb(ft, 0);           /* Unused */
-            st_writeb(ft, 0);           /* Unused */
-            st_writeb(ft, 0);           /* Unused */
+            sox_writedw(ft, v->rate);    /* Rate code */
+            sox_writeb(ft, 16);          /* Sample Size */
+            sox_writeb(ft, ft->signal.channels);   /* Sample Size */
+            sox_writew(ft, 0x0004);      /* Encoding */
+            sox_writeb(ft, 0);           /* Unused */
+            sox_writeb(ft, 0);           /* Unused */
+            sox_writeb(ft, 0);           /* Unused */
+            sox_writeb(ft, 0);           /* Unused */
           }
         }
 }
@@ -806,20 +806,20 @@ static const char *vocnames[] = {
   NULL
 };
 
-static st_format_t st_voc_format = {
+static sox_format_t sox_voc_format = {
   vocnames,
   NULL,
-  ST_FILE_LIT_END,
-  st_vocstartread,
-  st_vocread,
-  st_format_nothing,
-  st_vocstartwrite,
-  st_vocwrite,
-  st_vocstopwrite,
-  st_format_nothing_seek
+  SOX_FILE_LIT_END,
+  sox_vocstartread,
+  sox_vocread,
+  sox_format_nothing,
+  sox_vocstartwrite,
+  sox_vocwrite,
+  sox_vocstopwrite,
+  sox_format_nothing_seek
 };
 
-const st_format_t *st_voc_format_fn(void)
+const sox_format_t *sox_voc_format_fn(void)
 {
-    return &st_voc_format;
+    return &sox_voc_format;
 }

@@ -1,7 +1,7 @@
 /*
  * adpcm.h
  */
-#include "st.h"
+#include "sox.h"
 
 #ifndef SAMPL
 #define SAMPL short
@@ -39,19 +39,19 @@ extern void AdpcmBlockMashI(
  *  samplesPerBlock which would go into a block of size blockAlign
  *  Yes, it is confusing usage.
  */
-extern st_size_t AdpcmSamplesIn(
-	st_size_t dataLen,
+extern sox_size_t AdpcmSamplesIn(
+	sox_size_t dataLen,
 	unsigned short chans,
 	unsigned short blockAlign,
 	unsigned short samplesPerBlock
 );
 
 /*
- * st_size_t AdpcmBytesPerBlock(chans, samplesPerBlock)
+ * sox_size_t AdpcmBytesPerBlock(chans, samplesPerBlock)
  *   return minimum blocksize which would be required
  *   to encode number of chans with given samplesPerBlock
  */
-extern st_size_t AdpcmBytesPerBlock(
+extern sox_size_t AdpcmBytesPerBlock(
 	unsigned short chans,
 	unsigned short samplesPerBlock
 );

@@ -65,13 +65,13 @@
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
 #include <math.h>
 #include <string.h>
-#include "st_i.h"
+#include "sox_i.h"
 
 #define MOD_SINE        0
 #define MOD_TRIANGLE    1
 #define MAX_CHORUS      7
 
-static st_effect_t st_chorus_effect;
+static sox_effect_t sox_chorus_effect;
 
 typedef struct chorusstuff {
         int     num_chorus;
@@ -92,7 +92,7 @@ typedef struct chorusstuff {
 /*
  * Process options
  */
-static int st_chorus_getopts(eff_t effp, int n, char **argv) 
+static int sox_chorus_getopts(eff_t effp, int n, char **argv) 
 {
         chorus_t chorus = (chorus_t) effp->priv;
         int i;
@@ -102,8 +102,8 @@ static int st_chorus_getopts(eff_t effp, int n, char **argv)
 
         if ( ( n < 7 ) || (( n - 2 ) % 5 ) )
         {
-            st_fail(st_chorus_effect.usage);
-            return (ST_EOF);
+            sox_fail(sox_chorus_effect.usage);
+            return (SOX_EOF);
         }
 
         sscanf(argv[i++], "%f", &chorus->in_gain);
@@ -111,8 +111,8 @@ static int st_chorus_getopts(eff_t effp, int n, char **argv)
         while ( i < n ) {
                 if ( chorus->num_chorus > MAX_CHORUS )
                 {
-                        st_fail("chorus: to many delays, use less than %i delays", MAX_CHORUS);
-                        return (ST_EOF);
+                        sox_fail("chorus: to many delays, use less than %i delays", MAX_CHORUS);
+                        return (SOX_EOF);
                 }
                 sscanf(argv[i++], "%f", &chorus->delay[chorus->num_chorus]);
                 sscanf(argv[i++], "%f", &chorus->decay[chorus->num_chorus]);
@@ -124,19 +124,19 @@ static int st_chorus_getopts(eff_t effp, int n, char **argv)
                         chorus->modulation[chorus->num_chorus] = MOD_TRIANGLE;
                 else
                 {
-                        st_fail(st_chorus_effect.usage);
-                        return (ST_EOF);
+                        sox_fail(sox_chorus_effect.usage);
+                        return (SOX_EOF);
                 }
                 i++;
                 chorus->num_chorus++;
         }
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Prepare for processing.
  */
-static int st_chorus_start(eff_t effp)
+static int sox_chorus_start(eff_t effp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
         int i;
@@ -146,18 +146,18 @@ static int st_chorus_start(eff_t effp)
 
         if ( chorus->in_gain < 0.0 )
         {
-                st_fail("chorus: gain-in must be positive!");
-                return (ST_EOF);
+                sox_fail("chorus: gain-in must be positive!");
+                return (SOX_EOF);
         }
         if ( chorus->in_gain > 1.0 )
         {
-                st_fail("chorus: gain-in must be less than 1.0!");
-                return (ST_EOF);
+                sox_fail("chorus: gain-in must be less than 1.0!");
+                return (SOX_EOF);
         }
         if ( chorus->out_gain < 0.0 )
         {
-                st_fail("chorus: gain-out must be positive!");
-                return (ST_EOF);
+                sox_fail("chorus: gain-out must be positive!");
+                return (SOX_EOF);
         }
         for ( i = 0; i < chorus->num_chorus; i++ ) {
                 chorus->samples[i] = (int) ( ( chorus->delay[i] + 
@@ -167,52 +167,52 @@ static int st_chorus_start(eff_t effp)
 
                 if ( chorus->delay[i] < 20.0 )
                 {
-                        st_fail("chorus: delay must be more than 20.0 msec!");
-                        return (ST_EOF);
+                        sox_fail("chorus: delay must be more than 20.0 msec!");
+                        return (SOX_EOF);
                 }
                 if ( chorus->delay[i] > 100.0 )
                 {
-                        st_fail("chorus: delay must be less than 100.0 msec!");
-                        return (ST_EOF);
+                        sox_fail("chorus: delay must be less than 100.0 msec!");
+                        return (SOX_EOF);
                 }
                 if ( chorus->speed[i] < 0.1 )
                 {
-                        st_fail("chorus: speed must be more than 0.1 Hz!");
-                        return (ST_EOF);
+                        sox_fail("chorus: speed must be more than 0.1 Hz!");
+                        return (SOX_EOF);
                 }
                 if ( chorus->speed[i] > 5.0 )
                 {
-                        st_fail("chorus: speed must be less than 5.0 Hz!");
-                        return (ST_EOF);
+                        sox_fail("chorus: speed must be less than 5.0 Hz!");
+                        return (SOX_EOF);
                 }
                 if ( chorus->depth[i] < 0.0 )
                 {
-                        st_fail("chorus: delay must be more positive!");
-                        return (ST_EOF);
+                        sox_fail("chorus: delay must be more positive!");
+                        return (SOX_EOF);
                 }
                 if ( chorus->depth[i] > 10.0 )
                 {
-                    st_fail("chorus: delay must be less than 10.0 msec!");
-                    return (ST_EOF);
+                    sox_fail("chorus: delay must be less than 10.0 msec!");
+                    return (SOX_EOF);
                 }
                 if ( chorus->decay[i] < 0.0 )
                 {
-                        st_fail("chorus: decay must be positive!" );
-                        return (ST_EOF);
+                        sox_fail("chorus: decay must be positive!" );
+                        return (SOX_EOF);
                 }
                 if ( chorus->decay[i] > 1.0 )
                 {
-                        st_fail("chorus: decay must be less that 1.0!" );
-                        return (ST_EOF);
+                        sox_fail("chorus: decay must be less that 1.0!" );
+                        return (SOX_EOF);
                 }
                 chorus->length[i] = effp->ininfo.rate / chorus->speed[i];
                 chorus->lookup_tab[i] = (int *) xmalloc(sizeof (int) * chorus->length[i]);
 
                 if (chorus->modulation[i] == MOD_SINE)
-                  st_generate_wave_table(ST_WAVE_SINE, ST_INT, chorus->lookup_tab[i],
+                  sox_generate_wave_table(SOX_WAVE_SINE, SOX_INT, chorus->lookup_tab[i],
                                          chorus->length[i], 0, chorus->depth_samples[i], 0);
                 else
-                  st_generate_wave_table(ST_WAVE_TRIANGLE, ST_INT, chorus->lookup_tab[i], 
+                  sox_generate_wave_table(SOX_WAVE_TRIANGLE, SOX_INT, chorus->lookup_tab[i], 
                                          chorus->length[i],
                                          chorus->samples[i] - 1 - 2 * chorus->depth_samples[i],
                                          chorus->samples[i] - 1, 3 * M_PI_2);
@@ -227,7 +227,7 @@ static int st_chorus_start(eff_t effp)
         for ( i = 0; i < chorus->num_chorus; i++ )
                 sum_in_volume += chorus->decay[i];
         if ( chorus->in_gain * ( sum_in_volume ) > 1.0 / chorus->out_gain )
-        st_warn("chorus: warning >>> gain-out can cause saturation or clipping of output <<<");
+        sox_warn("chorus: warning >>> gain-out can cause saturation or clipping of output <<<");
 
 
         chorus->chorusbuf = (float *) xmalloc(sizeof (float) * chorus->maxsamples);
@@ -236,22 +236,22 @@ static int st_chorus_start(eff_t effp)
 
         chorus->counter = 0;
         chorus->fade_out = chorus->maxsamples;
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int st_chorus_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                   st_size_t *isamp, st_size_t *osamp)
+static int sox_chorus_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                   sox_size_t *isamp, sox_size_t *osamp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
         int len, done;
         int i;
         
         float d_in, d_out;
-        st_sample_t out;
+        sox_sample_t out;
 
         len = ((*isamp > *osamp) ? *osamp : *isamp);
         for(done = 0; done < len; done++) {
@@ -265,7 +265,7 @@ static int st_chorus_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf
                         chorus->maxsamples] * chorus->decay[i];
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * chorus->out_gain;
-                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 chorus->chorusbuf[chorus->counter] = d_in;
@@ -276,20 +276,20 @@ static int st_chorus_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf
                                 ( chorus->phase[i] + 1 ) % chorus->length[i];
         }
         /* processed all samples */
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Drain out reverb lines. 
  */
-static int st_chorus_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int sox_chorus_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
-        st_size_t done;
+        sox_size_t done;
         int i;
         
         float d_in, d_out;
-        st_sample_t out;
+        sox_sample_t out;
 
         done = 0;
         while ( ( done < *osamp ) && ( done < chorus->fade_out ) ) {
@@ -302,7 +302,7 @@ static int st_chorus_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 chorus->maxsamples] * chorus->decay[i];
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * chorus->out_gain;
-                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 chorus->chorusbuf[chorus->counter] = d_in;
@@ -317,15 +317,15 @@ static int st_chorus_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         /* samples played, it remains */
         *osamp = done;
         if (chorus->fade_out == 0)
-            return ST_EOF;
+            return SOX_EOF;
         else
-            return ST_SUCCESS;
+            return SOX_SUCCESS;
 }
 
 /*
  * Clean up chorus effect.
  */
-static int st_chorus_stop(eff_t effp)
+static int sox_chorus_stop(eff_t effp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
         int i;
@@ -336,22 +336,22 @@ static int st_chorus_stop(eff_t effp)
                 free((char *) chorus->lookup_tab[i]);
                 chorus->lookup_tab[i] = (int *) -1;   /* guaranteed core dump */
         }
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
-static st_effect_t st_chorus_effect = {
+static sox_effect_t sox_chorus_effect = {
   "chorus",
   "Usage: chorus gain-in gain-out delay decay speed depth [ -s | -t ]",
   0,
-  st_chorus_getopts,
-  st_chorus_start,
-  st_chorus_flow,
-  st_chorus_drain,
-  st_chorus_stop,
-  st_effect_nothing
+  sox_chorus_getopts,
+  sox_chorus_start,
+  sox_chorus_flow,
+  sox_chorus_drain,
+  sox_chorus_stop,
+  sox_effect_nothing
 };
 
-const st_effect_t *st_chorus_effect_fn(void)
+const sox_effect_t *sox_chorus_effect_fn(void)
 {
-    return &st_chorus_effect;
+    return &sox_chorus_effect;
 }

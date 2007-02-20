@@ -29,20 +29,20 @@ static int getopts(eff_t effp, int n, char * * argv)
       sscanf(argv[0], "%lf %c", &speed, &dummy) != 1 || speed < 0 ||
       (n > 1 && sscanf(argv[1], "%lf %c", &depth, &dummy) != 1) ||
       depth <= 0 || depth > 100) {
-    st_fail(effp->h->usage);
-    return ST_EOF;
+    sox_fail(effp->h->usage);
+    return SOX_EOF;
   }
   synth_args[2] = argv[0];
   sprintf(offset, "%g", 100 - depth / 2);
   synth_args[3] = offset;
-  return st_synth_getopts(effp, array_length(synth_args), synth_args);
+  return sox_synth_getopts(effp, array_length(synth_args), synth_args);
 }
 
-st_effect_t const * st_tremolo_effect_fn(void)
+sox_effect_t const * sox_tremolo_effect_fn(void)
 {
-  static st_effect_t driver = {
-    "tremolo", "Usage: tremolo speed_Hz [depth_percent];", ST_EFF_MCHAN,
-    getopts, st_synth_start, st_synth_flow, 0, 0, 0,
+  static sox_effect_t driver = {
+    "tremolo", "Usage: tremolo speed_Hz [depth_percent];", SOX_EFF_MCHAN,
+    getopts, sox_synth_start, sox_synth_flow, 0, 0, 0,
   };
   return &driver;
 }

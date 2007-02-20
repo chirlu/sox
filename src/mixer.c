@@ -15,12 +15,12 @@
  * and mono/stereo -> stereo/quad channel duplication.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 
-static st_effect_t st_mixer_effect;
+static sox_effect_t sox_mixer_effect;
 
 typedef struct mixerstuff {
         /* How to generate each output channel.  sources[i][j] */
@@ -82,8 +82,8 @@ static int getopts(eff_t effp, int n, char **argv)
             mixer->mix = MIX_RIGHT_BACK;
         else if (argv[0][0] == '-' && !isdigit((int)argv[0][1])
                 && argv[0][1] != '.') {
-            st_fail(st_mixer_effect.usage);
-            return (ST_EOF);
+            sox_fail(sox_mixer_effect.usage);
+            return (SOX_EOF);
         }
         else {
             int commas;
@@ -94,8 +94,8 @@ static int getopts(eff_t effp, int n, char **argv)
                 if (*s == ',') {
                     ++commas;
                     if (commas >= 16) {
-                        st_fail("mixer can only take up to 16 pan values");
-                        return (ST_EOF);
+                        sox_fail("mixer can only take up to 16 pan values");
+                        return (SOX_EOF);
                     }
                     pans[commas] = atof(s+1);
                 }
@@ -107,11 +107,11 @@ static int getopts(eff_t effp, int n, char **argv)
         mixer->mix = MIX_CENTER;
     }
     else {
-        st_fail(st_mixer_effect.usage);
-        return ST_EOF;
+        sox_fail(sox_mixer_effect.usage);
+        return SOX_EOF;
     }
 
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
 /*
@@ -192,22 +192,22 @@ static int start(eff_t effp)
      ichan = effp->ininfo.channels;
      ochan = effp->outinfo.channels;
      if (ochan == -1) {
-         st_fail("Output must have known number of channels to use mixer effect");
-         return(ST_EOF);
+         sox_fail("Output must have known number of channels to use mixer effect");
+         return(SOX_EOF);
      }
 
      if ((ichan != 1 && ichan != 2 && ichan != 4)
              ||  (ochan != 1 && ochan != 2 && ochan != 4)) {
-         st_fail("Can't average %d channels into %d channels",
+         sox_fail("Can't average %d channels into %d channels",
                  ichan, ochan);
-         return (ST_EOF);
+         return (SOX_EOF);
      }
 
      /* Handle the special-case flags */
      switch (mixer->mix) {
          case MIX_CENTER:
              if (ichan == ochan)
-               return ST_EFF_NULL;
+               return SOX_EFF_NULL;
              break;             /* Code below will handle this case */
          case MIX_LEFT:
              if (ichan == 2 && ochan == 1)
@@ -226,9 +226,9 @@ static int start(eff_t effp)
              }
              else
              {
-                 st_fail("Can't average %d channels into %d channels",
+                 sox_fail("Can't average %d channels into %d channels",
                          ichan, ochan);
-                 return ST_EOF;
+                 return SOX_EOF;
              }
              break;
          case MIX_RIGHT:
@@ -248,9 +248,9 @@ static int start(eff_t effp)
              }
              else
              {
-                 st_fail("Can't average %d channels into %d channels",
+                 sox_fail("Can't average %d channels into %d channels",
                          ichan, ochan);
-                 return ST_EOF;
+                 return SOX_EOF;
              }
              break;
          case MIX_FRONT:
@@ -262,8 +262,8 @@ static int start(eff_t effp)
              }
              else
              {
-                 st_fail("-f option requires 4 channels input and 2 channel output");
-                 return ST_EOF;
+                 sox_fail("-f option requires 4 channels input and 2 channel output");
+                 return SOX_EOF;
              }
              break;
          case MIX_BACK:
@@ -275,8 +275,8 @@ static int start(eff_t effp)
              }
              else
              {
-                 st_fail("-b option requires 4 channels input and 2 channel output");
-                 return ST_EOF;
+                 sox_fail("-b option requires 4 channels input and 2 channel output");
+                 return SOX_EOF;
              }
              break;
          case MIX_LEFT_FRONT:
@@ -296,8 +296,8 @@ static int start(eff_t effp)
              }
              else
              {
-                 st_fail("-1 option requires 4 channels input and 1 channel output");
-                 return ST_EOF;
+                 sox_fail("-1 option requires 4 channels input and 1 channel output");
+                 return SOX_EOF;
              }
              break;
          case MIX_RIGHT_FRONT:
@@ -317,8 +317,8 @@ static int start(eff_t effp)
              }
              else
              {
-                 st_fail("-2 option requires 4 channels input and 1 channel output");
-                 return ST_EOF;
+                 sox_fail("-2 option requires 4 channels input and 1 channel output");
+                 return SOX_EOF;
              }
              break;
          case MIX_LEFT_BACK:
@@ -332,8 +332,8 @@ static int start(eff_t effp)
              }
              else
              {
-                 st_fail("-3 option requires 4 channels input and 1 channel output");
-                 return ST_EOF;
+                 sox_fail("-3 option requires 4 channels input and 1 channel output");
+                 return SOX_EOF;
              }
          case MIX_RIGHT_BACK:
              if (ichan == 4 && ochan == 1)
@@ -346,15 +346,15 @@ static int start(eff_t effp)
              }
              else
              {
-                 st_fail("-4 option requires 4 channels input and 1 channel output");
-                 return ST_EOF;
+                 sox_fail("-4 option requires 4 channels input and 1 channel output");
+                 return SOX_EOF;
              }
 
          case MIX_SPECIFIED:
              break;
          default:
-             st_fail("Unknown mix option in average effect");
-             return ST_EOF;
+             sox_fail("Unknown mix option in average effect");
+             return SOX_EOF;
      }
 
      /* If number of pans is 4 or less then its a shorthand
@@ -411,8 +411,8 @@ static int start(eff_t effp)
              mixer->sources[3][1] = 0.5;
          }
          else {
-             st_fail("You must specify at least one mix level when using mixer with an unusual number of channels.");
-             return(ST_EOF);
+             sox_fail("You must specify at least one mix level when using mixer with an unusual number of channels.");
+             return(SOX_EOF);
          }
      }
      else if (mixer->num_pans == 1) {
@@ -439,8 +439,8 @@ static int start(eff_t effp)
          }
          else
          {
-             st_fail("Invalid options specified to mixer while not mixing");
-             return ST_EOF;
+             sox_fail("Invalid options specified to mixer while not mixing");
+             return SOX_EOF;
          }
      }
      else if (mixer->num_pans == 2) {
@@ -466,8 +466,8 @@ static int start(eff_t effp)
          }
          else
          {
-             st_fail("Invalid options specified to mixer for this channel combination");
-             return ST_EOF;
+             sox_fail("Invalid options specified to mixer for this channel combination");
+             return SOX_EOF;
          }
      }
      else if (mixer->num_pans == 4) {
@@ -488,28 +488,28 @@ static int start(eff_t effp)
          }
          else
          {
-             st_fail("Invalid options specified to mixer for this channel combination");
-             return ST_EOF;
+             sox_fail("Invalid options specified to mixer for this channel combination");
+             return SOX_EOF;
          }
      }
      else
      {
-         st_fail("Invalid options specified to mixer while not mixing");
-         return ST_EOF;
+         sox_fail("Invalid options specified to mixer while not mixing");
+         return SOX_EOF;
      }
 
 #if 0  /* TODO: test the following: */
      if (effp->ininfo.channels != effp->outinfo.channels)
-       return ST_SUCCESS;
+       return SOX_SUCCESS;
 
      for (i = 0; i < (int)effp->ininfo.channels; ++i)
        for (j = 0; j < (int)effp->outinfo.channels; ++j)
          if (avg->sources[i][j] != (i == j))
-           return ST_SUCCESS;
+           return SOX_SUCCESS;
 
-     return ST_EFF_NULL;
+     return SOX_EFF_NULL;
 #else
-     return ST_SUCCESS;
+     return SOX_SUCCESS;
 #endif
 }
 
@@ -517,11 +517,11 @@ static int start(eff_t effp)
  * Process either isamp or osamp samples, whichever is smaller.
  */
 
-static int flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                st_size_t *isamp, st_size_t *osamp)
+static int flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                sox_size_t *isamp, sox_size_t *osamp)
 {
     mixer_t mixer = (mixer_t) effp->priv;
-    st_size_t len, done;
+    sox_size_t len, done;
     int ichan, ochan;
     int i, j;
     double samp;
@@ -536,43 +536,43 @@ static int flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
             samp = 0.0;
             for (i = 0; i < ichan; i++)
                 samp += ibuf[i] * mixer->sources[i][j];
-            ST_SAMPLE_CLIP_COUNT(samp, effp->clips);
+            SOX_SAMPLE_CLIP_COUNT(samp, effp->clips);
             obuf[j] = samp;
         }
     }
     *isamp = len * ichan;
     *osamp = len * ochan;
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
-st_effect_t const * st_mixer_effect_fn(void)
+sox_effect_t const * sox_mixer_effect_fn(void)
 {
-  static st_effect_t driver = {
+  static sox_effect_t driver = {
     "mixer",
     "Usage: mixer [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
-    ST_EFF_MCHAN | ST_EFF_CHAN,
+    SOX_EFF_MCHAN | SOX_EFF_CHAN,
     getopts, start, flow, 0, 0, 0
   };
   return &driver;
 }
 
-st_effect_t const * st_avg_effect_fn(void)
+sox_effect_t const * sox_avg_effect_fn(void)
 {
-  static st_effect_t driver = {
+  static sox_effect_t driver = {
     "avg",
     "Usage: avg [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
-    ST_EFF_MCHAN | ST_EFF_CHAN | ST_EFF_DEPRECATED,
+    SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_DEPRECATED,
     getopts, start, flow, 0, 0, 0
   };
   return &driver;
 }
 
-st_effect_t const * st_pick_effect_fn(void)
+sox_effect_t const * sox_pick_effect_fn(void)
 {
-  static st_effect_t driver = {
+  static sox_effect_t driver = {
     "pick",
     "Usage: pick [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
-    ST_EFF_MCHAN | ST_EFF_CHAN | ST_EFF_DEPRECATED,
+    SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_DEPRECATED,
     getopts, start, flow, 0, 0, 0
   };
   return &driver;

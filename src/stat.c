@@ -15,7 +15,7 @@
 
 #include <math.h>
 #include <string.h>
-#include "st_i.h"
+#include "sox_i.h"
 #include "FFT.h"
 
 /* Private data for stat effect */
@@ -27,7 +27,7 @@ typedef struct statstuff {
   double dsum1, dsum2;          /* deltas */
   double scale;                 /* scale-factor */
   double last;                  /* previous sample */
-  st_size_t read;               /* samples processed */
+  sox_size_t read;               /* samples processed */
   int volume;
   int srms;
   int fft;
@@ -42,11 +42,11 @@ typedef struct statstuff {
 /*
  * Process options
  */
-static int st_stat_getopts(eff_t effp, int n, char **argv)
+static int sox_stat_getopts(eff_t effp, int n, char **argv)
 {
   stat_t stat = (stat_t) effp->priv;
 
-  stat->scale = ST_SAMPLE_MAX;
+  stat->scale = SOX_SAMPLE_MAX;
   stat->volume = 0;
   stat->srms = 0;
   stat->fft = 0;
@@ -56,13 +56,13 @@ static int st_stat_getopts(eff_t effp, int n, char **argv)
       stat->volume = 1;
     else if (!(strcmp(*argv, "-s"))) {
       if (n <= 1) {
-        st_fail("-s option: invalid argument");
-        return ST_EOF;
+        sox_fail("-s option: invalid argument");
+        return SOX_EOF;
       }
       n--, argv++;              /* Move to next argument. */
       if (!sscanf(*argv, "%lf", &stat->scale)) {
-        st_fail("-s option: invalid argument");
-        return ST_EOF;
+        sox_fail("-s option: invalid argument");
+        return SOX_EOF;
       }
     } else if (!(strcmp(*argv, "-rms")))
       stat->srms = 1;
@@ -71,18 +71,18 @@ static int st_stat_getopts(eff_t effp, int n, char **argv)
     else if (!(strcmp(*argv, "-d")))
       stat->volume = 2;
     else {
-      st_fail("Summary effect: unknown option");
-      return ST_EOF;
+      sox_fail("Summary effect: unknown option");
+      return SOX_EOF;
     }
   }
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /*
  * Prepare processing.
  */
-static int st_stat_start(eff_t effp)
+static int sox_stat_start(eff_t effp)
 {
   stat_t stat = (stat_t) effp->priv;
   int i;
@@ -109,7 +109,7 @@ static int st_stat_start(eff_t effp)
     stat->re_out = (float *)xmalloc(sizeof(float) * (stat->fft_size / 2));
   }
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /*
@@ -129,22 +129,22 @@ static void print_power_spectrum(unsigned samples, float rate, float *re_in, flo
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int st_stat_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
-                        st_size_t *isamp, st_size_t *osamp)
+static int sox_stat_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
+                        sox_size_t *isamp, sox_size_t *osamp)
 {
   stat_t stat = (stat_t) effp->priv;
   int done, x, len = min(*isamp, *osamp);
   short count = 0;
 
   if (len == 0)
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 
   if (stat->read == 0)          /* 1st sample */
     stat->min = stat->max = stat->mid = stat->last = (*ibuf)/stat->scale;
 
   if (stat->fft) {
     for (x = 0; x < len; x++) {
-      stat->re_in[stat->fft_offset++] = ST_SAMPLE_TO_FLOAT_DWORD(ibuf[x], effp->clips);
+      stat->re_in[stat->fft_offset++] = SOX_SAMPLE_TO_FLOAT_DWORD(ibuf[x], effp->clips);
 
       if (stat->fft_offset >= stat->fft_size) {
         stat->fft_offset = 0;
@@ -195,13 +195,13 @@ static int st_stat_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
   *isamp = *osamp = len;
   /* Process all samples */
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /*
  * Process tail of input samples.
  */
-static int st_stat_drain(eff_t effp, st_sample_t *obuf UNUSED, st_size_t *osamp)
+static int sox_stat_drain(eff_t effp, sox_sample_t *obuf UNUSED, sox_size_t *osamp)
 {
   stat_t stat = (stat_t) effp->priv;
 
@@ -219,14 +219,14 @@ static int st_stat_drain(eff_t effp, st_sample_t *obuf UNUSED, st_size_t *osamp)
   }
 
   *osamp = 0;
-  return ST_EOF;
+  return SOX_EOF;
 }
 
 /*
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int st_stat_stop(eff_t effp)
+static int sox_stat_stop(eff_t effp)
 {
   stat_t stat = (stat_t) effp->priv;
   double amp, scale, rms = 0, freq;
@@ -259,8 +259,8 @@ static int st_stat_stop(eff_t effp)
 
   /* Just print the volume adjustment */
   if (stat->volume == 1 && amp > 0) {
-    fprintf(stderr, "%.3f\n", ST_SAMPLE_MAX/(amp*scale));
-    return ST_SUCCESS;
+    fprintf(stderr, "%.3f\n", SOX_SAMPLE_MAX/(amp*scale));
+    return SOX_SUCCESS;
   }
   if (stat->volume == 2)
     fprintf(stderr, "\n\n");
@@ -286,7 +286,7 @@ static int st_stat_stop(eff_t effp)
   fprintf(stderr, "Rough   frequency: %12d\n", (int)freq);
 
   if (amp>0)
-    fprintf(stderr, "Volume adjustment: %12.3f\n", ST_SAMPLE_MAX/(amp*scale));
+    fprintf(stderr, "Volume adjustment: %12.3f\n", SOX_SAMPLE_MAX/(amp*scale));
 
   if (stat->bin[2] == 0 && stat->bin[3] == 0)
     fprintf(stderr, "\nProbably text, not sound\n");
@@ -295,14 +295,14 @@ static int st_stat_stop(eff_t effp)
     x = (float)(stat->bin[0] + stat->bin[3]) / (float)(stat->bin[1] + stat->bin[2]);
 
     if (x >= 3.0) {             /* use opposite encoding */
-      if (effp->ininfo.encoding == ST_ENCODING_UNSIGNED)
+      if (effp->ininfo.encoding == SOX_ENCODING_UNSIGNED)
         fprintf(stderr,"\nTry: -t raw -b -s \n");
       else
         fprintf(stderr,"\nTry: -t raw -b -u \n");
     } else if (x <= 1.0 / 3.0)
       ;                         /* correctly decoded */
     else if (x >= 0.5 && x <= 2.0) { /* use ULAW */
-      if (effp->ininfo.encoding == ST_ENCODING_ULAW)
+      if (effp->ininfo.encoding == SOX_ENCODING_ULAW)
         fprintf(stderr,"\nTry: -t raw -b -u \n");
       else
         fprintf(stderr,"\nTry: -t raw -b -U \n");
@@ -314,23 +314,23 @@ static int st_stat_stop(eff_t effp)
   free(stat->re_in);
   free(stat->re_out);
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 
 }
 
-static st_effect_t st_stat_effect = {
+static sox_effect_t sox_stat_effect = {
   "stat",
   "Usage: [ -s N ] [ -rms ] [-freq] [ -v ] [ -d ]",
-  ST_EFF_MCHAN | ST_EFF_REPORT,
-  st_stat_getopts,
-  st_stat_start,
-  st_stat_flow,
-  st_stat_drain,
-  st_stat_stop,
-  st_effect_nothing
+  SOX_EFF_MCHAN | SOX_EFF_REPORT,
+  sox_stat_getopts,
+  sox_stat_start,
+  sox_stat_flow,
+  sox_stat_drain,
+  sox_stat_stop,
+  sox_effect_nothing
 };
 
-const st_effect_t *st_stat_effect_fn(void)
+const sox_effect_t *sox_stat_effect_fn(void)
 {
-  return &st_stat_effect;
+  return &sox_stat_effect;
 }

@@ -90,7 +90,7 @@ typedef struct butterworth_crossover {
   double bandwidth;
 } *butterworth_crossover_t;
 
-static int lowpass_setup (butterworth_crossover_t butterworth, double frequency, st_rate_t rate, st_size_t nchan) {
+static int lowpass_setup (butterworth_crossover_t butterworth, double frequency, sox_rate_t rate, sox_size_t nchan) {
   double c;
 
   butterworth->xy_low = (struct xy *)xcalloc(nchan, sizeof(struct xy));
@@ -120,17 +120,17 @@ static int lowpass_setup (butterworth_crossover_t butterworth, double frequency,
   butterworth->b_high[0] = 2 * (c * c - 1.0) * butterworth->a_high[0];
   butterworth->b_high[1] = (1.0 - sqrt(2.0) * c + c * c) * butterworth->a_high[0];
 
-  return (ST_SUCCESS);
+  return (SOX_SUCCESS);
 }
 
-static int lowpass_flow(eff_t effp, butterworth_crossover_t butterworth, st_size_t nChan, st_sample_t *ibuf, st_sample_t *lowbuf, st_sample_t *highbuf,
-                         st_size_t len) {
-  st_size_t chan;
+static int lowpass_flow(eff_t effp, butterworth_crossover_t butterworth, sox_size_t nChan, sox_sample_t *ibuf, sox_sample_t *lowbuf, sox_sample_t *highbuf,
+                         sox_size_t len) {
+  sox_size_t chan;
   double in, out;
 
-  st_size_t done;
+  sox_size_t done;
 
-  st_sample_t *ibufptr, *lowbufptr, *highbufptr;
+  sox_sample_t *ibufptr, *lowbufptr, *highbufptr;
 
   for (chan=0;chan<nChan;++chan) {
     ibufptr = ibuf+chan;
@@ -159,7 +159,7 @@ static int lowpass_flow(eff_t effp, butterworth_crossover_t butterworth, st_size
       butterworth->xy_low[chan].y [1] = butterworth->xy_low[chan].y [0];
       butterworth->xy_low[chan].y [0] = out;
 
-      ST_SAMPLE_CLIP_COUNT(out, effp->clips);
+      SOX_SAMPLE_CLIP_COUNT(out, effp->clips);
 
       *lowbufptr = out;
 
@@ -175,7 +175,7 @@ static int lowpass_flow(eff_t effp, butterworth_crossover_t butterworth, st_size
       butterworth->xy_high[chan].y [1] = butterworth->xy_high[chan].y [0];
       butterworth->xy_high[chan].y [0] = out;
 
-      ST_SAMPLE_CLIP_COUNT(out, effp->clips);
+      SOX_SAMPLE_CLIP_COUNT(out, effp->clips);
 
       /* don't forget polarity reversal of high pass! */
 
@@ -186,13 +186,13 @@ static int lowpass_flow(eff_t effp, butterworth_crossover_t butterworth, st_size
     }
   }
 
-  return (ST_SUCCESS);
+  return (SOX_SUCCESS);
 }
 
 typedef struct comp_band {
-  st_compandt_t transfer_fn;
+  sox_compandt_t transfer_fn;
 
-  st_size_t expectedChannels; /* Also flags that channels aren't to be treated
+  sox_size_t expectedChannels; /* Also flags that channels aren't to be treated
                            individually when = 1 and input not mono */
   double *attackRate;   /* An array of attack rates */
   double *decayRate;    /*    ... and of decay rates */
@@ -200,17 +200,17 @@ typedef struct comp_band {
   double delay;         /* Delay to apply before companding */
   double topfreq;       /* upper bound crossover frequency */
   struct butterworth_crossover filter;
-  st_sample_t *delay_buf;   /* Old samples, used for delay processing */
-  st_size_t delay_size;    /* lookahead for this band (in samples) - function of delay, above */
-  st_ssize_t delay_buf_ptr; /* Index into delay_buf */
-  st_size_t delay_buf_cnt; /* No. of active entries in delay_buf */
+  sox_sample_t *delay_buf;   /* Old samples, used for delay processing */
+  sox_size_t delay_size;    /* lookahead for this band (in samples) - function of delay, above */
+  sox_ssize_t delay_buf_ptr; /* Index into delay_buf */
+  sox_size_t delay_buf_cnt; /* No. of active entries in delay_buf */
 } *comp_band_t;
 
 typedef struct {
-  st_size_t nBands;
-  st_sample_t *band_buf1, *band_buf2, *band_buf3;
-  st_size_t band_buf_len;
-  st_size_t delay_buf_size;/* Size of delay_buf in samples */
+  sox_size_t nBands;
+  sox_sample_t *band_buf1, *band_buf2, *band_buf3;
+  sox_size_t band_buf_len;
+  sox_size_t delay_buf_size;/* Size of delay_buf in samples */
   struct comp_band *bands;
 } *compand_t;
 
@@ -220,10 +220,10 @@ typedef struct {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-static int st_mcompand_getopts_1(comp_band_t l, st_size_t n, char **argv)
+static int sox_mcompand_getopts_1(comp_band_t l, sox_size_t n, char **argv)
 {
       char *s;
-      st_size_t rates, i, commas;
+      sox_size_t rates, i, commas;
 
       /* Start by checking the attack and decay rates */
 
@@ -233,8 +233,8 @@ static int st_mcompand_getopts_1(comp_band_t l, st_size_t n, char **argv)
       if (commas % 2 == 0) /* There must be an even number of
                               attack/decay parameters */
       {
-        st_fail("compander: Odd number of attack & decay rate parameters");
-        return (ST_EOF);
+        sox_fail("compander: Odd number of attack & decay rate parameters");
+        return (SOX_EOF);
       }
 
       rates = 1 + commas/2;
@@ -254,8 +254,8 @@ static int st_mcompand_getopts_1(comp_band_t l, st_size_t n, char **argv)
         ++i;
       } while (s != NULL);
 
-      if (!st_compandt_parse(&l->transfer_fn, argv[1], n>2 ? argv[2] : 0))
-        return ST_EOF;
+      if (!sox_compandt_parse(&l->transfer_fn, argv[1], n>2 ? argv[2] : 0))
+        return SOX_EOF;
 
       /* Set the initial "volume" to be attibuted to the input channels.
          Unless specified, choose 1.0 (maximum) otherwise clipping will
@@ -268,10 +268,10 @@ static int st_mcompand_getopts_1(comp_band_t l, st_size_t n, char **argv)
         if (n >= 5) l->delay = atof(argv[4]);
         else l->delay = 0.0;
       }
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
-static int parse_subarg(char *s, char **subargv, st_size_t *subargc) {
+static int parse_subarg(char *s, char **subargv, sox_size_t *subargc) {
   char **ap;
   char *s_p;
 
@@ -291,19 +291,19 @@ static int parse_subarg(char *s, char **subargv, st_size_t *subargc) {
 
   if (*subargc < 2 || *subargc > 5)
     {
-      st_fail("Wrong number of parameters for the compander effect within mcompand; usage:\n"
+      sox_fail("Wrong number of parameters for the compander effect within mcompand; usage:\n"
   "\tattack1,decay1{,attack2,decay2} [soft-knee-dB:]in-dB1[,out-dB1]{,in-dB2,out-dB2} [gain [initial-volume-dB [delay]]]\n"
   "\twhere {} means optional and repeatable and [] means optional.\n"
   "\tdB values are floating point or -inf'; times are in seconds.");
-      return (ST_EOF);
+      return (SOX_EOF);
     } else
-      return ST_SUCCESS;
+      return SOX_SUCCESS;
 }
 
-static int st_mcompand_getopts(eff_t effp, int n, char **argv) 
+static int sox_mcompand_getopts(eff_t effp, int n, char **argv) 
 {
   char *subargv[6], *cp;
-  st_size_t subargc, i, len;
+  sox_size_t subargc, i, len;
 
   compand_t c = (compand_t) effp->priv;
 
@@ -312,9 +312,9 @@ static int st_mcompand_getopts(eff_t effp, int n, char **argv)
 
   /* how many bands? */
   if (! (n&1)) {
-    st_fail("mcompand accepts only an odd number of arguments:\n"
+    sox_fail("mcompand accepts only an odd number of arguments:\n"
             "  mcompand quoted_compand_args [xover_freq quoted_compand_args [...]");
-    return ST_EOF;
+    return SOX_EOF;
   }
   c->nBands = (n+1)>>1;
 
@@ -322,38 +322,38 @@ static int st_mcompand_getopts(eff_t effp, int n, char **argv)
 
   for (i=0;i<c->nBands;++i) {
     len = strlen(argv[i<<1]);
-    if (parse_subarg(argv[i<<1],subargv,&subargc) != ST_SUCCESS)
-      return ST_EOF;
-    if (st_mcompand_getopts_1(&c->bands[i], subargc, &subargv[0]) != ST_SUCCESS)
-      return ST_EOF;
+    if (parse_subarg(argv[i<<1],subargv,&subargc) != SOX_SUCCESS)
+      return SOX_EOF;
+    if (sox_mcompand_getopts_1(&c->bands[i], subargc, &subargv[0]) != SOX_SUCCESS)
+      return SOX_EOF;
     if (i == (c->nBands-1))
       c->bands[i].topfreq = 0;
     else {
       c->bands[i].topfreq = strtod(argv[(i<<1)+1],&cp);
       if (*cp) {
-        st_fail("bad frequency in args to mcompand");
-        return ST_EOF;
+        sox_fail("bad frequency in args to mcompand");
+        return SOX_EOF;
       }
       if ((i>0) && (c->bands[i].topfreq < c->bands[i-1].topfreq)) {
-        st_fail("mcompand crossover frequencies must be in ascending order.");
-        return ST_EOF;
+        sox_fail("mcompand crossover frequencies must be in ascending order.");
+        return SOX_EOF;
       }
     }
   }
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /*
  * Prepare processing.
  * Do all initializations.
  */
-static int st_mcompand_start(eff_t effp)
+static int sox_mcompand_start(eff_t effp)
 {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
-  st_size_t i;
-  st_size_t band;
+  sox_size_t i;
+  sox_size_t band;
   
   for (band=0;band<c->nBands;++band) {
     l = &c->bands[band];
@@ -381,14 +381,14 @@ static int st_mcompand_start(eff_t effp)
 
     /* Allocate the delay buffer */
     if (c->delay_buf_size > 0)
-      l->delay_buf = (st_sample_t *)xcalloc(sizeof(long), c->delay_buf_size);
+      l->delay_buf = (sox_sample_t *)xcalloc(sizeof(long), c->delay_buf_size);
     l->delay_buf_ptr = 0;
     l->delay_buf_cnt = 0;
 
     if (l->topfreq != 0)
       lowpass_setup(&l->filter, l->topfreq, effp->outinfo.rate, effp->outinfo.channels);
   }
-  return (ST_SUCCESS);
+  return (SOX_SUCCESS);
 }
 
 /*
@@ -396,9 +396,9 @@ static int st_mcompand_start(eff_t effp)
  * value, the attack rate and decay rate
  */
 
-static void doVolume(double *v, double samp, comp_band_t l, st_size_t chan)
+static void doVolume(double *v, double samp, comp_band_t l, sox_size_t chan)
 {
-  double s = samp/(~((st_sample_t)1<<31));
+  double s = samp/(~((sox_sample_t)1<<31));
   double delta = s - *v;
 
   if (delta > 0.0) /* increase volume according to attack rate */
@@ -407,9 +407,9 @@ static void doVolume(double *v, double samp, comp_band_t l, st_size_t chan)
     *v += delta * l->decayRate[chan];
 }
 
-static int st_mcompand_flow_1(eff_t effp, compand_t c, comp_band_t l, const st_sample_t *ibuf, st_sample_t *obuf, st_size_t len, st_size_t filechans)
+static int sox_mcompand_flow_1(eff_t effp, compand_t c, comp_band_t l, const sox_sample_t *ibuf, sox_sample_t *obuf, sox_size_t len, sox_size_t filechans)
 {
-  st_size_t done, chan;
+  sox_size_t done, chan;
 
   for (done = 0; done < len; ibuf += filechans) {
 
@@ -433,12 +433,12 @@ static int st_mcompand_flow_1(eff_t effp, compand_t c, comp_band_t l, const st_s
     for (chan = 0; chan < filechans; ++chan) {
       int ch = l->expectedChannels > 1 ? chan : 0;
       double level_in_lin = l->volume[ch];
-      double level_out_lin = st_compandt(&l->transfer_fn, level_in_lin);
+      double level_out_lin = sox_compandt(&l->transfer_fn, level_in_lin);
       double checkbuf;
 
       if (c->delay_buf_size <= 0) {
         checkbuf = ibuf[chan] * level_out_lin;
-        ST_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
+        SOX_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
         obuf[done++] = checkbuf;
 
       } else {
@@ -457,7 +457,7 @@ static int st_mcompand_flow_1(eff_t effp, compand_t c, comp_band_t l, const st_s
 
         if (l->delay_buf_cnt >= l->delay_size)
           checkbuf = l->delay_buf[(l->delay_buf_ptr + c->delay_buf_size - l->delay_size)%c->delay_buf_size] * level_out_lin;
-          ST_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
+          SOX_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
           l->delay_buf[(l->delay_buf_ptr + c->delay_buf_size - l->delay_size)%c->delay_buf_size] = checkbuf;
         if (l->delay_buf_cnt >= c->delay_buf_size)
           obuf[done++] = l->delay_buf[l->delay_buf_ptr];
@@ -469,33 +469,33 @@ static int st_mcompand_flow_1(eff_t effp, compand_t c, comp_band_t l, const st_s
     }
   }
 
-  return (ST_SUCCESS);
+  return (SOX_SUCCESS);
 }
 
 /*
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int st_mcompand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                     st_size_t *isamp, st_size_t *osamp) {
+static int sox_mcompand_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                     sox_size_t *isamp, sox_size_t *osamp) {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
-  st_size_t len = min(*isamp, *osamp);
-  st_size_t band, i;
-  st_sample_t *abuf, *bbuf, *cbuf, *oldabuf, *ibuf_copy;
+  sox_size_t len = min(*isamp, *osamp);
+  sox_size_t band, i;
+  sox_sample_t *abuf, *bbuf, *cbuf, *oldabuf, *ibuf_copy;
   double out;
 
   if (c->band_buf_len < len) {
-    c->band_buf1 = (st_sample_t *)xrealloc(c->band_buf1,len*sizeof(st_sample_t));
-    c->band_buf2 = (st_sample_t *)xrealloc(c->band_buf2,len*sizeof(st_sample_t));
-    c->band_buf3 = (st_sample_t *)xrealloc(c->band_buf3,len*sizeof(st_sample_t));
+    c->band_buf1 = (sox_sample_t *)xrealloc(c->band_buf1,len*sizeof(sox_sample_t));
+    c->band_buf2 = (sox_sample_t *)xrealloc(c->band_buf2,len*sizeof(sox_sample_t));
+    c->band_buf3 = (sox_sample_t *)xrealloc(c->band_buf3,len*sizeof(sox_sample_t));
     c->band_buf_len = len;
   }
 
-  ibuf_copy = (st_sample_t *)xmalloc(*isamp * sizeof(st_sample_t));
-  memcpy(ibuf_copy, ibuf, *isamp * sizeof(st_sample_t));
+  ibuf_copy = (sox_sample_t *)xmalloc(*isamp * sizeof(sox_sample_t));
+  memcpy(ibuf_copy, ibuf, *isamp * sizeof(sox_sample_t));
 
-  /* split ibuf into bands using butterworths, pipe each band through st_mcompand_flow_1, then add back together and write to obuf */
+  /* split ibuf into bands using butterworths, pipe each band through sox_mcompand_flow_1, then add back together and write to obuf */
 
   memset(obuf,0,len * sizeof *obuf);
   for (band=0,abuf=ibuf_copy,bbuf=c->band_buf2,cbuf=c->band_buf1;band<c->nBands;++band) {
@@ -509,11 +509,11 @@ static int st_mcompand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *ob
     }
     if (abuf == ibuf_copy)
       abuf = c->band_buf3;
-    (void)st_mcompand_flow_1(effp, c,l,bbuf,abuf,len,effp->outinfo.channels);
+    (void)sox_mcompand_flow_1(effp, c,l,bbuf,abuf,len,effp->outinfo.channels);
     for (i=0;i<len;++i)
     {
       out = obuf[i] + abuf[i];
-      ST_SAMPLE_CLIP_COUNT(out, effp->clips);
+      SOX_SAMPLE_CLIP_COUNT(out, effp->clips);
       obuf[i] = out;
     }
     oldabuf = abuf;
@@ -525,12 +525,12 @@ static int st_mcompand_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *ob
 
   free(ibuf_copy);
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
-static int st_mcompand_drain_1(eff_t effp, compand_t c, comp_band_t l, st_sample_t *obuf, st_size_t maxdrain)
+static int sox_mcompand_drain_1(eff_t effp, compand_t c, comp_band_t l, sox_sample_t *obuf, sox_size_t maxdrain)
 {
-  st_size_t done;
+  sox_size_t done;
   double out;
 
   /*
@@ -538,7 +538,7 @@ static int st_mcompand_drain_1(eff_t effp, compand_t c, comp_band_t l, st_sample
    */
   for (done = 0;  done < maxdrain  &&  l->delay_buf_cnt > 0;  done++) {
     out = obuf[done] + l->delay_buf[l->delay_buf_ptr++];
-    ST_SAMPLE_CLIP_COUNT(out, effp->clips);
+    SOX_SAMPLE_CLIP_COUNT(out, effp->clips);
     obuf[done] = out;
     l->delay_buf_ptr %= c->delay_buf_size;
     l->delay_buf_cnt--;
@@ -552,16 +552,16 @@ static int st_mcompand_drain_1(eff_t effp, compand_t c, comp_band_t l, st_sample
 /*
  * Drain out compander delay lines. 
  */
-static int st_mcompand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int sox_mcompand_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-  st_size_t band, drained, mostdrained = 0;
+  sox_size_t band, drained, mostdrained = 0;
   compand_t c = (compand_t)effp->priv;
   comp_band_t l;
 
   memset(obuf,0,*osamp * sizeof *obuf);
   for (band=0;band<c->nBands;++band) {
     l = &c->bands[band];
-    drained = st_mcompand_drain_1(effp, c,l,obuf,*osamp);
+    drained = sox_mcompand_drain_1(effp, c,l,obuf,*osamp);
     if (drained > mostdrained)
       mostdrained = drained;
   }
@@ -569,19 +569,19 @@ static int st_mcompand_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
   *osamp = mostdrained;
 
   if (mostdrained)
-      return ST_SUCCESS;
+      return SOX_SUCCESS;
   else
-      return ST_EOF;
+      return SOX_EOF;
 }
 
 /*
  * Clean up compander effect.
  */
-static int st_mcompand_stop(eff_t effp)
+static int sox_mcompand_stop(eff_t effp)
 {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
-  st_size_t band;
+  sox_size_t band;
 
   free(c->band_buf1);
   c->band_buf1 = NULL;
@@ -599,18 +599,18 @@ static int st_mcompand_stop(eff_t effp)
     }
   }
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
-static int st_mcompand_delete(eff_t effp)
+static int sox_mcompand_delete(eff_t effp)
 {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
-  st_size_t band;
+  sox_size_t band;
 
   for (band = 0; band < c->nBands; band++) {
     l = &c->bands[band];
-    st_compandt_kill(&l->transfer_fn);
+    sox_compandt_kill(&l->transfer_fn);
     free(l->decayRate);
     free(l->attackRate);
     free(l->volume);
@@ -618,10 +618,10 @@ static int st_mcompand_delete(eff_t effp)
   free(c->bands);
   c->bands = NULL;
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
-static st_effect_t st_mcompand_effect = {
+static sox_effect_t sox_mcompand_effect = {
   "mcompand",
   "Usage: mcompand quoted_compand_args [crossover_frequency quoted_compand_args [...]]\n"
   "\n"
@@ -630,16 +630,16 @@ static st_effect_t st_mcompand_effect = {
   "  attack1,decay1[,attack2,decay2...]\n"
   "                 in-dB1,out-dB1[,in-dB2,out-dB2...]\n"
   "                [ gain [ initial-volume [ delay ] ] ]\n",
-  ST_EFF_MCHAN,
-  st_mcompand_getopts,
-  st_mcompand_start,
-  st_mcompand_flow,
-  st_mcompand_drain,
-  st_mcompand_stop,
-  st_mcompand_delete
+  SOX_EFF_MCHAN,
+  sox_mcompand_getopts,
+  sox_mcompand_start,
+  sox_mcompand_flow,
+  sox_mcompand_drain,
+  sox_mcompand_stop,
+  sox_mcompand_delete
 };
 
-const st_effect_t *st_mcompand_effect_fn(void)
+const sox_effect_t *sox_mcompand_effect_fn(void)
 {
-    return &st_mcompand_effect;
+    return &sox_mcompand_effect;
 }

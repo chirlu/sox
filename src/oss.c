@@ -25,7 +25,7 @@
  *
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 
 #ifdef HAVE_OSS
 
@@ -46,39 +46,39 @@ static int ossdspinit(ft_t ft)
 {
     int sampletype, samplesize, dsp_stereo;
     int tmp, rc;
-    st_fileinfo_t *file = (st_fileinfo_t *)ft->priv;
+    sox_fileinfo_t *file = (sox_fileinfo_t *)ft->priv;
 
     if (ft->signal.rate == 0.0) ft->signal.rate = 8000;
-    if (ft->signal.size == -1) ft->signal.size = ST_SIZE_BYTE;
-    if (ft->signal.size == ST_SIZE_BYTE) {
+    if (ft->signal.size == -1) ft->signal.size = SOX_SIZE_BYTE;
+    if (ft->signal.size == SOX_SIZE_BYTE) {
         sampletype = AFMT_U8;
         samplesize = 8;
-        if (ft->signal.encoding == ST_ENCODING_UNKNOWN)
-            ft->signal.encoding = ST_ENCODING_UNSIGNED;
-        if (ft->signal.encoding != ST_ENCODING_UNSIGNED) {
-            st_report("OSS driver only supports unsigned with bytes");
-            st_report("Forcing to unsigned");
-            ft->signal.encoding = ST_ENCODING_UNSIGNED;
+        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
+            ft->signal.encoding = SOX_ENCODING_UNSIGNED;
+        if (ft->signal.encoding != SOX_ENCODING_UNSIGNED) {
+            sox_report("OSS driver only supports unsigned with bytes");
+            sox_report("Forcing to unsigned");
+            ft->signal.encoding = SOX_ENCODING_UNSIGNED;
         }
     }
-    else if (ft->signal.size == ST_SIZE_16BIT) {
-        sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
+    else if (ft->signal.size == SOX_SIZE_16BIT) {
+        sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
-        if (ft->signal.encoding == ST_ENCODING_UNKNOWN)
-            ft->signal.encoding = ST_ENCODING_SIGN2;
-        if (ft->signal.encoding != ST_ENCODING_SIGN2) {
-            st_report("OSS driver only supports signed with words");
-            st_report("Forcing to signed linear");
-            ft->signal.encoding = ST_ENCODING_SIGN2;
+        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
+            ft->signal.encoding = SOX_ENCODING_SIGN2;
+        if (ft->signal.encoding != SOX_ENCODING_SIGN2) {
+            sox_report("OSS driver only supports signed with words");
+            sox_report("Forcing to signed linear");
+            ft->signal.encoding = SOX_ENCODING_SIGN2;
         }
     }
     else {
-        sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
+        sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
-        ft->signal.size = ST_SIZE_16BIT;
-        ft->signal.encoding = ST_ENCODING_SIGN2;
-        st_report("OSS driver only supports bytes and words");
-        st_report("Forcing to signed linear word");
+        ft->signal.size = SOX_SIZE_16BIT;
+        ft->signal.encoding = SOX_ENCODING_SIGN2;
+        sox_report("OSS driver only supports bytes and words");
+        sox_report("Forcing to signed linear word");
     }
 
     if (ft->signal.channels == 0) ft->signal.channels = 1;
@@ -86,8 +86,8 @@ static int ossdspinit(ft_t ft)
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_RESET, 0) < 0)
     {
-        st_fail_errno(ft,ST_EOF,"Unable to reset OSS driver.  Possibly accessing an invalid file/device");
-        return(ST_EOF);
+        sox_fail_errno(ft,SOX_EOF,"Unable to reset OSS driver.  Possibly accessing an invalid file/device");
+        return(SOX_EOF);
     }
 
     /* Query the supported formats and find the best match
@@ -100,26 +100,26 @@ static int ossdspinit(ft_t ft)
             if (samplesize == 16 && (tmp & (AFMT_S16_LE|AFMT_S16_BE)) == 0)
             {
                 /* Must not like 16-bits, try 8-bits */
-                ft->signal.size = ST_SIZE_BYTE;
-                ft->signal.encoding = ST_ENCODING_UNSIGNED;
-                st_report("OSS driver doesn't like signed words");
-                st_report("Forcing to unsigned bytes");
+                ft->signal.size = SOX_SIZE_BYTE;
+                ft->signal.encoding = SOX_ENCODING_UNSIGNED;
+                sox_report("OSS driver doesn't like signed words");
+                sox_report("Forcing to unsigned bytes");
                 tmp = sampletype = AFMT_U8;
                 samplesize = 8;
             }
             /* is 8-bit supported */
             else if (samplesize == 8 && (tmp & AFMT_U8) == 0)
             {
-                ft->signal.size = ST_SIZE_16BIT;
-                ft->signal.encoding = ST_ENCODING_SIGN2;
-                st_report("OSS driver doesn't like unsigned bytes");
-                st_report("Forcing to signed words");
-                sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
+                ft->signal.size = SOX_SIZE_16BIT;
+                ft->signal.encoding = SOX_ENCODING_SIGN2;
+                sox_report("OSS driver doesn't like unsigned bytes");
+                sox_report("Forcing to signed words");
+                sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
                 samplesize = 16;
             }
             /* determine which 16-bit format to use */
             if (samplesize == 16 && (tmp & sampletype) == 0)
-              sampletype = (ST_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
+              sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
         }
         tmp = sampletype;
         rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SETFMT, &tmp);
@@ -127,12 +127,12 @@ static int ossdspinit(ft_t ft)
     /* Give up and exit */
     if (rc < 0 || tmp != sampletype)
     {
-        st_fail_errno(ft,ST_EOF,"Unable to set the sample size to %d", samplesize);
-        return (ST_EOF);
+        sox_fail_errno(ft,SOX_EOF,"Unable to set the sample size to %d", samplesize);
+        return (SOX_EOF);
     }
 
     if (samplesize == 16)
-      ft->signal.reverse_bytes = ST_IS_BIGENDIAN != (sampletype == AFMT_S16_BE);
+      ft->signal.reverse_bytes = SOX_IS_BIGENDIAN != (sampletype == AFMT_S16_BE);
 
     if (ft->signal.channels == 2) dsp_stereo = 1;
     else dsp_stereo = 0;
@@ -140,13 +140,13 @@ static int ossdspinit(ft_t ft)
     tmp = dsp_stereo;
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_STEREO, &tmp) < 0)
     {
-        st_warn("Couldn't set to %s", dsp_stereo?  "stereo":"mono");
+        sox_warn("Couldn't set to %s", dsp_stereo?  "stereo":"mono");
         dsp_stereo = 0;
     }
 
     if (tmp != dsp_stereo)
     {
-        st_warn("Sound card appears to only support %d channels.  Overriding format", tmp+1);
+        sox_warn("Sound card appears to only support %d channels.  Overriding format", tmp+1);
         ft->signal.channels = tmp + 1;
     }
 
@@ -163,7 +163,7 @@ static int ossdspinit(ft_t ft)
          */
         if ((int)ft->signal.rate - tmp > (tmp * .01) || 
             tmp - (int)ft->signal.rate > (tmp * .01)) {
-            st_warn("Unable to set audio speed to %d (set to %d)",
+            sox_warn("Unable to set audio speed to %d (set to %d)",
                      ft->signal.rate, tmp);
             ft->signal.rate = tmp;
         }
@@ -175,8 +175,8 @@ static int ossdspinit(ft_t ft)
     file->size = 0;
     ioctl (fileno(ft->fp), SNDCTL_DSP_GETBLKSIZE, &file->size);
     if (file->size < 4 || file->size > 65536) {
-            st_fail_errno(ft,ST_EOF,"Invalid audio buffer size %d", file->size);
-            return (ST_EOF);
+            sox_fail_errno(ft,SOX_EOF,"Invalid audio buffer size %d", file->size);
+            return (SOX_EOF);
     }
     file->count = 0;
     file->pos = 0;
@@ -184,13 +184,13 @@ static int ossdspinit(ft_t ft)
     file->buf = (char *)xmalloc(file->size);
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_SYNC, NULL) < 0) {
-        st_fail_errno(ft,ST_EOF,"Unable to sync dsp");
-        return (ST_EOF);
+        sox_fail_errno(ft,SOX_EOF,"Unable to sync dsp");
+        return (SOX_EOF);
     }
 
     /* Change to non-buffered I/O */
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * file->size);
-    return(ST_SUCCESS);
+    return(SOX_SUCCESS);
 }
 
 /*
@@ -200,14 +200,14 @@ static int ossdspinit(ft_t ft)
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int st_ossdspstartread(ft_t ft)
+static int sox_ossdspstartread(ft_t ft)
 {
     int rc;
     rc = ossdspinit(ft);
     return rc;
 }
 
-static int st_ossdspstartwrite(ft_t ft)
+static int sox_ossdspstartwrite(ft_t ft)
 {
     return ossdspinit(ft);
 }
@@ -218,21 +218,21 @@ static const char *ossdspnames[] = {
   NULL
 };
 
-static st_format_t st_ossdsp_format = {
+static sox_format_t sox_ossdsp_format = {
   ossdspnames,
   NULL,
-  ST_FILE_DEVICE,
-  st_ossdspstartread,
-  st_rawread,
-  st_rawstopread,
-  st_ossdspstartwrite,
-  st_rawwrite,
-  st_rawstopwrite,
-  st_format_nothing_seek
+  SOX_FILE_DEVICE,
+  sox_ossdspstartread,
+  sox_rawread,
+  sox_rawstopread,
+  sox_ossdspstartwrite,
+  sox_rawwrite,
+  sox_rawstopwrite,
+  sox_format_nothing_seek
 };
 
-const st_format_t *st_ossdsp_format_fn(void)
+const sox_format_t *sox_ossdsp_format_fn(void)
 {
-    return &st_ossdsp_format;
+    return &sox_ossdsp_format;
 }
 #endif

@@ -57,11 +57,11 @@
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
 #include <math.h>
-#include "st_i.h"
+#include "sox_i.h"
 
-static st_effect_t st_echo_effect;
+static sox_effect_t sox_echo_effect;
 
-#define DELAY_BUFSIZ ( 50 * ST_MAXRATE )
+#define DELAY_BUFSIZ ( 50 * SOX_MAXRATE )
 #define MAX_ECHOS 7     /* 24 bit x ( 1 + MAX_ECHOS ) = */
                         /* 24 bit x 8 = 32 bit !!!      */
 
@@ -72,8 +72,8 @@ typedef struct echostuff {
         double  *delay_buf;
         float   in_gain, out_gain;
         float   delay[MAX_ECHOS], decay[MAX_ECHOS];
-        st_ssize_t samples[MAX_ECHOS], maxsamples;
-        st_size_t fade_out;
+        sox_ssize_t samples[MAX_ECHOS], maxsamples;
+        sox_size_t fade_out;
 } *echo_t;
 
 /* Private data for SKEL file */
@@ -82,7 +82,7 @@ typedef struct echostuff {
 /*
  * Process options
  */
-static int st_echo_getopts(eff_t effp, int n, char **argv) 
+static int sox_echo_getopts(eff_t effp, int n, char **argv) 
 {
         echo_t echo = (echo_t) effp->priv;
         int i;
@@ -91,8 +91,8 @@ static int st_echo_getopts(eff_t effp, int n, char **argv)
 
         if ((n < 4) || (n % 2))
         {
-            st_fail(st_echo_effect.usage);
-            return (ST_EOF);
+            sox_fail(sox_echo_effect.usage);
+            return (SOX_EOF);
         }
 
         i = 0;
@@ -100,20 +100,20 @@ static int st_echo_getopts(eff_t effp, int n, char **argv)
         sscanf(argv[i++], "%f", &echo->out_gain);
         while (i < n) {
                 if ( echo->num_delays >= MAX_ECHOS )
-                        st_fail("echo: to many delays, use less than %i delays",
+                        sox_fail("echo: to many delays, use less than %i delays",
                                 MAX_ECHOS);
                 /* Linux bug and it's cleaner. */
                 sscanf(argv[i++], "%f", &echo->delay[echo->num_delays]);
                 sscanf(argv[i++], "%f", &echo->decay[echo->num_delays]);
                 echo->num_delays++;
         }
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Prepare for processing.
  */
-static int st_echo_start(eff_t effp)
+static int sox_echo_start(eff_t effp)
 {
         echo_t echo = (echo_t) effp->priv;
         int i;
@@ -123,41 +123,41 @@ static int st_echo_start(eff_t effp)
         echo->maxsamples = 0;
         if ( echo->in_gain < 0.0 )
         {
-                st_fail("echo: gain-in must be positive!");
-                return (ST_EOF);
+                sox_fail("echo: gain-in must be positive!");
+                return (SOX_EOF);
         }
         if ( echo->in_gain > 1.0 )
         {
-                st_fail("echo: gain-in must be less than 1.0!");
-                return (ST_EOF);
+                sox_fail("echo: gain-in must be less than 1.0!");
+                return (SOX_EOF);
         }
         if ( echo->out_gain < 0.0 )
         {
-                st_fail("echo: gain-in must be positive!");
-                return (ST_EOF);
+                sox_fail("echo: gain-in must be positive!");
+                return (SOX_EOF);
         }
         for ( i = 0; i < echo->num_delays; i++ ) {
                 echo->samples[i] = echo->delay[i] * effp->ininfo.rate / 1000.0;
                 if ( echo->samples[i] < 1 )
                 {
-                    st_fail("echo: delay must be positive!");
-                    return (ST_EOF);
+                    sox_fail("echo: delay must be positive!");
+                    return (SOX_EOF);
                 }
-                if ( echo->samples[i] > (st_ssize_t)DELAY_BUFSIZ )
+                if ( echo->samples[i] > (sox_ssize_t)DELAY_BUFSIZ )
                 {
-                        st_fail("echo: delay must be less than %g seconds!",
+                        sox_fail("echo: delay must be less than %g seconds!",
                                 DELAY_BUFSIZ / (float) effp->ininfo.rate );
-                        return (ST_EOF);
+                        return (SOX_EOF);
                 }
                 if ( echo->decay[i] < 0.0 )
                 {
-                    st_fail("echo: decay must be positive!" );
-                    return (ST_EOF);
+                    sox_fail("echo: decay must be positive!" );
+                    return (SOX_EOF);
                 }
                 if ( echo->decay[i] > 1.0 )
                 {
-                    st_fail("echo: decay must be less than 1.0!" );
-                    return (ST_EOF);
+                    sox_fail("echo: decay must be less than 1.0!" );
+                    return (SOX_EOF);
                 }
                 if ( echo->samples[i] > echo->maxsamples )
                         echo->maxsamples = echo->samples[i];
@@ -170,25 +170,25 @@ static int st_echo_start(eff_t effp)
         for ( i = 0; i < echo->num_delays; i++ ) 
                 sum_in_volume += echo->decay[i];
         if ( sum_in_volume * echo->in_gain > 1.0 / echo->out_gain )
-                st_warn("echo: warning >>> gain-out can cause saturation of output <<<");
+                sox_warn("echo: warning >>> gain-out can cause saturation of output <<<");
         echo->counter = 0;
         echo->fade_out = echo->maxsamples;
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int st_echo_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                 st_size_t *isamp, st_size_t *osamp)
+static int sox_echo_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                 sox_size_t *isamp, sox_size_t *osamp)
 {
         echo_t echo = (echo_t) effp->priv;
         int len, done;
         int j;
         
         double d_in, d_out;
-        st_sample_t out;
+        sox_sample_t out;
 
         len = ((*isamp > *osamp) ? *osamp : *isamp);
         for(done = 0; done < len; done++) {
@@ -203,7 +203,7 @@ static int st_echo_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 }
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * echo->out_gain;
-                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 /* Store input in delay buffer */
                 echo->delay_buf[echo->counter] = d_in;
@@ -211,19 +211,19 @@ static int st_echo_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 echo->counter = ( echo->counter + 1 ) % echo->maxsamples;
         }
         /* processed all samples */
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Drain out reverb lines. 
  */
-static int st_echo_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int sox_echo_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
         echo_t echo = (echo_t) effp->priv;
         double d_in, d_out;
-        st_sample_t out;
+        sox_sample_t out;
         int j;
-        st_size_t done;
+        sox_size_t done;
 
         done = 0;
         /* drain out delay samples */
@@ -237,7 +237,7 @@ static int st_echo_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                 }
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * echo->out_gain;
-                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 /* Store input in delay buffer */
                 echo->delay_buf[echo->counter] = d_in;
@@ -249,36 +249,36 @@ static int st_echo_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         /* samples played, it remains */
         *osamp = done;
         if (echo->fade_out == 0)
-            return ST_EOF;
+            return SOX_EOF;
         else
-            return ST_SUCCESS;
+            return SOX_SUCCESS;
 }
 
 /*
  * Clean up reverb effect.
  */
-static int st_echo_stop(eff_t effp)
+static int sox_echo_stop(eff_t effp)
 {
         echo_t echo = (echo_t) effp->priv;
 
         free((char *) echo->delay_buf);
         echo->delay_buf = (double *) -1;   /* guaranteed core dump */
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
-static st_effect_t st_echo_effect = {
+static sox_effect_t sox_echo_effect = {
   "echo",
   "Usage: echo gain-in gain-out delay decay [ delay decay ... ]",
   0,
-  st_echo_getopts,
-  st_echo_start,
-  st_echo_flow,
-  st_echo_drain,
-  st_echo_stop,
-  st_effect_nothing
+  sox_echo_getopts,
+  sox_echo_start,
+  sox_echo_flow,
+  sox_echo_drain,
+  sox_echo_stop,
+  sox_effect_nothing
 };
 
-const st_effect_t *st_echo_effect_fn(void)
+const sox_effect_t *sox_echo_effect_fn(void)
 {
-    return &st_echo_effect;
+    return &sox_echo_effect;
 }

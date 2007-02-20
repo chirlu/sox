@@ -3,7 +3,7 @@
  * Richard Caley (R.Caley@ed.ac.uk)
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include <string.h>
 #include <errno.h>
 
@@ -18,12 +18,12 @@ typedef struct wvepriv
     short padding;
     short repeats;
 /* For seeking */
-        st_size_t dataStart;
+        sox_size_t dataStart;
     } *wve_t;
 
 static void wvewriteheader(ft_t ft);
 
-static int st_wveseek(ft_t ft, st_size_t offset)
+static int sox_wveseek(ft_t ft, sox_size_t offset)
 {
     int new_offset, channel_block, alignment;
     wve_t wve = (wve_t)ft->priv;
@@ -40,10 +40,10 @@ static int st_wveseek(ft_t ft, st_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += wve->dataStart;
 
-    return st_seeki(ft, offset, SEEK_SET);
+    return sox_seeki(ft, offset, SEEK_SET);
 }
 
-static int st_wvestartread(ft_t ft)
+static int sox_wvestartread(ft_t ft)
 {
         wve_t p = (wve_t)ft->priv;
         char magic[16];
@@ -53,57 +53,57 @@ static int st_wvestartread(ft_t ft)
         uint16_t trash16;
 
         /* Needed for rawread() */
-        rc = st_rawstartread(ft);
+        rc = sox_rawstartread(ft);
         if (rc)
             return rc;
 
         /* Check the magic word (null-terminated) */
-        st_reads(ft, magic, 16);
+        sox_reads(ft, magic, 16);
         if (strncmp(magic, PSION_MAGIC, 15)==0) {
-                st_debug("Found Psion magic word");
+                sox_debug("Found Psion magic word");
         }
         else
         {
-                st_fail_errno(ft,ST_EHDR,"Psion header doesn't start with magic word\nTry the '.al' file type with '-t al -r 8000 filename'");
-                return (ST_EOF);
+                sox_fail_errno(ft,SOX_EHDR,"Psion header doesn't start with magic word\nTry the '.al' file type with '-t al -r 8000 filename'");
+                return (SOX_EOF);
         }
 
-        st_readw(ft, (unsigned short *)&version);
+        sox_readw(ft, (unsigned short *)&version);
 
         /* Check magic version */
         if (version == PSION_VERSION)
-            st_debug("Found Psion magic word");
+            sox_debug("Found Psion magic word");
         else
         {
-            st_fail_errno(ft,ST_EHDR,"Wrong version in Psion header");
-            return(ST_EOF);
+            sox_fail_errno(ft,SOX_EHDR,"Wrong version in Psion header");
+            return(SOX_EOF);
         }
 
-        st_readdw(ft, &(p->length));
+        sox_readdw(ft, &(p->length));
 
-        st_readw(ft, (unsigned short *)&(p->padding));
+        sox_readw(ft, (unsigned short *)&(p->padding));
 
-        st_readw(ft, (unsigned short *)&(p->repeats));
+        sox_readw(ft, (unsigned short *)&(p->repeats));
 
-        st_readw(ft, (unsigned short *)&trash16);
-        st_readw(ft, (unsigned short *)&trash16);
-        st_readw(ft, (unsigned short *)&trash16);
+        sox_readw(ft, (unsigned short *)&trash16);
+        sox_readw(ft, (unsigned short *)&trash16);
+        sox_readw(ft, (unsigned short *)&trash16);
 
-        ft->signal.encoding = ST_ENCODING_ALAW;
-        ft->signal.size = ST_SIZE_BYTE;
+        ft->signal.encoding = SOX_ENCODING_ALAW;
+        ft->signal.size = SOX_SIZE_BYTE;
 
         if (ft->signal.rate != 0)
-            st_report("WVE must use 8000 sample rate.  Overriding");
+            sox_report("WVE must use 8000 sample rate.  Overriding");
         ft->signal.rate = 8000;
 
-        if (ft->signal.channels != ST_ENCODING_UNKNOWN && ft->signal.channels != 1)
-            st_report("WVE must only supports 1 channel.  Overriding");
+        if (ft->signal.channels != SOX_ENCODING_UNKNOWN && ft->signal.channels != 1)
+            sox_report("WVE must only supports 1 channel.  Overriding");
         ft->signal.channels = 1;
 
-        p->dataStart = st_tell(ft);
+        p->dataStart = sox_tell(ft);
         ft->length = p->length/ft->signal.size;
 
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /* When writing, the header is supposed to contain the number of
@@ -115,57 +115,57 @@ static int st_wvestartread(ft_t ft)
    if it is not, the unspecified size remains in the header
    (this is illegal). */
 
-static int st_wvestartwrite(ft_t ft)
+static int sox_wvestartwrite(ft_t ft)
 {
         wve_t p = (wve_t)ft->priv;
         int rc;
 
         /* Needed for rawwrite() */
-        rc = st_rawstartwrite(ft);
+        rc = sox_rawstartwrite(ft);
         if (rc)
-            return ST_EOF;
+            return SOX_EOF;
 
         p->length = 0;
         if (p->repeats == 0)
             p->repeats = 1;
 
         if (ft->signal.rate != 0)
-            st_report("WVE must use 8000 sample rate.  Overriding");
+            sox_report("WVE must use 8000 sample rate.  Overriding");
 
         if (ft->signal.channels != 0 && ft->signal.channels != 1)
-            st_report("WVE must only supports 1 channel.  Overriding");
+            sox_report("WVE must only supports 1 channel.  Overriding");
 
-        ft->signal.encoding = ST_ENCODING_ALAW;
-        ft->signal.size = ST_SIZE_BYTE;
+        ft->signal.encoding = SOX_ENCODING_ALAW;
+        ft->signal.size = SOX_SIZE_BYTE;
         ft->signal.rate = 8000;
 
         wvewriteheader(ft);
-        return ST_SUCCESS;
+        return SOX_SUCCESS;
 }
 
-static st_size_t st_wvewrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
+static sox_size_t sox_wvewrite(ft_t ft, const sox_sample_t *buf, sox_size_t samp)
 {
         wve_t p = (wve_t)ft->priv;
         p->length += samp * ft->signal.size;
-        return st_rawwrite(ft, buf, samp);
+        return sox_rawwrite(ft, buf, samp);
 }
 
-static int st_wvestopwrite(ft_t ft)
+static int sox_wvestopwrite(ft_t ft)
 {
 
         /* Call before seeking to flush buffer */
-        st_rawstopwrite(ft);
+        sox_rawstopwrite(ft);
 
         if (!ft->seekable)
         {
-            st_warn("Header will be have invalid file length since file is not seekable");
-            return ST_SUCCESS;
+            sox_warn("Header will be have invalid file length since file is not seekable");
+            return SOX_SUCCESS;
         }
 
-        if (st_seeki(ft, 0, 0) != 0)
+        if (sox_seeki(ft, 0, 0) != 0)
         {
-                st_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
-                return(ST_EOF);
+                sox_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
+                return(SOX_EOF);
         }
         wvewriteheader(ft);
 }
@@ -182,19 +182,19 @@ static void wvewriteheader(ft_t ft)
     version=PSION_VERSION;
     zero=0;
 
-    st_writes(ft, magic);
+    sox_writes(ft, magic);
     /* Null terminate string */
-    st_writeb(ft, 0);
+    sox_writeb(ft, 0);
 
-    st_writew(ft, version);
+    sox_writew(ft, version);
 
-    st_writedw(ft, p->length);
-    st_writew(ft, p->padding);
-    st_writew(ft, p->repeats);
+    sox_writedw(ft, p->length);
+    sox_writew(ft, p->padding);
+    sox_writew(ft, p->repeats);
 
-    st_writew(ft, zero);
-    st_writew(ft, zero);
-    st_writew(ft, zero);
+    sox_writew(ft, zero);
+    sox_writew(ft, zero);
+    sox_writew(ft, zero);
 }
 
 /* Psion .wve */
@@ -203,20 +203,20 @@ static const char *wvenames[] = {
   NULL
 };
 
-static st_format_t st_wve_format = {
+static sox_format_t sox_wve_format = {
   wvenames,
   NULL,
-  ST_FILE_SEEK | ST_FILE_BIG_END,
-  st_wvestartread,
-  st_rawread,
-  st_rawstopread,
-  st_wvestartwrite,
-  st_wvewrite,
-  st_wvestopwrite,
-  st_wveseek
+  SOX_FILE_SEEK | SOX_FILE_BIG_END,
+  sox_wvestartread,
+  sox_rawread,
+  sox_rawstopread,
+  sox_wvestartwrite,
+  sox_wvewrite,
+  sox_wvestopwrite,
+  sox_wveseek
 };
 
-const st_format_t *st_wve_format_fn(void)
+const sox_format_t *sox_wve_format_fn(void)
 {
-    return &st_wve_format;
+    return &sox_wve_format;
 }

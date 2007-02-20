@@ -16,11 +16,11 @@
  * Compander Transfer Function: (c) 2007 robs@users.sourceforge.net
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include <math.h>
 
 typedef struct {
-  struct st_compandt_segment {
+  struct sox_compandt_segment {
     double x, y;              /* 1st point in segment */
     double a, b;              /* Quadratic coeffecients for rest of segment */
   } * segments;
@@ -28,16 +28,16 @@ typedef struct {
   double out_min_lin;
   double outgain_dB;        /* Post processor gain */
   double curve_dB;
-} st_compandt_t;
+} sox_compandt_t;
 
-st_bool st_compandt_parse(st_compandt_t * t, char * points, char * gain);
-st_bool st_compandt_show(st_compandt_t * t, st_bool plot);
-void    st_compandt_kill(st_compandt_t * p);
+sox_bool sox_compandt_parse(sox_compandt_t * t, char * points, char * gain);
+sox_bool sox_compandt_show(sox_compandt_t * t, sox_bool plot);
+void    sox_compandt_kill(sox_compandt_t * p);
 
 /* Place in header to allow in-lining */
-static double st_compandt(st_compandt_t * t, double in_lin)
+static double sox_compandt(sox_compandt_t * t, double in_lin)
 {
-  struct st_compandt_segment * s;
+  struct sox_compandt_segment * s;
   double in_log, out_log;
 
   if (in_lin <= t->in_min_lin)

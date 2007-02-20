@@ -16,7 +16,7 @@
 #include <string.h>
 #include <assert.h>
 
-static st_effect_t st_noisered_effect;
+static sox_effect_t sox_noisered_effect;
 
 typedef struct chandata {
     float *window;
@@ -31,20 +31,20 @@ typedef struct reddata {
     float threshold;
 
     chandata_t *chandata;
-    st_size_t bufdata;
+    sox_size_t bufdata;
 } * reddata_t;
 
 /*
  * Get the options. Filename is mandatory, though a reasonable default would
  * be stdin (if the input file isn't coming from there, of course!)
  */
-static int st_noisered_getopts(eff_t effp, int n, char **argv) 
+static int sox_noisered_getopts(eff_t effp, int n, char **argv) 
 {
     reddata_t data = (reddata_t) effp->priv;
 
     if (n > 2 || n < 1) {
-            st_fail(st_noisered_effect.usage);
-            return (ST_EOF);
+            sox_fail(sox_noisered_effect.usage);
+            return (SOX_EOF);
     }
     data->threshold = 0.5;
     data->profile_filename = argv[0];
@@ -60,14 +60,14 @@ static int st_noisered_getopts(eff_t effp, int n, char **argv)
             data->threshold = 0;
         }
     }
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
 /*
  * Prepare processing.
  * Do all initializations.
  */
-static int st_noisered_start(eff_t effp)
+static int sox_noisered_start(eff_t effp)
 {
     reddata_t data = (reddata_t) effp->priv;
     int fchannels = 0;
@@ -89,9 +89,9 @@ static int st_noisered_start(eff_t effp)
     else
       ifp = fopen(data->profile_filename, "r");
     if (ifp == NULL) {
-        st_fail("Couldn't open profile file %s: %s",
+        sox_fail("Couldn't open profile file %s: %s",
                 data->profile_filename, strerror(errno));            
-        return ST_EOF;
+        return SOX_EOF;
     }
 
     while (1) {
@@ -100,31 +100,31 @@ static int st_noisered_start(eff_t effp)
         if (2 != fscanf(ifp, " Channel %d: %f", &i1, &f1))
             break;
         if (i1 != fchannels) {
-            st_fail("noisered: Got channel %d, expected channel %d.",
+            sox_fail("noisered: Got channel %d, expected channel %d.",
                     i1, fchannels);
-            return ST_EOF;
+            return SOX_EOF;
         }
 
         data->chandata[fchannels].noisegate[0] = f1;
         for (i = 1; i < FREQCOUNT; i ++) {
             if (1 != fscanf(ifp, ", %f", &f1)) {
-                st_fail("noisered: Not enough datums for channel %d "
+                sox_fail("noisered: Not enough datums for channel %d "
                         "(expected %d, got %d)", fchannels, FREQCOUNT, i);
-                return ST_EOF;
+                return SOX_EOF;
             }
             data->chandata[fchannels].noisegate[i] = f1;
         }
         fchannels ++;
     }
     if (fchannels != channels) {
-        st_fail("noisered: channel mismatch: %d in input, %d in profile.",
+        sox_fail("noisered: channel mismatch: %d in input, %d in profile.",
                 channels, fchannels);
-        return ST_EOF;
+        return SOX_EOF;
     }
     if (strcmp(data->profile_filename, "-") != 0)
       fclose(ifp);
 
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
 /* Mangle a single window. Each output sample (except the first and last
@@ -206,7 +206,7 @@ static void reduce_noise(chandata_t* chan, float* window, float level)
 /* Do window management once we have a complete window, including mangling
  * the current window. */
 static int process_window(eff_t effp, reddata_t data, int chan_num, int num_chans,
-                          st_sample_t *obuf, int len) {
+                          sox_sample_t *obuf, int len) {
     int j;
     float* nextwindow;
     int use = min(len, WINDOWSIZE)-min(len,(WINDOWSIZE/2));
@@ -214,7 +214,7 @@ static int process_window(eff_t effp, reddata_t data, int chan_num, int num_chan
     int first = (chan->lastwindow == NULL);
 
     if ((nextwindow = (float*)xcalloc(WINDOWSIZE, sizeof(float))) == NULL)
-        return ST_EOF;
+        return SOX_EOF;
     
     memcpy(nextwindow, chan->window+WINDOWSIZE/2,
            sizeof(float)*(WINDOWSIZE/2));
@@ -224,14 +224,14 @@ static int process_window(eff_t effp, reddata_t data, int chan_num, int num_chan
         for (j = 0; j < use; j ++) {
             float s = chan->window[j] + chan->lastwindow[WINDOWSIZE/2 + j];
             obuf[chan_num + num_chans * j] =
-                ST_FLOAT_DWORD_TO_SAMPLE(s, effp->clips);
+                SOX_FLOAT_DWORD_TO_SAMPLE(s, effp->clips);
         }
         free(chan->lastwindow);
     } else {
         for (j = 0; j < use; j ++) {
             assert(chan->window[j] >= -1 && chan->window[j] <= 1);
             obuf[chan_num + num_chans * j] =
-                ST_FLOAT_DWORD_TO_SAMPLE(chan->window[j], effp->clips);
+                SOX_FLOAT_DWORD_TO_SAMPLE(chan->window[j], effp->clips);
         }
     }
     chan->lastwindow = chan->window;
@@ -243,17 +243,17 @@ static int process_window(eff_t effp, reddata_t data, int chan_num, int num_chan
 /*
  * Read in windows, and call process_window once we get a whole one.
  */
-static int st_noisered_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                    st_size_t *isamp, st_size_t *osamp)
+static int sox_noisered_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                    sox_size_t *isamp, sox_size_t *osamp)
 {
     reddata_t data = (reddata_t) effp->priv;
-    st_size_t samp = min(*isamp, *osamp);
-    st_size_t tracks = effp->ininfo.channels;
-    st_size_t track_samples = samp / tracks;
-    st_size_t ncopy = min(track_samples, WINDOWSIZE-data->bufdata);
-    st_size_t whole_window = (ncopy + data->bufdata == WINDOWSIZE);
+    sox_size_t samp = min(*isamp, *osamp);
+    sox_size_t tracks = effp->ininfo.channels;
+    sox_size_t track_samples = samp / tracks;
+    sox_size_t ncopy = min(track_samples, WINDOWSIZE-data->bufdata);
+    sox_size_t whole_window = (ncopy + data->bufdata == WINDOWSIZE);
     int oldbuf = data->bufdata;
-    st_size_t i;
+    sox_size_t i;
 
     assert(effp->ininfo.channels == effp->outinfo.channels);
 
@@ -265,14 +265,14 @@ static int st_noisered_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *ob
     /* Reduce noise on every channel. */
     for (i = 0; i < tracks; i ++) {
         chandata_t* chan = &(data->chandata[i]);
-        st_size_t j;
+        sox_size_t j;
 
         if (chan->window == NULL)
             chan->window = (float*)xcalloc(WINDOWSIZE, sizeof(float));
         
         for (j = 0; j < ncopy; j ++)
             chan->window[oldbuf + j] =
-                ST_SAMPLE_TO_FLOAT_DWORD(ibuf[i + tracks * j], effp->clips);
+                SOX_SAMPLE_TO_FLOAT_DWORD(ibuf[i + tracks * j], effp->clips);
 
         if (!whole_window)
             continue;
@@ -286,14 +286,14 @@ static int st_noisered_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *ob
     else
         *osamp = 0;
 
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 }
 
 /*
  * We have up to half a window left to dump.
  */
 
-static int st_noisered_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int sox_noisered_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
     reddata_t data = (reddata_t)effp->priv;
     int i;
@@ -304,16 +304,16 @@ static int st_noisered_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     /* FIXME: This is very picky.  osamp needs to be big enough to get all
      * remaining data or it will be discarded.
      */
-    return (ST_EOF);
+    return (SOX_EOF);
 }
 
 /*
  * Clean up.
  */
-static int st_noisered_stop(eff_t effp)
+static int sox_noisered_stop(eff_t effp)
 {
     reddata_t data = (reddata_t) effp->priv;
-    st_size_t i;
+    sox_size_t i;
 
     for (i = 0; i < effp->ininfo.channels; i ++) {
         chandata_t* chan = &(data->chandata[i]);
@@ -325,22 +325,22 @@ static int st_noisered_stop(eff_t effp)
     
     free(data->chandata);
 
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
-static st_effect_t st_noisered_effect = {
+static sox_effect_t sox_noisered_effect = {
   "noisered",
   "Usage: noiseprof profile-file [threshold]",
-  ST_EFF_MCHAN,
-  st_noisered_getopts,
-  st_noisered_start,
-  st_noisered_flow,
-  st_noisered_drain,
-  st_noisered_stop,
-  st_effect_nothing
+  SOX_EFF_MCHAN,
+  sox_noisered_getopts,
+  sox_noisered_start,
+  sox_noisered_flow,
+  sox_noisered_drain,
+  sox_noisered_stop,
+  sox_effect_nothing
 };
 
-const st_effect_t *st_noisered_effect_fn(void)
+const sox_effect_t *sox_noisered_effect_fn(void)
 {
-    return &st_noisered_effect;
+    return &sox_noisered_effect;
 }

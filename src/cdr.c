@@ -22,13 +22,13 @@
  *
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 
 #define SECTORSIZE      (2352 / 2)
 
 /* Private data for SKEL file */
 typedef struct cdrstuff {
-        st_size_t samples;      /* number of samples written */
+        sox_size_t samples;      /* number of samples written */
 } *cdr_t;
 
 /*
@@ -39,29 +39,29 @@ typedef struct cdrstuff {
  *      mono/stereo/quad.
  */
 
-static int st_cdrstartread(ft_t ft) 
+static int sox_cdrstartread(ft_t ft) 
 {
         int rc;
 
         /* Needed because of rawread() */
-        rc = st_rawstartread(ft);
+        rc = sox_rawstartread(ft);
         if (rc)
             return rc;
 
         ft->signal.rate = 44100;
-        ft->signal.size = ST_SIZE_16BIT;
-        ft->signal.encoding = ST_ENCODING_SIGN2;
+        ft->signal.size = SOX_SIZE_16BIT;
+        ft->signal.encoding = SOX_ENCODING_SIGN2;
         ft->signal.channels = 2;
         ft->comment = NULL;
 
 /* Need length for seeking */
         if(ft->seekable){
-                ft->length = st_filelength(ft)/ST_SIZE_16BIT;
+                ft->length = sox_filelength(ft)/SOX_SIZE_16BIT;
         } else {
                 ft->length = 0;
         }
         
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /*
@@ -71,49 +71,49 @@ static int st_cdrstartread(ft_t ft)
  * Return number of samples read.
  */
 
-static st_size_t st_cdrread(ft_t ft, st_sample_t *buf, st_size_t len) 
+static sox_size_t sox_cdrread(ft_t ft, sox_sample_t *buf, sox_size_t len) 
 {
 
-        return st_rawread(ft, buf, len);
+        return sox_rawread(ft, buf, len);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-static int st_cdrstopread(ft_t ft) 
+static int sox_cdrstopread(ft_t ft) 
 {
         /* Needed because of rawread() */
-        return st_rawstopread(ft);
+        return sox_rawstopread(ft);
 }
 
-static int st_cdrstartwrite(ft_t ft) 
+static int sox_cdrstartwrite(ft_t ft) 
 {
         cdr_t cdr = (cdr_t) ft->priv;
         int rc;
 
         /* Needed because of rawwrite() */
-        rc = st_rawstartwrite(ft);
+        rc = sox_rawstartwrite(ft);
         if (rc)
             return rc;
 
         cdr->samples = 0;
 
         ft->signal.rate = 44100;
-        ft->signal.size = ST_SIZE_16BIT;
-        ft->signal.encoding = ST_ENCODING_SIGN2;
+        ft->signal.size = SOX_SIZE_16BIT;
+        ft->signal.encoding = SOX_ENCODING_SIGN2;
         ft->signal.channels = 2;
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
-static st_size_t st_cdrwrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
+static sox_size_t sox_cdrwrite(ft_t ft, const sox_sample_t *buf, sox_size_t len) 
 {
         cdr_t cdr = (cdr_t) ft->priv;
 
         cdr->samples += len;
 
-        return st_rawwrite(ft, buf, len);
+        return sox_rawwrite(ft, buf, len);
 }
 
 /*
@@ -121,7 +121,7 @@ static st_size_t st_cdrwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
  * samples.  We write -32768 for each sample to pad it out.
  */
 
-static int st_cdrstopwrite(ft_t ft) 
+static int sox_cdrstopwrite(ft_t ft) 
 {
         cdr_t cdr = (cdr_t) ft->priv;
         int padsamps = SECTORSIZE - (cdr->samples % SECTORSIZE);
@@ -129,7 +129,7 @@ static int st_cdrstopwrite(ft_t ft)
         int rc;
 
         /* Flush buffer before writing anything else */
-        rc = st_rawstopwrite(ft);
+        rc = sox_rawstopwrite(ft);
 
         if (rc)
             return rc;
@@ -139,11 +139,11 @@ static int st_cdrstopwrite(ft_t ft)
         if (padsamps != SECTORSIZE) 
         {
                 while (padsamps > 0) {
-                        st_writew(ft, zero);
+                        sox_writew(ft, zero);
                         padsamps--;
                 }
         }
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 static const char *cdrnames[] = {
@@ -152,20 +152,20 @@ static const char *cdrnames[] = {
   NULL
 };
 
-static st_format_t st_cdr_format = {
+static sox_format_t sox_cdr_format = {
   cdrnames,
   NULL,
-  ST_FILE_SEEK | ST_FILE_BIG_END,
-  st_cdrstartread,
-  st_cdrread,
-  st_cdrstopread,
-  st_cdrstartwrite,
-  st_cdrwrite,
-  st_cdrstopwrite,
-  st_rawseek
+  SOX_FILE_SEEK | SOX_FILE_BIG_END,
+  sox_cdrstartread,
+  sox_cdrread,
+  sox_cdrstopread,
+  sox_cdrstartwrite,
+  sox_cdrwrite,
+  sox_cdrstopwrite,
+  sox_rawseek
 };
 
-const st_format_t *st_cdr_format_fn(void)
+const sox_format_t *sox_cdr_format_fn(void)
 {
-    return &st_cdr_format;
+    return &sox_cdr_format;
 }

@@ -7,7 +7,7 @@
  * responsible for the consequences of using this software.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 
 #ifdef HAVE_ALSA
 
@@ -17,52 +17,52 @@ typedef struct alsa_priv
 {
     snd_pcm_t *pcm_handle;
     char *buf;
-    st_size_t buf_size;
+    sox_size_t buf_size;
 } *alsa_priv_t;
 
 static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
 {
     if (ft->signal.size == -1)
-        ft->signal.size = ST_SIZE_16BIT;
+        ft->signal.size = SOX_SIZE_16BIT;
 
-    if (ft->signal.size != ST_SIZE_16BIT)
+    if (ft->signal.size != SOX_SIZE_16BIT)
     {
-        st_report("trying for word samples.");
-        ft->signal.size = ST_SIZE_16BIT;
+        sox_report("trying for word samples.");
+        ft->signal.size = SOX_SIZE_16BIT;
     }
 
-    if (ft->signal.encoding != ST_ENCODING_SIGN2 &&
-        ft->signal.encoding != ST_ENCODING_UNSIGNED)
+    if (ft->signal.encoding != SOX_ENCODING_SIGN2 &&
+        ft->signal.encoding != SOX_ENCODING_UNSIGNED)
     {
-        if (ft->signal.size == ST_SIZE_16BIT)
+        if (ft->signal.size == SOX_SIZE_16BIT)
         {
-            st_report("driver only supports signed and unsigned samples.  Changing to signed.");
-            ft->signal.encoding = ST_ENCODING_SIGN2;
+            sox_report("driver only supports signed and unsigned samples.  Changing to signed.");
+            ft->signal.encoding = SOX_ENCODING_SIGN2;
         }
         else
         {
-            st_report("driver only supports signed and unsigned samples.  Changing to unsigned.");
-            ft->signal.encoding = ST_ENCODING_UNSIGNED;
+            sox_report("driver only supports signed and unsigned samples.  Changing to unsigned.");
+            ft->signal.encoding = SOX_ENCODING_UNSIGNED;
         }
     }
 
     /* Some hardware only wants to work with 8-bit or 16-bit data */
-    if (ft->signal.size == ST_SIZE_BYTE)
+    if (ft->signal.size == SOX_SIZE_BYTE)
     {
         if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U8)) && 
             !(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S8)))
         {
-            st_report("driver doesn't supported byte samples.  Changing to words.");
-            ft->signal.size = ST_SIZE_16BIT;
+            sox_report("driver doesn't supported byte samples.  Changing to words.");
+            ft->signal.size = SOX_SIZE_16BIT;
         }
     }
-    else if (ft->signal.size == ST_SIZE_16BIT)
+    else if (ft->signal.size == SOX_SIZE_16BIT)
     {
         if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)) && 
             !(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
         {
-            st_report("driver doesn't supported word samples.  Changing to bytes.");
-            ft->signal.size = ST_SIZE_BYTE;
+            sox_report("driver doesn't supported word samples.  Changing to bytes.");
+            ft->signal.size = SOX_SIZE_BYTE;
         }
     }
     else
@@ -70,31 +70,31 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
         if ((snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)) ||
             (snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
         {
-            st_report("driver doesn't supported %s samples.  Changing to words.", st_sizes_str[(unsigned char)ft->signal.size]);
-            ft->signal.size = ST_SIZE_16BIT;
+            sox_report("driver doesn't supported %s samples.  Changing to words.", sox_sizes_str[(unsigned char)ft->signal.size]);
+            ft->signal.size = SOX_SIZE_16BIT;
         }
         else
         {
-            st_report("driver doesn't supported %s samples.  Changing to bytes.", st_sizes_str[(unsigned char)ft->signal.size]);
-            ft->signal.size = ST_SIZE_BYTE;
+            sox_report("driver doesn't supported %s samples.  Changing to bytes.", sox_sizes_str[(unsigned char)ft->signal.size]);
+            ft->signal.size = SOX_SIZE_BYTE;
         }
     }
 
-    if (ft->signal.size == ST_SIZE_BYTE) {
+    if (ft->signal.size == SOX_SIZE_BYTE) {
         switch (ft->signal.encoding)
         {
-            case ST_ENCODING_SIGN2:
+            case SOX_ENCODING_SIGN2:
                 if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S8)))
                 {
-                    st_report("driver doesn't supported signed byte samples.  Changing to unsigned bytes.");
-                    ft->signal.encoding = ST_ENCODING_UNSIGNED;
+                    sox_report("driver doesn't supported signed byte samples.  Changing to unsigned bytes.");
+                    ft->signal.encoding = SOX_ENCODING_UNSIGNED;
                 }
                 break;
-            case ST_ENCODING_UNSIGNED:
+            case SOX_ENCODING_UNSIGNED:
                 if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U8)))
                 {
-                    st_report("driver doesn't supported unsigned byte samples.  Changing to signed bytes.");
-                    ft->signal.encoding = ST_ENCODING_SIGN2;
+                    sox_report("driver doesn't supported unsigned byte samples.  Changing to signed bytes.");
+                    ft->signal.encoding = SOX_ENCODING_SIGN2;
                 }
                 break;
             default:
@@ -102,19 +102,19 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
         }
         switch (ft->signal.encoding)
         {
-            case ST_ENCODING_SIGN2:
+            case SOX_ENCODING_SIGN2:
                 if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S8)))
                 {
-                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support signed byte samples");
-                    return ST_EOF;
+                    sox_fail_errno(ft,SOX_EFMT,"ALSA driver does not support signed byte samples");
+                    return SOX_EOF;
                 }
                 *fmt = SND_PCM_FORMAT_S8;
                 break;
-            case ST_ENCODING_UNSIGNED:
+            case SOX_ENCODING_UNSIGNED:
                 if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U8)))
                 {
-                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support unsigned byte samples");
-                    return ST_EOF;
+                    sox_fail_errno(ft,SOX_EFMT,"ALSA driver does not support unsigned byte samples");
+                    return SOX_EOF;
                 }
                 *fmt = SND_PCM_FORMAT_U8;
                 break;
@@ -122,21 +122,21 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
                     break;
         }
     }
-    else if (ft->signal.size == ST_SIZE_16BIT) {
+    else if (ft->signal.size == SOX_SIZE_16BIT) {
         switch (ft->signal.encoding)
         {
-            case ST_ENCODING_SIGN2:
+            case SOX_ENCODING_SIGN2:
                 if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
                 {
-                    st_report("driver does not support signed word samples.  Changing to unsigned words.");
-                    ft->signal.encoding = ST_ENCODING_UNSIGNED;
+                    sox_report("driver does not support signed word samples.  Changing to unsigned words.");
+                    ft->signal.encoding = SOX_ENCODING_UNSIGNED;
                 }
                 break;
-            case ST_ENCODING_UNSIGNED:
+            case SOX_ENCODING_UNSIGNED:
                 if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)))
                 {
-                    st_report("driver does not support unsigned word samples.  Changing to signed words.");
-                    ft->signal.encoding = ST_ENCODING_SIGN2;
+                    sox_report("driver does not support unsigned word samples.  Changing to signed words.");
+                    ft->signal.encoding = SOX_ENCODING_SIGN2;
                 }
                 break;
             default:
@@ -144,19 +144,19 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
         }
         switch (ft->signal.encoding)
         {
-            case ST_ENCODING_SIGN2:
+            case SOX_ENCODING_SIGN2:
                 if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
                 {
-                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support signed word samples");
-                    return ST_EOF;
+                    sox_fail_errno(ft,SOX_EFMT,"ALSA driver does not support signed word samples");
+                    return SOX_EOF;
                 }
                 *fmt = SND_PCM_FORMAT_S16_LE;
                 break;
-            case ST_ENCODING_UNSIGNED:
+            case SOX_ENCODING_UNSIGNED:
                 if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)))
                 {
-                    st_fail_errno(ft,ST_EFMT,"ALSA driver does not support unsigned word samples");
-                    return ST_EOF;
+                    sox_fail_errno(ft,SOX_EFMT,"ALSA driver does not support unsigned word samples");
+                    return SOX_EOF;
                 }
                 *fmt = SND_PCM_FORMAT_U16_LE;
                 break;
@@ -165,14 +165,14 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
         }
     }
     else {
-        st_fail_errno(ft,ST_EFMT,"ALSA driver does not support %s %s output",
-                      st_encodings_str[(unsigned char)ft->signal.encoding], st_sizes_str[(unsigned char)ft->signal.size]);
-        return ST_EOF;
+        sox_fail_errno(ft,SOX_EFMT,"ALSA driver does not support %s %s output",
+                      sox_encodings_str[(unsigned char)ft->signal.encoding], sox_sizes_str[(unsigned char)ft->signal.size]);
+        return SOX_EOF;
     }
     return 0;
 }
 
-static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
+static int sox_alsasetup(ft_t ft, snd_pcm_stream_t mode)
 {
     int fmt = SND_PCM_FORMAT_S16;
     int err;
@@ -189,20 +189,20 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     if ((err = snd_pcm_open(&(alsa->pcm_handle), ft->filename, 
                             mode, 0)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot open audio device");
+        sox_fail_errno(ft, SOX_EPERM, "cannot open audio device");
         goto open_error;
     }
 
     if ((err = snd_pcm_hw_params_malloc(&hw_params)) < 0) 
     {
-        st_fail_errno(ft, ST_ENOMEM, 
+        sox_fail_errno(ft, SOX_ENOMEM, 
                       "cannot allocate hardware parameter structure");
         goto open_error;
     }
 
     if ((err = snd_pcm_hw_params_any(alsa->pcm_handle, hw_params)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM,
+        sox_fail_errno(ft, SOX_EPERM,
                       "cannot initialize hardware parameter structure");
         goto open_error;
     }
@@ -211,7 +211,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     /* Turn off software resampling */
     err = snd_pcm_hw_params_set_rate_resample(alsa->pcm_handle, hw_params, 0);
     if (err < 0) {
-        st_fail_errno(ft, ST_EPERM, "Resampling setup failed for playback");
+        sox_fail_errno(ft, SOX_EPERM, "Resampling setup failed for playback");
         goto open_error;
     }
 #endif
@@ -219,7 +219,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     if ((err = snd_pcm_hw_params_set_access(alsa->pcm_handle, hw_params, 
                                             SND_PCM_ACCESS_RW_INTERLEAVED)) < 0)
     {
-        st_fail_errno(ft, ST_EPERM,
+        sox_fail_errno(ft, SOX_EPERM,
                       "cannot set access type");
         goto open_error;
     }
@@ -247,7 +247,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     if ((err = snd_pcm_hw_params_set_format(alsa->pcm_handle, 
                                             hw_params, fmt)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot set sample format");
+        sox_fail_errno(ft, SOX_EPERM, "cannot set sample format");
         goto open_error;
     }
 
@@ -257,7 +257,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     rate = range_limit(ft->signal.rate, min_rate, max_rate);
     if (rate != ft->signal.rate)
     {
-        st_report("hardware does not support sample rate %i; changing to %i.", ft->signal.rate, rate);
+        sox_report("hardware does not support sample rate %i; changing to %i.", ft->signal.rate, rate);
         ft->signal.rate = rate;
     }
     dir = 0;
@@ -266,7 +266,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
                                                &rate,
                                                &dir)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot set sample rate");
+        sox_fail_errno(ft, SOX_EPERM, "cannot set sample rate");
         goto open_error;
     }
     snd_pcm_hw_params_get_rate(hw_params, 
@@ -275,7 +275,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
  
     if (rate != ft->signal.rate)
     {
-        st_report("Could not set exact rate of %d.  Approximating with %d",
+        sox_report("Could not set exact rate of %d.  Approximating with %d",
                 ft->signal.rate, rate);
     }
 
@@ -285,22 +285,22 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
                                               hw_params, 
                                               ft->signal.channels)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot set channel count");
+        sox_fail_errno(ft, SOX_EPERM, "cannot set channel count");
         goto open_error;
     }
 
-    /* Have a much larger buffer than ST_BUFSIZ to avoid underruns */
-    buffer_size = ST_BUFSIZ * 8 / ft->signal.size / ft->signal.channels;
+    /* Have a much larger buffer than SOX_BUFSIZ to avoid underruns */
+    buffer_size = SOX_BUFSIZ * 8 / ft->signal.size / ft->signal.channels;
 
     if (snd_pcm_hw_params_get_buffer_size_min(hw_params, &buffer_size_min) < 0)
     {
-        st_fail_errno(ft, ST_EPERM, "Error getting min buffer size.");
+        sox_fail_errno(ft, SOX_EPERM, "Error getting min buffer size.");
         goto open_error;
     }
 
     if (snd_pcm_hw_params_get_buffer_size_max(hw_params, &buffer_size_max) < 0)
     {
-        st_fail_errno(ft, ST_EPERM, "Error getting max buffer size.");
+        sox_fail_errno(ft, SOX_EPERM, "Error getting max buffer size.");
         goto open_error;
     }
 
@@ -308,7 +308,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     if (snd_pcm_hw_params_get_period_size_min(hw_params, 
                                               &period_size_min, &dir) < 0)
     {
-        st_fail_errno(ft, ST_EPERM, "Error getting min period size.");
+        sox_fail_errno(ft, SOX_EPERM, "Error getting min period size.");
         goto open_error;
     }
 
@@ -316,7 +316,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     if (snd_pcm_hw_params_get_period_size_max(hw_params, 
                                               &period_size_max, &dir) < 0)
     {
-        st_fail_errno(ft, ST_EPERM, "Error getting max buffer size.");
+        sox_fail_errno(ft, SOX_EPERM, "Error getting max buffer size.");
         goto open_error;
     }
 
@@ -332,7 +332,7 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     if (snd_pcm_hw_params_set_period_size_near(alsa->pcm_handle, hw_params, 
                                                &period_size, &dir) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "Error setting periods.");
+        sox_fail_errno(ft, SOX_EPERM, "Error setting periods.");
         goto open_error;
     }
     snd_pcm_hw_params_get_period_size(hw_params, &period_size, &dir);
@@ -340,20 +340,20 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     dir = 0;
     if (snd_pcm_hw_params_set_buffer_size_near(alsa->pcm_handle, hw_params, 
                                                &buffer_size) < 0) {
-        st_fail_errno(ft, ST_EPERM, "Error setting buffer size.");
+        sox_fail_errno(ft, SOX_EPERM, "Error setting buffer size.");
         goto open_error;
     }
 
     snd_pcm_hw_params_get_buffer_size(hw_params, &buffer_size);
     if (period_size * 2 > buffer_size)
     {
-        st_fail_errno(ft, ST_EPERM, "Buffer too small. Could not use.");
+        sox_fail_errno(ft, SOX_EPERM, "Buffer too small. Could not use.");
         goto open_error;
     }
 
     if ((err = snd_pcm_hw_params(alsa->pcm_handle, hw_params)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot set parameters");
+        sox_fail_errno(ft, SOX_EPERM, "cannot set parameters");
         goto open_error;
     }
 
@@ -362,14 +362,14 @@ static int st_alsasetup(ft_t ft, snd_pcm_stream_t mode)
 
     if ((err = snd_pcm_prepare(alsa->pcm_handle)) < 0) 
     {
-        st_fail_errno(ft, ST_EPERM, "cannot prepare audio interface for use");
+        sox_fail_errno(ft, SOX_EPERM, "cannot prepare audio interface for use");
         goto open_error;
     }
 
     alsa->buf_size = buffer_size * ft->signal.size * ft->signal.channels;
     alsa->buf = xmalloc(alsa->buf_size);
 
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 
 open_error:
     if (fmask)
@@ -377,7 +377,7 @@ open_error:
     if (hw_params)
         snd_pcm_hw_params_free(hw_params);
 
-    return ST_EOF;
+    return SOX_EOF;
 
 }
 
@@ -390,7 +390,7 @@ static int xrun_recovery(snd_pcm_t *handle, int err)
     {   /* over/under-run */
         err = snd_pcm_prepare(handle);
         if (err < 0)
-            st_warn("Can't recover from over/underrun, prepare failed: %s", snd_strerror(err));
+            sox_warn("Can't recover from over/underrun, prepare failed: %s", snd_strerror(err));
         return 0;
     } 
     else 
@@ -404,7 +404,7 @@ static int xrun_recovery(snd_pcm_t *handle, int err)
             {
                 err = snd_pcm_prepare(handle);
                 if (err < 0)
-                    st_warn("Can't recovery from suspend, prepare failed: %s", snd_strerror(err));
+                    sox_warn("Can't recovery from suspend, prepare failed: %s", snd_strerror(err));
             }
         }
         return 0;
@@ -419,87 +419,87 @@ static int xrun_recovery(snd_pcm_t *handle, int err)
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int st_alsastartread(ft_t ft)
+static int sox_alsastartread(ft_t ft)
 {
-    return st_alsasetup(ft, SND_PCM_STREAM_CAPTURE);
+    return sox_alsasetup(ft, SND_PCM_STREAM_CAPTURE);
 }
 
-static void st_ub_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap UNUSED, st_size_t * clips UNUSED)
-{
-    while (len--)
-        *buf1++ = ST_UNSIGNED_BYTE_TO_SAMPLE(*((unsigned char *)buf2++),);
-}
-
-static void st_sb_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap UNUSED, st_size_t * clips UNUSED)
+static void sox_ub_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, char swap UNUSED, sox_size_t * clips UNUSED)
 {
     while (len--)
-        *buf1++ = ST_SIGNED_BYTE_TO_SAMPLE(*((int8_t *)buf2++),);
+        *buf1++ = SOX_UNSIGNED_BYTE_TO_SAMPLE(*((unsigned char *)buf2++),);
 }
 
-static void st_uw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clips UNUSED)
+static void sox_sb_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, char swap UNUSED, sox_size_t * clips UNUSED)
+{
+    while (len--)
+        *buf1++ = SOX_SIGNED_BYTE_TO_SAMPLE(*((int8_t *)buf2++),);
+}
+
+static void sox_uw_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, char swap, sox_size_t * clips UNUSED)
 {
     while (len--)
     {
         uint16_t datum = *((uint16_t *)buf2);
         buf2++; buf2++;
         if (swap)
-            datum = st_swapw(datum);
+            datum = sox_swapw(datum);
 
-        *buf1++ = ST_UNSIGNED_WORD_TO_SAMPLE(datum,);
+        *buf1++ = SOX_UNSIGNED_WORD_TO_SAMPLE(datum,);
     }
 }
 
-static void st_sw_read_buf(st_sample_t *buf1, char const * buf2, st_size_t len, char swap, st_size_t * clips UNUSED)
+static void sox_sw_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, char swap, sox_size_t * clips UNUSED)
 {
     while (len--)
     {
         int16_t datum = *((int16_t *)buf2);
         buf2++; buf2++;
         if (swap)
-            datum = st_swapw(datum);
+            datum = sox_swapw(datum);
 
-        *buf1++ = ST_SIGNED_WORD_TO_SAMPLE(datum,);
+        *buf1++ = SOX_SIGNED_WORD_TO_SAMPLE(datum,);
     }
 }
 
-static st_size_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
+static sox_size_t sox_alsaread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp)
 {
-    st_size_t len;
+    sox_size_t len;
     int err;
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
-    void (*read_buf)(st_sample_t *, char const *, st_size_t, char, st_size_t *) = 0;
+    void (*read_buf)(sox_sample_t *, char const *, sox_size_t, char, sox_size_t *) = 0;
 
     switch(ft->signal.size) {
-        case ST_SIZE_BYTE:
+        case SOX_SIZE_BYTE:
             switch(ft->signal.encoding)
             {
-                case ST_ENCODING_SIGN2:
-                    read_buf = st_sb_read_buf;
+                case SOX_ENCODING_SIGN2:
+                    read_buf = sox_sb_read_buf;
                     break;
-                case ST_ENCODING_UNSIGNED:
-                    read_buf = st_ub_read_buf;
+                case SOX_ENCODING_UNSIGNED:
+                    read_buf = sox_ub_read_buf;
                     break;
                 default:
-                    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
+                    sox_fail_errno(ft,SOX_EFMT,"Do not support this encoding for this data size");
                     return 0;
             }
             break;
-        case ST_SIZE_16BIT:
+        case SOX_SIZE_16BIT:
             switch(ft->signal.encoding)
             {
-                case ST_ENCODING_SIGN2:
-                    read_buf = st_sw_read_buf;
+                case SOX_ENCODING_SIGN2:
+                    read_buf = sox_sw_read_buf;
                     break;
-                case ST_ENCODING_UNSIGNED:
-                    read_buf = st_uw_read_buf;
+                case SOX_ENCODING_UNSIGNED:
+                    read_buf = sox_uw_read_buf;
                     break;
                 default:
-                    st_fail_errno(ft,ST_EFMT,"Do not support this encoding for this data size");
+                    sox_fail_errno(ft,SOX_EFMT,"Do not support this encoding for this data size");
                     return 0;
             }
             break;
         default:
-            st_fail_errno(ft,ST_EFMT,"Do not support this data size for this handler");
+            sox_fail_errno(ft,SOX_EFMT,"Do not support this data size for this handler");
             return 0;
     }
 
@@ -517,13 +517,13 @@ static st_size_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
         {
             if (xrun_recovery(alsa->pcm_handle, err) < 0)
             {
-                st_fail_errno(ft, ST_EPERM, "ALSA write error");
+                sox_fail_errno(ft, SOX_EPERM, "ALSA write error");
                 return 0;
             }
         }
         else
         {
-            read_buf(buf+(len*sizeof(st_sample_t)), alsa->buf, err, ft->signal.reverse_bytes, &ft->clips);
+            read_buf(buf+(len*sizeof(sox_sample_t)), alsa->buf, err, ft->signal.reverse_bytes, &ft->clips);
             len += err * ft->signal.channels;
         }
     }
@@ -531,7 +531,7 @@ static st_size_t st_alsaread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
     return len;
 }
 
-static int st_alsastopread(ft_t ft)
+static int sox_alsastopread(ft_t ft)
 {
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
 
@@ -539,93 +539,93 @@ static int st_alsastopread(ft_t ft)
 
     free(alsa->buf);
 
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 }
 
-static int st_alsastartwrite(ft_t ft)
+static int sox_alsastartwrite(ft_t ft)
 {
-    return st_alsasetup(ft, SND_PCM_STREAM_PLAYBACK);
+    return sox_alsasetup(ft, SND_PCM_STREAM_PLAYBACK);
 }
 
-static void st_ub_write_buf(char* buf1, st_sample_t const * buf2, st_size_t len, char swap UNUSED, st_size_t * clips)
-{
-    while (len--)
-        *(uint8_t *)buf1++ = ST_SAMPLE_TO_UNSIGNED_BYTE(*buf2++, *clips);
-}
-
-static void st_sb_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap UNUSED, st_size_t * clips)
+static void sox_ub_write_buf(char* buf1, sox_sample_t const * buf2, sox_size_t len, char swap UNUSED, sox_size_t * clips)
 {
     while (len--)
-        *(int8_t *)buf1++ = ST_SAMPLE_TO_SIGNED_BYTE(*buf2++, *clips);
+        *(uint8_t *)buf1++ = SOX_SAMPLE_TO_UNSIGNED_BYTE(*buf2++, *clips);
 }
 
-static void st_uw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clips)
+static void sox_sb_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t len, char swap UNUSED, sox_size_t * clips)
+{
+    while (len--)
+        *(int8_t *)buf1++ = SOX_SAMPLE_TO_SIGNED_BYTE(*buf2++, *clips);
+}
+
+static void sox_uw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t len, char swap, sox_size_t * clips)
 {
     while (len--)
     {
-        uint16_t datum = ST_SAMPLE_TO_UNSIGNED_WORD(*buf2++, *clips);
+        uint16_t datum = SOX_SAMPLE_TO_UNSIGNED_WORD(*buf2++, *clips);
         if (swap)
-            datum = st_swapw(datum);
+            datum = sox_swapw(datum);
         *(uint16_t *)buf1 = datum;
         buf1++; buf1++;
     }
 }
 
-static void st_sw_write_buf(char *buf1, st_sample_t const * buf2, st_size_t len, char swap, st_size_t * clips)
+static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t len, char swap, sox_size_t * clips)
 {
     while (len--)
     {
-        int16_t datum = ST_SAMPLE_TO_SIGNED_WORD(*buf2++, *clips);
+        int16_t datum = SOX_SAMPLE_TO_SIGNED_WORD(*buf2++, *clips);
         if (swap)
-            datum = st_swapw(datum);
+            datum = sox_swapw(datum);
         *(int16_t *)buf1 = datum;
         buf1++; buf1++;
     }
 }
 
-static st_size_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
+static sox_size_t sox_alsawrite(ft_t ft, const sox_sample_t *buf, sox_size_t nsamp)
 {
-    st_size_t osamp, done;
+    sox_size_t osamp, done;
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
-    void (*write_buf)(char *, const st_sample_t *, st_size_t, char, st_size_t *) = 0;
+    void (*write_buf)(char *, const sox_sample_t *, sox_size_t, char, sox_size_t *) = 0;
 
     switch(ft->signal.size) {
-        case ST_SIZE_BYTE:
+        case SOX_SIZE_BYTE:
             switch (ft->signal.encoding)
             {
-                case ST_ENCODING_SIGN2:
-                    write_buf = st_sb_write_buf;
+                case SOX_ENCODING_SIGN2:
+                    write_buf = sox_sb_write_buf;
                     break;
-                case ST_ENCODING_UNSIGNED:
-                    write_buf = st_ub_write_buf;
+                case SOX_ENCODING_UNSIGNED:
+                    write_buf = sox_ub_write_buf;
                     break;
                 default:
-                    st_fail_errno(ft,ST_EFMT,"this encoding is not supported for this data size");
+                    sox_fail_errno(ft,SOX_EFMT,"this encoding is not supported for this data size");
                     return 0;
             }
             break;
-        case ST_SIZE_16BIT:
+        case SOX_SIZE_16BIT:
             switch (ft->signal.encoding)
             {
-                case ST_ENCODING_SIGN2:
-                    write_buf = st_sw_write_buf;
+                case SOX_ENCODING_SIGN2:
+                    write_buf = sox_sw_write_buf;
                     break;
-                case ST_ENCODING_UNSIGNED:
-                    write_buf = st_uw_write_buf;
+                case SOX_ENCODING_UNSIGNED:
+                    write_buf = sox_uw_write_buf;
                     break;
                 default:
-                    st_fail_errno(ft,ST_EFMT,"this encoding is not supported for this data size");
+                    sox_fail_errno(ft,SOX_EFMT,"this encoding is not supported for this data size");
                     return 0;
             }
             break;
         default:
-            st_fail_errno(ft,ST_EFMT,"this data size is not supported by this handler");
+            sox_fail_errno(ft,SOX_EFMT,"this data size is not supported by this handler");
             return 0;
     }
 
     for (done = 0; done < nsamp; done += osamp) {
       int err;
-      st_size_t len;
+      sox_size_t len;
       
       osamp = min(nsamp - done, alsa->buf_size / ft->signal.size);
       write_buf(alsa->buf, buf, osamp, ft->signal.reverse_bytes, &ft->clips);
@@ -639,7 +639,7 @@ static st_size_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
           errno = 0;
         if (err < 0) {
           if (xrun_recovery(alsa->pcm_handle, err) < 0) {
-            st_fail_errno(ft, ST_EPERM, "ALSA write error");
+            sox_fail_errno(ft, SOX_EPERM, "ALSA write error");
             return 0;
           }
         } else
@@ -651,7 +651,7 @@ static st_size_t st_alsawrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
 }
 
 
-static int st_alsastopwrite(ft_t ft)
+static int sox_alsastopwrite(ft_t ft)
 {
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
 
@@ -660,7 +660,7 @@ static int st_alsastopwrite(ft_t ft)
 
     free(alsa->buf);
 
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 }
 
 static const char *alsanames[] = {
@@ -668,22 +668,22 @@ static const char *alsanames[] = {
   NULL
 };
 
-static st_format_t st_alsa_format = {
+static sox_format_t sox_alsa_format = {
   alsanames,
   NULL,
-  ST_FILE_DEVICE | ST_FILE_NOSTDIO,
-  st_alsastartread,
-  st_alsaread,
-  st_alsastopread,
-  st_alsastartwrite,
-  st_alsawrite,
-  st_alsastopwrite,
-  st_format_nothing_seek
+  SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
+  sox_alsastartread,
+  sox_alsaread,
+  sox_alsastopread,
+  sox_alsastartwrite,
+  sox_alsawrite,
+  sox_alsastopwrite,
+  sox_format_nothing_seek
 };
 
-const st_format_t *st_alsa_format_fn(void)
+const sox_format_t *sox_alsa_format_fn(void)
 {
-    return &st_alsa_format;
+    return &sox_alsa_format;
 }
 
 #endif /* HAVE_ALSA */

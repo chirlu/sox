@@ -11,7 +11,7 @@
  * Technische Universitaet Berlin
  *
  * More information on this format can be obtained from
- * http://www.cs.tu-berlin.de/~jutta/toast.html
+ * http://www.cs.tu-berlin.de/~jutta/toasox.html
  *
  * Source is available from ftp://ftp.cs.tu-berlin.de/pub/local/kbs/tubmik/gsm
  *
@@ -26,7 +26,7 @@
  *   Rewritten to support multiple channels
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 
 #ifdef EXTERNAL_GSM
 #include <gsm/gsm.h>
@@ -58,8 +58,8 @@ static int gsmstart_rw(ft_t ft, int w)
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
         int ch;
         
-        ft->signal.encoding = ST_ENCODING_GSM;
-        ft->signal.size = ST_SIZE_BYTE;
+        ft->signal.encoding = SOX_ENCODING_GSM;
+        ft->signal.size = SOX_SIZE_BYTE;
         if (!ft->signal.rate)
                 ft->signal.rate = 8000;
 
@@ -69,31 +69,31 @@ static int gsmstart_rw(ft_t ft, int w)
         p->channels = ft->signal.channels;
         if (p->channels > MAXCHANS || p->channels <= 0)
         {
-                st_fail_errno(ft,ST_EFMT,"gsm: channels(%d) must be in 1-16", ft->signal.channels);
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EFMT,"gsm: channels(%d) must be in 1-16", ft->signal.channels);
+                return(SOX_EOF);
         }
 
         for (ch=0; ch<p->channels; ch++) {
                 p->handle[ch] = gsm_create();
                 if (!p->handle[ch])
                 {
-                        st_fail_errno(ft,errno,"unable to create GSM stream");
-                        return (ST_EOF);
+                        sox_fail_errno(ft,errno,"unable to create GSM stream");
+                        return (SOX_EOF);
                 }
         }
         p->frames = (gsm_byte*) xmalloc(p->channels*FRAMESIZE);
         p->samples = (gsm_signal*) xmalloc(BLOCKSIZE * (p->channels+1) * sizeof(gsm_signal));
         p->sampleTop = p->samples + BLOCKSIZE*p->channels;
         p->samplePtr = (w)? p->samples : p->sampleTop;
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
-static int st_gsmstartread(ft_t ft) 
+static int sox_gsmstartread(ft_t ft) 
 {
         return gsmstart_rw(ft,0);
 }
 
-static int st_gsmstartwrite(ft_t ft)
+static int sox_gsmstartwrite(ft_t ft)
 {
         return gsmstart_rw(ft,1);
 }
@@ -105,7 +105,7 @@ static int st_gsmstartwrite(ft_t ft)
  * Return number of samples read.
  */
 
-static st_size_t st_gsmread(ft_t ft, st_sample_t *buf, st_size_t samp)
+static sox_size_t sox_gsmread(ft_t ft, sox_sample_t *buf, sox_size_t samp)
 {
         size_t done = 0;
         int r, ch, chans;
@@ -118,11 +118,11 @@ static st_size_t st_gsmread(ft_t ft, st_sample_t *buf, st_size_t samp)
         {
                 while (p->samplePtr < p->sampleTop && done < samp)
                         buf[done++] = 
-                            ST_SIGNED_WORD_TO_SAMPLE(*(p->samplePtr)++,);
+                            SOX_SIGNED_WORD_TO_SAMPLE(*(p->samplePtr)++,);
 
                 if (done>=samp) break;
 
-                r = st_readbuf(ft, p->frames, p->channels*FRAMESIZE, 1);
+                r = sox_readbuf(ft, p->frames, p->channels*FRAMESIZE, 1);
                 if (r != 1) break;
 
                 p->samplePtr = p->samples;
@@ -133,7 +133,7 @@ static st_size_t st_gsmread(ft_t ft, st_sample_t *buf, st_size_t samp)
                         gbuff = p->sampleTop;
                         if (gsm_decode(p->handle[ch], p->frames + ch*FRAMESIZE, gbuff) < 0)
                         {
-                                st_fail_errno(ft,errno,"error during GSM decode");
+                                sox_fail_errno(ft,errno,"error during GSM decode");
                                 return (0);
                         }
                         
@@ -171,19 +171,19 @@ static int gsmflush(ft_t ft)
                         gsp += chans;
                 }
                 gsm_encode(p->handle[ch], gbuff, p->frames);
-                r = st_writebuf(ft, p->frames, FRAMESIZE, 1);
+                r = sox_writebuf(ft, p->frames, FRAMESIZE, 1);
                 if (r != 1)
                 {
-                        st_fail_errno(ft,errno,"write error");
-                        return(ST_EOF);
+                        sox_fail_errno(ft,errno,"write error");
+                        return(SOX_EOF);
                 }
         }
         p->samplePtr = p->samples;
 
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
-static st_size_t st_gsmwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
+static sox_size_t sox_gsmwrite(ft_t ft, const sox_sample_t *buf, sox_size_t samp)
 {
         size_t done = 0;
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
@@ -192,7 +192,7 @@ static st_size_t st_gsmwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
         {
                 while ((p->samplePtr < p->sampleTop) && (done < samp))
                         *(p->samplePtr)++ = 
-                            ST_SAMPLE_TO_SIGNED_WORD(buf[done++], ft->clips);
+                            SOX_SAMPLE_TO_SIGNED_WORD(buf[done++], ft->clips);
 
                 if (p->samplePtr == p->sampleTop)
                 {
@@ -206,7 +206,7 @@ static st_size_t st_gsmwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
         return done;
 }
 
-static int st_gsmstopread(ft_t ft)
+static int sox_gsmstopread(ft_t ft)
 {
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
         int ch;
@@ -216,10 +216,10 @@ static int st_gsmstopread(ft_t ft)
 
         free(p->samples);
         free(p->frames);
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
-static int st_gsmstopwrite(ft_t ft)
+static int sox_gsmstopwrite(ft_t ft)
 {
         int rc;
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
@@ -231,7 +231,7 @@ static int st_gsmstopwrite(ft_t ft)
                     return rc;
         }
 
-        return st_gsmstopread(ft); /* destroy handles and free buffers */
+        return sox_gsmstopread(ft); /* destroy handles and free buffers */
 }
 
 /* GSM 06.10 */
@@ -240,20 +240,20 @@ static const char *gsmnames[] = {
   NULL
 };
 
-static st_format_t st_gsm_format = {
+static sox_format_t sox_gsm_format = {
   gsmnames,
   NULL,
   0,
-  st_gsmstartread,
-  st_gsmread,
-  st_gsmstopread,
-  st_gsmstartwrite,
-  st_gsmwrite,
-  st_gsmstopwrite,
-  st_format_nothing_seek
+  sox_gsmstartread,
+  sox_gsmread,
+  sox_gsmstopread,
+  sox_gsmstartwrite,
+  sox_gsmwrite,
+  sox_gsmstopwrite,
+  sox_format_nothing_seek
 };
 
-const st_format_t *st_gsm_format_fn(void)
+const sox_format_t *sox_gsm_format_fn(void)
 {
-    return &st_gsm_format;
+    return &sox_gsm_format;
 }

@@ -11,10 +11,10 @@
  * implied warranty.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include "g711.h"
 
-int16_t _st_alaw2linear16[256] = {
+int16_t _sox_alaw2linear16[256] = {
      -5504,   -5248,   -6016,   -5760,   -4480,   -4224,   -4992,
      -4736,   -7552,   -7296,   -8064,   -7808,   -6528,   -6272,
      -7040,   -6784,   -2752,   -2624,   -3008,   -2880,   -2240,
@@ -54,7 +54,7 @@ int16_t _st_alaw2linear16[256] = {
        816,     784,     880,     848
 };
 
-uint8_t _st_13linear2alaw[0x2000] = {
+uint8_t _sox_13linear2alaw[0x2000] = {
    0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a,
    0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a,
    0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a,
@@ -740,7 +740,7 @@ uint8_t _st_13linear2alaw[0x2000] = {
    0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa
 };
 
-int16_t _st_ulaw2linear16[256] = {
+int16_t _sox_ulaw2linear16[256] = {
     -32124,  -31100,  -30076,  -29052,  -28028,  -27004,  -25980,
     -24956,  -23932,  -22908,  -21884,  -20860,  -19836,  -18812,
     -17788,  -16764,  -15996,  -15484,  -14972,  -14460,  -13948,
@@ -780,7 +780,7 @@ int16_t _st_ulaw2linear16[256] = {
         24,      16,       8,       0
 };
 
-uint8_t _st_14linear2ulaw[0x4000] = {
+uint8_t _sox_14linear2ulaw[0x4000] = {
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -2197,7 +2197,7 @@ static int16_t search(
  * For further information see John C. Bellamy's Digital Telephony, 1982,
  * John Wiley & Sons, pps 98-111 and 472-476.
  */
-unsigned char st_13linear2alaw(
+unsigned char sox_13linear2alaw(
 	int16_t		pcm_val)	/* 2's complement (13-bit range) */
 {
 	int16_t		mask;
@@ -2237,7 +2237,7 @@ unsigned char st_13linear2alaw(
  * alaw2linear() - Convert an A-law value to 16-bit signed linear PCM
  *
  */
-int16_t st_alaw2linear16(
+int16_t sox_alaw2linear16(
 	unsigned char	a_val)
 {
 	int16_t t;
@@ -2296,7 +2296,7 @@ int16_t st_alaw2linear16(
  * For further information see John C. Bellamy's Digital Telephony, 1982,
  * John Wiley & Sons, pps 98-111 and 472-476.
  */
-unsigned char st_14linear2ulaw(
+unsigned char sox_14linear2ulaw(
 	int16_t		pcm_val)	/* 2's complement (14-bit range) */
 {
 	int16_t		mask;
@@ -2343,7 +2343,7 @@ unsigned char st_14linear2ulaw(
  * Note that this function expects to be passed the complement of the
  * original code word. This is in keeping with ISDN conventions.
  */
-int16_t st_ulaw2linear16(
+int16_t sox_ulaw2linear16(
 	unsigned char	u_val)
 {
 	int16_t		t;
@@ -2366,10 +2366,10 @@ int main(void)
     int x, y, find2a = 0;
 
     y = 0;
-    printf("int16_t _st_alaw2linear16[256] = {\n  ");
+    printf("int16_t _sox_alaw2linear16[256] = {\n  ");
     for (x = 0; x < 256; x++)
     {
-	printf("%8d,", st_alaw2linear16(x));
+	printf("%8d,", sox_alaw2linear16(x));
 	y++;
 	if (y == 7)
 	{
@@ -2378,11 +2378,11 @@ int main(void)
 	}
     }
 
-    printf("\n};\n\nuint8_t _st_13linear2alaw[0x2000] = {\n  ");
+    printf("\n};\n\nuint8_t _sox_13linear2alaw[0x2000] = {\n  ");
     y = 0;
     for (x = 0; x < 0x2000; x++)
     {
-	printf(" 0x%02x,", st_13linear2alaw((-0x1000)+x));
+	printf(" 0x%02x,", sox_13linear2alaw((-0x1000)+x));
 	y++;
 	if (y == 12)
 	{
@@ -2391,11 +2391,11 @@ int main(void)
 	}
     }
 
-    printf("\n};\n\nint16_t _st_ulaw2linear16[256] = {\n  ");
+    printf("\n};\n\nint16_t _sox_ulaw2linear16[256] = {\n  ");
     y = 0;
     for (x = 0; x < 256; x++)
     {
-	printf("%8d,", st_ulaw2linear16(x));
+	printf("%8d,", sox_ulaw2linear16(x));
 	y++;
 	if (y == 7)
 	{
@@ -2404,11 +2404,11 @@ int main(void)
 	}
     }
 
-    printf("\n};\n\nuint8_t _st_14linear2ulaw[0x4000] = {\n  ");
+    printf("\n};\n\nuint8_t _sox_14linear2ulaw[0x4000] = {\n  ");
     y = 0;
     for (x = 0; x < 0x4000; x++)
     {
-	printf(" 0x%02x,", st_14linear2ulaw((-0x2000)+x));
+	printf(" 0x%02x,", sox_14linear2ulaw((-0x2000)+x));
 	y++;
 	if (y == 12)
 	{

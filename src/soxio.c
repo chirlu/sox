@@ -1,4 +1,4 @@
-#include "st_i.h"
+#include "sox_i.h"
 
 #include <string.h>
 #include <errno.h>
@@ -27,16 +27,16 @@
 
 void set_endianness_if_not_already_set(ft_t ft)
 {
-  if (ft->signal.reverse_bytes == ST_OPTION_DEFAULT) {
-    if (ft->h->flags & ST_FILE_ENDIAN)
-      ft->signal.reverse_bytes = ST_IS_LITTLEENDIAN != !(ft->h->flags & ST_FILE_ENDBIG);
+  if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT) {
+    if (ft->h->flags & SOX_FILE_ENDIAN)
+      ft->signal.reverse_bytes = SOX_IS_LITTLEENDIAN != !(ft->h->flags & SOX_FILE_ENDBIG);
     else
-      ft->signal.reverse_bytes = ST_OPTION_NO;
+      ft->signal.reverse_bytes = SOX_OPTION_NO;
   }
-  if (ft->signal.reverse_nibbles == ST_OPTION_DEFAULT)
-    ft->signal.reverse_nibbles = ST_OPTION_NO;
-  if (ft->signal.reverse_bits == ST_OPTION_DEFAULT)
-    ft->signal.reverse_bits = ST_OPTION_NO;
+  if (ft->signal.reverse_nibbles == SOX_OPTION_DEFAULT)
+    ft->signal.reverse_nibbles = SOX_OPTION_NO;
+  if (ft->signal.reverse_bits == SOX_OPTION_DEFAULT)
+    ft->signal.reverse_bits = SOX_OPTION_NO;
 }
 
 static int is_seekable(ft_t ft)
@@ -49,48 +49,48 @@ static int is_seekable(ft_t ft)
 }
 
 /* check that all settings have been given */
-static int st_checkformat(ft_t ft)
+static int sox_checkformat(ft_t ft)
 {
 
-        ft->st_errno = ST_SUCCESS;
+        ft->sox_errno = SOX_SUCCESS;
 
         if (ft->signal.rate == 0)
         {
-                st_fail_errno(ft,ST_EFMT,"sampling rate was not specified");
-                return ST_EOF;
+                sox_fail_errno(ft,SOX_EFMT,"sampling rate was not specified");
+                return SOX_EOF;
         }
 
         if (ft->signal.size == -1)
         {
-                st_fail_errno(ft,ST_EFMT,"data size was not specified");
-                return ST_EOF;
+                sox_fail_errno(ft,SOX_EFMT,"data size was not specified");
+                return SOX_EOF;
         }
 
-        if (ft->signal.encoding == ST_ENCODING_UNKNOWN)
+        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
         {
-                st_fail_errno(ft,ST_EFMT,"data encoding was not specified");
-                return ST_EOF;
+                sox_fail_errno(ft,SOX_EFMT,"data encoding was not specified");
+                return SOX_EOF;
         }
 
-        if ((ft->signal.size <= 0) || (ft->signal.size > ST_INFO_SIZE_MAX))
+        if ((ft->signal.size <= 0) || (ft->signal.size > SOX_INFO_SIZE_MAX))
         {
-                st_fail_errno(ft,ST_EFMT,"data size %d is invalid", ft->signal.size);
-                return ST_EOF;
+                sox_fail_errno(ft,SOX_EFMT,"data size %d is invalid", ft->signal.size);
+                return SOX_EOF;
         }
 
-        if (ft->signal.encoding <= 0  || ft->signal.encoding >= ST_ENCODINGS)
+        if (ft->signal.encoding <= 0  || ft->signal.encoding >= SOX_ENCODINGS)
         {
-                st_fail_errno(ft,ST_EFMT,"data encoding %d is invalid", ft->signal.encoding);
-                return ST_EOF;
+                sox_fail_errno(ft,SOX_EFMT,"data encoding %d is invalid", ft->signal.encoding);
+                return SOX_EOF;
         }
 
-        return ST_SUCCESS;
+        return SOX_SUCCESS;
 }
 
-ft_t st_open_read(const char *path, const st_signalinfo_t *info,
+ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
                   const char *filetype)
 {
-    ft_t ft = (ft_t)xcalloc(sizeof(struct st_soundstream), 1);
+    ft_t ft = (ft_t)xcalloc(sizeof(struct sox_soundstream), 1);
 
     ft->filename = xstrdup(path);
 
@@ -100,21 +100,21 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
     else
         ft->filetype = xstrdup(filetype);
 
-    if (st_gettype(ft, st_false) != ST_SUCCESS) {
-        st_warn("Unknown input file format for `%s':  %s",
+    if (sox_gettype(ft, sox_false) != SOX_SUCCESS) {
+        sox_warn("Unknown input file format for `%s':  %s",
                 ft->filename,
-                ft->st_errstr);
+                ft->sox_errstr);
         goto input_error;
     }
 
     ft->signal.size = -1;
-    ft->signal.encoding = ST_ENCODING_UNKNOWN;
+    ft->signal.encoding = SOX_ENCODING_UNKNOWN;
     ft->signal.channels = 0;
     if (info)
         ft->signal = *info;
     ft->mode = 'r';
 
-    if (!(ft->h->flags & ST_FILE_NOSTDIO))
+    if (!(ft->h->flags & SOX_FILE_NOSTDIO))
     {
         /* Open file handler based on input name.  Used stdin file handler
          * if the filename is "-"
@@ -126,7 +126,7 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
         }
         else if ((ft->fp = fopen(ft->filename, "rb")) == NULL)
         {
-            st_warn("Can't open input file `%s': %s", ft->filename,
+            sox_warn("Can't open input file `%s': %s", ft->filename,
                     strerror(errno));
             goto input_error;
         }
@@ -139,9 +139,9 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
       set_endianness_if_not_already_set(ft);
 
     /* Read and write starters can change their formats. */
-    if ((*ft->h->startread)(ft) != ST_SUCCESS)
+    if ((*ft->h->startread)(ft) != SOX_SUCCESS)
     {
-        st_warn("Failed reading `%s': %s", ft->filename, ft->st_errstr);
+        sox_warn("Failed reading `%s': %s", ft->filename, ft->sox_errstr);
         goto input_error;
     }
 
@@ -152,10 +152,10 @@ ft_t st_open_read(const char *path, const st_signalinfo_t *info,
     if (ft->signal.channels == 0)
         ft->signal.channels = 1;
 
-    if (st_checkformat(ft) )
+    if (sox_checkformat(ft) )
     {
-        st_warn("bad input format for file %s: %s", ft->filename,
-                ft->st_errstr);
+        sox_warn("bad input format for file %s: %s", ft->filename,
+                ft->sox_errstr);
         goto input_error;
     }
     return ft;
@@ -174,18 +174,18 @@ input_error:
 #define LASTCHAR '/'
 #endif
 
-ft_t st_open_write(
-    st_bool (*overwrite_permitted)(const char *filename),
+ft_t sox_open_write(
+    sox_bool (*overwrite_permitted)(const char *filename),
     const char *path,
-    const st_signalinfo_t *info,
+    const sox_signalinfo_t *info,
     const char *filetype,
     const char *comment,
-    const st_instrinfo_t *instr,
-    const st_loopinfo_t *loops)
+    const sox_instrinfo_t *instr,
+    const sox_loopinfo_t *loops)
 {
-    ft_t ft = (ft_t)xcalloc(sizeof(struct st_soundstream), 1);
+    ft_t ft = (ft_t)xcalloc(sizeof(struct sox_soundstream), 1);
     int i;
-    st_bool no_filetype_given = filetype == NULL;
+    sox_bool no_filetype_given = filetype == NULL;
 
     ft->filename = xstrdup(path);
 
@@ -211,22 +211,22 @@ ft_t st_open_write(
     } else
         ft->filetype = xstrdup(filetype);
 
-    if (!ft->filetype || st_gettype(ft, no_filetype_given) != ST_SUCCESS)
+    if (!ft->filetype || sox_gettype(ft, no_filetype_given) != SOX_SUCCESS)
     {
-        st_fail("Unknown output file format for '%s':  %s",
+        sox_fail("Unknown output file format for '%s':  %s",
                 ft->filename,
-                ft->st_errstr);
+                ft->sox_errstr);
         goto output_error;
     }
 
     ft->signal.size = -1;
-    ft->signal.encoding = ST_ENCODING_UNKNOWN;
+    ft->signal.encoding = SOX_ENCODING_UNKNOWN;
     ft->signal.channels = 0;
     if (info)
         ft->signal = *info;
     ft->mode = 'w';
 
-    if (!(ft->h->flags & ST_FILE_NOSTDIO))
+    if (!(ft->h->flags & SOX_FILE_NOSTDIO))
     {
         /* Open file handler based on output name.  Used stdout file handler
          * if the filename is "-"
@@ -240,11 +240,11 @@ ft_t st_open_write(
           struct stat st;
           if (!stat(ft->filename, &st) && (st.st_mode & S_IFMT) == S_IFREG &&
               !overwrite_permitted(ft->filename)) {
-            st_fail("Permission to overwrite '%s' denied", ft->filename);
+            sox_fail("Permission to overwrite '%s' denied", ft->filename);
             goto output_error;
           }
           if ((ft->fp = fopen(ft->filename, "wb")) == NULL) {
-            st_fail("Can't open output file '%s': %s", ft->filename,
+            sox_fail("Can't open output file '%s': %s", ft->filename,
                     strerror(errno));
             goto output_error;
           }
@@ -252,9 +252,9 @@ ft_t st_open_write(
 
         /* stdout tends to be line-buffered.  Override this */
         /* to be Full Buffering. */
-        if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char)*ST_BUFSIZ))
+        if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char)*SOX_BUFSIZ))
         {
-            st_fail("Can't set write buffer");
+            sox_fail("Can't set write buffer");
             goto output_error;
         }
 
@@ -265,7 +265,7 @@ ft_t st_open_write(
     ft->comment = xstrdup(comment);
 
     if (loops)
-        for (i = 0; i < ST_MAX_NLOOPS; i++)
+        for (i = 0; i < SOX_MAX_NLOOPS; i++)
             ft->loops[i] = loops[i];
 
     /* leave SMPTE # alone since it's absolute */
@@ -275,16 +275,16 @@ ft_t st_open_write(
     set_endianness_if_not_already_set(ft);
 
     /* Read and write starters can change their formats. */
-    if ((*ft->h->startwrite)(ft) != ST_SUCCESS)
+    if ((*ft->h->startwrite)(ft) != SOX_SUCCESS)
     {
-        st_fail("Failed writing %s: %s", ft->filename, ft->st_errstr);
+        sox_fail("Failed writing %s: %s", ft->filename, ft->sox_errstr);
         goto output_error;
     }
 
-    if (st_checkformat(ft) )
+    if (sox_checkformat(ft) )
     {
-        st_fail("bad output format for file %s: %s", ft->filename,
-                ft->st_errstr);
+        sox_fail("bad output format for file %s: %s", ft->filename,
+                ft->sox_errstr);
         goto output_error;
     }
 
@@ -298,19 +298,19 @@ output_error:
     return NULL;
 }
 
-st_size_t st_read(ft_t f, st_sample_t * buf, st_size_t len)
+sox_size_t sox_read(ft_t f, sox_sample_t * buf, sox_size_t len)
 {
-  st_size_t actual = (*f->h->read)(f, buf, len);
+  sox_size_t actual = (*f->h->read)(f, buf, len);
   return (actual > len? 0 : actual);
 }
 
-st_size_t st_write(ft_t ft, const st_sample_t *buf, st_size_t len)
+sox_size_t sox_write(ft_t ft, const sox_sample_t *buf, sox_size_t len)
 {
     return (*ft->h->write)(ft, buf, len);
 }
 
 /* N.B. The file (if any) may already have been deleted. */
-int st_close(ft_t ft)
+int sox_close(ft_t ft)
 {
     int rc;
 
@@ -319,7 +319,7 @@ int st_close(ft_t ft)
     else
         rc = (*ft->h->stopwrite)(ft);
 
-    if (!(ft->h->flags & ST_FILE_NOSTDIO))
+    if (!(ft->h->flags & SOX_FILE_NOSTDIO))
         fclose(ft->fp);
     free(ft->filename);
     free(ft->filetype);
@@ -331,17 +331,17 @@ int st_close(ft_t ft)
     return rc;
 }
 
-int st_seek(ft_t ft, st_size_t offset, int whence)       
+int sox_seek(ft_t ft, sox_size_t offset, int whence)       
 {       
-    /* FIXME: Implement ST_SEEK_CUR and ST_SEEK_END. */         
-    if (whence != ST_SEEK_SET)          
-        return ST_EOF; /* FIXME: return ST_EINVAL */    
+    /* FIXME: Implement SOX_SEEK_CUR and SOX_SEEK_END. */         
+    if (whence != SOX_SEEK_SET)          
+        return SOX_EOF; /* FIXME: return SOX_EINVAL */    
 
     /* If file is a seekable file and this handler supports seeking,    
      * the invoke handlers function.    
      */         
-    if (ft->seekable  && (ft->h->flags & ST_FILE_SEEK))         
+    if (ft->seekable  && (ft->h->flags & SOX_FILE_SEEK))         
         return (*ft->h->seek)(ft, offset);      
     else        
-        return ST_EOF; /* FIXME: return ST_EBADF */     
+        return SOX_EOF; /* FIXME: return SOX_EBADF */     
 }

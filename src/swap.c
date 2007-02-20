@@ -11,9 +11,9 @@
  */
 
 
-#include "st_i.h"
+#include "sox_i.h"
 
-static st_effect_t st_swap_effect;
+static sox_effect_t sox_swap_effect;
 
 typedef struct swapstuff {
     int         order[4];
@@ -26,7 +26,7 @@ typedef struct swapstuff {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-static int st_swap_getopts(eff_t effp, int n, char **argv) 
+static int sox_swap_getopts(eff_t effp, int n, char **argv) 
 {
     swap_t swap = (swap_t) effp->priv;
 
@@ -36,8 +36,8 @@ static int st_swap_getopts(eff_t effp, int n, char **argv)
         swap->def_opts = 0;
         if (n != 2 && n != 4)
         {
-            st_fail(st_swap_effect.usage);
-            return (ST_EOF);
+            sox_fail(sox_swap_effect.usage);
+            return (SOX_EOF);
         }
         else if (n == 2)
         {
@@ -55,22 +55,22 @@ static int st_swap_getopts(eff_t effp, int n, char **argv)
     else
         swap->def_opts = 1;
 
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
 /*
  * Prepare processing.
  * Do all initializations.
  */
-static int st_swap_start(eff_t effp)
+static int sox_swap_start(eff_t effp)
 {
     swap_t swap = (swap_t) effp->priv;
     int i;
 
     if (effp->outinfo.channels == 1)
     {
-        st_fail("Can't swap channels on mono data.");
-        return (ST_EOF);
+        sox_fail("Can't swap channels on mono data.");
+        return (SOX_EOF);
     }
 
     if (effp->outinfo.channels == 2)
@@ -83,12 +83,12 @@ static int st_swap_start(eff_t effp)
 
         if (swap->order[2] || swap->order[3])
         {
-            st_fail("invalid swap channel options used");
+            sox_fail("invalid swap channel options used");
         }
         if (swap->order[0] != 1 && swap->order[0] != 2)
-            st_fail("invalid swap channel options used");
+            sox_fail("invalid swap channel options used");
         if (swap->order[1] != 1 && swap->order[1] != 2)
-            st_fail("invalid swap channel options used");
+            sox_fail("invalid swap channel options used");
 
         /* Convert to array offsets */
         swap->order[0]--;
@@ -106,13 +106,13 @@ static int st_swap_start(eff_t effp)
         }
 
         if (swap->order[0] < 1 || swap->order[0] > 4)
-            st_fail("invalid swap channel options used");
+            sox_fail("invalid swap channel options used");
         if (swap->order[1] < 1 || swap->order[1] > 4)
-            st_fail("invalid swap channel options used");
+            sox_fail("invalid swap channel options used");
         if (swap->order[2] < 1 || swap->order[2] > 4)
-            st_fail("invalid swap channel options used");
+            sox_fail("invalid swap channel options used");
         if (swap->order[3] < 1 || swap->order[3] > 4)
-            st_fail("invalid swap channel options used");
+            sox_fail("invalid swap channel options used");
 
         /* Convert to array offsets */
         swap->order[0]--;
@@ -124,17 +124,17 @@ static int st_swap_start(eff_t effp)
 
     for (i = 0; i < (int)effp->outinfo.channels; ++i)
       if (swap->order[i] != i)
-        return ST_SUCCESS;
+        return SOX_SUCCESS;
 
-    return ST_EFF_NULL;
+    return SOX_EFF_NULL;
 }
 
 /*
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int st_swap_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                 st_size_t *isamp, st_size_t *osamp)
+static int sox_swap_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                 sox_size_t *isamp, sox_size_t *osamp)
 {
     swap_t swap = (swap_t) effp->priv;
     int len, done;
@@ -180,22 +180,22 @@ static int st_swap_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         
         break;
     }
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
-static st_effect_t st_swap_effect = {
+static sox_effect_t sox_swap_effect = {
   "swap",
   "Usage: swap [1 2 | 1 2 3 4]",
-  ST_EFF_MCHAN,
-  st_swap_getopts,
-  st_swap_start,
-  st_swap_flow,
-  st_effect_nothing_drain,
-  st_effect_nothing,
-  st_effect_nothing  
+  SOX_EFF_MCHAN,
+  sox_swap_getopts,
+  sox_swap_start,
+  sox_swap_flow,
+  sox_effect_nothing_drain,
+  sox_effect_nothing,
+  sox_effect_nothing  
 };
 
-const st_effect_t *st_swap_effect_fn(void)
+const sox_effect_t *sox_swap_effect_fn(void)
 {
-    return &st_swap_effect;
+    return &sox_swap_effect;
 }

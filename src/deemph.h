@@ -104,6 +104,6 @@ p->b1 = -0.08782333709141937339;
  * pre-calculated filter coefficients.
  */
 if (effp->ininfo.rate != 44100) {
-  st_fail("Sample rate must be 44100 (audio-CD)");
-  return ST_EOF;
+  sox_fail("Sample rate must be 44100 (audio-CD)");
+  return SOX_EOF;
 }

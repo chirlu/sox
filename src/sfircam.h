@@ -159,7 +159,7 @@ typedef struct {                  /*     ditto                    */
 #define sfchans(x) ((x)->sfinfo.sf_chans)
 #define sfclass(x) ((x)->sfinfo.sf_packmode)
 #define sfsamplesize(x) ((size_t) ((x)->sfinfo.sf_packmode & 0xFFFF))
-#define sfbsize(x) ((x)->st_size - sizeof(SFHEADER))
+#define sfbsize(x) ((x)->sox_size - sizeof(SFHEADER))
 #define sfcodes(x) ((x)->sfinfo.sf_codes)
 
 /*
@@ -215,6 +215,6 @@ typedef struct {                  /*     ditto                    */
 #define sfmaxamp(mptr,chan) (mptr)->value[chan]
 #define sfmaxamploc(mptr,chan) (mptr)->samploc[chan]
 #define sfmaxamptime(x) (x)->timetag
-#define ismaxampgood(x,s) (sfmaxamptime(x) >= (s)->st_mtime)
+#define ismaxampgood(x,s) (sfmaxamptime(x) >= (s)->sox_mtime)
 #define sfcomm(x,n) (x)->comment[n]
 

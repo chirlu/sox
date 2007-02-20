@@ -31,7 +31,7 @@
 #include <unistd.h>             /* For SEEK_* defines if not found in stdio */
 #endif
 
-#include "st_i.h"
+#include "sox_i.h"
 
 #define HNIBBLE(byte) (((byte) >> 4) & 0xf)
 #define LNIBBLE(byte) ((byte) & 0xf)
@@ -89,87 +89,87 @@ static inline int32_t clip16(int32_t sample)
     }
 }
 
-static int st_xastartread(ft_t ft)
+static int sox_xastartread(ft_t ft)
 {
     xa_t xa = (xa_t) ft->priv;
     char *magic = xa->header.magic;
 
     /* Check for the magic value */
-    if (st_readbuf(ft, xa->header.magic, 1, 4) != 4 ||
+    if (sox_readbuf(ft, xa->header.magic, 1, 4) != 4 ||
         (memcmp("XA\0\0", xa->header.magic, 4) != 0 &&
          memcmp("XAI\0", xa->header.magic, 4) != 0 &&
          memcmp("XAJ\0", xa->header.magic, 4) != 0))
     {
-        st_fail_errno(ft, ST_EHDR, "XA: Header not found");
-        return ST_EOF;
+        sox_fail_errno(ft, SOX_EHDR, "XA: Header not found");
+        return SOX_EOF;
     }
     
     /* Read the rest of the header */
-    if (st_readdw(ft, &xa->header.outSize) != ST_SUCCESS) return ST_EOF;
-    if (st_readw(ft, &xa->header.tag) != ST_SUCCESS) return ST_EOF;
-    if (st_readw(ft, &xa->header.channels) != ST_SUCCESS) return ST_EOF;
-    if (st_readdw(ft, &xa->header.sampleRate) != ST_SUCCESS) return ST_EOF;
-    if (st_readdw(ft, &xa->header.avgByteRate) != ST_SUCCESS) return ST_EOF;
-    if (st_readw(ft, &xa->header.align) != ST_SUCCESS) return ST_EOF;
-    if (st_readw(ft, &xa->header.bits) != ST_SUCCESS) return ST_EOF;
+    if (sox_readdw(ft, &xa->header.outSize) != SOX_SUCCESS) return SOX_EOF;
+    if (sox_readw(ft, &xa->header.tag) != SOX_SUCCESS) return SOX_EOF;
+    if (sox_readw(ft, &xa->header.channels) != SOX_SUCCESS) return SOX_EOF;
+    if (sox_readdw(ft, &xa->header.sampleRate) != SOX_SUCCESS) return SOX_EOF;
+    if (sox_readdw(ft, &xa->header.avgByteRate) != SOX_SUCCESS) return SOX_EOF;
+    if (sox_readw(ft, &xa->header.align) != SOX_SUCCESS) return SOX_EOF;
+    if (sox_readw(ft, &xa->header.bits) != SOX_SUCCESS) return SOX_EOF;
 
     /* Output the data from the header */
-    st_debug("XA Header:");
-    st_debug(" szID:          %02x %02x %02x %02x  |%c%c%c%c|",
+    sox_debug("XA Header:");
+    sox_debug(" szID:          %02x %02x %02x %02x  |%c%c%c%c|",
         magic[0], magic[1], magic[2], magic[3],
         (magic[0] >= 0x20 && magic[0] <= 0x7e) ? magic[0] : '.',
         (magic[1] >= 0x20 && magic[1] <= 0x7e) ? magic[1] : '.',
         (magic[2] >= 0x20 && magic[2] <= 0x7e) ? magic[2] : '.',
         (magic[3] >= 0x20 && magic[3] <= 0x7e) ? magic[3] : '.');
-    st_debug(" dwOutSize:     %u", xa->header.outSize);
-    st_debug(" wTag:          0x%04x", xa->header.tag);
-    st_debug(" wChannels:     %u", xa->header.channels);
-    st_debug(" dwSampleRate:  %u", xa->header.sampleRate);
-    st_debug(" dwAvgByteRate: %u", xa->header.avgByteRate);
-    st_debug(" wAlign:        %u", xa->header.align);
-    st_debug(" wBits:         %u", xa->header.bits);
+    sox_debug(" dwOutSize:     %u", xa->header.outSize);
+    sox_debug(" wTag:          0x%04x", xa->header.tag);
+    sox_debug(" wChannels:     %u", xa->header.channels);
+    sox_debug(" dwSampleRate:  %u", xa->header.sampleRate);
+    sox_debug(" dwAvgByteRate: %u", xa->header.avgByteRate);
+    sox_debug(" wAlign:        %u", xa->header.align);
+    sox_debug(" wBits:         %u", xa->header.bits);
 
-    /* Populate the st_soundstream structure */
-    ft->signal.encoding = ST_ENCODING_SIGN2;
+    /* Populate the sox_soundstream structure */
+    ft->signal.encoding = SOX_ENCODING_SIGN2;
     
     if (ft->signal.size == -1 || ft->signal.size == (xa->header.bits >> 3)) {
         ft->signal.size = xa->header.bits >> 3;
     } else {
-        st_report("User options overriding size read in .xa header");
+        sox_report("User options overriding size read in .xa header");
     }
     
     if (ft->signal.channels == 0 || ft->signal.channels == xa->header.channels) {
         ft->signal.channels = xa->header.channels;
     } else {
-        st_report("User options overriding channels read in .xa header");
+        sox_report("User options overriding channels read in .xa header");
     }
     
     if (ft->signal.rate == 0 || ft->signal.rate == xa->header.sampleRate) {
         ft->signal.rate = xa->header.sampleRate;
     } else {
-        st_report("User options overriding rate read in .xa header");
+        sox_report("User options overriding rate read in .xa header");
     }
     
     /* Check for supported formats */
     if (ft->signal.size != 2) {
-        st_fail_errno(ft, ST_EFMT, "%d-bit sample resolution not supported.",
+        sox_fail_errno(ft, SOX_EFMT, "%d-bit sample resolution not supported.",
             ft->signal.size << 3);
-        return ST_EOF;
+        return SOX_EOF;
     }
     
     /* Validate the header */
     if (xa->header.bits != ft->signal.size << 3) {
-        st_report("Invalid sample resolution %d bits.  Assuming %d bits.",
+        sox_report("Invalid sample resolution %d bits.  Assuming %d bits.",
             xa->header.bits, ft->signal.size << 3);
         xa->header.bits = ft->signal.size << 3;
     }
     if (xa->header.align != ft->signal.size * xa->header.channels) {
-        st_report("Invalid sample alignment value %d.  Assuming %d.",
+        sox_report("Invalid sample alignment value %d.  Assuming %d.",
             xa->header.align, ft->signal.size * xa->header.channels);
         xa->header.align = ft->signal.size * xa->header.channels;
     }
     if (xa->header.avgByteRate != (xa->header.align * xa->header.sampleRate)) {
-        st_report("Invalid dwAvgByteRate value %d.  Assuming %d.",
+        sox_report("Invalid dwAvgByteRate value %d.  Assuming %d.",
             xa->header.avgByteRate, xa->header.align * xa->header.sampleRate);
         xa->header.avgByteRate = xa->header.align * xa->header.sampleRate;
     }
@@ -187,37 +187,37 @@ static int st_xastartread(ft_t ft)
     /* Final initialization */
     xa->bytesDecoded = 0;
     
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 }
 
 /* 
  * Read up to len samples from a file, converted to signed longs.
  * Return the number of samples read.
  */
-static st_size_t st_xaread(ft_t ft, st_sample_t *buf, st_size_t len)
+static sox_size_t sox_xaread(ft_t ft, sox_sample_t *buf, sox_size_t len)
 {
     xa_t xa = (xa_t) ft->priv;
     int32_t sample;
     unsigned char inByte;
     size_t i, done, bytes;
 
-    ft->st_errno = ST_SUCCESS;
+    ft->sox_errno = SOX_SUCCESS;
     done = 0;
     while (done < len) {
         if (xa->bufPos >= xa->blockSize) {
             /* Read the next block */
-            bytes = st_readbuf(ft, xa->buf, 1, xa->blockSize);
+            bytes = sox_readbuf(ft, xa->buf, 1, xa->blockSize);
             if (bytes < xa->blockSize) {
-                if (st_eof(ft)) {
+                if (sox_eof(ft)) {
                     if (done > 0) {
                         return done;
                     }
-                    st_fail_errno(ft,ST_EOF,"Premature EOF on .xa input file");
-                    return ST_EOF;
+                    sox_fail_errno(ft,SOX_EOF,"Premature EOF on .xa input file");
+                    return SOX_EOF;
                 } else {
                     /* error */
-                    st_fail_errno(ft,ST_EOF,"read error on input stream");
-                    return ST_EOF;
+                    sox_fail_errno(ft,SOX_EOF,"read error on input stream");
+                    return SOX_EOF;
                 }
             }
             xa->bufPos = 0;
@@ -242,7 +242,7 @@ static st_size_t st_xaread(ft_t ft, st_sample_t *buf, st_size_t len)
                 xa->state[i].prevSample = xa->state[i].curSample;
                 xa->state[i].curSample = sample;
                 
-                buf[done++] = ST_SIGNED_WORD_TO_SAMPLE(sample,);
+                buf[done++] = SOX_SIGNED_WORD_TO_SAMPLE(sample,);
                 xa->bytesDecoded += ft->signal.size;
             }
             for (i = 0; i < ft->signal.channels && done < len; i++) {
@@ -256,7 +256,7 @@ static st_size_t st_xaread(ft_t ft, st_sample_t *buf, st_size_t len)
                 xa->state[i].prevSample = xa->state[i].curSample;
                 xa->state[i].curSample = sample;
                 
-                buf[done++] = ST_SIGNED_WORD_TO_SAMPLE(sample,);
+                buf[done++] = SOX_SIGNED_WORD_TO_SAMPLE(sample,);
                 xa->bytesDecoded += ft->signal.size;
             }
 
@@ -264,16 +264,16 @@ static st_size_t st_xaread(ft_t ft, st_sample_t *buf, st_size_t len)
         }
     }
     if (done == 0) {
-        return ST_EOF;
+        return SOX_EOF;
     }
     return done;
 }
 
-static int st_xastopread(ft_t ft)
+static int sox_xastopread(ft_t ft)
 {
     xa_t xa = (xa_t) ft->priv;
 
-    ft->st_errno = ST_SUCCESS;
+    ft->sox_errno = SOX_SUCCESS;
 
     /* Free memory */
     free(xa->buf);
@@ -281,30 +281,30 @@ static int st_xastopread(ft_t ft)
     free(xa->state);
     xa->state = NULL;
     
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 }
 
-static int st_xastartwrite(ft_t ft)
+static int sox_xastartwrite(ft_t ft)
 {
-    st_fail_errno(ft, ST_ENOTSUP, ".XA writing not supported");
-    return ST_EOF;
+    sox_fail_errno(ft, SOX_ENOTSUP, ".XA writing not supported");
+    return SOX_EOF;
 }
 
-static st_size_t st_xawrite(ft_t ft, const st_sample_t *buf UNUSED, st_size_t len UNUSED)
+static sox_size_t sox_xawrite(ft_t ft, const sox_sample_t *buf UNUSED, sox_size_t len UNUSED)
 {
-    st_fail_errno(ft, ST_ENOTSUP, ".XA writing not supported");
-    return ST_EOF;
+    sox_fail_errno(ft, SOX_ENOTSUP, ".XA writing not supported");
+    return SOX_EOF;
 }
 
-static int st_xastopwrite(ft_t ft)
+static int sox_xastopwrite(ft_t ft)
 {
-    st_fail_errno(ft, ST_ENOTSUP, ".XA writing not supported");
-    return ST_EOF;
+    sox_fail_errno(ft, SOX_ENOTSUP, ".XA writing not supported");
+    return SOX_EOF;
 }
 
-static int st_xaseek(ft_t ft, st_size_t offset)
+static int sox_xaseek(ft_t ft, sox_size_t offset)
 {
-    return st_format_nothing_seek(ft, offset);
+    return sox_format_nothing_seek(ft, offset);
 }
 
 /* Maxis .xa */
@@ -313,20 +313,20 @@ static const char *xanames[] = {
     NULL
 };
 
-st_format_t st_xa_format = {
+sox_format_t sox_xa_format = {
   xanames,
   NULL,
-  ST_FILE_LIT_END,
-  st_xastartread,
-  st_xaread,
-  st_xastopread,
-  st_xastartwrite,
-  st_xawrite,
-  st_xastopwrite,
-  st_xaseek
+  SOX_FILE_LIT_END,
+  sox_xastartread,
+  sox_xaread,
+  sox_xastopread,
+  sox_xastartwrite,
+  sox_xawrite,
+  sox_xastopwrite,
+  sox_xaseek
 };
 
-const st_format_t *st_xa_format_fn(void)
+const sox_format_t *sox_xa_format_fn(void)
 {
-  return &st_xa_format;
+  return &sox_xa_format;
 }

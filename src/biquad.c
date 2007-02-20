@@ -31,7 +31,7 @@ static char const * const width_str[] = {
 static char const all_width_types[] = "hboqs";
 
 
-int st_biquad_getopts(eff_t effp, int n, char **argv,
+int sox_biquad_getopts(eff_t effp, int n, char **argv,
     int min_args, int max_args, int fc_pos, int width_pos, int gain_pos,
     char const * allowed_width_types, filter_t filter_type)
 {
@@ -45,17 +45,17 @@ int st_biquad_getopts(eff_t effp, int n, char **argv,
       (n > width_pos && ((unsigned)(sscanf(argv[width_pos], "%lf%c %c", &p->width, &width_type, &dummy)-1) > 1 || p->width <= 0)) ||
       (n > gain_pos  && sscanf(argv[gain_pos], "%lf %c", &p->gain, &dummy) != 1) ||
       !strchr(allowed_width_types, width_type) || (width_type == 's' && p->width > 1)) {
-    st_fail(effp->h->usage);
-    return ST_EOF;
+    sox_fail(effp->h->usage);
+    return SOX_EOF;
   }
   p->width_type = strchr(all_width_types, width_type) - all_width_types;
   if (p->width_type >= strlen(all_width_types))
     p->width_type = 0;
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 
-int st_biquad_start(eff_t effp)
+int sox_biquad_start(eff_t effp)
 {
   biquad_t p = (biquad_t) effp->priv;
 
@@ -82,19 +82,19 @@ int st_biquad_start(eff_t effp)
       , effp->ininfo.rate, effp->ininfo.rate
       , p->b0, p->b1, p->b2, p->a1, p->a2
       );
-    return ST_EOF;
+    return SOX_EOF;
   }
 
   p->o2 = p->o1 = p->i2 = p-> i1 = 0;
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 
-int st_biquad_flow(eff_t effp, const st_sample_t *ibuf,
-    st_sample_t *obuf, st_size_t *isamp, st_size_t *osamp)
+int sox_biquad_flow(eff_t effp, const sox_sample_t *ibuf,
+    sox_sample_t *obuf, sox_size_t *isamp, sox_size_t *osamp)
 {
   biquad_t p = (biquad_t) effp->priv;
-  st_size_t len = (*isamp > *osamp)? *osamp : *isamp;
+  sox_size_t len = (*isamp > *osamp)? *osamp : *isamp;
   *isamp = *osamp = len;
 
   while (len--)
@@ -102,7 +102,7 @@ int st_biquad_flow(eff_t effp, const st_sample_t *ibuf,
     double o0 = *ibuf*p->b0 +p->i1*p->b1 +p->i2*p->b2 -p->o1*p->a1 -p->o2*p->a2;
     p->i2 = p->i1, p->i1 = *ibuf++;
     p->o2 = p->o1, p->o1 = o0;
-    *obuf++ = ST_ROUND_CLIP_COUNT(o0, effp->clips);
+    *obuf++ = SOX_ROUND_CLIP_COUNT(o0, effp->clips);
   }
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }

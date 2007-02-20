@@ -12,7 +12,7 @@
  * (at your option) any later version.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include "FFT.h"
 
 #include <math.h>

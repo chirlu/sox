@@ -57,9 +57,9 @@
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
 #include <math.h>
 #include <string.h>
-#include "st_i.h"
+#include "sox_i.h"
 
-static st_effect_t st_phaser_effect;
+static sox_effect_t sox_phaser_effect;
 
 #define MOD_SINE        0
 #define MOD_TRIANGLE    1
@@ -73,22 +73,22 @@ typedef struct phaserstuff {
         float   in_gain, out_gain;
         float   delay, decay;
         float   speed;
-        st_size_t length;
+        sox_size_t length;
         int     *lookup_tab;
-        st_size_t maxsamples, fade_out;
+        sox_size_t maxsamples, fade_out;
 } *phaser_t;
 
 /*
  * Process options
  */
-static int st_phaser_getopts(eff_t effp, int n, char **argv) 
+static int sox_phaser_getopts(eff_t effp, int n, char **argv) 
 {
         phaser_t phaser = (phaser_t) effp->priv;
 
         if (!((n == 5) || (n == 6)))
         {
-            st_fail(st_phaser_effect.usage);
-            return (ST_EOF);
+            sox_fail(sox_phaser_effect.usage);
+            return (SOX_EOF);
         }
 
         sscanf(argv[0], "%f", &phaser->in_gain);
@@ -104,17 +104,17 @@ static int st_phaser_getopts(eff_t effp, int n, char **argv)
                         phaser->modulation = MOD_TRIANGLE;
                 else
                 {
-                        st_fail(st_phaser_effect.usage);
-                        return (ST_EOF);
+                        sox_fail(sox_phaser_effect.usage);
+                        return (SOX_EOF);
                 }
         }
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Prepare for processing.
  */
-static int st_phaser_start(eff_t effp)
+static int sox_phaser_start(eff_t effp)
 {
         phaser_t phaser = (phaser_t) effp->priv;
         unsigned int i;
@@ -123,39 +123,39 @@ static int st_phaser_start(eff_t effp)
 
         if ( phaser->delay < 0.0 )
         {
-            st_fail("phaser: delay must be positive!");
-            return (ST_EOF);
+            sox_fail("phaser: delay must be positive!");
+            return (SOX_EOF);
         }
         if ( phaser->delay > 5.0 )
         {
-            st_fail("phaser: delay must be less than 5.0 msec!");
-            return (ST_EOF);
+            sox_fail("phaser: delay must be less than 5.0 msec!");
+            return (SOX_EOF);
         }
         if ( phaser->speed < 0.1 )
         {
-            st_fail("phaser: speed must be more than 0.1 Hz!");
-            return (ST_EOF);
+            sox_fail("phaser: speed must be more than 0.1 Hz!");
+            return (SOX_EOF);
         }
         if ( phaser->speed > 2.0 )
         {
-            st_fail("phaser: speed must be less than 2.0 Hz!");
-            return (ST_EOF);
+            sox_fail("phaser: speed must be less than 2.0 Hz!");
+            return (SOX_EOF);
         }
         if ( phaser->decay < 0.0 )
         {
-            st_fail("phaser: decay must be positive!" );
-            return (ST_EOF);
+            sox_fail("phaser: decay must be positive!" );
+            return (SOX_EOF);
         }
         if ( phaser->decay >= 1.0 )
         {
-            st_fail("phaser: decay must be less that 1.0!" );
-            return (ST_EOF);
+            sox_fail("phaser: decay must be less that 1.0!" );
+            return (SOX_EOF);
         }
         /* Be nice and check the hint with warning, if... */
         if ( phaser->in_gain > ( 1.0 - phaser->decay * phaser->decay ) )
-                st_warn("phaser: warning >>> gain-in can cause saturation or clipping of output <<<");
+                sox_warn("phaser: warning >>> gain-in can cause saturation or clipping of output <<<");
         if ( phaser->in_gain / ( 1.0 - phaser->decay ) > 1.0 / phaser->out_gain )
-                st_warn("phaser: warning >>> gain-out can cause saturation or clipping of output <<<");
+                sox_warn("phaser: warning >>> gain-out can cause saturation or clipping of output <<<");
 
         phaser->length = effp->ininfo.rate / phaser->speed;
         phaser->phaserbuf = (double *) xmalloc(sizeof (double) * phaser->maxsamples);
@@ -164,29 +164,29 @@ static int st_phaser_start(eff_t effp)
         phaser->lookup_tab = (int *) xmalloc(sizeof (int) * phaser->length);
 
         if (phaser->modulation == MOD_SINE)
-          st_generate_wave_table(ST_WAVE_SINE, ST_INT, phaser->lookup_tab,
+          sox_generate_wave_table(SOX_WAVE_SINE, SOX_INT, phaser->lookup_tab,
               phaser->length, 0, phaser->maxsamples - 1, 0);
         else
-          st_generate_wave_table(ST_WAVE_TRIANGLE, ST_INT, phaser->lookup_tab,
+          sox_generate_wave_table(SOX_WAVE_TRIANGLE, SOX_INT, phaser->lookup_tab,
               phaser->length, 0, 2 * (phaser->maxsamples - 1), 3 * M_PI_2);
         phaser->counter = 0;
         phaser->phase = 0;
         phaser->fade_out = phaser->maxsamples;
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int st_phaser_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                   st_size_t *isamp, st_size_t *osamp)
+static int sox_phaser_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                   sox_size_t *isamp, sox_size_t *osamp)
 {
         phaser_t phaser = (phaser_t) effp->priv;
         int len, done;
         
         double d_in, d_out;
-        st_sample_t out;
+        sox_sample_t out;
 
         len = ((*isamp > *osamp) ? *osamp : *isamp);
         for(done = 0; done < len; done++) {
@@ -199,7 +199,7 @@ static int st_phaser_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf
         phaser->maxsamples] * phaser->decay * -1.0;
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_in * phaser->out_gain;
-                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 phaser->phaserbuf[phaser->counter] = d_in;
@@ -208,19 +208,19 @@ static int st_phaser_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf
                 phaser->phase  = ( phaser->phase + 1 ) % phaser->length;
         }
         /* processed all samples */
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Drain out reverb lines. 
  */
-static int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int sox_phaser_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
         phaser_t phaser = (phaser_t) effp->priv;
-        st_size_t done;
+        sox_size_t done;
         
         double d_in, d_out;
-        st_sample_t out;
+        sox_sample_t out;
 
         done = 0;
         while ( ( done < *osamp ) && ( done < phaser->fade_out ) ) {
@@ -232,7 +232,7 @@ static int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         phaser->maxsamples] * phaser->decay * -1.0;
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_in * phaser->out_gain;
-                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 phaser->phaserbuf[phaser->counter] = d_in;
@@ -245,36 +245,36 @@ static int st_phaser_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         /* samples played, it remains */
         *osamp = done;
         if (phaser->fade_out == 0)
-            return ST_EOF;
+            return SOX_EOF;
         else
-            return ST_SUCCESS;
+            return SOX_SUCCESS;
 }
 
 /*
  * Clean up phaser effect.
  */
-static int st_phaser_stop(eff_t effp)
+static int sox_phaser_stop(eff_t effp)
 {
         phaser_t phaser = (phaser_t) effp->priv;
 
         free(phaser->phaserbuf);
         free(phaser->lookup_tab);
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
-static st_effect_t st_phaser_effect = {
+static sox_effect_t sox_phaser_effect = {
   "phaser",
   "Usage: phaser gain-in gain-out delay decay speed [ -s | -t ]",
   0,
-  st_phaser_getopts,
-  st_phaser_start,
-  st_phaser_flow,
-  st_phaser_drain,
-  st_phaser_stop,
-  st_effect_nothing
+  sox_phaser_getopts,
+  sox_phaser_start,
+  sox_phaser_flow,
+  sox_phaser_drain,
+  sox_phaser_stop,
+  sox_effect_nothing
 };
 
-const st_effect_t *st_phaser_effect_fn(void)
+const sox_effect_t *sox_phaser_effect_fn(void)
 {
-    return &st_phaser_effect;
+    return &sox_phaser_effect;
 }

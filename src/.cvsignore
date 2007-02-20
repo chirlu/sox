@@ -1,6 +1,6 @@
 Makefile Makefile.in
-libst-config
-stconfig.h.in stconfig.h ststdint.h
+libsox-config
+soxconfig.h.in soxconfig.h soxstdint.h
 .deps
 stamp-h1
 .libs *.lo *.la

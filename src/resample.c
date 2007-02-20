@@ -40,7 +40,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "st_i.h"
+#include "sox_i.h"
 
 
 /* Conversion constants */
@@ -86,7 +86,7 @@
  *
  */
 
-static st_effect_t st_resample_effect;
+static sox_effect_t sox_resample_effect;
 
 #define ISCALE 0x10000
 
@@ -141,7 +141,7 @@ static long SrcEX(resample_t r, long Nx);
 /*
  * Process options
  */
-int st_resample_getopts(eff_t effp, int n, char **argv)
+int sox_resample_getopts(eff_t effp, int n, char **argv)
 {
         resample_t r = (resample_t) effp->priv;
 
@@ -171,45 +171,45 @@ int st_resample_getopts(eff_t effp, int n, char **argv)
         }
 
         if ((n >= 1) && (sscanf(argv[0], "%lf", &r->rolloff) != 1)) {
-          st_fail(st_resample_effect.usage);
-          return (ST_EOF);
+          sox_fail(sox_resample_effect.usage);
+          return (SOX_EOF);
         } else if ((r->rolloff <= 0.01) || (r->rolloff >= 1.0)) {
-          st_fail("resample: rolloff factor (%f) no good, should be 0.01<x<1.0", r->rolloff);
-          return(ST_EOF);
+          sox_fail("resample: rolloff factor (%f) no good, should be 0.01<x<1.0", r->rolloff);
+          return(SOX_EOF);
         }
 
         if ((n >= 2) && !sscanf(argv[1], "%lf", &r->beta)) {
-        	st_fail(st_resample_effect.usage);
-          	return (ST_EOF);
+        	sox_fail(sox_resample_effect.usage);
+          	return (SOX_EOF);
         } else if (r->beta <= 2.0) {
         	r->beta = 0;
-                st_debug("resample opts: Nuttall window, cutoff %f", r->rolloff);
+                sox_debug("resample opts: Nuttall window, cutoff %f", r->rolloff);
         } else
-                st_debug("resample opts: Kaiser window, cutoff %f, beta %f", r->rolloff, r->beta);
-        return (ST_SUCCESS);
+                sox_debug("resample opts: Kaiser window, cutoff %f, beta %f", r->rolloff, r->beta);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Prepare processing.
  */
-int st_resample_start(eff_t effp)
+int sox_resample_start(eff_t effp)
 {
   resample_t r = (resample_t) effp->priv;
   long Xoff, gcdrate;
   int i;
 
   /* The next line makes the "speed" effect accurate; it's needed because
-   * ininfo.rate (st_rate_t) isn't floating point (but it's probably not worth
-   * changing st_rate_t just because of this): */
+   * ininfo.rate (sox_rate_t) isn't floating point (but it's probably not worth
+   * changing sox_rate_t just because of this): */
   double in_rate = floor(effp->ininfo.rate / effp->globalinfo->speed + .5)
     * effp->globalinfo->speed;
 
   if (in_rate == effp->outinfo.rate)
-    return ST_EFF_NULL;
+    return SOX_EFF_NULL;
           
   r->Factor = (double) effp->outinfo.rate / in_rate;
 
-  gcdrate = st_gcd((long) effp->ininfo.rate, (long) effp->outinfo.rate);
+  gcdrate = sox_gcd((long) effp->ininfo.rate, (long) effp->outinfo.rate);
   r->a = effp->ininfo.rate / gcdrate;
   r->b = effp->outinfo.rate / gcdrate;
 
@@ -227,15 +227,15 @@ int st_resample_start(eff_t effp)
   /* returns error # <=0, or adjusted wing-len > 0 */
   i = makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq, 1);
   if (i <= 0) {
-    st_fail("resample: Unable to make filter");
-    return (ST_EOF);
+    sox_fail("resample: Unable to make filter");
+    return (SOX_EOF);
   }
 
-  st_debug("Nmult: %ld, Nwing: %ld, Nq: %ld", r->Nmult, r->Nwing, r->Nq);
+  sox_debug("Nmult: %ld, Nwing: %ld, Nq: %ld", r->Nmult, r->Nwing, r->Nq);
 
   if (r->quadr < 0) {     /* exact coeff's method */
     r->Xh = r->Nwing / r->b;
-    st_debug("resample: rate ratio %ld:%ld, coeff interpolation not needed", r->a, r->b);
+    sox_debug("resample: rate ratio %ld:%ld, coeff interpolation not needed", r->a, r->b);
   } else {
     r->dhb = Np;        /* Fixed-point Filter sampling-time-increment */
     if (r->Factor < 1.0)
@@ -259,13 +259,13 @@ int st_resample_start(eff_t effp)
   }
   i = BUFFSIZE - 2 * Xoff;
   if (i < r->Factor + 1.0 / r->Factor) {  /* Check input buffer size */
-    st_fail("Factor is too small or large for BUFFSIZE");
-    return (ST_EOF);
+    sox_fail("Factor is too small or large for BUFFSIZE");
+    return (SOX_EOF);
   }
 
   r->Xsize = 2 * Xoff + i / (1.0 + r->Factor);
   r->Ysize = BUFFSIZE - r->Xsize;
-  st_debug("Xsize %d, Ysize %d, Xoff %d", r->Xsize, r->Ysize, r->Xoff);
+  sox_debug("Xsize %d, Ysize %d, Xoff %d", r->Xsize, r->Ysize, r->Xoff);
 
   r->X = (double *) xmalloc(sizeof(double) * (BUFFSIZE));
   r->Y = r->X + r->Xsize;
@@ -273,20 +273,20 @@ int st_resample_start(eff_t effp)
   /* Need Xoff zeros at beginning of sample */
   for (i = 0; i < Xoff; i++)
     r->X[i] = 0;
-  return (ST_SUCCESS);
+  return (SOX_SUCCESS);
 }
 
 /*
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                     st_size_t *isamp, st_size_t *osamp)
+int sox_resample_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                     sox_size_t *isamp, sox_size_t *osamp)
 {
         resample_t r = (resample_t) effp->priv;
         long i, last, Nout, Nx, Nproc;
 
-        st_debug("Xp %d, Xread %d, isamp %d, ",r->Xp, r->Xread,*isamp);
+        sox_debug("Xp %d, Xread %d, isamp %d, ",r->Xp, r->Xread,*isamp);
 
         /* constrain amount we actually process */
         Nproc = r->Xsize - r->Xp;
@@ -298,12 +298,12 @@ int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         Nx = Nproc - r->Xread; /* space for right-wing future-data */
         if (Nx <= 0)
         {
-                st_fail("resample: Can not handle this sample rate change. Nx not positive: %d", Nx);
-                return (ST_EOF);
+                sox_fail("resample: Can not handle this sample rate change. Nx not positive: %d", Nx);
+                return (SOX_EOF);
         }
         if ((unsigned long)Nx > *isamp)
                 Nx = *isamp;
-        st_debug("Nx %d",Nx);
+        sox_debug("Nx %d",Nx);
 
         if (ibuf == NULL) {
                 for(i = r->Xread; i < Nx + r->Xread  ; i++) 
@@ -320,12 +320,12 @@ int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 r->Xread = last;
                 /* leave *isamp alone, we consumed it */
                 *osamp = 0;
-                return (ST_SUCCESS);
+                return (SOX_SUCCESS);
         }
         if (r->quadr < 0) { /* exact coeff's method */
                 long creep; 
                 Nout = SrcEX(r, Nproc);
-                st_debug("Nproc %d --> %d",Nproc,Nout);
+                sox_debug("Nproc %d --> %d",Nproc,Nout);
                 /* Move converter Nproc samples back in time */
                 r->t -= Nproc * r->b;
                 /* Advance by number of samples processed */
@@ -336,12 +336,12 @@ int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 {
                   r->t -= creep * r->b;  /* Remove time accumulation   */
                   r->Xp += creep;        /* and add it to read pointer */
-                  st_debug("Nproc %ld, creep %ld",Nproc,creep);
+                  sox_debug("Nproc %ld, creep %ld",Nproc,creep);
                 }
         } else { /* approx coeff's method */
                 long creep; 
                 Nout = SrcUD(r, Nproc);
-                st_debug("Nproc %d --> %d",Nproc,Nout);
+                sox_debug("Nproc %d --> %d",Nproc,Nout);
                 /* Move converter Nproc samples back in time */
                 r->Time -= Nproc;
                 /* Advance by number of samples processed */
@@ -352,7 +352,7 @@ int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 {
                   r->Time -= creep;   /* Remove time accumulation   */
                   r->Xp += creep;     /* and add it to read pointer */
-                  st_debug("Nproc %ld, creep %ld",Nproc,creep);
+                  sox_debug("Nproc %ld, creep %ld",Nproc,creep);
                 }
         }
 
@@ -360,7 +360,7 @@ int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         long i,k;
         /* Copy back portion of input signal that must be re-used */
         k = r->Xp - r->Xoff;
-        st_debug("k %d, last %d",k,last);
+        sox_debug("k %d, last %d",k,last);
         for (i=0; i<last - k; i++) 
             r->X[i] = r->X[i+k];
 
@@ -371,7 +371,7 @@ int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         for(i=0; i < Nout; i++) { 
                 double ftemp = r->Y[i] * ISCALE;
 
-                ST_SAMPLE_CLIP_COUNT(ftemp, effp->clips);
+                SOX_SAMPLE_CLIP_COUNT(ftemp, effp->clips);
                 *obuf++ = ftemp;
         }
 
@@ -379,60 +379,60 @@ int st_resample_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         *osamp = Nout;
 
         }
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Process tail of input samples.
  */
-int st_resample_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+int sox_resample_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
         resample_t r = (resample_t) effp->priv;
         long isamp_res, osamp_res;
-        st_sample_t *Obuf;
+        sox_sample_t *Obuf;
         int rc;
 
-        st_debug("Xoff %d  <--- DRAIN",r->Xoff);
+        sox_debug("Xoff %d  <--- DRAIN",r->Xoff);
 
         /* stuff end with Xoff zeros */
         isamp_res = r->Xoff;
         osamp_res = *osamp;
         Obuf = obuf;
         while (isamp_res>0 && osamp_res>0) {
-                st_sample_t Isamp, Osamp;
+                sox_sample_t Isamp, Osamp;
                 Isamp = isamp_res;
                 Osamp = osamp_res;
-                rc = st_resample_flow(effp, NULL, Obuf, (st_size_t *)&Isamp, (st_size_t *)&Osamp);
+                rc = sox_resample_flow(effp, NULL, Obuf, (sox_size_t *)&Isamp, (sox_size_t *)&Osamp);
                 if (rc)
                     return rc;
-                st_debug("DRAIN isamp,osamp  (%d,%d) -> (%d,%d)",
+                sox_debug("DRAIN isamp,osamp  (%d,%d) -> (%d,%d)",
                          isamp_res,osamp_res,Isamp,Osamp);
                 Obuf += Osamp;
                 osamp_res -= Osamp;
                 isamp_res -= Isamp;
         }
         *osamp -= osamp_res;
-        st_debug("DRAIN osamp %d", *osamp);
+        sox_debug("DRAIN osamp %d", *osamp);
         if (isamp_res)
-                st_warn("drain overran obuf by %d", isamp_res);
+                sox_warn("drain overran obuf by %d", isamp_res);
         /* FIXME: This is very picky.  IF obuf is not big enough to
          * drain remaining samples, they will be lost.
          */
-        return (ST_EOF);
+        return (SOX_EOF);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int st_resample_stop(eff_t effp)
+int sox_resample_stop(eff_t effp)
 {
         resample_t r = (resample_t) effp->priv;
         
         free(r->Imp - 1);
         free(r->X);
         /* free(r->Y); Y is in same block starting at X */ 
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /* over 90% of CPU time spent in this iprodUD() function */
@@ -510,11 +510,11 @@ static long SrcUD(resample_t r, long Nx)
    Factor = r->Factor;
    time = r->Time;
    dt = 1.0/Factor;        /* Output sampling period */
-   st_debug("Factor %f, dt %f, ",Factor,dt);
-   st_debug("Time %f, ",r->Time);
+   sox_debug("Factor %f, dt %f, ",Factor,dt);
+   sox_debug("Time %f, ",r->Time);
    /* (Xh * dhb)>>La is max index into Imp[] */
-   st_debug("ct=%.2f %d",(double)r->Nwing*Na/r->dhb, r->Xh);
-   st_debug("ct=%ld, T=%.6f, dhb=%6f, dt=%.6f",
+   sox_debug("ct=%.2f %d",(double)r->Nwing*Na/r->dhb, r->Xh);
+   sox_debug("ct=%ld, T=%.6f, dhb=%6f, dt=%.6f",
                          r->Xh, time-floor(time),(double)r->dhb/Na,dt);
    Ystart = Y = r->Y;
    n = (int)ceil((double)Nx/dt);
@@ -536,7 +536,7 @@ static long SrcUD(resample_t r, long Nx)
       time += dt;            /* Move to next sample by time increment */
       }
    r->Time = time;
-   st_debug("Time %f",r->Time);
+   sox_debug("Time %f",r->Time);
    return (Y - Ystart);        /* Return the number of output samples */
 }
 
@@ -623,7 +623,7 @@ int makeFilter(double Imp[], long Nwing, double Froll, double Beta,
       for (i=Dh; i<Mwing; i+=Dh)
          DCgain += ImpR[i];
       DCgain = 2*DCgain + ImpR[0];    /* DC gain of real coefficients */
-      st_debug("DCgain err=%.12f",DCgain-1.0);
+      sox_debug("DCgain err=%.12f",DCgain-1.0);
   
       DCgain = 1.0/DCgain;
       for (i=0; i<Mwing; i++)
@@ -723,19 +723,19 @@ static void LpFilter(double *c, long N, double frq, double Beta, long Num)
    }
 }
 
-static st_effect_t st_resample_effect = {
+static sox_effect_t sox_resample_effect = {
    "resample",
    "Usage: resample [ -qs | -q | -ql ] [ rolloff [ beta ] ]",
-   ST_EFF_RATE,
-   st_resample_getopts,
-   st_resample_start,
-   st_resample_flow,
-   st_resample_drain,
-   st_resample_stop,
-  st_effect_nothing
+   SOX_EFF_RATE,
+   sox_resample_getopts,
+   sox_resample_start,
+   sox_resample_flow,
+   sox_resample_drain,
+   sox_resample_stop,
+  sox_effect_nothing
 };
 
-const st_effect_t *st_resample_effect_fn(void)
+const sox_effect_t *sox_resample_effect_fn(void)
 {
-    return &st_resample_effect;
+    return &sox_resample_effect;
 }

@@ -19,7 +19,7 @@
  * TODO: When reading in comments, it doesn't understand how to read
  * more then one comment and doesn't know how to parse KEY=value.
  */
-#include "st_i.h"
+#include "sox_i.h"
 
 #if defined HAVE_LIBVORBISENC && defined HAVE_LIBVORBISFILE
 #include <stdio.h>
@@ -89,7 +89,7 @@ static int _fseeko64_wrap(FILE *f, ogg_int64_t off, int whence) {
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int st_vorbisstartread(ft_t ft)
+static int sox_vorbisstartread(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_info *vi;
@@ -110,9 +110,9 @@ static int st_vorbisstartread(ft_t ft)
         /* Init the decoder */
         if (ov_open_callbacks((void *)ft->fp,vb->vf,NULL,0,callbacks) < 0)
         {
-                st_fail_errno(ft,ST_EHDR,
+                sox_fail_errno(ft,SOX_EHDR,
                               "Input not an Ogg Vorbis audio stream");
-                return (ST_EOF);
+                return (SOX_EOF);
         }
 
         /* Get info about the Ogg Vorbis stream */
@@ -121,8 +121,8 @@ static int st_vorbisstartread(ft_t ft)
 
         /* Record audio info */
         ft->signal.rate = vi->rate;
-        ft->signal.size = ST_SIZE_16BIT;
-        ft->signal.encoding = ST_ENCODING_VORBIS;
+        ft->signal.size = SOX_SIZE_16BIT;
+        ft->signal.encoding = SOX_ENCODING_VORBIS;
         ft->signal.channels = vi->channels;
 
         /* ov_pcm_total doesn't work on non-seekable files so
@@ -168,7 +168,7 @@ static int st_vorbisstartread(ft_t ft)
         vb->eof = 0;
         vb->current_section = -1;
 
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 
@@ -191,7 +191,7 @@ static int refill_buffer (vorbis_t vb)
                 if (num_read == 0)
                         return (BUF_EOF);
                 else if (num_read == OV_HOLE)
-                        st_warn("Warning: hole in stream; probably harmless");
+                        sox_warn("Warning: hole in stream; probably harmless");
                 else if (num_read < 0)
                         return (BUF_ERROR);
                 else
@@ -210,12 +210,12 @@ static int refill_buffer (vorbis_t vb)
  * Return number of samples read.
  */
 
-static st_size_t st_vorbisread(ft_t ft, st_sample_t *buf, st_size_t len)
+static sox_size_t sox_vorbisread(ft_t ft, sox_sample_t *buf, sox_size_t len)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
-        st_size_t i;
+        sox_size_t i;
         int ret;
-        st_sample_t l;
+        sox_sample_t l;
 
 
         for(i = 0; i < len; i++) {
@@ -245,14 +245,14 @@ static st_size_t st_vorbisread(ft_t ft, st_sample_t *buf, st_size_t len)
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int st_vorbisstopread(ft_t ft)
+static int sox_vorbisstopread(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
 
         free(vb->buf);
         ov_clear(vb->vf);
 
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /* Write a page of ogg data to a file.  Taken directly from encode.c in
@@ -260,8 +260,8 @@ static int st_vorbisstopread(ft_t ft)
 static int oe_write_page(ogg_page *page, ft_t ft)
 {
         int written;
-        written = st_writebuf(ft, page->header,1,page->header_len);
-        written += st_writebuf(ft, page->body,1,page->body_len);
+        written = sox_writebuf(ft, page->header,1,page->header_len);
+        written += sox_writebuf(ft, page->body,1,page->body_len);
 
         return written;
 }
@@ -329,15 +329,15 @@ static int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
         return HEADER_OK;
 }
 
-static int st_vorbisstartwrite(ft_t ft)
+static int sox_vorbisstartwrite(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve;
         long rate;
         double quality = 3; /* Default compression quality gives ~112kbps */
 
-        ft->signal.size = ST_SIZE_16BIT;
-        ft->signal.encoding = ST_ENCODING_VORBIS;
+        ft->signal.size = SOX_SIZE_16BIT;
+        ft->signal.encoding = SOX_ENCODING_VORBIS;
 
         /* Allocate memory for all of the structures */
         ve = vb->vorbis_enc_data = (vorbis_enc_t *)xmalloc(sizeof(vorbis_enc_t));
@@ -347,16 +347,16 @@ static int st_vorbisstartwrite(ft_t ft)
         /* TODO */
         rate = ft->signal.rate;
         if (rate)
-            st_fail_errno(ft, ST_EHDR, "Error setting up Ogg Vorbis encorder - make sure you've specied a sane rate and number of channels");
+            sox_fail_errno(ft, SOX_EHDR, "Error setting up Ogg Vorbis encorder - make sure you've specied a sane rate and number of channels");
 
         /* Use encoding to average bit rate of VBR as specified by the -C option */
         if (ft->signal.compression != HUGE_VAL)
         {
             if (ft->signal.compression < -1 || ft->signal.compression > 10)
             {
-                st_fail_errno(ft,ST_EINVAL,
+                sox_fail_errno(ft,SOX_EINVAL,
                               "Vorbis compression quality nust be between -1 and 10");
-                return ST_EOF;
+                return SOX_EOF;
             }
             quality = ft->signal.compression;
         }
@@ -369,21 +369,21 @@ static int st_vorbisstartwrite(ft_t ft)
 
         if (write_vorbis_header(ft, ve) == HEADER_ERROR)
         {
-            st_fail_errno(ft,ST_EHDR,
+            sox_fail_errno(ft,SOX_EHDR,
                           "Error writing header for Ogg Vorbis audio stream");
-            return (ST_EOF);
+            return (SOX_EOF);
         }
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
-static st_size_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len)
+static sox_size_t sox_vorbiswrite(ft_t ft, const sox_sample_t *buf, sox_size_t len)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;
-        st_size_t samples = len / ft->signal.channels;
+        sox_size_t samples = len / ft->signal.channels;
         float **buffer = vorbis_analysis_buffer(&ve->vd, samples);
-        st_size_t i, j;
+        sox_size_t i, j;
         int ret;
         int eos = 0;
 
@@ -391,7 +391,7 @@ static st_size_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len)
         for (i = 0; i < samples; i++)
                 for (j = 0; j < ft->signal.channels; j++)
                         buffer[j][i] = buf[i*ft->signal.channels + j]
-                                / ((float)ST_SAMPLE_MAX);
+                                / ((float)SOX_SAMPLE_MAX);
 
         vorbis_analysis_wrote(&ve->vd, samples);
 
@@ -417,7 +417,7 @@ static st_size_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len)
 
                         ret = oe_write_page(&ve->og, ft);
                         if(!ret)
-                            return (ST_EOF);
+                            return (SOX_EOF);
 
                         if(ogg_page_eos(&ve->og))
                             eos = 1;
@@ -428,20 +428,20 @@ static st_size_t st_vorbiswrite(ft_t ft, const st_sample_t *buf, st_size_t len)
         return (len);
 }
 
-static int st_vorbisstopwrite(ft_t ft)
+static int sox_vorbisstopwrite(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;
 
         /* Close out the remaining data */
-        st_vorbiswrite(ft, NULL, 0);
+        sox_vorbiswrite(ft, NULL, 0);
 
         ogg_stream_clear(&ve->os);
         vorbis_block_clear(&ve->vb);
         vorbis_dsp_clear(&ve->vd);
         vorbis_info_clear(&ve->vi);
 
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 static const char *vorbisnames[] = {
@@ -450,21 +450,21 @@ static const char *vorbisnames[] = {
   NULL
 };
 
-static st_format_t st_vorbis_format = {
+static sox_format_t sox_vorbis_format = {
   vorbisnames,
   NULL,
   0,
-  st_vorbisstartread,
-  st_vorbisread,
-  st_vorbisstopread,
-  st_vorbisstartwrite,
-  st_vorbiswrite,
-  st_vorbisstopwrite,
-  st_format_nothing_seek
+  sox_vorbisstartread,
+  sox_vorbisread,
+  sox_vorbisstopread,
+  sox_vorbisstartwrite,
+  sox_vorbiswrite,
+  sox_vorbisstopwrite,
+  sox_format_nothing_seek
 };
 
-const st_format_t *st_vorbis_format_fn(void)
+const sox_format_t *sox_vorbis_format_fn(void)
 {
-    return &st_vorbis_format;
+    return &sox_vorbis_format;
 }
 #endif

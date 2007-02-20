@@ -43,7 +43,7 @@
  */
 
 typedef struct {
-  st_compandt_t transfer_fn;
+  sox_compandt_t transfer_fn;
 
   struct {
     double attack_times[2]; /* 0:attack_time, 1:decay_time */
@@ -52,10 +52,10 @@ typedef struct {
   unsigned expectedChannels;/* Also flags that channels aren't to be treated
                                individually when = 1 and input not mono */
   double delay;             /* Delay to apply before companding */
-  st_sample_t *delay_buf;   /* Old samples, used for delay processing */
-  st_ssize_t delay_buf_size;/* Size of delay_buf in samples */
-  st_ssize_t delay_buf_index; /* Index into delay_buf */
-  st_ssize_t delay_buf_cnt; /* No. of active entries in delay_buf */
+  sox_sample_t *delay_buf;   /* Old samples, used for delay processing */
+  sox_ssize_t delay_buf_size;/* Size of delay_buf in samples */
+  sox_ssize_t delay_buf_index; /* Index into delay_buf */
+  sox_ssize_t delay_buf_cnt; /* No. of active entries in delay_buf */
   int delay_buf_full;       /* Shows buffer situation (important for drain) */
 } * compand_t;
 
@@ -67,15 +67,15 @@ static int getopts(eff_t effp, int n, char * * argv)
   unsigned pairs, i, j, commas;
 
   if (n < 2 || n > 5) {
-    st_fail(effp->h->usage);
-    return ST_EOF;
+    sox_fail(effp->h->usage);
+    return SOX_EOF;
   }
 
   /* Start by checking the attack and decay rates */
   for (s = argv[0], commas = 0; *s; ++s) if (*s == ',') ++commas;
   if ((commas % 2) == 0) {
-    st_fail("there must be an even number of attack/decay parameters");
-    return ST_EOF;
+    sox_fail("there must be an even number of attack/decay parameters");
+    return SOX_EOF;
   }
   pairs = 1 + commas/2;
   l->channels = xcalloc(pairs, sizeof(*l->channels));
@@ -86,18 +86,18 @@ static int getopts(eff_t effp, int n, char * * argv)
   for (i = 0, s = strtok(argv[0], ","); s != NULL; ++i) {
     for (j = 0; j < 2; ++j) {
       if (sscanf(s, "%lf %c", &l->channels[i].attack_times[j], &dummy) != 1) {
-        st_fail("syntax error trying to read attack/decay time");
-        return ST_EOF;
+        sox_fail("syntax error trying to read attack/decay time");
+        return SOX_EOF;
       } else if (l->channels[i].attack_times[j] < 0) {
-        st_fail("attack & decay times can't be less than 0 seconds");
-        return ST_EOF;
+        sox_fail("attack & decay times can't be less than 0 seconds");
+        return SOX_EOF;
       }
       s = strtok(NULL, ",");
     }
   }
 
-  if (!st_compandt_parse(&l->transfer_fn, argv[1], n>2 ? argv[2] : 0))
-    return ST_EOF;
+  if (!sox_compandt_parse(&l->transfer_fn, argv[1], n>2 ? argv[2] : 0))
+    return SOX_EOF;
 
   /* Set the initial "volume" to be attibuted to the input channels.
      Unless specified, choose 0dB otherwise clipping will
@@ -105,25 +105,25 @@ static int getopts(eff_t effp, int n, char * * argv)
   for (i = 0; i < l->expectedChannels; ++i) {
     double init_vol_dB = 0;
     if (n > 3 && sscanf(argv[3], "%lf %c", &init_vol_dB, &dummy) != 1) {
-      st_fail("syntax error trying to read initial volume");
-      return ST_EOF;
+      sox_fail("syntax error trying to read initial volume");
+      return SOX_EOF;
     } else if (init_vol_dB > 0) {
-      st_fail("initial volume is relative to maximum volume so can't exceed 0dB");
-      return ST_EOF;
+      sox_fail("initial volume is relative to maximum volume so can't exceed 0dB");
+      return SOX_EOF;
     }
     l->channels[i].volume = pow(10., init_vol_dB / 20);
   }
 
   /* If there is a delay, store it. */
   if (n > 4 && sscanf(argv[4], "%lf %c", &l->delay, &dummy) != 1) {
-    st_fail("syntax error trying to read delay value");
-    return ST_EOF;
+    sox_fail("syntax error trying to read delay value");
+    return SOX_EOF;
   } else if (l->delay < 0) {
-    st_fail("delay can't be less than 0 seconds");
-    return ST_EOF;
+    sox_fail("delay can't be less than 0 seconds");
+    return SOX_EOF;
   }
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 static int start(eff_t effp)
@@ -131,14 +131,14 @@ static int start(eff_t effp)
   compand_t l = (compand_t) effp->priv;
   unsigned i, j;
 
-  st_debug("Starting compand effect; rate %i", effp->outinfo.rate);
-  st_debug("%i input channel(s) expected: actually %i",
+  sox_debug("Starting compand effect; rate %i", effp->outinfo.rate);
+  sox_debug("%i input channel(s) expected: actually %i",
       l->expectedChannels, effp->outinfo.channels);
   for (i = 0; i < l->expectedChannels; ++i)
-    st_debug("Channel %i: attack = %g decay = %g", i,
+    sox_debug("Channel %i: attack = %g decay = %g", i,
         l->channels[i].attack_times[0], l->channels[i].attack_times[1]);
-  if (!st_compandt_show(&l->transfer_fn, effp->globalinfo->octave_plot_effect))
-    return ST_EOF;
+  if (!sox_compandt_show(&l->transfer_fn, effp->globalinfo->octave_plot_effect))
+    return SOX_EOF;
 
   /* Convert attack and decay rates using number of samples */
   for (i = 0; i < l->expectedChannels; ++i)
@@ -152,12 +152,12 @@ static int start(eff_t effp)
   /* Allocate the delay buffer */
   l->delay_buf_size = l->delay * effp->outinfo.rate * effp->outinfo.channels;
   if (l->delay_buf_size > 0)
-    l->delay_buf = xcalloc((st_size_t)l->delay_buf_size, sizeof(*l->delay_buf));
+    l->delay_buf = xcalloc((sox_size_t)l->delay_buf_size, sizeof(*l->delay_buf));
   l->delay_buf_index = 0;
   l->delay_buf_cnt = 0;
   l->delay_buf_full= 0;
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /*
@@ -166,7 +166,7 @@ static int start(eff_t effp)
  */
 static void doVolume(double *v, double samp, compand_t l, int chan)
 {
-  double s = -samp / ST_SAMPLE_MIN;
+  double s = -samp / SOX_SAMPLE_MIN;
   double delta = s - *v;
 
   if (delta > 0.0) /* increase volume according to attack rate */
@@ -175,8 +175,8 @@ static void doVolume(double *v, double samp, compand_t l, int chan)
     *v += delta * l->channels[chan].attack_times[1];
 }
 
-static int flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
-                    st_size_t *isamp, st_size_t *osamp)
+static int flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
+                    sox_size_t *isamp, sox_size_t *osamp)
 {
   compand_t l = (compand_t) effp->priv;
   int len =  (*isamp > *osamp) ? *osamp : *isamp;
@@ -206,19 +206,19 @@ static int flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     for (chan = 0; chan < filechans; ++chan) {
       int ch = l->expectedChannels > 1 ? chan : 0;
       double level_in_lin = l->channels[ch].volume;
-      double level_out_lin = st_compandt(&l->transfer_fn, level_in_lin);
+      double level_out_lin = sox_compandt(&l->transfer_fn, level_in_lin);
       double checkbuf;
 
       if (l->delay_buf_size <= 0) {
         checkbuf = ibuf[chan] * level_out_lin;
-        ST_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
+        SOX_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
         obuf[odone++] = checkbuf;
         idone++;
       } else {
         if (l->delay_buf_cnt >= l->delay_buf_size) {
           l->delay_buf_full=1; /* delay buffer is now definitely full */
           checkbuf = l->delay_buf[l->delay_buf_index] * level_out_lin;
-          ST_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
+          SOX_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
           obuf[odone] = checkbuf;
           odone++;
           idone++;
@@ -233,13 +233,13 @@ static int flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
   }
 
   *isamp = idone; *osamp = odone;
-  return (ST_SUCCESS);
+  return (SOX_SUCCESS);
 }
 
-static int drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
   compand_t l = (compand_t) effp->priv;
-  st_size_t chan, done = 0;
+  sox_size_t chan, done = 0;
 
   if (l->delay_buf_full == 0)
     l->delay_buf_index = 0;
@@ -247,13 +247,13 @@ static int drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     for (chan = 0; chan < effp->outinfo.channels; ++chan) {
       int c = l->expectedChannels > 1 ? chan : 0;
       double level_in_lin = l->channels[c].volume;
-      double level_out_lin = st_compandt(&l->transfer_fn, level_in_lin);
+      double level_out_lin = sox_compandt(&l->transfer_fn, level_in_lin);
       obuf[done++] = l->delay_buf[l->delay_buf_index++] * level_out_lin;
       l->delay_buf_index %= l->delay_buf_size;
       l->delay_buf_cnt--;
     }
   *osamp = done;
-  return l->delay_buf_cnt > 0 ? ST_SUCCESS : ST_EOF;
+  return l->delay_buf_cnt > 0 ? SOX_SUCCESS : SOX_EOF;
 }
 
 static int stop(eff_t effp)
@@ -261,22 +261,22 @@ static int stop(eff_t effp)
   compand_t l = (compand_t) effp->priv;
 
   free(l->delay_buf);
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 static int kill(eff_t effp)
 {
   compand_t l = (compand_t) effp->priv;
 
-  st_compandt_kill(&l->transfer_fn);
+  sox_compandt_kill(&l->transfer_fn);
   free(l->channels);
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
-st_effect_t const * st_compand_effect_fn(void)
+sox_effect_t const * sox_compand_effect_fn(void)
 {
-  static st_effect_t driver = {
-    "compand", compand_usage, ST_EFF_MCHAN,
+  static sox_effect_t driver = {
+    "compand", compand_usage, SOX_EFF_MCHAN,
     getopts, start, flow, drain, stop, kill
   };
   return &driver;

@@ -16,26 +16,26 @@
 
 /* Effect: Pad With Silence   (c) 2006 robs@users.sourceforge.net */
 
-#include "st_i.h"
+#include "sox_i.h"
 
 typedef struct pad
 {
   int npads;         /* Number of pads requested */
   struct {
     char *str;       /* Command-line argument to parse for this pad */
-    st_size_t start; /* Start padding when in_pos equals this */
-    st_size_t pad;   /* Number of samples to pad */
+    sox_size_t start; /* Start padding when in_pos equals this */
+    sox_size_t pad;   /* Number of samples to pad */
   } * pads;
 
-  st_size_t in_pos;  /* Number of samples read from the input stream */
+  sox_size_t in_pos;  /* Number of samples read from the input stream */
   int pads_pos;      /* Number of pads completed so far */
-  st_size_t pad_pos; /* Number of samples through the current pad */
+  sox_size_t pad_pos; /* Number of samples through the current pad */
 } * pad_t;
 
-assert_static(sizeof(struct pad) <= ST_MAX_EFFECT_PRIVSIZE,
+assert_static(sizeof(struct pad) <= SOX_MAX_EFFECT_PRIVSIZE,
               /* else */ pad_PRIVSIZE_too_big);
 
-static int parse(eff_t effp, char * * argv, st_rate_t rate)
+static int parse(eff_t effp, char * * argv, sox_rate_t rate)
 {
   pad_t p = (pad_t) effp->priv;
   char const * next;
@@ -44,29 +44,29 @@ static int parse(eff_t effp, char * * argv, st_rate_t rate)
   for (i = 0; i < p->npads; ++i) {
     if (argv) /* 1st parse only */
       p->pads[i].str = xstrdup(argv[i]);
-    next = st_parsesamples(rate, p->pads[i].str, &p->pads[i].pad, 't');
+    next = sox_parsesamples(rate, p->pads[i].str, &p->pads[i].pad, 't');
     if (next == NULL) break;
     if (*next == '\0')
-      p->pads[i].start = i? ST_SIZE_MAX : 0;
+      p->pads[i].start = i? SOX_SIZE_MAX : 0;
     else {
       if (*next != '@') break;
-      next = st_parsesamples(rate, next+1, &p->pads[i].start, 't');
+      next = sox_parsesamples(rate, next+1, &p->pads[i].start, 't');
       if (next == NULL || *next != '\0') break;
     }
     if (i > 0 && p->pads[i].start <= p->pads[i-1].start) break;
   }
   if (i < p->npads) {
-    st_fail(effp->h->usage);
-    return ST_EOF;
+    sox_fail(effp->h->usage);
+    return SOX_EOF;
   }
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 static int create(eff_t effp, int n, char * * argv)
 {
   pad_t p = (pad_t) effp->priv;
   p->pads = xcalloc(p->npads = n, sizeof(*p->pads));
-  return parse(effp, argv, ST_MAXRATE); /* No rate yet; parse with dummy */
+  return parse(effp, argv, SOX_MAXRATE); /* No rate yet; parse with dummy */
 }
 
 static int start(eff_t effp)
@@ -78,15 +78,15 @@ static int start(eff_t effp)
   p->in_pos = p->pad_pos = p->pads_pos = 0;
   for (i = 0; i < p->npads; ++i)
     if (p->pads[i].pad)
-      return ST_SUCCESS;
-  return ST_EFF_NULL;
+      return SOX_SUCCESS;
+  return SOX_EFF_NULL;
 }
 
-static int flow(eff_t effp, const st_sample_t * ibuf, st_sample_t * obuf,
-                st_size_t * isamp, st_size_t * osamp)
+static int flow(eff_t effp, const sox_sample_t * ibuf, sox_sample_t * obuf,
+                sox_size_t * isamp, sox_size_t * osamp)
 {
   pad_t p = (pad_t) effp->priv;
-  st_size_t c, idone = 0, odone = 0;
+  sox_size_t c, idone = 0, odone = 0;
   *isamp /= effp->ininfo.channels;
   *osamp /= effp->ininfo.channels;
 
@@ -108,15 +108,15 @@ static int flow(eff_t effp, const st_sample_t * ibuf, st_sample_t * obuf,
 
   *isamp = idone * effp->ininfo.channels;
   *osamp = odone * effp->ininfo.channels;
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
-static int drain(eff_t effp, st_sample_t * obuf, st_size_t * osamp)
+static int drain(eff_t effp, sox_sample_t * obuf, sox_size_t * osamp)
 {
-  static st_size_t isamp = 0;
+  static sox_size_t isamp = 0;
   pad_t p = (pad_t) effp->priv;
   if (p->pads_pos != p->npads && p->in_pos != p->pads[p->pads_pos].start)
-    p->in_pos = ST_SIZE_MAX;  /* Invoke the final pad (with no given start) */
+    p->in_pos = SOX_SIZE_MAX;  /* Invoke the final pad (with no given start) */
   return flow(effp, 0, obuf, &isamp, osamp);
 }
 
@@ -124,8 +124,8 @@ static int stop(eff_t effp)
 {
   pad_t p = (pad_t) effp->priv;
   if (p->pads_pos != p->npads)
-    st_warn("Input audio too short; pads not applied: %i",p->npads-p->pads_pos);
-  return ST_SUCCESS;
+    sox_warn("Input audio too short; pads not applied: %i",p->npads-p->pads_pos);
+  return SOX_SUCCESS;
 }
 
 static int delete(eff_t effp)
@@ -135,13 +135,13 @@ static int delete(eff_t effp)
   for (i = 0; i < p->npads; ++i)
     free(p->pads[i].str);
   free(p->pads);
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
-st_effect_t const * st_pad_effect_fn(void)
+sox_effect_t const * sox_pad_effect_fn(void)
 {
-  static st_effect_t driver = {
-    "pad", "Usage: pad {length[@position]}", ST_EFF_MCHAN,
+  static sox_effect_t driver = {
+    "pad", "Usage: pad {length[@position]}", SOX_EFF_MCHAN,
     create, start, flow, drain, stop, delete
   };
   return &driver;

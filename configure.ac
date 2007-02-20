@@ -4,7 +4,7 @@ AC_INIT(SoX, 13.0.0, sox-devel@lists.sourceforge.net)
 AM_INIT_AUTOMAKE
 
 dnl create a config.h file (Automake will add -DHAVE_CONFIG_H)
-AM_CONFIG_HEADER(src/stconfig.h)
+AM_CONFIG_HEADER(src/soxconfig.h)
 
 dnl Check we have the right srcdir
 AC_CONFIG_SRCDIR(sox.1)
@@ -179,9 +179,9 @@ AC_SUBST(SAMPLERATE_CFLAGS)
 AC_SUBST(SAMPLERATE_LIBS)
 
 dnl Generate output files.
-AX_CREATE_STDINT_H(src/ststdint.h)
+AX_CREATE_STDINT_H(src/soxstdint.h)
 AC_CONFIG_FILES(Makefile src/Makefile src/libgsm/Makefile
-		amr-wb/Makefile src/libst-config)
+		amr-wb/Makefile src/libsox-config)
 AC_OUTPUT
 
 if test "$found_libgsm" = "yes"; then

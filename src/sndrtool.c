@@ -7,7 +7,7 @@
  *   Forced extra comment fields to zero.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 
 #include <math.h>
 #include <string.h>
@@ -16,33 +16,33 @@
 
 /* Private data used by writer */
 typedef struct sndpriv {
-        st_size_t nsamples;
-        st_size_t dataStart;
+        sox_size_t nsamples;
+        sox_size_t dataStart;
 } *snd_t;
 
-static void sndtwriteheader(ft_t ft, st_size_t nsamples)
+static void sndtwriteheader(ft_t ft, sox_size_t nsamples)
 {
     char name_buf[97];
 
     /* sndtool header */
-    st_writes(ft, "SOUND"); /* magic */
-    st_writeb(ft, 0x1a);
-    st_writew (ft,0);  /* hGSound */
-    st_writedw (ft,nsamples);
-    st_writedw (ft,0);
-    st_writedw (ft,nsamples);
-    st_writew (ft,(int) ft->signal.rate);
-    st_writew (ft,0);
-    st_writew (ft,10);
-    st_writew (ft,4);
+    sox_writes(ft, "SOUND"); /* magic */
+    sox_writeb(ft, 0x1a);
+    sox_writew (ft,0);  /* hGSound */
+    sox_writedw (ft,nsamples);
+    sox_writedw (ft,0);
+    sox_writedw (ft,nsamples);
+    sox_writew (ft,(int) ft->signal.rate);
+    sox_writew (ft,0);
+    sox_writew (ft,10);
+    sox_writew (ft,4);
     memset (name_buf, 0, 96);
     sprintf (name_buf,"%.62s - File created by SoX",ft->filename);
-    st_writebuf(ft, name_buf, 1, 96);
+    sox_writebuf(ft, name_buf, 1, 96);
 }
 
-static int st_sndseek(ft_t ft, st_size_t offset) 
+static int sox_sndseek(ft_t ft, sox_size_t offset) 
 {
-    st_size_t new_offset, channel_block, alignment;
+    sox_size_t new_offset, channel_block, alignment;
     snd_t snd = (snd_t ) ft->priv;
 
     new_offset = offset * ft->signal.size;
@@ -57,10 +57,10 @@ static int st_sndseek(ft_t ft, st_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += snd->dataStart;
 
-    return st_seeki(ft, new_offset, SEEK_SET);
+    return sox_seeki(ft, new_offset, SEEK_SET);
 }
 
-static int st_sndtstartread(ft_t ft)
+static int sox_sndtstartread(ft_t ft)
 {
         snd_t snd = (snd_t ) ft->priv;
 
@@ -70,7 +70,7 @@ static int st_sndtstartread(ft_t ft)
         int rc;
 
         /* Needed for rawread() */
-        rc = st_rawstartread(ft);
+        rc = sox_rawstartread(ft);
         if (rc)
             return rc;
 
@@ -82,100 +82,100 @@ static int st_sndtstartread(ft_t ft)
          and second word is between 4000 & 25000 then this is sounder sound */
         /* otherwise, its probably raw, not handled here */
 
-        if (st_readbuf(ft, buf, 1, 2) != 2)
+        if (sox_readbuf(ft, buf, 1, 2) != 2)
         {
-                st_fail_errno(ft,errno,"SND: unexpected EOF");
-                return(ST_EOF);
+                sox_fail_errno(ft,errno,"SND: unexpected EOF");
+                return(SOX_EOF);
         }
         if (strncmp(buf,"\0\0",2) == 0)
         {
         /* sounder */
-        st_readw(ft, &rate);
+        sox_readw(ft, &rate);
         if (rate < 4000 || rate > 25000 )
         {
-                st_fail_errno(ft,ST_EFMT,"SND: sample rate out of range");
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EFMT,"SND: sample rate out of range");
+                return(SOX_EOF);
         }
-        st_seeki(ft, 4, SEEK_CUR);
+        sox_seeki(ft, 4, SEEK_CUR);
         }
         else
         {
         /* sndtool ? */
-        st_readbuf(ft, &buf[2], 1, 6);
+        sox_readbuf(ft, &buf[2], 1, 6);
         if (strncmp(buf,"SOUND",5))
         {
-                st_fail_errno(ft,ST_EFMT,"SND: unrecognized SND format");
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EFMT,"SND: unrecognized SND format");
+                return(SOX_EOF);
         }
-        st_seeki(ft, 12, SEEK_CUR);
-        st_readw(ft, &rate);
-        st_seeki(ft, 6, SEEK_CUR);
-        if (st_reads(ft, buf, 96) == ST_EOF)
+        sox_seeki(ft, 12, SEEK_CUR);
+        sox_readw(ft, &rate);
+        sox_seeki(ft, 6, SEEK_CUR);
+        if (sox_reads(ft, buf, 96) == SOX_EOF)
         {
-                st_fail_errno(ft,ST_EHDR,"SND: unexpected EOF in SND header");
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EHDR,"SND: unexpected EOF in SND header");
+                return(SOX_EOF);
         }
-        st_debug("%s",buf);
+        sox_debug("%s",buf);
         }
 
         ft->signal.channels = 1;
         ft->signal.rate = rate;
-        ft->signal.encoding = ST_ENCODING_UNSIGNED;
-        ft->signal.size = ST_SIZE_BYTE;
+        ft->signal.encoding = SOX_ENCODING_UNSIGNED;
+        ft->signal.size = SOX_SIZE_BYTE;
 
-        snd->dataStart = st_tell(ft);
-        ft->length = st_filelength(ft) - snd->dataStart;
+        snd->dataStart = sox_tell(ft);
+        ft->length = sox_filelength(ft) - snd->dataStart;
 
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
-static int st_sndtstartwrite(ft_t ft)
+static int sox_sndtstartwrite(ft_t ft)
 {
         snd_t p = (snd_t ) ft->priv;
         int rc;
 
         /* Needed for rawwrite() */
-        rc = st_rawstartwrite(ft);
+        rc = sox_rawstartwrite(ft);
         if (rc)
             return rc;
 
         /* write header */
         ft->signal.channels = 1;
-        ft->signal.encoding = ST_ENCODING_UNSIGNED;
-        ft->signal.size = ST_SIZE_BYTE;
+        ft->signal.encoding = SOX_ENCODING_UNSIGNED;
+        ft->signal.size = SOX_SIZE_BYTE;
         p->nsamples = 0;
         sndtwriteheader(ft, 0);
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
-static st_size_t st_sndtwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
+static sox_size_t sox_sndtwrite(ft_t ft, const sox_sample_t *buf, sox_size_t len)
 {
         snd_t p = (snd_t ) ft->priv;
         p->nsamples += len;
-        return st_rawwrite(ft, buf, len);
+        return sox_rawwrite(ft, buf, len);
 }
 
-static int st_sndtstopwrite(ft_t ft)
+static int sox_sndtstopwrite(ft_t ft)
 {
         snd_t p = (snd_t ) ft->priv;
         int rc;
 
         /* Flush remaining buffer out */
-        rc = st_rawstopwrite(ft);
+        rc = sox_rawstopwrite(ft);
         if (rc)
             return rc;
 
         /* fixup file sizes in header */
-        if (st_seeki(ft, 0, 0) != 0){
-                st_fail_errno(ft,errno,"can't rewind output file to rewrite SND header");
-                return ST_EOF;
+        if (sox_seeki(ft, 0, 0) != 0){
+                sox_fail_errno(ft,errno,"can't rewind output file to rewrite SND header");
+                return SOX_EOF;
         }
                 
         sndtwriteheader(ft, p->nsamples);
                 
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /* Sndtool Sound File */
@@ -184,20 +184,20 @@ static const char *sndtnames[] = {
   NULL
 };
 
-const st_format_t st_snd_format = {
+const sox_format_t sox_snd_format = {
   sndtnames,
   NULL,
-  ST_FILE_SEEK | ST_FILE_LIT_END,
-  st_sndtstartread,
-  st_rawread,
-  st_rawstopread,
-  st_sndtstartwrite,
-  st_sndtwrite,
-  st_sndtstopwrite,
-  st_sndseek
+  SOX_FILE_SEEK | SOX_FILE_LIT_END,
+  sox_sndtstartread,
+  sox_rawread,
+  sox_rawstopread,
+  sox_sndtstartwrite,
+  sox_sndtwrite,
+  sox_sndtstopwrite,
+  sox_sndseek
 };
 
-const st_format_t *st_snd_format_fn(void)
+const sox_format_t *sox_snd_format_fn(void)
 {
-    return &st_snd_format;
+    return &sox_snd_format;
 }

@@ -21,19 +21,19 @@
 
 #define LOG_TO_LOG10(x) ((x) * 20 / log(10.))
 
-st_bool st_compandt_show(st_compandt_t * t, st_bool plot)
+sox_bool sox_compandt_show(sox_compandt_t * t, sox_bool plot)
 {
   int i;
 
   for (i = 1; t->segments[i-1].x; ++i)
-    st_debug("TF: %g %g %g %g",
+    sox_debug("TF: %g %g %g %g",
        LOG_TO_LOG10(t->segments[i].x),
        LOG_TO_LOG10(t->segments[i].y),
        LOG_TO_LOG10(t->segments[i].a),
        LOG_TO_LOG10(t->segments[i].b));
 
   if (!plot)
-    return st_true;
+    return sox_true;
   printf(
     "title('SoX effect: compand')\n"
     "xlabel('Input level (dB)')\n"
@@ -45,17 +45,17 @@ st_bool st_compandt_show(st_compandt_t * t, st_bool plot)
   for (i = -199; i <= 0; ++i) {
     double in = i/2.;
     double in_lin = pow(10., in/20);
-    printf("%g ", in + 20 * log10(st_compandt(t, in_lin)));
+    printf("%g ", in + 20 * log10(sox_compandt(t, in_lin)));
   }
   printf(
     "];\n"
     "%%plot(in,out,'b') %% hmm.. doesn't work :(\n"
     "semilogx(exp(in),out,'b')\n"
     "pause\n");
-  return st_false;
+  return sox_false;
 }
 
-static void prepare_transfer_fn(st_compandt_t * t)
+static void prepare_transfer_fn(sox_compandt_t * t)
 {
   int i;
   double radius = t->curve_dB * log(10.) / 20;
@@ -115,24 +115,24 @@ static void prepare_transfer_fn(st_compandt_t * t)
   t->out_min_lin= exp(t->segments[1].y);
 }
 
-static st_bool parse_transfer_value(char const * text, double * value)
+static sox_bool parse_transfer_value(char const * text, double * value)
 {
   char dummy;     /* To check for extraneous chars. */
 
   if (!strcmp(text, "-inf"))
-    *value = -20 * log10(-(double)ST_SAMPLE_MIN);
+    *value = -20 * log10(-(double)SOX_SAMPLE_MIN);
   else if (sscanf(text, "%lf %c", value, &dummy) != 1) {
-    st_fail("syntax error trying to read transfer function value");
-    return st_false;
+    sox_fail("syntax error trying to read transfer function value");
+    return sox_false;
   }
   else if (*value > 0) {
-    st_fail("transfer function values are relative to maximum volume so can't exceed 0dB");
-    return st_false;
+    sox_fail("transfer function values are relative to maximum volume so can't exceed 0dB");
+    return sox_false;
   }
-  return st_true;
+  return sox_true;
 }
 
-st_bool st_compandt_parse(st_compandt_t * t, char * points, char * gain)
+sox_bool sox_compandt_parse(sox_compandt_t * t, char * points, char * gain)
 {
   char const * text = points;
   unsigned i, j, num, pairs, commas = 0;
@@ -153,15 +153,15 @@ st_bool st_compandt_parse(st_compandt_t * t, char * points, char * gain)
 #define s(n) t->segments[2*((n)+1)]
   for (i = 0, text = strtok(points, ","); text != NULL; ++i) {
     if (!parse_transfer_value(text, &s(i).x))
-      return st_false;
+      return sox_false;
     if (i && s(i-1).x > s(i).x) {
-      st_fail("transfer function input values must be strictly increasing");
-      return st_false;
+      sox_fail("transfer function input values must be strictly increasing");
+      return sox_false;
     }
     if (i || (commas & 1)) {
       text = strtok(NULL, ",");
       if (!parse_transfer_value(text, &s(i).y))
-        return st_false;
+        return sox_false;
       s(i).y -= s(i).x;
     }
     text = strtok(NULL, ",");
@@ -173,8 +173,8 @@ st_bool st_compandt_parse(st_compandt_t * t, char * points, char * gain)
 #undef s
 
   if (gain && sscanf(gain, "%lf %c", &t->outgain_dB, &dummy) != 1) {
-    st_fail("syntax error trying to read post-processing gain value");
-    return st_false;
+    sox_fail("syntax error trying to read post-processing gain value");
+    return sox_false;
   }
 
 #define s(n) t->segments[2*(n)]
@@ -194,10 +194,10 @@ st_bool st_compandt_parse(st_compandt_t * t, char * points, char * gain)
 #undef s
 
   prepare_transfer_fn(t);
-  return st_true;
+  return sox_true;
 }
 
-void st_compandt_kill(st_compandt_t * p)
+void sox_compandt_kill(sox_compandt_t * p)
 {
   free(p->segments);
 }

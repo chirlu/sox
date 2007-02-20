@@ -13,7 +13,7 @@
  * Derived from: Sound Tools skeleton handler file.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include "sfircam.h"
 
 #include <string.h>
@@ -23,7 +23,7 @@
 typedef struct sfstuff {
         struct sfinfo info;
         /* needed for seek */
-        st_size_t dataStart;
+        sox_size_t dataStart;
 } *sf_t;
 
 /*
@@ -40,8 +40,8 @@ static void readcodes(ft_t ft, SFHEADER *sfhead)
         do {
                 sfcharp = (char *) sfcodep + sizeof(SFCODE);
                 if (ft->signal.reverse_bytes) {
-                        sfcodep->bsize = st_swapdw(sfcodep->bsize);
-                        sfcodep->code = st_swapdw(sfcodep->code);
+                        sfcodep->bsize = sox_swapdw(sfcodep->bsize);
+                        sfcodep->code = sox_swapdw(sfcodep->code);
                 }
                 bsize = sfcodep->bsize - sizeof(SFCODE);
                 switch(sfcodep->code) {
@@ -51,7 +51,7 @@ static void readcodes(ft_t ft, SFHEADER *sfhead)
                 case SF_COMMENT:
                         commentbuf = (char *) xmalloc(bsize + 1);
                         memcpy(commentbuf, sfcharp, bsize);
-                        st_report("IRCAM comment: %s", sfcharp);
+                        sox_report("IRCAM comment: %s", sfcharp);
                         commentbuf[bsize] = '\0';
                         if((newline = strchr(commentbuf, '\n')) != NULL)
                                 *newline = '\0';
@@ -63,9 +63,9 @@ static void readcodes(ft_t ft, SFHEADER *sfhead)
                 ft->comment = commentbuf;
 }
 
-static int st_sfseek(ft_t ft, st_size_t offset)
+static int sox_sfseek(ft_t ft, sox_size_t offset)
 {
-    st_size_t new_offset, channel_block, alignment;
+    sox_size_t new_offset, channel_block, alignment;
 
     sf_t sf = (sf_t ) ft->priv;
     new_offset = offset * ft->signal.size;
@@ -80,7 +80,7 @@ static int st_sfseek(ft_t ft, st_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += sf->dataStart;
 
-    return st_seeki(ft, new_offset, SEEK_SET);
+    return sox_seeki(ft, new_offset, SEEK_SET);
 }
 
 /*
@@ -90,27 +90,27 @@ static int st_sfseek(ft_t ft, st_size_t offset)
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int st_sfstartread(ft_t ft)
+static int sox_sfstartread(ft_t ft)
 {
         sf_t sf = (sf_t) ft->priv;
         SFHEADER sfhead;
         int rc;
         int samplesize = 0;
 
-        if (st_readbuf(ft, &sfhead, 1, sizeof(sfhead)) != sizeof(sfhead))
+        if (sox_readbuf(ft, &sfhead, 1, sizeof(sfhead)) != sizeof(sfhead))
         {
-                st_fail("unexpected EOF in SF header");
-                return(ST_EOF);
+                sox_fail("unexpected EOF in SF header");
+                return(SOX_EOF);
         }
         memcpy(&sf->info, &sfhead.sfinfo, sizeof(struct sfinfo));
         if (ft->signal.reverse_bytes) {
-                sf->info.sf_srate = st_swapf(sf->info.sf_srate);
-                sf->info.sf_packmode = st_swapdw(sf->info.sf_packmode);
-                sf->info.sf_chans = st_swapdw(sf->info.sf_chans);
+                sf->info.sf_srate = sox_swapf(sf->info.sf_srate);
+                sf->info.sf_packmode = sox_swapdw(sf->info.sf_packmode);
+                sf->info.sf_chans = sox_swapdw(sf->info.sf_chans);
         }
         if ((sfmagic1(&sfhead) != SF_MAGIC1) ||
             (sfmagic2(&sfhead) != SF_MAGIC2))
-                st_fail(
+                sox_fail(
 "SF %s file: can't read, it is byte-swapped or it is not an IRCAM SoundFile",
                         ft->filename);
 
@@ -122,19 +122,19 @@ static int st_sfstartread(ft_t ft)
         ft->signal.rate = sf->info.sf_srate;
         switch(sf->info.sf_packmode) {
                 case SF_SHORT:
-                        ft->signal.size = ST_SIZE_16BIT;
-                        ft->signal.encoding = ST_ENCODING_SIGN2;
+                        ft->signal.size = SOX_SIZE_16BIT;
+                        ft->signal.encoding = SOX_ENCODING_SIGN2;
                         samplesize = ft->signal.size;
                         break;
                 case SF_FLOAT:
-                        ft->signal.size = ST_SIZE_32BIT;
-                        ft->signal.encoding = ST_ENCODING_FLOAT;
+                        ft->signal.size = SOX_SIZE_32BIT;
+                        ft->signal.encoding = SOX_ENCODING_FLOAT;
                         samplesize = sizeof(float);
                         break;
                 default:
-                        st_fail("Soundfile input: unknown format 0x%x",
+                        sox_fail("Soundfile input: unknown format 0x%x",
                                 sf->info.sf_packmode);
-                        return(ST_EOF);
+                        return(SOX_EOF);
         }
         ft->signal.channels = (int) sf->info.sf_chans;
 
@@ -145,12 +145,12 @@ static int st_sfstartread(ft_t ft)
         readcodes(ft, &sfhead);
 
         /* Needed for rawread() */
-        rc = st_rawstartread(ft);
+        rc = sox_rawstartread(ft);
 
 /* Need length for seeking */
         if(ft->seekable){
-                ft->length = st_filelength(ft)/samplesize;
-                sf->dataStart = st_tell(ft);
+                ft->length = sox_filelength(ft)/samplesize;
+                sf->dataStart = sox_tell(ft);
         } else {
                 ft->length = 0;
         }
@@ -158,7 +158,7 @@ static int st_sfstartread(ft_t ft)
         return(rc);
 }
 
-static int st_sfstartwrite(ft_t ft)
+static int sox_sfstartwrite(ft_t ft)
 {
         sf_t sf = (sf_t) ft->priv;
         SFHEADER sfhead;
@@ -167,7 +167,7 @@ static int st_sfstartwrite(ft_t ft)
         int rc;
 
         /* Needed for rawwrite() */
-        rc = st_rawstartwrite(ft);
+        rc = sox_rawstartwrite(ft);
         if (rc)
             return rc;
 
@@ -176,20 +176,20 @@ static int st_sfstartwrite(ft_t ft)
         sf->info.magic_union._magic_bytes.sf_param = 0;
 
         /* This file handler can handle both big and little endian data */
-        if (ST_IS_LITTLEENDIAN)
+        if (SOX_IS_LITTLEENDIAN)
             sf->info.magic_union._magic_bytes.sf_machine = SF_VAX;
         else
             sf->info.magic_union._magic_bytes.sf_machine = SF_SUN;
 
         sf->info.sf_srate = ft->signal.rate;
-        if (ft->signal.size == ST_SIZE_32BIT &&
-            ft->signal.encoding == ST_ENCODING_FLOAT) {
+        if (ft->signal.size == SOX_SIZE_32BIT &&
+            ft->signal.encoding == SOX_ENCODING_FLOAT) {
                 sf->info.sf_packmode = SF_FLOAT;
         } else {
                 sf->info.sf_packmode = SF_SHORT;
                 /* Default to signed words */
-                ft->signal.size = ST_SIZE_16BIT;
-                ft->signal.encoding = ST_ENCODING_SIGN2;
+                ft->signal.size = SOX_SIZE_16BIT;
+                ft->signal.encoding = SOX_ENCODING_SIGN2;
         }
 
         sf->info.sf_chans = ft->signal.channels;
@@ -211,9 +211,9 @@ static int st_sfstartwrite(ft_t ft)
         sfcharp = (char *) sfcodep + sizeof(SFCODE);
         while(sfcharp < (char *) &sfhead + SIZEOF_HEADER)
                 *sfcharp++ = '\0';
-        st_writebuf(ft, &sfhead, 1, sizeof(SFHEADER));
+        sox_writebuf(ft, &sfhead, 1, sizeof(SFHEADER));
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /* Read and write are supplied by raw.c */
@@ -224,20 +224,20 @@ static const char *sfnames[] = {
   NULL
 };
 
-static st_format_t st_sf_format = {
+static sox_format_t sox_sf_format = {
   sfnames,
   NULL,
-  ST_FILE_SEEK,
-  st_sfstartread,
-  st_rawread,
-  st_rawstopread,
-  st_sfstartwrite,
-  st_rawwrite,
-  st_rawstopwrite,
-  st_sfseek
+  SOX_FILE_SEEK,
+  sox_sfstartread,
+  sox_rawread,
+  sox_rawstopread,
+  sox_sfstartwrite,
+  sox_rawwrite,
+  sox_rawstopwrite,
+  sox_sfseek
 };
 
-const st_format_t *st_sf_format_fn(void)
+const sox_format_t *sox_sf_format_fn(void)
 {
-    return &st_sf_format;
+    return &sox_sf_format;
 }

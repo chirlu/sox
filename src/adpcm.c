@@ -35,11 +35,11 @@
 #include <sys/types.h>
 #include <math.h>
 #include <stdio.h>
-#include "st_i.h"
+#include "sox_i.h"
 #include "adpcm.h"
 
 typedef struct MsState {
-        st_sample_t  step;      /* step size */
+        sox_sample_t  step;      /* step size */
         short iCoef[2];
 } MsState_t;
 
@@ -53,7 +53,7 @@ typedef struct MsState {
  * 1.0 is scaled to 0x100
  */
 static const
-st_sample_t stepAdjustTable[] = {
+sox_sample_t stepAdjustTable[] = {
         230, 230, 230, 230, 307, 409, 512, 614,
         768, 614, 512, 409, 307, 230, 230, 230
 };
@@ -72,17 +72,17 @@ const short iCoef[7][2] = {
                         { 392,-232}
 };
 
-static inline st_sample_t AdpcmDecode(st_sample_t c, MsState_t *state,
-                               st_sample_t sample1, st_sample_t sample2)
+static inline sox_sample_t AdpcmDecode(sox_sample_t c, MsState_t *state,
+                               sox_sample_t sample1, sox_sample_t sample2)
 {
-        st_sample_t vlin;
-        st_sample_t sample;
-        st_sample_t step;
+        sox_sample_t vlin;
+        sox_sample_t sample;
+        sox_sample_t step;
 
         /** Compute next step value **/
         step = state->step;
         {
-                st_sample_t nstep;
+                sox_sample_t nstep;
                 nstep = (stepAdjustTable[c] * step) >> 8;
                 state->step = (nstep < 16)? 16:nstep;
         }
@@ -232,7 +232,7 @@ static int AdpcmMashS(
                 if (op) {   /* if we want output, put it in proper place */
                         op[ox>>3] |= (ox&4)? c:(c<<4);
                         ox += 4*chans;
-                        st_debug_more("%.1x",c);
+                        sox_debug_more("%.1x",c);
 
                 }
 
@@ -241,9 +241,9 @@ static int AdpcmMashS(
                 if (step < 16) step = 16;
 
         }
-        if (op) st_debug_more("\n");
+        if (op) sox_debug_more("\n");
         d2 /= n; /* be sure it's non-negative */
-        st_debug_more("ch%d: st %d->%d, d %.1f\n", ch, *iostep, step, sqrt(d2));
+        sox_debug_more("ch%d: st %d->%d, d %.1f\n", ch, *iostep, step, sqrt(d2));
         *iostep = step;
         return (int) sqrt(d2);
 }
@@ -278,7 +278,7 @@ static inline void AdpcmMashChannel(
 
                 s1 = s0;
                 AdpcmMashS(ch, chans, v, iCoef[k], ip, n0, &s1, NULL);
-                st_debug_more(" s32 %d\n",s1);
+                sox_debug_more(" s32 %d\n",s1);
                 ss = s1 = (3*s0+s1)/4;
                 d1=AdpcmMashS(ch, chans, v, iCoef[k], ip, n, &ss, NULL); /* with step s1 */
                 if (!k || d0<dmin || d1<dmin) {
@@ -293,7 +293,7 @@ static inline void AdpcmMashChannel(
                 }
         }
         *st = smin;
-        st_debug_more("kmin %d, smin %5d, ",kmin,smin);
+        sox_debug_more("kmin %d, smin %5d, ",kmin,smin);
         d=AdpcmMashS(ch, chans, v, iCoef[kmin], ip, n, st, obuff);
         obuff[ch] = kmin;
 }
@@ -310,7 +310,7 @@ void AdpcmBlockMashI(
         int ch;
         unsigned char *p;
 
-        st_debug("AdpcmMashI(chans %d, ip %p, n %d, st %p, obuff %p, bA %d)\n",
+        sox_debug("AdpcmMashI(chans %d, ip %p, n %d, st %p, obuff %p, bA %d)\n",
                                                                  chans, ip, n, st, obuff, blockAlign);
 
         for (p=obuff+7*chans; p<obuff+blockAlign; p++) *p=0;
@@ -327,13 +327,13 @@ void AdpcmBlockMashI(
  *  samplesPerBlock which would go into a block of size blockAlign
  *  Yes, it is confusing usage.
  */
-st_size_t AdpcmSamplesIn(
-        st_size_t dataLen,
+sox_size_t AdpcmSamplesIn(
+        sox_size_t dataLen,
         unsigned short chans,
         unsigned short blockAlign,
         unsigned short samplesPerBlock
 ){
-        st_size_t m, n;
+        sox_size_t m, n;
 
         if (samplesPerBlock) {
                 n = (dataLen / blockAlign) * samplesPerBlock;
@@ -351,15 +351,15 @@ st_size_t AdpcmSamplesIn(
         return n;
 }
 
-st_size_t AdpcmBytesPerBlock(
+sox_size_t AdpcmBytesPerBlock(
         unsigned short chans,
         unsigned short samplesPerBlock
 )
 {
-        st_size_t n;
+        sox_size_t n;
         n = 7*chans;  /* header */
         if (samplesPerBlock > 2)
-                n += (((st_size_t)samplesPerBlock-2)*chans + 1)/2;
+                n += (((sox_size_t)samplesPerBlock-2)*chans + 1)/2;
         return n;
 }
 

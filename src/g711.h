@@ -10,12 +10,12 @@
  * implied warranty.
  */
 
-extern uint8_t _st_13linear2alaw[0x2000];
-extern int16_t _st_alaw2linear16[256];
-#define st_13linear2alaw(sw) (_st_13linear2alaw[((sw) + 0x1000)])
-#define st_alaw2linear16(uc) (_st_alaw2linear16[uc])
+extern uint8_t _sox_13linear2alaw[0x2000];
+extern int16_t _sox_alaw2linear16[256];
+#define sox_13linear2alaw(sw) (_sox_13linear2alaw[((sw) + 0x1000)])
+#define sox_alaw2linear16(uc) (_sox_alaw2linear16[uc])
 
-extern uint8_t _st_14linear2ulaw[0x4000];
-extern int16_t _st_ulaw2linear16[256];
-#define st_14linear2ulaw(sw) (_st_14linear2ulaw[((sw) + 0x2000)])
-#define st_ulaw2linear16(uc) (_st_ulaw2linear16[uc])
+extern uint8_t _sox_14linear2ulaw[0x4000];
+extern int16_t _sox_ulaw2linear16[256];
+#define sox_14linear2ulaw(sw) (_sox_14linear2ulaw[((sw) + 0x2000)])
+#define sox_ulaw2linear16(uc) (_sox_ulaw2linear16[uc])

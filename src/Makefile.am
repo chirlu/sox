@@ -7,9 +7,9 @@ AM_LDFLAGS = @SNDFILE_LIBS@ @SAMPLERATE_LIBS@
 LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
 
 bin_PROGRAMS = sox
-bin_SCRIPTS = libst-config
-lib_LTLIBRARIES = libst.la
-include_HEADERS = st.h ststdint.h
+bin_SCRIPTS = libsox-config
+lib_LTLIBRARIES = libsox.la
+include_HEADERS = sox.h soxstdint.h
 
 formats = 8svx.c adpcm.c adpcm.h adpcms.c adpcms.h aiff.c au.c auto.c avr.c \
 	  cdr.c cvsd.c cvsdfilt.h dat.c flac.c g711.c g711.h g721.c g723_24.c \
@@ -27,13 +27,13 @@ effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c \
 	  skeleff.c speed.c stat.c stretch.c swap.c synth.c synth.h tremolo.c \
 	  trim.c vibro.c vol.c
 
-libst_la_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c \
-		   misc.c st_i.h stio.c util.c xmalloc.c xmalloc.h \
+libsox_la_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c \
+		   misc.c sox_i.h soxio.c util.c xmalloc.c xmalloc.h \
 		   getopt.c getopt1.c getopt.h stconfig.h
-libst_la_LIBADD = @LIBGSM_LIBADD@
+libsox_la_LIBADD = @LIBGSM_LIBADD@
 
 sox_SOURCES = sox.c
-sox_LDADD = libst.la ../amr-wb/libamrwb.la
+sox_LDADD = libsox.la ../amr-wb/libamrwb.la
 
 EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav
 

@@ -19,7 +19,7 @@
  * Output is always in big-endian (Sun/NeXT) order.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include "g72x.h"
 #include <stdlib.h>
 #include <string.h>
@@ -48,9 +48,9 @@
 /* Private data */
 typedef struct aupriv {
         /* For writer: size in bytes */
-        st_size_t data_size;
+        sox_size_t data_size;
         /* For seeking */
-        st_size_t dataStart;
+        sox_size_t dataStart;
         /* For G72x decoding: */
         struct g72x_state state;
         int (*dec_routine)(int i, int out_coding, struct g72x_state *state_ptr);
@@ -59,65 +59,65 @@ typedef struct aupriv {
         int in_bits;
 } *au_t;
 
-static void auwriteheader(ft_t ft, st_size_t data_size);
+static void auwriteheader(ft_t ft, sox_size_t data_size);
 
-static int st_auencodingandsize(int sun_encoding, st_encoding_t * encoding, int * size)
+static int sox_auencodingandsize(int sun_encoding, sox_encoding_t * encoding, int * size)
 {
     switch (sun_encoding) {
     case SUN_ULAW:
-            *encoding = ST_ENCODING_ULAW;
-            *size = ST_SIZE_BYTE;
+            *encoding = SOX_ENCODING_ULAW;
+            *size = SOX_SIZE_BYTE;
             break;
     case SUN_ALAW:
-            *encoding = ST_ENCODING_ALAW;
-            *size = ST_SIZE_BYTE;
+            *encoding = SOX_ENCODING_ALAW;
+            *size = SOX_SIZE_BYTE;
             break;
     case SUN_LIN_8:
-            *encoding = ST_ENCODING_SIGN2;
-            *size = ST_SIZE_BYTE;
+            *encoding = SOX_ENCODING_SIGN2;
+            *size = SOX_SIZE_BYTE;
             break;
     case SUN_LIN_16:
-            *encoding = ST_ENCODING_SIGN2;
-            *size = ST_SIZE_16BIT;
+            *encoding = SOX_ENCODING_SIGN2;
+            *size = SOX_SIZE_16BIT;
             break;
     case SUN_LIN_24:
-            *encoding = ST_ENCODING_SIGN2;
-            *size = ST_SIZE_24BIT;
+            *encoding = SOX_ENCODING_SIGN2;
+            *size = SOX_SIZE_24BIT;
             break;
     case SUN_G721:
-            *encoding = ST_ENCODING_SIGN2;
-            *size = ST_SIZE_16BIT;
+            *encoding = SOX_ENCODING_SIGN2;
+            *size = SOX_SIZE_16BIT;
             break;
     case SUN_G723_3:
-            *encoding = ST_ENCODING_SIGN2;
-            *size = ST_SIZE_16BIT;
+            *encoding = SOX_ENCODING_SIGN2;
+            *size = SOX_SIZE_16BIT;
             break;
     case SUN_G723_5:
-            *encoding = ST_ENCODING_SIGN2;
-            *size = ST_SIZE_16BIT;
+            *encoding = SOX_ENCODING_SIGN2;
+            *size = SOX_SIZE_16BIT;
             break;
     case SUN_FLOAT:
-            *encoding = ST_ENCODING_FLOAT;
-            *size = ST_SIZE_32BIT;
+            *encoding = SOX_ENCODING_FLOAT;
+            *size = SOX_SIZE_32BIT;
             break;
     default:
-            st_debug("encoding: 0x%lx", encoding);
-            return(ST_EOF);
+            sox_debug("encoding: 0x%lx", encoding);
+            return(SOX_EOF);
     }
-    return(ST_SUCCESS);
+    return(SOX_SUCCESS);
 }
 
-static int st_auseek(ft_t ft, st_size_t offset) 
+static int sox_auseek(ft_t ft, sox_size_t offset) 
 {
     au_t au = (au_t ) ft->priv;
 
     if (au->dec_routine != NULL)
     {
-        st_fail_errno(ft,ST_ENOTSUP,"Sorry, DEC unsupported");
+        sox_fail_errno(ft,SOX_ENOTSUP,"Sorry, DEC unsupported");
     }
     else 
     {
-        st_size_t new_offset, channel_block, alignment;
+        sox_size_t new_offset, channel_block, alignment;
 
         new_offset = offset * ft->signal.size;
         /* Make sure request aligns to a channel block (ie left+right) */
@@ -131,13 +131,13 @@ static int st_auseek(ft_t ft, st_size_t offset)
             new_offset += (channel_block - alignment);
         new_offset += au->dataStart;
 
-        ft->st_errno = st_seeki(ft, new_offset, SEEK_SET);
+        ft->sox_errno = sox_seeki(ft, new_offset, SEEK_SET);
     }
 
-    return(ft->st_errno);
+    return(ft->sox_errno);
 }
 
-static int st_austartread(ft_t ft) 
+static int sox_austartread(ft_t ft) 
 {
         /* The following 6 variables represent a Sun sound header on disk.
            The numbers are written as big-endians.
@@ -158,44 +158,44 @@ static int st_austartread(ft_t ft)
         int rc;
 
         /* Check the magic word */
-        st_readdw(ft, &magic);
+        sox_readdw(ft, &magic);
         if (magic == DEC_INV_MAGIC) {
                 /* Inverted headers are not standard.  Code was probably
                  * left over from pre-standardize period of testing for
                  * endianess.  Its not hurting though.
                  */
                 ft->signal.reverse_bytes = !ft->signal.reverse_bytes;
-                st_debug("Found inverted DEC magic word.  Swapping bytes.");
+                sox_debug("Found inverted DEC magic word.  Swapping bytes.");
         }
         else if (magic == SUN_INV_MAGIC) {
                 ft->signal.reverse_bytes = !ft->signal.reverse_bytes;
-                st_debug("Found inverted Sun/NeXT magic word. Swapping bytes.");
+                sox_debug("Found inverted Sun/NeXT magic word. Swapping bytes.");
         }
         else if (magic == SUN_MAGIC) {
-                st_debug("Found Sun/NeXT magic word");
+                sox_debug("Found Sun/NeXT magic word");
         }
         else if (magic == DEC_MAGIC) {
-                st_debug("Found DEC magic word");
+                sox_debug("Found DEC magic word");
         }
         else
         {
-                st_fail_errno(ft,ST_EHDR,"Did not detect valid Sun/NeXT/DEC magic number in header.");
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EHDR,"Did not detect valid Sun/NeXT/DEC magic number in header.");
+                return(SOX_EOF);
         }
 
         /* Read the header size */
-        st_readdw(ft, &hdr_size);
+        sox_readdw(ft, &hdr_size);
         if (hdr_size < SUN_HDRSIZE)
         {
-                st_fail_errno(ft,ST_EHDR,"Sun/NeXT header size too small.");
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EHDR,"Sun/NeXT header size too small.");
+                return(SOX_EOF);
         }
 
         /* Read the data size; may be ~0 meaning unspecified */
-        st_readdw(ft, &data_size);
+        sox_readdw(ft, &data_size);
 
         /* Read the encoding; there are some more possibilities */
-        st_readdw(ft, &encoding);
+        sox_readdw(ft, &encoding);
 
 
         /* Translate the encoding into encoding and size parameters */
@@ -203,11 +203,11 @@ static int st_austartread(ft_t ft)
         p->dec_routine = NULL;
         p->in_buffer = 0;
         p->in_bits = 0;
-        if(st_auencodingandsize(encoding, &(ft->signal.encoding),
-                             &(ft->signal.size)) == ST_EOF)
+        if(sox_auencodingandsize(encoding, &(ft->signal.encoding),
+                             &(ft->signal.size)) == SOX_EOF)
         {
-            st_fail_errno(ft,ST_EFMT,"Unsupported encoding in Sun/NeXT header.\nOnly U-law, signed bytes, signed words, ADPCM, and 32-bit floats are supported.");
-            return(ST_EOF);
+            sox_fail_errno(ft,SOX_EFMT,"Unsupported encoding in Sun/NeXT header.\nOnly U-law, signed bytes, signed words, ADPCM, and 32-bit floats are supported.");
+            return(SOX_EOF);
         }
         switch (encoding) {
         case SUN_G721:
@@ -229,18 +229,18 @@ static int st_austartread(ft_t ft)
 
 
         /* Read the sampling rate */
-        st_readdw(ft, &sample_rate);
+        sox_readdw(ft, &sample_rate);
         if (ft->signal.rate == 0 || ft->signal.rate == sample_rate)
             ft->signal.rate = sample_rate;
         else
-            st_report("User options overriding rate read in .au header");
+            sox_report("User options overriding rate read in .au header");
 
         /* Read the number of channels */
-        st_readdw(ft, &channels);
+        sox_readdw(ft, &channels);
         if (ft->signal.channels == 0 || ft->signal.channels == channels)
             ft->signal.channels = channels;
         else
-            st_report("User options overriding channels read in .au header");
+            sox_report("User options overriding channels read in .au header");
 
 
         /* Skip the info string in header; print it if verbose */
@@ -250,11 +250,11 @@ static int st_austartread(ft_t ft)
                 buf = (char *) xmalloc(hdr_size+1);
                 
                 for(i = 0; i < hdr_size; i++) {
-                        st_readb(ft, (unsigned char *)&(buf[i]));
-                        if (st_eof(ft))
+                        sox_readb(ft, (unsigned char *)&(buf[i]));
+                        if (sox_eof(ft))
                         {
-                                st_fail_errno(ft,ST_EOF,"Unexpected EOF in Sun/NeXT header info.");
-                                return(ST_EOF);
+                                sox_fail_errno(ft,SOX_EOF,"Unexpected EOF in Sun/NeXT header info.");
+                                return(SOX_EOF);
                         }
                 }
                 /* Buffer should already be null terminated but
@@ -270,14 +270,14 @@ static int st_austartread(ft_t ft)
         /* Needed for seeking */
         ft->length = data_size/ft->signal.size;
         if(ft->seekable)
-                p->dataStart = st_tell(ft);
+                p->dataStart = sox_tell(ft);
 
         /* Needed for rawread() */
-        rc = st_rawstartread(ft);
+        rc = sox_rawstartread(ft);
         if (rc)
             return rc;
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /* When writing, the header is supposed to contain the number of
@@ -289,19 +289,19 @@ static int st_austartread(ft_t ft)
    if it is not, the unspecified size remains in the header
    (this is legal). */
 
-static int st_austartwrite(ft_t ft) 
+static int sox_austartwrite(ft_t ft) 
 {
         au_t p = (au_t ) ft->priv;
         int rc;
 
         /* Needed because of rawwrite(); */
-        rc = st_rawstartwrite(ft);
+        rc = sox_rawstartwrite(ft);
         if (rc)
             return rc;
 
         p->data_size = 0;
         auwriteheader(ft, SUN_UNSPEC);
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /*
@@ -315,7 +315,7 @@ static int unpack_input(ft_t ft, unsigned char *code)
         unsigned char           in_byte;
 
         if (p->in_bits < p->dec_bits) {
-                if (st_readb(ft, &in_byte) == ST_EOF) {
+                if (sox_readb(ft, &in_byte) == SOX_EOF) {
                         *code = 0;
                         return (-1);
                 }
@@ -328,16 +328,16 @@ static int unpack_input(ft_t ft, unsigned char *code)
         return (p->in_bits > 0);
 }
 
-static st_size_t st_auread(ft_t ft, st_sample_t *buf, st_size_t samp)
+static sox_size_t sox_auread(ft_t ft, sox_sample_t *buf, sox_size_t samp)
 {
         au_t p = (au_t ) ft->priv;
         unsigned char code;
         int done;
         if (p->dec_routine == NULL)
-                return st_rawread(ft, buf, samp);
+                return sox_rawread(ft, buf, samp);
         done = 0;
         while (samp > 0 && unpack_input(ft, &code) >= 0) {
-                *buf++ = ST_SIGNED_WORD_TO_SAMPLE(
+                *buf++ = SOX_SIGNED_WORD_TO_SAMPLE(
                         (*p->dec_routine)(code, AUDIO_ENCODING_LINEAR,
                                           &p->state),);
                 samp--;
@@ -346,14 +346,14 @@ static st_size_t st_auread(ft_t ft, st_sample_t *buf, st_size_t samp)
         return done;
 }
 
-static st_size_t st_auwrite(ft_t ft, const st_sample_t *buf, st_size_t samp)
+static sox_size_t sox_auwrite(ft_t ft, const sox_sample_t *buf, sox_size_t samp)
 {
         au_t p = (au_t ) ft->priv;
         p->data_size += samp * ft->signal.size;
-        return(st_rawwrite(ft, buf, samp));
+        return(sox_rawwrite(ft, buf, samp));
 }
 
-static int st_austopwrite(ft_t ft)
+static int sox_austopwrite(ft_t ft)
 {
         au_t p = (au_t ) ft->priv;
         int rc;
@@ -361,45 +361,45 @@ static int st_austopwrite(ft_t ft)
         /* Needed because of rawwrite(). Do now to flush
          * data before seeking around below.
          */
-        rc = st_rawstopwrite(ft);
+        rc = sox_rawstopwrite(ft);
         if (rc)
             return rc;
 
         /* Attempt to update header */
         if (ft->seekable)
         {
-          if (st_seeki(ft, 0, 0) != 0)
+          if (sox_seeki(ft, 0, 0) != 0)
           {
-                st_fail_errno(ft,errno,"Can't rewind output file to rewrite Sun header.");
-                return(ST_EOF);
+                sox_fail_errno(ft,errno,"Can't rewind output file to rewrite Sun header.");
+                return(SOX_EOF);
           }
           auwriteheader(ft, p->data_size);
         }
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
-static int st_ausunencoding(int size, int encoding)
+static int sox_ausunencoding(int size, int encoding)
 {
         int sun_encoding;
 
-        if (encoding == ST_ENCODING_ULAW && size == ST_SIZE_BYTE)
+        if (encoding == SOX_ENCODING_ULAW && size == SOX_SIZE_BYTE)
                 sun_encoding = SUN_ULAW;
-        else if (encoding == ST_ENCODING_ALAW && size == ST_SIZE_BYTE)
+        else if (encoding == SOX_ENCODING_ALAW && size == SOX_SIZE_BYTE)
                 sun_encoding = SUN_ALAW;
-        else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_BYTE)
+        else if (encoding == SOX_ENCODING_SIGN2 && size == SOX_SIZE_BYTE)
                 sun_encoding = SUN_LIN_8;
-        else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_16BIT)
+        else if (encoding == SOX_ENCODING_SIGN2 && size == SOX_SIZE_16BIT)
                 sun_encoding = SUN_LIN_16;
-        else if (encoding == ST_ENCODING_SIGN2 && size == ST_SIZE_24BIT)
+        else if (encoding == SOX_ENCODING_SIGN2 && size == SOX_SIZE_24BIT)
                 sun_encoding = SUN_LIN_24;
-        else if (encoding == ST_ENCODING_FLOAT && size == ST_SIZE_32BIT)
+        else if (encoding == SOX_ENCODING_FLOAT && size == SOX_SIZE_32BIT)
                 sun_encoding = SUN_FLOAT;
         else
-                sun_encoding = ST_ENCODING_UNKNOWN;
+                sun_encoding = SOX_ENCODING_UNKNOWN;
         return sun_encoding;
 }
 
-static void auwriteheader(ft_t ft, st_size_t data_size)
+static void auwriteheader(ft_t ft, sox_size_t data_size)
 {
         uint32_t magic;
         uint32_t hdr_size;
@@ -409,18 +409,18 @@ static void auwriteheader(ft_t ft, st_size_t data_size)
         int   x;
         int   comment_size;
 
-        if ((encoding = st_ausunencoding(ft->signal.size, ft->signal.encoding)) == -1) {
-                st_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
-                st_report("Only U-law, A-law, and signed bytes/words/tri-bytes are supported.");
-                st_report("Defaulting to 8khz u-law");
+        if ((encoding = sox_ausunencoding(ft->signal.size, ft->signal.encoding)) == -1) {
+                sox_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
+                sox_report("Only U-law, A-law, and signed bytes/words/tri-bytes are supported.");
+                sox_report("Defaulting to 8khz u-law");
                 encoding = SUN_ULAW;
-                ft->signal.encoding = ST_ENCODING_ULAW;
-                ft->signal.size = ST_SIZE_BYTE;
+                ft->signal.encoding = SOX_ENCODING_ULAW;
+                ft->signal.size = SOX_SIZE_BYTE;
                 ft->signal.rate = 8000;  /* strange but true */
         }
 
         magic = SUN_MAGIC;
-        st_writedw(ft, magic);
+        sox_writedw(ft, magic);
 
         /* Info field is at least 4 bytes. Here I force it to something
          * useful when there is no comments.
@@ -436,26 +436,26 @@ static void auwriteheader(ft_t ft, st_size_t data_size)
 
         hdr_size += comment_size;
 
-        st_writedw(ft, hdr_size);
+        sox_writedw(ft, hdr_size);
 
-        st_writedw(ft, data_size);
+        sox_writedw(ft, data_size);
 
-        st_writedw(ft, encoding);
+        sox_writedw(ft, encoding);
 
         sample_rate = ft->signal.rate;
-        st_writedw(ft, sample_rate);
+        sox_writedw(ft, sample_rate);
 
         channels = ft->signal.channels;
-        st_writedw(ft, channels);
+        sox_writedw(ft, channels);
 
-        st_writes(ft, ft->comment);
+        sox_writes(ft, ft->comment);
 
         /* Info must be 4 bytes at least and null terminated. */
         x = strlen(ft->comment);
         for (;x < 3; x++)
-            st_writeb(ft, 0);
+            sox_writeb(ft, 0);
 
-        st_writeb(ft, 0);
+        sox_writeb(ft, 0);
 }
 
 /* SPARC .au w/header */
@@ -465,20 +465,20 @@ static const char *aunames[] = {
   NULL
 };
 
-static st_format_t st_au_format = {
+static sox_format_t sox_au_format = {
   aunames,
   NULL,
-  ST_FILE_SEEK | ST_FILE_BIG_END,
-  st_austartread,
-  st_auread,
-  st_rawstopread,
-  st_austartwrite,
-  st_auwrite,
-  st_austopwrite,
-  st_auseek
+  SOX_FILE_SEEK | SOX_FILE_BIG_END,
+  sox_austartread,
+  sox_auread,
+  sox_rawstopread,
+  sox_austartwrite,
+  sox_auwrite,
+  sox_austopwrite,
+  sox_auseek
 };
 
-const st_format_t *st_au_format_fn(void)
+const sox_format_t *sox_au_format_fn(void)
 {
-    return &st_au_format;
+    return &sox_au_format;
 }

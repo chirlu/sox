@@ -9,32 +9,32 @@
  * the consequences of using this software.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include "g711.h"
 
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 
-#define ST_ULAW_BYTE_TO_SAMPLE(d,clips)   ST_SIGNED_WORD_TO_SAMPLE(st_ulaw2linear16(d),clips)
-#define ST_ALAW_BYTE_TO_SAMPLE(d,clips)   ST_SIGNED_WORD_TO_SAMPLE(st_alaw2linear16(d),clips)
-#define ST_SAMPLE_TO_ULAW_BYTE(d,c) st_14linear2ulaw(ST_SAMPLE_TO_SIGNED_WORD(d,c) >> 2)
-#define ST_SAMPLE_TO_ALAW_BYTE(d,c) st_13linear2alaw(ST_SAMPLE_TO_SIGNED_WORD(d,c) >> 3)
+#define SOX_ULAW_BYTE_TO_SAMPLE(d,clips)   SOX_SIGNED_WORD_TO_SAMPLE(sox_ulaw2linear16(d),clips)
+#define SOX_ALAW_BYTE_TO_SAMPLE(d,clips)   SOX_SIGNED_WORD_TO_SAMPLE(sox_alaw2linear16(d),clips)
+#define SOX_SAMPLE_TO_ULAW_BYTE(d,c) sox_14linear2ulaw(SOX_SAMPLE_TO_SIGNED_WORD(d,c) >> 2)
+#define SOX_SAMPLE_TO_ALAW_BYTE(d,c) sox_13linear2alaw(SOX_SAMPLE_TO_SIGNED_WORD(d,c) >> 3)
 
-int st_rawseek(ft_t ft, st_size_t offset)
+int sox_rawseek(ft_t ft, sox_size_t offset)
 {
-    st_size_t new_offset, channel_block, alignment;
+    sox_size_t new_offset, channel_block, alignment;
 
     switch(ft->signal.size) {
-        case ST_SIZE_BYTE:
-        case ST_SIZE_16BIT:
-        case ST_SIZE_24BIT:
-        case ST_SIZE_32BIT:
-        case ST_SIZE_64BIT:
+        case SOX_SIZE_BYTE:
+        case SOX_SIZE_16BIT:
+        case SOX_SIZE_24BIT:
+        case SOX_SIZE_32BIT:
+        case SOX_SIZE_64BIT:
             break;
         default:
-            st_fail_errno(ft,ST_ENOTSUP,"Can't seek this data size");
-            return ft->st_errno;
+            sox_fail_errno(ft,SOX_ENOTSUP,"Can't seek this data size");
+            return ft->sox_errno;
     }
 
     new_offset = offset * ft->signal.size;
@@ -48,63 +48,63 @@ int st_rawseek(ft_t ft, st_size_t offset)
     if (alignment != 0)
         new_offset += (channel_block - alignment);
 
-    ft->st_errno = st_seeki(ft, new_offset, SEEK_SET);
+    ft->sox_errno = sox_seeki(ft, new_offset, SEEK_SET);
 
-    return ft->st_errno;
+    return ft->sox_errno;
 }
 
-/* Works nicely for starting read and write; st_rawstart{read,write}
-   are #defined in st_i.h */
-int st_rawstart(ft_t ft, st_bool default_rate, st_bool default_channels, st_encoding_t encoding, signed char size, st_option_t rev_bits)
+/* Works nicely for starting read and write; sox_rawstart{read,write}
+   are #defined in sox_i.h */
+int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, signed char size, sox_option_t rev_bits)
 {
   if (default_rate && ft->signal.rate == 0) {
-    st_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
+    sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
     ft->signal.rate = 8000;
   }
 
   if (default_channels && ft->signal.channels == 0) {
-    st_warn("'%s': # channels not specified; trying mono", ft->filename);
+    sox_warn("'%s': # channels not specified; trying mono", ft->filename);
     ft->signal.channels = 1;
   }
 
-  if (encoding != ST_ENCODING_UNKNOWN) {
+  if (encoding != SOX_ENCODING_UNKNOWN) {
     if (ft->mode == 'r' &&
-        ft->signal.encoding != ST_ENCODING_UNKNOWN &&
+        ft->signal.encoding != SOX_ENCODING_UNKNOWN &&
         ft->signal.encoding != encoding)
-      st_report("'%s': Format options overriding file-type encoding", ft->filename);
+      sox_report("'%s': Format options overriding file-type encoding", ft->filename);
     else ft->signal.encoding = encoding;
   }
 
   if (size != -1) {
     if (ft->mode == 'r' &&
         ft->signal.size != -1 && ft->signal.size != size)
-      st_report("'%s': Format options overriding file-type sample-size", ft->filename);
+      sox_report("'%s': Format options overriding file-type sample-size", ft->filename);
     else ft->signal.size = size;
   }
 
-  if (rev_bits != ST_OPTION_DEFAULT) {
+  if (rev_bits != SOX_OPTION_DEFAULT) {
     if (ft->mode == 'r' &&
-        ft->signal.reverse_bits != ST_OPTION_DEFAULT &&
+        ft->signal.reverse_bits != SOX_OPTION_DEFAULT &&
         ft->signal.reverse_bits != rev_bits)
-      st_report("'%s': Format options overriding file-type bit-order", ft->filename);
+      sox_report("'%s': Format options overriding file-type bit-order", ft->filename);
     else ft->signal.reverse_bits = rev_bits;
   }
 
   ft->eof = 0;
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 #define READ_FUNC(size, sign, ctype, uctype, cast) \
-  static st_size_t st_ ## sign ## size ## _read_buf( \
-      ft_t ft, st_sample_t *buf, st_size_t len) \
+  static sox_size_t sox_ ## sign ## size ## _read_buf( \
+      ft_t ft, sox_sample_t *buf, sox_size_t len) \
   { \
-    st_size_t n; \
+    sox_size_t n; \
     for (n = 0; n < len; n++) { \
       ctype datum; \
-      int ret = st_read ## size(ft, (uctype *)&datum); \
-      if (ret != ST_SUCCESS) \
+      int ret = sox_read ## size(ft, (uctype *)&datum); \
+      if (ret != SOX_SUCCESS) \
         break; \
-      *buf++ = ST_ ## cast ## _TO_SAMPLE(datum, ft->clips); \
+      *buf++ = SOX_ ## cast ## _TO_SAMPLE(datum, ft->clips); \
     } \
     return n; \
   }
@@ -123,13 +123,13 @@ READ_FUNC(f, su, float, float, FLOAT_DWORD)
 READ_FUNC(df, su, double, double, FLOAT_DDWORD)
 
 #define WRITE_FUNC(size, sign, cast) \
-  static st_size_t st_ ## sign ## size ## _write_buf( \
-      ft_t ft, st_sample_t *buf, st_size_t len) \
+  static sox_size_t sox_ ## sign ## size ## _write_buf( \
+      ft_t ft, sox_sample_t *buf, sox_size_t len) \
   { \
-    st_size_t n; \
+    sox_size_t n; \
     for (n = 0; n < len; n++) { \
-      int ret = st_write ## size(ft, ST_SAMPLE_TO_ ## cast(*buf++, ft->clips)); \
-      if (ret != ST_SUCCESS) \
+      int ret = sox_write ## size(ft, SOX_SAMPLE_TO_ ## cast(*buf++, ft->clips)); \
+      if (ret != SOX_SUCCESS) \
         break; \
     } \
     return n; \
@@ -148,83 +148,83 @@ WRITE_FUNC(dw, s, SIGNED_DWORD)
 WRITE_FUNC(f, su, FLOAT_DWORD)
 WRITE_FUNC(df, su, FLOAT_DDWORD)
 
-typedef st_size_t (ft_io_fun)(ft_t ft, st_sample_t *buf, st_size_t len);
+typedef sox_size_t (ft_io_fun)(ft_t ft, sox_sample_t *buf, sox_size_t len);
 
-static ft_io_fun *check_format(ft_t ft, st_bool write)
+static ft_io_fun *check_format(ft_t ft, sox_bool write)
 {
     switch (ft->signal.size) {
-    case ST_SIZE_BYTE:
+    case SOX_SIZE_BYTE:
       switch (ft->signal.encoding) {
-      case ST_ENCODING_SIGN2:
-        return write ? st_sb_write_buf : st_sb_read_buf;
-      case ST_ENCODING_UNSIGNED:
-        return write ? st_ub_write_buf : st_ub_read_buf;
-      case ST_ENCODING_ULAW:
-        return write ? st_ulawb_write_buf : st_ulawb_read_buf;
-      case ST_ENCODING_ALAW:
-        return write ? st_alawb_write_buf : st_alawb_read_buf;
+      case SOX_ENCODING_SIGN2:
+        return write ? sox_sb_write_buf : sox_sb_read_buf;
+      case SOX_ENCODING_UNSIGNED:
+        return write ? sox_ub_write_buf : sox_ub_read_buf;
+      case SOX_ENCODING_ULAW:
+        return write ? sox_ulawb_write_buf : sox_ulawb_read_buf;
+      case SOX_ENCODING_ALAW:
+        return write ? sox_alawb_write_buf : sox_alawb_read_buf;
       default:
         break;
       }
       break;
       
-    case ST_SIZE_16BIT: 
+    case SOX_SIZE_16BIT: 
       switch (ft->signal.encoding) {
-      case ST_ENCODING_SIGN2:
-        return write ? st_sw_write_buf : st_sw_read_buf;
-      case ST_ENCODING_UNSIGNED:
-        return write ? st_uw_write_buf : st_uw_read_buf;
+      case SOX_ENCODING_SIGN2:
+        return write ? sox_sw_write_buf : sox_sw_read_buf;
+      case SOX_ENCODING_UNSIGNED:
+        return write ? sox_uw_write_buf : sox_uw_read_buf;
       default:
         break;
       }
       break;
 
-    case ST_SIZE_24BIT:
+    case SOX_SIZE_24BIT:
       switch (ft->signal.encoding) {
-      case ST_ENCODING_SIGN2:
-        return write ? st_s3_write_buf : st_s3_read_buf;
-      case ST_ENCODING_UNSIGNED:
-        return write ? st_u3_write_buf: st_u3_read_buf;
+      case SOX_ENCODING_SIGN2:
+        return write ? sox_s3_write_buf : sox_s3_read_buf;
+      case SOX_ENCODING_UNSIGNED:
+        return write ? sox_u3_write_buf: sox_u3_read_buf;
       default:
         break;
       }
       break;
       
-    case ST_SIZE_32BIT:
+    case SOX_SIZE_32BIT:
       switch (ft->signal.encoding) {
-      case ST_ENCODING_SIGN2:
-        return write ? st_sdw_write_buf : st_sdw_read_buf;
-      case ST_ENCODING_UNSIGNED:
-        return write ? st_udw_write_buf : st_udw_read_buf;
-      case ST_ENCODING_FLOAT:
-        return write ? st_suf_write_buf : st_suf_read_buf;
+      case SOX_ENCODING_SIGN2:
+        return write ? sox_sdw_write_buf : sox_sdw_read_buf;
+      case SOX_ENCODING_UNSIGNED:
+        return write ? sox_udw_write_buf : sox_udw_read_buf;
+      case SOX_ENCODING_FLOAT:
+        return write ? sox_suf_write_buf : sox_suf_read_buf;
       default:
         break;
       }
       break;
       
-    case ST_SIZE_64BIT:
+    case SOX_SIZE_64BIT:
       switch (ft->signal.encoding) {
-      case ST_ENCODING_FLOAT:
-        return write ? st_sudf_write_buf : st_sudf_read_buf;
+      case SOX_ENCODING_FLOAT:
+        return write ? sox_sudf_write_buf : sox_sudf_read_buf;
       default:
         break;
       }
       break;
 
     default:
-      st_fail_errno(ft,ST_EFMT,"this handler does not support this data size");
+      sox_fail_errno(ft,SOX_EFMT,"this handler does not support this data size");
       return NULL;
     }
 
-    st_fail_errno(ft,ST_EFMT,"this encoding is not supported for this data size");
+    sox_fail_errno(ft,SOX_EFMT,"this encoding is not supported for this data size");
     return NULL;
 }
 
 /* Read a stream of some type into SoX's internal buffer format. */
-st_size_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
+sox_size_t sox_rawread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp)
 {
-    ft_io_fun * read_buf = check_format(ft, st_false);
+    ft_io_fun * read_buf = check_format(ft, sox_false);
 
     if (read_buf && nsamp)
       return read_buf(ft, buf, nsamp);
@@ -234,52 +234,52 @@ st_size_t st_rawread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 
 static void writeflush(ft_t ft)
 {
-  ft->eof = ST_EOF;
+  ft->eof = SOX_EOF;
 }
 
 
 /* Writes SoX's internal buffer format to buffer of various data types. */
-st_size_t st_rawwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
+sox_size_t sox_rawwrite(ft_t ft, const sox_sample_t *buf, sox_size_t nsamp)
 {
-    ft_io_fun *write_buf = check_format(ft, st_true);
+    ft_io_fun *write_buf = check_format(ft, sox_true);
 
     if (write_buf && nsamp)
-      return write_buf(ft, (st_sample_t *)buf, nsamp);
+      return write_buf(ft, (sox_sample_t *)buf, nsamp);
 
     return 0;
 }
 
-int st_rawstopwrite(ft_t ft)
+int sox_rawstopwrite(ft_t ft)
 {
         writeflush(ft);
-        return ST_SUCCESS;
+        return SOX_SUCCESS;
 }
 
 static int raw_start(ft_t ft) {
-  return st_rawstart(ft,st_false,st_false,ST_ENCODING_UNKNOWN,-1,ST_OPTION_DEFAULT);
+  return sox_rawstart(ft,sox_false,sox_false,SOX_ENCODING_UNKNOWN,-1,SOX_OPTION_DEFAULT);
 }
-st_format_t const * st_raw_format_fn(void) {
+sox_format_t const * sox_raw_format_fn(void) {
   static char const * names[] = {"raw", NULL};
-  static st_format_t driver = {
-    names, NULL, ST_FILE_SEEK,
-    raw_start, st_rawread , st_rawstopread,
-    raw_start, st_rawwrite, st_rawstopwrite,
-    st_rawseek
+  static sox_format_t driver = {
+    names, NULL, SOX_FILE_SEEK,
+    raw_start, sox_rawread , sox_rawstopread,
+    raw_start, sox_rawwrite, sox_rawstopwrite,
+    sox_rawseek
   };
   return &driver;
 }
 
 #define RAW_FORMAT(id,alt1,alt2,size,rev_bits,encoding) \
 static int id##_start(ft_t ft) { \
-  return st_rawstart(ft,st_true,st_true,ST_ENCODING_##encoding,ST_SIZE_##size,ST_OPTION_##rev_bits); \
+  return sox_rawstart(ft,sox_true,sox_true,SOX_ENCODING_##encoding,SOX_SIZE_##size,SOX_OPTION_##rev_bits); \
 } \
-st_format_t const * st_##id##_format_fn(void) { \
+sox_format_t const * sox_##id##_format_fn(void) { \
   static char const * names[] = {#id, alt1, alt2, NULL}; \
-  static st_format_t driver = { \
+  static sox_format_t driver = { \
     names, NULL, 0, \
-    id##_start, st_rawread , st_rawstopread, \
-    id##_start, st_rawwrite, st_rawstopwrite, \
-    st_format_nothing_seek \
+    id##_start, sox_rawread , sox_rawstopread, \
+    id##_start, sox_rawwrite, sox_rawstopwrite, \
+    sox_format_nothing_seek \
   }; \
   return &driver; \
 }

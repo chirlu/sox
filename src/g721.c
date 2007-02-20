@@ -49,7 +49,7 @@
  *
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include "g72x.h"
 #include "g711.h"
 
@@ -89,10 +89,10 @@ int g721_encoder(int sl, int in_coding, struct g72x_state *state_ptr)
 
 	switch (in_coding) {	/* linearize input sample to 14-bit PCM */
 	case AUDIO_ENCODING_ALAW:
-		sl = st_alaw2linear16(sl) >> 2;
+		sl = sox_alaw2linear16(sl) >> 2;
 		break;
 	case AUDIO_ENCODING_ULAW:
-		sl = st_ulaw2linear16(sl) >> 2;
+		sl = sox_ulaw2linear16(sl) >> 2;
 		break;
 	case AUDIO_ENCODING_LINEAR:
 		sl >>= 2;			/* 14-bit dynamic range */

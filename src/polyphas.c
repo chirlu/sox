@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "st_i.h"
+#include "sox_i.h"
 
 #define Float float/*double*/
 #define ISCALE 0x10000
@@ -44,11 +44,11 @@ typedef struct {
 } polystage;
 
 typedef struct polyphase {
-  st_rate_t lcmrate;             /* least common multiple of rates */
-  st_rate_t inskip, outskip;     /* LCM increments for I & O rates */
+  sox_rate_t lcmrate;             /* least common multiple of rates */
+  sox_rate_t inskip, outskip;     /* LCM increments for I & O rates */
   double Factor;                 /* out_rate/in_rate               */
   unsigned long total;           /* number of filter stages        */
-  st_size_t oskip;               /* output samples to skip at start*/
+  sox_size_t oskip;               /* output samples to skip at start*/
   double inpipe;                 /* output samples 'in the pipe'   */
   polystage *stage[MF];          /* array of pointers to polystage structs */
   int win_type;
@@ -57,13 +57,13 @@ typedef struct polyphase {
   int m1[MF], m2[MF], b1[MF], b2[MF]; /* arrays used in optimize_factors */
 } *poly_t;
 
-assert_static(sizeof(struct polyphase) <= ST_MAX_EFFECT_PRIVSIZE, 
+assert_static(sizeof(struct polyphase) <= SOX_MAX_EFFECT_PRIVSIZE, 
               /* else */ skeleff_PRIVSIZE_too_big);
 
 /*
  * Process options
  */
-static int st_poly_getopts(eff_t effp, int n, char **argv)
+static int sox_poly_getopts(eff_t effp, int n, char **argv)
 {
   poly_t rate = (poly_t) effp->priv;
 
@@ -99,11 +99,11 @@ static int st_poly_getopts(eff_t effp, int n, char **argv)
       continue;
     }
 
-    st_fail("Polyphase: unknown argument (%s %s)!", argv[0], argv[1]);
-    return ST_EOF;
+    sox_fail("Polyphase: unknown argument (%s %s)!", argv[0], argv[1]);
+    return SOX_EOF;
   }
   
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /*
@@ -134,19 +134,19 @@ static int prime(int n, int *q0)
 
   p = primes;
   q = q0;
-  st_debug("factors(%d) =",n);
+  sox_debug("factors(%d) =",n);
   while (n > 1) {
     while ((pr = *p) && (n % pr)) p++;
     if (!pr) {
-      st_fail("Number %d too large of a prime.",n);
+      sox_fail("Number %d too large of a prime.",n);
       pr = n;
     }
     *q++ = pr;
     n /= pr;
   }
   *q = 0;
-  for (pr=0; pr<q-q0; pr++) st_debug(" %d",q0[pr]);
-  st_debug("");
+  for (pr=0; pr<q-q0; pr++) sox_debug(" %d",q0[pr]);
+  sox_debug("");
   return (q-q0);
 }
 
@@ -184,8 +184,8 @@ static int permute(int *m, int *l, int ct, int ct1, size_t amalg)
   }
   if (n) *p++=n;
   *p = 0;
-  /*for (k=0; k<p-m; k++) st_debug(" %d",m[k]);*/
-  /*st_debug("");*/
+  /*for (k=0; k<p-m; k++) sox_debug(" %d",m[k]);*/
+  /*sox_debug("");*/
   return (p-m);
 }
 
@@ -214,9 +214,9 @@ static int optimize_factors(poly_t rate, int numer, int denom, int *l1, int *l2)
       cost = 0;
       f = denom;
       u = min(ct1,ct2) + 1;
-      /*st_debug("pfacts(%d): ", numer);*/
+      /*sox_debug("pfacts(%d): ", numer);*/
       u1 = permute(rate->m1,l1,ct1,u,amalg);
-      /*st_debug("pfacts(%d): ", denom);*/
+      /*sox_debug("pfacts(%d): ", denom);*/
       u2 = permute(rate->m2,l2,ct2,u,amalg);
       u = max(u1,u2);
       for (j=0; j<u; j++) {
@@ -229,11 +229,11 @@ static int optimize_factors(poly_t rate, int numer, int denom, int *l1, int *l2)
       if (c_min>cost) {
         c_min = cost;
         u_min = u;
-        if (st_output_verbosity_level >= 4) {
-          st_debug("c_min %d, [%d-%d]:",c_min,numer,denom);
+        if (sox_output_verbosity_level >= 4) {
+          sox_debug("c_min %d, [%d-%d]:",c_min,numer,denom);
           for (j=0; j<u; j++)
-            st_debug(" (%d,%d)",rate->m1[j],rate->m2[j]);
-          st_debug("");
+            sox_debug(" (%d,%d)",rate->m1[j],rate->m2[j]);
+          sox_debug("");
         }
         memcpy(rate->b1,rate->m1,u*sizeof(int));
         memcpy(rate->b2,rate->m2,u*sizeof(int));
@@ -263,7 +263,7 @@ static void nuttall(Float *buffer, int length)
   int N1;
 
   if(buffer == NULL || length <= 0)
-    st_fail("Illegal buffer %p or length %d to nuttall.", buffer, length);
+    sox_fail("Illegal buffer %p or length %d to nuttall.", buffer, length);
 
   /* Initial variable setups. */
   N = length;
@@ -286,7 +286,7 @@ static void hamming(Float *buffer, int length)
     int N1;
 
     if(buffer == NULL || length <= 0)
-      st_fail("Illegal buffer %p or length %d to hamming.",buffer,length);
+      sox_fail("Illegal buffer %p or length %d to hamming.",buffer,length);
 
     N1 = length/2;
     for(j=0;j<length;j++)
@@ -312,7 +312,7 @@ static void fir_design(poly_t rate, Float *buffer, int length, Float cutoff)
     double sum;
 
     if(buffer == NULL || length < 0 || cutoff < 0 || cutoff > M_PI)
-      st_fail("Illegal buffer %p, length %d, or cutoff %f.",buffer,length,cutoff);
+      sox_fail("Illegal buffer %p, length %d, or cutoff %f.",buffer,length,cutoff);
 
     /* Use the user-option of window type */
     if (rate->win_type == 0)
@@ -320,12 +320,12 @@ static void fir_design(poly_t rate, Float *buffer, int length, Float cutoff)
     else
       hamming(buffer,length);  /* Design Hamming window:  43 dB cutoff */
 
-    /* st_debug("# fir_design length=%d, cutoff=%8.4f",length,cutoff); */
+    /* sox_debug("# fir_design length=%d, cutoff=%8.4f",length,cutoff); */
     /* Design filter:  windowed sinc function */
     sum = 0.0;
     for(j=0;j<length;j++) {
       buffer[j] *= sinc(M_PI*cutoff*(j-length/2)); /* center at length/2 */
-      /* st_debug("%.1f %.6f",(float)j,buffer[j]); */
+      /* sox_debug("%.1f %.6f",(float)j,buffer[j]); */
       sum += buffer[j];
     }
     sum = (double)1.0/sum;
@@ -333,12 +333,12 @@ static void fir_design(poly_t rate, Float *buffer, int length, Float cutoff)
     for(j=0;j<length;j++) {
       buffer[j] *= sum;
     }
-    /* st_debug("# end"); */
+    /* sox_debug("# end"); */
 }
 
 #define RIBLEN 2048
 
-static int st_poly_start(eff_t effp)
+static int sox_poly_start(eff_t effp)
 {
     poly_t rate = (poly_t) effp->priv;
     static int l1[MF], l2[MF];
@@ -347,10 +347,10 @@ static int st_poly_start(eff_t effp)
     int k;
 
     if (effp->ininfo.rate == effp->outinfo.rate)
-      return ST_EFF_NULL;
+      return SOX_EFF_NULL;
 
-    rate->lcmrate = st_lcm((st_sample_t)effp->ininfo.rate,
-                           (st_sample_t)effp->outinfo.rate);
+    rate->lcmrate = sox_lcm((sox_sample_t)effp->ininfo.rate,
+                           (sox_sample_t)effp->outinfo.rate);
 
     /* Cursory check for LCM overflow.
      * If both rates are below 65k, there should be no problem.
@@ -372,9 +372,9 @@ static int st_poly_start(eff_t effp)
     rate->total = total;
     /* l1 and l2 are now lists of the up/down factors for conversion */
 
-    st_debug("Poly:  input rate %d, output rate %d.  %d stages.",
+    sox_debug("Poly:  input rate %d, output rate %d.  %d stages.",
             effp->ininfo.rate, effp->outinfo.rate,total);
-    st_debug("Poly:  window: %s  size: %d  cutoff: %f.",
+    sox_debug("Poly:  window: %s  size: %d  cutoff: %f.",
             (rate->win_type == 0) ? ("nut") : ("ham"), rate->win_width, rate->cutoff);
 
     /* Create an array of filters and past history */
@@ -394,7 +394,7 @@ static int st_poly_start(eff_t effp)
       s->size = size;
       s->hsize = f_len/s->up; /* this much of window is past-history */
       s->held = 0;
-      st_debug("Poly:  stage %d:  Up by %d, down by %d,  i_samps %d, hsize %d",
+      sox_debug("Poly:  stage %d:  Up by %d, down by %d,  i_samps %d, hsize %d",
               k+1,s->up,s->down,size, s->hsize);
       s->filt_len = f_len;
       s->filt_array = (Float *) xmalloc(sizeof(Float) * f_len);
@@ -404,7 +404,7 @@ static int st_poly_start(eff_t effp)
         s->window[j] = 0.0;
 
       uprate *= s->up;
-      st_debug("Poly:         :  filt_len %d, cutoff freq %.1f",
+      sox_debug("Poly:         :  filt_len %d, cutoff freq %.1f",
               f_len, uprate * rate->cutoff / f_cutoff);
       uprate /= s->down;
       fir_design(rate, s->filt_array, f_len, rate->cutoff / f_cutoff);
@@ -427,8 +427,8 @@ static int st_poly_start(eff_t effp)
       s->filt_array = NULL;
       s->window = (Float *) xmalloc(sizeof(Float) * size);
     }
-    st_debug("Poly:  output samples %d, oskip %d",size, rate->oskip);
-    return (ST_SUCCESS);
+    sox_debug("Poly:  output samples %d, oskip %d",size, rate->oskip);
+    return (SOX_SUCCESS);
 }
 
 /*
@@ -437,7 +437,7 @@ static int st_poly_start(eff_t effp)
  */
 
 /* REMARK: putting this in a separate subroutine improves gcc's optimization */
-static double st_prod(const Float *q, int qstep, const Float *p, int n)
+static double sox_prod(const Float *q, int qstep, const Float *p, int n)
 {
   double sum = 0;
   const Float *p0;
@@ -461,16 +461,16 @@ static void polyphase(Float *output, polystage *s)
   Float *o_top;
 
   in = s->window + s->hsize;
-  /*for (mm=0; mm<s->filt_len; mm++) st_debug("cf_%d %f",mm,s->filt_array[mm]);*/
+  /*for (mm=0; mm<s->filt_len; mm++) sox_debug("cf_%d %f",mm,s->filt_array[mm]);*/
   /* assumes s->size divisible by down (now true) */
   o_top = output + (s->size * up) / down;
-  /*st_debug(" isize %d, osize %d, up %d, down %d, N %d", s->size, o_top-output, up, down, f_len);*/
+  /*sox_debug(" isize %d, osize %d, up %d, down %d, N %d", s->size, o_top-output, up, down, f_len);*/
   for (mm=0, o=output; o < o_top; mm+=down, o++) {
     double sum;
     const Float *p, *q;
     q = s->filt_array + (mm%up);   /* decimated coef pointer */
     p  = in + (mm/up);
-    sum = st_prod(q, up, p, f_len/up);
+    sum = sox_prod(q, up, p, f_len/up);
     *o = sum * up;
   }
 }
@@ -486,18 +486,18 @@ static void update_hist(Float *hist, int hist_size, int in_size)
 
 }
 
-static int st_poly_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
-                 st_size_t *isamp, st_size_t *osamp)
+static int sox_poly_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
+                 sox_size_t *isamp, sox_size_t *osamp)
 {
   poly_t rate = (poly_t) effp->priv;
   polystage *s0,*s1;
 
   /* Sanity check:  how much can we tolerate? */
-  /* st_debug("*isamp=%d *osamp=%d",*isamp,*osamp); */
+  /* sox_debug("*isamp=%d *osamp=%d",*isamp,*osamp); */
   s0 = rate->stage[0];            /* the first stage */
   s1 = rate->stage[rate->total];  /* the 'last' stage is output buffer */
   {
-    st_size_t in_size, gap, k;
+    sox_size_t in_size, gap, k;
 
     in_size = *isamp;
     gap = s0->size - s0->held; /* space available in this 'input' buffer */
@@ -521,7 +521,7 @@ static int st_poly_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
   }
 
   if (s0->held == s0->size && s1->held == 0) {
-    st_size_t k;
+    sox_size_t k;
     /* input buffer full, output buffer empty, so do process */
 
     for(k=0; k<rate->total; k++) {
@@ -532,7 +532,7 @@ static int st_poly_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
 
       out = rate->stage[k+1]->window + rate->stage[k+1]->hsize;
 
-      /* st_debug("k=%d  insize=%d",k,in_size); */
+      /* sox_debug("k=%d  insize=%d",k,in_size); */
       polyphase(out, s);
 
       /* copy input history into lower portion of rate->window[k] */
@@ -546,11 +546,11 @@ static int st_poly_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
   }
 
   {
-    st_sample_t *q;
-    st_size_t out_size;
-    st_size_t oskip;
+    sox_sample_t *q;
+    sox_size_t out_size;
+    sox_size_t oskip;
     Float *out_buf;
-    st_size_t k;
+    sox_size_t k;
 
     oskip = rate->oskip;
                 out_size = s1->held;
@@ -566,7 +566,7 @@ static int st_poly_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     {
         float f;
         f = out_buf[k] * ISCALE; /* should clip-limit */
-        ST_SAMPLE_CLIP_COUNT(f, effp->clips);
+        SOX_SAMPLE_CLIP_COUNT(f, effp->clips);
         *q++ = f;
     }
 
@@ -582,29 +582,29 @@ static int st_poly_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     }
 
   }
-  return (ST_SUCCESS);
+  return (SOX_SUCCESS);
 
 }
 
 /*
  * Process tail of input samples.
  */
-static int st_poly_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int sox_poly_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-  st_size_t in_size;
+  sox_size_t in_size;
   /* Call "flow" with NULL input. */
-  st_poly_flow(effp, NULL, obuf, &in_size, osamp);
-  return (ST_SUCCESS);
+  sox_poly_flow(effp, NULL, obuf, &in_size, osamp);
+  return (SOX_SUCCESS);
 }
 
 /*
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int st_poly_stop(eff_t effp)
+static int sox_poly_stop(eff_t effp)
 {
     poly_t rate = (poly_t)effp->priv;
-    st_size_t k;
+    sox_size_t k;
 
     for (k = 0; k <= rate->total; k++) {
       free(rate->stage[k]->window);
@@ -612,25 +612,25 @@ static int st_poly_stop(eff_t effp)
       free(rate->stage[k]);
     }
 
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 }
 
-static st_effect_t st_polyphase_effect = {
+static sox_effect_t sox_polyphase_effect = {
   "polyphase",
   "Usage: -w {nut|ham}   window type\n"
   "       -width n       window width in samples [default 1024]\n"
   "\n"
   "       -cutoff float  frequency cutoff for base bandwidth [default 0.95]",
-  ST_EFF_RATE,
-  st_poly_getopts,
-  st_poly_start,
-  st_poly_flow,
-  st_poly_drain,
-  st_poly_stop,
-  st_effect_nothing
+  SOX_EFF_RATE,
+  sox_poly_getopts,
+  sox_poly_start,
+  sox_poly_flow,
+  sox_poly_drain,
+  sox_poly_stop,
+  sox_effect_nothing
 };
 
-const st_effect_t *st_polyphase_effect_fn(void)
+const sox_effect_t *sox_polyphase_effect_fn(void)
 {
-    return &st_polyphase_effect;
+    return &sox_polyphase_effect;
 }

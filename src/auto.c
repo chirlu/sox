@@ -14,7 +14,7 @@
  * used any more -- but this is just laziness on my part.) 
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include <string.h>
 
 #if defined(DOS) || defined(WIN32)
@@ -23,7 +23,7 @@
 #define LASTCHAR '/'
 #endif
 
-static int st_autostartread(ft_t ft)
+static int sox_autostartread(ft_t ft)
 {
     char *type = NULL;
     char header[256];
@@ -38,7 +38,7 @@ static int st_autostartread(ft_t ft)
          * file.  So we start checking for those filetypes first.
          */
         memset(header,0,4);
-        if (st_readbuf(ft, header, 1, 4) == 4)
+        if (sox_readbuf(ft, header, 1, 4) == 4)
         {
             /* Look for .snd or dns. header of AU files */
             if ((strncmp(header, ".snd", 4) == 0) ||
@@ -51,7 +51,7 @@ static int st_autostartread(ft_t ft)
             else if (strncmp(header, "FORM", 4) == 0) 
             {
                 /* Need to read more data to see what type of FORM file */
-                if (st_readbuf(ft, header, 1, 8) == 8)
+                if (sox_readbuf(ft, header, 1, 8) == 8)
                 {
                     if (strncmp(header + 4, "AIFF", 4) == 0)
                         type = "aiff";
@@ -65,23 +65,23 @@ static int st_autostartread(ft_t ft)
             }
             else if (strncmp(header, "RIFF", 4) == 0)
             {
-                if (st_readbuf(ft, header, 1, 8) == 8)
+                if (sox_readbuf(ft, header, 1, 8) == 8)
                     if (strncmp(header + 4, "WAVE", 4) == 0)
                         type = "wav";
             }
             else if (strncmp(header, "Crea", 4) == 0) 
             {
-                if (st_readbuf(ft, header, 1, 15) == 15)
+                if (sox_readbuf(ft, header, 1, 15) == 15)
                     if (strncmp(header, "tive Voice File", 15) == 0) 
                         type = "voc";
             }
             else if (strncmp(header, "SOUN", 4) == 0)
             {
                 /* Check for SOUND magic header */
-                if (st_readbuf(ft, header, 1, 1) == 1 && *header == 'D')
+                if (sox_readbuf(ft, header, 1, 1) == 1 && *header == 'D')
                 {
                     /* Once we've found SOUND see if its smp or sndt */
-                    if (st_readbuf(ft, header, 1, 12) == 12)
+                    if (sox_readbuf(ft, header, 1, 12) == 12)
                     {
                         if (strncmp(header, " SAMPLE DATA", 12) == 0)
                             type = "smp";
@@ -96,13 +96,13 @@ static int st_autostartread(ft_t ft)
                 type = "avr";
             else if (strncmp(header, "NIST", 4) == 0) 
             {
-                if (st_readbuf(ft, header, 1, 3) == 3)
+                if (sox_readbuf(ft, header, 1, 3) == 3)
                     if (strncmp(header, "_1A", 3) == 0) 
                         type = "sph";
             }
             else if (strncmp(header, "ALaw", 4) == 0)
             {
-                if (st_readbuf(ft, header, 1, 11) == 11)
+                if (sox_readbuf(ft, header, 1, 11) == 11)
                     if (strncmp(header, "SoundFile**", 11) == 0)
                         type = "wve";
             }
@@ -122,26 +122,26 @@ static int st_autostartread(ft_t ft)
         if (type == NULL)
         {
             for (loop = 0; loop < 60; loop++)
-                if (st_readbuf(ft, header, 1, 1) != 1)
+                if (sox_readbuf(ft, header, 1, 1) != 1)
                     break;
-            if (st_readbuf(ft, header, 1, 4) == 4 && 
+            if (sox_readbuf(ft, header, 1, 4) == 4 && 
                 strncmp(header, "FSSD", 4) == 0)
             {
                 for (loop = 0; loop < 62; loop++)
-                    if (st_readbuf(ft, header, 1, 1) != 1)
+                    if (sox_readbuf(ft, header, 1, 1) != 1)
                         break;
-                if (st_readbuf(ft, header, 1, 4) == 0 && 
+                if (sox_readbuf(ft, header, 1, 4) == 0 && 
                     strncmp(header, "HCOM", 4) == 0)
                     type = "hcom";
             }
         }
 
-        st_rewind(ft);
+        sox_rewind(ft);
 
         if (type == NULL) {
           if (prc_checkheader(ft, header))
             type = "prc";
-          st_rewind(ft);
+          sox_rewind(ft);
         }        
     } /* if (seekable) */
 
@@ -163,27 +163,27 @@ static int st_autostartread(ft_t ft)
 
     if (type == NULL)
     {
-        st_fail_errno(ft,ST_EFMT, "Could not determine file type.");
-        return (ST_EOF);
+        sox_fail_errno(ft,SOX_EFMT, "Could not determine file type.");
+        return (SOX_EOF);
     }
     free(ft->filetype);
     ft->filetype = strdup(type);
-    rc = st_gettype(ft, st_true); /* Change ft->h to the new format */
-    if(rc != ST_SUCCESS)
+    rc = sox_gettype(ft, sox_true); /* Change ft->h to the new format */
+    if(rc != SOX_SUCCESS)
     {
-        st_fail_errno(ft,ST_EFMT,"Do not understand format type: %s",type);
+        sox_fail_errno(ft,SOX_EFMT,"Do not understand format type: %s",type);
         return (rc);
     }
 
-    st_debug("Detected file format type: %s", type);
+    sox_debug("Detected file format type: %s", type);
     set_endianness_if_not_already_set(ft);
     return (* ft->h->startread)(ft);
 }
 
-static int st_autostartwrite(ft_t ft) 
+static int sox_autostartwrite(ft_t ft) 
 {
-        st_fail_errno(ft,ST_EFMT,"Type AUTO can only be used for input!");
-        return(ST_EOF);
+        sox_fail_errno(ft,SOX_EFMT,"Type AUTO can only be used for input!");
+        return(SOX_EOF);
 }
 
 static const char *autonames[] = {
@@ -191,20 +191,20 @@ static const char *autonames[] = {
   NULL
 };
 
-static st_format_t st_auto_format = {
+static sox_format_t sox_auto_format = {
   autonames,
   NULL,
-  ST_FILE_DEVICE | ST_FILE_PHONY,
-  st_autostartread,
-  st_format_nothing_read_io,
-  st_format_nothing,
-  st_autostartwrite,
-  st_format_nothing_write_io,
-  st_format_nothing,
-  st_format_nothing_seek
+  SOX_FILE_DEVICE | SOX_FILE_PHONY,
+  sox_autostartread,
+  sox_format_nothing_read_io,
+  sox_format_nothing,
+  sox_autostartwrite,
+  sox_format_nothing_write_io,
+  sox_format_nothing,
+  sox_format_nothing_seek
 };
 
-const st_format_t *st_auto_format_fn(void)
+const sox_format_t *sox_auto_format_fn(void)
 {
-    return &st_auto_format;
+    return &sox_auto_format;
 }

@@ -93,12 +93,12 @@
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
 #include <math.h>
-#include "st_i.h"
+#include "sox_i.h"
 
-static st_effect_t st_reverb_effect;
+static sox_effect_t sox_reverb_effect;
 
 #define REVERB_FADE_THRESH 10
-#define DELAY_BUFSIZ ( 50 * ST_MAXRATE )
+#define DELAY_BUFSIZ ( 50 * SOX_MAXRATE )
 #define MAXREVERBS 8
 
 /* Private data for SKEL file */
@@ -109,13 +109,13 @@ typedef struct reverbstuff {
         float   in_gain, out_gain, time;
         float   delay[MAXREVERBS], decay[MAXREVERBS];
         size_t  samples[MAXREVERBS], maxsamples;
-        st_sample_t pl, ppl, pppl;
+        sox_sample_t pl, ppl, pppl;
 } *reverb_t;
 
 /*
  * Process options
  */
-static int st_reverb_getopts(eff_t effp, int n, char **argv) 
+static int sox_reverb_getopts(eff_t effp, int n, char **argv) 
 {
         reverb_t reverb = (reverb_t) effp->priv;
         int i;
@@ -125,15 +125,15 @@ static int st_reverb_getopts(eff_t effp, int n, char **argv)
 
         if ( n < 3 )
         {
-            st_fail(st_reverb_effect.usage);
-            return (ST_EOF);
+            sox_fail(sox_reverb_effect.usage);
+            return (SOX_EOF);
         }
 
         if ( n - 2 > MAXREVERBS )
         {
-            st_fail("reverb: to many dalays, use less than %i delays",
+            sox_fail("reverb: to many dalays, use less than %i delays",
                         MAXREVERBS);
-            return (ST_EOF);
+            return (SOX_EOF);
         }
 
         i = 0;
@@ -144,13 +144,13 @@ static int st_reverb_getopts(eff_t effp, int n, char **argv)
                 sscanf(argv[i++], "%f", &reverb->delay[reverb->numdelays]);
                 reverb->numdelays++;
         }
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Prepare for processing.
  */
-static int st_reverb_start(eff_t effp)
+static int sox_reverb_start(eff_t effp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
         size_t i;
@@ -159,28 +159,28 @@ static int st_reverb_start(eff_t effp)
 
         if ( reverb->out_gain < 0.0 )
         {
-                st_fail("reverb: gain-out must be positive");
-                return (ST_EOF);
+                sox_fail("reverb: gain-out must be positive");
+                return (SOX_EOF);
         }
         if ( reverb->out_gain > 1.0 )
-                st_warn("reverb: warnig >>> gain-out can cause saturation of output <<<");
+                sox_warn("reverb: warnig >>> gain-out can cause saturation of output <<<");
         if ( reverb->time < 0.0 )
         {
-                st_fail("reverb: reverb-time must be positive");
-                return (ST_EOF);
+                sox_fail("reverb: reverb-time must be positive");
+                return (SOX_EOF);
         }
         for(i = 0; i < reverb->numdelays; i++) {
                 reverb->samples[i] = reverb->delay[i] * effp->ininfo.rate / 1000.0;
                 if ( reverb->samples[i] < 1 )
                 {
-                    st_fail("reverb: delay must be positive!");
-                    return (ST_EOF);
+                    sox_fail("reverb: delay must be positive!");
+                    return (SOX_EOF);
                 }
                 if ( reverb->samples[i] > DELAY_BUFSIZ )
                 {
-                        st_fail("reverb: delay must be less than %g seconds!",
+                        sox_fail("reverb: delay must be less than %g seconds!",
                                 DELAY_BUFSIZ / (float) effp->ininfo.rate );
-                        return(ST_EOF);
+                        return(SOX_EOF);
                 }
                 /* Compute a realistic decay */
                 reverb->decay[i] = (float) pow(10.0,(-3.0 * reverb->delay[i] / reverb->time));
@@ -196,22 +196,22 @@ static int st_reverb_start(eff_t effp)
         for ( i = 0; i < reverb->numdelays; i++ )
                 reverb->in_gain *= 
                         ( 1.0 - ( reverb->decay[i] * reverb->decay[i] ));
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int st_reverb_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                   st_size_t *isamp, st_size_t *osamp)
+static int sox_reverb_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                   sox_size_t *isamp, sox_size_t *osamp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
         size_t len, done;
         size_t i, j;
         
         float d_in, d_out;
-        st_sample_t out;
+        sox_sample_t out;
 
         i = reverb->counter;
         len = ((*isamp > *osamp) ? *osamp : *isamp);
@@ -224,7 +224,7 @@ static int st_reverb_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf
                         d_in +=
 reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsamples] * reverb->decay[j];
                 d_out = d_in * reverb->out_gain;
-                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 reverb->reverbbuf[i] = d_in;
                 i++;            /* XXX need a % maxsamples here ? */
@@ -232,19 +232,19 @@ reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsam
         }
         reverb->counter = i;
         /* processed all samples */
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Drain out reverb lines. 
  */
-static int st_reverb_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int sox_reverb_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
         float d_in, d_out;
-        st_sample_t out, l;
+        sox_sample_t out, l;
         size_t i, j;
-        st_size_t done;
+        sox_size_t done;
 
         i = reverb->counter;
         done = 0;
@@ -256,10 +256,10 @@ static int st_reverb_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
                         d_in += 
 reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsamples] * reverb->decay[j];
                 d_out = d_in * reverb->out_gain;
-                out = ST_24BIT_CLIP_COUNT((st_sample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
                 obuf[done++] = out * 256;
                 reverb->reverbbuf[i] = d_in;
-                l = ST_24BIT_CLIP_COUNT((st_sample_t) d_in, effp->clips);
+                l = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_in, effp->clips);
                 reverb->pppl = reverb->ppl;
                 reverb->ppl = reverb->pl;
                 reverb->pl = l;
@@ -269,34 +269,34 @@ reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsam
                 ((abs(reverb->pl) + abs(reverb->ppl) + abs(reverb->pppl)) > REVERB_FADE_THRESH));
         reverb->counter = i;
         *osamp = done;
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Clean up reverb effect.
  */
-static int st_reverb_stop(eff_t effp)
+static int sox_reverb_stop(eff_t effp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
 
         free((char *) reverb->reverbbuf);
         reverb->reverbbuf = (float *) -1;   /* guaranteed core dump */
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
-static st_effect_t st_reverb_effect = {
+static sox_effect_t sox_reverb_effect = {
   "reverb",
   "Usage: reverb gain-out reverb-time delay [ delay ... ]",
   0,
-  st_reverb_getopts,
-  st_reverb_start,
-  st_reverb_flow,
-  st_reverb_drain,
-  st_reverb_stop,
-  st_effect_nothing
+  sox_reverb_getopts,
+  sox_reverb_start,
+  sox_reverb_flow,
+  sox_reverb_drain,
+  sox_reverb_stop,
+  sox_effect_nothing
 };
 
-const st_effect_t *st_reverb_effect_fn(void)
+const sox_effect_t *sox_reverb_effect_fn(void)
 {
-    return &st_reverb_effect;
+    return &sox_reverb_effect;
 }

@@ -51,7 +51,7 @@
 #include <math.h>
 #include <assert.h>
 
-#include "st_i.h"
+#include "sox_i.h"
 
 #include "FFT.h"
 
@@ -71,7 +71,7 @@ static int NumberOfBitsNeeded(int PowerOfTwo)
    int i;
 
    if (PowerOfTwo < 2) {
-      st_debug("Error: FFT called with size %d", PowerOfTwo);
+      sox_debug("Error: FFT called with size %d", PowerOfTwo);
       exit(2);
    }
 
@@ -129,7 +129,7 @@ void FFT(int NumSamples,
    float tr, ti;                /* temp real, temp imaginary */
 
    if (!IsPowerOfTwo(NumSamples)) {
-      st_debug("%d is not a power of two", NumSamples);
+      sox_debug("%d is not a power of two", NumSamples);
       exit(2);
    }
 

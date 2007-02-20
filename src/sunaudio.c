@@ -15,7 +15,7 @@
  * responsible for the consequences of using this software.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 
 #ifdef HAVE_SUN_AUDIO
 
@@ -44,10 +44,10 @@
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int st_sunstartread(ft_t ft)
+static int sox_sunstartread(ft_t ft)
 {
-    st_fileinfo_t *file = (st_fileinfo_t *)ft->priv;
-    st_size_t samplesize, encoding;
+    sox_fileinfo_t *file = (sox_fileinfo_t *)ft->priv;
+    sox_size_t samplesize, encoding;
     audio_info_t audio_if;
 #ifdef __SVR4
     audio_device_t audio_dev;
@@ -62,16 +62,16 @@ static int st_sunstartread(ft_t ft)
     file->buf = xmalloc (file->size);
 
     if (ft->signal.rate == 0.0) ft->signal.rate = 8000;
-    if (ft->signal.size == -1) ft->signal.size = ST_SIZE_BYTE;
-    if (ft->signal.encoding == ST_ENCODING_UNKNOWN) ft->signal.encoding = ST_ENCODING_ULAW;
+    if (ft->signal.size == -1) ft->signal.size = SOX_SIZE_BYTE;
+    if (ft->signal.encoding == SOX_ENCODING_UNKNOWN) ft->signal.encoding = SOX_ENCODING_ULAW;
 
 #ifdef __SVR4
     /* Read in old values, change to what we need and then send back */
     if (ioctl(fileno(ft->fp), AUDIO_GETDEV, &audio_dev) < 0) {
-        st_fail_errno(ft,errno,"Unable to get device information.");
-        return(ST_EOF);
+        sox_fail_errno(ft,errno,"Unable to get device information.");
+        return(SOX_EOF);
     }
-    st_report("Hardware detected:  %s",audio_dev.name);
+    sox_report("Hardware detected:  %s",audio_dev.name);
     if (strcmp("SUNW,am79c30",audio_dev.name) == 0)
     {
         simple_hw = 1;
@@ -81,72 +81,72 @@ static int st_sunstartread(ft_t ft)
     /* If simple hardware detected in force data to ulaw. */
     if (simple_hw)
     {
-        if (ft->signal.size == ST_SIZE_BYTE)
+        if (ft->signal.size == SOX_SIZE_BYTE)
         {
-            if (ft->signal.encoding != ST_ENCODING_ULAW &&
-                ft->signal.encoding != ST_ENCODING_ALAW)
+            if (ft->signal.encoding != SOX_ENCODING_ULAW &&
+                ft->signal.encoding != SOX_ENCODING_ALAW)
             {
-                st_report("Warning: Detected simple hardware.  Forcing output to ULAW");
-                ft->signal.encoding = ST_ENCODING_ULAW;
+                sox_report("Warning: Detected simple hardware.  Forcing output to ULAW");
+                ft->signal.encoding = SOX_ENCODING_ULAW;
             }
         }
-        else if (ft->signal.size == ST_SIZE_16BIT)
+        else if (ft->signal.size == SOX_SIZE_16BIT)
         {
-            st_report("Warning: Detected simple hardware.  Forcing output to ULAW");
-            ft->signal.size = ST_SIZE_BYTE;
-            ft->signal.encoding = ST_ENCODING_ULAW;
+            sox_report("Warning: Detected simple hardware.  Forcing output to ULAW");
+            ft->signal.size = SOX_SIZE_BYTE;
+            ft->signal.encoding = SOX_ENCODING_ULAW;
         }
     }
 
-    if (ft->signal.size == ST_SIZE_BYTE) {
+    if (ft->signal.size == SOX_SIZE_BYTE) {
         samplesize = 8;
-        if (ft->signal.encoding != ST_ENCODING_ULAW &&
-            ft->signal.encoding != ST_ENCODING_ALAW &&
-            ft->signal.encoding != ST_ENCODING_SIGN2) {
-            st_fail_errno(ft,ST_EFMT,"Sun audio driver only supports ULAW, ALAW, and signed linear for bytes.");
-                return (ST_EOF);
+        if (ft->signal.encoding != SOX_ENCODING_ULAW &&
+            ft->signal.encoding != SOX_ENCODING_ALAW &&
+            ft->signal.encoding != SOX_ENCODING_SIGN2) {
+            sox_fail_errno(ft,SOX_EFMT,"Sun audio driver only supports ULAW, ALAW, and signed linear for bytes.");
+                return (SOX_EOF);
         }
-        if ((ft->signal.encoding == ST_ENCODING_ULAW ||
-             ft->signal.encoding == ST_ENCODING_ALAW) && 
+        if ((ft->signal.encoding == SOX_ENCODING_ULAW ||
+             ft->signal.encoding == SOX_ENCODING_ALAW) && 
             ft->signal.channels == 2)
         {
-            st_report("Warning: only support mono for ULAW and ALAW data.  Forcing to mono.");
+            sox_report("Warning: only support mono for ULAW and ALAW data.  Forcing to mono.");
             ft->signal.channels = 1;
         }
     }
-    else if (ft->signal.size == ST_SIZE_16BIT) {
+    else if (ft->signal.size == SOX_SIZE_16BIT) {
         samplesize = 16;
-        if (ft->signal.encoding != ST_ENCODING_SIGN2) {
-            st_fail_errno(ft,ST_EFMT,"Sun audio driver only supports signed linear for words.");
-            return(ST_EOF);
+        if (ft->signal.encoding != SOX_ENCODING_SIGN2) {
+            sox_fail_errno(ft,SOX_EFMT,"Sun audio driver only supports signed linear for words.");
+            return(SOX_EOF);
         }
     }
     else {
-        st_fail_errno(ft,ST_EFMT,"Sun audio driver only supports bytes and words");
-        return(ST_EOF);
+        sox_fail_errno(ft,SOX_EFMT,"Sun audio driver only supports bytes and words");
+        return(SOX_EOF);
     }
 
     if (ft->signal.channels == 0) ft->signal.channels = 1;
     else if (ft->signal.channels > 1) {
-        st_report("Warning: some Sun audio devices can not play stereo");
-        st_report("at all or sometimes only with signed words.  If the");
-        st_report("sound seems sluggish then this is probably the case.");
-        st_report("Try forcing output to signed words or use the avg");
-        st_report("filter to reduce the number of channels.");
+        sox_report("Warning: some Sun audio devices can not play stereo");
+        sox_report("at all or sometimes only with signed words.  If the");
+        sox_report("sound seems sluggish then this is probably the case.");
+        sox_report("Try forcing output to signed words or use the avg");
+        sox_report("filter to reduce the number of channels.");
         ft->signal.channels = 2;
     }
 
     /* Read in old values, change to what we need and then send back */
     if (ioctl(fileno(ft->fp), AUDIO_GETINFO, &audio_if) < 0) {
-        st_fail_errno(ft,errno,"Unable to initialize /dev/audio");
-        return(ST_EOF);
+        sox_fail_errno(ft,errno,"Unable to initialize /dev/audio");
+        return(SOX_EOF);
     }
     audio_if.record.precision = samplesize;
     audio_if.record.channels = ft->signal.channels;
     audio_if.record.sample_rate = ft->signal.rate;
-    if (ft->signal.encoding == ST_ENCODING_ULAW)
+    if (ft->signal.encoding == SOX_ENCODING_ULAW)
         encoding = AUDIO_ENCODING_ULAW;
-    else if (ft->signal.encoding == ST_ENCODING_ALAW)
+    else if (ft->signal.encoding == SOX_ENCODING_ALAW)
         encoding = AUDIO_ENCODING_ALAW;
     else
         encoding = AUDIO_ENCODING_LINEAR;
@@ -154,20 +154,20 @@ static int st_sunstartread(ft_t ft)
 
     ioctl(fileno(ft->fp), AUDIO_SETINFO, &audio_if);
     if (audio_if.record.precision != samplesize) {
-        st_fail_errno(ft,errno,"Unable to initialize sample size for /dev/audio");
-        return(ST_EOF);
+        sox_fail_errno(ft,errno,"Unable to initialize sample size for /dev/audio");
+        return(SOX_EOF);
     }
     if (audio_if.record.channels != ft->signal.channels) {
-        st_fail_errno(ft,errno,"Unable to initialize number of channels for /dev/audio");
-        return(ST_EOF);
+        sox_fail_errno(ft,errno,"Unable to initialize number of channels for /dev/audio");
+        return(SOX_EOF);
     }
     if (audio_if.record.sample_rate != ft->signal.rate) {
-        st_fail_errno(ft,errno,"Unable to initialize rate for /dev/audio");
-        return(ST_EOF);
+        sox_fail_errno(ft,errno,"Unable to initialize rate for /dev/audio");
+        return(SOX_EOF);
     }
     if (audio_if.record.encoding != encoding) {
-        st_fail_errno(ft,errno,"Unable to initialize encoding for /dev/audio");
-        return(ST_EOF);
+        sox_fail_errno(ft,errno,"Unable to initialize encoding for /dev/audio");
+        return(SOX_EOF);
     }
     /* Flush any data in the buffers - its probably in the wrong format */
 #if defined(__NetBSD__) || defined(__OpenBSD__)
@@ -178,13 +178,13 @@ static int st_sunstartread(ft_t ft)
     /* Change to non-buffered I/O*/
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * file->size);
 
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
-static int st_sunstartwrite(ft_t ft)
+static int sox_sunstartwrite(ft_t ft)
 {
-    st_fileinfo_t *file = (st_fileinfo_t *)ft->priv;
-    st_size_t samplesize, encoding;
+    sox_fileinfo_t *file = (sox_fileinfo_t *)ft->priv;
+    sox_size_t samplesize, encoding;
     audio_info_t audio_if;
 #ifdef __SVR4
     audio_device_t audio_dev;
@@ -201,10 +201,10 @@ static int st_sunstartwrite(ft_t ft)
 #ifdef __SVR4
     /* Read in old values, change to what we need and then send back */
     if (ioctl(fileno(ft->fp), AUDIO_GETDEV, &audio_dev) < 0) {
-        st_fail_errno(ft,errno,"Unable to get device information.");
-        return(ST_EOF);
+        sox_fail_errno(ft,errno,"Unable to get device information.");
+        return(SOX_EOF);
     }
-    st_report("Hardware detected:  %s",audio_dev.name);
+    sox_report("Hardware detected:  %s",audio_dev.name);
     if (strcmp("SUNW,am79c30",audio_dev.name) == 0)
     {
         simple_hw = 1;
@@ -213,58 +213,58 @@ static int st_sunstartwrite(ft_t ft)
 
     if (simple_hw)
     {
-        if (ft->signal.size == ST_SIZE_BYTE)
+        if (ft->signal.size == SOX_SIZE_BYTE)
         {
-            if (ft->signal.encoding != ST_ENCODING_ULAW &&
-                ft->signal.encoding != ST_ENCODING_ALAW)
+            if (ft->signal.encoding != SOX_ENCODING_ULAW &&
+                ft->signal.encoding != SOX_ENCODING_ALAW)
             {
-                st_report("Warning: Detected simple hardware.  Forcing output to ULAW");
-                ft->signal.encoding = ST_ENCODING_ULAW;
+                sox_report("Warning: Detected simple hardware.  Forcing output to ULAW");
+                ft->signal.encoding = SOX_ENCODING_ULAW;
             }
         }
-        else if (ft->signal.size == ST_SIZE_16BIT)
+        else if (ft->signal.size == SOX_SIZE_16BIT)
         {
-            st_report("Warning: Detected simple hardware.  Forcing output to ULAW");
-            ft->signal.size = ST_SIZE_BYTE;
-            ft->signal.encoding = ST_ENCODING_ULAW;
+            sox_report("Warning: Detected simple hardware.  Forcing output to ULAW");
+            ft->signal.size = SOX_SIZE_BYTE;
+            ft->signal.encoding = SOX_ENCODING_ULAW;
         }
     }
 
     if (ft->signal.rate == 0.0) ft->signal.rate = 8000;
-    if (ft->signal.size == -1) ft->signal.size = ST_SIZE_BYTE;
-    if (ft->signal.encoding == ST_ENCODING_UNKNOWN) 
-        ft->signal.encoding = ST_ENCODING_ULAW;
+    if (ft->signal.size == -1) ft->signal.size = SOX_SIZE_BYTE;
+    if (ft->signal.encoding == SOX_ENCODING_UNKNOWN) 
+        ft->signal.encoding = SOX_ENCODING_ULAW;
 
-    if (ft->signal.size == ST_SIZE_BYTE) 
+    if (ft->signal.size == SOX_SIZE_BYTE) 
     {
         samplesize = 8;
-        if (ft->signal.encoding != ST_ENCODING_ULAW &&
-            ft->signal.encoding != ST_ENCODING_ALAW &&
-            ft->signal.encoding != ST_ENCODING_SIGN2) {
-            st_report("Sun Audio driver only supports ULAW, ALAW, and Signed Linear for bytes.");
-            st_report("Forcing to ULAW");
-            ft->signal.encoding = ST_ENCODING_ULAW;
+        if (ft->signal.encoding != SOX_ENCODING_ULAW &&
+            ft->signal.encoding != SOX_ENCODING_ALAW &&
+            ft->signal.encoding != SOX_ENCODING_SIGN2) {
+            sox_report("Sun Audio driver only supports ULAW, ALAW, and Signed Linear for bytes.");
+            sox_report("Forcing to ULAW");
+            ft->signal.encoding = SOX_ENCODING_ULAW;
         }
-        if ((ft->signal.encoding == ST_ENCODING_ULAW ||
-             ft->signal.encoding == ST_ENCODING_ALAW) && 
+        if ((ft->signal.encoding == SOX_ENCODING_ULAW ||
+             ft->signal.encoding == SOX_ENCODING_ALAW) && 
             ft->signal.channels == 2)
         {
-            st_report("Warning: only support mono for ULAW and ALAW data.  Forcing to mono.");
+            sox_report("Warning: only support mono for ULAW and ALAW data.  Forcing to mono.");
             ft->signal.channels = 1;
         }
 
     }
-    else if (ft->signal.size == ST_SIZE_16BIT) {
+    else if (ft->signal.size == SOX_SIZE_16BIT) {
         samplesize = 16;
-        if (ft->signal.encoding != ST_ENCODING_SIGN2) {
-            st_report("Sun Audio driver only supports Signed Linear for words.");
-            st_report("Forcing to Signed Linear");
-            ft->signal.encoding = ST_ENCODING_SIGN2;
+        if (ft->signal.encoding != SOX_ENCODING_SIGN2) {
+            sox_report("Sun Audio driver only supports Signed Linear for words.");
+            sox_report("Forcing to Signed Linear");
+            ft->signal.encoding = SOX_ENCODING_SIGN2;
         }
     }
     else {
-        st_report("Sun Audio driver only supports bytes and words");
-        ft->signal.size = ST_SIZE_16BIT;
+        sox_report("Sun Audio driver only supports bytes and words");
+        ft->signal.size = SOX_SIZE_16BIT;
         samplesize = 16;
     }
 
@@ -273,15 +273,15 @@ static int st_sunstartwrite(ft_t ft)
 
     /* Read in old values, change to what we need and then send back */
     if (ioctl(fileno(ft->fp), AUDIO_GETINFO, &audio_if) < 0) {
-        st_fail_errno(ft,errno,"Unable to initialize /dev/audio");
-        return(ST_EOF);
+        sox_fail_errno(ft,errno,"Unable to initialize /dev/audio");
+        return(SOX_EOF);
     }
     audio_if.play.precision = samplesize;
     audio_if.play.channels = ft->signal.channels;
     audio_if.play.sample_rate = ft->signal.rate;
-    if (ft->signal.encoding == ST_ENCODING_ULAW)
+    if (ft->signal.encoding == SOX_ENCODING_ULAW)
         encoding = AUDIO_ENCODING_ULAW;
-    else if (ft->signal.encoding == ST_ENCODING_ALAW)
+    else if (ft->signal.encoding == SOX_ENCODING_ALAW)
         encoding = AUDIO_ENCODING_ALAW;
     else
         encoding = AUDIO_ENCODING_LINEAR;
@@ -289,25 +289,25 @@ static int st_sunstartwrite(ft_t ft)
 
     ioctl(fileno(ft->fp), AUDIO_SETINFO, &audio_if);
     if (audio_if.play.precision != samplesize) {
-        st_fail_errno(ft,errno,"Unable to initialize sample size for /dev/audio");
-        return(ST_EOF);
+        sox_fail_errno(ft,errno,"Unable to initialize sample size for /dev/audio");
+        return(SOX_EOF);
     }
     if (audio_if.play.channels != ft->signal.channels) {
-        st_fail_errno(ft,errno,"Unable to initialize number of channels for /dev/audio");
-        return(ST_EOF);
+        sox_fail_errno(ft,errno,"Unable to initialize number of channels for /dev/audio");
+        return(SOX_EOF);
     }
     if (audio_if.play.sample_rate != ft->signal.rate) {
-        st_fail_errno(ft,errno,"Unable to initialize rate for /dev/audio");
-        return(ST_EOF);
+        sox_fail_errno(ft,errno,"Unable to initialize rate for /dev/audio");
+        return(SOX_EOF);
     }
     if (audio_if.play.encoding != encoding) {
-        st_fail_errno(ft,errno,"Unable to initialize encoding for /dev/audio");
-        return(ST_EOF);
+        sox_fail_errno(ft,errno,"Unable to initialize encoding for /dev/audio");
+        return(SOX_EOF);
     }
     /* Change to non-buffered I/O */
     setvbuf(ft->fp, NULL, _IONBF, sizeof(char) * file->size);
 
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
 /* Sun /dev/audio player */
@@ -316,22 +316,22 @@ static const char *sunnames[] = {
   NULL
 };
 
-static st_format_t st_sun_format = {
+static sox_format_t sox_sun_format = {
   sunnames,
   NULL,
-  ST_FILE_DEVICE,
-  st_sunstartread,
-  st_rawread,
-  st_rawstopread,
-  st_sunstartwrite,
-  st_rawwrite,
-  st_rawstopwrite,
-  st_format_nothing_seek
+  SOX_FILE_DEVICE,
+  sox_sunstartread,
+  sox_rawread,
+  sox_rawstopread,
+  sox_sunstartwrite,
+  sox_rawwrite,
+  sox_rawstopwrite,
+  sox_format_nothing_seek
 };
 
-const st_format_t *st_sun_format_fn(void)
+const sox_format_t *sox_sun_format_fn(void)
 {
-    return &st_sun_format;
+    return &sox_sun_format;
 }
 
 #endif

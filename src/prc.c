@@ -50,7 +50,7 @@
  ******************************************************************/
 
  
-#include "st_i.h"
+#include "sox_i.h"
 
 #include "adpcms.h"
 
@@ -63,7 +63,7 @@ typedef struct prcpriv {
   uint32_t nsamp, nbytes;
   short padding;
   short repeats;
-  st_size_t data_start;         /* for seeking */
+  sox_size_t data_start;         /* for seeking */
   struct adpcm_io adpcm;
   unsigned frame_samp;     /* samples left to read in current frame */
 } *prc_t;
@@ -107,16 +107,16 @@ static const char prc_header[]={
 
 int prc_checkheader(ft_t ft, char *head)
 {
-  st_readbuf(ft, head, 1, sizeof(prc_header));
+  sox_readbuf(ft, head, 1, sizeof(prc_header));
   return memcmp(head, prc_header, sizeof(prc_header)) == 0;
 }
 
 static void prcwriteheader(ft_t ft);
 
-static int seek(ft_t ft, st_size_t offset)
+static int seek(ft_t ft, sox_size_t offset)
 {
   prc_t prc = (prc_t)ft->priv;
-  st_size_t new_offset, channel_block, alignment;
+  sox_size_t new_offset, channel_block, alignment;
 
   new_offset = offset * ft->signal.size;
   /* Make sure request aligns to a channel block (i.e. left+right) */
@@ -130,7 +130,7 @@ static int seek(ft_t ft, st_size_t offset)
     new_offset += (channel_block - alignment);
   new_offset += prc->data_start;
 
-  return st_seeki(ft, new_offset, SEEK_SET);
+  return sox_seeki(ft, new_offset, SEEK_SET);
 }
 
 static int startread(ft_t ft)
@@ -145,110 +145,110 @@ static int startread(ft_t ft)
 
   /* Check the header */
   if (prc_checkheader(ft, head))
-    st_debug("Found Psion Record header");
+    sox_debug("Found Psion Record header");
   else {
-      st_fail_errno(ft,ST_EHDR,"Not a Psion Record file");
-      return (ST_EOF);
+      sox_fail_errno(ft,SOX_EHDR,"Not a Psion Record file");
+      return (SOX_EOF);
   }
 
-  st_readb(ft, &byte);
+  sox_readb(ft, &byte);
   if ((byte & 0x3) != 0x2) {
-    st_fail_errno(ft, ST_EHDR, "Invalid length byte for application name string %d", (int)(byte));
-    return ST_EOF;
+    sox_fail_errno(ft, SOX_EHDR, "Invalid length byte for application name string %d", (int)(byte));
+    return SOX_EOF;
   }
 
   byte >>= 2;
   assert(byte < 64);
-  st_reads(ft, appname, byte);
+  sox_reads(ft, appname, byte);
   if (strncasecmp(appname, "record.app", byte) != 0) {
-    st_fail_errno(ft, ST_EHDR, "Invalid application name string %.63s", appname);
-    return ST_EOF;
+    sox_fail_errno(ft, SOX_EHDR, "Invalid application name string %.63s", appname);
+    return SOX_EOF;
   }
         
-  st_readdw(ft, &len);
+  sox_readdw(ft, &len);
   p->nsamp = len;
-  st_debug("Number of samples: %d", len);
+  sox_debug("Number of samples: %d", len);
 
-  st_readdw(ft, &encoding);
-  st_debug("Encoding of samples: %x", encoding);
+  sox_readdw(ft, &encoding);
+  sox_debug("Encoding of samples: %x", encoding);
   if (encoding == 0)
-    ft->signal.encoding = ST_ENCODING_ALAW;
+    ft->signal.encoding = SOX_ENCODING_ALAW;
   else if (encoding == 0x100001a1)
-    ft->signal.encoding = ST_ENCODING_IMA_ADPCM;
+    ft->signal.encoding = SOX_ENCODING_IMA_ADPCM;
   else {
-    st_fail_errno(ft, ST_EHDR, "Unrecognised encoding");
-    return ST_EOF;
+    sox_fail_errno(ft, SOX_EHDR, "Unrecognised encoding");
+    return SOX_EOF;
   }
 
-  st_readw(ft, &reps);    /* Number of repeats */
-  st_debug("Repeats: %d", reps);
+  sox_readw(ft, &reps);    /* Number of repeats */
+  sox_debug("Repeats: %d", reps);
         
-  st_readb(ft, &volume);
-  st_debug("Volume: %d", (unsigned)volume);
+  sox_readb(ft, &volume);
+  sox_debug("Volume: %d", (unsigned)volume);
   if (volume < 1 || volume > 5)
-    st_warn("Volume %d outside range 1..5", volume);
+    sox_warn("Volume %d outside range 1..5", volume);
 
-  st_readb(ft, &byte);   /* Unused and seems always zero */
+  sox_readb(ft, &byte);   /* Unused and seems always zero */
 
-  st_readdw(ft, &repgap); /* Time between repeats in usec */
-  st_debug("Time between repeats (usec): %ld", repgap);
+  sox_readdw(ft, &repgap); /* Time between repeats in usec */
+  sox_debug("Time between repeats (usec): %ld", repgap);
 
-  st_readdw(ft, &listlen); /* Length of samples list */
-  st_debug("Number of bytes in samples list: %ld", listlen);
+  sox_readdw(ft, &listlen); /* Length of samples list */
+  sox_debug("Number of bytes in samples list: %ld", listlen);
 
   if (ft->signal.rate != 0 && ft->signal.rate != 8000)
-    st_report("PRC only supports 8 kHz; overriding.");
+    sox_report("PRC only supports 8 kHz; overriding.");
   ft->signal.rate = 8000;
 
   if (ft->signal.channels != 1 && ft->signal.channels != 0)
-    st_report("PRC only supports 1 channel; overriding.");
+    sox_report("PRC only supports 1 channel; overriding.");
   ft->signal.channels = 1;
 
-  p->data_start = st_tell(ft);
+  p->data_start = sox_tell(ft);
   ft->length = p->nsamp / ft->signal.channels;
 
-  if (ft->signal.encoding == ST_ENCODING_ALAW) {
-    ft->signal.size = ST_SIZE_BYTE;
-    if (st_rawstartread(ft))
-      return ST_EOF;
-  } else if (ft->signal.encoding == ST_ENCODING_IMA_ADPCM) {
+  if (ft->signal.encoding == SOX_ENCODING_ALAW) {
+    ft->signal.size = SOX_SIZE_BYTE;
+    if (sox_rawstartread(ft))
+      return SOX_EOF;
+  } else if (ft->signal.encoding == SOX_ENCODING_IMA_ADPCM) {
     p->frame_samp = 0;
-    if (st_adpcm_ima_start(ft, &p->adpcm))
-      return ST_EOF;
+    if (sox_adpcm_ima_start(ft, &p->adpcm))
+      return SOX_EOF;
   }
 
-  return (ST_SUCCESS);
+  return (SOX_SUCCESS);
 }
 
 /* Read a variable-length encoded count */
-/* Ignore return code of st_readb, as it doesn't really matter if EOF
+/* Ignore return code of sox_readb, as it doesn't really matter if EOF
    is delayed until the caller. */
 static unsigned read_cardinal(ft_t ft)
 {
   unsigned a;
   uint8_t byte;
 
-  if (st_readb(ft, &byte) == ST_EOF)
-    return (unsigned)ST_EOF;
-  st_debug_more("Cardinal byte 1: %x", byte);
+  if (sox_readb(ft, &byte) == SOX_EOF)
+    return (unsigned)SOX_EOF;
+  sox_debug_more("Cardinal byte 1: %x", byte);
   a = byte;
   if (!(a & 1))
     a >>= 1;
   else {
-    if (st_readb(ft, &byte) == ST_EOF)
-      return (unsigned)ST_EOF;
-    st_debug_more("Cardinal byte 2: %x", byte);
+    if (sox_readb(ft, &byte) == SOX_EOF)
+      return (unsigned)SOX_EOF;
+    sox_debug_more("Cardinal byte 2: %x", byte);
     a |= byte << 8;
     if (!(a & 2))
       a >>= 2;
     else if (!(a & 4)) {
-      if (st_readb(ft, &byte) == ST_EOF)
-        return (unsigned)ST_EOF;
-      st_debug_more("Cardinal byte 3: %x", byte);
+      if (sox_readb(ft, &byte) == SOX_EOF)
+        return (unsigned)SOX_EOF;
+      sox_debug_more("Cardinal byte 3: %x", byte);
       a |= byte << 16;
-      if (st_readb(ft, &byte) == ST_EOF)
-        return (unsigned)ST_EOF;
-      st_debug_more("Cardinal byte 4: %x", byte);
+      if (sox_readb(ft, &byte) == SOX_EOF)
+        return (unsigned)SOX_EOF;
+      sox_debug_more("Cardinal byte 4: %x", byte);
       a |= byte << 24;
       a >>= 3;
     }
@@ -257,43 +257,43 @@ static unsigned read_cardinal(ft_t ft)
   return a;
 }
 
-static st_size_t read(ft_t ft, st_sample_t *buf, st_size_t samp)
+static sox_size_t read(ft_t ft, sox_sample_t *buf, sox_size_t samp)
 {
   prc_t p = (prc_t)ft->priv;
 
-  st_debug_more("length now = %d", p->nsamp);
+  sox_debug_more("length now = %d", p->nsamp);
 
-  if (ft->signal.encoding == ST_ENCODING_IMA_ADPCM) {
-    st_size_t nsamp, read;
+  if (ft->signal.encoding == SOX_ENCODING_IMA_ADPCM) {
+    sox_size_t nsamp, read;
 
     if (p->frame_samp == 0) {
       unsigned framelen = read_cardinal(ft);
       uint32_t trash;
 
-      if (framelen == (unsigned)ST_EOF)
+      if (framelen == (unsigned)SOX_EOF)
         return 0;
 
-      st_debug_more("frame length %d", framelen);
+      sox_debug_more("frame length %d", framelen);
       p->frame_samp = framelen;
 
       /* Discard length of compressed data */
-      st_debug_more("compressed length %d", read_cardinal(ft));
+      sox_debug_more("compressed length %d", read_cardinal(ft));
       /* Discard length of BListL */
-      st_readdw(ft, &trash);
-      st_debug_more("list length %d", trash);
+      sox_readdw(ft, &trash);
+      sox_debug_more("list length %d", trash);
 
       /* Reset CODEC for start of frame */
-      st_adpcm_reset(&p->adpcm, ft->signal.encoding);
+      sox_adpcm_reset(&p->adpcm, ft->signal.encoding);
     }
     nsamp = min(p->frame_samp, samp);
     p->nsamp += nsamp;
-    read = st_adpcm_read(ft, &p->adpcm, buf, nsamp);
+    read = sox_adpcm_read(ft, &p->adpcm, buf, nsamp);
     p->frame_samp -= read;
-    st_debug_more("samples left in this frame: %d", p->frame_samp);
+    sox_debug_more("samples left in this frame: %d", p->frame_samp);
     return read;
   } else {
     p->nsamp += samp;
-    return st_rawread(ft, buf, samp);
+    return sox_rawread(ft, buf, samp);
   }
 }
 
@@ -301,10 +301,10 @@ static int stopread(ft_t ft)
 {
   prc_t p = (prc_t)ft->priv;
 
-  if (ft->signal.encoding == ST_ENCODING_IMA_ADPCM)
-    return st_adpcm_stopread(ft, &p->adpcm);
+  if (ft->signal.encoding == SOX_ENCODING_IMA_ADPCM)
+    return sox_adpcm_stopread(ft, &p->adpcm);
   else
-    return st_rawstopread(ft);
+    return sox_rawstopread(ft);
 }
 
 /* When writing, the header is supposed to contain the number of
@@ -320,18 +320,18 @@ static int startwrite(ft_t ft)
 {
   prc_t p = (prc_t)ft->priv;
 
-  if (ft->signal.encoding != ST_ENCODING_ALAW &&
-      ft->signal.encoding != ST_ENCODING_IMA_ADPCM) {
-    st_report("PRC only supports A-law and ADPCM encoding; choosing A-law");
-    ft->signal.encoding = ST_ENCODING_ALAW;
+  if (ft->signal.encoding != SOX_ENCODING_ALAW &&
+      ft->signal.encoding != SOX_ENCODING_IMA_ADPCM) {
+    sox_report("PRC only supports A-law and ADPCM encoding; choosing A-law");
+    ft->signal.encoding = SOX_ENCODING_ALAW;
   }
         
-  if (ft->signal.encoding == ST_ENCODING_ALAW) {
-    if (st_rawstartwrite(ft))
-      return ST_EOF;
-  } else if (ft->signal.encoding == ST_ENCODING_IMA_ADPCM) {
-    if (st_adpcm_ima_start(ft, &p->adpcm))
-      return ST_EOF;
+  if (ft->signal.encoding == SOX_ENCODING_ALAW) {
+    if (sox_rawstartwrite(ft))
+      return SOX_EOF;
+  } else if (ft->signal.encoding == SOX_ENCODING_IMA_ADPCM) {
+    if (sox_adpcm_ima_start(ft, &p->adpcm))
+      return SOX_EOF;
   }
         
   p->nsamp = 0;
@@ -340,20 +340,20 @@ static int startwrite(ft_t ft)
     p->repeats = 1;
 
   if (ft->signal.rate != 0 && ft->signal.rate != 8000)
-    st_report("PRC only supports 8 kHz sample rate; overriding.");
+    sox_report("PRC only supports 8 kHz sample rate; overriding.");
   ft->signal.rate = 8000;
 
   if (ft->signal.channels != 1 && ft->signal.channels != 0)
-    st_report("PRC only supports 1 channel; overriding.");
+    sox_report("PRC only supports 1 channel; overriding.");
   ft->signal.channels = 1;
 
-  ft->signal.size = ST_SIZE_BYTE;
+  ft->signal.size = SOX_SIZE_BYTE;
 
   prcwriteheader(ft);
 
-  p->data_start = st_tell(ft);
+  p->data_start = sox_tell(ft);
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 static void write_cardinal(ft_t ft, unsigned a)
@@ -362,53 +362,53 @@ static void write_cardinal(ft_t ft, unsigned a)
 
   if (a < 0x80) {
     byte = a << 1;
-    st_debug_more("Cardinal byte 1: %x", byte);
-    st_writeb(ft, byte);
+    sox_debug_more("Cardinal byte 1: %x", byte);
+    sox_writeb(ft, byte);
   } else if (a < 0x8000) {
     byte = (a << 2) | 1;
-    st_debug_more("Cardinal byte 1: %x", byte);
-    st_writeb(ft, byte);
+    sox_debug_more("Cardinal byte 1: %x", byte);
+    sox_writeb(ft, byte);
     byte = a >> 6;
-    st_debug_more("Cardinal byte 2: %x", byte);
-    st_writeb(ft, byte);
+    sox_debug_more("Cardinal byte 2: %x", byte);
+    sox_writeb(ft, byte);
   } else {
     byte = (a << 3) | 3;
-    st_debug_more("Cardinal byte 1: %x", byte);
-    st_writeb(ft, byte);
+    sox_debug_more("Cardinal byte 1: %x", byte);
+    sox_writeb(ft, byte);
     byte = a >> 5;
-    st_debug_more("Cardinal byte 2: %x", byte);
-    st_writeb(ft, byte);
+    sox_debug_more("Cardinal byte 2: %x", byte);
+    sox_writeb(ft, byte);
     byte = a >> 13;
-    st_debug_more("Cardinal byte 3: %x", byte);
-    st_writeb(ft, byte);
+    sox_debug_more("Cardinal byte 3: %x", byte);
+    sox_writeb(ft, byte);
     byte = a >> 21;
-    st_debug_more("Cardinal byte 4: %x", byte);
-    st_writeb(ft, byte);
+    sox_debug_more("Cardinal byte 4: %x", byte);
+    sox_writeb(ft, byte);
   }
 }
 
-static st_size_t write(ft_t ft, const st_sample_t *buf, st_size_t samp)
+static sox_size_t write(ft_t ft, const sox_sample_t *buf, sox_size_t samp)
 {
   prc_t p = (prc_t)ft->priv;
   /* Psion Record seems not to be able to handle frames > 800 samples */
   samp = min(samp, 800);
   p->nsamp += samp;
-  st_debug_more("length now = %d", p->nsamp);
-  if (ft->signal.encoding == ST_ENCODING_IMA_ADPCM) {
-    st_size_t written;
+  sox_debug_more("length now = %d", p->nsamp);
+  if (ft->signal.encoding == SOX_ENCODING_IMA_ADPCM) {
+    sox_size_t written;
 
     write_cardinal(ft, samp);
     /* Write compressed length */
     write_cardinal(ft, (samp / 2) + (samp % 2) + 4);
     /* Write length again (seems to be a BListL) */
-    st_debug_more("list length %d", samp);
-    st_writedw(ft, samp);
-    st_adpcm_reset(&p->adpcm, ft->signal.encoding);
-    written = st_adpcm_write(ft, &p->adpcm, buf, samp);
-    st_adpcm_flush(ft, &p->adpcm);
+    sox_debug_more("list length %d", samp);
+    sox_writedw(ft, samp);
+    sox_adpcm_reset(&p->adpcm, ft->signal.encoding);
+    written = sox_adpcm_write(ft, &p->adpcm, buf, samp);
+    sox_adpcm_flush(ft, &p->adpcm);
     return written;
   } else
-    return st_rawwrite(ft, buf, samp);
+    return sox_rawwrite(ft, buf, samp);
 }
 
 static int stopwrite(ft_t ft)
@@ -416,46 +416,46 @@ static int stopwrite(ft_t ft)
   prc_t p = (prc_t)ft->priv;
 
   /* Call before seeking to flush buffer (ADPCM has already been flushed) */
-  if (ft->signal.encoding != ST_ENCODING_IMA_ADPCM)
-    st_rawstopwrite(ft);
+  if (ft->signal.encoding != SOX_ENCODING_IMA_ADPCM)
+    sox_rawstopwrite(ft);
 
-  p->nbytes = st_tell(ft) - p->data_start;
+  p->nbytes = sox_tell(ft) - p->data_start;
 
   if (!ft->seekable) {
-      st_warn("Header will have invalid file length since file is not seekable");
-      return ST_SUCCESS;
+      sox_warn("Header will have invalid file length since file is not seekable");
+      return SOX_SUCCESS;
   }
 
-  if (st_seeki(ft, 0, 0) != 0) {
-      st_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
-      return(ST_EOF);
+  if (sox_seeki(ft, 0, 0) != 0) {
+      sox_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
+      return(SOX_EOF);
   }
   prcwriteheader(ft);
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 static void prcwriteheader(ft_t ft)
 {
   prc_t p = (prc_t)ft->priv;
 
-  st_writebuf(ft, prc_header, 1, sizeof(prc_header));
-  st_writes(ft, "\x2arecord.app");
+  sox_writebuf(ft, prc_header, 1, sizeof(prc_header));
+  sox_writes(ft, "\x2arecord.app");
 
-  st_debug("Number of samples: %d",p->nsamp);
-  st_writedw(ft, p->nsamp);
+  sox_debug("Number of samples: %d",p->nsamp);
+  sox_writedw(ft, p->nsamp);
 
-  if (ft->signal.encoding == ST_ENCODING_ALAW)
-    st_writedw(ft, 0);
+  if (ft->signal.encoding == SOX_ENCODING_ALAW)
+    sox_writedw(ft, 0);
   else
-    st_writedw(ft, 0x100001a1); /* ADPCM */
+    sox_writedw(ft, 0x100001a1); /* ADPCM */
   
-  st_writew(ft, 0);             /* Number of repeats */
-  st_writeb(ft, 3);             /* Volume: use default value of Record.app */
-  st_writeb(ft, 0);             /* Unused and seems always zero */
-  st_writedw(ft, 0);            /* Time between repeats in usec */
+  sox_writew(ft, 0);             /* Number of repeats */
+  sox_writeb(ft, 3);             /* Volume: use default value of Record.app */
+  sox_writeb(ft, 0);             /* Unused and seems always zero */
+  sox_writedw(ft, 0);            /* Time between repeats in usec */
 
-  st_debug("Number of bytes: %d", p->nbytes);
-  st_writedw(ft, p->nbytes);    /* Number of bytes of data */
+  sox_debug("Number of bytes: %d", p->nbytes);
+  sox_writedw(ft, p->nbytes);    /* Number of bytes of data */
 }
 
 /* Psion .prc */
@@ -464,10 +464,10 @@ static const char *prcnames[] = {
   NULL
 };
 
-static st_format_t st_prc_format = {
+static sox_format_t sox_prc_format = {
   prcnames,
   NULL,
-  ST_FILE_SEEK | ST_FILE_LIT_END,
+  SOX_FILE_SEEK | SOX_FILE_LIT_END,
   startread,
   read,
   stopread,
@@ -477,7 +477,7 @@ static st_format_t st_prc_format = {
   seek
 };
 
-const st_format_t *st_prc_format_fn(void)
+const sox_format_t *sox_prc_format_fn(void)
 {
-  return &st_prc_format;
+  return &sox_prc_format;
 }

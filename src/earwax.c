@@ -22,16 +22,16 @@
  * the consequences of using this software.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 
-static st_effect_t st_earwax_effect;
+static sox_effect_t sox_earwax_effect;
 
 #define EARWAX_SCALE 64
 
 /* A stereo fir filter. One side filters as if the signal was from
    30 degrees from the ear, the other as if 330 degrees. */
 /*                           30   330  */
-static const st_sample_t filt[]    =
+static const sox_sample_t filt[]    =
 {   4,  -6,
     4,  -11,
     -1,  -5,
@@ -69,32 +69,32 @@ static const st_sample_t filt[]    =
 #define EARWAX_NUMTAPS  64
 
 typedef struct earwaxstuff {
-  st_sample_t *tap; /* taps are z^-1 delays for the FIR filter */
+  sox_sample_t *tap; /* taps are z^-1 delays for the FIR filter */
 } *earwax_t;
 
 /*
  * Prepare for processing.
  */
-static int st_earwax_start(eff_t effp)
+static int sox_earwax_start(eff_t effp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int i;
 
   /* check the input format */
   if (effp->ininfo.rate != 44100 || effp->ininfo.channels != 2) {
-    st_fail("The earwax effect works only with 44.1 kHz, stereo audio.");
-    return (ST_EOF);
+    sox_fail("The earwax effect works only with 44.1 kHz, stereo audio.");
+    return (SOX_EOF);
   }
 
   /* allocate tap memory */
-  earwax->tap = (st_sample_t*)xmalloc( sizeof(st_sample_t) * EARWAX_NUMTAPS );
+  earwax->tap = (sox_sample_t*)xmalloc( sizeof(sox_sample_t) * EARWAX_NUMTAPS );
 
   /* zero out the delayed taps */
   for(i=0; i < EARWAX_NUMTAPS; i++ ){
     earwax->tap[i] = 0;
   }
 
-  return (ST_SUCCESS);
+  return (SOX_SUCCESS);
 }
 
 /*
@@ -102,13 +102,13 @@ static int st_earwax_start(eff_t effp)
  * Return number of samples processed.
  */
 
-static int st_earwax_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                   st_size_t *isamp, st_size_t *osamp)
+static int sox_earwax_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                   sox_size_t *isamp, sox_size_t *osamp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int len, done;
   int i;
-  st_sample_t output;
+  sox_sample_t output;
 
   len = ((*isamp > *osamp) ? *osamp : *isamp);
 
@@ -128,17 +128,17 @@ static int st_earwax_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf
   }
 
   *isamp = *osamp = len;
-  return (ST_SUCCESS);
+  return (SOX_SUCCESS);
 }
 
 /*
  * Drain out taps.
  */
-static int st_earwax_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int sox_earwax_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int i,j;
-  st_sample_t output;  
+  sox_sample_t output;  
 
   for(i = EARWAX_NUMTAPS-1; i >= 0; i--){
     output = 0;
@@ -149,34 +149,34 @@ static int st_earwax_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
   }
   *osamp = EARWAX_NUMTAPS-1;
 
-  return (ST_EOF);
+  return (SOX_EOF);
 }
 
 /*
  * Clean up taps.
  */
-static int st_earwax_stop(eff_t effp)
+static int sox_earwax_stop(eff_t effp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
 
   free((char *)earwax->tap);
 
-  return (ST_SUCCESS);
+  return (SOX_SUCCESS);
 }
 
-static st_effect_t st_earwax_effect = {
+static sox_effect_t sox_earwax_effect = {
   "earwax",
   "Usage: The earwax filtering effect takes no options",
-  ST_EFF_MCHAN,
-  st_effect_nothing_getopts,
-  st_earwax_start,
-  st_earwax_flow,
-  st_earwax_drain,
-  st_earwax_stop,
-  st_effect_nothing
+  SOX_EFF_MCHAN,
+  sox_effect_nothing_getopts,
+  sox_earwax_start,
+  sox_earwax_flow,
+  sox_earwax_drain,
+  sox_earwax_stop,
+  sox_effect_nothing
 };
 
-const st_effect_t *st_earwax_effect_fn(void)
+const sox_effect_t *sox_earwax_effect_fn(void)
 {
-    return &st_earwax_effect;
+    return &sox_earwax_effect;
 }

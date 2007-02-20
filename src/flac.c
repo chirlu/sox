@@ -18,7 +18,7 @@
 
 
 
-#include "st_i.h"
+#include "sox_i.h"
 
 #ifdef HAVE_LIBFLAC
 
@@ -62,7 +62,7 @@ typedef struct {
 
 
 
-assert_static(sizeof(Decoder) <= ST_MAX_FILE_PRIVSIZE, /* else */ Decoder__PRIVSIZE_too_big);
+assert_static(sizeof(Decoder) <= SOX_MAX_FILE_PRIVSIZE, /* else */ Decoder__PRIVSIZE_too_big);
 
 
 
@@ -86,7 +86,7 @@ static void FLAC__decoder_metadata_callback(FLAC__StreamDecoder const * const fl
       return;
 
     if (format->comment != NULL) {
-      st_warn("FLAC: multiple Vorbis comment block ignored");
+      sox_warn("FLAC: multiple Vorbis comment block ignored");
       return;
     }
 
@@ -111,7 +111,7 @@ static void FLAC__decoder_error_callback(FLAC__StreamDecoder const * const flac,
 
   (void) flac;
 
-  st_fail_errno(format, ST_EINVAL, "%s", FLAC__StreamDecoderErrorStatusString[status]);
+  sox_fail_errno(format, SOX_EINVAL, "%s", FLAC__StreamDecoderErrorStatusString[status]);
 }
 
 
@@ -124,7 +124,7 @@ static FLAC__StreamDecoderWriteStatus FLAC__frame_decode_callback(FLAC__StreamDe
   (void) flac;
 
   if (frame->header.bits_per_sample != decoder->bits_per_sample || frame->header.channels != decoder->channels || frame->header.sample_rate != decoder->sample_rate) {
-    st_fail_errno(format, ST_EINVAL, "FLAC ERROR: parameters differ between frame and header");
+    sox_fail_errno(format, SOX_EINVAL, "FLAC ERROR: parameters differ between frame and header");
     return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
   }
 
@@ -143,11 +143,11 @@ static int start_read(ft_t const format)
   memset(decoder, 0, sizeof(*decoder));
   decoder->flac = FLAC__stream_decoder_new();
   if (decoder->flac == NULL) {
-    st_fail_errno(format, ST_ENOMEM, "FLAC ERROR creating the decoder instance");
-    return ST_EOF;
+    sox_fail_errno(format, SOX_ENOMEM, "FLAC ERROR creating the decoder instance");
+    return SOX_EOF;
   }
 
-  FLAC__stream_decoder_set_md5_checking(decoder->flac, st_true);
+  FLAC__stream_decoder_set_md5_checking(decoder->flac, sox_true);
   FLAC__stream_decoder_set_metadata_respond_all(decoder->flac);
 #if FLAC_API_VERSION_CURRENT <= 7
   FLAC__file_decoder_set_filename(decoder->flac, format->filename);
@@ -165,14 +165,14 @@ static int start_read(ft_t const format)
     FLAC__decoder_error_callback,
     format) != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
 #endif
-    st_fail_errno(format, ST_EHDR, "FLAC ERROR initialising decoder");
-    return ST_EOF;
+    sox_fail_errno(format, SOX_EHDR, "FLAC ERROR initialising decoder");
+    return SOX_EOF;
   }
 
 
   if (!FLAC__stream_decoder_process_until_end_of_metadata(decoder->flac)) {
-    st_fail_errno(format, ST_EHDR, "FLAC ERROR whilst decoding metadata");
-    return ST_EOF;
+    sox_fail_errno(format, SOX_EHDR, "FLAC ERROR whilst decoding metadata");
+    return SOX_EOF;
   }
 
 #if FLAC_API_VERSION_CURRENT <= 7
@@ -180,20 +180,20 @@ static int start_read(ft_t const format)
 #else
   if (FLAC__stream_decoder_get_state(decoder->flac) > FLAC__STREAM_DECODER_END_OF_STREAM) {
 #endif
-    st_fail_errno(format, ST_EHDR, "FLAC ERROR during metadata decoding");
-    return ST_EOF;
+    sox_fail_errno(format, SOX_EHDR, "FLAC ERROR during metadata decoding");
+    return SOX_EOF;
   }
 
-  format->signal.encoding = ST_ENCODING_FLAC;
+  format->signal.encoding = SOX_ENCODING_FLAC;
   format->signal.rate = decoder->sample_rate;
   format->signal.size = decoder->bits_per_sample >> 3;
   format->signal.channels = decoder->channels;
   format->length = decoder->total_samples * decoder->channels;
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 
-static st_size_t read(ft_t const format, st_sample_t * sampleBuffer, st_size_t const requested)
+static sox_size_t read(ft_t const format, sox_sample_t * sampleBuffer, sox_size_t const requested)
 {
   Decoder * decoder = (Decoder *) format->priv;
   size_t actual = 0;
@@ -202,17 +202,17 @@ static st_size_t read(ft_t const format, st_sample_t * sampleBuffer, st_size_t c
     if (decoder->wide_sample_number >= decoder->number_of_wide_samples)
       FLAC__stream_decoder_process_single(decoder->flac);
     if (decoder->wide_sample_number >= decoder->number_of_wide_samples)
-      decoder->eof = st_true;
+      decoder->eof = sox_true;
     else {
       unsigned channel;
 
       for (channel = 0; channel < decoder->channels; channel++, actual++) {
         FLAC__int32 d = decoder->decoded_wide_samples[channel][decoder->wide_sample_number];
         switch (decoder->bits_per_sample) {
-        case  8: *sampleBuffer++ = ST_SIGNED_BYTE_TO_SAMPLE(d,); break;
-        case 16: *sampleBuffer++ = ST_SIGNED_WORD_TO_SAMPLE(d,); break;
-        case 24: *sampleBuffer++ = ST_SIGNED_24BIT_TO_SAMPLE(d,); break;
-        case 32: *sampleBuffer++ = ST_SIGNED_DWORD_TO_SAMPLE(d,); break;
+        case  8: *sampleBuffer++ = SOX_SIGNED_BYTE_TO_SAMPLE(d,); break;
+        case 16: *sampleBuffer++ = SOX_SIGNED_WORD_TO_SAMPLE(d,); break;
+        case 24: *sampleBuffer++ = SOX_SIGNED_24BIT_TO_SAMPLE(d,); break;
+        case 32: *sampleBuffer++ = SOX_SIGNED_DWORD_TO_SAMPLE(d,); break;
         }
       }
       ++decoder->wide_sample_number;
@@ -228,9 +228,9 @@ static int stop_read(ft_t const format)
   Decoder * decoder = (Decoder *) format->priv;
 
   if (!FLAC__stream_decoder_finish(decoder->flac) && decoder->eof)
-    st_warn("FLAC decoder MD5 checksum mismatch.");
+    sox_warn("FLAC decoder MD5 checksum mismatch.");
   FLAC__stream_decoder_delete(decoder->flac);
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 
@@ -249,7 +249,7 @@ typedef struct {
 
 
 
-assert_static(sizeof(Encoder) <= ST_MAX_FILE_PRIVSIZE, /* else */ Encoder__PRIVSIZE_too_big);
+assert_static(sizeof(Encoder) <= SOX_MAX_FILE_PRIVSIZE, /* else */ Encoder__PRIVSIZE_too_big);
 
 
 
@@ -258,7 +258,7 @@ static FLAC__StreamEncoderWriteStatus flac_stream_encoder_write_callback(FLAC__S
   ft_t const format = (ft_t) client_data;
   (void) flac, (void) samples, (void) current_frame;
 
-  return st_writebuf(format, buffer, 1, bytes) == bytes ? FLAC__STREAM_ENCODER_WRITE_STATUS_OK : FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
+  return sox_writebuf(format, buffer, 1, bytes) == bytes ? FLAC__STREAM_ENCODER_WRITE_STATUS_OK : FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
 }
 
 
@@ -277,7 +277,7 @@ static FLAC__StreamEncoderSeekStatus flac_stream_encoder_seek_callback(FLAC__Str
   (void) encoder;
   if (!format->seekable)
     return FLAC__STREAM_ENCODER_SEEK_STATUS_UNSUPPORTED;
-  else if (st_seeki(format, (st_size_t)absolute_byte_offset, SEEK_SET) != ST_SUCCESS)
+  else if (sox_seeki(format, (sox_size_t)absolute_byte_offset, SEEK_SET) != SOX_SUCCESS)
     return FLAC__STREAM_ENCODER_SEEK_STATUS_ERROR;
   else
     return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
@@ -311,10 +311,10 @@ static int start_write(ft_t const format)
   memset(encoder, 0, sizeof(*encoder));
   encoder->flac = FLAC__stream_encoder_new();
   if (encoder->flac == NULL) {
-    st_fail_errno(format, ST_ENOMEM, "FLAC ERROR creating the encoder instance");
-    return ST_EOF;
+    sox_fail_errno(format, SOX_ENOMEM, "FLAC ERROR creating the encoder instance");
+    return SOX_EOF;
   }
-  encoder->decoded_samples = xmalloc(ST_BUFSIZ * sizeof(FLAC__int32));
+  encoder->decoded_samples = xmalloc(SOX_BUFSIZ * sizeof(FLAC__int32));
 
   {     /* Select and set FLAC encoder options: */
     static struct {
@@ -326,15 +326,15 @@ static int start_write(ft_t const format)
       unsigned max_residual_partition_order;
       unsigned min_residual_partition_order;
     } const options[] = {
-      {1152, st_false, st_false, st_false, 0, 2, 2},
-      {1152, st_false, st_true, st_true, 0, 2, 2},
-      {1152, st_false, st_true, st_false, 0, 3, 0},
-      {4608, st_false, st_false, st_false, 6, 3, 3},
-      {4608, st_false, st_true, st_true, 8, 3, 3},
-      {4608, st_false, st_true, st_false, 8, 3, 3},
-      {4608, st_false, st_true, st_false, 8, 4, 0},
-      {4608, st_true, st_true, st_false, 8, 6, 0},
-      {4608, st_true, st_true, st_false, 12, 6, 0},
+      {1152, sox_false, sox_false, sox_false, 0, 2, 2},
+      {1152, sox_false, sox_true, sox_true, 0, 2, 2},
+      {1152, sox_false, sox_true, sox_false, 0, 3, 0},
+      {4608, sox_false, sox_false, sox_false, 6, 3, 3},
+      {4608, sox_false, sox_true, sox_true, 8, 3, 3},
+      {4608, sox_false, sox_true, sox_false, 8, 3, 3},
+      {4608, sox_false, sox_true, sox_false, 8, 4, 0},
+      {4608, sox_true, sox_true, sox_false, 8, 6, 0},
+      {4608, sox_true, sox_true, sox_false, 12, 6, 0},
     };
     unsigned compression_level = array_length(options) - 1; /* Default to "best" */
 
@@ -342,15 +342,15 @@ static int start_write(ft_t const format)
       compression_level = format->signal.compression;
       if (compression_level != format->signal.compression || 
           compression_level >= array_length(options)) {
-        st_fail_errno(format, ST_EINVAL,
+        sox_fail_errno(format, SOX_EINVAL,
                       "FLAC compression level must be a whole number from 0 to %i",
                       array_length(options) - 1);
-        return ST_EOF;
+        return SOX_EOF;
       }
     }
 
 #define SET_OPTION(x) do {\
-  st_report("FLAC "#x" = %i", options[compression_level].x); \
+  sox_report("FLAC "#x" = %i", options[compression_level].x); \
   FLAC__stream_encoder_set_##x(encoder->flac, options[compression_level].x);\
 } while (0)
     SET_OPTION(blocksize);
@@ -366,12 +366,12 @@ static int start_write(ft_t const format)
   }
 
   /* FIXME: FLAC should not need to know about this oddity */
-  if (format->signal.encoding < ST_ENCODING_SIZE_IS_WORD)
-    format->signal.size = ST_SIZE_16BIT;
+  if (format->signal.encoding < SOX_ENCODING_SIZE_IS_WORD)
+    format->signal.size = SOX_SIZE_16BIT;
 
   encoder->bits_per_sample = (format->signal.size > 4 ? 4 : format->signal.size) << 3;
 
-  st_report("FLAC encoding at %i bits per sample", encoder->bits_per_sample);
+  sox_report("FLAC encoding at %i bits per sample", encoder->bits_per_sample);
 
   FLAC__stream_encoder_set_channels(encoder->flac, format->signal.channels);
   FLAC__stream_encoder_set_bits_per_sample(encoder->flac, encoder->bits_per_sample);
@@ -381,12 +381,12 @@ static int start_write(ft_t const format)
     static const unsigned streamable_rates[] =
       {8000, 16000, 22050, 24000, 32000, 44100, 48000, 96000};
     size_t i;
-    st_bool streamable = st_false;
+    sox_bool streamable = sox_false;
     for (i = 0; !streamable && i < array_length(streamable_rates); ++i)
        streamable = (streamable_rates[i] == format->signal.rate);
     if (!streamable) {
-      st_report("FLAC: non-standard rate; output may not be streamable");
-      FLAC__stream_encoder_set_streamable_subset(encoder->flac, st_false);
+      sox_report("FLAC: non-standard rate; output may not be streamable");
+      FLAC__stream_encoder_set_streamable_subset(encoder->flac, sox_false);
     }
   }
 
@@ -421,7 +421,7 @@ static int start_write(ft_t const format)
       }
       entry.length = strlen((char const *) entry.entry);
 
-      FLAC__metadata_object_vorbiscomment_append_comment(metadata[0], entry, /*copy= */ st_true);
+      FLAC__metadata_object_vorbiscomment_append_comment(metadata[0], entry, /*copy= */ sox_true);
     } while (end_of_comment != NULL);
 
     FLAC__stream_encoder_set_metadata(encoder->flac, metadata, 1);
@@ -439,25 +439,25 @@ static int start_write(ft_t const format)
 #endif
 
   if (status != FLAC__STREAM_ENCODER_OK) {
-    st_fail_errno(format, ST_EINVAL, "%s", FLAC__StreamEncoderStateString[status]);
-    return ST_EOF;
+    sox_fail_errno(format, SOX_EINVAL, "%s", FLAC__StreamEncoderStateString[status]);
+    return SOX_EOF;
   }
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 
 
-static st_size_t write(ft_t const format, st_sample_t const * const sampleBuffer, st_size_t const len)
+static sox_size_t write(ft_t const format, sox_sample_t const * const sampleBuffer, sox_size_t const len)
 {
   Encoder * encoder = (Encoder *) format->priv;
   unsigned i;
 
   for (i = 0; i < len; ++i) {
     switch (encoder->bits_per_sample) {
-      case  8: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_BYTE(sampleBuffer[i], format->clips); break;
-      case 16: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_WORD(sampleBuffer[i], format->clips); break;
-      case 24: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_24BIT(sampleBuffer[i],format->clips); break;
-      case 32: encoder->decoded_samples[i] = ST_SAMPLE_TO_SIGNED_DWORD(sampleBuffer[i],format->clips); break;
+      case  8: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_BYTE(sampleBuffer[i], format->clips); break;
+      case 16: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_WORD(sampleBuffer[i], format->clips); break;
+      case 24: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_24BIT(sampleBuffer[i],format->clips); break;
+      case 32: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_DWORD(sampleBuffer[i],format->clips); break;
     }
   }
   FLAC__stream_encoder_process_interleaved(encoder->flac, encoder->decoded_samples, len / format->signal.channels);
@@ -476,18 +476,18 @@ static int stop_write(ft_t const format)
   FLAC__stream_encoder_delete(encoder->flac);
   free(encoder->decoded_samples);
   if (state != FLAC__STREAM_ENCODER_OK) {
-    st_fail_errno(format, ST_EINVAL, "FLAC ERROR: failed to encode to end of stream");
-    return ST_EOF;
+    sox_fail_errno(format, SOX_EINVAL, "FLAC ERROR: failed to encode to end of stream");
+    return SOX_EOF;
   }
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 
 
-st_format_t const * st_flac_format_fn(void)
+sox_format_t const * sox_flac_format_fn(void)
 {
   static char const * const names[] = {"flac", NULL};
-  static st_format_t const driver = {
+  static sox_format_t const driver = {
     names, NULL, 0,
     start_read, read, stop_read,
     start_write, write, stop_write,

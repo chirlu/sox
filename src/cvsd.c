@@ -34,7 +34,7 @@
 
 /* ---------------------------------------------------------------------- */
 
-#include "st_i.h"
+#include "sox_i.h"
 
 #include <math.h>
 #include <string.h>
@@ -117,8 +117,8 @@ static void cvsdstartcommon(ft_t ft)
         p->cvsd_rate = (ft->signal.rate <= 24000) ? 16000 : 32000;
         ft->signal.rate = 8000;
         ft->signal.channels = 1;
-        ft->signal.size = ST_SIZE_16BIT; /* make output format default to words */
-        ft->signal.encoding = ST_ENCODING_SIGN2;
+        ft->signal.size = SOX_SIZE_16BIT; /* make output format default to words */
+        ft->signal.encoding = SOX_ENCODING_SIGN2;
         /*
          * initialize the decoder
          */
@@ -144,13 +144,13 @@ static void cvsdstartcommon(ft_t ft)
         p->bytes_written = 0;
         p->com.v_min = 1;
         p->com.v_max = -1;
-        st_report("cvsd: bit rate %dbit/s, bits from %s", p->cvsd_rate,
+        sox_report("cvsd: bit rate %dbit/s, bits from %s", p->cvsd_rate,
                ft->signal.reverse_bits ? "msb to lsb" : "lsb to msb");
 }
 
 /* ---------------------------------------------------------------------- */
 
-static int st_cvsdstartread(ft_t ft) 
+static int sox_cvsdstartread(ft_t ft) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         float *fp1;
@@ -171,12 +171,12 @@ static int st_cvsdstartread(ft_t ft)
         for(fp1 = p->c.dec.output_filter, i = DEC_FILTERLEN; i > 0; i--)
                 *fp1++ = 0;
 
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
 
-static int st_cvsdstartwrite(ft_t ft) 
+static int sox_cvsdstartwrite(ft_t ft) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         float *fp1;
@@ -193,48 +193,48 @@ static int st_cvsdstartwrite(ft_t ft)
                 *fp1++ = 0;
         p->c.enc.recon_int = 0;
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
 
-static int st_cvsdstopwrite(ft_t ft)
+static int sox_cvsdstopwrite(ft_t ft)
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 
         if (p->bit.cnt) {
-                st_writeb(ft, p->bit.shreg);
+                sox_writeb(ft, p->bit.shreg);
                 p->bytes_written++;
         }
-        st_debug("cvsd: min slope %f, max slope %f", 
+        sox_debug("cvsd: min slope %f, max slope %f", 
                p->com.v_min, p->com.v_max);     
 
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
 
-static int st_cvsdstopread(ft_t ft)
+static int sox_cvsdstopread(ft_t ft)
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 
-        st_debug("cvsd: min value %f, max value %f", 
+        sox_debug("cvsd: min value %f, max value %f", 
                p->com.v_min, p->com.v_max);
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
 
-static st_size_t st_cvsdread(ft_t ft, st_sample_t *buf, st_size_t nsamp) 
+static sox_size_t sox_cvsdread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
-        st_size_t done = 0;
+        sox_size_t done = 0;
         float oval;
         
         while (done < nsamp) {
                 if (!p->bit.cnt) {
-                        if (st_readb(ft, &(p->bit.shreg)) == ST_EOF)
+                        if (sox_readb(ft, &(p->bit.shreg)) == SOX_EOF)
                                 return done;
                         p->bit.cnt = 8;
                         p->bit.mask = 1;
@@ -264,15 +264,15 @@ static st_size_t st_cvsdread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
                                           (p->cvsd_rate < 24000) ? 
                                           dec_filter_16 : dec_filter_32, 
                                           DEC_FILTERLEN);
-                        st_debug_more("input %d %f\n", debug_count, p->com.mla_int);
-                        st_debug_more("recon %d %f\n", debug_count, oval);
+                        sox_debug_more("input %d %f\n", debug_count, p->com.mla_int);
+                        sox_debug_more("recon %d %f\n", debug_count, oval);
                         debug_count++;
 
                         if (oval > p->com.v_max)
                                 p->com.v_max = oval;
                         if (oval < p->com.v_min)
                                 p->com.v_min = oval;
-                        *buf++ = (oval * ((float)ST_SAMPLE_MAX));
+                        *buf++ = (oval * ((float)SOX_SAMPLE_MAX));
                         done++;
                 }
                 p->com.phase &= 3;
@@ -282,10 +282,10 @@ static st_size_t st_cvsdread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
 
 /* ---------------------------------------------------------------------- */
 
-static st_size_t st_cvsdwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp) 
+static sox_size_t sox_cvsdwrite(ft_t ft, const sox_sample_t *buf, sox_size_t nsamp) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
-        st_size_t done = 0;
+        sox_size_t done = 0;
         float inval;
 
         for(;;) {
@@ -298,7 +298,7 @@ static st_size_t st_cvsdwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
                         memmove(p->c.enc.input_filter+1, p->c.enc.input_filter,
                                 sizeof(p->c.enc.input_filter)-sizeof(float));
                         p->c.enc.input_filter[0] = (*buf++) / 
-                                ((float)ST_SAMPLE_MAX);
+                                ((float)SOX_SAMPLE_MAX);
                         done++;
                 }
                 p->com.phase &= 3;
@@ -326,15 +326,15 @@ static st_size_t st_cvsdwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
                 } else
                         p->c.enc.recon_int -= p->com.mla_int;
                 if ((++(p->bit.cnt)) >= 8) {
-                        st_writeb(ft, p->bit.shreg);
+                        sox_writeb(ft, p->bit.shreg);
                         p->bytes_written++;
                         p->bit.shreg = p->bit.cnt = 0;
                         p->bit.mask = 1;
                 } else
                         p->bit.mask <<= 1;
                 p->com.phase += p->com.phase_inc;
-                st_debug_more("input %d %f\n", debug_count, inval);
-                st_debug_more("recon %d %f\n", debug_count, p->c.enc.recon_int);
+                sox_debug_more("input %d %f\n", debug_count, inval);
+                sox_debug_more("recon %d %f\n", debug_count, p->c.enc.recon_int);
                 debug_count++;
         }
 }
@@ -350,7 +350,7 @@ struct dvms_header {
         time_t        Unixtime;
         unsigned      Usender;
         unsigned      Ureceiver;
-        st_size_t     Length;
+        sox_size_t     Length;
         unsigned      Srate;
         unsigned      Days;
         unsigned      Custom1;
@@ -371,9 +371,9 @@ static int dvms_read_header(ft_t ft, struct dvms_header *hdr)
         int i;
         unsigned sum;
 
-        if (st_readbuf(ft, hdrbuf, sizeof(hdrbuf), 1) != 1)
+        if (sox_readbuf(ft, hdrbuf, sizeof(hdrbuf), 1) != 1)
         {
-                return (ST_EOF);
+                return (SOX_EOF);
         }
         for(i = sizeof(hdrbuf), sum = 0; i > /*2*/3; i--) /* Deti bug */
                 sum += *pch++;
@@ -397,11 +397,11 @@ static int dvms_read_header(ft_t ft, struct dvms_header *hdr)
         hdr->Crc = get16_le(&pch);
         if (sum != hdr->Crc) 
         {
-                st_report("DVMS header checksum error, read %u, calculated %u",
+                sox_report("DVMS header checksum error, read %u, calculated %u",
                      hdr->Crc, sum);
-                return (ST_EOF);
+                return (SOX_EOF);
         }
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -437,17 +437,17 @@ static int dvms_write_header(ft_t ft, struct dvms_header *hdr)
                 sum += *pchs++;
         hdr->Crc = sum;
         put16_le(&pch, hdr->Crc);
-        if (st_seeki(ft, 0, SEEK_SET) < 0)
+        if (sox_seeki(ft, 0, SEEK_SET) < 0)
         {
-                st_report("seek failed\n: %s",strerror(errno));
-                return (ST_EOF);
+                sox_report("seek failed\n: %s",strerror(errno));
+                return (SOX_EOF);
         }
-        if (st_writebuf(ft, hdrbuf, sizeof(hdrbuf), 1) != 1)
+        if (sox_writebuf(ft, hdrbuf, sizeof(hdrbuf), 1) != 1)
         {
-                st_report("%s",strerror(errno));
-                return (ST_EOF);
+                sox_report("%s",strerror(errno));
+                return (SOX_EOF);
         }
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -478,87 +478,87 @@ static void make_dvms_hdr(ft_t ft, struct dvms_header *hdr)
 
 /* ---------------------------------------------------------------------- */
 
-static int st_dvmsstartread(ft_t ft) 
+static int sox_dvmsstartread(ft_t ft) 
 {
         struct dvms_header hdr;
         int rc;
 
         rc = dvms_read_header(ft, &hdr);
         if (rc){
-            st_fail_errno(ft,ST_EHDR,"unable to read DVMS header");
+            sox_fail_errno(ft,SOX_EHDR,"unable to read DVMS header");
             return rc;
         }
 
-        st_debug("DVMS header of source file \"%s\":");
-        st_debug("  filename  \"%.14s\"",ft->filename);
-        st_debug("  id        0x%x", hdr.Filename);
-        st_debug("  state     0x%x", hdr.Id, hdr.State);
-        st_debug("  time      %s",ctime(&hdr.Unixtime)); /* ctime generates lf */
-        st_debug("  usender   %u", hdr.Usender);
-        st_debug("  ureceiver %u", hdr.Ureceiver);
-        st_debug("  length    %u", hdr.Length);
-        st_debug("  srate     %u", hdr.Srate);
-        st_debug("  days      %u", hdr.Days);
-        st_debug("  custom1   %u", hdr.Custom1);
-        st_debug("  custom2   %u", hdr.Custom2);
-        st_debug("  info      \"%.16s\"", hdr.Info);
+        sox_debug("DVMS header of source file \"%s\":");
+        sox_debug("  filename  \"%.14s\"",ft->filename);
+        sox_debug("  id        0x%x", hdr.Filename);
+        sox_debug("  state     0x%x", hdr.Id, hdr.State);
+        sox_debug("  time      %s",ctime(&hdr.Unixtime)); /* ctime generates lf */
+        sox_debug("  usender   %u", hdr.Usender);
+        sox_debug("  ureceiver %u", hdr.Ureceiver);
+        sox_debug("  length    %u", hdr.Length);
+        sox_debug("  srate     %u", hdr.Srate);
+        sox_debug("  days      %u", hdr.Days);
+        sox_debug("  custom1   %u", hdr.Custom1);
+        sox_debug("  custom2   %u", hdr.Custom2);
+        sox_debug("  info      \"%.16s\"", hdr.Info);
         ft->signal.rate = (hdr.Srate < 240) ? 16000 : 32000;
-        st_debug("DVMS rate %dbit/s using %dbit/s deviation %d%%", 
+        sox_debug("DVMS rate %dbit/s using %dbit/s deviation %d%%", 
                hdr.Srate*100, ft->signal.rate, 
                ((ft->signal.rate - hdr.Srate*100) * 100) / ft->signal.rate);
-        rc = st_cvsdstartread(ft);
+        rc = sox_cvsdstartread(ft);
         if (rc)
             return rc;
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
 
-static int st_dvmsstartwrite(ft_t ft) 
+static int sox_dvmsstartwrite(ft_t ft) 
 {
         struct dvms_header hdr;
         int rc;
         
-        rc = st_cvsdstartwrite(ft);
+        rc = sox_cvsdstartwrite(ft);
         if (rc)
             return rc;
 
         make_dvms_hdr(ft, &hdr);
         rc = dvms_write_header(ft, &hdr);
         if (rc){
-                st_fail_errno(ft,rc,"cannot write DVMS header");
+                sox_fail_errno(ft,rc,"cannot write DVMS header");
             return rc;
         }
 
         if (!ft->seekable)
-               st_warn("Length in output .DVMS header will wrong since can't seek to fix it");
+               sox_warn("Length in output .DVMS header will wrong since can't seek to fix it");
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /* ---------------------------------------------------------------------- */
 
-static int st_dvmsstopwrite(ft_t ft)
+static int sox_dvmsstopwrite(ft_t ft)
 {
         struct dvms_header hdr;
         int rc;
         
-        st_cvsdstopwrite(ft);
+        sox_cvsdstopwrite(ft);
         if (!ft->seekable)
         {
-            st_warn("File not seekable");
-            return (ST_EOF);
+            sox_warn("File not seekable");
+            return (SOX_EOF);
         }
-        if (st_seeki(ft, 0, 0) != 0)
+        if (sox_seeki(ft, 0, 0) != 0)
         {
-                st_fail_errno(ft,errno,"Can't rewind output file to rewrite DVMS header.");
-                return(ST_EOF);
+                sox_fail_errno(ft,errno,"Can't rewind output file to rewrite DVMS header.");
+                return(SOX_EOF);
         }
         make_dvms_hdr(ft, &hdr);
         rc = dvms_write_header(ft, &hdr);
         if(rc){
-            st_fail_errno(ft,rc,"cannot write DVMS header");
+            sox_fail_errno(ft,rc,"cannot write DVMS header");
             return rc;
         }       
         return rc;
@@ -573,22 +573,22 @@ static const char *cvsdnames[] = {
   NULL
 };
 
-static st_format_t st_cvsd_format = {
+static sox_format_t sox_cvsd_format = {
   cvsdnames,
   NULL,
   0,
-  st_cvsdstartread,
-  st_cvsdread,
-  st_cvsdstopread,
-  st_cvsdstartwrite,
-  st_cvsdwrite,
-  st_cvsdstopwrite,
-  st_format_nothing_seek
+  sox_cvsdstartread,
+  sox_cvsdread,
+  sox_cvsdstopread,
+  sox_cvsdstartwrite,
+  sox_cvsdwrite,
+  sox_cvsdstopwrite,
+  sox_format_nothing_seek
 };
 
-const st_format_t *st_cvsd_format_fn(void)
+const sox_format_t *sox_cvsd_format_fn(void)
 {
-    return &st_cvsd_format;
+    return &sox_cvsd_format;
 }
 /* Cont. Variable Solot Delta */
 static const char *dvmsnames[] = {
@@ -597,20 +597,20 @@ static const char *dvmsnames[] = {
   NULL
 };
 
-static st_format_t st_dvms_format = {
+static sox_format_t sox_dvms_format = {
   dvmsnames,
   NULL,
   0,
-  st_dvmsstartread,
-  st_cvsdread,
-  st_cvsdstopread,
-  st_dvmsstartwrite,
-  st_cvsdwrite,
-  st_dvmsstopwrite,
-  st_format_nothing_seek
+  sox_dvmsstartread,
+  sox_cvsdread,
+  sox_cvsdstopread,
+  sox_dvmsstartwrite,
+  sox_cvsdwrite,
+  sox_dvmsstopwrite,
+  sox_format_nothing_seek
 };
 
-const st_format_t *st_dvms_format_fn(void)
+const sox_format_t *sox_dvms_format_fn(void)
 {
-    return &st_dvms_format;
+    return &sox_dvms_format;
 }

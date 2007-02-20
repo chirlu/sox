@@ -16,7 +16,7 @@
  * the consequences of using this software.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include <string.h>
 #include <errno.h>
 
@@ -62,7 +62,7 @@ struct smptrailer {
 /* Private data for SMP file */
 typedef struct smpstuff {
   uint32_t NoOfSamps;           /* Sample data count in words */
-  st_size_t dataStart;
+  sox_size_t dataStart;
   /* comment memory resides in private data because it's small */
   char comment[COMMENTLEN + NAMELEN + 3];
 } *smp_t;
@@ -78,38 +78,38 @@ static int readtrailer(ft_t ft, struct smptrailer *trailer)
         int i;
         int16_t trash16;
 
-        st_readw(ft, (unsigned short *)&trash16); /* read reserved word */
+        sox_readw(ft, (unsigned short *)&trash16); /* read reserved word */
         for(i = 0; i < 8; i++) {        /* read the 8 loops */
-                st_readdw(ft, &(trailer->loops[i].start));
+                sox_readdw(ft, &(trailer->loops[i].start));
                 ft->loops[i].start = trailer->loops[i].start;
-                st_readdw(ft, &(trailer->loops[i].end));
+                sox_readdw(ft, &(trailer->loops[i].end));
                 ft->loops[i].length = 
                         trailer->loops[i].end - trailer->loops[i].start;
-                st_readb(ft, (unsigned char *)&(trailer->loops[i].type));
+                sox_readb(ft, (unsigned char *)&(trailer->loops[i].type));
                 ft->loops[i].type = trailer->loops[i].type;
-                st_readw(ft, (unsigned short *)&(trailer->loops[i].count));
+                sox_readw(ft, (unsigned short *)&(trailer->loops[i].count));
                 ft->loops[i].count = trailer->loops[i].count;
         }
         for(i = 0; i < 8; i++) {        /* read the 8 markers */
-                if (st_readbuf(ft, trailer->markers[i].name, 1, MARKERLEN) != 10)
+                if (sox_readbuf(ft, trailer->markers[i].name, 1, MARKERLEN) != 10)
                 {
-                    st_fail_errno(ft,ST_EHDR,"EOF in SMP");
-                    return(ST_EOF);
+                    sox_fail_errno(ft,SOX_EHDR,"EOF in SMP");
+                    return(SOX_EOF);
                 }
                 trailer->markers[i].name[MARKERLEN] = 0;
-                st_readdw(ft, &(trailer->markers[i].position));
+                sox_readdw(ft, &(trailer->markers[i].position));
         }
-        st_readb(ft, (unsigned char *)&(trailer->MIDInote));
-        st_readdw(ft, &(trailer->rate));
-        st_readdw(ft, &(trailer->SMPTEoffset));
-        st_readdw(ft, &(trailer->CycleSize));
-        return(ST_SUCCESS);
+        sox_readb(ft, (unsigned char *)&(trailer->MIDInote));
+        sox_readdw(ft, &(trailer->rate));
+        sox_readdw(ft, &(trailer->SMPTEoffset));
+        sox_readdw(ft, &(trailer->CycleSize));
+        return(SOX_SUCCESS);
 }
 
 /*
  * set the trailer data - loops and markers, to reasonably benign values
  */
-static void settrailer(ft_t ft, struct smptrailer *trailer, st_rate_t rate)
+static void settrailer(ft_t ft, struct smptrailer *trailer, sox_rate_t rate)
 {
         int i;
 
@@ -147,29 +147,29 @@ static int writetrailer(ft_t ft, struct smptrailer *trailer)
 {
         int i;
 
-        st_writew(ft, 0);                       /* write the reserved word */
+        sox_writew(ft, 0);                       /* write the reserved word */
         for(i = 0; i < 8; i++) {        /* write the 8 loops */
-                st_writedw(ft, trailer->loops[i].start);
-                st_writedw(ft, trailer->loops[i].end);
-                st_writeb(ft, trailer->loops[i].type);
-                st_writew(ft, trailer->loops[i].count);
+                sox_writedw(ft, trailer->loops[i].start);
+                sox_writedw(ft, trailer->loops[i].end);
+                sox_writeb(ft, trailer->loops[i].type);
+                sox_writew(ft, trailer->loops[i].count);
         }
         for(i = 0; i < 8; i++) {        /* write the 8 markers */
-                if (st_writes(ft, trailer->markers[i].name) == ST_EOF)
+                if (sox_writes(ft, trailer->markers[i].name) == SOX_EOF)
                 {
-                    st_fail_errno(ft,ST_EHDR,"EOF in SMP");
-                    return(ST_EOF);
+                    sox_fail_errno(ft,SOX_EHDR,"EOF in SMP");
+                    return(SOX_EOF);
                 }
-                st_writedw(ft, trailer->markers[i].position);
+                sox_writedw(ft, trailer->markers[i].position);
         }
-        st_writeb(ft, trailer->MIDInote);
-        st_writedw(ft, trailer->rate);
-        st_writedw(ft, trailer->SMPTEoffset);
-        st_writedw(ft, trailer->CycleSize);
-        return(ST_SUCCESS);
+        sox_writeb(ft, trailer->MIDInote);
+        sox_writedw(ft, trailer->rate);
+        sox_writedw(ft, trailer->SMPTEoffset);
+        sox_writedw(ft, trailer->CycleSize);
+        return(SOX_SUCCESS);
 }
 
-static int st_smpseek(ft_t ft, st_size_t offset) 
+static int sox_smpseek(ft_t ft, sox_size_t offset) 
 {
     int new_offset, channel_block, alignment;
     smp_t smp = (smp_t) ft->priv;
@@ -186,12 +186,12 @@ static int st_smpseek(ft_t ft, st_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += smp->dataStart;
 
-    ft->st_errno = st_seeki(ft, new_offset, SEEK_SET);
+    ft->sox_errno = sox_seeki(ft, new_offset, SEEK_SET);
 
-    if( ft->st_errno == ST_SUCCESS )
+    if( ft->sox_errno == SOX_SUCCESS )
         smp->NoOfSamps = ft->length - (new_offset / ft->signal.size);
 
-    return(ft->st_errno);
+    return(ft->sox_errno);
 }
 /*
  * Do anything required before you start reading samples.
@@ -200,7 +200,7 @@ static int st_smpseek(ft_t ft, st_size_t offset)
  *      size and encoding of samples, 
  *      mono/stereo/quad.
  */
-static int st_smpstartread(ft_t ft) 
+static int sox_smpstartread(ft_t ft) 
 {
         smp_t smp = (smp_t) ft->priv;
         int i;
@@ -212,25 +212,25 @@ static int st_smpstartread(ft_t ft)
         /* If you need to seek around the input file. */
         if (! ft->seekable)
         {
-                st_fail_errno(ft,ST_EOF,"SMP input file must be a file, not a pipe");
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EOF,"SMP input file must be a file, not a pipe");
+                return(SOX_EOF);
         }
 
         /* Read SampleVision header */
-        if (st_readbuf(ft, (char *)&header, 1, HEADERSIZE) != HEADERSIZE)
+        if (sox_readbuf(ft, (char *)&header, 1, HEADERSIZE) != HEADERSIZE)
         {
-                st_fail_errno(ft,ST_EHDR,"unexpected EOF in SMP header");
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EHDR,"unexpected EOF in SMP header");
+                return(SOX_EOF);
         }
         if (strncmp(header.Id, SVmagic, 17) != 0)
         {
-                st_fail_errno(ft,ST_EHDR,"SMP header does not begin with magic word %s", SVmagic);
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EHDR,"SMP header does not begin with magic word %s", SVmagic);
+                return(SOX_EOF);
         }
         if (strncmp(header.version, SVvers, 4) != 0)
         {
-                st_fail_errno(ft,ST_EHDR,"SMP header is not version %s", SVvers);
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EHDR,"SMP header is not version %s", SVvers);
+                return(SOX_EOF);
         }
 
         /* Format the sample name and comments to a single comment */
@@ -246,51 +246,51 @@ static int st_smpstartread(ft_t ft)
                 commentlen+1, header.comments);
         ft->comment = smp->comment;
 
-        st_report("SampleVision file name and comments: %s", ft->comment);
+        sox_report("SampleVision file name and comments: %s", ft->comment);
         /* Extract out the sample size (always intel format) */
-        st_readdw(ft, &(smp->NoOfSamps));
+        sox_readdw(ft, &(smp->NoOfSamps));
         /* mark the start of the sample data */
-        samplestart = st_tell(ft);
+        samplestart = sox_tell(ft);
 
         /* seek from the current position (the start of sample data) by */
         /* NoOfSamps * sizeof(int16_t) */
-        if (st_seeki(ft, smp->NoOfSamps * 2, 1) == -1)
+        if (sox_seeki(ft, smp->NoOfSamps * 2, 1) == -1)
         {
-                st_fail_errno(ft,errno,"SMP unable to seek to trailer");
-                return(ST_EOF);
+                sox_fail_errno(ft,errno,"SMP unable to seek to trailer");
+                return(SOX_EOF);
         }
         if (readtrailer(ft, &trailer))
         {
-                st_fail_errno(ft,ST_EHDR,"unexpected EOF in SMP trailer");
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EHDR,"unexpected EOF in SMP trailer");
+                return(SOX_EOF);
         }
 
         /* seek back to the beginning of the data */
-        if (st_seeki(ft, samplestart, 0) == -1) 
+        if (sox_seeki(ft, samplestart, 0) == -1) 
         {
-                st_fail_errno(ft,errno,"SMP unable to seek back to start of sample data");
-                return(ST_EOF);
+                sox_fail_errno(ft,errno,"SMP unable to seek back to start of sample data");
+                return(SOX_EOF);
         }
 
         ft->signal.rate = (int) trailer.rate;
-        ft->signal.size = ST_SIZE_16BIT;
-        ft->signal.encoding = ST_ENCODING_SIGN2;
+        ft->signal.size = SOX_SIZE_16BIT;
+        ft->signal.encoding = SOX_ENCODING_SIGN2;
         ft->signal.channels = 1;
         smp->dataStart = samplestart;
         ft->length = smp->NoOfSamps;
 
-        st_report("SampleVision trailer:");
+        sox_report("SampleVision trailer:");
         for(i = 0; i < 8; i++) if (1 || trailer.loops[i].count) {
-                st_report("Loop %d: start: %6d", i, trailer.loops[i].start);
-                st_report(" end:   %6d", trailer.loops[i].end);
-                st_report(" count: %6d", trailer.loops[i].count);
+                sox_report("Loop %d: start: %6d", i, trailer.loops[i].start);
+                sox_report(" end:   %6d", trailer.loops[i].end);
+                sox_report(" count: %6d", trailer.loops[i].count);
                 switch(trailer.loops[i].type) {
-                    case 0: st_report("type:  off"); break;
-                    case 1: st_report("type:  forward"); break;
-                    case 2: st_report("type:  forward/backward"); break;
+                    case 0: sox_report("type:  off"); break;
+                    case 1: sox_report("type:  forward"); break;
+                    case 2: sox_report("type:  forward/backward"); break;
                 }
         }
-        st_report("MIDI Note number: %d", trailer.MIDInote);
+        sox_report("MIDI Note number: %d", trailer.MIDInote);
 
         ft->instr.nloops = 0;
         for(i = 0; i < 8; i++) 
@@ -306,11 +306,11 @@ static int st_smpstartread(ft_t ft)
         ft->instr.MIDIlow = ft->instr.MIDIhi =
                 ft->instr.MIDInote = trailer.MIDInote;
         if (ft->instr.nloops > 0)
-                ft->instr.loopmode = ST_LOOP_8;
+                ft->instr.loopmode = SOX_LOOP_8;
         else
-                ft->instr.loopmode = ST_LOOP_NONE;
+                ft->instr.loopmode = SOX_LOOP_NONE;
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /*
@@ -319,21 +319,21 @@ static int st_smpstartread(ft_t ft)
  * Place in buf[].
  * Return number of samples read.
  */
-static st_size_t st_smpread(ft_t ft, st_sample_t *buf, st_size_t len) 
+static sox_size_t sox_smpread(ft_t ft, sox_sample_t *buf, sox_size_t len) 
 {
         smp_t smp = (smp_t) ft->priv;
         unsigned short datum;
-        st_size_t done = 0;
+        sox_size_t done = 0;
         
         for(; done < len && smp->NoOfSamps; done++, smp->NoOfSamps--) {
-                st_readw(ft, &datum);
+                sox_readw(ft, &datum);
                 /* scale signed up to long's range */
-                *buf++ = ST_SIGNED_WORD_TO_SAMPLE(datum,);
+                *buf++ = SOX_SIGNED_WORD_TO_SAMPLE(datum,);
         }
         return done;
 }
 
-static int st_smpstartwrite(ft_t ft) 
+static int sox_smpstartwrite(ft_t ft) 
 {
         smp_t smp = (smp_t) ft->priv;
         struct smpheader header;
@@ -341,13 +341,13 @@ static int st_smpstartwrite(ft_t ft)
         /* If you have to seek around the output file */
         if (! ft->seekable)
         {
-                st_fail_errno(ft,ST_EOF,"Output .smp file must be a file, not a pipe");
-                return(ST_EOF);
+                sox_fail_errno(ft,SOX_EOF,"Output .smp file must be a file, not a pipe");
+                return(SOX_EOF);
         }
 
         /* If your format specifies any of the following info. */
-        ft->signal.size = ST_SIZE_16BIT;
-        ft->signal.encoding = ST_ENCODING_SIGN2;
+        ft->signal.size = SOX_SIZE_16BIT;
+        ft->signal.encoding = SOX_ENCODING_SIGN2;
         ft->signal.channels = 1;
 
         strcpy(header.Id, SVmagic);
@@ -356,26 +356,26 @@ static int st_smpstartwrite(ft_t ft)
         sprintf(header.name, "%-*.*s", NAMELEN, NAMELEN, ft->comment);
 
         /* Write file header */
-        if(st_writebuf(ft, &header, 1, HEADERSIZE) != HEADERSIZE)
+        if(sox_writebuf(ft, &header, 1, HEADERSIZE) != HEADERSIZE)
         {
-            st_fail_errno(ft,errno,"SMP: Can't write header completely");
-            return(ST_EOF);
+            sox_fail_errno(ft,errno,"SMP: Can't write header completely");
+            return(SOX_EOF);
         }
-        st_writedw(ft, 0);      /* write as zero length for now, update later */
+        sox_writedw(ft, 0);      /* write as zero length for now, update later */
         smp->NoOfSamps = 0;
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
-static st_size_t st_smpwrite(ft_t ft, const st_sample_t *buf, st_size_t len) 
+static sox_size_t sox_smpwrite(ft_t ft, const sox_sample_t *buf, sox_size_t len) 
 {
         smp_t smp = (smp_t) ft->priv;
         int datum;
-        st_size_t done = 0;
+        sox_size_t done = 0;
 
         while(done < len) {
-                datum = (int) ST_SAMPLE_TO_SIGNED_WORD(*buf++, ft->clips);
-                st_writew(ft, datum);
+                datum = (int) SOX_SAMPLE_TO_SIGNED_WORD(*buf++, ft->clips);
+                sox_writew(ft, datum);
                 smp->NoOfSamps++;
                 done++;
         }
@@ -383,7 +383,7 @@ static st_size_t st_smpwrite(ft_t ft, const st_sample_t *buf, st_size_t len)
         return(done);
 }
 
-static int st_smpstopwrite(ft_t ft) 
+static int sox_smpstopwrite(ft_t ft) 
 {
         smp_t smp = (smp_t) ft->priv;
         struct smptrailer trailer;
@@ -391,14 +391,14 @@ static int st_smpstopwrite(ft_t ft)
         /* Assign the trailer data */
         settrailer(ft, &trailer, ft->signal.rate);
         writetrailer(ft, &trailer);
-        if (st_seeki(ft, 112, 0) == -1)
+        if (sox_seeki(ft, 112, 0) == -1)
         {
-                st_fail_errno(ft,errno,"SMP unable to seek back to save size");
-                return(ST_EOF);
+                sox_fail_errno(ft,errno,"SMP unable to seek back to save size");
+                return(SOX_EOF);
         }
-        st_writedw(ft, smp->NoOfSamps);
+        sox_writedw(ft, smp->NoOfSamps);
 
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /* SampleVision sound */
@@ -407,20 +407,20 @@ static const char *smpnames[] = {
   NULL,
 };
 
-static st_format_t st_smp_format = {
+static sox_format_t sox_smp_format = {
   smpnames,
   NULL,
-  ST_FILE_LOOPS | ST_FILE_SEEK | ST_FILE_LIT_END,
-  st_smpstartread,
-  st_smpread,
-  st_format_nothing,
-  st_smpstartwrite,
-  st_smpwrite,
-  st_smpstopwrite,
-  st_smpseek
+  SOX_FILE_LOOPS | SOX_FILE_SEEK | SOX_FILE_LIT_END,
+  sox_smpstartread,
+  sox_smpread,
+  sox_format_nothing,
+  sox_smpstartwrite,
+  sox_smpwrite,
+  sox_smpstopwrite,
+  sox_smpseek
 };
 
-const st_format_t *st_smp_format_fn(void)
+const sox_format_t *sox_smp_format_fn(void)
 {
-    return &st_smp_format;
+    return &sox_smp_format;
 }

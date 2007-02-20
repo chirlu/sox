@@ -21,14 +21,14 @@
 
 #include <math.h>
 #include <string.h>
-#include "st_i.h"
+#include "sox_i.h"
 
-static st_effect_t st_fade_effect;
+static sox_effect_t sox_fade_effect;
 
 /* Private data for fade file */
 typedef struct fadestuff
 { /* These are measured as samples */
-    st_size_t in_start, in_stop, out_start, out_stop, samplesdone;
+    sox_size_t in_start, in_stop, out_start, out_stop, samplesdone;
     char *in_stop_str, *out_start_str, *out_stop_str;
     char in_fadetype, out_fadetype;
     char do_out;
@@ -36,7 +36,7 @@ typedef struct fadestuff
 } *fade_t;
 
 /* prototypes */
-static double fade_gain(st_size_t index, st_size_t range, char fadetype);
+static double fade_gain(sox_size_t index, sox_size_t range, char fadetype);
 
 /*
  * Process options
@@ -45,7 +45,7 @@ static double fade_gain(st_size_t index, st_size_t range, char fadetype);
  * The 'info' fields are not yet filled in.
  */
 
-static int st_fade_getopts(eff_t effp, int n, char **argv)
+static int sox_fade_getopts(eff_t effp, int n, char **argv)
 {
 
     fade_t fade = (fade_t) effp->priv;
@@ -54,8 +54,8 @@ static int st_fade_getopts(eff_t effp, int n, char **argv)
 
     if (n < 1 || n > 4)
     { /* Wrong number of arguments. */
-        st_fail(st_fade_effect.usage);
-        return(ST_EOF);
+        sox_fail(sox_fade_effect.usage);
+        return(SOX_EOF);
     }
 
     /* because sample rate is unavailable at this point we store the
@@ -80,10 +80,10 @@ static int st_fade_getopts(eff_t effp, int n, char **argv)
     fade->in_stop_str = (char *)xmalloc(strlen(argv[0])+1);
     strcpy(fade->in_stop_str,argv[0]);
     /* Do a dummy parse to see if it will fail */
-    if (st_parsesamples(0, fade->in_stop_str, &fade->in_stop, 't') == NULL)
+    if (sox_parsesamples(0, fade->in_stop_str, &fade->in_stop, 't') == NULL)
     {
-        st_fail(st_fade_effect.usage);
-        return(ST_EOF);
+        sox_fail(sox_fade_effect.usage);
+        return(SOX_EOF);
     }
 
     fade->out_start_str = fade->out_stop_str = 0;
@@ -97,10 +97,10 @@ static int st_fade_getopts(eff_t effp, int n, char **argv)
             strcpy(fade->out_stop_str,argv[t_argno]);
 
             /* Do a dummy parse to see if it will fail */
-            if (st_parsesamples(0, fade->out_stop_str, 
+            if (sox_parsesamples(0, fade->out_stop_str, 
                                 &fade->out_stop, 't') == NULL) {
-              st_fail(st_fade_effect.usage);
-              return(ST_EOF);
+              sox_fail(sox_fade_effect.usage);
+              return(SOX_EOF);
             }
         }
         else
@@ -109,32 +109,32 @@ static int st_fade_getopts(eff_t effp, int n, char **argv)
             strcpy(fade->out_start_str,argv[t_argno]);
 
             /* Do a dummy parse to see if it will fail */
-            if (st_parsesamples(0, fade->out_start_str, 
+            if (sox_parsesamples(0, fade->out_start_str, 
                                 &fade->out_start, 't') == NULL) {
-              st_fail(st_fade_effect.usage);
-              return(ST_EOF);
+              sox_fail(sox_fade_effect.usage);
+              return(SOX_EOF);
             }
         }
     } /* End for(t_argno) */
 
-    return(ST_SUCCESS);
+    return(SOX_SUCCESS);
 }
 
 /*
  * Prepare processing.
  * Do all initializations.
  */
-static int st_fade_start(eff_t effp)
+static int sox_fade_start(eff_t effp)
 {
     fade_t fade = (fade_t) effp->priv;
 
     /* converting time values to samples */
     fade->in_start = 0;
-    if (st_parsesamples(effp->ininfo.rate, fade->in_stop_str,
+    if (sox_parsesamples(effp->ininfo.rate, fade->in_stop_str,
                         &fade->in_stop, 't') == NULL)
     {
-        st_fail(st_fade_effect.usage);
-        return(ST_EOF);
+        sox_fail(sox_fade_effect.usage);
+        return(SOX_EOF);
     }
 
     fade->do_out = 0;
@@ -142,21 +142,21 @@ static int st_fade_start(eff_t effp)
     if (fade->out_stop_str)
     {
         fade->do_out = 1;
-        if (st_parsesamples(effp->ininfo.rate, fade->out_stop_str,
+        if (sox_parsesamples(effp->ininfo.rate, fade->out_stop_str,
                             &fade->out_stop, 't') == NULL)
         {
-            st_fail(st_fade_effect.usage);
-            return(ST_EOF);
+            sox_fail(sox_fade_effect.usage);
+            return(SOX_EOF);
         }
 
         /* See if user wants to fade out. */
         if (fade->out_start_str)
         {
-            if (st_parsesamples(effp->ininfo.rate, fade->out_start_str,
+            if (sox_parsesamples(effp->ininfo.rate, fade->out_start_str,
                         &fade->out_start, 't') == NULL)
             {
-                st_fail(st_fade_effect.usage);
-                return(ST_EOF);
+                sox_fail(sox_fade_effect.usage);
+                return(SOX_EOF);
             }
             /* Fade time is relative to stop time. */
             fade->out_start = fade->out_stop - fade->out_start;
@@ -178,33 +178,33 @@ static int st_fade_start(eff_t effp)
     /* Sanity check for fade times vs total time */
     if (fade->in_stop > fade->out_start && fade->out_start != 0)
     { /* Fades too long */
-        st_fail("Fade: End of fade-in should not happen before beginning of fade-out");
-        return(ST_EOF);
+        sox_fail("Fade: End of fade-in should not happen before beginning of fade-out");
+        return(SOX_EOF);
     } /* endif fade time sanity */
 
     fade->samplesdone = fade->in_start;
     fade->endpadwarned = 0;
 
-    st_debug("fade: in_start = %d in_stop = %d out_start = %d out_stop = %d", fade->in_start, fade->in_stop, fade->out_start, fade->out_stop);
+    sox_debug("fade: in_start = %d in_stop = %d out_start = %d out_stop = %d", fade->in_start, fade->in_stop, fade->out_start, fade->out_stop);
 
     if (fade->in_start == fade->in_stop && fade->out_start == fade->out_stop)
-      return ST_EFF_NULL;
+      return SOX_EFF_NULL;
 
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 }
 
 /*
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int st_fade_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                 st_size_t *isamp, st_size_t *osamp)
+static int sox_fade_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                 sox_size_t *isamp, sox_size_t *osamp)
 {
     fade_t fade = (fade_t) effp->priv;
     /* len is total samples, chcnt counts channels */
     int len = 0, t_output = 1, more_output = 1;
-    st_sample_t t_ibuf;
-    st_size_t chcnt = 0;
+    sox_sample_t t_ibuf;
+    sox_size_t chcnt = 0;
 
     len = ((*isamp > *osamp) ? *osamp : *isamp);
 
@@ -270,19 +270,19 @@ static int st_fade_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
      * this.
      */
     if (fade->do_out && fade->samplesdone >= fade->out_stop)
-        return ST_EOF;
+        return SOX_EOF;
     else
-        return ST_SUCCESS;
+        return SOX_SUCCESS;
 }
 
 /*
  * Drain out remaining samples if the effect generates any.
  */
-static int st_fade_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int sox_fade_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
     fade_t fade = (fade_t) effp->priv;
     int len;
-    st_size_t t_chan = 0;
+    sox_size_t t_chan = 0;
 
     len = *osamp;
     *osamp = 0;
@@ -290,7 +290,7 @@ static int st_fade_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     if (fade->do_out && fade->samplesdone < fade->out_stop &&
         !(fade->endpadwarned))
     { /* Warning about padding silence into end of sample */
-        st_warn("Fade: warning: End time passed end-of-file. Padding with silence");
+        sox_warn("Fade: warning: End time passed end-of-file. Padding with silence");
         fade->endpadwarned = 1;
     } /* endif endpadwarned */
 
@@ -310,9 +310,9 @@ static int st_fade_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     } /* endfor */
 
     if (fade->do_out && fade->samplesdone >= fade->out_stop)
-        return ST_EOF;
+        return SOX_EOF;
     else
-        return ST_SUCCESS;
+        return SOX_SUCCESS;
 }
 
 /*
@@ -326,13 +326,13 @@ static int delete(eff_t effp)
     free(fade->in_stop_str);
     free(fade->out_start_str);
     free(fade->out_stop_str);
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
 /* Function returns gain value 0.0 - 1.0 according index / range ratio
 * and -1.0 if  type is invalid
 * todo: to optimize performance calculate gain every now and then and interpolate */
-static double fade_gain(st_size_t index, st_size_t range, char type)
+static double fade_gain(sox_size_t index, sox_size_t range, char type)
 {
     double retval = 0.0, findex = 0.0;
 
@@ -371,21 +371,21 @@ static double fade_gain(st_size_t index, st_size_t range, char type)
     return retval;
 }
 
-static st_effect_t st_fade_effect = {
+static sox_effect_t sox_fade_effect = {
   "fade",
   "Usage: fade [ type ] fade-in-length [ stop-time [ fade-out-length ] ]\n"
   "       Time is in hh:mm:ss.frac format.\n"
   "       Fade type one of q, h, t, l or p.",
-  ST_EFF_MCHAN,
-  st_fade_getopts,
-  st_fade_start,
-  st_fade_flow,
-  st_fade_drain,
-  st_effect_nothing,
+  SOX_EFF_MCHAN,
+  sox_fade_getopts,
+  sox_fade_start,
+  sox_fade_flow,
+  sox_fade_drain,
+  sox_effect_nothing,
   delete
 };
 
-const st_effect_t *st_fade_effect_fn(void)
+const sox_effect_t *sox_fade_effect_fn(void)
 {
-    return &st_fade_effect;
+    return &sox_fade_effect;
 }

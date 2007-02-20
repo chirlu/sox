@@ -23,7 +23,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "st_i.h"
+#include "sox_i.h"
 #include "ima_rw.h"
 /*
  *
@@ -83,7 +83,7 @@ static void ImaExpandS(
         val = (short)(ip[0] + (ip[1]<<8)); /* need cast for sign-extend */
         state = ip[2];
         if (state > ISSTMAX) {
-                st_warn("IMA_ADPCM block ch%d initial-state (%d) out of range", ch, state);
+                sox_warn("IMA_ADPCM block ch%d initial-state (%d) out of range", ch, state);
                 state = 0;
         }
         /* specs say to ignore ip[3] , but write it as 0 */
@@ -320,14 +320,14 @@ void ImaBlockMashI(
  *  samplesPerBlock which would go into a block of size blockAlign
  *  Yes, it is confusing.
  */
-st_size_t ImaSamplesIn(
-  st_size_t dataLen,
+sox_size_t ImaSamplesIn(
+  sox_size_t dataLen,
   unsigned short chans,
   unsigned short blockAlign,
   unsigned short samplesPerBlock
 )
 {
-  st_size_t m, n;
+  sox_size_t m, n;
 
   if (samplesPerBlock) {
     n = (dataLen / blockAlign) * samplesPerBlock;
@@ -336,7 +336,7 @@ st_size_t ImaSamplesIn(
     n = 0;
     m = blockAlign;
   }
-  if (m >= (st_size_t)4*chans) {
+  if (m >= (sox_size_t)4*chans) {
     m -= 4*chans;    /* number of bytes beyond block-header */
     m /= 4*chans;    /* number of 4-byte blocks/channel beyond header */
     m = 8*m + 1;     /* samples/chan beyond header + 1 in header */
@@ -348,21 +348,21 @@ st_size_t ImaSamplesIn(
 }
 
 /*
- * st_size_t ImaBytesPerBlock(chans, samplesPerBlock)
+ * sox_size_t ImaBytesPerBlock(chans, samplesPerBlock)
  *   return minimum blocksize which would be required
  *   to encode number of chans with given samplesPerBlock
  */
-st_size_t ImaBytesPerBlock(
+sox_size_t ImaBytesPerBlock(
   unsigned short chans,
   unsigned short samplesPerBlock
 )
 {
-  st_size_t n;
+  sox_size_t n;
   /* per channel, ima has blocks of len 4, the 1st has 1st sample, the others
    * up to 8 samples per block,
    * so number of later blocks is (nsamp-1 + 7)/8, total blocks/chan is
    * (nsamp-1+7)/8 + 1 = (nsamp+14)/8
    */
-  n = ((st_size_t)samplesPerBlock + 14)/8 * 4 * chans;
+  n = ((sox_size_t)samplesPerBlock + 14)/8 * 4 * chans;
   return n;
 }

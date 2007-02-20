@@ -19,7 +19,7 @@
    Software Foundation, Fifth Floor, 51 Franklin Street, Boston, MA
    02111-1301, USA.  */
 
-#include "st_i.h"
+#include "sox_i.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -37,7 +37,7 @@ void *xrealloc(void *ptr, size_t newsize)
     return NULL;
 
   if ((ptr = realloc(ptr, newsize)) == NULL) {
-    st_fail("out of memory");
+    sox_fail("out of memory");
     exit(2);
   }
 
@@ -52,7 +52,7 @@ void *xcalloc(size_t nmemb, size_t size)
   void *ptr = calloc(nmemb, size);
 
   if (ptr == NULL) {
-    st_fail("out of memory");
+    sox_fail("out of memory");
     exit(2);
   }
 
@@ -71,7 +71,7 @@ char *xstrdup(const char *s)
 
   t = strdup(s);
   if (t == NULL) {
-    st_fail("out of memory");
+    sox_fail("out of memory");
     exit(2);
   }
 

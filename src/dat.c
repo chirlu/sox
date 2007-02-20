@@ -10,7 +10,7 @@
  * the consequences of using this software.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include <string.h>
 
 #define LINEWIDTH 256
@@ -22,7 +22,7 @@ typedef struct dat {
     char prevline[LINEWIDTH]; 
 } *dat_t;
 
-static int st_datstartread(ft_t ft)
+static int sox_datstartread(ft_t ft)
 {
     char inpstr[LINEWIDTH];
     long rate;
@@ -31,7 +31,7 @@ static int st_datstartread(ft_t ft)
     char sc;
 
     /* Read lines until EOF or first non-comment line */
-    while ((status = st_reads(ft, inpstr, LINEWIDTH-1)) != ST_EOF) {
+    while ((status = sox_reads(ft, inpstr, LINEWIDTH-1)) != SOX_EOF) {
       inpstr[LINEWIDTH-1] = 0;
       if ((sscanf(inpstr," %c", &sc) != 0) && (sc != ';')) break;
       if (sscanf(inpstr," ; Sample Rate %ld", &rate)) {
@@ -41,7 +41,7 @@ static int st_datstartread(ft_t ft)
       }
     }
     /* Hold a copy of the last line we read (first non-comment) */
-    if (status != ST_EOF) {
+    if (status != SOX_EOF) {
       strncpy(((dat_t)ft->priv)->prevline, inpstr, LINEWIDTH);
       ((dat_t)ft->priv)->buffered = 1;
     } else {
@@ -52,31 +52,31 @@ static int st_datstartread(ft_t ft)
     if (ft->signal.channels == 0)
        ft->signal.channels = 1;
 
-    ft->signal.size = ST_SIZE_64BIT;
-    ft->signal.encoding = ST_ENCODING_FLOAT;
+    ft->signal.size = SOX_SIZE_64BIT;
+    ft->signal.encoding = SOX_ENCODING_FLOAT;
 
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
-static int st_datstartwrite(ft_t ft)
+static int sox_datstartwrite(ft_t ft)
 {
     dat_t dat = (dat_t) ft->priv;
     char s[LINEWIDTH];
 
-    ft->signal.size = ST_SIZE_64BIT;
-    ft->signal.encoding = ST_ENCODING_FLOAT;
+    ft->signal.size = SOX_SIZE_64BIT;
+    ft->signal.encoding = SOX_ENCODING_FLOAT;
     dat->timevalue = 0.0;
     dat->deltat = 1.0 / (double)ft->signal.rate;
     /* Write format comments to start of file */
     sprintf(s,"; Sample Rate %ld\015\n", (long)ft->signal.rate);
-    st_writes(ft, s);
+    sox_writes(ft, s);
     sprintf(s,"; Channels %d\015\n", (int)ft->signal.channels);
-    st_writes(ft, s);
+    sox_writes(ft, s);
 
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
-static st_size_t st_datread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
+static sox_size_t sox_datread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp)
 {
     char inpstr[LINEWIDTH];
     int  inpPtr = 0;
@@ -84,8 +84,8 @@ static st_size_t st_datread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
     double sampval = 0.0;
     int retc = 0;
     char sc = 0;
-    st_size_t done = 0;
-    st_size_t i=0;
+    sox_size_t done = 0;
+    sox_size_t i=0;
 
     /* Always read a complete set of channels */
     nsamp -= (nsamp % ft->signal.channels);
@@ -97,9 +97,9 @@ static st_size_t st_datread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
         strncpy(inpstr, ((dat_t)ft->priv)->prevline, LINEWIDTH);
         ((dat_t)ft->priv)->buffered=0;
       } else {
-        st_reads(ft, inpstr, LINEWIDTH-1);
+        sox_reads(ft, inpstr, LINEWIDTH-1);
         inpstr[LINEWIDTH-1] = 0;
-        if (st_eof(ft)) return (done);
+        if (sox_eof(ft)) return (done);
       }
 
       /* Skip over comments - ie. 0 or more whitespace, then ';' */
@@ -111,11 +111,11 @@ static st_size_t st_datread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
         retc = sscanf(&inpstr[inpPtr]," %lg%n", &sampval, &inpPtrInc);
         inpPtr += inpPtrInc;
         if (retc != 1) {
-          st_fail_errno(ft,ST_EOF,"Unable to read sample.");
-          return (ST_EOF);
+          sox_fail_errno(ft,SOX_EOF,"Unable to read sample.");
+          return (SOX_EOF);
         }
-        sampval *= ST_SAMPLE_MAX;
-        *buf++ = ST_ROUND_CLIP_COUNT(sampval, ft->clips);
+        sampval *= SOX_SAMPLE_MAX;
+        *buf++ = SOX_ROUND_CLIP_COUNT(sampval, ft->clips);
         done++;
       }
     }
@@ -123,13 +123,13 @@ static st_size_t st_datread(ft_t ft, st_sample_t *buf, st_size_t nsamp)
     return (done);
 }
 
-static st_size_t st_datwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
+static sox_size_t sox_datwrite(ft_t ft, const sox_sample_t *buf, sox_size_t nsamp)
 {
     dat_t dat = (dat_t) ft->priv;
-    st_size_t done = 0;
+    sox_size_t done = 0;
     double sampval=0.0;
     char s[LINEWIDTH];
-    st_size_t i=0;
+    sox_size_t i=0;
 
     /* Always write a complete set of channels */
     nsamp -= (nsamp % ft->signal.channels);
@@ -137,15 +137,15 @@ static st_size_t st_datwrite(ft_t ft, const st_sample_t *buf, st_size_t nsamp)
     /* Write time, then sample values, then CRLF newline */
     while(done < nsamp) {
       sprintf(s," %15.8g ",dat->timevalue);
-      st_writes(ft, s);
+      sox_writes(ft, s);
       for (i=0; i<ft->signal.channels; i++) {
-        sampval = ST_SAMPLE_TO_FLOAT_DDWORD(*buf++, ft->clips);
+        sampval = SOX_SAMPLE_TO_FLOAT_DDWORD(*buf++, ft->clips);
         sprintf(s," %15.8g", sampval);
-        st_writes(ft, s);
+        sox_writes(ft, s);
         done++;
       }
       sprintf(s," \015\n");
-      st_writes(ft, s);
+      sox_writes(ft, s);
       dat->timevalue += dat->deltat;
     }
     return done;
@@ -157,20 +157,20 @@ static const char *datnames[] = {
   NULL
 };
 
-static st_format_t st_dat_format = {
+static sox_format_t sox_dat_format = {
   datnames,
   NULL,
   0,
-  st_datstartread,
-  st_datread,
-  st_format_nothing,
-  st_datstartwrite,
-  st_datwrite,
-  st_format_nothing,
-  st_format_nothing_seek
+  sox_datstartread,
+  sox_datread,
+  sox_format_nothing,
+  sox_datstartwrite,
+  sox_datwrite,
+  sox_format_nothing,
+  sox_format_nothing_seek
 };
 
-const st_format_t *st_dat_format_fn(void)
+const sox_format_t *sox_dat_format_fn(void)
 {
-    return &st_dat_format;
+    return &sox_dat_format;
 }

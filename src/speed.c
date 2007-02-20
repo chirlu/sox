@@ -23,18 +23,18 @@
  * actually performed by whichever resampling effect is in effect.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include <math.h>
 #include <string.h>
 
 static int getopts(eff_t effp, int n, char * * argv)
 {
-  st_bool is_cents = st_false;
+  sox_bool is_cents = sox_false;
   double speed;
 
   /* Be quietly compatible with the old speed effect: */
   if (n != 0 && strcmp(*argv, "-c") == 0)
-    is_cents = st_true, ++argv, --n;
+    is_cents = sox_true, ++argv, --n;
 
   if (n == 1) {
     char c, dummy;
@@ -43,17 +43,17 @@ static int getopts(eff_t effp, int n, char * * argv)
       is_cents |= scanned == 2;
       if (is_cents || speed > 0) {
         effp->globalinfo->speed *= is_cents? pow(2, speed/1200) : speed;
-        return ST_SUCCESS;
+        return SOX_SUCCESS;
       }
     }
   }
-  st_fail(effp->h->usage);
-  return ST_EOF;
+  sox_fail(effp->h->usage);
+  return SOX_EOF;
 }
 
-st_effect_t const *st_speed_effect_fn(void)
+sox_effect_t const *sox_speed_effect_fn(void)
 {
-  static st_effect_t driver = {
-    "speed", "Usage: speed factor[c]", ST_EFF_NULL, getopts, 0, 0, 0, 0, 0};
+  static sox_effect_t driver = {
+    "speed", "Usage: speed factor[c]", SOX_EFF_NULL, getopts, 0, 0, 0, 0, 0};
   return &driver;
 }

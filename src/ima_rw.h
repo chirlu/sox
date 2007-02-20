@@ -19,7 +19,7 @@
  
 */
 
-#include "st.h"
+#include "sox.h"
 
 #ifndef SAMPL
 #define SAMPL short
@@ -67,19 +67,19 @@ extern void ImaBlockMashI(
  *  samplesPerBlock which would go into a block of size blockAlign
  *  Yes, it is confusing usage.
  */
-extern st_size_t ImaSamplesIn(
-	st_size_t dataLen,
+extern sox_size_t ImaSamplesIn(
+	sox_size_t dataLen,
 	unsigned short chans,
 	unsigned short blockAlign,
 	unsigned short samplesPerBlock
 );
 
 /*
- * st_size_t ImaBytesPerBlock(chans, samplesPerBlock)
+ * sox_size_t ImaBytesPerBlock(chans, samplesPerBlock)
  *   return minimum blocksize which would be required
  *   to encode number of chans with given samplesPerBlock
  */
-extern st_size_t ImaBytesPerBlock(
+extern sox_size_t ImaBytesPerBlock(
 	unsigned short chans,
 	unsigned short samplesPerBlock
 );

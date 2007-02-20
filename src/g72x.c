@@ -30,7 +30,7 @@
  * Common routines for G.721 and G.723 conversions.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include "g711.h"
 #include "g72x.h"
 
@@ -455,8 +455,8 @@ int tandem_adjust_alaw(int sr, int se, int y, int i, int sign, short *qtab)
 
         if (sr <= -32768)
                 sr = -1;
-        sp = st_13linear2alaw(((sr >> 1) << 3));/* short to A-law compression */
-        dx = (st_alaw2linear16(sp) >> 2) - se;  /* 16-bit prediction error */
+        sp = sox_13linear2alaw(((sr >> 1) << 3));/* short to A-law compression */
+        dx = (sox_alaw2linear16(sp) >> 2) - se;  /* 16-bit prediction error */
         id = quantize(dx, y, qtab, sign - 1);
 
         if (id == i) {                  /* no adjustment on sp */
@@ -497,8 +497,8 @@ int tandem_adjust_ulaw(int sr, int se, int y, int i, int sign, short *qtab)
 
         if (sr <= -32768)
                 sr = 0;
-        sp = st_14linear2ulaw((sr << 2));/* short to u-law compression */
-        dx = (st_ulaw2linear16(sp) >> 2) - se;  /* 16-bit prediction error */
+        sp = sox_14linear2ulaw((sr << 2));/* short to u-law compression */
+        dx = (sox_ulaw2linear16(sp) >> 2) - se;  /* 16-bit prediction error */
         id = quantize(dx, y, qtab, sign - 1);
         if (id == i) {
                 return (sp);

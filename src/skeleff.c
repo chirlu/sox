@@ -18,14 +18,14 @@
  * Foundation, Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301,
  * USA.  */
 
-#include "st_i.h"
+#include "sox_i.h"
 
 /* Private data for effect */
 typedef struct skeleff {
   int  localdata;
 } *skeleff_t;
 
-assert_static(sizeof(struct skeleff) <= ST_MAX_EFFECT_PRIVSIZE, 
+assert_static(sizeof(struct skeleff) <= SOX_MAX_EFFECT_PRIVSIZE, 
               /* else */ skeleff_PRIVSIZE_too_big);
 
 /*
@@ -39,11 +39,11 @@ static int getopts(eff_t effp, int n, char **argv)
   skeleff_t skeleff = (skeleff_t)effp->priv;
 
   if (n && n != 1) {
-    st_fail(effp->h->usage);
-    return ST_EOF;
+    sox_fail(effp->h->usage);
+    return SOX_EOF;
   }
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /*
@@ -53,22 +53,22 @@ static int getopts(eff_t effp, int n, char **argv)
 static int start(eff_t effp)
 {
   if (effp->outinfo.channels == 1) {
-    st_fail("Can't run skeleff on mono data.");
-    return ST_EOF;
+    sox_fail("Can't run skeleff on mono data.");
+    return SOX_EOF;
   }
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /*
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                           st_size_t *isamp, st_size_t *osamp)
+static int flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                           sox_size_t *isamp, sox_size_t *osamp)
 {
   skeleff_t skeleff = (skeleff_t)effp->priv;
-  st_size_t len, done;
+  sox_size_t len, done;
 
   switch (effp->outinfo.channels) {
   case 2:
@@ -91,20 +91,20 @@ static int flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     break;
   }
 
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /*
  * Drain out remaining samples if the effect generates any.
  */
-static int drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
   *osamp = 0;
-  /* Help out application and return ST_EOF when drain
+  /* Help out application and return SOX_EOF when drain
    * will not return any mre information.  *osamp == 0
    * also indicates that.
    */
-  return ST_EOF;
+  return SOX_EOF;
 }
 
 /*
@@ -112,7 +112,7 @@ static int drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
  */
 static int stop(eff_t effp)
 {
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /*
@@ -121,7 +121,7 @@ static int stop(eff_t effp)
  */
 static int delete(eff_t effp)
 {
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 
@@ -131,10 +131,10 @@ static int delete(eff_t effp)
  * the 6 functions, then the function can be deleted
  * and 0 used in place of the its name below.
  */
-static st_effect_t st_skel_effect = {
+static sox_effect_t sox_skel_effect = {
   "skel",
   "Usage: skel [option]",
-  ST_EFF_MCHAN,
+  SOX_EFF_MCHAN,
   getopts,
   start,
   flow,
@@ -147,7 +147,7 @@ static st_effect_t st_skel_effect = {
  * Function returning effect descriptor. This should be the only
  * externally visible object.
  */
-const st_effect_t *st_skel_effect_fn(void)
+const sox_effect_t *sox_skel_effect_fn(void)
 {
-  return &st_skel_effect;
+  return &sox_skel_effect;
 }

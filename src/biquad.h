@@ -19,7 +19,7 @@
 #ifndef biquad_included
 #define biquad_included
 
-#include "st_i.h"
+#include "sox_i.h"
 
 
 typedef enum {
@@ -66,22 +66,22 @@ typedef struct biquad
   double b2, b1, b0;       /* Filter coefficients */
   double a2, a1, a0;       /* Filter coefficients */
 
-  st_sample_t i1, i2;      /* Filter memory */
+  sox_sample_t i1, i2;      /* Filter memory */
   double      o1, o2;      /* Filter memory */
 } * biquad_t;
 
 
-assert_static(sizeof(struct biquad) <= ST_MAX_EFFECT_PRIVSIZE, 
+assert_static(sizeof(struct biquad) <= SOX_MAX_EFFECT_PRIVSIZE, 
     /* else */ biquad_PRIVSIZE_too_big);
 
-int st_biquad_getopts(eff_t effp, int n, char **argv,
+int sox_biquad_getopts(eff_t effp, int n, char **argv,
     int min_args, int max_args, int fc_pos, int width_pos, int gain_pos,
     char const * allowed_width_types, filter_t filter_type);
-int st_biquad_start(eff_t effp);
-int st_biquad_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                        st_size_t *isamp, st_size_t *osamp);
+int sox_biquad_start(eff_t effp);
+int sox_biquad_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                        sox_size_t *isamp, sox_size_t *osamp);
 
-#undef st_fail
-#define st_fail st_message_filename=effp->name,st_fail
+#undef sox_fail
+#define sox_fail sox_message_filename=effp->name,sox_fail
 
 #endif

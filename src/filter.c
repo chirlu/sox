@@ -25,18 +25,18 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "st_i.h"
+#include "sox_i.h"
 
-static st_effect_t st_filter_effect;
+static sox_effect_t sox_filter_effect;
 
 #define ISCALE 0x10000
 #define BUFFSIZE 8192
 
 /* Private data for Lerp via LCM file */
 typedef struct filterstuff {
-        st_rate_t rate;
-        st_sample_t freq0;/* low  corner freq */
-        st_sample_t freq1;/* high corner freq */
+        sox_rate_t rate;
+        sox_sample_t freq0;/* low  corner freq */
+        sox_sample_t freq1;/* high corner freq */
         double beta;/* >2 is kaiser window beta, <=2 selects nuttall window */
         long Nwin;
         double *Fp;/* [Xh+1] Filter coefficients */
@@ -54,7 +54,7 @@ static void FiltWin(filter_t f, long Nx);
 /*
  * Process options
  */
-static int st_filter_getopts(eff_t effp, int n, char **argv)
+static int sox_filter_getopts(eff_t effp, int n, char **argv)
 {
         filter_t f = (filter_t) effp->priv;
 
@@ -74,37 +74,37 @@ static int st_filter_getopts(eff_t effp, int n, char **argv)
                 }
                 if (*p) f->freq1 = f->freq0 = 0;
         }
-        st_debug("freq: %d-%d", f->freq0, f->freq1);
+        sox_debug("freq: %d-%d", f->freq0, f->freq1);
         if (f->freq0 == 0 && f->freq1 == 0)
         {
-                st_fail(st_filter_effect.usage);
-                return (ST_EOF);
+                sox_fail(sox_filter_effect.usage);
+                return (SOX_EOF);
         }
 
         if ((n >= 2) && !sscanf(argv[1], "%ld", &f->Nwin))
         {
-                st_fail(st_filter_effect.usage);
-                return (ST_EOF);
+                sox_fail(sox_filter_effect.usage);
+                return (SOX_EOF);
         }
         else if (f->Nwin < 4) {
-                st_fail("filter: window length (%ld) <4 is too short", f->Nwin);
-                return (ST_EOF);
+                sox_fail("filter: window length (%ld) <4 is too short", f->Nwin);
+                return (SOX_EOF);
         }
 
         if ((n >= 3) && !sscanf(argv[2], "%lf", &f->beta))
         {
-                st_fail(st_filter_effect.usage);
-                return (ST_EOF);
+                sox_fail(sox_filter_effect.usage);
+                return (SOX_EOF);
         }
 
-        st_debug("filter opts: %d-%d, window-len %d, beta %f", f->freq0, f->freq1, f->Nwin, f->beta);
-        return (ST_SUCCESS);
+        sox_debug("filter opts: %d-%d, window-len %d, beta %f", f->freq0, f->freq1, f->Nwin, f->beta);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Prepare processing.
  */
-static int st_filter_start(eff_t effp)
+static int sox_filter_start(eff_t effp)
 {
         filter_t f = (filter_t) effp->priv;
         double *Fp0, *Fp1;
@@ -114,36 +114,36 @@ static int st_filter_start(eff_t effp)
         f->rate = effp->ininfo.rate;
 
         /* adjust upper frequency to Nyquist if necessary */
-        if (f->freq1 > (st_sample_t)f->rate/2 || f->freq1 <= 0)
+        if (f->freq1 > (sox_sample_t)f->rate/2 || f->freq1 <= 0)
                 f->freq1 = f->rate/2;
 
         if ((f->freq0 < 0) || (f->freq0 > f->freq1))
         {
-                st_fail("filter: low(%d),high(%d) parameters must satisfy 0 <= low <= high <= %d",
+                sox_fail("filter: low(%d),high(%d) parameters must satisfy 0 <= low <= high <= %d",
                                         f->freq0, f->freq1, f->rate/2);
-                return (ST_EOF);
+                return (SOX_EOF);
         }
         
         Xh = f->Nwin/2;
         Fp0 = (double *) xmalloc(sizeof(double) * (Xh + 2)) + 1;
-        if (f->freq0 > (st_sample_t)f->rate/200) {
+        if (f->freq0 > (sox_sample_t)f->rate/200) {
                 Xh0 = makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, 1, 0);
                 if (Xh0 <= 1)
                 {
-                        st_fail("filter: Unable to make low filter");
-                        return (ST_EOF);
+                        sox_fail("filter: Unable to make low filter");
+                        return (SOX_EOF);
                 }
         } else {
                 Xh0 = 0;
         }
         Fp1 = (double *) xmalloc(sizeof(double) * (Xh + 2)) + 1;
         /* need Fp[-1] and Fp[Xh] for makeFilter */
-        if (f->freq1 < (st_sample_t)f->rate/2) {
+        if (f->freq1 < (sox_sample_t)f->rate/2) {
                 Xh1 = makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, 1, 0);
                 if (Xh1 <= 1)
                 {
-                        st_fail("filter: Unable to make high filter");
-                        return (ST_EOF);
+                        sox_fail("filter: Unable to make high filter");
+                        return (SOX_EOF);
                 }
         } else {
                 Fp1[0] = 1.0;
@@ -163,7 +163,7 @@ static int st_filter_start(eff_t effp)
 
         Xh -= 1;       /* Xh = 0 can only happen if filter was identity 0-Nyquist */
         if (Xh<=0)
-                st_warn("filter: adjusted freq %d-%d is identity", f->freq0, f->freq1);
+                sox_warn("filter: adjusted freq %d-%d is identity", f->freq0, f->freq1);
 
         f->Nwin = 2*Xh + 1;  /* not really used afterwards */
         f->Xh = Xh;
@@ -175,21 +175,21 @@ static int st_filter_start(eff_t effp)
         /* Need Xh zeros at beginning of X */
         for (i = 0; i < Xh; i++)
                 f->X[i] = 0;
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int st_filter_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                   st_size_t *isamp, st_size_t *osamp)
+static int sox_filter_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                   sox_size_t *isamp, sox_size_t *osamp)
 {
         filter_t f = (filter_t) effp->priv;
-        st_size_t i, Nx, Nproc;
+        sox_size_t i, Nx, Nproc;
 
         /* constrain amount we actually process */
-        /* st_debug("Xh %d, Xt %d, isamp %d, ",f->Xh, f->Xt, *isamp); */
+        /* sox_debug("Xh %d, Xt %d, isamp %d, ",f->Xh, f->Xt, *isamp); */
         Nx = BUFFSIZE + 2*f->Xh - f->Xt;
         if (Nx > *isamp) Nx = *isamp;
         if (Nx > *osamp) Nx = *osamp;
@@ -213,9 +213,9 @@ static int st_filter_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf
         if (Nproc <= 0) {
                 f->Xt += Nx;
                 *osamp = 0;
-                return (ST_SUCCESS);
+                return (SOX_SUCCESS);
         }
-        st_debug("flow Nproc %d",Nproc);
+        sox_debug("flow Nproc %d",Nproc);
         FiltWin(f, Nproc);
 
         /* Copy back portion of input signal that must be re-used */
@@ -228,56 +228,56 @@ static int st_filter_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf
                 *obuf++ = f->Y[i] * ISCALE;
 
         *osamp = Nproc;
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /*
  * Process tail of input samples.
  */
-static int st_filter_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int sox_filter_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
         filter_t f = (filter_t) effp->priv;
         long isamp_res, osamp_res;
-        st_sample_t *Obuf;
+        sox_sample_t *Obuf;
 
-        st_debug("Xh %d, Xt %d  <--- DRAIN",f->Xh, f->Xt);
+        sox_debug("Xh %d, Xt %d  <--- DRAIN",f->Xh, f->Xt);
 
         /* stuff end with Xh zeros */
         isamp_res = f->Xh;
         osamp_res = *osamp;
         Obuf = obuf;
         while (isamp_res>0 && osamp_res>0) {
-                st_sample_t Isamp, Osamp;
+                sox_sample_t Isamp, Osamp;
                 Isamp = isamp_res;
                 Osamp = osamp_res;
-                st_filter_flow(effp, NULL, Obuf, (st_size_t *)&Isamp, (st_size_t *)&Osamp);
-          /* st_debug("DRAIN isamp,osamp  (%d,%d) -> (%d,%d)",
+                sox_filter_flow(effp, NULL, Obuf, (sox_size_t *)&Isamp, (sox_size_t *)&Osamp);
+          /* sox_debug("DRAIN isamp,osamp  (%d,%d) -> (%d,%d)",
                  * isamp_res,osamp_res,Isamp,Osamp); */
                 Obuf += Osamp;
                 osamp_res -= Osamp;
                 isamp_res -= Isamp;
         };
         *osamp -= osamp_res;
-        /* st_debug("DRAIN osamp %d", *osamp); */
+        /* sox_debug("DRAIN osamp %d", *osamp); */
         if (isamp_res)
-                st_warn("drain overran obuf by %d", isamp_res);
+                sox_warn("drain overran obuf by %d", isamp_res);
         /* FIXME: This is very picky. osamp better be big enough to grab
          * all remaining samples or they will be discarded.
          */
-        return (ST_EOF);
+        return (SOX_EOF);
 }
 
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-static int st_filter_stop(eff_t effp)
+static int sox_filter_stop(eff_t effp)
 {
         filter_t f = (filter_t) effp->priv;
 
         free(f->Fp - 1);
         free(f->X);
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 static double jprod(const double *Fp, const double *Xp, long ct)
@@ -310,19 +310,19 @@ static void FiltWin(filter_t f, long Nx)
         }
 }
 
-static st_effect_t st_filter_effect = {
+static sox_effect_t sox_filter_effect = {
   "filter",
   "Usage: filter low-high [ windowlength [ beta ] ]",
   0,
-  st_filter_getopts,
-  st_filter_start,
-  st_filter_flow,
-  st_filter_drain,
-  st_filter_stop,
-  st_effect_nothing
+  sox_filter_getopts,
+  sox_filter_start,
+  sox_filter_flow,
+  sox_filter_drain,
+  sox_filter_stop,
+  sox_effect_nothing
 };
 
-const st_effect_t *st_filter_effect_fn(void)
+const sox_effect_t *sox_filter_effect_fn(void)
 {
-    return &st_filter_effect;
+    return &sox_filter_effect;
 }

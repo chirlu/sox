@@ -11,7 +11,7 @@
  * Sound Tools miscellaneous stuff.
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +29,7 @@
 #include <byteswap.h>
 #endif
 
-const char * const st_sizes_str[] = {
+const char * const sox_sizes_str[] = {
         "NONSENSE!",
         "1 byte",
         "2 bytes",
@@ -41,7 +41,7 @@ const char * const st_sizes_str[] = {
         "8 bytes"
 };
 
-const char * const st_size_bits_str[] = {
+const char * const sox_size_bits_str[] = {
         "NONSENSE!",
         "8-bit",
         "16-bit",
@@ -53,7 +53,7 @@ const char * const st_size_bits_str[] = {
         "64-bit"
 };
 
-const char * const st_encodings_str[] = {
+const char * const sox_encodings_str[] = {
         "NONSENSE!",
 
         "u-law",
@@ -63,7 +63,7 @@ const char * const st_encodings_str[] = {
         "IMA-ADPCM",
         "OKI-ADPCM",
 
-        "",   /* FIXME, see st.h */
+        "",   /* FIXME, see sox.h */
 
         "unsigned",
         "signed (2's complement)",
@@ -75,8 +75,8 @@ const char * const st_encodings_str[] = {
         "AMR-WB",
 };
 
-assert_static(array_length(st_encodings_str) == ST_ENCODINGS,
-    SIZE_MISMATCH_BETWEEN_st_encodings_t_AND_st_encodings_str);
+assert_static(array_length(sox_encodings_str) == SOX_ENCODINGS,
+    SIZE_MISMATCH_BETWEEN_sox_encodings_t_AND_sox_encodings_str);
 
 static const char readerr[] = "Premature EOF while reading sample file.";
 static const char writerr[] = "Error writing sample file.  You are probably out of disk space.";
@@ -112,88 +112,88 @@ static uint8_t const cswap[256] = {
 /* Read in a buffer of data of length len and each element is size bytes.
  * Returns number of elements read, not bytes read.
  */
-size_t st_readbuf(ft_t ft, void *buf, size_t size, st_size_t len)
+size_t sox_readbuf(ft_t ft, void *buf, size_t size, sox_size_t len)
 {
     return fread(buf, size, len, ft->fp);
 }
 
 /* Skip input without seeking. */
-int st_skipbytes(ft_t ft, st_size_t n)
+int sox_skipbytes(ft_t ft, sox_size_t n)
 {
   unsigned char trash;
 
   while (n--)
-    if (st_readb(ft, &trash) == ST_EOF)
-      return (ST_EOF);
+    if (sox_readb(ft, &trash) == SOX_EOF)
+      return (SOX_EOF);
   
-  return (ST_SUCCESS);
+  return (SOX_SUCCESS);
 }
 
 /* Pad output. */
-int st_padbytes(ft_t ft, st_size_t n)
+int sox_padbytes(ft_t ft, sox_size_t n)
 {
   while (n--)
-    if (st_writeb(ft, '\0') == ST_EOF)
-      return (ST_EOF);
+    if (sox_writeb(ft, '\0') == SOX_EOF)
+      return (SOX_EOF);
 
-  return (ST_SUCCESS);
+  return (SOX_SUCCESS);
 }
 
 /* Write a buffer of data of length len and each element is size bytes.
  * Returns number of elements writen, not bytes written.
  */
 
-size_t st_writebuf(ft_t ft, void const *buf, size_t size, st_size_t len)
+size_t sox_writebuf(ft_t ft, void const *buf, size_t size, sox_size_t len)
 {
     return fwrite(buf, size, len, ft->fp);
 }
 
-st_size_t st_filelength(ft_t ft)
+sox_size_t sox_filelength(ft_t ft)
 {
   struct stat st;
 
   fstat(fileno(ft->fp), &st);
 
-  return (st_size_t)st.st_size;
+  return (sox_size_t)st.st_size;
 }
 
-int st_flush(ft_t ft)
+int sox_flush(ft_t ft)
 {
   return fflush(ft->fp);
 }
 
-st_size_t st_tell(ft_t ft)
+sox_size_t sox_tell(ft_t ft)
 {
-  return (st_size_t)ftello(ft->fp);
+  return (sox_size_t)ftello(ft->fp);
 }
 
-int st_eof(ft_t ft)
+int sox_eof(ft_t ft)
 {
   return feof(ft->fp);
 }
 
-int st_error(ft_t ft)
+int sox_error(ft_t ft)
 {
   return ferror(ft->fp);
 }
 
-void st_rewind(ft_t ft)
+void sox_rewind(ft_t ft)
 {
   rewind(ft->fp);
 }
 
-void st_clearerr(ft_t ft)
+void sox_clearerr(ft_t ft)
 {
   clearerr(ft->fp);
 }
 
 /* Read and write known datatypes in "machine format".  Swap if indicated.
- * They all return ST_EOF on error and ST_SUCCESS on success.
+ * They all return SOX_EOF on error and SOX_SUCCESS on success.
  */
 /* Read n-char string (and possibly null-terminating).
  * Stop reading and null-terminate string if either a 0 or \n is reached.
  */
-int st_reads(ft_t ft, char *c, st_size_t len)
+int sox_reads(ft_t ft, char *c, sox_size_t len)
 {
     char *sc;
     char in;
@@ -201,11 +201,11 @@ int st_reads(ft_t ft, char *c, st_size_t len)
     sc = c;
     do
     {
-        if (st_readbuf(ft, &in, 1, 1) != 1)
+        if (sox_readbuf(ft, &in, 1, 1) != 1)
         {
             *sc = 0;
-                st_fail_errno(ft,errno,readerr);
-            return (ST_EOF);
+                sox_fail_errno(ft,errno,readerr);
+            return (SOX_EOF);
         }
         if (in == 0 || in == '\n')
             break;
@@ -214,178 +214,178 @@ int st_reads(ft_t ft, char *c, st_size_t len)
         sc++;
     } while (sc - c < (ptrdiff_t)len);
     *sc = 0;
-    return(ST_SUCCESS);
+    return(SOX_SUCCESS);
 }
 
 /* Write null-terminated string (without \0). */
-int st_writes(ft_t ft, char *c)
+int sox_writes(ft_t ft, char *c)
 {
-        if (st_writebuf(ft, c, 1, strlen(c)) != strlen(c))
+        if (sox_writebuf(ft, c, 1, strlen(c)) != strlen(c))
         {
-                st_fail_errno(ft,errno,writerr);
-                return(ST_EOF);
+                sox_fail_errno(ft,errno,writerr);
+                return(SOX_EOF);
         }
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /* Read byte. */
-int st_readb(ft_t ft, uint8_t *ub)
+int sox_readb(ft_t ft, uint8_t *ub)
 {
-  if (st_readbuf(ft, ub, 1, 1) != 1) {
-    st_fail_errno(ft,errno,readerr);
-    return ST_EOF;
+  if (sox_readbuf(ft, ub, 1, 1) != 1) {
+    sox_fail_errno(ft,errno,readerr);
+    return SOX_EOF;
   }
   if (ft->signal.reverse_bits)
     *ub = cswap[*ub];
   if (ft->signal.reverse_nibbles)
     *ub = ((*ub & 15) << 4) | (*ub >> 4);
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /* Write byte. */
-int st_writeb(ft_t ft, uint8_t ub)
+int sox_writeb(ft_t ft, uint8_t ub)
 {
   if (ft->signal.reverse_nibbles)
     ub = ((ub & 15) << 4) | (ub >> 4);
   if (ft->signal.reverse_bits)
     ub = cswap[ub];
-  if (st_writebuf(ft, &ub, 1, 1) != 1) {
-    st_fail_errno(ft,errno,writerr);
-    return ST_EOF;
+  if (sox_writebuf(ft, &ub, 1, 1) != 1) {
+    sox_fail_errno(ft,errno,writerr);
+    return SOX_EOF;
   }
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /* Read word. */
-int st_readw(ft_t ft, uint16_t *uw)
+int sox_readw(ft_t ft, uint16_t *uw)
 {
-        if (st_readbuf(ft, uw, 2, 1) != 1)
+        if (sox_readbuf(ft, uw, 2, 1) != 1)
         {
-            st_fail_errno(ft,errno,readerr);
-            return (ST_EOF);
+            sox_fail_errno(ft,errno,readerr);
+            return (SOX_EOF);
         }
         if (ft->signal.reverse_bytes)
-                *uw = st_swapw(*uw);
-        return ST_SUCCESS;
+                *uw = sox_swapw(*uw);
+        return SOX_SUCCESS;
 }
 
 /* Write word. */
-int st_writew(ft_t ft, uint16_t uw)
+int sox_writew(ft_t ft, uint16_t uw)
 {
         if (ft->signal.reverse_bytes)
-                uw = st_swapw(uw);
-        if (st_writebuf(ft, &uw, 2, 1) != 1)
+                uw = sox_swapw(uw);
+        if (sox_writebuf(ft, &uw, 2, 1) != 1)
         {
-                st_fail_errno(ft,errno,writerr);
-                return (ST_EOF);
+                sox_fail_errno(ft,errno,writerr);
+                return (SOX_EOF);
         }
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /* Read three bytes. */
-int st_read3(ft_t ft, uint24_t *u3)
+int sox_read3(ft_t ft, uint24_t *u3)
 {
-        if (st_readbuf(ft, u3, 3, 1) != 1)
+        if (sox_readbuf(ft, u3, 3, 1) != 1)
         {
-            st_fail_errno(ft,errno,readerr);
-            return (ST_EOF);
+            sox_fail_errno(ft,errno,readerr);
+            return (SOX_EOF);
         }
         if (ft->signal.reverse_bytes)
-                *u3 = st_swap24(*u3);
-        return ST_SUCCESS;
+                *u3 = sox_swap24(*u3);
+        return SOX_SUCCESS;
 }
 
 /* Write three bytes. */
-int st_write3(ft_t ft, uint24_t u3)
+int sox_write3(ft_t ft, uint24_t u3)
 {
         if (ft->signal.reverse_bytes)
-                u3 = st_swap24(u3);
-        if (st_writebuf(ft, &u3, 3, 1) != 1)
+                u3 = sox_swap24(u3);
+        if (sox_writebuf(ft, &u3, 3, 1) != 1)
         {
-                st_fail_errno(ft,errno,writerr);
-                return (ST_EOF);
+                sox_fail_errno(ft,errno,writerr);
+                return (SOX_EOF);
         }
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /* Read double word. */
-int st_readdw(ft_t ft, uint32_t *udw)
+int sox_readdw(ft_t ft, uint32_t *udw)
 {
-        if (st_readbuf(ft, udw, 4, 1) != 1)
+        if (sox_readbuf(ft, udw, 4, 1) != 1)
         {
-            st_fail_errno(ft,errno,readerr);
-            return (ST_EOF);
+            sox_fail_errno(ft,errno,readerr);
+            return (SOX_EOF);
         }
         if (ft->signal.reverse_bytes)
-                *udw = st_swapdw(*udw);
-        return ST_SUCCESS;
+                *udw = sox_swapdw(*udw);
+        return SOX_SUCCESS;
 }
 
 /* Write double word. */
-int st_writedw(ft_t ft, uint32_t udw)
+int sox_writedw(ft_t ft, uint32_t udw)
 {
         if (ft->signal.reverse_bytes)
-                udw = st_swapdw(udw);
-        if (st_writebuf(ft, &udw, 4, 1) != 1)
+                udw = sox_swapdw(udw);
+        if (sox_writebuf(ft, &udw, 4, 1) != 1)
         {
-                st_fail_errno(ft,errno,writerr);
-                return (ST_EOF);
+                sox_fail_errno(ft,errno,writerr);
+                return (SOX_EOF);
         }
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
 }
 
 /* Read float. */
-int st_readf(ft_t ft, float *f)
+int sox_readf(ft_t ft, float *f)
 {
-        if (st_readbuf(ft, f, sizeof(float), 1) != 1)
+        if (sox_readbuf(ft, f, sizeof(float), 1) != 1)
         {
-            st_fail_errno(ft,errno,readerr);
-            return(ST_EOF);
+            sox_fail_errno(ft,errno,readerr);
+            return(SOX_EOF);
         }
         if (ft->signal.reverse_bytes)
-                *f = st_swapf(*f);
-        return ST_SUCCESS;
+                *f = sox_swapf(*f);
+        return SOX_SUCCESS;
 }
 
 /* Write float. */
-int st_writef(ft_t ft, float f)
+int sox_writef(ft_t ft, float f)
 {
         float t = f;
 
         if (ft->signal.reverse_bytes)
-                t = st_swapf(t);
-        if (st_writebuf(ft, &t, sizeof(float), 1) != 1)
+                t = sox_swapf(t);
+        if (sox_writebuf(ft, &t, sizeof(float), 1) != 1)
         {
-                st_fail_errno(ft,errno,writerr);
-                return (ST_EOF);
+                sox_fail_errno(ft,errno,writerr);
+                return (SOX_EOF);
         }
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 /* Read double. */
-int st_readdf(ft_t ft, double *d)
+int sox_readdf(ft_t ft, double *d)
 {
-        if (st_readbuf(ft, d, sizeof(double), 1) != 1)
+        if (sox_readbuf(ft, d, sizeof(double), 1) != 1)
         {
-            st_fail_errno(ft,errno,readerr);
-            return(ST_EOF);
+            sox_fail_errno(ft,errno,readerr);
+            return(SOX_EOF);
         }
         if (ft->signal.reverse_bytes)
-                *d = st_swapd(*d);
-        return ST_SUCCESS;
+                *d = sox_swapd(*d);
+        return SOX_SUCCESS;
 }
 
 /* Write double. */
-int st_writedf(ft_t ft, double d)
+int sox_writedf(ft_t ft, double d)
 {
         if (ft->signal.reverse_bytes)
-                d = st_swapd(d);
-        if (st_writebuf(ft, &d, sizeof(double), 1) != 1)
+                d = sox_swapd(d);
+        if (sox_writebuf(ft, &d, sizeof(double), 1) != 1)
         {
-                st_fail_errno(ft,errno,writerr);
-                return (ST_EOF);
+                sox_fail_errno(ft,errno,writerr);
+                return (SOX_EOF);
         }
-        return (ST_SUCCESS);
+        return (SOX_SUCCESS);
 }
 
 
@@ -433,7 +433,7 @@ void put16_be(unsigned char **p, short val)
 }
 
 /* generic swap routine. Swap l and place in to f (datatype length = n) */
-static void st_swapb(char *l, char *f, int n)
+static void sox_swapb(char *l, char *f, int n)
 {
     register int i;
 
@@ -442,7 +442,7 @@ static void st_swapb(char *l, char *f, int n)
 }
 
 /* return swapped 32-bit float */
-float st_swapf(float f)
+float sox_swapf(float f)
 {
     union {
         uint32_t dw;
@@ -454,69 +454,69 @@ float st_swapf(float f)
     return u.f;
 }
 
-uint32_t st_swap24(uint24_t udw)
+uint32_t sox_swap24(uint24_t udw)
 {
     return ((udw >> 16) & 0xff) | (udw & 0xff00) | ((udw << 16) & 0xff0000);
 }
 
-double st_swapd(double df)
+double sox_swapd(double df)
 {
     double sdf;
-    st_swapb((char *)&df, (char *)&sdf, sizeof(double));
+    sox_swapb((char *)&df, (char *)&sdf, sizeof(double));
     return (sdf);
 }
 
 
 /* dummy format routines for do-nothing functions */
-int st_format_nothing(ft_t ft UNUSED) { return(ST_SUCCESS); }
-st_size_t st_format_nothing_read_io(ft_t ft UNUSED, st_sample_t *buf UNUSED, st_size_t len UNUSED) { return(0); }
-st_size_t st_format_nothing_write_io(ft_t ft UNUSED, const st_sample_t *buf UNUSED, st_size_t len UNUSED) { return(0); }
-int st_format_nothing_seek(ft_t ft UNUSED, st_size_t offset UNUSED) { st_fail_errno(ft, ST_ENOTSUP, "operation not supported"); return(ST_EOF); }
+int sox_format_nothing(ft_t ft UNUSED) { return(SOX_SUCCESS); }
+sox_size_t sox_format_nothing_read_io(ft_t ft UNUSED, sox_sample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
+sox_size_t sox_format_nothing_write_io(ft_t ft UNUSED, const sox_sample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
+int sox_format_nothing_seek(ft_t ft UNUSED, sox_size_t offset UNUSED) { sox_fail_errno(ft, SOX_ENOTSUP, "operation not supported"); return(SOX_EOF); }
 
 /* dummy effect routine for do-nothing functions */
-int st_effect_nothing(eff_t effp UNUSED)
+int sox_effect_nothing(eff_t effp UNUSED)
 {
-  return ST_SUCCESS;
+  return SOX_SUCCESS;
 }
 
-int st_effect_nothing_flow(eff_t effp UNUSED, const st_sample_t *ibuf UNUSED, st_sample_t *obuf UNUSED, st_size_t *isamp, st_size_t *osamp)
+int sox_effect_nothing_flow(eff_t effp UNUSED, const sox_sample_t *ibuf UNUSED, sox_sample_t *obuf UNUSED, sox_size_t *isamp, sox_size_t *osamp)
 {
   /* Pass through samples verbatim */
   *isamp = *osamp = min(*isamp, *osamp);
-  memcpy(obuf, ibuf, *isamp * sizeof(st_sample_t));
-  return ST_SUCCESS;
+  memcpy(obuf, ibuf, *isamp * sizeof(sox_sample_t));
+  return SOX_SUCCESS;
 }
 
-int st_effect_nothing_drain(eff_t effp UNUSED, st_sample_t *obuf UNUSED, st_size_t *osamp)
+int sox_effect_nothing_drain(eff_t effp UNUSED, sox_sample_t *obuf UNUSED, sox_size_t *osamp)
 {
   /* Inform no more samples to drain */
   *osamp = 0;
-  return ST_EOF;
+  return SOX_EOF;
 }
 
-int st_effect_nothing_getopts(eff_t effp, int n, char **argv UNUSED)
+int sox_effect_nothing_getopts(eff_t effp, int n, char **argv UNUSED)
 {
   if (n) {
-    st_fail(effp->h->usage);
-    return (ST_EOF);
+    sox_fail(effp->h->usage);
+    return (SOX_EOF);
   }
-  return (ST_SUCCESS);
+  return (SOX_SUCCESS);
 }
 
 
 /* here for linear interp.  might be useful for other things */
-st_sample_t st_gcd(st_sample_t a, st_sample_t b)
+sox_sample_t sox_gcd(sox_sample_t a, sox_sample_t b)
 {
   if (b == 0)
     return a;
   else
-    return st_gcd(b, a % b);
+    return sox_gcd(b, a % b);
 }
 
-st_sample_t st_lcm(st_sample_t a, st_sample_t b)
+sox_sample_t sox_lcm(sox_sample_t a, sox_sample_t b)
 {
-  /* parenthesize this way to avoid st_sample_t overflow in product term */
-  return a * (b / st_gcd(a, b));
+  /* parenthesize this way to avoid sox_sample_t overflow in product term */
+  return a * (b / sox_gcd(a, b));
 }
 
 #ifndef HAVE_STRCASECMP
@@ -550,9 +550,9 @@ char *strdup(const char *s)
 
 
 
-void st_generate_wave_table(
-    st_wave_t wave_type,
-    st_data_t data_type,
+void sox_generate_wave_table(
+    sox_wave_t wave_type,
+    sox_data_t data_type,
     void *table,
     uint32_t table_size,
     double min,
@@ -568,11 +568,11 @@ void st_generate_wave_table(
     double d;
     switch (wave_type)
     {
-      case ST_WAVE_SINE:
+      case SOX_WAVE_SINE:
       d = (sin((double)point / table_size * 2 * M_PI) + 1) / 2;
       break;
 
-      case ST_WAVE_TRIANGLE:
+      case SOX_WAVE_TRIANGLE:
       d = (double)point * 2 / table_size;
       switch (4 * point / table_size)
       {
@@ -589,14 +589,14 @@ void st_generate_wave_table(
     d  = d * (max - min) + min;
     switch (data_type)
     {
-      case ST_FLOAT:
+      case SOX_FLOAT:
         {
           float *fp = (float *)table;
           *fp++ = (float)d;
           table = fp;
           continue;
         }
-      case ST_DOUBLE:
+      case SOX_DOUBLE:
         {
           double *dp = (double *)table;
           *dp++ = d;
@@ -608,14 +608,14 @@ void st_generate_wave_table(
     d += d < 0? -0.5 : +0.5;
     switch (data_type)
     {
-      case ST_SHORT:
+      case SOX_SHORT:
         {
           short *sp = table;
           *sp++ = (short)d;
           table = sp;
           continue;
         }
-      case ST_INT:
+      case SOX_INT:
         {
           int *ip = table;
           *ip++ = (int)d;
@@ -629,14 +629,14 @@ void st_generate_wave_table(
 
 
 
-const char *st_version(void)
+const char *sox_version(void)
 {
     static char versionstr[20];
 
     sprintf(versionstr, "%d.%d.%d",
-            (ST_LIB_VERSION_CODE & 0xff0000) >> 16,
-            (ST_LIB_VERSION_CODE & 0x00ff00) >> 8,
-            (ST_LIB_VERSION_CODE & 0x0000ff));
+            (SOX_LIB_VERSION_CODE & 0xff0000) >> 16,
+            (SOX_LIB_VERSION_CODE & 0x00ff00) >> 8,
+            (SOX_LIB_VERSION_CODE & 0x0000ff));
     return(versionstr);
 }
 
@@ -646,7 +646,7 @@ const char *st_version(void)
  *
  * N.B. Can only seek forwards!
  */
-int st_seeki(ft_t ft, st_size_t offset, int whence)
+int sox_seeki(ft_t ft, sox_size_t offset, int whence)
 {
     if (ft->seekable == 0) {
         /* If a stream peel off chars else EPERM */
@@ -656,23 +656,23 @@ int st_seeki(ft_t ft, st_size_t offset, int whence)
                 offset--;
             }
             if (offset)
-                st_fail_errno(ft,ST_EOF, "offset past EOF");
+                sox_fail_errno(ft,SOX_EOF, "offset past EOF");
             else
-                ft->st_errno = ST_SUCCESS;
+                ft->sox_errno = SOX_SUCCESS;
         } else
-            st_fail_errno(ft,ST_EPERM, "file not seekable");
+            sox_fail_errno(ft,SOX_EPERM, "file not seekable");
     } else {
         if (fseeko(ft->fp, offset, whence) == -1)
-            st_fail_errno(ft,errno,strerror(errno));
+            sox_fail_errno(ft,errno,strerror(errno));
         else
-            ft->st_errno = ST_SUCCESS;
+            ft->sox_errno = SOX_SUCCESS;
     }
 
     /* Empty the st file buffer */
-    if (ft->st_errno == ST_SUCCESS)
+    if (ft->sox_errno == SOX_SUCCESS)
         ft->eof = 0;
 
-    return ft->st_errno;
+    return ft->sox_errno;
 }
 
 enum_item const * find_enum_text(char const * text, enum_item const * enum_items)
@@ -692,8 +692,8 @@ enum_item const * find_enum_text(char const * text, enum_item const * enum_items
   return result;
 }
 
-enum_item const st_wave_enum[] = {
-  ENUM_ITEM(ST_WAVE_,SINE)
-  ENUM_ITEM(ST_WAVE_,TRIANGLE)
+enum_item const sox_wave_enum[] = {
+  ENUM_ITEM(SOX_WAVE_,SINE)
+  ENUM_ITEM(SOX_WAVE_,TRIANGLE)
   {0, 0}};
 

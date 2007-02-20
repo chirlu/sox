@@ -65,7 +65,7 @@
 
 
 static int hilo1_getopts(eff_t effp, int n, char **argv) {
-  return st_biquad_getopts(effp, n, argv, 1, 1, 0, 1, 2, "",
+  return sox_biquad_getopts(effp, n, argv, 1, 1, 0, 1, 2, "",
       *effp->name == 'l'? filter_LPF_1 : filter_HPF_1);
 }
 
@@ -77,7 +77,7 @@ static int hilo2_getopts(eff_t effp, int n, char **argv) {
   if (n != 0 && strcmp(argv[0], "-2") == 0)
     ++argv, --n;
   p->width = sqrt(0.5); /* Default to Butterworth */
-  return st_biquad_getopts(effp, n, argv, 1, 2, 0, 1, 2, "qoh",
+  return sox_biquad_getopts(effp, n, argv, 1, 2, 0, 1, 2, "qoh",
       *effp->name == 'l'? filter_LPF : filter_HPF);
 }
 
@@ -86,12 +86,12 @@ static int bandpass_getopts(eff_t effp, int n, char **argv) {
   filter_t type = filter_BPF;
   if (n != 0 && strcmp(argv[0], "-c") == 0)
     ++argv, --n, type = filter_BPF_CSG;
-  return st_biquad_getopts(effp, n, argv, 2, 2, 0, 1, 2, "hqob", type);
+  return sox_biquad_getopts(effp, n, argv, 2, 2, 0, 1, 2, "hqob", type);
 }
 
 
 static int bandrej_getopts(eff_t effp, int n, char **argv) {
-  return st_biquad_getopts(effp, n, argv, 2, 2, 0, 1, 2, "hqob", filter_notch);
+  return sox_biquad_getopts(effp, n, argv, 2, 2, 0, 1, 2, "hqob", filter_notch);
 }
 
 
@@ -103,7 +103,7 @@ static int allpass_getopts(eff_t effp, int n, char **argv) {
   else if (n != 0 && strcmp(argv[0], "-2") == 0)
     ++argv, --n, type = filter_AP2;
   m = 1 + (type == filter_APF);
-  return st_biquad_getopts(effp, n, argv, m, m, 0, 1, 2, "hqo", type);
+  return sox_biquad_getopts(effp, n, argv, m, m, 0, 1, 2, "hqo", type);
 }
 
 
@@ -111,13 +111,13 @@ static int tone_getopts(eff_t effp, int n, char **argv) {
   biquad_t p = (biquad_t) effp->priv;
   p->width = 0.5;
   p->fc = *effp->name == 'b'? 100 : 3000;
-  return st_biquad_getopts(effp, n, argv, 1, 3, 1, 2, 0, "shqo",
+  return sox_biquad_getopts(effp, n, argv, 1, 3, 1, 2, 0, "shqo",
       *effp->name == 'b'?  filter_lowShelf: filter_highShelf);
 }
 
 
 static int equalizer_getopts(eff_t effp, int n, char **argv) {
-  return st_biquad_getopts(effp, n, argv, 3, 3, 0, 1, 2, "qoh", filter_peakingEQ);
+  return sox_biquad_getopts(effp, n, argv, 3, 3, 0, 1, 2, "qoh", filter_peakingEQ);
 }
 
 
@@ -125,12 +125,12 @@ static int band_getopts(eff_t effp, int n, char **argv) {
   filter_t type = filter_BPF_SPK;
   if (n != 0 && strcmp(argv[0], "-n") == 0)
     ++argv, --n, type = filter_BPF_SPK_N;
-  return st_biquad_getopts(effp, n, argv, 1, 2, 0, 1, 2, "hqo", type);
+  return sox_biquad_getopts(effp, n, argv, 1, 2, 0, 1, 2, "hqo", type);
 }
 
 
 static int deemph_getopts(eff_t effp, int n, char **argv) {
-  return st_biquad_getopts(effp, n, argv, 0, 0, 0, 1, 2, "", filter_deemph);
+  return sox_biquad_getopts(effp, n, argv, 0, 0, 0, 1, 2, "", filter_deemph);
 }
 
 
@@ -142,8 +142,8 @@ static int start(eff_t effp)
   double alpha = 0;
 
   if (w0 > M_PI) {
-    st_fail("frequency must be less than half the sample-rate (Nyquist rate)");
-    return ST_EOF;
+    sox_fail("frequency must be less than half the sample-rate (Nyquist rate)");
+    return SOX_EOF;
   }
   
   /* Set defaults: */
@@ -228,7 +228,7 @@ static int start(eff_t effp)
 
     case filter_peakingEQ: /* H(s) = (s^2 + s*(A/Q) + 1) / (s^2 + s/(A*Q) + 1) */
       if (A == 1)
-        return ST_EFF_NULL;
+        return SOX_EFF_NULL;
       p->b0 =   1 + alpha*A;
       p->b1 =  -2*cos(w0);
       p->b2 =   1 - alpha*A;
@@ -239,7 +239,7 @@ static int start(eff_t effp)
 
     case filter_lowShelf: /* H(s) = A * (s^2 + (sqrt(A)/Q)*s + A)/(A*s^2 + (sqrt(A)/Q)*s + 1) */
       if (A == 1)
-        return ST_EFF_NULL;
+        return SOX_EFF_NULL;
       p->b0 =    A*( (A+1) - (A-1)*cos(w0) + 2*sqrt(A)*alpha );
       p->b1 =  2*A*( (A-1) - (A+1)*cos(w0)                   );
       p->b2 =    A*( (A+1) - (A-1)*cos(w0) - 2*sqrt(A)*alpha );
@@ -250,7 +250,7 @@ static int start(eff_t effp)
 
     case filter_highShelf: /* H(s) = A * (A*s^2 + (sqrt(A)/Q)*s + 1)/(s^2 + (sqrt(A)/Q)*s + A) */
       if (!A)
-        return ST_EFF_NULL;
+        return SOX_EFF_NULL;
       p->b0 =    A*( (A+1) + (A-1)*cos(w0) + 2*sqrt(A)*alpha );
       p->b1 = -2*A*( (A-1) + (A+1)*cos(w0)                   );
       p->b2 =    A*( (A+1) + (A-1)*cos(w0) - 2*sqrt(A)*alpha );
@@ -301,21 +301,21 @@ static int start(eff_t effp)
       break;
     }
   }
-  return st_biquad_start(effp);
+  return sox_biquad_start(effp);
 }
 
 
 #define BIQUAD_EFFECT(name,group,usage,flags) \
-st_effect_t const * st_##name##_effect_fn(void) { \
-  static st_effect_t driver = { \
+sox_effect_t const * sox_##name##_effect_fn(void) { \
+  static sox_effect_t driver = { \
     #name, "Usage: " #name " " usage, flags, \
-    group##_getopts, start, st_biquad_flow, 0, 0, 0, \
+    group##_getopts, start, sox_biquad_flow, 0, 0, 0, \
   }; \
   return &driver; \
 }
 
-BIQUAD_EFFECT(highp,     hilo1,    "cutoff-frequency", ST_EFF_DEPRECATED)
-BIQUAD_EFFECT(lowp,      hilo1,    "cutoff-frequency", ST_EFF_DEPRECATED)
+BIQUAD_EFFECT(highp,     hilo1,    "cutoff-frequency", SOX_EFF_DEPRECATED)
+BIQUAD_EFFECT(lowp,      hilo1,    "cutoff-frequency", SOX_EFF_DEPRECATED)
 BIQUAD_EFFECT(highpass,  hilo2,    "[-1|-2] frequency [width[q|o|h]]", 0)
 BIQUAD_EFFECT(lowpass,   hilo2,    "[-1|-2] frequency [width[q|o|h]]", 0)
 BIQUAD_EFFECT(bandpass,  bandpass, "[-c] frequency width[h|q|o]", 0)

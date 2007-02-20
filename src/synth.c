@@ -16,7 +16,7 @@
 #include <ctype.h>
 #include "synth.h"
 
-static st_effect_t st_synth_effect;
+static sox_effect_t sox_synth_effect;
 
 #define PCOUNT 5
 
@@ -168,10 +168,10 @@ typedef struct synthstuff {
     double par[MAXCHAN][5];
 
     /* internal stuff */
-    st_sample_t max;
-    st_size_t samples_done;
+    sox_sample_t max;
+    sox_size_t samples_done;
     int rate;
-    st_size_t length; /* length in number of samples */
+    sox_size_t length; /* length in number of samples */
     double h[MAXCHAN]; /* store values necessary for  creation */
     PinkNoise pinkn[MAXCHAN];
 } *synth_t;
@@ -237,7 +237,7 @@ static void parmcopy(synth_t sy, int s, int d){
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-int st_synth_getopts(eff_t effp, int n, char **argv) 
+int sox_synth_getopts(eff_t effp, int n, char **argv) 
 {
     int argn;
     char *hlp;
@@ -264,12 +264,12 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
 
     argn=0;
     if ( n<0){
-        st_fail(st_synth_effect.usage);
-        return(ST_EOF);
+        sox_fail(sox_synth_effect.usage);
+        return(SOX_EOF);
     }
     if(n==0){
         /* no arg, use default*/
-        return(ST_SUCCESS);
+        return(SOX_SUCCESS);
     }
     
 
@@ -278,10 +278,10 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
         synth->length_str = (char *)xmalloc(strlen(argv[argn])+1);
         strcpy(synth->length_str,argv[argn]);
         /* Do a dummy parse of to see if it will fail */
-        if (st_parsesamples(0, synth->length_str, &synth->length, 't') == NULL)
+        if (sox_parsesamples(0, synth->length_str, &synth->length, 't') == NULL)
         {
-            st_fail(st_synth_effect.usage);
-            return (ST_EOF);
+            sox_fail(sox_synth_effect.usage);
+            return (SOX_EOF);
         }
         argn++;
     }
@@ -290,8 +290,8 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
     for (c = 0; c < MAXCHAN && n > argn; c++) {
       enum_item const * p = find_enum_text(argv[argn], synth_type);
       if (p == NULL) {
-        st_fail("no type given");
-        return ST_EOF;
+        sox_fail("no type given");
+        return SOX_EOF;
       }
       synth->type[c] = p->value;
       if (++argn == n) break;
@@ -307,19 +307,19 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
       if (isdigit((int)argv[argn][0]) || argv[argn][0] == '%') {
         synth->freq2[c] = synth->freq[c] = StringToFreq(argv[argn], &hlp);
         if (synth->freq[c] < 0) {
-          st_fail("invalid freq");
-          return ST_EOF;
+          sox_fail("invalid freq");
+          return SOX_EOF;
         }
         if (*hlp == '-') { /* freq2 given? */
           char * hlp2;
           synth->freq2[c] = StringToFreq(hlp + 1, &hlp2);
           if (synth->freq2[c] < 0) {
-            st_fail("invalid freq2");
-            return ST_EOF;
+            sox_fail("invalid freq2");
+            return SOX_EOF;
           }
           if (synth->length_str == NULL) {
-            st_fail("length must be given when using freq2");
-            return ST_EOF;
+            sox_fail("length must be given when using freq2");
+            return SOX_EOF;
           }
         }
         if (++argn == n) break;
@@ -328,13 +328,13 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
       /* read rest of parameters */
       for (i = 0; argn < n && isdigit((int)argv[argn][0]); ++i, ++argn) {
         if (i == PCOUNT) {
-          st_fail("too many parameters");
-          return ST_EOF;
+          sox_fail("too many parameters");
+          return SOX_EOF;
         }
         synth->par[c][i] = strtod(argv[argn], &hlp);
         if (hlp == argv[argn]) {
-          st_fail("parameter error");
-          return ST_EOF;
+          sox_fail("parameter error");
+          return SOX_EOF;
         }
       }
       if (argn == n) break;
@@ -357,7 +357,7 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
         parmcopy(synth,1,3);
     }
 
-    return (ST_SUCCESS);
+    return (SOX_SUCCESS);
 }
 
 
@@ -365,22 +365,22 @@ int st_synth_getopts(eff_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-int st_synth_start(eff_t effp)
+int sox_synth_start(eff_t effp)
 {
     int i;
     int c;
     synth_t synth = (synth_t) effp->priv;
     int shift_for_max = (4 - min(effp->outinfo.size, 4)) << 3;
 
-    synth->max = (ST_SAMPLE_MAX >> shift_for_max) << shift_for_max;
+    synth->max = (SOX_SAMPLE_MAX >> shift_for_max) << shift_for_max;
 
     if (synth->length_str)
     {
-        if (st_parsesamples(effp->ininfo.rate, synth->length_str,
+        if (sox_parsesamples(effp->ininfo.rate, synth->length_str,
                             &synth->length, 't') == NULL)
         {
-            st_fail(st_synth_effect.usage);
-            return(ST_EOF);
+            sox_fail(sox_synth_effect.usage);
+            return(SOX_EOF);
         }
     }
 
@@ -464,21 +464,21 @@ int st_synth_start(eff_t effp)
                 break;
         }
 
-        st_debug("type=%i, mix=%i, length=%u, f1=%g, f2=%g",
+        sox_debug("type=%i, mix=%i, length=%u, f1=%g, f2=%g",
                 synth->type[c], synth->mix[c], 
                 synth->length, synth->freq[c], synth->freq2[c]);
-        st_debug("p0=%g, p1=%g, p2=%g, p3=%g, p4=%g",
+        sox_debug("p0=%g, p1=%g, p2=%g, p3=%g, p4=%g",
                 synth->par[c][0], synth->par[c][1],
                 synth->par[c][2], synth->par[c][3], synth->par[c][4]);
     }
-    st_debug("inchan=%i, rate=%i", (int)effp->ininfo.channels,synth->rate);
-    return (ST_SUCCESS);
+    sox_debug("inchan=%i, rate=%i", (int)effp->ininfo.channels,synth->rate);
+    return (SOX_SUCCESS);
 }
 
 
 
-static st_sample_t do_synth(st_sample_t iv, synth_t synth, int c){
-    st_sample_t ov=iv;
+static sox_sample_t do_synth(sox_sample_t iv, synth_t synth, int c){
+    sox_sample_t ov=iv;
     double r=0.0; /* -1 .. +1 */
     double f;
     double om;
@@ -617,7 +617,7 @@ static st_sample_t do_synth(st_sample_t iv, synth_t synth, int c){
             r=synth->h[c];
             break;
         default:
-            st_warn("synth: internal error 1");
+            sox_warn("synth: internal error 1");
             break;
     }
 
@@ -637,13 +637,13 @@ static st_sample_t do_synth(st_sample_t iv, synth_t synth, int c){
             ov = iv/2 + r*synth->max/2;
             break;
         case SYNTH_AMOD:
-            ov = (st_sample_t)(0.5*(r+1.0)*(double)iv);
+            ov = (sox_sample_t)(0.5*(r+1.0)*(double)iv);
             break;
         case SYNTH_FMOD:
             ov = iv * r ;
             break;
         default:
-            st_fail("synth: internal error 2");
+            sox_fail("synth: internal error 2");
             break;
     }
 
@@ -655,24 +655,24 @@ static st_sample_t do_synth(st_sample_t iv, synth_t synth, int c){
 /*
  * Processed signed long samples from ibuf to obuf.
  */
-int st_synth_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                  st_size_t *isamp, st_size_t *osamp)
+int sox_synth_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                  sox_size_t *isamp, sox_size_t *osamp)
 {
     synth_t synth = (synth_t) effp->priv;
     int len; /* number of input samples */
     int done = 0;
     int c;
     int chan=effp->ininfo.channels;
-    int result = ST_SUCCESS;
+    int result = SOX_SUCCESS;
 
     if(chan > MAXCHAN ){
-        st_fail("synth: can not operate with more than %d channels",MAXCHAN);
-        return(ST_EOF);
+        sox_fail("synth: can not operate with more than %d channels",MAXCHAN);
+        return(SOX_EOF);
     }
 
     len = ((*isamp > *osamp) ? *osamp : *isamp) / chan;
 
-    while (done < len && result == ST_SUCCESS)
+    while (done < len && result == SOX_SUCCESS)
     {
         for(c=0;c<chan;c++){
             /* each channel is independent, but the algorithm is the same */
@@ -685,28 +685,28 @@ int st_synth_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         synth->samples_done++;
         if (synth->length > 0 && synth->samples_done == synth->length)
         {
-            result = ST_EOF;
+            result = SOX_EOF;
         }
     }
     *isamp = *osamp = done * chan;
     return result;
 }
 
-static st_effect_t st_synth_effect = {
+static sox_effect_t sox_synth_effect = {
   "synth",
   "Usage: synth [len] {[type] [combine] [freq[-freq2]] [off] [ph] [p1] [p2] [p3]}",
-  ST_EFF_MCHAN,
-  st_synth_getopts,
-  st_synth_start,
-  st_synth_flow,
-  st_effect_nothing_drain,
-  st_effect_nothing,
-  st_effect_nothing
+  SOX_EFF_MCHAN,
+  sox_synth_getopts,
+  sox_synth_start,
+  sox_synth_flow,
+  sox_effect_nothing_drain,
+  sox_effect_nothing,
+  sox_effect_nothing
 };
 
-const st_effect_t *st_synth_effect_fn(void)
+const sox_effect_t *sox_synth_effect_fn(void)
 {
-    return &st_synth_effect;
+    return &sox_synth_effect;
 }
 /*-------------------------------------------------------------- end of file */
 

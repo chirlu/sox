@@ -35,14 +35,14 @@
  * Some speed-optimization could be added at code size expanse/expense?
  */
 
-#include "st_i.h"
+#include "sox_i.h"
 
 #include <stdlib.h>
 #include <string.h>
 
 #include <math.h>   /* cos(), pow() */
 
-static st_effect_t st_pitch_effect;
+static sox_effect_t sox_pitch_effect;
 
 /* cross fading options for transitions
  */
@@ -102,9 +102,9 @@ typedef struct
 
     unsigned int iacc;   /* part of acc already output */
 
-    st_size_t size;      /* size of buffer for processing chunks. */
+    sox_size_t size;      /* size of buffer for processing chunks. */
     unsigned int index;  /* index of next empty input item. */
-    st_sample_t *buf;    /* bufferize input */
+    sox_sample_t *buf;    /* bufferize input */
 
     pitch_state_t state; /* buffer management status. */
 
@@ -126,7 +126,7 @@ static char * fadeoptname(int opt)
 
 static void debug(pitch_t pitch, char * where)
 {
-  st_debug("%s: ind=%d sz=%ld step=%d o=%d rate=%f ia=%d st=%d fo=%s", 
+  sox_debug("%s: ind=%d sz=%ld step=%d o=%d rate=%f ia=%d st=%d fo=%s", 
   where, pitch->index, pitch->size, pitch->step, pitch->overlap, 
   pitch->rate, pitch->iacc, pitch->state, fadeoptname(pitch->fadeopt));
 }
@@ -169,7 +169,7 @@ static double cub(
  */
 static void interpolation(
   pitch_t pitch,
-  const st_sample_t *ibuf, int ilen, 
+  const sox_sample_t *ibuf, int ilen, 
   double * out, int olen,
   double rate) /* signed */
 {
@@ -246,7 +246,7 @@ static void process_intput_buffer(pitch_t pitch)
 /*
  * Process options
  */
-static int st_pitch_getopts(eff_t effp, int n, char **argv) 
+static int sox_pitch_getopts(eff_t effp, int n, char **argv) 
 {
     pitch_t pitch = (pitch_t) effp->priv; 
     
@@ -255,16 +255,16 @@ static int st_pitch_getopts(eff_t effp, int n, char **argv)
 
     if (n && !sscanf(argv[0], "%lf", &pitch->shift))
     {
-        st_fail(st_pitch_effect.usage);
-        return ST_EOF;
+        sox_fail(sox_pitch_effect.usage);
+        return SOX_EOF;
     }
 
     /* sweep size in ms */
     pitch->width = PITCH_DEFAULT_WIDTH;
     if (n>1 && !sscanf(argv[1], "%lf", &pitch->width))
     {
-        st_fail(st_pitch_effect.usage);
-        return ST_EOF;
+        sox_fail(sox_pitch_effect.usage);
+        return SOX_EOF;
     }
 
     /* interpole option */
@@ -282,8 +282,8 @@ static int st_pitch_getopts(eff_t effp, int n, char **argv)
             pitch->interopt = PITCH_INTERPOLE_CUB;
             break;
         default:
-            st_fail(st_pitch_effect.usage);
-            return ST_EOF;
+            sox_fail(sox_pitch_effect.usage);
+            return SOX_EOF;
         }
     }
 
@@ -310,8 +310,8 @@ static int st_pitch_getopts(eff_t effp, int n, char **argv)
             pitch->fadeopt = PITCH_FADE_COS;
             break;
         default:
-            st_fail(st_pitch_effect.usage);
-            return ST_EOF;
+            sox_fail(sox_pitch_effect.usage);
+            return SOX_EOF;
         }
     }
     
@@ -319,17 +319,17 @@ static int st_pitch_getopts(eff_t effp, int n, char **argv)
     if (n>4 && (!sscanf(argv[4], "%lf", &pitch->coef) ||
                 pitch->coef<0.0 || pitch->coef>0.5))
     {
-        st_fail(st_pitch_effect.usage);
-        return ST_EOF;
+        sox_fail(sox_pitch_effect.usage);
+        return SOX_EOF;
     }
 
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 }
 
 /*
  * Start processing
  */
-static int st_pitch_start(eff_t effp)
+static int sox_pitch_start(eff_t effp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
     register int sample_rate = effp->outinfo.rate;
@@ -339,16 +339,16 @@ static int st_pitch_start(eff_t effp)
      */
     if (effp->outinfo.rate != effp->ininfo.rate)
     {
-        st_fail("PITCH cannot handle different rates (in=%ld, out=%ld)"
+        sox_fail("PITCH cannot handle different rates (in=%ld, out=%ld)"
              " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
-        return ST_EOF;
+        return SOX_EOF;
     }
  
     if (effp->outinfo.channels != effp->ininfo.channels)
     {
-        st_fail("PITCH cannot handle different channels (in=%ld, out=%ld)"
+        sox_fail("PITCH cannot handle different channels (in=%ld, out=%ld)"
              " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
-        return ST_EOF;
+        return SOX_EOF;
     }
 
     /* computer inner stuff... */
@@ -379,7 +379,7 @@ static int st_pitch_start(eff_t effp)
     pitch->fade = (double *) xmalloc(pitch->step*sizeof(double));
     pitch->tmp  = (double *) xmalloc(pitch->step*sizeof(double));
     pitch->acc  = (double *) xmalloc(pitch->step*sizeof(double));
-    pitch->buf  = (st_sample_t *) xmalloc(pitch->size*sizeof(st_sample_t));
+    pitch->buf  = (sox_sample_t *) xmalloc(pitch->size*sizeof(sox_sample_t));
     pitch->index = pitch->overlap;
 
     /* default initial signal */
@@ -429,24 +429,24 @@ static int st_pitch_start(eff_t effp)
     }
     else
     {
-        st_fail("unexpected PITCH_FADE parameter %d", pitch->fadeopt);
-        return ST_EOF;
+        sox_fail("unexpected PITCH_FADE parameter %d", pitch->fadeopt);
+        return SOX_EOF;
     }
 
     if (pitch->shift == 0)
-      return ST_EFF_NULL;
+      return SOX_EFF_NULL;
 
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 }
 
 /* Processes input.
  */
-static int st_pitch_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf, 
-                st_size_t *isamp, st_size_t *osamp)
+static int sox_pitch_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+                sox_size_t *isamp, sox_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
     int i, size;
-    st_size_t len, iindex, oindex;
+    sox_size_t len, iindex, oindex;
 
     size = pitch->size;
     /* size to process */
@@ -466,7 +466,7 @@ static int st_pitch_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
         {
             register int tocopy = min(pitch->size-pitch->index, len);
 
-            memcpy(pitch->buf+pitch->index, ibuf+iindex, tocopy*sizeof(st_sample_t));
+            memcpy(pitch->buf+pitch->index, ibuf+iindex, tocopy*sizeof(sox_sample_t));
 
             len -= tocopy;
             pitch->index += tocopy;
@@ -492,7 +492,7 @@ static int st_pitch_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
                 float f;
 
                 f = pitch->acc[pitch->iacc++];
-                ST_SAMPLE_CLIP_COUNT(f, effp->clips);
+                SOX_SAMPLE_CLIP_COUNT(f, effp->clips);
                 obuf[oindex++] = f;
             }
 
@@ -513,15 +513,15 @@ static int st_pitch_flow(eff_t effp, const st_sample_t *ibuf, st_sample_t *obuf,
     *isamp = iindex;
     *osamp = oindex;
 
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 }
 
 /* at the end...
  */
-static int st_pitch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
+static int sox_pitch_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
-    st_size_t i;
+    sox_size_t i;
 
     if (pitch->state == pi_input)
     {
@@ -545,7 +545,7 @@ static int st_pitch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
         float f;
 
         f = pitch->acc[pitch->iacc++];
-        ST_SAMPLE_CLIP_COUNT(f, effp->clips);
+        SOX_SAMPLE_CLIP_COUNT(f, effp->clips);
         obuf[i++] = f;
     }
 
@@ -553,16 +553,16 @@ static int st_pitch_drain(eff_t effp, st_sample_t *obuf, st_size_t *osamp)
     *osamp = i;
 
     if ((pitch->index - pitch->overlap) == 0)
-        return ST_EOF;
+        return SOX_EOF;
     else
-        return ST_SUCCESS;
+        return SOX_SUCCESS;
 }
     
 /*
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-static int st_pitch_stop(eff_t effp)
+static int sox_pitch_stop(eff_t effp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
 
@@ -571,24 +571,24 @@ static int st_pitch_stop(eff_t effp)
     free(pitch->acc);
     free(pitch->buf);
 
-    return ST_SUCCESS;
+    return SOX_SUCCESS;
 }
 
-static st_effect_t st_pitch_effect = {
+static sox_effect_t sox_pitch_effect = {
   "pitch",
   "Usage: pitch shift width interpole fade\n"
   "       (in cents, in ms, cub/lin, cos/ham/lin/trap)"
   "       (defaults: 0 20 c c)",
   0,
-  st_pitch_getopts,
-  st_pitch_start,
-  st_pitch_flow,
-  st_pitch_drain,
-  st_pitch_stop,
-  st_effect_nothing
+  sox_pitch_getopts,
+  sox_pitch_start,
+  sox_pitch_flow,
+  sox_pitch_drain,
+  sox_pitch_stop,
+  sox_effect_nothing
 };
 
-const st_effect_t *st_pitch_effect_fn(void)
+const sox_effect_t *sox_pitch_effect_fn(void)
 {
-    return &st_pitch_effect;
+    return &sox_pitch_effect;
 }
