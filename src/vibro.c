@@ -41,7 +41,7 @@ static int getopts(eff_t effp, int n, char * * argv)
 sox_effect_t const * sox_vibro_effect_fn(void)
 {
   static sox_effect_t driver = {
-    "vibro", "Usage: vibro speed [depth]", SOX_EFF_MCHAN,
+    "vibro", "Usage: vibro speed [depth]", SOX_EFF_MCHAN | SOX_EFF_DEPRECATED,
     getopts, sox_synth_start, sox_synth_flow, 0, 0, 0,
   };
   return &driver;
