@@ -8,7 +8,7 @@
  */
 
 /*
- * Sound Tools Bandpass effect file.
+ * libSoX Bandpass effect file.
  *
  * Algorithm:  2nd order recursive filter.
  * Formula stolen from MUSIC56K, a toolkit of 56000 assembler stuff.

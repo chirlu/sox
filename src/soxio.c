@@ -146,7 +146,7 @@ ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
     }
 
     /* Go a head and assume 1 channel audio if nothing is detected.
-     * This is because libst usually doesn't set this for mono file
+     * This is because libsox usually doesn't set this for mono file
      * formats (for historical reasons).
      */
     if (ft->signal.channels == 0)

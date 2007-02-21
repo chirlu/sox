@@ -10,7 +10,7 @@
  */
 
 /*
- * Sound Tools Sun format with header (SunOS 4.1; see /usr/demo/SOUND).
+ * libSoX Sun format with header (SunOS 4.1; see /usr/demo/SOUND).
  * NeXT uses this format also, but has more format codes defined.
  * DEC uses a slight variation and swaps bytes.
  * We only support the common formats.

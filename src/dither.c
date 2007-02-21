@@ -1,5 +1,5 @@
 /*
- * Sound Tools dithering noise effect file.
+ * libSoX dithering noise effect file.
  *
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors

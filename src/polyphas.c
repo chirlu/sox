@@ -1,5 +1,5 @@
 /*
- * Sound Tools rate change effect file.
+ * libSoX rate change effect file.
  *
  * July 14, 1998
  * Copyright 1998  K. Bradley, Carnegie Mellon University

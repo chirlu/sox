@@ -59,7 +59,7 @@
 */
 
 /*
- * Sound Tools chorus effect file.
+ * libSoX chorus effect file.
  */
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */

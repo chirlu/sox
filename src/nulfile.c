@@ -8,7 +8,7 @@
  */
 
 /*
- * Sound Tools null file format driver.
+ * libSoX null file format driver.
  * Written by Carsten Borchardt 
  * The author is not responsible for the consequences 
  * of using this software

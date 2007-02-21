@@ -11,7 +11,7 @@
  */
 
 /*
- * Sound Tools stereo/quad -> mono mixdown effect file.
+ * libSoX stereo/quad -> mono mixdown effect file.
  * and mono/stereo -> stereo/quad channel duplication.
  */
 

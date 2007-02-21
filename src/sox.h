@@ -1,5 +1,5 @@
 /*
- * Sound Tools Library
+ * libSoX Library
  *
  * Copyright 1999-2007 Chris Bagwell and SoX Contributors.
  *
@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include "ststdint.h"
 
-/* The following is the API version of libst.  It is not meant
+/* The following is the API version of libsox.  It is not meant
  * to follow the version number of SoX but it has historically.
  * Please do not count of these numbers being in sync.
  * The following is at 13.0.0
@@ -377,7 +377,7 @@ typedef struct
 struct sox_effect
 {
     char const *name;               /* effect name */
-    struct sox_globalinfo * globalinfo;/* global ST parameters */
+    struct sox_globalinfo * globalinfo;/* global parameters */
     struct sox_signalinfo ininfo;    /* input signal specifications */
     struct sox_signalinfo outinfo;   /* output signal specifications */
     const sox_effect_t *h;           /* effects driver */
@@ -439,7 +439,7 @@ extern char const * sox_message_filename;
 
 const char *sox_version(void);                   /* return version number */
 
-/* ST specific error codes.  The rest directly map from errno. */
+/* libSoX specific error codes.  The rest directly map from errno. */
 #define SOX_EHDR 2000            /* Invalid Audio Header */
 #define SOX_EFMT 2001            /* Unsupported data format */
 #define SOX_ERATE 2002           /* Unsupported rate for format */

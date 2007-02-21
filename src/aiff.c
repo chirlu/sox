@@ -1,5 +1,5 @@
 /*
- * Sound Tools SGI/Amiga AIFF format.
+ * libSoX SGI/Amiga AIFF format.
  * Used by SGI on 4D/35 and Indigo.
  * This is a subformat of the EA-IFF-85 format.
  * This is related to the IFF format used by the Amiga.

@@ -1,5 +1,5 @@
 /*
- * Sound Tools statistics "effect" file.
+ * libSoX statistics "effect" file.
  *
  * Compute various statistics on file and print them.
  *

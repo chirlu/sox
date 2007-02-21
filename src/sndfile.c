@@ -1,5 +1,5 @@
 /*
- * Sound Tools libsndfile formats.
+ * libSoX libsndfile formats.
  *
  * Copyright 2007 Reuben Thomas <rrt@sc3d.org>
  * Copyright 1999-2005 Erik de Castro Lopo <eridk@mega-nerd.com>

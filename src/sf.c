@@ -8,9 +8,9 @@
  */
 
 /*
- * Sound Tools IRCAM SoundFile format handler.
+ * libSoX IRCAM SoundFile format handler.
  *
- * Derived from: Sound Tools skeleton handler file.
+ * Derived from: libSoX skeleton handler file.
  */
 
 #include "sox_i.h"

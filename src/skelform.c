@@ -1,5 +1,5 @@
 /*
- * Sound Tools skeleton file format driver.
+ * libSoX skeleton file format driver.
  *
  * Copyright 1999 Chris Bagwell And Sundry Contributors
  *

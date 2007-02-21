@@ -14,7 +14,7 @@
  * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
-/* Sound Tools Effect: Adjust the audio speed (pitch and tempo together)
+/* libSoX Effect: Adjust the audio speed (pitch and tempo together)
  *
  * (c) 2006 robs@users.sourceforge.net
  *

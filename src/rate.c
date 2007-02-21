@@ -1,5 +1,5 @@
 /*
- * Sound Tools rate change effect.
+ * libSoX rate change effect.
  *
  * Now obsolete, and implemented by resample. Name retained for
  * backwards compatibility.

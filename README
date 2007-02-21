@@ -8,10 +8,10 @@ basic analysis and providing input to more capable analysis and
 plotting tools.
 
 SoX is distributed under the GNU GPL and GNU LGPL. To be precise: the
-sox program is distributed under the GPL, while the library libst, in
+sox program is distributed under the GPL, while the library libsox, in
 which most of SoX's functionality resides, is dual-licensed. Note that
-some optional components of libst are GPL only: if you use these, you
-must use libst under the GPL.
+some optional components of libsox are GPL only: if you use these, you
+must use libsox under the GPL.
 
 Send bug fixes, enhancements and feature requests to
 sox-devel@lists.sourceforge.net, or post them to the relevant tracker

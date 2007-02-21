@@ -51,7 +51,7 @@
 */
 
 /*
- * Sound Tools phaser effect file.
+ * libSoX phaser effect file.
  */
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */

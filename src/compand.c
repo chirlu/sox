@@ -16,7 +16,7 @@
 #include "compandt.h"
 
 /*
- * Compressor/expander effect for Sound Tools.
+ * Compressor/expander effect for libSoX.
  *
  * Flow diagram for one channel:
  *

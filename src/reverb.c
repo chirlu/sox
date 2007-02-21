@@ -88,7 +88,7 @@
 */
 
 /*
- * Sound Tools reverb effect file.
+ * libSoX reverb effect file.
  */
 
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */

@@ -1,5 +1,5 @@
 /*
- * Sound Tools Macintosh HCOM format.
+ * libSoX Macintosh HCOM format.
  * These are really FSSD type files with Huffman compression,
  * in MacBinary format.
  * To do: make the MacBinary format optional (so that .data files

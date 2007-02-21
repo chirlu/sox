@@ -8,7 +8,7 @@
  */
 
 /*
- * Sound Tools miscellaneous stuff.
+ * libSoX miscellaneous stuff.
  */
 
 #include "sox_i.h"

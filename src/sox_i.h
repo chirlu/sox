@@ -1,7 +1,7 @@
 /*
- * Sound Tools Internal header
+ * libSoX Internal header
  *
- *   This file is meant for libst internal use only
+ *   This file is meant for libsox internal use only
  *
  * Copyright 2001-2007 Chris Bagwell and SoX Contributors
  *
@@ -184,7 +184,7 @@ int sox_is_littleendian(void);
 #define M_PI_2  1.57079632679489661923  /* pi/2 */
 #endif
 
-/* The following is used at times in libst when alloc()ing buffers
+/* The following is used at times in libsox when alloc()ing buffers
  * to perform file I/O.  It can be useful to pass in similar sized
  * data to get max performance.
  */

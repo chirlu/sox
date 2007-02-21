@@ -1,8 +1,8 @@
 /*
- * Sound Tools SampleVision file format driver.
+ * libSoX SampleVision file format driver.
  * Output is always in little-endian (80x86/VAX) order.
  * 
- * Derived from: Sound Tools skeleton handler file.
+ * Derived from: libSoX skeleton handler file.
  *
  * Add: Loop point verbose info.  It's a start, anyway.
  */

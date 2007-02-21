@@ -1,5 +1,5 @@
 /*
- * Sound Tools rate change effect file.
+ * libSoX rate change effect file.
  * Spiffy rate changer using Smith & Wesson Bandwidth-Limited Interpolation.
  * The algorithm is described in "Bandlimited Interpolation -
  * Introduction and Algorithm" by Julian O. Smith III.

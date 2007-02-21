@@ -54,7 +54,7 @@ void sox_output_message(FILE *file, const char *filename, const char *fmt, va_li
 
 
 
-/* This is a bit of a hack.  It's useful to have the ST library
+/* This is a bit of a hack.  It's useful to have libSoX
  * report which driver (i.e. format or effect handler) is outputing
  * the message.  Using the filename for this purpose is only an
  * approximation, but it saves a lot of work. ;)

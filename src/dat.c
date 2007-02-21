@@ -1,5 +1,5 @@
 /*
- * Sound Tools text format file.  Tom Littlejohn, March 93.
+ * libSoX text format file.  Tom Littlejohn, March 93.
  *
  * Reads/writes sound files as text.
  *

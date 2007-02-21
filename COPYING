@@ -2,10 +2,10 @@ SoX source code is distributed under two main licenses. The two
 licenses are in the files LICENSE.GPL and LICENSE.LGPL.
 
 sox.c, and thus SoX-the user application, is distributed under the
-GPL, while the files that make up libst are licensed under the less
+GPL, while the files that make up libsox are licensed under the less
 restrictive LGPL.
 
-Note that some of the external packages that can be linked in to libst
+Note that some of the external packages that can be linked in to libsox
 are GPLed and/or may have licensing problems, so they can be disabled
-at configure time with the relevant--with-* options. If libst is built
+at configure time with the relevant--with-* options. If libsox is built
 with such libraries, it must be distributed under the GPL.

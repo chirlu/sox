@@ -33,7 +33,7 @@
  */
 
 /*
- * Sound Tools Sound Blaster VOC handler sources.
+ * libSoX Sound Blaster VOC handler sources.
  */
 
 /*------------------------------------------------------------------------
@@ -260,7 +260,7 @@ static int sox_vocstartread(ft_t ft)
         /* setup word length of data */
         ft->signal.size = v->size;
 
-        /* ANN:  Check VOC format and map to the proper ST format value */
+        /* ANN:  Check VOC format and map to the proper libSoX format value */
         switch (v->format) {
         case VOC_FMT_LIN8U:      /*     0    8 bit unsigned linear PCM */
             ft->signal.encoding = SOX_ENCODING_UNSIGNED;

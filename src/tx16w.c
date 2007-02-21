@@ -36,7 +36,7 @@
 #define TXMAXLEN 0x3FF80
 
 /*
- * Sound Tools skeleton file format driver.
+ * libSoX skeleton file format driver.
  */
 
 #include <stdio.h>

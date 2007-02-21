@@ -10,7 +10,7 @@
 #include "sox_i.h"
 
 /*
- * Sound Tools file format and effect tables.
+ * libSoX file format and effect tables.
  */
 
 /* File format handlers. */

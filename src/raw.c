@@ -1,5 +1,5 @@
 /*
- * Sound Tools raw file formats
+ * libSoX raw file formats
  *
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors

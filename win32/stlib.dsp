@@ -561,7 +561,7 @@ SOURCE=..\src\st.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\st_i.h
+SOURCE=..\src\sox_i.h
 # End Source File
 # Begin Source File
 

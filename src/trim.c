@@ -8,7 +8,7 @@
  */
 
 /*
- * Sound Tools skeleton effect file.
+ * libSoX skeleton effect file.
  */
 
 #include "sox_i.h"
