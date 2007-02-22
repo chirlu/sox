@@ -364,7 +364,7 @@ rm \-f 2tones.raw
 
 for freq in 1300 2200; do
   sox \-c1 \-r8000 \-n \-t raw \- synth 0\*d25 sine $freq vol 0\*d7 >> 2tones.raw
-  done
+done
 
 # We need 60 copies of 2tones.raw (0\*d5 sec) to get 30 secs of audio:
 iterations=60
@@ -375,7 +375,7 @@ rm \-f alert.raw
 while [ $iterations \-ge 1 ]; do
   cat 2tones.raw >> alert.raw
   iterations=\`expr $iterations \- 1\`
-  done
+done
 
 # Add a file header and save some disc space:
 sox \-sw \-c1 \-r8000 alert.raw alert.ogg
