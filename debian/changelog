@@ -1,14 +1,19 @@
 sox (13.0.0.cvs-1) unstable; urgency=low
 
-  * New upstream version:
-    - Huge amount of changes (closes: #345726, #349178, #374096, #274519, 
-      #257525, #382275).
-    - Please see the upstream changelog.
-    - Warning: some scripts may break with this new version.
+  * CVS version:
     - sox-dev renamed to libsox-dev.
     - Created libsox0 package that contains the SoX library.
+
+ -- Pascal Giard <evilynux@gmail.com>  Fri, 23 Feb 2007 14:56:42 -0500
+
+sox (13.0.0-1) unstable; urgency=low
+
+  * New upstream version:
+    - Huge amount of changes (closes: #345726, #274519, #257525).
+    - Please see the upstream changelog.
+    - Warning: some scripts may break with this new version.
     - Guenter set as co-maintainer.
-    - soxmix no longer exists.
+    - soxmix no longer exists (closes:  #349178, #374096).
   * Taking over the package with Guenter's permission.
     - Thanks alot for all those years of maintenance!
   * [debian/control]:
@@ -18,10 +23,13 @@ sox (13.0.0.cvs-1) unstable; urgency=low
   * [debian/patches]: No more patches, everything is fixed upstream.
   * [debian/rules]: 
     - Added -D_REENTRANT as required by policy on libraries.
-    - Added -Wl,-z to enforce symbol resolution at build time.
-  * [debian/README.Debian]: Added instructions to build from CVS.
+    - Added -Wl,-z,defs to enforce symbol resolution at build time.
+    - Disabled shared library for now, see README.Debian.
+  * [debian/README.Debian]:
+    - Added instructions to build from CVS.
+    - Added information as to why shared lib is disabled for now.
 
- -- Pascal Giard <pascal@gmail.com>  Sat, 17 Feb 2007 13:42:33 -0500
+ -- Pascal Giard <pascal@debian.org>  Fri, 23 Feb 2007 12:07:50 -0500
 
 sox (12.18.2-2) unstable; urgency=low
 
