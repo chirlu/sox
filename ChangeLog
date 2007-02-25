@@ -32,9 +32,12 @@ sox-13.0.1
   o Add missing RM define to Makefiles so installs work.
    (Bug# 1666599) (cbagwell)
 
-
   Internal improvements:
 
+  o Renamed libst to libsox for name recongition and to avoid
+    duplications with other existing libst libraries. (Rueben)
+  o Renamed libst-config to more standard sox-config. (cbagwell)
+  o Removed library information from sox-config --cflags. (cbagwell)
 
 sox-13.0.0
 ----------
