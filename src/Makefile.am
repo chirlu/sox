@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-RM = /bin/rm -f 
+RM = rm -f 
 
 AM_CFLAGS = @SNDFILE_CFLAGS@ @SAMPLERATE_CFLAGS@ -Wconversion
 AM_LDFLAGS = @SNDFILE_LIBS@ @SAMPLERATE_LIBS@

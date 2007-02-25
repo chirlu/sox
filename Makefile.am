@@ -5,7 +5,7 @@ ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = amr-wb @LIBGSM_SUBDIR@ src
 DIST_SUBDIRS = amr-wb src/libgsm src
 
-RM = /bin/rm -f
+RM = rm -f
 
 # man pages are not considered to be sources, so need to add "dist_"
 # prefix to ensure they are added to the distribution.
