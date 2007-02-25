@@ -57,10 +57,10 @@ void Reset_write_serial(TX_State * st)
     st->prev_ft = TX_SPEECH;
 }
 
-void Write_serial(FILE * fp, Word16 prms[], Word16 coding_mode, Word16 mode, TX_State *st, Word16 bitstreamformat)
+void Write_serial(FILE * fp, Word16 prms[], int coding_mode, int mode, TX_State *st, int bitstreamformat)
 {
    Word16 i, frame_type;
-   Word16 stream[SIZE_MAX];
+   Word16 stream[AMR_WB_SIZE_MAX];
    UWord8 temp;
    UWord8 *stream_ptr;
 
@@ -260,7 +260,7 @@ void Reset_read_serial(RX_State * st)
 }
 
 
-Word16 Read_serial(FILE * fp, Word16 prms[], Word16 * frame_type, Word16 * mode, RX_State *st, Word16 bitstreamformat)
+Word16 Read_serial(FILE * fp, Word16 prms[], Word16 * frame_type, Word16 * mode, RX_State *st, int bitstreamformat)
 {
    Word16 n, n1, type_of_frame_type, coding_mode, datalen, i;
    UWord8 toc, q, temp, *packet_ptr, packet[64];

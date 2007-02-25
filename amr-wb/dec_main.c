@@ -97,7 +97,7 @@ void Init_decoder(void **spd_state)
     return;
 }
 
-void Reset_decoder(void *st, Word16 reset_all)
+void Reset_decoder(void *st, int reset_all)
 {
     Word16 i;
 
@@ -180,12 +180,12 @@ void Close_decoder(void *spd_state)
  *-----------------------------------------------------------------*/
 
 void decoder(
-     Word16 mode,                          /* input : used mode                     */
+     int mode,                          /* input : used mode                     */
      Word16 prms[],                        /* input : parameter vector              */
      Word16 synth16k[],                    /* output: synthesis speech              */
      Word16 * frame_length,                /* output:  lenght of the frame          */
      void *spd_state,                      /* i/o   : State structure               */
-     Word16 frame_type                     /* input : received frame type           */
+     int  frame_type                     /* input : received frame type           */
 )
 {
 

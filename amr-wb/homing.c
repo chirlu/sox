@@ -107,14 +107,14 @@ static Word16 dhf_test(Word16 input_frame[], Word16 mode, Word16 nparms)
 }
 
 
-Word16 decoder_homing_frame_test(Word16 input_frame[], Word16 mode)
+Word16 decoder_homing_frame_test(Word16 input_frame[], int mode)
 {
     /* perform test for COMPLETE parameter frame */
     return dhf_test(input_frame, mode, nb_of_bits[mode]);
 }
 
 
-Word16 decoder_homing_frame_test_first(Word16 input_frame[], Word16 mode)
+Word16 decoder_homing_frame_test_first(Word16 input_frame[], int mode)
 {
     /* perform test for FIRST SUBFRAME of parameter frame ONLY */
     return dhf_test(input_frame, mode, prmnofsf[mode]);

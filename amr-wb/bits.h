@@ -26,7 +26,7 @@
 #define BIT_0_ITU (Word16)0x007F
 #define BIT_1_ITU (Word16)0x0081
 
-#define SIZE_MAX  (3+NB_BITS_MAX)          /* serial size max */
+#define AMR_WB_SIZE_MAX  (3+NB_BITS_MAX)          /* serial size max */
 #define TX_FRAME_TYPE (Word16)0x6b21
 #define RX_FRAME_TYPE (Word16)0x6b20
 
@@ -63,8 +63,8 @@ void Reset_write_serial(TX_State * st);
 Word16 Init_read_serial(RX_State ** st);
 Word16 Close_read_serial(RX_State *st);
 void Reset_read_serial(RX_State * st);
-void Write_serial(FILE * fp, Word16 prms[], Word16 coding_mode, Word16 mode, TX_State *st, Word16 bitstreamformat);
-Word16 Read_serial(FILE * fp, Word16 prms[], Word16 * frame_type, Word16 * mode, RX_State *st, Word16 bitstreamformat);
+void Write_serial(FILE * fp, Word16 prms[], int coding_mode, int mode, TX_State *st, int bitstreamformat);
+Word16 Read_serial(FILE * fp, Word16 prms[], Word16 * frame_type, Word16 * mode, RX_State *st, int bitstreamformat);
 
 void Parm_serial(
      Word16 value,                         /* input : parameter value */

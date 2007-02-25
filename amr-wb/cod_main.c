@@ -93,7 +93,7 @@ void Init_coder(void **spe_state)
 }
 
 
-void Reset_encoder(void *st, Word16 reset_all)
+void Reset_encoder(void *st, int reset_all)
 {
     Word16 i;
 
@@ -203,7 +203,7 @@ void coder(
      Word16 prms[],                        /* output:  output parameters                     */
      Word16 * ser_size,                    /* output:  bit rate of the used mode             */
      void *spe_state,                      /* i/o   :  State structure                       */
-     Word16 allow_dtx                      /* input :  DTX ON/OFF                            */
+     int allow_dtx                      /* input :  DTX ON/OFF                            */
 )
 {
 
