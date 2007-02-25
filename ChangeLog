@@ -28,6 +28,7 @@ sox-13.0.1
 
   o Fix (m)compand transfer function non-linearities; fix compand
     drain volume.  (robs)
+  o Fix crash with pan effect.  (robs)
 
   Internal improvements:
 

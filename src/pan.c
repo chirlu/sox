@@ -402,7 +402,7 @@ static int sox_pan_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf
         break;
     } /* end switch out channel */
 
-    free(ibuf_copy);
+    free(ibuf_copy - len * ich);
     
     return SOX_SUCCESS;
 }
