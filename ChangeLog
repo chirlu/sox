@@ -29,6 +29,9 @@ sox-13.0.1
   o Fix (m)compand transfer function non-linearities; fix compand
     drain volume.  (robs)
   o Fix crash with pan effect.  (robs)
+  o Add missing RM define to Makefiles so installs work.
+   (Bug# 1666599) (cbagwell)
+
 
   Internal improvements:
 
