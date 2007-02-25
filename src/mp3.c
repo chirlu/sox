@@ -51,7 +51,7 @@ struct mp3priv {
 
 #define ID3_TAG_FLAG_FOOTERPRESENT 0x10
 
-static int tagtype(const unsigned char *data, int length)
+static int tagtype(const unsigned char *data, size_t length)
 {
     /* TODO: It would be nice to look for Xing VBR headers
      * or TLE fields in ID3 to detect length of file
@@ -385,7 +385,7 @@ static int sox_mp3startwrite(ft_t ft)
   }
 
   if (ft->signal.channels != SOX_ENCODING_UNKNOWN) {
-    if ( (lame_set_num_channels(p->gfp,ft->signal.channels)) < 0) {
+    if ( (lame_set_num_channels(p->gfp,(int)ft->signal.channels)) < 0) {
         sox_fail_errno(ft,SOX_EOF,"Unsupported number of channels");
         return(SOX_EOF);
     }
@@ -393,7 +393,7 @@ static int sox_mp3startwrite(ft_t ft)
   else
     ft->signal.channels = lame_get_num_channels(p->gfp); /* LAME default */
 
-  lame_set_in_samplerate(p->gfp,ft->signal.rate);
+  lame_set_in_samplerate(p->gfp,(int)ft->signal.rate);
 
   lame_set_bWriteVbrTag(p->gfp, 0); /* disable writing VBR tag */
 
@@ -483,7 +483,7 @@ static sox_size_t sox_mp3write(ft_t ft, const sox_sample_t *buf, sox_size_t samp
 
     if ((written = lame_encode_buffer(p->gfp,buffer_l, buffer_r,
                                       nsamples, (unsigned char *)mp3buffer,
-                                      mp3buffer_size)) > mp3buffer_size){
+                                      (int)mp3buffer_size)) > mp3buffer_size){
         sox_fail_errno(ft,SOX_EOF,"Encoding failed");
         goto end;
     }
@@ -512,11 +512,12 @@ static int sox_mp3stopwrite(ft_t ft)
   struct mp3priv *p = (struct mp3priv *) ft->priv;
   char mp3buffer[7200];
   int written;
+  size_t written2;
   
   if ( (written=lame_encode_flush(p->gfp, (unsigned char *)mp3buffer, 7200)) <0){
     sox_fail_errno(ft,SOX_EOF,"Encoding failed");
   }
-  else if ((int)sox_writebuf(ft, mp3buffer, 1, written) < written){
+  else if (sox_writebuf(ft, mp3buffer, 1, written2 = written) < written2){
     sox_fail_errno(ft,SOX_EOF,"File write failed");
   }
 

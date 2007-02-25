@@ -165,10 +165,10 @@ static int sox_phaser_start(eff_t effp)
 
         if (phaser->modulation == MOD_SINE)
           sox_generate_wave_table(SOX_WAVE_SINE, SOX_INT, phaser->lookup_tab,
-              phaser->length, 0, phaser->maxsamples - 1, 0);
+              phaser->length, 0., (double)(phaser->maxsamples - 1), 0.);
         else
           sox_generate_wave_table(SOX_WAVE_TRIANGLE, SOX_INT, phaser->lookup_tab,
-              phaser->length, 0, 2 * (phaser->maxsamples - 1), 3 * M_PI_2);
+              phaser->length, 0., (double)(2 * (phaser->maxsamples - 1)), 3 * M_PI_2);
         phaser->counter = 0;
         phaser->phase = 0;
         phaser->fade_out = phaser->maxsamples;

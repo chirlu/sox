@@ -33,7 +33,7 @@ static int sox_spherestartread(ft_t ft)
         char *buf;
         char fldname[64], fldtype[16], fldsval[128];
         int i;
-        int header_size, bytes_read;
+        sox_size_t header_size, bytes_read;
         long rate;
 
         /* Needed for rawread() */
@@ -55,8 +55,8 @@ static int sox_spherestartread(ft_t ft)
         }
 
         /* Determine header size, and allocate a buffer large enough to hold it. */
-        sscanf(fldsval, "%d", &header_size);
-        buf = (char *)xmalloc(header_size);
+        sscanf(fldsval, "%u", &header_size);
+        buf = xmalloc(header_size);
 
         /* Skip what we have read so far */
         header_size -= 16;

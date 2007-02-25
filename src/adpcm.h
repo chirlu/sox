@@ -12,7 +12,7 @@ extern const short iCoef[7][2];
 
 /* AdpcmBlockExpandI() outputs interleaved samples into one output buffer */
 extern const char *AdpcmBlockExpandI(
-	int chans,          /* total channels             */
+	unsigned chans,          /* total channels             */
 	int nCoef,
 	const short *iCoef,
 	const unsigned char *ibuff,/* input buffer[blockAlign]   */
@@ -21,7 +21,7 @@ extern const char *AdpcmBlockExpandI(
 );
 
 extern void AdpcmBlockMashI(
-	int chans,          /* total channels */
+	unsigned chans,          /* total channels */
 	const SAMPL *ip,    /* ip[n*chans] is interleaved input samples */
 	int n,              /* samples to encode PER channel, REQUIRE */
 	int *st,            /* input/output steps, 16<=st[i] */
@@ -41,9 +41,9 @@ extern void AdpcmBlockMashI(
  */
 extern sox_size_t AdpcmSamplesIn(
 	sox_size_t dataLen,
-	unsigned short chans,
-	unsigned short blockAlign,
-	unsigned short samplesPerBlock
+	sox_size_t chans,
+	sox_size_t blockAlign,
+	sox_size_t samplesPerBlock
 );
 
 /*
@@ -52,6 +52,6 @@ extern sox_size_t AdpcmSamplesIn(
  *   to encode number of chans with given samplesPerBlock
  */
 extern sox_size_t AdpcmBytesPerBlock(
-	unsigned short chans,
-	unsigned short samplesPerBlock
+	sox_size_t chans,
+	sox_size_t samplesPerBlock
 );

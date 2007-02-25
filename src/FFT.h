@@ -54,7 +54,7 @@
  * input array, and that NumSamples must be a power of two.
  */
 
-void PowerSpectrum(int NumSamples, const float *In, float *Out);
+void PowerSpectrum(unsigned NumSamples, const float *In, float *Out);
 
 /*
  * Computes an FFT when the input data is real but you still
@@ -63,7 +63,7 @@ void PowerSpectrum(int NumSamples, const float *In, float *Out);
  * two.
  */
 
-void RealFFT(int NumSamples,
+void RealFFT(unsigned NumSamples,
              const float *RealIn, float *RealOut, float *ImagOut);
 
 /*
@@ -72,7 +72,7 @@ void RealFFT(int NumSamples,
  * inverse transform as well.
  */
 
-void FFT(int NumSamples,
+void FFT(unsigned NumSamples,
          int InverseTransform,
          const float *RealIn, float *ImagIn, float *RealOut, float *ImagOut);
 

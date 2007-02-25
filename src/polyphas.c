@@ -127,7 +127,7 @@ static const unsigned short primes[] = {
   0
 };
 
-static int prime(int n, int *q0)
+static int prime(unsigned n, int *q0)
 {
   const unsigned short *p;
   int pr, *q;
@@ -189,9 +189,10 @@ static int permute(int *m, int *l, int ct, int ct1, size_t amalg)
   return (p-m);
 }
 
-static int optimize_factors(poly_t rate, int numer, int denom, int *l1, int *l2)
+static int optimize_factors(poly_t rate, unsigned numer, unsigned denom, int *l1, int *l2)
 {
-  int f_min,c_min,u_min,ct1,ct2;
+  unsigned f_min;
+  int c_min,u_min,ct1,ct2;
   size_t amalg;
   int k;
 
@@ -210,7 +211,8 @@ static int optimize_factors(poly_t rate, int numer, int denom, int *l1, int *l2)
 
   for (amalg = max(9,l2[0]); amalg <= (size_t)(9+l2[ct2-1]); amalg++) {
     for (k = 0; k<100000; k++) {
-      int u,u1,u2,j,f,cost;
+      unsigned f;
+      int u,u1,u2,j,cost;
       cost = 0;
       f = denom;
       u = min(ct1,ct2) + 1;
@@ -295,7 +297,7 @@ static void hamming(Float *buffer, int length)
 
 /* Calculate the sinc function properly */
 
-static Float sinc(Float value)
+static Float sinc(double value)
 {
     return(fabs(value) < 1E-50 ? 1.0 : sin(value) / value);
 }
@@ -306,7 +308,7 @@ static Float sinc(Float value)
 
    buffer must already be allocated.
 */
-static void fir_design(poly_t rate, Float *buffer, int length, Float cutoff)
+static void fir_design(poly_t rate, Float *buffer, int length, double cutoff)
 {
     int j;
     double sum;

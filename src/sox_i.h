@@ -102,7 +102,7 @@ int sox_skipbytes(ft_t ft, sox_size_t n);
 int sox_padbytes(ft_t ft, sox_size_t n);
 size_t sox_writebuf(ft_t ft, void const *buf, size_t size, sox_size_t len);
 int sox_reads(ft_t ft, char *c, sox_size_t len);
-int sox_writes(ft_t ft, char *c);
+int sox_writes(ft_t ft, char const * c);
 int sox_readb(ft_t ft, uint8_t *ub);
 int sox_writeb(ft_t ft, int ub);
 int sox_readw(ft_t ft, uint16_t *uw);

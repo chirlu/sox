@@ -103,7 +103,7 @@ static inline sox_sample_t AdpcmDecode(sox_sample_t c, MsState_t *state,
 
 /* AdpcmBlockExpandI() outputs interleaved samples into one output buffer */
 const char *AdpcmBlockExpandI(
-        int chans,          /* total channels             */
+        unsigned chans,          /* total channels             */
         int nCoef,
         const short *iCoef,
         const unsigned char *ibuff,/* input buffer[blockAlign]   */
@@ -112,7 +112,7 @@ const char *AdpcmBlockExpandI(
 )
 {
         const unsigned char *ip;
-        int ch;
+        unsigned ch;
         const char *errmsg = NULL;
         MsState_t state[4];                                             /* One decompressor state for each channel */
 
@@ -141,7 +141,7 @@ const char *AdpcmBlockExpandI(
                 lsbshortldi(obuff[ch], ip);
 
         {
-                int ch;
+                unsigned ch;
                 unsigned char b;
                 short *op, *top, *tmp;
 
@@ -153,11 +153,11 @@ const char *AdpcmBlockExpandI(
                 while (op < top) {
                         b = *ip++;
                         tmp = op;
-                        *op++ = AdpcmDecode(b >> 4, state+ch, tmp[-chans], tmp[-2*chans]);
+                        *op++ = AdpcmDecode(b >> 4, state+ch, tmp[-chans], tmp[-(2*chans)]);
                         if (++ch == chans) ch = 0;
                         /* ch = ++ch % chans; */
                         tmp = op;
-                        *op++ = AdpcmDecode(b&0x0f, state+ch, tmp[-chans], tmp[-2*chans]);
+                        *op++ = AdpcmDecode(b&0x0f, state+ch, tmp[-chans], tmp[-(2*chans)]);
                         if (++ch == chans) ch = 0;
                         /* ch = ++ch % chans; */
                 }
@@ -166,8 +166,8 @@ const char *AdpcmBlockExpandI(
 }
 
 static int AdpcmMashS(
-        int ch,              /* channel number to encode, REQUIRE 0 <= ch < chans  */
-        int chans,           /* total channels */
+        unsigned ch,              /* channel number to encode, REQUIRE 0 <= ch < chans  */
+        unsigned chans,           /* total channels */
         SAMPL v[2],          /* values to use as starting 2 */
         const short iCoef[2],/* lin predictor coeffs */
         const SAMPL *ibuff,  /* ibuff[] is interleaved input samples */
@@ -249,8 +249,8 @@ static int AdpcmMashS(
 }
 
 static inline void AdpcmMashChannel(
-        int ch,             /* channel number to encode, REQUIRE 0 <= ch < chans  */
-        int chans,          /* total channels */
+        unsigned ch,             /* channel number to encode, REQUIRE 0 <= ch < chans  */
+        unsigned chans,          /* total channels */
         const SAMPL *ip,    /* ip[] is interleaved input samples */
         int n,              /* samples to encode PER channel, REQUIRE */
         int *st,            /* input/output steps, 16<=st[i] */
@@ -299,7 +299,7 @@ static inline void AdpcmMashChannel(
 }
 
 void AdpcmBlockMashI(
-        int chans,          /* total channels */
+        unsigned chans,          /* total channels */
         const SAMPL *ip,    /* ip[n*chans] is interleaved input samples */
         int n,              /* samples to encode PER channel */
         int *st,            /* input/output steps, 16<=st[i] */
@@ -307,7 +307,7 @@ void AdpcmBlockMashI(
         int blockAlign      /* >= 7*chans + chans*(n-2)/2.0    */
 )
 {
-        int ch;
+        unsigned ch;
         unsigned char *p;
 
         sox_debug("AdpcmMashI(chans %d, ip %p, n %d, st %p, obuff %p, bA %d)\n",
@@ -329,9 +329,9 @@ void AdpcmBlockMashI(
  */
 sox_size_t AdpcmSamplesIn(
         sox_size_t dataLen,
-        unsigned short chans,
-        unsigned short blockAlign,
-        unsigned short samplesPerBlock
+        sox_size_t chans,
+        sox_size_t blockAlign,
+        sox_size_t samplesPerBlock
 ){
         sox_size_t m, n;
 
@@ -352,8 +352,8 @@ sox_size_t AdpcmSamplesIn(
 }
 
 sox_size_t AdpcmBytesPerBlock(
-        unsigned short chans,
-        unsigned short samplesPerBlock
+        sox_size_t chans,
+        sox_size_t samplesPerBlock
 )
 {
         sox_size_t n;

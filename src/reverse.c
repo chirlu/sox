@@ -25,7 +25,7 @@ static sox_effect_t sox_reverse_effect;
 /* Private data */
 typedef struct reversestuff {
         FILE *fp;
-        sox_size_t pos;
+        off_t pos;
         int phase;
 } *reverse_t;
 
@@ -86,7 +86,7 @@ static int sox_reverse_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 
         if (reverse->phase == WRITING) {
                 fflush(reverse->fp);
-                fseeko(reverse->fp, 0, SEEK_END);
+                fseeko(reverse->fp, (off_t)0, SEEK_END);
                 reverse->pos = ftello(reverse->fp);
                 if (reverse->pos % sizeof(sox_sample_t) != 0)
                 {

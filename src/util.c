@@ -296,7 +296,7 @@ int sox_updateeffect(eff_t effp, const sox_signalinfo_t *in, const sox_signalinf
  * # of samples.
  * Returns NULL on error, pointer to next char to parse otherwise.
  */
-char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samples, char def)
+char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samples, int def)
 {
     int found_samples = 0, found_time = 0;
     int time = 0;

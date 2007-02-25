@@ -65,12 +65,12 @@ void initImaTable(void)
 }
 
 static void ImaExpandS(
-        int ch,             /* channel number to decode, REQUIRE 0 <= ch < chans  */
-        int chans,          /* total channels             */
+        unsigned ch,             /* channel number to decode, REQUIRE 0 <= ch < chans  */
+        unsigned chans,          /* total channels             */
         const unsigned char *ibuff,/* input buffer[blockAlign]   */
         SAMPL *obuff,       /* obuff[n] will be output samples */
         int n,              /* samples to decode PER channel, REQUIRE n % 8 == 1  */
-        int o_inc           /* index difference between successive output samples */
+        unsigned o_inc           /* index difference between successive output samples */
 )
 {
         const unsigned char *ip;
@@ -133,34 +133,34 @@ static void ImaExpandS(
 
 /* ImaBlockExpandI() outputs interleaved samples into one output buffer */
 void ImaBlockExpandI(
-        int chans,          /* total channels             */
+        unsigned chans,          /* total channels             */
         const unsigned char *ibuff,/* input buffer[blockAlign]   */
         SAMPL *obuff,       /* output samples, n*chans    */
         int n               /* samples to decode PER channel, REQUIRE n % 8 == 1  */
 )
 {
-        int ch;
+        unsigned ch;
         for (ch=0; ch<chans; ch++)
                 ImaExpandS(ch, chans, ibuff, obuff+ch, n, chans);
 }
 
 /* ImaBlockExpandM() outputs non-interleaved samples into chan separate output buffers */
 void ImaBlockExpandM(
-        int chans,          /* total channels             */
+        unsigned chans,          /* total channels             */
         const unsigned char *ibuff,/* input buffer[blockAlign]   */
         SAMPL **obuffs,     /* chan output sample buffers, each takes n samples */
         int n               /* samples to decode PER channel, REQUIRE n % 8 == 1  */
 )
 {
-        int ch;
+        unsigned ch;
         for (ch=0; ch<chans; ch++)
                 ImaExpandS(ch, chans, ibuff, obuffs[ch], n, 1);
 }
 
 static int ImaMashS(
-        int ch,             /* channel number to encode, REQUIRE 0 <= ch < chans  */
-        int chans,          /* total channels */
-        SAMPL v0,           /* value to use as starting prediction0 */
+        unsigned ch,             /* channel number to encode, REQUIRE 0 <= ch < chans  */
+        unsigned chans,          /* total channels */
+        int v0,           /* value to use as starting prediction0 */
         const SAMPL *ibuff, /* ibuff[] is interleaved input samples */
         int n,              /* samples to encode PER channel, REQUIRE n % 8 == 1 */
         int *st,            /* input/output state, REQUIRE 0 <= *st <= ISSTMAX */
@@ -245,8 +245,8 @@ static int ImaMashS(
 
 /* mash one channel... if you want to use opt>0, 9 is a reasonable value */
 inline static void ImaMashChannel(
-        int ch,             /* channel number to encode, REQUIRE 0 <= ch < chans  */
-        int chans,          /* total channels */
+        unsigned ch,             /* channel number to encode, REQUIRE 0 <= ch < chans  */
+        unsigned chans,          /* total channels */
         const SAMPL *ip,    /* ip[] is interleaved input samples */
         int n,              /* samples to encode PER channel, REQUIRE n % 8 == 1 */
         int *st,            /* input/output state, REQUIRE 0 <= *st <= ISSTMAX */
@@ -299,7 +299,7 @@ inline static void ImaMashChannel(
 
 /* mash one block.  if you want to use opt>0, 9 is a reasonable value */
 void ImaBlockMashI(
-        int chans,          /* total channels */
+        unsigned chans,          /* total channels */
         const SAMPL *ip,    /* ip[] is interleaved input samples */
         int n,              /* samples to encode PER channel, REQUIRE n % 8 == 1 */
         int *st,            /* input/output state, REQUIRE 0 <= *st <= ISSTMAX */
@@ -307,7 +307,7 @@ void ImaBlockMashI(
         int opt             /* non-zero allows some cpu-intensive code to improve output */
 )
 {
-        int ch;
+        unsigned ch;
         for (ch=0; ch<chans; ch++)
                 ImaMashChannel(ch, chans, ip, n, st+ch, obuff, opt);
 }
@@ -322,9 +322,9 @@ void ImaBlockMashI(
  */
 sox_size_t ImaSamplesIn(
   sox_size_t dataLen,
-  unsigned short chans,
-  unsigned short blockAlign,
-  unsigned short samplesPerBlock
+  sox_size_t chans,
+  sox_size_t blockAlign,
+  sox_size_t samplesPerBlock
 )
 {
   sox_size_t m, n;
@@ -353,8 +353,8 @@ sox_size_t ImaSamplesIn(
  *   to encode number of chans with given samplesPerBlock
  */
 sox_size_t ImaBytesPerBlock(
-  unsigned short chans,
-  unsigned short samplesPerBlock
+  sox_size_t chans,
+  sox_size_t samplesPerBlock
 )
 {
   sox_size_t n;

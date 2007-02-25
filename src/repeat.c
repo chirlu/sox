@@ -100,7 +100,7 @@ static int sox_repeat_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
         if (repeat->first_drain == 1) {
                 repeat->first_drain = 0;
 
-                fseeko(repeat->fp, 0, SEEK_END);
+                fseeko(repeat->fp, (off_t)0, SEEK_END);
                 repeat->total = ftello(repeat->fp);
 
                 if ((repeat->total % sizeof(sox_sample_t)) != 0) {
@@ -111,7 +111,7 @@ static int sox_repeat_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
                 repeat->total /= sizeof(sox_sample_t);
                 repeat->remaining = repeat->total;
 
-                fseeko(repeat->fp, 0, SEEK_SET);
+                fseeko(repeat->fp, (off_t)0, SEEK_SET);
         }
 
         if (repeat->remaining == 0) {
@@ -120,7 +120,7 @@ static int sox_repeat_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
                         return (SOX_EOF);
                 } else {
                         repeat->repeats--;
-                        fseeko(repeat->fp, 0, SEEK_SET);
+                        fseeko(repeat->fp, (off_t)0, SEEK_SET);
                         repeat->remaining = repeat->total;
                 }
         }
@@ -142,7 +142,7 @@ static int sox_repeat_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 
                 while (repeat->repeats > 0) {
                         repeat->repeats--;
-                        fseeko(repeat->fp, 0, SEEK_SET);
+                        fseeko(repeat->fp, (off_t)0, SEEK_SET);
 
                         if (repeat->total >= *osamp - done) {
                                 samp = *osamp - done;

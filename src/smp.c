@@ -171,7 +171,7 @@ static int writetrailer(ft_t ft, struct smptrailer *trailer)
 
 static int sox_smpseek(ft_t ft, sox_size_t offset) 
 {
-    int new_offset, channel_block, alignment;
+    sox_size_t new_offset, channel_block, alignment;
     smp_t smp = (smp_t) ft->priv;
 
     new_offset = offset * ft->signal.size;
@@ -205,7 +205,7 @@ static int sox_smpstartread(ft_t ft)
         smp_t smp = (smp_t) ft->priv;
         int i;
         int namelen, commentlen;
-        long samplestart;
+        sox_size_t samplestart;
         struct smpheader header;
         struct smptrailer trailer;
 

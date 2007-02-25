@@ -155,7 +155,7 @@ int sox_sndfile_stopread(ft_t ft)
 
 static struct {
   const char *ext;
-  int len;
+  unsigned len;
   int format;
 } format_map[] =
 {
@@ -216,7 +216,7 @@ static int name_to_format(const char *name)
 }
 
 /* Make libsndfile subtype from sample encoding and size */
-static int sndfile_format(int encoding, int size)
+static int sndfile_format(sox_encoding_t encoding, int size)
 {
   if (encoding < SOX_ENCODING_SIZE_IS_WORD) {
     switch (encoding) {

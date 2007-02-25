@@ -115,7 +115,7 @@ static int sox_stat_start(eff_t effp)
 /*
  * Print power spectrum to given stream
  */
-static void print_power_spectrum(unsigned samples, float rate, float *re_in, float *re_out)
+static void print_power_spectrum(unsigned samples, double rate, float *re_in, float *re_out)
 {
   float ffa = rate / samples;
   unsigned i;
@@ -148,7 +148,7 @@ static int sox_stat_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obu
 
       if (stat->fft_offset >= stat->fft_size) {
         stat->fft_offset = 0;
-        print_power_spectrum(stat->fft_size, effp->ininfo.rate, stat->re_in, stat->re_out);
+        print_power_spectrum(stat->fft_size, (double)effp->ininfo.rate, stat->re_in, stat->re_out);
       }
 
     }
@@ -215,7 +215,7 @@ static int sox_stat_drain(eff_t effp, sox_sample_t *obuf UNUSED, sox_size_t *osa
     for (x = stat->fft_offset; x < stat->fft_size; x++)
       stat->re_in[x] = 0;
       
-    print_power_spectrum(stat->fft_size, effp->ininfo.rate, stat->re_in, stat->re_out);
+    print_power_spectrum(stat->fft_size, (double)effp->ininfo.rate, stat->re_in, stat->re_out);
   }
 
   *osamp = 0;

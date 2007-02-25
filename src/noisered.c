@@ -70,9 +70,9 @@ static int sox_noisered_getopts(eff_t effp, int n, char **argv)
 static int sox_noisered_start(eff_t effp)
 {
     reddata_t data = (reddata_t) effp->priv;
-    int fchannels = 0;
-    int channels = effp->ininfo.channels;
-    int i;
+    sox_size_t fchannels = 0;
+    sox_size_t channels = effp->ininfo.channels;
+    sox_size_t i;
     FILE* ifp;
 
     data->chandata = (chandata_t*)xcalloc(channels, sizeof(*(data->chandata)));
@@ -95,9 +95,9 @@ static int sox_noisered_start(eff_t effp)
     }
 
     while (1) {
-        int i1;
+        sox_size_t i1;
         float f1;
-        if (2 != fscanf(ifp, " Channel %d: %f", &i1, &f1))
+        if (2 != fscanf(ifp, " Channel %u: %f", &i1, &f1))
             break;
         if (i1 != fchannels) {
             sox_fail("noisered: Got channel %d, expected channel %d.",
@@ -130,7 +130,7 @@ static int sox_noisered_start(eff_t effp)
 /* Mangle a single window. Each output sample (except the first and last
  * half-window) is the result of two distinct calls to this function, 
  * due to overlapping windows. */
-static void reduce_noise(chandata_t* chan, float* window, float level)
+static void reduce_noise(chandata_t* chan, float* window, double level)
 {
     float *inr, *ini, *outr, *outi, *power;
     float *smoothing = chan->smoothing;
@@ -205,8 +205,8 @@ static void reduce_noise(chandata_t* chan, float* window, float level)
 
 /* Do window management once we have a complete window, including mangling
  * the current window. */
-static int process_window(eff_t effp, reddata_t data, int chan_num, int num_chans,
-                          sox_sample_t *obuf, int len) {
+static int process_window(eff_t effp, reddata_t data, unsigned chan_num, unsigned num_chans,
+                          sox_sample_t *obuf, unsigned len) {
     int j;
     float* nextwindow;
     int use = min(len, WINDOWSIZE)-min(len,(WINDOWSIZE/2));
@@ -296,8 +296,8 @@ static int sox_noisered_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t 
 static int sox_noisered_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
     reddata_t data = (reddata_t)effp->priv;
-    int i;
-    int tracks = effp->ininfo.channels;
+    unsigned i;
+    unsigned tracks = effp->ininfo.channels;
     for (i = 0; i < tracks; i ++)
         *osamp = process_window(effp, data, i, tracks, obuf, data->bufdata);
 

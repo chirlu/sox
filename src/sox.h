@@ -86,7 +86,7 @@ static double sox_macro_temp_double UNUSED;
 #define SOX_SAMPLE_NEG SOX_INT_MIN(32)
 #define SOX_SAMPLE_TO_UNSIGNED(bits,d,clips) \
   (uint##bits##_t)( \
-    sox_macro_temp_sample=d, \
+    sox_macro_temp_sample=(d), \
     sox_macro_temp_sample>(sox_sample_t)(SOX_SAMPLE_MAX-(1U<<(31-bits)))? \
       ++(clips),SOX_UINT_MAX(bits): \
       ((uint32_t)(sox_macro_temp_sample^SOX_SAMPLE_NEG)+(1U<<(31-bits)))>>(32-bits))
@@ -104,7 +104,7 @@ static double sox_macro_temp_double UNUSED;
 #define SOX_UNSIGNED_DWORD_TO_SAMPLE(d,clips) (sox_sample_t)((d)^SOX_SAMPLE_NEG)
 #define SOX_SIGNED_DWORD_TO_SAMPLE(d,clips) (sox_sample_t)(d)
 #define SOX_FLOAT_DWORD_TO_SAMPLE SOX_FLOAT_DDWORD_TO_SAMPLE
-#define SOX_FLOAT_DDWORD_TO_SAMPLE(d,clips) (sox_macro_temp_double=d,sox_macro_temp_double<-1?++(clips),(-SOX_SAMPLE_MAX):sox_macro_temp_double>1?++(clips),SOX_SAMPLE_MAX:(sox_sample_t)((uint32_t)((double)(sox_macro_temp_double)*SOX_SAMPLE_MAX+(SOX_SAMPLE_MAX+.5))-SOX_SAMPLE_MAX))
+#define SOX_FLOAT_DDWORD_TO_SAMPLE(d,clips) (sox_macro_temp_double=(d),sox_macro_temp_double<-1?++(clips),(-SOX_SAMPLE_MAX):sox_macro_temp_double>1?++(clips),SOX_SAMPLE_MAX:(sox_sample_t)((uint32_t)((double)(sox_macro_temp_double)*SOX_SAMPLE_MAX+(SOX_SAMPLE_MAX+.5))-SOX_SAMPLE_MAX))
 #define SOX_SAMPLE_TO_UNSIGNED_BYTE(d,clips) SOX_SAMPLE_TO_UNSIGNED(8,d,clips)
 #define SOX_SAMPLE_TO_SIGNED_BYTE(d,clips) SOX_SAMPLE_TO_SIGNED(8,d,clips)
 #define SOX_SAMPLE_TO_UNSIGNED_WORD(d,clips) SOX_SAMPLE_TO_UNSIGNED(16,d,clips)
@@ -114,7 +114,7 @@ static double sox_macro_temp_double UNUSED;
 #define SOX_SAMPLE_TO_UNSIGNED_DWORD(d,clips) (uint32_t)((d)^SOX_SAMPLE_NEG)
 #define SOX_SAMPLE_TO_SIGNED_DWORD(d,clips) (int32_t)(d)
 #define SOX_SAMPLE_TO_FLOAT_DWORD SOX_SAMPLE_TO_FLOAT_DDWORD
-#define SOX_SAMPLE_TO_FLOAT_DDWORD(d,clips) (sox_macro_temp_sample=d,sox_macro_temp_sample==SOX_SAMPLE_MIN?++(clips),-1.0:((double)(sox_macro_temp_sample)*(1.0/SOX_SAMPLE_MAX)))
+#define SOX_SAMPLE_TO_FLOAT_DDWORD(d,clips) (sox_macro_temp_sample=(d),sox_macro_temp_sample==SOX_SAMPLE_MIN?++(clips),-1.0:((double)(sox_macro_temp_sample)*(1.0/SOX_SAMPLE_MAX)))
 
 
 
@@ -416,7 +416,7 @@ sox_bool is_effect_name(char const * text);
 int sox_updateeffect(eff_t, const sox_signalinfo_t *in, const sox_signalinfo_t *out, int);
 int sox_gettype(ft_t, sox_bool);
 ft_t sox_initformat(void);
-char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samples, char def);
+char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samples, int def);
 
 /* The following routines are unique to the trim effect.
  * sox_trim_get_start can be used to find what is the start

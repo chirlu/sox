@@ -56,9 +56,9 @@ typedef struct vorbisstuff {
 /* Decoding data */
         OggVorbis_File *vf;
         char *buf;
-        int buf_len;
-        int start;
-        int end;  /* Unsent data samples in buf[start] through buf[end-1] */
+        sox_size_t buf_len;
+        sox_size_t start;
+        sox_size_t end;  /* Unsent data samples in buf[start] through buf[end-1] */
         int current_section;
         int eof;
 
@@ -73,7 +73,7 @@ static int myclose (void *datasource UNUSED)
 }
 
 static int _fseeko64_wrap(FILE *f, ogg_int64_t off, int whence) {
-  int ret = fseeko(f, (long)off, whence);
+  int ret = fseeko(f, off, whence);
   if (ret == EBADF)
     ret = -1;
   return ret;
@@ -94,7 +94,7 @@ static int sox_vorbisstartread(ft_t ft)
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_info *vi;
         vorbis_comment *vc;
-        int comment_size;
+        sox_size_t comment_size;
         int i, offset;
 
         ov_callbacks callbacks = {
@@ -148,7 +148,7 @@ static int sox_vorbisstartread(ft_t ft)
                 for (i = 0; i < vc->comments; i++)
                 {
                         strncpy(ft->comment + offset, vc->user_comments[i],
-                                vc->comment_lengths[i]);
+                                (size_t)vc->comment_lengths[i]);
                         offset += vc->comment_lengths[i];
                         ft->comment[offset] = '\n';
                         offset++;
@@ -161,7 +161,7 @@ static int sox_vorbisstartread(ft_t ft)
 
         /* Setup buffer */
         vb->buf_len = DEF_BUF_LEN;
-        vb->buf = (char *)xcalloc(vb->buf_len, sizeof(char));
+        vb->buf = xcalloc(vb->buf_len, sizeof(char));
         vb->start = vb->end = 0;
 
         /* Fill in other info */
@@ -185,7 +185,7 @@ static int refill_buffer (vorbis_t vb)
         while (vb->end < vb->buf_len)
         {
                 num_read = ov_read(vb->vf, vb->buf + vb->end,
-                                   vb->buf_len - vb->end, 0, 2, 1,
+                                   (int)(vb->buf_len - vb->end), 0, 2, 1,
                                    &vb->current_section);
 
                 if (num_read == 0)
@@ -260,8 +260,8 @@ static int sox_vorbisstopread(ft_t ft)
 static int oe_write_page(ogg_page *page, ft_t ft)
 {
         int written;
-        written = sox_writebuf(ft, page->header,1,page->header_len);
-        written += sox_writebuf(ft, page->body,1,page->body_len);
+        written = sox_writebuf(ft, page->header,1,(sox_size_t)page->header_len);
+        written += sox_writebuf(ft, page->body,1,(sox_size_t)page->body_len);
 
         return written;
 }
@@ -360,7 +360,7 @@ static int sox_vorbisstartwrite(ft_t ft)
             }
             quality = ft->signal.compression;
         }
-        vorbis_encode_init_vbr(&ve->vi, ft->signal.channels, ft->signal.rate, quality / 10);
+        vorbis_encode_init_vbr(&ve->vi, (int)ft->signal.channels, (int)ft->signal.rate, quality / 10);
 
         vorbis_analysis_init(&ve->vd, &ve->vi);
         vorbis_block_init(&ve->vd, &ve->vb);
@@ -382,7 +382,7 @@ static sox_size_t sox_vorbiswrite(ft_t ft, const sox_sample_t *buf, sox_size_t l
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;
         sox_size_t samples = len / ft->signal.channels;
-        float **buffer = vorbis_analysis_buffer(&ve->vd, samples);
+        float **buffer = vorbis_analysis_buffer(&ve->vd, (int)samples);
         sox_size_t i, j;
         int ret;
         int eos = 0;
@@ -393,7 +393,7 @@ static sox_size_t sox_vorbiswrite(ft_t ft, const sox_sample_t *buf, sox_size_t l
                         buffer[j][i] = buf[i*ft->signal.channels + j]
                                 / ((float)SOX_SAMPLE_MAX);
 
-        vorbis_analysis_wrote(&ve->vd, samples);
+        vorbis_analysis_wrote(&ve->vd, (int)samples);
 
         while(vorbis_analysis_blockout(&ve->vd,&ve->vb)==1)
         {

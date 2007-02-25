@@ -60,8 +60,8 @@ static int sox_noiseprof_getopts(eff_t effp, int n, char **argv)
 static int sox_noiseprof_start(eff_t effp)
 {
     profdata_t data = (profdata_t) effp->priv;
-    int channels = effp->ininfo.channels;
-    int i;
+    unsigned channels = effp->ininfo.channels;
+    unsigned i;
    
     if (data->output_filename != NULL) {
         if (strcmp(data->output_filename, "-") != 0)
@@ -113,11 +113,11 @@ static int sox_noiseprof_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t
                     sox_size_t *isamp, sox_size_t *osamp)
 {
     profdata_t data = (profdata_t) effp->priv;
-    int samp = min(*isamp, *osamp);
-    int tracks = effp->ininfo.channels;
+    sox_size_t samp = min(*isamp, *osamp);
+    sox_size_t tracks = effp->ininfo.channels;
     sox_size_t track_samples = samp / tracks;
     int ncopy = 0;
-    int i;
+    sox_size_t i;
 
     assert(effp->ininfo.channels == effp->outinfo.channels);
 

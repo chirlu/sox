@@ -77,7 +77,7 @@ static int wavwritehdr(ft_t, int);
 static unsigned short  ImaAdpcmReadBlock(ft_t ft)
 {
     wav_t       wav = (wav_t) ft->priv;
-    int bytesRead;
+    size_t bytesRead;
     int samplesThisBlock;
 
     /* Pull in the packet and check the header */
@@ -117,7 +117,7 @@ static unsigned short  ImaAdpcmReadBlock(ft_t ft)
 static unsigned short  AdpcmReadBlock(ft_t ft)
 {
     wav_t       wav = (wav_t) ft->priv;
-    int bytesRead;
+    size_t bytesRead;
     int samplesThisBlock;
     const char *errmsg;
 
@@ -152,7 +152,7 @@ static unsigned short  AdpcmReadBlock(ft_t ft)
 static int xxxAdpcmWriteBlock(ft_t ft)
 {
     wav_t wav = (wav_t) ft->priv;
-    int chans, ct;
+    sox_size_t chans, ct;
     short *p;
 
     chans = ft->signal.channels;
@@ -1730,7 +1730,7 @@ static int sox_wavseek(ft_t ft, sox_size_t offset)
                 new_offset += (channel_block - alignment);
             new_offset += wav->dataStart;
 
-            ft->sox_errno = sox_seeki(ft, new_offset, SEEK_SET);
+            ft->sox_errno = sox_seeki(ft, (sox_size_t)new_offset, SEEK_SET);
 
             if( ft->sox_errno == SOX_SUCCESS )
                 wav->numSamples = (ft->length / ft->signal.channels) -

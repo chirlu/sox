@@ -218,7 +218,7 @@ int sox_reads(ft_t ft, char *c, sox_size_t len)
 }
 
 /* Write null-terminated string (without \0). */
-int sox_writes(ft_t ft, char *c)
+int sox_writes(ft_t ft, char const * c)
 {
         if (sox_writebuf(ft, c, 1, strlen(c)) != strlen(c))
         {

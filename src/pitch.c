@@ -169,8 +169,8 @@ static double cub(
  */
 static void interpolation(
   pitch_t pitch,
-  const sox_sample_t *ibuf, int ilen, 
-  double * out, int olen,
+  const sox_sample_t *ibuf, sox_size_t ilen, 
+  double * out, sox_size_t olen,
   double rate) /* signed */
 {
     register int i, size;
@@ -180,7 +180,7 @@ static void interpolation(
 
     if (rate>0) /* sweep forwards */
     {
-        for (index=0.0, i=0; i<olen; i++, index+=rate)
+        for (index=0.0, i=0; i<(int)olen; i++, index+=rate)
         {
             register int ifl = (int) index; /* FLOOR */
             register double frac = index - ifl;

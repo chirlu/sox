@@ -270,7 +270,7 @@ static int sox_txwstartwrite(ft_t ft)
 static sox_size_t sox_txwwrite(ft_t ft, const sox_sample_t *buf, sox_size_t len)
 {
     sox_size_t i;
-    unsigned int w1,w2;
+    sox_sample_t w1,w2;
 
     tx16w_len += len;
     if (tx16w_len > TXMAXLEN) return 0;

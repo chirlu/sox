@@ -186,7 +186,8 @@ static int sox_filter_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *o
                    sox_size_t *isamp, sox_size_t *osamp)
 {
         filter_t f = (filter_t) effp->priv;
-        sox_size_t i, Nx, Nproc;
+        sox_size_t Nx;
+        long i, Nproc;
 
         /* constrain amount we actually process */
         /* sox_debug("Xh %d, Xt %d, isamp %d, ",f->Xh, f->Xt, *isamp); */

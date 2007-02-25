@@ -36,7 +36,7 @@ typedef struct fadestuff
 } *fade_t;
 
 /* prototypes */
-static double fade_gain(sox_size_t index, sox_size_t range, char fadetype);
+static double fade_gain(sox_size_t index, sox_size_t range, int fadetype);
 
 /*
  * Process options
@@ -332,7 +332,7 @@ static int delete(eff_t effp)
 /* Function returns gain value 0.0 - 1.0 according index / range ratio
 * and -1.0 if  type is invalid
 * todo: to optimize performance calculate gain every now and then and interpolate */
-static double fade_gain(sox_size_t index, sox_size_t range, char type)
+static double fade_gain(sox_size_t index, sox_size_t range, int type)
 {
     double retval = 0.0, findex = 0.0;
 

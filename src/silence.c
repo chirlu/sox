@@ -291,7 +291,7 @@ static int sox_silence_start(eff_t effp)
         return(SOX_SUCCESS);
 }
 
-static int aboveThreshold(eff_t effp, sox_sample_t value, double threshold, char unit)
+static int aboveThreshold(eff_t effp, sox_sample_t value, double threshold, int unit)
 {
     double ratio;
     int rc;

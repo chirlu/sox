@@ -55,10 +55,10 @@
 
 #include "FFT.h"
 
-int **gFFTBitTable = NULL;
-const int MaxFastBits = 16;
+unsigned **gFFTBitTable = NULL;
+const unsigned MaxFastBits = 16;
 
-static int IsPowerOfTwo(int x)
+static int IsPowerOfTwo(unsigned x)
 {
    if (x < 2)
       return 0;
@@ -66,12 +66,12 @@ static int IsPowerOfTwo(int x)
    return !(x & (x-1));         /* Thanks to 'byang' for this cute trick! */
 }
 
-static int NumberOfBitsNeeded(int PowerOfTwo)
+static int NumberOfBitsNeeded(unsigned PowerOfTwo)
 {
    int i;
 
    if (PowerOfTwo < 2) {
-      sox_debug("Error: FFT called with size %d", PowerOfTwo);
+      sox_fail("Error: FFT called with size %d", PowerOfTwo);
       exit(2);
    }
 
@@ -80,9 +80,9 @@ static int NumberOfBitsNeeded(int PowerOfTwo)
          return i;
 }
 
-static int ReverseBits(int index, int NumBits)
+static unsigned ReverseBits(unsigned index, unsigned NumBits)
 {
-   int i, rev;
+   unsigned i, rev;
 
    for (i = rev = 0; i < NumBits; i++) {
       rev = (rev << 1) | (index & 1);
@@ -96,14 +96,14 @@ static int ReverseBits(int index, int NumBits)
 /* This function permanently allocates about 250Kb (actually (2**16)-2 ints). */
 static void InitFFT(void)
 {
-   int len, b;
+   unsigned len, b;
    
-   gFFTBitTable = (int**)xcalloc(MaxFastBits, sizeof(*gFFTBitTable));
+   gFFTBitTable = xcalloc(MaxFastBits, sizeof(*gFFTBitTable));
    
    for (b = 1, len = 2; b <= MaxFastBits; b++) {
-      int i;
+      unsigned i;
 
-      gFFTBitTable[b - 1] = (int*)xcalloc(len, sizeof(**gFFTBitTable));
+      gFFTBitTable[b - 1] = xcalloc(len, sizeof(**gFFTBitTable));
       for (i = 0; i < len; i++)
         gFFTBitTable[b - 1][i] = ReverseBits(i, b);
 
@@ -117,19 +117,19 @@ static void InitFFT(void)
 /*
  * Complex Fast Fourier Transform
  */
-void FFT(int NumSamples,
+void FFT(unsigned NumSamples,
          int InverseTransform,
          const float *RealIn, float *ImagIn, float *RealOut, float *ImagOut)
 {
-   int NumBits;                 /* Number of bits needed to store indices */
-   int i, j, k, n;
-   int BlockSize, BlockEnd;
+   unsigned i, BlockSize, NumBits;                 /* Number of bits needed to store indices */
+   int j, k, n;
+   int BlockEnd;
 
    double angle_numerator = 2.0 * M_PI;
    float tr, ti;                /* temp real, temp imaginary */
 
    if (!IsPowerOfTwo(NumSamples)) {
-      sox_debug("%d is not a power of two", NumSamples);
+      sox_fail("%d is not a power of two", NumSamples);
       exit(2);
    }
 
@@ -227,10 +227,9 @@ void FFT(int NumSamples,
  * i4  <->  imag[n/2-i]
  */
 
-void RealFFT(int NumSamples, const float *RealIn, float *RealOut, float *ImagOut)
+void RealFFT(unsigned NumSamples, const float *RealIn, float *RealOut, float *ImagOut)
 {
-   int Half = NumSamples / 2;
-   int i, i3;
+   unsigned i, i3, Half = NumSamples / 2;
    float theta = M_PI / Half;
    float wtemp = (float) sin(0.5 * theta);
    float wpr = -2.0 * wtemp * wtemp;
@@ -287,9 +286,9 @@ void RealFFT(int NumSamples, const float *RealIn, float *RealOut, float *ImagOut
  * of its code.
  */
 
-void PowerSpectrum(int NumSamples, const float *In, float *Out)
+void PowerSpectrum(sox_size_t NumSamples, const float *In, float *Out)
 {
-  int Half, i, i3;
+  unsigned Half, i, i3;
   float theta, wtemp, wpr, wpi, wr, wi;
   float h1r, h1i, h2r, h2i, rt, it;
   float *tmpReal;

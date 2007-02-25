@@ -167,7 +167,7 @@ typedef struct vocstuff {
     long           rate;        /* rate code (byte) of this chunk */
     int            silent;      /* sound or silence? */
     long           srate;       /* rate code (byte) of silence */
-    long           blockseek;   /* start of current output block */
+    sox_size_t     blockseek;   /* start of current output block */
     long           samples;     /* number of samples output */
     uint16_t       format;      /* VOC audio format */
     int            size;        /* word length of data */
@@ -788,9 +788,9 @@ static void blockstart(ft_t ft)
             sox_writeb(ft, 0);           /* block length (for now) */
             sox_writeb(ft, 0);           /* block length (for now) */
             v->rate = ft->signal.rate;
-            sox_writedw(ft, v->rate);    /* Rate code */
+            sox_writedw(ft, (unsigned)v->rate);    /* Rate code */
             sox_writeb(ft, 16);          /* Sample Size */
-            sox_writeb(ft, ft->signal.channels);   /* Sample Size */
+            sox_writeb(ft, (signed)ft->signal.channels);   /* Sample Size */
             sox_writew(ft, 0x0004);      /* Encoding */
             sox_writeb(ft, 0);           /* Unused */
             sox_writeb(ft, 0);           /* Unused */

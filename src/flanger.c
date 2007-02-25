@@ -222,8 +222,8 @@ static int sox_flanger_start(eff_t effp)
       SOX_FLOAT,
       f->lfo,
       f->lfo_length,
-      (sox_size_t)(f->delay_min / 1000 * effp->ininfo.rate + .5),
-      f->delay_buf_length - 2,
+      (double)(sox_size_t)(f->delay_min / 1000 * effp->ininfo.rate + .5),
+      (double)(f->delay_buf_length - 2),
       3 * M_PI_2);  /* Start the sweep at minimum delay (for mono at least) */
 
   sox_debug("delay_buf_length=%u lfo_length=%u\n",

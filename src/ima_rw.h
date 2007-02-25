@@ -33,7 +33,7 @@ extern void initImaTable(void);
 
 /* ImaBlockExpandI() outputs interleaved samples into one output buffer */
 extern void ImaBlockExpandI(
-	int chans,          /* total channels             */
+	unsigned chans,          /* total channels             */
 	const unsigned char *ibuff,/* input buffer[blockAlign]   */
 	SAMPL *obuff,       /* output samples, n*chans    */
 	int n               /* samples to decode PER channel, REQUIRE n % 8 == 1  */
@@ -41,7 +41,7 @@ extern void ImaBlockExpandI(
 
 /* ImaBlockExpandM() outputs non-interleaved samples into chan separate output buffers */
 extern void ImaBlockExpandM(
-	int chans,          /* total channels             */
+	unsigned chans,          /* total channels             */
 	const unsigned char *ibuff,/* input buffer[blockAlign]   */
 	SAMPL **obuffs,     /* chan output sample buffers, each takes n samples */
 	int n               /* samples to decode PER channel, REQUIRE n % 8 == 1  */
@@ -49,7 +49,7 @@ extern void ImaBlockExpandM(
 
 /* mash one block.  if you want to use opt>0, 9 is a reasonable value */
 extern void ImaBlockMashI(
-	int chans,          /* total channels */
+	unsigned chans,          /* total channels */
 	const SAMPL *ip,    /* ip[] is interleaved input samples */
 	int n,              /* samples to encode PER channel, REQUIRE n % 8 == 1 */
 	int *st,            /* input/output state[chans], REQUIRE 0 <= st[ch] <= ISSTMAX */
@@ -69,9 +69,9 @@ extern void ImaBlockMashI(
  */
 extern sox_size_t ImaSamplesIn(
 	sox_size_t dataLen,
-	unsigned short chans,
-	unsigned short blockAlign,
-	unsigned short samplesPerBlock
+	sox_size_t chans,
+	sox_size_t blockAlign,
+	sox_size_t samplesPerBlock
 );
 
 /*
@@ -80,7 +80,7 @@ extern sox_size_t ImaSamplesIn(
  *   to encode number of chans with given samplesPerBlock
  */
 extern sox_size_t ImaBytesPerBlock(
-	unsigned short chans,
-	unsigned short samplesPerBlock
+	sox_size_t chans,
+	sox_size_t samplesPerBlock
 );
 

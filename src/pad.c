@@ -20,15 +20,15 @@
 
 typedef struct pad
 {
-  int npads;         /* Number of pads requested */
+  unsigned npads;     /* Number of pads requested */
   struct {
-    char *str;       /* Command-line argument to parse for this pad */
+    char * str;       /* Command-line argument to parse for this pad */
     sox_size_t start; /* Start padding when in_pos equals this */
     sox_size_t pad;   /* Number of samples to pad */
   } * pads;
 
   sox_size_t in_pos;  /* Number of samples read from the input stream */
-  int pads_pos;      /* Number of pads completed so far */
+  unsigned pads_pos;  /* Number of pads completed so far */
   sox_size_t pad_pos; /* Number of samples through the current pad */
 } * pad_t;
 
@@ -39,7 +39,7 @@ static int parse(eff_t effp, char * * argv, sox_rate_t rate)
 {
   pad_t p = (pad_t) effp->priv;
   char const * next;
-  int i;
+  unsigned i;
 
   for (i = 0; i < p->npads; ++i) {
     if (argv) /* 1st parse only */
@@ -72,7 +72,7 @@ static int create(eff_t effp, int n, char * * argv)
 static int start(eff_t effp)
 {
   pad_t p = (pad_t) effp->priv;
-  int i;
+  unsigned i;
 
   parse(effp, 0, effp->ininfo.rate); /* Re-parse now rate is known */
   p->in_pos = p->pad_pos = p->pads_pos = 0;
@@ -124,14 +124,14 @@ static int stop(eff_t effp)
 {
   pad_t p = (pad_t) effp->priv;
   if (p->pads_pos != p->npads)
-    sox_warn("Input audio too short; pads not applied: %i",p->npads-p->pads_pos);
+    sox_warn("Input audio too short; pads not applied: %u",p->npads-p->pads_pos);
   return SOX_SUCCESS;
 }
 
 static int delete(eff_t effp)
 {
   pad_t p = (pad_t) effp->priv;
-  int i;
+  unsigned i;
   for (i = 0; i < p->npads; ++i)
     free(p->pads[i].str);
   free(p->pads);

@@ -210,12 +210,12 @@ static int sox_chorus_start(eff_t effp)
 
                 if (chorus->modulation[i] == MOD_SINE)
                   sox_generate_wave_table(SOX_WAVE_SINE, SOX_INT, chorus->lookup_tab[i],
-                                         chorus->length[i], 0, chorus->depth_samples[i], 0);
+                                         (unsigned)chorus->length[i], 0., (double)chorus->depth_samples[i], 0.);
                 else
                   sox_generate_wave_table(SOX_WAVE_TRIANGLE, SOX_INT, chorus->lookup_tab[i], 
-                                         chorus->length[i],
-                                         chorus->samples[i] - 1 - 2 * chorus->depth_samples[i],
-                                         chorus->samples[i] - 1, 3 * M_PI_2);
+                                         (unsigned)chorus->length[i],
+                                         (double)(chorus->samples[i] - 1 - 2 * chorus->depth_samples[i]),
+                                         (double)(chorus->samples[i] - 1), 3 * M_PI_2);
                 chorus->phase[i] = 0;
                 
                 if ( chorus->samples[i] > chorus->maxsamples )

@@ -455,10 +455,11 @@ static int sox_mcompand_flow_1(eff_t effp, compand_t c, comp_band_t l, const sox
            vol to, is a constant equal to the difference between this
            band's delay and the longest delay of all the bands. */
 
-        if (l->delay_buf_cnt >= l->delay_size)
+        if (l->delay_buf_cnt >= l->delay_size) {
           checkbuf = l->delay_buf[(l->delay_buf_ptr + c->delay_buf_size - l->delay_size)%c->delay_buf_size] * level_out_lin;
           SOX_SAMPLE_CLIP_COUNT(checkbuf, effp->clips);
           l->delay_buf[(l->delay_buf_ptr + c->delay_buf_size - l->delay_size)%c->delay_buf_size] = checkbuf;
+        }
         if (l->delay_buf_cnt >= c->delay_buf_size)
           obuf[done++] = l->delay_buf[l->delay_buf_ptr];
         else

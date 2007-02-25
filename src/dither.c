@@ -32,7 +32,7 @@ static int getopts(eff_t effp, int n, char * * argv)
     return SOX_EOF;
   }
   
-  dither->amount = sqrt(2); /* M_SQRT2 missing in some places */   /* Default to half a bit. */
+  dither->amount = sqrt(2.); /* M_SQRT2 missing in some places */   /* Default to half a bit. */
   if (n == 1) {
     double amount;
     char dummy;
