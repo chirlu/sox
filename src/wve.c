@@ -168,6 +168,7 @@ static int sox_wvestopwrite(ft_t ft)
                 return(SOX_EOF);
         }
         wvewriteheader(ft);
+        return SOX_SUCCESS;
 }
 
 static void wvewriteheader(ft_t ft)

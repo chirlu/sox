@@ -14,7 +14,7 @@
 #ifndef SOX_I_H
 #define SOX_I_H
 
-#include "stconfig.h"
+#include "soxconfig.h"
 #include "sox.h"
 #include "xmalloc.h"
 
@@ -104,9 +104,9 @@ size_t sox_writebuf(ft_t ft, void const *buf, size_t size, sox_size_t len);
 int sox_reads(ft_t ft, char *c, sox_size_t len);
 int sox_writes(ft_t ft, char *c);
 int sox_readb(ft_t ft, uint8_t *ub);
-int sox_writeb(ft_t ft, uint8_t ub);
+int sox_writeb(ft_t ft, int ub);
 int sox_readw(ft_t ft, uint16_t *uw);
-int sox_writew(ft_t ft, uint16_t uw);
+int sox_writew(ft_t ft, int uw);
 int sox_read3(ft_t ft, uint24_t *u3);
 int sox_write3(ft_t ft, uint24_t u3);
 int sox_readdw(ft_t ft, uint32_t *udw);
@@ -128,9 +128,9 @@ void sox_clearerr(ft_t ft);
 uint32_t get32_le(unsigned char **p);
 uint16_t get16_le(unsigned char **p);
 void put32_le(unsigned char **p, uint32_t val);
-void put16_le(unsigned char **p, int16_t val);
+void put16_le(unsigned char **p, unsigned val);
 void put32_be(unsigned char **p, int32_t val);
-void put16_be(unsigned char **p, short val);
+void put16_be(unsigned char **p, int val);
 
 /* Utilities to byte-swap values, use libc optimized macros if possible  */
 #ifdef HAVE_BYTESWAP_H
@@ -140,7 +140,7 @@ void put16_be(unsigned char **p, short val);
 #define sox_swapw(uw) (((uw >> 8) | (uw << 8)) & 0xffff)
 #define sox_swapdw(udw) ((udw >> 24) | ((udw >> 8) & 0xff00) | ((udw << 8) & 0xff0000) | (udw << 24))
 #endif
-float sox_swapf(float f);
+float sox_swapf(float const * f);
 uint32_t sox_swap24(uint32_t udw);
 double sox_swapd(double d);
 
@@ -268,7 +268,6 @@ sox_size_t sox_rawread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp);
 int sox_rawstopread(ft_t ft);
 int sox_rawstartwrite(ft_t ft);
 sox_size_t sox_rawwrite(ft_t ft, const sox_sample_t *buf, sox_size_t nsamp);
-int sox_rawstopwrite(ft_t ft);
 int sox_rawseek(ft_t ft, sox_size_t offset);
 
 /* libsndfile I/O */
@@ -293,10 +292,11 @@ int sox_effect_nothing_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *
 int sox_effect_nothing_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp);
 int sox_effect_nothing_getopts(eff_t effp, int n, char **argv UNUSED);
 
-int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, signed char size, sox_option_t rev_bits);
+int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size, sox_option_t rev_bits);
 #define sox_rawstartread(ft) sox_rawstart(ft, sox_false, sox_false, SOX_ENCODING_UNKNOWN, -1, SOX_OPTION_DEFAULT)
 #define sox_rawstartwrite sox_rawstartread
 #define sox_rawstopread sox_format_nothing
+#define sox_rawstopwrite sox_format_nothing
 
 /*=============================================================================
  * Effects

@@ -421,7 +421,7 @@ static int dvms_write_header(ft_t ft, struct dvms_header *hdr)
         pch += sizeof(hdr->Filename);
         put16_le(&pch, hdr->Id);
         put16_le(&pch, hdr->State);
-        put32_le(&pch, hdr->Unixtime);
+        put32_le(&pch, (unsigned)hdr->Unixtime);
         put16_le(&pch, hdr->Usender);
         put16_le(&pch, hdr->Ureceiver);
         put32_le(&pch, hdr->Length);

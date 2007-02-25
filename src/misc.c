@@ -243,7 +243,7 @@ int sox_readb(ft_t ft, uint8_t *ub)
 }
 
 /* Write byte. */
-int sox_writeb(ft_t ft, uint8_t ub)
+int sox_writeb(ft_t ft, int ub)
 {
   if (ft->signal.reverse_nibbles)
     ub = ((ub & 15) << 4) | (ub >> 4);
@@ -270,7 +270,7 @@ int sox_readw(ft_t ft, uint16_t *uw)
 }
 
 /* Write word. */
-int sox_writew(ft_t ft, uint16_t uw)
+int sox_writew(ft_t ft, int uw)
 {
         if (ft->signal.reverse_bytes)
                 uw = sox_swapw(uw);
@@ -343,7 +343,7 @@ int sox_readf(ft_t ft, float *f)
             return(SOX_EOF);
         }
         if (ft->signal.reverse_bytes)
-                *f = sox_swapf(*f);
+                *f = sox_swapf(f);
         return SOX_SUCCESS;
 }
 
@@ -353,7 +353,7 @@ int sox_writef(ft_t ft, float f)
         float t = f;
 
         if (ft->signal.reverse_bytes)
-                t = sox_swapf(t);
+                t = sox_swapf(&t);
         if (sox_writebuf(ft, &t, sizeof(float), 1) != 1)
         {
                 sox_fail_errno(ft,errno,writerr);
@@ -412,7 +412,7 @@ void put32_le(unsigned char **p, uint32_t val)
         *(*p)++ = (val >> 24) & 0xff;
 }
 
-void put16_le(unsigned char **p, int16_t val)
+void put16_le(unsigned char **p, unsigned val)
 {
         *(*p)++ = val & 0xff;
         *(*p)++ = (val >> 8) & 0xff;
@@ -426,7 +426,7 @@ void put32_be(unsigned char **p, int32_t val)
   *(*p)++ = val & 0xff;
 }
 
-void put16_be(unsigned char **p, short val)
+void put16_be(unsigned char **p, int val)
 {
   *(*p)++ = (val >> 8) & 0xff;
   *(*p)++ = val & 0xff;
@@ -442,14 +442,14 @@ static void sox_swapb(char *l, char *f, int n)
 }
 
 /* return swapped 32-bit float */
-float sox_swapf(float f)
+float sox_swapf(float const * f)
 {
     union {
         uint32_t dw;
         float f;
     } u;
 
-    u.f= f;
+    u.f= *f;
     u.dw= (u.dw>>24) | ((u.dw>>8)&0xff00) | ((u.dw<<8)&0xff0000) | (u.dw<<24);
     return u.f;
 }
@@ -662,16 +662,11 @@ int sox_seeki(ft_t ft, sox_size_t offset, int whence)
         } else
             sox_fail_errno(ft,SOX_EPERM, "file not seekable");
     } else {
-        if (fseeko(ft->fp, offset, whence) == -1)
+        if (fseeko(ft->fp, (off_t)offset, whence) == -1)
             sox_fail_errno(ft,errno,strerror(errno));
         else
             ft->sox_errno = SOX_SUCCESS;
     }
-
-    /* Empty the st file buffer */
-    if (ft->sox_errno == SOX_SUCCESS)
-        ft->eof = 0;
-
     return ft->sox_errno;
 }
 

@@ -298,7 +298,7 @@ static void makecodes(int e, int c, int s, int b, dictent newdict[511], long cod
   }
 }
 
-static void putcode(ft_t ft, long codes[256], long codesize[256], unsigned char c, unsigned char **df)
+static void putcode(ft_t ft, long codes[256], long codesize[256], unsigned c, unsigned char **df)
 {
   struct readpriv *p = (struct readpriv *) ft->priv;
   long code, size;
@@ -321,7 +321,7 @@ static void putcode(ft_t ft, long codes[256], long codesize[256], unsigned char 
   }
 }
 
-static void compress(ft_t ft, unsigned char **df, int32_t *dl, float fr)
+static void compress(ft_t ft, unsigned char **df, int32_t *dl, sox_rate_t fr)
 {
   struct readpriv *p = (struct readpriv *) ft->priv;
   int32_t samplerate;
@@ -416,7 +416,7 @@ static void compress(ft_t ft, unsigned char **df, int32_t *dl, float fr)
   put32_be(&dfp, *dl);
   put32_be(&dfp, p->new_checksum);
   put32_be(&dfp, 1);
-  samplerate = 22050 / (int32_t)fr;
+  samplerate = 22050 / fr;
   put32_be(&dfp, samplerate);
   put16_be(&dfp, dictsize);
   *df = datafork;               /* reassign passed pointer to new datafork */
@@ -434,7 +434,7 @@ static int sox_hcomstopwrite(ft_t ft)
 
   /* Compress it all at once */
   if (compressed_len)
-    compress(ft, &compressed_data, (int32_t *)&compressed_len, (double) ft->signal.rate);
+    compress(ft, &compressed_data, (int32_t *)&compressed_len, ft->signal.rate);
   free((char *)p->data);
 
   /* Write the header */
@@ -442,7 +442,7 @@ static int sox_hcomstopwrite(ft_t ft)
   sox_padbytes(ft, 65-3);
   sox_writes(ft, "FSSD");
   sox_padbytes(ft, 83-69);
-  sox_writedw(ft, (uint32_t)compressed_len); /* compressed_data size */
+  sox_writedw(ft, compressed_len); /* compressed_data size */
   sox_writedw(ft, 0); /* rsrc size */
   sox_padbytes(ft, 128 - 91);
   if (sox_error(ft)) {
@@ -457,7 +457,7 @@ static int sox_hcomstopwrite(ft_t ft)
 
   if (rc == SOX_SUCCESS)
     /* Pad the compressed_data fork to a multiple of 128 bytes */
-    sox_padbytes(ft, 128 - (int) (compressed_len % 128));
+    sox_padbytes(ft, 128u - (compressed_len % 128));
 
   return rc;
 }

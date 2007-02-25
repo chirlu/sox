@@ -213,11 +213,11 @@ static sox_size_t sox_xaread(ft_t ft, sox_sample_t *buf, sox_size_t len)
                         return done;
                     }
                     sox_fail_errno(ft,SOX_EOF,"Premature EOF on .xa input file");
-                    return SOX_EOF;
+                    return 0;
                 } else {
                     /* error */
                     sox_fail_errno(ft,SOX_EOF,"read error on input stream");
-                    return SOX_EOF;
+                    return 0;
                 }
             }
             xa->bufPos = 0;
@@ -264,7 +264,7 @@ static sox_size_t sox_xaread(ft_t ft, sox_sample_t *buf, sox_size_t len)
         }
     }
     if (done == 0) {
-        return SOX_EOF;
+        return 0;
     }
     return done;
 }
@@ -293,7 +293,7 @@ static int sox_xastartwrite(ft_t ft)
 static sox_size_t sox_xawrite(ft_t ft, const sox_sample_t *buf UNUSED, sox_size_t len UNUSED)
 {
     sox_fail_errno(ft, SOX_ENOTSUP, ".XA writing not supported");
-    return SOX_EOF;
+    return 0;
 }
 
 static int sox_xastopwrite(ft_t ft)

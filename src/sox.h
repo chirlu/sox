@@ -14,7 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "ststdint.h"
+#include "soxstdint.h"
 
 /* The following is the API version of libsox.  It is not meant
  * to follow the version number of SoX but it has historically.
@@ -260,7 +260,6 @@ typedef struct sox_fileinfo
     size_t        size;                 /* Size of buffer */
     size_t        count;                /* Count read in to buffer */
     size_t        pos;                  /* Position in buffer */
-    unsigned char eof;                  /* Marker that EOF has been reached */
 } sox_fileinfo_t;
 
 
@@ -297,16 +296,15 @@ struct sox_soundstream {
     sox_instrinfo_t  instr;                /* instrument specification */
     sox_loopinfo_t   loops[SOX_MAX_NLOOPS]; /* Looping specification */
     sox_bool         seekable;             /* can seek on this file */
-    char            mode;                 /* read or write mode */
+    char             mode;                 /* read or write mode */
     sox_size_t       length;               /* frames in file, or 0 if unknown. */
     sox_size_t       clips;                /* increment if clipping occurs */
-    char            *filename;            /* file name */
-    char            *filetype;            /* type of file */
-    char            *comment;             /* comment string */
-    FILE            *fp;                  /* File stream pointer */
-    unsigned char   eof;                  /* Marker that EOF has been reached */
-    int             sox_errno;             /* Failure error codes */
-    char            sox_errstr[256];       /* Extend Failure text */
+    char             *filename;            /* file name */
+    char             *filetype;            /* type of file */
+    char             *comment;             /* comment string */
+    FILE             *fp;                  /* File stream pointer */
+    int              sox_errno;            /* Failure error codes */
+    char             sox_errstr[256];      /* Extend Failure text */
     const sox_format_t *h;                 /* format struct for this file */
     /* The following is a portable trick to align this variable on
      * an 8-byte boundery.  Once this is done, the buffer alloced

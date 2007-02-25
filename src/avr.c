@@ -260,7 +260,7 @@ static int sox_avrstopwrite(ft_t ft)
   avr_t avr = (avr_t)ft->priv;
   int rc;
 
-  int size = avr->size / ft->signal.channels;
+  unsigned size = avr->size / ft->signal.channels;
 
   rc = sox_rawstopwrite(ft);
   if (rc)

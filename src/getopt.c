@@ -1,4 +1,4 @@
-#include "stconfig.h"
+#include "soxconfig.h"
 #ifndef HAVE_GETOPT_LONG
 
 /* Getopt for GNU.

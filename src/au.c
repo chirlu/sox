@@ -32,6 +32,7 @@
 #define DEC_INV_MAGIC   0x0064732e              /* '\0ds.' upside-down */
 #define SUN_HDRSIZE     24                      /* Size of minimal header */
 #define SUN_UNSPEC      ((unsigned)(~0))        /* Unspecified data size */
+#define SUN_ENCODING_UNKNOWN 0
 #define SUN_ULAW        1                       /* u-law encoding */
 #define SUN_LIN_8       2                       /* Linear 8 bits */
 #define SUN_LIN_16      3                       /* Linear 16 bits */
@@ -61,7 +62,7 @@ typedef struct aupriv {
 
 static void auwriteheader(ft_t ft, sox_size_t data_size);
 
-static int sox_auencodingandsize(int sun_encoding, sox_encoding_t * encoding, int * size)
+static int sox_auencodingandsize(uint32_t sun_encoding, sox_encoding_t * encoding, int * size)
 {
     switch (sun_encoding) {
     case SUN_ULAW:
@@ -378,9 +379,9 @@ static int sox_austopwrite(ft_t ft)
         return(SOX_SUCCESS);
 }
 
-static int sox_ausunencoding(int size, int encoding)
+static unsigned sox_ausunencoding(int size, sox_encoding_t encoding)
 {
-        int sun_encoding;
+        unsigned sun_encoding;
 
         if (encoding == SOX_ENCODING_ULAW && size == SOX_SIZE_BYTE)
                 sun_encoding = SUN_ULAW;
@@ -394,8 +395,7 @@ static int sox_ausunencoding(int size, int encoding)
                 sun_encoding = SUN_LIN_24;
         else if (encoding == SOX_ENCODING_FLOAT && size == SOX_SIZE_32BIT)
                 sun_encoding = SUN_FLOAT;
-        else
-                sun_encoding = SOX_ENCODING_UNKNOWN;
+        else sun_encoding = SUN_ENCODING_UNKNOWN;
         return sun_encoding;
 }
 
@@ -403,13 +403,14 @@ static void auwriteheader(ft_t ft, sox_size_t data_size)
 {
         uint32_t magic;
         uint32_t hdr_size;
-        int      encoding;
+        uint32_t encoding;
         uint32_t sample_rate;
         uint32_t channels;
         int   x;
         int   comment_size;
 
-        if ((encoding = sox_ausunencoding(ft->signal.size, ft->signal.encoding)) == -1) {
+        encoding = sox_ausunencoding(ft->signal.size, ft->signal.encoding);
+        if (encoding == SUN_ENCODING_UNKNOWN) {
                 sox_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
                 sox_report("Only U-law, A-law, and signed bytes/words/tri-bytes are supported.");
                 sox_report("Defaulting to 8khz u-law");

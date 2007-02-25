@@ -45,7 +45,7 @@
 
 /* Private data */
 struct gsmpriv {
-        int             channels;
+        unsigned        channels;
         gsm_signal      *samples;
         gsm_signal      *samplePtr;
         gsm_signal      *sampleTop;
@@ -56,7 +56,7 @@ struct gsmpriv {
 static int gsmstart_rw(ft_t ft, int w) 
 {
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
-        int ch;
+        unsigned ch;
         
         ft->signal.encoding = SOX_ENCODING_GSM;
         ft->signal.size = SOX_SIZE_BYTE;
@@ -209,7 +209,7 @@ static sox_size_t sox_gsmwrite(ft_t ft, const sox_sample_t *buf, sox_size_t samp
 static int sox_gsmstopread(ft_t ft)
 {
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
-        int ch;
+        unsigned ch;
 
         for (ch=0; ch<p->channels; ch++)
                 gsm_destroy(p->handle[ch]);

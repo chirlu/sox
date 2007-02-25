@@ -122,7 +122,7 @@ static void settrailer(ft_t ft, struct smptrailer *trailer, sox_rate_t rate)
                 trailer->loops[i].count = ft->loops[i].count;   
             } else {
                 /* set first loop start as FFFFFFFF */
-                trailer->loops[i].start = ~0;   
+                trailer->loops[i].start = ~0u;   
                 /* to mark it as not set */
                 trailer->loops[i].end = 0;      
                 trailer->loops[i].type = 0;
@@ -131,12 +131,12 @@ static void settrailer(ft_t ft, struct smptrailer *trailer, sox_rate_t rate)
         }
         for(i = 0; i < 8; i++) {        /* write the 8 markers */
                 strcpy(trailer->markers[i].name, "          ");
-                trailer->markers[i].position = ~0;
+                trailer->markers[i].position = ~0u;
         }
         trailer->MIDInote = MIDI_UNITY;         /* Unity play back */
         trailer->rate = rate;
         trailer->SMPTEoffset = 0;
-        trailer->CycleSize = -1;
+        trailer->CycleSize = ~0u;
 }
 
 /*

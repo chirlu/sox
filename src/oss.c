@@ -180,7 +180,6 @@ static int ossdspinit(ft_t ft)
     }
     file->count = 0;
     file->pos = 0;
-    file->eof = 0;
     file->buf = (char *)xmalloc(file->size);
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_SYNC, NULL) < 0) {

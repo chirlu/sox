@@ -96,7 +96,6 @@ void sox_adpcm_reset(adpcm_io_t state, sox_encoding_t type)
 {
   state->file.count = 0;
   state->file.pos = 0;
-  state->file.eof = 0;
   state->store.byte = 0;
   state->store.flag = 0;
 
@@ -161,7 +160,7 @@ sox_size_t sox_adpcm_read(ft_t ft, adpcm_io_t state, sox_sample_t * buffer, sox_
   sox_size_t n;
   uint8_t byte;
 
-  for (n = 0; n < (len&~1) && sox_readb(ft, &byte) == SOX_SUCCESS; n += 2) {
+  for (n = 0; n < (len&~1u) && sox_readb(ft, &byte) == SOX_SUCCESS; n += 2) {
     short word = adpcm_decode(byte >> 4, &state->encoder);
     *buffer++ = SOX_SIGNED_WORD_TO_SAMPLE(word, ft->clips);
 

@@ -33,7 +33,8 @@ typedef struct sfstuff {
 static void readcodes(ft_t ft, SFHEADER *sfhead)
 {
         char *commentbuf = NULL, *sfcharp, *newline;
-        short bsize, finished = 0;
+        sox_size_t bsize;
+        sox_bool finished = sox_false;
         SFCODE *sfcodep;
 
         sfcodep = (SFCODE *) &sfcodes(sfhead);
@@ -46,7 +47,7 @@ static void readcodes(ft_t ft, SFHEADER *sfhead)
                 bsize = sfcodep->bsize - sizeof(SFCODE);
                 switch(sfcodep->code) {
                 case SF_END:
-                        finished = 1;
+                        finished = sox_true;
                         break;
                 case SF_COMMENT:
                         commentbuf = (char *) xmalloc(bsize + 1);
@@ -104,7 +105,7 @@ static int sox_sfstartread(ft_t ft)
         }
         memcpy(&sf->info, &sfhead.sfinfo, sizeof(struct sfinfo));
         if (ft->signal.reverse_bytes) {
-                sf->info.sf_srate = sox_swapf(sf->info.sf_srate);
+                sf->info.sf_srate = sox_swapf(&sf->info.sf_srate);
                 sf->info.sf_packmode = sox_swapdw(sf->info.sf_packmode);
                 sf->info.sf_chans = sox_swapdw(sf->info.sf_chans);
         }

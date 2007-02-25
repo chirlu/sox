@@ -167,7 +167,7 @@ static int sox_maudstartread(ft_t ft)
                         if (chunksize & 1)
                                 chunksize++;
                         chunk_buf = (char *) xmalloc(chunksize + 1);
-                        if (sox_readbuf(ft, chunk_buf, 1, (int)chunksize) 
+                        if (sox_readbuf(ft, chunk_buf, 1, chunksize) 
                             != chunksize)
                         {
                                 sox_fail_errno(ft,SOX_EOF,"MAUD: Unexpected EOF in ANNO header");

@@ -102,9 +102,9 @@ static void parse_effects(int argc, char **argv);
 static void build_effects_table(void);
 static int start_all_effects(void);
 static int flow_effect_out(void);
-static int flow_effect(int);
+static int flow_effect(unsigned);
 static int drain_effect_out(void);
-static int drain_effect(int);
+static int drain_effect(unsigned);
 static void stop_effects(void);
 static void delete_effects(void);
 
@@ -142,9 +142,9 @@ static sox_signalinfo_t combiner, ofile_signal;
 
 static struct sox_effect efftab[MAX_EFF]; /* left/mono channel effects */
 static struct sox_effect efftabR[MAX_EFF];/* right channel effects */
-static int neffects;                     /* # of effects to run on data */
-static int input_eff;                    /* last input effect with data */
-static int input_eff_eof;                /* has input_eff reached EOF? */
+static unsigned neffects;                     /* # of effects to run on data */
+static unsigned input_eff;                    /* last input effect with data */
+static sox_bool input_eff_eof;                /* has input_eff reached EOF? */
 
 static struct sox_effect user_efftab[MAX_USER_EFF];
 static int nuser_effects;
@@ -884,8 +884,8 @@ static void balance_input(sox_sample_t * buf, sox_size_t ws, file_t f)
  */
 
 static int process(void) {
-  int e, flowstatus = 0;
-  sox_size_t ws, s, i;
+  int flowstatus = 0;
+  sox_size_t e, ws, s, i;
   sox_size_t ilen[MAX_INPUT_FILES];
   sox_sample_t *ibuf[MAX_INPUT_FILES];
 
@@ -1011,7 +1011,7 @@ static int process(void) {
   optimize_trim();
 
   input_eff = 0;
-  input_eff_eof = 0;
+  input_eff_eof = sox_false;
 
   /* mark chain as empty */
   for(e = 1; e < neffects; e++)
@@ -1230,7 +1230,8 @@ static void build_effects_table(void)
 
 static int start_all_effects(void)
 {
-  int i, j, ret = SOX_SUCCESS;
+  unsigned i, j;
+  int ret = SOX_SUCCESS;
 
   for (i = 1; i < neffects; i++) {
     struct sox_effect * e = &efftab[i];
@@ -1276,13 +1277,13 @@ static int start_all_effects(void)
 
 static int flow_effect_out(void)
 {
-  int e, havedata, flowstatus = 0;
-  size_t len, total;
+  int havedata, flowstatus = 0;
+  size_t e, len, total;
 
   do {
     /* run entire chain BACKWARDS: pull, don't push.*/
     /* this is because buffering system isn't a nice queueing system */
-    for (e = neffects - 1; e && e >= input_eff; e--) {
+    for (e = neffects - 1; e && (int)e >= (int)input_eff; e--) {
       /* Do not call flow effect on input if it has reported
        * EOF already as that's a waste of time and may
        * do bad things.
@@ -1300,7 +1301,7 @@ static int flow_effect_out(void)
       if (flowstatus == SOX_EOF) {
         input_eff = e;
         /* Assume next effect hasn't reach EOF yet */
-        input_eff_eof = 0;
+        input_eff_eof = sox_false;
       }
 
       /* If this buffer contains more input data then break out
@@ -1329,7 +1330,7 @@ static int flow_effect_out(void)
                        &efftab[neffects - 1].obuf[total],
                        efftab[neffects - 1].olen - total);
 
-        if (len == 0 || ofile->desc->eof) {
+        if (len == 0) {
           sox_warn("Error writing: %s", ofile->desc->sox_errstr);
           return SOX_EOF;
         }
@@ -1349,7 +1350,7 @@ static int flow_effect_out(void)
      * show no more data.
      */
     havedata = 0;
-    for (e = neffects - 1; e >= input_eff; e--) {
+    for (e = neffects - 1; (int)e >= (int)input_eff; e--) {
       /* If odone and olen are the same then this buffer
        * can be reused.
        */
@@ -1380,7 +1381,7 @@ static int flow_effect_out(void)
        */
       if (input_eff_eof) {
         input_eff++;
-        input_eff_eof = 0;
+        input_eff_eof = sox_false;
       }
 
       /* If the input file is not returning data then
@@ -1395,10 +1396,10 @@ static int flow_effect_out(void)
         if (efftab[input_eff].olen == 0) {
           input_eff++;
           /* Assume next effect hasn't reached EOF yet. */
-          input_eff_eof = 0;
+          input_eff_eof = sox_false;
         } else {
           havedata = 1;
-          input_eff_eof = (rc == SOX_EOF) ? 1 : 0;
+          input_eff_eof = rc == SOX_EOF;
           break;
         }
       }
@@ -1417,7 +1418,7 @@ static int flow_effect_out(void)
   return SOX_SUCCESS;
 }
 
-static int flow_effect(int e)
+static int flow_effect(unsigned e)
 {
   sox_size_t i, done, idone, odone, idonel, odonel, idoner, odoner;
   const sox_sample_t *ibuf;
@@ -1526,7 +1527,7 @@ static int drain_effect_out(void)
   if (input_eff == 0) {
     input_eff = 1;
     /* Assuming next effect hasn't reached EOF yet. */
-    input_eff_eof = 0;
+    input_eff_eof = sox_false;
   }
 
   /* Try to prime the pump with some data */
@@ -1536,9 +1537,9 @@ static int drain_effect_out(void)
     if (efftab[input_eff].olen == 0) {
       input_eff++;
       /* Assuming next effect hasn't reached EOF yet. */
-      input_eff_eof = 0;
+      input_eff_eof = sox_false;
     } else {
-      input_eff_eof = (rc == SOX_EOF) ? 1 : 0;
+      input_eff_eof = rc == SOX_EOF;
       break;
     }
   }
@@ -1547,7 +1548,7 @@ static int drain_effect_out(void)
   return flow_effect_out();
 }
 
-static int drain_effect(int e)
+static int drain_effect(unsigned e)
 {
   sox_ssize_t i, olen, olenl, olenr;
   sox_sample_t *obuf;
@@ -1593,7 +1594,7 @@ static int drain_effect(int e)
 
 static void stop_effects(void)
 {
-  int e;
+  unsigned e;
 
   for (e = 1; e < neffects; e++) {
     sox_size_t clips;
@@ -1614,7 +1615,7 @@ static void stop_effects(void)
 
 static void delete_effects(void)
 {
-  int e;
+  unsigned e;
 
   for (e = 1; e < neffects; e++) {
     int (*delete)(eff_t effp) =
@@ -1627,7 +1628,7 @@ static void delete_effects(void)
 
 static sox_size_t total_clips(void)
 {
-  int i;
+  unsigned i;
   sox_size_t clips = 0;
   for (i = 0; i < file_count; ++i)
     clips += files[i]->desc->clips + files[i]->volume_clips;

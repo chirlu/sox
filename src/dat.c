@@ -112,7 +112,7 @@ static sox_size_t sox_datread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp)
         inpPtr += inpPtrInc;
         if (retc != 1) {
           sox_fail_errno(ft,SOX_EOF,"Unable to read sample.");
-          return (SOX_EOF);
+          return 0;
         }
         sampval *= SOX_SAMPLE_MAX;
         *buf++ = SOX_ROUND_CLIP_COUNT(sampval, ft->clips);

@@ -792,7 +792,7 @@ static int aiffwriteheader(ft_t ft, sox_size_t nframes)
 
           /* time stamp of comment, Unix knows of time from 1/1/1970,
              Apple knows time from 1/1/1904 */
-          sox_writedw(ft, ((int32_t) time(NULL)) + 2082844800);
+          sox_writedw(ft, (unsigned)(time(NULL) + 2082844800));
 
           /* A marker ID of 0 indicates the comment is not associated
              with a marker */
@@ -808,7 +808,7 @@ static int aiffwriteheader(ft_t ft, sox_size_t nframes)
         /* COMM chunk -- describes encoding (and #frames) */
         sox_writes(ft, "COMM");
         sox_writedw(ft, 18); /* COMM chunk size */
-        sox_writew(ft, ft->signal.channels); /* nchannels */
+        sox_writew(ft, (int)ft->signal.channels); /* nchannels */
         sox_writedw(ft, nframes); /* number of frames */
         sox_writew(ft, bits); /* sample width, in bits */
         write_ieee_extended(ft, (double)ft->signal.rate);
@@ -818,7 +818,7 @@ static int aiffwriteheader(ft_t ft, sox_size_t nframes)
                 sox_writes(ft, "MARK");
                 if (ft->instr.nloops > 2)
                         ft->instr.nloops = 2;
-                sox_writedw(ft, 2 + 16*ft->instr.nloops);
+                sox_writedw(ft, 2 + 16u*ft->instr.nloops);
                 sox_writew(ft, ft->instr.nloops);
 
                 for(i = 0; i < ft->instr.nloops; i++) {
@@ -969,7 +969,7 @@ static int aifcwriteheader(ft_t ft, sox_size_t nframes)
         /* COMM chunk -- describes encoding (and #frames) */
         sox_writes(ft, "COMM");
         sox_writedw(ft, 18+4+1+15); /* COMM chunk size */
-        sox_writew(ft, ft->signal.channels); /* nchannels */
+        sox_writew(ft, (int)ft->signal.channels); /* nchannels */
         sox_writedw(ft, nframes); /* number of frames */
         sox_writew(ft, bits); /* sample width, in bits */
         write_ieee_extended(ft, (double)ft->signal.rate);

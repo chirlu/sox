@@ -96,9 +96,9 @@ do_singlechannel_formats () {
   (rate=8000; convertToAndFrom al sw uw sl raw Raw dat) || exit 1 # Fixed rate
 }
 
-grep -q "^#define HAVE_LIBFLAC" stconfig.h || skip="flac $skip"
-grep -q "^#define HAVE_LIBOGG" stconfig.h || skip="ogg $skip"
-grep -q "^#define HAVE_SNDFILE_H" stconfig.h || skip="caf $skip"
+grep -q "^#define HAVE_LIBFLAC" soxconfig.h || skip="flac $skip"
+grep -q "^#define HAVE_LIBOGG" soxconfig.h || skip="ogg $skip"
+grep -q "^#define HAVE_SNDFILE_H" soxconfig.h || skip="caf $skip"
 
 rate=44100
 samples=23493

@@ -55,7 +55,7 @@ int sox_rawseek(ft_t ft, sox_size_t offset)
 
 /* Works nicely for starting read and write; sox_rawstart{read,write}
    are #defined in sox_i.h */
-int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, signed char size, sox_option_t rev_bits)
+int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size, sox_option_t rev_bits)
 {
   if (default_rate && ft->signal.rate == 0) {
     sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
@@ -90,7 +90,6 @@ int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_
     else ft->signal.reverse_bits = rev_bits;
   }
 
-  ft->eof = 0;
   return SOX_SUCCESS;
 }
 
@@ -232,12 +231,6 @@ sox_size_t sox_rawread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp)
     return 0;
 }
 
-static void writeflush(ft_t ft)
-{
-  ft->eof = SOX_EOF;
-}
-
-
 /* Writes SoX's internal buffer format to buffer of various data types. */
 sox_size_t sox_rawwrite(ft_t ft, const sox_sample_t *buf, sox_size_t nsamp)
 {
@@ -249,12 +242,6 @@ sox_size_t sox_rawwrite(ft_t ft, const sox_sample_t *buf, sox_size_t nsamp)
     return 0;
 }
 
-int sox_rawstopwrite(ft_t ft)
-{
-        writeflush(ft);
-        return SOX_SUCCESS;
-}
-
 static int raw_start(ft_t ft) {
   return sox_rawstart(ft,sox_false,sox_false,SOX_ENCODING_UNKNOWN,-1,SOX_OPTION_DEFAULT);
 }
@@ -262,8 +249,8 @@ sox_format_t const * sox_raw_format_fn(void) {
   static char const * names[] = {"raw", NULL};
   static sox_format_t driver = {
     names, NULL, SOX_FILE_SEEK,
-    raw_start, sox_rawread , sox_rawstopread,
-    raw_start, sox_rawwrite, sox_rawstopwrite,
+    raw_start, sox_rawread , sox_format_nothing,
+    raw_start, sox_rawwrite, sox_format_nothing,
     sox_rawseek
   };
   return &driver;
@@ -277,8 +264,8 @@ sox_format_t const * sox_##id##_format_fn(void) { \
   static char const * names[] = {#id, alt1, alt2, NULL}; \
   static sox_format_t driver = { \
     names, NULL, 0, \
-    id##_start, sox_rawread , sox_rawstopread, \
-    id##_start, sox_rawwrite, sox_rawstopwrite, \
+    id##_start, sox_rawread , sox_format_nothing, \
+    id##_start, sox_rawwrite, sox_format_nothing, \
     sox_format_nothing_seek \
   }; \
   return &driver; \

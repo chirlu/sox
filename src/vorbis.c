@@ -417,7 +417,7 @@ static sox_size_t sox_vorbiswrite(ft_t ft, const sox_sample_t *buf, sox_size_t l
 
                         ret = oe_write_page(&ve->og, ft);
                         if(!ret)
-                            return (SOX_EOF);
+                            return 0;
 
                         if(ogg_page_eos(&ve->og))
                             eos = 1;

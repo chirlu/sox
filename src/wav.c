@@ -885,13 +885,13 @@ static int sox_wavstartread(ft_t ft)
     }
 
     /* Horrible way to find Cool Edit marker points. Taken from Quake source*/
-    ft->loops[0].start = -1;
+    ft->loops[0].start = ~0u;
     wav->found_cooledit = 0;
     if(ft->seekable){
         /*Got this from the quake source.  I think it 32bit aligns the chunks 
          * doubt any machine writing Cool Edit Chunks writes them at an odd 
          * offset */
-        len = (len + 1) & ~1;
+        len = (len + 1) & ~1u;
         if (sox_seeki(ft, len, SEEK_CUR) == SOX_SUCCESS &&
             findChunk(ft, "LIST", &len) != SOX_EOF)
         {
@@ -979,7 +979,7 @@ static int sox_wavstartread(ft_t ft)
                     else 
                     {
                         sox_debug("Attempting to seek beyond unsupported chunk '%c%c%c%c' of length %d bytes", magic[0], magic[1], magic[2], magic[3], len);
-                        len = (len + 1) & ~1;
+                        len = (len + 1) & ~1u;
                         sox_seeki(ft, len, SEEK_CUR);
                     }
                 }
@@ -1434,7 +1434,7 @@ static int wavwritehdr(ft_t ft, int second_header)
     }
 
     if (wFormatTag == WAVE_FORMAT_GSM610)
-        dwDataLength = (dwDataLength+1) & ~1; /*round up to even */
+        dwDataLength = (dwDataLength+1) & ~1u; /*round up to even */
 
     if ((wFormatTag == WAVE_FORMAT_PCM && wBitsPerSample > 16) || wChannels > 2)
     {

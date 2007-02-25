@@ -39,7 +39,7 @@ static int sox_svxstartread(ft_t ft)
         uint32_t channels, i;
         unsigned short rate;
 
-        long chan1_pos;
+        off_t chan1_pos;
 
         if (! ft->seekable)
         {
@@ -181,7 +181,7 @@ static int sox_svxstartread(ft_t ft)
                     sox_fail_errno (ft,errno,"Can't position channel %d",i);
                     return(SOX_EOF);
                 }
-                if (fseeko(p->ch[i],p->nsamples/channels*i,SEEK_CUR))
+                if (fseeko(p->ch[i],(off_t)p->nsamples/channels*i,SEEK_CUR))
                 {
                     sox_fail_errno (ft,errno,"Can't seek channel %d",i);
                     return(SOX_EOF);
@@ -295,7 +295,7 @@ static int sox_svxstopwrite(ft_t ft)
         /* append all channel pieces to channel 0 */
         /* close temp files */
         for (i = 1; i < ft->signal.channels; i++) {
-                if (fseeko(p->ch[i], 0, 0))
+                if (fseeko(p->ch[i], (off_t)0, 0))
                 {
                         sox_fail_errno (ft,errno,"Can't rewind channel output file %d",i);
                         return(SOX_EOF);
@@ -327,7 +327,7 @@ static int sox_svxstopwrite(ft_t ft)
 #define SVXHEADERSIZE 100
 static void svxwriteheader(ft_t ft, sox_size_t nsamples)
 {
-        int32_t formsize =  nsamples + SVXHEADERSIZE - 8;
+        sox_size_t formsize =  nsamples + SVXHEADERSIZE - 8;
 
         /* FORM size must be even */
         if(formsize % 2 != 0) formsize++;
@@ -352,8 +352,8 @@ static void svxwriteheader(ft_t ft, sox_size_t nsamples)
 
         sox_writes(ft, "CHAN");
         sox_writedw(ft, 4);
-        sox_writedw(ft, (ft->signal.channels == 2) ? 6 :
-                   (ft->signal.channels == 4) ? 15 : 2);
+        sox_writedw(ft, (ft->signal.channels == 2) ? 6u :
+                   (ft->signal.channels == 4) ? 15u : 2u);
 
         sox_writes(ft, "BODY");
         sox_writedw(ft, nsamples); /* samples in file */
