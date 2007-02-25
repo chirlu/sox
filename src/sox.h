@@ -1,5 +1,5 @@
 /*
- * libSoX Library
+ * libSoX Library Public Interface
  *
  * Copyright 1999-2007 Chris Bagwell and SoX Contributors.
  *
@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include "soxstdint.h"
 
-/* The following is the API version of libsox.  It is not meant
+/* The following is the API version of libSoX.  It is not meant
  * to follow the version number of SoX but it has historically.
  * Please do not count of these numbers being in sync.
  * The following is at 13.0.0
@@ -29,9 +29,8 @@
 #define UNUSED __attribute__ ((unused))
 #endif
 
-/* C language enhancements: */
-
-/* Boolean type, compatible with C++ */
+/* Boolean type, assignment (but not necessarily binary) compatible with
+ * C++ bool */
 typedef enum {sox_false, sox_true} sox_bool;
 
 typedef int32_t int24_t;     /* But beware of the extra byte. */
@@ -206,15 +205,15 @@ typedef struct sox_signalinfo
 
     /* There is a delineation between these vars being tri-state and
      * effectively boolean.  Logically the line falls between setting
-     * them up (could be done in stlib, or by the stlib client) and
-     * using them (in stlib).  Stlib's logic to set them up includes
+     * them up (could be done in libSoX, or by the libSoX client) and
+     * using them (in libSoX).  libSoX's logic to set them up includes
      * knowledge of the machine default and the format default.  (The
      * sox client logic adds to this a layer of overridability via user
      * options.)  The physical delineation is in the somewhat
-     * snappily-named stlib function `set_endianness_if_not_already_set'
+     * snappily-named libSoX function `set_endianness_if_not_already_set'
      * which is called at the right times (as files are openned) by the
-     * stlib core, not by the file drivers themselves.  The file drivers
-     * indicate to the stlib core if they have a preference using
+     * libSoX core, not by the file drivers themselves.  The file drivers
+     * indicate to the libSoX core if they have a preference using
      * SOX_FILE_xxx flags.
      */
     sox_option_t reverse_bytes;    /* endiannesses... */
@@ -323,10 +322,10 @@ struct sox_soundstream {
 #define SOX_FILE_NOSTDIO 8  /* does not use stdio routines */
 #define SOX_FILE_DEVICE  16 /* file is an audio device */
 #define SOX_FILE_PHONY   32 /* phony file/device */
-/* These two for use by the stlib core or stlib clients: */
+/* These two for use by the libSoX core or libSoX clients: */
 #define SOX_FILE_ENDIAN  64 /* is file format endian? */
 #define SOX_FILE_ENDBIG  128/* if so, is it big endian? */
-/* These two for use by stlib drivers: */
+/* These two for use by libSoX drivers: */
 #define SOX_FILE_LIT_END  (0   + 64)
 #define SOX_FILE_BIG_END  (128 + 64)
 

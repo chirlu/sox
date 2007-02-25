@@ -88,7 +88,7 @@ typedef struct file_info
   double replay_gain;
   char *comment;
   sox_size_t volume_clips;
-  ft_t desc;                              /* stlib file descriptor */
+  ft_t desc;                              /* libSoX file descriptor */
 } *file_t;
 
 /* local forward declarations */
