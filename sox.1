@@ -375,6 +375,18 @@ that when using SoX to play multiple files, Ctrl-C behaves slightly
 differently: pressing it once causes SoX to skip to the next file;
 pressing it twice in quick succession causes SoX to exit.
 .SH FILENAMES
+Filenames can be simple file names, absolute or relative path names,
+or URLs (inut files only).  Note that URL support requires that
+.BR wget (1)
+is available.
+.SP
+Note:
+Giving SoX an input or output filename that is the same as a SoX
+effect-name will not work since SoX will treat it as an effect
+specification.  The only work-around to this is to avoid such
+filenames; however, this is generally not difficult since most audio
+filenames have a filename `extension', whilst effect-names do not.
+.SP
 The following `special' filenames may be used in certain circumstances
 in place of a normal filename on the command line:
 .TP
@@ -425,13 +437,6 @@ directory.
 This is an alias of
 .B \-n
 and is retained for backwards compatibility only.
-.PP
-.B N.B.
-Giving SoX an input or output filename that is the same as a SoX
-effect-name will not work since SoX will treat it as an effect
-specification.  The only work-around to this is to avoid such
-filenames; however, this is generally not difficult since most audio
-filenames have a filename `extension', whilst effect-names do not.
 .SH OPTIONS
 .SS Global Options
 These options can be specified on the command line at any point
@@ -954,6 +959,12 @@ packed into only 4 bits, but in fact sounds no better than
 .TP
 \&\fB.mat\fR, \fB.mat4\fR, \fB.mat5\fR \fB(libsndfile)\fR
 Matlab 4.2/5.0 (respectively GNU Octave 2.0/2.1) format (.mat is the same as .mat4).
+.TP
+.B .m3u
+A
+.I playlist
+format; contains a list of audio files.
+See [5] for details of this format.
 .TP
 .B .maud
 An IFF-conforming audio file type, registered by
@@ -2229,7 +2240,8 @@ Please report any bugs found in this version of SoX to the mailing list
 (sox-users@lists.sourceforge.net).
 .SH SEE ALSO
 .BR soxexam (7),
-.BR libsox (3)
+.BR libsox (3),
+.BR wget (1)
 .SP
 The SoX web page at http://sox.sourceforge.net
 .SS References
@@ -2253,6 +2265,11 @@ http://harmony-central.com/Effects/Articles/Flanging
 Wikipedia,
 .IR "Decibel" ,
 http://en.wikipedia.org/wiki/Decibel
+.TP
+[5]
+Wikipedia,
+.IR "M3U" ,
+http://en.wikipedia.org/wiki/M3U
 .SH LICENSE
 Copyright 1991 Lance Norskog and Sundry Contributors.
 Copyright 1998\-2007 by Chris Bagwell and SoX Contributors.

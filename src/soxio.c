@@ -124,7 +124,7 @@ ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
             SET_BINARY_MODE(stdin);
             ft->fp = stdin;
         }
-        else if ((ft->fp = fopen(ft->filename, "rb")) == NULL)
+        else if ((ft->fp = xfopen(ft->filename, "rb")) == NULL)
         {
             sox_warn("Can't open input file `%s': %s", ft->filename,
                     strerror(errno));

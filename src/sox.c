@@ -30,6 +30,7 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <time.h>
+#include <ctype.h>
 #include <errno.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>             /* for unlink() */
@@ -266,6 +267,99 @@ static void set_replay_gain(char const * comment, file_t f)
   }
 }
 
+static sox_bool is_playlist(char const * filename)
+{
+  size_t  i = strlen(filename);
+  return i >= sizeof(".m3u") - 1 &&
+    strcasecmp(filename + i - (sizeof(".m3u") - 1), ".m3u") == 0;
+}
+
+static void parse_playlist(const file_t f0, char const * const filename)
+{
+  size_t text_length = 100;
+  char * text = xmalloc(text_length + 1);
+  char * dirname = xstrdup(filename);
+#if defined(DOS) || defined(WIN32)
+  char * slash_pos = max(strrchr(dirname, '/'), strrchr(dirname, '\\'));
+#else
+  char * slash_pos = strrchr(dirname, '/');
+#endif
+  FILE * file = xfopen(filename, "r");
+  int c;
+
+  if (!slash_pos)
+    *dirname = '\0';
+  else
+    *slash_pos = '\0';
+
+  if (file == NULL) {
+    sox_fail("Can't open playlist file `%s': %s", filename, strerror(errno));
+    exit(1);
+  }
+
+  do {
+    size_t i = 0;
+    char * last = NULL;
+
+    while (isspace(c = getc(file)));
+    if (c == EOF)
+      break;
+    while (c != EOF && !strchr("#\r\n", c)) {
+      if (i == text_length)
+        text = xrealloc(text, (text_length <<= 1) + 1);
+      text[i] = c;
+      if (!strchr(" \t\f", c))
+        last = text + i;
+      ++i;
+      c = getc(file);
+    }
+    if (ferror(file))
+      break;
+    if (c == '#') {
+      do c = getc(file);
+      while (c != EOF && !strchr("\r\n", c));
+      if (ferror(file))
+        break;
+    }
+    if (last)  {
+      file_t f;
+
+      if (file_count >= MAX_FILES) {
+        sox_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
+        exit(1);
+      }
+
+      last[1] = '\0';
+      f = new_file();
+      *f = *f0;
+      if (!dirname[0] || is_uri(text)
+#if defined(DOS) || defined(WIN32)
+          || text[0] == '\\' || text[1] == ':'
+#endif
+          || text[0] == '/')
+        f->filename = xstrdup(text);
+      else {
+        f->filename = xmalloc(strlen(dirname) + strlen(text) + 2); 
+        sprintf(f->filename, "%s/%s", dirname, text); 
+      }
+      if (is_playlist(f->filename)) {
+        parse_playlist(f, f->filename);
+        free(f->filename);
+        free(f);
+        continue;
+      }
+      files[file_count++] = f;
+    }
+  } while (c != EOF);
+  if (ferror(file)) {
+    sox_fail("Error reading playlist file `%s': %s", filename, strerror(errno));
+    exit(1);
+  }
+  fclose(file);
+  free(text);
+  free(dirname);
+}
+
 static void parse_options_and_filenames(int argc, char **argv)
 {
   file_t f = NULL;
@@ -288,6 +382,12 @@ static void parse_options_and_filenames(int argc, char **argv)
     } else {
       if (optind >= argc || is_effect_name(argv[optind]))
         break;
+      if (is_playlist(argv[optind])) {
+        parse_playlist(f, argv[optind++]);
+        free(f);
+        f = NULL;
+        continue;
+      }
       f->filename = xstrdup(argv[optind++]);
     }
     files[file_count++] = f;
@@ -364,6 +464,7 @@ int main(int argc, char **argv)
     usage("-v can only be given for an input file;\n"
             "\tuse 'vol' to set the output file volume");
 
+  signal(SIGINT, SIG_IGN); /* So child pipes aren't killed by track skip */
   for (i = 0; i < input_count; i++) {
     int j = input_count - 1 - i; /* Open in reverse order 'cos of rec (below) */
     file_t f = files[j];
@@ -396,6 +497,7 @@ int main(int argc, char **argv)
     if (files[j]->desc->comment)
       set_replay_gain(files[j]->desc->comment, f);
   }
+  signal(SIGINT, SIG_DFL);
 
   /* Loop through the rest of the arguments looking for effects */
   parse_effects(argc, argv);
@@ -1761,12 +1863,14 @@ static void usage(char const *message)
     while (*names++)
       formats++;
   }
+  ++formats;
   format_list = (const char **)xmalloc(formats * sizeof(char *));
   for (i = 0, formats = 0; sox_format_fns[i]; i++) {
     char const * const *names = sox_format_fns[i]()->names;
     while (*names)
       format_list[formats++] = *names++;
   }
+  format_list[formats++] = "m3u";
   qsort(format_list, formats, sizeof(char *), strcmp_p);
   for (i = 0; i < formats; i++)
     printf(" %s", format_list[i]);

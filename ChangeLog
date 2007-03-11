@@ -11,8 +11,8 @@ sox-13.0.1
 
   o Added support for ADPCM-encoded PRC files, based on Danny Smith's
     rec2wav and sndcmp.
-
   o Added AMR-WB format.  (robs)
+  o Added M3U playlist format [FR# 1667341].  (robs)
 
   Effects:
 
@@ -23,6 +23,7 @@ sox-13.0.1
   Other new features:
 
   o Show (with -S) if clipping is occurring.  (robs)
+  o Added internet input file support (needs wget).  (robs)
 
   Bug fixes:
 
@@ -38,6 +39,7 @@ sox-13.0.1
     duplications with other existing libst libraries. (Rueben)
   o Renamed libst-config to more standard sox-config. (cbagwell)
   o Removed library information from sox-config --cflags. (cbagwell)
+  o Got rid of several hundred compiler warnings.  (robs)
 
 sox-13.0.0
 ----------

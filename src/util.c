@@ -20,6 +20,9 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdarg.h>
+#ifdef _MSC_VER
+#define popen _popen
+#endif
 
 sox_output_message_handler_t sox_output_message_handler = NULL;
 int sox_output_verbosity_level = 2;
@@ -361,3 +364,30 @@ char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samp
     }
     return NULL;
 }
+
+sox_bool is_uri(char const * text)
+{
+  if (!isalpha(*text))
+    return sox_false;
+  ++text;
+  do {
+    if (!isalnum(*text) && !strchr("+-.", *text))
+      return sox_false;
+    ++text;
+  } while (*text && *text != ':');
+  return *text == ':';
+}
+
+FILE * xfopen(char const * identifier, char const * mode) 
+{ 
+  if (is_uri(identifier)) {
+    FILE * f; 
+    char const * const command_format = "wget -q -O- \"%s\"";
+    char * command = xmalloc(strlen(command_format) + strlen(identifier)); 
+    sprintf(command, command_format, identifier); 
+    f = popen(command, "r"); 
+    free(command); 
+    return f;
+  }
+  return fopen(identifier, mode);
+} 

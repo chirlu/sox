@@ -149,6 +149,8 @@ typedef void (*sox_output_message_handler_t)(int level, const char *filename, co
 extern sox_output_message_handler_t sox_output_message_handler;
 extern int sox_output_verbosity_level;
 void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap);
+sox_bool is_uri(char const * text);
+FILE * xfopen(char const * identifier, char const * mode);
 
 void sox_fail(const char *, ...);
 void sox_warn(const char *, ...);
