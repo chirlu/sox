@@ -101,7 +101,7 @@ ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
         ft->filetype = xstrdup(filetype);
 
     if (sox_gettype(ft, sox_false) != SOX_SUCCESS) {
-        sox_warn("Unknown input file format for `%s':  %s",
+        sox_fail("Unknown input file format for `%s':  %s",
                 ft->filename,
                 ft->sox_errstr);
         goto input_error;
@@ -126,7 +126,7 @@ ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
         }
         else if ((ft->fp = xfopen(ft->filename, "rb")) == NULL)
         {
-            sox_warn("Can't open input file `%s': %s", ft->filename,
+            sox_fail("Can't open input file `%s': %s", ft->filename,
                     strerror(errno));
             goto input_error;
         }
@@ -141,7 +141,7 @@ ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
     /* Read and write starters can change their formats. */
     if ((*ft->h->startread)(ft) != SOX_SUCCESS)
     {
-        sox_warn("Failed reading `%s': %s", ft->filename, ft->sox_errstr);
+        sox_fail("Failed reading `%s': %s", ft->filename, ft->sox_errstr);
         goto input_error;
     }
 
@@ -154,7 +154,7 @@ ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
 
     if (sox_checkformat(ft) )
     {
-        sox_warn("bad input format for file %s: %s", ft->filename,
+        sox_fail("bad input format for file %s: %s", ft->filename,
                 ft->sox_errstr);
         goto input_error;
     }
