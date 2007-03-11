@@ -9,7 +9,7 @@ AM_LDFLAGS = @SNDFILE_LIBS@ @SAMPLERATE_LIBS@
 LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
 
 bin_PROGRAMS = sox
-bin_SCRIPTS = libsox-config
+bin_SCRIPTS = sox-config
 lib_LTLIBRARIES = libsox.la
 include_HEADERS = sox.h soxstdint.h
 
