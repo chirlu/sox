@@ -267,15 +267,21 @@ static void set_replay_gain(char const * comment, file_t f)
   }
 }
 
+static sox_bool strcaseends(char const * str, char const * end)
+{
+  size_t str_len = strlen(str), end_len = strlen(end);
+  return str_len >= end_len && !strcasecmp(str + str_len - end_len, end);
+}
+
 static sox_bool is_playlist(char const * filename)
 {
-  size_t  i = strlen(filename);
-  return i >= sizeof(".m3u") - 1 &&
-    strcasecmp(filename + i - (sizeof(".m3u") - 1), ".m3u") == 0;
+  return strcaseends(filename, ".m3u") || strcaseends(filename, ".pls");
 }
 
 static void parse_playlist(const file_t f0, char const * const filename)
 {
+  sox_bool is_pls = strcaseends(filename, ".pls");
+  int comment_char = "#;"[is_pls];
   size_t text_length = 100;
   char * text = xmalloc(text_length + 1);
   char * dirname = xstrdup(filename);
@@ -299,29 +305,36 @@ static void parse_playlist(const file_t f0, char const * const filename)
 
   do {
     size_t i = 0;
-    char * last = NULL;
+    size_t begin = 0, end = 0;
 
     while (isspace(c = getc(file)));
     if (c == EOF)
       break;
-    while (c != EOF && !strchr("#\r\n", c)) {
+    while (c != EOF && !strchr("\r\n", c) && c != comment_char) {
       if (i == text_length)
         text = xrealloc(text, (text_length <<= 1) + 1);
-      text[i] = c;
+      text[i++] = c;
       if (!strchr(" \t\f", c))
-        last = text + i;
-      ++i;
+        end = i;
       c = getc(file);
     }
     if (ferror(file))
       break;
-    if (c == '#') {
+    if (c == comment_char) {
       do c = getc(file);
       while (c != EOF && !strchr("\r\n", c));
       if (ferror(file))
         break;
     }
-    if (last)  {
+    text[end] = '\0';
+    if (is_pls) {
+      char dummy;
+      if (!strncasecmp(text, "file", 4) && sscanf(text + 4, "%*u=%c", &dummy) == 1)
+        begin = strchr(text + 5, '=') - text + 1;
+      else end = 0;
+    }
+    if (begin != end) {
+      char const * id = text + begin;
       file_t f;
 
       if (file_count >= MAX_FILES) {
@@ -329,18 +342,17 @@ static void parse_playlist(const file_t f0, char const * const filename)
         exit(1);
       }
 
-      last[1] = '\0';
       f = new_file();
       *f = *f0;
-      if (!dirname[0] || is_uri(text)
+      if (!dirname[0] || is_uri(id)
 #if defined(DOS) || defined(WIN32)
-          || text[0] == '\\' || text[1] == ':'
+          || id[0] == '\\' || id[1] == ':'
 #endif
-          || text[0] == '/')
-        f->filename = xstrdup(text);
+          || id[0] == '/')
+        f->filename = xstrdup(id);
       else {
-        f->filename = xmalloc(strlen(dirname) + strlen(text) + 2); 
-        sprintf(f->filename, "%s/%s", dirname, text); 
+        f->filename = xmalloc(strlen(dirname) + strlen(id) + 2); 
+        sprintf(f->filename, "%s/%s", dirname, id); 
       }
       if (is_playlist(f->filename)) {
         parse_playlist(f, f->filename);
@@ -1863,7 +1875,7 @@ static void usage(char const *message)
     while (*names++)
       formats++;
   }
-  ++formats;
+  formats += 2;
   format_list = (const char **)xmalloc(formats * sizeof(char *));
   for (i = 0, formats = 0; sox_format_fns[i]; i++) {
     char const * const *names = sox_format_fns[i]()->names;
@@ -1871,6 +1883,7 @@ static void usage(char const *message)
       format_list[formats++] = *names++;
   }
   format_list[formats++] = "m3u";
+  format_list[formats++] = "pls";
   qsort(format_list, formats, sizeof(char *), strcmp_p);
   for (i = 0; i < formats; i++)
     printf(" %s", format_list[i]);
