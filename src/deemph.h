@@ -100,7 +100,7 @@ p->b0 =  0.45995451989513153057;
 p->b1 = -0.08782333709141937339;
 
 
-/* The sample-rate must be 44100 as this has been harded coded into the
+/* The sample-rate must be 44100 as this has been hard-coded into the
  * pre-calculated filter coefficients.
  */
 if (effp->ininfo.rate != 44100) {
