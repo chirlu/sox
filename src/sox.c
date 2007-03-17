@@ -1773,15 +1773,14 @@ static char const * sigfigs3(sox_size_t number)
 
 static char const * sigfigs3p(double percentage)
 {
-  if (!percentage)
-    return "0%";
-  else {
-    static char string[16][10];
-    static int i;
-    int decimals = 2 - range_limit((int)log10(floor(percentage)),0 , 2);
-    sprintf(string[i = (i+1) & 15], "%.*f%%", decimals, percentage);
-    return string[i];
-  }
+  static char string[16][10];
+  static unsigned n;
+  sprintf(string[n = (n+1) & 15], "%.1f%%", percentage);
+  if (strlen(string[n]) < 5)
+    sprintf(string[n], "%.2f%%", percentage);
+  else if (strlen(string[n]) > 5)
+    sprintf(string[n], "%.0f%%", percentage);
+  return string[n];
 }
 
 static void update_status(sox_bool all_done)
