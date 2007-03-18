@@ -19,6 +19,7 @@
 #include "xmalloc.h"
 
 #include <stdarg.h>
+#include <errno.h>
 
 #ifdef HAVE_BYTESWAP_H
 #include <byteswap.h>
@@ -103,12 +104,6 @@ int sox_padbytes(ft_t ft, sox_size_t n);
 size_t sox_writebuf(ft_t ft, void const *buf, size_t size, sox_size_t len);
 int sox_reads(ft_t ft, char *c, sox_size_t len);
 int sox_writes(ft_t ft, char const * c);
-int sox_readb(ft_t ft, uint8_t *ub);
-int sox_writeb(ft_t ft, int ub);
-int sox_readw(ft_t ft, uint16_t *uw);
-int sox_writew(ft_t ft, int uw);
-int sox_read3(ft_t ft, uint24_t *u3);
-int sox_write3(ft_t ft, uint24_t u3);
 int sox_readdw(ft_t ft, uint32_t *udw);
 int sox_writedw(ft_t ft, uint32_t udw);
 int sox_readf(ft_t ft, float *f);
@@ -168,9 +163,6 @@ void sox_debug_most(char const * fmt, ...);
 
 void sox_fail_errno(ft_t, int, const char *, ...);
 
-int sox_is_bigendian(void);
-int sox_is_littleendian(void);
-
 #ifdef WORDS_BIGENDIAN
 #define SOX_IS_BIGENDIAN 1
 #define SOX_IS_LITTLEENDIAN 0
@@ -191,6 +183,92 @@ int sox_is_littleendian(void);
  * data to get max performance.
  */
 #define SOX_BUFSIZ 8192
+
+extern const char sox_readerr[];
+extern const char sox_writerr[];
+extern uint8_t const cswap[256];
+
+/* Read byte. */
+UNUSED static int sox_readb(ft_t ft, uint8_t *ub)
+{
+  int ch1;
+  if ((ch1 = getc(ft->fp)) == EOF) {
+    sox_fail_errno(ft,errno,sox_readerr);
+    return SOX_EOF;
+  }
+  *ub = ft->signal.reverse_bits? cswap[ch1]: ch1;
+  if (ft->signal.reverse_nibbles)
+    *ub = ((*ub & 15) << 4) | (*ub >> 4);
+  return SOX_SUCCESS;
+}
+
+/* Write byte. */
+UNUSED static int sox_writeb(ft_t ft, int ub)
+{
+  if (ft->signal.reverse_nibbles)
+    ub = ((ub & 15) << 4) | (ub >> 4);
+  if (ft->signal.reverse_bits)
+    ub = cswap[ub];
+  if (putc(ub, ft->fp) == EOF) {
+    sox_fail_errno(ft,errno,sox_writerr);
+    return SOX_EOF;
+  }
+  return SOX_SUCCESS;
+}
+
+/* Read word. */
+UNUSED static int sox_readw(ft_t ft, uint16_t *uw)
+{
+  char * c = (char *)uw;
+  int ch1, ch2;
+  if ((ch1 = getc(ft->fp)) == EOF || (ch2 = getc(ft->fp)) == EOF) {
+    sox_fail_errno(ft,errno,sox_readerr);
+    return SOX_EOF;
+  }
+  c[SOX_IS_BIGENDIAN    ^ ft->signal.reverse_bytes] = ch1;
+  c[SOX_IS_LITTLEENDIAN ^ ft->signal.reverse_bytes] = ch2;
+  return SOX_SUCCESS;
+}
+
+/* Write word. */
+UNUSED static int sox_writew(ft_t ft, int uw)
+{
+  char * c = (char *)&uw;
+  if (putc(c[SOX_IS_BIGENDIAN    ^ ft->signal.reverse_bytes], ft->fp) == EOF ||
+      putc(c[SOX_IS_LITTLEENDIAN ^ ft->signal.reverse_bytes], ft->fp) == EOF) {
+    sox_fail_errno(ft,errno,sox_writerr);
+    return SOX_EOF;
+  }
+  return SOX_SUCCESS;
+}
+
+/* Read three bytes. */
+UNUSED static int sox_read3(ft_t ft, uint24_t *u3)
+{
+  char * c = (char *)u3;
+  int ch1, ch2, ch3;
+  if ((ch1 = getc(ft->fp)) == EOF || (ch2 = getc(ft->fp)) == EOF || (ch3 = getc(ft->fp)) == EOF) {
+    sox_fail_errno(ft,errno,sox_readerr);
+    return SOX_EOF;
+  }
+  c[(SOX_IS_BIGENDIAN    ^ ft->signal.reverse_bytes)<<1] = ch1;
+  c[1] = ch2;
+  c[(SOX_IS_LITTLEENDIAN ^ ft->signal.reverse_bytes)<<1] = ch3;
+  return SOX_SUCCESS;
+}
+
+/* Write three bytes. */
+UNUSED static int sox_write3(ft_t ft, uint24_t u3)
+{
+  char * c = (char *)&u3;
+  if (putc(c[(SOX_IS_BIGENDIAN    ^ ft->signal.reverse_bytes)<<1], ft->fp) == EOF ||
+      putc(c[1], ft->fp) == EOF ||
+      putc(c[(SOX_IS_LITTLEENDIAN ^ ft->signal.reverse_bytes)<<1], ft->fp) == EOF) {
+    sox_fail_errno(ft,errno,sox_writerr);
+    return SOX_EOF;
+  }
+  return SOX_SUCCESS;
+}
 
 /*=============================================================================
  * File Handlers

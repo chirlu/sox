@@ -17,6 +17,10 @@ AC_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
 m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG])
 
+if test "$GCC" = "yes"; then
+  CFLAGS="-O3 -fomit-frame-pointer"
+fi
+
 dnl Debugging
 AC_MSG_CHECKING([if we want a debug build])
 AC_ARG_ENABLE(debug,
@@ -37,7 +41,7 @@ AC_MSG_RESULT(no)
 
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = yes; then
-    CFLAGS="$CFLAGS -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic"
+    CFLAGS="$CFLAGS -Wall -Wextra -Wmissing-prototypes -Wstrict-prototypes -pedantic"
 fi
 
 dnl Check for system dependent features.

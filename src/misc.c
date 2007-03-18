@@ -78,11 +78,11 @@ const char * const sox_encodings_str[] = {
 assert_static(array_length(sox_encodings_str) == SOX_ENCODINGS,
     SIZE_MISMATCH_BETWEEN_sox_encodings_t_AND_sox_encodings_str);
 
-static const char readerr[] = "Premature EOF while reading sample file.";
-static const char writerr[] = "Error writing sample file.  You are probably out of disk space.";
+const char sox_readerr[] = "Premature EOF while reading sample file.";
+const char sox_writerr[] = "Error writing sample file.  You are probably out of disk space.";
 
 /* Lookup table to reverse the bit order of a byte. ie MSB become LSB */
-static uint8_t const cswap[256] = {
+uint8_t const cswap[256] = {
   0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0, 0x10, 0x90, 0x50, 0xD0,
   0x30, 0xB0, 0x70, 0xF0, 0x08, 0x88, 0x48, 0xC8, 0x28, 0xA8, 0x68, 0xE8, 
   0x18, 0x98, 0x58, 0xD8, 0x38, 0xB8, 0x78, 0xF8, 0x04, 0x84, 0x44, 0xC4, 
@@ -204,7 +204,7 @@ int sox_reads(ft_t ft, char *c, sox_size_t len)
         if (sox_readbuf(ft, &in, 1, 1) != 1)
         {
             *sc = 0;
-                sox_fail_errno(ft,errno,readerr);
+                sox_fail_errno(ft,errno,sox_readerr);
             return (SOX_EOF);
         }
         if (in == 0 || in == '\n')
@@ -222,88 +222,8 @@ int sox_writes(ft_t ft, char const * c)
 {
         if (sox_writebuf(ft, c, 1, strlen(c)) != strlen(c))
         {
-                sox_fail_errno(ft,errno,writerr);
+                sox_fail_errno(ft,errno,sox_writerr);
                 return(SOX_EOF);
-        }
-        return(SOX_SUCCESS);
-}
-
-/* Read byte. */
-int sox_readb(ft_t ft, uint8_t *ub)
-{
-  if (sox_readbuf(ft, ub, 1, 1) != 1) {
-    sox_fail_errno(ft,errno,readerr);
-    return SOX_EOF;
-  }
-  if (ft->signal.reverse_bits)
-    *ub = cswap[*ub];
-  if (ft->signal.reverse_nibbles)
-    *ub = ((*ub & 15) << 4) | (*ub >> 4);
-  return SOX_SUCCESS;
-}
-
-/* Write byte. */
-int sox_writeb(ft_t ft, int ub)
-{
-  if (ft->signal.reverse_nibbles)
-    ub = ((ub & 15) << 4) | (ub >> 4);
-  if (ft->signal.reverse_bits)
-    ub = cswap[ub];
-  if (sox_writebuf(ft, &ub, 1, 1) != 1) {
-    sox_fail_errno(ft,errno,writerr);
-    return SOX_EOF;
-  }
-  return SOX_SUCCESS;
-}
-
-/* Read word. */
-int sox_readw(ft_t ft, uint16_t *uw)
-{
-        if (sox_readbuf(ft, uw, 2, 1) != 1)
-        {
-            sox_fail_errno(ft,errno,readerr);
-            return (SOX_EOF);
-        }
-        if (ft->signal.reverse_bytes)
-                *uw = sox_swapw(*uw);
-        return SOX_SUCCESS;
-}
-
-/* Write word. */
-int sox_writew(ft_t ft, int uw)
-{
-        if (ft->signal.reverse_bytes)
-                uw = sox_swapw(uw);
-        if (sox_writebuf(ft, &uw, 2, 1) != 1)
-        {
-                sox_fail_errno(ft,errno,writerr);
-                return (SOX_EOF);
-        }
-        return(SOX_SUCCESS);
-}
-
-/* Read three bytes. */
-int sox_read3(ft_t ft, uint24_t *u3)
-{
-        if (sox_readbuf(ft, u3, 3, 1) != 1)
-        {
-            sox_fail_errno(ft,errno,readerr);
-            return (SOX_EOF);
-        }
-        if (ft->signal.reverse_bytes)
-                *u3 = sox_swap24(*u3);
-        return SOX_SUCCESS;
-}
-
-/* Write three bytes. */
-int sox_write3(ft_t ft, uint24_t u3)
-{
-        if (ft->signal.reverse_bytes)
-                u3 = sox_swap24(u3);
-        if (sox_writebuf(ft, &u3, 3, 1) != 1)
-        {
-                sox_fail_errno(ft,errno,writerr);
-                return (SOX_EOF);
         }
         return(SOX_SUCCESS);
 }
@@ -313,7 +233,7 @@ int sox_readdw(ft_t ft, uint32_t *udw)
 {
         if (sox_readbuf(ft, udw, 4, 1) != 1)
         {
-            sox_fail_errno(ft,errno,readerr);
+            sox_fail_errno(ft,errno,sox_readerr);
             return (SOX_EOF);
         }
         if (ft->signal.reverse_bytes)
@@ -328,7 +248,7 @@ int sox_writedw(ft_t ft, uint32_t udw)
                 udw = sox_swapdw(udw);
         if (sox_writebuf(ft, &udw, 4, 1) != 1)
         {
-                sox_fail_errno(ft,errno,writerr);
+                sox_fail_errno(ft,errno,sox_writerr);
                 return (SOX_EOF);
         }
         return(SOX_SUCCESS);
@@ -339,7 +259,7 @@ int sox_readf(ft_t ft, float *f)
 {
         if (sox_readbuf(ft, f, sizeof(float), 1) != 1)
         {
-            sox_fail_errno(ft,errno,readerr);
+            sox_fail_errno(ft,errno,sox_readerr);
             return(SOX_EOF);
         }
         if (ft->signal.reverse_bytes)
@@ -356,7 +276,7 @@ int sox_writef(ft_t ft, float f)
                 t = sox_swapf(&t);
         if (sox_writebuf(ft, &t, sizeof(float), 1) != 1)
         {
-                sox_fail_errno(ft,errno,writerr);
+                sox_fail_errno(ft,errno,sox_writerr);
                 return (SOX_EOF);
         }
         return (SOX_SUCCESS);
@@ -367,7 +287,7 @@ int sox_readdf(ft_t ft, double *d)
 {
         if (sox_readbuf(ft, d, sizeof(double), 1) != 1)
         {
-            sox_fail_errno(ft,errno,readerr);
+            sox_fail_errno(ft,errno,sox_readerr);
             return(SOX_EOF);
         }
         if (ft->signal.reverse_bytes)
@@ -382,7 +302,7 @@ int sox_writedf(ft_t ft, double d)
                 d = sox_swapd(d);
         if (sox_writebuf(ft, &d, sizeof(double), 1) != 1)
         {
-                sox_fail_errno(ft,errno,writerr);
+                sox_fail_errno(ft,errno,sox_writerr);
                 return (SOX_EOF);
         }
         return (SOX_SUCCESS);
