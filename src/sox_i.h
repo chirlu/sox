@@ -58,10 +58,11 @@ typedef struct {char const *text; int value;} enum_item;
 #define ENUM_ITEM(prefix, item) {#item, prefix##item},
 enum_item const * find_enum_text(
     char const * text, enum_item const * enum_items);
-
 typedef enum {SOX_SHORT, SOX_INT, SOX_FLOAT, SOX_DOUBLE} sox_data_t;
 typedef enum {SOX_WAVE_SINE, SOX_WAVE_TRIANGLE} sox_wave_t;
 extern enum_item const sox_wave_enum[];
+sox_bool is_uri(char const * text);
+FILE * xfopen(char const * identifier, char const * mode);
 
 /* Define fseeko and ftello for platforms lacking them */
 #ifndef HAVE_FSEEKO
@@ -144,8 +145,6 @@ typedef void (*sox_output_message_handler_t)(int level, const char *filename, co
 extern sox_output_message_handler_t sox_output_message_handler;
 extern int sox_output_verbosity_level;
 void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap);
-sox_bool is_uri(char const * text);
-FILE * xfopen(char const * identifier, char const * mode);
 
 void sox_fail(const char *, ...);
 void sox_warn(const char *, ...);
