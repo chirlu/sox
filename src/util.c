@@ -1,12 +1,7 @@
 /*
  * util.c.
- * Incorporate Jimen Ching's fixes for real library operation: Aug 3, 1994.
- * Redo all work from scratch, unfortunately.
- * Separate out all common variables used by effects & handlers,
- * and utility routines for other main programs to use.
- */
-
-/*
+ * Utility functions mostly related to logging.
+ *
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for

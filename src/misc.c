@@ -1,14 +1,14 @@
 /*
+ * libSoX miscellaneous file-handling functions.
+ */
+
+/*
  * July 5, 1991
  * Copyright 1991 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained.
  * Lance Norskog And Sundry Contributors are not responsible for
  * the consequences of using this software.
- */
-
-/*
- * libSoX miscellaneous stuff.
  */
 
 #include "sox_i.h"
