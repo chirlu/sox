@@ -130,7 +130,11 @@ static int band_getopts(eff_t effp, int n, char **argv) {
 
 
 static int deemph_getopts(eff_t effp, int n, char **argv) {
-  return sox_biquad_getopts(effp, n, argv, 0, 0, 0, 1, 2, "", filter_deemph);
+  biquad_t p = (biquad_t) effp->priv;
+  p->fc    = 5283;
+  p->width = 0.4845;
+  p->gain  = -9.477;
+  return sox_biquad_getopts(effp, n, argv, 0, 0, 0, 1, 2, "s", filter_deemph);
 }
 
 
@@ -248,6 +252,13 @@ static int start(eff_t effp)
       p->a2 =        (A+1) + (A-1)*cos(w0) - 2*sqrt(A)*alpha;
       break;
 
+    case filter_deemph:  /* See deemph.plt for documentation */
+      if (effp->ininfo.rate != 44100) {
+        sox_fail("Sample rate must be 44100 (audio-CD)");
+        return SOX_EOF;
+      }
+      /* Falls through... */
+
     case filter_highShelf: /* H(s) = A * (A*s^2 + (sqrt(A)/Q)*s + 1)/(s^2 + (sqrt(A)/Q)*s + A) */
       if (!A)
         return SOX_EFF_NULL;
@@ -295,11 +306,6 @@ static int start(eff_t effp)
       p->a1 = -2 * cos(w0);
       p->a2 = 1 - sin(w0);
       break;
-
-    case filter_deemph: {
-      #include "deemph.h" /* Has own documentation */
-      break;
-    }
   }
   return sox_biquad_start(effp);
 }
