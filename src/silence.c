@@ -61,6 +61,8 @@ typedef struct silencestuff
     sox_size_t   window_size;
     double      rms_sum;
 
+    char        leave_silence;
+
     /* State Machine */
     char        mode;
 } *silence_t;
@@ -82,6 +84,16 @@ static int sox_silence_getopts(eff_t effp, int n, char **argv)
 {
     silence_t   silence = (silence_t) effp->priv;
     int parse_count;
+
+    /* check for option switches */
+    silence->leave_silence = sox_false;
+    if (n > 0)
+    {
+        if (!strcmp("-l", *argv)) {
+            n--; argv++;
+            silence->leave_silence = sox_true;
+        }
+    }
 
     if (n < 1)
     {
@@ -457,21 +469,43 @@ silence_trim_flush:
             break;
 
         case SILENCE_COPY:
-            /* Attempts to copy samples into output buffer.  If not
-             * looking for silence to terminate copy then blindly
-             * copy data into output buffer.
+            /* Attempts to copy samples into output buffer.
              *
-             * If looking for silence, then see if input sample is above
-             * threshold.  If found then flush out hold off buffer
-             * and copy over to output buffer.  Tell user about
-             * input and output processing.
+             * Case B:
+             * If not looking for silence to terminate copy then
+             * blindly copy data into output buffer.
              *
-             * If not above threshold then store in hold off buffer
-             * and do not write to output buffer.  Tell user input
-             * was processed.
+             * Case A:
              *
-             * If hold off buffer is full then stop copying data and
-             * discard data in hold off buffer.
+             * Case 1a:
+             * If previous silence was detect then see if input sample is 
+             * above threshold.  If found then flush out hold off buffer
+             * and copy over to output buffer.  
+             *
+             * Case 1b:
+             * If no previous silence detect then see if input sample
+             * is above threshold.  If found then copy directly
+             * to output buffer.
+             *
+             * Case 2:
+             * If not above threshold then silence is detect so
+             * store in hold off buffer and do not write to output
+             * buffer.  Even though it wasn't put in output
+             * buffer, inform user that input was consumed.
+             *
+             * If hold off buffer is full after this then stop 
+             * copying data and discard data in hold off buffer.
+             *
+             * Special leave_silence logic:
+             *
+             * During this mode, go ahead and copy input
+             * samples to output buffer instead of holdoff buffer
+             * Then also short ciruit any flushes that would occur
+             * when non-silence is detect since samples were already
+             * copied.  This has the effect of always leaving
+             * holdoff[] amount of silence but deleting any
+             * beyond that amount.
+             *
              */
 silence_copy:
             nrOfTicks = min((*isamp-nrOfInSamplesRead), 
@@ -479,6 +513,7 @@ silence_copy:
                            effp->ininfo.channels;
             if (silence->stop)
             {
+                /* Case A */
                 for(i = 0; i < nrOfTicks; i++)
                 {
                     threshold = 1;
@@ -490,16 +525,24 @@ silence_copy:
                                                     silence->stop_unit);
                     }
 
-                    /* If above threshold, check to see if we where holding
+                    /* Case 1a
+                     * If above threshold, check to see if we where holding
                      * off previously.  If so then flush this buffer.
                      * We haven't incremented any pointers yet so nothing
                      * is lost.
+                     *
+                     * If user wants to leave_silence, then we
+                     * were already copying the data and so no
+                     * need to flush the old data.  Just resume
+                     * copying as if we were not holding off.
                      */
-                    if (threshold && silence->stop_holdoff_end)
+                    if (threshold && silence->stop_holdoff_end
+                        && !silence->leave_silence)
                     {
                         silence->mode = SILENCE_COPY_FLUSH;
                         goto silence_copy_flush;
                     }
+                    /* Case 1b */
                     else if (threshold)
                     {
                         /* Not holding off so copy into output buffer */
@@ -511,12 +554,17 @@ silence_copy:
                             nrOfOutSamplesWritten++;
                         }
                     }
+                    /* Case 2 */
                     else if (!threshold)
                     {
                         /* Add to holdoff buffer */
                         for (j = 0; j < effp->ininfo.channels; j++)
                         {
                             update_rms(effp, *ibuf);
+                            if (silence->leave_silence) {
+                                *obuf++ = *ibuf;
+                                nrOfOutSamplesWritten++;
+                            }
                             silence->stop_holdoff[
                                 silence->stop_holdoff_end++] = *ibuf++;
                             nrOfInSamplesRead++;
@@ -570,6 +618,7 @@ silence_copy:
             } /* Trimming off backend */
             else /* !(silence->stop) */
             {
+                /* Case B */
                 memcpy(obuf, ibuf, sizeof(sox_sample_t)*nrOfTicks*
                                    effp->ininfo.channels);
                 nrOfInSamplesRead += (nrOfTicks*effp->ininfo.channels);

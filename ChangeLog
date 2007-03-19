@@ -20,6 +20,8 @@ sox-13.0.1
   o Show (with --octave) compand transfer function.  (robs)
   o Allow e.g. "vol 6dB" (as well as "vol 6 dB").  (robs)
   o Changed deemph to be a true biquad for better accuracy.  (robs)
+  o Add option to silence effect to leave periods of silence
+    in and only strip out extra silence.   Mark Schreiber
 
   Other new features:
 

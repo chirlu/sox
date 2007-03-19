@@ -1856,7 +1856,7 @@ is the volume of the output.
 Reverse the audio completely.
 Requires disk space to store the data to be reversed.
 .TP
-\fBsilence \fIabove-periods\fR [\fIduration threshold\fR[\fBd\fR\^|\^\fB%\fR] [\fIbelow-periods duration threshold\fR[\fBd\fR\^|\^\fB%\fR]]
+\fBsilence [\fB\-l\fR] \fIabove-periods\fR [\fIduration threshold\fR[\fBd\fR\^|\^\fB%\fR] [\fIbelow-periods duration threshold\fR[\fBd\fR\^|\^\fB%\fR]]
 .SP
 Removes silence from the beginning, middle, or end of the audio.  Silence is anything below a specified threshold.
 .SP
@@ -1909,6 +1909,13 @@ treated as a positive value and is also used to indicate the
 effect should restart processing as specified by the
 \fIabove-periods\fR, making it suitable for removing periods of
 silence in the middle of the audio.
+.SP
+The option
+.B \-l
+indicates that \fIbelow-periods\fR \fIduration\fR length of audio
+should be left intact at the beginning of each period of silence.
+For example, if you want to remove long pauses between words
+but do not want to remove the pauses completely.
 .SP
 The \fIperiod\fR counts are in units of samples.  \fIDuration\fR counts may be in the format of hh:mm:ss.frac, or the exact count of samples.  \fIThreshold\fR numbers may be suffixed with
 .B d
