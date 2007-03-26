@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+#include <limits.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>     /* For SEEK_* defines if not found in stdio */
 #endif
@@ -562,6 +563,10 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
     sox_readdw(ft, &timeStamp);
     sox_readw(ft, &markerId);
     sox_readw(ft, &commentLength);
+    if (((size_t)totalCommentLength) + commentLength > USHRT_MAX) {
+        sox_fail_errno(ft,SOX_EOF,"AIFF: Comment too long in %s header", chunkDescription);
+        return(SOX_EOF);
+    }
     totalCommentLength += commentLength;
     /* allocate enough memory to hold the text including a terminating \0 */
     if(commentIndex == 0) {
