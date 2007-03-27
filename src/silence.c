@@ -716,7 +716,7 @@ static int delete(eff_t effp)
 
 static sox_effect_t sox_silence_effect = {
   "silence",
-  "Usage: silence above_periods [ duration thershold[d | %% ] ] [ below_periods duration threshold[ d | %% ]]",
+  "Usage: silence [ -l ] above_periods [ duration thershold[d|%%] ] [ below_periods duration threshold[d|%%]]",
   SOX_EFF_MCHAN,
   sox_silence_getopts,
   sox_silence_start,
