@@ -1451,13 +1451,12 @@ static int flow_effect_out(void)
         total += len;
       } while (total < efftab[neffects-1].olen);
       output_samples += (total / ofile->desc->signal.channels);
-      efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
     } else {
       /* Make it look like everything was consumed */
       output_samples += (efftab[neffects-1].olen /
                          ofile->desc->signal.channels);
-      efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
     }
+    efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
 
     /* if stuff still in pipeline, set up to flow effects again */
     /* When all effects have reported SOX_EOF then this check will
