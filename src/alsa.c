@@ -424,19 +424,19 @@ static int sox_alsastartread(ft_t ft)
     return sox_alsasetup(ft, SND_PCM_STREAM_CAPTURE);
 }
 
-static void sox_ub_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips UNUSED)
+static void ub_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips UNUSED)
 {
     while (len--)
         *buf1++ = SOX_UNSIGNED_BYTE_TO_SAMPLE(*((unsigned char *)buf2++),);
 }
 
-static void sox_sb_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips UNUSED)
+static void sb_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips UNUSED)
 {
     while (len--)
         *buf1++ = SOX_SIGNED_BYTE_TO_SAMPLE(*((int8_t *)buf2++),);
 }
 
-static void sox_uw_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips UNUSED)
+static void uw_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips UNUSED)
 {
     while (len--)
     {
@@ -449,7 +449,7 @@ static void sox_uw_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t le
     }
 }
 
-static void sox_sw_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips UNUSED)
+static void sw_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips UNUSED)
 {
     while (len--)
     {
@@ -474,10 +474,10 @@ static sox_size_t sox_alsaread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp)
             switch(ft->signal.encoding)
             {
                 case SOX_ENCODING_SIGN2:
-                    read_buf = sox_sb_read_buf;
+                    read_buf = sb_read_buf;
                     break;
                 case SOX_ENCODING_UNSIGNED:
-                    read_buf = sox_ub_read_buf;
+                    read_buf = ub_read_buf;
                     break;
                 default:
                     sox_fail_errno(ft,SOX_EFMT,"Do not support this encoding for this data size");
@@ -488,10 +488,10 @@ static sox_size_t sox_alsaread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp)
             switch(ft->signal.encoding)
             {
                 case SOX_ENCODING_SIGN2:
-                    read_buf = sox_sw_read_buf;
+                    read_buf = sw_read_buf;
                     break;
                 case SOX_ENCODING_UNSIGNED:
-                    read_buf = sox_uw_read_buf;
+                    read_buf = uw_read_buf;
                     break;
                 default:
                     sox_fail_errno(ft,SOX_EFMT,"Do not support this encoding for this data size");
