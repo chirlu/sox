@@ -17,10 +17,6 @@ AC_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
 m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG])
 
-if test "$GCC" = "yes"; then
-  CFLAGS="-O3 -fomit-frame-pointer"
-fi
-
 dnl Debugging
 AC_MSG_CHECKING([if we want a debug build])
 AC_ARG_ENABLE(debug,
