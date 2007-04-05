@@ -148,41 +148,23 @@ static int sox_spherestartread(ft_t ft)
 
         sphere->shorten_check[0] = 0;
 
-        /* Check first four bytes of data to see if it's shorten
-         * compressed or not.
-         */
-        sox_reads(ft, sphere->shorten_check, 4);
+        if (ft->seekable) {
+          /* Check first four bytes of data to see if it's shorten compressed. */
+          sox_size_t pos = sox_tell(ft);
+          sox_reads(ft, sphere->shorten_check, 4);
 
-        if (!strcmp(sphere->shorten_check,"ajkg"))
-        {
-            sox_fail_errno(ft,SOX_EFMT,"File uses shorten compression, cannot handle this.");
+          if (!strcmp(sphere->shorten_check,"ajkg")) {
+            sox_fail_errno(ft, SOX_EFMT, "File uses shorten compression, cannot handle this.");
             free(buf);
             return(SOX_EOF);
+          }
+
+          /* Can't just seek -4, as sox_reads has read 1-4 bytes */
+          sox_seeki(ft, pos, SEEK_SET); 
         }
 
         free(buf);
         return (SOX_SUCCESS);
-}
-
-/*
- * Read up to len samples from file.
- * Convert to signed longs.
- * Place in buf[].
- * Return number of samples read.
- */
-
-static sox_size_t sox_sphereread(ft_t ft, sox_sample_t *buf, sox_size_t len) 
-{
-    sphere_t sphere = (sphere_t) ft->priv;
-
-    if (sphere->shorten_check[0])
-    {
-        /* TODO: put these 4 bytes into the buffer.  Requires
-         * knowing how to process ulaw and all version of PCM data size.
-         */
-        sphere->shorten_check[0] = 0;
-    }
-    return sox_rawread(ft, buf, len);
 }
 
 static int sox_spherestartwrite(ft_t ft) 
@@ -292,7 +274,7 @@ static sox_format_t sox_sphere_format = {
   NULL,
   0,
   sox_spherestartread,
-  sox_sphereread,
+  sox_rawread,
   sox_rawstopread,
   sox_spherestartwrite,
   sox_spherewrite,

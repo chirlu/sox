@@ -2,7 +2,7 @@
 #
 # SoX Regression Test script: Lossless file conversion
 #
-# FIXME: Test sndt sph ogg
+# FIXME: Test sndt ogg ima
 
 # Options:
 #verbose=-V
@@ -33,7 +33,10 @@ convertToAndFrom () {
       fi
       if [ "${format1_skip}x" = "x" -a "${from_skip}x" = "x" ] ; then
         getFormat ${format1}; format1Text=$formatText; format1Flags=$formatFlags
-        getFormat       $1; format2Text=$formatText; format2Flags=$formatFlags
+        getFormat         $1; format2Text=$formatText; format2Flags=$formatFlags
+        echo ./sox -c $channels -r $rate -n $format1Flags input.$format1 synth $samples's' sin 300-3300 noise trapezium
+        echo ./sox $verbose -r $rate -c $channels $format1Flags input.$format1 $format2Flags intermediate.$1
+        echo ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$1 $format1Flags output.$format1
         ./sox -c $channels -r $rate -n $format1Flags input.$format1 synth $samples's' sin 300-3300 noise trapezium
         ./sox $verbose -r $rate -c $channels $format1Flags input.$format1 $format2Flags intermediate.$1
         ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$1 $format1Flags output.$format1
@@ -53,25 +56,25 @@ convertToAndFrom () {
 
 do_multichannel_formats () {
   format1=ub
-  convertToAndFrom sb ub sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac caf
+  convertToAndFrom sb ub sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac caf sph
 
   format1=sw
-  convertToAndFrom sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac caf
+  convertToAndFrom sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac caf sph
 
   format1=u3
   convertToAndFrom s3 u3 sl u4 raw Raw wav aiff aifc flac
 
   format1=sl
-  convertToAndFrom sl u4 Raw wav aiff aifc caf
+  convertToAndFrom sl u4 Raw wav aiff aifc caf sph
 
   format1=al
   convertToAndFrom al sw uw sl raw Raw dat aiff aifc flac caf
 
   format1=ul
-  convertToAndFrom ul sw uw sl raw Raw dat aiff aifc flac caf
+  convertToAndFrom ul sw uw sl raw Raw dat aiff aifc flac caf sph
 
   format1=Wav
-  convertToAndFrom Wav aiff aifc au dat sf flac caf
+  convertToAndFrom Wav aiff aifc au dat sf flac caf sph
 }
 
 do_twochannel_formats () {
