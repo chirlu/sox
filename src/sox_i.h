@@ -105,11 +105,44 @@ int sox_padbytes(ft_t ft, sox_size_t n);
 size_t sox_writebuf(ft_t ft, void const *buf, size_t size, sox_size_t len);
 int sox_reads(ft_t ft, char *c, sox_size_t len);
 int sox_writes(ft_t ft, char const * c);
-int sox_readdw(ft_t ft, uint32_t *udw);
+
+sox_size_t sox_read_ub_buf(ft_t ft, uint8_t *buf, sox_size_t len);
+sox_size_t sox_read_sb_buf(ft_t ft, int8_t *buf, sox_size_t len);
+sox_size_t sox_read_ulawb_buf(ft_t ft, uint8_t *buf, sox_size_t len);
+sox_size_t sox_read_alawb_buf(ft_t ft, uint8_t *buf, sox_size_t len);
+sox_size_t sox_read_uw_buf(ft_t ft, uint16_t *buf, sox_size_t len);
+sox_size_t sox_read_sw_buf(ft_t ft, int16_t *buf, sox_size_t len);
+sox_size_t sox_read_u3_buf(ft_t ft, uint24_t *buf, sox_size_t len);
+sox_size_t sox_read_s3_buf(ft_t ft, int24_t *buf, sox_size_t len);
+sox_size_t sox_read_udw_buf(ft_t ft, uint32_t *buf, sox_size_t len);
+sox_size_t sox_read_sdw_buf(ft_t ft, int32_t *buf, sox_size_t len);
+sox_size_t sox_read_suf_buf(ft_t ft, float *buf, sox_size_t len);
+sox_size_t sox_read_sudf_buf(ft_t ft, double *buf, sox_size_t len);
+
+sox_size_t sox_write_ub_buf(ft_t ft, uint8_t *buf, sox_size_t len);
+sox_size_t sox_write_sb_buf(ft_t ft, int8_t *buf, sox_size_t len);
+sox_size_t sox_write_ulawb_buf(ft_t ft, uint8_t *buf, sox_size_t len);
+sox_size_t sox_write_alawb_buf(ft_t ft, uint8_t *buf, sox_size_t len);
+sox_size_t sox_write_uw_buf(ft_t ft, uint16_t *buf, sox_size_t len);
+sox_size_t sox_write_sw_buf(ft_t ft, int16_t *buf, sox_size_t len);
+sox_size_t sox_write_u3_buf(ft_t ft, uint24_t *buf, sox_size_t len);
+sox_size_t sox_write_s3_buf(ft_t ft, int24_t *buf, sox_size_t len);
+sox_size_t sox_write_udw_buf(ft_t ft, uint32_t *buf, sox_size_t len);
+sox_size_t sox_write_sdw_buf(ft_t ft, int32_t *buf, sox_size_t len);
+sox_size_t sox_write_suf_buf(ft_t ft, float *buf, sox_size_t len);
+sox_size_t sox_write_sudf_buf(ft_t ft, double *buf, sox_size_t len);
+
+#define sox_readb(ft, ub) (sox_read_ub_buf(ft, ub, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
+int sox_writeb(ft_t ft, uint8_t ub);
+#define sox_readw(ft, uw) (sox_read_uw_buf(ft, uw, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
+int sox_writew(ft_t ft, uint16_t uw);
+#define sox_read3(ft, u3) (sox_read_u3_buf(ft, u3, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
+int sox_write3(ft_t ft, uint24_t u3);
+#define sox_readdw(ft, udw) (sox_read_udw_buf(ft, udw, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
 int sox_writedw(ft_t ft, uint32_t udw);
-int sox_readf(ft_t ft, float *f);
+#define sox_readf(ft, f) (sox_read_suf_buf(ft, f, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
 int sox_writef(ft_t ft, float f);
-int sox_readdf(ft_t ft, double *d);
+#define sox_readdf(ft, d) (sox_read_sudf_buf(ft, d, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
 int sox_writedf(ft_t ft, double d);
 int sox_seeki(ft_t ft, sox_size_t offset, int whence);
 sox_size_t sox_filelength(ft_t ft);
@@ -136,9 +169,9 @@ void put16_be(unsigned char **p, int val);
 #define sox_swapw(uw) (((uw >> 8) | (uw << 8)) & 0xffff)
 #define sox_swapdw(udw) ((udw >> 24) | ((udw >> 8) & 0xff00) | ((udw << 8) & 0xff0000) | (udw << 24))
 #endif
-float sox_swapf(float const * f);
-uint32_t sox_swap24(uint32_t udw);
-double sox_swapd(double d);
+float sox_swapf(float f);
+uint32_t sox_swap3(uint32_t udw);
+double sox_swapdf(double d);
 
 /* util.c */
 typedef void (*sox_output_message_handler_t)(int level, const char *filename, const char *fmt, va_list ap);
@@ -186,88 +219,6 @@ void sox_fail_errno(ft_t, int, const char *, ...);
 extern const char sox_readerr[];
 extern const char sox_writerr[];
 extern uint8_t const cswap[256];
-
-/* Read byte. */
-UNUSED static int sox_readb(ft_t ft, uint8_t *ub)
-{
-  int ch1;
-  if ((ch1 = getc(ft->fp)) == EOF) {
-    sox_fail_errno(ft,errno,sox_readerr);
-    return SOX_EOF;
-  }
-  *ub = ft->signal.reverse_bits? cswap[ch1]: ch1;
-  if (ft->signal.reverse_nibbles)
-    *ub = ((*ub & 15) << 4) | (*ub >> 4);
-  return SOX_SUCCESS;
-}
-
-/* Write byte. */
-UNUSED static int sox_writeb(ft_t ft, int ub)
-{
-  if (ft->signal.reverse_nibbles)
-    ub = ((ub & 15) << 4) | (ub >> 4);
-  if (ft->signal.reverse_bits)
-    ub = cswap[ub];
-  if (putc(ub, ft->fp) == EOF) {
-    sox_fail_errno(ft,errno,sox_writerr);
-    return SOX_EOF;
-  }
-  return SOX_SUCCESS;
-}
-
-/* Read word. */
-UNUSED static int sox_readw(ft_t ft, uint16_t *uw)
-{
-  char * c = (char *)uw;
-  int ch1, ch2;
-  if ((ch1 = getc(ft->fp)) == EOF || (ch2 = getc(ft->fp)) == EOF) {
-    sox_fail_errno(ft,errno,sox_readerr);
-    return SOX_EOF;
-  }
-  c[SOX_IS_BIGENDIAN    ^ ft->signal.reverse_bytes] = ch1;
-  c[SOX_IS_LITTLEENDIAN ^ ft->signal.reverse_bytes] = ch2;
-  return SOX_SUCCESS;
-}
-
-/* Write word. */
-UNUSED static int sox_writew(ft_t ft, int uw)
-{
-  char * c = (char *)&uw;
-  if (putc(c[SOX_IS_BIGENDIAN    ^ ft->signal.reverse_bytes], ft->fp) == EOF ||
-      putc(c[SOX_IS_LITTLEENDIAN ^ ft->signal.reverse_bytes], ft->fp) == EOF) {
-    sox_fail_errno(ft,errno,sox_writerr);
-    return SOX_EOF;
-  }
-  return SOX_SUCCESS;
-}
-
-/* Read three bytes. */
-UNUSED static int sox_read3(ft_t ft, uint24_t *u3)
-{
-  char * c = (char *)u3;
-  int ch1, ch2, ch3;
-  if ((ch1 = getc(ft->fp)) == EOF || (ch2 = getc(ft->fp)) == EOF || (ch3 = getc(ft->fp)) == EOF) {
-    sox_fail_errno(ft,errno,sox_readerr);
-    return SOX_EOF;
-  }
-  c[(SOX_IS_BIGENDIAN    ^ ft->signal.reverse_bytes)<<1] = ch1;
-  c[1] = ch2;
-  c[(SOX_IS_LITTLEENDIAN ^ ft->signal.reverse_bytes)<<1] = ch3;
-  return SOX_SUCCESS;
-}
-
-/* Write three bytes. */
-UNUSED static int sox_write3(ft_t ft, uint24_t u3)
-{
-  char * c = (char *)&u3;
-  if (putc(c[(SOX_IS_BIGENDIAN    ^ ft->signal.reverse_bytes)<<1], ft->fp) == EOF ||
-      putc(c[1], ft->fp) == EOF ||
-      putc(c[(SOX_IS_LITTLEENDIAN ^ ft->signal.reverse_bytes)<<1], ft->fp) == EOF) {
-    sox_fail_errno(ft,errno,sox_writerr);
-    return SOX_EOF;
-  }
-  return SOX_SUCCESS;
-}
 
 /*=============================================================================
  * File Handlers

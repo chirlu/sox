@@ -228,87 +228,6 @@ int sox_writes(ft_t ft, char const * c)
         return(SOX_SUCCESS);
 }
 
-/* Read double word. */
-int sox_readdw(ft_t ft, uint32_t *udw)
-{
-        if (sox_readbuf(ft, udw, 4, 1) != 1)
-        {
-            sox_fail_errno(ft,errno,sox_readerr);
-            return (SOX_EOF);
-        }
-        if (ft->signal.reverse_bytes)
-                *udw = sox_swapdw(*udw);
-        return SOX_SUCCESS;
-}
-
-/* Write double word. */
-int sox_writedw(ft_t ft, uint32_t udw)
-{
-        if (ft->signal.reverse_bytes)
-                udw = sox_swapdw(udw);
-        if (sox_writebuf(ft, &udw, 4, 1) != 1)
-        {
-                sox_fail_errno(ft,errno,sox_writerr);
-                return (SOX_EOF);
-        }
-        return(SOX_SUCCESS);
-}
-
-/* Read float. */
-int sox_readf(ft_t ft, float *f)
-{
-        if (sox_readbuf(ft, f, sizeof(float), 1) != 1)
-        {
-            sox_fail_errno(ft,errno,sox_readerr);
-            return(SOX_EOF);
-        }
-        if (ft->signal.reverse_bytes)
-                *f = sox_swapf(f);
-        return SOX_SUCCESS;
-}
-
-/* Write float. */
-int sox_writef(ft_t ft, float f)
-{
-        float t = f;
-
-        if (ft->signal.reverse_bytes)
-                t = sox_swapf(&t);
-        if (sox_writebuf(ft, &t, sizeof(float), 1) != 1)
-        {
-                sox_fail_errno(ft,errno,sox_writerr);
-                return (SOX_EOF);
-        }
-        return (SOX_SUCCESS);
-}
-
-/* Read double. */
-int sox_readdf(ft_t ft, double *d)
-{
-        if (sox_readbuf(ft, d, sizeof(double), 1) != 1)
-        {
-            sox_fail_errno(ft,errno,sox_readerr);
-            return(SOX_EOF);
-        }
-        if (ft->signal.reverse_bytes)
-                *d = sox_swapd(*d);
-        return SOX_SUCCESS;
-}
-
-/* Write double. */
-int sox_writedf(ft_t ft, double d)
-{
-        if (ft->signal.reverse_bytes)
-                d = sox_swapd(d);
-        if (sox_writebuf(ft, &d, sizeof(double), 1) != 1)
-        {
-                sox_fail_errno(ft,errno,sox_writerr);
-                return (SOX_EOF);
-        }
-        return (SOX_SUCCESS);
-}
-
-
 uint32_t get32_le(unsigned char **p)
 {
         uint32_t val = (((*p)[3]) << 24) | (((*p)[2]) << 16) | 
@@ -353,7 +272,7 @@ void put16_be(unsigned char **p, int val)
 }
 
 /* generic swap routine. Swap l and place in to f (datatype length = n) */
-static void sox_swapb(char *l, char *f, int n)
+static void sox_swap(char *l, char *f, int n)
 {
     register int i;
 
@@ -362,27 +281,27 @@ static void sox_swapb(char *l, char *f, int n)
 }
 
 /* return swapped 32-bit float */
-float sox_swapf(float const * f)
+float sox_swapf(float f)
 {
     union {
         uint32_t dw;
         float f;
     } u;
 
-    u.f= *f;
+    u.f= f;
     u.dw= (u.dw>>24) | ((u.dw>>8)&0xff00) | ((u.dw<<8)&0xff0000) | (u.dw<<24);
     return u.f;
 }
 
-uint32_t sox_swap24(uint24_t udw)
+uint32_t sox_swap3(uint24_t udw)
 {
     return ((udw >> 16) & 0xff) | (udw & 0xff00) | ((udw << 16) & 0xff0000);
 }
 
-double sox_swapd(double df)
+double sox_swapdf(double df)
 {
     double sdf;
-    sox_swapb((char *)&df, (char *)&sdf, sizeof(double));
+    sox_swap((char *)&df, (char *)&sdf, sizeof(double));
     return (sdf);
 }
 

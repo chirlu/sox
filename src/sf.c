@@ -105,7 +105,7 @@ static int sox_sfstartread(ft_t ft)
         }
         memcpy(&sf->info, &sfhead.sfinfo, sizeof(struct sfinfo));
         if (ft->signal.reverse_bytes) {
-                sf->info.sf_srate = sox_swapf(&sf->info.sf_srate);
+                sf->info.sf_srate = sox_swapf(sf->info.sf_srate);
                 sf->info.sf_packmode = sox_swapdw(sf->info.sf_packmode);
                 sf->info.sf_chans = sox_swapdw(sf->info.sf_chans);
         }
