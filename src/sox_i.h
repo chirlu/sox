@@ -144,7 +144,7 @@ int sox_writedw(ft_t ft, uint32_t udw);
 int sox_writef(ft_t ft, float f);
 #define sox_readdf(ft, d) (sox_read_sudf_buf(ft, d, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
 int sox_writedf(ft_t ft, double d);
-int sox_seeki(ft_t ft, sox_size_t offset, int whence);
+int sox_seeki(ft_t ft, sox_ssize_t offset, int whence);
 sox_size_t sox_filelength(ft_t ft);
 int sox_flush(ft_t ft);
 sox_size_t sox_tell(ft_t ft);

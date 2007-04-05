@@ -483,9 +483,9 @@ const char *sox_version(void)
  * file operations so that they could one day also work on memory
  * buffers.
  *
- * N.B. Can only seek forwards!
+ * N.B. Can only seek forwards on non-seekable streams!
  */
-int sox_seeki(ft_t ft, sox_size_t offset, int whence)
+int sox_seeki(ft_t ft, sox_ssize_t offset, int whence)
 {
     if (ft->seekable == 0) {
         /* If a stream peel off chars else EPERM */
