@@ -2,7 +2,7 @@
 #
 # SoX Regression Test script: Lossless file conversion
 #
-# FIXME: Test sndt ogg ima
+# FIXME: Test sndt
 
 # Options:
 #verbose=-V
@@ -62,13 +62,13 @@ do_multichannel_formats () {
   convertToAndFrom sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac caf sph
 
   format1=u3
-  convertToAndFrom s3 u3 sl u4 raw Raw wav aiff aifc flac
+  convertToAndFrom s3 u3 sl u4 raw Raw wav aiff aifc flac # FIXME: sph
 
   format1=sl
   convertToAndFrom sl u4 Raw wav aiff aifc caf sph
 
   format1=al
-  convertToAndFrom al sw uw sl raw Raw dat aiff aifc flac caf
+  convertToAndFrom al sw uw sl raw Raw dat aiff aifc flac caf # FIXME: sph
 
   format1=ul
   convertToAndFrom ul sw uw sl raw Raw dat aiff aifc flac caf sph
@@ -86,7 +86,10 @@ do_twochannel_formats () {
 
 do_singlechannel_formats () {
   format1=vox
-  convertToAndFrom vox sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac caf
+  convertToAndFrom vox sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac caf # FIXME: ima
+
+  format1=ima
+  convertToAndFrom ima sw uw s3 u3 sl u4 raw Raw dat au aiff aifc flac caf # FIXME: vox wav
 
   format1=Wav
   convertToAndFrom smp
