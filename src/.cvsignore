@@ -1,5 +1,5 @@
 Makefile Makefile.in
-libsox-config
+sox-config
 soxconfig.h.in soxconfig.h soxstdint.h
 .deps
 stamp-h1
