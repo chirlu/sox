@@ -102,6 +102,28 @@ do_singlechannel_formats () {
   (rate=8000; convertToAndFrom al sw uw sl raw Raw dat) || exit 1 # Fixed rate
 }
 
+# Reading and writing performance test
+timeIO () {
+  while [ $# != 0 ]; do
+      if [ "${skip}x" != "x" ] ; then
+        from_skip=`echo ${skip} | grep ${1}`
+      fi
+      if [ "${from_skip}x" = "x" ] ; then
+        getFormat $1;
+        echo ./sox -c $channels -r $rate -n $formatFlags input.$1 synth $samples's' sin 300-3300 noise trapezium
+        echo time ./sox $verbose -r $rate -c $channels $formatFlags input.$1 $formatFlags output.$1
+        ./sox -c $channels -r $rate -n $formatFlags input.$1 synth $samples's' sin 300-3300 noise trapezium
+        time ./sox $verbose -r $rate -c $channels $formatFlags input.$1 $formatFlags output.$1
+
+        rm -f input.$1 output.$1
+      fi
+      shift
+  done
+}
+
+
+# Run tests
+
 grep -q "^#define HAVE_LIBFLAC" soxconfig.h || skip="flac $skip"
 grep -q "^#define HAVE_LIBOGG" soxconfig.h || skip="ogg $skip"
 grep -q "^#define HAVE_SNDFILE_H" soxconfig.h || skip="caf $skip"
@@ -126,6 +148,10 @@ if [ "$all" = "all" ]; then
   do_twochannel_formats
 fi
 do_singlechannel_formats
+
+channels=2
+samples=10000000
+timeIO sb ub sw uw s3 u3 sl u4 raw Raw au wav aiff aifc caf sph # FIXME?: flac dat
 
 ./sox -c 1 -n output.ub synth .01 vol .5
 if [ `wc -c <output.ub` = 441 ]; then
