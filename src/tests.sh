@@ -9,7 +9,7 @@
 #all=all
 
 getFormat () {
-  formatText=$1; formatFlags=""
+  formatExt=$1; formatText=$1; formatFlags=""
   case $1 in
     al ) formatText="alaw byte" ;;
     sb ) formatText="signed byte" ;;
@@ -22,6 +22,9 @@ getFormat () {
     Raw) formatText="double"; formatFlags="-f -8" ;;
     au ) formatFlags="-s" ;;
     Wav) formatFlags="-u -b" ;;
+    sbX ) formatText="signed byte"; formatExt="sb"; formatFlags="-X" ;;
+    sbN ) formatText="signed byte"; formatExt="sb"; formatFlags="-N" ;;
+    sbXN ) formatText="signed byte"; formatExt="sb"; formatFlags="-X -N" ;;
   esac
 }
   
@@ -32,23 +35,37 @@ convertToAndFrom () {
         from_skip=`echo ${skip} | grep ${1}`
       fi
       if [ "${format1_skip}x" = "x" -a "${from_skip}x" = "x" ] ; then
-        getFormat ${format1}; format1Text=$formatText; format1Flags=$formatFlags
-        getFormat         $1; format2Text=$formatText; format2Flags=$formatFlags
-        echo ./sox -c $channels -r $rate -n $format1Flags input.$format1 synth $samples's' sin 300-3300 noise trapezium
-        echo ./sox $verbose -r $rate -c $channels $format1Flags input.$format1 $format2Flags intermediate.$1
-        echo ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$1 $format1Flags output.$format1
-        ./sox -c $channels -r $rate -n $format1Flags input.$format1 synth $samples's' sin 300-3300 noise trapezium
-        ./sox $verbose -r $rate -c $channels $format1Flags input.$format1 $format2Flags intermediate.$1
-        ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$1 $format1Flags output.$format1
+        getFormat ${format1}; format1Ext=$formatExt; format1Text=$formatText; format1Flags=$formatFlags
+        getFormat         $1; format2Ext=$formatExt; format2Text=$formatText; format2Flags=$formatFlags
+        echo ./sox -c $channels -r $rate -n $format1Flags input.$format1Ext synth $samples's' sin 300-3300 noise trapezium
+        echo ./sox $verbose -r $rate -c $channels $format1Flags input.$format1Ext $format2Flags intermediate.$format2Ext
+        echo ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$format2Ext $format1Flags output.$format1Ext
+        ./sox -R -c $channels -r $rate -n $format1Flags input.$format1Ext synth $samples's' sin 300-3300 noise trapezium
+        ./sox $verbose -r $rate -c $channels $format1Flags input.$format1Ext $format2Flags intermediate.$format2Ext
+        ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$format2Ext $format1Flags output.$format1Ext
+        intermediateReference=intermediate`echo "$channels $rate $format1Flags $format1Ext $format2Flags"|tr " " "_"`.$format2Ext
 
-        if cmp -s input.$format1 output.$format1
+	# Uncomment to generate new reference files
+	# N.B. new reference files must be manually checked for correctness
+        #cp -i intermediate.$format2Ext $intermediateReference
+
+        if test -f $intermediateReference
         then
-	  echo "ok     channels=$channels \"$format1Text\" <--> \"$format2Text\"."
-        else
-	  echo "*FAIL* channels=$channels \"$format1Text\" <--> \"$format2Text\"."
-	  exit 1    # This allows failure inspection.
+          if ! cmp -s $intermediateReference intermediate.$format2Ext
+          then
+            echo "*FAIL* channels=$channels \"$format1Text\" ---> \"$format2Text\"."
+            exit 1    # This allows failure inspection.
+          fi
         fi
-        rm -f input.$format1 intermediate.$1 output.$format1
+
+        if cmp -s input.$format1Ext output.$format1Ext
+        then
+          echo "ok     channels=$channels \"$format1Text\" <--> \"$format2Text\"."
+        else
+          echo "*FAIL* channels=$channels \"$format1Text\" <--> \"$format2Text\"."
+          exit 1    # This allows failure inspection.
+        fi
+        rm -f input.$format1Ext intermediate.$format2Ext output.$format1Ext
       fi
       shift
   done
@@ -92,7 +109,7 @@ do_singlechannel_formats () {
   convertToAndFrom ima sw uw s3 u3 sl u4 raw Raw dat au aiff aifc flac caf # FIXME: vox wav
 
   format1=Wav
-  convertToAndFrom smp
+  convertToAndFrom smp sb sbX sbN sbXN
   (rate=5512; convertToAndFrom hcom) || exit 1     # Fixed rate
 
   format1=wve
