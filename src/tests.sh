@@ -22,9 +22,9 @@ getFormat () {
     Raw) formatText="double"; formatFlags="-f -8" ;;
     au ) formatFlags="-s" ;;
     Wav) formatFlags="-u -b" ;;
-    sbX ) formatText="signed byte"; formatExt="sb"; formatFlags="-X" ;;
-    sbN ) formatText="signed byte"; formatExt="sb"; formatFlags="-N" ;;
-    sbXN ) formatText="signed byte"; formatExt="sb"; formatFlags="-X -N" ;;
+    sbX ) formatText="signed byte (swap bits)"; formatExt="sb"; formatFlags="-X" ;;
+    sbN ) formatText="signed byte (swap nibbles)"; formatExt="sb"; formatFlags="-N" ;;
+    sbXN ) formatText="signed byte (swap nibbles and bits)"; formatExt="sb"; formatFlags="-X -N" ;;
   esac
 }
   
