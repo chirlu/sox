@@ -219,7 +219,7 @@ static int sox_vocstartread(ft_t ft)
         int ii;  /* for getting rid of lseek */
         unsigned char uc;
 
-        if (sox_readbuf(ft, header, 1, 20) != 20)
+        if (sox_readbuf(ft, header, 20) != 20)
         {
                 sox_fail_errno(ft,SOX_EHDR,"unexpected EOF in VOC header");
                 return(SOX_EOF);

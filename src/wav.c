@@ -81,7 +81,7 @@ static unsigned short  ImaAdpcmReadBlock(ft_t ft)
     int samplesThisBlock;
 
     /* Pull in the packet and check the header */
-    bytesRead = sox_readbuf(ft, wav->packet, 1, wav->blockAlign);
+    bytesRead = sox_readbuf(ft, wav->packet, wav->blockAlign);
     samplesThisBlock = wav->samplesPerBlock;
     if (bytesRead < wav->blockAlign) 
     { 
@@ -122,7 +122,7 @@ static unsigned short  AdpcmReadBlock(ft_t ft)
     const char *errmsg;
 
     /* Pull in the packet and check the header */
-    bytesRead = sox_readbuf(ft, wav->packet, 1, wav->blockAlign);
+    bytesRead = sox_readbuf(ft, wav->packet, wav->blockAlign);
     samplesThisBlock = wav->samplesPerBlock;
     if (bytesRead < wav->blockAlign) 
     {
@@ -168,7 +168,7 @@ static int xxxAdpcmWriteBlock(ft_t ft)
             ImaBlockMashI(chans, wav->samples, wav->samplesPerBlock, wav->state, wav->packet, 9);
         }
         /* write the compressed packet */
-        if (sox_writebuf(ft, wav->packet, wav->blockAlign, 1) != 1)
+        if (sox_writebuf(ft, wav->packet, wav->blockAlign) != wav->blockAlign)
         {
             sox_fail_errno(ft,SOX_EOF,"write error");
             return (SOX_EOF);
@@ -234,7 +234,7 @@ static sox_size_t wavgsmread(ft_t ft, sox_sample_t *buf, sox_size_t len)
   /* read and decode loop, possibly leaving some samples in wav->gsmsample */
     while (done < len) {
         wav->gsmindex=0;
-        bytes = sox_readbuf(ft, frame, 1, 65);   
+        bytes = sox_readbuf(ft, frame, 65);   
         if (bytes <=0)
             return done;
         if (bytes<65) {
@@ -275,7 +275,7 @@ static int wavgsmflush(ft_t ft)
     gsm_encode(wav->gsmhandle, wav->gsmsample, frame);
     /*encode the odd half long (33 byte) frame */
     gsm_encode(wav->gsmhandle, wav->gsmsample+160, frame+32);
-    if (sox_writebuf(ft, frame, 1, 65) != 65)
+    if (sox_writebuf(ft, frame, 65) != 65)
     {
         sox_fail_errno(ft,SOX_EOF,"write error");
         return (SOX_EOF);

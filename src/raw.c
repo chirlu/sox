@@ -121,8 +121,9 @@ int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_
   { \
     sox_size_t n = 0, nread; \
     ctype *data = xmalloc(sizeof(ctype) * len); \
-    if ((nread = sox_readbuf(ft, (uctype *)data, size, len)) != len) \
+    if ((nread = sox_readbuf(ft, data, len * size)) != len * size) \
       sox_fail_errno(ft, errno, sox_readerr); \
+    nread /= size; \
     for (; n < nread; n++) { \
       twiddle(((uctype *)data)[n], type); \
       *buf++ = cast(data[n], ft->clips); \
@@ -139,7 +140,7 @@ int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_
     sox_size_t n; \
     for (n = 0; n < len; n++) { \
       ctype datum = 0; \
-      if (sox_readbuf(ft, (uctype *)&datum, size, 1) != 1) { \
+      if (sox_readbuf(ft, &datum, size) != size) { \
         sox_fail_errno(ft, errno, sox_readerr); \
         break; \
       } \
@@ -187,10 +188,10 @@ static READ_FUNC(df, sizeof(double), su, double, double, sox_sample_t, SOX_FLOAT
       data[n] = cast(*buf++, ft->clips); \
       twiddle(((uctype *)data)[n], type); \
     } \
-    if ((nwritten = sox_writebuf(ft, (uctype *)data, size, len)) != len) \
+    if ((nwritten = sox_writebuf(ft, data, len * size)) != len * size) \
       sox_fail_errno(ft, errno, sox_readerr); \
     free(data); \
-    return nwritten; \
+    return nwritten / size; \
   }
 
 /* This (slower) macro works for 3-byte types. */
@@ -202,7 +203,7 @@ static READ_FUNC(df, sizeof(double), su, double, double, sox_sample_t, SOX_FLOAT
     for (n = 0; n < len; n++) { \
       ctype datum = cast(*buf++, ft->clips); \
       twiddle(datum, type); \
-      if (sox_writebuf(ft, (uctype *)&datum, size, 1) != 1) { \
+      if (sox_writebuf(ft, &datum, size) != size) { \
         sox_fail_errno(ft, errno, sox_readerr); \
         break; \
       } \

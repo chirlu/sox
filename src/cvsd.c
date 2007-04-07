@@ -371,7 +371,7 @@ static int dvms_read_header(ft_t ft, struct dvms_header *hdr)
         int i;
         unsigned sum;
 
-        if (sox_readbuf(ft, hdrbuf, sizeof(hdrbuf), 1) != 1)
+        if (sox_readbuf(ft, hdrbuf, sizeof(hdrbuf)) != sizeof(hdrbuf))
         {
                 return (SOX_EOF);
         }
@@ -442,7 +442,7 @@ static int dvms_write_header(ft_t ft, struct dvms_header *hdr)
                 sox_report("seek failed\n: %s",strerror(errno));
                 return (SOX_EOF);
         }
-        if (sox_writebuf(ft, hdrbuf, sizeof(hdrbuf), 1) != 1)
+        if (sox_writebuf(ft, hdrbuf, sizeof(hdrbuf)) != sizeof(hdrbuf))
         {
                 sox_report("%s",strerror(errno));
                 return (SOX_EOF);

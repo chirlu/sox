@@ -107,7 +107,7 @@ static int sox_mp3_input(ft_t ft)
      */
     memmove(p->InputBuffer, p->Stream->next_frame, remaining);
 
-    bytes_read = sox_readbuf(ft, p->InputBuffer+remaining, 1, 
+    bytes_read = sox_readbuf(ft, p->InputBuffer+remaining,
                             INPUT_BUFFER_SIZE-remaining);
     if (bytes_read == 0)
     {
@@ -188,7 +188,7 @@ static int sox_mp3startread(ft_t ft)
      * format.  The decoded frame will be saved off so that it
      * can be processed later.
      */
-    ReadSize=sox_readbuf(ft, p->InputBuffer, 1, INPUT_BUFFER_SIZE);
+    ReadSize=sox_readbuf(ft, p->InputBuffer, INPUT_BUFFER_SIZE);
     if(ReadSize<=0)
     {
         if(sox_error(ft))
@@ -488,7 +488,7 @@ static sox_size_t sox_mp3write(ft_t ft, const sox_sample_t *buf, sox_size_t samp
         goto end;
     }
 
-    if (sox_writebuf(ft, mp3buffer, 1, written) < written)
+    if (sox_writebuf(ft, mp3buffer, written) < written)
     {
         sox_fail_errno(ft,SOX_EOF,"File write failed");
         goto end;
@@ -517,7 +517,7 @@ static int sox_mp3stopwrite(ft_t ft)
   if ( (written=lame_encode_flush(p->gfp, (unsigned char *)mp3buffer, 7200)) <0){
     sox_fail_errno(ft,SOX_EOF,"Encoding failed");
   }
-  else if (sox_writebuf(ft, mp3buffer, 1, written2 = written) < written2){
+  else if (sox_writebuf(ft, mp3buffer, written2 = written) < written2){
     sox_fail_errno(ft,SOX_EOF,"File write failed");
   }
 

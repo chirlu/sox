@@ -75,7 +75,7 @@ static int sox_avrstartread(ft_t ft)
     return(SOX_EOF);
   }
 
-  sox_readbuf(ft, avr->name, 1, sizeof(avr->name));
+  sox_readbuf(ft, avr->name, sizeof(avr->name));
 
   sox_readw (ft, &(avr->mono));
   if (avr->mono) {
@@ -130,9 +130,9 @@ static int sox_avrstartread(ft_t ft)
 
   sox_readw (ft, &(avr->res3));
 
-  sox_readbuf(ft, avr->ext, 1, sizeof(avr->ext));
+  sox_readbuf(ft, avr->ext, sizeof(avr->ext));
 
-  sox_readbuf(ft, avr->user, 1, sizeof(avr->user));
+  sox_readbuf(ft, avr->user, sizeof(avr->user));
 
   rc = sox_rawstartread (ft);
   if (rc)
@@ -234,14 +234,14 @@ static int sox_avrstartwrite(ft_t ft)
   sox_writew (ft, 0);
 
   /* ext */
-  sox_writebuf(ft, (void *)"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 1, sizeof(avr->ext));
+  sox_writebuf(ft, (void *)"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", sizeof(avr->ext));
 
   /* user */
   sox_writebuf(ft, 
            (void *)"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
            "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
            "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
-           "\0\0\0\0", 1, sizeof (avr->user));
+           "\0\0\0\0", sizeof (avr->user));
 
   return(SOX_SUCCESS);
 }

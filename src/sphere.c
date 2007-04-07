@@ -137,7 +137,7 @@ static int sox_spherestartread(ft_t ft)
 
         while (header_size)
         {
-            bytes_read = sox_readbuf(ft, buf, SOX_SIZE_BYTE, header_size);
+            bytes_read = sox_readbuf(ft, buf, header_size);
             if (bytes_read == 0)
             {
                 free(buf);

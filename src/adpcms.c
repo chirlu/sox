@@ -221,7 +221,7 @@ sox_size_t sox_adpcm_write(ft_t ft, adpcm_io_t state, const sox_sample_t * buffe
       state->file.buf[state->file.count++] = byte;
 
       if (state->file.count >= state->file.size) {
-        sox_writebuf(ft, state->file.buf, 1, state->file.count);
+        sox_writebuf(ft, state->file.buf, state->file.count);
 
         state->file.count = 0;
       }
@@ -263,7 +263,7 @@ void sox_adpcm_flush(ft_t ft, adpcm_io_t state)
   }
 
   if (state->file.count > 0)
-    sox_writebuf(ft, state->file.buf, 1, state->file.count);
+    sox_writebuf(ft, state->file.buf, state->file.count);
 }
 
 /******************************************************************************

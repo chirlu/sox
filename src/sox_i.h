@@ -99,10 +99,10 @@ char *strdup(const char *s);
  * possible byte swapping.
  */
 /* declared in misc.c */
-size_t sox_readbuf(ft_t ft, void *buf, size_t size, sox_size_t len);
+size_t sox_readbuf(ft_t ft, void *buf, sox_size_t len);
 int sox_skipbytes(ft_t ft, sox_size_t n);
 int sox_padbytes(ft_t ft, sox_size_t n);
-size_t sox_writebuf(ft_t ft, void const *buf, size_t size, sox_size_t len);
+size_t sox_writebuf(ft_t ft, void const *buf, sox_size_t len);
 int sox_reads(ft_t ft, char *c, sox_size_t len);
 int sox_writes(ft_t ft, char const * c);
 

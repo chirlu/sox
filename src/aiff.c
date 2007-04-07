@@ -521,7 +521,7 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft)
   sox_readdw(ft, &chunksize);
   /* allocate enough memory to hold the text including a terminating \0 */
   *text = (char *) xmalloc((size_t) chunksize + 1);
-  if (sox_readbuf(ft, *text, 1, chunksize) != chunksize)
+  if (sox_readbuf(ft, *text, chunksize) != chunksize)
   {
     sox_fail_errno(ft,SOX_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
     return(SOX_EOF);
@@ -531,7 +531,7 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft)
         {
                 /* Read past pad byte */
                 char c;
-                if (sox_readbuf(ft, &c, 1, 1) != 1)
+                if (sox_readbuf(ft, &c, 1) != 1)
                 {
                 sox_fail_errno(ft,SOX_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
                         return(SOX_EOF);
@@ -576,7 +576,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
       *text = xrealloc(*text, (size_t) totalCommentLength + 1);
     }
 
-    if (sox_readbuf(ft, *text + totalCommentLength - commentLength, 1, commentLength) != commentLength) {
+    if (sox_readbuf(ft, *text + totalCommentLength - commentLength, commentLength) != commentLength) {
         sox_fail_errno(ft,SOX_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
         return(SOX_EOF);
     }
@@ -585,7 +585,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
     if (commentLength % 2) {
         /* Read past pad byte */
         char c;
-        if (sox_readbuf(ft, &c, 1, 1) != 1) {
+        if (sox_readbuf(ft, &c, 1) != 1) {
             sox_fail_errno(ft,SOX_EOF,"AIFF: Unexpected EOF in %s header", chunkDescription);
             return(SOX_EOF);
         }
@@ -596,9 +596,8 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
   if (totalReadLength < chunksize) {
        size_t i;
        char c;
-       for (i=0; i < chunksize - totalReadLength; i++ ) {
-               sox_readbuf(ft, &c, 1, 1);
-       }
+       for (i=0; i < chunksize - totalReadLength; i++ )
+           sox_readbuf(ft, &c, 1);
   }
   return(SOX_SUCCESS);
 }
@@ -627,7 +626,7 @@ static int sox_aiffstopread(ft_t ft)
         {
             while (! sox_eof(ft)) 
             {
-                if (sox_readbuf(ft, buf, 1, 4) != 4)
+                if (sox_readbuf(ft, buf, 4) != 4)
                         break;
 
                 sox_readdw(ft, &chunksize);
@@ -998,7 +997,7 @@ static int aifcwriteheader(ft_t ft, sox_size_t nframes)
 static double read_ieee_extended(ft_t ft)
 {
         char buf[10];
-        if (sox_readbuf(ft, buf, 1, 10) != 10)
+        if (sox_readbuf(ft, buf, 10) != 10)
         {
                 sox_fail_errno(ft,SOX_EOF,"EOF while reading IEEE extended number");
                 return(SOX_EOF);
@@ -1010,13 +1009,11 @@ static void write_ieee_extended(ft_t ft, double x)
 {
         char buf[10];
         ConvertToIeeeExtended(x, buf);
-        /*
-        sox_debug("converted %g to %o %o %o %o %o %o %o %o %o %o",
+        sox_debug_more("converted %g to %o %o %o %o %o %o %o %o %o %o",
                 x,
                 buf[0], buf[1], buf[2], buf[3], buf[4],
                 buf[5], buf[6], buf[7], buf[8], buf[9]);
-        */
-        (void)sox_writebuf(ft, buf, 1, 10);
+        (void)sox_writebuf(ft, buf, 10);
 }
 
 

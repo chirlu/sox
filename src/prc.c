@@ -107,7 +107,7 @@ static const char prc_header[]={
 
 int prc_checkheader(ft_t ft, char *head)
 {
-  sox_readbuf(ft, head, 1, sizeof(prc_header));
+  sox_readbuf(ft, head, sizeof(prc_header));
   return memcmp(head, prc_header, sizeof(prc_header)) == 0;
 }
 
@@ -438,7 +438,7 @@ static void prcwriteheader(ft_t ft)
 {
   prc_t p = (prc_t)ft->priv;
 
-  sox_writebuf(ft, prc_header, 1, sizeof(prc_header));
+  sox_writebuf(ft, prc_header, sizeof(prc_header));
   sox_writes(ft, "\x2arecord.app");
 
   sox_debug("Number of samples: %d",p->nsamp);

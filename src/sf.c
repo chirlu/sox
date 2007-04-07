@@ -98,7 +98,7 @@ static int sox_sfstartread(ft_t ft)
         int rc;
         int samplesize = 0;
 
-        if (sox_readbuf(ft, &sfhead, 1, sizeof(sfhead)) != sizeof(sfhead))
+        if (sox_readbuf(ft, &sfhead, sizeof(sfhead)) != sizeof(sfhead))
         {
                 sox_fail("unexpected EOF in SF header");
                 return(SOX_EOF);
@@ -212,7 +212,7 @@ static int sox_sfstartwrite(ft_t ft)
         sfcharp = (char *) sfcodep + sizeof(SFCODE);
         while(sfcharp < (char *) &sfhead + SIZEOF_HEADER)
                 *sfcharp++ = '\0';
-        sox_writebuf(ft, &sfhead, 1, sizeof(SFHEADER));
+        sox_writebuf(ft, &sfhead, sizeof(SFHEADER));
 
         return(SOX_SUCCESS);
 }

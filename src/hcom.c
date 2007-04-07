@@ -438,7 +438,7 @@ static int sox_hcomstopwrite(ft_t ft)
   free((char *)p->data);
 
   /* Write the header */
-  sox_writebuf(ft, (void *)"\000\001A", 1, 3); /* Dummy file name "A" */
+  sox_writebuf(ft, (void *)"\000\001A", 3); /* Dummy file name "A" */
   sox_padbytes(ft, 65-3);
   sox_writes(ft, "FSSD");
   sox_padbytes(ft, 83-69);
@@ -448,7 +448,7 @@ static int sox_hcomstopwrite(ft_t ft)
   if (sox_error(ft)) {
     sox_fail_errno(ft, errno, "write error in HCOM header");
     rc = SOX_EOF;
-  } else if (sox_writebuf(ft, compressed_data, 1, compressed_len) != compressed_len) {
+  } else if (sox_writebuf(ft, compressed_data, compressed_len) != compressed_len) {
     /* Write the compressed_data fork */
     sox_fail_errno(ft, errno, "can't write compressed HCOM data");
     rc = SOX_EOF;

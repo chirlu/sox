@@ -258,7 +258,7 @@ static FLAC__StreamEncoderWriteStatus flac_stream_encoder_write_callback(FLAC__S
   ft_t const format = (ft_t) client_data;
   (void) flac, (void) samples, (void) current_frame;
 
-  return sox_writebuf(format, buffer, 1, bytes) == bytes ? FLAC__STREAM_ENCODER_WRITE_STATUS_OK : FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
+  return sox_writebuf(format, buffer, bytes) == bytes ? FLAC__STREAM_ENCODER_WRITE_STATUS_OK : FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
 }
 
 

@@ -37,7 +37,7 @@ static void sndtwriteheader(ft_t ft, sox_size_t nsamples)
     sox_writew (ft,4);
     memset (name_buf, 0, 96);
     sprintf (name_buf,"%.62s - File created by SoX",ft->filename);
-    sox_writebuf(ft, name_buf, 1, 96);
+    sox_writebuf(ft, name_buf, 96);
 }
 
 static int sox_sndseek(ft_t ft, sox_size_t offset) 
@@ -82,7 +82,7 @@ static int sox_sndtstartread(ft_t ft)
          and second word is between 4000 & 25000 then this is sounder sound */
         /* otherwise, its probably raw, not handled here */
 
-        if (sox_readbuf(ft, buf, 1, 2) != 2)
+        if (sox_readbuf(ft, buf, 2) != 2)
         {
                 sox_fail_errno(ft,errno,"SND: unexpected EOF");
                 return(SOX_EOF);
@@ -101,7 +101,7 @@ static int sox_sndtstartread(ft_t ft)
         else
         {
         /* sndtool ? */
-        sox_readbuf(ft, &buf[2], 1, 6);
+        sox_readbuf(ft, &buf[2], 6);
         if (strncmp(buf,"SOUND",5))
         {
                 sox_fail_errno(ft,SOX_EFMT,"SND: unrecognized SND format");

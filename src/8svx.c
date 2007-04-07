@@ -74,7 +74,7 @@ static int sox_svxstartread(ft_t ft)
                         sox_seeki(ft,12,SEEK_CUR);
                         sox_readw(ft, &rate);
                         sox_seeki(ft,1,SEEK_CUR);
-                        sox_readbuf(ft, buf,1,1);
+                        sox_readbuf(ft, buf,1);
                         if (buf[0] != 0)
                         {
                                 sox_fail_errno(ft, SOX_EFMT, "Unsupported data compression");
@@ -89,7 +89,7 @@ static int sox_svxstartread(ft_t ft)
                         if (chunksize & 1)
                                 chunksize++;
                         chunk_buf = (char *) xmalloc(chunksize + 2);
-                        if (sox_readbuf(ft, chunk_buf,1,(size_t)chunksize)
+                        if (sox_readbuf(ft, chunk_buf,(size_t)chunksize)
                                         != chunksize)
                         {
                                 sox_fail_errno(ft, SOX_EHDR, "Couldn't read all of header");
@@ -107,7 +107,7 @@ static int sox_svxstartread(ft_t ft)
                         if (chunksize & 1)
                                 chunksize++;
                         chunk_buf = (char *) xmalloc(chunksize + 1);
-                        if (sox_readbuf(ft, chunk_buf,1,(size_t)chunksize)
+                        if (sox_readbuf(ft, chunk_buf,(size_t)chunksize)
                                         != chunksize)
                         {
                                 sox_fail_errno(ft, SOX_EHDR, "Couldn't read all of header");

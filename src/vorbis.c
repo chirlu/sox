@@ -260,8 +260,8 @@ static int sox_vorbisstopread(ft_t ft)
 static int oe_write_page(ogg_page *page, ft_t ft)
 {
         int written;
-        written = sox_writebuf(ft, page->header,1,(sox_size_t)page->header_len);
-        written += sox_writebuf(ft, page->body,1,(sox_size_t)page->body_len);
+        written = sox_writebuf(ft, page->header,(sox_size_t)page->header_len);
+        written += sox_writebuf(ft, page->body,(sox_size_t)page->body_len);
 
         return written;
 }

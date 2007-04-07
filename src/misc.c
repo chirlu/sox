@@ -109,12 +109,12 @@ uint8_t const cswap[256] = {
 
 /* Utilities */
 
-/* Read in a buffer of data of length len and each element is size bytes.
- * Returns number of elements read, not bytes read.
+/* Read in a buffer of data of length len bytes.
+ * Returns number of bytes read.
  */
-size_t sox_readbuf(ft_t ft, void *buf, size_t size, sox_size_t len)
+size_t sox_readbuf(ft_t ft, void *buf, sox_size_t len)
 {
-    return fread(buf, size, len, ft->fp);
+    return fread(buf, 1, len, ft->fp);
 }
 
 /* Skip input without seeking. */
@@ -139,13 +139,13 @@ int sox_padbytes(ft_t ft, sox_size_t n)
   return (SOX_SUCCESS);
 }
 
-/* Write a buffer of data of length len and each element is size bytes.
- * Returns number of elements writen, not bytes written.
+/* Write a buffer of data of length bytes.
+ * Returns number of bytes written.
  */
 
-size_t sox_writebuf(ft_t ft, void const *buf, size_t size, sox_size_t len)
+size_t sox_writebuf(ft_t ft, void const *buf, sox_size_t len)
 {
-    return fwrite(buf, size, len, ft->fp);
+    return fwrite(buf, 1, len, ft->fp);
 }
 
 sox_size_t sox_filelength(ft_t ft)
@@ -201,7 +201,7 @@ int sox_reads(ft_t ft, char *c, sox_size_t len)
     sc = c;
     do
     {
-        if (sox_readbuf(ft, &in, 1, 1) != 1)
+        if (sox_readbuf(ft, &in, 1) != 1)
         {
             *sc = 0;
                 sox_fail_errno(ft,errno,sox_readerr);
@@ -220,7 +220,7 @@ int sox_reads(ft_t ft, char *c, sox_size_t len)
 /* Write null-terminated string (without \0). */
 int sox_writes(ft_t ft, char const * c)
 {
-        if (sox_writebuf(ft, c, 1, strlen(c)) != strlen(c))
+        if (sox_writebuf(ft, c, strlen(c)) != strlen(c))
         {
                 sox_fail_errno(ft,errno,sox_writerr);
                 return(SOX_EOF);

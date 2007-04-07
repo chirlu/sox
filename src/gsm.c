@@ -122,8 +122,9 @@ static sox_size_t sox_gsmread(ft_t ft, sox_sample_t *buf, sox_size_t samp)
 
                 if (done>=samp) break;
 
-                r = sox_readbuf(ft, p->frames, p->channels*FRAMESIZE, 1);
-                if (r != 1) break;
+                r = sox_readbuf(ft, p->frames, p->channels * FRAMESIZE);
+                if (r != p->channels * FRAMESIZE)
+                  break;
 
                 p->samplePtr = p->samples;
                 for (ch=0; ch<chans; ch++) {
@@ -171,8 +172,8 @@ static int gsmflush(ft_t ft)
                         gsp += chans;
                 }
                 gsm_encode(p->handle[ch], gbuff, p->frames);
-                r = sox_writebuf(ft, p->frames, FRAMESIZE, 1);
-                if (r != 1)
+                r = sox_writebuf(ft, p->frames, FRAMESIZE);
+                if (r != FRAMESIZE)
                 {
                         sox_fail_errno(ft,errno,"write error");
                         return(SOX_EOF);

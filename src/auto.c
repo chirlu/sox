@@ -38,7 +38,7 @@ static int sox_autostartread(ft_t ft)
          * file.  So we start checking for those filetypes first.
          */
         memset(header,0,4);
-        if (sox_readbuf(ft, header, 1, 4) == 4)
+        if (sox_readbuf(ft, header, 4) == 4)
         {
             /* Look for .snd or dns. header of AU files */
             if ((strncmp(header, ".snd", 4) == 0) ||
@@ -51,7 +51,7 @@ static int sox_autostartread(ft_t ft)
             else if (strncmp(header, "FORM", 4) == 0) 
             {
                 /* Need to read more data to see what type of FORM file */
-                if (sox_readbuf(ft, header, 1, 8) == 8)
+                if (sox_readbuf(ft, header, 8) == 8)
                 {
                     if (strncmp(header + 4, "AIFF", 4) == 0)
                         type = "aiff";
@@ -65,23 +65,23 @@ static int sox_autostartread(ft_t ft)
             }
             else if (strncmp(header, "RIFF", 4) == 0)
             {
-                if (sox_readbuf(ft, header, 1, 8) == 8)
+                if (sox_readbuf(ft, header, 8) == 8)
                     if (strncmp(header + 4, "WAVE", 4) == 0)
                         type = "wav";
             }
             else if (strncmp(header, "Crea", 4) == 0) 
             {
-                if (sox_readbuf(ft, header, 1, 15) == 15)
+                if (sox_readbuf(ft, header, 15) == 15)
                     if (strncmp(header, "tive Voice File", 15) == 0) 
                         type = "voc";
             }
             else if (strncmp(header, "SOUN", 4) == 0)
             {
                 /* Check for SOUND magic header */
-                if (sox_readbuf(ft, header, 1, 1) == 1 && *header == 'D')
+                if (sox_readbuf(ft, header, 1) == 1 && *header == 'D')
                 {
                     /* Once we've found SOUND see if its smp or sndt */
-                    if (sox_readbuf(ft, header, 1, 12) == 12)
+                    if (sox_readbuf(ft, header, 12) == 12)
                     {
                         if (strncmp(header, " SAMPLE DATA", 12) == 0)
                             type = "smp";
@@ -96,13 +96,13 @@ static int sox_autostartread(ft_t ft)
                 type = "avr";
             else if (strncmp(header, "NIST", 4) == 0) 
             {
-                if (sox_readbuf(ft, header, 1, 3) == 3)
+                if (sox_readbuf(ft, header, 3) == 3)
                     if (strncmp(header, "_1A", 3) == 0) 
                         type = "sph";
             }
             else if (strncmp(header, "ALaw", 4) == 0)
             {
-                if (sox_readbuf(ft, header, 1, 11) == 11)
+                if (sox_readbuf(ft, header, 11) == 11)
                     if (strncmp(header, "SoundFile**", 11) == 0)
                         type = "wve";
             }
@@ -122,15 +122,15 @@ static int sox_autostartread(ft_t ft)
         if (type == NULL)
         {
             for (loop = 0; loop < 60; loop++)
-                if (sox_readbuf(ft, header, 1, 1) != 1)
+                if (sox_readbuf(ft, header, 1) != 1)
                     break;
-            if (sox_readbuf(ft, header, 1, 4) == 4 && 
+            if (sox_readbuf(ft, header, 4) == 4 && 
                 strncmp(header, "FSSD", 4) == 0)
             {
                 for (loop = 0; loop < 62; loop++)
-                    if (sox_readbuf(ft, header, 1, 1) != 1)
+                    if (sox_readbuf(ft, header, 1) != 1)
                         break;
-                if (sox_readbuf(ft, header, 1, 4) == 0 && 
+                if (sox_readbuf(ft, header, 4) == 0 && 
                     strncmp(header, "HCOM", 4) == 0)
                     type = "hcom";
             }

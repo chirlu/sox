@@ -262,7 +262,7 @@ static int sox_txwstartwrite(ft_t ft)
     /* dummy numbers, just for place holder, real header is written
        at end of processing, since byte count is needed */
 
-    sox_writebuf(ft, &WH, 1, 32);
+    sox_writebuf(ft, &WH, 32);
     writedone = 32;
     return(SOX_SUCCESS);
 }
@@ -362,7 +362,7 @@ static int sox_txwstopwrite(ft_t ft)
         magic2[WH.sample_rate];
 
     sox_rewind(ft);
-    sox_writebuf(ft, &WH, 1, 32);
+    sox_writebuf(ft, &WH, 32);
 
     return(SOX_SUCCESS);
 }

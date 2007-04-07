@@ -95,7 +95,7 @@ static int sox_xastartread(ft_t ft)
     char *magic = xa->header.magic;
 
     /* Check for the magic value */
-    if (sox_readbuf(ft, xa->header.magic, 1, 4) != 4 ||
+    if (sox_readbuf(ft, xa->header.magic, 4) != 4 ||
         (memcmp("XA\0\0", xa->header.magic, 4) != 0 &&
          memcmp("XAI\0", xa->header.magic, 4) != 0 &&
          memcmp("XAJ\0", xa->header.magic, 4) != 0))
@@ -206,7 +206,7 @@ static sox_size_t sox_xaread(ft_t ft, sox_sample_t *buf, sox_size_t len)
     while (done < len) {
         if (xa->bufPos >= xa->blockSize) {
             /* Read the next block */
-            bytes = sox_readbuf(ft, xa->buf, 1, xa->blockSize);
+            bytes = sox_readbuf(ft, xa->buf, xa->blockSize);
             if (bytes < xa->blockSize) {
                 if (sox_eof(ft)) {
                     if (done > 0) {
