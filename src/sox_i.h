@@ -106,43 +106,31 @@ size_t sox_writebuf(ft_t ft, void const *buf, sox_size_t len);
 int sox_reads(ft_t ft, char *c, sox_size_t len);
 int sox_writes(ft_t ft, char const * c);
 
-sox_size_t sox_read_ub_buf(ft_t ft, uint8_t *buf, sox_size_t len);
-sox_size_t sox_read_sb_buf(ft_t ft, int8_t *buf, sox_size_t len);
-sox_size_t sox_read_ulawb_buf(ft_t ft, uint8_t *buf, sox_size_t len);
-sox_size_t sox_read_alawb_buf(ft_t ft, uint8_t *buf, sox_size_t len);
-sox_size_t sox_read_uw_buf(ft_t ft, uint16_t *buf, sox_size_t len);
-sox_size_t sox_read_sw_buf(ft_t ft, int16_t *buf, sox_size_t len);
-sox_size_t sox_read_u3_buf(ft_t ft, uint24_t *buf, sox_size_t len);
-sox_size_t sox_read_s3_buf(ft_t ft, int24_t *buf, sox_size_t len);
-sox_size_t sox_read_udw_buf(ft_t ft, uint32_t *buf, sox_size_t len);
-sox_size_t sox_read_sdw_buf(ft_t ft, int32_t *buf, sox_size_t len);
-sox_size_t sox_read_suf_buf(ft_t ft, float *buf, sox_size_t len);
-sox_size_t sox_read_sudf_buf(ft_t ft, double *buf, sox_size_t len);
+sox_size_t sox_read_b_buf(ft_t ft, uint8_t *buf, sox_size_t len);
+sox_size_t sox_read_w_buf(ft_t ft, uint16_t *buf, sox_size_t len);
+sox_size_t sox_read_3_buf(ft_t ft, uint24_t *buf, sox_size_t len);
+sox_size_t sox_read_dw_buf(ft_t ft, uint32_t *buf, sox_size_t len);
+sox_size_t sox_read_f_buf(ft_t ft, float *buf, sox_size_t len);
+sox_size_t sox_read_df_buf(ft_t ft, double *buf, sox_size_t len);
 
-sox_size_t sox_write_ub_buf(ft_t ft, uint8_t *buf, sox_size_t len);
-sox_size_t sox_write_sb_buf(ft_t ft, int8_t *buf, sox_size_t len);
-sox_size_t sox_write_ulawb_buf(ft_t ft, uint8_t *buf, sox_size_t len);
-sox_size_t sox_write_alawb_buf(ft_t ft, uint8_t *buf, sox_size_t len);
-sox_size_t sox_write_uw_buf(ft_t ft, uint16_t *buf, sox_size_t len);
-sox_size_t sox_write_sw_buf(ft_t ft, int16_t *buf, sox_size_t len);
-sox_size_t sox_write_u3_buf(ft_t ft, uint24_t *buf, sox_size_t len);
-sox_size_t sox_write_s3_buf(ft_t ft, int24_t *buf, sox_size_t len);
-sox_size_t sox_write_udw_buf(ft_t ft, uint32_t *buf, sox_size_t len);
-sox_size_t sox_write_sdw_buf(ft_t ft, int32_t *buf, sox_size_t len);
-sox_size_t sox_write_suf_buf(ft_t ft, float *buf, sox_size_t len);
-sox_size_t sox_write_sudf_buf(ft_t ft, double *buf, sox_size_t len);
+sox_size_t sox_write_b_buf(ft_t ft, uint8_t *buf, sox_size_t len);
+sox_size_t sox_write_w_buf(ft_t ft, uint16_t *buf, sox_size_t len);
+sox_size_t sox_write_3_buf(ft_t ft, uint24_t *buf, sox_size_t len);
+sox_size_t sox_write_dw_buf(ft_t ft, uint32_t *buf, sox_size_t len);
+sox_size_t sox_write_f_buf(ft_t ft, float *buf, sox_size_t len);
+sox_size_t sox_write_df_buf(ft_t ft, double *buf, sox_size_t len);
 
-#define sox_readb(ft, ub) (sox_read_ub_buf(ft, ub, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
+#define sox_readb(ft, ub) (sox_read_b_buf(ft, ub, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
 int sox_writeb(ft_t ft, uint8_t ub);
-#define sox_readw(ft, uw) (sox_read_uw_buf(ft, uw, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
+#define sox_readw(ft, uw) (sox_read_w_buf(ft, uw, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
 int sox_writew(ft_t ft, uint16_t uw);
-#define sox_read3(ft, u3) (sox_read_u3_buf(ft, u3, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
+#define sox_read3(ft, u3) (sox_read_3_buf(ft, u3, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
 int sox_write3(ft_t ft, uint24_t u3);
-#define sox_readdw(ft, udw) (sox_read_udw_buf(ft, udw, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
+#define sox_readdw(ft, udw) (sox_read_dw_buf(ft, udw, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
 int sox_writedw(ft_t ft, uint32_t udw);
-#define sox_readf(ft, f) (sox_read_suf_buf(ft, f, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
+#define sox_readf(ft, f) (sox_read_f_buf(ft, f, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
 int sox_writef(ft_t ft, float f);
-#define sox_readdf(ft, d) (sox_read_sudf_buf(ft, d, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
+#define sox_readdf(ft, d) (sox_read_df_buf(ft, d, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
 int sox_writedf(ft_t ft, double d);
 int sox_seeki(ft_t ft, sox_ssize_t offset, int whence);
 sox_size_t sox_filelength(ft_t ft);

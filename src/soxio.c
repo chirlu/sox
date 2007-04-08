@@ -309,6 +309,122 @@ sox_size_t sox_write(ft_t ft, const sox_sample_t *buf, sox_size_t len)
     return (*ft->h->write)(ft, buf, len);
 }
 
+#define TWIDDLE_BYTE(ub, type) \
+  do { \
+    if (ft->signal.reverse_bits) \
+      ub = cswap[ub]; \
+    if (ft->signal.reverse_nibbles) \
+      ub = ((ub & 15) << 4) | (ub >> 4); \
+  } while (0);
+
+#define TWIDDLE_WORD(uw, type) \
+  if (ft->signal.reverse_bytes ^ SOX_IS_BIGENDIAN) \
+    uw = sox_swap ## type(uw);
+
+/* N.B. This macro doesn't work for unaligned types (e.g. 3-byte
+   types). */
+#define READ_FUNC(type, size, ctype, twiddle) \
+  sox_size_t sox_read_ ## type ## _buf( \
+      ft_t ft, ctype *buf, sox_size_t len) \
+  { \
+    sox_size_t n, nread; \
+    if ((nread = sox_readbuf(ft, buf, len * size)) != len * size) \
+      sox_fail_errno(ft, errno, sox_readerr); \
+    nread /= size; \
+    for (n = 0; n < nread; n++) \
+      twiddle(buf[n], type); \
+    return nread; \
+  }
+
+/* Unpack a 3-byte value from a uint8_t * */
+#define sox_unpack3(p) ((p)[0] | ((p)[1] << 8) | ((p)[2] << 16))
+
+/* This (slower) macro works for unaligned types (e.g. 3-byte types)
+   that need to be unpacked. */
+#define READ_FUNC_UNPACK(type, size, ctype, twiddle) \
+  sox_size_t sox_read_ ## type ## _buf( \
+      ft_t ft, ctype *buf, sox_size_t len) \
+  { \
+    sox_size_t n, nread; \
+    uint8_t *data = xmalloc(size * len); \
+    if ((nread = sox_readbuf(ft, data, len * size)) != len * size) \
+      sox_fail_errno(ft, errno, sox_readerr); \
+    nread /= size; \
+    for (n = 0; n < nread; n++) { \
+      ctype datum = sox_unpack ## size(data + n * size); \
+      twiddle(datum, type); \
+      buf[n] = datum; \
+    } \
+    free(data); \
+    return n; \
+  }
+
+READ_FUNC(b, 1, uint8_t, TWIDDLE_BYTE)
+READ_FUNC(w, 2, uint16_t, TWIDDLE_WORD)
+READ_FUNC_UNPACK(3, 3, uint24_t, TWIDDLE_WORD)
+READ_FUNC(dw, 4, uint32_t, TWIDDLE_WORD)
+READ_FUNC(f, sizeof(float), float, TWIDDLE_WORD)
+READ_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
+
+/* N.B. This macro doesn't work for unaligned types (e.g. 3-byte
+   types). */
+#define WRITE_FUNC(type, size, ctype, twiddle) \
+  sox_size_t sox_write_ ## type ## _buf( \
+      ft_t ft, ctype *buf, sox_size_t len) \
+  { \
+    sox_size_t n, nwritten; \
+    for (n = 0; n < len; n++) \
+      twiddle(buf[n], type); \
+    if ((nwritten = sox_writebuf(ft, buf, len * size)) != len * size) \
+      sox_fail_errno(ft, errno, sox_writerr); \
+    return nwritten / size; \
+  }
+
+/* Pack a 3-byte value to a uint8_t * */
+#define sox_pack3(p, v) \
+  (p)[0] = v & 0xff; \
+  (p)[1] = (v >> 8) & 0xff; \
+  (p)[2] = (v >> 16) & 0xff;
+
+/* This (slower) macro works for unaligned types (e.g. 3-byte types)
+   that need to be packed. */
+#define WRITE_FUNC_PACK(type, size, ctype, twiddle) \
+  sox_size_t sox_write_ ## type ## _buf( \
+      ft_t ft, ctype *buf, sox_size_t len) \
+  { \
+    sox_size_t n, nwritten; \
+    uint8_t *data = xmalloc(size * len); \
+    for (n = 0; n < len; n++) { \
+      ctype datum = buf[n]; \
+      twiddle(datum, type); \
+      sox_pack ## size(data + n * size, datum); \
+    } \
+    if ((nwritten = sox_writebuf(ft, data, len * size)) != len * size) \
+      sox_fail_errno(ft, errno, sox_writerr); \
+    free(data); \
+    return nwritten / size; \
+  }
+
+WRITE_FUNC(b, 1, uint8_t, TWIDDLE_BYTE)
+WRITE_FUNC(w, 2, uint16_t, TWIDDLE_WORD)
+WRITE_FUNC_PACK(3, 3, uint24_t, TWIDDLE_WORD)
+WRITE_FUNC(dw, 4, uint32_t, TWIDDLE_WORD)
+WRITE_FUNC(f, sizeof(float), float, TWIDDLE_WORD)
+WRITE_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
+
+#define WRITE1_FUNC(type, sign, ctype) \
+  int sox_write ## type(ft_t ft, ctype datum) \
+  { \
+    return sox_write_ ## type ## _buf(ft, &datum, 1) == 1 ? SOX_SUCCESS : SOX_EOF; \
+  }
+
+WRITE1_FUNC(b, u, uint8_t)
+WRITE1_FUNC(w, u, uint16_t)
+WRITE1_FUNC(3, u, uint24_t)
+WRITE1_FUNC(dw, u, uint32_t)
+WRITE1_FUNC(f, su, float)
+WRITE1_FUNC(df, su, double)
+
 /* N.B. The file (if any) may already have been deleted. */
 int sox_close(ft_t ft)
 {

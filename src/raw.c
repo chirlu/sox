@@ -93,162 +93,59 @@ int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_
   return SOX_SUCCESS;
 }
 
-/* Dummy macros */
-#define sox_swapb(d) (d)
-#define idcast(x, y) (x)
-
-#define TWIDDLE_BYTE_READ(ub, type) \
-  if (ft->signal.reverse_bits) \
-    ub = cswap[ub]; \
-  if (ft->signal.reverse_nibbles) \
-    ub = ((ub & 15) << 4) | (ub >> 4);
-
-#define TWIDDLE_BYTE_WRITE(ub, type) \
-  if (ft->signal.reverse_nibbles) \
-    ub = ((ub & 15) << 4) | (ub >> 4); \
-  if (ft->signal.reverse_bits) \
-    ub = cswap[ub];
-
-#define TWIDDLE_WORD(uw, type) \
-  if (ft->signal.reverse_bytes ^ SOX_IS_BIGENDIAN) \
-    uw = sox_swap ## type(uw);
-
-/* N.B. This macro doesn't work for types, like 3-byte types, which
-   don't fill the type used to represent them. */
-#define READ_FUNC(type, size, sign, ctype, uctype, outtype, cast, suffix, twiddle) \
-  sox_size_t sox_read_ ## sign ## type ## suffix( \
-      ft_t ft, outtype *buf, sox_size_t len) \
+#define READ_SAMPLES_FUNC(type, size, sign, ctype, cast) \
+  sox_size_t sox_read_ ## sign ## type ## _samples( \
+      ft_t ft, sox_sample_t *buf, sox_size_t len) \
   { \
-    sox_size_t n = 0, nread; \
+    sox_size_t n, nread; \
     ctype *data = xmalloc(sizeof(ctype) * len); \
-    if ((nread = sox_readbuf(ft, data, len * size)) != len * size) \
+    if ((nread = sox_read_ ## type ## _buf(ft, data, len)) != len) \
       sox_fail_errno(ft, errno, sox_readerr); \
-    nread /= size; \
-    for (; n < nread; n++) { \
-      twiddle(((uctype *)data)[n], type); \
+    for (n = 0; n < nread; n++) \
       *buf++ = cast(data[n], ft->clips); \
-    } \
     free(data); \
     return nread; \
   }
 
-/* This (slower) macro works for 3-byte types. */
-#define READ_FUNC2(type, size, sign, ctype, uctype, outtype, cast, suffix, twiddle) \
-  sox_size_t sox_read_ ## sign ## type ## suffix( \
-      ft_t ft, outtype *buf, sox_size_t len) \
+static READ_SAMPLES_FUNC(b, 1, u, uint8_t, SOX_UNSIGNED_BYTE_TO_SAMPLE)
+static READ_SAMPLES_FUNC(b, 1, s, int8_t, SOX_SIGNED_BYTE_TO_SAMPLE)
+static READ_SAMPLES_FUNC(b, 1, ulaw, uint8_t, SOX_ULAW_BYTE_TO_SAMPLE)
+static READ_SAMPLES_FUNC(b, 1, alaw, uint8_t, SOX_ALAW_BYTE_TO_SAMPLE)
+static READ_SAMPLES_FUNC(w, 2, u, uint16_t, SOX_UNSIGNED_WORD_TO_SAMPLE)
+static READ_SAMPLES_FUNC(w, 2, s, int16_t, SOX_SIGNED_WORD_TO_SAMPLE)
+static READ_SAMPLES_FUNC(3, 3, u, uint24_t, SOX_UNSIGNED_24BIT_TO_SAMPLE)
+static READ_SAMPLES_FUNC(3, 3, s, int24_t, SOX_SIGNED_24BIT_TO_SAMPLE)
+static READ_SAMPLES_FUNC(dw, 4, u, uint32_t, SOX_UNSIGNED_DWORD_TO_SAMPLE)
+static READ_SAMPLES_FUNC(dw, 4, s, int32_t, SOX_SIGNED_DWORD_TO_SAMPLE)
+static READ_SAMPLES_FUNC(f, sizeof(float), su, float, SOX_FLOAT_DWORD_TO_SAMPLE)
+static READ_SAMPLES_FUNC(df, sizeof(double), su, double, SOX_FLOAT_DDWORD_TO_SAMPLE)
+
+#define WRITE_SAMPLES_FUNC(type, size, sign, ctype, cast) \
+  sox_size_t sox_write_ ## sign ## type ## _samples( \
+      ft_t ft, sox_sample_t *buf, sox_size_t len) \
   { \
-    sox_size_t n; \
-    for (n = 0; n < len; n++) { \
-      ctype datum = 0; \
-      if (sox_readbuf(ft, &datum, size) != size) { \
-        sox_fail_errno(ft, errno, sox_readerr); \
-        break; \
-      } \
-      twiddle(datum, type); \
-      *buf++ = cast(datum, ft->clips); \
-    } \
-    return n; \
-  }
-
-READ_FUNC(b, 1, u, uint8_t, uint8_t, uint8_t, idcast, _buf, TWIDDLE_BYTE_READ)
-READ_FUNC(b, 1, s, int8_t, uint8_t, int8_t, idcast, _buf, TWIDDLE_BYTE_READ)
-READ_FUNC(b, 1, ulaw, uint8_t, uint8_t, uint8_t, idcast, _buf, TWIDDLE_BYTE_READ)
-READ_FUNC(b, 1, alaw, uint8_t, uint8_t, uint8_t, idcast, _buf, TWIDDLE_BYTE_READ)
-READ_FUNC(w, 2, u, uint16_t, uint16_t, uint16_t, idcast, _buf, TWIDDLE_WORD)
-READ_FUNC(w, 2, s, int16_t, uint16_t, int16_t, idcast, _buf, TWIDDLE_WORD)
-READ_FUNC2(3, 3, u, uint24_t, uint24_t, uint24_t, idcast, _buf, TWIDDLE_WORD)
-READ_FUNC2(3, 3, s, int24_t, uint24_t, int24_t, idcast, _buf, TWIDDLE_WORD)
-READ_FUNC(dw, 4, u, uint32_t, uint32_t, uint32_t, idcast, _buf, TWIDDLE_WORD)
-READ_FUNC(dw, 4, s, int32_t, uint32_t, int32_t, idcast, _buf, TWIDDLE_WORD)
-READ_FUNC(f, sizeof(float), su, float, float, float, idcast, _buf, TWIDDLE_WORD)
-READ_FUNC(df, sizeof(double), su, double, double, double, idcast, _buf, TWIDDLE_WORD)
-
-static READ_FUNC(b, 1, u, uint8_t, uint8_t, sox_sample_t, SOX_UNSIGNED_BYTE_TO_SAMPLE, _samples, TWIDDLE_BYTE_READ)
-static READ_FUNC(b, 1, s, int8_t, uint8_t, sox_sample_t, SOX_SIGNED_BYTE_TO_SAMPLE, _samples, TWIDDLE_BYTE_READ)
-static READ_FUNC(b, 1, ulaw, uint8_t, uint8_t, sox_sample_t, SOX_ULAW_BYTE_TO_SAMPLE, _samples, TWIDDLE_BYTE_READ)
-static READ_FUNC(b, 1, alaw, uint8_t, uint8_t, sox_sample_t, SOX_ALAW_BYTE_TO_SAMPLE, _samples, TWIDDLE_BYTE_READ)
-static READ_FUNC(w, 2, u, uint16_t, uint16_t, sox_sample_t, SOX_UNSIGNED_WORD_TO_SAMPLE, _samples, TWIDDLE_WORD)
-static READ_FUNC(w, 2, s, int16_t, uint16_t, sox_sample_t, SOX_SIGNED_WORD_TO_SAMPLE, _samples, TWIDDLE_WORD)
-static READ_FUNC2(3, 3, u, uint24_t, uint24_t, sox_sample_t, SOX_UNSIGNED_24BIT_TO_SAMPLE, _samples, TWIDDLE_WORD)
-static READ_FUNC2(3, 3, s, int24_t, uint24_t, sox_sample_t, SOX_SIGNED_24BIT_TO_SAMPLE, _samples, TWIDDLE_WORD)
-static READ_FUNC(dw, 4, u, uint32_t, uint32_t, sox_sample_t, SOX_UNSIGNED_DWORD_TO_SAMPLE, _samples, TWIDDLE_WORD)
-static READ_FUNC(dw, 4, s, int32_t, uint32_t, sox_sample_t, SOX_SIGNED_DWORD_TO_SAMPLE, _samples, TWIDDLE_WORD)
-static READ_FUNC(f, sizeof(float), su, float, float, sox_sample_t, SOX_FLOAT_DWORD_TO_SAMPLE, _samples, TWIDDLE_WORD)
-static READ_FUNC(df, sizeof(double), su, double, double, sox_sample_t, SOX_FLOAT_DDWORD_TO_SAMPLE, _samples, TWIDDLE_WORD)
-
-/* N.B. This macro doesn't work for types, like 3-byte types, which
-   don't fill the type used to represent them. */
-#define WRITE_FUNC(type, size, sign, ctype, uctype, outtype, cast, suffix, twiddle) \
-  sox_size_t sox_write_ ## sign ## type ## suffix( \
-      ft_t ft, outtype *buf, sox_size_t len) \
-  { \
-    sox_size_t n = 0, nwritten; \
+    sox_size_t n, nwritten; \
     ctype *data = xmalloc(sizeof(ctype) * len); \
-    for (; n < len; n++) { \
-      data[n] = cast(*buf++, ft->clips); \
-      twiddle(((uctype *)data)[n], type); \
-    } \
-    if ((nwritten = sox_writebuf(ft, data, len * size)) != len * size) \
-      sox_fail_errno(ft, errno, sox_readerr); \
+    for (n = 0; n < len; n++) \
+      data[n] = cast(buf[n], ft->clips); \
+    if ((nwritten = sox_write_ ## type ## _buf(ft, data, len)) != len) \
+      sox_fail_errno(ft, errno, sox_writerr); \
     free(data); \
-    return nwritten / size; \
+    return nwritten; \
   }
 
-/* This (slower) macro works for 3-byte types. */
-#define WRITE_FUNC2(type, size, sign, ctype, uctype, intype, cast, suffix, twiddle) \
-  sox_size_t sox_write_ ## sign ## type ## suffix( \
-      ft_t ft, intype *buf, sox_size_t len) \
-  { \
-    sox_size_t n; \
-    for (n = 0; n < len; n++) { \
-      ctype datum = cast(*buf++, ft->clips); \
-      twiddle(datum, type); \
-      if (sox_writebuf(ft, &datum, size) != size) { \
-        sox_fail_errno(ft, errno, sox_readerr); \
-        break; \
-      } \
-    } \
-    return n; \
-  }
-
-WRITE_FUNC(b, 1, u, uint8_t, uint8_t, uint8_t, idcast, _buf, TWIDDLE_BYTE_WRITE)
-WRITE_FUNC(b, 1, s, int8_t, uint8_t, int8_t, idcast, _buf, TWIDDLE_BYTE_WRITE)
-WRITE_FUNC(b, 1, ulaw, uint8_t, uint8_t, uint8_t, idcast, _buf, TWIDDLE_BYTE_WRITE)
-WRITE_FUNC(b, 1, alaw, uint8_t, uint8_t, uint8_t, idcast, _buf, TWIDDLE_BYTE_WRITE)
-WRITE_FUNC(w, 2, u, uint16_t, uint16_t, uint16_t, idcast, _buf, TWIDDLE_WORD)
-WRITE_FUNC(w, 2, s, int16_t, uint16_t, int16_t, idcast, _buf, TWIDDLE_WORD)
-WRITE_FUNC2(3, 3, u, uint24_t, uint24_t, uint24_t, idcast, _buf, TWIDDLE_WORD)
-WRITE_FUNC2(3, 3, s, int24_t, uint24_t, int24_t, idcast, _buf, TWIDDLE_WORD)
-WRITE_FUNC(dw, 4, u, uint32_t, uint32_t, uint32_t, idcast, _buf, TWIDDLE_WORD)
-WRITE_FUNC(dw, 4, s, int32_t, uint32_t, int32_t, idcast, _buf, TWIDDLE_WORD)
-WRITE_FUNC(f, sizeof(float), su, float, float, float, idcast, _buf, TWIDDLE_WORD)
-WRITE_FUNC(df, sizeof(double), su, double, double, double, idcast, _buf, TWIDDLE_WORD)
-
-static WRITE_FUNC(b, 1, u, uint8_t, uint8_t, sox_sample_t, SOX_SAMPLE_TO_UNSIGNED_BYTE, _samples, TWIDDLE_BYTE_WRITE)
-static WRITE_FUNC(b, 1, s, int8_t, uint8_t, sox_sample_t, SOX_SAMPLE_TO_SIGNED_BYTE, _samples, TWIDDLE_BYTE_WRITE)
-static WRITE_FUNC(b, 1, ulaw, uint8_t, uint8_t, sox_sample_t, SOX_SAMPLE_TO_ULAW_BYTE, _samples, TWIDDLE_BYTE_WRITE)
-static WRITE_FUNC(b, 1, alaw, uint8_t, uint8_t, sox_sample_t, SOX_SAMPLE_TO_ALAW_BYTE, _samples, TWIDDLE_BYTE_WRITE)
-static WRITE_FUNC(w, 2, u, uint16_t, uint16_t, sox_sample_t, SOX_SAMPLE_TO_UNSIGNED_WORD, _samples, TWIDDLE_WORD)
-static WRITE_FUNC(w, 2, s, int16_t, uint16_t, sox_sample_t, SOX_SAMPLE_TO_SIGNED_WORD, _samples, TWIDDLE_WORD)
-static WRITE_FUNC2(3, 3, u, uint24_t, uint24_t, sox_sample_t, SOX_SAMPLE_TO_UNSIGNED_24BIT, _samples, TWIDDLE_WORD)
-static WRITE_FUNC2(3, 3, s, int24_t, uint24_t, sox_sample_t, SOX_SAMPLE_TO_SIGNED_24BIT, _samples, TWIDDLE_WORD)
-static WRITE_FUNC(dw, 4, u, uint32_t, uint32_t, sox_sample_t, SOX_SAMPLE_TO_UNSIGNED_DWORD, _samples, TWIDDLE_WORD)
-static WRITE_FUNC(dw, 4, s, int32_t, uint32_t, sox_sample_t, SOX_SAMPLE_TO_SIGNED_DWORD, _samples, TWIDDLE_WORD)
-static WRITE_FUNC(f, sizeof(float), su, float, float, sox_sample_t, SOX_SAMPLE_TO_FLOAT_DWORD, _samples, TWIDDLE_WORD)
-static WRITE_FUNC(df, sizeof(double), su, double, double, sox_sample_t, SOX_SAMPLE_TO_FLOAT_DDWORD, _samples, TWIDDLE_WORD)
-
-#define WRITE1_FUNC(type, sign, ctype) \
-  int sox_write ## type(ft_t ft, ctype datum) \
-  { \
-    return sox_write_ ## sign ## type ## _buf(ft, &datum, 1) == 1 ? SOX_SUCCESS : SOX_EOF; \
-  }
-
-WRITE1_FUNC(b, u, uint8_t)
-WRITE1_FUNC(w, u, uint16_t)
-WRITE1_FUNC(3, u, uint24_t)
-WRITE1_FUNC(dw, u, uint32_t)
-WRITE1_FUNC(f, su, float)
-WRITE1_FUNC(df, su, double)
+static WRITE_SAMPLES_FUNC(b, 1, u, uint8_t, SOX_SAMPLE_TO_UNSIGNED_BYTE)
+static WRITE_SAMPLES_FUNC(b, 1, s, int8_t, SOX_SAMPLE_TO_SIGNED_BYTE)
+static WRITE_SAMPLES_FUNC(b, 1, ulaw, uint8_t, SOX_SAMPLE_TO_ULAW_BYTE)
+static WRITE_SAMPLES_FUNC(b, 1, alaw, uint8_t, SOX_SAMPLE_TO_ALAW_BYTE)
+static WRITE_SAMPLES_FUNC(w, 2, u, uint16_t, SOX_SAMPLE_TO_UNSIGNED_WORD)
+static WRITE_SAMPLES_FUNC(w, 2, s, int16_t, SOX_SAMPLE_TO_SIGNED_WORD)
+static WRITE_SAMPLES_FUNC(3, 3, u, uint24_t, SOX_SAMPLE_TO_UNSIGNED_24BIT)
+static WRITE_SAMPLES_FUNC(3, 3, s, int24_t, SOX_SAMPLE_TO_SIGNED_24BIT)
+static WRITE_SAMPLES_FUNC(dw, 4, u, uint32_t, SOX_SAMPLE_TO_UNSIGNED_DWORD)
+static WRITE_SAMPLES_FUNC(dw, 4, s, int32_t, SOX_SAMPLE_TO_SIGNED_DWORD)
+static WRITE_SAMPLES_FUNC(f, sizeof(float), su, float, SOX_SAMPLE_TO_FLOAT_DWORD)
+static WRITE_SAMPLES_FUNC(df, sizeof(double), su, double, SOX_SAMPLE_TO_FLOAT_DDWORD)
 
 typedef sox_size_t (ft_io_fun)(ft_t ft, sox_sample_t *buf, sox_size_t len);
 
