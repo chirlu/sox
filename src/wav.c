@@ -366,6 +366,13 @@ static int findChunk(ft_t ft, const char *Label, sox_size_t *len)
     return SOX_SUCCESS;
 }
 
+
+static int wavfail(ft_t ft, const char *format)
+{
+    sox_fail_errno(ft, SOX_EHDR, "Unhandled WAV file encoding (%s).\nTry overriding the encoding: e.g. for an MP3 WAV, `-t mp3'", format);
+    return SOX_EOF;
+}
+
 /*
  * Do anything required before you start reading samples.
  * Read file header. 
@@ -548,17 +555,13 @@ static int sox_wavstartread(ft_t ft)
         break;
         
     case WAVE_FORMAT_OKI_ADPCM:
-        sox_fail_errno(ft,SOX_EHDR,"Sorry, this WAV file is in OKI ADPCM format.");
-        return SOX_EOF;
+        return wavfail(ft, "OKI ADPCM");
     case WAVE_FORMAT_DIGISTD:
-        sox_fail_errno(ft,SOX_EHDR,"Sorry, this WAV file is in Digistd format.");
-        return SOX_EOF;
+        return wavfail(ft, "Digistd");
     case WAVE_FORMAT_DIGIFIX:
-        sox_fail_errno(ft,SOX_EHDR,"Sorry, this WAV file is in Digifix format.");
-        return SOX_EOF;
+        return wavfail(ft, "Digifix");
     case WAVE_FORMAT_DOLBY_AC2:
-        sox_fail_errno(ft,SOX_EHDR,"Sorry, this WAV file is in Dolby AC2 format.");
-        return SOX_EOF;
+        return wavfail(ft, "Dolby AC2");
     case WAVE_FORMAT_GSM610:
         if (ft->signal.encoding == SOX_ENCODING_UNKNOWN || ft->signal.encoding == SOX_ENCODING_GSM )
             ft->signal.encoding = SOX_ENCODING_GSM;
@@ -566,31 +569,24 @@ static int sox_wavstartread(ft_t ft)
             sox_report("User options overriding encoding read in .wav header");
         break;
     case WAVE_FORMAT_ROCKWELL_ADPCM:
-        sox_fail_errno(ft,SOX_EOF,"Sorry, this WAV file is in Rockwell ADPCM format.");
-        return SOX_EOF;
+        return wavfail(ft, "Rockwell ADPCM");
     case WAVE_FORMAT_ROCKWELL_DIGITALK:
-        sox_fail_errno(ft,SOX_EOF,"Sorry, this WAV file is in Rockwell DIGITALK format.");
-        return SOX_EOF;
+        return wavfail(ft, "Rockwell DIGITALK");
     case WAVE_FORMAT_G721_ADPCM:
-        sox_fail_errno(ft,SOX_EOF,"Sorry, this WAV file is in G.721 ADPCM format.");
-        return SOX_EOF;
+        return wavfail(ft, "G.721 ADPCM");
     case WAVE_FORMAT_G728_CELP:
-        sox_fail_errno(ft,SOX_EOF,"Sorry, this WAV file is in G.728 CELP format.");
-        return SOX_EOF;
+        return wavfail(ft, "G.728 CELP");
     case WAVE_FORMAT_MPEG:
-        sox_fail_errno(ft,SOX_EOF,"Sorry, this WAV file is in MPEG format.");
-        return SOX_EOF;
+        return wavfail(ft, "MPEG");
     case WAVE_FORMAT_MPEGLAYER3:
-        sox_fail_errno(ft,SOX_EOF,"Sorry, this WAV file is in MPEG Layer 3 format.");
-        return SOX_EOF;
+        return wavfail(ft, "MP3");
     case WAVE_FORMAT_G726_ADPCM:
-        sox_fail_errno(ft,SOX_EOF,"Sorry, this WAV file is in G.726 ADPCM format.");
-        return SOX_EOF;
+        return wavfail(ft, "G.726 ADPCM");
     case WAVE_FORMAT_G722_ADPCM:
-        sox_fail_errno(ft,SOX_EOF,"Sorry, this WAV file is in G.722 ADPCM format.");
+        return wavfail(ft, "G.722 ADPCM");
+    default:
+        sox_fail_errno(ft, SOX_EHDR, "Unknown WAV file encoding (type %x)", wav->formatTag);
         return SOX_EOF;
-    default:    sox_fail_errno(ft,SOX_EOF,"WAV file has unknown format type of %x",wav->formatTag);
-                return SOX_EOF;
     }
 
     /* User options take precedence */
