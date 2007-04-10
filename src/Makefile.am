@@ -56,4 +56,4 @@ clean-local:
 	$(RM) play rec
 
 distclean-local:
-	$(RM) *.raw *.sf ststdint.h
+	$(RM) soxstdint.h
