@@ -61,12 +61,22 @@ dnl Allow libtool to be silenced
 AC_MSG_CHECKING([whether libtool should be silenced])
 AC_ARG_ENABLE(silent-libtool,
     AC_HELP_STRING([--enable-silent-libtool], [Pass --silent to libtool.]),
-    [if test $enableval = yes; then
+    [if test "$enable_silent_libtool" = "yes"; then
 	LIBTOOLFLAGS=--silent
     fi])
 AC_MSG_RESULT($enable_silent_libtool)
 AC_SUBST(LIBTOOLFLAGS)
 
+dnl Check if we want play/rec links
+AC_MSG_CHECKING([whether to make play and rec symlinks])
+AC_ARG_ENABLE(playrec-symlinks,
+    AC_HELP_STRING([--disable-playrec-symlinks], [Don't make play and rec symlinks to sox.]),,enable_playrec_symlinks=yes)
+AC_MSG_RESULT($enable_playrec_symlinks)
+if test "$enable_playrec_symlinks" = "yes"; then
+    PLAYRECLINKS=yes
+fi
+AC_SUBST(PLAYRECLINKS)
+     
 dnl Check for ALSA
 AC_MSG_CHECKING([whether to try building ALSA sound driver])
 AC_ARG_ENABLE(alsa,
@@ -110,7 +120,8 @@ if test "$enable_sun_audio" = yes; then
 fi
 
 dnl Check for libgsm
-AC_CHECK_HEADERS(gsm/gsm.h, found_libgsm=yes)
+AC_CHECK_HEADERS(gsm/gsm.h, found_libgsm=yes,
+    [AC_CHECK_HEADERS(gsm.h, found_libgsm=yes)])
 if test "$found_libgsm" = yes; then
     AC_CHECK_LIB(gsm, gsm_create, LIBS="$LIBS -lgsm")
     AC_DEFINE(EXTERNAL_GSM, 1, [Define if you are using an external GSM library])
@@ -205,9 +216,11 @@ fi
 
 dnl Report configuration.
 echo
+echo "Debugging build................... $enable_debug"
 echo "ALSA driver....................... $enable_alsa"
 echo "OSS driver........................ $enable_oss"
 echo "SUN audio driver.................. $enable_sun_audio"
+echo "play and rec symlinks............. $enable_playrec_symlinks"
 echo "libgsm............................ $gsm_option"
 echo "libsndfile formats................ $with_sndfile"
 echo "Ogg Vorbis format................. $with_ogg_vorbis"
