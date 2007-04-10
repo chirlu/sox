@@ -57,7 +57,6 @@ static int sox_sunstartread(ft_t ft)
     /* Hard-code for now. */
     file->count = 0;
     file->pos = 0;
-    file->eof = 0;
     file->size = 1024;
     file->buf = xmalloc (file->size);
 
@@ -194,7 +193,6 @@ static int sox_sunstartwrite(ft_t ft)
     /* Hard-code for now. */
     file->count = 0;
     file->pos = 0;
-    file->eof = 0;
     file->size = 1024;
     file->buf = xmalloc (file->size);
 
