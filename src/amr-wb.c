@@ -200,7 +200,7 @@ static int stopwrite(ft_t ft)
 
 sox_format_t const * sox_amr_wb_format_fn(void)
 {
-  static char const * names[] = {"amr-wb", NULL};
+  static char const * names[] = {"amr-wb", "awb", NULL};
   static sox_format_t driver = {
     names, NULL, 0,
     startread, read, stopread,
