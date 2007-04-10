@@ -154,50 +154,60 @@ AC_CHECK_HEADER(vorbis/codec.h,
 
 dnl Check for FLAC libraries
 AC_ARG_WITH(flac,
-    AC_HELP_STRING([--with-flac],
-        [Use FLAC if present (default is yes)]),
-        [with_flac=$withval],
-        [with_flac=yes])
-if test "$with_flac" = yes; then
+    AC_HELP_STRING([--without-flac],
+        [Don't try to use FLAC]),
+        [with_flac=$withval])
+if test "$with_flac" != "no"; then
+    using_flac=yes
     AC_CHECK_HEADER(FLAC/all.h,
-        [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new,,with_flac=no)],
-        with_flac=no)
+        [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new,,using_flac=no)],
+        using_flac=no)
+    if test "$with_flac" = "yes" -a "$using_flac" = "no"; then
+        AC_MSG_FAILURE([cannot find FLAC])
+    fi
 fi
 
 dnl Check for MAD libraries
 AC_ARG_WITH(mad,
-    AC_HELP_STRING([--with-mad],
-        [Use MAD (MP3 Audio Decoder) if present (default is yes)]),
-        [with_mad=$withval],
-        [with_mad=yes])
-if test "$with_mad" = yes; then
+    AC_HELP_STRING([--without-mad],
+        [Don't try to use MAD (MP3 Audio Decoder)]),
+        [with_mad=$withval])
+if test "$with_mad" != "no"; then
+    using_mad=yes
     AC_CHECK_HEADER(mad.h,
-        [AC_CHECK_LIB(mad, mad_stream_buffer,,with_mad=no)],
+        [AC_CHECK_LIB(mad, mad_stream_buffer,,using_mad=no)],
         with_mad=no)
+    if test "$with_mad" = "yes" -a "$using_mad" = "no"; then
+        AC_MSG_FAILURE([cannot find libmad])
+    fi
 fi
 
 dnl Test for LAME library.
 AC_ARG_WITH(lame,
-    AC_HELP_STRING([--with-lame],
-        [Use LAME (LAME Ain't an MP3 Encoder) if present (default is yes)]),
-        [with_lame=$withval],
-        [with_lame=yes])
-if test "$with_lame" = yes; then
+    AC_HELP_STRING([--without-lame],
+        [Don't try to use LAME (LAME Ain't an MP3 Encoder)]),
+        [with_lame=$withval])
+if test "$with_lame" != "no"; then
+    using_lame=yes
     AC_CHECK_HEADER(lame/lame.h,
-        [AC_CHECK_LIB(mp3lame, lame_init,,with_lame=no)],
-        with_lame=no)
+        [AC_CHECK_LIB(mp3lame, lame_init,,using_lame=no)],
+        using_lame=no)
+    if test "$with_lame" = "yes" -a "$using_lame" = "no"; then
+        AC_MSG_FAILURE([cannot find LAME])
+    fi
 fi
 
 dnl Test for libsamplerate.
 AC_ARG_WITH(samplerate,
-    AC_HELP_STRING([--with-samplerate],
-        [Use libsamplerate (aka Secret Rabbit Code) if present (default is yes)]),
-        [with_samplerate=$withval],
-        [with_samplerate=yes])
-if test "$with_samplerate" = yes; then
-  SOX_PATH_SAMPLERATE(, 
-                      [with_samplerate=no
-                       AC_MSG_NOTICE([Could not find a usable libsamplerate])])
+    AC_HELP_STRING([--without-samplerate],
+        [Don't try to use libsamplerate (aka Secret Rabbit Code)]),
+        [with_samplerate=$withval])
+if test "$with_samplerate" != "no"; then
+    using_samplerate=yes
+    SOX_PATH_SAMPLERATE(, using_samplerate=no)
+    if test "$with_samplerate" = "yes" -a "$using_samplerate" = "no"; then
+        AC_MSG_FAILURE([cannot find libsamplerate])
+    fi
 fi
 AC_SUBST(SAMPLERATE_CFLAGS)
 AC_SUBST(SAMPLERATE_LIBS)
@@ -223,10 +233,10 @@ echo "play and rec symlinks............. $enable_playrec_symlinks"
 echo "libgsm............................ $gsm_option"
 echo "libsndfile formats................ $with_sndfile"
 echo "Ogg Vorbis format................. $with_ogg_vorbis"
-echo "FLAC format....................... $with_flac"
-echo "MAD MP3 reader.................... $with_mad"
-echo "LAME MP3 writer................... $with_lame"
-echo "Secret Rabbit Code resampling..... $with_samplerate"
+echo "FLAC format....................... $using_flac"
+echo "MAD MP3 reader.................... $using_mad"
+echo "LAME MP3 writer................... $using_lame"
+echo "Secret Rabbit Code resampling..... $using_samplerate"
 echo
 echo "Configure finished.  Do 'make && make install' to compile and install SoX."
 echo
