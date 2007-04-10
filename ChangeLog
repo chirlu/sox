@@ -27,6 +27,7 @@ sox-13.0.1
 
   o Show (with -S) if clipping is occurring.  (robs)
   o Added internet input file support (needs wget).  (robs)
+  o Made it possible to build without sound drivers.  (Reuben Thomas)
 
   Bug fixes:
 
@@ -35,14 +36,14 @@ sox-13.0.1
   o Fix crash with pan effect.  (robs)
   o Add missing RM define to Makefiles so installs work.
    (Bug# 1666599) (cbagwell)
+  o Fix I/O performance regression in 13.0.0.  (Reuben Thomas)
 
   Internal improvements:
 
   o Renamed libst to libsox for name recongition and to avoid
-    duplications with other existing libst libraries. (Rueben)
-  o Renamed libst-config to more standard sox-config. (cbagwell)
-  o Removed library information from sox-config --cflags. (cbagwell)
+    duplications with other existing libst libraries. (Reuben Thomas)
   o Got rid of several hundred compiler warnings.  (robs)
+  o Added basic performance testing of I/O.  (Reuben Thomas)
 
 sox-13.0.0
 ----------
