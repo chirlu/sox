@@ -35,13 +35,15 @@ static sox_size_t pad_nsamps = sox_false;
 /* Private data for .wav file */
 typedef struct wavstuff {
     sox_size_t      numSamples;     /* samples/channel reading: starts at total count and decremented  */
-                                   /* writing: starts at 0 and counts samples written */
+                                    /* writing: starts at 0 and counts samples written */
     sox_size_t      dataLength;     /* needed for ADPCM writing */
-    unsigned short formatTag;      /* What type of encoding file is using */
+    unsigned short formatTag;       /* What type of encoding file is using */
     unsigned short samplesPerBlock;
     unsigned short blockAlign;
-    sox_size_t dataStart;  /* need to for seeking */
-    int found_cooledit;   
+    sox_size_t dataStart;           /* need to for seeking */
+    int ignoreSize;                 /* ignoreSize allows us to process 32-bit WAV files that are
+                                     * greater then 2 Gb and can't be represented by the
+                                     * 32-bit size field. */
 
     /* following used by *ADPCM wav files */
     unsigned short nCoefs;          /* ADPCM: number of coef sets */
@@ -402,7 +404,8 @@ static int sox_wavstartread(ft_t ft)
     char text[256];
     uint32_t      dwLoopPos;
 
-        ft->sox_errno = SOX_SUCCESS;
+    ft->sox_errno = SOX_SUCCESS;
+    wav->ignoreSize = 0;
 
     if (sox_reads(ft, magic, 4) == SOX_EOF || (strncmp("RIFF", magic, 4) != 0 &&
                                              strncmp("RIFX", magic, 4) != 0))
@@ -822,7 +825,7 @@ static int sox_wavstartread(ft_t ft)
         wav->numSamples = 
             AdpcmSamplesIn(dwDataLength, ft->signal.channels, 
                            wav->blockAlign, wav->samplesPerBlock);
-        /*sox_debug("datalen %d, numSamples %d",dwDataLength, wav->numSamples);*/
+        sox_debug_more("datalen %d, numSamples %d",dwDataLength, wav->numSamples);
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
         ft->length = wav->numSamples*ft->signal.channels;
         break;
@@ -833,7 +836,7 @@ static int sox_wavstartread(ft_t ft)
         wav->numSamples = 
             ImaSamplesIn(dwDataLength, ft->signal.channels, 
                          wav->blockAlign, wav->samplesPerBlock);
-        /*sox_debug("datalen %d, numSamples %d",dwDataLength, wav->numSamples);*/
+        sox_debug_more("datalen %d, numSamples %d",dwDataLength, wav->numSamples);
         wav->blockSamplesRemaining = 0;        /* Samples left in buffer */
         initImaTable();
         ft->length = wav->numSamples*ft->signal.channels;
@@ -882,7 +885,6 @@ static int sox_wavstartread(ft_t ft)
 
     /* Horrible way to find Cool Edit marker points. Taken from Quake source*/
     ft->loops[0].start = ~0u;
-    wav->found_cooledit = 0;
     if(ft->seekable){
         /*Got this from the quake source.  I think it 32bit aligns the chunks 
          * doubt any machine writing Cool Edit Chunks writes them at an odd 
@@ -891,7 +893,6 @@ static int sox_wavstartread(ft_t ft)
         if (sox_seeki(ft, len, SEEK_CUR) == SOX_SUCCESS &&
             findChunk(ft, "LIST", &len) != SOX_EOF)
         {
-            wav->found_cooledit = 1;
             ft->comment = (char*)xmalloc(256);
             /* Initialize comment to a NULL string */
             ft->comment[0] = 0;
@@ -1009,8 +1010,7 @@ static sox_size_t sox_wavread(ft_t ft, sox_sample_t *buf, sox_size_t len)
         case SOX_ENCODING_IMA_ADPCM:
         case SOX_ENCODING_ADPCM:
 
-            /* See reason for cooledit check in comments below */
-            if (wav->found_cooledit && len > (wav->numSamples*ft->signal.channels)) 
+            if (!wav->ignoreSize && len > (wav->numSamples*ft->signal.channels)) 
                 len = (wav->numSamples*ft->signal.channels);
 
             done = 0;
@@ -1058,8 +1058,7 @@ static sox_size_t sox_wavread(ft_t ft, sox_sample_t *buf, sox_size_t len)
             break;
 
         case SOX_ENCODING_GSM:
-            /* See reason for cooledit check in comments below */
-            if (wav->found_cooledit && len > wav->numSamples*ft->signal.channels) 
+            if (!wav->ignoreSize && len > wav->numSamples*ft->signal.channels) 
                 len = (wav->numSamples*ft->signal.channels);
 
             done = wavgsmread(ft, buf, len);
@@ -1068,17 +1067,7 @@ static sox_size_t sox_wavread(ft_t ft, sox_sample_t *buf, sox_size_t len)
         break;
 
         default: /* assume PCM or float encoding */
-            /* Cooledit seems to put a non-standard IFF LIST at
-             * the end of the file.  When this is detected,
-             * go ahead and only read in the reported size
-             * of data chunk so the LIST data is not treated
-             * as audio.  
-             * In other cases, go ahead and read unit EOF
-             * This allows us to process WAV files that are
-             * greater then 2Gig and can't be represented
-             * by the 32-bit size field.
-             */
-            if (wav->found_cooledit && len > wav->numSamples*ft->signal.channels) 
+            if (!wav->ignoreSize && len > wav->numSamples*ft->signal.channels) 
                 len = (wav->numSamples*ft->signal.channels);
 
             done = sox_rawread(ft, buf, len);
