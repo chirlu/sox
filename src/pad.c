@@ -128,7 +128,7 @@ static int stop(eff_t effp)
   return SOX_SUCCESS;
 }
 
-static int delete(eff_t effp)
+static int kill(eff_t effp)
 {
   pad_t p = (pad_t) effp->priv;
   unsigned i;
@@ -142,7 +142,7 @@ sox_effect_t const * sox_pad_effect_fn(void)
 {
   static sox_effect_t driver = {
     "pad", "Usage: pad {length[@position]}", SOX_EFF_MCHAN,
-    create, start, flow, drain, stop, delete
+    create, start, flow, drain, stop, kill
   };
   return &driver;
 }

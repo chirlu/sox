@@ -116,10 +116,10 @@ static int stop(eff_t effp)
 }
 
 /*
- * Do anything required when you delete an effect.  
+ * Do anything required when you kill an effect.  
  *      (free allocated memory, etc.)
  */
-static int delete(eff_t effp)
+static int kill(eff_t effp)
 {
   return SOX_SUCCESS;
 }
@@ -140,7 +140,7 @@ static sox_effect_t sox_skel_effect = {
   flow,
   drain,
   stop,
-  delete,
+  kill,
 };
 
 /*

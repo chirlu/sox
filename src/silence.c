@@ -705,7 +705,7 @@ static int sox_silence_stop(eff_t effp)
     return(SOX_SUCCESS);
 }
 
-static int delete(eff_t effp)
+static int kill(eff_t effp)
 {
   silence_t silence = (silence_t) effp->priv;
 
@@ -723,7 +723,7 @@ static sox_effect_t sox_silence_effect = {
   sox_silence_flow,
   sox_silence_drain,
   sox_silence_stop,
-  delete
+  kill
 };
 
 const sox_effect_t *sox_silence_effect_fn(void)

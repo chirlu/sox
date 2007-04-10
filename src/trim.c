@@ -179,7 +179,7 @@ static int sox_trim_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obu
         return (SOX_SUCCESS);
 }
 
-static int delete(eff_t effp)
+static int kill(eff_t effp)
 {
     trim_t trim = (trim_t) effp->priv;
 
@@ -210,7 +210,7 @@ static sox_effect_t sox_trim_effect = {
   sox_trim_flow,
   sox_effect_nothing_drain,
   sox_effect_nothing,
-  delete
+  kill
 };
 
 const sox_effect_t *sox_trim_effect_fn(void)

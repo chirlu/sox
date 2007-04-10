@@ -319,7 +319,7 @@ static int sox_fade_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
  * Do anything required when you stop reading samples.
  *      (free allocated memory, etc.)
  */
-static int delete(eff_t effp)
+static int kill(eff_t effp)
 {
     fade_t fade = (fade_t) effp->priv;
 
@@ -382,7 +382,7 @@ static sox_effect_t sox_fade_effect = {
   sox_fade_flow,
   sox_fade_drain,
   sox_effect_nothing,
-  delete
+  kill
 };
 
 const sox_effect_t *sox_fade_effect_fn(void)

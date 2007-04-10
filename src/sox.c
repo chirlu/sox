@@ -107,7 +107,7 @@ static int flow_effect(unsigned);
 static int drain_effect_out(void);
 static int drain_effect(unsigned);
 static void stop_effects(void);
-static void delete_effects(void);
+static void kill_effects(void);
 
 #define MAX_INPUT_FILES 32
 #define MAX_FILES MAX_INPUT_FILES + 2 /* 1 output file plus record input */
@@ -539,7 +539,7 @@ int main(int argc, char **argv)
   } while (process() != SOX_EOF && !user_abort && current_input < input_count);
   else process();
 
-  delete_effects();
+  kill_effects();
 
   for (i = 0; i < file_count; ++i)
     if (files[i]->desc->clips != 0)
@@ -1363,10 +1363,10 @@ static int start_all_effects(void)
         return SOX_EOF;
     }
     if (is_always_null || ret == SOX_EFF_NULL) { /* remove from the chain */
-      int (*delete)(eff_t effp) = e->h->kill? e->h->kill: sox_effect_nothing;
+      int (*kill)(eff_t effp) = e->h->kill? e->h->kill: sox_effect_nothing;
 
-      /* No left & right delete as there is no left & right getopts */
-      delete(e);
+      /* No left & right kill as there is no left & right getopts */
+      kill(e);
       --neffects;
       for (j = i--; j < neffects; ++j) {
         efftab[j] = efftab[j + 1];
@@ -1726,16 +1726,16 @@ static void stop_effects(void)
   }
 }
 
-static void delete_effects(void)
+static void kill_effects(void)
 {
   unsigned e;
 
   for (e = 1; e < neffects; e++) {
-    int (*delete)(eff_t effp) =
+    int (*kill)(eff_t effp) =
        efftab[e].h->kill? efftab[e].h->kill : sox_effect_nothing;
 
-    /* No left & right delete as there is no left & right getopts */
-    delete(&efftab[e]);
+    /* No left & right kill as there is no left & right getopts */
+    kill(&efftab[e]);
   }
 }
 

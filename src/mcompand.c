@@ -603,7 +603,7 @@ static int sox_mcompand_stop(eff_t effp)
   return SOX_SUCCESS;
 }
 
-static int sox_mcompand_delete(eff_t effp)
+static int sox_mcompand_kill(eff_t effp)
 {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
@@ -637,7 +637,7 @@ static sox_effect_t sox_mcompand_effect = {
   sox_mcompand_flow,
   sox_mcompand_drain,
   sox_mcompand_stop,
-  sox_mcompand_delete
+  sox_mcompand_kill
 };
 
 const sox_effect_t *sox_mcompand_effect_fn(void)
