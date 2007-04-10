@@ -18,22 +18,16 @@ AC_SUBST(LIBTOOL_DEPS)
 m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG])
 
 dnl Debugging
-AC_MSG_CHECKING([if we want a debug build])
-AC_ARG_ENABLE(debug,
-AC_HELP_STRING([--enable-debug], [make a debug build]),
-[
-if test $enableval = yes; then
-        CFLAGS="-g"
-        if test "$GCC" = "yes"; then
-          CFLAGS="$CFLAGS -ggdb"
-        fi
-	AC_MSG_RESULT(yes)
-else
-	AC_MSG_RESULT(no)
+AC_MSG_CHECKING([whether to make a debug build])
+enable_debug=no
+AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug], [make a debug build]))
+AC_MSG_RESULT($enable_debug)
+if test "$enable_debug" = "yes"; then
+    CFLAGS="-g"
+    if test "$GCC" = "yes"; then
+        CFLAGS="$CFLAGS -ggdb"
+    fi
 fi
-], [
-AC_MSG_RESULT(no)
-])
 
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = yes; then
@@ -54,7 +48,6 @@ AC_REPLACE_FUNCS(getopt_long)
 AM_CONDITIONAL(GETOPT_LONG, test x$getopt_long = xtrue)
 
 dnl Check if math library is needed.
-AC_CHECKING(if math library is required during link)
 AC_CHECK_FUNC(pow)
 if test "$ac_cv_func_pow" = no; then
   AC_CHECK_LIB(m, pow)
@@ -65,35 +58,55 @@ AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
 
 dnl Allow libtool to be silenced
+AC_MSG_CHECKING([whether libtool should be silenced])
 AC_ARG_ENABLE(silent-libtool,
-    AC_HELP_STRING([--enable-silent-libtool],
-        [Pass --silent to libtool.]),
-	LIBTOOLFLAGS=--silent)
+    AC_HELP_STRING([--enable-silent-libtool], [Pass --silent to libtool.]),
+    [if test $enableval = yes; then
+	LIBTOOLFLAGS=--silent
+    fi])
+AC_MSG_RESULT($enable_silent_libtool)
 AC_SUBST(LIBTOOLFLAGS)
 
-dnl Check for ALSA audio
-AC_CHECK_HEADERS(alsa/asoundlib.h,
-    [with_alsa=yes
-    AC_CHECK_LIB(asound, snd_pcm_open,, with_alsa=no)],
-    with_alsa=no)
-if test "$with_alsa" = yes; then
+dnl Check for ALSA
+AC_MSG_CHECKING([whether to try building ALSA sound driver])
+AC_ARG_ENABLE(alsa,
+    AC_HELP_STRING([--disable-alsa], [Don't build ALSA sound driver.]),,enable_alsa=yes)
+AC_MSG_RESULT($enable_alsa)
+if test "$enable_alsa" = "yes"; then
+    AC_CHECK_HEADERS(alsa/asoundlib.h,
+        AC_CHECK_LIB(asound, snd_pcm_open,, enable_alsa=no),
+        enable_alsa=no)
+fi
+if test "$enable_alsa" = yes; then
    AC_DEFINE(HAVE_ALSA, 1, [Define to 1 if you have ALSA.])
 fi
 
-dnl Check for OSS audio
-with_oss=no
-AC_CHECK_HEADERS(sys/soundcard.h, with_oss=yes)
-AC_CHECK_HEADERS(machine/soundcard.h, with_oss=yes)
-if test "$with_oss" = yes; then
+dnl Check for OSS
+AC_MSG_CHECKING([whether to try building OSS sound driver])
+AC_ARG_ENABLE(oss,
+    AC_HELP_STRING([--disable-oss], [Build OSS sound driver.]),,enable_oss=yes)
+AC_MSG_RESULT($enable_oss)
+if test "$enable_oss" = "yes"; then
+    AC_CHECK_HEADERS(sys/soundcard.h,,
+        [AC_CHECK_HEADERS(machine/soundcard.h,
+            [AC_CHECK_LIB(ossaudio, _oss_ioctl, LIBS="$LIBS -lossaudio")],
+            enable_oss=no)])
+fi
+if test "$enable_oss" = yes; then
    AC_DEFINE(HAVE_OSS, 1, [Define to 1 if you have OSS.])
 fi
 
 dnl Check for Sun audio
-with_sun_audio=no
-AC_CHECK_HEADERS(sys/audioio.h, with_sun_audio=yes)
-AC_CHECK_HEADERS(sun/audioio.h, with_sun_audio=yes)
-if test "$with_sun_audio" = yes; then
-   AC_DEFINE(HAVE_SUN_AUDIO, 1, [Define to 1 if you have Sun /dev/audio.])
+AC_MSG_CHECKING([whether to try building Sun audio driver])
+AC_ARG_ENABLE(sun-audio,
+    AC_HELP_STRING([--disble-sun-audio], [Build Sun audio driver.]),,enable_sun_audio=yes)
+AC_MSG_RESULT($enable_sun_audio)
+if test "$enable_sun_audio" = "yes"; then
+    AC_CHECK_HEADERS(sys/audioio.h,,
+        [AC_CHECK_HEADERS(sun/audioio.h,, enable_sun_audio=no)])
+fi
+if test "$enable_sun_audio" = yes; then
+   AC_DEFINE(HAVE_SUN_AUDIO, 1, [Define to 1 if you have Sun audio.])
 fi
 
 dnl Check for libgsm
@@ -192,9 +205,9 @@ fi
 
 dnl Report configuration.
 echo
-echo "ALSA driver....................... $with_alsa"
-echo "OSS driver........................ $with_oss"
-echo "SUN audio driver.................. $with_sun_audio"
+echo "ALSA driver....................... $enable_alsa"
+echo "OSS driver........................ $enable_oss"
+echo "SUN audio driver.................. $enable_sun_audio"
 echo "libgsm............................ $gsm_option"
 echo "libsndfile formats................ $with_sndfile"
 echo "Ogg Vorbis format................. $with_ogg_vorbis"
