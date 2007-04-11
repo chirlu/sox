@@ -20,7 +20,7 @@
 #endif
 
 sox_output_message_handler_t sox_output_message_handler = NULL;
-int sox_output_verbosity_level = 2;
+unsigned sox_output_verbosity_level = 2;
 
 void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap)
 {

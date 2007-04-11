@@ -252,7 +252,7 @@ ft_t sox_open_write(
 
         /* stdout tends to be line-buffered.  Override this */
         /* to be Full Buffering. */
-        if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char)*SOX_BUFSIZ))
+        if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char)*sox_bufsiz))
         {
             sox_fail("Can't set write buffer");
             goto output_error;

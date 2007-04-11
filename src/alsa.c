@@ -290,7 +290,7 @@ static int sox_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     }
 
     /* Have a much larger buffer than SOX_BUFSIZ to avoid underruns */
-    buffer_size = SOX_BUFSIZ * 8 / ft->signal.size / ft->signal.channels;
+    buffer_size = sox_bufsiz * 8 / ft->signal.size / ft->signal.channels;
 
     if (snd_pcm_hw_params_get_buffer_size_min(hw_params, &buffer_size_min) < 0)
     {

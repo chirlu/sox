@@ -25,7 +25,7 @@
 #include <math.h>
 #endif
 
-#define INPUT_BUFFER_SIZE       (SOX_BUFSIZ)
+#define INPUT_BUFFER_SIZE       (sox_bufsiz)
 
 /* Private data */
 struct mp3priv {

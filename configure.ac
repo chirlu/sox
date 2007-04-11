@@ -19,7 +19,6 @@ m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG])
 
 dnl Debugging
 AC_MSG_CHECKING([whether to make a debug build])
-enable_debug=no
 AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug], [make a debug build]))
 AC_MSG_RESULT($enable_debug)
 if test "$enable_debug" = "yes"; then
@@ -27,6 +26,8 @@ if test "$enable_debug" = "yes"; then
     if test "$GCC" = "yes"; then
         CFLAGS="$CFLAGS -ggdb"
     fi
+else
+    enable_debug=no
 fi
 
 dnl Extra CFLAGS if we have gcc

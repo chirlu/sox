@@ -56,6 +56,8 @@
 #include <io.h>
 #endif
 
+sox_size_t sox_bufsiz = 8192;
+
 static sox_bool play = sox_false, rec = sox_false;
 static enum {SOX_sequence, SOX_concatenate, SOX_mix, SOX_merge} combine_method = SOX_concatenate;
 static sox_size_t mixing_clips = 0;
@@ -75,10 +77,7 @@ static unsigned long input_wide_samples = 0;
 static unsigned long read_wide_samples = 0;
 static unsigned long output_samples = 0;
 
-static sox_sample_t ibufl[SOX_BUFSIZ / 2]; /* Left/right interleave buffers */
-static sox_sample_t ibufr[SOX_BUFSIZ / 2];
-static sox_sample_t obufl[SOX_BUFSIZ / 2];
-static sox_sample_t obufr[SOX_BUFSIZ / 2];
+static sox_sample_t *ibufl, *ibufr, *obufl, *obufr; /* Left/right interleave buffers */
 
 typedef struct file_info
 {
@@ -152,7 +151,7 @@ static int nuser_effects;
 
 static char *myname = NULL;
 
-static void output_message(int level, const char *filename, const char *fmt, va_list ap)
+static void output_message(unsigned level, const char *filename, const char *fmt, va_list ap)
 {
   if (sox_output_verbosity_level >= level) {
     fprintf(stderr, "%s ", myname);
@@ -166,13 +165,13 @@ static sox_bool overwrite_permitted(char const * filename)
   char c;
 
   if (!interactive) {
-    sox_report("Overwriting '%s'", filename);
+    sox_report("Overwriting `%s'", filename);
     return sox_true;
   }
-  sox_warn("Output file '%s' already exists", filename);
+  sox_warn("Output file `%s' already exists", filename);
   if (!isatty(fileno(stdin)))
     return sox_false;
-  do fprintf(stderr, "%s sox: overwrite '%s' (y/n)? ", myname, filename);
+  do fprintf(stderr, "%s sox: overwrite `%s' (y/n)? ", myname, filename);
   while (scanf(" %c%*[^\n]", &c) != 1 || !strchr("yYnN", c));
   return c == 'y' || c == 'Y';
 }
@@ -388,7 +387,7 @@ static void parse_options_and_filenames(int argc, char **argv)
 
     if (doopts(f, argc, argv)) { /* is null file? */
       if (f->filetype != NULL && strcmp(f->filetype, "null") != 0)
-        sox_warn("Ignoring '-t %s'.", f->filetype);
+        sox_warn("Ignoring `-t %s'.", f->filetype);
       f->filetype = "null";
       f->filename = xstrdup("-n");
     } else {
@@ -460,6 +459,12 @@ int main(int argc, char **argv)
   }
   parse_options_and_filenames(argc, argv);
 
+  /* Allocate buffers, size of which may have been set by --buffer */
+  ibufl = xcalloc(sox_bufsiz / 2, sizeof(sox_sample_t));
+  obufl = xcalloc(sox_bufsiz / 2, sizeof(sox_sample_t));
+  ibufr = xcalloc(sox_bufsiz / 2, sizeof(sox_sample_t));
+  obufr = xcalloc(sox_bufsiz / 2, sizeof(sox_sample_t));
+
   /* Make sure we got at least the required # of input filenames */
   input_count = file_count ? file_count - 1 : 0;
   if (input_count < (combine_method <= SOX_concatenate ? 1 : 2))
@@ -474,7 +479,7 @@ int main(int argc, char **argv)
   }
   if (ofile->volume != HUGE_VAL)
     usage("-v can only be given for an input file;\n"
-            "\tuse 'vol' to set the output file volume");
+            "\tuse `vol' to set the output file volume");
 
   signal(SIGINT, SIG_IGN); /* So child pipes aren't killed by track skip */
   for (i = 0; i < input_count; i++) {
@@ -601,10 +606,11 @@ static char * read_comment_file(char const * const filename)
   return result;
 }
 
-static char *getoptstr = "+abc:defghilmnoqr:st:uv:wxABC:DLMNRSUV::X12348";
+static char *getoptstr = "+ac:efghimnoqr:st:uv:xABC:DLMNRSUV::X12348";
 
 static struct option long_options[] =
   {
+    {"buffer"          , required_argument, NULL, 0},
     {"combine"         , required_argument, NULL, 0},
     {"comment-file"    , required_argument, NULL, 0},
     {"comment"         , required_argument, NULL, 0},
@@ -703,28 +709,37 @@ static sox_bool doopts(file_t f, int argc, char **argv)
 {
   while (sox_true) {
     int option_index;
-    int i;          /* Needed since scanf %u allows negative numbers :( */
+    int i; /* sscanf silently accepts negative numbers for %u :( */
     char dummy;     /* To check for extraneous chars in optarg. */
 
     switch (getopt_long(argc, argv, getoptstr, long_options, &option_index)) {
     case -1:        /* @ one of: file-name, effect name, end of arg-list. */
-      return sox_false; /* I.e. not null file. */
+      return sox_false; /* i.e. not null file. */
 
     case 0:         /* Long options with no short equivalent. */
       switch (option_index) {
       case 0:
-        combine_method = enum_option(option_index, combine_methods);
+#define SOX_BUFMIN 16
+        if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= SOX_BUFMIN) {
+        sox_fail("Buffer size `%s' must be > %d", optarg, SOX_BUFMIN);
+        exit(1);
+        }
+        sox_bufsiz = i;
         break;
 
       case 1:
-        f->comment = read_comment_file(optarg);
+        combine_method = enum_option(option_index, combine_methods);
         break;
 
       case 2:
-        f->comment = xstrdup(optarg);
+        f->comment = read_comment_file(optarg);
         break;
 
       case 3:
+        f->comment = xstrdup(optarg);
+        break;
+
+      case 4:
         switch (enum_option(option_index, endian_options)) {
           case ENDIAN_little: f->signal.reverse_bytes = SOX_IS_BIGENDIAN; break;
           case ENDIAN_big: f->signal.reverse_bytes = SOX_IS_LITTLEENDIAN; break;
@@ -732,23 +747,23 @@ static sox_bool doopts(file_t f, int argc, char **argv)
         }
         break;
 
-      case 4:
+      case 5:
         interactive = sox_true;
         break;
 
-      case 5:
+      case 6:
         usage_effect(optarg);
         break;
 
-      case 6:
+      case 7:
         globalinfo.octave_plot_effect = sox_true;
         break;
 
-      case 7:
+      case 8:
         replay_gain_mode = enum_option(option_index, rg_modes);
         break;
 
-      case 8:
+      case 9:
         printf("%s: v%s\n", myname, PACKAGE_VERSION);
         exit(0);
         break;
@@ -783,7 +798,7 @@ static sox_bool doopts(file_t f, int argc, char **argv)
 
     case 'r':
       if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
-        sox_fail("Rate value '%s' is not a positive integer", optarg);
+        sox_fail("Rate value `%s' is not a positive integer", optarg);
         exit(1);
       }
       f->signal.rate = i;
@@ -791,7 +806,7 @@ static sox_bool doopts(file_t f, int argc, char **argv)
 
     case 'v':
       if (sscanf(optarg, "%lf %c", &f->volume, &dummy) != 1) {
-        sox_fail("Volume value '%s' is not a number", optarg);
+        sox_fail("Volume value `%s' is not a number", optarg);
         exit(1);
       }
       uservolume = sox_true;
@@ -802,7 +817,7 @@ static sox_bool doopts(file_t f, int argc, char **argv)
 
     case 'c':
       if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
-        sox_fail("Channels value '%s' is not a positive integer", optarg);
+        sox_fail("Channels value `%s' is not a positive integer", optarg);
         exit(1);
       }
       f->signal.channels = i;
@@ -810,16 +825,16 @@ static sox_bool doopts(file_t f, int argc, char **argv)
 
     case 'C':
       if (sscanf(optarg, "%lf %c", &f->signal.compression, &dummy) != 1) {
-        sox_fail("Compression value '%s' is not a number", optarg);
+        sox_fail("Compression value `%s' is not a number", optarg);
         exit(1);
       }
       break;
 
-    case '1': case 'b': f->signal.size = SOX_SIZE_BYTE;   break;
-    case '2': case 'w': f->signal.size = SOX_SIZE_16BIT;   break;
-    case '3':           f->signal.size = SOX_SIZE_24BIT;  break;
-    case '4': case 'l': f->signal.size = SOX_SIZE_32BIT;  break;
-    case '8': case 'd': f->signal.size = SOX_SIZE_64BIT; break;
+    case '1': f->signal.size = SOX_SIZE_BYTE;  break;
+    case '2': f->signal.size = SOX_SIZE_16BIT; break;
+    case '3': f->signal.size = SOX_SIZE_24BIT; break;
+    case '4': f->signal.size = SOX_SIZE_32BIT; break;
+    case '8': f->signal.size = SOX_SIZE_64BIT; break;
 
     case 's': f->signal.encoding = SOX_ENCODING_SIGN2;     break;
     case 'u': f->signal.encoding = SOX_ENCODING_UNSIGNED;  break;
@@ -852,12 +867,12 @@ static sox_bool doopts(file_t f, int argc, char **argv)
     case 'V':
       if (optarg == NULL)
         ++sox_output_verbosity_level;
-      else if (sscanf(optarg, "%i %c", &sox_output_verbosity_level, &dummy) != 1
-          || sox_output_verbosity_level < 0) {
+      else if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i < 0) {
         sox_output_verbosity_level = 2;
-        sox_fail("Verbosity value '%s' is not an integer >= 0", optarg);
+        sox_fail("Verbosity value `%s' is not a non-negative integer", optarg);
         exit(1);
       }
+      sox_output_verbosity_level = (unsigned)i;
       break;
     }
   }
@@ -975,7 +990,7 @@ static sox_bool can_segue(sox_size_t i)
 
 static sox_size_t sox_read_wide(ft_t desc, sox_sample_t * buf)
 {
-  sox_size_t len = SOX_BUFSIZ / combiner.channels;
+  sox_size_t len = sox_bufsiz / combiner.channels;
   len = sox_read(desc, buf, len * desc->signal.channels) / desc->signal.channels;
   if (!len && desc->sox_errno)
     sox_fail("%s: %s (%s)", desc->filename, desc->sox_errstr, strerror(desc->sox_errno));
@@ -1105,9 +1120,9 @@ static int process(void) {
 
   /* Allocate output buffers for effects */
   for (e = 0; e < neffects; e++) {
-    efftab[e].obuf = (sox_sample_t *)xmalloc(SOX_BUFSIZ * sizeof(sox_sample_t));
+    efftab[e].obuf = (sox_sample_t *)xmalloc(sox_bufsiz * sizeof(sox_sample_t));
     if (efftabR[e].name)
-      efftabR[e].obuf = (sox_sample_t *)xmalloc(SOX_BUFSIZ * sizeof(sox_sample_t));
+      efftabR[e].obuf = (sox_sample_t *)xmalloc(sox_bufsiz * sizeof(sox_sample_t));
   }
 
   if (combine_method <= SOX_concatenate)
@@ -1115,7 +1130,7 @@ static int process(void) {
   else {
     ws = 0;
     for (i = 0; i < input_count; i++) {
-      ibuf[i] = (sox_sample_t *)xmalloc(SOX_BUFSIZ * sizeof(sox_sample_t));
+      ibuf[i] = (sox_sample_t *)xmalloc(sox_bufsiz * sizeof(sox_sample_t));
       progress_to_file(files[i]);
       ws = max(ws, input_wide_samples);
     }
@@ -1557,7 +1572,7 @@ static int flow_effect(unsigned e)
      * run effect over entire buffer.
      */
     idone = efftab[e - 1].olen - efftab[e - 1].odone;
-    odone = SOX_BUFSIZ - efftab[e].olen;
+    odone = sox_bufsiz - efftab[e].olen;
     sox_debug_more("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
     sox_debug_more("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
 
@@ -1579,7 +1594,7 @@ static int flow_effect(unsigned e)
      * on each of them.
      */
     idone = efftab[e - 1].olen - efftab[e - 1].odone;
-    odone = SOX_BUFSIZ - efftab[e].olen;
+    odone = sox_bufsiz - efftab[e].olen;
 
     ibuf = &efftab[e - 1].obuf[efftab[e - 1].odone];
     for (i = 0; i < idone; i += 2) {
@@ -1670,13 +1685,13 @@ static int drain_effect(unsigned e)
     efftab[e].h->drain? efftab[e].h->drain : sox_effect_nothing_drain;
 
   if (! efftabR[e].name) {
-    efftab[e].olen = SOX_BUFSIZ;
+    efftab[e].olen = sox_bufsiz;
     rc = drain(&efftab[e],efftab[e].obuf, &efftab[e].olen);
     efftab[e].odone = 0;
   } else {
     int rc_l, rc_r;
 
-    olen = SOX_BUFSIZ;
+    olen = sox_bufsiz;
 
     /* left */
     olenl = olen/2;
@@ -1826,10 +1841,11 @@ static void usage(char const *message)
          "-n              use the null file handler; for use with e.g. synth & stat\n"
          "\n"
          "GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):\n"
+         "--buffer BYTES  set the buffer size (default 8192)\n"
          "--combine concatenate  concatenate multiple input files (default for sox, rec)\n"
          "--combine sequence  sequence multiple input files (default for play)\n"
          "-h, --help      display version number and usage information\n"
-         "--help-effect name  display usage of specified effect; use 'all' to display all\n"
+         "--help-effect NAME  display usage of specified effect; use `all' to display all\n"
          "--interactive   prompt to overwrite output file\n"
          "-m, --combine mix  mix multiple input files (instead of concatenating)\n"
          "-M, --combine merge  merge multiple input files (instead of concatenating)\n"
@@ -1839,7 +1855,7 @@ static void usage(char const *message)
          "-R              use default random numbers (same on each run of SoX)\n"
          "-S, --show-progress  display progress while processing audio data\n"
          "--version       display version number of SoX and exit\n"
-         "-V[level]       increment or set verbosity level (default 2); levels are:\n"
+         "-V[LEVEL]       increment or set verbosity level (default 2); levels are:\n"
          "                  1: failure messages\n"
          "                  2: warnings\n"
          "                  3: details of processing\n"
@@ -1850,13 +1866,13 @@ static void usage(char const *message)
          "otherwise they are obtained automatically.  Output files will default to the\n"
          "same format options as the input file unless otherwise specified.\n"
          "\n"
-         "-c, --channels channels  number of channels in audio data\n"
-         "-C compression  compression factor for variably compressing output formats\n"
-         "--comment text  Specify comment text for the output file\n"
-         "--comment-file filename  file containing comment text for the output file\n"
+         "-c, --channels CHANNELS  number of channels in audio data\n"
+         "-C, --compression FACTOR  compression factor for output format\n"
+         "--comment TEXT  Specify comment text for the output file\n"
+         "--comment-file FILENAME  file containing comment text for the output file\n"
          "--endian little|big|swap  set endianness; swap means opposite to default\n"
-         "-r, --rate rate  sample rate of audio\n"
-         "-t, --type filetype  file type of audio\n"
+         "-r, --rate RATE  sample rate of audio\n"
+         "-t, --type FILETYPE  file type of audio\n"
          "-x              invert auto-detected endianness\n"
          "-N, --reverse-nibbles  nibble-order\n"
          "-X, --reverse-bits  bit-order of data\n"
@@ -1864,7 +1880,7 @@ static void usage(char const *message)
          "-s/-u/-U/-A/    sample encoding: signed/unsigned/u-law/A-law\n"
          "  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point\n"
          "-1/-2/-3/-4/-8  sample size in bytes\n"
-         "-v, --volume    volume input file volume adjustment factor (real number)\n"
+         "-v, --volume FACTOR  volume input file volume adjustment factor (real number)\n"
          "\n");
 
   printf("SUPPORTED FILE FORMATS:");

@@ -122,8 +122,8 @@ void sox_adpcm_reset(adpcm_io_t state, sox_encoding_t type)
 static int adpcm_start(ft_t ft, adpcm_io_t state, sox_encoding_t type)
 {
   /* setup file info */
-  state->file.buf = (char *) xmalloc(SOX_BUFSIZ);
-  state->file.size = SOX_BUFSIZ;
+  state->file.buf = (char *) xmalloc(sox_bufsiz);
+  state->file.size = sox_bufsiz;
   ft->signal.channels = 1;
 
   sox_adpcm_reset(state, type);

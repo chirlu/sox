@@ -18,10 +18,10 @@ getFormat () {
     ul ) formatText="ulaw byte" ;;
     ub ) formatText="unsigned byte" ;;
     uw ) formatText="unsigned word" ;;
-    raw) formatText="float"; formatFlags="-f -l" ;;
+    raw) formatText="float"; formatFlags="-f -4" ;;
     Raw) formatText="double"; formatFlags="-f -8" ;;
     au ) formatFlags="-s" ;;
-    Wav) formatFlags="-u -b" ;;
+    Wav) formatFlags="-u -1" ;;
     sbX ) formatText="signed byte (swap bits)"; formatExt="sb"; formatFlags="-X" ;;
     sbN ) formatText="signed byte (swap nibbles)"; formatExt="sb"; formatFlags="-N" ;;
     sbXN ) formatText="signed byte (swap nibbles and bits)"; formatExt="sb"; formatFlags="-X -N" ;;

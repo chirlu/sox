@@ -314,7 +314,7 @@ static int start_write(ft_t const format)
     sox_fail_errno(format, SOX_ENOMEM, "FLAC ERROR creating the encoder instance");
     return SOX_EOF;
   }
-  encoder->decoded_samples = xmalloc(SOX_BUFSIZ * sizeof(FLAC__int32));
+  encoder->decoded_samples = xmalloc(sox_bufsiz * sizeof(FLAC__int32));
 
   {     /* Select and set FLAC encoder options: */
     static struct {

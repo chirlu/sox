@@ -16,9 +16,9 @@ cls
 
 echo on
 .\sox %noise% %file%.wav ub.raw
-.\sox %noise% -t raw -r 8196 -u -b -c 1 ub.raw -r 8196 -s -b sb.raw
-.\sox %noise% -t raw -r 8196 -s -b -c 1 sb.raw -r 8196 -u -b ub2.raw
-.\sox %noise% -r 8196 -u -b -c 1 ub2.raw -r 8196 ub2.wav
+.\sox %noise% -t raw -r 8196 -u -1 -c 1 ub.raw -r 8196 -s -1 sb.raw
+.\sox %noise% -t raw -r 8196 -s -1 -c 1 sb.raw -r 8196 -u -1 ub2.raw
+.\sox %noise% -r 8196 -u -1 -c 1 ub2.raw -r 8196 ub2.wav
 @echo off
 
 echo.
@@ -47,10 +47,10 @@ del ub2.raw
 del ub2.wav
 
 echo on
-.\sox %noise% %file%.au -u -r 8192 -u -b ub.raw
-.\sox %noise% -r 8192 -u -b ub.raw -U -b ub.au
+.\sox %noise% %file%.au -u -r 8192 -u -1 ub.raw
+.\sox %noise% -r 8192 -u -1 ub.raw -U -1 ub.au
 .\sox %noise% ub.au -u ub2.raw
-.\sox %noise% ub.au -w ub2.sf
+.\sox %noise% ub.au -2 ub2.sf
 @echo off
 
 del ub.raw

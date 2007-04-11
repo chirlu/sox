@@ -77,13 +77,13 @@ SoX might be used.  The simple:
 .EE
 translates an audio file in Sun AU format to a Microsoft WAV file, whilst:
 .EX
-	sox recital.au -r 12000 -b -c 1 recital.wav vol 0.7 dither
+	sox recital.au -r 12000 -1 -c 1 recital.wav vol 0.7 dither
 .EE
 performs the same format translation, but also changes the audio
 sampling rate & sample size, down-mixes to mono, and applies
 the \fBvol\fR and \fBdither\fR effects.
 .EX
-	sox -r 8000 -u -b -c 1 voice-memo.raw voice-memo.wav
+	sox -r 8000 -u -1 -c 1 voice-memo.raw voice-memo.wav
 .EE
 adds a header to a raw audio file,
 .EX
@@ -445,7 +445,7 @@ before the first effect name.
 \fB\-h\fR, \fB\-\-help\fR
 Show version number and usage information.
 .TP
-\fB\-\-help\-effect=\fIname\fR
+\fB\-\-help\-effect=\fINAME\fR
 Show usage information on the specified effect.  The name
 \fBall\fR can be used to show usage on all effects.
 .TP
@@ -467,7 +467,10 @@ then, without this option, file2 will be overwritten.  Hence, using this
 option is strongly recommended; a `shell' alias, script, or batch file
 may be an appropriate way of permanently enabling it.
 .TP
-\fB\-m\fR\^|\^\fB\-M\fR\^|\^\fB\-\-combine=concatenate\fR\^|\^\fBmerge\fR\^|\^\fBmix\fR\^|\^\fBsequence\fR
+\fB\-\-buffer\fR \fBBYTES\fR
+Set the size in bytes of the buffers used for reading and writing sound data (default 8192).
+.TP
+\fB\-m\fR\^|\^\fB\-M\fR\^|\^\fB\-\-combine concatenate\fR\^|\^\fBmerge\fR\^|\^\fBmix\fR\^|\^\fBsequence\fR
 Select the input file combining method;
 .B \-m
 selects `mix',
@@ -493,11 +496,11 @@ without actually processing any audio.  E.g.
 Run in quiet mode when SoX wouldn't otherwise do so;
 this is the opposite of the \fB\-S\fR option.
 .PP
-\fB\-\-replay\-gain=track\fR
+\fB\-\-replay\-gain track\fR
 .br
-\fB\-\-replay\-gain=album\fR
+\fB\-\-replay\-gain album\fR
 .br
-\fB\-\-replay\-gain=off\fR
+\fB\-\-replay\-gain off\fR
 .if t .sp -.5
 .if n .sp -1
 .TP
@@ -560,8 +563,8 @@ sets it to 0.
 These options apply only to input files and may precede only input
 filenames on the command line.
 .TP
-\fB\-v \fIvolume\fR, \fB\-\-volume=\fIvolume\fR
-Adjust volume by a factor of \fIvolume\fR.
+\fB\-v\fR, \fB\-\-volume\fR \fIFACTOR\fR
+Adjust volume by a factor of \fIFACTOR\fR.
 This is a linear (amplitude) adjustment, so a number less than 1
 decreases the volume; greater than 1 increases it.  If a negative number
 is given, then in addition to the volume adjustment, the audio signal
@@ -578,7 +581,7 @@ immediately precede on the command line and are used mainly when
 working with headerless file formats or when specifying a format
 for the output file that is different to that of the input file.
 .TP
-\fB\-c \fIchannels\fR, \fB\-\-channels=\fIchannels\fR
+\fB\-c\fR, \fB\-\-channels\fR \fICHANNELS\fR
 The number of audio channels in the audio file.
 This may be 1, 2, or 4; for mono, stereo, or quad audio.  To cause
 the output file to have a different number of channels than the input
@@ -590,7 +593,7 @@ effect must be used.  If the
 effect is not specified on the
 command line it will be invoked internally with default parameters.
 .TP
-\fB\-\-comment \fItext\fR
+\fB\-\-comment \fITEXT\fR
 Specify the comment text to store in the output file header (where
 applicable).
 .SP
@@ -598,15 +601,13 @@ SoX will provide a default comment if this option (or
 .BR \-\-comment\-file )
 is not given; to specify that no comment should be stored in the output file,
 use 
-.B "\-\-comment \(dq\(dq"
-or 
-.BR \-\-comment= .
+.B "\-\-comment \(dq\(dq" .
 .TP
-\fB\-\-comment\-file \fIfilename\fR
+\fB\-\-comment\-file \fIFILENAME\fR
 Specify a file containing the comment text to store in the output
 file header (where applicable).
 .TP
-\fB\-r \fIrate\fR, \fB\-\-rate=\fIrate\fR
+\fB\-r, \fB\-\-rate\fR \fIRATE\fR
 Gives the sample rate in Hz of the file.  To cause the output file to have
 a different sample rate than the input file, include this option with
 the output file format options.
@@ -617,7 +618,7 @@ SoX has
 multiple rate changing effects, the user can specify which to use as an effect.
 If no rate change effect is specified then a default one will be chosen.
 .TP
-\fB\-t \fIfile-type\fR, \fB\-\-type=\fIfile-type\fR
+\fB\-t\fR, \fB\-\-type\fR \fIfile-type\fR
 Gives the type of the audio file.  This is useful when the
 file extension is non-standard or when the type can not be determined by
 looking at the header of the file.
@@ -629,11 +630,11 @@ header is not actually present.
 .SP
 See \fBFILE TYPES\fR below for a list of supported file types.
 .PP
-\fB\-L\fR, \fB\-\-endian=little\fR
+\fB\-L\fR, \fB\-\-endian little\fR
 .br
-\fB\-B\fR, \fB\-\-endian=big\fR
+\fB\-B\fR, \fB\-\-endian big\fR
 .br
-\fB\-x\fR, \fB\-\-endian=swap\fR
+\fB\-x\fR, \fB\-\-endian swap\fR
 .if t .sp -.5
 .if n .sp -1
 .TP
@@ -731,7 +732,7 @@ are retained for backwards compatibility only.
 These options apply only to the output file and may precede only the output
 filename on the command line.
 .TP
-\fB\-C \fIcompression-factor\fR, \fB\-\-compression=\fIcompression-factor\fR
+\fB\-C\fR, \fB\-\-compression\fR \fIFACTOR\fR
 The compression factor for variably compressing output file formats.  If
 this option is not given, then a default compression factor will apply.
 The compression factor is interpreted differently for different
@@ -1034,7 +1035,7 @@ files it attempts to set up the OSS driver to use the same format as
 the input file. It is suggested to always override the output values
 to use the highest quality format your OSS system can handle. Example:
 .EX
-	sox infile -t ossdsp -w -s /dev/dsp
+	sox infile -t ossdsp -2 -s /dev/dsp
 .EE
 .TP
 \&\fB.paf\fR, \fB.fap\fR \fB(libsndfile)\fR
@@ -1114,7 +1115,7 @@ files it attempts to set up the audio driver to use the same format as the
 input file.  It is suggested to always override the output values to use
 the highest quality format your hardware can handle.  Example:
 .EX
-	sox infile -t sunau -w -s /dev/audio
+	sox infile -t sunau -2 -s /dev/audio
 .EE
 or
 .EX

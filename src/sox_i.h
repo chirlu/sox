@@ -162,9 +162,9 @@ uint32_t sox_swap3(uint32_t udw);
 double sox_swapdf(double d);
 
 /* util.c */
-typedef void (*sox_output_message_handler_t)(int level, const char *filename, const char *fmt, va_list ap);
+typedef void (*sox_output_message_handler_t)(unsigned level, const char *filename, const char *fmt, va_list ap);
 extern sox_output_message_handler_t sox_output_message_handler;
-extern int sox_output_verbosity_level;
+extern unsigned sox_output_verbosity_level;
 void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap);
 
 void sox_fail(const char *, ...);
@@ -202,7 +202,7 @@ void sox_fail_errno(ft_t, int, const char *, ...);
  * to perform file I/O.  It can be useful to pass in similar sized
  * data to get max performance.
  */
-#define SOX_BUFSIZ 8192
+extern sox_size_t sox_bufsiz;
 
 extern const char sox_readerr[];
 extern const char sox_writerr[];
