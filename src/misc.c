@@ -308,8 +308,8 @@ double sox_swapdf(double df)
 
 /* dummy format routines for do-nothing functions */
 int sox_format_nothing(ft_t ft UNUSED) { return(SOX_SUCCESS); }
-sox_size_t sox_format_nothing_read_io(ft_t ft UNUSED, sox_sample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
-sox_size_t sox_format_nothing_write_io(ft_t ft UNUSED, const sox_sample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
+sox_size_t sox_format_nothing_read(ft_t ft UNUSED, sox_sample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
+sox_size_t sox_format_nothing_write(ft_t ft UNUSED, const sox_sample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
 int sox_format_nothing_seek(ft_t ft UNUSED, sox_size_t offset UNUSED) { sox_fail_errno(ft, SOX_ENOTSUP, "operation not supported"); return(SOX_EOF); }
 
 /* dummy effect routine for do-nothing functions */

@@ -226,6 +226,9 @@ extern const sox_format_t *sox_aifc_format_fn(void);
 extern const sox_format_t *sox_alsa_format_fn(void);
 #endif
 extern const sox_format_t *sox_amr_wb_format_fn(void);
+#ifdef HAVE_AO_AO_H
+extern const sox_format_t *sox_ao_format_fn(void);
+#endif
 extern const sox_format_t *sox_au_format_fn(void);
 extern const sox_format_t *sox_auto_format_fn(void);
 extern const sox_format_t *sox_avr_format_fn(void);
@@ -302,8 +305,8 @@ int sox_sndfile_seek(ft_t ft, sox_size_t offset);
  * a file handler or effect doesn't need to do anything special
  */
 int sox_format_nothing(ft_t ft);
-sox_size_t sox_format_nothing_read_io(ft_t ft, sox_sample_t *buf, sox_size_t len);
-sox_size_t sox_format_nothing_write_io(ft_t ft, const sox_sample_t *buf, sox_size_t len);
+sox_size_t sox_format_nothing_read(ft_t ft, sox_sample_t *buf, sox_size_t len);
+sox_size_t sox_format_nothing_write(ft_t ft, const sox_sample_t *buf, sox_size_t len);
 int sox_format_nothing_seek(ft_t ft, sox_size_t offset);
 int sox_effect_nothing(eff_t effp);
 int sox_effect_nothing_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);

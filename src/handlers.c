@@ -22,6 +22,9 @@ sox_format_fn_t sox_format_fns[] = {
   sox_alsa_format_fn,
 #endif
   sox_amr_wb_format_fn,
+#ifdef HAVE_LIBAO
+  sox_ao_format_fn,
+#endif
   sox_au_format_fn,
   sox_auto_format_fn,
   sox_avr_format_fn,

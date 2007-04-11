@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include "soxstdint.h"
 
 /* The following is the API version of libSoX.  It is not meant
@@ -147,6 +148,7 @@ static double sox_macro_temp_double UNUSED;
 typedef uint32_t sox_size_t;
 /* Maximum value size type can hold. (Minimum is 0). */
 #define SOX_SIZE_MAX 0xffffffff
+#define SOX_SAMPLE_BITS (sizeof(sox_size_t) * CHAR_BIT)
 
 typedef int32_t sox_ssize_t;
 /* Minimum and maximum value signed size type can hold. */

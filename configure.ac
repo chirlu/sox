@@ -92,6 +92,17 @@ if test "$enable_alsa" = yes; then
    AC_DEFINE(HAVE_ALSA, 1, [Define to 1 if you have ALSA.])
 fi
 
+dnl Check for libao
+AC_MSG_CHECKING([whether to try building libao sound driver])
+AC_ARG_ENABLE(libao,
+    AC_HELP_STRING([--disable-libao], [Don't build libao sound driver.]),,enable_libao=yes)
+AC_MSG_RESULT($enable_libao)
+if test "$enable_libao" = "yes"; then
+    AC_CHECK_HEADERS(ao/ao.h,
+        AC_CHECK_LIB(ao, ao_play,, enable_libao=no),
+        enable_libao=no)
+fi
+
 dnl Check for OSS
 AC_MSG_CHECKING([whether to try building OSS sound driver])
 AC_ARG_ENABLE(oss,
@@ -228,6 +239,7 @@ dnl Report configuration.
 echo
 echo "Debugging build................... $enable_debug"
 echo "ALSA driver....................... $enable_alsa"
+echo "libao driver...................... $enable_libao"
 echo "OSS driver........................ $enable_oss"
 echo "SUN audio driver.................. $enable_sun_audio"
 echo "play and rec symlinks............. $enable_playrec_symlinks"

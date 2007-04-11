@@ -196,10 +196,10 @@ static sox_format_t sox_auto_format = {
   NULL,
   SOX_FILE_DEVICE | SOX_FILE_PHONY,
   sox_autostartread,
-  sox_format_nothing_read_io,
+  sox_format_nothing_read,
   sox_format_nothing,
   sox_autostartwrite,
-  sox_format_nothing_write_io,
+  sox_format_nothing_write,
   sox_format_nothing,
   sox_format_nothing_seek
 };

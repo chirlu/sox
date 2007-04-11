@@ -227,8 +227,15 @@ static file_t new_file(void)
   return f;
 }
 
-static void set_device(file_t f)
+static void set_device(file_t f, sox_bool recording)
 {
+#ifdef HAVE_AO_AO_H
+  if (!recording) {
+    f->filetype = "ao";
+    f->filename = xstrdup("default");
+    return;
+  }
+#endif
 #if defined(HAVE_ALSA)
   f->filetype = "alsa";
   f->filename = xstrdup("default");
@@ -412,7 +419,7 @@ static void parse_options_and_filenames(int argc, char **argv)
     }
 
     f = f? f : new_file();
-    set_device(f);
+    set_device(f, sox_false);
     files[file_count++] = f;
   }
   else if (f) {
@@ -434,7 +441,7 @@ static void parse_options_and_filenames(int argc, char **argv)
     file_count++;
 
     f = new_file();
-    set_device(f);
+    set_device(f, sox_true);
     files[0] = f;
   }
 }

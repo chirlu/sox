@@ -13,6 +13,7 @@ sox-13.0.1
     rec2wav and sndcmp.
   o Added AMR-WB format.  (robs)
   o Added M3U playlist format [FR# 1667341].  (robs)
+  o Added libao support.  (Reuben Thomas)
 
   Effects:
 

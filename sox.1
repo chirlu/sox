@@ -791,7 +791,7 @@ Japanese data broadcasting.  Any private chunks are not supported.
 Note: The input file is currently processed as .aiff.
 .TP
 .B alsa
-ALSA default device driver.
+ALSA device driver.
 This is a pseudo-file type and can be optionally compiled into SoX.  Run
 .EX
 	sox -h
@@ -817,6 +817,18 @@ to the following bit-rates (as selected by the
 option): 0 = 6\*d6 kbit/s, 1 = 8\*d85 kbit/s, 2 = 12\*d65 kbit/s, 3 =
 14\*d25 kbit/s, 4 = 15\*d85 kbit/s 5 = 18\*d25 kbit/s, 6 = 19\*d85
 kbit/s, 7 = 23\*d05 kbit/s, 8 = 23\*d85 kbit/s
+.TP
+.B ao
+libao device driver.
+This is a pseudo-file type and can be optionally compiled into SoX.  Run
+.EX
+	sox -h
+.EE
+to see if you have support for this file type. It works only for
+playing audio files. It can play to a wide range of devices and sound
+systems. See its documentation for the full range. At the moment SoX's
+use of libao cannot be configured directly; you must use libao
+configuration files.
 .TP
 \&\fB.au\fR, \fB.snd\fR \fB(also with \-t sndfile)\fR
 Sun Microsystems AU files.
