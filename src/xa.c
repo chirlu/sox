@@ -194,7 +194,7 @@ static int sox_xastartread(ft_t ft)
  * Read up to len samples from a file, converted to signed longs.
  * Return the number of samples read.
  */
-static sox_size_t sox_xaread(ft_t ft, sox_sample_t *buf, sox_size_t len)
+static sox_size_t sox_xaread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
 {
     xa_t xa = (xa_t) ft->priv;
     int32_t sample;
@@ -290,7 +290,7 @@ static int sox_xastartwrite(ft_t ft)
     return SOX_EOF;
 }
 
-static sox_size_t sox_xawrite(ft_t ft, const sox_sample_t *buf UNUSED, sox_size_t len UNUSED)
+static sox_size_t sox_xawrite(ft_t ft, const sox_ssample_t *buf UNUSED, sox_size_t len UNUSED)
 {
     sox_fail_errno(ft, SOX_ENOTSUP, ".XA writing not supported");
     return 0;

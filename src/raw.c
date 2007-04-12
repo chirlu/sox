@@ -95,7 +95,7 @@ int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_
 
 #define READ_SAMPLES_FUNC(type, size, sign, ctype, cast) \
   sox_size_t sox_read_ ## sign ## type ## _samples( \
-      ft_t ft, sox_sample_t *buf, sox_size_t len) \
+      ft_t ft, sox_ssample_t *buf, sox_size_t len) \
   { \
     sox_size_t n, nread; \
     ctype *data = xmalloc(sizeof(ctype) * len); \
@@ -122,7 +122,7 @@ static READ_SAMPLES_FUNC(df, sizeof(double), su, double, SOX_FLOAT_DDWORD_TO_SAM
 
 #define WRITE_SAMPLES_FUNC(type, size, sign, ctype, cast) \
   sox_size_t sox_write_ ## sign ## type ## _samples( \
-      ft_t ft, sox_sample_t *buf, sox_size_t len) \
+      ft_t ft, sox_ssample_t *buf, sox_size_t len) \
   { \
     sox_size_t n, nwritten; \
     ctype *data = xmalloc(sizeof(ctype) * len); \
@@ -147,7 +147,7 @@ static WRITE_SAMPLES_FUNC(dw, 4, s, int32_t, SOX_SAMPLE_TO_SIGNED_DWORD)
 static WRITE_SAMPLES_FUNC(f, sizeof(float), su, float, SOX_SAMPLE_TO_FLOAT_DWORD)
 static WRITE_SAMPLES_FUNC(df, sizeof(double), su, double, SOX_SAMPLE_TO_FLOAT_DDWORD)
 
-typedef sox_size_t (ft_io_fun)(ft_t ft, sox_sample_t *buf, sox_size_t len);
+typedef sox_size_t (ft_io_fun)(ft_t ft, sox_ssample_t *buf, sox_size_t len);
 
 static ft_io_fun *check_format(ft_t ft, sox_bool write)
 {
@@ -221,7 +221,7 @@ static ft_io_fun *check_format(ft_t ft, sox_bool write)
 }
 
 /* Read a stream of some type into SoX's internal buffer format. */
-sox_size_t sox_rawread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp)
+sox_size_t sox_rawread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp)
 {
     ft_io_fun * read_buf = check_format(ft, sox_false);
 
@@ -232,12 +232,12 @@ sox_size_t sox_rawread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp)
 }
 
 /* Writes SoX's internal buffer format to buffer of various data types. */
-sox_size_t sox_rawwrite(ft_t ft, const sox_sample_t *buf, sox_size_t nsamp)
+sox_size_t sox_rawwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsamp)
 {
     ft_io_fun *write_buf = check_format(ft, sox_true);
 
     if (write_buf && nsamp)
-      return write_buf(ft, (sox_sample_t *)buf, nsamp);
+      return write_buf(ft, (sox_ssample_t *)buf, nsamp);
 
     return 0;
 }

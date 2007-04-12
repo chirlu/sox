@@ -104,7 +104,7 @@ typedef struct
 
     sox_size_t size;      /* size of buffer for processing chunks. */
     unsigned int index;  /* index of next empty input item. */
-    sox_sample_t *buf;    /* bufferize input */
+    sox_ssample_t *buf;    /* bufferize input */
 
     pitch_state_t state; /* buffer management status. */
 
@@ -169,7 +169,7 @@ static double cub(
  */
 static void interpolation(
   pitch_t pitch,
-  const sox_sample_t *ibuf, sox_size_t ilen, 
+  const sox_ssample_t *ibuf, sox_size_t ilen, 
   double * out, sox_size_t olen,
   double rate) /* signed */
 {
@@ -379,7 +379,7 @@ static int sox_pitch_start(eff_t effp)
     pitch->fade = (double *) xmalloc(pitch->step*sizeof(double));
     pitch->tmp  = (double *) xmalloc(pitch->step*sizeof(double));
     pitch->acc  = (double *) xmalloc(pitch->step*sizeof(double));
-    pitch->buf  = (sox_sample_t *) xmalloc(pitch->size*sizeof(sox_sample_t));
+    pitch->buf  = (sox_ssample_t *) xmalloc(pitch->size*sizeof(sox_ssample_t));
     pitch->index = pitch->overlap;
 
     /* default initial signal */
@@ -441,7 +441,7 @@ static int sox_pitch_start(eff_t effp)
 
 /* Processes input.
  */
-static int sox_pitch_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_pitch_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                 sox_size_t *isamp, sox_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
@@ -466,7 +466,7 @@ static int sox_pitch_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *ob
         {
             register int tocopy = min(pitch->size-pitch->index, len);
 
-            memcpy(pitch->buf+pitch->index, ibuf+iindex, tocopy*sizeof(sox_sample_t));
+            memcpy(pitch->buf+pitch->index, ibuf+iindex, tocopy*sizeof(sox_ssample_t));
 
             len -= tocopy;
             pitch->index += tocopy;
@@ -518,7 +518,7 @@ static int sox_pitch_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *ob
 
 /* at the end...
  */
-static int sox_pitch_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_pitch_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
     sox_size_t i;

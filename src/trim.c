@@ -116,7 +116,7 @@ static int sox_trim_start(eff_t effp)
  * Place in buf[].
  * Return number of samples read.
  */
-static int sox_trim_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_trim_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                  sox_size_t *isamp, sox_size_t *osamp)
 {
     int finished = 0;
@@ -164,7 +164,7 @@ static int sox_trim_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obu
         trim->trimmed += done;
     }
 
-    memcpy(obuf, ibuf+offset, done * sizeof(sox_sample_t));
+    memcpy(obuf, ibuf+offset, done * sizeof(sox_ssample_t));
 
     *osamp = done;
     *isamp = offset + done;

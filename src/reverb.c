@@ -109,7 +109,7 @@ typedef struct reverbstuff {
         float   in_gain, out_gain, time;
         float   delay[MAXREVERBS], decay[MAXREVERBS];
         size_t  samples[MAXREVERBS], maxsamples;
-        sox_sample_t pl, ppl, pppl;
+        sox_ssample_t pl, ppl, pppl;
 } *reverb_t;
 
 /*
@@ -203,7 +203,7 @@ static int sox_reverb_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_reverb_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_reverb_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
@@ -211,7 +211,7 @@ static int sox_reverb_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *o
         size_t i, j;
         
         float d_in, d_out;
-        sox_sample_t out;
+        sox_ssample_t out;
 
         i = reverb->counter;
         len = ((*isamp > *osamp) ? *osamp : *isamp);
@@ -224,7 +224,7 @@ static int sox_reverb_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *o
                         d_in +=
 reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsamples] * reverb->decay[j];
                 d_out = d_in * reverb->out_gain;
-                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_ssample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 reverb->reverbbuf[i] = d_in;
                 i++;            /* XXX need a % maxsamples here ? */
@@ -238,11 +238,11 @@ reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsam
 /*
  * Drain out reverb lines. 
  */
-static int sox_reverb_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_reverb_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
         float d_in, d_out;
-        sox_sample_t out, l;
+        sox_ssample_t out, l;
         size_t i, j;
         sox_size_t done;
 
@@ -256,10 +256,10 @@ static int sox_reverb_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
                         d_in += 
 reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsamples] * reverb->decay[j];
                 d_out = d_in * reverb->out_gain;
-                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_ssample_t) d_out, effp->clips);
                 obuf[done++] = out * 256;
                 reverb->reverbbuf[i] = d_in;
-                l = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_in, effp->clips);
+                l = SOX_24BIT_CLIP_COUNT((sox_ssample_t) d_in, effp->clips);
                 reverb->pppl = reverb->ppl;
                 reverb->ppl = reverb->pl;
                 reverb->pl = l;

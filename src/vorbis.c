@@ -210,12 +210,12 @@ static int refill_buffer (vorbis_t vb)
  * Return number of samples read.
  */
 
-static sox_size_t sox_vorbisread(ft_t ft, sox_sample_t *buf, sox_size_t len)
+static sox_size_t sox_vorbisread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         sox_size_t i;
         int ret;
-        sox_sample_t l;
+        sox_ssample_t l;
 
 
         for(i = 0; i < len; i++) {
@@ -377,7 +377,7 @@ static int sox_vorbisstartwrite(ft_t ft)
         return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_vorbiswrite(ft_t ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t sox_vorbiswrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;

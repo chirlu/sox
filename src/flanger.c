@@ -234,8 +234,8 @@ static int sox_flanger_start(eff_t effp)
 
 
 
-static int sox_flanger_flow(eff_t effp, sox_sample_t const * ibuf,
-    sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+static int sox_flanger_flow(eff_t effp, sox_ssample_t const * ibuf,
+    sox_ssample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
   flanger_t f = (flanger_t) effp->priv;
   int c, channels = effp->ininfo.channels;

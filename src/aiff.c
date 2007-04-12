@@ -602,7 +602,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
   return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_aiffread(ft_t ft, sox_sample_t *buf, sox_size_t len)
+static sox_size_t sox_aiffread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         sox_ssize_t done;
@@ -689,7 +689,7 @@ static int sox_aiffstartwrite(ft_t ft)
         return(aiffwriteheader(ft, 0x7f000000 / (ft->signal.size*ft->signal.channels)));
 }
 
-static sox_size_t sox_aiffwrite(ft_t ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t sox_aiffwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         aiff->nsamples += len;
@@ -706,7 +706,7 @@ static int sox_aiffstopwrite(ft_t ft)
            NUL */
         if (aiff->nsamples % 2 == 1 && ft->signal.size == 1 && ft->signal.channels == 1)
         {
-            sox_sample_t buf = 0;
+            sox_ssample_t buf = 0;
             sox_rawwrite(ft, &buf, 1);
         }
 
@@ -911,7 +911,7 @@ static int sox_aifcstopwrite(ft_t ft)
            NUL */
         if (aiff->nsamples % 2 == 1 && ft->signal.size == 1 && ft->signal.channels == 1)
         {
-            sox_sample_t buf = 0;
+            sox_ssample_t buf = 0;
             sox_rawwrite(ft, &buf, 1);
         }
 

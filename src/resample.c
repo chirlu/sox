@@ -280,7 +280,7 @@ int sox_resample_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int sox_resample_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+int sox_resample_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                      sox_size_t *isamp, sox_size_t *osamp)
 {
         resample_t r = (resample_t) effp->priv;
@@ -385,11 +385,11 @@ int sox_resample_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
 /*
  * Process tail of input samples.
  */
-int sox_resample_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
+int sox_resample_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         resample_t r = (resample_t) effp->priv;
         long isamp_res, osamp_res;
-        sox_sample_t *Obuf;
+        sox_ssample_t *Obuf;
         int rc;
 
         sox_debug("Xoff %d  <--- DRAIN",r->Xoff);
@@ -399,7 +399,7 @@ int sox_resample_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
         osamp_res = *osamp;
         Obuf = obuf;
         while (isamp_res>0 && osamp_res>0) {
-                sox_sample_t Isamp, Osamp;
+                sox_ssample_t Isamp, Osamp;
                 Isamp = isamp_res;
                 Osamp = osamp_res;
                 rc = sox_resample_flow(effp, NULL, Obuf, (sox_size_t *)&Isamp, (sox_size_t *)&Osamp);

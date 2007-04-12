@@ -77,7 +77,7 @@ static unsigned long input_wide_samples = 0;
 static unsigned long read_wide_samples = 0;
 static unsigned long output_samples = 0;
 
-static sox_sample_t *ibufl, *ibufr, *obufl, *obufr; /* Left/right interleave buffers */
+static sox_ssample_t *ibufl, *ibufr, *obufl, *obufr; /* Left/right interleave buffers */
 
 typedef struct file_info
 {
@@ -467,10 +467,10 @@ int main(int argc, char **argv)
   parse_options_and_filenames(argc, argv);
 
   /* Allocate buffers, size of which may have been set by --buffer */
-  ibufl = xcalloc(sox_bufsiz / 2, sizeof(sox_sample_t));
-  obufl = xcalloc(sox_bufsiz / 2, sizeof(sox_sample_t));
-  ibufr = xcalloc(sox_bufsiz / 2, sizeof(sox_sample_t));
-  obufr = xcalloc(sox_bufsiz / 2, sizeof(sox_sample_t));
+  ibufl = xcalloc(sox_bufsiz / 2, sizeof(sox_ssample_t));
+  obufl = xcalloc(sox_bufsiz / 2, sizeof(sox_ssample_t));
+  ibufr = xcalloc(sox_bufsiz / 2, sizeof(sox_ssample_t));
+  obufr = xcalloc(sox_bufsiz / 2, sizeof(sox_ssample_t));
 
   /* Make sure we got at least the required # of input filenames */
   input_count = file_count ? file_count - 1 : 0;
@@ -995,7 +995,7 @@ static sox_bool can_segue(sox_size_t i)
     files[i]->desc->signal.rate     == files[i - 1]->desc->signal.rate;
 }
 
-static sox_size_t sox_read_wide(ft_t desc, sox_sample_t * buf)
+static sox_size_t sox_read_wide(ft_t desc, sox_ssample_t * buf)
 {
   sox_size_t len = sox_bufsiz / combiner.channels;
   len = sox_read(desc, buf, len * desc->signal.channels) / desc->signal.channels;
@@ -1004,7 +1004,7 @@ static sox_size_t sox_read_wide(ft_t desc, sox_sample_t * buf)
   return len;
 }
 
-static void balance_input(sox_sample_t * buf, sox_size_t ws, file_t f)
+static void balance_input(sox_ssample_t * buf, sox_size_t ws, file_t f)
 {
   sox_size_t s = ws * f->desc->signal.channels;
 
@@ -1023,7 +1023,7 @@ static int process(void) {
   int flowstatus = 0;
   sox_size_t e, ws, s, i;
   sox_size_t ilen[MAX_INPUT_FILES];
-  sox_sample_t *ibuf[MAX_INPUT_FILES];
+  sox_ssample_t *ibuf[MAX_INPUT_FILES];
 
   combiner = files[current_input]->desc->signal;
   if (combine_method == SOX_sequence) {
@@ -1127,9 +1127,9 @@ static int process(void) {
 
   /* Allocate output buffers for effects */
   for (e = 0; e < neffects; e++) {
-    efftab[e].obuf = (sox_sample_t *)xmalloc(sox_bufsiz * sizeof(sox_sample_t));
+    efftab[e].obuf = (sox_ssample_t *)xmalloc(sox_bufsiz * sizeof(sox_ssample_t));
     if (efftabR[e].name)
-      efftabR[e].obuf = (sox_sample_t *)xmalloc(sox_bufsiz * sizeof(sox_sample_t));
+      efftabR[e].obuf = (sox_ssample_t *)xmalloc(sox_bufsiz * sizeof(sox_ssample_t));
   }
 
   if (combine_method <= SOX_concatenate)
@@ -1137,7 +1137,7 @@ static int process(void) {
   else {
     ws = 0;
     for (i = 0; i < input_count; i++) {
-      ibuf[i] = (sox_sample_t *)xmalloc(sox_bufsiz * sizeof(sox_sample_t));
+      ibuf[i] = (sox_ssample_t *)xmalloc(sox_bufsiz * sizeof(sox_ssample_t));
       progress_to_file(files[i]);
       ws = max(ws, input_wide_samples);
     }
@@ -1176,7 +1176,7 @@ static int process(void) {
       }
       balance_input(efftab[0].obuf, efftab[0].olen, files[current_input]);
     } else {
-      sox_sample_t * p = efftab[0].obuf;
+      sox_ssample_t * p = efftab[0].obuf;
       for (i = 0; i < input_count; ++i) {
         ilen[i] = sox_read_wide(files[i]->desc, ibuf[i]);
         balance_input(ibuf[i], ilen[i], files[i]);
@@ -1556,10 +1556,10 @@ static int flow_effect_out(void)
 static int flow_effect(unsigned e)
 {
   sox_size_t i, done, idone, odone, idonel, odonel, idoner, odoner;
-  const sox_sample_t *ibuf;
-  sox_sample_t *obuf;
+  const sox_ssample_t *ibuf;
+  sox_ssample_t *obuf;
   int effstatus, effstatusl, effstatusr;
-  int (*flow)(eff_t, sox_sample_t const*, sox_sample_t*, sox_size_t*, sox_size_t*) =
+  int (*flow)(eff_t, sox_ssample_t const*, sox_ssample_t*, sox_size_t*, sox_size_t*) =
     efftab[e].h->flow? efftab[e].h->flow : sox_effect_nothing_flow;
 
   /* Do not attempt to do any more effect processing during
@@ -1686,9 +1686,9 @@ static int drain_effect_out(void)
 static int drain_effect(unsigned e)
 {
   sox_ssize_t i, olen, olenl, olenr;
-  sox_sample_t *obuf;
+  sox_ssample_t *obuf;
   int rc;
-  int (*drain)(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp) =
+  int (*drain)(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp) =
     efftab[e].h->drain? efftab[e].h->drain : sox_effect_nothing_drain;
 
   if (! efftabR[e].name) {

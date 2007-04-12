@@ -226,7 +226,7 @@ static int sox_cvsdstopread(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-static sox_size_t sox_cvsdread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp) 
+static sox_size_t sox_cvsdread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         sox_size_t done = 0;
@@ -282,7 +282,7 @@ static sox_size_t sox_cvsdread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp)
 
 /* ---------------------------------------------------------------------- */
 
-static sox_size_t sox_cvsdwrite(ft_t ft, const sox_sample_t *buf, sox_size_t nsamp) 
+static sox_size_t sox_cvsdwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsamp) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         sox_size_t done = 0;

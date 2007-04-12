@@ -71,7 +71,7 @@ static int sox_cdrstartread(ft_t ft)
  * Return number of samples read.
  */
 
-static sox_size_t sox_cdrread(ft_t ft, sox_sample_t *buf, sox_size_t len) 
+static sox_size_t sox_cdrread(ft_t ft, sox_ssample_t *buf, sox_size_t len) 
 {
 
         return sox_rawread(ft, buf, len);
@@ -107,7 +107,7 @@ static int sox_cdrstartwrite(ft_t ft)
         return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_cdrwrite(ft_t ft, const sox_sample_t *buf, sox_size_t len) 
+static sox_size_t sox_cdrwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len) 
 {
         cdr_t cdr = (cdr_t) ft->priv;
 

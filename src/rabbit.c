@@ -111,7 +111,7 @@ static int sox_rabbit_start(eff_t effp)
 /*
  * Read all the data.
  */
-static int sox_rabbit_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf UNUSED,
+static int sox_rabbit_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf UNUSED,
                    sox_size_t *isamp, sox_size_t *osamp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
@@ -141,7 +141,7 @@ static int sox_rabbit_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *o
 /*
  * Process samples and write output.
  */
-static int sox_rabbit_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_rabbit_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
   int channels = effp->ininfo.channels;

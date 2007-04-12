@@ -220,7 +220,7 @@ static void wavgsmdestroy(ft_t ft)
     free(wav->gsmsample);
 }
 
-static sox_size_t wavgsmread(ft_t ft, sox_sample_t *buf, sox_size_t len)
+static sox_size_t wavgsmread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
 {
     wav_t       wav = (wav_t) ft->priv;
     size_t done=0;
@@ -288,7 +288,7 @@ static int wavgsmflush(ft_t ft)
     return (SOX_SUCCESS);
 }
 
-static sox_size_t wavgsmwrite(ft_t ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t wavgsmwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 {
     wav_t wav = (wav_t) ft->priv;
     size_t done = 0;
@@ -996,7 +996,7 @@ static int sox_wavstartread(ft_t ft)
  * Return number of samples read.
  */
 
-static sox_size_t sox_wavread(ft_t ft, sox_sample_t *buf, sox_size_t len) 
+static sox_size_t sox_wavread(ft_t ft, sox_ssample_t *buf, sox_size_t len) 
 {
         wav_t   wav = (wav_t) ft->priv;
         sox_size_t done;
@@ -1531,7 +1531,7 @@ static int wavwritehdr(ft_t ft, int second_header)
     return SOX_SUCCESS;
 }
 
-static sox_size_t sox_wavwrite(ft_t ft, const sox_sample_t *buf, sox_size_t len) 
+static sox_size_t sox_wavwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len) 
 {
         wav_t   wav = (wav_t) ft->priv;
         sox_ssize_t total_len = len;

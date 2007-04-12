@@ -82,7 +82,7 @@ static int start(eff_t effp)
   return SOX_EFF_NULL;
 }
 
-static int flow(eff_t effp, const sox_sample_t * ibuf, sox_sample_t * obuf,
+static int flow(eff_t effp, const sox_ssample_t * ibuf, sox_ssample_t * obuf,
                 sox_size_t * isamp, sox_size_t * osamp)
 {
   pad_t p = (pad_t) effp->priv;
@@ -111,7 +111,7 @@ static int flow(eff_t effp, const sox_sample_t * ibuf, sox_sample_t * obuf,
   return SOX_SUCCESS;
 }
 
-static int drain(eff_t effp, sox_sample_t * obuf, sox_size_t * osamp)
+static int drain(eff_t effp, sox_ssample_t * obuf, sox_size_t * osamp)
 {
   static sox_size_t isamp = 0;
   pad_t p = (pad_t) effp->priv;

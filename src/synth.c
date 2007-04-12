@@ -168,7 +168,7 @@ typedef struct synthstuff {
     double par[MAXCHAN][5];
 
     /* internal stuff */
-    sox_sample_t max;
+    sox_ssample_t max;
     sox_size_t samples_done;
     int rate;
     sox_size_t length; /* length in number of samples */
@@ -477,8 +477,8 @@ int sox_synth_start(eff_t effp)
 
 
 
-static sox_sample_t do_synth(sox_sample_t iv, synth_t synth, int c){
-    sox_sample_t ov=iv;
+static sox_ssample_t do_synth(sox_ssample_t iv, synth_t synth, int c){
+    sox_ssample_t ov=iv;
     double r=0.0; /* -1 .. +1 */
     double f;
     double om;
@@ -637,7 +637,7 @@ static sox_sample_t do_synth(sox_sample_t iv, synth_t synth, int c){
             ov = iv/2 + r*synth->max/2;
             break;
         case SYNTH_AMOD:
-            ov = (sox_sample_t)(0.5*(r+1.0)*(double)iv);
+            ov = (sox_ssample_t)(0.5*(r+1.0)*(double)iv);
             break;
         case SYNTH_FMOD:
             ov = iv * r ;
@@ -655,7 +655,7 @@ static sox_sample_t do_synth(sox_sample_t iv, synth_t synth, int c){
 /*
  * Processed signed long samples from ibuf to obuf.
  */
-int sox_synth_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+int sox_synth_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                   sox_size_t *isamp, sox_size_t *osamp)
 {
     synth_t synth = (synth_t) effp->priv;

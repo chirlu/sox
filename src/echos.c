@@ -172,7 +172,7 @@ static int sox_echos_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_echos_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_echos_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                 sox_size_t *isamp, sox_size_t *osamp)
 {
         echos_t echos = (echos_t) effp->priv;
@@ -180,7 +180,7 @@ static int sox_echos_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *ob
         int j;
         
         double d_in, d_out;
-        sox_sample_t out;
+        sox_ssample_t out;
 
         len = ((*isamp > *osamp) ? *osamp : *isamp);
         for(done = 0; done < len; done++) {
@@ -193,7 +193,7 @@ static int sox_echos_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *ob
                 }
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * echos->out_gain;
-                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_ssample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 /* Mix decay of delays and input */
                 for ( j = 0; j < echos->num_delays; j++ ) {
@@ -215,11 +215,11 @@ static int sox_echos_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *ob
 /*
  * Drain out reverb lines. 
  */
-static int sox_echos_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_echos_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         echos_t echos = (echos_t) effp->priv;
         double d_in, d_out;
-        sox_sample_t out;
+        sox_ssample_t out;
         int j;
         sox_size_t done;
 
@@ -233,7 +233,7 @@ static int sox_echos_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
                 }
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * echos->out_gain;
-                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_ssample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 /* Mix decay of delays and input */
                 for ( j = 0; j < echos->num_delays; j++ ) {

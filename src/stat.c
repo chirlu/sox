@@ -129,7 +129,7 @@ static void print_power_spectrum(unsigned samples, double rate, float *re_in, fl
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_stat_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
+static int sox_stat_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
                         sox_size_t *isamp, sox_size_t *osamp)
 {
   stat_t stat = (stat_t) effp->priv;
@@ -201,7 +201,7 @@ static int sox_stat_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obu
 /*
  * Process tail of input samples.
  */
-static int sox_stat_drain(eff_t effp, sox_sample_t *obuf UNUSED, sox_size_t *osamp)
+static int sox_stat_drain(eff_t effp, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
 {
   stat_t stat = (stat_t) effp->priv;
 

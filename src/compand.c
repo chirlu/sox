@@ -52,7 +52,7 @@ typedef struct {
   unsigned expectedChannels;/* Also flags that channels aren't to be treated
                                individually when = 1 and input not mono */
   double delay;             /* Delay to apply before companding */
-  sox_sample_t *delay_buf;   /* Old samples, used for delay processing */
+  sox_ssample_t *delay_buf;   /* Old samples, used for delay processing */
   sox_ssize_t delay_buf_size;/* Size of delay_buf in samples */
   sox_ssize_t delay_buf_index; /* Index into delay_buf */
   sox_ssize_t delay_buf_cnt; /* No. of active entries in delay_buf */
@@ -175,7 +175,7 @@ static void doVolume(double *v, double samp, compand_t l, int chan)
     *v += delta * l->channels[chan].attack_times[1];
 }
 
-static int flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
+static int flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
                     sox_size_t *isamp, sox_size_t *osamp)
 {
   compand_t l = (compand_t) effp->priv;
@@ -236,7 +236,7 @@ static int flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
   return (SOX_SUCCESS);
 }
 
-static int drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   compand_t l = (compand_t) effp->priv;
   sox_size_t chan, done = 0;

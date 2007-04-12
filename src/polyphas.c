@@ -351,8 +351,8 @@ static int sox_poly_start(eff_t effp)
     if (effp->ininfo.rate == effp->outinfo.rate)
       return SOX_EFF_NULL;
 
-    rate->lcmrate = sox_lcm((sox_sample_t)effp->ininfo.rate,
-                           (sox_sample_t)effp->outinfo.rate);
+    rate->lcmrate = sox_lcm((sox_ssample_t)effp->ininfo.rate,
+                           (sox_ssample_t)effp->outinfo.rate);
 
     /* Cursory check for LCM overflow.
      * If both rates are below 65k, there should be no problem.
@@ -488,7 +488,7 @@ static void update_hist(Float *hist, int hist_size, int in_size)
 
 }
 
-static int sox_poly_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
+static int sox_poly_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
                  sox_size_t *isamp, sox_size_t *osamp)
 {
   poly_t rate = (poly_t) effp->priv;
@@ -548,7 +548,7 @@ static int sox_poly_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obu
   }
 
   {
-    sox_sample_t *q;
+    sox_ssample_t *q;
     sox_size_t out_size;
     sox_size_t oskip;
     Float *out_buf;
@@ -591,7 +591,7 @@ static int sox_poly_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obu
 /*
  * Process tail of input samples.
  */
-static int sox_poly_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_poly_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   sox_size_t in_size;
   /* Call "flow" with NULL input. */

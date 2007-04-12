@@ -149,7 +149,7 @@ static int sox_hcomstartread(ft_t ft)
         return (SOX_SUCCESS);
 }
 
-static sox_size_t sox_hcomread(ft_t ft, sox_sample_t *buf, sox_size_t len)
+static sox_size_t sox_hcomread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
 {
         register struct readpriv *p = (struct readpriv *) ft->priv;
         int done = 0;
@@ -264,10 +264,10 @@ static int sox_hcomstartwrite(ft_t ft)
         return (SOX_SUCCESS);
 }
 
-static sox_size_t sox_hcomwrite(ft_t ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t sox_hcomwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 {
   struct writepriv *p = (struct writepriv *) ft->priv;
-  sox_sample_t datum;
+  sox_ssample_t datum;
   sox_size_t i;
 
   if (len == 0)

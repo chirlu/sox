@@ -72,12 +72,12 @@ static int sox_repeat_start(eff_t effp)
         return (SOX_SUCCESS);
 }
 
-static int sox_repeat_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf UNUSED,
+static int sox_repeat_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf UNUSED,
                 sox_size_t *isamp, sox_size_t *osamp)
 {
         repeat_t repeat = (repeat_t)effp->priv;
 
-        if (fwrite((char *)ibuf, sizeof(sox_sample_t), *isamp, repeat->fp) !=
+        if (fwrite((char *)ibuf, sizeof(sox_ssample_t), *isamp, repeat->fp) !=
                         *isamp) {
                 sox_fail("repeat: write error on temporary file");
                 return (SOX_EOF);
@@ -88,10 +88,10 @@ static int sox_repeat_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *o
         return (SOX_SUCCESS);
 }
 
-static int sox_repeat_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_repeat_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         size_t read = 0;
-        sox_sample_t *buf;
+        sox_ssample_t *buf;
         sox_size_t samp;
         sox_size_t done;
 
@@ -103,12 +103,12 @@ static int sox_repeat_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
                 fseeko(repeat->fp, (off_t)0, SEEK_END);
                 repeat->total = ftello(repeat->fp);
 
-                if ((repeat->total % sizeof(sox_sample_t)) != 0) {
+                if ((repeat->total % sizeof(sox_ssample_t)) != 0) {
                         sox_fail("repeat: corrupted temporary file");
                         return (SOX_EOF);
                 }
 
-                repeat->total /= sizeof(sox_sample_t);
+                repeat->total /= sizeof(sox_ssample_t);
                 repeat->remaining = repeat->total;
 
                 fseeko(repeat->fp, (off_t)0, SEEK_SET);
@@ -128,7 +128,7 @@ static int sox_repeat_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
                 buf = obuf;
                 samp = repeat->remaining;
 
-                read = fread((char *)buf, sizeof(sox_sample_t), samp,
+                read = fread((char *)buf, sizeof(sox_ssample_t), samp,
                                 repeat->fp);
                 if (read != samp) {
                         perror(strerror(errno));
@@ -154,7 +154,7 @@ static int sox_repeat_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
 
                         repeat->remaining = repeat->total - samp;
 
-                        read = fread((char *)buf, sizeof(sox_sample_t), samp,
+                        read = fread((char *)buf, sizeof(sox_ssample_t), samp,
                                         repeat->fp);
                         if (read != samp) {
                                 perror(strerror(errno));
@@ -170,7 +170,7 @@ static int sox_repeat_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
                 *osamp = done;
         }
         else {
-                read = fread((char *)obuf, sizeof(sox_sample_t), *osamp,
+                read = fread((char *)obuf, sizeof(sox_ssample_t), *osamp,
                                 repeat->fp);
                 if (read != *osamp) {
                         perror(strerror(errno));

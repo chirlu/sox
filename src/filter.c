@@ -35,8 +35,8 @@ static sox_effect_t sox_filter_effect;
 /* Private data for Lerp via LCM file */
 typedef struct filterstuff {
         sox_rate_t rate;
-        sox_sample_t freq0;/* low  corner freq */
-        sox_sample_t freq1;/* high corner freq */
+        sox_ssample_t freq0;/* low  corner freq */
+        sox_ssample_t freq1;/* high corner freq */
         double beta;/* >2 is kaiser window beta, <=2 selects nuttall window */
         long Nwin;
         double *Fp;/* [Xh+1] Filter coefficients */
@@ -114,7 +114,7 @@ static int sox_filter_start(eff_t effp)
         f->rate = effp->ininfo.rate;
 
         /* adjust upper frequency to Nyquist if necessary */
-        if (f->freq1 > (sox_sample_t)f->rate/2 || f->freq1 <= 0)
+        if (f->freq1 > (sox_ssample_t)f->rate/2 || f->freq1 <= 0)
                 f->freq1 = f->rate/2;
 
         if ((f->freq0 < 0) || (f->freq0 > f->freq1))
@@ -126,7 +126,7 @@ static int sox_filter_start(eff_t effp)
         
         Xh = f->Nwin/2;
         Fp0 = (double *) xmalloc(sizeof(double) * (Xh + 2)) + 1;
-        if (f->freq0 > (sox_sample_t)f->rate/200) {
+        if (f->freq0 > (sox_ssample_t)f->rate/200) {
                 Xh0 = makeFilter(Fp0, Xh, 2.0*(double)f->freq0/f->rate, f->beta, 1, 0);
                 if (Xh0 <= 1)
                 {
@@ -138,7 +138,7 @@ static int sox_filter_start(eff_t effp)
         }
         Fp1 = (double *) xmalloc(sizeof(double) * (Xh + 2)) + 1;
         /* need Fp[-1] and Fp[Xh] for makeFilter */
-        if (f->freq1 < (sox_sample_t)f->rate/2) {
+        if (f->freq1 < (sox_ssample_t)f->rate/2) {
                 Xh1 = makeFilter(Fp1, Xh, 2.0*(double)f->freq1/f->rate, f->beta, 1, 0);
                 if (Xh1 <= 1)
                 {
@@ -182,7 +182,7 @@ static int sox_filter_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_filter_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_filter_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
         filter_t f = (filter_t) effp->priv;
@@ -235,11 +235,11 @@ static int sox_filter_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *o
 /*
  * Process tail of input samples.
  */
-static int sox_filter_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_filter_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         filter_t f = (filter_t) effp->priv;
         long isamp_res, osamp_res;
-        sox_sample_t *Obuf;
+        sox_ssample_t *Obuf;
 
         sox_debug("Xh %d, Xt %d  <--- DRAIN",f->Xh, f->Xt);
 
@@ -248,7 +248,7 @@ static int sox_filter_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
         osamp_res = *osamp;
         Obuf = obuf;
         while (isamp_res>0 && osamp_res>0) {
-                sox_sample_t Isamp, Osamp;
+                sox_ssample_t Isamp, Osamp;
                 Isamp = isamp_res;
                 Osamp = osamp_res;
                 sox_filter_flow(effp, NULL, Obuf, (sox_size_t *)&Isamp, (sox_size_t *)&Osamp);

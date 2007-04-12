@@ -31,7 +31,7 @@ static sox_effect_t sox_earwax_effect;
 /* A stereo fir filter. One side filters as if the signal was from
    30 degrees from the ear, the other as if 330 degrees. */
 /*                           30   330  */
-static const sox_sample_t filt[]    =
+static const sox_ssample_t filt[]    =
 {   4,  -6,
     4,  -11,
     -1,  -5,
@@ -69,7 +69,7 @@ static const sox_sample_t filt[]    =
 #define EARWAX_NUMTAPS  64
 
 typedef struct earwaxstuff {
-  sox_sample_t *tap; /* taps are z^-1 delays for the FIR filter */
+  sox_ssample_t *tap; /* taps are z^-1 delays for the FIR filter */
 } *earwax_t;
 
 /*
@@ -87,7 +87,7 @@ static int sox_earwax_start(eff_t effp)
   }
 
   /* allocate tap memory */
-  earwax->tap = (sox_sample_t*)xmalloc( sizeof(sox_sample_t) * EARWAX_NUMTAPS );
+  earwax->tap = (sox_ssample_t*)xmalloc( sizeof(sox_ssample_t) * EARWAX_NUMTAPS );
 
   /* zero out the delayed taps */
   for(i=0; i < EARWAX_NUMTAPS; i++ ){
@@ -102,13 +102,13 @@ static int sox_earwax_start(eff_t effp)
  * Return number of samples processed.
  */
 
-static int sox_earwax_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_earwax_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int len, done;
   int i;
-  sox_sample_t output;
+  sox_ssample_t output;
 
   len = ((*isamp > *osamp) ? *osamp : *isamp);
 
@@ -134,11 +134,11 @@ static int sox_earwax_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *o
 /*
  * Drain out taps.
  */
-static int sox_earwax_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_earwax_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int i,j;
-  sox_sample_t output;  
+  sox_ssample_t output;  
 
   for(i = EARWAX_NUMTAPS-1; i >= 0; i--){
     output = 0;

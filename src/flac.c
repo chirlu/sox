@@ -193,7 +193,7 @@ static int start_read(ft_t const format)
 }
 
 
-static sox_size_t read(ft_t const format, sox_sample_t * sampleBuffer, sox_size_t const requested)
+static sox_size_t read(ft_t const format, sox_ssample_t * sampleBuffer, sox_size_t const requested)
 {
   Decoder * decoder = (Decoder *) format->priv;
   size_t actual = 0;
@@ -447,7 +447,7 @@ static int start_write(ft_t const format)
 
 
 
-static sox_size_t write(ft_t const format, sox_sample_t const * const sampleBuffer, sox_size_t const len)
+static sox_size_t write(ft_t const format, sox_ssample_t const * const sampleBuffer, sox_size_t const len)
 {
   Encoder * encoder = (Encoder *) format->priv;
   unsigned i;

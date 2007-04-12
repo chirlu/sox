@@ -135,7 +135,7 @@ int sox_sndfile_startread(ft_t ft)
  * Read up to len samples of type sox_sample_t from file into buf[].
  * Return number of samples read.
  */
-sox_size_t sox_sndfile_read(ft_t ft, sox_sample_t *buf, sox_size_t len)
+sox_size_t sox_sndfile_read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
 
@@ -321,7 +321,7 @@ int sox_sndfile_startwrite(ft_t ft)
  * Write len samples of type sox_sample_t from buf[] to file.
  * Return number of samples written.
  */
-sox_size_t sox_sndfile_write(ft_t ft, const sox_sample_t *buf, sox_size_t len)
+sox_size_t sox_sndfile_write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
 

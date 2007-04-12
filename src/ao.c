@@ -60,11 +60,11 @@ static int startwrite(ft_t ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t write(ft_t ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 {
   ao_priv_t ao = (ao_priv_t)ft->priv;
 
-  if (ao_play(ao->device, (void *)buf, len * sizeof(sox_sample_t)) == 0)
+  if (ao_play(ao->device, (void *)buf, len * sizeof(sox_ssample_t)) == 0)
     return 0;
 
   return len;

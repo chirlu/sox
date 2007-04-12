@@ -109,7 +109,7 @@ static void collect_data(chandata_t* chan) {
 /*
  * Grab what we can from ibuf, and process if we have a whole window.
  */
-static int sox_noiseprof_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_noiseprof_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
     profdata_t data = (profdata_t) effp->priv;
@@ -151,7 +151,7 @@ static int sox_noiseprof_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t
  * Finish off the last window.
  */
 
-static int sox_noiseprof_drain(eff_t effp, sox_sample_t *obuf UNUSED, sox_size_t *osamp)
+static int sox_noiseprof_drain(eff_t effp, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
 {
     profdata_t data = (profdata_t) effp->priv;
     int tracks = effp->ininfo.channels;

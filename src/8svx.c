@@ -193,7 +193,7 @@ static int sox_svxstartread(ft_t ft)
 /*======================================================================*/
 /*                         8SVXREAD                                     */
 /*======================================================================*/
-static sox_size_t sox_svxread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp)
+static sox_size_t sox_svxread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp)
 {
         unsigned char datum;
         size_t done = 0, i;
@@ -261,7 +261,7 @@ static int sox_svxstartwrite(ft_t ft)
 /*                         8SVXWRITE                                    */
 /*======================================================================*/
 
-static sox_size_t sox_svxwrite(ft_t ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t sox_svxwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 {
         svx_t p = (svx_t ) ft->priv;
 

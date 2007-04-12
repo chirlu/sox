@@ -319,7 +319,7 @@ static int sox_smpstartread(ft_t ft)
  * Place in buf[].
  * Return number of samples read.
  */
-static sox_size_t sox_smpread(ft_t ft, sox_sample_t *buf, sox_size_t len) 
+static sox_size_t sox_smpread(ft_t ft, sox_ssample_t *buf, sox_size_t len) 
 {
         smp_t smp = (smp_t) ft->priv;
         unsigned short datum;
@@ -367,7 +367,7 @@ static int sox_smpstartwrite(ft_t ft)
         return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_smpwrite(ft_t ft, const sox_sample_t *buf, sox_size_t len) 
+static sox_size_t sox_smpwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len) 
 {
         smp_t smp = (smp_t) ft->priv;
         int datum;

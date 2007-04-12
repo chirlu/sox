@@ -263,7 +263,7 @@ static int sox_mp3startread(ft_t ft)
  * Place in buf[].
  * Return number of samples read.
  */
-static sox_size_t sox_mp3read(ft_t ft, sox_sample_t *buf, sox_size_t len)
+static sox_size_t sox_mp3read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
 {
     struct mp3priv *p = (struct mp3priv *) ft->priv;
     sox_size_t donow,i,done=0;
@@ -280,7 +280,7 @@ static sox_size_t sox_mp3read(ft_t ft, sox_sample_t *buf, sox_size_t len)
                     sample=-MAD_F_ONE;
                 else if (sample >= MAD_F_ONE)
                     sample=MAD_F_ONE-1;
-                *buf++=(sox_sample_t)(sample<<(32-1-MAD_F_FRACBITS));
+                *buf++=(sox_ssample_t)(sample<<(32-1-MAD_F_FRACBITS));
                 i++;
             }
             p->cursamp++;
@@ -416,7 +416,7 @@ static int sox_mp3startwrite(ft_t ft)
   return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_mp3write(ft_t ft, const sox_sample_t *buf, sox_size_t samp)
+static sox_size_t sox_mp3write(ft_t ft, const sox_ssample_t *buf, sox_size_t samp)
 {
     struct mp3priv *p = (struct mp3priv *)ft->priv;
     char *mp3buffer;

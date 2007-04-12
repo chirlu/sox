@@ -298,13 +298,13 @@ output_error:
     return NULL;
 }
 
-sox_size_t sox_read(ft_t f, sox_sample_t * buf, sox_size_t len)
+sox_size_t sox_read(ft_t f, sox_ssample_t * buf, sox_size_t len)
 {
   sox_size_t actual = (*f->h->read)(f, buf, len);
   return (actual > len? 0 : actual);
 }
 
-sox_size_t sox_write(ft_t ft, const sox_sample_t *buf, sox_size_t len)
+sox_size_t sox_write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 {
     return (*ft->h->write)(ft, buf, len);
 }

@@ -206,7 +206,7 @@ static void reduce_noise(chandata_t* chan, float* window, double level)
 /* Do window management once we have a complete window, including mangling
  * the current window. */
 static int process_window(eff_t effp, reddata_t data, unsigned chan_num, unsigned num_chans,
-                          sox_sample_t *obuf, unsigned len) {
+                          sox_ssample_t *obuf, unsigned len) {
     int j;
     float* nextwindow;
     int use = min(len, WINDOWSIZE)-min(len,(WINDOWSIZE/2));
@@ -243,7 +243,7 @@ static int process_window(eff_t effp, reddata_t data, unsigned chan_num, unsigne
 /*
  * Read in windows, and call process_window once we get a whole one.
  */
-static int sox_noisered_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_noisered_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
     reddata_t data = (reddata_t) effp->priv;
@@ -293,7 +293,7 @@ static int sox_noisered_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t 
  * We have up to half a window left to dump.
  */
 
-static int sox_noisered_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_noisered_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
     reddata_t data = (reddata_t)effp->priv;
     unsigned i;

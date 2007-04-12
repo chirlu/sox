@@ -197,13 +197,13 @@ static int sox_fade_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_fade_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_fade_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                  sox_size_t *isamp, sox_size_t *osamp)
 {
     fade_t fade = (fade_t) effp->priv;
     /* len is total samples, chcnt counts channels */
     int len = 0, t_output = 1, more_output = 1;
-    sox_sample_t t_ibuf;
+    sox_ssample_t t_ibuf;
     sox_size_t chcnt = 0;
 
     len = ((*isamp > *osamp) ? *osamp : *isamp);
@@ -278,7 +278,7 @@ static int sox_fade_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obu
 /*
  * Drain out remaining samples if the effect generates any.
  */
-static int sox_fade_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int sox_fade_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
     fade_t fade = (fade_t) effp->priv;
     int len;

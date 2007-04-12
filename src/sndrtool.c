@@ -149,7 +149,7 @@ static int sox_sndtstartwrite(ft_t ft)
         return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_sndtwrite(ft_t ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t sox_sndtwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 {
         snd_t p = (snd_t ) ft->priv;
         p->nsamples += len;

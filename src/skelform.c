@@ -84,7 +84,7 @@ static int startread(ft_t ft)
  * Read up to len samples of type sox_sample_t from file into buf[].
  * Return number of samples read, or 0 if at end of file.
  */
-static sox_size_t read(ft_t ft, sox_sample_t *buf, sox_size_t len)
+static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
 {
   skelform_t sk = (skelform_t)ft->priv;
   sox_size_t done;
@@ -159,7 +159,7 @@ static int startwrite(ft_t ft)
  * Write len samples of type sox_sample_t from buf[] to file.
  * Return number of samples written.
  */
-static sox_size_t write(ft_t ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 {
   skelform_t sk = (skelform_t)ft->priv;
 

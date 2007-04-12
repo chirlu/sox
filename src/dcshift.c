@@ -101,7 +101,7 @@ static int sox_dcshift_start(eff_t effp)
 /*
  * Process data.
  */
-static int sox_dcshift_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int sox_dcshift_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
     dcs_t dcs = (dcs_t) effp->priv;

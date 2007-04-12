@@ -83,8 +83,8 @@ void sox_generate_wave_table(
     double max,         /* Maximum value on the y-axis. (e.g. +1) */
     double phase);      /* Phase at 1st point; 0..2pi. (e.g. pi/2 for cosine) */
 
-sox_sample_t sox_gcd(sox_sample_t a, sox_sample_t b);
-sox_sample_t sox_lcm(sox_sample_t a, sox_sample_t b);
+sox_ssample_t sox_gcd(sox_ssample_t a, sox_ssample_t b);
+sox_ssample_t sox_lcm(sox_ssample_t a, sox_ssample_t b);
 
 #ifndef HAVE_STRCASECMP
 int strcasecmp(const char *s1, const char *s2);
@@ -285,18 +285,18 @@ extern const sox_format_t *sox_xa_format_fn(void);
 
 /* Raw I/O */
 int sox_rawstartread(ft_t ft);
-sox_size_t sox_rawread(ft_t ft, sox_sample_t *buf, sox_size_t nsamp);
+sox_size_t sox_rawread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp);
 int sox_rawstopread(ft_t ft);
 int sox_rawstartwrite(ft_t ft);
-sox_size_t sox_rawwrite(ft_t ft, const sox_sample_t *buf, sox_size_t nsamp);
+sox_size_t sox_rawwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsamp);
 int sox_rawseek(ft_t ft, sox_size_t offset);
 
 /* libsndfile I/O */
 int sox_sndfile_startread(ft_t ft);
-sox_size_t sox_sndfile_read(ft_t ft, sox_sample_t *buf, sox_size_t len);
+sox_size_t sox_sndfile_read(ft_t ft, sox_ssample_t *buf, sox_size_t len);
 int sox_sndfile_stopread(ft_t ft);
 int sox_sndfile_startwrite(ft_t ft);
-sox_size_t sox_sndfile_write(ft_t ft, const sox_sample_t *buf, sox_size_t len);
+sox_size_t sox_sndfile_write(ft_t ft, const sox_ssample_t *buf, sox_size_t len);
 int sox_sndfile_stopwrite(ft_t ft);
 int sox_sndfile_seek(ft_t ft, sox_size_t offset);
 
@@ -305,12 +305,12 @@ int sox_sndfile_seek(ft_t ft, sox_size_t offset);
  * a file handler or effect doesn't need to do anything special
  */
 int sox_format_nothing(ft_t ft);
-sox_size_t sox_format_nothing_read(ft_t ft, sox_sample_t *buf, sox_size_t len);
-sox_size_t sox_format_nothing_write(ft_t ft, const sox_sample_t *buf, sox_size_t len);
+sox_size_t sox_format_nothing_read(ft_t ft, sox_ssample_t *buf, sox_size_t len);
+sox_size_t sox_format_nothing_write(ft_t ft, const sox_ssample_t *buf, sox_size_t len);
 int sox_format_nothing_seek(ft_t ft, sox_size_t offset);
 int sox_effect_nothing(eff_t effp);
-int sox_effect_nothing_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);
-int sox_effect_nothing_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp);
+int sox_effect_nothing_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);
+int sox_effect_nothing_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp);
 int sox_effect_nothing_getopts(eff_t effp, int n, char **argv UNUSED);
 
 int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size, sox_option_t rev_bits);
@@ -384,8 +384,8 @@ extern const sox_effect_t *sox_vol_effect_fn(void);
 /* Needed in rate.c */
 int sox_resample_start(eff_t effp);
 int sox_resample_getopts(eff_t effp, int n, char **argv);
-int sox_resample_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);
-int sox_resample_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp);
+int sox_resample_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);
+int sox_resample_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp);
 int sox_resample_stop(eff_t effp);
 
 #endif

@@ -123,7 +123,7 @@ static int startread(ft_t ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t read(ft_t ft, sox_sample_t * buf, sox_size_t len)
+static sox_size_t read(ft_t ft, sox_ssample_t * buf, sox_size_t len)
 {
   amr_wb_t this = (amr_wb_t) ft->priv;
   sox_size_t done;
@@ -168,7 +168,7 @@ static int startwrite(ft_t ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t write(ft_t ft, const sox_sample_t * buf, sox_size_t len)
+static sox_size_t write(ft_t ft, const sox_ssample_t * buf, sox_size_t len)
 {
   amr_wb_t this = (amr_wb_t) ft->priv;
   sox_size_t done;

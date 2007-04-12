@@ -9,9 +9,9 @@
  
 int sox_resample_getopts(eff_t effp, int n, char **argv);
 int sox_resample_start(eff_t effp);
-int sox_resample_flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+int sox_resample_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                      sox_size_t *isamp, sox_size_t *osamp);
-int sox_resample_drain(eff_t effp, sox_sample_t *obuf, sox_size_t *osamp);
+int sox_resample_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp);
 int sox_resample_stop(eff_t effp);
 
 static sox_effect_t sox_rate_effect = {

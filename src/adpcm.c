@@ -39,7 +39,7 @@
 #include "adpcm.h"
 
 typedef struct MsState {
-        sox_sample_t  step;      /* step size */
+        sox_ssample_t  step;      /* step size */
         short iCoef[2];
 } MsState_t;
 
@@ -53,7 +53,7 @@ typedef struct MsState {
  * 1.0 is scaled to 0x100
  */
 static const
-sox_sample_t stepAdjustTable[] = {
+sox_ssample_t stepAdjustTable[] = {
         230, 230, 230, 230, 307, 409, 512, 614,
         768, 614, 512, 409, 307, 230, 230, 230
 };
@@ -72,17 +72,17 @@ const short iCoef[7][2] = {
                         { 392,-232}
 };
 
-static inline sox_sample_t AdpcmDecode(sox_sample_t c, MsState_t *state,
-                               sox_sample_t sample1, sox_sample_t sample2)
+static inline sox_ssample_t AdpcmDecode(sox_ssample_t c, MsState_t *state,
+                               sox_ssample_t sample1, sox_ssample_t sample2)
 {
-        sox_sample_t vlin;
-        sox_sample_t sample;
-        sox_sample_t step;
+        sox_ssample_t vlin;
+        sox_ssample_t sample;
+        sox_ssample_t step;
 
         /** Compute next step value **/
         step = state->step;
         {
-                sox_sample_t nstep;
+                sox_ssample_t nstep;
                 nstep = (stepAdjustTable[c] * step) >> 8;
                 state->step = (nstep < 16)? 16:nstep;
         }

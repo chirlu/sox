@@ -105,7 +105,7 @@ static int sox_gsmstartwrite(ft_t ft)
  * Return number of samples read.
  */
 
-static sox_size_t sox_gsmread(ft_t ft, sox_sample_t *buf, sox_size_t samp)
+static sox_size_t sox_gsmread(ft_t ft, sox_ssample_t *buf, sox_size_t samp)
 {
         size_t done = 0;
         int r, ch, chans;
@@ -184,7 +184,7 @@ static int gsmflush(ft_t ft)
         return (SOX_SUCCESS);
 }
 
-static sox_size_t sox_gsmwrite(ft_t ft, const sox_sample_t *buf, sox_size_t samp)
+static sox_size_t sox_gsmwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t samp)
 {
         size_t done = 0;
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;

@@ -127,7 +127,7 @@ static int start(eff_t effp)
 /*
  * Process data.
  */
-static int flow(eff_t effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
+static int flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                 sox_size_t *isamp, sox_size_t *osamp)
 {
     vol_t vol = (vol_t) effp->priv;

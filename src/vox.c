@@ -26,7 +26,7 @@ static int ima_start(ft_t ft)
   return sox_adpcm_ima_start(ft, (adpcm_io_t)ft->priv);
 }
 
-static sox_size_t read(ft_t ft, sox_sample_t *buffer, sox_size_t len)
+static sox_size_t read(ft_t ft, sox_ssample_t *buffer, sox_size_t len)
 {
   return sox_adpcm_read(ft, (adpcm_io_t)ft->priv, buffer, len);
 }
@@ -36,7 +36,7 @@ static int stopread(ft_t ft)
   return sox_adpcm_stopread(ft, (adpcm_io_t)ft->priv);
 }
 
-static sox_size_t write(ft_t ft, const sox_sample_t *buffer, sox_size_t length)
+static sox_size_t write(ft_t ft, const sox_ssample_t *buffer, sox_size_t length)
 {
   return sox_adpcm_write(ft, (adpcm_io_t)ft->priv, buffer, length);
 }
