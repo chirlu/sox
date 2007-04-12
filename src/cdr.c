@@ -154,7 +154,6 @@ static const char *cdrnames[] = {
 
 static sox_format_t sox_cdr_format = {
   cdrnames,
-  NULL,
   SOX_FILE_SEEK | SOX_FILE_BIG_END,
   sox_cdrstartread,
   sox_cdrread,

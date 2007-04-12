@@ -248,7 +248,7 @@ static int raw_start(ft_t ft) {
 sox_format_t const * sox_raw_format_fn(void) {
   static char const * names[] = {"raw", NULL};
   static sox_format_t driver = {
-    names, NULL, SOX_FILE_SEEK,
+    names, SOX_FILE_SEEK,
     raw_start, sox_rawread , sox_format_nothing,
     raw_start, sox_rawwrite, sox_format_nothing,
     sox_rawseek
@@ -263,7 +263,7 @@ static int id##_start(ft_t ft) { \
 sox_format_t const * sox_##id##_format_fn(void) { \
   static char const * names[] = {#id, alt1, alt2, NULL}; \
   static sox_format_t driver = { \
-    names, NULL, 0, \
+    names, 0, \
     id##_start, sox_rawread , sox_format_nothing, \
     id##_start, sox_rawwrite, sox_format_nothing, \
     sox_format_nothing_seek \

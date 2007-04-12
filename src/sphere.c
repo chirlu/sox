@@ -271,7 +271,6 @@ static const char *spherenames[] = {
 
 static sox_format_t sox_sphere_format = {
   spherenames,
-  NULL,
   0,
   sox_spherestartread,
   sox_rawread,

@@ -1192,7 +1192,6 @@ static const char *aiffnames[] = {
 
 static sox_format_t sox_aiff_format = {
   aiffnames,
-  NULL,
   SOX_FILE_LOOPS | SOX_FILE_SEEK | SOX_FILE_BIG_END,
   sox_aiffstartread,
   sox_aiffread,
@@ -1216,7 +1215,6 @@ static const char *aifcnames[] = {
 
 static sox_format_t sox_aifc_format = {
   aifcnames,
-  NULL,
   SOX_FILE_LOOPS | SOX_FILE_SEEK | SOX_FILE_BIG_END,
   sox_aiffstartread,
   sox_aiffread,

@@ -554,7 +554,6 @@ static const char *mp3names[] = {
 
 static sox_format_t sox_mp3_format = {
   mp3names,
-  NULL,
   0,
   sox_mp3startread,
   sox_mp3read,

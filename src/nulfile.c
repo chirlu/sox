@@ -50,7 +50,6 @@ static const char *nulnames[] = {
 
 static sox_format_t sox_nul_format = {
   nulnames,
-  NULL,
   SOX_FILE_DEVICE | SOX_FILE_PHONY | SOX_FILE_NOSTDIO,
   sox_nulstartread,
   sox_nulread,

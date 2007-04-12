@@ -281,7 +281,6 @@ typedef struct sox_soundstream *ft_t;
 
 typedef struct sox_format {
     const char   * const *names;
-    const char   *usage;
     unsigned int flags;
     int          (*startread)(ft_t ft);
     sox_size_t    (*read)(ft_t ft, sox_ssample_t *buf, sox_size_t len);

@@ -315,7 +315,6 @@ static const char *xanames[] = {
 
 sox_format_t sox_xa_format = {
   xanames,
-  NULL,
   SOX_FILE_LIT_END,
   sox_xastartread,
   sox_xaread,

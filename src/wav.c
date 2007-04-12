@@ -1734,7 +1734,6 @@ static const char *wavnames[] = {
 
 static sox_format_t sox_wav_format = {
   wavnames,
-  NULL,
   SOX_FILE_SEEK | SOX_FILE_LIT_END,
   sox_wavstartread,
   sox_wavread,

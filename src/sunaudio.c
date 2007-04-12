@@ -316,7 +316,6 @@ static const char *sunnames[] = {
 
 static sox_format_t sox_sun_format = {
   sunnames,
-  NULL,
   SOX_FILE_DEVICE,
   sox_sunstartread,
   sox_rawread,

@@ -159,7 +159,6 @@ static const char *datnames[] = {
 
 static sox_format_t sox_dat_format = {
   datnames,
-  NULL,
   0,
   sox_datstartread,
   sox_datread,

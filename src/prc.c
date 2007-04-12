@@ -466,7 +466,6 @@ static const char *prcnames[] = {
 
 static sox_format_t sox_prc_format = {
   prcnames,
-  NULL,
   SOX_FILE_SEEK | SOX_FILE_LIT_END,
   startread,
   read,

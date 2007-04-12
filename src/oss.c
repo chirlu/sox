@@ -219,7 +219,6 @@ static const char *ossdspnames[] = {
 
 static sox_format_t sox_ossdsp_format = {
   ossdspnames,
-  NULL,
   SOX_FILE_DEVICE,
   sox_ossdspstartread,
   sox_rawread,

@@ -468,7 +468,6 @@ static const char *aunames[] = {
 
 static sox_format_t sox_au_format = {
   aunames,
-  NULL,
   SOX_FILE_SEEK | SOX_FILE_BIG_END,
   sox_austartread,
   sox_auread,

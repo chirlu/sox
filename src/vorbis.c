@@ -452,7 +452,6 @@ static const char *vorbisnames[] = {
 
 static sox_format_t sox_vorbis_format = {
   vorbisnames,
-  NULL,
   0,
   sox_vorbisstartread,
   sox_vorbisread,

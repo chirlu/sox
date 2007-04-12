@@ -206,7 +206,6 @@ static const char *wvenames[] = {
 
 static sox_format_t sox_wve_format = {
   wvenames,
-  NULL,
   SOX_FILE_SEEK | SOX_FILE_BIG_END,
   sox_wvestartread,
   sox_rawread,

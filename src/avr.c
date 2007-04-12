@@ -284,7 +284,6 @@ static const char *avrnames[] = {
 
 static sox_format_t sox_avr_format = {
   avrnames,
-  NULL,
   SOX_FILE_BIG_END,
   sox_avrstartread,
   sox_rawread,

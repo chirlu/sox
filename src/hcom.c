@@ -470,7 +470,6 @@ static const char *hcomnames[] = {
 
 static sox_format_t sox_hcom_format = {
   hcomnames,
-  NULL,
   SOX_FILE_BIG_END,
   sox_hcomstartread,
   sox_hcomread,

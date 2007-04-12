@@ -670,7 +670,6 @@ static const char *alsanames[] = {
 
 static sox_format_t sox_alsa_format = {
   alsanames,
-  NULL,
   SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
   sox_alsastartread,
   sox_alsaread,

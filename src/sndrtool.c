@@ -186,7 +186,6 @@ static const char *sndtnames[] = {
 
 const sox_format_t sox_snd_format = {
   sndtnames,
-  NULL,
   SOX_FILE_SEEK | SOX_FILE_LIT_END,
   sox_sndtstartread,
   sox_rawread,

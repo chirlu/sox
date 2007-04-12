@@ -367,7 +367,6 @@ static const char *svxnames[] = {
 
 static sox_format_t sox_svx_format = {
   svxnames,
-  NULL,
   SOX_FILE_BIG_END,
   sox_svxstartread,
   sox_svxread,

@@ -202,7 +202,7 @@ sox_format_t const * sox_amr_wb_format_fn(void)
 {
   static char const * names[] = {"amr-wb", "awb", NULL};
   static sox_format_t driver = {
-    names, NULL, 0,
+    names, 0,
     startread, read, stopread,
     startwrite, write, stopwrite,
     sox_format_nothing_seek

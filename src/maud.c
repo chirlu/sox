@@ -348,7 +348,6 @@ static const char *maudnames[] = {
 
 static sox_format_t sox_maud_format = {
   maudnames,
-  NULL,
   SOX_FILE_BIG_END,
   sox_maudstartread,
   sox_rawread,

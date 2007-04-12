@@ -50,7 +50,7 @@ const sox_format_t *sox_vox_format_fn(void)
 {
   static char const * names[] = {"vox", NULL};
   static sox_format_t driver = {
-    names, NULL, 0,
+    names, 0,
     vox_start,
     read,
     stopread,
@@ -66,7 +66,7 @@ const sox_format_t *sox_ima_format_fn(void)
 {
   static char const * names[] = {"ima", NULL};
   static sox_format_t driver = {
-    names, NULL, 0,
+    names, 0,
     ima_start,
     read,
     stopread,

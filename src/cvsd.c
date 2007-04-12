@@ -575,7 +575,6 @@ static const char *cvsdnames[] = {
 
 static sox_format_t sox_cvsd_format = {
   cvsdnames,
-  NULL,
   0,
   sox_cvsdstartread,
   sox_cvsdread,
@@ -599,7 +598,6 @@ static const char *dvmsnames[] = {
 
 static sox_format_t sox_dvms_format = {
   dvmsnames,
-  NULL,
   0,
   sox_dvmsstartread,
   sox_cvsdread,

@@ -488,7 +488,7 @@ sox_format_t const * sox_flac_format_fn(void)
 {
   static char const * const names[] = {"flac", NULL};
   static sox_format_t const driver = {
-    names, NULL, 0,
+    names, 0,
     start_read, read, stop_read,
     start_write, write, stop_write,
     0

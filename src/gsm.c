@@ -243,7 +243,6 @@ static const char *gsmnames[] = {
 
 static sox_format_t sox_gsm_format = {
   gsmnames,
-  NULL,
   0,
   sox_gsmstartread,
   sox_gsmread,

@@ -91,7 +91,6 @@ static const char *aonames[] = {
 
 static sox_format_t sox_ao_format = {
   aonames,
-  NULL,
   SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
   startread,
   sox_format_nothing_read,

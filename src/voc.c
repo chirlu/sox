@@ -808,7 +808,6 @@ static const char *vocnames[] = {
 
 static sox_format_t sox_voc_format = {
   vocnames,
-  NULL,
   SOX_FILE_LIT_END,
   sox_vocstartread,
   sox_vocread,

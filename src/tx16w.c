@@ -375,7 +375,6 @@ static const char *txwnames[] = {
 
 static sox_format_t sox_txw_format = {
    txwnames,
-   NULL,
    0,
    sox_txwstartread,
    sox_txwread,
