@@ -44,6 +44,7 @@ typedef struct wavstuff {
     int ignoreSize;                 /* ignoreSize allows us to process 32-bit WAV files that are
                                      * greater then 2 Gb and can't be represented by the
                                      * 32-bit size field. */
+  /* FIXME: Have some front-end code which sets this flag. */
 
     /* following used by *ADPCM wav files */
     unsigned short nCoefs;          /* ADPCM: number of coef sets */
