@@ -193,7 +193,6 @@ static const char *autonames[] = {
 
 static sox_format_t sox_auto_format = {
   autonames,
-  NULL,
   SOX_FILE_DEVICE | SOX_FILE_PHONY,
   sox_autostartread,
   sox_format_nothing_read,
