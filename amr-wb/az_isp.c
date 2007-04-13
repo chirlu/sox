@@ -25,6 +25,7 @@
  * predictor coefficient a[M].                                           *
  *-----------------------------------------------------------------------*/
 
+#include "acelp.h"
 #include "typedef.h"
 #include "basic_op.h"
 #include "oper_32b.h"

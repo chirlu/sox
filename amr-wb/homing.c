@@ -5,6 +5,7 @@
  *------------------------------------------------------------------------*/
 
 #include "typedef.h"
+#include "main.h"
 #include "cnst.h"
 #include "basic_op.h"
 #include "bits.h"

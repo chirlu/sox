@@ -10,6 +10,7 @@
  *---------------------------------------------------------*/
 
 #include "typedef.h"
+#include "acelp.h"
 #include "basic_op.h"
 #include "oper_32b.h"
 

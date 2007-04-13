@@ -97,7 +97,7 @@ void ACELP_4t64_fx(
                                            /* (o) : index (88): 11+11+11+11+11+11+11+11 = 88 bits.   */
 )
 {
-    Word16 i, j, k, st, ix, iy, pos, index, track, nb_pulse, nbiter;
+    Word16 i, j, k, st, ix = 0, iy = 0, pos, index, track, nb_pulse, nbiter;
     Word16 psk, ps, alpk, alp, val, k_cn, k_dn, exp;
     Word16 *p0, *p1, *p2, *p3, *psign;
     Word16 *h, *h_inv, *ptr_h1, *ptr_h2, *ptr_hf, h_shift;

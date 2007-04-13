@@ -1,7 +1,7 @@
-/***********************************************************************
+ /***********************************************************************
  *
  *   This file contains functions for the automatic complexity calculation
- * $Id: count.c,v 1.1 2007/02/15 23:22:35 robs Exp $
+ * $Id: count.c,v 1.2 2007/04/13 11:21:33 rrt Exp $
  *************************************************************************/
 
 #include <stdlib.h>
@@ -76,6 +76,7 @@ int getCounterId(char *objectNameArg)
   objectName[++maxCounter]=my_strdup(objectNameArg);
   return maxCounter;
 #else
+  (void)objectNameArg;
   return 0; /* Dummy */
 #endif
 }
@@ -89,6 +90,8 @@ void setCounter(int counterId)
       return;
     }
   currCounter=counterId;
+#else
+  (void)counterId;
 #endif
 }
 
@@ -289,7 +292,8 @@ void WMOPS_output (Word16 dtx_mode)
         fprintf (stdout, "  WorstWC=%.3f", ((float) tot_wc) * 0.00005);
     }
     fprintf (stdout, " (%d frames)\n", nbframe[currCounter]);
-    
+#else
+    (void)dtx_mode;
 #endif
 }
 

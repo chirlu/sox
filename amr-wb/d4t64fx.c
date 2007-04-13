@@ -19,6 +19,7 @@
  *-------------------------------------------------------------------*/
 
 #include "typedef.h"
+#include "acelp.h"
 #include "basic_op.h"
 #include "count.h"
 #include "cnst.h"

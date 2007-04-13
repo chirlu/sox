@@ -38,7 +38,7 @@
 *
 */
 
-Word16 ilog2(                              /* return: output value of the log2 */
+static Word16 ilog2(                       /* return: output value of the log2 */
      Word16 mant                           /* i: value to be converted */
 )
 {

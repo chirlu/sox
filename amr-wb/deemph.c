@@ -8,6 +8,7 @@
  *-------------------------------------------------------------------*/
 
 #include "typedef.h"
+#include "acelp.h"
 #include "basic_op.h"
 #include "math_op.h"
 #include "count.h"

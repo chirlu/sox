@@ -445,63 +445,6 @@ Word16 mult (Word16 var1, Word16 var2)
 
 /*___________________________________________________________________________
  |                                                                           |
- |   Function Name : L_mult                                                  |
- |                                                                           |
- |   Purpose :                                                               |
- |                                                                           |
- |   L_mult is the 32 bit result of the multiplication of var1 times var2    |
- |   with one shift left i.e.:                                               |
- |        L_mult(var1,var2) = L_shl((var1 times var2),1) and                   |
- |        L_mult(-32768,-32768) = 2147483647.                                |
- |                                                                           |
- |   Complexity weight : 1                                                   |
- |                                                                           |
- |   Inputs :                                                                |
- |                                                                           |
- |    var1                                                                   |
- |             16 bit short signed integer (Word16) whose value falls in the |
- |             range : 0xffff 8000 <= var1 <= 0x0000 7fff.                   |
- |                                                                           |
- |    var2                                                                   |
- |             16 bit short signed integer (Word16) whose value falls in the |
- |             range : 0xffff 8000 <= var1 <= 0x0000 7fff.                   |
- |                                                                           |
- |   Outputs :                                                               |
- |                                                                           |
- |    none                                                                   |
- |                                                                           |
- |   Return Value :                                                          |
- |                                                                           |
- |    L_var_out                                                              |
- |             32 bit long signed integer (Word32) whose value falls in the  |
- |             range : 0x8000 0000 <= L_var_out <= 0x7fff ffff.              |
- |___________________________________________________________________________|
-*/
-
-Word32 _L_mult (Word16 var1, Word16 var2)
-{
-    Word32 L_var_out;
-
-    L_var_out = (Word32) var1 *(Word32) var2;
-
-    if (L_var_out != (Word32) 0x40000000L)
-    {
-        L_var_out *= 2;
-    }
-    else
-    {
-        Overflow = 1;
-        L_var_out = MAX_32;
-    }
-
-#if (WMOPS)
-    multiCounter[currCounter].L_mult++;
-#endif
-    return (L_var_out);
-}
-
-/*___________________________________________________________________________
- |                                                                           |
  |   Function Name : negate                                                  |
  |                                                                           |
  |   Purpose :                                                               |
