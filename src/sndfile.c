@@ -113,7 +113,7 @@ int sox_sndfile_startread(ft_t ft)
   sndfile_t sf = (sndfile_t)ft->priv;
 
   sf->sf_info = (SF_INFO *)xcalloc(1, sizeof(SF_INFO));
-  /* We'd like to use sf_open, but auto file typing has already
+  /* We'd like to use sf_open_fd, but auto file typing has already
      invoked stdio buffering. */
   /* FIXME: If format parameters are set, assume file is raw. */
   if ((sf->sf_file = sf_open(ft->filename, SFM_READ, sf->sf_info)) == NULL) {
@@ -382,7 +382,7 @@ static const char *names[] = {
 /* Format descriptor */
 static sox_format_t sox_sndfile_format = {
   names,
-  SOX_FILE_SEEK,
+  SOX_FILE_SEEK | SOX_FILE_NOSTDIO,
   sox_sndfile_startread,
   sox_sndfile_read,
   sox_sndfile_stopread,
