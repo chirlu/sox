@@ -140,7 +140,7 @@ sox_size_t sox_sndfile_read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
   sndfile_t sf = (sndfile_t)ft->priv;
 
   /* FIXME: We assume int == sox_sample_t here */
-  return (sox_size_t)sf_read_int(sf->sf_file, (int *)buf, len);
+  return (sox_size_t)sf_read_int(sf->sf_file, (int *)buf, (sf_count_t)len);
 }
 
 /*
@@ -326,7 +326,7 @@ sox_size_t sox_sndfile_write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
   sndfile_t sf = (sndfile_t)ft->priv;
 
   /* FIXME: We assume int == sox_sample_t here */
-  return (sox_size_t)sf_write_int(sf->sf_file, (int *)buf, len);
+  return (sox_size_t)sf_write_int(sf->sf_file, (int *)buf, (sf_count_t)len);
 }
 
 /*
@@ -342,7 +342,7 @@ int sox_sndfile_stopwrite(ft_t ft)
 int sox_sndfile_seek(ft_t ft, sox_size_t offset)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
-  sf_seek(sf->sf_file, offset / ft->signal.channels, SEEK_CUR);
+  sf_seek(sf->sf_file, (sf_count_t)(offset / ft->signal.channels), SEEK_CUR);
   return SOX_SUCCESS;
 }
 

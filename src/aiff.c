@@ -63,7 +63,7 @@ static int sox_aiffseek(ft_t ft, sox_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += aiff->dataStart;
 
-    ft->sox_errno = sox_seeki(ft, new_offset, SEEK_SET);
+    ft->sox_errno = sox_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
 
     if (ft->sox_errno == SOX_SUCCESS)
         aiff->nsamples = ft->length - (new_offset / ft->signal.size);
@@ -94,7 +94,8 @@ static int sox_aiffstartread(ft_t ft)
         unsigned short nmarks = 0;
         unsigned short sustainLoopBegin = 0, sustainLoopEnd = 0,
                        releaseLoopBegin = 0, releaseLoopEnd = 0;
-        sox_size_t seekto = 0, ssndsize = 0;
+        sox_ssize_t seekto = 0;
+        sox_size_t ssndsize = 0;
         char *author;
         char *copyright;
         char *nametext;
@@ -180,7 +181,7 @@ static int sox_aiffstartread(ft_t ft)
                                 break;
                         /* else, seek to end of sound and hunt for more */
                         seekto = sox_tell(ft);
-                        sox_seeki(ft, chunksize, SEEK_CUR); 
+                        sox_seeki(ft, (sox_ssize_t)chunksize, SEEK_CUR); 
                 }
                 else if (strncmp(buf, "MARK", 4) == 0) {
                         /* MARK chunk */
@@ -491,7 +492,7 @@ static int sox_aiffstartread(ft_t ft)
 /* print out the MIDI key allocations, loop points, directions etc */
 static void reportInstrument(ft_t ft)
 {
-  int loopNum;
+  unsigned loopNum;
 
   if(ft->instr.nloops > 0)
     sox_report("AIFF Loop markers:");
@@ -735,10 +736,9 @@ static int aiffwriteheader(ft_t ft, sox_size_t nframes)
         int hsize =
                 8 /*COMM hdr*/ + 18 /*COMM chunk*/ +
                 8 /*SSND hdr*/ + 12 /*SSND chunk*/;
-        int bits = 0;
-        int i;
-        int padded_comment_size = 0;
-        int comment_size = 0;
+        unsigned bits = 0;
+        unsigned i;
+        sox_size_t padded_comment_size = 0, comment_size = 0;
         sox_size_t comment_chunk_size = 0;
 
         /* MARK and INST chunks */
@@ -812,7 +812,7 @@ static int aiffwriteheader(ft_t ft, sox_size_t nframes)
         /* COMM chunk -- describes encoding (and #frames) */
         sox_writes(ft, "COMM");
         sox_writedw(ft, 18); /* COMM chunk size */
-        sox_writew(ft, (int)ft->signal.channels); /* nchannels */
+        sox_writew(ft, ft->signal.channels); /* nchannels */
         sox_writedw(ft, nframes); /* number of frames */
         sox_writew(ft, bits); /* sample width, in bits */
         write_ieee_extended(ft, (double)ft->signal.rate);
@@ -839,10 +839,10 @@ static int aiffwriteheader(ft_t ft, sox_size_t nframes)
                 sox_writes(ft, "INST");
                 sox_writedw(ft, 20);
                 /* random MIDI shit that we default on */
-                sox_writeb(ft, ft->instr.MIDInote);
+                sox_writeb(ft, (uint8_t)ft->instr.MIDInote);
                 sox_writeb(ft, 0);                       /* detune */
-                sox_writeb(ft, ft->instr.MIDIlow);
-                sox_writeb(ft, ft->instr.MIDIhi);
+                sox_writeb(ft, (uint8_t)ft->instr.MIDIlow);
+                sox_writeb(ft, (uint8_t)ft->instr.MIDIhi);
                 sox_writeb(ft, 1);                       /* low velocity */
                 sox_writeb(ft, 127);                     /* hi  velocity */
                 sox_writew(ft, 0);                               /* gain */
@@ -937,10 +937,10 @@ static int sox_aifcstopwrite(ft_t ft)
 
 static int aifcwriteheader(ft_t ft, sox_size_t nframes)
 {
-        int hsize =
+        unsigned hsize =
                 12 /*FVER*/ + 8 /*COMM hdr*/ + 18+4+1+15 /*COMM chunk*/ +
                 8 /*SSND hdr*/ + 12 /*SSND chunk*/;
-        int bits = 0;
+        unsigned bits = 0;
 
         if (ft->signal.encoding == SOX_ENCODING_SIGN2 && 
             ft->signal.size == SOX_SIZE_BYTE)
@@ -973,7 +973,7 @@ static int aifcwriteheader(ft_t ft, sox_size_t nframes)
         /* COMM chunk -- describes encoding (and #frames) */
         sox_writes(ft, "COMM");
         sox_writedw(ft, 18+4+1+15); /* COMM chunk size */
-        sox_writew(ft, (int)ft->signal.channels); /* nchannels */
+        sox_writew(ft, ft->signal.channels); /* nchannels */
         sox_writedw(ft, nframes); /* number of frames */
         sox_writew(ft, bits); /* sample width, in bits */
         write_ieee_extended(ft, (double)ft->signal.rate);

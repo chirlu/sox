@@ -48,7 +48,7 @@ int sox_rawseek(ft_t ft, sox_size_t offset)
     if (alignment != 0)
         new_offset += (channel_block - alignment);
 
-    ft->sox_errno = sox_seeki(ft, new_offset, SEEK_SET);
+    ft->sox_errno = sox_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
 
     return ft->sox_errno;
 }
@@ -93,13 +93,13 @@ int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_
   return SOX_SUCCESS;
 }
 
-#define READ_SAMPLES_FUNC(type, size, sign, ctype, cast) \
+#define READ_SAMPLES_FUNC(type, size, sign, ctype, uctype, cast) \
   sox_size_t sox_read_ ## sign ## type ## _samples( \
       ft_t ft, sox_ssample_t *buf, sox_size_t len) \
   { \
     sox_size_t n, nread; \
     ctype *data = xmalloc(sizeof(ctype) * len); \
-    if ((nread = sox_read_ ## type ## _buf(ft, data, len)) != len) \
+    if ((nread = sox_read_ ## type ## _buf(ft, (uctype *)data, len)) != len) \
       sox_fail_errno(ft, errno, sox_readerr); \
     for (n = 0; n < nread; n++) \
       *buf++ = cast(data[n], ft->clips); \
@@ -107,20 +107,20 @@ int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_
     return nread; \
   }
 
-static READ_SAMPLES_FUNC(b, 1, u, uint8_t, SOX_UNSIGNED_BYTE_TO_SAMPLE)
-static READ_SAMPLES_FUNC(b, 1, s, int8_t, SOX_SIGNED_BYTE_TO_SAMPLE)
-static READ_SAMPLES_FUNC(b, 1, ulaw, uint8_t, SOX_ULAW_BYTE_TO_SAMPLE)
-static READ_SAMPLES_FUNC(b, 1, alaw, uint8_t, SOX_ALAW_BYTE_TO_SAMPLE)
-static READ_SAMPLES_FUNC(w, 2, u, uint16_t, SOX_UNSIGNED_WORD_TO_SAMPLE)
-static READ_SAMPLES_FUNC(w, 2, s, int16_t, SOX_SIGNED_WORD_TO_SAMPLE)
-static READ_SAMPLES_FUNC(3, 3, u, uint24_t, SOX_UNSIGNED_24BIT_TO_SAMPLE)
-static READ_SAMPLES_FUNC(3, 3, s, int24_t, SOX_SIGNED_24BIT_TO_SAMPLE)
-static READ_SAMPLES_FUNC(dw, 4, u, uint32_t, SOX_UNSIGNED_DWORD_TO_SAMPLE)
-static READ_SAMPLES_FUNC(dw, 4, s, int32_t, SOX_SIGNED_DWORD_TO_SAMPLE)
-static READ_SAMPLES_FUNC(f, sizeof(float), su, float, SOX_FLOAT_DWORD_TO_SAMPLE)
-static READ_SAMPLES_FUNC(df, sizeof(double), su, double, SOX_FLOAT_DDWORD_TO_SAMPLE)
+static READ_SAMPLES_FUNC(b, 1, u, uint8_t, uint8_t, SOX_UNSIGNED_BYTE_TO_SAMPLE)
+static READ_SAMPLES_FUNC(b, 1, s, int8_t, uint8_t, SOX_SIGNED_BYTE_TO_SAMPLE)
+static READ_SAMPLES_FUNC(b, 1, ulaw, uint8_t, uint8_t, SOX_ULAW_BYTE_TO_SAMPLE)
+static READ_SAMPLES_FUNC(b, 1, alaw, uint8_t, uint8_t, SOX_ALAW_BYTE_TO_SAMPLE)
+static READ_SAMPLES_FUNC(w, 2, u, uint16_t, uint16_t, SOX_UNSIGNED_WORD_TO_SAMPLE)
+static READ_SAMPLES_FUNC(w, 2, s, int16_t, uint16_t, SOX_SIGNED_WORD_TO_SAMPLE)
+static READ_SAMPLES_FUNC(3, 3, u, uint24_t, uint24_t, SOX_UNSIGNED_24BIT_TO_SAMPLE)
+static READ_SAMPLES_FUNC(3, 3, s, int24_t, uint24_t, SOX_SIGNED_24BIT_TO_SAMPLE)
+static READ_SAMPLES_FUNC(dw, 4, u, uint32_t, uint32_t, SOX_UNSIGNED_DWORD_TO_SAMPLE)
+static READ_SAMPLES_FUNC(dw, 4, s, int32_t, uint32_t, SOX_SIGNED_DWORD_TO_SAMPLE)
+static READ_SAMPLES_FUNC(f, sizeof(float), su, float, float, SOX_FLOAT_DWORD_TO_SAMPLE)
+static READ_SAMPLES_FUNC(df, sizeof(double), su, double, double, SOX_FLOAT_DDWORD_TO_SAMPLE)
 
-#define WRITE_SAMPLES_FUNC(type, size, sign, ctype, cast) \
+#define WRITE_SAMPLES_FUNC(type, size, sign, ctype, uctype, cast) \
   sox_size_t sox_write_ ## sign ## type ## _samples( \
       ft_t ft, sox_ssample_t *buf, sox_size_t len) \
   { \
@@ -128,24 +128,24 @@ static READ_SAMPLES_FUNC(df, sizeof(double), su, double, SOX_FLOAT_DDWORD_TO_SAM
     ctype *data = xmalloc(sizeof(ctype) * len); \
     for (n = 0; n < len; n++) \
       data[n] = cast(buf[n], ft->clips); \
-    if ((nwritten = sox_write_ ## type ## _buf(ft, data, len)) != len) \
+    if ((nwritten = sox_write_ ## type ## _buf(ft, (uctype *)data, len)) != len) \
       sox_fail_errno(ft, errno, sox_writerr); \
     free(data); \
     return nwritten; \
   }
 
-static WRITE_SAMPLES_FUNC(b, 1, u, uint8_t, SOX_SAMPLE_TO_UNSIGNED_BYTE)
-static WRITE_SAMPLES_FUNC(b, 1, s, int8_t, SOX_SAMPLE_TO_SIGNED_BYTE)
-static WRITE_SAMPLES_FUNC(b, 1, ulaw, uint8_t, SOX_SAMPLE_TO_ULAW_BYTE)
-static WRITE_SAMPLES_FUNC(b, 1, alaw, uint8_t, SOX_SAMPLE_TO_ALAW_BYTE)
-static WRITE_SAMPLES_FUNC(w, 2, u, uint16_t, SOX_SAMPLE_TO_UNSIGNED_WORD)
-static WRITE_SAMPLES_FUNC(w, 2, s, int16_t, SOX_SAMPLE_TO_SIGNED_WORD)
-static WRITE_SAMPLES_FUNC(3, 3, u, uint24_t, SOX_SAMPLE_TO_UNSIGNED_24BIT)
-static WRITE_SAMPLES_FUNC(3, 3, s, int24_t, SOX_SAMPLE_TO_SIGNED_24BIT)
-static WRITE_SAMPLES_FUNC(dw, 4, u, uint32_t, SOX_SAMPLE_TO_UNSIGNED_DWORD)
-static WRITE_SAMPLES_FUNC(dw, 4, s, int32_t, SOX_SAMPLE_TO_SIGNED_DWORD)
-static WRITE_SAMPLES_FUNC(f, sizeof(float), su, float, SOX_SAMPLE_TO_FLOAT_DWORD)
-static WRITE_SAMPLES_FUNC(df, sizeof(double), su, double, SOX_SAMPLE_TO_FLOAT_DDWORD)
+static WRITE_SAMPLES_FUNC(b, 1, u, uint8_t, uint8_t, SOX_SAMPLE_TO_UNSIGNED_BYTE)
+static WRITE_SAMPLES_FUNC(b, 1, s, int8_t, uint8_t, SOX_SAMPLE_TO_SIGNED_BYTE)
+static WRITE_SAMPLES_FUNC(b, 1, ulaw, uint8_t, uint8_t, SOX_SAMPLE_TO_ULAW_BYTE)
+static WRITE_SAMPLES_FUNC(b, 1, alaw, uint8_t, uint8_t, SOX_SAMPLE_TO_ALAW_BYTE)
+static WRITE_SAMPLES_FUNC(w, 2, u, uint16_t, uint16_t, SOX_SAMPLE_TO_UNSIGNED_WORD)
+static WRITE_SAMPLES_FUNC(w, 2, s, int16_t, uint16_t, SOX_SAMPLE_TO_SIGNED_WORD)
+static WRITE_SAMPLES_FUNC(3, 3, u, uint24_t, uint24_t, SOX_SAMPLE_TO_UNSIGNED_24BIT)
+static WRITE_SAMPLES_FUNC(3, 3, s, int24_t, uint24_t, SOX_SAMPLE_TO_SIGNED_24BIT)
+static WRITE_SAMPLES_FUNC(dw, 4, u, uint32_t, uint32_t, SOX_SAMPLE_TO_UNSIGNED_DWORD)
+static WRITE_SAMPLES_FUNC(dw, 4, s, int32_t, uint32_t, SOX_SAMPLE_TO_SIGNED_DWORD)
+static WRITE_SAMPLES_FUNC(f, sizeof(float), su, float, float, SOX_SAMPLE_TO_FLOAT_DWORD)
+static WRITE_SAMPLES_FUNC(df, sizeof(double), su, double, double, SOX_SAMPLE_TO_FLOAT_DDWORD)
 
 typedef sox_size_t (ft_io_fun)(ft_t ft, sox_ssample_t *buf, sox_size_t len);
 

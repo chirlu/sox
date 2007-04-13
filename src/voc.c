@@ -477,7 +477,7 @@ static void blockstop(ft_t ft)
         sox_ssample_t datum;
 
         sox_writeb(ft, 0);                     /* End of file block code */
-        sox_seeki(ft, v->blockseek, 0);         /* seek back to block length */
+        sox_seeki(ft, (sox_ssize_t)v->blockseek, 0); /* seek back to block length */
         sox_seeki(ft, 1, 1);                    /* seek forward one */
         if (v->silent) {
                 sox_writew(ft, v->samples);

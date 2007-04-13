@@ -162,9 +162,9 @@ int sox_flush(ft_t ft)
   return fflush(ft->fp);
 }
 
-sox_size_t sox_tell(ft_t ft)
+sox_ssize_t sox_tell(ft_t ft)
 {
-  return (sox_size_t)ftello(ft->fp);
+  return (sox_ssize_t)ftello(ft->fp);
 }
 
 int sox_eof(ft_t ft)

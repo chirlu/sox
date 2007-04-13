@@ -140,7 +140,7 @@ static int sox_svxstartread(ft_t ft)
                 sox_readdw(ft, &chunksize);
                 if (chunksize & 1)
                         chunksize++;
-                sox_seeki(ft,chunksize,SEEK_CUR);
+                sox_seeki(ft,(int32_t)chunksize,SEEK_CUR);
                 continue;
 
         }
@@ -341,7 +341,7 @@ static void svxwriteheader(ft_t ft, sox_size_t nsamples)
         sox_writedw(ft, nsamples/ft->signal.channels);  /* samples, 1-shot */
         sox_writedw(ft, 0);  /* samples, repeat */
         sox_writedw(ft, 0);  /* samples per repeat cycle */
-        sox_writew(ft, (int) ft->signal.rate); /* samples per second */
+        sox_writew(ft, (uint16_t)ft->signal.rate); /* samples per second */
         sox_writeb(ft,1); /* number of octabes */
         sox_writeb(ft,0); /* data compression (none) */
         sox_writew(ft,1); sox_writew(ft,0); /* volume */

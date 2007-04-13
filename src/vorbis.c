@@ -360,7 +360,7 @@ static int sox_vorbisstartwrite(ft_t ft)
             }
             quality = ft->signal.compression;
         }
-        vorbis_encode_init_vbr(&ve->vi, (int)ft->signal.channels, (int)ft->signal.rate, quality / 10);
+        vorbis_encode_init_vbr(&ve->vi, (int)ft->signal.channels, (int)ft->signal.rate, (float)(quality / 10));
 
         vorbis_analysis_init(&ve->vd, &ve->vi);
         vorbis_block_init(&ve->vd, &ve->vb);

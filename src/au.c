@@ -132,7 +132,7 @@ static int sox_auseek(ft_t ft, sox_size_t offset)
             new_offset += (channel_block - alignment);
         new_offset += au->dataStart;
 
-        ft->sox_errno = sox_seeki(ft, new_offset, SEEK_SET);
+        ft->sox_errno = sox_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
     }
 
     return(ft->sox_errno);

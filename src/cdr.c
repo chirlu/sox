@@ -125,7 +125,6 @@ static int sox_cdrstopwrite(ft_t ft)
 {
         cdr_t cdr = (cdr_t) ft->priv;
         int padsamps = SECTORSIZE - (cdr->samples % SECTORSIZE);
-        short zero;
         int rc;
 
         /* Flush buffer before writing anything else */
@@ -134,12 +133,10 @@ static int sox_cdrstopwrite(ft_t ft)
         if (rc)
             return rc;
 
-        zero = 0;
-
         if (padsamps != SECTORSIZE) 
         {
                 while (padsamps > 0) {
-                        sox_writew(ft, zero);
+                        sox_writew(ft, 0);
                         padsamps--;
                 }
         }

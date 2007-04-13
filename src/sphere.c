@@ -150,7 +150,7 @@ static int sox_spherestartread(ft_t ft)
 
         if (ft->seekable) {
           /* Check first four bytes of data to see if it's shorten compressed. */
-          sox_size_t pos = sox_tell(ft);
+          sox_ssize_t pos = sox_tell(ft);
           sox_reads(ft, sphere->shorten_check, 4);
 
           if (!strcmp(sphere->shorten_check,"ajkg")) {

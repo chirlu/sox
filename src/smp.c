@@ -38,8 +38,8 @@ struct smpheader {
 struct loop {
         uint32_t start; /* Sample count into sample data, not byte count */
         uint32_t end;   /* end point */
-        char type;   /* 0 = loop off, 1 = forward, 2 = forw/back */
-        short count;         /* No of times to loop */
+        unsigned char type;  /* 0 = loop off, 1 = forward, 2 = forw/back */
+        unsigned short count;  /* No of times to loop */
 };
 
 /* Samplevision marker definition structure */
@@ -162,7 +162,7 @@ static int writetrailer(ft_t ft, struct smptrailer *trailer)
                 }
                 sox_writedw(ft, trailer->markers[i].position);
         }
-        sox_writeb(ft, trailer->MIDInote);
+        sox_writeb(ft, (uint8_t)(trailer->MIDInote));
         sox_writedw(ft, trailer->rate);
         sox_writedw(ft, trailer->SMPTEoffset);
         sox_writedw(ft, trailer->CycleSize);
@@ -186,7 +186,7 @@ static int sox_smpseek(ft_t ft, sox_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += smp->dataStart;
 
-    ft->sox_errno = sox_seeki(ft, new_offset, SEEK_SET);
+    ft->sox_errno = sox_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
 
     if( ft->sox_errno == SOX_SUCCESS )
         smp->NoOfSamps = ft->length - (new_offset / ft->signal.size);
@@ -203,9 +203,8 @@ static int sox_smpseek(ft_t ft, sox_size_t offset)
 static int sox_smpstartread(ft_t ft) 
 {
         smp_t smp = (smp_t) ft->priv;
-        int i;
         int namelen, commentlen;
-        sox_size_t samplestart;
+        sox_size_t samplestart, i;
         struct smpheader header;
         struct smptrailer trailer;
 
@@ -254,7 +253,7 @@ static int sox_smpstartread(ft_t ft)
 
         /* seek from the current position (the start of sample data) by */
         /* NoOfSamps * sizeof(int16_t) */
-        if (sox_seeki(ft, smp->NoOfSamps * 2, 1) == -1)
+        if (sox_seeki(ft, (sox_ssize_t)(smp->NoOfSamps * 2), 1) == -1)
         {
                 sox_fail_errno(ft,errno,"SMP unable to seek to trailer");
                 return(SOX_EOF);
@@ -266,7 +265,7 @@ static int sox_smpstartread(ft_t ft)
         }
 
         /* seek back to the beginning of the data */
-        if (sox_seeki(ft, samplestart, 0) == -1) 
+        if (sox_seeki(ft, (sox_ssize_t)samplestart, 0) == -1) 
         {
                 sox_fail_errno(ft,errno,"SMP unable to seek back to start of sample data");
                 return(SOX_EOF);
@@ -375,7 +374,7 @@ static sox_size_t sox_smpwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len
 
         while(done < len) {
                 datum = (int) SOX_SAMPLE_TO_SIGNED_WORD(*buf++, ft->clips);
-                sox_writew(ft, datum);
+                sox_writew(ft, (uint16_t)datum);
                 smp->NoOfSamps++;
                 done++;
         }

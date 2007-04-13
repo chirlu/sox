@@ -31,7 +31,7 @@ static void sndtwriteheader(ft_t ft, sox_size_t nsamples)
     sox_writedw (ft,nsamples);
     sox_writedw (ft,0);
     sox_writedw (ft,nsamples);
-    sox_writew (ft,(int) ft->signal.rate);
+    sox_writew (ft, ft->signal.rate);
     sox_writew (ft,0);
     sox_writew (ft,10);
     sox_writew (ft,4);
@@ -57,7 +57,7 @@ static int sox_sndseek(ft_t ft, sox_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += snd->dataStart;
 
-    return sox_seeki(ft, new_offset, SEEK_SET);
+    return sox_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
 }
 
 static int sox_sndtstartread(ft_t ft)

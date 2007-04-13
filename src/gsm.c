@@ -107,8 +107,8 @@ static int sox_gsmstartwrite(ft_t ft)
 
 static sox_size_t sox_gsmread(ft_t ft, sox_ssample_t *buf, sox_size_t samp)
 {
-        size_t done = 0;
-        int r, ch, chans;
+        size_t done = 0, r;
+        int ch, chans;
         gsm_signal *gbuff;
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
 

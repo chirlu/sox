@@ -40,7 +40,7 @@ static int sox_wveseek(ft_t ft, sox_size_t offset)
         new_offset += (channel_block - alignment);
     new_offset += wve->dataStart;
 
-    return sox_seeki(ft, offset, SEEK_SET);
+    return sox_seeki(ft, (sox_ssize_t)offset, SEEK_SET);
 }
 
 static int sox_wvestartread(ft_t ft)

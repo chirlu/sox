@@ -135,7 +135,7 @@ int sox_writedf(ft_t ft, double d);
 int sox_seeki(ft_t ft, sox_ssize_t offset, int whence);
 sox_size_t sox_filelength(ft_t ft);
 int sox_flush(ft_t ft);
-sox_size_t sox_tell(ft_t ft);
+sox_ssize_t sox_tell(ft_t ft);
 int sox_eof(ft_t ft);
 int sox_error(ft_t ft);
 void sox_rewind(ft_t ft);

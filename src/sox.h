@@ -101,7 +101,7 @@ static double sox_macro_temp_double UNUSED;
 #define SOX_SIGNED_WORD_TO_SAMPLE(d,clips) SOX_SIGNED_TO_SAMPLE(16,d)
 #define SOX_UNSIGNED_24BIT_TO_SAMPLE(d,clips) SOX_UNSIGNED_TO_SAMPLE(24,d)
 #define SOX_SIGNED_24BIT_TO_SAMPLE(d,clips) SOX_SIGNED_TO_SAMPLE(24,d)
-#define SOX_UNSIGNED_DWORD_TO_SAMPLE(d,clips) (sox_ssample_t)((d)^SOX_SAMPLE_NEG)
+#define SOX_UNSIGNED_DWORD_TO_SAMPLE(d,clips) ((sox_ssample_t)(d)^SOX_SAMPLE_NEG)
 #define SOX_SIGNED_DWORD_TO_SAMPLE(d,clips) (sox_ssample_t)(d)
 #define SOX_FLOAT_DWORD_TO_SAMPLE SOX_FLOAT_DDWORD_TO_SAMPLE
 #define SOX_FLOAT_DDWORD_TO_SAMPLE(d,clips) (sox_macro_temp_double=(d),sox_macro_temp_double<-1?++(clips),(-SOX_SAMPLE_MAX):sox_macro_temp_double>1?++(clips),SOX_SAMPLE_MAX:(sox_ssample_t)((uint32_t)((double)(sox_macro_temp_double)*SOX_SAMPLE_MAX+(SOX_SAMPLE_MAX+.5))-SOX_SAMPLE_MAX))
@@ -140,7 +140,7 @@ static double sox_macro_temp_double UNUSED;
  * and increment a counter if clipping occurs.
  */
 #define SOX_24BIT_CLIP_COUNT(l, clips) \
-  ((l) >= ((sox_ssample_t)1 << 23)? ++(clips), ((sox_sample_t)1 << 23) - 1 : \
+  ((l) >= ((sox_ssample_t)1 << 23)? ++(clips), ((sox_ssample_t)1 << 23) - 1 : \
    (l) <=-((sox_ssample_t)1 << 23)? ++(clips),-((sox_ssample_t)1 << 23) + 1 : (l))
 
 
@@ -229,8 +229,8 @@ typedef struct  sox_loopinfo
 {
     sox_size_t    start;          /* first sample */
     sox_size_t    length;         /* length */
-    unsigned int count;          /* number of repeats, 0=forever */
-    signed char  type;           /* 0=no, 1=forward, 2=forward/back */
+    unsigned int count;           /* number of repeats, 0=forever */
+    unsigned char  type;          /* 0=no, 1=forward, 2=forward/back */
 } sox_loopinfo_t;
 
 /* Instrument parameters */
@@ -242,7 +242,7 @@ typedef struct  sox_instrinfo
     char MIDInote;       /* for unity pitch playback */
     char MIDIlow, MIDIhi;/* MIDI pitch-bend range */
     char loopmode;       /* semantics of loop data */
-    signed char nloops;  /* number of active loops (max SOX_MAX_NLOOPS) */
+    unsigned nloops;     /* number of active loops (max SOX_MAX_NLOOPS) */
 } sox_instrinfo_t;
 
 /* Loop modes, upper 4 bits mask the loop blass, lower 4 bits describe */

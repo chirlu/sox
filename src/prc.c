@@ -130,7 +130,7 @@ static int seek(ft_t ft, sox_size_t offset)
     new_offset += (channel_block - alignment);
   new_offset += prc->data_start;
 
-  return sox_seeki(ft, new_offset, SEEK_SET);
+  return sox_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
 }
 
 static int startread(ft_t ft)

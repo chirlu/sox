@@ -184,7 +184,7 @@ static int sox_maudstartread(ft_t ft)
                 sox_readdw(ft, &chunksize);
                 if (chunksize & 1)
                         chunksize++;
-                sox_seeki(ft, chunksize, SEEK_CUR);
+                sox_seeki(ft, (sox_ssize_t)chunksize, SEEK_CUR);
                 continue;
                 
         }
