@@ -61,7 +61,7 @@ char const * sox_message_filename = 0;
 
 
 
-static void sox_emit_message(int level, char const *fmt, va_list ap)
+static void sox_emit_message(unsigned level, char const *fmt, va_list ap)
 {
   if (sox_output_message_handler != NULL)
     (*sox_output_message_handler)(level, sox_message_filename, fmt, ap);
