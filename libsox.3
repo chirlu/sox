@@ -28,9 +28,9 @@ libsox \- SoX, an audio file-format and effect library
 .P
 .B ft_t sox_open_output(const char *\fIpath\fB, const sox_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB, const char *\fIcomment\fB);
 .P
-.B sox_ssize_t sox_read(ft_t \fIft\fB, sox_sample_t *\fIbuf\fB, sox_ssize_t \fIlen\fB);
+.B sox_ssize_t sox_read(ft_t \fIft\fB, sox_ssample_t *\fIbuf\fB, sox_ssize_t \fIlen\fB);
 .P
-.B sox_ssize_t sox_write(ft_t \fIft\fB, sox_sample_t *\fIbuf\fB, sox_ssize_t \fIlen\fB);
+.B sox_ssize_t sox_write(ft_t \fIft\fB, sox_ssample_t *\fIbuf\fB, sox_ssize_t \fIlen\fB);
 .P
 .B int sox_close(ft_t \fIft\fB);
 .P
