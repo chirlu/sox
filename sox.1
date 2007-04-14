@@ -904,7 +904,10 @@ See
 This is a pseudo-type that forces ffmpeg to be used. At the moment,
 ffmpeg support is read-only. The actual file type is deduced from the
 file. This pseudo-type depends on SoX having been built with optional
-ffmpeg support.
+ffmpeg support. It can read a wide range of audio files, not all of
+which are documented here, and also the audio track of many video
+files (including AVI, WMV and MPEG). At present only the first audio
+track of a file can be read.
 .TP
 .B .flac (also with \-t sndfile)
 Free Lossless Audio CODEC compressed audio.
