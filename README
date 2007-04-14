@@ -36,10 +36,9 @@ This release understands:
   o Amiga MAUD files
   o AMR-WB files
   o MP3 (with optional libmad and libmp3lame libraries)
-  o MP4, AAC, AC3, WAVPACK files (read-only, with optional ffmpeg
+  o MP4, AAC, AC3, WAVPACK files (with optional ffmpeg library)
+  o AVI, WMV, Ogg Theora, MPEG video files (with optional ffmpeg
     library)
-  o AVI, WMV, Ogg Theora, MPEG video files (read-only, with optional
-    ffmpeg library)
   o Ogg Vorbis files (with optional Ogg Vorbis libraries)
   o FLAC files (with optional libflac)
   o IRCAM SoundFile files

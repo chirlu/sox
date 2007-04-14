@@ -901,13 +901,13 @@ See
 .BR .paf .
 .TP
 .B ffmpeg
-This is a pseudo-type that forces ffmpeg to be used. At the moment,
-ffmpeg support is read-only. The actual file type is deduced from the
-file. This pseudo-type depends on SoX having been built with optional
-ffmpeg support. It can read a wide range of audio files, not all of
-which are documented here, and also the audio track of many video
-files (including AVI, WMV and MPEG). At present only the first audio
-track of a file can be read.
+This is a pseudo-type that forces ffmpeg to be used. The actual file
+type is deduced from the file name (it cannot be used on stdio). This
+pseudo-type depends on SoX having been built with optional ffmpeg
+support. It can read a wide range of audio files, not all of which are
+documented here, and also the audio track of many video files
+(including AVI, WMV and MPEG). At present only the first audio track
+of a file can be read.
 .TP
 .B .flac (also with \-t sndfile)
 Free Lossless Audio CODEC compressed audio.
@@ -1005,8 +1005,7 @@ for a similar format.
 .SP
 MP3 support in
 SoX is optional and requires access to either or both the external
-libmad and libmp3lame libraries.  To
-see if there is support for MP3 run
+libmad and libmp3lame libraries. To see if there is support for MP3 run
 .EX
 	sox -h
 .EE
@@ -1020,7 +1019,7 @@ MPEG standards for audio and video compression.  See
 for more information.
 .SP
 MP4 support in SoX is optional and requires access to the external
-ffmpeg libraries. Currently it is read-only.
+ffmpeg libraries.
 .TP
 .B .nist (also with \-t sndfile)
 See \fB.sph\fR.
