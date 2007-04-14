@@ -162,10 +162,10 @@ sox_size_t sox_adpcm_read(ft_t ft, adpcm_io_t state, sox_ssample_t * buffer, sox
 
   for (n = 0; n < (len&~1u) && sox_readb(ft, &byte) == SOX_SUCCESS; n += 2) {
     short word = adpcm_decode(byte >> 4, &state->encoder);
-    *buffer++ = SOX_SIGNED_WORD_TO_SAMPLE(word, ft->clips);
+    *buffer++ = SOX_SIGNED_16BIT_TO_SAMPLE(word, ft->clips);
 
     word = adpcm_decode(byte, &state->encoder);
-    *buffer++ = SOX_SIGNED_WORD_TO_SAMPLE(word, ft->clips);
+    *buffer++ = SOX_SIGNED_16BIT_TO_SAMPLE(word, ft->clips);
   }
   return n;
 }
@@ -210,7 +210,7 @@ sox_size_t sox_adpcm_write(ft_t ft, adpcm_io_t state, const sox_ssample_t * buff
   short word;
 
   while (count < length) {
-    word = SOX_SAMPLE_TO_SIGNED_WORD(*buffer++, ft->clips);
+    word = SOX_SAMPLE_TO_SIGNED_16BIT(*buffer++, ft->clips);
 
     byte <<= 4;
     byte |= adpcm_encode(word, &state->encoder) & 0x0F;

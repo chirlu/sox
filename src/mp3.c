@@ -461,8 +461,8 @@ static sox_size_t sox_mp3write(ft_t ft, const sox_ssample_t *buf, sox_size_t sam
         j=0;
         for (i=0; i<nsamples; i++)
         {
-            buffer_l[i]=SOX_SAMPLE_TO_SIGNED_WORD(buf[j++], ft->clips);
-            buffer_r[i]=SOX_SAMPLE_TO_SIGNED_WORD(buf[j++], ft->clips);
+            buffer_l[i]=SOX_SAMPLE_TO_SIGNED_16BIT(buf[j++], ft->clips);
+            buffer_r[i]=SOX_SAMPLE_TO_SIGNED_16BIT(buf[j++], ft->clips);
         }
     }
     else
@@ -470,7 +470,7 @@ static sox_size_t sox_mp3write(ft_t ft, const sox_ssample_t *buf, sox_size_t sam
         j=0;
         for (i=0; i<nsamples; i++)
         {
-            buffer_l[i]=SOX_SAMPLE_TO_SIGNED_WORD(buf[j++], ft->clips); 
+            buffer_l[i]=SOX_SAMPLE_TO_SIGNED_16BIT(buf[j++], ft->clips); 
         }
     }
 

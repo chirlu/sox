@@ -224,14 +224,14 @@ static int process_window(eff_t effp, reddata_t data, unsigned chan_num, unsigne
         for (j = 0; j < use; j ++) {
             float s = chan->window[j] + chan->lastwindow[WINDOWSIZE/2 + j];
             obuf[chan_num + num_chans * j] =
-                SOX_FLOAT_DWORD_TO_SAMPLE(s, effp->clips);
+                SOX_FLOAT_32BIT_TO_SAMPLE(s, effp->clips);
         }
         free(chan->lastwindow);
     } else {
         for (j = 0; j < use; j ++) {
             assert(chan->window[j] >= -1 && chan->window[j] <= 1);
             obuf[chan_num + num_chans * j] =
-                SOX_FLOAT_DWORD_TO_SAMPLE(chan->window[j], effp->clips);
+                SOX_FLOAT_32BIT_TO_SAMPLE(chan->window[j], effp->clips);
         }
     }
     chan->lastwindow = chan->window;
@@ -272,7 +272,7 @@ static int sox_noisered_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_
         
         for (j = 0; j < ncopy; j ++)
             chan->window[oldbuf + j] =
-                SOX_SAMPLE_TO_FLOAT_DWORD(ibuf[i + tracks * j], effp->clips);
+                SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i + tracks * j], effp->clips);
 
         if (!whole_window)
             continue;

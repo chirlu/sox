@@ -127,7 +127,7 @@ static int sox_rabbit_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t 
   r->data->data_in = (float *)xrealloc(r->data->data_in, newsamples * sizeof(float));
 
   for (i = 0 ; i < *isamp; i++)
-    r->data->data_in[r->samples + i] = SOX_SAMPLE_TO_FLOAT_DWORD(ibuf[i], effp->clips);
+    r->data->data_in[r->samples + i] = SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i], effp->clips);
 
   r->samples = newsamples;
   r->data->input_frames = r->samples / channels;
@@ -175,7 +175,7 @@ static int sox_rabbit_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 
   outsamps = min(r->data->output_frames_gen * channels - r->outsamp, *osamp);
   for (i = 0; i < outsamps; i++)
-    obuf[i] = SOX_FLOAT_DWORD_TO_SAMPLE(r->data->data_out[r->outsamp + i], effp->clips);
+    obuf[i] = SOX_FLOAT_32BIT_TO_SAMPLE(r->data->data_out[r->outsamp + i], effp->clips);
   *osamp = (sox_size_t)outsamps;
   r->outsamp += outsamps;
 

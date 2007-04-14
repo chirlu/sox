@@ -338,7 +338,7 @@ static sox_size_t sox_auread(ft_t ft, sox_ssample_t *buf, sox_size_t samp)
                 return sox_rawread(ft, buf, samp);
         done = 0;
         while (samp > 0 && unpack_input(ft, &code) >= 0) {
-                *buf++ = SOX_SIGNED_WORD_TO_SAMPLE(
+                *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE(
                         (*p->dec_routine)(code, AUDIO_ENCODING_LINEAR,
                                           &p->state),);
                 samp--;

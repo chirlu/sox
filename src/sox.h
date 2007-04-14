@@ -95,26 +95,26 @@ static double sox_macro_temp_double UNUSED;
 #define SOX_SIGNED_TO_SAMPLE(bits,d)((sox_ssample_t)(d)<<(32-bits))
 #define SOX_UNSIGNED_TO_SAMPLE(bits,d)(SOX_SIGNED_TO_SAMPLE(bits,d)^SOX_SAMPLE_NEG)
 
-#define SOX_UNSIGNED_BYTE_TO_SAMPLE(d,clips) SOX_UNSIGNED_TO_SAMPLE(8,d)
-#define SOX_SIGNED_BYTE_TO_SAMPLE(d,clips) SOX_SIGNED_TO_SAMPLE(8,d)
-#define SOX_UNSIGNED_WORD_TO_SAMPLE(d,clips) SOX_UNSIGNED_TO_SAMPLE(16,d)
-#define SOX_SIGNED_WORD_TO_SAMPLE(d,clips) SOX_SIGNED_TO_SAMPLE(16,d)
+#define SOX_UNSIGNED_8BIT_TO_SAMPLE(d,clips) SOX_UNSIGNED_TO_SAMPLE(8,d)
+#define SOX_SIGNED_8BIT_TO_SAMPLE(d,clips) SOX_SIGNED_TO_SAMPLE(8,d)
+#define SOX_UNSIGNED_16BIT_TO_SAMPLE(d,clips) SOX_UNSIGNED_TO_SAMPLE(16,d)
+#define SOX_SIGNED_16BIT_TO_SAMPLE(d,clips) SOX_SIGNED_TO_SAMPLE(16,d)
 #define SOX_UNSIGNED_24BIT_TO_SAMPLE(d,clips) SOX_UNSIGNED_TO_SAMPLE(24,d)
 #define SOX_SIGNED_24BIT_TO_SAMPLE(d,clips) SOX_SIGNED_TO_SAMPLE(24,d)
-#define SOX_UNSIGNED_DWORD_TO_SAMPLE(d,clips) ((sox_ssample_t)(d)^SOX_SAMPLE_NEG)
-#define SOX_SIGNED_DWORD_TO_SAMPLE(d,clips) (sox_ssample_t)(d)
-#define SOX_FLOAT_DWORD_TO_SAMPLE SOX_FLOAT_DDWORD_TO_SAMPLE
-#define SOX_FLOAT_DDWORD_TO_SAMPLE(d,clips) (sox_macro_temp_double=(d),sox_macro_temp_double<-1?++(clips),(-SOX_SAMPLE_MAX):sox_macro_temp_double>1?++(clips),SOX_SAMPLE_MAX:(sox_ssample_t)((uint32_t)((double)(sox_macro_temp_double)*SOX_SAMPLE_MAX+(SOX_SAMPLE_MAX+.5))-SOX_SAMPLE_MAX))
-#define SOX_SAMPLE_TO_UNSIGNED_BYTE(d,clips) SOX_SAMPLE_TO_UNSIGNED(8,d,clips)
-#define SOX_SAMPLE_TO_SIGNED_BYTE(d,clips) SOX_SAMPLE_TO_SIGNED(8,d,clips)
-#define SOX_SAMPLE_TO_UNSIGNED_WORD(d,clips) SOX_SAMPLE_TO_UNSIGNED(16,d,clips)
-#define SOX_SAMPLE_TO_SIGNED_WORD(d,clips) SOX_SAMPLE_TO_SIGNED(16,d,clips)
+#define SOX_UNSIGNED_32BIT_TO_SAMPLE(d,clips) ((sox_ssample_t)(d)^SOX_SAMPLE_NEG)
+#define SOX_SIGNED_32BIT_TO_SAMPLE(d,clips) (sox_ssample_t)(d)
+#define SOX_FLOAT_32BIT_TO_SAMPLE SOX_FLOAT_64BIT_TO_SAMPLE
+#define SOX_FLOAT_64BIT_TO_SAMPLE(d,clips) (sox_macro_temp_double=(d),sox_macro_temp_double<-1?++(clips),(-SOX_SAMPLE_MAX):sox_macro_temp_double>1?++(clips),SOX_SAMPLE_MAX:(sox_ssample_t)((uint32_t)((double)(sox_macro_temp_double)*SOX_SAMPLE_MAX+(SOX_SAMPLE_MAX+.5))-SOX_SAMPLE_MAX))
+#define SOX_SAMPLE_TO_UNSIGNED_8BIT(d,clips) SOX_SAMPLE_TO_UNSIGNED(8,d,clips)
+#define SOX_SAMPLE_TO_SIGNED_8BIT(d,clips) SOX_SAMPLE_TO_SIGNED(8,d,clips)
+#define SOX_SAMPLE_TO_UNSIGNED_16BIT(d,clips) SOX_SAMPLE_TO_UNSIGNED(16,d,clips)
+#define SOX_SAMPLE_TO_SIGNED_16BIT(d,clips) SOX_SAMPLE_TO_SIGNED(16,d,clips)
 #define SOX_SAMPLE_TO_UNSIGNED_24BIT(d,clips) SOX_SAMPLE_TO_UNSIGNED(24,d,clips)
 #define SOX_SAMPLE_TO_SIGNED_24BIT(d,clips) SOX_SAMPLE_TO_SIGNED(24,d,clips)
-#define SOX_SAMPLE_TO_UNSIGNED_DWORD(d,clips) (uint32_t)((d)^SOX_SAMPLE_NEG)
-#define SOX_SAMPLE_TO_SIGNED_DWORD(d,clips) (int32_t)(d)
-#define SOX_SAMPLE_TO_FLOAT_DWORD SOX_SAMPLE_TO_FLOAT_DDWORD
-#define SOX_SAMPLE_TO_FLOAT_DDWORD(d,clips) (sox_macro_temp_sample=(d),sox_macro_temp_sample==SOX_SAMPLE_MIN?++(clips),-1.0:((double)(sox_macro_temp_sample)*(1.0/SOX_SAMPLE_MAX)))
+#define SOX_SAMPLE_TO_UNSIGNED_32BIT(d,clips) (uint32_t)((d)^SOX_SAMPLE_NEG)
+#define SOX_SAMPLE_TO_SIGNED_32BIT(d,clips) (int32_t)(d)
+#define SOX_SAMPLE_TO_FLOAT_32BIT SOX_SAMPLE_TO_FLOAT_64BIT
+#define SOX_SAMPLE_TO_FLOAT_64BIT(d,clips) (sox_macro_temp_sample=(d),sox_macro_temp_sample==SOX_SAMPLE_MIN?++(clips),-1.0:((double)(sox_macro_temp_sample)*(1.0/SOX_SAMPLE_MAX)))
 
 
 

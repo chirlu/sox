@@ -144,7 +144,7 @@ static int sox_stat_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *o
 
   if (stat->fft) {
     for (x = 0; x < len; x++) {
-      stat->re_in[stat->fft_offset++] = SOX_SAMPLE_TO_FLOAT_DWORD(ibuf[x], effp->clips);
+      stat->re_in[stat->fft_offset++] = SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[x], effp->clips);
 
       if (stat->fft_offset >= stat->fft_size) {
         stat->fft_offset = 0;

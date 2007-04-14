@@ -118,7 +118,7 @@ static sox_size_t sox_gsmread(ft_t ft, sox_ssample_t *buf, sox_size_t samp)
         {
                 while (p->samplePtr < p->sampleTop && done < samp)
                         buf[done++] = 
-                            SOX_SIGNED_WORD_TO_SAMPLE(*(p->samplePtr)++,);
+                            SOX_SIGNED_16BIT_TO_SAMPLE(*(p->samplePtr)++,);
 
                 if (done>=samp) break;
 
@@ -193,7 +193,7 @@ static sox_size_t sox_gsmwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t sam
         {
                 while ((p->samplePtr < p->sampleTop) && (done < samp))
                         *(p->samplePtr)++ = 
-                            SOX_SAMPLE_TO_SIGNED_WORD(buf[done++], ft->clips);
+                            SOX_SAMPLE_TO_SIGNED_16BIT(buf[done++], ft->clips);
 
                 if (p->samplePtr == p->sampleTop)
                 {

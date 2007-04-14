@@ -130,7 +130,7 @@ static int sox_noiseprof_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample
         int j;
         for (j = 0; j < ncopy; j ++) {
             chan->window[j+data->bufdata] =
-                SOX_SAMPLE_TO_FLOAT_DWORD(ibuf[i+j*tracks], effp->clips);
+                SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i+j*tracks], effp->clips);
         }
         if (ncopy + data->bufdata == WINDOWSIZE)
             collect_data(chan);

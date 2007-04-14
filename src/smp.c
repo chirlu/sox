@@ -327,7 +327,7 @@ static sox_size_t sox_smpread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
         for(; done < len && smp->NoOfSamps; done++, smp->NoOfSamps--) {
                 sox_readw(ft, &datum);
                 /* scale signed up to long's range */
-                *buf++ = SOX_SIGNED_WORD_TO_SAMPLE(datum,);
+                *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE(datum,);
         }
         return done;
 }
@@ -373,7 +373,7 @@ static sox_size_t sox_smpwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len
         sox_size_t done = 0;
 
         while(done < len) {
-                datum = (int) SOX_SAMPLE_TO_SIGNED_WORD(*buf++, ft->clips);
+                datum = (int) SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips);
                 sox_writew(ft, (uint16_t)datum);
                 smp->NoOfSamps++;
                 done++;

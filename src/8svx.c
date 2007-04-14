@@ -207,7 +207,7 @@ static sox_size_t sox_svxread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp)
                         if (feof(p->ch[i]))
                                 return done;
                         /* scale signed up to long's range */
-                        *buf++ = SOX_SIGNED_BYTE_TO_SAMPLE(datum,);
+                        *buf++ = SOX_SIGNED_8BIT_TO_SAMPLE(datum,);
                 }
                 done += ft->signal.channels;
         }
@@ -272,7 +272,7 @@ static sox_size_t sox_svxwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len
 
         while(done < len) {
                 for (i = 0; i < ft->signal.channels; i++) {
-                        datum = SOX_SAMPLE_TO_SIGNED_BYTE(*buf++, ft->clips);
+                        datum = SOX_SAMPLE_TO_SIGNED_8BIT(*buf++, ft->clips);
                         /* FIXME: Needs to pass ft struct and not FILE */
                         putc(datum, p->ch[i]);
                 }

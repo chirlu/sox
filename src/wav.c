@@ -232,7 +232,7 @@ static sox_size_t wavgsmread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
 
   /* copy out any samples left from the last call */
     while(wav->gsmindex && (wav->gsmindex<160*2) && (done < len))
-        buf[done++]=SOX_SIGNED_WORD_TO_SAMPLE(wav->gsmsample[wav->gsmindex++],);
+        buf[done++]=SOX_SIGNED_16BIT_TO_SAMPLE(wav->gsmsample[wav->gsmindex++],);
 
   /* read and decode loop, possibly leaving some samples in wav->gsmsample */
     while (done < len) {
@@ -258,7 +258,7 @@ static sox_size_t wavgsmread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
         }
 
         while ((wav->gsmindex <160*2) && (done < len)){
-            buf[done++]=SOX_SIGNED_WORD_TO_SAMPLE(wav->gsmsample[(wav->gsmindex)++],);
+            buf[done++]=SOX_SIGNED_16BIT_TO_SAMPLE(wav->gsmsample[(wav->gsmindex)++],);
         }
     }
 
@@ -300,7 +300,7 @@ static sox_size_t wavgsmwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
     while (done < len) {
         while ((wav->gsmindex < 160*2) && (done < len))
             wav->gsmsample[(wav->gsmindex)++] = 
-                SOX_SAMPLE_TO_SIGNED_WORD(buf[done++], ft->clips);
+                SOX_SAMPLE_TO_SIGNED_16BIT(buf[done++], ft->clips);
 
         if (wav->gsmindex < 160*2)
             break;
@@ -1045,7 +1045,7 @@ static sox_size_t sox_wavread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
                     top = p+ct;
                     /* Output is already signed */
                     while (p<top)
-                        *buf++ = SOX_SIGNED_WORD_TO_SAMPLE((*p++),);
+                        *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE((*p++),);
 
                     wav->samplePtr = p;
                 }

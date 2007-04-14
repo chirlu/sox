@@ -242,7 +242,7 @@ static sox_size_t sox_xaread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
                 xa->state[i].prevSample = xa->state[i].curSample;
                 xa->state[i].curSample = sample;
                 
-                buf[done++] = SOX_SIGNED_WORD_TO_SAMPLE(sample,);
+                buf[done++] = SOX_SIGNED_16BIT_TO_SAMPLE(sample,);
                 xa->bytesDecoded += ft->signal.size;
             }
             for (i = 0; i < ft->signal.channels && done < len; i++) {
@@ -256,7 +256,7 @@ static sox_size_t sox_xaread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
                 xa->state[i].prevSample = xa->state[i].curSample;
                 xa->state[i].curSample = sample;
                 
-                buf[done++] = SOX_SIGNED_WORD_TO_SAMPLE(sample,);
+                buf[done++] = SOX_SIGNED_16BIT_TO_SAMPLE(sample,);
                 xa->bytesDecoded += ft->signal.size;
             }
 

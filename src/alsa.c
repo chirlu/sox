@@ -427,13 +427,13 @@ static int sox_alsastartread(ft_t ft)
 static void ub_read_buf(sox_ssample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips UNUSED)
 {
     while (len--)
-        *buf1++ = SOX_UNSIGNED_BYTE_TO_SAMPLE(*((unsigned char *)buf2++),);
+        *buf1++ = SOX_UNSIGNED_8BIT_TO_SAMPLE(*((unsigned char *)buf2++),);
 }
 
 static void sb_read_buf(sox_ssample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips UNUSED)
 {
     while (len--)
-        *buf1++ = SOX_SIGNED_BYTE_TO_SAMPLE(*((int8_t *)buf2++),);
+        *buf1++ = SOX_SIGNED_8BIT_TO_SAMPLE(*((int8_t *)buf2++),);
 }
 
 static void uw_read_buf(sox_ssample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips UNUSED)
@@ -445,7 +445,7 @@ static void uw_read_buf(sox_ssample_t *buf1, char const * buf2, sox_size_t len, 
         if (swap)
             datum = sox_swapw(datum);
 
-        *buf1++ = SOX_UNSIGNED_WORD_TO_SAMPLE(datum,);
+        *buf1++ = SOX_UNSIGNED_16BIT_TO_SAMPLE(datum,);
     }
 }
 
@@ -458,7 +458,7 @@ static void sw_read_buf(sox_ssample_t *buf1, char const * buf2, sox_size_t len, 
         if (swap)
             datum = sox_swapw(datum);
 
-        *buf1++ = SOX_SIGNED_WORD_TO_SAMPLE(datum,);
+        *buf1++ = SOX_SIGNED_16BIT_TO_SAMPLE(datum,);
     }
 }
 
@@ -550,20 +550,20 @@ static int sox_alsastartwrite(ft_t ft)
 static void sox_ub_write_buf(char* buf1, sox_ssample_t const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips)
 {
     while (len--)
-        *(uint8_t *)buf1++ = SOX_SAMPLE_TO_UNSIGNED_BYTE(*buf2++, *clips);
+        *(uint8_t *)buf1++ = SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf2++, *clips);
 }
 
 static void sox_sb_write_buf(char *buf1, sox_ssample_t const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips)
 {
     while (len--)
-        *(int8_t *)buf1++ = SOX_SAMPLE_TO_SIGNED_BYTE(*buf2++, *clips);
+        *(int8_t *)buf1++ = SOX_SAMPLE_TO_SIGNED_8BIT(*buf2++, *clips);
 }
 
 static void sox_uw_write_buf(char *buf1, sox_ssample_t const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips)
 {
     while (len--)
     {
-        uint16_t datum = SOX_SAMPLE_TO_UNSIGNED_WORD(*buf2++, *clips);
+        uint16_t datum = SOX_SAMPLE_TO_UNSIGNED_16BIT(*buf2++, *clips);
         if (swap)
             datum = sox_swapw(datum);
         *(uint16_t *)buf1 = datum;
@@ -575,7 +575,7 @@ static void sox_sw_write_buf(char *buf1, sox_ssample_t const * buf2, sox_size_t 
 {
     while (len--)
     {
-        int16_t datum = SOX_SAMPLE_TO_SIGNED_WORD(*buf2++, *clips);
+        int16_t datum = SOX_SAMPLE_TO_SIGNED_16BIT(*buf2++, *clips);
         if (swap)
             datum = sox_swapw(datum);
         *(int16_t *)buf1 = datum;

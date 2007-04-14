@@ -165,7 +165,7 @@ static sox_size_t sox_hcomread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
                         return (0);
                 }
                 p->sample = sample_rate;
-                *buf++ = SOX_UNSIGNED_BYTE_TO_SAMPLE(p->sample,);
+                *buf++ = SOX_UNSIGNED_8BIT_TO_SAMPLE(p->sample,);
                 p->huffcount--;
                 p->nrbits = 0;
                 done++;
@@ -201,7 +201,7 @@ static sox_size_t sox_hcomread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
                                 p->sample = 0;
                         p->sample = (p->sample + datum) & 0xff;
                         p->huffcount--;
-                        *buf++ = SOX_UNSIGNED_BYTE_TO_SAMPLE(p->sample,);
+                        *buf++ = SOX_UNSIGNED_8BIT_TO_SAMPLE(p->sample,);
                         p->dictentry = 0;
                         done++;
                         len--;
@@ -280,7 +280,7 @@ static sox_size_t sox_hcomwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t le
 
   for (i = 0; i < len; i++) {
     datum = *buf++;
-    p->data[p->pos++] = SOX_SAMPLE_TO_UNSIGNED_BYTE(datum, ft->clips);
+    p->data[p->pos++] = SOX_SAMPLE_TO_UNSIGNED_8BIT(datum, ft->clips);
   }
 
   return len;

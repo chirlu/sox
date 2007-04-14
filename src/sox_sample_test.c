@@ -146,27 +146,27 @@ int main()
   TEST_SINT(24)
 
   d = -1.0000000001;
-  sample = SOX_FLOAT_DDWORD_TO_SAMPLE(d, clips);
+  sample = SOX_FLOAT_64BIT_TO_SAMPLE(d, clips);
   assert(sample == -SOX_SAMPLE_MAX && --clips == 0);
 
   d = -1;
-  sample = SOX_FLOAT_DDWORD_TO_SAMPLE(d, clips);
+  sample = SOX_FLOAT_64BIT_TO_SAMPLE(d, clips);
   assert(sample == -SOX_SAMPLE_MAX && clips == 0);
-  d = SOX_SAMPLE_TO_FLOAT_DDWORD(sample,clips);
+  d = SOX_SAMPLE_TO_FLOAT_64BIT(sample,clips);
   assert(d == -1 && clips == 0);
 
   --sample;
-  d = SOX_SAMPLE_TO_FLOAT_DDWORD(sample,clips);
+  d = SOX_SAMPLE_TO_FLOAT_64BIT(sample,clips);
   assert(d == -1 && --clips == 0);
 
   d = 1;
-  sample = SOX_FLOAT_DDWORD_TO_SAMPLE(d, clips);
+  sample = SOX_FLOAT_64BIT_TO_SAMPLE(d, clips);
   assert(sample == SOX_SAMPLE_MAX && clips == 0);
-  d = SOX_SAMPLE_TO_FLOAT_DDWORD(sample,clips);
+  d = SOX_SAMPLE_TO_FLOAT_64BIT(sample,clips);
   assert(d == 1 && clips == 0);
 
   d = 1.0000000001;
-  sample = SOX_FLOAT_DDWORD_TO_SAMPLE(d, clips);
+  sample = SOX_FLOAT_64BIT_TO_SAMPLE(d, clips);
   assert(sample == SOX_SAMPLE_MAX && --clips == 0);
 
   {

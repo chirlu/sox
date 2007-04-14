@@ -19,7 +19,7 @@
 
 #include "sox_i.h"
 
-#ifdef HAVE_AO_AO_H
+#ifdef HAVE_LIBAO
 
 #include <stdlib.h>
 #include <stdio.h>

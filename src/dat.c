@@ -139,7 +139,7 @@ static sox_size_t sox_datwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsa
       sprintf(s," %15.8g ",dat->timevalue);
       sox_writes(ft, s);
       for (i=0; i<ft->signal.channels; i++) {
-        sampval = SOX_SAMPLE_TO_FLOAT_DDWORD(*buf++, ft->clips);
+        sampval = SOX_SAMPLE_TO_FLOAT_64BIT(*buf++, ft->clips);
         sprintf(s," %15.8g", sampval);
         sox_writes(ft, s);
         done++;

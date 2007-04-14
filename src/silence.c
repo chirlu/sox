@@ -314,11 +314,11 @@ static int aboveThreshold(eff_t effp, sox_ssample_t value, double threshold, int
     switch(effp->ininfo.size)
     {
         case SOX_SIZE_BYTE:
-            value = SOX_SAMPLE_TO_SIGNED_BYTE(value, dummy_clipped_count);
+            value = SOX_SAMPLE_TO_SIGNED_8BIT(value, dummy_clipped_count);
             ratio = (double)abs(value) / (double)SOX_INT8_MAX;
             break;
         case SOX_SIZE_16BIT:
-            value = SOX_SAMPLE_TO_SIGNED_WORD(value, dummy_clipped_count);
+            value = SOX_SAMPLE_TO_SIGNED_16BIT(value, dummy_clipped_count);
             ratio = (double)abs(value) / (double)SOX_INT16_MAX;
             break;
         case SOX_SIZE_24BIT:
@@ -326,7 +326,7 @@ static int aboveThreshold(eff_t effp, sox_ssample_t value, double threshold, int
             ratio = (double)abs(value) / (double)SOX_INT24_MAX;
             break;
         case SOX_SIZE_32BIT:
-            value = SOX_SAMPLE_TO_SIGNED_DWORD(value,);
+            value = SOX_SAMPLE_TO_SIGNED_32BIT(value,);
             ratio = (double)labs(value) / (double)SOX_INT32_MAX;
             break;
         default:

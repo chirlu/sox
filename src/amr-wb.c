@@ -133,7 +133,7 @@ static sox_size_t read(ft_t ft, sox_ssample_t * buf, sox_size_t len)
       this->pcm_index = decode_1_frame(ft);
     if (this->pcm_index >= L_FRAME16k)
       break;
-    *buf++ = SOX_SIGNED_WORD_TO_SAMPLE(0xfffc & this->pcm[this->pcm_index++], ft->clips);
+    *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE(0xfffc & this->pcm[this->pcm_index++], ft->clips);
   }
   return done;
 }
@@ -174,7 +174,7 @@ static sox_size_t write(ft_t ft, const sox_ssample_t * buf, sox_size_t len)
   sox_size_t done;
 
   for (done = 0; done < len; ++done) {
-    this->pcm[this->pcm_index++] = (Word16) (SOX_SAMPLE_TO_SIGNED_WORD(*buf++, ft->clips));
+    this->pcm[this->pcm_index++] = (Word16) (SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips));
     if (this->pcm_index == L_FRAME16k) {
       this->pcm_index = 0;
       encode_1_frame(ft);

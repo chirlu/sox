@@ -98,7 +98,7 @@ static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
     case SOX_SIZE_BYTE:
       switch (ft->signal.encoding) {
       case SOX_ENCODING_UNSIGNED:
-        *buf++ = SOX_UNSIGNED_BYTE_TO_SAMPLE(sample,);
+        *buf++ = SOX_UNSIGNED_8BIT_TO_SAMPLE(sample,);
         break;
       default:
         sox_fail("Undetected sample encoding in read!");
@@ -168,7 +168,7 @@ static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
     switch (ft->signal.encoding) {
     case SOX_ENCODING_UNSIGNED:
       while (len--) {
-        len = sox_writeb(ft, SOX_SAMPLE_TO_UNSIGNED_BYTE(*buf++, ft->clips));
+        len = sox_writeb(ft, SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++, ft->clips));
         if (len == 0)
           break;
       }

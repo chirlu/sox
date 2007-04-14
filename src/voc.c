@@ -373,7 +373,7 @@ static sox_size_t sox_vocread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
                     } else if (v->format == VOC_FMT_ALAW) {
                         *buf++ =  SOX_ALAW_BYTE_TO_SAMPLE(uc);
                     } else {
-                        *buf++ = SOX_UNSIGNED_BYTE_TO_SAMPLE(uc,);
+                        *buf++ = SOX_UNSIGNED_8BIT_TO_SAMPLE(uc,);
                     }
                     break;
                 case SOX_SIZE_16BIT:
@@ -384,7 +384,7 @@ static sox_size_t sox_vocread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
                             v->rest = 0;
                             return done;
                         }
-                    *buf++ = SOX_SIGNED_WORD_TO_SAMPLE(sw,);
+                    *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE(sw,);
                     v->rest--; /* Processed 2 bytes so update */
                     break;
                 }
@@ -456,10 +456,10 @@ static sox_size_t sox_vocwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len
         v->samples += len;
         while(done < len) {
           if (ft->signal.size == SOX_SIZE_BYTE) {
-            uc = SOX_SAMPLE_TO_UNSIGNED_BYTE(*buf++, ft->clips);
+            uc = SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++, ft->clips);
             sox_writeb(ft, uc);
           } else {
-            sw = (int) SOX_SAMPLE_TO_SIGNED_WORD(*buf++, ft->clips);
+            sw = (int) SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips);
             sox_writew(ft,sw);
           }
           done++;

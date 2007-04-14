@@ -209,10 +209,10 @@ static sox_size_t read(ft_t const format, sox_ssample_t * sampleBuffer, sox_size
       for (channel = 0; channel < decoder->channels; channel++, actual++) {
         FLAC__int32 d = decoder->decoded_wide_samples[channel][decoder->wide_sample_number];
         switch (decoder->bits_per_sample) {
-        case  8: *sampleBuffer++ = SOX_SIGNED_BYTE_TO_SAMPLE(d,); break;
-        case 16: *sampleBuffer++ = SOX_SIGNED_WORD_TO_SAMPLE(d,); break;
+        case  8: *sampleBuffer++ = SOX_SIGNED_8BIT_TO_SAMPLE(d,); break;
+        case 16: *sampleBuffer++ = SOX_SIGNED_16BIT_TO_SAMPLE(d,); break;
         case 24: *sampleBuffer++ = SOX_SIGNED_24BIT_TO_SAMPLE(d,); break;
-        case 32: *sampleBuffer++ = SOX_SIGNED_DWORD_TO_SAMPLE(d,); break;
+        case 32: *sampleBuffer++ = SOX_SIGNED_32BIT_TO_SAMPLE(d,); break;
         }
       }
       ++decoder->wide_sample_number;
@@ -454,10 +454,10 @@ static sox_size_t write(ft_t const format, sox_ssample_t const * const sampleBuf
 
   for (i = 0; i < len; ++i) {
     switch (encoder->bits_per_sample) {
-      case  8: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_BYTE(sampleBuffer[i], format->clips); break;
-      case 16: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_WORD(sampleBuffer[i], format->clips); break;
+      case  8: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_8BIT(sampleBuffer[i], format->clips); break;
+      case 16: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_16BIT(sampleBuffer[i], format->clips); break;
       case 24: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_24BIT(sampleBuffer[i],format->clips); break;
-      case 32: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_DWORD(sampleBuffer[i],format->clips); break;
+      case 32: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_32BIT(sampleBuffer[i],format->clips); break;
     }
   }
   FLAC__stream_encoder_process_interleaved(encoder->flac, encoder->decoded_samples, len / format->signal.channels);
