@@ -35,10 +35,13 @@ This release understands:
   o Macintosh HCOM files
   o Amiga MAUD files
   o AMR-WB files
-  o MP3 (with optional external libraries)
-  o MP4, AAC, AC3 files (read-only, with optional external libraries)
-  o Ogg Vorbis files (with optional external library)
-  o FLAC files (with optional external library)
+  o MP3 (with optional libmad and libmp3lame libraries)
+  o MP4, AAC, AC3, WAVPACK files (read-only, with optional ffmpeg
+    library)
+  o AVI, WMV, Ogg Theora, MPEG video files (read-only, with optional
+    ffmpeg library)
+  o Ogg Vorbis files (with optional Ogg Vorbis libraries)
+  o FLAC files (with optional libflac)
   o IRCAM SoundFile files
   o NIST SPHERE files
   o Turtle beach SampleVision files
