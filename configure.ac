@@ -179,6 +179,12 @@ if test "$with_flac" != "no"; then
     fi
 fi
 
+dnl Check for ffmpeg libraries
+AC_CHECK_HEADER(ffmpeg/avformat.h,
+    [with_ffmpeg=yes
+    AC_CHECK_LIB(avformat, av_open_input_file,, with_ffmpeg=no)],
+    with_ffmpeg=no)
+
 dnl Check for MAD libraries
 AC_ARG_WITH(mad,
     AC_HELP_STRING([--without-mad],
@@ -247,6 +253,7 @@ echo "libgsm............................ $gsm_option"
 echo "libsndfile formats................ $with_sndfile"
 echo "Ogg Vorbis format................. $with_ogg_vorbis"
 echo "FLAC format....................... $using_flac"
+echo "ffmpeg formats.................... $with_ffmpeg"
 echo "MAD MP3 reader.................... $using_mad"
 echo "LAME MP3 writer................... $using_lame"
 echo "Secret Rabbit Code resampling..... $using_samplerate"

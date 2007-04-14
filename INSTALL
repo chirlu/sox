@@ -44,18 +44,20 @@ may require pkg-config to be installed to be properly detected.
 
 SoX can detect and use the following libraries:
 
-Ogg Vorbis - More information available at http://www.vorbis.com
+  Ogg Vorbis - http://www.vorbis.com/
 
-Lame MP3 encoder - http://lame.sourceforge.net/
+  Lame MP3 encoder - http://lame.sourceforge.net/
 
-MAD MP3 decoder - http://www.underbit.com/products/mad/
+  MAD MP3 decoder - http://www.underbit.com/products/mad/
 
-FLAC - http://flac.sourceforge.net/
+  FLAC - http://flac.sourceforge.net/
 
-Secret Rabbit Code - http://www.mega-nerd.com/SRC/
+  Secret Rabbit Code - http://www.mega-nerd.com/SRC/
 
-libsndfile - http://www.mega-nerd.com/libsndfile/
+  libsndfile - http://www.mega-nerd.com/libsndfile/
 
+  ffmpeg - http://ffmpeg.mplayerhq.hu/
+  
 If any libraries are installed in a non-standard locations in your
 system then you can use the CPPFLAGS and LDFLAGS variables to allow
 configure to find them. For example:
@@ -89,4 +91,3 @@ congratulations! SoX works.
 If your adding new features to SoX or want to perform advance tests
 on a new platform then you can use the scripts "tests.sh" and
 "testall.sh" to stress SoX.
-

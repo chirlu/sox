@@ -743,12 +743,13 @@ File types can be set by the filename extension or the
 .B -t
 option (see above). File types that can be determined by a filename
 extension are listed with their names preceded by a dot. File types
-that require optional libsndfile support are marked
-`\fB(libsndfile)\fR'. File types that can be handled by libsndfile
-using \fB\-t sndfile\fR are marked `\fB(also with \-t sndfile)\fR'.
-This might be useful if you have a file that doesn't work with SoX's
-default format readers and writers, and there's a libsndfile reader
-and writer for that format.
+that require an external library, such as ffmpeg or libsndfile, are
+marked e.g. `\fB(ffmpeg)\fR'. File types that can be handled by an
+external library via its pseudo file type (currently libsndfile or
+ffmpeg) are marked e.g. `\fB(also with \-t sndfile)\fR'. This might be
+useful if you have a file that doesn't work with SoX's default format
+readers and writers, and there's an external reader or writer for that
+format.
 .SP
 .TP
 .B .raw (also with \-t sndfile)
@@ -899,6 +900,12 @@ A self-describing variant of
 See
 .BR .paf .
 .TP
+.B ffmpeg
+This is a pseudo-type that forces ffmpeg to be used. At the moment,
+ffmpeg support is read-only. The actual file type is deduced from the
+file. This pseudo-type depends on SoX having been built with optional
+ffmpeg support.
+.TP
 .B .flac (also with \-t sndfile)
 Free Lossless Audio CODEC compressed audio.
 FLAC is an open, patent-free CODEC designed for compressing
@@ -996,12 +1003,21 @@ for a similar format.
 MP3 support in
 SoX is optional and requires access to either or both the external
 libmad and libmp3lame libraries.  To
-see if there is support for Mp3 run
+see if there is support for MP3 run
 .EX
 	sox -h
 .EE
 and look for it under the list of supported file formats as `mp3'.
 .SP
+.TP
+\&\fB.mp4\fR, \fB.m4a\fR \fB(ffmpeg)\fR
+MP4 compressed audio.  MP3 (MPEG 4) is part of the
+MPEG standards for audio and video compression.  See
+.B mp3
+for more information.
+.SP
+MP4 support in SoX is optional and requires access to the external
+ffmpeg libraries. Currently it is read-only.
 .TP
 .B .nist (also with \-t sndfile)
 See \fB.sph\fR.
@@ -1097,10 +1113,9 @@ See
 .BR .au .
 .TP
 .B sndfile
-This is a pseudo-type that forces libsndfile to be used, even for file
-types normally handled internally by SoX. For writing files, the
+This is a pseudo-type that forces libsndfile to be used. For writing files, the
 actual file type is then taken from the output file name; for reading
-them, it is deduced from the file and any other format parameters.
+them, it is deduced from the file.
 This pseudo-type depends on SoX having been built with optional
 libsndfile support.
 .TP

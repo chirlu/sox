@@ -34,15 +34,17 @@ This release understands:
   o GSM files
   o Macintosh HCOM files
   o Amiga MAUD files
-  o MP3 files (with optional external library)
+  o AMR-WB files
+  o MP3 (with optional external libraries)
+  o MP4, AAC, AC3 files (read-only, with optional external libraries)
+  o Ogg Vorbis files (with optional external library)
+  o FLAC files (with optional external library)
   o IRCAM SoundFile files
   o NIST SPHERE files
   o Turtle beach SampleVision files
   o Soundtool (DOS) files
   o Yamaha TX-16W sampler files
   o Sound Blaster .VOC files
-  o Ogg Vorbis files (with optional external library)
-  o FLAC files (with optional external library)
   o Dialogic/OKI ADPCM files (.VOX)
   o Microsoft .WAV files
     o PCM, u-law, A-law
@@ -53,7 +55,7 @@ This release understands:
   o Maxis XA Audio files
     o EA ADPCM (read support only, for now)
   o Pseudo-file formats that allow direct playing/recording
-    from some audio devices under UNIX
+    from most audio devices
   o The "null" pseudo-file that reads and writes from/to nowhere
 
 Most sound formats are auto-detected.

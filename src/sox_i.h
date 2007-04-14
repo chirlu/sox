@@ -236,6 +236,9 @@ extern const sox_format_t *sox_cdr_format_fn(void);
 extern const sox_format_t *sox_cvsd_format_fn(void);
 extern const sox_format_t *sox_dvms_format_fn(void);
 extern const sox_format_t *sox_dat_format_fn(void);
+#ifdef HAVE_LIBAVFORMAT
+extern const sox_format_t *sox_ffmpeg_format_fn(void);
+#endif
 #ifdef HAVE_LIBFLAC
 extern const sox_format_t *sox_flac_format_fn(void);
 #endif

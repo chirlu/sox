@@ -32,6 +32,9 @@ sox_format_fn_t sox_format_fns[] = {
   sox_cvsd_format_fn,
   sox_dat_format_fn,
   sox_dvms_format_fn,
+#ifdef HAVE_LIBAVFORMAT
+  sox_ffmpeg_format_fn,
+#endif
 #ifdef HAVE_LIBFLAC
   sox_flac_format_fn,
 #endif
