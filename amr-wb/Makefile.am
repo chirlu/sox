@@ -10,4 +10,6 @@ p_med_ol.c pred_lt4.c preemph.c q_gain2.c qisf_ns.c qpisf_2s.c q_pulse.c \
 random.c residu.c scale.c syn_filt.c updt_tar.c util.c voicefac.c \
 wb_vad.c weight_a.c acelp.h basic_op.h bits.h cnst.h cod_main.h count.h \
 dec_main.h dtx.h log2.h log2_tab.h main.h math_op.h oper_32b.h p_med_o.h \
-q_pulse.h typedef.h typedefs.h wb_vad_c.h wb_vad.h
+q_pulse.h typedef.h typedefs.h wb_vad_c.h wb_vad.h \
+grid100.tab homing.tab lag_wind.tab p_med_ol.tab qisf_ns.tab \
+ham_wind.tab isp_isf.tab mime_io.tab q_gain2.tab qpisf_2s.tab
