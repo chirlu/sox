@@ -32,7 +32,7 @@ fi
 
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = yes; then
-    CFLAGS="$CFLAGS -Wall -Wextra -Wmissing-prototypes -Wstrict-prototypes -pedantic"
+    CFLAGS="$CFLAGS -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic"
 fi
 
 dnl Check for system dependent features.
