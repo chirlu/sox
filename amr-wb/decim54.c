@@ -239,5 +239,5 @@ static Word16 Interpol(                    /* return result of interpolation */
     }
     L_sum = L_shl(L_sum, 1);               /* saturation can occur here */
 
-    return (round(L_sum));
+    return (roundL(L_sum));
 }

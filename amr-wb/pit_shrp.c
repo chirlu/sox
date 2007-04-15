@@ -23,7 +23,7 @@ void Pit_shrp(
     {
         L_tmp = L_deposit_h(x[i]);
         L_tmp = L_mac(L_tmp, x[i - pit_lag], sharp);
-        x[i] = round(L_tmp);
+        x[i] = roundL(L_tmp);
         move16();
     }
 

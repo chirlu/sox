@@ -57,7 +57,7 @@ void Filt_6k_7k(
         L_tmp = 0;                         move32();
         for (j = 0; j < L_FIR; j++)
             L_tmp = L_mac(L_tmp, x[i + j], fir_6k_7k[j]);
-        signal[i] = round(L_tmp);          move16();
+        signal[i] = roundL(L_tmp);          move16();
     }
 
     Copy(x + lg, mem, L_FIR - 1);

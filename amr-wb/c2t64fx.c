@@ -64,12 +64,12 @@ void ACELP_2t64_fx(
     s = Dot_product12(cn, cn, L_SUBFR, &exp);
     Isqrt_n(&s, &exp);
     s = L_shl(s, add(exp, 5));             /* saturation can occur here */
-    k_cn = round(s);
+    k_cn = roundL(s);
 
     /* set k_dn = 32..512 (ener_dn = 2^30..2^22) */
     s = Dot_product12(dn, dn, L_SUBFR, &exp);
     Isqrt_n(&s, &exp);
-    k_dn = round(L_shl(s, add(exp, 5 + 3)));    /* k_dn = 256..4096 */
+    k_dn = roundL(L_shl(s, add(exp, 5 + 3)));    /* k_dn = 256..4096 */
     k_dn = mult_r(alp, k_dn);              /* alp in Q12 */
 
     /* mix normalized cn[] and dn[] */

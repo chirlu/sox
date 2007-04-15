@@ -215,7 +215,7 @@ static void Norm_Corr(
         L_tmp = L_mult(corr, norm);
         L_tmp = L_shl(L_tmp, add(add(exp_corr, exp_norm), scale));
 
-        corr_norm[t] = round(L_tmp);       move16();
+        corr_norm[t] = roundL(L_tmp);       move16();
 
         /* modify the filtered excitation excf[] for the next iteration */
 
@@ -289,7 +289,7 @@ static Word16 Interpol_4(                  /* (o)  : interpolated value  */
         L_sum = L_mac(L_sum, x[i], inter4_1[k]);
     }
 
-    sum = round(L_shl(L_sum, 1));
+    sum = roundL(L_shl(L_sum, 1));
 
     return (sum);
 }

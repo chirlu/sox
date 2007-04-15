@@ -84,7 +84,7 @@ void HP400_12k8(
         L_Extract(L_tmp, &y1_hi, &y1_lo);
 
         /* signal is divided by 16 to avoid overflow in energy computation */
-        signal[i] = round(L_tmp);          move16();
+        signal[i] = roundL(L_tmp);          move16();
     }
 
     mem[0] = y2_hi;                        move16();

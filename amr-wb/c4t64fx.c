@@ -210,12 +210,12 @@ void ACELP_4t64_fx(
     s = Dot_product12(cn, cn, L_SUBFR, &exp);
     Isqrt_n(&s, &exp);
     s = L_shl(s, add(exp, 5));             /* saturation can occur here */
-    k_cn = round(s);
+    k_cn = roundL(s);
 
     /* set k_dn = 32..512 (ener_dn = 2^30..2^22) */
     s = Dot_product12(dn, dn, L_SUBFR, &exp);
     Isqrt_n(&s, &exp);
-    k_dn = round(L_shl(s, add(exp, 5 + 3)));    /* k_dn = 256..4096 */
+    k_dn = roundL(L_shl(s, add(exp, 5 + 3)));    /* k_dn = 256..4096 */
     k_dn = mult_r(alp, k_dn);              /* alp in Q12 */
 
     /* mix normalized cn[] and dn[] */
@@ -528,7 +528,7 @@ void ACELP_4t64_fx(
             s = L_mac(s, rrixix[ipos[1]][j], 4096);
             i = add(shl(i, 4), j);         /* (ix/STEP)*NB_POS + (iy/STEP) */
             s = L_mac(s, rrixiy[ipos[0]][i], 8192);
-            alp = round(s);
+            alp = roundL(s);
             test();move16();move16();
             if (sign[ix] < 0)
                 p0 = h_inv - ix;
@@ -593,7 +593,7 @@ void ACELP_4t64_fx(
             for (i = 0; i < L_SUBFR; i++)
                 L_tmp = L_mac(L_tmp, vec[i], vec[i]);
 
-            alp = round(L_shr(L_tmp, 3));
+            alp = roundL(L_shr(L_tmp, 3));
 
             if (sub(nbbits, 72) == 0)
             {
@@ -813,7 +813,7 @@ static void cor_h_vec(
 
         L_sum = L_shl(L_sum, 1);
 
-        corr = round(L_sum);
+        corr = roundL(L_sum);
 
         cor[i] = add(mult(corr, sign[pos]), *p0++);     move16();
 

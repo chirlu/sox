@@ -239,7 +239,7 @@ void D_gain2(
         }
     }
     /* keep past gain code in Q3 for frame erasure (can saturate) */
-    *past_gain_code = round(L_shl(*gain_cod, 3));       move16();
+    *past_gain_code = roundL(L_shl(*gain_cod, 3));       move16();
     *past_gain_pit = *gain_pit;            move16();
 
     *prev_gc = *past_gain_code;            move16();

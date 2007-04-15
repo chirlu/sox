@@ -399,13 +399,13 @@ void coder(
         L_tmp = L_mult(new_speech[i], 16384);
         L_tmp = L_msu(L_tmp, new_speech[i - 1], mu);
         L_tmp = L_shl(L_tmp, Q_new);
-        new_speech[i] = round(L_tmp);      move16();
+        new_speech[i] = roundL(L_tmp);      move16();
     }
 
     L_tmp = L_mult(new_speech[0], 16384);
     L_tmp = L_msu(L_tmp, st->mem_preemph, mu);
     L_tmp = L_shl(L_tmp, Q_new);
-    new_speech[0] = round(L_tmp);          move16();
+    new_speech[0] = roundL(L_tmp);          move16();
 
     st->mem_preemph = tmp;                 move16();
 
@@ -870,7 +870,7 @@ void coder(
             for (j = 1; j <= M; j++)
                 L_tmp = L_msu(L_tmp, p_Aq[j], error[i + M - j]);
 
-            h1[i] = error[i + M] = round(L_shl(L_tmp, 3));      move16();move16();
+            h1[i] = error[i + M] = roundL(L_shl(L_tmp, 3));      move16();move16();
         }
         /* deemph without division by 2 -> Q14 to Q15 */
         tmp = 0;                           move16();
@@ -1057,7 +1057,7 @@ void coder(
             L_tmp = L_mult(5898, exc[i - 1 + i_subfr]);
             L_tmp = L_mac(L_tmp, 20972, exc[i + i_subfr]);
             L_tmp = L_mac(L_tmp, 5898, exc[i + 1 + i_subfr]);
-            code[i] = round(L_tmp);        move16();
+            code[i] = roundL(L_tmp);        move16();
         }
 
         Convolve(code, h1, y2, L_SUBFR);
@@ -1242,7 +1242,7 @@ void coder(
         Gp_clip_test_gain_pit(gain_pit, st->gp_clip);
 
         L_tmp = L_shl(L_gain_code, Q_new); /* saturation can occur here */
-        gain_code = round(L_tmp);          /* scaled gain_code with Qnew */
+        gain_code = roundL(L_tmp);          /* scaled gain_code with Qnew */
 
         /*----------------------------------------------------------*
          * Update parameters for the next subframe.                 *
@@ -1274,7 +1274,7 @@ void coder(
         L_tmp = L_mac(L_tmp, xn[L_SUBFR - 1], 16384);
         L_tmp = L_msu(L_tmp, y1[L_SUBFR - 1], gain_pit);
         L_tmp = L_shl(L_tmp, sub(1, shift));
-        st->mem_w0 = round(L_tmp);         move16();
+        st->mem_w0 = roundL(L_tmp);         move16();
 
         if (sub(*ser_size, NBBITS_24k) >= 0)
             Copy(&exc[i_subfr], exc2, L_SUBFR);
@@ -1286,7 +1286,7 @@ void coder(
             L_tmp = L_shl(L_tmp, 5);
             L_tmp = L_mac(L_tmp, exc[i + i_subfr], gain_pit);
             L_tmp = L_shl(L_tmp, 1);       /* saturation can occur here */
-            exc[i + i_subfr] = round(L_tmp);    move16();
+            exc[i + i_subfr] = roundL(L_tmp);    move16();
         }
 
         Syn_filt(p_Aq, M, &exc[i_subfr], synth, L_SUBFR, st->mem_syn, 1);
@@ -1349,23 +1349,23 @@ void coder(
 
             L_tmp = L_deposit_h(code[0]);
             L_tmp = L_msu(L_tmp, code[1], tmp);
-            code2[0] = round(L_tmp);       move16();
+            code2[0] = roundL(L_tmp);       move16();
 
             for (i = 1; i < L_SUBFR - 1; i++)
             {
                 L_tmp = L_deposit_h(code[i]);
                 L_tmp = L_msu(L_tmp, code[i + 1], tmp);
                 L_tmp = L_msu(L_tmp, code[i - 1], tmp);
-                code2[i] = round(L_tmp);   move16();
+                code2[i] = roundL(L_tmp);   move16();
             }
 
             L_tmp = L_deposit_h(code[L_SUBFR - 1]);
             L_tmp = L_msu(L_tmp, code[L_SUBFR - 2], tmp);
-            code2[L_SUBFR - 1] = round(L_tmp);  move16();
+            code2[L_SUBFR - 1] = roundL(L_tmp);  move16();
 
             /* build excitation */
 
-            gain_code = round(L_shl(L_gain_code, Q_new));
+            gain_code = roundL(L_shl(L_gain_code, Q_new));
 
             for (i = 0; i < L_SUBFR; i++)
             {
@@ -1373,7 +1373,7 @@ void coder(
                 L_tmp = L_shl(L_tmp, 5);
                 L_tmp = L_mac(L_tmp, exc2[i], gain_pit);
                 L_tmp = L_shl(L_tmp, 1);   /* saturation can occur here */
-                exc2[i] = round(L_tmp);    move16();
+                exc2[i] = roundL(L_tmp);    move16();
             }
 
             corr_gain = synthesis(p_Aq, exc2, Q_new, &speech16k[i_subfr * 5 / 4], st);

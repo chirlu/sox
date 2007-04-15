@@ -570,7 +570,7 @@ Word16 extract_l (Word32 L_var1)
  |   Round the lower 16 bits of the 32 bit input number into the MS 16 bits  |
  |   with saturation. Shift the resulting bits right by 16 and return the 16 |
  |   bit number:                                                             |
- |               round(L_var1) = extract_h(L_add(L_var1,32768))              |
+ |               roundL(L_var1) = extract_h(L_add(L_var1,32768))              |
  |                                                                           |
  |   Complexity weight : 1                                                   |
  |                                                                           |
@@ -592,7 +592,7 @@ Word16 extract_l (Word32 L_var1)
  |___________________________________________________________________________|
 */
 
-Word16 round (Word32 L_var1)
+Word16 roundL (Word32 L_var1)
 {
     Word16 var_out;
     Word32 L_rounded;
@@ -1474,7 +1474,7 @@ Word16 shr_r (Word16 var1, Word16 var2)
  |   result to L_var3 with saturation. Round the LS 16 bits of the result    |
  |   into the MS 16 bits with saturation and shift the result right by 16.   |
  |   Return a 16 bit result.                                                 |
- |            mac_r(L_var3,var1,var2) = round(L_mac(L_var3,var1,var2))       |
+ |            mac_r(L_var3,var1,var2) = roundL(L_mac(L_var3,var1,var2))       |
  |                                                                           |
  |   Complexity weight : 2                                                   |
  |                                                                           |
@@ -1533,7 +1533,7 @@ Word16 mac_r (Word32 L_var3, Word16 var1, Word16 var2)
  |   bit result to L_var3 with saturation. Round the LS 16 bits of the res-  |
  |   ult into the MS 16 bits with saturation and shift the result right by   |
  |   16. Return a 16 bit result.                                             |
- |            msu_r(L_var3,var1,var2) = round(L_msu(L_var3,var1,var2))       |
+ |            msu_r(L_var3,var1,var2) = roundL(L_msu(L_var3,var1,var2))       |
  |                                                                           |
  |   Complexity weight : 2                                                   |
  |                                                                           |

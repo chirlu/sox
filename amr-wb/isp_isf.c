@@ -41,7 +41,7 @@ void Isp_isf(
         /* acos(isp[i])= ind*128 + ( ( isp[i]-table[ind] ) * slope[ind] )/2048 */
 
         L_tmp = L_mult(sub(isp[i], table[ind]), slope[ind]);
-        isf[i] = round(L_shl(L_tmp, 4));   /* (isp[i]-table[ind])*slope[ind])>>11 */
+        isf[i] = roundL(L_shl(L_tmp, 4));   /* (isp[i]-table[ind])*slope[ind])>>11 */
         move16();
         isf[i] = add(isf[i], shl(ind, 7)); move16();
     }

@@ -52,7 +52,7 @@ void LP_Decim2(
         for (k = 0; k < L_FIR; k++)
             L_tmp = L_mac(L_tmp, *p_x++, h_fir[k]);
 
-        x[j] = round(L_tmp);               move16();
+        x[j] = roundL(L_tmp);               move16();
     }
 
     return;

@@ -330,7 +330,7 @@ void decoder(
             {
                 L_tmp = L_mult(isf_tmp[i], sub(32767, interpol_frac[j]));
                 L_tmp = L_mac(L_tmp, isf[i], interpol_frac[j]);
-                HfIsf[i] = round(L_tmp);   move16();
+                HfIsf[i] = roundL(L_tmp);   move16();
             }
             synthesis(Aq, &exc2[i_subfr], 0, &synth16k[i_subfr * 5 / 4], (short) 1, HfIsf, nb_bits, newDTXState, st, bfi);
         }
@@ -554,7 +554,7 @@ void decoder(
                 L_tmp = L_mult(5898, exc[i - 1 + i_subfr]);
                 L_tmp = L_mac(L_tmp, 20972, exc[i + i_subfr]);
                 L_tmp = L_mac(L_tmp, 5898, exc[i + 1 + i_subfr]);
-                code[i] = round(L_tmp);    move16();
+                code[i] = roundL(L_tmp);    move16();
             }
             Copy(code, &exc[i_subfr], L_SUBFR);
         }
@@ -692,7 +692,7 @@ void decoder(
             Q_new = add(Q_new, 1);
             test();test();
         }
-        gain_code = round(L_tmp);          /* scaled gain_code with Qnew */
+        gain_code = roundL(L_tmp);          /* scaled gain_code with Qnew */
 
         Scale_sig(exc + i_subfr - (PIT_MAX + L_INTERPOL),
             PIT_MAX + L_INTERPOL + L_SUBFR, sub(Q_new, st->Q_old));
@@ -735,7 +735,7 @@ void decoder(
                     tmp = mult(exc2[i], pit_sharp);
                     L_tmp = L_mult(tmp, gain_pit);
                     L_tmp = L_shr(L_tmp, 1);
-                    excp[i] = round(L_tmp);
+                    excp[i] = roundL(L_tmp);
                     move16();
                 }
             }
@@ -763,7 +763,7 @@ void decoder(
             L_tmp = L_shl(L_tmp, 5);
             L_tmp = L_mac(L_tmp, exc[i + i_subfr], gain_pit);
             L_tmp = L_shl(L_tmp, 1);
-            exc[i + i_subfr] = round(L_tmp);    move16();
+            exc[i + i_subfr] = roundL(L_tmp);    move16();
         }
 
         /* find maximum value of excitation for next scaling */
@@ -852,7 +852,7 @@ void decoder(
 
         L_tmp = L_deposit_h(code[0]);
         L_tmp = L_msu(L_tmp, code[1], tmp);
-        code2[0] = round(L_tmp);
+        code2[0] = roundL(L_tmp);
         move16();
 
         for (i = 1; i < L_SUBFR - 1; i++)
@@ -860,18 +860,18 @@ void decoder(
             L_tmp = L_deposit_h(code[i]);
             L_tmp = L_msu(L_tmp, code[i + 1], tmp);
             L_tmp = L_msu(L_tmp, code[i - 1], tmp);
-            code2[i] = round(L_tmp);
+            code2[i] = roundL(L_tmp);
             move16();
         }
 
         L_tmp = L_deposit_h(code[L_SUBFR - 1]);
         L_tmp = L_msu(L_tmp, code[L_SUBFR - 2], tmp);
-        code2[L_SUBFR - 1] = round(L_tmp);
+        code2[L_SUBFR - 1] = roundL(L_tmp);
         move16();
 
         /* build excitation */
 
-        gain_code = round(L_shl(L_gain_code, Q_new));
+        gain_code = roundL(L_shl(L_gain_code, Q_new));
 
         for (i = 0; i < L_SUBFR; i++)
         {
@@ -879,7 +879,7 @@ void decoder(
             L_tmp = L_shl(L_tmp, 5);
             L_tmp = L_mac(L_tmp, exc2[i], gain_pit);
             L_tmp = L_shl(L_tmp, 1);       /* saturation can occur here */
-            exc2[i] = round(L_tmp);
+            exc2[i] = roundL(L_tmp);
             move16();
         }
 
@@ -903,7 +903,7 @@ void decoder(
             {
                 L_tmp = L_mult(isf_tmp[i], sub(32767, interpol_frac[j]));
                 L_tmp = L_mac(L_tmp, isf[i], interpol_frac[j]);
-                HfIsf[i] = round(L_tmp);
+                HfIsf[i] = roundL(L_tmp);
             }
         } else
         {

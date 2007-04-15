@@ -43,7 +43,7 @@ void agc2(
         return;
     }
     exp = sub(norm_l(s), 1);
-    gain_out = round(L_shl(s, exp));
+    gain_out = roundL(L_shl(s, exp));
 
     /* calculate gain_in with exponent */
 
@@ -63,7 +63,7 @@ void agc2(
     } else
     {
         i = norm_l(s);
-        gain_in = round(L_shl(s, i));
+        gain_in = roundL(L_shl(s, i));
         exp = sub(exp, i);
 
         /*---------------------------------------------------*
@@ -75,7 +75,7 @@ void agc2(
         s = L_shr(s, exp);                 /* add exponent */
 
         s = Isqrt(s);
-        g0 = round(L_shl(s, 9));
+        g0 = roundL(L_shl(s, 9));
     }
     /* sig_out(n) = gain(n) sig_out(n) */
 

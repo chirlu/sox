@@ -83,7 +83,7 @@ void HP50_12k8(
         L_Extract(L_tmp, &y1_hi, &y1_lo);
 
         L_tmp = L_shl(L_tmp, 1);           /* coeff Q14 --> Q15 with saturation */
-        signal[i] = round(L_tmp);          move16();
+        signal[i] = roundL(L_tmp);          move16();
     }
 
     mem[0] = y2_hi;                        move16();

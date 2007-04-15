@@ -33,7 +33,7 @@ void Int_isp(
         {
             L_tmp = L_mult(isp_old[i], fac_old);
             L_tmp = L_mac(L_tmp, isp_new[i], fac_new);
-            isp[i] = round(L_tmp);         move16();
+            isp[i] = roundL(L_tmp);         move16();
         }
         Isp_Az(isp, Az, M, 0);
         Az += MP1;

@@ -48,7 +48,7 @@ void Syn_filt(
 
         L_tmp = L_shl(L_tmp, add(3, s));
 
-        y[i] = yy[i] = round(L_tmp);       move16();move16();
+        y[i] = yy[i] = roundL(L_tmp);       move16();move16();
     }
 
     /* Update memory if required */

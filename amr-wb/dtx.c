@@ -1152,7 +1152,7 @@ static void find_frame_indices(
     tmp = norm_l(summax);
     summax = L_shl(summax, tmp);
     summin = L_shl(summin, tmp);
-    L_tmp = L_mult(round(summax), INV_MED_THRESH);
+    L_tmp = L_mult(roundL(summax), INV_MED_THRESH);
     test();
     if (L_sub(L_tmp, summin) <= 0)
     {
@@ -1162,7 +1162,7 @@ static void find_frame_indices(
     /* minimum distance then the median ISF vector replacement is    */
     /* not performed                                                 */
     summax2nd = L_shl(summax2nd, tmp);
-    L_tmp = L_mult(round(summax2nd), INV_MED_THRESH);
+    L_tmp = L_mult(roundL(summax2nd), INV_MED_THRESH);
     test();
     if (L_sub(L_tmp, summin) <= 0)
     {

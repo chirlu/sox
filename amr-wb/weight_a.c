@@ -23,10 +23,10 @@ void Weight_a(
     fac = gamma;                           move16();
     for (i = 1; i < m; i++)
     {
-        ap[i] = round(L_mult(a[i], fac));  move16();
-        fac = round(L_mult(fac, gamma));
+        ap[i] = roundL(L_mult(a[i], fac));  move16();
+        fac = roundL(L_mult(fac, gamma));
     }
-    ap[m] = round(L_mult(a[m], fac));      move16();
+    ap[m] = roundL(L_mult(a[m], fac));      move16();
 
     return;
 }

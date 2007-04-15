@@ -72,8 +72,8 @@ void Az_isp(
     for (i = 0; i < NC; i++)
     {
         t0 = L_mult(a[i], 16384);
-        f1[i] = round(L_mac(t0, a[M - i], 16384));      move16();  /* =(a[i]+a[M-i])/2 */
-        f2[i] = round(L_msu(t0, a[M - i], 16384));      move16();  /* =(a[i]-a[M-i])/2 */
+        f1[i] = roundL(L_mac(t0, a[M - i], 16384));      move16();  /* =(a[i]+a[M-i])/2 */
+        f2[i] = roundL(L_msu(t0, a[M - i], 16384));      move16();  /* =(a[i]-a[M-i])/2 */
     }
     f1[NC] = a[NC];                        move16();
 

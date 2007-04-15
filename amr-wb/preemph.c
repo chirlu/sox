@@ -28,12 +28,12 @@ void Preemph(
     {
         L_tmp = L_deposit_h(x[i]);
         L_tmp = L_msu(L_tmp, x[i - 1], mu);
-        x[i] = round(L_tmp);               move16();
+        x[i] = roundL(L_tmp);               move16();
     }
 
     L_tmp = L_deposit_h(x[0]);
     L_tmp = L_msu(L_tmp, *mem, mu);
-    x[0] = round(L_tmp);                   move16();
+    x[0] = roundL(L_tmp);                   move16();
 
     *mem = temp;                           move16();
 
@@ -58,13 +58,13 @@ void Preemph2(
         L_tmp = L_deposit_h(x[i]);
         L_tmp = L_msu(L_tmp, x[i - 1], mu);
         L_tmp = L_shl(L_tmp, 1);
-        x[i] = round(L_tmp);               move16();
+        x[i] = roundL(L_tmp);               move16();
     }
 
     L_tmp = L_deposit_h(x[0]);
     L_tmp = L_msu(L_tmp, *mem, mu);
     L_tmp = L_shl(L_tmp, 1);
-    x[0] = round(L_tmp);                   move16();
+    x[0] = roundL(L_tmp);                   move16();
 
     *mem = temp;                           move16();
 

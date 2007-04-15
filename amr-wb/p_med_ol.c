@@ -103,7 +103,7 @@ Word16 Pitch_med_ol(                       /* output: open loop pitch lag       
     R2 = L_shl(R2, exp_R2);
 
 
-    R1 = L_mult(round(R1), round(R2));
+    R1 = L_mult(roundL(R1), roundL(R2));
 
     i = norm_l(R1);
     R1 = L_shl(R1, i);
@@ -114,11 +114,11 @@ Word16 Pitch_med_ol(                       /* output: open loop pitch lag       
 
     Isqrt_n(&R1, &exp_R1);
 
-    R0 = L_mult(round(R0), round(R1));
+    R0 = L_mult(roundL(R0), roundL(R1));
     exp_R0 = sub(31, exp_R0);
     exp_R0 = add(exp_R0, exp_R1);
 
-    *gain = round(L_shl(R0, exp_R0));
+    *gain = roundL(L_shl(R0, exp_R0));
     move16();
 
     /* Shitf hp_wsp[] for next frame */

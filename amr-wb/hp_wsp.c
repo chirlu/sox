@@ -60,7 +60,7 @@ void scale_mem_Hp_wsp(Word16 mem[], Word16 exp)
     {
         L_tmp = L_deposit_h(mem[i]);       /* x[i] */
         L_tmp = L_shl(L_tmp, exp);
-        mem[i] = round(L_tmp);             move16();
+        mem[i] = roundL(L_tmp);             move16();
     }
 
     return;
@@ -122,7 +122,7 @@ void Hp_wsp(
         L_Extract(L_tmp, &y1_hi, &y1_lo);
 
         L_tmp = L_shl(L_tmp, 1);           /* coeff Q14 --> Q15 */
-        hp_wsp[i] = round(L_tmp);          move16();
+        hp_wsp[i] = roundL(L_tmp);          move16();
     }
 
     mem[0] = y3_hi;                        move16();

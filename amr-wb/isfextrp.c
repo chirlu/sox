@@ -35,7 +35,7 @@ void Isf_Extrapolation(Word16 HfIsf[])
     /* Mean of difference vector */
     for (i = 3; i < (M - 1); i++)
         L_tmp = L_mac(L_tmp, IsfDiff[i - 1], INV_LENGTH);
-    mean = round(L_tmp);
+    mean = roundL(L_tmp);
 
     IsfCorr[0] = 0;                        move32();
     IsfCorr[1] = 0;                        move32();

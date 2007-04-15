@@ -108,7 +108,7 @@ void Pred_lt4(
         }
         L_sum = L_shl(L_sum, 1);
 
-        exc[j] = round(L_sum);
+        exc[j] = roundL(L_sum);
         move16();
         x++;
     }

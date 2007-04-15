@@ -60,7 +60,7 @@ void cor_h_x(
 
     for (i = 0; i < L_SUBFR; i++)
     {
-        dn[i] = round(L_shl(y32[i], j));   move16();
+        dn[i] = roundL(L_shl(y32[i], j));   move16();
     }
 
     return;

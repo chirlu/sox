@@ -298,7 +298,7 @@ void Dpisf_2s_46b(
             {
                 L_tmp = L_mac(L_tmp, isf_buf[j * M + i], 8192);
             }
-            ref_isf[i] = round(L_tmp);     move16();
+            ref_isf[i] = roundL(L_tmp);     move16();
         }
 
         /* use the past ISFs slightly shifted towards their mean */
@@ -397,7 +397,7 @@ void Dpisf_2s_36b(
                 L_tmp = L_mac(L_tmp, isf_buf[j * M + i], 8192);
             }
 
-            ref_isf[i] = round(L_tmp);     move16();
+            ref_isf[i] = roundL(L_tmp);     move16();
         }
 
         /* use the past ISFs slightly shifted towards their mean */

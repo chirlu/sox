@@ -223,7 +223,7 @@ void Levinson(
     for (i = 1; i <= M; i++)
     {
         t0 = L_Comp(Ah[i], Al[i]);
-        old_A[i - 1] = A[i] = round(L_shl(t0, 1));      move16();move16();
+        old_A[i - 1] = A[i] = roundL(L_shl(t0, 1));      move16();move16();
     }
     old_rc[0] = rc[0];                     move16();
     old_rc[1] = rc[1];                     move16();

@@ -459,7 +459,7 @@ Word16 voice_factor(                       /* (o) Q15 : factor (-1=unvoiced to 1
 void Scale_sig(
      Word16 x[],                           /* (i/o) : signal to scale               */
      Word16 lg,                            /* (i)   : size of x[]                   */
-     Word16 exp                            /* (i)   : exponent: x = round(x << exp) */
+     Word16 exp                            /* (i)   : exponent: x = roundL(x << exp) */
 );
 
 void snr(Word16 x[], Word16 y[], Word16 l, Word16 Q_x);
