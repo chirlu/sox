@@ -29,7 +29,10 @@ void set_endianness_if_not_already_set(ft_t ft)
 {
   if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT) {
     if (ft->h->flags & SOX_FILE_ENDIAN)
-      ft->signal.reverse_bytes = SOX_IS_LITTLEENDIAN != !(ft->h->flags & SOX_FILE_ENDBIG);
+      /* Set reverse_bytes for big-endian formats; on a big-endian
+         system this cancels out with the reversal made for being on a
+         big-endian system. */
+      ft->signal.reverse_bytes = (ft->h->flags & SOX_FILE_ENDBIG) != 0;
     else
       ft->signal.reverse_bytes = SOX_OPTION_NO;
   }
