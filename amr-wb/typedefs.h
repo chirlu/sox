@@ -20,20 +20,6 @@
 *        UWord32       32-bit unsigned   minUWord32, maxUWord32
 *        Float         floating point    minFloat,   maxFloat
 *
-*
-*      The following compile switches are #defined:
-*
-*        PLATFORM      string indicating platform progam is compiled on
-*                      possible values: "OSF", "PC", "SUN"
-*
-*        OSF           only defined if the current platform is an Alpha
-*        PC            only defined if the current platform is a PC
-*        SUN           only defined if the current platform is a Sun
-*        
-*        LSBFIRST      is defined if the byte order on this platform is
-*                      "least significant byte first" -> defined on DEC Alpha
-*                      and PC, undefined on Sun
-*
 ********************************************************************************
 */
 #ifndef typedefs_h
@@ -148,29 +134,6 @@ typedef struct {
 typedef int Bool;
 #define false 0
 #define true 1
-
-/*
- ********* Check current platform
- */
-#if defined(__MSDOS__)
-#define PC
-#define PLATFORM "PC"
-#define LSBFIRST
-#elif defined(__osf__)
-#define OSF
-#define PLATFORM "OSF"
-#define LSBFIRST
-#elif defined(__sun__) || defined(__sun)
-#define SUN
-#define PLATFORM "SUN"
-#undef LSBFIRST
-#elif defined(linux) && (defined(i386) || defined(__amd64__)) || defined(__MINGW32__)
-#define PC
-#define PLATFORM "PC"
-#define LSBFIRST
-#else
-#error "can't determine architecture; adapt typedefs.h to your platform"
-#endif
 
 #endif
 
