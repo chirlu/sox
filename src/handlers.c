@@ -42,6 +42,7 @@ sox_format_fn_t sox_format_fns[] = {
   sox_hcom_format_fn,
   sox_ima_format_fn,
   sox_la_format_fn,
+  sox_lpc10_format_fn,
   sox_lu_format_fn,
   sox_maud_format_fn,
 #if defined(HAVE_LIBMAD) || defined(HAVE_LIBMP3LAME)

@@ -245,6 +245,7 @@ extern const sox_format_t *sox_flac_format_fn(void);
 extern const sox_format_t *sox_gsm_format_fn(void);
 extern const sox_format_t *sox_hcom_format_fn(void);
 extern const sox_format_t *sox_ima_format_fn(void);
+extern const sox_format_t *sox_lpc10_format_fn(void);
 extern const sox_format_t *sox_maud_format_fn(void);
 extern const sox_format_t *sox_mp3_format_fn(void);
 extern const sox_format_t *sox_nul_format_fn(void);

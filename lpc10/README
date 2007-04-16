@@ -1,0 +1,47 @@
+Sun Jul  7 15:35:44 CDT 1996
+Andy Fingerhut (jaf@arl.wustl.edu)
+
+Before you can make any of the programs in this directory, you must
+change to the lpc10 directory and make the LPC-10 library.  See the
+README file there, and be especially sure to read the notes there
+about possible modifications you will need to make to the file lpc10.h
+in this directory.
+
+I've made up a Unix makefile for the programs nuke and unnuke, called
+makefile.unx.  I don't know how to create a makefile for Microsoft C.
+Feel free to send me one if you create one that works.
+
+The files in this directory are just some simple main programs that
+call the routines create_lpc10_encoder_state(), lpc10_encode(),
+create_lpc10_decoder_state(), and lpc10_decode().  Those four routines
+are defined in source files within the subdirectory lpc10, and are all
+that any application ever needs to use to compress and decompress
+speech with the LPC-10 coder.  The main programs in this directory are
+just intended as examples of how to use these routines.
+
+Optionally, an application could also use the routines
+init_lpc10_encoder_state() or init_lpc10_decoder_state() to
+reinitialize a state struct that was created by one of the create
+functions mentioned above.  This could be useful between talk spurts,
+for example, to flush out any possible remaining garbage state that
+could occur because some data was lost.  This shouldn't be necessary,
+since any old bad state should be flushed out or decay within a few
+frame times anyway (frame time = 22.5 ms).  I have heard lost packets
+(or maybe they were garbled?) produce interesting audio artifacts in
+the application Nautilus.
+
+
+Tue Aug 20 15:49:04 CDT 1996
+Andy Fingerhut (jaf@arl.wustl.edu)
+
+I have just completed making many changes to the C source code that
+allow multiple audio streams to be compressed or decompressed in an
+interleaved fashion.  This is useful, for example, for some Internet
+MBONE audio tools that can receive compressed audio from multiple
+sources simultaneously.  See one or more of the following
+demonstration programs for examples of the calling sequence:
+
+nuke - compressing one audio stream
+nuke2 - compressing two audio streams, alternating one frame from each
+unnuke - decompressing one audio stream
+unnuke2 - decompressing two audio streams, alternating one frame from each

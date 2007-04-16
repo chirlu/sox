@@ -15,8 +15,8 @@ include_HEADERS = sox.h soxstdint.h
 formats = 8svx.c adpcm.c adpcm.h adpcms.c adpcms.h aiff.c ao.c au.c auto.c avr.c \
 	  cdr.c cvsd.c cvsdfilt.h dat.c ffmpeg.c flac.c g711.c g711.h g721.c \
 	  g723_24.c g723_40.c g72x.c g72x.h gsm.c hcom.c ima_rw.c ima_rw.h \
-	  maud.c mp3.c nulfile.c prc.c raw.c sf.c sfircam.h skelform.c smp.c \
-	  sndfile.c sndrtool.c sphere.c tx16w.c voc.c vorbis.c vox.c wav.c \
+	  lpc10.c maud.c mp3.c nulfile.c prc.c raw.c sf.c sfircam.h skelform.c \
+	  smp.c sndfile.c sndrtool.c sphere.c tx16w.c voc.c vorbis.c vox.c wav.c \
 	  wav.h wve.c xa.c amr-wb.c
 
 effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c \
@@ -34,7 +34,7 @@ libsox_la_SOURCES = $(formats) $(effects) alsa.c oss.c sunaudio.c handlers.c \
 libsox_la_LIBADD = @LIBGSM_LIBADD@
 
 sox_SOURCES = sox.c
-sox_LDADD = libsox.la ../amr-wb/libamrwb.la
+sox_LDADD = libsox.la ../amr-wb/libamrwb.la ../lpc10/liblpc10.la
 
 EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav
 
