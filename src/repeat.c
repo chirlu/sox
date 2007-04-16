@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/types.h> /* for off_t on OS/2 and possibly others */
 
 static sox_effect_t sox_repeat_effect;
 
