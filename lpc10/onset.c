@@ -1,13 +1,5 @@
 /*
 
-$Log: onset.c,v $
-Revision 1.1  2007/04/16 21:57:43  rrt
-LPC-10 support, documentation still to come; I wanted to land the code
-before 14.0.0 went into test, and I'll be busy tomorrow.
-
-Not highly tested either, but it's just a format, doesn't interfere
-with anything else, and I'll get on that case before we go stable.
-
  * Revision 1.2  1996/08/20  20:37:55  jaf
  * Removed all static local variables that were SAVE'd in the Fortran
  * code, and put them in struct lpc10_encoder_state that is passed as an
@@ -22,16 +14,14 @@ with anything else, and I'll get on that case before we go stable.
 
 */
 
-#ifdef P_R_O_T_O_T_Y_P_E_S
-extern int onset_(real *pebuf, integer *osbuf, integer *osptr, integer *oslen, integer *sbufl, integer *sbufh, integer *lframe, struct lpc10_encoder_state *st);
-#endif
-
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
 	-lf2c -lm   (in that order)
 */
 
 #include "f2c.h"
+
+extern int onset_(real *pebuf, integer *osbuf, integer *osptr, integer *oslen, integer *sbufl, integer *sbufh, integer *lframe, struct lpc10_encoder_state *st);
 
 /* Table of constant values */
 
@@ -41,15 +31,7 @@ static real c_b2 = 1.f;
 
 /* 	ONSET Version 49 */
 
-/* $Log: onset.c,v $
-/* Revision 1.1  2007/04/16 21:57:43  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
-/*
- * Revision 1.2  1996/08/20  20:37:55  jaf
+/* Revision 1.2  1996/08/20  20:37:55  jaf
  * Removed all static local variables that were SAVE'd in the Fortran
  * code, and put them in struct lpc10_encoder_state that is passed as an
  * argument.
@@ -144,34 +126,6 @@ static real c_b2 = 1.f;
     real *fpc;
 
 /*       Arguments */
-/* $Log: onset.c,v $
-/* Revision 1.1  2007/04/16 21:57:43  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
-/*
- * Revision 1.2  1996/08/20  20:37:55  jaf
- * Removed all static local variables that were SAVE'd in the Fortran
- * code, and put them in struct lpc10_encoder_state that is passed as an
- * argument.
- *
- * Removed init function, since all initialization is now done in
- * init_lpc10_encoder_state().
- *
- * Revision 1.1  1996/08/19  22:31:18  jaf
- * Initial revision
- * */
-/* Revision 1.3  1996/03/29  22:03:47  jaf */
-/* Removed definitions for any constants that were no longer used. */
-
-/* Revision 1.2  1996/03/26  19:34:33  jaf */
-/* Added comments indicating which constants are not needed in an */
-/* application that uses the LPC-10 coder. */
-
-/* Revision 1.1  1996/02/07  14:43:51  jaf */
-/* Initial revision */
 
 /*   LPC Configuration parameters: */
 /* Frame size, Prediction order, Pitch period */

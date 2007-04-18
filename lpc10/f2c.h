@@ -1,13 +1,5 @@
 /*
 
-$Log: f2c.h,v $
-Revision 1.1  2007/04/16 21:57:02  rrt
-LPC-10 support, documentation still to come; I wanted to land the code
-before 14.0.0 went into test, and I'll be busy tomorrow.
-
-Not highly tested either, but it's just a format, doesn't interfere
-with anything else, and I'll get on that case before we go stable.
-
  * Revision 1.2  1996/08/20  20:26:28  jaf
  * Any typedef defining a type that was used in lpc10_encoder_state or
  * lpc10_decoder_state struct's was commented out here and added to

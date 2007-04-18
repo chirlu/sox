@@ -1,13 +1,5 @@
 /*
 
-$Log: chanwr.c,v $
-Revision 1.1  2007/04/16 21:56:30  rrt
-LPC-10 support, documentation still to come; I wanted to land the code
-before 14.0.0 went into test, and I'll be busy tomorrow.
-
-Not highly tested either, but it's just a format, doesn't interfere
-with anything else, and I'll get on that case before we go stable.
-
  * Revision 1.2  1996/08/20  20:20:24  jaf
  * Removed all static local variables that were SAVE'd in the Fortran
  * code, and put them in struct lpc10_encoder_state that is passed as an
@@ -19,11 +11,6 @@ with anything else, and I'll get on that case before we go stable.
 
 */
 
-#ifdef P_R_O_T_O_T_Y_P_E_S
-extern int chanwr_(integer *order, integer *ipitv, integer *irms, integer *irc, integer *ibits, struct lpc10_encoder_state *st);
-extern int chanrd_(integer *order, integer *ipitv, integer *irms, integer *irc, integer *ibits);
-#endif
-
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
 	-lf2c -lm   (in that order)
@@ -31,17 +18,13 @@ extern int chanrd_(integer *order, integer *ipitv, integer *irms, integer *irc, 
 
 #include "f2c.h"
 
+int chanwr_(integer *order, integer *ipitv, integer *irms, integer *irc, integer *ibits, struct lpc10_encoder_state *st);
+int chanrd_(integer *order, integer *ipitv, integer *irms, integer *irc, integer *ibits);
+
 /* *********************************************************************** */
 
 /* 	CHANL Version 49 */
 
-/* $Log: chanwr.c,v $
-/* Revision 1.1  2007/04/16 21:56:30  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
 /*
  * Revision 1.2  1996/08/20  20:20:24  jaf
  * Removed all static local variables that were SAVE'd in the Fortran
@@ -123,7 +106,7 @@ extern int chanrd_(integer *order, integer *ipitv, integer *irms, integer *irc, 
 /* 	R5-1, R6-1, R7-2, R9-0,  P-5, */
 /* 	R5-2, R6-2,R10-1, R8-2,  P-6, R9-1, */
 /* 	R5-3, R6-3, R7-3, R9-2, R8-3, SYNC */
-/* Subroutine */ int chanwr_0_(int n__, integer *order, integer *ipitv, 
+static int chanwr_0_(int n__, integer *order, integer *ipitv, 
 	integer *irms, integer *irc, integer *ibits,
 			       struct lpc10_encoder_state *st)
 {

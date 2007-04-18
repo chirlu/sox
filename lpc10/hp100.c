@@ -1,13 +1,5 @@
 /*
 
-$Log: hp100.c,v $
-Revision 1.1  2007/04/16 21:57:16  rrt
-LPC-10 support, documentation still to come; I wanted to land the code
-before 14.0.0 went into test, and I'll be busy tomorrow.
-
-Not highly tested either, but it's just a format, doesn't interfere
-with anything else, and I'll get on that case before we go stable.
-
  * Revision 1.2  1996/08/20  20:28:05  jaf
  * Removed all static local variables that were SAVE'd in the Fortran
  * code, and put them in struct lpc10_encoder_state that is passed as an
@@ -21,12 +13,6 @@ with anything else, and I'll get on that case before we go stable.
  *
 
 */
-
-#ifdef P_R_O_T_O_T_Y_P_E_S
-extern int hp100_(real *speech, integer *start, integer *end,
-		  struct lpc10_encoder_state *st);
-extern int inithp100_(void);
-#endif
 
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
@@ -35,51 +21,13 @@ extern int inithp100_(void);
 
 #include "f2c.h"
 
+extern int hp100_(real *speech, integer *start, integer *end,
+		  struct lpc10_encoder_state *st);
+extern int inithp100_(void);
+
 /* ********************************************************************* */
 
 /*      HP100 Version 55 */
-
-/* $Log: hp100.c,v $
-/* Revision 1.1  2007/04/16 21:57:16  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
-/*
- * Revision 1.2  1996/08/20  20:28:05  jaf
- * Removed all static local variables that were SAVE'd in the Fortran
- * code, and put them in struct lpc10_encoder_state that is passed as an
- * argument.
- *
- * Removed init function, since all initialization is now done in
- * init_lpc10_encoder_state().
- *
- * Revision 1.1  1996/08/19  22:32:04  jaf
- * Initial revision
- * */
-/* Revision 1.6  1996/03/15  16:45:25  jaf */
-/* Rearranged a few comments. */
-
-/* Revision 1.5  1996/03/14  23:20:54  jaf */
-/* Added comments about when INITHP100 should be used. */
-
-/* Revision 1.4  1996/03/14  23:08:08  jaf */
-/* Added an entry named INITHP100 that initializes the local state of */
-/* subroutine HP100. */
-
-/* Revision 1.3  1996/03/14  22:09:20  jaf */
-/* Comments added explaining which of the local variables of this */
-/* subroutine need to be saved from one invocation to the next, and which */
-/* do not. */
-
-/* Revision 1.2  1996/02/12  15:05:54  jaf */
-/* Added lots of comments explaining why I changed one line, which was a */
-/* declaration with initializations. */
-
-/* Revision 1.1  1996/02/07 14:47:12  jaf */
-/* Initial revision */
-
 
 /* ********************************************************************* */
 

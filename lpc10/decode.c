@@ -1,13 +1,5 @@
 /*
 
-$Log: decode.c,v $
-Revision 1.1  2007/04/16 21:56:42  rrt
-LPC-10 support, documentation still to come; I wanted to land the code
-before 14.0.0 went into test, and I'll be busy tomorrow.
-
-Not highly tested either, but it's just a format, doesn't interfere
-with anything else, and I'll get on that case before we go stable.
-
  * Revision 1.2  1996/08/20  20:22:39  jaf
  * Removed all static local variables that were SAVE'd in the Fortran
  * code, and put them in struct lpc10_decoder_state that is passed as an
@@ -22,19 +14,14 @@ with anything else, and I'll get on that case before we go stable.
 
 */
 
-#ifdef P_R_O_T_O_T_Y_P_E_S
-extern int decode_(integer *ipitv, integer *irms, integer *irc, integer *voice, integer *pitch, real *rms, real *rc, struct lpc10_decoder_state *st);
-/* comlen contrl_ 12 */
-/*:ref: ham84_ 14 3 4 4 4 */
-/*:ref: median_ 4 3 4 4 4 */
-#endif
-
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
 	-lf2c -lm   (in that order)
 */
 
 #include "f2c.h"
+
+extern int decode_(integer *ipitv, integer *irms, integer *irc, integer *voice, integer *pitch, real *rms, real *rc, struct lpc10_decoder_state *st);
 
 /* Common Block Declarations */
 
@@ -53,13 +40,6 @@ static integer c__2 = 2;
 
 /* 	DECODE Version 54 */
 
-/* $Log: decode.c,v $
-/* Revision 1.1  2007/04/16 21:56:42  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
 /*
  * Revision 1.2  1996/08/20  20:22:39  jaf
  * Removed all static local variables that were SAVE'd in the Fortran
@@ -189,67 +169,10 @@ static integer c__2 = 2;
     extern integer median_(integer *, integer *, integer *);
     integer ishift, errcnt, lsb;
 
-/* $Log: decode.c,v $
-/* Revision 1.1  2007/04/16 21:56:42  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
-/*
- * Revision 1.2  1996/08/20  20:22:39  jaf
- * Removed all static local variables that were SAVE'd in the Fortran
- * code, and put them in struct lpc10_decoder_state that is passed as an
- * argument.
- *
- * Removed init function, since all initialization is now done in
- * init_lpc10_decoder_state().
- *
- * Revision 1.1  1996/08/19  22:32:38  jaf
- * Initial revision
- * */
-/* Revision 1.3  1996/03/29  22:03:47  jaf */
-/* Removed definitions for any constants that were no longer used. */
-
-/* Revision 1.2  1996/03/26  19:34:33  jaf */
-/* Added comments indicating which constants are not needed in an */
-/* application that uses the LPC-10 coder. */
-
-/* Revision 1.1  1996/02/07  14:43:51  jaf */
-/* Initial revision */
 
 /*   LPC Configuration parameters: */
 /* Frame size, Prediction order, Pitch period */
 /*       Arguments */
-/* $Log: decode.c,v $
-/* Revision 1.1  2007/04/16 21:56:42  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
-/*
- * Revision 1.2  1996/08/20  20:22:39  jaf
- * Removed all static local variables that were SAVE'd in the Fortran
- * code, and put them in struct lpc10_decoder_state that is passed as an
- * argument.
- *
- * Removed init function, since all initialization is now done in
- * init_lpc10_decoder_state().
- *
- * Revision 1.1  1996/08/19  22:32:38  jaf
- * Initial revision
- * */
-/* Revision 1.3  1996/03/29  22:05:55  jaf */
-/* Commented out the common block variables that are not needed by the */
-/* embedded version. */
-
-/* Revision 1.2  1996/03/26  19:34:50  jaf */
-/* Added comments indicating which constants are not needed in an */
-/* application that uses the LPC-10 coder. */
-
-/* Revision 1.1  1996/02/07  14:44:09  jaf */
-/* Initial revision */
 
 /*   LPC Processing control variables: */
 
@@ -275,8 +198,7 @@ static integer c__2 = 2;
 /* core of the coding and decoding routines.  Actually, I take that back. 
 */
 /* At least when compiling with f2c, the upper bound of DO loops is */
-/* stored in a local variable before the DO loop begins, and then that is 
-*/
+/* stored in a local variable before the DO loop begins, and then that is */
 /* compared against on each iteration. */
 /* Similarly for lframe, which is given a value of MAXFRM in SETUP. */
 /* Similarly for quant, which is given a value of 2400 in SETUP.  quant */
@@ -510,9 +432,9 @@ static integer c__2 = 2;
 	}
 	for (i__ = 1; i__ <= 6; ++i__) {
 	    if ((i__1 = drc[i__ * 3 - 2] - drc[i__ * 3 - 3], (real) abs(i__1))
-		     >= corth[ixcor + (i__ + 2 << 2) - 5] && (i__2 = drc[i__ *
+		     >= corth[ixcor + ((i__ + 2) << 2) - 5] && (i__2 = drc[i__ *
 		     3 - 2] - drc[i__ * 3 - 1], (real) abs(i__2)) >= corth[
-		    ixcor + (i__ + 2 << 2) - 5]) {
+		    ixcor + ((i__ + 2) << 2) - 5]) {
 		irc[i__] = median_(&drc[i__ * 3 - 1], &drc[i__ * 3 - 2], &drc[
 			i__ * 3 - 3]);
 	    }

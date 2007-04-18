@@ -1,22 +1,10 @@
 /*
 
-$Log: ivfilt.c,v $
-Revision 1.1  2007/04/16 21:57:20  rrt
-LPC-10 support, documentation still to come; I wanted to land the code
-before 14.0.0 went into test, and I'll be busy tomorrow.
-
-Not highly tested either, but it's just a format, doesn't interfere
-with anything else, and I'll get on that case before we go stable.
-
  * Revision 1.1  1996/08/19  22:31:53  jaf
  * Initial revision
  *
 
 */
-
-#ifdef P_R_O_T_O_T_Y_P_E_S
-extern int ivfilt_(real *lpbuf, real *ivbuf, integer *len, integer *nsamp, real *ivrc);
-#endif
 
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
@@ -25,17 +13,12 @@ extern int ivfilt_(real *lpbuf, real *ivbuf, integer *len, integer *nsamp, real 
 
 #include "f2c.h"
 
+extern int ivfilt_(real *lpbuf, real *ivbuf, integer *len, integer *nsamp, real *ivrc);
+
 /* ********************************************************************* */
 
 /* 	IVFILT Version 48 */
 
-/* $Log: ivfilt.c,v $
-/* Revision 1.1  2007/04/16 21:57:20  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
 /*
  * Revision 1.1  1996/08/19  22:31:53  jaf
  * Initial revision
@@ -93,7 +76,7 @@ extern int ivfilt_(real *lpbuf, real *ivbuf, integer *len, integer *nsamp, real 
     /* Function Body */
     for (i__ = 1; i__ <= 3; ++i__) {
 	r__[i__ - 1] = 0.f;
-	k = i__ - 1 << 2;
+	k = (i__ - 1) << 2;
 	i__1 = *len;
 	for (j = (i__ << 2) + *len - *nsamp; j <= i__1; j += 2) {
 	    r__[i__ - 1] += lpbuf[j] * lpbuf[j - k];

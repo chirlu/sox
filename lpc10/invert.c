@@ -1,22 +1,10 @@
 /*
 
-$Log: invert.c,v $
-Revision 1.1  2007/04/16 21:57:18  rrt
-LPC-10 support, documentation still to come; I wanted to land the code
-before 14.0.0 went into test, and I'll be busy tomorrow.
-
-Not highly tested either, but it's just a format, doesn't interfere
-with anything else, and I'll get on that case before we go stable.
-
  * Revision 1.1  1996/08/19  22:32:00  jaf
  * Initial revision
  *
 
 */
-
-#ifdef P_R_O_T_O_T_Y_P_E_S
-extern int invert_(integer *order, real *phi, real *psi, real *rc);
-#endif
 
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
@@ -25,17 +13,12 @@ extern int invert_(integer *order, real *phi, real *psi, real *rc);
 
 #include "f2c.h"
 
+extern int invert_(integer *order, real *phi, real *psi, real *rc);
+
 /* **************************************************************** */
 
 /* 	INVERT Version 45G */
 
-/* $Log: invert.c,v $
-/* Revision 1.1  2007/04/16 21:57:18  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
 /*
  * Revision 1.1  1996/08/19  22:32:00  jaf
  * Initial revision
@@ -92,26 +75,6 @@ extern int invert_(integer *order, real *phi, real *psi, real *rc);
     real v[100]	/* was [10][10] */;
 
 /*       Arguments */
-/* $Log: invert.c,v $
-/* Revision 1.1  2007/04/16 21:57:18  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
-/*
- * Revision 1.1  1996/08/19  22:32:00  jaf
- * Initial revision
- * */
-/* Revision 1.3  1996/03/29  22:03:47  jaf */
-/* Removed definitions for any constants that were no longer used. */
-
-/* Revision 1.2  1996/03/26  19:34:33  jaf */
-/* Added comments indicating which constants are not needed in an */
-/* application that uses the LPC-10 coder. */
-
-/* Revision 1.1  1996/02/07  14:43:51  jaf */
-/* Initial revision */
 
 /*   LPC Configuration parameters: */
 /* Frame size, Prediction order, Pitch period */

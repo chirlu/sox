@@ -1,23 +1,10 @@
 /*
 
-$Log: encode.c,v $
-Revision 1.1  2007/04/16 21:56:56  rrt
-LPC-10 support, documentation still to come; I wanted to land the code
-before 14.0.0 went into test, and I'll be busy tomorrow.
-
-Not highly tested either, but it's just a format, doesn't interfere
-with anything else, and I'll get on that case before we go stable.
-
  * Revision 1.1  1996/08/19  22:32:21  jaf
  * Initial revision
  *
 
 */
-
-#ifdef P_R_O_T_O_T_Y_P_E_S
-extern int encode_(integer *voice, integer *pitch, real *rms, real *rc, integer *ipitch, integer *irms, integer *irc);
-/* comlen contrl_ 12 */
-#endif
 
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
@@ -25,6 +12,8 @@ extern int encode_(integer *voice, integer *pitch, real *rms, real *rc, integer 
 */
 
 #include "f2c.h"
+
+extern int encode_(integer *voice, integer *pitch, real *rms, real *rc, integer *ipitch, integer *irms, integer *irc);
 
 /* Common Block Declarations */
 
@@ -43,13 +32,6 @@ static integer c__2 = 2;
 
 /* 	ENCODE Version 54 */
 
-/* $Log: encode.c,v $
-/* Revision 1.1  2007/04/16 21:56:56  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
 /*
  * Revision 1.1  1996/08/19  22:32:21  jaf
  * Initial revision
@@ -129,51 +111,10 @@ static integer c__2 = 2;
     /* Local variables */
     integer idel, nbit, i__, j, i2, i3, mrk;
 
-/* $Log: encode.c,v $
-/* Revision 1.1  2007/04/16 21:56:56  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
-/*
- * Revision 1.1  1996/08/19  22:32:21  jaf
- * Initial revision
- * */
-/* Revision 1.3  1996/03/29  22:03:47  jaf */
-/* Removed definitions for any constants that were no longer used. */
-
-/* Revision 1.2  1996/03/26  19:34:33  jaf */
-/* Added comments indicating which constants are not needed in an */
-/* application that uses the LPC-10 coder. */
-
-/* Revision 1.1  1996/02/07  14:43:51  jaf */
-/* Initial revision */
 
 /*   LPC Configuration parameters: */
 /* Frame size, Prediction order, Pitch period */
 /*       Arguments */
-/* $Log: encode.c,v $
-/* Revision 1.1  2007/04/16 21:56:56  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
-/*
- * Revision 1.1  1996/08/19  22:32:21  jaf
- * Initial revision
- * */
-/* Revision 1.3  1996/03/29  22:05:55  jaf */
-/* Commented out the common block variables that are not needed by the */
-/* embedded version. */
-
-/* Revision 1.2  1996/03/26  19:34:50  jaf */
-/* Added comments indicating which constants are not needed in an */
-/* application that uses the LPC-10 coder. */
-
-/* Revision 1.1  1996/02/07  14:44:09  jaf */
-/* Initial revision */
 
 /*   LPC Processing control variables: */
 

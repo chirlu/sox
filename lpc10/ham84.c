@@ -1,22 +1,10 @@
 /*
 
-$Log: ham84.c,v $
-Revision 1.1  2007/04/16 21:57:14  rrt
-LPC-10 support, documentation still to come; I wanted to land the code
-before 14.0.0 went into test, and I'll be busy tomorrow.
-
-Not highly tested either, but it's just a format, doesn't interfere
-with anything else, and I'll get on that case before we go stable.
-
  * Revision 1.1  1996/08/19  22:32:07  jaf
  * Initial revision
  *
 
 */
-
-#ifdef P_R_O_T_O_T_Y_P_E_S
-extern int ham84_(integer *input, integer *output, integer *errcnt);
-#endif
 
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
@@ -25,17 +13,12 @@ extern int ham84_(integer *input, integer *output, integer *errcnt);
 
 #include "f2c.h"
 
+extern int ham84_(integer *input, integer *output, integer *errcnt);
+
 /* ***************************************************************** */
 
 /* 	HAM84 Version 45G */
 
-/* $Log: ham84.c,v $
-/* Revision 1.1  2007/04/16 21:57:14  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
 /*
  * Revision 1.1  1996/08/19  22:32:07  jaf
  * Initial revision

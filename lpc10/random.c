@@ -1,13 +1,5 @@
 /*
 
-$Log: random.c,v $
-Revision 1.1  2007/04/16 21:58:05  rrt
-LPC-10 support, documentation still to come; I wanted to land the code
-before 14.0.0 went into test, and I'll be busy tomorrow.
-
-Not highly tested either, but it's just a format, doesn't interfere
-with anything else, and I'll get on that case before we go stable.
-
  * Revision 1.2  1996/08/20  20:41:32  jaf
  * Removed all static local variables that were SAVE'd in the Fortran
  * code, and put them in struct lpc10_decoder_state that is passed as an
@@ -22,10 +14,6 @@ with anything else, and I'll get on that case before we go stable.
 
 */
 
-#ifdef P_R_O_T_O_T_Y_P_E_S
-extern integer random_(struct lpc10_decoder_state *st);
-#endif
-
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
 	-lf2c -lm   (in that order)
@@ -33,17 +21,12 @@ extern integer random_(struct lpc10_decoder_state *st);
 
 #include "f2c.h"
 
+extern integer random_(struct lpc10_decoder_state *st);
+
 /* ********************************************************************** */
 
 /* 	RANDOM Version 49 */
 
-/* $Log: random.c,v $
-/* Revision 1.1  2007/04/16 21:58:05  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
 /*
  * Revision 1.2  1996/08/20  20:41:32  jaf
  * Removed all static local variables that were SAVE'd in the Fortran

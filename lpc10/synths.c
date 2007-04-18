@@ -1,13 +1,5 @@
 /*
 
-$Log: synths.c,v $
-Revision 1.1  2007/04/16 21:58:10  rrt
-LPC-10 support, documentation still to come; I wanted to land the code
-before 14.0.0 went into test, and I'll be busy tomorrow.
-
-Not highly tested either, but it's just a format, doesn't interfere
-with anything else, and I'll get on that case before we go stable.
-
  * Revision 1.2  1996/08/20  20:42:59  jaf
  * Removed all static local variables that were SAVE'd in the Fortran
  * code, and put them in struct lpc10_decoder_state that is passed as an
@@ -22,24 +14,14 @@ with anything else, and I'll get on that case before we go stable.
 
 */
 
-#ifdef P_R_O_T_O_T_Y_P_E_S
-extern int synths_(integer *voice, integer *pitch, real *rms, real *rc, real *speech, integer *k, struct lpc10_decoder_state *st);
-/* comlen contrl_ 12 */
-/*:ref: pitsyn_ 14 12 4 4 4 6 6 4 4 4 6 6 4 6 */
-/*:ref: irc2pc_ 14 5 6 6 4 6 6 */
-/*:ref: bsynz_ 14 7 6 4 4 6 6 6 6 */
-/*:ref: deemp_ 14 2 6 4 */
-/*:ref: initpitsyn_ 14 0 */
-/*:ref: initbsynz_ 14 0 */
-/*:ref: initdeemp_ 14 0 */
-#endif
-
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
 	-lf2c -lm   (in that order)
 */
 
 #include "f2c.h"
+
+extern int synths_(integer *voice, integer *pitch, real *rms, real *rc, real *speech, integer *k, struct lpc10_decoder_state *st);
 
 /* Common Block Declarations */
 
@@ -58,13 +40,6 @@ static real c_b2 = .7f;
 
 /* 	SYNTHS Version 54 */
 
-/* $Log: synths.c,v $
-/* Revision 1.1  2007/04/16 21:58:10  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
 /*
  * Revision 1.2  1996/08/20  20:42:59  jaf
  * Removed all static local variables that were SAVE'd in the Fortran
@@ -169,7 +144,7 @@ static real c_b2 = .7f;
     extern /* Subroutine */ int deemp_(real *, integer *, struct lpc10_decoder_state *);
     real ratio;
     integer ipiti[16];
-    extern /* Subroutine */ bsynz_(real *, integer *, 
+    extern int bsynz_(real *, integer *, 
 	    integer *, real *, real *, real *, real *, struct lpc10_decoder_state *), irc2pc_(real *, real *
 	    , integer *, real *, real *);
     real g2pass;
@@ -179,67 +154,9 @@ static real c_b2 = .7f;
 	    integer *, real *, struct lpc10_decoder_state *);
     real rci[160]	/* was [10][16] */;
 
-/* $Log: synths.c,v $
-/* Revision 1.1  2007/04/16 21:58:10  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
-/*
- * Revision 1.2  1996/08/20  20:42:59  jaf
- * Removed all static local variables that were SAVE'd in the Fortran
- * code, and put them in struct lpc10_decoder_state that is passed as an
- * argument.
- *
- * Removed init function, since all initialization is now done in
- * init_lpc10_decoder_state().
- *
- * Revision 1.1  1996/08/19  22:30:33  jaf
- * Initial revision
- * */
-/* Revision 1.3  1996/03/29  22:03:47  jaf */
-/* Removed definitions for any constants that were no longer used. */
-
-/* Revision 1.2  1996/03/26  19:34:33  jaf */
-/* Added comments indicating which constants are not needed in an */
-/* application that uses the LPC-10 coder. */
-
-/* Revision 1.1  1996/02/07  14:43:51  jaf */
-/* Initial revision */
-
 /*   LPC Configuration parameters: */
 /* Frame size, Prediction order, Pitch period */
 /*       Arguments */
-/* $Log: synths.c,v $
-/* Revision 1.1  2007/04/16 21:58:10  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
-/*
- * Revision 1.2  1996/08/20  20:42:59  jaf
- * Removed all static local variables that were SAVE'd in the Fortran
- * code, and put them in struct lpc10_decoder_state that is passed as an
- * argument.
- *
- * Removed init function, since all initialization is now done in
- * init_lpc10_decoder_state().
- *
- * Revision 1.1  1996/08/19  22:30:33  jaf
- * Initial revision
- * */
-/* Revision 1.3  1996/03/29  22:05:55  jaf */
-/* Commented out the common block variables that are not needed by the */
-/* embedded version. */
-
-/* Revision 1.2  1996/03/26  19:34:50  jaf */
-/* Added comments indicating which constants are not needed in an */
-/* application that uses the LPC-10 coder. */
-
-/* Revision 1.1  1996/02/07  14:44:09  jaf */
-/* Initial revision */
 
 /*   LPC Processing control variables: */
 

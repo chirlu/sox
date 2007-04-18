@@ -1,13 +1,5 @@
 /*
 
-$Log: dyptrk.c,v $
-Revision 1.1  2007/04/16 21:56:54  rrt
-LPC-10 support, documentation still to come; I wanted to land the code
-before 14.0.0 went into test, and I'll be busy tomorrow.
-
-Not highly tested either, but it's just a format, doesn't interfere
-with anything else, and I'll get on that case before we go stable.
-
  * Revision 1.2  1996/08/20  20:25:29  jaf
  * Removed all static local variables that were SAVE'd in the Fortran
  * code, and put them in struct lpc10_encoder_state that is passed as an
@@ -22,17 +14,14 @@ with anything else, and I'll get on that case before we go stable.
 
 */
 
-#ifdef P_R_O_T_O_T_Y_P_E_S
-extern int dyptrk_(real *amdf, integer *ltau, integer *minptr, integer *voice, integer *pitch, integer *midx, struct lpc10_encoder_state *st);
-/* comlen contrl_ 12 */
-#endif
-
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
 	-lf2c -lm   (in that order)
 */
 
 #include "f2c.h"
+
+extern int dyptrk_(real *amdf, integer *ltau, integer *minptr, integer *voice, integer *pitch, integer *midx, struct lpc10_encoder_state *st);
 
 /* Common Block Declarations */
 
@@ -47,13 +36,6 @@ extern struct {
 
 /* 	DYPTRK Version 52 */
 
-/* $Log: dyptrk.c,v $
-/* Revision 1.1  2007/04/16 21:56:54  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
 /*
  * Revision 1.2  1996/08/20  20:25:29  jaf
  * Removed all static local variables that were SAVE'd in the Fortran
@@ -137,35 +119,6 @@ extern struct {
     real alpha, minsc, maxsc;
 
 /*       Arguments */
-/* $Log: dyptrk.c,v $
-/* Revision 1.1  2007/04/16 21:56:54  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
-/*
- * Revision 1.2  1996/08/20  20:25:29  jaf
- * Removed all static local variables that were SAVE'd in the Fortran
- * code, and put them in struct lpc10_encoder_state that is passed as an
- * argument.
- *
- * Removed init function, since all initialization is now done in
- * init_lpc10_encoder_state().
- *
- * Revision 1.1  1996/08/19  22:32:26  jaf
- * Initial revision
- * */
-/* Revision 1.3  1996/03/29  22:05:55  jaf */
-/* Commented out the common block variables that are not needed by the */
-/* embedded version. */
-
-/* Revision 1.2  1996/03/26  19:34:50  jaf */
-/* Added comments indicating which constants are not needed in an */
-/* application that uses the LPC-10 coder. */
-
-/* Revision 1.1  1996/02/07  14:44:09  jaf */
-/* Initial revision */
 
 /*   LPC Processing control variables: */
 

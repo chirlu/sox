@@ -1,22 +1,10 @@
 /*
 
-$Log: placev.c,v $
-Revision 1.1  2007/04/16 21:57:53  rrt
-LPC-10 support, documentation still to come; I wanted to land the code
-before 14.0.0 went into test, and I'll be busy tomorrow.
-
-Not highly tested either, but it's just a format, doesn't interfere
-with anything else, and I'll get on that case before we go stable.
-
  * Revision 1.1  1996/08/19  22:31:02  jaf
  * Initial revision
  *
 
 */
-
-#ifdef P_R_O_T_O_T_Y_P_E_S
-extern int placev_(integer *osbuf, integer *osptr, integer *oslen, integer *obound, integer *vwin, integer *af, integer *lframe, integer *minwin, integer *maxwin, integer *dvwinl, integer *dvwinh);
-#endif
 
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
@@ -25,17 +13,12 @@ extern int placev_(integer *osbuf, integer *osptr, integer *oslen, integer *obou
 
 #include "f2c.h"
 
+extern int placev_(integer *osbuf, integer *osptr, integer *oslen, integer *obound, integer *vwin, integer *af, integer *lframe, integer *minwin, integer *maxwin, integer *dvwinl, integer *dvwinh);
+
 /* ****************************************************************** */
 
 /* 	PLACEV Version 48 */
 
-/* $Log: placev.c,v $
-/* Revision 1.1  2007/04/16 21:57:53  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
 /*
  * Revision 1.1  1996/08/19  22:31:02  jaf
  * Initial revision
@@ -178,12 +161,14 @@ t*/
 /*   placement lost. */
 /* Compute the placement range */
     /* Parameter adjustments */
+    (void)oslen;
+    (void)dvwinh;
     --osbuf;
     vwin -= 3;
 
     /* Function Body */
 /* Computing MAX */
-    i__1 = vwin[(*af - 1 << 1) + 2] + 1, i__2 = (*af - 2) * *lframe + 1;
+    i__1 = vwin[((*af - 1) << 1) + 2] + 1, i__2 = (*af - 2) * *lframe + 1;
     lrange = max(i__1,i__2);
     hrange = *af * *lframe;
 /* Compute OSPTR1, so the following code only looks at relevant onsets. */
@@ -197,7 +182,7 @@ L90:
 /* Check for case 1 first (fast case): */
     if (osptr1 <= 1 || osbuf[osptr1 - 1] < lrange) {
 /* Computing MAX */
-	i__1 = vwin[(*af - 1 << 1) + 2] + 1;
+	i__1 = vwin[((*af - 1) << 1) + 2] + 1;
 	vwin[(*af << 1) + 1] = max(i__1,*dvwinl);
 	vwin[(*af << 1) + 2] = vwin[(*af << 1) + 1] + *maxwin - 1;
 	*obound = 0;

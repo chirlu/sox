@@ -1,22 +1,10 @@
 /*
 
-$Log: dcbias.c,v $
-Revision 1.1  2007/04/16 21:56:39  rrt
-LPC-10 support, documentation still to come; I wanted to land the code
-before 14.0.0 went into test, and I'll be busy tomorrow.
-
-Not highly tested either, but it's just a format, doesn't interfere
-with anything else, and I'll get on that case before we go stable.
-
  * Revision 1.1  1996/08/19  22:40:23  jaf
  * Initial revision
  *
 
 */
-
-#ifdef P_R_O_T_O_T_Y_P_E_S
-extern int dcbias_(integer *len, real *speech, real *sigout);
-#endif
 
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
@@ -25,17 +13,12 @@ extern int dcbias_(integer *len, real *speech, real *sigout);
 
 #include "f2c.h"
 
+extern int dcbias_(integer *len, real *speech, real *sigout);
+
 /* ********************************************************************* */
 
 /* 	DCBIAS Version 50 */
 
-/* $Log: dcbias.c,v $
-/* Revision 1.1  2007/04/16 21:56:39  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
 /*
  * Revision 1.1  1996/08/19  22:40:23  jaf
  * Initial revision

@@ -1,6 +1,10 @@
 /*
 
 $Log: placea.c,v $
+Revision 1.2  2007/04/18 14:00:38  rrt
+Remove $Log tokens and associated log messages (in many files, several
+copies of every log message were being written) and lots of warnings.
+
 Revision 1.1  2007/04/16 21:57:47  rrt
 LPC-10 support, documentation still to come; I wanted to land the code
 before 14.0.0 went into test, and I'll be busy tomorrow.
@@ -14,10 +18,6 @@ with anything else, and I'll get on that case before we go stable.
 
 */
 
-#ifdef P_R_O_T_O_T_Y_P_E_S
-extern int placea_(integer *ipitch, integer *voibuf, integer *obound, integer *af, integer *vwin, integer *awin, integer *ewin, integer *lframe, integer *maxwin);
-#endif
-
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
 	-lf2c -lm   (in that order)
@@ -25,19 +25,13 @@ extern int placea_(integer *ipitch, integer *voibuf, integer *obound, integer *a
 
 #include "f2c.h"
 
+extern int placea_(integer *ipitch, integer *voibuf, integer *obound, integer *af, integer *vwin, integer *awin, integer *ewin, integer *lframe, integer *maxwin);
+
 /* *********************************************************************** */
 
 /* 	PLACEA Version 48 */
 
-/* $Log: placea.c,v $
-/* Revision 1.1  2007/04/16 21:57:47  rrt
-/* LPC-10 support, documentation still to come; I wanted to land the code
-/* before 14.0.0 went into test, and I'll be busy tomorrow.
-/*
-/* Not highly tested either, but it's just a format, doesn't interfere
-/* with anything else, and I'll get on that case before we go stable.
-/*
- * Revision 1.1  1996/08/19  22:31:07  jaf
+/* Revision 1.1  1996/08/19  22:31:07  jaf
  * Initial revision
  * */
 /* Revision 1.5  1996/03/19  20:41:55  jaf */
@@ -142,18 +136,18 @@ extern int placea_(integer *ipitch, integer *voibuf, integer *obound, integer *a
 /*   is not altered from MAXWIN, since this would defeat the purpose */
 /*   of phase-synchronous placement. */
 /* Check for case 1 and case 2 */
-    allv = voibuf[(*af - 2 << 1) + 2] == 1;
-    allv = allv && voibuf[(*af - 1 << 1) + 1] == 1;
-    allv = allv && voibuf[(*af - 1 << 1) + 2] == 1;
+    allv = voibuf[((*af - 2) << 1) + 2] == 1;
+    allv = allv && voibuf[((*af - 1) << 1) + 1] == 1;
+    allv = allv && voibuf[((*af - 1) << 1) + 2] == 1;
     allv = allv && voibuf[(*af << 1) + 1] == 1;
     allv = allv && voibuf[(*af << 1) + 2] == 1;
     winv = voibuf[(*af << 1) + 1] == 1 || voibuf[(*af << 1) + 2] == 1;
-    if (allv || winv && *obound == 0) {
+    if (allv || (winv && *obound == 0)) {
 /* APHASE:  Phase synchronous window placement. */
 /* Get minimum lower index of the window. */
-	i__ = (lrange + *ipitch - 1 - awin[(*af - 1 << 1) + 1]) / *ipitch;
+	i__ = (lrange + *ipitch - 1 - awin[((*af - 1) << 1) + 1]) / *ipitch;
 	i__ *= *ipitch;
-	i__ += awin[(*af - 1 << 1) + 1];
+	i__ += awin[((*af - 1) << 1) + 1];
 /* L = the actual length of this frame's analysis window. */
 	l = *maxwin;
 /* Calculate the location where a perfectly centered window would star
