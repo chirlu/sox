@@ -32,11 +32,13 @@ This release understands:
   o CD-R (music CD format)
   o CVS and VMS files (continuous variable slope)
   o GSM files
+  o LPC-10 files
   o Macintosh HCOM files
   o Amiga MAUD files
   o AMR-WB files
   o MP3 (with optional libmad and libmp3lame libraries)
-  o MP4, AAC, AC3, WAVPACK files (with optional ffmpeg library)
+  o MP4, AAC, AC3, WAVPACK, AMR-NB files (with optional ffmpeg
+    library)
   o AVI, WMV, Ogg Theora, MPEG video files (with optional ffmpeg
     library)
   o Ogg Vorbis files (with optional Ogg Vorbis libraries)

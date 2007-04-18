@@ -29,7 +29,7 @@
 .SP
 .fi
 ..
-.TH SoX 1 "January 31, 2007" "sox" "Sound eXchange"
+.TH SoX 1 "April 17, 2007" "sox" "Sound eXchange"
 .SH NAME
 SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH SYNOPSIS
@@ -978,6 +978,11 @@ Another name for
 A headerless file of IMA ADPCM audio data. IMA ADPCM claims 16-bit precision
 packed into only 4 bits, but in fact sounds no better than
 .BR .vox .
+.TP
+\&\fB.lpc\fR, \fB.lpc10\fR
+LPC-10 is a compression scheme for speech developed in the United
+States. See http://www.arl.wustl.edu/~jaf/lpc/ for details. There is
+no associated file format, so SoX's implementation is headerless.
 .TP
 \&\fB.mat\fR, \fB.mat4\fR, \fB.mat5\fR \fB(libsndfile)\fR
 Matlab 4.2/5.0 (respectively GNU Octave 2.0/2.1) format (.mat is the same as .mat4).

@@ -4,7 +4,7 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
-sox-13.0.1
+sox-14.0.0
 ----------
 
   File formats:
@@ -15,6 +15,7 @@ sox-13.0.1
   o Added M3U playlist format [FR# 1667341].  (robs)
   o Added libao support.  (Reuben Thomas)
   o Added read-only ffmpeg support.  (Reuben Thomas)
+  o Added LPC-10 support.  (Reuben Thomas)
 
   Effects:
 
@@ -23,7 +24,7 @@ sox-13.0.1
   o Allow e.g. "vol 6dB" (as well as "vol 6 dB").  (robs)
   o Changed deemph to be a true biquad for better accuracy.  (robs)
   o Add option to silence effect to leave periods of silence
-    in and only strip out extra silence.   Mark Schreiber
+    in and only strip out extra silence.   (Mark Schreiber)
 
   Other new features:
 
@@ -44,7 +45,7 @@ sox-13.0.1
 
   o Renamed libst to libsox for name recongition and to avoid
     duplications with other existing libst libraries. (Reuben Thomas)
-  o Got rid of several hundred compiler warnings.  (robs)
+  o Got rid of several hundred compiler warnings.  (robs, Reuben Thomas)
   o Added basic performance testing of I/O.  (Reuben Thomas)
 
 sox-13.0.0
