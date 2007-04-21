@@ -25,4 +25,4 @@ compression=2
 output=coded
 test
 
-exit 1
+exit 0
