@@ -1,0 +1,28 @@
+#!/bin/sh
+
+testv=amr-wb-vectors
+
+test() {
+  c=coded-$compression-$input.amr-wb
+  d=decoded-$compression-$input.au
+  ./sox $testv/input-$input.au -C$compression $c
+  cmp $c $testv/$c || exit 1
+  ./sox $c --comment= $d
+  cmp $d $testv/$d || exit 1
+  rm $c $d
+}
+
+input=sing
+compression=8
+while [ $compression \-ge 0 ]; do
+  output=tst_m$compression
+  test
+  compression=`expr $compression \- 1`
+done
+
+input=dtx
+compression=2
+output=coded
+test
+
+exit 1

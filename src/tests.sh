@@ -166,6 +166,14 @@ if [ "$all" = "all" ]; then
 fi
 do_singlechannel_formats
 
+./amr-wb-test
+if [ $? -eq 0 ]; then
+  echo "ok     amr-wb"
+else
+  echo "*FAIL* amr-wb"
+  exit 1
+fi
+
 channels=2
 samples=10000000
 timeIO sb ub sw uw s3 u3 sl u4 raw Raw au wav aiff aifc caf sph # FIXME?: flac dat
