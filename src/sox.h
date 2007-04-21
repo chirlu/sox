@@ -329,6 +329,8 @@ struct sox_soundstream {
 /* These two for use by libSoX drivers: */
 #define SOX_FILE_LIT_END  (0   + 64)
 #define SOX_FILE_BIG_END  (128 + 64)
+#define SOX_FILE_BIT_REV 256
+#define SOX_FILE_NIB_REV 512
 
 /* Size field */
 #define SOX_SIZE_BYTE    1

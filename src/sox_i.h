@@ -317,8 +317,8 @@ int sox_effect_nothing_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t
 int sox_effect_nothing_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp);
 int sox_effect_nothing_getopts(eff_t effp, int n, char **argv UNUSED);
 
-int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size, sox_option_t rev_bits);
-#define sox_rawstartread(ft) sox_rawstart(ft, sox_false, sox_false, SOX_ENCODING_UNKNOWN, -1, SOX_OPTION_DEFAULT)
+int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size);
+#define sox_rawstartread(ft) sox_rawstart(ft, sox_false, sox_false, SOX_ENCODING_UNKNOWN, -1)
 #define sox_rawstartwrite sox_rawstartread
 #define sox_rawstopread sox_format_nothing
 #define sox_rawstopwrite sox_format_nothing

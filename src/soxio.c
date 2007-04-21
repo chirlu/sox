@@ -36,10 +36,15 @@ void set_endianness_if_not_already_set(ft_t ft)
     else
       ft->signal.reverse_bytes = SOX_OPTION_NO;
   }
-  if (ft->signal.reverse_nibbles == SOX_OPTION_DEFAULT)
-    ft->signal.reverse_nibbles = SOX_OPTION_NO;
   if (ft->signal.reverse_bits == SOX_OPTION_DEFAULT)
-    ft->signal.reverse_bits = SOX_OPTION_NO;
+    ft->signal.reverse_bits = !!(ft->h->flags & SOX_FILE_BIT_REV);
+  else if (ft->signal.reverse_bits != !!(ft->h->flags & SOX_FILE_BIT_REV))
+      sox_report("'%s': Format options overriding file-type bit-order", ft->filename);
+
+  if (ft->signal.reverse_nibbles == SOX_OPTION_DEFAULT)
+    ft->signal.reverse_nibbles = !!(ft->h->flags & SOX_FILE_NIB_REV);
+  else if (ft->signal.reverse_nibbles != !!(ft->h->flags & SOX_FILE_NIB_REV))
+      sox_report("'%s': Format options overriding file-type nibble-order", ft->filename);
 }
 
 static int is_seekable(ft_t ft)
@@ -148,7 +153,7 @@ ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
         goto input_error;
     }
 
-    /* Go a head and assume 1 channel audio if nothing is detected.
+    /* Go ahead and assume 1 channel audio if nothing is detected.
      * This is because libsox usually doesn't set this for mono file
      * formats (for historical reasons).
      */

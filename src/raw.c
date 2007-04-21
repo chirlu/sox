@@ -55,7 +55,7 @@ int sox_rawseek(ft_t ft, sox_size_t offset)
 
 /* Works nicely for starting read and write; sox_rawstart{read,write}
    are #defined in sox_i.h */
-int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size, sox_option_t rev_bits)
+int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size)
 {
   if (default_rate && ft->signal.rate == 0) {
     sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
@@ -80,14 +80,6 @@ int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_
         ft->signal.size != -1 && ft->signal.size != size)
       sox_report("'%s': Format options overriding file-type sample-size", ft->filename);
     else ft->signal.size = size;
-  }
-
-  if (rev_bits != SOX_OPTION_DEFAULT) {
-    if (ft->mode == 'r' &&
-        ft->signal.reverse_bits != SOX_OPTION_DEFAULT &&
-        ft->signal.reverse_bits != rev_bits)
-      sox_report("'%s': Format options overriding file-type bit-order", ft->filename);
-    else ft->signal.reverse_bits = rev_bits;
   }
 
   return SOX_SUCCESS;
@@ -243,7 +235,7 @@ sox_size_t sox_rawwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsamp)
 }
 
 static int raw_start(ft_t ft) {
-  return sox_rawstart(ft,sox_false,sox_false,SOX_ENCODING_UNKNOWN,-1,SOX_OPTION_DEFAULT);
+  return sox_rawstart(ft,sox_false,sox_false,SOX_ENCODING_UNKNOWN,-1);
 }
 sox_format_t const * sox_raw_format_fn(void) {
   static char const * names[] = {"raw", NULL};
@@ -256,14 +248,14 @@ sox_format_t const * sox_raw_format_fn(void) {
   return &driver;
 }
 
-#define RAW_FORMAT(id,alt1,alt2,size,rev_bits,encoding) \
+#define RAW_FORMAT(id,alt1,alt2,size,flags,encoding) \
 static int id##_start(ft_t ft) { \
-  return sox_rawstart(ft,sox_true,sox_true,SOX_ENCODING_##encoding,SOX_SIZE_##size,SOX_OPTION_##rev_bits); \
+  return sox_rawstart(ft,sox_true,sox_true,SOX_ENCODING_##encoding,SOX_SIZE_##size); \
 } \
 sox_format_t const * sox_##id##_format_fn(void) { \
   static char const * names[] = {#id, alt1, alt2, NULL}; \
   static sox_format_t driver = { \
-    names, 0, \
+    names, flags, \
     id##_start, sox_rawread , sox_format_nothing, \
     id##_start, sox_rawwrite, sox_format_nothing, \
     sox_format_nothing_seek \
@@ -271,17 +263,17 @@ sox_format_t const * sox_##id##_format_fn(void) { \
   return &driver; \
 }
 
-RAW_FORMAT(sb,NULL ,NULL  ,BYTE , DEFAULT,SIGN2)
-RAW_FORMAT(sl,NULL ,NULL  ,32BIT, DEFAULT,SIGN2)
-RAW_FORMAT(s3,NULL ,NULL  ,24BIT, DEFAULT,SIGN2)
-RAW_FORMAT(sw,NULL ,NULL  ,16BIT, DEFAULT,SIGN2)
+RAW_FORMAT(sb,NULL ,NULL  ,BYTE , 0,SIGN2)
+RAW_FORMAT(sl,NULL ,NULL  ,32BIT, 0,SIGN2)
+RAW_FORMAT(s3,NULL ,NULL  ,24BIT, 0,SIGN2)
+RAW_FORMAT(sw,NULL ,NULL  ,16BIT, 0,SIGN2)
                    
-RAW_FORMAT(ub,"sou","fssd",BYTE , DEFAULT,UNSIGNED)
-RAW_FORMAT(uw,NULL ,NULL  ,16BIT, DEFAULT,UNSIGNED)
-RAW_FORMAT(u3,NULL ,NULL  ,24BIT, DEFAULT,UNSIGNED)
-RAW_FORMAT(u4,NULL ,NULL  ,32BIT, DEFAULT,UNSIGNED)
+RAW_FORMAT(ub,"sou","fssd",BYTE , 0,UNSIGNED)
+RAW_FORMAT(uw,NULL ,NULL  ,16BIT, 0,UNSIGNED)
+RAW_FORMAT(u3,NULL ,NULL  ,24BIT, 0,UNSIGNED)
+RAW_FORMAT(u4,NULL ,NULL  ,32BIT, 0,UNSIGNED)
                    
-RAW_FORMAT(al,NULL ,NULL  ,BYTE ,NO     ,ALAW)
-RAW_FORMAT(ul,NULL ,NULL  ,BYTE ,NO     ,ULAW)
-RAW_FORMAT(la,NULL ,NULL  ,BYTE ,YES    ,ALAW)
-RAW_FORMAT(lu,NULL ,NULL  ,BYTE ,YES    ,ULAW)
+RAW_FORMAT(al,NULL ,NULL  ,BYTE ,0     ,ALAW)
+RAW_FORMAT(ul,NULL ,NULL  ,BYTE ,0     ,ULAW)
+RAW_FORMAT(la,NULL ,NULL  ,BYTE ,SOX_FILE_BIT_REV    ,ALAW)
+RAW_FORMAT(lu,NULL ,NULL  ,BYTE ,SOX_FILE_BIT_REV    ,ULAW)

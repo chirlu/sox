@@ -128,7 +128,7 @@ static int adpcm_start(ft_t ft, adpcm_io_t state, sox_encoding_t type)
 
   sox_adpcm_reset(state, type);
   
-  return sox_rawstart(ft, sox_true, sox_false, type, SOX_SIZE_16BIT, SOX_OPTION_DEFAULT);
+  return sox_rawstart(ft, sox_true, sox_false, type, SOX_SIZE_16BIT);
 }
 
 int sox_adpcm_oki_start(ft_t ft, adpcm_io_t state)
