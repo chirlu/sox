@@ -874,12 +874,14 @@ static sox_bool doopts(file_t f, int argc, char **argv)
     case 'V':
       if (optarg == NULL)
         ++sox_output_verbosity_level;
-      else if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i < 0) {
-        sox_output_verbosity_level = 2;
-        sox_fail("Verbosity value `%s' is not a non-negative integer", optarg);
-        exit(1);
+      else {
+        if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i < 0) {
+          sox_output_verbosity_level = 2;
+          sox_fail("Verbosity value `%s' is not a non-negative integer", optarg);
+          exit(1);
+        }
+        sox_output_verbosity_level = (unsigned)i;
       }
-      sox_output_verbosity_level = (unsigned)i;
       break;
     }
   }
