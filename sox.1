@@ -663,7 +663,7 @@ trimmed.uw will be created as little-endian;
 must be used to preserve big-endianness in the output file.
 .SP
 The
-.B -V
+.B \-V
 option can be used to check the selected orderings.
 .TP
 \fB\-N\fR, \fB\-\-reverse\-nibbles\fR
@@ -672,7 +672,7 @@ sometimes useful with ADPCM-based formats.
 .SP
 .B N.B.
 See also N.B. in section on
-.B -x
+.B \-x
 above.
 .TP
 \fB\-X\fR, \fB\-\-reverse\-bits\fR
@@ -681,7 +681,7 @@ sometimes useful with a few (mostly headerless) formats.
 .SP
 .B N.B.
 See also N.B. in section on
-.B -x
+.B \-x
 above.
 .TP
 \fB\-s\fR\^/\fB\-u\fR\^/\fB\-U\fR\^/\fB\-A\fR\^/\fB\-a\fR\^/\fB\-i\fR\^/\fB\-g\fR\^/\fB\-f\fR
@@ -695,9 +695,9 @@ When uncompressed \(*m-law has roughly the precision of 14-bit PCM audio
 and A-law has roughly the precision of 13-bit PCM audio.
 .SP
 A-law and \(*m-law are sometimes encoded using reversed bit-ordering
-(i.e. MSB becomes LSB).  Internally, SoX understands how to work with
-these encodings but there is currently no command line option to
-specify them.  If you need this support then you can use the pseudo
+(i.e. MSB becomes LSB).  If you need this support then you can use the
+.B \-X
+option or the pseudo
 file types of `.la' and `.lu' to inform SoX of the encoding.  See
 supported file types for more information.
 .SP
@@ -740,7 +740,7 @@ compressing file formats.  See the description of the file formats that
 use this option for more information.
 .SH FILE TYPES
 File types can be set by the filename extension or the
-.B -t
+.B \-t
 option (see above). File types that can be determined by a filename
 extension are listed with their names preceded by a dot. File types
 that require an external library, such as ffmpeg or libsndfile, are
@@ -814,7 +814,7 @@ generation mobile telephony and defined in 3GPP TS 26.173.
 .SP
 AMR-WB audio has a fixed sampling rate of 16 kHz and supports encoding
 to the following bit-rates (as selected by the
-.B -C
+.B \-C
 option): 0 = 6\*d6 kbit/s, 1 = 8\*d85 kbit/s, 2 = 12\*d65 kbit/s, 3 =
 14\*d25 kbit/s, 4 = 15\*d85 kbit/s 5 = 18\*d25 kbit/s, 6 = 19\*d85
 kbit/s, 7 = 23\*d05 kbit/s, 8 = 23\*d85 kbit/s
@@ -1074,6 +1074,13 @@ to use the highest quality format your OSS system can handle. Example:
 .TP
 \&\fB.paf\fR, \fB.fap\fR \fB(libsndfile)\fR
 Ensoniq PARIS file format (big and little-endian respectively).
+.TP
+.B .pls
+A
+.I playlist
+format; contains a list of audio files.
+See [6] for details of this format.
+Note: SHOUTcast PLS is only partially supported.
 .TP
 .B .prc
 Psion Record. Used in Psion EPOC PDAs (Series 5, Revo and similar) for
@@ -1557,9 +1564,9 @@ See [3] for a detailed description of flanging.
 \fBhighpass\fR\^|\^\fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR]]
 Apply a high-pass or low-pass filter with 3dB point \fIfrequency\fR.
 The filter can be either single-pole (with
-.BR -1 ),
+.BR \-1 ),
 or double-pole (the default, or with
-.BR -2 ).
+.BR \-2 ).
 .I width
 applies only to double-pole filters and is the filter-width: as a
 Q-factor (the default, or if appended with `\fBq\fR'), in octaves (if
@@ -2245,7 +2252,7 @@ Apply a high-pass filter.
 This effect is just an alias for the
 .B highpass
 effect used with its
-.B -1
+.B \-1
 option; it is retained for backwards compatibility only.
 .TP
 \fBlowp \fIfrequency\fR
@@ -2253,7 +2260,7 @@ Apply a low-pass filter.
 This effect is just an alias for the
 .B lowpass
 effect used with its
-.B -1
+.B \-1
 option; it is retained for backwards compatibility only.
 .TP
 \fBmask\fR [\fIdepth\fR]
@@ -2311,6 +2318,11 @@ http://en.wikipedia.org/wiki/Decibel
 Wikipedia,
 .IR "M3U" ,
 http://en.wikipedia.org/wiki/M3U
+.TP
+[6]
+Wikipedia,
+.IR "PLS" ,
+http://en.wikipedia.org/wiki/PLS_(file_format)
 .SH LICENSE
 Copyright 1991 Lance Norskog and Sundry Contributors.
 Copyright 1998\-2007 by Chris Bagwell and SoX Contributors.

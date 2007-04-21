@@ -12,7 +12,8 @@ sox-14.0.0
   o Added support for ADPCM-encoded PRC files, based on Danny Smith's
     rec2wav and sndcmp.
   o Added AMR-WB format.  (robs)
-  o Added M3U playlist format [FR# 1667341].  (robs)
+  o Added M3U & PLS playlist formats [FR# 1667341] (Note: SHOUTcast PLS
+    is only partially supported).  (robs)
   o Added libao support.  (Reuben Thomas)
   o Added read-only ffmpeg support.  (Reuben Thomas)
   o Added LPC-10 support.  (Reuben Thomas)

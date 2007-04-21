@@ -88,10 +88,11 @@ Contributors:
 		Build system makeover, Lua scripting, Secret Rabbit
                 Code resampling, much cleanup.
 	Rob Sykes		robs@users.sourceforge.net
-                Formats: M3U, FLAC, AMR-WB, 24bit support for popular formats.
+                Formats: M3U, PLS, FLAC, AMR-WB, 24bit support for popular
+                formats.
 		Effects: pad, bass, treble, new flanger, soft-knee companding,
                 speed via resampling, filters makeover inc. octave plots.
                 Others: open input files via URL, file merging, play
-                multiple files with mixed format types, much manual
-                improvement and expansion, various fixes, enhancements
-                and clean-ups.
+                multiple files with mixed format types, play with replay-gain,
+                much manual improvement and expansion, various fixes,
+                enhancements and clean-ups.
