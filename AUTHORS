@@ -85,8 +85,9 @@ Contributors:
 	Matthias Nutt
 		Multiple effects from command line.
 	Reuben Thomas		rrt@sc3d.org
-		Build system makeover, Lua scripting, Secret Rabbit
-                Code resampling, much cleanup.
+		Build system makeover, libsndfile and ffmpeg sound
+		format support, libao playback, Secret Rabbit Code
+		resampling; many fixes and much cleanup.
 	Rob Sykes		robs@users.sourceforge.net
                 Formats: M3U, PLS, FLAC, AMR-WB, 24bit support for popular
                 formats.
