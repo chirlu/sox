@@ -7,7 +7,7 @@
  * Copyright 1997 Graeme W. Gill, 93/5/17
  *
  * Info for format tags can be found at:
- *   http://www.microsoft.com/asf/resources/draft-ietf-fleischman-codec-subtree-01.txt
+ *   http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
  *
  */
 
@@ -421,6 +421,7 @@ static int sox_wavstartread(ft_t ft)
         sox_debug("Found RIFX header, swapping bytes");
         ft->signal.reverse_bytes = SOX_IS_LITTLEENDIAN;
     }
+    else ft->signal.reverse_bytes = SOX_IS_BIGENDIAN;
 
     sox_readdw(ft, &dwRiffLength);
 
