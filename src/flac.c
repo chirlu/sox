@@ -471,7 +471,8 @@ static int stop_write(ft_t const format)
   Encoder * encoder = (Encoder *) format->priv;
   FLAC__StreamEncoderState state = FLAC__stream_encoder_get_state(encoder->flac);
 
-  FLAC__metadata_object_delete(encoder->metadata);
+  if (encoder->metadata)
+    FLAC__metadata_object_delete(encoder->metadata);
   FLAC__stream_encoder_finish(encoder->flac);
   FLAC__stream_encoder_delete(encoder->flac);
   free(encoder->decoded_samples);
