@@ -1595,6 +1595,10 @@ and a separately specifiable compander run on each band.  See the
 parameters are specified between double quotes and the crossover
 frequency for that band is given by \fIxover-freq\fR; these can be
 repeated to create multiple bands.
+.SP
+See also
+.B compand
+for a single-band companding effect.
 .TP
 \fBmixer\fR [ \fB\-l\fR\^|\^\fB\-r\fR\^|\^\fB\-f\fR\^|\^\fB\-b\fR\^|\^\fB\-1\fR\^|\^\fB\-2\fR\^|\^\fB\-3\fR\^|\^\fB\-4\fR\^|\^\fIn\fR{\fB,\fIn\fR} ]
 Reduce the number of audio channels by mixing or selecting channels,
@@ -1671,8 +1675,9 @@ filter needs one parameter, \fIprofile-file\fR, which contains the noise profile
 from \fBnoiseprof\fR.  \fIthreshold\fR specifies how much noise should be removed, and
 may be between 0 and 1 with a default of 0\*d5.  Higher values will remove more
 noise but present a greater likelihood of distorting the desired audio signal.
-Experiment with different threshold values to find the optimal one for your
-audio.
+Using headphones to check the results, experiment with different
+threshold values to find the optimal one for your audio; pay special
+attention to quieter sections.
 .TP
 \fBpad\fR { \fIlength\fR[\fB@\fIposition\fR] }
 Pad the audio with silence, at the beginning, the end, or any
@@ -2235,6 +2240,10 @@ than 1 (e.g. 0\*d05 or 0\*d02) and is used only on peaks to prevent clipping.
 Not specifying this parameter will cause no limiter to be used.  In verbose
 mode, this effect will display the percentage of the audio that needed to be
 limited.
+.SP
+See also
+.B compand
+for a dynamic-range compression/expansion/limiting effect.
 .SS Deprecated Effects
 The following effects have been renamed or have their functionality
 included in another effect.  They continue to work in this version of
