@@ -411,13 +411,27 @@ static void auwriteheader(ft_t ft, sox_size_t data_size)
 
         encoding = sox_ausunencoding(ft->signal.size, ft->signal.encoding);
         if (encoding == SUN_ENCODING_UNKNOWN) {
-                sox_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
-                sox_report("Only U-law, A-law, and signed bytes/words/tri-bytes are supported.");
-                sox_report("Defaulting to 8khz u-law");
-                encoding = SUN_ULAW;
-                ft->signal.encoding = SOX_ENCODING_ULAW;
-                ft->signal.size = SOX_SIZE_BYTE;
-                ft->signal.rate = 8000;  /* strange but true */
+          sox_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
+          sox_report("Only u-law, A-law, and signed 8/16/24 bits are supported.");
+          if (ft->signal.size > 2) {
+            sox_report("Defaulting to signed 24 bit");
+            ft->signal.encoding = SOX_ENCODING_SIGN2;
+            ft->signal.size = SOX_SIZE_24BIT;
+            encoding = SUN_LIN_24;
+          }
+          else if (ft->signal.size == 2) {
+            sox_report("Defaulting to signed 16 bit");
+            ft->signal.encoding = SOX_ENCODING_SIGN2;
+            ft->signal.size = SOX_SIZE_16BIT;
+            encoding = SUN_LIN_16;
+          }
+          else {
+            sox_report("Defaulting to 8khz u-law");
+            encoding = SUN_ULAW;
+            ft->signal.encoding = SOX_ENCODING_ULAW;
+            ft->signal.size = SOX_SIZE_BYTE;
+            ft->signal.rate = 8000;  /* strange but true */
+          }
         }
 
         magic = SUN_MAGIC;
