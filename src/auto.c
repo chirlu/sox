@@ -57,14 +57,14 @@ static int sox_autostartread(ft_t ft)
                         type = "aiff";
                     else if (strncmp(header + 4, "AIFC", 4) == 0)
                         type = "aiff";
-                        else if (strncmp(header + 4, "8SVX", 4) == 0)
+                    else if (strncmp(header + 4, "8SVX", 4) == 0)
                         type = "8svx";
                     else if (strncmp(header + 4, "MAUD", 4) == 0)
                         type = "maud";
                 }
             }
-            else if (strncmp(header, "RIFF", 4) == 0)
-            {
+            else if (strncmp(header, "RIFF", 4) == 0 ||
+                     strncmp(header, "RIFX", 4) == 0) {
                 if (sox_readbuf(ft, header, 8) == 8)
                     if (strncmp(header + 4, "WAVE", 4) == 0)
                         type = "wav";
