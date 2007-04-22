@@ -17,6 +17,8 @@ sox-14.0.0
   o Added libao support.  (Reuben Thomas)
   o Added read-only ffmpeg support.  (Reuben Thomas)
   o Added LPC-10 support.  (Reuben Thomas)
+  o FLAC: added seekable decoding; added seek-table generation; don't
+    crash when encoding with no comment.  (robs)
 
   Effects:
 
@@ -41,6 +43,7 @@ sox-14.0.0
   o Add missing RM define to Makefiles so installs work.
    (Bug# 1666599) (cbagwell)
   o Fix I/O performance regression in 13.0.0.  (Reuben Thomas)
+  o Fix displayed times when playing a file and using trim.  (robs)
 
   Internal improvements:
 
