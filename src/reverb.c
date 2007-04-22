@@ -287,7 +287,7 @@ static int sox_reverb_stop(eff_t effp)
 static sox_effect_t sox_reverb_effect = {
   "reverb",
   "Usage: reverb gain-out reverb-time delay [ delay ... ]",
-  0,
+  SOX_EFF_LENGTH,
   sox_reverb_getopts,
   sox_reverb_start,
   sox_reverb_flow,

@@ -331,7 +331,7 @@ static int sox_noisered_stop(eff_t effp)
 static sox_effect_t sox_noisered_effect = {
   "noisered",
   "Usage: noiseprof profile-file [threshold]",
-  SOX_EFF_MCHAN,
+  SOX_EFF_MCHAN|SOX_EFF_LENGTH,
   sox_noisered_getopts,
   sox_noisered_start,
   sox_noisered_flow,

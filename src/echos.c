@@ -273,7 +273,7 @@ static int sox_echos_stop(eff_t effp)
 static sox_effect_t sox_echos_effect = {
   "echos",
   "Usage: echos gain-in gain-out delay decay [ delay decay ... ]",
-  0,
+  SOX_EFF_LENGTH,
   sox_echos_getopts,
   sox_echos_start,
   sox_echos_flow,

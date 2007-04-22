@@ -321,7 +321,7 @@ static int sox_stat_stop(eff_t effp)
 static sox_effect_t sox_stat_effect = {
   "stat",
   "Usage: [ -s N ] [ -rms ] [-freq] [ -v ] [ -d ]",
-  SOX_EFF_MCHAN | SOX_EFF_REPORT,
+  SOX_EFF_MCHAN,
   sox_stat_getopts,
   sox_stat_start,
   sox_stat_flow,

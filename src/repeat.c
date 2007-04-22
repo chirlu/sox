@@ -199,7 +199,7 @@ static int sox_repeat_stop(eff_t effp)
 static sox_effect_t sox_repeat_effect = {
   "repeat",
   "Usage: repeat count",
-  0,
+  SOX_EFF_LENGTH,
   sox_repeat_getopts,
   sox_repeat_start,
   sox_repeat_flow,

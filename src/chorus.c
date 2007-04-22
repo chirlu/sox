@@ -342,7 +342,7 @@ static int sox_chorus_stop(eff_t effp)
 static sox_effect_t sox_chorus_effect = {
   "chorus",
   "Usage: chorus gain-in gain-out delay decay speed depth [ -s | -t ]",
-  0,
+  SOX_EFF_LENGTH,
   sox_chorus_getopts,
   sox_chorus_start,
   sox_chorus_flow,

@@ -579,7 +579,7 @@ static sox_effect_t sox_pitch_effect = {
   "Usage: pitch shift width interpole fade\n"
   "       (in cents, in ms, cub/lin, cos/ham/lin/trap)"
   "       (defaults: 0 20 c c)",
-  0,
+  SOX_EFF_LENGTH,
   sox_pitch_getopts,
   sox_pitch_start,
   sox_pitch_flow,

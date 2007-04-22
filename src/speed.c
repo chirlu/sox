@@ -54,6 +54,7 @@ static int getopts(eff_t effp, int n, char * * argv)
 sox_effect_t const *sox_speed_effect_fn(void)
 {
   static sox_effect_t driver = {
-    "speed", "Usage: speed factor[c]", SOX_EFF_NULL, getopts, 0, 0, 0, 0, 0};
+    "speed", "Usage: speed factor[c]", SOX_EFF_NULL|SOX_EFF_LENGTH,
+    getopts, 0, 0, 0, 0, 0};
   return &driver;
 }

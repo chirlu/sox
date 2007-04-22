@@ -141,7 +141,7 @@ static int kill(eff_t effp)
 sox_effect_t const * sox_pad_effect_fn(void)
 {
   static sox_effect_t driver = {
-    "pad", "Usage: pad {length[@position]}", SOX_EFF_MCHAN,
+    "pad", "Usage: pad {length[@position]}", SOX_EFF_MCHAN|SOX_EFF_LENGTH,
     create, start, flow, drain, stop, kill
   };
   return &driver;

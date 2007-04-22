@@ -348,10 +348,10 @@ extern const char * const sox_encodings_str[];
 
 #define SOX_EFF_CHAN     1           /* Effect can mix channels up/down */
 #define SOX_EFF_RATE     2           /* Effect can alter data rate */
-#define SOX_EFF_MCHAN    4           /* Effect can handle multi-channel */
-#define SOX_EFF_REPORT   8           /* Effect does not affect the audio */
-#define SOX_EFF_DEPRECATED 16        /* Effect is living on borrowed time */
-#define SOX_EFF_NULL     32          /* Effect does nothing */
+#define SOX_EFF_LENGTH   4           /* Effect can alter audio length */
+#define SOX_EFF_MCHAN    8           /* Effect can handle multi-channel */
+#define SOX_EFF_NULL     16          /* Effect does nothing */
+#define SOX_EFF_DEPRECATED 32        /* Effect is living on borrowed time */
 
 /*
  * Handler structure for each effect.
@@ -403,6 +403,7 @@ ft_t sox_open_write(
     const sox_signalinfo_t *info,
     const char *filetype,
     const char *comment,
+    sox_size_t length,
     const sox_instrinfo_t *instr,
     const sox_loopinfo_t *loops);
 extern sox_size_t sox_read(ft_t ft, sox_ssample_t *buf, sox_size_t len);

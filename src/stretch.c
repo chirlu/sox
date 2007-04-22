@@ -361,7 +361,7 @@ static sox_effect_t sox_stretch_effect = {
   "Usage: stretch factor [window fade shift fading]\n"
   "       (expansion, frame in ms, lin/..., unit<1.0, unit<0.5)\n"
   "       (defaults: 1.0 20 lin ...)",
-  0,
+  SOX_EFF_LENGTH,
   sox_stretch_getopts,
   sox_stretch_start,
   sox_stretch_flow,

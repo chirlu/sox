@@ -188,6 +188,7 @@ ft_t sox_open_write(
     const sox_signalinfo_t *info,
     const char *filetype,
     const char *comment,
+    sox_size_t length,
     const sox_instrinfo_t *instr,
     const sox_loopinfo_t *loops)
 {
@@ -197,7 +198,6 @@ ft_t sox_open_write(
 
     ft->filename = xstrdup(path);
 
-    /* Let auto effect do the work if user is not overriding. */
     if (!filetype) {
         char *chop;
         int len;
@@ -280,6 +280,7 @@ ft_t sox_open_write(
     if (instr)
         ft->instr = *instr;
 
+    ft->length = length;
     set_endianness_if_not_already_set(ft);
 
     /* Read and write starters can change their formats. */

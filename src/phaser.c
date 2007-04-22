@@ -265,7 +265,7 @@ static int sox_phaser_stop(eff_t effp)
 static sox_effect_t sox_phaser_effect = {
   "phaser",
   "Usage: phaser gain-in gain-out delay decay speed [ -s | -t ]",
-  0,
+  SOX_EFF_LENGTH,
   sox_phaser_getopts,
   sox_phaser_start,
   sox_phaser_flow,

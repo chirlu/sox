@@ -212,7 +212,7 @@ static int sox_noiseprof_stop(eff_t effp)
 static sox_effect_t sox_noiseprof_effect = {
   "noiseprof",
   "Usage: noiseprof [filename]",
-  SOX_EFF_MCHAN | SOX_EFF_REPORT,
+  SOX_EFF_MCHAN,
   sox_noiseprof_getopts,
   sox_noiseprof_start,
   sox_noiseprof_flow,

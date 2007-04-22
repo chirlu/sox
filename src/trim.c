@@ -204,7 +204,7 @@ void sox_trim_clear_start(eff_t effp)
 static sox_effect_t sox_trim_effect = {
   "trim",
   "Usage: trim start [length]",
-  SOX_EFF_MCHAN,
+  SOX_EFF_MCHAN|SOX_EFF_LENGTH,
   sox_trim_getopts,
   sox_trim_start,
   sox_trim_flow,
