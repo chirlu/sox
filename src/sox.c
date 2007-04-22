@@ -1268,6 +1268,8 @@ static void parse_effects(int argc, char **argv)
       sox_fail("Effect `%s' does not exist!", argv[optind]);
       exit(1);
     }
+    if (e->h->flags & SOX_EFF_DEPRECATED)
+      sox_warn("Effect `%s' is deprecated and may be removed in a future release; please refer to the manual sox(1) for an alternative effect", e->name);
 
     optind++; /* Skip past effect name */
     e->globalinfo = &globalinfo;
