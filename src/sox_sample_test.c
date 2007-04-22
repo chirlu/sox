@@ -169,9 +169,5 @@ int main()
   sample = SOX_FLOAT_64BIT_TO_SAMPLE(d, clips);
   assert(sample == SOX_SAMPLE_MAX && --clips == 0);
 
-  {
-    enum {MEANT_TO_FAIL};
-    assert(MEANT_TO_FAIL);
-  }
   return 0;
 }

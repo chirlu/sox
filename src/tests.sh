@@ -141,6 +141,9 @@ timeIO () {
 
 # Run tests
 
+make sox_sample_test
+./sox_sample_test || exit 1
+
 grep -q "^#define HAVE_LIBFLAC" soxconfig.h || skip="flac $skip"
 grep -q "^#define HAVE_LIBOGG" soxconfig.h || skip="ogg $skip"
 grep -q "^#define HAVE_SNDFILE_H" soxconfig.h || skip="caf $skip"
