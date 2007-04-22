@@ -683,33 +683,29 @@ static int enum_option(int option_index, enum_item const * items)
 
 static void optimize_trim(void)          
 {
-    /* Speed hack.  If the "trim" effect is the first effect then
-     * peek inside its "effect descriptor" and see what the
-     * start location is.  This has to be done after its start()
-     * is called to have the correct location.
-     * Also, only do this when only working with one input file.
-     * This is because the logic to do it for multiple files is
-     * complex and problably never used.
-     * This hack is a huge time savings when trimming
-     * gigs of audio data into managable chunks
-     */ 
-    if (input_count == 1 && neffects > 1 &&
-        strcmp(efftab[1].name, "trim") == 0)
-    {
-        if ((files[0]->desc->h->flags & SOX_FILE_SEEK) &&
-            files[0]->desc->seekable)
-        { 
-            if (sox_seek(files[0]->desc, sox_trim_get_start(&efftab[1]), 
-                        SOX_SEEK_SET) != SOX_EOF)
-            { 
-                /* Assuming a failed seek stayed where it was.  If the 
-                 * seek worked then reset the start location of 
-                 * trim so that it thinks user didn't request a skip.
-                 */ 
-                sox_trim_clear_start(&efftab[1]);
-            }    
-        }        
-    }    
+  /* Speed hack.  If the "trim" effect is the first effect then
+   * peek inside its "effect descriptor" and see what the
+   * start location is.  This has to be done after its start()
+   * is called to have the correct location.
+   * Also, only do this when only working with one input file.
+   * This is because the logic to do it for multiple files is
+   * complex and problably never used.
+   * This hack is a huge time savings when trimming
+   * gigs of audio data into managable chunks
+   */ 
+  if (input_count == 1 && neffects > 1 && strcmp(efftab[1].name, "trim") == 0) {
+    if ((files[0]->desc->h->flags & SOX_FILE_SEEK) && files[0]->desc->seekable){
+      sox_size_t offset = sox_trim_get_start(&efftab[1]);
+      if (sox_seek(files[0]->desc, offset, SOX_SEEK_SET) != SOX_EOF) { 
+        read_wide_samples = offset / files[0]->desc->signal.channels;
+        /* Assuming a failed seek stayed where it was.  If the 
+         * seek worked then reset the start location of 
+         * trim so that it thinks user didn't request a skip.
+         */ 
+        sox_trim_clear_start(&efftab[1]);
+      }    
+    }        
+  }    
 }
 
 static sox_bool doopts(file_t f, int argc, char **argv)
@@ -1026,6 +1022,8 @@ static int process(void) {
   sox_size_t e, ws, s, i;
   sox_size_t ilen[MAX_INPUT_FILES];
   sox_ssample_t *ibuf[MAX_INPUT_FILES];
+  sox_bool known_length = combine_method != SOX_sequence;
+  sox_size_t olen = 0;
 
   combiner = files[current_input]->desc->signal;
   if (combine_method == SOX_sequence) {
@@ -1045,6 +1043,11 @@ static int process(void) {
       max_channels = max(max_channels, files[i]->desc->signal.channels);
       min_rate = min(min_rate, files[i]->desc->signal.rate);
       max_rate = max(max_rate, files[i]->desc->signal.rate);
+      known_length = known_length && files[i]->desc->length != 0;
+      if (combine_method == SOX_concatenate)
+        olen += files[i]->desc->length / files[i]->desc->signal.channels;
+      else
+        olen = max(olen, files[i]->desc->length / files[i]->desc->signal.channels);
     }
     if (min_rate != max_rate)
       sox_fail("Input files must have the same sample-rate");
@@ -1074,6 +1077,12 @@ static int process(void) {
 
   combiner.rate = combiner.rate * globalinfo.speed + .5;
 
+  for (i = 0; i < nuser_effects; i++)
+    known_length = known_length && !(user_efftab[i].h->flags & SOX_EFF_LENGTH);
+
+  if (!known_length)
+    olen = 0;
+
   {
     sox_loopinfo_t loops[SOX_MAX_NLOOPS];
     double factor;
@@ -1086,7 +1095,7 @@ static int process(void) {
         comment = ofile->comment;
 
     /*
-     * copy loop ofile, resizing appropriately
+     * copy loop info, resizing appropriately
      * it's in samples, so # channels don't matter
      * FIXME: This doesn't work for multi-file processing or
      * effects that change file length.
@@ -1104,6 +1113,7 @@ static int process(void) {
                           &ofile->signal,
                           ofile->filetype,
                           comment,
+                          olen,
                           &files[0]->desc->instr,
                           loops);
 
@@ -1125,7 +1135,7 @@ static int process(void) {
   build_effects_table();
 
   if (start_all_effects() != SOX_SUCCESS)
-    exit(2); /* Failing effect should have displayed an error message */
+    exit(2); /* The failing effect should have displayed an error message */
 
   /* Allocate output buffers for effects */
   for (e = 0; e < neffects; e++) {
