@@ -14,7 +14,7 @@
  * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
-/* File format: FLAC   (c) 2006 robs@users.sourceforge.net */
+/* File format: FLAC   (c) 2006-7 robs@users.sourceforge.net */
 
 
 
@@ -41,6 +41,7 @@
 #define FLAC__stream_decoder_process_single FLAC__file_decoder_process_single
 #define FLAC__stream_decoder_finish FLAC__file_decoder_finish
 #define FLAC__stream_decoder_delete FLAC__file_decoder_delete
+#define FLAC__stream_decoder_seek_absolute FLAC__file_decoder_seek_absolute
 #endif
 
 
@@ -244,7 +245,8 @@ typedef struct {
   unsigned number_of_samples;
 
   FLAC__StreamEncoder * flac;
-  FLAC__StreamMetadata *metadata;
+  FLAC__StreamMetadata * metadata[2];
+  unsigned num_metadata;
 } Encoder;
 
 
@@ -343,8 +345,8 @@ static int start_write(ft_t const format)
       if (compression_level != format->signal.compression || 
           compression_level >= array_length(options)) {
         sox_fail_errno(format, SOX_EINVAL,
-                      "FLAC compression level must be a whole number from 0 to %i",
-                      array_length(options) - 1);
+                   "FLAC compression level must be a whole number from 0 to %i",
+                   array_length(options) - 1);
         return SOX_EOF;
       }
     }
@@ -390,15 +392,35 @@ static int start_write(ft_t const format)
     }
   }
 
-  if (format->length != 0)
+  if (format->length != 0) {
     FLAC__stream_encoder_set_total_samples_estimate(encoder->flac, (FLAC__uint64)format->length);
 
+    encoder->metadata[encoder->num_metadata] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_SEEKTABLE);
+    if (encoder->metadata[encoder->num_metadata] == NULL) {
+      sox_fail_errno(format, SOX_ENOMEM, "FLAC ERROR creating the encoder seek table template");
+      return SOX_EOF;
+    }
+    {
+#if FLAC_API_VERSION_CURRENT >= 8
+      if (!FLAC__metadata_object_seektable_template_append_spaced_points_by_samples(encoder->metadata[encoder->num_metadata], 10 * format->signal.rate, (FLAC__uint64)(format->length/format->signal.channels))) {
+#else
+      sox_size_t samples = 10 * format->signal.rate;
+      sox_size_t total_samples = format->length/format->signal.channels;
+      if (!FLAC__metadata_object_seektable_template_append_spaced_points(encoder->metadata[encoder->num_metadata], total_samples / samples + (total_samples % samples != 0), (FLAC__uint64)total_samples)) {
+#endif
+        sox_fail_errno(format, SOX_ENOMEM, "FLAC ERROR creating the encoder seek table points");
+        return SOX_EOF;
+      }
+    }
+    encoder->metadata[encoder->num_metadata]->is_last = sox_false; /* the encoder will set this for us */
+    ++encoder->num_metadata;
+  }
+
   if (format->comment != NULL && * format->comment != '\0') {
-    FLAC__StreamMetadata * metadata[1];
     FLAC__StreamMetadata_VorbisComment_Entry entry;
     char * comments, * comment, * end_of_comment;
 
-    encoder->metadata = metadata[0] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT);
+    encoder->metadata[encoder->num_metadata] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT);
 
     /* Check if there is a FIELD=value pair already in the comment; if not, add one */
     if (strchr(format->comment, '=') == NULL) {
@@ -421,12 +443,15 @@ static int start_write(ft_t const format)
       }
       entry.length = strlen((char const *) entry.entry);
 
-      FLAC__metadata_object_vorbiscomment_append_comment(metadata[0], entry, /*copy= */ sox_true);
+      FLAC__metadata_object_vorbiscomment_append_comment(encoder->metadata[encoder->num_metadata], entry, /*copy= */ sox_true);
     } while (end_of_comment != NULL);
 
-    FLAC__stream_encoder_set_metadata(encoder->flac, metadata, 1);
     free(comments);
+    ++encoder->num_metadata;
   }
+
+  if (encoder->num_metadata)
+    FLAC__stream_encoder_set_metadata(encoder->flac, encoder->metadata, encoder->num_metadata);
 
 #if FLAC_API_VERSION_CURRENT <= 7
   FLAC__stream_encoder_set_write_callback(encoder->flac, flac_stream_encoder_write_callback);
@@ -470,11 +495,12 @@ static int stop_write(ft_t const format)
 {
   Encoder * encoder = (Encoder *) format->priv;
   FLAC__StreamEncoderState state = FLAC__stream_encoder_get_state(encoder->flac);
+  unsigned i;
 
-  if (encoder->metadata)
-    FLAC__metadata_object_delete(encoder->metadata);
   FLAC__stream_encoder_finish(encoder->flac);
   FLAC__stream_encoder_delete(encoder->flac);
+  for (i = 0; i < encoder->num_metadata; ++i)
+    FLAC__metadata_object_delete(encoder->metadata[i]);
   free(encoder->decoded_samples);
   if (state != FLAC__STREAM_ENCODER_OK) {
     sox_fail_errno(format, SOX_EINVAL, "FLAC ERROR: failed to encode to end of stream");
@@ -485,14 +511,23 @@ static int stop_write(ft_t const format)
 
 
 
+static int seek(ft_t format, sox_size_t offset)
+{
+  Decoder * decoder = (Decoder *) format->priv;
+
+  return format->mode == 'r' && FLAC__stream_decoder_seek_absolute(decoder->flac, (FLAC__uint64)(offset / format->signal.channels)) ?  SOX_SUCCESS : SOX_EOF;
+}
+
+
+
 sox_format_t const * sox_flac_format_fn(void)
 {
   static char const * const names[] = {"flac", NULL};
   static sox_format_t const driver = {
-    names, 0,
+    names, SOX_FILE_SEEK,
     start_read, read, stop_read,
     start_write, write, stop_write,
-    0
+    seek
   };
   return &driver;
 }
