@@ -519,8 +519,9 @@ static int seek(ft_t format, sox_size_t offset)
 }
 
 
+const sox_format_t *sox_flac_format_fn(void);
 
-sox_format_t const * sox_flac_format_fn(void)
+const sox_format_t *sox_flac_format_fn(void)
 {
   static char const * const names[] = {"flac", NULL};
   static sox_format_t const driver = {

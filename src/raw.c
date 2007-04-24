@@ -1,8 +1,7 @@
 /*
- * libSoX raw file formats
+ * libSoX raw I/O
  *
- * July 5, 1991
- * Copyright 1991 Lance Norskog And Sundry Contributors
+ * Copyright 1991-2007 Lance Norskog And Sundry Contributors
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained.
  * Lance Norskog And Sundry Contributors are not responsible for
@@ -233,47 +232,3 @@ sox_size_t sox_rawwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsamp)
 
     return 0;
 }
-
-static int raw_start(ft_t ft) {
-  return sox_rawstart(ft,sox_false,sox_false,SOX_ENCODING_UNKNOWN,-1);
-}
-sox_format_t const * sox_raw_format_fn(void) {
-  static char const * names[] = {"raw", NULL};
-  static sox_format_t driver = {
-    names, SOX_FILE_SEEK,
-    raw_start, sox_rawread , sox_format_nothing,
-    raw_start, sox_rawwrite, sox_format_nothing,
-    sox_rawseek
-  };
-  return &driver;
-}
-
-#define RAW_FORMAT(id,alt1,alt2,size,flags,encoding) \
-static int id##_start(ft_t ft) { \
-  return sox_rawstart(ft,sox_true,sox_true,SOX_ENCODING_##encoding,SOX_SIZE_##size); \
-} \
-sox_format_t const * sox_##id##_format_fn(void) { \
-  static char const * names[] = {#id, alt1, alt2, NULL}; \
-  static sox_format_t driver = { \
-    names, flags, \
-    id##_start, sox_rawread , sox_format_nothing, \
-    id##_start, sox_rawwrite, sox_format_nothing, \
-    sox_format_nothing_seek \
-  }; \
-  return &driver; \
-}
-
-RAW_FORMAT(sb,NULL ,NULL  ,BYTE , 0,SIGN2)
-RAW_FORMAT(sl,NULL ,NULL  ,32BIT, 0,SIGN2)
-RAW_FORMAT(s3,NULL ,NULL  ,24BIT, 0,SIGN2)
-RAW_FORMAT(sw,NULL ,NULL  ,16BIT, 0,SIGN2)
-                   
-RAW_FORMAT(ub,"sou","fssd",BYTE , 0,UNSIGNED)
-RAW_FORMAT(uw,NULL ,NULL  ,16BIT, 0,UNSIGNED)
-RAW_FORMAT(u3,NULL ,NULL  ,24BIT, 0,UNSIGNED)
-RAW_FORMAT(u4,NULL ,NULL  ,32BIT, 0,UNSIGNED)
-                   
-RAW_FORMAT(al,NULL ,NULL  ,BYTE ,0     ,ALAW)
-RAW_FORMAT(ul,NULL ,NULL  ,BYTE ,0     ,ULAW)
-RAW_FORMAT(la,NULL ,NULL  ,BYTE ,SOX_FILE_BIT_REV    ,ALAW)
-RAW_FORMAT(lu,NULL ,NULL  ,BYTE ,SOX_FILE_BIT_REV    ,ULAW)

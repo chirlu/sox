@@ -203,6 +203,8 @@ static sox_format_t sox_auto_format = {
   sox_format_nothing_seek
 };
 
+const sox_format_t *sox_auto_format_fn(void);
+
 const sox_format_t *sox_auto_format_fn(void)
 {
     return &sox_auto_format;

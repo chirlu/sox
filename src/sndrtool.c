@@ -184,7 +184,7 @@ static const char *sndtnames[] = {
   NULL
 };
 
-const sox_format_t sox_snd_format = {
+static const sox_format_t sox_snd_format = {
   sndtnames,
   SOX_FILE_SEEK | SOX_FILE_LIT_END,
   sox_sndtstartread,
@@ -196,7 +196,9 @@ const sox_format_t sox_snd_format = {
   sox_sndseek
 };
 
-const sox_format_t *sox_snd_format_fn(void)
+const sox_format_t *sox_sndrtool_format_fn(void);
+
+const sox_format_t *sox_sndrtool_format_fn(void)
 {
     return &sox_snd_format;
 }

@@ -237,6 +237,8 @@ static sox_format_t sox_sf_format = {
   sox_sfseek
 };
 
+const sox_format_t *sox_sf_format_fn(void);
+
 const sox_format_t *sox_sf_format_fn(void)
 {
     return &sox_sf_format;

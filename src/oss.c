@@ -42,7 +42,7 @@
 #include <sys/ioctl.h>
 
 /* common r/w initialization code */
-static int ossdspinit(ft_t ft)
+static int ossinit(ft_t ft)
 {
     int sampletype, samplesize, dsp_stereo;
     int tmp, rc;
@@ -199,38 +199,41 @@ static int ossdspinit(ft_t ft)
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int sox_ossdspstartread(ft_t ft)
+static int sox_ossstartread(ft_t ft)
 {
     int rc;
-    rc = ossdspinit(ft);
+    rc = ossinit(ft);
     return rc;
 }
 
-static int sox_ossdspstartwrite(ft_t ft)
+static int sox_ossstartwrite(ft_t ft)
 {
-    return ossdspinit(ft);
+    return ossinit(ft);
 }
 
 /* OSS /dev/dsp player */
-static const char *ossdspnames[] = {
+static const char *ossnames[] = {
   "ossdsp",
+  "oss",
   NULL
 };
 
-static sox_format_t sox_ossdsp_format = {
-  ossdspnames,
+static sox_format_t sox_oss_format = {
+  ossnames,
   SOX_FILE_DEVICE,
-  sox_ossdspstartread,
+  sox_ossstartread,
   sox_rawread,
   sox_rawstopread,
-  sox_ossdspstartwrite,
+  sox_ossstartwrite,
   sox_rawwrite,
   sox_rawstopwrite,
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_ossdsp_format_fn(void)
+const sox_format_t *sox_oss_format_fn(void);
+
+const sox_format_t *sox_oss_format_fn(void)
 {
-    return &sox_ossdsp_format;
+    return &sox_oss_format;
 }
 #endif

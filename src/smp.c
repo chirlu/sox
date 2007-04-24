@@ -418,6 +418,8 @@ static sox_format_t sox_smp_format = {
   sox_smpseek
 };
 
+const sox_format_t *sox_smp_format_fn(void);
+
 const sox_format_t *sox_smp_format_fn(void)
 {
     return &sox_smp_format;

@@ -2,7 +2,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = amr-wb lpc10 @LIBGSM_SUBDIR@ src
+SUBDIRS = libltdl amr-wb lpc10 @LIBGSM_SUBDIR@ src
 DIST_SUBDIRS = amr-wb lpc10 src/libgsm src
 
 RM = rm -f

@@ -35,6 +35,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>             /* for unlink() */
 #endif
+#include <ltdl.h>
 
 #ifdef HAVE_GETOPT_LONG
 #include <getopt.h>
@@ -59,6 +60,7 @@
 sox_size_t sox_bufsiz = 8192;
 
 static sox_bool play = sox_false, rec = sox_false;
+static plugins_initted = sox_false;
 static enum {SOX_sequence, SOX_concatenate, SOX_mix, SOX_merge} combine_method = SOX_concatenate;
 static sox_size_t mixing_clips = 0;
 static sox_bool repeatable_random = sox_false;  /* Whether to invoke srand. */
@@ -147,7 +149,7 @@ static unsigned input_eff;                    /* last input effect with data */
 static sox_bool input_eff_eof;                /* has input_eff reached EOF? */
 
 static struct sox_effect user_efftab[MAX_USER_EFF];
-static int nuser_effects;
+static unsigned nuser_effects;
 
 static char *myname = NULL;
 
@@ -180,6 +182,7 @@ static sox_bool overwrite_permitted(char const * filename)
 static void cleanup(void)
 {
   size_t i;
+  int ret;
 
   /* Close the input and output files before exiting. */
   for (i = 0; i < input_count; i++) {
@@ -206,6 +209,11 @@ static void cleanup(void)
       free(ofile->desc);
     }
     free(ofile);
+  }
+
+  if (plugins_initted && (ret = lt_dlexit()) != 0) {
+    sox_fail("lt_dlexit failed with %d error(s): %s", ret, lt_dlerror());
+    exit(1);
   }
 }
 
@@ -446,6 +454,36 @@ static void parse_options_and_filenames(int argc, char **argv)
   }
 }
 
+static void init_plugins(void)
+{
+  int ret;
+  size_t i;
+
+  if ((ret = lt_dlinit()) != 0) {
+    sox_fail("lt_dlinit failed with %d error(s): %s", ret, lt_dlerror());
+    exit(1);
+  }
+  plugins_initted = sox_true;
+
+  for (i = 0; sox_format_fns[i].name || sox_format_fns[i].fn; i++) {
+    if (sox_format_fns[i].name) { /* Try to load plugin */
+#define MAX_NAME_LEN 1024
+      char name[MAX_NAME_LEN];
+      int sn = snprintf(name, MAX_NAME_LEN, PKGLIBDIR "/libsox_fmt_%s.la", sox_format_fns[i].name);
+      
+      if (sn < MAX_NAME_LEN) {
+        char fnname[MAX_NAME_LEN];
+        lt_dlhandle lth = lt_dlopen(name);
+        
+        snprintf(fnname, MAX_NAME_LEN, "sox_%s_format_fn", sox_format_fns[i].name);
+        sox_format_fns[i].fn = (sox_format_fn_t)lt_dlsym(lth, fnname);
+        sox_debug("opening format plugin `%s': library %p, entry point %p\n", name, lth, sox_format_fns[i].fn);
+      }
+    } else
+      sox_debug("opening builtin format `%s': entry point %p\n", sox_format_fns[i].fn()->names[0], sox_format_fns[i].fn);
+  }
+}
+
 int main(int argc, char **argv)
 {
   size_t i;
@@ -454,6 +492,7 @@ int main(int argc, char **argv)
   atexit(cleanup);
   sox_output_message_handler = output_message;
 
+  /* Read command-line and argv[0] options */
   i = strlen(myname);
   if (i >= sizeof("play") - 1 &&
       strcmp(myname + i - (sizeof("play") - 1), "play") == 0) {
@@ -466,6 +505,10 @@ int main(int argc, char **argv)
   }
   parse_options_and_filenames(argc, argv);
 
+  /* Load plugins (after options so we can output debugging messages
+     if desired) */
+  init_plugins();
+  
   /* Allocate buffers, size of which may have been set by --buffer */
   ibufl = xcalloc(sox_bufsiz / 2, sizeof(sox_ssample_t));
   obufl = xcalloc(sox_bufsiz / 2, sizeof(sox_ssample_t));
@@ -1318,7 +1361,7 @@ static void add_default_effect(char const * name, int * effects_mask)
  */
 static void build_effects_table(void)
 {
-  int i;
+  unsigned i;
   int effects_mask = 0;
   sox_bool need_rate = combiner.rate     != ofile->desc->signal.rate;
   sox_bool need_chan = combiner.channels != ofile->desc->signal.channels;
@@ -1905,17 +1948,21 @@ static void usage(char const *message)
          "\n");
 
   printf("SUPPORTED FILE FORMATS:");
-  for (i = 0, formats = 0; sox_format_fns[i]; i++) {
-    char const * const *names = sox_format_fns[i]()->names;
-    while (*names++)
-      formats++;
+  for (i = 0, formats = 0; sox_format_fns[i].name || sox_format_fns[i].fn; i++) {
+    if (sox_format_fns[i].fn) {
+      char const * const *names = sox_format_fns[i].fn()->names;
+      while (*names++)
+        formats++;
+    }
   }
   formats += 2;
   format_list = (const char **)xmalloc(formats * sizeof(char *));
-  for (i = 0, formats = 0; sox_format_fns[i]; i++) {
-    char const * const *names = sox_format_fns[i]()->names;
-    while (*names)
-      format_list[formats++] = *names++;
+  for (i = 0, formats = 0; sox_format_fns[i].name || sox_format_fns[i].fn; i++) {
+    if (sox_format_fns[i].fn) {
+      char const * const *names = sox_format_fns[i].fn()->names;
+      while (*names)
+        format_list[formats++] = *names++;
+    }
   }
   format_list[formats++] = "m3u";
   format_list[formats++] = "pls";

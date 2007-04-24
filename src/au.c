@@ -492,6 +492,8 @@ static sox_format_t sox_au_format = {
   sox_auseek
 };
 
+const sox_format_t *sox_au_format_fn(void);
+
 const sox_format_t *sox_au_format_fn(void)
 {
     return &sox_au_format;

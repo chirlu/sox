@@ -1057,7 +1057,7 @@ see if there is support for Ogg Vorbis run
 .EE
 and look for it under the list of supported file formats as `vorbis'.
 .TP
-.B ossdsp
+.B oss
 OSS /dev/dsp device driver.
 This is a pseudo-file that can be optionally compiled into SoX.  Run
 .EX
@@ -1069,7 +1069,7 @@ files it attempts to set up the OSS driver to use the same format as
 the input file. It is suggested to always override the output values
 to use the highest quality format your OSS system can handle. Example:
 .EX
-	sox infile -t ossdsp -2 -s /dev/dsp
+	sox infile -t oss -2 -s /dev/dsp
 .EE
 .TP
 \&\fB.paf\fR, \fB.fap\fR \fB(libsndfile)\fR

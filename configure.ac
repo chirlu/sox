@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(SoX, 13.0.0, sox-devel@lists.sourceforge.net)
+AC_INIT(SoX, 14.0.0, sox-devel@lists.sourceforge.net)
 AM_INIT_AUTOMAKE
 
 dnl create a config.h file (Automake will add -DHAVE_CONFIG_H)
@@ -11,10 +11,16 @@ AC_CONFIG_SRCDIR(sox.1)
 
 dnl Checks for programs.
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_LN_S
+AC_LIBLTDL_INSTALLABLE
+AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
+AC_CONFIG_SUBDIRS(libltdl)
 AC_SUBST(LIBTOOL_DEPS)
+AC_SUBST(LIBLTDL)
+AC_SUBST(LTDLINCL)
 m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG])
 
 dnl Debugging

@@ -12,19 +12,19 @@ getFormat () {
   formatExt=$1; formatText=$1; formatFlags=""
   case $1 in
     al ) formatText="alaw byte" ;;
-    sb ) formatText="signed byte" ;;
-    sl ) formatText="signed long" ;;
-    sw ) formatText="signed word" ;;
+    s1 ) formatText="signed byte" ;;
+    s4 ) formatText="signed long" ;;
+    s2 ) formatText="signed word" ;;
     ul ) formatText="ulaw byte" ;;
-    ub ) formatText="unsigned byte" ;;
-    uw ) formatText="unsigned word" ;;
+    u1 ) formatText="unsigned byte" ;;
+    u2 ) formatText="unsigned word" ;;
     raw) formatText="float"; formatFlags="-f -4" ;;
     Raw) formatText="double"; formatFlags="-f -8" ;;
     au ) formatFlags="-s" ;;
     Wav) formatFlags="-u -1" ;;
-    sbX ) formatText="signed byte (swap bits)"; formatExt="sb"; formatFlags="-X" ;;
-    sbN ) formatText="signed byte (swap nibbles)"; formatExt="sb"; formatFlags="-N" ;;
-    sbXN ) formatText="signed byte (swap nibbles and bits)"; formatExt="sb"; formatFlags="-X -N" ;;
+    s1X ) formatText="signed byte (swap bits)"; formatExt="s1"; formatFlags="-X" ;;
+    s1N ) formatText="signed byte (swap nibbles)"; formatExt="s1"; formatFlags="-N" ;;
+    s1XN ) formatText="signed byte (swap nibbles and bits)"; formatExt="s1"; formatFlags="-X -N" ;;
   esac
 }
   
@@ -72,23 +72,23 @@ convertToAndFrom () {
 }
 
 do_multichannel_formats () {
-  format1=ub
-  convertToAndFrom sb ub sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac caf sph
+  format1=u1
+  convertToAndFrom s1 u1 s2 u2 s3 u3 s4 u4 raw Raw dat au wav aiff aifc flac caf sph
 
-  format1=sw
-  convertToAndFrom sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac caf sph
+  format1=s2
+  convertToAndFrom s2 u2 s3 u3 s4 u4 raw Raw dat au wav aiff aifc flac caf sph
 
   format1=u3
-  convertToAndFrom s3 u3 sl u4 raw Raw wav aiff aifc flac # FIXME: sph
+  convertToAndFrom s3 u3 s4 u4 raw Raw wav aiff aifc flac # FIXME: sph
 
-  format1=sl
-  convertToAndFrom sl u4 Raw wav aiff aifc caf sph
+  format1=s4
+  convertToAndFrom s4 u4 Raw wav aiff aifc caf sph
 
   format1=al
-  convertToAndFrom al sw uw sl raw Raw dat aiff aifc flac caf # FIXME: sph
+  convertToAndFrom al s2 u2 s4 raw Raw dat aiff aifc flac caf # FIXME: sph
 
   format1=ul
-  convertToAndFrom ul sw uw sl raw Raw dat aiff aifc flac caf sph
+  convertToAndFrom ul s2 u2 s4 raw Raw dat aiff aifc flac caf sph
 
   format1=Wav
   convertToAndFrom Wav aiff aifc au dat sf flac caf sph
@@ -103,20 +103,20 @@ do_twochannel_formats () {
 
 do_singlechannel_formats () {
   format1=vox
-  convertToAndFrom vox sw uw s3 u3 sl u4 raw Raw dat au wav aiff aifc flac caf # FIXME: ima
+  convertToAndFrom vox s2 u2 s3 u3 s4 u4 raw Raw dat au wav aiff aifc flac caf # FIXME: ima
 
   format1=ima
-  convertToAndFrom ima sw uw s3 u3 sl u4 raw Raw dat au aiff aifc flac caf # FIXME: vox wav
+  convertToAndFrom ima s2 u2 s3 u3 s4 u4 raw Raw dat au aiff aifc flac caf # FIXME: vox wav
 
   format1=Wav
-  convertToAndFrom smp sb sbX sbN sbXN
+  convertToAndFrom smp s1 s1X s1N s1XN
   (rate=5512; convertToAndFrom hcom) || exit 1     # Fixed rate
 
   format1=wve
-  (rate=8000; convertToAndFrom al sw uw sl raw Raw dat) || exit 1 # Fixed rate
+  (rate=8000; convertToAndFrom al s2 u2 s4 raw Raw dat) || exit 1 # Fixed rate
 
   format1=prc
-  (rate=8000; convertToAndFrom al sw uw sl raw Raw dat) || exit 1 # Fixed rate
+  (rate=8000; convertToAndFrom al s2 u2 s4 raw Raw dat) || exit 1 # Fixed rate
 }
 
 # Reading and writing performance test
@@ -160,7 +160,7 @@ if [ "$all" = "all" ]; then
 fi
 do_twochannel_formats
 format1=cdda         # 2-channel only
-convertToAndFrom sw u3 aiff
+convertToAndFrom s2 u3 aiff
 
 channels=1 
 if [ "$all" = "all" ]; then
@@ -179,14 +179,14 @@ fi
 
 channels=2
 samples=10000000
-timeIO sb ub sw uw s3 u3 sl u4 raw Raw au wav aiff aifc caf sph # FIXME?: flac dat
+timeIO s1 u1 s2 u2 s3 u3 s4 u4 raw Raw au wav aiff aifc caf sph # FIXME?: flac dat
 
-./sox -c 1 -n output.ub synth .01 vol .5
-if [ `wc -c <output.ub` = 441 ]; then
+./sox -c 1 -n output.u1 synth .01 vol .5
+if [ `wc -c <output.u1` = 441 ]; then
   echo "ok     synth size"
 else
   echo "*FAIL* synth size"
 fi
-rm output.ub
+rm output.u1
 
 test -n "$skip" && echo "Skipped: $skip"

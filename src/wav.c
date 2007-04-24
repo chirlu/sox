@@ -1745,6 +1745,8 @@ static sox_format_t sox_wav_format = {
   sox_wavseek
 };
 
+const sox_format_t *sox_wav_format_fn(void);
+
 const sox_format_t *sox_wav_format_fn()
 {
     return &sox_wav_format;

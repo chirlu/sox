@@ -161,6 +161,8 @@ static sox_format_t sox_cdr_format = {
   sox_rawseek
 };
 
+const sox_format_t *sox_cdr_format_fn(void);
+
 const sox_format_t *sox_cdr_format_fn(void)
 {
     return &sox_cdr_format;

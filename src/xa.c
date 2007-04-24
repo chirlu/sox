@@ -325,6 +325,8 @@ sox_format_t sox_xa_format = {
   sox_xaseek
 };
 
+const sox_format_t *sox_xa_format_fn(void);
+
 const sox_format_t *sox_xa_format_fn(void)
 {
   return &sox_xa_format;

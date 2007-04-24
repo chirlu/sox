@@ -219,6 +219,8 @@ static sox_format_t sox_skel_format = {
   seek
 };
 
+const sox_format_t *sox_skel_format_fn(void);
+
 const sox_format_t *sox_skel_format_fn(void)
 {
   return &sox_skel_format;

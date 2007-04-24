@@ -216,6 +216,8 @@ static sox_format_t sox_wve_format = {
   sox_wveseek
 };
 
+const sox_format_t *sox_wve_format_fn(void);
+
 const sox_format_t *sox_wve_format_fn(void)
 {
     return &sox_wve_format;

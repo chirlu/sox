@@ -13,79 +13,90 @@
  * libSoX file format and effect tables.
  */
 
+#define PLUGIN(module) {#module, NULL}
+
 /* File format handlers. */
-sox_format_fn_t sox_format_fns[] = {
-  sox_aiff_format_fn,
-  sox_aifc_format_fn,
-  sox_al_format_fn,
-#ifdef HAVE_ALSA
-  sox_alsa_format_fn,
-#endif
-  sox_amr_wb_format_fn,
-#ifdef HAVE_LIBAO
-  sox_ao_format_fn,
-#endif
-  sox_au_format_fn,
-  sox_auto_format_fn,
-  sox_avr_format_fn,
-  sox_cdr_format_fn,
-  sox_cvsd_format_fn,
-  sox_dat_format_fn,
-  sox_dvms_format_fn,
-#ifdef HAVE_LIBAVFORMAT
-  sox_ffmpeg_format_fn,
+sox_format_tab_t sox_format_fns[] = {
+  /* Built-in formats */
+  PLUGIN(auto),
+
+  /* Raw file formats */
+  PLUGIN(raw),
+  PLUGIN(s1),
+  PLUGIN(s2),
+  PLUGIN(s3),
+  PLUGIN(s4),
+  PLUGIN(u1),
+  PLUGIN(u2),
+  PLUGIN(u3),
+  PLUGIN(u4),
+  PLUGIN(al),
+  PLUGIN(la),
+  PLUGIN(ul),
+  PLUGIN(lu),
+
+  /* Plugin file formats */
+  PLUGIN(aiff),
+  PLUGIN(aifc),
+  PLUGIN(amr_wb),
+  PLUGIN(au),
+  PLUGIN(avr),
+  PLUGIN(cdr),
+  PLUGIN(cvsd),
+  PLUGIN(dvms),
+  PLUGIN(dat),
+#ifdef HAVE_LIBAVPLUGIN
+  PLUGIN(ffmpeg),
 #endif
 #ifdef HAVE_LIBFLAC
-  sox_flac_format_fn,
+  PLUGIN(flac),
 #endif
-  sox_gsm_format_fn,
-  sox_hcom_format_fn,
-  sox_ima_format_fn,
-  sox_la_format_fn,
-  sox_lpc10_format_fn,
-  sox_lu_format_fn,
-  sox_maud_format_fn,
+  PLUGIN(gsm),
+  PLUGIN(hcom),
+  PLUGIN(lpc10),
+  PLUGIN(maud),
 #if defined(HAVE_LIBMAD) || defined(HAVE_LIBMP3LAME)
-  sox_mp3_format_fn,
+  PLUGIN(mp3),
 #endif
-  sox_nul_format_fn,
-#ifdef HAVE_OSS
-  sox_ossdsp_format_fn,
-#endif
-  sox_prc_format_fn,
-  sox_raw_format_fn,
-  sox_s3_format_fn,
-  sox_sb_format_fn,
-  sox_sf_format_fn,
-  sox_sl_format_fn,
-  sox_smp_format_fn,
-  sox_snd_format_fn,
-  sox_sphere_format_fn,
-#ifdef HAVE_SUN_AUDIO
-  sox_sun_format_fn,
-#endif
-  sox_svx_format_fn,
-  sox_sw_format_fn,
-  sox_txw_format_fn,
-  sox_u3_format_fn,
-  sox_u4_format_fn,
-  sox_ub_format_fn,
-  sox_ul_format_fn,
-  sox_uw_format_fn,
-  sox_voc_format_fn,
+  PLUGIN(nul),
+  PLUGIN(prc),
+  PLUGIN(sf),
+  PLUGIN(smp),
+  PLUGIN(sndrtool),
+  PLUGIN(sphere),
+  PLUGIN(svx),
+  PLUGIN(txw),
+  PLUGIN(voc),
 #if defined HAVE_LIBVORBISENC && defined HAVE_LIBVORBISFILE
-  sox_vorbis_format_fn,
+  PLUGIN(vorbis),
 #endif
-  sox_vox_format_fn,
-  sox_wav_format_fn,
-  sox_wve_format_fn,
-  sox_xa_format_fn,
-  /* Prefer internal formats over libsndfile. Can be overridden
-   * by using -t sndfile. */
+  PLUGIN(vox),
+  PLUGIN(ima),
+  PLUGIN(wav),
+  PLUGIN(wve),
+  PLUGIN(xa),
+  /* Prefer internal formats over libsndfile by placing sndfile last
+     Can be overridden by using -t sndfile. */
 #ifdef HAVE_SNDFILE_H
-  sox_sndfile_format_fn,
+  PLUGIN(sndfile),
 #endif
-  NULL
+
+  /* I/O formats */
+#ifdef HAVE_ALSA
+  PLUGIN(alsa),
+#endif
+#ifdef HAVE_LIBAO
+  PLUGIN(ao),
+#endif
+#ifdef HAVE_OSS
+  PLUGIN(oss),
+#endif
+#ifdef HAVE_SUN_AUDIO
+  PLUGIN(sun),
+#endif
+
+  /* End marker */
+  {NULL, NULL}
 };
 
 /* Effects handlers. */

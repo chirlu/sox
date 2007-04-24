@@ -16,6 +16,7 @@
  */
 
 #include "sox_i.h"
+#include "aiff.h"
 
 #include <math.h>
 #include <time.h>      /* for time stamping comments */
@@ -28,13 +29,6 @@
 #include <unistd.h>     /* For SEEK_* defines if not found in stdio */
 #endif
 
-/* Private data used by writer */
-typedef struct aiffpriv {
-    sox_size_t nsamples;  /* number of 1-channel samples read or written */
-                         /* Decrements for read increments for write */
-    sox_size_t dataStart; /* need to for seeking */
-} *aiff_t;
-
 /* forward declarations */
 static double read_ieee_extended(ft_t);
 static int aiffwriteheader(ft_t, sox_size_t);
@@ -46,7 +40,14 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft);
 static int commentChunk(char **text, char *chunkDescription, ft_t ft);
 static void reportInstrument(ft_t ft);
 
-static int sox_aiffseek(ft_t ft, sox_size_t offset) 
+/* Private data used by writer */
+typedef struct aiffpriv {
+    sox_size_t nsamples;  /* number of 1-channel samples read or written */
+                         /* Decrements for read increments for write */
+    sox_size_t dataStart; /* need to for seeking */
+} *aiff_t;
+
+int sox_aiffseek(ft_t ft, sox_size_t offset) 
 {
     aiff_t aiff = (aiff_t ) ft->priv;
     sox_size_t new_offset, channel_block, alignment;
@@ -71,7 +72,7 @@ static int sox_aiffseek(ft_t ft, sox_size_t offset)
     return(ft->sox_errno);
 }
 
-static int sox_aiffstartread(ft_t ft) 
+int sox_aiffstartread(ft_t ft) 
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         char buf[5];
@@ -603,7 +604,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
   return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_aiffread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
+sox_size_t sox_aiffread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         sox_ssize_t done;
@@ -617,7 +618,7 @@ static sox_size_t sox_aiffread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
         return done;
 }
 
-static int sox_aiffstopread(ft_t ft) 
+int sox_aiffstopread(ft_t ft) 
 {
         char buf[5];
         uint32_t chunksize;
@@ -660,7 +661,7 @@ static int sox_aiffstopread(ft_t ft)
    Strictly spoken this is not legal, but the playaiff utility
    will still be able to play the resulting file. */
 
-static int sox_aiffstartwrite(ft_t ft)
+int sox_aiffstartwrite(ft_t ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         int rc;
@@ -690,7 +691,7 @@ static int sox_aiffstartwrite(ft_t ft)
         return(aiffwriteheader(ft, 0x7f000000 / (ft->signal.size*ft->signal.channels)));
 }
 
-static sox_size_t sox_aiffwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+sox_size_t sox_aiffwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         aiff->nsamples += len;
@@ -698,7 +699,7 @@ static sox_size_t sox_aiffwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t le
         return(len);
 }
 
-static int sox_aiffstopwrite(ft_t ft)
+int sox_aiffstopwrite(ft_t ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         int rc;
@@ -872,7 +873,7 @@ static int aiffwriteheader(ft_t ft, sox_size_t nframes)
         return(SOX_SUCCESS);
 }
 
-static int sox_aifcstartwrite(ft_t ft)
+int sox_aifcstartwrite(ft_t ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         int rc;
@@ -902,7 +903,7 @@ static int sox_aifcstartwrite(ft_t ft)
         return(aifcwriteheader(ft, 0x7f000000 / (ft->signal.size*ft->signal.channels)));
 }
 
-static int sox_aifcstopwrite(ft_t ft)
+int sox_aifcstopwrite(ft_t ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         int rc;
@@ -1181,51 +1182,4 @@ static double ConvertFromIeeeExtended(unsigned char *bytes)
         return -f;
     else
         return f;
-}
-
-
-static const char *aiffnames[] = {
-  "aiff",
-  "aif",
-  NULL
-};
-
-static sox_format_t sox_aiff_format = {
-  aiffnames,
-  SOX_FILE_LOOPS | SOX_FILE_SEEK | SOX_FILE_BIG_END,
-  sox_aiffstartread,
-  sox_aiffread,
-  sox_aiffstopread,
-  sox_aiffstartwrite,
-  sox_aiffwrite,
-  sox_aiffstopwrite,
-  sox_aiffseek
-};
-
-const sox_format_t *sox_aiff_format_fn(void)
-{
-    return &sox_aiff_format;
-}
-
-static const char *aifcnames[] = {
-  "aifc",
-  "aiffc",
-  NULL
-};
-
-static sox_format_t sox_aifc_format = {
-  aifcnames,
-  SOX_FILE_LOOPS | SOX_FILE_SEEK | SOX_FILE_BIG_END,
-  sox_aiffstartread,
-  sox_aiffread,
-  sox_aiffstopread,
-  sox_aifcstartwrite,
-  sox_aiffwrite,
-  sox_aifcstopwrite,
-  sox_aiffseek
-};
-
-const sox_format_t *sox_aifc_format_fn(void)
-{
-    return &sox_aifc_format;
 }

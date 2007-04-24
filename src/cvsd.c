@@ -35,6 +35,7 @@
 /* ---------------------------------------------------------------------- */
 
 #include "sox_i.h"
+#include "cvsd.h"
 
 #include <math.h>
 #include <string.h>
@@ -150,7 +151,7 @@ static void cvsdstartcommon(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-static int sox_cvsdstartread(ft_t ft) 
+int sox_cvsdstartread(ft_t ft) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         float *fp1;
@@ -176,7 +177,7 @@ static int sox_cvsdstartread(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-static int sox_cvsdstartwrite(ft_t ft) 
+int sox_cvsdstartwrite(ft_t ft) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         float *fp1;
@@ -198,7 +199,7 @@ static int sox_cvsdstartwrite(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-static int sox_cvsdstopwrite(ft_t ft)
+int sox_cvsdstopwrite(ft_t ft)
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 
@@ -214,7 +215,7 @@ static int sox_cvsdstopwrite(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-static int sox_cvsdstopread(ft_t ft)
+int sox_cvsdstopread(ft_t ft)
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 
@@ -226,7 +227,7 @@ static int sox_cvsdstopread(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-static sox_size_t sox_cvsdread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp) 
+sox_size_t sox_cvsdread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         sox_size_t done = 0;
@@ -282,7 +283,7 @@ static sox_size_t sox_cvsdread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp)
 
 /* ---------------------------------------------------------------------- */
 
-static sox_size_t sox_cvsdwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsamp) 
+sox_size_t sox_cvsdwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsamp) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         sox_size_t done = 0;
@@ -478,7 +479,7 @@ static void make_dvms_hdr(ft_t ft, struct dvms_header *hdr)
 
 /* ---------------------------------------------------------------------- */
 
-static int sox_dvmsstartread(ft_t ft) 
+int sox_dvmsstartread(ft_t ft) 
 {
         struct dvms_header hdr;
         int rc;
@@ -515,7 +516,7 @@ static int sox_dvmsstartread(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-static int sox_dvmsstartwrite(ft_t ft) 
+int sox_dvmsstartwrite(ft_t ft) 
 {
         struct dvms_header hdr;
         int rc;
@@ -539,7 +540,7 @@ static int sox_dvmsstartwrite(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-static int sox_dvmsstopwrite(ft_t ft)
+int sox_dvmsstopwrite(ft_t ft)
 {
         struct dvms_header hdr;
         int rc;
@@ -562,53 +563,4 @@ static int sox_dvmsstopwrite(ft_t ft)
             return rc;
         }       
         return rc;
-}
-
-/* ---------------------------------------------------------------------- */
-
-/* Cont. Variable Slope Delta */
-static const char *cvsdnames[] = {
-  "cvs",
-  "cvsd",
-  NULL
-};
-
-static sox_format_t sox_cvsd_format = {
-  cvsdnames,
-  0,
-  sox_cvsdstartread,
-  sox_cvsdread,
-  sox_cvsdstopread,
-  sox_cvsdstartwrite,
-  sox_cvsdwrite,
-  sox_cvsdstopwrite,
-  sox_format_nothing_seek
-};
-
-const sox_format_t *sox_cvsd_format_fn(void)
-{
-    return &sox_cvsd_format;
-}
-/* Cont. Variable Solot Delta */
-static const char *dvmsnames[] = {
-  "vms",
-  "dvms",
-  NULL
-};
-
-static sox_format_t sox_dvms_format = {
-  dvmsnames,
-  0,
-  sox_dvmsstartread,
-  sox_cvsdread,
-  sox_cvsdstopread,
-  sox_dvmsstartwrite,
-  sox_cvsdwrite,
-  sox_dvmsstopwrite,
-  sox_format_nothing_seek
-};
-
-const sox_format_t *sox_dvms_format_fn(void)
-{
-    return &sox_dvms_format;
 }

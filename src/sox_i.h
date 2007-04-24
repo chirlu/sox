@@ -213,79 +213,33 @@ extern uint8_t const cswap[256];
  *=============================================================================
  */
 
-/* Psion record header check, defined in prc.c */
+/* Psion record header check, defined in misc.c and used in prc.c and auto.c */
+const char prc_header[41];
 int prc_checkheader(ft_t ft, char *head);
 
 typedef const sox_format_t *(*sox_format_fn_t)(void);
 
-extern sox_format_fn_t sox_format_fns[];
+typedef struct {
+  char *name;
+  sox_format_fn_t fn;
+} sox_format_tab_t;
 
-extern const sox_format_t *sox_aiff_format_fn(void);
-extern const sox_format_t *sox_aifc_format_fn(void);
-#ifdef HAVE_ALSA
-extern const sox_format_t *sox_alsa_format_fn(void);
-#endif
-extern const sox_format_t *sox_amr_wb_format_fn(void);
-#ifdef HAVE_AO_AO_H
-extern const sox_format_t *sox_ao_format_fn(void);
-#endif
-extern const sox_format_t *sox_au_format_fn(void);
-extern const sox_format_t *sox_auto_format_fn(void);
-extern const sox_format_t *sox_avr_format_fn(void);
-extern const sox_format_t *sox_cdr_format_fn(void);
-extern const sox_format_t *sox_cvsd_format_fn(void);
-extern const sox_format_t *sox_dvms_format_fn(void);
-extern const sox_format_t *sox_dat_format_fn(void);
-#ifdef HAVE_LIBAVFORMAT
-extern const sox_format_t *sox_ffmpeg_format_fn(void);
-#endif
-#ifdef HAVE_LIBFLAC
-extern const sox_format_t *sox_flac_format_fn(void);
-#endif
-extern const sox_format_t *sox_gsm_format_fn(void);
-extern const sox_format_t *sox_hcom_format_fn(void);
-extern const sox_format_t *sox_ima_format_fn(void);
-extern const sox_format_t *sox_lpc10_format_fn(void);
-extern const sox_format_t *sox_maud_format_fn(void);
-extern const sox_format_t *sox_mp3_format_fn(void);
-extern const sox_format_t *sox_nul_format_fn(void);
-#ifdef HAVE_OSS
-extern const sox_format_t *sox_ossdsp_format_fn(void);
-#endif
-extern const sox_format_t *sox_prc_format_fn(void);
-extern const sox_format_t *sox_raw_format_fn(void);
-extern const sox_format_t *sox_al_format_fn(void);
-extern const sox_format_t *sox_la_format_fn(void);
-extern const sox_format_t *sox_lu_format_fn(void);
-extern const sox_format_t *sox_s3_format_fn(void);
-extern const sox_format_t *sox_sb_format_fn(void);
-extern const sox_format_t *sox_sl_format_fn(void);
-extern const sox_format_t *sox_sw_format_fn(void);
-extern const sox_format_t *sox_u3_format_fn(void);
-extern const sox_format_t *sox_ub_format_fn(void);
-extern const sox_format_t *sox_u4_format_fn(void);
-extern const sox_format_t *sox_ul_format_fn(void);
-extern const sox_format_t *sox_uw_format_fn(void);
-extern const sox_format_t *sox_sf_format_fn(void);
-extern const sox_format_t *sox_smp_format_fn(void);
-extern const sox_format_t *sox_snd_format_fn(void);
-#ifdef HAVE_SNDFILE_H
-extern const sox_format_t *sox_sndfile_format_fn(void);
-#endif
-extern const sox_format_t *sox_sphere_format_fn(void);
-#ifdef HAVE_SUN_AUDIO
-extern const sox_format_t *sox_sun_format_fn(void);
-#endif
-extern const sox_format_t *sox_svx_format_fn(void);
-extern const sox_format_t *sox_txw_format_fn(void);
-extern const sox_format_t *sox_voc_format_fn(void);
-#if defined HAVE_LIBVORBISENC && defined HAVE_LIBVORBISFILE
-extern const sox_format_t *sox_vorbis_format_fn(void);
-#endif
-extern const sox_format_t *sox_vox_format_fn(void);
-extern const sox_format_t *sox_wav_format_fn(void);
-extern const sox_format_t *sox_wve_format_fn(void);
-extern const sox_format_t *sox_xa_format_fn(void);
+extern sox_format_tab_t sox_format_fns[];
+
+const sox_format_t *sox_auto_format_fn(void);
+const sox_format_t *sox_raw_format_fn(void);
+const sox_format_t *sox_al_format_fn(void);
+const sox_format_t *sox_la_format_fn(void);
+const sox_format_t *sox_lu_format_fn(void);
+const sox_format_t *sox_s3_format_fn(void);
+const sox_format_t *sox_sb_format_fn(void);
+const sox_format_t *sox_sl_format_fn(void);
+const sox_format_t *sox_sw_format_fn(void);
+const sox_format_t *sox_u3_format_fn(void);
+const sox_format_t *sox_ub_format_fn(void);
+const sox_format_t *sox_u4_format_fn(void);
+const sox_format_t *sox_ul_format_fn(void);
+const sox_format_t *sox_uw_format_fn(void);
 
 /* Raw I/O */
 int sox_rawstartread(ft_t ft);
@@ -294,16 +248,6 @@ int sox_rawstopread(ft_t ft);
 int sox_rawstartwrite(ft_t ft);
 sox_size_t sox_rawwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsamp);
 int sox_rawseek(ft_t ft, sox_size_t offset);
-
-/* libsndfile I/O */
-int sox_sndfile_startread(ft_t ft);
-sox_size_t sox_sndfile_read(ft_t ft, sox_ssample_t *buf, sox_size_t len);
-int sox_sndfile_stopread(ft_t ft);
-int sox_sndfile_startwrite(ft_t ft);
-sox_size_t sox_sndfile_write(ft_t ft, const sox_ssample_t *buf, sox_size_t len);
-int sox_sndfile_stopwrite(ft_t ft);
-int sox_sndfile_seek(ft_t ft, sox_size_t offset);
-
 
 /* The following functions can be used to simply return success if
  * a file handler or effect doesn't need to do anything special
