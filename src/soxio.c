@@ -109,7 +109,7 @@ ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
         ft->filetype = xstrdup(filetype);
 
     if (sox_gettype(ft, sox_false) != SOX_SUCCESS) {
-        sox_fail("Unknown input file format for `%s':  %s",
+        sox_fail("Unknown input file format for `%s': %s",
                 ft->filename,
                 ft->sox_errstr);
         goto input_error;
