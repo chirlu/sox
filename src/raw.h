@@ -10,7 +10,7 @@
  */
 
 #define RAW_FORMAT0(id, size, flags, encoding) \
-int id ## _start(ft_t ft) { \
+static int id ## _start(ft_t ft) { \
   return sox_rawstart(ft, sox_true, sox_true, SOX_ENCODING_ ## encoding, SOX_SIZE_ ## size); \
 } \
 const sox_format_t *sox_ ## id ## _format_fn(void); \
