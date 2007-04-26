@@ -161,7 +161,7 @@ static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
       lpc->samples = 0;
     }
 
-    while (lpc->samples < LPC10_BITS_IN_COMPRESSED_FRAME)
+    while (nread < len && lpc->samples < LPC10_SAMPLES_PER_FRAME)
       buf[nread++] = SOX_FLOAT_32BIT_TO_SAMPLE(lpc->speech[lpc->samples++], ft->clips);
   }
 
