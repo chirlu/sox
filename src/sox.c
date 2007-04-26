@@ -61,7 +61,7 @@ sox_size_t sox_bufsiz = 8192;
 
 static sox_bool play = sox_false, rec = sox_false;
 static plugins_initted = sox_false;
-static enum {SOX_sequence, SOX_concatenate, SOX_mix, SOX_merge} combine_method = SOX_concatenate;
+static enum {sox_sequence, sox_concatenate, sox_mix, sox_merge} combine_method = sox_concatenate;
 static sox_size_t mixing_clips = 0;
 static sox_bool repeatable_random = sox_false;  /* Whether to invoke srand. */
 static sox_bool interactive = sox_false;
@@ -426,7 +426,7 @@ static void parse_options_and_filenames(int argc, char **argv)
       exit(1);
     }
 
-    f = f? f : new_file();
+    f = f ? f : new_file();
     set_device(f, sox_false);
     files[file_count++] = f;
   }
@@ -444,7 +444,7 @@ static void parse_options_and_filenames(int argc, char **argv)
       exit(1);
     }
 
-    for (i = file_count; i > 0; -- i)
+    for (i = file_count; i > 0; i--)
       files[i] = files[i - 1];
     file_count++;
 
@@ -498,11 +498,12 @@ int main(int argc, char **argv)
       strcmp(myname + i - (sizeof("play") - 1), "play") == 0) {
     play = sox_true;
     replay_gain_mode = RG_track;
-    combine_method = SOX_sequence;
+    combine_method = sox_sequence;
   } else if (i >= sizeof("rec") - 1 &&
       strcmp(myname + i - (sizeof("rec") - 1), "rec") == 0) {
     rec = sox_true;
   }
+
   parse_options_and_filenames(argc, argv);
 
   /* Load plugins (after options so we can output debugging messages
@@ -517,7 +518,7 @@ int main(int argc, char **argv)
 
   /* Make sure we got at least the required # of input filenames */
   input_count = file_count ? file_count - 1 : 0;
-  if (input_count < (combine_method <= SOX_concatenate ? 1 : 2))
+  if (input_count < (combine_method <= sox_concatenate ? 1 : 2))
     usage("Not enough input filenames specified");
 
   /* Check for misplaced input/output-specific options */
@@ -539,7 +540,7 @@ int main(int argc, char **argv)
     /* When mixing audio, default to input side volume adjustments that will
      * make sure no clipping will occur.  Users probably won't be happy with
      * this, and will override it, possibly causing clipping to occur. */
-    if (combine_method == SOX_mix && !uservolume)
+    if (combine_method == sox_mix && !uservolume)
       f->volume = 1.0 / input_count;
 
     if (rec && !j) { /* Set the recording sample rate & # of channels: */
@@ -587,7 +588,7 @@ int main(int argc, char **argv)
   }
 
   ofile_signal = ofile->signal;
-  if (combine_method == SOX_sequence) do {
+  if (combine_method == sox_sequence) do {
     if (ofile->desc)
       sox_close(ofile->desc);
     free(ofile->desc);
@@ -686,10 +687,10 @@ static struct option long_options[] =
   };
 
 static enum_item const combine_methods[] = {
-  ENUM_ITEM(SOX_,sequence)
-  ENUM_ITEM(SOX_,concatenate)
-  ENUM_ITEM(SOX_,mix)
-  ENUM_ITEM(SOX_,merge)
+  ENUM_ITEM(sox_,sequence)
+  ENUM_ITEM(sox_,concatenate)
+  ENUM_ITEM(sox_,mix)
+  ENUM_ITEM(sox_,merge)
   {0, 0}};
 
 static enum_item const rg_modes[] = {
@@ -817,11 +818,11 @@ static sox_bool doopts(file_t f, int argc, char **argv)
       break;
 
     case 'm':
-      combine_method = SOX_mix;
+      combine_method = sox_mix;
       break;
 
     case 'M':
-      combine_method = SOX_merge;
+      combine_method = sox_merge;
       break;
 
     case 'R': /* Useful for regression testing. */
@@ -998,7 +999,7 @@ static void progress_to_file(file_t f)
   read_wide_samples = 0;
   input_wide_samples = f->desc->length / f->desc->signal.channels;
   if (show_progress && (sox_output_verbosity_level < 3 ||
-                        (combine_method <= SOX_concatenate && input_count > 1)))
+                        (combine_method <= sox_concatenate && input_count > 1)))
     display_file_info(f, sox_false);
   if (f->volume == HUGE_VAL)
     f->volume = 1;
@@ -1023,7 +1024,7 @@ static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
 static void sigint(int s)
 {
   static struct timeval then;
-  if (show_progress && s == SIGINT && combine_method <= SOX_concatenate &&
+  if (show_progress && s == SIGINT && combine_method <= sox_concatenate &&
       since(&then, 1., sox_true))
     user_skip = sox_true;
   else user_abort = sox_true;
@@ -1065,11 +1066,11 @@ static int process(void) {
   sox_size_t e, ws, s, i;
   sox_size_t ilen[MAX_INPUT_FILES];
   sox_ssample_t *ibuf[MAX_INPUT_FILES];
-  sox_bool known_length = combine_method != SOX_sequence;
+  sox_bool known_length = combine_method != sox_sequence;
   sox_size_t olen = 0;
 
   combiner = files[current_input]->desc->signal;
-  if (combine_method == SOX_sequence) {
+  if (combine_method == sox_sequence) {
     if (!current_input) for (i = 0; i < input_count; i++)
       report_file_info(files[i]);
   } else {
@@ -1087,7 +1088,7 @@ static int process(void) {
       min_rate = min(min_rate, files[i]->desc->signal.rate);
       max_rate = max(max_rate, files[i]->desc->signal.rate);
       known_length = known_length && files[i]->desc->length != 0;
-      if (combine_method == SOX_concatenate)
+      if (combine_method == sox_concatenate)
         olen += files[i]->desc->length / files[i]->desc->signal.channels;
       else
         olen = max(olen, files[i]->desc->length / files[i]->desc->signal.channels);
@@ -1095,17 +1096,17 @@ static int process(void) {
     if (min_rate != max_rate)
       sox_fail("Input files must have the same sample-rate");
     if (min_channels != max_channels) {
-      if (combine_method == SOX_concatenate) {
+      if (combine_method == sox_concatenate) {
         sox_fail("Input files must have the same # channels");
         exit(1);
-      } else if (combine_method == SOX_mix)
+      } else if (combine_method == sox_mix)
         sox_warn("Input files don't have the same # channels");
     }
     if (min_rate != max_rate)
       exit(1);
 
     combiner.channels = 
-      combine_method == SOX_merge? total_channels : max_channels;
+      combine_method == sox_merge? total_channels : max_channels;
   }
 
   ofile->signal = ofile_signal;
@@ -1187,7 +1188,7 @@ static int process(void) {
       efftabR[e].obuf = (sox_ssample_t *)xmalloc(sox_bufsiz * sizeof(sox_ssample_t));
   }
 
-  if (combine_method <= SOX_concatenate)
+  if (combine_method <= sox_concatenate)
     progress_to_file(files[current_input]);
   else {
     ws = 0;
@@ -1213,7 +1214,7 @@ static int process(void) {
   /* Run input data through effects until EOF (olen == 0) or user-abort. */
   do {
     efftab[0].olen = 0;
-    if (combine_method <= SOX_concatenate) {
+    if (combine_method <= sox_concatenate) {
       if (!user_skip)
         efftab[0].olen = sox_read_wide(files[current_input]->desc, efftab[0].obuf);
       if (efftab[0].olen == 0) {   /* If EOF, go to the next input file. */
@@ -1223,7 +1224,7 @@ static int process(void) {
           fprintf(stderr, "Skipped.\n");
         }
         if (++current_input < input_count) {
-          if (combine_method == SOX_sequence && !can_segue(current_input))
+          if (combine_method == sox_sequence && !can_segue(current_input))
             break;
           progress_to_file(files[current_input]);
           continue;
@@ -1238,7 +1239,7 @@ static int process(void) {
         efftab[0].olen = max(efftab[0].olen, ilen[i]);
       }
       for (ws = 0; ws < efftab[0].olen; ++ws) /* wide samples */
-        if (combine_method == SOX_mix) {          /* sum samples together */
+        if (combine_method == sox_mix) {          /* sum samples together */
           for (s = 0; s < combiner.channels; ++s, ++p) {
             *p = 0;
             for (i = 0; i < input_count; ++i)
@@ -1248,7 +1249,7 @@ static int process(void) {
                 *p = SOX_ROUND_CLIP_COUNT(sample, mixing_clips);
             }
           }
-        } else { /* SOX_merge: like a multi-track recorder */
+        } else { /* sox_merge: like a multi-track recorder */
           for (i = 0; i < input_count; ++i)
             for (s = 0; s < files[i]->desc->signal.channels; ++s)
               *p++ = (ws < ilen[i]) * ibuf[i][ws * files[i]->desc->signal.channels + s];
@@ -1277,7 +1278,7 @@ static int process(void) {
   if (ofile->desc->sox_errno == 0)
     drain_effect_out();
 
-  if (combine_method > SOX_concatenate)
+  if (combine_method > sox_concatenate)
     /* Free input buffers now that they are not used */
     for (i = 0; i < input_count; i++)
       free(ibuf[i]);
