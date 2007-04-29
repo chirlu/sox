@@ -377,6 +377,12 @@ int strncasecmp(char const *s1, char const * s2, size_t n)
 }
 #endif
 
+sox_bool strcaseends(char const * str, char const * end)
+{
+  size_t str_len = strlen(str), end_len = strlen(end);
+  return str_len >= end_len && !strcasecmp(str + str_len - end_len, end);
+}
+
 #ifndef HAVE_STRDUP
 /*
  * Portable strdup() function

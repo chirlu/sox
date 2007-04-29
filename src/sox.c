@@ -281,12 +281,6 @@ static void set_replay_gain(char const * comment, file_t f)
   }
 }
 
-static sox_bool strcaseends(char const * str, char const * end)
-{
-  size_t str_len = strlen(str), end_len = strlen(end);
-  return str_len >= end_len && !strcasecmp(str + str_len - end_len, end);
-}
-
 static sox_bool is_playlist(char const * filename)
 {
   return strcaseends(filename, ".m3u") || strcaseends(filename, ".pls");

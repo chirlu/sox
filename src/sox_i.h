@@ -91,6 +91,8 @@ int strcasecmp(const char *s1, const char *s2);
 int strncasecmp(char const * s1, char const * s2, size_t n);
 #endif
 
+sox_bool strcaseends(char const * str, char const * end);
+
 #ifndef HAVE_STRDUP
 char *strdup(const char *s);
 #endif
