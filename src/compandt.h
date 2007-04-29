@@ -31,7 +31,7 @@ typedef struct {
 } sox_compandt_t;
 
 sox_bool sox_compandt_parse(sox_compandt_t * t, char * points, char * gain);
-sox_bool sox_compandt_show(sox_compandt_t * t, sox_bool plot);
+sox_bool sox_compandt_show(sox_compandt_t * t, sox_plot_t plot);
 void    sox_compandt_kill(sox_compandt_t * p);
 
 /* Place in header to allow in-lining */

@@ -22,10 +22,13 @@ sox-14.0.0
 
   Effects:
 
+  o --octave option changed to --plot; can now also use gnuplot to
+    plot effect transfer function.  (robs)
   o Added soft-knee companding.  (robs)
-  o Show (with --octave) compand transfer function.  (robs)
+  o Show (with --plot) compand transfer function.  (robs)
   o Allow e.g. "vol 6dB" (as well as "vol 6 dB").  (robs)
-  o Changed deemph to be a true biquad for better accuracy.  (robs)
+  o Changed deemph filter from 1st order to 2nd order for
+    better accuracy.  (robs)
   o Add option to silence effect to leave periods of silence
     in and only strip out extra silence.   (Mark Schreiber)
 

@@ -137,7 +137,7 @@ static int start(eff_t effp)
   for (i = 0; i < l->expectedChannels; ++i)
     sox_debug("Channel %i: attack = %g decay = %g", i,
         l->channels[i].attack_times[0], l->channels[i].attack_times[1]);
-  if (!sox_compandt_show(&l->transfer_fn, effp->globalinfo->octave_plot_effect))
+  if (!sox_compandt_show(&l->transfer_fn, effp->globalinfo->plot))
     return SOX_EOF;
 
   /* Convert attack and decay rates using number of samples */

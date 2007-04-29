@@ -662,7 +662,7 @@ static struct option long_options[] =
     {"endian"          , required_argument, NULL, 0},
     {"interactive"     ,       no_argument, NULL, 0},
     {"help-effect"     , required_argument, NULL, 0},
-    {"octave"          ,       no_argument, NULL, 0},
+    {"plot"            , required_argument, NULL, 0},
     {"replay-gain"     , required_argument, NULL, 0},
     {"version"         ,       no_argument, NULL, 0},
 
@@ -698,6 +698,12 @@ static enum_item const endian_options[] = {
   ENUM_ITEM(ENDIAN_,little)
   ENUM_ITEM(ENDIAN_,big)
   ENUM_ITEM(ENDIAN_,swap)
+  {0, 0}};
+
+static enum_item const plot_methods[] = {
+  ENUM_ITEM(sox_plot_,off)
+  ENUM_ITEM(sox_plot_,octave)
+  ENUM_ITEM(sox_plot_,gnuplot)
   {0, 0}};
 
 static int enum_option(int option_index, enum_item const * items)
@@ -797,7 +803,7 @@ static sox_bool doopts(file_t f, int argc, char **argv)
         break;
 
       case 7:
-        globalinfo.octave_plot_effect = sox_true;
+        globalinfo.plot = enum_option(option_index, plot_methods);
         break;
 
       case 8:

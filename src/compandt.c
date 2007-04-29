@@ -21,7 +21,7 @@
 
 #define LOG_TO_LOG10(x) ((x) * 20 / log(10.))
 
-sox_bool sox_compandt_show(sox_compandt_t * t, sox_bool plot)
+sox_bool sox_compandt_show(sox_compandt_t * t, sox_plot_t plot)
 {
   int i;
 
@@ -32,27 +32,47 @@ sox_bool sox_compandt_show(sox_compandt_t * t, sox_bool plot)
        LOG_TO_LOG10(t->segments[i].a),
        LOG_TO_LOG10(t->segments[i].b));
 
-  if (!plot)
-    return sox_true;
-  printf(
-    "title('SoX effect: compand')\n"
-    "xlabel('Input level (dB)')\n"
-    "ylabel('Output level (dB)')\n"
-    "%%axis([-100 0 -100 0])\n"
-    "in=linspace(-99.5,0,200);\n"
-    "grid on\n"
-    "out=[");
-  for (i = -199; i <= 0; ++i) {
-    double in = i/2.;
-    double in_lin = pow(10., in/20);
-    printf("%g ", in + 20 * log10(sox_compandt(t, in_lin)));
+  if (plot == sox_plot_octave) {
+    printf(
+      "%% GNU Octave file (may also work with MATLAB(R) )\n"
+      "title('SoX effect: compand')\n"
+      "xlabel('Input level (dB)')\n"
+      "ylabel('Output level (dB)')\n"
+      "in=linspace(-99.5,0,200);\n"
+      "grid on\n"
+      "out=[");
+    for (i = -199; i <= 0; ++i) {
+      double in = i/2.;
+      double in_lin = pow(10., in/20);
+      printf("%g ", in + 20 * log10(sox_compandt(t, in_lin)));
+    }
+    printf(
+      "];\n"
+      "%%plot(in,out) %% hmm.. doesn't work :(\n"
+      "semilogx(exp(in),out)\n"
+      "pause\n");
+    return sox_false;
   }
-  printf(
-    "];\n"
-    "%%plot(in,out,'b') %% hmm.. doesn't work :(\n"
-    "semilogx(exp(in),out,'b')\n"
-    "pause\n");
-  return sox_false;
+  if (plot == sox_plot_gnuplot) {
+    printf(
+      "# gnuplot file\n"
+      "set title 'SoX effect: compand'\n"
+      "set xlabel 'Input level (dB)'\n"
+      "set ylabel 'Output level (dB)'\n"
+      "set grid xtics ytics\n"
+      "set key off\n"
+      "plot '-' with lines\n");
+    for (i = -199; i <= 0; ++i) {
+      double in = i/2.;
+      double in_lin = pow(10., in/20);
+      printf("%g %g\n", in, in + 20 * log10(sox_compandt(t, in_lin)));
+    }
+    printf(
+      "e\n"
+      "pause -1 'Hit return to continue'\n");
+    return sox_false;
+  }
+  return sox_true;
 }
 
 static void prepare_transfer_fn(sox_compandt_t * t)

@@ -480,31 +480,27 @@ selects `merge',
 See \fBInput File Combining\fR above for a description of the different
 combining methods.
 .TP
-\fB\-\-octave\fR
-Run in a mode that can be used, in conjunction with the GNU
-Octave program, to assist with the selection and configuration
-of many of the filtering effects.  For the first given effect
-that supports the \fB\-\-octave\fR option, SoX will output Octave
-commands to plot the effect's transfer function, and then exit
-without actually processing any audio.  E.g.
+\fB\-\-plot gnuplot\fR\^|\^\fBoctave\fR\^|\^\fBoff\fR
+If not set to
+.B off
+(the default if
+.B \-\-plot
+is not given), run in a mode that can be used, in conjunction with the
+gnuplot program or the GNU Octave program, to assist with the selection
+and configuration of many of the transfer-function based effects.
+For the first given effect that supports the selected plotting program,
+SoX will output commands to plot the effect's transfer function, and
+then exit without actually processing any audio.  E.g.
 .EX
-	sox --octave input-file -n highpass 1320 > plot.m
+	sox --plot octave input-file -n highpass 1320 > plot.m
 	octave plot.m
 .EE
 .TP
 \fB\-q\fR, \fB\-\-no\-show\-progress\fR
 Run in quiet mode when SoX wouldn't otherwise do so;
 this is the opposite of the \fB\-S\fR option.
-.PP
-\fB\-\-replay\-gain track\fR
-.br
-\fB\-\-replay\-gain album\fR
-.br
-\fB\-\-replay\-gain off\fR
-.if t .sp -.5
-.if n .sp -1
 .TP
-\ 
+\fB\-\-replay\-gain track\fR\^|\^\fBalbum\fR\^|\^\fBoff\fR
 Select whether or not to apply replay-gain adjustment to input files.
 The default is
 .B track
@@ -1245,7 +1241,7 @@ a Q-factor (if appended with `\fBq\fR').  An all-pass filter changes the
 audio's frequency to phase relationship without changing its frequency
 to amplitude relationship.  The filter is described in detail in [1].
 .SP
-This effect supports the \fB\-\-octave\fR global option.
+This effect supports the \fB\-\-plot\fR global option.
 .TP
 \fBband\fR [\fB\-n\fR] \fIcenter\fR [width\fR[\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]]
 Apply a band-pass filter.
@@ -1281,7 +1277,7 @@ i.e. peaking at the
 .I center
 frequency and settling around it.
 .SP
-This effect supports the \fB\-\-octave\fR global option.
+This effect supports the \fB\-\-plot\fR global option.
 .SP
 See also \fBfilter\fR for a bandpass filter with steeper shoulders.
 .TP
@@ -1299,7 +1295,7 @@ default: constant 0dB peak gain.
 The filters roll off at 6dB per octave (20dB per decade)
 and are described in detail in [1].
 .SP
-These effects support the \fB\-\-octave\fR global option.
+These effects support the \fB\-\-plot\fR global option.
 .SP
 See also \fBfilter\fR for a bandpass filter with steeper shoulders.
 .TP
@@ -1342,7 +1338,7 @@ default value is 0\*d5.
 .SP
 The filters are described in detail in [1].
 .SP
-These effects support the \fB\-\-octave\fR global option.
+These effects support the \fB\-\-plot\fR global option.
 .SP
 See also \fBequalizer\fR for a peaking equalisation effect.
 .TP
@@ -1391,7 +1387,7 @@ Specifying a delay approximately equal to the attack/decay times
 allows the compander to effectively operate in a `predictive' rather than a
 reactive mode.
 .SP
-This effect supports the \fB\-\-octave\fR global option (for the transfer function).
+This effect supports the \fB\-\-plot\fR global option (for the transfer function).
 .SP
 See also
 .B mcompand
@@ -1417,7 +1413,7 @@ audio-CD format.  The frequency response of pre-emphasized
 recordings is rectified.  The filter is defined in the
 standard document ISO 908.
 .SP
-This effect supports the \fB\-\-octave\fR global option.
+This effect supports the \fB\-\-plot\fR global option.
 .SP
 See also the \fBbass\fR and \fBtreble\fR shelving equalisation effects.
 .TP
@@ -1481,7 +1477,7 @@ can be given several times, each with a different central frequency.
 .SP
 The filter is described in detail in [1].
 .SP
-This effect supports the \fB\-\-octave\fR global option.
+This effect supports the \fB\-\-plot\fR global option.
 .SP
 See also \fBbass\fR and \fBtreble\fR for shelving equalisation effects.
 .TP
@@ -1575,7 +1571,7 @@ the default Q is 0\*d707 and gives a Butterworth response.  The filters
 roll off at 6dB per pole per octave (20dB per pole per decade).  The
 double-pole filters are described in detail in [1].
 .SP
-These effects support the \fB\-\-octave\fR global option.
+These effects support the \fB\-\-plot\fR global option.
 .SP
 See also \fBfilter\fR for filters with a steeper roll-off.
 .TP
@@ -2296,8 +2292,10 @@ command-line parameters, or 2 if an error occurs during file processing.
 Please report any bugs found in this version of SoX to the mailing list
 (sox-users@lists.sourceforge.net).
 .SH SEE ALSO
-.BR soxexam (7),
+.BR gnuplot (1),
 .BR libsox (3),
+.BR octave (1),
+.BR soxexam (7),
 .BR wget (1)
 .SP
 The SoX web page at http://sox.sourceforge.net

@@ -185,12 +185,14 @@ typedef enum {
   SOX_ENCODINGS            /* End of list marker */
 } sox_encoding_t;
 
-/* Global parameters */
+typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot} sox_plot_t;
+
+/* Global parameters (for effects) */
 
 typedef struct  sox_globalinfo
 {
-    sox_bool octave_plot_effect;/* To help user choose effect & options */
-    double speed;         /* Gather up all speed changes here, then resample */
+  sox_plot_t plot;         /* To help the user choose effect & options */
+  double speed;            /* Gather up all speed changes here, then resample */
 } sox_globalinfo_t;
 
 typedef enum {SOX_OPTION_NO, SOX_OPTION_YES, SOX_OPTION_DEFAULT} sox_option_t;
