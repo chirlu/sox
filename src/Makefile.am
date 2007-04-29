@@ -68,7 +68,7 @@ libsox_fmt_xa_la_SOURCES = xa.c
 libsox_fmt_alsa_la_SOURCES = alsa.c
 libsox_fmt_ao_la_SOURCES = ao.c
 libsox_fmt_oss_la_SOURCES = oss.c
-libsox_fmt_sunau_la_SOURCES = sunaudio
+libsox_fmt_sunau_la_SOURCES = sunaudio.c
 
 pkglib_LTLIBRARIES = libsox_fmt_auto.la libsox_fmt_raw.la libsox_fmt_s1.la \
 	  libsox_fmt_s2.la libsox_fmt_s3.la libsox_fmt_s4.la libsox_fmt_u1.la	\
