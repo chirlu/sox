@@ -127,7 +127,7 @@ fi
 dnl Check for Sun audio
 AC_MSG_CHECKING([whether to try building Sun audio driver])
 AC_ARG_ENABLE(sun-audio,
-    AC_HELP_STRING([--disble-sun-audio], [Build Sun audio driver.]),,enable_sun_audio=yes)
+    AC_HELP_STRING([--disable-sun-audio], [Build Sun audio driver.]),,enable_sun_audio=yes)
 AC_MSG_RESULT($enable_sun_audio)
 if test "$enable_sun_audio" = "yes"; then
     AC_CHECK_HEADERS(sys/audioio.h,,
