@@ -960,9 +960,10 @@ static void display_file_info(file_t f, sox_bool full)
     if (f->desc->length && f->desc->signal.channels && f->desc->signal.rate) {
       sox_size_t ws = f->desc->length / f->desc->signal.channels;
       fprintf(stderr,
-        "Duration       : %s = %u samples = %g CDDA sectors\n",
+        "Duration       : %s = %u samples %c %g CDDA sectors\n",
         str_time((double)ws / f->desc->signal.rate),
-        ws, (double)ws / 588);
+        ws, "~="[f->desc->signal.rate == 44100],
+        (double)ws/ f->desc->signal.rate * 44100 / 588);
     }
     fprintf(stderr,
       "Endian Type    : %s\n"
