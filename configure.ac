@@ -112,7 +112,7 @@ fi
 dnl Check for OSS
 AC_MSG_CHECKING([whether to try building OSS sound driver])
 AC_ARG_ENABLE(oss,
-    AC_HELP_STRING([--disable-oss], [Build OSS sound driver.]),,enable_oss=yes)
+    AC_HELP_STRING([--disable-oss], [Don't build OSS sound driver.]),,enable_oss=yes)
 AC_MSG_RESULT($enable_oss)
 if test "$enable_oss" = "yes"; then
     AC_CHECK_HEADERS(sys/soundcard.h,,
@@ -127,7 +127,7 @@ fi
 dnl Check for Sun audio
 AC_MSG_CHECKING([whether to try building Sun audio driver])
 AC_ARG_ENABLE(sun-audio,
-    AC_HELP_STRING([--disable-sun-audio], [Build Sun audio driver.]),,enable_sun_audio=yes)
+    AC_HELP_STRING([--disable-sun-audio], [Don't build Sun audio driver.]),,enable_sun_audio=yes)
 AC_MSG_RESULT($enable_sun_audio)
 if test "$enable_sun_audio" = "yes"; then
     AC_CHECK_HEADERS(sys/audioio.h,,
