@@ -57,8 +57,6 @@
 #include <io.h>
 #endif
 
-sox_size_t sox_bufsiz = 8192;
-
 static sox_bool play = sox_false, rec = sox_false;
 static plugins_initted = sox_false;
 static enum {sox_sequence, sox_concatenate, sox_mix, sox_merge} combine_method = sox_concatenate;
