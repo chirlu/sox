@@ -165,9 +165,9 @@ AC_SUBST(SNDFILE_LIBS)
 dnl Check for Ogg Vorbis libraries
 AC_CHECK_HEADER(vorbis/codec.h,
     [with_ogg_vorbis=yes
-    AC_CHECK_LIB(ogg, ogg_packet_clear,, with_ogg_vorbis=no)
-    AC_CHECK_LIB(vorbisfile, ov_clear,, with_ogg_vorbis=no)
-    AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr,, with_ogg_vorbis=no)],
+    AC_CHECK_LIB(ogg, ogg_packet_clear,LIBS="$LIBS -logg", with_ogg_vorbis=no)
+    AC_CHECK_LIB(vorbisfile, ov_clear,LIBS="$LIBS -lvorbisfile", with_ogg_vorbis=no)
+    AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr,LIBS="$LIBS -lvorbisenc", with_ogg_vorbis=no)],
     with_ogg_vorbis=no)
 
 dnl Check for FLAC libraries
