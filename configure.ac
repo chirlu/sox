@@ -236,9 +236,24 @@ fi
 AC_SUBST(SAMPLERATE_CFLAGS)
 AC_SUBST(SAMPLERATE_LIBS)
 
+dnl Check for amr-wb libraries
+AC_ARG_WITH(amr-wb,
+    AC_HELP_STRING([--without-amr-wb],
+        [Don't try to use amr-wb]),
+        [with_amr_wb=$withval])
+if test "$with_amr_wb" != "no"; then
+    using_amr_wb=yes
+    AC_CHECK_HEADER(amrwb/dec.h,
+        [AC_CHECK_LIB(amrwb, D_MAIN_decode,,using_amr_wb=no)],
+        using_amr_wb=no)
+    if test "$with_amr_wb" = "yes" -a "$using_amr_wb" = "no"; then
+        AC_MSG_FAILURE([cannot find amr-wb])
+    fi
+fi
+
 dnl Generate output files.
 AX_CREATE_STDINT_H(src/soxstdint.h)
-AC_CONFIG_FILES(Makefile src/Makefile src/libgsm/Makefile amr-wb/Makefile lpc10/Makefile)
+AC_CONFIG_FILES(Makefile src/Makefile src/libgsm/Makefile lpc10/Makefile)
 AC_OUTPUT
 
 if test "$found_libgsm" = "yes"; then
@@ -263,6 +278,7 @@ echo "ffmpeg formats.................... $with_ffmpeg"
 echo "MAD MP3 reader.................... $using_mad"
 echo "LAME MP3 writer................... $using_lame"
 echo "Secret Rabbit Code resampling..... $using_samplerate"
+echo "AMR-WB format..................... $using_amr_wb"
 echo
 echo "Configure finished.  Do 'make && make install' to compile and install SoX."
 echo

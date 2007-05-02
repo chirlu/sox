@@ -38,7 +38,9 @@ sox_format_tab_t sox_format_fns[] = {
   /* Plugin file formats */
   PLUGIN(aiff),
   PLUGIN(aifc),
+#ifdef HAVE_LIBAMRWB
   PLUGIN(amr_wb),
+#endif
   PLUGIN(au),
   PLUGIN(avr),
   PLUGIN(cdr),

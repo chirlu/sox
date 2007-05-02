@@ -16,8 +16,17 @@
 
 /* File format: AMR-WB   (c) 2007 robs@users.sourceforge.net */
 
+/* In order to use this format with SoX, first obtain, build & install:
+ *   http://ftp.penguin.cz/pub/users/utx/amr/amrwb-7.0.0.0.tar.bz2
+ */
+
+#ifdef HAVE_LIBAMRWB
+
 #include "sox_i.h"
-#include "../amr-wb/amr-wb.h"
+#include "amrwb/typedef.h"
+#include "amrwb/enc_if.h"
+#include "amrwb/dec_if.h"
+#include "amrwb/if_rom.h"
 #include <string.h>
 #include <math.h>
 
@@ -25,13 +34,8 @@ static char const magic[] = "#!AMR-WB\n";
 
 typedef struct amr_wb
 {
-  RX_State * rx_state;
-  TX_State * tx_state;
   void * state;
   Word16 coding_mode;
-  Word16 mode_previous;
-  sox_bool reset;
-  sox_bool reset_previous;
   Word16 pcm[L_FRAME16k];
   sox_size_t pcm_index;
 } * amr_wb_t;
@@ -39,56 +43,28 @@ typedef struct amr_wb
 assert_static(sizeof(struct amr_wb) <= SOX_MAX_FILE_PRIVSIZE,
               /* else */ amr_wb_PRIVSIZE_too_big);
 
-#define ENCODING 2 /* 0..2 */
-
 static sox_size_t decode_1_frame(ft_t ft)
 {
   amr_wb_t this = (amr_wb_t) ft->priv;
-  Word16 nb_bits, i;
-  Word16 mode, frame_type, frame_length;
-  Word16 prms[NB_BITS_MAX];
+  Word16 mode;
+  UWord8 serial[NB_SERIAL_MAX];
 
-  nb_bits = Read_serial(ft->fp, prms, &frame_type, &mode, this->rx_state, ENCODING);
-  if (nb_bits == 0)
+  if (fread(serial, sizeof(UWord8), 1, ft->fp) != 1)
     return L_FRAME16k;
-
-  if (frame_type == RX_NO_DATA || frame_type == RX_SPEECH_LOST) {
-    mode = this->mode_previous;
-    this->reset = sox_false;
-  } else {
-    this->mode_previous = mode;
-
-    if (this->reset_previous)
-      this->reset = decoder_homing_frame_test_first(prms, mode);
-  }
-  if (this->reset && this->reset_previous)
-    for (i = 0; i < L_FRAME16k; i++)
-      this->pcm[i] = EHF_MASK;
-  else
-    decoder(mode, prms, this->pcm, &frame_length, this->state, frame_type);
-  if (!this->reset_previous)
-    this->reset = decoder_homing_frame_test(prms, mode);
-  if (this->reset)
-    Reset_decoder(this->state, 1);
-  this->reset_previous = this->reset;
+  mode = (Word16)((serial[0] >> 3) & 0x0F);
+  if (fread(&serial[1], sizeof(UWord8), block_size[mode] - 1, ft->fp) != block_size[mode] - 1)
+    return L_FRAME16k;
+  D_IF_decode(this->state, serial, this->pcm, _good_frame);
   return 0;
 }
 
 static void encode_1_frame(ft_t ft)
 {
   amr_wb_t this = (amr_wb_t) ft->priv;
-  sox_size_t i;
-  Word16 nb_bits;
-  Word16 prms[NB_BITS_MAX];
-  Word16 reset = encoder_homing_frame_test(this->pcm);
+  UWord8 serial[NB_SERIAL_MAX];
   Word16 mode = this->coding_mode;
-
-  for (i = 0; i < L_FRAME16k; ++i)
-    this->pcm[i] = this->pcm[i] & ~3;
-  coder(&mode, this->pcm, prms, &nb_bits, this->state, 1);
-  Write_serial(ft->fp, prms, mode, this->coding_mode, this->tx_state, ENCODING);
-  if (reset)
-    Reset_encoder(this->state, 1);
+  Word32 serial_size = E_IF_encode(this->state, mode, this->pcm, serial, 1);
+  fwrite(serial, 1, serial_size, ft->fp);
 }
 
 static void set_format(ft_t ft)
@@ -102,22 +78,17 @@ static void set_format(ft_t ft)
 static int startread(ft_t ft)
 {
   amr_wb_t this = (amr_wb_t) ft->priv;
+  char buffer[sizeof(magic)];
 
-  this->reset_previous = sox_true;
   this->pcm_index = L_FRAME16k;
 
-  Init_decoder(&this->state);
-  Init_read_serial(&this->rx_state);
+  this->state = D_IF_init();
 
-  if (ENCODING == 2) {
-    char buffer[sizeof(magic)];
-
-    fread(buffer, sizeof(char), sizeof(buffer) - 1, ft->fp);
-    buffer[sizeof(buffer) - 1] = 0;
-    if (strcmp(buffer, magic)) {
-      sox_fail("Invalid magic number");
-      return SOX_EOF;
-    }
+  fread(buffer, sizeof(char), sizeof(buffer) - 1, ft->fp);
+  buffer[sizeof(buffer) - 1] = 0;
+  if (strcmp(buffer, magic)) {
+    sox_fail("Invalid magic number");
+    return SOX_EOF;
   }
   set_format(ft);
   return SOX_SUCCESS;
@@ -133,7 +104,7 @@ static sox_size_t read(ft_t ft, sox_ssample_t * buf, sox_size_t len)
       this->pcm_index = decode_1_frame(ft);
     if (this->pcm_index >= L_FRAME16k)
       break;
-    *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE(0xfffc & this->pcm[this->pcm_index++], ft->clips);
+    *buf++ = SOX_SIGNED_16BIT_TO_SAMPLE(this->pcm[this->pcm_index++], ft->clips);
   }
   return done;
 }
@@ -141,8 +112,7 @@ static sox_size_t read(ft_t ft, sox_ssample_t * buf, sox_size_t len)
 static int stopread(ft_t ft)
 {
   amr_wb_t this = (amr_wb_t) ft->priv;
-  Close_decoder(this->state);
-  Close_read_serial(this->rx_state);
+  D_IF_exit(this->state);
   return SOX_SUCCESS;
 }
 
@@ -160,10 +130,8 @@ static int startwrite(ft_t ft)
   else this->coding_mode = 0;
 
   set_format(ft);
-  Init_coder(&this->state);
-  Init_write_serial(&this->tx_state);
-  if (ENCODING == 2)
-    sox_writes(ft, magic);
+  this->state = E_IF_init();
+  sox_writes(ft, magic);
   this->pcm_index = 0;
   return SOX_SUCCESS;
 }
@@ -193,8 +161,7 @@ static int stopwrite(ft_t ft)
     } while (this->pcm_index < L_FRAME16k);
     encode_1_frame(ft);
   }
-  Close_coder(this->state);
-  Close_write_serial(this->tx_state);
+  E_IF_exit(this->state);
   return SOX_SUCCESS;
 }
 
@@ -211,3 +178,5 @@ const sox_format_t *sox_amr_wb_format_fn(void)
   };
   return &driver;
 }
+
+#endif
