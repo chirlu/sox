@@ -6,8 +6,12 @@ sox (14.0.0.cvs-1) unstable; urgency=low
     - Created libsox0 package that contains the SoX library.
     - Fixed sound file types description.
     - Added dependency on libao-dev and libltdl3-dev.
+  * [debian/libsox0.dirs, debian/libsox-dev.dirs]:
+    - Added /usr/lib/sox/ for format plugins.
+  * [debian/libsox0.install, debian/libsox-dev.install]:
+    - Added format plugins.
 
- -- Pascal Giard <evilynux@gmail.com>  Sun, 29 Apr 2007 16:10:22 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Thu, 03 May 2007 10:20:21 -0400
 
 sox (13.0.0-1) unstable; urgency=low
 
