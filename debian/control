@@ -24,7 +24,6 @@ Package: libsox0
 Architecture: any
 Section: devel
 Depends: ${shlibs:Depends}
-Conflicts: libst
 Description: SoX library
  SoX is the swiss army knife of sound processing.
  .
@@ -36,7 +35,6 @@ Package: libsox-dev
 Architecture: any
 Section: devel
 Depends: libsox0 (=${Source-Version}), ${shlibs:Depends}
-Conflicts: libst-dev
 Description: Development files for the SoX library
  SoX is the swiss army knife of sound processing.
  .
