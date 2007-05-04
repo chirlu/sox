@@ -64,6 +64,11 @@ extern enum_item const sox_wave_enum[];
 sox_bool is_uri(char const * text);
 FILE * xfopen(char const * identifier, char const * mode);
 
+/* Function we supply if it's missing from system libc */
+#ifndef HAVE_STRRSTR
+char *strrstr(const char *s, const char *t);
+#endif
+
 /* Define fseeko and ftello for platforms lacking them */
 #ifndef HAVE_FSEEKO
 #define fseeko fseek
@@ -226,6 +231,7 @@ typedef struct {
   sox_format_fn_t fn;
 } sox_format_tab_t;
 
+extern unsigned sox_formats;
 extern sox_format_tab_t sox_format_fns[];
 
 const sox_format_t *sox_auto_format_fn(void);

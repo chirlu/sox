@@ -6,12 +6,12 @@
  * Copyright 1991 Lance Norskog And Sundry Contributors
  * Copyright 1998-2007 Chris Bagnall and SoX contributors
  *
- * This library is free software; you can redistribute it and/or
+ * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
@@ -58,7 +58,7 @@
 #endif
 
 static sox_bool play = sox_false, rec = sox_false;
-static plugins_initted = sox_false;
+static sox_bool plugins_initted = sox_false;
 static enum {sox_sequence, sox_concatenate, sox_mix, sox_merge} combine_method = sox_concatenate;
 static sox_size_t mixing_clips = 0;
 static sox_bool repeatable_random = sox_false;  /* Whether to invoke srand. */
@@ -446,10 +446,32 @@ static void parse_options_and_filenames(int argc, char **argv)
   }
 }
 
-static void init_plugins(void)
+#define MAX_NAME_LEN 1024
+static int init_format(const char *file, lt_ptr data)
+{
+  lt_dlhandle lth = lt_dlopenext(file);
+  char *end = file + strlen(file);
+  const char prefix[] = "libsox_fmt_";
+  char fnname[MAX_NAME_LEN];
+  char *start = strstr(file, prefix) + sizeof(prefix) - 1;
+
+  (void)data;
+  if (start < end) {
+    int ret = snprintf(fnname, MAX_NAME_LEN, "sox_%.*s_format_fn", end - start, start);
+    if (ret > 0 && ret < MAX_NAME_LEN) {
+      sox_format_fns[sox_formats].fn = (sox_format_fn_t)lt_dlsym(lth, fnname);
+      sox_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, lth, sox_format_fns[sox_formats].fn);
+      sox_formats++;
+      return 0;
+    }
+  }
+
+  return -1;
+}
+
+static void find_formats(void)
 {
   int ret;
-  size_t i;
 
   if ((ret = lt_dlinit()) != 0) {
     sox_fail("lt_dlinit failed with %d error(s): %s", ret, lt_dlerror());
@@ -457,23 +479,7 @@ static void init_plugins(void)
   }
   plugins_initted = sox_true;
 
-  for (i = 0; sox_format_fns[i].name || sox_format_fns[i].fn; i++) {
-    if (sox_format_fns[i].name) { /* Try to load plugin */
-#define MAX_NAME_LEN 1024
-      char name[MAX_NAME_LEN];
-      int sn = snprintf(name, MAX_NAME_LEN, PKGLIBDIR "/libsox_fmt_%s.la", sox_format_fns[i].name);
-      
-      if (sn < MAX_NAME_LEN) {
-        char fnname[MAX_NAME_LEN];
-        lt_dlhandle lth = lt_dlopen(name);
-        
-        snprintf(fnname, MAX_NAME_LEN, "sox_%s_format_fn", sox_format_fns[i].name);
-        sox_format_fns[i].fn = (sox_format_fn_t)lt_dlsym(lth, fnname);
-        sox_debug("opening format plugin `%s': library %p, entry point %p\n", name, lth, sox_format_fns[i].fn);
-      }
-    } else
-      sox_debug("opening builtin format `%s': entry point %p\n", sox_format_fns[i].fn()->names[0], sox_format_fns[i].fn);
-  }
+  lt_dlforeachfile(PKGLIBDIR, init_format, NULL);
 }
 
 int main(int argc, char **argv)
@@ -500,7 +506,7 @@ int main(int argc, char **argv)
 
   /* Load plugins (after options so we can output debugging messages
      if desired) */
-  init_plugins();
+  find_formats();
   
   /* Allocate buffers, size of which may have been set by --buffer */
   ibufl = xcalloc(sox_bufsiz / 2, sizeof(sox_ssample_t));
@@ -1948,7 +1954,7 @@ static void usage(char const *message)
          "\n");
 
   printf("SUPPORTED FILE FORMATS:");
-  for (i = 0, formats = 0; sox_format_fns[i].name || sox_format_fns[i].fn; i++) {
+  for (i = 0, formats = 0; i < sox_formats; i++) {
     if (sox_format_fns[i].fn) {
       char const * const *names = sox_format_fns[i].fn()->names;
       while (*names++)
@@ -1957,7 +1963,7 @@ static void usage(char const *message)
   }
   formats += 2;
   format_list = (const char **)xmalloc(formats * sizeof(char *));
-  for (i = 0, formats = 0; sox_format_fns[i].name || sox_format_fns[i].fn; i++) {
+  for (i = 0, formats = 0; i < sox_formats; i++) {
     if (sox_format_fns[i].fn) {
       char const * const *names = sox_format_fns[i].fn()->names;
       while (*names)

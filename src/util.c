@@ -123,8 +123,8 @@ int sox_gettype(ft_t formp, sox_bool is_file_extension)
         sox_fail_errno(formp, SOX_EFMT, "Filetype was not specified");
         return SOX_EFMT;
     }
-    for (i = 0; sox_format_fns[i].fn || sox_format_fns[i].name; i++) {
-      /* FIXME: make this code easier to write  */
+    for (i = 0; i < sox_formats; i++) {
+      /* FIXME: add only non-NULL formats to the list */
       if (sox_format_fns[i].fn) {
         const sox_format_t *f = sox_format_fns[i].fn();
         if (is_file_extension && (f->flags & SOX_FILE_DEVICE))

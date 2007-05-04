@@ -309,13 +309,13 @@ static int sox_sunstartwrite(ft_t ft)
 }
 
 /* Sun /dev/audio player */
-static const char *sunnames[] = {
+static const char *names[] = {
   "sunau",
   NULL
 };
 
-static sox_format_t sox_sun_format = {
-  sunnames,
+static sox_format_t sox_sunau_format = {
+  names,
   SOX_FILE_DEVICE,
   sox_sunstartread,
   sox_rawread,
@@ -326,11 +326,11 @@ static sox_format_t sox_sun_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_sun_format_fn(void);
+const sox_format_t *sox_sunau_format_fn(void);
 
-const sox_format_t *sox_sun_format_fn(void)
+const sox_format_t *sox_sunau_format_fn(void)
 {
-    return &sox_sun_format;
+    return &sox_sunau_format;
 }
 
 #endif
