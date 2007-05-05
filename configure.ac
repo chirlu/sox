@@ -191,7 +191,7 @@ if test "$with_flac" != "no"; then
         AC_MSG_FAILURE([cannot find FLAC])
     fi
 fi
-AM_CONDITIONAL(HAVE_FLAC, test x$with_flac = xyes)
+AM_CONDITIONAL(HAVE_FLAC, test x$using_flac = xyes)
 
 dnl Check for ffmpeg libraries
 AC_CHECK_HEADER(ffmpeg/avformat.h,
