@@ -15,11 +15,23 @@
 .ds RA \(->
 '\"
 '\" Decimal point set slightly raised
-.ds d \v'-.15m'.\v'+.15m'
+.if t .ds d \v'-.15m'.\v'+.15m'
+.if n .ds d .
 '\"
+'\" Enclosure macro for examples
+.de EX
+.SP
+.nf
+.ft CW
+..
+.de EE
+.ft R
+.SP
+.fi
+..
 .TH SoX 7 "January 31, 2007" "soxexam" "Sound eXchange"
 .SH NAME
-soxexam\*mSoX Examples
+SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH EXAMPLES
 .SS Introduction
 The core problem is that you need some experience in using effects
@@ -250,59 +262,58 @@ The sample sounds if ten springs are in your ears:
 	play file.xxx phaser 0\*d6 0\*d66 3 0\*d6 2 \-t
 .SS Compander
 The compander effect allows the dynamic range of a signal to be
-compressed or expanded.
+compressed or expanded.  It works by calculating the input signal level
+averaged over time according to the given attack and decay parameters,
+and setting the output signal level according to the given
+transfer-function parameters.
+.SP
 For most situations, the attack time (response to the music getting
 louder) should be shorter than the decay time because our ears are more
 sensitive to suddenly loud music than to suddenly soft music.
 .SP
 For example, suppose you are listening to Strauss's `Also Sprach
-Zarathustra' in a noisy environment such as a car.
+Zarathustra' in a noisy environment such as a moving vehicle.
 If you turn up the volume enough to hear the soft passages over the
 road noise, the loud sections will be too loud.
-You could try this:
-.SP
-	play file.xxx compand 0\*d3,1 \-90,\-90,\-70,\-70,\-60,\-20,0,0 \-5 0 0\*d2
-.SP
-The transfer function (`\-90,...') says that
-.I very
-soft sounds between \-90 and \-70 decibels (\-90 is about the limit of
-16-bit encoding) will remain unchanged.
-That keeps the compander from boosting the volume on `silent' passages
-such as between movements.
-However, sounds in the range \-60 decibels to 0 decibels (maximum
+So you could try this:
+.EX
+	sox asz.flac asz-car.flac compand 0.3,1 6:-70,-60,-20 -5 -90 0.2
+.EE
+The transfer function (`6:\-70,...') says that very soft sounds (below
+\-70dB) will remain unchanged.  This will stop the compander from
+boosting the volume on `silent' passages such as between movements.
+However, sounds in the range \-60dB to 0dB (maximum
 volume) will be boosted so that the 60dB dynamic range of the
 original music will be compressed 3-to-1 into a 20dB range, which is
 wide enough to enjoy the music but narrow enough to get around the
-road noise.
-The \-5 dB output gain is needed to avoid clipping (the number is
+road noise.  The `6:' selects 6dB soft-knee companding.
+The \-5 (dB) output gain is needed to avoid clipping (the number is
 inexact, and was derived by experimentation).
-The 0 for the initial volume will work fine for a clip that starts
-with a bit of silence, and the delay of 0\*d2 has the effect of causing
+The \-90 (dB) for the initial volume will work fine for a clip that starts
+with near silence, and the delay of 0\*d2 (seconds) has the effect of causing
 the compander to react a bit more quickly to sudden volume changes.
 .SP
+In order to visualise the transfer function, SoX can be invoked with the
+.B \-\-plot
+option, e.g.
+.EX
+	sox -n -n --plot gnuplot compand 0,0 6:-70,-60,-20 -5 > my.plt
+	gnuplot my.plt
+.EE
 The following (one long) command shows how multi-band companding is
 typically used in FM radio:
-.SP
-	play file.xxx
-.br
-	vol \-3 db filter 8000\- 32 100 mcompand \(dq0\*d005,0\*d1
-.br
-	\-47,\-40,\-34,\-34,\-17,\-33 0 0 0\(dq 100 \(dq0\*d003,0\*d05
-.br
-	\-47,\-40,\-34,\-34,\-17,\-33 0 0 0\(dq 400 \(dq0\*d000625,0\*d0125
-.br
-	\-47,\-40,\-34,\-34,\-15,\-33 0 0 0\(dq 1600 \(dq0\*d0001,0\*d025
-.br
-	\-47,\-40,\-34,\-34,\-31,\-31,\-0,\-30 0 0 0\(dq 6400
-.br
-	\(dq0,0\*d025 \-38,\-31,\-28,\-28,\-0,\-25 0 0 0\(dq vol 27 db vol \-12
-.br
-	db highpass 22 highpass 22 filter \-17500 256 vol +12 db
-.br
-	vol \-3 db lowp 17801
-.SP
+.EX
+	play file.xxx vol -3dB filter 8000- 32 100 mcompand \\
+	\(dq0.005,0.1 -47,-40,-34,-34,-17,-33\(dq 100 \\
+	\(dq0.003,0.05 -47,-40,-34,-34,-17,-33\(dq 400 \\
+	\(dq0.000625,0.0125 -47,-40,-34,-34,-15,-33\(dq 1600 \\
+	\(dq0.0001,0.025 -47,-40,-34,-34,-31,-31,-0,-30\(dq 6400 \\
+	\(dq0,0.025 -38,-31,-28,-28,-0,-25\(dq \\
+	vol 15dB highpass 22 highpass 22 filter -17500 256 \\
+	vol 9dB lowpass -1 17801
+.EE
 The audio file is played with a simulated FM radio sound (or broadcast
-signal condition if the lowp at the end is skipped).
+signal condition if the lowpass filter at the end is skipped).
 Note that the pipeline is set up with US-style 75us preemphasis.
 .SS Changing the Rate of Playback
 You can use stretch to change the rate of playback of an audio sample
@@ -357,8 +368,7 @@ containing the alert sound.
 The scripting language shown is `Bourne shell' (sh) but it should be
 simple to translate this to another scripting language if you do not
 have access to sh.
-.nf
-
+.EX
 # Make sure we append to a file that's initially empty:
 rm \-f 2tones.raw
 
@@ -378,11 +388,10 @@ while [ $iterations \-ge 1 ]; do
 done
 
 # Add a file header and save some disc space:
-sox \-sw \-c1 \-r8000 alert.raw alert.ogg
+sox \-s2 \-c1 \-r8000 alert.raw alert.ogg
 
 play alert.ogg
-
-.fi
+.EE
 If you try out the above script, you may want to hit Ctrl-C fairly soon
 after the alert tone starts playing\*mit's not a pleasant sound!  The
 .B synth
