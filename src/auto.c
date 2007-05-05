@@ -114,6 +114,13 @@ static int sox_autostartread(ft_t ft)
                      (memcmp(header, "XAJ\0", 4) == 0) ||
                      (memcmp(header, "XA\0\0", 4) == 0))
                 type = "xa";
+            else if (strncmp(header, "#!AM", 4) == 0) {
+              rc = sox_readbuf(ft, header, 5);
+              if (rc >= 2 && strncmp(header, "R\n", 2) == 0)
+                type = "amr-nb";
+              else if (rc >= 5 && strncmp(header, "R-WB\n", 5) == 0)
+                type = "amr-wb";
+            }
         } /* read 4-byte header */
 
         /* If we didn't find type yet then start looking for file

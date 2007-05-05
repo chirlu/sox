@@ -89,7 +89,7 @@ Contributors:
 		format support, libao playback, Secret Rabbit Code
 		resampling; many fixes and much cleanup.
 	Rob Sykes		robs@users.sourceforge.net
-                Formats: M3U, PLS, FLAC, AMR-WB, 24bit support for popular
+                Formats: M3U, PLS, FLAC, AMR, 24bit support for popular
                 formats.
 		Effects: pad, bass, treble, new flanger, soft-knee companding,
                 speed via resampling, filters makeover inc. gnuplot & octave

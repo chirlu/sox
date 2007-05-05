@@ -128,6 +128,11 @@ libsox_fmt_amr_wb_la_SOURCES = amr-wb.c
 libsox_fmt_amr_wb_la_LIBADD = libsox.la
 pkglib_LTLIBRARIES += libsox_fmt_amr_wb.la
 endif
+if HAVE_AMR_NB
+libsox_fmt_amr_nb_la_SOURCES = amr-nb.c
+libsox_fmt_amr_nb_la_LIBADD = libsox.la
+pkglib_LTLIBRARIES += libsox_fmt_amr_nb.la
+endif
 if HAVE_MP3
 libsox_fmt_mp3_la_SOURCES = mp3.c
 libsox_fmt_mp3_la_LIBADD = libsox.la

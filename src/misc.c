@@ -73,6 +73,7 @@ const char * const sox_encodings_str[] = {
         "Vorbis",
         "FLAC",
         "AMR-WB",
+        "AMR-NB",
 };
 
 assert_static(array_length(sox_encodings_str) == SOX_ENCODINGS,

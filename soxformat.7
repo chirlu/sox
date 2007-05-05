@@ -33,10 +33,10 @@
 .SH NAME
 SoX \- Sound eXchange, the Swiss Army knife of audio manipulation
 .SH DESCRIPTION
-File types can be set by the filename extension or the
-.B \-t
-option (see above). File types that can be determined by a filename
-extension are listed with their names preceded by a dot. File types
+File types that can be determined by a filename
+extension are listed with their names preceded by a dot.
+.SP
+File types
 that require an external library, such as ffmpeg or libsndfile, are
 marked e.g. `\fB(ffmpeg)\fR'. File types that can be handled by an
 external library via its pseudo file type (currently libsndfile or
@@ -102,16 +102,43 @@ the highest quality format your ALSA system can handle.  Example:
 	sox infile -t alsa default
 .EE
 .TP
+\&\fB.amr\-nb\fR
+Adaptive Multi Rate\*mNarrow Band speech codec; a lossy format used in 3rd
+generation mobile telephony and defined in 3GPP TS 26.071 et al.
+.SP
+AMR-WB audio has a fixed sampling rate of 8 kHz and supports encoding
+to the following bit-rates (as selected by the
+.B \-C
+option): 0 = 4\*d75 kbit/s, 1 = 5\*d15 kbit/s, 2 = 5\*d9 kbit/s, 3 =
+6\*d7 kbit/s, 4 = 7\*d4 kbit/s 5 = 7\*d95 kbit/s, 6 = 10\*d2
+kbit/s, 7 = 12\*d2 kbit/s.
+.SP
+This format in SoX is optional and requires access to external libraries.
+To see if there is support for this format, enter
+.EX
+	sox -h
+.EE
+and look for it under the list:
+.IR "SUPPORTED FILE FORMATS" .
+.TP
 \&\fB.amr\-wb\fR
-Adaptive Multi Rate\*mWideband speech codec; a lossy format used in 3rd
-generation mobile telephony and defined in 3GPP TS 26.173.
+Adaptive Multi Rate\*mWide Band speech codec; a lossy format used in 3rd
+generation mobile telephony and defined in 3GPP TS 26.171 et al.
 .SP
 AMR-WB audio has a fixed sampling rate of 16 kHz and supports encoding
 to the following bit-rates (as selected by the
 .B \-C
 option): 0 = 6\*d6 kbit/s, 1 = 8\*d85 kbit/s, 2 = 12\*d65 kbit/s, 3 =
 14\*d25 kbit/s, 4 = 15\*d85 kbit/s 5 = 18\*d25 kbit/s, 6 = 19\*d85
-kbit/s, 7 = 23\*d05 kbit/s, 8 = 23\*d85 kbit/s
+kbit/s, 7 = 23\*d05 kbit/s, 8 = 23\*d85 kbit/s.
+.SP
+This format in SoX is optional and requires access to external libraries.
+To see if there is support for this format on your system, enter
+.EX
+	sox -h
+.EE
+and look for it under the list:
+.IR "SUPPORTED FILE FORMATS" .
 .TP
 .B ao
 libao device driver.

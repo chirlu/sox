@@ -11,7 +11,7 @@ sox-14.0.0
 
   o Added support for ADPCM-encoded PRC files, based on Danny Smith's
     rec2wav and sndcmp.
-  o Added AMR-WB format.  (robs)
+  o Added AMR-NB [FR# 728875] & AMR-WB formats (with external libs).  (robs)
   o Added M3U & PLS playlist formats [FR# 1667341] (Note: SHOUTcast PLS
     is only partially supported).  (robs)
   o Added libao support.  (Reuben Thomas)
@@ -47,6 +47,7 @@ sox-14.0.0
    (Bug# 1666599) (cbagwell)
   o Fix I/O performance regression in 13.0.0.  (Reuben Thomas)
   o Fix displayed times when playing a file and using trim.  (robs)
+  o Fix CDDA sector duration display for non-CDDA sample rates.  (robs)
 
   Internal improvements:
 

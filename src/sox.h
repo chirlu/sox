@@ -181,6 +181,7 @@ typedef enum {
   SOX_ENCODING_VORBIS    , /* Vorbis compression */
   SOX_ENCODING_FLAC      , /* FLAC compression */
   SOX_ENCODING_AMR_WB    , /* AMR-WB compression */
+  SOX_ENCODING_AMR_NB    , /* AMR-NB compression */
 
   SOX_ENCODINGS            /* End of list marker */
 } sox_encoding_t;

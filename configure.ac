@@ -256,13 +256,29 @@ AC_ARG_WITH(amr-wb,
 if test "$with_amr_wb" != "no"; then
     using_amr_wb=yes
     AC_CHECK_HEADER(amrwb/dec.h,
-        [AC_CHECK_LIB(amrwb, D_MAIN_decode,,using_amr_wb=no)],
+        [AC_CHECK_LIB(amrwb, D_IF_init,,using_amr_wb=no)],
         using_amr_wb=no)
     if test "$with_amr_wb" = "yes" -a "$using_amr_wb" = "no"; then
         AC_MSG_FAILURE([cannot find amr-wb])
     fi
 fi
 AM_CONDITIONAL(HAVE_AMR_WB, test x$using_amr_wb = xyes)
+
+dnl Check for amr-nb libraries
+AC_ARG_WITH(amr-nb,
+    AC_HELP_STRING([--without-amr-nb],
+        [Don't try to use amr-nb]),
+        [with_amr_nb=$withval])
+if test "$with_amr_nb" != "no"; then
+    using_amr_nb=yes
+    AC_CHECK_HEADER(amrnb/sp_dec.h,
+        [AC_CHECK_LIB(amrnb, Decoder_Interface_init,,using_amr_nb=no)],
+        using_amr_nb=no)
+    if test "$with_amr_nb" = "yes" -a "$using_amr_nb" = "no"; then
+        AC_MSG_FAILURE([cannot find amr-nb])
+    fi
+fi
+AM_CONDITIONAL(HAVE_AMR_NB, test x$using_amr_nb = xyes)
 
 dnl Generate output files.
 AX_CREATE_STDINT_H(src/soxstdint.h)
@@ -292,6 +308,7 @@ echo "MAD MP3 reader.................... $using_mad"
 echo "LAME MP3 writer................... $using_lame"
 echo "Secret Rabbit Code resampling..... $using_samplerate"
 echo "AMR-WB format..................... $using_amr_wb"
+echo "AMR-NB format..................... $using_amr_nb"
 echo
 echo "Configure finished.  Do 'make && make install' to compile and install SoX."
 echo
