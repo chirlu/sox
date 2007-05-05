@@ -14,8 +14,6 @@
 
 #include <string.h>
 
-#if defined(HAVE_LIBMAD) || defined(HAVE_LIBMP3LAME)
-
 #ifdef HAVE_LIBMAD
 #include <mad.h>
 #endif
@@ -570,4 +568,3 @@ const sox_format_t *sox_mp3_format_fn(void)
 {
     return &sox_mp3_format;
 }
-#endif

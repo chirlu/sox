@@ -43,8 +43,6 @@
 
 #include "sox_i.h"
 
-#ifdef HAVE_LIBAVFORMAT
-
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -506,5 +504,3 @@ const sox_format_t *sox_ffmpeg_format_fn(void)
 {
   return &sox_ffmpeg_format;
 }
-
-#endif

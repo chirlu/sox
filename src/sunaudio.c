@@ -17,8 +17,6 @@
 
 #include "sox_i.h"
 
-#ifdef HAVE_SUN_AUDIO
-
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #ifdef HAVE_SUN_AUDIOIO_H
@@ -332,5 +330,3 @@ const sox_format_t *sox_sunau_format_fn(void)
 {
     return &sox_sunau_format;
 }
-
-#endif

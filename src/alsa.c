@@ -9,8 +9,6 @@
 
 #include "sox_i.h"
 
-#ifdef HAVE_ALSA
-
 #include <alsa/asoundlib.h>
 
 typedef struct alsa_priv
@@ -686,5 +684,3 @@ const sox_format_t *sox_alsa_format_fn(void)
 {
     return &sox_alsa_format;
 }
-
-#endif /* HAVE_ALSA */

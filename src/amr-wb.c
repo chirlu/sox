@@ -1,4 +1,6 @@
 /*
+ * File format: AMR-WB   (c) 2007 robs@users.sourceforge.net
+ * 
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or (at
@@ -14,13 +16,9 @@
  * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
-/* File format: AMR-WB   (c) 2007 robs@users.sourceforge.net */
-
 /* In order to use this format with SoX, first obtain, build & install:
  *   http://ftp.penguin.cz/pub/users/utx/amr/amrwb-7.0.0.0.tar.bz2
  */
-
-#ifdef HAVE_LIBAMRWB
 
 #include "sox_i.h"
 #include "amrwb/typedef.h"
@@ -178,5 +176,3 @@ const sox_format_t *sox_amr_wb_format_fn(void)
   };
   return &driver;
 }
-
-#endif

@@ -19,9 +19,9 @@
  * TODO: When reading in comments, it doesn't understand how to read
  * more then one comment and doesn't know how to parse KEY=value.
  */
+
 #include "sox_i.h"
 
-#if defined HAVE_LIBVORBISENC && defined HAVE_LIBVORBISFILE
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
@@ -468,4 +468,3 @@ const sox_format_t *sox_vorbis_format_fn(void)
 {
     return &sox_vorbis_format;
 }
-#endif

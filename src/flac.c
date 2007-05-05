@@ -1,4 +1,6 @@
 /*
+ * File format: FLAC   (c) 2006-7 robs@users.sourceforge.net
+ *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or (at
@@ -14,13 +16,8 @@
  * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
-/* File format: FLAC   (c) 2006-7 robs@users.sourceforge.net */
-
-
 
 #include "sox_i.h"
-
-#ifdef HAVE_LIBFLAC
 
 #include <math.h>
 #include <string.h>
@@ -532,7 +529,3 @@ const sox_format_t *sox_flac_format_fn(void)
   };
   return &driver;
 }
-
-
-
-#endif /* HAVE_LIBFLAC */

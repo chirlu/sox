@@ -12,6 +12,21 @@ bin_PROGRAMS = sox
 lib_LTLIBRARIES = libsox.la
 include_HEADERS = sox.h soxstdint.h
 
+# Format modules; listed first so optional ones can be added later
+pkglib_LTLIBRARIES = libsox_fmt_auto.la libsox_fmt_raw.la libsox_fmt_s1.la \
+	  libsox_fmt_s2.la libsox_fmt_s3.la libsox_fmt_s4.la libsox_fmt_u1.la	\
+	  libsox_fmt_u2.la libsox_fmt_u3.la libsox_fmt_u4.la		\
+	  libsox_fmt_al.la libsox_fmt_la.la libsox_fmt_ul.la		\
+	  libsox_fmt_lu.la libsox_fmt_svx.la libsox_fmt_aiff.la		\
+	  libsox_fmt_aifc.la libsox_fmt_au.la libsox_fmt_avr.la		\
+	  libsox_fmt_cdr.la libsox_fmt_cvsd.la libsox_fmt_dvms.la	\
+	  libsox_fmt_dat.la libsox_fmt_gsm.la libsox_fmt_hcom.la	\
+	  libsox_fmt_lpc10.la libsox_fmt_maud.la libsox_fmt_prc.la	\
+	  libsox_fmt_sf.la libsox_fmt_smp.la libsox_fmt_sndrtool.la	\
+	  libsox_fmt_sphere.la libsox_fmt_txw.la libsox_fmt_voc.la	\
+	  libsox_fmt_vox.la libsox_fmt_ima.la libsox_fmt_wav.la		\
+	  libsox_fmt_wve.la libsox_fmt_xa.la libsox_fmt_nul.la
+
 # File format detection
 libsox_fmt_auto_la_SOURCES = auto.c
 libsox_fmt_auto_la_LIBADD = libsox.la
@@ -49,8 +64,6 @@ libsox_fmt_aiff_la_SOURCES = aiff-fmt.c
 libsox_fmt_aiff_la_LIBADD = libsox.la
 libsox_fmt_aifc_la_SOURCES = aifc-fmt.c
 libsox_fmt_aifc_la_LIBADD = libsox.la
-libsox_fmt_amr_wb_la_SOURCES = amr-wb.c
-libsox_fmt_amr_wb_la_LIBADD = libsox.la
 libsox_fmt_au_la_SOURCES = au.c
 libsox_fmt_au_la_LIBADD = libsox.la
 libsox_fmt_avr_la_SOURCES = avr.c
@@ -63,10 +76,6 @@ libsox_fmt_dvms_la_SOURCES = dvms-fmt.c
 libsox_fmt_dvms_la_LIBADD = libsox.la
 libsox_fmt_dat_la_SOURCES = dat.c
 libsox_fmt_dat_la_LIBADD = libsox.la
-libsox_fmt_ffmpeg_la_SOURCES = ffmpeg.c
-libsox_fmt_ffmeg_la_LIBADD = libsox.la
-libsox_fmt_flac_la_SOURCES = flac.c
-libsox_fmt_flac_la_LIBADD = libsox.la
 libsox_fmt_gsm_la_SOURCES = gsm.c
 libsox_fmt_gsm_la_LIBADD = libsox.la
 libsox_fmt_hcom_la_SOURCES = hcom.c
@@ -75,18 +84,12 @@ libsox_fmt_lpc10_la_SOURCES = lpc10.c
 libsox_fmt_lpc10_la_LIBADD = ../lpc10/liblpc10.la libsox.la
 libsox_fmt_maud_la_SOURCES = maud.c
 libsox_fmt_maud_la_LIBADD = libsox.la
-libsox_fmt_mp3_la_SOURCES = mp3.c
-libsox_fmt_mp3_la_LIBADD = libsox.la
-libsox_fmt_nul_la_SOURCES = nulfile.c
-libsox_fmt_nul_la_LIBADD = libsox.la
 libsox_fmt_prc_la_SOURCES = prc.c
 libsox_fmt_prc_la_LIBADD = libsox.la
 libsox_fmt_sf_la_SOURCES = sf.c sfircam.h
 libsox_fmt_sf_la_LIBADD = libsox.la
 libsox_fmt_smp_la_SOURCES = smp.c
 libsox_fmt_smp_la_LIBADD = libsox.la
-libsox_fmt_sndfile_la_SOURCES = sndfile.c
-libsox_fmt_sndfile_la_LIBADD = libsox.la
 libsox_fmt_sndrtool_la_SOURCES = sndrtool.c
 libsox_fmt_sndrtool_la_LIBADD = libsox.la
 libsox_fmt_sphere_la_SOURCES = sphere.c
@@ -95,8 +98,6 @@ libsox_fmt_txw_la_SOURCES = tx16w.c
 libsox_fmt_txw_la_LIBADD = libsox.la
 libsox_fmt_voc_la_SOURCES = voc.c
 libsox_fmt_voc_la_LIBADD = libsox.la
-libsox_fmt_vorbis_la_SOURCES = vorbis.c
-libsox_fmt_vorbis_la_LIBADD = libsox.la
 libsox_fmt_vox_la_SOURCES = vox-fmt.c
 libsox_fmt_vox_la_LIBADD = libsox.la
 libsox_fmt_ima_la_SOURCES = ima-fmt.c
@@ -107,34 +108,60 @@ libsox_fmt_wve_la_SOURCES = wve.c
 libsox_fmt_wve_la_LIBADD = libsox.la
 libsox_fmt_xa_la_SOURCES = xa.c
 libsox_fmt_xa_la_LIBADD = libsox.la
+if HAVE_FLAC
+libsox_fmt_flac_la_SOURCES = flac.c
+libsox_fmt_flac_la_LIBADD = libsox.la
+pkglib_LTLIBRARIES += libsox_fmt_flac.la
+endif
+if HAVE_FFMPEG
+libsox_fmt_ffmpeg_la_SOURCES = ffmpeg.c
+libsox_fmt_ffmpeg_la_LIBADD = libsox.la
+pkglib_LTLIBRARIES += libsox_fmt_ffmpeg.la
+endif
+if HAVE_SNDFILE
+libsox_fmt_sndfile_la_SOURCES = sndfile.c
+libsox_fmt_sndfile_la_LIBADD = libsox.la
+pkglib_LTLIBRARIES += libsox_fmt_sndfile.la
+endif
+if HAVE_AMR_WB
+libsox_fmt_amr_wb_la_SOURCES = amr-wb.c
+libsox_fmt_amr_wb_la_LIBADD = libsox.la
+pkglib_LTLIBRARIES += libsox_fmt_amr_wb.la
+endif
+if HAVE_MP3
+libsox_fmt_mp3_la_SOURCES = mp3.c
+libsox_fmt_mp3_la_LIBADD = libsox.la
+pkglib_LTLIBRARIES += libsox_fmt_mp3.la
+endif
+if HAVE_OGG_VORBIS
+libsox_fmt_vorbis_la_SOURCES = vorbis.c
+libsox_fmt_vorbis_la_LIBADD = libsox.la
+pkglib_LTLIBRARIES += libsox_fmt_vorbis.la
+endif
 
 # I/O devices
+libsox_fmt_nul_la_SOURCES = nulfile.c
+libsox_fmt_nul_la_LIBADD = libsox.la
+if HAVE_ALSA
 libsox_fmt_alsa_la_SOURCES = alsa.c
 libsox_fmt_alsa_la_LIBADD = libsox.la
+pkglib_LTLIBRARIES += libsox_fmt_alsa.la
+endif
+if HAVE_LIBAO
 libsox_fmt_ao_la_SOURCES = ao.c
 libsox_fmt_ao_la_LIBADD = libsox.la
+pkglib_LTLIBRARIES += libsox_fmt_ao.la
+endif
+if HAVE_OSS
 libsox_fmt_oss_la_SOURCES = oss.c
 libsox_fmt_oss_la_LIBADD = libsox.la
+pkglib_LTLIBRARIES += libsox_fmt_oss.la
+endif
+if HAVE_SUN_AUDIO
 libsox_fmt_sunau_la_SOURCES = sunaudio.c
 libsox_fmt_sunau_la_LIBADD = libsox.la
-
-pkglib_LTLIBRARIES = libsox_fmt_auto.la libsox_fmt_raw.la libsox_fmt_s1.la \
-	  libsox_fmt_s2.la libsox_fmt_s3.la libsox_fmt_s4.la libsox_fmt_u1.la	\
-	  libsox_fmt_u2.la libsox_fmt_u3.la libsox_fmt_u4.la		\
-	  libsox_fmt_al.la libsox_fmt_la.la libsox_fmt_ul.la		\
-	  libsox_fmt_lu.la libsox_fmt_svx.la libsox_fmt_aiff.la		\
-	  libsox_fmt_aifc.la libsox_fmt_amr_wb.la libsox_fmt_au.la	\
-	  libsox_fmt_avr.la libsox_fmt_cdr.la libsox_fmt_cvsd.la	\
-	  libsox_fmt_dvms.la libsox_fmt_dat.la libsox_fmt_ffmpeg.la	\
-	  libsox_fmt_flac.la libsox_fmt_gsm.la libsox_fmt_hcom.la	\
-	  libsox_fmt_lpc10.la libsox_fmt_maud.la libsox_fmt_mp3.la	\
-	  libsox_fmt_nul.la libsox_fmt_prc.la libsox_fmt_sf.la		\
-	  libsox_fmt_smp.la libsox_fmt_sndfile.la			\
-	  libsox_fmt_sndrtool.la libsox_fmt_sphere.la			\
-	  libsox_fmt_txw.la libsox_fmt_voc.la libsox_fmt_vorbis.la	\
-	  libsox_fmt_vox.la libsox_fmt_ima.la libsox_fmt_wav.la		\
-	  libsox_fmt_wve.la libsox_fmt_xa.la libsox_fmt_alsa.la		\
-	  libsox_fmt_ao.la libsox_fmt_oss.la libsox_fmt_sunau.la
+pkglib_LTLIBRARIES += libsox_fmt_sunau.la
+endif
 
 effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c \
 	  compandt.c compandt.h dcshift.c dither.c earwax.c echo.c echos.c \

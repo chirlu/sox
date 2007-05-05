@@ -97,6 +97,7 @@ fi
 if test "$enable_alsa" = yes; then
    AC_DEFINE(HAVE_ALSA, 1, [Define to 1 if you have ALSA.])
 fi
+AM_CONDITIONAL(HAVE_ALSA, test x$enable_alsa = xyes)
 
 dnl Check for libao
 AC_MSG_CHECKING([whether to try building libao sound driver])
@@ -108,6 +109,7 @@ if test "$enable_libao" = "yes"; then
         AC_CHECK_LIB(ao, ao_play,, enable_libao=no),
         enable_libao=no)
 fi
+AM_CONDITIONAL(HAVE_LIBAO, test x$enable_libao = xyes)
 
 dnl Check for OSS
 AC_MSG_CHECKING([whether to try building OSS sound driver])
@@ -123,6 +125,7 @@ fi
 if test "$enable_oss" = yes; then
    AC_DEFINE(HAVE_OSS, 1, [Define to 1 if you have OSS.])
 fi
+AM_CONDITIONAL(HAVE_OSS, test x$enable_oss = xyes)
 
 dnl Check for Sun audio
 AC_MSG_CHECKING([whether to try building Sun audio driver])
@@ -136,6 +139,7 @@ fi
 if test "$enable_sun_audio" = yes; then
    AC_DEFINE(HAVE_SUN_AUDIO, 1, [Define to 1 if you have Sun audio.])
 fi
+AM_CONDITIONAL(HAVE_SUN_AUDIO, test x$enable_sun_audio = xyes)
 
 dnl Check for libgsm
 AC_CHECK_HEADERS(gsm/gsm.h, found_libgsm=yes,
@@ -159,6 +163,7 @@ if test "$with_sndfile" = yes; then
   SOX_PATH_SNDFILE(, [with_sndfile=no
                        AC_MSG_NOTICE([Could not find a usable libsndfile])])
 fi
+AM_CONDITIONAL(HAVE_SNDFILE, test x$with_sndfile = xyes)
 AC_SUBST(SNDFILE_CFLAGS)
 AC_SUBST(SNDFILE_LIBS)
         
@@ -170,6 +175,7 @@ AC_CHECK_HEADER(vorbis/codec.h,
     AC_CHECK_LIB(vorbisfile, ov_clear,, with_ogg_vorbis=no)
     AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr,, with_ogg_vorbis=no)],
     with_ogg_vorbis=no)
+AM_CONDITIONAL(HAVE_OGG_VORBIS, test x$with_ogg_vorbis = xyes)
 
 dnl Check for FLAC libraries
 AC_ARG_WITH(flac,
@@ -185,12 +191,14 @@ if test "$with_flac" != "no"; then
         AC_MSG_FAILURE([cannot find FLAC])
     fi
 fi
+AM_CONDITIONAL(HAVE_FLAC, test x$with_flac = xyes)
 
 dnl Check for ffmpeg libraries
 AC_CHECK_HEADER(ffmpeg/avformat.h,
     [with_ffmpeg=yes
     AC_CHECK_LIB(avformat, av_open_input_file,, with_ffmpeg=no)],
     with_ffmpeg=no)
+AM_CONDITIONAL(HAVE_FFMPEG, test x$with_ffmpeg = xyes)
 
 dnl Check for MAD libraries
 AC_ARG_WITH(mad,
@@ -222,6 +230,9 @@ if test "$with_lame" != "no"; then
     fi
 fi
 
+dnl MP3 library depends on libmad || LAME
+AM_CONDITIONAL(HAVE_MP3, test x$using_mad = xyes -o x$using_lame = xyes)
+
 dnl Test for libsamplerate.
 AC_ARG_WITH(samplerate,
     AC_HELP_STRING([--without-samplerate],
@@ -251,6 +262,7 @@ if test "$with_amr_wb" != "no"; then
         AC_MSG_FAILURE([cannot find amr-wb])
     fi
 fi
+AM_CONDITIONAL(HAVE_AMR_WB, test x$using_amr_wb = xyes)
 
 dnl Generate output files.
 AX_CREATE_STDINT_H(src/soxstdint.h)
