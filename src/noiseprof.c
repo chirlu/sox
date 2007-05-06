@@ -193,7 +193,7 @@ static int sox_noiseprof_stop(eff_t effp)
         fprintf(data->output_file, "Channel %d: ", i);
 
         for (j = 0; j < FREQCOUNT; j ++) {
-            double r = chan->profilecount[j] != 0 ?
+            double r = chan->profilecount[j] != 0 ? 
                     chan->sum[j] / chan->profilecount[j] : 0;
             fprintf(data->output_file, "%s%f", j == 0 ? "" : ", ", r);
         }
