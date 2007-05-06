@@ -63,7 +63,7 @@ static enum {sox_sequence, sox_concatenate, sox_mix, sox_merge} combine_method =
 static sox_size_t mixing_clips = 0;
 static sox_bool repeatable_random = sox_false;  /* Whether to invoke srand. */
 static sox_bool interactive = sox_false;
-static sox_globalinfo_t globalinfo = {sox_false, 1};
+static sox_effects_global_info_t effects_global_info = {sox_false, 1, &sox_global_info};
 static sox_bool uservolume = sox_false;
 typedef enum {RG_off, RG_track, RG_album} rg_mode;
 static rg_mode replay_gain_mode = RG_off;
@@ -807,7 +807,7 @@ static sox_bool doopts(file_t f, int argc, char **argv)
         break;
 
       case 7:
-        globalinfo.plot = enum_option(option_index, plot_methods);
+        effects_global_info.plot = enum_option(option_index, plot_methods);
         break;
 
       case 8:
@@ -1124,7 +1124,7 @@ static int process(void) {
   if (ofile->signal.channels == 0)
     ofile->signal.channels = combiner.channels;
 
-  combiner.rate = combiner.rate * globalinfo.speed + .5;
+  combiner.rate = combiner.rate * effects_global_info.speed + .5;
 
   for (i = 0; i < nuser_effects; i++)
     known_length = known_length && !(user_efftab[i].h->flags & SOX_EFF_LENGTH);
@@ -1321,7 +1321,7 @@ static void parse_effects(int argc, char **argv)
       sox_warn("Effect `%s' is deprecated and may be removed in a future release; please refer to the manual sox(1) for an alternative effect", e->name);
 
     optind++; /* Skip past effect name */
-    e->globalinfo = &globalinfo;
+    e->global_info = &effects_global_info;
     getopts = e->h->getopts?  e->h->getopts : sox_effect_nothing_getopts;
     if (getopts(e, argc_effect, &argv[optind]) == SOX_EOF)
       exit(2);
@@ -1355,7 +1355,7 @@ static void add_default_effect(char const * name, int * effects_mask)
   sox_geteffect(e, name);
 
   /* Set up & give default opts for added effects */
-  e->globalinfo = &globalinfo;
+  e->global_info = &effects_global_info;
   getopts = e->h->getopts?  e->h->getopts : sox_effect_nothing_getopts;
   if (getopts(e, 0, NULL) == SOX_EOF)
     exit(2);

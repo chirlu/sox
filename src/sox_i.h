@@ -210,6 +210,7 @@ void sox_fail_errno(ft_t, int, const char *, ...);
  * data to get max performance.
  */
 extern sox_size_t sox_bufsiz;
+extern sox_global_info_t sox_global_info;
 
 extern const char sox_readerr[];
 extern const char sox_writerr[];

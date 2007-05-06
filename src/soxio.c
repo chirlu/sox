@@ -26,6 +26,7 @@
 #endif
 
 sox_size_t sox_bufsiz = 8192;
+sox_global_info_t sox_global_info;
 
 void set_endianness_if_not_already_set(ft_t ft)
 {
@@ -129,10 +130,14 @@ ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
         /* Open file handler based on input name.  Used stdin file handler
          * if the filename is "-"
          */
-        if (!strcmp(ft->filename, "-"))
-        {
-            SET_BINARY_MODE(stdin);
-            ft->fp = stdin;
+        if (!strcmp(ft->filename, "-")) {
+          if (sox_global_info.stdin_in_use_by) {
+            sox_fail("'-' (stdin) already in use by '%s'", sox_global_info.stdin_in_use_by);
+            goto input_error;
+          }
+          sox_global_info.stdin_in_use_by = "audio input";
+          SET_BINARY_MODE(stdin);
+          ft->fp = stdin;
         }
         else if ((ft->fp = xfopen(ft->filename, "rb")) == NULL)
         {
@@ -241,8 +246,12 @@ ft_t sox_open_write(
         /* Open file handler based on output name.  Used stdout file handler
          * if the filename is "-"
          */
-        if (!strcmp(ft->filename, "-"))
-        {
+        if (!strcmp(ft->filename, "-")) {
+          if (sox_global_info.stdout_in_use_by) {
+            sox_fail("'-' (stdout) already in use by '%s'", sox_global_info.stdout_in_use_by);
+            goto output_error;
+          }
+          sox_global_info.stdout_in_use_by = "audio output";
             SET_BINARY_MODE(stdout);
             ft->fp = stdout;
         }

@@ -42,7 +42,7 @@ static int getopts(eff_t effp, int n, char * * argv)
     if (scanned == 1 || (scanned == 2 && c == 'c')) {
       is_cents |= scanned == 2;
       if (is_cents || speed > 0) {
-        effp->globalinfo->speed *= is_cents? pow(2., speed/1200) : speed;
+        effp->global_info->speed *= is_cents? pow(2., speed/1200) : speed;
         return SOX_SUCCESS;
       }
     }

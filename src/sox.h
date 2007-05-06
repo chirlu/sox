@@ -186,15 +186,25 @@ typedef enum {
   SOX_ENCODINGS            /* End of list marker */
 } sox_encoding_t;
 
+typedef struct sox_global_info /* Global parameters (for effects & formats) */
+{
+  char const * stdin_in_use_by;
+  char const * stdout_in_use_by;
+} sox_global_info_t;
+
 typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot} sox_plot_t;
 
-/* Global parameters (for effects) */
-
-typedef struct  sox_globalinfo
+typedef struct sox_effects_global_info /* Global parameters (for effects) */
 {
   sox_plot_t plot;         /* To help the user choose effect & options */
   double speed;            /* Gather up all speed changes here, then resample */
-} sox_globalinfo_t;
+  sox_global_info_t * global_info;
+} sox_effects_global_info_t;
+
+typedef struct sox_formats_global_info /* Global parameters (for formats) */
+{
+  sox_global_info_t * global_info;
+} sox_formats_global_info_t;
 
 typedef enum {SOX_OPTION_NO, SOX_OPTION_YES, SOX_OPTION_DEFAULT} sox_option_t;
 
@@ -380,7 +390,7 @@ typedef struct
 struct sox_effect
 {
     char const *name;               /* effect name */
-    struct sox_globalinfo * globalinfo;/* global parameters */
+    struct sox_effects_global_info * global_info;/* global parameters */
     struct sox_signalinfo ininfo;    /* input signal specifications */
     struct sox_signalinfo outinfo;   /* output signal specifications */
     const sox_effect_t *h;           /* effects driver */

@@ -66,7 +66,7 @@ int sox_biquad_start(eff_t effp)
   p->a2 = p->a2/p->a0;
   p->a1 = p->a1/p->a0;
 
-  if (effp->globalinfo->plot == sox_plot_octave) {
+  if (effp->global_info->plot == sox_plot_octave) {
     printf(
       "%% GNU Octave file (may also work with MATLAB(R) )\n"
       "title('SoX effect: %s gain=%g frequency=%g %s=%g (rate=%u)')\n"
@@ -86,7 +86,7 @@ int sox_biquad_start(eff_t effp)
       );
     return SOX_EOF;
   }
-  if (effp->globalinfo->plot == sox_plot_gnuplot) {
+  if (effp->global_info->plot == sox_plot_gnuplot) {
     printf(
       "# gnuplot file\n"
       "set title 'SoX effect: %s gain=%g frequency=%g %s=%g (rate=%u)'\n"

@@ -201,8 +201,8 @@ int sox_resample_start(eff_t effp)
   /* The next line makes the "speed" effect accurate; it's needed because
    * ininfo.rate (sox_rate_t) isn't floating point (but it's probably not worth
    * changing sox_rate_t just because of this): */
-  double in_rate = floor(effp->ininfo.rate / effp->globalinfo->speed + .5)
-    * effp->globalinfo->speed;
+  double in_rate = floor(effp->ininfo.rate / effp->global_info->speed + .5)
+    * effp->global_info->speed;
 
   if (in_rate == effp->outinfo.rate)
     return SOX_EFF_NULL;

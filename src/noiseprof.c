@@ -59,33 +59,34 @@ static int sox_noiseprof_getopts(eff_t effp, int n, char **argv)
  */
 static int sox_noiseprof_start(eff_t effp)
 {
-    profdata_t data = (profdata_t) effp->priv;
-    unsigned channels = effp->ininfo.channels;
-    unsigned i;
+  profdata_t data = (profdata_t) effp->priv;
+  unsigned channels = effp->ininfo.channels;
+  unsigned i;
    
-    if (data->output_filename != NULL) {
-        if (strcmp(data->output_filename, "-") != 0)
-          data->output_file = fopen(data->output_filename, "w");
-        else
-          data->output_file = stdout;
-        if (data->output_file == NULL) {
-            sox_fail("Couldn't open output file %s: %s",
-                    data->output_filename, strerror(errno));            
-        }
-    } else {
-        /* FIXME: We should detect output to stdout, and redirect to stderr. */
-        data->output_file = stderr;
+  /* Note: don't fall back to stderr if stdout is unavailable
+   * since we already use stderr for diagnostics. */
+  if (!data->output_filename || !strcmp(data->output_filename, "-")) {
+    if (effp->global_info->global_info->stdout_in_use_by) {
+      sox_fail("stdout already in use by '%s'", effp->global_info->global_info->stdout_in_use_by);
+      return SOX_EOF;
     }
+    effp->global_info->global_info->stdout_in_use_by = effp->name;
+    data->output_file = stdout;
+  }
+  else if ((data->output_file = fopen(data->output_filename, "w")) == NULL) {
+    sox_fail("Couldn't open profile file %s: %s", data->output_filename, strerror(errno));
+    return SOX_EOF;
+  }
 
-    data->chandata = (chandata_t*)xcalloc(channels, sizeof(*(data->chandata)));
-    data->bufdata = 0;
-    for (i = 0; i < channels; i ++) {
-        data->chandata[i].sum = (float*)xcalloc(FREQCOUNT, sizeof(float));
-        data->chandata[i].profilecount = (int*)xcalloc(FREQCOUNT, sizeof(int));
-        data->chandata[i].window = (float*)xcalloc(WINDOWSIZE, sizeof(float));
-    }
+  data->chandata = (chandata_t*)xcalloc(channels, sizeof(*(data->chandata)));
+  data->bufdata = 0;
+  for (i = 0; i < channels; i ++) {
+    data->chandata[i].sum = (float*)xcalloc(FREQCOUNT, sizeof(float));
+    data->chandata[i].profilecount = (int*)xcalloc(FREQCOUNT, sizeof(int));
+    data->chandata[i].window = (float*)xcalloc(WINDOWSIZE, sizeof(float));
+  }
 
-    return SOX_SUCCESS;
+  return SOX_SUCCESS;
 }
 
 /* Collect statistics from the complete window on channel chan. */
@@ -192,8 +193,9 @@ static int sox_noiseprof_stop(eff_t effp)
         fprintf(data->output_file, "Channel %d: ", i);
 
         for (j = 0; j < FREQCOUNT; j ++) {
-            fprintf(data->output_file, "%s%f", j == 0 ? "" : ", ",
-                    chan->sum[j] / chan->profilecount[j]);
+            double r = chan->profilecount[j] != 0 ?
+                    chan->sum[j] / chan->profilecount[j] : 0;
+            fprintf(data->output_file, "%s%f", j == 0 ? "" : ", ", r);
         }
         fprintf(data->output_file, "\n");
 
@@ -203,7 +205,7 @@ static int sox_noiseprof_stop(eff_t effp)
 
     free(data->chandata);
 
-    if (data->output_file != stderr && data->output_file != stdout)
+    if (data->output_file != stdout)
         fclose(data->output_file);
     
     return (SOX_SUCCESS);

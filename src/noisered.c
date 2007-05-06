@@ -16,6 +16,21 @@
 #include <string.h>
 #include <assert.h>
 
+#define NUMERIC_PARAMETER(p, min, max) { \
+  char * end_ptr; \
+  double d; \
+  if (argc == 0) break; \
+  d = strtod(*argv, &end_ptr); \
+  if (end_ptr != *argv) { \
+    if (d < min || d > max || *end_ptr != '\0') { \
+      sox_fail(effp->h->usage); \
+      return SOX_EOF; \
+    } \
+    this->p = d; \
+    --argc, ++argv; \
+  } \
+}
+
 static sox_effect_t sox_noisered_effect;
 
 typedef struct chandata {
@@ -35,32 +50,29 @@ typedef struct reddata {
 } * reddata_t;
 
 /*
- * Get the options. Filename is mandatory, though a reasonable default would
- * be stdin (if the input file isn't coming from there, of course!)
+ * Get the options. Default file is stdin (if the audio
+ * input file isn't coming from there, of course!)
  */
-static int sox_noisered_getopts(eff_t effp, int n, char **argv) 
+static int sox_noisered_getopts(eff_t effp, int argc, char **argv)
 {
-    reddata_t data = (reddata_t) effp->priv;
+  reddata_t this = (reddata_t) effp->priv;
 
-    if (n > 2 || n < 1) {
-            sox_fail(sox_noisered_effect.usage);
-            return (SOX_EOF);
-    }
-    data->threshold = 0.5;
-    data->profile_filename = argv[0];
-    if (n == 2)
-    {
-        data->threshold = atof(argv[1]);
+  if (argc > 0) {
+    this->profile_filename = argv[0];
+    ++argv;
+    --argc;
+  }
 
-        if (data->threshold > 1)
-        {
-            data->threshold = 1;
-        } else if (data->threshold < 0)
-        {
-            data->threshold = 0;
-        }
-    }
-    return (SOX_SUCCESS);
+  this->threshold = 0.5;
+  do {     /* break-able block */
+    NUMERIC_PARAMETER(threshold, 0, 1);
+  } while (0);
+
+  if (argc != 0) {
+    sox_fail(effp->h->usage);
+    return SOX_EOF;
+  }
+  return SOX_SUCCESS;
 }
 
 /*
@@ -84,13 +96,17 @@ static int sox_noisered_start(eff_t effp)
     }
 
     /* Here we actually open the input file. */
-    if (strcmp(data->profile_filename, "-") == 0)
+    if (!data->profile_filename || !strcmp(data->profile_filename, "-")) {
+      if (effp->global_info->global_info->stdin_in_use_by) {
+        sox_fail("stdin already in use by '%s'", effp->global_info->global_info->stdin_in_use_by);
+        return SOX_EOF;
+      }
+      effp->global_info->global_info->stdin_in_use_by = effp->name;
       ifp = stdin;
-    else
-      ifp = fopen(data->profile_filename, "r");
-    if (ifp == NULL) {
+    }
+    else if ((ifp = fopen(data->profile_filename, "r")) == NULL) {
         sox_fail("Couldn't open profile file %s: %s",
-                data->profile_filename, strerror(errno));            
+                data->profile_filename, strerror(errno));
         return SOX_EOF;
     }
 
@@ -121,7 +137,7 @@ static int sox_noisered_start(eff_t effp)
                 channels, fchannels);
         return SOX_EOF;
     }
-    if (strcmp(data->profile_filename, "-") != 0)
+    if (ifp != stdin)
       fclose(ifp);
 
     return (SOX_SUCCESS);
