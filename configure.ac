@@ -196,7 +196,9 @@ AM_CONDITIONAL(HAVE_FLAC, test x$using_flac = xyes)
 dnl Check for ffmpeg libraries
 AC_CHECK_HEADER(ffmpeg/avformat.h,
     [with_ffmpeg=yes
-    AC_CHECK_LIB(avformat, av_open_input_file,, with_ffmpeg=no)],
+    AC_CHECK_LIB(avformat, av_open_input_file,, with_ffmpeg=no)
+    AC_CHECK_LIB(avutil, av_rescale_q,, with_ffmpeg=no)
+    AC_CHECK_LIB(avcodec, avcodec_encode_audio,, with_ffmpeg=no)],
     with_ffmpeg=no)
 AM_CONDITIONAL(HAVE_FFMPEG, test x$with_ffmpeg = xyes)
 
