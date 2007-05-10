@@ -148,7 +148,7 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
                     sox_fail_errno(ft,SOX_EFMT,"ALSA driver does not support signed word samples");
                     return SOX_EOF;
                 }
-                *fmt = SND_PCM_FORMAT_S16_LE;
+                *fmt = SND_PCM_FORMAT_S16;
                 break;
             case SOX_ENCODING_UNSIGNED:
                 if (!(snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)))
@@ -156,7 +156,7 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
                     sox_fail_errno(ft,SOX_EFMT,"ALSA driver does not support unsigned word samples");
                     return SOX_EOF;
                 }
-                *fmt = SND_PCM_FORMAT_U16_LE;
+                *fmt = SND_PCM_FORMAT_U16;
                 break;
             default:
                     break;
