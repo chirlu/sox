@@ -14,7 +14,7 @@
 #endif
 
 /* Based on zlib's minigzip: */
-#if defined(WIN32) || defined(__NT__)
+#if defined(WIN32) || defined(__NT__) || defined(__DJGPP__)
 #include <fcntl.h>
 #include <io.h>
 #ifndef O_BINARY
