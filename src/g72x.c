@@ -1,4 +1,27 @@
 /*
+ * Common routines for G.721 and G.723 conversions.
+ *
+ * (c) SoX Contributors
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library. If not, write to the Free Software
+ * Foundation, Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301,
+ * USA.
+ *
+ * 
+ * This code is based on code from Sun, which came with the following
+ * copyright notice:
+ * -----------------------------------------------------------------------
  * This source code is a product of Sun Microsystems, Inc. and is provided
  * for unrestricted use.  Users may copy or modify this source code without
  * charge.
@@ -22,21 +45,52 @@
  * Sun Microsystems, Inc.
  * 2550 Garcia Avenue
  * Mountain View, California  94043
- */
-
-/*
- * g72x.c
- *
- * Common routines for G.721 and G.723 conversions.
+ * -----------------------------------------------------------------------
  */
 
 #include "sox_i.h"
 #include "g711.h"
 #include "g72x.h"
 
-static short power2[15] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80,
-                        0x100, 0x200, 0x400, 0x800, 0x1000, 0x2000, 0x4000};
+static const char LogTable256[] =
+{
+        0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+        5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
+};
 
+static inline int log2plus1(int val)
+{
+        /* From http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogLookup */
+        unsigned int v = (unsigned int)val; /* 32-bit word to find the log of */
+        unsigned r;     /* r will be lg(v) */
+        register unsigned int t, tt; /* temporaries */
+
+        if ((tt = v >> 16))
+        {
+            r = (t = tt >> 8) ? 24 + LogTable256[t] : 16 + LogTable256[tt];
+        }
+        else
+        {
+            r = (t = v >> 8) ? 8 + LogTable256[t] : LogTable256[v];
+        }
+
+        return r + 1;
+}
+  
 /*
  * quan()
  *
@@ -68,7 +122,7 @@ static int fmult(int an, int srn)
         short           retval;
 
         anmag = (an > 0) ? an : ((-an) & 0x1FFF);
-        anexp = quan(anmag, power2, 15) - 6;
+        anexp = log2plus1(anmag) - 6;
         anmant = (anmag == 0) ? 32 :
             (anexp >= 0) ? anmag >> anexp : anmag << -anexp;
         wanexp = anexp + ((srn >> 6) & 0xF) - 13;
@@ -185,7 +239,7 @@ int quantize(int d, int y, short *table, int size)
          * Compute base 2 log of 'd', and store in 'dl'.
          */
         dqm = abs(d);
-        exp = quan(dqm >> 1, power2, 15);
+        exp = log2plus1(dqm >> 1);
         mant = ((dqm << 7) >> exp) & 0x7F;      /* Fractional portion. */
         dl = (exp << 7) + mant;
 
@@ -375,7 +429,7 @@ void update(int code_size, int y, int wi, int fi, int dq, int sr,
         if (mag == 0) {
                 state_ptr->dq[0] = (dq >= 0) ? 0x20 : (short)0xFC20;
         } else {
-                exp = quan(mag, power2, 15);
+                exp = log2plus1(mag);
                 state_ptr->dq[0] = (dq >= 0) ?
                     (exp << 6) + ((mag << 6) >> exp) :
                     (exp << 6) + ((mag << 6) >> exp) - 0x400;
@@ -386,11 +440,11 @@ void update(int code_size, int y, int wi, int fi, int dq, int sr,
         if (sr == 0) {
                 state_ptr->sr[0] = 0x20;
         } else if (sr > 0) {
-                exp = quan(sr, power2, 15);
+                exp = log2plus1(sr);
                 state_ptr->sr[0] = (exp << 6) + ((sr << 6) >> exp);
         } else if (sr > -32768) {
                 mag = -sr;
-                exp = quan(mag, power2, 15);
+                exp = log2plus1(mag);
                 state_ptr->sr[0] =  (exp << 6) + ((mag << 6) >> exp) - 0x400;
         } else
                 state_ptr->sr[0] = (short)(0xFC20);
