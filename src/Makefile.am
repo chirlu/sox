@@ -77,7 +77,7 @@ libsox_fmt_dvms_la_LIBADD = libsox.la
 libsox_fmt_dat_la_SOURCES = dat.c
 libsox_fmt_dat_la_LIBADD = libsox.la
 libsox_fmt_gsm_la_SOURCES = gsm.c
-libsox_fmt_gsm_la_LIBADD = libsox.la
+libsox_fmt_gsm_la_LIBADD = libsox.la @GSM_LIBS@
 libsox_fmt_hcom_la_SOURCES = hcom.c
 libsox_fmt_hcom_la_LIBADD = libsox.la
 libsox_fmt_lpc10_la_SOURCES = lpc10.c
@@ -103,19 +103,19 @@ libsox_fmt_vox_la_LIBADD = libsox.la
 libsox_fmt_ima_la_SOURCES = ima-fmt.c
 libsox_fmt_ima_la_LIBADD = libsox.la
 libsox_fmt_wav_la_SOURCES = adpcm.c adpcm.h ima_rw.c ima_rw.h wav.c wav.h
-libsox_fmt_wav_la_LIBADD = libsox.la
+libsox_fmt_wav_la_LIBADD = libsox.la @GSM_LIBS@
 libsox_fmt_wve_la_SOURCES = wve.c
 libsox_fmt_wve_la_LIBADD = libsox.la
 libsox_fmt_xa_la_SOURCES = xa.c
 libsox_fmt_xa_la_LIBADD = libsox.la
 if HAVE_FLAC
 libsox_fmt_flac_la_SOURCES = flac.c
-libsox_fmt_flac_la_LIBADD = libsox.la
+libsox_fmt_flac_la_LIBADD = libsox.la @FLAC_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_flac.la
 endif
 if HAVE_FFMPEG
 libsox_fmt_ffmpeg_la_SOURCES = ffmpeg.c
-libsox_fmt_ffmpeg_la_LIBADD = libsox.la
+libsox_fmt_ffmpeg_la_LIBADD = libsox.la @FFMPEG_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_ffmpeg.la
 endif
 if HAVE_SNDFILE
@@ -125,22 +125,22 @@ pkglib_LTLIBRARIES += libsox_fmt_sndfile.la
 endif
 if HAVE_AMR_WB
 libsox_fmt_amr_wb_la_SOURCES = amr-wb.c
-libsox_fmt_amr_wb_la_LIBADD = libsox.la
+libsox_fmt_amr_wb_la_LIBADD = libsox.la @AMR_WB_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_amr_wb.la
 endif
 if HAVE_AMR_NB
 libsox_fmt_amr_nb_la_SOURCES = amr-nb.c
-libsox_fmt_amr_nb_la_LIBADD = libsox.la
+libsox_fmt_amr_nb_la_LIBADD = libsox.la @AMR_NB_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_amr_nb.la
 endif
 if HAVE_MP3
 libsox_fmt_mp3_la_SOURCES = mp3.c
-libsox_fmt_mp3_la_LIBADD = libsox.la
+libsox_fmt_mp3_la_LIBADD = libsox.la @MP3_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_mp3.la
 endif
 if HAVE_OGG_VORBIS
 libsox_fmt_vorbis_la_SOURCES = vorbis.c
-libsox_fmt_vorbis_la_LIBADD = libsox.la
+libsox_fmt_vorbis_la_LIBADD = libsox.la @OGG_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_vorbis.la
 endif
 
@@ -149,17 +149,17 @@ libsox_fmt_nul_la_SOURCES = nulfile.c
 libsox_fmt_nul_la_LIBADD = libsox.la
 if HAVE_ALSA
 libsox_fmt_alsa_la_SOURCES = alsa.c
-libsox_fmt_alsa_la_LIBADD = libsox.la
+libsox_fmt_alsa_la_LIBADD = libsox.la @ALSA_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_alsa.la
 endif
 if HAVE_LIBAO
 libsox_fmt_ao_la_SOURCES = ao.c
-libsox_fmt_ao_la_LIBADD = libsox.la
+libsox_fmt_ao_la_LIBADD = libsox.la @AO_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_ao.la
 endif
 if HAVE_OSS
 libsox_fmt_oss_la_SOURCES = oss.c
-libsox_fmt_oss_la_LIBADD = libsox.la
+libsox_fmt_oss_la_LIBADD = libsox.la @OSS_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_oss.la
 endif
 if HAVE_SUN_AUDIO

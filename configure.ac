@@ -91,13 +91,14 @@ AC_ARG_ENABLE(alsa,
 AC_MSG_RESULT($enable_alsa)
 if test "$enable_alsa" = "yes"; then
     AC_CHECK_HEADERS(alsa/asoundlib.h,
-        AC_CHECK_LIB(asound, snd_pcm_open,, enable_alsa=no),
+        AC_CHECK_LIB(asound, snd_pcm_open, ALSA_LIBS="$ALSA_LIBS -lasound", enable_alsa=no),
         enable_alsa=no)
 fi
 if test "$enable_alsa" = yes; then
    AC_DEFINE(HAVE_ALSA, 1, [Define to 1 if you have ALSA.])
 fi
 AM_CONDITIONAL(HAVE_ALSA, test x$enable_alsa = xyes)
+AC_SUBST(ALSA_LIBS)
 
 dnl Check for libao
 AC_MSG_CHECKING([whether to try building libao sound driver])
@@ -106,10 +107,11 @@ AC_ARG_ENABLE(libao,
 AC_MSG_RESULT($enable_libao)
 if test "$enable_libao" = "yes"; then
     AC_CHECK_HEADERS(ao/ao.h,
-        AC_CHECK_LIB(ao, ao_play,, enable_libao=no),
+        AC_CHECK_LIB(ao, ao_play, AO_LIBS="$AO_LIBS -lao", enable_libao=no),
         enable_libao=no)
 fi
 AM_CONDITIONAL(HAVE_LIBAO, test x$enable_libao = xyes)
+AC_SUBST(AO_LIBS)
 
 dnl Check for OSS
 AC_MSG_CHECKING([whether to try building OSS sound driver])
@@ -119,13 +121,14 @@ AC_MSG_RESULT($enable_oss)
 if test "$enable_oss" = "yes"; then
     AC_CHECK_HEADERS(sys/soundcard.h,,
         [AC_CHECK_HEADERS(machine/soundcard.h,
-            [AC_CHECK_LIB(ossaudio, _oss_ioctl, LIBS="$LIBS -lossaudio")],
+            [AC_CHECK_LIB(ossaudio, _oss_ioctl, OSS_LIBS="$OSS_LIBS -lossaudio")],
             enable_oss=no)])
 fi
 if test "$enable_oss" = yes; then
    AC_DEFINE(HAVE_OSS, 1, [Define to 1 if you have OSS.])
 fi
 AM_CONDITIONAL(HAVE_OSS, test x$enable_oss = xyes)
+AC_SUBST(OSS_LIBS)
 
 dnl Check for Sun audio
 AC_MSG_CHECKING([whether to try building Sun audio driver])
@@ -145,7 +148,7 @@ dnl Check for libgsm
 AC_CHECK_HEADERS(gsm/gsm.h, found_libgsm=yes,
     [AC_CHECK_HEADERS(gsm.h, found_libgsm=yes)])
 if test "$found_libgsm" = yes; then
-    AC_CHECK_LIB(gsm, gsm_create, LIBS="$LIBS -lgsm")
+    AC_CHECK_LIB(gsm, gsm_create, GSM_LIBS="$GSM_LIBS -lgsm")
     AC_DEFINE(EXTERNAL_GSM, 1, [Define if you are using an external GSM library])
 else
     LIBGSM_SUBDIR=src/libgsm
@@ -153,6 +156,7 @@ else
 fi
 AC_SUBST(LIBGSM_SUBDIR)
 AC_SUBST(LIBGSM_LIBADD)
+AC_SUBST(GSM_LIBS)
      
 dnl Check for libsndfile
 AC_ARG_WITH(sndfile, AC_HELP_STRING([--with-sndfile],
@@ -170,12 +174,13 @@ AC_SUBST(SNDFILE_LIBS)
 dnl Check for Ogg Vorbis libraries
 AC_CHECK_HEADER(vorbis/codec.h,
     [with_ogg_vorbis=yes
-    AC_CHECK_LIB(ogg, ogg_packet_clear,, with_ogg_vorbis=no)
-    AC_CHECK_LIB(vorbis, vorbis_analysis_headerout,, with_ogg_vorbis=no)
-    AC_CHECK_LIB(vorbisfile, ov_clear,, with_ogg_vorbis=no)
-    AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr,, with_ogg_vorbis=no)],
+    AC_CHECK_LIB(ogg, ogg_packet_clear, OGG_LIBS="$OGG_LIBS -logg", with_ogg_vorbis=no)
+    AC_CHECK_LIB(vorbis, vorbis_analysis_headerout, OGG_LIBS="$OGG_LIBS -lvorbis", with_ogg_vorbis=no)
+    AC_CHECK_LIB(vorbisfile, ov_clear, OGG_LIBS="$OGG_LIBS -lvorbisfile", with_ogg_vorbis=no)
+    AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr, OGG_LIBS="$OGG_LIBS -lvorbisenc", with_ogg_vorbis=no)],
     with_ogg_vorbis=no)
 AM_CONDITIONAL(HAVE_OGG_VORBIS, test x$with_ogg_vorbis = xyes)
+AC_SUBST(OGG_LIBS)
 
 dnl Check for FLAC libraries
 AC_ARG_WITH(flac,
@@ -185,22 +190,24 @@ AC_ARG_WITH(flac,
 if test "$with_flac" != "no"; then
     using_flac=yes
     AC_CHECK_HEADER(FLAC/all.h,
-        [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new,,using_flac=no)],
+        [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new, FLAC_LIBS="$FLAC_LIBS -lFLAC",using_flac=no)],
         using_flac=no)
     if test "$with_flac" = "yes" -a "$using_flac" = "no"; then
         AC_MSG_FAILURE([cannot find FLAC])
     fi
 fi
 AM_CONDITIONAL(HAVE_FLAC, test x$using_flac = xyes)
+AC_SUBST(FLAC_LIBS)
 
 dnl Check for ffmpeg libraries
 AC_CHECK_HEADER(ffmpeg/avformat.h,
     [with_ffmpeg=yes
-    AC_CHECK_LIB(avformat, av_open_input_file,, with_ffmpeg=no)
-    AC_CHECK_LIB(avutil, av_rescale_q,, with_ffmpeg=no)
-    AC_CHECK_LIB(avcodec, avcodec_encode_audio,, with_ffmpeg=no)],
+    AC_CHECK_LIB(avformat, av_open_input_file, FFMPEG_LIBS="$FFMPEG_LIBS -lavformat", with_ffmpeg=no)
+    AC_CHECK_LIB(avutil, av_rescale_q, FFMPEG_LIBS="$FFMPEG_LIBS -lavutil", with_ffmpeg=no)
+    AC_CHECK_LIB(avcodec, avcodec_encode_audio, FFMPEG_LIBS="$FFMPEG_LIBS -lavcodec", with_ffmpeg=no)],
     with_ffmpeg=no)
 AM_CONDITIONAL(HAVE_FFMPEG, test x$with_ffmpeg = xyes)
+AC_SUBST(FFMPEG_LIBS)
 
 dnl Check for MAD libraries
 AC_ARG_WITH(mad,
@@ -210,7 +217,7 @@ AC_ARG_WITH(mad,
 if test "$with_mad" != "no"; then
     using_mad=yes
     AC_CHECK_HEADER(mad.h,
-        [AC_CHECK_LIB(mad, mad_stream_buffer,,using_mad=no)],
+        [AC_CHECK_LIB(mad, mad_stream_buffer, MP3_LIBS="$MP3_LIBS -lmad",using_mad=no)],
         with_mad=no)
     if test "$with_mad" = "yes" -a "$using_mad" = "no"; then
         AC_MSG_FAILURE([cannot find libmad])
@@ -225,7 +232,7 @@ AC_ARG_WITH(lame,
 if test "$with_lame" != "no"; then
     using_lame=yes
     AC_CHECK_HEADER(lame/lame.h,
-        [AC_CHECK_LIB(mp3lame, lame_init,,using_lame=no)],
+        [AC_CHECK_LIB(mp3lame, lame_init, MP3_LIBS="$MP3_LIBS -lmp3lame",using_lame=no)],
         using_lame=no)
     if test "$with_lame" = "yes" -a "$using_lame" = "no"; then
         AC_MSG_FAILURE([cannot find LAME])
@@ -234,6 +241,7 @@ fi
 
 dnl MP3 library depends on libmad || LAME
 AM_CONDITIONAL(HAVE_MP3, test x$using_mad = xyes -o x$using_lame = xyes)
+AC_SUBST(MP3_LIBS)
 
 dnl Test for libsamplerate.
 AC_ARG_WITH(samplerate,
@@ -258,13 +266,14 @@ AC_ARG_WITH(amr-wb,
 if test "$with_amr_wb" != "no"; then
     using_amr_wb=yes
     AC_CHECK_HEADER(amrwb/dec.h,
-        [AC_CHECK_LIB(amrwb, D_IF_init,,using_amr_wb=no)],
+        [AC_CHECK_LIB(amrwb, D_IF_init, AMR_WB_LIBS="$AMR_WB_LIBS -lamrwb",using_amr_wb=no)],
         using_amr_wb=no)
     if test "$with_amr_wb" = "yes" -a "$using_amr_wb" = "no"; then
         AC_MSG_FAILURE([cannot find amr-wb])
     fi
 fi
 AM_CONDITIONAL(HAVE_AMR_WB, test x$using_amr_wb = xyes)
+AC_SUBST(AMR_WB_LIBS)
 
 dnl Check for amr-nb libraries
 AC_ARG_WITH(amr-nb,
@@ -274,13 +283,14 @@ AC_ARG_WITH(amr-nb,
 if test "$with_amr_nb" != "no"; then
     using_amr_nb=yes
     AC_CHECK_HEADER(amrnb/sp_dec.h,
-        [AC_CHECK_LIB(amrnb, Decoder_Interface_init,,using_amr_nb=no)],
+        [AC_CHECK_LIB(amrnb, Decoder_Interface_init, AMR_NB_LIBS="$AMR_NB_LIBS -lamrnb" ,using_amr_nb=no)],
         using_amr_nb=no)
     if test "$with_amr_nb" = "yes" -a "$using_amr_nb" = "no"; then
         AC_MSG_FAILURE([cannot find amr-nb])
     fi
 fi
 AM_CONDITIONAL(HAVE_AMR_NB, test x$using_amr_nb = xyes)
+AC_SUBST(AMR_NB_LIBS)
 
 dnl Generate output files.
 AX_CREATE_STDINT_H(src/soxstdint.h)
