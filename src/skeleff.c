@@ -133,7 +133,7 @@ static int kill(eff_t effp)
  */
 static sox_effect_t sox_skel_effect = {
   "skel",
-  "Usage: skel [option]",
+  "Usage: skel [OPTION]",
   SOX_EFF_MCHAN,
   getopts,
   start,
