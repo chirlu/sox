@@ -8,5 +8,5 @@ include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
 #include /usr/share/cdbs/1/rules/simple-patchsys.mk
 
-DEB_CONFIGURE_SCRIPT_ENV += CFLAGS="-fPIC -D_REENTRANT" LDFLAGS="-Wl,-z,defs"
-DEB_CONFIGURE_EXTRA_FLAGS := --disable-lame
+DEB_CONFIGURE_SCRIPT_ENV += CFLAGS="-D_REENTRANT" LDFLAGS="-Wl,-z,defs"
+DEB_CONFIGURE_EXTRA_FLAGS := --disable-lame --disable-ffmpeg
