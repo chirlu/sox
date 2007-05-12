@@ -2,8 +2,9 @@
 
 RM = rm -f 
 
-AM_CFLAGS = @SNDFILE_CFLAGS@ @SAMPLERATE_CFLAGS@ $(LTDLINCL) -Wconversion
-AM_LDFLAGS = @SNDFILE_LIBS@ @SAMPLERATE_LIBS@ $(LIBLTDL)
+AM_CPPFLAGS = -DLADSPA_PATH="\"@LADSPA_PATH@\"" -DPKGLIBDIR="\"$(pkglibdir)\""
+AM_CFLAGS = $(LTDLINCL) -Wconversion
+AM_LDFLAGS = $(LIBLTDL)
 
 # Pass flags from --enable-silent-libtool
 LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
@@ -120,7 +121,8 @@ pkglib_LTLIBRARIES += libsox_fmt_ffmpeg.la
 endif
 if HAVE_SNDFILE
 libsox_fmt_sndfile_la_SOURCES = sndfile.c
-libsox_fmt_sndfile_la_LIBADD = libsox.la
+libsox_fmt_sndfile_la_CFLAGS = @SNDFILE_CFLAGS@
+libsox_fmt_sndfile_la_LIBADD = libsox.la @SNDFILE_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_sndfile.la
 endif
 if HAVE_AMR_WB
@@ -168,22 +170,23 @@ libsox_fmt_sunau_la_LIBADD = libsox.la
 pkglib_LTLIBRARIES += libsox_fmt_sunau.la
 endif
 
-effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c \
-	  compandt.c compandt.h dcshift.c dither.c earwax.c echo.c echos.c \
-	  fade.c FFT.c FFT.h filter.c flanger.c mcompand.c mixer.c noiseprof.c \
-	  noisered.c noisered.h pad.c pan.c phaser.c pitch.c polyphas.c \
-	  rabbit.c rate.c repeat.c resample.c reverb.c reverse.c silence.c \
-	  skeleff.c speed.c stat.c stretch.c swap.c synth.c synth.h tremolo.c \
-	  trim.c vibro.c vol.c
+effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c	\
+	  compandt.c compandt.h dcshift.c dither.c earwax.c echo.c echos.c	\
+	  fade.c FFT.c FFT.h filter.c flanger.c ladspa.c mcompand.c	\
+	  mixer.c noiseprof.c noisered.c noisered.h pad.c pan.c		\
+	  phaser.c pitch.c polyphas.c rabbit.c rate.c repeat.c		\
+	  resample.c reverb.c reverse.c silence.c skeleff.c speed.c	\
+	  stat.c stretch.c swap.c synth.c synth.h tremolo.c trim.c	\
+	  vibro.c vol.c
 
 libsox_la_SOURCES = $(effects) adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
-	  g711.c g711.h g721.c g723_24.c g723_40.c g72x.c g72x.h vox.c vox.h \
-	  raw.c raw.h handlers.c misc.c sox_i.h skelform.c soxio.c util.c \
-	  xmalloc.c xmalloc.h \
-	  getopt.c getopt1.c getopt.h soxconfig.h
-libsox_la_LIBADD = @LIBGSM_LIBADD@
+	  g711.c g711.h g721.c g723_24.c g723_40.c g72x.c g72x.h vox.c vox.h	\
+	  raw.c raw.h handlers.c misc.c sox_i.h skelform.c soxio.c	\
+	  util.c xmalloc.c xmalloc.h getopt.c getopt1.c getopt.h	\
+	  soxconfig.h
+libsox_la_CFLAGS = @SAMPLERATE_CFLAGS@
+libsox_la_LIBADD = @LIBGSM_LIBADD@ @SAMPLERATE_LIBS@
 
-sox_CPPFLAGS = -DPKGLIBDIR="\"$(pkglibdir)\""
 sox_SOURCES = sox.c
 sox_LDADD = libsox.la
 
