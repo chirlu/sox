@@ -1,3 +1,9 @@
+FFMPEG formats
+--------------
+SoX requires avcodec >= cvs20070301 which is only available in experimental for now.
+Therefore, ffmpeg support is disabled for now.
+If there's a significant demand, i'll release an experimental package of SoX.
+
 SoX from CVS
 ------------
 If you downloaded SoX from the CVS, you may build the package by:
@@ -6,4 +12,4 @@ If you downloaded SoX from the CVS, you may build the package by:
 2) Configuring and making the release tarball: ./configure && make dist
 3) Building the package: debuild -B
 
- -- Pascal Giard <evilynux@gmail.com>  Thu, 18 Jan 2007 03:54:52 -0500
+ -- Pascal Giard <evilynux@gmail.com>  Tue, 08 May 2007 21:13:56 -0400
