@@ -197,7 +197,7 @@ static int sox_rabbit_stop(eff_t effp)
 
 static sox_effect_t sox_rabbit_effect = {
   "rabbit",
-  "Usage: rabbit [ -c0 | -c1 | -c2 | -c3 | -c4 ]",
+  "Usage: rabbit [-c0|-c1|-c2|-c3|-c4]",
   SOX_EFF_RATE | SOX_EFF_MCHAN,
   sox_rabbit_getopts,
   sox_rabbit_start,
