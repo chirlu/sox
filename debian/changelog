@@ -1,18 +1,27 @@
 sox (14.0.0.cvs-1) unstable; urgency=low
 
-  * CVS version.
+  * CVS version:
+    - Another important release adding dynamic libraries (closes: #416989).
+    - Adds playlist support (closes: #119470).
+    - Uses libao output (closes: #391514, #421682).
   * [debian/control]:
     - sox-dev renamed to libsox-dev.
     - Created libsox0 package that contains the SoX library.
     - Fixed sound file types description.
     - Added dependency on libao-dev and libltdl3-dev.
     - No longer conflicting with libst and libst-dev.
-  * [debian/libsox0.dirs, debian/libsox-dev.dirs]:
+    - Splitted format libraries in different packages (libsox-fmt-foo).
+  * [debian/libsox-dev.dirs]:
     - Added /usr/lib/sox/ for format plugins.
   * [debian/libsox0.install, debian/libsox-dev.install]:
     - Added format plugins.
+  * [debian/README.Debian]:
+    - Added note about experimental ffmpeg formats support.
+  * [debian/rules]:
+    - Removed fPIC from CFLAGS as libtool takes care of it upstream.
+    - Disabled ffmpeg formats support explicitly, see README.Debian.
 
- -- Pascal Giard <evilynux@gmail.com>  Thu, 03 May 2007 10:20:21 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Sun, 06 May 2007 11:53:51 -0400
 
 sox (13.0.0-1) unstable; urgency=low
 

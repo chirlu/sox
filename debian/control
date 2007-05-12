@@ -23,7 +23,8 @@ Description: Swiss army knife of sound processing
 Package: libsox0
 Architecture: any
 Section: devel
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, libsox-fmt-base (=${Source-Version})
+Recommends: libsox-fmt-all (=${Source-Version})
 Description: SoX library
  SoX is the swiss army knife of sound processing.
  .
@@ -31,10 +32,88 @@ Description: SoX library
  .
  Homepage: http://sox.sourceforge.net
 
+Package: libsox-fmt-base
+Architecture: any
+Section: devel
+Depends: ${shlibs:Depends}
+Description: SoX library
+ SoX is the swiss army knife of sound processing.
+ .
+ This package contains the minimal set of SoX format libraries.
+ .
+ Homepage: http://sox.sourceforge.net
+
+Package: libsox-fmt-flac
+Architecture: any
+Section: devel
+Depends: ${shlibs:Depends}
+Description: SoX library
+ SoX is the swiss army knife of sound processing.
+ .
+ This package contains the SoX FLAC format library.
+ .
+ Homepage: http://sox.sourceforge.net
+
+Package: libsox-fmt-gsm
+Architecture: any
+Section: devel
+Depends: ${shlibs:Depends}
+Description: SoX library
+ SoX is the swiss army knife of sound processing.
+ .
+ This package contains the SoX GSM format library.
+ .
+ Homepage: http://sox.sourceforge.net
+
+Package: libsox-fmt-mp3
+Architecture: any
+Section: devel
+Depends: ${shlibs:Depends}
+Description: SoX library
+ SoX is the swiss army knife of sound processing.
+ .
+ This package contains the SoX MP3 format library.
+ Read support by libmad. Write support not available yet.
+ .
+ Homepage: http://sox.sourceforge.net
+
+Package: libsox-fmt-ogg
+Architecture: any
+Section: devel
+Depends: ${shlibs:Depends}
+Description: SoX library
+ SoX is the swiss army knife of sound processing.
+ .
+ This package contains the SoX OGG Vorbis format library.
+ .
+ Homepage: http://sox.sourceforge.net
+
+Package: libsox-fmt-sndfile
+Architecture: any
+Section: devel
+Depends: ${shlibs:Depends}
+Description: SoX library
+ SoX is the swiss army knife of sound processing.
+ .
+ This package contains the SoX libsndfile format library.
+ .
+ Homepage: http://sox.sourceforge.net
+
+Package: libsox-fmt-all
+Architecture: any
+Section: devel
+Depends: libsox-fmt-base, libsox-fmt-flac, libsox-fmt-gsm, libsox-fmt-mp3, libsox-fmt-ogg
+Description: SoX library
+ SoX is the swiss army knife of sound processing.
+ .
+ This is a meta package depending on all free SoX format libraries.
+ .
+ Homepage: http://sox.sourceforge.net
+
 Package: libsox-dev
 Architecture: any
 Section: devel
-Depends: libsox0 (=${Source-Version}), ${shlibs:Depends}
+Depends: libsox0 (=${Source-Version}), libsox-fmt-base (=${Source-Version}), ${shlibs:Depends}
 Description: Development files for the SoX library
  SoX is the swiss army knife of sound processing.
  .
