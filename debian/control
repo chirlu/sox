@@ -102,7 +102,7 @@ Description: SoX library
 Package: libsox-fmt-all
 Architecture: any
 Section: devel
-Depends: libsox-fmt-base, libsox-fmt-flac, libsox-fmt-gsm, libsox-fmt-mp3, libsox-fmt-ogg
+Depends: libsox-fmt-base, libsox-fmt-flac, libsox-fmt-gsm, libsox-fmt-mp3, libsox-fmt-ogg, libsox-fmt-sndfile
 Description: SoX library
  SoX is the swiss army knife of sound processing.
  .
