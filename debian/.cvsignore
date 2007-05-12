@@ -1,0 +1,16 @@
+*.debhelper
+*.substvars
+stamp-*
+files
+sox
+libsox-dev
+libsox-fmt-all
+libsox-fmt-base
+libsox-fmt-ffmpeg
+libsox-fmt-flac
+libsox-fmt-gsm
+libsox-fmt-mp3
+libsox-fmt-ogg
+libsox-fmt-sndfile
+libsox0
+tmp
