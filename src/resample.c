@@ -286,7 +286,7 @@ int sox_resample_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf
         resample_t r = (resample_t) effp->priv;
         long i, last, Nout, Nx, Nproc;
 
-        sox_debug("Xp %d, Xread %d, isamp %d, ",r->Xp, r->Xread,*isamp);
+        sox_debug_more("Xp %d, Xread %d, isamp %d, ",r->Xp, r->Xread,*isamp);
 
         /* constrain amount we actually process */
         Nproc = r->Xsize - r->Xp;
@@ -303,7 +303,7 @@ int sox_resample_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf
         }
         if ((unsigned long)Nx > *isamp)
                 Nx = *isamp;
-        sox_debug("Nx %d",Nx);
+        sox_debug_more("Nx %d",Nx);
 
         if (ibuf == NULL) {
                 for(i = r->Xread; i < Nx + r->Xread  ; i++) 
@@ -325,7 +325,7 @@ int sox_resample_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf
         if (r->quadr < 0) { /* exact coeff's method */
                 long creep; 
                 Nout = SrcEX(r, Nproc);
-                sox_debug("Nproc %d --> %d",Nproc,Nout);
+                sox_debug_more("Nproc %d --> %d",Nproc,Nout);
                 /* Move converter Nproc samples back in time */
                 r->t -= Nproc * r->b;
                 /* Advance by number of samples processed */
@@ -336,12 +336,12 @@ int sox_resample_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf
                 {
                   r->t -= creep * r->b;  /* Remove time accumulation   */
                   r->Xp += creep;        /* and add it to read pointer */
-                  sox_debug("Nproc %ld, creep %ld",Nproc,creep);
+                  sox_debug_more("Nproc %ld, creep %ld",Nproc,creep);
                 }
         } else { /* approx coeff's method */
                 long creep; 
                 Nout = SrcUD(r, Nproc);
-                sox_debug("Nproc %d --> %d",Nproc,Nout);
+                sox_debug_more("Nproc %d --> %d",Nproc,Nout);
                 /* Move converter Nproc samples back in time */
                 r->Time -= Nproc;
                 /* Advance by number of samples processed */
@@ -352,7 +352,7 @@ int sox_resample_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf
                 {
                   r->Time -= creep;   /* Remove time accumulation   */
                   r->Xp += creep;     /* and add it to read pointer */
-                  sox_debug("Nproc %ld, creep %ld",Nproc,creep);
+                  sox_debug_more("Nproc %ld, creep %ld",Nproc,creep);
                 }
         }
 
@@ -360,7 +360,7 @@ int sox_resample_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf
         long i,k;
         /* Copy back portion of input signal that must be re-used */
         k = r->Xp - r->Xoff;
-        sox_debug("k %d, last %d",k,last);
+        sox_debug_more("k %d, last %d",k,last);
         for (i=0; i<last - k; i++) 
             r->X[i] = r->X[i+k];
 
@@ -510,11 +510,11 @@ static long SrcUD(resample_t r, long Nx)
    Factor = r->Factor;
    time = r->Time;
    dt = 1.0/Factor;        /* Output sampling period */
-   sox_debug("Factor %f, dt %f, ",Factor,dt);
-   sox_debug("Time %f, ",r->Time);
+   sox_debug_more("Factor %f, dt %f, ",Factor,dt);
+   sox_debug_more("Time %f, ",r->Time);
    /* (Xh * dhb)>>La is max index into Imp[] */
-   sox_debug("ct=%.2f %d",(double)r->Nwing*Na/r->dhb, r->Xh);
-   sox_debug("ct=%ld, T=%.6f, dhb=%6f, dt=%.6f",
+   sox_debug_more("ct=%.2f %d",(double)r->Nwing*Na/r->dhb, r->Xh);
+   sox_debug_more("ct=%ld, T=%.6f, dhb=%6f, dt=%.6f",
                          r->Xh, time-floor(time),(double)r->dhb/Na,dt);
    Ystart = Y = r->Y;
    n = (int)ceil((double)Nx/dt);
@@ -536,7 +536,7 @@ static long SrcUD(resample_t r, long Nx)
       time += dt;            /* Move to next sample by time increment */
       }
    r->Time = time;
-   sox_debug("Time %f",r->Time);
+   sox_debug_more("Time %f",r->Time);
    return (Y - Ystart);        /* Return the number of output samples */
 }
 
