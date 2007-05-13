@@ -17,8 +17,7 @@ sox-14.0.0
   o Added libao support.  (Reuben Thomas)
   o Added read-only ffmpeg support.  (Reuben Thomas)
   o Added LPC-10 support.  (Reuben Thomas)
-  o FLAC: added seekable decoding; added seek-table generation; don't
-    crash when encoding with no comment.  (robs)
+  o FLAC: added seekable decoding; added seek-table generation.  (robs)
 
   Effects:
 
@@ -31,6 +30,7 @@ sox-14.0.0
     better accuracy.  (robs)
   o Add option to silence effect to leave periods of silence
     in and only strip out extra silence.   (Mark Schreiber)
+  o synth can now generate any number of channels.  (robs)
 
   Other new features:
 
@@ -46,8 +46,11 @@ sox-14.0.0
   o Add missing RM define to Makefiles so installs work.
    (Bug# 1666599) (cbagwell)
   o Fix I/O performance regression in 13.0.0.  (Reuben Thomas)
+  o Fix .lu, .la read regression in 13.0.0 [Bug# 1715076].  (robs)
   o Fix displayed times when playing a file and using trim.  (robs)
   o Fix CDDA sector duration display for non-CDDA sample rates.  (robs)
+  o synth fixes: brown noise; inverted square wave; offset < 0.  (robs)
+  o FLAC: fixed crash when encoding with no comment.  (robs)
 
   Internal improvements:
 
