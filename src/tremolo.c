@@ -16,14 +16,14 @@
 
 /* Effect: tremolo  (c) 2007 robs@users.sourceforge.net */
 
-#include "synth.h"
+#include "sox_i.h"
 
 static int getopts(eff_t effp, int n, char * * argv) 
 {
   double speed, depth = 40;
   char dummy;     /* To check for extraneous chars. */
   char offset[100];
-  char * synth_args[] = {"sine", "fmod", 0, 0};
+  char * args[] = {"sine", "fmod", 0, 0};
 
   if (n < 1 || n > 2 ||
       sscanf(argv[0], "%lf %c", &speed, &dummy) != 1 || speed < 0 ||
@@ -32,17 +32,18 @@ static int getopts(eff_t effp, int n, char * * argv)
     sox_fail(effp->h->usage);
     return SOX_EOF;
   }
-  synth_args[2] = argv[0];
+  args[2] = argv[0];
   sprintf(offset, "%g", 100 - depth / 2);
-  synth_args[3] = offset;
-  return sox_synth_getopts(effp, array_length(synth_args), synth_args);
+  args[3] = offset;
+  return sox_synth_effect_fn()->getopts(effp, array_length(args), args);
 }
 
 sox_effect_t const * sox_tremolo_effect_fn(void)
 {
-  static sox_effect_t driver = {
-    "tremolo", "Usage: tremolo speed_Hz [depth_percent];", SOX_EFF_MCHAN,
-    getopts, sox_synth_start, sox_synth_flow, 0, 0, 0,
-  };
+  static sox_effect_t driver;
+  driver = *sox_synth_effect_fn();
+  driver.name = "tremolo";
+  driver.usage = "Usage: tremolo speed_Hz [depth_percent]";
+  driver.getopts = getopts;
   return &driver;
 }
