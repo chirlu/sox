@@ -533,6 +533,14 @@ enum_item const * find_enum_text(char const * text, enum_item const * enum_items
   return result;
 }
 
+enum_item const * find_enum_value(int value, enum_item const * enum_items)
+{
+  for (;enum_items->text; ++enum_items)
+    if (value == enum_items->value)
+      return enum_items;
+  return NULL;
+}
+
 enum_item const sox_wave_enum[] = {
   ENUM_ITEM(SOX_WAVE_,SINE)
   ENUM_ITEM(SOX_WAVE_,TRIANGLE)

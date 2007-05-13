@@ -50,6 +50,8 @@
 
 #define range_limit(x, lower, upper) (min(max(x, lower), upper))
 
+#define sqr(a) ((a) * (a))
+
 /* Array-length operator */
 #define array_length(a) (sizeof(a)/sizeof(a[0]))
 
@@ -58,6 +60,7 @@ typedef struct {char const *text; int value;} enum_item;
 #define ENUM_ITEM(prefix, item) {#item, prefix##item},
 enum_item const * find_enum_text(
     char const * text, enum_item const * enum_items);
+enum_item const * find_enum_value(int value, enum_item const * enum_items);
 typedef enum {SOX_SHORT, SOX_INT, SOX_FLOAT, SOX_DOUBLE} sox_data_t;
 typedef enum {SOX_WAVE_SINE, SOX_WAVE_TRIANGLE} sox_wave_t;
 extern enum_item const sox_wave_enum[];
