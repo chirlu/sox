@@ -1326,7 +1326,7 @@ static int wavwritehdr(ft_t ft, int second_header)
 
             break;
         default:
-            sox_report("Do not support %s in WAV files.  Forcing to Signed Words.",sox_sizes_str[(unsigned char)ft->signal.size]);
+            sox_report("Do not support %s data in WAV files.  Forcing to Signed 16-bit.",sox_sizes_str[(unsigned char)ft->signal.size]);
             ft->signal.encoding = SOX_ENCODING_SIGN2;
             ft->signal.size = SOX_SIZE_16BIT;
             wBitsPerSample = 16;
