@@ -1,71 +1,59 @@
 /*
- * synth - Synthesizer Effect.  
+ * synth - Synthesizer Effect.
  *
- * Written by Carsten Borchardt Jan 2001
- * Version 0.1
+ * Copyright (c) Jan 2001  Carsten Borchardt
+ * Copyright (c) 2001-2007 SoX contributers
  *
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * The authors are not responsible for 
- * the consequences of using this software.
+ * This source code is freely redistributable and may be used for any purpose.
+ * This copyright notice must be maintained.  The authors are not responsible
+ * for the consequences of using this software.
  */
 
-#include <signal.h>
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
-#include "synth.h"
+#include "sox_i.h"
 
-static sox_effect_t sox_synth_effect;
-
-#define PCOUNT 5
-
-#define SYNTH_SINE       0
-#define SYNTH_SQUARE     1
-#define SYNTH_SAWTOOTH   2
-#define SYNTH_TRIANGLE   3
-#define SYNTH_TRAPEZIUM  4
-#define SYNTH_TRAPETZ    SYNTH_TRAPEZIUM /* Deprecated name for trapezium */
-#define SYNTH_WHITENOISE 5
-#define SYNTH_NOISE      SYNTH_WHITENOISE /* Just a handy alias */
-#define SYNTH_PINKNOISE  6
-#define SYNTH_BROWNNOISE 7
-#define SYNTH_EXP        8
-
-#define SYNTH_CREATE    0x000
-#define SYNTH_MIX       0x100
-#define SYNTH_AMOD      0x200
-#define SYNTH_FMOD      0x400
+typedef enum {
+  synth_sine,
+  synth_square,
+  synth_sawtooth,
+  synth_triangle,
+  synth_trapezium,
+  synth_trapetz  = synth_trapezium,   /* Deprecated name for trapezium */
+  synth_exp,
+                                      /* Repetetives above, noises below */
+  synth_whitenoise,
+  synth_noise = synth_whitenoise,     /* Just a handy alias */
+  synth_pinknoise,
+  synth_brownnoise
+} type_t;
 
 enum_item const synth_type[] = {
-  ENUM_ITEM(SYNTH_,SINE      )
-  ENUM_ITEM(SYNTH_,SQUARE    )
-  ENUM_ITEM(SYNTH_,SAWTOOTH  )
-  ENUM_ITEM(SYNTH_,TRIANGLE  )
-  ENUM_ITEM(SYNTH_,TRAPEZIUM )
-  ENUM_ITEM(SYNTH_,TRAPETZ   )
-  ENUM_ITEM(SYNTH_,WHITENOISE)
-  ENUM_ITEM(SYNTH_,NOISE     )
-  ENUM_ITEM(SYNTH_,PINKNOISE )
-  ENUM_ITEM(SYNTH_,BROWNNOISE)
-  ENUM_ITEM(SYNTH_,EXP       )
-  {0, 0}};
+  ENUM_ITEM(synth_, sine)
+  ENUM_ITEM(synth_, square)
+  ENUM_ITEM(synth_, sawtooth)
+  ENUM_ITEM(synth_, triangle)
+  ENUM_ITEM(synth_, trapezium)
+  ENUM_ITEM(synth_, trapetz)
+  ENUM_ITEM(synth_, exp)
+  ENUM_ITEM(synth_, whitenoise)
+  ENUM_ITEM(synth_, noise)
+  ENUM_ITEM(synth_, pinknoise)
+  ENUM_ITEM(synth_, brownnoise)
+  {0, 0}
+};
+
+typedef enum {synth_create, synth_mix, synth_amod, synth_fmod} combine_t;
 
 enum_item const combine_type[] = {
-  ENUM_ITEM(SYNTH_,CREATE)
-  ENUM_ITEM(SYNTH_,MIX   )
-  ENUM_ITEM(SYNTH_,AMOD  )
-  ENUM_ITEM(SYNTH_,FMOD  )
-  {0, 0}};
+  ENUM_ITEM(synth_, create)
+  ENUM_ITEM(synth_, mix)
+  ENUM_ITEM(synth_, amod)
+  ENUM_ITEM(synth_, fmod)
+  {0, 0}
+};
 
-/* do not ask me for the colored noise, i copied the 
- * algorithm somewhere...
- */
-#define BROWNNOISE_FAC  (500.0/32768.0)
-#define PINKNOISE_FAC   (5000.0/32768.0)
-#define LOG_10_20     0.1151292546497022842009e0
-
-#define MAXCHAN 4
 
 
 /******************************************************************************
@@ -74,639 +62,539 @@ enum_item const combine_type[] = {
  * Author: Phil Burk, http://www.softsynth.com
  */
 
-  
 /* Calculate pseudo-random 32 bit number based on linear congruential method. */
-static unsigned long GenerateRandomNumber( void )
+static unsigned long GenerateRandomNumber(void)
 {
-        static unsigned long randSeed = 22222;  /* Change this for different random sequences. */
-        randSeed = (randSeed * 196314165) + 907633515;
-        return randSeed;
+  static unsigned long randSeed = 22222;        /* Change this for different random sequences. */
+
+  randSeed = (randSeed * 196314165) + 907633515;
+  return randSeed;
 }
 
 #define PINK_MAX_RANDOM_ROWS   (30)
 #define PINK_RANDOM_BITS       (24)
 #define PINK_RANDOM_SHIFT      ((sizeof(long)*8)-PINK_RANDOM_BITS)
 
-typedef struct{
-    long      pink_Rows[PINK_MAX_RANDOM_ROWS];
-    long      pink_RunningSum;   /* Used to optimize summing of generators. */
-    int       pink_Index;        /* Incremented each sample. */
-    int       pink_IndexMask;    /* Index wrapped by ANDing with this mask. */
-    float     pink_Scalar;       /* Used to scale within range of -1.0 to +1.0 */
+typedef struct {
+  long pink_Rows[PINK_MAX_RANDOM_ROWS];
+  long pink_RunningSum;         /* Used to optimize summing of generators. */
+  int pink_Index;               /* Incremented each sample. */
+  int pink_IndexMask;           /* Index wrapped by ANDing with this mask. */
+  float pink_Scalar;            /* Used to scale within range of -1 to +1 */
 } PinkNoise;
 
 /* Setup PinkNoise structure for N rows of generators. */
-static void InitializePinkNoise( PinkNoise *pink, int numRows )
+static void InitializePinkNoise(PinkNoise * pink, int numRows)
 {
-        int i;
-        long pmax;
-        pink->pink_Index = 0;
-        pink->pink_IndexMask = (1<<numRows) - 1;
-/* Calculate maximum possible signed random value. Extra 1 for white noise always added. */
-        pmax = (numRows + 1) * (1<<(PINK_RANDOM_BITS-1));
-        pink->pink_Scalar = 1.0f / pmax;
-/* Initialize rows. */
-        for( i=0; i<numRows; i++ ) pink->pink_Rows[i] = 0;
-        pink->pink_RunningSum = 0;
+  int i;
+  long pmax;
+
+  pink->pink_Index = 0;
+  pink->pink_IndexMask = (1 << numRows) - 1;
+  /* Calculate maximum possible signed random value. Extra 1 for white noise always added. */
+  pmax = (numRows + 1) * (1 << (PINK_RANDOM_BITS - 1));
+  pink->pink_Scalar = 1.0f / pmax;
+  /* Initialize rows. */
+  for (i = 0; i < numRows; i++)
+    pink->pink_Rows[i] = 0;
+  pink->pink_RunningSum = 0;
 }
 
-/* Generate Pink noise values between -1.0 and +1.0 */
-static float GeneratePinkNoise( PinkNoise *pink )
+/* Generate Pink noise values between -1 and +1 */
+static float GeneratePinkNoise(PinkNoise * pink)
 {
-        long newRandom;
-        long sum;
-        float output;
+  long newRandom;
+  long sum;
+  float output;
 
-/* Increment and mask index. */
-        pink->pink_Index = (pink->pink_Index + 1) & pink->pink_IndexMask;
+  /* Increment and mask index. */
+  pink->pink_Index = (pink->pink_Index + 1) & pink->pink_IndexMask;
 
-/* If index is zero, don't update any random values. */
-        if( pink->pink_Index != 0 )
-        {
-        /* Determine how many trailing zeros in PinkIndex. */
-        /* This algorithm will hang if n==0 so test first. */
-                int numZeros = 0;
-                int n = pink->pink_Index;
-                while( (n & 1) == 0 )
-                {
-                        n = n >> 1;
-                        numZeros++;
-                }
+  /* If index is zero, don't update any random values. */
+  if (pink->pink_Index != 0) {
+    /* Determine how many trailing zeros in PinkIndex. */
+    /* This algorithm will hang if n==0 so test first. */
+    int numZeros = 0;
+    int n = pink->pink_Index;
 
-        /* Replace the indexed ROWS random value.
-         * Subtract and add back to RunningSum instead of adding all the random
-         * values together. Only one changes each time.
-         */
-                pink->pink_RunningSum -= pink->pink_Rows[numZeros];
-                newRandom = ((long)GenerateRandomNumber()) >> PINK_RANDOM_SHIFT;
-                pink->pink_RunningSum += newRandom;
-                pink->pink_Rows[numZeros] = newRandom;
-        }
-        
-/* Add extra white noise value. */
-        newRandom = ((long)GenerateRandomNumber()) >> PINK_RANDOM_SHIFT;
-        sum = pink->pink_RunningSum + newRandom;
+    while ((n & 1) == 0) {
+      n = n >> 1;
+      numZeros++;
+    }
 
-/* Scale to range of -1.0 to 0.9999. */
-        output = pink->pink_Scalar * sum;
+    /* Replace the indexed ROWS random value.
+     * Subtract and add back to RunningSum instead of adding all the random
+     * values together. Only one changes each time.
+     */
+    pink->pink_RunningSum -= pink->pink_Rows[numZeros];
+    newRandom = ((long) GenerateRandomNumber()) >> PINK_RANDOM_SHIFT;
+    pink->pink_RunningSum += newRandom;
+    pink->pink_Rows[numZeros] = newRandom;
+  }
 
-        return output;
+  /* Add extra white noise value. */
+  newRandom = ((long) GenerateRandomNumber()) >> PINK_RANDOM_SHIFT;
+  sum = pink->pink_RunningSum + newRandom;
+
+  /* Scale to range of -1 to 0.9999. */
+  output = pink->pink_Scalar * sum;
+
+  return output;
 }
 
 /**************** end of pink noise stuff */
 
 
 
-/* Private data for the synthesizer */
-typedef struct synthstuff {
-    /* options */
-    char *length_str;
-    int type[MAXCHAN];
-    int mix[MAXCHAN];
-    double freq[MAXCHAN];
-    double freq2[MAXCHAN];
-    double par[MAXCHAN][5];
+typedef struct {
+  /* options */
+  type_t type;
+  combine_t combine;
+  double freq, freq2;
+  double offset, phase;
+  double p1, p2, p3; /* Use depends on synth type */
 
-    /* internal stuff */
-    sox_ssample_t max;
-    sox_size_t samples_done;
-    int rate;
-    sox_size_t length; /* length in number of samples */
-    double h[MAXCHAN]; /* store values necessary for  creation */
-    PinkNoise pinkn[MAXCHAN];
-} *synth_t;
+  /* internal stuff */
+  double cycle_start_time_s;
+  double brown_noise;
+  PinkNoise pink_noise;
+} * channel_t;
+
+
+
+/* Private data for the synthesizer */
+typedef struct {
+  char *        length_str;
+  sox_ssample_t max;
+  sox_size_t    samples_done;
+  sox_size_t    samples_to_do;
+  channel_t     channels;
+  unsigned number_of_channels;
+} * synth_t;
+
 
 
 /* a note is given as an int,
  * 0   => 440 Hz = A
- * >0  => number of half notes 'up', 
+ * >0  => number of half notes 'up',
  * <0  => number of half notes down,
  * example 12 => A of next octave, 880Hz
  *
  * calculated by freq = 440Hz * 2**(note/12)
  */
-static double calc_note_freq(double note){
-    return (440.0 * pow(2.0,note/12.0));
-}
-
-
-/* read string 's' and convert to frequency
- * 's' can be a positive number which is the frequency in Hz
- * if 's' starts with a hash '%' and a following number the corresponding
- * note is calculated
- * return -1 on error
- */ 
-static double StringToFreq(char *s, char **h){
-    double f;
-
-    if(*s=='%'){
-        f = strtod(s+1,h);
-        if ( *h == s+1 ){ 
-            /* error*/
-            return -1.0;
-        }
-        f=calc_note_freq(f);
-    }else{
-        f=strtod(s,h);
-        if(*h==s){
-            return -1.0;
-        }
-    }
-    if( f < 0.0 )
-        return -1.0;
-    return f;
-}
-
-
-
-static void parmcopy(synth_t sy, int s, int d){
-    int i;
-    sy->freq[d]=sy->freq[s];
-    sy->freq2[d]=sy->freq2[s];
-    sy->type[d]=sy->type[s];
-    sy->mix[d]=sy->mix[s];
-    for(i=0;i<PCOUNT;i++){
-        sy->par[d][i]=sy->par[s][i];
-    }
-}
-
-
-/*
- * Process options
- *
- * Don't do initialization now.
- * The 'info' fields are not yet filled in.
- */
-int sox_synth_getopts(eff_t effp, int n, char **argv) 
+static double calc_note_freq(double note)
 {
-    int argn;
-    char *hlp;
-    int i;
-    int c;
-    synth_t synth = (synth_t) effp->priv;
-    
+  return 440.0 * pow(2.0, note / 12.0);
+}
 
-    /* set default parameters */
-    synth->length = 0; /* use length of input file */
-    synth->length_str = 0;
-    for(c=0;c<MAXCHAN;c++){
-        synth->freq[c] = 440.0;
-        synth->freq2[c] = 440.0;
-        synth->type[c]=SYNTH_SINE; 
-        synth->mix[c] = SYNTH_CREATE;
-    
-        for(i=0;i<PCOUNT;i++)
-            synth->par[c][i]= -1.0;
-        
-        synth->par[c][0]= 0.0; /* offset */
-        synth->par[c][1]= 0.0; /* phase */;
-    }
 
-    argn=0;
-    if ( n<0){
-        sox_fail(sox_synth_effect.usage);
-        return(SOX_EOF);
-    }
-    if(n==0){
-        /* no arg, use default*/
-        return(SOX_SUCCESS);
-    }
-    
 
-    /* read length if given ( if first par starts with digit )*/
-    if( isdigit((int)argv[argn][0]) || argv[argn][0] == '.') {
-        synth->length_str = (char *)xmalloc(strlen(argv[argn])+1);
-        strcpy(synth->length_str,argv[argn]);
-        /* Do a dummy parse of to see if it will fail */
-        if (sox_parsesamples(0, synth->length_str, &synth->length, 't') == NULL)
-        {
-            sox_fail(sox_synth_effect.usage);
-            return (SOX_EOF);
+/* Read string 's' and convert to frequency.
+ * 's' can be a positive number which is the frequency in Hz.
+ * If 's' starts with a hash '%' and a following number the corresponding
+ * note is calculated.
+ * Return -1 on error.
+ */
+static double StringToFreq(char *s, char **h)
+{
+  double f;
+
+  if (*s == '%') {
+    f = strtod(s + 1, h);
+    if (*h == s + 1)
+      return -1;
+    f = calc_note_freq(f);
+  } else {
+    f = strtod(s, h);
+    if (*h == s)
+      return -1;
+  }
+  if (f < 0)
+    return -1;
+  return f;
+}
+
+
+
+static void create_channel(channel_t chan)
+{
+  memset(chan, 0, sizeof(*chan));
+  chan->freq2 = chan->freq = 440;
+  chan->p3 = chan->p2 = chan->p1 = -1;
+}
+
+
+
+static void set_default_parameters(channel_t chan, int c)
+{
+  switch (chan->type) {
+    case synth_square:    /* p1 is pulse width */
+      if (chan->p1 < 0)
+        chan->p1 = 0.5;   /* default to 50% duty cycle */
+      break;
+
+    case synth_triangle:  /* p1 is position of maximum */
+      if (chan->p1 < 0)
+        chan->p1 = 0.5;
+      break;
+
+    case synth_trapezium:
+      /* p1 is length of rising slope,
+       * p2 position where falling slope begins
+       * p3 position of end of falling slope
+       */
+      if (chan->p1 < 0) {
+        chan->p1 = 0.1;
+        chan->p2 = 0.5;
+        chan->p3 = 0.6;
+      } else if (chan->p2 < 0) { /* try a symetric waveform */
+        if (chan->p1 <= 0.5) {
+          chan->p2 = (1 - 2 * chan->p1) / 2;
+          chan->p3 = chan->p2 + chan->p1;
+        } else {
+          /* symetric is not possible, fall back to asymetrical triangle */
+          chan->p2 = chan->p1;
+          chan->p3 = 1;
         }
-        argn++;
+      } else if (chan->p3 < 0)
+        chan->p3 = 1;     /* simple falling slope to the end */
+      break;
+
+    case synth_pinknoise:
+      /* Initialize pink noise signals with different numbers of rows. */
+      InitializePinkNoise(&(chan->pink_noise), 10 + 2 * c);
+      break;
+
+    case synth_exp:
+      if (chan->p1 < 0) /* p1 is position of maximum */
+        chan->p1 = 0.5;
+      if (chan->p2 < 0) /* p2 is amplitude */
+        chan->p2 = 1;
+      break;
+
+    default: break;
+  }
+}
+
+
+
+static int getopts(eff_t effp, int argc, char **argv)
+{
+  synth_t synth = (synth_t) effp->priv;
+  int argn = 0;
+
+  /* Get duration if given (if first arg starts with digit) */
+  if (argc && (isdigit(argv[argn][0]) || argv[argn][0] == '.')) {
+    synth->length_str = xmalloc(strlen(argv[argn]) + 1);
+    strcpy(synth->length_str, argv[argn]);
+    /* Do a dummy parse of to see if it will fail */
+    if (sox_parsesamples(0, synth->length_str, &synth->samples_to_do, 't') == NULL) {
+      sox_fail(effp->h->usage);
+      return SOX_EOF;
     }
-    /* for one or more channel */
-    /* type [combine] [f1[-f2]] [p0] [p1] [p2] [p3] [p4] */
-    for (c = 0; c < MAXCHAN && n > argn; c++) {
-      enum_item const * p = find_enum_text(argv[argn], synth_type);
-      if (p == NULL) {
-        sox_fail("no type given");
+    argn++;
+  }
+
+  while (argn < argc) { /* type [combine] [f1[-f2] [p1 [p2 [p3 [p3 [p4]]]]]] */
+    channel_t chan;
+    char * char_ptr;
+    enum_item const *p = find_enum_text(argv[argn], synth_type);
+
+    if (p == NULL) {
+      sox_fail("no type given");
+      return SOX_EOF;
+    }
+    synth->channels = xrealloc(synth->channels, sizeof(*synth->channels) * (synth->number_of_channels + 1));
+    chan = &synth->channels[synth->number_of_channels++];
+    create_channel(chan);
+    chan->type = p->value;
+    if (++argn == argc)
+      break;
+
+    /* maybe there is a combine-type in next arg */
+    p = find_enum_text(argv[argn], combine_type);
+    if (p != NULL) {
+      chan->combine = p->value;
+      if (++argn == argc)
+        break;
+    }
+
+    /* read frequencies if given */
+    if (isdigit((int) argv[argn][0]) || argv[argn][0] == '%') {
+      chan->freq2 = chan->freq = StringToFreq(argv[argn], &char_ptr);
+      if (chan->freq < 0) {
+        sox_fail("invalid freq");
         return SOX_EOF;
       }
-      synth->type[c] = p->value;
-      if (++argn == n) break;
+      if (*char_ptr == '-') {        /* freq2 given? */
+        char *hlp2;
 
-      /* maybe there is a combine-type in next arg */
-      p = find_enum_text(argv[argn], combine_type);
-      if (p != NULL) {
-        synth->mix[c] = p->value;
-        if (++argn == n) break;
-      }
-
-      /* read frequencies if given */
-      if (isdigit((int)argv[argn][0]) || argv[argn][0] == '%') {
-        synth->freq2[c] = synth->freq[c] = StringToFreq(argv[argn], &hlp);
-        if (synth->freq[c] < 0) {
-          sox_fail("invalid freq");
+        chan->freq2 = StringToFreq(char_ptr + 1, &hlp2);
+        if (chan->freq2 < 0) {
+          sox_fail("invalid freq2");
           return SOX_EOF;
         }
-        if (*hlp == '-') { /* freq2 given? */
-          char * hlp2;
-          synth->freq2[c] = StringToFreq(hlp + 1, &hlp2);
-          if (synth->freq2[c] < 0) {
-            sox_fail("invalid freq2");
-            return SOX_EOF;
-          }
-          if (synth->length_str == NULL) {
-            sox_fail("length must be given when using freq2");
-            return SOX_EOF;
-          }
-        }
-        if (++argn == n) break;
-      }
-
-      /* read rest of parameters */
-      for (i = 0; argn < n && isdigit((int)argv[argn][0]); ++i, ++argn) {
-        if (i == PCOUNT) {
-          sox_fail("too many parameters");
-          return SOX_EOF;
-        }
-        synth->par[c][i] = strtod(argv[argn], &hlp);
-        if (hlp == argv[argn]) {
-          sox_fail("parameter error");
+        if (synth->length_str == NULL) {
+          sox_fail("duration must be given when using freq2");
           return SOX_EOF;
         }
       }
-      if (argn == n) break;
+      if (++argn == argc)
+        break;
     }
 
-    /* make some intelligent parameter initialization for channels
-     * where no parameters were given
-     *
-     * - if only parms for one channel were given, copy to other channels
-     * - if parm for 2 channels were given, copy to channel 1->3, 2->4
-     * - if parm for 3 channels were given, copy 2->4
-     */
-    if(c == 0 || c >= MAXCHAN){
-        for(c=1;c<MAXCHAN;c++)
-            parmcopy(synth,0,c);
-    }else if(c == 1){
-        parmcopy(synth,0,2);
-        parmcopy(synth,1,3);
-    }else if(c == 2){
-        parmcopy(synth,1,3);
+    /* read rest of parameters */
+    #define NUMERIC_PARAMETER(p, min, max) { \
+      char * end_ptr; \
+      double d = strtod(argv[argn], &end_ptr); \
+      if (end_ptr == argv[argn]) \
+        break; \
+      if (d < min || d > max || *end_ptr != '\0') { \
+        sox_fail("parameter error"); \
+        return SOX_EOF; \
+      } \
+      chan->p = d / 100; /* adjust so abs(parameter) <= 1 */\
+      if (++argn == argc) \
+        break; \
     }
-
-    return (SOX_SUCCESS);
+    do { /* break-able block */
+      NUMERIC_PARAMETER(offset,-100, 100)
+      NUMERIC_PARAMETER(phase ,   0, 100)
+      NUMERIC_PARAMETER(p1,   0, 100)
+      NUMERIC_PARAMETER(p2,   0, 100)
+      NUMERIC_PARAMETER(p1,   0, 100)
+    } while (0);
+  }
+  return SOX_SUCCESS;
 }
 
 
-/*
- * Prepare processing.
- * Do all initializations.
- */
-int sox_synth_start(eff_t effp)
+
+static int start(eff_t effp)
 {
-    int i;
-    int c;
-    synth_t synth = (synth_t) effp->priv;
-    int shift_for_max = (4 - min(effp->outinfo.size, 4)) << 3;
+  synth_t synth = (synth_t) effp->priv;
+  unsigned i;
+  int shift_for_max = (4 - min(effp->outinfo.size, 4)) << 3;
 
-    synth->max = (SOX_SAMPLE_MAX >> shift_for_max) << shift_for_max;
+  synth->max = (SOX_SAMPLE_MAX >> shift_for_max) << shift_for_max;
+  synth->samples_done = 0;
 
-    if (synth->length_str)
-    {
-        if (sox_parsesamples(effp->ininfo.rate, synth->length_str,
-                            &synth->length, 't') == NULL)
-        {
-            sox_fail(sox_synth_effect.usage);
-            return(SOX_EOF);
-        }
+  if (synth->length_str)
+    if (sox_parsesamples(effp->ininfo.rate, synth->length_str, &synth->samples_to_do, 't') == NULL) {
+      sox_fail(effp->h->usage);
+      return SOX_EOF;
     }
 
-    synth->samples_done=0;
-    synth->rate = effp->ininfo.rate;
-    
-    for(i=0;i< MAXCHAN; i++){
-        synth->h[i]=0.0;
-    }
+  /* If no channels parameters were given, create one default channel: */
+  if (!synth->number_of_channels) {
+    synth->channels = xmalloc(sizeof(*synth->channels));
+    create_channel(&synth->channels[synth->number_of_channels++]);
+  }
 
-    /* parameter adjustment for all channels */
-    for(c=0;c<MAXCHAN;c++){
-        /* adjust parameter 0 - 100% to 0..1 */
-        for(i=0;i<PCOUNT;i++){
-            synth->par[c][i] /= 100.0;
-        }
-    
-        /* give parameters nice defaults for the different 'type' */
-    
-        switch(synth->type[c]){
-            case SYNTH_SINE:
-                break;
-            case SYNTH_SQUARE:
-                /* p2 is pulse width */
-                if(synth->par[c][2] < 0.0){
-                    synth->par[c][2] = 0.5; /* default to 50% duty cycle */
-                }
-                break;
-            case SYNTH_TRIANGLE:
-                /* p2 is position of maximum*/
-                if(synth->par[c][2] < 0.0){
-                    /* default : 0 */
-                    synth->par[c][2]=0.5;
-                }
-                break;
-            case SYNTH_SAWTOOTH:
-                /* no parameters, use TRIANGLE to create no-default-sawtooth */
-                break;
-            case SYNTH_TRAPETZ:
-                /* p2 is length of rising slope,
-                 * p3 position where falling slope begins
-                 * p4 position of end of falling slope
-                 */
-                if(synth->par[c][2] < 0.0 ){
-                    synth->par[c][2]= 0.1;
-                    synth->par[c][3]= 0.5;
-                    synth->par[c][4]= 0.6;
-                }else if(synth->par[c][3] < 0.0){
-                    /* try a symetric waveform
-                     */
-                    if(synth->par[c][2] <= 0.5){
-                        synth->par[c][3] = (1.0-2.0*synth->par[c][2])/2.0;
-                        synth->par[c][4] = synth->par[c][3] + synth->par[c][2];
-                    }else{
-                        /* symetric is not possible, fall back to asymetrical 
-                         * triangle
-                         */
-                        synth->par[c][3]=synth->par[c][2];
-                        synth->par[c][4]=1.0;
-                    }
-                }else if(synth->par[c][4] < 0.0){
-                    /* simple falling slope to the end */
-                    synth->par[c][4]=1.0;
-                }
-                break;
-            case SYNTH_PINKNOISE:
-                /* Initialize pink noise signals with different numbers of rows. */
-                InitializePinkNoise( &(synth->pinkn[c]),10+2*c);
-                break;
-            case SYNTH_EXP:
-                /* p2 is position of maximum*/
-                if (synth->par[c][2] < 0)
-                  synth->par[c][2] = 0.5;
+  /* If too few channel parameters were given, copy channels: */
+  if (synth->number_of_channels < effp->ininfo.channels) {
+    synth->channels = xrealloc(synth->channels, sizeof(*synth->channels) * effp->ininfo.channels);
+    for (i = synth->number_of_channels; i < effp->ininfo.channels; ++i)
+      synth->channels[i] = synth->channels[i % synth->number_of_channels];
+    synth->number_of_channels = i;
+  }
 
-                /* p2 is amplitude */
-                if (synth->par[c][3] < 0)
-                  synth->par[c][3] = 1;
-                break;
+  for (i = 0; i < synth->number_of_channels; i++)
+    set_default_parameters(&synth->channels[i], i);
 
-            default:
-                break;
-        }
+  for (i = 0; i < effp->ininfo.channels; i++) {
+    channel_t chan = &synth->channels[i];
 
-        sox_debug("type=%i, mix=%i, length=%u, f1=%g, f2=%g",
-                synth->type[c], synth->mix[c], 
-                synth->length, synth->freq[c], synth->freq2[c]);
-        sox_debug("p0=%g, p1=%g, p2=%g, p3=%g, p4=%g",
-                synth->par[c][0], synth->par[c][1],
-                synth->par[c][2], synth->par[c][3], synth->par[c][4]);
-    }
-    sox_debug("inchan=%i, rate=%i", (int)effp->ininfo.channels,synth->rate);
-    return (SOX_SUCCESS);
+    sox_debug("type=%s, combine=%s, samples_to_do=%u, f1=%g, f2=%g, "
+              "offset=%g, phase=%g, p1=%g, p2=%g, p3=%g",
+        find_enum_value(chan->type, synth_type)->text,
+        find_enum_value(chan->combine, combine_type)->text,
+        synth->samples_to_do, chan->freq, chan->freq2,
+        chan->offset, chan->phase, chan->p1, chan->p2, chan->p3);
+  }
+  return SOX_SUCCESS;
 }
 
 
 
-static sox_ssample_t do_synth(sox_ssample_t iv, synth_t synth, int c){
-    sox_ssample_t ov=iv;
-    double r=0.0; /* -1 .. +1 */
-    double f;
-    double om;
-    double sd;
-    double move;
-    double t,dt ;
+static sox_ssample_t do_synth(sox_ssample_t synth_input, synth_t synth, int c, double rate)
+{
+  channel_t chan = &synth->channels[c];
+  double synth_out;              /* [-1, 1] */
 
-    if(synth->length<=0){
-        /* there is no way to change the freq. without knowing the length
-         * use startfreq all the time ...
+  if (chan->type < synth_noise) { /* Need to calculate phase: */
+    double f;              /* Current frequency; variable if sweeping */
+    double cycle_period_s; /* Current period in seconds */
+    double total_elapsed_time_s, cycle_elapsed_time_s;
+    double phase;            /* [0, 1) */
+
+    if (synth->samples_to_do <= 0)
+      f = chan->freq;      /* Can't sweep if synth duration is unknown */
+    else
+      f = chan->freq * exp((log(chan->freq2) - log(chan->freq)) *
+          synth->samples_done / synth->samples_to_do);
+    cycle_period_s = 1 / f;
+    total_elapsed_time_s = synth->samples_done / rate;
+    cycle_elapsed_time_s = total_elapsed_time_s - chan->cycle_start_time_s;
+    if (cycle_elapsed_time_s >= cycle_period_s) {  /* move to next cycle */
+      chan->cycle_start_time_s += cycle_period_s;
+      cycle_elapsed_time_s = total_elapsed_time_s - chan->cycle_start_time_s;
+    }
+    phase = cycle_elapsed_time_s / cycle_period_s;
+    phase = fmod(phase + chan->phase, 1.0);
+
+    switch (chan->type) {
+      case synth_sine:
+        synth_out = sin(2 * M_PI * phase);
+        break;
+
+      case synth_square:
+        /* |_______           | +1
+         * |       |          |
+         * |_______|__________|  0
+         * |       |          |
+         * |       |__________| -1
+         * |                  |
+         * 0       p1          1
          */
-        f = synth->freq[c];
-    }else{
-        f = synth->freq[c] * 
-            exp( (log(synth->freq2[c])-log(synth->freq[c]))* 
-                 synth->samples_done/synth->length );
+        synth_out = -1 + 2 * (phase < chan->p1);
+        break;
+
+      case synth_sawtooth:
+        /* |           __| +1
+         * |        __/  |
+         * |_______/_____|  0
+         * |  __/        |
+         * |_/           | -1
+         * |             |
+         * 0             1
+         */
+        synth_out = -1 + 2 * phase;
+        break;
+
+      case synth_triangle:
+        /* |    .    | +1
+         * |   / \   |
+         * |__/___\__|  0
+         * | /     \ |
+         * |/       \| -1
+         * |         |
+         * 0   p1    1
+         */
+
+        if (phase < chan->p1)
+          synth_out = -1 + 2 * phase / chan->p1;          /* In rising part of period */
+        else
+          synth_out = 1 - 2 * (phase - chan->p1) / (1 - chan->p1); /* In falling part */
+        break;
+
+      case synth_trapezium:
+        /* |    ______             |+1
+         * |   /      \            |
+         * |__/________\___________| 0
+         * | /          \          |
+         * |/            \_________|-1
+         * |                       |
+         * 0   p1    p2   p3       1
+         */
+        if (phase < chan->p1)       /* In rising part of period */
+          synth_out = -1 + 2 * phase / chan->p1;
+        else if (phase < chan->p2)  /* In high part of period */
+          synth_out = 1;
+        else if (phase < chan->p3)  /* In falling part */
+          synth_out = 1 - 2 * (phase - chan->p2) / (chan->p3 - chan->p2);
+        else                        /* In low part of period */
+          synth_out = -1;
+        break;
+
+      case synth_exp:
+        /* |             |              | +1
+         * |            | |             |
+         * |          _|   |_           | 0
+         * |       __-       -__        |
+         * |____---             ---____ | f(p2)
+         * |                            |
+         * 0             p1             1
+         */
+#define LOG_10_20        0.1151292546497022842009e0
+        synth_out = exp(-chan->p2 * LOG_10_20 * 100);  /* 0 ..  1 */
+        if (phase < chan->p1)
+          synth_out = synth_out * exp(phase * log(1 / synth_out) / chan->p1);
+        else
+          synth_out = synth_out * exp((1 - phase) * log(1 / synth_out) / (1 - chan->p1));
+        synth_out = synth_out * 2 - 1;      /* map 0 .. 1 to -1 .. +1 */
+        break;
+
+      default: synth_out = 0;
     }
-    om = 1.0 / f; /* periodendauer inn sec */
-    t = synth->samples_done / (double)synth->rate; /* zeit seit start in sec */
-    dt = t - synth->h[c]; /* seit seitdem letzte periode um war. */
-    if( dt < om){
-        /* wir sind noch in der periode.. */
-    }else{
-        /* schon in naechste periode */
-        synth->h[c]+=om;
-        dt=t-synth->h[c];
-    }
-    sd= dt/om; /* position in der aktuellen periode; 0<= sd < 1*/
-    sd = fmod(sd+synth->par[c][1],1.0); /* phase einbauen */
+  } else switch (chan->type) {
+#define RAND (2. * rand() * (1. / RAND_MAX) - 1)
+    case synth_whitenoise:
+      synth_out = RAND;
+      break;
 
+    case synth_pinknoise:
+      synth_out = GeneratePinkNoise(&(chan->pink_noise));
+      break;
 
-    switch(synth->type[c]){
-        case SYNTH_SINE:
-            r = sin(2.0 * M_PI * sd);
-            break;
-        case SYNTH_SQUARE:
-            /* |_______           | +1
-             * |       |          |
-             * |_______|__________|  0
-             * |       |          |
-             * |       |__________| -1
-             * |                  |
-             * 0       p2          1
-             */
-            if(sd < synth->par[c][2]){
-                r = -1.0;
-            }else{
-                r = +1.0;
-            }
-            break;
-        case SYNTH_SAWTOOTH:
-            /* |           __| +1
-             * |        __/  |
-             * |_______/_____|  0
-             * |  __/        |
-             * |_/           | -1
-             * |             |
-             * 0             1
-             */
-            r = -1.0 + 2.0 * sd;
-            break;
-        case SYNTH_TRIANGLE:
-            /* |    _    | +1
-             * |   / \   |
-             * |__/___\__|  0
-             * | /     \ |
-             * |/       \| -1
-             * |         |
-             * 0   p2    1
-             */
+    case synth_brownnoise:
+      do synth_out = chan->brown_noise + RAND * (1. / 16);
+      while (fabs(synth_out) > 1);
+      chan->brown_noise = synth_out;
+      break;
 
-            if( sd < synth->par[c][2]){ /* in rising Part of period */
-                r = -1.0 + 2.0 * sd / synth->par[c][2];
-            }else{    /* falling part */
-                r = 1.0 - 2.0 *
-                    (sd-synth->par[c][2])/(1-synth->par[c][2]);
-            }
-            break;
-        case SYNTH_TRAPETZ:
-            /* |    ______             |+1
-             * |   /      \            |
-             * |__/________\___________| 0
-             * | /          \          |
-             * |/            \_________|-1
-             * |                       |
-             * 0   p2    p3   p4       1
-             */
-            if( sd < synth->par[c][2]){ /* in rising part of period */
-                r = -1.0 + 2.0 * sd / synth->par[c][2];
-            }else if( sd < synth->par[c][3]){ /* in constant Part of period */
-                r=1.0;
-            }else if( sd < synth->par[c][4] ){ /* falling part */
-                r = 1.0 - 2.0 *
-                    (sd - synth->par[c][3])/(synth->par[c][4]-synth->par[c][3]);
-            }else{
-                r = -1.0;
-            }
-            break;
+    default: synth_out = 0;
+  }
 
-        case SYNTH_EXP:
-            /* |             |              | +1
-             * |            | |             |
-             * |          _|   |_           | 0
-             * |       __-       -__        |
-             * |____---             ---____ | f(p3) 
-             * |                            |
-             * 0             p2             1
-             */
-            move=exp( - synth->par[c][3] * LOG_10_20 * 100.0 ); /* 0 ..  1 */
-            if ( sd < synth->par[c][2] ) {
-                r = move * exp(sd * log(1.0/move)/synth->par[c][2]);
-            }else{
-                r = move * 
-                    exp( (1-sd)*log(1.0/move)/
-                         (1.0-synth->par[c][2]));
-            }
+  /* Add offset, but prevent clipping: */
+  synth_out = synth_out * (1 - fabs(chan->offset)) + chan->offset;
 
-            /* r in 0 .. 1 */
-            r = r * 2.0 - 1.0; /* -1 .. +1 */
-            break;
-        case SYNTH_WHITENOISE:
-            r= 2.0* rand()/(double)RAND_MAX - 1.0;
-            break;
-        case SYNTH_PINKNOISE:
-            r = GeneratePinkNoise( &(synth->pinkn[c]) );
-            break;
-        case SYNTH_BROWNNOISE:
-            /* no idea if this algorithm is good enough.. */
-            move = 2.0* rand()/(double)RAND_MAX - 1.0;
-            move *= BROWNNOISE_FAC;
-            synth->h[c] += move;
-            if ((synth->h[c]) > 1.0)
-                synth->h[c] -= 2.0*move;
-            if ((synth->h[c]) < -1.0)
-                synth->h[c] += 2.0*move;
-            r=synth->h[c];
-            break;
-        default:
-            sox_warn("synth: internal error 1");
-            break;
-    }
-
-    /* add offset, but prevent clipping */
-    om = fabs(synth->par[c][0]);
-    if( om <= 1.0 ){
-        r *= 1.0 - om; /* reduce amp, prevent clipping */
-        r += om;
-    }
-
-
-    switch(synth->mix[c]){
-        case SYNTH_CREATE:
-            ov = synth->max * r;
-            break;
-        case SYNTH_MIX:
-            ov = iv/2 + r*synth->max/2;
-            break;
-        case SYNTH_AMOD:
-            ov = (sox_ssample_t)(0.5*(r+1.0)*(double)iv);
-            break;
-        case SYNTH_FMOD:
-            ov = iv * r ;
-            break;
-        default:
-            sox_fail("synth: internal error 2");
-            break;
-    }
-
-    return ov;
+  switch (chan->combine) {
+    case synth_create: return  synth_out * synth->max;
+    case synth_mix   : return (synth_out * synth->max + synth_input) * 0.5;
+    case synth_amod  : return (synth_out + 1) * synth_input * 0.5;
+    case synth_fmod  : return  synth_out * synth_input;
+  }
+  return 0;
 }
 
 
 
-/*
- * Processed signed long samples from ibuf to obuf.
- */
-int sox_synth_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
-                  sox_size_t *isamp, sox_size_t *osamp)
+static int flow(eff_t effp, const sox_ssample_t * ibuf, sox_ssample_t * obuf,
+    sox_size_t * isamp, sox_size_t * osamp)
 {
-    synth_t synth = (synth_t) effp->priv;
-    int len; /* number of input samples */
-    int done = 0;
-    int c;
-    int chan=effp->ininfo.channels;
-    int result = SOX_SUCCESS;
+  synth_t synth = (synth_t) effp->priv;
+  unsigned len = min(*isamp, *osamp) / effp->ininfo.channels;
+  unsigned c, done, result = SOX_SUCCESS;
 
-    if(chan > MAXCHAN ){
-        sox_fail("synth: can not operate with more than %d channels",MAXCHAN);
-        return(SOX_EOF);
-    }
-
-    len = ((*isamp > *osamp) ? *osamp : *isamp) / chan;
-
-    while (done < len && result == SOX_SUCCESS)
-    {
-        for(c=0;c<chan;c++){
-            /* each channel is independent, but the algorithm is the same */
-
-            obuf[c] = do_synth(ibuf[c],synth,c);
-        }
-        ibuf+=chan;
-        obuf+=chan;
-        ++done;
-        synth->samples_done++;
-        if (synth->length > 0 && synth->samples_done == synth->length)
-        {
-            result = SOX_EOF;
-        }
-    }
-    *isamp = *osamp = done * chan;
-    return result;
+  for (done = 0; done < len && result == SOX_SUCCESS; ++done) {
+    for (c = 0; c < effp->ininfo.channels; c++)
+      *obuf++ = do_synth(*ibuf++, synth, c, effp->ininfo.rate);
+    if (++synth->samples_done == synth->samples_to_do)
+      result = SOX_EOF;
+  }
+  *isamp = *osamp = done * effp->ininfo.channels;
+  return result;
 }
 
-static sox_effect_t sox_synth_effect = {
-  "synth",
-  "Usage: synth [len] {[type] [combine] [freq[-freq2]] [off] [ph] [p1] [p2] [p3]}",
-  SOX_EFF_MCHAN,
-  sox_synth_getopts,
-  sox_synth_start,
-  sox_synth_flow,
-  sox_effect_nothing_drain,
-  sox_effect_nothing,
-  sox_effect_nothing
-};
+
+
+static int kill(eff_t effp)
+{
+  synth_t synth = (synth_t) effp->priv;
+  free(synth->channels);
+  free(synth->length_str);
+  return SOX_SUCCESS;
+}
+
+
 
 const sox_effect_t *sox_synth_effect_fn(void)
 {
-    return &sox_synth_effect;
+  static sox_effect_t driver = {
+    "synth",
+    "Usage: synth [len] {type [combine] [freq[-freq2] [off [ph [p1 [p2 [p3]]]]]]}",
+    SOX_EFF_MCHAN, getopts, start, flow, 0, 0, kill
+  };
+  return &driver;
 }
-/*-------------------------------------------------------------- end of file */
-
