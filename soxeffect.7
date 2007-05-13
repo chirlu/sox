@@ -1040,7 +1040,7 @@ sample counts is the number of samples with the letter `s' appended to
 it.  A value of 8000s will wait until 8000 samples are read before
 starting to process audio.
 .TP
-\fBvol \fIgain\fR[[ ]\fItype\fR [\fIlimitergain\fR]]
+\fBvol \fIgain\fR [\fItype\fR [\fIlimitergain\fR]]
 Apply an amplification or an attenuation to the audio signal.
 Unlike the
 .B \-v
@@ -1086,6 +1086,13 @@ voltage and power ratios.
 Beware of
 .B Clipping
 when the increasing the volume.
+.SP
+The
+.I gain
+and the
+.I type
+parameters can be concatenated if desired, e.g.
+.BR "vol 10dB" .
 .SP
 An optional \fIlimitergain\fR value can be specified and should be a
 value much less
