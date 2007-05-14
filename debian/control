@@ -7,6 +7,7 @@ Build-Depends: debhelper (>= 1.2.64), libltdl3-dev, libvorbis-dev, libmad0-dev, 
 Standards-Version: 3.7.2
 
 Package: sox
+Section: sound
 Architecture: any
 Depends: ${shlibs:Depends}
 Description: Swiss army knife of sound processing
@@ -22,7 +23,7 @@ Description: Swiss army knife of sound processing
 
 Package: libsox0
 Architecture: any
-Section: devel
+Section: sound
 Depends: ${shlibs:Depends}, libsox-fmt-base (=${Source-Version})
 Recommends: libsox-fmt-all, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss
 Description: SoX library
@@ -35,7 +36,7 @@ Description: SoX library
 
 Package: libsox-fmt-base
 Architecture: any
-Section: devel
+Section: sound
 Depends: ${shlibs:Depends}
 Description: SoX library
  SoX is the swiss army knife of sound processing.
@@ -46,7 +47,7 @@ Description: SoX library
 
 Package: libsox-fmt-alsa
 Architecture: any
-Section: devel
+Section: sound
 Depends: ${shlibs:Depends}
 Description: SoX library
  SoX is the swiss army knife of sound processing.
@@ -57,7 +58,7 @@ Description: SoX library
 
 Package: libsox-fmt-ao
 Architecture: any
-Section: devel
+Section: sound
 Depends: ${shlibs:Depends}
 Description: SoX library
  SoX is the swiss army knife of sound processing.
@@ -68,7 +69,7 @@ Description: SoX library
 
 Package: libsox-fmt-flac
 Architecture: any
-Section: devel
+Section: sound
 Depends: ${shlibs:Depends}
 Description: SoX library
  SoX is the swiss army knife of sound processing.
@@ -79,7 +80,7 @@ Description: SoX library
 
 Package: libsox-fmt-gsm
 Architecture: any
-Section: devel
+Section: sound
 Depends: ${shlibs:Depends}
 Description: SoX library
  SoX is the swiss army knife of sound processing.
@@ -90,7 +91,7 @@ Description: SoX library
 
 Package: libsox-fmt-mp3
 Architecture: any
-Section: devel
+Section: sound
 Depends: ${shlibs:Depends}
 Description: SoX library
  SoX is the swiss army knife of sound processing.
@@ -102,7 +103,7 @@ Description: SoX library
 
 Package: libsox-fmt-ogg
 Architecture: any
-Section: devel
+Section: sound
 Depends: ${shlibs:Depends}
 Description: SoX library
  SoX is the swiss army knife of sound processing.
@@ -113,7 +114,7 @@ Description: SoX library
 
 Package: libsox-fmt-sndfile
 Architecture: any
-Section: devel
+Section: sound
 Depends: ${shlibs:Depends}
 Description: SoX library
  SoX is the swiss army knife of sound processing.
@@ -124,7 +125,7 @@ Description: SoX library
 
 Package: libsox-fmt-oss
 Architecture: any
-Section: devel
+Section: sound
 Depends: ${shlibs:Depends}
 Description: SoX library
  SoX is the swiss army knife of sound processing.
@@ -135,7 +136,7 @@ Description: SoX library
 
 Package: libsox-fmt-all
 Architecture: any
-Section: devel
+Section: sound
 Depends: libsox-fmt-base, libsox-fmt-flac, libsox-fmt-gsm, libsox-fmt-mp3, libsox-fmt-ogg, libsox-fmt-sndfile, libsox-fmt-alsa, libsox-fmt-ao, libsox-fmt-oss
 Description: SoX library
  SoX is the swiss army knife of sound processing.
