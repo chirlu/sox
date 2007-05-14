@@ -184,7 +184,7 @@ static int sox_autostartread(ft_t ft)
 
     sox_debug("Detected file format type: %s", type);
     set_endianness_if_not_already_set(ft);
-    return (* ft->h->startread)(ft);
+    return ft->h->startread? (* ft->h->startread)(ft) : SOX_SUCCESS;
 }
 
 static int sox_autostartwrite(ft_t ft) 

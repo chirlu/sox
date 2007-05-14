@@ -1,68 +1,65 @@
 /*
- * July 5, 1991
- * Copyright 1991 Lance Norskog And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
- * the consequences of using this software.
- */
-
-/*
- * libSoX null file format driver.
- * Written by Carsten Borchardt 
- * The author is not responsible for the consequences 
- * of using this software
+ * File format: null   (c) 2006-7 SoX contributers
+ * Based on an original idea by Carsten Borchardt
+ *
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, write to the Free Software Foundation,
+ * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
 #include "sox_i.h"
 #include <string.h>
 
-static int sox_nulstartread(ft_t ft) 
+static int startread(ft_t ft)
 {
   /* If format parameters are not given, set somewhat arbitrary
    * (but commonly used) defaults: */
-  if (ft->signal.rate     == 0) ft->signal.rate     = 44100;
-  if (ft->signal.channels == 0) ft->signal.channels = 2;
-  if (ft->signal.size     ==-1) ft->signal.size     = SOX_SIZE_16BIT;
-  if (ft->signal.encoding == SOX_ENCODING_UNKNOWN) ft->signal.encoding = SOX_ENCODING_SIGN2;
-
+  if (!ft->signal.rate) {
+    ft->signal.rate = 44100;
+    sox_report("sample rate not specified; using %i", ft->signal.rate);
+  }
+  if (ft->signal.size <= 0) {
+    ft->signal.size = SOX_SIZE_16BIT;
+    sox_report("precision not specified; using %s", sox_size_bits_str[ft->signal.size]);
+  }
+  if (ft->signal.encoding == SOX_ENCODING_UNKNOWN) {
+    ft->signal.encoding = SOX_ENCODING_SIGN2;
+    sox_report("encoding not specified; using %s", sox_encodings_str[ft->signal.encoding]);
+  }
   return SOX_SUCCESS;
 }
 
-static sox_size_t sox_nulread(ft_t ft UNUSED, sox_ssample_t *buf, sox_size_t len) 
+static sox_size_t read(ft_t ft UNUSED, sox_ssample_t *buf, sox_size_t len)
 {
   /* Reading from null generates silence i.e. (sox_sample_t)0. */
   memset(buf, 0, sizeof(sox_ssample_t) * len);
   return len; /* Return number of samples "read". */
 }
 
-static sox_size_t sox_nulwrite(ft_t ft UNUSED, const sox_ssample_t *buf UNUSED, sox_size_t len) 
+static sox_size_t write(ft_t ft UNUSED, const sox_ssample_t *buf UNUSED, sox_size_t len)
 {
   /* Writing to null just discards the samples */
   return len; /* Return number of samples "written". */
 }
 
-static const char *nulnames[] = {
-  "null",
-  "nul",  /* For backwards compatibility with scripts that used -t nul. */
-  NULL,
-};
-
-static sox_format_t sox_nul_format = {
-  nulnames,
-  SOX_FILE_DEVICE | SOX_FILE_PHONY | SOX_FILE_NOSTDIO,
-  sox_nulstartread,
-  sox_nulread,
-  sox_format_nothing,
-  sox_format_nothing,
-  sox_nulwrite,
-  sox_format_nothing,
-  sox_format_nothing_seek
-};
-
 const sox_format_t *sox_nul_format_fn(void);
 
 const sox_format_t *sox_nul_format_fn(void)
 {
-    return &sox_nul_format;
+  static const char *names[] = { "null", "nul"/* with -t; deprecated*/, NULL};
+  static sox_format_t driver = {
+    names, SOX_FILE_DEVICE | SOX_FILE_PHONY | SOX_FILE_NOSTDIO,
+    startread, read, 0, 0, write, 0, 0
+  };
+  return &driver;
 }

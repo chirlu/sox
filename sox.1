@@ -105,8 +105,7 @@ mixes together two audio files.
 .EE
 plays a collection of audio files whilst applying a bass boosting effect,
 .EX
-	play -c4 -n -c1 synth sin %-12 sin %-9 sin %-5 sin %-2 \(rs
-		vol 0.7 mixer fade q 0.1 1 0.1
+	play -n -c1 synth sin %-12 sin %-9 sin %-5 sin %-2 fade q 0.1 1 0.1
 .EE
 plays a synthesised `A minor seventh' chord with a pipe-organ sound,
 .EX
@@ -417,9 +416,9 @@ Using a null file to output audio amounts to discarding the audio
 and is useful mainly with effects that produce information about the
 audio instead of affecting it (such as \fBnoiseprof\fR or \fBstat\fR).
 .SP
-The number of channels and the sampling rate associated with a null file
-are by default 2 and 44\*d1\ kHz respectively, but, as with a normal
-file, these can be overridden if desired using command-line format
+The sampling rate associated with a null file
+is by default 44\*d1\ kHz, but, as with a normal
+file, this can be overridden if desired using command-line format
 options (see below).
 .SP
 One other use of \fB\-n\fR is to use it in conjunction with

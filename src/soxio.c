@@ -154,7 +154,7 @@ ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
       set_endianness_if_not_already_set(ft);
 
     /* Read and write starters can change their formats. */
-    if ((*ft->h->startread)(ft) != SOX_SUCCESS)
+    if (ft->h->startread && (*ft->h->startread)(ft) != SOX_SUCCESS)
     {
         sox_fail("Failed reading `%s': %s", ft->filename, ft->sox_errstr);
         goto input_error;
@@ -164,8 +164,8 @@ ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
      * This is because libsox usually doesn't set this for mono file
      * formats (for historical reasons).
      */
-    if (ft->signal.channels == 0)
-        ft->signal.channels = 1;
+    if (!(ft->h->flags & SOX_FILE_PHONY) && !ft->signal.channels)
+      ft->signal.channels = 1;
 
     if (sox_checkformat(ft) )
     {
@@ -295,7 +295,7 @@ ft_t sox_open_write(
     set_endianness_if_not_already_set(ft);
 
     /* Read and write starters can change their formats. */
-    if ((*ft->h->startwrite)(ft) != SOX_SUCCESS)
+    if (ft->h->startwrite && (*ft->h->startwrite)(ft) != SOX_SUCCESS)
     {
         sox_fail("Failed writing %s: %s", ft->filename, ft->sox_errstr);
         goto output_error;
@@ -320,13 +320,13 @@ output_error:
 
 sox_size_t sox_read(ft_t f, sox_ssample_t * buf, sox_size_t len)
 {
-  sox_size_t actual = (*f->h->read)(f, buf, len);
+  sox_size_t actual = f->h->read? (*f->h->read)(f, buf, len) : 0;
   return (actual > len? 0 : actual);
 }
 
 sox_size_t sox_write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 {
-    return (*ft->h->write)(ft, buf, len);
+    return ft->h->write? (*ft->h->write)(ft, buf, len) : 0;
 }
 
 #define TWIDDLE_BYTE(ub, type) \
@@ -451,9 +451,9 @@ int sox_close(ft_t ft)
     int rc;
 
     if (ft->mode == 'r')
-        rc = (*ft->h->stopread)(ft);
+        rc = ft->h->stopread? (*ft->h->stopread)(ft) : SOX_SUCCESS;
     else
-        rc = (*ft->h->stopwrite)(ft);
+        rc = ft->h->stopwrite? (*ft->h->stopwrite)(ft) : SOX_SUCCESS;
 
     if (!(ft->h->flags & SOX_FILE_NOSTDIO))
         fclose(ft->fp);
@@ -467,17 +467,17 @@ int sox_close(ft_t ft)
     return rc;
 }
 
-int sox_seek(ft_t ft, sox_size_t offset, int whence)       
-{       
-    /* FIXME: Implement SOX_SEEK_CUR and SOX_SEEK_END. */         
-    if (whence != SOX_SEEK_SET)          
-        return SOX_EOF; /* FIXME: return SOX_EINVAL */    
+int sox_seek(ft_t ft, sox_size_t offset, int whence)
+{
+    /* FIXME: Implement SOX_SEEK_CUR and SOX_SEEK_END. */
+    if (whence != SOX_SEEK_SET)
+        return SOX_EOF; /* FIXME: return SOX_EINVAL */
 
-    /* If file is a seekable file and this handler supports seeking,    
-     * the invoke handlers function.    
-     */         
-    if (ft->seekable  && (ft->h->flags & SOX_FILE_SEEK))         
-        return (*ft->h->seek)(ft, offset);      
-    else        
-        return SOX_EOF; /* FIXME: return SOX_EBADF */     
+    /* If file is a seekable file and this handler supports seeking,
+     * the invoke handlers function.
+     */
+    if (ft->seekable  && (ft->h->flags & SOX_FILE_SEEK))
+        return ft->h->seek? (*ft->h->seek)(ft, offset) : SOX_EOF;
+    else
+        return SOX_EOF; /* FIXME: return SOX_EBADF */
 }

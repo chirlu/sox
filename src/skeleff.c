@@ -128,7 +128,7 @@ static int kill(eff_t effp)
 /*
  * Effect descriptor.
  * If no specific processing is needed for any of
- * the 6 functions, then the function can be deleted
+ * the 6 functions, then the function above can be deleted
  * and 0 used in place of the its name below.
  */
 static sox_effect_t sox_skel_effect = {

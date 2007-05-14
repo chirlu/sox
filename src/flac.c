@@ -367,6 +367,7 @@ static int start_write(ft_t const format)
   /* FIXME: FLAC should not need to know about this oddity */
   if (format->signal.encoding < SOX_ENCODING_SIZE_IS_WORD)
     format->signal.size = SOX_SIZE_16BIT;
+  format->signal.encoding = SOX_ENCODING_FLAC;
 
   encoder->bits_per_sample = (format->signal.size > 4 ? 4 : format->signal.size) << 3;
 

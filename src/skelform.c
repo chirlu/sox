@@ -206,7 +206,11 @@ static const char *names[] = {
   NULL
 };
 
-/* Format descriptor */
+/* Format descriptor
+ * If no specific processing is needed for any of
+ * the 7 functions, then the function above can be deleted
+ * and 0 used in place of the its name below.
+ */
 static sox_format_t sox_skel_format = {
   names,
   SOX_FILE_SEEK,

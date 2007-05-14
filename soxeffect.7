@@ -929,13 +929,13 @@ length specified as a parameter to \fBsynth\fR or by another given
 effect that can has an associated length).
 .SP
 For example, the following produces a 3 second, 44\*d1\ kHz,
-stereo audio file containing a sine-wave swept from 300 to 3300\ Hz:
+audio file containing a sine-wave swept from 300 to 3300\ Hz:
 .EX
 	sox -n output.au synth 3 sine 300-3300
 .EE
-and this produces an 8\ kHz mono version:
+and this produces an 8\ kHz version:
 .EX
-	sox -r 8000 -c 1 -n output.au synth 3 sine 300-3300
+	sox -r 8000 -n output.au synth 3 sine 300-3300
 .EE
 Multiple channels can be synthesised by specifying the set of
 parameters shown between braces multiple times;

@@ -576,6 +576,14 @@ int main(int argc, char **argv)
     exit(0);
   }
 
+  for (i = 0; i < input_count; i++) {
+    int j;
+    for (j =0; j < nuser_effects && !files[i]->desc->signal.channels; ++j)
+      files[i]->desc->signal.channels = user_efftab[j].ininfo.channels;
+    if (!files[i]->desc->signal.channels)
+      ++files[i]->desc->signal.channels;
+  }
+
   if (repeatable_random)
     sox_debug("Not reseeding PRNG; randomness is repeatable");
   else {
@@ -949,14 +957,20 @@ static void display_file_info(file_t f, sox_bool full)
     f->desc->mode == 'r'? "Input File     " : "Output File    ", f->desc->filename);
   if (strcmp(f->desc->filename, "-") == 0 || (f->desc->h->flags & SOX_FILE_DEVICE))
     fprintf(stderr, " (%s)", f->desc->h->names[0]);
+  fprintf(stderr, "\n");
 
-  fprintf(stderr, "\n"
-    "Sample Size    : %s (%s)\n"
-    "Sample Encoding: %s\n"
+  if (f->desc->signal.size)
+    fprintf(stderr, "Sample Size    : %s (%s)\n",
+        sox_size_bits_str[f->desc->signal.size],
+        sox_sizes_str[f->desc->signal.size]);
+
+  if (f->desc->signal.encoding)
+    fprintf(stderr, "Sample Encoding: %s\n",
+        sox_encodings_str[f->desc->signal.encoding]);
+
+  fprintf(stderr,
     "Channels       : %u\n"
     "Sample Rate    : %u\n",
-    sox_size_bits_str[f->desc->signal.size], sox_sizes_str[f->desc->signal.size],
-    sox_encodings_str[f->desc->signal.encoding],
     f->desc->signal.channels,
     f->desc->signal.rate);
 
@@ -969,14 +983,15 @@ static void display_file_info(file_t f, sox_bool full)
         ws, "~="[f->desc->signal.rate == 44100],
         (double)ws/ f->desc->signal.rate * 44100 / 588);
     }
-    fprintf(stderr,
-      "Endian Type    : %s\n"
-      "Reverse Nibbles: %s\n"
-      "Reverse Bits   : %s\n",
-      f->desc->signal.size == 1? "N/A" :
-        f->desc->signal.reverse_bytes != SOX_IS_BIGENDIAN ? "big" : "little",
-      no_yes[f->desc->signal.reverse_nibbles],
-      no_yes[f->desc->signal.reverse_bits]);
+    if (f->desc->signal.size > 1)
+      fprintf(stderr, "Endian Type    : %s\n",
+          f->desc->signal.reverse_bytes != SOX_IS_BIGENDIAN ? "big" : "little");
+    if (f->desc->signal.size)
+      fprintf(stderr,
+        "Reverse Nibbles: %s\n"
+        "Reverse Bits   : %s\n",
+        no_yes[f->desc->signal.reverse_nibbles],
+        no_yes[f->desc->signal.reverse_bits]);
   }
 
   if (f->replay_gain != HUGE_VAL)
@@ -1371,6 +1386,8 @@ static void build_effects_table(void)
   int effects_mask = 0;
   sox_bool need_rate = combiner.rate     != ofile->desc->signal.rate;
   sox_bool need_chan = combiner.channels != ofile->desc->signal.channels;
+  int user_mchan = -1;
+  sox_size_t channels = combiner.channels;
 
   { /* Check if we have to add effects to change rate/chans or if the
        user has specified effects to do this, in which case, check if
@@ -1386,14 +1403,17 @@ static void build_effects_table(void)
         need_rate = sox_false;
         ++user_rate_effects;
       }
+      if (user_efftab[i].h->flags & SOX_EFF_MCHAN)
+        user_mchan = i;
     }
     if (user_chan_effects > 1) {
       sox_fail("Cannot specify multiple effects that change number of channels");
       exit(2);
     }
-    if (user_rate_effects > 1)
-      sox_report("Cannot specify multiple effects that change sample rate");
-      /* FIXME: exit here or add comment as to why not */
+    if (user_rate_effects > 1) {
+      sox_fail("Cannot specify multiple effects that change sample rate");
+      exit(2);
+    }
   }
 
   /* --------- add the effects ------------------------ */
@@ -1401,28 +1421,26 @@ static void build_effects_table(void)
   /* efftab[0] is always the input stream and always exists */
   neffects = 1;
 
-  /* If reducing channels, it's faster to do so before all other effects: */
-  if (need_chan && combiner.channels > ofile->desc->signal.channels) {
-    add_default_effect("mixer", &effects_mask);
-    need_chan = sox_false;
-  }
-  /* If reducing rate, it's faster to do so before all other effects
-   * (except reducing channels): */
-  if (need_rate && combiner.rate > ofile->desc->signal.rate) {
-    add_default_effect("resample", &effects_mask);
-    need_rate = sox_false;
-  }
   /* Copy user specified effects into the real efftab */
-  for (i = 0; i < nuser_effects; i++) {
-    memcpy(&efftab[neffects], &user_efftab[i], sizeof(efftab[0]));
-    add_effect(&effects_mask);
+  for (i = 0; i <= nuser_effects; i++) {
+    /* If reducing channels, it's faster to do so before all other effects: */
+    if ((int)i > user_mchan && need_chan && combiner.channels > ofile->desc->signal.channels) {
+      add_default_effect("mixer", &effects_mask);
+      channels = ofile->desc->signal.channels;
+      need_chan = sox_false;
+    }
+    /* If reducing rate, it's faster to do so before all other effects
+     * (except reducing channels): */
+    if (need_rate)
+      if (i == nuser_effects || (channels <= 2 && combiner.rate > ofile->desc->signal.rate)) {
+        add_default_effect("resample", &effects_mask);
+        need_rate = sox_false;
+      }
+    if (i < nuser_effects) {
+      memcpy(&efftab[neffects], &user_efftab[i], sizeof(efftab[0]));
+      add_effect(&effects_mask);
+    }
   }
-  /* If rate/channels-changing effects are needed but haven't yet been
-   * added, then do it here.  Change rate before channels because it's
-   * faster to change rate on a smaller # of channels and # of channels
-   * can not be reduced, only increased, at this point. */
-  if (need_rate)
-    add_default_effect("resample", &effects_mask);
   if (need_chan)
     add_default_effect("mixer", &effects_mask);
 }
@@ -1467,6 +1485,10 @@ static int start_all_effects(void)
   }
   for (i = 1; i < neffects; ++i) {
     struct sox_effect * e = &efftab[i];
+    if (e->ininfo.channels > 2 && !(e->h->flags & SOX_EFF_MCHAN)) {
+      sox_fail("Sorry, effect '%s' cannot handle multiple channels, and SoX can only help out in the case of 2 channels", e->name);
+      return SOX_EOF;
+    }
     sox_report("Effects chain: %-10s %-6s %uHz", e->name,
         e->ininfo.channels < 2 ? "mono" :
         (e->h->flags & SOX_EFF_MCHAN)? "multi" : "stereo", e->ininfo.rate);
@@ -1633,7 +1655,7 @@ static int flow_effect(unsigned e)
 
   /* I have no input data ? */
   if (efftab[e - 1].odone == efftab[e - 1].olen) {
-    sox_debug("%s no data to pull to me!", efftab[e].name);
+    sox_debug_more("%s no data to pull to me!", efftab[e].name);
     return 0;
   }
 
@@ -1713,7 +1735,7 @@ static int flow_effect(unsigned e)
   if (effstatus == SOX_EOF)
     return SOX_EOF;
   if (done == 0) {
-    sox_fail("Effect took & gave no samples!");
+    sox_fail("'%s' effect took & gave no samples!", efftab[e].name);
     exit(2);
   }
   return SOX_SUCCESS;

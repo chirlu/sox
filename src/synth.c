@@ -22,7 +22,7 @@ typedef enum {
   synth_trapezium,
   synth_trapetz  = synth_trapezium,   /* Deprecated name for trapezium */
   synth_exp,
-                                      /* Repetetives above, noises below */
+                                      /* Tones above, noises below */
   synth_whitenoise,
   synth_noise = synth_whitenoise,     /* Just a handy alias */
   synth_pinknoise,
@@ -365,6 +365,16 @@ static int getopts(eff_t effp, int argc, char **argv)
       NUMERIC_PARAMETER(p1,   0, 100)
     } while (0);
   }
+
+  /* If no channels parameters were given, create one default channel: */
+  if (!synth->number_of_channels) {
+    synth->channels = xmalloc(sizeof(*synth->channels));
+    create_channel(&synth->channels[synth->number_of_channels++]);
+  }
+
+  if (!effp->ininfo.channels)
+    effp->ininfo.channels = synth->number_of_channels;
+
   return SOX_SUCCESS;
 }
 
@@ -384,12 +394,6 @@ static int start(eff_t effp)
       sox_fail(effp->h->usage);
       return SOX_EOF;
     }
-
-  /* If no channels parameters were given, create one default channel: */
-  if (!synth->number_of_channels) {
-    synth->channels = xmalloc(sizeof(*synth->channels));
-    create_channel(&synth->channels[synth->number_of_channels++]);
-  }
 
   /* If too few channel parameters were given, copy channels: */
   if (synth->number_of_channels < effp->ininfo.channels) {
