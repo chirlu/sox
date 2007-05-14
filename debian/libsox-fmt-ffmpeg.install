@@ -1,1 +1,1 @@
-debian/tmp/usr/lib/sox/libsox_fmt_ffmpeg.so.* usr/lib/sox/
+debian/tmp/usr/lib/sox/libsox_fmt_ffmpeg.so* usr/lib/sox/
