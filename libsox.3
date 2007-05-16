@@ -22,19 +22,27 @@
 libsox \- SoX, an audio file-format and effect library
 .SH SYNOPSIS
 .nf
-.B #include <st.h>
+.B #include <sox.h>
 .P
-.B ft_t sox_open_input(const char *\fIpath\fB, const sox_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB);
+.B ft_t sox_open_read(const char *\fIpath\fB, const sox_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB);
 .P
-.B ft_t sox_open_output(const char *\fIpath\fB, const sox_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB, const char *\fIcomment\fB);
+.B ft_t sox_open_write(sox_bool (*\fIoverwrite_permitted\fB)(const char *\fIfilename\fB), const char *\fIpath\fB, const sox_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB, const char *\fIcomment\fB, sox_size_t \fIlength\fB, const sox_instrinfo_t *\fIinstr\fB, const sox_loopinfo_t *\fIloops\fB);
 .P
-.B sox_ssize_t sox_read(ft_t \fIft\fB, sox_ssample_t *\fIbuf\fB, sox_ssize_t \fIlen\fB);
+.B sox_size_t sox_read(ft_t \fIft\fB, sox_ssample_t *\fIbuf\fB, sox_size_t \fIlen\fB);
 .P
-.B sox_ssize_t sox_write(ft_t \fIft\fB, sox_ssample_t *\fIbuf\fB, sox_ssize_t \fIlen\fB);
+.B sox_size_t sox_write(ft_t \fIft\fB, sox_ssample_t *\fIbuf\fB, sox_size_t \fIlen\fB);
 .P
 .B int sox_close(ft_t \fIft\fB);
 .P
 .B int sox_seek(ft_t \fIft\fB, sox_size_t \fIoffset\fB, int \fIwhence\fB);
+.P
+.B int sox_geteffect_opt(eff_t \fIeffp\fB, int \fIargc\fB, char **\fIargv\fB);
+.P
+.B int sox_geteffect(eff_t \fIeffp\fB, const char *\fIeffect_name\fB);
+.P
+.B sox_bool is_effect_name(char const *\fItext\fB);
+.P
+.B int sox_updateeffect(eff_t \fIeffp\fB, const sox_signalinfo_t *\fIin\fB, const sox_signalinfo_t *\fIout\fB, int \fIeffect_mask\fB);
 .P
 .B cc \fIfile.c\fB -o \fIfile \f-lsox
 .fi
