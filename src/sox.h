@@ -426,10 +426,10 @@ extern int sox_close(ft_t ft);
 #define SOX_SEEK_SET 0
 extern int sox_seek(ft_t ft, sox_size_t offset, int whence);
 
-int sox_geteffect_opt(eff_t, int, char **);
-int sox_geteffect(eff_t, const char *);
-sox_bool is_effect_name(char const * text);
-int sox_updateeffect(eff_t, const sox_signalinfo_t *in, const sox_signalinfo_t *out, int);
+int sox_geteffect_opt(eff_t effp, int argc, char **argv);
+int sox_geteffect(eff_t effp, const char *effect_name);
+sox_bool is_effect_name(char const *text);
+int sox_updateeffect(eff_t effp, const sox_signalinfo_t *in, const sox_signalinfo_t *out, int effect_mask);
 int sox_gettype(ft_t, sox_bool);
 ft_t sox_initformat(void);
 char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samples, int def);
