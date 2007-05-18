@@ -89,7 +89,7 @@ static int _fseeko64_wrap(FILE *f, ogg_int64_t off, int whence) {
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int sox_vorbisstartread(ft_t ft)
+static int startread(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_info *vi;
@@ -210,7 +210,7 @@ static int refill_buffer (vorbis_t vb)
  * Return number of samples read.
  */
 
-static sox_size_t sox_vorbisread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         sox_size_t i;
@@ -245,7 +245,7 @@ static sox_size_t sox_vorbisread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int sox_vorbisstopread(ft_t ft)
+static int stopread(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
 
@@ -329,7 +329,7 @@ static int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
         return HEADER_OK;
 }
 
-static int sox_vorbisstartwrite(ft_t ft)
+static int startwrite(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve;
@@ -377,7 +377,7 @@ static int sox_vorbisstartwrite(ft_t ft)
         return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_vorbiswrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;
@@ -428,13 +428,13 @@ static sox_size_t sox_vorbiswrite(ft_t ft, const sox_ssample_t *buf, sox_size_t 
         return (len);
 }
 
-static int sox_vorbisstopwrite(ft_t ft)
+static int stopwrite(ft_t ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;
 
         /* Close out the remaining data */
-        sox_vorbiswrite(ft, NULL, 0);
+        write(ft, NULL, 0);
 
         ogg_stream_clear(&ve->os);
         vorbis_block_clear(&ve->vb);
@@ -444,27 +444,22 @@ static int sox_vorbisstopwrite(ft_t ft)
         return (SOX_SUCCESS);
 }
 
-static const char *vorbisnames[] = {
-  "vorbis",
-  "ogg",
-  NULL
-};
-
-static sox_format_t sox_vorbis_format = {
-  vorbisnames,
-  0,
-  sox_vorbisstartread,
-  sox_vorbisread,
-  sox_vorbisstopread,
-  sox_vorbisstartwrite,
-  sox_vorbiswrite,
-  sox_vorbisstopwrite,
-  sox_format_nothing_seek
-};
+static int seek(ft_t ft, sox_size_t offset) 
+{
+  vorbis_t vb = (vorbis_t)ft->priv;
+  return ov_pcm_seek(vb->vf, offset / ft->signal.channels)? SOX_EOF:SOX_SUCCESS;
+}
 
 const sox_format_t *sox_vorbis_format_fn(void);
 
 const sox_format_t *sox_vorbis_format_fn(void)
 {
-    return &sox_vorbis_format;
+  static const char * names[] = {"vorbis", "ogg", NULL};
+  static sox_format_t driver = {
+    names, SOX_FILE_SEEK,
+    startread, read, stopread,
+    startwrite, write, stopwrite,
+    seek
+  };
+  return &driver;
 }
