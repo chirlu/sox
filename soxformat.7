@@ -401,7 +401,16 @@ A
 .I playlist
 format; contains a list of audio files.
 See [2] for details of this format.
-Note: SHOUTcast PLS is only partially supported.
+.SP
+Note: SHOUTcast PLS relies on
+.BR wget (1)
+and is only partially supported: it's necessary to
+specify the audio type manually, e.g.
+.EX
+	play -t mp3 \(dqhttp://a.server/pls?rn=265&file=filename.pls\(dq
+.EE
+and SoX does not know about alternative servers\*mhit Ctrl-C twice in
+quick succession to quit.
 .TP
 .B .prc
 Psion Record. Used in Psion EPOC PDAs (Series 5, Revo and similar) for
