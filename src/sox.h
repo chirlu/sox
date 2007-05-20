@@ -28,6 +28,8 @@
 /* Avoid warnings about unused parameters. */
 #ifdef __GNUC__
 #define UNUSED __attribute__ ((unused))
+#else
+#define UNUSED
 #endif
 
 /* Boolean type, assignment (but not necessarily binary) compatible with

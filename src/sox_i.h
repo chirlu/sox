@@ -32,7 +32,30 @@
 #define NORET
 #endif
 
-/* C language enhancements: */
+#ifdef _MSC_VER
+#define __STDC__ 1
+#define S_IFMT   _S_IFMT
+#define S_IFREG  _S_IFREG
+#define O_BINARY _O_BINARY
+#define fstat _fstat
+#define ftime _ftime
+#define inline __inline
+#define isatty _isatty
+#define popen _popen
+#define stat _stat
+#define strdup _strdup
+#define timeb _timeb
+#endif
+
+#if defined(DOS) || defined(WIN32) || defined(__NT__) || defined(__DJGPP__)
+  #define LAST_SLASH(path) max(strrchr(path, '/'), strrchr(path, '\\'))
+  #define IS_ABSOLUTE(path) ((path)[0] == '/' || (path)[0] == '\\' || (path)[1] == ':')
+  #define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
+#else
+  #define LAST_SLASH(path) strrchr(path, '/')
+  #define IS_ABSOLUTE(path) ((path)[0] == '/')
+  #define SET_BINARY_MODE(file)
+#endif
 
 /* Compile-time ("static") assertion */
 /*   e.g. assert_static(sizeof(int) >= 4, int_type_too_small)    */
@@ -56,6 +79,7 @@
 #define array_length(a) (sizeof(a)/sizeof(a[0]))
 
 /* declared in misc.c */
+char const * find_file_extension(char const * pathname);
 typedef struct {char const *text; int value;} enum_item;
 #define ENUM_ITEM(prefix, item) {#item, prefix##item},
 enum_item const * find_enum_text(
@@ -237,21 +261,6 @@ typedef struct {
 
 extern unsigned sox_formats;
 extern sox_format_tab_t sox_format_fns[];
-
-const sox_format_t *sox_auto_format_fn(void);
-const sox_format_t *sox_raw_format_fn(void);
-const sox_format_t *sox_al_format_fn(void);
-const sox_format_t *sox_la_format_fn(void);
-const sox_format_t *sox_lu_format_fn(void);
-const sox_format_t *sox_s3_format_fn(void);
-const sox_format_t *sox_sb_format_fn(void);
-const sox_format_t *sox_sl_format_fn(void);
-const sox_format_t *sox_sw_format_fn(void);
-const sox_format_t *sox_u3_format_fn(void);
-const sox_format_t *sox_ub_format_fn(void);
-const sox_format_t *sox_u4_format_fn(void);
-const sox_format_t *sox_ul_format_fn(void);
-const sox_format_t *sox_uw_format_fn(void);
 
 /* Raw I/O */
 int sox_rawstartread(ft_t ft);

@@ -9,18 +9,29 @@
 
 #include "sox_i.h"
 
-#define MAX_FORMATS 256
-unsigned sox_formats = 0;
-sox_format_tab_t sox_format_fns[MAX_FORMATS];
+/*
+ * libSoX file format and effect tables.
+ */
+
+/* File format handlers. */
+
+#ifdef HAVE_LTDL_H
+  #define MAX_FORMATS 256
+  unsigned sox_formats = 0;
+  sox_format_tab_t sox_format_fns[MAX_FORMATS];
+#else
+  #define FORMAT(f) extern sox_format_t const * sox_##f##_format_fn(void);
+  #include "formats.h"
+  #undef FORMAT
+  sox_format_tab_t sox_format_fns[] = {
+  #define FORMAT(f) {0, sox_##f##_format_fn},
+  #include "formats.h"
+  #undef FORMAT
+  };
+  unsigned sox_formats = array_length(sox_format_fns);
+#endif 
 
 /* Effects handlers. */
-
-/*
- * SOX_EFF_CHAN means that the number of channels can change.
- * SOX_EFF_RATE means that the sample rate can change.
- * SOX_EFF_MCHAN means that the effect is coded for multiple channels.
- *
- */
 
 sox_effect_fn_t sox_effect_fns[] = {
   sox_allpass_effect_fn,

@@ -15,9 +15,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdarg.h>
-#ifdef _MSC_VER
-#define popen _popen
-#endif
 
 sox_output_message_handler_t sox_output_message_handler = NULL;
 unsigned sox_output_verbosity_level = 2;
@@ -102,10 +99,10 @@ void sox_fail_errno(ft_t ft, int sox_errno, const char *fmt, ...)
         ft->sox_errno = sox_errno;
 
         va_start(args, fmt);
-#ifdef _MSC_VER
-        vsprintf(ft->sox_errstr, fmt, args);
-#else
+#ifdef HAVE_VSNPRINTF
         vsnprintf(ft->sox_errstr, sizeof(ft->sox_errstr), fmt, args);
+#else
+        vsprintf(ft->sox_errstr, fmt, args);
 #endif
         va_end(args);
         ft->sox_errstr[255] = '\0';

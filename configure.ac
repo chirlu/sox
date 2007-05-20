@@ -47,10 +47,10 @@ AC_C_INLINE
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(fcntl.h unistd.h byteswap.h)
+AC_CHECK_HEADERS(fcntl.h unistd.h byteswap.h sys/time.h sys/timeb.h ltdl.h)
 
 dnl Checks for library functions.
-AC_CHECK_FUNCS(strcasecmp strdup)
+AC_CHECK_FUNCS(strcasecmp strdup popen vsnprintf)
 AC_REPLACE_FUNCS(getopt_long)
 AM_CONDITIONAL(GETOPT_LONG, test x$getopt_long = xtrue)
 

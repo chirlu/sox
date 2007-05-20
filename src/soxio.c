@@ -1,29 +1,16 @@
 #include "sox_i.h"
 
-#include <string.h>
 #include <errno.h>
-#include <stdlib.h>
-#include <sys/types.h> /* for fstat() */
-#include <sys/stat.h> /* for fstat() */
-
-#ifdef _MSC_VER
-/* __STDC__ is defined, so these symbols aren't created. */
-#define S_IFMT   _S_IFMT
-#define S_IFREG  _S_IFREG
-#define fstat _fstat
-#endif
-
-/* Based on zlib's minigzip: */
-#if defined(WIN32) || defined(__NT__) || defined(__DJGPP__)
 #include <fcntl.h>
-#include <io.h>
-#ifndef O_BINARY
-#define O_BINARY _O_BINARY
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#ifdef HAVE_IO_H
+  #include <io.h>
 #endif
-#define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
-#else
-#define SET_BINARY_MODE(file)
-#endif
+
 
 sox_size_t sox_bufsiz = 8192;
 sox_global_info_t sox_global_info;
@@ -183,12 +170,6 @@ input_error:
     return NULL;
 }
 
-#if defined(DOS) || defined(WIN32)
-#define LASTCHAR '\\'
-#else
-#define LASTCHAR '/'
-#endif
-
 ft_t sox_open_write(
     sox_bool (*overwrite_permitted)(const char *filename),
     const char *path,
@@ -206,25 +187,11 @@ ft_t sox_open_write(
     ft->filename = xstrdup(path);
 
     if (!filetype) {
-        char *chop;
-        int len;
-
-        len = strlen(ft->filename);
-
-        /* Use filename extension to determine audio type.
-         * Search for the last '.' appearing in the filename, same
-         * as for input files.
-         */
-        chop = ft->filename + len;
-        while (chop > ft->filename && *chop != LASTCHAR && *chop != '.')
-            chop--;
-
-        if (*chop == '.') {
-            chop++;
-            ft->filetype = xstrdup(chop);
-        }
+      char const * extension = find_file_extension(ft->filename);
+      if (extension)
+        ft->filetype = xstrdup(extension);
     } else
-        ft->filetype = xstrdup(filetype);
+      ft->filetype = xstrdup(filetype);
 
     if (!ft->filetype || sox_gettype(ft, no_filetype_given) != SOX_SUCCESS)
     {

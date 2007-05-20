@@ -20,10 +20,10 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #ifdef HAVE_SUN_AUDIOIO_H
-#include <sun/audioio.h>
+  #include <sun/audioio.h>
 #else
 #ifdef HAVE_SYS_AUDIOIO_H
-#include <sys/audioio.h>
+  #include <sys/audioio.h>
 #endif
 #endif
 #include <errno.h>

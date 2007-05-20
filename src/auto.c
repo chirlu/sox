@@ -17,12 +17,6 @@
 #include "sox_i.h"
 #include <string.h>
 
-#if defined(DOS) || defined(WIN32)
-#define LASTCHAR '\\'
-#else
-#define LASTCHAR '/'
-#endif
-
 static int sox_autostartread(ft_t ft)
 {
     char *type = NULL;
@@ -153,25 +147,11 @@ static int sox_autostartread(ft_t ft)
     } /* if (seekable) */
 
     if (type == NULL)
-    {
-        /* Use filename extension to determine audio type. */
+      type = find_file_extension(ft->filename);
 
-        /* First, chop off any path portions of filename.  This
-         * prevents the next search from considering that part. */
-        if ((type = strrchr(ft->filename, LASTCHAR)) == NULL)
-            type = ft->filename;
-
-        /* Now look for an filename extension */
-        if ((type = strrchr(type, '.')) != NULL)
-            type++;
-        else
-            type = NULL;
-    }
-
-    if (type == NULL)
-    {
-        sox_fail_errno(ft,SOX_EFMT, "Could not determine file type.");
-        return (SOX_EOF);
+    if (type == NULL) {
+      sox_fail_errno(ft,SOX_EFMT, "Could not determine file type.");
+      return SOX_EOF;
     }
     free(ft->filetype);
     ft->filetype = strdup(type);

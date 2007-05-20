@@ -23,38 +23,52 @@
  */
 
 #include "sox_i.h"
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <sys/time.h>
-#include <time.h>
+
 #include <ctype.h>
 #include <errno.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>             /* for unlink() */
+#include <math.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+
+#ifdef HAVE_IO_H
+  #include <io.h>
 #endif
-#include <ltdl.h>
+
+#ifdef HAVE_LTDL_H
+  #include <ltdl.h>
+#endif
+
+#ifdef HAVE_SYS_TIME_H
+  #include <sys/time.h>
+#endif
+
+#ifdef HAVE_SYS_TIMEB_H
+  #include <sys/timeb.h>
+#endif
+
+#ifdef HAVE_UNISTD_H
+  #include <unistd.h>
+#endif
 
 #ifdef HAVE_GETOPT_LONG
-#include <getopt.h>
+  #include <getopt.h>
 #else
-#include "getopt.h"
+  #include "getopt.h"
 #endif
 
-#include <sys/types.h> /* for fstat() */
-#include <sys/stat.h> /* for fstat() */
-#ifdef _MSC_VER
-/*
- * __STDC__ is defined, so these symbols aren't created.
- */
-#define S_IFMT   _S_IFMT
-#define S_IFREG  _S_IFREG
-#define fstat _fstat
-#define strdup _strdup
-#define isatty _isatty
-#include <io.h>
+#ifdef HAVE_GETTIMEOFDAY
+  #define TIME_FRAC 1e6
+#else
+  #define timeval timeb
+  #define gettimeofday(a,b) ftime(a)
+  #define tv_sec time
+  #define tv_usec millitm
+  #define TIME_FRAC 1e3
 #endif
 
 static sox_bool play = sox_false, rec = sox_false;
@@ -209,10 +223,12 @@ static void cleanup(void)
     free(ofile);
   }
 
+#ifdef HAVE_LTDL_H
   if (plugins_initted && (ret = lt_dlexit()) != 0) {
     sox_fail("lt_dlexit failed with %d error(s): %s", ret, lt_dlerror());
     exit(1);
   }
+#endif
 }
 
 static file_t new_file(void)
@@ -235,7 +251,7 @@ static file_t new_file(void)
 
 static void set_device(file_t f, sox_bool recording)
 {
-#ifdef HAVE_AO_AO_H
+#ifdef HAVE_LIBAO
   if (!recording) {
     f->filetype = "ao";
     f->filename = xstrdup("default");
@@ -245,10 +261,10 @@ static void set_device(file_t f, sox_bool recording)
 #if defined(HAVE_ALSA)
   f->filetype = "alsa";
   f->filename = xstrdup("default");
-#elif defined(HAVE_OSS)
+#elif defined(HAVE_SYS_SOUNDCARD_H) || defined(HAVE_MACHINE_SOUNDCARD_H)
   f->filetype = "ossdsp";
   f->filename = xstrdup("/dev/dsp");
-#elif defined (HAVE_SUN_AUDIO)
+#elif defined(HAVE_SYS_AUDIOIO_H) || defined(HAVE_SUN_AUDIOIO_H)
   char *device = getenv("AUDIODEV");
   f->filetype = "sunau";
   f->filename = xstrdup(device ? device : "/dev/audio");
@@ -291,11 +307,7 @@ static void parse_playlist(const file_t f0, char const * const filename)
   size_t text_length = 100;
   char * text = xmalloc(text_length + 1);
   char * dirname = xstrdup(filename);
-#if defined(DOS) || defined(WIN32)
-  char * slash_pos = max(strrchr(dirname, '/'), strrchr(dirname, '\\'));
-#else
-  char * slash_pos = strrchr(dirname, '/');
-#endif
+  char * slash_pos = LAST_SLASH(dirname);
   FILE * file = xfopen(filename, "r");
   int c;
 
@@ -350,11 +362,7 @@ static void parse_playlist(const file_t f0, char const * const filename)
 
       f = new_file();
       *f = *f0;
-      if (!dirname[0] || is_uri(id)
-#if defined(DOS) || defined(WIN32)
-          || id[0] == '\\' || id[1] == ':'
-#endif
-          || id[0] == '/')
+      if (!dirname[0] || is_uri(id) || IS_ABSOLUTE(id))
         f->filename = xstrdup(id);
       else {
         f->filename = xmalloc(strlen(dirname) + strlen(id) + 2); 
@@ -446,6 +454,7 @@ static void parse_options_and_filenames(int argc, char **argv)
   }
 }
 
+#ifdef HAVE_LTDL_H
 #define MAX_NAME_LEN 1024
 static int init_format(const char *file, lt_ptr data)
 {
@@ -468,9 +477,11 @@ static int init_format(const char *file, lt_ptr data)
 
   return -1;
 }
+#endif
 
 static void find_formats(void)
 {
+#ifdef HAVE_LTDL_H
   int ret;
 
   if ((ret = lt_dlinit()) != 0) {
@@ -480,6 +491,7 @@ static void find_formats(void)
   plugins_initted = sox_true;
 
   lt_dlforeachfile(PKGLIBDIR, init_format, NULL);
+#endif
 }
 
 int main(int argc, char **argv)
@@ -1035,7 +1047,7 @@ static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
   time_t d;
   gettimeofday(&now, NULL);
   d = now.tv_sec - then->tv_sec;
-  ret = d > ceil(secs) || now.tv_usec - then->tv_usec + d * 1e6 >= secs * 1e6;
+  ret = d > ceil(secs) || now.tv_usec - then->tv_usec + d * TIME_FRAC >= secs * TIME_FRAC;
   if (ret || always_reset)
     *then = now;
   return ret;

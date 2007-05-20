@@ -359,6 +359,21 @@ sox_ssample_t sox_lcm(sox_ssample_t a, sox_ssample_t b)
   return a * (b / sox_gcd(a, b));
 }
 
+char const * find_file_extension(char const * pathname)
+{
+  /* First, chop off any path portions of filename.  This
+   * prevents the next search from considering that part. */
+  char const * result = LAST_SLASH(pathname);
+  if (!result)
+    result = pathname;
+
+  /* Now look for an filename extension */
+  result = strrchr(result, '.');
+  if (result)
+    ++result;
+  return result;
+}
+
 #ifndef HAVE_STRCASECMP
 /*
  * Portable strcasecmp() function
@@ -562,12 +577,14 @@ sox_bool is_uri(char const * text)
 FILE * xfopen(char const * identifier, char const * mode) 
 { 
   if (is_uri(identifier)) {
-    FILE * f; 
+    FILE * f = 0; 
+#ifdef HAVE_POPEN
     char const * const command_format = "wget -q -O- \"%s\"";
     char * command = xmalloc(strlen(command_format) + strlen(identifier)); 
     sprintf(command, command_format, identifier); 
     f = popen(command, "r"); 
-    free(command); 
+    free(command);
+#endif 
     return f;
   }
   return fopen(identifier, mode);

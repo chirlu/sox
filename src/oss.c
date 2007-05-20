@@ -27,18 +27,17 @@
 
 #include "sox_i.h"
 
-#ifdef HAVE_OSS
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
 #ifdef HAVE_SYS_SOUNDCARD_H
-#include <sys/soundcard.h>
+  #include <sys/soundcard.h>
 #endif
 #ifdef HAVE_MACHINE_SOUNDCARD_H
-#include <machine/soundcard.h>
+  #include <machine/soundcard.h>
 #endif
+
 #include <sys/ioctl.h>
 
 /* common r/w initialization code */
@@ -236,4 +235,3 @@ const sox_format_t *sox_oss_format_fn(void)
 {
     return &sox_oss_format;
 }
-#endif
