@@ -207,15 +207,13 @@ static int sox_reverb_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
-        size_t len, done;
-        size_t i, j;
-        
+        size_t i = reverb->counter, j;
         float d_in, d_out;
         sox_ssample_t out;
+        sox_size_t len = min(*isamp, *osamp);
+        *isamp = *osamp = len;
 
-        i = reverb->counter;
-        len = ((*isamp > *osamp) ? *osamp : *isamp);
-        for(done = 0; done < len; done++) {
+        while (len--) {
                 /* Store delays as 24-bit signed longs */
                 d_in = (float) *ibuf++ / 256;
                 d_in = d_in * reverb->in_gain;
@@ -227,7 +225,7 @@ reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsam
                 out = SOX_24BIT_CLIP_COUNT((sox_ssample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 reverb->reverbbuf[i] = d_in;
-                i++;            /* XXX need a % maxsamples here ? */
+                i++;            /* FIXME need a % maxsamples here ? */
                 i %= reverb->maxsamples;
         }
         reverb->counter = i;

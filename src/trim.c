@@ -119,7 +119,7 @@ static int sox_trim_start(eff_t effp)
 static int sox_trim_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                  sox_size_t *isamp, sox_size_t *osamp)
 {
-    int finished = 0;
+    int result = SOX_SUCCESS;
     int start_trim = 0;
     int offset = 0;
     int done;
@@ -158,25 +158,17 @@ static int sox_trim_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *o
              * to the desired length less the amount already read.
              */
             done = trim->length - trim->trimmed;
-            finished = 1;
+            result = SOX_EOF;
         }
 
         trim->trimmed += done;
     }
-
-    memcpy(obuf, ibuf+offset, done * sizeof(sox_ssample_t));
-
+    memcpy(obuf, ibuf+offset, done * sizeof(*obuf));
     *osamp = done;
     *isamp = offset + done;
     trim->index += done;
 
-    /* return SOX_EOF when nothing consumed and we detect
-     * we are finished.
-     */
-    if (finished && !done)
-        return (SOX_EOF);
-    else
-        return (SOX_SUCCESS);
+    return result;
 }
 
 static int kill(eff_t effp)

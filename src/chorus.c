@@ -247,14 +247,13 @@ static int sox_chorus_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
-        int len, done;
         int i;
-        
         float d_in, d_out;
         sox_ssample_t out;
+        sox_size_t len = min(*isamp, *osamp);
+        *isamp = *osamp = len;
 
-        len = ((*isamp > *osamp) ? *osamp : *isamp);
-        for(done = 0; done < len; done++) {
+        while (len--) {
                 /* Store delays as 24-bit signed longs */
                 d_in = (float) *ibuf++ / 256;
                 /* Compute output first */

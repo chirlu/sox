@@ -136,62 +136,62 @@ static int sox_stat_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *o
   int done, x, len = min(*isamp, *osamp);
   short count = 0;
 
-  if (len == 0)
-    return SOX_SUCCESS;
+  if (len) {
+    if (stat->read == 0)          /* 1st sample */
+      stat->min = stat->max = stat->mid = stat->last = (*ibuf)/stat->scale;
 
-  if (stat->read == 0)          /* 1st sample */
-    stat->min = stat->max = stat->mid = stat->last = (*ibuf)/stat->scale;
+    if (stat->fft) {
+      for (x = 0; x < len; x++) {
+        stat->re_in[stat->fft_offset++] = SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[x], effp->clips);
 
-  if (stat->fft) {
-    for (x = 0; x < len; x++) {
-      stat->re_in[stat->fft_offset++] = SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[x], effp->clips);
+        if (stat->fft_offset >= stat->fft_size) {
+          stat->fft_offset = 0;
+          print_power_spectrum(stat->fft_size, (double)effp->ininfo.rate, stat->re_in, stat->re_out);
+        }
 
-      if (stat->fft_offset >= stat->fft_size) {
-        stat->fft_offset = 0;
-        print_power_spectrum(stat->fft_size, (double)effp->ininfo.rate, stat->re_in, stat->re_out);
+      }
+    }
+
+    for (done = 0; done < len; done++) {
+      long lsamp = *ibuf++;
+      double delta, samp = (double)lsamp / stat->scale;
+      /* work in scaled levels for both sample and delta */
+      stat->bin[(lsamp >> 30) + 2]++;
+      *obuf++ = lsamp;
+
+      if (stat->volume == 2) {
+          fprintf(stderr,"%08lx ",lsamp);
+          if (count++ == 5) {
+              fprintf(stderr,"\n");
+              count = 0;
+          }
       }
 
+      /* update min/max */
+      if (stat->min > samp)
+        stat->min = samp;
+      else if (stat->max < samp)
+        stat->max = samp;
+      stat->mid = stat->min / 2 + stat->max / 2;
+
+      stat->sum1 += samp;
+      stat->sum2 += samp*samp;
+      stat->asum += fabs(samp);
+
+      delta = fabs(samp - stat->last);
+      if (delta < stat->dmin)
+        stat->dmin = delta;
+      else if (delta > stat->dmax)
+        stat->dmax = delta;
+
+      stat->dsum1 += delta;
+      stat->dsum2 += delta*delta;
+
+      stat->last = samp;
     }
+    stat->read += len;
   }
 
-  for (done = 0; done < len; done++) {
-    long lsamp = *ibuf++;
-    double delta, samp = (double)lsamp / stat->scale;
-    /* work in scaled levels for both sample and delta */
-    stat->bin[(lsamp >> 30) + 2]++;
-    *obuf++ = lsamp;
-
-    if (stat->volume == 2) {
-        fprintf(stderr,"%08lx ",lsamp);
-        if (count++ == 5) {
-            fprintf(stderr,"\n");
-            count = 0;
-        }
-    }
-
-    /* update min/max */
-    if (stat->min > samp)
-      stat->min = samp;
-    else if (stat->max < samp)
-      stat->max = samp;
-    stat->mid = stat->min / 2 + stat->max / 2;
-
-    stat->sum1 += samp;
-    stat->sum2 += samp*samp;
-    stat->asum += fabs(samp);
-
-    delta = fabs(samp - stat->last);
-    if (delta < stat->dmin)
-      stat->dmin = delta;
-    else if (delta > stat->dmax)
-      stat->dmax = delta;
-
-    stat->dsum1 += delta;
-    stat->dsum2 += delta*delta;
-
-    stat->last = samp;
-  }
-  stat->read += len;
   *isamp = *osamp = len;
   /* Process all samples */
 
