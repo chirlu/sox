@@ -419,9 +419,9 @@ static int sox_wavstartread(ft_t ft)
     if (strncmp("RIFX", magic, 4) == 0) 
     {
         sox_debug("Found RIFX header, swapping bytes");
-        ft->signal.reverse_bytes = SOX_IS_LITTLEENDIAN;
+        ft->signal.reverse_bytes ^= SOX_IS_LITTLEENDIAN;
     }
-    else ft->signal.reverse_bytes = SOX_IS_BIGENDIAN;
+    else ft->signal.reverse_bytes ^= SOX_IS_BIGENDIAN;
 
     sox_readdw(ft, &dwRiffLength);
 
@@ -1439,7 +1439,6 @@ static int wavwritehdr(ft_t ft, int second_header)
     dwAvgBytesPerSec = (double)wBlockAlign*ft->signal.rate / (double)wSamplesPerBlock + 0.5;
 
     /* figured out header info, so write it */
-
 
     /* If user specified opposite swap than we think, assume they are
      * asking to write a RIFX file.
