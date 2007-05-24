@@ -454,12 +454,13 @@ static void parse_options_and_filenames(int argc, char **argv)
   }
 }
 
+/* FIXME: Use vasprintf */
 #ifdef HAVE_LTDL_H
 #define MAX_NAME_LEN 1024
 static int init_format(const char *file, lt_ptr data)
 {
   lt_dlhandle lth = lt_dlopenext(file);
-  char *end = file + strlen(file);
+  const char *end = file + strlen(file);
   const char prefix[] = "libsox_fmt_";
   char fnname[MAX_NAME_LEN];
   char *start = strstr(file, prefix) + sizeof(prefix) - 1;
@@ -470,12 +471,12 @@ static int init_format(const char *file, lt_ptr data)
     if (ret > 0 && ret < MAX_NAME_LEN) {
       sox_format_fns[sox_formats].fn = (sox_format_fn_t)lt_dlsym(lth, fnname);
       sox_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, lth, sox_format_fns[sox_formats].fn);
-      sox_formats++;
-      return 0;
+      if (sox_format_fns[sox_formats].fn)
+        sox_formats++;
     }
   }
 
-  return -1;
+  return 0;
 }
 #endif
 
@@ -1989,20 +1990,16 @@ static void usage(char const *message)
 
   printf("SUPPORTED FILE FORMATS:");
   for (i = 0, formats = 0; i < sox_formats; i++) {
-    if (sox_format_fns[i].fn) {
-      char const * const *names = sox_format_fns[i].fn()->names;
-      while (*names++)
-        formats++;
-    }
+    char const * const *names = sox_format_fns[i].fn()->names;
+    while (*names++)
+      formats++;
   }
   formats += 2;
   format_list = (const char **)xmalloc(formats * sizeof(char *));
   for (i = 0, formats = 0; i < sox_formats; i++) {
-    if (sox_format_fns[i].fn) {
-      char const * const *names = sox_format_fns[i].fn()->names;
-      while (*names)
-        format_list[formats++] = *names++;
-    }
+    char const * const *names = sox_format_fns[i].fn()->names;
+    while (*names)
+      format_list[formats++] = *names++;
   }
   format_list[formats++] = "m3u";
   format_list[formats++] = "pls";
