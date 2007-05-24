@@ -121,22 +121,19 @@ int sox_gettype(ft_t formp, sox_bool is_file_extension)
         return SOX_EFMT;
     }
     for (i = 0; i < sox_formats; i++) {
-      /* FIXME: add only non-NULL formats to the list */
-      if (sox_format_fns[i].fn) {
-        const sox_format_t *f = sox_format_fns[i].fn();
-        if (is_file_extension && (f->flags & SOX_FILE_DEVICE))
-          continue; /* don't match device name in file name extensions */
-        for (list = f->names; *list; list++) {
-            const char *s1 = *list, *s2 = formp->filetype;
-            if (!strcasecmp(s1, s2))
-                break;  /* not a match */
-        }
-        if (!*list)
-            continue;
-        /* Found it! */
-        formp->h = f;
-        return SOX_SUCCESS;
+      const sox_format_t *f = sox_format_fns[i].fn();
+      if (is_file_extension && (f->flags & SOX_FILE_DEVICE))
+        continue; /* don't match device name in file name extensions */
+      for (list = f->names; *list; list++) {
+        const char *s1 = *list, *s2 = formp->filetype;
+        if (!strcasecmp(s1, s2))
+          break;  /* not a match */
       }
+      if (!*list)
+        continue;
+      /* Found it! */
+      formp->h = f;
+      return SOX_SUCCESS;
     }
     sox_fail_errno(formp, SOX_EFMT, "File type `%s' is not known",
                   formp->filetype);
