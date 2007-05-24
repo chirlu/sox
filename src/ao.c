@@ -19,8 +19,6 @@
 
 #include "sox_i.h"
 
-#ifdef HAVE_LIBAO
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <ao/ao.h>
@@ -107,5 +105,3 @@ const sox_format_t *sox_ao_format_fn(void)
 {
     return &sox_ao_format;
 }
-
-#endif
