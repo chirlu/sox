@@ -117,7 +117,7 @@ int sox_biquad_flow(eff_t effp, const sox_ssample_t *ibuf,
     sox_ssample_t *obuf, sox_size_t *isamp, sox_size_t *osamp)
 {
   biquad_t p = (biquad_t) effp->priv;
-  sox_size_t len = (*isamp > *osamp)? *osamp : *isamp;
+  sox_size_t len = min(*isamp, *osamp);
   *isamp = *osamp = len;
 
   while (len--)
