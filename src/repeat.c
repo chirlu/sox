@@ -44,12 +44,12 @@ static int sox_repeat_getopts(eff_t effp, int n, char **argv)
         }
 
         if (!(sscanf(argv[0], "%i", &repeat->repeats))) {
-                sox_fail("repeat: could not parse repeat parameter");
+                sox_fail("could not parse repeat parameter");
                 return (SOX_EOF);
         }
 
         if (repeat->repeats < 0) {
-                sox_fail("repeat: repeat parameter must be positive");
+                sox_fail("repeat parameter must be positive");
                 return (SOX_EOF);
         }
 
@@ -64,7 +64,7 @@ static int sox_repeat_start(eff_t effp)
           return SOX_EFF_NULL;
 
         if ((repeat->fp = tmpfile()) == NULL) {
-                sox_fail("repeat: could not create temporary file");
+                sox_fail("could not create temporary file");
                 return (SOX_EOF);
         }
 
@@ -80,7 +80,7 @@ static int sox_repeat_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t 
 
         if (fwrite((char *)ibuf, sizeof(sox_ssample_t), *isamp, repeat->fp) !=
                         *isamp) {
-                sox_fail("repeat: write error on temporary file");
+                sox_fail("write error on temporary file");
                 return (SOX_EOF);
         }
 
@@ -105,7 +105,7 @@ static int sox_repeat_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
                 repeat->total = ftello(repeat->fp);
 
                 if ((repeat->total % sizeof(sox_ssample_t)) != 0) {
-                        sox_fail("repeat: corrupted temporary file");
+                        sox_fail("corrupted temporary file");
                         return (SOX_EOF);
                 }
 
@@ -133,7 +133,7 @@ static int sox_repeat_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
                                 repeat->fp);
                 if (read != samp) {
                         perror(strerror(errno));
-                        sox_fail("repeat: read error on temporary file");
+                        sox_fail("read error on temporary file");
                         return(SOX_EOF);
                 }
 
@@ -199,7 +199,7 @@ static int sox_repeat_stop(eff_t effp)
 static sox_effect_t sox_repeat_effect = {
   "repeat",
   "Usage: repeat count",
-  SOX_EFF_LENGTH,
+  SOX_EFF_MCHAN | SOX_EFF_LENGTH,
   sox_repeat_getopts,
   sox_repeat_start,
   sox_repeat_flow,
