@@ -72,7 +72,9 @@
 #endif
 
 static sox_bool play = sox_false, rec = sox_false;
+#ifdef HAVE_LTDL_H
 static sox_bool plugins_initted = sox_false;
+#endif
 static enum {sox_sequence, sox_concatenate, sox_mix, sox_merge} combine_method = sox_concatenate;
 static sox_size_t mixing_clips = 0;
 static sox_bool repeatable_random = sox_false;  /* Whether to invoke srand. */
@@ -90,8 +92,6 @@ static sox_option_t show_progress = SOX_OPTION_DEFAULT;
 static unsigned long input_wide_samples = 0;
 static unsigned long read_wide_samples = 0;
 static unsigned long output_samples = 0;
-
-static sox_ssample_t *ibufl, *ibufr, *obufl, *obufr; /* Left/right interleave buffers */
 
 typedef struct file_info
 {
@@ -112,15 +112,6 @@ static void usage_effect(char *) NORET;
 static int process(void);
 static void update_status(sox_bool all_done);
 static void report_file_info(file_t f);
-static void parse_effects(int argc, char **argv);
-static void build_effects_table(void);
-static int start_all_effects(void);
-static int flow_effect_out(void);
-static int flow_effect(unsigned);
-static int drain_effect_out(void);
-static int drain_effect(unsigned);
-static void stop_effects(void);
-static void kill_effects(void);
 
 #define MAX_INPUT_FILES 32
 #define MAX_FILES MAX_INPUT_FILES + 2 /* 1 output file plus record input */
@@ -138,28 +129,11 @@ static sox_signalinfo_t combiner, ofile_signal;
  * converting a mono file to stereo.  This allows the resample to work
  * on half the data.
  *
- * Real effects table only needs to be 2 entries bigger then the user
- * specified table.  This is because at most we will need to add
- * a resample effect and a channel averaging effect.
+ * User effects table must be 4 entries smaller then the real
+ * effects table.  This is because at most we will need to add
+ * a resample effect, a channel mixing effect, the input, and the output.
  */
-#define MAX_EFF 16
-#define MAX_USER_EFF 14
-
-/*
- * efftab[0] is a dummy entry used only as an input buffer for
- * reading input data into.
- *
- * If one was to support effects for quad-channel files, there would
- * need to be an effect table for each channel to handle effects
- * that don't set SOX_EFF_MCHAN.
- */
-
-static struct sox_effect efftab[MAX_EFF]; /* left/mono channel effects */
-static struct sox_effect efftabR[MAX_EFF];/* right channel effects */
-static unsigned neffects;                     /* # of effects to run on data */
-static unsigned input_eff;                    /* last input effect with data */
-static sox_bool input_eff_eof;                /* has input_eff reached EOF? */
-
+#define MAX_USER_EFF (MAX_EFFECTS - 4)
 static struct sox_effect user_efftab[MAX_USER_EFF];
 static unsigned nuser_effects;
 
@@ -194,7 +168,6 @@ static sox_bool overwrite_permitted(char const * filename)
 static void cleanup(void)
 {
   size_t i;
-  int ret;
 
   /* Close the input and output files before exiting. */
   for (i = 0; i < input_count; i++) {
@@ -249,7 +222,7 @@ static file_t new_file(void)
   return f;
 }
 
-static void set_device(file_t f, sox_bool recording)
+static void set_device(file_t f, sox_bool recording UNUSED)
 {
 #ifdef HAVE_LIBAO
   if (!recording) {
@@ -454,6 +427,37 @@ static void parse_options_and_filenames(int argc, char **argv)
   }
 }
 
+static void parse_effects(int argc, char **argv)
+{
+  int argc_effect;
+
+  for (nuser_effects = 0; optind < argc; ++nuser_effects) {
+    struct sox_effect * e = &user_efftab[nuser_effects];
+    int (*getopts)(eff_t effp, int argc, char *argv[]);
+
+    if (nuser_effects >= MAX_USER_EFF) {
+      sox_fail("too many effects specified (at most %i allowed)", MAX_USER_EFF);
+      exit(1);
+    }
+
+    argc_effect = sox_geteffect_opt(e, argc - optind, &argv[optind]);
+    if (argc_effect == SOX_EOF) {
+      sox_fail("Effect `%s' does not exist!", argv[optind]);
+      exit(1);
+    }
+    if (e->h->flags & SOX_EFF_DEPRECATED)
+      sox_warn("Effect `%s' is deprecated and may be removed in a future release; please refer to the manual sox(1) for an alternative effect", e->name);
+
+    optind++; /* Skip past effect name */
+    e->global_info = &effects_global_info;
+    getopts = e->h->getopts?  e->h->getopts : sox_effect_nothing_getopts;
+    if (getopts(e, argc_effect, &argv[optind]) == SOX_EOF)
+      exit(2);
+
+    optind += argc_effect; /* Skip past the effect arguments */
+  }
+}
+
 /* FIXME: Use vasprintf */
 #ifdef HAVE_LTDL_H
 #define MAX_NAME_LEN 1024
@@ -521,12 +525,6 @@ int main(int argc, char **argv)
      if desired) */
   find_formats();
   
-  /* Allocate buffers, size of which may have been set by --buffer */
-  ibufl = xcalloc(sox_bufsiz / 2, sizeof(sox_ssample_t));
-  obufl = xcalloc(sox_bufsiz / 2, sizeof(sox_ssample_t));
-  ibufr = xcalloc(sox_bufsiz / 2, sizeof(sox_ssample_t));
-  obufr = xcalloc(sox_bufsiz / 2, sizeof(sox_ssample_t));
-
   /* Make sure we got at least the required # of input filenames */
   input_count = file_count ? file_count - 1 : 0;
   if (input_count < (combine_method <= sox_concatenate ? 1 : 2))
@@ -590,7 +588,7 @@ int main(int argc, char **argv)
   }
 
   for (i = 0; i < input_count; i++) {
-    int j;
+    unsigned j;
     for (j =0; j < nuser_effects && !files[i]->desc->signal.channels; ++j)
       files[i]->desc->signal.channels = user_efftab[j].ininfo.channels;
     if (!files[i]->desc->signal.channels)
@@ -635,6 +633,8 @@ int main(int argc, char **argv)
   if (show_progress) {
     if (user_abort)
       fprintf(stderr, "Aborted.\n");
+    else if (user_skip)
+      fprintf(stderr, "Skipped.\n");
     else
       fprintf(stderr, "Done.\n");
   }
@@ -762,16 +762,16 @@ static void optimize_trim(void)
    * This hack is a huge time savings when trimming
    * gigs of audio data into managable chunks
    */ 
-  if (input_count == 1 && neffects > 1 && strcmp(efftab[1].name, "trim") == 0) {
+  if (input_count == 1 && neffects > 1 && strcmp(effects[1][0].name, "trim") == 0) {
     if ((files[0]->desc->h->flags & SOX_FILE_SEEK) && files[0]->desc->seekable){
-      sox_size_t offset = sox_trim_get_start(&efftab[1]);
+      sox_size_t offset = sox_trim_get_start(&effects[1][0]);
       if (sox_seek(files[0]->desc, offset, SOX_SEEK_SET) != SOX_EOF) { 
         read_wide_samples = offset / files[0]->desc->signal.channels;
         /* Assuming a failed seek stayed where it was.  If the 
          * seek worked then reset the start location of 
          * trim so that it thinks user didn't request a skip.
          */ 
-        sox_trim_clear_start(&efftab[1]);
+        sox_trim_clear_start(&effects[1][0]);
       }    
     }        
   }    
@@ -1029,6 +1029,10 @@ static void report_file_info(file_t f)
 
 static void progress_to_file(file_t f)
 {
+  if (user_skip) {
+    user_skip = sox_false;
+    fprintf(stderr, "Skipped.\n");
+  }
   read_wide_samples = 0;
   input_wide_samples = f->desc->length / f->desc->signal.channels;
   if (show_progress && (sox_output_verbosity_level < 3 ||
@@ -1070,9 +1074,9 @@ static sox_bool can_segue(sox_size_t i)
     files[i]->desc->signal.rate     == files[i - 1]->desc->signal.rate;
 }
 
-static sox_size_t sox_read_wide(ft_t desc, sox_ssample_t * buf)
+static sox_size_t sox_read_wide(ft_t desc, sox_ssample_t * buf, sox_size_t max)
 {
-  sox_size_t len = sox_bufsiz / combiner.channels;
+  sox_size_t len = max / combiner.channels;
   len = sox_read(desc, buf, len * desc->signal.channels) / desc->signal.channels;
   if (!len && desc->sox_errno)
     sox_fail("%s: %s (%s)", desc->filename, desc->sox_errstr, strerror(desc->sox_errno));
@@ -1090,15 +1094,224 @@ static void balance_input(sox_ssample_t * buf, sox_size_t ws, file_t f)
     }
 }
 
+typedef struct input_combiner
+{
+  sox_ssample_t *ibuf[MAX_INPUT_FILES];
+} * input_combiner_t;
+
+assert_static(sizeof(struct input_combiner) <= SOX_MAX_EFFECT_PRIVSIZE,
+              /* else */ input_combiner_PRIVSIZE_too_big);
+
+static int combiner_start(eff_t effp)
+{
+  input_combiner_t z = (input_combiner_t) effp->priv;
+  sox_size_t ws, i;
+
+  if (combine_method <= sox_concatenate)
+    progress_to_file(files[current_input]);
+  else {
+    ws = 0;
+    for (i = 0; i < input_count; i++) {
+      z->ibuf[i] = (sox_ssample_t *)xmalloc(sox_bufsiz * sizeof(sox_ssample_t));
+      progress_to_file(files[i]);
+      ws = max(ws, input_wide_samples);
+    }
+    input_wide_samples = ws; /* Output length is that of longest input file. */
+  }
+  return SOX_SUCCESS;
+}
+
+static int combiner_drain(eff_t effp, sox_ssample_t * obuf, sox_size_t * osamp)
+{
+  input_combiner_t z = (input_combiner_t) effp->priv;
+  sox_size_t ws, s, i;
+  sox_size_t ilen[MAX_INPUT_FILES];
+  sox_size_t olen = 0;
+
+  if (combine_method <= sox_concatenate) while (sox_true) {
+    if (!user_skip)
+      olen = sox_read_wide(files[current_input]->desc, obuf, *osamp);
+    if (olen == 0) {   /* If EOF, go to the next input file. */
+      if (++current_input < input_count) {
+        if (combine_method == sox_sequence && !can_segue(current_input))
+          break;
+        progress_to_file(files[current_input]);
+        continue;
+      }
+    }
+    balance_input(obuf, olen, files[current_input]);
+    break;
+  } else {
+    sox_ssample_t * p = obuf;
+    for (i = 0; i < input_count; ++i) {
+      ilen[i] = sox_read_wide(files[i]->desc, z->ibuf[i], *osamp);
+      balance_input(z->ibuf[i], ilen[i], files[i]);
+      olen = max(olen, ilen[i]);
+    }
+    for (ws = 0; ws < olen; ++ws) /* wide samples */
+      if (combine_method == sox_mix) {          /* sum samples together */
+        for (s = 0; s < effp->ininfo.channels; ++s, ++p) {
+          *p = 0;
+          for (i = 0; i < input_count; ++i)
+            if (ws < ilen[i] && s < files[i]->desc->signal.channels) {
+              /* Cast to double prevents integer overflow */
+              double sample = *p + (double)z->ibuf[i][ws * files[i]->desc->signal.channels + s];
+              *p = SOX_ROUND_CLIP_COUNT(sample, mixing_clips);
+          }
+        }
+      } else { /* sox_merge: like a multi-track recorder */
+        for (i = 0; i < input_count; ++i)
+          for (s = 0; s < files[i]->desc->signal.channels; ++s)
+            *p++ = (ws < ilen[i]) * z->ibuf[i][ws * files[i]->desc->signal.channels + s];
+    }
+  }
+  read_wide_samples += olen;
+  olen *= effp->ininfo.channels;
+  *osamp = olen;
+  return olen? SOX_SUCCESS : SOX_EOF;
+}
+
+static int combiner_stop(eff_t effp)
+{
+  input_combiner_t z = (input_combiner_t) effp->priv;
+  sox_size_t i;
+
+  if (combine_method > sox_concatenate)
+    /* Free input buffers now that they are not used */
+    for (i = 0; i < input_count; i++)
+      free(z->ibuf[i]);
+
+  return SOX_SUCCESS;
+}
+
+static sox_effect_t const * input_combiner_effect_fn(void)
+{
+  static sox_effect_t driver = {
+    "input", 0, SOX_EFF_MCHAN,
+    0, combiner_start, 0, combiner_drain, combiner_stop, 0
+  };
+  return &driver;
+}
+
+static int output_flow(eff_t effp UNUSED, sox_ssample_t const * ibuf,
+    sox_ssample_t * obuf UNUSED, sox_size_t * isamp, sox_size_t * osamp)
+{
+  size_t len;
+  for (*osamp = *isamp; *osamp; ibuf += len, *osamp -= len) {
+    len = sox_write(ofile->desc, ibuf, *osamp);
+    if (len == 0) {
+      sox_warn("Error writing: %s", ofile->desc->sox_errstr);
+      return SOX_EOF;
+    }
+    if (user_abort) /* Don't get stuck in this loop. */
+      return SOX_EOF;
+  }
+  output_samples += *isamp / ofile->desc->signal.channels;
+  return SOX_SUCCESS;
+}
+
+static sox_effect_t const * output_effect_fn(void)
+{
+  static sox_effect_t driver = {
+    "output", 0, SOX_EFF_MCHAN, 0, 0, output_flow, 0, 0, 0
+  };
+  return &driver;
+}
+
+static void add_default_effect(char const * name, int * effects_mask)
+{
+  struct sox_effect eff;
+  struct sox_effect * e = &eff;
+  int (*getopts)(eff_t effp, int argc, char *argv[]);
+
+  /* Find effect and update initial pointers */
+  sox_geteffect(e, name);
+
+  /* Set up & give default opts for added effects */
+  e->global_info = &effects_global_info;
+  getopts = e->h->getopts?  e->h->getopts : sox_effect_nothing_getopts;
+  if (getopts(e, 0, NULL) == SOX_EOF)
+    exit(2);
+
+  add_effect(e, &combiner, &ofile->desc->signal, effects_mask);
+}
+
+/* If needed effects are not given, auto-add at (performance) optimal point.
+ */
+static void add_effects(void)
+{
+  unsigned i;
+  int effects_mask = 0;
+  sox_bool need_rate = combiner.rate     != ofile->desc->signal.rate;
+  sox_bool need_chan = combiner.channels != ofile->desc->signal.channels;
+  int user_mchan = -1;
+  sox_size_t channels = combiner.channels;
+  struct sox_effect eff;
+
+  { /* Check if we have to add effects to change rate/chans or if the
+       user has specified effects to do this, in which case, check if
+       too many rate/channel-changing effects have been specified:     */
+    int user_chan_effects = 0, user_rate_effects = 0;
+
+    for (i = 0; i < nuser_effects; i++) {
+      if (user_efftab[i].h->flags & SOX_EFF_CHAN) {
+        need_chan = sox_false;
+        ++user_chan_effects;
+      }
+      if (user_efftab[i].h->flags & SOX_EFF_RATE) {
+        need_rate = sox_false;
+        ++user_rate_effects;
+      }
+      if (user_efftab[i].h->flags & SOX_EFF_MCHAN)
+        user_mchan = i;
+    }
+    if (user_chan_effects > 1) {
+      sox_fail("Cannot specify multiple effects that change number of channels");
+      exit(2);
+    }
+    if (user_rate_effects > 1) {
+      sox_fail("Cannot specify multiple effects that change sample rate");
+      exit(2);
+    }
+  }
+
+  eff.h = input_combiner_effect_fn();
+  eff.name = eff.h->name;
+  add_effect(&eff, &combiner, &ofile->desc->signal, &effects_mask);
+
+  /* Copy user specified effects into the real effects */
+  for (i = 0; i <= nuser_effects; i++) {
+    /* If reducing channels, it's faster to do so before all other effects: */
+    if ((int)i > user_mchan && need_chan && combiner.channels > ofile->desc->signal.channels) {
+      add_default_effect("mixer", &effects_mask);
+      channels = ofile->desc->signal.channels;
+      need_chan = sox_false;
+    }
+    /* If reducing rate, it's faster to do so before all other effects
+     * (except reducing channels): */
+    if (need_rate)
+      if (i == nuser_effects || combiner.rate > ofile->desc->signal.rate) {
+        add_default_effect("resample", &effects_mask);
+        need_rate = sox_false;
+      }
+    if (i < nuser_effects)
+      add_effect(&user_efftab[i], &combiner, &ofile->desc->signal, &effects_mask);
+  }
+  if (need_chan)
+    add_default_effect("mixer", &effects_mask);
+
+  eff.h = output_effect_fn();
+  eff.name = eff.h->name;
+  add_effect(&eff, &combiner, &ofile->desc->signal, &effects_mask);
+}
+
 /*
  * Process:   Input(s) -> Balancing -> Combiner -> Effects -> Output
  */
 
 static int process(void) {
   int flowstatus = 0;
-  sox_size_t e, ws, s, i;
-  sox_size_t ilen[MAX_INPUT_FILES];
-  sox_ssample_t *ibuf[MAX_INPUT_FILES];
+  sox_size_t i;
   sox_bool known_length = combine_method != sox_sequence;
   sox_size_t olen = 0;
 
@@ -1209,668 +1422,32 @@ static int process(void) {
     report_file_info(ofile);
   }
 
-  build_effects_table();
-
-  if (start_all_effects() != SOX_SUCCESS)
+  add_effects();
+  if (start_effects() != SOX_SUCCESS)
     exit(2); /* The failing effect should have displayed an error message */
-
-  /* Allocate output buffers for effects */
-  for (e = 0; e < neffects; e++) {
-    efftab[e].obuf = (sox_ssample_t *)xmalloc(sox_bufsiz * sizeof(sox_ssample_t));
-    if (efftabR[e].name)
-      efftabR[e].obuf = (sox_ssample_t *)xmalloc(sox_bufsiz * sizeof(sox_ssample_t));
-  }
-
-  if (combine_method <= sox_concatenate)
-    progress_to_file(files[current_input]);
-  else {
-    ws = 0;
-    for (i = 0; i < input_count; i++) {
-      ibuf[i] = (sox_ssample_t *)xmalloc(sox_bufsiz * sizeof(sox_ssample_t));
-      progress_to_file(files[i]);
-      ws = max(ws, input_wide_samples);
-    }
-    input_wide_samples = ws; /* Output length is that of longest input file. */
-  }
 
   optimize_trim();
 
-  input_eff = 0;
-  input_eff_eof = sox_false;
-
-  /* mark chain as empty */
-  for(e = 1; e < neffects; e++)
-    efftab[e].odone = efftab[e].olen = 0;
-
   signal(SIGINT, sigint);
   signal(SIGTERM, sigint);
-  /* Run input data through effects until EOF (olen == 0) or user-abort. */
-  do {
-    efftab[0].olen = 0;
-    if (combine_method <= sox_concatenate) {
-      if (!user_skip)
-        efftab[0].olen = sox_read_wide(files[current_input]->desc, efftab[0].obuf);
-      if (efftab[0].olen == 0) {   /* If EOF, go to the next input file. */
-        update_status(sox_true);
-        if (user_skip) {
-          user_skip = sox_false;
-          fprintf(stderr, "Skipped.\n");
-        }
-        if (++current_input < input_count) {
-          if (combine_method == sox_sequence && !can_segue(current_input))
-            break;
-          progress_to_file(files[current_input]);
-          continue;
-        }
-      }
-      balance_input(efftab[0].obuf, efftab[0].olen, files[current_input]);
-    } else {
-      sox_ssample_t * p = efftab[0].obuf;
-      for (i = 0; i < input_count; ++i) {
-        ilen[i] = sox_read_wide(files[i]->desc, ibuf[i]);
-        balance_input(ibuf[i], ilen[i], files[i]);
-        efftab[0].olen = max(efftab[0].olen, ilen[i]);
-      }
-      for (ws = 0; ws < efftab[0].olen; ++ws) /* wide samples */
-        if (combine_method == sox_mix) {          /* sum samples together */
-          for (s = 0; s < combiner.channels; ++s, ++p) {
-            *p = 0;
-            for (i = 0; i < input_count; ++i)
-              if (ws < ilen[i] && s < files[i]->desc->signal.channels) {
-                /* Cast to double prevents integer overflow */
-                double sample = *p + (double)ibuf[i][ws * files[i]->desc->signal.channels + s];
-                *p = SOX_ROUND_CLIP_COUNT(sample, mixing_clips);
-            }
-          }
-        } else { /* sox_merge: like a multi-track recorder */
-          for (i = 0; i < input_count; ++i)
-            for (s = 0; s < files[i]->desc->signal.channels; ++s)
-              *p++ = (ws < ilen[i]) * ibuf[i][ws * files[i]->desc->signal.channels + s];
-      }
-    }
-    if (efftab[0].olen == 0)
-      break;
 
-    efftab[0].odone = 0;
-    read_wide_samples += efftab[0].olen;
-    efftab[0].olen *= combiner.channels;
-    flowstatus = flow_effect_out();
-    update_status(user_abort || ofile->desc->sox_errno || flowstatus);
+  flowstatus = flow_effects(update_status, &user_abort);
 
-    /* Quit reading/writing on user aborts.  This will close
-     * the files nicely as if an EOF was reached on read. */
-    if (user_abort)
-      break;
-
-    /* If there's an error, don't try to write more. */
-    if (ofile->desc->sox_errno)
-      break;
-  } while (flowstatus == 0);
-
-  /* Drain the effects; don't write if output is indicating errors. */
-  if (ofile->desc->sox_errno == 0)
-    drain_effect_out();
-
-  if (combine_method > sox_concatenate)
-    /* Free input buffers now that they are not used */
-    for (i = 0; i < input_count; i++)
-      free(ibuf[i]);
-
-  /* Free output buffers now that they won't be used */
-  for (e = 0; e < neffects; e++) {
-    free(efftab[e].obuf);
-    free(efftabR[e].obuf);
-  }
-
-  /* N.B. more data may be written during stop_effects */
   stop_effects();
+  delete_effects();
   return flowstatus;
-}
-
-static void parse_effects(int argc, char **argv)
-{
-  int argc_effect;
-
-  for (nuser_effects = 0; optind < argc; ++nuser_effects) {
-    struct sox_effect * e = &user_efftab[nuser_effects];
-    int (*getopts)(eff_t effp, int argc, char *argv[]);
-
-    if (nuser_effects >= MAX_USER_EFF) {
-      sox_fail("too many effects specified (at most %i allowed)", MAX_USER_EFF);
-      exit(1);
-    }
-
-    argc_effect = sox_geteffect_opt(e, argc - optind, &argv[optind]);
-    if (argc_effect == SOX_EOF) {
-      sox_fail("Effect `%s' does not exist!", argv[optind]);
-      exit(1);
-    }
-    if (e->h->flags & SOX_EFF_DEPRECATED)
-      sox_warn("Effect `%s' is deprecated and may be removed in a future release; please refer to the manual sox(1) for an alternative effect", e->name);
-
-    optind++; /* Skip past effect name */
-    e->global_info = &effects_global_info;
-    getopts = e->h->getopts?  e->h->getopts : sox_effect_nothing_getopts;
-    if (getopts(e, argc_effect, &argv[optind]) == SOX_EOF)
-      exit(2);
-
-    optind += argc_effect; /* Skip past the effect arguments */
-  }
-}
-
-static void add_effect(int * effects_mask)
-{
-  struct sox_effect * e = &efftab[neffects];
-
-  /* Copy format info to effect table */
-  *effects_mask =
-    sox_updateeffect(e, &combiner, &ofile->desc->signal, *effects_mask);
-
-  /* If this effect can't handle multiple channels then account for this. */
-  if (e->ininfo.channels > 1 && !(e->h->flags & SOX_EFF_MCHAN))
-    memcpy(&efftabR[neffects], e, sizeof(*e));
-  else memset(&efftabR[neffects], 0, sizeof(*e));
-
-  ++neffects;
-}
-
-static void add_default_effect(char const * name, int * effects_mask)
-{
-  struct sox_effect * e = &efftab[neffects];
-  int (*getopts)(eff_t effp, int argc, char *argv[]);
-
-  /* Find effect and update initial pointers */
-  sox_geteffect(e, name);
-
-  /* Set up & give default opts for added effects */
-  e->global_info = &effects_global_info;
-  getopts = e->h->getopts?  e->h->getopts : sox_effect_nothing_getopts;
-  if (getopts(e, 0, NULL) == SOX_EOF)
-    exit(2);
-
-  add_effect(effects_mask);
-}
-
-/* If needed effects are not given, auto-add at (performance) optimal point.
- */
-static void build_effects_table(void)
-{
-  unsigned i;
-  int effects_mask = 0;
-  sox_bool need_rate = combiner.rate     != ofile->desc->signal.rate;
-  sox_bool need_chan = combiner.channels != ofile->desc->signal.channels;
-  int user_mchan = -1;
-  sox_size_t channels = combiner.channels;
-
-  { /* Check if we have to add effects to change rate/chans or if the
-       user has specified effects to do this, in which case, check if
-       too many rate/channel-changing effects have been specified:     */
-    int user_chan_effects = 0, user_rate_effects = 0;
-
-    for (i = 0; i < nuser_effects; i++) {
-      if (user_efftab[i].h->flags & SOX_EFF_CHAN) {
-        need_chan = sox_false;
-        ++user_chan_effects;
-      }
-      if (user_efftab[i].h->flags & SOX_EFF_RATE) {
-        need_rate = sox_false;
-        ++user_rate_effects;
-      }
-      if (user_efftab[i].h->flags & SOX_EFF_MCHAN)
-        user_mchan = i;
-    }
-    if (user_chan_effects > 1) {
-      sox_fail("Cannot specify multiple effects that change number of channels");
-      exit(2);
-    }
-    if (user_rate_effects > 1) {
-      sox_fail("Cannot specify multiple effects that change sample rate");
-      exit(2);
-    }
-  }
-
-  /* --------- add the effects ------------------------ */
-
-  /* efftab[0] is always the input stream and always exists */
-  neffects = 1;
-
-  /* Copy user specified effects into the real efftab */
-  for (i = 0; i <= nuser_effects; i++) {
-    /* If reducing channels, it's faster to do so before all other effects: */
-    if ((int)i > user_mchan && need_chan && combiner.channels > ofile->desc->signal.channels) {
-      add_default_effect("mixer", &effects_mask);
-      channels = ofile->desc->signal.channels;
-      need_chan = sox_false;
-    }
-    /* If reducing rate, it's faster to do so before all other effects
-     * (except reducing channels): */
-    if (need_rate)
-      if (i == nuser_effects || (channels <= 2 && combiner.rate > ofile->desc->signal.rate)) {
-        add_default_effect("resample", &effects_mask);
-        need_rate = sox_false;
-      }
-    if (i < nuser_effects) {
-      memcpy(&efftab[neffects], &user_efftab[i], sizeof(efftab[0]));
-      add_effect(&effects_mask);
-    }
-  }
-  if (need_chan)
-    add_default_effect("mixer", &effects_mask);
-}
-
-static int start_all_effects(void)
-{
-  unsigned i, j;
-  int ret = SOX_SUCCESS;
-
-  for (i = 1; i < neffects; i++) {
-    struct sox_effect * e = &efftab[i];
-    sox_bool is_always_null = (e->h->flags & SOX_EFF_NULL) != 0;
-    int (*start)(eff_t effp) = e->h->start? e->h->start : sox_effect_nothing;
-
-    if (is_always_null)
-      sox_report("'%s' has no effect (is a proxy effect)", e->name);
-    else {
-      e->clips = 0;
-      ret = start(e);
-      if (ret == SOX_EFF_NULL)
-        sox_warn("'%s' has no effect in this configuration", e->name);
-      else if (ret != SOX_SUCCESS)
-        return SOX_EOF;
-    }
-    if (is_always_null || ret == SOX_EFF_NULL) { /* remove from the chain */
-      int (*kill)(eff_t effp) = e->h->kill? e->h->kill: sox_effect_nothing;
-
-      /* No left & right kill as there is no left & right getopts */
-      kill(e);
-      --neffects;
-      for (j = i--; j < neffects; ++j) {
-        efftab[j] = efftab[j + 1];
-        efftabR[j] = efftabR[j + 1];
-      }
-    }
-    /* No null checks here; the left channel looks after this */
-    else if (efftabR[i].name) {
-      efftabR[i].clips = 0;
-      if (start(&efftabR[i]) != SOX_SUCCESS)
-        return SOX_EOF;
-    }
-  }
-  for (i = 1; i < neffects; ++i) {
-    struct sox_effect * e = &efftab[i];
-    if (e->ininfo.channels > 2 && !(e->h->flags & SOX_EFF_MCHAN)) {
-      sox_fail("Sorry, effect '%s' cannot handle multiple channels, and SoX can only help out in the case of 2 channels", e->name);
-      return SOX_EOF;
-    }
-    sox_report("Effects chain: %-10s %-6s %uHz", e->name,
-        e->ininfo.channels < 2 ? "mono" :
-        (e->h->flags & SOX_EFF_MCHAN)? "multi" : "stereo", e->ininfo.rate);
-  }
-  return SOX_SUCCESS;
-}
-
-static int flow_effect_out(void)
-{
-  int havedata, flowstatus = 0;
-  size_t e, len, total;
-
-  do {
-    /* run entire chain BACKWARDS: pull, don't push.*/
-    /* this is because buffering system isn't a nice queueing system */
-    for (e = neffects - 1; e && (int)e >= (int)input_eff; e--) {
-      /* Do not call flow effect on input if it has reported
-       * EOF already as that's a waste of time and may
-       * do bad things.
-       */
-      if (e == input_eff && input_eff_eof)
-        continue;
-
-      /* flow_effect returns SOX_EOF when it will not process
-       * any more samples.  This is used to bail out early.
-       * Since we are "pulling" data, it is OK that we are not
-       * calling any more previous effects since their output
-       * would not be looked at anyways.
-       */
-      flowstatus = flow_effect(e);
-      if (flowstatus == SOX_EOF) {
-        input_eff = e;
-        /* Assume next effect hasn't reach EOF yet */
-        input_eff_eof = sox_false;
-      }
-
-      /* If this buffer contains more input data then break out
-       * of this loop now.  This will allow us to loop back around
-       * and reprocess the rest of this input buffer: we finish each
-       * effect before moving on to the next, so that each effect
-       * starts with an empty output buffer.
-       */
-      if (efftab[e].odone < efftab[e].olen) {
-        sox_debug_more("Breaking out of loop to flush buffer");
-        break;
-      }
-    }
-
-    /* If outputting and output data was generated then write it */
-    if (efftab[neffects - 1].olen > efftab[neffects - 1].odone) {
-      total = 0;
-      do {
-        /* Do not do any more writing during user aborts as
-         * we may be stuck in an infinite writing loop.
-         */
-        if (user_abort)
-          return SOX_EOF;
-
-        len = sox_write(ofile->desc,
-                       &efftab[neffects - 1].obuf[total],
-                       efftab[neffects - 1].olen - total);
-
-        if (len == 0) {
-          sox_warn("Error writing: %s", ofile->desc->sox_errstr);
-          return SOX_EOF;
-        }
-        total += len;
-      } while (total < efftab[neffects-1].olen);
-      output_samples += (total / ofile->desc->signal.channels);
-    } else {
-      /* Make it look like everything was consumed */
-      output_samples += (efftab[neffects-1].olen /
-                         ofile->desc->signal.channels);
-    }
-    efftab[neffects-1].odone = efftab[neffects-1].olen = 0;
-
-    /* if stuff still in pipeline, set up to flow effects again */
-    /* When all effects have reported SOX_EOF then this check will
-     * show no more data.
-     */
-    havedata = 0;
-    for (e = neffects - 1; (int)e >= (int)input_eff; e--) {
-      /* If odone and olen are the same then this buffer
-       * can be reused.
-       */
-      if (efftab[e].odone == efftab[e].olen)
-        efftab[e].odone = efftab[e].olen = 0;
-
-      if (efftab[e].odone < efftab[e].olen) {
-        /* Only mark that we have more data if a full
-         * frame that can be written.
-         * FIXME: If this error case happens for the
-         * input buffer then the data will be lost and
-         * will cause stereo channels to be inversed.
-         */
-        if ((efftab[e].olen - efftab[e].odone) >=
-            ofile->desc->signal.channels)
-          havedata = 1;
-        else
-          sox_warn("Received buffer with incomplete amount of samples.");
-        /* Don't break out because other things are being
-         * done in loop.
-         */
-      }
-    }
-
-    if (!havedata && input_eff > 0) {
-      /* When EOF has been detected, skip to the next input
-       * before looking for more data.
-       */
-      if (input_eff_eof) {
-        input_eff++;
-        input_eff_eof = sox_false;
-      }
-
-      /* If the input file is not returning data then
-       * we must prime the pump using the drain effect.
-       * After it's primed, the loop will suck the data
-       * through.  Once an input_eff stops reporting samples,
-       * we will continue to the next until all are drained.
-       */
-      while (input_eff < neffects) {
-        int rc = drain_effect(input_eff);
-
-        if (efftab[input_eff].olen == 0) {
-          input_eff++;
-          /* Assume next effect hasn't reached EOF yet. */
-          input_eff_eof = sox_false;
-        } else {
-          havedata = 1;
-          input_eff_eof = rc == SOX_EOF;
-          break;
-        }
-      }
-    }
-  } while (havedata);
-
-  /* If input_eff isn't pointing at fake first entry then there
-   * is no need to read any more data from disk.  Return this
-   * fact to caller.
-   */
-  if (input_eff > 0) {
-    sox_debug("Effect return SOX_EOF");
-    return SOX_EOF;
-  }
-
-  return SOX_SUCCESS;
-}
-
-static int flow_effect(unsigned e)
-{
-  sox_size_t i, done, idone, odone, idonel, odonel, idoner, odoner;
-  const sox_ssample_t *ibuf;
-  sox_ssample_t *obuf;
-  int effstatus, effstatusl, effstatusr;
-  int (*flow)(eff_t, sox_ssample_t const*, sox_ssample_t*, sox_size_t*, sox_size_t*) =
-    efftab[e].h->flow? efftab[e].h->flow : sox_effect_nothing_flow;
-
-  /* Do not attempt to do any more effect processing during
-   * user aborts as we may be stuck in an infinite flow loop.
-   */
-  if (user_abort)
-    return SOX_EOF;
-
-  /* I have no input data ? */
-  if (efftab[e - 1].odone == efftab[e - 1].olen) {
-    sox_debug_more("%s no data to pull to me!", efftab[e].name);
-    return 0;
-  }
-
-  if (!efftabR[e].name) {
-    /* No stereo data, or effect can handle stereo data so
-     * run effect over entire buffer.
-     */
-    idone = efftab[e - 1].olen - efftab[e - 1].odone;
-    odone = sox_bufsiz - efftab[e].olen;
-    sox_debug_more("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-    sox_debug_more("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
-
-    effstatus = flow(&efftab[e],
-                     &efftab[e - 1].obuf[efftab[e - 1].odone],
-                     &efftab[e].obuf[efftab[e].olen],
-                     (sox_size_t *)&idone,
-                     (sox_size_t *)&odone);
-
-    efftab[e - 1].odone += idone;
-    /* Don't update efftab[e].odone as we didn't consume data */
-    efftab[e].olen += odone;
-    sox_debug_more("post %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-    sox_debug_more("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e-1].odone, efftab[e-1].olen, efftab[e].odone, efftab[e].olen);
-
-    done = idone + odone;
-  } else {
-    /* Put stereo data in two separate buffers and run effect
-     * on each of them.
-     */
-    idone = efftab[e - 1].olen - efftab[e - 1].odone;
-    odone = sox_bufsiz - efftab[e].olen;
-
-    ibuf = &efftab[e - 1].obuf[efftab[e - 1].odone];
-    for (i = 0; i < idone; i += 2) {
-      ibufl[i / 2] = *ibuf++;
-      ibufr[i / 2] = *ibuf++;
-    }
-
-    /* left */
-    idonel = (idone + 1) / 2;   /* odd-length logic */
-    odonel = odone / 2;
-    sox_debug_more("pre %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-    sox_debug_more("pre %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e - 1].odone, efftab[e - 1].olen, efftab[e].odone, efftab[e].olen);
-
-    effstatusl = flow(&efftab[e],
-                      ibufl, obufl, (sox_size_t *)&idonel,
-                      (sox_size_t *)&odonel);
-
-    /* right */
-    idoner = idone / 2;               /* odd-length logic */
-    odoner = odone / 2;
-    effstatusr = flow(&efftabR[e],
-                      ibufr, obufr, (sox_size_t *)&idoner,
-                      (sox_size_t *)&odoner);
-
-    obuf = &efftab[e].obuf[efftab[e].olen];
-    /* This loop implies left and right effect will always output
-     * the same amount of data.
-     */
-    for (i = 0; i < odoner; i++) {
-      *obuf++ = obufl[i];
-      *obuf++ = obufr[i];
-    }
-    efftab[e-1].odone += idonel + idoner;
-    /* Don't zero efftab[e].odone since nothing has been consumed yet */
-    efftab[e].olen += odonel + odoner;
-    sox_debug_more("post %s idone=%d, odone=%d", efftab[e].name, idone, odone);
-    sox_debug_more("post %s odone1=%d, olen1=%d odone=%d olen=%d", efftab[e].name, efftab[e - 1].odone, efftab[e - 1].olen, efftab[e].odone, efftab[e].olen);
-
-    done = idonel + idoner + odonel + odoner;
-
-    if (effstatusl)
-      effstatus = effstatusl;
-    else
-      effstatus = effstatusr;
-  }
-  if (effstatus == SOX_EOF)
-    return SOX_EOF;
-  if (done == 0) {
-    sox_fail("'%s' effect took & gave no samples!", efftab[e].name);
-    exit(2);
-  }
-  return SOX_SUCCESS;
-}
-
-static int drain_effect_out(void)
-{
-  /* Skip past input effect since we know thats not needed */
-  if (input_eff == 0) {
-    input_eff = 1;
-    /* Assuming next effect hasn't reached EOF yet. */
-    input_eff_eof = sox_false;
-  }
-
-  /* Try to prime the pump with some data */
-  while (input_eff < neffects) {
-    int rc = drain_effect(input_eff);
-
-    if (efftab[input_eff].olen == 0) {
-      input_eff++;
-      /* Assuming next effect hasn't reached EOF yet. */
-      input_eff_eof = sox_false;
-    } else {
-      input_eff_eof = rc == SOX_EOF;
-      break;
-    }
-  }
-
-  /* Just do standard flow routines after the priming. */
-  return flow_effect_out();
-}
-
-static int drain_effect(unsigned e)
-{
-  sox_ssize_t i, olen, olenl, olenr;
-  sox_ssample_t *obuf;
-  int rc;
-  int (*drain)(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp) =
-    efftab[e].h->drain? efftab[e].h->drain : sox_effect_nothing_drain;
-
-  if (! efftabR[e].name) {
-    efftab[e].olen = sox_bufsiz;
-    rc = drain(&efftab[e],efftab[e].obuf, &efftab[e].olen);
-    efftab[e].odone = 0;
-  } else {
-    int rc_l, rc_r;
-
-    olen = sox_bufsiz;
-
-    /* left */
-    olenl = olen/2;
-    rc_l = drain(&efftab[e], obufl, (sox_size_t *)&olenl);
-
-    /* right */
-    olenr = olen/2;
-    rc_r = drain(&efftabR[e], obufr, (sox_size_t *)&olenr);
-
-    if (rc_l == SOX_EOF || rc_r == SOX_EOF)
-      rc = SOX_EOF;
-    else
-      rc = SOX_SUCCESS;
-
-    obuf = efftab[e].obuf;
-    /* This loop implies left and right effect will always output
-     * the same amount of data.
-     */
-    for (i = 0; i < olenr; i++) {
-      *obuf++ = obufl[i];
-      *obuf++ = obufr[i];
-    }
-    efftab[e].olen = olenl + olenr;
-    efftab[e].odone = 0;
-  }
-  return rc;
-}
-
-static void stop_effects(void)
-{
-  unsigned e;
-
-  for (e = 1; e < neffects; e++) {
-    sox_size_t clips;
-    int (*stop)(eff_t effp) =
-       efftab[e].h->stop? efftab[e].h->stop : sox_effect_nothing;
-
-    stop(&efftab[e]);
-    clips = efftab[e].clips;
-
-    if (efftabR[e].name) {
-      stop(&efftabR[e]);
-      clips += efftab[e].clips;
-    }
-    if (clips != 0)
-      sox_warn("'%s' clipped %u samples; decrease volume?",efftab[e].name,clips);
-  }
-}
-
-static void kill_effects(void)
-{
-  unsigned e;
-
-  for (e = 1; e < neffects; e++) {
-    int (*kill)(eff_t effp) =
-       efftab[e].h->kill? efftab[e].h->kill : sox_effect_nothing;
-
-    /* No left & right kill as there is no left & right getopts */
-    kill(&efftab[e]);
-  }
 }
 
 static sox_size_t total_clips(void)
 {
-  unsigned i;
+  unsigned i, f;
   sox_size_t clips = 0;
   for (i = 0; i < file_count; ++i)
     clips += files[i]->desc->clips + files[i]->volume_clips;
   clips += mixing_clips;
-  for (i = 1; i < neffects; ++i) {
-    clips += efftab[i].clips;
-    if (efftabR[i].name)
-      clips += efftab[i].clips;
-  }
+  for (i = 1; i < neffects - 1; ++i)
+    for (f = 1; f < effects[i][0].flows; ++f)
+      clips += effects[i][f].clips;
   return clips;
 }
 
@@ -1934,6 +1511,53 @@ static void usage(char const *message)
   size_t i, formats;
   const char **format_list;
   const sox_effect_t *e;
+  static char const * lines[] = {
+"SPECIAL FILENAMES:",
+"-               stdin (infile) or stdout (outfile)",
+"-n              use the null file handler; for use with e.g. synth & stat",
+"",
+"GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):",
+"--buffer BYTES  set the buffer size (default 8192)",
+"--combine concatenate  concatenate multiple input files (default for sox, rec)",
+"--combine sequence  sequence multiple input files (default for play)",
+"-h, --help      display version number and usage information",
+"--help-effect NAME  display usage of specified effect; use `all' to display all",
+"--interactive   prompt to overwrite output file",
+"-m, --combine mix  mix multiple input files (instead of concatenating)",
+"-M, --combine merge  merge multiple input files (instead of concatenating)",
+"--octave        generate Octave commands to plot response of filter effect",
+"-q, --no-show-progress  run in quiet mode; opposite of -S",
+"--replay-gain track|album|off  default: off (sox, rec), track (play)",
+"-R              use default random numbers (same on each run of SoX)",
+"-S, --show-progress  display progress while processing audio data",
+"--version       display version number of SoX and exit",
+"-V[LEVEL]       increment or set verbosity level (default 2); levels are:",
+"                  1: failure messages",
+"                  2: warnings",
+"                  3: details of processing",
+"                  4-6: increasing levels of debug messages",
+"",
+"FORMAT OPTIONS (fopts):",
+"Format options only need to be supplied for input files that are headerless,",
+"otherwise they are obtained automatically.  Output files will default to the",
+"same format options as the input file unless otherwise specified.",
+"",
+"-c, --channels CHANNELS  number of channels in audio data",
+"-C, --compression FACTOR  compression factor for output format",
+"--comment TEXT  Specify comment text for the output file",
+"--comment-file FILENAME  file containing comment text for the output file",
+"--endian little|big|swap  set endianness; swap means opposite to default",
+"-r, --rate RATE  sample rate of audio",
+"-t, --type FILETYPE  file type of audio",
+"-x              invert auto-detected endianness",
+"-N, --reverse-nibbles  nibble-order",
+"-X, --reverse-bits  bit-order of data",
+"-B/-L           force endianness to big/little",
+"-s/-u/-U/-A/    sample encoding: signed/unsigned/u-law/A-law",
+"  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point",
+"-1/-2/-3/-4/-8  sample size in bytes",
+"-v, --volume FACTOR  volume input file volume adjustment factor (real number)",
+""};
 
   printf("%s: ", myname);
   printf("SoX Version %s\n\n", PACKAGE_VERSION);
@@ -1941,52 +1565,9 @@ static void usage(char const *message)
     fprintf(stderr, "Failed: %s\n\n", message);
   printf("Usage summary: [gopts] [[fopts] infile]... [fopts]%s [effect [effopts]]...\n\n",
          play? "" : " outfile");
-  printf("SPECIAL FILENAMES:\n"
-         "-               stdin (infile) or stdout (outfile)\n"
-         "-n              use the null file handler; for use with e.g. synth & stat\n"
-         "\n"
-         "GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):\n"
-         "--buffer BYTES  set the buffer size (default 8192)\n"
-         "--combine concatenate  concatenate multiple input files (default for sox, rec)\n"
-         "--combine sequence  sequence multiple input files (default for play)\n"
-         "-h, --help      display version number and usage information\n"
-         "--help-effect NAME  display usage of specified effect; use `all' to display all\n"
-         "--interactive   prompt to overwrite output file\n"
-         "-m, --combine mix  mix multiple input files (instead of concatenating)\n"
-         "-M, --combine merge  merge multiple input files (instead of concatenating)\n"
-         "--octave        generate Octave commands to plot response of filter effect\n"
-         "-q, --no-show-progress  run in quiet mode; opposite of -S\n"
-         "--replay-gain track|album|off  default: off (sox, rec), track (play)\n"
-         "-R              use default random numbers (same on each run of SoX)\n"
-         "-S, --show-progress  display progress while processing audio data\n"
-         "--version       display version number of SoX and exit\n"
-         "-V[LEVEL]       increment or set verbosity level (default 2); levels are:\n"
-         "                  1: failure messages\n"
-         "                  2: warnings\n"
-         "                  3: details of processing\n"
-         "                  4-6: increasing levels of debug messages\n"
-         "\n"
-         "FORMAT OPTIONS (fopts):\n"
-         "Format options only need to be supplied for input files that are headerless,\n"
-         "otherwise they are obtained automatically.  Output files will default to the\n"
-         "same format options as the input file unless otherwise specified.\n"
-         "\n"
-         "-c, --channels CHANNELS  number of channels in audio data\n"
-         "-C, --compression FACTOR  compression factor for output format\n"
-         "--comment TEXT  Specify comment text for the output file\n"
-         "--comment-file FILENAME  file containing comment text for the output file\n"
-         "--endian little|big|swap  set endianness; swap means opposite to default\n"
-         "-r, --rate RATE  sample rate of audio\n"
-         "-t, --type FILETYPE  file type of audio\n"
-         "-x              invert auto-detected endianness\n"
-         "-N, --reverse-nibbles  nibble-order\n"
-         "-X, --reverse-bits  bit-order of data\n"
-         "-B/-L           force endianness to big/little\n"
-         "-s/-u/-U/-A/    sample encoding: signed/unsigned/u-law/A-law\n"
-         "  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point\n"
-         "-1/-2/-3/-4/-8  sample size in bytes\n"
-         "-v, --volume FACTOR  volume input file volume adjustment factor (real number)\n"
-         "\n");
+
+  for (i = 0; i < array_length(lines); ++i)
+    puts(lines[i]);
 
   printf("SUPPORTED FILE FORMATS:");
   for (i = 0, formats = 0; i < sox_formats; i++) {

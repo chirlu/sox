@@ -392,6 +392,7 @@ typedef struct
 struct sox_effect
 {
     char const *name;               /* effect name */
+    sox_size_t       flows;
     struct sox_effects_global_info * global_info;/* global parameters */
     struct sox_signalinfo ininfo;    /* input signal specifications */
     struct sox_signalinfo outinfo;   /* output signal specifications */
@@ -432,6 +433,17 @@ int sox_geteffect_opt(eff_t effp, int argc, char **argv);
 int sox_geteffect(eff_t effp, const char *effect_name);
 sox_bool is_effect_name(char const *text);
 int sox_updateeffect(eff_t effp, const sox_signalinfo_t *in, const sox_signalinfo_t *out, int effect_mask);
+
+#define MAX_EFFECTS 20
+extern struct sox_effect * effects[MAX_EFFECTS];
+extern unsigned neffects;                     /* # of effects to run on data */
+void add_effect(struct sox_effect * e, sox_signalinfo_t * in, sox_signalinfo_t * out, int * effects_mask);
+int start_effects(void);
+int flow_effects(void (* update_status)(sox_bool), sox_bool * user_abort);
+void stop_effects(void);
+void kill_effects(void);
+void delete_effects(void);
+
 int sox_gettype(ft_t, sox_bool);
 ft_t sox_initformat(void);
 char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samples, int def);

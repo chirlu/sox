@@ -183,7 +183,7 @@ libsox_la_SOURCES = $(effects) adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvs
 	  g711.c g711.h g721.c g723_24.c g723_40.c g72x.c g72x.h vox.c vox.h	\
 	  raw.c raw.h handlers.c misc.c sox_i.h skelform.c soxio.c	\
 	  util.c xmalloc.c xmalloc.h getopt.c getopt1.c getopt.h	\
-	  soxconfig.h
+	  soxconfig.h effects.c
 libsox_la_CFLAGS = @SAMPLERATE_CFLAGS@
 libsox_la_LIBADD = @LIBGSM_LIBADD@ @SAMPLERATE_LIBS@
 

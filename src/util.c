@@ -188,6 +188,8 @@ int sox_geteffect(eff_t effp, const char *effect_name)
 {
     int i;
 
+    memset(effp, 0, sizeof(*effp));
+
     for(i = 0; sox_effect_fns[i]; i++) {
         const sox_effect_t *e = sox_effect_fns[i]();
 
