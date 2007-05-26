@@ -1,9 +1,9 @@
 Instructions for compiling SoX using Microsoft's Visual C.
 
-1. Install cmake (http://www.cmake.org/HTML/Download.html)
-2. Install any optional libraries to use with SoX
-2. Unpack the sources to say c:\sox
-3. Type cd c:\sox
-4. Type cmake .
+o Install cmake (http://www.cmake.org/HTML/Download.html)
+o Install any optional libraries to use with SoX
+o Unpack the sources to say c:\sox
+o Type cd c:\sox
+o Type cmake .
 
 This should generate project build files for use with Visual C.
