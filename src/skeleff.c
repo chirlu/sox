@@ -34,12 +34,12 @@ assert_static(sizeof(struct skeleff) <= SOX_MAX_EFFECT_PRIVSIZE,
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-static int getopts(eff_t effp, int n, char **argv)
+static int getopts(sox_effect_t effp, int n, char **argv)
 {
   skeleff_t skeleff = (skeleff_t)effp->priv;
 
   if (n && n != 1) {
-    sox_fail(effp->h->usage);
+    sox_fail(effp->handler.usage);
     return SOX_EOF;
   }
 
@@ -50,7 +50,7 @@ static int getopts(eff_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-static int start(eff_t effp)
+static int start(sox_effect_t effp)
 {
   if (effp->outinfo.channels == 1) {
     sox_fail("Can't run skeleff on mono data.");
@@ -64,7 +64,7 @@ static int start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                            sox_size_t *isamp, sox_size_t *osamp)
 {
   skeleff_t skeleff = (skeleff_t)effp->priv;
@@ -97,7 +97,7 @@ static int flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
 /*
  * Drain out remaining samples if the effect generates any.
  */
-static int drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   *osamp = 0;
   /* Help out application and return SOX_EOF when drain
@@ -110,7 +110,7 @@ static int drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 /*
  * Do anything required when you stop reading samples.  
  */
-static int stop(eff_t effp)
+static int stop(sox_effect_t effp)
 {
   return SOX_SUCCESS;
 }
@@ -119,7 +119,7 @@ static int stop(eff_t effp)
  * Do anything required when you kill an effect.  
  *      (free allocated memory, etc.)
  */
-static int kill(eff_t effp)
+static int kill(sox_effect_t effp)
 {
   return SOX_SUCCESS;
 }
@@ -131,7 +131,7 @@ static int kill(eff_t effp)
  * the 6 functions, then the function above can be deleted
  * and 0 used in place of the its name below.
  */
-static sox_effect_t sox_skel_effect = {
+static sox_effect_handler_t sox_skel_effect = {
   "skel",
   "Usage: skel [OPTION]",
   SOX_EFF_MCHAN,
@@ -147,7 +147,7 @@ static sox_effect_t sox_skel_effect = {
  * Function returning effect descriptor. This should be the only
  * externally visible object.
  */
-const sox_effect_t *sox_skel_effect_fn(void)
+const sox_effect_handler_t *sox_skel_effect_fn(void)
 {
   return &sox_skel_effect;
 }

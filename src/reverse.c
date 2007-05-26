@@ -20,8 +20,6 @@
 #include <unistd.h>     /* For SEEK_* defines if not found in stdio */
 #endif
 
-static sox_effect_t sox_reverse_effect;
-
 /* Private data */
 typedef struct reversestuff {
         FILE *fp;
@@ -36,7 +34,7 @@ typedef struct reversestuff {
  * Prepare processing: open temporary file.
  */
 
-static int sox_reverse_start(eff_t effp)
+static int sox_reverse_start(sox_effect_t effp)
 {
         reverse_t reverse = (reverse_t) effp->priv;
         reverse->fp = tmpfile();
@@ -53,7 +51,7 @@ static int sox_reverse_start(eff_t effp)
  * Effect flow: a degenerate case: write input samples on temporary file,
  * don't generate any output samples.
  */
-static int sox_reverse_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf UNUSED, 
+static int sox_reverse_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf UNUSED, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
         reverse_t reverse = (reverse_t) effp->priv;
@@ -77,7 +75,7 @@ static int sox_reverse_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t
  * Effect drain: generate the actual samples in reverse order.
  */
 
-static int sox_reverse_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_reverse_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         reverse_t reverse = (reverse_t) effp->priv;
         sox_size_t len, nbytes;
@@ -123,7 +121,7 @@ static int sox_reverse_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 /*
  * Close and unlink the temporary file.
  */
-static int sox_reverse_stop(eff_t effp)
+static int sox_reverse_stop(sox_effect_t effp)
 {
         reverse_t reverse = (reverse_t) effp->priv;
 
@@ -131,19 +129,19 @@ static int sox_reverse_stop(eff_t effp)
         return (SOX_SUCCESS);
 }
 
-static sox_effect_t sox_reverse_effect = {
+static sox_effect_handler_t sox_reverse_effect = {
   "reverse",
   "Usage: Reverse effect takes no options",
   0,
-  sox_effect_nothing_getopts,
+  NULL,
   sox_reverse_start,
   sox_reverse_flow,
   sox_reverse_drain,
   sox_reverse_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_reverse_effect_fn(void)
+const sox_effect_handler_t *sox_reverse_effect_fn(void)
 {
     return &sox_reverse_effect;
 }

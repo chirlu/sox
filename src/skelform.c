@@ -1,5 +1,5 @@
 /*
- * libSoX skeleton file format driver.
+ * libSoX skeleton file format handler.
  *
  * Copyright 1999 Chris Bagwell And Sundry Contributors
  *

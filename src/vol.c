@@ -39,7 +39,7 @@ static enum_item const vol_types[] = {
 /*
  * Process options: gain (float) type (amplitude, power, dB)
  */
-static int getopts(eff_t effp, int argc, char **argv) 
+static int getopts(sox_effect_t effp, int argc, char **argv) 
 {
   vol_t     vol = (vol_t) effp->priv; 
   char      type_string[11];
@@ -52,7 +52,7 @@ static int getopts(eff_t effp, int argc, char **argv)
   
   /* Get the vol, and the type if it's in the same arg. */
   if (!argc || (have_type = sscanf(argv[0], "%lf %10s %c", &vol->gain, type_string, &dummy) - 1) > 1) {
-    sox_fail(effp->h->usage);
+    sox_fail(effp->handler.usage);
     return SOX_EOF;
   }
   ++argv, --argc;
@@ -67,7 +67,7 @@ static int getopts(eff_t effp, int argc, char **argv)
   if (have_type) {
     enum_item const * p = find_enum_text(type_ptr, vol_types);
     if (!p) {
-      sox_fail(effp->h->usage);
+      sox_fail(effp->handler.usage);
       return SOX_EOF;
     }
     switch (p->value) {
@@ -80,7 +80,7 @@ static int getopts(eff_t effp, int argc, char **argv)
 
   if (argc) {
     if (fabs(vol->gain) < 1 || sscanf(*argv, "%lf %c", &vol->limitergain, &dummy) != 1 || vol->limitergain <= 0 || vol->limitergain >= 1) {
-      sox_fail(effp->h->usage);
+      sox_fail(effp->handler.usage);
       return SOX_EOF;                  
     }
     
@@ -100,7 +100,7 @@ static int getopts(eff_t effp, int argc, char **argv)
 /*
  * Start processing
  */
-static int start(eff_t effp)
+static int start(sox_effect_t effp)
 {
     vol_t vol = (vol_t) effp->priv;
     
@@ -116,7 +116,7 @@ static int start(eff_t effp)
 /*
  * Process data.
  */
-static int flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                 sox_size_t *isamp, sox_size_t *osamp)
 {
     vol_t vol = (vol_t) effp->priv;
@@ -174,7 +174,7 @@ static int flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
     return SOX_SUCCESS;
 }
 
-static int stop(eff_t effp)
+static int stop(sox_effect_t effp)
 {
   vol_t vol = (vol_t) effp->priv;
   if (vol->limited) {
@@ -184,10 +184,10 @@ static int stop(eff_t effp)
   return SOX_SUCCESS;
 }
 
-sox_effect_t const * sox_vol_effect_fn(void)
+sox_effect_handler_t const * sox_vol_effect_fn(void)
 {
-  static sox_effect_t driver = {
+  static sox_effect_handler_t handler = {
     "vol", vol_usage, SOX_EFF_MCHAN, getopts, start, flow, 0, stop, 0
   };
-  return &driver;
+  return &handler;
 }

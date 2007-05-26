@@ -13,8 +13,6 @@
 
 #include "sox_i.h"
 
-static sox_effect_t sox_swap_effect;
-
 typedef struct swapstuff {
     int         order[4];
     int         def_opts;
@@ -26,7 +24,7 @@ typedef struct swapstuff {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-static int sox_swap_getopts(eff_t effp, int n, char **argv) 
+static int sox_swap_getopts(sox_effect_t effp, int n, char **argv) 
 {
     swap_t swap = (swap_t) effp->priv;
 
@@ -36,7 +34,7 @@ static int sox_swap_getopts(eff_t effp, int n, char **argv)
         swap->def_opts = 0;
         if (n != 2 && n != 4)
         {
-            sox_fail(sox_swap_effect.usage);
+            sox_fail(effp->handler.usage);
             return (SOX_EOF);
         }
         else if (n == 2)
@@ -62,7 +60,7 @@ static int sox_swap_getopts(eff_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-static int sox_swap_start(eff_t effp)
+static int sox_swap_start(sox_effect_t effp)
 {
     swap_t swap = (swap_t) effp->priv;
     int i;
@@ -133,7 +131,7 @@ static int sox_swap_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_swap_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_swap_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                  sox_size_t *isamp, sox_size_t *osamp)
 {
     swap_t swap = (swap_t) effp->priv;
@@ -183,19 +181,19 @@ static int sox_swap_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *o
     return (SOX_SUCCESS);
 }
 
-static sox_effect_t sox_swap_effect = {
+static sox_effect_handler_t sox_swap_effect = {
   "swap",
   "Usage: swap [1 2 | 1 2 3 4]",
   SOX_EFF_MCHAN,
   sox_swap_getopts,
   sox_swap_start,
   sox_swap_flow,
-  sox_effect_nothing_drain,
-  sox_effect_nothing,
-  sox_effect_nothing  
+  NULL,
+  NULL,
+  NULL  
 };
 
-const sox_effect_t *sox_swap_effect_fn(void)
+const sox_effect_handler_t *sox_swap_effect_fn(void)
 {
     return &sox_swap_effect;
 }

@@ -19,8 +19,6 @@
 #include <string.h>
 #include <errno.h>
 
-static sox_effect_t sox_noiseprof_effect;
-
 typedef struct chandata {
     float *sum;
     int   *profilecount;
@@ -39,14 +37,14 @@ typedef struct profdata {
 /*
  * Get the filename, if any. We don't open it until sox_noiseprof_start.
  */
-static int sox_noiseprof_getopts(eff_t effp, int n, char **argv) 
+static int sox_noiseprof_getopts(sox_effect_t effp, int n, char **argv) 
 {
     profdata_t data = (profdata_t) effp->priv;
 
     if (n == 1) {
         data->output_filename = argv[0];
     } else if (n > 1) {
-        sox_fail(sox_noiseprof_effect.usage);
+        sox_fail(effp->handler.usage);
         return (SOX_EOF);
     }
 
@@ -57,7 +55,7 @@ static int sox_noiseprof_getopts(eff_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-static int sox_noiseprof_start(eff_t effp)
+static int sox_noiseprof_start(sox_effect_t effp)
 {
   profdata_t data = (profdata_t) effp->priv;
   unsigned channels = effp->ininfo.channels;
@@ -70,7 +68,7 @@ static int sox_noiseprof_start(eff_t effp)
       sox_fail("stdout already in use by '%s'", effp->global_info->global_info->stdout_in_use_by);
       return SOX_EOF;
     }
-    effp->global_info->global_info->stdout_in_use_by = effp->name;
+    effp->global_info->global_info->stdout_in_use_by = effp->handler.name;
     data->output_file = stdout;
   }
   else if ((data->output_file = fopen(data->output_filename, "w")) == NULL) {
@@ -110,7 +108,7 @@ static void collect_data(chandata_t* chan) {
 /*
  * Grab what we can from ibuf, and process if we have a whole window.
  */
-static int sox_noiseprof_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_noiseprof_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
     profdata_t data = (profdata_t) effp->priv;
@@ -152,7 +150,7 @@ static int sox_noiseprof_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample
  * Finish off the last window.
  */
 
-static int sox_noiseprof_drain(eff_t effp, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
+static int sox_noiseprof_drain(sox_effect_t effp, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
 {
     profdata_t data = (profdata_t) effp->priv;
     int tracks = effp->ininfo.channels;
@@ -181,7 +179,7 @@ static int sox_noiseprof_drain(eff_t effp, sox_ssample_t *obuf UNUSED, sox_size_
 /*
  * Print profile and clean up.
  */
-static int sox_noiseprof_stop(eff_t effp)
+static int sox_noiseprof_stop(sox_effect_t effp)
 {
     profdata_t data = (profdata_t) effp->priv;
     sox_size_t i;
@@ -211,7 +209,7 @@ static int sox_noiseprof_stop(eff_t effp)
     return (SOX_SUCCESS);
 }
 
-static sox_effect_t sox_noiseprof_effect = {
+static sox_effect_handler_t sox_noiseprof_effect = {
   "noiseprof",
   "Usage: noiseprof [profile-file]",
   SOX_EFF_MCHAN,
@@ -220,10 +218,10 @@ static sox_effect_t sox_noiseprof_effect = {
   sox_noiseprof_flow,
   sox_noiseprof_drain,
   sox_noiseprof_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_noiseprof_effect_fn(void)
+const sox_effect_handler_t *sox_noiseprof_effect_fn(void)
 {
     return &sox_noiseprof_effect;
 }

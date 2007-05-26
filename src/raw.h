@@ -15,13 +15,13 @@ static int id ## _start(ft_t ft) { \
 } \
 const sox_format_t *sox_ ## id ## _format_fn(void); \
 const sox_format_t *sox_ ## id ## _format_fn(void) { \
-  static sox_format_t driver = { \
+  static sox_format_t handler = { \
     names, flags, \
     id ## _start, sox_rawread , sox_format_nothing, \
     id ## _start, sox_rawwrite, sox_format_nothing, \
     sox_format_nothing_seek \
   }; \
-  return &driver; \
+  return &handler; \
 }
 
 #define RAW_FORMAT(id, size, flags, encoding) \

@@ -1,6 +1,6 @@
 /*
 
-    AVR file format driver for SoX
+    AVR file format handler for SoX
     Copyright (C) 1999 Jan Paul Schmidt <jps@fundament.org>
 
     This library is free software; you can redistribute it and/or

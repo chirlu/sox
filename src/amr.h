@@ -155,11 +155,11 @@ const sox_format_t *AMR_FORMAT_FN(void);
 const sox_format_t *AMR_FORMAT_FN(void)
 {
   static char const * names[] = {AMR_NAMES, NULL};
-  static sox_format_t driver = {
+  static sox_format_t handler = {
     names, 0,
     startread, read, stopread,
     startwrite, write, stopwrite,
     sox_format_nothing_seek
   };
-  return &driver;
+  return &handler;
 }

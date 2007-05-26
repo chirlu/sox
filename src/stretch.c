@@ -25,8 +25,6 @@
 #include <string.h>
 #include <assert.h>
 
-static sox_effect_t sox_stretch_effect;
-
 #define DEFAULT_SLOW_SHIFT_RATIO        0.8
 #define DEFAULT_FAST_SHIFT_RATIO        1.0
 
@@ -72,7 +70,7 @@ typedef struct
 /*
  * Process options
  */
-static int sox_stretch_getopts(eff_t effp, int n, char **argv) 
+static int sox_stretch_getopts(sox_effect_t effp, int n, char **argv) 
 {
   char usage[1024];
   stretch_t stretch = (stretch_t) effp->priv; 
@@ -83,13 +81,13 @@ static int sox_stretch_getopts(eff_t effp, int n, char **argv)
   stretch->fade = sox_linear_fading;
 
   if (n > 0 && !sscanf(argv[0], "%lf", &stretch->factor)) {
-    sprintf(usage, "%s\n\terror while parsing factor", sox_stretch_effect.usage);
+    sprintf(usage, "%s\n\terror while parsing factor", effp->handler.usage);
     sox_fail(usage);
     return SOX_EOF;
   }
 
   if (n > 1 && !sscanf(argv[1], "%lf", &stretch->window)) {
-    sprintf(usage, "%s\n\terror while parsing window size", sox_stretch_effect.usage);
+    sprintf(usage, "%s\n\terror while parsing window size", effp->handler.usage);
     sox_fail(usage);
     return SOX_EOF;
   }
@@ -101,7 +99,7 @@ static int sox_stretch_getopts(eff_t effp, int n, char **argv)
       stretch->fade = sox_linear_fading;
       break;
     default:
-      sprintf (usage, "%s\n\terror while parsing fade type", sox_stretch_effect.usage);
+      sprintf (usage, "%s\n\terror while parsing fade type", effp->handler.usage);
       sox_fail(usage);
       return SOX_EOF;
     }
@@ -112,13 +110,13 @@ static int sox_stretch_getopts(eff_t effp, int n, char **argv)
     DEFAULT_FAST_SHIFT_RATIO: DEFAULT_SLOW_SHIFT_RATIO;
  
   if (n > 3 && !sscanf(argv[3], "%lf", &stretch->shift)) {
-    sprintf (usage, "%s\n\terror while parsing shift ratio", sox_stretch_effect.usage);
+    sprintf (usage, "%s\n\terror while parsing shift ratio", effp->handler.usage);
     sox_fail(usage);
     return SOX_EOF;
   }
 
   if (stretch->shift > 1.0 || stretch->shift <= 0.0) {
-    sprintf(usage, "%s\n\terror with shift ratio value", sox_stretch_effect.usage);
+    sprintf(usage, "%s\n\terror with shift ratio value", effp->handler.usage);
     sox_fail(usage);
     return SOX_EOF;
   }
@@ -133,13 +131,13 @@ static int sox_stretch_getopts(eff_t effp, int n, char **argv)
     stretch->fading = 0.5;
   
   if (n > 4 && !sscanf(argv[4], "%lf", &stretch->fading)) {
-    sprintf(usage, "%s\n\terror while parsing fading ratio", sox_stretch_effect.usage);
+    sprintf(usage, "%s\n\terror while parsing fading ratio", effp->handler.usage);
     sox_fail(usage);
     return SOX_EOF;
   }
 
   if (stretch->fading > 0.5 || stretch->fading < 0.0) {
-    sprintf(usage, "%s\n\terror with fading ratio value", sox_stretch_effect.usage);
+    sprintf(usage, "%s\n\terror with fading ratio value", effp->handler.usage);
     sox_fail(usage);
     return SOX_EOF;
   }
@@ -150,7 +148,7 @@ static int sox_stretch_getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-static int sox_stretch_start(eff_t effp)
+static int sox_stretch_start(sox_effect_t effp)
 {
   stretch_t stretch = (stretch_t)effp->priv;
   sox_size_t i;
@@ -244,7 +242,7 @@ static void combine(stretch_t stretch)
 /*
  * Processes flow.
  */
-static int sox_stretch_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_stretch_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
   stretch_t stretch = (stretch_t) effp->priv;
@@ -311,7 +309,7 @@ static int sox_stretch_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t
  * Drain buffer at the end
  * maybe not correct ? end might be artificially faded?
  */
-static int sox_stretch_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_stretch_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   stretch_t stretch = (stretch_t) effp->priv;
   sox_size_t i;
@@ -345,7 +343,7 @@ static int sox_stretch_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-static int sox_stretch_stop(eff_t effp)
+static int sox_stretch_stop(sox_effect_t effp)
 {
   stretch_t stretch = (stretch_t) effp->priv;
 
@@ -356,7 +354,7 @@ static int sox_stretch_stop(eff_t effp)
   return SOX_SUCCESS;
 }
 
-static sox_effect_t sox_stretch_effect = {
+static sox_effect_handler_t sox_stretch_effect = {
   "stretch",
   "Usage: stretch factor [window fade shift fading]\n"
   "       (expansion, frame in ms, lin/..., unit<1.0, unit<0.5)\n"
@@ -367,10 +365,10 @@ static sox_effect_t sox_stretch_effect = {
   sox_stretch_flow,
   sox_stretch_drain,
   sox_stretch_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_stretch_effect_fn(void)
+const sox_effect_handler_t *sox_stretch_effect_fn(void)
 {
   return &sox_stretch_effect;
 }

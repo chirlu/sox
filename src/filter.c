@@ -27,8 +27,6 @@
 
 #include "sox_i.h"
 
-static sox_effect_t sox_filter_effect;
-
 #define ISCALE 0x10000
 #define BUFFSIZE 8192
 
@@ -54,7 +52,7 @@ static void FiltWin(filter_t f, long Nx);
 /*
  * Process options
  */
-static int sox_filter_getopts(eff_t effp, int n, char **argv)
+static int sox_filter_getopts(sox_effect_t effp, int n, char **argv)
 {
         filter_t f = (filter_t) effp->priv;
 
@@ -77,13 +75,13 @@ static int sox_filter_getopts(eff_t effp, int n, char **argv)
         sox_debug("freq: %d-%d", f->freq0, f->freq1);
         if (f->freq0 == 0 && f->freq1 == 0)
         {
-                sox_fail(sox_filter_effect.usage);
+                sox_fail(effp->handler.usage);
                 return (SOX_EOF);
         }
 
         if ((n >= 2) && !sscanf(argv[1], "%ld", &f->Nwin))
         {
-                sox_fail(sox_filter_effect.usage);
+                sox_fail(effp->handler.usage);
                 return (SOX_EOF);
         }
         else if (f->Nwin < 4) {
@@ -93,7 +91,7 @@ static int sox_filter_getopts(eff_t effp, int n, char **argv)
 
         if ((n >= 3) && !sscanf(argv[2], "%lf", &f->beta))
         {
-                sox_fail(sox_filter_effect.usage);
+                sox_fail(effp->handler.usage);
                 return (SOX_EOF);
         }
 
@@ -104,7 +102,7 @@ static int sox_filter_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare processing.
  */
-static int sox_filter_start(eff_t effp)
+static int sox_filter_start(sox_effect_t effp)
 {
         filter_t f = (filter_t) effp->priv;
         double *Fp0, *Fp1;
@@ -182,7 +180,7 @@ static int sox_filter_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_filter_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_filter_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
         filter_t f = (filter_t) effp->priv;
@@ -235,7 +233,7 @@ static int sox_filter_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t 
 /*
  * Process tail of input samples.
  */
-static int sox_filter_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_filter_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         filter_t f = (filter_t) effp->priv;
         long isamp_res, osamp_res;
@@ -272,7 +270,7 @@ static int sox_filter_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-static int sox_filter_stop(eff_t effp)
+static int sox_filter_stop(sox_effect_t effp)
 {
         filter_t f = (filter_t) effp->priv;
 
@@ -311,7 +309,7 @@ static void FiltWin(filter_t f, long Nx)
         }
 }
 
-static sox_effect_t sox_filter_effect = {
+static sox_effect_handler_t sox_filter_effect = {
   "filter",
   "Usage: filter low-high [ windowlength [ beta ] ]",
   0,
@@ -320,10 +318,10 @@ static sox_effect_t sox_filter_effect = {
   sox_filter_flow,
   sox_filter_drain,
   sox_filter_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_filter_effect_fn(void)
+const sox_effect_handler_t *sox_filter_effect_fn(void)
 {
     return &sox_filter_effect;
 }

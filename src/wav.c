@@ -1,5 +1,5 @@
 /*
- * Microsoft's WAVE sound format driver
+ * Microsoft's WAVE sound format handler
  *
  * Copyright 1998-2006 Chris Bagwell and SoX Contributors
  * Copyright 1991 Lance Norskog And Sundry Contributors

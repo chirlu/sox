@@ -1,5 +1,5 @@
 /*
- * Ogg Vorbis sound format driver
+ * Ogg Vorbis sound format handler
  * Copyright 2001, Stan Seibert <indigo@aztec.asu.edu>
  *
  * Portions from oggenc, (c) Michael Smith <msmith@labyrinth.net.au>,
@@ -7,7 +7,7 @@
  * libvorbisfile (c) Xiphophorus Company
  *
  * May 9, 2001 - Stan Seibert (indigo@aztec.asu.edu)
- * Ogg Vorbis driver initially written.
+ * Ogg Vorbis handler initially written.
  *
  * July 5, 1991 - Skeleton file
  * Copyright 1991 Lance Norskog And Sundry Contributors
@@ -455,11 +455,11 @@ const sox_format_t *sox_vorbis_format_fn(void);
 const sox_format_t *sox_vorbis_format_fn(void)
 {
   static const char * names[] = {"vorbis", "ogg", NULL};
-  static sox_format_t driver = {
+  static sox_format_t handler = {
     names, SOX_FILE_SEEK,
     startread, read, stopread,
     startwrite, write, stopwrite,
     seek
   };
-  return &driver;
+  return &handler;
 }

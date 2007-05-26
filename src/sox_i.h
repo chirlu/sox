@@ -139,6 +139,7 @@ int sox_padbytes(ft_t ft, sox_size_t n);
 size_t sox_writebuf(ft_t ft, void const *buf, sox_size_t len);
 int sox_reads(ft_t ft, char *c, sox_size_t len);
 int sox_writes(ft_t ft, char const * c);
+void set_endianness_if_not_already_set(ft_t ft);
 
 sox_size_t sox_read_b_buf(ft_t ft, uint8_t *buf, sox_size_t len);
 sox_size_t sox_read_w_buf(ft_t ft, uint16_t *buf, sox_size_t len);
@@ -238,6 +239,7 @@ void sox_fail_errno(ft_t, int, const char *, ...);
  */
 extern sox_size_t sox_bufsiz;
 extern sox_global_info_t sox_global_info;
+extern sox_effects_global_info_t effects_global_info;
 
 extern const char sox_readerr[];
 extern const char sox_writerr[];
@@ -277,10 +279,6 @@ int sox_format_nothing(ft_t ft);
 sox_size_t sox_format_nothing_read(ft_t ft, sox_ssample_t *buf, sox_size_t len);
 sox_size_t sox_format_nothing_write(ft_t ft, const sox_ssample_t *buf, sox_size_t len);
 int sox_format_nothing_seek(ft_t ft, sox_size_t offset);
-int sox_effect_nothing(eff_t effp);
-int sox_effect_nothing_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);
-int sox_effect_nothing_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp);
-int sox_effect_nothing_getopts(eff_t effp, int n, char **argv UNUSED);
 
 int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size);
 #define sox_rawstartread(ft) sox_rawstart(ft, sox_false, sox_false, SOX_ENCODING_UNKNOWN, -1)
@@ -293,68 +291,68 @@ int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_
  *=============================================================================
  */
 
-typedef const sox_effect_t *(*sox_effect_fn_t)(void);
+typedef const sox_effect_handler_t *(*sox_effect_fn_t)(void);
 
 extern sox_effect_fn_t sox_effect_fns[];
 
-extern const sox_effect_t *sox_allpass_effect_fn(void);
-extern const sox_effect_t *sox_avg_effect_fn(void);
-extern const sox_effect_t *sox_band_effect_fn(void);
-extern const sox_effect_t *sox_bandpass_effect_fn(void);
-extern const sox_effect_t *sox_bandreject_effect_fn(void);
-extern const sox_effect_t *sox_bass_effect_fn(void);
-extern const sox_effect_t *sox_chorus_effect_fn(void);
-extern const sox_effect_t *sox_compand_effect_fn(void);
-extern const sox_effect_t *sox_dcshift_effect_fn(void);
-extern const sox_effect_t *sox_deemph_effect_fn(void);
-extern const sox_effect_t *sox_dither_effect_fn(void);
-extern const sox_effect_t *sox_earwax_effect_fn(void);
-extern const sox_effect_t *sox_echo_effect_fn(void);
-extern const sox_effect_t *sox_echos_effect_fn(void);
-extern const sox_effect_t *sox_equalizer_effect_fn(void);
-extern const sox_effect_t *sox_fade_effect_fn(void);
-extern const sox_effect_t *sox_filter_effect_fn(void);
-extern const sox_effect_t *sox_flanger_effect_fn(void);
-extern const sox_effect_t *sox_highpass_effect_fn(void);
-extern const sox_effect_t *sox_highp_effect_fn(void);
-extern const sox_effect_t *sox_lowpass_effect_fn(void);
-extern const sox_effect_t *sox_lowp_effect_fn(void);
-extern const sox_effect_t *sox_mask_effect_fn(void);
-extern const sox_effect_t *sox_mcompand_effect_fn(void);
-extern const sox_effect_t *sox_mixer_effect_fn(void);
-extern const sox_effect_t *sox_noiseprof_effect_fn(void);
-extern const sox_effect_t *sox_noisered_effect_fn(void);
-extern const sox_effect_t *sox_pad_effect_fn(void);
-extern const sox_effect_t *sox_pan_effect_fn(void);
-extern const sox_effect_t *sox_phaser_effect_fn(void);
-extern const sox_effect_t *sox_pick_effect_fn(void);
-extern const sox_effect_t *sox_pitch_effect_fn(void);
-extern const sox_effect_t *sox_polyphase_effect_fn(void);
+extern const sox_effect_handler_t *sox_allpass_effect_fn(void);
+extern const sox_effect_handler_t *sox_avg_effect_fn(void);
+extern const sox_effect_handler_t *sox_band_effect_fn(void);
+extern const sox_effect_handler_t *sox_bandpass_effect_fn(void);
+extern const sox_effect_handler_t *sox_bandreject_effect_fn(void);
+extern const sox_effect_handler_t *sox_bass_effect_fn(void);
+extern const sox_effect_handler_t *sox_chorus_effect_fn(void);
+extern const sox_effect_handler_t *sox_compand_effect_fn(void);
+extern const sox_effect_handler_t *sox_dcshift_effect_fn(void);
+extern const sox_effect_handler_t *sox_deemph_effect_fn(void);
+extern const sox_effect_handler_t *sox_dither_effect_fn(void);
+extern const sox_effect_handler_t *sox_earwax_effect_fn(void);
+extern const sox_effect_handler_t *sox_echo_effect_fn(void);
+extern const sox_effect_handler_t *sox_echos_effect_fn(void);
+extern const sox_effect_handler_t *sox_equalizer_effect_fn(void);
+extern const sox_effect_handler_t *sox_fade_effect_fn(void);
+extern const sox_effect_handler_t *sox_filter_effect_fn(void);
+extern const sox_effect_handler_t *sox_flanger_effect_fn(void);
+extern const sox_effect_handler_t *sox_highpass_effect_fn(void);
+extern const sox_effect_handler_t *sox_highp_effect_fn(void);
+extern const sox_effect_handler_t *sox_lowpass_effect_fn(void);
+extern const sox_effect_handler_t *sox_lowp_effect_fn(void);
+extern const sox_effect_handler_t *sox_mask_effect_fn(void);
+extern const sox_effect_handler_t *sox_mcompand_effect_fn(void);
+extern const sox_effect_handler_t *sox_mixer_effect_fn(void);
+extern const sox_effect_handler_t *sox_noiseprof_effect_fn(void);
+extern const sox_effect_handler_t *sox_noisered_effect_fn(void);
+extern const sox_effect_handler_t *sox_pad_effect_fn(void);
+extern const sox_effect_handler_t *sox_pan_effect_fn(void);
+extern const sox_effect_handler_t *sox_phaser_effect_fn(void);
+extern const sox_effect_handler_t *sox_pick_effect_fn(void);
+extern const sox_effect_handler_t *sox_pitch_effect_fn(void);
+extern const sox_effect_handler_t *sox_polyphase_effect_fn(void);
 #ifdef HAVE_SAMPLERATE_H
-extern const sox_effect_t *sox_rabbit_effect_fn(void);
+extern const sox_effect_handler_t *sox_rabbit_effect_fn(void);
 #endif
-extern const sox_effect_t *sox_rate_effect_fn(void);
-extern const sox_effect_t *sox_repeat_effect_fn(void);
-extern const sox_effect_t *sox_resample_effect_fn(void);
-extern const sox_effect_t *sox_reverb_effect_fn(void);
-extern const sox_effect_t *sox_reverse_effect_fn(void);
-extern const sox_effect_t *sox_silence_effect_fn(void);
-extern const sox_effect_t *sox_speed_effect_fn(void);
-extern const sox_effect_t *sox_stat_effect_fn(void);
-extern const sox_effect_t *sox_stretch_effect_fn(void);
-extern const sox_effect_t *sox_swap_effect_fn(void);
-extern const sox_effect_t *sox_synth_effect_fn(void);
-extern const sox_effect_t *sox_treble_effect_fn(void);
-extern const sox_effect_t *sox_tremolo_effect_fn(void);
-extern const sox_effect_t *sox_trim_effect_fn(void);
-extern const sox_effect_t *sox_vibro_effect_fn(void);
-extern const sox_effect_t *sox_vol_effect_fn(void);
+extern const sox_effect_handler_t *sox_rate_effect_fn(void);
+extern const sox_effect_handler_t *sox_repeat_effect_fn(void);
+extern const sox_effect_handler_t *sox_resample_effect_fn(void);
+extern const sox_effect_handler_t *sox_reverb_effect_fn(void);
+extern const sox_effect_handler_t *sox_reverse_effect_fn(void);
+extern const sox_effect_handler_t *sox_silence_effect_fn(void);
+extern const sox_effect_handler_t *sox_speed_effect_fn(void);
+extern const sox_effect_handler_t *sox_stat_effect_fn(void);
+extern const sox_effect_handler_t *sox_stretch_effect_fn(void);
+extern const sox_effect_handler_t *sox_swap_effect_fn(void);
+extern const sox_effect_handler_t *sox_synth_effect_fn(void);
+extern const sox_effect_handler_t *sox_treble_effect_fn(void);
+extern const sox_effect_handler_t *sox_tremolo_effect_fn(void);
+extern const sox_effect_handler_t *sox_trim_effect_fn(void);
+extern const sox_effect_handler_t *sox_vibro_effect_fn(void);
+extern const sox_effect_handler_t *sox_vol_effect_fn(void);
 
 /* Needed in rate.c */
-int sox_resample_start(eff_t effp);
-int sox_resample_getopts(eff_t effp, int n, char **argv);
-int sox_resample_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);
-int sox_resample_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp);
-int sox_resample_stop(eff_t effp);
+int sox_resample_start(sox_effect_t effp);
+int sox_resample_getopts(sox_effect_t effp, int n, char **argv);
+int sox_resample_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);
+int sox_resample_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp);
+int sox_resample_stop(sox_effect_t effp);
 
 #endif

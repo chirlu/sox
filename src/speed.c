@@ -27,7 +27,7 @@
 #include <math.h>
 #include <string.h>
 
-static int getopts(eff_t effp, int n, char * * argv)
+static int getopts(sox_effect_t effp, int n, char * * argv)
 {
   sox_bool is_cents = sox_false;
   double speed;
@@ -47,14 +47,14 @@ static int getopts(eff_t effp, int n, char * * argv)
       }
     }
   }
-  sox_fail(effp->h->usage);
+  sox_fail(effp->handler.usage);
   return SOX_EOF;
 }
 
-sox_effect_t const *sox_speed_effect_fn(void)
+sox_effect_handler_t const *sox_speed_effect_fn(void)
 {
-  static sox_effect_t driver = {
+  static sox_effect_handler_t handler = {
     "speed", "Usage: speed factor[c]", SOX_EFF_NULL|SOX_EFF_LENGTH,
     getopts, 0, 0, 0, 0, 0};
-  return &driver;
+  return &handler;
 }

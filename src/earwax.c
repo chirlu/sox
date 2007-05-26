@@ -24,8 +24,6 @@
 
 #include "sox_i.h"
 
-static sox_effect_t sox_earwax_effect;
-
 #define EARWAX_SCALE 64
 
 /* A stereo fir filter. One side filters as if the signal was from
@@ -75,7 +73,7 @@ typedef struct earwaxstuff {
 /*
  * Prepare for processing.
  */
-static int sox_earwax_start(eff_t effp)
+static int sox_earwax_start(sox_effect_t effp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int i;
@@ -102,7 +100,7 @@ static int sox_earwax_start(eff_t effp)
  * Return number of samples processed.
  */
 
-static int sox_earwax_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_earwax_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
@@ -134,7 +132,7 @@ static int sox_earwax_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t 
 /*
  * Drain out taps.
  */
-static int sox_earwax_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_earwax_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int i,j;
@@ -155,7 +153,7 @@ static int sox_earwax_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 /*
  * Clean up taps.
  */
-static int sox_earwax_stop(eff_t effp)
+static int sox_earwax_stop(sox_effect_t effp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
 
@@ -164,19 +162,19 @@ static int sox_earwax_stop(eff_t effp)
   return (SOX_SUCCESS);
 }
 
-static sox_effect_t sox_earwax_effect = {
+static sox_effect_handler_t sox_earwax_effect = {
   "earwax",
   "Usage: The earwax filtering effect takes no options",
   SOX_EFF_MCHAN|SOX_EFF_LENGTH,
-  sox_effect_nothing_getopts,
+  NULL,
   sox_earwax_start,
   sox_earwax_flow,
   sox_earwax_drain,
   sox_earwax_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_earwax_effect_fn(void)
+const sox_effect_handler_t *sox_earwax_effect_fn(void)
 {
     return &sox_earwax_effect;
 }

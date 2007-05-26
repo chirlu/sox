@@ -23,12 +23,12 @@ typedef struct dither {
 assert_static(sizeof(struct dither) <= SOX_MAX_EFFECT_PRIVSIZE,
               /* else */ dither_PRIVSIZE_too_big);
 
-static int getopts(eff_t effp, int n, char * * argv)
+static int getopts(sox_effect_t effp, int n, char * * argv)
 {
   dither_t dither = (dither_t) effp->priv;
 
   if (n > 1) {
-    sox_fail(effp->h->usage);
+    sox_fail(effp->handler.usage);
     return SOX_EOF;
   }
   
@@ -40,7 +40,7 @@ static int getopts(eff_t effp, int n, char * * argv)
     if (scanned == 1 && amount > 0)
       dither->amount *= amount;
     else {
-      sox_fail(effp->h->usage);
+      sox_fail(effp->handler.usage);
       return SOX_EOF;
     }
   }
@@ -48,7 +48,7 @@ static int getopts(eff_t effp, int n, char * * argv)
   return SOX_SUCCESS;
 }
 
-static int start(eff_t effp)
+static int start(sox_effect_t effp)
 {
   dither_t dither = (dither_t) effp->priv;
 
@@ -65,7 +65,7 @@ static int start(eff_t effp)
   return SOX_EFF_NULL;   /* Dithering not needed at >= 24 bits */
 }
 
-static int flow(eff_t effp, const sox_ssample_t * ibuf,
+static int flow(sox_effect_t effp, const sox_ssample_t * ibuf,
     sox_ssample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
   dither_t dither = (dither_t)effp->priv;
@@ -80,20 +80,20 @@ static int flow(eff_t effp, const sox_ssample_t * ibuf,
   return SOX_SUCCESS;
 }
 
-sox_effect_t const * sox_dither_effect_fn(void)
+sox_effect_handler_t const * sox_dither_effect_fn(void)
 {
-  static sox_effect_t driver = {
+  static sox_effect_handler_t handler = {
     "dither", "Usage: dither [amount]", SOX_EFF_MCHAN,
     getopts, start, flow, 0, 0, 0
   };
-  return &driver;
+  return &handler;
 }
 
-sox_effect_t const * sox_mask_effect_fn(void)
+sox_effect_handler_t const * sox_mask_effect_fn(void)
 {
-  static sox_effect_t driver = {
+  static sox_effect_handler_t handler = {
     "mask", "Usage: mask [amount]", SOX_EFF_MCHAN | SOX_EFF_DEPRECATED,
     getopts, start, flow, 0, 0, 0
   };
-  return &driver;
+  return &handler;
 }

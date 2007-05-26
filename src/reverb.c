@@ -95,8 +95,6 @@
 #include <math.h>
 #include "sox_i.h"
 
-static sox_effect_t sox_reverb_effect;
-
 #define REVERB_FADE_THRESH 10
 #define DELAY_BUFSIZ ( 50 * SOX_MAXRATE )
 #define MAXREVERBS 8
@@ -115,7 +113,7 @@ typedef struct reverbstuff {
 /*
  * Process options
  */
-static int sox_reverb_getopts(eff_t effp, int n, char **argv) 
+static int sox_reverb_getopts(sox_effect_t effp, int n, char **argv) 
 {
         reverb_t reverb = (reverb_t) effp->priv;
         int i;
@@ -125,7 +123,7 @@ static int sox_reverb_getopts(eff_t effp, int n, char **argv)
 
         if ( n < 3 )
         {
-            sox_fail(sox_reverb_effect.usage);
+            sox_fail(effp->handler.usage);
             return (SOX_EOF);
         }
 
@@ -150,7 +148,7 @@ static int sox_reverb_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare for processing.
  */
-static int sox_reverb_start(eff_t effp)
+static int sox_reverb_start(sox_effect_t effp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
         size_t i;
@@ -203,7 +201,7 @@ static int sox_reverb_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_reverb_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_reverb_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
@@ -236,7 +234,7 @@ reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsam
 /*
  * Drain out reverb lines. 
  */
-static int sox_reverb_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_reverb_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
         float d_in, d_out;
@@ -273,7 +271,7 @@ reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsam
 /*
  * Clean up reverb effect.
  */
-static int sox_reverb_stop(eff_t effp)
+static int sox_reverb_stop(sox_effect_t effp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
 
@@ -282,7 +280,7 @@ static int sox_reverb_stop(eff_t effp)
         return (SOX_SUCCESS);
 }
 
-static sox_effect_t sox_reverb_effect = {
+static sox_effect_handler_t sox_reverb_effect = {
   "reverb",
   "Usage: reverb gain-out reverb-time delay [ delay ... ]",
   SOX_EFF_LENGTH,
@@ -291,10 +289,10 @@ static sox_effect_t sox_reverb_effect = {
   sox_reverb_flow,
   sox_reverb_drain,
   sox_reverb_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_reverb_effect_fn(void)
+const sox_effect_handler_t *sox_reverb_effect_fn(void)
 {
     return &sox_reverb_effect;
 }

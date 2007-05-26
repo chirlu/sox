@@ -20,8 +20,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-static sox_effect_t sox_mixer_effect;
-
 typedef struct mixerstuff {
         /* How to generate each output channel.  sources[i][j] */
         /* represents the fraction of channel i that should be passed */
@@ -49,7 +47,7 @@ typedef struct mixerstuff {
 /*
  * Process options
  */
-static int getopts(eff_t effp, int n, char **argv) 
+static int getopts(sox_effect_t effp, int n, char **argv) 
 {
     mixer_t mixer = (mixer_t) effp->priv;
     double* pans = &mixer->sources[0][0];
@@ -82,7 +80,7 @@ static int getopts(eff_t effp, int n, char **argv)
             mixer->mix = MIX_RIGHT_BACK;
         else if (argv[0][0] == '-' && !isdigit((int)argv[0][1])
                 && argv[0][1] != '.') {
-            sox_fail(sox_mixer_effect.usage);
+            sox_fail(effp->handler.usage);
             return (SOX_EOF);
         }
         else {
@@ -107,7 +105,7 @@ static int getopts(eff_t effp, int n, char **argv)
         mixer->mix = MIX_CENTER;
     }
     else {
-        sox_fail(sox_mixer_effect.usage);
+        sox_fail(effp->handler.usage);
         return SOX_EOF;
     }
 
@@ -117,7 +115,7 @@ static int getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-static int start(eff_t effp)
+static int start(sox_effect_t effp)
 {
     /*
        Hmmm, this is tricky.  Lemme think:
@@ -510,7 +508,7 @@ static int start(eff_t effp)
  * Process either isamp or osamp samples, whichever is smaller.
  */
 
-static int flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                 sox_size_t *isamp, sox_size_t *osamp)
 {
     mixer_t mixer = (mixer_t) effp->priv;
@@ -538,35 +536,35 @@ static int flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
     return (SOX_SUCCESS);
 }
 
-sox_effect_t const * sox_mixer_effect_fn(void)
+sox_effect_handler_t const * sox_mixer_effect_fn(void)
 {
-  static sox_effect_t driver = {
+  static sox_effect_handler_t handler = {
     "mixer",
     "Usage: mixer [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
     SOX_EFF_MCHAN | SOX_EFF_CHAN,
     getopts, start, flow, 0, 0, 0
   };
-  return &driver;
+  return &handler;
 }
 
-sox_effect_t const * sox_avg_effect_fn(void)
+sox_effect_handler_t const * sox_avg_effect_fn(void)
 {
-  static sox_effect_t driver = {
+  static sox_effect_handler_t handler = {
     "avg",
     "Usage: avg [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
     SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_DEPRECATED,
     getopts, start, flow, 0, 0, 0
   };
-  return &driver;
+  return &handler;
 }
 
-sox_effect_t const * sox_pick_effect_fn(void)
+sox_effect_handler_t const * sox_pick_effect_fn(void)
 {
-  static sox_effect_t driver = {
+  static sox_effect_handler_t handler = {
     "pick",
     "Usage: pick [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
     SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_DEPRECATED,
     getopts, start, flow, 0, 0, 0
   };
-  return &driver;
+  return &handler;
 }

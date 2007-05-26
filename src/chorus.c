@@ -71,8 +71,6 @@
 #define MOD_TRIANGLE    1
 #define MAX_CHORUS      7
 
-static sox_effect_t sox_chorus_effect;
-
 typedef struct chorusstuff {
         int     num_chorus;
         int     modulation[MAX_CHORUS];
@@ -92,7 +90,7 @@ typedef struct chorusstuff {
 /*
  * Process options
  */
-static int sox_chorus_getopts(eff_t effp, int n, char **argv) 
+static int sox_chorus_getopts(sox_effect_t effp, int n, char **argv) 
 {
         chorus_t chorus = (chorus_t) effp->priv;
         int i;
@@ -102,7 +100,7 @@ static int sox_chorus_getopts(eff_t effp, int n, char **argv)
 
         if ( ( n < 7 ) || (( n - 2 ) % 5 ) )
         {
-            sox_fail(sox_chorus_effect.usage);
+            sox_fail(effp->handler.usage);
             return (SOX_EOF);
         }
 
@@ -124,7 +122,7 @@ static int sox_chorus_getopts(eff_t effp, int n, char **argv)
                         chorus->modulation[chorus->num_chorus] = MOD_TRIANGLE;
                 else
                 {
-                        sox_fail(sox_chorus_effect.usage);
+                        sox_fail(effp->handler.usage);
                         return (SOX_EOF);
                 }
                 i++;
@@ -136,7 +134,7 @@ static int sox_chorus_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare for processing.
  */
-static int sox_chorus_start(eff_t effp)
+static int sox_chorus_start(sox_effect_t effp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
         int i;
@@ -243,7 +241,7 @@ static int sox_chorus_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_chorus_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_chorus_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
@@ -281,7 +279,7 @@ static int sox_chorus_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t 
 /*
  * Drain out reverb lines. 
  */
-static int sox_chorus_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_chorus_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
         sox_size_t done;
@@ -324,7 +322,7 @@ static int sox_chorus_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 /*
  * Clean up chorus effect.
  */
-static int sox_chorus_stop(eff_t effp)
+static int sox_chorus_stop(sox_effect_t effp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
         int i;
@@ -338,7 +336,7 @@ static int sox_chorus_stop(eff_t effp)
         return (SOX_SUCCESS);
 }
 
-static sox_effect_t sox_chorus_effect = {
+static sox_effect_handler_t sox_chorus_effect = {
   "chorus",
   "Usage: chorus gain-in gain-out delay decay speed depth [ -s | -t ]",
   SOX_EFF_LENGTH,
@@ -347,10 +345,10 @@ static sox_effect_t sox_chorus_effect = {
   sox_chorus_flow,
   sox_chorus_drain,
   sox_chorus_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_chorus_effect_fn(void)
+const sox_effect_handler_t *sox_chorus_effect_fn(void)
 {
     return &sox_chorus_effect;
 }

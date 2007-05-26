@@ -16,41 +16,47 @@
 #include <ctype.h>
 #include <stdarg.h>
 
+sox_size_t sox_bufsiz = 8192;
 sox_output_message_handler_t sox_output_message_handler = NULL;
 unsigned sox_output_verbosity_level = 2;
+
+sox_global_info_t sox_global_info;
+
+sox_effects_global_info_t effects_global_info =
+    {sox_false, 1, &sox_global_info};
 
 void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap)
 {
   char buffer[10];
-  char const * drivername;
+  char const * handler_name;
   char const * dot_pos;
  
-  drivername = strrchr(filename, '/');
-  if (drivername != NULL) {
-    ++drivername;
+  handler_name = strrchr(filename, '/');
+  if (handler_name != NULL) {
+    ++handler_name;
   } else {
-    drivername = strrchr(filename, '\\');
-    if (drivername != NULL)
-      ++drivername;
+    handler_name = strrchr(filename, '\\');
+    if (handler_name != NULL)
+      ++handler_name;
     else
-      drivername = filename;
+      handler_name = filename;
   }
 
-  dot_pos = strrchr(drivername, '.');
-  if (dot_pos != NULL && dot_pos - drivername <= (ptrdiff_t)(sizeof(buffer) - 1)) {
-    strncpy(buffer, drivername, (size_t)(dot_pos - drivername));
-    buffer[dot_pos - drivername] = '\0';
-    drivername = buffer;
+  dot_pos = strrchr(handler_name, '.');
+  if (dot_pos != NULL && dot_pos - handler_name <= (ptrdiff_t)(sizeof(buffer) - 1)) {
+    strncpy(buffer, handler_name, (size_t)(dot_pos - handler_name));
+    buffer[dot_pos - handler_name] = '\0';
+    handler_name = buffer;
   }
 
-  fprintf(file, "%s: ", drivername);
+  fprintf(file, "%s: ", handler_name);
   vfprintf(file, fmt, ap);
 }
 
 
 
 /* This is a bit of a hack.  It's useful to have libSoX
- * report which driver (i.e. format or effect handler) is outputing
+ * report which format or effect handler is outputing
  * the message.  Using the filename for this purpose is only an
  * approximation, but it saves a lot of work. ;)
  */
@@ -140,84 +146,73 @@ int sox_gettype(ft_t formp, sox_bool is_file_extension)
     return SOX_EFMT;
 }
 
-/*
- * Check that we have a known effect name.  If found, copy name of
- * effect into structure and place a pointer to internal data.
- * Returns -1 on error else it turns the total number of arguments
- * that should be passed to this effect's getopt() function.
- */
-int sox_geteffect_opt(eff_t effp, int argc, char **argv)
+sox_effect_handler_t const * sox_find_effect(char const * name)
 {
-    int i, optind;
+  int i;
 
-    for (i = 0; sox_effect_fns[i]; i++)
-    {
-        const sox_effect_t *e = sox_effect_fns[i]();
-
-        if (e && e->name && strcasecmp(e->name, argv[0]) == 0) {
-          effp->name = e->name;
-          effp->h = e;
-          for (optind = 1; optind < argc; optind++)
-          {
-              for (i = 0; sox_effect_fns[i]; i++)
-              {
-                  const sox_effect_t *e = sox_effect_fns[i]();
-                  if (e && e->name && strcasecmp(e->name, argv[optind]) == 0)
-                    return (optind - 1);
-              }
-              /* Didn't find a match, try the next argument. */
-          }
-          /*
-           * No matches found, all the following arguments are
-           * for this effect passed in.
-           */
-          return (optind - 1);
-        }
-    }
-
-    return (SOX_EOF);
+  for (i = 0; sox_effect_fns[i]; ++i) {
+    const sox_effect_handler_t *e = sox_effect_fns[i] ();
+    if (e && e->name && strcasecmp(e->name, name) == 0)
+      return e;                 /* Found it. */
+  }
+  return NULL;
 }
 
-/*
- * Check that we have a known effect name.  If found, copy name of
- * effect into structure and place a pointer to internal data.
- * Returns -1 on on failure.
- */
-
-int sox_geteffect(eff_t effp, const char *effect_name)
+/* dummy effect routine for do-nothing functions */
+static int effect_nothing(sox_effect_t effp UNUSED)
 {
-    int i;
-
-    memset(effp, 0, sizeof(*effp));
-
-    for(i = 0; sox_effect_fns[i]; i++) {
-        const sox_effect_t *e = sox_effect_fns[i]();
-
-        if (e && e->name && strcasecmp(e->name, effect_name) == 0) {
-          effp->name = e->name;
-          effp->h = e;
-          return SOX_SUCCESS;
-        }
-    }
-
-    return (SOX_EOF);
+  return SOX_SUCCESS;
 }
 
-/*
- * Check if we have a known effect name.
- */
-sox_bool is_effect_name(char const * text)
+static int effect_nothing_flow(sox_effect_t effp UNUSED, const sox_ssample_t *ibuf UNUSED, sox_ssample_t *obuf UNUSED, sox_size_t *isamp, sox_size_t *osamp)
 {
-    int i;
+  /* Pass through samples verbatim */
+  *isamp = *osamp = min(*isamp, *osamp);
+  memcpy(obuf, ibuf, *isamp * sizeof(sox_ssample_t));
+  return SOX_SUCCESS;
+}
 
-    for(i = 0; sox_effect_fns[i]; i++) {
-        const sox_effect_t *e = sox_effect_fns[i]();
+static int effect_nothing_drain(sox_effect_t effp UNUSED, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
+{
+  /* Inform no more samples to drain */
+  *osamp = 0;
+  return SOX_EOF;
+}
 
-        if (e && e->name && strcasecmp(e->name, text) == 0)
-          return sox_true;
-    }
+static int effect_nothing_getopts(sox_effect_t effp, int n, char **argv UNUSED)
+{
+#undef sox_fail
+#define sox_fail sox_message_filename=effp->handler.name,sox_fail
+  if (n) {
+    sox_fail(effp->handler.usage);
+    return (SOX_EOF);
+  }
+  return (SOX_SUCCESS);
+}
 
-    return sox_false;
+int sox_create_effect(sox_effect_t effp, sox_effect_handler_t const * e)
+{
+  memset(effp, 0, sizeof(*effp));
+  effp->global_info = &effects_global_info;
+  effp->handler = *e;
+  if (!effp->handler.getopts) effp->handler.getopts = effect_nothing_getopts;
+  if (!effp->handler.start) effp->handler.start = effect_nothing;
+  if (!effp->handler.flow) effp->handler.flow = effect_nothing_flow;
+  if (!effp->handler.drain) effp->handler.drain = effect_nothing_drain;
+  if (!effp->handler.stop) effp->handler.stop = effect_nothing;
+  if (!effp->handler.kill) effp->handler.kill = effect_nothing;
+  return SOX_SUCCESS;
+}
+
+int sox_get_effect(sox_effect_t effp, const char * name)
+{
+  sox_effect_handler_t const * e = sox_find_effect(name);
+
+  if (!e)
+    return SOX_EOF;
+
+  sox_create_effect(effp, e);
+  return SOX_SUCCESS;
 }
 
 /*
@@ -232,7 +227,7 @@ sox_bool is_effect_name(char const * text)
  * calls.
  */
 
-int sox_updateeffect(eff_t effp, const sox_signalinfo_t *in, const sox_signalinfo_t *out, 
+int sox_update_effect(sox_effect_t effp, const sox_signalinfo_t *in, const sox_signalinfo_t *out, 
                     int effect_mask)
 {
     effp->ininfo = *in;
@@ -244,7 +239,7 @@ int sox_updateeffect(eff_t effp, const sox_signalinfo_t *in, const sox_signalinf
         /* Only effects with SOX_EFF_CHAN flag can actually handle
          * outputing a different number of channels then the input.
          */
-        if (!(effp->h->flags & SOX_EFF_CHAN))
+        if (!(effp->handler.flags & SOX_EFF_CHAN))
         {
             /* If this effect is being ran before a SOX_EFF_CHAN effect
              * then effect's output is the same as the input file. Else its
@@ -264,7 +259,7 @@ int sox_updateeffect(eff_t effp, const sox_signalinfo_t *in, const sox_signalinf
         /* Only the SOX_EFF_RATE effect can handle an input that
          * is a different sample rate then the output.
          */
-        if (!(effp->h->flags & SOX_EFF_RATE))
+        if (!(effp->handler.flags & SOX_EFF_RATE))
         {
             if (effect_mask & SOX_EFF_RATE)
                 effp->ininfo.rate = out->rate;
@@ -273,9 +268,9 @@ int sox_updateeffect(eff_t effp, const sox_signalinfo_t *in, const sox_signalinf
         }
     }
 
-    if (effp->h->flags & SOX_EFF_CHAN)
+    if (effp->handler.flags & SOX_EFF_CHAN)
         effect_mask |= SOX_EFF_CHAN;
-    if (effp->h->flags & SOX_EFF_RATE)
+    if (effp->handler.flags & SOX_EFF_RATE)
         effect_mask |= SOX_EFF_RATE;
 
     return effect_mask;

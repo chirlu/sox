@@ -42,7 +42,7 @@ typedef struct statstuff {
 /*
  * Process options
  */
-static int sox_stat_getopts(eff_t effp, int n, char **argv)
+static int sox_stat_getopts(sox_effect_t effp, int n, char **argv)
 {
   stat_t stat = (stat_t) effp->priv;
 
@@ -82,7 +82,7 @@ static int sox_stat_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare processing.
  */
-static int sox_stat_start(eff_t effp)
+static int sox_stat_start(sox_effect_t effp)
 {
   stat_t stat = (stat_t) effp->priv;
   int i;
@@ -129,7 +129,7 @@ static void print_power_spectrum(unsigned samples, double rate, float *re_in, fl
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_stat_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
+static int sox_stat_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
                         sox_size_t *isamp, sox_size_t *osamp)
 {
   stat_t stat = (stat_t) effp->priv;
@@ -201,7 +201,7 @@ static int sox_stat_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *o
 /*
  * Process tail of input samples.
  */
-static int sox_stat_drain(eff_t effp, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
+static int sox_stat_drain(sox_effect_t effp, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
 {
   stat_t stat = (stat_t) effp->priv;
 
@@ -226,7 +226,7 @@ static int sox_stat_drain(eff_t effp, sox_ssample_t *obuf UNUSED, sox_size_t *os
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int sox_stat_stop(eff_t effp)
+static int sox_stat_stop(sox_effect_t effp)
 {
   stat_t stat = (stat_t) effp->priv;
   double amp, scale, rms = 0, freq;
@@ -318,7 +318,7 @@ static int sox_stat_stop(eff_t effp)
 
 }
 
-static sox_effect_t sox_stat_effect = {
+static sox_effect_handler_t sox_stat_effect = {
   "stat",
   "Usage: [ -s N ] [ -rms ] [-freq] [ -v ] [ -d ]",
   SOX_EFF_MCHAN,
@@ -327,10 +327,10 @@ static sox_effect_t sox_stat_effect = {
   sox_stat_flow,
   sox_stat_drain,
   sox_stat_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_stat_effect_fn(void)
+const sox_effect_handler_t *sox_stat_effect_fn(void)
 {
   return &sox_stat_effect;
 }

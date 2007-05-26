@@ -1,5 +1,5 @@
 /*
- * libSoX MAUD file format driver, by Lutz Vieweg 1993
+ * libSoX MAUD file format handler, by Lutz Vieweg 1993
  *
  * supports: mono and stereo, linear, a-law and u-law reading and writing
  *

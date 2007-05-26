@@ -19,8 +19,6 @@
 #include "sox_i.h"
 #include <string.h>
 
-static sox_effect_t sox_pan_effect;
-
 /* structure to hold pan parameter */
 
 typedef struct {
@@ -30,7 +28,7 @@ typedef struct {
 /*
  * Process options
  */
-static int sox_pan_getopts(eff_t effp, int n, char **argv) 
+static int sox_pan_getopts(sox_effect_t effp, int n, char **argv) 
 {
     pan_t pan = (pan_t) effp->priv; 
     
@@ -39,7 +37,7 @@ static int sox_pan_getopts(eff_t effp, int n, char **argv)
     if (n && (!sscanf(argv[0], "%lf", &pan->dir) || 
               pan->dir < -1.0 || pan->dir > 1.0))
     {
-        sox_fail(sox_pan_effect.usage);
+        sox_fail(effp->handler.usage);
         return SOX_EOF;
     }
 
@@ -49,7 +47,7 @@ static int sox_pan_getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-static int sox_pan_start(eff_t effp)
+static int sox_pan_start(sox_effect_t effp)
 {
     if (effp->outinfo.channels==1)
         sox_warn("PAN onto a mono channel...");
@@ -73,7 +71,7 @@ static int sox_pan_start(eff_t effp)
 /*
  * Process either isamp or osamp samples, whichever is smaller.
  */
-static int sox_pan_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_pan_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                 sox_size_t *isamp, sox_size_t *osamp)
 {
     pan_t pan = (pan_t) effp->priv;
@@ -411,19 +409,19 @@ static int sox_pan_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *ob
  * FIXME: Add a stop function with statistics on right, left, and output amplitudes.
  */
 
-static sox_effect_t sox_pan_effect = {
+static sox_effect_handler_t sox_pan_effect = {
   "pan",
   "Usage: pan direction (in [-1.0 .. 1.0])",
   SOX_EFF_MCHAN | SOX_EFF_CHAN,
   sox_pan_getopts,
   sox_pan_start,
   sox_pan_flow,
-  sox_effect_nothing_drain,
-  sox_effect_nothing,
-  sox_effect_nothing
+  NULL,
+  NULL,
+  NULL
 };
 
-const sox_effect_t *sox_pan_effect_fn(void)
+const sox_effect_handler_t *sox_pan_effect_fn(void)
 {
     return &sox_pan_effect;
 }

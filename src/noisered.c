@@ -23,15 +23,13 @@
   d = strtod(*argv, &end_ptr); \
   if (end_ptr != *argv) { \
     if (d < min || d > max || *end_ptr != '\0') { \
-      sox_fail(effp->h->usage); \
+      sox_fail(effp->handler.usage); \
       return SOX_EOF; \
     } \
     this->p = d; \
     --argc, ++argv; \
   } \
 }
-
-static sox_effect_t sox_noisered_effect;
 
 typedef struct chandata {
     float *window;
@@ -53,7 +51,7 @@ typedef struct reddata {
  * Get the options. Default file is stdin (if the audio
  * input file isn't coming from there, of course!)
  */
-static int sox_noisered_getopts(eff_t effp, int argc, char **argv)
+static int sox_noisered_getopts(sox_effect_t effp, int argc, char **argv)
 {
   reddata_t this = (reddata_t) effp->priv;
 
@@ -69,7 +67,7 @@ static int sox_noisered_getopts(eff_t effp, int argc, char **argv)
   } while (0);
 
   if (argc != 0) {
-    sox_fail(effp->h->usage);
+    sox_fail(effp->handler.usage);
     return SOX_EOF;
   }
   return SOX_SUCCESS;
@@ -79,7 +77,7 @@ static int sox_noisered_getopts(eff_t effp, int argc, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-static int sox_noisered_start(eff_t effp)
+static int sox_noisered_start(sox_effect_t effp)
 {
     reddata_t data = (reddata_t) effp->priv;
     sox_size_t fchannels = 0;
@@ -101,7 +99,7 @@ static int sox_noisered_start(eff_t effp)
         sox_fail("stdin already in use by '%s'", effp->global_info->global_info->stdin_in_use_by);
         return SOX_EOF;
       }
-      effp->global_info->global_info->stdin_in_use_by = effp->name;
+      effp->global_info->global_info->stdin_in_use_by = effp->handler.name;
       ifp = stdin;
     }
     else if ((ifp = fopen(data->profile_filename, "r")) == NULL) {
@@ -221,7 +219,7 @@ static void reduce_noise(chandata_t* chan, float* window, double level)
 
 /* Do window management once we have a complete window, including mangling
  * the current window. */
-static int process_window(eff_t effp, reddata_t data, unsigned chan_num, unsigned num_chans,
+static int process_window(sox_effect_t effp, reddata_t data, unsigned chan_num, unsigned num_chans,
                           sox_ssample_t *obuf, unsigned len) {
     int j;
     float* nextwindow;
@@ -259,7 +257,7 @@ static int process_window(eff_t effp, reddata_t data, unsigned chan_num, unsigne
 /*
  * Read in windows, and call process_window once we get a whole one.
  */
-static int sox_noisered_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_noisered_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
     reddata_t data = (reddata_t) effp->priv;
@@ -309,7 +307,7 @@ static int sox_noisered_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_
  * We have up to half a window left to dump.
  */
 
-static int sox_noisered_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_noisered_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
     reddata_t data = (reddata_t)effp->priv;
     unsigned i;
@@ -326,7 +324,7 @@ static int sox_noisered_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp
 /*
  * Clean up.
  */
-static int sox_noisered_stop(eff_t effp)
+static int sox_noisered_stop(sox_effect_t effp)
 {
     reddata_t data = (reddata_t) effp->priv;
     sox_size_t i;
@@ -344,7 +342,7 @@ static int sox_noisered_stop(eff_t effp)
     return (SOX_SUCCESS);
 }
 
-static sox_effect_t sox_noisered_effect = {
+static sox_effect_handler_t sox_noisered_effect = {
   "noisered",
   "Usage: noisered [profile-file [amount]]",
   SOX_EFF_MCHAN|SOX_EFF_LENGTH,
@@ -353,10 +351,10 @@ static sox_effect_t sox_noisered_effect = {
   sox_noisered_flow,
   sox_noisered_drain,
   sox_noisered_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_noisered_effect_fn(void)
+const sox_effect_handler_t *sox_noisered_effect_fn(void)
 {
     return &sox_noisered_effect;
 }

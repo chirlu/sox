@@ -313,37 +313,6 @@ sox_size_t sox_format_nothing_read(ft_t ft UNUSED, sox_ssample_t *buf UNUSED, so
 sox_size_t sox_format_nothing_write(ft_t ft UNUSED, const sox_ssample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
 int sox_format_nothing_seek(ft_t ft UNUSED, sox_size_t offset UNUSED) { sox_fail_errno(ft, SOX_ENOTSUP, "operation not supported"); return(SOX_EOF); }
 
-/* dummy effect routine for do-nothing functions */
-int sox_effect_nothing(eff_t effp UNUSED)
-{
-  return SOX_SUCCESS;
-}
-
-int sox_effect_nothing_flow(eff_t effp UNUSED, const sox_ssample_t *ibuf UNUSED, sox_ssample_t *obuf UNUSED, sox_size_t *isamp, sox_size_t *osamp)
-{
-  /* Pass through samples verbatim */
-  *isamp = *osamp = min(*isamp, *osamp);
-  memcpy(obuf, ibuf, *isamp * sizeof(sox_ssample_t));
-  return SOX_SUCCESS;
-}
-
-int sox_effect_nothing_drain(eff_t effp UNUSED, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
-{
-  /* Inform no more samples to drain */
-  *osamp = 0;
-  return SOX_EOF;
-}
-
-int sox_effect_nothing_getopts(eff_t effp, int n, char **argv UNUSED)
-{
-  if (n) {
-    sox_fail(effp->h->usage);
-    return (SOX_EOF);
-  }
-  return (SOX_SUCCESS);
-}
-
-
 /* here for linear interp.  might be useful for other things */
 sox_ssample_t sox_gcd(sox_ssample_t a, sox_ssample_t b)
 {

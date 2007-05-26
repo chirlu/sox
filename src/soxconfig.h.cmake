@@ -18,7 +18,6 @@
 #cmakedefine HAVE_LIBVORBIS           1
 #cmakedefine HAVE_LTDL_H              1
 #cmakedefine HAVE_MACHINE_SOUNDCARD_H 1
-#cmakedefine HAVE_MSVC                1
 #cmakedefine HAVE_POPEN               1
 #cmakedefine HAVE_SAMPLERATE_H        1
 #cmakedefine HAVE_SNDFILE_1_0_12      1

@@ -57,9 +57,9 @@ const sox_format_t *sox_nul_format_fn(void);
 const sox_format_t *sox_nul_format_fn(void)
 {
   static const char *names[] = { "null", "nul"/* with -t; deprecated*/, NULL};
-  static sox_format_t driver = {
+  static sox_format_t handler = {
     names, SOX_FILE_DEVICE | SOX_FILE_PHONY | SOX_FILE_NOSTDIO,
     startread, read, 0, 0, write, 0, 0
   };
-  return &driver;
+  return &handler;
 }

@@ -278,7 +278,7 @@ static void set_default_parameters(channel_t chan, int c)
 
 
 
-static int getopts(eff_t effp, int argc, char **argv)
+static int getopts(sox_effect_t effp, int argc, char **argv)
 {
   synth_t synth = (synth_t) effp->priv;
   int argn = 0;
@@ -289,7 +289,7 @@ static int getopts(eff_t effp, int argc, char **argv)
     strcpy(synth->length_str, argv[argn]);
     /* Do a dummy parse of to see if it will fail */
     if (sox_parsesamples(0, synth->length_str, &synth->samples_to_do, 't') == NULL) {
-      sox_fail(effp->h->usage);
+      sox_fail(effp->handler.usage);
       return SOX_EOF;
     }
     argn++;
@@ -380,7 +380,7 @@ static int getopts(eff_t effp, int argc, char **argv)
 
 
 
-static int start(eff_t effp)
+static int start(sox_effect_t effp)
 {
   synth_t synth = (synth_t) effp->priv;
   unsigned i;
@@ -391,7 +391,7 @@ static int start(eff_t effp)
 
   if (synth->length_str)
     if (sox_parsesamples(effp->ininfo.rate, synth->length_str, &synth->samples_to_do, 't') == NULL) {
-      sox_fail(effp->h->usage);
+      sox_fail(effp->handler.usage);
       return SOX_EOF;
     }
 
@@ -564,7 +564,7 @@ static sox_ssample_t do_synth(sox_ssample_t synth_input, synth_t synth, int c, d
 
 
 
-static int flow(eff_t effp, const sox_ssample_t * ibuf, sox_ssample_t * obuf,
+static int flow(sox_effect_t effp, const sox_ssample_t * ibuf, sox_ssample_t * obuf,
     sox_size_t * isamp, sox_size_t * osamp)
 {
   synth_t synth = (synth_t) effp->priv;
@@ -583,7 +583,7 @@ static int flow(eff_t effp, const sox_ssample_t * ibuf, sox_ssample_t * obuf,
 
 
 
-static int kill(eff_t effp)
+static int kill(sox_effect_t effp)
 {
   synth_t synth = (synth_t) effp->priv;
   free(synth->channels);
@@ -593,12 +593,12 @@ static int kill(eff_t effp)
 
 
 
-const sox_effect_t *sox_synth_effect_fn(void)
+const sox_effect_handler_t *sox_synth_effect_fn(void)
 {
-  static sox_effect_t driver = {
+  static sox_effect_handler_t handler = {
     "synth",
     "Usage: synth [len] {type [combine] [freq[-freq2] [off [ph [p1 [p2 [p3]]]]]]}",
     SOX_EFF_MCHAN, getopts, start, flow, 0, 0, kill
   };
-  return &driver;
+  return &handler;
 }

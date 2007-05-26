@@ -24,8 +24,6 @@
 #include <string.h>
 #include <sys/types.h> /* for off_t on OS/2 and possibly others */
 
-static sox_effect_t sox_repeat_effect;
-
 typedef struct repeatstuff {
         FILE *fp;
         int first_drain;
@@ -34,12 +32,12 @@ typedef struct repeatstuff {
         int repeats;
 } *repeat_t;
 
-static int sox_repeat_getopts(eff_t effp, int n, char **argv)
+static int sox_repeat_getopts(sox_effect_t effp, int n, char **argv)
 {
         repeat_t repeat = (repeat_t)effp->priv;
 
         if (n != 1) {
-                sox_fail(sox_repeat_effect.usage);
+                sox_fail(effp->handler.usage);
                 return (SOX_EOF);
         }
 
@@ -56,7 +54,7 @@ static int sox_repeat_getopts(eff_t effp, int n, char **argv)
         return (SOX_SUCCESS);
 }
 
-static int sox_repeat_start(eff_t effp)
+static int sox_repeat_start(sox_effect_t effp)
 {
         repeat_t repeat = (repeat_t)effp->priv;
 
@@ -73,7 +71,7 @@ static int sox_repeat_start(eff_t effp)
         return (SOX_SUCCESS);
 }
 
-static int sox_repeat_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf UNUSED,
+static int sox_repeat_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf UNUSED,
                 sox_size_t *isamp, sox_size_t *osamp)
 {
         repeat_t repeat = (repeat_t)effp->priv;
@@ -89,7 +87,7 @@ static int sox_repeat_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t 
         return (SOX_SUCCESS);
 }
 
-static int sox_repeat_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_repeat_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         size_t read = 0;
         sox_ssample_t *buf;
@@ -187,7 +185,7 @@ static int sox_repeat_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
             return SOX_SUCCESS;
 }
 
-static int sox_repeat_stop(eff_t effp)
+static int sox_repeat_stop(sox_effect_t effp)
 {
         repeat_t repeat = (repeat_t)effp->priv;
 
@@ -196,7 +194,7 @@ static int sox_repeat_stop(eff_t effp)
         return (SOX_SUCCESS);
 }
 
-static sox_effect_t sox_repeat_effect = {
+static sox_effect_handler_t sox_repeat_effect = {
   "repeat",
   "Usage: repeat count",
   SOX_EFF_MCHAN | SOX_EFF_LENGTH,
@@ -205,10 +203,10 @@ static sox_effect_t sox_repeat_effect = {
   sox_repeat_flow,
   sox_repeat_drain,
   sox_repeat_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_repeat_effect_fn(void)
+const sox_effect_handler_t *sox_repeat_effect_fn(void)
 {
     return &sox_repeat_effect;
 }

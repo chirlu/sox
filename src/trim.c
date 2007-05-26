@@ -14,8 +14,6 @@
 #include "sox_i.h"
 #include <string.h>
 
-static sox_effect_t sox_trim_effect;
-
 /* Time resolutin one millisecond */
 #define TIMERES 1000
 
@@ -37,7 +35,7 @@ typedef struct
 /*
  * Process options
  */
-static int sox_trim_getopts(eff_t effp, int n, char **argv) 
+static int sox_trim_getopts(sox_effect_t effp, int n, char **argv) 
 {
     trim_t trim = (trim_t) effp->priv;
 
@@ -51,7 +49,7 @@ static int sox_trim_getopts(eff_t effp, int n, char **argv)
             /* Do a dummy parse to see if it will fail */
             if (sox_parsesamples(0, trim->length_str, &trim->length, 't') == NULL)
             {
-                sox_fail(sox_trim_effect.usage);
+                sox_fail(effp->handler.usage);
                 return(SOX_EOF);
             }
         case 1:
@@ -60,12 +58,12 @@ static int sox_trim_getopts(eff_t effp, int n, char **argv)
             /* Do a dummy parse to see if it will fail */
             if (sox_parsesamples(0, trim->start_str, &trim->start, 't') == NULL)
             {
-                sox_fail(sox_trim_effect.usage);
+                sox_fail(effp->handler.usage);
                 return(SOX_EOF);
             }
             break;
         default:
-            sox_fail(sox_trim_effect.usage);
+            sox_fail(effp->handler.usage);
             return SOX_EOF;
             break;
 
@@ -76,14 +74,14 @@ static int sox_trim_getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-static int sox_trim_start(eff_t effp)
+static int sox_trim_start(sox_effect_t effp)
 {
     trim_t trim = (trim_t) effp->priv;
 
     if (sox_parsesamples(effp->ininfo.rate, trim->start_str,
                         &trim->start, 't') == NULL)
     {
-        sox_fail(sox_trim_effect.usage);
+        sox_fail(effp->handler.usage);
         return(SOX_EOF);
     }
     /* Account for # of channels */
@@ -94,7 +92,7 @@ static int sox_trim_start(eff_t effp)
         if (sox_parsesamples(effp->ininfo.rate, trim->length_str,
                     &trim->length, 't') == NULL)
         {
-            sox_fail(sox_trim_effect.usage);
+            sox_fail(effp->handler.usage);
             return(SOX_EOF);
         }
     }
@@ -116,7 +114,7 @@ static int sox_trim_start(eff_t effp)
  * Place in buf[].
  * Return number of samples read.
  */
-static int sox_trim_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_trim_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                  sox_size_t *isamp, sox_size_t *osamp)
 {
     int result = SOX_SUCCESS;
@@ -171,7 +169,7 @@ static int sox_trim_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *o
     return result;
 }
 
-static int kill(eff_t effp)
+static int kill(sox_effect_t effp)
 {
     trim_t trim = (trim_t) effp->priv;
 
@@ -181,31 +179,31 @@ static int kill(eff_t effp)
     return (SOX_SUCCESS);
 }
 
-sox_size_t sox_trim_get_start(eff_t effp)          
+sox_size_t sox_trim_get_start(sox_effect_t effp)          
 {        
     trim_t trim = (trim_t)effp->priv;    
     return trim->start;          
 }        
 
-void sox_trim_clear_start(eff_t effp)     
+void sox_trim_clear_start(sox_effect_t effp)     
 {        
     trim_t trim = (trim_t)effp->priv;    
     trim->start = 0;     
 }
 
-static sox_effect_t sox_trim_effect = {
+static sox_effect_handler_t sox_trim_effect = {
   "trim",
   "Usage: trim start [length]",
   SOX_EFF_MCHAN|SOX_EFF_LENGTH,
   sox_trim_getopts,
   sox_trim_start,
   sox_trim_flow,
-  sox_effect_nothing_drain,
-  sox_effect_nothing,
+  NULL,
+  NULL,
   kill
 };
 
-const sox_effect_t *sox_trim_effect_fn(void)
+const sox_effect_handler_t *sox_trim_effect_fn(void)
 {
     return &sox_trim_effect;
 }

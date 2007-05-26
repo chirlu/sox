@@ -35,7 +35,7 @@ typedef struct pad
 assert_static(sizeof(struct pad) <= SOX_MAX_EFFECT_PRIVSIZE,
               /* else */ pad_PRIVSIZE_too_big);
 
-static int parse(eff_t effp, char * * argv, sox_rate_t rate)
+static int parse(sox_effect_t effp, char * * argv, sox_rate_t rate)
 {
   pad_t p = (pad_t) effp->priv;
   char const * next;
@@ -56,20 +56,20 @@ static int parse(eff_t effp, char * * argv, sox_rate_t rate)
     if (i > 0 && p->pads[i].start <= p->pads[i-1].start) break;
   }
   if (i < p->npads) {
-    sox_fail(effp->h->usage);
+    sox_fail(effp->handler.usage);
     return SOX_EOF;
   }
   return SOX_SUCCESS;
 }
 
-static int create(eff_t effp, int n, char * * argv)
+static int create(sox_effect_t effp, int n, char * * argv)
 {
   pad_t p = (pad_t) effp->priv;
   p->pads = xcalloc(p->npads = n, sizeof(*p->pads));
   return parse(effp, argv, SOX_MAXRATE); /* No rate yet; parse with dummy */
 }
 
-static int start(eff_t effp)
+static int start(sox_effect_t effp)
 {
   pad_t p = (pad_t) effp->priv;
   unsigned i;
@@ -82,7 +82,7 @@ static int start(eff_t effp)
   return SOX_EFF_NULL;
 }
 
-static int flow(eff_t effp, const sox_ssample_t * ibuf, sox_ssample_t * obuf,
+static int flow(sox_effect_t effp, const sox_ssample_t * ibuf, sox_ssample_t * obuf,
                 sox_size_t * isamp, sox_size_t * osamp)
 {
   pad_t p = (pad_t) effp->priv;
@@ -111,7 +111,7 @@ static int flow(eff_t effp, const sox_ssample_t * ibuf, sox_ssample_t * obuf,
   return SOX_SUCCESS;
 }
 
-static int drain(eff_t effp, sox_ssample_t * obuf, sox_size_t * osamp)
+static int drain(sox_effect_t effp, sox_ssample_t * obuf, sox_size_t * osamp)
 {
   static sox_size_t isamp = 0;
   pad_t p = (pad_t) effp->priv;
@@ -120,7 +120,7 @@ static int drain(eff_t effp, sox_ssample_t * obuf, sox_size_t * osamp)
   return flow(effp, 0, obuf, &isamp, osamp);
 }
 
-static int stop(eff_t effp)
+static int stop(sox_effect_t effp)
 {
   pad_t p = (pad_t) effp->priv;
   if (p->pads_pos != p->npads)
@@ -128,7 +128,7 @@ static int stop(eff_t effp)
   return SOX_SUCCESS;
 }
 
-static int kill(eff_t effp)
+static int kill(sox_effect_t effp)
 {
   pad_t p = (pad_t) effp->priv;
   unsigned i;
@@ -138,11 +138,11 @@ static int kill(eff_t effp)
   return SOX_SUCCESS;
 }
 
-sox_effect_t const * sox_pad_effect_fn(void)
+sox_effect_handler_t const * sox_pad_effect_fn(void)
 {
-  static sox_effect_t driver = {
+  static sox_effect_handler_t handler = {
     "pad", "Usage: pad {length[@position]}", SOX_EFF_MCHAN|SOX_EFF_LENGTH,
     create, start, flow, drain, stop, kill
   };
-  return &driver;
+  return &handler;
 }

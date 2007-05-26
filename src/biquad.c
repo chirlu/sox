@@ -31,7 +31,7 @@ static char const * const width_str[] = {
 static char const all_width_types[] = "hboqs";
 
 
-int sox_biquad_getopts(eff_t effp, int n, char **argv,
+int sox_biquad_getopts(sox_effect_t effp, int n, char **argv,
     int min_args, int max_args, int fc_pos, int width_pos, int gain_pos,
     char const * allowed_width_types, filter_t filter_type)
 {
@@ -45,7 +45,7 @@ int sox_biquad_getopts(eff_t effp, int n, char **argv,
       (n > width_pos && ((unsigned)(sscanf(argv[width_pos], "%lf%c %c", &p->width, &width_type, &dummy)-1) > 1 || p->width <= 0)) ||
       (n > gain_pos  && sscanf(argv[gain_pos], "%lf %c", &p->gain, &dummy) != 1) ||
       !strchr(allowed_width_types, width_type) || (width_type == 's' && p->width > 1)) {
-    sox_fail(effp->h->usage);
+    sox_fail(effp->handler.usage);
     return SOX_EOF;
   }
   p->width_type = strchr(all_width_types, width_type) - all_width_types;
@@ -55,7 +55,7 @@ int sox_biquad_getopts(eff_t effp, int n, char **argv,
 }
 
 
-int sox_biquad_start(eff_t effp)
+int sox_biquad_start(sox_effect_t effp)
 {
   biquad_t p = (biquad_t) effp->priv;
 
@@ -80,7 +80,7 @@ int sox_biquad_start(eff_t effp)
       "semilogx(w,20*log10(h))\n"
       "disp('Hit return to continue')\n"
       "pause\n"
-      , effp->name, p->gain, p->fc, width_str[p->width_type], p->width
+      , effp->handler.name, p->gain, p->fc, width_str[p->width_type], p->width
       , effp->ininfo.rate, effp->ininfo.rate
       , p->b0, p->b1, p->b2, p->a1, p->a2
       );
@@ -101,7 +101,7 @@ int sox_biquad_start(eff_t effp)
       "set key off\n"
       "plot [f=10:Fs/2] [-35:25] 20*log10(H(f))\n"
       "pause -1 'Hit return to continue'\n"
-      , effp->name, p->gain, p->fc, width_str[p->width_type], p->width
+      , effp->handler.name, p->gain, p->fc, width_str[p->width_type], p->width
       , effp->ininfo.rate, effp->ininfo.rate
       , p->b0, p->b1, p->b2, p->a1, p->a2
       );
@@ -113,7 +113,7 @@ int sox_biquad_start(eff_t effp)
 }
 
 
-int sox_biquad_flow(eff_t effp, const sox_ssample_t *ibuf,
+int sox_biquad_flow(sox_effect_t effp, const sox_ssample_t *ibuf,
     sox_ssample_t *obuf, sox_size_t *isamp, sox_size_t *osamp)
 {
   biquad_t p = (biquad_t) effp->priv;

@@ -19,7 +19,7 @@
  *
  * January 12, 1995
  * Copyright 1995 Mark Lakata (lakata@physics.berkeley.edu)
- * Additions to tx16w.c SOX driver.  This version writes as well as
+ * Additions to tx16w.c SOX handler.  This version writes as well as
  * reads TX16W format.
  *
  * July 31, 1998
@@ -34,10 +34,6 @@
  */
 
 #define TXMAXLEN 0x3FF80
-
-/*
- * libSoX skeleton file format driver.
- */
 
 #include <stdio.h>
 #include <string.h>

@@ -59,8 +59,6 @@
 #include <string.h>
 #include "sox_i.h"
 
-static sox_effect_t sox_phaser_effect;
-
 #define MOD_SINE        0
 #define MOD_TRIANGLE    1
 
@@ -81,13 +79,13 @@ typedef struct phaserstuff {
 /*
  * Process options
  */
-static int sox_phaser_getopts(eff_t effp, int n, char **argv) 
+static int sox_phaser_getopts(sox_effect_t effp, int n, char **argv) 
 {
         phaser_t phaser = (phaser_t) effp->priv;
 
         if (!((n == 5) || (n == 6)))
         {
-            sox_fail(sox_phaser_effect.usage);
+            sox_fail(effp->handler.usage);
             return (SOX_EOF);
         }
 
@@ -104,7 +102,7 @@ static int sox_phaser_getopts(eff_t effp, int n, char **argv)
                         phaser->modulation = MOD_TRIANGLE;
                 else
                 {
-                        sox_fail(sox_phaser_effect.usage);
+                        sox_fail(effp->handler.usage);
                         return (SOX_EOF);
                 }
         }
@@ -114,7 +112,7 @@ static int sox_phaser_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare for processing.
  */
-static int sox_phaser_start(eff_t effp)
+static int sox_phaser_start(sox_effect_t effp)
 {
         phaser_t phaser = (phaser_t) effp->priv;
         unsigned int i;
@@ -179,7 +177,7 @@ static int sox_phaser_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_phaser_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_phaser_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
         phaser_t phaser = (phaser_t) effp->priv;
@@ -213,7 +211,7 @@ static int sox_phaser_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t 
 /*
  * Drain out reverb lines. 
  */
-static int sox_phaser_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_phaser_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         phaser_t phaser = (phaser_t) effp->priv;
         sox_size_t done;
@@ -252,7 +250,7 @@ static int sox_phaser_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 /*
  * Clean up phaser effect.
  */
-static int sox_phaser_stop(eff_t effp)
+static int sox_phaser_stop(sox_effect_t effp)
 {
         phaser_t phaser = (phaser_t) effp->priv;
 
@@ -261,7 +259,7 @@ static int sox_phaser_stop(eff_t effp)
         return (SOX_SUCCESS);
 }
 
-static sox_effect_t sox_phaser_effect = {
+static sox_effect_handler_t sox_phaser_effect = {
   "phaser",
   "Usage: phaser gain-in gain-out delay decay speed [ -s | -t ]",
   SOX_EFF_LENGTH,
@@ -270,10 +268,10 @@ static sox_effect_t sox_phaser_effect = {
   sox_phaser_flow,
   sox_phaser_drain,
   sox_phaser_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_phaser_effect_fn(void)
+const sox_effect_handler_t *sox_phaser_effect_fn(void)
 {
     return &sox_phaser_effect;
 }

@@ -15,8 +15,6 @@
 
 #include <math.h>   /* exp(), sqrt() */
 
-static sox_effect_t sox_dcshift_effect;
-
 typedef struct {
     double dcshift; /* DC shift. */
     int uselimiter; /* boolean: are we using the limiter? */
@@ -30,7 +28,7 @@ typedef struct {
 /*
  * Process options: dcshift (double) type (amplitude, power, dB)
  */
-static int sox_dcshift_getopts(eff_t effp, int n, char **argv)
+static int sox_dcshift_getopts(sox_effect_t effp, int n, char **argv)
 {
     dcs_t dcs = (dcs_t) effp->priv;
     dcs->dcshift = 1.0; /* default is no change */
@@ -38,13 +36,13 @@ static int sox_dcshift_getopts(eff_t effp, int n, char **argv)
 
     if (n < 1)
     {
-        sox_fail(sox_dcshift_effect.usage);
+        sox_fail(effp->handler.usage);
         return SOX_EOF;
     }
 
     if (n && (!sscanf(argv[0], "%lf", &dcs->dcshift)))
     {
-        sox_fail(sox_dcshift_effect.usage);
+        sox_fail(effp->handler.usage);
         return SOX_EOF;
     }
 
@@ -52,7 +50,7 @@ static int sox_dcshift_getopts(eff_t effp, int n, char **argv)
     {
         if (!sscanf(argv[1], "%lf", &dcs->limitergain))
         {
-                sox_fail(sox_dcshift_effect.usage);
+                sox_fail(effp->handler.usage);
                 return SOX_EOF;
         }
 
@@ -72,7 +70,7 @@ static int sox_dcshift_getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-static int sox_dcshift_start(eff_t effp)
+static int sox_dcshift_start(sox_effect_t effp)
 {
     dcs_t dcs = (dcs_t) effp->priv;
 
@@ -101,7 +99,7 @@ static int sox_dcshift_start(eff_t effp)
 /*
  * Process data.
  */
-static int sox_dcshift_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_dcshift_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
     dcs_t dcs = (dcs_t) effp->priv;
@@ -168,7 +166,7 @@ static int sox_dcshift_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int sox_dcshift_stop(eff_t effp)
+static int sox_dcshift_stop(sox_effect_t effp)
 {
     dcs_t dcs = (dcs_t) effp->priv;
 
@@ -193,7 +191,7 @@ static int sox_dcshift_stop(eff_t effp)
     return SOX_SUCCESS;
 }
 
-static sox_effect_t sox_dcshift_effect = {
+static sox_effect_handler_t sox_dcshift_effect = {
    "dcshift",
    "Usage: dcshift shift [ limitergain ]\n"
    "       The peak limiter has a gain much less than 1.0 (ie 0.05 or 0.02) which is only\n"
@@ -202,12 +200,12 @@ static sox_effect_t sox_dcshift_effect = {
    sox_dcshift_getopts,
    sox_dcshift_start,
    sox_dcshift_flow,
-   sox_effect_nothing_drain,
+   NULL,
    sox_dcshift_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_dcshift_effect_fn(void)
+const sox_effect_handler_t *sox_dcshift_effect_fn(void)
 {
     return &sox_dcshift_effect;
 }

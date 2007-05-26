@@ -64,13 +64,13 @@
 #include <math.h>
 
 
-static int hilo1_getopts(eff_t effp, int n, char **argv) {
+static int hilo1_getopts(sox_effect_t effp, int n, char **argv) {
   return sox_biquad_getopts(effp, n, argv, 1, 1, 0, 1, 2, "",
-      *effp->name == 'l'? filter_LPF_1 : filter_HPF_1);
+      *effp->handler.name == 'l'? filter_LPF_1 : filter_HPF_1);
 }
 
 
-static int hilo2_getopts(eff_t effp, int n, char **argv) {
+static int hilo2_getopts(sox_effect_t effp, int n, char **argv) {
   biquad_t p = (biquad_t) effp->priv;
   if (n != 0 && strcmp(argv[0], "-1") == 0)
     return hilo1_getopts(effp, n - 1, argv + 1);
@@ -78,11 +78,11 @@ static int hilo2_getopts(eff_t effp, int n, char **argv) {
     ++argv, --n;
   p->width = sqrt(0.5); /* Default to Butterworth */
   return sox_biquad_getopts(effp, n, argv, 1, 2, 0, 1, 2, "qoh",
-      *effp->name == 'l'? filter_LPF : filter_HPF);
+      *effp->handler.name == 'l'? filter_LPF : filter_HPF);
 }
 
 
-static int bandpass_getopts(eff_t effp, int n, char **argv) {
+static int bandpass_getopts(sox_effect_t effp, int n, char **argv) {
   filter_t type = filter_BPF;
   if (n != 0 && strcmp(argv[0], "-c") == 0)
     ++argv, --n, type = filter_BPF_CSG;
@@ -90,12 +90,12 @@ static int bandpass_getopts(eff_t effp, int n, char **argv) {
 }
 
 
-static int bandrej_getopts(eff_t effp, int n, char **argv) {
+static int bandrej_getopts(sox_effect_t effp, int n, char **argv) {
   return sox_biquad_getopts(effp, n, argv, 2, 2, 0, 1, 2, "hqob", filter_notch);
 }
 
 
-static int allpass_getopts(eff_t effp, int n, char **argv) {
+static int allpass_getopts(sox_effect_t effp, int n, char **argv) {
   filter_t type = filter_APF;
   int m;
   if (n != 0 && strcmp(argv[0], "-1") == 0)
@@ -107,21 +107,21 @@ static int allpass_getopts(eff_t effp, int n, char **argv) {
 }
 
 
-static int tone_getopts(eff_t effp, int n, char **argv) {
+static int tone_getopts(sox_effect_t effp, int n, char **argv) {
   biquad_t p = (biquad_t) effp->priv;
   p->width = 0.5;
-  p->fc = *effp->name == 'b'? 100 : 3000;
+  p->fc = *effp->handler.name == 'b'? 100 : 3000;
   return sox_biquad_getopts(effp, n, argv, 1, 3, 1, 2, 0, "shqo",
-      *effp->name == 'b'?  filter_lowShelf: filter_highShelf);
+      *effp->handler.name == 'b'?  filter_lowShelf: filter_highShelf);
 }
 
 
-static int equalizer_getopts(eff_t effp, int n, char **argv) {
+static int equalizer_getopts(sox_effect_t effp, int n, char **argv) {
   return sox_biquad_getopts(effp, n, argv, 3, 3, 0, 1, 2, "qoh", filter_peakingEQ);
 }
 
 
-static int band_getopts(eff_t effp, int n, char **argv) {
+static int band_getopts(sox_effect_t effp, int n, char **argv) {
   filter_t type = filter_BPF_SPK;
   if (n != 0 && strcmp(argv[0], "-n") == 0)
     ++argv, --n, type = filter_BPF_SPK_N;
@@ -129,7 +129,7 @@ static int band_getopts(eff_t effp, int n, char **argv) {
 }
 
 
-static int deemph_getopts(eff_t effp, int n, char **argv) {
+static int deemph_getopts(sox_effect_t effp, int n, char **argv) {
   biquad_t p = (biquad_t) effp->priv;
   p->fc    = 5283;
   p->width = 0.4845;
@@ -138,7 +138,7 @@ static int deemph_getopts(eff_t effp, int n, char **argv) {
 }
 
 
-static int start(eff_t effp)
+static int start(sox_effect_t effp)
 {
   biquad_t p = (biquad_t) effp->priv;
   double w0 = 2 * M_PI * p->fc / effp->ininfo.rate;
@@ -312,12 +312,12 @@ static int start(eff_t effp)
 
 
 #define BIQUAD_EFFECT(name,group,usage,flags) \
-sox_effect_t const * sox_##name##_effect_fn(void) { \
-  static sox_effect_t driver = { \
+sox_effect_handler_t const * sox_##name##_effect_fn(void) { \
+  static sox_effect_handler_t handler = { \
     #name, "Usage: " #name " " usage, flags, \
     group##_getopts, start, sox_biquad_flow, 0, 0, 0, \
   }; \
-  return &driver; \
+  return &handler; \
 }
 
 BIQUAD_EFFECT(highp,     hilo1,    "cutoff-frequency", SOX_EFF_DEPRECATED)

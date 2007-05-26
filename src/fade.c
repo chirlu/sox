@@ -23,8 +23,6 @@
 #include <string.h>
 #include "sox_i.h"
 
-static sox_effect_t sox_fade_effect;
-
 /* Private data for fade file */
 typedef struct fadestuff
 { /* These are measured as samples */
@@ -45,7 +43,7 @@ static double fade_gain(sox_size_t index, sox_size_t range, int fadetype);
  * The 'info' fields are not yet filled in.
  */
 
-static int sox_fade_getopts(eff_t effp, int n, char **argv)
+static int sox_fade_getopts(sox_effect_t effp, int n, char **argv)
 {
 
     fade_t fade = (fade_t) effp->priv;
@@ -54,7 +52,7 @@ static int sox_fade_getopts(eff_t effp, int n, char **argv)
 
     if (n < 1 || n > 4)
     { /* Wrong number of arguments. */
-        sox_fail(sox_fade_effect.usage);
+        sox_fail(effp->handler.usage);
         return(SOX_EOF);
     }
 
@@ -82,7 +80,7 @@ static int sox_fade_getopts(eff_t effp, int n, char **argv)
     /* Do a dummy parse to see if it will fail */
     if (sox_parsesamples(0, fade->in_stop_str, &fade->in_stop, 't') == NULL)
     {
-        sox_fail(sox_fade_effect.usage);
+        sox_fail(effp->handler.usage);
         return(SOX_EOF);
     }
 
@@ -99,7 +97,7 @@ static int sox_fade_getopts(eff_t effp, int n, char **argv)
             /* Do a dummy parse to see if it will fail */
             if (sox_parsesamples(0, fade->out_stop_str, 
                                 &fade->out_stop, 't') == NULL) {
-              sox_fail(sox_fade_effect.usage);
+              sox_fail(effp->handler.usage);
               return(SOX_EOF);
             }
         }
@@ -111,7 +109,7 @@ static int sox_fade_getopts(eff_t effp, int n, char **argv)
             /* Do a dummy parse to see if it will fail */
             if (sox_parsesamples(0, fade->out_start_str, 
                                 &fade->out_start, 't') == NULL) {
-              sox_fail(sox_fade_effect.usage);
+              sox_fail(effp->handler.usage);
               return(SOX_EOF);
             }
         }
@@ -124,7 +122,7 @@ static int sox_fade_getopts(eff_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-static int sox_fade_start(eff_t effp)
+static int sox_fade_start(sox_effect_t effp)
 {
     fade_t fade = (fade_t) effp->priv;
 
@@ -133,7 +131,7 @@ static int sox_fade_start(eff_t effp)
     if (sox_parsesamples(effp->ininfo.rate, fade->in_stop_str,
                         &fade->in_stop, 't') == NULL)
     {
-        sox_fail(sox_fade_effect.usage);
+        sox_fail(effp->handler.usage);
         return(SOX_EOF);
     }
 
@@ -145,7 +143,7 @@ static int sox_fade_start(eff_t effp)
         if (sox_parsesamples(effp->ininfo.rate, fade->out_stop_str,
                             &fade->out_stop, 't') == NULL)
         {
-            sox_fail(sox_fade_effect.usage);
+            sox_fail(effp->handler.usage);
             return(SOX_EOF);
         }
 
@@ -155,7 +153,7 @@ static int sox_fade_start(eff_t effp)
             if (sox_parsesamples(effp->ininfo.rate, fade->out_start_str,
                         &fade->out_start, 't') == NULL)
             {
-                sox_fail(sox_fade_effect.usage);
+                sox_fail(effp->handler.usage);
                 return(SOX_EOF);
             }
             /* Fade time is relative to stop time. */
@@ -197,7 +195,7 @@ static int sox_fade_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_fade_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_fade_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                  sox_size_t *isamp, sox_size_t *osamp)
 {
     fade_t fade = (fade_t) effp->priv;
@@ -278,7 +276,7 @@ static int sox_fade_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *o
 /*
  * Drain out remaining samples if the effect generates any.
  */
-static int sox_fade_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_fade_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
     fade_t fade = (fade_t) effp->priv;
     int len;
@@ -319,7 +317,7 @@ static int sox_fade_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
  * Do anything required when you stop reading samples.
  *      (free allocated memory, etc.)
  */
-static int kill(eff_t effp)
+static int kill(sox_effect_t effp)
 {
     fade_t fade = (fade_t) effp->priv;
 
@@ -371,7 +369,7 @@ static double fade_gain(sox_size_t index, sox_size_t range, int type)
     return retval;
 }
 
-static sox_effect_t sox_fade_effect = {
+static sox_effect_handler_t sox_fade_effect = {
   "fade",
   "Usage: fade [ type ] fade-in-length [ stop-time [ fade-out-length ] ]\n"
   "       Time is in hh:mm:ss.frac format.\n"
@@ -381,11 +379,11 @@ static sox_effect_t sox_fade_effect = {
   sox_fade_start,
   sox_fade_flow,
   sox_fade_drain,
-  sox_effect_nothing,
+  NULL,
   kill
 };
 
-const sox_effect_t *sox_fade_effect_fn(void)
+const sox_effect_handler_t *sox_fade_effect_fn(void)
 {
     return &sox_fade_effect;
 }

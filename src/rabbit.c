@@ -32,8 +32,6 @@
 #include <math.h>
 #include <samplerate.h>
 
-static sox_effect_t sox_rabbit_effect;
-
 /* Private data for resampling */
 typedef struct {
   int converter_type;           /* SRC converter type */
@@ -46,7 +44,7 @@ typedef struct {
 /*
  * Process options
  */
-static int sox_rabbit_getopts(eff_t effp, int n, char **argv)
+static int sox_rabbit_getopts(sox_effect_t effp, int n, char **argv)
 {
   rabbit_t r = (rabbit_t) effp->priv;
 
@@ -72,7 +70,7 @@ static int sox_rabbit_getopts(eff_t effp, int n, char **argv)
   }
 
   if (n >= 1) {
-    sox_fail(sox_rabbit_effect.usage);
+    sox_fail(effp->handler.usage);
     return SOX_EOF;
   }
 
@@ -82,7 +80,7 @@ static int sox_rabbit_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare processing.
  */
-static int sox_rabbit_start(eff_t effp)
+static int sox_rabbit_start(sox_effect_t effp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
 
@@ -111,7 +109,7 @@ static int sox_rabbit_start(eff_t effp)
 /*
  * Read all the data.
  */
-static int sox_rabbit_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf UNUSED,
+static int sox_rabbit_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf UNUSED,
                    sox_size_t *isamp, sox_size_t *osamp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
@@ -141,7 +139,7 @@ static int sox_rabbit_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t 
 /*
  * Process samples and write output.
  */
-static int sox_rabbit_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_rabbit_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
   int channels = effp->ininfo.channels;
@@ -186,7 +184,7 @@ static int sox_rabbit_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int sox_rabbit_stop(eff_t effp)
+static int sox_rabbit_stop(sox_effect_t effp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
 
@@ -195,7 +193,7 @@ static int sox_rabbit_stop(eff_t effp)
   return SOX_SUCCESS;
 }
 
-static sox_effect_t sox_rabbit_effect = {
+static sox_effect_handler_t sox_rabbit_effect = {
   "rabbit",
   "Usage: rabbit [-c0|-c1|-c2|-c3|-c4]",
   SOX_EFF_RATE | SOX_EFF_MCHAN,
@@ -204,10 +202,10 @@ static sox_effect_t sox_rabbit_effect = {
   sox_rabbit_flow,
   sox_rabbit_drain,
   sox_rabbit_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_rabbit_effect_fn(void)
+const sox_effect_handler_t *sox_rabbit_effect_fn(void)
 {
   return &sox_rabbit_effect;
 }

@@ -1,7 +1,7 @@
 /* Direct to Sun Audio Driver
  *
  * Added by Chris Bagwell (cbagwell@sprynet.com) on 2/26/96
- * Based on oss driver.
+ * Based on oss handler.
  *
  * Cleaned up changes of format somewhat in sunstartwrite on 03/31/98
  *

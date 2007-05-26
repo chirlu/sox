@@ -42,8 +42,6 @@
 
 #include <math.h>   /* cos(), pow() */
 
-static sox_effect_t sox_pitch_effect;
-
 /* cross fading options for transitions
  */
 #define PITCH_FADE_COS 0 /* cosine */
@@ -246,7 +244,7 @@ static void process_intput_buffer(pitch_t pitch)
 /*
  * Process options
  */
-static int sox_pitch_getopts(eff_t effp, int n, char **argv) 
+static int sox_pitch_getopts(sox_effect_t effp, int n, char **argv) 
 {
     pitch_t pitch = (pitch_t) effp->priv; 
     
@@ -255,7 +253,7 @@ static int sox_pitch_getopts(eff_t effp, int n, char **argv)
 
     if (n && !sscanf(argv[0], "%lf", &pitch->shift))
     {
-        sox_fail(sox_pitch_effect.usage);
+        sox_fail(effp->handler.usage);
         return SOX_EOF;
     }
 
@@ -263,7 +261,7 @@ static int sox_pitch_getopts(eff_t effp, int n, char **argv)
     pitch->width = PITCH_DEFAULT_WIDTH;
     if (n>1 && !sscanf(argv[1], "%lf", &pitch->width))
     {
-        sox_fail(sox_pitch_effect.usage);
+        sox_fail(effp->handler.usage);
         return SOX_EOF;
     }
 
@@ -282,7 +280,7 @@ static int sox_pitch_getopts(eff_t effp, int n, char **argv)
             pitch->interopt = PITCH_INTERPOLE_CUB;
             break;
         default:
-            sox_fail(sox_pitch_effect.usage);
+            sox_fail(effp->handler.usage);
             return SOX_EOF;
         }
     }
@@ -310,7 +308,7 @@ static int sox_pitch_getopts(eff_t effp, int n, char **argv)
             pitch->fadeopt = PITCH_FADE_COS;
             break;
         default:
-            sox_fail(sox_pitch_effect.usage);
+            sox_fail(effp->handler.usage);
             return SOX_EOF;
         }
     }
@@ -319,7 +317,7 @@ static int sox_pitch_getopts(eff_t effp, int n, char **argv)
     if (n>4 && (!sscanf(argv[4], "%lf", &pitch->coef) ||
                 pitch->coef<0.0 || pitch->coef>0.5))
     {
-        sox_fail(sox_pitch_effect.usage);
+        sox_fail(effp->handler.usage);
         return SOX_EOF;
     }
 
@@ -329,7 +327,7 @@ static int sox_pitch_getopts(eff_t effp, int n, char **argv)
 /*
  * Start processing
  */
-static int sox_pitch_start(eff_t effp)
+static int sox_pitch_start(sox_effect_t effp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
     register int sample_rate = effp->outinfo.rate;
@@ -441,7 +439,7 @@ static int sox_pitch_start(eff_t effp)
 
 /* Processes input.
  */
-static int sox_pitch_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_pitch_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                 sox_size_t *isamp, sox_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
@@ -518,7 +516,7 @@ static int sox_pitch_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *
 
 /* at the end...
  */
-static int sox_pitch_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_pitch_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
     sox_size_t i;
@@ -562,7 +560,7 @@ static int sox_pitch_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-static int sox_pitch_stop(eff_t effp)
+static int sox_pitch_stop(sox_effect_t effp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
 
@@ -574,7 +572,7 @@ static int sox_pitch_stop(eff_t effp)
     return SOX_SUCCESS;
 }
 
-static sox_effect_t sox_pitch_effect = {
+static sox_effect_handler_t sox_pitch_effect = {
   "pitch",
   "Usage: pitch shift width interpole fade\n"
   "       (in cents, in ms, cub/lin, cos/ham/lin/trap)"
@@ -585,10 +583,10 @@ static sox_effect_t sox_pitch_effect = {
   sox_pitch_flow,
   sox_pitch_drain,
   sox_pitch_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_pitch_effect_fn(void)
+const sox_effect_handler_t *sox_pitch_effect_fn(void)
 {
     return &sox_pitch_effect;
 }

@@ -1,5 +1,5 @@
 /*
- * libSoX SampleVision file format driver.
+ * libSoX SampleVision file format handler.
  * Output is always in little-endian (80x86/VAX) order.
  * 
  * Derived from: libSoX skeleton handler file.

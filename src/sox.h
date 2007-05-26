@@ -229,7 +229,7 @@ typedef struct sox_signalinfo
      * options.)  The physical delineation is in the somewhat
      * snappily-named libSoX function `set_endianness_if_not_already_set'
      * which is called at the right times (as files are openned) by the
-     * libSoX core, not by the file drivers themselves.  The file drivers
+     * libSoX core, not by the file handlers themselves.  The file handlers
      * indicate to the libSoX core if they have a preference using
      * SOX_FILE_xxx flags.
      */
@@ -341,7 +341,7 @@ struct sox_soundstream {
 /* These two for use by the libSoX core or libSoX clients: */
 #define SOX_FILE_ENDIAN  64 /* is file format endian? */
 #define SOX_FILE_ENDBIG  128/* if so, is it big endian? */
-/* These two for use by libSoX drivers: */
+/* These two for use by libSoX handlers: */
 #define SOX_FILE_LIT_END  (0   + 64)
 #define SOX_FILE_BIG_END  (128 + 64)
 #define SOX_FILE_BIT_REV 256
@@ -372,45 +372,37 @@ extern const char * const sox_encodings_str[];
  * Handler structure for each effect.
  */
 
-typedef struct sox_effect *eff_t;
+typedef struct sox_effect * sox_effect_t;
 
-typedef struct
-{
-    char const *name;               /* effect name */
-    char const *usage;
-    unsigned int flags;
+typedef struct {
+  char const * name;
+  char const * usage;
+  unsigned int flags;
 
-    int (*getopts)(eff_t effp, int argc, char *argv[]);
-    int (*start)(eff_t effp);
-    int (*flow)(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
-                sox_size_t *isamp, sox_size_t *osamp);
-    int (*drain)(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp);
-    int (*stop)(eff_t effp);
-    int (*kill)(eff_t effp);
-} sox_effect_t;
+  int (*getopts)(sox_effect_t effp, int argc, char *argv[]);
+  int (*start)(sox_effect_t effp);
+  int (*flow)(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
+              sox_size_t *isamp, sox_size_t *osamp);
+  int (*drain)(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp);
+  int (*stop)(sox_effect_t effp);
+  int (*kill)(sox_effect_t effp);
+} sox_effect_handler_t;
 
-struct sox_effect
-{
-    char const *name;               /* effect name */
-    sox_size_t       flows;
-    struct sox_effects_global_info * global_info;/* global parameters */
-    struct sox_signalinfo ininfo;    /* input signal specifications */
-    struct sox_signalinfo outinfo;   /* output signal specifications */
-    const sox_effect_t *h;           /* effects driver */
-    sox_ssample_t     *obuf;          /* output buffer */
-    sox_size_t       odone, olen;    /* consumed, total length */
-    sox_size_t       clips;   /* increment if clipping occurs */
-    /* The following is a portable trick to align this variable on
-     * an 8-byte boundary.  Once this is done, the buffer alloced
-     * after it should be align on an 8-byte boundery as well.
-     * This lets you cast any structure over the private area
-     * without concerns of alignment.
-     */
-    double priv1;
-    char priv[SOX_MAX_EFFECT_PRIVSIZE]; /* private area for effect */
+struct sox_effect {
+  /* Placing priv at the start of this structure ensures that it gets aligned
+   * in memory in the optimal way for any structure to be cast over it. */
+  char priv[SOX_MAX_EFFECT_PRIVSIZE];    /* private area for effect */
+
+  struct sox_effects_global_info * global_info; /* global parameters */
+  struct sox_signalinfo    ininfo;       /* input signal specifications */
+  struct sox_signalinfo    outinfo;      /* output signal specifications */
+  sox_effect_handler_t     handler;
+  sox_ssample_t            * obuf;       /* output buffer */
+  sox_size_t               odone, olen;  /* consumed, total length */
+  sox_size_t               clips;        /* increment if clipping occurs */
+  sox_size_t               flows;
 };
 
-void set_endianness_if_not_already_set(ft_t ft);
 extern ft_t sox_open_read(const char *path, const sox_signalinfo_t *info, 
                          const char *filetype);
 ft_t sox_open_write(
@@ -429,20 +421,21 @@ extern int sox_close(ft_t ft);
 #define SOX_SEEK_SET 0
 extern int sox_seek(ft_t ft, sox_size_t offset, int whence);
 
-int sox_geteffect_opt(eff_t effp, int argc, char **argv);
-int sox_geteffect(eff_t effp, const char *effect_name);
-sox_bool is_effect_name(char const *text);
-int sox_updateeffect(eff_t effp, const sox_signalinfo_t *in, const sox_signalinfo_t *out, int effect_mask);
+sox_effect_handler_t const * sox_find_effect(char const * name);
+int sox_create_effect(sox_effect_t effp, sox_effect_handler_t const * e);
+int sox_get_effect(sox_effect_t effp, const char * name);
+int sox_update_effect(sox_effect_t effp, const sox_signalinfo_t *in, const sox_signalinfo_t *out, int effect_mask);
 
-#define MAX_EFFECTS 20
-extern struct sox_effect * effects[MAX_EFFECTS];
-extern unsigned neffects;                     /* # of effects to run on data */
-void add_effect(struct sox_effect * e, sox_signalinfo_t * in, sox_signalinfo_t * out, int * effects_mask);
-int start_effects(void);
-int flow_effects(void (* update_status)(sox_bool), sox_bool * user_abort);
-void stop_effects(void);
-void kill_effects(void);
-void delete_effects(void);
+/* Effects chain */
+#define SOX_MAX_EFFECTS 20
+extern sox_effect_t sox_effects[SOX_MAX_EFFECTS];
+extern unsigned sox_neffects;
+int sox_add_effect(sox_effect_t e, sox_signalinfo_t * in, sox_signalinfo_t * out, int * effects_mask);
+int sox_start_effects(void);
+int sox_flow_effects(void (* update_status)(sox_bool), sox_bool * user_abort);
+void sox_stop_effects(void);
+void sox_kill_effects(void);
+void sox_delete_effects(void);
 
 int sox_gettype(ft_t, sox_bool);
 ft_t sox_initformat(void);
@@ -457,15 +450,15 @@ char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samp
  * wants to trim and use a sox_seek() operation instead.  After
  * sox_seek()'ing, you should set the trim option to 0.
  */
-sox_size_t sox_trim_get_start(eff_t effp);
-void sox_trim_clear_start(eff_t effp);
+sox_size_t sox_trim_get_start(sox_effect_t effp);
+void sox_trim_clear_start(sox_effect_t effp);
 
 extern char const * sox_message_filename;
 
-#define SOX_EOF (-1)
-#define SOX_SUCCESS (0)
+#define SOX_SUCCESS 0
+#define SOX_EOF (-1)           /* End Of File or other error */
 
-const char *sox_version(void);                   /* return version number */
+const char *sox_version(void);   /* Returns version number */
 
 /* libSoX specific error codes.  The rest directly map from errno. */
 #define SOX_EHDR 2000            /* Invalid Audio Header */

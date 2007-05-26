@@ -1,4 +1,4 @@
-/* ALSA sound driver
+/* ALSA sound handler
  *
  * Copyright 1997-2005 Jimen Ching And Sundry Contributors
  * This source code is freely redistributable and may be used for

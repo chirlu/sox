@@ -50,8 +50,6 @@
 #include <math.h>
 #include "sox_i.h"
 
-static sox_effect_t sox_echos_effect;
-
 #define DELAY_BUFSIZ ( 50 * SOX_MAXRATE )
 #define MAX_ECHOS 7     /* 24 bit x ( 1 + MAX_ECHOS ) = */
                         /* 24 bit x 8 = 32 bit !!!      */
@@ -72,7 +70,7 @@ typedef struct echosstuff {
 /*
  * Process options
  */
-static int sox_echos_getopts(eff_t effp, int n, char **argv) 
+static int sox_echos_getopts(sox_effect_t effp, int n, char **argv) 
 {
         echos_t echos = (echos_t) effp->priv;
         int i;
@@ -81,7 +79,7 @@ static int sox_echos_getopts(eff_t effp, int n, char **argv)
 
         if ((n < 4) || (n % 2))
         {
-            sox_fail(sox_echos_effect.usage);
+            sox_fail(effp->handler.usage);
             return (SOX_EOF);
         }
 
@@ -107,7 +105,7 @@ static int sox_echos_getopts(eff_t effp, int n, char **argv)
 /*
  * Prepare for processing.
  */
-static int sox_echos_start(eff_t effp)
+static int sox_echos_start(sox_effect_t effp)
 {
         echos_t echos = (echos_t) effp->priv;
         int i;
@@ -172,7 +170,7 @@ static int sox_echos_start(eff_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_echos_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_echos_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                 sox_size_t *isamp, sox_size_t *osamp)
 {
         echos_t echos = (echos_t) effp->priv;
@@ -214,7 +212,7 @@ static int sox_echos_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *
 /*
  * Drain out reverb lines. 
  */
-static int sox_echos_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_echos_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         echos_t echos = (echos_t) effp->priv;
         double d_in, d_out;
@@ -260,7 +258,7 @@ static int sox_echos_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 /*
  * Clean up echos effect.
  */
-static int sox_echos_stop(eff_t effp)
+static int sox_echos_stop(sox_effect_t effp)
 {
         echos_t echos = (echos_t) effp->priv;
 
@@ -269,7 +267,7 @@ static int sox_echos_stop(eff_t effp)
         return (SOX_SUCCESS);
 }
 
-static sox_effect_t sox_echos_effect = {
+static sox_effect_handler_t sox_echos_effect = {
   "echos",
   "Usage: echos gain-in gain-out delay decay [ delay decay ... ]",
   SOX_EFF_LENGTH,
@@ -278,10 +276,10 @@ static sox_effect_t sox_echos_effect = {
   sox_echos_flow,
   sox_echos_drain,
   sox_echos_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_echos_effect_fn(void)
+const sox_effect_handler_t *sox_echos_effect_fn(void)
 {
     return &sox_echos_effect;
 }

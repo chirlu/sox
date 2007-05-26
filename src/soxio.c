@@ -12,9 +12,6 @@
 #endif
 
 
-sox_size_t sox_bufsiz = 8192;
-sox_global_info_t sox_global_info;
-
 void set_endianness_if_not_already_set(ft_t ft)
 {
   if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT) {

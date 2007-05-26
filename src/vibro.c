@@ -18,7 +18,7 @@
 
 #include "sox_i.h"
 
-static int getopts(eff_t effp, int n, char * * argv) 
+static int getopts(sox_effect_t effp, int n, char * * argv) 
 {
   double speed, depth = 0.5;
   char dummy;     /* To check for extraneous chars. */
@@ -29,7 +29,7 @@ static int getopts(eff_t effp, int n, char * * argv)
       sscanf(argv[0], "%lf %c", &speed, &dummy) != 1 || speed < 0 ||
       (n > 1 && sscanf(argv[1], "%lf %c", &depth, &dummy) != 1) ||
       depth <= 0 || depth > 1) {
-    sox_fail(effp->h->usage);
+    sox_fail(effp->handler.usage);
     return SOX_EOF;
   }
   args[2] = argv[0];
@@ -38,13 +38,13 @@ static int getopts(eff_t effp, int n, char * * argv)
   return sox_synth_effect_fn()->getopts(effp, array_length(args), args);
 }
 
-sox_effect_t const * sox_vibro_effect_fn(void)
+sox_effect_handler_t const * sox_vibro_effect_fn(void)
 {
-  static sox_effect_t driver;
-  driver = *sox_synth_effect_fn();
-  driver.name = "vibro";
-  driver.usage = "Usage: vibro speed [depth]";
-  driver.getopts = getopts;
-  driver.flags |= SOX_EFF_DEPRECATED;
-  return &driver;
+  static sox_effect_handler_t handler;
+  handler = *sox_synth_effect_fn();
+  handler.name = "vibro";
+  handler.usage = "Usage: vibro speed [depth]";
+  handler.getopts = getopts;
+  handler.flags |= SOX_EFF_DEPRECATED;
+  return &handler;
 }

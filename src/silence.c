@@ -18,8 +18,6 @@
 #include <math.h>
 #include "sox_i.h"
 
-static sox_effect_t sox_silence_effect;
-
 /* Private data for silence effect. */
 
 #define SILENCE_TRIM        0
@@ -67,7 +65,7 @@ typedef struct silencestuff
     char        mode;
 } *silence_t;
 
-static void clear_rms(eff_t effp)
+static void clear_rms(sox_effect_t effp)
 
 {
     silence_t silence = (silence_t) effp->priv;
@@ -80,7 +78,7 @@ static void clear_rms(eff_t effp)
     silence->rms_sum = 0;
 }
 
-static int sox_silence_getopts(eff_t effp, int n, char **argv)
+static int sox_silence_getopts(sox_effect_t effp, int n, char **argv)
 {
     silence_t   silence = (silence_t) effp->priv;
     int parse_count;
@@ -97,7 +95,7 @@ static int sox_silence_getopts(eff_t effp, int n, char **argv)
 
     if (n < 1)
     {
-        sox_fail(sox_silence_effect.usage);
+        sox_fail(effp->handler.usage);
         return (SOX_EOF);
     }
 
@@ -105,7 +103,7 @@ static int sox_silence_getopts(eff_t effp, int n, char **argv)
     silence->start = sox_false;
     if (sscanf(argv[0], "%d", &silence->start_periods) != 1)
     {
-        sox_fail(sox_silence_effect.usage);
+        sox_fail(effp->handler.usage);
         return(SOX_EOF);
     }
     if (silence->start_periods < 0)
@@ -121,7 +119,7 @@ static int sox_silence_getopts(eff_t effp, int n, char **argv)
         silence->start = sox_true;
         if (n < 2)
         {
-            sox_fail(sox_silence_effect.usage);
+            sox_fail(effp->handler.usage);
             return SOX_EOF;
         }
 
@@ -135,7 +133,7 @@ static int sox_silence_getopts(eff_t effp, int n, char **argv)
         if (sox_parsesamples(0,silence->start_duration_str,
                     &silence->start_duration,'s') == NULL)
         {
-            sox_fail(sox_silence_effect.usage);
+            sox_fail(effp->handler.usage);
             return(SOX_EOF);
         }
 
@@ -143,7 +141,7 @@ static int sox_silence_getopts(eff_t effp, int n, char **argv)
                 &silence->start_unit);
         if (parse_count < 1)
         {
-            sox_fail(sox_silence_effect.usage);
+            sox_fail(effp->handler.usage);
             return SOX_EOF;
         }
         else if (parse_count < 2)
@@ -159,12 +157,12 @@ static int sox_silence_getopts(eff_t effp, int n, char **argv)
     {
         if (n < 3)
         {
-            sox_fail(sox_silence_effect.usage);
+            sox_fail(effp->handler.usage);
             return SOX_EOF;
         }
         if (sscanf(argv[0], "%d", &silence->stop_periods) != 1)
         {
-            sox_fail(sox_silence_effect.usage);
+            sox_fail(effp->handler.usage);
             return SOX_EOF;
         }
         if (silence->stop_periods < 0)
@@ -188,7 +186,7 @@ static int sox_silence_getopts(eff_t effp, int n, char **argv)
         if (sox_parsesamples(0,silence->stop_duration_str,
                     &silence->stop_duration,'s') == NULL)
         {
-            sox_fail(sox_silence_effect.usage);
+            sox_fail(effp->handler.usage);
             return(SOX_EOF);
         }
 
@@ -196,7 +194,7 @@ static int sox_silence_getopts(eff_t effp, int n, char **argv)
                              &silence->stop_unit);
         if (parse_count < 1)
         {
-            sox_fail(sox_silence_effect.usage);
+            sox_fail(effp->handler.usage);
             return SOX_EOF;
         }
         else if (parse_count < 2)
@@ -212,7 +210,7 @@ static int sox_silence_getopts(eff_t effp, int n, char **argv)
         if ((silence->start_unit != '%') && (silence->start_unit != 'd'))
         {
             sox_fail("Invalid unit specified");
-            sox_fail(sox_silence_effect.usage);
+            sox_fail(effp->handler.usage);
             return(SOX_EOF);
         }
         if ((silence->start_unit == '%') && ((silence->start_threshold < 0.0)
@@ -250,7 +248,7 @@ static int sox_silence_getopts(eff_t effp, int n, char **argv)
     return(SOX_SUCCESS);
 }
 
-static int sox_silence_start(eff_t effp)
+static int sox_silence_start(sox_effect_t effp)
 {
         silence_t       silence = (silence_t) effp->priv;
 
@@ -271,7 +269,7 @@ static int sox_silence_start(eff_t effp)
             if (sox_parsesamples(effp->ininfo.rate, silence->start_duration_str,
                                 &silence->start_duration, 's') == NULL)
             {
-                sox_fail(sox_silence_effect.usage);
+                sox_fail(effp->handler.usage);
                 return(SOX_EOF);
             }
         }
@@ -280,7 +278,7 @@ static int sox_silence_start(eff_t effp)
             if (sox_parsesamples(effp->ininfo.rate,silence->stop_duration_str,
                                 &silence->stop_duration,'s') == NULL)
             {
-                sox_fail(sox_silence_effect.usage);
+                sox_fail(effp->handler.usage);
                 return(SOX_EOF);
             }
         }
@@ -303,7 +301,7 @@ static int sox_silence_start(eff_t effp)
         return(SOX_SUCCESS);
 }
 
-static int aboveThreshold(eff_t effp, sox_ssample_t value, double threshold, int unit)
+static int aboveThreshold(sox_effect_t effp, sox_ssample_t value, double threshold, int unit)
 {
     double ratio;
     int rc;
@@ -342,7 +340,7 @@ static int aboveThreshold(eff_t effp, sox_ssample_t value, double threshold, int
     return rc;
 }
 
-static sox_ssample_t compute_rms(eff_t effp, sox_ssample_t sample)
+static sox_ssample_t compute_rms(sox_effect_t effp, sox_ssample_t sample)
 {
     silence_t silence = (silence_t) effp->priv;
     double new_sum;
@@ -357,7 +355,7 @@ static sox_ssample_t compute_rms(eff_t effp, sox_ssample_t sample)
     return (rms);
 }
 
-static void update_rms(eff_t effp, sox_ssample_t sample)
+static void update_rms(sox_effect_t effp, sox_ssample_t sample)
 {
     silence_t silence = (silence_t) effp->priv;
 
@@ -372,7 +370,7 @@ static void update_rms(eff_t effp, sox_ssample_t sample)
 
 /* Process signed long samples from ibuf to obuf. */
 /* Return number of samples processed in isamp and osamp. */
-static int sox_silence_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_silence_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
     silence_t silence = (silence_t) effp->priv;
@@ -659,7 +657,7 @@ silence_copy_flush:
         return (SOX_SUCCESS);
 }
 
-static int sox_silence_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_silence_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
     silence_t silence = (silence_t) effp->priv;
     sox_size_t i;
@@ -695,7 +693,7 @@ static int sox_silence_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
         return SOX_SUCCESS;
 }
 
-static int sox_silence_stop(eff_t effp)
+static int sox_silence_stop(sox_effect_t effp)
 {
     silence_t silence = (silence_t) effp->priv;
 
@@ -705,7 +703,7 @@ static int sox_silence_stop(eff_t effp)
     return(SOX_SUCCESS);
 }
 
-static int kill(eff_t effp)
+static int kill(sox_effect_t effp)
 {
   silence_t silence = (silence_t) effp->priv;
 
@@ -714,7 +712,7 @@ static int kill(eff_t effp)
   return SOX_SUCCESS;
 }
 
-static sox_effect_t sox_silence_effect = {
+static sox_effect_handler_t sox_silence_effect = {
   "silence",
   "Usage: silence [ -l ] above_periods [ duration thershold[d|%%] ] [ below_periods duration threshold[d|%%]]",
   SOX_EFF_MCHAN,
@@ -726,7 +724,7 @@ static sox_effect_t sox_silence_effect = {
   kill
 };
 
-const sox_effect_t *sox_silence_effect_fn(void)
+const sox_effect_handler_t *sox_silence_effect_fn(void)
 {
     return &sox_silence_effect;
 }

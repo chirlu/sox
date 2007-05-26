@@ -110,7 +110,7 @@ static enum_item const interp_enum[] = {
   d = strtod(*argv, &end_ptr); \
   if (end_ptr != *argv) { \
     if (d < min || d > max || *end_ptr != '\0') { \
-      sox_fail(effp->h->usage); \
+      sox_fail(effp->handler.usage); \
       return SOX_EOF; \
     } \
     f->p = d; \
@@ -132,7 +132,7 @@ static enum_item const interp_enum[] = {
 
 
 
-static int sox_flanger_getopts(eff_t effp, int argc, char *argv[])
+static int sox_flanger_getopts(sox_effect_t effp, int argc, char *argv[])
 {
   flanger_t f = (flanger_t) effp->priv;
 
@@ -154,7 +154,7 @@ static int sox_flanger_getopts(eff_t effp, int argc, char *argv[])
   } while (0);
 
   if (argc != 0) {
-    sox_fail(effp->h->usage);
+    sox_fail(effp->handler.usage);
     return SOX_EOF;
   }
 
@@ -181,7 +181,7 @@ static int sox_flanger_getopts(eff_t effp, int argc, char *argv[])
 
 
 
-static int sox_flanger_start(eff_t effp)
+static int sox_flanger_start(sox_effect_t effp)
 {
   flanger_t f = (flanger_t) effp->priv;
   int c, channels = effp->ininfo.channels;
@@ -234,7 +234,7 @@ static int sox_flanger_start(eff_t effp)
 
 
 
-static int sox_flanger_flow(eff_t effp, sox_ssample_t const * ibuf,
+static int sox_flanger_flow(sox_effect_t effp, sox_ssample_t const * ibuf,
     sox_ssample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
   flanger_t f = (flanger_t) effp->priv;
@@ -289,7 +289,7 @@ static int sox_flanger_flow(eff_t effp, sox_ssample_t const * ibuf,
 
 
 
-static int sox_flanger_stop(eff_t effp)
+static int sox_flanger_stop(sox_effect_t effp)
 {
   flanger_t f = (flanger_t) effp->priv;
   int c, channels = effp->ininfo.channels;
@@ -306,21 +306,21 @@ static int sox_flanger_stop(eff_t effp)
 
 
 
-static sox_effect_t sox_flanger_effect = {
+static sox_effect_handler_t sox_flanger_effect = {
   "flanger",
   sox_flanger_usage,
   SOX_EFF_MCHAN,
   sox_flanger_getopts,
   sox_flanger_start,
   sox_flanger_flow,
-  sox_effect_nothing_drain,
+  NULL,
   sox_flanger_stop,
-  sox_effect_nothing
+  NULL
 };
 
 
 
-sox_effect_t const * sox_flanger_effect_fn(void)
+sox_effect_handler_t const * sox_flanger_effect_fn(void)
 {
   return &sox_flanger_effect;
 }

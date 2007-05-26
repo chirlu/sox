@@ -7,14 +7,14 @@
 
 #include "sox_i.h"
  
-int sox_resample_getopts(eff_t effp, int n, char **argv);
-int sox_resample_start(eff_t effp);
-int sox_resample_flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+int sox_resample_getopts(sox_effect_t effp, int n, char **argv);
+int sox_resample_start(sox_effect_t effp);
+int sox_resample_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                      sox_size_t *isamp, sox_size_t *osamp);
-int sox_resample_drain(eff_t effp, sox_ssample_t *obuf, sox_size_t *osamp);
-int sox_resample_stop(eff_t effp);
+int sox_resample_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp);
+int sox_resample_stop(sox_effect_t effp);
 
-static sox_effect_t sox_rate_effect = {
+static sox_effect_handler_t sox_rate_effect = {
   "rate",
   "Usage: Rate effect takes no options",
   SOX_EFF_RATE | SOX_EFF_DEPRECATED,
@@ -23,10 +23,10 @@ static sox_effect_t sox_rate_effect = {
   sox_resample_flow,
   sox_resample_drain,
   sox_resample_stop,
-  sox_effect_nothing
+  NULL
 };
 
-const sox_effect_t *sox_rate_effect_fn(void)
+const sox_effect_handler_t *sox_rate_effect_fn(void)
 {
     return &sox_rate_effect;
 }
