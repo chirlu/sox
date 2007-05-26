@@ -196,7 +196,8 @@ static int start(eff_t effp)
          return(SOX_EOF);
      }
 
-     if ((ichan != 1 && ichan != 2 && ichan != 4)
+     if ((ichan != 1 && ichan != 2 && ichan != 4 &&
+          mixer->mix != MIX_CENTER && ochan != 1)
              ||  (ochan != 1 && ochan != 2 && ochan != 4)) {
          sox_fail("Can't average %d channels into %d channels",
                  ichan, ochan);
@@ -384,10 +385,9 @@ static int start(eff_t effp)
              mixer->sources[0][2] = 1.0;
              mixer->sources[0][3] = 1.0;
          }
-         /* CASE 2 */
-         else if (ichan == 2 && ochan == 1) {
-             mixer->sources[0][0] = 0.5;
-             mixer->sources[1][0] = 0.5;
+         /* CASE 2, 6 */
+         else if (ochan == 1) {
+             mixer->sources[0][0] = 1.0 / ichan;
          }
          /* CASE 5 */
          else if (ichan == 2 && ochan == 4) {
@@ -395,13 +395,6 @@ static int start(eff_t effp)
              mixer->sources[0][2] = 1.0;
              mixer->sources[1][1] = 1.0;
              mixer->sources[1][3] = 1.0;
-         }
-         /* CASE 6 */
-         else if (ichan == 4 && ochan == 1) {
-             mixer->sources[0][0] = 0.25;
-             mixer->sources[1][0] = 0.25;
-             mixer->sources[2][0] = 0.25;
-             mixer->sources[3][0] = 0.25;
          }
          /* CASE 7 */
          else if (ichan == 4 && ochan == 2) {
@@ -535,7 +528,7 @@ static int flow(eff_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
         for (j = 0; j < ochan; j++) {
             samp = 0.0;
             for (i = 0; i < ichan; i++)
-                samp += ibuf[i] * mixer->sources[i][j];
+                samp += ibuf[i] * mixer->sources[mixer->mix == MIX_CENTER? 0 : i][j];
             SOX_SAMPLE_CLIP_COUNT(samp, effp->clips);
             obuf[j] = samp;
         }
