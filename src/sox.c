@@ -446,7 +446,7 @@ static void parse_effects(int argc, char **argv)
 
     for (i = 0; i < argc - optind && !sox_find_effect(argv[optind + i]); ++i);
     if (e->handler.getopts(e, i, &argv[optind]) == SOX_EOF)
-      exit(1);
+      exit(1); /* The failing effect should have displayed an error message */
 
     optind += i; /* Skip past the effect arguments */
 
@@ -1515,7 +1515,7 @@ static void usage(char const *message)
 "--interactive   prompt to overwrite output file",
 "-m, --combine mix  mix multiple input files (instead of concatenating)",
 "-M, --combine merge  merge multiple input files (instead of concatenating)",
-"--octave        generate Octave commands to plot response of filter effect",
+"--plot gnuplot|octave  generate script to plot response of filter effect",
 "-q, --no-show-progress  run in quiet mode; opposite of -S",
 "--replay-gain track|album|off  default: off (sox, rec), track (play)",
 "-R              use default random numbers (same on each run of SoX)",
