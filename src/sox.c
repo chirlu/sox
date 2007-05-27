@@ -1234,7 +1234,6 @@ static void add_effects(void)
   sox_bool need_rate = combiner.rate     != ofile->desc->signal.rate;
   sox_bool need_chan = combiner.channels != ofile->desc->signal.channels;
   int user_mchan = -1;
-  sox_size_t channels = combiner.channels;
   sox_effect_t eff;
 
   { /* Check if we have to add effects to change rate/chans or if the
@@ -1272,7 +1271,6 @@ static void add_effects(void)
     /* If reducing channels, it's faster to do so before all other effects: */
     if ((int)i > user_mchan && need_chan && combiner.channels > ofile->desc->signal.channels) {
       add_default_effect("mixer", &effects_mask);
-      channels = ofile->desc->signal.channels;
       need_chan = sox_false;
     }
     /* If reducing rate, it's faster to do so before all other effects
