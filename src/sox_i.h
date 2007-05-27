@@ -245,9 +245,9 @@ extern const char sox_readerr[];
 extern const char sox_writerr[];
 extern uint8_t const cswap[256];
 
-/*=============================================================================
+/*-----------------------------------------------------------------------------
  * File Handlers
- *=============================================================================
+ *-----------------------------------------------------------------------------
  */
 
 /* Psion record header check, defined in misc.c and used in prc.c and auto.c */
@@ -286,9 +286,9 @@ int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_
 #define sox_rawstopread sox_format_nothing
 #define sox_rawstopwrite sox_format_nothing
 
-/*=============================================================================
+/*-----------------------------------------------------------------------------
  * Effects
- *=============================================================================
+ *-----------------------------------------------------------------------------
  */
 
 typedef const sox_effect_handler_t *(*sox_effect_fn_t)(void);
@@ -315,6 +315,9 @@ extern const sox_effect_handler_t *sox_filter_effect_fn(void);
 extern const sox_effect_handler_t *sox_flanger_effect_fn(void);
 extern const sox_effect_handler_t *sox_highpass_effect_fn(void);
 extern const sox_effect_handler_t *sox_highp_effect_fn(void);
+#ifdef HAVE_LADSPA_H
+extern const sox_effect_handler_t *sox_ladspa_effect_fn(void);
+#endif
 extern const sox_effect_handler_t *sox_lowpass_effect_fn(void);
 extern const sox_effect_handler_t *sox_lowp_effect_fn(void);
 extern const sox_effect_handler_t *sox_mask_effect_fn(void);
@@ -349,10 +352,10 @@ extern const sox_effect_handler_t *sox_vibro_effect_fn(void);
 extern const sox_effect_handler_t *sox_vol_effect_fn(void);
 
 /* Needed in rate.c */
-int sox_resample_start(sox_effect_t effp);
-int sox_resample_getopts(sox_effect_t effp, int n, char **argv);
-int sox_resample_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);
-int sox_resample_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp);
-int sox_resample_stop(sox_effect_t effp);
+int sox_resample_start(sox_effect_t * effp);
+int sox_resample_getopts(sox_effect_t * effp, int n, char **argv);
+int sox_resample_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);
+int sox_resample_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp);
+int sox_resample_stop(sox_effect_t * effp);
 
 #endif

@@ -18,11 +18,11 @@
 
 #include "sox_i.h"
 
-sox_effect_t sox_effects[SOX_MAX_EFFECTS];
+sox_effect_t * sox_effects[SOX_MAX_EFFECTS];
 unsigned sox_neffects;
 
 
-int sox_add_effect(sox_effect_t e, sox_signalinfo_t * in, sox_signalinfo_t * out, int * effects_mask)
+int sox_add_effect(sox_effect_t * e, sox_signalinfo_t * in, sox_signalinfo_t * out, int * effects_mask)
 {
   unsigned f, flows;
 
@@ -83,9 +83,9 @@ int sox_start_effects(void)
   int ret = SOX_SUCCESS;
 
   for (i = 0; i < sox_neffects; ++i) {
-    sox_effect_t e = &sox_effects[i][0];
+    sox_effect_t * e = &sox_effects[i][0];
     sox_bool is_always_null = (e->handler.flags & SOX_EFF_NULL) != 0;
-    int (*start)(sox_effect_t effp) = e->handler.start;
+    int (*start)(sox_effect_t * effp) = e->handler.start;
 
     if (is_always_null)
       sox_report("'%s' has no effect (is a proxy effect)", e->handler.name);
@@ -111,7 +111,7 @@ int sox_start_effects(void)
     }
   }
   for (i = 0; i < sox_neffects; ++i) {
-    sox_effect_t e = &sox_effects[i][0];
+    sox_effect_t * e = &sox_effects[i][0];
     sox_report("Effects chain: %-10s %uHz %u channels %s",
         e->handler.name, e->ininfo.rate, e->ininfo.channels,
         (e->handler.flags & SOX_EFF_MCHAN)? "(multi)" : "");

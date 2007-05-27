@@ -139,7 +139,7 @@ static long SrcEX(resample_t r, long Nx);
 /*
  * Process options
  */
-int sox_resample_getopts(sox_effect_t effp, int n, char **argv)
+int sox_resample_getopts(sox_effect_t * effp, int n, char **argv)
 {
         resample_t r = (resample_t) effp->priv;
 
@@ -190,7 +190,7 @@ int sox_resample_getopts(sox_effect_t effp, int n, char **argv)
 /*
  * Prepare processing.
  */
-int sox_resample_start(sox_effect_t effp)
+int sox_resample_start(sox_effect_t * effp)
 {
   resample_t r = (resample_t) effp->priv;
   long Xoff, gcdrate;
@@ -278,7 +278,7 @@ int sox_resample_start(sox_effect_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int sox_resample_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+int sox_resample_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                      sox_size_t *isamp, sox_size_t *osamp)
 {
         resample_t r = (resample_t) effp->priv;
@@ -383,7 +383,7 @@ int sox_resample_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_
 /*
  * Process tail of input samples.
  */
-int sox_resample_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+int sox_resample_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         resample_t r = (resample_t) effp->priv;
         long isamp_res, osamp_res;
@@ -423,7 +423,7 @@ int sox_resample_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int sox_resample_stop(sox_effect_t effp)
+int sox_resample_stop(sox_effect_t * effp)
 {
         resample_t r = (resample_t) effp->priv;
         

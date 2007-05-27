@@ -47,7 +47,7 @@ typedef struct mixerstuff {
 /*
  * Process options
  */
-static int getopts(sox_effect_t effp, int n, char **argv) 
+static int getopts(sox_effect_t * effp, int n, char **argv) 
 {
     mixer_t mixer = (mixer_t) effp->priv;
     double* pans = &mixer->sources[0][0];
@@ -115,7 +115,7 @@ static int getopts(sox_effect_t effp, int n, char **argv)
 /*
  * Start processing
  */
-static int start(sox_effect_t effp)
+static int start(sox_effect_t * effp)
 {
     /*
        Hmmm, this is tricky.  Lemme think:
@@ -508,7 +508,7 @@ static int start(sox_effect_t effp)
  * Process either isamp or osamp samples, whichever is smaller.
  */
 
-static int flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                 sox_size_t *isamp, sox_size_t *osamp)
 {
     mixer_t mixer = (mixer_t) effp->priv;

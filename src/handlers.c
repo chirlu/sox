@@ -16,6 +16,7 @@
 /* File format handlers. */
 
 #ifdef HAVE_LTDL_H
+/* FIXME: Use a vector, not a fixed-size array */
   #define MAX_FORMATS 256
   unsigned sox_formats = 0;
   sox_format_tab_t sox_format_fns[MAX_FORMATS];
@@ -33,6 +34,7 @@
 
 /* Effects handlers. */
 
+/* FIXME: Generate this list automatically */
 sox_effect_fn_t sox_effect_fns[] = {
   sox_allpass_effect_fn,
   sox_avg_effect_fn,
@@ -54,6 +56,9 @@ sox_effect_fn_t sox_effect_fns[] = {
   sox_flanger_effect_fn,
   sox_highpass_effect_fn,
   sox_highp_effect_fn,
+#ifdef HAVE_LADSPA_H
+  sox_ladspa_effect_fn,
+#endif
   sox_lowpass_effect_fn,
   sox_lowp_effect_fn,
   sox_mask_effect_fn,

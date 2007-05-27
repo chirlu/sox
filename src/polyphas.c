@@ -63,7 +63,7 @@ assert_static(sizeof(struct polyphase) <= SOX_MAX_EFFECT_PRIVSIZE,
 /*
  * Process options
  */
-static int sox_poly_getopts(sox_effect_t effp, int n, char **argv)
+static int sox_poly_getopts(sox_effect_t * effp, int n, char **argv)
 {
   poly_t rate = (poly_t) effp->priv;
 
@@ -340,7 +340,7 @@ static void fir_design(poly_t rate, Float *buffer, int length, double cutoff)
 
 #define RIBLEN 2048
 
-static int sox_poly_start(sox_effect_t effp)
+static int sox_poly_start(sox_effect_t * effp)
 {
     poly_t rate = (poly_t) effp->priv;
     static int l1[MF], l2[MF];
@@ -488,7 +488,7 @@ static void update_hist(Float *hist, int hist_size, int in_size)
 
 }
 
-static int sox_poly_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
+static int sox_poly_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
                  sox_size_t *isamp, sox_size_t *osamp)
 {
   poly_t rate = (poly_t) effp->priv;
@@ -591,7 +591,7 @@ static int sox_poly_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssamp
 /*
  * Process tail of input samples.
  */
-static int sox_poly_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_poly_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   sox_size_t in_size;
   /* Call "flow" with NULL input. */
@@ -603,7 +603,7 @@ static int sox_poly_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *os
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int sox_poly_stop(sox_effect_t effp)
+static int sox_poly_stop(sox_effect_t * effp)
 {
     poly_t rate = (poly_t)effp->priv;
     sox_size_t k;

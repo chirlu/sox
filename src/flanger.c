@@ -132,7 +132,7 @@ static enum_item const interp_enum[] = {
 
 
 
-static int sox_flanger_getopts(sox_effect_t effp, int argc, char *argv[])
+static int sox_flanger_getopts(sox_effect_t * effp, int argc, char *argv[])
 {
   flanger_t f = (flanger_t) effp->priv;
 
@@ -181,7 +181,7 @@ static int sox_flanger_getopts(sox_effect_t effp, int argc, char *argv[])
 
 
 
-static int sox_flanger_start(sox_effect_t effp)
+static int sox_flanger_start(sox_effect_t * effp)
 {
   flanger_t f = (flanger_t) effp->priv;
   int c, channels = effp->ininfo.channels;
@@ -234,7 +234,7 @@ static int sox_flanger_start(sox_effect_t effp)
 
 
 
-static int sox_flanger_flow(sox_effect_t effp, sox_ssample_t const * ibuf,
+static int sox_flanger_flow(sox_effect_t * effp, sox_ssample_t const * ibuf,
     sox_ssample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
   flanger_t f = (flanger_t) effp->priv;
@@ -289,7 +289,7 @@ static int sox_flanger_flow(sox_effect_t effp, sox_ssample_t const * ibuf,
 
 
 
-static int sox_flanger_stop(sox_effect_t effp)
+static int sox_flanger_stop(sox_effect_t * effp)
 {
   flanger_t f = (flanger_t) effp->priv;
   int c, channels = effp->ininfo.channels;

@@ -18,7 +18,7 @@
 
 #include "sox_i.h"
 
-static int getopts(sox_effect_t effp, int n, char * * argv) 
+static int getopts(sox_effect_t * effp, int n, char * * argv) 
 {
   double speed, depth = 0.5;
   char dummy;     /* To check for extraneous chars. */

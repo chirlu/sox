@@ -244,7 +244,7 @@ static void process_intput_buffer(pitch_t pitch)
 /*
  * Process options
  */
-static int sox_pitch_getopts(sox_effect_t effp, int n, char **argv) 
+static int sox_pitch_getopts(sox_effect_t * effp, int n, char **argv) 
 {
     pitch_t pitch = (pitch_t) effp->priv; 
     
@@ -327,7 +327,7 @@ static int sox_pitch_getopts(sox_effect_t effp, int n, char **argv)
 /*
  * Start processing
  */
-static int sox_pitch_start(sox_effect_t effp)
+static int sox_pitch_start(sox_effect_t * effp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
     register int sample_rate = effp->outinfo.rate;
@@ -439,7 +439,7 @@ static int sox_pitch_start(sox_effect_t effp)
 
 /* Processes input.
  */
-static int sox_pitch_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_pitch_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                 sox_size_t *isamp, sox_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
@@ -516,7 +516,7 @@ static int sox_pitch_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssam
 
 /* at the end...
  */
-static int sox_pitch_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_pitch_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
     sox_size_t i;
@@ -560,7 +560,7 @@ static int sox_pitch_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *o
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-static int sox_pitch_stop(sox_effect_t effp)
+static int sox_pitch_stop(sox_effect_t * effp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
 

@@ -34,7 +34,7 @@ typedef struct reversestuff {
  * Prepare processing: open temporary file.
  */
 
-static int sox_reverse_start(sox_effect_t effp)
+static int sox_reverse_start(sox_effect_t * effp)
 {
         reverse_t reverse = (reverse_t) effp->priv;
         reverse->fp = tmpfile();
@@ -51,7 +51,7 @@ static int sox_reverse_start(sox_effect_t effp)
  * Effect flow: a degenerate case: write input samples on temporary file,
  * don't generate any output samples.
  */
-static int sox_reverse_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf UNUSED, 
+static int sox_reverse_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf UNUSED, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
         reverse_t reverse = (reverse_t) effp->priv;
@@ -75,7 +75,7 @@ static int sox_reverse_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ss
  * Effect drain: generate the actual samples in reverse order.
  */
 
-static int sox_reverse_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_reverse_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         reverse_t reverse = (reverse_t) effp->priv;
         sox_size_t len, nbytes;
@@ -121,7 +121,7 @@ static int sox_reverse_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t 
 /*
  * Close and unlink the temporary file.
  */
-static int sox_reverse_stop(sox_effect_t effp)
+static int sox_reverse_stop(sox_effect_t * effp)
 {
         reverse_t reverse = (reverse_t) effp->priv;
 

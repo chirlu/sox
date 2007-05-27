@@ -123,7 +123,7 @@ static int lowpass_setup (butterworth_crossover_t butterworth, double frequency,
   return (SOX_SUCCESS);
 }
 
-static int lowpass_flow(sox_effect_t effp, butterworth_crossover_t butterworth, sox_size_t nChan, sox_ssample_t *ibuf, sox_ssample_t *lowbuf, sox_ssample_t *highbuf,
+static int lowpass_flow(sox_effect_t * effp, butterworth_crossover_t butterworth, sox_size_t nChan, sox_ssample_t *ibuf, sox_ssample_t *lowbuf, sox_ssample_t *highbuf,
                          sox_size_t len) {
   sox_size_t chan;
   double in, out;
@@ -300,7 +300,7 @@ static int parse_subarg(char *s, char **subargv, sox_size_t *subargc) {
       return SOX_SUCCESS;
 }
 
-static int sox_mcompand_getopts(sox_effect_t effp, int n, char **argv) 
+static int sox_mcompand_getopts(sox_effect_t * effp, int n, char **argv) 
 {
   char *subargv[6], *cp;
   sox_size_t subargc, i, len;
@@ -348,7 +348,7 @@ static int sox_mcompand_getopts(sox_effect_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-static int sox_mcompand_start(sox_effect_t effp)
+static int sox_mcompand_start(sox_effect_t * effp)
 {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
@@ -407,7 +407,7 @@ static void doVolume(double *v, double samp, comp_band_t l, sox_size_t chan)
     *v += delta * l->decayRate[chan];
 }
 
-static int sox_mcompand_flow_1(sox_effect_t effp, compand_t c, comp_band_t l, const sox_ssample_t *ibuf, sox_ssample_t *obuf, sox_size_t len, sox_size_t filechans)
+static int sox_mcompand_flow_1(sox_effect_t * effp, compand_t c, comp_band_t l, const sox_ssample_t *ibuf, sox_ssample_t *obuf, sox_size_t len, sox_size_t filechans)
 {
   sox_size_t done, chan;
 
@@ -477,7 +477,7 @@ static int sox_mcompand_flow_1(sox_effect_t effp, compand_t c, comp_band_t l, co
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_mcompand_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_mcompand_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                      sox_size_t *isamp, sox_size_t *osamp) {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
@@ -529,7 +529,7 @@ static int sox_mcompand_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_s
   return SOX_SUCCESS;
 }
 
-static int sox_mcompand_drain_1(sox_effect_t effp, compand_t c, comp_band_t l, sox_ssample_t *obuf, sox_size_t maxdrain)
+static int sox_mcompand_drain_1(sox_effect_t * effp, compand_t c, comp_band_t l, sox_ssample_t *obuf, sox_size_t maxdrain)
 {
   sox_size_t done;
   double out;
@@ -553,7 +553,7 @@ static int sox_mcompand_drain_1(sox_effect_t effp, compand_t c, comp_band_t l, s
 /*
  * Drain out compander delay lines. 
  */
-static int sox_mcompand_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_mcompand_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   sox_size_t band, drained, mostdrained = 0;
   compand_t c = (compand_t)effp->priv;
@@ -578,7 +578,7 @@ static int sox_mcompand_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t
 /*
  * Clean up compander effect.
  */
-static int sox_mcompand_stop(sox_effect_t effp)
+static int sox_mcompand_stop(sox_effect_t * effp)
 {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
@@ -603,7 +603,7 @@ static int sox_mcompand_stop(sox_effect_t effp)
   return SOX_SUCCESS;
 }
 
-static int sox_mcompand_kill(sox_effect_t effp)
+static int sox_mcompand_kill(sox_effect_t * effp)
 {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;

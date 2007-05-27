@@ -31,7 +31,7 @@ static char const * const width_str[] = {
 static char const all_width_types[] = "hboqs";
 
 
-int sox_biquad_getopts(sox_effect_t effp, int n, char **argv,
+int sox_biquad_getopts(sox_effect_t * effp, int n, char **argv,
     int min_args, int max_args, int fc_pos, int width_pos, int gain_pos,
     char const * allowed_width_types, filter_t filter_type)
 {
@@ -55,7 +55,7 @@ int sox_biquad_getopts(sox_effect_t effp, int n, char **argv,
 }
 
 
-int sox_biquad_start(sox_effect_t effp)
+int sox_biquad_start(sox_effect_t * effp)
 {
   biquad_t p = (biquad_t) effp->priv;
 
@@ -113,7 +113,7 @@ int sox_biquad_start(sox_effect_t effp)
 }
 
 
-int sox_biquad_flow(sox_effect_t effp, const sox_ssample_t *ibuf,
+int sox_biquad_flow(sox_effect_t * effp, const sox_ssample_t *ibuf,
     sox_ssample_t *obuf, sox_size_t *isamp, sox_size_t *osamp)
 {
   biquad_t p = (biquad_t) effp->priv;

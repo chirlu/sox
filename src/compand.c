@@ -59,7 +59,7 @@ typedef struct {
   int delay_buf_full;       /* Shows buffer situation (important for drain) */
 } * compand_t;
 
-static int getopts(sox_effect_t effp, int n, char * * argv)
+static int getopts(sox_effect_t * effp, int n, char * * argv)
 {
   compand_t l = (compand_t) effp->priv;
   char * s;
@@ -126,7 +126,7 @@ static int getopts(sox_effect_t effp, int n, char * * argv)
   return SOX_SUCCESS;
 }
 
-static int start(sox_effect_t effp)
+static int start(sox_effect_t * effp)
 {
   compand_t l = (compand_t) effp->priv;
   unsigned i, j;
@@ -175,7 +175,7 @@ static void doVolume(double *v, double samp, compand_t l, int chan)
     *v += delta * l->channels[chan].attack_times[1];
 }
 
-static int flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
+static int flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
                     sox_size_t *isamp, sox_size_t *osamp)
 {
   compand_t l = (compand_t) effp->priv;
@@ -236,7 +236,7 @@ static int flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obu
   return (SOX_SUCCESS);
 }
 
-static int drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   compand_t l = (compand_t) effp->priv;
   sox_size_t chan, done = 0;
@@ -256,7 +256,7 @@ static int drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
   return l->delay_buf_cnt > 0 ? SOX_SUCCESS : SOX_EOF;
 }
 
-static int stop(sox_effect_t effp)
+static int stop(sox_effect_t * effp)
 {
   compand_t l = (compand_t) effp->priv;
 
@@ -264,7 +264,7 @@ static int stop(sox_effect_t effp)
   return SOX_SUCCESS;
 }
 
-static int kill(sox_effect_t effp)
+static int kill(sox_effect_t * effp)
 {
   compand_t l = (compand_t) effp->priv;
 

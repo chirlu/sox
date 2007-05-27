@@ -51,7 +51,7 @@ typedef struct reddata {
  * Get the options. Default file is stdin (if the audio
  * input file isn't coming from there, of course!)
  */
-static int sox_noisered_getopts(sox_effect_t effp, int argc, char **argv)
+static int sox_noisered_getopts(sox_effect_t * effp, int argc, char **argv)
 {
   reddata_t this = (reddata_t) effp->priv;
 
@@ -77,7 +77,7 @@ static int sox_noisered_getopts(sox_effect_t effp, int argc, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-static int sox_noisered_start(sox_effect_t effp)
+static int sox_noisered_start(sox_effect_t * effp)
 {
     reddata_t data = (reddata_t) effp->priv;
     sox_size_t fchannels = 0;
@@ -219,7 +219,7 @@ static void reduce_noise(chandata_t* chan, float* window, double level)
 
 /* Do window management once we have a complete window, including mangling
  * the current window. */
-static int process_window(sox_effect_t effp, reddata_t data, unsigned chan_num, unsigned num_chans,
+static int process_window(sox_effect_t * effp, reddata_t data, unsigned chan_num, unsigned num_chans,
                           sox_ssample_t *obuf, unsigned len) {
     int j;
     float* nextwindow;
@@ -257,7 +257,7 @@ static int process_window(sox_effect_t effp, reddata_t data, unsigned chan_num, 
 /*
  * Read in windows, and call process_window once we get a whole one.
  */
-static int sox_noisered_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_noisered_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
     reddata_t data = (reddata_t) effp->priv;
@@ -307,7 +307,7 @@ static int sox_noisered_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_s
  * We have up to half a window left to dump.
  */
 
-static int sox_noisered_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_noisered_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
     reddata_t data = (reddata_t)effp->priv;
     unsigned i;
@@ -324,7 +324,7 @@ static int sox_noisered_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t
 /*
  * Clean up.
  */
-static int sox_noisered_stop(sox_effect_t effp)
+static int sox_noisered_stop(sox_effect_t * effp)
 {
     reddata_t data = (reddata_t) effp->priv;
     sox_size_t i;

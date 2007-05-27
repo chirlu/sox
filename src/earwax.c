@@ -73,7 +73,7 @@ typedef struct earwaxstuff {
 /*
  * Prepare for processing.
  */
-static int sox_earwax_start(sox_effect_t effp)
+static int sox_earwax_start(sox_effect_t * effp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int i;
@@ -100,7 +100,7 @@ static int sox_earwax_start(sox_effect_t effp)
  * Return number of samples processed.
  */
 
-static int sox_earwax_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_earwax_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
@@ -132,7 +132,7 @@ static int sox_earwax_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssa
 /*
  * Drain out taps.
  */
-static int sox_earwax_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_earwax_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
   int i,j;
@@ -153,7 +153,7 @@ static int sox_earwax_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *
 /*
  * Clean up taps.
  */
-static int sox_earwax_stop(sox_effect_t effp)
+static int sox_earwax_stop(sox_effect_t * effp)
 {
   earwax_t earwax = (earwax_t) effp->priv;
 

@@ -16,6 +16,8 @@ typedef struct alsa_priv
     snd_pcm_t *pcm_handle;
     char *buf;
     sox_size_t buf_size;
+    snd_pcm_uframes_t period_size;
+    snd_pcm_uframes_t frames_this_period;
 } *alsa_priv_t;
 
 static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
@@ -365,6 +367,8 @@ static int sox_alsasetup(ft_t ft, snd_pcm_stream_t mode)
     }
 
     alsa->buf_size = buffer_size * ft->signal.size * ft->signal.channels;
+    alsa->period_size = period_size;
+    alsa->frames_this_period = 0;
     alsa->buf = xmalloc(alsa->buf_size);
 
     return (SOX_SUCCESS);
@@ -645,6 +649,9 @@ static sox_size_t sox_alsawrite(ft_t ft, const sox_ssample_t *buf, sox_size_t ns
       }
     }
 
+    /* keep track of how many frames have been played this period, so we know
+     * how many frames of silence to append at the end of playback */
+    alsa->frames_this_period = (alsa->frames_this_period + nsamp / ft->signal.channels) % alsa->period_size;
     return nsamp;
 }
 
@@ -652,6 +659,27 @@ static sox_size_t sox_alsawrite(ft_t ft, const sox_ssample_t *buf, sox_size_t ns
 static int sox_alsastopwrite(ft_t ft)
 {
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
+
+    /* Append silence to fill the rest of the period, because alsa provides
+     * whole periods to the hardware */
+    snd_pcm_uframes_t frames_of_silence = alsa->period_size - alsa->frames_this_period;
+
+    memset(alsa->buf, 0, frames_of_silence * ft->signal.size * ft->signal.channels);
+
+    while (0 && frames_of_silence > 0) {
+      int err;
+      err = snd_pcm_writei(alsa->pcm_handle, 
+                           alsa->buf,
+                           frames_of_silence);
+      if (err < 0) {
+        if (xrun_recovery(alsa->pcm_handle, err) < 0) {
+          sox_fail_errno(ft, SOX_EPERM, "ALSA write error");
+          /* FIXME: return a more suitable error code */
+          return SOX_EOF;
+        }
+      } else
+        frames_of_silence -= err;
+    }
 
     snd_pcm_drain(alsa->pcm_handle);
     snd_pcm_close(alsa->pcm_handle);

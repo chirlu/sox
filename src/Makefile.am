@@ -2,7 +2,7 @@
 
 RM = rm -f 
 
-AM_CPPFLAGS = -DPKGLIBDIR="\"$(pkglibdir)\""
+AM_CPPFLAGS = -DLADSPA_PATH="\"@LADSPA_PATH@\"" -DPKGLIBDIR="\"$(pkglibdir)\""
 AM_CFLAGS = $(LTDLINCL) -Wconversion
 AM_LDFLAGS = $(LIBLTDL)
 
@@ -172,7 +172,7 @@ endif
 
 effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c	\
 	  compandt.c compandt.h dcshift.c dither.c earwax.c echo.c echos.c	\
-	  fade.c FFT.c FFT.h filter.c flanger.c mcompand.c	\
+	  fade.c FFT.c FFT.h filter.c flanger.c ladspa.c mcompand.c	\
 	  mixer.c noiseprof.c noisered.c noisered.h pad.c pan.c		\
 	  phaser.c pitch.c polyphas.c rabbit.c rate.c repeat.c		\
 	  resample.c reverb.c reverse.c silence.c skeleff.c speed.c	\

@@ -65,7 +65,7 @@ typedef struct silencestuff
     char        mode;
 } *silence_t;
 
-static void clear_rms(sox_effect_t effp)
+static void clear_rms(sox_effect_t * effp)
 
 {
     silence_t silence = (silence_t) effp->priv;
@@ -78,7 +78,7 @@ static void clear_rms(sox_effect_t effp)
     silence->rms_sum = 0;
 }
 
-static int sox_silence_getopts(sox_effect_t effp, int n, char **argv)
+static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
 {
     silence_t   silence = (silence_t) effp->priv;
     int parse_count;
@@ -248,7 +248,7 @@ static int sox_silence_getopts(sox_effect_t effp, int n, char **argv)
     return(SOX_SUCCESS);
 }
 
-static int sox_silence_start(sox_effect_t effp)
+static int sox_silence_start(sox_effect_t * effp)
 {
         silence_t       silence = (silence_t) effp->priv;
 
@@ -301,7 +301,7 @@ static int sox_silence_start(sox_effect_t effp)
         return(SOX_SUCCESS);
 }
 
-static int aboveThreshold(sox_effect_t effp, sox_ssample_t value, double threshold, int unit)
+static int aboveThreshold(sox_effect_t * effp, sox_ssample_t value, double threshold, int unit)
 {
     double ratio;
     int rc;
@@ -340,7 +340,7 @@ static int aboveThreshold(sox_effect_t effp, sox_ssample_t value, double thresho
     return rc;
 }
 
-static sox_ssample_t compute_rms(sox_effect_t effp, sox_ssample_t sample)
+static sox_ssample_t compute_rms(sox_effect_t * effp, sox_ssample_t sample)
 {
     silence_t silence = (silence_t) effp->priv;
     double new_sum;
@@ -355,7 +355,7 @@ static sox_ssample_t compute_rms(sox_effect_t effp, sox_ssample_t sample)
     return (rms);
 }
 
-static void update_rms(sox_effect_t effp, sox_ssample_t sample)
+static void update_rms(sox_effect_t * effp, sox_ssample_t sample)
 {
     silence_t silence = (silence_t) effp->priv;
 
@@ -370,7 +370,7 @@ static void update_rms(sox_effect_t effp, sox_ssample_t sample)
 
 /* Process signed long samples from ibuf to obuf. */
 /* Return number of samples processed in isamp and osamp. */
-static int sox_silence_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_silence_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
     silence_t silence = (silence_t) effp->priv;
@@ -657,7 +657,7 @@ silence_copy_flush:
         return (SOX_SUCCESS);
 }
 
-static int sox_silence_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_silence_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
     silence_t silence = (silence_t) effp->priv;
     sox_size_t i;
@@ -693,7 +693,7 @@ static int sox_silence_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t 
         return SOX_SUCCESS;
 }
 
-static int sox_silence_stop(sox_effect_t effp)
+static int sox_silence_stop(sox_effect_t * effp)
 {
     silence_t silence = (silence_t) effp->priv;
 
@@ -703,7 +703,7 @@ static int sox_silence_stop(sox_effect_t effp)
     return(SOX_SUCCESS);
 }
 
-static int kill(sox_effect_t effp)
+static int kill(sox_effect_t * effp)
 {
   silence_t silence = (silence_t) effp->priv;
 

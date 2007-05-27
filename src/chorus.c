@@ -90,7 +90,7 @@ typedef struct chorusstuff {
 /*
  * Process options
  */
-static int sox_chorus_getopts(sox_effect_t effp, int n, char **argv) 
+static int sox_chorus_getopts(sox_effect_t * effp, int n, char **argv) 
 {
         chorus_t chorus = (chorus_t) effp->priv;
         int i;
@@ -134,7 +134,7 @@ static int sox_chorus_getopts(sox_effect_t effp, int n, char **argv)
 /*
  * Prepare for processing.
  */
-static int sox_chorus_start(sox_effect_t effp)
+static int sox_chorus_start(sox_effect_t * effp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
         int i;
@@ -241,7 +241,7 @@ static int sox_chorus_start(sox_effect_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_chorus_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_chorus_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
@@ -279,7 +279,7 @@ static int sox_chorus_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssa
 /*
  * Drain out reverb lines. 
  */
-static int sox_chorus_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_chorus_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
         sox_size_t done;
@@ -322,7 +322,7 @@ static int sox_chorus_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *
 /*
  * Clean up chorus effect.
  */
-static int sox_chorus_stop(sox_effect_t effp)
+static int sox_chorus_stop(sox_effect_t * effp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
         int i;

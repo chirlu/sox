@@ -28,7 +28,7 @@ typedef struct {
 /*
  * Process options: dcshift (double) type (amplitude, power, dB)
  */
-static int sox_dcshift_getopts(sox_effect_t effp, int n, char **argv)
+static int sox_dcshift_getopts(sox_effect_t * effp, int n, char **argv)
 {
     dcs_t dcs = (dcs_t) effp->priv;
     dcs->dcshift = 1.0; /* default is no change */
@@ -70,7 +70,7 @@ static int sox_dcshift_getopts(sox_effect_t effp, int n, char **argv)
 /*
  * Start processing
  */
-static int sox_dcshift_start(sox_effect_t effp)
+static int sox_dcshift_start(sox_effect_t * effp)
 {
     dcs_t dcs = (dcs_t) effp->priv;
 
@@ -99,7 +99,7 @@ static int sox_dcshift_start(sox_effect_t effp)
 /*
  * Process data.
  */
-static int sox_dcshift_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_dcshift_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
     dcs_t dcs = (dcs_t) effp->priv;
@@ -166,7 +166,7 @@ static int sox_dcshift_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ss
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int sox_dcshift_stop(sox_effect_t effp)
+static int sox_dcshift_stop(sox_effect_t * effp)
 {
     dcs_t dcs = (dcs_t) effp->priv;
 

@@ -278,7 +278,7 @@ static void set_default_parameters(channel_t chan, int c)
 
 
 
-static int getopts(sox_effect_t effp, int argc, char **argv)
+static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   synth_t synth = (synth_t) effp->priv;
   int argn = 0;
@@ -380,7 +380,7 @@ static int getopts(sox_effect_t effp, int argc, char **argv)
 
 
 
-static int start(sox_effect_t effp)
+static int start(sox_effect_t * effp)
 {
   synth_t synth = (synth_t) effp->priv;
   unsigned i;
@@ -564,7 +564,7 @@ static sox_ssample_t do_synth(sox_ssample_t synth_input, synth_t synth, int c, d
 
 
 
-static int flow(sox_effect_t effp, const sox_ssample_t * ibuf, sox_ssample_t * obuf,
+static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf, sox_ssample_t * obuf,
     sox_size_t * isamp, sox_size_t * osamp)
 {
   synth_t synth = (synth_t) effp->priv;
@@ -583,7 +583,7 @@ static int flow(sox_effect_t effp, const sox_ssample_t * ibuf, sox_ssample_t * o
 
 
 
-static int kill(sox_effect_t effp)
+static int kill(sox_effect_t * effp)
 {
   synth_t synth = (synth_t) effp->priv;
   free(synth->channels);

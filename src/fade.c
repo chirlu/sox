@@ -43,7 +43,7 @@ static double fade_gain(sox_size_t index, sox_size_t range, int fadetype);
  * The 'info' fields are not yet filled in.
  */
 
-static int sox_fade_getopts(sox_effect_t effp, int n, char **argv)
+static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
 {
 
     fade_t fade = (fade_t) effp->priv;
@@ -122,7 +122,7 @@ static int sox_fade_getopts(sox_effect_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-static int sox_fade_start(sox_effect_t effp)
+static int sox_fade_start(sox_effect_t * effp)
 {
     fade_t fade = (fade_t) effp->priv;
 
@@ -195,7 +195,7 @@ static int sox_fade_start(sox_effect_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_fade_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_fade_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                  sox_size_t *isamp, sox_size_t *osamp)
 {
     fade_t fade = (fade_t) effp->priv;
@@ -276,7 +276,7 @@ static int sox_fade_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssamp
 /*
  * Drain out remaining samples if the effect generates any.
  */
-static int sox_fade_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_fade_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
     fade_t fade = (fade_t) effp->priv;
     int len;
@@ -317,7 +317,7 @@ static int sox_fade_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *os
  * Do anything required when you stop reading samples.
  *      (free allocated memory, etc.)
  */
-static int kill(sox_effect_t effp)
+static int kill(sox_effect_t * effp)
 {
     fade_t fade = (fade_t) effp->priv;
 

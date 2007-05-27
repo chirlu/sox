@@ -24,6 +24,7 @@
 
 #include "sox_i.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>
@@ -133,7 +134,7 @@ static sox_signalinfo_t combiner, ofile_signal;
  * a resample effect, a channel mixing effect, the input, and the output.
  */
 #define MAX_USER_EFF (SOX_MAX_EFFECTS - 4)
-static struct sox_effect user_efftab[MAX_USER_EFF];
+static sox_effect_t user_efftab[MAX_USER_EFF];
 static unsigned nuser_effects;
 
 static char *myname = NULL;
@@ -196,9 +197,12 @@ static void cleanup(void)
   }
 
 #ifdef HAVE_LTDL_H
-  if (plugins_initted && (ret = lt_dlexit()) != 0) {
-    sox_fail("lt_dlexit failed with %d error(s): %s", ret, lt_dlerror());
-    exit(1);
+  {
+    int ret;
+    if (plugins_initted && (ret = lt_dlexit()) != 0) {
+      sox_fail("lt_dlexit failed with %d error(s): %s", ret, lt_dlerror());
+      exit(1);
+    }
   }
 #endif
 }
@@ -429,7 +433,7 @@ static void parse_options_and_filenames(int argc, char **argv)
 static void parse_effects(int argc, char **argv)
 {
   for (nuser_effects = 0; optind < argc; ++nuser_effects) {
-    struct sox_effect * e = &user_efftab[nuser_effects];
+    sox_effect_t *e = &user_efftab[nuser_effects];
     int i;
 
     if (nuser_effects >= MAX_USER_EFF) {
@@ -437,7 +441,8 @@ static void parse_effects(int argc, char **argv)
       exit(1);
     }
 
-    sox_get_effect(e, argv[optind++]);  /* Cannot fail */
+    /* Name should always be correct! */
+    sox_create_effect(e, sox_find_effect(argv[optind++]));
 
     for (i = 0; i < argc - optind && !sox_find_effect(argv[optind + i]); ++i);
     if (e->handler.getopts(e, i, &argv[optind]) == SOX_EOF)
@@ -446,7 +451,7 @@ static void parse_effects(int argc, char **argv)
     optind += i; /* Skip past the effect arguments */
 
     if (e->handler.flags & SOX_EFF_DEPRECATED)
-      sox_warn("Effect `%s' is deprecated and may be removed in a future release; please refer to the manual sox(1) for an alternative effect", e->handler.name);
+      sox_warn("Effect `%s' is deprecated; see sox(1) for an alternative", e->handler.name);
   }
 }
 
@@ -842,12 +847,12 @@ static sox_bool doopts(file_t f, int argc, char **argv)
       combine_method = sox_merge;
       break;
 
-    case 'R': /* Useful for regression testing. */
+    case 'R':                   /* Useful for regression testing. */
       repeatable_random = sox_true;
       break;
 
     case 'e': case 'n':
-      return sox_true;  /* I.e. is null file. */
+      return sox_true;          /* i.e. is null file. */
       break;
 
     case 'h': case '?':
@@ -1094,7 +1099,7 @@ typedef struct input_combiner
 assert_static(sizeof(struct input_combiner) <= SOX_MAX_EFFECT_PRIVSIZE,
               /* else */ input_combiner_PRIVSIZE_too_big);
 
-static int combiner_start(sox_effect_t effp)
+static int combiner_start(sox_effect_t *effp)
 {
   input_combiner_t z = (input_combiner_t) effp->priv;
   sox_size_t ws, i;
@@ -1113,7 +1118,7 @@ static int combiner_start(sox_effect_t effp)
   return SOX_SUCCESS;
 }
 
-static int combiner_drain(sox_effect_t effp, sox_ssample_t * obuf, sox_size_t * osamp)
+static int combiner_drain(sox_effect_t *effp, sox_ssample_t * obuf, sox_size_t * osamp)
 {
   input_combiner_t z = (input_combiner_t) effp->priv;
   sox_size_t ws, s, i;
@@ -1163,7 +1168,7 @@ static int combiner_drain(sox_effect_t effp, sox_ssample_t * obuf, sox_size_t * 
   return olen? SOX_SUCCESS : SOX_EOF;
 }
 
-static int combiner_stop(sox_effect_t effp)
+static int combiner_stop(sox_effect_t *effp)
 {
   input_combiner_t z = (input_combiner_t) effp->priv;
   sox_size_t i;
@@ -1185,7 +1190,7 @@ static sox_effect_handler_t const * input_combiner_effect_fn(void)
   return &handler;
 }
 
-static int output_flow(sox_effect_t effp UNUSED, sox_ssample_t const * ibuf,
+static int output_flow(sox_effect_t *effp UNUSED, sox_ssample_t const * ibuf,
     sox_ssample_t * obuf UNUSED, sox_size_t * isamp, sox_size_t * osamp)
 {
   size_t len;
@@ -1210,11 +1215,12 @@ static sox_effect_handler_t const * output_effect_fn(void)
   return &handler;
 }
 
-static void add_default_effect(char const * name, int * effects_mask)
+static void add_default_effect(char const *name, int *effects_mask)
 {
-  struct sox_effect e;
+  sox_effect_t e;
 
-  sox_get_effect(&e, name);        /* Find effect and update initial pointers */
+  /* Default name should always be correct! */
+  sox_create_effect(&e, sox_find_effect(name));
   if (e.handler.getopts(&e, 0, NULL) == SOX_EOF)   /* Set up with default opts */
     exit(2);
   sox_add_effect(&e, &combiner, &ofile->desc->signal, effects_mask);
@@ -1229,7 +1235,7 @@ static void add_effects(void)
   sox_bool need_chan = combiner.channels != ofile->desc->signal.channels;
   int user_mchan = -1;
   sox_size_t channels = combiner.channels;
-  struct sox_effect eff;
+  sox_effect_t eff;
 
   { /* Check if we have to add effects to change rate/chans or if the
        user has specified effects to do this, in which case, check if

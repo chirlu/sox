@@ -23,7 +23,7 @@ typedef struct dither {
 assert_static(sizeof(struct dither) <= SOX_MAX_EFFECT_PRIVSIZE,
               /* else */ dither_PRIVSIZE_too_big);
 
-static int getopts(sox_effect_t effp, int n, char * * argv)
+static int getopts(sox_effect_t * effp, int n, char * * argv)
 {
   dither_t dither = (dither_t) effp->priv;
 
@@ -48,7 +48,7 @@ static int getopts(sox_effect_t effp, int n, char * * argv)
   return SOX_SUCCESS;
 }
 
-static int start(sox_effect_t effp)
+static int start(sox_effect_t * effp)
 {
   dither_t dither = (dither_t) effp->priv;
 
@@ -65,7 +65,7 @@ static int start(sox_effect_t effp)
   return SOX_EFF_NULL;   /* Dithering not needed at >= 24 bits */
 }
 
-static int flow(sox_effect_t effp, const sox_ssample_t * ibuf,
+static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf,
     sox_ssample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
   dither_t dither = (dither_t)effp->priv;

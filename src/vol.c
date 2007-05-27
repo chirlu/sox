@@ -39,7 +39,7 @@ static enum_item const vol_types[] = {
 /*
  * Process options: gain (float) type (amplitude, power, dB)
  */
-static int getopts(sox_effect_t effp, int argc, char **argv) 
+static int getopts(sox_effect_t * effp, int argc, char **argv) 
 {
   vol_t     vol = (vol_t) effp->priv; 
   char      type_string[11];
@@ -100,7 +100,7 @@ static int getopts(sox_effect_t effp, int argc, char **argv)
 /*
  * Start processing
  */
-static int start(sox_effect_t effp)
+static int start(sox_effect_t * effp)
 {
     vol_t vol = (vol_t) effp->priv;
     
@@ -116,7 +116,7 @@ static int start(sox_effect_t effp)
 /*
  * Process data.
  */
-static int flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                 sox_size_t *isamp, sox_size_t *osamp)
 {
     vol_t vol = (vol_t) effp->priv;
@@ -174,7 +174,7 @@ static int flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obu
     return SOX_SUCCESS;
 }
 
-static int stop(sox_effect_t effp)
+static int stop(sox_effect_t * effp)
 {
   vol_t vol = (vol_t) effp->priv;
   if (vol->limited) {

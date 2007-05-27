@@ -35,7 +35,7 @@ typedef struct
 /*
  * Process options
  */
-static int sox_trim_getopts(sox_effect_t effp, int n, char **argv) 
+static int sox_trim_getopts(sox_effect_t * effp, int n, char **argv) 
 {
     trim_t trim = (trim_t) effp->priv;
 
@@ -74,7 +74,7 @@ static int sox_trim_getopts(sox_effect_t effp, int n, char **argv)
 /*
  * Start processing
  */
-static int sox_trim_start(sox_effect_t effp)
+static int sox_trim_start(sox_effect_t * effp)
 {
     trim_t trim = (trim_t) effp->priv;
 
@@ -114,7 +114,7 @@ static int sox_trim_start(sox_effect_t effp)
  * Place in buf[].
  * Return number of samples read.
  */
-static int sox_trim_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_trim_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                  sox_size_t *isamp, sox_size_t *osamp)
 {
     int result = SOX_SUCCESS;
@@ -169,7 +169,7 @@ static int sox_trim_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssamp
     return result;
 }
 
-static int kill(sox_effect_t effp)
+static int kill(sox_effect_t * effp)
 {
     trim_t trim = (trim_t) effp->priv;
 
@@ -179,13 +179,13 @@ static int kill(sox_effect_t effp)
     return (SOX_SUCCESS);
 }
 
-sox_size_t sox_trim_get_start(sox_effect_t effp)          
+sox_size_t sox_trim_get_start(sox_effect_t * effp)          
 {        
     trim_t trim = (trim_t)effp->priv;    
     return trim->start;          
 }        
 
-void sox_trim_clear_start(sox_effect_t effp)     
+void sox_trim_clear_start(sox_effect_t * effp)     
 {        
     trim_t trim = (trim_t)effp->priv;    
     trim->start = 0;     

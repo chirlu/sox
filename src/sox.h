@@ -19,7 +19,7 @@
 
 /* The following is the API version of libSoX.  It is not meant
  * to follow the version number of SoX but it has historically.
- * Please do not count of these numbers being in sync.
+ * Please do not count on these numbers being in sync.
  * The following is at 13.0.0
  */
 #define SOX_LIB_VERSION_CODE 0x0d0000
@@ -372,20 +372,20 @@ extern const char * const sox_encodings_str[];
  * Handler structure for each effect.
  */
 
-typedef struct sox_effect * sox_effect_t;
+typedef struct sox_effect sox_effect_t;
 
 typedef struct {
   char const * name;
   char const * usage;
   unsigned int flags;
 
-  int (*getopts)(sox_effect_t effp, int argc, char *argv[]);
-  int (*start)(sox_effect_t effp);
-  int (*flow)(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
+  int (*getopts)(sox_effect_t * effp, int argc, char *argv[]);
+  int (*start)(sox_effect_t * effp);
+  int (*flow)(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
               sox_size_t *isamp, sox_size_t *osamp);
-  int (*drain)(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp);
-  int (*stop)(sox_effect_t effp);
-  int (*kill)(sox_effect_t effp);
+  int (*drain)(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp);
+  int (*stop)(sox_effect_t * effp);
+  int (*kill)(sox_effect_t * effp);
 } sox_effect_handler_t;
 
 struct sox_effect {
@@ -421,16 +421,15 @@ extern int sox_close(ft_t ft);
 #define SOX_SEEK_SET 0
 extern int sox_seek(ft_t ft, sox_size_t offset, int whence);
 
-sox_effect_handler_t const * sox_find_effect(char const * name);
-int sox_create_effect(sox_effect_t effp, sox_effect_handler_t const * e);
-int sox_get_effect(sox_effect_t effp, const char * name);
-int sox_update_effect(sox_effect_t effp, const sox_signalinfo_t *in, const sox_signalinfo_t *out, int effect_mask);
+sox_effect_handler_t const *sox_find_effect(char const * name);
+int sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const *e);
+int sox_update_effect(sox_effect_t * effp, const sox_signalinfo_t *in, const sox_signalinfo_t *out, int effect_mask);
 
 /* Effects chain */
 #define SOX_MAX_EFFECTS 20
-extern sox_effect_t sox_effects[SOX_MAX_EFFECTS];
+extern sox_effect_t * sox_effects[SOX_MAX_EFFECTS];
 extern unsigned sox_neffects;
-int sox_add_effect(sox_effect_t e, sox_signalinfo_t * in, sox_signalinfo_t * out, int * effects_mask);
+int sox_add_effect(sox_effect_t * e, sox_signalinfo_t * in, sox_signalinfo_t * out, int * effects_mask);
 int sox_start_effects(void);
 int sox_flow_effects(void (* update_status)(sox_bool), sox_bool * user_abort);
 void sox_stop_effects(void);
@@ -450,8 +449,8 @@ char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samp
  * wants to trim and use a sox_seek() operation instead.  After
  * sox_seek()'ing, you should set the trim option to 0.
  */
-sox_size_t sox_trim_get_start(sox_effect_t effp);
-void sox_trim_clear_start(sox_effect_t effp);
+sox_size_t sox_trim_get_start(sox_effect_t * effp);
+void sox_trim_clear_start(sox_effect_t * effp);
 
 extern char const * sox_message_filename;
 

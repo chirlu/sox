@@ -44,7 +44,7 @@ typedef struct {
 /*
  * Process options
  */
-static int sox_rabbit_getopts(sox_effect_t effp, int n, char **argv)
+static int sox_rabbit_getopts(sox_effect_t * effp, int n, char **argv)
 {
   rabbit_t r = (rabbit_t) effp->priv;
 
@@ -80,7 +80,7 @@ static int sox_rabbit_getopts(sox_effect_t effp, int n, char **argv)
 /*
  * Prepare processing.
  */
-static int sox_rabbit_start(sox_effect_t effp)
+static int sox_rabbit_start(sox_effect_t * effp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
 
@@ -109,7 +109,7 @@ static int sox_rabbit_start(sox_effect_t effp)
 /*
  * Read all the data.
  */
-static int sox_rabbit_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf UNUSED,
+static int sox_rabbit_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf UNUSED,
                    sox_size_t *isamp, sox_size_t *osamp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
@@ -139,7 +139,7 @@ static int sox_rabbit_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssa
 /*
  * Process samples and write output.
  */
-static int sox_rabbit_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_rabbit_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
   int channels = effp->ininfo.channels;
@@ -184,7 +184,7 @@ static int sox_rabbit_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int sox_rabbit_stop(sox_effect_t effp)
+static int sox_rabbit_stop(sox_effect_t * effp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
 

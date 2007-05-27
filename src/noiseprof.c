@@ -37,7 +37,7 @@ typedef struct profdata {
 /*
  * Get the filename, if any. We don't open it until sox_noiseprof_start.
  */
-static int sox_noiseprof_getopts(sox_effect_t effp, int n, char **argv) 
+static int sox_noiseprof_getopts(sox_effect_t * effp, int n, char **argv) 
 {
     profdata_t data = (profdata_t) effp->priv;
 
@@ -55,7 +55,7 @@ static int sox_noiseprof_getopts(sox_effect_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-static int sox_noiseprof_start(sox_effect_t effp)
+static int sox_noiseprof_start(sox_effect_t * effp)
 {
   profdata_t data = (profdata_t) effp->priv;
   unsigned channels = effp->ininfo.channels;
@@ -108,7 +108,7 @@ static void collect_data(chandata_t* chan) {
 /*
  * Grab what we can from ibuf, and process if we have a whole window.
  */
-static int sox_noiseprof_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_noiseprof_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
     profdata_t data = (profdata_t) effp->priv;
@@ -150,7 +150,7 @@ static int sox_noiseprof_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_
  * Finish off the last window.
  */
 
-static int sox_noiseprof_drain(sox_effect_t effp, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
+static int sox_noiseprof_drain(sox_effect_t * effp, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
 {
     profdata_t data = (profdata_t) effp->priv;
     int tracks = effp->ininfo.channels;
@@ -179,7 +179,7 @@ static int sox_noiseprof_drain(sox_effect_t effp, sox_ssample_t *obuf UNUSED, so
 /*
  * Print profile and clean up.
  */
-static int sox_noiseprof_stop(sox_effect_t effp)
+static int sox_noiseprof_stop(sox_effect_t * effp)
 {
     profdata_t data = (profdata_t) effp->priv;
     sox_size_t i;

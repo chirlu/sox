@@ -52,7 +52,7 @@ static void FiltWin(filter_t f, long Nx);
 /*
  * Process options
  */
-static int sox_filter_getopts(sox_effect_t effp, int n, char **argv)
+static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
 {
         filter_t f = (filter_t) effp->priv;
 
@@ -102,7 +102,7 @@ static int sox_filter_getopts(sox_effect_t effp, int n, char **argv)
 /*
  * Prepare processing.
  */
-static int sox_filter_start(sox_effect_t effp)
+static int sox_filter_start(sox_effect_t * effp)
 {
         filter_t f = (filter_t) effp->priv;
         double *Fp0, *Fp1;
@@ -180,7 +180,7 @@ static int sox_filter_start(sox_effect_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_filter_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_filter_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
         filter_t f = (filter_t) effp->priv;
@@ -233,7 +233,7 @@ static int sox_filter_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssa
 /*
  * Process tail of input samples.
  */
-static int sox_filter_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_filter_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         filter_t f = (filter_t) effp->priv;
         long isamp_res, osamp_res;
@@ -270,7 +270,7 @@ static int sox_filter_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-static int sox_filter_stop(sox_effect_t effp)
+static int sox_filter_stop(sox_effect_t * effp)
 {
         filter_t f = (filter_t) effp->priv;
 

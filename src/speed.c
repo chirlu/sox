@@ -27,7 +27,7 @@
 #include <math.h>
 #include <string.h>
 
-static int getopts(sox_effect_t effp, int n, char * * argv)
+static int getopts(sox_effect_t * effp, int n, char * * argv)
 {
   sox_bool is_cents = sox_false;
   double speed;

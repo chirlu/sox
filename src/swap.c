@@ -24,7 +24,7 @@ typedef struct swapstuff {
  * Don't do initialization now.
  * The 'info' fields are not yet filled in.
  */
-static int sox_swap_getopts(sox_effect_t effp, int n, char **argv) 
+static int sox_swap_getopts(sox_effect_t * effp, int n, char **argv) 
 {
     swap_t swap = (swap_t) effp->priv;
 
@@ -60,7 +60,7 @@ static int sox_swap_getopts(sox_effect_t effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-static int sox_swap_start(sox_effect_t effp)
+static int sox_swap_start(sox_effect_t * effp)
 {
     swap_t swap = (swap_t) effp->priv;
     int i;
@@ -131,7 +131,7 @@ static int sox_swap_start(sox_effect_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_swap_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_swap_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                  sox_size_t *isamp, sox_size_t *osamp)
 {
     swap_t swap = (swap_t) effp->priv;

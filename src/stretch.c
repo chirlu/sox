@@ -70,7 +70,7 @@ typedef struct
 /*
  * Process options
  */
-static int sox_stretch_getopts(sox_effect_t effp, int n, char **argv) 
+static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv) 
 {
   char usage[1024];
   stretch_t stretch = (stretch_t) effp->priv; 
@@ -148,7 +148,7 @@ static int sox_stretch_getopts(sox_effect_t effp, int n, char **argv)
 /*
  * Start processing
  */
-static int sox_stretch_start(sox_effect_t effp)
+static int sox_stretch_start(sox_effect_t * effp)
 {
   stretch_t stretch = (stretch_t)effp->priv;
   sox_size_t i;
@@ -242,7 +242,7 @@ static void combine(stretch_t stretch)
 /*
  * Processes flow.
  */
-static int sox_stretch_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_stretch_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
   stretch_t stretch = (stretch_t) effp->priv;
@@ -309,7 +309,7 @@ static int sox_stretch_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ss
  * Drain buffer at the end
  * maybe not correct ? end might be artificially faded?
  */
-static int sox_stretch_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_stretch_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   stretch_t stretch = (stretch_t) effp->priv;
   sox_size_t i;
@@ -343,7 +343,7 @@ static int sox_stretch_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t 
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-static int sox_stretch_stop(sox_effect_t effp)
+static int sox_stretch_stop(sox_effect_t * effp)
 {
   stretch_t stretch = (stretch_t) effp->priv;
 

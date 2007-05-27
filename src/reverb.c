@@ -113,7 +113,7 @@ typedef struct reverbstuff {
 /*
  * Process options
  */
-static int sox_reverb_getopts(sox_effect_t effp, int n, char **argv) 
+static int sox_reverb_getopts(sox_effect_t * effp, int n, char **argv) 
 {
         reverb_t reverb = (reverb_t) effp->priv;
         int i;
@@ -148,7 +148,7 @@ static int sox_reverb_getopts(sox_effect_t effp, int n, char **argv)
 /*
  * Prepare for processing.
  */
-static int sox_reverb_start(sox_effect_t effp)
+static int sox_reverb_start(sox_effect_t * effp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
         size_t i;
@@ -201,7 +201,7 @@ static int sox_reverb_start(sox_effect_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_reverb_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_reverb_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
@@ -234,7 +234,7 @@ reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsam
 /*
  * Drain out reverb lines. 
  */
-static int sox_reverb_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_reverb_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
         float d_in, d_out;
@@ -271,7 +271,7 @@ reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsam
 /*
  * Clean up reverb effect.
  */
-static int sox_reverb_stop(sox_effect_t effp)
+static int sox_reverb_stop(sox_effect_t * effp)
 {
         reverb_t reverb = (reverb_t) effp->priv;
 

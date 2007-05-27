@@ -28,7 +28,7 @@ typedef struct {
 /*
  * Process options
  */
-static int sox_pan_getopts(sox_effect_t effp, int n, char **argv) 
+static int sox_pan_getopts(sox_effect_t * effp, int n, char **argv) 
 {
     pan_t pan = (pan_t) effp->priv; 
     
@@ -47,7 +47,7 @@ static int sox_pan_getopts(sox_effect_t effp, int n, char **argv)
 /*
  * Start processing
  */
-static int sox_pan_start(sox_effect_t effp)
+static int sox_pan_start(sox_effect_t * effp)
 {
     if (effp->outinfo.channels==1)
         sox_warn("PAN onto a mono channel...");
@@ -71,7 +71,7 @@ static int sox_pan_start(sox_effect_t effp)
 /*
  * Process either isamp or osamp samples, whichever is smaller.
  */
-static int sox_pan_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_pan_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                 sox_size_t *isamp, sox_size_t *osamp)
 {
     pan_t pan = (pan_t) effp->priv;

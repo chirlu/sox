@@ -35,7 +35,7 @@ typedef struct pad
 assert_static(sizeof(struct pad) <= SOX_MAX_EFFECT_PRIVSIZE,
               /* else */ pad_PRIVSIZE_too_big);
 
-static int parse(sox_effect_t effp, char * * argv, sox_rate_t rate)
+static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
 {
   pad_t p = (pad_t) effp->priv;
   char const * next;
@@ -62,14 +62,14 @@ static int parse(sox_effect_t effp, char * * argv, sox_rate_t rate)
   return SOX_SUCCESS;
 }
 
-static int create(sox_effect_t effp, int n, char * * argv)
+static int create(sox_effect_t * effp, int n, char * * argv)
 {
   pad_t p = (pad_t) effp->priv;
   p->pads = xcalloc(p->npads = n, sizeof(*p->pads));
   return parse(effp, argv, SOX_MAXRATE); /* No rate yet; parse with dummy */
 }
 
-static int start(sox_effect_t effp)
+static int start(sox_effect_t * effp)
 {
   pad_t p = (pad_t) effp->priv;
   unsigned i;
@@ -82,7 +82,7 @@ static int start(sox_effect_t effp)
   return SOX_EFF_NULL;
 }
 
-static int flow(sox_effect_t effp, const sox_ssample_t * ibuf, sox_ssample_t * obuf,
+static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf, sox_ssample_t * obuf,
                 sox_size_t * isamp, sox_size_t * osamp)
 {
   pad_t p = (pad_t) effp->priv;
@@ -111,7 +111,7 @@ static int flow(sox_effect_t effp, const sox_ssample_t * ibuf, sox_ssample_t * o
   return SOX_SUCCESS;
 }
 
-static int drain(sox_effect_t effp, sox_ssample_t * obuf, sox_size_t * osamp)
+static int drain(sox_effect_t * effp, sox_ssample_t * obuf, sox_size_t * osamp)
 {
   static sox_size_t isamp = 0;
   pad_t p = (pad_t) effp->priv;
@@ -120,7 +120,7 @@ static int drain(sox_effect_t effp, sox_ssample_t * obuf, sox_size_t * osamp)
   return flow(effp, 0, obuf, &isamp, osamp);
 }
 
-static int stop(sox_effect_t effp)
+static int stop(sox_effect_t * effp)
 {
   pad_t p = (pad_t) effp->priv;
   if (p->pads_pos != p->npads)
@@ -128,7 +128,7 @@ static int stop(sox_effect_t effp)
   return SOX_SUCCESS;
 }
 
-static int kill(sox_effect_t effp)
+static int kill(sox_effect_t * effp)
 {
   pad_t p = (pad_t) effp->priv;
   unsigned i;

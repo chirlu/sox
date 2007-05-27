@@ -80,7 +80,7 @@ typedef struct echostuff {
 /*
  * Process options
  */
-static int sox_echo_getopts(sox_effect_t effp, int n, char **argv) 
+static int sox_echo_getopts(sox_effect_t * effp, int n, char **argv) 
 {
         echo_t echo = (echo_t) effp->priv;
         int i;
@@ -111,7 +111,7 @@ static int sox_echo_getopts(sox_effect_t effp, int n, char **argv)
 /*
  * Prepare for processing.
  */
-static int sox_echo_start(sox_effect_t effp)
+static int sox_echo_start(sox_effect_t * effp)
 {
         echo_t echo = (echo_t) effp->priv;
         int i;
@@ -178,7 +178,7 @@ static int sox_echo_start(sox_effect_t effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_echo_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_echo_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                  sox_size_t *isamp, sox_size_t *osamp)
 {
         echo_t echo = (echo_t) effp->priv;
@@ -214,7 +214,7 @@ static int sox_echo_flow(sox_effect_t effp, const sox_ssample_t *ibuf, sox_ssamp
 /*
  * Drain out reverb lines. 
  */
-static int sox_echo_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_echo_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         echo_t echo = (echo_t) effp->priv;
         double d_in, d_out;
@@ -254,7 +254,7 @@ static int sox_echo_drain(sox_effect_t effp, sox_ssample_t *obuf, sox_size_t *os
 /*
  * Clean up reverb effect.
  */
-static int sox_echo_stop(sox_effect_t effp)
+static int sox_echo_stop(sox_effect_t * effp)
 {
         echo_t echo = (echo_t) effp->priv;
 
