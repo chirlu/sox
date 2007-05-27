@@ -36,11 +36,9 @@ libsox \- SoX, an audio file-format and effect library
 .P
 .B int sox_seek(ft_t \fIft\fB, sox_size_t \fIoffset\fB, int \fIwhence\fB);
 .P
-.B int sox_geteffect_opt(eff_t \fIeffp\fB, int \fIargc\fB, char **\fIargv\fB);
+.B sox_effect_t *sox_geteffect(const char *\fIeffect_name\fB);
 .P
-.B int sox_geteffect(eff_t \fIeffp\fB, const char *\fIeffect_name\fB);
-.P
-.B sox_bool is_effect_name(char const *\fItext\fB);
+.B int sox_geteffect_opts(int \fIargc\fB, char **\fIargv\fB);
 .P
 .B int sox_updateeffect(eff_t \fIeffp\fB, const sox_signalinfo_t *\fIin\fB, const sox_signalinfo_t *\fIout\fB, int \fIeffect_mask\fB);
 .P
@@ -92,6 +90,19 @@ behavior will occur.
 The \fBsox_close\fR function dissociates the named \fIft_t\fR from its
 underlying file or set of functions. If the format handler was being
 used for output, any buffered data is written first.
+.P
+The function \fBsox_geteffect\fR finds effect \fIname\fR, returning a
+pointer to its \fIsox_effect_t\fR if it exists, and NULL otherwise.
+.P
+The function \fBsox_geteffect_opts\fR finds the extent of options for
+the current effect, by examining each argument until it finds another
+effect name or runs out of arguments. It returns the number of
+arguments for the current effect.
+.P
+The \fBsox_updateeffect\fR function copies input and output signal
+info into effect structures. The \fIeffect_mask\fR parameter is the
+return value of the previous call to this function; for the first
+call, pass 0.
 .P
 SoX includes skeleton C files to assist you in writing new
 formats (skelform.c) and effects (skeleff.c). sox.c itself is a good
