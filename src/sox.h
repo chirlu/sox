@@ -422,7 +422,7 @@ extern int sox_close(ft_t ft);
 extern int sox_seek(ft_t ft, sox_size_t offset, int whence);
 
 sox_effect_handler_t const *sox_find_effect(char const * name);
-int sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const *e);
+void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const *e);
 int sox_update_effect(sox_effect_t * effp, const sox_signalinfo_t *in, const sox_signalinfo_t *out, int effect_mask);
 
 /* Effects chain */

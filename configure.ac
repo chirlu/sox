@@ -243,21 +243,6 @@ dnl MP3 library depends on libmad || LAME
 AM_CONDITIONAL(HAVE_MP3, test x$using_mad = xyes -o x$using_lame = xyes)
 AC_SUBST(MP3_LIBS)
 
-dnl Test for libsamplerate.
-AC_ARG_WITH(samplerate,
-    AC_HELP_STRING([--without-samplerate],
-        [Don't try to use libsamplerate (aka Secret Rabbit Code)]),
-        [with_samplerate=$withval])
-if test "$with_samplerate" != "no"; then
-    using_samplerate=yes
-    SOX_PATH_SAMPLERATE(, using_samplerate=no)
-    if test "$with_samplerate" = "yes" -a "$using_samplerate" = "no"; then
-        AC_MSG_FAILURE([cannot find libsamplerate])
-    fi
-fi
-AC_SUBST(SAMPLERATE_CFLAGS)
-AC_SUBST(SAMPLERATE_LIBS)
-
 dnl Check for amr-wb libraries
 AC_ARG_WITH(amr-wb,
     AC_HELP_STRING([--without-amr-wb],
@@ -292,6 +277,36 @@ fi
 AM_CONDITIONAL(HAVE_AMR_NB, test x$using_amr_nb = xyes)
 AC_SUBST(AMR_NB_LIBS)
 
+dnl Test for libsamplerate.
+AC_ARG_WITH(samplerate,
+    AC_HELP_STRING([--without-samplerate],
+        [Don't try to use libsamplerate (aka Secret Rabbit Code)]),
+        [with_samplerate=$withval])
+if test "$with_samplerate" != "no"; then
+    using_samplerate=yes
+    SOX_PATH_SAMPLERATE(, using_samplerate=no)
+    if test "$with_samplerate" = "yes" -a "$using_samplerate" = "no"; then
+        AC_MSG_FAILURE([cannot find libsamplerate])
+    fi
+fi
+AC_SUBST(SAMPLERATE_CFLAGS)
+AC_SUBST(SAMPLERATE_LIBS)
+
+dnl Test for LADSPA
+AC_ARG_WITH(ladspa,
+    AC_HELP_STRING([--without-ladspa], [Don't try to use LADSPA]), [with_ladspa=$withval])
+if test "$with_ladspa" != "no"; then
+    using_ladspa=yes
+    AC_CHECK_HEADERS(ladspa.h,, using_ladspa=no)
+    if test "$with_ladspa" = "yes" -a "$using_ladspa" = "no"; then
+        AC_MSG_FAILURE([cannot find ladspa.h])
+    fi
+fi
+LADSPA_PATH=${libdir}/ladspa
+AC_ARG_WITH(ladspa-path,
+    AC_HELP_STRING([--with-ladspa-path], [Default search path for LADSPA plugins]), [LADSPA_PATH=$withval])
+AC_SUBST(LADSPA_PATH)
+
 dnl Generate output files.
 AX_CREATE_STDINT_H(src/soxstdint.h)
 AC_CONFIG_FILES(Makefile src/Makefile src/libgsm/Makefile lpc10/Makefile)
@@ -318,9 +333,10 @@ echo "FLAC format....................... $using_flac"
 echo "ffmpeg formats.................... $with_ffmpeg"
 echo "MAD MP3 reader.................... $using_mad"
 echo "LAME MP3 writer................... $using_lame"
-echo "Secret Rabbit Code resampling..... $using_samplerate"
 echo "AMR-WB format..................... $using_amr_wb"
 echo "AMR-NB format..................... $using_amr_nb"
+echo "LADSPA effects.................... $using_ladspa"
+echo "Secret Rabbit Code resampling..... $using_samplerate"
 echo
 echo "Configure finished.  Do 'make && make install' to compile and install SoX."
 echo

@@ -191,7 +191,7 @@ static int effect_nothing_getopts(sox_effect_t * effp, int n, char **argv UNUSED
   return (SOX_SUCCESS);
 }
 
-int sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const * e)
+void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const * e)
 {
   assert(e);
   memset(effp, 0, sizeof(*effp));
@@ -203,7 +203,6 @@ int sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const * e)
   if (!effp->handler.drain) effp->handler.drain = effect_nothing_drain;
   if (!effp->handler.stop) effp->handler.stop = effect_nothing;
   if (!effp->handler.kill) effp->handler.kill = effect_nothing;
-  return SOX_SUCCESS;
 }
 
 /*

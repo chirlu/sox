@@ -412,6 +412,16 @@ These effects support the \fB\-\-plot\fR global option.
 .SP
 See also \fBfilter\fR for filters with a steeper roll-off.
 .TP
+\fBladspa\fR \fBmodule\fR [\fBplugin\fR] [\fBargument\fR...]
+Apply a LADSPA [5] (Linux Audio Developer's Simple Plugin API) plugin.
+Despite the name, LADSPA is not Linux-specific, and a wide range of
+effects is available as LADSPA plugins, such as cmt [6] (the Computer
+Music Toolkit) and Steve Harris's plugin collection [7]. The first
+argument is the plugin module, the second the name of the plugin (a
+module can contain more than one plugin) and any other arguments are
+for the control ports of the plugin. Only plugins with precisely one
+input and one output port can be used at present.
+.TP
 \fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR]]
 Apply a low-pass filter.
 See the description of the \fBhighpass\fR effect for details.
@@ -715,14 +725,15 @@ determines the type of filter window used.  Any value greater than 2 is
 the beta for a Kaiser window.  Beta \(<= 2 selects a Nuttall window.
 If unspecified, the default is a Kaiser window with beta 16.
 .SP
-In the case of Kaiser window (beta > 2), lower betas produce a somewhat
-faster transition from pass-band to stop-band, at the cost of noticeable artifacts.
-A beta of 16 is the default, beta less than 10 is not recommended.  If you want
-a sharper cutoff, don't use low beta's, use a longer sample window.
-A Nuttall window is selected by specifying any `beta' \(<= 2, and the
-Nuttall window has somewhat steeper cutoff than the default Kaiser window.
-You will probably not need to use the beta parameter at all, unless you are
-just curious about comparing the effects of Nuttall vs. Kaiser windows.
+In the case of Kaiser window (beta > 2), lower betas produce a
+somewhat faster transition from pass-band to stop-band, at the cost of
+noticeable artifacts. A beta of 16 is the default, beta less than 10
+is not recommended. If you want a sharper cutoff, don't use low
+beta's, use a longer sample window. A Nuttall window is selected by
+specifying any `beta' \(<= 2, and the Nuttall window has somewhat
+steeper cutoff than the default Kaiser window. You will probably not
+need to use the beta parameter at all, unless you are just curious
+about comparing the effects of Nuttall vs. Kaiser windows.
 .SP
 This is the default effect if the two files have different sampling rates.
 Default parameters are, as indicated above, Kaiser window of length 45,
@@ -755,24 +766,30 @@ is the volume of the output.
 Reverse the audio completely.
 Requires disk space to store the data to be reversed.
 .TP
-\fBsilence \fR[\fB\-l\fR] \fIabove-periods\fR [\fIduration threshold\fR[\fBd\fR\^|\^\fB%\fR] [\fIbelow-periods duration threshold\fR[\fBd\fR\^|\^\fB%\fR]]
+\fBsilence \fR[\fB\-l\fR] \fIabove-periods\fR [\fIduration
+threshold\fR[\fBd\fR\^|\^\fB%\fR] [\fIbelow-periods duration
+threshold\fR[\fBd\fR\^|\^\fB%\fR]]
 .SP
-Removes silence from the beginning, middle, or end of the audio.  Silence is anything below a specified threshold.
+Removes silence from the beginning, middle, or end of the audio.
+Silence is anything below a specified threshold.
 .SP
-The \fIabove-periods\fR value is used to indicate if audio should be trimmed at
-the beginning of the audio.  A value of zero indicates no silence
-should be trimmed from the beginning.  When specifying an non-zero
-\fIabove-periods\fR, it trims audio up until it finds non-silence.
-Normally, when trimming silence from
-beginning of audio the \fIabove-periods\fR will be 1 but it can be increased to
-higher values to trim all audio up to a specific count of non-silence periods.
-For example, if you had an audio file with two songs that each contained
-2 seconds of silence before the song, you could specify an \fIabove-period\fR
-of 2 to strip out both silence periods and the first song.
+The \fIabove-periods\fR value is used to indicate if audio should be
+trimmed at the beginning of the audio. A value of zero indicates no
+silence should be trimmed from the beginning. When specifying an
+non-zero \fIabove-periods\fR, it trims audio up until it finds
+non-silence. Normally, when trimming silence from beginning of audio
+the \fIabove-periods\fR will be 1 but it can be increased to higher
+values to trim all audio up to a specific count of non-silence
+periods. For example, if you had an audio file with two songs that
+each contained 2 seconds of silence before the song, you could specify
+an \fIabove-period\fR of 2 to strip out both silence periods and the
+first song.
 .SP
-When \fIabove-periods\fR is non-zero, you must also specify a \fIduration\fR and
-\fIthreshold\fR.  \fIDuration\fR indications the amount of time that non-silence must be
-detected before it stops trimming audio.  By increasing the duration, burst of noise can be treated as silence and trimmed off.
+When \fIabove-periods\fR is non-zero, you must also specify a
+\fIduration\fR and \fIthreshold\fR. \fIDuration\fR indications the
+amount of time that non-silence must be detected before it stops
+trimming audio. By increasing the duration, burst of noise can be
+treated as silence and trimmed off.
 .SP
 \fIThreshold\fR is used to indicate what sample value you should treat as
 silence.  For digital audio, a value of 0 may be fine but for audio
@@ -816,11 +833,14 @@ should be left intact at the beginning of each period of silence.
 For example, if you want to remove long pauses between words
 but do not want to remove the pauses completely.
 .SP
-The \fIperiod\fR counts are in units of samples.  \fIDuration\fR counts may be in the format of hh:mm:ss.frac, or the exact count of samples.  \fIThreshold\fR numbers may be suffixed with
+The \fIperiod\fR counts are in units of samples. \fIDuration\fR counts
+may be in the format of hh:mm:ss.frac, or the exact count of samples.
+\fIThreshold\fR numbers may be suffixed with
 .B d
 to indicate the value is in decibels, or
 .B %
-to indicate a percentage of maximum value of the sample value (\fB0%\fR specifies pure digital silence).
+to indicate a percentage of maximum value of the sample value
+(\fB0%\fR specifies pure digital silence).
 .TP
 \fBspeed \fIfactor\fR[\fBc\fR]
 Adjust the audio speed (pitch and tempo together).  \fIfactor\fR
@@ -1178,6 +1198,21 @@ http://harmony-central.com/Effects/Articles/Flanging
 Wikipedia,
 .IR "Decibel" ,
 http://en.wikipedia.org/wiki/Decibel
+.TP
+[5]
+Richard Furse,
+.IR "Linux Audio Developer's Simple Plugin API" ,
+http://www.ladspa.org/
+.TP
+[6]
+Richard Furse,
+.IR "Computer Music Toolkit" ,
+http://www.ladspa.org/cmt
+.TP
+[7]
+Steve Harris,
+.IR "LADSPA plugins" ,
+http://plugin.org.uk/
 .SH AUTHORS
 Chris Bagwell (cbagwell@users.sourceforge.net).
 Other authors and contributors are listed in the AUTHORS file that

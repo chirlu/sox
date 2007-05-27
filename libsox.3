@@ -36,11 +36,13 @@ libsox \- SoX, an audio file-format and effect library
 .P
 .B int sox_seek(ft_t \fIft\fB, sox_size_t \fIoffset\fB, int \fIwhence\fB);
 .P
-.B sox_effect_t *sox_geteffect(const char *\fIeffect_name\fB);
+.B sox_effect_handler_t const *sox_find_effect(char const *\fIname\fB);
 .P
-.B int sox_geteffect_opts(int \fIargc\fB, char **\fIargv\fB);
+.B void sox_create_effect(sox_effect_t \fIeffp\fB, sox_effect_handler_t const *\fIe\fB);
 .P
-.B int sox_updateeffect(eff_t \fIeffp\fB, const sox_signalinfo_t *\fIin\fB, const sox_signalinfo_t *\fIout\fB, int \fIeffect_mask\fB);
+int sox_get_effect(sox_effect_t \fIeffp\fB, const char *\fIname\fB);
+.P
+.B int sox_update_effect(eff_t \fIeffp\fB, const sox_signalinfo_t *\fIin\fB, const sox_signalinfo_t *\fIout\fB, int \fIeffect_mask\fB);
 .P
 .B cc \fIfile.c\fB -o \fIfile \f-lsox
 .fi
@@ -91,18 +93,19 @@ The \fBsox_close\fR function dissociates the named \fIft_t\fR from its
 underlying file or set of functions. If the format handler was being
 used for output, any buffered data is written first.
 .P
-The function \fBsox_geteffect\fR finds effect \fIname\fR, returning a
-pointer to its \fIsox_effect_t\fR if it exists, and NULL otherwise.
+The function \fBsox_find_effect\fR finds effect \fIname\fR, returning
+a pointer to its \fIsox_effect_handler_t\fR if it exists, and NULL
+otherwise.
 .P
-The function \fBsox_geteffect_opts\fR finds the extent of options for
-the current effect, by examining each argument until it finds another
-effect name or runs out of arguments. It returns the number of
-arguments for the current effect.
+The function \fBsox_create_effect\fR instantiates an effect into a
+\fIsox_effect_t\fR given a \fIsox_effect_handler_t *\fR. Any missing
+methods are automatically set to the corresponding \fBnothing\fR
+method.
 .P
-The \fBsox_updateeffect\fR function copies input and output signal
+The \fBsox_update_effect\fR function copies input and output signal
 info into effect structures. The \fIeffect_mask\fR parameter is the
 return value of the previous call to this function; for the first
-call, pass 0.
+call, pass 0. The function returns the updated effect mask.
 .P
 SoX includes skeleton C files to assist you in writing new
 formats (skelform.c) and effects (skeleff.c). sox.c itself is a good
@@ -111,14 +114,14 @@ deal with the header and then use raw.c's routines for reading and
 writing.
 .SH RETURN VALUE
 Upon successful completion \fBsox_open_input\fR and
-\fBsox_open_output\fR return a ft_t (which is a pointer). Otherwise,
-NULL is returned. TODO: Need a what to return reason for failures.
-Currently, relies on sox_warn to print information.
+\fBsox_open_output\fR return an \fIft_t\fR (which is a pointer).
+Otherwise, NULL is returned. TODO: Need a way to return reason for
+failures. Currently, relies on \fBsox_warn\fR to print information.
 .P
 \fBsox_read\fR and \fBsox_write\fR return the number of samples
 successfully read or written. If an error occurs, or the end-of-file
 is reached, the return value is a short item count or SOX_EOF. TODO:
-\fBsox_read\fR does not distiguish between end-of-ifle and error. Need
+\fBsox_read\fR does not distiguish between end-of-file and error. Need
 an feof() and ferror() concept to determine which occured.
 .P
 Upon successful completion \fBsox_close\fR returns 0. Otherwise, SOX_EOF

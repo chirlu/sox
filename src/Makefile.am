@@ -10,7 +10,7 @@ AM_LDFLAGS = $(LIBLTDL)
 LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
 
 bin_PROGRAMS = sox
-lib_LTLIBRARIES = libsox.la
+lib_LTLIBRARIES = libsox.la libsfx.la
 include_HEADERS = sox.h soxstdint.h
 
 # Format modules; listed first so optional ones can be added later
@@ -78,7 +78,7 @@ libsox_fmt_dvms_la_LIBADD = libsox.la
 libsox_fmt_dat_la_SOURCES = dat.c
 libsox_fmt_dat_la_LIBADD = libsox.la
 libsox_fmt_gsm_la_SOURCES = gsm.c
-libsox_fmt_gsm_la_LIBADD = libsox.la @GSM_LIBS@
+libsox_fmt_gsm_la_LIBADD = libsox.la @GSM_LIBS@ @LIBGSM_LIBADD@
 libsox_fmt_hcom_la_SOURCES = hcom.c
 libsox_fmt_hcom_la_LIBADD = libsox.la
 libsox_fmt_lpc10_la_SOURCES = lpc10.c
@@ -104,7 +104,7 @@ libsox_fmt_vox_la_LIBADD = libsox.la
 libsox_fmt_ima_la_SOURCES = ima-fmt.c
 libsox_fmt_ima_la_LIBADD = libsox.la
 libsox_fmt_wav_la_SOURCES = adpcm.c adpcm.h ima_rw.c ima_rw.h wav.c wav.h
-libsox_fmt_wav_la_LIBADD = libsox.la @GSM_LIBS@
+libsox_fmt_wav_la_LIBADD = libsox.la @GSM_LIBS@ @LIBGSM_LIBADD@
 libsox_fmt_wve_la_SOURCES = wve.c
 libsox_fmt_wve_la_LIBADD = libsox.la
 libsox_fmt_xa_la_SOURCES = xa.c
@@ -170,7 +170,7 @@ libsox_fmt_sunau_la_LIBADD = libsox.la
 pkglib_LTLIBRARIES += libsox_fmt_sunau.la
 endif
 
-effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c	\
+libsfx_la_SOURCES = band.h biquad.c biquad.h biquads.c chorus.c compand.c	\
 	  compandt.c compandt.h dcshift.c dither.c earwax.c echo.c echos.c	\
 	  fade.c FFT.c FFT.h filter.c flanger.c ladspa.c mcompand.c	\
 	  mixer.c noiseprof.c noisered.c noisered.h pad.c pan.c		\
@@ -178,17 +178,17 @@ effects = band.h biquad.c biquad.h biquads.c chorus.c compand.c	\
 	  resample.c reverb.c reverse.c silence.c skeleff.c speed.c	\
 	  stat.c stretch.c swap.c synth.c tremolo.c trim.c	\
 	  vibro.c vol.c
+libsfx_la_CFLAGS = @SAMPLERATE_CFLAGS@
+libsfx_la_LIBADD = @SAMPLERATE_LIBS@
 
-libsox_la_SOURCES = $(effects) adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
+libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
 	  g711.c g711.h g721.c g723_24.c g723_40.c g72x.c g72x.h vox.c vox.h	\
 	  raw.c raw.h handlers.c misc.c sox_i.h skelform.c soxio.c	\
 	  util.c xmalloc.c xmalloc.h getopt.c getopt1.c getopt.h	\
 	  soxconfig.h effects.c
-libsox_la_CFLAGS = @SAMPLERATE_CFLAGS@
-libsox_la_LIBADD = @LIBGSM_LIBADD@ @SAMPLERATE_LIBS@
 
 sox_SOURCES = sox.c
-sox_LDADD = libsox.la
+sox_LDADD = libsox.la libsfx.la
 
 EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav
 
