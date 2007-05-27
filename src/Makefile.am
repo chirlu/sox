@@ -190,7 +190,7 @@ libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
 sox_SOURCES = sox.c
 sox_LDADD = libsox.la libsfx.la
 
-EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav
+EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav libgsm
 
 all: sox$(EXEEXT) play rec
 
