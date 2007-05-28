@@ -150,7 +150,8 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
     }
   }
 
-  /* FIXME: allow use of source and sink plugins */
+  /* FIXME: allow use of source and sink plugins; needs a design
+     change to allow an effect to be a source or sink */
   if (l_st->input_port == ULONG_MAX) {
     sox_fail("no input port");
     return SOX_EOF;
@@ -191,6 +192,9 @@ static int sox_ladspa_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_s
   ladspa_t l_st = (ladspa_t)effp->priv;
   LADSPA_Data *buf = xmalloc(sizeof(LADSPA_Data) * *isamp);
   sox_sample_t i;
+  sox_size_t len = min(*isamp, *osamp);
+
+  *osamp = *isamp = len;
 
   /* Copy the input; FIXME: Assume LADSPA_Data == float! */
   for (i = 0; i < *isamp; i++)
@@ -204,7 +208,6 @@ static int sox_ladspa_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_s
   l_st->desc->run(l_st->handle, *isamp);
 
   /* Copy the output; FIXME: Assume LADSPA_Data == float! */
-  *osamp = *isamp;
   for (i = 0; i < *osamp; i++)
     obuf[i] = SOX_FLOAT_32BIT_TO_SAMPLE(buf[i], effp->clips);
 

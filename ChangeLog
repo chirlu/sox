@@ -9,18 +9,21 @@ sox-14.0.0
 
   File formats:
 
-  o Added support for ADPCM-encoded PRC files, based on Danny Smith's
-    rec2wav and sndcmp.
-  o Added AMR-NB [FR# 728875] & AMR-WB formats (with external libs).  (robs)
+  o Added ffmpeg support.  (Reuben Thomas)
+  o FLAC: added seekable decoding; added seek-table generation.  (robs)
   o Added M3U & PLS playlist formats [FR# 1667341] (Note: SHOUTcast PLS
     is only partially supported).  (robs)
+  o Made format readers and writers into individual modules for easier
+    distribution of differently-licensed code.  (Reuben Thomas)
   o Added libao support.  (Reuben Thomas)
-  o Added read-only ffmpeg support.  (Reuben Thomas)
+  o Added support for ADPCM-encoded PRC files, based on Danny Smith's
+    rec2wav and sndcmp.  (Reuben Thomas)
+  o Added AMR-NB [FR# 728875] & AMR-WB formats (with external libs).  (robs)
   o Added LPC-10 support.  (Reuben Thomas)
-  o FLAC: added seekable decoding; added seek-table generation.  (robs)
 
   Effects:
 
+  o Use LADSPA effects (one input, one output).  (Reuben Thomas)
   o --octave option changed to --plot; can now also use gnuplot to
     plot effect transfer function.  (robs)
   o Added soft-knee companding.  (robs)
@@ -55,9 +58,11 @@ sox-14.0.0
   Internal improvements:
 
   o Renamed libst to libsox for name recongition and to avoid
-    duplications with other existing libst libraries. (Reuben Thomas)
+    duplications with other existing libst libraries.  (Reuben Thomas)
+  o Moved effects to libsfx.  (Reuben Thomas)
   o Got rid of several hundred compiler warnings.  (robs, Reuben Thomas)
   o Added basic performance testing of I/O.  (Reuben Thomas)
+  o Added cmake build files for Win32.  (robs)
 
 sox-13.0.0
 ----------
@@ -68,14 +73,14 @@ sox-13.0.0
     (Octave 2.0/2.1), .pvf, .sds, .sd2 and .xi file formats via libsndfile.
     If available, libsndfile can also be used to handle all the other file
     formats it understands.  (Reuben Thomas)
-  o Add FLAC support (robs@users.sf.net)
+  o Add FLAC support (robs)
   o Support Maxis's XA format. (Dwayne C. Litzenberger)
   o Add support for 24-bit PCM raw, wav (WAVE_FORMAT_EXTENSIBLE) [FR# 801015],
     au, aiff, & flac files. (robs)
   o Add AIFF-C output support.  (shashimoto)
   o New .ima file format for raw IMA ADPCM.  (robs)
   o Allow the rate and number of channels of .au files to be overridden
-    by command-line arguments. (robs@users.sf.net)
+    by command-line arguments. (robs)
   o Add seek support for GSM data in WAV files. Rafal Maszkowski
   o Allow encoding quality to be specified (FLAC & Ogg, but not
     MP3 yet).  (robs)
@@ -176,7 +181,7 @@ sox-13.0.0
 
   Internal improvements:
 
-  o More and better self-tests. (robs@users.sf.net)
+  o More and better self-tests. (robs)
   o Build system overhaul to use the full set of GNU autotools.
     (Reuben Thomas)
   o Add new getopt1.c to win32 project file.

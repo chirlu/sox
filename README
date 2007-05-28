@@ -111,6 +111,8 @@ The sound effects include:
   o Noise elimination using frequency profiling
   o Resample using libsamplerate (aka Secret Rabbit code, optional
     external library)
+  o Apply LADSPA (Linux Audio Developer's Simple Plugin API) effects
+    such as cmt (Computer Music Toolkit)
 
 Unless you're using a pre-compiled binary version, you will need to
 compile SoX as described in the INSTALL file.

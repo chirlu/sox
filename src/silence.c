@@ -10,7 +10,7 @@
  * when it sees a specified count of samples below a given threshold
  * (all channels).
  * It may also be used to delete samples anywhere in a sound file.
- * Theshold's can be given as either a percentage or in decibels.
+ * Thesholds can be given as either a percentage or in decibels.
  */
 
 

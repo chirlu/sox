@@ -453,7 +453,7 @@ static int sox_pitch_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ss
     oindex = 0;
 
     /* warning:
-       because of the asynchroneous nature of buffering,
+       because of the asynchronous nature of buffering,
        the output index can reach the buffer limits before full consumption.
        I put the input index just in case. 
        If the code is correct, eithier len or iindex is redundant.

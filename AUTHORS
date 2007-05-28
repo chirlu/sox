@@ -6,8 +6,22 @@ bugs.
 Creator:
 	Lance Norskog
 
-Mantainer:
+Mantainers:
 	Chris Bagwell		cbagwell@users.sourceforge.net
+	Reuben Thomas		rrt@sc3d.org
+		Build system makeover, libsndfile and ffmpeg sound
+		format support, libao playback, Secret Rabbit Code
+		resampling; many fixes and much cleanup.
+	Rob Sykes		robs@users.sourceforge.net
+                Formats: M3U, PLS, FLAC, AMR, 24bit support for popular
+                formats.
+		Effects: pad, bass, treble, new flanger, soft-knee companding,
+                speed via resampling, filters makeover inc. gnuplot & octave
+                plotting.
+                Others: open input files via URL, file merging, play
+                multiple files with mixed format types, play with replay-gain,
+                building with cmake, much manual improvement and expansion,
+                various fixes, enhancements and clean-ups.
 
 Contributors:
 	Juergen Mueller		jmueller@uia.ua.ac.be
@@ -84,17 +98,3 @@ Contributors:
 		patch collection and maintance.
 	Matthias Nutt
 		Multiple effects from command line.
-	Reuben Thomas		rrt@sc3d.org
-		Build system makeover, libsndfile and ffmpeg sound
-		format support, libao playback, Secret Rabbit Code
-		resampling; many fixes and much cleanup.
-	Rob Sykes		robs@users.sourceforge.net
-                Formats: M3U, PLS, FLAC, AMR, 24bit support for popular
-                formats.
-		Effects: pad, bass, treble, new flanger, soft-knee companding,
-                speed via resampling, filters makeover inc. gnuplot & octave
-                plotting.
-                Others: open input files via URL, file merging, play
-                multiple files with mixed format types, play with replay-gain,
-                much manual improvement and expansion, various fixes,
-                enhancements and clean-ups.
