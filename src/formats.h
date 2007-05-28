@@ -1,3 +1,5 @@
+/* FIXME: generate this list automatically */
+
   FORMAT(aifc)
   FORMAT(aiff)
   FORMAT(al)
