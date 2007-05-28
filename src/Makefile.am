@@ -186,9 +186,10 @@ libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
 	  raw.c raw.h handlers.c misc.c sox_i.h skelform.c soxio.c	\
 	  util.c xmalloc.c xmalloc.h getopt.c getopt1.c getopt.h	\
 	  soxconfig.h effects.c
+libsox_la_LIBADD = libsfx.la
 
 sox_SOURCES = sox.c
-sox_LDADD = libsox.la libsfx.la
+sox_LDADD = libsox.la
 
 EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav libgsm
 
