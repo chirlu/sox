@@ -34,6 +34,9 @@ sox-14.0.0
   o Add option to silence effect to leave periods of silence
     in and only strip out extra silence.   (Mark Schreiber)
   o synth can now generate any number of channels.  (robs)
+  o mixer can now mixdown to mono any number of channels.  (robs)
+  o All effects that could only work on mono or stereo audio, now
+    work with any number of channels.  (robs)
 
   Other new features:
 
@@ -54,6 +57,7 @@ sox-14.0.0
   o Fix CDDA sector duration display for non-CDDA sample rates.  (robs)
   o synth fixes: brown noise; inverted square wave; offset < 0.  (robs)
   o FLAC: fixed crash when encoding with no comment.  (robs)
+  o Fixed effect drain problems: chorus, echo(s), phaser.  (robs)
 
   Internal improvements:
 
@@ -62,6 +66,7 @@ sox-14.0.0
   o Moved effects to libsfx.  (Reuben Thomas)
   o Got rid of several hundred compiler warnings.  (robs, Reuben Thomas)
   o Added basic performance testing of I/O.  (Reuben Thomas)
+  o Effects chain processing now available in libSoX.  (robs)
   o Added cmake build files for Win32.  (robs)
 
 sox-13.0.0
