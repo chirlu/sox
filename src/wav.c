@@ -419,9 +419,8 @@ static int sox_wavstartread(ft_t ft)
     if (strncmp("RIFX", magic, 4) == 0) 
     {
         sox_debug("Found RIFX header, swapping bytes");
-        ft->signal.reverse_bytes ^= SOX_IS_LITTLEENDIAN;
+        ft->signal.reverse_bytes = !ft->signal.reverse_bytes;
     }
-    else ft->signal.reverse_bytes ^= SOX_IS_BIGENDIAN;
 
     sox_readdw(ft, &dwRiffLength);
 

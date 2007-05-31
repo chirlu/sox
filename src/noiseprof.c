@@ -118,7 +118,7 @@ static int sox_noiseprof_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, so
     int ncopy = 0;
     sox_size_t i;
 
-    /* FIXME: Make this non-fatal */
+    /* FIXME: Make this automatic for all effects */
     assert(effp->ininfo.channels == effp->outinfo.channels);
 
     /* How many samples per track to analyze? */

@@ -263,7 +263,7 @@ static int sox_silence_start(sox_effect_t * effp)
 
         clear_rms(effp);
 
-        /* Now that we now sample rate, reparse duration. */
+        /* Now that we know sample rate, reparse duration. */
         if (silence->start)
         {
             if (sox_parsesamples(effp->ininfo.rate, silence->start_duration_str,

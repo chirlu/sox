@@ -172,21 +172,20 @@ endif
 
 libsfx_la_SOURCES = band.h biquad.c biquad.h biquads.c chorus.c compand.c	\
 	  compandt.c compandt.h dcshift.c dither.c earwax.c echo.c echos.c	\
-	  fade.c FFT.c FFT.h filter.c flanger.c ladspa.c mcompand.c	\
-	  mixer.c noiseprof.c noisered.c noisered.h pad.c pan.c		\
-	  phaser.c pitch.c polyphas.c rabbit.c rate.c repeat.c		\
+	  effects.c fade.c FFT.c FFT.h filter.c flanger.c ladspa.c	\
+	  mcompand.c mixer.c noiseprof.c noisered.c noisered.h pad.c	\
+	  pan.c phaser.c pitch.c polyphas.c rabbit.c rate.c repeat.c	\
 	  resample.c reverb.c reverse.c silence.c skeleff.c speed.c	\
-	  stat.c stretch.c swap.c synth.c tremolo.c trim.c	\
-	  vibro.c vol.c
+	  stat.c stretch.c swap.c synth.c tremolo.c trim.c vibro.c	\
+	  vol.c
 libsfx_la_CFLAGS = @SAMPLERATE_CFLAGS@
 libsfx_la_LIBADD = @SAMPLERATE_LIBS@
 
 libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
 	  g711.c g711.h g721.c g723_24.c g723_40.c g72x.c g72x.h vox.c vox.h	\
-	  raw.c raw.h handlers.c misc.c sox_i.h skelform.c soxio.c	\
+	  raw.c raw.h formats.c misc.c sox_i.h skelform.c soxio.c	\
 	  util.c xmalloc.c xmalloc.h getopt.c getopt1.c getopt.h	\
-	  soxconfig.h effects.c
-libsox_la_LIBADD = libsfx.la
+	  soxconfig.h
 
 sox_SOURCES = sox.c
 sox_LDADD = libsox.la

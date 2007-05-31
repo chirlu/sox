@@ -1,4 +1,7 @@
 /*
+ * SoX Effects chain
+ * (c) 2007 robs@users.sourceforge.net
+ *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or (at
@@ -14,13 +17,131 @@
  * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
-/* SoX Effects chain   (c) 2007 robs@users.sourceforge.net */
-
 #include "sox_i.h"
+#include <assert.h>
+#include <string.h>
+#include <strings.h>
+
+/* dummy effect routine for do-nothing functions */
+static int effect_nothing(sox_effect_t * effp UNUSED)
+{
+  return SOX_SUCCESS;
+}
+
+static int effect_nothing_flow(sox_effect_t * effp UNUSED, const sox_ssample_t *ibuf UNUSED, sox_ssample_t *obuf UNUSED, sox_size_t *isamp, sox_size_t *osamp)
+{
+  /* Pass through samples verbatim */
+  *isamp = *osamp = min(*isamp, *osamp);
+  memcpy(obuf, ibuf, *isamp * sizeof(sox_ssample_t));
+  return SOX_SUCCESS;
+}
+
+static int effect_nothing_drain(sox_effect_t * effp UNUSED, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
+{
+  /* Inform no more samples to drain */
+  *osamp = 0;
+  return SOX_EOF;
+}
+
+static int effect_nothing_getopts(sox_effect_t * effp, int n, char **argv UNUSED)
+{
+#undef sox_fail
+#define sox_fail sox_message_filename=effp->handler.name,sox_fail
+  if (n) {
+    sox_fail(effp->handler.usage);
+    return (SOX_EOF);
+  }
+  return (SOX_SUCCESS);
+#undef sox_fail
+}
+
+
+/* Effect chain routines */
+
+sox_effect_handler_t const * sox_find_effect(char const * name)
+{
+  int i;
+
+  for (i = 0; sox_effect_fns[i]; ++i) {
+    const sox_effect_handler_t *e = sox_effect_fns[i] ();
+    if (e && e->name && strcasecmp(e->name, name) == 0)
+      return e;                 /* Found it. */
+  }
+  return NULL;
+}
+
+void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const * e)
+{
+  assert(e);
+  memset(effp, 0, sizeof(*effp));
+  effp->global_info = &effects_global_info;
+  effp->handler = *e;
+  if (!effp->handler.getopts) effp->handler.getopts = effect_nothing_getopts;
+  if (!effp->handler.start) effp->handler.start = effect_nothing;
+  if (!effp->handler.flow) effp->handler.flow = effect_nothing_flow;
+  if (!effp->handler.drain) effp->handler.drain = effect_nothing_drain;
+  if (!effp->handler.stop) effp->handler.stop = effect_nothing;
+  if (!effp->handler.kill) effp->handler.kill = effect_nothing;
+}
+
+/*
+ * Copy input and output signal info into effect structures.
+ * Must pass in a bitmask containing info on whether SOX_EFF_CHAN
+ * or SOX_EFF_RATE has been used previously on this effect stream.
+ * If not running multiple effects then just pass in a value of 0.
+ *
+ * Return value is the same mask plus addition of SOX_EFF_CHAN or
+ * SOX_EFF_RATE if it was used in this effect.  That make this
+ * return value can be passed back into this function in future
+ * calls.
+ */
+
+int sox_update_effect(sox_effect_t * effp, const sox_signalinfo_t *in, const sox_signalinfo_t *out, 
+                    int effect_mask)
+{
+    effp->ininfo = *in;
+    effp->outinfo = *out;
+
+    if (in->channels != out->channels) {
+      /* Only effects with SOX_EFF_CHAN flag can actually handle
+       * outputing a different number of channels then the input.
+       */
+      if (!(effp->handler.flags & SOX_EFF_CHAN)) {
+        /* If this effect is being run before a SOX_EFF_CHAN effect
+         * then its output is the same as the input file; otherwise,
+         * its input contains the same number of channels as the
+         * output file. */
+        if (effect_mask & SOX_EFF_CHAN)
+          effp->ininfo.channels = out->channels;
+        else
+          effp->outinfo.channels = in->channels;
+      }
+    }
+
+    if (in->rate != out->rate)
+    {
+        /* Only SOX_EFF_RATE effects can handle an input that
+         * has a different sample rate from the output. */
+        if (!(effp->handler.flags & SOX_EFF_RATE))
+        {
+            if (effect_mask & SOX_EFF_RATE)
+                effp->ininfo.rate = out->rate;
+            else
+                effp->outinfo.rate = in->rate;
+        }
+    }
+
+    if (effp->handler.flags & SOX_EFF_CHAN)
+        effect_mask |= SOX_EFF_CHAN;
+    if (effp->handler.flags & SOX_EFF_RATE)
+        effect_mask |= SOX_EFF_RATE;
+
+    return effect_mask;
+}
+
 
 sox_effect_t * sox_effects[SOX_MAX_EFFECTS];
 unsigned sox_neffects;
-
 
 int sox_add_effect(sox_effect_t * e, sox_signalinfo_t * in, sox_signalinfo_t * out, int * effects_mask)
 {
@@ -276,3 +397,66 @@ void sox_delete_effects(void)
   while (sox_neffects)
     free(sox_effects[--sox_neffects]);
 }
+
+
+/* Effects handlers. */
+
+/* FIXME: Generate this list automatically */
+sox_effect_fn_t sox_effect_fns[] = {
+  sox_allpass_effect_fn,
+  sox_avg_effect_fn,
+  sox_band_effect_fn,
+  sox_bandpass_effect_fn,
+  sox_bandreject_effect_fn,
+  sox_bass_effect_fn,
+  sox_chorus_effect_fn,
+  sox_compand_effect_fn,
+  sox_dcshift_effect_fn,
+  sox_deemph_effect_fn,
+  sox_dither_effect_fn,
+  sox_earwax_effect_fn,
+  sox_echo_effect_fn,
+  sox_echos_effect_fn,
+  sox_equalizer_effect_fn,
+  sox_fade_effect_fn,
+  sox_filter_effect_fn,
+  sox_flanger_effect_fn,
+  sox_highpass_effect_fn,
+  sox_highp_effect_fn,
+#ifdef HAVE_LADSPA_H
+  sox_ladspa_effect_fn,
+#endif
+  sox_lowpass_effect_fn,
+  sox_lowp_effect_fn,
+  sox_mask_effect_fn,
+  sox_mcompand_effect_fn,
+  sox_mixer_effect_fn,
+  sox_noiseprof_effect_fn,
+  sox_noisered_effect_fn,
+  sox_pad_effect_fn,
+  sox_pan_effect_fn,
+  sox_phaser_effect_fn,
+  sox_pick_effect_fn,
+  sox_pitch_effect_fn,
+  sox_polyphase_effect_fn,
+#ifdef HAVE_SAMPLERATE_H
+  sox_rabbit_effect_fn,
+#endif
+  sox_rate_effect_fn,
+  sox_repeat_effect_fn,
+  sox_resample_effect_fn,
+  sox_reverb_effect_fn,
+  sox_reverse_effect_fn,
+  sox_silence_effect_fn,
+  sox_speed_effect_fn,
+  sox_stat_effect_fn,
+  sox_stretch_effect_fn,
+  sox_swap_effect_fn,
+  sox_synth_effect_fn,
+  sox_treble_effect_fn,
+  sox_tremolo_effect_fn,
+  sox_trim_effect_fn,
+  sox_vibro_effect_fn,
+  sox_vol_effect_fn,
+  NULL
+};

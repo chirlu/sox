@@ -269,7 +269,7 @@ static int sox_noisered_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox
     int oldbuf = data->bufdata;
     sox_size_t i;
 
-    /* FIXME: make this non-fatal */
+    /* FIXME: Make this automatic for all effects */
     assert(effp->ininfo.channels == effp->outinfo.channels);
 
     if (whole_window)

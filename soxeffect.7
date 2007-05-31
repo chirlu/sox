@@ -419,8 +419,9 @@ effects is available as LADSPA plugins, such as cmt [6] (the Computer
 Music Toolkit) and Steve Harris's plugin collection [7]. The first
 argument is the plugin module, the second the name of the plugin (a
 module can contain more than one plugin) and any other arguments are
-for the control ports of the plugin. Only plugins with precisely one
-input and one output port can be used at present.
+for the control ports of the plugin. Missing arguments are supplied by
+default values if possible. Only plugins with at most one audio input
+and one audio output port can be used.
 .TP
 \fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR]]
 Apply a low-pass filter.

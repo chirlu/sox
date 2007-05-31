@@ -24,6 +24,7 @@
 #include <assert.h>
 #include <limits.h>
 #include <string.h>
+#include <math.h>
 #include <ltdl.h>
 #include <ladspa.h>
 
@@ -39,6 +40,46 @@ typedef struct {
   unsigned long input_port, output_port;
 } *ladspa_t;
 
+static LADSPA_Data ladspa_default(const LADSPA_PortRangeHint *p)
+{
+  LADSPA_Data d;
+  
+  if (LADSPA_IS_HINT_DEFAULT_0(p->HintDescriptor))
+    d = 0.0;
+  else if (LADSPA_IS_HINT_DEFAULT_1(p->HintDescriptor))
+    d = 1.0;
+  else if (LADSPA_IS_HINT_DEFAULT_100(p->HintDescriptor))
+    d = 100.0;
+  else if (LADSPA_IS_HINT_DEFAULT_440(p->HintDescriptor))
+    d = 440.0;
+  else if (LADSPA_IS_HINT_DEFAULT_MINIMUM(p->HintDescriptor))
+    d = p->LowerBound;
+  else if (LADSPA_IS_HINT_DEFAULT_MAXIMUM(p->HintDescriptor))
+    d = p->UpperBound;
+  else if (LADSPA_IS_HINT_DEFAULT_LOW(p->HintDescriptor)) {
+    if (LADSPA_IS_HINT_LOGARITHMIC(p->HintDescriptor))
+      d = exp(log(p->LowerBound) * 0.75 + log(p->UpperBound) * 0.25);
+    else
+      d = p->LowerBound * 0.75 + p->UpperBound * 0.25;
+  } else if (LADSPA_IS_HINT_DEFAULT_MIDDLE(p->HintDescriptor)) {
+    if (LADSPA_IS_HINT_LOGARITHMIC(p->HintDescriptor))
+      d = exp(log(p->LowerBound) * 0.5 + log(p->UpperBound) * 0.5);
+    else
+      d = p->LowerBound * 0.5 + p->UpperBound * 0.5;
+  } else if (LADSPA_IS_HINT_DEFAULT_HIGH(p->HintDescriptor)) {
+    if (LADSPA_IS_HINT_LOGARITHMIC(p->HintDescriptor))
+      d = exp(log(p->LowerBound) * 0.25 + log(p->UpperBound) * 0.75);
+    else
+      d = p->LowerBound * 0.25 + p->UpperBound * 0.75;
+  } else { /* shouldn't happen */
+    /* FIXME: Deal with this at a higher level */
+    sox_fail("non-existent default value; using 0.1");
+    d = 0.1; /* Should at least avoid divide by 0 */
+  }
+
+  return d;
+}
+
 /*
  * Process options
  */
@@ -48,7 +89,6 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
   char *path;
   LADSPA_Descriptor_Function l_fn;
   unsigned long index = 0, i;
-  unsigned long audio_ports = 0;
   double arg;
 
   l_st->input_port = ULONG_MAX;
@@ -88,7 +128,7 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
 
   /* If more than one plugin, or first argument is not a number, try
      to use first argument as plugin label. */
-  if (l_fn(1) != NULL || !sscanf(argv[0], "%lf", &arg)) {
+  if (n > 0 && (l_fn(1) != NULL || !sscanf(argv[0], "%lf", &arg))) {
     while (l_st->desc && strcmp(l_st->desc->Label, argv[0]) != 0)
       l_st->desc = l_fn(++index);
     if (l_st->desc == NULL) {
@@ -96,14 +136,6 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
       return SOX_EOF;
     } else
       n--; argv++;
-  }
-
-
-  /* Instantiate the plugin */
-  l_st->handle = l_st->desc->instantiate(l_st->desc, effp->ininfo.rate);
-  if (l_st->handle == NULL) {
-    sox_fail("could not instantiate plugin");
-    return SOX_EOF;
   }
 
   /* Scan the ports to check there's one input and one output */
@@ -122,44 +154,39 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
     }
                
     if (LADSPA_IS_PORT_AUDIO(port)) {
-      audio_ports++;
-      if (audio_ports > 2) {
-        sox_fail("can't use a plugin with more than two audio ports");
-        return SOX_EOF;
-      }
-
-      /* Don't bother counting input and output ports, as if we have
-         too many or not enough we'll find out anyway */
-      if (LADSPA_IS_PORT_INPUT(port))
+      if (LADSPA_IS_PORT_INPUT(port)) {
+        if (l_st->input_port != ULONG_MAX) {
+          sox_fail("can't use a plugin with more than one audio input port");
+          return SOX_EOF;
+        }
         l_st->input_port = i;
-      else if (LADSPA_IS_PORT_OUTPUT(port))
+      } else if (LADSPA_IS_PORT_OUTPUT(port)) {
+        if (l_st->output_port != ULONG_MAX) {
+          sox_fail("can't use a plugin with more than one audio output port");
+          return SOX_EOF;
+        }
         l_st->output_port = i;
+      }
     } else {                    /* Control port */
       if (n == 0) {
-        sox_fail("not enough arguments for control ports");
-        return SOX_EOF;
+        if (!LADSPA_IS_HINT_HAS_DEFAULT(l_st->desc->PortRangeHints[i].HintDescriptor)) {
+          sox_fail("not enough arguments for control ports");
+          return SOX_EOF;
+        }
+        l_st->control[i] = ladspa_default(&(l_st->desc->PortRangeHints[i]));
+        sox_debug("default argument for port %d is %f", i, l_st->control[i]);
+      } else {
+        if (!sscanf(argv[0], "%lf", &arg)) {
+          sox_fail(effp->handler.usage);
+          return SOX_EOF;
+        }
+        l_st->control[i] = (LADSPA_Data)arg;
+        sox_debug("argument for port %d is %f", i, l_st->control[i]);
+        n--; argv++;
       }
-      if (!sscanf(argv[0], "%lf", &arg)) {
-        sox_fail(effp->handler.usage);
-        return SOX_EOF;
-      }
-      l_st->control[i] = (LADSPA_Data)arg;
-      sox_debug("argument for port %d is %f", i, l_st->control[i]);
-      n--; argv++;
-      l_st->desc->connect_port(l_st->handle, i, &(l_st->control[i]));
     }
   }
 
-  /* FIXME: allow use of source and sink plugins; needs a design
-     change to allow an effect to be a source or sink */
-  if (l_st->input_port == ULONG_MAX) {
-    sox_fail("no input port");
-    return SOX_EOF;
-  } else if (l_st->output_port == ULONG_MAX) {
-    sox_fail("no output port");
-    return SOX_EOF;
-  }
-  
   /* Stop if we have any unused arguments */
   if (n > 0) {
     sox_fail(sox_ladspa_effect.usage);
@@ -175,6 +202,22 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
 static int sox_ladspa_start(sox_effect_t * effp)
 {
   ladspa_t l_st = (ladspa_t)effp->priv;
+  unsigned long i;
+
+  /* Instantiate the plugin */
+  sox_debug("rate for plugin is %d", effp->ininfo.rate);
+  l_st->handle = l_st->desc->instantiate(l_st->desc, effp->ininfo.rate);
+  if (l_st->handle == NULL) {
+    sox_fail("could not instantiate plugin");
+    return SOX_EOF;
+  }
+
+  for (i = 0; i < l_st->desc->PortCount; i++) {
+    const LADSPA_PortDescriptor port = l_st->desc->PortDescriptors[i];
+
+    if (LADSPA_IS_PORT_CONTROL(port))
+      l_st->desc->connect_port(l_st->handle, i, &(l_st->control[i]));
+  }
 
   /* If needed, activate the plugin */
   if (l_st->desc->activate)
@@ -190,28 +233,40 @@ static int sox_ladspa_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_s
                            sox_size_t *isamp, sox_size_t *osamp)
 {
   ladspa_t l_st = (ladspa_t)effp->priv;
-  LADSPA_Data *buf = xmalloc(sizeof(LADSPA_Data) * *isamp);
   sox_sample_t i;
   sox_size_t len = min(*isamp, *osamp);
 
   *osamp = *isamp = len;
 
-  /* Copy the input; FIXME: Assume LADSPA_Data == float! */
-  for (i = 0; i < *isamp; i++)
-    buf[i] = SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i], effp->clips);
-
-  /* Connect the I/O ports */
-  l_st->desc->connect_port(l_st->handle, l_st->input_port, buf);
-  l_st->desc->connect_port(l_st->handle, l_st->output_port, buf);
-
-  /* Run the plugin */
-  l_st->desc->run(l_st->handle, *isamp);
-
-  /* Copy the output; FIXME: Assume LADSPA_Data == float! */
-  for (i = 0; i < *osamp; i++)
-    obuf[i] = SOX_FLOAT_32BIT_TO_SAMPLE(buf[i], effp->clips);
-
-  free(buf);
+  if (len) {
+    LADSPA_Data *buf = xmalloc(sizeof(LADSPA_Data) * len);
+    
+    /* Insert input if effect takes it */
+    if (l_st->input_port != ULONG_MAX) {
+      /* Copy the input; FIXME: Assume LADSPA_Data == float! */
+      for (i = 0; i < len; i++)
+        buf[i] = SOX_SAMPLE_TO_FLOAT_32BIT(ibuf[i], effp->clips);
+      
+      /* Connect the input port */
+      l_st->desc->connect_port(l_st->handle, l_st->input_port, buf);
+    }
+    
+    /* Connect the output port if used */
+    if (l_st->output_port != ULONG_MAX)
+      l_st->desc->connect_port(l_st->handle, l_st->output_port, buf);
+    
+    /* Run the plugin */
+    l_st->desc->run(l_st->handle, len);
+    
+    /* Grab output if effect produces it */
+    if (l_st->output_port != ULONG_MAX)
+      /* FIXME: Assume LADSPA_Data == float! */
+      for (i = 0; i < len; i++) {
+        obuf[i] = SOX_FLOAT_32BIT_TO_SAMPLE(buf[i], effp->clips);
+      }
+    
+    free(buf);
+  }
 
   return SOX_SUCCESS;
 }
@@ -244,7 +299,7 @@ static int sox_ladspa_stop(sox_effect_t * effp)
 static sox_effect_handler_t sox_ladspa_effect = {
   "ladspa",
   "Usage: ladspa MODULE [PLUGIN] [ARGUMENT...]",
-  SOX_EFF_RATE | SOX_EFF_MCHAN,
+  0,
   sox_ladspa_getopts,
   sox_ladspa_start,
   sox_ladspa_flow,
