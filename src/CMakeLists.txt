@@ -95,7 +95,116 @@ add_custom_command(
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/soxstdint.h.cmake
   )
 
-add_library(lib${PROJECT_NAME} 8svx adpcm adpcms aifc-fmt aiff aiff-fmt al-fmt au auto avr biquad biquads cdr chorus compand compandt cvsd cvsd-fmt dat dcshift dither dvms-fmt earwax echo echos effects fade FFT filter flanger g711 g721 g723_24 g723_40 g72x getopt1 getopt gsm handlers hcom ima-fmt ima_rw la-fmt lpc10 lu-fmt maud mcompand misc mixer noiseprof noisered nulfile pad pan phaser pitch polyphas prc rate raw raw-fmt repeat resample reverb reverse s1-fmt s2-fmt s3-fmt s4-fmt sf silence skeleff skelform smp sndrtool soxio speed sphere stat stretch swap synth tremolo trim tx16w u1-fmt u2-fmt u3-fmt u4-fmt ul-fmt util vibro voc vol vox vox-fmt wav wve xa xmalloc soxstdint ${optional_srcs})
+set(effects_srcs
+  biquad
+  biquads
+  chorus
+  compand
+  compandt
+  dcshift
+  dither
+  earwax
+  echo
+  echos
+  effects
+  fade
+  FFT
+  filter
+  flanger
+  mcompand
+  mixer
+  noiseprof
+  noisered
+  pad
+  pan
+  phaser
+  pitch
+  polyphas
+  rate
+  repeat
+  resample
+  reverb
+  reverse
+  silence
+  skeleff
+  speed
+  stat
+  stretch
+  swap
+  synth
+  tremolo
+  trim
+  vibro
+  vol
+)
+set(formats_srcs
+  8svx
+  adpcm
+  adpcms
+  aifc-fmt
+  aiff
+  aiff-fmt
+  al-fmt
+  au
+  auto
+  avr
+  cdr
+  cvsd
+  cvsd-fmt
+  dat
+  dvms-fmt
+  formats
+  g711
+  g721
+  g723_24
+  g723_40
+  g72x
+  gsm
+  hcom
+  ima-fmt
+  ima_rw
+  la-fmt
+  lpc10
+  lu-fmt
+  maud
+  nulfile
+  prc
+  raw
+  raw-fmt
+  s1-fmt
+  s2-fmt
+  s3-fmt
+  s4-fmt
+  sf
+  skelform
+  smp
+  sndrtool
+  sphere
+  tx16w
+  u1-fmt
+  u2-fmt
+  u3-fmt
+  u4-fmt
+  ul-fmt
+  voc
+  vox
+  vox-fmt
+  wav
+  wve
+  xa
+)
+add_library(lib${PROJECT_NAME}
+  getopt
+  getopt1
+  misc
+  soxio
+  soxstdint
+  util
+  xmalloc
+  ${effects_srcs}
+  ${formats_srcs}
+  ${optional_srcs}
+)
 add_executable(${PROJECT_NAME} ${PROJECT_NAME}.c)
 target_link_libraries(${PROJECT_NAME} lib${PROJECT_NAME} lpc10 ${optional_libs})
 add_executable(sox_sample_test sox_sample_test.c)

@@ -381,8 +381,8 @@ typedef struct {
 
   int (*getopts)(sox_effect_t * effp, int argc, char *argv[]);
   int (*start)(sox_effect_t * effp);
-  int (*flow)(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
-              sox_size_t *isamp, sox_size_t *osamp);
+  int (*flow)(sox_effect_t * effp, const sox_ssample_t *ibuf,
+      sox_ssample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);
   int (*drain)(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp);
   int (*stop)(sox_effect_t * effp);
   int (*kill)(sox_effect_t * effp);
@@ -399,6 +399,7 @@ struct sox_effect {
   sox_effect_handler_t     handler;
   sox_ssample_t            * obuf;       /* output buffer */
   sox_size_t               odone, olen;  /* consumed, total length */
+  sox_size_t               imin;         /* minimum input buffer size */
   sox_size_t               clips;        /* increment if clipping occurs */
   sox_size_t               flows;
 };
@@ -429,11 +430,11 @@ int sox_update_effect(sox_effect_t * effp, const sox_signalinfo_t *in, const sox
 #define SOX_MAX_EFFECTS 20
 extern sox_effect_t * sox_effects[SOX_MAX_EFFECTS];
 extern unsigned sox_neffects;
+int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin);
 int sox_add_effect(sox_effect_t * e, sox_signalinfo_t * in, sox_signalinfo_t * out, int * effects_mask);
 int sox_start_effects(void);
-int sox_flow_effects(void (* update_status)(sox_bool), sox_bool * user_abort);
+int sox_flow_effects(int (* callback)(sox_bool all_done));
 void sox_stop_effects(void);
-void sox_kill_effects(void);
 void sox_delete_effects(void);
 
 int sox_gettype(ft_t, sox_bool);

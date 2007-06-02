@@ -110,7 +110,7 @@ static sox_bool doopts(file_t, int, char **);
 static void usage(char const *) NORET;
 static void usage_effect(char *) NORET;
 static int process(void);
-static void update_status(sox_bool all_done);
+static void display_status(sox_bool all_done);
 static void report_file_info(file_t f);
 
 #define MAX_INPUT_FILES 32
@@ -609,7 +609,8 @@ int main(int argc, char **argv)
   } while (process() != SOX_EOF && !user_abort && current_input < input_count);
   else process();
 
-  sox_kill_effects();
+  while (nuser_effects--)
+    user_efftab[nuser_effects].handler.kill(&user_efftab[nuser_effects]);
 
   for (i = 0; i < file_count; ++i)
     if (files[i]->desc->clips != 0)
@@ -1221,7 +1222,7 @@ static void add_default_effect(char const *name, int *effects_mask)
 
   /* Default name should always be correct! */
   sox_create_effect(&e, sox_find_effect(name));
-  if (e.handler.getopts(&e, 0, NULL) == SOX_EOF)   /* Set up with default opts */
+  if (e.handler.getopts(&e, 0, NULL) == SOX_EOF)  /* Set up with default opts */
     exit(2);
   sox_add_effect(&e, &combiner, &ofile->desc->signal, effects_mask);
 }
@@ -1340,6 +1341,12 @@ static void open_output_file(sox_size_t olen)
   report_file_info(ofile);
 }
 
+static int update_status(sox_bool all_done)
+{
+  display_status(all_done || user_abort);
+  return user_abort? SOX_EOF : SOX_SUCCESS;
+}
+
 /*
  * Process:   Input(s) -> Balancing -> Combiner -> Effects -> Output
  */
@@ -1370,9 +1377,9 @@ static int process(void) {
       max_rate = max(max_rate, files[i]->desc->signal.rate);
       known_length = known_length && files[i]->desc->length != 0;
       if (combine_method == sox_concatenate)
-        olen += files[i]->desc->length / files[i]->desc->signal.channels;
+        olen += files[i]->desc->length;
       else
-        olen = max(olen, files[i]->desc->length / files[i]->desc->signal.channels);
+        olen = max(olen, files[i]->desc->length);
     }
     if (min_rate != max_rate)
       sox_fail("Input files must have the same sample-rate");
@@ -1419,7 +1426,7 @@ static int process(void) {
   signal(SIGINT, sigint);
   signal(SIGTERM, sigint);
 
-  flowstatus = sox_flow_effects(update_status, &user_abort);
+  flowstatus = sox_flow_effects(update_status);
 
   sox_stop_effects();
   sox_delete_effects();
@@ -1467,7 +1474,7 @@ static char const * sigfigs3p(double percentage)
   return string[n];
 }
 
-static void update_status(sox_bool all_done)
+static void display_status(sox_bool all_done)
 {
   static struct timeval then;
   if (!show_progress)

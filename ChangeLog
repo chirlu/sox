@@ -67,7 +67,11 @@ sox-14.0.0
   o Got rid of several hundred compiler warnings.  (robs, Reuben Thomas)
   o Added basic performance testing of I/O.  (Reuben Thomas)
   o Effects chain processing now available in libSoX.  (robs)
+  o Added effects-chain buffering for effects that use a window [FR#
+    1621695].  (robs)
   o Added cmake build files for Win32.  (robs)
+
+
 
 sox-13.0.0
 ----------

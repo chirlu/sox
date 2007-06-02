@@ -292,64 +292,10 @@ int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_
  */
 
 typedef const sox_effect_handler_t *(*sox_effect_fn_t)(void);
-
 extern sox_effect_fn_t sox_effect_fns[];
-
-extern const sox_effect_handler_t *sox_allpass_effect_fn(void);
-extern const sox_effect_handler_t *sox_avg_effect_fn(void);
-extern const sox_effect_handler_t *sox_band_effect_fn(void);
-extern const sox_effect_handler_t *sox_bandpass_effect_fn(void);
-extern const sox_effect_handler_t *sox_bandreject_effect_fn(void);
-extern const sox_effect_handler_t *sox_bass_effect_fn(void);
-extern const sox_effect_handler_t *sox_chorus_effect_fn(void);
-extern const sox_effect_handler_t *sox_compand_effect_fn(void);
-extern const sox_effect_handler_t *sox_dcshift_effect_fn(void);
-extern const sox_effect_handler_t *sox_deemph_effect_fn(void);
-extern const sox_effect_handler_t *sox_dither_effect_fn(void);
-extern const sox_effect_handler_t *sox_earwax_effect_fn(void);
-extern const sox_effect_handler_t *sox_echo_effect_fn(void);
-extern const sox_effect_handler_t *sox_echos_effect_fn(void);
-extern const sox_effect_handler_t *sox_equalizer_effect_fn(void);
-extern const sox_effect_handler_t *sox_fade_effect_fn(void);
-extern const sox_effect_handler_t *sox_filter_effect_fn(void);
-extern const sox_effect_handler_t *sox_flanger_effect_fn(void);
-extern const sox_effect_handler_t *sox_highpass_effect_fn(void);
-extern const sox_effect_handler_t *sox_highp_effect_fn(void);
-#ifdef HAVE_LADSPA_H
-extern const sox_effect_handler_t *sox_ladspa_effect_fn(void);
-#endif
-extern const sox_effect_handler_t *sox_lowpass_effect_fn(void);
-extern const sox_effect_handler_t *sox_lowp_effect_fn(void);
-extern const sox_effect_handler_t *sox_mask_effect_fn(void);
-extern const sox_effect_handler_t *sox_mcompand_effect_fn(void);
-extern const sox_effect_handler_t *sox_mixer_effect_fn(void);
-extern const sox_effect_handler_t *sox_noiseprof_effect_fn(void);
-extern const sox_effect_handler_t *sox_noisered_effect_fn(void);
-extern const sox_effect_handler_t *sox_pad_effect_fn(void);
-extern const sox_effect_handler_t *sox_pan_effect_fn(void);
-extern const sox_effect_handler_t *sox_phaser_effect_fn(void);
-extern const sox_effect_handler_t *sox_pick_effect_fn(void);
-extern const sox_effect_handler_t *sox_pitch_effect_fn(void);
-extern const sox_effect_handler_t *sox_polyphase_effect_fn(void);
-#ifdef HAVE_SAMPLERATE_H
-extern const sox_effect_handler_t *sox_rabbit_effect_fn(void);
-#endif
-extern const sox_effect_handler_t *sox_rate_effect_fn(void);
-extern const sox_effect_handler_t *sox_repeat_effect_fn(void);
-extern const sox_effect_handler_t *sox_resample_effect_fn(void);
-extern const sox_effect_handler_t *sox_reverb_effect_fn(void);
-extern const sox_effect_handler_t *sox_reverse_effect_fn(void);
-extern const sox_effect_handler_t *sox_silence_effect_fn(void);
-extern const sox_effect_handler_t *sox_speed_effect_fn(void);
-extern const sox_effect_handler_t *sox_stat_effect_fn(void);
-extern const sox_effect_handler_t *sox_stretch_effect_fn(void);
-extern const sox_effect_handler_t *sox_swap_effect_fn(void);
-extern const sox_effect_handler_t *sox_synth_effect_fn(void);
-extern const sox_effect_handler_t *sox_treble_effect_fn(void);
-extern const sox_effect_handler_t *sox_tremolo_effect_fn(void);
-extern const sox_effect_handler_t *sox_trim_effect_fn(void);
-extern const sox_effect_handler_t *sox_vibro_effect_fn(void);
-extern const sox_effect_handler_t *sox_vol_effect_fn(void);
+#define EFFECT(f) extern sox_effect_handler_t const * sox_##f##_effect_fn(void);
+#include "effects.h"
+#undef EFFECT
 
 /* Needed in rate.c */
 int sox_resample_start(sox_effect_t * effp);

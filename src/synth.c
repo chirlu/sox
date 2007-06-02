@@ -165,11 +165,13 @@ typedef struct {
 /* Private data for the synthesizer */
 typedef struct {
   char *        length_str;
+  channel_t     getopts_channels;
+  sox_size_t    getopts_nchannels;
   sox_ssample_t max;
   sox_size_t    samples_done;
   sox_size_t    samples_to_do;
   channel_t     channels;
-  unsigned number_of_channels;
+  sox_size_t    number_of_channels;
 } * synth_t;
 
 
@@ -304,8 +306,8 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
       sox_fail("no type given");
       return SOX_EOF;
     }
-    synth->channels = xrealloc(synth->channels, sizeof(*synth->channels) * (synth->number_of_channels + 1));
-    chan = &synth->channels[synth->number_of_channels++];
+    synth->getopts_channels = xrealloc(synth->getopts_channels, sizeof(*synth->getopts_channels) * (synth->getopts_nchannels + 1));
+    chan = &synth->getopts_channels[synth->getopts_nchannels++];
     create_channel(chan);
     chan->type = p->value;
     if (++argn == argc)
@@ -366,14 +368,14 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     } while (0);
   }
 
-  /* If no channels parameters were given, create one default channel: */
-  if (!synth->number_of_channels) {
-    synth->channels = xmalloc(sizeof(*synth->channels));
-    create_channel(&synth->channels[synth->number_of_channels++]);
+  /* If no channel parameters were given, create one default channel: */
+  if (!synth->getopts_nchannels) {
+    synth->getopts_channels = xmalloc(sizeof(*synth->getopts_channels));
+    create_channel(&synth->getopts_channels[synth->getopts_nchannels++]);
   }
 
   if (!effp->ininfo.channels)
-    effp->ininfo.channels = synth->number_of_channels;
+    effp->ininfo.channels = synth->getopts_nchannels;
 
   return SOX_SUCCESS;
 }
@@ -395,20 +397,12 @@ static int start(sox_effect_t * effp)
       return SOX_EOF;
     }
 
-  /* If too few channel parameters were given, copy channels: */
-  if (synth->number_of_channels < effp->ininfo.channels) {
-    synth->channels = xrealloc(synth->channels, sizeof(*synth->channels) * effp->ininfo.channels);
-    for (i = synth->number_of_channels; i < effp->ininfo.channels; ++i)
-      synth->channels[i] = synth->channels[i % synth->number_of_channels];
-    synth->number_of_channels = i;
-  }
-
-  for (i = 0; i < synth->number_of_channels; i++)
-    set_default_parameters(&synth->channels[i], i);
-
-  for (i = 0; i < effp->ininfo.channels; i++) {
+  synth->number_of_channels = effp->ininfo.channels;
+  synth->channels = xcalloc(synth->number_of_channels, sizeof(*synth->channels));
+  for (i = 0; i < synth->number_of_channels; ++i) {
     channel_t chan = &synth->channels[i];
-
+    *chan = synth->getopts_channels[i % synth->getopts_nchannels];
+    set_default_parameters(chan, i);
     sox_debug("type=%s, combine=%s, samples_to_do=%u, f1=%g, f2=%g, "
               "offset=%g, phase=%g, p1=%g, p2=%g, p3=%g",
         find_enum_value(chan->type, synth_type)->text,
@@ -583,10 +577,19 @@ static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf, sox_ssample_t *
 
 
 
-static int kill(sox_effect_t * effp)
+static int stop(sox_effect_t * effp)
 {
   synth_t synth = (synth_t) effp->priv;
   free(synth->channels);
+  return SOX_SUCCESS;
+}
+
+
+
+static int kill(sox_effect_t * effp)
+{
+  synth_t synth = (synth_t) effp->priv;
+  free(synth->getopts_channels);
   free(synth->length_str);
   return SOX_SUCCESS;
 }
@@ -598,7 +601,7 @@ const sox_effect_handler_t *sox_synth_effect_fn(void)
   static sox_effect_handler_t handler = {
     "synth",
     "Usage: synth [len] {type [combine] [freq[-freq2] [off [ph [p1 [p2 [p3]]]]]]}",
-    SOX_EFF_MCHAN, getopts, start, flow, 0, 0, kill
+    SOX_EFF_MCHAN, getopts, start, flow, 0, stop, kill
   };
   return &handler;
 }
