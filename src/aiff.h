@@ -15,12 +15,12 @@
  * the consequences of using this software.
  */
 
-int sox_aiffseek(ft_t ft, sox_size_t offset);
-int sox_aiffstartread(ft_t ft);
-sox_size_t sox_aiffread(ft_t ft, sox_ssample_t *buf, sox_size_t len);
-int sox_aiffstopread(ft_t ft);
-int sox_aiffstartwrite(ft_t ft);
-sox_size_t sox_aiffwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len);
-int sox_aiffstopwrite(ft_t ft);
-int sox_aifcstartwrite(ft_t ft);
-int sox_aifcstopwrite(ft_t ft);
+int sox_aiffseek(sox_format_t * ft, sox_size_t offset);
+int sox_aiffstartread(sox_format_t * ft);
+sox_size_t sox_aiffread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len);
+int sox_aiffstopread(sox_format_t * ft);
+int sox_aiffstartwrite(sox_format_t * ft);
+sox_size_t sox_aiffwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len);
+int sox_aiffstopwrite(sox_format_t * ft);
+int sox_aifcstartwrite(sox_format_t * ft);
+int sox_aifcstopwrite(sox_format_t * ft);

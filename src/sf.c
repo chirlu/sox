@@ -30,7 +30,7 @@ typedef struct sfstuff {
  * Read the codes from the sound file, allocate space for the comment and
  * assign its pointer to the comment field in ft.
  */
-static void readcodes(ft_t ft, SFHEADER *sfhead)
+static void readcodes(sox_format_t * ft, SFHEADER *sfhead)
 {
         char *commentbuf = NULL, *sfcharp, *newline;
         sox_size_t bsize;
@@ -64,7 +64,7 @@ static void readcodes(ft_t ft, SFHEADER *sfhead)
                 ft->comment = commentbuf;
 }
 
-static int sox_sfseek(ft_t ft, sox_size_t offset)
+static int sox_sfseek(sox_format_t * ft, sox_size_t offset)
 {
     sox_size_t new_offset, channel_block, alignment;
 
@@ -91,7 +91,7 @@ static int sox_sfseek(ft_t ft, sox_size_t offset)
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int sox_sfstartread(ft_t ft)
+static int sox_sfstartread(sox_format_t * ft)
 {
         sf_t sf = (sf_t) ft->priv;
         SFHEADER sfhead;
@@ -159,7 +159,7 @@ static int sox_sfstartread(ft_t ft)
         return(rc);
 }
 
-static int sox_sfstartwrite(ft_t ft)
+static int sox_sfstartwrite(sox_format_t * ft)
 {
         sf_t sf = (sf_t) ft->priv;
         SFHEADER sfhead;
@@ -225,7 +225,7 @@ static const char *sfnames[] = {
   NULL
 };
 
-static sox_format_t sox_sf_format = {
+static sox_format_handler_t sox_sf_format = {
   sfnames,
   SOX_FILE_SEEK,
   sox_sfstartread,
@@ -237,9 +237,9 @@ static sox_format_t sox_sf_format = {
   sox_sfseek
 };
 
-const sox_format_t *sox_sf_format_fn(void);
+const sox_format_handler_t *sox_sf_format_fn(void);
 
-const sox_format_t *sox_sf_format_fn(void)
+const sox_format_handler_t *sox_sf_format_fn(void)
 {
     return &sox_sf_format;
 }

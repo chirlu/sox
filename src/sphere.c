@@ -26,7 +26,7 @@ typedef struct spherestuff {
  *      size and encoding of samples, 
  *      mono/stereo/quad.
  */
-static int sox_spherestartread(ft_t ft) 
+static int sox_spherestartread(sox_format_t * ft) 
 {
         sphere_t sphere = (sphere_t) ft->priv;
         int rc;
@@ -167,7 +167,7 @@ static int sox_spherestartread(ft_t ft)
         return (SOX_SUCCESS);
 }
 
-static int sox_spherestartwrite(ft_t ft) 
+static int sox_spherestartwrite(sox_format_t * ft) 
 {
     int rc;
     int x;
@@ -206,7 +206,7 @@ static int sox_spherestartwrite(ft_t ft)
         
 }
 
-static sox_size_t sox_spherewrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len) 
+static sox_size_t sox_spherewrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len) 
 {
     sphere_t sphere = (sphere_t) ft->priv;
 
@@ -214,7 +214,7 @@ static sox_size_t sox_spherewrite(ft_t ft, const sox_ssample_t *buf, sox_size_t 
     return sox_rawwrite(ft, buf, len);
 }
 
-static int sox_spherestopwrite(ft_t ft) 
+static int sox_spherestopwrite(sox_format_t * ft) 
 {
     int rc;
     char buf[128];
@@ -269,7 +269,7 @@ static const char *spherenames[] = {
   NULL
 };
 
-static sox_format_t sox_sphere_format = {
+static sox_format_handler_t sox_sphere_format = {
   spherenames,
   0,
   sox_spherestartread,
@@ -281,9 +281,9 @@ static sox_format_t sox_sphere_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_sphere_format_fn(void);
+const sox_format_handler_t *sox_sphere_format_fn(void);
 
-const sox_format_t *sox_sphere_format_fn(void)
+const sox_format_handler_t *sox_sphere_format_fn(void)
 {
     return &sox_sphere_format;
 }

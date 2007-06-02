@@ -198,8 +198,8 @@ typedef struct vocstuff {
 #define VOC_FMT_CRLADPCM4A 0x200   /* Creative 16-bit to 4-bit ADPCM */
 
 /* Prototypes for internal functions */
-static int getblock(ft_t);
-static void blockstart(ft_t);
+static int getblock(sox_format_t *);
+static void blockstart(sox_format_t *);
 
 /* Conversion macros (from raw.c) */
 #define SOX_ALAW_BYTE_TO_SAMPLE(d) ((sox_ssample_t)(sox_alaw2linear16(d)) << 16)
@@ -209,7 +209,7 @@ static void blockstart(ft_t);
 /*-----------------------------------------------------------------
  * sox_vocstartread() -- start reading a VOC file
  *-----------------------------------------------------------------*/
-static int sox_vocstartread(ft_t ft)
+static int sox_vocstartread(sox_format_t * ft)
 {
         int rtn = SOX_SUCCESS;
         char header[20];
@@ -308,7 +308,7 @@ static int sox_vocstartread(ft_t ft)
  * ANN:  Major changes here to support multi-part files and files
  *       that do not have audio in block 9's.
  *-----------------------------------------------------------------*/
-static sox_size_t sox_vocread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t sox_vocread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
 {
         vs_t v = (vs_t) ft->priv;
         sox_size_t done = 0;
@@ -409,7 +409,7 @@ static sox_size_t sox_vocread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
  * which will work with the oldest software (eg. an 8-bit mono sample
  * will be able to be played with a really old SB VOC player.)
  */
-static int sox_vocstartwrite(ft_t ft)
+static int sox_vocstartwrite(sox_format_t * ft)
 {
         vs_t v = (vs_t) ft->priv;
 
@@ -441,7 +441,7 @@ static int sox_vocstartwrite(ft_t ft)
 /*-----------------------------------------------------------------
  * sox_vocwrite() -- write a VOC file
  *-----------------------------------------------------------------*/
-static sox_size_t sox_vocwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t sox_vocwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
 {
         vs_t v = (vs_t) ft->priv;
         unsigned char uc;
@@ -471,7 +471,7 @@ static sox_size_t sox_vocwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len
  * blockstop() -- stop an output block
  * End the current data or silence block.
  *-----------------------------------------------------------------*/
-static void blockstop(ft_t ft)
+static void blockstop(sox_format_t * ft)
 {
         vs_t v = (vs_t) ft->priv;
         sox_ssample_t datum;
@@ -500,7 +500,7 @@ static void blockstop(ft_t ft)
 /*-----------------------------------------------------------------
  * sox_vocstopwrite() -- stop writing a VOC file
  *-----------------------------------------------------------------*/
-static int sox_vocstopwrite(ft_t ft)
+static int sox_vocstopwrite(sox_format_t * ft)
 {
         blockstop(ft);
         return(SOX_SUCCESS);
@@ -514,7 +514,7 @@ static int sox_vocstopwrite(ft_t ft)
  * getblock() -- Read next block header, save info,
  *               leave position at start of dat
  *-----------------------------------------------------------------*/
-static int getblock(ft_t ft)
+static int getblock(sox_format_t * ft)
 {
         vs_t v = (vs_t) ft->priv;
         unsigned char uc, block;
@@ -747,7 +747,7 @@ static int getblock(ft_t ft)
 /*-----------------------------------------------------------------
  * vlockstart() -- start an output block
  *-----------------------------------------------------------------*/
-static void blockstart(ft_t ft)
+static void blockstart(sox_format_t * ft)
 {
         vs_t v = (vs_t) ft->priv;
 
@@ -806,7 +806,7 @@ static const char *vocnames[] = {
   NULL
 };
 
-static sox_format_t sox_voc_format = {
+static sox_format_handler_t sox_voc_format = {
   vocnames,
   SOX_FILE_LIT_END,
   sox_vocstartread,
@@ -818,9 +818,9 @@ static sox_format_t sox_voc_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_voc_format_fn(void);
+const sox_format_handler_t *sox_voc_format_fn(void);
 
-const sox_format_t *sox_voc_format_fn(void)
+const sox_format_handler_t *sox_voc_format_fn(void)
 {
     return &sox_voc_format;
 }

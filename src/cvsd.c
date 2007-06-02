@@ -111,7 +111,7 @@ static float float_conv(float *fp1, float *fp2,int n)
  */
 /* ---------------------------------------------------------------------- */
 
-static void cvsdstartcommon(ft_t ft)
+static void cvsdstartcommon(sox_format_t * ft)
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         
@@ -151,7 +151,7 @@ static void cvsdstartcommon(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_cvsdstartread(ft_t ft) 
+int sox_cvsdstartread(sox_format_t * ft) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         float *fp1;
@@ -177,7 +177,7 @@ int sox_cvsdstartread(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_cvsdstartwrite(ft_t ft) 
+int sox_cvsdstartwrite(sox_format_t * ft) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         float *fp1;
@@ -199,7 +199,7 @@ int sox_cvsdstartwrite(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_cvsdstopwrite(ft_t ft)
+int sox_cvsdstopwrite(sox_format_t * ft)
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 
@@ -215,7 +215,7 @@ int sox_cvsdstopwrite(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_cvsdstopread(ft_t ft)
+int sox_cvsdstopread(sox_format_t * ft)
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
 
@@ -227,7 +227,7 @@ int sox_cvsdstopread(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-sox_size_t sox_cvsdread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp) 
+sox_size_t sox_cvsdread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t nsamp) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         sox_size_t done = 0;
@@ -283,7 +283,7 @@ sox_size_t sox_cvsdread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp)
 
 /* ---------------------------------------------------------------------- */
 
-sox_size_t sox_cvsdwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsamp) 
+sox_size_t sox_cvsdwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t nsamp) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         sox_size_t done = 0;
@@ -365,7 +365,7 @@ struct dvms_header {
 
 /* ---------------------------------------------------------------------- */
 
-static int dvms_read_header(ft_t ft, struct dvms_header *hdr)
+static int dvms_read_header(sox_format_t * ft, struct dvms_header *hdr)
 {
         unsigned char hdrbuf[DVMS_HEADER_LEN];
         unsigned char *pch = hdrbuf;
@@ -410,7 +410,7 @@ static int dvms_read_header(ft_t ft, struct dvms_header *hdr)
 /*
  * note! file must be seekable
  */
-static int dvms_write_header(ft_t ft, struct dvms_header *hdr)
+static int dvms_write_header(sox_format_t * ft, struct dvms_header *hdr)
 {
         unsigned char hdrbuf[DVMS_HEADER_LEN];
         unsigned char *pch = hdrbuf;
@@ -453,7 +453,7 @@ static int dvms_write_header(ft_t ft, struct dvms_header *hdr)
 
 /* ---------------------------------------------------------------------- */
 
-static void make_dvms_hdr(ft_t ft, struct dvms_header *hdr)
+static void make_dvms_hdr(sox_format_t * ft, struct dvms_header *hdr)
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         size_t len;
@@ -479,7 +479,7 @@ static void make_dvms_hdr(ft_t ft, struct dvms_header *hdr)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_dvmsstartread(ft_t ft) 
+int sox_dvmsstartread(sox_format_t * ft) 
 {
         struct dvms_header hdr;
         int rc;
@@ -516,7 +516,7 @@ int sox_dvmsstartread(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_dvmsstartwrite(ft_t ft) 
+int sox_dvmsstartwrite(sox_format_t * ft) 
 {
         struct dvms_header hdr;
         int rc;
@@ -540,7 +540,7 @@ int sox_dvmsstartwrite(ft_t ft)
 
 /* ---------------------------------------------------------------------- */
 
-int sox_dvmsstopwrite(ft_t ft)
+int sox_dvmsstopwrite(sox_format_t * ft)
 {
         struct dvms_header hdr;
         int rc;

@@ -63,7 +63,7 @@ typedef struct avrstuff {
  */
 
 
-static int sox_avrstartread(ft_t ft) 
+static int sox_avrstartread(sox_format_t * ft) 
 {
   avr_t avr = (avr_t)ft->priv;
   int rc;
@@ -141,7 +141,7 @@ static int sox_avrstartread(ft_t ft)
   return(SOX_SUCCESS);
 }
 
-static int sox_avrstartwrite(ft_t ft) 
+static int sox_avrstartwrite(sox_format_t * ft) 
 {
   avr_t avr = (avr_t)ft->priv;
   int rc;
@@ -246,7 +246,7 @@ static int sox_avrstartwrite(ft_t ft)
   return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_avrwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsamp) 
+static sox_size_t sox_avrwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t nsamp) 
 {
   avr_t avr = (avr_t)ft->priv;
 
@@ -255,7 +255,7 @@ static sox_size_t sox_avrwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsa
   return (sox_rawwrite (ft, buf, nsamp));
 }
 
-static int sox_avrstopwrite(ft_t ft) 
+static int sox_avrstopwrite(sox_format_t * ft) 
 {
   avr_t avr = (avr_t)ft->priv;
   int rc;
@@ -282,7 +282,7 @@ static const char *avrnames[] = {
   NULL
 };
 
-static sox_format_t sox_avr_format = {
+static sox_format_handler_t sox_avr_format = {
   avrnames,
   SOX_FILE_BIG_END,
   sox_avrstartread,
@@ -294,9 +294,9 @@ static sox_format_t sox_avr_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_avr_format_fn(void);
+const sox_format_handler_t *sox_avr_format_fn(void);
 
-const sox_format_t *sox_avr_format_fn(void)
+const sox_format_handler_t *sox_avr_format_fn(void)
 {
     return &sox_avr_format;
 }

@@ -54,7 +54,7 @@ struct readpriv {
         int32_t curword;
 };
 
-static int sox_hcomstartread(ft_t ft)
+static int sox_hcomstartread(sox_format_t * ft)
 {
         struct readpriv *p = (struct readpriv *) ft->priv;
         int i;
@@ -149,7 +149,7 @@ static int sox_hcomstartread(ft_t ft)
         return (SOX_SUCCESS);
 }
 
-static sox_size_t sox_hcomread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t sox_hcomread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
 {
         register struct readpriv *p = (struct readpriv *) ft->priv;
         int done = 0;
@@ -213,7 +213,7 @@ static sox_size_t sox_hcomread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
         return done;
 }
 
-static int sox_hcomstopread(ft_t ft)
+static int sox_hcomstopread(sox_format_t * ft)
 {
         register struct readpriv *p = (struct readpriv *) ft->priv;
 
@@ -240,7 +240,7 @@ struct writepriv {
 
 #define BUFINCR (10*BUFSIZ)
 
-static int sox_hcomstartwrite(ft_t ft)
+static int sox_hcomstartwrite(sox_format_t * ft)
 {
         register struct writepriv *p = (struct writepriv *) ft->priv;
 
@@ -264,7 +264,7 @@ static int sox_hcomstartwrite(ft_t ft)
         return (SOX_SUCCESS);
 }
 
-static sox_size_t sox_hcomwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t sox_hcomwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
 {
   struct writepriv *p = (struct writepriv *) ft->priv;
   sox_ssample_t datum;
@@ -298,7 +298,7 @@ static void makecodes(int e, int c, int s, int b, dictent newdict[511], long cod
   }
 }
 
-static void putcode(ft_t ft, long codes[256], long codesize[256], unsigned c, unsigned char **df)
+static void putcode(sox_format_t * ft, long codes[256], long codesize[256], unsigned c, unsigned char **df)
 {
   struct readpriv *p = (struct readpriv *) ft->priv;
   long code, size;
@@ -321,7 +321,7 @@ static void putcode(ft_t ft, long codes[256], long codesize[256], unsigned c, un
   }
 }
 
-static void compress(ft_t ft, unsigned char **df, int32_t *dl, sox_rate_t fr)
+static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl, sox_rate_t fr)
 {
   struct readpriv *p = (struct readpriv *) ft->priv;
   int32_t samplerate;
@@ -425,7 +425,7 @@ static void compress(ft_t ft, unsigned char **df, int32_t *dl, sox_rate_t fr)
 
 /* End of hcom utility routines */
 
-static int sox_hcomstopwrite(ft_t ft)
+static int sox_hcomstopwrite(sox_format_t * ft)
 {
   struct writepriv *p = (struct writepriv *) ft->priv;
   unsigned char *compressed_data = p->data;
@@ -468,7 +468,7 @@ static const char *hcomnames[] = {
   NULL
 };
 
-static sox_format_t sox_hcom_format = {
+static sox_format_handler_t sox_hcom_format = {
   hcomnames,
   SOX_FILE_BIG_END,
   sox_hcomstartread,
@@ -480,9 +480,9 @@ static sox_format_t sox_hcom_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_hcom_format_fn(void);
+const sox_format_handler_t *sox_hcom_format_fn(void);
 
-const sox_format_t *sox_hcom_format_fn(void)
+const sox_format_handler_t *sox_hcom_format_fn(void)
 {
     return &sox_hcom_format;
 }

@@ -20,7 +20,7 @@
 #include "sox_i.h"
 #include <string.h>
 
-static int startread(ft_t ft)
+static int startread(sox_format_t * ft)
 {
   /* If format parameters are not given, set somewhat arbitrary
    * (but commonly used) defaults: */
@@ -39,25 +39,25 @@ static int startread(ft_t ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t read(ft_t ft UNUSED, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t read(sox_format_t * ft UNUSED, sox_ssample_t *buf, sox_size_t len)
 {
   /* Reading from null generates silence i.e. (sox_sample_t)0. */
   memset(buf, 0, sizeof(sox_ssample_t) * len);
   return len; /* Return number of samples "read". */
 }
 
-static sox_size_t write(ft_t ft UNUSED, const sox_ssample_t *buf UNUSED, sox_size_t len)
+static sox_size_t write(sox_format_t * ft UNUSED, const sox_ssample_t *buf UNUSED, sox_size_t len)
 {
   /* Writing to null just discards the samples */
   return len; /* Return number of samples "written". */
 }
 
-const sox_format_t *sox_nul_format_fn(void);
+const sox_format_handler_t *sox_nul_format_fn(void);
 
-const sox_format_t *sox_nul_format_fn(void)
+const sox_format_handler_t *sox_nul_format_fn(void)
 {
   static const char *names[] = { "null", "nul"/* with -t; deprecated*/, NULL};
-  static sox_format_t handler = {
+  static sox_format_handler_t handler = {
     names, SOX_FILE_DEVICE | SOX_FILE_PHONY | SOX_FILE_NOSTDIO,
     startread, read, 0, 0, write, 0, 0
   };

@@ -21,9 +21,9 @@ typedef struct wvepriv
         sox_size_t dataStart;
     } *wve_t;
 
-static void wvewriteheader(ft_t ft);
+static void wvewriteheader(sox_format_t * ft);
 
-static int sox_wveseek(ft_t ft, sox_size_t offset)
+static int sox_wveseek(sox_format_t * ft, sox_size_t offset)
 {
     int new_offset, channel_block, alignment;
     wve_t wve = (wve_t)ft->priv;
@@ -43,7 +43,7 @@ static int sox_wveseek(ft_t ft, sox_size_t offset)
     return sox_seeki(ft, (sox_ssize_t)offset, SEEK_SET);
 }
 
-static int sox_wvestartread(ft_t ft)
+static int sox_wvestartread(sox_format_t * ft)
 {
         wve_t p = (wve_t)ft->priv;
         char magic[16];
@@ -115,7 +115,7 @@ static int sox_wvestartread(ft_t ft)
    if it is not, the unspecified size remains in the header
    (this is illegal). */
 
-static int sox_wvestartwrite(ft_t ft)
+static int sox_wvestartwrite(sox_format_t * ft)
 {
         wve_t p = (wve_t)ft->priv;
         int rc;
@@ -143,14 +143,14 @@ static int sox_wvestartwrite(ft_t ft)
         return SOX_SUCCESS;
 }
 
-static sox_size_t sox_wvewrite(ft_t ft, const sox_ssample_t *buf, sox_size_t samp)
+static sox_size_t sox_wvewrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t samp)
 {
         wve_t p = (wve_t)ft->priv;
         p->length += samp * ft->signal.size;
         return sox_rawwrite(ft, buf, samp);
 }
 
-static int sox_wvestopwrite(ft_t ft)
+static int sox_wvestopwrite(sox_format_t * ft)
 {
 
         /* Call before seeking to flush buffer */
@@ -171,7 +171,7 @@ static int sox_wvestopwrite(ft_t ft)
         return SOX_SUCCESS;
 }
 
-static void wvewriteheader(ft_t ft)
+static void wvewriteheader(sox_format_t * ft)
 {
 
     char magic[16];
@@ -204,7 +204,7 @@ static const char *wvenames[] = {
   NULL
 };
 
-static sox_format_t sox_wve_format = {
+static sox_format_handler_t sox_wve_format = {
   wvenames,
   SOX_FILE_SEEK | SOX_FILE_BIG_END,
   sox_wvestartread,
@@ -216,9 +216,9 @@ static sox_format_t sox_wve_format = {
   sox_wveseek
 };
 
-const sox_format_t *sox_wve_format_fn(void);
+const sox_format_handler_t *sox_wve_format_fn(void);
 
-const sox_format_t *sox_wve_format_fn(void)
+const sox_format_handler_t *sox_wve_format_fn(void)
 {
     return &sox_wve_format;
 }

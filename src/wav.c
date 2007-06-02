@@ -65,7 +65,7 @@ typedef struct wavstuff {
 
 static char *wav_format_str(unsigned wFormatTag);
 
-static int wavwritehdr(ft_t, int);
+static int wavwritehdr(sox_format_t *, int);
 
 
 /****************************************************************************/
@@ -77,7 +77,7 @@ static int wavwritehdr(ft_t, int);
  * ImaAdpcmReadBlock - Grab and decode complete block of samples
  *
  */
-static unsigned short  ImaAdpcmReadBlock(ft_t ft)
+static unsigned short  ImaAdpcmReadBlock(sox_format_t * ft)
 {
     wav_t       wav = (wav_t) ft->priv;
     size_t bytesRead;
@@ -117,7 +117,7 @@ static unsigned short  ImaAdpcmReadBlock(ft_t ft)
  * AdpcmReadBlock - Grab and decode complete block of samples
  *
  */
-static unsigned short  AdpcmReadBlock(ft_t ft)
+static unsigned short  AdpcmReadBlock(sox_format_t * ft)
 {
     wav_t       wav = (wav_t) ft->priv;
     size_t bytesRead;
@@ -152,7 +152,7 @@ static unsigned short  AdpcmReadBlock(ft_t ft)
 /* Common ADPCM Write Function                                              */
 /****************************************************************************/
 
-static int xxxAdpcmWriteBlock(ft_t ft)
+static int xxxAdpcmWriteBlock(sox_format_t * ft)
 {
     wav_t wav = (wav_t) ft->priv;
     sox_size_t chans, ct;
@@ -191,7 +191,7 @@ static int xxxAdpcmWriteBlock(ft_t ft)
 /* WAV GSM6.10 support functions                                            */
 /****************************************************************************/
 /* create the gsm object, malloc buffer for 160*2 samples */
-static int wavgsminit(ft_t ft)
+static int wavgsminit(sox_format_t * ft)
 {       
     int valueP=1;
     wav_t       wav = (wav_t) ft->priv;
@@ -214,14 +214,14 @@ static int wavgsminit(ft_t ft)
 }
 
 /*destroy the gsm object and free the buffer */
-static void wavgsmdestroy(ft_t ft)
+static void wavgsmdestroy(sox_format_t * ft)
 {       
     wav_t       wav = (wav_t) ft->priv;
     gsm_destroy(wav->gsmhandle);
     free(wav->gsmsample);
 }
 
-static sox_size_t wavgsmread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t wavgsmread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
 {
     wav_t       wav = (wav_t) ft->priv;
     size_t done=0;
@@ -265,7 +265,7 @@ static sox_size_t wavgsmread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
     return done;
 }
 
-static int wavgsmflush(ft_t ft)
+static int wavgsmflush(sox_format_t * ft)
 {
     gsm_byte    frame[65];
     wav_t       wav = (wav_t) ft->priv;
@@ -289,7 +289,7 @@ static int wavgsmflush(ft_t ft)
     return (SOX_SUCCESS);
 }
 
-static sox_size_t wavgsmwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t wavgsmwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
 {
     wav_t wav = (wav_t) ft->priv;
     size_t done = 0;
@@ -313,7 +313,7 @@ static sox_size_t wavgsmwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 
 }
 
-static void wavgsmstopwrite(ft_t ft)
+static void wavgsmstopwrite(sox_format_t * ft)
 {
     wav_t       wav = (wav_t) ft->priv;
 
@@ -336,7 +336,7 @@ static void wavgsmstopwrite(ft_t ft)
 /****************************************************************************/
 /* General Sox WAV file code                                                */
 /****************************************************************************/
-static int findChunk(ft_t ft, const char *Label, sox_size_t *len)
+static int findChunk(sox_format_t * ft, const char *Label, sox_size_t *len)
 {
     char magic[5];
     for (;;)
@@ -370,7 +370,7 @@ static int findChunk(ft_t ft, const char *Label, sox_size_t *len)
 }
 
 
-static int wavfail(ft_t ft, const char *format)
+static int wavfail(sox_format_t * ft, const char *format)
 {
     sox_fail_errno(ft, SOX_EHDR, "Unhandled WAV file encoding (%s).\nTry overriding the encoding: e.g. for an MP3 WAV, `-t mp3'", format);
     return SOX_EOF;
@@ -383,7 +383,7 @@ static int wavfail(ft_t ft, const char *format)
  *      size and encoding of samples, 
  *      mono/stereo/quad.
  */
-static int sox_wavstartread(ft_t ft) 
+static int sox_wavstartread(sox_format_t * ft) 
 {
     wav_t       wav = (wav_t) ft->priv;
     char        magic[5];
@@ -997,7 +997,7 @@ static int sox_wavstartread(ft_t ft)
  * Return number of samples read.
  */
 
-static sox_size_t sox_wavread(ft_t ft, sox_ssample_t *buf, sox_size_t len) 
+static sox_size_t sox_wavread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len) 
 {
         wav_t   wav = (wav_t) ft->priv;
         sox_size_t done;
@@ -1093,7 +1093,7 @@ static sox_size_t sox_wavread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-static int sox_wavstopread(ft_t ft) 
+static int sox_wavstopread(sox_format_t * ft) 
 {
     wav_t       wav = (wav_t) ft->priv;
     int         rc = SOX_SUCCESS;
@@ -1121,7 +1121,7 @@ static int sox_wavstopread(ft_t ft)
     return rc;
 }
 
-static int sox_wavstartwrite(ft_t ft) 
+static int sox_wavstartwrite(sox_format_t * ft) 
 {
     wav_t wav = (wav_t) ft->priv;
     int rc;
@@ -1232,7 +1232,7 @@ dwDataLength     - (data chunk header) the number of (valid) data bytes written
 
 */
 
-static int wavwritehdr(ft_t ft, int second_header) 
+static int wavwritehdr(sox_format_t * ft, int second_header) 
 {
     wav_t       wav = (wav_t) ft->priv;
 
@@ -1531,7 +1531,7 @@ static int wavwritehdr(ft_t ft, int second_header)
     return SOX_SUCCESS;
 }
 
-static sox_size_t sox_wavwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len) 
+static sox_size_t sox_wavwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len) 
 {
         wav_t   wav = (wav_t) ft->priv;
         sox_ssize_t total_len = len;
@@ -1572,7 +1572,7 @@ static sox_size_t sox_wavwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len
         }
 }
 
-static int sox_wavstopwrite(ft_t ft) 
+static int sox_wavstopwrite(sox_format_t * ft) 
 {
         wav_t   wav = (wav_t) ft->priv;
 
@@ -1667,7 +1667,7 @@ static char *wav_format_str(unsigned wFormatTag)
         }
 }
 
-static int sox_wavseek(ft_t ft, sox_size_t offset) 
+static int sox_wavseek(sox_format_t * ft, sox_size_t offset) 
 {
     wav_t   wav = (wav_t) ft->priv;
     int new_offset, channel_block, alignment;
@@ -1731,7 +1731,7 @@ static const char *wavnames[] = {
   NULL
 };
 
-static sox_format_t sox_wav_format = {
+static sox_format_handler_t sox_wav_format = {
   wavnames,
   SOX_FILE_SEEK | SOX_FILE_LIT_END,
   sox_wavstartread,
@@ -1743,9 +1743,9 @@ static sox_format_t sox_wav_format = {
   sox_wavseek
 };
 
-const sox_format_t *sox_wav_format_fn(void);
+const sox_format_handler_t *sox_wav_format_fn(void);
 
-const sox_format_t *sox_wav_format_fn()
+const sox_format_handler_t *sox_wav_format_fn()
 {
     return &sox_wav_format;
 }

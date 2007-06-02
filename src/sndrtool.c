@@ -20,7 +20,7 @@ typedef struct sndpriv {
         sox_size_t dataStart;
 } *snd_t;
 
-static void sndtwriteheader(ft_t ft, sox_size_t nsamples)
+static void sndtwriteheader(sox_format_t * ft, sox_size_t nsamples)
 {
     char name_buf[97];
 
@@ -40,7 +40,7 @@ static void sndtwriteheader(ft_t ft, sox_size_t nsamples)
     sox_writebuf(ft, name_buf, 96);
 }
 
-static int sox_sndseek(ft_t ft, sox_size_t offset) 
+static int sox_sndseek(sox_format_t * ft, sox_size_t offset) 
 {
     sox_size_t new_offset, channel_block, alignment;
     snd_t snd = (snd_t ) ft->priv;
@@ -60,7 +60,7 @@ static int sox_sndseek(ft_t ft, sox_size_t offset)
     return sox_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
 }
 
-static int sox_sndtstartread(ft_t ft)
+static int sox_sndtstartread(sox_format_t * ft)
 {
         snd_t snd = (snd_t ) ft->priv;
 
@@ -129,7 +129,7 @@ static int sox_sndtstartread(ft_t ft)
         return (SOX_SUCCESS);
 }
 
-static int sox_sndtstartwrite(ft_t ft)
+static int sox_sndtstartwrite(sox_format_t * ft)
 {
         snd_t p = (snd_t ) ft->priv;
         int rc;
@@ -149,14 +149,14 @@ static int sox_sndtstartwrite(ft_t ft)
         return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_sndtwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t sox_sndtwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
 {
         snd_t p = (snd_t ) ft->priv;
         p->nsamples += len;
         return sox_rawwrite(ft, buf, len);
 }
 
-static int sox_sndtstopwrite(ft_t ft)
+static int sox_sndtstopwrite(sox_format_t * ft)
 {
         snd_t p = (snd_t ) ft->priv;
         int rc;
@@ -184,7 +184,7 @@ static const char *sndtnames[] = {
   NULL
 };
 
-static const sox_format_t sox_snd_format = {
+static const sox_format_handler_t sox_snd_format = {
   sndtnames,
   SOX_FILE_SEEK | SOX_FILE_LIT_END,
   sox_sndtstartread,
@@ -196,9 +196,9 @@ static const sox_format_t sox_snd_format = {
   sox_sndseek
 };
 
-const sox_format_t *sox_sndrtool_format_fn(void);
+const sox_format_handler_t *sox_sndrtool_format_fn(void);
 
-const sox_format_t *sox_sndrtool_format_fn(void)
+const sox_format_handler_t *sox_sndrtool_format_fn(void)
 {
     return &sox_snd_format;
 }

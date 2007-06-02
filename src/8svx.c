@@ -20,13 +20,13 @@ typedef struct svxpriv {
         FILE *ch[4];
 }*svx_t;
 
-static void svxwriteheader(ft_t, sox_size_t);
+static void svxwriteheader(sox_format_t *, sox_size_t);
 
 /*======================================================================*/
 /*                         8SVXSTARTREAD                                */
 /*======================================================================*/
 
-static int sox_svxstartread(ft_t ft)
+static int sox_svxstartread(sox_format_t * ft)
 {
         svx_t p = (svx_t ) ft->priv;
 
@@ -193,7 +193,7 @@ static int sox_svxstartread(ft_t ft)
 /*======================================================================*/
 /*                         8SVXREAD                                     */
 /*======================================================================*/
-static sox_size_t sox_svxread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp)
+static sox_size_t sox_svxread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t nsamp)
 {
         unsigned char datum;
         size_t done = 0, i;
@@ -217,7 +217,7 @@ static sox_size_t sox_svxread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp)
 /*======================================================================*/
 /*                         8SVXSTOPREAD                                 */
 /*======================================================================*/
-static int sox_svxstopread(ft_t ft)
+static int sox_svxstopread(sox_format_t * ft)
 {
         size_t i;
 
@@ -233,7 +233,7 @@ static int sox_svxstopread(ft_t ft)
 /*======================================================================*/
 /*                         8SVXSTARTWRITE                               */
 /*======================================================================*/
-static int sox_svxstartwrite(ft_t ft)
+static int sox_svxstartwrite(sox_format_t * ft)
 {
         svx_t p = (svx_t ) ft->priv;
         size_t i;
@@ -261,7 +261,7 @@ static int sox_svxstartwrite(ft_t ft)
 /*                         8SVXWRITE                                    */
 /*======================================================================*/
 
-static sox_size_t sox_svxwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t sox_svxwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
 {
         svx_t p = (svx_t ) ft->priv;
 
@@ -285,7 +285,7 @@ static sox_size_t sox_svxwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len
 /*                         8SVXSTOPWRITE                                */
 /*======================================================================*/
 
-static int sox_svxstopwrite(ft_t ft)
+static int sox_svxstopwrite(sox_format_t * ft)
 {
         svx_t p = (svx_t ) ft->priv;
 
@@ -325,7 +325,7 @@ static int sox_svxstopwrite(ft_t ft)
 /*                         8SVXWRITEHEADER                              */
 /*======================================================================*/
 #define SVXHEADERSIZE 100
-static void svxwriteheader(ft_t ft, sox_size_t nsamples)
+static void svxwriteheader(sox_format_t * ft, sox_size_t nsamples)
 {
         sox_size_t formsize =  nsamples + SVXHEADERSIZE - 8;
 
@@ -365,7 +365,7 @@ static const char *svxnames[] = {
   NULL
 };
 
-static sox_format_t sox_svx_format = {
+static sox_format_handler_t sox_svx_format = {
   svxnames,
   SOX_FILE_BIG_END,
   sox_svxstartread,
@@ -377,9 +377,9 @@ static sox_format_t sox_svx_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_svx_format_fn(void);
+const sox_format_handler_t *sox_svx_format_fn(void);
 
-const sox_format_t *sox_svx_format_fn(void)
+const sox_format_handler_t *sox_svx_format_fn(void)
 {
     return &sox_svx_format;
 }

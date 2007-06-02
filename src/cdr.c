@@ -39,7 +39,7 @@ typedef struct cdrstuff {
  *      mono/stereo/quad.
  */
 
-static int sox_cdrstartread(ft_t ft) 
+static int sox_cdrstartread(sox_format_t * ft) 
 {
         int rc;
 
@@ -71,7 +71,7 @@ static int sox_cdrstartread(ft_t ft)
  * Return number of samples read.
  */
 
-static sox_size_t sox_cdrread(ft_t ft, sox_ssample_t *buf, sox_size_t len) 
+static sox_size_t sox_cdrread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len) 
 {
 
         return sox_rawread(ft, buf, len);
@@ -81,13 +81,13 @@ static sox_size_t sox_cdrread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-static int sox_cdrstopread(ft_t ft) 
+static int sox_cdrstopread(sox_format_t * ft) 
 {
         /* Needed because of rawread() */
         return sox_rawstopread(ft);
 }
 
-static int sox_cdrstartwrite(ft_t ft) 
+static int sox_cdrstartwrite(sox_format_t * ft) 
 {
         cdr_t cdr = (cdr_t) ft->priv;
         int rc;
@@ -107,7 +107,7 @@ static int sox_cdrstartwrite(ft_t ft)
         return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_cdrwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len) 
+static sox_size_t sox_cdrwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len) 
 {
         cdr_t cdr = (cdr_t) ft->priv;
 
@@ -121,7 +121,7 @@ static sox_size_t sox_cdrwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len
  * samples.  We write -32768 for each sample to pad it out.
  */
 
-static int sox_cdrstopwrite(ft_t ft) 
+static int sox_cdrstopwrite(sox_format_t * ft) 
 {
         cdr_t cdr = (cdr_t) ft->priv;
         int padsamps = SECTORSIZE - (cdr->samples % SECTORSIZE);
@@ -149,7 +149,7 @@ static const char *cdrnames[] = {
   NULL
 };
 
-static sox_format_t sox_cdr_format = {
+static sox_format_handler_t sox_cdr_format = {
   cdrnames,
   SOX_FILE_SEEK | SOX_FILE_BIG_END,
   sox_cdrstartread,
@@ -161,9 +161,9 @@ static sox_format_t sox_cdr_format = {
   sox_rawseek
 };
 
-const sox_format_t *sox_cdr_format_fn(void);
+const sox_format_handler_t *sox_cdr_format_fn(void);
 
-const sox_format_t *sox_cdr_format_fn(void)
+const sox_format_handler_t *sox_cdr_format_fn(void)
 {
     return &sox_cdr_format;
 }

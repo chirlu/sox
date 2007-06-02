@@ -41,7 +41,7 @@ assert_static(sizeof(struct skelform) <= SOX_MAX_FILE_PRIVSIZE,
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int startread(ft_t ft)
+static int startread(sox_format_t * ft)
 {
   skelform_t sk = (skelform_t)ft->priv;
   sox_size_t samples_in_file;
@@ -84,7 +84,7 @@ static int startread(ft_t ft)
  * Read up to len samples of type sox_sample_t from file into buf[].
  * Return number of samples read, or 0 if at end of file.
  */
-static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
 {
   skelform_t sk = (skelform_t)ft->priv;
   sox_size_t done;
@@ -118,12 +118,12 @@ static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int stopread(ft_t ft)
+static int stopread(sox_format_t * ft)
 {
   return SOX_SUCCESS;
 }
 
-static int startwrite(ft_t ft)
+static int startwrite(sox_format_t * ft)
 {
   skelform_t sk = (skelform_t)ft->priv;
 
@@ -159,7 +159,7 @@ static int startwrite(ft_t ft)
  * Write len samples of type sox_sample_t from buf[] to file.
  * Return number of samples written.
  */
-static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
 {
   skelform_t sk = (skelform_t)ft->priv;
 
@@ -186,7 +186,7 @@ static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
   return len;
 }
 
-static int stopwrite(ft_t ft)
+static int stopwrite(sox_format_t * ft)
 {
   /* All samples are already written out. */
   /* If file header needs fixing up, for example it needs the number
@@ -194,7 +194,7 @@ static int stopwrite(ft_t ft)
   return SOX_SUCCESS;
 }
 
-static int seek(ft_t ft, sox_size_t offset)
+static int seek(sox_format_t * ft, sox_size_t offset)
 {
   /* Seek relative to current position. */
   return SOX_SUCCESS;
@@ -211,7 +211,7 @@ static const char *names[] = {
  * the 7 functions, then the function above can be deleted
  * and 0 used in place of the its name below.
  */
-static sox_format_t sox_skel_format = {
+static sox_format_handler_t sox_skel_format = {
   names,
   SOX_FILE_SEEK,
   startread,
@@ -223,9 +223,9 @@ static sox_format_t sox_skel_format = {
   seek
 };
 
-const sox_format_t *sox_skel_format_fn(void);
+const sox_format_handler_t *sox_skel_format_fn(void);
 
-const sox_format_t *sox_skel_format_fn(void)
+const sox_format_handler_t *sox_skel_format_fn(void)
 {
   return &sox_skel_format;
 }

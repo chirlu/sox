@@ -102,7 +102,7 @@ typedef struct file_info
   double replay_gain;
   char *comment;
   sox_size_t volume_clips;
-  ft_t desc;                              /* libSoX file descriptor */
+  sox_format_t * ft;                           /* libSoX file descriptor */
 } *file_t;
 
 /* local forward declarations */
@@ -171,27 +171,27 @@ static void cleanup(void)
 
   /* Close the input and output files before exiting. */
   for (i = 0; i < input_count; i++) {
-    if (files[i]->desc) {
-      sox_close(files[i]->desc);
-      free(files[i]->desc);
+    if (files[i]->ft) {
+      sox_close(files[i]->ft);
+      free(files[i]->ft);
     }
     free(files[i]);
   }
 
   if (file_count) {
-    if (ofile->desc) {
-      if (!(ofile->desc->h->flags & SOX_FILE_NOSTDIO)) {
+    if (ofile->ft) {
+      if (!(ofile->ft->handler->flags & SOX_FILE_NOSTDIO)) {
         struct stat st;
-        fstat(fileno(ofile->desc->fp), &st);
+        fstat(fileno(ofile->ft->fp), &st);
 
         /* If we didn't succeed and we created an output file, remove it. */
         if (!success && (st.st_mode & S_IFMT) == S_IFREG)
-          unlink(ofile->desc->filename);
+          unlink(ofile->ft->filename);
       }
 
       /* Assumption: we can unlink a file before sox_closing it. */
-      sox_close(ofile->desc);
-      free(ofile->desc);
+      sox_close(ofile->ft);
+      free(ofile->ft);
     }
     free(ofile);
   }
@@ -551,25 +551,25 @@ int main(int argc, char **argv)
 
     if (rec && !j) { /* Set the recording sample rate & # of channels: */
       if (input_count > 1) {   /* Get them from the next input file: */
-        f->signal.rate = files[1]->desc->signal.rate;
-        f->signal.channels = files[1]->desc->signal.channels;
+        f->signal.rate = files[1]->ft->signal.rate;
+        f->signal.channels = files[1]->ft->signal.channels;
       }
       else { /* Get them from the output file (which is not open yet): */
         f->signal.rate = files[1]->signal.rate;
         f->signal.channels = files[1]->signal.channels;
       }
     }
-    files[j]->desc = sox_open_read(f->filename, &f->signal, f->filetype);
-    if (!files[j]->desc)
+    files[j]->ft = sox_open_read(f->filename, &f->signal, f->filetype);
+    if (!files[j]->ft)
       /* sox_open_read() will call sox_warn for most errors.
        * Rely on that printing something. */
       exit(2);
     if (show_progress == SOX_OPTION_DEFAULT &&
-        (files[j]->desc->h->flags & SOX_FILE_DEVICE) != 0 &&
-        (files[j]->desc->h->flags & SOX_FILE_PHONY) == 0)
+        (files[j]->ft->handler->flags & SOX_FILE_DEVICE) != 0 &&
+        (files[j]->ft->handler->flags & SOX_FILE_PHONY) == 0)
       show_progress = SOX_OPTION_YES;
-    if (files[j]->desc->comment)
-      set_replay_gain(files[j]->desc->comment, f);
+    if (files[j]->ft->comment)
+      set_replay_gain(files[j]->ft->comment, f);
   }
   signal(SIGINT, SIG_DFL);
 
@@ -586,10 +586,10 @@ int main(int argc, char **argv)
 
   for (i = 0; i < input_count; i++) {
     unsigned j;
-    for (j =0; j < nuser_effects && !files[i]->desc->signal.channels; ++j)
-      files[i]->desc->signal.channels = user_efftab[j].ininfo.channels;
-    if (!files[i]->desc->signal.channels)
-      ++files[i]->desc->signal.channels;
+    for (j =0; j < nuser_effects && !files[i]->ft->signal.channels; ++j)
+      files[i]->ft->signal.channels = user_efftab[j].ininfo.channels;
+    if (!files[i]->ft->signal.channels)
+      ++files[i]->ft->signal.channels;
   }
 
   if (repeatable_random)
@@ -603,9 +603,9 @@ int main(int argc, char **argv)
 
   ofile_signal = ofile->signal;
   if (combine_method == sox_sequence) do {
-    if (ofile->desc)
-      sox_close(ofile->desc);
-    free(ofile->desc);
+    if (ofile->ft)
+      sox_close(ofile->ft);
+    free(ofile->ft);
   } while (process() != SOX_EOF && !user_abort && current_input < input_count);
   else process();
 
@@ -613,12 +613,12 @@ int main(int argc, char **argv)
     user_efftab[nuser_effects].handler.kill(&user_efftab[nuser_effects]);
 
   for (i = 0; i < file_count; ++i)
-    if (files[i]->desc->clips != 0)
+    if (files[i]->ft->clips != 0)
       sox_warn(i < input_count?"%s: input clipped %u samples" :
                               "%s: output clipped %u samples; decrease volume?",
-          (files[i]->desc->h->flags & SOX_FILE_DEVICE)?
-                       files[i]->desc->h->names[0] : files[i]->desc->filename,
-          files[i]->desc->clips);
+          (files[i]->ft->handler->flags & SOX_FILE_DEVICE)?
+                       files[i]->ft->handler->names[0] : files[i]->ft->filename,
+          files[i]->ft->clips);
 
   if (mixing_clips > 0)
     sox_warn("mix-combining clipped %u samples; decrease volume?", mixing_clips);
@@ -761,10 +761,10 @@ static void optimize_trim(void)
    * gigs of audio data into managable chunks
    */ 
   if (input_count == 1 && sox_neffects > 1 && strcmp(sox_effects[1][0].handler.name, "trim") == 0) {
-    if ((files[0]->desc->h->flags & SOX_FILE_SEEK) && files[0]->desc->seekable){
+    if ((files[0]->ft->handler->flags & SOX_FILE_SEEK) && files[0]->ft->seekable){
       sox_size_t offset = sox_trim_get_start(&sox_effects[1][0]);
-      if (sox_seek(files[0]->desc, offset, SOX_SEEK_SET) != SOX_EOF) { 
-        read_wide_samples = offset / files[0]->desc->signal.channels;
+      if (sox_seek(files[0]->ft, offset, SOX_SEEK_SET) != SOX_EOF) { 
+        read_wide_samples = offset / files[0]->ft->signal.channels;
         /* Assuming a failed seek stayed where it was.  If the 
          * seek worked then reset the start location of 
          * trim so that it thinks user didn't request a skip.
@@ -965,44 +965,44 @@ static void display_file_info(file_t f, sox_bool full)
   static char const * const no_yes[] = {"no", "yes"};
 
   fprintf(stderr, "\n%s: '%s'",
-    f->desc->mode == 'r'? "Input File     " : "Output File    ", f->desc->filename);
-  if (strcmp(f->desc->filename, "-") == 0 || (f->desc->h->flags & SOX_FILE_DEVICE))
-    fprintf(stderr, " (%s)", f->desc->h->names[0]);
+    f->ft->mode == 'r'? "Input File     " : "Output File    ", f->ft->filename);
+  if (strcmp(f->ft->filename, "-") == 0 || (f->ft->handler->flags & SOX_FILE_DEVICE))
+    fprintf(stderr, " (%s)", f->ft->handler->names[0]);
   fprintf(stderr, "\n");
 
-  if (f->desc->signal.size)
+  if (f->ft->signal.size)
     fprintf(stderr, "Sample Size    : %s (%s)\n",
-        sox_size_bits_str[f->desc->signal.size],
-        sox_sizes_str[f->desc->signal.size]);
+        sox_size_bits_str[f->ft->signal.size],
+        sox_sizes_str[f->ft->signal.size]);
 
-  if (f->desc->signal.encoding)
+  if (f->ft->signal.encoding)
     fprintf(stderr, "Sample Encoding: %s\n",
-        sox_encodings_str[f->desc->signal.encoding]);
+        sox_encodings_str[f->ft->signal.encoding]);
 
   fprintf(stderr,
     "Channels       : %u\n"
     "Sample Rate    : %u\n",
-    f->desc->signal.channels,
-    f->desc->signal.rate);
+    f->ft->signal.channels,
+    f->ft->signal.rate);
 
   if (full) {
-    if (f->desc->length && f->desc->signal.channels && f->desc->signal.rate) {
-      sox_size_t ws = f->desc->length / f->desc->signal.channels;
+    if (f->ft->length && f->ft->signal.channels && f->ft->signal.rate) {
+      sox_size_t ws = f->ft->length / f->ft->signal.channels;
       fprintf(stderr,
         "Duration       : %s = %u samples %c %g CDDA sectors\n",
-        str_time((double)ws / f->desc->signal.rate),
-        ws, "~="[f->desc->signal.rate == 44100],
-        (double)ws/ f->desc->signal.rate * 44100 / 588);
+        str_time((double)ws / f->ft->signal.rate),
+        ws, "~="[f->ft->signal.rate == 44100],
+        (double)ws/ f->ft->signal.rate * 44100 / 588);
     }
-    if (f->desc->signal.size > 1)
+    if (f->ft->signal.size > 1)
       fprintf(stderr, "Endian Type    : %s\n",
-          f->desc->signal.reverse_bytes != SOX_IS_BIGENDIAN ? "big" : "little");
-    if (f->desc->signal.size)
+          f->ft->signal.reverse_bytes != SOX_IS_BIGENDIAN ? "big" : "little");
+    if (f->ft->signal.size)
       fprintf(stderr,
         "Reverse Nibbles: %s\n"
         "Reverse Bits   : %s\n",
-        no_yes[f->desc->signal.reverse_nibbles],
-        no_yes[f->desc->signal.reverse_bits]);
+        no_yes[f->ft->signal.reverse_nibbles],
+        no_yes[f->ft->signal.reverse_bits]);
   }
 
   if (f->replay_gain != HUGE_VAL)
@@ -1010,11 +1010,11 @@ static void display_file_info(file_t f, sox_bool full)
   if (f->volume != HUGE_VAL)
     fprintf(stderr, "Level adjust   : %g (linear gain)\n" , f->volume);
 
-  if (!(f->desc->h->flags & SOX_FILE_DEVICE) && f->desc->comment) {
-    if (strchr(f->desc->comment, '\n'))
-      fprintf(stderr, "Comments       : \n%s\n", f->desc->comment);
+  if (!(f->ft->handler->flags & SOX_FILE_DEVICE) && f->ft->comment) {
+    if (strchr(f->ft->comment, '\n'))
+      fprintf(stderr, "Comments       : \n%s\n", f->ft->comment);
     else
-      fprintf(stderr, "Comment        : '%s'\n", f->desc->comment);
+      fprintf(stderr, "Comment        : '%s'\n", f->ft->comment);
   }
   fprintf(stderr, "\n");
 }
@@ -1032,7 +1032,7 @@ static void progress_to_file(file_t f)
     fprintf(stderr, "Skipped.\n");
   }
   read_wide_samples = 0;
-  input_wide_samples = f->desc->length / f->desc->signal.channels;
+  input_wide_samples = f->ft->length / f->ft->signal.channels;
   if (show_progress && (sox_output_verbosity_level < 3 ||
                         (combine_method <= sox_concatenate && input_count > 1)))
     display_file_info(f, sox_false);
@@ -1040,7 +1040,7 @@ static void progress_to_file(file_t f)
     f->volume = 1;
   if (f->replay_gain != HUGE_VAL)
     f->volume *= pow(10.0, f->replay_gain / 20);
-  f->desc->sox_errno = errno = 0;
+  f->ft->sox_errno = errno = 0;
 }
 
 static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
@@ -1068,22 +1068,22 @@ static void sigint(int s)
 static sox_bool can_segue(sox_size_t i)
 {
   return
-    files[i]->desc->signal.channels == files[i - 1]->desc->signal.channels &&
-    files[i]->desc->signal.rate     == files[i - 1]->desc->signal.rate;
+    files[i]->ft->signal.channels == files[i - 1]->ft->signal.channels &&
+    files[i]->ft->signal.rate     == files[i - 1]->ft->signal.rate;
 }
 
-static sox_size_t sox_read_wide(ft_t desc, sox_ssample_t * buf, sox_size_t max)
+static sox_size_t sox_read_wide(sox_format_t * ft, sox_ssample_t * buf, sox_size_t max)
 {
   sox_size_t len = max / combiner.channels;
-  len = sox_read(desc, buf, len * desc->signal.channels) / desc->signal.channels;
-  if (!len && desc->sox_errno)
-    sox_fail("%s: %s (%s)", desc->filename, desc->sox_errstr, strerror(desc->sox_errno));
+  len = sox_read(ft, buf, len * ft->signal.channels) / ft->signal.channels;
+  if (!len && ft->sox_errno)
+    sox_fail("%s: %s (%s)", ft->filename, ft->sox_errstr, strerror(ft->sox_errno));
   return len;
 }
 
 static void balance_input(sox_ssample_t * buf, sox_size_t ws, file_t f)
 {
-  sox_size_t s = ws * f->desc->signal.channels;
+  sox_size_t s = ws * f->ft->signal.channels;
 
   if (f->volume != 1)
     while (s--) {
@@ -1128,7 +1128,7 @@ static int combiner_drain(sox_effect_t *effp, sox_ssample_t * obuf, sox_size_t *
 
   if (combine_method <= sox_concatenate) while (sox_true) {
     if (!user_skip)
-      olen = sox_read_wide(files[current_input]->desc, obuf, *osamp);
+      olen = sox_read_wide(files[current_input]->ft, obuf, *osamp);
     if (olen == 0) {   /* If EOF, go to the next input file. */
       if (++current_input < input_count) {
         if (combine_method == sox_sequence && !can_segue(current_input))
@@ -1142,7 +1142,7 @@ static int combiner_drain(sox_effect_t *effp, sox_ssample_t * obuf, sox_size_t *
   } else {
     sox_ssample_t * p = obuf;
     for (i = 0; i < input_count; ++i) {
-      ilen[i] = sox_read_wide(files[i]->desc, z->ibuf[i], *osamp);
+      ilen[i] = sox_read_wide(files[i]->ft, z->ibuf[i], *osamp);
       balance_input(z->ibuf[i], ilen[i], files[i]);
       olen = max(olen, ilen[i]);
     }
@@ -1151,16 +1151,16 @@ static int combiner_drain(sox_effect_t *effp, sox_ssample_t * obuf, sox_size_t *
         for (s = 0; s < effp->ininfo.channels; ++s, ++p) {
           *p = 0;
           for (i = 0; i < input_count; ++i)
-            if (ws < ilen[i] && s < files[i]->desc->signal.channels) {
+            if (ws < ilen[i] && s < files[i]->ft->signal.channels) {
               /* Cast to double prevents integer overflow */
-              double sample = *p + (double)z->ibuf[i][ws * files[i]->desc->signal.channels + s];
+              double sample = *p + (double)z->ibuf[i][ws * files[i]->ft->signal.channels + s];
               *p = SOX_ROUND_CLIP_COUNT(sample, mixing_clips);
           }
         }
       } else { /* sox_merge: like a multi-track recorder */
         for (i = 0; i < input_count; ++i)
-          for (s = 0; s < files[i]->desc->signal.channels; ++s)
-            *p++ = (ws < ilen[i]) * z->ibuf[i][ws * files[i]->desc->signal.channels + s];
+          for (s = 0; s < files[i]->ft->signal.channels; ++s)
+            *p++ = (ws < ilen[i]) * z->ibuf[i][ws * files[i]->ft->signal.channels + s];
     }
   }
   read_wide_samples += olen;
@@ -1196,15 +1196,15 @@ static int output_flow(sox_effect_t *effp UNUSED, sox_ssample_t const * ibuf,
 {
   size_t len;
   for (*osamp = *isamp; *osamp; ibuf += len, *osamp -= len) {
-    len = sox_write(ofile->desc, ibuf, *osamp);
+    len = sox_write(ofile->ft, ibuf, *osamp);
     if (len == 0) {
-      sox_warn("Error writing: %s", ofile->desc->sox_errstr);
+      sox_warn("Error writing: %s", ofile->ft->sox_errstr);
       return SOX_EOF;
     }
     if (user_abort) /* Don't get stuck in this loop. */
       return SOX_EOF;
   }
-  output_samples += *isamp / ofile->desc->signal.channels;
+  output_samples += *isamp / ofile->ft->signal.channels;
   return SOX_SUCCESS;
 }
 
@@ -1224,7 +1224,7 @@ static void add_default_effect(char const *name, int *effects_mask)
   sox_create_effect(&e, sox_find_effect(name));
   if (e.handler.getopts(&e, 0, NULL) == SOX_EOF)  /* Set up with default opts */
     exit(2);
-  sox_add_effect(&e, &combiner, &ofile->desc->signal, effects_mask);
+  sox_add_effect(&e, &combiner, &ofile->ft->signal, effects_mask);
 }
 
 /* If needed effects are not given, auto-add at (performance) optimal point. */
@@ -1232,8 +1232,8 @@ static void add_effects(void)
 {
   unsigned i;
   int effects_mask = 0;
-  sox_bool need_rate = combiner.rate     != ofile->desc->signal.rate;
-  sox_bool need_chan = combiner.channels != ofile->desc->signal.channels;
+  sox_bool need_rate = combiner.rate     != ofile->ft->signal.rate;
+  sox_bool need_chan = combiner.channels != ofile->ft->signal.channels;
   int user_mchan = -1;
   sox_effect_t eff;
 
@@ -1265,30 +1265,30 @@ static void add_effects(void)
   }
 
   sox_create_effect(&eff, input_combiner_effect_fn());
-  sox_add_effect(&eff, &combiner, &ofile->desc->signal, &effects_mask);
+  sox_add_effect(&eff, &combiner, &ofile->ft->signal, &effects_mask);
 
   /* Copy user specified effects into the real effects */
   for (i = 0; i <= nuser_effects; i++) {
     /* If reducing channels, it's faster to do so before all other effects: */
-    if ((int)i > user_mchan && need_chan && combiner.channels > ofile->desc->signal.channels) {
+    if ((int)i > user_mchan && need_chan && combiner.channels > ofile->ft->signal.channels) {
       add_default_effect("mixer", &effects_mask);
       need_chan = sox_false;
     }
     /* If reducing rate, it's faster to do so before all other effects
      * (except reducing channels): */
     if (need_rate)
-      if (i == nuser_effects || combiner.rate > ofile->desc->signal.rate) {
+      if (i == nuser_effects || combiner.rate > ofile->ft->signal.rate) {
         add_default_effect("resample", &effects_mask);
         need_rate = sox_false;
       }
     if (i < nuser_effects)
-      sox_add_effect(&user_efftab[i], &combiner, &ofile->desc->signal, &effects_mask);
+      sox_add_effect(&user_efftab[i], &combiner, &ofile->ft->signal, &effects_mask);
   }
   if (need_chan)
     add_default_effect("mixer", &effects_mask);
 
   sox_create_effect(&eff, output_effect_fn());
-  sox_add_effect(&eff, &combiner, &ofile->desc->signal, &effects_mask);
+  sox_add_effect(&eff, &combiner, &ofile->ft->signal, &effects_mask);
 }
 
 static void open_output_file(sox_size_t olen)
@@ -1299,7 +1299,7 @@ static void open_output_file(sox_size_t olen)
   char const *comment = NULL;
 
   if (ofile->comment == NULL)
-    comment = files[0]->desc->comment ? files[0]->desc->comment : "Processed by SoX";
+    comment = files[0]->ft->comment ? files[0]->ft->comment : "Processed by SoX";
   else if (*ofile->comment != '\0')
       comment = ofile->comment;
 
@@ -1311,22 +1311,22 @@ static void open_output_file(sox_size_t olen)
    */
   factor = (double) ofile->signal.rate / combiner.rate;
   for (i = 0; i < SOX_MAX_NLOOPS; i++) {
-    loops[i].start = files[0]->desc->loops[i].start * factor;
-    loops[i].length = files[0]->desc->loops[i].length * factor;
-    loops[i].count = files[0]->desc->loops[i].count;
-    loops[i].type = files[0]->desc->loops[i].type;
+    loops[i].start = files[0]->ft->loops[i].start * factor;
+    loops[i].length = files[0]->ft->loops[i].length * factor;
+    loops[i].count = files[0]->ft->loops[i].count;
+    loops[i].type = files[0]->ft->loops[i].type;
   }
 
-  ofile->desc = sox_open_write(overwrite_permitted,
+  ofile->ft = sox_open_write(overwrite_permitted,
                         ofile->filename,
                         &ofile->signal,
                         ofile->filetype,
                         comment,
                         olen,
-                        &files[0]->desc->instr,
+                        &files[0]->ft->instr,
                         loops);
 
-  if (!ofile->desc)
+  if (!ofile->ft)
     /* sox_open_write() will call sox_warn for most errors.
      * Rely on that printing something. */
     exit(2);
@@ -1335,8 +1335,8 @@ static void open_output_file(sox_size_t olen)
    * progress display to match behavior of ogg123,
    * unless the user requested us not to display anything. */
   if (show_progress == SOX_OPTION_DEFAULT)
-    show_progress = (ofile->desc->h->flags & SOX_FILE_DEVICE) != 0 &&
-                    (ofile->desc->h->flags & SOX_FILE_PHONY) == 0;
+    show_progress = (ofile->ft->handler->flags & SOX_FILE_DEVICE) != 0 &&
+                    (ofile->ft->handler->flags & SOX_FILE_PHONY) == 0;
 
   report_file_info(ofile);
 }
@@ -1357,7 +1357,7 @@ static int process(void) {
   sox_bool known_length = combine_method != sox_sequence;
   sox_size_t olen = 0;
 
-  combiner = files[current_input]->desc->signal;
+  combiner = files[current_input]->ft->signal;
   if (combine_method == sox_sequence) {
     if (!current_input) for (i = 0; i < input_count; i++)
       report_file_info(files[i]);
@@ -1370,16 +1370,16 @@ static int process(void) {
 
     for (i = 0; i < input_count; i++) { /* Report all inputs, then check */
       report_file_info(files[i]);
-      total_channels += files[i]->desc->signal.channels;
-      min_channels = min(min_channels, files[i]->desc->signal.channels);
-      max_channels = max(max_channels, files[i]->desc->signal.channels);
-      min_rate = min(min_rate, files[i]->desc->signal.rate);
-      max_rate = max(max_rate, files[i]->desc->signal.rate);
-      known_length = known_length && files[i]->desc->length != 0;
+      total_channels += files[i]->ft->signal.channels;
+      min_channels = min(min_channels, files[i]->ft->signal.channels);
+      max_channels = max(max_channels, files[i]->ft->signal.channels);
+      min_rate = min(min_rate, files[i]->ft->signal.rate);
+      max_rate = max(max_rate, files[i]->ft->signal.rate);
+      known_length = known_length && files[i]->ft->length != 0;
       if (combine_method == sox_concatenate)
-        olen += files[i]->desc->length;
+        olen += files[i]->ft->length;
       else
-        olen = max(olen, files[i]->desc->length);
+        olen = max(olen, files[i]->ft->length);
     }
     if (min_rate != max_rate)
       sox_fail("Input files must have the same sample-rate");
@@ -1438,7 +1438,7 @@ static sox_size_t total_clips(void)
   unsigned i, f;
   sox_size_t clips = 0;
   for (i = 0; i < file_count; ++i)
-    clips += files[i]->desc->clips + files[i]->volume_clips;
+    clips += files[i]->ft->clips + files[i]->volume_clips;
   clips += mixing_clips;
   for (i = 1; i < sox_neffects - 1; ++i)
     for (f = 1; f < sox_effects[i][0].flows; ++f)

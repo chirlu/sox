@@ -20,7 +20,7 @@ typedef struct alsa_priv
     snd_pcm_uframes_t frames_this_period;
 } *alsa_priv_t;
 
-static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
+static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
 {
     if (ft->signal.size == -1)
         ft->signal.size = SOX_SIZE_16BIT;
@@ -172,7 +172,7 @@ static int get_format(ft_t ft, snd_pcm_format_mask_t *fmask, int *fmt)
     return 0;
 }
 
-static int sox_alsasetup(ft_t ft, snd_pcm_stream_t mode)
+static int sox_alsasetup(sox_format_t * ft, snd_pcm_stream_t mode)
 {
     int fmt = SND_PCM_FORMAT_S16;
     int err;
@@ -421,7 +421,7 @@ static int xrun_recovery(snd_pcm_t *handle, int err)
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int sox_alsastartread(ft_t ft)
+static int sox_alsastartread(sox_format_t * ft)
 {
     return sox_alsasetup(ft, SND_PCM_STREAM_CAPTURE);
 }
@@ -464,7 +464,7 @@ static void sw_read_buf(sox_ssample_t *buf1, char const * buf2, sox_size_t len, 
     }
 }
 
-static sox_size_t sox_alsaread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp)
+static sox_size_t sox_alsaread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t nsamp)
 {
     sox_size_t len;
     int err;
@@ -533,7 +533,7 @@ static sox_size_t sox_alsaread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp)
     return len;
 }
 
-static int sox_alsastopread(ft_t ft)
+static int sox_alsastopread(sox_format_t * ft)
 {
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
 
@@ -544,7 +544,7 @@ static int sox_alsastopread(ft_t ft)
     return SOX_SUCCESS;
 }
 
-static int sox_alsastartwrite(ft_t ft)
+static int sox_alsastartwrite(sox_format_t * ft)
 {
     return sox_alsasetup(ft, SND_PCM_STREAM_PLAYBACK);
 }
@@ -585,7 +585,7 @@ static void sox_sw_write_buf(char *buf1, sox_ssample_t const * buf2, sox_size_t 
     }
 }
 
-static sox_size_t sox_alsawrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsamp)
+static sox_size_t sox_alsawrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t nsamp)
 {
     sox_size_t osamp, done;
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
@@ -656,7 +656,7 @@ static sox_size_t sox_alsawrite(ft_t ft, const sox_ssample_t *buf, sox_size_t ns
 }
 
 
-static int sox_alsastopwrite(ft_t ft)
+static int sox_alsastopwrite(sox_format_t * ft)
 {
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
 
@@ -694,7 +694,7 @@ static const char *alsanames[] = {
   NULL
 };
 
-static sox_format_t sox_alsa_format = {
+static sox_format_handler_t sox_alsa_format = {
   alsanames,
   SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
   sox_alsastartread,
@@ -706,9 +706,9 @@ static sox_format_t sox_alsa_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_alsa_format_fn(void);
+const sox_format_handler_t *sox_alsa_format_fn(void);
 
-const sox_format_t *sox_alsa_format_fn(void)
+const sox_format_handler_t *sox_alsa_format_fn(void)
 {
     return &sox_alsa_format;
 }

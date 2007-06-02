@@ -24,7 +24,7 @@ struct maudstuff { /* max. 100 bytes!!!! */
         uint32_t nsamples;
 };
 
-static void maudwriteheader(ft_t);
+static void maudwriteheader(sox_format_t *);
 
 /*
  * Do anything required before you start reading samples.
@@ -33,7 +33,7 @@ static void maudwriteheader(ft_t);
  *      size and encoding of samples, 
  *      mono/stereo/quad.
  */
-static int sox_maudstartread(ft_t ft) 
+static int sox_maudstartread(sox_format_t * ft) 
 {
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         
@@ -198,7 +198,7 @@ static int sox_maudstartread(ft_t ft)
         return(SOX_SUCCESS);
 }
 
-static int sox_maudstartwrite(ft_t ft) 
+static int sox_maudstartwrite(sox_format_t * ft) 
 {
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         int rc;
@@ -232,7 +232,7 @@ static int sox_maudstartwrite(ft_t ft)
         return (SOX_SUCCESS);
 }
 
-static sox_size_t sox_maudwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len) 
+static sox_size_t sox_maudwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len) 
 {
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         
@@ -241,7 +241,7 @@ static sox_size_t sox_maudwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t le
         return sox_rawwrite(ft, buf, len);
 }
 
-static int sox_maudstopwrite(ft_t ft) 
+static int sox_maudstopwrite(sox_format_t * ft) 
 {
         int rc;
 
@@ -263,7 +263,7 @@ static int sox_maudstopwrite(ft_t ft)
 }
 
 #define MAUDHEADERSIZE (4+(4+4+32)+(4+4+32)+(4+4))
-static void maudwriteheader(ft_t ft)
+static void maudwriteheader(sox_format_t * ft)
 {
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         
@@ -346,7 +346,7 @@ static const char *maudnames[] = {
   NULL,
 };
 
-static sox_format_t sox_maud_format = {
+static sox_format_handler_t sox_maud_format = {
   maudnames,
   SOX_FILE_BIG_END,
   sox_maudstartread,
@@ -358,9 +358,9 @@ static sox_format_t sox_maud_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_maud_format_fn(void);
+const sox_format_handler_t *sox_maud_format_fn(void);
 
-const sox_format_t *sox_maud_format_fn(void)
+const sox_format_handler_t *sox_maud_format_fn(void)
 {
     return &sox_maud_format;
 }

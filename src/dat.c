@@ -22,7 +22,7 @@ typedef struct dat {
     char prevline[LINEWIDTH]; 
 } *dat_t;
 
-static int sox_datstartread(ft_t ft)
+static int sox_datstartread(sox_format_t * ft)
 {
     char inpstr[LINEWIDTH];
     long rate;
@@ -58,7 +58,7 @@ static int sox_datstartread(ft_t ft)
     return (SOX_SUCCESS);
 }
 
-static int sox_datstartwrite(ft_t ft)
+static int sox_datstartwrite(sox_format_t * ft)
 {
     dat_t dat = (dat_t) ft->priv;
     char s[LINEWIDTH];
@@ -76,7 +76,7 @@ static int sox_datstartwrite(ft_t ft)
     return (SOX_SUCCESS);
 }
 
-static sox_size_t sox_datread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp)
+static sox_size_t sox_datread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t nsamp)
 {
     char inpstr[LINEWIDTH];
     int  inpPtr = 0;
@@ -123,7 +123,7 @@ static sox_size_t sox_datread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp)
     return (done);
 }
 
-static sox_size_t sox_datwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsamp)
+static sox_size_t sox_datwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t nsamp)
 {
     dat_t dat = (dat_t) ft->priv;
     sox_size_t done = 0;
@@ -157,7 +157,7 @@ static const char *datnames[] = {
   NULL
 };
 
-static sox_format_t sox_dat_format = {
+static sox_format_handler_t sox_dat_format = {
   datnames,
   0,
   sox_datstartread,
@@ -169,9 +169,9 @@ static sox_format_t sox_dat_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_dat_format_fn(void);
+const sox_format_handler_t *sox_dat_format_fn(void);
 
-const sox_format_t *sox_dat_format_fn(void)
+const sox_format_handler_t *sox_dat_format_fn(void)
 {
     return &sox_dat_format;
 }

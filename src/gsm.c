@@ -53,7 +53,7 @@ struct gsmpriv {
         gsm             handle[MAXCHANS];
 };
 
-static int gsmstart_rw(ft_t ft, int w) 
+static int gsmstart_rw(sox_format_t * ft, int w) 
 {
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
         unsigned ch;
@@ -88,12 +88,12 @@ static int gsmstart_rw(ft_t ft, int w)
         return (SOX_SUCCESS);
 }
 
-static int sox_gsmstartread(ft_t ft) 
+static int sox_gsmstartread(sox_format_t * ft) 
 {
         return gsmstart_rw(ft,0);
 }
 
-static int sox_gsmstartwrite(ft_t ft)
+static int sox_gsmstartwrite(sox_format_t * ft)
 {
         return gsmstart_rw(ft,1);
 }
@@ -105,7 +105,7 @@ static int sox_gsmstartwrite(ft_t ft)
  * Return number of samples read.
  */
 
-static sox_size_t sox_gsmread(ft_t ft, sox_ssample_t *buf, sox_size_t samp)
+static sox_size_t sox_gsmread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t samp)
 {
         size_t done = 0, r;
         int ch, chans;
@@ -149,7 +149,7 @@ static sox_size_t sox_gsmread(ft_t ft, sox_ssample_t *buf, sox_size_t samp)
         return done;
 }
 
-static int gsmflush(ft_t ft)
+static int gsmflush(sox_format_t * ft)
 {
         int r, ch, chans;
         gsm_signal *gbuff;
@@ -184,7 +184,7 @@ static int gsmflush(ft_t ft)
         return (SOX_SUCCESS);
 }
 
-static sox_size_t sox_gsmwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t samp)
+static sox_size_t sox_gsmwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t samp)
 {
         size_t done = 0;
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
@@ -207,7 +207,7 @@ static sox_size_t sox_gsmwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t sam
         return done;
 }
 
-static int sox_gsmstopread(ft_t ft)
+static int sox_gsmstopread(sox_format_t * ft)
 {
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
         unsigned ch;
@@ -220,7 +220,7 @@ static int sox_gsmstopread(ft_t ft)
         return (SOX_SUCCESS);
 }
 
-static int sox_gsmstopwrite(ft_t ft)
+static int sox_gsmstopwrite(sox_format_t * ft)
 {
         int rc;
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
@@ -241,7 +241,7 @@ static const char *gsmnames[] = {
   NULL
 };
 
-static sox_format_t sox_gsm_format = {
+static sox_format_handler_t sox_gsm_format = {
   gsmnames,
   0,
   sox_gsmstartread,
@@ -253,9 +253,9 @@ static sox_format_t sox_gsm_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_gsm_format_fn(void);
+const sox_format_handler_t *sox_gsm_format_fn(void);
 
-const sox_format_t *sox_gsm_format_fn(void)
+const sox_format_handler_t *sox_gsm_format_fn(void)
 {
     return &sox_gsm_format;
 }

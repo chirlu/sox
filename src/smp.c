@@ -73,7 +73,7 @@ char *SVmagic = "SOUND SAMPLE DATA ", *SVvers = "2.1 ";
  * Read the SampleVision trailer structure.
  * Returns 1 if everything was read ok, 0 if there was an error.
  */
-static int readtrailer(ft_t ft, struct smptrailer *trailer)
+static int readtrailer(sox_format_t * ft, struct smptrailer *trailer)
 {
         int i;
         int16_t trash16;
@@ -109,7 +109,7 @@ static int readtrailer(ft_t ft, struct smptrailer *trailer)
 /*
  * set the trailer data - loops and markers, to reasonably benign values
  */
-static void settrailer(ft_t ft, struct smptrailer *trailer, sox_rate_t rate)
+static void settrailer(sox_format_t * ft, struct smptrailer *trailer, sox_rate_t rate)
 {
         int i;
 
@@ -143,7 +143,7 @@ static void settrailer(ft_t ft, struct smptrailer *trailer, sox_rate_t rate)
  * Write the SampleVision trailer structure.
  * Returns 1 if everything was written ok, 0 if there was an error.
  */
-static int writetrailer(ft_t ft, struct smptrailer *trailer)
+static int writetrailer(sox_format_t * ft, struct smptrailer *trailer)
 {
         int i;
 
@@ -169,7 +169,7 @@ static int writetrailer(ft_t ft, struct smptrailer *trailer)
         return(SOX_SUCCESS);
 }
 
-static int sox_smpseek(ft_t ft, sox_size_t offset) 
+static int sox_smpseek(sox_format_t * ft, sox_size_t offset) 
 {
     sox_size_t new_offset, channel_block, alignment;
     smp_t smp = (smp_t) ft->priv;
@@ -200,7 +200,7 @@ static int sox_smpseek(ft_t ft, sox_size_t offset)
  *      size and encoding of samples, 
  *      mono/stereo/quad.
  */
-static int sox_smpstartread(ft_t ft) 
+static int sox_smpstartread(sox_format_t * ft) 
 {
         smp_t smp = (smp_t) ft->priv;
         int namelen, commentlen;
@@ -318,7 +318,7 @@ static int sox_smpstartread(ft_t ft)
  * Place in buf[].
  * Return number of samples read.
  */
-static sox_size_t sox_smpread(ft_t ft, sox_ssample_t *buf, sox_size_t len) 
+static sox_size_t sox_smpread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len) 
 {
         smp_t smp = (smp_t) ft->priv;
         unsigned short datum;
@@ -332,7 +332,7 @@ static sox_size_t sox_smpread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
         return done;
 }
 
-static int sox_smpstartwrite(ft_t ft) 
+static int sox_smpstartwrite(sox_format_t * ft) 
 {
         smp_t smp = (smp_t) ft->priv;
         struct smpheader header;
@@ -366,7 +366,7 @@ static int sox_smpstartwrite(ft_t ft)
         return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_smpwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len) 
+static sox_size_t sox_smpwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len) 
 {
         smp_t smp = (smp_t) ft->priv;
         int datum;
@@ -382,7 +382,7 @@ static sox_size_t sox_smpwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len
         return(done);
 }
 
-static int sox_smpstopwrite(ft_t ft) 
+static int sox_smpstopwrite(sox_format_t * ft) 
 {
         smp_t smp = (smp_t) ft->priv;
         struct smptrailer trailer;
@@ -406,7 +406,7 @@ static const char *smpnames[] = {
   NULL,
 };
 
-static sox_format_t sox_smp_format = {
+static sox_format_handler_t sox_smp_format = {
   smpnames,
   SOX_FILE_LOOPS | SOX_FILE_SEEK | SOX_FILE_LIT_END,
   sox_smpstartread,
@@ -418,9 +418,9 @@ static sox_format_t sox_smp_format = {
   sox_smpseek
 };
 
-const sox_format_t *sox_smp_format_fn(void);
+const sox_format_handler_t *sox_smp_format_fn(void);
 
-const sox_format_t *sox_smp_format_fn(void)
+const sox_format_handler_t *sox_smp_format_fn(void)
 {
     return &sox_smp_format;
 }

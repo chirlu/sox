@@ -108,7 +108,7 @@ static sox_encoding_t sox_encoding_and_size(int format, int *size)
 /*
  * Open file in sndfile.
  */
-static int startread(ft_t ft)
+static int startread(sox_format_t * ft)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
 
@@ -135,7 +135,7 @@ static int startread(ft_t ft)
  * Read up to len samples of type sox_sample_t from file into buf[].
  * Return number of samples read.
  */
-static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
 
@@ -146,7 +146,7 @@ static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
 /*
  * Close file for libsndfile (this doesn't close the file handle)
  */
-static int stopread(ft_t ft)
+static int stopread(sox_format_t * ft)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
   sf_close(sf->sf_file);
@@ -270,7 +270,7 @@ static int sndfile_format(sox_encoding_t encoding, int size)
   }
 }
 
-static int startwrite(ft_t ft)
+static int startwrite(sox_format_t * ft)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
   int subtype = sndfile_format(ft->signal.encoding, ft->signal.size);
@@ -321,7 +321,7 @@ static int startwrite(ft_t ft)
  * Write len samples of type sox_sample_t from buf[] to file.
  * Return number of samples written.
  */
-static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
 
@@ -332,14 +332,14 @@ static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 /*
  * Close file for libsndfile (this doesn't close the file handle)
  */
-static int stopwrite(ft_t ft)
+static int stopwrite(sox_format_t * ft)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
   sf_close(sf->sf_file);
   return SOX_SUCCESS;
 }
 
-static int seek(ft_t ft, sox_size_t offset)
+static int seek(sox_format_t * ft, sox_size_t offset)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
   sf_seek(sf->sf_file, (sf_count_t)(offset / ft->signal.channels), SEEK_CUR);
@@ -380,7 +380,7 @@ static const char *names[] = {
 };
 
 /* Format descriptor */
-static sox_format_t format = {
+static sox_format_handler_t format = {
   names,
   SOX_FILE_SEEK | SOX_FILE_NOSTDIO,
   startread,
@@ -392,9 +392,9 @@ static sox_format_t format = {
   seek
 };
 
-const sox_format_t *sox_sndfile_format_fn(void);
+const sox_format_handler_t *sox_sndfile_format_fn(void);
 
-const sox_format_t *sox_sndfile_format_fn(void)
+const sox_format_handler_t *sox_sndfile_format_fn(void)
 {
   return &format;
 }

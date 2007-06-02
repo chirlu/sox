@@ -12,29 +12,29 @@
 #endif
 
 
-void set_endianness_if_not_already_set(ft_t ft)
+void set_endianness_if_not_already_set(sox_format_t * ft)
 {
   if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT) {
-    if (ft->h->flags & SOX_FILE_ENDIAN)
+    if (ft->handler->flags & SOX_FILE_ENDIAN)
       /* Set reverse_bytes for big-endian formats; on a big-endian
          system this cancels out with the reversal made for being on a
          big-endian system. */
-      ft->signal.reverse_bytes = (ft->h->flags & SOX_FILE_ENDBIG) != 0;
+      ft->signal.reverse_bytes = (ft->handler->flags & SOX_FILE_ENDBIG) != 0;
     else
       ft->signal.reverse_bytes = SOX_OPTION_NO;
   }
   if (ft->signal.reverse_bits == SOX_OPTION_DEFAULT)
-    ft->signal.reverse_bits = !!(ft->h->flags & SOX_FILE_BIT_REV);
-  else if (ft->signal.reverse_bits != !!(ft->h->flags & SOX_FILE_BIT_REV))
+    ft->signal.reverse_bits = !!(ft->handler->flags & SOX_FILE_BIT_REV);
+  else if (ft->signal.reverse_bits != !!(ft->handler->flags & SOX_FILE_BIT_REV))
       sox_report("'%s': Format options overriding file-type bit-order", ft->filename);
 
   if (ft->signal.reverse_nibbles == SOX_OPTION_DEFAULT)
-    ft->signal.reverse_nibbles = !!(ft->h->flags & SOX_FILE_NIB_REV);
-  else if (ft->signal.reverse_nibbles != !!(ft->h->flags & SOX_FILE_NIB_REV))
+    ft->signal.reverse_nibbles = !!(ft->handler->flags & SOX_FILE_NIB_REV);
+  else if (ft->signal.reverse_nibbles != !!(ft->handler->flags & SOX_FILE_NIB_REV))
       sox_report("'%s': Format options overriding file-type nibble-order", ft->filename);
 }
 
-static int is_seekable(ft_t ft)
+static int is_seekable(sox_format_t * ft)
 {
         struct stat st;
 
@@ -44,7 +44,7 @@ static int is_seekable(ft_t ft)
 }
 
 /* check that all settings have been given */
-static int sox_checkformat(ft_t ft)
+static int sox_checkformat(sox_format_t * ft)
 {
 
         ft->sox_errno = SOX_SUCCESS;
@@ -82,10 +82,10 @@ static int sox_checkformat(ft_t ft)
         return SOX_SUCCESS;
 }
 
-ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
+sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info,
                   const char *filetype)
 {
-    ft_t ft = (ft_t)xcalloc(sizeof(struct sox_soundstream), 1);
+    sox_format_t * ft = xcalloc(sizeof(*ft), 1);
 
     ft->filename = xstrdup(path);
 
@@ -109,7 +109,7 @@ ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
         ft->signal = *info;
     ft->mode = 'r';
 
-    if (!(ft->h->flags & SOX_FILE_NOSTDIO))
+    if (!(ft->handler->flags & SOX_FILE_NOSTDIO))
     {
         /* Open file handler based on input name.  Used stdin file handler
          * if the filename is "-"
@@ -138,7 +138,7 @@ ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
       set_endianness_if_not_already_set(ft);
 
     /* Read and write starters can change their formats. */
-    if (ft->h->startread && (*ft->h->startread)(ft) != SOX_SUCCESS)
+    if (ft->handler->startread && (*ft->handler->startread)(ft) != SOX_SUCCESS)
     {
         sox_fail("Failed reading `%s': %s", ft->filename, ft->sox_errstr);
         goto input_error;
@@ -148,7 +148,7 @@ ft_t sox_open_read(const char *path, const sox_signalinfo_t *info,
      * This is because libsox usually doesn't set this for mono file
      * formats (for historical reasons).
      */
-    if (!(ft->h->flags & SOX_FILE_PHONY) && !ft->signal.channels)
+    if (!(ft->handler->flags & SOX_FILE_PHONY) && !ft->signal.channels)
       ft->signal.channels = 1;
 
     if (sox_checkformat(ft) )
@@ -167,7 +167,7 @@ input_error:
     return NULL;
 }
 
-ft_t sox_open_write(
+sox_format_t * sox_open_write(
     sox_bool (*overwrite_permitted)(const char *filename),
     const char *path,
     const sox_signalinfo_t *info,
@@ -177,7 +177,7 @@ ft_t sox_open_write(
     const sox_instrinfo_t *instr,
     const sox_loopinfo_t *loops)
 {
-    ft_t ft = (ft_t)xcalloc(sizeof(struct sox_soundstream), 1);
+    sox_format_t * ft = xcalloc(sizeof(*ft), 1);
     int i;
     sox_bool no_filetype_given = filetype == NULL;
 
@@ -205,7 +205,7 @@ ft_t sox_open_write(
         ft->signal = *info;
     ft->mode = 'w';
 
-    if (!(ft->h->flags & SOX_FILE_NOSTDIO))
+    if (!(ft->handler->flags & SOX_FILE_NOSTDIO))
     {
         /* Open file handler based on output name.  Used stdout file handler
          * if the filename is "-"
@@ -259,7 +259,7 @@ ft_t sox_open_write(
     set_endianness_if_not_already_set(ft);
 
     /* Read and write starters can change their formats. */
-    if (ft->h->startwrite && (*ft->h->startwrite)(ft) != SOX_SUCCESS)
+    if (ft->handler->startwrite && (*ft->handler->startwrite)(ft) != SOX_SUCCESS)
     {
         sox_fail("Failed writing %s: %s", ft->filename, ft->sox_errstr);
         goto output_error;
@@ -282,15 +282,15 @@ output_error:
     return NULL;
 }
 
-sox_size_t sox_read(ft_t f, sox_ssample_t * buf, sox_size_t len)
+sox_size_t sox_read(sox_format_t * ft, sox_ssample_t * buf, sox_size_t len)
 {
-  sox_size_t actual = f->h->read? (*f->h->read)(f, buf, len) : 0;
+  sox_size_t actual = ft->handler->read? (*ft->handler->read)(ft, buf, len) : 0;
   return (actual > len? 0 : actual);
 }
 
-sox_size_t sox_write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+sox_size_t sox_write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
 {
-    return ft->h->write? (*ft->h->write)(ft, buf, len) : 0;
+    return ft->handler->write? (*ft->handler->write)(ft, buf, len) : 0;
 }
 
 #define TWIDDLE_BYTE(ub, type) \
@@ -309,7 +309,7 @@ sox_size_t sox_write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
    types). */
 #define READ_FUNC(type, size, ctype, twiddle) \
   sox_size_t sox_read_ ## type ## _buf( \
-      ft_t ft, ctype *buf, sox_size_t len) \
+      sox_format_t * ft, ctype *buf, sox_size_t len) \
   { \
     sox_size_t n, nread; \
     if ((nread = sox_readbuf(ft, buf, len * size)) != len * size) \
@@ -327,7 +327,7 @@ sox_size_t sox_write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
    that need to be unpacked. */
 #define READ_FUNC_UNPACK(type, size, ctype, twiddle) \
   sox_size_t sox_read_ ## type ## _buf( \
-      ft_t ft, ctype *buf, sox_size_t len) \
+      sox_format_t * ft, ctype *buf, sox_size_t len) \
   { \
     sox_size_t n, nread; \
     uint8_t *data = xmalloc(size * len); \
@@ -354,7 +354,7 @@ READ_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
    types). */
 #define WRITE_FUNC(type, size, ctype, twiddle) \
   sox_size_t sox_write_ ## type ## _buf( \
-      ft_t ft, ctype *buf, sox_size_t len) \
+      sox_format_t * ft, ctype *buf, sox_size_t len) \
   { \
     sox_size_t n, nwritten; \
     for (n = 0; n < len; n++) \
@@ -374,7 +374,7 @@ READ_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
    that need to be packed. */
 #define WRITE_FUNC_PACK(type, size, ctype, twiddle) \
   sox_size_t sox_write_ ## type ## _buf( \
-      ft_t ft, ctype *buf, sox_size_t len) \
+      sox_format_t * ft, ctype *buf, sox_size_t len) \
   { \
     sox_size_t n, nwritten; \
     uint8_t *data = xmalloc(size * len); \
@@ -397,7 +397,7 @@ WRITE_FUNC(f, sizeof(float), float, TWIDDLE_WORD)
 WRITE_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
 
 #define WRITE1_FUNC(type, sign, ctype) \
-  int sox_write ## type(ft_t ft, ctype datum) \
+  int sox_write ## type(sox_format_t * ft, ctype datum) \
   { \
     return sox_write_ ## type ## _buf(ft, &datum, 1) == 1 ? SOX_SUCCESS : SOX_EOF; \
   }
@@ -410,16 +410,16 @@ WRITE1_FUNC(f, su, float)
 WRITE1_FUNC(df, su, double)
 
 /* N.B. The file (if any) may already have been deleted. */
-int sox_close(ft_t ft)
+int sox_close(sox_format_t * ft)
 {
     int rc;
 
     if (ft->mode == 'r')
-        rc = ft->h->stopread? (*ft->h->stopread)(ft) : SOX_SUCCESS;
+        rc = ft->handler->stopread? (*ft->handler->stopread)(ft) : SOX_SUCCESS;
     else
-        rc = ft->h->stopwrite? (*ft->h->stopwrite)(ft) : SOX_SUCCESS;
+        rc = ft->handler->stopwrite? (*ft->handler->stopwrite)(ft) : SOX_SUCCESS;
 
-    if (!(ft->h->flags & SOX_FILE_NOSTDIO))
+    if (!(ft->handler->flags & SOX_FILE_NOSTDIO))
         fclose(ft->fp);
     free(ft->filename);
     free(ft->filetype);
@@ -431,7 +431,7 @@ int sox_close(ft_t ft)
     return rc;
 }
 
-int sox_seek(ft_t ft, sox_size_t offset, int whence)
+int sox_seek(sox_format_t * ft, sox_size_t offset, int whence)
 {
     /* FIXME: Implement SOX_SEEK_CUR and SOX_SEEK_END. */
     if (whence != SOX_SEEK_SET)
@@ -440,8 +440,8 @@ int sox_seek(ft_t ft, sox_size_t offset, int whence)
     /* If file is a seekable file and this handler supports seeking,
      * the invoke handlers function.
      */
-    if (ft->seekable  && (ft->h->flags & SOX_FILE_SEEK))
-        return ft->h->seek? (*ft->h->seek)(ft, offset) : SOX_EOF;
+    if (ft->seekable  && (ft->handler->flags & SOX_FILE_SEEK))
+        return ft->handler->seek? (*ft->handler->seek)(ft, offset) : SOX_EOF;
     else
         return SOX_EOF; /* FIXME: return SOX_EBADF */
 }

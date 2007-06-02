@@ -119,7 +119,7 @@ void sox_adpcm_reset(adpcm_io_t state, sox_encoding_t type)
  *                 rates but the codecs allows any user specified rate.
  ******************************************************************************/
 
-static int adpcm_start(ft_t ft, adpcm_io_t state, sox_encoding_t type)
+static int adpcm_start(sox_format_t * ft, adpcm_io_t state, sox_encoding_t type)
 {
   /* setup file info */
   state->file.buf = (char *) xmalloc(sox_bufsiz);
@@ -131,12 +131,12 @@ static int adpcm_start(ft_t ft, adpcm_io_t state, sox_encoding_t type)
   return sox_rawstart(ft, sox_true, sox_false, type, SOX_SIZE_16BIT);
 }
 
-int sox_adpcm_oki_start(ft_t ft, adpcm_io_t state)
+int sox_adpcm_oki_start(sox_format_t * ft, adpcm_io_t state)
 {
   return adpcm_start(ft, state, SOX_ENCODING_OKI_ADPCM);
 }
 
-int sox_adpcm_ima_start(ft_t ft, adpcm_io_t state)
+int sox_adpcm_ima_start(sox_format_t * ft, adpcm_io_t state)
 {
   return adpcm_start(ft, state, SOX_ENCODING_IMA_ADPCM);
 }
@@ -155,7 +155,7 @@ int sox_adpcm_ima_start(ft_t ft, adpcm_io_t state)
  * Notes      : 
  ******************************************************************************/
 
-sox_size_t sox_adpcm_read(ft_t ft, adpcm_io_t state, sox_ssample_t * buffer, sox_size_t len)
+sox_size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t state, sox_ssample_t * buffer, sox_size_t len)
 {
   sox_size_t n;
   uint8_t byte;
@@ -180,7 +180,7 @@ sox_size_t sox_adpcm_read(ft_t ft, adpcm_io_t state, sox_ssample_t * buffer, sox
  * Notes      : 
  ******************************************************************************/
 
-int sox_adpcm_stopread(ft_t ft UNUSED, adpcm_io_t state)
+int sox_adpcm_stopread(sox_format_t * ft UNUSED, adpcm_io_t state)
 {
   free(state->file.buf);
 
@@ -202,7 +202,7 @@ int sox_adpcm_stopread(ft_t ft UNUSED, adpcm_io_t state)
  * Notes      : 
  ******************************************************************************/
 
-sox_size_t sox_adpcm_write(ft_t ft, adpcm_io_t state, const sox_ssample_t * buffer, sox_size_t length)
+sox_size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t state, const sox_ssample_t * buffer, sox_size_t length)
 {
   sox_size_t count = 0;
   uint8_t byte = state->store.byte;
@@ -248,7 +248,7 @@ sox_size_t sox_adpcm_write(ft_t ft, adpcm_io_t state, const sox_ssample_t * buff
  * Notes      : 1. Called directly for writing framed formats
  ******************************************************************************/
 
-void sox_adpcm_flush(ft_t ft, adpcm_io_t state)
+void sox_adpcm_flush(sox_format_t * ft, adpcm_io_t state)
 {
   uint8_t byte = state->store.byte;
   uint8_t flag = state->store.flag;
@@ -277,7 +277,7 @@ void sox_adpcm_flush(ft_t ft, adpcm_io_t state)
  * Notes      : 
  ******************************************************************************/
 
-int sox_adpcm_stopwrite(ft_t ft, adpcm_io_t state)
+int sox_adpcm_stopwrite(sox_format_t * ft, adpcm_io_t state)
 {
   sox_adpcm_flush(ft, state);
 

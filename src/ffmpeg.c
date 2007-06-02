@@ -148,7 +148,7 @@ static int audio_decode_frame(ffmpeg_t ffmpeg, uint8_t *audio_buf, int buf_size)
   }
 }
 
-static int startread(ft_t ft)
+static int startread(sox_format_t * ft)
 {
   ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
   AVFormatParameters params;
@@ -212,7 +212,7 @@ static int startread(ft_t ft)
  * Read up to len samples of type sox_sample_t from file into buf[].
  * Return number of samples read.
  */
-static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
 {
   ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
   AVPacket *pkt = &ffmpeg->audio_pkt;
@@ -241,7 +241,7 @@ static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
 /*
  * Close file for ffmpeg (this doesn't close the file handle)
  */
-static int stopread(ft_t ft)
+static int stopread(sox_format_t * ft)
 {
   ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
 
@@ -258,7 +258,7 @@ static int stopread(ft_t ft)
 /*
  * add an audio output stream
  */
-static AVStream *add_audio_stream(ft_t ft, AVFormatContext *oc, enum CodecID codec_id)
+static AVStream *add_audio_stream(sox_format_t * ft, AVFormatContext *oc, enum CodecID codec_id)
 {
   AVCodecContext *c;
   AVStream *st;
@@ -326,7 +326,7 @@ static int open_audio(ffmpeg_t ffmpeg, AVStream *st)
   return SOX_SUCCESS;
 }
 
-static int startwrite(ft_t ft)
+static int startwrite(sox_format_t * ft)
 {
   ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
 
@@ -397,7 +397,7 @@ static int startwrite(ft_t ft)
  * Write up to len samples of type sox_sample_t from buf[] into file.
  * Return number of samples written.
  */
-static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
 {
   ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
   sox_size_t nread = 0, nwritten = 0;
@@ -440,7 +440,7 @@ static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
 /*
  * Close file for ffmpeg (this doesn't close the file handle)
  */
-static int stopwrite(ft_t ft)
+static int stopwrite(sox_format_t * ft)
 {
   ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
   unsigned i;
@@ -486,7 +486,7 @@ static const char *names[] = {
 };
 
 /* Format descriptor */
-static sox_format_t sox_ffmpeg_format = {
+static sox_format_handler_t sox_ffmpeg_format = {
   names,
   SOX_FILE_NOSTDIO,
   startread,
@@ -498,9 +498,9 @@ static sox_format_t sox_ffmpeg_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_ffmpeg_format_fn(void);
+const sox_format_handler_t *sox_ffmpeg_format_fn(void);
 
-const sox_format_t *sox_ffmpeg_format_fn(void)
+const sox_format_handler_t *sox_ffmpeg_format_fn(void)
 {
   return &sox_ffmpeg_format;
 }

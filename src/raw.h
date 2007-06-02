@@ -10,12 +10,12 @@
  */
 
 #define RAW_FORMAT0(id, size, flags, encoding) \
-static int id ## _start(ft_t ft) { \
+static int id ## _start(sox_format_t * ft) { \
   return sox_rawstart(ft, sox_true, sox_true, SOX_ENCODING_ ## encoding, SOX_SIZE_ ## size); \
 } \
-const sox_format_t *sox_ ## id ## _format_fn(void); \
-const sox_format_t *sox_ ## id ## _format_fn(void) { \
-  static sox_format_t handler = { \
+const sox_format_handler_t *sox_ ## id ## _format_fn(void); \
+const sox_format_handler_t *sox_ ## id ## _format_fn(void) { \
+  static sox_format_handler_t handler = { \
     names, flags, \
     id ## _start, sox_rawread , sox_format_nothing, \
     id ## _start, sox_rawwrite, sox_format_nothing, \

@@ -89,7 +89,7 @@ static inline int32_t clip16(int32_t sample)
     }
 }
 
-static int sox_xastartread(ft_t ft)
+static int sox_xastartread(sox_format_t * ft)
 {
     xa_t xa = (xa_t) ft->priv;
     char *magic = xa->header.magic;
@@ -194,7 +194,7 @@ static int sox_xastartread(ft_t ft)
  * Read up to len samples from a file, converted to signed longs.
  * Return the number of samples read.
  */
-static sox_size_t sox_xaread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t sox_xaread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
 {
     xa_t xa = (xa_t) ft->priv;
     int32_t sample;
@@ -269,7 +269,7 @@ static sox_size_t sox_xaread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
     return done;
 }
 
-static int sox_xastopread(ft_t ft)
+static int sox_xastopread(sox_format_t * ft)
 {
     xa_t xa = (xa_t) ft->priv;
 
@@ -284,25 +284,25 @@ static int sox_xastopread(ft_t ft)
     return SOX_SUCCESS;
 }
 
-static int sox_xastartwrite(ft_t ft)
+static int sox_xastartwrite(sox_format_t * ft)
 {
     sox_fail_errno(ft, SOX_ENOTSUP, ".XA writing not supported");
     return SOX_EOF;
 }
 
-static sox_size_t sox_xawrite(ft_t ft, const sox_ssample_t *buf UNUSED, sox_size_t len UNUSED)
+static sox_size_t sox_xawrite(sox_format_t * ft, const sox_ssample_t *buf UNUSED, sox_size_t len UNUSED)
 {
     sox_fail_errno(ft, SOX_ENOTSUP, ".XA writing not supported");
     return 0;
 }
 
-static int sox_xastopwrite(ft_t ft)
+static int sox_xastopwrite(sox_format_t * ft)
 {
     sox_fail_errno(ft, SOX_ENOTSUP, ".XA writing not supported");
     return SOX_EOF;
 }
 
-static int sox_xaseek(ft_t ft, sox_size_t offset)
+static int sox_xaseek(sox_format_t * ft, sox_size_t offset)
 {
     return sox_format_nothing_seek(ft, offset);
 }
@@ -313,7 +313,7 @@ static const char *xanames[] = {
     NULL
 };
 
-sox_format_t sox_xa_format = {
+sox_format_handler_t sox_xa_format = {
   xanames,
   SOX_FILE_LIT_END,
   sox_xastartread,
@@ -325,9 +325,9 @@ sox_format_t sox_xa_format = {
   sox_xaseek
 };
 
-const sox_format_t *sox_xa_format_fn(void);
+const sox_format_handler_t *sox_xa_format_fn(void);
 
-const sox_format_t *sox_xa_format_fn(void)
+const sox_format_handler_t *sox_xa_format_fn(void)
 {
   return &sox_xa_format;
 }

@@ -113,13 +113,13 @@ uint8_t const cswap[256] = {
 /* Read in a buffer of data of length len bytes.
  * Returns number of bytes read.
  */
-size_t sox_readbuf(ft_t ft, void *buf, sox_size_t len)
+size_t sox_readbuf(sox_format_t * ft, void *buf, sox_size_t len)
 {
     return fread(buf, 1, len, ft->fp);
 }
 
 /* Skip input without seeking. */
-int sox_skipbytes(ft_t ft, sox_size_t n)
+int sox_skipbytes(sox_format_t * ft, sox_size_t n)
 {
   unsigned char trash;
 
@@ -131,7 +131,7 @@ int sox_skipbytes(ft_t ft, sox_size_t n)
 }
 
 /* Pad output. */
-int sox_padbytes(ft_t ft, sox_size_t n)
+int sox_padbytes(sox_format_t * ft, sox_size_t n)
 {
   while (n--)
     if (sox_writeb(ft, '\0') == SOX_EOF)
@@ -144,12 +144,12 @@ int sox_padbytes(ft_t ft, sox_size_t n)
  * Returns number of bytes written.
  */
 
-size_t sox_writebuf(ft_t ft, void const *buf, sox_size_t len)
+size_t sox_writebuf(sox_format_t * ft, void const *buf, sox_size_t len)
 {
     return fwrite(buf, 1, len, ft->fp);
 }
 
-sox_size_t sox_filelength(ft_t ft)
+sox_size_t sox_filelength(sox_format_t * ft)
 {
   struct stat st;
 
@@ -158,32 +158,32 @@ sox_size_t sox_filelength(ft_t ft)
   return (sox_size_t)st.st_size;
 }
 
-int sox_flush(ft_t ft)
+int sox_flush(sox_format_t * ft)
 {
   return fflush(ft->fp);
 }
 
-sox_ssize_t sox_tell(ft_t ft)
+sox_ssize_t sox_tell(sox_format_t * ft)
 {
   return (sox_ssize_t)ftello(ft->fp);
 }
 
-int sox_eof(ft_t ft)
+int sox_eof(sox_format_t * ft)
 {
   return feof(ft->fp);
 }
 
-int sox_error(ft_t ft)
+int sox_error(sox_format_t * ft)
 {
   return ferror(ft->fp);
 }
 
-void sox_rewind(ft_t ft)
+void sox_rewind(sox_format_t * ft)
 {
   rewind(ft->fp);
 }
 
-void sox_clearerr(ft_t ft)
+void sox_clearerr(sox_format_t * ft)
 {
   clearerr(ft->fp);
 }
@@ -194,7 +194,7 @@ void sox_clearerr(ft_t ft)
 /* Read n-char string (and possibly null-terminating).
  * Stop reading and null-terminate string if either a 0 or \n is reached.
  */
-int sox_reads(ft_t ft, char *c, sox_size_t len)
+int sox_reads(sox_format_t * ft, char *c, sox_size_t len)
 {
     char *sc;
     char in;
@@ -219,7 +219,7 @@ int sox_reads(ft_t ft, char *c, sox_size_t len)
 }
 
 /* Write null-terminated string (without \0). */
-int sox_writes(ft_t ft, char const * c)
+int sox_writes(sox_format_t * ft, char const * c)
 {
         if (sox_writebuf(ft, c, strlen(c)) != strlen(c))
         {
@@ -308,10 +308,10 @@ double sox_swapdf(double df)
 
 
 /* dummy format routines for do-nothing functions */
-int sox_format_nothing(ft_t ft UNUSED) { return(SOX_SUCCESS); }
-sox_size_t sox_format_nothing_read(ft_t ft UNUSED, sox_ssample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
-sox_size_t sox_format_nothing_write(ft_t ft UNUSED, const sox_ssample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
-int sox_format_nothing_seek(ft_t ft UNUSED, sox_size_t offset UNUSED) { sox_fail_errno(ft, SOX_ENOTSUP, "operation not supported"); return(SOX_EOF); }
+int sox_format_nothing(sox_format_t * ft UNUSED) { return(SOX_SUCCESS); }
+sox_size_t sox_format_nothing_read(sox_format_t * ft UNUSED, sox_ssample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
+sox_size_t sox_format_nothing_write(sox_format_t * ft UNUSED, const sox_ssample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
+int sox_format_nothing_seek(sox_format_t * ft UNUSED, sox_size_t offset UNUSED) { sox_fail_errno(ft, SOX_ENOTSUP, "operation not supported"); return(SOX_EOF); }
 
 /* here for linear interp.  might be useful for other things */
 sox_ssample_t sox_gcd(sox_ssample_t a, sox_ssample_t b)
@@ -476,7 +476,7 @@ const char *sox_version(void)
  *
  * N.B. Can only seek forwards on non-seekable streams!
  */
-int sox_seeki(ft_t ft, sox_ssize_t offset, int whence)
+int sox_seeki(sox_format_t * ft, sox_ssize_t offset, int whence)
 {
     if (ft->seekable == 0) {
         /* If a stream peel off chars else EPERM */
@@ -599,7 +599,7 @@ const char prc_header[41] = {
 10 LListB (i.e. long giving number of bytes followed by bytes) Sound Data
 */
 
-int prc_checkheader(ft_t ft, char *head)
+int prc_checkheader(sox_format_t * ft, char *head)
 {
   sox_readbuf(ft, head, sizeof(prc_header));
   return memcmp(head, prc_header, sizeof(prc_header)) == 0;

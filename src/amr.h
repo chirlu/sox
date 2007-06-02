@@ -30,7 +30,7 @@ typedef struct amr
 
 assert_static(sizeof(struct amr) <= SOX_MAX_FILE_PRIVSIZE, AMR_PRIV_TOO_BIG);
 
-static sox_size_t decode_1_frame(ft_t ft)
+static sox_size_t decode_1_frame(sox_format_t * ft)
 {
   amr_t amr = (amr_t) ft->priv;
   int block_size_1;
@@ -45,14 +45,14 @@ static sox_size_t decode_1_frame(ft_t ft)
   return 0;
 }
 
-static void encode_1_frame(ft_t ft)
+static void encode_1_frame(sox_format_t * ft)
 {
   amr_t amr = (amr_t) ft->priv;
   unsigned char coded[AMR_CODED_MAX];
   fwrite(coded, 1, (unsigned)E_IF_encode(amr->state, amr->mode, amr->pcm, coded, 1), ft->fp);
 }
 
-static void set_format(ft_t ft)
+static void set_format(sox_format_t * ft)
 {
   ft->signal.rate = AMR_RATE;
   ft->signal.size = SOX_SIZE_16BIT;
@@ -60,7 +60,7 @@ static void set_format(ft_t ft)
   ft->signal.channels = 1;
 }
 
-static int startread(ft_t ft)
+static int startread(sox_format_t * ft)
 {
   amr_t amr = (amr_t) ft->priv;
   char buffer[sizeof(magic)];
@@ -79,7 +79,7 @@ static int startread(ft_t ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t read(ft_t ft, sox_ssample_t * buf, sox_size_t len)
+static sox_size_t read(sox_format_t * ft, sox_ssample_t * buf, sox_size_t len)
 {
   amr_t amr = (amr_t) ft->priv;
   sox_size_t done;
@@ -94,14 +94,14 @@ static sox_size_t read(ft_t ft, sox_ssample_t * buf, sox_size_t len)
   return done;
 }
 
-static int stopread(ft_t ft)
+static int stopread(sox_format_t * ft)
 {
   amr_t amr = (amr_t) ft->priv;
   D_IF_exit(amr->state);
   return SOX_SUCCESS;
 }
 
-static int startwrite(ft_t ft)
+static int startwrite(sox_format_t * ft)
 {
   amr_t amr = (amr_t) ft->priv;
 
@@ -121,7 +121,7 @@ static int startwrite(ft_t ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t write(ft_t ft, const sox_ssample_t * buf, sox_size_t len)
+static sox_size_t write(sox_format_t * ft, const sox_ssample_t * buf, sox_size_t len)
 {
   amr_t amr = (amr_t) ft->priv;
   sox_size_t done;
@@ -136,7 +136,7 @@ static sox_size_t write(ft_t ft, const sox_ssample_t * buf, sox_size_t len)
   return done;
 }
 
-static int stopwrite(ft_t ft)
+static int stopwrite(sox_format_t * ft)
 {
   amr_t amr = (amr_t) ft->priv;
 
@@ -150,12 +150,12 @@ static int stopwrite(ft_t ft)
   return SOX_SUCCESS;
 }
 
-const sox_format_t *AMR_FORMAT_FN(void);
+const sox_format_handler_t *AMR_FORMAT_FN(void);
 
-const sox_format_t *AMR_FORMAT_FN(void)
+const sox_format_handler_t *AMR_FORMAT_FN(void)
 {
   static char const * names[] = {AMR_NAMES, NULL};
-  static sox_format_t handler = {
+  static sox_format_handler_t handler = {
     names, 0,
     startread, read, stopread,
     startwrite, write, stopwrite,

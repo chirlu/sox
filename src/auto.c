@@ -17,7 +17,7 @@
 #include "sox_i.h"
 #include <string.h>
 
-static int sox_autostartread(ft_t ft)
+static int sox_autostartread(sox_format_t * ft)
 {
     char *type = NULL;
     char header[256];
@@ -164,10 +164,10 @@ static int sox_autostartread(ft_t ft)
 
     sox_debug("Detected file format type: %s", type);
     set_endianness_if_not_already_set(ft);
-    return ft->h->startread? (* ft->h->startread)(ft) : SOX_SUCCESS;
+    return ft->handler->startread? (* ft->handler->startread)(ft) : SOX_SUCCESS;
 }
 
-static int sox_autostartwrite(ft_t ft) 
+static int sox_autostartwrite(sox_format_t * ft) 
 {
         sox_fail_errno(ft,SOX_EFMT,"Type AUTO can only be used for input!");
         return(SOX_EOF);
@@ -178,7 +178,7 @@ static const char *autonames[] = {
   NULL
 };
 
-static sox_format_t sox_auto_format = {
+static sox_format_handler_t sox_auto_format = {
   autonames,
   SOX_FILE_DEVICE | SOX_FILE_PHONY,
   sox_autostartread,
@@ -190,9 +190,9 @@ static sox_format_t sox_auto_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_auto_format_fn(void);
+const sox_format_handler_t *sox_auto_format_fn(void);
 
-const sox_format_t *sox_auto_format_fn(void)
+const sox_format_handler_t *sox_auto_format_fn(void)
 {
     return &sox_auto_format;
 }

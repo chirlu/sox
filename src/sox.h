@@ -17,6 +17,13 @@
 #include <limits.h>
 #include "soxstdint.h"
 
+/* Avoid warnings about unused parameters. */
+#ifdef __GNUC__
+#define UNUSED __attribute__ ((unused))
+#else
+#define UNUSED
+#endif
+
 /* The following is the API version of libSoX.  It is not meant
  * to follow the version number of SoX but it has historically.
  * Please do not count on these numbers being in sync.
@@ -25,12 +32,22 @@
 #define SOX_LIB_VERSION_CODE 0x0d0000
 #define SOX_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
-/* Avoid warnings about unused parameters. */
-#ifdef __GNUC__
-#define UNUSED __attribute__ ((unused))
-#else
-#define UNUSED
-#endif
+const char *sox_version(void);   /* Returns version number */
+
+extern char const * sox_message_filename;
+
+#define SOX_SUCCESS 0
+#define SOX_EOF (-1)             /* End Of File or other error */
+
+/* libSoX specific error codes.  The rest directly map from errno. */
+#define SOX_EHDR 2000            /* Invalid Audio Header */
+#define SOX_EFMT 2001            /* Unsupported data format */
+#define SOX_ERATE 2002           /* Unsupported rate for format */
+#define SOX_ENOMEM 2003          /* Can't alloc memory */
+#define SOX_EPERM 2004           /* Operation not permitted */
+#define SOX_ENOTSUP 2005         /* Operation not supported */
+#define SOX_EINVAL 2006          /* Invalid argument */
+#define SOX_EFFMT 2007           /* Unsupported file format */
 
 /* Boolean type, assignment (but not necessarily binary) compatible with
  * C++ bool */
@@ -196,13 +213,6 @@ typedef struct sox_global_info /* Global parameters (for effects & formats) */
 
 typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot} sox_plot_t;
 
-typedef struct sox_effects_global_info /* Global parameters (for effects) */
-{
-  sox_plot_t plot;         /* To help the user choose effect & options */
-  double speed;            /* Gather up all speed changes here, then resample */
-  sox_global_info_t * global_info;
-} sox_effects_global_info_t;
-
 typedef struct sox_formats_global_info /* Global parameters (for formats) */
 {
   sox_global_info_t * global_info;
@@ -280,55 +290,49 @@ typedef struct sox_fileinfo
 
 
 /*
+ * Handler structure for each format.
+ */
+
+typedef struct sox_format sox_format_t;
+
+typedef struct {
+    const char   * const *names;
+    unsigned int flags;
+    int          (*startread)(sox_format_t * ft);
+    sox_size_t    (*read)(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len);
+    int          (*stopread)(sox_format_t * ft);
+    int          (*startwrite)(sox_format_t * ft);
+    sox_size_t    (*write)(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len);
+    int          (*stopwrite)(sox_format_t * ft);
+    int          (*seek)(sox_format_t * ft, sox_size_t offset);
+} sox_format_handler_t;
+
+/*
  *  Format information for input and output files.
  */
 
 #define SOX_MAX_FILE_PRIVSIZE    1000
-#define SOX_MAX_EFFECT_PRIVSIZE 1000
-
 #define SOX_MAX_NLOOPS           8
 
-/*
- * Handler structure for each format.
- */
+struct sox_format {
+  /* Placing priv at the start of this structure ensures that it gets aligned
+   * in memory in the optimal way for any structure to be cast over it. */
+  char   priv[SOX_MAX_FILE_PRIVSIZE];    /* format's private data area */
 
-typedef struct sox_soundstream *ft_t;
-
-typedef struct sox_format {
-    const char   * const *names;
-    unsigned int flags;
-    int          (*startread)(ft_t ft);
-    sox_size_t    (*read)(ft_t ft, sox_ssample_t *buf, sox_size_t len);
-    int          (*stopread)(ft_t ft);
-    int          (*startwrite)(ft_t ft);
-    sox_size_t    (*write)(ft_t ft, const sox_ssample_t *buf, sox_size_t len);
-    int          (*stopwrite)(ft_t ft);
-    int          (*seek)(ft_t ft, sox_size_t offset);
-} sox_format_t;
-
-struct sox_soundstream {
-    sox_signalinfo_t signal;               /* signal specifications */
-    sox_instrinfo_t  instr;                /* instrument specification */
-    sox_loopinfo_t   loops[SOX_MAX_NLOOPS]; /* Looping specification */
-    sox_bool         seekable;             /* can seek on this file */
-    char             mode;                 /* read or write mode */
-    sox_size_t       length;               /* frames in file, or 0 if unknown. */
-    sox_size_t       clips;                /* increment if clipping occurs */
-    char             *filename;            /* file name */
-    char             *filetype;            /* type of file */
-    char             *comment;             /* comment string */
-    FILE             *fp;                  /* File stream pointer */
-    int              sox_errno;            /* Failure error codes */
-    char             sox_errstr[256];      /* Extend Failure text */
-    const sox_format_t *h;                 /* format struct for this file */
-    /* The following is a portable trick to align this variable on
-     * an 8-byte boundery.  Once this is done, the buffer alloced
-     * after it should be align on an 8-byte boundery as well.
-     * This lets you cast any structure over the private area
-     * without concerns of alignment.
-     */
-    double priv1;
-    char   priv[SOX_MAX_FILE_PRIVSIZE]; /* format's private data area */
+  sox_signalinfo_t signal;               /* signal specifications */
+  sox_instrinfo_t  instr;                /* instrument specification */
+  sox_loopinfo_t   loops[SOX_MAX_NLOOPS];/* Looping specification */
+  sox_bool         seekable;             /* can seek on this file */
+  char             mode;                 /* read or write mode */
+  sox_size_t       length;               /* frames in file, or 0 if unknown. */
+  sox_size_t       clips;                /* increment if clipping occurs */
+  char             *filename;            /* file name */
+  char             *filetype;            /* type of file */
+  char             *comment;             /* comment string */
+  FILE             *fp;                  /* File stream pointer */
+  int              sox_errno;            /* Failure error codes */
+  char             sox_errstr[256];      /* Extend Failure text */
+  const sox_format_handler_t * handler;  /* format struct for this file */
 };
 
 /* file flags field */
@@ -361,16 +365,46 @@ extern const char * const sox_sizes_str[];
 extern const char * const sox_size_bits_str[];
 extern const char * const sox_encodings_str[];
 
+sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info, 
+                         const char *filetype);
+sox_format_t * sox_open_write(
+    sox_bool (*overwrite_permitted)(const char *filename),
+    const char *path,
+    const sox_signalinfo_t *info,
+    const char *filetype,
+    const char *comment,
+    sox_size_t length,
+    const sox_instrinfo_t *instr,
+    const sox_loopinfo_t *loops);
+sox_size_t sox_read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len);
+sox_size_t sox_write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len);
+int sox_close(sox_format_t * ft);
+
+#define SOX_SEEK_SET 0
+int sox_seek(sox_format_t * ft, sox_size_t offset, int whence);
+
+int sox_gettype(sox_format_t *, sox_bool);
+sox_format_t * sox_initformat(void);
+
+/*
+ * Structures for effects.
+ */
+
+typedef struct sox_effects_global_info /* Global parameters (for effects) */
+{
+  sox_plot_t plot;         /* To help the user choose effect & options */
+  double speed;            /* Gather up all speed changes here, then resample */
+  sox_global_info_t * global_info;
+} sox_effects_global_info_t;
+
+#define SOX_MAX_EFFECT_PRIVSIZE SOX_MAX_FILE_PRIVSIZE
+
 #define SOX_EFF_CHAN     1           /* Effect can mix channels up/down */
 #define SOX_EFF_RATE     2           /* Effect can alter data rate */
 #define SOX_EFF_LENGTH   4           /* Effect can alter audio length */
 #define SOX_EFF_MCHAN    8           /* Effect can handle multi-channel */
 #define SOX_EFF_NULL     16          /* Effect does nothing */
 #define SOX_EFF_DEPRECATED 32        /* Effect is living on borrowed time */
-
-/*
- * Handler structure for each effect.
- */
 
 typedef struct sox_effect sox_effect_t;
 
@@ -404,24 +438,6 @@ struct sox_effect {
   sox_size_t               flows;
 };
 
-extern ft_t sox_open_read(const char *path, const sox_signalinfo_t *info, 
-                         const char *filetype);
-ft_t sox_open_write(
-    sox_bool (*overwrite_permitted)(const char *filename),
-    const char *path,
-    const sox_signalinfo_t *info,
-    const char *filetype,
-    const char *comment,
-    sox_size_t length,
-    const sox_instrinfo_t *instr,
-    const sox_loopinfo_t *loops);
-extern sox_size_t sox_read(ft_t ft, sox_ssample_t *buf, sox_size_t len);
-extern sox_size_t sox_write(ft_t ft, const sox_ssample_t *buf, sox_size_t len);
-extern int sox_close(ft_t ft);
-
-#define SOX_SEEK_SET 0
-extern int sox_seek(ft_t ft, sox_size_t offset, int whence);
-
 sox_effect_handler_t const *sox_find_effect(char const * name);
 void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const *e);
 int sox_update_effect(sox_effect_t * effp, const sox_signalinfo_t *in, const sox_signalinfo_t *out, int effect_mask);
@@ -437,8 +453,6 @@ int sox_flow_effects(int (* callback)(sox_bool all_done));
 void sox_stop_effects(void);
 void sox_delete_effects(void);
 
-int sox_gettype(ft_t, sox_bool);
-ft_t sox_initformat(void);
 char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samples, int def);
 
 /* The following routines are unique to the trim effect.
@@ -452,22 +466,5 @@ char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samp
  */
 sox_size_t sox_trim_get_start(sox_effect_t * effp);
 void sox_trim_clear_start(sox_effect_t * effp);
-
-extern char const * sox_message_filename;
-
-#define SOX_SUCCESS 0
-#define SOX_EOF (-1)           /* End Of File or other error */
-
-const char *sox_version(void);   /* Returns version number */
-
-/* libSoX specific error codes.  The rest directly map from errno. */
-#define SOX_EHDR 2000            /* Invalid Audio Header */
-#define SOX_EFMT 2001            /* Unsupported data format */
-#define SOX_ERATE 2002           /* Unsupported rate for format */
-#define SOX_ENOMEM 2003          /* Can't alloc memory */
-#define SOX_EPERM 2004           /* Operation not permitted */
-#define SOX_ENOTSUP 2005         /* Operation not supported */
-#define SOX_EINVAL 2006          /* Invalid argument */
-#define SOX_EFFMT 2007           /* Unsupported file format */
 
 #endif

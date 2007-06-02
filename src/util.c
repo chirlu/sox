@@ -100,7 +100,7 @@ SOX_MESSAGE_FUNCTION(sox_debug_most , 6)
 
 #undef SOX_MESSAGE_FUNCTION
 
-void sox_fail_errno(ft_t ft, int sox_errno, const char *fmt, ...)
+void sox_fail_errno(sox_format_t * ft, int sox_errno, const char *fmt, ...)
 {
         va_list args;
 
@@ -119,32 +119,32 @@ void sox_fail_errno(ft_t ft, int sox_errno, const char *fmt, ...)
 /*
  * Check that we have a known format suffix string.
  */
-int sox_gettype(ft_t formp, sox_bool is_file_extension)
+int sox_gettype(sox_format_t * ft, sox_bool is_file_extension)
 {
     const char * const *list;
     unsigned i;
 
-    if (!formp->filetype) {
-        sox_fail_errno(formp, SOX_EFMT, "Filetype was not specified");
+    if (!ft->filetype) {
+        sox_fail_errno(ft, SOX_EFMT, "Filetype was not specified");
         return SOX_EFMT;
     }
     for (i = 0; i < sox_formats; i++) {
-      const sox_format_t *f = sox_format_fns[i].fn();
+      const sox_format_handler_t *f = sox_format_fns[i].fn();
       if (is_file_extension && (f->flags & SOX_FILE_DEVICE))
         continue; /* don't match device name in file name extensions */
       for (list = f->names; *list; list++) {
-        const char *s1 = *list, *s2 = formp->filetype;
+        const char *s1 = *list, *s2 = ft->filetype;
         if (!strcasecmp(s1, s2))
           break;  /* not a match */
       }
       if (!*list)
         continue;
       /* Found it! */
-      formp->h = f;
+      ft->handler = f;
       return SOX_SUCCESS;
     }
-    sox_fail_errno(formp, SOX_EFMT, "File type `%s' is not known",
-                  formp->filetype);
+    sox_fail_errno(ft, SOX_EFMT, "File type `%s' is not known",
+                  ft->filetype);
     return SOX_EFMT;
 }
 

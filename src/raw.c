@@ -20,7 +20,7 @@
 #define SOX_SAMPLE_TO_ULAW_BYTE(d,c) sox_14linear2ulaw(SOX_SAMPLE_TO_SIGNED_16BIT(d,c) >> 2)
 #define SOX_SAMPLE_TO_ALAW_BYTE(d,c) sox_13linear2alaw(SOX_SAMPLE_TO_SIGNED_16BIT(d,c) >> 3)
 
-int sox_rawseek(ft_t ft, sox_size_t offset)
+int sox_rawseek(sox_format_t * ft, sox_size_t offset)
 {
     sox_size_t new_offset, channel_block, alignment;
 
@@ -54,7 +54,7 @@ int sox_rawseek(ft_t ft, sox_size_t offset)
 
 /* Works nicely for starting read and write; sox_rawstart{read,write}
    are #defined in sox_i.h */
-int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size)
+int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size)
 {
   if (default_rate && ft->signal.rate == 0) {
     sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
@@ -86,7 +86,7 @@ int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_
 
 #define READ_SAMPLES_FUNC(type, size, sign, ctype, uctype, cast) \
   sox_size_t sox_read_ ## sign ## type ## _samples( \
-      ft_t ft, sox_ssample_t *buf, sox_size_t len) \
+      sox_format_t * ft, sox_ssample_t *buf, sox_size_t len) \
   { \
     sox_size_t n, nread; \
     ctype *data = xmalloc(sizeof(ctype) * len); \
@@ -113,7 +113,7 @@ static READ_SAMPLES_FUNC(df, sizeof(double), su, double, double, SOX_FLOAT_64BIT
 
 #define WRITE_SAMPLES_FUNC(type, size, sign, ctype, uctype, cast) \
   sox_size_t sox_write_ ## sign ## type ## _samples( \
-      ft_t ft, sox_ssample_t *buf, sox_size_t len) \
+      sox_format_t * ft, sox_ssample_t *buf, sox_size_t len) \
   { \
     sox_size_t n, nwritten; \
     ctype *data = xmalloc(sizeof(ctype) * len); \
@@ -138,9 +138,9 @@ static WRITE_SAMPLES_FUNC(dw, 4, s, int32_t, uint32_t, SOX_SAMPLE_TO_SIGNED_32BI
 static WRITE_SAMPLES_FUNC(f, sizeof(float), su, float, float, SOX_SAMPLE_TO_FLOAT_32BIT)
 static WRITE_SAMPLES_FUNC(df, sizeof(double), su, double, double, SOX_SAMPLE_TO_FLOAT_64BIT)
 
-typedef sox_size_t (ft_io_fun)(ft_t ft, sox_ssample_t *buf, sox_size_t len);
+typedef sox_size_t (ft_io_fun)(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len);
 
-static ft_io_fun *check_format(ft_t ft, sox_bool write)
+static ft_io_fun *check_format(sox_format_t * ft, sox_bool write)
 {
     switch (ft->signal.size) {
     case SOX_SIZE_BYTE:
@@ -212,7 +212,7 @@ static ft_io_fun *check_format(ft_t ft, sox_bool write)
 }
 
 /* Read a stream of some type into SoX's internal buffer format. */
-sox_size_t sox_rawread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp)
+sox_size_t sox_rawread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t nsamp)
 {
     ft_io_fun * read_buf = check_format(ft, sox_false);
 
@@ -223,7 +223,7 @@ sox_size_t sox_rawread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp)
 }
 
 /* Writes SoX's internal buffer format to buffer of various data types. */
-sox_size_t sox_rawwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsamp)
+sox_size_t sox_rawwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t nsamp)
 {
     ft_io_fun *write_buf = check_format(ft, sox_true);
 

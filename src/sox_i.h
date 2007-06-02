@@ -133,48 +133,48 @@ char *strdup(const char *s);
  * possible byte swapping.
  */
 /* declared in misc.c */
-size_t sox_readbuf(ft_t ft, void *buf, sox_size_t len);
-int sox_skipbytes(ft_t ft, sox_size_t n);
-int sox_padbytes(ft_t ft, sox_size_t n);
-size_t sox_writebuf(ft_t ft, void const *buf, sox_size_t len);
-int sox_reads(ft_t ft, char *c, sox_size_t len);
-int sox_writes(ft_t ft, char const * c);
-void set_endianness_if_not_already_set(ft_t ft);
+size_t sox_readbuf(sox_format_t * ft, void *buf, sox_size_t len);
+int sox_skipbytes(sox_format_t * ft, sox_size_t n);
+int sox_padbytes(sox_format_t * ft, sox_size_t n);
+size_t sox_writebuf(sox_format_t * ft, void const *buf, sox_size_t len);
+int sox_reads(sox_format_t * ft, char *c, sox_size_t len);
+int sox_writes(sox_format_t * ft, char const * c);
+void set_endianness_if_not_already_set(sox_format_t * ft);
 
-sox_size_t sox_read_b_buf(ft_t ft, uint8_t *buf, sox_size_t len);
-sox_size_t sox_read_w_buf(ft_t ft, uint16_t *buf, sox_size_t len);
-sox_size_t sox_read_3_buf(ft_t ft, uint24_t *buf, sox_size_t len);
-sox_size_t sox_read_dw_buf(ft_t ft, uint32_t *buf, sox_size_t len);
-sox_size_t sox_read_f_buf(ft_t ft, float *buf, sox_size_t len);
-sox_size_t sox_read_df_buf(ft_t ft, double *buf, sox_size_t len);
+sox_size_t sox_read_b_buf(sox_format_t * ft, uint8_t *buf, sox_size_t len);
+sox_size_t sox_read_w_buf(sox_format_t * ft, uint16_t *buf, sox_size_t len);
+sox_size_t sox_read_3_buf(sox_format_t * ft, uint24_t *buf, sox_size_t len);
+sox_size_t sox_read_dw_buf(sox_format_t * ft, uint32_t *buf, sox_size_t len);
+sox_size_t sox_read_f_buf(sox_format_t * ft, float *buf, sox_size_t len);
+sox_size_t sox_read_df_buf(sox_format_t * ft, double *buf, sox_size_t len);
 
-sox_size_t sox_write_b_buf(ft_t ft, uint8_t *buf, sox_size_t len);
-sox_size_t sox_write_w_buf(ft_t ft, uint16_t *buf, sox_size_t len);
-sox_size_t sox_write_3_buf(ft_t ft, uint24_t *buf, sox_size_t len);
-sox_size_t sox_write_dw_buf(ft_t ft, uint32_t *buf, sox_size_t len);
-sox_size_t sox_write_f_buf(ft_t ft, float *buf, sox_size_t len);
-sox_size_t sox_write_df_buf(ft_t ft, double *buf, sox_size_t len);
+sox_size_t sox_write_b_buf(sox_format_t * ft, uint8_t *buf, sox_size_t len);
+sox_size_t sox_write_w_buf(sox_format_t * ft, uint16_t *buf, sox_size_t len);
+sox_size_t sox_write_3_buf(sox_format_t * ft, uint24_t *buf, sox_size_t len);
+sox_size_t sox_write_dw_buf(sox_format_t * ft, uint32_t *buf, sox_size_t len);
+sox_size_t sox_write_f_buf(sox_format_t * ft, float *buf, sox_size_t len);
+sox_size_t sox_write_df_buf(sox_format_t * ft, double *buf, sox_size_t len);
 
 #define sox_readb(ft, ub) (sox_read_b_buf(ft, ub, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
-int sox_writeb(ft_t ft, uint8_t ub);
+int sox_writeb(sox_format_t * ft, uint8_t ub);
 #define sox_readw(ft, uw) (sox_read_w_buf(ft, uw, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
-int sox_writew(ft_t ft, uint16_t uw);
+int sox_writew(sox_format_t * ft, uint16_t uw);
 #define sox_read3(ft, u3) (sox_read_3_buf(ft, u3, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
-int sox_write3(ft_t ft, uint24_t u3);
+int sox_write3(sox_format_t * ft, uint24_t u3);
 #define sox_readdw(ft, udw) (sox_read_dw_buf(ft, udw, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
-int sox_writedw(ft_t ft, uint32_t udw);
+int sox_writedw(sox_format_t * ft, uint32_t udw);
 #define sox_readf(ft, f) (sox_read_f_buf(ft, f, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
-int sox_writef(ft_t ft, float f);
+int sox_writef(sox_format_t * ft, float f);
 #define sox_readdf(ft, d) (sox_read_df_buf(ft, d, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
-int sox_writedf(ft_t ft, double d);
-int sox_seeki(ft_t ft, sox_ssize_t offset, int whence);
-sox_size_t sox_filelength(ft_t ft);
-int sox_flush(ft_t ft);
-sox_ssize_t sox_tell(ft_t ft);
-int sox_eof(ft_t ft);
-int sox_error(ft_t ft);
-void sox_rewind(ft_t ft);
-void sox_clearerr(ft_t ft);
+int sox_writedf(sox_format_t * ft, double d);
+int sox_seeki(sox_format_t * ft, sox_ssize_t offset, int whence);
+sox_size_t sox_filelength(sox_format_t * ft);
+int sox_flush(sox_format_t * ft);
+sox_ssize_t sox_tell(sox_format_t * ft);
+int sox_eof(sox_format_t * ft);
+int sox_error(sox_format_t * ft);
+void sox_rewind(sox_format_t * ft);
+void sox_clearerr(sox_format_t * ft);
 
 /* Utilities to read/write values endianness-independently */
 uint32_t get32_le(unsigned char **p);
@@ -216,7 +216,7 @@ void sox_debug_most(char const * fmt, ...);
 #define sox_debug_more sox_message_filename=__FILE__,sox_debug_more
 #define sox_debug_most sox_message_filename=__FILE__,sox_debug_most
 
-void sox_fail_errno(ft_t, int, const char *, ...);
+void sox_fail_errno(sox_format_t *, int, const char *, ...);
 
 #ifdef WORDS_BIGENDIAN
 #define SOX_IS_BIGENDIAN 1
@@ -252,9 +252,9 @@ extern uint8_t const cswap[256];
 
 /* Psion record header check, defined in misc.c and used in prc.c and auto.c */
 const char prc_header[41];
-int prc_checkheader(ft_t ft, char *head);
+int prc_checkheader(sox_format_t * ft, char *head);
 
-typedef const sox_format_t *(*sox_format_fn_t)(void);
+typedef const sox_format_handler_t *(*sox_format_fn_t)(void);
 
 typedef struct {
   char *name;
@@ -265,22 +265,22 @@ extern unsigned sox_formats;
 extern sox_format_tab_t sox_format_fns[];
 
 /* Raw I/O */
-int sox_rawstartread(ft_t ft);
-sox_size_t sox_rawread(ft_t ft, sox_ssample_t *buf, sox_size_t nsamp);
-int sox_rawstopread(ft_t ft);
-int sox_rawstartwrite(ft_t ft);
-sox_size_t sox_rawwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t nsamp);
-int sox_rawseek(ft_t ft, sox_size_t offset);
+int sox_rawstartread(sox_format_t * ft);
+sox_size_t sox_rawread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t nsamp);
+int sox_rawstopread(sox_format_t * ft);
+int sox_rawstartwrite(sox_format_t * ft);
+sox_size_t sox_rawwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t nsamp);
+int sox_rawseek(sox_format_t * ft, sox_size_t offset);
 
 /* The following functions can be used to simply return success if
  * a file handler or effect doesn't need to do anything special
  */
-int sox_format_nothing(ft_t ft);
-sox_size_t sox_format_nothing_read(ft_t ft, sox_ssample_t *buf, sox_size_t len);
-sox_size_t sox_format_nothing_write(ft_t ft, const sox_ssample_t *buf, sox_size_t len);
-int sox_format_nothing_seek(ft_t ft, sox_size_t offset);
+int sox_format_nothing(sox_format_t * ft);
+sox_size_t sox_format_nothing_read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len);
+sox_size_t sox_format_nothing_write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len);
+int sox_format_nothing_seek(sox_format_t * ft, sox_size_t offset);
 
-int sox_rawstart(ft_t ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size);
+int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size);
 #define sox_rawstartread(ft) sox_rawstart(ft, sox_false, sox_false, SOX_ENCODING_UNKNOWN, -1)
 #define sox_rawstartwrite sox_rawstartread
 #define sox_rawstopread sox_format_nothing

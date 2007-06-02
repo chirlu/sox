@@ -30,15 +30,15 @@
 #endif
 
 /* forward declarations */
-static double read_ieee_extended(ft_t);
-static int aiffwriteheader(ft_t, sox_size_t);
-static int aifcwriteheader(ft_t, sox_size_t);
-static void write_ieee_extended(ft_t, double);
+static double read_ieee_extended(sox_format_t *);
+static int aiffwriteheader(sox_format_t *, sox_size_t);
+static int aifcwriteheader(sox_format_t *, sox_size_t);
+static void write_ieee_extended(sox_format_t *, double);
 static double ConvertFromIeeeExtended(unsigned char*);
 static void ConvertToIeeeExtended(double, char *);
-static int textChunk(char **text, char *chunkDescription, ft_t ft);
-static int commentChunk(char **text, char *chunkDescription, ft_t ft);
-static void reportInstrument(ft_t ft);
+static int textChunk(char **text, char *chunkDescription, sox_format_t * ft);
+static int commentChunk(char **text, char *chunkDescription, sox_format_t * ft);
+static void reportInstrument(sox_format_t * ft);
 
 /* Private data used by writer */
 typedef struct aiffpriv {
@@ -47,7 +47,7 @@ typedef struct aiffpriv {
     sox_size_t dataStart; /* need to for seeking */
 } *aiff_t;
 
-int sox_aiffseek(ft_t ft, sox_size_t offset) 
+int sox_aiffseek(sox_format_t * ft, sox_size_t offset) 
 {
     aiff_t aiff = (aiff_t ) ft->priv;
     sox_size_t new_offset, channel_block, alignment;
@@ -72,7 +72,7 @@ int sox_aiffseek(ft_t ft, sox_size_t offset)
     return(ft->sox_errno);
 }
 
-int sox_aiffstartread(ft_t ft) 
+int sox_aiffstartread(sox_format_t * ft) 
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         char buf[5];
@@ -491,7 +491,7 @@ int sox_aiffstartread(ft_t ft)
 }
 
 /* print out the MIDI key allocations, loop points, directions etc */
-static void reportInstrument(ft_t ft)
+static void reportInstrument(sox_format_t * ft)
 {
   unsigned loopNum;
 
@@ -517,7 +517,7 @@ static void reportInstrument(ft_t ft)
 }
 
 /* Process a text chunk, allocate memory, display it if verbose and return */
-static int textChunk(char **text, char *chunkDescription, ft_t ft) 
+static int textChunk(char **text, char *chunkDescription, sox_format_t * ft) 
 {
   uint32_t chunksize;
   sox_readdw(ft, &chunksize);
@@ -546,7 +546,7 @@ static int textChunk(char **text, char *chunkDescription, ft_t ft)
 /* Comment lengths are words, not double words, and we can have several, so
    we use a special function, not textChunk().;
  */
-static int commentChunk(char **text, char *chunkDescription, ft_t ft)
+static int commentChunk(char **text, char *chunkDescription, sox_format_t * ft)
 {
   uint32_t chunksize;
   unsigned short numComments;
@@ -604,7 +604,7 @@ static int commentChunk(char **text, char *chunkDescription, ft_t ft)
   return(SOX_SUCCESS);
 }
 
-sox_size_t sox_aiffread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
+sox_size_t sox_aiffread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         sox_ssize_t done;
@@ -618,7 +618,7 @@ sox_size_t sox_aiffread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
         return done;
 }
 
-int sox_aiffstopread(ft_t ft) 
+int sox_aiffstopread(sox_format_t * ft) 
 {
         char buf[5];
         uint32_t chunksize;
@@ -661,7 +661,7 @@ int sox_aiffstopread(ft_t ft)
    Strictly spoken this is not legal, but the playaiff utility
    will still be able to play the resulting file. */
 
-int sox_aiffstartwrite(ft_t ft)
+int sox_aiffstartwrite(sox_format_t * ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         int rc;
@@ -691,7 +691,7 @@ int sox_aiffstartwrite(ft_t ft)
         return(aiffwriteheader(ft, 0x7f000000 / (ft->signal.size*ft->signal.channels)));
 }
 
-sox_size_t sox_aiffwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+sox_size_t sox_aiffwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         aiff->nsamples += len;
@@ -699,7 +699,7 @@ sox_size_t sox_aiffwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
         return(len);
 }
 
-int sox_aiffstopwrite(ft_t ft)
+int sox_aiffstopwrite(sox_format_t * ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         int rc;
@@ -732,7 +732,7 @@ int sox_aiffstopwrite(ft_t ft)
         return(aiffwriteheader(ft, aiff->nsamples / ft->signal.channels));
 }
 
-static int aiffwriteheader(ft_t ft, sox_size_t nframes)
+static int aiffwriteheader(sox_format_t * ft, sox_size_t nframes)
 {
         int hsize =
                 8 /*COMM hdr*/ + 18 /*COMM chunk*/ +
@@ -873,7 +873,7 @@ static int aiffwriteheader(ft_t ft, sox_size_t nframes)
         return(SOX_SUCCESS);
 }
 
-int sox_aifcstartwrite(ft_t ft)
+int sox_aifcstartwrite(sox_format_t * ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         int rc;
@@ -903,7 +903,7 @@ int sox_aifcstartwrite(ft_t ft)
         return(aifcwriteheader(ft, 0x7f000000 / (ft->signal.size*ft->signal.channels)));
 }
 
-int sox_aifcstopwrite(ft_t ft)
+int sox_aifcstopwrite(sox_format_t * ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
         int rc;
@@ -936,7 +936,7 @@ int sox_aifcstopwrite(ft_t ft)
         return(aifcwriteheader(ft, aiff->nsamples / ft->signal.channels));
 }
 
-static int aifcwriteheader(ft_t ft, sox_size_t nframes)
+static int aifcwriteheader(sox_format_t * ft, sox_size_t nframes)
 {
         unsigned hsize =
                 12 /*FVER*/ + 8 /*COMM hdr*/ + 18+4+1+15 /*COMM chunk*/ +
@@ -995,7 +995,7 @@ static int aifcwriteheader(ft_t ft, sox_size_t nframes)
         return(SOX_SUCCESS);
 }
 
-static double read_ieee_extended(ft_t ft)
+static double read_ieee_extended(sox_format_t * ft)
 {
         char buf[10];
         if (sox_readbuf(ft, buf, 10) != 10)
@@ -1006,7 +1006,7 @@ static double read_ieee_extended(ft_t ft)
         return ConvertFromIeeeExtended((unsigned char *)buf);
 }
 
-static void write_ieee_extended(ft_t ft, double x)
+static void write_ieee_extended(sox_format_t * ft, double x)
 {
         char buf[10];
         ConvertToIeeeExtended(x, buf);

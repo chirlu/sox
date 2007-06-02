@@ -31,7 +31,7 @@ static const char *dvmsnames[] = {
   NULL
 };
 
-static sox_format_t sox_dvms_format = {
+static sox_format_handler_t sox_dvms_format = {
   dvmsnames,
   0,
   sox_dvmsstartread,
@@ -43,9 +43,9 @@ static sox_format_t sox_dvms_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_dvms_format_fn(void);
+const sox_format_handler_t *sox_dvms_format_fn(void);
 
-const sox_format_t *sox_dvms_format_fn(void)
+const sox_format_handler_t *sox_dvms_format_fn(void)
 {
     return &sox_dvms_format;
 }

@@ -17,7 +17,7 @@
   unsigned sox_formats = 0;
   sox_format_tab_t sox_format_fns[MAX_FORMATS];
 #else
-  #define FORMAT(f) extern sox_format_t const * sox_##f##_format_fn(void);
+  #define FORMAT(f) extern sox_format_handler_t const * sox_##f##_format_fn(void);
   #include "formats.h"
   #undef FORMAT
   sox_format_tab_t sox_format_fns[] = {

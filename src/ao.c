@@ -30,13 +30,13 @@ typedef struct ao_priv
   ao_sample_format format;
 } *ao_priv_t;
 
-static int startread(UNUSED ft_t ft)
+static int startread(UNUSED sox_format_t * ft)
 {
   sox_fail("Cannot read from libao driver");
   return SOX_EOF;
 }
 
-static int startwrite(ft_t ft)
+static int startwrite(sox_format_t * ft)
 {
   ao_priv_t ao = (ao_priv_t)ft->priv;
 
@@ -58,7 +58,7 @@ static int startwrite(ft_t ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
 {
   ao_priv_t ao = (ao_priv_t)ft->priv;
 
@@ -68,7 +68,7 @@ static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
   return len;
 }
 
-static int stopwrite(ft_t ft)
+static int stopwrite(sox_format_t * ft)
 {
   ao_priv_t ao = (ao_priv_t)ft->priv;
 
@@ -87,7 +87,7 @@ static const char *aonames[] = {
   NULL
 };
 
-static sox_format_t sox_ao_format = {
+static sox_format_handler_t sox_ao_format = {
   aonames,
   SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
   startread,
@@ -99,9 +99,9 @@ static sox_format_t sox_ao_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_ao_format_fn(void);
+const sox_format_handler_t *sox_ao_format_fn(void);
 
-const sox_format_t *sox_ao_format_fn(void)
+const sox_format_handler_t *sox_ao_format_fn(void)
 {
     return &sox_ao_format;
 }

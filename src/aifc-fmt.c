@@ -18,7 +18,7 @@ static const char *aifcnames[] = {
   NULL
 };
 
-static sox_format_t sox_aifc_format = {
+static sox_format_handler_t sox_aifc_format = {
   aifcnames,
   SOX_FILE_LOOPS | SOX_FILE_SEEK | SOX_FILE_BIG_END,
   sox_aiffstartread,
@@ -30,9 +30,9 @@ static sox_format_t sox_aifc_format = {
   sox_aiffseek
 };
 
-const sox_format_t *sox_aifc_format_fn(void);
+const sox_format_handler_t *sox_aifc_format_fn(void);
 
-const sox_format_t *sox_aifc_format_fn(void)
+const sox_format_handler_t *sox_aifc_format_fn(void)
 {
     return &sox_aifc_format;
 }

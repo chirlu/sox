@@ -68,9 +68,9 @@ typedef struct prcpriv {
   unsigned frame_samp;     /* samples left to read in current frame */
 } *prc_t;
 
-static void prcwriteheader(ft_t ft);
+static void prcwriteheader(sox_format_t * ft);
 
-static int seek(ft_t ft, sox_size_t offset)
+static int seek(sox_format_t * ft, sox_size_t offset)
 {
   prc_t prc = (prc_t)ft->priv;
   sox_size_t new_offset, channel_block, alignment;
@@ -90,7 +90,7 @@ static int seek(ft_t ft, sox_size_t offset)
   return sox_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
 }
 
-static int startread(ft_t ft)
+static int startread(sox_format_t * ft)
 {
   prc_t p = (prc_t)ft->priv;
   char head[sizeof(prc_header)];
@@ -180,7 +180,7 @@ static int startread(ft_t ft)
 /* Read a variable-length encoded count */
 /* Ignore return code of sox_readb, as it doesn't really matter if EOF
    is delayed until the caller. */
-static unsigned read_cardinal(ft_t ft)
+static unsigned read_cardinal(sox_format_t * ft)
 {
   unsigned a;
   uint8_t byte;
@@ -214,7 +214,7 @@ static unsigned read_cardinal(ft_t ft)
   return a;
 }
 
-static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t samp)
+static sox_size_t read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t samp)
 {
   prc_t p = (prc_t)ft->priv;
 
@@ -254,7 +254,7 @@ static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t samp)
   }
 }
 
-static int stopread(ft_t ft)
+static int stopread(sox_format_t * ft)
 {
   prc_t p = (prc_t)ft->priv;
 
@@ -273,7 +273,7 @@ static int stopread(ft_t ft)
    if it is not, the unspecified size remains in the header
    (this is illegal). */
 
-static int startwrite(ft_t ft)
+static int startwrite(sox_format_t * ft)
 {
   prc_t p = (prc_t)ft->priv;
 
@@ -313,7 +313,7 @@ static int startwrite(ft_t ft)
   return SOX_SUCCESS;
 }
 
-static void write_cardinal(ft_t ft, unsigned a)
+static void write_cardinal(sox_format_t * ft, unsigned a)
 {
   uint8_t byte;
 
@@ -344,7 +344,7 @@ static void write_cardinal(ft_t ft, unsigned a)
   }
 }
 
-static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t samp)
+static sox_size_t write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t samp)
 {
   prc_t p = (prc_t)ft->priv;
   /* Psion Record seems not to be able to handle frames > 800 samples */
@@ -368,7 +368,7 @@ static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t samp)
     return sox_rawwrite(ft, buf, samp);
 }
 
-static int stopwrite(ft_t ft)
+static int stopwrite(sox_format_t * ft)
 {
   prc_t p = (prc_t)ft->priv;
 
@@ -391,7 +391,7 @@ static int stopwrite(ft_t ft)
   return SOX_SUCCESS;
 }
 
-static void prcwriteheader(ft_t ft)
+static void prcwriteheader(sox_format_t * ft)
 {
   prc_t p = (prc_t)ft->priv;
 
@@ -421,7 +421,7 @@ static const char *prcnames[] = {
   NULL
 };
 
-static sox_format_t sox_prc_format = {
+static sox_format_handler_t sox_prc_format = {
   prcnames,
   SOX_FILE_SEEK | SOX_FILE_LIT_END,
   startread,
@@ -433,9 +433,9 @@ static sox_format_t sox_prc_format = {
   seek
 };
 
-const sox_format_t *sox_prc_format_fn(void);
+const sox_format_handler_t *sox_prc_format_fn(void);
 
-const sox_format_t *sox_prc_format_fn(void)
+const sox_format_handler_t *sox_prc_format_fn(void)
 {
   return &sox_prc_format;
 }

@@ -42,7 +42,7 @@
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int sox_sunstartread(ft_t ft)
+static int sox_sunstartread(sox_format_t * ft)
 {
     sox_fileinfo_t *file = (sox_fileinfo_t *)ft->priv;
     sox_size_t samplesize, encoding;
@@ -178,7 +178,7 @@ static int sox_sunstartread(ft_t ft)
     return (SOX_SUCCESS);
 }
 
-static int sox_sunstartwrite(ft_t ft)
+static int sox_sunstartwrite(sox_format_t * ft)
 {
     sox_fileinfo_t *file = (sox_fileinfo_t *)ft->priv;
     sox_size_t samplesize, encoding;
@@ -312,7 +312,7 @@ static const char *names[] = {
   NULL
 };
 
-static sox_format_t sox_sunau_format = {
+static sox_format_handler_t sox_sunau_format = {
   names,
   SOX_FILE_DEVICE,
   sox_sunstartread,
@@ -324,9 +324,9 @@ static sox_format_t sox_sunau_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_sunau_format_fn(void);
+const sox_format_handler_t *sox_sunau_format_fn(void);
 
-const sox_format_t *sox_sunau_format_fn(void)
+const sox_format_handler_t *sox_sunau_format_fn(void)
 {
     return &sox_sunau_format;
 }

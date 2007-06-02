@@ -41,7 +41,7 @@ typedef struct lpcpriv {
   significant bits of the last byte. The 8 bit characters are "filled"
   in order from most significant bit to least significant.
 */
-static void write_bits(ft_t ft, INT32 *bits, int len)
+static void write_bits(sox_format_t * ft, INT32 *bits, int len)
 {
   int i;
   uint8_t mask;	/* The next bit position within the variable "data" to
@@ -96,7 +96,7 @@ static void write_bits(ft_t ft, INT32 *bits, int len)
   the range 0 to len, inclusive. If it is less than len, it will
   always be a multiple of 8.
 */
-static int read_bits(ft_t ft, INT32 *bits, int len)
+static int read_bits(sox_format_t * ft, INT32 *bits, int len)
 {
   int i;
   uint8_t c;
@@ -118,7 +118,7 @@ static int read_bits(ft_t ft, INT32 *bits, int len)
   return (len);
 }
 
-static int startread(ft_t ft)
+static int startread(sox_format_t * ft)
 {
   lpcpriv_t lpc = (lpcpriv_t)ft->priv;
 
@@ -131,7 +131,7 @@ static int startread(ft_t ft)
   return SOX_SUCCESS;
 }
 
-static int startwrite(ft_t ft) 
+static int startwrite(sox_format_t * ft) 
 {
   lpcpriv_t lpc = (lpcpriv_t)ft->priv;
 
@@ -144,7 +144,7 @@ static int startwrite(ft_t ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
 {
   lpcpriv_t lpc = (lpcpriv_t)ft->priv;
   sox_size_t nread = 0;
@@ -168,7 +168,7 @@ static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
   return nread;
 }
 
-static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
 {
   lpcpriv_t lpc = (lpcpriv_t)ft->priv;
   sox_size_t nwritten = 0;
@@ -189,7 +189,7 @@ static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
   return nwritten;
 }
 
-static int stopread(ft_t ft)
+static int stopread(sox_format_t * ft)
 {
   lpcpriv_t lpc = (lpcpriv_t)ft->priv;
 
@@ -198,7 +198,7 @@ static int stopread(ft_t ft)
   return SOX_SUCCESS;
 }
 
-static int stopwrite(ft_t ft)
+static int stopwrite(sox_format_t * ft)
 {
   lpcpriv_t lpc = (lpcpriv_t)ft->priv;
 
@@ -214,7 +214,7 @@ static const char *lpc10names[] = {
   NULL
 };
 
-static sox_format_t sox_lpc10_format = {
+static sox_format_handler_t sox_lpc10_format = {
   lpc10names,
   0,
   startread,
@@ -226,9 +226,9 @@ static sox_format_t sox_lpc10_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_lpc10_format_fn(void);
+const sox_format_handler_t *sox_lpc10_format_fn(void);
 
-const sox_format_t *sox_lpc10_format_fn(void)
+const sox_format_handler_t *sox_lpc10_format_fn(void)
 {
   return &sox_lpc10_format;
 }

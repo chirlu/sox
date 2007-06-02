@@ -41,7 +41,7 @@
 #include <sys/ioctl.h>
 
 /* common r/w initialization code */
-static int ossinit(ft_t ft)
+static int ossinit(sox_format_t * ft)
 {
     int sampletype, samplesize, dsp_stereo;
     int tmp, rc;
@@ -198,14 +198,14 @@ static int ossinit(ft_t ft)
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int sox_ossstartread(ft_t ft)
+static int sox_ossstartread(sox_format_t * ft)
 {
     int rc;
     rc = ossinit(ft);
     return rc;
 }
 
-static int sox_ossstartwrite(ft_t ft)
+static int sox_ossstartwrite(sox_format_t * ft)
 {
     return ossinit(ft);
 }
@@ -217,7 +217,7 @@ static const char *ossnames[] = {
   NULL
 };
 
-static sox_format_t sox_oss_format = {
+static sox_format_handler_t sox_oss_format = {
   ossnames,
   SOX_FILE_DEVICE,
   sox_ossstartread,
@@ -229,9 +229,9 @@ static sox_format_t sox_oss_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_oss_format_fn(void);
+const sox_format_handler_t *sox_oss_format_fn(void);
 
-const sox_format_t *sox_oss_format_fn(void)
+const sox_format_handler_t *sox_oss_format_fn(void)
 {
     return &sox_oss_format;
 }

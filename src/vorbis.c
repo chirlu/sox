@@ -89,7 +89,7 @@ static int _fseeko64_wrap(FILE *f, ogg_int64_t off, int whence) {
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int startread(ft_t ft)
+static int startread(sox_format_t * ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_info *vi;
@@ -210,7 +210,7 @@ static int refill_buffer (vorbis_t vb)
  * Return number of samples read.
  */
 
-static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         sox_size_t i;
@@ -245,7 +245,7 @@ static sox_size_t read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int stopread(ft_t ft)
+static int stopread(sox_format_t * ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
 
@@ -257,7 +257,7 @@ static int stopread(ft_t ft)
 
 /* Write a page of ogg data to a file.  Taken directly from encode.c in
    oggenc.   Returns the number of bytes written. */
-static int oe_write_page(ogg_page *page, ft_t ft)
+static int oe_write_page(ogg_page *page, sox_format_t * ft)
 {
         int written;
         written = sox_writebuf(ft, page->header,(sox_size_t)page->header_len);
@@ -269,7 +269,7 @@ static int oe_write_page(ogg_page *page, ft_t ft)
 /* Write out the header packets.  Derived mostly from encode.c in
    oggenc.  Returns HEADER_ERROR if the header cannot be written and
    HEADER_OK otherwise. */
-static int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
+static int write_vorbis_header(sox_format_t * ft, vorbis_enc_t *ve)
 {
         ogg_packet header_main;
         ogg_packet header_comments;
@@ -329,7 +329,7 @@ static int write_vorbis_header(ft_t ft, vorbis_enc_t *ve)
         return HEADER_OK;
 }
 
-static int startwrite(ft_t ft)
+static int startwrite(sox_format_t * ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve;
@@ -377,7 +377,7 @@ static int startwrite(ft_t ft)
         return(SOX_SUCCESS);
 }
 
-static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;
@@ -428,7 +428,7 @@ static sox_size_t write(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
         return (len);
 }
 
-static int stopwrite(ft_t ft)
+static int stopwrite(sox_format_t * ft)
 {
         vorbis_t vb = (vorbis_t) ft->priv;
         vorbis_enc_t *ve = vb->vorbis_enc_data;
@@ -444,18 +444,18 @@ static int stopwrite(ft_t ft)
         return (SOX_SUCCESS);
 }
 
-static int seek(ft_t ft, sox_size_t offset) 
+static int seek(sox_format_t * ft, sox_size_t offset) 
 {
   vorbis_t vb = (vorbis_t)ft->priv;
   return ov_pcm_seek(vb->vf, offset / ft->signal.channels)? SOX_EOF:SOX_SUCCESS;
 }
 
-const sox_format_t *sox_vorbis_format_fn(void);
+const sox_format_handler_t *sox_vorbis_format_fn(void);
 
-const sox_format_t *sox_vorbis_format_fn(void)
+const sox_format_handler_t *sox_vorbis_format_fn(void)
 {
   static const char * names[] = {"vorbis", "ogg", NULL};
-  static sox_format_t handler = {
+  static sox_format_handler_t handler = {
     names, SOX_FILE_SEEK,
     startread, read, stopread,
     startwrite, write, stopwrite,

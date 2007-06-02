@@ -13,12 +13,12 @@
 #include "sox_i.h"
 #include "vox.h"
  
-const sox_format_t *sox_vox_format_fn(void);
+const sox_format_handler_t *sox_vox_format_fn(void);
 
-const sox_format_t *sox_vox_format_fn(void)
+const sox_format_handler_t *sox_vox_format_fn(void)
 {
   static char const * names[] = {"vox", NULL};
-  static sox_format_t handler = {
+  static sox_format_handler_t handler = {
     names, 0,
     sox_vox_start,
     sox_vox_read,

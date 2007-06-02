@@ -60,7 +60,7 @@ typedef struct aupriv {
         int in_bits;
 } *au_t;
 
-static void auwriteheader(ft_t ft, sox_size_t data_size);
+static void auwriteheader(sox_format_t * ft, sox_size_t data_size);
 
 static int sox_auencodingandsize(uint32_t sun_encoding, sox_encoding_t * encoding, int * size)
 {
@@ -108,7 +108,7 @@ static int sox_auencodingandsize(uint32_t sun_encoding, sox_encoding_t * encodin
     return(SOX_SUCCESS);
 }
 
-static int sox_auseek(ft_t ft, sox_size_t offset) 
+static int sox_auseek(sox_format_t * ft, sox_size_t offset) 
 {
     au_t au = (au_t ) ft->priv;
 
@@ -138,7 +138,7 @@ static int sox_auseek(ft_t ft, sox_size_t offset)
     return(ft->sox_errno);
 }
 
-static int sox_austartread(ft_t ft) 
+static int sox_austartread(sox_format_t * ft) 
 {
         /* The following 6 variables represent a Sun sound header on disk.
            The numbers are written as big-endians.
@@ -290,7 +290,7 @@ static int sox_austartread(ft_t ft)
    if it is not, the unspecified size remains in the header
    (this is legal). */
 
-static int sox_austartwrite(ft_t ft) 
+static int sox_austartwrite(sox_format_t * ft) 
 {
         au_t p = (au_t ) ft->priv;
         int rc;
@@ -310,7 +310,7 @@ static int sox_austartwrite(ft_t ft)
  * Returns 1 if there is residual input, returns -1 if eof, else returns 0.
  * (Adapted from Sun's decode.c.)
  */
-static int unpack_input(ft_t ft, unsigned char *code)
+static int unpack_input(sox_format_t * ft, unsigned char *code)
 {
         au_t p = (au_t ) ft->priv;
         unsigned char           in_byte;
@@ -329,7 +329,7 @@ static int unpack_input(ft_t ft, unsigned char *code)
         return (p->in_bits > 0);
 }
 
-static sox_size_t sox_auread(ft_t ft, sox_ssample_t *buf, sox_size_t samp)
+static sox_size_t sox_auread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t samp)
 {
         au_t p = (au_t ) ft->priv;
         unsigned char code;
@@ -347,14 +347,14 @@ static sox_size_t sox_auread(ft_t ft, sox_ssample_t *buf, sox_size_t samp)
         return done;
 }
 
-static sox_size_t sox_auwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t samp)
+static sox_size_t sox_auwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t samp)
 {
         au_t p = (au_t ) ft->priv;
         p->data_size += samp * ft->signal.size;
         return(sox_rawwrite(ft, buf, samp));
 }
 
-static int sox_austopwrite(ft_t ft)
+static int sox_austopwrite(sox_format_t * ft)
 {
         au_t p = (au_t ) ft->priv;
         int rc;
@@ -399,7 +399,7 @@ static unsigned sox_ausunencoding(int size, sox_encoding_t encoding)
         return sun_encoding;
 }
 
-static void auwriteheader(ft_t ft, sox_size_t data_size)
+static void auwriteheader(sox_format_t * ft, sox_size_t data_size)
 {
         uint32_t magic;
         uint32_t hdr_size;
@@ -480,7 +480,7 @@ static const char *aunames[] = {
   NULL
 };
 
-static sox_format_t sox_au_format = {
+static sox_format_handler_t sox_au_format = {
   aunames,
   SOX_FILE_SEEK | SOX_FILE_BIG_END,
   sox_austartread,
@@ -492,9 +492,9 @@ static sox_format_t sox_au_format = {
   sox_auseek
 };
 
-const sox_format_t *sox_au_format_fn(void);
+const sox_format_handler_t *sox_au_format_fn(void);
 
-const sox_format_t *sox_au_format_fn(void)
+const sox_format_handler_t *sox_au_format_fn(void)
 {
     return &sox_au_format;
 }

@@ -31,7 +31,7 @@ static const char *cvsdnames[] = {
   NULL
 };
 
-static sox_format_t sox_cvsd_format = {
+static sox_format_handler_t sox_cvsd_format = {
   cvsdnames,
   0,
   sox_cvsdstartread,
@@ -43,9 +43,9 @@ static sox_format_t sox_cvsd_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_cvsd_format_fn(void);
+const sox_format_handler_t *sox_cvsd_format_fn(void);
 
-const sox_format_t *sox_cvsd_format_fn(void)
+const sox_format_handler_t *sox_cvsd_format_fn(void)
 {
     return &sox_cvsd_format;
 }

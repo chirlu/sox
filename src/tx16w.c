@@ -70,7 +70,7 @@ static sox_size_t writedone=0;
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int sox_txwstartread(ft_t ft)
+static int sox_txwstartread(sox_format_t * ft)
 {
     int c;
     char filetype[7];
@@ -182,7 +182,7 @@ static int sox_txwstartread(ft_t ft)
  * Return number of samples read.
  */
 
-static sox_size_t sox_txwread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t sox_txwread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
 {
     txw_t sk = (txw_t) ft->priv;
     sox_size_t done = 0;
@@ -232,7 +232,7 @@ static sox_size_t sox_txwread(ft_t ft, sox_ssample_t *buf, sox_size_t len)
     return done;
 }
 
-static int sox_txwstartwrite(ft_t ft)
+static int sox_txwstartwrite(sox_format_t * ft)
 {
     struct WaveHeader_ WH;
 
@@ -263,7 +263,7 @@ static int sox_txwstartwrite(ft_t ft)
     return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_txwwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t sox_txwwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
 {
     sox_size_t i;
     sox_ssample_t w1,w2;
@@ -286,7 +286,7 @@ static sox_size_t sox_txwwrite(ft_t ft, const sox_ssample_t *buf, sox_size_t len
     return(len);
 }
 
-static int sox_txwstopwrite(ft_t ft)
+static int sox_txwstopwrite(sox_format_t * ft)
 {
     struct WaveHeader_ WH;
     int AttackLength, LoopLength, i;
@@ -369,7 +369,7 @@ static const char *txwnames[] = {
   NULL
 };
 
-static sox_format_t sox_txw_format = {
+static sox_format_handler_t sox_txw_format = {
    txwnames,
    0,
    sox_txwstartread,
@@ -381,9 +381,9 @@ static sox_format_t sox_txw_format = {
    sox_format_nothing_seek
 };
 
-const sox_format_t *sox_txw_format_fn(void);
+const sox_format_handler_t *sox_txw_format_fn(void);
 
-const sox_format_t *sox_txw_format_fn(void)
+const sox_format_handler_t *sox_txw_format_fn(void)
 {
     return &sox_txw_format;
 }

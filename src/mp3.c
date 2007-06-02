@@ -85,7 +85,7 @@ static int tagtype(const unsigned char *data, size_t length)
  * still exists in the buffer then they are first shifted to be
  * front of the stream buffer.
  */
-static int sox_mp3_input(ft_t ft)
+static int sox_mp3_input(sox_format_t * ft)
 {
     struct mp3priv *p = (struct mp3priv *) ft->priv;
     size_t bytes_read;
@@ -122,7 +122,7 @@ static int sox_mp3_input(ft_t ft)
  * consume it all.  Returns SOX_EOF if no tag is found.  Its up to
  * caller to recover.
  * */
-static int sox_mp3_inputtag(ft_t ft)
+static int sox_mp3_inputtag(sox_format_t * ft)
 {
     struct mp3priv *p = (struct mp3priv *) ft->priv;
     int rc = SOX_EOF;
@@ -157,7 +157,7 @@ static int sox_mp3_inputtag(ft_t ft)
     return rc;
 }
 
-static int sox_mp3startread(ft_t ft) 
+static int sox_mp3startread(sox_format_t * ft) 
 {
     struct mp3priv *p = (struct mp3priv *) ft->priv;
     size_t ReadSize;
@@ -261,7 +261,7 @@ static int sox_mp3startread(ft_t ft)
  * Place in buf[].
  * Return number of samples read.
  */
-static sox_size_t sox_mp3read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t sox_mp3read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
 {
     struct mp3priv *p = (struct mp3priv *) ft->priv;
     sox_size_t donow,i,done=0;
@@ -324,7 +324,7 @@ static sox_size_t sox_mp3read(ft_t ft, sox_ssample_t *buf, sox_size_t len)
     return done;
 }
 
-static int sox_mp3stopread(ft_t ft)
+static int sox_mp3stopread(sox_format_t * ft)
 {
   struct mp3priv *p=(struct mp3priv*) ft->priv;
 
@@ -341,19 +341,19 @@ static int sox_mp3stopread(ft_t ft)
   return SOX_SUCCESS;
 }
 #else /*HAVE_LIBMAD*/
-static int sox_mp3startread(ft_t ft)
+static int sox_mp3startread(sox_format_t * ft)
 {
   sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
   return SOX_EOF;
 }
 
-sox_ssize_t sox_mp3read(ft_t ft, sox_sample_t *buf, sox_size_t samp)
+sox_ssize_t sox_mp3read(sox_format_t * ft, sox_sample_t *buf, sox_size_t samp)
 {
   sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
   return SOX_EOF;
 }
 
-int sox_mp3stopread(ft_t ft)
+int sox_mp3stopread(sox_format_t * ft)
 {
   sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
   return SOX_EOF;
@@ -366,7 +366,7 @@ static void null_error_func(const char* string UNUSED, va_list va UNUSED)
   return;
 }
 
-static int sox_mp3startwrite(ft_t ft)
+static int sox_mp3startwrite(sox_format_t * ft)
 {
   struct mp3priv *p = (struct mp3priv *) ft->priv;
   
@@ -414,7 +414,7 @@ static int sox_mp3startwrite(ft_t ft)
   return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_mp3write(ft_t ft, const sox_ssample_t *buf, sox_size_t samp)
+static sox_size_t sox_mp3write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t samp)
 {
     struct mp3priv *p = (struct mp3priv *)ft->priv;
     char *mp3buffer;
@@ -505,7 +505,7 @@ end3:
     return done;
 }
 
-static int sox_mp3stopwrite(ft_t ft)
+static int sox_mp3stopwrite(sox_format_t * ft)
 {
   struct mp3priv *p = (struct mp3priv *) ft->priv;
   char mp3buffer[7200];
@@ -524,19 +524,19 @@ static int sox_mp3stopwrite(ft_t ft)
 }
 
 #else /* HAVE_LIBMP3LAME */
-static int sox_mp3startwrite(ft_t ft UNUSED)
+static int sox_mp3startwrite(sox_format_t * ft UNUSED)
 {
   sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
   return SOX_EOF;
 }
 
-static sox_size_t sox_mp3write(ft_t ft UNUSED, const sox_sample_t *buf UNUSED, sox_size_t samp UNUSED)
+static sox_size_t sox_mp3write(sox_format_t * ft UNUSED, const sox_sample_t *buf UNUSED, sox_size_t samp UNUSED)
 {
   sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
   return 0;
 }
 
-static int sox_mp3stopwrite(ft_t ft)
+static int sox_mp3stopwrite(sox_format_t * ft)
 {
   sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
   return SOX_EOF;
@@ -550,7 +550,7 @@ static const char *mp3names[] = {
   NULL,
 };
 
-static sox_format_t sox_mp3_format = {
+static sox_format_handler_t sox_mp3_format = {
   mp3names,
   0,
   sox_mp3startread,
@@ -562,9 +562,9 @@ static sox_format_t sox_mp3_format = {
   sox_format_nothing_seek
 };
 
-const sox_format_t *sox_mp3_format_fn(void);
+const sox_format_handler_t *sox_mp3_format_fn(void);
 
-const sox_format_t *sox_mp3_format_fn(void)
+const sox_format_handler_t *sox_mp3_format_fn(void)
 {
     return &sox_mp3_format;
 }
