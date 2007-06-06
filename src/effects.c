@@ -255,10 +255,10 @@ static int flow_effect(unsigned n)
   sox_size_t idone = effp1->olen - effp1->odone;
   sox_size_t odone = sox_bufsiz - effp->olen;
 
-  if (effp->flows == 1)   /* Run effect on all channels at once */
-    effstatus = effp->handler.flow(effp,
-        &effp1->obuf[effp1->odone], &effp->obuf[effp->olen], &idone, &odone);
-  else {                         /* Run effect on each channel individually */
+  if (effp->flows == 1)       /* Run effect on all channels at once */
+    effstatus = effp->handler.flow(effp, &effp1->obuf[effp1->odone],
+                                   &effp->obuf[effp->olen], &idone, &odone);
+  else {                 /* Run effect on each channel individually */
     sox_ssample_t *obuf = &effp->obuf[effp->olen];
     sox_size_t idone_last, odone_last;
 
