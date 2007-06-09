@@ -14,11 +14,11 @@
 
 #include <string.h>
 
-#ifdef HAVE_LIBMAD
+#ifdef HAVE_MAD_H
 #include <mad.h>
 #endif
 
-#ifdef HAVE_LIBMP3LAME
+#ifdef HAVE_LAME_LAME_H
 #include <lame/lame.h>
 #include <math.h>
 #endif
@@ -27,7 +27,7 @@
 
 /* Private data */
 struct mp3priv {
-#ifdef HAVE_LIBMAD
+#ifdef HAVE_MAD_H
         struct mad_stream       *Stream;
         struct mad_frame        *Frame;
         struct mad_synth        *Synth;
@@ -35,13 +35,13 @@ struct mp3priv {
         unsigned char           *InputBuffer;
         sox_ssize_t              cursamp;
         sox_size_t               FrameCount;
-#endif /*HAVE_LIBMAD*/
-#ifdef HAVE_LIBMP3LAME
+#endif /*HAVE_MAD_H*/
+#ifdef HAVE_LAME_LAME_H
         lame_global_flags       *gfp;
-#endif /*HAVE_LIBMP3LAME*/
+#endif /*HAVE_LAME_LAME_H*/
 };
 
-#ifdef HAVE_LIBMAD
+#ifdef HAVE_MAD_H
 
 /* This function merges the functions tagtype() and id3_tag_query()
    from MAD's libid3tag, so we don't have to link to it
@@ -340,7 +340,7 @@ static int sox_mp3stopread(sox_format_t * ft)
 
   return SOX_SUCCESS;
 }
-#else /*HAVE_LIBMAD*/
+#else /*HAVE_MAD_H*/
 static int sox_mp3startread(sox_format_t * ft)
 {
   sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
@@ -358,9 +358,9 @@ int sox_mp3stopread(sox_format_t * ft)
   sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
   return SOX_EOF;
 }
-#endif /*HAVE_LIBMAD*/
+#endif /*HAVE_MAD_H*/
 
-#ifdef HAVE_LIBMP3LAME
+#ifdef HAVE_LAME_LAME_H
 static void null_error_func(const char* string UNUSED, va_list va UNUSED)
 {
   return;
@@ -523,7 +523,7 @@ static int sox_mp3stopwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-#else /* HAVE_LIBMP3LAME */
+#else /* HAVE_LAME_LAME_H */
 static int sox_mp3startwrite(sox_format_t * ft UNUSED)
 {
   sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
@@ -541,7 +541,7 @@ static int sox_mp3stopwrite(sox_format_t * ft)
   sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
   return SOX_EOF;
 }
-#endif /* HAVE_LIBMP3LAME */
+#endif /* HAVE_LAME_LAME_H */
 
 /* MP3 */
 static const char *mp3names[] = {
