@@ -297,11 +297,4 @@ extern sox_effect_fn_t sox_effect_fns[];
 #include "effects.h"
 #undef EFFECT
 
-/* Needed in rate.c */
-int sox_resample_start(sox_effect_t * effp);
-int sox_resample_getopts(sox_effect_t * effp, int n, char **argv);
-int sox_resample_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);
-int sox_resample_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp);
-int sox_resample_stop(sox_effect_t * effp);
-
 #endif

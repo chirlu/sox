@@ -139,7 +139,7 @@ static long SrcEX(resample_t r, long Nx);
 /*
  * Process options
  */
-int sox_resample_getopts(sox_effect_t * effp, int n, char **argv)
+static int getopts(sox_effect_t * effp, int n, char **argv)
 {
         resample_t r = (resample_t) effp->priv;
 
@@ -172,7 +172,7 @@ int sox_resample_getopts(sox_effect_t * effp, int n, char **argv)
           sox_fail(effp->handler.usage);
           return (SOX_EOF);
         } else if ((r->rolloff <= 0.01) || (r->rolloff >= 1.0)) {
-          sox_fail("resample: rolloff factor (%f) no good, should be 0.01<x<1.0", r->rolloff);
+          sox_fail("rolloff factor (%f) no good, should be 0.01<x<1.0", r->rolloff);
           return(SOX_EOF);
         }
 
@@ -181,16 +181,16 @@ int sox_resample_getopts(sox_effect_t * effp, int n, char **argv)
           	return (SOX_EOF);
         } else if (r->beta <= 2.0) {
         	r->beta = 0;
-                sox_debug("resample opts: Nuttall window, cutoff %f", r->rolloff);
+                sox_debug("opts: Nuttall window, cutoff %f", r->rolloff);
         } else
-                sox_debug("resample opts: Kaiser window, cutoff %f, beta %f", r->rolloff, r->beta);
+                sox_debug("opts: Kaiser window, cutoff %f, beta %f", r->rolloff, r->beta);
         return (SOX_SUCCESS);
 }
 
 /*
  * Prepare processing.
  */
-int sox_resample_start(sox_effect_t * effp)
+static int start(sox_effect_t * effp)
 {
   resample_t r = (resample_t) effp->priv;
   long Xoff, gcdrate;
@@ -225,7 +225,7 @@ int sox_resample_start(sox_effect_t * effp)
   /* returns error # <=0, or adjusted wing-len > 0 */
   i = makeFilter(r->Imp, r->Nwing, r->rolloff, r->beta, r->Nq, 1);
   if (i <= 0) {
-    sox_fail("resample: Unable to make filter");
+    sox_fail("Unable to make filter");
     return (SOX_EOF);
   }
 
@@ -233,7 +233,7 @@ int sox_resample_start(sox_effect_t * effp)
 
   if (r->quadr < 0) {     /* exact coeff's method */
     r->Xh = r->Nwing / r->b;
-    sox_debug("resample: rate ratio %ld:%ld, coeff interpolation not needed", r->a, r->b);
+    sox_debug("rate ratio %ld:%ld, coeff interpolation not needed", r->a, r->b);
   } else {
     r->dhb = Np;        /* Fixed-point Filter sampling-time-increment */
     if (r->Factor < 1.0)
@@ -278,7 +278,7 @@ int sox_resample_start(sox_effect_t * effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-int sox_resample_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                      sox_size_t *isamp, sox_size_t *osamp)
 {
         resample_t r = (resample_t) effp->priv;
@@ -296,7 +296,7 @@ int sox_resample_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssampl
         Nx = Nproc - r->Xread; /* space for right-wing future-data */
         if (Nx <= 0)
         {
-                sox_fail("resample: Can not handle this sample rate change. Nx not positive: %d", Nx);
+                sox_fail("Can not handle this sample rate change. Nx not positive: %d", Nx);
                 return (SOX_EOF);
         }
         if ((unsigned long)Nx > *isamp)
@@ -383,7 +383,7 @@ int sox_resample_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssampl
 /*
  * Process tail of input samples.
  */
-int sox_resample_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
         resample_t r = (resample_t) effp->priv;
         long isamp_res, osamp_res;
@@ -400,7 +400,7 @@ int sox_resample_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osa
                 sox_ssample_t Isamp, Osamp;
                 Isamp = isamp_res;
                 Osamp = osamp_res;
-                rc = sox_resample_flow(effp, NULL, Obuf, (sox_size_t *)&Isamp, (sox_size_t *)&Osamp);
+                rc = flow(effp, NULL, Obuf, (sox_size_t *)&Isamp, (sox_size_t *)&Osamp);
                 if (rc)
                     return rc;
                 sox_debug("DRAIN isamp,osamp  (%d,%d) -> (%d,%d)",
@@ -423,7 +423,7 @@ int sox_resample_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osa
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-int sox_resample_stop(sox_effect_t * effp)
+static int stop(sox_effect_t * effp)
 {
         resample_t r = (resample_t) effp->priv;
         
@@ -721,19 +721,11 @@ static void LpFilter(double *c, long N, double frq, double Beta, long Num)
    }
 }
 
-static sox_effect_handler_t sox_resample_effect = {
-   "resample",
-   "Usage: resample [ -qs | -q | -ql ] [ rolloff [ beta ] ]",
-   SOX_EFF_RATE,
-   sox_resample_getopts,
-   sox_resample_start,
-   sox_resample_flow,
-   sox_resample_drain,
-   sox_resample_stop,
-  NULL
-};
-
 const sox_effect_handler_t *sox_resample_effect_fn(void)
 {
-    return &sox_resample_effect;
+  static sox_effect_handler_t handler = {
+     "resample", "Usage: resample [ -qs | -q | -ql ] [ rolloff [ beta ] ]",
+     SOX_EFF_RATE, getopts, start, flow, drain, stop, NULL
+  };
+  return &handler;
 }
