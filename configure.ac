@@ -240,7 +240,7 @@ if test "$with_lame" != "no"; then
 fi
 
 dnl MP3 library depends on libmad || LAME
-AM_CONDITIONAL(HAVE_MP3, test x$using_mad = xyes -o x$using_lame = xyes)
+AM_CONDITIONAL(HAVE_MP3, test "x$using_mad" = "xyes" -o "x$using_lame" = "xyes")
 AC_SUBST(MP3_LIBS)
 
 dnl Check for amr-wb libraries
