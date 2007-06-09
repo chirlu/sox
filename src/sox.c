@@ -1216,79 +1216,68 @@ static sox_effect_handler_t const * output_effect_fn(void)
   return &handler;
 }
 
-static void add_default_effect(char const *name, int *effects_mask)
+static void add_auto_effect(char const * name, sox_signalinfo_t * signal)
 {
-  sox_effect_t e;
+  sox_effect_t eff;
 
-  /* Default name should always be correct! */
-  sox_create_effect(&e, sox_find_effect(name));
-  if (e.handler.getopts(&e, 0, NULL) == SOX_EOF)  /* Set up with default opts */
+  /* Auto effect should always succeed here */
+  sox_create_effect(&eff, sox_find_effect(name));
+  eff.handler.getopts(&eff, 0, NULL);          /* Set up with default opts */
+
+  /* But could fail here */
+  if (sox_add_effect(&eff, signal, &ofile->ft->signal) != SOX_SUCCESS)
     exit(2);
-  sox_add_effect(&e, &combiner, &ofile->ft->signal, effects_mask);
 }
 
 /* If needed effects are not given, auto-add at (performance) optimal point. */
 static void add_effects(void)
 {
-  unsigned i;
-  int effects_mask = 0;
-  sox_bool need_rate = combiner.rate     != ofile->ft->signal.rate;
-  sox_bool need_chan = combiner.channels != ofile->ft->signal.channels;
-  int user_mchan = -1;
+  sox_signalinfo_t signal = combiner;
+  unsigned i, min_chan = 0, min_rate = 0;
   sox_effect_t eff;
 
-  { /* Check if we have to add effects to change rate/chans or if the
-       user has specified effects to do this, in which case, check if
-       too many rate/channel-changing effects have been specified:     */
-    int user_chan_effects = 0, user_rate_effects = 0;
-
-    for (i = 0; i < nuser_effects; i++) {
-      if (user_efftab[i].handler.flags & SOX_EFF_CHAN) {
-        need_chan = sox_false;
-        ++user_chan_effects;
-      }
-      if (user_efftab[i].handler.flags & SOX_EFF_RATE) {
-        need_rate = sox_false;
-        ++user_rate_effects;
-      }
-      if (user_efftab[i].handler.flags & SOX_EFF_MCHAN)
-        user_mchan = i;
-    }
-    if (user_chan_effects > 1) {
-      sox_fail("Cannot specify multiple effects that change number of channels");
-      exit(2);
-    }
-    if (user_rate_effects > 1) {
-      sox_fail("Cannot specify multiple effects that change sample rate");
-      exit(2);
-    }
+  /* Find points after which we might add effects to change rate/chans */
+  for (i = 0; i < nuser_effects; i++) {
+    if (user_efftab[i].handler.flags & (SOX_EFF_CHAN|SOX_EFF_MCHAN))
+      min_chan = i + 1;
+    if (user_efftab[i].handler.flags & SOX_EFF_RATE)
+      min_rate = i + 1;
   }
-
+  /* 1st `effect' in the chain is the input combiner */
   sox_create_effect(&eff, input_combiner_effect_fn());
-  sox_add_effect(&eff, &combiner, &ofile->ft->signal, &effects_mask);
+  sox_add_effect(&eff, &signal, &ofile->ft->signal);
 
-  /* Copy user specified effects into the real effects */
+  /* Add auto effects if appropriate; add user specified effects */
   for (i = 0; i <= nuser_effects; i++) {
     /* If reducing channels, it's faster to do so before all other effects: */
-    if ((int)i > user_mchan && need_chan && combiner.channels > ofile->ft->signal.channels) {
-      add_default_effect("mixer", &effects_mask);
-      need_chan = sox_false;
-    }
+    if (signal.channels > ofile->ft->signal.channels && i >= min_chan)
+      add_auto_effect("mixer", &signal);
+
     /* If reducing rate, it's faster to do so before all other effects
      * (except reducing channels): */
-    if (need_rate)
-      if (i == nuser_effects || combiner.rate > ofile->ft->signal.rate) {
-        add_default_effect("resample", &effects_mask);
-        need_rate = sox_false;
-      }
-    if (i < nuser_effects)
-      sox_add_effect(&user_efftab[i], &combiner, &ofile->ft->signal, &effects_mask);
-  }
-  if (need_chan)
-    add_default_effect("mixer", &effects_mask);
+    if (signal.rate > ofile->ft->signal.rate && i >= min_rate)
+      add_auto_effect("resample", &signal);
 
+    if (i < nuser_effects)
+      sox_add_effect(&user_efftab[i], &signal, &ofile->ft->signal);
+  }
+  /* Add auto effects if still needed at this point */
+  if (signal.rate != ofile->ft->signal.rate)
+    add_auto_effect("resample", &signal);  /* Must be up-sampling */
+  if (signal.channels != ofile->ft->signal.channels)
+    add_auto_effect("mixer", &signal);     /* Must be increasing channels */
+
+  /* Last `effect' in the chain is the output file */
   sox_create_effect(&eff, output_effect_fn());
-  sox_add_effect(&eff, &combiner, &ofile->ft->signal, &effects_mask);
+  if (sox_add_effect(&eff, &signal, &ofile->ft->signal) != SOX_SUCCESS)
+    exit(2);
+
+  for (i = 0; i < sox_neffects; ++i) {
+    sox_effect_t * effp = &sox_effects[i][0];
+    sox_report("effects chain: %-10s %uHz %u channels %s",
+        effp->handler.name, effp->ininfo.rate, effp->ininfo.channels,
+        (effp->handler.flags & SOX_EFF_MCHAN)? "(multi)" : "");
+  }
 }
 
 static void open_output_file(sox_size_t olen)
@@ -1345,6 +1334,22 @@ static int update_status(sox_bool all_done)
 {
   display_status(all_done || user_abort);
   return user_abort? SOX_EOF : SOX_SUCCESS;
+}
+
+static void sox_stop_effects(void)
+{
+  unsigned e, f;
+  for (e = 0; e < sox_neffects; ++e) {
+    sox_effect_t * effp = &sox_effects[e][0];
+    sox_size_t clips = 0;
+
+    for (f = 0; f < effp->flows; ++f) {
+      effp->handler.stop(&sox_effects[e][f]);
+      clips += sox_effects[e][f].clips;
+    }
+    if (clips != 0)
+      sox_warn("clipped %u samples; decrease volume?", clips);
+  }
 }
 
 /*
@@ -1418,8 +1423,6 @@ static int process(void) {
   open_output_file(olen);
 
   add_effects();
-  if (sox_start_effects() != SOX_SUCCESS)
-    exit(2); /* The failing effect should have displayed an error message */
 
   optimize_trim();
 

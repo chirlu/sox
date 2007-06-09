@@ -399,8 +399,8 @@ typedef struct sox_effects_global_info /* Global parameters (for effects) */
 
 #define SOX_MAX_EFFECT_PRIVSIZE SOX_MAX_FILE_PRIVSIZE
 
-#define SOX_EFF_CHAN     1           /* Effect can mix channels up/down */
-#define SOX_EFF_RATE     2           /* Effect can alter data rate */
+#define SOX_EFF_CHAN     1           /* Effect can alter # of channels */
+#define SOX_EFF_RATE     2           /* Effect can alter sample rate */
 #define SOX_EFF_LENGTH   4           /* Effect can alter audio length */
 #define SOX_EFF_MCHAN    8           /* Effect can handle multi-channel */
 #define SOX_EFF_NULL     16          /* Effect does nothing */
@@ -435,22 +435,20 @@ struct sox_effect {
   sox_size_t               odone, olen;  /* consumed, total length */
   sox_size_t               imin;         /* minimum input buffer size */
   sox_size_t               clips;        /* increment if clipping occurs */
-  sox_size_t               flows;
+  sox_size_t               flows;        /* 1 if MCHAN, # chans otherwise */
+  sox_size_t               flow;         /* flow # */
 };
 
 sox_effect_handler_t const *sox_find_effect(char const * name);
 void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const *e);
-int sox_update_effect(sox_effect_t * effp, const sox_signalinfo_t *in, const sox_signalinfo_t *out, int effect_mask);
 
 /* Effects chain */
 #define SOX_MAX_EFFECTS 20
 extern sox_effect_t * sox_effects[SOX_MAX_EFFECTS];
 extern unsigned sox_neffects;
 int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin);
-int sox_add_effect(sox_effect_t * e, sox_signalinfo_t * in, sox_signalinfo_t * out, int * effects_mask);
-int sox_start_effects(void);
+int sox_add_effect(sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out);
 int sox_flow_effects(int (* callback)(sox_bool all_done));
-void sox_stop_effects(void);
 void sox_delete_effects(void);
 
 char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samples, int def);

@@ -23,127 +23,67 @@
 #include <strings.h>
 
 #undef sox_fail
-#undef sox_warn
 #undef sox_report
 #define sox_fail sox_message_filename=effp->handler.name,sox_fail
-#define sox_warn sox_message_filename=effp->handler.name,sox_warn
 #define sox_report sox_message_filename=effp->handler.name,sox_report
 
-/* dummy effect routine for do-nothing functions */
-static int effect_nothing(sox_effect_t * effp UNUSED)
+
+
+/* Default effect handler functions for do-nothing situations: */
+
+static int default_function(sox_effect_t * effp UNUSED)
 {
   return SOX_SUCCESS;
 }
 
-static int effect_nothing_flow(sox_effect_t * effp UNUSED, const sox_ssample_t *ibuf UNUSED, sox_ssample_t *obuf UNUSED, sox_size_t *isamp, sox_size_t *osamp)
+/* Pass through samples verbatim */
+static int default_flow(sox_effect_t * effp UNUSED, const sox_ssample_t *ibuf UNUSED, sox_ssample_t *obuf UNUSED, sox_size_t *isamp, sox_size_t *osamp)
 {
-  /* Pass through samples verbatim */
   *isamp = *osamp = min(*isamp, *osamp);
   memcpy(obuf, ibuf, *isamp * sizeof(*obuf));
   return SOX_SUCCESS;
 }
 
-static int effect_nothing_drain(sox_effect_t * effp UNUSED, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
+/* Inform no more samples to drain */
+static int default_drain(sox_effect_t * effp UNUSED, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
 {
-  /* Inform no more samples to drain */
   *osamp = 0;
   return SOX_EOF;
 }
 
-static int effect_nothing_getopts(sox_effect_t * effp, int argc, char **argv UNUSED)
+/* Check that no parameters have been given */
+static int default_getopts(sox_effect_t * effp, int argc, char **argv UNUSED)
 {
   if (argc) {
-    sox_fail(effp->handler.usage);
+    sox_fail("takes no parameters");
     return SOX_EOF;
   }
   return SOX_SUCCESS;
 }
 
-
-/* Effect chain routines */
-
-sox_effect_handler_t const * sox_find_effect(char const * name)
-{
-  int e;
-
-  for (e = 0; sox_effect_fns[e]; ++e) {
-    const sox_effect_handler_t *effp = sox_effect_fns[e] ();
-    if (effp && effp->name && strcasecmp(effp->name, name) == 0)
-      return effp;                 /* Found it. */
-  }
-  return NULL;
-}
-
+/* Partially initialise the effect structure; signal info will come later */
 void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const * eh)
 {
   assert(eh);
   memset(effp, 0, sizeof(*effp));
   effp->global_info = &effects_global_info;
   effp->handler = *eh;
-  if (!effp->handler.getopts) effp->handler.getopts = effect_nothing_getopts;
-  if (!effp->handler.start  ) effp->handler.start   = effect_nothing;
-  if (!effp->handler.flow   ) effp->handler.flow    = effect_nothing_flow;
-  if (!effp->handler.drain  ) effp->handler.drain   = effect_nothing_drain;
-  if (!effp->handler.stop   ) effp->handler.stop    = effect_nothing;
-  if (!effp->handler.kill   ) effp->handler.kill    = effect_nothing;
+  if (!effp->handler.getopts) effp->handler.getopts = default_getopts;
+  if (!effp->handler.start  ) effp->handler.start   = default_function;
+  if (!effp->handler.flow   ) effp->handler.flow    = default_flow;
+  if (!effp->handler.drain  ) effp->handler.drain   = default_drain;
+  if (!effp->handler.stop   ) effp->handler.stop    = default_function;
+  if (!effp->handler.kill   ) effp->handler.kill    = default_function;
 }
 
-/*
- * Copy input and output signal info into effect structures.
- * Must pass in a bitmask containing info on whether SOX_EFF_CHAN
- * or SOX_EFF_RATE has been used previously on this effect stream.
- * If not running multiple effects then just pass in a value of 0.
- *
- * Return value is the same mask plus addition of SOX_EFF_CHAN or
- * SOX_EFF_RATE if it was used in this effect.  That make this
- * return value can be passed back into this function in future
- * calls.
- */
 
-int sox_update_effect(sox_effect_t * effp, const sox_signalinfo_t * in,
-                      const sox_signalinfo_t * out, int effect_mask)
-{
-  effp->ininfo = *in;
-  effp->outinfo = *out;
 
-  if (in->channels != out->channels) {
-    /* Only effects with SOX_EFF_CHAN flag can actually handle
-     * outputing a different number of channels then the input.
-     */
-    if (!(effp->handler.flags & SOX_EFF_CHAN)) {
-      /* If this effect is being run before a SOX_EFF_CHAN effect
-       * then its output is the same as the input file; otherwise,
-       * its input contains the same number of channels as the
-       * output file. */
-      if (effect_mask & SOX_EFF_CHAN)
-        effp->ininfo.channels = out->channels;
-      else
-        effp->outinfo.channels = in->channels;
-    }
-  }
-
-  if (in->rate != out->rate) {
-    /* Only SOX_EFF_RATE effects can handle an input that
-     * has a different sample rate from the output. */
-    if (!(effp->handler.flags & SOX_EFF_RATE)) {
-      if (effect_mask & SOX_EFF_RATE)
-        effp->ininfo.rate = out->rate;
-      else
-        effp->outinfo.rate = in->rate;
-    }
-  }
-
-  if (effp->handler.flags & SOX_EFF_CHAN)
-    effect_mask |= SOX_EFF_CHAN;
-  if (effp->handler.flags & SOX_EFF_RATE)
-    effect_mask |= SOX_EFF_RATE;
-
-  return effect_mask;
-}
+/* Effects chain: */
 
 sox_effect_t * sox_effects[SOX_MAX_EFFECTS];
 unsigned sox_neffects;
 
+/* Effect can call in start() or flow() to set minimum input size to flow() */
 int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin)
 {
   if (imin > sox_bufsiz / effp->flows) {
@@ -155,91 +95,54 @@ int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin)
   return SOX_SUCCESS;
 }
 
-int sox_add_effect(sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t * out, int * effects_mask)
-{
-  unsigned f, flows;
+/* Add an effect to the chain. *in is the input signal for this effect. *out is
+ * a suggestion as to what the output signal should be, but depending on its
+ * given options and *in, the effect can choose to do differently.  Whatever
+ * output rate and channels the effect does produce are written back to *in,
+ * ready for the next effect in the chain.
+ */
+int sox_add_effect(sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t
+    const * out) { int ret, (*start)(sox_effect_t * effp) =
+  effp->handler.start; unsigned f;
 
-  if (sox_neffects == SOX_MAX_EFFECTS)
+  if (effp->handler.flags & SOX_EFF_NULL) {
+    sox_report("has no effect (is a proxy effect)");
+    return SOX_EFF_NULL;
+  }
+  effp->outinfo = effp->ininfo = *in;
+  if (effp->handler.flags & SOX_EFF_CHAN)
+    effp->outinfo.channels = out->channels;
+  if (effp->handler.flags & SOX_EFF_RATE)
+    effp->outinfo.rate = out->rate;
+  effp->flows =
+    (effp->handler.flags & SOX_EFF_MCHAN)? 1 : effp->ininfo.channels;
+  effp->clips = 0;
+  effp->imin = 0;
+  ret = start(effp);
+  if (ret == SOX_EFF_NULL) {
+    sox_report("has no effect in this configuration");
+    return SOX_EFF_NULL;
+  }
+  if (ret != SOX_SUCCESS)
     return SOX_EOF;
+  *in = effp->outinfo;
 
-  *effects_mask = sox_update_effect(effp, in, out, *effects_mask);
-
-  flows = (effp->handler.flags & SOX_EFF_MCHAN)? 1 : effp->ininfo.channels;
-
-  sox_effects[sox_neffects] = xcalloc(flows, sizeof(sox_effects[sox_neffects][0]));
+  if (sox_neffects == SOX_MAX_EFFECTS) {
+    sox_fail("Too many effects!");
+    return SOX_EOF;
+  }
+  sox_effects[sox_neffects] =
+    xcalloc(effp->flows, sizeof(sox_effects[sox_neffects][0]));
   sox_effects[sox_neffects][0] = *effp;
-  sox_effects[sox_neffects][0].flows = flows;
 
-  for (f = 1; f < flows; ++f)
-    sox_effects[sox_neffects][f] = sox_effects[sox_neffects][0];
+  for (f = 1; f < effp->flows; ++f) {
+    sox_effects[sox_neffects][f] = *effp;
+    sox_effects[sox_neffects][f].flow = f;
+    if (start(&sox_effects[sox_neffects][f]) != SOX_SUCCESS)
+      return SOX_EOF;
+  }
 
   ++sox_neffects;
-  return SOX_SUCCESS;
-}
-
-static void stop_effect(unsigned e)
-{
-  sox_effect_t * effp = &sox_effects[e][0];
-  unsigned f;
-
-  sox_size_t clips = 0;
-
-  for (f = 0; f < effp->flows; ++f) {
-    effp->handler.stop(&sox_effects[e][f]);
-    clips += sox_effects[e][f].clips;
-  }
-  if (clips != 0)
-    sox_warn("clipped %u samples; decrease volume?", clips);
-}
-
-void sox_stop_effects(void)
-{
-  unsigned e;
-  for (e = 0; e < sox_neffects; ++e)
-    stop_effect(e);
-}
-
-int sox_start_effects(void)
-{
-  unsigned e, f, i;
-  int ret = SOX_SUCCESS;
-
-  for (e = 0; e < sox_neffects; ++e) {
-    sox_effect_t * effp = &sox_effects[e][0];
-    sox_bool is_always_null = (effp->handler.flags & SOX_EFF_NULL) != 0;
-    int (*start)(sox_effect_t * effp) = effp->handler.start;
-
-    if (is_always_null)
-      sox_report("has no effect (is a proxy effect)");
-    else {
-      effp->clips = 0;
-      effp->imin = 0;
-      ret = start(effp);
-      if (ret == SOX_EFF_NULL)
-        sox_report("has no effect in this configuration");
-      else if (ret != SOX_SUCCESS)
-        return SOX_EOF;
-    }
-    if (is_always_null || ret == SOX_EFF_NULL) { /* remove from the chain */
-      free(sox_effects[e]);
-      --sox_neffects;
-      for (i = e--; i < sox_neffects; ++i)
-        sox_effects[i] = sox_effects[i + 1];
-    }
-    else for (f = 1; f < sox_effects[e][0].flows; ++f) {
-      sox_effects[e][f].clips = 0;
-      if (start(&sox_effects[e][f]) != SOX_SUCCESS)
-        return SOX_EOF;
-    }
-  }
-  for (e = 0; e < sox_neffects; ++e) {
-    sox_effect_t * effp = &sox_effects[e][0];
-    #undef sox_report
-    #define sox_report     sox_message_filename="effects chain",sox_report
-    sox_report("%-10s %uHz %u channels %s",
-        effp->handler.name, effp->ininfo.rate, effp->ininfo.channels,
-        (effp->handler.flags & SOX_EFF_MCHAN)? "(multi)" : "");
-  }
   return SOX_SUCCESS;
 }
 
@@ -344,6 +247,7 @@ static int drain_effect(unsigned n)
   return effstatus == SOX_SUCCESS? SOX_SUCCESS : SOX_EOF;
 }
 
+/* Flow data through the effects chain until an effect or callback gives EOF */
 int sox_flow_effects(int (* callback)(sox_bool all_done))
 {
   int flow_status = SOX_SUCCESS;
@@ -403,6 +307,7 @@ int sox_flow_effects(int (* callback)(sox_bool all_done))
   return flow_status;
 }
 
+/* Remove all effects from the chain */
 void sox_delete_effects(void)
 {
   while (sox_neffects)
@@ -410,7 +315,8 @@ void sox_delete_effects(void)
 }
 
 
-/* Effects handlers. */
+
+/* Effects library: */
 
 sox_effect_fn_t sox_effect_fns[] = {
 #define EFFECT(f) sox_##f##_effect_fn,
@@ -418,3 +324,16 @@ sox_effect_fn_t sox_effect_fns[] = {
 #undef EFFECT
   NULL
 };
+
+/* Find a named effect in the effects library */
+sox_effect_handler_t const * sox_find_effect(char const * name)
+{
+  int e;
+
+  for (e = 0; sox_effect_fns[e]; ++e) {
+    const sox_effect_handler_t *eh = sox_effect_fns[e] ();
+    if (eh && eh->name && strcasecmp(eh->name, name) == 0)
+      return eh;                 /* Found it. */
+  }
+  return NULL;
+}
