@@ -29,10 +29,9 @@ assert_static(sizeof(struct skeleff) <= SOX_MAX_EFFECT_PRIVSIZE,
               /* else */ skeleff_PRIVSIZE_too_big);
 
 /*
- * Process command-line options
- *
- * Don't do initialization now.
- * The 'info' fields are not yet filled in.
+ * Process command-line options but don't do other
+ * initialization now: effp->ininfo & effp->outinfo are not
+ * yet filled in.
  */
 static int getopts(sox_effect_t * effp, int n, char **argv)
 {
@@ -53,7 +52,7 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
 static int start(sox_effect_t * effp)
 {
   if (effp->outinfo.channels == 1) {
-    sox_fail("Can't run skeleff on mono data.");
+    sox_fail("Can't run on mono data.");
     return SOX_EOF;
   }
 
@@ -100,9 +99,9 @@ static int flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *o
 static int drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   *osamp = 0;
-  /* Help out application and return SOX_EOF when drain
-   * will not return any mre information.  *osamp == 0
-   * also indicates that.
+  /* Return SOX_EOF when drain
+   * will not output any more samples.
+   * *osamp == 0 * also indicates that.
    */
   return SOX_EOF;
 }
