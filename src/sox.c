@@ -1228,7 +1228,8 @@ static void add_effects(void)
       add_auto_effect("resample", &signal);
 
     if (i < nuser_effects)
-      sox_add_effect(&user_efftab[i], &signal, &ofile->ft->signal);
+      if (sox_add_effect(&user_efftab[i], &signal, &ofile->ft->signal) != SOX_SUCCESS)
+        exit(2);
   }
   /* Add auto effects if still needed at this point */
   if (signal.rate != ofile->ft->signal.rate)
