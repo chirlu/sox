@@ -513,7 +513,9 @@ static int seek(sox_format_t * ft, sox_size_t offset)
 {
   Decoder * decoder = (Decoder *) ft->priv;
 
-  return ft->mode == 'r' && FLAC__stream_decoder_seek_absolute(decoder->flac, (FLAC__uint64)(offset / ft->signal.channels)) ?  SOX_SUCCESS : SOX_EOF;
+  int result = ft->mode == 'r' && FLAC__stream_decoder_seek_absolute(decoder->flac, (FLAC__uint64)(offset / ft->signal.channels)) ?  SOX_SUCCESS : SOX_EOF;
+  decoder->wide_sample_number = decoder->number_of_wide_samples = 0;
+  return result;
 }
 
 
