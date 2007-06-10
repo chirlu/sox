@@ -670,7 +670,7 @@ static char * read_comment_file(char const * const filename)
   return result;
 }
 
-static char *getoptstr = "+ac:efghimnoqr:st:uv:xABC:DLMNRSUV::X12348";
+static char *getoptstr = "+abc:defghilmnoqr:st:uv:wxABC:DLMNRSUV::X12348";
 
 static struct option long_options[] =
   {
@@ -869,11 +869,11 @@ static sox_bool doopts(file_t f, int argc, char **argv)
       }
       break;
 
-    case '1': f->signal.size = SOX_SIZE_BYTE;  break;
-    case '2': f->signal.size = SOX_SIZE_16BIT; break;
-    case '3': f->signal.size = SOX_SIZE_24BIT; break;
-    case '4': f->signal.size = SOX_SIZE_32BIT; break;
-    case '8': f->signal.size = SOX_SIZE_64BIT; break;
+    case '1': case 'b': f->signal.size = SOX_SIZE_BYTE;  break;
+    case '2': case 'w': f->signal.size = SOX_SIZE_16BIT; break;
+    case '3':           f->signal.size = SOX_SIZE_24BIT; break;
+    case '4': case 'l': f->signal.size = SOX_SIZE_32BIT; break;
+    case '8': case 'd': f->signal.size = SOX_SIZE_64BIT; break;
 
     case 's': f->signal.encoding = SOX_ENCODING_SIGN2;     break;
     case 'u': f->signal.encoding = SOX_ENCODING_UNSIGNED;  break;
