@@ -273,7 +273,7 @@ sox_size_t sox_rawwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t 
 int sox_rawseek(sox_format_t * ft, sox_size_t offset);
 
 /* The following functions can be used to simply return success if
- * a file handler or effect doesn't need to do anything special
+ * a file handler doesn't need to do anything special
  */
 int sox_format_nothing(sox_format_t * ft);
 sox_size_t sox_format_nothing_read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len);

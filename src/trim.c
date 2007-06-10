@@ -7,18 +7,10 @@
  * the consequences of using this software.
  */
 
-/*
- * libSoX skeleton effect file.
- */
-
 #include "sox_i.h"
 #include <string.h>
 
-/* Time resolutin one millisecond */
-#define TIMERES 1000
-
-typedef struct
-{
+typedef struct {
     /* options here */
     char *start_str;
     char *length_str;

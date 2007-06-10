@@ -101,7 +101,7 @@ static int drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
   *osamp = 0;
   /* Return SOX_EOF when drain
    * will not output any more samples.
-   * *osamp == 0 * also indicates that.
+   * *osamp == 0 also indicates that.
    */
   return SOX_EOF;
 }

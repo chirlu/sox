@@ -307,6 +307,29 @@ int sox_flow_effects(int (* callback)(sox_bool all_done))
   return flow_status;
 }
 
+sox_size_t sox_effects_clips(void)
+{
+  unsigned i, f;
+  sox_size_t clips = 0;
+  for (i = 1; i < sox_neffects - 1; ++i)
+    for (f = 0; f < sox_effects[i][0].flows; ++f)
+      clips += sox_effects[i][f].clips;
+  return clips;
+}
+
+sox_size_t sox_stop_effect(sox_size_t e)
+{
+  unsigned f;
+  sox_effect_t * effp = &sox_effects[e][0];
+  sox_size_t clips = 0;
+
+  for (f = 0; f < effp->flows; ++f) {
+    effp->handler.stop(&sox_effects[e][f]);
+    clips += sox_effects[e][f].clips;
+  }
+  return clips;
+}
+
 /* Remove all effects from the chain */
 void sox_delete_effects(void)
 {

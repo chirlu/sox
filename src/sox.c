@@ -1338,18 +1338,12 @@ static int update_status(sox_bool all_done)
 
 static void sox_stop_effects(void)
 {
-  unsigned e, f;
-  for (e = 0; e < sox_neffects; ++e) {
-    sox_effect_t * effp = &sox_effects[e][0];
-    sox_size_t clips = 0;
+  sox_size_t e, clips;
 
-    for (f = 0; f < effp->flows; ++f) {
-      effp->handler.stop(&sox_effects[e][f]);
-      clips += sox_effects[e][f].clips;
-    }
-    if (clips != 0)
-      sox_warn("clipped %u samples; decrease volume?", clips);
-  }
+  for (e = 0; e < sox_neffects; ++e)
+    if ((clips = sox_stop_effect(e)) != 0)
+      sox_warn("%s clipped %u samples; decrease volume?",
+          sox_effects[e][0].handler.name, clips);
 }
 
 /*
@@ -1442,11 +1436,7 @@ static sox_size_t total_clips(void)
   sox_size_t clips = 0;
   for (i = 0; i < file_count; ++i)
     clips += files[i]->ft->clips + files[i]->volume_clips;
-  clips += mixing_clips;
-  for (i = 1; i < sox_neffects - 1; ++i)
-    for (f = 1; f < sox_effects[i][0].flows; ++f)
-      clips += sox_effects[i][f].clips;
-  return clips;
+  return clips + mixing_clips + sox_effects_clips();
 }
 
 static char const * sigfigs3(sox_size_t number)
