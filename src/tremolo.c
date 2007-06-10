@@ -28,10 +28,8 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
   if (n < 1 || n > 2 ||
       sscanf(argv[0], "%lf %c", &speed, &dummy) != 1 || speed < 0 ||
       (n > 1 && sscanf(argv[1], "%lf %c", &depth, &dummy) != 1) ||
-      depth <= 0 || depth > 100) {
-    sox_fail(effp->handler.usage);
-    return SOX_EOF;
-  }
+      depth <= 0 || depth > 100)
+    return sox_usage(effp);
   args[2] = argv[0];
   sprintf(offset, "%g", 100 - depth / 2);
   args[3] = offset;
@@ -43,7 +41,7 @@ sox_effect_handler_t const * sox_tremolo_effect_fn(void)
   static sox_effect_handler_t handler;
   handler = *sox_synth_effect_fn();
   handler.name = "tremolo";
-  handler.usage = "Usage: tremolo speed_Hz [depth_percent]";
+  handler.usage = "speed_Hz [depth_percent]";
   handler.getopts = getopts;
   return &handler;
 }

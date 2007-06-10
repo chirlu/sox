@@ -94,18 +94,12 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
     }
 
     if (n < 1)
-    {
-        sox_fail(effp->handler.usage);
-        return (SOX_EOF);
-    }
+      return sox_usage(effp);
 
     /* Parse data related to trimming front side */
     silence->start = sox_false;
     if (sscanf(argv[0], "%d", &silence->start_periods) != 1)
-    {
-        sox_fail(effp->handler.usage);
-        return(SOX_EOF);
-    }
+      return sox_usage(effp);
     if (silence->start_periods < 0)
     {
         sox_fail("Periods must not be negative");
@@ -118,10 +112,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
     {
         silence->start = sox_true;
         if (n < 2)
-        {
-            sox_fail(effp->handler.usage);
-            return SOX_EOF;
-        }
+          return sox_usage(effp);
 
         /* We do not know the sample rate so we can not fully
          * parse the duration info yet.  So save argument off
@@ -132,18 +123,12 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
         /* Perform a fake parse to do error checking */
         if (sox_parsesamples(0,silence->start_duration_str,
                     &silence->start_duration,'s') == NULL)
-        {
-            sox_fail(effp->handler.usage);
-            return(SOX_EOF);
-        }
+          return sox_usage(effp);
 
         parse_count = sscanf(argv[1], "%lf%c", &silence->start_threshold, 
                 &silence->start_unit);
         if (parse_count < 1)
-        {
-            sox_fail(effp->handler.usage);
-            return SOX_EOF;
-        }
+          return sox_usage(effp);
         else if (parse_count < 2)
             silence->start_unit = '%';
 
@@ -156,15 +141,9 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
     if (n > 0)
     {
         if (n < 3)
-        {
-            sox_fail(effp->handler.usage);
-            return SOX_EOF;
-        }
+          return sox_usage(effp);
         if (sscanf(argv[0], "%d", &silence->stop_periods) != 1)
-        {
-            sox_fail(effp->handler.usage);
-            return SOX_EOF;
-        }
+          return sox_usage(effp);
         if (silence->stop_periods < 0)
         {
             silence->stop_periods = -silence->stop_periods;
@@ -185,18 +164,12 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
         /* Perform a fake parse to do error checking */
         if (sox_parsesamples(0,silence->stop_duration_str,
                     &silence->stop_duration,'s') == NULL)
-        {
-            sox_fail(effp->handler.usage);
-            return(SOX_EOF);
-        }
+          return sox_usage(effp);
 
         parse_count = sscanf(argv[1], "%lf%c", &silence->stop_threshold, 
                              &silence->stop_unit);
         if (parse_count < 1)
-        {
-            sox_fail(effp->handler.usage);
-            return SOX_EOF;
-        }
+          return sox_usage(effp);
         else if (parse_count < 2)
             silence->stop_unit = '%';
 
@@ -210,8 +183,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
         if ((silence->start_unit != '%') && (silence->start_unit != 'd'))
         {
             sox_fail("Invalid unit specified");
-            sox_fail(effp->handler.usage);
-            return(SOX_EOF);
+            return sox_usage(effp);
         }
         if ((silence->start_unit == '%') && ((silence->start_threshold < 0.0)
             || (silence->start_threshold > 100.0)))
@@ -268,19 +240,13 @@ static int sox_silence_start(sox_effect_t * effp)
         {
             if (sox_parsesamples(effp->ininfo.rate, silence->start_duration_str,
                                 &silence->start_duration, 's') == NULL)
-            {
-                sox_fail(effp->handler.usage);
-                return(SOX_EOF);
-            }
+              return sox_usage(effp);
         }
         if (silence->stop)
         {
             if (sox_parsesamples(effp->ininfo.rate,silence->stop_duration_str,
                                 &silence->stop_duration,'s') == NULL)
-            {
-                sox_fail(effp->handler.usage);
-                return(SOX_EOF);
-            }
+              return sox_usage(effp);
         }
 
         if (silence->start)
@@ -714,7 +680,7 @@ static int kill(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_silence_effect = {
   "silence",
-  "Usage: silence [ -l ] above_periods [ duration thershold[d|%%] ] [ below_periods duration threshold[d|%%]]",
+  "[ -l ] above_periods [ duration thershold[d|%%] ] [ below_periods duration threshold[d|%%]]",
   SOX_EFF_MCHAN,
   sox_silence_getopts,
   sox_silence_start,

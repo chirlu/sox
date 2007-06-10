@@ -79,10 +79,8 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
         else if (!strcmp(argv[0], "-4"))
             mixer->mix = MIX_RIGHT_BACK;
         else if (argv[0][0] == '-' && !isdigit((int)argv[0][1])
-                && argv[0][1] != '.') {
-            sox_fail(effp->handler.usage);
-            return (SOX_EOF);
-        }
+                && argv[0][1] != '.')
+          return sox_usage(effp);
         else {
             int commas;
             char *s;
@@ -104,10 +102,8 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
     else if (n == 0) {
         mixer->mix = MIX_CENTER;
     }
-    else {
-        sox_fail(effp->handler.usage);
-        return SOX_EOF;
-    }
+    else
+      return sox_usage(effp);
 
     return (SOX_SUCCESS);
 }
@@ -540,7 +536,7 @@ sox_effect_handler_t const * sox_mixer_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "mixer",
-    "Usage: mixer [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
+    "[ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
     SOX_EFF_MCHAN | SOX_EFF_CHAN,
     getopts, start, flow, 0, 0, 0
   };
@@ -549,22 +545,17 @@ sox_effect_handler_t const * sox_mixer_effect_fn(void)
 
 sox_effect_handler_t const * sox_avg_effect_fn(void)
 {
-  static sox_effect_handler_t handler = {
-    "avg",
-    "Usage: avg [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
-    SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_DEPRECATED,
-    getopts, start, flow, 0, 0, 0
-  };
+  static sox_effect_handler_t handler;
+  handler = *sox_mixer_effect_fn();
+  handler.name = "avg";
+  handler.flags |= SOX_EFF_DEPRECATED;
   return &handler;
 }
 
 sox_effect_handler_t const * sox_pick_effect_fn(void)
 {
-  static sox_effect_handler_t handler = {
-    "pick",
-    "Usage: pick [ -l | -r | -f | -b | -1 | -2 | -3 | -4 | n,n,n...,n ]",
-    SOX_EFF_MCHAN | SOX_EFF_CHAN | SOX_EFF_DEPRECATED,
-    getopts, start, flow, 0, 0, 0
-  };
+  static sox_effect_handler_t handler;
+  handler = *sox_avg_effect_fn();
+  handler.name = "pick";
   return &handler;
 }

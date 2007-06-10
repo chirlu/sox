@@ -17,7 +17,7 @@
 /* Effect: Stereo Flanger   (c) 2006 robs@users.sourceforge.net */
 
 #define sox_flanger_usage \
-  "Usage: flanger [delay depth regen width speed shape phase interp]\n"
+  "[delay depth regen width speed shape phase interp]\n"
 /*
   "                  .\n" \
   "                 /|regen\n" \
@@ -109,10 +109,8 @@ static enum_item const interp_enum[] = {
   if (argc == 0) break; \
   d = strtod(*argv, &end_ptr); \
   if (end_ptr != *argv) { \
-    if (d < min || d > max || *end_ptr != '\0') { \
-      sox_fail(effp->handler.usage); \
-      return SOX_EOF; \
-    } \
+    if (d < min || d > max || *end_ptr != '\0') \
+      return sox_usage(effp); \
     f->p = d; \
     --argc, ++argv; \
   } \
@@ -153,10 +151,8 @@ static int sox_flanger_getopts(sox_effect_t * effp, int argc, char *argv[])
     TEXTUAL_PARAMETER(interpolation, interp_enum)
   } while (0);
 
-  if (argc != 0) {
-    sox_fail(effp->handler.usage);
-    return SOX_EOF;
-  }
+  if (argc != 0)
+    return sox_usage(effp);
 
   sox_report("parameters:\n"
       "delay = %gms\n"

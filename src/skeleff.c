@@ -37,10 +37,8 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
 {
   skeleff_t skeleff = (skeleff_t)effp->priv;
 
-  if (n && n != 1) {
-    sox_fail(effp->handler.usage);
-    return SOX_EOF;
-  }
+  if (n && n != 1)
+    return sox_usage(effp);
 
   return SOX_SUCCESS;
 }
@@ -132,7 +130,7 @@ static int kill(sox_effect_t * effp)
  */
 static sox_effect_handler_t sox_skel_effect = {
   "skel",
-  "Usage: skel [OPTION]",
+  "[OPTION]",
   SOX_EFF_MCHAN,
   getopts,
   start,

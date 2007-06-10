@@ -35,24 +35,15 @@ static int sox_dcshift_getopts(sox_effect_t * effp, int n, char **argv)
     dcs->uselimiter = 0; /* default is no limiter */
 
     if (n < 1)
-    {
-        sox_fail(effp->handler.usage);
-        return SOX_EOF;
-    }
+      return sox_usage(effp);
 
     if (n && (!sscanf(argv[0], "%lf", &dcs->dcshift)))
-    {
-        sox_fail(effp->handler.usage);
-        return SOX_EOF;
-    }
+      return sox_usage(effp);
 
     if (n>1)
     {
         if (!sscanf(argv[1], "%lf", &dcs->limitergain))
-        {
-                sox_fail(effp->handler.usage);
-                return SOX_EOF;
-        }
+          return sox_usage(effp);
 
         dcs->uselimiter = 1; /* ok, we'll use it */
         /* The following equation is derived so that there is no 
@@ -76,18 +67,6 @@ static int sox_dcshift_start(sox_effect_t * effp)
 
     if (dcs->dcshift == 0)
       return SOX_EFF_NULL;
-
-    if (effp->outinfo.channels != effp->ininfo.channels) {
-        sox_fail("DCSHIFT cannot handle different channels (in=%d, out=%d)"
-             " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
-        return SOX_EOF;
-    }
-
-    if (effp->outinfo.rate != effp->ininfo.rate) {
-        sox_fail("DCSHIFT cannot handle different rates (in=%ld, out=%ld)"
-             " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
-        return SOX_EOF;
-    }
 
     dcs->clipped = 0;
     dcs->limited = 0;
@@ -193,7 +172,7 @@ static int sox_dcshift_stop(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_dcshift_effect = {
    "dcshift",
-   "Usage: dcshift shift [ limitergain ]\n"
+   "shift [ limitergain ]\n"
    "       The peak limiter has a gain much less than 1.0 (ie 0.05 or 0.02) which is only\n"
    "       used on peaks to prevent clipping. (default is no limiter)",
    SOX_EFF_MCHAN,

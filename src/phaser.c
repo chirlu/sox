@@ -84,10 +84,7 @@ static int sox_phaser_getopts(sox_effect_t * effp, int n, char **argv)
         phaser_t phaser = (phaser_t) effp->priv;
 
         if (!((n == 5) || (n == 6)))
-        {
-            sox_fail(effp->handler.usage);
-            return (SOX_EOF);
-        }
+          return sox_usage(effp);
 
         sscanf(argv[0], "%f", &phaser->in_gain);
         sscanf(argv[1], "%f", &phaser->out_gain);
@@ -101,10 +98,7 @@ static int sox_phaser_getopts(sox_effect_t * effp, int n, char **argv)
                 else if ( ! strcmp(argv[5], "-t"))
                         phaser->modulation = MOD_TRIANGLE;
                 else
-                {
-                        sox_fail(effp->handler.usage);
-                        return (SOX_EOF);
-                }
+                  return sox_usage(effp);
         }
         return (SOX_SUCCESS);
 }
@@ -261,7 +255,7 @@ static int sox_phaser_stop(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_phaser_effect = {
   "phaser",
-  "Usage: phaser gain-in gain-out delay decay speed [ -s | -t ]",
+  "gain-in gain-out delay decay speed [ -s | -t ]",
   SOX_EFF_LENGTH,
   sox_phaser_getopts,
   sox_phaser_start,

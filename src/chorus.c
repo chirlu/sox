@@ -99,10 +99,7 @@ static int sox_chorus_getopts(sox_effect_t * effp, int n, char **argv)
         i = 0;
 
         if ( ( n < 7 ) || (( n - 2 ) % 5 ) )
-        {
-            sox_fail(effp->handler.usage);
-            return (SOX_EOF);
-        }
+          return sox_usage(effp);
 
         sscanf(argv[i++], "%f", &chorus->in_gain);
         sscanf(argv[i++], "%f", &chorus->out_gain);
@@ -121,10 +118,7 @@ static int sox_chorus_getopts(sox_effect_t * effp, int n, char **argv)
                 else if ( ! strcmp(argv[i], "-t"))
                         chorus->modulation[chorus->num_chorus] = MOD_TRIANGLE;
                 else
-                {
-                        sox_fail(effp->handler.usage);
-                        return (SOX_EOF);
-                }
+                  return sox_usage(effp);
                 i++;
                 chorus->num_chorus++;
         }
@@ -338,7 +332,7 @@ static int sox_chorus_stop(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_chorus_effect = {
   "chorus",
-  "Usage: chorus gain-in gain-out delay decay speed depth [ -s | -t ]",
+  "gain-in gain-out delay decay speed depth [ -s | -t ]",
   SOX_EFF_LENGTH,
   sox_chorus_getopts,
   sox_chorus_start,

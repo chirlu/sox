@@ -124,6 +124,7 @@ int strncasecmp(char const * s1, char const * s2, size_t n);
 #endif
 
 sox_bool strcaseends(char const * str, char const * end);
+sox_bool strends(char const * str, char const * end);
 
 #ifndef HAVE_STRDUP
 char *strdup(const char *s);
@@ -291,6 +292,7 @@ int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_chan
  *-----------------------------------------------------------------------------
  */
 
+int sox_usage(sox_effect_t * effp);
 typedef const sox_effect_handler_t *(*sox_effect_fn_t)(void);
 extern sox_effect_fn_t sox_effect_fns[];
 #define EFFECT(f) extern sox_effect_handler_t const * sox_##f##_effect_fn(void);

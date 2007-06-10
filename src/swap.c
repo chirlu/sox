@@ -33,10 +33,7 @@ static int sox_swap_getopts(sox_effect_t * effp, int n, char **argv)
     {
         swap->def_opts = 0;
         if (n != 2 && n != 4)
-        {
-            sox_fail(effp->handler.usage);
-            return (SOX_EOF);
-        }
+          return sox_usage(effp);
         else if (n == 2)
         {
             sscanf(argv[0],"%d",&swap->order[0]);
@@ -183,7 +180,7 @@ static int sox_swap_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssa
 
 static sox_effect_handler_t sox_swap_effect = {
   "swap",
-  "Usage: swap [1 2 | 1 2 3 4]",
+  "[1 2 | 1 2 3 4]",
   SOX_EFF_MCHAN,
   sox_swap_getopts,
   sox_swap_start,

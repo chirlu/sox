@@ -22,10 +22,8 @@
   if (argc == 0) break; \
   d = strtod(*argv, &end_ptr); \
   if (end_ptr != *argv) { \
-    if (d < min || d > max || *end_ptr != '\0') { \
-      sox_fail(effp->handler.usage); \
-      return SOX_EOF; \
-    } \
+    if (d < min || d > max || *end_ptr != '\0') \
+      return sox_usage(effp); \
     this->p = d; \
     --argc, ++argv; \
   } \
@@ -66,11 +64,7 @@ static int sox_noisered_getopts(sox_effect_t * effp, int argc, char **argv)
     NUMERIC_PARAMETER(threshold, 0, 1);
   } while (0);
 
-  if (argc != 0) {
-    sox_fail(effp->handler.usage);
-    return SOX_EOF;
-  }
-  return SOX_SUCCESS;
+  return argc? sox_usage(effp) : SOX_SUCCESS;
 }
 
 /*
@@ -345,7 +339,7 @@ static int sox_noisered_stop(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_noisered_effect = {
   "noisered",
-  "Usage: noisered [profile-file [amount]]",
+  "[profile-file [amount]]",
   SOX_EFF_MCHAN|SOX_EFF_LENGTH,
   sox_noisered_getopts,
   sox_noisered_start,

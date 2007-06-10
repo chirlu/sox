@@ -78,10 +78,7 @@ static int sox_echos_getopts(sox_effect_t * effp, int n, char **argv)
         echos->num_delays = 0;
 
         if ((n < 4) || (n % 2))
-        {
-            sox_fail(effp->handler.usage);
-            return (SOX_EOF);
-        }
+          return sox_usage(effp);
 
         i = 0;
         sscanf(argv[i++], "%f", &echos->in_gain);
@@ -269,7 +266,7 @@ static int sox_echos_stop(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_echos_effect = {
   "echos",
-  "Usage: echos gain-in gain-out delay decay [ delay decay ... ]",
+  "gain-in gain-out delay decay [ delay decay ... ]",
   SOX_EFF_LENGTH,
   sox_echos_getopts,
   sox_echos_start,

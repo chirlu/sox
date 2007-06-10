@@ -43,10 +43,8 @@ static int sox_noiseprof_getopts(sox_effect_t * effp, int n, char **argv)
 
     if (n == 1) {
         data->output_filename = argv[0];
-    } else if (n > 1) {
-        sox_fail(effp->handler.usage);
-        return (SOX_EOF);
-    }
+    } else if (n > 1)
+      return sox_usage(effp);
 
     return (SOX_SUCCESS);
 }
@@ -212,7 +210,7 @@ static int sox_noiseprof_stop(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_noiseprof_effect = {
   "noiseprof",
-  "Usage: noiseprof [profile-file]",
+  "[profile-file]",
   SOX_EFF_MCHAN,
   sox_noiseprof_getopts,
   sox_noiseprof_start,

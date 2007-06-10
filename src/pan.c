@@ -36,10 +36,7 @@ static int sox_pan_getopts(sox_effect_t * effp, int n, char **argv)
     
     if (n && (!sscanf(argv[0], "%lf", &pan->dir) || 
               pan->dir < -1.0 || pan->dir > 1.0))
-    {
-        sox_fail(effp->handler.usage);
-        return SOX_EOF;
-    }
+      return sox_usage(effp);
 
     return SOX_SUCCESS;
 }
@@ -51,14 +48,6 @@ static int sox_pan_start(sox_effect_t * effp)
 {
     if (effp->outinfo.channels==1)
         sox_warn("PAN onto a mono channel...");
-
-    if (effp->outinfo.rate != effp->ininfo.rate)
-    {
-        sox_fail("PAN cannot handle different rates (in=%ld, out=%ld)"
-             " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
-        return SOX_EOF;
-    }
-
     return SOX_SUCCESS;
 }
 
@@ -411,7 +400,7 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssam
 
 static sox_effect_handler_t sox_pan_effect = {
   "pan",
-  "Usage: pan direction (in [-1.0 .. 1.0])",
+  "direction (in [-1.0 .. 1.0])",
   SOX_EFF_MCHAN | SOX_EFF_CHAN,
   sox_pan_getopts,
   sox_pan_start,

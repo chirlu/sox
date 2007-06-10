@@ -624,7 +624,7 @@ static int sox_mcompand_kill(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_mcompand_effect = {
   "mcompand",
-  "Usage: mcompand quoted_compand_args [crossover_frequency quoted_compand_args [...]]\n"
+  "quoted_compand_args [crossover_frequency quoted_compand_args [...]]\n"
   "\n"
   "quoted_compand_args are as for the compand effect:\n"
   "\n"

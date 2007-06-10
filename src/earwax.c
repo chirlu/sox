@@ -164,7 +164,7 @@ static int sox_earwax_stop(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_earwax_effect = {
   "earwax",
-  "Usage: The earwax filtering effect takes no options",
+  NULL,
   SOX_EFF_MCHAN|SOX_EFF_LENGTH,
   NULL,
   sox_earwax_start,

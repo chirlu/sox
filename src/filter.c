@@ -74,26 +74,17 @@ static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
         }
         sox_debug("freq: %d-%d", f->freq0, f->freq1);
         if (f->freq0 == 0 && f->freq1 == 0)
-        {
-                sox_fail(effp->handler.usage);
-                return (SOX_EOF);
-        }
+          return sox_usage(effp);
 
         if ((n >= 2) && !sscanf(argv[1], "%ld", &f->Nwin))
-        {
-                sox_fail(effp->handler.usage);
-                return (SOX_EOF);
-        }
+          return sox_usage(effp);
         else if (f->Nwin < 4) {
                 sox_fail("filter: window length (%ld) <4 is too short", f->Nwin);
                 return (SOX_EOF);
         }
 
         if ((n >= 3) && !sscanf(argv[2], "%lf", &f->beta))
-        {
-                sox_fail(effp->handler.usage);
-                return (SOX_EOF);
-        }
+          return sox_usage(effp);
 
         sox_debug("filter opts: %d-%d, window-len %d, beta %f", f->freq0, f->freq1, f->Nwin, f->beta);
         return (SOX_SUCCESS);
@@ -311,7 +302,7 @@ static void FiltWin(filter_t f, long Nx)
 
 static sox_effect_handler_t sox_filter_effect = {
   "filter",
-  "Usage: filter low-high [ windowlength [ beta ] ]",
+  "low-high [ windowlength [ beta ] ]",
   0,
   sox_filter_getopts,
   sox_filter_start,

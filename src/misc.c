@@ -368,6 +368,12 @@ sox_bool strcaseends(char const * str, char const * end)
   return str_len >= end_len && !strcasecmp(str + str_len - end_len, end);
 }
 
+sox_bool strends(char const * str, char const * end)
+{
+  size_t str_len = strlen(str), end_len = strlen(end);
+  return str_len >= end_len && !strcmp(str + str_len - end_len, end);
+}
+
 #ifndef HAVE_STRDUP
 /*
  * Portable strdup() function

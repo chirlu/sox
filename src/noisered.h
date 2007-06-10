@@ -18,4 +18,5 @@
 #include <math.h>
 
 #define WINDOWSIZE 2048
-#define FREQCOUNT (WINDOWSIZE/2+1)
+#define HALFWINDOW (WINDOWSIZE / 2)
+#define FREQCOUNT  (HALFWINDOW + 1)

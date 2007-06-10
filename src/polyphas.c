@@ -619,7 +619,7 @@ static int sox_poly_stop(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_polyphase_effect = {
   "polyphase",
-  "Usage: -w {nut|ham}   window type\n"
+  "-w {nut|ham}   window type\n"
   "       -width n       window width in samples [default 1024]\n"
   "\n"
   "       -cutoff float  frequency cutoff for base bandwidth [default 0.95]",

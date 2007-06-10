@@ -169,16 +169,15 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
         }
 
         if ((n >= 1) && (sscanf(argv[0], "%lf", &r->rolloff) != 1)) {
-          sox_fail(effp->handler.usage);
-          return (SOX_EOF);
+          return sox_usage(effp);
         } else if ((r->rolloff <= 0.01) || (r->rolloff >= 1.0)) {
           sox_fail("rolloff factor (%f) no good, should be 0.01<x<1.0", r->rolloff);
           return(SOX_EOF);
         }
 
+
         if ((n >= 2) && !sscanf(argv[1], "%lf", &r->beta)) {
-        	sox_fail(effp->handler.usage);
-          	return (SOX_EOF);
+          return sox_usage(effp);
         } else if (r->beta <= 2.0) {
         	r->beta = 0;
                 sox_debug("opts: Nuttall window, cutoff %f", r->rolloff);
@@ -724,7 +723,7 @@ static void LpFilter(double *c, long N, double frq, double Beta, long Num)
 const sox_effect_handler_t *sox_resample_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-     "resample", "Usage: resample [ -qs | -q | -ql ] [ rolloff [ beta ] ]",
+     "resample", "[ -qs | -q | -ql ] [ rolloff [ beta ] ]",
      SOX_EFF_RATE, getopts, start, flow, drain, stop, NULL
   };
   return &handler;

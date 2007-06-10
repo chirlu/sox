@@ -290,10 +290,8 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     synth->length_str = xmalloc(strlen(argv[argn]) + 1);
     strcpy(synth->length_str, argv[argn]);
     /* Do a dummy parse of to see if it will fail */
-    if (sox_parsesamples(0, synth->length_str, &synth->samples_to_do, 't') == NULL) {
-      sox_fail(effp->handler.usage);
-      return SOX_EOF;
-    }
+    if (sox_parsesamples(0, synth->length_str, &synth->samples_to_do, 't') == NULL)
+      return sox_usage(effp);
     argn++;
   }
 
@@ -392,10 +390,8 @@ static int start(sox_effect_t * effp)
   synth->samples_done = 0;
 
   if (synth->length_str)
-    if (sox_parsesamples(effp->ininfo.rate, synth->length_str, &synth->samples_to_do, 't') == NULL) {
-      sox_fail(effp->handler.usage);
-      return SOX_EOF;
-    }
+    if (sox_parsesamples(effp->ininfo.rate, synth->length_str, &synth->samples_to_do, 't') == NULL)
+      return sox_usage(effp);
 
   synth->number_of_channels = effp->ininfo.channels;
   synth->channels = xcalloc(synth->number_of_channels, sizeof(*synth->channels));
@@ -600,8 +596,8 @@ const sox_effect_handler_t *sox_synth_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
     "synth",
-    "Usage: synth [len] {type [combine] [freq[-freq2] [off [ph [p1 [p2 [p3]]]]]]}",
-    SOX_EFF_MCHAN, getopts, start, flow, 0, stop, kill
+    "[len] {type [combine] [freq[-freq2] [off [ph [p1 [p2 [p3]]]]]]}",
+    SOX_EFF_MCHAN | SOX_EFF_PREC, getopts, start, flow, 0, stop, kill
   };
   return &handler;
 }

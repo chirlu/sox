@@ -47,14 +47,13 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
       }
     }
   }
-  sox_fail(effp->handler.usage);
-  return SOX_EOF;
+  return sox_usage(effp);
 }
 
 sox_effect_handler_t const *sox_speed_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "speed", "Usage: speed factor[c]", SOX_EFF_NULL|SOX_EFF_LENGTH,
+    "speed", "factor[c]", SOX_EFF_NULL|SOX_EFF_LENGTH,
     getopts, 0, 0, 0, 0, 0};
   return &handler;
 }

@@ -252,18 +252,12 @@ static int sox_pitch_getopts(sox_effect_t * effp, int n, char **argv)
     pitch->shift = 0.0; /* default is no change */
 
     if (n && !sscanf(argv[0], "%lf", &pitch->shift))
-    {
-        sox_fail(effp->handler.usage);
-        return SOX_EOF;
-    }
+      return sox_usage(effp);
 
     /* sweep size in ms */
     pitch->width = PITCH_DEFAULT_WIDTH;
     if (n>1 && !sscanf(argv[1], "%lf", &pitch->width))
-    {
-        sox_fail(effp->handler.usage);
-        return SOX_EOF;
-    }
+      return sox_usage(effp);
 
     /* interpole option */
     pitch->interopt = PITCH_INTERPOLE_DEFAULT;
@@ -280,8 +274,7 @@ static int sox_pitch_getopts(sox_effect_t * effp, int n, char **argv)
             pitch->interopt = PITCH_INTERPOLE_CUB;
             break;
         default:
-            sox_fail(effp->handler.usage);
-            return SOX_EOF;
+            return sox_usage(effp);
         }
     }
 
@@ -308,18 +301,14 @@ static int sox_pitch_getopts(sox_effect_t * effp, int n, char **argv)
             pitch->fadeopt = PITCH_FADE_COS;
             break;
         default:
-            sox_fail(effp->handler.usage);
-            return SOX_EOF;
+            return sox_usage(effp);
         }
     }
     
     pitch->coef = 0.25;
     if (n>4 && (!sscanf(argv[4], "%lf", &pitch->coef) ||
                 pitch->coef<0.0 || pitch->coef>0.5))
-    {
-        sox_fail(effp->handler.usage);
-        return SOX_EOF;
-    }
+      return sox_usage(effp);
 
     return SOX_SUCCESS;
 }
@@ -332,22 +321,6 @@ static int sox_pitch_start(sox_effect_t * effp)
     pitch_t pitch = (pitch_t) effp->priv;
     register int sample_rate = effp->outinfo.rate;
     unsigned int i;
-
-    /* check constraints. sox does already take care of that I guess?
-     */
-    if (effp->outinfo.rate != effp->ininfo.rate)
-    {
-        sox_fail("PITCH cannot handle different rates (in=%ld, out=%ld)"
-             " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
-        return SOX_EOF;
-    }
- 
-    if (effp->outinfo.channels != effp->ininfo.channels)
-    {
-        sox_fail("PITCH cannot handle different channels (in=%ld, out=%ld)"
-             " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
-        return SOX_EOF;
-    }
 
     /* computer inner stuff... */
 
@@ -574,7 +547,7 @@ static int sox_pitch_stop(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_pitch_effect = {
   "pitch",
-  "Usage: pitch shift width interpole fade\n"
+  "shift width interpole fade\n"
   "       (in cents, in ms, cub/lin, cos/ham/lin/trap)"
   "       (defaults: 0 20 c c)",
   SOX_EFF_LENGTH,

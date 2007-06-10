@@ -176,10 +176,8 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
         l_st->control[i] = ladspa_default(&(l_st->desc->PortRangeHints[i]));
         sox_debug("default argument for port %d is %f", i, l_st->control[i]);
       } else {
-        if (!sscanf(argv[0], "%lf", &arg)) {
-          sox_fail(effp->handler.usage);
-          return SOX_EOF;
-        }
+        if (!sscanf(argv[0], "%lf", &arg))
+          return sox_usage(effp);
         l_st->control[i] = (LADSPA_Data)arg;
         sox_debug("argument for port %d is %f", i, l_st->control[i]);
         n--; argv++;
@@ -188,12 +186,7 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
   }
 
   /* Stop if we have any unused arguments */
-  if (n > 0) {
-    sox_fail(sox_ladspa_effect.usage);
-    return SOX_EOF;
-  }
-
-  return SOX_SUCCESS;
+  return n? sox_usage(effp) : SOX_SUCCESS;
 }
 
 /*
@@ -298,7 +291,7 @@ static int sox_ladspa_stop(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_ladspa_effect = {
   "ladspa",
-  "Usage: ladspa MODULE [PLUGIN] [ARGUMENT...]",
+  "MODULE [PLUGIN] [ARGUMENT...]",
   0,
   sox_ladspa_getopts,
   sox_ladspa_start,

@@ -504,17 +504,13 @@ int main(int argc, char **argv)
   atexit(cleanup);
   sox_output_message_handler = output_message;
 
-  /* Read command-line and argv[0] options */
-  i = strlen(myname);
-  if (i >= sizeof("play") - 1 &&
-      strcmp(myname + i - (sizeof("play") - 1), "play") == 0) {
+  if (strends(myname, "play")) {
     play = sox_true;
     replay_gain_mode = RG_track;
     combine_method = sox_sequence;
-  } else if (i >= sizeof("rec") - 1 &&
-      strcmp(myname + i - (sizeof("rec") - 1), "rec") == 0) {
-    rec = sox_true;
   }
+  else if (strends(myname, "rec"))
+    rec = sox_true;
 
   parse_options_and_filenames(argc, argv);
 
@@ -631,7 +627,7 @@ int main(int argc, char **argv)
   if (show_progress) {
     if (user_abort)
       fprintf(stderr, "Aborted.\n");
-    else if (user_skip)
+    else if (user_skip && !rec)
       fprintf(stderr, "Skipped.\n");
     else
       fprintf(stderr, "Done.\n");
@@ -746,33 +742,6 @@ static int enum_option(int option_index, enum_item const * items)
     exit(1);
   }
   return p->value;
-}
-
-static void optimize_trim(void)          
-{
-  /* Speed hack.  If the "trim" effect is the first effect then
-   * peek inside its "effect descriptor" and see what the
-   * start location is.  This has to be done after its start()
-   * is called to have the correct location.
-   * Also, only do this when only working with one input file.
-   * This is because the logic to do it for multiple files is
-   * complex and problably never used.
-   * This hack is a huge time savings when trimming
-   * gigs of audio data into managable chunks
-   */ 
-  if (input_count == 1 && sox_neffects > 1 && strcmp(sox_effects[1][0].handler.name, "trim") == 0) {
-    if ((files[0]->ft->handler->flags & SOX_FILE_SEEK) && files[0]->ft->seekable){
-      sox_size_t offset = sox_trim_get_start(&sox_effects[1][0]);
-      if (sox_seek(files[0]->ft, offset, SOX_SEEK_SET) != SOX_EOF) { 
-        read_wide_samples = offset / files[0]->ft->signal.channels;
-        /* Assuming a failed seek stayed where it was.  If the 
-         * seek worked then reset the start location of 
-         * trim so that it thinks user didn't request a skip.
-         */ 
-        sox_trim_clear_start(&sox_effects[1][0]);
-      }    
-    }        
-  }    
 }
 
 static sox_bool doopts(file_t f, int argc, char **argv)
@@ -1274,10 +1243,37 @@ static void add_effects(void)
 
   for (i = 0; i < sox_neffects; ++i) {
     sox_effect_t * effp = &sox_effects[i][0];
-    sox_report("effects chain: %-10s %uHz %u channels %s",
-        effp->handler.name, effp->ininfo.rate, effp->ininfo.channels,
+    sox_report("effects chain: %-10s %uHz %u channels %u bits %s",
+        effp->handler.name, effp->ininfo.rate, effp->ininfo.channels, effp->ininfo.size * 8,
         (effp->handler.flags & SOX_EFF_MCHAN)? "(multi)" : "");
   }
+}
+
+static void optimize_trim(void)          
+{
+  /* Speed hack.  If the "trim" effect is the first effect then
+   * peek inside its "effect descriptor" and see what the
+   * start location is.  This has to be done after its start()
+   * is called to have the correct location.
+   * Also, only do this when only working with one input file.
+   * This is because the logic to do it for multiple files is
+   * complex and problably never used.
+   * This hack is a huge time savings when trimming
+   * gigs of audio data into managable chunks
+   */ 
+  if (input_count == 1 && sox_neffects > 1 && strcmp(sox_effects[1][0].handler.name, "trim") == 0) {
+    if ((files[0]->ft->handler->flags & SOX_FILE_SEEK) && files[0]->ft->seekable){
+      sox_size_t offset = sox_trim_get_start(&sox_effects[1][0]);
+      if (sox_seek(files[0]->ft, offset, SOX_SEEK_SET) != SOX_EOF) { 
+        read_wide_samples = offset / files[0]->ft->signal.channels;
+        /* Assuming a failed seek stayed where it was.  If the 
+         * seek worked then reset the start location of 
+         * trim so that it thinks user didn't request a skip.
+         */ 
+        sox_trim_clear_start(&sox_effects[1][0]);
+      }    
+    }        
+  }    
 }
 
 static void open_output_file(sox_size_t olen)
@@ -1432,7 +1428,7 @@ static int process(void) {
 
 static sox_size_t total_clips(void)
 {
-  unsigned i, f;
+  unsigned i;
   sox_size_t clips = 0;
   for (i = 0; i < file_count; ++i)
     clips += files[i]->ft->clips + files[i]->volume_clips;
@@ -1595,7 +1591,6 @@ static void usage(char const *message)
 static void usage_effect(char *effect)
 {
   int i;
-  const sox_effect_handler_t *e;
 
   printf("%s: ", myname);
   printf("v%s\n\n", PACKAGE_VERSION);
@@ -1603,14 +1598,10 @@ static void usage_effect(char *effect)
   printf("Effect usage:\n\n");
 
   for (i = 0; sox_effect_fns[i]; i++) {
-    e = sox_effect_fns[i]();
-    if (e && e->name && (!strcmp("all", effect) ||  !strcmp(e->name, effect))) {
-      char *p = strstr(e->usage, "Usage: ");
-      printf("%s\n\n", p ? p + 7 : e->usage);
+    const sox_effect_handler_t *e = sox_effect_fns[i]();
+    if (e && e->name && (!strcmp("all", effect) || !strcmp(e->name, effect))) {
+      printf("%s %s\n\n", e->name, e->usage? e->usage : "");
     }
   }
-
-  if (!effect)
-    printf("see --help-effect=effect for effopts ('all' for effopts of all effects)\n\n");
   exit(1);
 }

@@ -33,7 +33,7 @@
  *                  -------
  */
 #define compand_usage \
-  "Usage: compand attack1,decay1{,attack2,decay2} [soft-knee-dB:]in-dB1[,out-dB1]{,in-dB2,out-dB2} [gain [initial-volume-dB [delay]]]\n" \
+  "attack1,decay1{,attack2,decay2} [soft-knee-dB:]in-dB1[,out-dB1]{,in-dB2,out-dB2} [gain [initial-volume-dB [delay]]]\n" \
   "\twhere {} means optional and repeatable and [] means optional.\n" \
   "\tdB values are floating point or -inf'; times are in seconds."
 /*
@@ -66,10 +66,8 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
   char dummy;     /* To check for extraneous chars. */
   unsigned pairs, i, j, commas;
 
-  if (n < 2 || n > 5) {
-    sox_fail(effp->handler.usage);
-    return SOX_EOF;
-  }
+  if (n < 2 || n > 5)
+    return sox_usage(effp);
 
   /* Start by checking the attack and decay rates */
   for (s = argv[0], commas = 0; *s; ++s) if (*s == ',') ++commas;
@@ -131,7 +129,6 @@ static int start(sox_effect_t * effp)
   compand_t l = (compand_t) effp->priv;
   unsigned i, j;
 
-  sox_debug("Starting compand effect; rate %i", effp->outinfo.rate);
   sox_debug("%i input channel(s) expected: actually %i",
       l->expectedChannels, effp->outinfo.channels);
   for (i = 0; i < l->expectedChannels; ++i)

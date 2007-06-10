@@ -55,10 +55,8 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
     }
     if (i > 0 && p->pads[i].start <= p->pads[i-1].start) break;
   }
-  if (i < p->npads) {
-    sox_fail(effp->handler.usage);
-    return SOX_EOF;
-  }
+  if (i < p->npads)
+    return sox_usage(effp);
   return SOX_SUCCESS;
 }
 
@@ -141,7 +139,7 @@ static int kill(sox_effect_t * effp)
 sox_effect_handler_t const * sox_pad_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "pad", "Usage: pad {length[@position]}", SOX_EFF_MCHAN|SOX_EFF_LENGTH,
+    "pad", "{length[@position]}", SOX_EFF_MCHAN|SOX_EFF_LENGTH,
     create, start, flow, drain, stop, kill
   };
   return &handler;

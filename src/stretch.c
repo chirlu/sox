@@ -72,7 +72,6 @@ typedef struct
  */
 static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv) 
 {
-  char usage[1024];
   stretch_t stretch = (stretch_t) effp->priv; 
     
   /* default options */
@@ -81,15 +80,13 @@ static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
   stretch->fade = sox_linear_fading;
 
   if (n > 0 && !sscanf(argv[0], "%lf", &stretch->factor)) {
-    sprintf(usage, "%s\n\terror while parsing factor", effp->handler.usage);
-    sox_fail(usage);
-    return SOX_EOF;
+    sox_fail("error while parsing factor");
+    return sox_usage(effp);
   }
 
   if (n > 1 && !sscanf(argv[1], "%lf", &stretch->window)) {
-    sprintf(usage, "%s\n\terror while parsing window size", effp->handler.usage);
-    sox_fail(usage);
-    return SOX_EOF;
+    sox_fail("error while parsing window size");
+    return sox_usage(effp);
   }
 
   if (n > 2) {
@@ -99,9 +96,8 @@ static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
       stretch->fade = sox_linear_fading;
       break;
     default:
-      sprintf (usage, "%s\n\terror while parsing fade type", effp->handler.usage);
-      sox_fail(usage);
-      return SOX_EOF;
+      sox_fail("error while parsing fade type");
+      return sox_usage(effp);
     }
   }
 
@@ -110,15 +106,13 @@ static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
     DEFAULT_FAST_SHIFT_RATIO: DEFAULT_SLOW_SHIFT_RATIO;
  
   if (n > 3 && !sscanf(argv[3], "%lf", &stretch->shift)) {
-    sprintf (usage, "%s\n\terror while parsing shift ratio", effp->handler.usage);
-    sox_fail(usage);
-    return SOX_EOF;
+    sox_fail("error while parsing shift ratio");
+    return sox_usage(effp);
   }
 
   if (stretch->shift > 1.0 || stretch->shift <= 0.0) {
-    sprintf(usage, "%s\n\terror with shift ratio value", effp->handler.usage);
-    sox_fail(usage);
-    return SOX_EOF;
+    sox_fail("error with shift ratio value");
+    return sox_usage(effp);
   }
 
   /* default fading stuff... 
@@ -131,15 +125,13 @@ static int sox_stretch_getopts(sox_effect_t * effp, int n, char **argv)
     stretch->fading = 0.5;
   
   if (n > 4 && !sscanf(argv[4], "%lf", &stretch->fading)) {
-    sprintf(usage, "%s\n\terror while parsing fading ratio", effp->handler.usage);
-    sox_fail(usage);
-    return SOX_EOF;
+    sox_fail("error while parsing fading ratio");
+    return sox_usage(effp);
   }
 
   if (stretch->fading > 0.5 || stretch->fading < 0.0) {
-    sprintf(usage, "%s\n\terror with fading ratio value", effp->handler.usage);
-    sox_fail(usage);
-    return SOX_EOF;
+    sox_fail("error with fading ratio value");
+    return sox_usage(effp);
   }
   
   return SOX_SUCCESS;
@@ -155,19 +147,6 @@ static int sox_stretch_start(sox_effect_t * effp)
 
   if (stretch->factor == 1)
     return SOX_EFF_NULL;
-
-  /* FIXME: not necessary. taken care by effect processing? */
-  if (effp->outinfo.channels != effp->ininfo.channels) {
-    sox_fail("stretch cannot handle different channels (in=%d, out=%d)"
-            " use avg or pan", effp->ininfo.channels, effp->outinfo.channels);
-    return SOX_EOF;
-  }
-
-  if (effp->outinfo.rate != effp->ininfo.rate) {
-    sox_fail("stretch cannot handle different rates (in=%ld, out=%ld)"
-            " use resample or rate", effp->ininfo.rate, effp->outinfo.rate);
-    return SOX_EOF;
-  }
 
   stretch->state = input_state;
 
@@ -356,7 +335,7 @@ static int sox_stretch_stop(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_stretch_effect = {
   "stretch",
-  "Usage: stretch factor [window fade shift fading]\n"
+  "factor [window fade shift fading]\n"
   "       (expansion, frame in ms, lin/..., unit<1.0, unit<0.5)\n"
   "       (defaults: 1.0 20 lin ...)",
   SOX_EFF_LENGTH,

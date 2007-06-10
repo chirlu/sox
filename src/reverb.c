@@ -122,10 +122,7 @@ static int sox_reverb_getopts(sox_effect_t * effp, int n, char **argv)
         reverb->maxsamples = 0;
 
         if ( n < 3 )
-        {
-            sox_fail(effp->handler.usage);
-            return (SOX_EOF);
-        }
+          return sox_usage(effp);
 
         if ( n - 2 > MAXREVERBS )
         {
@@ -282,7 +279,7 @@ static int sox_reverb_stop(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_reverb_effect = {
   "reverb",
-  "Usage: reverb gain-out reverb-time delay [ delay ... ]",
+  "gain-out reverb-time delay [ delay ... ]",
   SOX_EFF_LENGTH,
   sox_reverb_getopts,
   sox_reverb_start,

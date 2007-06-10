@@ -36,10 +36,8 @@ static int sox_repeat_getopts(sox_effect_t * effp, int n, char **argv)
 {
         repeat_t repeat = (repeat_t)effp->priv;
 
-        if (n != 1) {
-                sox_fail(effp->handler.usage);
-                return (SOX_EOF);
-        }
+        if (n != 1)
+          return sox_usage(effp);
 
         if (!(sscanf(argv[0], "%i", &repeat->repeats))) {
                 sox_fail("could not parse repeat parameter");
@@ -196,7 +194,7 @@ static int sox_repeat_stop(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_repeat_effect = {
   "repeat",
-  "Usage: repeat count",
+  "count",
   SOX_EFF_MCHAN | SOX_EFF_LENGTH,
   sox_repeat_getopts,
   sox_repeat_start,

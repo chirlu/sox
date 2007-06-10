@@ -131,7 +131,7 @@ static int sox_reverse_stop(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_reverse_effect = {
   "reverse",
-  "Usage: Reverse effect takes no options",
+  NULL,
   0,
   NULL,
   sox_reverse_start,

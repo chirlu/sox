@@ -40,24 +40,16 @@ static int sox_trim_getopts(sox_effect_t * effp, int n, char **argv)
             strcpy(trim->length_str,argv[1]);
             /* Do a dummy parse to see if it will fail */
             if (sox_parsesamples(0, trim->length_str, &trim->length, 't') == NULL)
-            {
-                sox_fail(effp->handler.usage);
-                return(SOX_EOF);
-            }
+              return sox_usage(effp);
         case 1:
             trim->start_str = (char *)xmalloc(strlen(argv[0])+1);
             strcpy(trim->start_str,argv[0]);
             /* Do a dummy parse to see if it will fail */
             if (sox_parsesamples(0, trim->start_str, &trim->start, 't') == NULL)
-            {
-                sox_fail(effp->handler.usage);
-                return(SOX_EOF);
-            }
+              return sox_usage(effp);
             break;
         default:
-            sox_fail(effp->handler.usage);
-            return SOX_EOF;
-            break;
+            return sox_usage(effp);
 
     }
     return (SOX_SUCCESS);
@@ -72,10 +64,7 @@ static int sox_trim_start(sox_effect_t * effp)
 
     if (sox_parsesamples(effp->ininfo.rate, trim->start_str,
                         &trim->start, 't') == NULL)
-    {
-        sox_fail(effp->handler.usage);
-        return(SOX_EOF);
-    }
+      return sox_usage(effp);
     /* Account for # of channels */
     trim->start *= effp->ininfo.channels;
 
@@ -83,10 +72,7 @@ static int sox_trim_start(sox_effect_t * effp)
     {
         if (sox_parsesamples(effp->ininfo.rate, trim->length_str,
                     &trim->length, 't') == NULL)
-        {
-            sox_fail(effp->handler.usage);
-            return(SOX_EOF);
-        }
+          return sox_usage(effp);
     }
     else
         trim->length = 0;
@@ -185,7 +171,7 @@ void sox_trim_clear_start(sox_effect_t * effp)
 
 static sox_effect_handler_t sox_trim_effect = {
   "trim",
-  "Usage: trim start [length]",
+  "start [length]",
   SOX_EFF_MCHAN|SOX_EFF_LENGTH,
   sox_trim_getopts,
   sox_trim_start,

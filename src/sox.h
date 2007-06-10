@@ -81,10 +81,10 @@ typedef uint32_t sox_sample_t;
  *  Format   Minimum     Minimum     I O    Maximum     Maximum     I O      
  *  ------  ---------  ------------ -- --   --------  ------------ -- --  
  *  Float      -1     -1.00000000047 y y       1           1        y n         
- *  Byte      -128        -128       n n      127     127.9999999   n y   
- *  Word     -32768      -32768      n n     32767    32767.99998   n y   
- *  24bit   -8388608    -8388608     n n    8388607   8388607.996   n y   
- *  Dword  -2147483648 -2147483648   n n   2147483647 2147483647    n n   
+ *  Int8      -128        -128       n n      127     127.9999999   n y   
+ *  Int16    -32768      -32768      n n     32767    32767.99998   n y   
+ *  Int24   -8388608    -8388608     n n    8388607   8388607.996   n y   
+ *  Int32  -2147483648 -2147483648   n n   2147483647 2147483647    n n   
  *
  * Conversions are as accurate as possible (with rounding).
  *
@@ -401,10 +401,11 @@ typedef struct sox_effects_global_info /* Global parameters (for effects) */
 
 #define SOX_EFF_CHAN     1           /* Effect can alter # of channels */
 #define SOX_EFF_RATE     2           /* Effect can alter sample rate */
-#define SOX_EFF_LENGTH   4           /* Effect can alter audio length */
-#define SOX_EFF_MCHAN    8           /* Effect can handle multi-channel */
-#define SOX_EFF_NULL     16          /* Effect does nothing */
-#define SOX_EFF_DEPRECATED 32        /* Effect is living on borrowed time */
+#define SOX_EFF_PREC     4           /* Effect can alter sample precision */
+#define SOX_EFF_LENGTH   8           /* Effect can alter audio length */
+#define SOX_EFF_MCHAN    16          /* Effect can handle multi-channel */
+#define SOX_EFF_NULL     32          /* Effect does nothing */
+#define SOX_EFF_DEPRECATED 64        /* Effect is living on borrowed time */
 
 typedef struct sox_effect sox_effect_t;
 
@@ -449,6 +450,8 @@ extern unsigned sox_neffects;
 int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin);
 int sox_add_effect(sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out);
 int sox_flow_effects(int (* callback)(sox_bool all_done));
+sox_size_t sox_effects_clips(void);
+sox_size_t sox_stop_effect(sox_size_t e);
 void sox_delete_effects(void);
 
 char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samples, int def);

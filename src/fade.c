@@ -51,10 +51,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
     int t_argno;
 
     if (n < 1 || n > 4)
-    { /* Wrong number of arguments. */
-        sox_fail(effp->handler.usage);
-        return(SOX_EOF);
-    }
+         return sox_usage(effp);
 
     /* because sample rate is unavailable at this point we store the
      * string off for later computations.
@@ -79,10 +76,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
     strcpy(fade->in_stop_str,argv[0]);
     /* Do a dummy parse to see if it will fail */
     if (sox_parsesamples(0, fade->in_stop_str, &fade->in_stop, 't') == NULL)
-    {
-        sox_fail(effp->handler.usage);
-        return(SOX_EOF);
-    }
+      return sox_usage(effp);
 
     fade->out_start_str = fade->out_stop_str = 0;
 
@@ -96,10 +90,8 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
 
             /* Do a dummy parse to see if it will fail */
             if (sox_parsesamples(0, fade->out_stop_str, 
-                                &fade->out_stop, 't') == NULL) {
-              sox_fail(effp->handler.usage);
-              return(SOX_EOF);
-            }
+                                &fade->out_stop, 't') == NULL)
+              return sox_usage(effp);
         }
         else
         {
@@ -108,10 +100,8 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
 
             /* Do a dummy parse to see if it will fail */
             if (sox_parsesamples(0, fade->out_start_str, 
-                                &fade->out_start, 't') == NULL) {
-              sox_fail(effp->handler.usage);
-              return(SOX_EOF);
-            }
+                                &fade->out_start, 't') == NULL)
+              return sox_usage(effp);
         }
     } /* End for(t_argno) */
 
@@ -130,10 +120,7 @@ static int sox_fade_start(sox_effect_t * effp)
     fade->in_start = 0;
     if (sox_parsesamples(effp->ininfo.rate, fade->in_stop_str,
                         &fade->in_stop, 't') == NULL)
-    {
-        sox_fail(effp->handler.usage);
-        return(SOX_EOF);
-    }
+      return sox_usage(effp);
 
     fade->do_out = 0;
     /* See if user specified a stop time */
@@ -142,20 +129,14 @@ static int sox_fade_start(sox_effect_t * effp)
         fade->do_out = 1;
         if (sox_parsesamples(effp->ininfo.rate, fade->out_stop_str,
                             &fade->out_stop, 't') == NULL)
-        {
-            sox_fail(effp->handler.usage);
-            return(SOX_EOF);
-        }
+          return sox_usage(effp);
 
         /* See if user wants to fade out. */
         if (fade->out_start_str)
         {
             if (sox_parsesamples(effp->ininfo.rate, fade->out_start_str,
                         &fade->out_start, 't') == NULL)
-            {
-                sox_fail(effp->handler.usage);
-                return(SOX_EOF);
-            }
+              return sox_usage(effp);
             /* Fade time is relative to stop time. */
             fade->out_start = fade->out_stop - fade->out_start;
 
@@ -371,7 +352,7 @@ static double fade_gain(sox_size_t index, sox_size_t range, int type)
 
 static sox_effect_handler_t sox_fade_effect = {
   "fade",
-  "Usage: fade [ type ] fade-in-length [ stop-time [ fade-out-length ] ]\n"
+  "[ type ] fade-in-length [ stop-time [ fade-out-length ] ]\n"
   "       Time is in hh:mm:ss.frac format.\n"
   "       Fade type one of q, h, t, l or p.",
   SOX_EFF_MCHAN,

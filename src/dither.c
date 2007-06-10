@@ -27,10 +27,8 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
 {
   dither_t dither = (dither_t) effp->priv;
 
-  if (n > 1) {
-    sox_fail(effp->handler.usage);
-    return SOX_EOF;
-  }
+  if (n > 1)
+    return sox_usage(effp);
   
   dither->amount = sqrt(2.); /* M_SQRT2 missing in some places */   /* Default to half a bit. */
   if (n == 1) {
@@ -39,10 +37,8 @@ static int getopts(sox_effect_t * effp, int n, char * * argv)
     int scanned = sscanf(*argv, "%lf %c", &amount, &dummy);
     if (scanned == 1 && amount > 0)
       dither->amount *= amount;
-    else {
-      sox_fail(effp->handler.usage);
-      return SOX_EOF;
-    }
+    else
+      return sox_usage(effp);
   }
 
   return SOX_SUCCESS;
@@ -83,7 +79,7 @@ static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf,
 sox_effect_handler_t const * sox_dither_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "dither", "Usage: dither [amount]", SOX_EFF_MCHAN,
+    "dither", "[amount]", SOX_EFF_MCHAN | SOX_EFF_PREC,
     getopts, start, flow, 0, 0, 0
   };
   return &handler;
@@ -92,7 +88,7 @@ sox_effect_handler_t const * sox_dither_effect_fn(void)
 sox_effect_handler_t const * sox_mask_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "mask", "Usage: mask [amount]", SOX_EFF_MCHAN | SOX_EFF_DEPRECATED,
+    "mask", "[amount]", SOX_EFF_MCHAN | SOX_EFF_PREC | SOX_EFF_DEPRECATED,
     getopts, start, flow, 0, 0, 0
   };
   return &handler;

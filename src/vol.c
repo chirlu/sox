@@ -8,7 +8,7 @@
  * FIXME: deprecate or remove the limiter in favour of compand.
  */
 #define vol_usage \
-  "Usage: vol GAIN [TYPE [LIMITERGAIN]]\n" \
+  "GAIN [TYPE [LIMITERGAIN]]\n" \
   "\t(default TYPE=amplitude: 1 is constant, < 0 change phase;\n" \
   "\tTYPE=power 1 is constant; TYPE=dB: 0 is constant, +6 doubles ampl.)\n" \
   "\tThe peak limiter has a gain much less than 1 (e.g. 0.05 or 0.02) and\n" \
@@ -51,10 +51,8 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   vol->uselimiter = sox_false; /* Default is no limiter. */
   
   /* Get the vol, and the type if it's in the same arg. */
-  if (!argc || (have_type = sscanf(argv[0], "%lf %10s %c", &vol->gain, type_string, &dummy) - 1) > 1) {
-    sox_fail(effp->handler.usage);
-    return SOX_EOF;
-  }
+  if (!argc || (have_type = sscanf(argv[0], "%lf %10s %c", &vol->gain, type_string, &dummy) - 1) > 1)
+    return sox_usage(effp);
   ++argv, --argc;
 
   /* No type yet? Get it from the next arg: */
@@ -66,10 +64,8 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 
   if (have_type) {
     enum_item const * p = find_enum_text(type_ptr, vol_types);
-    if (!p) {
-      sox_fail(effp->handler.usage);
-      return SOX_EOF;
-    }
+    if (!p)
+      return sox_usage(effp);
     switch (p->value) {
       case vol_dB: vol->gain = exp(vol->gain*LOG_10_20); break;
       case vol_power: /* power to amplitude, keep phase change */
@@ -79,10 +75,8 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   }
 
   if (argc) {
-    if (fabs(vol->gain) < 1 || sscanf(*argv, "%lf %c", &vol->limitergain, &dummy) != 1 || vol->limitergain <= 0 || vol->limitergain >= 1) {
-      sox_fail(effp->handler.usage);
-      return SOX_EOF;                  
-    }
+    if (fabs(vol->gain) < 1 || sscanf(*argv, "%lf %c", &vol->limitergain, &dummy) != 1 || vol->limitergain <= 0 || vol->limitergain >= 1)
+      return sox_usage(effp);
     
     vol->uselimiter = sox_true;
     /* The following equation is derived so that there is no 

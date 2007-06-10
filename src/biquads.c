@@ -314,7 +314,7 @@ static int start(sox_effect_t * effp)
 #define BIQUAD_EFFECT(name,group,usage,flags) \
 sox_effect_handler_t const * sox_##name##_effect_fn(void) { \
   static sox_effect_handler_t handler = { \
-    #name, "Usage: " #name " " usage, flags, \
+    #name, usage, flags, \
     group##_getopts, start, sox_biquad_flow, 0, 0, 0, \
   }; \
   return &handler; \
@@ -331,4 +331,4 @@ BIQUAD_EFFECT(bass,      tone,     "gain [frequency [width[s|h|q|o]]]", 0)
 BIQUAD_EFFECT(treble,    tone,     "gain [frequency [width[s|h|q|o]]]", 0)
 BIQUAD_EFFECT(equalizer, equalizer,"frequency width[q|o|h] gain", 0)
 BIQUAD_EFFECT(band,      band,     "[-n] center [width[h|q|o]]", 0)
-BIQUAD_EFFECT(deemph,    deemph,   "takes no options", 0)
+BIQUAD_EFFECT(deemph,    deemph,   NULL, 0)

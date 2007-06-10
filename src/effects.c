@@ -28,6 +28,14 @@
 #define sox_report sox_message_filename=effp->handler.name,sox_report
 
 
+int sox_usage(sox_effect_t * effp)
+{
+  if (effp->handler.usage)
+    sox_fail("usage: %s", effp->handler.usage);
+  else
+    sox_fail("this effect takes no parameters");
+  return SOX_EOF;
+}
 
 /* Default effect handler functions for do-nothing situations: */
 
@@ -54,11 +62,7 @@ static int default_drain(sox_effect_t * effp UNUSED, sox_ssample_t *obuf UNUSED,
 /* Check that no parameters have been given */
 static int default_getopts(sox_effect_t * effp, int argc, char **argv UNUSED)
 {
-  if (argc) {
-    sox_fail("takes no parameters");
-    return SOX_EOF;
-  }
-  return SOX_SUCCESS;
+  return argc? sox_usage(effp) : SOX_SUCCESS;
 }
 
 /* Partially initialise the effect structure; signal info will come later */
@@ -102,22 +106,30 @@ int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin)
  * ready for the next effect in the chain.
  */
 int sox_add_effect(sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t
-    const * out) { int ret, (*start)(sox_effect_t * effp) =
-  effp->handler.start; unsigned f;
+    const * out)
+{
+  int ret, (*start)(sox_effect_t * effp) = effp->handler.start;
+  unsigned f;
+  sox_effect_t eff0;  /* Copy of effect for flow 0 before calling start */
 
   if (effp->handler.flags & SOX_EFF_NULL) {
     sox_report("has no effect (is a proxy effect)");
     return SOX_EFF_NULL;
   }
-  effp->outinfo = effp->ininfo = *in;
-  if (effp->handler.flags & SOX_EFF_CHAN)
-    effp->outinfo.channels = out->channels;
-  if (effp->handler.flags & SOX_EFF_RATE)
-    effp->outinfo.rate = out->rate;
+  effp->ininfo = *in;
+  effp->outinfo = *out;
+  if (!(effp->handler.flags & SOX_EFF_CHAN))
+    effp->outinfo.channels = in->channels;
+  if (!(effp->handler.flags & SOX_EFF_RATE))
+    effp->outinfo.rate = in->rate;
+  if (!(effp->handler.flags & SOX_EFF_PREC))
+    effp->outinfo.size = in->size;
+
   effp->flows =
     (effp->handler.flags & SOX_EFF_MCHAN)? 1 : effp->ininfo.channels;
   effp->clips = 0;
   effp->imin = 0;
+  eff0 = *effp;
   ret = start(effp);
   if (ret == SOX_EFF_NULL) {
     sox_report("has no effect in this configuration");
@@ -125,6 +137,7 @@ int sox_add_effect(sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t
   }
   if (ret != SOX_SUCCESS)
     return SOX_EOF;
+
   *in = effp->outinfo;
 
   if (sox_neffects == SOX_MAX_EFFECTS) {
@@ -136,7 +149,7 @@ int sox_add_effect(sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t
   sox_effects[sox_neffects][0] = *effp;
 
   for (f = 1; f < effp->flows; ++f) {
-    sox_effects[sox_neffects][f] = *effp;
+    sox_effects[sox_neffects][f] = eff0;
     sox_effects[sox_neffects][f].flow = f;
     if (start(&sox_effects[sox_neffects][f]) != SOX_SUCCESS)
       return SOX_EOF;
