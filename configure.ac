@@ -231,9 +231,9 @@ AC_ARG_WITH(lame,
         [with_lame=$withval])
 if test "$with_lame" != "no"; then
     using_lame=yes
-    AC_CHECK_HEADERS(lame/lame.h,
-        [AC_CHECK_LIB(mp3lame, lame_init, MP3_LIBS="$MP3_LIBS -lmp3lame",using_lame=no)],
-        using_lame=no)
+    AC_CHECK_HEADERS(lame/lame.h,,
+        [AC_CHECK_HEADERS(lame.h,, using_lame=no)])
+    AC_CHECK_LIB(mp3lame, lame_init, MP3_LIBS="$MP3_LIBS -lmp3lame",using_lame=no)
     if test "$with_lame" = "yes" -a "$using_lame" = "no"; then
         AC_MSG_FAILURE([cannot find LAME])
     fi
