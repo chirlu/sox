@@ -559,3 +559,19 @@ sox_effect_handler_t const * sox_pick_effect_fn(void)
   handler.name = "pick";
   return &handler;
 }
+
+static int oops_getopts(sox_effect_t * effp, int n, char * * argv) 
+{
+  char * args[] = {"1,-1,-1,1"};
+  return sox_mixer_effect_fn()->getopts(effp, array_length(args), args);
+}
+
+sox_effect_handler_t const * sox_oops_effect_fn(void)
+{
+  static sox_effect_handler_t handler;
+  handler = *sox_mixer_effect_fn();
+  handler.name = "oops";
+  handler.usage = NULL;
+  handler.getopts = oops_getopts;
+  return &handler;
+}

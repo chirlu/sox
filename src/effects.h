@@ -30,6 +30,7 @@
   EFFECT(mixer)
   EFFECT(noiseprof)
   EFFECT(noisered)
+  EFFECT(oops)
   EFFECT(pad)
   EFFECT(pan)
   EFFECT(phaser)

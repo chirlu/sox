@@ -543,6 +543,13 @@ using a pipe, e.g.
 	sox noisy.au -n trim 0 1 noiseprof | play noisy.au noisered
 .EE
 .TP
+\fBoops\fR
+Out Of Phase Stereo effect.
+Mixes stereo to twin-mono where each mono channel contains the
+difference between the left and right stereo channels.
+This is sometimes known as the karaoke effect as it often has the effect
+of removing most or all of the vocals from a recording.
+.TP
 \fBpad\fR { \fIlength\fR[\fB@\fIposition\fR] }
 Pad the audio with silence, at the beginning, the end, or any
 specified points through the audio.
