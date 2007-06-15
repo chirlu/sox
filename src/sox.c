@@ -1491,11 +1491,23 @@ static int strcmp_p(const void *p1, const void *p2)
   return strcmp(*(const char **)p1, *(const char **)p2);
 }
 
+static void display_supported_effects(void)
+{
+  unsigned i;
+  const sox_effect_handler_t *e;
+
+  printf("\n\nSUPPORTED EFFECTS:");
+  for (i = 0; sox_effect_fns[i]; i++) {
+    e = sox_effect_fns[i]();
+    if (e && e->name && !(e->flags & SOX_EFF_DEPRECATED))
+      printf(" %s", e->name);
+  }
+}
+
 static void usage(char const *message)
 {
   size_t i, formats;
   const char **format_list;
-  const sox_effect_handler_t *e;
   static char const * lines[] = {
 "SPECIAL FILENAMES:",
 "-               stdin (infile) or stdout (outfile)",
@@ -1574,12 +1586,7 @@ static void usage(char const *message)
     printf(" %s", format_list[i]);
   free(format_list);
 
-  printf("\n\nSUPPORTED EFFECTS:");
-  for (i = 0; sox_effect_fns[i]; i++) {
-    e = sox_effect_fns[i]();
-    if (e && e->name && !(e->flags & SOX_EFF_DEPRECATED))
-      printf(" %s", e->name);
-  }
+  display_supported_effects();
 
   printf("\n\neffopts: depends on effect\n");
 
@@ -1589,19 +1596,24 @@ static void usage(char const *message)
     exit(0);
 }
 
-static void usage_effect(char *effect)
+static void usage_effect(char *name)
 {
   int i;
 
   printf("%s: ", myname);
   printf("v%s\n\n", PACKAGE_VERSION);
 
-  printf("Effect usage:\n\n");
+  if (strcmp("all", name) && !sox_find_effect(name)) {
+    printf("Cannot find an effect called `%s'.", name);
+    display_supported_effects();
+  }
+  else {
+    printf("Effect usage:\n\n");
 
-  for (i = 0; sox_effect_fns[i]; i++) {
-    const sox_effect_handler_t *e = sox_effect_fns[i]();
-    if (e && e->name && (!strcmp("all", effect) || !strcmp(e->name, effect))) {
-      printf("%s %s\n\n", e->name, e->usage? e->usage : "");
+    for (i = 0; sox_effect_fns[i]; i++) {
+      const sox_effect_handler_t *e = sox_effect_fns[i]();
+      if (e && e->name && (!strcmp("all", name) || !strcmp(e->name, name)))
+        printf("%s %s\n\n", e->name, e->usage? e->usage : "");
     }
   }
   exit(1);
