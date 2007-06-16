@@ -562,7 +562,7 @@ sox_effect_handler_t const * sox_pick_effect_fn(void)
 
 static int oops_getopts(sox_effect_t * effp, int n, char * * argv) 
 {
-  char * args[] = {"1,-1,-1,1"};
+  char * args[] = {"1,1,-1,-1"};
   return sox_mixer_effect_fn()->getopts(effp, array_length(args), args);
 }
 
