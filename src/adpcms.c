@@ -43,7 +43,11 @@ static void adpcm_init(adpcm_t state, int type)
   state->max_step_index = type? 48 : 88;
   state->steps = type? oki_steps : ima_steps;
   state->mask = type? ~15 : ~0;
+  state->errors = 0;
 }
+
+#define min_sample -0x8000
+#define max_sample 0x7fff
 
 static int adpcm_decode(int code, adpcm_t state)
 {
@@ -52,7 +56,15 @@ static int adpcm_decode(int code, adpcm_t state)
   if (code & 8)
     s = -s;
   s += state->last_output;
-  s = range_limit(s, -0x8000, 0x7fff);
+  if (s < min_sample || s > max_sample) {
+    int grace = (state->steps[state->step_index] >> 3) & state->mask;
+    if (s < min_sample - grace || s > max_sample + grace) {
+      sox_debug_most("code=%i step=%i grace=%i s=%i", 
+          code & 15, state->steps[state->step_index], grace, s);
+      state->errors++;
+    }
+    s = s < min_sample? min_sample : max_sample;
+  }
   state->step_index += step_changes[code & 0x07];
   state->step_index = range_limit(state->step_index, 0, state->max_step_index);
   return state->last_output = s;
@@ -182,6 +194,8 @@ sox_size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t state, sox_ssample_t * b
 
 int sox_adpcm_stopread(sox_format_t * ft UNUSED, adpcm_io_t state)
 {
+  if (state->encoder.errors)
+    sox_warn("%s: ADPCM state errors: %u", ft->filename, state->encoder.errors);
   free(state->file.buf);
 
   return (SOX_SUCCESS);

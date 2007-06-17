@@ -23,6 +23,7 @@ typedef struct adpcm_struct
   int max_step_index;
   int const * steps;
   int mask;
+  int errors;
 } * adpcm_t;
 
 typedef struct adpcm_io {
