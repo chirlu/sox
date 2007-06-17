@@ -560,10 +560,10 @@ sox_effect_handler_t const * sox_pick_effect_fn(void)
   return &handler;
 }
 
-static int oops_getopts(sox_effect_t * effp, int n, char * * argv) 
+static int oops_getopts(sox_effect_t * effp, int argc, char * * argv UNUSED) 
 {
   char * args[] = {"1,1,-1,-1"};
-  return sox_mixer_effect_fn()->getopts(effp, array_length(args), args);
+  return argc? sox_usage(effp) : sox_mixer_effect_fn()->getopts(effp, array_length(args), args);
 }
 
 sox_effect_handler_t const * sox_oops_effect_fn(void)
