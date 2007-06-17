@@ -11,4 +11,4 @@
 #include "sox_i.h"
 #include "raw.h"
 
-RAW_FORMAT(s2, 16BIT, 0, SIGN2)
+RAW_FORMAT1(s2, "sw", 16BIT, 0, SIGN2)

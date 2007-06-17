@@ -28,6 +28,14 @@ const sox_format_handler_t *sox_ ## id ## _format_fn(void) { \
   static char const *names[] = {#id, NULL}; \
   RAW_FORMAT0(id, size, flags, encoding)
 
+#define RAW_FORMAT1(id, alt, size, flags, encoding) \
+  static char const *names[] = {#id, alt, NULL}; \
+  RAW_FORMAT0(id, size, flags, encoding)
+
 #define RAW_FORMAT2(id, alt1, alt2, size, flags, encoding) \
   static char const *names[] = {#id, alt1, alt2, NULL}; \
+  RAW_FORMAT0(id, size, flags, encoding)
+
+#define RAW_FORMAT3(id, alt1, alt2, alt3, size, flags, encoding) \
+  static char const *names[] = {#id, alt1, alt2, alt3, NULL}; \
   RAW_FORMAT0(id, size, flags, encoding)
