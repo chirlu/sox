@@ -59,7 +59,7 @@
 #if defined HAVE_LIBFLAC
   FORMAT(flac)
 #endif
-#if defined(HAVE_LIBMAD) || defined(HAVE_LIBMP3LAME)
+#if defined(HAVE_MAD_H) || defined(HAVE_LAME_LAME_H)
   FORMAT(mp3)
 #endif
 #if defined(HAVE_SYS_SOUNDCARD_H) || defined(HAVE_MACHINE_SOUNDCARD_H)
