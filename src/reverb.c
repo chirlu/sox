@@ -174,7 +174,7 @@ static int sox_reverb_start(sox_effect_t * effp)
                 if ( reverb->samples[i] > DELAY_BUFSIZ )
                 {
                         sox_fail("reverb: delay must be less than %g seconds!",
-                                DELAY_BUFSIZ / (float) effp->ininfo.rate );
+                                DELAY_BUFSIZ / effp->ininfo.rate );
                         return(SOX_EOF);
                 }
                 /* Compute a realistic decay */

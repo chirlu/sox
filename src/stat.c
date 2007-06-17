@@ -146,7 +146,7 @@ static int sox_stat_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssa
 
         if (stat->fft_offset >= stat->fft_size) {
           stat->fft_offset = 0;
-          print_power_spectrum(stat->fft_size, (double)effp->ininfo.rate, stat->re_in, stat->re_out);
+          print_power_spectrum(stat->fft_size, effp->ininfo.rate, stat->re_in, stat->re_out);
         }
 
       }
@@ -215,7 +215,7 @@ static int sox_stat_drain(sox_effect_t * effp, sox_ssample_t *obuf UNUSED, sox_s
     for (x = stat->fft_offset; x < stat->fft_size; x++)
       stat->re_in[x] = 0;
       
-    print_power_spectrum(stat->fft_size, (double)effp->ininfo.rate, stat->re_in, stat->re_out);
+    print_power_spectrum(stat->fft_size, effp->ininfo.rate, stat->re_in, stat->re_out);
   }
 
   *osamp = 0;

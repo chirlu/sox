@@ -351,6 +351,8 @@ static int sox_poly_start(sox_effect_t * effp)
     if (effp->ininfo.rate == effp->outinfo.rate)
       return SOX_EFF_NULL;
 
+    effp->outinfo.channels = effp->ininfo.channels;
+
     rate->lcmrate = sox_lcm((sox_ssample_t)effp->ininfo.rate,
                            (sox_ssample_t)effp->outinfo.rate);
 
@@ -359,8 +361,8 @@ static int sox_poly_start(sox_effect_t * effp)
      * 16 bits x 16 bits = 32 bits, which we can handle.
      */
 
-    rate->inskip = rate->lcmrate / effp->ininfo.rate;
-    rate->outskip = rate->lcmrate / effp->outinfo.rate;
+    rate->inskip = rate->lcmrate / (sox_ssample_t)effp->ininfo.rate;
+    rate->outskip = rate->lcmrate / (sox_ssample_t)effp->outinfo.rate;
     rate->Factor = (double)rate->inskip / (double)rate->outskip;
     rate->inpipe = 0;
     {
@@ -374,7 +376,7 @@ static int sox_poly_start(sox_effect_t * effp)
     rate->total = total;
     /* l1 and l2 are now lists of the up/down factors for conversion */
 
-    sox_debug("Poly:  input rate %d, output rate %d.  %d stages.",
+    sox_debug("Poly:  input rate %g, output rate %g.  %d stages.",
             effp->ininfo.rate, effp->outinfo.rate,total);
     sox_debug("Poly:  window: %s  size: %d  cutoff: %f.",
             (rate->win_type == 0) ? ("nut") : ("ham"), rate->win_width, rate->cutoff);

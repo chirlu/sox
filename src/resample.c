@@ -195,16 +195,12 @@ static int start(sox_effect_t * effp)
   long Xoff, gcdrate;
   int i;
 
-  /* The next line makes the "speed" effect accurate; it's needed because
-   * ininfo.rate (sox_rate_t) isn't floating point (but it's probably not worth
-   * changing sox_rate_t just because of this): */
-  double in_rate = floor(effp->ininfo.rate / effp->global_info->speed + .5)
-    * effp->global_info->speed;
-
-  if (in_rate == effp->outinfo.rate)
+  if (effp->ininfo.rate == effp->outinfo.rate)
     return SOX_EFF_NULL;
           
-  r->Factor = (double) effp->outinfo.rate / in_rate;
+  effp->outinfo.channels = effp->ininfo.channels;
+
+  r->Factor = effp->outinfo.rate / effp->ininfo.rate;
 
   gcdrate = sox_gcd((long) effp->ininfo.rate, (long) effp->outinfo.rate);
   r->a = effp->ininfo.rate / gcdrate;

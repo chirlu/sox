@@ -214,6 +214,7 @@ static file_t new_file(void)
   f->signal.size = -1;
   f->signal.encoding = SOX_ENCODING_UNKNOWN;
   f->signal.channels = 0;
+  f->signal.rate = 0;
   f->signal.reverse_bytes = SOX_OPTION_DEFAULT;
   f->signal.reverse_nibbles = SOX_OPTION_DEFAULT;
   f->signal.reverse_bits = SOX_OPTION_DEFAULT;
@@ -836,11 +837,10 @@ static sox_bool doopts(file_t f, int argc, char **argv)
       break;
 
     case 'r':
-      if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= 0) {
-        sox_fail("Rate value `%s' is not a positive integer", optarg);
+      if (sscanf(optarg, "%lf %c", &f->signal.rate, &dummy) != 1 || f->signal.rate <= 0) {
+        sox_fail("Rate value `%s' is not a positive number", optarg);
         exit(1);
       }
-      f->signal.rate = i;
       break;
 
     case 'v':
@@ -950,7 +950,7 @@ static void display_file_info(file_t f, sox_bool full)
 
   fprintf(stderr,
     "Channels       : %u\n"
-    "Sample Rate    : %u\n",
+    "Sample Rate    : %g\n",
     f->ft->signal.channels,
     f->ft->signal.rate);
 
@@ -1244,7 +1244,7 @@ static void add_effects(void)
 
   for (i = 0; i < sox_neffects; ++i) {
     sox_effect_t * effp = &sox_effects[i][0];
-    sox_report("effects chain: %-10s %uHz %u channels %u bits %s",
+    sox_report("effects chain: %-10s %gHz %u channels %u bits %s",
         effp->handler.name, effp->ininfo.rate, effp->ininfo.channels, effp->ininfo.size * 8,
         (effp->handler.flags & SOX_EFF_MCHAN)? "(multi)" : "");
   }
@@ -1403,7 +1403,7 @@ static int process(void) {
   if (ofile->signal.channels == 0)
     ofile->signal.channels = combiner.channels;
 
-  combiner.rate = combiner.rate * effects_global_info.speed + .5;
+  combiner.rate = combiner.rate * effects_global_info.speed;
 
   for (i = 0; i < nuser_effects; i++)
     known_length = known_length && !(user_efftab[i].handler.flags & SOX_EFF_LENGTH);

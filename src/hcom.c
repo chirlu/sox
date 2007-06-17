@@ -244,7 +244,7 @@ static int sox_hcomstartwrite(sox_format_t * ft)
 {
         register struct writepriv *p = (struct writepriv *) ft->priv;
 
-        switch (ft->signal.rate) {
+        switch ((int)ft->signal.rate) {
         case 22050:
         case 22050/2:
         case 22050/3:

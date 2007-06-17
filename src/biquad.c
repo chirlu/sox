@@ -67,10 +67,10 @@ int sox_biquad_start(sox_effect_t * effp)
   if (effp->global_info->plot == sox_plot_octave) {
     printf(
       "%% GNU Octave file (may also work with MATLAB(R) )\n"
-      "title('SoX effect: %s gain=%g frequency=%g %s=%g (rate=%u)')\n"
+      "title('SoX effect: %s gain=%g frequency=%g %s=%g (rate=%g)')\n"
       "xlabel('Frequency (Hz)')\n"
       "ylabel('Amplitude Response (dB)')\n"
-      "Fs=%u;minF=10;maxF=Fs/2;\n"
+      "Fs=%g;minF=10;maxF=Fs/2;\n"
       "axis([minF maxF -35 25])\n"
       "sweepF=logspace(log10(minF),log10(maxF),200);\n"
       "grid on\n"
@@ -87,10 +87,10 @@ int sox_biquad_start(sox_effect_t * effp)
   if (effp->global_info->plot == sox_plot_gnuplot) {
     printf(
       "# gnuplot file\n"
-      "set title 'SoX effect: %s gain=%g frequency=%g %s=%g (rate=%u)'\n"
+      "set title 'SoX effect: %s gain=%g frequency=%g %s=%g (rate=%g)'\n"
       "set xlabel 'Frequency (Hz)'\n"
       "set ylabel 'Amplitude Response (dB)'\n"
-      "Fs=%u.\n"
+      "Fs=%g\n"
       "b0=%g; b1=%g; b2=%g; a1=%g; a2=%g\n"
       "o=2*pi/Fs\n"
       "H(f)=sqrt((b0*b0+b1*b1+b2*b2+2.*(b0*b1+b1*b2)*cos(f*o)+2.*(b0*b2)*cos(2.*f*o))/(1.+a1*a1+a2*a2+2.*(a1+a1*a2)*cos(f*o)+2.*a2*cos(2.*f*o)))\n"

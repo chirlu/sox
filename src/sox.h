@@ -155,12 +155,14 @@ static double sox_macro_temp_double UNUSED;
   ((d) < 0? (d) <= SOX_SAMPLE_MIN - 0.5? ++(clips), SOX_SAMPLE_MIN: (d) - 0.5 \
         : (d) >= SOX_SAMPLE_MAX + 0.5? ++(clips), SOX_SAMPLE_MAX: (d) + 0.5)
 
-/* Rvalue MACRO to clip a sox_sample_t to 24 bits,
+/* Rvalue MACRO to clip an integer to a given number of bits
  * and increment a counter if clipping occurs.
  */
-#define SOX_24BIT_CLIP_COUNT(l, clips) \
-  ((l) >= ((sox_ssample_t)1 << 23)? ++(clips), ((sox_ssample_t)1 << 23) - 1 : \
-   (l) <=-((sox_ssample_t)1 << 23)? ++(clips),-((sox_ssample_t)1 << 23) + 1 : (l))
+#define SOX_INTEGER_CLIP_COUNT(bits,i,clips) ( \
+  (i) >(1 << ((bits)-1))- 1? ++(clips),(1 << ((bits)-1))- 1 : \
+  (i) <-1 << ((bits)-1)    ? ++(clips),-1 << ((bits)-1) : (i))
+#define SOX_16BIT_CLIP_COUNT(i,clips) SOX_INTEGER_CLIP_COUNT(16,i,clips)
+#define SOX_24BIT_CLIP_COUNT(i,clips) SOX_INTEGER_CLIP_COUNT(24,i,clips)
 
 
 
@@ -174,7 +176,7 @@ typedef int32_t sox_ssize_t;
 #define SOX_SSIZE_MAX 0x7fffffff
 #define SOX_SSIZE_MIN (-SOX_SSIZE_MAX - 1)
 
-typedef unsigned sox_rate_t;
+typedef double sox_rate_t;
 /* Warning, this is a MAX value used in the library.  Each format and
  * effect may have its own limitations of rate.
  */

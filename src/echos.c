@@ -134,7 +134,7 @@ static int sox_echos_start(sox_effect_t * effp)
                 if ( echos->samples[i] > (sox_ssize_t)DELAY_BUFSIZ )
                 {
                         sox_fail("echos: delay must be less than %g seconds!",
-                                DELAY_BUFSIZ / (float) effp->ininfo.rate );
+                                DELAY_BUFSIZ / effp->ininfo.rate );
                         return (SOX_EOF);
                 }
                 if ( echos->decay[i] < 0.0 )
