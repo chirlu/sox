@@ -114,7 +114,7 @@ int sox_add_effect(sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t
 
   if (effp->handler.flags & SOX_EFF_NULL) {
     sox_report("has no effect (is a proxy effect)");
-    return SOX_EFF_NULL;
+    return SOX_SUCCESS;
   }
   effp->ininfo = *in;
   effp->outinfo = *out;
@@ -133,7 +133,7 @@ int sox_add_effect(sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t
   ret = start(effp);
   if (ret == SOX_EFF_NULL) {
     sox_report("has no effect in this configuration");
-    return SOX_EFF_NULL;
+    return SOX_SUCCESS;
   }
   if (ret != SOX_SUCCESS)
     return SOX_EOF;
