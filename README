@@ -35,7 +35,7 @@ This release understands:
   o LPC-10 files
   o Macintosh HCOM files
   o Amiga MAUD files
-  o AMR-WB files
+  o AMR-WB & AMR-NB (with optional libamrwb & libamrnb libraries)
   o MP3 (with optional libmad and libmp3lame libraries)
   o MP4, AAC, AC3, WAVPACK, AMR-NB files (with optional ffmpeg
     library)
