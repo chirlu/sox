@@ -18,15 +18,6 @@
 #include <ctype.h>
 #include <stdarg.h>
 
-sox_size_t sox_bufsiz = 8192;
-sox_output_message_handler_t sox_output_message_handler = NULL;
-unsigned sox_output_verbosity_level = 2;
-
-sox_global_info_t sox_global_info;
-
-sox_effects_global_info_t effects_global_info =
-    {sox_false, 1, &sox_global_info};
-
 void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap)
 {
   char buffer[10];
@@ -55,24 +46,11 @@ void sox_output_message(FILE *file, const char *filename, const char *fmt, va_li
   vfprintf(file, fmt, ap);
 }
 
-
-
-/* This is a bit of a hack.  It's useful to have libSoX
- * report which format or effect handler is outputing
- * the message.  Using the filename for this purpose is only an
- * approximation, but it saves a lot of work. ;)
- */
-char const * sox_message_filename = 0;
-
-
-
 static void sox_emit_message(unsigned level, char const *fmt, va_list ap)
 {
-  if (sox_output_message_handler != NULL)
-    (*sox_output_message_handler)(level, sox_message_filename, fmt, ap);
+  if (sox_globals.output_message_handler != NULL)
+    (*sox_globals.output_message_handler)(level, sox_globals.subsystem, fmt, ap);
 }
-
-
 
 #undef sox_fail
 #undef sox_warn
@@ -114,38 +92,6 @@ void sox_fail_errno(sox_format_t * ft, int sox_errno, const char *fmt, ...)
 #endif
         va_end(args);
         ft->sox_errstr[255] = '\0';
-}
-
-/*
- * Check that we have a known format suffix string.
- */
-int sox_gettype(sox_format_t * ft, sox_bool is_file_extension)
-{
-    const char * const *list;
-    unsigned i;
-
-    if (!ft->filetype) {
-        sox_fail_errno(ft, SOX_EFMT, "Filetype was not specified");
-        return SOX_EFMT;
-    }
-    for (i = 0; i < sox_formats; i++) {
-      const sox_format_handler_t *f = sox_format_fns[i].fn();
-      if (is_file_extension && (f->flags & SOX_FILE_DEVICE))
-        continue; /* don't match device name in file name extensions */
-      for (list = f->names; *list; list++) {
-        const char *s1 = *list, *s2 = ft->filetype;
-        if (!strcasecmp(s1, s2))
-          break;  /* not a match */
-      }
-      if (!*list)
-        continue;
-      /* Found it! */
-      ft->handler = f;
-      return SOX_SUCCESS;
-    }
-    sox_fail_errno(ft, SOX_EFMT, "File type `%s' is not known",
-                  ft->filetype);
-    return SOX_EFMT;
 }
 
 /*

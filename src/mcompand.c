@@ -300,7 +300,7 @@ static int parse_subarg(char *s, char **subargv, sox_size_t *subargc) {
       return SOX_SUCCESS;
 }
 
-static int sox_mcompand_getopts(sox_effect_t * effp, int n, char **argv) 
+static int getopts(sox_effect_t * effp, int n, char **argv) 
 {
   char *subargv[6], *cp;
   sox_size_t subargc, i, len;
@@ -348,7 +348,7 @@ static int sox_mcompand_getopts(sox_effect_t * effp, int n, char **argv)
  * Prepare processing.
  * Do all initializations.
  */
-static int sox_mcompand_start(sox_effect_t * effp)
+static int start(sox_effect_t * effp)
 {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
@@ -477,7 +477,7 @@ static int sox_mcompand_flow_1(sox_effect_t * effp, compand_t c, comp_band_t l, 
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_mcompand_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
                      sox_size_t *isamp, sox_size_t *osamp) {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
@@ -553,7 +553,7 @@ static int sox_mcompand_drain_1(sox_effect_t * effp, compand_t c, comp_band_t l,
 /*
  * Drain out compander delay lines. 
  */
-static int sox_mcompand_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
 {
   sox_size_t band, drained, mostdrained = 0;
   compand_t c = (compand_t)effp->priv;
@@ -578,7 +578,7 @@ static int sox_mcompand_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size
 /*
  * Clean up compander effect.
  */
-static int sox_mcompand_stop(sox_effect_t * effp)
+static int stop(sox_effect_t * effp)
 {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
@@ -603,7 +603,7 @@ static int sox_mcompand_stop(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-static int sox_mcompand_kill(sox_effect_t * effp)
+static int kill(sox_effect_t * effp)
 {
   compand_t c = (compand_t) effp->priv;
   comp_band_t l;
@@ -622,25 +622,20 @@ static int sox_mcompand_kill(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-static sox_effect_handler_t sox_mcompand_effect = {
-  "mcompand",
-  "quoted_compand_args [crossover_frequency quoted_compand_args [...]]\n"
-  "\n"
-  "quoted_compand_args are as for the compand effect:\n"
-  "\n"
-  "  attack1,decay1[,attack2,decay2...]\n"
-  "                 in-dB1,out-dB1[,in-dB2,out-dB2...]\n"
-  "                [ gain [ initial-volume [ delay ] ] ]\n",
-  SOX_EFF_MCHAN,
-  sox_mcompand_getopts,
-  sox_mcompand_start,
-  sox_mcompand_flow,
-  sox_mcompand_drain,
-  sox_mcompand_stop,
-  sox_mcompand_kill
-};
-
 const sox_effect_handler_t *sox_mcompand_effect_fn(void)
 {
-    return &sox_mcompand_effect;
+  static sox_effect_handler_t handler = {
+    "mcompand",
+    "quoted_compand_args [crossover_frequency quoted_compand_args [...]]\n"
+    "\n"
+    "quoted_compand_args are as for the compand effect:\n"
+    "\n"
+    "  attack1,decay1[,attack2,decay2...]\n"
+    "                 in-dB1,out-dB1[,in-dB2,out-dB2...]\n"
+    "                [ gain [ initial-volume [ delay ] ] ]\n",
+    SOX_EFF_MCHAN,
+    getopts, start, flow, drain, stop, kill
+  };
+
+  return &handler;
 }

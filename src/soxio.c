@@ -11,6 +11,23 @@
   #include <io.h>
 #endif
 
+sox_globals_t sox_globals = {2, 8192, NULL, NULL, NULL, NULL};
+
+/*
+ * Check that we have a known format suffix string.
+ */
+int sox_gettype(sox_format_t * ft, sox_bool is_file_extension)
+{
+  if (!ft->filetype)
+    sox_fail_errno(ft, SOX_EFMT, "unknown file type");
+  else {
+    ft->handler = sox_find_format(ft->filetype, is_file_extension);
+    if (ft->handler)
+      return SOX_SUCCESS;
+    sox_fail_errno(ft, SOX_EFMT, "unknown file type `%s'", ft->filetype);
+  }
+  return SOX_EFMT;
+}
 
 void set_endianness_if_not_already_set(sox_format_t * ft)
 {
@@ -95,19 +112,16 @@ sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info,
     else
         ft->filetype = xstrdup(filetype);
 
+    ft->mode = 'r';
     if (sox_gettype(ft, sox_false) != SOX_SUCCESS) {
-        sox_fail("Unknown input file format for `%s': %s",
-                ft->filename,
-                ft->sox_errstr);
-        goto input_error;
+      sox_fail("Failed reading `%s': %s", ft->filename, ft->sox_errstr);
+      goto input_error;
     }
-
     ft->signal.size = -1;
     ft->signal.encoding = SOX_ENCODING_UNKNOWN;
     ft->signal.channels = 0;
     if (info)
         ft->signal = *info;
-    ft->mode = 'r';
 
     if (!(ft->handler->flags & SOX_FILE_NOSTDIO))
     {
@@ -115,11 +129,11 @@ sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info,
          * if the filename is "-"
          */
         if (!strcmp(ft->filename, "-")) {
-          if (sox_global_info.stdin_in_use_by) {
-            sox_fail("'-' (stdin) already in use by '%s'", sox_global_info.stdin_in_use_by);
+          if (sox_globals.stdin_in_use_by) {
+            sox_fail("'-' (stdin) already in use by '%s'", sox_globals.stdin_in_use_by);
             goto input_error;
           }
-          sox_global_info.stdin_in_use_by = "audio input";
+          sox_globals.stdin_in_use_by = "audio input";
           SET_BINARY_MODE(stdin);
           ft->fp = stdin;
         }
@@ -190,20 +204,16 @@ sox_format_t * sox_open_write(
     } else
       ft->filetype = xstrdup(filetype);
 
-    if (!ft->filetype || sox_gettype(ft, no_filetype_given) != SOX_SUCCESS)
-    {
-        sox_fail("Unknown output file format for '%s':  %s",
-                ft->filename,
-                ft->sox_errstr);
-        goto output_error;
+    ft->mode = 'w';
+    if (sox_gettype(ft, no_filetype_given) != SOX_SUCCESS) {
+      sox_fail("Failed writing `%s': %s", ft->filename, ft->sox_errstr);
+      goto output_error;
     }
-
     ft->signal.size = -1;
     ft->signal.encoding = SOX_ENCODING_UNKNOWN;
     ft->signal.channels = 0;
     if (info)
         ft->signal = *info;
-    ft->mode = 'w';
 
     if (!(ft->handler->flags & SOX_FILE_NOSTDIO))
     {
@@ -211,11 +221,11 @@ sox_format_t * sox_open_write(
          * if the filename is "-"
          */
         if (!strcmp(ft->filename, "-")) {
-          if (sox_global_info.stdout_in_use_by) {
-            sox_fail("'-' (stdout) already in use by '%s'", sox_global_info.stdout_in_use_by);
+          if (sox_globals.stdout_in_use_by) {
+            sox_fail("'-' (stdout) already in use by '%s'", sox_globals.stdout_in_use_by);
             goto output_error;
           }
-          sox_global_info.stdout_in_use_by = "audio output";
+          sox_globals.stdout_in_use_by = "audio output";
             SET_BINARY_MODE(stdout);
             ft->fp = stdout;
         }
@@ -235,7 +245,7 @@ sox_format_t * sox_open_write(
 
         /* stdout tends to be line-buffered.  Override this */
         /* to be Full Buffering. */
-        if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char)*sox_bufsiz))
+        if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char) * sox_globals.bufsiz))
         {
             sox_fail("Can't set write buffer");
             goto output_error;
@@ -261,7 +271,7 @@ sox_format_t * sox_open_write(
     /* Read and write starters can change their formats. */
     if (ft->handler->startwrite && (*ft->handler->startwrite)(ft) != SOX_SUCCESS)
     {
-        sox_fail("Failed writing %s: %s", ft->filename, ft->sox_errstr);
+        sox_fail("Failed writing `%s': %s", ft->filename, ft->sox_errstr);
         goto output_error;
     }
 

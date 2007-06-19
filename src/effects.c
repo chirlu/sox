@@ -24,9 +24,12 @@
 
 #undef sox_fail
 #undef sox_report
-#define sox_fail sox_message_filename=effp->handler.name,sox_fail
-#define sox_report sox_message_filename=effp->handler.name,sox_report
+#define sox_fail sox_globals.subsystem=effp->handler.name,sox_fail
+#define sox_report sox_globals.subsystem=effp->handler.name,sox_report
 
+
+sox_effects_globals_t sox_effects_globals =
+    {sox_false, 1, &sox_globals};
 
 int sox_usage(sox_effect_t * effp)
 {
@@ -70,7 +73,7 @@ void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const * eh)
 {
   assert(eh);
   memset(effp, 0, sizeof(*effp));
-  effp->global_info = &effects_global_info;
+  effp->global_info = &sox_effects_globals;
   effp->handler = *eh;
   if (!effp->handler.getopts) effp->handler.getopts = default_getopts;
   if (!effp->handler.start  ) effp->handler.start   = default_function;
@@ -90,7 +93,7 @@ unsigned sox_neffects;
 /* Effect can call in start() or flow() to set minimum input size to flow() */
 int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin)
 {
-  if (imin > sox_bufsiz / effp->flows) {
+  if (imin > sox_globals.bufsiz / effp->flows) {
     sox_fail("sox_bufsiz not big enough");
     return SOX_EOF;
   }
@@ -169,7 +172,7 @@ static int flow_effect(unsigned n)
   sox_size_t i, f;
   const sox_ssample_t *ibuf;
   sox_size_t idone = effp1->olen - effp1->odone;
-  sox_size_t odone = sox_bufsiz - effp->olen;
+  sox_size_t odone = sox_globals.bufsiz - effp->olen;
 
   if (effp->flows == 1)       /* Run effect on all channels at once */
     effstatus = effp->handler.flow(effp, &effp1->obuf[effp1->odone],
@@ -226,7 +229,7 @@ static int drain_effect(unsigned n)
   sox_effect_t * effp = &sox_effects[n][0];
   int effstatus = SOX_SUCCESS;
   sox_size_t i, f;
-  sox_size_t odone = sox_bufsiz - effp->olen;
+  sox_size_t odone = sox_globals.bufsiz - effp->olen;
 
   if (effp->flows == 1)   /* Run effect on all channels at once */
     effstatus = effp->handler.drain(effp, &effp->obuf[effp->olen], &odone);
@@ -269,7 +272,7 @@ int sox_flow_effects(int (* callback)(sox_bool all_done))
   sox_bool draining = sox_true;
 
   for (e = 0; e < sox_neffects; ++e) {
-    sox_effects[e][0].obuf = xmalloc(sox_bufsiz * sizeof(sox_effects[e][0].obuf[0]));
+    sox_effects[e][0].obuf = xmalloc(sox_globals.bufsiz * sizeof(sox_effects[e][0].obuf[0]));
     sox_effects[e][0].odone = sox_effects[e][0].olen = 0;
     max_flows = max(max_flows, sox_effects[e][0].flows);
   }
@@ -277,8 +280,8 @@ int sox_flow_effects(int (* callback)(sox_bool all_done))
   ibufc = xcalloc(max_flows, sizeof(*ibufc));
   obufc = xcalloc(max_flows, sizeof(*obufc));
   for (f = 0; f < max_flows; ++f) {
-    ibufc[f] = xcalloc(sox_bufsiz / 2, sizeof(ibufc[f][0]));
-    obufc[f] = xcalloc(sox_bufsiz / 2, sizeof(obufc[f][0]));
+    ibufc[f] = xcalloc(sox_globals.bufsiz / 2, sizeof(ibufc[f][0]));
+    obufc[f] = xcalloc(sox_globals.bufsiz / 2, sizeof(obufc[f][0]));
   }
 
   e = sox_neffects - 1;

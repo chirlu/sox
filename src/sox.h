@@ -34,8 +34,6 @@
 
 const char *sox_version(void);   /* Returns version number */
 
-extern char const * sox_message_filename;
-
 #define SOX_SUCCESS 0
 #define SOX_EOF (-1)             /* End Of File or other error */
 
@@ -207,19 +205,7 @@ typedef enum {
   SOX_ENCODINGS            /* End of list marker */
 } sox_encoding_t;
 
-typedef struct sox_global_info /* Global parameters (for effects & formats) */
-{
-  char const * stdin_in_use_by;
-  char const * stdout_in_use_by;
-} sox_global_info_t;
-
 typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot} sox_plot_t;
-
-typedef struct sox_formats_global_info /* Global parameters (for formats) */
-{
-  sox_global_info_t * global_info;
-} sox_formats_global_info_t;
-
 typedef enum {SOX_OPTION_NO, SOX_OPTION_YES, SOX_OPTION_DEFAULT} sox_option_t;
 
 /* Signal parameters */
@@ -385,19 +371,13 @@ int sox_close(sox_format_t * ft);
 #define SOX_SEEK_SET 0
 int sox_seek(sox_format_t * ft, sox_size_t offset, int whence);
 
+sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev);
 int sox_gettype(sox_format_t *, sox_bool);
 sox_format_t * sox_initformat(void);
 
 /*
  * Structures for effects.
  */
-
-typedef struct sox_effects_global_info /* Global parameters (for effects) */
-{
-  sox_plot_t plot;         /* To help the user choose effect & options */
-  double speed;            /* Gather up all speed changes here, then resample */
-  sox_global_info_t * global_info;
-} sox_effects_global_info_t;
 
 #define SOX_MAX_EFFECT_PRIVSIZE SOX_MAX_FILE_PRIVSIZE
 
@@ -410,6 +390,7 @@ typedef struct sox_effects_global_info /* Global parameters (for effects) */
 #define SOX_EFF_DEPRECATED 64        /* Effect is living on borrowed time */
 
 typedef struct sox_effect sox_effect_t;
+typedef struct sox_effects_globals sox_effects_globals_t;
 
 typedef struct {
   char const * name;
@@ -430,7 +411,7 @@ struct sox_effect {
    * in memory in the optimal way for any structure to be cast over it. */
   char priv[SOX_MAX_EFFECT_PRIVSIZE];    /* private area for effect */
 
-  struct sox_effects_global_info * global_info; /* global parameters */
+  sox_effects_globals_t * global_info; /* global parameters */
   struct sox_signalinfo    ininfo;       /* input signal specifications */
   struct sox_signalinfo    outinfo;      /* output signal specifications */
   sox_effect_handler_t     handler;

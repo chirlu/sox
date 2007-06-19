@@ -27,3 +27,19 @@
   };
   unsigned sox_formats = array_length(sox_format_fns);
 #endif 
+
+/* Find a named format in the formats library */
+sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev)
+{
+  int f, n;
+
+  for (f = 0; f < sox_formats; ++f) {
+    sox_format_handler_t const * fh = sox_format_fns[f].fn();
+
+    if (!(no_dev && (fh->flags & SOX_FILE_DEVICE)))
+      for (n = 0; fh->names[n]; ++n)
+        if (!strcasecmp(fh->names[n], name))
+          return fh;                 /* Found it. */
+  }
+  return NULL;
+}

@@ -167,7 +167,7 @@ set(formats_srcs
   ima-fmt
   ima_rw
   la-fmt
-  lpc10
+  lpc10.c
   lu-fmt
   maud
   nulfile

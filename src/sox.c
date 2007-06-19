@@ -141,7 +141,7 @@ static char *myname = NULL;
 
 static void output_message(unsigned level, const char *filename, const char *fmt, va_list ap)
 {
-  if (sox_output_verbosity_level >= level) {
+  if (sox_globals.verbosity >= level) {
     fprintf(stderr, "%s ", myname);
     sox_output_message(stderr, filename, fmt, ap);
     fprintf(stderr, "\n");
@@ -503,7 +503,7 @@ int main(int argc, char **argv)
 
   myname = argv[0];
   atexit(cleanup);
-  sox_output_message_handler = output_message;
+  sox_globals.output_message_handler = output_message;
 
   if (strends(myname, "play")) {
     play = sox_true;
@@ -764,7 +764,7 @@ static sox_bool doopts(file_t f, int argc, char **argv)
         sox_fail("Buffer size `%s' must be > %d", optarg, SOX_BUFMIN);
         exit(1);
         }
-        sox_bufsiz = i;
+        sox_globals.bufsiz = i;
         break;
 
       case 1:
@@ -796,7 +796,7 @@ static sox_bool doopts(file_t f, int argc, char **argv)
         break;
 
       case 7:
-        effects_global_info.plot = enum_option(option_index, plot_methods);
+        sox_effects_globals.plot = enum_option(option_index, plot_methods);
         break;
 
       case 8:
@@ -905,14 +905,14 @@ static sox_bool doopts(file_t f, int argc, char **argv)
 
     case 'V':
       if (optarg == NULL)
-        ++sox_output_verbosity_level;
+        ++sox_globals.verbosity;
       else {
         if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i < 0) {
-          sox_output_verbosity_level = 2;
+          sox_globals.verbosity = 2;
           sox_fail("Verbosity value `%s' is not a non-negative integer", optarg);
           exit(1);
         }
-        sox_output_verbosity_level = (unsigned)i;
+        sox_globals.verbosity = (unsigned)i;
       }
       break;
     }
@@ -990,7 +990,7 @@ static void display_file_info(file_t f, sox_bool full)
 
 static void report_file_info(file_t f)
 {
-  if (sox_output_verbosity_level > 2)
+  if (sox_globals.verbosity > 2)
     display_file_info(f, sox_true);
 }
 
@@ -1002,7 +1002,7 @@ static void progress_to_file(file_t f)
   }
   read_wide_samples = 0;
   input_wide_samples = f->ft->length / f->ft->signal.channels;
-  if (show_progress && (sox_output_verbosity_level < 3 ||
+  if (show_progress && (sox_globals.verbosity < 3 ||
                         (combine_method <= sox_concatenate && input_count > 1)))
     display_file_info(f, sox_false);
   if (f->volume == HUGE_VAL)
@@ -1079,7 +1079,7 @@ static int combiner_start(sox_effect_t *effp)
   else {
     ws = 0;
     for (i = 0; i < input_count; i++) {
-      z->ibuf[i] = (sox_ssample_t *)xmalloc(sox_bufsiz * sizeof(sox_ssample_t));
+      z->ibuf[i] = (sox_ssample_t *)xmalloc(sox_globals.bufsiz * sizeof(sox_ssample_t));
       progress_to_file(files[i]);
       ws = max(ws, input_wide_samples);
     }
@@ -1403,7 +1403,7 @@ static int process(void) {
   if (ofile->signal.channels == 0)
     ofile->signal.channels = combiner.channels;
 
-  combiner.rate = combiner.rate * effects_global_info.speed;
+  combiner.rate = combiner.rate * sox_effects_globals.speed;
 
   for (i = 0; i < nuser_effects; i++)
     known_length = known_length && !(user_efftab[i].handler.flags & SOX_EFF_LENGTH);

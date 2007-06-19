@@ -199,8 +199,6 @@ double sox_swapdf(double d);
 
 /* util.c */
 typedef void (*sox_output_message_handler_t)(unsigned level, const char *filename, const char *fmt, va_list ap);
-extern sox_output_message_handler_t sox_output_message_handler;
-extern unsigned sox_output_verbosity_level;
 void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap);
 
 void sox_fail(const char *, ...);
@@ -210,12 +208,12 @@ void sox_debug(const char *, ...);
 void sox_debug_more(char const * fmt, ...);
 void sox_debug_most(char const * fmt, ...);
 
-#define sox_fail       sox_message_filename=__FILE__,sox_fail
-#define sox_warn       sox_message_filename=__FILE__,sox_warn
-#define sox_report     sox_message_filename=__FILE__,sox_report
-#define sox_debug      sox_message_filename=__FILE__,sox_debug
-#define sox_debug_more sox_message_filename=__FILE__,sox_debug_more
-#define sox_debug_most sox_message_filename=__FILE__,sox_debug_most
+#define sox_fail       sox_globals.subsystem=__FILE__,sox_fail
+#define sox_warn       sox_globals.subsystem=__FILE__,sox_warn
+#define sox_report     sox_globals.subsystem=__FILE__,sox_report
+#define sox_debug      sox_globals.subsystem=__FILE__,sox_debug
+#define sox_debug_more sox_globals.subsystem=__FILE__,sox_debug_more
+#define sox_debug_most sox_globals.subsystem=__FILE__,sox_debug_most
 
 void sox_fail_errno(sox_format_t *, int, const char *, ...);
 
@@ -234,13 +232,36 @@ void sox_fail_errno(sox_format_t *, int, const char *, ...);
 #define M_PI_2  1.57079632679489661923  /* pi/2 */
 #endif
 
+typedef struct sox_globals /* Global parameters (for effects & formats) */
+{
+  unsigned     verbosity;
 /* The following is used at times in libsox when alloc()ing buffers
  * to perform file I/O.  It can be useful to pass in similar sized
  * data to get max performance.
  */
-extern sox_size_t sox_bufsiz;
-extern sox_global_info_t sox_global_info;
-extern sox_effects_global_info_t effects_global_info;
+  sox_size_t   bufsiz;
+  char const * stdin_in_use_by;
+  char const * stdout_in_use_by;
+  sox_output_message_handler_t output_message_handler;
+  char const * subsystem;
+
+} sox_globals_t;
+
+struct sox_effects_globals /* Global parameters (for effects) */
+{
+  sox_plot_t plot;         /* To help the user choose effect & options */
+  double speed;            /* Gather up all speed changes here, then resample */
+  sox_globals_t * global_info;
+};
+
+typedef struct sox_formats_globals /* Global parameters (for formats) */
+{
+  sox_globals_t * global_info;
+} sox_formats_globals;
+
+
+extern sox_globals_t sox_globals;
+extern sox_effects_globals_t sox_effects_globals;
 
 extern const char sox_readerr[];
 extern const char sox_writerr[];

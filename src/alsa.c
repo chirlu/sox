@@ -289,8 +289,8 @@ static int sox_alsasetup(sox_format_t * ft, snd_pcm_stream_t mode)
         goto open_error;
     }
 
-    /* Have a much larger buffer than sox_bufsiz to avoid underruns */
-    buffer_size = sox_bufsiz * 8 / ft->signal.size / ft->signal.channels;
+    /* Have a much larger buffer than sox_globals.bufsiz to avoid underruns */
+    buffer_size = sox_globals.bufsiz * 8 / ft->signal.size / ft->signal.channels;
 
     if (snd_pcm_hw_params_get_buffer_size_min(hw_params, &buffer_size_min) < 0)
     {

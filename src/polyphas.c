@@ -231,7 +231,7 @@ static int optimize_factors(poly_t rate, unsigned numer, unsigned denom, int *l1
       if (c_min>cost) {
         c_min = cost;
         u_min = u;
-        if (sox_output_verbosity_level >= 4) {
+        if (sox_globals.verbosity >= 4) {
           sox_debug("c_min %d, [%d-%d]:",c_min,numer,denom);
           for (j=0; j<u; j++)
             sox_debug(" (%d,%d)",rate->m1[j],rate->m2[j]);

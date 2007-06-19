@@ -149,18 +149,12 @@ static int sox_autostartread(sox_format_t * ft)
     if (type == NULL)
       type = find_file_extension(ft->filename);
 
-    if (type == NULL) {
-      sox_fail_errno(ft,SOX_EFMT, "Could not determine file type.");
-      return SOX_EOF;
-    }
     free(ft->filetype);
-    ft->filetype = strdup(type);
+    ft->filetype = xstrdup(type);
+    ft->mode = 'r';
     rc = sox_gettype(ft, sox_true); /* Change ft->h to the new format */
-    if(rc != SOX_SUCCESS)
-    {
-        sox_fail_errno(ft,SOX_EFMT,"Do not understand format type: %s",type);
-        return (rc);
-    }
+    if (rc != SOX_SUCCESS)
+      return (rc);
 
     sox_debug("Detected file format type: %s", type);
     set_endianness_if_not_already_set(ft);

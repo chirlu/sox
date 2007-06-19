@@ -82,6 +82,6 @@ int sox_biquad_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_
                         sox_size_t *isamp, sox_size_t *osamp);
 
 #undef sox_fail
-#define sox_fail sox_message_filename=effp->handler.name,sox_fail
+#define sox_fail sox_globals.subsystem=effp->handler.name,sox_fail
 
 #endif
