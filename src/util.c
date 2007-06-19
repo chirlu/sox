@@ -11,45 +11,16 @@
  */
 
 #include "sox_i.h"
-#include <assert.h>
-#include <stddef.h>
 #include <string.h>
-#include <strings.h>
-#include <ctype.h>
 #include <stdarg.h>
 
 void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap)
 {
-  char buffer[10];
-  char const * handler_name;
-  char const * dot_pos;
- 
-  handler_name = strrchr(filename, '/');
-  if (handler_name != NULL) {
-    ++handler_name;
-  } else {
-    handler_name = strrchr(filename, '\\');
-    if (handler_name != NULL)
-      ++handler_name;
-    else
-      handler_name = filename;
-  }
-
-  dot_pos = strrchr(handler_name, '.');
-  if (dot_pos != NULL && dot_pos - handler_name <= (ptrdiff_t)(sizeof(buffer) - 1)) {
-    strncpy(buffer, handler_name, (size_t)(dot_pos - handler_name));
-    buffer[dot_pos - handler_name] = '\0';
-    handler_name = buffer;
-  }
-
-  fprintf(file, "%s: ", handler_name);
+  char const * slash_pos = LAST_SLASH(filename);
+  char const * base_name = slash_pos? slash_pos + 1 : filename;
+  char const * dot_pos   = strrchr(base_name, '.');
+  fprintf(file, "%.*s: ", dot_pos? dot_pos - base_name : -1, base_name);
   vfprintf(file, fmt, ap);
-}
-
-static void sox_emit_message(unsigned level, char const *fmt, va_list ap)
-{
-  if (sox_globals.output_message_handler != NULL)
-    (*sox_globals.output_message_handler)(level, sox_globals.subsystem, fmt, ap);
 }
 
 #undef sox_fail
@@ -60,13 +31,12 @@ static void sox_emit_message(unsigned level, char const *fmt, va_list ap)
 #undef sox_debug_most
 
 #define SOX_MESSAGE_FUNCTION(name,level) \
-void name(char const * fmt, ...) \
-{ \
-  va_list args; \
-\
-  va_start(args, fmt); \
-  sox_emit_message(level, fmt, args); \
-  va_end(args); \
+void name(char const * fmt, ...) { \
+  va_list ap; \
+  va_start(ap, fmt); \
+  if (sox_globals.output_message_handler) \
+    (*sox_globals.output_message_handler)(level,sox_globals.subsystem,fmt,ap); \
+  va_end(ap); \
 }
 
 SOX_MESSAGE_FUNCTION(sox_fail  , 1)
