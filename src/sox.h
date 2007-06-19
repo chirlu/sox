@@ -12,6 +12,7 @@
 #ifndef SOX_H
 #define SOX_H
 
+#include <stddef.h> /* Ensure NULL etc. are available throughout SoX */
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
