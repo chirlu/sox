@@ -24,7 +24,6 @@
 
 #include "sox_i.h"
 
-#include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>
@@ -72,56 +71,51 @@
   #define TIME_FRAC 1e3
 #endif
 
+
+/* argv[0] options */
+
+static char const * myname = NULL;
 static sox_bool play = sox_false, rec = sox_false;
-#ifdef HAVE_LTDL_H
-static sox_bool plugins_initted = sox_false;
-#endif
-static enum {sox_sequence, sox_concatenate, sox_mix, sox_merge} combine_method = sox_concatenate;
-static sox_size_t mixing_clips = 0;
+
+
+/* gopts */
+
+static enum {sox_sequence, sox_concatenate, sox_mix, sox_merge}
+    combine_method = sox_concatenate;
 static sox_bool repeatable_random = sox_false;  /* Whether to invoke srand. */
 static sox_bool interactive = sox_false;
 static sox_bool uservolume = sox_false;
 typedef enum {RG_off, RG_track, RG_album} rg_mode;
 static rg_mode replay_gain_mode = RG_off;
-
-static sox_bool user_abort = sox_false;
-static sox_bool user_skip = sox_false;
-static int success = 0;
-
 static sox_option_t show_progress = SOX_OPTION_DEFAULT;
-static unsigned long input_wide_samples = 0;
-static unsigned long read_wide_samples = 0;
-static unsigned long output_samples = 0;
+
+
+/* Input & output files */
 
 typedef struct file_info
 {
-  char *filename;
-  char *filetype;
+  char * filename;
+
+  /* fopts */
+  char const * filetype;
   sox_signalinfo_t signal;
   double volume;
   double replay_gain;
-  char *comment;
-  sox_size_t volume_clips;
-  sox_format_t * ft;                           /* libSoX file descriptor */
-} *file_t;
+  char const * comment;
 
-/* local forward declarations */
-static sox_bool doopts(file_t, int, char **);
-static void usage(char const *) NORET;
-static void usage_effect(char *) NORET;
-static int process(void);
-static void display_status(sox_bool all_done);
-static void report_file_info(file_t f);
+  sox_format_t * ft;  /* libSoX file descriptor */
+  sox_size_t volume_clips;
+} * file_t;
 
 #define MAX_INPUT_FILES 32
 #define MAX_FILES MAX_INPUT_FILES + 2 /* 1 output file plus record input */
-
 static file_t files[MAX_FILES]; /* Array tracking input and output files */
 #define ofile files[file_count - 1]
 static size_t file_count = 0;
 static size_t input_count = 0;
-static size_t current_input = 0;
-static sox_signalinfo_t combiner, ofile_signal;
+
+
+/* Effects */
 
 /* We parse effects into a temporary effects table and then place into
  * the real effects table.  This makes it easier to reorder some effects
@@ -137,7 +131,175 @@ static sox_signalinfo_t combiner, ofile_signal;
 static sox_effect_t user_efftab[MAX_USER_EFF];
 static unsigned nuser_effects;
 
-static char *myname = NULL;
+
+/* Flowing */
+
+static sox_signalinfo_t combiner, ofile_signal;
+static sox_size_t mixing_clips = 0;
+static size_t current_input = 0;
+static unsigned long input_wide_samples = 0;
+static unsigned long read_wide_samples = 0;
+static unsigned long output_samples = 0;
+static sox_bool user_abort = sox_false;
+static sox_bool user_skip = sox_false;
+static int success = 0;
+
+
+/* Plugins */
+
+#ifdef HAVE_LTDL_H
+static sox_bool plugins_initted = sox_false;
+#endif
+
+
+/* local forward declarations */
+
+static sox_bool parse_gopts_and_fopts(file_t, int, char **);
+static int process(void);
+static void display_status(sox_bool all_done);
+static void report_file_info(file_t f);
+
+
+static void display_SoX_version(void)
+{
+  printf("%s: SoX v%s\n", myname, PACKAGE_VERSION);
+}
+
+static int strcmp_p(const void *p1, const void *p2)
+{
+  return strcmp(*(const char **)p1, *(const char **)p2);
+}
+
+static void display_supported_formats(void)
+{
+  size_t i, formats;
+  const char **format_list;
+
+  printf("SUPPORTED FILE FORMATS:");
+  for (i = 0, formats = 0; i < sox_formats; i++) {
+    char const * const *names = sox_format_fns[i].fn()->names;
+    while (*names++)
+      formats++;
+  }
+  formats += 2;
+  format_list = (const char **)xmalloc(formats * sizeof(char *));
+  for (i = 0, formats = 0; i < sox_formats; i++) {
+    char const * const *names = sox_format_fns[i].fn()->names;
+    while (*names)
+      format_list[formats++] = *names++;
+  }
+  format_list[formats++] = "m3u";
+  format_list[formats++] = "pls";
+  qsort(format_list, formats, sizeof(char *), strcmp_p);
+  for (i = 0; i < formats; i++)
+    printf(" %s", format_list[i]);
+  free(format_list);
+  puts("\n");
+}
+
+static void display_supported_effects(void)
+{
+  size_t i;
+  const sox_effect_handler_t *e;
+
+  printf("SUPPORTED EFFECTS:");
+  for (i = 0; sox_effect_fns[i]; i++) {
+    e = sox_effect_fns[i]();
+    if (e && e->name && !(e->flags & SOX_EFF_DEPRECATED))
+      printf(" %s", e->name);
+  }
+  puts("\n");
+}
+
+static void usage(char const * message)
+{
+  size_t i;
+  static char const * lines[] = {
+"SPECIAL FILENAMES:",
+"-               stdin (infile) or stdout (outfile)",
+"-n              use the null file handler; for use with e.g. synth & stat",
+"",
+"GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):",
+"--buffer BYTES  set the buffer size (default 8192)",
+"--combine concatenate  concatenate multiple input files (default for sox, rec)",
+"--combine sequence  sequence multiple input files (default for play)",
+"-h, --help      display version number and usage information",
+"--help-effect NAME  display usage of specified effect; use `all' to display all",
+"--interactive   prompt to overwrite output file",
+"-m, --combine mix  mix multiple input files (instead of concatenating)",
+"-M, --combine merge  merge multiple input files (instead of concatenating)",
+"--plot gnuplot|octave  generate script to plot response of filter effect",
+"-q, --no-show-progress  run in quiet mode; opposite of -S",
+"--replay-gain track|album|off  default: off (sox, rec), track (play)",
+"-R              use default random numbers (same on each run of SoX)",
+"-S, --show-progress  display progress while processing audio data",
+"--version       display version number of SoX and exit",
+"-V[LEVEL]       increment or set verbosity level (default 2); levels are:",
+"                  1: failure messages",
+"                  2: warnings",
+"                  3: details of processing",
+"                  4-6: increasing levels of debug messages",
+"",
+"FORMAT OPTIONS (fopts):",
+"Format options only need to be supplied for input files that are headerless,",
+"otherwise they are obtained automatically.  Output files will default to the",
+"same format options as the input file unless otherwise specified.",
+"",
+"-c, --channels CHANNELS  number of channels in audio data",
+"-C, --compression FACTOR  compression factor for output format",
+"--comment TEXT  Specify comment text for the output file",
+"--comment-file FILENAME  file containing comment text for the output file",
+"--endian little|big|swap  set endianness; swap means opposite to default",
+"-r, --rate RATE  sample rate of audio",
+"-t, --type FILETYPE  file type of audio",
+"-x              invert auto-detected endianness",
+"-N, --reverse-nibbles  nibble-order",
+"-X, --reverse-bits  bit-order of data",
+"-B/-L           force endianness to big/little",
+"-s/-u/-U/-A/    sample encoding: signed/unsigned/u-law/A-law",
+"  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point",
+"-1/-2/-3/-4/-8  sample size in bytes",
+"-v, --volume FACTOR  volume input file volume adjustment factor (real number)",
+""};
+
+  display_SoX_version();
+  putchar('\n');
+
+  if (message)
+    fprintf(stderr, "Failed: %s\n\n", message);  /* N.B. stderr */
+
+  printf("Usage summary: [gopts] [[fopts] infile]... [fopts]%s [effect [effopts]]...\n\n",
+         play? "" : " outfile");
+  for (i = 0; i < array_length(lines); ++i)
+    puts(lines[i]);
+  display_supported_formats();
+  display_supported_effects();
+  printf("effopts: depends on effect\n");
+  exit(message != NULL);
+}
+
+static void usage_effect(char const * name)
+{
+  int i;
+
+  display_SoX_version();
+  putchar('\n');
+
+  if (strcmp("all", name) && !sox_find_effect(name)) {
+    printf("Cannot find an effect called `%s'.", name);
+    display_supported_effects();
+  }
+  else {
+    printf("Effect usage:\n\n");
+
+    for (i = 0; sox_effect_fns[i]; i++) {
+      const sox_effect_handler_t *e = sox_effect_fns[i]();
+      if (e && e->name && (!strcmp("all", name) || !strcmp(e->name, name)))
+        printf("%s %s\n\n", e->name, e->usage? e->usage : "");
+    }
+  }
+  exit(1);
+}
 
 static void output_message(unsigned level, const char *filename, const char *fmt, va_list ap)
 {
@@ -377,7 +539,7 @@ static void parse_options_and_filenames(int argc, char **argv)
       exit(1);
     }
 
-    if (doopts(f, argc, argv)) { /* is null file? */
+    if (parse_gopts_and_fopts(f, argc, argv)) { /* is null file? */
       if (f->filetype != NULL && strcmp(f->filetype, "null") != 0)
         sox_warn("Ignoring `-t %s'.", f->filetype);
       f->filetype = "null";
@@ -745,7 +907,7 @@ static int enum_option(int option_index, enum_item const * items)
   return p->value;
 }
 
-static sox_bool doopts(file_t f, int argc, char **argv)
+static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
 {
   while (sox_true) {
     int option_index;
@@ -804,7 +966,7 @@ static sox_bool doopts(file_t f, int argc, char **argv)
         break;
 
       case 9:
-        printf("%s: v%s\n", myname, PACKAGE_VERSION);
+        display_SoX_version();
         exit(0);
         break;
       }
@@ -1484,137 +1646,4 @@ static void display_status(sox_bool all_done)
   }
   if (all_done)
     fputc('\n', stderr);
-}
-
-static int strcmp_p(const void *p1, const void *p2)
-{
-  return strcmp(*(const char **)p1, *(const char **)p2);
-}
-
-static void display_supported_effects(void)
-{
-  unsigned i;
-  const sox_effect_handler_t *e;
-
-  printf("\n\nSUPPORTED EFFECTS:");
-  for (i = 0; sox_effect_fns[i]; i++) {
-    e = sox_effect_fns[i]();
-    if (e && e->name && !(e->flags & SOX_EFF_DEPRECATED))
-      printf(" %s", e->name);
-  }
-}
-
-static void usage(char const *message)
-{
-  size_t i, formats;
-  const char **format_list;
-  static char const * lines[] = {
-"SPECIAL FILENAMES:",
-"-               stdin (infile) or stdout (outfile)",
-"-n              use the null file handler; for use with e.g. synth & stat",
-"",
-"GLOBAL OPTIONS (gopts) (can be specified at any point before the first effect):",
-"--buffer BYTES  set the buffer size (default 8192)",
-"--combine concatenate  concatenate multiple input files (default for sox, rec)",
-"--combine sequence  sequence multiple input files (default for play)",
-"-h, --help      display version number and usage information",
-"--help-effect NAME  display usage of specified effect; use `all' to display all",
-"--interactive   prompt to overwrite output file",
-"-m, --combine mix  mix multiple input files (instead of concatenating)",
-"-M, --combine merge  merge multiple input files (instead of concatenating)",
-"--plot gnuplot|octave  generate script to plot response of filter effect",
-"-q, --no-show-progress  run in quiet mode; opposite of -S",
-"--replay-gain track|album|off  default: off (sox, rec), track (play)",
-"-R              use default random numbers (same on each run of SoX)",
-"-S, --show-progress  display progress while processing audio data",
-"--version       display version number of SoX and exit",
-"-V[LEVEL]       increment or set verbosity level (default 2); levels are:",
-"                  1: failure messages",
-"                  2: warnings",
-"                  3: details of processing",
-"                  4-6: increasing levels of debug messages",
-"",
-"FORMAT OPTIONS (fopts):",
-"Format options only need to be supplied for input files that are headerless,",
-"otherwise they are obtained automatically.  Output files will default to the",
-"same format options as the input file unless otherwise specified.",
-"",
-"-c, --channels CHANNELS  number of channels in audio data",
-"-C, --compression FACTOR  compression factor for output format",
-"--comment TEXT  Specify comment text for the output file",
-"--comment-file FILENAME  file containing comment text for the output file",
-"--endian little|big|swap  set endianness; swap means opposite to default",
-"-r, --rate RATE  sample rate of audio",
-"-t, --type FILETYPE  file type of audio",
-"-x              invert auto-detected endianness",
-"-N, --reverse-nibbles  nibble-order",
-"-X, --reverse-bits  bit-order of data",
-"-B/-L           force endianness to big/little",
-"-s/-u/-U/-A/    sample encoding: signed/unsigned/u-law/A-law",
-"  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point",
-"-1/-2/-3/-4/-8  sample size in bytes",
-"-v, --volume FACTOR  volume input file volume adjustment factor (real number)",
-""};
-
-  printf("%s: ", myname);
-  printf("SoX Version %s\n\n", PACKAGE_VERSION);
-  if (message)
-    fprintf(stderr, "Failed: %s\n\n", message);
-  printf("Usage summary: [gopts] [[fopts] infile]... [fopts]%s [effect [effopts]]...\n\n",
-         play? "" : " outfile");
-
-  for (i = 0; i < array_length(lines); ++i)
-    puts(lines[i]);
-
-  printf("SUPPORTED FILE FORMATS:");
-  for (i = 0, formats = 0; i < sox_formats; i++) {
-    char const * const *names = sox_format_fns[i].fn()->names;
-    while (*names++)
-      formats++;
-  }
-  formats += 2;
-  format_list = (const char **)xmalloc(formats * sizeof(char *));
-  for (i = 0, formats = 0; i < sox_formats; i++) {
-    char const * const *names = sox_format_fns[i].fn()->names;
-    while (*names)
-      format_list[formats++] = *names++;
-  }
-  format_list[formats++] = "m3u";
-  format_list[formats++] = "pls";
-  qsort(format_list, formats, sizeof(char *), strcmp_p);
-  for (i = 0; i < formats; i++)
-    printf(" %s", format_list[i]);
-  free(format_list);
-
-  display_supported_effects();
-
-  printf("\n\neffopts: depends on effect\n");
-
-  if (message)
-    exit(1);
-  else
-    exit(0);
-}
-
-static void usage_effect(char *name)
-{
-  int i;
-
-  printf("%s: ", myname);
-  printf("v%s\n\n", PACKAGE_VERSION);
-
-  if (strcmp("all", name) && !sox_find_effect(name)) {
-    printf("Cannot find an effect called `%s'.", name);
-    display_supported_effects();
-  }
-  else {
-    printf("Effect usage:\n\n");
-
-    for (i = 0; sox_effect_fns[i]; i++) {
-      const sox_effect_handler_t *e = sox_effect_fns[i]();
-      if (e && e->name && (!strcmp("all", name) || !strcmp(e->name, name)))
-        printf("%s %s\n\n", e->name, e->usage? e->usage : "");
-    }
-  }
-  exit(1);
 }
