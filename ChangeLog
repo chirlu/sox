@@ -59,6 +59,7 @@ sox-14.0.0
   o FLAC: fixed crash when encoding with no comment.  (robs)
   o Fixed effect drain problems: chorus, echo(s), phaser.  (robs)
   o Fix rabbit responsiveness and memory problems.  (Peter Samuelson)
+  o Fix broken stereo audio when recording using ALSA.  (robs)
 
   Internal improvements:
 
