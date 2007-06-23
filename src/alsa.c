@@ -466,70 +466,53 @@ static void sw_read_buf(sox_ssample_t *buf1, char const * buf2, sox_size_t len, 
 
 static sox_size_t sox_alsaread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t nsamp)
 {
-    sox_size_t len;
-    int err;
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
     void (*read_buf)(sox_ssample_t *, char const *, sox_size_t, sox_bool, sox_size_t *) = 0;
+    sox_size_t len;
 
     switch(ft->signal.size) {
-        case SOX_SIZE_BYTE:
-            switch(ft->signal.encoding)
-            {
-                case SOX_ENCODING_SIGN2:
-                    read_buf = sb_read_buf;
-                    break;
-                case SOX_ENCODING_UNSIGNED:
-                    read_buf = ub_read_buf;
-                    break;
-                default:
-                    sox_fail_errno(ft,SOX_EFMT,"Do not support this encoding for this data size");
-                    return 0;
-            }
-            break;
-        case SOX_SIZE_16BIT:
-            switch(ft->signal.encoding)
-            {
-                case SOX_ENCODING_SIGN2:
-                    read_buf = sw_read_buf;
-                    break;
-                case SOX_ENCODING_UNSIGNED:
-                    read_buf = uw_read_buf;
-                    break;
-                default:
-                    sox_fail_errno(ft,SOX_EFMT,"Do not support this encoding for this data size");
-                    return 0;
-            }
-            break;
-        default:
-            sox_fail_errno(ft,SOX_EFMT,"Do not support this data size for this handler");
+      case SOX_SIZE_BYTE:
+        switch(ft->signal.encoding) {
+          case SOX_ENCODING_SIGN2:    read_buf = sb_read_buf; break;
+          case SOX_ENCODING_UNSIGNED: read_buf = ub_read_buf; break;
+          default:
+            sox_fail_errno(ft,SOX_EFMT,"Do not support this encoding for this data size");
             return 0;
+        }
+        break;
+      case SOX_SIZE_16BIT:
+        switch(ft->signal.encoding) {
+          case SOX_ENCODING_SIGN2:    read_buf = sw_read_buf; break;
+          case SOX_ENCODING_UNSIGNED: read_buf = uw_read_buf; break;
+          default:
+            sox_fail_errno(ft,SOX_EFMT,"Do not support this encoding for this data size");
+            return 0;
+        }
+        break;
+      default:
+        sox_fail_errno(ft,SOX_EFMT,"Do not support this data size for this handler");
+        return 0;
     }
 
     /* Prevent overflow */
     if (nsamp > alsa->buf_size/ft->signal.size)
-        nsamp = (alsa->buf_size/ft->signal.size);
+      nsamp = (alsa->buf_size/ft->signal.size);
+
     len = 0;
-
-    while (len < nsamp)
-    {
-        /* ALSA library takes "frame" counts. */
-        err = snd_pcm_readi(alsa->pcm_handle, alsa->buf, 
-                            (nsamp - len)/ft->signal.channels);
-        if (err < 0)
-        {
-            if (xrun_recovery(alsa->pcm_handle, err) < 0)
-            {
-                sox_fail_errno(ft, SOX_EPERM, "ALSA write error");
-                return 0;
-            }
+    while (len < nsamp) {
+      sox_size_t n = snd_pcm_readi(alsa->pcm_handle, alsa->buf, 
+          (nsamp - len)/ft->signal.channels); /* ALSA takes "frame" counts. */
+      if ((int)n < 0) {
+        if (xrun_recovery(alsa->pcm_handle, (int)n) < 0) {
+          sox_fail_errno(ft, SOX_EPERM, "ALSA read error");
+          return 0;
         }
-        else
-        {
-            read_buf(buf+(len*sizeof(sox_ssample_t)), alsa->buf, (unsigned)err, ft->signal.reverse_bytes, &ft->clips);
-            len += err * ft->signal.channels;
-        }
+      } else {
+        n *= ft->signal.channels;
+        read_buf(buf + len, alsa->buf, n, ft->signal.reverse_bytes, &ft->clips);
+        len += n;
+      }
     }
-
     return len;
 }
 
