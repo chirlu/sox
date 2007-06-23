@@ -677,6 +677,9 @@ int main(int argc, char **argv)
 
   parse_options_and_filenames(argc, argv);
 
+  if (sox_globals.verbosity > 2)
+    display_SoX_version();
+
   /* Load plugins (after options so we can output debugging messages
      if desired) */
   find_formats();
