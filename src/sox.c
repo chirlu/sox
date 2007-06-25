@@ -160,9 +160,9 @@ static void display_status(sox_bool all_done);
 static void report_file_info(file_t f);
 
 
-static void display_SoX_version(void)
+static void display_SoX_version(FILE * file)
 {
-  printf("%s: SoX v%s\n", myname, PACKAGE_VERSION);
+  fprintf(file, "%s: SoX v%s\n", myname, PACKAGE_VERSION);
 }
 
 static int strcmp_p(const void *p1, const void *p2)
@@ -262,7 +262,7 @@ static void usage(char const * message)
 "-v, --volume FACTOR  volume input file volume adjustment factor (real number)",
 ""};
 
-  display_SoX_version();
+  display_SoX_version(stdout);
   putchar('\n');
 
   if (message)
@@ -282,7 +282,7 @@ static void usage_effect(char const * name)
 {
   int i;
 
-  display_SoX_version();
+  display_SoX_version(stdout);
   putchar('\n');
 
   if (strcmp("all", name) && !sox_find_effect(name)) {
@@ -678,7 +678,7 @@ int main(int argc, char **argv)
   parse_options_and_filenames(argc, argv);
 
   if (sox_globals.verbosity > 2)
-    display_SoX_version();
+    display_SoX_version(stderr);
 
   /* Load plugins (after options so we can output debugging messages
      if desired) */
@@ -969,7 +969,7 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
         break;
 
       case 9:
-        display_SoX_version();
+        display_SoX_version(stdout);
         exit(0);
         break;
       }
