@@ -523,6 +523,15 @@ See
 .B .vox (also with \-t sndfile)
 A headerless file of Dialogic/OKI ADPCM audio data commonly comes with the
 extension .vox.  This ADPCM data has 12-bit precision packed into only 4-bits.
+.SP
+Note: some early Dialogic hardware does not always reset the ADPCM
+encoder at the start of each vox file.  This can result in clipping
+and/or DC offset problems when it comes to decoding the audio.  Whilst
+little can be done about the clipping, a DC offset can be removed by
+passing the decoded audio through a high-pass filter, e.g.:
+.EX
+	sox input.vox output.au highpass 10
+.EE
 .TP
 .B .w64 (libsndfile)
 Sonic Foundry's 64-bit RIFF/WAV format.
