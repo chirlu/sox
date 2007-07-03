@@ -273,7 +273,7 @@ extern uint8_t const cswap[256];
  */
 
 /* Psion record header check, defined in misc.c and used in prc.c and auto.c */
-const char prc_header[41];
+extern const char prc_header[41];
 int prc_checkheader(sox_format_t * ft, char *head);
 
 typedef const sox_format_handler_t *(*sox_format_fn_t)(void);
