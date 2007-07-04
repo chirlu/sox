@@ -108,7 +108,7 @@ static int sox_filter_start(sox_effect_t * effp)
 
         if ((f->freq0 < 0) || (f->freq0 > f->freq1))
         {
-                sox_fail("filter: low(%d),high(%d) parameters must satisfy 0 <= low <= high <= %d",
+                sox_fail("filter: low(%d),high(%d) parameters must satisfy 0 <= low <= high <= %g",
                                         f->freq0, f->freq1, f->rate/2);
                 return (SOX_EOF);
         }

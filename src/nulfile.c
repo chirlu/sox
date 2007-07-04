@@ -1,5 +1,5 @@
 /*
- * File format: null   (c) 2006-7 SoX contributers
+ * File format: null   (c) 2006-7 SoX contributors
  * Based on an original idea by Carsten Borchardt
  *
  * This library is free software; you can redistribute it and/or modify it
@@ -26,7 +26,7 @@ static int startread(sox_format_t * ft)
    * (but commonly used) defaults: */
   if (!ft->signal.rate) {
     ft->signal.rate = 44100;
-    sox_report("sample rate not specified; using %i", ft->signal.rate);
+    sox_report("sample rate not specified; using %g", ft->signal.rate);
   }
   if (ft->signal.size <= 0) {
     ft->signal.size = SOX_SIZE_16BIT;

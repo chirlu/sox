@@ -162,7 +162,7 @@ static int ossinit(sox_format_t * ft)
          */
         if ((int)ft->signal.rate - tmp > (tmp * .01) || 
             tmp - (int)ft->signal.rate > (tmp * .01)) {
-            sox_warn("Unable to set audio speed to %d (set to %d)",
+            sox_warn("Unable to set audio speed to %g (set to %d)",
                      ft->signal.rate, tmp);
             ft->signal.rate = tmp;
         }

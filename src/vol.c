@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 20/03/2000 Fabien COELHO <fabien@coelho.net>
- * Copyright (c) 2000-2007 SoX contributers
+ * Copyright (c) 2000-2007 SoX contributors
  *
  * SoX vol effect; change volume with basic linear amplitude formula.
  * Beware of saturations!  Clipping is checked and reported.

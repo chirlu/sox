@@ -2,7 +2,7 @@
  * synth - Synthesizer Effect.
  *
  * Copyright (c) Jan 2001  Carsten Borchardt
- * Copyright (c) 2001-2007 SoX contributers
+ * Copyright (c) 2001-2007 SoX contributors
  *
  * This source code is freely redistributable and may be used for any purpose.
  * This copyright notice must be maintained.  The authors are not responsible

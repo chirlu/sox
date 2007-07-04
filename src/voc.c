@@ -565,15 +565,13 @@ static int getblock(sox_format_t * ft)
                         if (!v->extended) {
                           if (uc == 0)
                           {
-                            sox_fail_errno(ft,SOX_EFMT,
-                              "File %s: Sample rate is zero?");
+                            sox_fail_errno(ft, SOX_EFMT, "Sample rate is zero?");
                             return(SOX_EOF);
                           }
                           if ((v->rate != -1) && (uc != v->rate))
                           {
                             sox_fail_errno(ft,SOX_EFMT,
-                              "File %s: sample rate codes differ: %d != %d",
-                                 ft->filename,v->rate, uc);
+                              "sample rate codes differ: %d != %d", v->rate, uc);
                             return(SOX_EOF);
                           }
                           v->rate = uc;
@@ -584,8 +582,7 @@ static int getblock(sox_format_t * ft)
                         if (uc != 0)
                         {
                           sox_fail_errno(ft,SOX_EFMT,
-                            "File %s: only interpret 8-bit data!",
-                               ft->filename);
+                            "only interpret 8-bit data!");
                           return(SOX_EOF);
                         }
                         v->extended = 0;
@@ -597,14 +594,14 @@ static int getblock(sox_format_t * ft)
                         if (new_rate_32 == 0)
                         {
                             sox_fail_errno(ft,SOX_EFMT,
-                              "File %s: Sample rate is zero?",ft->filename);
+                              "Sample rate is zero?");
                             return(SOX_EOF);
                         }
                         if ((v->rate != -1) && ((long)new_rate_32 != v->rate))
                         {
                             sox_fail_errno(ft,SOX_EFMT,
-                              "File %s: sample rate codes differ: %d != %d",
-                                ft->filename, v->rate, new_rate_32);
+                              "sample rate codes differ: %d != %d",
+                                v->rate, new_rate_32);
                             return(SOX_EOF);
                         }
                         v->rate = new_rate_32;
@@ -638,9 +635,8 @@ static int getblock(sox_format_t * ft)
                         sox_readb(ft, &uc);
                         if (uc == 0)
                         {
-                                sox_fail_errno(ft,SOX_EFMT,
-                                  "File %s: Silence sample rate is zero");
-                                return(SOX_EOF);
+                          sox_fail_errno(ft,SOX_EFMT, "Silence sample rate is zero");
+                          return(SOX_EOF);
                         }
                         /*
                          * Some silence-packed files have gratuitously
@@ -690,7 +686,7 @@ static int getblock(sox_format_t * ft)
                         continue;       /* get next block */
                 case VOC_LOOP:
                 case VOC_LOOPEND:
-                        sox_debug("File %s: skipping repeat loop");
+                        sox_debug("skipping repeat loop");
                         for(i = 0; i < sblen; i++)
                             sox_readb(ft, (unsigned char *)&trash);
                         break;
@@ -703,15 +699,14 @@ static int getblock(sox_format_t * ft)
                         sox_readw(ft, &new_rate_16);
                         if (new_rate_16 == 0)
                         {
-                           sox_fail_errno(ft,SOX_EFMT,
-                             "File %s: Sample rate is zero?");
+                           sox_fail_errno(ft,SOX_EFMT, "Sample rate is zero?");
                            return(SOX_EOF);
                         }
                         if ((v->rate != -1) && (new_rate_16 != v->rate))
                         {
                            sox_fail_errno(ft,SOX_EFMT,
-                             "File %s: sample rate codes differ: %d != %d",
-                                        ft->filename, v->rate, new_rate_16);
+                             "sample rate codes differ: %d != %d",
+                                        v->rate, new_rate_16);
                            return(SOX_EOF);
                         }
                         v->rate = new_rate_16;
@@ -719,8 +714,7 @@ static int getblock(sox_format_t * ft)
                         if (uc != 0)
                         {
                                 sox_fail_errno(ft,SOX_EFMT,
-                                  "File %s: only interpret 8-bit data!",
-                                        ft->filename);
+                                  "only interpret 8-bit data!");
                                 return(SOX_EOF);
                         }
                         sox_readb(ft, &uc);
@@ -735,8 +729,7 @@ static int getblock(sox_format_t * ft)
                         /* can be grabed.                               */
                         continue;
                 default:
-                        sox_debug("File %s: skipping unknown block code %d",
-                                ft->filename, block);
+                        sox_debug("skipping unknown block code %d", block);
                         for(i = 0; i < sblen; i++)
                             sox_readb(ft, (unsigned char *)&trash);
                 }

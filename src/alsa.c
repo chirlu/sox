@@ -36,12 +36,12 @@ static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
     {
         if (ft->signal.size == SOX_SIZE_16BIT)
         {
-            sox_report("driver only supports signed and unsigned samples.  Changing to signed.");
+            sox_report("driver supports only signed and unsigned samples.  Changing to signed.");
             ft->signal.encoding = SOX_ENCODING_SIGN2;
         }
         else
         {
-            sox_report("driver only supports signed and unsigned samples.  Changing to unsigned.");
+            sox_report("driver supports only signed and unsigned samples.  Changing to unsigned.");
             ft->signal.encoding = SOX_ENCODING_UNSIGNED;
         }
     }
@@ -257,7 +257,7 @@ static int sox_alsasetup(sox_format_t * ft, snd_pcm_stream_t mode)
     rate = range_limit(ft->signal.rate, min_rate, max_rate);
     if (rate != ft->signal.rate)
     {
-        sox_report("hardware does not support sample rate %i; changing to %i.", ft->signal.rate, rate);
+        sox_report("hardware does not support sample rate %g; changing to %i.", ft->signal.rate, rate);
         ft->signal.rate = rate;
     }
     dir = 0;
@@ -275,7 +275,7 @@ static int sox_alsasetup(sox_format_t * ft, snd_pcm_stream_t mode)
  
     if (rate != ft->signal.rate)
     {
-        sox_report("Could not set exact rate of %d.  Approximating with %d",
+        sox_report("Could not set exact rate of %g.  Approximating with %i",
                 ft->signal.rate, rate);
     }
 

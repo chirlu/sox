@@ -4,7 +4,7 @@
  * This is the main function for the command line sox program.
  *
  * Copyright 1991 Lance Norskog And Sundry Contributors
- * Copyright 1998-2007 Chris Bagnall and SoX contributors
+ * Copyright 1998-2007 Chris Bagwell and SoX contributors
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -1568,7 +1568,7 @@ static int process(void) {
   if (ofile->signal.channels == 0)
     ofile->signal.channels = combiner.channels;
 
-  combiner.rate = combiner.rate * sox_effects_globals.speed;
+  combiner.rate *= sox_effects_globals.speed;
 
   for (i = 0; i < nuser_effects; i++)
     known_length = known_length && !(user_efftab[i].handler.flags & SOX_EFF_LENGTH);

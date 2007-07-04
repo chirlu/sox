@@ -28,8 +28,10 @@
 /* various gcc optimizations and portablity defines */
 #ifdef __GNUC__
 #define NORET __attribute__((noreturn))
+#define PRINTF __attribute__ ((format (printf, 1, 2)))
 #else
 #define NORET
+#define PRINTF
 #endif
 
 #ifdef _MSC_VER
@@ -201,12 +203,12 @@ double sox_swapdf(double d);
 typedef void (*sox_output_message_handler_t)(unsigned level, const char *filename, const char *fmt, va_list ap);
 void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap);
 
-void sox_fail(const char *, ...);
-void sox_warn(const char *, ...);
-void sox_report(const char *, ...);
-void sox_debug(const char *, ...);
-void sox_debug_more(char const * fmt, ...);
-void sox_debug_most(char const * fmt, ...);
+void sox_fail(const char *, ...) PRINTF;
+void sox_warn(const char *, ...) PRINTF;
+void sox_report(const char *, ...) PRINTF;
+void sox_debug(const char *, ...) PRINTF;
+void sox_debug_more(char const * fmt, ...) PRINTF;
+void sox_debug_most(char const * fmt, ...) PRINTF;
 
 #define sox_fail       sox_globals.subsystem=__FILE__,sox_fail
 #define sox_warn       sox_globals.subsystem=__FILE__,sox_warn
@@ -215,7 +217,12 @@ void sox_debug_most(char const * fmt, ...);
 #define sox_debug_more sox_globals.subsystem=__FILE__,sox_debug_more
 #define sox_debug_most sox_globals.subsystem=__FILE__,sox_debug_most
 
-void sox_fail_errno(sox_format_t *, int, const char *, ...);
+void sox_fail_errno(sox_format_t *, int, const char *, ...)
+#ifdef __GNUC__
+__attribute__ ((format (printf, 3, 4)));
+#else
+;
+#endif
 
 #ifdef WORDS_BIGENDIAN
 #define SOX_IS_BIGENDIAN 1

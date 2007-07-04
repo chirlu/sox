@@ -490,11 +490,11 @@ int sox_dvmsstartread(sox_format_t * ft)
             return rc;
         }
 
-        sox_debug("DVMS header of source file \"%s\":");
-        sox_debug("  filename  \"%.14s\"",ft->filename);
-        sox_debug("  id        0x%x", hdr.Filename);
-        sox_debug("  state     0x%x", hdr.Id, hdr.State);
-        sox_debug("  time      %s",ctime(&hdr.Unixtime)); /* ctime generates lf */
+        sox_debug("DVMS header of source file \"%s\":", ft->filename);
+        sox_debug("  filename  \"%.14s\"", hdr.Filename);
+        sox_debug("  id        0x%x", hdr.Id);
+        sox_debug("  state     0x%x", hdr.State);
+        sox_debug("  time      %s", ctime(&hdr.Unixtime)); /* ctime generates lf */
         sox_debug("  usender   %u", hdr.Usender);
         sox_debug("  ureceiver %u", hdr.Ureceiver);
         sox_debug("  length    %u", hdr.Length);
@@ -504,7 +504,7 @@ int sox_dvmsstartread(sox_format_t * ft)
         sox_debug("  custom2   %u", hdr.Custom2);
         sox_debug("  info      \"%.16s\"", hdr.Info);
         ft->signal.rate = (hdr.Srate < 240) ? 16000 : 32000;
-        sox_debug("DVMS rate %dbit/s using %dbit/s deviation %d%%", 
+        sox_debug("DVMS rate %dbit/s using %gbit/s deviation %g%%", 
                hdr.Srate*100, ft->signal.rate, 
                ((ft->signal.rate - hdr.Srate*100) * 100) / ft->signal.rate);
         rc = sox_cvsdstartread(ft);

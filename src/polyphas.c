@@ -146,7 +146,7 @@ static int prime(unsigned n, int *q0)
   }
   *q = 0;
   for (pr=0; pr<q-q0; pr++) sox_debug(" %d",q0[pr]);
-  sox_debug("");
+  sox_debug(" ");
   return (q-q0);
 }
 
@@ -235,7 +235,7 @@ static int optimize_factors(poly_t rate, unsigned numer, unsigned denom, int *l1
           sox_debug("c_min %d, [%d-%d]:",c_min,numer,denom);
           for (j=0; j<u; j++)
             sox_debug(" (%d,%d)",rate->m1[j],rate->m2[j]);
-          sox_debug("");
+          sox_debug(" ");
         }
         memcpy(rate->b1,rate->m1,u*sizeof(int));
         memcpy(rate->b2,rate->m2,u*sizeof(int));

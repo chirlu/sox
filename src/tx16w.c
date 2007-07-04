@@ -166,7 +166,7 @@ static int sox_txwstartread(sox_format_t * ft)
                 ft->signal.rate = 33333;
             }
     }
-    sox_debug("Sample rate = %ld",ft->signal.rate);
+    sox_debug("Sample rate = %g", ft->signal.rate);
 
     ft->signal.channels = 1 ; /* not sure about stereo sample data yet ??? */
     ft->signal.size = SOX_SIZE_16BIT; /* this is close enough */
