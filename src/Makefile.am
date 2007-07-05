@@ -179,7 +179,7 @@ libsfx_la_SOURCES = band.h biquad.c biquad.h biquads.c chorus.c compand.c	\
 	  stat.c stretch.c swap.c synth.c tremolo.c trim.c vibro.c	\
 	  vol.c
 libsfx_la_CFLAGS = @SAMPLERATE_CFLAGS@
-libsfx_la_LIBADD = @SAMPLERATE_LIBS@
+libsfx_la_LIBADD = @SAMPLERATE_LIBS@ libsox.la
 
 libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
 	  g711.c g711.h g721.c g723_24.c g723_40.c g72x.c g72x.h vox.c vox.h	\
