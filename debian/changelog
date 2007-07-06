@@ -5,6 +5,7 @@ sox (14.0.0.cvs-1) unstable; urgency=low
     - Adds playlist support (closes: #119470).
     - Uses libao output (closes: #391514, #421682).
     - Big-endian fix (closes: #421682).
+    - Invalid pointer fix (closes: #414977).
   * [debian/control]:
     - sox-dev renamed to libsox-dev.
     - Created libsox0 package that contains the SoX library.
