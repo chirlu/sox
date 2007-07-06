@@ -162,7 +162,7 @@ static void report_file_info(file_t f);
 
 static void display_SoX_version(FILE * file)
 {
-  fprintf(file, "%s: SoX %s\n", myname, PACKAGE_VERSION);
+  fprintf(file, "%s: SoX v%s\n", myname, PACKAGE_VERSION);
 }
 
 static int strcmp_p(const void *p1, const void *p2)
