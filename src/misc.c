@@ -552,7 +552,7 @@ sox_bool is_uri(char const * text)
 FILE * xfopen(char const * identifier, char const * mode) 
 { 
   if (is_uri(identifier)) {
-    FILE * f = 0; 
+    FILE * f = NULL;
 #ifdef HAVE_POPEN
     char const * const command_format = "wget -q -O- \"%s\"";
     char * command = xmalloc(strlen(command_format) + strlen(identifier)); 
