@@ -19,6 +19,8 @@
 
 #include "sox_i.h"
 
+#ifdef HAVE_SAMPLERATE_H
+
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -191,3 +193,5 @@ const sox_effect_handler_t *sox_rabbit_effect_fn(void)
 
   return &handler;
 }
+
+#endif /* HAVE_SAMPLERATE */

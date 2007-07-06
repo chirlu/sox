@@ -314,7 +314,7 @@ static const char *names[] = {
 
 static sox_format_handler_t sox_sunau_format = {
   names,
-  SOX_FILE_DEVICE,
+  SOX_FILE_DEVICE | SOX_FILE_LIT_END,
   sox_sunstartread,
   sox_rawread,
   sox_rawstopread,
