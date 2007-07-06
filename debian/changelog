@@ -11,7 +11,8 @@ sox (14.0.0.cvs-1) unstable; urgency=low
     - sox-dev renamed to libsox-dev.
     - Created libsox0 package that contains the SoX library.
     - Fixed sound file types description.
-    - Added build dependency on libao-dev, libltdl3-dev and ladspa-sdk.
+    - Added build dependency on libao-dev, libltdl3-dev, ladspa-sdk and
+      libavcodec-dev.
     - No longer conflicting with libst and libst-dev.
     - Splitted format libraries in different packages (libsox-fmt-foo).
   * [debian/libsox-dev.dirs]:
