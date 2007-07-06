@@ -1,9 +1,3 @@
-FFMPEG formats
---------------
-SoX requires avcodec >= cvs20070301 which is only available in experimental for now.
-Therefore, ffmpeg support is disabled for now.
-If there's a significant demand, i'll release an experimental package of SoX.
-
 SoX from CVS
 ------------
 If you downloaded SoX from the CVS, you may build the package by:

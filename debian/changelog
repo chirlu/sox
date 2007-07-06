@@ -20,12 +20,9 @@ sox (14.0.0.cvs-1) unstable; urgency=low
     - Added library.
   * [debian/libsox-fmt-*]:
     - Added format plugins.
-  * [debian/README.Debian]:
-    - Added note about experimental ffmpeg formats support.
   * [debian/rules]:
     - Removed fPIC from CFLAGS as libtool takes care of it upstream.
     - Removed LDFLAGS -Wl,-z,defs as upstream is now doing it.
-    - Disabled ffmpeg formats support explicitly, see README.Debian.
     - Added DEB_DH_MAKESHLIBS_ARGS -Xfmt to avoid useless calls to ldconfig.
 	
  -- Pascal Giard <evilynux@gmail.com>  Fri, 06 Jul 2007 02:57:39 -0400

@@ -9,6 +9,7 @@ include /usr/share/cdbs/1/class/autotools.mk
 #include /usr/share/cdbs/1/rules/simple-patchsys.mk
 
 DEB_CONFIGURE_SCRIPT_ENV += CFLAGS="-D_REENTRANT"
-DEB_CONFIGURE_EXTRA_FLAGS := --disable-lame --disable-ffmpeg
+#DEB_CONFIGURE_EXTRA_FLAGS := --disable-lame --disable-ffmpeg
+DEB_CONFIGURE_EXTRA_FLAGS := --disable-lame
 # Takes care of postinst-has-useless-call-to-ldconfig for libsox-fmt-*
 DEB_DH_MAKESHLIBS_ARGS := -Xfmt
