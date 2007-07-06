@@ -1,6 +1,10 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(SoX, 14.0.0, sox-devel@lists.sourceforge.net)
+
+dnl Find target architecture
+AC_CANONICAL_TARGET
+
 AM_INIT_AUTOMAKE
 
 dnl create a config.h file (Automake will add -DHAVE_CONFIG_H)
@@ -39,6 +43,11 @@ fi
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = yes; then
     CFLAGS="$CFLAGS -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic"
+    dnl Stricter policy on GNU/Linux, all symbols must be resolved
+    case $target in
+      *linux*)
+        LDFLAGS="$LDFLAGS -Wl,-z,defs";;
+    esac
 fi
 
 dnl Check for system dependent features.
