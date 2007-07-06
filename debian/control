@@ -54,7 +54,8 @@ Description: SoX library
  .
  This package contains the SoX alsa format I/O library.
  .
- Homepage: http://sox.sourceforge.net
+ SoX: http://sox.sourceforge.net
+ alsa: http://www.alsa-project.org
 
 Package: libsox-fmt-ao
 Architecture: any
@@ -65,7 +66,20 @@ Description: SoX library
  .
  This package contains the SoX Libao format I/O library.
  .
- Homepage: http://sox.sourceforge.net
+ SoX: http://sox.sourceforge.net
+ libao: http://xiph.org/ao
+
+Package: libsox-fmt-ffmpeg
+Architecture: any
+Section: sound
+Depends: ${shlibs:Depends}
+Description: SoX library
+ SoX is the swiss army knife of sound processing.
+ .
+ This package contains the SoX ffmpeg format library.
+ .
+ SoX: http://sox.sourceforge.net
+ ffmpeg: http://ffmpeg.sourceforge.net
 
 Package: libsox-fmt-flac
 Architecture: any
@@ -76,7 +90,8 @@ Description: SoX library
  .
  This package contains the SoX FLAC format library.
  .
- Homepage: http://sox.sourceforge.net
+ SoX: http://sox.sourceforge.net
+ FLAC: http://flac.sourceforge.net
 
 Package: libsox-fmt-gsm
 Architecture: any
@@ -87,7 +102,7 @@ Description: SoX library
  .
  This package contains the SoX GSM format library.
  .
- Homepage: http://sox.sourceforge.net
+ SoX: http://sox.sourceforge.net
 
 Package: libsox-fmt-mp3
 Architecture: any
@@ -99,7 +114,8 @@ Description: SoX library
  This package contains the SoX MP3 format library.
  Read support by libmad. Write support not available yet.
  .
- Homepage: http://sox.sourceforge.net
+ SoX: http://sox.sourceforge.net
+ libmad: http://www.underbit.com/products/mad/
 
 Package: libsox-fmt-ogg
 Architecture: any
@@ -110,7 +126,8 @@ Description: SoX library
  .
  This package contains the SoX OGG Vorbis format library.
  .
- Homepage: http://sox.sourceforge.net
+ SoX: http://sox.sourceforge.net
+ OGG Vorbis: http://www.vorbis.com
 
 Package: libsox-fmt-sndfile
 Architecture: any
@@ -121,7 +138,8 @@ Description: SoX library
  .
  This package contains the SoX libsndfile format library.
  .
- Homepage: http://sox.sourceforge.net
+ SoX: http://sox.sourceforge.net
+ libsndfile: http://www.mega-nerd.com/libsndfile/
 
 Package: libsox-fmt-oss
 Architecture: any
