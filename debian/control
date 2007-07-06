@@ -3,7 +3,7 @@ Section: sound
 Priority: optional
 Maintainer: Pascal Giard <pascal@debian.org>
 Uploaders: Guenter Geiger (Debian/GNU) <geiger@debian.org>
-Build-Depends: debhelper (>= 1.2.64), libltdl3-dev, libvorbis-dev, libmad0-dev, libgsm1-dev, libsndfile1-dev (>= 1.0.12), libsamplerate0-dev, cdbs, libao-dev, libasound2-dev [!kfreebsd-i386 !kfreebsd-amd64]
+Build-Depends: debhelper (>= 1.2.64), libltdl3-dev, libvorbis-dev, libmad0-dev, libgsm1-dev, libsndfile1-dev (>= 1.0.12), libsamplerate0-dev, cdbs, libao-dev, ladspa-sdk, libasound2-dev [!kfreebsd-i386 !kfreebsd-amd64]
 Standards-Version: 3.7.2
 
 Package: sox
