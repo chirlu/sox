@@ -2,7 +2,7 @@ sox (14.0.0.cvs-1) unstable; urgency=low
 
   * CVS version:
     - Another important release, please see the upstream changelog.
-    - Adds dynamic libraries (closes: #416989).
+    - Adds dynamic libraries.
     - Adds playlist support (closes: #119470).
     - Uses libao output (closes: #391514, #421682).
     - Big-endian fix (closes: #421682).
