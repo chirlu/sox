@@ -69,7 +69,7 @@
   FORMAT(sndfile)
 #endif
 #if defined(HAVE_SYS_AUDIOIO_H) || defined(HAVE_SUN_AUDIOIO_H)
-  FORMAT(sun)
+  FORMAT(sunau)
 #endif
 #if defined HAVE_LIBVORBIS
   FORMAT(vorbis)
