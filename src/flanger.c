@@ -103,42 +103,15 @@ static enum_item const interp_enum[] = {
 
 
 
-#define NUMERIC_PARAMETER(p, min, max) { \
-  char * end_ptr; \
-  double d; \
-  if (argc == 0) break; \
-  d = strtod(*argv, &end_ptr); \
-  if (end_ptr != *argv) { \
-    if (d < min || d > max || *end_ptr != '\0') \
-      return sox_usage(effp); \
-    f->p = d; \
-    --argc, ++argv; \
-  } \
-}
-
-
-
-#define TEXTUAL_PARAMETER(p, enum_table) { \
-  enum_item const * e; \
-  if (argc == 0) break; \
-  e = find_enum_text(*argv, enum_table); \
-  if (e != NULL) { \
-    f->p = e->value; \
-    --argc, ++argv; \
-  } \
-}
-
-
-
 static int sox_flanger_getopts(sox_effect_t * effp, int argc, char *argv[])
 {
-  flanger_t f = (flanger_t) effp->priv;
+  flanger_t p = (flanger_t) effp->priv;
 
   /* Set non-zero defaults: */
-  f->delay_depth  = 2;
-  f->delay_gain   = 71;
-  f->speed        = 0.5;
-  f->channel_phase= 25;
+  p->delay_depth  = 2;
+  p->delay_gain   = 71;
+  p->speed        = 0.5;
+  p->channel_phase= 25;
 
   do { /* break-able block */
     NUMERIC_PARAMETER(delay_min    , 0  , 10 )
@@ -163,14 +136,14 @@ static int sox_flanger_getopts(sox_effect_t * effp, int argc, char *argv[])
       "shape = %s\n"
       "phase = %g%%\n"
       "interp= %s",
-      f->delay_min,
-      f->delay_depth,
-      f->feedback_gain,
-      f->delay_gain,
-      f->speed,
-      sox_wave_enum[f->wave_shape].text,
-      f->channel_phase,
-      interp_enum[f->interpolation].text);
+      p->delay_min,
+      p->delay_depth,
+      p->feedback_gain,
+      p->delay_gain,
+      p->speed,
+      sox_wave_enum[p->wave_shape].text,
+      p->channel_phase,
+      interp_enum[p->interpolation].text);
 
   return SOX_SUCCESS;
 }

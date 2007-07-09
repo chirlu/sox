@@ -327,4 +327,29 @@ extern sox_effect_fn_t sox_effect_fns[];
 #include "effects.h"
 #undef EFFECT
 
+#define NUMERIC_PARAMETER(name, min, max) { \
+  char * end_ptr; \
+  double d; \
+  if (argc == 0) break; \
+  d = strtod(*argv, &end_ptr); \
+  if (end_ptr != *argv) { \
+    if (d < min || d > max || *end_ptr != '\0') {\
+      sox_fail("parameter `%s' must be between %g and %g", #name, (double)min, (double)max); \
+      return sox_usage(effp); \
+    } \
+    p->name = d; \
+    --argc, ++argv; \
+  } \
+}
+
+#define TEXTUAL_PARAMETER(name, enum_table) { \
+  enum_item const * e; \
+  if (argc == 0) break; \
+  e = find_enum_text(*argv, enum_table); \
+  if (e != NULL) { \
+    p->name = e->value; \
+    --argc, ++argv; \
+  } \
+}
+
 #endif

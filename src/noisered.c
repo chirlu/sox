@@ -16,19 +16,6 @@
 #include <string.h>
 #include <assert.h>
 
-#define NUMERIC_PARAMETER(p, min, max) { \
-  char * end_ptr; \
-  double d; \
-  if (argc == 0) break; \
-  d = strtod(*argv, &end_ptr); \
-  if (end_ptr != *argv) { \
-    if (d < min || d > max || *end_ptr != '\0') \
-      return sox_usage(effp); \
-    this->p = d; \
-    --argc, ++argv; \
-  } \
-}
-
 typedef struct chandata {
     float *window;
     float *lastwindow;
@@ -51,15 +38,15 @@ typedef struct reddata {
  */
 static int sox_noisered_getopts(sox_effect_t * effp, int argc, char **argv)
 {
-  reddata_t this = (reddata_t) effp->priv;
+  reddata_t p = (reddata_t) effp->priv;
 
   if (argc > 0) {
-    this->profile_filename = argv[0];
+    p->profile_filename = argv[0];
     ++argv;
     --argc;
   }
 
-  this->threshold = 0.5;
+  p->threshold = 0.5;
   do {     /* break-able block */
     NUMERIC_PARAMETER(threshold, 0, 1);
   } while (0);
