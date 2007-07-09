@@ -412,6 +412,22 @@ These effects support the \fB\-\-plot\fR global option.
 .SP
 See also \fBfilter\fR for filters with a steeper roll-off.
 .TP
+\fBkey \fR[\fB\-q\fR] \fIshift\fR [\fIwindow\fR [\fIseek\fR [\fIoverlap\fR]]]
+Change the audio key (i.e. pitch but not tempo) using the SoundTouch [8]
+algorithm.
+.SP
+.I shift
+gives the key shift in `cents' (i.e. 100ths of a semitone).  See the
+.B
+tempo
+effect for a description of the other parameters.
+.SP
+Note: This effect works with only mono or stereo audio.
+.SP
+See also
+.B pitch
+for a similar effect.
+.TP
 \fBladspa\fR \fBmodule\fR [\fBplugin\fR] [\fBargument\fR...]
 Apply a LADSPA [5] (Linux Audio Developer's Simple Plugin API) plugin.
 Despite the name, LADSPA is not Linux-specific, and a wide range of
@@ -1034,6 +1050,57 @@ begins; default=50. exp: the amplitude in percent; default=100.
 \fIp3\fR (trapezium): the percentage through each cycle at which `falling'
 ends; default=60.
 .TP
+\fBtempo \fR[\fB\-l\fR] \fIfactor\fR [\fIwindow\fR [\fIseek\fR [\fIoverlap\fR]]]
+Change the audio tempo (but not its pitch) using the SoundTouch [8] algorithm.
+.SP
+The optional
+.B \-l
+parameter selects a linear seek for a more accurate but slower version of the
+algorithm.
+.SP
+.I factor
+gives the ratio of new tempo to the old tempo.
+.SP
+The optional
+.I window
+parameter gives the length in milliseconds (default 82) of a single
+processing sequence.  This determines to how long sequences the original
+sound is chopped in the time-stretch algorithm.  The larger this value
+is, the fewer sequences are used in processing.  In principle a bigger
+value sounds better when slowing down tempo, but worse when increasing
+tempo and vice versa.  Increasing this value reduces computational
+burden & vice versa.
+.SP
+The optional
+.I seek
+parameter gives the seeking window length in milliseconds (default 14)
+for the algorithm to find the best possible overlapping location.  This
+determines from how wide window the algorithm may look for an optimal
+joining location when mixing the sound sequences back together.  The
+bigger this window setting is, the higher the possibility to find a
+better mixing position will become, but at the same time large values
+may cause a "drifting" artifact because consequent sequences will be
+taken at more uneven intervals.  If there's a disturbing artifact that
+sounds as if a constant frequency was drifting around, try reducing this
+setting.  Increasing this value increases computational burden & vice
+versa.
+.SP
+The optional
+.I overlap
+parameter gives the overlap length in milliseconds (default 12).  When
+the chopped sound sequences are mixed back together, to form a
+continuous sound stream, this parameter defines over how long period the
+two consecutive sequences are let to overlap each other.  This shouldn't
+be that critical parameter. If you reduce the \fIwindow\fR  setting by a
+large amount, you might wish to try a smaller value on this.  Increasing
+this value increases computational burden & vice versa.
+.SP
+Note: This effect works with only mono or stereo audio.
+.SP
+See also
+.B stretch
+for a similar effect.
+.TP
 \fBtreble \fIgain\fR [\fIfrequency\fR [\fIwidth\fR[\fBs\fR\^|\^\fBh\fR\^|\^\fBo\fR\^|\^\fBq\fR]]]
 Apply a treble tone-control effect.
 See the description of the \fBbass\fR effect for details.
@@ -1210,7 +1277,7 @@ http://en.wikipedia.org/wiki/Decibel
 [5]
 Richard Furse,
 .IR "Linux Audio Developer's Simple Plugin API" ,
-http://www.ladspa.org/
+http://www.ladspa.org
 .TP
 [6]
 Richard Furse,
@@ -1220,7 +1287,12 @@ http://www.ladspa.org/cmt
 [7]
 Steve Harris,
 .IR "LADSPA plugins" ,
-http://plugin.org.uk/
+http://plugin.org.uk
+.TP
+[8]
+Olli Parviainen,
+.IR "SoundTouch Audio Processing Library" ,
+http://www.surina.net/soundtouch
 .SH AUTHORS
 Chris Bagwell (cbagwell@users.sourceforge.net).
 Other authors and contributors are listed in the AUTHORS file that

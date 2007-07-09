@@ -1,5 +1,4 @@
 include(CheckIncludeFiles)
-include(CheckIncludeFileCXX)
 include(CheckFunctionExists)
 include(CheckLibraryExists)
 include(TestBigEndian)
@@ -41,13 +40,6 @@ check_include_files("string.h"           HAVE_STRING_H)
 check_include_files("sys/time.h"         HAVE_SYS_TIME_H)
 check_include_files("sys/timeb.h"        HAVE_SYS_TIMEB_H)
 check_include_files("unistd.h"           HAVE_UNISTD_H)
-
-check_include_file_cxx("soundtouch/SoundTouch.h" HAVE_LIBSOUNDTOUCH)
-if (HAVE_LIBSOUNDTOUCH)
-  set(optional_srcs ${optional_srcs} tempo)
-  set(optional_libs ${optional_libs} SoundTouch)
-endif (HAVE_LIBSOUNDTOUCH)
-
 
 check_function_exists("fseeko"           HAVE_FSEEKO)
 check_function_exists("getopt_long"      HAVE_GETOPT_LONG)
@@ -106,103 +98,30 @@ add_custom_command(
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/soxstdint.h.cmake
   )
 
+# Format with: !xargs echo|tr ' ' '\n'|sort|column|expand|sed 's/^/  /'
 set(effects_srcs
-  biquad
-  biquads
-  chorus
-  compand
-  compandt
-  dcshift
-  dither
-  earwax
-  echo
-  echos
-  effects
-  fade
-  FFT
-  filter
-  flanger
-  mcompand
-  mixer
-  noiseprof
-  noisered
-  pad
-  pan
-  phaser
-  pitch
-  polyphas
-  rate
-  repeat
-  resample
-  reverb
-  reverse
-  silence
-  skeleff
-  speed
-  stat
-  stretch
-  swap
-  synth
-  tremolo
-  trim
-  vibro
-  vol
+  biquad          echos           noiseprof       resample        synth
+  biquads         effects         noisered        reverb          tempo
+  chorus          fade            pad             reverse         tremolo
+  compand         FFT             pan             silence         trim
+  compandt        filter          phaser          skeleff         vibro
+  dcshift         flanger         pitch           speed           vol
+  dither          key             polyphas        stat
+  earwax          mcompand        rate            stretch
+  echo            mixer           repeat          swap
 )
 set(formats_srcs
-  8svx
-  adpcm
-  adpcms
-  aifc-fmt
-  aiff
-  aiff-fmt
-  al-fmt
-  au
-  auto
-  avr
-  cdr
-  cvsd
-  cvsd-fmt
-  dat
-  dvms-fmt
-  formats
-  g711
-  g721
-  g723_24
-  g723_40
-  g72x
-  gsm
-  hcom
-  ima-fmt
-  ima_rw
-  la-fmt
-  lpc10.c
-  lu-fmt
-  maud
-  nulfile
-  prc
-  raw
-  raw-fmt
-  s1-fmt
-  s2-fmt
-  s3-fmt
-  s4-fmt
-  sf
-  skelform
-  smp
-  sndrtool
-  sphere
-  tx16w
-  u1-fmt
-  u2-fmt
-  u3-fmt
-  u4-fmt
-  ul-fmt
-  voc
-  vox
-  vox-fmt
-  wav
-  wve
-  xa
+  8svx            cvsd            hcom            s1-fmt          u2-fmt
+  adpcm           cvsd-fmt        ima-fmt         s2-fmt          u3-fmt
+  adpcms          dat             ima_rw          s3-fmt          u4-fmt
+  aifc-fmt        dvms-fmt        la-fmt          s4-fmt          ul-fmt
+  aiff            formats         lpc10.c         sf              voc
+  aiff-fmt        g711            lu-fmt          skelform        vox
+  al-fmt          g721            maud            smp             vox-fmt
+  au              g723_24         nulfile         sndrtool        wav
+  auto            g723_40         prc             sphere          wve
+  avr             g72x            raw             tx16w           xa
+  cdr             gsm             raw-fmt         u1-fmt
 )
 add_library(lib${PROJECT_NAME}
   getopt
@@ -218,9 +137,6 @@ add_library(lib${PROJECT_NAME}
 )
 add_executable(${PROJECT_NAME} ${PROJECT_NAME}.c)
 target_link_libraries(${PROJECT_NAME} lib${PROJECT_NAME} lpc10 ${optional_libs})
-if (HAVE_LIBSOUNDTOUCH)
-  set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-endif (HAVE_LIBSOUNDTOUCH)
 add_executable(sox_sample_test sox_sample_test.c)
 add_custom_target(rec ALL ln -sf sox rec DEPENDS sox)
 add_custom_target(play ALL ln -sf sox play DEPENDS sox)

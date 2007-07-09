@@ -20,9 +20,7 @@
   EFFECT(flanger)
   EFFECT(highpass)
   EFFECT(highp)
-#ifdef HAVE_LIBSOUNDTOUCH
   EFFECT(key)
-#endif
 #ifdef HAVE_LADSPA_H
   EFFECT(ladspa)
 #endif
@@ -54,9 +52,7 @@
   EFFECT(stretch)
   EFFECT(swap)
   EFFECT(synth)
-#ifdef HAVE_LIBSOUNDTOUCH
   EFFECT(tempo)
-#endif
   EFFECT(treble)
   EFFECT(tremolo)
   EFFECT(trim)
