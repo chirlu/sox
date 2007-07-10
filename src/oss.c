@@ -47,12 +47,6 @@ static int ossinit(sox_format_t * ft)
     int tmp, rc;
     sox_fileinfo_t *file = (sox_fileinfo_t *)ft->priv;
 
-    /* If user doesn't specify anything then prefer writing in
-     * machine endian format.
-     */
-    if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT)
-        ft->signal.reverse_bytes = SOX_OPTION_NO;
-
     if (ft->signal.rate == 0.0) ft->signal.rate = 8000;
     if (ft->signal.size == -1) ft->signal.size = SOX_SIZE_BYTE;
     if (ft->signal.size == SOX_SIZE_BYTE) {
