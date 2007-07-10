@@ -47,6 +47,12 @@ static int ossinit(sox_format_t * ft)
     int tmp, rc;
     sox_fileinfo_t *file = (sox_fileinfo_t *)ft->priv;
 
+    /* If user doesn't specify anything then prefer writing in
+     * machine endian format.
+     */
+    if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT)
+        ft->signal.reverse_bytes = SOX_OPTION_NO;
+
     if (ft->signal.rate == 0.0) ft->signal.rate = 8000;
     if (ft->signal.size == -1) ft->signal.size = SOX_SIZE_BYTE;
     if (ft->signal.size == SOX_SIZE_BYTE) {
@@ -61,7 +67,11 @@ static int ossinit(sox_format_t * ft)
         }
     }
     else if (ft->signal.size == SOX_SIZE_16BIT) {
-        sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
+        /* Attempt to use endian that user specified */
+        if (ft->signal.reverse_bytes)
+            sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
+        else
+            sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
         if (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
             ft->signal.encoding = SOX_ENCODING_SIGN2;
@@ -72,7 +82,11 @@ static int ossinit(sox_format_t * ft)
         }
     }
     else {
-        sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
+        /* Attempt to use endian that user specified */
+        if (ft->signal.reverse_bytes)
+            sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
+        else
+            sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
         ft->signal.size = SOX_SIZE_16BIT;
         ft->signal.encoding = SOX_ENCODING_SIGN2;
@@ -118,7 +132,16 @@ static int ossinit(sox_format_t * ft)
             }
             /* determine which 16-bit format to use */
             if (samplesize == 16 && (tmp & sampletype) == 0)
-              sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
+            {
+                /* Either user requested something not supported
+                 * or hardware doesn't support machine endian.
+                 * Force to opposite as the above test showed
+                 * it supports at least one of the two endians.
+                 */
+                sampletype = (sampletype == AFMT_S16_BE) ? AFMT_S16_LE : AFMT_S16_BE;
+                ft->signal.reverse_bytes = !ft->signal.reverse_bytes;
+            }
+
         }
         tmp = sampletype;
         rc = ioctl(fileno(ft->fp), SNDCTL_DSP_SETFMT, &tmp);
@@ -129,9 +152,6 @@ static int ossinit(sox_format_t * ft)
         sox_fail_errno(ft,SOX_EOF,"Unable to set the sample size to %d", samplesize);
         return (SOX_EOF);
     }
-
-    if (samplesize == 16)
-      ft->signal.reverse_bytes = SOX_IS_BIGENDIAN != (sampletype == AFMT_S16_BE);
 
     if (ft->signal.channels == 2) dsp_stereo = 1;
     else dsp_stereo = 0;
