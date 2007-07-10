@@ -166,23 +166,19 @@ static int sox_austartread(sox_format_t * ft)
              * left over from pre-standardize period of testing for
              * endianess.  Its not hurting though.
              */
-            if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT)
-                ft->signal.reverse_bytes = SOX_IS_BIGENDIAN;
+            ft->signal.reverse_bytes = SOX_IS_BIGENDIAN;
         }
         else if (magic == SUN_INV_MAGIC) {
             sox_debug("Found inverted Sun/NeXT magic word.");
-            if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT)
-                ft->signal.reverse_bytes = SOX_IS_BIGENDIAN;
+            ft->signal.reverse_bytes = SOX_IS_BIGENDIAN;
         }
         else if (magic == SUN_MAGIC) {
             sox_debug("Found Sun/NeXT magic word");
-            if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT)
-                ft->signal.reverse_bytes = SOX_IS_LITTLEENDIAN;
+            ft->signal.reverse_bytes = SOX_IS_LITTLEENDIAN;
         }
         else if (magic == DEC_MAGIC) {
             sox_debug("Found DEC magic word");
-            if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT)
-                ft->signal.reverse_bytes = SOX_IS_LITTLEENDIAN;
+            ft->signal.reverse_bytes = SOX_IS_LITTLEENDIAN;
         }
         else
         {
