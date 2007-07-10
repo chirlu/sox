@@ -418,8 +418,12 @@ static int sox_wavstartread(sox_format_t * ft)
     /* RIFX is a Big-endian RIFF */
     if (strncmp("RIFX", magic, 4) == 0) 
     {
-        sox_debug("Found RIFX header, swapping bytes");
-        ft->signal.reverse_bytes = !ft->signal.reverse_bytes;
+        sox_debug("Found RIFX header");
+        ft->signal.reverse_bytes = SOX_IS_LITTLEENDIAN;
+    }
+    else
+    {
+        ft->signal.reverse_bytes = SOX_IS_BIGENDIAN;
     }
 
     sox_readdw(ft, &dwRiffLength);
@@ -1442,7 +1446,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
     /* If user specified opposite swap than we think, assume they are
      * asking to write a RIFX file.
      */
-    if (ft->signal.reverse_bytes != SOX_IS_BIGENDIAN)
+    if (ft->signal.reverse_bytes && SOX_IS_LITTLEENDIAN)
     {
         if (!second_header)
             sox_report("Requested to swap bytes so writing RIFX header");
