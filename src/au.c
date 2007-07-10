@@ -161,22 +161,28 @@ static int sox_austartread(sox_format_t * ft)
         /* Check the magic word */
         sox_readdw(ft, &magic);
         if (magic == DEC_INV_MAGIC) {
-                /* Inverted headers are not standard.  Code was probably
-                 * left over from pre-standardize period of testing for
-                 * endianess.  Its not hurting though.
-                 */
-                ft->signal.reverse_bytes = !ft->signal.reverse_bytes;
-                sox_debug("Found inverted DEC magic word.  Swapping bytes.");
+            sox_debug("Found inverted DEC magic word.");
+            /* Inverted headers are not standard.  Code was probably
+             * left over from pre-standardize period of testing for
+             * endianess.  Its not hurting though.
+             */
+            if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT)
+                ft->signal.reverse_bytes = SOX_IS_BIGENDIAN;
         }
         else if (magic == SUN_INV_MAGIC) {
-                ft->signal.reverse_bytes = !ft->signal.reverse_bytes;
-                sox_debug("Found inverted Sun/NeXT magic word. Swapping bytes.");
+            sox_debug("Found inverted Sun/NeXT magic word.");
+            if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT)
+                ft->signal.reverse_bytes = SOX_IS_BIGENDIAN;
         }
         else if (magic == SUN_MAGIC) {
-                sox_debug("Found Sun/NeXT magic word");
+            sox_debug("Found Sun/NeXT magic word");
+            if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT)
+                ft->signal.reverse_bytes = SOX_IS_LITTLEENDIAN;
         }
         else if (magic == DEC_MAGIC) {
-                sox_debug("Found DEC magic word");
+            sox_debug("Found DEC magic word");
+            if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT)
+                ft->signal.reverse_bytes = SOX_IS_LITTLEENDIAN;
         }
         else
         {
@@ -480,9 +486,14 @@ static const char *aunames[] = {
   NULL
 };
 
+/* Purposely did not specify format as big endian because
+ * it can handle both.  This means we must set our own
+ * default values for reverse_bytes when not specified
+ * since we didn't give the hint to soxio.
+ */
 static sox_format_handler_t sox_au_format = {
   aunames,
-  SOX_FILE_SEEK | SOX_FILE_BIG_END,
+  SOX_FILE_SEEK,
   sox_austartread,
   sox_auread,
   sox_rawstopread,
