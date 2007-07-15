@@ -9,13 +9,24 @@ AM_LDFLAGS = $(LIBLTDL)
 # Pass flags from --enable-silent-libtool
 LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
 
+#########################
+# SoX - the application #
+#########################
+
 bin_PROGRAMS = sox
 lib_LTLIBRARIES = libsox.la libsfx.la
 include_HEADERS = sox.h soxstdint.h
+sox_SOURCES = sox.c
+sox_LDADD = libsox.la libsfx.la
 
+#############################################
+# libsox Dynamic Libraries for File Formats #
+#############################################
+
+if HAVE_LIBLTDL
 # Format modules; listed first so optional ones can be added later
 pkglib_LTLIBRARIES = libsox_fmt_auto.la libsox_fmt_raw.la libsox_fmt_s1.la \
-	  libsox_fmt_s2.la libsox_fmt_s3.la libsox_fmt_s4.la libsox_fmt_u1.la	\
+	  libsox_fmt_s2.la libsox_fmt_s3.la libsox_fmt_s4.la libsox_fmt_u1.la \
 	  libsox_fmt_u2.la libsox_fmt_u3.la libsox_fmt_u4.la		\
 	  libsox_fmt_al.la libsox_fmt_la.la libsox_fmt_ul.la		\
 	  libsox_fmt_lu.la libsox_fmt_svx.la libsox_fmt_aiff.la		\
@@ -169,9 +180,14 @@ libsox_fmt_sunau_la_SOURCES = sunaudio.c
 libsox_fmt_sunau_la_LIBADD = libsox.la
 pkglib_LTLIBRARIES += libsox_fmt_sunau.la
 endif
+endif
 
-libsfx_la_SOURCES = band.h biquad.c biquad.h biquads.c chorus.c compand.c	\
-	  compandt.c compandt.h dcshift.c dither.c earwax.c echo.c echos.c	\
+############################
+# libsfx - effects library #
+############################
+
+libsfx_la_SOURCES = band.h biquad.c biquad.h biquads.c chorus.c compand.c \
+	  compandt.c compandt.h dcshift.c dither.c earwax.c echo.c echos.c \
 	  effects.c effects.h fade.c FFT.c FFT.h filter.c flanger.c key.c \
 	  ladspa.c mcompand.c mixer.c noiseprof.c noisered.c noisered.h pad.c \
 	  pan.c phaser.c pitch.c polyphas.c rabbit.c rate.c repeat.c	\
@@ -181,14 +197,76 @@ libsfx_la_SOURCES = band.h biquad.c biquad.h biquads.c chorus.c compand.c	\
 libsfx_la_CFLAGS = @SAMPLERATE_CFLAGS@
 libsfx_la_LIBADD = @SAMPLERATE_LIBS@ libsox.la
 
+############################################
+# libsox - file format and utility library #
+############################################
+
 libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
-	  g711.c g711.h g721.c g723_24.c g723_40.c g72x.c g72x.h vox.c vox.h	\
+	  g711.c g711.h g721.c g723_24.c g723_40.c g72x.c g72x.h vox.c vox.h \
 	  raw.c raw.h formats.c misc.c sox_i.h skelform.c soxio.c	\
 	  util.c xmalloc.c xmalloc.h getopt.c getopt1.c getopt.h	\
 	  soxconfig.h
+libsox_la_CFLAGS = 
 
-sox_SOURCES = sox.c
-sox_LDADD = libsox.la libsfx.la
+if HAVE_LIBLTDL
+else
+  libsox_la_SOURCES += auto.c raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
+    s4-fmt.c u1-fmt.c u2-fmt.c u3-fmt.c u4-fmt.c al-fmt.c la-fmt.c ul-fmt.c \
+    lu-fmt.c 8svx.c aiff-fmt.c aifc-fmt.c au.c avr.c cdr.c cvsd-fmt.c \
+    dvms-fmt.c dat.c gsm.c hcom.c lpc10.c maud.c prc.c sf.c sfircam.h smp.c \
+    sndrtool.c sphere.c tx16w.c voc.c vox-fmt.c ima-fmt.c adpcm.c adpcm.h \
+    ima_rw.c ima_rw.h wav.c wav.h wve.c xa.c nulfile.c
+
+sox_LDADD += @GSM_LIBS@ @LIBGSM_LIBADD@
+sox_LDADD += ../lpc10/liblpc10.la
+
+if HAVE_FLAC
+    libsox_la_SOURCES += flac.c
+    sox_LDADD += @FLAC_LIBS@
+endif
+if HAVE_FFMPEG
+    libsox_la_SOURCES += ffmpeg.c
+    sox_LDADD += @FFMPEG_LIBS@
+endif
+if HAVE_SNDFILE
+    libsox_la_SOURCES += sndfile.c
+    libsox_la_CFLAGS += @SNDFILE_CFLAGS@
+    sox_LDADD += @SNDFILE_LIBS@
+endif
+if HAVE_AMR_WB
+    libsox_la_SOURCES += amr-wb.c
+    sox_LDADD += @AMR_WB_LIBS@
+endif
+if HAVE_AMR_NB
+    libsox_la_SOURCES += amr-nb.c
+    sox_LDADD += @AMR_NB_LIBS@
+endif
+if HAVE_MP3
+    libsox_la_SOURCES += mp3.c
+    sox_LDADD += @MP3_LIBS@
+endif
+if HAVE_OGG_VORBIS
+    libsox_la_SOURCES += vorbis.c
+    sox_LDADD += @OGG_LIBS@
+endif
+if HAVE_ALSA
+    libsox_la_SOURCES += alsa.c
+    sox_LDADD += @ALSA_LIBS@
+endif
+if HAVE_LIBAO
+    libsox_la_SOURCES += ao.c
+    sox_LDADD += @AO_LIBS@
+endif
+if HAVE_OSS
+    libsox_la_SOURCES += oss.c
+    sox_LDADD += @OSS_LIBS@
+endif
+if HAVE_SUN_AUDIO
+    libsox_la_SOURCES += sunaudio.c
+endif
+
+#end !HAVE_LIBLTDL
+endif
 
 EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav libgsm
 

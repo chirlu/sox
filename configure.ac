@@ -18,13 +18,21 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_LIBLTDL_INSTALLABLE
-AC_LIBTOOL_DLOPEN
+# Disable libltdl support when building only static libraries
+if test "$enable_shared" != "no"; then
+  AC_LIBLTDL_INSTALLABLE
+  AC_LIBTOOL_DLOPEN
+fi
 AC_PROG_LIBTOOL
-AC_CONFIG_SUBDIRS(libltdl)
 AC_SUBST(LIBTOOL_DEPS)
-AC_SUBST(LIBLTDL)
-AC_SUBST(LTDLINCL)
+AC_CONFIG_SUBDIRS(libltdl)
+if test "$enable_shared" != "no"; then
+  AC_SUBST(LIBLTDL)
+  AC_SUBST(LTDLINCL)
+  AC_CHECK_HEADERS(ltdl.h)
+fi
+AM_CONDITIONAL(HAVE_LIBLTDL, test x$enable_shared = xyes)
+
 m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG])
 
 dnl Debugging
@@ -56,7 +64,7 @@ AC_C_INLINE
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(fcntl.h unistd.h byteswap.h sys/time.h sys/timeb.h ltdl.h)
+AC_CHECK_HEADERS(fcntl.h unistd.h byteswap.h sys/time.h sys/timeb.h)
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS(strcasecmp strdup popen vsnprintf)
@@ -330,6 +338,7 @@ fi
 dnl Report configuration.
 echo
 echo "Debugging build................... $enable_debug"
+echo "Support dynamic modules........... $enable_shared"
 echo "ALSA driver....................... $enable_alsa"
 echo "libao driver...................... $enable_libao"
 echo "OSS driver........................ $enable_oss"
