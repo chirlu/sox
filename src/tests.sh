@@ -144,7 +144,7 @@ timeIO () {
 make sox_sample_test
 ./sox_sample_test || exit 1
 
-grep -q "^FLAC_LIBS *= *-lFLAC" Makefile || skip="flac $skip"
+./sox --help | grep -q "flac" || skip="flac $skip"
 grep -q "^OGG_LIBS *= *-logg"   Makefile || skip="ogg $skip"
 grep -q "^#define HAVE_SNDFILE_H" soxconfig.h || skip="caf $skip"
 
