@@ -23,7 +23,7 @@ sox_LDADD = libsox.la libsfx.la
 # libsox Dynamic Libraries for File Formats #
 #############################################
 
-if HAVE_LIBLTDL
+if USE_LIBLTDL
 # Format modules; listed first so optional ones can be added later
 pkglib_LTLIBRARIES = libsox_fmt_auto.la libsox_fmt_raw.la libsox_fmt_s1.la \
 	  libsox_fmt_s2.la libsox_fmt_s3.la libsox_fmt_s4.la libsox_fmt_u1.la \
@@ -208,7 +208,7 @@ libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
 	  soxconfig.h
 libsox_la_CFLAGS = 
 
-if HAVE_LIBLTDL
+if USE_LIBLTDL
 else
   libsox_la_SOURCES += auto.c raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
     s4-fmt.c u1-fmt.c u2-fmt.c u3-fmt.c u4-fmt.c al-fmt.c la-fmt.c ul-fmt.c \
@@ -265,7 +265,7 @@ if HAVE_SUN_AUDIO
     libsox_la_SOURCES += sunaudio.c
 endif
 
-#end !HAVE_LIBLTDL
+#end !USE_LIBLTDL
 endif
 
 EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav libgsm

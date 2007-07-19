@@ -31,7 +31,7 @@ if test "$enable_shared" != "no"; then
   AC_SUBST(LTDLINCL)
   AC_CHECK_HEADERS(ltdl.h)
 fi
-AM_CONDITIONAL(HAVE_LIBLTDL, test x$enable_shared = xyes)
+AM_CONDITIONAL(USE_LIBLTDL, test x$enable_shared = xyes)
 
 m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG])
 
