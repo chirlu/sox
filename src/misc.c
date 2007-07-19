@@ -554,7 +554,7 @@ FILE * xfopen(char const * identifier, char const * mode)
   if (is_uri(identifier)) {
     FILE * f = NULL;
 #ifdef HAVE_POPEN
-    char const * const command_format = "wget -q -O- \"%s\"";
+    char const * const command_format = "wget --no-check-certificate -q -O- \"%s\"";
     char * command = xmalloc(strlen(command_format) + strlen(identifier)); 
     sprintf(command, command_format, identifier); 
     f = popen(command, "r"); 
