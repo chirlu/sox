@@ -344,7 +344,8 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     }
 
     /* read rest of parameters */
-    #define NUMERIC_PARAMETER(p, min, max) { \
+#undef NUMERIC_PARAMETER
+#define NUMERIC_PARAMETER(p, min, max) { \
       char * end_ptr; \
       double d = strtod(argv[argn], &end_ptr); \
       if (end_ptr == argv[argn]) \
