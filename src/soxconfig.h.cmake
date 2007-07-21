@@ -22,7 +22,6 @@
 #cmakedefine HAVE_SAMPLERATE_H        1
 #cmakedefine HAVE_SNDFILE_1_0_12      1
 #cmakedefine HAVE_SNDFILE_H           1
-#cmakedefine HAVE_LIBSOUNDTOUCH       1
 #cmakedefine HAVE_STDINT_H            1
 #cmakedefine HAVE_STRCASECMP          1
 #cmakedefine HAVE_STRDUP              1

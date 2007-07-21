@@ -31,7 +31,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   double d;
   char dummy, arg[100];
-  int pos = (argc && !strcmp(*argv, "-l"))? 1 : 0;
+  int pos = (argc && !strcmp(*argv, "-q"))? 1 : 0;
 
   if (argc <= pos || sscanf(argv[pos], "%lf %c", &d, &dummy) != 1)
     return sox_usage(effp);
@@ -47,7 +47,7 @@ sox_effect_handler_t const * sox_key_effect_fn(void)
   static sox_effect_handler_t handler;
   handler = *sox_tempo_effect_fn();
   handler.name = "key";
-  handler.usage = "[-l] shift-in-cents [window-ms [seek-ms [overlap-ms]]]",
+  handler.usage = "[-q] shift-in-cents [window-ms [seek-ms [overlap-ms]]]",
   handler.getopts = getopts;
   return &handler;
 }

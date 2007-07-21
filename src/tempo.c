@@ -18,12 +18,13 @@
  * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
-/* Addressible FIFO buffer */
-
 #include "sox_i.h"
 #include "xmalloc.h"
-
+#include <math.h>
 #include <string.h>
+#include <assert.h>
+
+/* Addressible FIFO buffer */
 
 typedef struct {
   char * data;
@@ -112,502 +113,195 @@ static void fifo_create(fifo_t * f, size_t item_size)
 }
 
 /*
- * Change tempo (alter duration, maintain pitch) using a time domain
- * WSOLA-like method.  Based on TDStretch.cpp revision 1.24 from The
- * SoundTouch Library Copyright (c) Olli Parviainen 2001-2005.
+ * Change tempo (alter duration, maintain pitch) using a WSOLA algorithm.
+ * Based on ideas from Olli Parviainen's SoundTouch Library.
  */
-
-#include <string.h>
-#include <assert.h>
-#ifndef max
-#define max(a, b) ((a) >= (b) ? (a) : (b))
-#endif
-
-typedef enum {FALSE, TRUE} BOOL;
 
 typedef struct {
   size_t samples_in;
   size_t samples_out;
   double factor;
   size_t channels;
-  size_t sampleReq;
-  float * pMidBuffer;
-  float * pRefMidBuffer;
-  float * pRefMidBufferUnaligned;
-  size_t overlapLength;
-  size_t seekLength;
-  size_t seekWindowLength;
-  size_t maxOffset;
-  double nominalSkip;
-  double skipFract;
-  fifo_t outputBuffer;
-  fifo_t inputBuffer;
-  BOOL bQuickseek;
-  BOOL bMidBufferDirty;
-} TDStretch;
+  size_t process_size;
+  float * prev_win_end;
+  size_t overlap;
+  size_t seek;
+  size_t window;
+  size_t windows_total;
+  size_t skip_total;
+  fifo_t output_fifo;
+  fifo_t input_fifo;
+  sox_bool quick_seek;
+} Stretch;
 
-static void clearMidBuffer(TDStretch * p)
+/* For the Wave Similarity bit of WSOLA */
+static double difference(const float * a, const float * b, size_t length)
 {
-  if (p->bMidBufferDirty) {
-    memset((p->pMidBuffer), 0, 2 * sizeof(float) * p->overlapLength);
-    p->bMidBufferDirty = FALSE;
-  }
-}
-
-static void clearInput(TDStretch * p)
-{
-  p->samples_in = 0;
-  fifo_clear(&p->inputBuffer);
-  clearMidBuffer(p);
-}
-
-static void clear(TDStretch * p)
-{
-  fifo_clear(&p->outputBuffer);
-  fifo_clear(&p->inputBuffer);
-  clearMidBuffer(p);
-}
-
-/* Slopes the amplitude of the 'midBuffer' samples so that cross correlation */
-/* is faster to calculate */
-static void precalcCorrReferenceMono(TDStretch * p)
-{
-  int i;
-  float temp;
-
-  for (i = 0; i < (int) p->overlapLength; i++) {
-    temp = (float) i *(float) (p->overlapLength - i);
-
-    (p->pRefMidBuffer)[i] = (float) ((p->pMidBuffer)[i] * temp);
-  }
-}
-
-static void precalcCorrReferenceStereo(TDStretch * p)
-{
-  int i, cnt2;
-  float temp;
-
-  for (i = 0; i < (int) p->overlapLength; i++) {
-    temp = (float) i *(float) (p->overlapLength - i);
-
-    cnt2 = i * 2;
-    (p->pRefMidBuffer)[cnt2] = (float) ((p->pMidBuffer)[cnt2] * temp);
-    (p->pRefMidBuffer)[cnt2 + 1] = (float) ((p->pMidBuffer)[cnt2 + 1] * temp);
-  }
-}
-
-static double calcCrossCorrMono(
-    TDStretch * p, const float * mixingPos, const float * compare)
-{
-  double corr = 0;
+  double diff = 0;
   size_t i = 0;
 
-  /* Loop optimisation: */
-  #define _ corr += mixingPos[i] * compare[i], ++i;
-  do {_ _ _ _ _ _ _ _} while (i < p->overlapLength);
+  #define _ diff += sqr(a[i] - b[i]), ++i; /* Loop optimisation */
+  do {_ _ _ _ _ _ _ _} while (i < length); /* N.B. length ≡ 0 (mod 8) */
   #undef _
-  return corr;
+  return diff;
 }
 
-static double calcCrossCorrStereo(
-    TDStretch * p, const float * mixingPos, const float * compare)
+/* Find where the two windows are most alike over the overlap period. */
+static size_t stretch_best_overlap_position(Stretch * p, float const * new_win)
 {
-  double corr = 0;
-  size_t i = 0;
+  float * f = p->prev_win_end;
+  size_t j, best_pos, prev_best_pos = (p->seek + 1) >> 1, step = 64;
+  size_t i = best_pos = p->quick_seek? prev_best_pos : 0;
+  double diff, least_diff = difference(new_win + p->channels * i, f, p->channels * p->overlap);
+  int k = 0;
 
-  /* Loop optimisation: */
-  #define _ corr += mixingPos[i]*compare[i] + mixingPos[i+1]*compare[i+1], i+=2;
-  do {_ _ _ _ _ _ _ _} while (i < 2 * p->overlapLength);
-  #undef _
-  return corr;
-}
-
-/* Seeks for the optimal overlap-mixing position.  The best position is
- * determined as the position where the two overlapped sample sequences are
- * 'most alike', in terms of the highest cross-correlation value over the
- * overlapping period.  4 variants exist for mono/stereo, quick/accurate */
-
-static size_t seekBestOverlapPositionMono(
-    TDStretch * p, const float * refPos)
-{
-  size_t bestOffs;
-  double bestCorr, corr;
-  size_t tempOffset;
-  const float *compare;
-
-  /* Slopes the amplitude of the 'midBuffer' samples */
-  precalcCorrReferenceMono(p);
-  bestCorr = INT_MIN;
-  bestOffs = 0;
-
-  /* Scans for the best correlation value by testing each possible position */
-  /* over the permitted range. */
-  for (tempOffset = 0; tempOffset < p->seekLength; tempOffset++) {
-    compare = refPos + tempOffset;
-
-    /* Calculates correlation value for the mixing position corresponding */
-    /* to 'tempOffset' */
-    corr = calcCrossCorrMono(p, p->pRefMidBuffer, compare);
-
-    /* Checks for the highest correlation value */
-    if (corr > bestCorr) {
-      bestCorr = corr;
-      bestOffs = tempOffset;
-    }
-  }
-  return bestOffs;
-}
-
-static size_t seekBestOverlapPositionStereo(TDStretch * p,
-                                            const float * refPos)
-{
-  size_t bestOffs;
-  double bestCorr, corr;
-  size_t i;
-
-  precalcCorrReferenceStereo(p);
-  bestCorr = INT_MIN;
-  bestOffs = 0;
-
-  for (i = 0; i < p->seekLength; i++) {
-    corr = calcCrossCorrStereo(p, refPos + 2 * i, p->pRefMidBuffer);
-    if (corr > bestCorr) {
-      bestCorr = corr;
-      bestOffs = i;
-    }
-  }
-  return bestOffs;
-}
-
-/* Table for the quick hierarchical mixing position seeking algorithm */
-static int const scanOffsets[4][24] = {
-  { 124,  186,  248,  310,  372,  434,  496,  558,  620,  682,  744, 806,
-    868,  930,  992, 1054, 1116, 1178, 1240, 1302, 1364, 1426, 1488,   0},
-  {-100,  -75,  -50,  -25,   25,   50,   75,  100,    0,    0,    0,   0,
-      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,   0},
-  { -20,  -15,  -10,   -5,    5,   10,   15,   20,    0,    0,    0,   0,
-      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,   0},
-  {  -4,   -3,   -2,   -1,    1,    2,    3,    4,    0,    0,    0,   0,
-      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,   0}};
-
-static size_t seekBestOverlapPositionMonoQuick(TDStretch * p,
-                                               const float * refPos)
-{
-  size_t j;
-  size_t bestOffs;
-  double bestCorr, corr;
-  size_t scanCount, corrOffset, tempOffset;
-
-  /* Slopes the amplitude of the 'midBuffer' samples */
-  precalcCorrReferenceMono(p);
-  bestCorr = INT_MIN;
-  bestOffs = 0;
-  corrOffset = 0;
-  tempOffset = 0;
-
-  /* Scans for the best correlation value using four-pass hierarchical
-   * search.  The look-up table 'scans' has hierarchical position adjusting
-   * steps.  In first pass the routine searhes for the highest correlation
-   * with relatively coarse steps, then rescans the neighbourhood of the
-   * highest correlation with better resolution and so on. */
-  for (scanCount = 0; scanCount < 4; scanCount++) {
-    j = 0;
-    while (scanOffsets[scanCount][j]) {
-      tempOffset = corrOffset + scanOffsets[scanCount][j];
-      if (tempOffset >= p->seekLength)
+  if (p->quick_seek) do { /* hierarchical search */
+    for (k = -1; k <= 1; k += 2) for (j = 1; j < 4 || step == 64; ++j) {
+      i = prev_best_pos + k * j * step;
+      if ((int)i < 0 || i >= p->seek)
         break;
-
-      /* Calculates correlation value for the mixing position corresponding */
-      /* to 'tempOffset' */
-      corr = calcCrossCorrMono(p, refPos + tempOffset, (p->pRefMidBuffer));
-
-      /* Checks for the highest correlation value */
-      if (corr > bestCorr) {
-        bestCorr = corr;
-        bestOffs = tempOffset;
-      }
-      j++;
+      diff = difference(new_win + p->channels * i, f, p->channels * p->overlap);
+      if (diff < least_diff)
+        least_diff = diff, best_pos = i;
     }
-    corrOffset = bestOffs;
+    prev_best_pos = best_pos;
+  } while (step >>= 2);
+  else for (i = 1; i < p->seek; i++) { /* linear search */
+    diff = difference(new_win + p->channels * i, f, p->channels * p->overlap);
+    if (diff < least_diff)
+      least_diff = diff, best_pos = i;
   }
-
-  return bestOffs;
+  return best_pos;
 }
 
-static size_t seekBestOverlapPositionStereoQuick(TDStretch * p,
-                                                 const float * refPos)
+/* For the Over-Lap bit of WSOLA */
+static void stretch_overlap(Stretch * p, const float * in1, const float * in2, float * output)
 {
-  size_t j;
-  size_t bestOffs;
-  double bestCorr, corr;
-  size_t scanCount, corrOffset, tempOffset;
+  size_t i, j, k = 0;
+  float fade_step = 1.0f / (float) p->overlap;
 
-  precalcCorrReferenceStereo(p);
+  for (i = 0; i < p->overlap; ++i) {
+    float fade_in  = fade_step * (float) i;
+    float fade_out = 1.0f - fade_in;
+    for (j = 0; j < p->channels; ++j, ++k)
+      output[k] = in1[k] * fade_out + in2[k] * fade_in;
+  }
+}
 
-  bestCorr = INT_MIN;
-  bestOffs = 0;
-  corrOffset = 0;
-  tempOffset = 0;
+static void stretch_process_windows(Stretch * p)
+{
+  while (fifo_occupancy(&p->input_fifo) >= p->process_size) {
+    size_t skip, offset = 0;
 
-  for (scanCount = 0; scanCount < 4; scanCount++) {
-    j = 0;
-    while (scanOffsets[scanCount][j]) {
-      tempOffset = corrOffset + scanOffsets[scanCount][j];
-      if (tempOffset >= p->seekLength)
-        break;
-
-      corr =
-          calcCrossCorrStereo(p, refPos + 2 * tempOffset, p->pRefMidBuffer);
-
-      if (corr > bestCorr) {
-        bestCorr = corr;
-        bestOffs = tempOffset;
-      }
-      j++;
+    /* Copy or overlap the first bit to the output */
+    if (!p->windows_total)
+      fifo_write(&p->output_fifo, p->overlap, fifo_read_ptr(&p->input_fifo));
+    else {
+      offset = stretch_best_overlap_position(p, fifo_read_ptr(&p->input_fifo));
+      stretch_overlap(p, p->prev_win_end,
+          (float *) fifo_read_ptr(&p->input_fifo) + p->channels * offset,
+          fifo_write(&p->output_fifo, p->overlap, NULL));
     }
-    corrOffset = bestOffs;
-  }
-  return bestOffs;
-}
+    /* Copy the middle bit to the output */
+    if (p->window > 2 * p->overlap)
+      fifo_write(&p->output_fifo, p->window - 2 * p->overlap,
+                 (float *) fifo_read_ptr(&p->input_fifo) +
+                 p->channels * (offset + p->overlap));
 
-static size_t seekBestOverlapPosition(TDStretch * p,
-                                      const float * refPos)
-{
-  if (p->channels == 2) {
-    if (p->bQuickseek)
-      return seekBestOverlapPositionStereoQuick(p, refPos);
-    return seekBestOverlapPositionStereo(p, refPos);
-  } else if (p->bQuickseek)
-    return seekBestOverlapPositionMonoQuick(p, refPos);
-  return seekBestOverlapPositionMono(p, refPos);
-}
+    /* Copy the end bit to prev_win_end ready to be mixed with
+     * the beginning of the next window. */
+    assert(offset + p->window <= fifo_occupancy(&p->input_fifo));
+    memcpy(p->prev_win_end,
+           (float *) fifo_read_ptr(&p->input_fifo) +
+           p->channels * (offset + p->window - p->overlap),
+           p->channels * p->overlap * sizeof(*(p->prev_win_end)));
 
+    /* The Advance bit of WSOLA */
+    skip = p->factor * (++p->windows_total * (p->window - p->overlap)) + 0.5;
+    skip -= (p->seek + 1) >> 1; /* So seek straddles the nominal skip point. */
+    p->skip_total += skip -= p->skip_total;
+    fifo_read(&p->input_fifo, skip, NULL);
 
-/* Overlaps samples in 'midBuffer' with the samples in 'input' */
-static void overlapMono(TDStretch * p, float * output,
-                        const float * input)
-{
-  int i, itemp;
-
-  for (i = 0; i < (int) p->overlapLength; i++) {
-    itemp = p->overlapLength - i;
-    output[i] = (input[i] * i + (p->pMidBuffer)[i] * itemp) / p->overlapLength;
+    sox_debug("%3u %u", offset, skip);
   }
 }
 
-static void overlapStereo(TDStretch * p, float * output,
-                          const float * input)
+static void stretch_setup(Stretch * p,
+  double sample_rate,
+  double factor,      /* 1 for no change, < 1 for slower, > 1 for faster. */
+  double window_ms,   /* Processing window length in milliseconds. */
+  double seek_ms,     /* Milliseconds to seek for the best overlap position. */
+  double overlap_ms,  /* Overlap length in milliseconds. */
+  sox_bool quick_seek)/* Whether to quick seek for the best overlap position.*/
 {
-  int i;
-  size_t cnt2;
-  float fTemp;
-  float fScale;
-  float fi;
+  size_t max_skip;
 
-  fScale = 1.0f / (float) p->overlapLength;
+  p->factor = factor;
+  p->window = sample_rate * window_ms / 1000 + .5;
+  p->seek   = sample_rate * seek_ms / 1000 + .5;
+  p->overlap = max(sample_rate * overlap_ms / 1000 + 4.5, 16);
+  p->overlap &= ~7; /* must be divisible by 8 */
+  p->prev_win_end = xmalloc(p->overlap * p->channels * sizeof(*p->prev_win_end));
+  p->quick_seek = quick_seek;
 
-  for (i = 0; i < (int) p->overlapLength; i++) {
-    fTemp = (float) (p->overlapLength - i) * fScale;
-    fi = (float) i *fScale;
-
-    cnt2 = 2 * i;
-    output[cnt2 + 0] = input[cnt2 + 0] * fi + p->pMidBuffer[cnt2 + 0] * fTemp;
-    output[cnt2 + 1] = input[cnt2 + 1] * fi + p->pMidBuffer[cnt2 + 1] * fTemp;
-  }
+  /* # of samples needed in input fifo to process a window */
+  max_skip = ceil(factor * (p->window - p->overlap));
+  p->process_size = max(max_skip + p->overlap, p->window) + p->seek;
 }
 
-/* Overlaps samples in 'midBuffer' with the samples in 'inputBuffer' at
- * position of 'ovlPos'. */
-static inline void overlap(TDStretch * p, float * output,
-                           const float * input, size_t ovlPos)
-{
-  if (p->channels == 2)
-    overlapStereo(p, output, input + 2 * ovlPos);
-  else
-    overlapMono(p, output, input + ovlPos);
-}
-
-/* Processes as many processing frames of the samples 'inputBuffer', store */
-/* the result into 'outputBuffer' */
-static void processSamples(TDStretch * p)
-{
-  size_t ovlSkip, offset, temp;
-
-  if (p->bMidBufferDirty == FALSE) {
-    /* if midBuffer is empty, move the first samples of the input stream
-     * into it */
-    if (fifo_occupancy(&p->inputBuffer) < p->overlapLength)
-      return;   /* wait until we've got p->overlapLength samples */
-    fifo_read(&p->inputBuffer, p->overlapLength, p->pMidBuffer);
-    p->bMidBufferDirty = TRUE;
-  }
-  /* Process samples as long as there are enough samples in 'inputBuffer'
-   * to form a processing frame. */
-  while (fifo_occupancy(&p->inputBuffer) >= p->sampleReq) {
-    /* If tempo differs from the normal SCALE, scan for the best overlapping
-     * position */
-    offset = seekBestOverlapPosition(p, fifo_read_ptr(&p->inputBuffer));
-
-    /* Mix the samples in the 'inputBuffer' at position of 'offset' with the
-     * samples in 'midBuffer' using sliding overlapping ... first partially
-     * overlap with the end of the previous sequence (that's in 'midBuffer') */
-    overlap(p, fifo_reserve(&p->outputBuffer, p->overlapLength),
-            fifo_read_ptr(&p->inputBuffer), offset);
-
-    /* ... then copy sequence samples from 'inputBuffer' to output */
-    temp = (p->seekWindowLength - 2 * p->overlapLength);    /* & 0xfffffffe; */
-    if ((int)temp > 0) {
-      fifo_write(&p->outputBuffer, temp,
-                 (float *) fifo_read_ptr(&p->inputBuffer) +
-                 p->channels * (offset + p->overlapLength));
-    }
-    /* Copies the end of the current sequence from 'inputBuffer' to
-     * 'midBuffer' for being mixed with the beginning of the next
-     * processing sequence and so on */
-    assert(offset + p->seekWindowLength <= fifo_occupancy(&p->inputBuffer));
-    memcpy(p->pMidBuffer,
-           (float *) fifo_read_ptr(&p->inputBuffer) +
-           p->channels * (offset + p->seekWindowLength - p->overlapLength),
-           p->channels * sizeof(float) * p->overlapLength);
-    p->bMidBufferDirty = TRUE;
-
-    /* Remove the processed samples from the input buffer. Update
-     * the difference between integer & nominal skip step to 'p->skipFract'
-     * in order to prevent the error from accumulating over time. */
-    p->skipFract += p->nominalSkip;     /* real skip size */
-    ovlSkip = (int) p->skipFract;       /* rounded to integer skip */
-    p->skipFract -= ovlSkip;    /* maintain the fraction part, i.e. real vs. integer skip */
-    fifo_read(&p->inputBuffer, ovlSkip, NULL);
-  }
-}
-
-/* Set new overlap length parameter & reallocate RefMidBuffer if necessary. */
-static void acceptNewOverlapLength(TDStretch * p, size_t newOverlapLength)
-{
-  size_t prevOvl;
-
-  prevOvl = p->overlapLength;
-  p->overlapLength = newOverlapLength;
-  if (p->overlapLength > prevOvl) {
-    free(p->pMidBuffer);
-    free(p->pRefMidBufferUnaligned);
-    p->pMidBuffer = xcalloc(p->overlapLength * 2, sizeof(float));
-    p->bMidBufferDirty = TRUE;
-    clearMidBuffer(p);
-    p->pRefMidBufferUnaligned = xcalloc(
-        2 * p->overlapLength + 16 / sizeof(float), sizeof(float));
-
-    /* For efficiency, align 'pRefMidBuffer' to 16 byte boundary */
-    p->pRefMidBuffer = (float *)
-      ((((unsigned long) (p->pRefMidBufferUnaligned)) + 15ul) & ~15ul);
-  }
-}
-
-/*  Sets routine control parameters. These control are certain time constants
- *  defining how the sound is stretched to the desired duration.
- *    'sampleRate' = sample rate of the sound
- *    'sequenceMS' = one processing sequence length in milliseconds
- *    'seekwindowMS' = seeking window length for scanning the best overlapping
- *       position
- *    'overlapMS' = overlapping length
- *    'tempo' = 1 for no change, < 1 for slower, > 1 for faster.
- *    'quickSeek' = whether to use a quick seek for the best overlapping
- *    position.
- */
-static void setParameters(TDStretch * p, double sampleRate, double tempo,
-    double sequenceMs, double seekWindowMs, double overlapMs, BOOL quickSeek)
-{
-  size_t newOvl;
-  size_t intskip;
-
-  p->factor = tempo;
-  p->bQuickseek = quickSeek;
-  p->maxOffset = p->seekLength = sampleRate * seekWindowMs / 1000 + .5;
-  p->seekWindowLength = sampleRate * sequenceMs / 1000 + .5;
-  newOvl = max(sampleRate * overlapMs / 1000 + 4.5, 16);
-  newOvl &= ~7; /* must be divisible by 8 */
-  acceptNewOverlapLength(p, newOvl);
-
-  /* Calculate ideal skip length (according to tempo value)  */
-  p->nominalSkip = tempo * (p->seekWindowLength - p->overlapLength);
-  p->skipFract = 0;
-  intskip = (int) (p->nominalSkip + 0.5);
-
-  /* Calculate how many samples are needed in the 'inputBuffer' to  */
-  /* process another batch of samples */
-  p->sampleReq =
-      max(intskip + p->overlapLength, p->seekWindowLength) + p->maxOffset;
-}
-
-static float * putSamples(TDStretch * p, float const *samples, size_t n)
+static float * stretch_input(Stretch * p, float const *samples, size_t n)
 {
   p->samples_in += n;
-  return fifo_write(&p->inputBuffer, n, samples);
+  return fifo_write(&p->input_fifo, n, samples);
 }
 
-static float const * receiveSamples(
-    TDStretch * p, float * samples, size_t * n)
+static float const * stretch_output(
+    Stretch * p, float * samples, size_t * n)
 {
-  p->samples_out += *n = min(*n, fifo_occupancy(&p->outputBuffer));
-  return fifo_read(&p->outputBuffer, *n, samples);
+  p->samples_out += *n = min(*n, fifo_occupancy(&p->output_fifo));
+  return fifo_read(&p->output_fifo, *n, samples);
 }
 
-/* Flushes the last samples from the processing pipeline to the output.
- * Clears also the internal processing buffers.
- *
- * Note: This function is meant for extracting the last samples of a sound
- * stream. This function may introduce additional blank samples in the end
- * of the sound stream, and thus it's not recommended to call this function
- * in the middle of a sound stream. */
-static void flush(TDStretch * p)
+/* Flush samples remaining in the processing pipeline to the output. */
+static void stretch_flush(Stretch * p)
 {
   size_t samples_out = p->samples_in / p->factor + .5;
 
   if (p->samples_out < samples_out) {
     size_t remaining = p->samples_in / p->factor + .5 - p->samples_out;
-    float buff[128];
-    memset(buff, 0, sizeof(buff));
+    float * buff = xcalloc(128 * p->channels, sizeof(*buff));
 
-    while (fifo_occupancy(&p->outputBuffer) < remaining) {
-      putSamples(p, buff, sizeof(buff)/sizeof(buff[0])/p->channels);
-      processSamples(p);
+    while (fifo_occupancy(&p->output_fifo) < remaining) {
+      stretch_input(p, buff, 128);
+      stretch_process_windows(p);
     }
-    fifo_trim(&p->outputBuffer, remaining);
-    clearInput(p);
+    free(buff);
+    fifo_trim(&p->output_fifo, remaining);
+    p->samples_in = 0;
   }
 }
 
-static void deleteTDStretch(TDStretch * p)
+static void stretch_delete(Stretch * p)
 {
-  free(p->pMidBuffer);
-  free(p->pRefMidBufferUnaligned);
-  fifo_delete(&p->outputBuffer);
-  fifo_delete(&p->inputBuffer);
+  free(p->prev_win_end);
+  fifo_delete(&p->output_fifo);
+  fifo_delete(&p->input_fifo);
   free(p);
 }
 
-static TDStretch * newTDStretch(size_t channels)
+static Stretch * stretch_new(size_t channels)
 {
-  TDStretch * p = xcalloc(1, sizeof(*p));
+  Stretch * p = xcalloc(1, sizeof(*p));
   p->channels = channels;
-  fifo_create(&p->inputBuffer, p->channels * sizeof(float));
-  fifo_create(&p->outputBuffer, p->channels * sizeof(float));
+  fifo_create(&p->input_fifo, p->channels * sizeof(float));
+  fifo_create(&p->output_fifo, p->channels * sizeof(float));
   return p;
 }
 
-/*
- * libSoX tempo effect: adjust the audio tempo (but not key)
- *
- * Adjustment is given as the ratio of the new tempo to the old tempo.
- */
-
-#include "sox_i.h"
-#include <math.h>
-
 typedef struct tempo {
-  TDStretch   * tdstretch;
+  Stretch     * stretch;
   sox_bool    quick_seek;
-  double      factor, sequence_ms, seek_window_ms, overlap_ms;
+  double      factor, window_ms, seek_ms, overlap_ms;
 } priv_t;
 
 assert_static(sizeof(struct tempo) <= SOX_MAX_EFFECT_PRIVSIZE,
@@ -617,21 +311,19 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *) effp->priv;
 
-  p->sequence_ms    = 82; /* Set non-zero defaults: */
-  p->seek_window_ms = 14;
-  p->overlap_ms     = 12;
+  p->window_ms    = 82; /* Set non-zero defaults: */
+  p->seek_ms      = 14;
+  p->overlap_ms   = 12;
 
-  p->quick_seek = !argc || strcmp(*argv, "-l") || (--argc, ++argv, sox_false);
+  p->quick_seek = argc && !strcmp(*argv, "-q") && (--argc, ++argv, sox_true);
   do {                    /* break-able block */
-    NUMERIC_PARAMETER(factor        ,0.25, 4  )
-    NUMERIC_PARAMETER(sequence_ms   , 10 , 120)
-    NUMERIC_PARAMETER(seek_window_ms, 7  , 28 )
-    NUMERIC_PARAMETER(overlap_ms    , 6  , 24 )
+    NUMERIC_PARAMETER(factor      ,0.25, 4  )
+    NUMERIC_PARAMETER(window_ms   , 10 , 120)
+    NUMERIC_PARAMETER(seek_ms     , 3  , 28 )
+    NUMERIC_PARAMETER(overlap_ms  , 2  , 24 )
   } while (0);
-
-  sox_debug("factor:%g sequence:%g seek:%g overlap:%g quick:%i", p->factor,
-      p->sequence_ms, p->seek_window_ms, p->overlap_ms, p->quick_seek);
-  return argc || !p->factor? sox_usage(effp) : SOX_SUCCESS;
+  return argc || !p->factor || p->overlap_ms + p->seek_ms >= p->window_ms ?
+    sox_usage(effp) : SOX_SUCCESS;
 }
 
 static int start(sox_effect_t * effp)
@@ -640,14 +332,9 @@ static int start(sox_effect_t * effp)
 
   if (p->factor == 1)
     return SOX_EFF_NULL;
-
-  if (effp->ininfo.channels > 2) {
-    sox_fail("supports only mono or stereo audio");
-    return SOX_EOF;
-  }
-  p->tdstretch = newTDStretch(effp->ininfo.channels);
-  setParameters(p->tdstretch, effp->ininfo.rate, p->factor, p->sequence_ms,
-                p->seek_window_ms, p->overlap_ms, p->quick_seek);
+  p->stretch = stretch_new(effp->ininfo.channels);
+  stretch_setup(p->stretch, effp->ininfo.rate, p->factor, p->window_ms,
+                p->seek_ms, p->overlap_ms, p->quick_seek);
   return SOX_SUCCESS;
 }
 
@@ -657,16 +344,16 @@ static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf,
   priv_t * p = (priv_t *) effp->priv;
   sox_size_t i;
   sox_size_t odone = *osamp /= effp->ininfo.channels;
-  float const * s = receiveSamples(p->tdstretch, NULL, &odone);
+  float const * s = stretch_output(p->stretch, NULL, &odone);
 
   for (i = 0; i < odone * effp->ininfo.channels; ++i)
     *obuf++ = SOX_FLOAT_32BIT_TO_SAMPLE(*s++, effp->clips);
 
   if (*isamp && odone < *osamp) {
-    float * t = putSamples(p->tdstretch, NULL, *isamp / effp->ininfo.channels);
+    float * t = stretch_input(p->stretch, NULL, *isamp / effp->ininfo.channels);
     for (i = *isamp; i; --i)
       *t++ = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++, effp->clips);
-    processSamples(p->tdstretch);
+    stretch_process_windows(p->stretch);
   }
   else *isamp = 0;
 
@@ -677,20 +364,20 @@ static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf,
 static int drain(sox_effect_t * effp, sox_ssample_t * obuf, sox_size_t * osamp)
 {
   static sox_size_t isamp = 0;
-  flush(((priv_t *)effp->priv)->tdstretch);
+  stretch_flush(((priv_t *)effp->priv)->stretch);
   return flow(effp, 0, obuf, &isamp, osamp);
 }
 
 static int stop(sox_effect_t * effp)
 {
-  deleteTDStretch(((priv_t *)effp->priv)->tdstretch);
+  stretch_delete(((priv_t *)effp->priv)->stretch);
   return SOX_SUCCESS;
 }
 
 sox_effect_handler_t const * sox_tempo_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "tempo", "[-l] factor [window-ms [seek-ms [overlap-ms]]]",
+    "tempo", "[-q] factor [window-ms [seek-ms [overlap-ms]]]",
     SOX_EFF_MCHAN | SOX_EFF_LENGTH,
     getopts, start, flow, drain, stop, NULL
   };
