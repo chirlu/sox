@@ -61,6 +61,8 @@ sox-14.0.0
   o Fixed effect drain problems: chorus, echo(s), phaser.  (robs)
   o Fix rabbit responsiveness and memory problems.  (Peter Samuelson)
   o Fix broken stereo audio when recording using ALSA.  (robs)
+  o Fix OSS driver on big endian machines that was introduced in
+    last release.
 
   Internal improvements:
 
