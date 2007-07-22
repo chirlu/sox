@@ -35,6 +35,7 @@ sox-14.0.0
     in and only strip out extra silence.   (Mark Schreiber)
   o synth can now generate any number of channels.  (robs)
   o mixer can now mixdown to mono any number of channels.  (robs)
+  o Added oops effect (mixer special case).  (robs)
   o All effects that could only work on mono or stereo audio, now
     work with any number of channels.  (robs)
   o Added WSOLA-based key and tempo effects.  (robs)
