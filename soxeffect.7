@@ -412,12 +412,11 @@ These effects support the \fB\-\-plot\fR global option.
 .SP
 See also \fBfilter\fR for filters with a steeper roll-off.
 .TP
-\fBkey \fR[\fB\-q\fR] \fIshift\fR [\fIwindow\fR [\fIseek\fR [\fIoverlap\fR]]]
-Change the audio key (i.e. pitch but not tempo) using a WSOLA algorithm similar
-to that used by SoundTouch [8].
+\fBkey \fR[\fB\-q\fR] \fIshift\fR [\fIsegment\fR [\fIsearch\fR [\fIoverlap\fR]]]
+Change the audio key (i.e. pitch but not tempo) using a WSOLA algorithm.
 .SP
 .I shift
-is the key shift in positive or negative `cents' (i.e. 100ths of a
+gives the key shift as positive or negative `cents' (i.e. 100ths of a
 semitone).  See the
 .B tempo
 effect for a description of the other parameters.
@@ -610,21 +609,6 @@ speed in Hz.
 The modulation is either sinusoidal (\fB\-s\fR) or triangular
 (\fB\-t\fR).  The decay should be less than 0\*d5 to avoid
 feedback.  Gain-out is the volume of the output.
-.TP
-\fBpitch \fIshift\fR [\fIwidth interpolate fade\fR]
-Change the pitch of file without affecting its duration by cross-fading
-shifted samples.
-.I shift
-is given in cents.  Use a positive value to shift to treble, negative value to shift to bass.
-Default shift is 0.
-.I width
-of window is in ms.  Default width is 20ms.  Try 30ms to lower pitch,
-and 10ms to raise pitch.
-.I interpolate
-option, can be \fBcubic\fR or \fBlinear\fR.  Default is \fBcubic\fR.  The
-.I fade
-option, can be \fBcos\fR, \fBhamming\fR, \fBlinear\fR or
-\fBtrapezoid\fR; the default is \fBcos\fR.
 .TP
 \fBpolyphase\fR [\fB\-w nut\fR\^|\^\fBham\fR] [\fB\-width \fIn\fR] [\fB\-cutoff \fIc\fR]
 Change the sampling rate using `polyphase interpolation', a DSP algorithm.
@@ -924,22 +908,6 @@ audio from the internal buffer that is in 32-bit signed PCM data.
 This is mainly only of use in tracking down endian problems that
 creep in to SoX on cross-platform versions.
 .TP
-\fBstretch \fIfactor\fR [\fIwindow fade shift fading\fR]
-Time stretch the audio by the given factor.  Changes duration without affecting the pitch.
-.I factor
-of stretching: >1 lengthen, <1 shorten duration.
-.I window
-size is in ms.  Default is 20ms.  The
-.I fade
-option, can be `lin'.
-.I shift
-ratio, in [0 1].  Default depends on stretch factor. 1
-to shorten, 0\*d8 to lengthen.  The
-.I fading
-ratio, in [0 0\*d5].  The amount of a fade's default depends on
-.I factor
-and \fIshift\fR.
-.TP
 \fBswap\fR [\fI1 2\fR | \fI1 2 3 4\fR]
 Swap channels in multi-channel audio files.  Optionally, you may
 specify the channel order you would like the output in.  This defaults
@@ -1048,48 +1016,38 @@ begins; default=50. exp: the amplitude in percent; default=100.
 \fIp3\fR (trapezium): the percentage through each cycle at which `falling'
 ends; default=60.
 .TP
-\fBtempo \fR[\fB\-q\fR] \fIfactor\fR [\fIwindow\fR [\fIseek\fR [\fIoverlap\fR]]]
-Change the audio tempo (but not its pitch) using a WSOLA algorithm similar
-to that used by SoundTouch [8].
+\fBtempo \fR[\fB\-q\fR] \fIfactor\fR [\fIsegment\fR [\fIsearch\fR [\fIoverlap\fR]]]
+Change the audio tempo (but not its pitch) using a `WSOLA' algorithm.
+The audio is chopped up into segments which are then shifted in the time
+domain and overlapped (cross-faded) at points where their waveforms are
+most similar (as determined by measurement of `least squares').
 .SP
-The optional
+By default, linear searches are used to find the best overlapping
+points; if the optional
 .B \-q
-parameter selects a quicker but less accurate version of the algorithm.
+parameter is given, tree searches are used instead, giving a quicker,
+but possibly lower quality, result.
 .SP
 .I factor
 gives the ratio of new tempo to the old tempo.
 .SP
 The optional
-.I window
-parameter gives the length in milliseconds of each chunk (or window) of
-audio processed by the algorithm.  The default value is 82\ ms and is
-typically suitable for making small changes to the tempo of music.  For
-larger tempo changes (e.g. a factor of 2), 50\ ms may be better; for
-speech, 30\ ms may be better.
+.I segment
+parameter selects the algorithm's segment size in milliseconds.  The
+default value is 82 and is typically suited to making small changes to
+the tempo of music; for larger changes (e.g. a factor of 2), 50\ ms may
+give a better result.  When changing the tempo of speech, a segment size
+of around 30\ ms often works well.
 .SP
 The optional
-.I seek
-parameter gives the seeking window length in milliseconds (default 14)
-for the algorithm to find the best possible overlapping location.  This
-determines from how wide window the algorithm may look for an optimal
-joining location when mixing the sound sequences back together.  The
-bigger this window setting is, the higher the possibility to find a
-better mixing position will become, but at the same time large values
-may cause a `drifting' artifact because consequent sequences will be
-taken at more uneven intervals.  If there's a disturbing artifact that
-sounds as if a constant frequency was drifting around, try reducing this
-setting.  Increasing this value increases computational burden & vice
-versa.
+.I search
+parameter gives the audio length in milliseconds (default 14) over which
+the algorithm will search for overlapping points.  Larger values use
+more processing time and do not necessarily produce better results.
 .SP
 The optional
 .I overlap
-parameter gives the overlap length in milliseconds (default 12).  When
-the chopped sound sequences are mixed back together, to form a
-continuous sound stream, this parameter defines over how long period the
-two consecutive sequences are let to overlap each other.  This shouldn't
-be that critical parameter. If you reduce the \fIwindow\fR  setting by a
-large amount, you might wish to try a smaller value on this.  Increasing
-this value increases computational burden & vice versa.
+parameter gives the segment overlap length in milliseconds (default 12).
 .SP
 See also
 .B stretch
@@ -1230,9 +1188,54 @@ This effect is just an alias of the
 .B mixer
 effect and is retained for backwards compatibility only.
 .TP
+\fBpitch \fIshift\fR [\fIwidth interpolate fade\fR]
+Change the audio pitch (but not its duration).
+This effect is equivalent to the
+.B key
+effect with
+.I search
+set to zero, so its results are comparitively poor; 
+it is retained for backwards compatibility only.
+.SP
+Change by cross-fading shifted samples.
+.I shift
+is given in cents.  Use a positive value to shift to treble, negative value to shift to bass.
+Default shift is 0.
+.I width
+of window is in ms.  Default width is 20ms.  Try 30ms to lower pitch,
+and 10ms to raise pitch.
+.I interpolate
+option, can be \fBcubic\fR or \fBlinear\fR.  Default is \fBcubic\fR.  The
+.I fade
+option, can be \fBcos\fR, \fBhamming\fR, \fBlinear\fR or
+\fBtrapezoid\fR; the default is \fBcos\fR.
+.TP
 \fBrate\fR
 Does the same as \fBresample\fR with no parameters; it exists for
 backwards compatibility.
+.TP
+\fBstretch \fIfactor\fR [\fIwindow fade shift fading\fR]
+Change the audio duration (but not its pitch).
+This effect is equivalent to the
+.B tempo
+effect with (\fIfactor\fR inverted and)
+.I search
+set to zero, so its results are comparitively poor; 
+it is retained for backwards compatibility only.
+.SP
+.I factor
+of stretching: >1 lengthen, <1 shorten duration.
+.I window
+size is in ms.  Default is 20ms.  The
+.I fade
+option, can be `lin'.
+.I shift
+ratio, in [0 1].  Default depends on stretch factor. 1
+to shorten, 0\*d8 to lengthen.  The
+.I fading
+ratio, in [0 0\*d5].  The amount of a fade's default depends on
+.I factor
+and \fIshift\fR.
 .TP
 \fBvibro \fIspeed\fR [\fIdepth\fR]
 This is a deprecated alias for the
@@ -1282,11 +1285,6 @@ http://www.ladspa.org/cmt
 Steve Harris,
 .IR "LADSPA plugins" ,
 http://plugin.org.uk
-.TP
-[8]
-Olli Parviainen,
-.IR "SoundTouch Audio Processing Library" ,
-http://www.surina.net/soundtouch
 .SH AUTHORS
 Chris Bagwell (cbagwell@users.sourceforge.net).
 Other authors and contributors are listed in the AUTHORS file that

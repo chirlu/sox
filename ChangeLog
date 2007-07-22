@@ -37,6 +37,7 @@ sox-14.0.0
   o mixer can now mixdown to mono any number of channels.  (robs)
   o All effects that could only work on mono or stereo audio, now
     work with any number of channels.  (robs)
+  o Added WSOLA-based key and tempo effects.  (robs)
 
   Other new features:
 

@@ -47,7 +47,8 @@ sox_effect_handler_t const * sox_key_effect_fn(void)
   static sox_effect_handler_t handler;
   handler = *sox_tempo_effect_fn();
   handler.name = "key";
-  handler.usage = "[-q] shift-in-cents [window-ms [seek-ms [overlap-ms]]]",
+  handler.usage = "[-q] shift-in-cents [segment-ms [search-ms [overlap-ms]]]",
   handler.getopts = getopts;
+  handler.flags &= ~SOX_EFF_LENGTH;
   return &handler;
 }

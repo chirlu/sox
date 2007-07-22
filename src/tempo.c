@@ -1,7 +1,7 @@
 /*
- * Effect: change the audio tempo (but not key)
- *
+ * Effect: change tempo (alter duration, maintain pitch) with a WSOLA method.
  * Copyright (c) 2007 robs@users.sourceforge.net
+ * Based on ideas from Olli Parviainen's SoundTouch Library.
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -24,7 +24,7 @@
 #include <string.h>
 #include <assert.h>
 
-/* Addressible FIFO buffer */
+/*------------------------- Addressible FIFO buffer --------------------------*/
 
 typedef struct {
   char * data;
@@ -112,32 +112,35 @@ static void fifo_create(fifo_t * f, size_t item_size)
   fifo_clear(f);
 }
 
-/*
- * Change tempo (alter duration, maintain pitch) using a WSOLA algorithm.
- * Based on ideas from Olli Parviainen's SoundTouch Library.
- */
+/*---------------------------- WSOLA Tempo Change ----------------------------*/
 
 typedef struct {
+  /* Configuration parameters: */
+  size_t channels;
+  sox_bool quick_search; /* Whether to quick search or linear search */
+  double factor;         /* 1 for no change, < 1 for slower, > 1 for faster. */
+  size_t search;         /* Wide samples to search for best overlap position */
+  size_t segment;        /* Processing segment length in wide samples */
+  size_t overlap;        /* In wide samples */
+
+  size_t process_size;   /* # input wide samples needed to process 1 segment */
+
+  /* Buffers: */
+  fifo_t input_fifo;
+  float * overlap_buf;
+  fifo_t output_fifo;
+
+  /* Counters: */
   size_t samples_in;
   size_t samples_out;
-  double factor;
-  size_t channels;
-  size_t process_size;
-  float * prev_win_end;
-  size_t overlap;
-  size_t seek;
-  size_t window;
-  size_t windows_total;
+  size_t segments_total;
   size_t skip_total;
-  fifo_t output_fifo;
-  fifo_t input_fifo;
-  sox_bool quick_seek;
-} Stretch;
+} tempo_t;
 
-/* For the Wave Similarity bit of WSOLA */
-static double difference(const float * a, const float * b, size_t length)
+/* For the Waveform Similarity part of WSOLA */
+static float difference(const float * a, const float * b, size_t length)
 {
-  double diff = 0;
+  float diff = 0;
   size_t i = 0;
 
   #define _ diff += sqr(a[i] - b[i]), ++i; /* Loop optimisation */
@@ -146,162 +149,153 @@ static double difference(const float * a, const float * b, size_t length)
   return diff;
 }
 
-/* Find where the two windows are most alike over the overlap period. */
-static size_t stretch_best_overlap_position(Stretch * p, float const * new_win)
+/* Find where the two segments are most alike over the overlap period. */
+static size_t tempo_best_overlap_position(tempo_t * t, float const * new_win)
 {
-  float * f = p->prev_win_end;
-  size_t j, best_pos, prev_best_pos = (p->seek + 1) >> 1, step = 64;
-  size_t i = best_pos = p->quick_seek? prev_best_pos : 0;
-  double diff, least_diff = difference(new_win + p->channels * i, f, p->channels * p->overlap);
+  float * f = t->overlap_buf;
+  size_t j, best_pos, prev_best_pos = (t->search + 1) >> 1, step = 64;
+  size_t i = best_pos = t->quick_search? prev_best_pos : 0;
+  float diff, least_diff = difference(new_win + t->channels * i, f, t->channels * t->overlap);
   int k = 0;
 
-  if (p->quick_seek) do { /* hierarchical search */
+  if (t->quick_search) do { /* hierarchical search */
     for (k = -1; k <= 1; k += 2) for (j = 1; j < 4 || step == 64; ++j) {
       i = prev_best_pos + k * j * step;
-      if ((int)i < 0 || i >= p->seek)
+      if ((int)i < 0 || i >= t->search)
         break;
-      diff = difference(new_win + p->channels * i, f, p->channels * p->overlap);
+      diff = difference(new_win + t->channels * i, f, t->channels * t->overlap);
       if (diff < least_diff)
         least_diff = diff, best_pos = i;
     }
     prev_best_pos = best_pos;
   } while (step >>= 2);
-  else for (i = 1; i < p->seek; i++) { /* linear search */
-    diff = difference(new_win + p->channels * i, f, p->channels * p->overlap);
+  else for (i = 1; i < t->search; i++) { /* linear search */
+    diff = difference(new_win + t->channels * i, f, t->channels * t->overlap);
     if (diff < least_diff)
       least_diff = diff, best_pos = i;
   }
   return best_pos;
 }
 
-/* For the Over-Lap bit of WSOLA */
-static void stretch_overlap(Stretch * p, const float * in1, const float * in2, float * output)
+/* For the Over-Lap part of WSOLA */
+static void tempo_overlap(
+    tempo_t * t, const float * in1, const float * in2, float * output)
 {
   size_t i, j, k = 0;
-  float fade_step = 1.0f / (float) p->overlap;
+  float fade_step = 1.0f / (float) t->overlap;
 
-  for (i = 0; i < p->overlap; ++i) {
+  for (i = 0; i < t->overlap; ++i) {
     float fade_in  = fade_step * (float) i;
     float fade_out = 1.0f - fade_in;
-    for (j = 0; j < p->channels; ++j, ++k)
+    for (j = 0; j < t->channels; ++j, ++k)
       output[k] = in1[k] * fade_out + in2[k] * fade_in;
   }
 }
 
-static void stretch_process_windows(Stretch * p)
+static void tempo_process(tempo_t * t)
 {
-  while (fifo_occupancy(&p->input_fifo) >= p->process_size) {
+  while (fifo_occupancy(&t->input_fifo) >= t->process_size) {
     size_t skip, offset = 0;
 
     /* Copy or overlap the first bit to the output */
-    if (!p->windows_total)
-      fifo_write(&p->output_fifo, p->overlap, fifo_read_ptr(&p->input_fifo));
+    if (!t->segments_total)
+      fifo_write(&t->output_fifo, t->overlap, fifo_read_ptr(&t->input_fifo));
     else {
-      offset = stretch_best_overlap_position(p, fifo_read_ptr(&p->input_fifo));
-      stretch_overlap(p, p->prev_win_end,
-          (float *) fifo_read_ptr(&p->input_fifo) + p->channels * offset,
-          fifo_write(&p->output_fifo, p->overlap, NULL));
+      offset = tempo_best_overlap_position(t, fifo_read_ptr(&t->input_fifo));
+      tempo_overlap(t, t->overlap_buf,
+          (float *) fifo_read_ptr(&t->input_fifo) + t->channels * offset,
+          fifo_write(&t->output_fifo, t->overlap, NULL));
     }
     /* Copy the middle bit to the output */
-    if (p->window > 2 * p->overlap)
-      fifo_write(&p->output_fifo, p->window - 2 * p->overlap,
-                 (float *) fifo_read_ptr(&p->input_fifo) +
-                 p->channels * (offset + p->overlap));
+    if (t->segment > 2 * t->overlap)
+      fifo_write(&t->output_fifo, t->segment - 2 * t->overlap,
+                 (float *) fifo_read_ptr(&t->input_fifo) +
+                 t->channels * (offset + t->overlap));
 
-    /* Copy the end bit to prev_win_end ready to be mixed with
-     * the beginning of the next window. */
-    assert(offset + p->window <= fifo_occupancy(&p->input_fifo));
-    memcpy(p->prev_win_end,
-           (float *) fifo_read_ptr(&p->input_fifo) +
-           p->channels * (offset + p->window - p->overlap),
-           p->channels * p->overlap * sizeof(*(p->prev_win_end)));
+    /* Copy the end bit to overlap_buf ready to be mixed with
+     * the beginning of the next segment. */
+    memcpy(t->overlap_buf,
+           (float *) fifo_read_ptr(&t->input_fifo) +
+           t->channels * (offset + t->segment - t->overlap),
+           t->channels * t->overlap * sizeof(*(t->overlap_buf)));
 
-    /* The Advance bit of WSOLA */
-    skip = p->factor * (++p->windows_total * (p->window - p->overlap)) + 0.5;
-    skip -= (p->seek + 1) >> 1; /* So seek straddles the nominal skip point. */
-    p->skip_total += skip -= p->skip_total;
-    fifo_read(&p->input_fifo, skip, NULL);
-
-    sox_debug("%3u %u", offset, skip);
+    /* The Advance part of WSOLA */
+    skip = t->factor * (++t->segments_total * (t->segment - t->overlap)) + 0.5;
+    skip -= (t->search + 1) >> 1; /* So search straddles nominal skip point. */
+    t->skip_total += skip -= t->skip_total;
+    fifo_read(&t->input_fifo, skip, NULL);
   }
 }
 
-static void stretch_setup(Stretch * p,
-  double sample_rate,
-  double factor,      /* 1 for no change, < 1 for slower, > 1 for faster. */
-  double window_ms,   /* Processing window length in milliseconds. */
-  double seek_ms,     /* Milliseconds to seek for the best overlap position. */
-  double overlap_ms,  /* Overlap length in milliseconds. */
-  sox_bool quick_seek)/* Whether to quick seek for the best overlap position.*/
+static float * tempo_input(tempo_t * t, float const * samples, size_t n)
+{
+  t->samples_in += n;
+  return fifo_write(&t->input_fifo, n, samples);
+}
+
+static float const * tempo_output(tempo_t * t, float * samples, size_t * n)
+{
+  t->samples_out += *n = min(*n, fifo_occupancy(&t->output_fifo));
+  return fifo_read(&t->output_fifo, *n, samples);
+}
+
+/* Flush samples remaining in overlap_buf & input_fifo to the output. */
+static void tempo_flush(tempo_t * t)
+{
+  size_t samples_out = t->samples_in / t->factor + .5;
+  size_t remaining = samples_out - t->samples_out;
+  float * buff = xcalloc(128 * t->channels, sizeof(*buff));
+
+  if ((int)remaining > 0) {
+    while (fifo_occupancy(&t->output_fifo) < remaining) {
+      tempo_input(t, buff, 128);
+      tempo_process(t);
+    }
+    fifo_trim(&t->output_fifo, remaining);
+    t->samples_in = 0;
+  }
+  free(buff);
+}
+
+static void tempo_setup(tempo_t * t,
+  double sample_rate, sox_bool quick_search, double factor,
+  double segment_ms, double search_ms, double overlap_ms)
 {
   size_t max_skip;
-
-  p->factor = factor;
-  p->window = sample_rate * window_ms / 1000 + .5;
-  p->seek   = sample_rate * seek_ms / 1000 + .5;
-  p->overlap = max(sample_rate * overlap_ms / 1000 + 4.5, 16);
-  p->overlap &= ~7; /* must be divisible by 8 */
-  p->prev_win_end = xmalloc(p->overlap * p->channels * sizeof(*p->prev_win_end));
-  p->quick_seek = quick_seek;
-
-  /* # of samples needed in input fifo to process a window */
-  max_skip = ceil(factor * (p->window - p->overlap));
-  p->process_size = max(max_skip + p->overlap, p->window) + p->seek;
+  t->quick_search = quick_search;
+  t->factor = factor;
+  t->segment = sample_rate * segment_ms / 1000 + .5;
+  t->search  = sample_rate * search_ms / 1000 + .5;
+  t->overlap = max(sample_rate * overlap_ms / 1000 + 4.5, 16);
+  t->overlap &= ~7; /* Make divisible by 8 for loop optimisation */
+  t->overlap_buf = xmalloc(t->overlap * t->channels * sizeof(*t->overlap_buf));
+  max_skip = ceil(factor * (t->segment - t->overlap));
+  t->process_size = max(max_skip + t->overlap, t->segment) + t->search;
 }
 
-static float * stretch_input(Stretch * p, float const *samples, size_t n)
+static void tempo_delete(tempo_t * t)
 {
-  p->samples_in += n;
-  return fifo_write(&p->input_fifo, n, samples);
+  free(t->overlap_buf);
+  fifo_delete(&t->output_fifo);
+  fifo_delete(&t->input_fifo);
+  free(t);
 }
 
-static float const * stretch_output(
-    Stretch * p, float * samples, size_t * n)
+static tempo_t * tempo_create(size_t channels)
 {
-  p->samples_out += *n = min(*n, fifo_occupancy(&p->output_fifo));
-  return fifo_read(&p->output_fifo, *n, samples);
+  tempo_t * t = xcalloc(1, sizeof(*t));
+  t->channels = channels;
+  fifo_create(&t->input_fifo, t->channels * sizeof(float));
+  fifo_create(&t->output_fifo, t->channels * sizeof(float));
+  return t;
 }
 
-/* Flush samples remaining in the processing pipeline to the output. */
-static void stretch_flush(Stretch * p)
-{
-  size_t samples_out = p->samples_in / p->factor + .5;
-
-  if (p->samples_out < samples_out) {
-    size_t remaining = p->samples_in / p->factor + .5 - p->samples_out;
-    float * buff = xcalloc(128 * p->channels, sizeof(*buff));
-
-    while (fifo_occupancy(&p->output_fifo) < remaining) {
-      stretch_input(p, buff, 128);
-      stretch_process_windows(p);
-    }
-    free(buff);
-    fifo_trim(&p->output_fifo, remaining);
-    p->samples_in = 0;
-  }
-}
-
-static void stretch_delete(Stretch * p)
-{
-  free(p->prev_win_end);
-  fifo_delete(&p->output_fifo);
-  fifo_delete(&p->input_fifo);
-  free(p);
-}
-
-static Stretch * stretch_new(size_t channels)
-{
-  Stretch * p = xcalloc(1, sizeof(*p));
-  p->channels = channels;
-  fifo_create(&p->input_fifo, p->channels * sizeof(float));
-  fifo_create(&p->output_fifo, p->channels * sizeof(float));
-  return p;
-}
+/*------------------------------- SoX Wrapper --------------------------------*/
 
 typedef struct tempo {
-  Stretch     * stretch;
-  sox_bool    quick_seek;
-  double      factor, window_ms, seek_ms, overlap_ms;
+  tempo_t     * tempo;
+  sox_bool    quick_search;
+  double      factor, segment_ms, search_ms, overlap_ms;
 } priv_t;
 
 assert_static(sizeof(struct tempo) <= SOX_MAX_EFFECT_PRIVSIZE,
@@ -311,18 +305,19 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 {
   priv_t * p = (priv_t *) effp->priv;
 
-  p->window_ms    = 82; /* Set non-zero defaults: */
-  p->seek_ms      = 14;
-  p->overlap_ms   = 12;
+  p->segment_ms = 82; /* Set non-zero defaults: */
+  p->search_ms  = 14;
+  p->overlap_ms = 12;
 
-  p->quick_seek = argc && !strcmp(*argv, "-q") && (--argc, ++argv, sox_true);
+  p->quick_search = argc && !strcmp(*argv, "-q") && (--argc, ++argv, sox_true);
   do {                    /* break-able block */
     NUMERIC_PARAMETER(factor      ,0.25, 4  )
-    NUMERIC_PARAMETER(window_ms   , 10 , 120)
-    NUMERIC_PARAMETER(seek_ms     , 3  , 28 )
-    NUMERIC_PARAMETER(overlap_ms  , 2  , 24 )
+    NUMERIC_PARAMETER(segment_ms  , 10 , 120)
+    NUMERIC_PARAMETER(search_ms   , 0  , 30 )
+    NUMERIC_PARAMETER(overlap_ms  , 0  , 30 )
   } while (0);
-  return argc || !p->factor || p->overlap_ms + p->seek_ms >= p->window_ms ?
+
+  return argc || !p->factor || p->overlap_ms + p->search_ms >= p->segment_ms ?
     sox_usage(effp) : SOX_SUCCESS;
 }
 
@@ -332,9 +327,10 @@ static int start(sox_effect_t * effp)
 
   if (p->factor == 1)
     return SOX_EFF_NULL;
-  p->stretch = stretch_new(effp->ininfo.channels);
-  stretch_setup(p->stretch, effp->ininfo.rate, p->factor, p->window_ms,
-                p->seek_ms, p->overlap_ms, p->quick_seek);
+
+  p->tempo = tempo_create(effp->ininfo.channels);
+  tempo_setup(p->tempo, effp->ininfo.rate, p->quick_search, p->factor,
+      p->segment_ms, p->search_ms, p->overlap_ms);
   return SOX_SUCCESS;
 }
 
@@ -342,18 +338,17 @@ static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf,
                 sox_ssample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
   priv_t * p = (priv_t *) effp->priv;
-  sox_size_t i;
-  sox_size_t odone = *osamp /= effp->ininfo.channels;
-  float const * s = stretch_output(p->stretch, NULL, &odone);
+  sox_size_t i, odone = *osamp /= effp->ininfo.channels;
+  float const * s = tempo_output(p->tempo, NULL, &odone);
 
   for (i = 0; i < odone * effp->ininfo.channels; ++i)
     *obuf++ = SOX_FLOAT_32BIT_TO_SAMPLE(*s++, effp->clips);
 
   if (*isamp && odone < *osamp) {
-    float * t = stretch_input(p->stretch, NULL, *isamp / effp->ininfo.channels);
+    float * t = tempo_input(p->tempo, NULL, *isamp / effp->ininfo.channels);
     for (i = *isamp; i; --i)
       *t++ = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++, effp->clips);
-    stretch_process_windows(p->stretch);
+    tempo_process(p->tempo);
   }
   else *isamp = 0;
 
@@ -364,22 +359,21 @@ static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf,
 static int drain(sox_effect_t * effp, sox_ssample_t * obuf, sox_size_t * osamp)
 {
   static sox_size_t isamp = 0;
-  stretch_flush(((priv_t *)effp->priv)->stretch);
+  tempo_flush(((priv_t *)effp->priv)->tempo);
   return flow(effp, 0, obuf, &isamp, osamp);
 }
 
 static int stop(sox_effect_t * effp)
 {
-  stretch_delete(((priv_t *)effp->priv)->stretch);
+  tempo_delete(((priv_t *)effp->priv)->tempo);
   return SOX_SUCCESS;
 }
 
 sox_effect_handler_t const * sox_tempo_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "tempo", "[-q] factor [window-ms [seek-ms [overlap-ms]]]",
-    SOX_EFF_MCHAN | SOX_EFF_LENGTH,
-    getopts, start, flow, drain, stop, NULL
+    "tempo", "[-q] factor [segment-ms [search-ms [overlap-ms]]]",
+    SOX_EFF_MCHAN | SOX_EFF_LENGTH, getopts, start, flow, drain, stop, NULL
   };
   return &handler;
 }
