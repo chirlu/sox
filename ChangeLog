@@ -58,8 +58,8 @@ sox-14.0.0
   o Fix displayed times when playing a file and using trim.  (robs)
   o Fix CDDA sector duration display for non-CDDA sample rates.  (robs)
   o synth fixes: brown noise; inverted square wave; offset < 0.  (robs)
-  o FLAC: fixed crash when encoding with no comment.  (robs)
-  o Fixed effect drain problems: chorus, echo(s), phaser.  (robs)
+  o Fix crash when encoding Vorbis or FLAC: with no comment.  (robs)
+  o Fix effect drain problems: chorus, echo(s), phaser.  (robs)
   o Fix rabbit responsiveness and memory problems.  (Peter Samuelson)
   o Fix broken stereo audio when recording using ALSA.  (robs)
   o Fix OSS driver on big endian machines that was introduced in

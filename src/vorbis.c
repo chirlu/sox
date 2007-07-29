@@ -266,67 +266,46 @@ static int oe_write_page(ogg_page *page, sox_format_t * ft)
         return written;
 }
 
-/* Write out the header packets.  Derived mostly from encode.c in
-   oggenc.  Returns HEADER_ERROR if the header cannot be written and
-   HEADER_OK otherwise. */
-static int write_vorbis_header(sox_format_t * ft, vorbis_enc_t *ve)
+/* Write out the header packets.  Derived mostly from encode.c in oggenc.
+ * Returns HEADER_OK if the header can be written, HEADER_ERROR otherwise. */
+static int write_vorbis_header(sox_format_t * ft, vorbis_enc_t * ve)
 {
-        ogg_packet header_main;
-        ogg_packet header_comments;
-        ogg_packet header_codebooks;
-        vorbis_comment vc;
-        int result;
-        int ret;
-        char *comment;
+  ogg_packet header_main;
+  ogg_packet header_comments;
+  ogg_packet header_codebooks;
+  vorbis_comment vc;
+  char * comment = NULL;
 
-        /* Make the comment structure */
-        vc.user_comments = (char **)xcalloc(1, sizeof(char *));
-        vc.comment_lengths = (int *)xcalloc(1, sizeof(int));
-        vc.comments = 1;
+  memset(&vc, 0, sizeof(vc));
+  if (ft->comment && *ft->comment) {           /* Make the comment structure */
+    ++vc.comments;
+    vc.user_comments = xcalloc(1, sizeof(*vc.user_comments));
+    vc.comment_lengths = xcalloc(1, sizeof(*vc.comment_lengths));
 
-        /* We check if there is a FIELD=value pair already in the comment
-         * if not, add one */
-        if (strchr(ft->comment,'=') == NULL)
-        {
-            comment = (char *)xcalloc(1,strlen(ft->comment)+strlen("COMMENT=")+1);
-            strncpy(comment,"COMMENT=",strlen("COMMENT="));
-        }
-        else
-            comment = (char *)xcalloc(1,strlen(ft->comment)+1);
-        
-        if (!comment)
-            return HEADER_ERROR;
+    /* Add a FIELD=value pair if not one already in the comment */
+    comment = xcalloc(1, strlen(ft->comment) + strlen("COMMENT=") + 1);
+    if (!strchr(ft->comment,'='))
+      strcpy(comment, "COMMENT=");
+    
+    vc.user_comments[0] = strcat(comment, ft->comment);
+    vc.comment_lengths[0] = strlen(comment);
+  }
+  vorbis_analysis_headerout(                   /* Build the packets */
+      &ve->vd, &vc, &header_main, &header_comments, &header_codebooks);
 
-        strcat(comment,ft->comment);
+  ogg_stream_packetin(&ve->os,&header_main);   /* And stream them out */
+  ogg_stream_packetin(&ve->os,&header_comments);
+  ogg_stream_packetin(&ve->os,&header_codebooks);
 
-        vc.user_comments[0] = comment;
-        vc.comment_lengths[0] = strlen(comment);
-
-        /* Build the packets */
-        vorbis_analysis_headerout(&ve->vd,&vc,
-                                  &header_main,
-                                  &header_comments,
-                                  &header_codebooks);
-
-        /* And stream them out */
-        ogg_stream_packetin(&ve->os,&header_main);
-        ogg_stream_packetin(&ve->os,&header_comments);
-        ogg_stream_packetin(&ve->os,&header_codebooks);
-
-        while((result = ogg_stream_flush(&ve->os, &ve->og)))
-        {
-                if (!result)
-                  break;
-                ret = oe_write_page(&ve->og, ft);
-                if (!ret)
-                {
-                    free(comment);
-                    return HEADER_ERROR;
-                }
-        }
-
-        free(comment);
-        return HEADER_OK;
+  while (ogg_stream_flush(&ve->os, &ve->og)) {
+    int ret = oe_write_page(&ve->og, ft);
+    if (!ret) {
+      free(comment);
+      return HEADER_ERROR;
+    }
+  }
+  free(comment);
+  return HEADER_OK;
 }
 
 static int startwrite(sox_format_t * ft)
