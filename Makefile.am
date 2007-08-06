@@ -3,7 +3,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = lpc10 @LIBGSM_SUBDIR@ src
-if USE_LIBLTDL
+if HAVE_LIBLTDL
 SUBDIRS += libltdl
 endif
 DIST_SUBDIRS = libltdl lpc10 src

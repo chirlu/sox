@@ -39,7 +39,7 @@
   #include <io.h>
 #endif
 
-#ifdef HAVE_LTDL_H
+#ifdef HAVE_LIBLTDL
   #include <ltdl.h>
 #endif
 
@@ -147,7 +147,7 @@ static int success = 0;
 
 /* Plugins */
 
-#ifdef HAVE_LTDL_H
+#ifdef HAVE_LIBLTDL
 static sox_bool plugins_initted = sox_false;
 #endif
 
@@ -358,7 +358,7 @@ static void cleanup(void)
     free(ofile);
   }
 
-#ifdef HAVE_LTDL_H
+#ifdef HAVE_LIBLTDL
   {
     int ret;
     if (plugins_initted && (ret = lt_dlexit()) != 0) {
@@ -619,7 +619,7 @@ static void parse_effects(int argc, char **argv)
 }
 
 /* FIXME: Use vasprintf */
-#ifdef HAVE_LTDL_H
+#ifdef HAVE_LIBLTDL
 #define MAX_NAME_LEN 1024
 static int init_format(const char *file, lt_ptr data)
 {
@@ -646,7 +646,7 @@ static int init_format(const char *file, lt_ptr data)
 
 static void find_formats(void)
 {
-#ifdef HAVE_LTDL_H
+#ifdef HAVE_LIBLTDL
   int ret;
 
   if ((ret = lt_dlinit()) != 0) {

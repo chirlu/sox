@@ -12,7 +12,7 @@
 
 /* File format handlers. */
 
-#ifdef HAVE_LTDL_H
+#ifdef HAVE_LIBLTDL
 /* FIXME: Use a vector, not a fixed-size array */
   #define MAX_FORMATS 256
   unsigned sox_formats = 0;

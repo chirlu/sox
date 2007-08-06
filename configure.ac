@@ -18,20 +18,34 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_LN_S
-# Disable libltdl support when building only static libraries
-if test "$enable_shared" != "no"; then
+
+AC_ARG_WITH(libltdl,
+    AC_HELP_STRING([--without-libltdl],
+        [Don't try to use libltdl for external dynamic library support]),
+        [with_libltdl=$withval])
+
+using_libltdl=no
+if test "$with_libltdl" != "no"; then
+    # Disable libltdl support when building only static libraries
+    if test "$enable_shared" != "no"; then
+        using_libltdl=yes
+    fi
+fi
+
+if test "$using_libltdl" != "no"; then
   AC_LIBLTDL_INSTALLABLE
   AC_LIBTOOL_DLOPEN
 fi
 AC_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
 AC_CONFIG_SUBDIRS(libltdl)
-if test "$enable_shared" != "no"; then
+if test "$using_libltdl" != "no"; then
   AC_SUBST(LIBLTDL)
   AC_SUBST(LTDLINCL)
-  AC_CHECK_HEADERS(ltdl.h)
+  AC_CHECK_HEADERS(ltdl.h, AC_DEFINE([HAVE_LIBLTDL], 1, [Define to 1 if you have LIBLTDL.]), [using_libltdl=no])
+
 fi
-AM_CONDITIONAL(USE_LIBLTDL, test x$enable_shared = xyes)
+AM_CONDITIONAL(HAVE_LIBLTDL, test x$using_libltdl = xyes)
 
 m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG])
 
@@ -51,10 +65,11 @@ fi
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = yes; then
     CFLAGS="$CFLAGS -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic"
-    dnl Stricter policy on GNU/Linux, all symbols must be resolved
+    dnl Define stricter policy on GNU/Linux, all symbols must be resolved
     case $target in
       *linux*)
-        LDFLAGS="$LDFLAGS -Wl,-z,defs";;
+        LDFLAGS="$LDFLAGS -Wl,-z,defs"
+        ;;
     esac
 fi
 
@@ -338,7 +353,7 @@ fi
 dnl Report configuration.
 echo
 echo "Debugging build................... $enable_debug"
-echo "Support dynamic modules........... $enable_shared"
+echo "External module support........... $using_libltdl"
 echo "ALSA driver....................... $enable_alsa"
 echo "libao driver...................... $enable_libao"
 echo "OSS driver........................ $enable_oss"

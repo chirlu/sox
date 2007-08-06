@@ -23,7 +23,7 @@ sox_LDADD = libsox.la libsfx.la
 # libsox Dynamic Libraries for File Formats #
 #############################################
 
-if USE_LIBLTDL
+if HAVE_LIBLTDL
 # Format modules; listed first so optional ones can be added later
 pkglib_LTLIBRARIES = libsox_fmt_auto.la libsox_fmt_raw.la libsox_fmt_s1.la \
 	  libsox_fmt_s2.la libsox_fmt_s3.la libsox_fmt_s4.la libsox_fmt_u1.la \
@@ -208,7 +208,7 @@ libsox_la_SOURCES = adpcms.c adpcms.h aiff.c aiff.h cvsd.c cvsd.h cvsdfilt.h \
 	  soxconfig.h
 libsox_la_CFLAGS = 
 
-if USE_LIBLTDL
+if HAVE_LIBLTDL
 else
   libsox_la_SOURCES += auto.c raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
     s4-fmt.c u1-fmt.c u2-fmt.c u3-fmt.c u4-fmt.c al-fmt.c la-fmt.c ul-fmt.c \
@@ -216,56 +216,68 @@ else
     dvms-fmt.c dat.c gsm.c hcom.c lpc10.c maud.c prc.c sf.c sfircam.h smp.c \
     sndrtool.c sphere.c tx16w.c voc.c vox-fmt.c ima-fmt.c adpcm.c adpcm.h \
     ima_rw.c ima_rw.h wav.c wav.h wve.c xa.c nulfile.c
+libsox_la_LIBADD = @GSM_LIBS@ @LIBGSM_LIBADD@
+libsox_la_LIBADD += ../lpc10/liblpc10.la
 
 sox_LDADD += @GSM_LIBS@ @LIBGSM_LIBADD@
 sox_LDADD += ../lpc10/liblpc10.la
 
 if HAVE_FLAC
     libsox_la_SOURCES += flac.c
+    libsox_la_LIBADD += @FLAC_LIBS@
     sox_LDADD += @FLAC_LIBS@
 endif
 if HAVE_FFMPEG
     libsox_la_SOURCES += ffmpeg.c
+    libsox_la_LIBADD += @FFMPEG_LIBS@
     sox_LDADD += @FFMPEG_LIBS@
 endif
 if HAVE_SNDFILE
     libsox_la_SOURCES += sndfile.c
     libsox_la_CFLAGS += @SNDFILE_CFLAGS@
+    libsox_la_LIBADD += @SNDFILE_LIBS@
     sox_LDADD += @SNDFILE_LIBS@
 endif
 if HAVE_AMR_WB
     libsox_la_SOURCES += amr-wb.c
+    libsox_la_LIBADD += @AMR_WB_LIBS@
     sox_LDADD += @AMR_WB_LIBS@
 endif
 if HAVE_AMR_NB
     libsox_la_SOURCES += amr-nb.c
+    libsox_la_LIBADD += @AMR_NB_LIBS@
     sox_LDADD += @AMR_NB_LIBS@
 endif
 if HAVE_MP3
     libsox_la_SOURCES += mp3.c
+    libsox_la_LIBADD += @MP3_LIBS@
     sox_LDADD += @MP3_LIBS@
 endif
 if HAVE_OGG_VORBIS
     libsox_la_SOURCES += vorbis.c
+    libsox_la_LIBADD += @OGG_LIBS@
     sox_LDADD += @OGG_LIBS@
 endif
 if HAVE_ALSA
     libsox_la_SOURCES += alsa.c
+    libsox_la_LIBADD += @ALSA_LIBS@
     sox_LDADD += @ALSA_LIBS@
 endif
 if HAVE_LIBAO
     libsox_la_SOURCES += ao.c
+    libsox_la_LIBADD += @AO_LIBS@
     sox_LDADD += @AO_LIBS@
 endif
 if HAVE_OSS
     libsox_la_SOURCES += oss.c
+    libsox_la_LIBADD += @OSS_LIBS@
     sox_LDADD += @OSS_LIBS@
 endif
 if HAVE_SUN_AUDIO
     libsox_la_SOURCES += sunaudio.c
 endif
 
-#end !USE_LIBLTDL
+#end !HAVE_LIBLTDL
 endif
 
 EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav libgsm
