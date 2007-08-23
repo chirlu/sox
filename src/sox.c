@@ -1193,8 +1193,11 @@ static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
 static void sigint(int s)
 {
   static struct timeval then;
-  if (input_count > 1 && show_progress && s == SIGINT && combine_method <= sox_concatenate &&
-      since(&then, 1., sox_true))
+  if (input_count <= 1) {
+    fprintf(stderr, "Aborted.\n");
+    exit(0);
+  } else if (show_progress && s == SIGINT && combine_method <= sox_concatenate &&
+             since(&then, 1.0, sox_true))
     user_skip = sox_true;
   else user_abort = sox_true;
 }
@@ -1345,7 +1348,7 @@ static int output_flow(sox_effect_t *effp UNUSED, sox_ssample_t const * ibuf,
 static sox_effect_handler_t const * output_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "output", 0, SOX_EFF_MCHAN, 0, 0, output_flow, 0, 0, 0
+    "output", 0, SOX_EFF_MCHAN, NULL, NULL, output_flow, NULL, NULL, NULL
   };
   return &handler;
 }
@@ -1583,7 +1586,6 @@ static int process(void) {
   optimize_trim();
 
   signal(SIGINT, sigint);
-  signal(SIGTERM, sigint);
 
   flowstatus = sox_flow_effects(update_status);
 
