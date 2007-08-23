@@ -1,7 +1,12 @@
 Makefile
+Makefile.in
 config.h
+aclocal.m4
+config-h.in
 config.log
 config.status
+config.status.lineno
+configure
 configure.lineno
 libtool
 stamp-h1
