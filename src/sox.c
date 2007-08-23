@@ -1193,7 +1193,7 @@ static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
 static void sigint(int s)
 {
   static struct timeval then;
-  if (show_progress && s == SIGINT && combine_method <= sox_concatenate &&
+  if (input_count > 1 && show_progress && s == SIGINT && combine_method <= sox_concatenate &&
       since(&then, 1., sox_true))
     user_skip = sox_true;
   else user_abort = sox_true;
