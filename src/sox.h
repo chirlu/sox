@@ -288,10 +288,10 @@ typedef struct {
     const char   * const *names;
     unsigned int flags;
     int          (*startread)(sox_format_t * ft);
-    sox_size_t    (*read)(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len);
+    sox_size_t   (*read)(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len);
     int          (*stopread)(sox_format_t * ft);
     int          (*startwrite)(sox_format_t * ft);
-    sox_size_t    (*write)(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len);
+    sox_size_t   (*write)(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len);
     int          (*stopwrite)(sox_format_t * ft);
     int          (*seek)(sox_format_t * ft, sox_size_t offset);
 } sox_format_handler_t;
@@ -412,11 +412,11 @@ struct sox_effect {
    * in memory in the optimal way for any structure to be cast over it. */
   char priv[SOX_MAX_EFFECT_PRIVSIZE];    /* private area for effect */
 
-  sox_effects_globals_t * global_info; /* global parameters */
+  sox_effects_globals_t *  global_info;  /* global parameters */
   struct sox_signalinfo    ininfo;       /* input signal specifications */
   struct sox_signalinfo    outinfo;      /* output signal specifications */
   sox_effect_handler_t     handler;
-  sox_ssample_t            * obuf;       /* output buffer */
+  sox_ssample_t *          obuf;         /* output buffer */
   sox_size_t               odone, olen;  /* consumed, total length */
   sox_size_t               imin;         /* minimum input buffer size */
   sox_size_t               clips;        /* increment if clipping occurs */
