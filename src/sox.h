@@ -243,8 +243,8 @@ typedef struct  sox_loopinfo
 {
     sox_size_t    start;          /* first sample */
     sox_size_t    length;         /* length */
-    unsigned int count;           /* number of repeats, 0=forever */
-    unsigned char  type;          /* 0=no, 1=forward, 2=forward/back */
+    unsigned int  count;          /* number of repeats, 0=forever */
+    unsigned char type;           /* 0=no, 1=forward, 2=forward/back */
 } sox_loopinfo_t;
 
 /* Instrument parameters */
@@ -412,11 +412,11 @@ struct sox_effect {
    * in memory in the optimal way for any structure to be cast over it. */
   char priv[SOX_MAX_EFFECT_PRIVSIZE];    /* private area for effect */
 
-  sox_effects_globals_t *  global_info;  /* global parameters */
+  sox_effects_globals_t    *global_info; /* global parameters */
   struct sox_signalinfo    ininfo;       /* input signal specifications */
   struct sox_signalinfo    outinfo;      /* output signal specifications */
   sox_effect_handler_t     handler;
-  sox_ssample_t *          obuf;         /* output buffer */
+  sox_ssample_t            *obuf;        /* output buffer */
   sox_size_t               odone, olen;  /* consumed, total length */
   sox_size_t               imin;         /* minimum input buffer size */
   sox_size_t               clips;        /* increment if clipping occurs */
