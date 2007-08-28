@@ -1193,10 +1193,7 @@ static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
 static void sigint(int s)
 {
   static struct timeval then;
-  if (input_count <= 1) {
-    fprintf(stderr, "Aborted.\n");
-    exit(0);
-  } else if (show_progress && s == SIGINT && combine_method <= sox_concatenate &&
+  if (input_count > 1 && show_progress && s == SIGINT && combine_method <= sox_concatenate &&
              since(&then, 1.0, sox_true))
     user_skip = sox_true;
   else user_abort = sox_true;
@@ -1586,7 +1583,9 @@ static int process(void) {
   optimize_trim();
 
   signal(SIGINT, sigint);
-
+  /* FIXME: For SIGTERM at least we really should guarantee to stop quickly */
+  signal(SIGTERM, sigint); /* Stop gracefully even in extremis */
+  
   flowstatus = sox_flow_effects(update_status);
 
   sox_stop_effects();
