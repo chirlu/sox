@@ -69,6 +69,18 @@ sox.exe using mingw libraries then you can use the following:
 
 ./configure CC="gcc -mno-cygwin" --disable-shared
 
+If you get compile failures during linking on your platform, you may need to
+pass "-no-undefined" to libtool.  Trying compiling with this:
+
+./configure LDFLAGS="-no-undefined"
+
+Newer versions of SoX include support for loading libraries for
+file formats at runtime.  If you experience problems with this
+then you may wish to revert back to the older compile-time support.
+To stick with old behavior use:
+
+./configure --without-libltdl
+
 Testing
 -------
 
