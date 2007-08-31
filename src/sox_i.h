@@ -49,7 +49,7 @@
 #define timeb _timeb
 #endif
 
-#if defined(DOS) || defined(WIN32) || defined(__NT__) || defined(__DJGPP__)
+#if defined(DOS) || defined(WIN32) || defined(__NT__) || defined(__DJGPP__) || defined(__OS2__)
   #define LAST_SLASH(path) max(strrchr(path, '/'), strrchr(path, '\\'))
   #define IS_ABSOLUTE(path) ((path)[0] == '/' || (path)[0] == '\\' || (path)[1] == ':')
   #define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
