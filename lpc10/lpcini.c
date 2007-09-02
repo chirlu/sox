@@ -12,14 +12,14 @@
 
 /*  -- translated by f2c (version 19951025).
    You must link the resulting object file with the libraries:
-	-lf2c -lm   (in that order)
+        -lf2c -lm   (in that order)
 */
+
+#include <stdlib.h>
 
 #include "f2c.h"
 
 extern int lpcini_(void);
-
-#include <malloc.h>
 
 /* Common Block Declarations */
 
@@ -65,7 +65,7 @@ struct {
 
 /* Many files which use fdebug are not listed, since it is only used in */
 /* those other files conditionally, to print trace statements. */
-/* 	integer fsi, fso, fpi, fpo, fbi, fbo, pbin, fmsg, fdebug */
+/*      integer fsi, fso, fpi, fpo, fbi, fbo, pbin, fmsg, fdebug */
 /*  LPC order, Frame size, Quantization rate, Bits per frame, */
 /*    Error correction */
 /* Subroutine SETUP is the only place where order is assigned a value, */
@@ -94,7 +94,7 @@ struct {
 /* unvoiced frames, with no change in the coding rate, and no noticeable 
 */
 /* quality difference in the decoded speech. */
-/* 	integer quant, nbits */
+/*      integer quant, nbits */
 /* *** Read/write: variables for debugging, not needed for LPC algorithm 
 */
 
@@ -120,10 +120,10 @@ struct {
 /* would be of much interest to an application in which LPC10 is */
 /* embedded. */
 /* listl and lincnt are not needed for an embedded LPC10 at all. */
-/* 	integer nframe, nunsfm, iclip, maxosp, listl, lincnt */
-/* 	common /contrl/ fsi, fso, fpi, fpo, fbi, fbo, pbin, fmsg, fdebug */
-/* 	common /contrl/ quant, nbits */
-/* 	common /contrl/ nframe, nunsfm, iclip, maxosp, listl, lincnt */
+/*      integer nframe, nunsfm, iclip, maxosp, listl, lincnt */
+/*      common /contrl/ fsi, fso, fpi, fpo, fbi, fbo, pbin, fmsg, fdebug */
+/*      common /contrl/ quant, nbits */
+/*      common /contrl/ nframe, nunsfm, iclip, maxosp, listl, lincnt */
     contrl_1.order = 10;
     contrl_1.lframe = 180;
     contrl_1.corrp = TRUE_;
@@ -143,9 +143,9 @@ create_lpc10_encoder_state(void)
     struct lpc10_encoder_state *st;
 
     st = (struct lpc10_encoder_state *)
-	malloc((unsigned) sizeof (struct lpc10_encoder_state));
+        malloc((unsigned) sizeof (struct lpc10_encoder_state));
     if (st != 0) {
-	init_lpc10_encoder_state(st);
+        init_lpc10_encoder_state(st);
     }
     return (st);
 }
@@ -166,33 +166,33 @@ void init_lpc10_encoder_state(struct lpc10_encoder_state *st)
     
     /* State used by function analys */
     for (i = 0; i < 540; i++) {
-	st->inbuf[i] = 0.0f;
-	st->pebuf[i] = 0.0f;
+        st->inbuf[i] = 0.0f;
+        st->pebuf[i] = 0.0f;
     }
     for (i = 0; i < 696; i++) {
-	st->lpbuf[i] = 0.0f;
+        st->lpbuf[i] = 0.0f;
     }
     for (i = 0; i < 312; i++) {
-	st->ivbuf[i] = 0.0f;
+        st->ivbuf[i] = 0.0f;
     }
     st->bias = 0.0f;
     /* integer osbuf[10];   no initial value necessary */
     st->osptr = 1;
     for (i = 0; i < 3; i++) {
-	st->obound[i] = 0;
+        st->obound[i] = 0;
     }
     st->vwin[4] = 307;
     st->vwin[5] = 462;
     st->awin[4] = 307;
     st->awin[5] = 462;
     for (i = 0; i < 8; i++) {
-	st->voibuf[i] = 0;
+        st->voibuf[i] = 0;
     }
     for (i = 0; i < 3; i++) {
-	st->rmsbuf[i] = 0.0f;
+        st->rmsbuf[i] = 0.0f;
     }
     for (i = 0; i < 30; i++) {
-	st->rcbuf[i] = 0.0f;
+        st->rcbuf[i] = 0.0f;
     }
     st->zpre = 0.0f;
 
@@ -202,7 +202,7 @@ void init_lpc10_encoder_state(struct lpc10_encoder_state *st)
     st->d__ = 1.0f;
     /* real fpc;    no initial value necessary */
     for (i = 0; i < 16; i++) {
-	st->l2buf[i] = 0.0f;
+        st->l2buf[i] = 0.0f;
     }
     st->l2sum1 = 0.0f;
     st->l2ptr1 = 1;
@@ -214,7 +214,7 @@ void init_lpc10_encoder_state(struct lpc10_encoder_state *st)
     st->dither = 20.0f;
     st->maxmin = 0.0f;
     for (i = 0; i < 6; i++) {
-	st->voice[i] = 0.0f;
+        st->voice[i] = 0.0f;
     }
     st->lbve = 3000;
     st->fbve = 3000;
@@ -228,10 +228,10 @@ void init_lpc10_encoder_state(struct lpc10_encoder_state *st)
 
     /* State used by function dyptrk */
     for (i = 0; i < 60; i++) {
-	st->s[i] = 0.0f;
+        st->s[i] = 0.0f;
     }
     for (i = 0; i < 120; i++) {
-	st->p[i] = 0;
+        st->p[i] = 0;
     }
     st->ipoint = 0;
     st->alphax = 0.0f;
@@ -254,9 +254,9 @@ create_lpc10_decoder_state(void)
     struct lpc10_decoder_state *st;
 
     st = (struct lpc10_decoder_state *)
-	malloc((unsigned) sizeof (struct lpc10_decoder_state));
+        malloc((unsigned) sizeof (struct lpc10_decoder_state));
     if (st != 0) {
-	init_lpc10_decoder_state(st);
+        init_lpc10_decoder_state(st);
     }
     return (st);
 }
@@ -277,16 +277,16 @@ void init_lpc10_decoder_state(struct lpc10_decoder_state *st)
     st->iavgp = 60;
     st->erate = 0;
     for (i = 0; i < 30; i++) {
-	st->drc[i] = 0;
+        st->drc[i] = 0;
     }
     for (i = 0; i < 3; i++) {
-	st->dpit[i] = 0;
-	st->drms[i] = 0;
+        st->dpit[i] = 0;
+        st->drms[i] = 0;
     }
 
     /* State used by function synths */
     for (i = 0; i < 360; i++) {
-	st->buf[i] = 0.0f;
+        st->buf[i] = 0.0f;
     }
     st->buflen = 180;
 
@@ -301,8 +301,8 @@ void init_lpc10_decoder_state(struct lpc10_decoder_state *st)
     /* State used by function bsynz */
     st->ipo = 0;
     for (i = 0; i < 166; i++) {
-	st->exc[i] = 0.0f;
-	st->exc2[i] = 0.0f;
+        st->exc[i] = 0.0f;
+        st->exc2[i] = 0.0f;
     }
     st->lpi1 = 0.0f;
     st->lpi2 = 0.0f;
