@@ -30,7 +30,7 @@
  * Please do not count on these numbers being in sync.
  * The following is at 13.0.0
  */
-#define SOX_LIB_VERSION_CODE 0x0d0000
+#define SOX_LIB_VERSION_CODE 0x0e0000
 #define SOX_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 const char *sox_version(void);   /* Returns version number */
