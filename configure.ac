@@ -189,7 +189,8 @@ fi
 AC_SUBST(LIBGSM_SUBDIR)
 AC_SUBST(LIBGSM_LIBADD)
 AC_SUBST(GSM_LIBS)
-     
+AM_CONDITIONAL(EXTERNAL_GSM, test x$found_libgsm = xyes)
+
 dnl Check for libsndfile
 AC_ARG_WITH(sndfile, AC_HELP_STRING([--with-sndfile],
     [Use libsndfile if present (default is yes)]),
