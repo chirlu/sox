@@ -44,19 +44,19 @@
 #if defined HAVE_ALSA
   FORMAT(alsa)
 #endif
-#if defined HAVE_LIBAMRNB
+#if defined HAVE_AMRNB
   FORMAT(amr_nb)
 #endif
-#if defined HAVE_LIBAMRWB
+#if defined HAVE_AMRWB
   FORMAT(amr_wb)
 #endif
 #if defined HAVE_LIBAO
   FORMAT(ao)
 #endif
-#if defined HAVE_LIBAVPLUGIN
+#if defined HAVE_FFMPEG
   FORMAT(ffmpeg)
 #endif
-#if defined HAVE_LIBFLAC
+#if defined HAVE_FLAC
   FORMAT(flac)
 #endif
 #if defined(HAVE_MAD_H) || defined(HAVE_LAME_LAME_H)
@@ -71,6 +71,6 @@
 #if defined(HAVE_SYS_AUDIOIO_H) || defined(HAVE_SUN_AUDIOIO_H)
   FORMAT(sunau)
 #endif
-#if defined HAVE_LIBVORBIS
+#if defined HAVE_OGG_VORBIS
   FORMAT(vorbis)
 #endif

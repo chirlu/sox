@@ -9,12 +9,12 @@
 #cmakedefine HAVE_INTTYPES_H          1
 #cmakedefine HAVE_IO_H                1
 #cmakedefine HAVE_LAME_LAME_H         1
-#cmakedefine HAVE_LIBAMRNB            1
-#cmakedefine HAVE_LIBAMRWB            1
+#cmakedefine HAVE_AMRNB               1
+#cmakedefine HAVE_AMRWB               1
 #cmakedefine HAVE_LIBAO               1
-#cmakedefine HAVE_LIBAVPLUGIN         1
-#cmakedefine HAVE_LIBFLAC             1
-#cmakedefine HAVE_LIBVORBIS           1
+#cmakedefine HAVE_FFMPEG              1
+#cmakedefine HAVE_FLAC                1
+#cmakedefine HAVE_OGG_VORBIS          1
 #cmakedefine HAVE_LTDL_H              1
 #cmakedefine HAVE_MACHINE_SOUNDCARD_H 1
 #cmakedefine HAVE_MAD_H               1

@@ -142,6 +142,9 @@ if test "$enable_libao" = "yes"; then
         AC_CHECK_LIB(ao, ao_play, AO_LIBS="$AO_LIBS -lao", enable_libao=no),
         enable_libao=no)
 fi
+if test "$enable_libao" = yes; then
+   AC_DEFINE(HAVE_LIBAO, 1, [Define to 1 if you have libao.])
+fi
 AM_CONDITIONAL(HAVE_LIBAO, test x$enable_libao = xyes)
 AC_SUBST(AO_LIBS)
 
@@ -212,6 +215,9 @@ AC_CHECK_HEADER(vorbis/codec.h,
     AC_CHECK_LIB(vorbisfile, ov_clear, OGG_LIBS="$OGG_LIBS -lvorbisfile", with_ogg_vorbis=no)
     AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr, OGG_LIBS="$OGG_LIBS -lvorbisenc", with_ogg_vorbis=no)],
     with_ogg_vorbis=no)
+if test "$with_ogg_vorbis" = yes; then
+   AC_DEFINE(HAVE_OGG_VORBIS, 1, [Define to 1 if you have Ogg Vorbis.])
+fi
 AM_CONDITIONAL(HAVE_OGG_VORBIS, test x$with_ogg_vorbis = xyes)
 AC_SUBST(OGG_LIBS)
 
@@ -220,6 +226,7 @@ AC_ARG_WITH(flac,
     AC_HELP_STRING([--without-flac],
         [Don't try to use FLAC]),
         [with_flac=$withval])
+using_flac=no
 if test "$with_flac" != "no"; then
     using_flac=yes
     AC_CHECK_HEADER(FLAC/all.h,
@@ -228,6 +235,9 @@ if test "$with_flac" != "no"; then
     if test "$with_flac" = "yes" -a "$using_flac" = "no"; then
         AC_MSG_FAILURE([cannot find FLAC])
     fi
+fi
+if test "$using_flac" = yes; then
+   AC_DEFINE(HAVE_FLAC, 1, [Define to 1 if you have FLAC.])
 fi
 AM_CONDITIONAL(HAVE_FLAC, test x$using_flac = xyes)
 AC_SUBST(FLAC_LIBS)
@@ -239,6 +249,9 @@ AC_CHECK_HEADER(ffmpeg/avformat.h,
     AC_CHECK_LIB(avutil, av_rescale_q, FFMPEG_LIBS="$FFMPEG_LIBS -lavutil", with_ffmpeg=no)
     AC_CHECK_LIB(avcodec, avcodec_encode_audio, FFMPEG_LIBS="$FFMPEG_LIBS -lavcodec", with_ffmpeg=no)],
     with_ffmpeg=no)
+if test "$with_ffmpeg" = yes; then
+   AC_DEFINE(HAVE_FFMPEG, 1, [Define to 1 if you have ffmpeg.])
+fi
 AM_CONDITIONAL(HAVE_FFMPEG, test x$with_ffmpeg = xyes)
 AC_SUBST(FFMPEG_LIBS)
 
@@ -247,6 +260,7 @@ AC_ARG_WITH(mad,
     AC_HELP_STRING([--without-mad],
         [Don't try to use MAD (MP3 Audio Decoder)]),
         [with_mad=$withval])
+using_mad=no
 if test "$with_mad" != "no"; then
     using_mad=yes
     AC_CHECK_HEADERS(mad.h,
@@ -262,6 +276,7 @@ AC_ARG_WITH(lame,
     AC_HELP_STRING([--without-lame],
         [Don't try to use LAME (LAME Ain't an MP3 Encoder)]),
         [with_lame=$withval])
+using_lame=no
 if test "$with_lame" != "no"; then
     using_lame=yes
     AC_CHECK_HEADERS(lame/lame.h,,
@@ -281,6 +296,7 @@ AC_ARG_WITH(amr-wb,
     AC_HELP_STRING([--without-amr-wb],
         [Don't try to use amr-wb]),
         [with_amr_wb=$withval])
+using_amr_wb=no
 if test "$with_amr_wb" != "no"; then
     using_amr_wb=yes
     AC_CHECK_HEADER(amrwb/dec.h,
@@ -290,6 +306,9 @@ if test "$with_amr_wb" != "no"; then
         AC_MSG_FAILURE([cannot find amr-wb])
     fi
 fi
+if test "$using_amr_wb" = yes; then
+   AC_DEFINE(HAVE_AMR_WB, 1, [Define to 1 if you have AMR-WB.])
+fi
 AM_CONDITIONAL(HAVE_AMR_WB, test x$using_amr_wb = xyes)
 AC_SUBST(AMR_WB_LIBS)
 
@@ -298,6 +317,7 @@ AC_ARG_WITH(amr-nb,
     AC_HELP_STRING([--without-amr-nb],
         [Don't try to use amr-nb]),
         [with_amr_nb=$withval])
+using_amr_nb=no
 if test "$with_amr_nb" != "no"; then
     using_amr_nb=yes
     AC_CHECK_HEADER(amrnb/sp_dec.h,
@@ -307,6 +327,9 @@ if test "$with_amr_nb" != "no"; then
         AC_MSG_FAILURE([cannot find amr-nb])
     fi
 fi
+if test "$using_amr_nb" = yes; then
+   AC_DEFINE(HAVE_AMR_NB, 1, [Define to 1 if you have AMR-NB.])
+fi
 AM_CONDITIONAL(HAVE_AMR_NB, test x$using_amr_nb = xyes)
 AC_SUBST(AMR_NB_LIBS)
 
@@ -315,6 +338,7 @@ AC_ARG_WITH(samplerate,
     AC_HELP_STRING([--without-samplerate],
         [Don't try to use libsamplerate (aka Secret Rabbit Code)]),
         [with_samplerate=$withval])
+using_samplerate=no
 if test "$with_samplerate" != "no"; then
     using_samplerate=yes
     SOX_PATH_SAMPLERATE(, using_samplerate=no)
@@ -328,7 +352,8 @@ AC_SUBST(SAMPLERATE_LIBS)
 dnl Test for LADSPA
 AC_ARG_WITH(ladspa,
     AC_HELP_STRING([--without-ladspa], [Don't try to use LADSPA]), [with_ladspa=$withval])
-if test "$with_ladspa" != "no"; then
+using_ladspa=no
+if test "$with_ladspa" != "no" -a "$using_libltdl" = "yes"; then
     using_ladspa=yes
     AC_CHECK_HEADERS(ladspa.h,, using_ladspa=no)
     if test "$with_ladspa" = "yes" -a "$using_ladspa" = "no"; then
