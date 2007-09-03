@@ -298,6 +298,9 @@ install-exec-hook:
 
 clean-local:
 	$(RM) play rec
+	cd libgsm && $(MAKE) clean
 
 distclean-local:
 	$(RM) soxstdint.h
+	cd libgsm && $(MAKE) distclean
+
