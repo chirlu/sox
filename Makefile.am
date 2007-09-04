@@ -2,11 +2,11 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = lpc10 @LIBGSM_SUBDIR@ src/libgsm src
+SUBDIRS = lpc10 @LIBGSM_SUBDIR@ src
 if HAVE_LIBLTDL
 SUBDIRS += libltdl
 endif
-DIST_SUBDIRS = libltdl lpc10 src/libgsm src
+DIST_SUBDIRS = libltdl lpc10 src
 
 RM = rm -f
 

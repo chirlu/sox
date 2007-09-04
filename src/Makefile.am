@@ -1,5 +1,8 @@
 ## Process this file with automake to produce Makefile.in
 
+SUBDIRS = libgsm
+DIST_SUBDIRS = libgsm
+
 RM = rm -f 
 
 AM_CPPFLAGS = -DLADSPA_PATH="\"@LADSPA_PATH@\"" -DPKGLIBDIR="\"$(pkglibdir)\""
