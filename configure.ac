@@ -186,10 +186,8 @@ if test "$found_libgsm" = yes; then
     AC_CHECK_LIB(gsm, gsm_create, GSM_LIBS="$GSM_LIBS -lgsm")
     AC_DEFINE(EXTERNAL_GSM, 1, [Define if you are using an external GSM library])
 else
-    LIBGSM_SUBDIR=src/libgsm
     LIBGSM_LIBADD=libgsm/libgsm.la
 fi
-AC_SUBST(LIBGSM_SUBDIR)
 AC_SUBST(LIBGSM_LIBADD)
 AC_SUBST(GSM_LIBS)
 AM_CONDITIONAL(EXTERNAL_GSM, test x$found_libgsm = xyes)
