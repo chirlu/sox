@@ -354,6 +354,7 @@ extern const char * const sox_sizes_str[];
 extern const char * const sox_size_bits_str[];
 extern const char * const sox_encodings_str[];
 
+int sox_format_init(void);
 sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info, 
                          const char *filetype);
 sox_format_t * sox_open_write(
@@ -374,7 +375,7 @@ int sox_seek(sox_format_t * ft, sox_size_t offset, int whence);
 
 sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev);
 int sox_gettype(sox_format_t *, sox_bool);
-sox_format_t * sox_initformat(void);
+void sox_format_quit(void);
 
 /*
  * Structures for effects.

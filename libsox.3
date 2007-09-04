@@ -24,6 +24,8 @@ libsox \- SoX, an audio file-format and effect library
 .nf
 .B #include <sox.h>
 .P
+.B int sox_format_init(void);
+.P
 .B ft_t sox_open_read(const char *\fIpath\fB, const sox_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB);
 .P
 .B ft_t sox_open_write(sox_bool (*\fIoverwrite_permitted\fB)(const char *\fIfilename\fB), const char *\fIpath\fB, const sox_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB, const char *\fIcomment\fB, sox_size_t \fIlength\fB, const sox_instrinfo_t *\fIinstr\fB, const sox_loopinfo_t *\fIloops\fB);
@@ -51,6 +53,12 @@ libsox \- SoX, an audio file-format and effect library
 is a library of sound sample file format readers/writers and sound
 effects processors. It is mainly developed for use by SoX but is
 useful for any sound application.
+.P
+\fBsox_format_init\fR function performs some required initialization
+related to all file format handlers.  If compiled with dynamic
+library support then this will detect and initialize all external
+libraries.  This should be called before any other file operations
+are performed.
 .P
 \fBsox_open_input\fR function opens the file for reading whose name is
 the string pointed to by \fIpath\fR and associates an ft_t with it. If
@@ -92,6 +100,9 @@ behavior will occur.
 The \fBsox_close\fR function dissociates the named \fIft_t\fR from its
 underlying file or set of functions. If the format handler was being
 used for output, any buffered data is written first.
+.P
+\fBsox_format_quite\fR function performs some required cleanup
+related to all file format handlers.
 .P
 The function \fBsox_find_effect\fR finds effect \fIname\fR, returning
 a pointer to its \fIsox_effect_handler_t\fR if it exists, and NULL

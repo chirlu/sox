@@ -39,10 +39,6 @@
   #include <io.h>
 #endif
 
-#ifdef HAVE_LIBLTDL
-  #include <ltdl.h>
-#endif
-
 #ifdef HAVE_SYS_TIME_H
   #include <sys/time.h>
 #endif
@@ -143,14 +139,6 @@ static unsigned long output_samples = 0;
 static sox_bool user_abort = sox_false;
 static sox_bool user_skip = sox_false;
 static int success = 0;
-
-
-/* Plugins */
-
-#ifdef HAVE_LIBLTDL
-static sox_bool plugins_initted = sox_false;
-#endif
-
 
 /* local forward declarations */
 
@@ -358,15 +346,7 @@ static void cleanup(void)
     free(ofile);
   }
 
-#ifdef HAVE_LIBLTDL
-  {
-    int ret;
-    if (plugins_initted && (ret = lt_dlexit()) != 0) {
-      sox_fail("lt_dlexit failed with %d error(s): %s", ret, lt_dlerror());
-      exit(1);
-    }
-  }
-#endif
+  sox_format_quit();
 }
 
 static file_t new_file(void)
@@ -618,47 +598,6 @@ static void parse_effects(int argc, char **argv)
   }
 }
 
-/* FIXME: Use vasprintf */
-#ifdef HAVE_LIBLTDL
-#define MAX_NAME_LEN 1024
-static int init_format(const char *file, lt_ptr data)
-{
-  lt_dlhandle lth = lt_dlopenext(file);
-  const char *end = file + strlen(file);
-  const char prefix[] = "libsox_fmt_";
-  char fnname[MAX_NAME_LEN];
-  char *start = strstr(file, prefix) + sizeof(prefix) - 1;
-
-  (void)data;
-  if (start < end) {
-    int ret = snprintf(fnname, MAX_NAME_LEN, "sox_%.*s_format_fn", end - start, start);
-    if (ret > 0 && ret < MAX_NAME_LEN) {
-      sox_format_fns[sox_formats].fn = (sox_format_fn_t)lt_dlsym(lth, fnname);
-      sox_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, lth, sox_format_fns[sox_formats].fn);
-      if (sox_format_fns[sox_formats].fn)
-        sox_formats++;
-    }
-  }
-
-  return 0;
-}
-#endif
-
-static void find_formats(void)
-{
-#ifdef HAVE_LIBLTDL
-  int ret;
-
-  if ((ret = lt_dlinit()) != 0) {
-    sox_fail("lt_dlinit failed with %d error(s): %s", ret, lt_dlerror());
-    exit(1);
-  }
-  plugins_initted = sox_true;
-
-  lt_dlforeachfile(PKGLIBDIR, init_format, NULL);
-#endif
-}
-
 int main(int argc, char **argv)
 {
   size_t i;
@@ -675,15 +614,14 @@ int main(int argc, char **argv)
   else if (strends(myname, "rec"))
     rec = sox_true;
 
+  sox_format_init();
+ 
   parse_options_and_filenames(argc, argv);
 
   if (sox_globals.verbosity > 2)
     display_SoX_version(stderr);
 
-  /* Load plugins (after options so we can output debugging messages
-     if desired) */
-  find_formats();
-  
+ 
   /* Make sure we got at least the required # of input filenames */
   input_count = file_count ? file_count - 1 : 0;
   if (input_count < (combine_method <= sox_concatenate ? 1 : 2))

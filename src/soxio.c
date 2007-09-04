@@ -11,7 +11,61 @@
   #include <io.h>
 #endif
 
+#ifdef HAVE_LIBLTDL
+  #include <ltdl.h>
+#endif
+
 sox_globals_t sox_globals = {2, 8192, NULL, NULL, NULL, NULL};
+
+/* Plugins */
+
+#ifdef HAVE_LIBLTDL
+static sox_bool plugins_initted = sox_false;
+#endif
+
+/* FIXME: Use vasprintf */
+#ifdef HAVE_LIBLTDL
+#define MAX_NAME_LEN 1024
+static int init_format(const char *file, lt_ptr data)
+{
+  lt_dlhandle lth = lt_dlopenext(file);
+  const char *end = file + strlen(file);
+  const char prefix[] = "libsox_fmt_";
+  char fnname[MAX_NAME_LEN];
+  char *start = strstr(file, prefix) + sizeof(prefix) - 1;
+
+  (void)data;
+  if (start < end) {
+    int ret = snprintf(fnname, MAX_NAME_LEN, "sox_%.*s_format_fn", end - start, start);
+    if (ret > 0 && ret < MAX_NAME_LEN) {
+      sox_format_fns[sox_formats].fn = (sox_format_fn_t)lt_dlsym(lth, fnname);
+      sox_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, lth, sox_format_fns[sox_formats].fn);
+      if (sox_format_fns[sox_formats].fn)
+        sox_formats++;
+    }
+  }
+
+  return 0;
+}
+#endif
+
+/*
+ * Initialize list of known format handlers.
+ */
+int sox_format_init(void)
+{
+#ifdef HAVE_LIBLTDL
+  int ret;
+
+  if ((ret = lt_dlinit()) != 0) {
+    sox_fail("lt_dlinit failed with %d error(s): %s", ret, lt_dlerror());
+    exit(1);
+  }
+  plugins_initted = sox_true;
+
+  lt_dlforeachfile(PKGLIBDIR, init_format, NULL);
+#endif
+}
 
 /*
  * Check that we have a known format suffix string.
@@ -27,6 +81,22 @@ int sox_gettype(sox_format_t * ft, sox_bool is_file_extension)
     sox_fail_errno(ft, SOX_EFMT, "unknown file type `%s'", ft->filetype);
   }
   return SOX_EFMT;
+}
+
+/*
+ * Cleanup things.
+ */
+void sox_format_quit(void)
+{
+#ifdef HAVE_LIBLTDL
+  {
+    int ret;
+    if (plugins_initted && (ret = lt_dlexit()) != 0) {
+      sox_fail("lt_dlexit failed with %d error(s): %s", ret, lt_dlerror());
+      exit(1);
+    }
+  }
+#endif
 }
 
 void set_endianness_if_not_already_set(sox_format_t * ft)
