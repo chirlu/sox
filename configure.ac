@@ -206,6 +206,12 @@ AC_SUBST(SNDFILE_CFLAGS)
 AC_SUBST(SNDFILE_LIBS)
         
 dnl Check for Ogg Vorbis libraries
+AC_ARG_WITH(oggvorbis, AC_HELP_STRING([--with-oggvorbis], 
+	[Use oggvorbis if present (default is yes)]),
+        [with_ogg_vorbis=$withval],
+	[with_ogg_vorbis=yes])
+
+if test "$with_ogg_vorbis" = yes; then
 AC_CHECK_HEADER(vorbis/codec.h,
     [with_ogg_vorbis=yes
     AC_CHECK_LIB(ogg, ogg_packet_clear, OGG_LIBS="$OGG_LIBS -logg", with_ogg_vorbis=no)
@@ -213,6 +219,7 @@ AC_CHECK_HEADER(vorbis/codec.h,
     AC_CHECK_LIB(vorbisfile, ov_clear, OGG_LIBS="$OGG_LIBS -lvorbisfile", with_ogg_vorbis=no)
     AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr, OGG_LIBS="$OGG_LIBS -lvorbisenc", with_ogg_vorbis=no)],
     with_ogg_vorbis=no)
+fi
 if test "$with_ogg_vorbis" = yes; then
    AC_DEFINE(HAVE_OGG_VORBIS, 1, [Define to 1 if you have Ogg Vorbis.])
 fi
@@ -241,12 +248,18 @@ AM_CONDITIONAL(HAVE_FLAC, test x$using_flac = xyes)
 AC_SUBST(FLAC_LIBS)
 
 dnl Check for ffmpeg libraries
+AC_ARG_WITH(ffmpeg,
+    AC_HELP_STRING([--without-ffmpeg],
+        [Don't try to use FFMpeg]),
+        [with_ffmpeg=$withval])
+if test "$with_ffmpeg" != "no"; then
 AC_CHECK_HEADER(ffmpeg/avformat.h,
     [with_ffmpeg=yes
     AC_CHECK_LIB(avformat, av_open_input_file, FFMPEG_LIBS="$FFMPEG_LIBS -lavformat", with_ffmpeg=no)
     AC_CHECK_LIB(avutil, av_rescale_q, FFMPEG_LIBS="$FFMPEG_LIBS -lavutil", with_ffmpeg=no)
     AC_CHECK_LIB(avcodec, avcodec_encode_audio, FFMPEG_LIBS="$FFMPEG_LIBS -lavcodec", with_ffmpeg=no)],
     with_ffmpeg=no)
+fi
 if test "$with_ffmpeg" = yes; then
    AC_DEFINE(HAVE_FFMPEG, 1, [Define to 1 if you have ffmpeg.])
 fi
