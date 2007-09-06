@@ -1,14 +1,14 @@
                            SoX Installation
                            ----------------
 
-This distribution will compile and run on most UNIX systems. It was
-originally developed on a UNIX/386 machine running AT&T V3.2 but it's
-currently developed under Linux. With a little work it should work
+This distribution will compile and run on most commonly-used systems.
+It was originally developed on a UNIX/386 machine running AT&T V3.2 but
+it's currently developed under Linux.  With a little work it should work
 with most POSIX systems.
 
 
-Compiling
----------
+Compiling using a POSIX system
+------------------------------
 
 [Only if you're compiling the CVS sources, first make sure you have
 the GNU autotools installed (automake 1.9, autoconf >= 2.59) and run
@@ -35,6 +35,18 @@ configure script to customize SoX for your applications. Run
 for a complete list of options.
 
 
+Compiling using Microsoft's Visual C
+------------------------------------
+
+o Install cmake (http://www.cmake.org/HTML/Download.html)
+o Install any optional libraries to use with SoX
+o Install the SoX sources to say c:\sox
+o Type cd c:\sox
+o Type cmake .
+
+This should generate project build files for use with Visual C.
+
+
 Optional Compile Features
 -------------------------
 
@@ -44,19 +56,23 @@ may require pkg-config to be installed to be properly detected.
 
 SoX can detect and use the following libraries:
 
-  Ogg Vorbis - http://www.vorbis.com/
+  Ogg Vorbis - http://www.vorbis.com
 
-  Lame MP3 encoder - http://lame.sourceforge.net/
+  Lame MP3 encoder - http://lame.sourceforge.net
 
-  MAD MP3 decoder - http://www.underbit.com/products/mad/
+  MAD MP3 decoder - http://www.underbit.com/products/mad
 
-  FLAC - http://flac.sourceforge.net/
+  FLAC - http://flac.sourceforge.net
 
-  Secret Rabbit Code - http://www.mega-nerd.com/SRC/
+  Secret Rabbit Code - http://www.mega-nerd.com/SRC
 
-  libsndfile - http://www.mega-nerd.com/libsndfile/
+  libsndfile - http://www.mega-nerd.com/libsndfile
 
-  ffmpeg - http://ffmpeg.mplayerhq.hu/
+  ffmpeg - http://ffmpeg.mplayerhq.hu
+
+  AMR-NB/WB - http://www.penguin.cz/~utx/amr
+
+  LADSPA - http://www.ladspa.org
   
 If any libraries are installed in a non-standard locations in your
 system then you can use the CPPFLAGS and LDFLAGS variables to allow
