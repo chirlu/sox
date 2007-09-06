@@ -31,7 +31,7 @@
 #ifdef EXTERNAL_GSM
 #include <gsm/gsm.h>
 #else
-#include "libgsm/gsm.h"
+#include "../libgsm/gsm.h"
 #endif
 
 #include <errno.h>

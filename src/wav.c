@@ -26,7 +26,7 @@
 #ifdef EXTERNAL_GSM
 #include <gsm/gsm.h>
 #else
-#include "libgsm/gsm.h"
+#include "../libgsm/gsm.h"
 #endif
 
 /* To allow padding to samplesPerBlock. Works, but currently never true. */

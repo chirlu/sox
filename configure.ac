@@ -186,7 +186,7 @@ if test "$found_libgsm" = yes; then
     AC_CHECK_LIB(gsm, gsm_create, GSM_LIBS="$GSM_LIBS -lgsm")
     AC_DEFINE(EXTERNAL_GSM, 1, [Define if you are using an external GSM library])
 else
-    LIBGSM_LIBADD=libgsm/libgsm.la
+    LIBGSM_LIBADD=../libgsm/libgsm.la
 fi
 AC_SUBST(LIBGSM_LIBADD)
 AC_SUBST(GSM_LIBS)
@@ -378,7 +378,7 @@ AC_SUBST(LADSPA_PATH)
 
 dnl Generate output files.
 AX_CREATE_STDINT_H(src/soxstdint.h)
-AC_CONFIG_FILES(Makefile src/Makefile src/libgsm/Makefile lpc10/Makefile)
+AC_CONFIG_FILES(Makefile src/Makefile libgsm/Makefile lpc10/Makefile)
 AC_OUTPUT
 
 if test "$found_libgsm" = "yes"; then
