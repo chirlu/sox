@@ -387,7 +387,7 @@ sox_size_t sox_write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len
   } while (0);
 
 #define TWIDDLE_WORD(uw, type) \
-  if (ft->signal.reverse_bytes ^ SOX_IS_BIGENDIAN) \
+  if (ft->signal.reverse_bytes) \
     uw = sox_swap ## type(uw);
 
 /* N.B. This macro doesn't work for unaligned types (e.g. 3-byte
