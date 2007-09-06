@@ -280,7 +280,7 @@ endif
 #end !HAVE_LIBLTDL
 endif
 
-EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav sox_sample_test.c
+EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav sox_sample_test.c amr-wb-test
 
 all: sox$(EXEEXT) play rec
 
