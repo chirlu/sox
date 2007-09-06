@@ -59,12 +59,13 @@ int sox_format_init(void)
 
   if ((ret = lt_dlinit()) != 0) {
     sox_fail("lt_dlinit failed with %d error(s): %s", ret, lt_dlerror());
-    exit(1);
+    return SOX_EOF;
   }
   plugins_initted = sox_true;
 
   lt_dlforeachfile(PKGLIBDIR, init_format, NULL);
 #endif
+  return SOX_SUCCESS;
 }
 
 /*
@@ -93,7 +94,6 @@ void sox_format_quit(void)
     int ret;
     if (plugins_initted && (ret = lt_dlexit()) != 0) {
       sox_fail("lt_dlexit failed with %d error(s): %s", ret, lt_dlerror());
-      exit(1);
     }
   }
 #endif

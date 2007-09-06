@@ -614,7 +614,8 @@ int main(int argc, char **argv)
   else if (strends(myname, "rec"))
     rec = sox_true;
 
-  sox_format_init();
+  if (sox_format_init() != SOX_SUCCESS)
+      exit(1);
  
   parse_options_and_filenames(argc, argv);
 
