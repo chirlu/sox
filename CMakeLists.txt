@@ -43,6 +43,7 @@ check_include_files("io.h"               HAVE_IO_H)
 #check_include_files("ltdl.h"             HAVE_LTDL_H) # no plug-ins as yet
 check_include_files("stdint.h"           HAVE_STDINT_H)
 check_include_files("string.h"           HAVE_STRING_H)
+check_include_files("strings.h"          HAVE_STRINGS_H)
 check_include_files("sys/time.h"         HAVE_SYS_TIME_H)
 check_include_files("sys/timeb.h"        HAVE_SYS_TIMEB_H)
 check_include_files("unistd.h"           HAVE_UNISTD_H)
