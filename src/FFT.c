@@ -285,7 +285,7 @@ void RealFFT(unsigned NumSamples, const float *RealIn, float *RealOut, float *Im
  * of its code.
  */
 
-void PowerSpectrum(sox_size_t NumSamples, const float *In, float *Out)
+void PowerSpectrum(unsigned NumSamples, const float *In, float *Out)
 {
   unsigned Half, i, i3;
   float theta, wtemp, wpr, wpi, wr, wi;
