@@ -193,37 +193,44 @@ AC_SUBST(GSM_LIBS)
 AM_CONDITIONAL(EXTERNAL_GSM, test x$found_libgsm = xyes)
 
 dnl Check for libsndfile
-AC_ARG_WITH(sndfile, AC_HELP_STRING([--with-sndfile],
-    [Use libsndfile if present (default is yes)]),
-    [with_sndfile=$withval],
-    [with_sndfile=yes])
-if test "$with_sndfile" = yes; then
-  SOX_PATH_SNDFILE(, [with_sndfile=no
-                       AC_MSG_NOTICE([Could not find a usable libsndfile])])
+AC_ARG_WITH(sndfile,
+    AC_HELP_STRING([--without-sndfile],
+    [Don't try to use libsndfile]),
+    [with_sndfile=$withval])
+using_sndfile=no
+if test "$with_sndfile" != "no"; then
+    using_sndfile=yes
+    SOX_PATH_SNDFILE(, using_sndfile=no)
+    if test "$with_sndfile" = "yes" -a "$using_sndfile" = "no"; then
+        AC_MSG_FAILURE([cannot find libsndfile])
+    fi
 fi
-AM_CONDITIONAL(HAVE_SNDFILE, test x$with_sndfile = xyes)
+AM_CONDITIONAL(HAVE_SNDFILE, test x$using_sndfile = xyes)
 AC_SUBST(SNDFILE_CFLAGS)
 AC_SUBST(SNDFILE_LIBS)
         
 dnl Check for Ogg Vorbis libraries
-AC_ARG_WITH(oggvorbis, AC_HELP_STRING([--with-oggvorbis], 
-	[Use oggvorbis if present (default is yes)]),
-        [with_ogg_vorbis=$withval],
-	[with_ogg_vorbis=yes])
-
-if test "$with_ogg_vorbis" = yes; then
-AC_CHECK_HEADER(vorbis/codec.h,
-    [with_ogg_vorbis=yes
-    AC_CHECK_LIB(ogg, ogg_packet_clear, OGG_LIBS="$OGG_LIBS -logg", with_ogg_vorbis=no)
-    AC_CHECK_LIB(vorbis, vorbis_analysis_headerout, OGG_LIBS="$OGG_LIBS -lvorbis", with_ogg_vorbis=no)
-    AC_CHECK_LIB(vorbisfile, ov_clear, OGG_LIBS="$OGG_LIBS -lvorbisfile", with_ogg_vorbis=no)
-    AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr, OGG_LIBS="$OGG_LIBS -lvorbisenc", with_ogg_vorbis=no)],
-    with_ogg_vorbis=no)
+AC_ARG_WITH(ogg,
+    AC_HELP_STRING([--without-ogg], 
+	[Don't try to use Ogg Vorbis]),
+        [with_ogg=$withval])
+using_ogg=no
+if test "$with_ogg" != "no"; then
+    using_ogg=yes
+    AC_CHECK_HEADER(vorbis/codec.h,
+        [AC_CHECK_LIB(ogg, ogg_packet_clear, OGG_LIBS="$OGG_LIBS -logg", using_ogg=no)
+        AC_CHECK_LIB(vorbis, vorbis_analysis_headerout, OGG_LIBS="$OGG_LIBS -lvorbis", using_ogg=no)
+        AC_CHECK_LIB(vorbisfile, ov_clear, OGG_LIBS="$OGG_LIBS -lvorbisfile", using_ogg=no)
+        AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr, OGG_LIBS="$OGG_LIBS -lvorbisenc", using_ogg=no)],
+        using_ogg=no)
+    if test "$with_ogg" = "yes" -a "$using_ogg" = "no"; then
+        AC_MSG_FAILURE([cannot find Ogg Vorbis])
+    fi
 fi
-if test "$with_ogg_vorbis" = yes; then
+if test "$using_ogg" = yes; then
    AC_DEFINE(HAVE_OGG_VORBIS, 1, [Define to 1 if you have Ogg Vorbis.])
 fi
-AM_CONDITIONAL(HAVE_OGG_VORBIS, test x$with_ogg_vorbis = xyes)
+AM_CONDITIONAL(HAVE_OGG_VORBIS, test x$using_ogg = xyes)
 AC_SUBST(OGG_LIBS)
 
 dnl Check for FLAC libraries
@@ -250,20 +257,24 @@ AC_SUBST(FLAC_LIBS)
 dnl Check for ffmpeg libraries
 AC_ARG_WITH(ffmpeg,
     AC_HELP_STRING([--without-ffmpeg],
-        [Don't try to use FFMpeg]),
+        [Don't try to use ffmpeg]),
         [with_ffmpeg=$withval])
+using_ffmpeg=no
 if test "$with_ffmpeg" != "no"; then
-AC_CHECK_HEADER(ffmpeg/avformat.h,
-    [with_ffmpeg=yes
-    AC_CHECK_LIB(avformat, av_open_input_file, FFMPEG_LIBS="$FFMPEG_LIBS -lavformat", with_ffmpeg=no)
-    AC_CHECK_LIB(avutil, av_rescale_q, FFMPEG_LIBS="$FFMPEG_LIBS -lavutil", with_ffmpeg=no)
-    AC_CHECK_LIB(avcodec, avcodec_encode_audio, FFMPEG_LIBS="$FFMPEG_LIBS -lavcodec", with_ffmpeg=no)],
-    with_ffmpeg=no)
+    using_ffmpeg=yes
+    AC_CHECK_HEADER(ffmpeg/avformat.h,
+        [AC_CHECK_LIB(avformat, av_open_input_file, FFMPEG_LIBS="$FFMPEG_LIBS -lavformat", using_ffmpeg=no)
+        AC_CHECK_LIB(avutil, av_rescale_q, FFMPEG_LIBS="$FFMPEG_LIBS -lavutil", using_ffmpeg=no)
+        AC_CHECK_LIB(avcodec, avcodec_encode_audio, FFMPEG_LIBS="$FFMPEG_LIBS -lavcodec", using_ffmpeg=no)],
+        using_ffmpeg=no)
+    if test "$with_ffmpeg" = "yes" -a "$using_ffmpeg" = "no"; then
+        AC_MSG_FAILURE([cannot find ffmpeg])
+    fi
 fi
-if test "$with_ffmpeg" = yes; then
+if test "$using_ffmpeg" = yes; then
    AC_DEFINE(HAVE_FFMPEG, 1, [Define to 1 if you have ffmpeg.])
 fi
-AM_CONDITIONAL(HAVE_FFMPEG, test x$with_ffmpeg = xyes)
+AM_CONDITIONAL(HAVE_FFMPEG, test x$using_ffmpeg = xyes)
 AC_SUBST(FFMPEG_LIBS)
 
 dnl Check for MAD libraries
@@ -397,10 +408,10 @@ echo "OSS driver........................ $enable_oss"
 echo "SUN audio driver.................. $enable_sun_audio"
 echo "play and rec symlinks............. $enable_playrec_symlinks"
 echo "libgsm............................ $gsm_option"
-echo "libsndfile formats................ $with_sndfile"
-echo "Ogg Vorbis format................. $with_ogg_vorbis"
+echo "libsndfile formats................ $using_sndfile"
+echo "Ogg Vorbis format................. $using_ogg"
 echo "FLAC format....................... $using_flac"
-echo "ffmpeg formats.................... $with_ffmpeg"
+echo "ffmpeg formats.................... $using_ffmpeg"
 echo "MAD MP3 reader.................... $using_mad"
 echo "LAME MP3 writer................... $using_lame"
 echo "AMR-WB format..................... $using_amr_wb"
