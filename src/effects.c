@@ -289,7 +289,7 @@ int sox_flow_effects(int (* callback)(sox_bool all_done))
 
   e = sox_neffects - 1;
   while (source_e < sox_neffects) {
-#define have_imin (sox_effects[e - 1][0].olen - sox_effects[e - 1][0].odone >= sox_effects[e][0].imin)
+#define have_imin (e > 0 && e < sox_neffects && sox_effects[e - 1][0].olen - sox_effects[e - 1][0].odone >= sox_effects[e][0].imin)
     if (e == source_e && (draining || !have_imin)) {
       if (drain_effect(e) == SOX_EOF) {
         ++source_e;
@@ -300,7 +300,7 @@ int sox_flow_effects(int (* callback)(sox_bool all_done))
       source_e = e;
       draining = sox_true;
     }
-    if (sox_effects[e][0].olen > sox_effects[e][0].odone) /* False for output */
+    if (e < sox_neffects && sox_effects[e][0].olen > sox_effects[e][0].odone) /* False for output */
       ++e;
     else if (e == source_e)
       draining = sox_true;
