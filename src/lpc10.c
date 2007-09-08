@@ -127,6 +127,8 @@ static int startread(sox_format_t * ft)
     return SOX_EOF;
   }
   lpc->samples = LPC10_SAMPLES_PER_FRAME;
+  ft->signal.size = SOX_SIZE_16BIT;
+  ft->signal.encoding = SOX_ENCODING_SIGN2;
 
   return SOX_SUCCESS;
 }
@@ -173,17 +175,19 @@ static sox_size_t write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t 
   lpcpriv_t lpc = (lpcpriv_t)ft->priv;
   sox_size_t nwritten = 0;
 
-  while (len + lpc->samples >= LPC10_SAMPLES_PER_FRAME) {
-    INT32 bits[LPC10_BITS_IN_COMPRESSED_FRAME];
-
-    while (lpc->samples < LPC10_SAMPLES_PER_FRAME) {
+  while (len > 0) {
+    while (len > 0 && lpc->samples < LPC10_SAMPLES_PER_FRAME) {
       lpc->speech[lpc->samples++] = SOX_SAMPLE_TO_FLOAT_32BIT(buf[nwritten++], ft->clips);
       len--;
     }
-    
-    lpc10_encode(lpc->speech, bits, lpc->encst);
-    write_bits(ft, bits, LPC10_BITS_IN_COMPRESSED_FRAME);
-    lpc->samples = 0;
+
+    if (lpc->samples == LPC10_SAMPLES_PER_FRAME) {
+      INT32 bits[LPC10_BITS_IN_COMPRESSED_FRAME];
+
+      lpc10_encode(lpc->speech, bits, lpc->encst);
+      write_bits(ft, bits, LPC10_BITS_IN_COMPRESSED_FRAME);
+      lpc->samples = 0;
+    }
   }
 
   return nwritten;
