@@ -7,6 +7,9 @@ sox (14.0.0.cvs-1) unstable; urgency=low
     - Uses libao output (closes: #391514, #421682).
     - Big-endian fix (closes: #421682).
     - Invalid pointer fix (closes: #414977).
+    - la to wav conversion fix (closes: #435362).
+    - FLAC support fix (closes: #437130).
+    - Fixes extra noise at end of wav files (closes: #436012).
   * [debian/control]:
     - sox-dev renamed to libsox-dev.
     - Created libsox0 package that contains the SoX library.
