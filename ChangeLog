@@ -55,6 +55,7 @@ sox-14.0.0
    (Bug# 1666599) (cbagwell)
   o Fix I/O performance regression in 13.0.0.  (Reuben Thomas)
   o Fix .lu, .la read regression in 13.0.0 [Bug# 1715076].  (robs)
+  o Fix uncompressed NIST/Sphere read regression in v13 [Bug #1736016].
   o Fix displayed times when playing a file and using trim.  (robs)
   o Fix CDDA sector duration display for non-CDDA sample rates.  (robs)
   o synth fixes: brown noise; inverted square wave; offset < 0.  (robs)
