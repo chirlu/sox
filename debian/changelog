@@ -15,6 +15,7 @@ sox (14.0.0.cvs-1) unstable; urgency=low
       libavcodec-dev.
     - No longer conflicting with libst and libst-dev.
     - Splitted format libraries in different packages (libsox-fmt-foo).
+    - Added !hurd-i386 to dependency on libasound-dev (closes: #440470).
   * [debian/libsox-dev.dirs]:
     - Added /usr/lib/sox/ for format plugins.
   * [debian/libsox0.install, debian/libsox-dev.install]:
