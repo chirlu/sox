@@ -11,7 +11,8 @@ Compiling using a POSIX system
 ------------------------------
 
 [Only if you're compiling the CVS sources, first make sure you have
-the GNU autotools installed (automake 1.9, autoconf >= 2.59) and run
+the GNU autotools installed (automake >= 1.9, autoconf >= 2.59) and
+run
 
 	autoreconf -i
 ]
