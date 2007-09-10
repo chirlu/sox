@@ -32,10 +32,10 @@ static int init_format(const char *file, lt_ptr data)
   const char *end = file + strlen(file);
   const char prefix[] = "libsox_fmt_";
   char fnname[MAX_NAME_LEN];
-  char *start = strstr(file, prefix) + sizeof(prefix) - 1;
+  char *start = strstr(file, prefix);
 
   (void)data;
-  if (start < end) {
+  if (start && (start += sizeof(prefix) - 1) < end) {
     int ret = snprintf(fnname, MAX_NAME_LEN, "sox_%.*s_format_fn", end - start, start);
     if (ret > 0 && ret < MAX_NAME_LEN) {
       sox_format_fns[sox_formats].fn = (sox_format_fn_t)lt_dlsym(lth, fnname);
