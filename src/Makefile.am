@@ -3,8 +3,7 @@
 RM = rm -f 
 
 AM_CPPFLAGS = -DLADSPA_PATH="\"@LADSPA_PATH@\"" -DPKGLIBDIR="\"$(pkglibdir)\""
-AM_CFLAGS = $(LTDLINCL) -Wconversion
-AM_LDFLAGS = $(LIBLTDL)
+AM_CFLAGS = -Wconversion
 
 # Pass flags from --enable-silent-libtool
 LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
@@ -24,6 +23,9 @@ sox_LDADD = libsox.la libsfx.la
 #############################################
 
 if HAVE_LIBLTDL
+AM_CFLAGS += $(LTDLINCL)
+AM_LDFLAGS = $(LIBLTDL)
+
 # Format modules; listed first so optional ones can be added later
 pkglib_LTLIBRARIES = libsox_fmt_auto.la libsox_fmt_raw.la libsox_fmt_s1.la \
 	  libsox_fmt_s2.la libsox_fmt_s3.la libsox_fmt_s4.la libsox_fmt_u1.la \
