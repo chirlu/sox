@@ -26,7 +26,7 @@ AC_ARG_WITH(libltdl,
 
 using_libltdl=no
 if test "$with_libltdl" != "no"; then
-    # Disable libltdl support when building only static libraries
+    dnl Disable libltdl support when building only static libraries
     if test "$enable_shared" != "no"; then
         using_libltdl=yes
     fi
@@ -42,8 +42,7 @@ AC_CONFIG_SUBDIRS(libltdl)
 if test "$using_libltdl" != "no"; then
   AC_SUBST(LIBLTDL)
   AC_SUBST(LTDLINCL)
-  AC_CHECK_HEADERS(ltdl.h, AC_DEFINE([HAVE_LIBLTDL], 1, [Define to 1 if you have LIBLTDL.]), [using_libltdl=no])
-
+  AC_CHECK_HEADERS(ltdl.h, AC_DEFINE([HAVE_LIBLTDL], 1, [Define to 1 if you have libltdl]), [using_libltdl=no])
 fi
 AM_CONDITIONAL(HAVE_LIBLTDL, test x$using_libltdl = xyes)
 
