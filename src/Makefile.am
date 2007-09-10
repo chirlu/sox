@@ -300,3 +300,10 @@ clean-local:
 
 distclean-local:
 	$(RM) soxstdint.h
+
+# Ideally we would use the "check" target so that "make distcheck"
+# would run the test suite, but an uninstalled libltdl build cannot
+# currently load its formats and effects, so the checks would fail.
+installcheck:
+	tests.sh
+	testall.sh

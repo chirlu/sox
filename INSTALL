@@ -27,6 +27,14 @@ commands:
 	make
 	make install
 
+Optionally:
+
+	make installcheck
+
+(At the moment you can't run "make check", because when built
+modularly SoX can't use its format and effect modules until
+it is installed.)
+
 There are several optional parameters that you may pass to the
 configure script to customize SoX for your applications. Run
 
