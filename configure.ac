@@ -30,6 +30,13 @@ if test "$with_libltdl" != "no"; then
     if test "$enable_shared" != "no"; then
         using_libltdl=yes
     fi
+    dnl Force off using libltdl on targets that are know to have
+    dnl problems.
+    case $target in
+      *cygwin*)
+        using_libltdl=no
+        ;;
+    esac
 fi
 
 if test "$using_libltdl" != "no"; then
