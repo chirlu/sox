@@ -305,5 +305,5 @@ distclean-local:
 # would run the test suite, but an uninstalled libltdl build cannot
 # currently load its formats and effects, so the checks would fail.
 installcheck:
-	tests.sh
-	testall.sh
+	./tests.sh
+	./testall.sh
