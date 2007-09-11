@@ -306,6 +306,6 @@ distclean-local:
 # currently load its formats and effects, so the checks would fail.
 # TODO: Make this installcheck again.  Scripts don't work because
 # of use of "./".
-installcheck-local:
+local-installcheck:
 	$(srcdir)/tests.sh
 	$(srcdir)/testall.sh
