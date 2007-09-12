@@ -139,12 +139,12 @@ libsox_fmt_sndfile_la_LIBADD = libsox.la @SNDFILE_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_sndfile.la
 endif
 if HAVE_AMR_WB
-libsox_fmt_amr_wb_la_SOURCES = amr-wb.c
+libsox_fmt_amr_wb_la_SOURCES = amr-wb.c amr.h
 libsox_fmt_amr_wb_la_LIBADD = libsox.la @AMR_WB_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_amr_wb.la
 endif
 if HAVE_AMR_NB
-libsox_fmt_amr_nb_la_SOURCES = amr-nb.c
+libsox_fmt_amr_nb_la_SOURCES = amr-nb.c amr.h
 libsox_fmt_amr_nb_la_LIBADD = libsox.la @AMR_NB_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_amr_nb.la
 endif
@@ -241,12 +241,12 @@ if HAVE_SNDFILE
     sox_LDADD += @SNDFILE_LIBS@
 endif
 if HAVE_AMR_WB
-    libsox_la_SOURCES += amr-wb.c
+    libsox_la_SOURCES += amr-wb.c amr.h
     libsox_la_LIBADD += @AMR_WB_LIBS@
     sox_LDADD += @AMR_WB_LIBS@
 endif
 if HAVE_AMR_NB
-    libsox_la_SOURCES += amr-nb.c
+    libsox_la_SOURCES += amr-nb.c amr.h
     libsox_la_LIBADD += @AMR_NB_LIBS@
     sox_LDADD += @AMR_NB_LIBS@
 endif
