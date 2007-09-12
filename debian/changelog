@@ -1,6 +1,12 @@
-sox (14.0.0.cvs-1) unstable; urgency=low
+sox (14.0.0+cvs-1) unstable; urgency=low
 
-  * CVS version:
+  * CVS version.
+
+ -- Pascal Giard <evilynux@gmail.com>  Wed, 12 Sep 2007 12:44:18 -0400
+
+sox (14.0.0-1) unstable; urgency=low
+
+  * New upstream release:
     - Another important release, please see the upstream changelog.
     - Adds dynamic libraries.
     - Adds playlist support (closes: #119470).
@@ -33,7 +39,7 @@ sox (14.0.0.cvs-1) unstable; urgency=low
     - Added DEB_DH_MAKESHLIBS_ARGS -Xfmt to avoid useless calls to ldconfig.
     - Fixed all lintian binary-or-shlib-defines-rpath warnings using chrpath.
 	
- -- Pascal Giard <evilynux@gmail.com>  Sun, 09 Sep 2007 11:22:32 -0400
+ -- Pascal Giard <pascal@debian.org>  Wed, 12 Sep 2007 12:10:38 -0400
 
 sox (13.0.0-1) unstable; urgency=low
 
