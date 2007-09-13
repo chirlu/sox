@@ -101,7 +101,7 @@ static int startread(sox_format_t * ft)
                 (size_t (*)(void *, size_t, size_t, void *))  fread,
                 (int (*)(void *, ogg_int64_t, int))           _fseeko64_wrap,
                 (int (*)(void *))                             myclose,
-                (long (*)(void *))                            ftello
+                (off_t (*)(void *))                            ftello
         };
 
         /* Allocate space for decoding structure */
