@@ -38,7 +38,7 @@ Package: libsox-fmt-base
 Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}
-Description: SoX library
+Description: Minimal set of SoX format libraries
  SoX is the swiss army knife of sound processing.
  .
  This package contains the minimal set of SoX format libraries.
@@ -49,7 +49,7 @@ Package: libsox-fmt-alsa
 Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}
-Description: SoX library
+Description: SoX alsa format I/O library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX alsa format I/O library.
@@ -61,7 +61,7 @@ Package: libsox-fmt-ao
 Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}
-Description: SoX library
+Description: SoX Libao format I/O library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX Libao format I/O library.
@@ -73,7 +73,7 @@ Package: libsox-fmt-ffmpeg
 Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}
-Description: SoX library
+Description: SoX ffmpeg format library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX ffmpeg format library.
@@ -85,7 +85,7 @@ Package: libsox-fmt-flac
 Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}
-Description: SoX library
+Description: SoX FLAC format library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX FLAC format library.
@@ -97,7 +97,7 @@ Package: libsox-fmt-gsm
 Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}
-Description: SoX library
+Description: SoX GSM format library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX GSM format library.
@@ -108,7 +108,7 @@ Package: libsox-fmt-mp3
 Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}
-Description: SoX library
+Description: SoX MP3 format library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX MP3 format library.
@@ -121,7 +121,7 @@ Package: libsox-fmt-ogg
 Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}
-Description: SoX library
+Description: SoX OGG Vorbis format library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX OGG Vorbis format library.
@@ -133,7 +133,7 @@ Package: libsox-fmt-sndfile
 Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}
-Description: SoX library
+Description: SoX libsndfile format library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX libsndfile format library.
@@ -145,7 +145,7 @@ Package: libsox-fmt-oss
 Architecture: any
 Section: sound
 Depends: ${shlibs:Depends}
-Description: SoX library
+Description: SoX OSS format I/O library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX OSS format I/O library.
@@ -156,7 +156,7 @@ Package: libsox-fmt-all
 Architecture: any
 Section: sound
 Depends: libsox-fmt-base, libsox-fmt-ffmpeg, libsox-fmt-flac, libsox-fmt-gsm, libsox-fmt-mp3, libsox-fmt-ogg, libsox-fmt-sndfile, libsox-fmt-alsa, libsox-fmt-ao, libsox-fmt-oss
-Description: SoX library
+Description: All SoX format libraries
  SoX is the swiss army knife of sound processing.
  .
  This is a meta package depending on all free SoX format libraries.

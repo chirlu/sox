@@ -1,8 +1,9 @@
 sox (14.0.0+cvs-1) unstable; urgency=low
 
   * CVS version.
+  * [debian/control]: Proper short description for format packages.
 
- -- Pascal Giard <evilynux@gmail.com>  Wed, 12 Sep 2007 12:44:18 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Mon, 17 Sep 2007 23:39:19 -0400
 
 sox (14.0.0-1) unstable; urgency=low
 
