@@ -13,7 +13,7 @@ RM = rm -f
 # man pages are not considered to be sources, so need to add "dist_"
 # prefix to ensure they are added to the distribution.
 dist_man_MANS = sox.1 soxeffect.7 soxformat.7 soxexam.7 libsox.3
-EXTRA_DIST = sox.txt soxeffect.txt soxformat.txt soxexam.txt libsox.txt
+EXTRA_DIST = sox.txt soxeffect.txt soxformat.txt soxexam.txt libsox.txt CMakeLists.txt
 
 play.1 rec.1: sox.1
 	$(RM) $@ && $(LN_S) $< $@
