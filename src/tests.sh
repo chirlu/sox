@@ -1,8 +1,6 @@
 #!/bin/sh
 #
 # SoX Regression Test script: Lossless file conversion
-#
-# FIXME: Test sndt
 
 # Options:
 #verbose=-V
@@ -109,7 +107,7 @@ do_singlechannel_formats () {
   convertToAndFrom ima s2 u2 s3 u3 s4 u4 raw Raw dat au aiff aifc flac caf # FIXME: vox wav
 
   format1=Wav
-  convertToAndFrom smp s1 s1X s1N s1XN
+  convertToAndFrom smp s1 s1X s1N s1XN sndt
   (rate=5512; convertToAndFrom hcom) || exit 1     # Fixed rate
 
   format1=wve

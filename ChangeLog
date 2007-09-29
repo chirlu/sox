@@ -4,6 +4,14 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-14.0.1
+----------
+
+  Bug fixes:
+
+  o Fix Sndtool read error causing noise at start.  (Reynir Stefansson)
+
+
 sox-14.0.0
 ----------
 
