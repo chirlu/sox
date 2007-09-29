@@ -7,6 +7,11 @@ sox-11gamma.
 sox-14.0.1
 ----------
 
+  File formats:
+
+  o Added support for non-standard, non-WAVE_FORMAT_EXTENSIBLE
+    (esp. 24-bit) PCM wav.  (robs)
+
   Bug fixes:
 
   o Fix Sndtool read error causing noise at start.  (Reynir Stefansson)

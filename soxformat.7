@@ -557,6 +557,17 @@ and written.  To write a RIFX file, use the
 .B \-B
 option with the output file options.
 .TP
+.B .wavpcm
+A non-standard variant of
+.BR .wav .
+Some applications cannot read a standard WAV file header for PCM-encoded
+data with sample-size greater than 16-bits, but can read a non-standard
+WAV header.  It is likely that such applications will eventually be
+updated to support the standard header, but in the mean time, this SoX
+format can be used to create files with the non-standard header that
+should work with these applications.  (Note that SoX will automatically
+detect and read WAV files with the non-standard header.)
+.TP
 .B .wve
 Psion 8-bit A-law.  Used on Psion SIBO PDAs (Series 3 and similar).
 .TP
