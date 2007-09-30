@@ -15,6 +15,7 @@ sox-14.0.1
   Bug fixes:
 
   o Fix Sndtool read error causing noise at start.  (Reynir Stefansson)
+  o Fix loss of 1 decoded FLAC block when using "trim 0 ...".  (robs)
 
 
 sox-14.0.0
