@@ -16,6 +16,9 @@ sox-14.0.1
 
   o Fix Sndtool read error causing noise at start.  (Reynir Stefansson)
   o Fix loss of 1 decoded FLAC block when using "trim 0 ...".  (robs)
+  o Let "make distcheck" run some automated test scripts.
+  o Distribute missing cmake files.
+  o Fix ogg vorbis compile error on some platforms.
 
 
 sox-14.0.0

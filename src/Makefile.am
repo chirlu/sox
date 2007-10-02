@@ -297,6 +297,7 @@ install-exec-hook:
 
 clean-local:
 	$(RM) play rec
+	$(RM) sox_sample_test
 
 distclean-local:
 	$(RM) soxstdint.h
@@ -304,8 +305,7 @@ distclean-local:
 # Ideally we would use the "check" target so that "make distcheck"
 # would run the test suite, but an uninstalled libltdl build cannot
 # currently load its formats and effects, so the checks would fail.
-# TODO: Make this installcheck again.  Scripts don't work because
-# of use of "./".
-local-installcheck:
-	$(srcdir)/tests.sh
-	$(srcdir)/testall.sh
+installcheck:
+	$(srcdir)/tests.sh --bindir=${bindir} --builddir=${builddir} --srcdir=${srcdir}
+	$(srcdir)/testall.sh --bindir=${bindir} --srcdir=${srcdir}
+

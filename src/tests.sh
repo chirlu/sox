@@ -6,6 +6,48 @@
 #verbose=-V
 #all=all
 
+bindir="."
+builddir="."
+srcdir="."
+
+# Allow user to override paths.  Useful for testing an installed
+# sox.
+while [ $# -ne 0 ]; do
+    case "$1" in
+        --bindir=*)
+        bindir=`echo $1 | sed 's/.*=//'`
+        ;;
+
+        -i)
+        shift
+        bindir=$1
+        ;;
+
+        --builddir=*)
+        builddir=`echo $1 | sed 's/.*=//'`
+        ;;
+
+        -b)
+        shift
+        builddir=$1
+        ;;
+
+        --srcdir=*)
+        srcdir=`echo $1 | sed 's/.*=//'`
+        ;;
+
+        -c)
+        shift
+        srcdir=$1
+        ;;
+
+        *)
+        echo "Unknown option"
+        exit 1
+    esac
+    shift
+done
+
 getFormat () {
   formatExt=$1; formatText=$1; formatFlags=""
   case $1 in
@@ -35,12 +77,12 @@ convertToAndFrom () {
       if [ "${format1_skip}x" = "x" -a "${from_skip}x" = "x" ] ; then
         getFormat ${format1}; format1Ext=$formatExt; format1Text=$formatText; format1Flags=$formatFlags
         getFormat         $1; format2Ext=$formatExt; format2Text=$formatText; format2Flags=$formatFlags
-        echo ./sox -c $channels -r $rate -n $format1Flags input.$format1Ext synth $samples's' sin 300-3300 noise trapezium
-        echo ./sox $verbose -r $rate -c $channels $format1Flags input.$format1Ext $format2Flags intermediate.$format2Ext
-        echo ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$format2Ext $format1Flags output.$format1Ext
-        ./sox -R -c $channels -r $rate -n $format1Flags input.$format1Ext synth $samples's' sin 300-3300 noise trapezium
-        ./sox $verbose -r $rate -c $channels $format1Flags input.$format1Ext $format2Flags intermediate.$format2Ext
-        ./sox $verbose -r $rate -c $channels $format2Flags intermediate.$format2Ext $format1Flags output.$format1Ext
+        echo ${bindir}/sox -c $channels -r $rate -n $format1Flags input.$format1Ext synth $samples's' sin 300-3300 noise trapezium
+        echo ${bindir}/sox $verbose -r $rate -c $channels $format1Flags input.$format1Ext $format2Flags intermediate.$format2Ext
+        echo ${bindir}/sox $verbose -r $rate -c $channels $format2Flags intermediate.$format2Ext $format1Flags output.$format1Ext
+        ${bindir}/sox -R -c $channels -r $rate -n $format1Flags input.$format1Ext synth $samples's' sin 300-3300 noise trapezium
+        ${bindir}/sox $verbose -r $rate -c $channels $format1Flags input.$format1Ext $format2Flags intermediate.$format2Ext
+        ${bindir}/sox $verbose -r $rate -c $channels $format2Flags intermediate.$format2Ext $format1Flags output.$format1Ext
         intermediateReference=intermediate`echo "$channels $rate $format1Flags $format1Ext $format2Flags"|tr " " "_"`.$format2Ext
 
 	# Uncomment to generate new reference files
@@ -125,10 +167,10 @@ timeIO () {
       fi
       if [ "${from_skip}x" = "x" ] ; then
         getFormat $1;
-        echo ./sox -c $channels -r $rate -n $formatFlags input.$1 synth $samples's' sin 300-3300 noise trapezium
-        echo time ./sox $verbose -r $rate -c $channels $formatFlags input.$1 $formatFlags output.$1
-        ./sox -c $channels -r $rate -n $formatFlags input.$1 synth $samples's' sin 300-3300 noise trapezium
-        time ./sox $verbose -r $rate -c $channels $formatFlags input.$1 $formatFlags output.$1
+        echo ${bindir}/sox -c $channels -r $rate -n $formatFlags input.$1 synth $samples's' sin 300-3300 noise trapezium
+        echo time ${bindir}/sox $verbose -r $rate -c $channels $formatFlags input.$1 $formatFlags output.$1
+        ${bindir}/sox -c $channels -r $rate -n $formatFlags input.$1 synth $samples's' sin 300-3300 noise trapezium
+        time ${bindir}/sox $verbose -r $rate -c $channels $formatFlags input.$1 $formatFlags output.$1
 
         rm -f input.$1 output.$1
       fi
@@ -140,11 +182,11 @@ timeIO () {
 # Run tests
 
 make sox_sample_test
-./sox_sample_test || exit 1
+${builddir}/sox_sample_test || exit 1
 
-./sox --help | grep -q "flac" || skip="flac $skip"
+${bindir}/sox --help | grep -q "flac" || skip="flac $skip"
 grep -q "^OGG_LIBS *= *-logg"   Makefile || skip="ogg $skip"
-grep -q "^#define HAVE_SNDFILE_H" soxconfig.h || skip="caf $skip"
+grep -q "^#define HAVE_SNDFILE_H" ${builddir}/src/soxconfig.h || skip="caf $skip"
 
 rate=44100
 samples=23493
@@ -167,7 +209,7 @@ if [ "$all" = "all" ]; then
 fi
 do_singlechannel_formats
 
-./amr-wb-test
+${srcdir}/amr-wb-test
 if [ $? -eq 0 ]; then
   echo "ok     amr-wb"
 else
@@ -179,7 +221,7 @@ channels=2
 samples=10000000
 timeIO s1 u1 s2 u2 s3 u3 s4 u4 raw Raw au wav aiff aifc caf sph # FIXME?: flac dat
 
-./sox -c 1 -n output.u1 synth .01 vol .5
+${bindir}/sox -c 1 -n output.u1 synth .01 vol .5
 if [ `wc -c <output.u1` = 441 ]; then
   echo "ok     synth size"
 else
