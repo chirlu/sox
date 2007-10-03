@@ -110,7 +110,7 @@ static int sox_trim_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssa
      */
     if (!trim->trimmed) {
         if ((trim->index+done) <= trim->start) {
-            /* If we haven't read more then "start" samples, return that
+            /* If we haven't read more than "start" samples, return that
              * we've read all this buffer without outputing anything
              */
             *osamp = 0;

@@ -17,7 +17,7 @@
  * the consequences of using this software.
  *
  * TODO: When reading in comments, it doesn't understand how to read
- * more then one comment and doesn't know how to parse KEY=value.
+ * more than one comment and doesn't know how to parse KEY=value.
  */
 
 #include "sox_i.h"
