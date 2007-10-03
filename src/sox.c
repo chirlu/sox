@@ -126,6 +126,8 @@ static size_t input_count = 0;
 #define MAX_USER_EFF (SOX_MAX_EFFECTS - 4)
 static sox_effect_t user_efftab[MAX_USER_EFF];
 static unsigned nuser_effects;
+static sox_effects_chain_t ofile_effects_chain;
+
 
 
 /* Flowing */
@@ -900,7 +902,7 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
         break;
 
       case 7:
-        sox_effects_globals.plot = enum_option(option_index, plot_methods);
+        ofile_effects_chain.global_info.plot = enum_option(option_index, plot_methods);
         break;
 
       case 8:
@@ -1289,7 +1291,7 @@ static sox_effect_handler_t const * output_effect_fn(void)
   return &handler;
 }
 
-static void add_auto_effect(char const * name, sox_signalinfo_t * signal)
+static void add_auto_effect(sox_effects_chain_t * chain, char const * name, sox_signalinfo_t * signal)
 {
   sox_effect_t eff;
 
@@ -1298,12 +1300,12 @@ static void add_auto_effect(char const * name, sox_signalinfo_t * signal)
   eff.handler.getopts(&eff, 0, NULL);          /* Set up with default opts */
 
   /* But could fail here */
-  if (sox_add_effect(&eff, signal, &ofile->ft->signal) != SOX_SUCCESS)
+  if (sox_add_effect(chain, &eff, signal, &ofile->ft->signal) != SOX_SUCCESS)
     exit(2);
 }
 
 /* If needed effects are not given, auto-add at (performance) optimal point. */
-static void add_effects(void)
+static void add_effects(sox_effects_chain_t * chain)
 {
   sox_signalinfo_t signal = combiner;
   unsigned i, min_chan = 0, min_rate = 0;
@@ -1318,36 +1320,36 @@ static void add_effects(void)
   }
   /* 1st `effect' in the chain is the input combiner */
   sox_create_effect(&eff, input_combiner_effect_fn());
-  sox_add_effect(&eff, &signal, &ofile->ft->signal);
+  sox_add_effect(chain, &eff, &signal, &ofile->ft->signal);
 
   /* Add auto effects if appropriate; add user specified effects */
   for (i = 0; i <= nuser_effects; i++) {
     /* If reducing channels, it's faster to do so before all other effects: */
     if (signal.channels > ofile->ft->signal.channels && i >= min_chan)
-      add_auto_effect("mixer", &signal);
+      add_auto_effect(chain, "mixer", &signal);
 
     /* If reducing rate, it's faster to do so before all other effects
      * (except reducing channels): */
     if (signal.rate > ofile->ft->signal.rate && i >= min_rate)
-      add_auto_effect("resample", &signal);
+      add_auto_effect(chain, "resample", &signal);
 
     if (i < nuser_effects)
-      if (sox_add_effect(&user_efftab[i], &signal, &ofile->ft->signal) != SOX_SUCCESS)
+      if (sox_add_effect(chain, &user_efftab[i], &signal, &ofile->ft->signal) != SOX_SUCCESS)
         exit(2);
   }
   /* Add auto effects if still needed at this point */
   if (signal.rate != ofile->ft->signal.rate)
-    add_auto_effect("resample", &signal);  /* Must be up-sampling */
+    add_auto_effect(chain, "resample", &signal);  /* Must be up-sampling */
   if (signal.channels != ofile->ft->signal.channels)
-    add_auto_effect("mixer", &signal);     /* Must be increasing channels */
+    add_auto_effect(chain, "mixer", &signal);     /* Must be increasing channels */
 
   /* Last `effect' in the chain is the output file */
   sox_create_effect(&eff, output_effect_fn());
-  if (sox_add_effect(&eff, &signal, &ofile->ft->signal) != SOX_SUCCESS)
+  if (sox_add_effect(chain, &eff, &signal, &ofile->ft->signal) != SOX_SUCCESS)
     exit(2);
 
-  for (i = 0; i < sox_neffects; ++i) {
-    sox_effect_t * effp = &sox_effects[i][0];
+  for (i = 0; i < chain->length; ++i) {
+    sox_effect_t const * effp = &chain->effects[i][0];
     sox_report("effects chain: %-10s %gHz %u channels %u bits %s",
         effp->handler.name, effp->ininfo.rate, effp->ininfo.channels, effp->ininfo.size * 8,
         (effp->handler.flags & SOX_EFF_MCHAN)? "(multi)" : "");
@@ -1366,16 +1368,16 @@ static void optimize_trim(void)
    * This hack is a huge time savings when trimming
    * gigs of audio data into managable chunks
    */ 
-  if (input_count == 1 && sox_neffects > 1 && strcmp(sox_effects[1][0].handler.name, "trim") == 0) {
+  if (input_count == 1 && ofile_effects_chain.length > 1 && strcmp(ofile_effects_chain.effects[1][0].handler.name, "trim") == 0) {
     if ((files[0]->ft->handler->flags & SOX_FILE_SEEK) && files[0]->ft->seekable){
-      sox_size_t offset = sox_trim_get_start(&sox_effects[1][0]);
+      sox_size_t offset = sox_trim_get_start(&ofile_effects_chain.effects[1][0]);
       if (offset && sox_seek(files[0]->ft, offset, SOX_SEEK_SET) != SOX_EOF) { 
         read_wide_samples = offset / files[0]->ft->signal.channels;
         /* Assuming a failed seek stayed where it was.  If the 
          * seek worked then reset the start location of 
          * trim so that it thinks user didn't request a skip.
          */ 
-        sox_trim_clear_start(&sox_effects[1][0]);
+        sox_trim_clear_start(&ofile_effects_chain.effects[1][0]);
       }    
     }        
   }    
@@ -1437,14 +1439,14 @@ static int update_status(sox_bool all_done)
   return user_abort? SOX_EOF : SOX_SUCCESS;
 }
 
-static void sox_stop_effects(void)
+static void sox_stop_effects(sox_effects_chain_t * chain)
 {
   sox_size_t e, clips;
 
-  for (e = 0; e < sox_neffects; ++e)
-    if ((clips = sox_stop_effect(e)) != 0)
+  for (e = 0; e < chain->length; ++e)
+    if ((clips = sox_stop_effect(chain, e)) != 0)
       sox_warn("%s clipped %u samples; decrease volume?",
-          sox_effects[e][0].handler.name, clips);
+          chain->effects[e][0].handler.name, clips);
 }
 
 /*
@@ -1517,7 +1519,8 @@ static int process(void) {
 
   open_output_file(olen);
 
-  add_effects();
+  ofile_effects_chain.global_info = sox_effects_globals;
+  add_effects(&ofile_effects_chain);
 
   optimize_trim();
 
@@ -1525,10 +1528,10 @@ static int process(void) {
   /* FIXME: For SIGTERM at least we really should guarantee to stop quickly */
   signal(SIGTERM, sigint); /* Stop gracefully even in extremis */
   
-  flowstatus = sox_flow_effects(update_status);
+  flowstatus = sox_flow_effects(&ofile_effects_chain, update_status);
 
-  sox_stop_effects();
-  sox_delete_effects();
+  sox_stop_effects(&ofile_effects_chain);
+  sox_delete_effects(&ofile_effects_chain);
   return flowstatus;
 }
 
@@ -1538,7 +1541,7 @@ static sox_size_t total_clips(void)
   sox_size_t clips = 0;
   for (i = 0; i < file_count; ++i)
     clips += files[i]->ft->clips + files[i]->volume_clips;
-  return clips + mixing_clips + sox_effects_clips();
+  return clips + mixing_clips + sox_effects_clips(&ofile_effects_chain);
 }
 
 static char const * sigfigs3(sox_size_t number)

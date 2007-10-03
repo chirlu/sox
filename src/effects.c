@@ -32,7 +32,7 @@
 
 
 sox_effects_globals_t sox_effects_globals =
-    {sox_false, 1, &sox_globals};
+    {sox_plot_off, 1, &sox_globals};
 
 int sox_usage(sox_effect_t * effp)
 {
@@ -90,9 +90,6 @@ void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const * eh)
 
 /* Effects chain: */
 
-sox_effect_t * sox_effects[SOX_MAX_EFFECTS];
-unsigned sox_neffects;
-
 /* Effect can call in start() or flow() to set minimum input size to flow() */
 int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin)
 {
@@ -111,7 +108,7 @@ int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin)
  * output rate and channels the effect does produce are written back to *in,
  * ready for the next effect in the chain.
  */
-int sox_add_effect(sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t
+int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t
     const * out)
 {
   int ret, (*start)(sox_effect_t * effp) = effp->handler.start;
@@ -122,6 +119,7 @@ int sox_add_effect(sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t
     sox_report("has no effect (is a proxy effect)");
     return SOX_SUCCESS;
   }
+  effp->global_info = &chain->global_info;
   effp->ininfo = *in;
   effp->outinfo = *out;
   if (!(effp->handler.flags & SOX_EFF_CHAN))
@@ -146,31 +144,29 @@ int sox_add_effect(sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t
 
   *in = effp->outinfo;
 
-  if (sox_neffects == SOX_MAX_EFFECTS) {
+  if (chain->length == SOX_MAX_EFFECTS) {
     sox_fail("Too many effects!");
     return SOX_EOF;
   }
-  sox_effects[sox_neffects] =
-    xcalloc(effp->flows, sizeof(sox_effects[sox_neffects][0]));
-  sox_effects[sox_neffects][0] = *effp;
+  chain->effects[chain->length] =
+    xcalloc(effp->flows, sizeof(chain->effects[chain->length][0]));
+  chain->effects[chain->length][0] = *effp;
 
   for (f = 1; f < effp->flows; ++f) {
-    sox_effects[sox_neffects][f] = eff0;
-    sox_effects[sox_neffects][f].flow = f;
-    if (start(&sox_effects[sox_neffects][f]) != SOX_SUCCESS)
+    chain->effects[chain->length][f] = eff0;
+    chain->effects[chain->length][f].flow = f;
+    if (start(&chain->effects[chain->length][f]) != SOX_SUCCESS)
       return SOX_EOF;
   }
 
-  ++sox_neffects;
+  ++chain->length;
   return SOX_SUCCESS;
 }
 
-static sox_ssample_t **ibufc, **obufc; /* Channel interleave buffers */
-
-static int flow_effect(unsigned n)
+static int flow_effect(sox_effects_chain_t * chain, unsigned n)
 {
-  sox_effect_t * effp1 = &sox_effects[n - 1][0];
-  sox_effect_t * effp = &sox_effects[n][0];
+  sox_effect_t * effp1 = &chain->effects[n - 1][0];
+  sox_effect_t * effp = &chain->effects[n][0];
   int effstatus = SOX_SUCCESS;
   sox_size_t i, f;
   const sox_ssample_t *ibuf;
@@ -187,13 +183,13 @@ static int flow_effect(unsigned n)
     ibuf = &effp1->obuf[effp1->odone];
     for (i = 0; i < idone; i += effp->flows)
       for (f = 0; f < effp->flows; ++f)
-        ibufc[f][i / effp->flows] = *ibuf++;
+        chain->ibufc[f][i / effp->flows] = *ibuf++;
 
     for (f = 0; f < effp->flows; ++f) {
       sox_size_t idonec = idone / effp->flows;
       sox_size_t odonec = odone / effp->flows;
-      int eff_status_c = effp->handler.flow(&sox_effects[n][f],
-          ibufc[f], obufc[f], &idonec, &odonec);
+      int eff_status_c = effp->handler.flow(&chain->effects[n][f],
+          chain->ibufc[f], chain->obufc[f], &idonec, &odonec);
       if (f && (idonec != idone_last || odonec != odone_last)) {
         sox_fail("flowed asymmetrically!");
         effstatus = SOX_EOF;
@@ -207,7 +203,7 @@ static int flow_effect(unsigned n)
 
     for (i = 0; i < odone_last; ++i)
       for (f = 0; f < effp->flows; ++f)
-        *obuf++ = obufc[f][i];
+        *obuf++ = chain->obufc[f][i];
 
     idone = f * idone_last;
     odone = f * odone_last;
@@ -227,9 +223,9 @@ static int flow_effect(unsigned n)
 }
 
 /* The same as flow_effect but with no input */
-static int drain_effect(unsigned n)
+static int drain_effect(sox_effects_chain_t * chain, unsigned n)
 {
-  sox_effect_t * effp = &sox_effects[n][0];
+  sox_effect_t * effp = &chain->effects[n][0];
   int effstatus = SOX_SUCCESS;
   sox_size_t i, f;
   sox_size_t odone = sox_globals.bufsiz - effp->olen;
@@ -242,7 +238,7 @@ static int drain_effect(unsigned n)
 
     for (f = 0; f < effp->flows; ++f) {
       sox_size_t odonec = odone / effp->flows;
-      int eff_status_c = effp->handler.drain(&sox_effects[n][f], obufc[f], &odonec);
+      int eff_status_c = effp->handler.drain(&chain->effects[n][f], chain->obufc[f], &odonec);
       if (f && (odonec != odone_last)) {
         sox_fail("drained asymmetrically!");
         effstatus = SOX_EOF;
@@ -255,7 +251,7 @@ static int drain_effect(unsigned n)
 
     for (i = 0; i < odone_last; ++i)
       for (f = 0; f < effp->flows; ++f)
-        *obuf++ = obufc[f][i];
+        *obuf++ = chain->obufc[f][i];
     odone = f * odone_last;
   }
   if (!odone)   /* This is the only thing that drain has and flow hasn't */
@@ -267,93 +263,93 @@ static int drain_effect(unsigned n)
 }
 
 /* Flow data through the effects chain until an effect or callback gives EOF */
-int sox_flow_effects(int (* callback)(sox_bool all_done))
+int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_done))
 {
   int flow_status = SOX_SUCCESS;
   sox_size_t e, source_e = 0;               /* effect indices */
   sox_size_t f, max_flows = 0;
   sox_bool draining = sox_true;
 
-  for (e = 0; e < sox_neffects; ++e) {
-    sox_effects[e][0].obuf = xmalloc(sox_globals.bufsiz * sizeof(sox_effects[e][0].obuf[0]));
-    sox_effects[e][0].odone = sox_effects[e][0].olen = 0;
-    max_flows = max(max_flows, sox_effects[e][0].flows);
+  for (e = 0; e < chain->length; ++e) {
+    chain->effects[e][0].obuf = xmalloc(sox_globals.bufsiz * sizeof(chain->effects[e][0].obuf[0]));
+    chain->effects[e][0].odone = chain->effects[e][0].olen = 0;
+    max_flows = max(max_flows, chain->effects[e][0].flows);
   }
 
-  ibufc = xcalloc(max_flows, sizeof(*ibufc));
-  obufc = xcalloc(max_flows, sizeof(*obufc));
+  chain->ibufc = xcalloc(max_flows, sizeof(*chain->ibufc));
+  chain->obufc = xcalloc(max_flows, sizeof(*chain->obufc));
   for (f = 0; f < max_flows; ++f) {
-    ibufc[f] = xcalloc(sox_globals.bufsiz / 2, sizeof(ibufc[f][0]));
-    obufc[f] = xcalloc(sox_globals.bufsiz / 2, sizeof(obufc[f][0]));
+    chain->ibufc[f] = xcalloc(sox_globals.bufsiz / 2, sizeof(chain->ibufc[f][0]));
+    chain->obufc[f] = xcalloc(sox_globals.bufsiz / 2, sizeof(chain->obufc[f][0]));
   }
 
-  e = sox_neffects - 1;
-  while (source_e < sox_neffects) {
-#define have_imin (e > 0 && e < sox_neffects && sox_effects[e - 1][0].olen - sox_effects[e - 1][0].odone >= sox_effects[e][0].imin)
+  e = chain->length - 1;
+  while (source_e < chain->length) {
+#define have_imin (e > 0 && e < chain->length && chain->effects[e - 1][0].olen - chain->effects[e - 1][0].odone >= chain->effects[e][0].imin)
     if (e == source_e && (draining || !have_imin)) {
-      if (drain_effect(e) == SOX_EOF) {
+      if (drain_effect(chain, e) == SOX_EOF) {
         ++source_e;
         draining = sox_false;
       }
-    } else if (have_imin && flow_effect(e) == SOX_EOF) {
+    } else if (have_imin && flow_effect(chain, e) == SOX_EOF) {
       flow_status = SOX_EOF;
       source_e = e;
       draining = sox_true;
     }
-    if (e < sox_neffects && sox_effects[e][0].olen > sox_effects[e][0].odone) /* False for output */
+    if (e < chain->length && chain->effects[e][0].olen > chain->effects[e][0].odone) /* False for output */
       ++e;
     else if (e == source_e)
       draining = sox_true;
     else if ((int)--e < (int)source_e)
       e = source_e;
 
-    if (callback && callback(source_e == sox_neffects) != SOX_SUCCESS) {
+    if (callback && callback(source_e == chain->length) != SOX_SUCCESS) {
       flow_status = SOX_EOF; /* Client has requested to stop the flow. */
       break;
     }
   }
 
   for (f = 0; f < max_flows; ++f) {
-    free(ibufc[f]);
-    free(obufc[f]);
+    free(chain->ibufc[f]);
+    free(chain->obufc[f]);
   }
-  free(obufc);
-  free(ibufc);
+  free(chain->obufc);
+  free(chain->ibufc);
 
-  for (e = 0; e < sox_neffects; ++e)
-    free(sox_effects[e][0].obuf);
+  for (e = 0; e < chain->length; ++e)
+    free(chain->effects[e][0].obuf);
 
   return flow_status;
 }
 
-sox_size_t sox_effects_clips(void)
+sox_size_t sox_effects_clips(sox_effects_chain_t * chain)
 {
   unsigned i, f;
   sox_size_t clips = 0;
-  for (i = 1; i < sox_neffects - 1; ++i)
-    for (f = 0; f < sox_effects[i][0].flows; ++f)
-      clips += sox_effects[i][f].clips;
+  for (i = 1; i < chain->length - 1; ++i)
+    for (f = 0; f < chain->effects[i][0].flows; ++f)
+      clips += chain->effects[i][f].clips;
   return clips;
 }
 
-sox_size_t sox_stop_effect(sox_size_t e)
+sox_size_t sox_stop_effect(sox_effects_chain_t * chain, sox_size_t e)
 {
   unsigned f;
-  sox_effect_t * effp = &sox_effects[e][0];
+  sox_effect_t * effp = &chain->effects[e][0];
   sox_size_t clips = 0;
 
   for (f = 0; f < effp->flows; ++f) {
-    effp->handler.stop(&sox_effects[e][f]);
-    clips += sox_effects[e][f].clips;
+    effp->handler.stop(&chain->effects[e][f]);
+    clips += chain->effects[e][f].clips;
   }
   return clips;
 }
 
 /* Remove all effects from the chain */
-void sox_delete_effects(void)
+void sox_delete_effects(sox_effects_chain_t * chain)
 {
-  while (sox_neffects)
-    free(sox_effects[--sox_neffects]);
+  while (chain->length)
+    free(chain->effects[--chain->length]);
 }
 
 

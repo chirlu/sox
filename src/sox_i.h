@@ -352,4 +352,11 @@ extern sox_effect_fn_t sox_effect_fns[];
   } \
 }
 
+struct sox_effects_chain {
+#define SOX_MAX_EFFECTS 20
+  sox_effect_t * effects[SOX_MAX_EFFECTS];
+  unsigned length;
+  sox_ssample_t **ibufc, **obufc; /* Channel interleave buffers */
+  sox_effects_globals_t global_info;
+};
 #endif

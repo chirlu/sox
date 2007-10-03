@@ -429,15 +429,17 @@ sox_effect_handler_t const *sox_find_effect(char const * name);
 void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const *e);
 
 /* Effects chain */
-#define SOX_MAX_EFFECTS 20
-extern sox_effect_t * sox_effects[SOX_MAX_EFFECTS];
-extern unsigned sox_neffects;
+
 int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin);
-int sox_add_effect(sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out);
-int sox_flow_effects(int (* callback)(sox_bool all_done));
-sox_size_t sox_effects_clips(void);
-sox_size_t sox_stop_effect(sox_size_t e);
-void sox_delete_effects(void);
+
+struct sox_effects_chain;
+typedef struct sox_effects_chain sox_effects_chain_t;
+
+int sox_add_effect(sox_effects_chain_t *, sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out);
+int sox_flow_effects(sox_effects_chain_t *, int (* callback)(sox_bool all_done));
+sox_size_t sox_effects_clips(sox_effects_chain_t *);
+sox_size_t sox_stop_effect(sox_effects_chain_t *, sox_size_t e);
+void sox_delete_effects(sox_effects_chain_t *);
 
 char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samples, int def);
 
