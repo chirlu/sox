@@ -1,8 +1,20 @@
 sox (14.0.0+cvs-1) UNRELEASED; urgency=low
 
   * CVS version.
+  
+ -- Pascal Giard <evilynux@gmail.com>  Tue, 02 Oct 2007 21:14:39 -0400
 
- -- Pascal Giard <evilynux@gmail.com>  Sun, 30 Sep 2007 14:46:46 -0400
+sox (14.0.0-4) unstable; urgency=low
+
+  * [debian/control]:
+    - Fixed depends for libsox-dev, libsox-fmt-base became libsox-fmt-all.
+    - Fixed circular dependency libsox0 <--> libsox-fmt-base.
+      + libsox0 no longer requires libsox-fmt-base (closes: #444926).
+      + Added libsox-fmt-base to Recommends.
+      + Retrograded libsox-fmt-all from Recommends to Suggests.
+      + Improved long description of sox.
+
+ -- Pascal Giard <pascal@debian.org>  Tue, 02 Oct 2007 21:14:39 -0400
 
 sox (14.0.0-3) unstable; urgency=low
 

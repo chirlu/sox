@@ -18,18 +18,27 @@ Description: Swiss army knife of sound processing
  .
  SoX is able to handle formats like Ogg Vorbis, MP3, WAV, AIFF, VOC, SND, AU,
  GSM and several more.
+ Any format support requires at least libsox-fmt-base. Some formats have their
+ own package e.g. Ogg Vorbis is provided by libsox-fmt-ogg.
+ .
+ SoX supports most common sound architectures i.e. Alsa, Libao and OSS
+ (provided by libsox-fmt-alsa, libsox-fmt-ao and libsox-fmt-oss). It also
+ supports LADSPA plugins.
  .
  Homepage: http://sox.sourceforge.net
 
 Package: libsox0
 Architecture: any
 Section: sound
-Depends: ${shlibs:Depends}, libsox-fmt-base (=${binary:Version})
-Recommends: libsox-fmt-all, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss
+Depends: ${shlibs:Depends}
+Recommends: libsox-fmt-base, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss
+Suggests: libsox-fmt-all
 Description: SoX library
  SoX is the swiss army knife of sound processing.
  .
  This package contains the SoX library.
+ .
+ Any format support requires at least libsox-fmt-base.
  Sound card I/O requires libsox-fmt-alsa, libsox-fmt-ao or libsox-fmt-oss.
  .
  Homepage: http://sox.sourceforge.net
@@ -166,7 +175,7 @@ Description: All SoX format libraries
 Package: libsox-dev
 Architecture: any
 Section: devel
-Depends: libsox0 (=${binary:Version}), libsox-fmt-base (=${binary:Version}), ${shlibs:Depends}
+Depends: libsox0 (=${binary:Version}), libsox-fmt-all (=${binary:Version}), ${shlibs:Depends}
 Description: Development files for the SoX library
  SoX is the swiss army knife of sound processing.
  .
