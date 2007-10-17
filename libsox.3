@@ -278,6 +278,15 @@ is called when there are no more input samples to process.
 may generate output samples on its own.
 See echo.c for how to do this, 
 and see that what it does is absolutely bogus.
+.SH LINKING
+The method of linking against libsox and libsfx depends on how SoX was
+built on your system. For a static build, just link against the
+libraries as normal. For a dynamic build, you should use libtool to
+link with the correct linker flags. See the libtool manual for
+details; basically, you use it as:
+.SP
+	libtool --mode=link gcc -o prog /path/to/libsox.la /path/to/libsfx.la
+.SP
 .SH BUGS
 This manual page is both incomplete and out of date.
 .SH SEE ALSO
