@@ -238,6 +238,7 @@ static int sox_reverb_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t
         sox_ssample_t out, l;
         size_t i, j;
         sox_size_t done;
+        sox_bool notfaded;
 
         i = reverb->counter;
         done = 0;
@@ -256,13 +257,12 @@ reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsam
                 reverb->pppl = reverb->ppl;
                 reverb->ppl = reverb->pl;
                 reverb->pl = l;
-                i++;            /* need a % maxsamples here ? */
-                i %= reverb->maxsamples;
-        } while((done < *osamp) && 
-                ((abs(reverb->pl) + abs(reverb->ppl) + abs(reverb->pppl)) > REVERB_FADE_THRESH));
+                i = (i + 1) % reverb->maxsamples;
+                notfaded = (abs(reverb->pl) + abs(reverb->ppl) + abs(reverb->pppl) > REVERB_FADE_THRESH);
+        } while (done < *osamp && notfaded);
         reverb->counter = i;
         *osamp = done;
-        return (SOX_SUCCESS);
+        return notfaded? SOX_SUCCESS : SOX_EOF;
 }
 
 /*
