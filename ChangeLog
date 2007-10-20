@@ -20,7 +20,8 @@ sox-14.0.1
   o Let "make distcheck" run some automated test scripts.
   o Distribute missing cmake files.
   o Fix ogg vorbis compile error on some platforms.
-
+  o Remove unused libltdl that could cause header mismatch with
+    installed libltdl.
 
 sox-14.0.0
 ----------

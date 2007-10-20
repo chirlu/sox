@@ -28,7 +28,7 @@
 /* The following is the API version of libSoX.  It is not meant
  * to follow the version number of SoX but it has historically.
  * Please do not count on these numbers being in sync.
- * The following is at 13.0.0
+ * The following is at 14.0.0
  */
 #define SOX_LIB_VERSION_CODE 0x0e0000
 #define SOX_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
