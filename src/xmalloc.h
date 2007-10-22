@@ -29,4 +29,6 @@ void *xcalloc(size_t nmemb, size_t size);
 void *xrealloc(void *ptr, size_t newsize);
 char *xstrdup(const char *s);
 
+#define Xcalloc(var, n) var = xcalloc(n, sizeof(*var))
+
 #endif

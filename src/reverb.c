@@ -1,295 +1,297 @@
 /*
- * August 24, 1998
- * Copyright (C) 1998 Juergen Mueller And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
- * the consequences of using this software.
+ * Effect: reverb           Copyright (c) 2007 robs@users.sourceforge.net
+ * Algorithm based on freeverb by Jezar @ Dreampoint.
+ *
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, write to the Free Software Foundation,
+ * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
-/*
-**      Echo effect. based on:
-**
-** echoplex.c - echo generator
-**
-** Copyright (C) 1989 by Jef Poskanzer.
-**
-** Permission to use, copy, modify, and distribute this software and its
-** documentation for any purpose and without fee is hereby granted, provided
-** that the above copyright notice appear in all copies and that both that
-** copyright notice and this permission notice appear in supporting
-** documentation.  This software is provided "as is" without express or
-** implied warranty.
-*/
-
-
-/*
- * Changes to old "echo.c" now called "reverb.c":
- *
- * The effect name changes from "echo" to "reverb" (see Guitar FX FAQ) for
- * the difference in its defintion.
- * The idea of the echoplexer is modified and enhanceb by an automatic
- * setting of each decay for realistic reverb.
- * Some bugs are fixed concerning xmalloc and fade-outs.
- * Added an output volume (gain-out) avoiding saturation or clipping.
- *
- *
- * Reverb effect for dsp.
- *
- * Flow diagram scheme for n delays ( 1 <= n <= MAXREVERB )
- *
- *        * gain-in  +---+                        * gain-out
- * ibuff ----------->|   |------------------------------------> obuff
- *                   |   |  * decay 1
- *                   |   |<------------------------+
- *                   | + |  * decay 2              |
- *                   |   |<--------------------+   |
- *                   |   |  * decay n          |   |
- *                   |   |<----------------+   |   |
- *                   +---+                 |   |   |
- *                     |      _________    |   |   |
- *                     |     |         |   |   |   |
- *                     +---->| delay n |---+   |   |
- *                     .     |_________|       |   |
- *                     .                       |   |
- *                     .      _________        |   |
- *                     |     |         |       |   |
- *                     +---->| delay 2 |-------+   |
- *                     |     |_________|           |
- *                     |                           |
- *                     |      _________            |
- *                     |     |         |           |
- *                     +---->| delay 1 |-----------+
- *                           |_________|
- *
- *
- *
- * Usage:
- *   reverb gain-out reverb-time delay-1 [ delay-2 ... delay-n ]
- *
- * Where:
- *   gain-out :  0.0 ...      volume
- *   reverb-time :  > 0.0 msec
- *   delay-1 ... delay-n :  > 0.0 msec
- *
- * Note:
- *   gain-in is automatically adjusted avoiding saturation and clipping of
- *   the output. decay-1 to decay-n are computed such that at reverb-time
- *   the input will be 60 dB of the original input for the given delay-1 
- *   to delay-n. delay-1 to delay-n specify the time when the first bounce
- *   of the input will appear. A proper setting for delay-1 to delay-n 
- *   depends on the choosen reverb-time (see hint).
- *
- * Hint:
- *   a realstic reverb effect can be obtained using for a given reverb-time "t"
- *   delays in the range of "t/2 ... t/4". Each delay should not be an integer
- *   of any other.
- *
-*/
-
-/*
- * libSoX reverb effect file.
- */
-
-#include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
-#include <math.h>
 #include "sox_i.h"
+#include "xmalloc.h"
+#include <math.h>
+#include <string.h>
 
-#define REVERB_FADE_THRESH 10
-#define DELAY_BUFSIZ ( 50 * SOX_MAXRATE )
-#define MAXREVERBS 8
+#define FLOAT float
+#define filter_create(p, n) (p)->ptr=Xcalloc((p)->buffer, (p)->size=(size_t)(n))
+#define filter_delete(p) free((p)->buffer)
+#define ADVANCE_PTR(ptr) if (--p->ptr < p->buffer) p->ptr += p->size
 
-/* Private data for SKEL file */
-typedef struct reverbstuff {
-        int     counter;                        
-        size_t  numdelays;
-        float   *reverbbuf;
-        float   in_gain, out_gain, time;
-        float   delay[MAXREVERBS], decay[MAXREVERBS];
-        size_t  samples[MAXREVERBS], maxsamples;
-        sox_ssample_t pl, ppl, pppl;
-} *reverb_t;
+typedef struct {
+  size_t  size;
+  FLOAT   * buffer, * ptr;
+  FLOAT   store;
+} filter_t;
 
-/*
- * Process options
- */
-static int sox_reverb_getopts(sox_effect_t * effp, int n, char **argv) 
+static FLOAT comb_process(filter_t * p,
+    FLOAT input, FLOAT feedback, FLOAT hf_damping)
 {
-        reverb_t reverb = (reverb_t) effp->priv;
-        int i;
-
-        reverb->numdelays = 0;
-        reverb->maxsamples = 0;
-
-        if ( n < 3 )
-          return sox_usage(effp);
-
-        if ( n - 2 > MAXREVERBS )
-        {
-            sox_fail("reverb: to many dalays, use less than %i delays",
-                        MAXREVERBS);
-            return (SOX_EOF);
-        }
-
-        i = 0;
-        sscanf(argv[i++], "%f", &reverb->out_gain);
-        sscanf(argv[i++], "%f", &reverb->time);
-        while (i < n) {
-                /* Linux bug and it's cleaner. */
-                sscanf(argv[i++], "%f", &reverb->delay[reverb->numdelays]);
-                reverb->numdelays++;
-        }
-        return (SOX_SUCCESS);
+  FLOAT output = *p->ptr;
+  p->store = output + (p->store - output) * hf_damping;
+  *p->ptr = input + p->store * feedback;
+  ADVANCE_PTR(ptr);
+  return output;
 }
 
-/*
- * Prepare for processing.
- */
-static int sox_reverb_start(sox_effect_t * effp)
+static FLOAT allpass_process(filter_t * p,
+    FLOAT input, FLOAT feedback)
 {
-        reverb_t reverb = (reverb_t) effp->priv;
-        size_t i;
-
-        reverb->in_gain = 1.0;
-
-        if ( reverb->out_gain < 0.0 )
-        {
-                sox_fail("reverb: gain-out must be positive");
-                return (SOX_EOF);
-        }
-        if ( reverb->out_gain > 1.0 )
-                sox_warn("reverb: warnig >>> gain-out can cause saturation of output <<<");
-        if ( reverb->time < 0.0 )
-        {
-                sox_fail("reverb: reverb-time must be positive");
-                return (SOX_EOF);
-        }
-        for(i = 0; i < reverb->numdelays; i++) {
-                reverb->samples[i] = reverb->delay[i] * effp->ininfo.rate / 1000.0;
-                if ( reverb->samples[i] < 1 )
-                {
-                    sox_fail("reverb: delay must be positive!");
-                    return (SOX_EOF);
-                }
-                if ( reverb->samples[i] > DELAY_BUFSIZ )
-                {
-                        sox_fail("reverb: delay must be less than %g seconds!",
-                                DELAY_BUFSIZ / effp->ininfo.rate );
-                        return(SOX_EOF);
-                }
-                /* Compute a realistic decay */
-                reverb->decay[i] = (float) pow(10.0,(-3.0 * reverb->delay[i] / reverb->time));
-                if ( reverb->samples[i] > reverb->maxsamples )
-                    reverb->maxsamples = reverb->samples[i];
-        }
-        reverb->reverbbuf = (float *) xmalloc(sizeof (float) * reverb->maxsamples);
-        for ( i = 0; i < reverb->maxsamples; ++i )
-                reverb->reverbbuf[i] = 0.0;
-        reverb->pppl = reverb->ppl = reverb->pl = 0x7fffff;             /* fade-outs */
-        reverb->counter = 0;
-        /* Compute the input volume carefully */
-        for ( i = 0; i < reverb->numdelays; i++ )
-                reverb->in_gain *= 
-                        ( 1.0 - ( reverb->decay[i] * reverb->decay[i] ));
-        return (SOX_SUCCESS);
+  FLOAT output = *p->ptr;
+  *p->ptr = input + output * feedback;
+  ADVANCE_PTR(ptr);
+  return output - input;
 }
 
-/*
- * Processed signed long samples from ibuf to obuf.
- * Return number of samples processed.
- */
-static int sox_reverb_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
-                   sox_size_t *isamp, sox_size_t *osamp)
-{
-        reverb_t reverb = (reverb_t) effp->priv;
-        size_t i = reverb->counter, j;
-        float d_in, d_out;
-        sox_ssample_t out;
-        sox_size_t len = min(*isamp, *osamp);
-        *isamp = *osamp = len;
+static const size_t /* Filter lengths in samples (for 44100Hz sample-rate) */
+  comb_lengths[] = {1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617},
+  allpass_lengths[] = {225, 341, 441, 556};
+#define stereo_adjust 12
 
-        while (len--) {
-                /* Store delays as 24-bit signed longs */
-                d_in = (float) *ibuf++ / 256;
-                d_in = d_in * reverb->in_gain;
-                /* Mix decay of delay and input as output */
-                for ( j = 0; j < reverb->numdelays; j++ )
-                        d_in +=
-reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsamples] * reverb->decay[j];
-                d_out = d_in * reverb->out_gain;
-                out = SOX_24BIT_CLIP_COUNT((sox_ssample_t) d_out, effp->clips);
-                *obuf++ = out * 256;
-                reverb->reverbbuf[i] = d_in;
-                i++;            /* FIXME need a % maxsamples here ? */
-                i %= reverb->maxsamples;
-        }
-        reverb->counter = i;
-        /* processed all samples */
-        return (SOX_SUCCESS);
+typedef struct filter_array {
+  filter_t comb   [array_length(comb_lengths)];
+  filter_t allpass[array_length(allpass_lengths)];
+} filter_array_t;
+
+static void filter_array_create(filter_array_t * p, double rate,
+    double scale, double offset)
+{
+  size_t i;
+  double r = rate * (1 / 44100.);
+
+  for (i = 0; i < array_length(comb_lengths); ++i, offset = -offset)
+    filter_create(&p->comb[i], scale * r * (comb_lengths[i] + stereo_adjust * offset) + .5);
+  for (i = 0; i < array_length(allpass_lengths); ++i, offset = -offset)
+    filter_create(&p->allpass[i], r * (allpass_lengths[i] + stereo_adjust * offset) + .5);
 }
 
-/*
- * Drain out reverb lines. 
- */
-static int sox_reverb_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static void filter_array_delete(filter_array_t * p)
 {
-        reverb_t reverb = (reverb_t) effp->priv;
-        float d_in, d_out;
-        sox_ssample_t out, l;
-        size_t i, j;
-        sox_size_t done;
-        sox_bool notfaded;
+  size_t i;
 
-        i = reverb->counter;
-        done = 0;
-        /* drain out delay samples */
-        do {
-                d_in = 0;
-                d_out = 0;
-                for ( j = 0; j < reverb->numdelays; ++j )
-                        d_in += 
-reverb->reverbbuf[(i + reverb->maxsamples - reverb->samples[j]) % reverb->maxsamples] * reverb->decay[j];
-                d_out = d_in * reverb->out_gain;
-                out = SOX_24BIT_CLIP_COUNT((sox_ssample_t) d_out, effp->clips);
-                obuf[done++] = out * 256;
-                reverb->reverbbuf[i] = d_in;
-                l = SOX_24BIT_CLIP_COUNT((sox_ssample_t) d_in, effp->clips);
-                reverb->pppl = reverb->ppl;
-                reverb->ppl = reverb->pl;
-                reverb->pl = l;
-                i = (i + 1) % reverb->maxsamples;
-                notfaded = (abs(reverb->pl) + abs(reverb->ppl) + abs(reverb->pppl) > REVERB_FADE_THRESH);
-        } while (done < *osamp && notfaded);
-        reverb->counter = i;
-        *osamp = done;
-        return notfaded? SOX_SUCCESS : SOX_EOF;
+  for (i = 0; i < array_length(allpass_lengths); ++i)
+    filter_delete(&p->allpass[i]);
+  for (i = 0; i < array_length(comb_lengths); ++i)
+    filter_delete(&p->comb[i]);
 }
 
-/*
- * Clean up reverb effect.
- */
-static int sox_reverb_stop(sox_effect_t * effp)
+static void filter_array_process(filter_array_t * p,
+    size_t length, FLOAT const * input, FLOAT * output,
+    FLOAT feedback, FLOAT hf_damping, FLOAT gain)
 {
-        reverb_t reverb = (reverb_t) effp->priv;
+  while (length--) {
+    FLOAT out = 0, in = *input++;
 
-        free((char *) reverb->reverbbuf);
-        reverb->reverbbuf = (float *) -1;   /* guaranteed core dump */
-        return (SOX_SUCCESS);
+    size_t i = array_length(comb_lengths) - 1;
+    do out += comb_process(p->comb + i, in, feedback, hf_damping);
+    while (i--);
+
+    i = array_length(allpass_lengths) - 1;
+    do out = allpass_process(p->allpass + i, out, .5f);
+    while (i--);
+
+    *output++ = out * gain;
+  }
 }
 
-static sox_effect_handler_t sox_reverb_effect = {
-  "reverb",
-  "gain-out reverb-time delay [ delay ... ]",
-  SOX_EFF_LENGTH,
-  sox_reverb_getopts,
-  sox_reverb_start,
-  sox_reverb_flow,
-  sox_reverb_drain,
-  sox_reverb_stop,
-  NULL
-};
+static const size_t block_size = 1024;
 
-const sox_effect_handler_t *sox_reverb_effect_fn(void)
+typedef struct reverb {
+  FLOAT feedback;
+  FLOAT hf_damping;
+  FLOAT gain;
+  size_t delay, num_delay_blocks;
+  FLOAT * * in, * out[2];
+  filter_array_t chan[2];
+} reverb_t;
+
+static FLOAT * reverb_create(reverb_t * p, double sample_rate_Hz,
+    double wet_gain_dB,
+    double room_scale,     /* % */
+    double reverberance,   /* % */
+    double hf_damping,     /* % */
+    double pre_delay_ms,
+    FLOAT * * out,
+    double stereo_depth)
 {
-    return &sox_reverb_effect;
+  size_t i;
+  double scale = room_scale / 100 * .9 + .1;
+  double depth = stereo_depth / 100;
+  double a, b;
+
+  memset(p, 0, sizeof(*p));
+
+  b = -1 / log(1 - .5); a = 100 / (1 + log(1 - .98) * b); b *= a;
+  p->feedback = 1 - exp((reverberance - a) / b);
+  p->hf_damping = hf_damping / 100 * .3 + .2;
+  p->gain = exp(wet_gain_dB / 20 * log(10)) * .015;
+  p->delay = pre_delay_ms / 1000 * sample_rate_Hz + .5;
+  p->num_delay_blocks = (p->delay + block_size - 1) / block_size;
+  Xcalloc(p->in, 1 + p->num_delay_blocks);
+  for (i = 0; i <= p->num_delay_blocks; ++i)
+    Xcalloc(p->in[i], block_size);
+  for (i = 0; i <= ceil(depth); ++i) {
+    filter_array_create(p->chan + i, sample_rate_Hz, scale, i * depth);
+    out[i] = Xcalloc(p->out[i], block_size);
+  }
+  return p->in[0];
+}
+
+static void reverb_delete(reverb_t * p)
+{
+  size_t i;
+  for (i = 0; i < 2 && p->out[i]; ++i) {
+    free(p->out[i]);
+    filter_array_delete(p->chan + i);
+  }
+  for (i = 0; i <= p->num_delay_blocks; ++i)
+    free(p->in[i]);
+  free(p->in);
+}
+
+static FLOAT * reverb_process(reverb_t * p, size_t length)
+{
+  FLOAT * oldest_in = p->in[p->num_delay_blocks];
+  size_t len1 = p->delay % block_size;
+  size_t len2 = length - len1, i;
+
+  for (i = 0; i < 2 && p->out[i]; ++i) {
+    FLOAT * * b = p->in + p->num_delay_blocks;
+
+    if (len1)
+      filter_array_process(p->chan + i, len1, *b-- + block_size - len1, p->out[i], p->feedback, p->hf_damping, p->gain);
+    filter_array_process(p->chan + i, len2, *b, p->out[i] + len1, p->feedback, p->hf_damping, p->gain);
+  }
+  for (i = p->num_delay_blocks; i; --i)
+    p->in[i] = p->in[i - 1];
+  return p->in[i] = oldest_in;
+}
+
+/*------------------------------- SoX Wrapper --------------------------------*/
+
+typedef struct priv {
+  double reverberance, hf_damping, pre_delay_ms;
+  double stereo_depth, wet_gain_dB, room_scale;
+  sox_bool wet_only;
+
+  size_t ichannels, ochannels;
+  struct {
+    reverb_t reverb;
+    FLOAT * dry, * dry1, * wet[2];
+  } f[2];
+} priv_t;
+
+assert_static(sizeof(struct priv) <= SOX_MAX_EFFECT_PRIVSIZE,
+              /* else */ EFFECT_PRIVSIZE_too_big);
+
+static int getopts(sox_effect_t * effp, int argc, char **argv)
+{
+  priv_t * p = (priv_t *) effp->priv;
+
+  p->reverberance = p->hf_damping = 50; /* Set non-zero defaults */
+  p->stereo_depth = p->room_scale = 100;
+
+  p->wet_only = argc && (!strcmp(*argv, "-w") || !strcmp(*argv, "--wet-only"))
+    && (--argc, ++argv, sox_true);
+  do {  /* break-able block */
+    NUMERIC_PARAMETER(reverberance, 0, 100)
+    NUMERIC_PARAMETER(hf_damping, 0, 100)
+    NUMERIC_PARAMETER(room_scale, 0, 100)
+    NUMERIC_PARAMETER(stereo_depth, 0, 100)
+    NUMERIC_PARAMETER(pre_delay_ms, 0, 500)
+    NUMERIC_PARAMETER(wet_gain_dB, -10, 10)
+  } while (0);
+
+  return argc ? sox_usage(effp) : SOX_SUCCESS;
+}
+
+static int start(sox_effect_t * effp)
+{
+  priv_t * p = (priv_t *) effp->priv;
+  size_t i;
+  
+  p->ichannels = p->ochannels = 1;
+
+  effp->outinfo.rate = effp->ininfo.rate;
+  if (effp->ininfo.channels > 2 && p->stereo_depth) {
+    sox_warn("stereo-depth not applicable with >2 channels");
+    p->stereo_depth = 0;
+  }
+  if (effp->ininfo.channels == 1 && p->stereo_depth)
+    effp->outinfo.channels = p->ochannels = 2;
+  else effp->outinfo.channels = effp->ininfo.channels;
+  if (effp->ininfo.channels == 2 && p->stereo_depth)
+    p->ichannels = p->ochannels = 2;
+  else effp->flows = effp->ininfo.channels;
+  for (i = 0; i < p->ichannels; ++i)
+    p->f[i].dry = reverb_create(&p->f[i].reverb, effp->ininfo.rate,
+        p->wet_gain_dB, p->room_scale, p->reverberance, p->hf_damping,
+        p->pre_delay_ms, p->f[i].wet, p->stereo_depth);
+  return sox_effect_set_imin(effp, block_size);
+}
+
+static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf,
+                sox_ssample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+{
+  priv_t * p = (priv_t *) effp->priv;
+  sox_size_t c, i, w;
+
+  if (*isamp < block_size || *osamp < block_size * p->ochannels / p->ichannels)
+    *isamp = *osamp = 0;
+  else {
+    *osamp = (*isamp = block_size) * p->ochannels / p->ichannels;
+
+    for (i = 0; i < *isamp; ++i) for (c = 0; c < p->ichannels; ++c) 
+      p->f[c].dry[i] = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++, effp->clips);
+    for (c = 0; c < p->ichannels; ++c) {
+      p->f[c].dry1 = p->f[c].dry;
+      p->f[c].dry = reverb_process(&p->f[c].reverb, *isamp / p->ichannels);
+    }
+    if (p->ichannels == 2)
+      for (i = 0; i < *isamp; ++i) for (w = 0; w < 2; ++w) {
+        FLOAT x = (1 - p->wet_only) * p->f[w].dry1[i] + .5 *
+          (p->f[0].wet[w][i] + p->f[1].wet[w][i]);
+        *obuf++ = SOX_FLOAT_32BIT_TO_SAMPLE(x, effp->clips);
+      }
+    else
+      for (i = 0; i < *isamp; ++i) for (w = 0; w < min(2, p->ochannels); ++w) {
+        FLOAT x = (1 - p->wet_only) * p->f[0].dry1[i] + p->f[0].wet[w][i];
+        *obuf++ = SOX_FLOAT_32BIT_TO_SAMPLE(x, effp->clips);
+      }
+  }
+  return SOX_SUCCESS;
+}
+
+static int stop(sox_effect_t * effp)
+{
+  priv_t * p = (priv_t *) effp->priv;
+  size_t i;
+  for (i = 0; i < p->ichannels; ++i)
+    reverb_delete(&p->f[i].reverb);
+  return SOX_SUCCESS;
+}
+
+sox_effect_handler_t const *sox_reverb_effect_fn(void)
+{
+  static sox_effect_handler_t handler = {
+    "reverb", 
+    "[-w|--wet-only]"
+    " [reverberance (50%)"
+    " [HF-damping (50%)"
+    " [room-scale (100%)"
+    " [stereo-depth (100%)"
+    " [pre-delay (0ms)"
+    " [wet-gain (0dB)"
+    "]]]]]]", SOX_EFF_MCHAN, getopts, start, flow, NULL, stop, NULL
+  };
+  return &handler;
 }

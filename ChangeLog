@@ -15,13 +15,17 @@ sox-14.0.1
   Bug fixes:
 
   o Fix Sndtool read error causing noise at start.  (Reynir Stefánsson)
-  o Fix [bug #1804772] Reverb effect locks up.  (Reynir Stefánsson)
   o Fix loss of 1 decoded FLAC block when using "trim 0 ...".  (robs)
   o Let "make distcheck" run some automated test scripts.
   o Distribute missing cmake files.
   o Fix ogg vorbis compile error on some platforms.
   o Remove unused libltdl that could cause header mismatch with
     installed libltdl.
+
+  Effects:
+
+  o Reimplemented reverb using freeverb.  (robs)
+
 
 sox-14.0.0
 ----------
