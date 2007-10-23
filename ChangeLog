@@ -12,6 +12,10 @@ sox-14.0.1
   o Added support for non-standard, non-WAVE_FORMAT_EXTENSIBLE
     (esp. 24-bit) PCM wav.  (robs)
 
+  Effects:
+
+  o Reimplemented reverb using freeverb.  (robs)
+
   Bug fixes:
 
   o Fix Sndtool read error causing noise at start.  (Reynir Stefánsson)
@@ -21,10 +25,7 @@ sox-14.0.1
   o Fix ogg vorbis compile error on some platforms.
   o Remove unused libltdl that could cause header mismatch with
     installed libltdl.
-
-  Effects:
-
-  o Reimplemented reverb using freeverb.  (robs)
+  o Fix trim when first effect with IMA-ADPCM input wav file.  (robs)
 
 
 sox-14.0.0

@@ -1371,7 +1371,7 @@ static void optimize_trim(void)
   if (input_count == 1 && ofile_effects_chain.length > 1 && strcmp(ofile_effects_chain.effects[1][0].handler.name, "trim") == 0) {
     if ((files[0]->ft->handler->flags & SOX_FILE_SEEK) && files[0]->ft->seekable){
       sox_size_t offset = sox_trim_get_start(&ofile_effects_chain.effects[1][0]);
-      if (offset && sox_seek(files[0]->ft, offset, SOX_SEEK_SET) != SOX_EOF) { 
+      if (offset && sox_seek(files[0]->ft, offset, SOX_SEEK_SET) == SOX_SUCCESS) { 
         read_wide_samples = offset / files[0]->ft->signal.channels;
         /* Assuming a failed seek stayed where it was.  If the 
          * seek worked then reset the start location of 
