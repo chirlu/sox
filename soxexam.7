@@ -190,50 +190,24 @@ listen carefully between the difference of sinusoidal and triangular modulation:
 .SP
 	play file.xxx flanger triangle
 .SS Reverb
-The reverb effect is often used in audience hall which are to small or contain
-too many many visitors which disturb (dampen) the reflection of sound at
-the walls.  Reverb will make the sound be perceived as if it were in
-a large hall.  You can try the reverb effect in your bathroom or garage or
-sport hall by shouting loud some words. You'll hear the words reflected from
-the walls.
+A reverberation effect is sometimes needed in concert halls that are too
+small or contain so many people that the hall's natural reverberance is
+diminished.
 .SP
-The biggest problem in using the reverb effect is the correct setting of the
-(wall) delays such that the sound is realistic and doesn't sound like music
-playing in a tin can or has overloaded feedback which destroys any illusion
-of playing in a big hall.
-To help you obtain realistic reverb effects, you should decide first how
-long the reverb should take place until it is not loud enough to be registered
-by your ears. This is be done by varying the reverb time `t'.  To simulate
-small halls, use 200ms.  To simulate large halls, use 1000ms.  Clearly,
-the walls of such a hall aren't far
-away, so you should define its setting be given every wall its delay time.
-However, if the wall is to far away for the reverb time, you won't hear the
-reverb, so the nearest wall will be best at `t/4' delay and the farthest
-at `t/2'. You can try other distances as well, but it won't sound very realistic.
-The walls shouldn't stand to close to each other and not in a multiple integer
-distance to each other ( so avoid wall like: 200 and 202, or something
-like 100 and 200 ).
-.SP
-Since audience halls do have a lot of walls, we will start designing one
-beginning with one wall:
-.SP
-	play file.xxx reverb 1 600 180
-.SP
-One wall more:
-.SP
-	play file.xxx reverb 1 600 180 200
-.SP
-Next two walls:
-.SP
-	play file.xxx reverb 1 600 180 200 220 240
-.SP
-Now, why not a futuristic hall with six walls:
-.SP
-	play file.xxx reverb 1 600 180 200 220 240 280 300
+Using the effect is easy:
+.EX
+	play file.xxx reverb
+.EE
+gives the default reverberance (50%); or specify the desired reverberance
+as a percentage:
+.EX
+	play file.xxx reverb 80
+.EE
+For fine tuning, see
+.BR sox (1).
 .SP
 If you run out of machine power or memory, then stop as many applications
-as possible (every interrupt will consume a lot of CPU time which for
-bigger halls is absolutely necessary).
+as possible.
 .SS Phaser
 The phaser effect is like the flanger effect, but it uses a reverb instead of
 an echo and does phase shifting. You'll hear the difference in the examples

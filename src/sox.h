@@ -418,7 +418,7 @@ struct sox_effect {
   struct sox_signalinfo    outinfo;      /* output signal specifications */
   sox_effect_handler_t     handler;
   sox_ssample_t            *obuf;        /* output buffer */
-  sox_size_t               odone, olen;  /* consumed, total length */
+  sox_size_t               obeg, oend;   /* consumed, total length */
   sox_size_t               imin;         /* minimum input buffer size */
   sox_size_t               clips;        /* increment if clipping occurs */
   sox_size_t               flows;        /* 1 if MCHAN, # chans otherwise */

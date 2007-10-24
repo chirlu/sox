@@ -33,7 +33,7 @@ typedef struct {
   FLOAT   store;
 } filter_t;
 
-static FLOAT comb_process(filter_t * p,
+static FLOAT comb_process(filter_t * p,  /* gcc -O2 will inline this */
     FLOAT input, FLOAT feedback, FLOAT hf_damping)
 {
   FLOAT output = *p->ptr;
@@ -43,7 +43,7 @@ static FLOAT comb_process(filter_t * p,
   return output;
 }
 
-static FLOAT allpass_process(filter_t * p,
+static FLOAT allpass_process(filter_t * p,  /* gcc -O2 will inline this */
     FLOAT input, FLOAT feedback)
 {
   FLOAT output = *p->ptr;
@@ -52,7 +52,7 @@ static FLOAT allpass_process(filter_t * p,
   return output - input;
 }
 
-static const size_t /* Filter lengths in samples (for 44100Hz sample-rate) */
+static const size_t /* Filter delay lengths in samples (44100Hz sample-rate) */
   comb_lengths[] = {1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617},
   allpass_lengths[] = {225, 341, 441, 556};
 #define stereo_adjust 12
@@ -133,7 +133,7 @@ static FLOAT * reverb_create(reverb_t * p, double sample_rate_Hz,
   b = -1 / log(1 - .5); a = 100 / (1 + log(1 - .98) * b); b *= a;
   p->feedback = 1 - exp((reverberance - a) / b);
   p->hf_damping = hf_damping / 100 * .3 + .2;
-  p->gain = exp(wet_gain_dB / 20 * log(10)) * .015;
+  p->gain = exp(wet_gain_dB / 20 * log(10.)) * .015;
   p->delay = pre_delay_ms / 1000 * sample_rate_Hz + .5;
   p->num_delay_blocks = (p->delay + block_size - 1) / block_size;
   Xcalloc(p->in, 1 + p->num_delay_blocks);

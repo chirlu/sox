@@ -30,6 +30,8 @@
 #define sox_fail sox_globals.subsystem=effp->handler.name,sox_fail
 #define sox_report sox_globals.subsystem=effp->handler.name,sox_report
 
+#define DEBUG_EFFECTS_CHAIN 0
+
 
 sox_effects_globals_t sox_effects_globals =
     {sox_plot_off, 1, &sox_globals};
@@ -170,24 +172,28 @@ static int flow_effect(sox_effects_chain_t * chain, unsigned n)
   int effstatus = SOX_SUCCESS;
   sox_size_t i, f;
   const sox_ssample_t *ibuf;
-  sox_size_t idone = effp1->olen - effp1->odone;
-  sox_size_t odone = sox_globals.bufsiz - effp->olen;
+  sox_size_t idone = effp1->oend - effp1->obeg;
+  sox_size_t obeg = sox_globals.bufsiz - effp->oend;
+#if DEBUG_EFFECTS_CHAIN
+  sox_size_t pre_idone = idone;
+  sox_size_t pre_odone = obeg;
+#endif
 
   if (effp->flows == 1)       /* Run effect on all channels at once */
-    effstatus = effp->handler.flow(effp, &effp1->obuf[effp1->odone],
-                                   &effp->obuf[effp->olen], &idone, &odone);
+    effstatus = effp->handler.flow(effp, &effp1->obuf[effp1->obeg],
+                                   &effp->obuf[effp->oend], &idone, &obeg);
   else {                 /* Run effect on each channel individually */
-    sox_ssample_t *obuf = &effp->obuf[effp->olen];
+    sox_ssample_t *obuf = &effp->obuf[effp->oend];
     sox_size_t idone_last, odone_last;
 
-    ibuf = &effp1->obuf[effp1->odone];
+    ibuf = &effp1->obuf[effp1->obeg];
     for (i = 0; i < idone; i += effp->flows)
       for (f = 0; f < effp->flows; ++f)
         chain->ibufc[f][i / effp->flows] = *ibuf++;
 
     for (f = 0; f < effp->flows; ++f) {
       sox_size_t idonec = idone / effp->flows;
-      sox_size_t odonec = odone / effp->flows;
+      sox_size_t odonec = obeg / effp->flows;
       int eff_status_c = effp->handler.flow(&chain->effects[n][f],
           chain->ibufc[f], chain->obufc[f], &idonec, &odonec);
       if (f && (idonec != idone_last || odonec != odone_last)) {
@@ -206,18 +212,21 @@ static int flow_effect(sox_effects_chain_t * chain, unsigned n)
         *obuf++ = chain->obufc[f][i];
 
     idone = f * idone_last;
-    odone = f * odone_last;
+    obeg = f * odone_last;
   }
-  effp1->odone += idone;
-  if (effp1->odone == effp1->olen)
-    effp1->odone = effp1->olen = 0;
-  else if (effp1->olen - effp1->odone < effp->imin ) { /* Need to refill? */
-    memmove(effp1->obuf, &effp1->obuf[effp1->odone], (effp1->olen - effp1->odone) * sizeof(*effp1->obuf));
-    effp1->olen -= effp1->odone;
-    effp1->odone = 0;
+#if DEBUG_EFFECTS_CHAIN
+  sox_report("flow:  %5u%5u%5u%5u", pre_idone, pre_odone, idone, obeg);
+#endif
+  effp1->obeg += idone;
+  if (effp1->obeg == effp1->oend)
+    effp1->obeg = effp1->oend = 0;
+  else if (effp1->oend - effp1->obeg < effp->imin ) { /* Need to refill? */
+    memmove(effp1->obuf, &effp1->obuf[effp1->obeg], (effp1->oend - effp1->obeg) * sizeof(*effp1->obuf));
+    effp1->oend -= effp1->obeg;
+    effp1->obeg = 0;
   }
 
-  effp->olen += odone;
+  effp->oend += obeg;
 
   return effstatus == SOX_SUCCESS? SOX_SUCCESS : SOX_EOF;
 }
@@ -228,16 +237,19 @@ static int drain_effect(sox_effects_chain_t * chain, unsigned n)
   sox_effect_t * effp = &chain->effects[n][0];
   int effstatus = SOX_SUCCESS;
   sox_size_t i, f;
-  sox_size_t odone = sox_globals.bufsiz - effp->olen;
+  sox_size_t obeg = sox_globals.bufsiz - effp->oend;
+#if DEBUG_EFFECTS_CHAIN
+  sox_size_t pre_odone = obeg;
+#endif
 
   if (effp->flows == 1)   /* Run effect on all channels at once */
-    effstatus = effp->handler.drain(effp, &effp->obuf[effp->olen], &odone);
+    effstatus = effp->handler.drain(effp, &effp->obuf[effp->oend], &obeg);
   else {                         /* Run effect on each channel individually */
-    sox_ssample_t *obuf = &effp->obuf[effp->olen];
+    sox_ssample_t *obuf = &effp->obuf[effp->oend];
     sox_size_t odone_last;
 
     for (f = 0; f < effp->flows; ++f) {
-      sox_size_t odonec = odone / effp->flows;
+      sox_size_t odonec = obeg / effp->flows;
       int eff_status_c = effp->handler.drain(&chain->effects[n][f], chain->obufc[f], &odonec);
       if (f && (odonec != odone_last)) {
         sox_fail("drained asymmetrically!");
@@ -252,12 +264,15 @@ static int drain_effect(sox_effects_chain_t * chain, unsigned n)
     for (i = 0; i < odone_last; ++i)
       for (f = 0; f < effp->flows; ++f)
         *obuf++ = chain->obufc[f][i];
-    odone = f * odone_last;
+    obeg = f * odone_last;
   }
-  if (!odone)   /* This is the only thing that drain has and flow hasn't */
+#if DEBUG_EFFECTS_CHAIN
+  sox_report("drain: %5u%5u%5u%5u", 0, pre_odone, 0, obeg);
+#endif
+  if (!obeg)   /* This is the only thing that drain has and flow hasn't */
     effstatus = SOX_EOF;
 
-  effp->olen += odone;
+  effp->oend += obeg;
 
   return effstatus == SOX_SUCCESS? SOX_SUCCESS : SOX_EOF;
 }
@@ -272,7 +287,7 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
 
   for (e = 0; e < chain->length; ++e) {
     chain->effects[e][0].obuf = xmalloc(sox_globals.bufsiz * sizeof(chain->effects[e][0].obuf[0]));
-    chain->effects[e][0].odone = chain->effects[e][0].olen = 0;
+    chain->effects[e][0].obeg = chain->effects[e][0].oend = 0;
     max_flows = max(max_flows, chain->effects[e][0].flows);
   }
 
@@ -285,7 +300,8 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
 
   e = chain->length - 1;
   while (source_e < chain->length) {
-#define have_imin (e > 0 && e < chain->length && chain->effects[e - 1][0].olen - chain->effects[e - 1][0].odone >= chain->effects[e][0].imin)
+#define have_imin (e > 0 && e < chain->length && chain->effects[e - 1][0].oend - chain->effects[e - 1][0].obeg >= chain->effects[e][0].imin)
+    size_t osize = chain->effects[e][0].oend - chain->effects[e][0].obeg;
     if (e == source_e && (draining || !have_imin)) {
       if (drain_effect(chain, e) == SOX_EOF) {
         ++source_e;
@@ -296,7 +312,7 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
       source_e = e;
       draining = sox_true;
     }
-    if (e < chain->length && chain->effects[e][0].olen > chain->effects[e][0].odone) /* False for output */
+    if (e < chain->length && chain->effects[e][0].oend - chain->effects[e][0].obeg > osize) /* False for output */
       ++e;
     else if (e == source_e)
       draining = sox_true;
