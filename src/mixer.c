@@ -33,15 +33,7 @@ typedef struct mixerstuff {
 
 /* MIX_CENTER is shorthand to mix channels together at 50% each */
 #define MIX_CENTER      0
-#define MIX_LEFT        1
-#define MIX_RIGHT       2
-#define MIX_FRONT       3
-#define MIX_BACK        4
-#define MIX_SPECIFIED   5
-#define MIX_LEFT_FRONT  6
-#define MIX_RIGHT_FRONT 7
-#define MIX_LEFT_BACK   8
-#define MIX_RIGHT_BACK  9
+#define MIX_SPECIFIED   1
 
 
 /*
@@ -62,22 +54,14 @@ static int getopts(sox_effect_t * effp, int n, char **argv)
     /* input and output channels, we'll record the information for */
     /* later. */
     if (n == 1) {
-        if(!strcmp(argv[0], "-l"))
-            mixer->mix = MIX_LEFT;
-        else if (!strcmp(argv[0], "-r"))
-            mixer->mix = MIX_RIGHT;
-        else if (!strcmp(argv[0], "-f"))
-            mixer->mix = MIX_FRONT;
-        else if (!strcmp(argv[0], "-b"))
-            mixer->mix = MIX_BACK;
-        else if (!strcmp(argv[0], "-1"))
-            mixer->mix = MIX_LEFT_FRONT;
-        else if (!strcmp(argv[0], "-2"))
-            mixer->mix = MIX_RIGHT_FRONT;
-        else if (!strcmp(argv[0], "-3"))
-            mixer->mix = MIX_LEFT_BACK;
-        else if (!strcmp(argv[0], "-4"))
-            mixer->mix = MIX_RIGHT_BACK;
+        if      (!strcmp(argv[0], "-l")) mixer->mix = 'l';
+        else if (!strcmp(argv[0], "-r")) mixer->mix = 'r';
+        else if (!strcmp(argv[0], "-f")) mixer->mix = 'f';
+        else if (!strcmp(argv[0], "-b")) mixer->mix = 'b';
+        else if (!strcmp(argv[0], "-1")) mixer->mix = '1';
+        else if (!strcmp(argv[0], "-2")) mixer->mix = '2';
+        else if (!strcmp(argv[0], "-3")) mixer->mix = '3';
+        else if (!strcmp(argv[0], "-4")) mixer->mix = '4';
         else if (argv[0][0] == '-' && !isdigit((int)argv[0][1])
                 && argv[0][1] != '.')
           return sox_usage(effp);
@@ -186,15 +170,14 @@ static int start(sox_effect_t * effp)
      ichan = effp->ininfo.channels;
      ochan = effp->outinfo.channels;
      if (ochan == -1) {
-         sox_fail("Output must have known number of channels to use mixer effect");
+         sox_fail("Output must have known number of channels");
          return(SOX_EOF);
      }
 
      if ((ichan != 1 && ichan != 2 && ichan != 4 &&
           mixer->mix != MIX_CENTER && ochan != 1)
              ||  (ochan != 1 && ochan != 2 && ochan != 4)) {
-         sox_fail("Can't average %d channels into %d channels",
-                 ichan, ochan);
+         sox_fail("Can't mix %d -> %d channels", ichan, ochan);
          return (SOX_EOF);
      }
 
@@ -204,7 +187,7 @@ static int start(sox_effect_t * effp)
              if (ichan == ochan)
                return SOX_EFF_NULL;
              break;             /* Code below will handle this case */
-         case MIX_LEFT:
+         case 'l':
              if (ichan == 2 && ochan == 1)
              {
                  pans[0] = 1.0;
@@ -221,12 +204,11 @@ static int start(sox_effect_t * effp)
              }
              else
              {
-                 sox_fail("Can't average %d channels into %d channels",
-                         ichan, ochan);
+                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
              break;
-         case MIX_RIGHT:
+         case 'r':
              if (ichan == 2 && ochan == 1)
              {
                  pans[0] = 0.0;
@@ -243,38 +225,53 @@ static int start(sox_effect_t * effp)
              }
              else
              {
-                 sox_fail("Can't average %d channels into %d channels",
-                         ichan, ochan);
+                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
              break;
-         case MIX_FRONT:
+         case 'f':
              if (ichan == 4 && ochan == 2)
              {
                  pans[0] = 1.0;
                  pans[1] = 0.0;
                  mixer->num_pans = 2;
              }
+             else if (ichan == 4 && ochan == 1)
+             {
+                 pans[0] = 0.5;
+                 pans[1] = 0.5;
+                 pans[2] = 0.0;
+                 pans[3] = 0.0;
+                 mixer->num_pans = 4;
+             }
              else
              {
-                 sox_fail("-f option requires 4 channels input and 2 channel output");
+                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
              break;
-         case MIX_BACK:
+         case 'b':
              if (ichan == 4 && ochan == 2)
              {
                  pans[0] = 0.0;
                  pans[1] = 1.0;
                  mixer->num_pans = 2;
              }
+             else if (ichan == 4 && ochan == 1)
+             {
+                 pans[0] = 0.0;
+                 pans[1] = 0.0;
+                 pans[2] = 0.5;
+                 pans[3] = 0.5;
+                 mixer->num_pans = 4;
+             }
              else
              {
-                 sox_fail("-b option requires 4 channels input and 2 channel output");
+                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
              break;
-         case MIX_LEFT_FRONT:
+         case '1':
              if (ichan == 2 && ochan == 1)
              {
                  pans[0] = 1.0;
@@ -291,11 +288,11 @@ static int start(sox_effect_t * effp)
              }
              else
              {
-                 sox_fail("-1 option requires 4 channels input and 1 channel output");
+                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
              break;
-         case MIX_RIGHT_FRONT:
+         case '2':
              if (ichan == 2 && ochan == 1)
              {
                  pans[0] = 0.0;
@@ -312,11 +309,12 @@ static int start(sox_effect_t * effp)
              }
              else
              {
-                 sox_fail("-2 option requires 4 channels input and 1 channel output");
+                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
              break;
-         case MIX_LEFT_BACK:
+
+         case '3':
              if (ichan == 4 && ochan == 1)
              {
                  pans[0] = 0.0;
@@ -327,10 +325,12 @@ static int start(sox_effect_t * effp)
              }
              else
              {
-                 sox_fail("-3 option requires 4 channels input and 1 channel output");
+                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
-         case MIX_RIGHT_BACK:
+             break;
+
+         case '4':
              if (ichan == 4 && ochan == 1)
              {
                  pans[0] = 0.0;
@@ -341,14 +341,15 @@ static int start(sox_effect_t * effp)
              }
              else
              {
-                 sox_fail("-4 option requires 4 channels input and 1 channel output");
+                 sox_fail("Can't mix -%c %d -> %d channels", mixer->mix, ichan, ochan);
                  return SOX_EOF;
              }
+             break;
 
          case MIX_SPECIFIED:
              break;
          default:
-             sox_fail("Unknown mix option in average effect");
+             sox_fail("Unknown mix option");
              return SOX_EOF;
      }
 
@@ -426,7 +427,7 @@ static int start(sox_effect_t * effp)
          }
          else
          {
-             sox_fail("Invalid options specified to mixer while not mixing");
+             sox_fail("Invalid options while not mixing");
              return SOX_EOF;
          }
      }
@@ -453,9 +454,13 @@ static int start(sox_effect_t * effp)
          }
          else
          {
-             sox_fail("Invalid options specified to mixer for this channel combination");
+             sox_fail("Invalid options for this channel combination");
              return SOX_EOF;
          }
+     }
+     else if (mixer->num_pans == 3) {
+       sox_fail("Invalid options while not mixing");
+       return SOX_EOF;
      }
      else if (mixer->num_pans == 4) {
          /* CASE 4 */
@@ -475,29 +480,20 @@ static int start(sox_effect_t * effp)
          }
          else
          {
-             sox_fail("Invalid options specified to mixer for this channel combination");
+             sox_fail("Invalid options for this channel combination");
              return SOX_EOF;
          }
      }
-     else
-     {
-         sox_fail("Invalid options specified to mixer while not mixing");
-         return SOX_EOF;
-     }
 
-#if 0  /* TODO: test the following: */
      if (effp->ininfo.channels != effp->outinfo.channels)
        return SOX_SUCCESS;
 
      for (i = 0; i < (int)effp->ininfo.channels; ++i)
        for (j = 0; j < (int)effp->outinfo.channels; ++j)
-         if (avg->sources[i][j] != (i == j))
+         if (mixer->sources[i][j] != (i == j))
            return SOX_SUCCESS;
 
      return SOX_EFF_NULL;
-#else
-     return SOX_SUCCESS;
-#endif
 }
 
 /*

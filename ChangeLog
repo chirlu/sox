@@ -20,12 +20,16 @@ sox-14.0.1
 
   o Fix Sndtool read error causing noise at start.  (Reynir Stefánsson)
   o Fix loss of 1 decoded FLAC block when using "trim 0 ...".  (robs)
+  o Fix trim when first effect with IMA-ADPCM input wav file.  (robs)
+  o Fix mixer with >4 numbers, and mixer -3 behaving as mixer -4.  (robs)
+
+  Internal improvements:
+
   o Let "make distcheck" run some automated test scripts.
   o Distribute missing cmake files.
   o Fix ogg vorbis compile error on some platforms.
   o Remove unused libltdl that could cause header mismatch with
     installed libltdl.
-  o Fix trim when first effect with IMA-ADPCM input wav file.  (robs)
 
 
 sox-14.0.0
