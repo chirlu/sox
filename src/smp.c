@@ -349,9 +349,9 @@ static int sox_smpstartwrite(sox_format_t * ft)
         ft->signal.encoding = SOX_ENCODING_SIGN2;
         ft->signal.channels = 1;
 
-        strcpy(header.Id, SVmagic);
-        strcpy(header.version, SVvers);
-        sprintf(header.comments, "%-*s", COMMENTLEN, "Converted using Sox.");
+        memcpy(header.Id, SVmagic, sizeof(header.Id));
+        memcpy(header.version, SVvers, sizeof(header.version));
+        sprintf(header.comments, "%-*s", COMMENTLEN - 1, "Converted using Sox.");
         sprintf(header.name, "%-*.*s", NAMELEN, NAMELEN, ft->comment);
 
         /* Write file header */
