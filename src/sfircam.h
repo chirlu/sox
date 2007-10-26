@@ -93,7 +93,6 @@ struct sfinfo {
     float     sf_srate;
     uint32_t          sf_chans;
     uint32_t          sf_packmode;
-    char      sf_codes;
 };
 
 typedef union sfheader {
@@ -160,7 +159,6 @@ typedef struct {                  /*     ditto                    */
 #define sfclass(x) ((x)->sfinfo.sf_packmode)
 #define sfsamplesize(x) ((size_t) ((x)->sfinfo.sf_packmode & 0xFFFF))
 #define sfbsize(x) ((x)->sox_size - sizeof(SFHEADER))
-#define sfcodes(x) ((x)->sfinfo.sf_codes)
 
 /*
  * Macros for testing soundfiles

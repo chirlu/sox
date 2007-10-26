@@ -37,7 +37,7 @@ static void readcodes(sox_format_t * ft, SFHEADER *sfhead)
         sox_bool finished = sox_false;
         SFCODE *sfcodep;
 
-        sfcodep = (SFCODE *) &sfcodes(sfhead);
+        sfcodep = (SFCODE *) (&sfhead->sfinfo + 1);
         do {
                 sfcharp = (char *) sfcodep + sizeof(SFCODE);
                 if (ft->signal.reverse_bytes) {
@@ -199,7 +199,7 @@ static int sox_sfstartwrite(sox_format_t * ft)
         /* between different coverts and not rely on memory contents */
         memset (&sfhead, 0, sizeof(SFHEADER));
         memcpy(&sfhead.sfinfo, &sf->info, sizeof(struct sfinfo));
-        sfcodep = (SFCODE *) &sfcodes(&sfhead);
+        sfcodep = (SFCODE *) (&sfhead.sfinfo + 1);
         sfcodep->code = SF_COMMENT;
         sfcodep->bsize = strlen(ft->comment) + sizeof(SFCODE);
         while (sfcodep->bsize % 4)
