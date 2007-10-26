@@ -1,6 +1,7 @@
 /*
- * Effect: reverb           Copyright (c) 2007 robs@users.sourceforge.net
- * Algorithm based on freeverb by Jezar @ Dreampoint.
+ * Effect: stereo reverberation
+ * Copyright (c) 2007 robs@users.sourceforge.net
+ * Filter design based on freeverb by Jezar at Dreampoint.
  *
  * This library is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -18,38 +19,37 @@
  */
 
 #include "sox_i.h"
+#include "fifo.h"
 #include "xmalloc.h"
 #include <math.h>
-#include <string.h>
 
-#define FLOAT float
 #define filter_create(p, n) (p)->ptr=Xcalloc((p)->buffer, (p)->size=(size_t)(n))
+#define filter_advance(p) if (--(p)->ptr < (p)->buffer) (p)->ptr += (p)->size
 #define filter_delete(p) free((p)->buffer)
-#define ADVANCE_PTR(ptr) if (--p->ptr < p->buffer) p->ptr += p->size
 
 typedef struct {
   size_t  size;
-  FLOAT   * buffer, * ptr;
-  FLOAT   store;
+  float   * buffer, * ptr;
+  float   store;
 } filter_t;
 
-static FLOAT comb_process(filter_t * p,  /* gcc -O2 will inline this */
-    FLOAT input, FLOAT feedback, FLOAT hf_damping)
+static float comb_process(filter_t * p,  /* gcc -O2 will inline this */
+    float const * input, float const * feedback, float const * hf_damping)
 {
-  FLOAT output = *p->ptr;
-  p->store = output + (p->store - output) * hf_damping;
-  *p->ptr = input + p->store * feedback;
-  ADVANCE_PTR(ptr);
+  float output = *p->ptr;
+  p->store = output + (p->store - output) * *hf_damping;
+  *p->ptr = *input + p->store * *feedback;
+  filter_advance(p);
   return output;
 }
 
-static FLOAT allpass_process(filter_t * p,  /* gcc -O2 will inline this */
-    FLOAT input, FLOAT feedback)
+static float allpass_process(filter_t * p,  /* gcc -O2 will inline this */
+    float const * input)
 {
-  FLOAT output = *p->ptr;
-  *p->ptr = input + output * feedback;
-  ADVANCE_PTR(ptr);
-  return output - input;
+  float output = *p->ptr;
+  *p->ptr = *input + output * .5;
+  filter_advance(p);
+  return output - *input;
 }
 
 static const size_t /* Filter delay lengths in samples (44100Hz sample-rate) */
@@ -74,6 +74,25 @@ static void filter_array_create(filter_array_t * p, double rate,
     filter_create(&p->allpass[i], r * (allpass_lengths[i] + stereo_adjust * offset) + .5);
 }
 
+static void filter_array_process(filter_array_t * p,
+    size_t length, float const * input, float * output,
+    float const * feedback, float const * hf_damping, float const * gain)
+{
+  while (length--) {
+    float out = 0, in = *input++;
+
+    size_t i = array_length(comb_lengths) - 1;
+    do out += comb_process(p->comb + i, &in, feedback, hf_damping);
+    while (i--);
+
+    i = array_length(allpass_lengths) - 1;
+    do out = allpass_process(p->allpass + i, &out);
+    while (i--);
+
+    *output++ = out * *gain;
+  }
+}
+
 static void filter_array_delete(filter_array_t * p)
 {
   size_t i;
@@ -84,66 +103,49 @@ static void filter_array_delete(filter_array_t * p)
     filter_delete(&p->comb[i]);
 }
 
-static void filter_array_process(filter_array_t * p,
-    size_t length, FLOAT const * input, FLOAT * output,
-    FLOAT feedback, FLOAT hf_damping, FLOAT gain)
-{
-  while (length--) {
-    FLOAT out = 0, in = *input++;
-
-    size_t i = array_length(comb_lengths) - 1;
-    do out += comb_process(p->comb + i, in, feedback, hf_damping);
-    while (i--);
-
-    i = array_length(allpass_lengths) - 1;
-    do out = allpass_process(p->allpass + i, out, .5f);
-    while (i--);
-
-    *output++ = out * gain;
-  }
-}
-
-static const size_t block_size = 1024;
-
 typedef struct reverb {
-  FLOAT feedback;
-  FLOAT hf_damping;
-  FLOAT gain;
-  size_t delay, num_delay_blocks;
-  FLOAT * * in, * out[2];
+  float feedback;
+  float hf_damping;
+  float gain;
+  fifo_t input_fifo;
   filter_array_t chan[2];
+  float * out[2];
 } reverb_t;
 
-static FLOAT * reverb_create(reverb_t * p, double sample_rate_Hz,
+static void reverb_create(reverb_t * p, double sample_rate_Hz,
     double wet_gain_dB,
     double room_scale,     /* % */
     double reverberance,   /* % */
     double hf_damping,     /* % */
     double pre_delay_ms,
-    FLOAT * * out,
-    double stereo_depth)
+    double stereo_depth,
+    size_t buffer_size,
+    float * * out)
 {
-  size_t i;
+  size_t i, delay = pre_delay_ms / 1000 * sample_rate_Hz + .5;
   double scale = room_scale / 100 * .9 + .1;
   double depth = stereo_depth / 100;
-  double a, b;
+  double a =  -1 /  log(1 - /**/.3 /**/);           /* Set minimum feedback */
+  double b = 100 / (log(1 - /**/.98/**/) * a + 1);  /* Set maximum feedback */
 
   memset(p, 0, sizeof(*p));
-
-  b = -1 / log(1 - .5); a = 100 / (1 + log(1 - .98) * b); b *= a;
-  p->feedback = 1 - exp((reverberance - a) / b);
+  p->feedback = 1 - exp((reverberance - b) / (a * b));
   p->hf_damping = hf_damping / 100 * .3 + .2;
   p->gain = exp(wet_gain_dB / 20 * log(10.)) * .015;
-  p->delay = pre_delay_ms / 1000 * sample_rate_Hz + .5;
-  p->num_delay_blocks = (p->delay + block_size - 1) / block_size;
-  Xcalloc(p->in, 1 + p->num_delay_blocks);
-  for (i = 0; i <= p->num_delay_blocks; ++i)
-    Xcalloc(p->in[i], block_size);
+  fifo_create(&p->input_fifo, sizeof(float));
+  memset(fifo_write(&p->input_fifo, delay, 0), 0, delay * sizeof(float));
   for (i = 0; i <= ceil(depth); ++i) {
     filter_array_create(p->chan + i, sample_rate_Hz, scale, i * depth);
-    out[i] = Xcalloc(p->out[i], block_size);
+    out[i] = Xcalloc(p->out[i], buffer_size);
   }
-  return p->in[0];
+}
+
+static void reverb_process(reverb_t * p, size_t length)
+{
+  size_t i;
+  for (i = 0; i < 2 && p->out[i]; ++i)
+    filter_array_process(p->chan + i, length, (float *) fifo_read_ptr(&p->input_fifo), p->out[i], &p->feedback, &p->hf_damping, &p->gain);
+  fifo_read(&p->input_fifo, length, NULL);
 }
 
 static void reverb_delete(reverb_t * p)
@@ -153,27 +155,7 @@ static void reverb_delete(reverb_t * p)
     free(p->out[i]);
     filter_array_delete(p->chan + i);
   }
-  for (i = 0; i <= p->num_delay_blocks; ++i)
-    free(p->in[i]);
-  free(p->in);
-}
-
-static FLOAT * reverb_process(reverb_t * p, size_t length)
-{
-  FLOAT * oldest_in = p->in[p->num_delay_blocks];
-  size_t len1 = p->delay % block_size;
-  size_t len2 = length - len1, i;
-
-  for (i = 0; i < 2 && p->out[i]; ++i) {
-    FLOAT * * b = p->in + p->num_delay_blocks;
-
-    if (len1)
-      filter_array_process(p->chan + i, len1, *b-- + block_size - len1, p->out[i], p->feedback, p->hf_damping, p->gain);
-    filter_array_process(p->chan + i, len2, *b, p->out[i] + len1, p->feedback, p->hf_damping, p->gain);
-  }
-  for (i = p->num_delay_blocks; i; --i)
-    p->in[i] = p->in[i - 1];
-  return p->in[i] = oldest_in;
+  fifo_delete(&p->input_fifo);
 }
 
 /*------------------------------- SoX Wrapper --------------------------------*/
@@ -186,8 +168,8 @@ typedef struct priv {
   size_t ichannels, ochannels;
   struct {
     reverb_t reverb;
-    FLOAT * dry, * dry1, * wet[2];
-  } f[2];
+    float * dry, * wet[2];
+  } chan[2];
 } priv_t;
 
 assert_static(sizeof(struct priv) <= SOX_MAX_EFFECT_PRIVSIZE,
@@ -220,7 +202,6 @@ static int start(sox_effect_t * effp)
   size_t i;
   
   p->ichannels = p->ochannels = 1;
-
   effp->outinfo.rate = effp->ininfo.rate;
   if (effp->ininfo.channels > 2 && p->stereo_depth) {
     sox_warn("stereo-depth not applicable with >2 channels");
@@ -232,41 +213,34 @@ static int start(sox_effect_t * effp)
   if (effp->ininfo.channels == 2 && p->stereo_depth)
     p->ichannels = p->ochannels = 2;
   else effp->flows = effp->ininfo.channels;
-  for (i = 0; i < p->ichannels; ++i)
-    p->f[i].dry = reverb_create(&p->f[i].reverb, effp->ininfo.rate,
-        p->wet_gain_dB, p->room_scale, p->reverberance, p->hf_damping,
-        p->pre_delay_ms, p->f[i].wet, p->stereo_depth);
-  return sox_effect_set_imin(effp, block_size);
+  for (i = 0; i < p->ichannels; ++i) reverb_create(
+    &p->chan[i].reverb, effp->ininfo.rate, p->wet_gain_dB, p->room_scale,
+    p->reverberance, p->hf_damping, p->pre_delay_ms, p->stereo_depth,
+    effp->global_info->global_info->bufsiz / p->ochannels, p->chan[i].wet);
+  return SOX_SUCCESS;
 }
 
 static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf,
                 sox_ssample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
   priv_t * p = (priv_t *) effp->priv;
-  sox_size_t c, i, w;
+  sox_size_t c, i, w, len = min(*isamp / p->ichannels, *osamp / p->ochannels);
 
-  if (*isamp < block_size || *osamp < block_size * p->ochannels / p->ichannels)
-    *isamp = *osamp = 0;
-  else {
-    *osamp = (*isamp = block_size) * p->ochannels / p->ichannels;
-
-    for (i = 0; i < *isamp; ++i) for (c = 0; c < p->ichannels; ++c) 
-      p->f[c].dry[i] = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++, effp->clips);
-    for (c = 0; c < p->ichannels; ++c) {
-      p->f[c].dry1 = p->f[c].dry;
-      p->f[c].dry = reverb_process(&p->f[c].reverb, *isamp / p->ichannels);
-    }
-    if (p->ichannels == 2)
-      for (i = 0; i < *isamp; ++i) for (w = 0; w < 2; ++w) {
-        FLOAT x = (1 - p->wet_only) * p->f[w].dry1[i] + .5 *
-          (p->f[0].wet[w][i] + p->f[1].wet[w][i]);
-        *obuf++ = SOX_FLOAT_32BIT_TO_SAMPLE(x, effp->clips);
-      }
-    else
-      for (i = 0; i < *isamp; ++i) for (w = 0; w < min(2, p->ochannels); ++w) {
-        FLOAT x = (1 - p->wet_only) * p->f[0].dry1[i] + p->f[0].wet[w][i];
-        *obuf++ = SOX_FLOAT_32BIT_TO_SAMPLE(x, effp->clips);
-      }
+  *isamp = len * p->ichannels, *osamp = len * p->ochannels;
+  for (c = 0; c < p->ichannels; ++c)
+    p->chan[c].dry = fifo_write(&p->chan[c].reverb.input_fifo, len, 0);
+  for (i = 0; i < len; ++i) for (c = 0; c < p->ichannels; ++c) 
+    p->chan[c].dry[i] = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++, effp->clips);
+  for (c = 0; c < p->ichannels; ++c)
+    reverb_process(&p->chan[c].reverb, len);
+  if (p->ichannels == 2) for (i = 0; i < len; ++i) for (w = 0; w < 2; ++w) {
+    float out = (1 - p->wet_only) * p->chan[w].dry[i] +
+      .5 * (p->chan[0].wet[w][i] + p->chan[1].wet[w][i]);
+    *obuf++ = SOX_FLOAT_32BIT_TO_SAMPLE(out, effp->clips);
+  }
+  else for (i = 0; i < len; ++i) for (w = 0; w < p->ochannels; ++w) {
+    float out = (1 - p->wet_only) * p->chan[0].dry[i] + p->chan[0].wet[w][i];
+    *obuf++ = SOX_FLOAT_32BIT_TO_SAMPLE(out, effp->clips);
   }
   return SOX_SUCCESS;
 }
@@ -276,7 +250,7 @@ static int stop(sox_effect_t * effp)
   priv_t * p = (priv_t *) effp->priv;
   size_t i;
   for (i = 0; i < p->ichannels; ++i)
-    reverb_delete(&p->f[i].reverb);
+    reverb_delete(&p->chan[i].reverb);
   return SOX_SUCCESS;
 }
 
