@@ -55,7 +55,7 @@ typedef struct
 
   sox_size_t size;         /* buffer size */
   sox_size_t index;        /* next available element */
-  sox_ssample_t *ibuf;      /* input buffer */
+  sox_sample_t *ibuf;      /* input buffer */
   sox_size_t ishift;       /* input shift */
   
   sox_size_t oindex;       /* next evailable element */
@@ -153,7 +153,7 @@ static int sox_stretch_start(sox_effect_t * effp)
   stretch->size = (int)(effp->outinfo.rate * 0.001 * stretch->window);
   /* start in the middle of an input to avoid initial fading... */
   stretch->index = stretch->size / 2;
-  stretch->ibuf = (sox_ssample_t *)xmalloc(stretch->size * sizeof(sox_ssample_t));
+  stretch->ibuf = (sox_sample_t *)xmalloc(stretch->size * sizeof(sox_sample_t));
 
   /* the shift ratio deal with the longest of ishift/oshift
      hence ishift<=size and oshift<=size. */
@@ -221,7 +221,7 @@ static void combine(stretch_t stretch)
 /*
  * Processes flow.
  */
-static int sox_stretch_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_stretch_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
   stretch_t stretch = (stretch_t) effp->priv;
@@ -233,7 +233,7 @@ static int sox_stretch_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_
       sox_size_t tocopy = min(*isamp-iindex, 
                              stretch->size-stretch->index);
 
-      memcpy(stretch->ibuf + stretch->index, ibuf + iindex, tocopy * sizeof(sox_ssample_t));
+      memcpy(stretch->ibuf + stretch->index, ibuf + iindex, tocopy * sizeof(sox_sample_t));
       
       iindex += tocopy;
       stretch->index += tocopy;
@@ -288,7 +288,7 @@ static int sox_stretch_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_
  * Drain buffer at the end
  * maybe not correct ? end might be artificially faded?
  */
-static int sox_stretch_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_stretch_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
   stretch_t stretch = (stretch_t) effp->priv;
   sox_size_t i;

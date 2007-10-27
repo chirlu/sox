@@ -39,14 +39,14 @@ static int startread(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t read(sox_format_t * ft UNUSED, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t read(sox_format_t * ft UNUSED, sox_sample_t *buf, sox_size_t len)
 {
   /* Reading from null generates silence i.e. (sox_sample_t)0. */
-  memset(buf, 0, sizeof(sox_ssample_t) * len);
+  memset(buf, 0, sizeof(sox_sample_t) * len);
   return len; /* Return number of samples "read". */
 }
 
-static sox_size_t write(sox_format_t * ft UNUSED, const sox_ssample_t *buf UNUSED, sox_size_t len)
+static sox_size_t write(sox_format_t * ft UNUSED, const sox_sample_t *buf UNUSED, sox_size_t len)
 {
   /* Writing to null just discards the samples */
   return len; /* Return number of samples "written". */

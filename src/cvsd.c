@@ -227,7 +227,7 @@ int sox_cvsdstopread(sox_format_t * ft)
 
 /* ---------------------------------------------------------------------- */
 
-sox_size_t sox_cvsdread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t nsamp) 
+sox_size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         sox_size_t done = 0;
@@ -283,7 +283,7 @@ sox_size_t sox_cvsdread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t nsamp)
 
 /* ---------------------------------------------------------------------- */
 
-sox_size_t sox_cvsdwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t nsamp) 
+sox_size_t sox_cvsdwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp) 
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         sox_size_t done = 0;

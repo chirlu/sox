@@ -92,7 +92,7 @@ static int sox_trim_start(sox_effect_t * effp)
  * Place in buf[].
  * Return number of samples read.
  */
-static int sox_trim_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_trim_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
                  sox_size_t *isamp, sox_size_t *osamp)
 {
     int result = SOX_SUCCESS;

@@ -1147,7 +1147,7 @@ static sox_bool can_segue(sox_size_t i)
     files[i]->ft->signal.rate     == files[i - 1]->ft->signal.rate;
 }
 
-static sox_size_t sox_read_wide(sox_format_t * ft, sox_ssample_t * buf, sox_size_t max)
+static sox_size_t sox_read_wide(sox_format_t * ft, sox_sample_t * buf, sox_size_t max)
 {
   sox_size_t len = max / combiner.channels;
   len = sox_read(ft, buf, len * ft->signal.channels) / ft->signal.channels;
@@ -1156,7 +1156,7 @@ static sox_size_t sox_read_wide(sox_format_t * ft, sox_ssample_t * buf, sox_size
   return len;
 }
 
-static void balance_input(sox_ssample_t * buf, sox_size_t ws, file_t f)
+static void balance_input(sox_sample_t * buf, sox_size_t ws, file_t f)
 {
   sox_size_t s = ws * f->ft->signal.channels;
 
@@ -1169,7 +1169,7 @@ static void balance_input(sox_ssample_t * buf, sox_size_t ws, file_t f)
 
 typedef struct input_combiner
 {
-  sox_ssample_t *ibuf[MAX_INPUT_FILES];
+  sox_sample_t *ibuf[MAX_INPUT_FILES];
 } * input_combiner_t;
 
 assert_static(sizeof(struct input_combiner) <= SOX_MAX_EFFECT_PRIVSIZE,
@@ -1185,7 +1185,7 @@ static int combiner_start(sox_effect_t *effp)
   else {
     ws = 0;
     for (i = 0; i < input_count; i++) {
-      z->ibuf[i] = (sox_ssample_t *)xmalloc(sox_globals.bufsiz * sizeof(sox_ssample_t));
+      z->ibuf[i] = (sox_sample_t *)xmalloc(sox_globals.bufsiz * sizeof(sox_sample_t));
       progress_to_file(files[i]);
       ws = max(ws, input_wide_samples);
     }
@@ -1194,7 +1194,7 @@ static int combiner_start(sox_effect_t *effp)
   return SOX_SUCCESS;
 }
 
-static int combiner_drain(sox_effect_t *effp, sox_ssample_t * obuf, sox_size_t * osamp)
+static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, sox_size_t * osamp)
 {
   input_combiner_t z = (input_combiner_t) effp->priv;
   sox_size_t ws, s, i;
@@ -1215,7 +1215,7 @@ static int combiner_drain(sox_effect_t *effp, sox_ssample_t * obuf, sox_size_t *
     balance_input(obuf, olen, files[current_input]);
     break;
   } else {
-    sox_ssample_t * p = obuf;
+    sox_sample_t * p = obuf;
     for (i = 0; i < input_count; ++i) {
       ilen[i] = sox_read_wide(files[i]->ft, z->ibuf[i], *osamp);
       balance_input(z->ibuf[i], ilen[i], files[i]);
@@ -1266,8 +1266,8 @@ static sox_effect_handler_t const * input_combiner_effect_fn(void)
   return &handler;
 }
 
-static int output_flow(sox_effect_t *effp UNUSED, sox_ssample_t const * ibuf,
-    sox_ssample_t * obuf UNUSED, sox_size_t * isamp, sox_size_t * osamp)
+static int output_flow(sox_effect_t *effp UNUSED, sox_sample_t const * ibuf,
+    sox_sample_t * obuf UNUSED, sox_size_t * isamp, sox_size_t * osamp)
 {
   size_t len;
   for (*osamp = *isamp; *osamp; ibuf += len, *osamp -= len) {

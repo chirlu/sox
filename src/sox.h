@@ -65,18 +65,17 @@ typedef uint32_t uint24_t;   /* ditto */
 #define SOX_INT32_MAX SOX_INT_MAX(32)
 #define SOX_INT64_MAX 0x7fffffffffffffffLL /* Not in use yet */
 
-typedef int32_t sox_ssample_t;
-typedef uint32_t sox_sample_t;
+typedef int32_t sox_sample_t;
 
 /* Minimum and maximum values a sample can hold. */
-#define SOX_SAMPLE_MAX (sox_ssample_t)SOX_INT_MAX(32)
-#define SOX_SAMPLE_MIN (sox_ssample_t)SOX_INT_MIN(32)
+#define SOX_SAMPLE_MAX (sox_sample_t)SOX_INT_MAX(32)
+#define SOX_SAMPLE_MIN (sox_sample_t)SOX_INT_MIN(32)
 
 
 
 /*                Conversions: Linear PCM <--> sox_sample_t
  *
- *   I/O       I/O     sox_sample_t  Clips?    I/O     sox_sample_t  Clips? 
+ *   I/O       I/O     sox_sample_t Clips?    I/O     sox_sample_t Clips? 
  *  Format   Minimum     Minimum     I O    Maximum     Maximum     I O      
  *  ------  ---------  ------------ -- --   --------  ------------ -- --  
  *  Float      -1     -1.00000000047 y y       1           1        y n         
@@ -98,19 +97,19 @@ typedef uint32_t sox_sample_t;
  */
 
 /* Temporary variables to prevent multiple evaluation of macro arguments: */
-static sox_ssample_t sox_macro_temp_sample UNUSED;
+static sox_sample_t sox_macro_temp_sample UNUSED;
 static double sox_macro_temp_double UNUSED;
 
 #define SOX_SAMPLE_NEG SOX_INT_MIN(32)
 #define SOX_SAMPLE_TO_UNSIGNED(bits,d,clips) \
   (uint##bits##_t)( \
     sox_macro_temp_sample=(d), \
-    sox_macro_temp_sample>(sox_ssample_t)(SOX_SAMPLE_MAX-(1U<<(31-bits)))? \
+    sox_macro_temp_sample>(sox_sample_t)(SOX_SAMPLE_MAX-(1U<<(31-bits)))? \
       ++(clips),SOX_UINT_MAX(bits): \
       ((uint32_t)(sox_macro_temp_sample^SOX_SAMPLE_NEG)+(1U<<(31-bits)))>>(32-bits))
 #define SOX_SAMPLE_TO_SIGNED(bits,d,clips) \
   (int##bits##_t)(SOX_SAMPLE_TO_UNSIGNED(bits,d,clips)^SOX_INT_MIN(bits))
-#define SOX_SIGNED_TO_SAMPLE(bits,d)((sox_ssample_t)(d)<<(32-bits))
+#define SOX_SIGNED_TO_SAMPLE(bits,d)((sox_sample_t)(d)<<(32-bits))
 #define SOX_UNSIGNED_TO_SAMPLE(bits,d)(SOX_SIGNED_TO_SAMPLE(bits,d)^SOX_SAMPLE_NEG)
 
 #define SOX_UNSIGNED_8BIT_TO_SAMPLE(d,clips) SOX_UNSIGNED_TO_SAMPLE(8,d)
@@ -119,10 +118,10 @@ static double sox_macro_temp_double UNUSED;
 #define SOX_SIGNED_16BIT_TO_SAMPLE(d,clips) SOX_SIGNED_TO_SAMPLE(16,d)
 #define SOX_UNSIGNED_24BIT_TO_SAMPLE(d,clips) SOX_UNSIGNED_TO_SAMPLE(24,d)
 #define SOX_SIGNED_24BIT_TO_SAMPLE(d,clips) SOX_SIGNED_TO_SAMPLE(24,d)
-#define SOX_UNSIGNED_32BIT_TO_SAMPLE(d,clips) ((sox_ssample_t)(d)^SOX_SAMPLE_NEG)
-#define SOX_SIGNED_32BIT_TO_SAMPLE(d,clips) (sox_ssample_t)(d)
+#define SOX_UNSIGNED_32BIT_TO_SAMPLE(d,clips) ((sox_sample_t)(d)^SOX_SAMPLE_NEG)
+#define SOX_SIGNED_32BIT_TO_SAMPLE(d,clips) (sox_sample_t)(d)
 #define SOX_FLOAT_32BIT_TO_SAMPLE SOX_FLOAT_64BIT_TO_SAMPLE
-#define SOX_FLOAT_64BIT_TO_SAMPLE(d,clips) (sox_macro_temp_double=(d),sox_macro_temp_double<-1?++(clips),(-SOX_SAMPLE_MAX):sox_macro_temp_double>1?++(clips),SOX_SAMPLE_MAX:(sox_ssample_t)((uint32_t)((double)(sox_macro_temp_double)*SOX_SAMPLE_MAX+(SOX_SAMPLE_MAX+.5))-SOX_SAMPLE_MAX))
+#define SOX_FLOAT_64BIT_TO_SAMPLE(d,clips) (sox_macro_temp_double=(d),sox_macro_temp_double<-1?++(clips),(-SOX_SAMPLE_MAX):sox_macro_temp_double>1?++(clips),SOX_SAMPLE_MAX:(sox_sample_t)((uint32_t)((double)(sox_macro_temp_double)*SOX_SAMPLE_MAX+(SOX_SAMPLE_MAX+.5))-SOX_SAMPLE_MAX))
 #define SOX_SAMPLE_TO_UNSIGNED_8BIT(d,clips) SOX_SAMPLE_TO_UNSIGNED(8,d,clips)
 #define SOX_SAMPLE_TO_SIGNED_8BIT(d,clips) SOX_SAMPLE_TO_SIGNED(8,d,clips)
 #define SOX_SAMPLE_TO_UNSIGNED_16BIT(d,clips) SOX_SAMPLE_TO_UNSIGNED(16,d,clips)
@@ -288,10 +287,10 @@ typedef struct {
     const char   * const *names;
     unsigned int flags;
     int          (*startread)(sox_format_t * ft);
-    sox_size_t   (*read)(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len);
+    sox_size_t   (*read)(sox_format_t * ft, sox_sample_t *buf, sox_size_t len);
     int          (*stopread)(sox_format_t * ft);
     int          (*startwrite)(sox_format_t * ft);
-    sox_size_t   (*write)(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len);
+    sox_size_t   (*write)(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len);
     int          (*stopwrite)(sox_format_t * ft);
     int          (*seek)(sox_format_t * ft, sox_size_t offset);
 } sox_format_handler_t;
@@ -366,8 +365,8 @@ sox_format_t * sox_open_write(
     sox_size_t length,
     const sox_instrinfo_t *instr,
     const sox_loopinfo_t *loops);
-sox_size_t sox_read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len);
-sox_size_t sox_write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len);
+sox_size_t sox_read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len);
+sox_size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len);
 int sox_close(sox_format_t * ft);
 
 #define SOX_SEEK_SET 0
@@ -401,9 +400,9 @@ typedef struct {
 
   int (*getopts)(sox_effect_t * effp, int argc, char *argv[]);
   int (*start)(sox_effect_t * effp);
-  int (*flow)(sox_effect_t * effp, const sox_ssample_t *ibuf,
-      sox_ssample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);
-  int (*drain)(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp);
+  int (*flow)(sox_effect_t * effp, const sox_sample_t *ibuf,
+      sox_sample_t *obuf, sox_size_t *isamp, sox_size_t *osamp);
+  int (*drain)(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp);
   int (*stop)(sox_effect_t * effp);
   int (*kill)(sox_effect_t * effp);
 } sox_effect_handler_t;
@@ -417,7 +416,7 @@ struct sox_effect {
   struct sox_signalinfo    ininfo;       /* input signal specifications */
   struct sox_signalinfo    outinfo;      /* output signal specifications */
   sox_effect_handler_t     handler;
-  sox_ssample_t            *obuf;        /* output buffer */
+  sox_sample_t            *obuf;        /* output buffer */
   sox_size_t               obeg, oend;   /* consumed, total length */
   sox_size_t               imin;         /* minimum input buffer size */
   sox_size_t               clips;        /* increment if clipping occurs */

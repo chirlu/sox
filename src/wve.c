@@ -143,7 +143,7 @@ static int sox_wvestartwrite(sox_format_t * ft)
         return SOX_SUCCESS;
 }
 
-static sox_size_t sox_wvewrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t samp)
+static sox_size_t sox_wvewrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t samp)
 {
         wve_t p = (wve_t)ft->priv;
         p->length += samp * ft->signal.size;

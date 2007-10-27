@@ -309,12 +309,12 @@ double sox_swapdf(double df)
 
 /* dummy format routines for do-nothing functions */
 int sox_format_nothing(sox_format_t * ft UNUSED) { return(SOX_SUCCESS); }
-sox_size_t sox_format_nothing_read(sox_format_t * ft UNUSED, sox_ssample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
-sox_size_t sox_format_nothing_write(sox_format_t * ft UNUSED, const sox_ssample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
+sox_size_t sox_format_nothing_read(sox_format_t * ft UNUSED, sox_sample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
+sox_size_t sox_format_nothing_write(sox_format_t * ft UNUSED, const sox_sample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
 int sox_format_nothing_seek(sox_format_t * ft UNUSED, sox_size_t offset UNUSED) { sox_fail_errno(ft, SOX_ENOTSUP, "operation not supported"); return(SOX_EOF); }
 
 /* here for linear interp.  might be useful for other things */
-sox_ssample_t sox_gcd(sox_ssample_t a, sox_ssample_t b)
+sox_sample_t sox_gcd(sox_sample_t a, sox_sample_t b)
 {
   if (b == 0)
     return a;
@@ -322,7 +322,7 @@ sox_ssample_t sox_gcd(sox_ssample_t a, sox_ssample_t b)
     return sox_gcd(b, a % b);
 }
 
-sox_ssample_t sox_lcm(sox_ssample_t a, sox_ssample_t b)
+sox_sample_t sox_lcm(sox_sample_t a, sox_sample_t b)
 {
   /* parenthesize this way to avoid sox_sample_t overflow in product term */
   return a * (b / sox_gcd(a, b));

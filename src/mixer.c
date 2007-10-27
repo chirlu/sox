@@ -500,7 +500,7 @@ static int start(sox_effect_t * effp)
  * Process either isamp or osamp samples, whichever is smaller.
  */
 
-static int flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
                 sox_size_t *isamp, sox_size_t *osamp)
 {
     mixer_t mixer = (mixer_t) effp->priv;

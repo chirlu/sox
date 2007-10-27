@@ -214,7 +214,7 @@ static unsigned read_cardinal(sox_format_t * ft)
   return a;
 }
 
-static sox_size_t read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t samp)
+static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t samp)
 {
   prc_t p = (prc_t)ft->priv;
 
@@ -344,7 +344,7 @@ static void write_cardinal(sox_format_t * ft, unsigned a)
   }
 }
 
-static sox_size_t write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t samp)
+static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t samp)
 {
   prc_t p = (prc_t)ft->priv;
   /* Psion Record seems not to be able to handle frames > 800 samples */

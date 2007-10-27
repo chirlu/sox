@@ -175,13 +175,13 @@ static int sox_echo_start(sox_effect_t * effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_echo_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_echo_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
                  sox_size_t *isamp, sox_size_t *osamp)
 {
         echo_t echo = (echo_t) effp->priv;
         int j;
         double d_in, d_out;
-        sox_ssample_t out;
+        sox_sample_t out;
         sox_size_t len = min(*isamp, *osamp);
         *isamp = *osamp = len;
 
@@ -197,7 +197,7 @@ static int sox_echo_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssa
                 }
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * echo->out_gain;
-                out = SOX_24BIT_CLIP_COUNT((sox_ssample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 /* Store input in delay buffer */
                 echo->delay_buf[echo->counter] = d_in;
@@ -211,11 +211,11 @@ static int sox_echo_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssa
 /*
  * Drain out reverb lines. 
  */
-static int sox_echo_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_echo_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
         echo_t echo = (echo_t) effp->priv;
         double d_in, d_out;
-        sox_ssample_t out;
+        sox_sample_t out;
         int j;
         sox_size_t done;
 
@@ -231,7 +231,7 @@ static int sox_echo_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *
                 }
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * echo->out_gain;
-                out = SOX_24BIT_CLIP_COUNT((sox_ssample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 /* Store input in delay buffer */
                 echo->delay_buf[echo->counter] = d_in;

@@ -202,8 +202,8 @@ static int getblock(sox_format_t *);
 static void blockstart(sox_format_t *);
 
 /* Conversion macros (from raw.c) */
-#define SOX_ALAW_BYTE_TO_SAMPLE(d) ((sox_ssample_t)(sox_alaw2linear16(d)) << 16)
-#define SOX_ULAW_BYTE_TO_SAMPLE(d) ((sox_ssample_t)(sox_ulaw2linear16(d)) << 16)
+#define SOX_ALAW_BYTE_TO_SAMPLE(d) ((sox_sample_t)(sox_alaw2linear16(d)) << 16)
+#define SOX_ULAW_BYTE_TO_SAMPLE(d) ((sox_sample_t)(sox_ulaw2linear16(d)) << 16)
 
 /* public VOC functions for SOX */
 /*-----------------------------------------------------------------
@@ -308,7 +308,7 @@ static int sox_vocstartread(sox_format_t * ft)
  * ANN:  Major changes here to support multi-part files and files
  *       that do not have audio in block 9's.
  *-----------------------------------------------------------------*/
-static sox_size_t sox_vocread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t sox_vocread(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
         vs_t v = (vs_t) ft->priv;
         sox_size_t done = 0;
@@ -441,7 +441,7 @@ static int sox_vocstartwrite(sox_format_t * ft)
 /*-----------------------------------------------------------------
  * sox_vocwrite() -- write a VOC file
  *-----------------------------------------------------------------*/
-static sox_size_t sox_vocwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t sox_vocwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
         vs_t v = (vs_t) ft->priv;
         unsigned char uc;
@@ -474,7 +474,7 @@ static sox_size_t sox_vocwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_
 static void blockstop(sox_format_t * ft)
 {
         vs_t v = (vs_t) ft->priv;
-        sox_ssample_t datum;
+        sox_sample_t datum;
 
         sox_writeb(ft, 0);                     /* End of file block code */
         sox_seeki(ft, (sox_ssize_t)v->blockseek, 0); /* seek back to block length */

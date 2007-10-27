@@ -220,8 +220,8 @@ static int start(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf,
-                sox_ssample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
+                sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
   priv_t * p = (priv_t *) effp->priv;
   sox_size_t c, i, w, len = min(*isamp / p->ichannels, *osamp / p->ochannels);

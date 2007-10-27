@@ -167,7 +167,7 @@ typedef struct {
   char *        length_str;
   channel_t     getopts_channels;
   sox_size_t    getopts_nchannels;
-  sox_ssample_t max;
+  sox_sample_t max;
   sox_size_t    samples_done;
   sox_size_t    samples_to_do;
   channel_t     channels;
@@ -412,7 +412,7 @@ static int start(sox_effect_t * effp)
 
 
 
-static sox_ssample_t do_synth(sox_ssample_t synth_input, synth_t synth, int c, double rate)
+static sox_sample_t do_synth(sox_sample_t synth_input, synth_t synth, int c, double rate)
 {
   channel_t chan = &synth->channels[c];
   double synth_out;              /* [-1, 1] */
@@ -555,7 +555,7 @@ static sox_ssample_t do_synth(sox_ssample_t synth_input, synth_t synth, int c, d
 
 
 
-static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf, sox_ssample_t * obuf,
+static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * obuf,
     sox_size_t * isamp, sox_size_t * osamp)
 {
   synth_t synth = (synth_t) effp->priv;

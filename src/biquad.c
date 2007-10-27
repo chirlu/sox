@@ -58,11 +58,11 @@ int sox_biquad_start(sox_effect_t * effp)
   biquad_t p = (biquad_t) effp->priv;
 
   /* Simplify: */
-  p->b2 = p->b2/p->a0;
-  p->b1 = p->b1/p->a0;
-  p->b0 = p->b0/p->a0;
-  p->a2 = p->a2/p->a0;
-  p->a1 = p->a1/p->a0;
+  p->b2 /= p->a0;
+  p->b1 /= p->a0;
+  p->b0 /= p->a0;
+  p->a2 /= p->a0;
+  p->a1 /= p->a0;
 
   if (effp->global_info->plot == sox_plot_octave) {
     printf(
@@ -111,8 +111,8 @@ int sox_biquad_start(sox_effect_t * effp)
 }
 
 
-int sox_biquad_flow(sox_effect_t * effp, const sox_ssample_t *ibuf,
-    sox_ssample_t *obuf, sox_size_t *isamp, sox_size_t *osamp)
+int sox_biquad_flow(sox_effect_t * effp, const sox_sample_t *ibuf,
+    sox_sample_t *obuf, sox_size_t *isamp, sox_size_t *osamp)
 {
   biquad_t p = (biquad_t) effp->priv;
   sox_size_t len = min(*isamp, *osamp);

@@ -331,7 +331,7 @@ static int unpack_input(sox_format_t * ft, unsigned char *code)
         return (p->in_bits > 0);
 }
 
-static sox_size_t sox_auread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t samp)
+static sox_size_t sox_auread(sox_format_t * ft, sox_sample_t *buf, sox_size_t samp)
 {
         au_t p = (au_t ) ft->priv;
         unsigned char code;
@@ -349,7 +349,7 @@ static sox_size_t sox_auread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t s
         return done;
 }
 
-static sox_size_t sox_auwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t samp)
+static sox_size_t sox_auwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t samp)
 {
         au_t p = (au_t ) ft->priv;
         p->data_size += samp * ft->signal.size;

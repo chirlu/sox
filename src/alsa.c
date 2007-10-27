@@ -426,19 +426,19 @@ static int sox_alsastartread(sox_format_t * ft)
     return sox_alsasetup(ft, SND_PCM_STREAM_CAPTURE);
 }
 
-static void ub_read_buf(sox_ssample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips UNUSED)
+static void ub_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips UNUSED)
 {
     while (len--)
         *buf1++ = SOX_UNSIGNED_8BIT_TO_SAMPLE(*((unsigned char *)buf2++),);
 }
 
-static void sb_read_buf(sox_ssample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips UNUSED)
+static void sb_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips UNUSED)
 {
     while (len--)
         *buf1++ = SOX_SIGNED_8BIT_TO_SAMPLE(*((int8_t *)buf2++),);
 }
 
-static void uw_read_buf(sox_ssample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips UNUSED)
+static void uw_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips UNUSED)
 {
     while (len--)
     {
@@ -451,7 +451,7 @@ static void uw_read_buf(sox_ssample_t *buf1, char const * buf2, sox_size_t len, 
     }
 }
 
-static void sw_read_buf(sox_ssample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips UNUSED)
+static void sw_read_buf(sox_sample_t *buf1, char const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips UNUSED)
 {
     while (len--)
     {
@@ -464,10 +464,10 @@ static void sw_read_buf(sox_ssample_t *buf1, char const * buf2, sox_size_t len, 
     }
 }
 
-static sox_size_t sox_alsaread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t nsamp)
+static sox_size_t sox_alsaread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
 {
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
-    void (*read_buf)(sox_ssample_t *, char const *, sox_size_t, sox_bool, sox_size_t *) = 0;
+    void (*read_buf)(sox_sample_t *, char const *, sox_size_t, sox_bool, sox_size_t *) = 0;
     sox_size_t len;
 
     switch(ft->signal.size) {
@@ -532,19 +532,19 @@ static int sox_alsastartwrite(sox_format_t * ft)
     return sox_alsasetup(ft, SND_PCM_STREAM_PLAYBACK);
 }
 
-static void sox_ub_write_buf(char* buf1, sox_ssample_t const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips)
+static void sox_ub_write_buf(char* buf1, sox_sample_t const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips)
 {
     while (len--)
         *(uint8_t *)buf1++ = SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf2++, *clips);
 }
 
-static void sox_sb_write_buf(char *buf1, sox_ssample_t const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips)
+static void sox_sb_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t len, sox_bool swap UNUSED, sox_size_t * clips)
 {
     while (len--)
         *(int8_t *)buf1++ = SOX_SAMPLE_TO_SIGNED_8BIT(*buf2++, *clips);
 }
 
-static void sox_uw_write_buf(char *buf1, sox_ssample_t const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips)
+static void sox_uw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips)
 {
     while (len--)
     {
@@ -556,7 +556,7 @@ static void sox_uw_write_buf(char *buf1, sox_ssample_t const * buf2, sox_size_t 
     }
 }
 
-static void sox_sw_write_buf(char *buf1, sox_ssample_t const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips)
+static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips)
 {
     while (len--)
     {
@@ -568,11 +568,11 @@ static void sox_sw_write_buf(char *buf1, sox_ssample_t const * buf2, sox_size_t 
     }
 }
 
-static sox_size_t sox_alsawrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t nsamp)
+static sox_size_t sox_alsawrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
 {
     sox_size_t osamp, done;
     alsa_priv_t alsa = (alsa_priv_t)ft->priv;
-    void (*write_buf)(char *, const sox_ssample_t *, sox_size_t, sox_bool, sox_size_t *) = 0;
+    void (*write_buf)(char *, const sox_sample_t *, sox_size_t, sox_bool, sox_size_t *) = 0;
 
     switch(ft->signal.size) {
         case SOX_SIZE_BYTE:

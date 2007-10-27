@@ -243,8 +243,8 @@ static int start(sox_effect_t * effp)
   return SOX_SUCCESS;
 }
 
-static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf,
-                sox_ssample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
+                sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
   priv_t * p = (priv_t *) effp->priv;
   sox_size_t i, odone = *osamp /= effp->ininfo.channels;
@@ -265,7 +265,7 @@ static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf,
   return SOX_SUCCESS;
 }
 
-static int drain(sox_effect_t * effp, sox_ssample_t * obuf, sox_size_t * osamp)
+static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
 {
   static sox_size_t isamp = 0;
   tempo_flush(((priv_t *)effp->priv)->tempo);

@@ -146,7 +146,7 @@ static int startwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
   lpcpriv_t lpc = (lpcpriv_t)ft->priv;
   sox_size_t nread = 0;
@@ -170,7 +170,7 @@ static sox_size_t read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
   return nread;
 }
 
-static sox_size_t write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
   lpcpriv_t lpc = (lpcpriv_t)ft->priv;
   sox_size_t nwritten = 0;

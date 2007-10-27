@@ -212,7 +212,7 @@ static int startread(sox_format_t * ft)
  * Read up to len samples of type sox_sample_t from file into buf[].
  * Return number of samples read.
  */
-static sox_size_t read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
   ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
   AVPacket *pkt = &ffmpeg->audio_pkt;
@@ -397,7 +397,7 @@ static int startwrite(sox_format_t * ft)
  * Write up to len samples of type sox_sample_t from buf[] into file.
  * Return number of samples written.
  */
-static sox_size_t write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
   ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
   sox_size_t nread = 0, nwritten = 0;

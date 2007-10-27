@@ -128,7 +128,7 @@ static int sox_swap_start(sox_effect_t * effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_swap_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_swap_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
                  sox_size_t *isamp, sox_size_t *osamp)
 {
     swap_t swap = (swap_t) effp->priv;

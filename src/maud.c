@@ -232,7 +232,7 @@ static int sox_maudstartwrite(sox_format_t * ft)
         return (SOX_SUCCESS);
 }
 
-static sox_size_t sox_maudwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len) 
+static sox_size_t sox_maudwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len) 
 {
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         

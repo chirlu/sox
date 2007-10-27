@@ -36,7 +36,7 @@ typedef struct silencestuff
     char        start_unit; /* "d" for decibels or "%" for percent. */
     int         restart;
 
-    sox_ssample_t *start_holdoff;
+    sox_sample_t *start_holdoff;
     sox_size_t   start_holdoff_offset;
     sox_size_t   start_holdoff_end;
     int         start_found_periods;
@@ -48,7 +48,7 @@ typedef struct silencestuff
     double      stop_threshold;
     char        stop_unit;
 
-    sox_ssample_t *stop_holdoff;
+    sox_sample_t *stop_holdoff;
     sox_size_t   stop_holdoff_offset;
     sox_size_t   stop_holdoff_end;
     int         stop_found_periods;
@@ -254,12 +254,12 @@ static int sox_silence_start(sox_effect_t * effp)
         else
             silence->mode = SILENCE_COPY;
 
-        silence->start_holdoff = (sox_ssample_t *)xmalloc(sizeof(sox_ssample_t)*silence->start_duration);
+        silence->start_holdoff = (sox_sample_t *)xmalloc(sizeof(sox_sample_t)*silence->start_duration);
         silence->start_holdoff_offset = 0;
         silence->start_holdoff_end = 0;
         silence->start_found_periods = 0;
 
-        silence->stop_holdoff = (sox_ssample_t *)xmalloc(sizeof(sox_ssample_t)*silence->stop_duration);
+        silence->stop_holdoff = (sox_sample_t *)xmalloc(sizeof(sox_sample_t)*silence->stop_duration);
         silence->stop_holdoff_offset = 0;
         silence->stop_holdoff_end = 0;
         silence->stop_found_periods = 0;
@@ -267,11 +267,11 @@ static int sox_silence_start(sox_effect_t * effp)
         return(SOX_SUCCESS);
 }
 
-static int aboveThreshold(sox_effect_t * effp, sox_ssample_t value, double threshold, int unit)
+static int aboveThreshold(sox_effect_t * effp, sox_sample_t value, double threshold, int unit)
 {
     double ratio;
     int rc;
-    sox_ssample_t dummy_clipped_count = 0;
+    sox_sample_t dummy_clipped_count = 0;
 
     /* When scaling low bit data, noise values got scaled way up */
     /* Only consider the original bits when looking for silence */
@@ -306,11 +306,11 @@ static int aboveThreshold(sox_effect_t * effp, sox_ssample_t value, double thres
     return rc;
 }
 
-static sox_ssample_t compute_rms(sox_effect_t * effp, sox_ssample_t sample)
+static sox_sample_t compute_rms(sox_effect_t * effp, sox_sample_t sample)
 {
     silence_t silence = (silence_t) effp->priv;
     double new_sum;
-    sox_ssample_t rms;
+    sox_sample_t rms;
 
     new_sum = silence->rms_sum;
     new_sum -= *silence->window_current;
@@ -321,7 +321,7 @@ static sox_ssample_t compute_rms(sox_effect_t * effp, sox_ssample_t sample)
     return (rms);
 }
 
-static void update_rms(sox_effect_t * effp, sox_ssample_t sample)
+static void update_rms(sox_effect_t * effp, sox_sample_t sample)
 {
     silence_t silence = (silence_t) effp->priv;
 
@@ -336,7 +336,7 @@ static void update_rms(sox_effect_t * effp, sox_ssample_t sample)
 
 /* Process signed long samples from ibuf to obuf. */
 /* Return number of samples processed in isamp and osamp. */
-static int sox_silence_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_silence_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
                     sox_size_t *isamp, sox_size_t *osamp)
 {
     silence_t silence = (silence_t) effp->priv;
@@ -583,7 +583,7 @@ silence_copy:
             else /* !(silence->stop) */
             {
                 /* Case B */
-                memcpy(obuf, ibuf, sizeof(sox_ssample_t)*nrOfTicks*
+                memcpy(obuf, ibuf, sizeof(sox_sample_t)*nrOfTicks*
                                    effp->ininfo.channels);
                 nrOfInSamplesRead += (nrOfTicks*effp->ininfo.channels);
                 nrOfOutSamplesWritten += (nrOfTicks*effp->ininfo.channels);
@@ -623,7 +623,7 @@ silence_copy_flush:
         return (SOX_SUCCESS);
 }
 
-static int sox_silence_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_silence_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
     silence_t silence = (silence_t) effp->priv;
     sox_size_t i;

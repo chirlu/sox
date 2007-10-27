@@ -246,7 +246,7 @@ static int sox_avrstartwrite(sox_format_t * ft)
   return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_avrwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t nsamp) 
+static sox_size_t sox_avrwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp) 
 {
   avr_t avr = (avr_t)ft->priv;
 

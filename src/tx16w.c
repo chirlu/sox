@@ -177,12 +177,12 @@ static int sox_txwstartread(sox_format_t * ft)
 
 /*
  * Read up to len samples from file.
- * Convert to sox_sample_ts.
+ * Convert to sox_sample_t.
  * Place in buf[].
  * Return number of samples read.
  */
 
-static sox_size_t sox_txwread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len)
+static sox_size_t sox_txwread(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
     txw_t sk = (txw_t) ft->priv;
     sox_size_t done = 0;
@@ -221,10 +221,10 @@ static sox_size_t sox_txwread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t 
         sk->rest -= 3; /* adjust remaining for bytes we just read */
         s1 = (unsigned short) (uc1 << 4) | (((uc2 >> 4) & 017));
         s2 = (unsigned short) (uc3 << 4) | (( uc2 & 017 ));
-        *buf = (sox_ssample_t) s1;
+        *buf = (sox_sample_t) s1;
         *buf = (*buf << 20);
         buf++; /* sample one is done */
-        *buf = (sox_ssample_t) s2;
+        *buf = (sox_sample_t) s2;
         *buf = (*buf << 20);
         buf++; /* sample two is done */
         done += 2; /* adjust converted & stored sample count */
@@ -263,10 +263,10 @@ static int sox_txwstartwrite(sox_format_t * ft)
     return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_txwwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
+static sox_size_t sox_txwwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
     sox_size_t i;
-    sox_ssample_t w1,w2;
+    sox_sample_t w1,w2;
 
     tx16w_len += len;
     if (tx16w_len > TXMAXLEN) return 0;

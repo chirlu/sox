@@ -27,7 +27,7 @@ int sox_ima_start(sox_format_t * ft)
   return sox_adpcm_ima_start(ft, (adpcm_io_t)ft->priv);
 }
 
-sox_size_t sox_vox_read(sox_format_t * ft, sox_ssample_t *buffer, sox_size_t len)
+sox_size_t sox_vox_read(sox_format_t * ft, sox_sample_t *buffer, sox_size_t len)
 {
   return sox_adpcm_read(ft, (adpcm_io_t)ft->priv, buffer, len);
 }
@@ -37,7 +37,7 @@ int sox_vox_stopread(sox_format_t * ft)
   return sox_adpcm_stopread(ft, (adpcm_io_t)ft->priv);
 }
 
-sox_size_t sox_vox_write(sox_format_t * ft, const sox_ssample_t *buffer, sox_size_t length)
+sox_size_t sox_vox_write(sox_format_t * ft, const sox_sample_t *buffer, sox_size_t length)
 {
   return sox_adpcm_write(ft, (adpcm_io_t)ft->priv, buffer, length);
 }

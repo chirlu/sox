@@ -367,13 +367,13 @@ output_error:
     return NULL;
 }
 
-sox_size_t sox_read(sox_format_t * ft, sox_ssample_t * buf, sox_size_t len)
+sox_size_t sox_read(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
 {
   sox_size_t actual = ft->handler->read? (*ft->handler->read)(ft, buf, len) : 0;
   return (actual > len? 0 : actual);
 }
 
-sox_size_t sox_write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len)
+sox_size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
     return ft->handler->write? (*ft->handler->write)(ft, buf, len) : 0;
 }

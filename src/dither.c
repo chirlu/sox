@@ -61,8 +61,8 @@ static int start(sox_effect_t * effp)
   return SOX_EFF_NULL;   /* Dithering not needed at >= 24 bits */
 }
 
-static int flow(sox_effect_t * effp, const sox_ssample_t * ibuf,
-    sox_ssample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
+static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
+    sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
   dither_t dither = (dither_t)effp->priv;
   sox_size_t len = min(*isamp, *osamp);

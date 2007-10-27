@@ -235,13 +235,13 @@ static int sox_chorus_start(sox_effect_t * effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int sox_chorus_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_chorus_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
                    sox_size_t *isamp, sox_size_t *osamp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
         int i;
         float d_in, d_out;
-        sox_ssample_t out;
+        sox_sample_t out;
         sox_size_t len = min(*isamp, *osamp);
         *isamp = *osamp = len;
 
@@ -256,7 +256,7 @@ static int sox_chorus_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_s
                         chorus->maxsamples] * chorus->decay[i];
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * chorus->out_gain;
-                out = SOX_24BIT_CLIP_COUNT((sox_ssample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 chorus->chorusbuf[chorus->counter] = d_in;
@@ -273,14 +273,14 @@ static int sox_chorus_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_s
 /*
  * Drain out reverb lines. 
  */
-static int sox_chorus_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int sox_chorus_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
         chorus_t chorus = (chorus_t) effp->priv;
         sox_size_t done;
         int i;
         
         float d_in, d_out;
-        sox_ssample_t out;
+        sox_sample_t out;
 
         done = 0;
         while ( ( done < *osamp ) && ( done < chorus->fade_out ) ) {
@@ -293,7 +293,7 @@ static int sox_chorus_drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t
                 chorus->maxsamples] * chorus->decay[i];
                 /* Adjust the output volume and size to 24 bit */
                 d_out = d_out * chorus->out_gain;
-                out = SOX_24BIT_CLIP_COUNT((sox_ssample_t) d_out, effp->clips);
+                out = SOX_24BIT_CLIP_COUNT((sox_sample_t) d_out, effp->clips);
                 *obuf++ = out * 256;
                 /* Mix decay of delay and input */
                 chorus->chorusbuf[chorus->counter] = d_in;

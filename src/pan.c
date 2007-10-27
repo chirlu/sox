@@ -60,17 +60,17 @@ static int sox_pan_start(sox_effect_t * effp)
 /*
  * Process either isamp or osamp samples, whichever is smaller.
  */
-static int sox_pan_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
                 sox_size_t *isamp, sox_size_t *osamp)
 {
     pan_t pan = (pan_t) effp->priv;
     sox_size_t len, done;
-    sox_ssample_t *ibuf_copy;
+    sox_sample_t *ibuf_copy;
     char ich, och;
     double left, right, dir, hdir;
     
-    ibuf_copy = (sox_ssample_t *)xmalloc(*isamp * sizeof(sox_ssample_t));
-    memcpy(ibuf_copy, ibuf, *isamp * sizeof(sox_ssample_t));
+    ibuf_copy = (sox_sample_t *)xmalloc(*isamp * sizeof(sox_sample_t));
+    memcpy(ibuf_copy, ibuf, *isamp * sizeof(sox_sample_t));
 
     dir   = pan->dir;    /* -1   <=  dir  <= 1   */
     hdir  = 0.5 * dir;  /* -0.5 <=  hdir <= 0.5 */

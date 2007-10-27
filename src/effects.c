@@ -53,7 +53,7 @@ static int default_function(sox_effect_t * effp UNUSED)
 }
 
 /* Pass through samples verbatim */
-static int default_flow(sox_effect_t * effp UNUSED, const sox_ssample_t *ibuf UNUSED, sox_ssample_t *obuf UNUSED, sox_size_t *isamp, sox_size_t *osamp)
+static int default_flow(sox_effect_t * effp UNUSED, const sox_sample_t *ibuf UNUSED, sox_sample_t *obuf UNUSED, sox_size_t *isamp, sox_size_t *osamp)
 {
   *isamp = *osamp = min(*isamp, *osamp);
   memcpy(obuf, ibuf, *isamp * sizeof(*obuf));
@@ -61,7 +61,7 @@ static int default_flow(sox_effect_t * effp UNUSED, const sox_ssample_t *ibuf UN
 }
 
 /* Inform no more samples to drain */
-static int default_drain(sox_effect_t * effp UNUSED, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
+static int default_drain(sox_effect_t * effp UNUSED, sox_sample_t *obuf UNUSED, sox_size_t *osamp)
 {
   *osamp = 0;
   return SOX_EOF;
@@ -171,7 +171,7 @@ static int flow_effect(sox_effects_chain_t * chain, unsigned n)
   sox_effect_t * effp = &chain->effects[n][0];
   int effstatus = SOX_SUCCESS;
   sox_size_t i, f;
-  const sox_ssample_t *ibuf;
+  const sox_sample_t *ibuf;
   sox_size_t idone = effp1->oend - effp1->obeg;
   sox_size_t obeg = sox_globals.bufsiz - effp->oend;
 #if DEBUG_EFFECTS_CHAIN
@@ -183,7 +183,7 @@ static int flow_effect(sox_effects_chain_t * chain, unsigned n)
     effstatus = effp->handler.flow(effp, &effp1->obuf[effp1->obeg],
                                    &effp->obuf[effp->oend], &idone, &obeg);
   else {                 /* Run effect on each channel individually */
-    sox_ssample_t *obuf = &effp->obuf[effp->oend];
+    sox_sample_t *obuf = &effp->obuf[effp->oend];
     sox_size_t idone_last, odone_last;
 
     ibuf = &effp1->obuf[effp1->obeg];
@@ -245,7 +245,7 @@ static int drain_effect(sox_effects_chain_t * chain, unsigned n)
   if (effp->flows == 1)   /* Run effect on all channels at once */
     effstatus = effp->handler.drain(effp, &effp->obuf[effp->oend], &obeg);
   else {                         /* Run effect on each channel individually */
-    sox_ssample_t *obuf = &effp->obuf[effp->oend];
+    sox_sample_t *obuf = &effp->obuf[effp->oend];
     sox_size_t odone_last;
 
     for (f = 0; f < effp->flows; ++f) {

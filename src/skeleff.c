@@ -61,7 +61,7 @@ static int start(sox_effect_t * effp)
  * Processed signed long samples from ibuf to obuf.
  * Return number of samples processed.
  */
-static int flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf, 
+static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
                            sox_size_t *isamp, sox_size_t *osamp)
 {
   skeleff_t skeleff = (skeleff_t)effp->priv;
@@ -94,7 +94,7 @@ static int flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *o
 /*
  * Drain out remaining samples if the effect generates any.
  */
-static int drain(sox_effect_t * effp, sox_ssample_t *obuf, sox_size_t *osamp)
+static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
   *osamp = 0;
   /* Return SOX_EOF when drain

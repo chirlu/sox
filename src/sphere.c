@@ -206,7 +206,7 @@ static int sox_spherestartwrite(sox_format_t * ft)
         
 }
 
-static sox_size_t sox_spherewrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len) 
+static sox_size_t sox_spherewrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len) 
 {
     sphere_t sphere = (sphere_t) ft->priv;
 

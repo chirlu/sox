@@ -167,7 +167,7 @@ int sox_adpcm_ima_start(sox_format_t * ft, adpcm_io_t state)
  * Notes      : 
  ******************************************************************************/
 
-sox_size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t state, sox_ssample_t * buffer, sox_size_t len)
+sox_size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t state, sox_sample_t * buffer, sox_size_t len)
 {
   sox_size_t n;
   uint8_t byte;
@@ -216,7 +216,7 @@ int sox_adpcm_stopread(sox_format_t * ft UNUSED, adpcm_io_t state)
  * Notes      : 
  ******************************************************************************/
 
-sox_size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t state, const sox_ssample_t * buffer, sox_size_t length)
+sox_size_t sox_adpcm_write(sox_format_t * ft, adpcm_io_t state, const sox_sample_t * buffer, sox_size_t length)
 {
   sox_size_t count = 0;
   uint8_t byte = state->store.byte;

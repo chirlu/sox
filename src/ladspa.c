@@ -222,12 +222,11 @@ static int sox_ladspa_start(sox_effect_t * effp)
 /*
  * Process one bufferful of data.
  */
-static int sox_ladspa_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_ssample_t *obuf,
+static int sox_ladspa_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf,
                            sox_size_t *isamp, sox_size_t *osamp)
 {
   ladspa_t l_st = (ladspa_t)effp->priv;
-  sox_sample_t i;
-  sox_size_t len = min(*isamp, *osamp);
+  sox_size_t i, len = min(*isamp, *osamp);
 
   *osamp = *isamp = len;
 
@@ -267,7 +266,7 @@ static int sox_ladspa_flow(sox_effect_t * effp, const sox_ssample_t *ibuf, sox_s
 /*
  * Nothing to do.
  */
-static int sox_ladspa_drain(sox_effect_t * effp UNUSED, sox_ssample_t *obuf UNUSED, sox_size_t *osamp)
+static int sox_ladspa_drain(sox_effect_t * effp UNUSED, sox_sample_t *obuf UNUSED, sox_size_t *osamp)
 {
   *osamp = 0;
 

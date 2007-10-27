@@ -117,8 +117,8 @@ void sox_generate_wave_table(
     double max,         /* Maximum value on the y-axis. (e.g. +1) */
     double phase);      /* Phase at 1st point; 0..2pi. (e.g. pi/2 for cosine) */
 
-sox_ssample_t sox_gcd(sox_ssample_t a, sox_ssample_t b);
-sox_ssample_t sox_lcm(sox_ssample_t a, sox_ssample_t b);
+sox_sample_t sox_gcd(sox_sample_t a, sox_sample_t b);
+sox_sample_t sox_lcm(sox_sample_t a, sox_sample_t b);
 
 #ifndef HAVE_STRCASECMP
 int strcasecmp(const char *s1, const char *s2);
@@ -295,18 +295,18 @@ extern sox_format_tab_t sox_format_fns[];
 
 /* Raw I/O */
 int sox_rawstartread(sox_format_t * ft);
-sox_size_t sox_rawread(sox_format_t * ft, sox_ssample_t *buf, sox_size_t nsamp);
+sox_size_t sox_rawread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp);
 int sox_rawstopread(sox_format_t * ft);
 int sox_rawstartwrite(sox_format_t * ft);
-sox_size_t sox_rawwrite(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t nsamp);
+sox_size_t sox_rawwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp);
 int sox_rawseek(sox_format_t * ft, sox_size_t offset);
 
 /* The following functions can be used to simply return success if
  * a file handler doesn't need to do anything special
  */
 int sox_format_nothing(sox_format_t * ft);
-sox_size_t sox_format_nothing_read(sox_format_t * ft, sox_ssample_t *buf, sox_size_t len);
-sox_size_t sox_format_nothing_write(sox_format_t * ft, const sox_ssample_t *buf, sox_size_t len);
+sox_size_t sox_format_nothing_read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len);
+sox_size_t sox_format_nothing_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len);
 int sox_format_nothing_seek(sox_format_t * ft, sox_size_t offset);
 
 int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size);
@@ -356,7 +356,7 @@ struct sox_effects_chain {
 #define SOX_MAX_EFFECTS 20
   sox_effect_t * effects[SOX_MAX_EFFECTS];
   unsigned length;
-  sox_ssample_t **ibufc, **obufc; /* Channel interleave buffers */
+  sox_sample_t **ibufc, **obufc; /* Channel interleave buffers */
   sox_effects_globals_t global_info;
 };
 #endif
