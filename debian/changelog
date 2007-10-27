@@ -2,7 +2,14 @@ sox (14.0.0+cvs-1) UNRELEASED; urgency=low
 
   * CVS version.
   
- -- Pascal Giard <evilynux@gmail.com>  Tue, 02 Oct 2007 21:14:39 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Wed, 24 Oct 2007 20:53:53 -0400
+
+sox (14.0.0-5) unstable; urgency=low
+
+  * [debian/control]:
+    - Copied libsox0 Recommends and Suggests to sox (closes: #447903).
+
+ -- Pascal Giard <pascal@debian.org>  Wed, 24 Oct 2007 20:53:53 -0400
 
 sox (14.0.0-4) unstable; urgency=low
 

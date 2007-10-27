@@ -10,6 +10,8 @@ Package: sox
 Section: sound
 Architecture: any
 Depends: ${shlibs:Depends}
+Recommends: libsox-fmt-base, libsox-fmt-alsa | libsox-fmt-ao | libsox-fmt-oss
+Suggests: libsox-fmt-all
 Description: Swiss army knife of sound processing
  SoX is a command line utility that can convert various formats of computer 
  audio files in to other formats. It can also apply various effects to these 
