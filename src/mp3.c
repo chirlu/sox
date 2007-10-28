@@ -23,6 +23,13 @@
 #include <math.h>
 #endif
 
+#if HAVE_ID3TAG && HAVE_UNISTD_H
+  #include <id3tag.h>
+  #include <unistd.h>
+#else
+  #define ID3_TAG_FLAG_FOOTERPRESENT 0x10
+#endif
+
 #define INPUT_BUFFER_SIZE       (sox_globals.bufsiz)
 
 /* Private data */
@@ -47,8 +54,6 @@ struct mp3priv {
    from MAD's libid3tag, so we don't have to link to it
    Returns 0 if the frame is not an ID3 tag, tag length if it is */
 
-#define ID3_TAG_FLAG_FOOTERPRESENT 0x10
-
 static int tagtype(const unsigned char *data, size_t length)
 {
     /* TODO: It would be nice to look for Xing VBR headers
@@ -71,14 +76,17 @@ static int tagtype(const unsigned char *data, size_t length)
         unsigned char flags;
         unsigned int size;
         flags = data[5];
-        size = (data[6]<<21) + (data[7]<<14) + (data[8]<<7) + data[9];
+        size = 10 + (data[6]<<21) + (data[7]<<14) + (data[8]<<7) + data[9];
         if (flags & ID3_TAG_FLAG_FOOTERPRESENT)
             size += 10;
-        return 10 + size;
+        for (; size < length && ! data[size]; ++size);  /* Consume padding */
+        return size;
     }
 
     return 0;
 }
+
+#include "mp3-duration.h"
 
 /*
  * (Re)fill the stream buffer whish is to be decoded.  If any data
@@ -174,6 +182,9 @@ static int sox_mp3startread(sox_format_t * ft)
     p->Timer=(mad_timer_t *)xmalloc(sizeof(mad_timer_t));
     p->InputBuffer=(unsigned char *)xmalloc(INPUT_BUFFER_SIZE);
 
+    if (ft->seekable)
+      ft->length = mp3_duration_ms(ft->fp, p->InputBuffer);
+
     mad_stream_init(p->Stream);
     mad_frame_init(p->Frame);
     mad_synth_init(p->Synth);
@@ -249,6 +260,8 @@ static int sox_mp3startread(sox_format_t * ft)
     mad_timer_add(p->Timer,p->Frame->header.duration);
     mad_synth_frame(p->Synth,p->Frame);
     ft->signal.rate=p->Synth->pcm.samplerate;
+    ft->length = ft->length * .001 * ft->signal.rate + .5;
+    ft->length *= ft->signal.channels;  /* Keep separate from line above! */
 
     p->cursamp = 0;
 

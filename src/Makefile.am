@@ -149,7 +149,7 @@ libsox_fmt_amr_nb_la_LIBADD = libsox.la @AMR_NB_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_amr_nb.la
 endif
 if HAVE_MP3
-libsox_fmt_mp3_la_SOURCES = mp3.c
+libsox_fmt_mp3_la_SOURCES = mp3.c mp3-duration.h
 libsox_fmt_mp3_la_LIBADD = libsox.la @MP3_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_mp3.la
 endif
@@ -251,7 +251,7 @@ if HAVE_AMR_NB
     sox_LDADD += @AMR_NB_LIBS@
 endif
 if HAVE_MP3
-    libsox_la_SOURCES += mp3.c
+    libsox_la_SOURCES += mp3.c mp3-duration.h
     libsox_la_LIBADD += @MP3_LIBS@
     sox_LDADD += @MP3_LIBS@
 endif

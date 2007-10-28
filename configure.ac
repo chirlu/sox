@@ -299,6 +299,26 @@ if test "$with_mad" != "no"; then
     fi
 fi
 
+dnl Check for id3tag libraries
+AC_ARG_WITH(id3tag,
+    AC_HELP_STRING([--without-id3tag],
+        [Don't try to use id3tag]),
+        [with_id3tag=$withval])
+using_id3tag=no
+if test "$with_id3tag" != "no"; then
+    using_id3tag=yes
+    AC_CHECK_HEADER(id3tag.h,
+        [AC_CHECK_LIB(id3tag, id3_file_open, MP3_LIBS="$MP3_LIBS -lid3tag",using_id3tag=no)],
+        using_id3tag=no)
+    if test "$with_id3tag" = "yes" -a "$using_id3tag" = "no"; then
+        AC_MSG_FAILURE([cannot find id3tag])
+    fi
+fi
+if test "$using_id3tag" = yes; then
+   AC_DEFINE(HAVE_ID3TAG, 1, [Define to 1 if you have id3tag.])
+fi
+AM_CONDITIONAL(HAVE_ID3TAG, test x$using_id3tag = xyes)
+
 dnl Test for LAME library.
 AC_ARG_WITH(lame,
     AC_HELP_STRING([--without-lame],
@@ -419,6 +439,7 @@ echo "Ogg Vorbis format................. $using_ogg"
 echo "FLAC format....................... $using_flac"
 echo "ffmpeg formats.................... $using_ffmpeg"
 echo "MAD MP3 reader.................... $using_mad"
+echo "id3tag library.................... $using_id3tag"
 echo "LAME MP3 writer................... $using_lame"
 echo "AMR-WB format..................... $using_amr_wb"
 echo "AMR-NB format..................... $using_amr_nb"
