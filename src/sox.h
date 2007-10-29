@@ -380,7 +380,7 @@ void sox_format_quit(void);
  * Structures for effects.
  */
 
-#define SOX_MAX_EFFECT_PRIVSIZE SOX_MAX_FILE_PRIVSIZE
+#define SOX_MAX_EFFECT_PRIVSIZE (2 * SOX_MAX_FILE_PRIVSIZE)
 
 #define SOX_EFF_CHAN     1           /* Effect can alter # of channels */
 #define SOX_EFF_RATE     2           /* Effect can alter sample rate */
