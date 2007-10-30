@@ -83,7 +83,7 @@ static sox_size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
   struct mad_frame    mad_frame;
   mad_timer_t         time = mad_timer_zero;
   sox_size_t          initial_bitrate, tagsize = 0, consumed = 0, frames = 0;
-  sox_bool            vbr = sox_false, padded = sox_false;
+  sox_bool            vbr = sox_false, depadded = sox_false;
 
 #if HAVE_ID3TAG && HAVE_UNISTD_H
   sox_size_t duration_ms = id3tag_duration_ms(fp);
@@ -97,24 +97,25 @@ static sox_size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
   mad_header_init(&mad_header);
   mad_frame_init(&mad_frame);
 
-  while (sox_true) {
+  do {  /* Read data from the MP3 file */
     int read, padding = 0;
     size_t leftover = mad_stream.bufend - mad_stream.next_frame;
+
     memcpy(buffer, mad_stream.this_frame, leftover);
     read = fread(buffer + leftover, 1, INPUT_BUFFER_SIZE - leftover, fp);
     if (read <= 0) {
       sox_debug("got exact duration by scan to EOF (frames=%u leftover=%u)", frames, leftover);
       break;
     }
-    for (; !padded && padding < read && !buffer[padding]; ++padding);
-    padded = sox_true;
+    for (; !depadded && padding < read && !buffer[padding]; ++padding);
+    depadded = sox_true;
     mad_stream_buffer(&mad_stream, buffer + padding, leftover + read - padding);
 
-    while (sox_true) {
+    while (sox_true) {  /* Decode frame headers */
       mad_stream.error = MAD_ERROR_NONE;
       if (mad_header_decode(&mad_header, &mad_stream) == -1) {
         if (mad_stream.error == MAD_ERROR_BUFLEN)
-          break;  /* Get some more data from the file */
+          break;  /* Normal behaviour; get some more data from the file */
         if (!MAD_RECOVERABLE(mad_stream.error)) {
           sox_warn("unrecoverable MAD error");
           break;
@@ -122,19 +123,17 @@ static sox_size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
         if (mad_stream.error == MAD_ERROR_LOSTSYNC) {
           unsigned available = (mad_stream.bufend - mad_stream.this_frame);
           tagsize = tagtype(mad_stream.this_frame, available);
-          if (tagsize > 0) {   /* It's just some ID3 tags, so skip */
+          if (tagsize) {   /* It's some ID3 tags, so just skip */
             if (tagsize >= available) {
               fseeko(fp, (off_t)(tagsize - available), SEEK_CUR);
-              padded = sox_false;
+              depadded = sox_false;
             }
             mad_stream_skip(&mad_stream, min(tagsize, available));
-            continue;
           }
-          sox_warn("MAD lost sync");
-          continue;
+          else sox_warn("MAD lost sync");
         }
-        sox_warn("recoverable MAD error");
-        continue;
+        else sox_warn("recoverable MAD error");
+        continue; /* Not an audio frame */
       }
 
       mad_timer_add(&time, mad_header.duration);
@@ -156,21 +155,19 @@ static sox_size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
           break;
         }
       }
-      else vbr |= initial_bitrate != mad_header.bitrate;
+      else vbr |= mad_header.bitrate != initial_bitrate;
 
       /* If not VBR, we can time just a few frames then extrapolate */
       if (++frames == 10 && !vbr) {
         struct stat filestat;
         fstat(fileno(fp), &filestat);
         mad_timer_mult(&time, (double)(filestat.st_size - tagsize) / consumed);
-        sox_debug("got approx. duration by FBR extrapolation");
+        sox_debug("got approx. duration by CBR extrapolation");
         break;
       }
     }
+  } while (mad_stream.error == MAD_ERROR_BUFLEN);
 
-    if (mad_stream.error != MAD_ERROR_BUFLEN)
-      break;
-  }
   mad_frame_finish(&mad_frame);
   mad_header_finish(&mad_header);
   mad_stream_finish(&mad_stream);

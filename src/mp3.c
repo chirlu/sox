@@ -56,13 +56,6 @@ struct mp3priv {
 
 static int tagtype(const unsigned char *data, size_t length)
 {
-    /* TODO: It would be nice to look for Xing VBR headers
-     * or TLE fields in ID3 to detect length of file
-     * and set ft->length.
-     * For CBR, we should fstat the file and divided
-     * by bitrate to find length.
-     */
-
     if (length >= 3 && data[0] == 'T' && data[1] == 'A' && data[2] == 'G')
     {
         return 128; /* ID3V1 */
@@ -79,7 +72,7 @@ static int tagtype(const unsigned char *data, size_t length)
         size = 10 + (data[6]<<21) + (data[7]<<14) + (data[8]<<7) + data[9];
         if (flags & ID3_TAG_FLAG_FOOTERPRESENT)
             size += 10;
-        for (; size < length && ! data[size]; ++size);  /* Consume padding */
+        for (; size < length && !data[size]; ++size);  /* Consume padding */
         return size;
     }
 
@@ -89,7 +82,7 @@ static int tagtype(const unsigned char *data, size_t length)
 #include "mp3-duration.h"
 
 /*
- * (Re)fill the stream buffer whish is to be decoded.  If any data
+ * (Re)fill the stream buffer that is to be decoded.  If any data
  * still exists in the buffer then they are first shifted to be
  * front of the stream buffer.
  */
