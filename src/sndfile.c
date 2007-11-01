@@ -77,13 +77,17 @@ static sox_encoding_t sox_encoding_and_size(int format, int *size)
     *size = SOX_SIZE_8BIT;
     return SOX_ENCODING_ALAW;
   case SF_FORMAT_IMA_ADPCM:
+    *size = SOX_SIZE_16BIT;
     return SOX_ENCODING_IMA_ADPCM;
   case SF_FORMAT_MS_ADPCM:
+    *size = SOX_SIZE_16BIT;
     return SOX_ENCODING_MS_ADPCM;
   case SF_FORMAT_GSM610:
+    *size = SOX_SIZE_16BIT;
     return SOX_ENCODING_GSM;
   case SF_FORMAT_VOX_ADPCM:
-    return SOX_ENCODING_ADPCM;
+    *size = SOX_SIZE_16BIT;
+    return SOX_ENCODING_OKI_ADPCM;
 
   /* For encodings we can't represent, have a sensible default */
   case SF_FORMAT_G721_32:
