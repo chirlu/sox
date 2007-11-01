@@ -187,7 +187,11 @@ int sox_aiffstartread(sox_format_t * ft)
                 else if (strncmp(buf, "MARK", 4) == 0) {
                         /* MARK chunk */
                         sox_readdw(ft, &chunksize);
-                        sox_readw(ft, &nmarks);
+                        if (chunksize >= sizeof(nmarks)) {
+                          sox_readw(ft, &nmarks);
+                          chunksize -= sizeof(nmarks);
+                        }
+                        else nmarks = 0;
 
                         /* Some programs like to always have a MARK chunk
                          * but will set number of marks to 0 and force
@@ -202,8 +206,6 @@ int sox_aiffstartread(sox_format_t * ft)
                         if (nmarks > 32)
                             nmarks = 32;
 
-                        if (chunksize > 2)
-                            chunksize -= 2;
                         for(i = 0; i < nmarks && chunksize; i++) {
                                 unsigned char len, read_len, tmp_c;
 
