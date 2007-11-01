@@ -247,7 +247,7 @@ static void usage(char const * message)
 "-X, --reverse-bits  bit-order of data",
 "-B/-L           force endianness to big/little",
 "-s/-u/-U/-A/    sample encoding: signed/unsigned/u-law/A-law",
-"  -a/-i/-g/-f   ADPCM/IMA_ADPCM/GSM/floating point",
+"  -a/-i/-g/-f   ADPCM/IMA ADPCM/GSM/floating point",
 "-1/-2/-3/-4/-8  sample size in bytes",
 "-v, --volume FACTOR  volume input file volume adjustment factor (real number)",
 ""};
