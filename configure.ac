@@ -355,9 +355,9 @@ if test "$with_amr_wb" != "no"; then
     fi
 fi
 if test "$using_amr_wb" = yes; then
-   AC_DEFINE(HAVE_AMR_WB, 1, [Define to 1 if you have AMR-WB.])
+   AC_DEFINE(HAVE_AMRWB, 1, [Define to 1 if you have AMR-WB.])
 fi
-AM_CONDITIONAL(HAVE_AMR_WB, test x$using_amr_wb = xyes)
+AM_CONDITIONAL(HAVE_AMRWB, test x$using_amr_wb = xyes)
 AC_SUBST(AMR_WB_LIBS)
 
 dnl Check for amr-nb libraries
@@ -376,9 +376,9 @@ if test "$with_amr_nb" != "no"; then
     fi
 fi
 if test "$using_amr_nb" = yes; then
-   AC_DEFINE(HAVE_AMR_NB, 1, [Define to 1 if you have AMR-NB.])
+   AC_DEFINE(HAVE_AMRNB, 1, [Define to 1 if you have AMR-NB.])
 fi
-AM_CONDITIONAL(HAVE_AMR_NB, test x$using_amr_nb = xyes)
+AM_CONDITIONAL(HAVE_AMRNB, test x$using_amr_nb = xyes)
 AC_SUBST(AMR_NB_LIBS)
 
 dnl Test for libsamplerate.

@@ -31,6 +31,7 @@ sox-14.0.1
   o Fix ogg vorbis compile error on some platforms.
   o Remove unused libltdl that could cause header mismatch with
     installed libltdl.
+  o Fix AMR detection with --disable-shared.  (robs)
 
 
 sox-14.0.0
