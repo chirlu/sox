@@ -117,9 +117,13 @@ static int startread(sox_format_t * ft)
   sndfile_t sf = (sndfile_t)ft->priv;
 
   sf->sf_info = (SF_INFO *)xcalloc(1, sizeof(SF_INFO));
+
+  /* Copy format info; FIXME: more to do */
+  sf->sf_info->samplerate = ft->signal.rate + .5;
+  sf->sf_info->channels = ft->signal.channels;
+
   /* We'd like to use sf_open_fd, but auto file typing has already
      invoked stdio buffering. */
-  /* FIXME: If format parameters are set, assume file is raw. */
   if ((sf->sf_file = sf_open(ft->filename, SFM_READ, sf->sf_info)) == NULL) {
     sox_fail("sndfile cannot open file for reading: %s", sf_strerror(sf->sf_file));
     free(sf->sf_file);
@@ -127,10 +131,16 @@ static int startread(sox_format_t * ft)
   }
 
   /* Copy format info */
-  ft->signal.rate = sf->sf_info->samplerate;
   ft->signal.encoding = sox_encoding_and_size(sf->sf_info->format, &ft->signal.size);
   ft->signal.channels = sf->sf_info->channels;
   ft->length = sf->sf_info->frames * sf->sf_info->channels;
+  if (ft->signal.encoding == SOX_ENCODING_OKI_ADPCM) {
+    if (ft->signal.rate == 0) {
+      sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
+      ft->signal.rate = 8000;
+    }
+  }
+  else ft->signal.rate = sf->sf_info->samplerate;
 
   return SOX_SUCCESS;
 }
@@ -153,7 +163,11 @@ static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 static int stopread(sox_format_t * ft)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
-  sf_close(sf->sf_file);
+  int ret = sf_close(sf->sf_file);
+  if (ft->signal.encoding == SOX_ENCODING_OKI_ADPCM) {
+    if (ret)
+      sox_warn("%s: ADPCM state errors: %i", ft->filename, ret);
+  }
   return SOX_SUCCESS;
 }
 
@@ -294,7 +308,6 @@ static int startwrite(sox_format_t * ft)
     SF_FORMAT_INFO format_info;
     int i, count;
 
-    sox_warn("cannot use desired output encoding, choosing default");
     sf_command(sf->sf_file, SFC_GET_SIMPLE_FORMAT_COUNT, &count, sizeof(int));
     for (i = 0; i < count; i++) {
       format_info.format = i;
@@ -311,6 +324,8 @@ static int startwrite(sox_format_t * ft)
       sox_fail("cannot find a usable output encoding");
       return SOX_EOF;
     }
+    if (sf->sf_info->format != SF_FORMAT_RAW + SF_FORMAT_VOX_ADPCM)
+      sox_warn("cannot use desired output encoding, choosing default");
   }
 
   if ((sf->sf_file = sf_open(ft->filename, SFM_WRITE, sf->sf_info)) == NULL) {
