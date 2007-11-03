@@ -1,8 +1,9 @@
-sox (14.0.0+cvs-1) UNRELEASED; urgency=low
+sox (14.0.1+cvs-1) UNRELEASED; urgency=low
 
   * CVS version.
+  * [debian/control]: Added libid3tag0-dev to Build-Depends.
   
- -- Pascal Giard <evilynux@gmail.com>  Wed, 24 Oct 2007 20:53:53 -0400
+ -- Pascal Giard <evilynux@gmail.com>  Sat, 03 Nov 2007 19:15:02 -0400
 
 sox (14.0.0-5) unstable; urgency=low
 
