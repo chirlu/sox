@@ -23,6 +23,7 @@ sox-14.0.1
   o Fix loss of 1 decoded FLAC block when using "trim 0 ...".  (robs)
   o Fix trim when first effect with IMA-ADPCM input wav file.  (robs)
   o Fix mixer with >4 numbers, and mixer -3 behaving as mixer -4.  (robs)
+  o Fix [1748909] sox does not report remaining playtime of mp3s.  (robs)
 
   Internal improvements:
 

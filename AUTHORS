@@ -15,9 +15,10 @@ Mantainers:
 	Rob Sykes		robs@users.sourceforge.net
                 Formats: M3U, PLS, FLAC, AMR, 24bit support for popular
                 formats.
-		Effects: pad, bass, treble, new flanger, soft-knee companding,
-                speed via resampling, filters makeover inc. gnuplot & octave
-                plotting; new effects chain with buffering and any # channels.
+		Effects: key, tempo, pad, bass, treble, new reverb, new
+		flanger, soft-knee companding, speed via resampling, filters
+		makeover inc.  gnuplot & octave plotting; new effects chain
+		with buffering and any # channels.
                 Others: open input files via URL, file merging, play
                 multiple files with mixed format types, play with replay-gain,
                 building with cmake, much manual improvement and expansion,
