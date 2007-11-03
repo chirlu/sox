@@ -189,7 +189,7 @@ sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info,
 
     ft->mode = 'r';
     if (sox_gettype(ft, sox_false) != SOX_SUCCESS) {
-      sox_fail("Failed reading `%s': %s", ft->filename, ft->sox_errstr);
+      sox_fail("Can't open input file `%s': %s", ft->filename, ft->sox_errstr);
       goto input_error;
     }
     ft->signal.size = -1;
@@ -229,7 +229,7 @@ sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info,
     /* Read and write starters can change their formats. */
     if (ft->handler->startread && (*ft->handler->startread)(ft) != SOX_SUCCESS)
     {
-        sox_fail("Failed reading `%s': %s", ft->filename, ft->sox_errstr);
+        sox_fail("Can't open input file `%s': %s", ft->filename, ft->sox_errstr);
         goto input_error;
     }
 
@@ -281,7 +281,7 @@ sox_format_t * sox_open_write(
 
     ft->mode = 'w';
     if (sox_gettype(ft, no_filetype_given) != SOX_SUCCESS) {
-      sox_fail("Failed writing `%s': %s", ft->filename, ft->sox_errstr);
+      sox_fail("Can't open output file `%s': %s", ft->filename, ft->sox_errstr);
       goto output_error;
     }
     ft->signal.size = -1;
@@ -312,7 +312,7 @@ sox_format_t * sox_open_write(
             goto output_error;
           }
           if ((ft->fp = fopen(ft->filename, "wb")) == NULL) {
-            sox_fail("Can't open output file '%s': %s", ft->filename,
+            sox_fail("Can't open output file `%s': %s", ft->filename,
                     strerror(errno));
             goto output_error;
           }
@@ -346,7 +346,7 @@ sox_format_t * sox_open_write(
     /* Read and write starters can change their formats. */
     if (ft->handler->startwrite && (*ft->handler->startwrite)(ft) != SOX_SUCCESS)
     {
-        sox_fail("Failed writing `%s': %s", ft->filename, ft->sox_errstr);
+        sox_fail("Can't open output file `%s': %s", ft->filename, ft->sox_errstr);
         goto output_error;
     }
 
