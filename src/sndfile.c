@@ -29,15 +29,49 @@
 #include <ctype.h>
 #include <sndfile.h>
 
+#define LOG_MAX 2048 /* As per the SFC_GET_LOG_INFO example */
+
+#ifndef HACKED_LSF
+#define sf_stop(x)
+#endif
+
 /* Private data for sndfile files */
 typedef struct sndfile
 {
   SNDFILE *sf_file;
   SF_INFO *sf_info;
+  char * log_buffer;
+  char const * log_buffer_ptr;
 } *sndfile_t;
 
 assert_static(sizeof(struct sndfile) <= SOX_MAX_FILE_PRIVSIZE, 
               /* else */ sndfile_PRIVSIZE_too_big);
+
+/*
+ * Drain LSF's wonderful log buffer
+ */
+static void drain_log_buffer(sox_format_t * ft)
+{
+  sndfile_t sf = (sndfile_t)ft->priv;
+
+  sf_command(sf->sf_file, SFC_GET_LOG_INFO, sf->log_buffer, LOG_MAX);
+  while (*sf->log_buffer_ptr) {
+    static char const warning_prefix[] = "*** Warning : ";
+    char const * end = strchr(sf->log_buffer_ptr, '\n');
+    if (!end)
+      end = strchr(sf->log_buffer_ptr, '\0');
+    if (!strncmp(sf->log_buffer_ptr, warning_prefix, strlen(warning_prefix))) {
+      sf->log_buffer_ptr += strlen(warning_prefix);
+      sox_warn("`%s': %.*s",
+          ft->filename, end - sf->log_buffer_ptr, sf->log_buffer_ptr);
+    } else
+      sox_debug("`%s': %.*s",
+          ft->filename, end - sf->log_buffer_ptr, sf->log_buffer_ptr);
+    sf->log_buffer_ptr = end;
+    if (*sf->log_buffer_ptr == '\n')
+      ++sf->log_buffer_ptr;
+  }
+}
 
 /* Get sample encoding and size from libsndfile subtype; return value
    is encoding if conversion was made, or SOX_ENCODING_UNKNOWN for
@@ -107,68 +141,6 @@ static sox_encoding_t sox_encoding_and_size(int format, int *size)
 
   assert(0); /* Should never reach here */
   return SOX_ENCODING_UNKNOWN;
-}
-
-/*
- * Open file in sndfile.
- */
-static int startread(sox_format_t * ft)
-{
-  sndfile_t sf = (sndfile_t)ft->priv;
-
-  sf->sf_info = (SF_INFO *)xcalloc(1, sizeof(SF_INFO));
-
-  /* Copy format info; FIXME: more to do */
-  sf->sf_info->samplerate = ft->signal.rate + .5;
-  sf->sf_info->channels = ft->signal.channels;
-
-  /* We'd like to use sf_open_fd, but auto file typing has already
-     invoked stdio buffering. */
-  if ((sf->sf_file = sf_open(ft->filename, SFM_READ, sf->sf_info)) == NULL) {
-    sox_fail("sndfile cannot open file for reading: %s", sf_strerror(sf->sf_file));
-    free(sf->sf_file);
-    return SOX_EOF;
-  }
-
-  /* Copy format info */
-  ft->signal.encoding = sox_encoding_and_size(sf->sf_info->format, &ft->signal.size);
-  ft->signal.channels = sf->sf_info->channels;
-  ft->length = sf->sf_info->frames * sf->sf_info->channels;
-  if (ft->signal.encoding == SOX_ENCODING_OKI_ADPCM) {
-    if (ft->signal.rate == 0) {
-      sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
-      ft->signal.rate = 8000;
-    }
-  }
-  else ft->signal.rate = sf->sf_info->samplerate;
-
-  return SOX_SUCCESS;
-}
-
-/*
- * Read up to len samples of type sox_sample_t from file into buf[].
- * Return number of samples read.
- */
-static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
-{
-  sndfile_t sf = (sndfile_t)ft->priv;
-
-  /* FIXME: We assume int == sox_sample_t here */
-  return (sox_size_t)sf_read_int(sf->sf_file, (int *)buf, (sf_count_t)len);
-}
-
-/*
- * Close file for libsndfile (this doesn't close the file handle)
- */
-static int stopread(sox_format_t * ft)
-{
-  sndfile_t sf = (sndfile_t)ft->priv;
-  int ret = sf_close(sf->sf_file);
-  if (ft->signal.encoding == SOX_ENCODING_OKI_ADPCM) {
-    if (ret)
-      sox_warn("%s: ADPCM state errors: %i", ft->filename, ret);
-  }
-  return SOX_SUCCESS;
 }
 
 static struct {
@@ -288,21 +260,93 @@ static int sndfile_format(sox_encoding_t encoding, int size)
   }
 }
 
-static int startwrite(sox_format_t * ft)
+static void start(sox_format_t * ft)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
   int subtype = sndfile_format(ft->signal.encoding, ft->signal.size);
-  sf->sf_info = (SF_INFO *)xmalloc(sizeof(SF_INFO));
+  sf->log_buffer_ptr = sf->log_buffer = xmalloc(LOG_MAX);
+  sf->sf_info = (SF_INFO *)xcalloc(1, sizeof(SF_INFO));
 
   /* Copy format info */
-  if (strcmp(ft->filetype, "sndfile") == 0)
-    sf->sf_info->format = name_to_format(ft->filename) | subtype;
-  else
-    sf->sf_info->format = name_to_format(ft->filetype) | subtype;
+  if (subtype) {
+    if (strcmp(ft->filetype, "sndfile") == 0)
+      sf->sf_info->format = name_to_format(ft->filename) | subtype;
+    else
+      sf->sf_info->format = name_to_format(ft->filetype) | subtype;
+  }
   sf->sf_info->samplerate = ft->signal.rate;
   sf->sf_info->channels = ft->signal.channels;
-  sf->sf_info->frames = ft->length / ft->signal.channels;
+  if (ft->signal.channels)
+    sf->sf_info->frames = ft->length / ft->signal.channels;
+}
 
+/*
+ * Open file in sndfile.
+ */
+static int startread(sox_format_t * ft)
+{
+  sndfile_t sf = (sndfile_t)ft->priv;
+
+  start(ft);
+
+  /* We'd like to use sf_open_fd, but auto file typing has already
+     invoked stdio buffering. */
+  sf->sf_file = sf_open(ft->filename, SFM_READ, sf->sf_info);
+  drain_log_buffer(ft);
+
+  if (sf->sf_file == NULL) {
+    memset(ft->sox_errstr, 0, sizeof(ft->sox_errstr));
+    strncpy(ft->sox_errstr, sf_strerror(sf->sf_file), sizeof(ft->sox_errstr)-1);
+    free(sf->sf_file);
+    return SOX_EOF;
+  }
+
+  /* Copy format info */
+  ft->signal.encoding = sox_encoding_and_size(sf->sf_info->format, &ft->signal.size);
+  ft->signal.channels = sf->sf_info->channels;
+  ft->length = sf->sf_info->frames * sf->sf_info->channels;
+
+  /* FIXME: it would be better if LSF was able to do this */
+  if ((sf->sf_info->format & SF_FORMAT_TYPEMASK) == SF_FORMAT_RAW) {
+    if (ft->signal.rate == 0) {
+      sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
+      ft->signal.rate = 8000;
+    }
+  }
+  else ft->signal.rate = sf->sf_info->samplerate;
+
+  return SOX_SUCCESS;
+}
+
+/*
+ * Read up to len samples of type sox_sample_t from file into buf[].
+ * Return number of samples read.
+ */
+static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+{
+  sndfile_t sf = (sndfile_t)ft->priv;
+
+  /* FIXME: We assume int == sox_sample_t here */
+  return (sox_size_t)sf_read_int(sf->sf_file, (int *)buf, (sf_count_t)len);
+}
+
+/*
+ * Close file for libsndfile (this doesn't close the file handle)
+ */
+static int stopread(sox_format_t * ft)
+{
+  sndfile_t sf = (sndfile_t)ft->priv;
+  sf_stop(sf->sf_file);
+  drain_log_buffer(ft);
+  sf_close(sf->sf_file);
+  return SOX_SUCCESS;
+}
+
+static int startwrite(sox_format_t * ft)
+{
+  sndfile_t sf = (sndfile_t)ft->priv;
+
+  start(ft);
   /* If output format is invalid, try to find a sensible default */
   if (!sf_format_check(sf->sf_info)) {
     SF_FORMAT_INFO format_info;
@@ -324,12 +368,17 @@ static int startwrite(sox_format_t * ft)
       sox_fail("cannot find a usable output encoding");
       return SOX_EOF;
     }
-    if (sf->sf_info->format != SF_FORMAT_RAW + SF_FORMAT_VOX_ADPCM)
+    if ((sf->sf_info->format & SF_FORMAT_TYPEMASK) != SF_FORMAT_RAW)
       sox_warn("cannot use desired output encoding, choosing default");
   }
 
-  if ((sf->sf_file = sf_open(ft->filename, SFM_WRITE, sf->sf_info)) == NULL) {
-    sox_fail("sndfile cannot open file for writing: %s", sf_strerror(sf->sf_file));
+  sf->sf_file = sf_open(ft->filename, SFM_WRITE, sf->sf_info);
+  drain_log_buffer(ft);
+
+  if (sf->sf_file == NULL) {
+    memset(ft->sox_errstr, 0, sizeof(ft->sox_errstr));
+    strncpy(ft->sox_errstr, sf_strerror(sf->sf_file), sizeof(ft->sox_errstr)-1);
+    free(sf->sf_file);
     return SOX_EOF;
   }
 
@@ -354,6 +403,8 @@ static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t l
 static int stopwrite(sox_format_t * ft)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
+  sf_stop(sf->sf_file);
+  drain_log_buffer(ft);
   sf_close(sf->sf_file);
   return SOX_SUCCESS;
 }
