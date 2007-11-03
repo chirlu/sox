@@ -184,9 +184,9 @@ timeIO () {
 make sox_sample_test
 ${builddir}/sox_sample_test || exit 1
 
-${bindir}/sox --help | grep -q "flac" || skip="flac $skip"
-grep -q "^OGG_LIBS *= *-logg"   Makefile || skip="ogg $skip"
-grep -q "^#define HAVE_SNDFILE_H" ${builddir}/src/soxconfig.h || skip="caf $skip"
+# Don't test unsupported stuff
+${bindir}/sox --help | grep -q "^SUPPORTED.*\<flac\>" || skip="flac $skip"
+${bindir}/sox --help | grep -q "^SUPPORTED.*\<caf\>" || skip="caf $skip"
 
 rate=44100
 samples=23493
