@@ -760,6 +760,14 @@ output-rate \(di gcd(input-rate, output-rate) \(<= 511.
 .SP
 Add reverberation to the audio using the freeverb algorithm.
 Default values are shown in parenthesis.
+.SP
+Note that
+.B reverb
+increases both the volume and the length of the audio, so to prevent clipping
+in these domains, a typical invocation might be:
+.EX
+	play dry.au vol -3dB pad 0 3 reverb
+.EE
 .TP
 \fBreverse\fR
 Reverse the audio completely.
