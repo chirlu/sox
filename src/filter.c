@@ -86,7 +86,7 @@ static int sox_filter_getopts(sox_effect_t * effp, int n, char **argv)
         if ((n >= 3) && !sscanf(argv[2], "%lf", &f->beta))
           return sox_usage(effp);
 
-        sox_debug("filter opts: %d-%d, window-len %d, beta %f", f->freq0, f->freq1, f->Nwin, f->beta);
+        sox_debug("filter opts: %d-%d, window-len %ld, beta %f", f->freq0, f->freq1, f->Nwin, f->beta);
         return (SOX_SUCCESS);
 }
 
@@ -205,7 +205,7 @@ static int sox_filter_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sa
                 *osamp = 0;
                 return (SOX_SUCCESS);
         }
-        sox_debug("flow Nproc %d",Nproc);
+        sox_debug("flow Nproc %ld",Nproc);
         FiltWin(f, Nproc);
 
         /* Copy back portion of input signal that must be re-used */
@@ -230,7 +230,7 @@ static int sox_filter_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t 
         long isamp_res, osamp_res;
         sox_sample_t *Obuf;
 
-        sox_debug("Xh %d, Xt %d  <--- DRAIN",f->Xh, f->Xt);
+        sox_debug("Xh %ld, Xt %ld  <--- DRAIN",f->Xh, f->Xt);
 
         /* stuff end with Xh zeros */
         isamp_res = f->Xh;
@@ -250,7 +250,7 @@ static int sox_filter_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t 
         *osamp -= osamp_res;
         /* sox_debug("DRAIN osamp %d", *osamp); */
         if (isamp_res)
-                sox_warn("drain overran obuf by %d", isamp_res);
+                sox_warn("drain overran obuf by %ld", isamp_res);
         /* FIXME: This is very picky. osamp better be big enough to grab
          * all remaining samples or they will be discarded.
          */

@@ -1280,4 +1280,6 @@ main (argc, argv)
 }
 
 #endif /* TEST */
+#else
+void dummy(void); /* To suppress empty file warning */
 #endif /* HAVE_GETOPT_LONG */

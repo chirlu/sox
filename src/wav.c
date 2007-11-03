@@ -1524,7 +1524,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
         sox_debug("Finished writing Wave file, %u data bytes %u samples",
                 dwDataLength,wav->numSamples);
         if (wFormatTag == WAVE_FORMAT_GSM610){
-            sox_debug("GSM6.10 format: %u blocks %u padded samples %u padded data bytes",
+            sox_debug("GSM6.10 format: %li blocks %u padded samples %u padded data bytes",
                     blocksWritten, dwSamplesWritten, dwDataLength);
             if (wav->gsmbytecount != dwDataLength)
                 sox_warn("help ! internal inconsistency - data_written %u gsmbytecount %u",

@@ -148,10 +148,10 @@ static int startread(sox_format_t * ft)
   sox_readb(ft, &byte);   /* Unused and seems always zero */
 
   sox_readdw(ft, &repgap); /* Time between repeats in usec */
-  sox_debug("Time between repeats (usec): %ld", repgap);
+  sox_debug("Time between repeats (usec): %u", repgap);
 
   sox_readdw(ft, &listlen); /* Length of samples list */
-  sox_debug("Number of bytes in samples list: %ld", listlen);
+  sox_debug("Number of bytes in samples list: %u", listlen);
 
   if (ft->signal.rate != 0 && ft->signal.rate != 8000)
     sox_report("PRC only supports 8 kHz; overriding.");

@@ -184,7 +184,7 @@ static int flow_effect(sox_effects_chain_t * chain, unsigned n)
                                    &effp->obuf[effp->oend], &idone, &obeg);
   else {                 /* Run effect on each channel individually */
     sox_sample_t *obuf = &effp->obuf[effp->oend];
-    sox_size_t idone_last, odone_last;
+    sox_size_t idone_last = 0, odone_last = 0; /* Initialised to prevent warning */
 
     ibuf = &effp1->obuf[effp1->obeg];
     for (i = 0; i < idone; i += effp->flows)
@@ -246,7 +246,7 @@ static int drain_effect(sox_effects_chain_t * chain, unsigned n)
     effstatus = effp->handler.drain(effp, &effp->obuf[effp->oend], &obeg);
   else {                         /* Run effect on each channel individually */
     sox_sample_t *obuf = &effp->obuf[effp->oend];
-    sox_size_t odone_last;
+    sox_size_t odone_last = 0; /* Initialised to prevent warning */
 
     for (f = 0; f < effp->flows; ++f) {
       sox_size_t odonec = obeg / effp->flows;

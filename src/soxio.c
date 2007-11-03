@@ -39,7 +39,7 @@ static int init_format(const char *file, lt_ptr data)
     int ret = snprintf(fnname, MAX_NAME_LEN, "sox_%.*s_format_fn", end - start, start);
     if (ret > 0 && ret < MAX_NAME_LEN) {
       sox_format_fns[sox_formats].fn = (sox_format_fn_t)lt_dlsym(lth, fnname);
-      sox_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, lth, sox_format_fns[sox_formats].fn);
+      sox_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, (void *)lth, (void *)sox_format_fns[sox_formats].fn);
       if (sox_format_fns[sox_formats].fn)
         sox_formats++;
     }

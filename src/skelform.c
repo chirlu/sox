@@ -86,7 +86,7 @@ static int startread(sox_format_t * ft)
  */
 static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
-  skelform_t sk = (skelform_t)ft->priv;
+  skelform_t UNUSED sk = (skelform_t)ft->priv;
   sox_size_t done;
   unsigned char sample;
 
@@ -118,14 +118,14 @@ static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
  * Do anything required when you stop reading samples.
  * Don't close input file!
  */
-static int stopread(sox_format_t * ft)
+static int stopread(sox_format_t UNUSED * ft)
 {
   return SOX_SUCCESS;
 }
 
 static int startwrite(sox_format_t * ft)
 {
-  skelform_t sk = (skelform_t)ft->priv;
+  skelform_t UNUSED sk = (skelform_t)ft->priv;
 
   /* If you have to seek around the output file. */
   /* If header contains a length value then seeking will be
@@ -161,7 +161,7 @@ static int startwrite(sox_format_t * ft)
  */
 static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
-  skelform_t sk = (skelform_t)ft->priv;
+  skelform_t UNUSED sk = (skelform_t)ft->priv;
 
   switch (ft->signal.size) {
   case SOX_SIZE_BYTE:
@@ -186,7 +186,7 @@ static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t l
   return len;
 }
 
-static int stopwrite(sox_format_t * ft)
+static int stopwrite(sox_format_t UNUSED * ft)
 {
   /* All samples are already written out. */
   /* If file header needs fixing up, for example it needs the number
@@ -194,7 +194,7 @@ static int stopwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static int seek(sox_format_t * ft, sox_size_t offset)
+static int seek(sox_format_t UNUSED * ft, sox_size_t UNUSED offset)
 {
   /* Seek relative to current position. */
   return SOX_SUCCESS;

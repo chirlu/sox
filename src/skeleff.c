@@ -33,9 +33,9 @@ assert_static(sizeof(struct skeleff) <= SOX_MAX_EFFECT_PRIVSIZE,
  * initialization now: effp->ininfo & effp->outinfo are not
  * yet filled in.
  */
-static int getopts(sox_effect_t * effp, int n, char **argv)
+static int getopts(sox_effect_t * effp, int n, char UNUSED **argv)
 {
-  skeleff_t skeleff = (skeleff_t)effp->priv;
+  skeleff_t UNUSED skeleff = (skeleff_t)effp->priv;
 
   if (n && n != 1)
     return sox_usage(effp);
@@ -64,7 +64,7 @@ static int start(sox_effect_t * effp)
 static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf, 
                            sox_size_t *isamp, sox_size_t *osamp)
 {
-  skeleff_t skeleff = (skeleff_t)effp->priv;
+  skeleff_t UNUSED skeleff = (skeleff_t)effp->priv;
   sox_size_t len, done;
 
   switch (effp->outinfo.channels) {
@@ -94,7 +94,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
 /*
  * Drain out remaining samples if the effect generates any.
  */
-static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int drain(sox_effect_t UNUSED * effp, sox_sample_t UNUSED *obuf, sox_size_t *osamp)
 {
   *osamp = 0;
   /* Return SOX_EOF when drain
@@ -107,7 +107,7 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 /*
  * Do anything required when you stop reading samples.  
  */
-static int stop(sox_effect_t * effp)
+static int stop(sox_effect_t UNUSED * effp)
 {
   return SOX_SUCCESS;
 }
@@ -116,7 +116,7 @@ static int stop(sox_effect_t * effp)
  * Do anything required when you kill an effect.  
  *      (free allocated memory, etc.)
  */
-static int kill(sox_effect_t * effp)
+static int kill(sox_effect_t UNUSED * effp)
 {
   return SOX_SUCCESS;
 }
@@ -144,6 +144,7 @@ static sox_effect_handler_t sox_skel_effect = {
  * Function returning effect descriptor. This should be the only
  * externally visible object.
  */
+const sox_effect_handler_t *sox_skel_effect_fn(void);
 const sox_effect_handler_t *sox_skel_effect_fn(void)
 {
   return &sox_skel_effect;

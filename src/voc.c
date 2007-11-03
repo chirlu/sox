@@ -571,7 +571,7 @@ static int getblock(sox_format_t * ft)
                           if ((v->rate != -1) && (uc != v->rate))
                           {
                             sox_fail_errno(ft,SOX_EFMT,
-                              "sample rate codes differ: %d != %d", v->rate, uc);
+                              "sample rate codes differ: %ld != %d", v->rate, uc);
                             return(SOX_EOF);
                           }
                           v->rate = uc;
@@ -600,7 +600,7 @@ static int getblock(sox_format_t * ft)
                         if ((v->rate != -1) && ((long)new_rate_32 != v->rate))
                         {
                             sox_fail_errno(ft,SOX_EFMT,
-                              "sample rate codes differ: %d != %d",
+                              "sample rate codes differ: %ld != %d",
                                 v->rate, new_rate_32);
                             return(SOX_EOF);
                         }
@@ -705,7 +705,7 @@ static int getblock(sox_format_t * ft)
                         if ((v->rate != -1) && (new_rate_16 != v->rate))
                         {
                            sox_fail_errno(ft,SOX_EFMT,
-                             "sample rate codes differ: %d != %d",
+                             "sample rate codes differ: %ld != %d",
                                         v->rate, new_rate_16);
                            return(SOX_EOF);
                         }

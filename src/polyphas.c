@@ -265,7 +265,7 @@ static void nuttall(Float *buffer, int length)
   int N1;
 
   if(buffer == NULL || length <= 0)
-    sox_fail("Illegal buffer %p or length %d to nuttall.", buffer, length);
+    sox_fail("Illegal buffer %p or length %d to nuttall.", (void *)buffer, length);
 
   /* Initial variable setups. */
   N = length;
@@ -288,7 +288,7 @@ static void hamming(Float *buffer, int length)
     int N1;
 
     if(buffer == NULL || length <= 0)
-      sox_fail("Illegal buffer %p or length %d to hamming.",buffer,length);
+      sox_fail("Illegal buffer %p or length %d to hamming.",(void *)buffer,length);
 
     N1 = length/2;
     for(j=0;j<length;j++)
@@ -314,7 +314,7 @@ static void fir_design(poly_t rate, Float *buffer, int length, double cutoff)
     double sum;
 
     if(buffer == NULL || length < 0 || cutoff < 0 || cutoff > M_PI)
-      sox_fail("Illegal buffer %p, length %d, or cutoff %f.",buffer,length,cutoff);
+      sox_fail("Illegal buffer %p, length %d, or cutoff %f.",(void *)buffer,length,cutoff);
 
     /* Use the user-option of window type */
     if (rate->win_type == 0)

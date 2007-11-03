@@ -102,7 +102,7 @@ static int sox_auencodingandsize(uint32_t sun_encoding, sox_encoding_t * encodin
             *size = SOX_SIZE_32BIT;
             break;
     default:
-            sox_debug("encoding: 0x%lx", sun_encoding);
+            sox_debug("encoding: 0x%x", sun_encoding);
             return(SOX_EOF);
     }
     return(SOX_SUCCESS);

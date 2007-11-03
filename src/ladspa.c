@@ -111,7 +111,7 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
   }
 
   /* Get descriptor function */
-  if ((l_fn = lt_dlsym(l_st->lth, "ladspa_descriptor")) == NULL) {
+  if ((l_fn = (LADSPA_Descriptor_Function)lt_dlsym(l_st->lth, "ladspa_descriptor")) == NULL) {
     sox_fail("could not find ladspa_descriptor");
     return SOX_EOF;
   }
@@ -146,10 +146,10 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
     /* Check port is well specified. All control ports should be
        inputs, but don't bother checking, as we never rely on this. */
     if (LADSPA_IS_PORT_INPUT(port) && LADSPA_IS_PORT_OUTPUT(port)) {
-      sox_fail("port %d is both input and output", i);
+      sox_fail("port %lu is both input and output", i);
       return SOX_EOF;
     } else if (LADSPA_IS_PORT_CONTROL(port) && LADSPA_IS_PORT_AUDIO(port)) {
-      sox_fail("port %d is both audio and control", i);
+      sox_fail("port %lu is both audio and control", i);
       return SOX_EOF;
     }
                
@@ -174,12 +174,12 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
           return SOX_EOF;
         }
         l_st->control[i] = ladspa_default(&(l_st->desc->PortRangeHints[i]));
-        sox_debug("default argument for port %d is %f", i, l_st->control[i]);
+        sox_debug("default argument for port %lu is %f", i, l_st->control[i]);
       } else {
         if (!sscanf(argv[0], "%lf", &arg))
           return sox_usage(effp);
         l_st->control[i] = (LADSPA_Data)arg;
-        sox_debug("argument for port %d is %f", i, l_st->control[i]);
+        sox_debug("argument for port %lu is %f", i, l_st->control[i]);
         n--; argv++;
       }
     }

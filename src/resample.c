@@ -258,7 +258,7 @@ static int start(sox_effect_t * effp)
 
   r->Xsize = 2 * Xoff + i / (1.0 + r->Factor);
   r->Ysize = BUFFSIZE - r->Xsize;
-  sox_debug("Xsize %d, Ysize %d, Xoff %d", r->Xsize, r->Ysize, r->Xoff);
+  sox_debug("Xsize %li, Ysize %li, Xoff %li", r->Xsize, r->Ysize, r->Xoff);
 
   r->X = (double *) xmalloc(sizeof(double) * (BUFFSIZE));
   r->Y = r->X + r->Xsize;
@@ -279,7 +279,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
         resample_t r = (resample_t) effp->priv;
         long i, last, Nout, Nx, Nproc;
 
-        sox_debug_more("Xp %d, Xread %d, isamp %d, ",r->Xp, r->Xread,*isamp);
+        sox_debug_more("Xp %li, Xread %li, isamp %d, ",r->Xp, r->Xread,*isamp);
 
         /* constrain amount we actually process */
         Nproc = r->Xsize - r->Xp;
@@ -291,12 +291,12 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
         Nx = Nproc - r->Xread; /* space for right-wing future-data */
         if (Nx <= 0)
         {
-                sox_fail("Can not handle this sample rate change. Nx not positive: %d", Nx);
+                sox_fail("Can not handle this sample rate change. Nx not positive: %li", Nx);
                 return (SOX_EOF);
         }
         if ((unsigned long)Nx > *isamp)
                 Nx = *isamp;
-        sox_debug_more("Nx %d",Nx);
+        sox_debug_more("Nx %li",Nx);
 
         if (ibuf == NULL) {
                 for(i = r->Xread; i < Nx + r->Xread  ; i++) 
@@ -318,7 +318,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
         if (r->quadr < 0) { /* exact coeff's method */
                 long creep; 
                 Nout = SrcEX(r, Nproc);
-                sox_debug_more("Nproc %d --> %d",Nproc,Nout);
+                sox_debug_more("Nproc %li --> %li",Nproc,Nout);
                 /* Move converter Nproc samples back in time */
                 r->t -= Nproc * r->b;
                 /* Advance by number of samples processed */
@@ -334,7 +334,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
         } else { /* approx coeff's method */
                 long creep; 
                 Nout = SrcUD(r, Nproc);
-                sox_debug_more("Nproc %d --> %d",Nproc,Nout);
+                sox_debug_more("Nproc %li --> %li",Nproc,Nout);
                 /* Move converter Nproc samples back in time */
                 r->Time -= Nproc;
                 /* Advance by number of samples processed */
@@ -353,7 +353,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
         long i,k;
         /* Copy back portion of input signal that must be re-used */
         k = r->Xp - r->Xoff;
-        sox_debug_more("k %d, last %d",k,last);
+        sox_debug_more("k %li, last %li",k,last);
         for (i=0; i<last - k; i++) 
             r->X[i] = r->X[i+k];
 
@@ -385,7 +385,7 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
         sox_sample_t *Obuf;
         int rc;
 
-        sox_debug("Xoff %d  <--- DRAIN",r->Xoff);
+        sox_debug("Xoff %li  <--- DRAIN",r->Xoff);
 
         /* stuff end with Xoff zeros */
         isamp_res = r->Xoff;
@@ -398,7 +398,7 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
                 rc = flow(effp, NULL, Obuf, (sox_size_t *)&Isamp, (sox_size_t *)&Osamp);
                 if (rc)
                     return rc;
-                sox_debug("DRAIN isamp,osamp  (%d,%d) -> (%d,%d)",
+                sox_debug("DRAIN isamp,osamp  (%li,%li) -> (%d,%d)",
                          isamp_res,osamp_res,Isamp,Osamp);
                 Obuf += Osamp;
                 osamp_res -= Osamp;
@@ -407,7 +407,7 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
         *osamp -= osamp_res;
         sox_debug("DRAIN osamp %d", *osamp);
         if (isamp_res)
-                sox_warn("drain overran obuf by %d", isamp_res);
+                sox_warn("drain overran obuf by %li", isamp_res);
         /* FIXME: This is very picky.  IF obuf is not big enough to
          * drain remaining samples, they will be lost.
          */
@@ -506,7 +506,7 @@ static long SrcUD(resample_t r, long Nx)
    sox_debug_more("Factor %f, dt %f, ",Factor,dt);
    sox_debug_more("Time %f, ",r->Time);
    /* (Xh * dhb)>>La is max index into Imp[] */
-   sox_debug_more("ct=%.2f %d",(double)r->Nwing*Na/r->dhb, r->Xh);
+   sox_debug_more("ct=%.2f %li",(double)r->Nwing*Na/r->dhb, r->Xh);
    sox_debug_more("ct=%ld, T=%.6f, dhb=%6f, dt=%.6f",
                          r->Xh, time-floor(time),(double)r->dhb/Na,dt);
    Ystart = Y = r->Y;

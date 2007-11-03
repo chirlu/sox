@@ -19,7 +19,7 @@
 
 static int sox_autostartread(sox_format_t * ft)
 {
-    char *type = NULL;
+    char const * type = NULL;
     char header[256];
     int rc, loop;
 
