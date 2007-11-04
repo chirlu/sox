@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/* $Header: /cvsroot/sox/sox/libgsm/lpc.c,v 1.1 2007/09/06 16:50:55 cbagwell Exp $ */
+/* $Header: /cvsroot/sox/sox/libgsm/lpc.c,v 1.2 2007/11/04 16:32:36 robs Exp $ */
 
 #include <stdio.h>
 #include <assert.h>
@@ -326,6 +326,7 @@ void Gsm_LPC_Analysis (
         word 		 * LARc)	/* 0..7   LARc's	OUT	*/
 {
 	longword	L_ACF[9];
+  (void)S; /* Denotes intentionally unused */
 
 #if defined(USE_FLOAT_MUL) && defined(FAST)
 	if (S->fast) Fast_Autocorrelation (s,	  L_ACF );

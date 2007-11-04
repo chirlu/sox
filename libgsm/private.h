@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/*$Header: /cvsroot/sox/sox/libgsm/private.h,v 1.1 2007/09/06 16:50:56 cbagwell Exp $*/
+/*$Header: /cvsroot/sox/sox/libgsm/private.h,v 1.2 2007/11/04 16:32:36 robs Exp $*/
 
 #ifndef	PRIVATE_H
 #define	PRIVATE_H
@@ -102,7 +102,7 @@ extern word	gsm_asr  	(word a, int n);
 		   >= MAX_LONGWORD ? MIN_LONGWORD : -(longword)utmp-2 )   \
 	: ((b) <= 0 ? (a) + (b)   \
 	          : (utmp = (ulongword)(a) + (ulongword)(b)) >= MAX_LONGWORD \
-		    ? MAX_LONGWORD : utmp))
+		    ? MAX_LONGWORD : (longword)utmp))
 
 /*
  * # define GSM_ADD(a, b)	\

@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/* $Header: /cvsroot/sox/sox/libgsm/long_term.c,v 1.1 2007/09/06 16:50:55 cbagwell Exp $ */
+/* $Header: /cvsroot/sox/sox/libgsm/long_term.c,v 1.2 2007/11/04 16:32:36 robs Exp $ */
 
 #include <stdio.h>
 #include <assert.h>
@@ -875,6 +875,8 @@ void Gsm_Long_Term_Predictor ( 	/* 4x for 160 samples */
 	word	* bc	/* gain factor			OUT	*/
 )
 {
+  (void)S; /* Denotes intentionally unused */
+
 	assert( d  ); assert( dp ); assert( e  );
 	assert( dpp); assert( Nc ); assert( bc );
 

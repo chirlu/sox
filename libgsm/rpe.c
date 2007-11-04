@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/* $Header: /cvsroot/sox/sox/libgsm/rpe.c,v 1.1 2007/09/06 16:50:56 cbagwell Exp $ */
+/* $Header: /cvsroot/sox/sox/libgsm/rpe.c,v 1.2 2007/11/04 16:32:36 robs Exp $ */
 
 #include <stdio.h>
 #include <assert.h>
@@ -458,6 +458,7 @@ void Gsm_RPE_Encoding (
 	word	xM[13], xMp[13];
 	word	mant, exp;
 
+  (void)S; /* Denotes intentionally unused */
 	Weighting_filter(e, x);
 	RPE_grid_selection(x, xM, Mc);
 
@@ -480,6 +481,7 @@ void Gsm_RPE_Decoding (
 	word	exp, mant;
 	word	xMp[ 13 ];
 
+  (void)S; /* Denotes intentionally unused */
 	APCM_quantization_xmaxc_to_exp_mant( xmaxcr, &exp, &mant );
 	APCM_inverse_quantization( xMcr, mant, exp, xMp );
 	RPE_grid_positioning( Mcr, xMp, erp );

@@ -33,8 +33,8 @@ assert_static(sizeof(struct amr) <= SOX_MAX_FILE_PRIVSIZE, AMR_PRIV_TOO_BIG);
 static sox_size_t decode_1_frame(sox_format_t * ft)
 {
   amr_t amr = (amr_t) ft->priv;
-  int block_size_1;
-  unsigned char coded[AMR_CODED_MAX];
+  size_t block_size_1;
+  UWord8 coded[AMR_CODED_MAX];
 
   if (fread(coded, sizeof(coded[0]), 1, ft->fp) != 1)
     return AMR_FRAME;
@@ -48,7 +48,7 @@ static sox_size_t decode_1_frame(sox_format_t * ft)
 static void encode_1_frame(sox_format_t * ft)
 {
   amr_t amr = (amr_t) ft->priv;
-  unsigned char coded[AMR_CODED_MAX];
+  UWord8 coded[AMR_CODED_MAX];
   fwrite(coded, 1, (unsigned)E_IF_encode(amr->state, amr->mode, amr->pcm, coded, 1), ft->fp);
 }
 
