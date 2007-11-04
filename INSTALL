@@ -73,13 +73,15 @@ SoX can detect and use the following libraries:
 
   FLAC - http://flac.sourceforge.net
 
-  Secret Rabbit Code - http://www.mega-nerd.com/SRC
+  AMR-NB/WB - http://www.penguin.cz/~utx/amr
 
   libsndfile - http://www.mega-nerd.com/libsndfile
 
   ffmpeg - http://ffmpeg.mplayerhq.hu
 
-  AMR-NB/WB - http://www.penguin.cz/~utx/amr
+  libao - http://xiph.org/ao
+
+  Secret Rabbit Code - http://www.mega-nerd.com/SRC
 
   LADSPA - http://www.ladspa.org
   
