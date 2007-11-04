@@ -10,7 +10,7 @@ sox-14.0.1
   File formats:
 
   o Added support for non-standard, non-WAVE_FORMAT_EXTENSIBLE
-    (esp. 24-bit) PCM wav.  (robs)
+    (esp. 24-bit) PCM wav (see wavpcm in soxformat.7 for details).  (robs)
   o Initial support for showing MP3 file duration with -V & -S.  (robs)
 
   Effects:
