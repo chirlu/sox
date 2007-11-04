@@ -131,7 +131,7 @@ bigcalc(double Factor, double Freq1, const SAMPL *ibuff, int len)
 	double s2=0, v2=0;
 	const SAMPL *ip;
 
-	static inline void a_init(double frq)
+	inline void a_init(double frq)
 	{
 		x = 1;
 		y = 0;
@@ -139,7 +139,7 @@ bigcalc(double Factor, double Freq1, const SAMPL *ibuff, int len)
 		thy = sin(frq*M_PI);
 	}
 	
-	static inline const double a(double k, double L)
+	inline double a(double k, double L)
 	{
 		double a, l, u;
 		l = L/2.0;
@@ -148,7 +148,7 @@ bigcalc(double Factor, double Freq1, const SAMPL *ibuff, int len)
 		return a;
 	}
 
-	static inline void a_post(int k)
+	inline void a_post(int k)
 	{
 		double x1;
 		x1 = x*thx - y*thy;

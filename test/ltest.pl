@@ -22,7 +22,7 @@ use strict;
 $|=1;
 
 # set default values
-my $sox='../sox';
+my $sox='../src/sox';
 my $effect='resample';
 #my $effect='resample -qs';
 #my $effect='resample -q';
@@ -31,6 +31,7 @@ my $effect='resample';
 #my $effect='filter 400-2000';
 #my $effect='filter 400-2000 1024';
 
+#my ($rate0,$rate1)=(44100,44100); # sample rates
 my ($rate0,$rate1)=(8000,22050); # sample rates
 my $p=400;  # silence before/after tonepulse
 my $env="4000:16000:4000"; # attack, duration, drop

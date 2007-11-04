@@ -10,7 +10,7 @@ LIBS:=-lm
 all: ding model lding lmodel corr
 
 corr: corr.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
 
 ding: ding.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
@@ -25,5 +25,6 @@ lmodel: model.c
 	$(CC) $(CFLAGS) -DLSAMPL $(LDFLAGS) -o $@ $< $(LIBS)
 
 clean:
-	rm -f ding lding model lmodel corr *~
+	rm -f ding lding model lmodel corr *~ A B
+	rm -rf d
 
