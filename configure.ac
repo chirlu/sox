@@ -105,13 +105,13 @@ AC_FUNC_FSEEKO
 dnl Allow libtool to be silenced
 AC_MSG_CHECKING([whether libtool should be silenced])
 AC_ARG_ENABLE(silent-libtool,
-    AC_HELP_STRING([--enable-silent-libtool], [Pass --silent to libtool.]),
-    [if test "$enable_silent_libtool" = "yes"; then
-	LIBTOOLFLAGS=--silent
-    fi])
+    AC_HELP_STRING([--disable-silent-libtool], [Verbose libtool]),,enable_silent_libtool=yes)
 AC_MSG_RESULT($enable_silent_libtool)
+if test "$enable_silent_libtool" = "yes"; then
+    LIBTOOLFLAGS=--silent
+fi
 AC_SUBST(LIBTOOLFLAGS)
-
+     
 dnl Check if we want play/rec links
 AC_MSG_CHECKING([whether to make play and rec symlinks])
 AC_ARG_ENABLE(playrec-symlinks,
