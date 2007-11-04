@@ -25,6 +25,7 @@ sox-14.0.1
   o Fix mixer with >4 numbers, and mixer -3 behaving as mixer -4.  (robs)
   o Fix [1748909] sox does not report remaining playtime of mp3s.  (robs)
   o Fix failure to read AIFF files with empty MARK chunk.  (robs)
+  o Fix spurious 'Premature EOF' message in some circumstances.  (robs)
 
   Internal improvements:
 
