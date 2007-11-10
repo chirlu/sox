@@ -205,7 +205,8 @@ int sox_reads(sox_format_t * ft, char *c, sox_size_t len)
         if (sox_readbuf(ft, &in, 1) != 1)
         {
             *sc = 0;
-                sox_fail_errno(ft,errno,sox_readerr);
+            if (sox_error(ft))
+              sox_fail_errno(ft, errno, sox_readerr);
             return (SOX_EOF);
         }
         if (in == 0 || in == '\n')

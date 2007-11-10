@@ -397,7 +397,7 @@ sox_size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
       sox_format_t * ft, ctype *buf, sox_size_t len) \
   { \
     sox_size_t n, nread; \
-    if ((nread = sox_readbuf(ft, buf, len * size)) != len * size && ferror(ft->fp)) \
+    if ((nread = sox_readbuf(ft, buf, len * size)) != len * size && sox_error(ft)) \
       sox_fail_errno(ft, errno, sox_readerr); \
     nread /= size; \
     for (n = 0; n < nread; n++) \
@@ -416,7 +416,7 @@ sox_size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
   { \
     sox_size_t n, nread; \
     uint8_t *data = xmalloc(size * len); \
-    if ((nread = sox_readbuf(ft, data, len * size)) != len * size && ferror(ft->fp)) \
+    if ((nread = sox_readbuf(ft, data, len * size)) != len * size && sox_error(ft)) \
       sox_fail_errno(ft, errno, sox_readerr); \
     nread /= size; \
     for (n = 0; n < nread; n++) { \
