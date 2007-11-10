@@ -306,7 +306,7 @@ static int startread(sox_format_t * ft)
   ft->signal.channels = sf->sf_info->channels;
   ft->length = sf->sf_info->frames * sf->sf_info->channels;
 
-  /* FIXME: it would be better if LSF was able to do this */
+  /* FIXME: it would be better if LSF were able to do this */
   if ((sf->sf_info->format & SF_FORMAT_TYPEMASK) == SF_FORMAT_RAW) {
     if (ft->signal.rate == 0) {
       sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
