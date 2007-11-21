@@ -115,7 +115,8 @@ uint8_t const cswap[256] = {
  */
 size_t sox_readbuf(sox_format_t * ft, void *buf, sox_size_t len)
 {
-    return fread(buf, 1, len, ft->fp);
+  size_t ret = fread(buf, 1, len, ft->fp);
+  return (ferror(ft->fp) || feof(ft->fp)) ? 0 : ret;
 }
 
 /* Skip input without seeking. */
@@ -146,7 +147,8 @@ int sox_padbytes(sox_format_t * ft, sox_size_t n)
 
 size_t sox_writebuf(sox_format_t * ft, void const *buf, sox_size_t len)
 {
-    return fwrite(buf, 1, len, ft->fp);
+  size_t ret = fwrite(buf, 1, len, ft->fp);
+  return (ferror(ft->fp) || feof(ft->fp)) ? 0 : ret;
 }
 
 sox_size_t sox_filelength(sox_format_t * ft)
