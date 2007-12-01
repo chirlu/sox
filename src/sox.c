@@ -902,7 +902,7 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
         break;
 
       case 7:
-        ofile_effects_chain.global_info.plot = enum_option(option_index, plot_methods);
+        sox_effects_globals.plot = enum_option(option_index, plot_methods);
         break;
 
       case 8:
