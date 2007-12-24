@@ -26,25 +26,21 @@ libsox \- SoX, an audio file-format and effect library
 .P
 .B int sox_format_init(void);
 .P
-.B ft_t sox_open_read(const char *\fIpath\fB, const sox_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB);
+.B sox_format_t sox_open_read(const char *\fIpath\fB, const sox_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB);
 .P
-.B ft_t sox_open_write(sox_bool (*\fIoverwrite_permitted\fB)(const char *\fIfilename\fB), const char *\fIpath\fB, const sox_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB, const char *\fIcomment\fB, sox_size_t \fIlength\fB, const sox_instrinfo_t *\fIinstr\fB, const sox_loopinfo_t *\fIloops\fB);
+.B sox_format_t sox_open_write(sox_bool (*\fIoverwrite_permitted\fB)(const char *\fIfilename\fB), const char *\fIpath\fB, const sox_signalinfo_t *\fIinfo\fB, const char *\fIfiletype\fB, const char *\fIcomment\fB, sox_size_t \fIlength\fB, const sox_instrinfo_t *\fIinstr\fB, const sox_loopinfo_t *\fIloops\fB);
 .P
-.B sox_size_t sox_read(ft_t \fIft\fB, sox_ssample_t *\fIbuf\fB, sox_size_t \fIlen\fB);
+.B sox_size_t sox_read(sox_format_t \fIft\fB, sox_ssample_t *\fIbuf\fB, sox_size_t \fIlen\fB);
 .P
-.B sox_size_t sox_write(ft_t \fIft\fB, sox_ssample_t *\fIbuf\fB, sox_size_t \fIlen\fB);
+.B sox_size_t sox_write(sox_format_t \fIft\fB, sox_ssample_t *\fIbuf\fB, sox_size_t \fIlen\fB);
 .P
-.B int sox_close(ft_t \fIft\fB);
+.B int sox_close(sox_format_t \fIft\fB);
 .P
-.B int sox_seek(ft_t \fIft\fB, sox_size_t \fIoffset\fB, int \fIwhence\fB);
+.B int sox_seek(sox_format_t \fIft\fB, sox_size_t \fIoffset\fB, int \fIwhence\fB);
 .P
 .B sox_effect_handler_t const *sox_find_effect(char const *\fIname\fB);
 .P
 .B void sox_create_effect(sox_effect_t \fIeffp\fB, sox_effect_handler_t const *\fIe\fB);
-.P
-.B int sox_get_effect(sox_effect_t \fIeffp\fB, const char *\fIname\fB);
-.P
-.B int sox_update_effect(eff_t \fIeffp\fB, const sox_signalinfo_t *\fIin\fB, const sox_signalinfo_t *\fIout\fB, int \fIeffect_mask\fB);
 .P
 .B cc \fIfile.c\fB -o \fIfile \f-lsox
 .fi
@@ -61,7 +57,7 @@ libraries.  This should be called before any other file operations
 are performed.
 .P
 \fBsox_open_input\fR function opens the file for reading whose name is
-the string pointed to by \fIpath\fR and associates an ft_t with it. If
+the string pointed to by \fIpath\fR and associates an sox_format_t with it. If
 \fIinfo\fR is non-NULL then it will be used to specify the data format
 of the input file. This is normally only needed for headerless audio
 files since the information is not stored in the file. If
@@ -71,7 +67,7 @@ derived by looking at the file header and/or the filename extension. A
 special name of "-" can be used to read data from stdin.
 .P
 \fBsox_open_output\fR function opens the file for writing whose name is
-the string pointed to by \fIpath\fR and associates an ft_t with it. If
+the string pointed to by \fIpath\fR and associates an sox_format_t with it. If
 \fIinfo\fR is non-NULL then it will be used to specify the data format
 of the output file. Since most file formats can write data in
 different data formats, this generally has to be specified. The info
@@ -97,7 +93,7 @@ process. The value of \fIlen\fR is specified in total samples. If its
 value is not evenly divisable by the number of channels, undefined
 behavior will occur.
 .P
-The \fBsox_close\fR function dissociates the named \fIft_t\fR from its
+The \fBsox_close\fR function dissociates the named \fIsox_format_t\fR from its
 underlying file or set of functions. If the format handler was being
 used for output, any buffered data is written first.
 .P
@@ -125,7 +121,7 @@ deal with the header and then use raw.c's routines for reading and
 writing.
 .SH RETURN VALUE
 Upon successful completion \fBsox_open_input\fR and
-\fBsox_open_output\fR return an \fIft_t\fR (which is a pointer).
+\fBsox_open_output\fR return an \fIsox_format_t\fR (which is a pointer).
 Otherwise, NULL is returned. TODO: Need a way to return reason for
 failures. Currently, relies on \fBsox_warn\fR to print information.
 .P
