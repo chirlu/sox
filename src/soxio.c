@@ -15,7 +15,17 @@
   #include <ltdl.h>
 #endif
 
-sox_globals_t sox_globals = {2, 8192, NULL, NULL, NULL, NULL};
+static void output_message(unsigned level, const char *filename, const char *fmt, va_list ap);
+
+sox_globals_t sox_globals = {2, 8192, NULL, NULL, output_message, NULL};
+
+static void output_message(unsigned level, const char *filename, const char *fmt, va_list ap)
+{
+  if (sox_globals.verbosity >= level) {
+    sox_output_message(stderr, filename, fmt, ap);
+    fprintf(stderr, "\n");
+  }
+}
 
 /* Plugins */
 
@@ -179,6 +189,10 @@ sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info,
 {
     sox_format_t * ft = xcalloc(sizeof(*ft), 1);
 
+    ft->signal.reverse_bytes =
+    ft->signal.reverse_nibbles =
+    ft->signal.reverse_bits = SOX_OPTION_DEFAULT;
+
     ft->filename = xstrdup(path);
 
     /* Let auto type do the work if user is not overriding. */
@@ -307,7 +321,7 @@ sox_format_t * sox_open_write(
         else {
           struct stat st;
           if (!stat(ft->filename, &st) && (st.st_mode & S_IFMT) == S_IFREG &&
-              !overwrite_permitted(ft->filename)) {
+              (overwrite_permitted && !overwrite_permitted(ft->filename))) {
             sox_fail("Permission to overwrite '%s' denied", ft->filename);
             goto output_error;
           }
@@ -513,6 +527,7 @@ int sox_close(sox_format_t * ft)
     if (ft->mode == 'w')
         free(ft->comment);
 
+    free(ft);
     return rc;
 }
 

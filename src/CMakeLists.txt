@@ -48,9 +48,12 @@ add_library(lib${PROJECT_NAME}
   getopt                  soxio
   getopt1                 soxstdint
 )
+set(optional_libs /usr/local/lib/libsndfile.so ${optional_libs})
 add_executable(${PROJECT_NAME} ${PROJECT_NAME}.c)
 target_link_libraries(${PROJECT_NAME} lib${PROJECT_NAME} lpc10 ${optional_libs})
 add_executable(sox_sample_test sox_sample_test.c)
+add_executable(example1 example1.c)
+target_link_libraries(example1 lib${PROJECT_NAME} lpc10 ${optional_libs})
 find_program(LN ln)
 if (LN)
   add_custom_target(rec ALL ${LN} -sf sox rec DEPENDS sox)

@@ -12,11 +12,14 @@ LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
 # SoX - the application #
 #########################
 
-bin_PROGRAMS = sox
+bin_PROGRAMS = sox sox_sample_test example1
 lib_LTLIBRARIES = libsox.la libsfx.la
 include_HEADERS = sox.h soxstdint.h
 sox_SOURCES = sox.c
 sox_LDADD = libsox.la libsfx.la
+example1_SOURCES = example1.c
+example1_LDADD = libsox.la libsfx.la
+sox_sample_test_SOURCES = sox_sample_test.c
 
 #############################################
 # libsox Dynamic Libraries for File Formats #
@@ -282,9 +285,9 @@ endif
 #end !HAVE_LIBLTDL
 endif
 
-EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav sox_sample_test.c amr-wb-test CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake
+EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav sox_sample_test.c amr-wb-test CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake example1.c
 
-all: sox$(EXEEXT) play rec
+all: sox$(EXEEXT) play rec sox_sample_test example1
 
 play rec: sox$(EXEEXT)
 	./sox --help > /dev/null
@@ -298,6 +301,7 @@ install-exec-hook:
 clean-local:
 	$(RM) play rec
 	$(RM) sox_sample_test
+	$(RM) example1
 
 distclean-local:
 	$(RM) soxstdint.h

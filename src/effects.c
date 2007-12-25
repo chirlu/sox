@@ -92,6 +92,13 @@ void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const * eh)
 
 /* Effects chain: */
 
+sox_effects_chain_t * sox_create_effects_chain(void)
+{
+  sox_effects_chain_t * result = xcalloc(1, sizeof(sox_effects_chain_t));
+  result->global_info = sox_effects_globals;
+  return result;
+}
+
 /* Effect can call in start() or flow() to set minimum input size to flow() */
 int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin)
 {
@@ -364,8 +371,17 @@ sox_size_t sox_stop_effect(sox_effects_chain_t * chain, sox_size_t e)
 /* Remove all effects from the chain */
 void sox_delete_effects(sox_effects_chain_t * chain)
 {
-  while (chain->length)
-    free(chain->effects[--chain->length]);
+  sox_size_t e, clips;
+
+  for (e = 0; e < chain->length; ++e) {
+    sox_effect_t * effp = chain->effects[e];
+    if ((clips = sox_stop_effect(chain, e)) != 0)
+      sox_warn("%s clipped %u samples; decrease volume?",
+          chain->effects[e][0].handler.name, clips);
+    effp->handler.kill(effp);
+    free(chain->effects[e]);
+  }
+  chain->length = 0;
 }
 
 

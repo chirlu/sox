@@ -433,6 +433,7 @@ int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin);
 
 struct sox_effects_chain;
 typedef struct sox_effects_chain sox_effects_chain_t;
+sox_effects_chain_t * sox_create_effects_chain(void);
 
 int sox_add_effect(sox_effects_chain_t *, sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out);
 int sox_flow_effects(sox_effects_chain_t *, int (* callback)(sox_bool all_done));

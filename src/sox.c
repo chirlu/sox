@@ -17,7 +17,7 @@
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this library. If not, write to the Free Software
+ * along with this program. If not, write to the Free Software
  * Foundation, Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301,
  * USA.
  */
@@ -325,7 +325,6 @@ static void cleanup(void)
   for (i = 0; i < input_count; i++) {
     if (files[i]->ft) {
       sox_close(files[i]->ft);
-      free(files[i]->ft);
     }
     free(files[i]);
   }
@@ -343,7 +342,6 @@ static void cleanup(void)
 
       /* Assumption: we can unlink a file before sox_closing it. */
       sox_close(ofile->ft);
-      free(ofile->ft);
     }
     free(ofile);
   }
@@ -708,12 +706,8 @@ int main(int argc, char **argv)
   if (combine_method == sox_sequence) do {
     if (ofile->ft)
       sox_close(ofile->ft);
-    free(ofile->ft);
   } while (process() != SOX_EOF && !user_abort && current_input < input_count);
   else process();
-
-  while (nuser_effects--)
-    user_efftab[nuser_effects].handler.kill(&user_efftab[nuser_effects]);
 
   for (i = 0; i < file_count; ++i)
     if (files[i]->ft->clips != 0)
@@ -1147,12 +1141,29 @@ static sox_bool can_segue(sox_size_t i)
     files[i]->ft->signal.rate     == files[i - 1]->ft->signal.rate;
 }
 
+static void display_error(sox_format_t * ft)
+{
+  static char const * const sox_strerror[] = {
+    "Invalid Audio Header",
+    "Unsupported data format",
+    "Unsupported rate for format",
+    "Can't alloc memory",
+    "Operation not permitted",
+    "Operation not supported",
+    "Invalid argument",
+    "Unsupported file format",
+  };
+  sox_fail("%s: %s (%s)", ft->filename, ft->sox_errstr,
+      ft->sox_errno < SOX_EHDR?
+      strerror(ft->sox_errno) : sox_strerror[ft->sox_errno - SOX_EHDR]);
+}
+
 static sox_size_t sox_read_wide(sox_format_t * ft, sox_sample_t * buf, sox_size_t max)
 {
   sox_size_t len = max / combiner.channels;
   len = sox_read(ft, buf, len * ft->signal.channels) / ft->signal.channels;
   if (!len && ft->sox_errno)
-    sox_fail("%s: %s (%s)", ft->filename, ft->sox_errstr, strerror(ft->sox_errno));
+    display_error(ft);
   return len;
 }
 
@@ -1439,16 +1450,6 @@ static int update_status(sox_bool all_done)
   return user_abort? SOX_EOF : SOX_SUCCESS;
 }
 
-static void sox_stop_effects(sox_effects_chain_t * chain)
-{
-  sox_size_t e, clips;
-
-  for (e = 0; e < chain->length; ++e)
-    if ((clips = sox_stop_effect(chain, e)) != 0)
-      sox_warn("%s clipped %u samples; decrease volume?",
-          chain->effects[e][0].handler.name, clips);
-}
-
 /*
  * Process:   Input(s) -> Balancing -> Combiner -> Effects -> Output
  */
@@ -1530,7 +1531,6 @@ static int process(void) {
   
   flowstatus = sox_flow_effects(&ofile_effects_chain, update_status);
 
-  sox_stop_effects(&ofile_effects_chain);
   sox_delete_effects(&ofile_effects_chain);
   return flowstatus;
 }
