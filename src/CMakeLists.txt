@@ -1,7 +1,6 @@
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}config.h)
 
-#include_directories(${liblpc10_BINARY_DIR}/lpc10)
-#link_directories(${liblpc10_SOURCE_DIR}/lpc10)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 if(CMAKE_COMPILER_IS_GNUCC)
 #  add_definitions(-Wconversion)
@@ -12,10 +11,10 @@ if (NOT EXTERNAL_GSM)
 endif (NOT EXTERNAL_GSM)
 
 add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/soxstdint.h
-  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/soxstdint.h.cmake ${CMAKE_CURRENT_SOURCE_DIR}/soxstdint.h
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/soxstdint.h
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/soxstdint.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/soxstdint.h
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/soxstdint.h.cmake
-  )
+)
 
 # Format with: !xargs echo|tr ' ' '\n'|sort|column|expand|sed 's/^/  /'
 set(effects_srcs
@@ -40,7 +39,7 @@ set(formats_srcs
   au              g723_24         nulfile         sndrtool        wav
   auto            g723_40         prc             sphere          wve
   avr             g72x            raw             tx16w           xa
-  cdr             gsm             raw-fmt         u1-fmt
+  cdr             gsm.c           raw-fmt         u1-fmt
 )
 add_library(lib${PROJECT_NAME}
   ${effects_srcs}         misc                    util
@@ -48,7 +47,6 @@ add_library(lib${PROJECT_NAME}
   getopt                  soxio
   getopt1                 soxstdint
 )
-set(optional_libs /usr/local/lib/libsndfile.so ${optional_libs})
 add_executable(${PROJECT_NAME} ${PROJECT_NAME}.c)
 target_link_libraries(${PROJECT_NAME} lib${PROJECT_NAME} lpc10 ${optional_libs})
 add_executable(sox_sample_test sox_sample_test.c)

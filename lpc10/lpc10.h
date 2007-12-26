@@ -1,6 +1,9 @@
 /*
 
 $Log: lpc10.h,v $
+Revision 1.2  2007/12/26 16:12:42  robs
+support out-of-source-build
+
 Revision 1.1  2007/04/16 21:57:22  rrt
 LPC-10 support, documentation still to come; I wanted to land the code
 before 14.0.0 went into test, and I'll be busy tomorrow.
@@ -17,7 +20,7 @@ with anything else, and I'll get on that case before we go stable.
 #ifndef __LPC10_H__
 #define __LPC10_H__
 
-#include "../src/soxstdint.h"
+#include "soxstdint.h"
 
 #define LPC10_SAMPLES_PER_FRAME 180
 #define LPC10_BITS_IN_COMPRESSED_FRAME 54

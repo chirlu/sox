@@ -5,4 +5,5 @@ liblpc10_la_SOURCES = analys.c bsynz.c chanwr.c dcbias.c \
   ham84.c hp100.c invert.c irc2pc.c ivfilt.c lpcdec.c lpcenc.c lpcini.c \
   lpfilt.c median.c mload.c onset.c pitsyn.c placea.c placev.c preemp.c \
   prepro.c random.c rcchk.c synths.c tbdm.c voicin.c vparms.c
+AM_CPPFLAGS=-I../src
 EXTRA_DIST = CMakeLists.txt
