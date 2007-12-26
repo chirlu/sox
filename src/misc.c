@@ -115,8 +115,7 @@ uint8_t const cswap[256] = {
  */
 size_t sox_readbuf(sox_format_t * ft, void *buf, sox_size_t len)
 {
-  size_t ret = fread(buf, 1, len, ft->fp);
-  return (ferror(ft->fp) || feof(ft->fp)) ? 0 : ret;
+  return fread(buf, 1, len, ft->fp);
 }
 
 /* Skip input without seeking. */
