@@ -12,7 +12,8 @@ LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
 # SoX - the application #
 #########################
 
-bin_PROGRAMS = sox sox_sample_test example1
+bin_PROGRAMS = sox sox_sample_test
+EXTRA_PROGRAMS = example1
 lib_LTLIBRARIES = libsox.la libsfx.la
 include_HEADERS = sox.h soxstdint.h
 sox_SOURCES = sox.c
