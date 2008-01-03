@@ -21,8 +21,7 @@ AC_PROG_LN_S
 
 AC_ARG_WITH(libltdl,
     AC_HELP_STRING([--without-libltdl],
-        [Don't try to use libltdl for external dynamic library support]),
-        [with_libltdl=$withval])
+        [Don't try to use libltdl for external dynamic library support]))
 
 using_libltdl=no
 if test "$with_libltdl" != "no"; then
@@ -201,8 +200,7 @@ AM_CONDITIONAL(EXTERNAL_GSM, test x$found_libgsm = xyes)
 dnl Check for libsndfile
 AC_ARG_WITH(sndfile,
     AC_HELP_STRING([--without-sndfile],
-    [Don't try to use libsndfile]),
-    [with_sndfile=$withval])
+    [Don't try to use libsndfile]))
 using_sndfile=no
 if test "$with_sndfile" != "no"; then
     using_sndfile=yes
@@ -218,8 +216,7 @@ AC_SUBST(SNDFILE_LIBS)
 dnl Check for Ogg Vorbis libraries
 AC_ARG_WITH(ogg,
     AC_HELP_STRING([--without-ogg], 
-	[Don't try to use Ogg Vorbis]),
-        [with_ogg=$withval])
+	[Don't try to use Ogg Vorbis]))
 using_ogg=no
 if test "$with_ogg" != "no"; then
     using_ogg=yes
@@ -242,8 +239,7 @@ AC_SUBST(OGG_LIBS)
 dnl Check for FLAC libraries
 AC_ARG_WITH(flac,
     AC_HELP_STRING([--without-flac],
-        [Don't try to use FLAC]),
-        [with_flac=$withval])
+        [Don't try to use FLAC]))
 using_flac=no
 if test "$with_flac" != "no"; then
     using_flac=yes
@@ -263,8 +259,7 @@ AC_SUBST(FLAC_LIBS)
 dnl Check for ffmpeg libraries
 AC_ARG_WITH(ffmpeg,
     AC_HELP_STRING([--without-ffmpeg],
-        [Don't try to use ffmpeg]),
-        [with_ffmpeg=$withval])
+        [Don't try to use ffmpeg]))
 using_ffmpeg=no
 if test "$with_ffmpeg" != "no"; then
     using_ffmpeg=yes
@@ -286,8 +281,7 @@ AC_SUBST(FFMPEG_LIBS)
 dnl Check for MAD libraries
 AC_ARG_WITH(mad,
     AC_HELP_STRING([--without-mad],
-        [Don't try to use MAD (MP3 Audio Decoder)]),
-        [with_mad=$withval])
+        [Don't try to use MAD (MP3 Audio Decoder)]))
 using_mad=no
 if test "$with_mad" != "no"; then
     using_mad=yes
@@ -302,8 +296,7 @@ fi
 dnl Check for id3tag libraries
 AC_ARG_WITH(id3tag,
     AC_HELP_STRING([--without-id3tag],
-        [Don't try to use id3tag]),
-        [with_id3tag=$withval])
+        [Don't try to use id3tag]))
 using_id3tag=no
 if test "$with_id3tag" != "no"; then
     using_id3tag=yes
@@ -322,8 +315,7 @@ AM_CONDITIONAL(HAVE_ID3TAG, test x$using_id3tag = xyes)
 dnl Test for LAME library.
 AC_ARG_WITH(lame,
     AC_HELP_STRING([--without-lame],
-        [Don't try to use LAME (LAME Ain't an MP3 Encoder)]),
-        [with_lame=$withval])
+        [Don't try to use LAME (LAME Ain't an MP3 Encoder)]))
 using_lame=no
 if test "$with_lame" != "no"; then
     using_lame=yes
@@ -342,8 +334,7 @@ AC_SUBST(MP3_LIBS)
 dnl Check for amr-wb libraries
 AC_ARG_WITH(amr-wb,
     AC_HELP_STRING([--without-amr-wb],
-        [Don't try to use amr-wb]),
-        [with_amr_wb=$withval])
+        [Don't try to use amr-wb]))
 using_amr_wb=no
 if test "$with_amr_wb" != "no"; then
     using_amr_wb=yes
@@ -363,8 +354,7 @@ AC_SUBST(AMR_WB_LIBS)
 dnl Check for amr-nb libraries
 AC_ARG_WITH(amr-nb,
     AC_HELP_STRING([--without-amr-nb],
-        [Don't try to use amr-nb]),
-        [with_amr_nb=$withval])
+        [Don't try to use amr-nb]))
 using_amr_nb=no
 if test "$with_amr_nb" != "no"; then
     using_amr_nb=yes
@@ -384,8 +374,7 @@ AC_SUBST(AMR_NB_LIBS)
 dnl Test for libsamplerate.
 AC_ARG_WITH(samplerate,
     AC_HELP_STRING([--without-samplerate],
-        [Don't try to use libsamplerate (aka Secret Rabbit Code)]),
-        [with_samplerate=$withval])
+        [Don't try to use libsamplerate (aka Secret Rabbit Code)]))
 using_samplerate=no
 if test "$with_samplerate" != "no"; then
     using_samplerate=yes
@@ -399,7 +388,7 @@ AC_SUBST(SAMPLERATE_LIBS)
 
 dnl Test for LADSPA
 AC_ARG_WITH(ladspa,
-    AC_HELP_STRING([--without-ladspa], [Don't try to use LADSPA]), [with_ladspa=$withval])
+    AC_HELP_STRING([--without-ladspa], [Don't try to use LADSPA]))
 using_ladspa=no
 if test "$with_ladspa" != "no" -a "$using_libltdl" = "yes"; then
     using_ladspa=yes
@@ -410,7 +399,7 @@ if test "$with_ladspa" != "no" -a "$using_libltdl" = "yes"; then
 fi
 LADSPA_PATH=${libdir}/ladspa
 AC_ARG_WITH(ladspa-path,
-    AC_HELP_STRING([--with-ladspa-path], [Default search path for LADSPA plugins]), [LADSPA_PATH=$withval])
+    AC_HELP_STRING([--with-ladspa-path], [Default search path for LADSPA plugins]))
 AC_SUBST(LADSPA_PATH)
 
 dnl Generate output files.
