@@ -152,7 +152,8 @@ static int startread(sox_format_t * ft)
 {
   ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
   AVFormatParameters params;
-  int i, ret;
+  int ret;
+  unsigned i;
 
   ffmpeg->audio_buf = xcalloc(1, AVCODEC_MAX_AUDIO_FRAME_SIZE);
 
@@ -442,7 +443,7 @@ static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t l
 static int stopwrite(sox_format_t * ft)
 {
   ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
-  int i;
+  unsigned i;
 
   /* Close CODEC */
   if (ffmpeg->audio_st) {
