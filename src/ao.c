@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <ao/ao.h>
 
 typedef struct ao_priv
@@ -41,9 +42,19 @@ static int startwrite(sox_format_t * ft)
   ao_priv_t ao = (ao_priv_t)ft->priv;
 
   ao_initialize();
-  if ((ao->driver_id = ao_default_driver_id()) < 0) {
-    sox_fail("Could not find a default driver");
-    return SOX_EOF;
+  if (strcmp(ft->filename,"default") == 0)
+  {
+      if ((ao->driver_id = ao_default_driver_id()) < 0) {
+          sox_fail("Could not find a default ao driver");
+          return SOX_EOF;
+      }
+  }
+  else
+  {
+      if ((ao->driver_id = ao_driver_id(ft->filename)) < 0) {
+          sox_fail("Could not find a ao driver %s", ft->filename);
+          return SOX_EOF;
+      }
   }
 
   ao->format.bits = SOX_SAMPLE_BITS;
@@ -51,7 +62,7 @@ static int startwrite(sox_format_t * ft)
   ao->format.channels = ft->signal.channels;
   ao->format.byte_format = AO_FMT_NATIVE;
   if ((ao->device = ao_open_live(ao->driver_id, &ao->format, NULL)) == NULL) {
-    sox_fail("Could not open default device: error %d", errno);
+    sox_fail("Could not open device: error %d", errno);
     return SOX_EOF;
   }
 

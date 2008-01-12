@@ -148,9 +148,14 @@ This is a pseudo-file type and can be optionally compiled into SoX.  Run
 .EE
 to see if you have support for this file type. It works only for
 playing audio files. It can play to a wide range of devices and sound
-systems. See its documentation for the full range. At the moment SoX's
+systems. See its documentation for the full range. For the most part, SoX's
 use of libao cannot be configured directly; you must use libao
 configuration files.
+.SP
+The filename specified is used to determine which libao plugin to
+us.  Normally, you should specify "default" as the filename.  If that
+doesn't give the desired behavior then you can specify the short name
+for a given plugin (such as pulse for pulse audio plugin).
 .TP
 \&\fB.au\fR, \fB.snd\fR \fB(also with \-t sndfile)\fR
 Sun Microsystems AU files.

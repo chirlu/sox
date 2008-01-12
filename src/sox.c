@@ -370,13 +370,6 @@ static file_t new_file(void)
 
 static void set_device(file_t f, sox_bool recording UNUSED)
 {
-#ifdef HAVE_LIBAO
-  if (!recording) {
-    f->filetype = "ao";
-    f->filename = xstrdup("default");
-    return;
-  }
-#endif
 #if defined(HAVE_ALSA)
   f->filetype = "alsa";
   f->filename = xstrdup("default");
@@ -387,6 +380,11 @@ static void set_device(file_t f, sox_bool recording UNUSED)
   char *device = getenv("AUDIODEV");
   f->filetype = "sunau";
   f->filename = xstrdup(device ? device : "/dev/audio");
+#elif HAVE_LIBAO
+  if (!recording) {
+    f->filetype = "ao";
+    f->filename = xstrdup("default");
+  }
 #else
   sox_fail("Sorry, there is no default audio device configured");
   exit(1);
