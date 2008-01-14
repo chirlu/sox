@@ -222,15 +222,10 @@ if test "$with_ogg" != "no"; then
     using_ogg=yes
     AC_CHECK_HEADER(vorbis/codec.h,
         [AC_CHECK_LIB(ogg, ogg_packet_clear, OGG_LIBS="$OGG_LIBS -logg", using_ogg=no)
-        ac_save_LIBS=$LIBS
-        AC_CHECK_LIB(vorbis, vorbis_analysis_headerout, [], using_ogg=no, $OGG_LIBS)
-        dnl AC_CHECK_LIB appends library to LIBS which would mess
-        dnl up link order of -logg.  So manually remove it.
-        LIBS=$ac_save_LIBS
-        AC_CHECK_LIB(vorbisfile, ov_clear, [], using_ogg=no, $OGG_LIBS)
-        LIBS=$ac_save_LIBS
-        AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr, OGG_LIBS="$OGG_LIBS -lvorbisenc", using_ogg=no)],
-        using_ogg=no, $OGG_LIBS)
+        AC_CHECK_LIB(vorbis, vorbis_analysis_headerout, OGG_LIBS="-lvorbis $OGG_LIBS", using_ogg=no, $OGG_LIBS)
+        AC_CHECK_LIB(vorbisfile, ov_clear, OGG_LIBS="-lvorbisfile $OGG_LIBS", using_ogg=no, $OGG_LIBS)
+        AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr, OGG_LIBS="-lvorbisenc $OGG_LIBS", using_ogg=no, $OGG_LIBS)],
+        using_ogg=no)
     if test "$with_ogg" = "yes" -a "$using_ogg" = "no"; then
         AC_MSG_FAILURE([cannot find Ogg Vorbis])
     fi
