@@ -288,7 +288,7 @@ endif
 
 EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav sox_sample_test.c amr-wb-test CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake example1.c
 
-all: sox$(EXEEXT) play rec sox_sample_test example1
+all: sox$(EXEEXT) play rec sox_sample_test$(EXEEXT) example1$(EXEEXT)
 
 play rec: sox$(EXEEXT)
 	./sox --help > /dev/null

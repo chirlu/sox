@@ -222,10 +222,15 @@ if test "$with_ogg" != "no"; then
     using_ogg=yes
     AC_CHECK_HEADER(vorbis/codec.h,
         [AC_CHECK_LIB(ogg, ogg_packet_clear, OGG_LIBS="$OGG_LIBS -logg", using_ogg=no)
-        AC_CHECK_LIB(vorbis, vorbis_analysis_headerout, OGG_LIBS="$OGG_LIBS -lvorbis", using_ogg=no)
-        AC_CHECK_LIB(vorbisfile, ov_clear, OGG_LIBS="$OGG_LIBS -lvorbisfile", using_ogg=no)
+        ac_save_LIBS=$LIBS
+        AC_CHECK_LIB(vorbis, vorbis_analysis_headerout, [], using_ogg=no, $OGG_LIBS)
+        dnl AC_CHECK_LIB appends library to LIBS which would mess
+        dnl up link order of -logg.  So manually remove it.
+        LIBS=$ac_save_LIBS
+        AC_CHECK_LIB(vorbisfile, ov_clear, [], using_ogg=no, $OGG_LIBS)
+        LIBS=$ac_save_LIBS
         AC_CHECK_LIB(vorbisenc, vorbis_encode_init_vbr, OGG_LIBS="$OGG_LIBS -lvorbisenc", using_ogg=no)],
-        using_ogg=no)
+        using_ogg=no, $OGG_LIBS)
     if test "$with_ogg" = "yes" -a "$using_ogg" = "no"; then
         AC_MSG_FAILURE([cannot find Ogg Vorbis])
     fi
@@ -287,7 +292,7 @@ if test "$with_mad" != "no"; then
     using_mad=yes
     AC_CHECK_HEADERS(mad.h,
         [AC_CHECK_LIB(mad, mad_stream_buffer, MP3_LIBS="$MP3_LIBS -lmad",using_mad=no)],
-        with_mad=no)
+        using_mad=no)
     if test "$with_mad" = "yes" -a "$using_mad" = "no"; then
         AC_MSG_FAILURE([cannot find libmad])
     fi

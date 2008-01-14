@@ -41,6 +41,12 @@ m4_ifdef([PKG_CHECK_MODULES],
   fi
   ])
 
+m4_ifndef([PKG_CHECK_MODULES],
+  [# PKG_CHECK_MODULES not available
+  # Best guess is that samplerate only needs to link against itself
+  SAMPLERATE_LIBS="-lsamplerate"
+  ])
+
 # Now try actually using libsamplerate
 if test "$have_samplerate" != "no"
 then
@@ -48,6 +54,7 @@ then
   ac_save_LIBS="$LIBS"
   CFLAGS="$CFLAGS $SAMPLERATE_CFLAGS"
   LIBS="$LIBS $SAMPLERATE_LIBS"
+  dnl Must hardcode samplerate library if we can not get it from pkg-config
   AC_CHECK_HEADER([samplerate.h], [
     AC_DEFINE([HAVE_SAMPLERATE_H], 1, [Define if you have <samplerate.h>])
     AC_CHECK_FUNC([src_new], [
