@@ -371,24 +371,42 @@ static file_t new_file(void)
 static void set_device(file_t f, sox_bool recording UNUSED)
 {
 #if defined(HAVE_ALSA)
-  f->filetype = "alsa";
-  f->filename = xstrdup("default");
-#elif defined(HAVE_SYS_SOUNDCARD_H) || defined(HAVE_MACHINE_SOUNDCARD_H)
-  f->filetype = "ossdsp";
-  f->filename = xstrdup("/dev/dsp");
-#elif defined(HAVE_SYS_AUDIOIO_H) || defined(HAVE_SUN_AUDIOIO_H)
-  char *device = getenv("AUDIODEV");
-  f->filetype = "sunau";
-  f->filename = xstrdup(device ? device : "/dev/audio");
-#elif HAVE_LIBAO
-  if (!recording) {
-    f->filetype = "ao";
+  if (sox_find_format("alsa", sox_false))
+  {
+    f->filetype = "alsa";
     f->filename = xstrdup("default");
+    return;
   }
-#else
+#endif
+#if defined(HAVE_SYS_SOUNDCARD_H) || defined(HAVE_MACHINE_SOUNDCARD_H)
+  if (sox_find_format("ossdsp", sox_false))
+  {
+    f->filetype = "ossdsp";
+    f->filename = xstrdup("/dev/dsp");
+    return;
+  }
+#endif
+#if defined(HAVE_SYS_AUDIOIO_H) || defined(HAVE_SUN_AUDIOIO_H)
+  if (sox_find_format("sunau", sox_false))
+  {
+    char *device = getenv("AUDIODEV");
+    f->filetype = "sunau";
+    f->filename = xstrdup(device ? device : "/dev/audio");
+    return;
+  }
+#endif
+#ifdef HAVE_LIBAO
+  if (!recording) {
+    if (sox_find_format("ao", sox_false))
+    {
+        f->filetype = "ao";
+        f->filename = xstrdup("default");
+        return;
+    }
+  }
+#endif
   sox_fail("Sorry, there is no default audio device configured");
   exit(1);
-#endif
 }
 
 static void set_replay_gain(char const * comment, file_t f)
