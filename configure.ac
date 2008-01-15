@@ -237,6 +237,12 @@ AM_CONDITIONAL(HAVE_OGG_VORBIS, test x$using_ogg = xyes)
 AC_SUBST(OGG_LIBS)
 
 dnl Check for FLAC libraries
+case $target in
+  *mingw*)
+  FLAC_LIBS="-lwsock32"
+  ;;
+esac
+
 AC_ARG_WITH(flac,
     AC_HELP_STRING([--without-flac],
         [Don't try to use FLAC]))
@@ -244,7 +250,7 @@ using_flac=no
 if test "$with_flac" != "no"; then
     using_flac=yes
     AC_CHECK_HEADER(FLAC/all.h,
-        [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new, FLAC_LIBS="$FLAC_LIBS -lFLAC",using_flac=no)],
+        [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new, FLAC_LIBS="-lFLAC $FLAC_LIBS",using_flac=no, $FLAC_LIBS)],
         using_flac=no)
     if test "$with_flac" = "yes" -a "$using_flac" = "no"; then
         AC_MSG_FAILURE([cannot find FLAC])
