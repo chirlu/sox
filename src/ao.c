@@ -29,6 +29,8 @@ typedef struct ao_priv
   int driver_id;
   ao_device *device;
   ao_sample_format format;
+  char *buf;
+  sox_size_t buf_size;
 } *ao_priv_t;
 
 static int startread(UNUSED sox_format_t * ft)
@@ -40,6 +42,25 @@ static int startread(UNUSED sox_format_t * ft)
 static int startwrite(sox_format_t * ft)
 {
   ao_priv_t ao = (ao_priv_t)ft->priv;
+
+  if (ft->signal.size != SOX_SIZE_16BIT || 
+      ft->signal.encoding != SOX_ENCODING_SIGN2)
+  {
+      sox_report("Forcing to signed 16 bit samples for ao driver");
+      ft->signal.size = SOX_SIZE_16BIT;
+      ft->signal.encoding = SOX_ENCODING_SIGN2;
+  }
+
+  ao->buf_size = sox_globals.bufsiz - (sox_globals.bufsiz % ft->signal.size);
+  ao->buf_size *= ft->signal.size;
+  ao->buf = xmalloc(ao->buf_size);
+
+  if (!ao->buf)
+  {
+      sox_fail_errno(ft, SOX_ENOMEM, "Can not allocate memory for ao driver");
+      return SOX_EOF;
+  }
+
 
   ao_initialize();
   if (strcmp(ft->filename,"default") == 0)
@@ -57,7 +78,7 @@ static int startwrite(sox_format_t * ft)
       }
   }
 
-  ao->format.bits = SOX_SAMPLE_BITS;
+  ao->format.bits = ft->signal.size * 8;
   ao->format.rate = ft->signal.rate;
   ao->format.channels = ft->signal.channels;
   ao->format.byte_format = AO_FMT_NATIVE;
@@ -69,11 +90,31 @@ static int startwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t len, sox_bool swap, sox_size_t * clips)
+{
+    while (len--)
+    {
+        uint16_t datum = SOX_SAMPLE_TO_SIGNED_16BIT(*buf2++, *clips);
+        if (swap)
+            datum = sox_swapw(datum);
+        *(uint16_t *)buf1 = datum;
+        buf1++; buf1++;
+    }
+}
+
+static sox_size_t write(sox_format_t *ft, const sox_sample_t *buf, sox_size_t len)
 {
   ao_priv_t ao = (ao_priv_t)ft->priv;
+  sox_size_t aobuf_size;
 
-  if (ao_play(ao->device, (void *)buf, len * sizeof(sox_sample_t)) == 0)
+  if (len > ao->buf_size / ft->signal.size)
+      len = ao->buf_size / ft->signal.size;
+
+  aobuf_size = ft->signal.size * len;
+
+  sox_sw_write_buf((char *)ao->buf, buf, len, ft->signal.reverse_bytes,
+                   &(ft->clips));
+  if (ao_play(ao->device, (void *)ao->buf, aobuf_size) == 0)
     return 0;
 
   return len;
@@ -82,6 +123,8 @@ static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t l
 static int stopwrite(sox_format_t * ft)
 {
   ao_priv_t ao = (ao_priv_t)ft->priv;
+
+  free(ao->buf);
 
   if (ao_close(ao->device) == 0) {
     sox_fail("Error closing libao output");

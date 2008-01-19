@@ -25,6 +25,8 @@ sox-14.0.1
   o Fix [1748909] sox does not report remaining playtime of mp3s.  (robs)
   o Fix failure to read AIFF files with empty MARK chunk.  (robs)
   o Fix spurious 'Premature EOF' message in some circumstances.  (robs)
+  o Switched to 16-bit for libao driver since not all its plugins
+    support it (such as oss, nas, and pulse audio).
 
   Internal improvements:
 
@@ -34,6 +36,8 @@ sox-14.0.1
   o Remove unused libltdl that could cause header mismatch with
     installed libltdl.
   o Fix AMR detection with --disable-shared.  (robs)
+  o Updated configure to support linking to static libraries
+    on mingw for flac, ogg, and libsamplerate libraries.
 
 
 sox-14.0.0
