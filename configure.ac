@@ -249,8 +249,12 @@ AC_ARG_WITH(flac,
 using_flac=no
 if test "$with_flac" != "no"; then
     using_flac=yes
+    dnl Note passing in OGG_LIBS.  That is because FLAC has optional
+    dnl support for OGG and if OGG libraries are found ont this
+    dnl system then its highly likely to be compiled into FLAC
+    dnl and will require these at link time.
     AC_CHECK_HEADER(FLAC/all.h,
-        [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new, FLAC_LIBS="-lFLAC $FLAC_LIBS",using_flac=no, $FLAC_LIBS)],
+        [AC_CHECK_LIB(FLAC, FLAC__stream_encoder_new, FLAC_LIBS="-lFLAC $FLAC_LIBS $OGG_LIBS",using_flac=no, $FLAC_LIBS $OGG_LIBS)],
         using_flac=no)
     if test "$with_flac" = "yes" -a "$using_flac" = "no"; then
         AC_MSG_FAILURE([cannot find FLAC])
