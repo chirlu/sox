@@ -434,7 +434,8 @@ argument is the plugin module, the second the name of the plugin (a
 module can contain more than one plugin) and any other arguments are
 for the control ports of the plugin. Missing arguments are supplied by
 default values if possible. Only plugins with at most one audio input
-and one audio output port can be used.
+and one audio output port can be used.  If found, the enviornment varible
+LADSPA_PATH will be used as search path for plugins.
 .TP
 \fBlowpass\fR [\fB-1\fR|\fB-2\fR] \fIfrequency\fR [\fRwidth\fR[\fBq\fR\^|\^\fBo\fR\^|\^\fBh\fR]]
 Apply a low-pass filter.
