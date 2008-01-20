@@ -584,8 +584,8 @@ static void parse_options_and_filenames(int argc, char **argv)
     file_count++;
 
     f = new_file();
-    set_device(f, sox_true);
     files[0] = f;
+    set_device(f, sox_true);
   }
 }
 
