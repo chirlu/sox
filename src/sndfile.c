@@ -145,38 +145,42 @@ static sox_encoding_t sox_encoding_and_size(int format, int *size)
 
 static struct {
   const char *ext;
-  unsigned len;
   int format;
 } format_map[] =
 {
-  { "aif",	3, SF_FORMAT_AIFF },
-  { "wav",	0, SF_FORMAT_WAV },
-  { "au",	0, SF_FORMAT_AU },
-  { "snd",	0, SF_FORMAT_AU },
+  { "aif",	SF_FORMAT_AIFF },
+  { "aiff",	SF_FORMAT_AIFF },
+  { "wav",	SF_FORMAT_WAV },
+  { "au",	SF_FORMAT_AU },
+  { "snd",	SF_FORMAT_AU },
 #ifdef HAVE_SNDFILE_1_0_12
-  { "caf",	0, SF_FORMAT_CAF },
-  { "flac",	0, SF_FORMAT_FLAC },
+  { "caf",	SF_FORMAT_CAF },
+  { "flac",	SF_FORMAT_FLAC },
 #endif
-  { "svx",	0, SF_FORMAT_SVX },
-  { "8svx",     0, SF_FORMAT_SVX },
-  { "paf",	0, SF_ENDIAN_BIG | SF_FORMAT_PAF },
-  { "fap",	0, SF_ENDIAN_LITTLE | SF_FORMAT_PAF },
-  { "gsm",	0, SF_FORMAT_RAW | SF_FORMAT_GSM610 },
-  { "nist", 	0, SF_FORMAT_NIST },
-  { "sph",      0, SF_FORMAT_NIST },
-  { "ircam",	0, SF_FORMAT_IRCAM },
-  { "sf",	0, SF_FORMAT_IRCAM },
-  { "voc",	0, SF_FORMAT_VOC },
-  { "w64", 	0, SF_FORMAT_W64 },
-  { "raw",	0, SF_FORMAT_RAW },
-  { "mat4", 	0, SF_FORMAT_MAT4 },
-  { "mat5", 	0, SF_FORMAT_MAT5 },
-  { "mat",	0, SF_FORMAT_MAT4 },
-  { "pvf",	0, SF_FORMAT_PVF },
-  { "sds",	0, SF_FORMAT_SDS },
-  { "sd2",	0, SF_FORMAT_SD2 },
-  { "vox",	0, SF_FORMAT_RAW | SF_FORMAT_VOX_ADPCM },
-  { "xi",	0, SF_FORMAT_XI }
+#ifdef HAVE_SNDFILE_1_0_18
+  { "wve",	SF_FORMAT_WVE },
+  { "ogg",	SF_FORMAT_OGG },
+#endif
+  { "svx",	SF_FORMAT_SVX },
+  { "8svx",     SF_FORMAT_SVX },
+  { "paf",	SF_ENDIAN_BIG | SF_FORMAT_PAF },
+  { "fap",	SF_ENDIAN_LITTLE | SF_FORMAT_PAF },
+  { "gsm",	SF_FORMAT_RAW | SF_FORMAT_GSM610 },
+  { "nist", 	SF_FORMAT_NIST },
+  { "sph",      SF_FORMAT_NIST },
+  { "ircam",	SF_FORMAT_IRCAM },
+  { "sf",	SF_FORMAT_IRCAM },
+  { "voc",	SF_FORMAT_VOC },
+  { "w64", 	SF_FORMAT_W64 },
+  { "raw",	SF_FORMAT_RAW },
+  { "mat4", 	SF_FORMAT_MAT4 },
+  { "mat5", 	SF_FORMAT_MAT5 },
+  { "mat",	SF_FORMAT_MAT4 },
+  { "pvf",	SF_FORMAT_PVF },
+  { "sds",	SF_FORMAT_SDS },
+  { "sd2",	SF_FORMAT_SD2 },
+  { "vox",	SF_FORMAT_RAW | SF_FORMAT_VOX_ADPCM },
+  { "xi",	SF_FORMAT_XI }
 };
 
 /* Convert file name or type to libsndfile format */
@@ -188,7 +192,7 @@ static int name_to_format(const char *name)
 
   if ((cptr = strrchr(name, '.')) != NULL) {
     strncpy(buffer, cptr + 1, FILE_TYPE_BUFLEN);
-    buffer[FILE_TYPE_BUFLEN] = 0;
+    buffer[FILE_TYPE_BUFLEN] = '\0';
   
     for (k = 0; buffer[k]; k++)
       buffer[k] = tolower((buffer[k]));
@@ -196,9 +200,7 @@ static int name_to_format(const char *name)
     strncpy(buffer, name, FILE_TYPE_BUFLEN);
   
   for (k = 0; k < (int)(sizeof(format_map) / sizeof(format_map [0])); k++) {
-    if (format_map[k].len > 0 && strncmp(name, format_map[k].ext, format_map[k].len) == 0)
-      return format_map[k].format;
-    else if (strcmp(buffer, format_map[k].ext) == 0)
+    if (strcmp(buffer, format_map[k].ext) == 0)
       return format_map[k].format;
   }
 

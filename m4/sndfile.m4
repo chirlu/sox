@@ -54,7 +54,8 @@ then
       ifelse([$1], , :, [$1])
       have_sndfile="yes"
     ])
-    AC_CHECK_FUNC([sf_open_virtual], AC_DEFINE([HAVE_SNDFILE_1_0_12], 1, [Define if you have libsndfile >= 1.0.12]))      
+    AC_CHECK_FUNC([sf_open_virtual], AC_DEFINE([HAVE_SNDFILE_1_0_12], 1, [Define if you have libsndfile >= 1.0.12]))
+    AC_CHECK_DECL([SF_FORMAT_OGG], AC_DEFINE([HAVE_SNDFILE_1_0_18], 1, [Define if you have libsndfile >= 1.0.18]),, [#include <sndfile.h>])
   ])
   CFLAGS="$ac_save_CFLAGS"
   LIBS="$ac_save_LIBS"
