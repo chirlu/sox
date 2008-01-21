@@ -138,6 +138,7 @@ static int sox_wvestartwrite(sox_format_t * ft)
         ft->signal.encoding = SOX_ENCODING_ALAW;
         ft->signal.size = SOX_SIZE_BYTE;
         ft->signal.rate = 8000;
+        ft->signal.channels = 1;
 
         wvewriteheader(ft);
         return SOX_SUCCESS;
