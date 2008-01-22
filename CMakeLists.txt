@@ -49,7 +49,6 @@ check_include_files("sys/timeb.h"        HAVE_SYS_TIMEB_H)
 check_include_files("unistd.h"           HAVE_UNISTD_H)
 
 check_function_exists("fseeko"           HAVE_FSEEKO)
-check_function_exists("getopt_long"      HAVE_GETOPT_LONG)
 check_function_exists("gettimeofday"     HAVE_GETTIMEOFDAY)
 check_function_exists("popen"            HAVE_POPEN)
 check_function_exists("strcasecmp"       HAVE_STRCASECMP)

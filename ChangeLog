@@ -25,6 +25,7 @@ sox-14.0.1
   o Fix [1748909] sox does not report remaining playtime of mp3s.  (robs)
   o Fix failure to read AIFF files with empty MARK chunk.  (robs)
   o Fix spurious 'Premature EOF' message in some circumstances.  (robs)
+  o Fix -V (without argument) on non-gnu systems.  (robs)
   o Switched to 16-bit for libao driver since not all its plugins
     support it (such as oss, nas, and pulse audio) (Morita Sho)
   o Stop crash when "rec" is ran with no arguments (Morita Sho).

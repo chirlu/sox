@@ -8,7 +8,6 @@
 #cmakedefine HAVE_FFMPEG              1
 #cmakedefine HAVE_FLAC                1
 #cmakedefine HAVE_FSEEKO              1
-#cmakedefine HAVE_GETOPT_LONG         1
 #cmakedefine HAVE_GETTIMEOFDAY        1
 #cmakedefine HAVE_ID3TAG              1
 #cmakedefine HAVE_INTTYPES_H          1

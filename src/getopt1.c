@@ -1,5 +1,3 @@
-#include "soxconfig.h"
-#ifndef HAVE_GETOPT_LONG
 /* getopt_long and getopt_long_only entry points for GNU getopt.
    Copyright (C) 1987,88,89,90,91,92,93,94,96,97,98
      Free Software Foundation, Inc.
@@ -198,6 +196,3 @@ main (argc, argv)
 }
 
 #endif /* TEST */
-#else
-void dummy(void); /* To suppress empty file warning */
-#endif /* HAVE_GETOPT_LONG */
