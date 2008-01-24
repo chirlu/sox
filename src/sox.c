@@ -1491,9 +1491,9 @@ static int process(void) {
       max_rate = max(max_rate, files[i]->ft->signal.rate);
       known_length = known_length && files[i]->ft->length != 0;
       if (combine_method == sox_concatenate)
-        olen += files[i]->ft->length;
+        olen += files[i]->ft->length / files[i]->ft->signal.channels;
       else
-        olen = max(olen, files[i]->ft->length);
+        olen = max(olen, files[i]->ft->length / files[i]->ft->signal.channels);
     }
     if (min_rate != max_rate)
       sox_fail("Input files must have the same sample-rate");
@@ -1529,7 +1529,7 @@ static int process(void) {
   if (!known_length)
     olen = 0;
 
-  open_output_file(olen);
+  open_output_file(olen * ofile->signal.channels * ofile->signal.rate / combiner.rate + .5);
 
   ofile_effects_chain.global_info = sox_effects_globals;
   add_effects(&ofile_effects_chain);
