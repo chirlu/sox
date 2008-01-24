@@ -44,6 +44,8 @@
 #define FLAC__stream_decoder_seek_absolute FLAC__file_decoder_seek_absolute
 #endif
 
+#define MAX_COMPRESSION 8
+
 
 typedef struct {
   /* Info: */
@@ -309,6 +311,18 @@ static int start_write(sox_format_t * const ft)
 {
   Encoder * encoder = (Encoder *) ft->priv;
   FLAC__StreamEncoderState status;
+  unsigned compression_level = MAX_COMPRESSION; /* Default to "best" */
+
+  if (ft->signal.compression != HUGE_VAL) {
+    compression_level = ft->signal.compression;
+    if (compression_level != ft->signal.compression || 
+        compression_level > MAX_COMPRESSION) {
+      sox_fail_errno(ft, SOX_EINVAL,
+                 "FLAC compression level must be a whole number from 0 to %i",
+                 MAX_COMPRESSION);
+      return SOX_EOF;
+    }
+  }
 
   memset(encoder, 0, sizeof(*encoder));
   encoder->flac = FLAC__stream_encoder_new();
@@ -318,55 +332,6 @@ static int start_write(sox_format_t * const ft)
   }
   encoder->decoded_samples = xmalloc(sox_globals.bufsiz * sizeof(FLAC__int32));
 
-  {     /* Select and set FLAC encoder options: */
-    static struct {
-      unsigned blocksize;
-      FLAC__bool do_exhaustive_model_search;
-      FLAC__bool do_mid_side_stereo;
-      FLAC__bool loose_mid_side_stereo;
-      unsigned max_lpc_order;
-      unsigned max_residual_partition_order;
-      unsigned min_residual_partition_order;
-    } const options[] = {
-      {1152, sox_false, sox_false, sox_false, 0, 2, 2},
-      {1152, sox_false, sox_true, sox_true, 0, 2, 2},
-      {1152, sox_false, sox_true, sox_false, 0, 3, 0},
-      {4608, sox_false, sox_false, sox_false, 6, 3, 3},
-      {4608, sox_false, sox_true, sox_true, 8, 3, 3},
-      {4608, sox_false, sox_true, sox_false, 8, 3, 3},
-      {4608, sox_false, sox_true, sox_false, 8, 4, 0},
-      {4608, sox_true, sox_true, sox_false, 8, 6, 0},
-      {4608, sox_true, sox_true, sox_false, 12, 6, 0},
-    };
-    unsigned compression_level = array_length(options) - 1; /* Default to "best" */
-
-    if (ft->signal.compression != HUGE_VAL) {
-      compression_level = ft->signal.compression;
-      if (compression_level != ft->signal.compression || 
-          compression_level >= array_length(options)) {
-        sox_fail_errno(ft, SOX_EINVAL,
-                   "FLAC compression level must be a whole number from 0 to %i",
-                   array_length(options) - 1);
-        return SOX_EOF;
-      }
-    }
-
-#define SET_OPTION(x) do {\
-  sox_report("FLAC "#x" = %i", options[compression_level].x); \
-  FLAC__stream_encoder_set_##x(encoder->flac, options[compression_level].x);\
-} while (0)
-    SET_OPTION(blocksize);
-    SET_OPTION(do_exhaustive_model_search);
-    SET_OPTION(max_lpc_order);
-    SET_OPTION(max_residual_partition_order);
-    SET_OPTION(min_residual_partition_order);
-    if (ft->signal.channels == 2) {
-      SET_OPTION(do_mid_side_stereo);
-      SET_OPTION(loose_mid_side_stereo);
-    }
-#undef SET_OPTION
-  }
-
   /* FIXME: FLAC should not need to know about this oddity */
   if (ft->signal.encoding < SOX_ENCODING_SIZE_IS_WORD)
     ft->signal.size = SOX_SIZE_16BIT;
@@ -374,7 +339,7 @@ static int start_write(sox_format_t * const ft)
 
   encoder->bits_per_sample = (ft->signal.size > 4 ? 4 : ft->signal.size) << 3;
 
-  sox_report("FLAC encoding at %i bits per sample", encoder->bits_per_sample);
+  sox_report("encoding at %i bits per sample", encoder->bits_per_sample);
 
   FLAC__stream_encoder_set_channels(encoder->flac, ft->signal.channels);
   FLAC__stream_encoder_set_bits_per_sample(encoder->flac, encoder->bits_per_sample);
@@ -388,10 +353,50 @@ static int start_write(sox_format_t * const ft)
     for (i = 0; !streamable && i < array_length(streamable_rates); ++i)
        streamable = (streamable_rates[i] == ft->signal.rate);
     if (!streamable) {
-      sox_report("FLAC: non-standard rate; output may not be streamable");
+      sox_report("non-standard rate; output may not be streamable");
       FLAC__stream_encoder_set_streamable_subset(encoder->flac, sox_false);
     }
   }
+
+#if FLAC_API_VERSION_CURRENT >= 10
+  FLAC__stream_encoder_set_compression_level(encoder->flac, compression_level);
+#else
+  {
+    static struct {
+      unsigned blocksize;
+      FLAC__bool do_exhaustive_model_search;
+      FLAC__bool do_mid_side_stereo;
+      FLAC__bool loose_mid_side_stereo;
+      unsigned max_lpc_order;
+      unsigned max_residual_partition_order;
+      unsigned min_residual_partition_order;
+    } const options[MAX_COMPRESSION + 1] = {
+      {1152, sox_false, sox_false, sox_false, 0, 2, 2},
+      {1152, sox_false, sox_true, sox_true, 0, 2, 2},
+      {1152, sox_false, sox_true, sox_false, 0, 3, 0},
+      {4608, sox_false, sox_false, sox_false, 6, 3, 3},
+      {4608, sox_false, sox_true, sox_true, 8, 3, 3},
+      {4608, sox_false, sox_true, sox_false, 8, 3, 3},
+      {4608, sox_false, sox_true, sox_false, 8, 4, 0},
+      {4608, sox_true, sox_true, sox_false, 8, 6, 0},
+      {4608, sox_true, sox_true, sox_false, 12, 6, 0},
+    };
+#define SET_OPTION(x) do {\
+  sox_report(#x" = %i", options[compression_level].x); \
+  FLAC__stream_encoder_set_##x(encoder->flac, options[compression_level].x);\
+} while (0)
+    SET_OPTION(blocksize);
+    SET_OPTION(do_exhaustive_model_search);
+    SET_OPTION(max_lpc_order);
+    SET_OPTION(max_residual_partition_order);
+    SET_OPTION(min_residual_partition_order);
+    if (ft->signal.channels == 2) {
+      SET_OPTION(do_mid_side_stereo);
+      SET_OPTION(loose_mid_side_stereo);
+    }
+#undef SET_OPTION
+  }
+#endif
 
   if (ft->length != 0) {
     FLAC__stream_encoder_set_total_samples_estimate(encoder->flac, (FLAC__uint64)ft->length);
@@ -479,11 +484,22 @@ static sox_size_t write(sox_format_t * const ft, sox_sample_t const * const samp
   unsigned i;
 
   for (i = 0; i < len; ++i) {
+    long pcm = SOX_SAMPLE_TO_SIGNED_32BIT(sampleBuffer[i], ft->clips);
+    encoder->decoded_samples[i] = pcm >> (32 - encoder->bits_per_sample);
     switch (encoder->bits_per_sample) {
-      case  8: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_8BIT(sampleBuffer[i], ft->clips); break;
-      case 16: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_16BIT(sampleBuffer[i], ft->clips); break;
-      case 24: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_24BIT(sampleBuffer[i],ft->clips); break;
-      case 32: encoder->decoded_samples[i] = SOX_SAMPLE_TO_SIGNED_32BIT(sampleBuffer[i],ft->clips); break;
+      case  8: encoder->decoded_samples[i] =
+          SOX_SAMPLE_TO_SIGNED_8BIT(sampleBuffer[i], ft->clips);
+        break;
+      case 16: encoder->decoded_samples[i] =
+          SOX_SAMPLE_TO_SIGNED_16BIT(sampleBuffer[i], ft->clips);
+        break;
+      case 24: encoder->decoded_samples[i] = /* sign extension: */
+          SOX_SAMPLE_TO_SIGNED_24BIT(sampleBuffer[i],ft->clips) << 8;
+        encoder->decoded_samples[i] >>= 8;
+        break;
+      case 32: encoder->decoded_samples[i] =
+          SOX_SAMPLE_TO_SIGNED_32BIT(sampleBuffer[i],ft->clips);
+        break;
     }
   }
   FLAC__stream_encoder_process_interleaved(encoder->flac, encoder->decoded_samples, len / ft->signal.channels);
@@ -512,6 +528,10 @@ static int stop_write(sox_format_t * const ft)
 
 
 
+/*
+ * N.B.  Do not call this function with offset=0 when file-pointer
+ * is already 0 or a block of decoded FLAC data will be discarded.
+ */
 static int seek(sox_format_t * ft, sox_size_t offset)
 {
   Decoder * decoder = (Decoder *) ft->priv;
