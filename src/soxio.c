@@ -371,6 +371,13 @@ sox_format_t * sox_open_write(
         goto output_error;
     }
 
+    /*
+     * Bit of a hack; doesn't cover the situation where
+     * codec changes audio length (e.g. 8svx, gsm):
+     */
+    if (info)
+      ft->length = ft->length * ft->signal.rate / info->rate * ft->signal.channels / info->channels + .5;
+
     return ft;
 
 output_error:

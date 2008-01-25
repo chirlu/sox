@@ -19,16 +19,20 @@ sox-14.0.1
   Bug fixes:
 
   o Fix Sndtool read error causing noise at start.  (Reynir Stefánsson)
-  o Fix loss of 1 decoded FLAC block when using "trim 0 ...".  (robs)
-  o Fix trim when first effect with IMA-ADPCM input wav file.  (robs)
   o Fix mixer with >4 numbers, and mixer -3 behaving as mixer -4.  (robs)
   o Fix [1748909] sox does not report remaining playtime of mp3s.  (robs)
   o Fix failure to read AIFF files with empty MARK chunk.  (robs)
   o Fix spurious 'Premature EOF' message in some circumstances.  (robs)
-  o Fix -V (without argument) on non-gnu systems.  (robs)
   o Switched to 16-bit for libao driver since not all its plugins
     support it (such as oss, nas, and pulse audio) (Morita Sho)
-  o Stop crash when "rec" is ran with no arguments (Morita Sho).
+  o Stop crash when "rec" is run with no arguments (Morita Sho).
+  o Fix -V (without argument) on non-gnu systems.  (robs)
+  o Fix reported (with -V) output audio length in some cases.  (robs)
+  o Fix actual FLAC output file audio length in some cases.  (robs)
+  o Fix poor 24-bit FLAC compression & support newer versions of
+    libFLAC (1.2.x).  (robs)
+  o Fix loss of 1 decoded FLAC block when using "trim 0 ...".  (robs)
+  o Fix trim when first effect with IMA-ADPCM input wav file.  (robs)
 
   Internal improvements:
 

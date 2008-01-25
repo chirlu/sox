@@ -399,7 +399,7 @@ static int start_write(sox_format_t * const ft)
 #endif
 
   if (ft->length != 0) {
-    FLAC__stream_encoder_set_total_samples_estimate(encoder->flac, (FLAC__uint64)ft->length);
+    FLAC__stream_encoder_set_total_samples_estimate(encoder->flac, (FLAC__uint64)(ft->length / ft->signal.channels));
 
     encoder->metadata[encoder->num_metadata] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_SEEKTABLE);
     if (encoder->metadata[encoder->num_metadata] == NULL) {
