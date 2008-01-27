@@ -2,6 +2,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -209,6 +210,7 @@ sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info,
     ft->signal.size = -1;
     ft->signal.encoding = SOX_ENCODING_UNKNOWN;
     ft->signal.channels = 0;
+    ft->signal.compression = HUGE_VAL;
     if (info)
         ft->signal = *info;
 
@@ -301,6 +303,7 @@ sox_format_t * sox_open_write(
     ft->signal.size = -1;
     ft->signal.encoding = SOX_ENCODING_UNKNOWN;
     ft->signal.channels = 0;
+    ft->signal.compression = HUGE_VAL;
     if (info)
         ft->signal = *info;
 
