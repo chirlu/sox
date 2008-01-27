@@ -242,19 +242,20 @@ music.  It is similar to MP3 and Ogg Vorbis, but lossless,
 meaning that audio is compressed in FLAC without any loss in
 quality.
 .SP
-SoX can decode native FLAC files (.flac) but not Ogg FLAC files (.ogg).
+SoX can read native FLAC files (.flac) but not Ogg FLAC files (.ogg).
 [But see
 .B .ogg
 below for information relating to support for Ogg
 Vorbis files.]
 .SP
-SoX has basic support for writing FLAC files: it can encode to
-native FLAC using compression levels 0 to 8.  8 is the default
-compression level and gives the best (but slowest) compression;
-0 gives the least (but fastest) compression.  The compression
-level can be selected using the
+SoX can write native FLAC files according to a given or default
+compression level.  8 is the default compression level and gives the
+best (but slowest) compression; 0 gives the least (but fastest)
+compression.  The compression level is selected using the
 .B \-C
-option (see above) with a whole number from 0 to 8.
+option [see 
+.BR sox (1)]
+with a whole number from 0 to 8.
 .SP
 FLAC support in
 SoX is optional and requires optional FLAC libraries.  To
@@ -566,7 +567,8 @@ option with the output file options.
 A non-standard variant of
 .BR .wav .
 Some applications cannot read a standard WAV file header for PCM-encoded
-data with sample-size greater than 16-bits, but can read a non-standard
+data with sample-size greater than 16-bits or with more than two
+channels, but can read a non-standard
 WAV header.  It is likely that such applications will eventually be
 updated to support the standard header, but in the mean time, this SoX
 format can be used to create files with the non-standard header that
