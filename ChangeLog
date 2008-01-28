@@ -46,7 +46,7 @@ sox-14.0.1
     on mingw for flac, ogg, and libsamplerate libraries.
 
 
-sox-14.0.0
+sox-14.0.0	2007-09-11
 ----------
 
   File formats:
@@ -122,7 +122,7 @@ sox-14.0.0
 
 
 
-sox-13.0.0
+sox-13.0.0	2007-02-11
 ----------
 
   File formats:
@@ -248,7 +248,7 @@ sox-13.0.0
   o Removed the old internally invoked (but mentioned in the man page)
     copy effect.  (robs)
 
-sox-12.18.2
+sox-12.18.2	2006-09-03
 -----------
   o Adding in Debian's disk full fix (#313206).
   o Finally got rid of reference to cleanup() function in
@@ -273,7 +273,7 @@ sox-12.18.2
   o Updates to nul file handler to prevent crashes during output.
     Martin Panter (1482869)
 
-sox-12.18.1
+sox-12.18.1	2006-05-07
 ------------
 
   o The "filter" effect could go into infinite drain mode.  Now
@@ -311,7 +311,7 @@ sox-12.18.1
   o Added support for multiple channels in .dat files. 
     (1366634) tomchristie
 
-sox-12.17.9
+sox-12.17.9	2005-12-05
 -----------
 
   o Updates to compile under VC6. Jimen Ching
@@ -362,7 +362,7 @@ sox-12.17.9
   o Allow aborting SoX with SIGTERM, along with previous SIGINT.
     Norman Ramsey.
 
-sox-12.17.8
+sox-12.17.8	2005-08-22
 -----------
   o noisered effect had compile problems with some compilers.
   o "-x" option was being ignored since 12.17.7.
@@ -381,7 +381,7 @@ sox-12.17.8
   o In AIFF files, fixed problem were short comments should cause
     AIFF handler to get confused and become misaligned.
 
-sox-12.17.7
+sox-12.17.7	2004-12-20
 -----------
   o Christian Weisgerber sent patches to man page fixes
     and patches for sunaudio driver on openbsd.
@@ -409,7 +409,7 @@ sox-12.17.7
     to determine what the noise is (like background hiss on
     cassette tapes).
 
-sox-12.17.6
+sox-12.17.6	2004-10-13
 -----------
   o Changed comment code to always use copies of strings to
     fix bug in WAV handlering freeing argv[] memory.
@@ -466,7 +466,7 @@ sox-12.17.6
   o WAV with GSM data now always pads data to even number of bytes.
   o Added support for writing 32-bit audio to AIFF.
 
-sox-12.17.5
+sox-12.17.5	2004-08-15
 -----------
   o Thomas Klausner sent in patches to compile audio drivers under
     NetBSD.
@@ -505,7 +505,7 @@ sox-12.17.5
   o Rearrange link order of ogg vorbis libraries so that they
     can be compiled as static. (Christian Weisgerbr)
 
-sox-12.17.4
+sox-12.17.4	2003-03-22
 -----------
   o Peter Nyhlen fixed a problem with reading Comments in Ogg Vorbis files.
   o Added install target to allow installing libgsm from main Makefile.
@@ -550,7 +550,7 @@ sox-12.17.4
     Forte compiler happy.
   o Added support for ALSA 0.9 driver. Jimen Ching
 
-sox-12.17.3
+sox-12.17.3	2001-12-15
 -----------
   o Removed check that prevented pan from being invoked when the
     input and output channels were the same.
@@ -614,7 +614,7 @@ sox-12.17.3
     support as well as able to read in VOC files using a pipe.  More
     examples added to soxexam file.
 
-sox-12.17.2
+sox-12.17.2	2001-09-15
 -----------
   o Daniel Culbert found and fixed a bug in the polyphase effect
     that occurs on platforms that rand() can return large values.
@@ -680,7 +680,7 @@ sox-12.17.2
     Also have auto handler now use file extensions if it can't figure
     it out.
 
-sox-12.17.1
+sox-12.17.1	2000-11-19
 -----------
   o Andreas Kies fixed a bug were we were not detecting correctly
     if an output file was seekable.
@@ -711,7 +711,7 @@ sox-12.17.1
     man pages.  Changed effect so that it computed the time the
     same way that the fade effect does.
 
-sox-12.17
+sox-12.17	2000-09-08
 ---------
   o Sox can now read and write w98 compatible gsm .wav files,
     if compiled properly with libgsm.  Thanks go to Stuart
@@ -789,7 +789,7 @@ sox-12.17
   o Curt Zirzow added a trim effect to trim off audio data.
   o Updated ALSA driver to support new interface. Jimen Ching 
 
-sox-12.16
+sox-12.16	1999-07-13
 ---------
   
   o Changed raw data functions to perform I/O operations using block reads.
@@ -836,7 +836,7 @@ sox-12.16
   o Fixed core dump when writting AIFF files with no comments.
     (Olaf Pueschel)
 
-sox-12.15
+sox-12.15	1998-10-01
 ---------
 
   o Juergen Mueller moved Sox forward quite a bit by adding all the
@@ -874,7 +874,7 @@ sox-12.15
   o Added -g and -a options for new style support of GSM and ADPCM.  Added
     error checking to various formats to avoid allowing these types.
 
-sox-12.14
+sox-12.14	1998-05-15
 ---------
 
   o Bumped major version number up and shortened name.  The shorter name
@@ -917,7 +917,7 @@ sox-12.14
   o There is a known bug in hcom's compress() function.  It is allocating
     memory that can't be free'd under some OS's.  It causes a core dump.
 
-sox-11gamma-cb3
+sox-11gamma-cb3	1997-03-28
 ---------------
 
 This release of sox is mainly a bugfix release.  The following things
@@ -941,7 +941,7 @@ have changed:
   o  Added new sound format, cvsd (Continuously Variable Slope Delta)
      from Thomas Sailer (sailer@ife.ee.ethz.ch).
 
-sox-11gamma-cb2
+sox-11gamma-cb2	1996-10-04
 ---------------
 
 This release of sox is based on the latest gamma version released
