@@ -230,3 +230,7 @@ fi
 rm output.u1
 
 test -n "$skip" && echo "Skipped: $skip"
+
+# Run one last command so return code is not error
+# when $skip is empty.
+echo "done."
