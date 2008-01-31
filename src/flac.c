@@ -83,26 +83,18 @@ static void FLAC__decoder_metadata_callback(FLAC__StreamDecoder const * const fl
     decoder->total_samples = metadata->data.stream_info.total_samples;
   }
   else if (metadata->type == FLAC__METADATA_TYPE_VORBIS_COMMENT) {
-    size_t i, comment_size = 0;
+    size_t i;
 
     if (metadata->data.vorbis_comment.num_comments == 0)
       return;
 
-    if (ft->comment != NULL) {
-      sox_warn("FLAC: multiple Vorbis comment block ignored");
+    if (ft->comments != NULL) {
+      sox_warn("multiple Vorbis comment block ignored");
       return;
     }
 
     for (i = 0; i < metadata->data.vorbis_comment.num_comments; ++i)
-      comment_size += metadata->data.vorbis_comment.comments[i].length + 1;
-
-    ft->comment = (char *) xcalloc(comment_size, sizeof(char));
-
-    for (i = 0; i < metadata->data.vorbis_comment.num_comments; ++i) {
-      strcat(ft->comment, (char const *) metadata->data.vorbis_comment.comments[i].entry);
-      if (i != metadata->data.vorbis_comment.num_comments - 1)
-        strcat(ft->comment, "\n");
-    }
+      append_comment(&ft->comments, (char const *) metadata->data.vorbis_comment.comments[i].entry);
   }
 }
 
@@ -231,7 +223,7 @@ static int stop_read(sox_format_t * const ft)
   Decoder * decoder = (Decoder *) ft->priv;
 
   if (!FLAC__stream_decoder_finish(decoder->flac) && decoder->eof)
-    sox_warn("FLAC decoder MD5 checksum mismatch.");
+    sox_warn("decoder MD5 checksum mismatch.");
   FLAC__stream_decoder_delete(decoder->flac);
   return SOX_SUCCESS;
 }
@@ -422,37 +414,22 @@ static int start_write(sox_format_t * const ft)
     ++encoder->num_metadata;
   }
 
-  if (ft->comment != NULL && * ft->comment != '\0') {
+  if (ft->comments) {     /* Make the comment structure */
     FLAC__StreamMetadata_VorbisComment_Entry entry;
-    char * comments, * comment, * end_of_comment;
+    int i;
 
     encoder->metadata[encoder->num_metadata] = FLAC__metadata_object_new(FLAC__METADATA_TYPE_VORBIS_COMMENT);
-
-    /* Check if there is a FIELD=value pair already in the comment; if not, add one */
-    if (strchr(ft->comment, '=') == NULL) {
-      static const char prepend[] = "COMMENT=";
-      comments = xmalloc(strlen(ft->comment) + sizeof(prepend));
-      strcpy(comments, prepend);
-      strcat(comments, ft->comment);
-    }
-    else
-      comments = strdup(ft->comment);
-
-    comment = comments;
-
-    do {
-      entry.entry = (FLAC__byte *) comment;
-      end_of_comment = strchr(comment, '\n');
-      if (end_of_comment != NULL) {
-        *end_of_comment = '\0';
-        comment = end_of_comment + 1;
-      }
-      entry.length = strlen((char const *) entry.entry);
-
+    for (i = 0; ft->comments[i]; ++i) {
+      static const char prepend[] = "Comment=";
+      char * text = xcalloc(strlen(prepend) + strlen(ft->comments[i]) + 1, sizeof(*text));
+      /* Prepend `Comment=' if no field-name already in the comment */
+      if (!strchr(ft->comments[i], '='))
+        strcpy(text, prepend);
+      entry.entry = (FLAC__byte *) strcat(text, ft->comments[i]);
+      entry.length = strlen(text);
       FLAC__metadata_object_vorbiscomment_append_comment(encoder->metadata[encoder->num_metadata], entry, /*copy= */ sox_true);
-    } while (end_of_comment != NULL);
-
-    free(comments);
+      free(text);
+    }
     ++encoder->num_metadata;
   }
 

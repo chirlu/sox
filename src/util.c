@@ -11,8 +11,10 @@
  */
 
 #include "sox_i.h"
+#include <assert.h>
 #include <string.h>
 #include <stdarg.h>
+
 
 void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap)
 {
@@ -139,4 +141,83 @@ char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samp
         return end;
     }
     return NULL;
+}
+
+
+
+/*--------------------------------- Comments ---------------------------------*/
+
+size_t num_comments(comments_t comments)
+{
+  size_t result = 0;
+  if (!comments)
+    return 0;
+  while (*comments++)
+    ++result;
+  return result;
+}
+
+void append_comment(comments_t * comments, char const * comment)
+{
+  size_t n = num_comments(*comments);
+  *comments = xrealloc(*comments, (n + 2) * sizeof(**comments));
+  assert(comment);
+  (*comments)[n++] = xstrdup(comment);
+  (*comments)[n] = 0;
+}
+
+void append_comments(comments_t * comments, char const * comment)
+{
+  char * end;
+  if (comment) {
+    while ((end = strchr(comment, '\n'))) {
+      size_t len = end - comment;
+      char * c = xmalloc((len + 1) * sizeof(*c));
+      strncpy(c, comment, len);
+      c[len] = '\0';
+      append_comment(comments, c);
+      comment += len + 1;
+      free(c);
+    }
+    if (*comment)
+      append_comment(comments, comment);
+  }
+}
+
+comments_t copy_comments(comments_t comments)
+{
+  comments_t result = 0;
+
+  if (comments) while (*comments)
+    append_comment(&result, *comments++);
+  return result;
+}
+
+void delete_comments(comments_t * comments)
+{
+  comments_t p = *comments;
+
+  if (p) while (*p)
+    free(*p++);
+  free(*comments);
+  *comments = 0;
+}
+
+char * cat_comments(comments_t comments)
+{
+  comments_t p = comments;
+  size_t len = 0;
+  char * result;
+
+  if (p) while (*p)
+    len += strlen(*p++) + 1;
+
+  result = xcalloc(len? len : 1, sizeof(*result));
+
+  if ((p = comments) && *p) {
+    strcpy(result, *p);
+    while (*++p)
+      strcat(strcat(result, "\n"), *p);
+  }
+  return result;
 }

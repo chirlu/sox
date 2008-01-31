@@ -587,20 +587,6 @@ effect must be used.  If the
 effect is not specified on the
 command line it will be invoked internally with default parameters.
 .TP
-\fB\-\-comment \fITEXT\fR
-Specify the comment text to store in the output file header (where
-applicable).
-.SP
-SoX will provide a default comment if this option (or
-.BR \-\-comment\-file )
-is not given; to specify that no comment should be stored in the output file,
-use 
-.B "\-\-comment \(dq\(dq" .
-.TP
-\fB\-\-comment\-file \fIFILENAME\fR
-Specify a file containing the comment text to store in the output
-file header (where applicable).
-.TP
 \fB\-r, \fB\-\-rate\fR \fIRATE\fR
 Gives the sample rate in Hz of the file.  To cause the output file to have
 a different sample rate than the input file, include this option with
@@ -720,6 +706,23 @@ The sample datum size is 1, 2, 3, 4, or 8 bytes; i.e. 8, 16, 24, 32, or 64 bits.
 .SS Output File Format Options
 These options apply only to the output file and may precede only the output
 filename on the command line.
+.TP
+\fB\-\-add\-comment \fITEXT\fR
+Append a comment in the output file header (where applicable).
+.TP
+\fB\-\-comment \fITEXT\fR
+Specify the comment text to store in the output file header (where
+applicable).
+.SP
+SoX will provide a default comment if this option (or
+.BR \-\-comment\-file )
+is not given; to specify that no comment should be stored in the output file,
+use 
+.B "\-\-comment \(dq\(dq" .
+.TP
+\fB\-\-comment\-file \fIFILENAME\fR
+Specify a file containing the comment text to store in the output
+file header (where applicable).
 .TP
 \fB\-C\fR, \fB\-\-compression\fR \fIFACTOR\fR
 The compression factor for variably compressing output file formats.  If

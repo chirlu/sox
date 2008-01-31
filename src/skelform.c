@@ -62,11 +62,7 @@ static int startread(sox_format_t * ft)
   ft->signal.size = SOX_SIZE_BYTE; /* or WORD ... */
   ft->signal.encoding = SOX_ENCODING_UNSIGNED; /* or SIGN2 ... */
   ft->signal.channels = 1; /* or 2 or 4 */
-  {
-    char *comment = "any comment in file header.";
-    ft->comment = xmalloc(sizeof(comment));
-    strcpy(ft->comment, comment);
-  }
+  append_comment(&ft->comments, "any comment in file header.");
 
   /* If your format doesn't have a header then samples_in_file
    * can be determined by the file size.

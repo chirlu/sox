@@ -268,7 +268,8 @@ static int sox_austartread(sox_format_t * ft)
                  */
                 buf[hdr_size] = '\0';
 
-                ft->comment = buf;
+                append_comments(&ft->comments, buf);
+                free(buf);
         }
         /* Needed for seeking */
         ft->length = data_size/ft->signal.size;
@@ -410,6 +411,7 @@ static void auwriteheader(sox_format_t * ft, sox_size_t data_size)
         uint32_t channels;
         int   x;
         int   comment_size;
+        char * comment = cat_comments(ft->comments);
 
         encoding = sox_ausunencoding(ft->signal.size, ft->signal.encoding);
         if (encoding == SUN_ENCODING_UNKNOWN) {
@@ -439,15 +441,9 @@ static void auwriteheader(sox_format_t * ft, sox_size_t data_size)
         magic = SUN_MAGIC;
         sox_writedw(ft, magic);
 
-        /* Info field is at least 4 bytes. Here I force it to something
-         * useful when there is no comments.
-         */
-        if (ft->comment == NULL)
-                ft->comment = xstrdup("SoX");
-
         hdr_size = SUN_HDRSIZE;
 
-        comment_size = strlen(ft->comment) + 1; /*+1 = null-term. */
+        comment_size = strlen(comment) + 1; /*+1 = null-term. */
         if (comment_size < 4)
             comment_size = 4; /* minimum size */
 
@@ -465,10 +461,11 @@ static void auwriteheader(sox_format_t * ft, sox_size_t data_size)
         channels = ft->signal.channels;
         sox_writedw(ft, channels);
 
-        sox_writes(ft, ft->comment);
+        sox_writes(ft, comment);
 
         /* Info must be 4 bytes at least and null terminated. */
-        x = strlen(ft->comment);
+        x = strlen(comment);
+        free(comment);
         for (;x < 3; x++)
             sox_writeb(ft, 0);
 

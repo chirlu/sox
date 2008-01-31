@@ -97,7 +97,9 @@ int sox_aiffstartread(sox_format_t * ft)
                        releaseLoopBegin = 0, releaseLoopEnd = 0;
         sox_ssize_t seekto = 0;
         sox_size_t ssndsize = 0;
+        char *annotation;
         char *author;
+        char *comment = NULL;
         char *copyright;
         char *nametext;
 
@@ -286,19 +288,25 @@ int sox_aiffstartread(sox_format_t * ft)
                             sox_readb(ft, (unsigned char *)&trash8);
                 }
                 else if (strncmp(buf, "ANNO", 4) == 0) {
-                        rc = textChunk(&(ft->comment), "Annotation:", ft);
-                        if (rc)
-                        {
-                          /* Fail already called in function */
-                          return(SOX_EOF);
-                        }
+                  rc = textChunk(&annotation, "Annotation:", ft);
+                  if (rc)
+                  {
+                    /* Fail already called in function */
+                    return(SOX_EOF);
+                  }
+                  if (annotation)
+                    append_comments(&ft->comments, annotation);
+                  free(annotation);
                 }
                 else if (strncmp(buf, "COMT", 4) == 0) {
-                  rc = commentChunk(&(ft->comment), "Comment:", ft);
+                  rc = commentChunk(&comment, "Comment:", ft);
                   if (rc) {
                     /* Fail already called in function */
                     return(SOX_EOF);
                   }
+                  if (comment)
+                    append_comments(&ft->comments, comment);
+                  free(comment);
                 }
                 else if (strncmp(buf, "AUTH", 4) == 0) {
                   /* Author chunk */
@@ -743,6 +751,7 @@ static int aiffwriteheader(sox_format_t * ft, sox_size_t nframes)
         unsigned i;
         sox_size_t padded_comment_size = 0, comment_size = 0;
         sox_size_t comment_chunk_size = 0;
+        char * comment = cat_comments(ft->comments);
 
         /* MARK and INST chunks */
         if (ft->instr.nloops) {
@@ -770,9 +779,9 @@ static int aiffwriteheader(sox_format_t * ft, sox_size_t nframes)
 
         /* COMT comment chunk -- holds comments text with a timestamp and marker id */
         /* We calculate the comment_chunk_size if we will be writing a comment */
-        if (ft->comment)
+        if (ft->comments)
         {
-          comment_size = strlen(ft->comment);
+          comment_size = strlen(comment);
           /* Must put an even number of characters out.
            * True 68k processors OS's seem to require this.
            */
@@ -789,7 +798,7 @@ static int aiffwriteheader(sox_format_t * ft, sox_size_t nframes)
         sox_writes(ft, "AIFF"); /* File type */
 
         /* Now we write the COMT comment chunk using the precomputed sizes */
-        if (ft->comment)
+        if (ft->comments)
         {
           sox_writes(ft, "COMT");
           sox_writedw(ft, comment_chunk_size);
@@ -807,10 +816,11 @@ static int aiffwriteheader(sox_format_t * ft, sox_size_t nframes)
 
           /* now write the count and the bytes of text */
           sox_writew(ft, padded_comment_size);
-          sox_writes(ft, ft->comment);
+          sox_writes(ft, comment);
           if (comment_size != padded_comment_size)
                 sox_writes(ft, " ");
         }
+        free(comment);
 
         /* COMM chunk -- describes encoding (and #frames) */
         sox_writes(ft, "COMM");

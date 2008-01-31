@@ -302,6 +302,8 @@ typedef struct {
 #define SOX_MAX_FILE_PRIVSIZE    1000
 #define SOX_MAX_NLOOPS           8
 
+typedef char * * comments_t;
+
 struct sox_format {
   /* Placing priv at the start of this structure ensures that it gets aligned
    * in memory in the optimal way for any structure to be cast over it. */
@@ -316,7 +318,7 @@ struct sox_format {
   sox_size_t       clips;                /* increment if clipping occurs */
   char             *filename;            /* file name */
   char             *filetype;            /* type of file */
-  char             *comment;             /* comment string */
+  comments_t       comments;             /* comment strings */
   FILE             *fp;                  /* File stream pointer */
   int              sox_errno;            /* Failure error codes */
   char             sox_errstr[256];      /* Extend Failure text */
@@ -361,7 +363,7 @@ sox_format_t * sox_open_write(
     const char *path,
     const sox_signalinfo_t *info,
     const char *filetype,
-    const char *comment,
+    comments_t comments,
     sox_size_t length,
     const sox_instrinfo_t *instr,
     const sox_loopinfo_t *loops);

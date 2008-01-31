@@ -92,7 +92,7 @@ typedef struct file_info
   sox_signalinfo_t signal;
   double volume;
   double replay_gain;
-  char const * comment;
+  comments_t comments;
 
   sox_format_t * ft;  /* libSoX file descriptor */
   sox_size_t volume_clips;
@@ -232,6 +232,7 @@ static void usage(char const * message)
 "",
 "-c, --channels CHANNELS  number of channels in audio data",
 "-C, --compression FACTOR  compression factor for output format",
+"--add-comment TEXT  Append output file comment",
 "--comment TEXT  Specify comment text for the output file",
 "--comment-file FILENAME  file containing comment text for the output file",
 "--endian little|big|swap  set endianness; swap means opposite to default",
@@ -404,23 +405,21 @@ static void set_device(file_t f, sox_bool recording UNUSED)
   exit(1);
 }
 
-static void set_replay_gain(char const * comment, file_t f)
+static void set_replay_gain(comments_t comments, file_t f)
 {
   rg_mode rg = replay_gain_mode;
   int try = 2; /* Will try to find the other GAIN if preferred one not found */
+  size_t i, n = num_comments(comments);
 
   if (rg != RG_off) while (try--) {
-    char const * p = comment;
     char const * target =
       rg == RG_track? "REPLAYGAIN_TRACK_GAIN=" : "REPLAYGAIN_ALBUM_GAIN=";
-    do {
-      if (strncasecmp(p, target, strlen(target)) == 0) {
-        f->replay_gain = atof(p + strlen(target));
+    for (i = 0; i < n; ++i) {
+      if (strncasecmp(comments[i], target, strlen(target)) == 0) {
+        f->replay_gain = atof(comments[i] + strlen(target));
         return;
       }
-      while (*p && *p!= '\n') ++p;
-      while (*p && strchr("\r\n\t\f ", *p)) ++p;
-    } while (*p);
+    }
     rg ^= RG_track ^ RG_album;
   }
 }
@@ -642,12 +641,12 @@ int main(int argc, char **argv)
   /* Check for misplaced input/output-specific options */
   for (i = 0; i < input_count; ++i) {
     if (files[i]->signal.compression != HUGE_VAL)
-      usage("A compression factor can only be given for an output file");
-    if (files[i]->comment != NULL)
-      usage("A comment can only be given for an output file");
+      usage("A compression factor can be given only for an output file");
+    if (files[i]->comments != NULL)
+      usage("Comments can be given only for an output file");
   }
   if (ofile->volume != HUGE_VAL)
-    usage("-v can only be given for an input file;\n"
+    usage("-v can be given only for an input file;\n"
             "\tuse `vol' to set the output file volume");
 
   signal(SIGINT, SIG_IGN); /* So child pipes aren't killed by track skip */
@@ -680,8 +679,7 @@ int main(int argc, char **argv)
         (files[j]->ft->handler->flags & SOX_FILE_DEVICE) != 0 &&
         (files[j]->ft->handler->flags & SOX_FILE_PHONY) == 0)
       show_progress = SOX_OPTION_YES;
-    if (files[j]->ft->comment)
-      set_replay_gain(files[j]->ft->comment, f);
+    set_replay_gain(files[j]->ft->comments, f);
   }
   signal(SIGINT, SIG_DFL);
 
@@ -749,43 +747,44 @@ int main(int argc, char **argv)
   return 0;
 }
 
-static char * read_comment_file(char const * const filename)
+static void read_comment_file(comments_t * comments, char const * const filename)
 {
-  sox_bool file_error;
-  int file_length = 0;
-  char * result;
+  int c;
+  size_t text_length = 100;
+  char * text = xmalloc(text_length + 1);
   FILE * file = fopen(filename, "rt");
 
   if (file == NULL) {
     sox_fail("Cannot open comment file %s", filename);
     exit(1);
   }
-  file_error = fseeko(file, (off_t)0, SEEK_END);
-  if (!file_error) {
-    file_length = ftello(file);
-    file_error |= file_length < 0;
-    if (!file_error) {
-      result = xmalloc((unsigned)file_length + 1);
-      rewind(file);
-      file_error |= fread(result, (unsigned)file_length, 1, file) != 1;
-    }
-  }
-  if (file_error) {
-    sox_fail("Error reading comment file %s", filename);
-    exit(1);
-  }
-  fclose(file);
+  do {
+    size_t i = 0;
 
-  while (file_length && result[file_length - 1] == '\n')
-    --file_length;
-  result[file_length] = '\0';
-  return result;
+    while ((c = getc(file)) != EOF && !strchr("\r\n", c)) {
+      if (i == text_length)
+        text = xrealloc(text, (text_length <<= 1) + 1);
+      text[i++] = c;
+    }
+    if (ferror(file)) {
+      sox_fail("Error reading comment file %s", filename);
+      exit(1);
+    }
+    if (i) {
+      text[i] = '\0';
+      append_comment(comments, text);
+    }
+  } while (c != EOF);
+
+  fclose(file);
+  free(text);
 }
 
 static char *getoptstr = "+abc:defghilmnoqr:st:uv:wxABC:DLMNRSUV::X12348";
 
 static struct option long_options[] =
   {
+    {"add-comment"     , required_argument, NULL, 0},
     {"buffer"          , required_argument, NULL, 0},
     {"combine"         , required_argument, NULL, 0},
     {"comment-file"    , required_argument, NULL, 0},
@@ -870,6 +869,11 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
     case 0:         /* Long options with no short equivalent. */
       switch (option_index) {
       case 0:
+        if (optarg)
+          append_comment(&f->comments, optarg);
+        break;
+
+      case 1:
 #define SOX_BUFMIN 16
         if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i <= SOX_BUFMIN) {
         sox_fail("Buffer size `%s' must be > %d", optarg, SOX_BUFMIN);
@@ -878,19 +882,22 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
         sox_globals.bufsiz = i;
         break;
 
-      case 1:
+      case 2:
         combine_method = enum_option(option_index, combine_methods);
         break;
 
-      case 2:
-        f->comment = read_comment_file(optarg);
-        break;
-
       case 3:
-        f->comment = xstrdup(optarg);
+        append_comment(&f->comments, "");
+        read_comment_file(&f->comments, optarg);
         break;
 
       case 4:
+        append_comment(&f->comments, "");
+        if (optarg)
+          append_comment(&f->comments, optarg);
+        break;
+
+      case 5:
         switch (enum_option(option_index, endian_options)) {
           case ENDIAN_little: f->signal.reverse_bytes = SOX_IS_BIGENDIAN; break;
           case ENDIAN_big: f->signal.reverse_bytes = SOX_IS_LITTLEENDIAN; break;
@@ -898,23 +905,23 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
         }
         break;
 
-      case 5:
+      case 6:
         interactive = sox_true;
         break;
 
-      case 6:
+      case 7:
         usage_effect(optarg);
         break;
 
-      case 7:
+      case 8:
         sox_effects_globals.plot = enum_option(option_index, plot_methods);
         break;
 
-      case 8:
+      case 9:
         replay_gain_mode = enum_option(option_index, rg_modes);
         break;
 
-      case 9:
+      case 10:
         display_SoX_version(stdout);
         exit(0);
         break;
@@ -1090,11 +1097,14 @@ static void display_file_info(file_t f, sox_bool full)
   if (f->volume != HUGE_VAL)
     fprintf(stderr, "Level adjust   : %g (linear gain)\n" , f->volume);
 
-  if (!(f->ft->handler->flags & SOX_FILE_DEVICE) && f->ft->comment) {
-    if (strchr(f->ft->comment, '\n'))
-      fprintf(stderr, "Comments       : \n%s\n", f->ft->comment);
-    else
-      fprintf(stderr, "Comment        : '%s'\n", f->ft->comment);
+  if (!(f->ft->handler->flags & SOX_FILE_DEVICE) && f->ft->comments) {
+    if (num_comments(f->ft->comments) > 1) {
+      comments_t p = f->ft->comments;
+      fprintf(stderr, "Comments       : \n");
+      do fprintf(stderr, "%s\n", *p);
+      while (*++p);
+    }
+    else fprintf(stderr, "Comment        : '%s'\n", f->ft->comments[0]);
   }
   fprintf(stderr, "\n");
 }
@@ -1410,12 +1420,19 @@ static void open_output_file(sox_size_t olen)
   sox_loopinfo_t loops[SOX_MAX_NLOOPS];
   double factor;
   int i;
-  char const *comment = NULL;
+  comments_t comments = copy_comments(files[0]->ft->comments);
+  comments_t p = ofile->comments;
 
-  if (ofile->comment == NULL)
-    comment = files[0]->ft->comment ? files[0]->ft->comment : "Processed by SoX";
-  else if (*ofile->comment != '\0')
-      comment = ofile->comment;
+  if (!comments && !p)
+    append_comment(&comments, "Processed by SoX");
+  else if (p) {
+    if (!(*p)[0]) {
+      delete_comments(&comments);
+      ++p;
+    }
+    while (*p)
+      append_comment(&comments, *p++);
+  }
 
   /*
    * copy loop info, resizing appropriately
@@ -1435,10 +1452,11 @@ static void open_output_file(sox_size_t olen)
                         ofile->filename,
                         &ofile->signal,
                         ofile->filetype,
-                        comment,
+                        comments,
                         olen,
                         &files[0]->ft->instr,
                         loops);
+  delete_comments(&comments);
 
   if (!ofile->ft)
     /* sox_open_write() will call sox_warn for most errors.

@@ -132,10 +132,13 @@ sox_bool strends(char const * str, char const * end);
 char *strdup(const char *s);
 #endif
 
+
+
+/*---------------------------- Declared in misc.c ----------------------------*/
+
 /* Read and write basic data types from "ft" stream.  Uses ft->swap for
  * possible byte swapping.
  */
-/* declared in misc.c */
 size_t sox_readbuf(sox_format_t * ft, void *buf, sox_size_t len);
 int sox_skipbytes(sox_format_t * ft, sox_size_t n);
 int sox_padbytes(sox_format_t * ft, sox_size_t n);
@@ -199,7 +202,10 @@ float sox_swapf(float f);
 uint32_t sox_swap3(uint32_t udw);
 double sox_swapdf(double d);
 
-/* util.c */
+
+
+/*---------------------------- Declared in util.c ----------------------------*/
+
 typedef void (*sox_output_message_handler_t)(unsigned level, const char *filename, const char *fmt, va_list ap);
 void sox_output_message(FILE *file, const char *filename, const char *fmt, va_list ap);
 
@@ -223,6 +229,15 @@ __attribute__ ((format (printf, 3, 4)));
 #else
 ;
 #endif
+
+size_t num_comments(comments_t comments);
+void append_comment(comments_t * comments, char const * comment);
+void append_comments(comments_t * comments, char const * comment);
+comments_t copy_comments(comments_t comments);
+void delete_comments(comments_t * comments);
+char * cat_comments(comments_t comments);
+
+
 
 #ifdef WORDS_BIGENDIAN
 #define SOX_IS_BIGENDIAN 1
@@ -274,10 +289,9 @@ extern const char sox_readerr[];
 extern const char sox_writerr[];
 extern uint8_t const cswap[256];
 
-/*-----------------------------------------------------------------------------
- * File Handlers
- *-----------------------------------------------------------------------------
- */
+
+
+/*------------------------------ File Handlers -------------------------------*/
 
 /* Psion record header check, defined in misc.c and used in prc.c and auto.c */
 extern const char prc_header[41];
@@ -315,10 +329,9 @@ int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_chan
 #define sox_rawstopread sox_format_nothing
 #define sox_rawstopwrite sox_format_nothing
 
-/*-----------------------------------------------------------------------------
- * Effects
- *-----------------------------------------------------------------------------
- */
+
+
+/*--------------------------------- Effects ----------------------------------*/
 
 int sox_usage(sox_effect_t * effp);
 typedef const sox_effect_handler_t *(*sox_effect_fn_t)(void);
@@ -359,4 +372,5 @@ struct sox_effects_chain {
   sox_sample_t **ibufc, **obufc; /* Channel interleave buffers */
   sox_effects_globals_t global_info;
 };
+
 #endif

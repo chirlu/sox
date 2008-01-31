@@ -157,8 +157,6 @@ static int sox_maudstartread(sox_format_t * ft)
                                 return(SOX_EOF);
                         }
                         
-                        ft->comment = 0;
-                        
                         continue;
                 }
                 

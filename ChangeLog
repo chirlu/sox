@@ -4,6 +4,24 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
+sox-14.0.2	2008-xx-xx
+----------
+
+  File formats:
+
+  Effects:
+
+  Other new features:
+
+  o Command line support for multiple file comments.  (robs)
+
+  Bug fixes:
+
+  o Fix [1864216] comments mangled when writing ogg-vorbis.  (robs)
+
+  Internal improvements:
+
+
 sox-14.0.1	2008-01-29
 ----------
 

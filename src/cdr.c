@@ -52,7 +52,6 @@ static int sox_cdrstartread(sox_format_t * ft)
         ft->signal.size = SOX_SIZE_16BIT;
         ft->signal.encoding = SOX_ENCODING_SIGN2;
         ft->signal.channels = 2;
-        ft->comment = NULL;
 
 /* Need length for seeking */
         if(ft->seekable){

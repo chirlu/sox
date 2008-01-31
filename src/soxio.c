@@ -277,7 +277,7 @@ sox_format_t * sox_open_write(
     const char *path,
     const sox_signalinfo_t *info,
     const char *filetype,
-    const char *comment,
+    comments_t comments,
     sox_size_t length,
     const sox_instrinfo_t *instr,
     const sox_loopinfo_t *loops)
@@ -347,7 +347,7 @@ sox_format_t * sox_open_write(
         ft->seekable = is_seekable(ft);
     }
 
-    ft->comment = xstrdup(comment);
+    ft->comments = copy_comments(comments);
 
     if (loops)
         for (i = 0; i < SOX_MAX_NLOOPS; i++)
@@ -532,10 +532,7 @@ int sox_close(sox_format_t * ft)
         fclose(ft->fp);
     free(ft->filename);
     free(ft->filetype);
-    /* Currently, since startread() mallocs comments, stopread
-     * is expected to also free it. */
-    if (ft->mode == 'w')
-        free(ft->comment);
+    delete_comments(&ft->comments);
 
     free(ft);
     return rc;

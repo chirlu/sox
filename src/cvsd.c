@@ -457,6 +457,7 @@ static void make_dvms_hdr(sox_format_t * ft, struct dvms_header *hdr)
 {
         struct cvsdpriv *p = (struct cvsdpriv *) ft->priv;
         size_t len;
+        char * comment = cat_comments(ft->comments);
 
         memset(hdr->Filename, 0, sizeof(hdr->Filename));
         len = strlen(ft->filename);
@@ -470,11 +471,12 @@ static void make_dvms_hdr(sox_format_t * ft, struct dvms_header *hdr)
         hdr->Srate = p->cvsd_rate/100;
         hdr->Days = hdr->Custom1 = hdr->Custom2 = 0;
         memset(hdr->Info, 0, sizeof(hdr->Info));
-        len = strlen(ft->comment);
+        len = strlen(comment);
         if (len >= sizeof(hdr->Info))
                 len = sizeof(hdr->Info)-1;
-        memcpy(hdr->Info, ft->comment, len);
+        memcpy(hdr->Info, comment, len);
         memset(hdr->extend, 0, sizeof(hdr->extend));
+        free(comment);
 }
 
 /* ---------------------------------------------------------------------- */

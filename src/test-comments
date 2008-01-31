@@ -1,0 +1,93 @@
+#!/bin/sh -x
+
+tmp=/tmp/`basename $0`-$$
+
+check () {
+  f=$1; shift
+  : > $tmp.expected
+  lines=0
+  while [ $# != 0 ]; do
+    echo "$1" >> $tmp.expected
+    shift
+    lines=`expr $lines + 1`
+  done
+  ./sox -V $f -n 2> $tmp.info
+  if [ $lines -eq 1 ]; then
+    grep "^Comment " $tmp.info|sed "s/[^']*'//"|sed "s/'$//" > $tmp.comments
+  else
+    head -n -1 $tmp.info|tac|head -n -`grep -n ^Comments $tmp.info|sed "s/:.*//"`|tac>$tmp.comments
+  fi
+  cmp $tmp.comments $tmp.expected || exit 1
+}
+
+check_file () {
+  ./sox -V $1 -n 2> $tmp.info
+  head -n -1 $tmp.info|tac|head -n -`grep -n ^Comments $tmp.info|sed "s/:.*//"`|tac>$tmp.comments
+  cmp $tmp.comments $2 || exit 1
+}
+
+com0="Processed by SoX"
+com1="foo bar"
+com2="bar foo"
+
+./sox monkey.au $tmp.au # Apply default comment
+check $tmp.au "$com0"
+
+cp $tmp.au $tmp.comment.au
+
+cat > $tmp.i << .
+TITLE=The First Track
+ARTIST=A Band Of Musicians
+ALBUM=A Collection Of Songs
+DATE=2008
+TRACKNUMBER=01
+TRACKTOTAL=14
+GENRE=Music
+REPLAYGAIN_TRACK_PEAK=1.00515676
+REPLAYGAIN_TRACK_GAIN=-3.97 dB
+REPLAYGAIN_ALBUM_PEAK=1.00515676
+REPLAYGAIN_ALBUM_GAIN=-2.88 dB
+.
+
+./sox monkey.au --comment-file $tmp.i $tmp.comments.au
+check_file $tmp.comments.au $tmp.i
+
+./sox monkey.au --comment= $tmp.au # Don't apply default comment
+check $tmp.au
+
+./sox monkey.au --add-comment "$com1" $tmp.au
+check $tmp.au "$com1"
+
+./sox $tmp.comment.au --add-comment "$com1" $tmp.au
+check $tmp.au "$com0" "$com1"
+
+./sox monkey.au --add-comment "$com1" --add-comment "$com2" $tmp.au
+check $tmp.au "$com1" "$com2"
+
+./sox $tmp.comment.au --add-comment "$com1" --add-comment "$com2" $tmp.au
+check $tmp.au "$com0" "$com1" "$com2"
+
+./sox $tmp.comments.au --comment= $tmp.au
+check $tmp.au
+
+./sox $tmp.comments.au --comment "$com1" $tmp.au
+check $tmp.au "$com1"
+
+./sox $tmp.comments.au --add-comment "$com1" $tmp.au
+cp $tmp.i $tmp.j
+echo "$com1" >> $tmp.j
+check_file $tmp.au $tmp.j
+
+./sox $tmp.comments.au --add-comment "$com1" --add-comment "$com2" $tmp.au
+echo "$com2" >> $tmp.j
+check_file $tmp.au $tmp.j
+
+# FIXME: smp aiff mp3
+./sox $tmp.comments.au $tmp.flac
+./sox $tmp.flac $tmp.sf
+./sox $tmp.sf $tmp.ogg
+./sox $tmp.ogg $tmp.au
+check_file $tmp.au $tmp.i
+
+rm -f $tmp.*
+exit 0

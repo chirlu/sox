@@ -41,6 +41,7 @@ typedef struct wavstuff {
     unsigned short samplesPerBlock;
     unsigned short blockAlign;
     sox_size_t dataStart;           /* need to for seeking */
+    char           * comment;
     int ignoreSize;                 /* ignoreSize allows us to process 32-bit WAV files that are
                                      * greater then 2 Gb and can't be represented by the
                                      * 32-bit size field. */
@@ -898,9 +899,9 @@ static int sox_wavstartread(sox_format_t * ft)
         if (sox_seeki(ft, (sox_ssize_t)len, SEEK_CUR) == SOX_SUCCESS &&
             findChunk(ft, "LIST", &len) != SOX_EOF)
         {
-            ft->comment = (char*)xmalloc(256);
+            wav->comment = (char*)xmalloc(256);
             /* Initialize comment to a NULL string */
-            ft->comment[0] = 0;
+            wav->comment[0] = 0;
             while(!sox_eof(ft))
             {
                 if (sox_reads(ft,magic,4) == SOX_EOF)
@@ -934,12 +935,12 @@ static int sox_wavstartread(sox_format_t * ft)
                             break;
                         }
                         sox_reads(ft,text,len);
-                        if (strlen(ft->comment) + strlen(text) < 254)
+                        if (strlen(wav->comment) + strlen(text) < 254)
                         {
-                            if (ft->comment[0] != 0)
-                                strcat(ft->comment,"\n");
+                            if (wav->comment[0] != 0)
+                                strcat(wav->comment,"\n");
 
-                            strcat(ft->comment,text);
+                            strcat(wav->comment,text);
                         }
                         if (strlen(text) < len)
                            sox_seeki(ft, (sox_ssize_t)(len - strlen(text)), SEEK_CUR); 
@@ -953,12 +954,12 @@ static int sox_wavstartread(sox_format_t * ft)
                             break;
                         }
                         sox_reads(ft,text,len);
-                        if (strlen(ft->comment) + strlen(text) < 254)
+                        if (strlen(wav->comment) + strlen(text) < 254)
                         {
-                            if (ft->comment[0] != 0)
-                                strcat(ft->comment,"\n");
+                            if (wav->comment[0] != 0)
+                                strcat(wav->comment,"\n");
 
-                            strcat(ft->comment,text);
+                            strcat(wav->comment,text);
                         }
                         if (strlen(text) < len)
                            sox_seeki(ft, (sox_ssize_t)(len - strlen(text)), SEEK_CUR); 
@@ -1107,8 +1108,8 @@ static int sox_wavstopread(sox_format_t * ft)
     free(wav->packet);
     free(wav->samples);
     free(wav->iCoefs);
-    free(ft->comment);
-    ft->comment = NULL;
+    free(wav->comment);
+    wav->comment = NULL;
 
     switch (ft->signal.encoding)
     {

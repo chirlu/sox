@@ -243,9 +243,8 @@ static int sox_smpstartread(sox_format_t * ft)
           ;
         sprintf(smp->comment, "%.*s: %.*s", namelen+1, header.name,
                 commentlen+1, header.comments);
-        ft->comment = smp->comment;
+        append_comments(&ft->comments, smp->comment);
 
-        sox_report("SampleVision file name and comments: %s", ft->comment);
         /* Extract out the sample size (always intel format) */
         sox_readdw(ft, &(smp->NoOfSamps));
         /* mark the start of the sample data */
@@ -336,6 +335,7 @@ static int sox_smpstartwrite(sox_format_t * ft)
 {
         smp_t smp = (smp_t) ft->priv;
         struct smpheader header;
+        char * comment = cat_comments(ft->comments);
 
         /* If you have to seek around the output file */
         if (! ft->seekable)
@@ -352,7 +352,8 @@ static int sox_smpstartwrite(sox_format_t * ft)
         memcpy(header.Id, SVmagic, sizeof(header.Id));
         memcpy(header.version, SVvers, sizeof(header.version));
         sprintf(header.comments, "%-*s", COMMENTLEN - 1, "Converted using Sox.");
-        sprintf(header.name, "%-*.*s", NAMELEN, NAMELEN, ft->comment);
+        sprintf(header.name, "%-*.*s", NAMELEN, NAMELEN, comment);
+        free(comment);
 
         /* Write file header */
         if(sox_writebuf(ft, &header, HEADERSIZE) != HEADERSIZE)

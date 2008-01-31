@@ -32,7 +32,7 @@ typedef struct sfstuff {
  */
 static void readcodes(sox_format_t * ft, SFHEADER *sfhead)
 {
-        char *commentbuf = NULL, *sfcharp, *newline;
+        char *commentbuf = NULL, *sfcharp;
         sox_size_t bsize;
         sox_bool finished = sox_false;
         SFCODE *sfcodep;
@@ -52,16 +52,13 @@ static void readcodes(sox_format_t * ft, SFHEADER *sfhead)
                 case SF_COMMENT:
                         commentbuf = (char *) xmalloc(bsize + 1);
                         memcpy(commentbuf, sfcharp, bsize);
-                        sox_report("IRCAM comment: %s", sfcharp);
                         commentbuf[bsize] = '\0';
-                        if((newline = strchr(commentbuf, '\n')) != NULL)
-                                *newline = '\0';
                         break;
                 }
                 sfcodep = (SFCODE *) (sfcharp + bsize);
         } while(!finished);
-        if(commentbuf != NULL)  /* handles out of memory condition as well */
-                ft->comment = commentbuf;
+        append_comments(&ft->comments, commentbuf);
+        free(commentbuf);
 }
 
 static int sox_sfseek(sox_format_t * ft, sox_size_t offset)
@@ -166,6 +163,7 @@ static int sox_sfstartwrite(sox_format_t * ft)
         SFCODE *sfcodep;
         char *sfcharp;
         int rc;
+        char * comment = cat_comments(ft->comments);
 
         /* Needed for rawwrite() */
         rc = sox_rawstartwrite(ft);
@@ -201,11 +199,12 @@ static int sox_sfstartwrite(sox_format_t * ft)
         memcpy(&sfhead.sfinfo, &sf->info, sizeof(struct sfinfo));
         sfcodep = (SFCODE *) (&sfhead.sfinfo + 1);
         sfcodep->code = SF_COMMENT;
-        sfcodep->bsize = strlen(ft->comment) + sizeof(SFCODE);
+        sfcodep->bsize = strlen(comment) + sizeof(SFCODE);
         while (sfcodep->bsize % 4)
                 sfcodep->bsize++;
         sfcharp = (char *) sfcodep;
-        strcpy(sfcharp + sizeof(SFCODE), ft->comment);
+        strcpy(sfcharp + sizeof(SFCODE), comment);
+        free(comment);
         sfcodep = (SFCODE *) (sfcharp + sfcodep->bsize);
         sfcodep->code = SF_END;
         sfcodep->bsize = sizeof(SFCODE);
