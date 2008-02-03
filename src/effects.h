@@ -48,6 +48,7 @@
   EFFECT(reverse)
   EFFECT(silence)
   EFFECT(speed)
+  EFFECT(splice)
   EFFECT(stat)
   EFFECT(stretch)
   EFFECT(swap)

@@ -99,6 +99,7 @@ The sound effects include:
     it
   o Change the speed of samples being played (like speeding up the
     motor on a tape recorder)
+  o Splice together audio sections
   o Display general stats on a sound sample
   o Stretch/shorten the duration of a sound file (without affecting
     pitch)

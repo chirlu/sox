@@ -11,6 +11,8 @@ sox-14.0.2	2008-xx-xx
 
   Effects:
 
+  o Added effect to splice together audio sections.  (robs)
+
   Other new features:
 
   o Command line support for multiple file comments.  (robs)

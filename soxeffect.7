@@ -865,6 +865,62 @@ resampling, in addition to the \fBspeed\fR effect, specify
 either the \fBresample\fR or the \fBrabbit\fR effect with
 appropriate parameters.
 .TP
+\fBsplice \fR { \fIposition\fR[\fB,\fIexcess\fR[\fB,\fIleaway\fR]] }
+Splice together audio sections.  This effect provides two things over
+simple audio concatenation: a (usually short) cross-fade is applied at
+the join and a wave similarity comparison is made to help determine the
+best place at which to make the join.
+.SP
+To perform a splice, first use the
+.B trim
+effect to select the audio sections to be joined together.  As when
+performing a tape splice, the end of the section to be spliced onto
+should be trimmed with a small
+.I excess
+(default 0\*d005 seconds) of audio after the ideal joining point.  The
+beginning of the audio section to splice on should be trimmed with the
+same
+.IR excess
+(before the ideal joining point), plus an additional
+.I leaway
+(default 0\*d005 seconds).  Sox should then be invoked with the two
+audio sections as input files and the
+.B splice
+effect given with the position at which to perform the splice\*mthis is
+length of the first audio section (including the excess).
+.SP
+For example, a long song begins with two verses which start (as
+determined e.g. by using the
+.B play
+command with the
+.B trim
+(\fIstart\fR) effect) at times 0:30\*d125 and 1:03\*d432.
+The following commands cut out the first verse:
+.EX
+	sox too-long.au part1.au trim 0 30.130
+.EE
+(5 ms excess, after the first verse starts)
+.EX
+	sox long.au part2.au trim 1:03.422
+.EE
+(5 ms excess plus 5 ms leaway, before the second verse starts)
+.EX
+	sox part1.au part2.au just-right.au splice 30.130
+.EE
+Provided your arithmetic is good enough, multiple splices can be
+performed with a single
+.B splice
+invocation.
+For example, two splices are required to `copy and paste' audio.
+.SP
+It is also possible to use this effect to perform general cross-fades, e.g. to
+join two songs.
+In this case,
+.I excess
+would typically be an number of seconds, and
+.I leaway
+should be set to zero.
+.TP
 \fBstat\fR [\fB\-s \fIn\fR] [\fB\-rms\fR] [\fB\-freq\fR] [\fB\-v\fR] [\fB\-d\fR]
 Do a statistical check on the input file,
 and print results on the standard error file.  Audio is passed

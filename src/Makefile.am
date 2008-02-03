@@ -198,8 +198,8 @@ libsfx_la_SOURCES = band.h biquad.c biquad.h biquads.c chorus.c compand.c \
 	  ladspa.c mcompand.c mixer.c noiseprof.c noisered.c noisered.h pad.c \
 	  pan.c phaser.c pitch.c polyphas.c rabbit.c rate.c repeat.c	\
 	  resample.c reverb.c reverse.c silence.c skeleff.c speed.c	\
-	  stat.c stretch.c swap.c synth.c tempo.c tremolo.c trim.c vibro.c \
-	  vol.c
+	  splice.c stat.c stretch.c swap.c synth.c tempo.c tremolo.c trim.c \
+	  vibro.c vol.c
 libsfx_la_CFLAGS = @SAMPLERATE_CFLAGS@
 libsfx_la_LIBADD = @SAMPLERATE_LIBS@ libsox.la
 
