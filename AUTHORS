@@ -8,6 +8,8 @@ Creator:
 
 Mantainers:
 	Chris Bagwell		cbagwell@users.sourceforge.net
+		OSS and Sun players, bugfixes, ADPCM support,
+		patch collection and maintance.
 	Reuben Thomas		rrt@sc3d.org
 		Build system makeover, libsndfile and ffmpeg sound
 		format support, libao playback, Secret Rabbit Code
@@ -17,8 +19,8 @@ Mantainers:
                 formats.
 		Effects: key, tempo, pad, bass, treble, new reverb, new
 		flanger, soft-knee companding, speed via resampling, filters
-		makeover inc.  gnuplot & octave plotting; new effects chain
-		with buffering and any # channels.
+		makeover inc. gnuplot & octave plotting, splice, remix;
+		new effects chain with buffering and any # channels.
                 Others: open input files via URL, file merging, play
                 multiple files with mixed format types, play with replay-gain,
                 building with cmake, much manual improvement and expansion,
@@ -94,8 +96,5 @@ Contributors:
 	Stuart Daines <sjd.u-net.com>
 		Patches for r/w support of gsm-encoded wav files,
 		cleanup of wav.c.
-	Chris Bagwell		cbagwell@sprynet.com
-		OSS and Sun players, bugfixes, ADPCM support,
-		patch collection and maintance.
 	Matthias Nutt
 		Multiple effects from command line.

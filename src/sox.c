@@ -1149,8 +1149,8 @@ static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
 static void sigint(int s)
 {
   static struct timeval then;
-  if (input_count > 1 && show_progress && s == SIGINT && combine_method <= sox_concatenate &&
-             since(&then, 1.0, sox_true))
+  if (input_count > 1 && show_progress && s == SIGINT &&
+      combine_method <= sox_concatenate && since(&then, 1.0, sox_true))
     user_skip = sox_true;
   else user_abort = sox_true;
 }
@@ -1536,8 +1536,13 @@ static int process(void) {
     ofile->signal.size = combiner.size;
   if (ofile->signal.encoding == SOX_ENCODING_UNKNOWN)
     ofile->signal.encoding = combiner.encoding;
-  if (ofile->signal.channels == 0)
-    ofile->signal.channels = combiner.channels;
+  if (ofile->signal.channels == 0) {
+    unsigned j;
+    for (j = 0; j < nuser_effects && !ofile->signal.channels; ++j)
+      ofile->signal.channels = user_efftab[nuser_effects - 1 - j].outinfo.channels;
+    if (ofile->signal.channels == 0)
+      ofile->signal.channels = combiner.channels;
+  }
 
   combiner.rate *= sox_effects_globals.speed;
 

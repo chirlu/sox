@@ -12,6 +12,7 @@ sox-14.0.2	2008-xx-xx
   Effects:
 
   o Added effect to splice together audio sections.  (robs)
+  o Added remix effect (complements the mixer effect).  (robs)
 
   Other new features:
 
@@ -92,7 +93,7 @@ sox-14.0.0	2007-09-11
   o Show (with --plot) compand transfer function.  (robs)
   o Allow e.g. "vol 6dB" (as well as "vol 6 dB").  (robs)
   o Changed deemph filter from 1st order to 2nd order for
-    better accuracy.  (robs)
+    slightly better accuracy.  (robs)
   o Add option to silence effect to leave periods of silence
     in and only strip out extra silence.   (Mark Schreiber)
   o synth can now generate any number of channels.  (robs)

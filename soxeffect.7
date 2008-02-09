@@ -512,6 +512,9 @@ In Ch	Out Ch	Num	Mappings
 .TE
 .DT
 .SP
+See also
+.B remix
+for a similar effect.
 .TP
 \fBnoiseprof\fR [\fIprofile-file\fR]
 Calculate a profile of the audio for use in noise reduction.  See the
@@ -651,6 +654,146 @@ and
 .B resample
 for other sample-rate changing effects, and see
 \fBresample\fR for more discussion of resampling.
+.TP
+\fBremix\fR [\fB\-a\fR\^|\^\fB\-m\fR] <\fIout-spec\fR>
+\fIout-spec\fR	= \fIin-spec\fR{\fB,\fIin-spec\fR} | \fB0\fR
+.br
+\fIin-spec\fR	= [\fIin-chan\fR]\^[\fB\-\fR[\fIin-chan2\fR]]\^[\fIvol-spec\fR]
+.br
+\fIvol-spec\fR	= \fBp\fR\^|\^\fBi\fR\^|\^\fBv\^\fR[\fIvolume\fR]
+.br
+.SP
+Select and mix input audio channels into output audio channels.  Each output
+channel is specified, in turn, by a given \fIout-spec\fR: a list of
+contributing input channels and volume specifications.
+.SP
+Note that this effect operates on the audio
+.I channels
+within the SoX effects processing chain; it should not be confused with the 
+.B \-m
+global option (where multiple
+.I files
+are mix-combined before entering the effects chain).
+.SP
+An
+.I out-spec
+contains comma-separated input channel-numbers and hyphen-delimited
+channel-number ranges; alternatively,
+.B 0
+may be given to create a silent output channel.  For example,
+.EX
+	sox input.au output.au remix 6 7 8 0
+.EE
+creates an output file with four channels, where channels 1, 2, and 3 are
+copies of channels 6, 7, and 8 in the input file, and channel 4 is silent.
+Whereas
+.EX
+	sox input.au output.au remix 1-3,7 3
+.EE
+creates a stereo output file where the left channel is a mix-down of input
+channels 1, 2, 3, and 7, and the right channel is a copy of input channel 3.
+.SP
+Where a range of channels is specified, the channel numbers to the left and
+right of the hyphen are optional and default to 1 and to the number of input
+channels respectively. Thus
+.EX
+	sox input.au output.au remix -
+.EE
+performs a mix-down of all input channels to mono.
+.SP
+By default, where an output channel is mixed from multiple (n) input
+channels, each input channel will be scaled by a factor of \(S1/\s-2n\s+2.
+Custom mixing volumes can be set by following a given input channel or range
+of input channels with a \fIvol-spec\fR (volume specification).
+This is one of the letters \fBp\fR, \fBi\fR, or \fBv\fR,
+followed by a volume number, the meaning of which depends on the given
+letter and is defined as follows:
+.TS
+center;
+lI lI lI
+c l l.
+Letter	Volume number	Notes
+p	power adjust in dB	0 = no change
+i	power adjust in dB	T{
+.na
+As `p', but invert the audio
+T}
+v	voltage multiplier	T{
+.na
+1 = no change, 0\*d5 \(~= 6dB attenuation, 2 \(~= 6dB gain, \-1 = invert
+T}
+.TE
+
+If an
+.I out-spec
+includes at least one
+.I vol-spec
+then, by default, \(S1/\s-2n\s+2 scaling is not applied to any other channels in the
+same out-spec (though may be in other out-specs).
+The \-a (automatic)
+option however, can be given to retain the automatic scaling in this
+case.  For example,
+.EX
+	sox input.au output.au remix 1,2 3,4v0.8
+.EE
+results in channel level multipliers of 0\*d5,0\*d5 1,0\*d8, whereas
+.EX
+	sox input.au output.au remix -a 1,2 3,4v0.8
+.EE
+results in channel level multipliers of 0\*d5,0\*d5 0\*d5,0\*d8.
+.SP
+The \-m (manual) option disables all automatic volume adjustments, so
+.EX
+	sox input.au output.au remix -m 1,2 3,4v0.8
+.EE
+results in channel level multipliers of 1,1 1,0\*d8.
+.SP
+The volume number is optional and omitting it corresponds to no volume
+change; however, the only case in which this is useful is in conjunction
+with
+.BR i .
+For example, if
+.I input.au
+is stereo, then
+.EX
+	sox input.au output.au remix 1,2i
+.EE
+is a mono equivalent of the
+.B oops
+effect.
+.TS
+center;
+c8 c8 c.
+*	*	*
+.TE
+.SP
+One typical use of the
+.B remix
+effect is to split an audio file into a set of files, each containing
+one of the constituent channels (in order to perform subsequent
+processing on individual audio channels).  Where more than a few
+channels are involved, a script such as the following is useful:
+.EX
+#!/bin/sh                        # This is a Bourne shell script
+chans=$(sox -V "$1" -n 2>&1|grep \^Chan|head -1|sed "s/.*: //")
+while [ $chans -ge 1 ]; do
+  chans0=$(printf %02i $chans)   # 2 digits hence up to 99 chans
+  out=$(echo "$1"|sed "s/\\(.*\\)\\.\\(.*\\)/\\1-$chans0.\\2/")
+  sox "$1" "$out" remix $chans
+  chans=$(expr $chans - 1)
+done
+.EE
+If a file
+.I input.au
+containing six audio channels were given, the script would produce six
+output files:
+.IR input-01.au ,
+\fIinput-02.au\fR, ...,
+.IR input-06.au .
+.SP
+See also
+.B mixer
+for a similar effect.
 .TP
 \fBrepeat \fIcount\fR
 Repeat the entire audio \fIcount\fR times.

@@ -43,6 +43,7 @@
 #endif
   EFFECT(rate)
   EFFECT(repeat)
+  EFFECT(remix)
   EFFECT(resample)
   EFFECT(reverb)
   EFFECT(reverse)
