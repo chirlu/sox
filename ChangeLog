@@ -4,25 +4,47 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
-sox-14.0.2	2008-xx-xx
+sox-14.0.2	2008-TBD
 ----------
 
-  File formats:
+File formats:
 
-  Effects:
+  o No change
+
+Effects:
 
   o Added effect to splice together audio sections.  (robs)
   o Added remix effect (complements the mixer effect).  (robs)
 
-  Other new features:
+Other new features:
 
   o Command line support for multiple file comments.  (robs)
 
-  Bug fixes:
+Bug fixes:
 
   o Fix [1864216] comments mangled when writing ogg-vorbis.  (robs)
 
-  Internal improvements:
+Internal improvements:
+
+  o Use FORTIFY_SOURCE with gcc.  (robs)
+
+Feature deprecation & removal:
+
+  Deprec-  Feature    [O(ption)]                           Removal
+  ated in  [F(ormat)] [E(ffect)]   Replacement             due in
+  -------  ----------------------  ----------------------  -------
+  13.0.0   O -e                    -n                      14.0.2
+  13.0.0   O -b/-w/-l/-d           -1/-2/-4/-8             14.0.2
+  13.0.0   E avg, pick             mixer                   14.0.2
+  13.0.0   E highp, lowp           highpass -1, lowpass -1 14.0.2
+  13.0.0   E mask                  dither                  14.0.2
+  13.0.0   E rate                  ~= resample             14.0.2
+  13.0.0   E vibro                 ~= tremolo              14.0.2
+  13.0.0   F auto                  Becomes internal only   14.0.2
+  14.0.0   E stretch               ~= tempo                2008-09-11
+  14.0.0   E pitch                 ~= key                  2008-09-11
+  14.0.2   F wve (native)          wve (libsndfile)        14.0.2 + 1 year
+  14.0.2   F flac: libFLAC 1.1.1   libFLAC > 1.1.1         14.0.2 + 6 months
 
 
 sox-14.0.1	2008-01-29

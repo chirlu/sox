@@ -69,7 +69,7 @@ fi
 
 dnl Extra CFLAGS if we have gcc
 if test "$GCC" = yes; then
-    CFLAGS="$CFLAGS -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic"
+    CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2 -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic"
     dnl Define stricter policy on GNU/Linux, all symbols must be resolved
     case $target in
       *linux*)

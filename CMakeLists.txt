@@ -32,7 +32,7 @@ endmacro(optional3)
 project(sox)
 
 if(CMAKE_COMPILER_IS_GNUCC)
-  add_definitions(-Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic)
+  add_definitions(-D_FORTIFY_SOURCE=2 -Wall -W -Wmissing-prototypes -Wstrict-prototypes -pedantic)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 include(TestBigEndian)
