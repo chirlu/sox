@@ -775,7 +775,7 @@ processing on individual audio channels).  Where more than a few
 channels are involved, a script such as the following is useful:
 .EX
 #!/bin/sh                        # This is a Bourne shell script
-chans=$(sox -V "$1" -n 2>&1|grep \^Chan|head -1|sed "s/.*: //")
+chans=$(soxi -c "$1")
 while [ $chans -ge 1 ]; do
   chans0=$(printf %02i $chans)   # 2 digits hence up to 99 chans
   out=$(echo "$1"|sed "s/\\(.*\\)\\.\\(.*\\)/\\1-$chans0.\\2/")
@@ -793,7 +793,9 @@ output files:
 .SP
 See also
 .B mixer
-for a similar effect.
+and
+.B swap
+for similar effects.
 .TP
 \fBrepeat \fIcount\fR
 Repeat the entire audio \fIcount\fR times.
@@ -1444,10 +1446,10 @@ This is a deprecated alias for the
 effect.  It differs in that the depth parameter ranges from 0 to 1 and defaults to 0\*d5.
 .SH SEE ALSO
 .BR sox (1),
+.BR soxi (1),
 .BR soxformat (7),
 .BR libsox (3),
-.BR soxexam (7),
-.BR wget (1)
+.BR soxexam (7)
 .SP
 The SoX web page at http://sox.sourceforge.net
 .SS References

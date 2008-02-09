@@ -66,7 +66,7 @@
 /* argv[0] options */
 
 static char const * myname = NULL;
-static sox_bool play = sox_false, rec = sox_false;
+static enum {sox_sox, sox_play, sox_rec, sox_soxi} sox_mode;
 
 
 /* gopts */
@@ -255,7 +255,7 @@ static void usage(char const * message)
     fprintf(stderr, "Failed: %s\n\n", message);  /* N.B. stderr */
 
   printf("Usage summary: [gopts] [[fopts] infile]... [fopts]%s [effect [effopts]]...\n\n",
-         play? "" : " outfile");
+         sox_mode == sox_play? "" : " outfile");
   for (i = 0; i < array_length(lines); ++i)
     puts(lines[i]);
   display_supported_formats();
@@ -345,6 +345,116 @@ static void cleanup(void)
   sox_format_quit();
 }
 
+static char const * str_time(double duration)
+{
+  static char string[16][50];
+  static int i;
+  int mins = duration / 60;
+  i = (i+1) & 15;
+  sprintf(string[i], "%02i:%05.2f", mins, duration - mins * 60);
+  return string[i];
+}
+
+static void display_file_info(file_t f, sox_bool full)
+{
+  static char const * const no_yes[] = {"no", "yes"};
+  FILE * const output = sox_mode == sox_soxi? stdout : stderr;
+
+  fprintf(output, "\n%s: '%s'",
+    f->ft->mode == 'r'? "Input File     " : "Output File    ", f->ft->filename);
+  if (strcmp(f->ft->filename, "-") == 0 || (f->ft->handler->flags & SOX_FILE_DEVICE))
+    fprintf(output, " (%s)", f->ft->handler->names[0]);
+  fprintf(output, "\n");
+
+  if (f->ft->signal.size)
+    fprintf(output, "Sample Size    : %s (%s)\n",
+        sox_size_bits_str[f->ft->signal.size],
+        sox_sizes_str[f->ft->signal.size]);
+
+  if (f->ft->signal.encoding)
+    fprintf(output, "Sample Encoding: %s\n",
+        sox_encodings_str[f->ft->signal.encoding]);
+
+  fprintf(output,
+    "Channels       : %u\n"
+    "Sample Rate    : %g\n",
+    f->ft->signal.channels,
+    f->ft->signal.rate);
+
+  if (f->ft->length && f->ft->signal.channels && f->ft->signal.rate) {
+    sox_size_t ws = f->ft->length / f->ft->signal.channels;
+    fprintf(output,
+      "Duration       : %s = %u samples %c %g CDDA sectors\n",
+      str_time((double)ws / f->ft->signal.rate),
+      ws, "~="[f->ft->signal.rate == 44100],
+      (double)ws/ f->ft->signal.rate * 44100 / 588);
+  }
+  if (full) {
+    if (f->ft->signal.size > 1)
+      fprintf(output, "Endian Type    : %s\n",
+          f->ft->signal.reverse_bytes != SOX_IS_BIGENDIAN ? "big" : "little");
+    if (f->ft->signal.size)
+      fprintf(output,
+        "Reverse Nibbles: %s\n"
+        "Reverse Bits   : %s\n",
+        no_yes[f->ft->signal.reverse_nibbles],
+        no_yes[f->ft->signal.reverse_bits]);
+  }
+
+  if (f->replay_gain != HUGE_VAL)
+    fprintf(output, "Replay gain    : %+g dB\n" , f->replay_gain);
+  if (f->volume != HUGE_VAL)
+    fprintf(output, "Level adjust   : %g (linear gain)\n" , f->volume);
+
+  if (!(f->ft->handler->flags & SOX_FILE_DEVICE) && f->ft->comments) {
+    if (num_comments(f->ft->comments) > 1) {
+      comments_t p = f->ft->comments;
+      fprintf(output, "Comments       : \n");
+      do fprintf(output, "%s\n", *p);
+      while (*++p);
+    }
+    else fprintf(output, "Comment        : '%s'\n", f->ft->comments[0]);
+  }
+  fprintf(output, "\n");
+}
+
+static void report_file_info(file_t f)
+{
+  if (sox_globals.verbosity > 2)
+    display_file_info(f, sox_true);
+}
+
+static void progress_to_file(file_t f)
+{
+  if (user_skip) {
+    user_skip = sox_false;
+    fprintf(stderr, "\nSkipped (Ctrl-C twice to quit).\n");
+  }
+  read_wide_samples = 0;
+  input_wide_samples = f->ft->length / f->ft->signal.channels;
+  if (show_progress && (sox_globals.verbosity < 3 ||
+                        (combine_method <= sox_concatenate && input_count > 1)))
+    display_file_info(f, sox_false);
+  if (f->volume == HUGE_VAL)
+    f->volume = 1;
+  if (f->replay_gain != HUGE_VAL)
+    f->volume *= pow(10.0, f->replay_gain / 20);
+  f->ft->sox_errno = errno = 0;
+}
+
+static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
+{
+  sox_bool ret;
+  struct timeval now;
+  time_t d;
+  gettimeofday(&now, NULL);
+  d = now.tv_sec - then->tv_sec;
+  ret = d > ceil(secs) || now.tv_usec - then->tv_usec + d * TIME_FRAC >= secs * TIME_FRAC;
+  if (ret || always_reset)
+    *then = now;
+  return ret;
+}
+
 static file_t new_file(void)
 {
   file_t f = xcalloc(sizeof(*f), 1);
@@ -429,15 +539,16 @@ static sox_bool is_playlist(char const * filename)
   return strcaseends(filename, ".m3u") || strcaseends(filename, ".pls");
 }
 
-static void parse_playlist(const file_t f0, char const * const filename)
+static void parse_playlist(int (* callback)(void *, char *), void * p, char const * const listname)
 {
-  sox_bool is_pls = strcaseends(filename, ".pls");
+  sox_bool is_pls = strcaseends(listname, ".pls");
   int comment_char = "#;"[is_pls];
   size_t text_length = 100;
   char * text = xmalloc(text_length + 1);
-  char * dirname = xstrdup(filename);
+  char * dirname = xstrdup(listname);
   char * slash_pos = LAST_SLASH(dirname);
-  FILE * file = xfopen(filename, "r");
+  FILE * file = xfopen(listname, "r");
+  char * filename;
   int c;
 
   if (!slash_pos)
@@ -446,7 +557,7 @@ static void parse_playlist(const file_t f0, char const * const filename)
     *slash_pos = '\0';
 
   if (file == NULL) {
-    sox_fail("Can't open playlist file `%s': %s", filename, strerror(errno));
+    sox_fail("Can't open playlist file `%s': %s", listname, strerror(errno));
     exit(1);
   }
 
@@ -482,37 +593,90 @@ static void parse_playlist(const file_t f0, char const * const filename)
     }
     if (begin != end) {
       char const * id = text + begin;
-      file_t f;
 
-      if (file_count >= MAX_FILES) {
-        sox_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
-        exit(1);
-      }
-
-      f = new_file();
-      *f = *f0;
       if (!dirname[0] || is_uri(id) || IS_ABSOLUTE(id))
-        f->filename = xstrdup(id);
+        filename = xstrdup(id);
       else {
-        f->filename = xmalloc(strlen(dirname) + strlen(id) + 2); 
-        sprintf(f->filename, "%s/%s", dirname, id); 
+        filename = xmalloc(strlen(dirname) + strlen(id) + 2); 
+        sprintf(filename, "%s/%s", dirname, id); 
       }
-      if (is_playlist(f->filename)) {
-        parse_playlist(f, f->filename);
-        free(f->filename);
-        free(f);
-        continue;
+      if (is_playlist(filename)) {
+        parse_playlist(callback, p, filename);
+        free(filename);
       }
-      files[file_count++] = f;
+      else if (callback(p, filename))
+        break;
     }
   } while (c != EOF);
   if (ferror(file)) {
-    sox_fail("Error reading playlist file `%s': %s", filename, strerror(errno));
+    sox_fail("Error reading playlist file `%s': %s", listname, strerror(errno));
     exit(1);
   }
   fclose(file);
   free(text);
   free(dirname);
+}
+
+typedef enum {
+  full, rate, channels, samples, duration, bits, encoding, annotation} soxi_t;
+
+static int soxi1(soxi_t * type, char * filename)
+{
+  file_t f = new_file();
+  f->filename = filename;
+  if ((f->ft = sox_open_read(f->filename, NULL, NULL))) {
+    sox_size_t ws = f->ft->length / max(f->ft->signal.channels, 1);
+    switch (*type) {
+      case rate: printf("%g\n", f->ft->signal.rate); break;
+      case channels: printf("%u\n", f->ft->signal.channels); break;
+      case samples: printf("%u\n", ws); break;
+      case duration: printf("%s\n", str_time((double)ws / max(f->ft->signal.rate, 1))); break;
+      case bits: printf("%s\n", sox_size_bits_str[f->ft->signal.size]); break;
+      case encoding: printf("%s\n", sox_encodings_str[f->ft->signal.encoding]); break;
+      case annotation: if (f->ft->comments) {
+        comments_t p = f->ft->comments;
+        do printf("%s\n", *p); while (*++p);
+      }
+      break;
+      case full: display_file_info(f, sox_false); break;
+    }
+    sox_close(f->ft);
+  }
+  free(f);
+  return 0;
+}
+
+static void soxi(int argc, char * const * argv)
+{
+  static char const opts[] = "rcsdbea?";
+  soxi_t type = full;
+  int opt;
+
+  while ((opt = getopt(argc, argv, opts)) > 0)
+    type = 1 + (strchr(opts, opt) - opts);
+  if (type > annotation)
+    printf("Usage: soxi [-r|-c|-s|-d|-b|-e|-a] infile1 ...\n");
+  else for (; optind < argc; ++optind) {
+    if (is_playlist(argv[optind]))
+      parse_playlist(soxi1, &type, argv[optind]);
+    else soxi1(&type, argv[optind]);
+  }
+  exit(0);
+}
+
+static int add_file(file_t f0, char * filename)
+{
+  file_t f;
+
+  if (file_count >= MAX_FILES) {
+    sox_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
+    exit(1);
+  }
+  f = new_file();
+  *f = *f0;
+  f->filename = filename;
+  files[file_count++] = f;
+  return 0;
 }
 
 static void parse_options_and_filenames(int argc, char **argv)
@@ -538,7 +702,7 @@ static void parse_options_and_filenames(int argc, char **argv)
       if (optind >= argc || sox_find_effect(argv[optind]))
         break;
       if (is_playlist(argv[optind])) {
-        parse_playlist(f, argv[optind++]);
+        parse_playlist(add_file, f, argv[optind++]);
         free(f);
         f = NULL;
         continue;
@@ -549,7 +713,7 @@ static void parse_options_and_filenames(int argc, char **argv)
     f = NULL;
   }
 
-  if (play) {
+  if (sox_mode == sox_play) {
     if (file_count >= MAX_FILES) {
       sox_fail("Too many filenames; maximum is %d input files and 1 output file", MAX_INPUT_FILES);
       exit(1);
@@ -565,7 +729,7 @@ static void parse_options_and_filenames(int argc, char **argv)
     free(f); /* No file opts and no filename, so that's okay */
   }
 
-  if (rec) {
+  if (sox_mode == sox_rec) {
     sox_size_t i;
 
     if (file_count >= MAX_FILES) {
@@ -617,21 +781,25 @@ int main(int argc, char **argv)
   sox_globals.output_message_handler = output_message;
 
   if (strends(myname, "play")) {
-    play = sox_true;
+    sox_mode = sox_play;
     replay_gain_mode = RG_track;
     combine_method = sox_sequence;
   }
   else if (strends(myname, "rec"))
-    rec = sox_true;
+    sox_mode = sox_rec;
+  else if (strends(myname, "soxi"))
+    sox_mode = sox_soxi;
 
   if (sox_format_init() != SOX_SUCCESS)
-      exit(1);
+    exit(1);
  
+  if (sox_mode == sox_soxi)
+    soxi(argc, argv);
+
   parse_options_and_filenames(argc, argv);
 
   if (sox_globals.verbosity > 2)
     display_SoX_version(stderr);
-
  
   /* Make sure we got at least the required # of input filenames */
   input_count = file_count ? file_count - 1 : 0;
@@ -660,7 +828,7 @@ int main(int argc, char **argv)
     if (combine_method == sox_mix && !uservolume)
       f->volume = 1.0 / input_count;
 
-    if (rec && !j) { /* Set the recording sample rate & # of channels: */
+    if (sox_mode == sox_rec && !j) { /* Set the recording sample rate & # of channels: */
       if (input_count > 1) {   /* Get them from the next input file: */
         f->signal.rate = files[1]->ft->signal.rate;
         f->signal.channels = files[1]->ft->signal.channels;
@@ -737,7 +905,7 @@ int main(int argc, char **argv)
   if (show_progress) {
     if (user_abort)
       fprintf(stderr, "Aborted.\n");
-    else if (user_skip && !rec)
+    else if (user_skip && sox_mode != sox_rec)
       fprintf(stderr, "Skipped.\n");
     else
       fprintf(stderr, "Done.\n");
@@ -1035,115 +1203,6 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
       break;
     }
   }
-}
-
-static char const * str_time(double duration)
-{
-  static char string[16][50];
-  static int i;
-  int mins = duration / 60;
-  i = (i+1) & 15;
-  sprintf(string[i], "%02i:%05.2f", mins, duration - mins * 60);
-  return string[i];
-}
-
-static void display_file_info(file_t f, sox_bool full)
-{
-  static char const * const no_yes[] = {"no", "yes"};
-
-  fprintf(stderr, "\n%s: '%s'",
-    f->ft->mode == 'r'? "Input File     " : "Output File    ", f->ft->filename);
-  if (strcmp(f->ft->filename, "-") == 0 || (f->ft->handler->flags & SOX_FILE_DEVICE))
-    fprintf(stderr, " (%s)", f->ft->handler->names[0]);
-  fprintf(stderr, "\n");
-
-  if (f->ft->signal.size)
-    fprintf(stderr, "Sample Size    : %s (%s)\n",
-        sox_size_bits_str[f->ft->signal.size],
-        sox_sizes_str[f->ft->signal.size]);
-
-  if (f->ft->signal.encoding)
-    fprintf(stderr, "Sample Encoding: %s\n",
-        sox_encodings_str[f->ft->signal.encoding]);
-
-  fprintf(stderr,
-    "Channels       : %u\n"
-    "Sample Rate    : %g\n",
-    f->ft->signal.channels,
-    f->ft->signal.rate);
-
-  if (full) {
-    if (f->ft->length && f->ft->signal.channels && f->ft->signal.rate) {
-      sox_size_t ws = f->ft->length / f->ft->signal.channels;
-      fprintf(stderr,
-        "Duration       : %s = %u samples %c %g CDDA sectors\n",
-        str_time((double)ws / f->ft->signal.rate),
-        ws, "~="[f->ft->signal.rate == 44100],
-        (double)ws/ f->ft->signal.rate * 44100 / 588);
-    }
-    if (f->ft->signal.size > 1)
-      fprintf(stderr, "Endian Type    : %s\n",
-          f->ft->signal.reverse_bytes != SOX_IS_BIGENDIAN ? "big" : "little");
-    if (f->ft->signal.size)
-      fprintf(stderr,
-        "Reverse Nibbles: %s\n"
-        "Reverse Bits   : %s\n",
-        no_yes[f->ft->signal.reverse_nibbles],
-        no_yes[f->ft->signal.reverse_bits]);
-  }
-
-  if (f->replay_gain != HUGE_VAL)
-    fprintf(stderr, "Replay gain    : %+g dB\n" , f->replay_gain);
-  if (f->volume != HUGE_VAL)
-    fprintf(stderr, "Level adjust   : %g (linear gain)\n" , f->volume);
-
-  if (!(f->ft->handler->flags & SOX_FILE_DEVICE) && f->ft->comments) {
-    if (num_comments(f->ft->comments) > 1) {
-      comments_t p = f->ft->comments;
-      fprintf(stderr, "Comments       : \n");
-      do fprintf(stderr, "%s\n", *p);
-      while (*++p);
-    }
-    else fprintf(stderr, "Comment        : '%s'\n", f->ft->comments[0]);
-  }
-  fprintf(stderr, "\n");
-}
-
-static void report_file_info(file_t f)
-{
-  if (sox_globals.verbosity > 2)
-    display_file_info(f, sox_true);
-}
-
-static void progress_to_file(file_t f)
-{
-  if (user_skip) {
-    user_skip = sox_false;
-    fprintf(stderr, "Skipped.\n");
-  }
-  read_wide_samples = 0;
-  input_wide_samples = f->ft->length / f->ft->signal.channels;
-  if (show_progress && (sox_globals.verbosity < 3 ||
-                        (combine_method <= sox_concatenate && input_count > 1)))
-    display_file_info(f, sox_false);
-  if (f->volume == HUGE_VAL)
-    f->volume = 1;
-  if (f->replay_gain != HUGE_VAL)
-    f->volume *= pow(10.0, f->replay_gain / 20);
-  f->ft->sox_errno = errno = 0;
-}
-
-static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
-{
-  sox_bool ret;
-  struct timeval now;
-  time_t d;
-  gettimeofday(&now, NULL);
-  d = now.tv_sec - then->tv_sec;
-  ret = d > ceil(secs) || now.tv_usec - then->tv_usec + d * TIME_FRAC >= secs * TIME_FRAC;
-  if (ret || always_reset)
-    *then = now;
-  return ret;
 }
 
 static void sigint(int s)

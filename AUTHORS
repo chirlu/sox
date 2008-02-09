@@ -21,7 +21,7 @@ Mantainers:
 		flanger, soft-knee companding, speed via resampling, filters
 		makeover inc. gnuplot & octave plotting, splice, remix;
 		new effects chain with buffering and any # channels.
-                Others: open input files via URL, file merging, play
+                Others: soxi, open input files via URL, file merging, play
                 multiple files with mixed format types, play with replay-gain,
                 building with cmake, much manual improvement and expansion,
                 various fixes, enhancements and clean-ups.

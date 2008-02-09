@@ -172,6 +172,10 @@ Replay Gain information if some was present in the input file.  In this
 case, if anything other than a simple format conversion was performed
 then the output file Replay Gain information is likely to be incorrect
 and so should be recalculated using a tool that supports this (not SoX).
+.SP
+The
+.BR soxi (1)
+command can be used to display information from audio file headers.
 .SS Determining & Setting The File Format
 There are several mechanisms available for SoX to use to determine or set the
 format characteristics of an audio file.  Depending on the circumstances,
@@ -420,16 +424,6 @@ The sampling rate associated with a null file
 is by default 44\*d1\ kHz, but, as with a normal
 file, this can be overridden if desired using command-line format
 options (see below).
-.SP
-One other use of \fB\-n\fR is to use it in conjunction with
-.B \-V
-to display information from the audio file header
-without having to read any further into the file, e.g.
-.EX
-	sox \-V *.wav \-n
-.EE
-will display header information for each `WAV' file in the current
-directory.
 .TP
 \fB\-e\fR
 This is an alias of
@@ -739,6 +733,7 @@ command-line parameters, or 2 if an error occurs during file processing.
 Please report any bugs found in this version of SoX to the mailing list
 (sox-users@lists.sourceforge.net).
 .SH SEE ALSO
+.BR soxi (1),
 .BR soxexam (7),
 .BR soxformat (7),
 .BR soxeffect (7),

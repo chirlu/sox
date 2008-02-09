@@ -288,19 +288,19 @@ endif
 
 EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav sox_sample_test.c amr-wb-test CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake example1.c test-comments
 
-all: sox$(EXEEXT) play rec sox_sample_test$(EXEEXT) example1$(EXEEXT)
+all: sox$(EXEEXT) play rec soxi sox_sample_test$(EXEEXT) example1$(EXEEXT)
 
-play rec: sox$(EXEEXT)
+play rec soxi: sox$(EXEEXT)
 	./sox --help > /dev/null
 	test -f .libs/lt-sox && ( $(RM) $@ && $(LN_S) .libs/lt-sox $@ ) || $(LN_S) sox$(EXEEXT) $@
 
 install-exec-hook:
 	if test "$(PLAYRECLINKS)" = "yes"; then	\
-		cd $(DESTDIR)$(bindir); $(RM) play rec; $(LN_S) sox play; $(LN_S) sox rec; \
+		cd $(DESTDIR)$(bindir); $(RM) play rec soxi; $(LN_S) sox play; $(LN_S) sox rec; $(LN_S) sox soxi; \
 	fi
 
 clean-local:
-	$(RM) play rec
+	$(RM) play rec soxi
 	$(RM) sox_sample_test
 	$(RM) example1
 
