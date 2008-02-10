@@ -64,7 +64,7 @@ static int create(sox_effect_t * effp, int n, char * * argv)
 {
   pad_t p = (pad_t) effp->priv;
   p->pads = xcalloc(p->npads = n, sizeof(*p->pads));
-  return parse(effp, argv, SOX_MAXRATE); /* No rate yet; parse with dummy */
+  return parse(effp, argv, 96000.); /* No rate yet; parse with dummy */
 }
 
 static int start(sox_effect_t * effp)

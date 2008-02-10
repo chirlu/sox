@@ -175,10 +175,6 @@ typedef int32_t sox_ssize_t;
 #define SOX_SSIZE_MIN (-SOX_SSIZE_MAX - 1)
 
 typedef double sox_rate_t;
-/* Warning, this is a MAX value used in the library.  Each format and
- * effect may have its own limitations of rate.
- */
-#define SOX_MAXRATE      (50U * 1024) /* maximum sample rate in library */
 
 typedef enum {
   SOX_ENCODING_UNKNOWN   ,

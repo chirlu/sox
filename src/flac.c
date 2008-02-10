@@ -335,7 +335,7 @@ static int start_write(sox_format_t * const ft)
 
   FLAC__stream_encoder_set_channels(encoder->flac, ft->signal.channels);
   FLAC__stream_encoder_set_bits_per_sample(encoder->flac, encoder->bits_per_sample);
-  FLAC__stream_encoder_set_sample_rate(encoder->flac, ft->signal.rate);
+  FLAC__stream_encoder_set_sample_rate(encoder->flac, (unsigned)(ft->signal.rate + .5));
 
   { /* Check if rate is streamable: */
     static const unsigned streamable_rates[] =

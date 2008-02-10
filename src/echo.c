@@ -59,7 +59,7 @@
 #include <math.h>
 #include "sox_i.h"
 
-#define DELAY_BUFSIZ ( 50 * SOX_MAXRATE )
+#define DELAY_BUFSIZ ( 50 * 50U * 1024 )
 #define MAX_ECHOS 7     /* 24 bit x ( 1 + MAX_ECHOS ) = */
                         /* 24 bit x 8 = 32 bit !!!      */
 

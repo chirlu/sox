@@ -44,8 +44,8 @@ typedef struct {
 } polystage;
 
 typedef struct polyphase {
-  sox_rate_t lcmrate;             /* least common multiple of rates */
-  sox_rate_t inskip, outskip;     /* LCM increments for I & O rates */
+  unsigned lcmrate;             /* least common multiple of rates */
+  unsigned inskip, outskip;     /* LCM increments for I & O rates */
   double Factor;                 /* out_rate/in_rate               */
   unsigned long total;           /* number of filter stages        */
   sox_size_t oskip;               /* output samples to skip at start*/

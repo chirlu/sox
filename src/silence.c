@@ -121,7 +121,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
         silence->start_duration_str = (char *)xmalloc(strlen(argv[0])+1);
         strcpy(silence->start_duration_str,argv[0]);
         /* Perform a fake parse to do error checking */
-        if (sox_parsesamples(0,silence->start_duration_str,
+        if (sox_parsesamples(0.,silence->start_duration_str,
                     &silence->start_duration,'s') == NULL)
           return sox_usage(effp);
 
@@ -162,7 +162,7 @@ static int sox_silence_getopts(sox_effect_t * effp, int n, char **argv)
         silence->stop_duration_str = (char *)xmalloc(strlen(argv[0])+1);
         strcpy(silence->stop_duration_str,argv[0]);
         /* Perform a fake parse to do error checking */
-        if (sox_parsesamples(0,silence->stop_duration_str,
+        if (sox_parsesamples(0.,silence->stop_duration_str,
                     &silence->stop_duration,'s') == NULL)
           return sox_usage(effp);
 

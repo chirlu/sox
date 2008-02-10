@@ -290,7 +290,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     synth->length_str = xmalloc(strlen(argv[argn]) + 1);
     strcpy(synth->length_str, argv[argn]);
     /* Do a dummy parse of to see if it will fail */
-    if (sox_parsesamples(0, synth->length_str, &synth->samples_to_do, 't') == NULL)
+    if (sox_parsesamples(0., synth->length_str, &synth->samples_to_do, 't') == NULL)
       return sox_usage(effp);
     argn++;
   }

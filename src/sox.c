@@ -539,7 +539,9 @@ static sox_bool is_playlist(char const * filename)
   return strcaseends(filename, ".m3u") || strcaseends(filename, ".pls");
 }
 
-static void parse_playlist(int (* callback)(void *, char *), void * p, char const * const listname)
+typedef int (* playlist_callback_t)(void *, char *);
+
+static void parse_playlist(playlist_callback_t callback, void * p, char const * const listname)
 {
   sox_bool is_pls = strcaseends(listname, ".pls");
   int comment_char = "#;"[is_pls];
@@ -658,7 +660,7 @@ static void soxi(int argc, char * const * argv)
     printf("Usage: soxi [-r|-c|-s|-d|-b|-e|-a] infile1 ...\n");
   else for (; optind < argc; ++optind) {
     if (is_playlist(argv[optind]))
-      parse_playlist(soxi1, &type, argv[optind]);
+      parse_playlist((playlist_callback_t)soxi1, &type, argv[optind]);
     else soxi1(&type, argv[optind]);
   }
   exit(0);
@@ -702,7 +704,7 @@ static void parse_options_and_filenames(int argc, char **argv)
       if (optind >= argc || sox_find_effect(argv[optind]))
         break;
       if (is_playlist(argv[optind])) {
-        parse_playlist(add_file, f, argv[optind++]);
+        parse_playlist((playlist_callback_t)add_file, f, argv[optind++]);
         free(f);
         f = NULL;
         continue;
@@ -1611,7 +1613,7 @@ static int process(void) {
   if (!known_length)
     olen = 0;
 
-  open_output_file(olen * ofile->signal.channels * ofile->signal.rate / combiner.rate + .5);
+  open_output_file((sox_size_t)(olen * ofile->signal.channels * ofile->signal.rate / combiner.rate + .5));
 
   ofile_effects_chain.global_info = sox_effects_globals;
   add_effects(&ofile_effects_chain);

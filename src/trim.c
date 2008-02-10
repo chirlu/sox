@@ -39,13 +39,13 @@ static int sox_trim_getopts(sox_effect_t * effp, int n, char **argv)
             trim->length_str = (char *)xmalloc(strlen(argv[1])+1);
             strcpy(trim->length_str,argv[1]);
             /* Do a dummy parse to see if it will fail */
-            if (sox_parsesamples(0, trim->length_str, &trim->length, 't') == NULL)
+            if (sox_parsesamples(0., trim->length_str, &trim->length, 't') == NULL)
               return sox_usage(effp);
         case 1:
             trim->start_str = (char *)xmalloc(strlen(argv[0])+1);
             strcpy(trim->start_str,argv[0]);
             /* Do a dummy parse to see if it will fail */
-            if (sox_parsesamples(0, trim->start_str, &trim->start, 't') == NULL)
+            if (sox_parsesamples(0., trim->start_str, &trim->start, 't') == NULL)
               return sox_usage(effp);
             break;
         default:

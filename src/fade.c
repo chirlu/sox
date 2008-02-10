@@ -75,7 +75,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
     fade->in_stop_str = (char *)xmalloc(strlen(argv[0])+1);
     strcpy(fade->in_stop_str,argv[0]);
     /* Do a dummy parse to see if it will fail */
-    if (sox_parsesamples(0, fade->in_stop_str, &fade->in_stop, 't') == NULL)
+    if (sox_parsesamples(0., fade->in_stop_str, &fade->in_stop, 't') == NULL)
       return sox_usage(effp);
 
     fade->out_start_str = fade->out_stop_str = 0;
@@ -89,7 +89,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
             strcpy(fade->out_stop_str,argv[t_argno]);
 
             /* Do a dummy parse to see if it will fail */
-            if (sox_parsesamples(0, fade->out_stop_str, 
+            if (sox_parsesamples(0., fade->out_stop_str, 
                                 &fade->out_stop, 't') == NULL)
               return sox_usage(effp);
         }
@@ -99,7 +99,7 @@ static int sox_fade_getopts(sox_effect_t * effp, int n, char **argv)
             strcpy(fade->out_start_str,argv[t_argno]);
 
             /* Do a dummy parse to see if it will fail */
-            if (sox_parsesamples(0, fade->out_start_str, 
+            if (sox_parsesamples(0., fade->out_start_str, 
                                 &fade->out_start, 't') == NULL)
               return sox_usage(effp);
         }

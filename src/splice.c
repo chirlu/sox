@@ -99,12 +99,12 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
   for (i = 0; i < p->nsplices; ++i) {
     if (argv) /* 1st parse only */
       p->splices[i].str = xstrdup(argv[i]);
-    
+
     p->splices[i].overlap = p->splices[i].search = rate * 0.01 + .5;
 
     next = sox_parsesamples(rate, p->splices[i].str, &p->splices[i].start, 't');
     if (next == NULL) break;
-    
+
     if (*next == ',') {
       next = sox_parsesamples(rate, next + 1, &p->splices[i].overlap, 't');
       if (next == NULL) break;
@@ -118,7 +118,7 @@ static int parse(sox_effect_t * effp, char * * argv, sox_rate_t rate)
     if (*next != '\0') break;
     p->splices[i].overlap = max(p->splices[i].overlap + 4, 16);
     p->splices[i].overlap &= ~7; /* Make divisible by 8 for loop optimisation */
-    
+
     if (i > 0 && p->splices[i].start <= p->splices[i-1].start) break;
     if (p->splices[i].start < p->splices[i].overlap) break;
     p->splices[i].start -= p->splices[i].overlap;
@@ -134,7 +134,7 @@ static int create(sox_effect_t * effp, int n, char * * argv)
 {
   splice_t p = (splice_t) effp->priv;
   p->splices = xcalloc(p->nsplices = n, sizeof(*p->splices));
-  return parse(effp, argv, SOX_MAXRATE); /* No rate yet; parse with dummy */
+  return parse(effp, argv, 96000.); /* No rate yet; parse with dummy */
 }
 
 static int start(sox_effect_t * effp)
