@@ -560,6 +560,38 @@ using a pipe, e.g.
 	sox noisy.au -n trim 0 1 noiseprof | play noisy.au noisered
 .EE
 .TP
+\fBnorm\fR [\fIlevel\fR]
+Normalise audio to 0dB FSD or to a given level relative to 0dB.
+Requires temporary file space to store the audio to be normalised.
+.SP
+To create a normalised copy of an audio file,
+.EX
+	sox infile outfile norm
+.EE
+can be used, though note that if `infile' has a simple encoding (e.g.
+PCM), then
+.EX
+	sox infile outfile vol \`sox infile -n stat -v 2>&1\`
+.EE
+(on systems that support this construct) might be quicker to execute
+(though perhaps not to type!) as it doesn't require a temporary file.
+.SP
+For a more complex example, suppose that `effect1' performs some unknown
+or unpredictable attenuation and that `effect2' requires up to 10dB of
+headroom, then
+.EX
+	sox infile outfile effect1 norm -10 effect2 norm
+.EE
+gives both effect2 and the output file the highest possible signal
+levels.
+.SP
+In most cases,
+.B norm \-3
+should be the maximum level used at the output file (to leave headroom
+for playback-resampling, etc.).  See also the discussions of clipping
+and Replay Gain in
+.BR sox (1).
+.TP
 \fBoops\fR
 Out Of Phase Stereo effect.
 Mixes stereo to twin-mono where each mono channel contains the
@@ -799,7 +831,7 @@ for similar effects.
 .TP
 \fBrepeat \fIcount\fR
 Repeat the entire audio \fIcount\fR times.
-Requires disk space to store the data to be repeated.
+Requires temporary file space to store the audio to be repeated.
 Note that repeating once yields two copies: the original audio and the
 repeated audio.
 .TP
@@ -917,7 +949,7 @@ in these domains, a typical invocation might be:
 .TP
 \fBreverse\fR
 Reverse the audio completely.
-Requires disk space to store the data to be reversed.
+Requires temporary file space to store the audio to be reversed.
 .TP
 \fBsilence \fR[\fB\-l\fR] \fIabove-periods\fR [\fIduration
 threshold\fR[\fBd\fR\^|\^\fB%\fR] [\fIbelow-periods duration

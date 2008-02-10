@@ -131,7 +131,7 @@ static void reverb_create(reverb_t * p, double sample_rate_Hz,
   memset(p, 0, sizeof(*p));
   p->feedback = 1 - exp((reverberance - b) / (a * b));
   p->hf_damping = hf_damping / 100 * .3 + .2;
-  p->gain = exp(wet_gain_dB / 20 * log(10.)) * .015;
+  p->gain = dB_to_linear(wet_gain_dB) * .015;
   fifo_create(&p->input_fifo, sizeof(float));
   memset(fifo_write(&p->input_fifo, delay, 0), 0, delay * sizeof(float));
   for (i = 0; i <= ceil(depth); ++i) {

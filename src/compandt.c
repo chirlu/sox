@@ -19,7 +19,7 @@
 #include "compandt.h"
 #include <string.h>
 
-#define LOG_TO_LOG10(x) ((x) * 20 / log(10.))
+#define LOG_TO_LOG10(x) ((x) * 20 / M_LN10)
 
 sox_bool sox_compandt_show(sox_compandt_t * t, sox_plot_t plot)
 {
@@ -78,12 +78,12 @@ sox_bool sox_compandt_show(sox_compandt_t * t, sox_plot_t plot)
 static void prepare_transfer_fn(sox_compandt_t * t)
 {
   int i;
-  double radius = t->curve_dB * log(10.) / 20;
+  double radius = t->curve_dB * M_LN10 / 20;
 
   for (i = 0; !i || t->segments[i-2].x; i += 2) {
     t->segments[i].y += t->outgain_dB;
-    t->segments[i].x *= log(10.) / 20; /* Convert to natural logs */
-    t->segments[i].y *= log(10.) / 20;
+    t->segments[i].x *= M_LN10 / 20; /* Convert to natural logs */
+    t->segments[i].y *= M_LN10 / 20;
   }
 
 #define line1 t->segments[i - 4]

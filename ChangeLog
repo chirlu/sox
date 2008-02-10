@@ -15,6 +15,7 @@ Effects:
 
   o Added effect to splice together audio sections.  (robs)
   o Added remix effect (complements the mixer effect).  (robs)
+  o Added norm (normalise) effect.  (robs)
 
 Other new features:
 

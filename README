@@ -85,6 +85,7 @@ The sound effects include:
   o Apply an equalizer effect
   o Add dithering/masking noise to a signal
   o Multi-band compander
+  o Normalise the audio level
   o Pad with silence
   o Pan sound between channels
   o Apply a phaser effect

@@ -81,7 +81,7 @@ static int parse(sox_effect_t * effp, char * * argv, unsigned channels)
         multiplier = sep1 == 'v' ? 1 : 0;
         PARSE(sep2, "%lf", multiplier, -HUGE_VAL, separators + 4);
         if (sep1 != 'v')
-          multiplier = (sep1 == 'p'? 1 : -1) * exp(multiplier / 20 * log(10.));
+          multiplier = (sep1 == 'p'? 1 : -1) * dB_to_linear(multiplier);
         mul_spec = sox_true;
       }
       if (chan2 < chan1) {int t = chan1; chan1 = chan2; chan2 = t;}

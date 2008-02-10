@@ -19,7 +19,7 @@ Mantainers:
                 formats.
 		Effects: key, tempo, pad, bass, treble, new reverb, new
 		flanger, soft-knee companding, speed via resampling, filters
-		makeover inc. gnuplot & octave plotting, splice, remix;
+		makeover inc. gnuplot & octave plotting, splice, remix, norm;
 		new effects chain with buffering and any # channels.
                 Others: soxi, open input files via URL, file merging, play
                 multiple files with mixed format types, play with replay-gain,

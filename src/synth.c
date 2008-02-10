@@ -511,8 +511,7 @@ static sox_sample_t do_synth(sox_sample_t synth_input, synth_t synth, int c, dou
          * |                            |
          * 0             p1             1
          */
-#define LOG_10_20        0.1151292546497022842009e0
-        synth_out = exp(-chan->p2 * LOG_10_20 * 100);  /* 0 ..  1 */
+        synth_out = dB_to_linear(chan->p2 * -100);  /* 0 ..  1 */
         if (phase < chan->p1)
           synth_out = synth_out * exp(phase * log(1 / synth_out) / chan->p1);
         else

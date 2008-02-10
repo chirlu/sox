@@ -31,6 +31,7 @@
   EFFECT(mixer)
   EFFECT(noiseprof)
   EFFECT(noisered)
+  EFFECT(norm)
   EFFECT(oops)
   EFFECT(pad)
   EFFECT(pan)

@@ -253,6 +253,11 @@ char * cat_comments(comments_t comments);
 #ifndef M_PI_2
 #define M_PI_2  1.57079632679489661923  /* pi/2 */
 #endif
+#ifndef M_LN10
+#define M_LN10  2.30258509299404568402  /* natural log of 10 */
+#endif
+#define dB_to_linear(x) exp((x) * M_LN10 * 0.05)
+#define linear_to_dB(x) (log10(x) * 20)
 
 typedef struct sox_globals /* Global parameters (for effects & formats) */
 {

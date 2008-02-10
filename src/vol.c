@@ -17,8 +17,6 @@
 #include "sox_i.h"
 #include <math.h>
 
-#define LOG_10_20 ((double)(0.1151292546497022842009e0))
-
 typedef struct {
   double    gain; /* amplitude gain. */
   sox_bool  uselimiter;
@@ -67,7 +65,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     if (!p)
       return sox_usage(effp);
     switch (p->value) {
-      case vol_dB: vol->gain = exp(vol->gain*LOG_10_20); break;
+      case vol_dB: vol->gain = dB_to_linear(vol->gain); break;
       case vol_power: /* power to amplitude, keep phase change */
         vol->gain = vol->gain > 0 ? sqrt(vol->gain) : -sqrt(-vol->gain);
         break;
