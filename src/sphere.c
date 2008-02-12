@@ -72,7 +72,7 @@ static int sox_spherestartread(sox_format_t * ft)
 
         while (strncmp(buf, "end_head", 8) != 0)
         {
-            if (strncmp(buf, "sample_n_bytes", 14) == 0 && ft->signal.size == -1)
+            if (strncmp(buf, "sample_n_bytes", 14) == 0 && !ft->signal.size)
             {
                 sscanf(buf, "%63s %15s %d", fldname, fldtype, &i);
                 ft->signal.size = i;
@@ -120,7 +120,7 @@ static int sox_spherestartread(sox_format_t * ft)
             header_size -= (strlen(buf) + 1);
         }
 
-        if (ft->signal.size == -1)
+        if (!ft->signal.size)
             ft->signal.size = SOX_SIZE_BYTE;
 
         /* sample_coding is optional and is PCM if missing.
@@ -129,7 +129,7 @@ static int sox_spherestartread(sox_format_t * ft)
          */
         if (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
         {
-            if (ft->signal.size == 1)
+            if (ft->signal.size == SOX_SIZE_8BIT)
                 ft->signal.encoding = SOX_ENCODING_UNSIGNED;
             else
                 ft->signal.encoding = SOX_ENCODING_SIGN2;

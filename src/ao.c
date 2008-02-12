@@ -43,6 +43,7 @@ static int startwrite(sox_format_t * ft)
 {
   ao_priv_t ao = (ao_priv_t)ft->priv;
 
+  set_signal_defaults(&ft->signal);
   if (ft->signal.size != SOX_SIZE_16BIT || 
       ft->signal.encoding != SOX_ENCODING_SIGN2)
   {

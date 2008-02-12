@@ -759,7 +759,7 @@ static int sox_wavstartread(sox_format_t * ft)
         
     case SOX_SIZE_BYTE:
         /* User options take precedence */
-        if (ft->signal.size == -1 || ft->signal.size == SOX_SIZE_BYTE)
+        if (!ft->signal.size || ft->signal.size == SOX_SIZE_BYTE)
             ft->signal.size = SOX_SIZE_BYTE;
         else
             sox_warn("User options overriding size read in .wav header");
@@ -770,7 +770,7 @@ static int sox_wavstartread(sox_format_t * ft)
         break;
         
     case SOX_SIZE_16BIT:
-        if (ft->signal.size == -1 || ft->signal.size == SOX_SIZE_16BIT)
+        if (!ft->signal.size || ft->signal.size == SOX_SIZE_16BIT)
             ft->signal.size = SOX_SIZE_16BIT;
         else
             sox_warn("User options overriding size read in .wav header");
@@ -781,7 +781,7 @@ static int sox_wavstartread(sox_format_t * ft)
         break;
         
     case SOX_SIZE_24BIT:
-        if (ft->signal.size == -1 || ft->signal.size == SOX_SIZE_24BIT)
+        if (!ft->signal.size || ft->signal.size == SOX_SIZE_24BIT)
             ft->signal.size = SOX_SIZE_24BIT;
         else
             sox_warn("User options overriding size read in .wav header");
@@ -792,7 +792,7 @@ static int sox_wavstartread(sox_format_t * ft)
         break;
         
     case SOX_SIZE_32BIT:
-        if (ft->signal.size == -1 || ft->signal.size == SOX_SIZE_32BIT)
+        if (!ft->signal.size || ft->signal.size == SOX_SIZE_32BIT)
             ft->signal.size = SOX_SIZE_32BIT;
         else
             sox_warn("User options overriding size read in .wav header");

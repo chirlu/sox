@@ -22,9 +22,6 @@ typedef struct alsa_priv
 
 static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
 {
-    if (ft->signal.size == -1)
-        ft->signal.size = SOX_SIZE_16BIT;
-
     if (ft->signal.size != SOX_SIZE_16BIT)
     {
         sox_report("trying for word samples.");
@@ -36,11 +33,13 @@ static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
     {
         if (ft->signal.size == SOX_SIZE_16BIT)
         {
+          if (ft->signal.encoding != SOX_ENCODING_UNKNOWN)
             sox_report("driver supports only signed and unsigned samples.  Changing to signed.");
             ft->signal.encoding = SOX_ENCODING_SIGN2;
         }
         else
         {
+          if (ft->signal.encoding != SOX_ENCODING_UNKNOWN)
             sox_report("driver supports only signed and unsigned samples.  Changing to unsigned.");
             ft->signal.encoding = SOX_ENCODING_UNSIGNED;
         }
@@ -70,12 +69,12 @@ static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
         if ((snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_U16)) ||
             (snd_pcm_format_mask_test(fmask, SND_PCM_FORMAT_S16)))
         {
-            sox_report("driver doesn't supported %s samples.  Changing to words.", sox_sizes_str[(unsigned char)ft->signal.size]);
+            sox_report("driver doesn't supported %s samples.  Changing to words.", sox_sizes_str[ft->signal.size]);
             ft->signal.size = SOX_SIZE_16BIT;
         }
         else
         {
-            sox_report("driver doesn't supported %s samples.  Changing to bytes.", sox_sizes_str[(unsigned char)ft->signal.size]);
+            sox_report("driver doesn't supported %s samples.  Changing to bytes.", sox_sizes_str[ft->signal.size]);
             ft->signal.size = SOX_SIZE_BYTE;
         }
     }
@@ -166,7 +165,7 @@ static int get_format(sox_format_t * ft, snd_pcm_format_mask_t *fmask, int *fmt)
     }
     else {
         sox_fail_errno(ft,SOX_EFMT,"ALSA driver does not support %s %s output",
-                      sox_encodings_str[(unsigned char)ft->signal.encoding], sox_sizes_str[(unsigned char)ft->signal.size]);
+                      sox_encodings_str[(unsigned char)ft->signal.encoding], sox_sizes_str[ft->signal.size]);
         return SOX_EOF;
     }
     return 0;
@@ -185,6 +184,9 @@ static int sox_alsasetup(sox_format_t * ft, snd_pcm_stream_t mode)
     snd_pcm_uframes_t period_size, period_size_min, period_size_max;
     int dir;
     snd_pcm_format_mask_t *fmask = NULL;
+    sox_signalinfo_t client_signal = ft->signal;
+
+    set_signal_defaults(&ft->signal);
 
     if ((err = snd_pcm_open(&(alsa->pcm_handle), ft->filename, 
                             mode, 0)) < 0) 
@@ -257,6 +259,7 @@ static int sox_alsasetup(sox_format_t * ft, snd_pcm_stream_t mode)
     rate = range_limit(ft->signal.rate, min_rate, max_rate);
     if (rate != ft->signal.rate)
     {
+      if (client_signal.rate != 0)
         sox_report("hardware does not support sample rate %g; changing to %i.", ft->signal.rate, rate);
         ft->signal.rate = rate;
     }

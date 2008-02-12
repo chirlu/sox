@@ -62,7 +62,7 @@ typedef struct aupriv {
 
 static void auwriteheader(sox_format_t * ft, sox_size_t data_size);
 
-static int sox_auencodingandsize(uint32_t sun_encoding, sox_encoding_t * encoding, int * size)
+static int sox_auencodingandsize(uint32_t sun_encoding, sox_encoding_t * encoding, unsigned * size)
 {
     switch (sun_encoding) {
     case SUN_ULAW:
@@ -417,16 +417,15 @@ static void auwriteheader(sox_format_t * ft, sox_size_t data_size)
         if (encoding == SUN_ENCODING_UNKNOWN) {
           sox_report("Unsupported output encoding/size for Sun/NeXT header or .AU format not specified.");
           sox_report("Only u-law, A-law, and signed 8/16/24 bits are supported.");
-          if (ft->signal.size > 2) {
+          if (ft->signal.size > SOX_SIZE_16BIT) {
             sox_report("Defaulting to signed 24 bit");
             ft->signal.encoding = SOX_ENCODING_SIGN2;
             ft->signal.size = SOX_SIZE_24BIT;
             encoding = SUN_LIN_24;
           }
-          else if (ft->signal.size == 2) {
+          else if (ft->signal.size == SOX_SIZE_16BIT) {
             sox_report("Defaulting to signed 16 bit");
             ft->signal.encoding = SOX_ENCODING_SIGN2;
-            ft->signal.size = SOX_SIZE_16BIT;
             encoding = SUN_LIN_16;
           }
           else {

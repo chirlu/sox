@@ -1,5 +1,6 @@
 #include "sox_i.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <math.h>
@@ -110,6 +111,13 @@ void sox_format_quit(void)
 #endif
 }
 
+void set_signal_defaults(sox_signalinfo_t * signal)
+{
+  if (!signal->rate    ) signal->rate     = SOX_DEFAULT_RATE;
+  if (!signal->size    ) signal->size     = SOX_DEFAULT_SIZE;
+  if (!signal->channels) signal->channels = SOX_DEFAULT_CHANNELS;
+}
+
 void set_endianness_if_not_already_set(sox_format_t * ft)
 {
   if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT) {
@@ -158,7 +166,7 @@ static int sox_checkformat(sox_format_t * ft)
                 return SOX_EOF;
         }
 
-        if (ft->signal.size == -1)
+        if (!ft->signal.size)
         {
                 sox_fail_errno(ft,SOX_EFMT,"data size was not specified");
                 return SOX_EOF;
@@ -170,9 +178,9 @@ static int sox_checkformat(sox_format_t * ft)
                 return SOX_EOF;
         }
 
-        if ((ft->signal.size <= 0) || (ft->signal.size > SOX_INFO_SIZE_MAX))
+        if (ft->signal.size > SOX_INFO_SIZE_MAX)
         {
-                sox_fail_errno(ft,SOX_EFMT,"data size %d is invalid", ft->signal.size);
+                sox_fail_errno(ft,SOX_EFMT,"data size %u is invalid", ft->signal.size);
                 return SOX_EOF;
         }
 
@@ -207,7 +215,7 @@ sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info,
       sox_fail("Can't open input file `%s': %s", ft->filename, ft->sox_errstr);
       goto input_error;
     }
-    ft->signal.size = -1;
+    ft->signal.size = 0;
     ft->signal.encoding = SOX_ENCODING_UNKNOWN;
     ft->signal.channels = 0;
     ft->signal.compression = HUGE_VAL;
@@ -300,7 +308,7 @@ sox_format_t * sox_open_write(
       sox_fail("Can't open output file `%s': %s", ft->filename, ft->sox_errstr);
       goto output_error;
     }
-    ft->signal.size = -1;
+    ft->signal.size = 0;
     ft->signal.encoding = SOX_ENCODING_UNKNOWN;
     ft->signal.channels = 0;
     ft->signal.compression = HUGE_VAL;
@@ -552,3 +560,87 @@ int sox_seek(sox_format_t * ft, sox_size_t offset, int whence)
     else
         return SOX_EOF; /* FIXME: return SOX_EBADF */
 }
+
+sox_bool sox_is_playlist(char const * filename)
+{
+  return strcaseends(filename, ".m3u") || strcaseends(filename, ".pls");
+}
+
+int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * const listname)
+{
+  sox_bool const is_pls = strcaseends(listname, ".pls");
+  int const comment_char = "#;"[is_pls];
+  size_t text_length = 100;
+  char * text = xmalloc(text_length + 1);
+  char * dirname = xstrdup(listname);
+  char * slash_pos = LAST_SLASH(dirname);
+  FILE * file = xfopen(listname, "r");
+  char * filename;
+  int c, result = SOX_SUCCESS;
+
+  if (!slash_pos)
+    *dirname = '\0';
+  else
+    *slash_pos = '\0';
+
+  if (file == NULL) {
+    sox_fail("Can't open playlist file `%s': %s", listname, strerror(errno));
+    result = SOX_EOF;
+  }
+  else do {
+    size_t i = 0;
+    size_t begin = 0, end = 0;
+
+    while (isspace(c = getc(file)));
+    if (c == EOF)
+      break;
+    while (c != EOF && !strchr("\r\n", c) && c != comment_char) {
+      if (i == text_length)
+        text = xrealloc(text, (text_length <<= 1) + 1);
+      text[i++] = c;
+      if (!strchr(" \t\f", c))
+        end = i;
+      c = getc(file);
+    }
+    if (ferror(file))
+      break;
+    if (c == comment_char) {
+      do c = getc(file);
+      while (c != EOF && !strchr("\r\n", c));
+      if (ferror(file))
+        break;
+    }
+    text[end] = '\0';
+    if (is_pls) {
+      char dummy;
+      if (!strncasecmp(text, "file", 4) && sscanf(text + 4, "%*u=%c", &dummy) == 1)
+        begin = strchr(text + 5, '=') - text + 1;
+      else end = 0;
+    }
+    if (begin != end) {
+      char const * id = text + begin;
+
+      if (!dirname[0] || is_uri(id) || IS_ABSOLUTE(id))
+        filename = xstrdup(id);
+      else {
+        filename = xmalloc(strlen(dirname) + strlen(id) + 2); 
+        sprintf(filename, "%s/%s", dirname, id); 
+      }
+      if (sox_is_playlist(filename))
+        sox_parse_playlist(callback, p, filename);
+      else if (callback(p, filename))
+        c = EOF;
+      free(filename);
+    }
+  } while (c != EOF);
+
+  if (ferror(file)) {
+    sox_fail("Error reading playlist file `%s': %s", listname, strerror(errno));
+    result = SOX_EOF;
+  }
+  if (file) fclose(file);
+  free(text);
+  free(dirname);
+  return result;
+}
+

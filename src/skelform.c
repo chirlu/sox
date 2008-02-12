@@ -58,8 +58,8 @@ static int startread(sox_format_t * ft)
    * If your format contains a header with format information
    * then you should set it here.
    */
-  ft->signal.rate =  44100;
-  ft->signal.size = SOX_SIZE_BYTE; /* or WORD ... */
+  ft->signal.rate = 44100; /* or 8000, 16000, 32000, 48000, ... */
+  ft->signal.size = SOX_SIZE_8BIT; /* or 16BIT ... */
   ft->signal.encoding = SOX_ENCODING_UNSIGNED; /* or SIGN2 ... */
   ft->signal.channels = 1; /* or 2 or 4 */
   append_comment(&ft->comments, "any comment in file header.");
@@ -91,7 +91,7 @@ static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
       break;
     sample = fgetc(ft->fp);
     switch (ft->signal.size) {
-    case SOX_SIZE_BYTE:
+    case SOX_SIZE_8BIT:
       switch (ft->signal.encoding) {
       case SOX_ENCODING_UNSIGNED:
         *buf++ = SOX_UNSIGNED_8BIT_TO_SAMPLE(sample,);
@@ -136,7 +136,7 @@ static int startwrite(sox_format_t * ft)
   if (ft->signal.rate != 44100)
     sox_fail("Output .skel file must have a sample rate of 44100Hz");
 
-  if (ft->signal.size == -1) {
+  if (ft->signal.size == 0) {
     sox_fail("Did not specify a size for .skel output file");
     return SOX_EOF;
   }
@@ -160,7 +160,7 @@ static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t l
   skelform_t UNUSED sk = (skelform_t)ft->priv;
 
   switch (ft->signal.size) {
-  case SOX_SIZE_BYTE:
+  case SOX_SIZE_8BIT:
     switch (ft->signal.encoding) {
     case SOX_ENCODING_UNSIGNED:
       while (len--) {

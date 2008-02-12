@@ -52,14 +52,14 @@ static int sox_sunstartread(sox_format_t * ft)
 #endif
     char simple_hw=0;
 
+    set_signal_defaults(&ft->signal);
+
     /* Hard-code for now. */
     file->count = 0;
     file->pos = 0;
     file->size = 1024;
     file->buf = xmalloc (file->size);
 
-    if (ft->signal.rate == 0.0) ft->signal.rate = 8000;
-    if (ft->signal.size == -1) ft->signal.size = SOX_SIZE_BYTE;
     if (ft->signal.encoding == SOX_ENCODING_UNKNOWN) ft->signal.encoding = SOX_ENCODING_ULAW;
 
 #ifdef __SVR4
@@ -188,6 +188,8 @@ static int sox_sunstartwrite(sox_format_t * ft)
 #endif
     char simple_hw=0;
 
+    set_signal_defaults(&ft->signal);
+
     /* Hard-code for now. */
     file->count = 0;
     file->pos = 0;
@@ -226,15 +228,12 @@ static int sox_sunstartwrite(sox_format_t * ft)
         }
     }
 
-    if (ft->signal.rate == 0.0) ft->signal.rate = 8000;
-    if (ft->signal.size == -1) ft->signal.size = SOX_SIZE_BYTE;
-    if (ft->signal.encoding == SOX_ENCODING_UNKNOWN) 
-        ft->signal.encoding = SOX_ENCODING_ULAW;
-
     if (ft->signal.size == SOX_SIZE_BYTE) 
     {
         samplesize = 8;
-        if (ft->signal.encoding != SOX_ENCODING_ULAW &&
+        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN) 
+            ft->signal.encoding = SOX_ENCODING_ULAW;
+        else if (ft->signal.encoding != SOX_ENCODING_ULAW &&
             ft->signal.encoding != SOX_ENCODING_ALAW &&
             ft->signal.encoding != SOX_ENCODING_SIGN2) {
             sox_report("Sun Audio driver only supports ULAW, ALAW, and Signed Linear for bytes.");
@@ -252,7 +251,9 @@ static int sox_sunstartwrite(sox_format_t * ft)
     }
     else if (ft->signal.size == SOX_SIZE_16BIT) {
         samplesize = 16;
-        if (ft->signal.encoding != SOX_ENCODING_SIGN2) {
+        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN) 
+            ft->signal.encoding = SOX_ENCODING_SIGN2;
+        else if (ft->signal.encoding != SOX_ENCODING_SIGN2) {
             sox_report("Sun Audio driver only supports Signed Linear for words.");
             sox_report("Forcing to Signed Linear");
             ft->signal.encoding = SOX_ENCODING_SIGN2;
@@ -261,11 +262,11 @@ static int sox_sunstartwrite(sox_format_t * ft)
     else {
         sox_report("Sun Audio driver only supports bytes and words");
         ft->signal.size = SOX_SIZE_16BIT;
+        ft->signal.encoding = SOX_ENCODING_SIGN2;
         samplesize = 16;
     }
 
-    if (ft->signal.channels == 0) ft->signal.channels = 1;
-    else if (ft->signal.channels > 1) ft->signal.channels = 2;
+    if (ft->signal.channels > 1) ft->signal.channels = 2;
 
     /* Read in old values, change to what we need and then send back */
     if (ioctl(fileno(ft->fp), AUDIO_GETINFO, &audio_if) < 0) {

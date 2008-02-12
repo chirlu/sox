@@ -221,7 +221,7 @@ channels=2
 samples=10000000
 timeIO s1 u1 s2 u2 s3 u3 s4 u4 raw Raw au wav aiff aifc caf sph # FIXME?: flac dat
 
-${bindir}/sox -c 1 -n output.u1 synth .01 vol .5
+${bindir}/sox -c 1 -r 44100 -n output.u1 synth .01 vol .5
 if [ `wc -c <output.u1` = 441 ]; then
   echo "ok     synth size"
 else

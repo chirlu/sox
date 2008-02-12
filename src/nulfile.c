@@ -1,5 +1,5 @@
 /*
- * File format: null   (c) 2006-7 SoX contributors
+ * File format: null   (c) 2006-8 SoX contributors
  * Based on an original idea by Carsten Borchardt
  *
  * This library is free software; you can redistribute it and/or modify it
@@ -22,20 +22,19 @@
 
 static int startread(sox_format_t * ft)
 {
-  /* If format parameters are not given, set somewhat arbitrary
-   * (but commonly used) defaults: */
   if (!ft->signal.rate) {
-    ft->signal.rate = 44100;
+    ft->signal.rate = SOX_DEFAULT_RATE;
     sox_report("sample rate not specified; using %g", ft->signal.rate);
   }
-  if (ft->signal.size <= 0) {
-    ft->signal.size = SOX_SIZE_16BIT;
+  if (!ft->signal.size) {
+    ft->signal.size = SOX_DEFAULT_SIZE;
     sox_report("precision not specified; using %s", sox_size_bits_str[ft->signal.size]);
   }
   if (ft->signal.encoding == SOX_ENCODING_UNKNOWN) {
-    ft->signal.encoding = SOX_ENCODING_SIGN2;
+    ft->signal.encoding = SOX_DEFAULT_ENCODING;
     sox_report("encoding not specified; using %s", sox_encodings_str[ft->signal.encoding]);
   }
+  /* Default number of channels is application-dependent */
   return SOX_SUCCESS;
 }
 

@@ -66,7 +66,7 @@ static void filter_array_create(filter_array_t * p, double rate,
     double scale, double offset)
 {
   size_t i;
-  double r = rate * (1 / 44100.);
+  double r = rate * (1 / 44100.); /* Compensate for actual sample-rate */
 
   for (i = 0; i < array_length(comb_lengths); ++i, offset = -offset)
     filter_create(&p->comb[i], scale * r * (comb_lengths[i] + stereo_adjust * offset) + .5);

@@ -11,7 +11,7 @@
 #include "sox_i.h"
  
 static int raw_start(sox_format_t * ft) {
-  return sox_rawstart(ft,sox_false,sox_false,SOX_ENCODING_UNKNOWN,-1);
+  return sox_rawstart(ft, sox_false, sox_false, SOX_ENCODING_UNKNOWN, 0);
 }
 
 const sox_format_handler_t *sox_raw_format_fn(void);
@@ -21,8 +21,8 @@ const sox_format_handler_t *sox_raw_format_fn(void)
   static char const * names[] = {"raw", NULL};
   static sox_format_handler_t handler = {
     names, SOX_FILE_SEEK,
-    raw_start, sox_rawread , sox_format_nothing,
-    raw_start, sox_rawwrite, sox_format_nothing,
+    raw_start, sox_rawread , NULL,
+    raw_start, sox_rawwrite, NULL,
     sox_rawseek
   };
   return &handler;

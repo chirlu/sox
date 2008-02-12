@@ -54,7 +54,7 @@ int sox_rawseek(sox_format_t * ft, sox_size_t offset)
 
 /* Works nicely for starting read and write; sox_rawstart{read,write}
    are #defined in sox_i.h */
-int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size)
+int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, unsigned size)
 {
   if (default_rate && ft->signal.rate == 0) {
     sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
@@ -74,9 +74,8 @@ int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_chan
     else ft->signal.encoding = encoding;
   }
 
-  if (size != -1) {
-    if (ft->mode == 'r' &&
-        ft->signal.size != -1 && ft->signal.size != size)
+  if (size != 0) {
+    if (ft->mode == 'r' && ft->signal.size != 0 && ft->signal.size != size)
       sox_report("'%s': Format options overriding file-type sample-size", ft->filename);
     else ft->signal.size = size;
   }

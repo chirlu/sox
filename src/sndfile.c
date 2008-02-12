@@ -77,7 +77,7 @@ static void drain_log_buffer(sox_format_t * ft)
    is encoding if conversion was made, or SOX_ENCODING_UNKNOWN for
    invalid input. If the libsndfile subtype can't be represented in
    SoX types, use 16-bit signed. */
-static sox_encoding_t sox_encoding_and_size(int format, int *size)
+static sox_encoding_t sox_encoding_and_size(int format, unsigned * size)
 {
   *size = -1;                   /* Default */
   format &= SF_FORMAT_SUBMASK;

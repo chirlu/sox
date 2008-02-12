@@ -145,6 +145,7 @@ int sox_padbytes(sox_format_t * ft, sox_size_t n);
 size_t sox_writebuf(sox_format_t * ft, void const *buf, sox_size_t len);
 int sox_reads(sox_format_t * ft, char *c, sox_size_t len);
 int sox_writes(sox_format_t * ft, char const * c);
+void set_signal_defaults(sox_signalinfo_t * signal);
 void set_endianness_if_not_already_set(sox_format_t * ft);
 
 sox_size_t sox_read_b_buf(sox_format_t * ft, uint8_t *buf, sox_size_t len);
@@ -328,8 +329,8 @@ sox_size_t sox_format_nothing_read(sox_format_t * ft, sox_sample_t *buf, sox_siz
 sox_size_t sox_format_nothing_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len);
 int sox_format_nothing_seek(sox_format_t * ft, sox_size_t offset);
 
-int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, int size);
-#define sox_rawstartread(ft) sox_rawstart(ft, sox_false, sox_false, SOX_ENCODING_UNKNOWN, -1)
+int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, unsigned size);
+#define sox_rawstartread(ft) sox_rawstart(ft, sox_false, sox_false, SOX_ENCODING_UNKNOWN, 0)
 #define sox_rawstartwrite sox_rawstartread
 #define sox_rawstopread sox_format_nothing
 #define sox_rawstopwrite sox_format_nothing

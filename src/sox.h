@@ -208,11 +208,11 @@ typedef enum {SOX_OPTION_NO, SOX_OPTION_YES, SOX_OPTION_DEFAULT} sox_option_t;
 
 typedef struct sox_signalinfo
 {
-    sox_rate_t rate;       /* sampling rate */
-    int size;             /* compressed or uncompressed datum size */
+    sox_rate_t rate;         /* sampling rate */
+    unsigned channels;       /* number of sound channels */
+    unsigned size;           /* compressed or uncompressed datum size */
     sox_encoding_t encoding; /* format of sample numbers */
-    unsigned channels;    /* number of sound channels */
-    double compression;   /* compression factor (where applicable) */
+    double compression;      /* compression factor (where applicable) */
 
     /* There is a delineation between these vars being tri-state and
      * effectively boolean.  Logically the line falls between setting
@@ -231,6 +231,12 @@ typedef struct sox_signalinfo
     sox_option_t reverse_nibbles;
     sox_option_t reverse_bits;
 } sox_signalinfo_t;
+
+/* Defaults for common hardware */
+#define SOX_DEFAULT_CHANNELS  2
+#define SOX_DEFAULT_RATE      48000
+#define SOX_DEFAULT_SIZE      SOX_SIZE_16BIT
+#define SOX_DEFAULT_ENCODING  SOX_ENCODING_SIGN2
 
 /* Loop parameters */
 
@@ -452,5 +458,9 @@ char const * sox_parsesamples(sox_rate_t rate, const char *str, sox_size_t *samp
  */
 sox_size_t sox_trim_get_start(sox_effect_t * effp);
 void sox_trim_clear_start(sox_effect_t * effp);
+
+typedef int (* sox_playlist_callback_t)(void *, char *);
+sox_bool sox_is_playlist(char const * filename);
+int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * const listname);
 
 #endif

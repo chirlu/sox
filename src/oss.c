@@ -46,9 +46,9 @@ static int ossinit(sox_format_t * ft)
     int sampletype, samplesize, dsp_stereo;
     int tmp, rc;
     sox_fileinfo_t *file = (sox_fileinfo_t *)ft->priv;
+    sox_signalinfo_t client_signal = ft->signal;
 
-    if (ft->signal.rate == 0.0) ft->signal.rate = 8000;
-    if (ft->signal.size == -1) ft->signal.size = SOX_SIZE_BYTE;
+    set_signal_defaults(&ft->signal);
     if (ft->signal.size == SOX_SIZE_BYTE) {
         sampletype = AFMT_U8;
         samplesize = 8;
@@ -88,8 +88,7 @@ static int ossinit(sox_format_t * ft)
         sox_report("Forcing to signed linear word");
     }
 
-    if (ft->signal.channels == 0) ft->signal.channels = 1;
-    else if (ft->signal.channels > 2) ft->signal.channels = 2;
+    if (ft->signal.channels > 2) ft->signal.channels = 2;
 
     if (ioctl(fileno(ft->fp), SNDCTL_DSP_RESET, 0) < 0)
     {
@@ -159,6 +158,7 @@ static int ossinit(sox_format_t * ft)
 
     if (tmp != dsp_stereo)
     {
+      if (client_signal.channels != 0)
         sox_warn("Sound card appears to only support %d channels.  Overriding format", tmp+1);
         ft->signal.channels = tmp + 1;
     }
@@ -176,6 +176,7 @@ static int ossinit(sox_format_t * ft)
          */
         if ((int)ft->signal.rate - tmp > (tmp * .01) || 
             tmp - (int)ft->signal.rate > (tmp * .01)) {
+          if (client_signal.rate != 0)
             sox_warn("Unable to set audio speed to %g (set to %d)",
                      ft->signal.rate, tmp);
             ft->signal.rate = tmp;

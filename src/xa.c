@@ -132,7 +132,7 @@ static int sox_xastartread(sox_format_t * ft)
     /* Populate the sox_soundstream structure */
     ft->signal.encoding = SOX_ENCODING_SIGN2;
     
-    if (ft->signal.size == -1 || ft->signal.size == (xa->header.bits >> 3)) {
+    if (!ft->signal.size || ft->signal.size == (xa->header.bits >> 3)) {
         ft->signal.size = xa->header.bits >> 3;
     } else {
         sox_report("User options overriding size read in .xa header");

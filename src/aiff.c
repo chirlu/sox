@@ -422,7 +422,7 @@ int sox_aiffstartread(sox_format_t * ft)
                 if ((ft->signal.channels == 0)
                         || (ft->signal.rate == 0)
                         || (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
-                        || (ft->signal.size == -1)) {
+                        || (ft->signal.size == 0)) {
                   sox_report("You must specify # channels, sample rate, signed/unsigned,");
                   sox_report("and 8/16 on the command line.");
                   sox_fail_errno(ft,SOX_EFMT,"Bogus AIFF file: no COMM section.");
@@ -716,7 +716,7 @@ int sox_aiffstopwrite(sox_format_t * ft)
 
         /* If we've written an odd number of bytes, write a padding
            NUL */
-        if (aiff->nsamples % 2 == 1 && ft->signal.size == 1 && ft->signal.channels == 1)
+        if (aiff->nsamples % 2 == 1 && ft->signal.size == SOX_SIZE_8BIT && ft->signal.channels == 1)
         {
             sox_sample_t buf = 0;
             sox_rawwrite(ft, &buf, 1);
@@ -922,7 +922,7 @@ int sox_aifcstopwrite(sox_format_t * ft)
 
         /* If we've written an odd number of bytes, write a padding
            NUL */
-        if (aiff->nsamples % 2 == 1 && ft->signal.size == 1 && ft->signal.channels == 1)
+        if (aiff->nsamples % 2 == 1 && ft->signal.size == SOX_SIZE_8BIT && ft->signal.channels == 1)
         {
             sox_sample_t buf = 0;
             sox_rawwrite(ft, &buf, 1);
