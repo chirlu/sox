@@ -556,8 +556,8 @@ static char const * device_name(char const * const type)
 
 static char const * set_default_device(file_t f)
 {
-  /* Default audio device type in order of preference: */
-  if (!f->filetype) f->filetype = getenv("AUDIOTYPE");
+  /* Default audio driver type in order of preference: */
+  if (!f->filetype) f->filetype = getenv("AUDIODRIVER");
   if (!f->filetype && sox_find_format("alsa", sox_false)) f->filetype = "alsa";
   if (!f->filetype && sox_find_format("oss" , sox_false)) f->filetype = "oss";
   if (!f->filetype && sox_find_format("sunau",sox_false)) f->filetype = "sunau";

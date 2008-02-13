@@ -97,9 +97,12 @@ use the same data format as passed in to SoX.
 It works for both playing and recording audio files.  When playing audio
 files it attempts to set up the ALSA driver to use the same format as the
 input file.  It is suggested to always override the output values to use
-the highest quality format your ALSA system can handle.  Example:
+the highest quality format your ALSA system can handle.  Examples:
 .EX
+	sox infile -t alsa
 	sox infile -t alsa default
+	sox infile -t alsa hw:0
+	sox -t alsa hw:1 outfile
 .EE
 .TP
 \&\fB.amr\-nb\fR
