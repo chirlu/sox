@@ -1087,8 +1087,30 @@ The following commands cut out the first verse:
 Provided your arithmetic is good enough, multiple splices can be
 performed with a single
 .B splice
-invocation.
-For example, two splices are required to `copy and paste' audio.
+invocation.  For example:
+.EX
+#!/bin/sh
+# Audio Copy and Paste Over
+# acpo infile copy-start copy-stop paste-over-start outfile
+# All times measured in samples.
+rate=\`soxi -r "$1"\`
+e=\`expr $rate '*' 5 / 1000\`  # Using default excess
+l=$e                         # and leaway.
+sox "$1" piece.au trim \`expr $2 - $e - $l\`s \\
+	\`expr $3 - $2 + $e + $l + $e\`s
+sox "$1" part1.au trim 0 \`expr $4 + $e\`s
+sox "$1" part2.au trim \`expr $4 + $3 - $2 - $e - $l\`s
+sox part1.au piece.au part2.au "$5" splice \\
+	\`expr $4 + $e\`s \\
+	\`expr $4 + $e + $3 - $2 + $e + $l + $e\`s
+.EE
+In the above Bourne shell script,
+two splices are used to `copy and paste' audio:
+.TS
+center;
+c8 c8 c.
+*	*	*
+.TE
 .SP
 It is also possible to use this effect to perform general cross-fades, e.g. to
 join two songs.
