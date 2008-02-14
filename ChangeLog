@@ -21,6 +21,7 @@ Other new features:
 
   o Command line support for multiple file comments.  (robs)
   o Added soxi utility to extract/display file header fields.  (robs)
+  o Added pkg-config support. (Pascal Giard)
 
 Bug fixes:
 

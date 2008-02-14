@@ -412,7 +412,7 @@ AC_SUBST(LADSPA_PATH)
 
 dnl Generate output files.
 AX_CREATE_STDINT_H(src/soxstdint.h)
-AC_CONFIG_FILES(Makefile src/Makefile libgsm/Makefile lpc10/Makefile)
+AC_CONFIG_FILES(Makefile src/Makefile libgsm/Makefile lpc10/Makefile sox.pc)
 AC_OUTPUT
 
 if test "$found_libgsm" = "yes"; then
