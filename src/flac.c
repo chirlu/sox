@@ -249,7 +249,7 @@ assert_static(sizeof(Encoder) <= SOX_MAX_FILE_PRIVSIZE, /* else */ Encoder__PRIV
 
 
 
-static FLAC__StreamEncoderWriteStatus flac_stream_encoder_write_callback(FLAC__StreamEncoder const * const flac, const FLAC__byte buffer[], unsigned const bytes, unsigned const samples, unsigned const current_frame, void * const client_data)
+static FLAC__StreamEncoderWriteStatus flac_stream_encoder_write_callback(FLAC__StreamEncoder const * const flac, const FLAC__byte buffer[], size_t const bytes, unsigned const samples, unsigned const current_frame, void * const client_data)
 {
   sox_format_t * const ft = (sox_format_t *) client_data;
   (void) flac, (void) samples, (void) current_frame;

@@ -26,6 +26,7 @@ Other new features:
 Bug fixes:
 
   o Fix [1864216] comments mangled when writing ogg-vorbis.  (robs)
+  o Fix crash on 64-bit arch with tempo & key effects.  (Sami Liedes)
 
 Internal improvements:
 

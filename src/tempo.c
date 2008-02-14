@@ -247,7 +247,9 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
                 sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
   priv_t * p = (priv_t *) effp->priv;
-  sox_size_t i, odone = *osamp /= effp->ininfo.channels;
+  sox_size_t i;
+  /* odone must be size_t 'cos tempo_output arg. is. (!= sox_size_t on amd64) */
+  size_t odone = *osamp /= effp->ininfo.channels;
   float const * s = tempo_output(p->tempo, NULL, &odone);
 
   for (i = 0; i < odone * effp->ininfo.channels; ++i)
