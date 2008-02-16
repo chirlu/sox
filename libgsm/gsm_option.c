@@ -4,7 +4,7 @@
  * details.  THERE IS ABSOLUTELY NO WARRANTY FOR THIS SOFTWARE.
  */
 
-/* $Header: /cvsroot/sox/sox/libgsm/gsm_option.c,v 1.1 2007/09/06 16:50:55 cbagwell Exp $ */
+/* $Header: /cvsroot/sox/sox/libgsm/gsm_option.c,v 1.2 2008/02/16 18:30:03 robs Exp $ */
 
 #include "private.h"
 
@@ -62,6 +62,7 @@ int gsm_option (gsm r, int opt, int * val)
 		break;
 
 	default:
+                (void)r, (void)val;
 		break;
 	}
 	return result;
