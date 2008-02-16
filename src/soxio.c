@@ -50,8 +50,10 @@ static int init_format(const char *file, lt_ptr data)
   if (start && (start += sizeof(prefix) - 1) < end) {
     int ret = snprintf(fnname, MAX_NAME_LEN, "sox_%.*s_format_fn", end - start, start);
     if (ret > 0 && ret < MAX_NAME_LEN) {
-      sox_format_fns[sox_formats].fn = (sox_format_fn_t)lt_dlsym(lth, fnname);
-      sox_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, (void *)lth, (void *)sox_format_fns[sox_formats].fn);
+      union {sox_format_fn_t fn; lt_ptr ptr;} ltptr;
+      ltptr.ptr = lt_dlsym(lth, fnname);
+      sox_format_fns[sox_formats].fn = ltptr.fn;
+      sox_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, (void *)lth, ltptr.ptr);
       if (sox_format_fns[sox_formats].fn)
         sox_formats++;
     }
@@ -422,6 +424,10 @@ sox_size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
   if (ft->signal.reverse_bytes) \
     uw = sox_swap ## type(uw);
 
+#define TWIDDLE_FLOAT(f, type) \
+  if (ft->signal.reverse_bytes) \
+    sox_swapf(&f);
+
 /* N.B. This macro doesn't work for unaligned types (e.g. 3-byte
    types). */
 #define READ_FUNC(type, size, ctype, twiddle) \
@@ -464,7 +470,7 @@ READ_FUNC(b, 1, uint8_t, TWIDDLE_BYTE)
 READ_FUNC(w, 2, uint16_t, TWIDDLE_WORD)
 READ_FUNC_UNPACK(3, 3, uint24_t, TWIDDLE_WORD)
 READ_FUNC(dw, 4, uint32_t, TWIDDLE_WORD)
-READ_FUNC(f, sizeof(float), float, TWIDDLE_WORD)
+READ_FUNC(f, sizeof(float), float, TWIDDLE_FLOAT)
 READ_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
 
 /* N.B. This macro doesn't work for unaligned types (e.g. 3-byte
@@ -510,21 +516,35 @@ WRITE_FUNC(b, 1, uint8_t, TWIDDLE_BYTE)
 WRITE_FUNC(w, 2, uint16_t, TWIDDLE_WORD)
 WRITE_FUNC_PACK(3, 3, uint24_t, TWIDDLE_WORD)
 WRITE_FUNC(dw, 4, uint32_t, TWIDDLE_WORD)
-WRITE_FUNC(f, sizeof(float), float, TWIDDLE_WORD)
+WRITE_FUNC(f, sizeof(float), float, TWIDDLE_FLOAT)
 WRITE_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
 
-#define WRITE1_FUNC(type, sign, ctype) \
+#define WRITE1U_FUNC(type, ctype) \
+  int sox_write ## type(sox_format_t * ft, unsigned d) \
+  { ctype datum = (ctype)d; \
+    return sox_write_ ## type ## _buf(ft, &datum, 1) == 1 ? SOX_SUCCESS : SOX_EOF; \
+  }
+
+#define WRITE1S_FUNC(type, ctype) \
+  int sox_writes ## type(sox_format_t * ft, signed d) \
+  { ctype datum = (ctype)d; \
+    return sox_write_ ## type ## _buf(ft, &datum, 1) == 1 ? SOX_SUCCESS : SOX_EOF; \
+  }
+
+#define WRITE1_FUNC(type, ctype) \
   int sox_write ## type(sox_format_t * ft, ctype datum) \
   { \
     return sox_write_ ## type ## _buf(ft, &datum, 1) == 1 ? SOX_SUCCESS : SOX_EOF; \
   }
 
-WRITE1_FUNC(b, u, uint8_t)
-WRITE1_FUNC(w, u, uint16_t)
-WRITE1_FUNC(3, u, uint24_t)
-WRITE1_FUNC(dw, u, uint32_t)
-WRITE1_FUNC(f, su, float)
-WRITE1_FUNC(df, su, double)
+WRITE1U_FUNC(b, uint8_t)
+WRITE1U_FUNC(w, uint16_t)
+WRITE1U_FUNC(3, uint24_t)
+WRITE1U_FUNC(dw, uint32_t)
+WRITE1S_FUNC(b, uint8_t)
+WRITE1S_FUNC(w, uint16_t)
+WRITE1_FUNC(f, float)
+WRITE1_FUNC(df, double)
 
 /* N.B. The file (if any) may already have been deleted. */
 int sox_close(sox_format_t * ft)

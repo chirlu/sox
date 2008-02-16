@@ -188,15 +188,15 @@ static void wvewriteheader(sox_format_t * ft)
     /* Null terminate string */
     sox_writeb(ft, 0);
 
-    sox_writew(ft, version);
+    sox_writesw(ft, version);
 
     sox_writedw(ft, p->length);
-    sox_writew(ft, p->padding);
-    sox_writew(ft, p->repeats);
+    sox_writesw(ft, p->padding);
+    sox_writesw(ft, p->repeats);
 
-    sox_writew(ft, zero);
-    sox_writew(ft, zero);
-    sox_writew(ft, zero);
+    sox_writesw(ft, zero);
+    sox_writesw(ft, zero);
+    sox_writesw(ft, zero);
 }
 
 /* Psion .wve */

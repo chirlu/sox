@@ -382,7 +382,7 @@ static int sox_austopwrite(sox_format_t * ft)
         return(SOX_SUCCESS);
 }
 
-static unsigned sox_ausunencoding(int size, sox_encoding_t encoding)
+static unsigned sox_ausunencoding(unsigned size, sox_encoding_t encoding)
 {
         unsigned sun_encoding;
 

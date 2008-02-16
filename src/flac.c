@@ -273,7 +273,7 @@ static FLAC__StreamEncoderSeekStatus flac_stream_encoder_seek_callback(FLAC__Str
   (void) encoder;
   if (!ft->seekable)
     return FLAC__STREAM_ENCODER_SEEK_STATUS_UNSUPPORTED;
-  else if (sox_seeki(ft, (sox_size_t)absolute_byte_offset, SEEK_SET) != SOX_SUCCESS)
+  else if (sox_seeki(ft, (sox_ssize_t)absolute_byte_offset, SEEK_SET) != SOX_SUCCESS)
     return FLAC__STREAM_ENCODER_SEEK_STATUS_ERROR;
   else
     return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
@@ -400,7 +400,7 @@ static int start_write(sox_format_t * const ft)
     }
     {
 #if FLAC_API_VERSION_CURRENT >= 8
-      if (!FLAC__metadata_object_seektable_template_append_spaced_points_by_samples(encoder->metadata[encoder->num_metadata], 10 * ft->signal.rate, (FLAC__uint64)(ft->length/ft->signal.channels))) {
+      if (!FLAC__metadata_object_seektable_template_append_spaced_points_by_samples(encoder->metadata[encoder->num_metadata], (unsigned)(10 * ft->signal.rate + .5), (FLAC__uint64)(ft->length/ft->signal.channels))) {
 #else
       sox_size_t samples = 10 * ft->signal.rate;
       sox_size_t total_samples = ft->length/ft->signal.channels;

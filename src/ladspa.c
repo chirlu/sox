@@ -87,7 +87,7 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
 {
   ladspa_t l_st = (ladspa_t)effp->priv;
   char *path;
-  LADSPA_Descriptor_Function l_fn;
+  union {LADSPA_Descriptor_Function fn; lt_ptr ptr;} ltptr;
   unsigned long index = 0, i;
   double arg;
 
@@ -111,26 +111,26 @@ static int sox_ladspa_getopts(sox_effect_t *effp, int n, char **argv)
   }
 
   /* Get descriptor function */
-  if ((l_fn = (LADSPA_Descriptor_Function)lt_dlsym(l_st->lth, "ladspa_descriptor")) == NULL) {
+  if ((ltptr.ptr = lt_dlsym(l_st->lth, "ladspa_descriptor")) == NULL) {
     sox_fail("could not find ladspa_descriptor");
     return SOX_EOF;
   }
 
   /* If no plugins in this module, complain */
-  if (l_fn(0) == NULL) {
+  if (ltptr.fn(0) == NULL) {
     sox_fail("no plugins found");
     return SOX_EOF;
   }
 
   /* Get first plugin descriptor */
-  l_st->desc = l_fn(0);
+  l_st->desc = ltptr.fn(0);
   assert(l_st->desc);           /* We already know this will work */
 
   /* If more than one plugin, or first argument is not a number, try
      to use first argument as plugin label. */
-  if (n > 0 && (l_fn(1) != NULL || !sscanf(argv[0], "%lf", &arg))) {
+  if (n > 0 && (ltptr.fn(1) != NULL || !sscanf(argv[0], "%lf", &arg))) {
     while (l_st->desc && strcmp(l_st->desc->Label, argv[0]) != 0)
-      l_st->desc = l_fn(++index);
+      l_st->desc = ltptr.fn(++index);
     if (l_st->desc == NULL) {
       sox_fail("no plugin called `%s' found", argv[0]);
       return SOX_EOF;

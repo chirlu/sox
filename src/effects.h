@@ -43,8 +43,8 @@
   EFFECT(rabbit)
 #endif
   EFFECT(rate)
-  EFFECT(repeat)
   EFFECT(remix)
+  EFFECT(repeat)
   EFFECT(resample)
   EFFECT(reverb)
   EFFECT(reverse)

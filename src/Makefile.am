@@ -3,7 +3,7 @@
 RM = rm -f 
 
 AM_CPPFLAGS = -DLADSPA_PATH="\"@LADSPA_PATH@\"" -DPKGLIBDIR="\"$(pkglibdir)\""
-AM_CFLAGS = #-Wconversion
+AM_CFLAGS = -Wconversion #-Werror
 
 # Pass flags from --enable-silent-libtool
 LIBTOOL = @LIBTOOL@ @LIBTOOLFLAGS@
@@ -20,7 +20,7 @@ sox_SOURCES = sox.c
 sox_LDADD = libsox.la libsfx.la
 example1_SOURCES = example1.c
 example1_LDADD = libsox.la libsfx.la
-sox_sample_test_SOURCES = sox_sample_test.c
+sox_sample_test_SOURCES = sox_sample_test.c sox_sample_test.h
 
 #############################################
 # libsox Dynamic Libraries for File Formats #
@@ -143,12 +143,12 @@ libsox_fmt_sndfile_la_LIBADD = libsox.la @SNDFILE_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_sndfile.la
 endif
 if HAVE_AMRWB
-libsox_fmt_amr_wb_la_SOURCES = amr-wb.c amr.h
+libsox_fmt_amr_wb_la_SOURCES = amr-wb.c amr.h amr1.h amr2.h
 libsox_fmt_amr_wb_la_LIBADD = libsox.la @AMR_WB_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_amr_wb.la
 endif
 if HAVE_AMRNB
-libsox_fmt_amr_nb_la_SOURCES = amr-nb.c amr.h
+libsox_fmt_amr_nb_la_SOURCES = amr-nb.c amr.h amr1.h amr2.h
 libsox_fmt_amr_nb_la_LIBADD = libsox.la @AMR_NB_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_amr_nb.la
 endif
@@ -158,7 +158,7 @@ libsox_fmt_mp3_la_LIBADD = libsox.la @MP3_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_mp3.la
 endif
 if HAVE_OGG_VORBIS
-libsox_fmt_vorbis_la_SOURCES = vorbis.c
+libsox_fmt_vorbis_la_SOURCES = vorbis.c vorbis1.h
 libsox_fmt_vorbis_la_LIBADD = libsox.la @OGG_LIBS@
 pkglib_LTLIBRARIES += libsox_fmt_vorbis.la
 endif
@@ -245,12 +245,12 @@ if HAVE_SNDFILE
     sox_LDADD += @SNDFILE_LIBS@
 endif
 if HAVE_AMRWB
-    libsox_la_SOURCES += amr-wb.c amr.h
+    libsox_la_SOURCES += amr-wb.c amr.h amr1.h amr2.h
     libsox_la_LIBADD += @AMR_WB_LIBS@
     sox_LDADD += @AMR_WB_LIBS@
 endif
 if HAVE_AMRNB
-    libsox_la_SOURCES += amr-nb.c amr.h
+    libsox_la_SOURCES += amr-nb.c amr.h amr1.h amr2.h
     libsox_la_LIBADD += @AMR_NB_LIBS@
     sox_LDADD += @AMR_NB_LIBS@
 endif
@@ -260,7 +260,7 @@ if HAVE_MP3
     sox_LDADD += @MP3_LIBS@
 endif
 if HAVE_OGG_VORBIS
-    libsox_la_SOURCES += vorbis.c
+    libsox_la_SOURCES += vorbis.c vorbis1.h
     libsox_la_LIBADD += @OGG_LIBS@
     sox_LDADD += @OGG_LIBS@
 endif
@@ -286,7 +286,9 @@ endif
 #end !HAVE_LIBLTDL
 endif
 
-EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat monkey.au monkey.wav sox_sample_test.c amr-wb-test CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake example1.c test-comments
+EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat test-comments \
+	     monkey.au monkey.wav \
+	     amr-wb-test CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake
 
 all: sox$(EXEEXT) play rec soxi sox_sample_test$(EXEEXT) example1$(EXEEXT)
 

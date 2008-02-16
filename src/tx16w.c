@@ -278,9 +278,9 @@ static sox_size_t sox_txwwrite(sox_format_t * ft, const sox_sample_t *buf, sox_s
         else {
             w2 =  *buf++ >> 20;
         }
-        sox_writeb(ft, (w1 >> 4) & 0xFF);
-        sox_writeb(ft, (((w1 & 0x0F) << 4) | (w2 & 0x0F)) & 0xFF);
-        sox_writeb(ft, (w2 >> 4) & 0xFF);
+        sox_writesb(ft, (w1 >> 4) & 0xFF);
+        sox_writesb(ft, (((w1 & 0x0F) << 4) | (w2 & 0x0F)) & 0xFF);
+        sox_writesb(ft, (w2 >> 4) & 0xFF);
         writedone += 3;
     }
     return(len);

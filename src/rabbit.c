@@ -93,7 +93,7 @@ static int start(sox_effect_t * effp)
   r->data = (SRC_DATA *)xcalloc(1, sizeof(SRC_DATA));
   r->data->src_ratio = out_rate / effp->ininfo.rate;
   r->i_alloc = r->o_alloc = 0;
-  r->state = src_new(r->converter_type, effp->ininfo.channels, &err);
+  r->state = src_new(r->converter_type, (int)effp->ininfo.channels, &err);
   if (err) {
     free(r->data);
     sox_fail("cannot initialise rabbit: %s", src_strerror(err));

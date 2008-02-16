@@ -78,9 +78,9 @@ void FFT(unsigned NumSamples,
 /*
  * Applies a windowing function to the data in place
  */
-typedef enum {RECTANGULAR = 0, /* no window */
-              BARTLETT = 1,    /* triangular */
-              HAMMING = 2,
-              HANNING = 3} windowfunc_t;
+typedef enum {RECTANGULAR, /* no window */
+              BARTLETT,    /* triangular */
+              HAMMING,
+              HANNING} windowfunc_t;
 
 void WindowFunc(windowfunc_t whichFunction, int NumSamples, float *data);

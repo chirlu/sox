@@ -1,29 +1,20 @@
-#!/bin/sh -x
+#!/bin/sh
 
 tmp=/tmp/`basename $0`-$$
+
+check_file () {
+  ./soxi -a $1 > $tmp.comments
+  cmp $tmp.comments $2 || exit 1
+}
 
 check () {
   f=$1; shift
   : > $tmp.expected
-  lines=0
   while [ $# != 0 ]; do
     echo "$1" >> $tmp.expected
     shift
-    lines=`expr $lines + 1`
   done
-  ./sox -V $f -n 2> $tmp.info
-  if [ $lines -eq 1 ]; then
-    grep "^Comment " $tmp.info|sed "s/[^']*'//"|sed "s/'$//" > $tmp.comments
-  else
-    head -n -1 $tmp.info|tac|head -n -`grep -n ^Comments $tmp.info|sed "s/:.*//"`|tac>$tmp.comments
-  fi
-  cmp $tmp.comments $tmp.expected || exit 1
-}
-
-check_file () {
-  ./sox -V $1 -n 2> $tmp.info
-  head -n -1 $tmp.info|tac|head -n -`grep -n ^Comments $tmp.info|sed "s/:.*//"`|tac>$tmp.comments
-  cmp $tmp.comments $2 || exit 1
+  check_file $f $tmp.expected
 }
 
 com0="Processed by SoX"

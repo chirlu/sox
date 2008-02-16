@@ -181,12 +181,11 @@ timeIO () {
 
 # Run tests
 
-make sox_sample_test
 ${builddir}/sox_sample_test || exit 1
 
 # Don't test unsupported stuff
-${bindir}/sox --help | grep -q "^SUPPORTED.*\<flac\>" || skip="flac $skip"
-${bindir}/sox --help | grep -q "^SUPPORTED.*\<caf\>" || skip="caf $skip"
+${bindir}/sox --help | grep -q "^AUDIO FILE.*\<flac\>" || skip="flac $skip"
+${bindir}/sox --help | grep -q "^AUDIO FILE.*\<caf\>" || skip="caf $skip"
 
 rate=44100
 samples=23493
@@ -209,17 +208,13 @@ if [ "$all" = "all" ]; then
 fi
 do_singlechannel_formats
 
-${srcdir}/amr-wb-test
+${srcdir}/test-comments
 if [ $? -eq 0 ]; then
-  echo "ok     amr-wb"
+  echo "ok     comments"
 else
-  echo "*FAIL* amr-wb"
+  echo "*FAIL* comments"
   exit 1
 fi
-
-channels=2
-samples=10000000
-timeIO s1 u1 s2 u2 s3 u3 s4 u4 raw Raw au wav aiff aifc caf sph # FIXME?: flac dat
 
 ${bindir}/sox -c 1 -r 44100 -n output.u1 synth .01 vol .5
 if [ `wc -c <output.u1` = 441 ]; then
@@ -228,6 +223,10 @@ else
   echo "*FAIL* synth size"
 fi
 rm output.u1
+
+channels=2
+samples=10000000
+timeIO s1 u1 s2 u2 s3 u3 s4 u4 raw Raw au wav aiff aifc caf sph # FIXME?: flac dat
 
 test -n "$skip" && echo "Skipped: $skip"
 

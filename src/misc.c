@@ -285,16 +285,16 @@ static void sox_swap(char *l, char *f, int n)
 }
 
 /* return swapped 32-bit float */
-float sox_swapf(float f)
+void sox_swapf(float * f)
 {
     union {
         uint32_t dw;
         float f;
     } u;
 
-    u.f= f;
+    u.f= *f;
     u.dw= (u.dw>>24) | ((u.dw>>8)&0xff00) | ((u.dw<<8)&0xff0000) | (u.dw<<24);
-    return u.f;
+    *f = u.f;
 }
 
 uint32_t sox_swap3(uint24_t udw)
@@ -526,7 +526,7 @@ enum_item const * find_enum_text(char const * text, enum_item const * enum_items
   return result;
 }
 
-enum_item const * find_enum_value(int value, enum_item const * enum_items)
+enum_item const * find_enum_value(unsigned value, enum_item const * enum_items)
 {
   for (;enum_items->text; ++enum_items)
     if (value == enum_items->value)
@@ -541,11 +541,11 @@ enum_item const sox_wave_enum[] = {
 
 sox_bool is_uri(char const * text)
 {
-  if (!isalpha(*text))
+  if (!isalpha((int)*text))
     return sox_false;
   ++text;
   do {
-    if (!isalnum(*text) && !strchr("+-.", *text))
+    if (!isalnum((int)*text) && !strchr("+-.", *text))
       return sox_false;
     ++text;
   } while (*text && *text != ':');

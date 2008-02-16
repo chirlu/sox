@@ -84,9 +84,9 @@ typedef struct {
 } PinkNoise;
 
 /* Setup PinkNoise structure for N rows of generators. */
-static void InitializePinkNoise(PinkNoise * pink, int numRows)
+static void InitializePinkNoise(PinkNoise * pink, size_t numRows)
 {
-  int i;
+  size_t i;
   long pmax;
 
   pink->pink_Index = 0;
@@ -227,7 +227,7 @@ static void create_channel(channel_t chan)
 
 
 
-static void set_default_parameters(channel_t chan, int c)
+static void set_default_parameters(channel_t chan, size_t c)
 {
   switch (chan->type) {
     case synth_square:    /* p1 is pulse width */
@@ -286,7 +286,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
   int argn = 0;
 
   /* Get duration if given (if first arg starts with digit) */
-  if (argc && (isdigit(argv[argn][0]) || argv[argn][0] == '.')) {
+  if (argc && (isdigit((int)argv[argn][0]) || argv[argn][0] == '.')) {
     synth->length_str = xmalloc(strlen(argv[argn]) + 1);
     strcpy(synth->length_str, argv[argn]);
     /* Do a dummy parse of to see if it will fail */
@@ -384,7 +384,7 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
 static int start(sox_effect_t * effp)
 {
   synth_t synth = (synth_t) effp->priv;
-  unsigned i;
+  size_t i;
   int shift_for_max = (4 - min(effp->outinfo.size, 4)) << 3;
 
   synth->max = (SOX_SAMPLE_MAX >> shift_for_max) << shift_for_max;
@@ -412,7 +412,7 @@ static int start(sox_effect_t * effp)
 
 
 
-static sox_sample_t do_synth(sox_sample_t synth_input, synth_t synth, int c, double rate)
+static sox_sample_t do_synth(sox_sample_t synth_input, synth_t synth, unsigned c, double rate)
 {
   channel_t chan = &synth->channels[c];
   double synth_out;              /* [-1, 1] */
@@ -559,7 +559,8 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
 {
   synth_t synth = (synth_t) effp->priv;
   unsigned len = min(*isamp, *osamp) / effp->ininfo.channels;
-  unsigned c, done, result = SOX_SUCCESS;
+  unsigned c, done;
+  int result = SOX_SUCCESS;
 
   for (done = 0; done < len && result == SOX_SUCCESS; ++done) {
     for (c = 0; c < effp->ininfo.channels; c++)

@@ -31,7 +31,7 @@ static void sndtwriteheader(sox_format_t * ft, sox_size_t nsamples)
   sox_writedw(ft, nsamples);
   sox_writedw(ft, 0);
   sox_writedw(ft, nsamples);
-  sox_writew(ft, ft->signal.rate);
+  sox_writew(ft, (unsigned)(ft->signal.rate + .5));
   sox_writew(ft, 0);
   sox_writew(ft, 10);
   sox_writew(ft, 4);

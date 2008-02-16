@@ -82,11 +82,11 @@
 
 /* declared in misc.c */
 char const * find_file_extension(char const * pathname);
-typedef struct {char const *text; int value;} enum_item;
+typedef struct {char const *text; unsigned value;} enum_item;
 #define ENUM_ITEM(prefix, item) {#item, prefix##item},
 enum_item const * find_enum_text(
     char const * text, enum_item const * enum_items);
-enum_item const * find_enum_value(int value, enum_item const * enum_items);
+enum_item const * find_enum_value(unsigned value, enum_item const * enum_items);
 typedef enum {SOX_SHORT, SOX_INT, SOX_FLOAT, SOX_DOUBLE} sox_data_t;
 typedef enum {SOX_WAVE_SINE, SOX_WAVE_TRIANGLE} sox_wave_t;
 extern enum_item const sox_wave_enum[];
@@ -163,13 +163,15 @@ sox_size_t sox_write_f_buf(sox_format_t * ft, float *buf, sox_size_t len);
 sox_size_t sox_write_df_buf(sox_format_t * ft, double *buf, sox_size_t len);
 
 #define sox_readb(ft, ub) (sox_read_b_buf(ft, ub, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
-int sox_writeb(sox_format_t * ft, uint8_t ub);
+int sox_writeb(sox_format_t * ft, unsigned ub);
 #define sox_readw(ft, uw) (sox_read_w_buf(ft, uw, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
-int sox_writew(sox_format_t * ft, uint16_t uw);
+int sox_writew(sox_format_t * ft, unsigned uw);
+int sox_writesb(sox_format_t * ft, signed);
+int sox_writesw(sox_format_t * ft, signed);
 #define sox_read3(ft, u3) (sox_read_3_buf(ft, u3, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
-int sox_write3(sox_format_t * ft, uint24_t u3);
+int sox_write3(sox_format_t * ft, unsigned u3);
 #define sox_readdw(ft, udw) (sox_read_dw_buf(ft, udw, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
-int sox_writedw(sox_format_t * ft, uint32_t udw);
+int sox_writedw(sox_format_t * ft, unsigned udw);
 #define sox_readf(ft, f) (sox_read_f_buf(ft, f, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
 int sox_writef(sox_format_t * ft, float f);
 #define sox_readdf(ft, d) (sox_read_df_buf(ft, d, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
@@ -199,7 +201,7 @@ void put16_be(unsigned char **p, int val);
 #define sox_swapw(uw) (((uw >> 8) | (uw << 8)) & 0xffff)
 #define sox_swapdw(udw) ((udw >> 24) | ((udw >> 8) & 0xff00) | ((udw << 8) & 0xff0000) | (udw << 24))
 #endif
-float sox_swapf(float f);
+void sox_swapf(float * f);
 uint32_t sox_swap3(uint32_t udw);
 double sox_swapdf(double d);
 

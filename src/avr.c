@@ -211,7 +211,7 @@ static int sox_avrstartwrite(sox_format_t * ft)
   sox_writew (ft, 0xffff);
 
   /* rate */
-  sox_writedw (ft, ft->signal.rate);
+  sox_writedw(ft, (unsigned)(ft->signal.rate + .5));
 
   /* size */
   /* Don't know the size yet. */

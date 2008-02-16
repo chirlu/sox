@@ -181,7 +181,7 @@ static int sox_svxstartread(sox_format_t * ft)
                     sox_fail_errno (ft,errno,"Can't position channel %d",i);
                     return(SOX_EOF);
                 }
-                if (fseeko(p->ch[i],(off_t)p->nsamples/channels*i,SEEK_CUR))
+                if (fseeko(p->ch[i],(off_t)(p->nsamples/channels*i),SEEK_CUR))
                 {
                     sox_fail_errno (ft,errno,"Can't seek channel %d",i);
                     return(SOX_EOF);
@@ -302,7 +302,10 @@ static int sox_svxstopwrite(sox_format_t * ft)
                 }
                 while (!feof(p->ch[i])) {
                         len = fread(svxbuf, 1, 512, p->ch[i]);
-                        fwrite (svxbuf, 1, len, p->ch[0]);
+                        if (fwrite (svxbuf, 1, len, p->ch[0]) != len) {
+                          sox_fail_errno (ft,errno,"Can't write channel output file %d",i);
+                          return SOX_EOF;
+                        }
                 }
                 fclose (p->ch[i]);
         }

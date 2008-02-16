@@ -460,7 +460,7 @@ static sox_size_t sox_vocwrite(sox_format_t * ft, const sox_sample_t *buf, sox_s
             sox_writeb(ft, uc);
           } else {
             sw = (int) SOX_SAMPLE_TO_SIGNED_16BIT(*buf++, ft->clips);
-            sox_writew(ft,sw);
+            sox_writesw(ft,sw);
           }
           done++;
         }
@@ -480,7 +480,7 @@ static void blockstop(sox_format_t * ft)
         sox_seeki(ft, (sox_ssize_t)v->blockseek, 0); /* seek back to block length */
         sox_seeki(ft, 1, 1);                    /* seek forward one */
         if (v->silent) {
-                sox_writew(ft, v->samples);
+                sox_writesw(ft, v->samples);
         } else {
           if (ft->signal.size == SOX_SIZE_BYTE) {
             if (ft->signal.channels > 1) {
@@ -489,11 +489,11 @@ static void blockstop(sox_format_t * ft)
           }
                 v->samples += 2;                /* adjustment: SBDK pp. 3-5 */
                 datum = (v->samples * ft->signal.size) & 0xff;
-                sox_writeb(ft, (int)datum);       /* low byte of length */
+                sox_writesb(ft, datum);       /* low byte of length */
                 datum = ((v->samples * ft->signal.size) >> 8) & 0xff;
-                sox_writeb(ft, (int)datum);  /* middle byte of length */
+                sox_writesb(ft, datum);  /* middle byte of length */
                 datum = ((v->samples  * ft->signal.size)>> 16) & 0xff;
-                sox_writeb(ft, (int)datum); /* high byte of length */
+                sox_writesb(ft, datum); /* high byte of length */
         }
 }
 
@@ -749,7 +749,7 @@ static void blockstart(sox_format_t * ft)
                 sox_writeb(ft, VOC_SILENCE);     /* Silence block code */
                 sox_writeb(ft, 0);               /* Period length */
                 sox_writeb(ft, 0);               /* Period length */
-                sox_writeb(ft, v->rate);         /* Rate code */
+                sox_writesb(ft, v->rate);         /* Rate code */
         } else {
           if (ft->signal.size == SOX_SIZE_BYTE) {
             /* 8-bit sample section.  By always setting the correct     */
@@ -764,7 +764,7 @@ static void blockstart(sox_format_t * ft)
               sox_writeb(ft, 0);                /* block length = 4 */
               sox_writeb(ft, 0);                /* block length = 4 */
                   v->rate = 65536 - (256000000.0/(2*(float)ft->signal.rate));
-              sox_writew(ft,v->rate);    /* Rate code */
+              sox_writesw(ft,v->rate);    /* Rate code */
               sox_writeb(ft, 0);         /* File is not packed */
               sox_writeb(ft, 1);         /* samples are in stereo */
             }
@@ -773,7 +773,7 @@ static void blockstart(sox_format_t * ft)
             sox_writeb(ft, 0);           /* block length (for now) */
             sox_writeb(ft, 0);           /* block length (for now) */
             v->rate = 256 - (1000000.0/(float)ft->signal.rate);
-            sox_writeb(ft, (int) v->rate);/* Rate code */
+            sox_writesb(ft, (int) v->rate);/* Rate code */
             sox_writeb(ft, 0);           /* 8-bit raw data */
         } else {
             sox_writeb(ft, VOC_DATA_16); /* Voice Data block code */
@@ -783,7 +783,7 @@ static void blockstart(sox_format_t * ft)
             v->rate = ft->signal.rate;
             sox_writedw(ft, (unsigned)v->rate);    /* Rate code */
             sox_writeb(ft, 16);          /* Sample Size */
-            sox_writeb(ft, (signed)ft->signal.channels);   /* Sample Size */
+            sox_writeb(ft, ft->signal.channels);   /* Sample Size */
             sox_writew(ft, 0x0004);      /* Encoding */
             sox_writeb(ft, 0);           /* Unused */
             sox_writeb(ft, 0);           /* Unused */

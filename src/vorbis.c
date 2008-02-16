@@ -71,7 +71,7 @@ static int myclose(void *datasource UNUSED)
 
 static int _fseeko64_wrap(FILE * f, ogg_int64_t off, int whence)
 {
-  int ret = fseeko(f, off, whence);
+  int ret = fseeko(f, (off_t)off, whence);
 
   if (ret == EBADF)
     ret = -1;
@@ -245,8 +245,8 @@ static int write_vorbis_header(sox_format_t * ft, vorbis_enc_t * ve)
   memset(&vc, 0, sizeof(vc));
   vc.comments = num_comments(ft->comments);
   if (vc.comments) {     /* Make the comment structure */
-    vc.comment_lengths = xcalloc(vc.comments, sizeof(*vc.comment_lengths));
-    vc.user_comments = xcalloc(vc.comments, sizeof(*vc.user_comments));
+    vc.comment_lengths = xcalloc((size_t)vc.comments, sizeof(*vc.comment_lengths));
+    vc.user_comments = xcalloc((size_t)vc.comments, sizeof(*vc.user_comments));
     for (i = 0; i < vc.comments; ++i) {
       static const char prepend[] = "Comment=";
       char * text = xcalloc(strlen(prepend) + strlen(ft->comments[i]) + 1, sizeof(*text));
@@ -304,8 +304,7 @@ static int startwrite(sox_format_t * ft)
     }
     quality = ft->signal.compression;
   }
-  vorbis_encode_init_vbr(&ve->vi, (int) ft->signal.channels,
-                         (int) ft->signal.rate, (float) (quality / 10));
+#include "vorbis1.h"
 
   vorbis_analysis_init(&ve->vd, &ve->vi);
   vorbis_block_init(&ve->vd, &ve->vb);
@@ -392,7 +391,7 @@ static int seek(sox_format_t * ft, sox_size_t offset)
 {
   vorbis_t vb = (vorbis_t) ft->priv;
 
-  return ov_pcm_seek(vb->vf, offset / ft->signal.channels)? SOX_EOF:SOX_SUCCESS;
+  return ov_pcm_seek(vb->vf, (ogg_int64_t)(offset / ft->signal.channels))? SOX_EOF:SOX_SUCCESS;
 }
 
 const sox_format_handler_t *sox_vorbis_format_fn(void);

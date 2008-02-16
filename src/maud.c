@@ -276,54 +276,54 @@ static void maudwriteheader(sox_format_t * ft)
         switch (ft->signal.encoding) {
                 
         case SOX_ENCODING_UNSIGNED:
-                sox_writew(ft, (int) 8); /* number of bits per sample as stored in MDAT */
-                sox_writew(ft, (int) 8); /* number of bits per sample after decompression */
-                break;
+          sox_writew(ft, 8); /* number of bits per sample as stored in MDAT */
+          sox_writew(ft, 8); /* number of bits per sample after decompression */
+          break;
                 
         case SOX_ENCODING_SIGN2:
-                sox_writew(ft, (int) 16); /* number of bits per sample as stored in MDAT */
-                sox_writew(ft, (int) 16); /* number of bits per sample after decompression */
-                break;
+          sox_writew(ft, 16); /* number of bits per sample as stored in MDAT */
+          sox_writew(ft, 16); /* number of bits per sample after decompression */
+          break;
                 
         case SOX_ENCODING_ALAW:
         case SOX_ENCODING_ULAW:
-                sox_writew(ft, (int) 8); /* number of bits per sample as stored in MDAT */
-                sox_writew(ft, (int) 16); /* number of bits per sample after decompression */
-                break;
+          sox_writew(ft, 8); /* number of bits per sample as stored in MDAT */
+          sox_writew(ft, 16); /* number of bits per sample after decompression */
+          break;
 
         default:
-                break;
+          break;
         }
         
-        sox_writedw(ft, ft->signal.rate); /* clock source frequency */
+        sox_writedw(ft, (unsigned)(ft->signal.rate + .5)); /* sample rate, Hz */
         sox_writew(ft, (int) 1); /* clock devide */
         
         if (ft->signal.channels == 1) {
-                sox_writew(ft, (int) 0); /* channel information */
-                sox_writew(ft, (int) 1); /* number of channels (mono: 1, stereo: 2, ...) */
+          sox_writew(ft, 0); /* channel information */
+          sox_writew(ft, 1); /* number of channels (mono: 1, stereo: 2, ...) */
         }
         else {
-                sox_writew(ft, (int) 1);
-                sox_writew(ft, (int) 2);
+          sox_writew(ft, 1);
+          sox_writew(ft, 2);
         }
         
         switch (ft->signal.encoding) {
                 
         case SOX_ENCODING_UNSIGNED:
         case SOX_ENCODING_SIGN2:
-                sox_writew(ft, (int) 0); /* no compression */
-                break;
+          sox_writew(ft, 0); /* no compression */
+          break;
                 
         case SOX_ENCODING_ULAW:
-                sox_writew(ft, (int) 3);
-                break;
+          sox_writew(ft, 3);
+          break;
                 
         case SOX_ENCODING_ALAW:
-                sox_writew(ft, (int) 2);
-                break;
+          sox_writew(ft, 2);
+          break;
 
         default:
-                break;
+          break;
         }
         
         sox_writedw(ft, 0); /* reserved */

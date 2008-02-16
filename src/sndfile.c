@@ -77,9 +77,9 @@ static void drain_log_buffer(sox_format_t * ft)
    is encoding if conversion was made, or SOX_ENCODING_UNKNOWN for
    invalid input. If the libsndfile subtype can't be represented in
    SoX types, use 16-bit signed. */
-static sox_encoding_t sox_encoding_and_size(int format, unsigned * size)
+static sox_encoding_t sox_encoding_and_size(unsigned format, unsigned * size)
 {
-  *size = -1;                   /* Default */
+  *size = 0;                   /* Default */
   format &= SF_FORMAT_SUBMASK;
   
   switch (format) {
@@ -208,7 +208,7 @@ static int name_to_format(const char *name)
 }
 
 /* Make libsndfile subtype from sample encoding and size */
-static int sndfile_format(sox_encoding_t encoding, int size)
+static int sndfile_format(sox_encoding_t encoding, unsigned size)
 {
   if (encoding < SOX_ENCODING_SIZE_IS_WORD) {
     switch (encoding) {
@@ -304,7 +304,7 @@ static int startread(sox_format_t * ft)
   }
 
   /* Copy format info */
-  ft->signal.encoding = sox_encoding_and_size(sf->sf_info->format, &ft->signal.size);
+  ft->signal.encoding = sox_encoding_and_size((unsigned)sf->sf_info->format, &ft->signal.size);
   ft->signal.channels = sf->sf_info->channels;
   ft->length = sf->sf_info->frames * sf->sf_info->channels;
 
