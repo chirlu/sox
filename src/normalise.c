@@ -21,6 +21,7 @@
 #include <string.h>
 
 typedef struct norm {
+  sox_bool      individual;
   double        norm0;    /* Multiplier to take to 0dB FSD */
   double        level;    /* Multiplier to take to 'level' */
   sox_sample_t  min, max;
@@ -35,6 +36,7 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
   priv_t p = (priv_t)effp->priv;
   char dummy;
 
+  if (argc && !strcmp(*argv, "-i")) p->individual = sox_true, ++argv, --argc;
   if (argc > 1 || (argc == 1 &&
         (sscanf(*argv, "%lf%c", &p->level, &dummy) != 1 || p->level > 0)))
     return sox_usage(effp);
@@ -46,6 +48,8 @@ static int start(sox_effect_t * effp)
 {
   priv_t p = (priv_t)effp->priv;
 
+  if (!p->individual)
+    effp->flows = 1;
   p->norm0 = p->max = p->min = 0;
   p->tmp_file = tmpfile();
   if (p->tmp_file == NULL) {
@@ -106,7 +110,7 @@ static int stop(sox_effect_t * effp)
 sox_effect_handler_t const * sox_norm_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "norm", "[level]", 0, create, start, flow, drain, stop, NULL
+    "norm", "[-i] [level]", 0, create, start, flow, drain, stop, NULL
   };
   return &handler;
 }
