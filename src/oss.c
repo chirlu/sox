@@ -241,7 +241,7 @@ static sox_format_handler_t sox_oss_format = {
   sox_ossstartwrite,
   sox_rawwrite,
   sox_rawstopwrite,
-  sox_format_nothing_seek
+  NULL
 };
 
 const sox_format_handler_t *sox_oss_format_fn(void);

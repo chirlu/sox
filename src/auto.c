@@ -152,7 +152,7 @@ static int sox_autostartread(sox_format_t * ft)
     free(ft->filetype);
     ft->filetype = xstrdup(type);
     ft->mode = 'r';
-    rc = sox_gettype(ft, sox_true); /* Change ft->h to the new format */
+    rc = sox_gettype(ft, sox_true); /* Change to the new format */
     if (rc != SOX_SUCCESS)
       return (rc);
 
@@ -161,32 +161,14 @@ static int sox_autostartread(sox_format_t * ft)
     return ft->handler->startread? (* ft->handler->startread)(ft) : SOX_SUCCESS;
 }
 
-static int sox_autostartwrite(sox_format_t * ft) 
-{
-        sox_fail_errno(ft,SOX_EFMT,"Type AUTO can only be used for input!");
-        return(SOX_EOF);
-}
-
-static const char *autonames[] = {
-  "auto",
-  NULL
-};
-
-static sox_format_handler_t sox_auto_format = {
-  autonames,
-  SOX_FILE_DEVICE | SOX_FILE_PHONY,
-  sox_autostartread,
-  sox_format_nothing_read,
-  sox_format_nothing,
-  sox_autostartwrite,
-  sox_format_nothing_write,
-  sox_format_nothing,
-  sox_format_nothing_seek
-};
-
 const sox_format_handler_t *sox_auto_format_fn(void);
-
 const sox_format_handler_t *sox_auto_format_fn(void)
 {
-    return &sox_auto_format;
+  static const char *autonames[] = {"magic", NULL};
+
+  static sox_format_handler_t sox_auto_format = {
+    autonames, SOX_FILE_DEVICE | SOX_FILE_PHONY,
+    sox_autostartread, NULL, NULL, NULL, NULL, NULL, NULL
+  };
+  return &sox_auto_format;
 }

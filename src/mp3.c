@@ -352,18 +352,8 @@ static int sox_mp3startread(sox_format_t * ft)
   sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
   return SOX_EOF;
 }
-
-sox_ssize_t sox_mp3read(sox_format_t * ft, sox_sample_t *buf, sox_size_t samp)
-{
-  sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
-  return SOX_EOF;
-}
-
-int sox_mp3stopread(sox_format_t * ft)
-{
-  sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
-  return SOX_EOF;
-}
+#define sox_mp3read NULL
+#define sox_mp3stopread NULL
 #endif /*HAVE_MAD_H*/
 
 #ifdef HAVE_LAME_LAME_H
@@ -535,18 +525,8 @@ static int sox_mp3startwrite(sox_format_t * ft UNUSED)
   sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
   return SOX_EOF;
 }
-
-static sox_size_t sox_mp3write(sox_format_t * ft UNUSED, const sox_sample_t *buf UNUSED, sox_size_t samp UNUSED)
-{
-  sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
-  return 0;
-}
-
-static int sox_mp3stopwrite(sox_format_t * ft)
-{
-  sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
-  return SOX_EOF;
-}
+#define sox_mp3write NULL
+#define sox_mp3stopwrite NULL
 #endif /* HAVE_LAME_LAME_H */
 
 /* MP3 */
@@ -565,7 +545,7 @@ static sox_format_handler_t sox_mp3_format = {
   sox_mp3startwrite,
   sox_mp3write,
   sox_mp3stopwrite,
-  sox_format_nothing_seek
+  NULL
 };
 
 const sox_format_handler_t *sox_mp3_format_fn(void);

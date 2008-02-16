@@ -320,8 +320,6 @@ sox_effect_handler_t const * sox_##name##_effect_fn(void) { \
   return &handler; \
 }
 
-BIQUAD_EFFECT(highp,     hilo1,    "cutoff-frequency", SOX_EFF_DEPRECATED)
-BIQUAD_EFFECT(lowp,      hilo1,    "cutoff-frequency", SOX_EFF_DEPRECATED)
 BIQUAD_EFFECT(highpass,  hilo2,    "[-1|-2] frequency [width[q|o|h]]", 0)
 BIQUAD_EFFECT(lowpass,   hilo2,    "[-1|-2] frequency [width[q|o|h]]", 0)
 BIQUAD_EFFECT(bandpass,  bandpass, "[-c] frequency width[h|q|o]", 0)

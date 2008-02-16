@@ -477,7 +477,7 @@ static sox_format_handler_t sox_hcom_format = {
   sox_hcomstartwrite,
   sox_hcomwrite,
   sox_hcomstopwrite,
-  sox_format_nothing_seek
+  NULL
 };
 
 const sox_format_handler_t *sox_hcom_format_fn(void);

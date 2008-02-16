@@ -33,12 +33,6 @@ typedef struct ao_priv
   sox_size_t buf_size;
 } *ao_priv_t;
 
-static int startread(UNUSED sox_format_t * ft)
-{
-  sox_fail("Cannot read from libao driver");
-  return SOX_EOF;
-}
-
 static int startwrite(sox_format_t * ft)
 {
   ao_priv_t ao = (ao_priv_t)ft->priv;
@@ -143,15 +137,10 @@ static const char *aonames[] = {
 };
 
 static sox_format_handler_t sox_ao_format = {
-  aonames,
-  SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
-  startread,
-  sox_format_nothing_read,
-  sox_format_nothing,
-  startwrite,
-  write,
-  stopwrite,
-  sox_format_nothing_seek
+  aonames, SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
+  NULL, NULL, NULL,
+  startwrite, write, stopwrite,
+  NULL
 };
 
 const sox_format_handler_t *sox_ao_format_fn(void);

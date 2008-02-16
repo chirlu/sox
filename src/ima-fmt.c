@@ -26,7 +26,7 @@ const sox_format_handler_t *sox_ima_format_fn(void)
     sox_ima_start,
     sox_vox_write,
     sox_vox_stopwrite,
-    sox_format_nothing_seek
+    NULL
   };
   return &handler;
 }

@@ -40,7 +40,7 @@ static sox_format_handler_t sox_dvms_format = {
   sox_dvmsstartwrite,
   sox_cvsdwrite,
   sox_dvmsstopwrite,
-  sox_format_nothing_seek
+  NULL
 };
 
 const sox_format_handler_t *sox_dvms_format_fn(void);

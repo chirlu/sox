@@ -250,7 +250,7 @@ static sox_format_handler_t sox_gsm_format = {
   sox_gsmstartwrite,
   sox_gsmwrite,
   sox_gsmstopwrite,
-  sox_format_nothing_seek
+  NULL
 };
 
 const sox_format_handler_t *sox_gsm_format_fn(void);

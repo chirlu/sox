@@ -539,23 +539,6 @@ sox_effect_handler_t const * sox_mixer_effect_fn(void)
   return &handler;
 }
 
-sox_effect_handler_t const * sox_avg_effect_fn(void)
-{
-  static sox_effect_handler_t handler;
-  handler = *sox_mixer_effect_fn();
-  handler.name = "avg";
-  handler.flags |= SOX_EFF_DEPRECATED;
-  return &handler;
-}
-
-sox_effect_handler_t const * sox_pick_effect_fn(void)
-{
-  static sox_effect_handler_t handler;
-  handler = *sox_avg_effect_fn();
-  handler.name = "pick";
-  return &handler;
-}
-
 static int oops_getopts(sox_effect_t * effp, int argc, char * * argv UNUSED) 
 {
   char * args[] = {"1,1,-1,-1"};

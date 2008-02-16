@@ -353,7 +353,7 @@ static sox_format_handler_t sox_maud_format = {
   sox_maudstartwrite,
   sox_maudwrite,
   sox_maudstopwrite,
-  sox_format_nothing_seek
+  NULL
 };
 
 const sox_format_handler_t *sox_maud_format_fn(void);

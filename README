@@ -72,7 +72,7 @@ The sound effects include:
   o Bass tone control
   o Compress and Expand (compand) the dynamic range of a sample
   o Chorus effect
-  o DCShift audio - useful to get the best volume adjustments
+  o DC-shift audio - useful to get the best volume adjustments
   o De-emphasis filter
   o Move sound stage of CD audio to in front of you (for headphone
     use)
@@ -89,7 +89,7 @@ The sound effects include:
   o Pad with silence
   o Pan sound between channels
   o Apply a phaser effect
-  o Change the pitch of a sound file without affecting its speed
+  o Change the key (pitch) of a sound file without affecting its speed
   o Repeat audio data
   o Change sampling rates using several different algorithms. A
      'resample' and 'polyphase' effect use high-grade signal rate
@@ -98,17 +98,16 @@ The sound effects include:
   o Reverse the sound samples (to search for Satanic messages ;-)
   o Detect periods of silence and start and stop processing based on
     it
-  o Change the speed of samples being played (like speeding up the
+  o Change speed (pitch and tempo together)
     motor on a tape recorder)
   o Splice together audio sections
   o Display general stats on a sound sample
-  o Stretch/shorten the duration of a sound file (without affecting
-    pitch)
+  o Change the tempo an audio file (without affecting pitch)
   o Swap stereo channels
   o Create sounds with a simple synthesizer
   o Treble tone control
   o Trim audio data from beginning and end of file
-  o Apply a tremolo (a.k.a. vibrato) effect
+  o Apply a tremolo effect
   o Volume adjustment
   o Noise elimination using frequency profiling
   o Resample using libsamplerate (aka Secret Rabbit code, optional

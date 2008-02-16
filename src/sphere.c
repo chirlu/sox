@@ -278,7 +278,7 @@ static sox_format_handler_t sox_sphere_format = {
   sox_spherestartwrite,
   sox_spherewrite,
   sox_spherestopwrite,
-  sox_format_nothing_seek
+  NULL
 };
 
 const sox_format_handler_t *sox_sphere_format_fn(void);

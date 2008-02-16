@@ -84,12 +84,3 @@ sox_effect_handler_t const * sox_dither_effect_fn(void)
   };
   return &handler;
 }
-
-sox_effect_handler_t const * sox_mask_effect_fn(void)
-{
-  static sox_effect_handler_t handler;
-  handler = *sox_dither_effect_fn();
-  handler.name = "mask";
-  handler.flags |= SOX_EFF_DEPRECATED;
-  return &handler;
-}

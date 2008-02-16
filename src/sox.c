@@ -811,7 +811,7 @@ static void read_comment_file(comments_t * comments, char const * const filename
   free(text);
 }
 
-static char *getoptstr = "+abc:defghilmnoqr:st:uv:wxABC:DLMNRSUV::X12348";
+static char *getoptstr = "+ac:fghimnoqr:st:uv:xABC:DLMNRSUV::X12348";
 
 static struct option long_options[] =
   {
@@ -971,7 +971,7 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
       repeatable_random = sox_true;
       break;
 
-    case 'e': case 'n':
+    case 'n':
       return sox_true;          /* i.e. is null file. */
       break;
 
@@ -1018,11 +1018,11 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
       }
       break;
 
-    case '1': case 'b': f->signal.size = SOX_SIZE_BYTE;  break;
-    case '2': case 'w': f->signal.size = SOX_SIZE_16BIT; break;
-    case '3':           f->signal.size = SOX_SIZE_24BIT; break;
-    case '4': case 'l': f->signal.size = SOX_SIZE_32BIT; break;
-    case '8': case 'd': f->signal.size = SOX_SIZE_64BIT; break;
+    case '1': f->signal.size = SOX_SIZE_BYTE;  break;
+    case '2': f->signal.size = SOX_SIZE_16BIT; break;
+    case '3': f->signal.size = SOX_SIZE_24BIT; break;
+    case '4': f->signal.size = SOX_SIZE_32BIT; break;
+    case '8': f->signal.size = SOX_SIZE_64BIT; break;
 
     case 's': f->signal.encoding = SOX_ENCODING_SIGN2;     break;
     case 'u': f->signal.encoding = SOX_ENCODING_UNSIGNED;  break;

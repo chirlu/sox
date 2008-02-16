@@ -302,11 +302,6 @@ static int sox_xastopwrite(sox_format_t * ft)
     return SOX_EOF;
 }
 
-static int sox_xaseek(sox_format_t * ft, sox_size_t offset)
-{
-    return sox_format_nothing_seek(ft, offset);
-}
-
 /* Maxis .xa */
 static const char *xanames[] = {
     "xa",
@@ -322,7 +317,7 @@ sox_format_handler_t sox_xa_format = {
   sox_xastartwrite,
   sox_xawrite,
   sox_xastopwrite,
-  sox_xaseek
+  NULL
 };
 
 const sox_format_handler_t *sox_xa_format_fn(void);

@@ -291,7 +291,7 @@ static sox_format_handler_t sox_avr_format = {
   sox_avrstartwrite,
   sox_avrwrite,
   sox_avrstopwrite,
-  sox_format_nothing_seek
+  NULL
 };
 
 const sox_format_handler_t *sox_avr_format_fn(void);

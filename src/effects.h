@@ -1,7 +1,6 @@
 /* FIXME: generate this list automatically */
 
   EFFECT(allpass)
-  EFFECT(avg)
   EFFECT(band)
   EFFECT(bandpass)
   EFFECT(bandreject)
@@ -19,14 +18,11 @@
   EFFECT(filter)
   EFFECT(flanger)
   EFFECT(highpass)
-  EFFECT(highp)
   EFFECT(key)
 #ifdef HAVE_LADSPA_H
   EFFECT(ladspa)
 #endif
   EFFECT(lowpass)
-  EFFECT(lowp)
-  EFFECT(mask)
   EFFECT(mcompand)
   EFFECT(mixer)
   EFFECT(noiseprof)
@@ -36,13 +32,11 @@
   EFFECT(pad)
   EFFECT(pan)
   EFFECT(phaser)
-  EFFECT(pick)
   EFFECT(pitch)
   EFFECT(polyphase)
 #ifdef HAVE_SAMPLERATE_H
   EFFECT(rabbit)
 #endif
-  EFFECT(rate)
   EFFECT(remix)
   EFFECT(repeat)
   EFFECT(resample)
@@ -59,5 +53,4 @@
   EFFECT(treble)
   EFFECT(tremolo)
   EFFECT(trim)
-  EFFECT(vibro)
   EFFECT(vol)

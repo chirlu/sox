@@ -1413,38 +1413,6 @@ The following effects have been renamed or have their functionality
 included in another effect.  They continue to work in this version of
 SoX but may be removed in future.
 .TP
-\fBavg\fR [ \fB\-l\fR\^|\^\fB\-r\fR\^|\^\fB\-f\fR\^|\^\fB\-b\fR\^|\^\fB\-1\fR\^|\^\fB\-2\fR\^|\^\fB\-3\fR\^|\^\fB\-4\fR\^|\^\fIn\fR{\fB,\fIn\fR} ]
-Reduce the number of audio channels by mixing or selecting channels,
-or duplicate channels to increase the number of channels.
-This effect is just an alias of the
-.B mixer
-effect and is retained for backwards compatibility only.
-.TP
-\fBhighp\fR \fIfrequency\fR
-Apply a high-pass filter.
-This effect is just an alias for the
-.B highpass
-effect used with its
-.B \-1
-option; it is retained for backwards compatibility only.
-.TP
-\fBlowp \fIfrequency\fR
-Apply a low-pass filter.
-This effect is just an alias for the
-.B lowpass
-effect used with its
-.B \-1
-option; it is retained for backwards compatibility only.
-.TP
-\fBmask\fR [\fIdepth\fR]
-This effect is just a deprecated alias for the \fBdither\fR effect, left for historical reasons.
-.TP
-\fBpick\fR [ \fB\-l\fR\^|\^\fB\-r\fR\^|\^\fB\-f\fR\^|\^\fB\-b\fR\^|\^\fB\-1\fR\^|\^\fB\-2\fR\^|\^\fB\-3\fR\^|\^\fB\-4\fR\^|\^\fIn\fR{\fB,\fIn\fR} ]
-Pick a subset of channels to be copied into the output file.
-This effect is just an alias of the
-.B mixer
-effect and is retained for backwards compatibility only.
-.TP
 \fBpitch \fIshift\fR [\fIwidth interpolate fade\fR]
 Change the audio pitch (but not its duration).
 This effect is equivalent to the
@@ -1466,10 +1434,6 @@ option, can be \fBcubic\fR or \fBlinear\fR.  Default is \fBcubic\fR.  The
 .I fade
 option, can be \fBcos\fR, \fBhamming\fR, \fBlinear\fR or
 \fBtrapezoid\fR; the default is \fBcos\fR.
-.TP
-\fBrate\fR
-Does the same as \fBresample\fR with no parameters; it exists for
-backwards compatibility.
 .TP
 \fBstretch \fIfactor\fR [\fIwindow fade shift fading\fR]
 Change the audio duration (but not its pitch).
@@ -1493,11 +1457,6 @@ to shorten, 0\*d8 to lengthen.  The
 ratio, in [0 0\*d5].  The amount of a fade's default depends on
 .I factor
 and \fIshift\fR.
-.TP
-\fBvibro \fIspeed\fR [\fIdepth\fR]
-This is a deprecated alias for the
-.B tremolo
-effect.  It differs in that the depth parameter ranges from 0 to 1 and defaults to 0\*d5.
 .SH SEE ALSO
 .BR sox (1),
 .BR soxi (1),

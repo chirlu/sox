@@ -312,8 +312,6 @@ double sox_swapdf(double df)
 
 /* dummy format routines for do-nothing functions */
 int sox_format_nothing(sox_format_t * ft UNUSED) { return(SOX_SUCCESS); }
-sox_size_t sox_format_nothing_read(sox_format_t * ft UNUSED, sox_sample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
-sox_size_t sox_format_nothing_write(sox_format_t * ft UNUSED, const sox_sample_t *buf UNUSED, sox_size_t len UNUSED) { return(0); }
 int sox_format_nothing_seek(sox_format_t * ft UNUSED, sox_size_t offset UNUSED) { sox_fail_errno(ft, SOX_ENOTSUP, "operation not supported"); return(SOX_EOF); }
 
 /* here for linear interp.  might be useful for other things */

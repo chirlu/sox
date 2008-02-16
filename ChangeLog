@@ -4,12 +4,27 @@ Change History
 This file contains a list of all changes starting after the release of
 sox-11gamma.
 
-sox-14.0.2	2008-TBD
+
+sox-14.1.0	2008-TBD
 ----------
+
+Deprecated features removed in this release:
+
+  Deprec-  Feature    [O(ption)]                           Removal
+  ated in  [F(ormat)] [E(ffect)]   Replacement             due in
+  -------  ----------------------  ----------------------  -------
+  13.0.0   O -e                    -n                      14.1.0
+  13.0.0   O -b/-w/-l/-d           -1/-2/-4/-8             14.1.0
+  13.0.0   E avg, pick             mixer                   14.1.0
+  13.0.0   E highp, lowp           highpass -1, lowpass -1 14.1.0
+  13.0.0   E mask                  dither                  14.1.0
+  13.0.0   E rate                  ~= resample             14.1.0
+  13.0.0   E vibro                 ~= tremolo              14.1.0
+  13.0.0   F auto                  Becomes internal only   14.1.0
 
 File formats:
 
-  o No change
+  o None new.
 
 Effects:
 
@@ -26,29 +41,22 @@ Other new features:
 Bug fixes:
 
   o Fix [1864216] comments mangled when writing ogg-vorbis.  (robs)
-  o Fix crash on 64-bit arch with tempo & key effects.  (Sami Liedes)
+  o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)
 
 Internal improvements:
 
   o Use FORTIFY_SOURCE with gcc.  (robs)
+  o Fixed all compiler warnings (AFAICT).  (robs)
 
-Feature deprecation & removal:
+Deprecated features to be removed in future:
 
   Deprec-  Feature    [O(ption)]                           Removal
   ated in  [F(ormat)] [E(ffect)]   Replacement             due in
   -------  ----------------------  ----------------------  -------
-  13.0.0   O -e                    -n                      14.0.2
-  13.0.0   O -b/-w/-l/-d           -1/-2/-4/-8             14.0.2
-  13.0.0   E avg, pick             mixer                   14.0.2
-  13.0.0   E highp, lowp           highpass -1, lowpass -1 14.0.2
-  13.0.0   E mask                  dither                  14.0.2
-  13.0.0   E rate                  ~= resample             14.0.2
-  13.0.0   E vibro                 ~= tremolo              14.0.2
-  13.0.0   F auto                  Becomes internal only   14.0.2
   14.0.0   E stretch               ~= tempo                2008-09-11
   14.0.0   E pitch                 ~= key                  2008-09-11
-  14.0.2   F wve (native)          wve (libsndfile)        14.0.2 + 1 year
-  14.0.2   F flac: libFLAC 1.1.1   libFLAC > 1.1.1         14.0.2 + 6 months
+  14.1.0   F wve (native)          wve (libsndfile)        14.1.0 + 1 year
+  14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1         14.1.0 + 6 months
 
 
 sox-14.0.1	2008-01-29

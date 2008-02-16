@@ -689,7 +689,7 @@ static sox_format_handler_t sox_alsa_format = {
   sox_alsastartwrite,
   sox_alsawrite,
   sox_alsastopwrite,
-  sox_format_nothing_seek
+  NULL
 };
 
 const sox_format_handler_t *sox_alsa_format_fn(void);

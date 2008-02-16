@@ -808,7 +808,7 @@ static sox_format_handler_t sox_voc_format = {
   sox_vocstartwrite,
   sox_vocwrite,
   sox_vocstopwrite,
-  sox_format_nothing_seek
+  NULL
 };
 
 const sox_format_handler_t *sox_voc_format_fn(void);

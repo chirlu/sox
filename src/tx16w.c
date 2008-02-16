@@ -378,7 +378,7 @@ static sox_format_handler_t sox_txw_format = {
    sox_txwstartwrite,
    sox_txwwrite,
    sox_txwstopwrite,
-   sox_format_nothing_seek
+   NULL
 };
 
 const sox_format_handler_t *sox_txw_format_fn(void);

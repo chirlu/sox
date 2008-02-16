@@ -40,7 +40,7 @@ static sox_format_handler_t sox_cvsd_format = {
   sox_cvsdstartwrite,
   sox_cvsdwrite,
   sox_cvsdstopwrite,
-  sox_format_nothing_seek
+  NULL
 };
 
 const sox_format_handler_t *sox_cvsd_format_fn(void);

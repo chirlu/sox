@@ -87,15 +87,24 @@ int sox_format_init(void)
  */
 int sox_gettype(sox_format_t * ft, sox_bool is_file_extension)
 {
-  if (!ft->filetype)
+  if (!ft->filetype) {
     sox_fail_errno(ft, SOX_EFMT, "unknown file type");
-  else {
-    ft->handler = sox_find_format(ft->filetype, is_file_extension);
-    if (ft->handler)
-      return SOX_SUCCESS;
-    sox_fail_errno(ft, SOX_EFMT, "unknown file type `%s'", ft->filetype);
+    return SOX_EFMT;
   }
-  return SOX_EFMT;
+  ft->handler = sox_find_format(ft->filetype, is_file_extension);
+  if (!ft->handler) {
+    sox_fail_errno(ft, SOX_EFMT, "unknown file type `%s'", ft->filetype);
+    return SOX_EFMT;
+  }
+  if (ft->mode == 'r' && !ft->handler->startread && !ft->handler->read) {
+    sox_fail_errno(ft, SOX_EFMT, "file type `%s' isn't readable", ft->filetype);
+    return SOX_EFMT;
+  }
+  if (ft->mode == 'w' && !ft->handler->startwrite && !ft->handler->write) {
+    sox_fail_errno(ft, SOX_EFMT, "file type `%s' isn't writable", ft->filetype);
+    return SOX_EFMT;
+  }
+  return SOX_SUCCESS;
 }
 
 /*
@@ -208,7 +217,7 @@ sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info,
 
     /* Let auto type do the work if user is not overriding. */
     if (!filetype)
-        ft->filetype = xstrdup("auto");
+        ft->filetype = xstrdup("magic");
     else
         ft->filetype = xstrdup(filetype);
 

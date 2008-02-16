@@ -495,7 +495,7 @@ static sox_format_handler_t sox_ffmpeg_format = {
   startwrite,
   write,
   stopwrite,
-  sox_format_nothing_seek
+  NULL
 };
 
 const sox_format_handler_t *sox_ffmpeg_format_fn(void);
