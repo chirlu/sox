@@ -286,9 +286,9 @@ endif
 #end !HAVE_LIBLTDL
 endif
 
-EXTRA_DIST = tests.sh testall.sh tests.bat testall.bat test-comments \
-	     monkey.au monkey.wav \
-	     amr-wb-test CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake
+EXTRA_DIST = monkey.au monkey.wav \
+	     CMakeLists.txt soxstdint.h.cmake soxconfig.h.cmake \
+	     tests.sh testall.sh tests.bat testall.bat test-comments
 
 all: sox$(EXEEXT) play rec soxi sox_sample_test$(EXEEXT) example1$(EXEEXT)
 
