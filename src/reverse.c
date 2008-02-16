@@ -12,136 +12,82 @@
  */
 
 #include "sox_i.h"
+#include <string.h>
 
-#include <math.h>
-#include <stdio.h>
+typedef struct reverse {
+  off_t         pos;
+  FILE          * tmp_file;
+} * priv_t;
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>     /* For SEEK_* defines if not found in stdio */
-#endif
+assert_static(sizeof(struct reverse) <= SOX_MAX_EFFECT_PRIVSIZE,
+              /* else */ reverse_PRIVSIZE_too_big);
 
-/* Private data */
-typedef struct reversestuff {
-        FILE *fp;
-        off_t pos;
-        int phase;
-} *reverse_t;
-
-#define WRITING 0
-#define READING 1
-
-/*
- * Prepare processing: open temporary file.
- */
-
-static int sox_reverse_start(sox_effect_t * effp)
+static int start(sox_effect_t * effp)
 {
-        reverse_t reverse = (reverse_t) effp->priv;
-        reverse->fp = tmpfile();
-        if (reverse->fp == NULL)
-        {
-                sox_fail("Reverse effect can't create temporary file");
-                return (SOX_EOF);
-        }
-        reverse->phase = WRITING;
-        return (SOX_SUCCESS);
+  priv_t p = (priv_t)effp->priv;
+
+  p->pos = 0;
+  p->tmp_file = tmpfile();
+  if (p->tmp_file == NULL) {
+    sox_fail("can't create temporary file: %s", strerror(errno));
+    return SOX_EOF;
+  }
+  return SOX_SUCCESS;
 }
 
-/*
- * Effect flow: a degenerate case: write input samples on temporary file,
- * don't generate any output samples.
- */
-static int sox_reverse_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obuf UNUSED, 
-                    sox_size_t *isamp, sox_size_t *osamp)
+static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
+    sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
-        reverse_t reverse = (reverse_t) effp->priv;
+  priv_t p = (priv_t)effp->priv;
 
-        if (reverse->phase != WRITING)
-        {
-                sox_fail("Internal error: reverse_flow called in wrong phase");
-                return(SOX_EOF);
-        }
-        if (fwrite((char *)ibuf, sizeof(sox_sample_t), *isamp, reverse->fp)
-            != *isamp)
-        {
-                sox_fail("Reverse effect write error on temporary file");
-                return(SOX_EOF);
-        }
-        *osamp = 0;
-        return(SOX_SUCCESS);
+  if (fwrite(ibuf, sizeof(*ibuf), *isamp, p->tmp_file) != *isamp) {
+    sox_fail("error writing temporary file: %s", strerror(errno));
+    return SOX_EOF;
+  }
+  (void)obuf, *osamp = 0; /* samples not output until drain */
+  return SOX_SUCCESS;
 }
 
-/*
- * Effect drain: generate the actual samples in reverse order.
- */
-
-static int sox_reverse_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
+static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
 {
-        reverse_t reverse = (reverse_t) effp->priv;
-        sox_size_t len, nbytes;
-        register int i, j;
-        sox_sample_t temp;
+  priv_t p = (priv_t) effp->priv;
+  size_t i, j;
 
-        if (reverse->phase == WRITING) {
-                fflush(reverse->fp);
-                fseeko(reverse->fp, (off_t)0, SEEK_END);
-                reverse->pos = ftello(reverse->fp);
-                if (reverse->pos % sizeof(sox_sample_t) != 0)
-                {
-                        sox_fail("Reverse effect finds odd temporary file");
-                        return(SOX_EOF);
-                }
-                reverse->phase = READING;
-        }
-        len = *osamp;
-        nbytes = len * sizeof(sox_sample_t);
-        if (reverse->pos < nbytes) {
-                nbytes = reverse->pos;
-                len = nbytes / sizeof(sox_sample_t);
-        }
-        reverse->pos -= nbytes;
-        fseeko(reverse->fp, reverse->pos, SEEK_SET);
-        if (fread((char *)obuf, sizeof(sox_sample_t), len, reverse->fp) != len)
-        {
-                sox_fail("Reverse effect read error from temporary file");
-                return(SOX_EOF);
-        }
-        for (i = 0, j = len-1; i < j; i++, j--) {
-                temp = obuf[i];
-                obuf[i] = obuf[j];
-                obuf[j] = temp;
-        }
-        *osamp = len;
-        if (reverse->pos == 0)
-            return SOX_EOF;
-        else
-            return SOX_SUCCESS;
+  if (p->pos == 0) {
+    fflush(p->tmp_file);
+    p->pos = ftello(p->tmp_file);
+    if (p->pos % sizeof(sox_sample_t) != 0) {
+      sox_fail("temporary file has incorrect size");
+      return SOX_EOF;
+    }
+    p->pos /= sizeof(sox_sample_t);
+  }
+  p->pos -= *osamp = min((off_t)*osamp, p->pos);
+  fseeko(p->tmp_file, (off_t)(p->pos * sizeof(sox_sample_t)), SEEK_SET);
+  if (fread(obuf, sizeof(sox_sample_t), *osamp, p->tmp_file) != *osamp) {
+    sox_fail("error reading temporary file: %s", strerror(errno));
+    return SOX_EOF;
+  }
+  for (i = 0, j = *osamp - 1; i < j; ++i, --j) { /* reverse the samples */
+    sox_sample_t temp = obuf[i];
+    obuf[i] = obuf[j];
+    obuf[j] = temp;
+  }
+  return p->pos? SOX_SUCCESS : SOX_EOF;
 }
 
-/*
- * Close and unlink the temporary file.
- */
-static int sox_reverse_stop(sox_effect_t * effp)
+static int stop(sox_effect_t * effp)
 {
-        reverse_t reverse = (reverse_t) effp->priv;
+  priv_t p = (priv_t)effp->priv;
 
-        fclose(reverse->fp);
-        return (SOX_SUCCESS);
+  fclose(p->tmp_file); /* auto-deleted by tmpfile */
+  return SOX_SUCCESS;
 }
 
-static sox_effect_handler_t sox_reverse_effect = {
-  "reverse",
-  NULL,
-  0,
-  NULL,
-  sox_reverse_start,
-  sox_reverse_flow,
-  sox_reverse_drain,
-  sox_reverse_stop,
-  NULL
-};
-
-const sox_effect_handler_t *sox_reverse_effect_fn(void)
+sox_effect_handler_t const * sox_reverse_effect_fn(void)
 {
-    return &sox_reverse_effect;
+  static sox_effect_handler_t handler = {
+    "reverse", NULL, 0, NULL, start, flow, drain, stop, NULL
+  };
+  return &handler;
 }
