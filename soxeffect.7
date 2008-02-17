@@ -560,7 +560,7 @@ using a pipe, e.g.
 	sox noisy.au -n trim 0 1 noiseprof | play noisy.au noisered
 .EE
 .TP
-\fBnorm\fR [\fIlevel\fR]
+\fBnorm\fR [\fB-i\fR] [\fIlevel\fR]
 Normalise audio to 0dB FSD or to a given level relative to 0dB.
 Requires temporary file space to store the audio to be normalised.
 .SP
@@ -584,6 +584,14 @@ headroom, then
 .EE
 gives both effect2 and the output file the highest possible signal
 levels.
+.SP
+Normally, audio is normalised based on the level of the channel with
+the highest peak level, which means that whilst all channels are adjusted,
+only one channel attains
+the normalised level.  If the
+.B \-i
+option is given, then each channel is treated individually and
+will attain the normalised level.
 .SP
 In most cases,
 .B norm \-3
