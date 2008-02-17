@@ -134,6 +134,7 @@ static unsigned long output_samples = 0;
 static sox_bool user_abort = sox_false;
 static sox_bool user_skip = sox_false;
 static int success = 0;
+static sox_sample_t omax[2], omin[2];
 
 
 /* local forward declarations */
@@ -718,7 +719,7 @@ int main(int argc, char **argv)
   parse_effects(argc, argv);
 
   /* Not the best way for users to do this; now deprecated in favour of soxi. */
-  if (!nuser_effects && ofile->filetype && !strcmp(ofile->filetype, "null")) {
+  if (!show_progress && !nuser_effects && ofile->filetype && !strcmp(ofile->filetype, "null")) {
     for (i = 0; i < input_count; i++)
       report_file_info(files[i]);
     exit(0);
@@ -1224,6 +1225,19 @@ static int output_flow(sox_effect_t *effp UNUSED, sox_sample_t const * ibuf,
     sox_sample_t * obuf UNUSED, sox_size_t * isamp, sox_size_t * osamp)
 {
   size_t len;
+
+  for (len = 0; len < *isamp; len += effp->ininfo.channels) {
+    omax[0] = max(omax[0], ibuf[len]);
+    omin[0] = min(omin[0], ibuf[len]);
+    if (effp->ininfo.channels > 1) {
+      omax[1] = max(omax[1], ibuf[len + 1]);
+      omin[1] = min(omin[1], ibuf[len + 1]);
+    }
+    else {
+      omax[1] = omax[0];
+      omin[1] = omin[0];
+    }
+  }
   for (*osamp = *isamp; *osamp; ibuf += len, *osamp -= len) {
     len = sox_write(ofile->ft, ibuf, *osamp);
     if (len == 0) {
@@ -1528,6 +1542,24 @@ static char const * sigfigs3p(double percentage)
   return string[n];
 }
 
+static char const * vu(unsigned channel)
+{
+  static char const * const text[][2] = {
+    {"", ""}, {"-", "-"}, {"=", "="}, {"-=", "=-"},
+    {"==", "=="}, {"-==", "==-"}, {"===", "==="}, {"-===", "===-"},
+    {"====", "===="}, {"-====", "====-"}, {"=====", "====="},
+    {"-=====", "=====-"}, {"======", "======"},
+    {"!=====", "=====!"}, {"!!====", "====!!"}, /* 2 `red' levels */
+  };
+  int const red = 2, white = array_length(text) - red;
+  double const MAX = SOX_SAMPLE_MAX, MIN = SOX_SAMPLE_MIN;
+  double linear = max(omax[channel] / MAX, omin[channel] / MIN);
+  int vu_dB = linear? floor(2 * white + red - .5 + linear_to_dB(linear)) : 0;
+  int index = vu_dB < 2 * white? max(vu_dB / 2, 0) : vu_dB - white;
+  omax[channel] = omin[channel] = 0;
+  return text[index][channel];
+}
+
 static void display_status(sox_bool all_done)
 {
   static struct timeval then;
@@ -1542,9 +1574,10 @@ static void display_status(sox_bool all_done)
       left_time = max(in_time - read_time, 0);
       percentage = max(100. * read_wide_samples / input_wide_samples, 0);
     }
-    fprintf(stderr, "\rTime: %s [%s] of %s (%-5s) Samples out: %-6sClips: %-5s",
+    fprintf(stderr, "\r%s [%s] of %s (%-5s) Samps out:%-5s%6s|%-6sClips:%-5s",
       str_time(read_time), str_time(left_time), str_time(in_time),
-      sigfigs3p(percentage), sigfigs3(output_samples), sigfigs3(total_clips()));
+      sigfigs3p(percentage), sigfigs3(output_samples),
+      vu(0), vu(1), sigfigs3(total_clips()));
   }
   if (all_done)
     fputc('\n', stderr);

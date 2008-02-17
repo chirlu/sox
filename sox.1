@@ -253,6 +253,16 @@ or
 (Note that the syntax of the
 .B set
 command may vary from system to system.)
+.SP
+To set a suitable recording level, a V.U. meter is usually used.  SoX includes a
+simple V.U. meter that can be invoked as follows:
+.EX
+	rec -n
+.EE
+The recording level should be adjusted (using the system mixer program)
+so that the meter is `in the red' (a single exclamation mark is shown)
+\fIat most very occasionally\fR, and never `off the scale' (two
+exclamation marks are shown).
 .SS Accuracy
 Many file formats that compress audio discard some of the audio signal
 information whilst doing so; converting to such a format then converting
@@ -543,6 +553,36 @@ otherwise.
 Display input file format/header information and input file(s)
 processing progress in terms of elapsed/remaining time and percentage
 complete.
+Also displays the number of samples written to the output file, a V.U. meter,
+and an indication if clipping has occurred.
+The V.U. meter shows up to two channels and is calibrated for digital
+audio as follows:
+.TS
+center box;
+cI lI lI
+cI lI lI
+r l l.
+dB FSD	Display
+>=	(right channel)	Comment
+\-25.5	\-
+\-23.5	T{
+=
+T}
+\-21.5	=\-
+\-19.5	==
+\-17.5	==\-
+\-15.5	===
+\-13.5	===\-
+\-11.5	====
+\-9.5	====\-
+\-7.5	=====
+\-5.5	=====\-
+\-3.5	======
+\-1.5	=====!	`In the red'
+\-0.5	====!!	`Off the scale'
+.TE
+
+.SP
 This option is enabled by default when using
 SoX to play or record audio.
 .TP

@@ -24,6 +24,7 @@ Mantainers:
                 Others: soxi, open input files via URL, file merging, play
                 multiple files with mixed format types, play with replay-gain,
                 building with cmake, much manual improvement and expansion,
+		improved displays with -S & -V including V.U. and clips,
                 various fixes, enhancements and clean-ups.
 
 Contributors:
