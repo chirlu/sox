@@ -76,6 +76,11 @@ static sox_bool repeatable_random = sox_false;  /* Whether to invoke srand. */
 static sox_bool interactive = sox_false;
 static sox_bool uservolume = sox_false;
 typedef enum {RG_off, RG_track, RG_album} rg_mode;
+static enum_item const rg_modes[] = {
+  ENUM_ITEM(RG_,off)
+  ENUM_ITEM(RG_,track)
+  ENUM_ITEM(RG_,album)
+  {0, 0}};
 static rg_mode replay_gain_mode = RG_off;
 static sox_option_t show_progress = SOX_OPTION_DEFAULT;
 
@@ -91,6 +96,7 @@ typedef struct file_info
   sox_signalinfo_t signal;
   double volume;
   double replay_gain;
+  rg_mode replay_gain_mode;
   comments_t comments;
 
   sox_format_t * ft;  /* libSoX file descriptor */
@@ -227,7 +233,8 @@ static void display_file_info(sox_format_t * ft, file_t f, sox_bool full)
   }
 
   if (f && f->replay_gain != HUGE_VAL)
-    fprintf(output, "Replay gain    : %+g dB\n" , f->replay_gain);
+    fprintf(output, "Replay gain    : %+g dB (%s)\n" , f->replay_gain,
+        find_enum_value(f->replay_gain_mode, rg_modes)->text);
   if (f && f->volume != HUGE_VAL)
     fprintf(output, "Level adjust   : %g (linear gain)\n" , f->volume);
 
@@ -1035,12 +1042,6 @@ static enum_item const combine_methods[] = {
   ENUM_ITEM(sox_,merge)
   {0, 0}};
 
-static enum_item const rg_modes[] = {
-  ENUM_ITEM(RG_,off)
-  ENUM_ITEM(RG_,track)
-  ENUM_ITEM(RG_,album)
-  {0, 0}};
-
 enum {ENDIAN_little, ENDIAN_big, ENDIAN_swap};
 static enum_item const endian_options[] = {
   ENUM_ITEM(ENDIAN_,little)
@@ -1422,6 +1423,7 @@ static void set_replay_gain(comments_t comments, file_t f)
     for (i = 0; i < n; ++i) {
       if (strncasecmp(comments[i], target, strlen(target)) == 0) {
         f->replay_gain = atof(comments[i] + strlen(target));
+        f->replay_gain_mode = rg;
         return;
       }
     }
@@ -1436,6 +1438,11 @@ static void output_message(unsigned level, const char *filename, const char *fmt
     sox_output_message(stderr, filename, fmt, ap);
     fprintf(stderr, "\n");
   }
+}
+
+static sox_bool cmp_comment_text(char const * c1, char const * c2)
+{
+  return c1 && c2 && !strcasecmp(c1, c2);
 }
 
 int main(int argc, char **argv)
@@ -1508,8 +1515,19 @@ int main(int argc, char **argv)
         (files[j]->ft->handler->flags & SOX_FILE_DEVICE) != 0 &&
         (files[j]->ft->handler->flags & SOX_FILE_PHONY) == 0)
       show_progress = SOX_OPTION_YES;
-    set_replay_gain(files[j]->ft->comments, f);
   }
+  /* Simple heuristic to determine if replay-gain should be in album mode */
+  if (sox_mode == sox_play && replay_gain_mode == RG_track && input_count > 1 &&
+      cmp_comment_text(
+        find_comment(files[0]->ft->comments, "artist"),
+        find_comment(files[1]->ft->comments, "artist")) &&
+      cmp_comment_text(
+        find_comment(files[0]->ft->comments, "album"),
+        find_comment(files[1]->ft->comments, "album")))
+    replay_gain_mode = RG_album;
+
+  for (i = 0; i < input_count; i++)
+    set_replay_gain(files[i]->ft->comments, files[i]);
   signal(SIGINT, SIG_DFL);
 
   /* Loop through the rest of the arguments looking for effects */

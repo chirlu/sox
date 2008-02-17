@@ -239,6 +239,7 @@ void append_comments(comments_t * comments, char const * comment);
 comments_t copy_comments(comments_t comments);
 void delete_comments(comments_t * comments);
 char * cat_comments(comments_t comments);
+char const * find_comment(comments_t comments, char const * id);
 
 
 

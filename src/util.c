@@ -221,3 +221,13 @@ char * cat_comments(comments_t comments)
   }
   return result;
 }
+
+char const * find_comment(comments_t comments, char const * id)
+{
+  size_t len = strlen(id);
+
+  if (comments) for (;*comments; ++comments)
+    if (!strncasecmp(*comments, id, len) && (*comments)[len] == '=')
+      return *comments + len + 1;
+  return NULL;
+}

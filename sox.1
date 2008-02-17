@@ -542,11 +542,19 @@ this is the opposite of the \fB\-S\fR option.
 \fB\-\-replay\-gain track\fR\^|\^\fBalbum\fR\^|\^\fBoff\fR
 Select whether or not to apply replay-gain adjustment to input files.
 The default is
+.B off
+for
+.B sox
+and
+.BR rec ,
+.B album
+for
+.B play
+where (at least) the first two input files are tagged with the same Artist and
+Album names, and
 .B track
 for
 .B play
-and
-.B off
 otherwise.
 .TP
 \fB\-S\fR, \fB\-\-show\-progress\fR
