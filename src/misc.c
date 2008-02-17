@@ -309,11 +309,6 @@ double sox_swapdf(double df)
     return (sdf);
 }
 
-
-/* dummy format routines for do-nothing functions */
-int sox_format_nothing(sox_format_t * ft UNUSED) { return(SOX_SUCCESS); }
-int sox_format_nothing_seek(sox_format_t * ft UNUSED, sox_size_t offset UNUSED) { sox_fail_errno(ft, SOX_ENOTSUP, "operation not supported"); return(SOX_EOF); }
-
 /* here for linear interp.  might be useful for other things */
 sox_sample_t sox_gcd(sox_sample_t a, sox_sample_t b)
 {

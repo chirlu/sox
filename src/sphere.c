@@ -216,14 +216,9 @@ static sox_size_t sox_spherewrite(sox_format_t * ft, const sox_sample_t *buf, so
 
 static int sox_spherestopwrite(sox_format_t * ft) 
 {
-    int rc;
     char buf[128];
     sphere_t sphere = (sphere_t) ft->priv;
     long samples, rate;
-
-    rc = sox_rawstopwrite(ft);
-    if (rc)
-        return rc;
 
     if (sox_seeki(ft, 0, 0) != 0)
     {

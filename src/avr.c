@@ -258,13 +258,8 @@ static sox_size_t sox_avrwrite(sox_format_t * ft, const sox_sample_t *buf, sox_s
 static int sox_avrstopwrite(sox_format_t * ft) 
 {
   avr_t avr = (avr_t)ft->priv;
-  int rc;
 
   unsigned size = avr->size / ft->signal.channels;
-
-  rc = sox_rawstopwrite(ft);
-  if (rc)
-      return rc;
 
   /* Fix size */
   sox_seeki(ft, 26, SEEK_SET);
@@ -287,7 +282,7 @@ static sox_format_handler_t sox_avr_format = {
   SOX_FILE_BIG_END,
   sox_avrstartread,
   sox_rawread,
-  sox_format_nothing,
+  NULL,
   sox_avrstartwrite,
   sox_avrwrite,
   sox_avrstopwrite,

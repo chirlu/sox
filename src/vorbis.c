@@ -400,7 +400,7 @@ const sox_format_handler_t *sox_vorbis_format_fn(void)
 {
   static const char *names[] = {"vorbis", "ogg", NULL};
   static sox_format_handler_t handler = {
-    names, SOX_FILE_SEEK,
+    names, 0,
     startread, read, stopread,
     startwrite, write, stopwrite,
     seek

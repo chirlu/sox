@@ -162,10 +162,10 @@ static sox_format_handler_t sox_dat_format = {
   0,
   sox_datstartread,
   sox_datread,
-  sox_format_nothing,
+  NULL,
   sox_datstartwrite,
   sox_datwrite,
-  sox_format_nothing,
+  NULL,
   NULL
 };
 

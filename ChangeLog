@@ -10,17 +10,17 @@ sox-14.1.0	2008-TBD
 
 Deprecated features removed in this release:
 
-  Deprec-  Feature    [O(ption)]                           Removal
-  ated in  [F(ormat)] [E(ffect)]   Replacement             due in
-  -------  ----------------------  ----------------------  -------
-  13.0.0   O -e                    -n                      14.1.0
-  13.0.0   O -b/-w/-l/-d           -1/-2/-4/-8             14.1.0
-  13.0.0   E avg, pick             mixer                   14.1.0
-  13.0.0   E highp, lowp           highpass -1, lowpass -1 14.1.0
-  13.0.0   E mask                  dither                  14.1.0
-  13.0.0   E rate                  ~= resample             14.1.0
-  13.0.0   E vibro                 ~= tremolo              14.1.0
-  13.0.0   F auto                  Becomes internal only   14.1.0
+  Deprec-  Feature    [O(ption)]
+  ated in  [F(ormat)] [E(ffect)]   Replacement
+  -------  ----------------------  ----------------------
+  13.0.0   O -e                    -n
+  13.0.0   O -b/-w/-l/-d           -1/-2/-4/-8
+  13.0.0   E avg, pick             mixer
+  13.0.0   E highp, lowp           highpass -1, lowpass -1
+  13.0.0   E mask                  dither
+  13.0.0   E rate                  ~= resample
+  13.0.0   E vibro                 ~= tremolo
+  13.0.0   F auto                  Becomes internal only
 
 File formats:
 
@@ -57,6 +57,9 @@ Deprecated features to be removed in future:
   14.0.0   E pitch                 ~= key                  2008-09-11
   14.1.0   F wve (native)          wve (libsndfile)        14.1.0 + 1 year
   14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1         14.1.0 + 6 months
+  14.1.0   Behaviour whereby       soxi                    14.1.0 + 1 year
+           sox -V file(s) -n
+	   doesn't read to EOF
 
 
 sox-14.0.1	2008-01-29
@@ -361,9 +364,9 @@ sox-12.18.1	2006-05-07
   o Prevent crashes when printing error mesages (1447239)
   o Added makefile and support files to compile using Open Watcom
     compiler.  (1417798) Marty
-  o Stop calling flow() on effects that returned EOF during drain().  Allows 
+  o Stop calling flow() on effects that returned EOF during drain().  Allows
     two back-to-back reverse effects to work.
-  o Added support for multiple channels in .dat files. 
+  o Added support for multiple channels in .dat files.
     (1366634) tomchristie
 
 sox-12.17.9	2005-12-05
@@ -396,7 +399,7 @@ sox-12.17.9	2005-12-05
     talking to kernel driver.  This also means that device names
     are now the ALSA logical names instead of /dev type names.
   o Added ALSA support to play/rec scripts.
-  o Added st_open*, st_read, st_write, st_seek, st_close routines 
+  o Added st_open*, st_read, st_write, st_seek, st_close routines
     to help simplify developer interface to libst.  See libst.3..
   o Removed st_initformat(), st_copyformat(), and
     st_checkformat() from library.  If your app used those
@@ -842,11 +845,11 @@ sox-12.17	2000-09-08
   o Matthias Nutt helped add support for specifying multiple effects
     to SoX on the command line.
   o Curt Zirzow added a trim effect to trim off audio data.
-  o Updated ALSA driver to support new interface. Jimen Ching 
+  o Updated ALSA driver to support new interface. Jimen Ching
 
 sox-12.16	1999-07-13
 ---------
-  
+
   o Changed raw data functions to perform I/O operations using block reads.
     Should improve speeds greatly, especially when filesize is in megs.
     Got code ready to tweak speed more which also forced me to clean up
@@ -877,7 +880,7 @@ sox-12.16	1999-07-13
     Also fix an Endian bug thats been there for quite a long time (when
     ran on Intel machines).  Made comment lengths even length to make
     most MacOS programs happy.  cbagwell
-  o Resample function was updated by Andreas Wilde 
+  o Resample function was updated by Andreas Wilde
     (andreas@eakaw2.et.tu-dresden.de) to fix problem were freqs. were
     off by a factor of 2.
   o Added an effect that swaps stereo channels.  cbagwell
@@ -900,16 +903,16 @@ sox-12.15	1998-10-01
     handy CHEAT.eft file for using various effects.
   o Incorporated Yamaha TX-16W sampler file support provided by
     Rob Talley (rob@aii.com) and Mark Lakata (lakata@physics.berkeley.edu).
-  o Fixed a small bug in hcom compression, dependent on sign 
+  o Fixed a small bug in hcom compression, dependent on sign
     extension.  Leigh Smith (leigh@psychokiller.dialix.oz.au).
   o sox -h now prints out the file formats and effects supported.
     Leigh Smith and Chris Bagwell.
   o smp transfers comments more completely.  Leigh Smith.
-  o aiff manages markers and loops correctly and produces more 
+  o aiff manages markers and loops correctly and produces more
     verbose output.  Leigh Smith.
   o Added polyphase resampler (kb@ece.cmu.edu).  This adds a slightly
     different resampling algorithm to the mix.
-  o Michael Brown (mjb@pootle.demon.co.uk) sent a patch to stop crashes 
+  o Michael Brown (mjb@pootle.demon.co.uk) sent a patch to stop crashes
     from happening when reading mono MS ADPCM files.
   o Fabrice Bellard has added a less buggy 'rate' conversion.  I've left
     the old rate code included but if all goes well this will become
@@ -941,7 +944,7 @@ sox-12.14	1998-05-15
   o Added path string to play and rec strings so that it could be run by
     users without complete paths setup (i.e. Ran by "rc" files during bootup
     or shutdown)
-  o Fixed -e option from Richard Guenther 
+  o Fixed -e option from Richard Guenther
       (richard.guenther@student.uni-tuebingen.de) and fixed a small bug
     in stat.
   o Fixed a bug in the mask effect for ULAW/ALAW files.
@@ -966,7 +969,7 @@ sox-12.14	1998-05-15
   o Speaking of cleanups, anyone want to help cleanup the makefiles for
     various platforms?  They are quite outdated right now and it is
     very obvious that Sox hasn't been able to compile under all the
-    platforms it once did for several releases.  Please send in 
+    platforms it once did for several releases.  Please send in
     the cleaned-up makefile versions along with what programs you
     used to compile it with.
   o There is a known bug in hcom's compress() function.  It is allocating
@@ -1024,7 +1027,7 @@ to busy to even look for it.
      sox effects after the filename and hear them in real time.
      Please be sure that an older version of sox is not in your path
      because these script will possibly find it first and
-     incorrectly use it.  
+     incorrectly use it.
   o  Setting play/record volume still requires an external program.
      If you have one a command line program to do this (such as
      "mixer" for Linux) then you will want to edit the play and rec

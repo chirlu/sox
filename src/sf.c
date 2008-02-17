@@ -226,7 +226,7 @@ static const char *sfnames[] = {
 
 static sox_format_handler_t sox_sf_format = {
   sfnames,
-  SOX_FILE_SEEK,
+  0,
   sox_sfstartread,
   sox_rawread,
   sox_rawstopread,

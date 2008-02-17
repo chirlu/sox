@@ -656,9 +656,7 @@ int sox_aiffstopread(sox_format_t * ft)
                 }
             }
         }
-
-        /* Needed because of sox_rawwrite() */
-        return sox_rawstopread(ft);
+        return SOX_SUCCESS;
 }
 
 /* When writing, the header is supposed to contain the number of
@@ -712,7 +710,6 @@ sox_size_t sox_aiffwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t 
 int sox_aiffstopwrite(sox_format_t * ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
-        int rc;
 
         /* If we've written an odd number of bytes, write a padding
            NUL */
@@ -721,13 +718,6 @@ int sox_aiffstopwrite(sox_format_t * ft)
             sox_sample_t buf = 0;
             sox_rawwrite(ft, &buf, 1);
         }
-
-        /* Needed because of sox_rawwrite().  Call now to flush
-         * buffer now before seeking around below.
-         */
-        rc = sox_rawstopwrite(ft);
-        if (rc)
-            return rc;
 
         if (!ft->seekable)
         {
@@ -918,7 +908,6 @@ int sox_aifcstartwrite(sox_format_t * ft)
 int sox_aifcstopwrite(sox_format_t * ft)
 {
         aiff_t aiff = (aiff_t ) ft->priv;
-        int rc;
 
         /* If we've written an odd number of bytes, write a padding
            NUL */
@@ -927,13 +916,6 @@ int sox_aifcstopwrite(sox_format_t * ft)
             sox_sample_t buf = 0;
             sox_rawwrite(ft, &buf, 1);
         }
-
-        /* Needed because of sox_rawwrite().  Call now to flush
-         * buffer now before seeking around below.
-         */
-        rc = sox_rawstopwrite(ft);
-        if (rc)
-            return rc;
 
         if (!ft->seekable)
         {

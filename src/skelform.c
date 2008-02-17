@@ -209,7 +209,7 @@ static const char *names[] = {
  */
 static sox_format_handler_t sox_skel_format = {
   names,
-  SOX_FILE_SEEK,
+  0,
   startread,
   read,
   stopread,

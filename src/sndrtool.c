@@ -154,12 +154,6 @@ static sox_size_t sox_sndtwrite(sox_format_t * ft, const sox_sample_t * buf,
 static int sox_sndtstopwrite(sox_format_t * ft)
 {
   snd_t p = (snd_t) ft->priv;
-  int rc;
-
-  /* Flush remaining buffer out */
-  rc = sox_rawstopwrite(ft);
-  if (rc)
-    return rc;
 
   /* fixup file sizes in header */
   if (sox_seeki(ft, 0, 0) != 0) {
@@ -182,7 +176,7 @@ static const char *sndtnames[] = {
 
 static const sox_format_handler_t sox_snd_format = {
   sndtnames,
-  SOX_FILE_SEEK | SOX_FILE_LIT_END,
+  SOX_FILE_LIT_END,
   sox_sndtstartread,
   sox_rawread,
   sox_rawstopread,

@@ -261,7 +261,7 @@ static int stopread(sox_format_t * ft)
   if (ft->signal.encoding == SOX_ENCODING_IMA_ADPCM)
     return sox_adpcm_stopread(ft, &p->adpcm);
   else
-    return sox_rawstopread(ft);
+    return SOX_SUCCESS;
 }
 
 /* When writing, the header is supposed to contain the number of
@@ -372,10 +372,6 @@ static int stopwrite(sox_format_t * ft)
 {
   prc_t p = (prc_t)ft->priv;
 
-  /* Call before seeking to flush buffer (ADPCM has already been flushed) */
-  if (ft->signal.encoding != SOX_ENCODING_IMA_ADPCM)
-    sox_rawstopwrite(ft);
-
   p->nbytes = sox_tell(ft) - p->data_start;
 
   if (!ft->seekable) {
@@ -423,7 +419,7 @@ static const char *prcnames[] = {
 
 static sox_format_handler_t sox_prc_format = {
   prcnames,
-  SOX_FILE_SEEK | SOX_FILE_LIT_END,
+  SOX_FILE_LIT_END,
   startread,
   read,
   stopread,

@@ -20,7 +20,7 @@ static const char *aifcnames[] = {
 
 static sox_format_handler_t sox_aifc_format = {
   aifcnames,
-  SOX_FILE_LOOPS | SOX_FILE_SEEK | SOX_FILE_BIG_END,
+  SOX_FILE_LOOPS | SOX_FILE_BIG_END,
   sox_aiffstartread,
   sox_aiffread,
   sox_aiffstopread,

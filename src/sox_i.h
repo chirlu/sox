@@ -322,20 +322,11 @@ int sox_rawstopread(sox_format_t * ft);
 int sox_rawstartwrite(sox_format_t * ft);
 sox_size_t sox_rawwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp);
 int sox_rawseek(sox_format_t * ft, sox_size_t offset);
-
-/* The following functions can be used to simply return success if
- * a file handler doesn't need to do anything special
- */
-int sox_format_nothing(sox_format_t * ft);
-sox_size_t sox_format_nothing_read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len);
-sox_size_t sox_format_nothing_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len);
-int sox_format_nothing_seek(sox_format_t * ft, sox_size_t offset);
-
 int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, unsigned size);
 #define sox_rawstartread(ft) sox_rawstart(ft, sox_false, sox_false, SOX_ENCODING_UNKNOWN, 0)
 #define sox_rawstartwrite sox_rawstartread
-#define sox_rawstopread sox_format_nothing
-#define sox_rawstopwrite sox_format_nothing
+#define sox_rawstopread NULL
+#define sox_rawstopwrite NULL
 
 
 

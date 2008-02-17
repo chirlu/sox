@@ -409,10 +409,10 @@ static const char *smpnames[] = {
 
 static sox_format_handler_t sox_smp_format = {
   smpnames,
-  SOX_FILE_LOOPS | SOX_FILE_SEEK | SOX_FILE_LIT_END,
+  SOX_FILE_LOOPS | SOX_FILE_LIT_END,
   sox_smpstartread,
   sox_smpread,
-  sox_format_nothing,
+  NULL,
   sox_smpstartwrite,
   sox_smpwrite,
   sox_smpstopwrite,

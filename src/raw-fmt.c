@@ -20,7 +20,7 @@ const sox_format_handler_t *sox_raw_format_fn(void)
 {
   static char const * names[] = {"raw", NULL};
   static sox_format_handler_t handler = {
-    names, SOX_FILE_SEEK,
+    names, 0,
     raw_start, sox_rawread , NULL,
     raw_start, sox_rawwrite, NULL,
     sox_rawseek

@@ -330,7 +330,6 @@ struct sox_format {
 /* file flags field */
 #define SOX_FILE_LOOPS   1  /* does file format support loops? */
 #define SOX_FILE_INSTR   2  /* does file format support instrument specs? */
-#define SOX_FILE_SEEK    4  /* does file format support seeking? */
 #define SOX_FILE_NOSTDIO 8  /* does not use stdio routines */
 #define SOX_FILE_DEVICE  16 /* file is an audio device */
 #define SOX_FILE_PHONY   32 /* phony file/device */

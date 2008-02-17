@@ -17,9 +17,9 @@ const sox_format_handler_t *sox_ ## id ## _format_fn(void); \
 const sox_format_handler_t *sox_ ## id ## _format_fn(void) { \
   static sox_format_handler_t handler = { \
     names, flags, \
-    id ## _start, sox_rawread , sox_format_nothing, \
-    id ## _start, sox_rawwrite, sox_format_nothing, \
-    sox_format_nothing_seek \
+    id ## _start, sox_rawread , NULL, \
+    id ## _start, sox_rawwrite, NULL, \
+    NULL \
   }; \
   return &handler; \
 }

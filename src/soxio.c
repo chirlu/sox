@@ -582,12 +582,11 @@ int sox_seek(sox_format_t * ft, sox_size_t offset, int whence)
         return SOX_EOF; /* FIXME: return SOX_EINVAL */
 
     /* If file is a seekable file and this handler supports seeking,
-     * the invoke handlers function.
+     * then invoke handler's function.
      */
-    if (ft->seekable  && (ft->handler->flags & SOX_FILE_SEEK))
-        return ft->handler->seek? (*ft->handler->seek)(ft, offset) : SOX_EOF;
-    else
-        return SOX_EOF; /* FIXME: return SOX_EBADF */
+    if (ft->seekable && ft->handler->seek)
+      return (*ft->handler->seek)(ft, offset);
+    return SOX_EOF; /* FIXME: return SOX_EBADF */
 }
 
 sox_bool sox_is_playlist(char const * filename)

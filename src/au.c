@@ -360,14 +360,6 @@ static sox_size_t sox_auwrite(sox_format_t * ft, const sox_sample_t *buf, sox_si
 static int sox_austopwrite(sox_format_t * ft)
 {
         au_t p = (au_t ) ft->priv;
-        int rc;
-
-        /* Needed because of rawwrite(). Do now to flush
-         * data before seeking around below.
-         */
-        rc = sox_rawstopwrite(ft);
-        if (rc)
-            return rc;
 
         /* Attempt to update header */
         if (ft->seekable)
@@ -485,7 +477,7 @@ static const char *aunames[] = {
  */
 static sox_format_handler_t sox_au_format = {
   aunames,
-  SOX_FILE_SEEK | SOX_FILE_BIG_END,
+  SOX_FILE_BIG_END,
   sox_austartread,
   sox_auread,
   sox_rawstopread,

@@ -1,168 +1,61 @@
 /*
- * CD-R format handler
+ * CD Digital Audio format handler: pads to integer number of CDDA sectors
  *
  * David Elliott, Sony Microsystems -  July 5, 1991
  *
  * Copyright 1991 David Elliott And Sundry Contributors
  * This source code is freely redistributable and may be used for
  * any purpose.  This copyright notice must be maintained. 
- * Lance Norskog And Sundry Contributors are not responsible for 
+ * David Elliott And Sundry Contributors are not responsible for 
  * the consequences of using this software.
- *
- * This code automatically handles endianness differences
- *
- * cbagwell (cbagwell@sprynet.com) - 20 April 1998
- *
- *   Changed endianness handling.  Seemed to be reversed (since format
- *   is in big endian) and made it so that user could always override
- *   swapping no matter what endian machine they are one.
- *
- *   Fixed bug were trash could be appended to end of file for certain
- *   endian machines.
- *
  */
 
 #include "sox_i.h"
 
-#define SECTORSIZE      (2352 / 2)
+#define SECTOR_SIZE   (2352 / 2)
+#define samples       (*(sox_size_t *)ft->priv)
 
-/* Private data for SKEL file */
-typedef struct cdrstuff {
-        sox_size_t samples;      /* number of samples written */
-} *cdr_t;
-
-/*
- * Do anything required before you start reading samples.
- * Read file header. 
- *      Find out sampling rate, 
- *      size and encoding of samples, 
- *      mono/stereo/quad.
- */
-
-static int sox_cdrstartread(sox_format_t * ft) 
+static int start(sox_format_t * ft) 
 {
-        int rc;
+  ft->signal.rate = 44100;
+  ft->signal.size = SOX_SIZE_16BIT;
+  ft->signal.encoding = SOX_ENCODING_SIGN2;
+  ft->signal.channels = 2;
 
-        /* Needed because of rawread() */
-        rc = sox_rawstartread(ft);
-        if (rc)
-            return rc;
-
-        ft->signal.rate = 44100;
-        ft->signal.size = SOX_SIZE_16BIT;
-        ft->signal.encoding = SOX_ENCODING_SIGN2;
-        ft->signal.channels = 2;
-
-/* Need length for seeking */
-        if(ft->seekable){
-                ft->length = sox_filelength(ft)/SOX_SIZE_16BIT;
-        } else {
-                ft->length = 0;
-        }
-        
-        return(SOX_SUCCESS);
+  if (ft->mode == 'r' && ft->seekable) /* Need length for seeking */
+    ft->length = sox_filelength(ft)/SOX_SIZE_16BIT;
+  
+  return SOX_SUCCESS;
 }
 
-/*
- * Read up to len samples from file.
- * Convert to signed longs.
- * Place in buf[].
- * Return number of samples read.
- */
-
-static sox_size_t sox_cdrread(sox_format_t * ft, sox_sample_t *buf, sox_size_t len) 
+static sox_size_t write(
+    sox_format_t * ft, const sox_sample_t *buf, sox_size_t len) 
 {
-
-        return sox_rawread(ft, buf, len);
+  samples += len;
+  return sox_rawwrite(ft, buf, len);
 }
 
-/*
- * Do anything required when you stop reading samples.  
- * Don't close input file! 
- */
-static int sox_cdrstopread(sox_format_t * ft) 
+static int stopwrite(sox_format_t * ft) 
 {
-        /* Needed because of rawread() */
-        return sox_rawstopread(ft);
+  sox_size_t i = samples % SECTOR_SIZE;
+
+  if (i) while (i++ < SECTOR_SIZE)     /* Pad with silence to multiple */
+    sox_writew(ft, 0);                 /* of SECTOR_SIZE samples. */
+
+  return SOX_SUCCESS;
 }
-
-static int sox_cdrstartwrite(sox_format_t * ft) 
-{
-        cdr_t cdr = (cdr_t) ft->priv;
-        int rc;
-
-        /* Needed because of rawwrite() */
-        rc = sox_rawstartwrite(ft);
-        if (rc)
-            return rc;
-
-        cdr->samples = 0;
-
-        ft->signal.rate = 44100;
-        ft->signal.size = SOX_SIZE_16BIT;
-        ft->signal.encoding = SOX_ENCODING_SIGN2;
-        ft->signal.channels = 2;
-
-        return(SOX_SUCCESS);
-}
-
-static sox_size_t sox_cdrwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len) 
-{
-        cdr_t cdr = (cdr_t) ft->priv;
-
-        cdr->samples += len;
-
-        return sox_rawwrite(ft, buf, len);
-}
-
-/*
- * A CD-R file needs to be padded to SECTORSIZE, which is in terms of
- * samples.  We write -32768 for each sample to pad it out.
- */
-
-static int sox_cdrstopwrite(sox_format_t * ft) 
-{
-        cdr_t cdr = (cdr_t) ft->priv;
-        int padsamps = SECTORSIZE - (cdr->samples % SECTORSIZE);
-        int rc;
-
-        /* Flush buffer before writing anything else */
-        rc = sox_rawstopwrite(ft);
-
-        if (rc)
-            return rc;
-
-        if (padsamps != SECTORSIZE) 
-        {
-                while (padsamps > 0) {
-                        sox_writew(ft, 0);
-                        padsamps--;
-                }
-        }
-        return(SOX_SUCCESS);
-}
-
-static const char *cdrnames[] = {
-  "cdda",
-  "cdr",
-  NULL
-};
-
-static sox_format_handler_t sox_cdr_format = {
-  cdrnames,
-  SOX_FILE_SEEK | SOX_FILE_BIG_END,
-  sox_cdrstartread,
-  sox_cdrread,
-  sox_cdrstopread,
-  sox_cdrstartwrite,
-  sox_cdrwrite,
-  sox_cdrstopwrite,
-  sox_rawseek
-};
 
 const sox_format_handler_t *sox_cdr_format_fn(void);
-
 const sox_format_handler_t *sox_cdr_format_fn(void)
 {
-    return &sox_cdr_format;
+  static const char * names[] = {"cdda", "cdr", NULL};
+
+  static sox_format_handler_t handler = {
+    names, SOX_FILE_BIG_END,
+    start, sox_rawread, NULL,
+    start, write, stopwrite,
+    sox_rawseek
+  };
+
+  return &handler;
 }

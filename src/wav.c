@@ -1101,9 +1101,8 @@ static sox_size_t sox_wavread(sox_format_t * ft, sox_sample_t *buf, sox_size_t l
 static int sox_wavstopread(sox_format_t * ft) 
 {
     wav_t       wav = (wav_t) ft->priv;
-    int         rc = SOX_SUCCESS;
 
-        ft->sox_errno = SOX_SUCCESS;
+    ft->sox_errno = SOX_SUCCESS;
 
     free(wav->packet);
     free(wav->samples);
@@ -1120,10 +1119,9 @@ static int sox_wavstopread(sox_format_t * ft)
     case SOX_ENCODING_ADPCM:
         break;
     default:
-        /* Needed for rawread() */
-        rc = sox_rawstopread(ft);
+        break;
     }
-    return rc;
+    return SOX_SUCCESS;
 }
 
 static int sox_wavstartwrite(sox_format_t * ft) 
@@ -1599,12 +1597,6 @@ static int sox_wavstopwrite(sox_format_t * ft)
         free(wav->samples);
         free(wav->iCoefs);
 
-        /* Flush any remaining data */
-        if (wav->formatTag != WAVE_FORMAT_IMA_ADPCM &&
-            wav->formatTag != WAVE_FORMAT_ADPCM &&
-            wav->formatTag != WAVE_FORMAT_GSM610)
-            sox_rawstopwrite(ft);
-
         /* All samples are already written out. */
         /* If file header needs fixing up, for example it needs the */
         /* the number of samples in a field, seek back and write them here. */
@@ -1739,7 +1731,7 @@ static const char *wavnames[] = {
 
 static sox_format_handler_t sox_wav_format = {
   wavnames,
-  SOX_FILE_SEEK | SOX_FILE_LIT_END,
+  SOX_FILE_LIT_END,
   sox_wavstartread,
   sox_wavread,
   sox_wavstopread,

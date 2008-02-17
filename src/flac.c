@@ -525,7 +525,7 @@ const sox_format_handler_t *sox_flac_format_fn(void)
 {
   static char const * const names[] = {"flac", NULL};
   static sox_format_handler_t handler = {
-    names, SOX_FILE_SEEK,
+    names, 0,
     start_read, read, stop_read,
     start_write, write, stop_write,
     seek

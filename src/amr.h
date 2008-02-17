@@ -167,7 +167,7 @@ const sox_format_handler_t *AMR_FORMAT_FN(void)
     names, 0,
     startread, read, stopread,
     startwrite, write, stopwrite,
-    sox_format_nothing_seek
+    NULL
   };
   return &handler;
 }

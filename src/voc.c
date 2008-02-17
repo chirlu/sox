@@ -804,7 +804,7 @@ static sox_format_handler_t sox_voc_format = {
   SOX_FILE_LIT_END,
   sox_vocstartread,
   sox_vocread,
-  sox_format_nothing,
+  NULL,
   sox_vocstartwrite,
   sox_vocwrite,
   sox_vocstopwrite,

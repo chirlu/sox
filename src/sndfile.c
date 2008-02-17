@@ -454,7 +454,7 @@ static const char *names[] = {
 /* Format descriptor */
 static sox_format_handler_t format = {
   names,
-  SOX_FILE_SEEK | SOX_FILE_NOSTDIO,
+  SOX_FILE_NOSTDIO,
   startread,
   read,
   stopread,

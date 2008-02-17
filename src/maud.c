@@ -241,13 +241,6 @@ static sox_size_t sox_maudwrite(sox_format_t * ft, const sox_sample_t *buf, sox_
 
 static int sox_maudstopwrite(sox_format_t * ft) 
 {
-        int rc;
-
-        /* Flush out remaining samples*/
-        rc = sox_rawstopwrite(ft);
-        if (rc)
-            return rc;
-
         /* All samples are already written out. */
         
         if (sox_seeki(ft, 0, 0) != 0) 

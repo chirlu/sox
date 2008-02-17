@@ -118,12 +118,6 @@ static int sox_wvestartread(sox_format_t * ft)
 static int sox_wvestartwrite(sox_format_t * ft)
 {
         wve_t p = (wve_t)ft->priv;
-        int rc;
-
-        /* Needed for rawwrite() */
-        rc = sox_rawstartwrite(ft);
-        if (rc)
-            return SOX_EOF;
 
         p->length = 0;
         if (p->repeats == 0)
@@ -153,9 +147,6 @@ static sox_size_t sox_wvewrite(sox_format_t * ft, const sox_sample_t *buf, sox_s
 
 static int sox_wvestopwrite(sox_format_t * ft)
 {
-
-        /* Call before seeking to flush buffer */
-        sox_rawstopwrite(ft);
 
         if (!ft->seekable)
         {
@@ -207,7 +198,7 @@ static const char *wvenames[] = {
 
 static sox_format_handler_t sox_wve_format = {
   wvenames,
-  SOX_FILE_SEEK | SOX_FILE_BIG_END,
+  SOX_FILE_BIG_END,
   sox_wvestartread,
   sox_rawread,
   sox_rawstopread,

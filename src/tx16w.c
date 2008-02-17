@@ -374,7 +374,7 @@ static sox_format_handler_t sox_txw_format = {
    0,
    sox_txwstartread,
    sox_txwread,
-   sox_format_nothing,
+   NULL,
    sox_txwstartwrite,
    sox_txwwrite,
    sox_txwstopwrite,
