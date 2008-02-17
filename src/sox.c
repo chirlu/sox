@@ -717,14 +717,14 @@ int main(int argc, char **argv)
   /* Loop through the rest of the arguments looking for effects */
   parse_effects(argc, argv);
 
-  /* Not the greatest way for users to do this perhaps, but they're used
-   * to it, so it ought to stay until we replace it with something better. */
+  /* Not the best way for users to do this; now deprecated in favour of soxi. */
   if (!nuser_effects && ofile->filetype && !strcmp(ofile->filetype, "null")) {
     for (i = 0; i < input_count; i++)
       report_file_info(files[i]);
     exit(0);
   }
 
+  /* Bit of a hack: input files can get # of chans from an effect */
   for (i = 0; i < input_count; i++) {
     unsigned j;
     for (j =0; j < nuser_effects && !files[i]->ft->signal.channels; ++j)

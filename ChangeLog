@@ -42,6 +42,8 @@ Bug fixes:
 
   o Fix [1864216] comments mangled when writing ogg-vorbis.  (robs)
   o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)
+  o Fix [1890983] rec shortcut should apply bit depth (8-bit,
+    16-bit, etc.) to input handler.  (robs)
 
 Internal improvements:
 
@@ -59,7 +61,7 @@ Deprecated features to be removed in future:
   14.1.0   F flac: libFLAC 1.1.1   libFLAC > 1.1.1         14.1.0 + 6 months
   14.1.0   Behaviour whereby       soxi                    14.1.0 + 1 year
            sox -V file(s) -n
-	   doesn't read to EOF
+	   doesn't read to EOF.
 
 
 sox-14.0.1	2008-01-29
