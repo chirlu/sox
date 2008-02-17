@@ -513,13 +513,21 @@ _getopt_initialize (argc, argv, optstring)
    long-named options.  */
 
 int
-_getopt_internal (argc, argv, optstring, longopts, longind, long_only)
-     int argc;
-     char *const *argv;
-     const char *optstring;
-     const struct option *longopts;
-     int *longind;
-     int long_only;
+_getopt_internal (
+     int argc,
+     char *const *argv,
+     const char *optstring,
+     const struct option *longopts,
+     int *longind,
+     int long_only);
+int
+_getopt_internal (
+     int argc,
+     char *const *argv,
+     const char *optstring,
+     const struct option *longopts,
+     int *longind,
+     int long_only)
 {
   int print_errors = opterr;
   if (optstring[0] == ':')
