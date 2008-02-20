@@ -164,15 +164,10 @@ static double sox_macro_temp_double UNUSED;
 
 
 
-typedef uint32_t sox_size_t;
-/* Maximum value size type can hold. (Minimum is 0). */
-#define SOX_SIZE_MAX 0xffffffff
-#define SOX_SAMPLE_BITS (sizeof(sox_size_t) * CHAR_BIT)
-
-typedef int32_t sox_ssize_t;
-/* Minimum and maximum value signed size type can hold. */
-#define SOX_SSIZE_MAX 0x7fffffff
-#define SOX_SSIZE_MIN (-SOX_SSIZE_MAX - 1)
+#include <stddef.h>
+typedef size_t sox_size_t;
+#define SOX_SIZE_MAX (sox_size_t)(-1)
+typedef ptrdiff_t sox_ssize_t;
 
 typedef double sox_rate_t;
 
