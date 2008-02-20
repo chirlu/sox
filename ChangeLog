@@ -37,7 +37,7 @@ Other new features:
   o Command line support for multiple file comments.  (robs)
   o Added soxi utility to extract/display file header fields.  (robs)
   o Added pkg-config support. (Pascal Giard)
-  o Added simple V.U. meter.  (robs)
+  o Added basic VU meter.  (robs)
   o Added simple heuristic to detect when playing an album and set
     the default replay-gain mode to `album'.  (robs)
 
@@ -47,6 +47,7 @@ Bug fixes:
   o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)
   o Fix [1890983] rec shortcut should apply bit depth (8-bit,
     16-bit, etc.) to input handler.  (robs)
+  o Fix short noise at end of alsa playback.  (Morita Sho)
 
 Internal improvements:
 

@@ -652,7 +652,8 @@ static int sox_alsastopwrite(sox_format_t * ft)
 
     memset(alsa->buf, 0, frames_of_silence * ft->signal.size * ft->signal.channels);
 
-    while (0 && frames_of_silence > 0) {
+    sox_debug("padding output with %u silent samples", (unsigned)frames_of_silence);
+    while (frames_of_silence > 0) {
       int err;
       err = snd_pcm_writei(alsa->pcm_handle, 
                            alsa->buf,
