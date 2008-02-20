@@ -183,3 +183,23 @@ sox_effect_handler_t const * sox_vol_effect_fn(void)
   };
   return &handler;
 }
+
+static int gain_getopts(sox_effect_t * effp, int argc, char * * argv) 
+{
+  char * args[] = {0, "dB"};
+
+  if (argc != 1)
+    return sox_usage(effp);
+  args[0] = argv[0];
+  return sox_vol_effect_fn()->getopts(effp, array_length(args), args);
+}
+
+sox_effect_handler_t const * sox_gain_effect_fn(void)
+{
+  static sox_effect_handler_t handler;
+  handler = *sox_vol_effect_fn();
+  handler.name = "gain";
+  handler.usage = "dB-gain";
+  handler.getopts = gain_getopts;
+  return &handler;
+}

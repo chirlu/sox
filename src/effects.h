@@ -17,6 +17,7 @@
   EFFECT(fade)
   EFFECT(filter)
   EFFECT(flanger)
+  EFFECT(gain)
   EFFECT(highpass)
   EFFECT(key)
 #ifdef HAVE_LADSPA_H
