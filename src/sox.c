@@ -422,7 +422,7 @@ static int output_flow(sox_effect_t *effp UNUSED, sox_sample_t const * ibuf,
 {
   size_t len;
 
-  for (len = 0; len < *isamp; len += effp->ininfo.channels) {
+  if (show_progress) for (len = 0; len < *isamp; len += effp->ininfo.channels) {
     omax[0] = max(omax[0], ibuf[len]);
     omin[0] = min(omin[0], ibuf[len]);
     if (effp->ininfo.channels > 1) {
@@ -557,24 +557,6 @@ static char const * sigfigs3p(double percentage)
   return string[n];
 }
 
-static char const * vu(unsigned channel)
-{
-  static char const * const text[][2] = {
-    {"", ""}, {"-", "-"}, {"=", "="}, {"-=", "=-"},
-    {"==", "=="}, {"-==", "==-"}, {"===", "==="}, {"-===", "===-"},
-    {"====", "===="}, {"-====", "====-"}, {"=====", "====="},
-    {"-=====", "=====-"}, {"======", "======"},
-    {"!=====", "=====!"}, {"!!====", "====!!"}, /* 2 `red' levels */
-  };
-  int const red = 2, white = array_length(text) - red;
-  double const MAX = SOX_SAMPLE_MAX, MIN = SOX_SAMPLE_MIN;
-  double linear = max(omax[channel] / MAX, omin[channel] / MIN);
-  int vu_dB = linear? floor(2 * white + red - .5 + linear_to_dB(linear)) : 0;
-  int index = vu_dB < 2 * white? max(vu_dB / 2, 0) : vu_dB - white;
-  omax[channel] = omin[channel] = 0;
-  return text[index][channel];
-}
-
 static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
 {
   sox_bool ret;
@@ -588,12 +570,53 @@ static sox_bool since(struct timeval * then, double secs, sox_bool always_reset)
   return ret;
 }
 
+#define MIN_HEADROOM 6.
+static double min_headroom = MIN_HEADROOM;
+
+static char const * vu(unsigned channel)
+{
+  static struct timeval then;
+  static char const * const text[][2] = {
+    /* White: 2dB steps */
+    {"", ""}, {"-", "-"}, {"=", "="}, {"-=", "=-"},
+    {"==", "=="}, {"-==", "==-"}, {"===", "==="}, {"-===", "===-"},
+    {"====", "===="}, {"-====", "====-"}, {"=====", "====="},
+    {"-=====", "=====-"}, {"======", "======"},
+    /* Red: 1dB steps */
+    {"!=====", "=====!"},
+  };
+  int const red = 1, white = array_length(text) - red;
+  double const MAX = SOX_SAMPLE_MAX, MIN = SOX_SAMPLE_MIN;
+  double linear = max(omax[channel] / MAX, omin[channel] / MIN);
+  double dB = linear_to_dB(linear);
+  int vu_dB = linear? floor(2 * white + red + dB) : 0;
+  int index = vu_dB < 2 * white? max(vu_dB / 2, 0) : min(vu_dB - white, red + white - 1);
+  omax[channel] = omin[channel] = 0;
+  if (-dB < min_headroom) {
+    gettimeofday(&then, NULL);
+    min_headroom = -dB;
+  }
+  else if (since(&then, 3., sox_false))
+    min_headroom = -dB;
+
+  return text[index][channel];
+}
+
+static char * headroom(void)
+{
+  static char buff[10];
+  unsigned h = (unsigned)(min_headroom * 10);
+  if (min_headroom >= MIN_HEADROOM) return "      ";
+  sprintf(buff, "Hd:%u.%u", h /10, h % 10);
+  return buff;
+}
+
 static void display_status(sox_bool all_done)
 {
   static struct timeval then;
   if (!show_progress)
     return;
-  if (all_done || since(&then, .15, sox_false)) {
+  if (all_done || since(&then, .1, sox_false)) {
     double read_time = (double)read_wide_samples / combiner.rate;
     double left_time = 0, in_time = 0, percentage = 0;
 
@@ -602,10 +625,10 @@ static void display_status(sox_bool all_done)
       left_time = max(in_time - read_time, 0);
       percentage = max(100. * read_wide_samples / input_wide_samples, 0);
     }
-    fprintf(stderr, "\r%s [%s] of %s (%-5s) Samps out:%-5s%6s|%-6sClips:%-5s",
-      str_time(read_time), str_time(left_time), str_time(in_time),
-      sigfigs3p(percentage), sigfigs3(output_samples),
-      vu(0), vu(1), sigfigs3(total_clips()));
+    fprintf(stderr, "\r%-5s %s [%s] of %s Out:%-5s [%6s|%-6s]%s Clip:%-5s",
+      sigfigs3p(percentage), str_time(read_time), str_time(left_time),
+      str_time(in_time), sigfigs3(output_samples),
+      vu(0), vu(1), headroom(), sigfigs3(total_clips()));
   }
   if (all_done)
     fputc('\n', stderr);
