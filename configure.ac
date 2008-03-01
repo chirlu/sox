@@ -52,7 +52,22 @@ if test "$using_libltdl" != "no"; then
 fi
 AM_CONDITIONAL(HAVE_LIBLTDL, test x$using_libltdl = xyes)
 
-m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG])
+AC_ARG_WITH(pkgconfigdir,
+    AC_HELP_STRING([--with-pkgconfigdir],
+                   [location to install .pc files or "no" to disable (default=$(libdir)/pkgconfig)]))
+
+m4_ifndef([PKG_PROG_PKG_CONFIG], with_pkgconfigdir="no")
+
+using_pkgconfig=no
+if test "$with_pkgconfigdir" != "no"; then
+    if test "$with_pkgconfigdir" == ""; then
+        with_pkgconfigdir="\$(libdir)/pkgconfig"
+    fi
+    using_pkgconfig="yes"
+    PKG_PROG_PKG_CONFIG
+fi
+AM_CONDITIONAL(HAVE_PKGCONFIG, test x$using_pkgconfig = xyes)
+AC_SUBST(PKGCONFIGDIR, $with_pkgconfigdir)
 
 dnl Debugging
 AC_MSG_CHECKING([whether to make a debug build])
@@ -421,6 +436,12 @@ else
    gsm_option="in-tree"
 fi
 
+if test "$using_pkgconfig" = "no"; then
+    pkgconfig_option="disabled"
+else
+    pkgconfig_option="$with_pkgconfigdir"
+fi
+
 dnl Report configuration.
 echo
 echo "Debugging build................... $enable_debug"
@@ -442,6 +463,7 @@ echo "AMR-WB format..................... $using_amr_wb"
 echo "AMR-NB format..................... $using_amr_nb"
 echo "LADSPA effects.................... $using_ladspa"
 echo "Secret Rabbit Code resampling..... $using_samplerate"
+echo "pkg-config location............... $pkgconfig_option"
 echo
 echo "Configure finished.  Do 'make && make install' to compile and install SoX."
 echo
