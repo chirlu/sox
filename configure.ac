@@ -60,7 +60,7 @@ m4_ifndef([PKG_PROG_PKG_CONFIG], with_pkgconfigdir="no")
 
 using_pkgconfig=no
 if test "$with_pkgconfigdir" != "no"; then
-    if test "$with_pkgconfigdir" == ""; then
+    if test "$with_pkgconfigdir" = ""; then
         with_pkgconfigdir="\$(libdir)/pkgconfig"
     fi
     using_pkgconfig="yes"
