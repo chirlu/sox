@@ -84,43 +84,43 @@ static sox_encoding_t sox_encoding_and_size(unsigned format, unsigned * size)
   
   switch (format) {
   case SF_FORMAT_PCM_S8:
-    *size = SOX_SIZE_8BIT;
+    *size = 8;
     return SOX_ENCODING_SIGN2;
   case SF_FORMAT_PCM_16:
-    *size = SOX_SIZE_16BIT;
+    *size = 16;
     return SOX_ENCODING_SIGN2;
   case SF_FORMAT_PCM_24:
-    *size = SOX_SIZE_24BIT;
+    *size = 24;
     return SOX_ENCODING_SIGN2;
   case SF_FORMAT_PCM_32:
-    *size = SOX_SIZE_32BIT;
+    *size = 32;
     return SOX_ENCODING_SIGN2;
   case SF_FORMAT_PCM_U8:
-    *size = SOX_SIZE_8BIT;
+    *size = 8;
     return SOX_ENCODING_UNSIGNED;
   case SF_FORMAT_FLOAT:
-    *size = SOX_SIZE_32BIT;
+    *size = 32;
     return SOX_ENCODING_FLOAT;
   case SF_FORMAT_DOUBLE:
-    *size = SOX_SIZE_64BIT;
+    *size = 64;
     return SOX_ENCODING_FLOAT;
   case SF_FORMAT_ULAW:
-    *size = SOX_SIZE_8BIT;
+    *size = 8;
     return SOX_ENCODING_ULAW;
   case SF_FORMAT_ALAW:
-    *size = SOX_SIZE_8BIT;
+    *size = 8;
     return SOX_ENCODING_ALAW;
   case SF_FORMAT_IMA_ADPCM:
-    *size = SOX_SIZE_16BIT;
+    *size = 16;
     return SOX_ENCODING_IMA_ADPCM;
   case SF_FORMAT_MS_ADPCM:
-    *size = SOX_SIZE_16BIT;
+    *size = 16;
     return SOX_ENCODING_MS_ADPCM;
   case SF_FORMAT_GSM610:
-    *size = SOX_SIZE_16BIT;
+    *size = 16;
     return SOX_ENCODING_GSM;
   case SF_FORMAT_VOX_ADPCM:
-    *size = SOX_SIZE_16BIT;
+    *size = 16;
     return SOX_ENCODING_OKI_ADPCM;
 
   /* For encodings we can't represent, have a sensible default */
@@ -210,26 +210,20 @@ static int name_to_format(const char *name)
 /* Make libsndfile subtype from sample encoding and size */
 static int sndfile_format(sox_encoding_t encoding, unsigned size)
 {
-  if (encoding < SOX_ENCODING_SIZE_IS_WORD) {
-    switch (encoding) {
+  size = (size + 7) & ~7u;
+  switch (encoding) {
     case SOX_ENCODING_ULAW:
       return SF_FORMAT_ULAW;
     case SOX_ENCODING_ALAW:
       return SF_FORMAT_ALAW;
-    case SOX_ENCODING_ADPCM:
     case SOX_ENCODING_MS_ADPCM:
       return SF_FORMAT_MS_ADPCM;
     case SOX_ENCODING_IMA_ADPCM:
       return SF_FORMAT_IMA_ADPCM;
     case SOX_ENCODING_OKI_ADPCM:
       return SF_FORMAT_VOX_ADPCM;
-    default: /* Should be impossible */
-      return 0;
-    }
-  } else {
-    switch (encoding) {
     case SOX_ENCODING_UNSIGNED:
-      if (size == SOX_SIZE_8BIT)
+      if (size == 8)
         return SF_FORMAT_PCM_U8;
       else
         return 0;
@@ -239,13 +233,13 @@ static int sndfile_format(sox_encoding_t encoding, unsigned size)
 #ifdef HAVE_SNDFILE_1_0_12
     case SOX_ENCODING_FLAC:
       switch (size) {
-      case SOX_SIZE_8BIT:
+      case 8:
         return SF_FORMAT_PCM_S8;
-      case SOX_SIZE_16BIT:
+      case 16:
         return SF_FORMAT_PCM_16;
-      case SOX_SIZE_24BIT:
+      case 24:
         return SF_FORMAT_PCM_24;
-      case SOX_SIZE_32BIT:
+      case 32:
         return SF_FORMAT_PCM_32;
       default: /* invalid size */
         return 0;
@@ -258,14 +252,13 @@ static int sndfile_format(sox_encoding_t encoding, unsigned size)
       return SF_FORMAT_GSM610;
     default: /* Bad encoding */
       return 0;
-    }
   }
 }
 
 static void start(sox_format_t * ft)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
-  int subtype = sndfile_format(ft->signal.encoding, ft->signal.size);
+  int subtype = sndfile_format(ft->encoding.encoding, ft->encoding.bits_per_sample? ft->encoding.bits_per_sample : ft->signal.precision);
   sf->log_buffer_ptr = sf->log_buffer = xmalloc(LOG_MAX);
   sf->sf_info = (SF_INFO *)xcalloc(1, sizeof(SF_INFO));
 
@@ -304,7 +297,7 @@ static int startread(sox_format_t * ft)
   }
 
   /* Copy format info */
-  ft->signal.encoding = sox_encoding_and_size((unsigned)sf->sf_info->format, &ft->signal.size);
+  ft->encoding.encoding = sox_encoding_and_size((unsigned)sf->sf_info->format, &ft->encoding.bits_per_sample);
   ft->signal.channels = sf->sf_info->channels;
   ft->length = sf->sf_info->frames * sf->sf_info->channels;
 
@@ -324,7 +317,7 @@ static int startread(sox_format_t * ft)
  * Read up to len samples of type sox_sample_t from file into buf[].
  * Return number of samples read.
  */
-static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
 
@@ -391,7 +384,7 @@ static int startwrite(sox_format_t * ft)
  * Write len samples of type sox_sample_t from buf[] to file.
  * Return number of samples written.
  */
-static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
   sndfile_t sf = (sndfile_t)ft->priv;
 
@@ -418,56 +411,60 @@ static int seek(sox_format_t * ft, sox_size_t offset)
   return SOX_SUCCESS;
 }
 
-/* Format file suffixes */
-/* For now, comment out formats built in to SoX */
-static const char *names[] = {
-  "sndfile", /* special type to force use of sndfile */
-  /* "aif", */
-  /* "wav", */
-  /* "au", */
-#ifdef HAVE_SNDFILE_1_0_12
-  "caf",
-#endif
-  /* "flac", */
-  /* "snd", */
-  /* "svx", */
-  "paf",
-  "fap",
-  /* "gsm", */
-  /* "nist", */
-  /* "ircam", */
-  /* "sf", */
-  /* "voc", */
-  "w64",
-  /* "raw", */
-  "mat4",
-  "mat5",
-  "mat",
-  "pvf",
-  "sds",
-  "sd2",
-  /* "vox", */
-  "xi",
-  NULL
-};
-
-/* Format descriptor */
-static sox_format_handler_t format = {
-  names,
-  SOX_FILE_NOSTDIO,
-  startread,
-  read,
-  stopread,
-  startwrite,
-  write,
-  stopwrite,
-  seek
-};
-
-const sox_format_handler_t *sox_sndfile_format_fn(void);
-
-const sox_format_handler_t *sox_sndfile_format_fn(void)
+SOX_FORMAT_HANDLER(sndfile)
 {
+  /* Format file suffixes */
+  /* For now, comment out formats built in to SoX */
+  static char const * const names[] = {
+    "sndfile", /* special type to force use of sndfile */
+    /* "aif", */
+    /* "wav", */
+    /* "au", */
+#ifdef HAVE_SNDFILE_1_0_12
+    "caf",
+#endif
+    /* "flac", */
+    /* "snd", */
+    /* "svx", */
+    "paf",
+    "fap",
+    /* "gsm", */
+    /* "nist", */
+    /* "ircam", */
+    /* "sf", */
+    /* "voc", */
+    "w64",
+    /* "raw", */
+    "mat4",
+    "mat5",
+    "mat",
+    "pvf",
+    "sds",
+    "sd2",
+    /* "vox", */
+    "xi",
+    NULL
+  };
+
+  static unsigned const write_encodings[] = {
+    SOX_ENCODING_SIGN2, 16, 24, 32, 8, 0,
+    SOX_ENCODING_UNSIGNED, 8, 0,
+    SOX_ENCODING_FLOAT, 32, 64, 0,
+    SOX_ENCODING_ALAW, 8, 0,
+    SOX_ENCODING_ULAW, 8, 0,
+    SOX_ENCODING_IMA_ADPCM, 4, 0,
+    SOX_ENCODING_MS_ADPCM, 4, 0,
+    SOX_ENCODING_OKI_ADPCM, 4, 0,
+    SOX_ENCODING_GSM, 0,
+    0};
+
+  static sox_format_handler_t const format = {
+    names, SOX_FILE_NOSTDIO,
+    startread, read_samples, stopread,
+    startwrite, write_samples, stopwrite,
+    seek, write_encodings, NULL
+  };
+
   return &format;
 }
 

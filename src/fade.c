@@ -9,6 +9,8 @@
  * the consequences of using this software.
  */
 
+#include "sox_i.h"
+
 /* Fade curves */
 #define FADE_QUARTER    'q'     /* Quarter of sine wave, 0 to pi/2 */
 #define FADE_HALF       'h'     /* Half of sine wave, pi/2 to 1.5 * pi
@@ -21,7 +23,6 @@
 
 #include <math.h>
 #include <string.h>
-#include "sox_i.h"
 
 /* Private data for fade file */
 typedef struct fadestuff
@@ -118,7 +119,7 @@ static int sox_fade_start(sox_effect_t * effp)
 
     /* converting time values to samples */
     fade->in_start = 0;
-    if (sox_parsesamples(effp->ininfo.rate, fade->in_stop_str,
+    if (sox_parsesamples(effp->in_signal.rate, fade->in_stop_str,
                         &fade->in_stop, 't') == NULL)
       return sox_usage(effp);
 
@@ -127,14 +128,14 @@ static int sox_fade_start(sox_effect_t * effp)
     if (fade->out_stop_str)
     {
         fade->do_out = 1;
-        if (sox_parsesamples(effp->ininfo.rate, fade->out_stop_str,
+        if (sox_parsesamples(effp->in_signal.rate, fade->out_stop_str,
                             &fade->out_stop, 't') == NULL)
           return sox_usage(effp);
 
         /* See if user wants to fade out. */
         if (fade->out_start_str)
         {
-            if (sox_parsesamples(effp->ininfo.rate, fade->out_start_str,
+            if (sox_parsesamples(effp->in_signal.rate, fade->out_start_str,
                         &fade->out_start, 't') == NULL)
               return sox_usage(effp);
             /* Fade time is relative to stop time. */
@@ -238,7 +239,7 @@ static int sox_fade_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
 
         /* Process next channel */
         chcnt++;
-        if (chcnt >= effp->ininfo.channels)
+        if (chcnt >= effp->in_signal.channels)
         { /* all channels of this sample processed */
             chcnt = 0;
             fade->samplesdone += 1;
@@ -281,7 +282,7 @@ static int sox_fade_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *o
         *osamp += 1;
 
         t_chan++;
-        if (t_chan >= effp->ininfo.channels)
+        if (t_chan >= effp->in_signal.channels)
         {
             fade->samplesdone += 1;
             t_chan = 0;

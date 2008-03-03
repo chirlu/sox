@@ -202,19 +202,19 @@ static int start(sox_effect_t * effp)
   size_t i;
   
   p->ichannels = p->ochannels = 1;
-  effp->outinfo.rate = effp->ininfo.rate;
-  if (effp->ininfo.channels > 2 && p->stereo_depth) {
+  effp->out_signal.rate = effp->in_signal.rate;
+  if (effp->in_signal.channels > 2 && p->stereo_depth) {
     sox_warn("stereo-depth not applicable with >2 channels");
     p->stereo_depth = 0;
   }
-  if (effp->ininfo.channels == 1 && p->stereo_depth)
-    effp->outinfo.channels = p->ochannels = 2;
-  else effp->outinfo.channels = effp->ininfo.channels;
-  if (effp->ininfo.channels == 2 && p->stereo_depth)
+  if (effp->in_signal.channels == 1 && p->stereo_depth)
+    effp->out_signal.channels = p->ochannels = 2;
+  else effp->out_signal.channels = effp->in_signal.channels;
+  if (effp->in_signal.channels == 2 && p->stereo_depth)
     p->ichannels = p->ochannels = 2;
-  else effp->flows = effp->ininfo.channels;
+  else effp->flows = effp->in_signal.channels;
   for (i = 0; i < p->ichannels; ++i) reverb_create(
-    &p->chan[i].reverb, effp->ininfo.rate, p->wet_gain_dB, p->room_scale,
+    &p->chan[i].reverb, effp->in_signal.rate, p->wet_gain_dB, p->room_scale,
     p->reverberance, p->hf_damping, p->pre_delay_ms, p->stereo_depth,
     effp->global_info->global_info->bufsiz / p->ochannels, p->chan[i].wet);
   return SOX_SUCCESS;

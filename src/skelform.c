@@ -59,15 +59,15 @@ static int startread(sox_format_t * ft)
    * then you should set it here.
    */
   ft->signal.rate = 44100; /* or 8000, 16000, 32000, 48000, ... */
-  ft->signal.size = SOX_SIZE_8BIT; /* or 16BIT ... */
-  ft->signal.encoding = SOX_ENCODING_UNSIGNED; /* or SIGN2 ... */
-  ft->signal.channels = 1; /* or 2 or 4 */
+  ft->signal.channels = 1; /* or 2 or 3 ... */
+  ft->encoding.bits_per_sample = 8; /* or 16 ... */
+  ft->encoding.encoding = SOX_ENCODING_UNSIGNED; /* or SIGN2 ... */
   append_comment(&ft->comments, "any comment in file header.");
 
   /* If your format doesn't have a header then samples_in_file
    * can be determined by the file size.
    */
-  samples_in_file = sox_filelength(ft) / ft->signal.size;
+  samples_in_file = sox_filelength(ft) / (ft->encoding.bits_per_sample >> 3);
 
   /* If you can detect the length of your file, record it here. */
   ft->length = samples_in_file;
@@ -80,7 +80,7 @@ static int startread(sox_format_t * ft)
  * Read up to len samples of type sox_sample_t from file into buf[].
  * Return number of samples read, or 0 if at end of file.
  */
-static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
   skelform_t UNUSED sk = (skelform_t)ft->priv;
   sox_size_t done;
@@ -90,9 +90,9 @@ static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
     if (feof(ft->fp)) /* no more samples */
       break;
     sample = fgetc(ft->fp);
-    switch (ft->signal.size) {
-    case SOX_SIZE_8BIT:
-      switch (ft->signal.encoding) {
+    switch (ft->encoding.bits_per_sample) {
+    case 8:
+      switch (ft->encoding.encoding) {
       case SOX_ENCODING_UNSIGNED:
         *buf++ = SOX_UNSIGNED_8BIT_TO_SAMPLE(sample,);
         break;
@@ -136,12 +136,12 @@ static int startwrite(sox_format_t * ft)
   if (ft->signal.rate != 44100)
     sox_fail("Output .skel file must have a sample rate of 44100Hz");
 
-  if (ft->signal.size == 0) {
+  if (ft->encoding.bits_per_sample == 0) {
     sox_fail("Did not specify a size for .skel output file");
     return SOX_EOF;
   }
 
-  /* error check ft->signal.encoding */
+  /* error check ft->encoding.encoding */
   /* error check ft->signal.channels */
 
   /* Write file header, if any */
@@ -155,13 +155,13 @@ static int startwrite(sox_format_t * ft)
  * Write len samples of type sox_sample_t from buf[] to file.
  * Return number of samples written.
  */
-static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
   skelform_t UNUSED sk = (skelform_t)ft->priv;
 
-  switch (ft->signal.size) {
-  case SOX_SIZE_8BIT:
-    switch (ft->signal.encoding) {
+  switch (ft->encoding.bits_per_sample) {
+  case 8:
+    switch (ft->encoding.encoding) {
     case SOX_ENCODING_UNSIGNED:
       while (len--) {
         len = sox_writeb(ft, SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++, ft->clips));
@@ -196,32 +196,28 @@ static int seek(sox_format_t UNUSED * ft, sox_size_t UNUSED offset)
   return SOX_SUCCESS;
 }
 
-/* Format file suffixes */
-static const char *names[] = {
-  "skel",
-  NULL
-};
-
-/* Format descriptor
- * If no specific processing is needed for any of
- * the 7 functions, then the function above can be deleted
- * and 0 used in place of the its name below.
- */
-static sox_format_handler_t sox_skel_format = {
-  names,
-  0,
-  startread,
-  read,
-  stopread,
-  startwrite,
-  write,
-  stopwrite,
-  seek
-};
-
-const sox_format_handler_t *sox_skel_format_fn(void);
-
-const sox_format_handler_t *sox_skel_format_fn(void)
+SOX_FORMAT_HANDLER(skel)
 {
-  return &sox_skel_format;
+  /* Format file suffixes */
+  static const char *names[] = {"skel",NULL };
+
+  /* Encoding types and sizes that this handler can write */
+  static unsigned encodings[] = {
+    SOX_ENCODING_SIGN2, 16, 0,
+    SOX_ENCODING_UNSIGNED, 8, 0,
+    0};
+
+  /* Format descriptor
+   * If no specific processing is needed for any of
+   * the 7 functions, then the function above can be deleted
+   * and NULL used in place of the its name below.
+   */
+  static sox_format_handler_t handler = {
+    names, 0,
+    startread, read_samples, stopread,
+    startwrite, write_samples, stopwrite,
+    seek, encodings, NULL
+  };
+
+  return &handler;
 }

@@ -40,14 +40,14 @@ static void sndtwriteheader(sox_format_t * ft, sox_size_t nsamples)
   sox_writebuf(ft, name_buf, 96);
 }
 
-static int sox_sndseek(sox_format_t * ft, sox_size_t offset)
+static int seek(sox_format_t * ft, sox_size_t offset)
 {
   sox_size_t new_offset, channel_block, alignment;
   snd_t snd = (snd_t) ft->priv;
 
-  new_offset = offset * ft->signal.size;
+  new_offset = offset * (ft->encoding.bits_per_sample >> 3);
   /* Make sure request aligns to a channel block (ie left+right) */
-  channel_block = ft->signal.channels * ft->signal.size;
+  channel_block = ft->signal.channels * (ft->encoding.bits_per_sample >> 3);
   alignment = new_offset % channel_block;
   /* Most common mistaken is to compute something like
    * "skip everthing upto and including this sample" so
@@ -60,7 +60,7 @@ static int sox_sndseek(sox_format_t * ft, sox_size_t offset)
   return sox_seeki(ft, (sox_ssize_t) new_offset, SEEK_SET);
 }
 
-static int sox_sndtstartread(sox_format_t * ft)
+static int startread(sox_format_t * ft)
 {
   snd_t snd = (snd_t) ft->priv;
 
@@ -113,8 +113,8 @@ static int sox_sndtstartread(sox_format_t * ft)
 
   ft->signal.channels = 1;
   ft->signal.rate = rate;
-  ft->signal.encoding = SOX_ENCODING_UNSIGNED;
-  ft->signal.size = SOX_SIZE_BYTE;
+  ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
+  ft->encoding.bits_per_sample = 8;
 
   snd->dataStart = sox_tell(ft);
   ft->length = sox_filelength(ft) - snd->dataStart;
@@ -122,7 +122,7 @@ static int sox_sndtstartread(sox_format_t * ft)
   return (SOX_SUCCESS);
 }
 
-static int sox_sndtstartwrite(sox_format_t * ft)
+static int startwrite(sox_format_t * ft)
 {
   snd_t p = (snd_t) ft->priv;
   int rc;
@@ -133,16 +133,13 @@ static int sox_sndtstartwrite(sox_format_t * ft)
     return rc;
 
   /* write header */
-  ft->signal.channels = 1;
-  ft->signal.encoding = SOX_ENCODING_UNSIGNED;
-  ft->signal.size = SOX_SIZE_BYTE;
   p->nsamples = 0;
   sndtwriteheader(ft, 0);
 
   return (SOX_SUCCESS);
 }
 
-static sox_size_t sox_sndtwrite(sox_format_t * ft, const sox_sample_t * buf,
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t * buf,
                                 sox_size_t len)
 {
   snd_t p = (snd_t) ft->priv;
@@ -151,7 +148,7 @@ static sox_size_t sox_sndtwrite(sox_format_t * ft, const sox_sample_t * buf,
   return sox_rawwrite(ft, buf, len);
 }
 
-static int sox_sndtstopwrite(sox_format_t * ft)
+static int stopwrite(sox_format_t * ft)
 {
   snd_t p = (snd_t) ft->priv;
 
@@ -161,34 +158,19 @@ static int sox_sndtstopwrite(sox_format_t * ft)
                    "can't rewind output file to rewrite SND header");
     return SOX_EOF;
   }
-
   sndtwriteheader(ft, p->nsamples);
-
-
   return (SOX_SUCCESS);
 }
 
-/* Sndtool Sound File */
-static const char *sndtnames[] = {
-  "sndt",
-  NULL
-};
-
-static const sox_format_handler_t sox_snd_format = {
-  sndtnames,
-  SOX_FILE_LIT_END,
-  sox_sndtstartread,
-  sox_rawread,
-  sox_rawstopread,
-  sox_sndtstartwrite,
-  sox_sndtwrite,
-  sox_sndtstopwrite,
-  sox_sndseek
-};
-
-const sox_format_handler_t *sox_sndrtool_format_fn(void);
-
-const sox_format_handler_t *sox_sndrtool_format_fn(void)
+SOX_FORMAT_HANDLER(sndrtool)
 {
-  return &sox_snd_format;
+  static char const * const names[] = {"sndt", NULL};
+  static unsigned const write_encodings[] = {SOX_ENCODING_UNSIGNED, 8, 0, 0};
+  static sox_format_handler_t const handler = {
+    names, SOX_FILE_LIT_END | SOX_FILE_MONO,
+    startread, sox_rawread, sox_rawstopread,
+    startwrite, write_samples, stopwrite,
+    seek, write_encodings, NULL
+  };
+  return &handler;
 }

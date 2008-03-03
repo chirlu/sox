@@ -68,6 +68,7 @@ typedef uint32_t uint24_t;   /* ditto */
 typedef int32_t sox_sample_t;
 
 /* Minimum and maximum values a sample can hold. */
+#define SOX_SAMPLE_PRECISION 32
 #define SOX_SAMPLE_MAX (sox_sample_t)SOX_INT_MAX(32)
 #define SOX_SAMPLE_MIN (sox_sample_t)SOX_INT_MIN(32)
 
@@ -173,64 +174,71 @@ typedef double sox_rate_t;
 
 typedef enum {
   SOX_ENCODING_UNKNOWN   ,
+  
+  SOX_ENCODING_SIGN2     , /* signed linear 2's comp: Mac */
+  SOX_ENCODING_UNSIGNED  , /* unsigned linear: Sound Blaster */
+  SOX_ENCODING_FLOAT     , /* floating point (binary format) */
+  SOX_ENCODING_FLOAT_TEXT, /* floating point (text format) */
+  SOX_ENCODING_FLAC      , /* FLAC compression */
+  SOX_ENCODING_HCOM      , /*  */
+
+  SOX_ENCODING_LOSSLESS  , /* Lossless above, lossy below */
 
   SOX_ENCODING_ULAW      , /* u-law signed logs: US telephony, SPARC */
   SOX_ENCODING_ALAW      , /* A-law signed logs: non-US telephony */
-  SOX_ENCODING_ADPCM     , /* G72x Compressed PCM */
+  SOX_ENCODING_G721      , /* G.721 4-bit ADPCM */
+  SOX_ENCODING_G723      , /* G.723 3 or 5 bit ADPCM */
   SOX_ENCODING_MS_ADPCM  , /* Microsoft Compressed PCM */
   SOX_ENCODING_IMA_ADPCM , /* IMA Compressed PCM */
   SOX_ENCODING_OKI_ADPCM , /* Dialogic/OKI Compressed PCM */
-
-  SOX_ENCODING_SIZE_IS_WORD, /* FIXME: marks raw types (above) that mis-report size. sox_signalinfo_t really needs a precision_in_bits item */
-
-  SOX_ENCODING_UNSIGNED  , /* unsigned linear: Sound Blaster */
-  SOX_ENCODING_SIGN2     , /* signed linear 2's comp: Mac */
-  SOX_ENCODING_FLOAT     , /* 32-bit float */
   SOX_ENCODING_GSM       , /* GSM 6.10 33byte frame lossy compression */
   SOX_ENCODING_MP3       , /* MP3 compression */
   SOX_ENCODING_VORBIS    , /* Vorbis compression */
-  SOX_ENCODING_FLAC      , /* FLAC compression */
   SOX_ENCODING_AMR_WB    , /* AMR-WB compression */
   SOX_ENCODING_AMR_NB    , /* AMR-NB compression */
-
+  SOX_ENCODING_CVSD      , /*  */
+  SOX_ENCODING_LPC10     , /*  */
   SOX_ENCODINGS            /* End of list marker */
 } sox_encoding_t;
 
 typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot} sox_plot_t;
 typedef enum {SOX_OPTION_NO, SOX_OPTION_YES, SOX_OPTION_DEFAULT} sox_option_t;
 
-/* Signal parameters */
 
-typedef struct sox_signalinfo
-{
-    sox_rate_t rate;         /* sampling rate */
-    unsigned channels;       /* number of sound channels */
-    unsigned size;           /* compressed or uncompressed datum size */
-    sox_encoding_t encoding; /* format of sample numbers */
-    double compression;      /* compression factor (where applicable) */
-
-    /* There is a delineation between these vars being tri-state and
-     * effectively boolean.  Logically the line falls between setting
-     * them up (could be done in libSoX, or by the libSoX client) and
-     * using them (in libSoX).  libSoX's logic to set them up includes
-     * knowledge of the machine default and the format default.  (The
-     * sox client logic adds to this a layer of overridability via user
-     * options.)  The physical delineation is in the somewhat
-     * snappily-named libSoX function `set_endianness_if_not_already_set'
-     * which is called at the right times (as files are openned) by the
-     * libSoX core, not by the file handlers themselves.  The file handlers
-     * indicate to the libSoX core if they have a preference using
-     * SOX_FILE_xxx flags.
-     */
-    sox_option_t reverse_bytes;    /* endiannesses... */
-    sox_option_t reverse_nibbles;
-    sox_option_t reverse_bits;
+typedef struct { /* Signal parameters; 0 if unknown */
+  sox_rate_t rate;         /* sampling rate */
+  unsigned channels;       /* number of sound channels */
+  unsigned precision;      /* in bits */
 } sox_signalinfo_t;
+
+
+typedef struct { /* Encoding parameters */
+  sox_encoding_t encoding; /* format of sample numbers */
+  unsigned bits_per_sample;  /* 0 if unknown or variable; uncompressed value if lossless; compressed value if lossy */
+  double compression;      /* compression factor (where applicable) */
+
+  /* There is a delineation between these vars being tri-state and
+   * effectively boolean.  Logically the line falls between setting
+   * them up (could be done in libSoX, or by the libSoX client) and
+   * using them (in libSoX).  libSoX's logic to set them up includes
+   * knowledge of the machine default and the format default.  (The
+   * sox client logic adds to this a layer of overridability via user
+   * options.)  The physical delineation is in the somewhat
+   * snappily-named libSoX function `set_endianness_if_not_already_set'
+   * which is called at the right times (as files are openned) by the
+   * libSoX core, not by the file handlers themselves.  The file handlers
+   * indicate to the libSoX core if they have a preference using
+   * SOX_FILE_xxx flags.
+   */
+  sox_option_t reverse_bytes;    /* endiannesses... */
+  sox_option_t reverse_nibbles;
+  sox_option_t reverse_bits;
+} sox_encodinginfo_t;
 
 /* Defaults for common hardware */
 #define SOX_DEFAULT_CHANNELS  2
 #define SOX_DEFAULT_RATE      48000
-#define SOX_DEFAULT_SIZE      SOX_SIZE_16BIT
+#define SOX_DEFAULT_PRECISION      16
 #define SOX_DEFAULT_ENCODING  SOX_ENCODING_SIGN2
 
 /* Loop parameters */
@@ -290,6 +298,8 @@ typedef struct {
     sox_size_t   (*write)(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len);
     int          (*stopwrite)(sox_format_t * ft);
     int          (*seek)(sox_format_t * ft, sox_size_t offset);
+    unsigned     const * write_formats;
+    sox_rate_t   const * write_rates;
 } sox_format_handler_t;
 
 /*
@@ -307,11 +317,13 @@ struct sox_format {
   char   priv[SOX_MAX_FILE_PRIVSIZE];    /* format's private data area */
 
   sox_signalinfo_t signal;               /* signal specifications */
+  sox_encodinginfo_t encoding;               /* encoding specifications */
   sox_instrinfo_t  instr;                /* instrument specification */
   sox_loopinfo_t   loops[SOX_MAX_NLOOPS];/* Looping specification */
   sox_bool         seekable;             /* can seek on this file */
   char             mode;                 /* read or write mode */
-  sox_size_t       length;               /* frames in file, or 0 if unknown. */
+  sox_size_t       length;        /* samples * channels in file; 0 if unknown */
+  sox_size_t       olength;       /* samples * channels in file; 0 if unknown */
   sox_size_t       clips;                /* increment if clipping occurs */
   char             *filename;            /* file name */
   char             *filetype;            /* type of file */
@@ -319,7 +331,8 @@ struct sox_format {
   FILE             *fp;                  /* File stream pointer */
   int              sox_errno;            /* Failure error codes */
   char             sox_errstr[256];      /* Extend Failure text */
-  const sox_format_handler_t * handler;  /* format struct for this file */
+  off_t            data_start;
+  sox_format_handler_t handler;  /* format struct for this file */
 };
 
 /* file flags field */
@@ -334,35 +347,37 @@ struct sox_format {
 /* These two for use by libSoX handlers: */
 #define SOX_FILE_LIT_END  (0   + 64)
 #define SOX_FILE_BIG_END  (128 + 64)
-#define SOX_FILE_BIT_REV 256
-#define SOX_FILE_NIB_REV 512
-
-/* Size field */
-#define SOX_SIZE_BYTE    1
-#define SOX_SIZE_8BIT    1
-#define SOX_SIZE_16BIT   2
-#define SOX_SIZE_24BIT   3
-#define SOX_SIZE_32BIT   4
-#define SOX_SIZE_64BIT   8
-#define SOX_INFO_SIZE_MAX     8
+#define SOX_FILE_BIT_REV 0x0100
+#define SOX_FILE_NIB_REV 0x0200
+#define SOX_FILE_CHANS   0x1C00
+#define SOX_FILE_MONO    0x0400
+#define SOX_FILE_STEREO  0x0800
+#define SOX_FILE_QUAD    0x1000
+#define SOX_FILE_REWIND  0x2000
 
 /* declared in misc.c */
-extern const char * const sox_sizes_str[];
-extern const char * const sox_size_bits_str[];
 extern const char * const sox_encodings_str[];
 
 int sox_format_init(void);
-sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info, 
-                         const char *filetype);
+sox_format_t * sox_open_read(
+    char               const * path,
+    sox_signalinfo_t   const * signal,
+    sox_encodinginfo_t const * encoding,
+    char               const * filetype);
+sox_bool sox_format_supports_encoding(
+    char               const * path,
+    char               const * filetype,
+    sox_encodinginfo_t const * encoding);
 sox_format_t * sox_open_write(
     sox_bool (*overwrite_permitted)(const char *filename),
-    const char *path,
-    const sox_signalinfo_t *info,
-    const char *filetype,
-    comments_t comments,
-    sox_size_t length,
-    const sox_instrinfo_t *instr,
-    const sox_loopinfo_t *loops);
+    char               const * path,
+    sox_signalinfo_t   const * signal,
+    sox_encodinginfo_t const * encoding,
+    char               const * filetype,
+    comments_t                 comments,
+    sox_size_t                 length,
+    sox_instrinfo_t    const * instr,
+    sox_loopinfo_t     const * loops);
 sox_size_t sox_read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len);
 sox_size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len);
 int sox_close(sox_format_t * ft);
@@ -410,16 +425,18 @@ struct sox_effect {
    * in memory in the optimal way for any structure to be cast over it. */
   char priv[SOX_MAX_EFFECT_PRIVSIZE];    /* private area for effect */
 
-  sox_effects_globals_t    *global_info; /* global parameters */
-  struct sox_signalinfo    ininfo;       /* input signal specifications */
-  struct sox_signalinfo    outinfo;      /* output signal specifications */
+  sox_effects_globals_t    * global_info; /* global parameters */
+  sox_signalinfo_t         in_signal;
+  sox_signalinfo_t         out_signal;
+  sox_encodinginfo_t       const * in_encoding;
+  sox_encodinginfo_t       const * out_encoding;
   sox_effect_handler_t     handler;
-  sox_sample_t            *obuf;        /* output buffer */
-  sox_size_t               obeg, oend;   /* consumed, total length */
-  sox_size_t               imin;         /* minimum input buffer size */
-  sox_size_t               clips;        /* increment if clipping occurs */
-  sox_size_t               flows;        /* 1 if MCHAN, # chans otherwise */
-  sox_size_t               flow;         /* flow # */
+  sox_sample_t             * obuf;        /* output buffer */
+  sox_size_t               obeg, oend;    /* consumed, total length */
+  sox_size_t               imin;          /* minimum input buffer size */
+  sox_size_t               clips;         /* increment if clipping occurs */
+  sox_size_t               flows;         /* 1 if MCHAN, # chans otherwise */
+  sox_size_t               flow;          /* flow # */
 };
 
 sox_effect_handler_t const *sox_find_effect(char const * name);
@@ -431,9 +448,10 @@ int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin);
 
 struct sox_effects_chain;
 typedef struct sox_effects_chain sox_effects_chain_t;
-sox_effects_chain_t * sox_create_effects_chain(void);
-
-int sox_add_effect(sox_effects_chain_t *, sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out);
+sox_effects_chain_t * sox_create_effects_chain(
+    sox_encodinginfo_t const * in_enc,
+    sox_encodinginfo_t const * out_enc);
+int sox_add_effect( sox_effects_chain_t * chain, sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out);
 int sox_flow_effects(sox_effects_chain_t *, int (* callback)(sox_bool all_done));
 sox_size_t sox_effects_clips(sox_effects_chain_t *);
 sox_size_t sox_stop_effect(sox_effects_chain_t *, sox_size_t e);

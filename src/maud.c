@@ -15,9 +15,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>     /* For SEEK_* defines if not found in stdio */
-#endif
 
 /* Private data for MAUD file */
 struct maudstuff { /* max. 100 bytes!!!! */
@@ -33,7 +30,7 @@ static void maudwriteheader(sox_format_t *);
  *      size and encoding of samples, 
  *      mono/stereo/quad.
  */
-static int sox_maudstartread(sox_format_t * ft) 
+static int startread(sox_format_t * ft) 
 {
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         
@@ -136,20 +133,20 @@ static int sox_maudstartread(sox_format_t * ft)
                         sox_readdw(ft, &trash32);
                         
                         if (bitpersam == 8 && chaninf == 0) {
-                                ft->signal.size = SOX_SIZE_BYTE;
-                                ft->signal.encoding = SOX_ENCODING_UNSIGNED;
+                                ft->encoding.bits_per_sample = 8;
+                                ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
                         }
                         else if (bitpersam == 8 && chaninf == 2) {
-                                ft->signal.size = SOX_SIZE_BYTE;
-                                ft->signal.encoding = SOX_ENCODING_ALAW;
+                                ft->encoding.bits_per_sample = 8;
+                                ft->encoding.encoding = SOX_ENCODING_ALAW;
                         }
                         else if (bitpersam == 8 && chaninf == 3) {
-                                ft->signal.size = SOX_SIZE_BYTE;
-                                ft->signal.encoding = SOX_ENCODING_ULAW;
+                                ft->encoding.bits_per_sample = 8;
+                                ft->encoding.encoding = SOX_ENCODING_ULAW;
                         }
                         else if (bitpersam == 16 && chaninf == 0) {
-                                ft->signal.size = SOX_SIZE_16BIT;
-                                ft->signal.encoding = SOX_ENCODING_SIGN2;
+                                ft->encoding.bits_per_sample = 16;
+                                ft->encoding.encoding = SOX_ENCODING_SIGN2;
                         }
                         else 
                         {
@@ -196,7 +193,7 @@ static int sox_maudstartread(sox_format_t * ft)
         return(SOX_SUCCESS);
 }
 
-static int sox_maudstartwrite(sox_format_t * ft) 
+static int startwrite(sox_format_t * ft) 
 {
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         int rc;
@@ -212,25 +209,13 @@ static int sox_maudstartwrite(sox_format_t * ft)
             sox_fail_errno(ft,SOX_EOF,"Output .maud file must be a file, not a pipe");
             return (SOX_EOF);
         }
-        
-        if (ft->signal.channels != 1 && ft->signal.channels != 2) {
-                sox_fail_errno(ft,SOX_EFMT,"MAUD: unsupported number of channels, unable to store");
-                return(SOX_EOF);
-        }
-        if (ft->signal.size == SOX_SIZE_16BIT) ft->signal.encoding = SOX_ENCODING_SIGN2;
-        if (ft->signal.encoding == SOX_ENCODING_ULAW || 
-            ft->signal.encoding == SOX_ENCODING_ALAW) ft->signal.size = SOX_SIZE_BYTE;
-        if (ft->signal.size == SOX_SIZE_BYTE && 
-            ft->signal.encoding == SOX_ENCODING_SIGN2) 
-            ft->signal.encoding = SOX_ENCODING_UNSIGNED;
-        
         p->nsamples = 0x7f000000;
         maudwriteheader(ft);
         p->nsamples = 0;
         return (SOX_SUCCESS);
 }
 
-static sox_size_t sox_maudwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len) 
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len) 
 {
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         
@@ -239,7 +224,7 @@ static sox_size_t sox_maudwrite(sox_format_t * ft, const sox_sample_t *buf, sox_
         return sox_rawwrite(ft, buf, len);
 }
 
-static int sox_maudstopwrite(sox_format_t * ft) 
+static int stopwrite(sox_format_t * ft) 
 {
         /* All samples are already written out. */
         
@@ -259,14 +244,14 @@ static void maudwriteheader(sox_format_t * ft)
         struct maudstuff * p = (struct maudstuff *) ft->priv;
         
         sox_writes(ft, "FORM");
-        sox_writedw(ft, (p->nsamples*ft->signal.size) + MAUDHEADERSIZE);  /* size of file */
+        sox_writedw(ft, (p->nsamples* (ft->encoding.bits_per_sample >> 3)) + MAUDHEADERSIZE);  /* size of file */
         sox_writes(ft, "MAUD"); /* File type */
         
         sox_writes(ft, "MHDR");
         sox_writedw(ft,  8*4); /* number of bytes to follow */
         sox_writedw(ft, p->nsamples);  /* number of samples stored in MDAT */
         
-        switch (ft->signal.encoding) {
+        switch (ft->encoding.encoding) {
                 
         case SOX_ENCODING_UNSIGNED:
           sox_writew(ft, 8); /* number of bits per sample as stored in MDAT */
@@ -300,7 +285,7 @@ static void maudwriteheader(sox_format_t * ft)
           sox_writew(ft, 2);
         }
         
-        switch (ft->signal.encoding) {
+        switch (ft->encoding.encoding) {
                 
         case SOX_ENCODING_UNSIGNED:
         case SOX_ENCODING_SIGN2:
@@ -328,30 +313,23 @@ static void maudwriteheader(sox_format_t * ft)
         sox_writes(ft, "file create by Sound eXchange ");
         
         sox_writes(ft, "MDAT");
-        sox_writedw(ft, p->nsamples * ft->signal.size ); /* samples in file */
+        sox_writedw(ft, p->nsamples * (ft->encoding.bits_per_sample >> 3)); /* samples in file */
 }
 
-/* Amiga MAUD */
-static const char *maudnames[] = {
-  "maud",
-  NULL,
-};
-
-static sox_format_handler_t sox_maud_format = {
-  maudnames,
-  SOX_FILE_BIG_END,
-  sox_maudstartread,
-  sox_rawread,
-  sox_rawstopread,
-  sox_maudstartwrite,
-  sox_maudwrite,
-  sox_maudstopwrite,
-  NULL
-};
-
-const sox_format_handler_t *sox_maud_format_fn(void);
-
-const sox_format_handler_t *sox_maud_format_fn(void)
+SOX_FORMAT_HANDLER(maud)
 {
-    return &sox_maud_format;
+  static char const * const names[] = {"maud", NULL};
+  static unsigned const write_encodings[] = {
+    SOX_ENCODING_SIGN2, 16, 0,
+    SOX_ENCODING_UNSIGNED, 8, 0,
+    SOX_ENCODING_ULAW, 8, 0,
+    SOX_ENCODING_ALAW, 8, 0,
+    0};
+  static sox_format_handler_t const handler = {
+    names, SOX_FILE_BIG_END | SOX_FILE_MONO | SOX_FILE_STEREO,
+    startread, sox_rawread, sox_rawstopread,
+    startwrite, write_samples, stopwrite,
+    NULL, write_encodings, NULL
+  };
+  return &handler;
 }

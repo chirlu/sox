@@ -19,10 +19,10 @@
 
  */
 
+#include "sox_i.h"
+
 #include <stdio.h>
 #include <string.h>
-
-#include "sox_i.h"
 
 #define AVR_MAGIC "2BIT"
 
@@ -63,7 +63,7 @@ typedef struct avrstuff {
  */
 
 
-static int sox_avrstartread(sox_format_t * ft) 
+static int startread(sox_format_t * ft) 
 {
   avr_t avr = (avr_t)ft->priv;
   int rc;
@@ -87,10 +87,10 @@ static int sox_avrstartread(sox_format_t * ft)
 
   sox_readw (ft, &(avr->rez));
   if (avr->rez == 8) {
-    ft->signal.size = SOX_SIZE_BYTE;
+    ft->encoding.bits_per_sample = 8;
   }
   else if (avr->rez == 16) {
-    ft->signal.size = SOX_SIZE_16BIT;
+    ft->encoding.bits_per_sample = 16;
   }
   else {
     sox_fail_errno(ft,SOX_EFMT,"AVR: unsupported sample resolution");
@@ -99,10 +99,10 @@ static int sox_avrstartread(sox_format_t * ft)
 
   sox_readw (ft, &(avr->sign));
   if (avr->sign) {
-    ft->signal.encoding = SOX_ENCODING_SIGN2;
+    ft->encoding.encoding = SOX_ENCODING_SIGN2;
   }
   else {
-    ft->signal.encoding = SOX_ENCODING_UNSIGNED;
+    ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
   }
 
   sox_readw (ft, &(avr->loop));
@@ -141,7 +141,7 @@ static int sox_avrstartread(sox_format_t * ft)
   return(SOX_SUCCESS);
 }
 
-static int sox_avrstartwrite(sox_format_t * ft) 
+static int startwrite(sox_format_t * ft) 
 {
   avr_t avr = (avr_t)ft->priv;
   int rc;
@@ -181,10 +181,10 @@ static int sox_avrstartwrite(sox_format_t * ft)
   }
 
   /* rez */
-  if (ft->signal.size == SOX_SIZE_BYTE) {
+  if (ft->encoding.bits_per_sample == 8) {
     sox_writew (ft, 8);
   }
-  else if (ft->signal.size == SOX_SIZE_16BIT) {
+  else if (ft->encoding.bits_per_sample == 16) {
     sox_writew (ft, 16);
   }
   else {
@@ -193,10 +193,10 @@ static int sox_avrstartwrite(sox_format_t * ft)
   }
 
   /* sign */
-  if (ft->signal.encoding == SOX_ENCODING_SIGN2) {
+  if (ft->encoding.encoding == SOX_ENCODING_SIGN2) {
     sox_writew (ft, 0xffff);
   }
-  else if (ft->signal.encoding == SOX_ENCODING_UNSIGNED) {
+  else if (ft->encoding.encoding == SOX_ENCODING_UNSIGNED) {
     sox_writew (ft, 0);
   }
   else {
@@ -246,7 +246,7 @@ static int sox_avrstartwrite(sox_format_t * ft)
   return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_avrwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp) 
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp) 
 {
   avr_t avr = (avr_t)ft->priv;
 
@@ -255,7 +255,7 @@ static sox_size_t sox_avrwrite(sox_format_t * ft, const sox_sample_t *buf, sox_s
   return (sox_rawwrite (ft, buf, nsamp));
 }
 
-static int sox_avrstopwrite(sox_format_t * ft) 
+static int stopwrite(sox_format_t * ft) 
 {
   avr_t avr = (avr_t)ft->priv;
 
@@ -272,26 +272,19 @@ static int sox_avrstopwrite(sox_format_t * ft)
   return(SOX_SUCCESS);
 }
 
-static const char *avrnames[] = {
-  "avr",
-  NULL
-};
-
-static sox_format_handler_t sox_avr_format = {
-  avrnames,
-  SOX_FILE_BIG_END,
-  sox_avrstartread,
-  sox_rawread,
-  NULL,
-  sox_avrstartwrite,
-  sox_avrwrite,
-  sox_avrstopwrite,
-  NULL
-};
-
-const sox_format_handler_t *sox_avr_format_fn(void);
-
-const sox_format_handler_t *sox_avr_format_fn(void)
+SOX_FORMAT_HANDLER(avr)
 {
-    return &sox_avr_format;
+  static char const * const names[] = { "avr", NULL };
+  static unsigned const write_encodings[] = {
+    SOX_ENCODING_SIGN2, 16, 8, 0,
+    SOX_ENCODING_UNSIGNED, 16, 8, 0,
+    0};
+  static sox_format_handler_t handler = {
+    names,
+    SOX_FILE_BIG_END|SOX_FILE_MONO|SOX_FILE_STEREO,
+    startread, sox_rawread, NULL,
+    startwrite, write_samples, stopwrite,
+    NULL, write_encodings, NULL
+  };
+  return &handler;
 }

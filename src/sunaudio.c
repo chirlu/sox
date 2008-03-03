@@ -60,7 +60,7 @@ static int sox_sunstartread(sox_format_t * ft)
     file->size = 1024;
     file->buf = xmalloc (file->size);
 
-    if (ft->signal.encoding == SOX_ENCODING_UNKNOWN) ft->signal.encoding = SOX_ENCODING_ULAW;
+    if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN) ft->encoding.encoding = SOX_ENCODING_ULAW;
 
 #ifdef __SVR4
     /* Read in old values, change to what we need and then send back */
@@ -78,42 +78,42 @@ static int sox_sunstartread(sox_format_t * ft)
     /* If simple hardware detected in force data to ulaw. */
     if (simple_hw)
     {
-        if (ft->signal.size == SOX_SIZE_BYTE)
+        if (ft->encoding.bits_per_sample == 8)
         {
-            if (ft->signal.encoding != SOX_ENCODING_ULAW &&
-                ft->signal.encoding != SOX_ENCODING_ALAW)
+            if (ft->encoding.encoding != SOX_ENCODING_ULAW &&
+                ft->encoding.encoding != SOX_ENCODING_ALAW)
             {
                 sox_report("Warning: Detected simple hardware.  Forcing output to ULAW");
-                ft->signal.encoding = SOX_ENCODING_ULAW;
+                ft->encoding.encoding = SOX_ENCODING_ULAW;
             }
         }
-        else if (ft->signal.size == SOX_SIZE_16BIT)
+        else if (ft->encoding.bits_per_sample == 16)
         {
             sox_report("Warning: Detected simple hardware.  Forcing output to ULAW");
-            ft->signal.size = SOX_SIZE_BYTE;
-            ft->signal.encoding = SOX_ENCODING_ULAW;
+            ft->encoding.bits_per_sample = 8;
+            ft->encoding.encoding = SOX_ENCODING_ULAW;
         }
     }
 
-    if (ft->signal.size == SOX_SIZE_BYTE) {
+    if (ft->encoding.bits_per_sample == 8) {
         samplesize = 8;
-        if (ft->signal.encoding != SOX_ENCODING_ULAW &&
-            ft->signal.encoding != SOX_ENCODING_ALAW &&
-            ft->signal.encoding != SOX_ENCODING_SIGN2) {
+        if (ft->encoding.encoding != SOX_ENCODING_ULAW &&
+            ft->encoding.encoding != SOX_ENCODING_ALAW &&
+            ft->encoding.encoding != SOX_ENCODING_SIGN2) {
             sox_fail_errno(ft,SOX_EFMT,"Sun audio driver only supports ULAW, ALAW, and signed linear for bytes.");
                 return (SOX_EOF);
         }
-        if ((ft->signal.encoding == SOX_ENCODING_ULAW ||
-             ft->signal.encoding == SOX_ENCODING_ALAW) && 
+        if ((ft->encoding.encoding == SOX_ENCODING_ULAW ||
+             ft->encoding.encoding == SOX_ENCODING_ALAW) && 
             ft->signal.channels == 2)
         {
             sox_report("Warning: only support mono for ULAW and ALAW data.  Forcing to mono.");
             ft->signal.channels = 1;
         }
     }
-    else if (ft->signal.size == SOX_SIZE_16BIT) {
+    else if (ft->encoding.bits_per_sample == 16) {
         samplesize = 16;
-        if (ft->signal.encoding != SOX_ENCODING_SIGN2) {
+        if (ft->encoding.encoding != SOX_ENCODING_SIGN2) {
             sox_fail_errno(ft,SOX_EFMT,"Sun audio driver only supports signed linear for words.");
             return(SOX_EOF);
         }
@@ -141,9 +141,9 @@ static int sox_sunstartread(sox_format_t * ft)
     audio_if.record.precision = samplesize;
     audio_if.record.channels = ft->signal.channels;
     audio_if.record.sample_rate = ft->signal.rate;
-    if (ft->signal.encoding == SOX_ENCODING_ULAW)
+    if (ft->encoding.encoding == SOX_ENCODING_ULAW)
         encoding = AUDIO_ENCODING_ULAW;
-    else if (ft->signal.encoding == SOX_ENCODING_ALAW)
+    else if (ft->encoding.encoding == SOX_ENCODING_ALAW)
         encoding = AUDIO_ENCODING_ALAW;
     else
         encoding = AUDIO_ENCODING_LINEAR;
@@ -211,37 +211,37 @@ static int sox_sunstartwrite(sox_format_t * ft)
 
     if (simple_hw)
     {
-        if (ft->signal.size == SOX_SIZE_BYTE)
+        if (ft->encoding.bits_per_sample == 8)
         {
-            if (ft->signal.encoding != SOX_ENCODING_ULAW &&
-                ft->signal.encoding != SOX_ENCODING_ALAW)
+            if (ft->encoding.encoding != SOX_ENCODING_ULAW &&
+                ft->encoding.encoding != SOX_ENCODING_ALAW)
             {
                 sox_report("Warning: Detected simple hardware.  Forcing output to ULAW");
-                ft->signal.encoding = SOX_ENCODING_ULAW;
+                ft->encoding.encoding = SOX_ENCODING_ULAW;
             }
         }
-        else if (ft->signal.size == SOX_SIZE_16BIT)
+        else if (ft->encoding.bits_per_sample == 16)
         {
             sox_report("Warning: Detected simple hardware.  Forcing output to ULAW");
-            ft->signal.size = SOX_SIZE_BYTE;
-            ft->signal.encoding = SOX_ENCODING_ULAW;
+            ft->encoding.bits_per_sample = 8;
+            ft->encoding.encoding = SOX_ENCODING_ULAW;
         }
     }
 
-    if (ft->signal.size == SOX_SIZE_BYTE) 
+    if (ft->encoding.bits_per_sample == 8) 
     {
         samplesize = 8;
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN) 
-            ft->signal.encoding = SOX_ENCODING_ULAW;
-        else if (ft->signal.encoding != SOX_ENCODING_ULAW &&
-            ft->signal.encoding != SOX_ENCODING_ALAW &&
-            ft->signal.encoding != SOX_ENCODING_SIGN2) {
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN) 
+            ft->encoding.encoding = SOX_ENCODING_ULAW;
+        else if (ft->encoding.encoding != SOX_ENCODING_ULAW &&
+            ft->encoding.encoding != SOX_ENCODING_ALAW &&
+            ft->encoding.encoding != SOX_ENCODING_SIGN2) {
             sox_report("Sun Audio driver only supports ULAW, ALAW, and Signed Linear for bytes.");
             sox_report("Forcing to ULAW");
-            ft->signal.encoding = SOX_ENCODING_ULAW;
+            ft->encoding.encoding = SOX_ENCODING_ULAW;
         }
-        if ((ft->signal.encoding == SOX_ENCODING_ULAW ||
-             ft->signal.encoding == SOX_ENCODING_ALAW) && 
+        if ((ft->encoding.encoding == SOX_ENCODING_ULAW ||
+             ft->encoding.encoding == SOX_ENCODING_ALAW) && 
             ft->signal.channels == 2)
         {
             sox_report("Warning: only support mono for ULAW and ALAW data.  Forcing to mono.");
@@ -249,20 +249,20 @@ static int sox_sunstartwrite(sox_format_t * ft)
         }
 
     }
-    else if (ft->signal.size == SOX_SIZE_16BIT) {
+    else if (ft->encoding.bits_per_sample == 16) {
         samplesize = 16;
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN) 
-            ft->signal.encoding = SOX_ENCODING_SIGN2;
-        else if (ft->signal.encoding != SOX_ENCODING_SIGN2) {
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN) 
+            ft->encoding.encoding = SOX_ENCODING_SIGN2;
+        else if (ft->encoding.encoding != SOX_ENCODING_SIGN2) {
             sox_report("Sun Audio driver only supports Signed Linear for words.");
             sox_report("Forcing to Signed Linear");
-            ft->signal.encoding = SOX_ENCODING_SIGN2;
+            ft->encoding.encoding = SOX_ENCODING_SIGN2;
         }
     }
     else {
         sox_report("Sun Audio driver only supports bytes and words");
-        ft->signal.size = SOX_SIZE_16BIT;
-        ft->signal.encoding = SOX_ENCODING_SIGN2;
+        ft->encoding.bits_per_sample = 16;
+        ft->encoding.encoding = SOX_ENCODING_SIGN2;
         samplesize = 16;
     }
 
@@ -276,9 +276,9 @@ static int sox_sunstartwrite(sox_format_t * ft)
     audio_if.play.precision = samplesize;
     audio_if.play.channels = ft->signal.channels;
     audio_if.play.sample_rate = ft->signal.rate;
-    if (ft->signal.encoding == SOX_ENCODING_ULAW)
+    if (ft->encoding.encoding == SOX_ENCODING_ULAW)
         encoding = AUDIO_ENCODING_ULAW;
-    else if (ft->signal.encoding == SOX_ENCODING_ALAW)
+    else if (ft->encoding.encoding == SOX_ENCODING_ALAW)
         encoding = AUDIO_ENCODING_ALAW;
     else
         encoding = AUDIO_ENCODING_LINEAR;
@@ -307,27 +307,19 @@ static int sox_sunstartwrite(sox_format_t * ft)
     return (SOX_SUCCESS);
 }
 
-/* Sun /dev/audio player */
-static const char *names[] = {
-  "sunau",
-  NULL
-};
-
-static sox_format_handler_t sox_sunau_format = {
-  names,
-  SOX_FILE_DEVICE,
-  sox_sunstartread,
-  sox_rawread,
-  sox_rawstopread,
-  sox_sunstartwrite,
-  sox_rawwrite,
-  sox_rawstopwrite,
-  NULL
-};
-
-const sox_format_handler_t *sox_sunau_format_fn(void);
-
-const sox_format_handler_t *sox_sunau_format_fn(void)
+SOX_FORMAT_HANDLER(sunau)
 {
-    return &sox_sunau_format;
+  static char const * const names[] = {"sunau", NULL};
+  static unsigned const write_encodings[] = {
+    SOX_ENCODING_ULAW, 8, 0,
+    SOX_ENCODING_ALAW, 8, 0,
+    SOX_ENCODING_SIGN2, 8, 16, 0,
+    0};
+  static sox_format_handler_t const handler = {
+    names, SOX_FILE_DEVICE,
+    sox_sunstartread, sox_rawread, sox_rawstopread,
+    sox_sunstartwrite, sox_rawwrite, sox_rawstopwrite,
+    NULL, write_encodings
+  };
+  return &handler;
 }

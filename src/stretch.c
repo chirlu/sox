@@ -150,7 +150,7 @@ static int sox_stretch_start(sox_effect_t * effp)
 
   stretch->state = input_state;
 
-  stretch->size = (int)(effp->outinfo.rate * 0.001 * stretch->window);
+  stretch->size = (int)(effp->out_signal.rate * 0.001 * stretch->window);
   /* start in the middle of an input to avoid initial fading... */
   stretch->index = stretch->size / 2;
   stretch->ibuf = (sox_sample_t *)xmalloc(stretch->size * sizeof(sox_sample_t));

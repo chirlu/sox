@@ -98,7 +98,7 @@ static int parse(sox_effect_t * effp, char * * argv, unsigned channels)
       if (p->out_specs[i].in_specs[j].multiplier == HUGE_VAL)
         p->out_specs[i].in_specs[j].multiplier = (p->mode == automatic || (p->mode == semi && !mul_spec)) ?  1. / p->out_specs[i].num_in_channels : 1;
   }
-  effp->outinfo.channels = p->num_out_channels;
+  effp->out_signal.channels = p->num_out_channels;
   return SOX_SUCCESS;
 }
 
@@ -114,8 +114,8 @@ static int create(sox_effect_t * effp, int argc, char * * argv)
 static int start(sox_effect_t * effp)
 {
   remix_t p = (remix_t) effp->priv;
-  parse(effp, NULL, effp->ininfo.channels);
-  if (effp->ininfo.channels < p->min_in_channels) {
+  parse(effp, NULL, effp->in_signal.channels);
+  if (effp->in_signal.channels < p->min_in_channels) {
     sox_fail("too few input channels");
     return SOX_EOF;
   }
@@ -127,11 +127,11 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 {
   remix_t p = (remix_t) effp->priv;
   unsigned i, j, len;
-  len =  min(*isamp / effp->ininfo.channels, *osamp / effp->outinfo.channels);
-  *isamp = len * effp->ininfo.channels;
-  *osamp = len * effp->outinfo.channels;
+  len =  min(*isamp / effp->in_signal.channels, *osamp / effp->out_signal.channels);
+  *isamp = len * effp->in_signal.channels;
+  *osamp = len * effp->out_signal.channels;
 
-  for (; len--; ibuf += effp->ininfo.channels) for (j = 0; j < effp->outinfo.channels; j++) {
+  for (; len--; ibuf += effp->in_signal.channels) for (j = 0; j < effp->out_signal.channels; j++) {
     double out = 0;
     for (i = 0; i < p->out_specs[j].num_in_channels; i++)
       out += ibuf[p->out_specs[j].in_specs[i].channel_num] * p->out_specs[j].in_specs[i].multiplier;

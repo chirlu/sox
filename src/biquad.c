@@ -79,7 +79,7 @@ int sox_biquad_start(sox_effect_t * effp)
       "disp('Hit return to continue')\n"
       "pause\n"
       , effp->handler.name, p->gain, p->fc, width_str[p->width_type], p->width
-      , effp->ininfo.rate, effp->ininfo.rate
+      , effp->in_signal.rate, effp->in_signal.rate
       , p->b0, p->b1, p->b2, p->a1, p->a2
       );
     return SOX_EOF;
@@ -100,7 +100,7 @@ int sox_biquad_start(sox_effect_t * effp)
       "plot [f=10:Fs/2] [-35:25] 20*log10(H(f))\n"
       "pause -1 'Hit return to continue'\n"
       , effp->handler.name, p->gain, p->fc, width_str[p->width_type], p->width
-      , effp->ininfo.rate, effp->ininfo.rate
+      , effp->in_signal.rate, effp->in_signal.rate
       , p->b0, p->b1, p->b2, p->a1, p->a2
       );
     return SOX_EOF;

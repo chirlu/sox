@@ -16,7 +16,6 @@
  * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
-#include "sox_i.h"
 #include <string.h>
 #include <math.h>
 
@@ -56,14 +55,6 @@ static sox_bool encode_1_frame(sox_format_t * ft)
   return result;
 }
 
-static void set_format(sox_format_t * ft)
-{
-  ft->signal.rate = AMR_RATE;
-  ft->signal.size = SOX_SIZE_16BIT;
-  ft->signal.encoding = AMR_ENCODING;
-  ft->signal.channels = 1;
-}
-
 static int startread(sox_format_t * ft)
 {
   amr_t amr = (amr_t) ft->priv;
@@ -80,7 +71,9 @@ static int startread(sox_format_t * ft)
     sox_fail_errno(ft, SOX_EHDR, "invalid magic number");
     return SOX_EOF;
   }
-  set_format(ft);
+  ft->signal.rate = AMR_RATE;
+  ft->encoding.encoding = AMR_ENCODING;
+  ft->signal.channels = 1;
   return SOX_SUCCESS;
 }
 
@@ -110,16 +103,15 @@ static int startwrite(sox_format_t * ft)
 {
   amr_t amr = (amr_t) ft->priv;
 
-  if (ft->signal.compression != HUGE_VAL) {
-    amr->mode = ft->signal.compression;
-    if (amr->mode != ft->signal.compression || amr->mode > AMR_MODE_MAX) {
+  if (ft->encoding.compression != HUGE_VAL) {
+    amr->mode = ft->encoding.compression;
+    if (amr->mode != ft->encoding.compression || amr->mode > AMR_MODE_MAX) {
       sox_fail_errno(ft, SOX_EINVAL, "compression level must be a whole number from 0 to %i", AMR_MODE_MAX);
       return SOX_EOF;
     }
   }
   else amr->mode = 0;
 
-  set_format(ft);
 #include "amr2.h"
   sox_writes(ft, magic);
   amr->pcm_index = 0;
@@ -158,16 +150,17 @@ static int stopwrite(sox_format_t * ft)
   return result;
 }
 
-const sox_format_handler_t *AMR_FORMAT_FN(void);
-
-const sox_format_handler_t *AMR_FORMAT_FN(void)
+sox_format_handler_t const * AMR_FORMAT_FN(void);
+sox_format_handler_t const * AMR_FORMAT_FN(void)
 {
-  static char const * names[] = {AMR_NAMES, NULL};
+  static char const * const names[] = {AMR_NAMES, NULL};
+  static sox_rate_t   const write_rates[] = {AMR_RATE, 0};
+  static unsigned const write_encodings[] = {AMR_ENCODING, 0, 0};
   static sox_format_handler_t handler = {
-    names, 0,
+    names, SOX_FILE_MONO,
     startread, read, stopread,
     startwrite, write, stopwrite,
-    NULL
+    NULL, write_encodings, write_rates
   };
   return &handler;
 }

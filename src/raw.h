@@ -1,25 +1,34 @@
 /*
- * libSoX raw file formats
+ * File formats: raw         (c) 2007-8 SoX contributors
  *
- * July 5, 1991
- * Copyright 1991 Lance Norskog And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained.
- * Lance Norskog And Sundry Contributors are not responsible for
- * the consequences of using this software.
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, write to the Free Software Foundation,
+ * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
 #define RAW_FORMAT0(id, size, flags, encoding) \
 static int id ## _start(sox_format_t * ft) { \
-  return sox_rawstart(ft, sox_true, sox_true, SOX_ENCODING_ ## encoding, SOX_SIZE_ ## size); \
+  return sox_rawstart(ft, sox_true, sox_true, sox_true, SOX_ENCODING_ ## encoding, size); \
 } \
 const sox_format_handler_t *sox_ ## id ## _format_fn(void); \
 const sox_format_handler_t *sox_ ## id ## _format_fn(void) { \
+  static unsigned const write_encodings[] = { \
+    SOX_ENCODING_ ## encoding, size, 0, 0}; \
   static sox_format_handler_t handler = { \
     names, flags, \
     id ## _start, sox_rawread , NULL, \
     id ## _start, sox_rawwrite, NULL, \
-    NULL \
+    NULL, write_encodings, NULL \
   }; \
   return &handler; \
 }

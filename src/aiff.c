@@ -51,10 +51,11 @@ int sox_aiffseek(sox_format_t * ft, sox_size_t offset)
 {
     aiff_t aiff = (aiff_t ) ft->priv;
     sox_size_t new_offset, channel_block, alignment;
+    sox_size_t size = ft->encoding.bits_per_sample >> 3;
 
-    new_offset = offset * ft->signal.size;
+    new_offset = offset * size;
     /* Make sure request aligns to a channel block (ie left+right) */
-    channel_block = ft->signal.channels * ft->signal.size;
+    channel_block = ft->signal.channels * size;
     alignment = new_offset % channel_block;
     /* Most common mistaken is to compute something like
      * "skip everthing upto and including this sample" so
@@ -67,7 +68,7 @@ int sox_aiffseek(sox_format_t * ft, sox_size_t offset)
     ft->sox_errno = sox_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
 
     if (ft->sox_errno == SOX_SUCCESS)
-        aiff->nsamples = ft->length - (new_offset / ft->signal.size);
+        aiff->nsamples = ft->length - (new_offset / size);
 
     return(ft->sox_errno);
 }
@@ -386,33 +387,17 @@ int sox_aiffstartread(sox_format_t * ft)
         if (foundcomm) {
                 ft->signal.channels = channels;
                 ft->signal.rate = rate;
-                if (ft->signal.encoding != SOX_ENCODING_UNKNOWN && ft->signal.encoding != SOX_ENCODING_SIGN2)
+                if (ft->encoding.encoding != SOX_ENCODING_UNKNOWN && ft->encoding.encoding != SOX_ENCODING_SIGN2)
                     sox_report("AIFF only supports signed data.  Forcing to signed.");
-                ft->signal.encoding = SOX_ENCODING_SIGN2;
+                ft->encoding.encoding = SOX_ENCODING_SIGN2;
                 if (bits <= 8)
-                {
-                    ft->signal.size = SOX_SIZE_BYTE;
-                    if (bits < 8)
-                        sox_report("Forcing data size from %d bits to 8 bits",bits);
-                }
+                    ft->encoding.bits_per_sample = 8;
                 else if (bits <= 16)
-                {
-                    ft->signal.size = SOX_SIZE_16BIT;
-                    if (bits < 16)
-                        sox_report("Forcing data size from %d bits to 16 bits",bits);
-                }
+                    ft->encoding.bits_per_sample = 16;
                 else if (bits <= 24)
-                {
-                    ft->signal.size = SOX_SIZE_24BIT;
-                    if (bits < 24)
-                        sox_report("Forcing data size from %d bits to 24 bits",bits);
-                }
+                    ft->encoding.bits_per_sample = 24;
                 else if (bits <= 32)
-                {
-                    ft->signal.size = SOX_SIZE_32BIT;
-                    if (bits < 32)
-                        sox_report("Forcing data size from %d bits to 32 bits",bits);
-                }
+                    ft->encoding.bits_per_sample = 32;
                 else
                 {
                     sox_fail_errno(ft,SOX_EFMT,"unsupported sample size in AIFF header: %d", bits);
@@ -421,8 +406,8 @@ int sox_aiffstartread(sox_format_t * ft)
         } else  {
                 if ((ft->signal.channels == 0)
                         || (ft->signal.rate == 0)
-                        || (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
-                        || (ft->signal.size == 0)) {
+                        || (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
+                        || (ft->encoding.bits_per_sample == 0)) {
                   sox_report("You must specify # channels, sample rate, signed/unsigned,");
                   sox_report("and 8/16 on the command line.");
                   sox_fail_errno(ft,SOX_EFMT,"Bogus AIFF file: no COMM section.");
@@ -431,13 +416,13 @@ int sox_aiffstartread(sox_format_t * ft)
 
         }
 
-        aiff->nsamples = ssndsize / ft->signal.size;
+        aiff->nsamples = ssndsize / (ft->encoding.bits_per_sample >> 3);
 
         /* Cope with 'sowt' CD tracks as read on Macs */
         if (is_sowt)
         {
                 aiff->nsamples -= 4;
-                ft->signal.reverse_bytes = !ft->signal.reverse_bytes;
+                ft->encoding.reverse_bytes = !ft->encoding.reverse_bytes;
         }
         
         if (foundmark && !foundinstr)
@@ -680,23 +665,14 @@ int sox_aiffstartwrite(sox_format_t * ft)
             return rc;
 
         aiff->nsamples = 0;
-        if (ft->signal.encoding < SOX_ENCODING_SIZE_IS_WORD && 
-            ft->signal.size == SOX_SIZE_BYTE) {
-                sox_report("expanding compressed bytes to signed 16 bits");
-                ft->signal.encoding = SOX_ENCODING_SIGN2;
-                ft->signal.size = SOX_SIZE_16BIT;
-        }
-        if (ft->signal.encoding != SOX_ENCODING_UNKNOWN && ft->signal.encoding != SOX_ENCODING_SIGN2)
-            sox_report("AIFF only supports signed data.  Forcing to signed.");
-        ft->signal.encoding = SOX_ENCODING_SIGN2; /* We have a fixed encoding */
 
         /* Compute the "very large number" so that a maximum number
            of samples can be transmitted through a pipe without the
            risk of causing overflow when calculating the number of bytes.
-           At 48 kHz, 16 bits stereo, this gives ~3 hours of music.
-           Sorry, the AIFF format does not provide for an "infinite"
+           At 48 kHz, 16 bits stereo, this gives ~3 hours of audio.
+           Sorry, the AIFF format does not provide for an indefinite
            number of samples. */
-        return(aiffwriteheader(ft, 0x7f000000 / (ft->signal.size*ft->signal.channels)));
+        return(aiffwriteheader(ft, 0x7f000000 / ((ft->encoding.bits_per_sample>>3)*ft->signal.channels)));
 }
 
 sox_size_t sox_aiffwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
@@ -713,7 +689,7 @@ int sox_aiffstopwrite(sox_format_t * ft)
 
         /* If we've written an odd number of bytes, write a padding
            NUL */
-        if (aiff->nsamples % 2 == 1 && ft->signal.size == SOX_SIZE_8BIT && ft->signal.channels == 1)
+        if (aiff->nsamples % 2 == 1 && ft->encoding.bits_per_sample == 8 && ft->signal.channels == 1)
         {
             sox_sample_t buf = 0;
             sox_rawwrite(ft, &buf, 1);
@@ -749,17 +725,17 @@ static int aiffwriteheader(sox_format_t * ft, sox_size_t nframes)
           hsize += 8 /* INST hdr */ + 20; /* INST chunk */
         }
 
-        if (ft->signal.encoding == SOX_ENCODING_SIGN2 && 
-            ft->signal.size == SOX_SIZE_BYTE)
+        if (ft->encoding.encoding == SOX_ENCODING_SIGN2 && 
+            ft->encoding.bits_per_sample == 8)
                 bits = 8;
-        else if (ft->signal.encoding == SOX_ENCODING_SIGN2 && 
-                 ft->signal.size == SOX_SIZE_16BIT)
+        else if (ft->encoding.encoding == SOX_ENCODING_SIGN2 && 
+                 ft->encoding.bits_per_sample == 16)
                 bits = 16;
-        else if (ft->signal.encoding == SOX_ENCODING_SIGN2 && 
-                 ft->signal.size == SOX_SIZE_24BIT)
+        else if (ft->encoding.encoding == SOX_ENCODING_SIGN2 && 
+                 ft->encoding.bits_per_sample == 24)
                 bits = 24;
-        else if (ft->signal.encoding == SOX_ENCODING_SIGN2 && 
-                 ft->signal.size == SOX_SIZE_32BIT)
+        else if (ft->encoding.encoding == SOX_ENCODING_SIGN2 && 
+                 ft->encoding.bits_per_sample == 32)
                 bits = 32;
         else
         {
@@ -784,7 +760,7 @@ static int aiffwriteheader(sox_format_t * ft, sox_size_t nframes)
 
         sox_writes(ft, "FORM"); /* IFF header */
         /* file size */
-        sox_writedw(ft, hsize + nframes * ft->signal.size * ft->signal.channels); 
+        sox_writedw(ft, hsize + nframes * (ft->encoding.bits_per_sample >> 3) * ft->signal.channels); 
         sox_writes(ft, "AIFF"); /* File type */
 
         /* Now we write the COMT comment chunk using the precomputed sizes */
@@ -798,7 +774,7 @@ static int aiffwriteheader(sox_format_t * ft, sox_size_t nframes)
 
           /* time stamp of comment, Unix knows of time from 1/1/1970,
              Apple knows time from 1/1/1904 */
-          sox_writedw(ft, (unsigned)(time(NULL) + 2082844800));
+          sox_writedw(ft, (unsigned)((sox_globals.repeatable? 0 : time(NULL)) + 2082844800));
 
           /* A marker ID of 0 indicates the comment is not associated
              with a marker */
@@ -869,7 +845,7 @@ static int aiffwriteheader(sox_format_t * ft, sox_size_t nframes)
         /* SSND chunk -- describes data */
         sox_writes(ft, "SSND");
         /* chunk size */
-        sox_writedw(ft, 8 + nframes * ft->signal.channels * ft->signal.size); 
+        sox_writedw(ft, 8 + nframes * ft->signal.channels * (ft->encoding.bits_per_sample >> 3)); 
         sox_writedw(ft, 0); /* offset */
         sox_writedw(ft, 0); /* block size */
         return(SOX_SUCCESS);
@@ -886,15 +862,6 @@ int sox_aifcstartwrite(sox_format_t * ft)
             return rc;
 
         aiff->nsamples = 0;
-        if (ft->signal.encoding < SOX_ENCODING_SIZE_IS_WORD && 
-            ft->signal.size == SOX_SIZE_BYTE) {
-                sox_report("expanding compressed bytes to signed 16 bits");
-                ft->signal.encoding = SOX_ENCODING_SIGN2;
-                ft->signal.size = SOX_SIZE_16BIT;
-        }
-        if (ft->signal.encoding != SOX_ENCODING_UNKNOWN && ft->signal.encoding != SOX_ENCODING_SIGN2)
-            sox_report("AIFC only supports signed data.  Forcing to signed.");
-        ft->signal.encoding = SOX_ENCODING_SIGN2; /* We have a fixed encoding */
 
         /* Compute the "very large number" so that a maximum number
            of samples can be transmitted through a pipe without the
@@ -902,7 +869,7 @@ int sox_aifcstartwrite(sox_format_t * ft)
            At 48 kHz, 16 bits stereo, this gives ~3 hours of music.
            Sorry, the AIFC format does not provide for an "infinite"
            number of samples. */
-        return(aifcwriteheader(ft, 0x7f000000 / (ft->signal.size*ft->signal.channels)));
+        return(aifcwriteheader(ft, 0x7f000000 / ((ft->encoding.bits_per_sample >> 3)*ft->signal.channels)));
 }
 
 int sox_aifcstopwrite(sox_format_t * ft)
@@ -911,7 +878,7 @@ int sox_aifcstopwrite(sox_format_t * ft)
 
         /* If we've written an odd number of bytes, write a padding
            NUL */
-        if (aiff->nsamples % 2 == 1 && ft->signal.size == SOX_SIZE_8BIT && ft->signal.channels == 1)
+        if (aiff->nsamples % 2 == 1 && ft->encoding.bits_per_sample == 8 && ft->signal.channels == 1)
         {
             sox_sample_t buf = 0;
             sox_rawwrite(ft, &buf, 1);
@@ -937,17 +904,17 @@ static int aifcwriteheader(sox_format_t * ft, sox_size_t nframes)
                 8 /*SSND hdr*/ + 12 /*SSND chunk*/;
         unsigned bits = 0;
 
-        if (ft->signal.encoding == SOX_ENCODING_SIGN2 && 
-            ft->signal.size == SOX_SIZE_BYTE)
+        if (ft->encoding.encoding == SOX_ENCODING_SIGN2 && 
+            ft->encoding.bits_per_sample == 8)
                 bits = 8;
-        else if (ft->signal.encoding == SOX_ENCODING_SIGN2 && 
-                 ft->signal.size == SOX_SIZE_16BIT)
+        else if (ft->encoding.encoding == SOX_ENCODING_SIGN2 && 
+                 ft->encoding.bits_per_sample == 16)
                 bits = 16;
-        else if (ft->signal.encoding == SOX_ENCODING_SIGN2 && 
-                 ft->signal.size == SOX_SIZE_24BIT)
+        else if (ft->encoding.encoding == SOX_ENCODING_SIGN2 && 
+                 ft->encoding.bits_per_sample == 24)
                 bits = 24;
-        else if (ft->signal.encoding == SOX_ENCODING_SIGN2 && 
-                 ft->signal.size == SOX_SIZE_32BIT)
+        else if (ft->encoding.encoding == SOX_ENCODING_SIGN2 && 
+                 ft->encoding.bits_per_sample == 32)
                 bits = 32;
         else
         {
@@ -957,7 +924,7 @@ static int aifcwriteheader(sox_format_t * ft, sox_size_t nframes)
 
         sox_writes(ft, "FORM"); /* IFF header */
         /* file size */
-        sox_writedw(ft, hsize + nframes * ft->signal.size * ft->signal.channels); 
+        sox_writedw(ft, hsize + nframes * (ft->encoding.bits_per_sample >> 3) * ft->signal.channels); 
         sox_writes(ft, "AIFC"); /* File type */
 
         /* FVER chunk */
@@ -981,7 +948,7 @@ static int aifcwriteheader(sox_format_t * ft, sox_size_t nframes)
         /* SSND chunk -- describes data */
         sox_writes(ft, "SSND");
         /* chunk size */
-        sox_writedw(ft, 8 + nframes * ft->signal.channels * ft->signal.size); 
+        sox_writedw(ft, 8 + nframes * ft->signal.channels * (ft->encoding.bits_per_sample >> 3)); 
         sox_writedw(ft, 0); /* offset */
         sox_writedw(ft, 0); /* block size */
 

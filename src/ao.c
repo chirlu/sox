@@ -38,16 +38,8 @@ static int startwrite(sox_format_t * ft)
   ao_priv_t ao = (ao_priv_t)ft->priv;
 
   set_signal_defaults(&ft->signal);
-  if (ft->signal.size != SOX_SIZE_16BIT || 
-      ft->signal.encoding != SOX_ENCODING_SIGN2)
-  {
-      sox_report("Forcing to signed 16 bit samples for ao driver");
-      ft->signal.size = SOX_SIZE_16BIT;
-      ft->signal.encoding = SOX_ENCODING_SIGN2;
-  }
-
-  ao->buf_size = sox_globals.bufsiz - (sox_globals.bufsiz % ft->signal.size);
-  ao->buf_size *= ft->signal.size;
+  ao->buf_size = sox_globals.bufsiz - (sox_globals.bufsiz % (ft->encoding.bits_per_sample >> 3));
+  ao->buf_size *= (ft->encoding.bits_per_sample >> 3);
   ao->buf = xmalloc(ao->buf_size);
 
   if (!ao->buf)
@@ -73,7 +65,7 @@ static int startwrite(sox_format_t * ft)
       }
   }
 
-  ao->format.bits = ft->signal.size * 8;
+  ao->format.bits = ft->encoding.bits_per_sample;
   ao->format.rate = ft->signal.rate;
   ao->format.channels = ft->signal.channels;
   ao->format.byte_format = AO_FMT_NATIVE;
@@ -97,17 +89,17 @@ static void sox_sw_write_buf(char *buf1, sox_sample_t const * buf2, sox_size_t l
     }
 }
 
-static sox_size_t write(sox_format_t *ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t write_samples(sox_format_t *ft, const sox_sample_t *buf, sox_size_t len)
 {
   ao_priv_t ao = (ao_priv_t)ft->priv;
   sox_size_t aobuf_size;
 
-  if (len > ao->buf_size / ft->signal.size)
-      len = ao->buf_size / ft->signal.size;
+  if (len > ao->buf_size / (ft->encoding.bits_per_sample >> 3))
+      len = ao->buf_size / (ft->encoding.bits_per_sample >> 3);
 
-  aobuf_size = ft->signal.size * len;
+  aobuf_size = (ft->encoding.bits_per_sample >> 3) * len;
 
-  sox_sw_write_buf((char *)ao->buf, buf, len, ft->signal.reverse_bytes,
+  sox_sw_write_buf((char *)ao->buf, buf, len, ft->encoding.reverse_bytes,
                    &(ft->clips));
   if (ao_play(ao->device, (void *)ao->buf, aobuf_size) == 0)
     return 0;
@@ -130,22 +122,15 @@ static int stopwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-/* libao player */
-static const char *aonames[] = {
-  "ao",
-  NULL
-};
-
-static sox_format_handler_t sox_ao_format = {
-  aonames, SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
-  NULL, NULL, NULL,
-  startwrite, write, stopwrite,
-  NULL
-};
-
-const sox_format_handler_t *sox_ao_format_fn(void);
-
-const sox_format_handler_t *sox_ao_format_fn(void)
+SOX_FORMAT_HANDLER(ao)
 {
-    return &sox_ao_format;
+  static char const * const names[] = {"ao", NULL};
+  static unsigned const encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
+  static sox_format_handler_t const handler = {
+    names, SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
+    NULL, NULL, NULL,
+    startwrite, write_samples, stopwrite,
+    NULL, encodings, NULL
+  };
+  return &handler;
 }

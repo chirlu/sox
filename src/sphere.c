@@ -26,20 +26,14 @@ typedef struct spherestuff {
  *      size and encoding of samples, 
  *      mono/stereo/quad.
  */
-static int sox_spherestartread(sox_format_t * ft) 
+static int startread(sox_format_t * ft) 
 {
         sphere_t sphere = (sphere_t) ft->priv;
-        int rc;
         char *buf;
         char fldname[64], fldtype[16], fldsval[128];
         int i;
         sox_size_t header_size, bytes_read;
         long rate;
-
-        /* Needed for rawread() */
-        rc = sox_rawstartread(ft);
-        if (rc)
-            return rc;
 
         /* Magic header */
         if (sox_reads(ft, fldname, 8) == SOX_EOF || strncmp(fldname, "NIST_1A", 7) != 0)
@@ -72,10 +66,10 @@ static int sox_spherestartread(sox_format_t * ft)
 
         while (strncmp(buf, "end_head", 8) != 0)
         {
-            if (strncmp(buf, "sample_n_bytes", 14) == 0 && !ft->signal.size)
+            if (strncmp(buf, "sample_n_bytes", 14) == 0 && !ft->encoding.bits_per_sample)
             {
                 sscanf(buf, "%63s %15s %d", fldname, fldtype, &i);
-                ft->signal.size = i;
+                ft->encoding.bits_per_sample = i << 3;
             }
             if (strncmp(buf, "channel_count", 13) == 0 && 
                 ft->signal.channels == 0)
@@ -89,10 +83,10 @@ static int sox_spherestartread(sox_format_t * ft)
                 /* Only bother looking for ulaw flag.  All others
                  * should be caught below by default PCM check
                  */
-                if (ft->signal.encoding == SOX_ENCODING_UNKNOWN && 
+                if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN && 
                     strncmp(fldsval,"ulaw",4) == 0)
                 {
-                    ft->signal.encoding = SOX_ENCODING_ULAW;
+                    ft->encoding.encoding = SOX_ENCODING_ULAW;
                 }
             }
             if (strncmp(buf, "sample_rate ", 12) == 0 &&
@@ -105,9 +99,9 @@ static int sox_spherestartread(sox_format_t * ft)
             {
                 sscanf(buf, "%53s %15s %127s", fldname, fldtype, fldsval);
                 if (strncmp(fldsval,"01",2) == 0)
-                  ft->signal.reverse_bytes = SOX_IS_BIGENDIAN; /* Data is little endian. */
+                  ft->encoding.reverse_bytes = SOX_IS_BIGENDIAN; /* Data is little endian. */
                 else if (strncmp(fldsval,"10",2) == 0)
-                  ft->signal.reverse_bytes = SOX_IS_LITTLEENDIAN; /* Data is big endian. */
+                  ft->encoding.reverse_bytes = SOX_IS_LITTLEENDIAN; /* Data is big endian. */
             }
 
             if (sox_reads(ft, buf, header_size) == SOX_EOF)
@@ -120,19 +114,19 @@ static int sox_spherestartread(sox_format_t * ft)
             header_size -= (strlen(buf) + 1);
         }
 
-        if (!ft->signal.size)
-            ft->signal.size = SOX_SIZE_BYTE;
+        if (!ft->encoding.bits_per_sample)
+            ft->encoding.bits_per_sample = 8;
 
         /* sample_coding is optional and is PCM if missing.
          * This means encoding is signed if size = word or
          * unsigned if size = byte.
          */
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
         {
-            if (ft->signal.size == SOX_SIZE_8BIT)
-                ft->signal.encoding = SOX_ENCODING_UNSIGNED;
+            if (ft->encoding.bits_per_sample == 8)
+                ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
             else
-                ft->signal.encoding = SOX_ENCODING_SIGN2;
+                ft->encoding.encoding = SOX_ENCODING_SIGN2;
         }
 
         while (header_size)
@@ -164,10 +158,10 @@ static int sox_spherestartread(sox_format_t * ft)
         }
 
         free(buf);
-        return (SOX_SUCCESS);
+        return sox_rawstartread(ft);
 }
 
-static int sox_spherestartwrite(sox_format_t * ft) 
+static int startwrite(sox_format_t * ft) 
 {
     int rc;
     int x;
@@ -177,17 +171,6 @@ static int sox_spherestartwrite(sox_format_t * ft)
     {
         sox_fail_errno(ft,SOX_EOF,"File must be seekable for sphere file output");
         return (SOX_EOF);
-    }
-
-    switch (ft->signal.encoding)
-    {
-        case SOX_ENCODING_ULAW:
-        case SOX_ENCODING_SIGN2:
-        case SOX_ENCODING_UNSIGNED:
-            break;
-        default:
-            sox_fail_errno(ft,SOX_EFMT,"SPHERE format only supports ulaw and PCM data.");
-            return(SOX_EOF);
     }
 
     sphere->numSamples = 0;
@@ -206,7 +189,7 @@ static int sox_spherestartwrite(sox_format_t * ft)
         
 }
 
-static sox_size_t sox_spherewrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len) 
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len) 
 {
     sphere_t sphere = (sphere_t) ft->priv;
 
@@ -214,7 +197,7 @@ static sox_size_t sox_spherewrite(sox_format_t * ft, const sox_sample_t *buf, so
     return sox_rawwrite(ft, buf, len);
 }
 
-static int sox_spherestopwrite(sox_format_t * ft) 
+static int stopwrite(sox_format_t * ft) 
 {
     char buf[128];
     sphere_t sphere = (sphere_t) ft->priv;
@@ -222,7 +205,7 @@ static int sox_spherestopwrite(sox_format_t * ft)
 
     if (sox_seeki(ft, 0, 0) != 0)
     {
-        sox_fail_errno(ft,errno,"Could not rewird output file to rewrite sphere header.");
+        sox_fail_errno(ft,errno,"Could not rewind output file to rewrite sphere header.");
         return (SOX_EOF);
     }
 
@@ -233,21 +216,21 @@ static int sox_spherestopwrite(sox_format_t * ft)
     sprintf(buf, "sample_count -i %ld\n", samples);
     sox_writes(ft, buf);
 
-    sprintf(buf, "sample_n_bytes -i %d\n", ft->signal.size);
+    sprintf(buf, "sample_n_bytes -i %d\n", ft->encoding.bits_per_sample >> 3);
     sox_writes(ft, buf);
 
     sprintf(buf, "channel_count -i %d\n", ft->signal.channels);
     sox_writes(ft, buf);
 
     sprintf(buf, "sample_byte_format -s2 %s\n",
-        ft->signal.reverse_bytes != SOX_IS_BIGENDIAN ? "10" : "01");
+        ft->encoding.reverse_bytes != SOX_IS_BIGENDIAN ? "10" : "01");
     sox_writes(ft, buf);
 
     rate = ft->signal.rate;
     sprintf(buf, "sample_rate -i %ld\n", rate);
     sox_writes(ft, buf);
 
-    if (ft->signal.encoding == SOX_ENCODING_ULAW)
+    if (ft->encoding.encoding == SOX_ENCODING_ULAW)
         sox_writes(ft, "sample_coding -s4 ulaw\n");
     else
         sox_writes(ft, "sample_coding -s3 pcm\n");
@@ -257,28 +240,19 @@ static int sox_spherestopwrite(sox_format_t * ft)
     return (SOX_SUCCESS);
 }
 
-/* NIST Sphere File */
-static const char *spherenames[] = {
-  "sph",
-  "nist",
-  NULL
-};
-
-static sox_format_handler_t sox_sphere_format = {
-  spherenames,
-  0,
-  sox_spherestartread,
-  sox_rawread,
-  sox_rawstopread,
-  sox_spherestartwrite,
-  sox_spherewrite,
-  sox_spherestopwrite,
-  NULL
-};
-
-const sox_format_handler_t *sox_sphere_format_fn(void);
-
-const sox_format_handler_t *sox_sphere_format_fn(void)
+SOX_FORMAT_HANDLER(sphere)
 {
-    return &sox_sphere_format;
+  static char const * const names[] = {"sph", "nist", NULL};
+  static unsigned const write_encodings[] = {
+    SOX_ENCODING_SIGN2, 8, 16, 24, 32, 0,
+    SOX_ENCODING_UNSIGNED, 8, 16, 24, 32, 0,
+    SOX_ENCODING_ULAW, 8, 0,
+    0};
+  static sox_format_handler_t const handler = {
+    names, 0,
+    startread, sox_rawread, sox_rawstopread,
+    startwrite, write_samples, stopwrite,
+    NULL, write_encodings, NULL
+  };
+  return &handler;
 }

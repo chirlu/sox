@@ -127,10 +127,7 @@ static int startread(sox_format_t * ft)
     return SOX_EOF;
   }
   lpc->samples = LPC10_SAMPLES_PER_FRAME;
-  ft->signal.size = SOX_SIZE_16BIT;
-  ft->signal.encoding = SOX_ENCODING_SIGN2;
-
-  return SOX_SUCCESS;
+  return sox_check_read_params(ft, 1, 8000., SOX_ENCODING_LPC10, 0, (off_t)0);
 }
 
 static int startwrite(sox_format_t * ft) 
@@ -146,7 +143,7 @@ static int startwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
   lpcpriv_t lpc = (lpcpriv_t)ft->priv;
   sox_size_t nread = 0;
@@ -170,7 +167,7 @@ static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
   return nread;
 }
 
-static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
   lpcpriv_t lpc = (lpcpriv_t)ft->priv;
   sox_size_t nwritten = 0;
@@ -211,28 +208,16 @@ static int stopwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-/* LPC-10 */
-static const char *lpc10names[] = {
-  "lpc",
-  "lpc10",
-  NULL
-};
-
-static sox_format_handler_t sox_lpc10_format = {
-  lpc10names,
-  0,
-  startread,
-  read,
-  stopread,
-  startwrite,
-  write,
-  stopwrite,
-  NULL
-};
-
-const sox_format_handler_t *sox_lpc10_format_fn(void);
-
-const sox_format_handler_t *sox_lpc10_format_fn(void)
+SOX_FORMAT_HANDLER(lpc10)
 {
-  return &sox_lpc10_format;
+  static char const * const names[] = {"lpc10", "lpc", NULL};
+  static sox_rate_t   const write_rates[] = {8000, 0};
+  static unsigned     const write_encodings[] = {SOX_ENCODING_LPC10, 0, 0};
+  static sox_format_handler_t handler = {
+    names, SOX_FILE_MONO,
+    startread, read_samples, stopread,
+    startwrite, write_samples, stopwrite,
+    NULL, write_encodings, write_rates
+  };
+  return &handler;
 }

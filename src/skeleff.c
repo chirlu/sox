@@ -30,7 +30,7 @@ assert_static(sizeof(struct skeleff) <= SOX_MAX_EFFECT_PRIVSIZE,
 
 /*
  * Process command-line options but don't do other
- * initialization now: effp->ininfo & effp->outinfo are not
+ * initialization now: effp->in_signal & effp->out_signal are not
  * yet filled in.
  */
 static int getopts(sox_effect_t * effp, int n, char UNUSED **argv)
@@ -49,7 +49,7 @@ static int getopts(sox_effect_t * effp, int n, char UNUSED **argv)
  */
 static int start(sox_effect_t * effp)
 {
-  if (effp->outinfo.channels == 1) {
+  if (effp->out_signal.channels == 1) {
     sox_fail("Can't run on mono data.");
     return SOX_EOF;
   }
@@ -67,7 +67,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
   skeleff_t UNUSED skeleff = (skeleff_t)effp->priv;
   sox_size_t len, done;
 
-  switch (effp->outinfo.channels) {
+  switch (effp->out_signal.channels) {
   case 2:
     /* Length to process will be buffer length / 2 since we
      * work with two samples at a time.

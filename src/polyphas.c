@@ -23,11 +23,12 @@
  *
  */
 
+#include "sox_i.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "sox_i.h"
 
 #define Float float/*double*/
 #define ISCALE 0x10000
@@ -348,21 +349,21 @@ static int sox_poly_start(sox_effect_t * effp)
     int total, size, uprate;
     int k;
 
-    if (effp->ininfo.rate == effp->outinfo.rate)
+    if (effp->in_signal.rate == effp->out_signal.rate)
       return SOX_EFF_NULL;
 
-    effp->outinfo.channels = effp->ininfo.channels;
+    effp->out_signal.channels = effp->in_signal.channels;
 
-    rate->lcmrate = sox_lcm((sox_sample_t)effp->ininfo.rate,
-                           (sox_sample_t)effp->outinfo.rate);
+    rate->lcmrate = sox_lcm((sox_sample_t)effp->in_signal.rate,
+                           (sox_sample_t)effp->out_signal.rate);
 
     /* Cursory check for LCM overflow.
      * If both rates are below 65k, there should be no problem.
      * 16 bits x 16 bits = 32 bits, which we can handle.
      */
 
-    rate->inskip = rate->lcmrate / (sox_sample_t)effp->ininfo.rate;
-    rate->outskip = rate->lcmrate / (sox_sample_t)effp->outinfo.rate;
+    rate->inskip = rate->lcmrate / (sox_sample_t)effp->in_signal.rate;
+    rate->outskip = rate->lcmrate / (sox_sample_t)effp->out_signal.rate;
     rate->Factor = (double)rate->inskip / (double)rate->outskip;
     rate->inpipe = 0;
     {
@@ -377,12 +378,12 @@ static int sox_poly_start(sox_effect_t * effp)
     /* l1 and l2 are now lists of the up/down factors for conversion */
 
     sox_debug("Poly:  input rate %g, output rate %g.  %d stages.",
-            effp->ininfo.rate, effp->outinfo.rate,total);
+            effp->in_signal.rate, effp->out_signal.rate,total);
     sox_debug("Poly:  window: %s  size: %d  cutoff: %f.",
             (rate->win_type == 0) ? ("nut") : ("ham"), rate->win_width, rate->cutoff);
 
     /* Create an array of filters and past history */
-    uprate = effp->ininfo.rate;
+    uprate = effp->in_signal.rate;
     for (k = 0; k < total; k++) {
       int j, prod, f_cutoff, f_len;
       polystage *s;

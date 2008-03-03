@@ -82,18 +82,18 @@ static int start(sox_effect_t * effp)
 {
   rabbit_t r = (rabbit_t) effp->priv;
   int err = 0;
-  double out_rate = r->out_rate != HUGE_VAL? r->out_rate : effp->outinfo.rate;
+  double out_rate = r->out_rate != HUGE_VAL? r->out_rate : effp->out_signal.rate;
 
-  if (effp->ininfo.rate == out_rate)
+  if (effp->in_signal.rate == out_rate)
     return SOX_EFF_NULL;
           
-  effp->outinfo.channels = effp->ininfo.channels;
-  effp->outinfo.rate = out_rate;
+  effp->out_signal.channels = effp->in_signal.channels;
+  effp->out_signal.rate = out_rate;
 
   r->data = (SRC_DATA *)xcalloc(1, sizeof(SRC_DATA));
-  r->data->src_ratio = out_rate / effp->ininfo.rate;
+  r->data->src_ratio = out_rate / effp->in_signal.rate;
   r->i_alloc = r->o_alloc = 0;
-  r->state = src_new(r->converter_type, (int)effp->ininfo.channels, &err);
+  r->state = src_new(r->converter_type, (int)effp->in_signal.channels, &err);
   if (err) {
     free(r->data);
     sox_fail("cannot initialise rabbit: %s", src_strerror(err));
@@ -111,7 +111,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
 {
   rabbit_t r = (rabbit_t) effp->priv;
   SRC_DATA *d = r->data;
-  unsigned int channels = effp->ininfo.channels;
+  unsigned int channels = effp->in_signal.channels;
   sox_size_t i;
   sox_size_t isamples0 = d->input_frames * channels;
   sox_size_t isamples = isamples0 + *isamp;

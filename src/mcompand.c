@@ -14,6 +14,8 @@
  * the consequences of using this software.
  */
 
+#include "sox_i.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include "compandt.h"
@@ -357,7 +359,7 @@ static int start(sox_effect_t * effp)
   
   for (band=0;band<c->nBands;++band) {
     l = &c->bands[band];
-    l->delay_size = c->bands[band].delay * effp->outinfo.rate * effp->outinfo.channels;
+    l->delay_size = c->bands[band].delay * effp->out_signal.rate * effp->out_signal.channels;
     if (l->delay_size > c->delay_buf_size)
       c->delay_buf_size = l->delay_size;
   }
@@ -367,14 +369,14 @@ static int start(sox_effect_t * effp)
     /* Convert attack and decay rates using number of samples */
 
     for (i = 0; i < l->expectedChannels; ++i) {
-      if (l->attackRate[i] > 1.0/effp->outinfo.rate)
+      if (l->attackRate[i] > 1.0/effp->out_signal.rate)
         l->attackRate[i] = 1.0 -
-          exp(-1.0/(effp->outinfo.rate * l->attackRate[i]));
+          exp(-1.0/(effp->out_signal.rate * l->attackRate[i]));
       else
         l->attackRate[i] = 1.0;
-      if (l->decayRate[i] > 1.0/effp->outinfo.rate)
+      if (l->decayRate[i] > 1.0/effp->out_signal.rate)
         l->decayRate[i] = 1.0 -
-          exp(-1.0/(effp->outinfo.rate * l->decayRate[i]));
+          exp(-1.0/(effp->out_signal.rate * l->decayRate[i]));
       else
         l->decayRate[i] = 1.0;
     }
@@ -386,7 +388,7 @@ static int start(sox_effect_t * effp)
     l->delay_buf_cnt = 0;
 
     if (l->topfreq != 0)
-      lowpass_setup(&l->filter, l->topfreq, effp->outinfo.rate, effp->outinfo.channels);
+      lowpass_setup(&l->filter, l->topfreq, effp->out_signal.rate, effp->out_signal.channels);
   }
   return (SOX_SUCCESS);
 }
@@ -503,14 +505,14 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
     l = &c->bands[band];
 
     if (l->topfreq)
-      lowpass_flow(effp, &l->filter, effp->outinfo.channels, abuf, bbuf, cbuf, len);
+      lowpass_flow(effp, &l->filter, effp->out_signal.channels, abuf, bbuf, cbuf, len);
     else {
       bbuf = abuf;
       abuf = cbuf;
     }
     if (abuf == ibuf_copy)
       abuf = c->band_buf3;
-    (void)sox_mcompand_flow_1(effp, c,l,bbuf,abuf,len,effp->outinfo.channels);
+    (void)sox_mcompand_flow_1(effp, c,l,bbuf,abuf,len,effp->out_signal.channels);
     for (i=0;i<len;++i)
     {
       out = obuf[i] + abuf[i];

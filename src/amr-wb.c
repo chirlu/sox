@@ -21,6 +21,8 @@
  * or install equivalent package(s) e.g. marillat.
  */
 
+#include "sox_i.h"
+
 #include "amrwb/typedef.h"
 #include "amrwb/enc_if.h"
 #include "amrwb/dec_if.h"

@@ -174,9 +174,9 @@ static int sox_smpseek(sox_format_t * ft, sox_size_t offset)
     sox_size_t new_offset, channel_block, alignment;
     smp_t smp = (smp_t) ft->priv;
 
-    new_offset = offset * ft->signal.size;
+    new_offset = offset * (ft->encoding.bits_per_sample >> 3);
     /* Make sure request aligns to a channel block (ie left+right) */
-    channel_block = ft->signal.channels * ft->signal.size;
+    channel_block = ft->signal.channels * (ft->encoding.bits_per_sample >> 3);
     alignment = new_offset % channel_block;
     /* Most common mistaken is to compute something like
      * "skip everthing upto and including this sample" so
@@ -189,7 +189,7 @@ static int sox_smpseek(sox_format_t * ft, sox_size_t offset)
     ft->sox_errno = sox_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
 
     if( ft->sox_errno == SOX_SUCCESS )
-        smp->NoOfSamps = ft->length - (new_offset / ft->signal.size);
+        smp->NoOfSamps = ft->length - (new_offset / (ft->encoding.bits_per_sample >> 3));
 
     return(ft->sox_errno);
 }
@@ -271,8 +271,8 @@ static int sox_smpstartread(sox_format_t * ft)
         }
 
         ft->signal.rate = (int) trailer.rate;
-        ft->signal.size = SOX_SIZE_16BIT;
-        ft->signal.encoding = SOX_ENCODING_SIGN2;
+        ft->encoding.bits_per_sample = 16;
+        ft->encoding.encoding = SOX_ENCODING_SIGN2;
         ft->signal.channels = 1;
         smp->dataStart = samplestart;
         ft->length = smp->NoOfSamps;
@@ -344,11 +344,6 @@ static int sox_smpstartwrite(sox_format_t * ft)
                 return(SOX_EOF);
         }
 
-        /* If your format specifies any of the following info. */
-        ft->signal.size = SOX_SIZE_16BIT;
-        ft->signal.encoding = SOX_ENCODING_SIGN2;
-        ft->signal.channels = 1;
-
         memcpy(header.Id, SVmagic, sizeof(header.Id));
         memcpy(header.version, SVvers, sizeof(header.version));
         sprintf(header.comments, "%-*s", COMMENTLEN - 1, "Converted using Sox.");
@@ -401,27 +396,15 @@ static int sox_smpstopwrite(sox_format_t * ft)
         return(SOX_SUCCESS);
 }
 
-/* SampleVision sound */
-static const char *smpnames[] = {
-  "smp",
-  NULL,
-};
-
-static sox_format_handler_t sox_smp_format = {
-  smpnames,
-  SOX_FILE_LOOPS | SOX_FILE_LIT_END,
-  sox_smpstartread,
-  sox_smpread,
-  NULL,
-  sox_smpstartwrite,
-  sox_smpwrite,
-  sox_smpstopwrite,
-  sox_smpseek
-};
-
-const sox_format_handler_t *sox_smp_format_fn(void);
-
-const sox_format_handler_t *sox_smp_format_fn(void)
+SOX_FORMAT_HANDLER(smp)
 {
-    return &sox_smp_format;
+  static char const * const names[] = {"smp", NULL};
+  static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
+  static sox_format_handler_t handler = {
+    names, SOX_FILE_LOOPS | SOX_FILE_LIT_END | SOX_FILE_MONO,
+    sox_smpstartread, sox_smpread, NULL,
+    sox_smpstartwrite, sox_smpwrite, sox_smpstopwrite,
+    sox_smpseek, write_encodings, NULL
+  };
+  return &handler;
 }

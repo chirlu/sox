@@ -104,6 +104,7 @@ char *strrstr(const char *s, const char *t);
 #define ftello ftell
 #define off_t long
 #endif
+assert_static(sizeof(off_t) == _FILE_OFFSET_BITS >> 3, OFF_T_BUILD_PROBLEM);
 
 /* Digitise one cycle of a wave and store it as
  * a table of samples of a specified data-type.
@@ -176,7 +177,8 @@ int sox_writedw(sox_format_t * ft, unsigned udw);
 int sox_writef(sox_format_t * ft, float f);
 #define sox_readdf(ft, d) (sox_read_df_buf(ft, d, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
 int sox_writedf(sox_format_t * ft, double d);
-int sox_seeki(sox_format_t * ft, sox_ssize_t offset, int whence);
+int sox_seeki(sox_format_t * ft, sox_ssize_t to_sample, int whence);
+int sox_offset_seek(sox_format_t * ft, off_t byte_offset, sox_size_t to_sample);
 sox_size_t sox_filelength(sox_format_t * ft);
 int sox_flush(sox_format_t * ft);
 sox_ssize_t sox_tell(sox_format_t * ft);
@@ -275,7 +277,7 @@ typedef struct sox_globals /* Global parameters (for effects & formats) */
   char const * stdout_in_use_by;
   sox_output_message_handler_t output_message_handler;
   char const * subsystem;
-
+  sox_bool     repeatable;
 } sox_globals_t;
 
 struct sox_effects_globals /* Global parameters (for effects) */
@@ -302,6 +304,17 @@ extern uint8_t const cswap[256];
 
 /*------------------------------ File Handlers -------------------------------*/
 
+void sox_init_encodinginfo(sox_encodinginfo_t * e);
+unsigned sox_precision(sox_encoding_t encoding, unsigned pcm_size);
+int sox_check_read_params(sox_format_t * ft, unsigned channels,
+    sox_rate_t rate, sox_encoding_t encoding, unsigned bits_per_sample,
+    off_t num_samples);
+sox_sample_t sox_sample_max(sox_encodinginfo_t const * encoding);
+#define SOX_FORMAT_HANDLER(name) \
+sox_format_handler_t const * sox_##name##_format_fn(void); \
+sox_format_handler_t const * sox_##name##_format_fn(void)
+#define div_bits(size, bits) (off_t)((double)(size) * 8 / bits)
+
 /* Psion record header check, defined in misc.c and used in prc.c and auto.c */
 extern const char prc_header[41];
 int prc_checkheader(sox_format_t * ft, char *head);
@@ -323,8 +336,8 @@ int sox_rawstopread(sox_format_t * ft);
 int sox_rawstartwrite(sox_format_t * ft);
 sox_size_t sox_rawwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp);
 int sox_rawseek(sox_format_t * ft, sox_size_t offset);
-int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, unsigned size);
-#define sox_rawstartread(ft) sox_rawstart(ft, sox_false, sox_false, SOX_ENCODING_UNKNOWN, 0)
+int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_bool default_length, sox_encoding_t encoding, unsigned size);
+#define sox_rawstartread(ft) sox_rawstart(ft, sox_false, sox_false, sox_false, SOX_ENCODING_UNKNOWN, 0)
 #define sox_rawstartwrite sox_rawstartread
 #define sox_rawstopread NULL
 #define sox_rawstopwrite NULL
@@ -371,6 +384,8 @@ struct sox_effects_chain {
   unsigned length;
   sox_sample_t **ibufc, **obufc; /* Channel interleave buffers */
   sox_effects_globals_t global_info;
+  sox_encodinginfo_t const * in_enc;
+  sox_encodinginfo_t const * out_enc;
 };
 
 #endif

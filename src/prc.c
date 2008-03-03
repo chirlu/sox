@@ -63,7 +63,7 @@ typedef struct prcpriv {
   uint32_t nsamp, nbytes;
   short padding;
   short repeats;
-  sox_size_t data_start;         /* for seeking */
+  off_t data_start;         /* for seeking */
   struct adpcm_io adpcm;
   unsigned frame_samp;     /* samples left to read in current frame */
 } *prc_t;
@@ -72,22 +72,8 @@ static void prcwriteheader(sox_format_t * ft);
 
 static int seek(sox_format_t * ft, sox_size_t offset)
 {
-  prc_t prc = (prc_t)ft->priv;
-  sox_size_t new_offset, channel_block, alignment;
-
-  new_offset = offset * ft->signal.size;
-  /* Make sure request aligns to a channel block (i.e. left+right) */
-  channel_block = ft->signal.channels * ft->signal.size;
-  alignment = new_offset % channel_block;
-  /* Most common mistake is to compute something like
-   * "skip everthing up to and including this sample" so
-   * advance to next sample block in this case.
-   */
-  if (alignment != 0)
-    new_offset += (channel_block - alignment);
-  new_offset += prc->data_start;
-
-  return sox_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
+  prc_t p = (prc_t)ft->priv;
+  return sox_offset_seek(ft, p->data_start, offset);
 }
 
 static int startread(sox_format_t * ft)
@@ -129,9 +115,9 @@ static int startread(sox_format_t * ft)
   sox_readdw(ft, &encoding);
   sox_debug("Encoding of samples: %x", encoding);
   if (encoding == 0)
-    ft->signal.encoding = SOX_ENCODING_ALAW;
+    ft->encoding.encoding = SOX_ENCODING_ALAW;
   else if (encoding == 0x100001a1)
-    ft->signal.encoding = SOX_ENCODING_IMA_ADPCM;
+    ft->encoding.encoding = SOX_ENCODING_IMA_ADPCM;
   else {
     sox_fail_errno(ft, SOX_EHDR, "Unrecognised encoding");
     return SOX_EOF;
@@ -164,11 +150,11 @@ static int startread(sox_format_t * ft)
   p->data_start = sox_tell(ft);
   ft->length = p->nsamp / ft->signal.channels;
 
-  if (ft->signal.encoding == SOX_ENCODING_ALAW) {
-    ft->signal.size = SOX_SIZE_BYTE;
+  if (ft->encoding.encoding == SOX_ENCODING_ALAW) {
+    ft->encoding.bits_per_sample = 8;
     if (sox_rawstartread(ft))
       return SOX_EOF;
-  } else if (ft->signal.encoding == SOX_ENCODING_IMA_ADPCM) {
+  } else if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) {
     p->frame_samp = 0;
     if (sox_adpcm_ima_start(ft, &p->adpcm))
       return SOX_EOF;
@@ -214,13 +200,13 @@ static unsigned read_cardinal(sox_format_t * ft)
   return a;
 }
 
-static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t samp)
+static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t samp)
 {
   prc_t p = (prc_t)ft->priv;
 
   sox_debug_more("length now = %d", p->nsamp);
 
-  if (ft->signal.encoding == SOX_ENCODING_IMA_ADPCM) {
+  if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) {
     sox_size_t nsamp, read;
 
     if (p->frame_samp == 0) {
@@ -240,7 +226,7 @@ static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t samp)
       sox_debug_more("list length %d", trash);
 
       /* Reset CODEC for start of frame */
-      sox_adpcm_reset(&p->adpcm, ft->signal.encoding);
+      sox_adpcm_reset(&p->adpcm, ft->encoding.encoding);
     }
     nsamp = min(p->frame_samp, samp);
     p->nsamp += nsamp;
@@ -258,7 +244,7 @@ static int stopread(sox_format_t * ft)
 {
   prc_t p = (prc_t)ft->priv;
 
-  if (ft->signal.encoding == SOX_ENCODING_IMA_ADPCM)
+  if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM)
     return sox_adpcm_stopread(ft, &p->adpcm);
   else
     return SOX_SUCCESS;
@@ -277,16 +263,10 @@ static int startwrite(sox_format_t * ft)
 {
   prc_t p = (prc_t)ft->priv;
 
-  if (ft->signal.encoding != SOX_ENCODING_ALAW &&
-      ft->signal.encoding != SOX_ENCODING_IMA_ADPCM) {
-    sox_report("PRC only supports A-law and ADPCM encoding; choosing A-law");
-    ft->signal.encoding = SOX_ENCODING_ALAW;
-  }
-        
-  if (ft->signal.encoding == SOX_ENCODING_ALAW) {
+  if (ft->encoding.encoding == SOX_ENCODING_ALAW) {
     if (sox_rawstartwrite(ft))
       return SOX_EOF;
-  } else if (ft->signal.encoding == SOX_ENCODING_IMA_ADPCM) {
+  } else if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) {
     if (sox_adpcm_ima_start(ft, &p->adpcm))
       return SOX_EOF;
   }
@@ -295,16 +275,6 @@ static int startwrite(sox_format_t * ft)
   p->nbytes = 0;
   if (p->repeats == 0)
     p->repeats = 1;
-
-  if (ft->signal.rate != 0 && ft->signal.rate != 8000)
-    sox_report("PRC only supports 8 kHz sample rate; overriding.");
-  ft->signal.rate = 8000;
-
-  if (ft->signal.channels != 1 && ft->signal.channels != 0)
-    sox_report("PRC only supports 1 channel; overriding.");
-  ft->signal.channels = 1;
-
-  ft->signal.size = SOX_SIZE_BYTE;
 
   prcwriteheader(ft);
 
@@ -344,14 +314,14 @@ static void write_cardinal(sox_format_t * ft, unsigned a)
   }
 }
 
-static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t samp)
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t samp)
 {
   prc_t p = (prc_t)ft->priv;
   /* Psion Record seems not to be able to handle frames > 800 samples */
   samp = min(samp, 800);
   p->nsamp += samp;
   sox_debug_more("length now = %d", p->nsamp);
-  if (ft->signal.encoding == SOX_ENCODING_IMA_ADPCM) {
+  if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) {
     sox_size_t written;
 
     write_cardinal(ft, samp);
@@ -360,7 +330,7 @@ static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t s
     /* Write length again (seems to be a BListL) */
     sox_debug_more("list length %d", samp);
     sox_writedw(ft, samp);
-    sox_adpcm_reset(&p->adpcm, ft->signal.encoding);
+    sox_adpcm_reset(&p->adpcm, ft->encoding.encoding);
     written = sox_adpcm_write(ft, &p->adpcm, buf, samp);
     sox_adpcm_flush(ft, &p->adpcm);
     return written;
@@ -397,7 +367,7 @@ static void prcwriteheader(sox_format_t * ft)
   sox_debug("Number of samples: %d",p->nsamp);
   sox_writedw(ft, p->nsamp);
 
-  if (ft->signal.encoding == SOX_ENCODING_ALAW)
+  if (ft->encoding.encoding == SOX_ENCODING_ALAW)
     sox_writedw(ft, 0);
   else
     sox_writedw(ft, 0x100001a1); /* ADPCM */
@@ -411,27 +381,19 @@ static void prcwriteheader(sox_format_t * ft)
   sox_writedw(ft, p->nbytes);    /* Number of bytes of data */
 }
 
-/* Psion .prc */
-static const char *prcnames[] = {
-  "prc",
-  NULL
-};
-
-static sox_format_handler_t sox_prc_format = {
-  prcnames,
-  SOX_FILE_LIT_END,
-  startread,
-  read,
-  stopread,
-  startwrite,
-  write,
-  stopwrite,
-  seek
-};
-
-const sox_format_handler_t *sox_prc_format_fn(void);
-
-const sox_format_handler_t *sox_prc_format_fn(void)
+SOX_FORMAT_HANDLER(prc)
 {
-  return &sox_prc_format;
+  static char const * const names[]           = {"prc", NULL};
+  static sox_rate_t   const write_rates[]     = {8000, 0};
+  static unsigned     const write_encodings[] = {
+    SOX_ENCODING_ALAW, 8, 0,
+    SOX_ENCODING_IMA_ADPCM, 4, 0,
+    0};
+  static sox_format_handler_t const handler = {
+    names, SOX_FILE_LIT_END | SOX_FILE_MONO,
+    startread, read_samples, stopread,
+    startwrite, write_samples, stopwrite,
+    seek, write_encodings, write_rates
+  };
+  return &handler;
 }

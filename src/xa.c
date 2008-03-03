@@ -23,15 +23,11 @@
 /* Thanks to Valery V. Anisimovsky <samael@avn.mccme.ru> for the 
  * "Maxis XA Audio File Format Description", dated 5-01-2002. */
 
+#include "sox_i.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>             /* For SEEK_* defines if not found in stdio */
-#endif
-
-#include "sox_i.h"
 
 #define HNIBBLE(byte) (((byte) >> 4) & 0xf)
 #define LNIBBLE(byte) ((byte) & 0xf)
@@ -89,7 +85,7 @@ static inline int32_t clip16(int32_t sample)
     }
 }
 
-static int sox_xastartread(sox_format_t * ft)
+static int startread(sox_format_t * ft)
 {
     xa_t xa = (xa_t) ft->priv;
     char *magic = xa->header.magic;
@@ -130,10 +126,10 @@ static int sox_xastartread(sox_format_t * ft)
     sox_debug(" wBits:         %u", xa->header.bits);
 
     /* Populate the sox_soundstream structure */
-    ft->signal.encoding = SOX_ENCODING_SIGN2;
+    ft->encoding.encoding = SOX_ENCODING_SIGN2;
     
-    if (!ft->signal.size || ft->signal.size == (xa->header.bits >> 3)) {
-        ft->signal.size = xa->header.bits >> 3;
+    if (!ft->encoding.bits_per_sample || ft->encoding.bits_per_sample == xa->header.bits) {
+        ft->encoding.bits_per_sample = xa->header.bits;
     } else {
         sox_report("User options overriding size read in .xa header");
     }
@@ -151,22 +147,22 @@ static int sox_xastartread(sox_format_t * ft)
     }
     
     /* Check for supported formats */
-    if (ft->signal.size != 2) {
+    if (ft->encoding.bits_per_sample != 16) {
         sox_fail_errno(ft, SOX_EFMT, "%d-bit sample resolution not supported.",
-            ft->signal.size << 3);
+            ft->encoding.bits_per_sample);
         return SOX_EOF;
     }
     
     /* Validate the header */
-    if (xa->header.bits != ft->signal.size << 3) {
+    if (xa->header.bits != ft->encoding.bits_per_sample) {
         sox_report("Invalid sample resolution %d bits.  Assuming %d bits.",
-            xa->header.bits, ft->signal.size << 3);
-        xa->header.bits = ft->signal.size << 3;
+            xa->header.bits, ft->encoding.bits_per_sample);
+        xa->header.bits = ft->encoding.bits_per_sample;
     }
-    if (xa->header.align != ft->signal.size * xa->header.channels) {
+    if (xa->header.align != (ft->encoding.bits_per_sample >> 3) * xa->header.channels) {
         sox_report("Invalid sample alignment value %d.  Assuming %d.",
-            xa->header.align, ft->signal.size * xa->header.channels);
-        xa->header.align = ft->signal.size * xa->header.channels;
+            xa->header.align, (ft->encoding.bits_per_sample >> 3) * xa->header.channels);
+        xa->header.align = (ft->encoding.bits_per_sample >> 3) * xa->header.channels;
     }
     if (xa->header.avgByteRate != (xa->header.align * xa->header.sampleRate)) {
         sox_report("Invalid dwAvgByteRate value %d.  Assuming %d.",
@@ -194,7 +190,7 @@ static int sox_xastartread(sox_format_t * ft)
  * Read up to len samples from a file, converted to signed longs.
  * Return the number of samples read.
  */
-static sox_size_t sox_xaread(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
     xa_t xa = (xa_t) ft->priv;
     int32_t sample;
@@ -243,7 +239,7 @@ static sox_size_t sox_xaread(sox_format_t * ft, sox_sample_t *buf, sox_size_t le
                 xa->state[i].curSample = sample;
                 
                 buf[done++] = SOX_SIGNED_16BIT_TO_SAMPLE(sample,);
-                xa->bytesDecoded += ft->signal.size;
+                xa->bytesDecoded += (ft->encoding.bits_per_sample >> 3);
             }
             for (i = 0; i < ft->signal.channels && done < len; i++) {
                 /* low nibble */
@@ -257,7 +253,7 @@ static sox_size_t sox_xaread(sox_format_t * ft, sox_sample_t *buf, sox_size_t le
                 xa->state[i].curSample = sample;
                 
                 buf[done++] = SOX_SIGNED_16BIT_TO_SAMPLE(sample,);
-                xa->bytesDecoded += ft->signal.size;
+                xa->bytesDecoded += (ft->encoding.bits_per_sample >> 3);
             }
 
             xa->bufPos += ft->signal.channels;
@@ -269,7 +265,7 @@ static sox_size_t sox_xaread(sox_format_t * ft, sox_sample_t *buf, sox_size_t le
     return done;
 }
 
-static int sox_xastopread(sox_format_t * ft)
+static int stopread(sox_format_t * ft)
 {
     xa_t xa = (xa_t) ft->priv;
 
@@ -284,45 +280,14 @@ static int sox_xastopread(sox_format_t * ft)
     return SOX_SUCCESS;
 }
 
-static int sox_xastartwrite(sox_format_t * ft)
+SOX_FORMAT_HANDLER(xa)
 {
-    sox_fail_errno(ft, SOX_ENOTSUP, ".XA writing not supported");
-    return SOX_EOF;
-}
-
-static sox_size_t sox_xawrite(sox_format_t * ft, const sox_sample_t *buf UNUSED, sox_size_t len UNUSED)
-{
-    sox_fail_errno(ft, SOX_ENOTSUP, ".XA writing not supported");
-    return 0;
-}
-
-static int sox_xastopwrite(sox_format_t * ft)
-{
-    sox_fail_errno(ft, SOX_ENOTSUP, ".XA writing not supported");
-    return SOX_EOF;
-}
-
-/* Maxis .xa */
-static const char *xanames[] = {
-    "xa",
-    NULL
-};
-
-sox_format_handler_t sox_xa_format = {
-  xanames,
-  SOX_FILE_LIT_END,
-  sox_xastartread,
-  sox_xaread,
-  sox_xastopread,
-  sox_xastartwrite,
-  sox_xawrite,
-  sox_xastopwrite,
-  NULL
-};
-
-const sox_format_handler_t *sox_xa_format_fn(void);
-
-const sox_format_handler_t *sox_xa_format_fn(void)
-{
-  return &sox_xa_format;
+  static char const * const names[] = {"xa", NULL };
+  static sox_format_handler_t const handler = {
+    names, SOX_FILE_LIT_END,
+    startread, read_samples, stopread,
+    NULL, NULL, NULL,
+    NULL, NULL, NULL
+  };
+  return &handler;
 }

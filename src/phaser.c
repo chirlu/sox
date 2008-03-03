@@ -54,10 +54,11 @@
  * libSoX phaser effect file.
  */
 
+#include "sox_i.h"
+
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
 #include <math.h>
 #include <string.h>
-#include "sox_i.h"
 
 #define MOD_SINE        0
 #define MOD_TRIANGLE    1
@@ -111,7 +112,7 @@ static int sox_phaser_start(sox_effect_t * effp)
         phaser_t phaser = (phaser_t) effp->priv;
         unsigned int i;
 
-        phaser->maxsamples = phaser->delay * effp->ininfo.rate / 1000.0;
+        phaser->maxsamples = phaser->delay * effp->in_signal.rate / 1000.0;
 
         if ( phaser->delay < 0.0 )
         {
@@ -149,7 +150,7 @@ static int sox_phaser_start(sox_effect_t * effp)
         if ( phaser->in_gain / ( 1.0 - phaser->decay ) > 1.0 / phaser->out_gain )
                 sox_warn("phaser: warning >>> gain-out can cause saturation or clipping of output <<<");
 
-        phaser->length = effp->ininfo.rate / phaser->speed;
+        phaser->length = effp->in_signal.rate / phaser->speed;
         phaser->phaserbuf = (double *) xmalloc(sizeof (double) * phaser->maxsamples);
         for ( i = 0; i < phaser->maxsamples; i++ )
                 phaser->phaserbuf[i] = 0.0;

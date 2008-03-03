@@ -84,8 +84,7 @@ static int drain(sox_effect_t * effp, sox_sample_t * obuf, sox_size_t * osamp)
   int result = SOX_SUCCESS;
 
   if (!p->norm0) {
-    int shift_for_max = (4 - min(effp->outinfo.size, 4)) << 3;
-    double max = (SOX_SAMPLE_MAX >> shift_for_max) << shift_for_max;
+    double max = sox_sample_max(effp->out_encoding);
     p->norm0 = p->level * min(max / p->max, (double)SOX_SAMPLE_MIN / p->min);
     rewind(p->tmp_file);
   }

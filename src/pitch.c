@@ -319,7 +319,7 @@ static int sox_pitch_getopts(sox_effect_t * effp, int n, char **argv)
 static int sox_pitch_start(sox_effect_t * effp)
 {
     pitch_t pitch = (pitch_t) effp->priv;
-    register int sample_rate = effp->outinfo.rate;
+    register int sample_rate = effp->out_signal.rate;
     unsigned int i;
 
     /* computer inner stuff... */

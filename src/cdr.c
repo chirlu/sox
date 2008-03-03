@@ -1,61 +1,49 @@
 /*
- * CD Digital Audio format handler: pads to integer number of CDDA sectors
+ * File format: cdda   (c) 2006-8 SoX contributors
+ * Based on an original idea by David Elliott
  *
- * David Elliott, Sony Microsystems -  July 5, 1991
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
  *
- * Copyright 1991 David Elliott And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * David Elliott And Sundry Contributors are not responsible for 
- * the consequences of using this software.
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, write to the Free Software Foundation,
+ * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
 #include "sox_i.h"
 
-#define SECTOR_SIZE   (2352 / 2)
-#define samples       (*(sox_size_t *)ft->priv)
-
 static int start(sox_format_t * ft) 
 {
-  ft->signal.rate = 44100;
-  ft->signal.size = SOX_SIZE_16BIT;
-  ft->signal.encoding = SOX_ENCODING_SIGN2;
-  ft->signal.channels = 2;
-
-  if (ft->mode == 'r' && ft->seekable) /* Need length for seeking */
-    ft->length = sox_filelength(ft)/SOX_SIZE_16BIT;
-  
-  return SOX_SUCCESS;
-}
-
-static sox_size_t write(
-    sox_format_t * ft, const sox_sample_t *buf, sox_size_t len) 
-{
-  samples += len;
-  return sox_rawwrite(ft, buf, len);
+  return sox_check_read_params(ft, 2, 44100., SOX_ENCODING_SIGN2, 16, (off_t)0);
 }
 
 static int stopwrite(sox_format_t * ft) 
 {
-  sox_size_t i = samples % SECTOR_SIZE;
+  sox_size_t const sector_num_samples = 588 * ft->signal.channels;
+  sox_size_t i = ft->olength % sector_num_samples;
 
-  if (i) while (i++ < SECTOR_SIZE)     /* Pad with silence to multiple */
-    sox_writew(ft, 0);                 /* of SECTOR_SIZE samples. */
-
+  if (i) while (i++ < sector_num_samples)    /* Pad with silence to multiple */
+    sox_writew(ft, 0);                       /* of 1/75th of a second. */
   return SOX_SUCCESS;
 }
 
-const sox_format_handler_t *sox_cdr_format_fn(void);
-const sox_format_handler_t *sox_cdr_format_fn(void)
+SOX_FORMAT_HANDLER(cdr)
 {
-  static const char * names[] = {"cdda", "cdr", NULL};
-
+  static char const * const names[] = {"cdda", "cdr", NULL};
+  static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
+  static sox_rate_t const write_rates[] = {44100, 0};
   static sox_format_handler_t handler = {
-    names, SOX_FILE_BIG_END,
+    names, SOX_FILE_BIG_END|SOX_FILE_STEREO,
     start, sox_rawread, NULL,
-    start, write, stopwrite,
-    sox_rawseek
+    NULL, sox_rawwrite, stopwrite,
+    sox_rawseek, write_encodings, write_rates
   };
-
   return &handler;
 }

@@ -92,10 +92,14 @@ void sox_create_effect(sox_effect_t * effp, sox_effect_handler_t const * eh)
 
 /* Effects chain: */
 
-sox_effects_chain_t * sox_create_effects_chain(void)
+sox_effects_chain_t * sox_create_effects_chain(
+    sox_encodinginfo_t const * in_enc,
+    sox_encodinginfo_t const * out_enc)
 {
   sox_effects_chain_t * result = xcalloc(1, sizeof(sox_effects_chain_t));
   result->global_info = sox_effects_globals;
+  result->in_enc = in_enc;
+  result->out_enc = out_enc;
   return result;
 }
 
@@ -117,8 +121,7 @@ int sox_effect_set_imin(sox_effect_t * effp, sox_size_t imin)
  * output rate and channels the effect does produce are written back to *in,
  * ready for the next effect in the chain.
  */
-int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t
-    const * out)
+int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signalinfo_t * in, sox_signalinfo_t const * out)
 {
   int ret, (*start)(sox_effect_t * effp) = effp->handler.start;
   unsigned f;
@@ -129,17 +132,19 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
     return SOX_SUCCESS;
   }
   effp->global_info = &chain->global_info;
-  effp->ininfo = *in;
-  effp->outinfo = *out;
+  effp->in_signal = *in;
+  effp->out_signal = *out;
+  effp->in_encoding = chain->in_enc;
+  effp->out_encoding = chain->out_enc;
   if (!(effp->handler.flags & SOX_EFF_CHAN))
-    effp->outinfo.channels = in->channels;
+    effp->out_signal.channels = in->channels;
   if (!(effp->handler.flags & SOX_EFF_RATE))
-    effp->outinfo.rate = in->rate;
+    effp->out_signal.rate = in->rate;
   if (!(effp->handler.flags & SOX_EFF_PREC))
-    effp->outinfo.size = in->size;
+    effp->out_signal.precision = in->precision;
 
   effp->flows =
-    (effp->handler.flags & SOX_EFF_MCHAN)? 1 : effp->ininfo.channels;
+    (effp->handler.flags & SOX_EFF_MCHAN)? 1 : effp->in_signal.channels;
   effp->clips = 0;
   effp->imin = 0;
   eff0 = *effp;
@@ -151,7 +156,7 @@ int sox_add_effect(sox_effects_chain_t * chain, sox_effect_t * effp, sox_signali
   if (ret != SOX_SUCCESS)
     return SOX_EOF;
 
-  *in = effp->outinfo;
+  *in = effp->out_signal;
 
   if (chain->length == SOX_MAX_EFFECTS) {
     sox_fail("Too many effects!");

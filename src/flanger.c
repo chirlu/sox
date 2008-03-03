@@ -153,7 +153,7 @@ static int sox_flanger_getopts(sox_effect_t * effp, int argc, char *argv[])
 static int sox_flanger_start(sox_effect_t * effp)
 {
   flanger_t f = (flanger_t) effp->priv;
-  int c, channels = effp->ininfo.channels;
+  int c, channels = effp->in_signal.channels;
 
   if (channels > MAX_CHANNELS) {
     sox_fail("Can not operate with more than %i channels", MAX_CHANNELS);
@@ -177,21 +177,21 @@ static int sox_flanger_start(sox_effect_t * effp)
 
   /* Create the delay buffers, one for each channel: */
   f->delay_buf_length =
-    (f->delay_min + f->delay_depth) / 1000 * effp->ininfo.rate + 0.5;
+    (f->delay_min + f->delay_depth) / 1000 * effp->in_signal.rate + 0.5;
   ++f->delay_buf_length;  /* Need 0 to n, i.e. n + 1. */
   ++f->delay_buf_length;  /* Quadratic interpolator needs one more. */
   for (c = 0; c < channels; ++c)
     f->delay_bufs[c] = xcalloc(f->delay_buf_length, sizeof(*f->delay_bufs[0]));
 
   /* Create the LFO lookup table: */
-  f->lfo_length = effp->ininfo.rate / f->speed;
+  f->lfo_length = effp->in_signal.rate / f->speed;
   f->lfo = xcalloc(f->lfo_length, sizeof(*f->lfo));
   sox_generate_wave_table(
       f->wave_shape,
       SOX_FLOAT,
       f->lfo,
       f->lfo_length,
-      (double)(sox_size_t)(f->delay_min / 1000 * effp->ininfo.rate + .5),
+      (double)(sox_size_t)(f->delay_min / 1000 * effp->in_signal.rate + .5),
       (double)(f->delay_buf_length - 2),
       3 * M_PI_2);  /* Start the sweep at minimum delay (for mono at least) */
 
@@ -207,7 +207,7 @@ static int sox_flanger_flow(sox_effect_t * effp, sox_sample_t const * ibuf,
     sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
   flanger_t f = (flanger_t) effp->priv;
-  int c, channels = effp->ininfo.channels;
+  int c, channels = effp->in_signal.channels;
   sox_size_t len = (*isamp > *osamp ? *osamp : *isamp) / channels;
 
   *isamp = *osamp = len * channels;
@@ -261,7 +261,7 @@ static int sox_flanger_flow(sox_effect_t * effp, sox_sample_t const * ibuf,
 static int sox_flanger_stop(sox_effect_t * effp)
 {
   flanger_t f = (flanger_t) effp->priv;
-  int c, channels = effp->ininfo.channels;
+  int c, channels = effp->in_signal.channels;
 
   for (c = 0; c < channels; ++c)
     free(f->delay_bufs[c]);

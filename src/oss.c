@@ -49,41 +49,41 @@ static int ossinit(sox_format_t * ft)
     sox_signalinfo_t client_signal = ft->signal;
 
     set_signal_defaults(&ft->signal);
-    if (ft->signal.size == SOX_SIZE_BYTE) {
+    if (ft->encoding.bits_per_sample == 8) {
         sampletype = AFMT_U8;
         samplesize = 8;
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
-            ft->signal.encoding = SOX_ENCODING_UNSIGNED;
-        if (ft->signal.encoding != SOX_ENCODING_UNSIGNED) {
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
+            ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
+        if (ft->encoding.encoding != SOX_ENCODING_UNSIGNED) {
             sox_report("OSS driver only supports unsigned with bytes");
             sox_report("Forcing to unsigned");
-            ft->signal.encoding = SOX_ENCODING_UNSIGNED;
+            ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
         }
     }
-    else if (ft->signal.size == SOX_SIZE_16BIT) {
+    else if (ft->encoding.bits_per_sample == 16) {
         /* Attempt to use endian that user specified */
-        if (ft->signal.reverse_bytes)
+        if (ft->encoding.reverse_bytes)
             sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
         else
             sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
-            ft->signal.encoding = SOX_ENCODING_SIGN2;
-        if (ft->signal.encoding != SOX_ENCODING_SIGN2) {
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
+            ft->encoding.encoding = SOX_ENCODING_SIGN2;
+        if (ft->encoding.encoding != SOX_ENCODING_SIGN2) {
             sox_report("OSS driver only supports signed with words");
             sox_report("Forcing to signed linear");
-            ft->signal.encoding = SOX_ENCODING_SIGN2;
+            ft->encoding.encoding = SOX_ENCODING_SIGN2;
         }
     }
     else {
         /* Attempt to use endian that user specified */
-        if (ft->signal.reverse_bytes)
+        if (ft->encoding.reverse_bytes)
             sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_LE : AFMT_S16_BE;
         else
             sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
         samplesize = 16;
-        ft->signal.size = SOX_SIZE_16BIT;
-        ft->signal.encoding = SOX_ENCODING_SIGN2;
+        ft->encoding.bits_per_sample = 16;
+        ft->encoding.encoding = SOX_ENCODING_SIGN2;
         sox_report("OSS driver only supports bytes and words");
         sox_report("Forcing to signed linear word");
     }
@@ -106,8 +106,8 @@ static int ossinit(sox_format_t * ft)
             if (samplesize == 16 && (tmp & (AFMT_S16_LE|AFMT_S16_BE)) == 0)
             {
                 /* Must not like 16-bits, try 8-bits */
-                ft->signal.size = SOX_SIZE_BYTE;
-                ft->signal.encoding = SOX_ENCODING_UNSIGNED;
+                ft->encoding.bits_per_sample = 8;
+                ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
                 sox_report("OSS driver doesn't like signed words");
                 sox_report("Forcing to unsigned bytes");
                 tmp = sampletype = AFMT_U8;
@@ -116,8 +116,8 @@ static int ossinit(sox_format_t * ft)
             /* is 8-bit supported */
             else if (samplesize == 8 && (tmp & AFMT_U8) == 0)
             {
-                ft->signal.size = SOX_SIZE_16BIT;
-                ft->signal.encoding = SOX_ENCODING_SIGN2;
+                ft->encoding.bits_per_sample = 16;
+                ft->encoding.encoding = SOX_ENCODING_SIGN2;
                 sox_report("OSS driver doesn't like unsigned bytes");
                 sox_report("Forcing to signed words");
                 sampletype = (SOX_IS_BIGENDIAN) ? AFMT_S16_BE : AFMT_S16_LE;
@@ -132,7 +132,7 @@ static int ossinit(sox_format_t * ft)
                  * it supports at least one of the two endians.
                  */
                 sampletype = (sampletype == AFMT_S16_BE) ? AFMT_S16_LE : AFMT_S16_BE;
-                ft->signal.reverse_bytes = !ft->signal.reverse_bytes;
+                ft->encoding.reverse_bytes = !ft->encoding.reverse_bytes;
             }
 
         }
@@ -159,7 +159,7 @@ static int ossinit(sox_format_t * ft)
     if (tmp != dsp_stereo)
     {
       if (client_signal.channels != 0)
-        sox_warn("Sound card appears to only support %d channels.  Overriding format", tmp+1);
+        sox_warn("Sound card appears to support only %d channels.  Overriding format", tmp+1);
         ft->signal.channels = tmp + 1;
     }
 
@@ -206,47 +206,18 @@ static int ossinit(sox_format_t * ft)
     return(SOX_SUCCESS);
 }
 
-/*
- * Do anything required before you start reading samples.
- * Read file header.
- *      Find out sampling rate,
- *      size and encoding of samples,
- *      mono/stereo/quad.
- */
-static int sox_ossstartread(sox_format_t * ft)
+SOX_FORMAT_HANDLER(oss)
 {
-    int rc;
-    rc = ossinit(ft);
-    return rc;
-}
-
-static int sox_ossstartwrite(sox_format_t * ft)
-{
-    return ossinit(ft);
-}
-
-/* OSS /dev/dsp player */
-static const char *ossnames[] = {
-  "ossdsp",
-  "oss",
-  NULL
-};
-
-static sox_format_handler_t sox_oss_format = {
-  ossnames,
-  SOX_FILE_DEVICE,
-  sox_ossstartread,
-  sox_rawread,
-  sox_rawstopread,
-  sox_ossstartwrite,
-  sox_rawwrite,
-  sox_rawstopwrite,
-  NULL
-};
-
-const sox_format_handler_t *sox_oss_format_fn(void);
-
-const sox_format_handler_t *sox_oss_format_fn(void)
-{
-    return &sox_oss_format;
+  static char const * const names[] = {"ossdsp", "oss", NULL};
+  static unsigned const write_encodings[] = {
+    SOX_ENCODING_SIGN2, 16, 0,
+    SOX_ENCODING_UNSIGNED, 8, 0,
+    0};
+  static sox_format_handler_t const handler = {
+    names, SOX_FILE_DEVICE,
+    ossinit, sox_rawread, sox_rawstopread,
+    ossinit, sox_rawwrite, sox_rawstopwrite,
+    NULL, write_encodings, NULL
+  };
+  return &handler;
 }

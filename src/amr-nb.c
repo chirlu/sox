@@ -21,6 +21,8 @@
  * or install equivalent package(s) e.g. marillat.
  */
 
+#include "sox_i.h"
+
 #include "amrnb/typedef.h"
 #include "amrnb/interf_dec.h"
 #include "amrnb/sp_dec.h"

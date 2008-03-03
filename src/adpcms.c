@@ -140,7 +140,7 @@ static int adpcm_start(sox_format_t * ft, adpcm_io_t state, sox_encoding_t type)
 
   sox_adpcm_reset(state, type);
   
-  return sox_rawstart(ft, sox_true, sox_false, type, SOX_SIZE_16BIT);
+  return sox_rawstart(ft, sox_true, sox_false, sox_true, type, 4);
 }
 
 int sox_adpcm_oki_start(sox_format_t * ft, adpcm_io_t state)
@@ -155,14 +155,13 @@ int sox_adpcm_ima_start(sox_format_t * ft, adpcm_io_t state)
 
 /******************************************************************************
  * Function   : sox_adpcm_read 
- * Description: Fills an internal buffer from the VOX file, converts the 
- *              OKI ADPCM 4-bit samples to 12-bit signed PCM and then scales 
- *              the samples to full range 16 bit PCM.
+ * Description: Converts the OKI ADPCM 4-bit samples to 16-bit signed PCM and
+ *              then scales the samples to full sox_sample_t range.
  * Parameters : ft     - file info structure
  *              state  - ADPCM state structure
  *              buffer - output buffer
- *              length - size of output buffer
- * Returns    : int    - number of samples returned in buffer
+ *              len    - size of output buffer
+ * Returns    :        - number of samples returned in buffer
  * Exceptions :
  * Notes      : 
  ******************************************************************************/

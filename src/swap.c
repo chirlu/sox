@@ -62,13 +62,13 @@ static int sox_swap_start(sox_effect_t * effp)
     swap_t swap = (swap_t) effp->priv;
     int i;
 
-    if (effp->outinfo.channels == 1)
+    if (effp->out_signal.channels == 1)
     {
         sox_fail("Can't swap channels on mono data.");
         return (SOX_EOF);
     }
 
-    if (effp->outinfo.channels == 2)
+    if (effp->out_signal.channels == 2)
     {
         if (swap->def_opts)
         {
@@ -90,7 +90,7 @@ static int sox_swap_start(sox_effect_t * effp)
         swap->order[1]--;
     }
 
-    if (effp->outinfo.channels == 4)
+    if (effp->out_signal.channels == 4)
     {
         if (swap->def_opts)
         {
@@ -117,7 +117,7 @@ static int sox_swap_start(sox_effect_t * effp)
 
     }
 
-    for (i = 0; i < (int)effp->outinfo.channels; ++i)
+    for (i = 0; i < (int)effp->out_signal.channels; ++i)
       if (swap->order[i] != i)
         return SOX_SUCCESS;
 
@@ -134,7 +134,7 @@ static int sox_swap_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
     swap_t swap = (swap_t) effp->priv;
     int len, done;
 
-    switch (effp->outinfo.channels)
+    switch (effp->out_signal.channels)
     {
     case 2:
         /* Length to process will be buffer length / 2 since we

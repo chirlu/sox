@@ -40,7 +40,7 @@ static void readcodes(sox_format_t * ft, SFHEADER *sfhead)
         sfcodep = (SFCODE *) (&sfhead->sfinfo + 1);
         do {
                 sfcharp = (char *) sfcodep + sizeof(SFCODE);
-                if (ft->signal.reverse_bytes) {
+                if (ft->encoding.reverse_bytes) {
                         sfcodep->bsize = sox_swapdw(sfcodep->bsize);
                         sfcodep->code = sox_swapdw(sfcodep->code);
                 }
@@ -61,14 +61,14 @@ static void readcodes(sox_format_t * ft, SFHEADER *sfhead)
         free(commentbuf);
 }
 
-static int sox_sfseek(sox_format_t * ft, sox_size_t offset)
+static int seek(sox_format_t * ft, sox_size_t offset)
 {
     sox_size_t new_offset, channel_block, alignment;
 
     sf_t sf = (sf_t ) ft->priv;
-    new_offset = offset * ft->signal.size;
+    new_offset = offset * (ft->encoding.bits_per_sample >> 3);
     /* Make sure request aligns to a channel block (ie left+right) */
-    channel_block = ft->signal.channels * ft->signal.size;
+    channel_block = ft->signal.channels * (ft->encoding.bits_per_sample >> 3);
     alignment = new_offset % channel_block;
     /* Most common mistaken is to compute something like
      * "skip everthing upto and including this sample" so
@@ -88,7 +88,7 @@ static int sox_sfseek(sox_format_t * ft, sox_size_t offset)
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int sox_sfstartread(sox_format_t * ft)
+static int startread(sox_format_t * ft)
 {
         sf_t sf = (sf_t) ft->priv;
         SFHEADER sfhead;
@@ -101,7 +101,7 @@ static int sox_sfstartread(sox_format_t * ft)
                 return(SOX_EOF);
         }
         memcpy(&sf->info, &sfhead.sfinfo, sizeof(struct sfinfo));
-        if (ft->signal.reverse_bytes) {
+        if (ft->encoding.reverse_bytes) {
                 sox_swapf(&sf->info.sf_srate);
                 sf->info.sf_packmode = sox_swapdw(sf->info.sf_packmode);
                 sf->info.sf_chans = sox_swapdw(sf->info.sf_chans);
@@ -120,13 +120,13 @@ static int sox_sfstartread(sox_format_t * ft)
         ft->signal.rate = sf->info.sf_srate;
         switch(sf->info.sf_packmode) {
                 case SF_SHORT:
-                        ft->signal.size = SOX_SIZE_16BIT;
-                        ft->signal.encoding = SOX_ENCODING_SIGN2;
-                        samplesize = ft->signal.size;
+                        ft->encoding.bits_per_sample = 16;
+                        ft->encoding.encoding = SOX_ENCODING_SIGN2;
+                        samplesize = 2;
                         break;
                 case SF_FLOAT:
-                        ft->signal.size = SOX_SIZE_32BIT;
-                        ft->signal.encoding = SOX_ENCODING_FLOAT;
+                        ft->encoding.bits_per_sample = 16;
+                        ft->encoding.encoding = SOX_ENCODING_FLOAT;
                         samplesize = sizeof(float);
                         break;
                 default:
@@ -156,7 +156,7 @@ static int sox_sfstartread(sox_format_t * ft)
         return(rc);
 }
 
-static int sox_sfstartwrite(sox_format_t * ft)
+static int startwrite(sox_format_t * ft)
 {
         sf_t sf = (sf_t) ft->priv;
         SFHEADER sfhead;
@@ -181,14 +181,14 @@ static int sox_sfstartwrite(sox_format_t * ft)
             sf->info.magic_union._magic_bytes.sf_machine = SF_SUN;
 
         sf->info.sf_srate = ft->signal.rate;
-        if (ft->signal.size == SOX_SIZE_32BIT &&
-            ft->signal.encoding == SOX_ENCODING_FLOAT) {
+        if (ft->encoding.bits_per_sample == 32 &&
+            ft->encoding.encoding == SOX_ENCODING_FLOAT) {
                 sf->info.sf_packmode = SF_FLOAT;
         } else {
                 sf->info.sf_packmode = SF_SHORT;
                 /* Default to signed words */
-                ft->signal.size = SOX_SIZE_16BIT;
-                ft->signal.encoding = SOX_ENCODING_SIGN2;
+                ft->encoding.bits_per_sample = 16;
+                ft->encoding.encoding = SOX_ENCODING_SIGN2;
         }
 
         sf->info.sf_chans = ft->signal.channels;
@@ -216,29 +216,18 @@ static int sox_sfstartwrite(sox_format_t * ft)
         return(SOX_SUCCESS);
 }
 
-/* Read and write are supplied by raw.c */
-/* IRCAM Sound File */
-static const char *sfnames[] = {
-  "sf",
-  "ircam",
-  NULL
-};
-
-static sox_format_handler_t sox_sf_format = {
-  sfnames,
-  0,
-  sox_sfstartread,
-  sox_rawread,
-  sox_rawstopread,
-  sox_sfstartwrite,
-  sox_rawwrite,
-  sox_rawstopwrite,
-  sox_sfseek
-};
-
-const sox_format_handler_t *sox_sf_format_fn(void);
-
-const sox_format_handler_t *sox_sf_format_fn(void)
+SOX_FORMAT_HANDLER(sf)
 {
-    return &sox_sf_format;
+  static char const * const names[] = {"sf", "ircam", NULL};
+  static unsigned const encodings[] = {
+    SOX_ENCODING_SIGN2, 16, 0,
+    SOX_ENCODING_FLOAT, 32, 0,
+    0};
+  static sox_format_handler_t const handler = {
+    names, 0,
+    startread, sox_rawread, sox_rawstopread,
+    startwrite, sox_rawwrite, sox_rawstopwrite,
+    seek, encodings, NULL
+  };
+  return &handler;
 }

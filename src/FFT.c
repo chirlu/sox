@@ -45,12 +45,12 @@
  * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
+#include "sox_i.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
-
-#include "sox_i.h"
 
 #include "FFT.h"
 

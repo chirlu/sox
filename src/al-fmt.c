@@ -1,14 +1,22 @@
 /*
- * libSoX al raw file format
+ * File formats: raw         (c) 2007-8 SoX contributors
  *
- * Copyright 2007 Lance Norskog And Sundry Contributors
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained.
- * Lance Norskog And Sundry Contributors are not responsible for
- * the consequences of using this software.
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, write to the Free Software Foundation,
+ * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
 #include "sox_i.h"
 #include "raw.h"
 
-RAW_FORMAT(al, 8BIT, 0, ALAW)
+RAW_FORMAT(al, 8, 0, ALAW)

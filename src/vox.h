@@ -1,13 +1,19 @@
 /*
- * SOX file format handler for Dialogic/Oki ADPCM VOX files.
+ * (c) 2007-8 SoX contributors
  *
- * Copyright 1991-2007 Tony Seebregts And Sundry Contributors
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
  *
- * This source code is freely redistributable and may be used for any
- * purpose.  This copyright notice must be maintained.
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
  *
- * Tony Seebregts And Sundry Contributors are not responsible for the
- * consequences of using this software.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, write to the Free Software Foundation,
+ * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
 int sox_vox_start(sox_format_t * ft);

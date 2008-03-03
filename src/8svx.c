@@ -26,7 +26,7 @@ static void svxwriteheader(sox_format_t *, sox_size_t);
 /*                         8SVXSTARTREAD                                */
 /*======================================================================*/
 
-static int sox_svxstartread(sox_format_t * ft)
+static int startread(sox_format_t * ft)
 {
         svx_t p = (svx_t ) ft->priv;
 
@@ -160,8 +160,8 @@ static int sox_svxstartread(sox_format_t * ft)
         ft->length = p->nsamples;
         ft->signal.channels = channels;
         ft->signal.rate = rate;
-        ft->signal.encoding = SOX_ENCODING_SIGN2;
-        ft->signal.size = SOX_SIZE_BYTE;
+        ft->encoding.encoding = SOX_ENCODING_SIGN2;
+        ft->encoding.bits_per_sample = 8;
 
         /* open files to channels */
         p->ch[0] = ft->fp;
@@ -193,7 +193,7 @@ static int sox_svxstartread(sox_format_t * ft)
 /*======================================================================*/
 /*                         8SVXREAD                                     */
 /*======================================================================*/
-static sox_size_t sox_svxread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
+static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
 {
         unsigned char datum;
         size_t done = 0, i;
@@ -217,7 +217,7 @@ static sox_size_t sox_svxread(sox_format_t * ft, sox_sample_t *buf, sox_size_t n
 /*======================================================================*/
 /*                         8SVXSTOPREAD                                 */
 /*======================================================================*/
-static int sox_svxstopread(sox_format_t * ft)
+static int stopread(sox_format_t * ft)
 {
         size_t i;
 
@@ -233,7 +233,7 @@ static int sox_svxstopread(sox_format_t * ft)
 /*======================================================================*/
 /*                         8SVXSTARTWRITE                               */
 /*======================================================================*/
-static int sox_svxstartwrite(sox_format_t * ft)
+static int startwrite(sox_format_t * ft)
 {
         svx_t p = (svx_t ) ft->priv;
         size_t i;
@@ -249,9 +249,6 @@ static int sox_svxstartwrite(sox_format_t * ft)
         }
 
         /* write header (channel 0) */
-        ft->signal.encoding = SOX_ENCODING_SIGN2;
-        ft->signal.size = SOX_SIZE_BYTE;
-
         p->nsamples = 0;
         svxwriteheader(ft, p->nsamples);
         return(SOX_SUCCESS);
@@ -261,7 +258,7 @@ static int sox_svxstartwrite(sox_format_t * ft)
 /*                         8SVXWRITE                                    */
 /*======================================================================*/
 
-static sox_size_t sox_svxwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
         svx_t p = (svx_t ) ft->priv;
 
@@ -285,7 +282,7 @@ static sox_size_t sox_svxwrite(sox_format_t * ft, const sox_sample_t *buf, sox_s
 /*                         8SVXSTOPWRITE                                */
 /*======================================================================*/
 
-static int sox_svxstopwrite(sox_format_t * ft)
+static int stopwrite(sox_format_t * ft)
 {
         svx_t p = (svx_t ) ft->priv;
 
@@ -362,27 +359,15 @@ static void svxwriteheader(sox_format_t * ft, sox_size_t nsamples)
         sox_writedw(ft, nsamples); /* samples in file */
 }
 
-/* Amiga 8SVX */
-static const char *svxnames[] = {
-  "8svx",
-  NULL
-};
-
-static sox_format_handler_t sox_svx_format = {
-  svxnames,
-  SOX_FILE_BIG_END,
-  sox_svxstartread,
-  sox_svxread,
-  sox_svxstopread,
-  sox_svxstartwrite,
-  sox_svxwrite,
-  sox_svxstopwrite,
-  NULL
-};
-
-const sox_format_handler_t *sox_svx_format_fn(void);
-
-const sox_format_handler_t *sox_svx_format_fn(void)
+SOX_FORMAT_HANDLER(svx)
 {
-    return &sox_svx_format;
+  static char const * const names[] = {"8svx", NULL};
+  static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 8, 0, 0};
+  static sox_format_handler_t const handler = {
+    names, SOX_FILE_BIG_END|SOX_FILE_MONO|SOX_FILE_STEREO|SOX_FILE_QUAD,
+    startread, read_samples, stopread,
+    startwrite, write_samples, stopwrite,
+    NULL, write_encodings, NULL
+  };
+  return &handler;
 }

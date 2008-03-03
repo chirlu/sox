@@ -1,38 +1,34 @@
 /*
- * Export module for AIFF-C format, implemented in aiff.c.
+ * File format: AIFF-C (see aiff.c)           (c) 2007-8 SoX contributors
  *
- * Copyright 1991-2007 Guido van Rossum And Sundry Contributors
- * 
- * This source code is freely redistributable and may be used for
- * any purpose.  This copyright notice must be maintained. 
- * Guido van Rossum And Sundry Contributors are not responsible for 
- * the consequences of using this software.
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, write to the Free Software Foundation,
+ * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
 #include "sox_i.h"
 #include "aiff.h"
 
-static const char *aifcnames[] = {
-  "aifc",
-  "aiffc",
-  NULL
-};
-
-static sox_format_handler_t sox_aifc_format = {
-  aifcnames,
-  SOX_FILE_LOOPS | SOX_FILE_BIG_END,
-  sox_aiffstartread,
-  sox_aiffread,
-  sox_aiffstopread,
-  sox_aifcstartwrite,
-  sox_aiffwrite,
-  sox_aifcstopwrite,
-  sox_aiffseek
-};
-
-const sox_format_handler_t *sox_aifc_format_fn(void);
-
-const sox_format_handler_t *sox_aifc_format_fn(void)
+SOX_FORMAT_HANDLER(aifc)
 {
-    return &sox_aifc_format;
+  static char const * const names[] = {"aifc", "aiffc", NULL};
+  static unsigned const write_encodings[] = {
+    SOX_ENCODING_SIGN2, 32, 24, 16, 8, 0, 0};
+  static sox_format_handler_t const sox_aifc_format = {
+    names, SOX_FILE_LOOPS | SOX_FILE_BIG_END,
+    sox_aiffstartread, sox_aiffread, sox_aiffstopread,
+    sox_aifcstartwrite, sox_aiffwrite, sox_aifcstopwrite,
+    sox_aiffseek, write_encodings, NULL
+  };
+  return &sox_aifc_format;
 }

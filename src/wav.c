@@ -11,6 +11,8 @@
  *
  */
 
+#include "sox_i.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,7 +21,6 @@
 #include <unistd.h>             /* For SEEK_* defines if not found in stdio */
 #endif
 
-#include "sox_i.h"
 #include "wav.h"
 #include "ima_rw.h"
 #include "adpcm.h"
@@ -384,12 +385,11 @@ static int wavfail(sox_format_t * ft, const char *format)
  *      size and encoding of samples, 
  *      mono/stereo/quad.
  */
-static int sox_wavstartread(sox_format_t * ft) 
+static int startread(sox_format_t * ft) 
 {
     wav_t       wav = (wav_t) ft->priv;
     char        magic[5];
     uint32_t    len;
-    int         rc;
 
     /* wave file characteristics */
     uint32_t      dwRiffLength;
@@ -420,11 +420,11 @@ static int sox_wavstartread(sox_format_t * ft)
     if (strncmp("RIFX", magic, 4) == 0) 
     {
         sox_debug("Found RIFX header");
-        ft->signal.reverse_bytes = SOX_IS_LITTLEENDIAN;
+        ft->encoding.reverse_bytes = SOX_IS_LITTLEENDIAN;
     }
     else
     {
-        ft->signal.reverse_bytes = SOX_IS_BIGENDIAN;
+        ft->encoding.reverse_bytes = SOX_IS_BIGENDIAN;
     }
 
     sox_readdw(ft, &dwRiffLength);
@@ -499,68 +499,44 @@ static int sox_wavstartread(sox_format_t * ft)
         
     case WAVE_FORMAT_PCM:
         /* Default (-1) depends on sample size.  Set that later on. */
-        if (ft->signal.encoding != SOX_ENCODING_UNKNOWN && ft->signal.encoding != SOX_ENCODING_UNSIGNED &&
-            ft->signal.encoding != SOX_ENCODING_SIGN2)
+        if (ft->encoding.encoding != SOX_ENCODING_UNKNOWN && ft->encoding.encoding != SOX_ENCODING_UNSIGNED &&
+            ft->encoding.encoding != SOX_ENCODING_SIGN2)
             sox_report("User options overriding encoding read in .wav header");
-
-        /* Needed by rawread() functions */
-        rc = sox_rawstartread(ft);
-        if (rc)
-            return rc;
-
         break;
         
     case WAVE_FORMAT_IMA_ADPCM:
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN || ft->signal.encoding == SOX_ENCODING_IMA_ADPCM)
-            ft->signal.encoding = SOX_ENCODING_IMA_ADPCM;
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN || ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM)
+            ft->encoding.encoding = SOX_ENCODING_IMA_ADPCM;
         else
             sox_report("User options overriding encoding read in .wav header");
         break;
 
     case WAVE_FORMAT_ADPCM:
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN || ft->signal.encoding == SOX_ENCODING_ADPCM)
-            ft->signal.encoding = SOX_ENCODING_ADPCM;
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN || ft->encoding.encoding == SOX_ENCODING_MS_ADPCM)
+            ft->encoding.encoding = SOX_ENCODING_MS_ADPCM;
         else
             sox_report("User options overriding encoding read in .wav header");
         break;
 
     case WAVE_FORMAT_IEEE_FLOAT:
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN || ft->signal.encoding == SOX_ENCODING_FLOAT)
-            ft->signal.encoding = SOX_ENCODING_FLOAT;
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN || ft->encoding.encoding == SOX_ENCODING_FLOAT)
+            ft->encoding.encoding = SOX_ENCODING_FLOAT;
         else
             sox_report("User options overriding encoding read in .wav header");
-
-        /* Needed by rawread() functions */
-        rc = sox_rawstartread(ft);
-        if (rc)
-            return rc;
-
         break;
         
     case WAVE_FORMAT_ALAW:
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN || ft->signal.encoding == SOX_ENCODING_ALAW)
-            ft->signal.encoding = SOX_ENCODING_ALAW;
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN || ft->encoding.encoding == SOX_ENCODING_ALAW)
+            ft->encoding.encoding = SOX_ENCODING_ALAW;
         else
             sox_report("User options overriding encoding read in .wav header");
-
-        /* Needed by rawread() functions */
-        rc = sox_rawstartread(ft);
-        if (rc)
-            return rc;
-
         break;
         
     case WAVE_FORMAT_MULAW:
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN || ft->signal.encoding == SOX_ENCODING_ULAW)
-            ft->signal.encoding = SOX_ENCODING_ULAW;
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN || ft->encoding.encoding == SOX_ENCODING_ULAW)
+            ft->encoding.encoding = SOX_ENCODING_ULAW;
         else
             sox_report("User options overriding encoding read in .wav header");
-
-        /* Needed by rawread() functions */
-        rc = sox_rawstartread(ft);
-        if (rc)
-            return rc;
-
         break;
         
     case WAVE_FORMAT_OKI_ADPCM:
@@ -572,8 +548,8 @@ static int sox_wavstartread(sox_format_t * ft)
     case WAVE_FORMAT_DOLBY_AC2:
         return wavfail(ft, "Dolby AC2");
     case WAVE_FORMAT_GSM610:
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN || ft->signal.encoding == SOX_ENCODING_GSM )
-            ft->signal.encoding = SOX_ENCODING_GSM;
+        if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN || ft->encoding.encoding == SOX_ENCODING_GSM )
+            ft->encoding.encoding = SOX_ENCODING_GSM;
         else
             sox_report("User options overriding encoding read in .wav header");
         break;
@@ -689,7 +665,7 @@ static int sox_wavstartread(sox_format_t * ft)
             if (errct) sox_warn("base iCoefs differ in %d/14 positions",errct);
         }
 
-        bytespersample = SOX_SIZE_16BIT;  /* AFTER de-compression */
+        bytespersample = 2;  /* AFTER de-compression */
         break;
 
     case WAVE_FORMAT_IMA_ADPCM:
@@ -720,7 +696,7 @@ static int sox_wavstartread(sox_format_t * ft)
 
         wav->samples = (short *)xmalloc(wChannels*wav->samplesPerBlock*sizeof(short));
 
-        bytespersample = SOX_SIZE_16BIT;  /* AFTER de-compression */
+        bytespersample = 2;  /* AFTER de-compression */
         break;
 
     /* GSM formats have extended fmt chunk.  Check for those cases. */
@@ -745,7 +721,7 @@ static int sox_wavstartread(sox_format_t * ft)
                     wav_format_str(wav->formatTag), wav->samplesPerBlock, 320);
             return SOX_EOF;
         }
-        bytespersample = SOX_SIZE_16BIT;  /* AFTER de-compression */
+        bytespersample = 2;  /* AFTER de-compression */
         len -= 2;
         break;
 
@@ -754,57 +730,28 @@ static int sox_wavstartread(sox_format_t * ft)
 
     }
 
+    /* User options take precedence */
+    if (!ft->encoding.bits_per_sample || ft->encoding.bits_per_sample == wBitsPerSample)
+      ft->encoding.bits_per_sample = wBitsPerSample;
+    else
+      sox_warn("User options overriding size read in .wav header");
+
+    /* Now we have enough information to set default encodings. */
     switch (bytespersample)
     {
+    case 1:
+      if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
+        ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
+      break;
         
-    case SOX_SIZE_BYTE:
-        /* User options take precedence */
-        if (!ft->signal.size || ft->signal.size == SOX_SIZE_BYTE)
-            ft->signal.size = SOX_SIZE_BYTE;
-        else
-            sox_warn("User options overriding size read in .wav header");
-
-        /* Now we have enough information to set default encodings. */
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
-            ft->signal.encoding = SOX_ENCODING_UNSIGNED;
-        break;
-        
-    case SOX_SIZE_16BIT:
-        if (!ft->signal.size || ft->signal.size == SOX_SIZE_16BIT)
-            ft->signal.size = SOX_SIZE_16BIT;
-        else
-            sox_warn("User options overriding size read in .wav header");
-
-        /* Now we have enough information to set default encodings. */
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
-            ft->signal.encoding = SOX_ENCODING_SIGN2;
-        break;
-        
-    case SOX_SIZE_24BIT:
-        if (!ft->signal.size || ft->signal.size == SOX_SIZE_24BIT)
-            ft->signal.size = SOX_SIZE_24BIT;
-        else
-            sox_warn("User options overriding size read in .wav header");
-
-        /* Now we have enough information to set default encodings. */
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
-            ft->signal.encoding = SOX_ENCODING_SIGN2;
-        break;
-        
-    case SOX_SIZE_32BIT:
-        if (!ft->signal.size || ft->signal.size == SOX_SIZE_32BIT)
-            ft->signal.size = SOX_SIZE_32BIT;
-        else
-            sox_warn("User options overriding size read in .wav header");
-
-        /* Now we have enough information to set default encodings. */
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
-            ft->signal.encoding = SOX_ENCODING_SIGN2;
-        break;
+    case 2: case 3: case 4:
+      if (ft->encoding.encoding == SOX_ENCODING_UNKNOWN)
+        ft->encoding.encoding = SOX_ENCODING_SIGN2;
+      break;
         
     default:
-        sox_fail_errno(ft,SOX_EOF,"Sorry, don't understand .wav size");
-        return SOX_EOF;
+      sox_fail_errno(ft,SOX_EFMT,"Sorry, don't understand .wav size");
+      return SOX_EOF;
     }
 
     /* Skip anything left over from fmt chunk */
@@ -855,8 +802,8 @@ static int sox_wavstartread(sox_format_t * ft)
         break;
 
     default:
-        wav->numSamples = dwDataLength/ft->signal.size/ft->signal.channels;
-        ft->length = wav->numSamples*ft->signal.channels;
+        wav->numSamples = div_bits(dwDataLength, ft->encoding.bits_per_sample) / ft->signal.channels;
+        ft->length = wav->numSamples * ft->signal.channels;
     }
 
     sox_debug("Reading Wave file: %s format, %d channel%s, %d samp/sec",
@@ -991,7 +938,7 @@ static int sox_wavstartread(sox_format_t * ft)
         sox_clearerr(ft);
         sox_seeki(ft,(sox_ssize_t)wav->dataStart,SEEK_SET);
     }   
-    return SOX_SUCCESS;
+    return sox_rawstartread(ft);
 }
 
 
@@ -1002,7 +949,7 @@ static int sox_wavstartread(sox_format_t * ft)
  * Return number of samples read.
  */
 
-static sox_size_t sox_wavread(sox_format_t * ft, sox_sample_t *buf, sox_size_t len) 
+static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len) 
 {
         wav_t   wav = (wav_t) ft->priv;
         sox_size_t done;
@@ -1011,10 +958,10 @@ static sox_size_t sox_wavread(sox_format_t * ft, sox_sample_t *buf, sox_size_t l
         
         /* If file is in ADPCM encoding then read in multiple blocks else */
         /* read as much as possible and return quickly. */
-        switch (ft->signal.encoding)
+        switch (ft->encoding.encoding)
         {
         case SOX_ENCODING_IMA_ADPCM:
-        case SOX_ENCODING_ADPCM:
+        case SOX_ENCODING_MS_ADPCM:
 
             if (!wav->ignoreSize && len > (wav->numSamples*ft->signal.channels)) 
                 len = (wav->numSamples*ft->signal.channels);
@@ -1098,7 +1045,7 @@ static sox_size_t sox_wavread(sox_format_t * ft, sox_sample_t *buf, sox_size_t l
  * Do anything required when you stop reading samples.  
  * Don't close input file! 
  */
-static int sox_wavstopread(sox_format_t * ft) 
+static int stopread(sox_format_t * ft) 
 {
     wav_t       wav = (wav_t) ft->priv;
 
@@ -1110,13 +1057,13 @@ static int sox_wavstopread(sox_format_t * ft)
     free(wav->comment);
     wav->comment = NULL;
 
-    switch (ft->signal.encoding)
+    switch (ft->encoding.encoding)
     {
     case SOX_ENCODING_GSM:
         wavgsmdestroy(ft);
         break;
     case SOX_ENCODING_IMA_ADPCM:
-    case SOX_ENCODING_ADPCM:
+    case SOX_ENCODING_MS_ADPCM:
         break;
     default:
         break;
@@ -1124,16 +1071,16 @@ static int sox_wavstopread(sox_format_t * ft)
     return SOX_SUCCESS;
 }
 
-static int sox_wavstartwrite(sox_format_t * ft) 
+static int startwrite(sox_format_t * ft) 
 {
     wav_t wav = (wav_t) ft->priv;
     int rc;
 
     ft->sox_errno = SOX_SUCCESS;
 
-    if (ft->signal.encoding != SOX_ENCODING_ADPCM &&
-        ft->signal.encoding != SOX_ENCODING_IMA_ADPCM &&
-        ft->signal.encoding != SOX_ENCODING_GSM)
+    if (ft->encoding.encoding != SOX_ENCODING_MS_ADPCM &&
+        ft->encoding.encoding != SOX_ENCODING_IMA_ADPCM &&
+        ft->encoding.encoding != SOX_ENCODING_GSM)
     {
         rc = sox_rawstartwrite(ft);
         if (rc)
@@ -1142,8 +1089,9 @@ static int sox_wavstartwrite(sox_format_t * ft)
 
     wav->numSamples = 0;
     wav->dataLength = 0;
-    if (!ft->seekable)
+    if (!ft->length && !ft->seekable)
         sox_warn("Length in output .wav header will be wrong since can't seek to fix it");
+
     rc = wavwritehdr(ft, 0);  /* also calculates various wav->* info */
     if (rc != 0)
         return rc;
@@ -1235,6 +1183,8 @@ dwDataLength     - (data chunk header) the number of (valid) data bytes written
 
 */
 
+#define MS_UNSPEC 0x7ffff000  /* Unspecified data size (this is a kludge) */
+
 static int wavwritehdr(sox_format_t * ft, int second_header) 
 {
     wav_t       wav = (wav_t) ft->priv;
@@ -1260,7 +1210,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
     uint32_t dwSamplesWritten=0;  /* windows doesnt seem to use this*/
 
     /* data chunk */
-    uint32_t  dwDataLength=0x7ffff000; /* length of sound data in bytes */
+    uint32_t  dwDataLength = MS_UNSPEC; /* length of sound data in bytes */
     /* end of variables written to header */
 
     /* internal variables, intermediate values etc */
@@ -1270,74 +1220,10 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
 
     dwSamplesPerSecond = ft->signal.rate;
     wChannels = ft->signal.channels;
-
-    /* Check to see if encoding is ADPCM or not.  If ADPCM
-     * possibly override the size to be bytes.  It isn't needed
-     * by this routine will look nicer (and more correct)
-     * on verbose output.
-     */
-    if ((ft->signal.encoding == SOX_ENCODING_ADPCM ||
-         ft->signal.encoding == SOX_ENCODING_IMA_ADPCM ||
-         ft->signal.encoding == SOX_ENCODING_GSM) &&
-         ft->signal.size != SOX_SIZE_BYTE)
-    {
-        sox_report("Overriding output size to bytes for compressed data.");
-        ft->signal.size = SOX_SIZE_BYTE;
-    }
-
-    switch (ft->signal.size)
-    {
-        case SOX_SIZE_BYTE:
-            wBitsPerSample = 8;
-            if (ft->signal.encoding != SOX_ENCODING_UNSIGNED &&
-                    ft->signal.encoding != SOX_ENCODING_ULAW &&
-                    ft->signal.encoding != SOX_ENCODING_ALAW &&
-                    ft->signal.encoding != SOX_ENCODING_GSM &&
-                    ft->signal.encoding != SOX_ENCODING_ADPCM &&
-                    ft->signal.encoding != SOX_ENCODING_IMA_ADPCM)
-            {
-                sox_report("Do not support %s with 8-bit data.  Forcing to unsigned",sox_encodings_str[(unsigned char)ft->signal.encoding]);
-                ft->signal.encoding = SOX_ENCODING_UNSIGNED;
-            }
-            break;
-        case SOX_SIZE_16BIT:
-            wBitsPerSample = 16;
-            if (ft->signal.encoding != SOX_ENCODING_SIGN2)
-            {
-                sox_report("Do not support %s with 16-bit data.  Forcing to Signed.",sox_encodings_str[(unsigned char)ft->signal.encoding]);
-                ft->signal.encoding = SOX_ENCODING_SIGN2;
-            }
-            break;
-        case SOX_SIZE_24BIT:
-            wBitsPerSample = 24;
-            if (ft->signal.encoding != SOX_ENCODING_SIGN2)
-            {
-                sox_report("Do not support %s with 24-bit data.  Forcing to Signed.",sox_encodings_str[(unsigned char)ft->signal.encoding]);
-                ft->signal.encoding = SOX_ENCODING_SIGN2;
-            }
-            break;
-
-        case SOX_SIZE_32BIT:
-            wBitsPerSample = 32;
-            if (ft->signal.encoding != SOX_ENCODING_SIGN2 &&
-                ft->signal.encoding != SOX_ENCODING_FLOAT)
-            {
-                sox_report("Do not support %s with 32-bit data.  Forcing to Signed.",sox_encodings_str[(unsigned char)ft->signal.encoding]);
-                ft->signal.encoding = SOX_ENCODING_SIGN2;
-            }
-
-            break;
-        default:
-            sox_report("Do not support %s data in WAV files.  Forcing to Signed 16-bit.",sox_sizes_str[(unsigned char)ft->signal.size]);
-            ft->signal.encoding = SOX_ENCODING_SIGN2;
-            ft->signal.size = SOX_SIZE_16BIT;
-            wBitsPerSample = 16;
-            break;
-    }
-
+    wBitsPerSample = ft->encoding.bits_per_sample;
     wSamplesPerBlock = 1;       /* common default for PCM data */
 
-    switch (ft->signal.encoding)
+    switch (ft->encoding.encoding)
     {
         case SOX_ENCODING_UNSIGNED:
         case SOX_ENCODING_SIGN2:
@@ -1370,7 +1256,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
             wExtSize = 2;
             wSamplesPerBlock = ImaSamplesIn(0, wChannels, wBlockAlign, 0);
             break;
-        case SOX_ENCODING_ADPCM:
+        case SOX_ENCODING_MS_ADPCM:
             if (wChannels>16)
             {
                 sox_fail_errno(ft,SOX_EOF,"Channels(%d) must be <= 16",wChannels);
@@ -1386,6 +1272,8 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
             if (wChannels!=1)
             {
                 sox_report("Overriding GSM audio from %d channel to 1",wChannels);
+                if (!second_header)
+                  ft->length /= max(1, ft->signal.channels);
                 wChannels = ft->signal.channels = 1;
             }
             wFormatTag = WAVE_FORMAT_GSM610;
@@ -1402,12 +1290,12 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
     wav->blockAlign = wBlockAlign;
     wav->samplesPerBlock = wSamplesPerBlock;
 
-    if (!second_header) {       /* adjust for blockAlign */
+    if (!second_header && !ft->length) {       /* adjust for blockAlign */
         blocksWritten = dwDataLength/wBlockAlign;
         dwDataLength = blocksWritten * wBlockAlign;
         dwSamplesWritten = blocksWritten * wSamplesPerBlock;
     } else {    /* fixup with real length */
-        dwSamplesWritten = wav->numSamples;
+        dwSamplesWritten = second_header? wav->numSamples : ft->length;
         switch(wFormatTag)
         {
             case WAVE_FORMAT_ADPCM:
@@ -1445,7 +1333,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
     /* If user specified opposite swap than we think, assume they are
      * asking to write a RIFX file.
      */
-    if (ft->signal.reverse_bytes && SOX_IS_LITTLEENDIAN)
+    if (ft->encoding.reverse_bytes && SOX_IS_LITTLEENDIAN)
     {
         if (!second_header)
             sox_report("Requested to swap bytes so writing RIFX header");
@@ -1534,7 +1422,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
     return SOX_SUCCESS;
 }
 
-static sox_size_t sox_wavwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len) 
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len) 
 {
         wav_t   wav = (wav_t) ft->priv;
         sox_ssize_t total_len = len;
@@ -1575,7 +1463,7 @@ static sox_size_t sox_wavwrite(sox_format_t * ft, const sox_sample_t *buf, sox_s
         }
 }
 
-static int sox_wavstopwrite(sox_format_t * ft) 
+static int stopwrite(sox_format_t * ft) 
 {
         wav_t   wav = (wav_t) ft->priv;
 
@@ -1600,8 +1488,10 @@ static int sox_wavstopwrite(sox_format_t * ft)
         /* All samples are already written out. */
         /* If file header needs fixing up, for example it needs the */
         /* the number of samples in a field, seek back and write them here. */
+        if (ft->length && wav->numSamples == ft->length)
+          return SOX_SUCCESS;
         if (!ft->seekable)
-                return SOX_EOF;
+          return SOX_EOF;
 
         if (sox_seeki(ft, 0, SEEK_SET) != 0)
         {
@@ -1664,7 +1554,7 @@ static char *wav_format_str(unsigned wFormatTag)
         }
 }
 
-static int sox_wavseek(sox_format_t * ft, sox_size_t offset) 
+static int seek(sox_format_t * ft, sox_size_t offset) 
 {
     wav_t   wav = (wav_t) ft->priv;
     int new_offset, channel_block, alignment;
@@ -1700,9 +1590,9 @@ static int sox_wavseek(sox_format_t * ft, sox_size_t offset)
             break;
 
         default:
-            new_offset = offset * ft->signal.size;
+            new_offset = offset * (ft->encoding.bits_per_sample >> 3);
             /* Make sure request aligns to a channel block (ie left+right) */
-            channel_block = ft->signal.channels * ft->signal.size;
+            channel_block = ft->signal.channels * (ft->encoding.bits_per_sample >> 3);
             alignment = new_offset % channel_block;
             /* Most common mistaken is to compute something like
              * "skip everthing upto and including this sample" so
@@ -1716,34 +1606,30 @@ static int sox_wavseek(sox_format_t * ft, sox_size_t offset)
 
             if( ft->sox_errno == SOX_SUCCESS )
                 wav->numSamples = (ft->length / ft->signal.channels) -
-                                  (new_offset / ft->signal.size / ft->signal.channels);
+                                  (new_offset / (ft->encoding.bits_per_sample >> 3) / ft->signal.channels);
     }
 
     return(ft->sox_errno);
 }
 
-/* Microsoft RIFF */
-static const char *wavnames[] = {
-  "wav",
-  "wavpcm",
-  NULL
-};
-
-static sox_format_handler_t sox_wav_format = {
-  wavnames,
-  SOX_FILE_LIT_END,
-  sox_wavstartread,
-  sox_wavread,
-  sox_wavstopread,
-  sox_wavstartwrite,
-  sox_wavwrite,
-  sox_wavstopwrite,
-  sox_wavseek
-};
-
-const sox_format_handler_t *sox_wav_format_fn(void);
-
-const sox_format_handler_t *sox_wav_format_fn()
+SOX_FORMAT_HANDLER(wav)
 {
-    return &sox_wav_format;
+  static char const * const names[] = {"wav", "wavpcm", NULL};
+  static unsigned const write_encodings[] = {
+    SOX_ENCODING_SIGN2, 16, 24, 32, 0,
+    SOX_ENCODING_UNSIGNED, 8, 0,
+    SOX_ENCODING_ULAW, 8, 0,
+    SOX_ENCODING_ALAW, 8, 0,
+    SOX_ENCODING_GSM, 0,
+    SOX_ENCODING_MS_ADPCM, 4, 0,
+    SOX_ENCODING_IMA_ADPCM, 4, 0,
+    SOX_ENCODING_FLOAT, 32, 0,
+    0};
+  static sox_format_handler_t const handler = {
+    names, SOX_FILE_LIT_END,
+    startread, read_samples, stopread,
+    startwrite, write_samples, stopwrite,
+    seek, write_encodings, NULL
+  };
+  return &handler;
 }

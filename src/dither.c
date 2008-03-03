@@ -12,9 +12,10 @@
  *
  */
 
+#include "sox_i.h"
+
 #include <stdlib.h>
 #include <math.h>
-#include "sox_i.h"
 
 typedef struct dither {
   double amount;
@@ -48,17 +49,10 @@ static int start(sox_effect_t * effp)
 {
   dither_t dither = (dither_t) effp->priv;
 
-  if (effp->outinfo.encoding == SOX_ENCODING_ULAW ||
-      effp->outinfo.encoding == SOX_ENCODING_ALAW) {
-    dither->amount *= 16;
-    return SOX_SUCCESS;
-  } else if (effp->outinfo.size == SOX_SIZE_BYTE) {
-    dither->amount *= 256;
-    return SOX_SUCCESS;
-  } else if (effp->outinfo.size == SOX_SIZE_16BIT)
-    return SOX_SUCCESS;
-
-  return SOX_EFF_NULL;   /* Dithering not needed at >= 24 bits */
+  if (effp->out_signal.precision > 16)
+    return SOX_EFF_NULL;   /* Dithering not needed at >= 24 bits */
+  dither->amount *= 1 << (16 - effp->out_signal.precision);
+  return SOX_SUCCESS;
 }
 
 static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,

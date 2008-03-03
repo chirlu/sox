@@ -58,8 +58,7 @@ static int gsmstart_rw(sox_format_t * ft, int w)
         struct gsmpriv *p = (struct gsmpriv *) ft->priv;
         unsigned ch;
         
-        ft->signal.encoding = SOX_ENCODING_GSM;
-        ft->signal.size = SOX_SIZE_BYTE;
+        ft->encoding.encoding = SOX_ENCODING_GSM;
         if (!ft->signal.rate)
                 ft->signal.rate = 8000;
 
@@ -235,27 +234,15 @@ static int sox_gsmstopwrite(sox_format_t * ft)
         return sox_gsmstopread(ft); /* destroy handles and free buffers */
 }
 
-/* GSM 06.10 */
-static const char *gsmnames[] = {
-  "gsm",
-  NULL
-};
-
-static sox_format_handler_t sox_gsm_format = {
-  gsmnames,
-  0,
-  sox_gsmstartread,
-  sox_gsmread,
-  sox_gsmstopread,
-  sox_gsmstartwrite,
-  sox_gsmwrite,
-  sox_gsmstopwrite,
-  NULL
-};
-
-const sox_format_handler_t *sox_gsm_format_fn(void);
-
-const sox_format_handler_t *sox_gsm_format_fn(void)
+SOX_FORMAT_HANDLER(gsm)
 {
-    return &sox_gsm_format;
+  static char const * const names[] = {"gsm", NULL};
+  static unsigned const write_encodings[] = {SOX_ENCODING_GSM, 0, 0};
+  static sox_format_handler_t handler = {
+    names, 0,
+    sox_gsmstartread, sox_gsmread, sox_gsmstopread,
+    sox_gsmstartwrite, sox_gsmwrite, sox_gsmstopwrite,
+    NULL, write_encodings, NULL
+  };
+  return &handler;
 }

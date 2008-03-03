@@ -37,11 +37,11 @@
  * Various changes, bugfixes(?), increased precision, by Stan Brooks.
  */
 
+#include "sox_i.h"
+
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "sox_i.h"
-
 
 /* Conversion constants */
 #define Lc        7
@@ -195,16 +195,16 @@ static int start(sox_effect_t * effp)
   long Xoff, gcdrate;
   int i;
 
-  if (effp->ininfo.rate == effp->outinfo.rate)
+  if (effp->in_signal.rate == effp->out_signal.rate)
     return SOX_EFF_NULL;
           
-  effp->outinfo.channels = effp->ininfo.channels;
+  effp->out_signal.channels = effp->in_signal.channels;
 
-  r->Factor = effp->outinfo.rate / effp->ininfo.rate;
+  r->Factor = effp->out_signal.rate / effp->in_signal.rate;
 
-  gcdrate = sox_gcd((long) effp->ininfo.rate, (long) effp->outinfo.rate);
-  r->a = effp->ininfo.rate / gcdrate;
-  r->b = effp->outinfo.rate / gcdrate;
+  gcdrate = sox_gcd((long) effp->in_signal.rate, (long) effp->out_signal.rate);
+  r->a = effp->in_signal.rate / gcdrate;
+  r->b = effp->out_signal.rate / gcdrate;
 
   if (r->a <= r->b && r->b <= NQMAX) {
     r->quadr = -1;      /* exact coeffs */

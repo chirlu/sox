@@ -55,9 +55,10 @@
  * libSoX reverb effect file.
  */
 
+#include "sox_i.h"
+
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
 #include <math.h>
-#include "sox_i.h"
 
 #define DELAY_BUFSIZ ( 50 * 50U * 1024 )
 #define MAX_ECHOS 7     /* 24 bit x ( 1 + MAX_ECHOS ) = */
@@ -132,7 +133,7 @@ static int sox_echo_start(sox_effect_t * effp)
                 return (SOX_EOF);
         }
         for ( i = 0; i < echo->num_delays; i++ ) {
-                echo->samples[i] = echo->delay[i] * effp->ininfo.rate / 1000.0;
+                echo->samples[i] = echo->delay[i] * effp->in_signal.rate / 1000.0;
                 if ( echo->samples[i] < 1 )
                 {
                     sox_fail("echo: delay must be positive!");
@@ -141,7 +142,7 @@ static int sox_echo_start(sox_effect_t * effp)
                 if ( echo->samples[i] > (sox_ssize_t)DELAY_BUFSIZ )
                 {
                         sox_fail("echo: delay must be less than %g seconds!",
-                                DELAY_BUFSIZ / effp->ininfo.rate );
+                                DELAY_BUFSIZ / effp->in_signal.rate );
                         return (SOX_EOF);
                 }
                 if ( echo->decay[i] < 0.0 )

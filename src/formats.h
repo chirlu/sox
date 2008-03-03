@@ -12,6 +12,7 @@
   FORMAT(dvms)
   FORMAT(gsm)
   FORMAT(hcom)
+  FORMAT(htk)
   FORMAT(ima)
   FORMAT(la)
   FORMAT(lpc10)

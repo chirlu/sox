@@ -158,17 +158,15 @@ static int sox_autostartread(sox_format_t * ft)
 
     sox_debug("Detected file format type: %s", type);
     set_endianness_if_not_already_set(ft);
-    return ft->handler->startread? (* ft->handler->startread)(ft) : SOX_SUCCESS;
+    return ft->handler.startread? (*ft->handler.startread)(ft) : SOX_SUCCESS;
 }
 
-const sox_format_handler_t *sox_auto_format_fn(void);
-const sox_format_handler_t *sox_auto_format_fn(void)
+SOX_FORMAT_HANDLER(auto)
 {
   static const char *autonames[] = {"magic", NULL};
-
   static sox_format_handler_t sox_auto_format = {
     autonames, SOX_FILE_DEVICE | SOX_FILE_PHONY,
-    sox_autostartread, NULL, NULL, NULL, NULL, NULL, NULL
+    sox_autostartread, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
   };
   return &sox_auto_format;
 }

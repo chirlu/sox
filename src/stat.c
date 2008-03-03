@@ -13,9 +13,10 @@
  * the consequences of using this software.
  */
 
+#include "sox_i.h"
+
 #include <math.h>
 #include <string.h>
-#include "sox_i.h"
 #include "FFT.h"
 
 /* Private data for stat effect */
@@ -146,7 +147,7 @@ static int sox_stat_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_samp
 
         if (stat->fft_offset >= stat->fft_size) {
           stat->fft_offset = 0;
-          print_power_spectrum(stat->fft_size, effp->ininfo.rate, stat->re_in, stat->re_out);
+          print_power_spectrum(stat->fft_size, effp->in_signal.rate, stat->re_in, stat->re_out);
         }
 
       }
@@ -215,7 +216,7 @@ static int sox_stat_drain(sox_effect_t * effp, sox_sample_t *obuf UNUSED, sox_si
     for (x = stat->fft_offset; x < stat->fft_size; x++)
       stat->re_in[x] = 0;
       
-    print_power_spectrum(stat->fft_size, effp->ininfo.rate, stat->re_in, stat->re_out);
+    print_power_spectrum(stat->fft_size, effp->in_signal.rate, stat->re_in, stat->re_out);
   }
 
   *osamp = 0;
@@ -266,7 +267,7 @@ static int sox_stat_stop(sox_effect_t * effp)
     fprintf(stderr, "\n\n");
   /* print out the info */
   fprintf(stderr, "Samples read:      %12u\n", stat->read);
-  fprintf(stderr, "Length (seconds):  %12.6f\n", (double)stat->read/effp->ininfo.rate/effp->ininfo.channels);
+  fprintf(stderr, "Length (seconds):  %12.6f\n", (double)stat->read/effp->in_signal.rate/effp->in_signal.channels);
   if (stat->srms)
     fprintf(stderr, "Scaled by rms:     %12.6f\n", rms);
   else
@@ -282,7 +283,7 @@ static int sox_stat_stop(sox_effect_t * effp)
   fprintf(stderr, "Minimum delta:     %12.6f\n", stat->dmin);
   fprintf(stderr, "Mean    delta:     %12.6f\n", stat->dsum1/(ct-1));
   fprintf(stderr, "RMS     delta:     %12.6f\n", sqrt(stat->dsum2/(ct-1)));
-  freq = sqrt(stat->dsum2/stat->sum2)*effp->ininfo.rate/(M_PI*2);
+  freq = sqrt(stat->dsum2/stat->sum2)*effp->in_signal.rate/(M_PI*2);
   fprintf(stderr, "Rough   frequency: %12d\n", (int)freq);
 
   if (amp>0)
@@ -295,17 +296,17 @@ static int sox_stat_stop(sox_effect_t * effp)
     x = (float)(stat->bin[0] + stat->bin[3]) / (float)(stat->bin[1] + stat->bin[2]);
 
     if (x >= 3.0) {             /* use opposite encoding */
-      if (effp->ininfo.encoding == SOX_ENCODING_UNSIGNED)
-        fprintf(stderr,"\nTry: -t raw -b -s \n");
+      if (effp->in_encoding->encoding == SOX_ENCODING_UNSIGNED)
+        fprintf(stderr,"\nTry: -t raw -s -1 \n");
       else
-        fprintf(stderr,"\nTry: -t raw -b -u \n");
+        fprintf(stderr,"\nTry: -t raw -u -1 \n");
     } else if (x <= 1.0 / 3.0)
       ;                         /* correctly decoded */
     else if (x >= 0.5 && x <= 2.0) { /* use ULAW */
-      if (effp->ininfo.encoding == SOX_ENCODING_ULAW)
-        fprintf(stderr,"\nTry: -t raw -b -u \n");
+      if (effp->in_encoding->encoding == SOX_ENCODING_ULAW)
+        fprintf(stderr,"\nTry: -t raw -u -1 \n");
       else
-        fprintf(stderr,"\nTry: -t raw -b -U \n");
+        fprintf(stderr,"\nTry: -t raw -U -1 \n");
     } else
       fprintf(stderr, "\nCan't guess the type\n");
   }

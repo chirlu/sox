@@ -72,7 +72,7 @@ static int start(sox_effect_t * effp)
   pad_t p = (pad_t) effp->priv;
   unsigned i;
 
-  parse(effp, 0, effp->ininfo.rate); /* Re-parse now rate is known */
+  parse(effp, 0, effp->in_signal.rate); /* Re-parse now rate is known */
   p->in_pos = p->pad_pos = p->pads_pos = 0;
   for (i = 0; i < p->npads; ++i)
     if (p->pads[i].pad)
@@ -85,18 +85,18 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
 {
   pad_t p = (pad_t) effp->priv;
   sox_size_t c, idone = 0, odone = 0;
-  *isamp /= effp->ininfo.channels;
-  *osamp /= effp->ininfo.channels;
+  *isamp /= effp->in_signal.channels;
+  *osamp /= effp->in_signal.channels;
 
   do {
     /* Copying: */
     for (; idone < *isamp && odone < *osamp && !(p->pads_pos != p->npads && p->in_pos == p->pads[p->pads_pos].start); ++idone, ++odone, ++p->in_pos)
-      for (c = 0; c < effp->ininfo.channels; ++c) *obuf++ = *ibuf++;
+      for (c = 0; c < effp->in_signal.channels; ++c) *obuf++ = *ibuf++;
 
     /* Padding: */
     if (p->pads_pos != p->npads && p->in_pos == p->pads[p->pads_pos].start) {
       for (; odone < *osamp && p->pad_pos < p->pads[p->pads_pos].pad; ++odone, ++p->pad_pos)
-        for (c = 0; c < effp->ininfo.channels; ++c) *obuf++ = 0;
+        for (c = 0; c < effp->in_signal.channels; ++c) *obuf++ = 0;
       if (p->pad_pos == p->pads[p->pads_pos].pad) { /* Move to next pad? */
         ++p->pads_pos;
         p->pad_pos = 0;
@@ -104,8 +104,8 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
     }
   } while (idone < *isamp && odone < *osamp);
 
-  *isamp = idone * effp->ininfo.channels;
-  *osamp = odone * effp->ininfo.channels;
+  *isamp = idone * effp->in_signal.channels;
+  *osamp = odone * effp->in_signal.channels;
   return SOX_SUCCESS;
 }
 

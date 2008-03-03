@@ -258,12 +258,12 @@ static int sox_vocstartread(sox_format_t * ft)
         }
 
         /* setup word length of data */
-        ft->signal.size = v->size;
+        ft->encoding.bits_per_sample = v->size;
 
         /* ANN:  Check VOC format and map to the proper libSoX format value */
         switch (v->format) {
         case VOC_FMT_LIN8U:      /*     0    8 bit unsigned linear PCM */
-            ft->signal.encoding = SOX_ENCODING_UNSIGNED;
+            ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
             break;
         case VOC_FMT_CRLADPCM4:  /*     1    Creative 8-bit to 4-bit ADPCM */
             sox_fail ("Unsupported VOC format CRLADPCM4 %d", v->format);
@@ -278,13 +278,13 @@ static int sox_vocstartread(sox_format_t * ft)
             rtn=SOX_EOF;
             break;
         case VOC_FMT_LIN16:      /*     4    16-bit signed PCM */
-            ft->signal.encoding = SOX_ENCODING_SIGN2;
+            ft->encoding.encoding = SOX_ENCODING_SIGN2;
             break;
         case VOC_FMT_ALAW:       /*     6    CCITT a-Law 8-bit PCM */
-            ft->signal.encoding = SOX_ENCODING_ALAW;
+            ft->encoding.encoding = SOX_ENCODING_ALAW;
             break;
         case VOC_FMT_MU255:      /*     7    CCITT u-Law 8-bit PCM */
-            ft->signal.encoding = SOX_ENCODING_ULAW;
+            ft->encoding.encoding = SOX_ENCODING_ULAW;
             break;
         case VOC_FMT_CRLADPCM4A: /*0x200    Creative 16-bit to 4-bit ADPCM */
             sox_fail ("Unsupported VOC format CRLADPCM4A %d", v->format);
@@ -360,7 +360,7 @@ static sox_size_t sox_vocread(sox_format_t * ft, sox_sample_t *buf, sox_size_t l
 
                 /* Read the data in the file */
                 switch(v->size) {
-                case SOX_SIZE_BYTE:
+                case 8:
                     if (sox_readb(ft, &uc) == SOX_EOF) {
                         sox_warn("VOC input: short file");
                         v->rest = 0;
@@ -376,7 +376,7 @@ static sox_size_t sox_vocread(sox_format_t * ft, sox_sample_t *buf, sox_size_t l
                         *buf++ = SOX_UNSIGNED_8BIT_TO_SAMPLE(uc,);
                     }
                     break;
-                case SOX_SIZE_16BIT:
+                case 16:
                     sox_readw(ft, (unsigned short *)&sw);
                     if (sox_eof(ft))
                         {
@@ -428,10 +428,6 @@ static int sox_vocstartwrite(sox_format_t * ft)
         sox_writew(ft, 0x10a);              /* major/minor version number */
         sox_writew(ft, 0x1129);          /* checksum of version number */
 
-        if (ft->signal.size == SOX_SIZE_BYTE)
-          ft->signal.encoding = SOX_ENCODING_UNSIGNED;
-        else
-          ft->signal.encoding = SOX_ENCODING_SIGN2;
         if (ft->signal.channels == 0)
                 ft->signal.channels = 1;
 
@@ -455,7 +451,7 @@ static sox_size_t sox_vocwrite(sox_format_t * ft, const sox_sample_t *buf, sox_s
         }
         v->samples += len;
         while(done < len) {
-          if (ft->signal.size == SOX_SIZE_BYTE) {
+          if (ft->encoding.bits_per_sample == 8) {
             uc = SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++, ft->clips);
             sox_writeb(ft, uc);
           } else {
@@ -482,17 +478,17 @@ static void blockstop(sox_format_t * ft)
         if (v->silent) {
                 sox_writesw(ft, v->samples);
         } else {
-          if (ft->signal.size == SOX_SIZE_BYTE) {
+          if (ft->encoding.bits_per_sample == 8) {
             if (ft->signal.channels > 1) {
               sox_seeki(ft, 8, 1); /* forward 7 + 1 for new block header */
             }
           }
                 v->samples += 2;                /* adjustment: SBDK pp. 3-5 */
-                datum = (v->samples * ft->signal.size) & 0xff;
+                datum = (v->samples * (ft->encoding.bits_per_sample >> 3)) & 0xff;
                 sox_writesb(ft, datum);       /* low byte of length */
-                datum = ((v->samples * ft->signal.size) >> 8) & 0xff;
+                datum = ((v->samples * (ft->encoding.bits_per_sample >> 3)) >> 8) & 0xff;
                 sox_writesb(ft, datum);  /* middle byte of length */
-                datum = ((v->samples  * ft->signal.size)>> 16) & 0xff;
+                datum = ((v->samples  * (ft->encoding.bits_per_sample >> 3))>> 16) & 0xff;
                 sox_writesb(ft, datum); /* high byte of length */
         }
 }
@@ -587,7 +583,7 @@ static int getblock(sox_format_t * ft)
                         }
                         v->extended = 0;
                         v->rest = sblen - 2;
-                        v->size = SOX_SIZE_BYTE;
+                        v->size = 8;
                         return (SOX_SUCCESS);
                 case VOC_DATA_16:
                         sox_readdw(ft, &new_rate_32);
@@ -609,8 +605,8 @@ static int getblock(sox_format_t * ft)
                         sox_readb(ft, &uc);
                         switch (uc)
                         {
-                            case 8:     v->size = SOX_SIZE_BYTE; break;
-                            case 16:    v->size = SOX_SIZE_16BIT; break;
+                            case 8:     v->size = 8; break;
+                            case 16:    v->size = 16; break;
                             default:
                                 sox_fail_errno(ft,SOX_EFMT,
                                               "Don't understand size %d", uc);
@@ -751,7 +747,7 @@ static void blockstart(sox_format_t * ft)
                 sox_writeb(ft, 0);               /* Period length */
                 sox_writesb(ft, v->rate);         /* Rate code */
         } else {
-          if (ft->signal.size == SOX_SIZE_BYTE) {
+          if (ft->encoding.bits_per_sample == 8) {
             /* 8-bit sample section.  By always setting the correct     */
             /* rate value in the DATA block (even when its preceeded    */
             /* by an EXTENDED block) old software can still play stereo */
@@ -793,27 +789,18 @@ static void blockstart(sox_format_t * ft)
         }
 }
 
-/* Sound Blaster .VOC */
-static const char *vocnames[] = {
-  "voc",
-  NULL
-};
-
-static sox_format_handler_t sox_voc_format = {
-  vocnames,
-  SOX_FILE_LIT_END,
-  sox_vocstartread,
-  sox_vocread,
-  NULL,
-  sox_vocstartwrite,
-  sox_vocwrite,
-  sox_vocstopwrite,
-  NULL
-};
-
-const sox_format_handler_t *sox_voc_format_fn(void);
-
-const sox_format_handler_t *sox_voc_format_fn(void)
+SOX_FORMAT_HANDLER(voc)
 {
-    return &sox_voc_format;
+  static char const * const names[] = {"voc", NULL};
+  static unsigned const write_encodings[] = {
+    SOX_ENCODING_SIGN2, 16, 0,
+    SOX_ENCODING_UNSIGNED, 8, 0,
+    0};
+  static sox_format_handler_t const handler = {
+    names, SOX_FILE_LIT_END|SOX_FILE_MONO|SOX_FILE_STEREO,
+    sox_vocstartread, sox_vocread, NULL,
+    sox_vocstartwrite, sox_vocwrite, sox_vocstopwrite,
+    NULL, write_encodings, NULL
+  };
+  return &handler;
 }

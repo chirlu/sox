@@ -20,6 +20,7 @@
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+#include "sox_i.h"
 
 int sox_cvsdstartread(sox_format_t * ft);
 int sox_cvsdstartwrite(sox_format_t * ft);

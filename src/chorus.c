@@ -62,10 +62,11 @@
  * libSoX chorus effect file.
  */
 
+#include "sox_i.h"
+
 #include <stdlib.h> /* Harmless, and prototypes atof() etc. --dgc */
 #include <math.h>
 #include <string.h>
-#include "sox_i.h"
 
 #define MOD_SINE        0
 #define MOD_TRIANGLE    1
@@ -153,9 +154,9 @@ static int sox_chorus_start(sox_effect_t * effp)
         }
         for ( i = 0; i < chorus->num_chorus; i++ ) {
                 chorus->samples[i] = (int) ( ( chorus->delay[i] + 
-                        chorus->depth[i] ) * effp->ininfo.rate / 1000.0);
+                        chorus->depth[i] ) * effp->in_signal.rate / 1000.0);
                 chorus->depth_samples[i] = (int) (chorus->depth[i] * 
-                        effp->ininfo.rate / 1000.0);
+                        effp->in_signal.rate / 1000.0);
 
                 if ( chorus->delay[i] < 20.0 )
                 {
@@ -197,7 +198,7 @@ static int sox_chorus_start(sox_effect_t * effp)
                         sox_fail("chorus: decay must be less that 1.0!" );
                         return (SOX_EOF);
                 }
-                chorus->length[i] = effp->ininfo.rate / chorus->speed[i];
+                chorus->length[i] = effp->in_signal.rate / chorus->speed[i];
                 chorus->lookup_tab[i] = (int *) xmalloc(sizeof (int) * chorus->length[i]);
 
                 if (chorus->modulation[i] == MOD_SINE)

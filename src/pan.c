@@ -46,7 +46,7 @@ static int sox_pan_getopts(sox_effect_t * effp, int n, char **argv)
  */
 static int sox_pan_start(sox_effect_t * effp)
 {
-    if (effp->outinfo.channels==1)
+    if (effp->out_signal.channels==1)
         sox_warn("PAN onto a mono channel...");
     return SOX_SUCCESS;
 }
@@ -77,8 +77,8 @@ static int sox_pan_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sampl
     left  = 0.5 - hdir; /*  0   <=  left <= 1   */
     right = 0.5 + hdir; /*  0   <= right <= 1   */
 
-    ich = effp->ininfo.channels;
-    och = effp->outinfo.channels;
+    ich = effp->in_signal.channels;
+    och = effp->out_signal.channels;
 
     len = min(*osamp/och,*isamp/ich);
 

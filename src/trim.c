@@ -62,15 +62,15 @@ static int sox_trim_start(sox_effect_t * effp)
 {
     trim_t trim = (trim_t) effp->priv;
 
-    if (sox_parsesamples(effp->ininfo.rate, trim->start_str,
+    if (sox_parsesamples(effp->in_signal.rate, trim->start_str,
                         &trim->start, 't') == NULL)
       return sox_usage(effp);
     /* Account for # of channels */
-    trim->start *= effp->ininfo.channels;
+    trim->start *= effp->in_signal.channels;
 
     if (trim->length_str)
     {
-        if (sox_parsesamples(effp->ininfo.rate, trim->length_str,
+        if (sox_parsesamples(effp->in_signal.rate, trim->length_str,
                     &trim->length, 't') == NULL)
           return sox_usage(effp);
     }
@@ -78,7 +78,7 @@ static int sox_trim_start(sox_effect_t * effp)
         trim->length = 0;
 
     /* Account for # of channels */
-    trim->length *= effp->ininfo.channels;
+    trim->length *= effp->in_signal.channels;
 
     trim->index = 0;
     trim->trimmed = 0;

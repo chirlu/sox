@@ -1,5 +1,6 @@
 #include "sox_i.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -19,7 +20,7 @@
 
 static void output_message(unsigned level, const char *filename, const char *fmt, va_list ap);
 
-sox_globals_t sox_globals = {2, 8192, NULL, NULL, output_message, NULL};
+sox_globals_t sox_globals = {2, 8192, NULL, NULL, output_message, NULL, sox_false};
 
 static void output_message(unsigned level, const char *filename, const char *fmt, va_list ap)
 {
@@ -87,20 +88,23 @@ int sox_format_init(void)
  */
 int sox_gettype(sox_format_t * ft, sox_bool is_file_extension)
 {
+  sox_format_handler_t const * handler;
+
   if (!ft->filetype) {
     sox_fail_errno(ft, SOX_EFMT, "unknown file type");
     return SOX_EFMT;
   }
-  ft->handler = sox_find_format(ft->filetype, is_file_extension);
-  if (!ft->handler) {
+  handler = sox_find_format(ft->filetype, is_file_extension);
+  if (!handler) {
     sox_fail_errno(ft, SOX_EFMT, "unknown file type `%s'", ft->filetype);
     return SOX_EFMT;
   }
-  if (ft->mode == 'r' && !ft->handler->startread && !ft->handler->read) {
+  ft->handler = *handler;
+  if (ft->mode == 'r' && !ft->handler.startread && !ft->handler.read) {
     sox_fail_errno(ft, SOX_EFMT, "file type `%s' isn't readable", ft->filetype);
     return SOX_EFMT;
   }
-  if (ft->mode == 'w' && !ft->handler->startwrite && !ft->handler->write) {
+  if (ft->mode == 'w' && !ft->handler.startwrite && !ft->handler.write) {
     sox_fail_errno(ft, SOX_EFMT, "file type `%s' isn't writable", ft->filetype);
     return SOX_EFMT;
   }
@@ -125,34 +129,34 @@ void sox_format_quit(void)
 void set_signal_defaults(sox_signalinfo_t * signal)
 {
   if (!signal->rate    ) signal->rate     = SOX_DEFAULT_RATE;
-  if (!signal->size    ) signal->size     = SOX_DEFAULT_SIZE;
+  if (!signal->precision    ) signal->precision     = SOX_DEFAULT_PRECISION;
   if (!signal->channels) signal->channels = SOX_DEFAULT_CHANNELS;
 }
 
 void set_endianness_if_not_already_set(sox_format_t * ft)
 {
-  if (ft->signal.reverse_bytes == SOX_OPTION_DEFAULT) {
-    if (ft->handler->flags & SOX_FILE_ENDIAN)
+  if (ft->encoding.reverse_bytes == SOX_OPTION_DEFAULT) {
+    if (ft->handler.flags & SOX_FILE_ENDIAN)
     {
         /* Set revere_bytes if we are running on opposite endian
          * machine compared to file format.
          */
-        if (ft->handler->flags & SOX_FILE_ENDBIG)
-            ft->signal.reverse_bytes = SOX_IS_LITTLEENDIAN;
+        if (ft->handler.flags & SOX_FILE_ENDBIG)
+            ft->encoding.reverse_bytes = SOX_IS_LITTLEENDIAN;
         else
-            ft->signal.reverse_bytes = SOX_IS_BIGENDIAN;
+            ft->encoding.reverse_bytes = SOX_IS_BIGENDIAN;
     }
     else
-      ft->signal.reverse_bytes = SOX_OPTION_NO;
+      ft->encoding.reverse_bytes = SOX_OPTION_NO;
   }
-  if (ft->signal.reverse_bits == SOX_OPTION_DEFAULT)
-    ft->signal.reverse_bits = !!(ft->handler->flags & SOX_FILE_BIT_REV);
-  else if (ft->signal.reverse_bits != !!(ft->handler->flags & SOX_FILE_BIT_REV))
+  if (ft->encoding.reverse_bits == SOX_OPTION_DEFAULT)
+    ft->encoding.reverse_bits = !!(ft->handler.flags & SOX_FILE_BIT_REV);
+  else if (ft->encoding.reverse_bits != !!(ft->handler.flags & SOX_FILE_BIT_REV))
       sox_report("'%s': Format options overriding file-type bit-order", ft->filename);
 
-  if (ft->signal.reverse_nibbles == SOX_OPTION_DEFAULT)
-    ft->signal.reverse_nibbles = !!(ft->handler->flags & SOX_FILE_NIB_REV);
-  else if (ft->signal.reverse_nibbles != !!(ft->handler->flags & SOX_FILE_NIB_REV))
+  if (ft->encoding.reverse_nibbles == SOX_OPTION_DEFAULT)
+    ft->encoding.reverse_nibbles = !!(ft->handler.flags & SOX_FILE_NIB_REV);
+  else if (ft->encoding.reverse_nibbles != !!(ft->handler.flags & SOX_FILE_NIB_REV))
       sox_report("'%s': Format options overriding file-type nibble-order", ft->filename);
 }
 
@@ -168,50 +172,26 @@ static int is_seekable(sox_format_t * ft)
 /* check that all settings have been given */
 static int sox_checkformat(sox_format_t * ft)
 {
+  ft->sox_errno = SOX_SUCCESS;
 
-        ft->sox_errno = SOX_SUCCESS;
-
-        if (ft->signal.rate == 0)
-        {
-                sox_fail_errno(ft,SOX_EFMT,"sampling rate was not specified");
-                return SOX_EOF;
-        }
-
-        if (!ft->signal.size)
-        {
-                sox_fail_errno(ft,SOX_EFMT,"data size was not specified");
-                return SOX_EOF;
-        }
-
-        if (ft->signal.encoding == SOX_ENCODING_UNKNOWN)
-        {
-                sox_fail_errno(ft,SOX_EFMT,"data encoding was not specified");
-                return SOX_EOF;
-        }
-
-        if (ft->signal.size > SOX_INFO_SIZE_MAX)
-        {
-                sox_fail_errno(ft,SOX_EFMT,"data size %u is invalid", ft->signal.size);
-                return SOX_EOF;
-        }
-
-        if (ft->signal.encoding <= 0  || ft->signal.encoding >= SOX_ENCODINGS)
-        {
-                sox_fail_errno(ft,SOX_EFMT,"data encoding %d is invalid", ft->signal.encoding);
-                return SOX_EOF;
-        }
-
-        return SOX_SUCCESS;
+  if (!ft->signal.rate) {
+    sox_fail_errno(ft,SOX_EFMT,"sampling rate was not specified");
+    return SOX_EOF;
+  }
+  if (!ft->signal.precision) {
+    sox_fail_errno(ft,SOX_EFMT,"data encoding was not specified");
+    return SOX_EOF;
+  }
+  return SOX_SUCCESS;
 }
 
-sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info,
-                  const char *filetype)
+sox_format_t * sox_open_read(
+    char               const * path,
+    sox_signalinfo_t   const * signal,
+    sox_encodinginfo_t const * encoding,
+    char               const * filetype)
 {
     sox_format_t * ft = xcalloc(sizeof(*ft), 1);
-
-    ft->signal.reverse_bytes =
-    ft->signal.reverse_nibbles =
-    ft->signal.reverse_bits = SOX_OPTION_DEFAULT;
 
     ft->filename = xstrdup(path);
 
@@ -226,14 +206,13 @@ sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info,
       sox_fail("Can't open input file `%s': %s", ft->filename, ft->sox_errstr);
       goto input_error;
     }
-    ft->signal.size = 0;
-    ft->signal.encoding = SOX_ENCODING_UNKNOWN;
-    ft->signal.channels = 0;
-    ft->signal.compression = HUGE_VAL;
-    if (info)
-        ft->signal = *info;
+    if (signal)
+      ft->signal = *signal;
+    if (encoding)
+      ft->encoding = *encoding;
+    else sox_init_encodinginfo(&ft->encoding);
 
-    if (!(ft->handler->flags & SOX_FILE_NOSTDIO))
+    if (!(ft->handler.flags & SOX_FILE_NOSTDIO))
     {
         /* Open file handler based on input name.  Used stdin file handler
          * if the filename is "-"
@@ -262,17 +241,20 @@ sox_format_t * sox_open_read(const char *path, const sox_signalinfo_t *info,
       set_endianness_if_not_already_set(ft);
 
     /* Read and write starters can change their formats. */
-    if (ft->handler->startread && (*ft->handler->startread)(ft) != SOX_SUCCESS)
+    if (ft->handler.startread && (*ft->handler.startread)(ft) != SOX_SUCCESS)
     {
         sox_fail("Can't open input file `%s': %s", ft->filename, ft->sox_errstr);
         goto input_error;
     }
 
+    if (!ft->signal.precision)
+      ft->signal.precision = sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample);
+
     /* Go ahead and assume 1 channel audio if nothing is detected.
      * This is because libsox usually doesn't set this for mono file
      * formats (for historical reasons).
      */
-    if (!(ft->handler->flags & SOX_FILE_PHONY) && !ft->signal.channels)
+    if (!(ft->handler.flags & SOX_FILE_PHONY) && !ft->signal.channels)
       ft->signal.channels = 1;
 
     if (sox_checkformat(ft) )
@@ -291,150 +273,330 @@ input_error:
     return NULL;
 }
 
+static void set_output_format(sox_format_t * ft)
+{
+  sox_encoding_t e;
+  unsigned i, s;
+  unsigned const * encodings = ft->handler.write_formats;
+#define enc_arg(T) (T)encodings[i++]
+
+  if (ft->handler.write_rates){
+    if (!ft->signal.rate)
+      ft->signal.rate = ft->handler.write_rates[0];
+    else {
+      sox_rate_t r;
+      i = 0;
+      while ((r = ft->handler.write_rates[i++])) {
+        if (r == ft->signal.rate)
+          break;
+      }
+      if (r != ft->signal.rate) {
+        sox_rate_t given = ft->signal.rate, max = 0;
+        ft->signal.rate = HUGE_VAL;
+        i = 0;
+        while ((r = ft->handler.write_rates[i++])) {
+          if (r > given && r < ft->signal.rate)
+            ft->signal.rate = r;
+          else max = max(r, max);
+        }
+        if (ft->signal.rate == HUGE_VAL)
+          ft->signal.rate = max;
+        sox_warn("%s can't encode at %gHz; using %gHz", ft->handler.names[0], given, ft->signal.rate);
+      }
+    }
+  }
+  else if (!ft->signal.rate)
+    ft->signal.rate = SOX_DEFAULT_RATE;
+
+  if (ft->handler.flags & SOX_FILE_CHANS) {
+    if (ft->signal.channels == 1 && !(ft->handler.flags & SOX_FILE_MONO)) {
+      ft->signal.channels = (ft->handler.flags & SOX_FILE_STEREO)? 2 : 4;
+      sox_warn("%s can't encode mono; setting channels to %u", ft->handler.names[0], ft->signal.channels);
+    } else
+    if (ft->signal.channels == 2 && !(ft->handler.flags & SOX_FILE_STEREO)) {
+      ft->signal.channels = (ft->handler.flags & SOX_FILE_QUAD)? 4 : 1;
+      sox_warn("%s can't encode stereo; setting channels to %u", ft->handler.names[0], ft->signal.channels);
+    } else
+    if (ft->signal.channels == 4 && !(ft->handler.flags & SOX_FILE_QUAD)) {
+      ft->signal.channels = (ft->handler.flags & SOX_FILE_STEREO)? 2 : 1;
+      sox_warn("%s can't encode quad; setting channels to %u", ft->handler.names[0], ft->signal.channels);
+    }
+  } else ft->signal.channels = max(ft->signal.channels, 1);
+
+  if (!encodings)
+    return;
+  /* If an encoding has been given, check if it supported by this handler */
+  if (ft->encoding.encoding) {
+    i = 0;
+    while ((e = enc_arg(sox_encoding_t))) {
+      if (e == ft->encoding.encoding)
+        break;
+      while (enc_arg(unsigned));
+    }
+    if (e != ft->encoding.encoding) {
+      sox_warn("%s can't encode %s", ft->handler.names[0], sox_encodings_str[ft->encoding.encoding]);
+      ft->encoding.encoding = 0;
+    }
+    else {
+      unsigned max_p = 0;
+      unsigned max_p_s = 0;
+      unsigned given_size = 0;
+      sox_bool found = sox_false;
+      if (ft->encoding.bits_per_sample)
+        given_size = ft->encoding.bits_per_sample;
+      ft->encoding.bits_per_sample = 65;
+      while ((s = enc_arg(unsigned))) {
+        if (s == given_size)
+          found = sox_true;
+        if (sox_precision(e, s) >= ft->signal.precision) {
+          if (s < ft->encoding.bits_per_sample)
+            ft->encoding.bits_per_sample = s;
+        }
+        else if (sox_precision(e, s) > max_p) {
+          max_p = sox_precision(e, s);
+          max_p_s = s;
+        }
+      }
+      if (ft->encoding.bits_per_sample == 65)
+        ft->encoding.bits_per_sample = max_p_s;
+      if (given_size) {
+        if (found)
+          ft->encoding.bits_per_sample = given_size;
+        else sox_warn("%s can't encode %s to %u-bit", ft->handler.names[0], sox_encodings_str[ft->encoding.encoding], given_size);
+      }
+    }
+  }
+
+  /* If a size has been given, check if it supported by this handler */
+  if (!ft->encoding.encoding && ft->encoding.bits_per_sample) {
+    i = 0;
+    s= 0;
+    while (s != ft->encoding.bits_per_sample && (e = enc_arg(sox_encoding_t)))
+      while ((s = enc_arg(unsigned)) && s != ft->encoding.bits_per_sample);
+    if (s != ft->encoding.bits_per_sample) {
+      sox_warn("%s can't encode to %u-bit", ft->handler.names[0], ft->encoding.bits_per_sample);
+      ft->encoding.bits_per_sample = 0;
+    }
+    else ft->encoding.encoding = e;
+  }
+
+  /* Find the smallest lossless encoding with precision >= signal.precision */
+  if (!ft->encoding.encoding) {
+    ft->encoding.bits_per_sample = 65;
+    i = 0;
+    while ((e = enc_arg(sox_encoding_t)))
+      while ((s = enc_arg(unsigned)))
+        if (e < SOX_ENCODING_LOSSLESS &&
+            sox_precision(e, s) >= ft->signal.precision && s < ft->encoding.bits_per_sample) {
+          ft->encoding.encoding = e;
+          ft->encoding.bits_per_sample = s;
+        }
+  }
+
+  /* Find the smallest lossy encoding with precision >= signal precision,
+   * or, if none such, the highest precision encoding */
+  if (!ft->encoding.encoding) {
+    unsigned max_p = 0;
+    sox_encoding_t max_p_e = 0;
+    unsigned max_p_s = 0;
+    i = 0;
+    while ((e = enc_arg(sox_encoding_t)))
+      do {
+        s = enc_arg(unsigned);
+        if (sox_precision(e, s) >= ft->signal.precision) {
+          if (s < ft->encoding.bits_per_sample) {
+            ft->encoding.encoding = e;
+            ft->encoding.bits_per_sample = s;
+          }
+        }
+        else if (sox_precision(e, s) > max_p) {
+          max_p = sox_precision(e, s);
+          max_p_e = e;
+          max_p_s = s;
+        }
+      } while (s);
+    if (!ft->encoding.encoding) {
+      ft->encoding.encoding = max_p_e;
+      ft->encoding.bits_per_sample = max_p_s;
+    }
+  }
+  ft->signal.precision = min(ft->signal.precision, sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample));
+  #undef enc_arg
+}
+
+sox_bool sox_format_supports_encoding(
+    char               const * path,
+    char               const * filetype,
+    sox_encodinginfo_t const * encoding)
+{
+  #define enc_arg(T) (T)ft.handler.write_formats[i++]
+  sox_encoding_t e;
+  unsigned i = 0, s;
+  sox_format_t ft;
+  sox_bool no_filetype_given = filetype == NULL;
+
+  assert(path);
+  assert(encoding);
+  ft.filetype = (char *)(filetype? filetype : find_file_extension(path));
+  if (sox_gettype(&ft, no_filetype_given) != SOX_SUCCESS ||
+      !ft.handler.write_formats)
+    return sox_false;
+  while ((e = enc_arg(sox_encoding_t))) {
+    if (e == encoding->encoding) {
+      while ((s = enc_arg(unsigned)))
+        if (s == encoding->bits_per_sample)
+          return sox_true;
+      break;
+    }
+    while (enc_arg(unsigned));
+  }
+  return sox_false;
+  #undef enc_arg
+}
+
 sox_format_t * sox_open_write(
     sox_bool (*overwrite_permitted)(const char *filename),
-    const char *path,
-    const sox_signalinfo_t *info,
-    const char *filetype,
-    comments_t comments,
-    sox_size_t length,
-    const sox_instrinfo_t *instr,
-    const sox_loopinfo_t *loops)
+    char               const * path,
+    sox_signalinfo_t   const * signal,
+    sox_encodinginfo_t const * encoding,
+    char               const * filetype,
+    comments_t                 comments,
+    sox_size_t                 length,
+    sox_instrinfo_t    const * instr,
+    sox_loopinfo_t     const * loops)
 {
-    sox_format_t * ft = xcalloc(sizeof(*ft), 1);
-    int i;
-    sox_bool no_filetype_given = filetype == NULL;
+  sox_bool no_filetype_given = filetype == NULL;
+  sox_format_t * ft = xcalloc(sizeof(*ft), 1);
+  int i;
 
-    ft->filename = xstrdup(path);
-
-    if (!filetype) {
-      char const * extension = find_file_extension(ft->filename);
-      if (extension)
-        ft->filetype = xstrdup(extension);
-    } else
-      ft->filetype = xstrdup(filetype);
-
-    ft->mode = 'w';
-    if (sox_gettype(ft, no_filetype_given) != SOX_SUCCESS) {
-      sox_fail("Can't open output file `%s': %s", ft->filename, ft->sox_errstr);
-      goto output_error;
-    }
-    ft->signal.size = 0;
-    ft->signal.encoding = SOX_ENCODING_UNKNOWN;
-    ft->signal.channels = 0;
-    ft->signal.compression = HUGE_VAL;
-    if (info)
-        ft->signal = *info;
-
-    if (!(ft->handler->flags & SOX_FILE_NOSTDIO))
-    {
-        /* Open file handler based on output name.  Used stdout file handler
-         * if the filename is "-"
-         */
-        if (!strcmp(ft->filename, "-")) {
-          if (sox_globals.stdout_in_use_by) {
-            sox_fail("'-' (stdout) already in use by '%s'", sox_globals.stdout_in_use_by);
-            goto output_error;
-          }
-          sox_globals.stdout_in_use_by = "audio output";
-            SET_BINARY_MODE(stdout);
-            ft->fp = stdout;
-        }
-        else {
-          struct stat st;
-          if (!stat(ft->filename, &st) && (st.st_mode & S_IFMT) == S_IFREG &&
-              (overwrite_permitted && !overwrite_permitted(ft->filename))) {
-            sox_fail("Permission to overwrite '%s' denied", ft->filename);
-            goto output_error;
-          }
-          if ((ft->fp = fopen(ft->filename, "wb")) == NULL) {
-            sox_fail("Can't open output file `%s': %s", ft->filename,
-                    strerror(errno));
-            goto output_error;
-          }
-        }
-
-        /* stdout tends to be line-buffered.  Override this */
-        /* to be Full Buffering. */
-        if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char) * sox_globals.bufsiz))
-        {
-            sox_fail("Can't set write buffer");
-            goto output_error;
-        }
-
-        /* See if this file is seekable or not */
-        ft->seekable = is_seekable(ft);
-    }
-
-    ft->comments = copy_comments(comments);
-
-    if (loops)
-        for (i = 0; i < SOX_MAX_NLOOPS; i++)
-            ft->loops[i] = loops[i];
-
-    /* leave SMPTE # alone since it's absolute */
-    if (instr)
-        ft->instr = *instr;
-
-    ft->length = length;
-    set_endianness_if_not_already_set(ft);
-
-    /* Read and write starters can change their formats. */
-    if (ft->handler->startwrite && (*ft->handler->startwrite)(ft) != SOX_SUCCESS)
-    {
-        sox_fail("Can't open output file `%s': %s", ft->filename, ft->sox_errstr);
-        goto output_error;
-    }
-
-    if (sox_checkformat(ft) )
-    {
-        sox_fail("bad output format for file %s: %s", ft->filename,
-                ft->sox_errstr);
-        goto output_error;
-    }
-
-    /*
-     * Bit of a hack; doesn't cover the situation where
-     * codec changes audio length (e.g. 8svx, gsm):
-     */
-    if (info)
-      ft->length = ft->length * ft->signal.rate / info->rate * ft->signal.channels / info->channels + .5;
-
-    return ft;
-
-output_error:
-
-    free(ft->filename);
-    free(ft->filetype);
+  if (!path || !signal) {
     free(ft);
     return NULL;
+  }
+
+  ft->filename = xstrdup(path);
+
+  if (!filetype) {
+    char const * extension = find_file_extension(ft->filename);
+    if (extension)
+      ft->filetype = xstrdup(extension);
+  } else ft->filetype = xstrdup(filetype);
+
+  ft->mode = 'w';
+  if (sox_gettype(ft, no_filetype_given) != SOX_SUCCESS) {
+    sox_fail("Can't open output file `%s': %s", ft->filename, ft->sox_errstr);
+    goto output_error;
+  }
+  ft->signal = *signal;
+  if (encoding)
+    ft->encoding = *encoding;
+  else sox_init_encodinginfo(&ft->encoding);
+
+  if (!(ft->handler.flags & SOX_FILE_NOSTDIO))
+  {
+      /* Open file handler based on output name.  Used stdout file handler
+       * if the filename is "-"
+       */
+      if (!strcmp(ft->filename, "-")) {
+        if (sox_globals.stdout_in_use_by) {
+          sox_fail("'-' (stdout) already in use by '%s'", sox_globals.stdout_in_use_by);
+          goto output_error;
+        }
+        sox_globals.stdout_in_use_by = "audio output";
+          SET_BINARY_MODE(stdout);
+          ft->fp = stdout;
+      }
+      else {
+        struct stat st;
+        if (!stat(ft->filename, &st) && (st.st_mode & S_IFMT) == S_IFREG &&
+            (overwrite_permitted && !overwrite_permitted(ft->filename))) {
+          sox_fail("Permission to overwrite '%s' denied", ft->filename);
+          goto output_error;
+        }
+        if ((ft->fp = fopen(ft->filename, "wb")) == NULL) {
+          sox_fail("Can't open output file `%s': %s", ft->filename,
+                  strerror(errno));
+          goto output_error;
+        }
+      }
+
+      /* stdout tends to be line-buffered.  Override this */
+      /* to be Full Buffering. */
+      if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char) * sox_globals.bufsiz))
+      {
+          sox_fail("Can't set write buffer");
+          goto output_error;
+      }
+
+      /* See if this file is seekable or not */
+      ft->seekable = is_seekable(ft);
+  }
+
+  ft->comments = copy_comments(comments);
+
+  if (loops) for (i = 0; i < SOX_MAX_NLOOPS; i++)
+    ft->loops[i] = loops[i];
+
+  /* leave SMPTE # alone since it's absolute */
+  if (instr)
+    ft->instr = *instr;
+
+  ft->length = length;
+  set_endianness_if_not_already_set(ft);
+  set_output_format(ft);
+
+  /* FIXME: doesn't cover the situation where
+   * codec changes audio length (e.g. 8svx, gsm): */
+  if (signal->rate && signal->channels)
+    ft->length = ft->length * ft->signal.rate / signal->rate *
+      ft->signal.channels / signal->channels + .5;
+
+  if ((ft->handler.flags & SOX_FILE_REWIND) && !ft->length && !ft->seekable)
+    sox_warn("can't seek in output file `%s'; length in file header will be unspecified", ft->filename);
+
+  /* Read and write starters can change their formats. */
+  if (ft->handler.startwrite && (ft->handler.startwrite)(ft) != SOX_SUCCESS){
+    sox_fail("can't open output file `%s': %s", ft->filename, ft->sox_errstr);
+    goto output_error;
+  }
+
+  if (sox_checkformat(ft) == SOX_SUCCESS)
+    return ft;
+  sox_fail("bad format for output file `%s': %s", ft->filename, ft->sox_errstr);
+
+output_error:
+  free(ft->filename);
+  free(ft->filetype);
+  free(ft);
+  return NULL;
 }
 
 sox_size_t sox_read(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
 {
-  sox_size_t actual = ft->handler->read? (*ft->handler->read)(ft, buf, len) : 0;
+  sox_size_t actual = ft->handler.read? (*ft->handler.read)(ft, buf, len) : 0;
   return (actual > len? 0 : actual);
 }
 
 sox_size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
-    return ft->handler->write? (*ft->handler->write)(ft, buf, len) : 0;
+  ft->olength += len;
+  return ft->handler.write? (*ft->handler.write)(ft, buf, len) : 0;
 }
 
 #define TWIDDLE_BYTE(ub, type) \
   do { \
-    if (ft->signal.reverse_bits) \
+    if (ft->encoding.reverse_bits) \
       ub = cswap[ub]; \
-    if (ft->signal.reverse_nibbles) \
+    if (ft->encoding.reverse_nibbles) \
       ub = ((ub & 15) << 4) | (ub >> 4); \
   } while (0);
 
 #define TWIDDLE_WORD(uw, type) \
-  if (ft->signal.reverse_bytes) \
+  if (ft->encoding.reverse_bytes) \
     uw = sox_swap ## type(uw);
 
 #define TWIDDLE_FLOAT(f, type) \
-  if (ft->signal.reverse_bytes) \
+  if (ft->encoding.reverse_bytes) \
     sox_swapf(&f);
 
 /* N.B. This macro doesn't work for unaligned types (e.g. 3-byte
@@ -558,21 +720,30 @@ WRITE1_FUNC(df, double)
 /* N.B. The file (if any) may already have been deleted. */
 int sox_close(sox_format_t * ft)
 {
-    int rc;
+  int rc = SOX_SUCCESS;
 
-    if (ft->mode == 'r')
-        rc = ft->handler->stopread? (*ft->handler->stopread)(ft) : SOX_SUCCESS;
-    else
-        rc = ft->handler->stopwrite? (*ft->handler->stopwrite)(ft) : SOX_SUCCESS;
+  if (ft->mode == 'r')
+    rc = ft->handler.stopread? (*ft->handler.stopread)(ft) : SOX_SUCCESS;
+  else {
+    if (ft->handler.flags & SOX_FILE_REWIND) {
+      if (ft->olength != ft->length && ft->seekable) {
+        rc = sox_seeki(ft, 0, 0);
+        if (rc == SOX_SUCCESS)
+          rc = ft->handler.stopwrite? (*ft->handler.stopwrite)(ft)
+             : ft->handler.startwrite?(*ft->handler.startwrite)(ft) : SOX_SUCCESS;
+      }
+    }
+    else rc = ft->handler.stopwrite? (*ft->handler.stopwrite)(ft) : SOX_SUCCESS;
+  }
 
-    if (!(ft->handler->flags & SOX_FILE_NOSTDIO))
-        fclose(ft->fp);
-    free(ft->filename);
-    free(ft->filetype);
-    delete_comments(&ft->comments);
+  if (!(ft->handler.flags & SOX_FILE_NOSTDIO))
+    fclose(ft->fp);
+  free(ft->filename);
+  free(ft->filetype);
+  delete_comments(&ft->comments);
 
-    free(ft);
-    return rc;
+  free(ft);
+  return rc;
 }
 
 int sox_seek(sox_format_t * ft, sox_size_t offset, int whence)
@@ -584,8 +755,8 @@ int sox_seek(sox_format_t * ft, sox_size_t offset, int whence)
     /* If file is a seekable file and this handler supports seeking,
      * then invoke handler's function.
      */
-    if (ft->seekable && ft->handler->seek)
-      return (*ft->handler->seek)(ft, offset);
+    if (ft->seekable && ft->handler.seek)
+      return (*ft->handler.seek)(ft, offset);
     return SOX_EOF; /* FIXME: return SOX_EBADF */
 }
 

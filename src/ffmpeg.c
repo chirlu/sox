@@ -153,7 +153,7 @@ static int startread(sox_format_t * ft)
   ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
   AVFormatParameters params;
   int ret;
-  unsigned i;
+  int i;
 
   ffmpeg->audio_buf = xcalloc(1, AVCODEC_MAX_AUDIO_FRAME_SIZE);
 
@@ -198,8 +198,8 @@ static int startread(sox_format_t * ft)
 
   /* Copy format info */
   ft->signal.rate = ffmpeg->audio_st->codec->sample_rate;
-  ft->signal.size = SOX_SIZE_16BIT;
-  ft->signal.encoding = SOX_ENCODING_SIGN2;
+  ft->encoding.bits_per_sample = 16;
+  ft->encoding.encoding = SOX_ENCODING_SIGN2;
   ft->signal.channels = ffmpeg->audio_st->codec->channels;
   ft->length = 0; /* Currently we can't seek; no idea how to get this
                      info from ffmpeg anyway (in time, yes, but not in
@@ -212,7 +212,7 @@ static int startread(sox_format_t * ft)
  * Read up to len samples of type sox_sample_t from file into buf[].
  * Return number of samples read.
  */
-static sox_size_t read(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
   ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
   AVPacket *pkt = &ffmpeg->audio_pkt;
@@ -397,7 +397,7 @@ static int startwrite(sox_format_t * ft)
  * Write up to len samples of type sox_sample_t from buf[] into file.
  * Return number of samples written.
  */
-static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
   ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
   sox_size_t nread = 0, nwritten = 0;
@@ -443,7 +443,7 @@ static sox_size_t write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t l
 static int stopwrite(sox_format_t * ft)
 {
   ffmpeg_t ffmpeg = (ffmpeg_t)ft->priv;
-  unsigned i;
+  int i;
 
   /* Close CODEC */
   if (ffmpeg->audio_st) {
@@ -472,35 +472,29 @@ static int stopwrite(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-
-/* Format file suffixes */
-/* For now, comment out formats built in to SoX */
-static const char *names[] = {
-  "ffmpeg", /* special type to force use of ffmpeg */
-  "mp4",
-  "m4a",
-  "avi",
-  "wmv",
-  "mpg",
-  NULL
-};
-
-/* Format descriptor */
-static sox_format_handler_t sox_ffmpeg_format = {
-  names,
-  SOX_FILE_NOSTDIO,
-  startread,
-  read,
-  stopread,
-  startwrite,
-  write,
-  stopwrite,
-  NULL
-};
-
-const sox_format_handler_t *sox_ffmpeg_format_fn(void);
-
-const sox_format_handler_t *sox_ffmpeg_format_fn(void)
+SOX_FORMAT_HANDLER(ffmpeg)
 {
-  return &sox_ffmpeg_format;
+  /* Format file suffixes */
+  /* For now, comment out formats built in to SoX */
+  static char const * const names[] = {
+    "ffmpeg", /* special type to force use of ffmpeg */
+    "mp4",
+    "m4a",
+    "avi",
+    "wmv",
+    "mpg",
+    NULL
+  };
+
+  static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
+
+  static sox_format_handler_t handler = {
+    names,
+    SOX_FILE_NOSTDIO,
+    startread, read_samples, stopread,
+    startwrite, write_samples, stopwrite,
+    NULL, write_encodings, NULL
+  };
+
+  return &handler;
 }

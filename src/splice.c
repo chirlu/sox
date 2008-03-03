@@ -142,8 +142,8 @@ static int start(sox_effect_t * effp)
   splice_t p = (splice_t) effp->priv;
   unsigned i;
 
-  parse(effp, 0, effp->ininfo.rate); /* Re-parse now rate is known */
-  p->buffer = xcalloc(p->max_buffer_size * effp->ininfo.channels, sizeof(*p->buffer));
+  parse(effp, 0, effp->in_signal.rate); /* Re-parse now rate is known */
+  p->buffer = xcalloc(p->max_buffer_size * effp->in_signal.channels, sizeof(*p->buffer));
   p->in_pos = p->buffer_pos = p->splices_pos = 0;
   p->state = p->splices_pos != p->nsplices && p->in_pos == p->splices[p->splices_pos].start;
   for (i = 0; i < p->nsplices; ++i)
@@ -157,8 +157,8 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
 {
   splice_t p = (splice_t) effp->priv;
   sox_size_t c, idone = 0, odone = 0;
-  *isamp /= effp->ininfo.channels;
-  *osamp /= effp->ininfo.channels;
+  *isamp /= effp->in_signal.channels;
+  *osamp /= effp->in_signal.channels;
 
   while (sox_true) {
 copying:
@@ -168,7 +168,7 @@ copying:
           p->state = 1;
           goto buffering;
         }
-        for (c = 0; c < effp->ininfo.channels; ++c)
+        for (c = 0; c < effp->in_signal.channels; ++c)
           *obuf++ = *ibuf++;
       }
       break;
@@ -176,18 +176,18 @@ copying:
 
 buffering:
     if (p->state == 1) {
-      sox_size_t buffer_size = (2 * p->splices[p->splices_pos].overlap + p->splices[p->splices_pos].search) * effp->ininfo.channels;
+      sox_size_t buffer_size = (2 * p->splices[p->splices_pos].overlap + p->splices[p->splices_pos].search) * effp->in_signal.channels;
       for (; idone < *isamp; ++idone, ++p->in_pos) {
         if (p->buffer_pos == buffer_size) {
           p->buffer_pos = do_splice(p->buffer,
               p->splices[p->splices_pos].overlap,
               p->splices[p->splices_pos].search,
-              effp->ininfo.channels) * effp->ininfo.channels;
+              effp->in_signal.channels) * effp->in_signal.channels;
           p->state = 2;
           goto flushing;
           break;
         }
-        for (c = 0; c < effp->ininfo.channels; ++c)
+        for (c = 0; c < effp->in_signal.channels; ++c)
           p->buffer[p->buffer_pos++] = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++, effp->clips);
       }
       break;
@@ -195,7 +195,7 @@ buffering:
 
 flushing:
     if (p->state == 2) {
-      sox_size_t buffer_size = (2 * p->splices[p->splices_pos].overlap + p->splices[p->splices_pos].search) * effp->ininfo.channels;
+      sox_size_t buffer_size = (2 * p->splices[p->splices_pos].overlap + p->splices[p->splices_pos].search) * effp->in_signal.channels;
       for (; odone < *osamp; ++odone) {
         if (p->buffer_pos == buffer_size) {
           p->buffer_pos = 0;
@@ -203,15 +203,15 @@ flushing:
           p->state = p->splices_pos != p->nsplices && p->in_pos == p->splices[p->splices_pos].start;
           goto copying;
         }
-        for (c = 0; c < effp->ininfo.channels; ++c)
+        for (c = 0; c < effp->in_signal.channels; ++c)
           *obuf++ = SOX_FLOAT_32BIT_TO_SAMPLE(p->buffer[p->buffer_pos++], effp->clips);
       }
       break;
     }
   }
 
-  *isamp = idone * effp->ininfo.channels;
-  *osamp = odone * effp->ininfo.channels;
+  *isamp = idone * effp->in_signal.channels;
+  *osamp = odone * effp->in_signal.channels;
   return SOX_SUCCESS;
 }
 

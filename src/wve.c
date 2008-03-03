@@ -1,216 +1,61 @@
 /*
- * Psion wve format, based on the au format file. Hacked by
- * Richard Caley (R.Caley@ed.ac.uk)
+ * File format: Psion wve   (c) 2008 robs@users.sourceforge.net
+ *
+ * See http://filext.com/file-extension/WVE
+ *
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, write to the Free Software Foundation,
+ * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
 #include "sox_i.h"
 #include <string.h>
-#include <errno.h>
 
-/* Magic numbers used in Psion audio files */
-#define PSION_MAGIC     "ALawSoundFile**"
-#define PSION_VERSION   ((short)3856)
-#define PSION_HDRSIZE   32
+static char const ID1[18] = "ALawSoundFile**\0\017\020";
+static char const ID2[] = {0,0,0,1,0,0,0,0,0,0}; /* pad & repeat info: ignore */
 
-typedef struct wvepriv
-    {
-    uint32_t length;
-    short padding;
-    short repeats;
-/* For seeking */
-        sox_size_t dataStart;
-    } *wve_t;
-
-static void wvewriteheader(sox_format_t * ft);
-
-static int sox_wveseek(sox_format_t * ft, sox_size_t offset)
+static int start_read(sox_format_t * ft)
 {
-    int new_offset, channel_block, alignment;
-    wve_t wve = (wve_t)ft->priv;
+  char buf[sizeof(ID1)];
+  uint32_t num_samples;
 
-    new_offset = offset * ft->signal.size;
-    /* Make sure request aligns to a channel block (i.e. left+right) */
-    channel_block = ft->signal.channels * ft->signal.size;
-    alignment = new_offset % channel_block;
-    /* Most common mistake is to compute something like
-     * "skip everthing up to and including this sample" so
-     * advance to next sample block in this case.
-     */
-    if (alignment != 0)
-        new_offset += (channel_block - alignment);
-    new_offset += wve->dataStart;
-
-    return sox_seeki(ft, (sox_ssize_t)offset, SEEK_SET);
+  if (sox_readbuf(ft, buf, sizeof(buf)) != sizeof(buf) ||
+      sox_readdw(ft, &num_samples) || sox_skipbytes(ft, sizeof(ID2)))
+    return SOX_EOF;
+  if (memcmp(ID1, buf, sizeof(buf))) {
+    sox_fail_errno(ft,SOX_EHDR,"wve: can't find Psion identifier");
+    return SOX_EOF;
+  }
+  return sox_check_read_params(ft, 1, 8000., SOX_ENCODING_ALAW, 8, (off_t)num_samples);
 }
 
-static int sox_wvestartread(sox_format_t * ft)
+static int write_header(sox_format_t * ft)
 {
-        wve_t p = (wve_t)ft->priv;
-        char magic[16];
-        short version;
-        int rc;
-
-        uint16_t trash16;
-
-        /* Needed for rawread() */
-        rc = sox_rawstartread(ft);
-        if (rc)
-            return rc;
-
-        /* Check the magic word (null-terminated) */
-        sox_reads(ft, magic, 16);
-        if (strncmp(magic, PSION_MAGIC, 15)==0) {
-                sox_debug("Found Psion magic word");
-        }
-        else
-        {
-                sox_fail_errno(ft,SOX_EHDR,"Psion header doesn't start with magic word\nTry the '.al' file type with '-t al -r 8000 filename'");
-                return (SOX_EOF);
-        }
-
-        sox_readw(ft, (unsigned short *)&version);
-
-        /* Check magic version */
-        if (version == PSION_VERSION)
-            sox_debug("Found Psion magic word");
-        else
-        {
-            sox_fail_errno(ft,SOX_EHDR,"Wrong version in Psion header");
-            return(SOX_EOF);
-        }
-
-        sox_readdw(ft, &(p->length));
-
-        sox_readw(ft, (unsigned short *)&(p->padding));
-
-        sox_readw(ft, (unsigned short *)&(p->repeats));
-
-        sox_readw(ft, (unsigned short *)&trash16);
-        sox_readw(ft, (unsigned short *)&trash16);
-        sox_readw(ft, (unsigned short *)&trash16);
-
-        ft->signal.encoding = SOX_ENCODING_ALAW;
-        ft->signal.size = SOX_SIZE_BYTE;
-
-        if (ft->signal.rate != 0)
-            sox_report("WVE must use 8000 sample rate.  Overriding");
-        ft->signal.rate = 8000;
-
-        if (ft->signal.channels != SOX_ENCODING_UNKNOWN && ft->signal.channels != 1)
-            sox_report("WVE must only supports 1 channel.  Overriding");
-        ft->signal.channels = 1;
-
-        p->dataStart = sox_tell(ft);
-        ft->length = p->length/ft->signal.size;
-
-        return (SOX_SUCCESS);
+  return sox_writebuf(ft, ID1, sizeof(ID1)) != sizeof(ID1)
+      || sox_writedw(ft, ft->olength? ft->olength:ft->length)
+      || sox_writebuf(ft, ID2, sizeof(ID2)) != sizeof(ID2)? SOX_EOF:SOX_SUCCESS;
 }
 
-/* When writing, the header is supposed to contain the number of
-   data bytes written, unless it is written to a pipe.
-   Since we don't know how many bytes will follow until we're done,
-   we first write the header with an unspecified number of bytes,
-   and at the end we rewind the file and write the header again
-   with the right size.  This only works if the file is seekable;
-   if it is not, the unspecified size remains in the header
-   (this is illegal). */
-
-static int sox_wvestartwrite(sox_format_t * ft)
+SOX_FORMAT_HANDLER(wve)
 {
-        wve_t p = (wve_t)ft->priv;
-
-        p->length = 0;
-        if (p->repeats == 0)
-            p->repeats = 1;
-
-        if (ft->signal.rate != 0)
-            sox_report("WVE must use 8000 sample rate.  Overriding");
-
-        if (ft->signal.channels != 0 && ft->signal.channels != 1)
-            sox_report("WVE must only supports 1 channel.  Overriding");
-
-        ft->signal.encoding = SOX_ENCODING_ALAW;
-        ft->signal.size = SOX_SIZE_BYTE;
-        ft->signal.rate = 8000;
-        ft->signal.channels = 1;
-
-        wvewriteheader(ft);
-        return SOX_SUCCESS;
-}
-
-static sox_size_t sox_wvewrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t samp)
-{
-        wve_t p = (wve_t)ft->priv;
-        p->length += samp * ft->signal.size;
-        return sox_rawwrite(ft, buf, samp);
-}
-
-static int sox_wvestopwrite(sox_format_t * ft)
-{
-
-        if (!ft->seekable)
-        {
-            sox_warn("Header will be have invalid file length since file is not seekable");
-            return SOX_SUCCESS;
-        }
-
-        if (sox_seeki(ft, 0, 0) != 0)
-        {
-                sox_fail_errno(ft,errno,"Can't rewind output file to rewrite Psion header.");
-                return(SOX_EOF);
-        }
-        wvewriteheader(ft);
-        return SOX_SUCCESS;
-}
-
-static void wvewriteheader(sox_format_t * ft)
-{
-
-    char magic[16];
-    short version;
-    short zero;
-    wve_t p = (wve_t)ft->priv;
-
-    strcpy(magic,PSION_MAGIC);
-    version=PSION_VERSION;
-    zero=0;
-
-    sox_writes(ft, magic);
-    /* Null terminate string */
-    sox_writeb(ft, 0);
-
-    sox_writesw(ft, version);
-
-    sox_writedw(ft, p->length);
-    sox_writesw(ft, p->padding);
-    sox_writesw(ft, p->repeats);
-
-    sox_writesw(ft, zero);
-    sox_writesw(ft, zero);
-    sox_writesw(ft, zero);
-}
-
-/* Psion .wve */
-static const char *wvenames[] = {
-  "wve",
-  NULL
-};
-
-static sox_format_handler_t sox_wve_format = {
-  wvenames,
-  SOX_FILE_BIG_END,
-  sox_wvestartread,
-  sox_rawread,
-  sox_rawstopread,
-  sox_wvestartwrite,
-  sox_wvewrite,
-  sox_wvestopwrite,
-  sox_wveseek
-};
-
-const sox_format_handler_t *sox_wve_format_fn(void);
-
-const sox_format_handler_t *sox_wve_format_fn(void)
-{
-    return &sox_wve_format;
+  static char const * const names[] = {"wve", NULL};
+  static sox_rate_t   const write_rates[] = {8000, 0};
+  static unsigned     const write_encodings[] = {SOX_ENCODING_ALAW, 8, 0, 0};
+  static sox_format_handler_t const handler = {
+    names, SOX_FILE_BIG_END | SOX_FILE_MONO | SOX_FILE_REWIND,
+    start_read, sox_rawread, NULL,
+    write_header, sox_rawwrite, NULL,
+    sox_rawseek, write_encodings, write_rates
+  };
+  return &handler;
 }

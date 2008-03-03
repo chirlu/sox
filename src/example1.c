@@ -29,9 +29,9 @@ static sox_format_t * in, * out;
 
 static int input_drain(sox_effect_t *effp, sox_sample_t * obuf, sox_size_t * osamp)
 {
-  *osamp -= *osamp % effp->outinfo.channels;
+  *osamp -= *osamp % effp->out_signal.channels;
   *osamp = sox_read(in, obuf, *osamp);
-  *osamp -= *osamp % effp->outinfo.channels;
+  *osamp -= *osamp % effp->out_signal.channels;
   if (!*osamp && in->sox_errno)
     fprintf(stderr, "%s: %s\n", in->filename, in->sox_errstr);
   return *osamp? SOX_SUCCESS : SOX_EOF;
@@ -73,14 +73,18 @@ static sox_effect_handler_t const * output_handler(void)
  */
 int main(int argc, char * argv[])
 {
-  sox_effects_chain_t * chain = sox_create_effects_chain();
+  sox_effects_chain_t * chain;
   sox_effect_t e;
   char * vol[] = {"3dB"};
 
   assert(argc == 3);
   assert(sox_format_init() == SOX_SUCCESS);
 
-  assert(in = sox_open_read(argv[1], NULL, NULL));
+  assert(in = sox_open_read(argv[1], NULL, NULL, NULL));
+  assert(out = sox_open_write(NULL, argv[2], &in->signal, NULL, NULL, NULL, 0, NULL, 0));
+
+  chain = sox_create_effects_chain(&in->encoding, &out->encoding);
+
   sox_create_effect(&e, input_handler());
   assert(sox_add_effect(chain, &e, &in->signal, &in->signal) == SOX_SUCCESS);
 
@@ -92,14 +96,13 @@ int main(int argc, char * argv[])
   assert(e.handler.getopts(&e, 0, NULL) == SOX_SUCCESS);
   assert(sox_add_effect(chain, &e, &in->signal, &in->signal) == SOX_SUCCESS);
 
-  assert(out = sox_open_write(NULL, argv[2], &in->signal, NULL, NULL, 0, NULL, 0));
   sox_create_effect(&e, output_handler());
   assert(sox_add_effect(chain, &e, &in->signal, &in->signal) == SOX_SUCCESS);
 
-  assert(sox_flow_effects(chain, NULL) == SOX_SUCCESS);
+  sox_flow_effects(chain, NULL);
 
-  sox_close(out);
   sox_delete_effects(chain);
+  sox_close(out);
   sox_close(in);
   sox_format_quit();
   free(chain);

@@ -24,30 +24,41 @@ Deprecated features removed in this release:
 
 File formats:
 
-  o None new.
+  o New htk format.  (robs)
+  o Fix [1864216] comments mangled when writing ogg-vorbis.  (robs)
+  o Fix short noise at end of alsa playback.  (Morita Sho)
+  o Fix wve seek accuracy.  (robs)
+  o Fix lpc10 not working.  (robs)
+  o For wav & au, fix [548256] size in header wrong when piping out.  (robs)
+  o Writing aiff, aifc & cvsd now repeatable with -R.  (robs)
+  o Writing hcom no longer fails with unsupported rate--chooses
+    best match.  (robs)
+  o Au/snd: added support for 32-bit integer and 64-bit float PCM
+    encoding/decoding; display name of unsupported encoding.  (robs)
 
 Effects:
 
-  o Added effect to splice together audio sections.  (robs)
-  o Added remix effect (complements the mixer effect).  (robs)
-  o Added norm (normalise) effect.  (robs)
+  o New `splice' effect; splice together audio sections.  (robs)
+  o New `remix' effect; complements the mixer effect.  (robs)
+  o New `norm' (normalise) effect.  (robs)
+  o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)
+  o Fix synth max. level setting for some output encodings.  (robs)
 
 Other new features:
 
   o Command line support for multiple file comments.  (robs)
-  o Added soxi utility to extract/display file header fields.  (robs)
-  o Added pkg-config support. (Pascal Giard)
-  o Added basic VU meter.  (robs)
-  o Added simple heuristic to detect when playing an album and set
+  o Soxi utility to extract/display file header fields.  (robs)
+  o Pkg-config support. (Pascal Giard)
+  o Basic VU meter.  (robs)
+  o Simple heuristic to detect when playing an album and set
     the default replay-gain mode to `album'.  (robs)
+  o More intelligent choice of output file format parameters when
+    type is different to that of input file.  (robs)
 
-Bug fixes:
+Other bug fixes:
 
-  o Fix [1864216] comments mangled when writing ogg-vorbis.  (robs)
-  o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)
   o Fix [1890983] rec shortcut should apply bit depth (8-bit,
     16-bit, etc.) to input handler.  (robs)
-  o Fix short noise at end of alsa playback.  (Morita Sho)
 
 Internal improvements:
 

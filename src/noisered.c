@@ -62,7 +62,7 @@ static int sox_noisered_start(sox_effect_t * effp)
 {
     reddata_t data = (reddata_t) effp->priv;
     sox_size_t fchannels = 0;
-    sox_size_t channels = effp->ininfo.channels;
+    sox_size_t channels = effp->in_signal.channels;
     sox_size_t i;
     FILE* ifp;
 
@@ -243,7 +243,7 @@ static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_
 {
     reddata_t data = (reddata_t) effp->priv;
     sox_size_t samp = min(*isamp, *osamp);
-    sox_size_t tracks = effp->ininfo.channels;
+    sox_size_t tracks = effp->in_signal.channels;
     sox_size_t track_samples = samp / tracks;
     sox_size_t ncopy = min(track_samples, WINDOWSIZE-data->bufdata);
     sox_size_t whole_window = (ncopy + data->bufdata == WINDOWSIZE);
@@ -251,7 +251,7 @@ static int sox_noisered_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_
     sox_size_t i;
 
     /* FIXME: Make this automatic for all effects */
-    assert(effp->ininfo.channels == effp->outinfo.channels);
+    assert(effp->in_signal.channels == effp->out_signal.channels);
 
     if (whole_window)
         data->bufdata = WINDOWSIZE/2;
@@ -293,7 +293,7 @@ static int sox_noisered_drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_
 {
     reddata_t data = (reddata_t)effp->priv;
     unsigned i;
-    unsigned tracks = effp->ininfo.channels;
+    unsigned tracks = effp->in_signal.channels;
     for (i = 0; i < tracks; i ++)
         *osamp = process_window(effp, data, i, tracks, obuf, data->bufdata);
 
@@ -311,7 +311,7 @@ static int sox_noisered_stop(sox_effect_t * effp)
     reddata_t data = (reddata_t) effp->priv;
     sox_size_t i;
 
-    for (i = 0; i < effp->ininfo.channels; i ++) {
+    for (i = 0; i < effp->in_signal.channels; i ++) {
         chandata_t* chan = &(data->chandata[i]);
         free(chan->lastwindow);
         free(chan->window);

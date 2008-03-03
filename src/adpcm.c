@@ -32,11 +32,12 @@
  *
  */
 
+#include "sox_i.h"
+#include "adpcm.h"
+
 #include <sys/types.h>
 #include <math.h>
 #include <stdio.h>
-#include "sox_i.h"
-#include "adpcm.h"
 
 typedef struct MsState {
         sox_sample_t  step;      /* step size */

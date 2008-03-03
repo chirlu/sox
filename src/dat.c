@@ -52,8 +52,7 @@ static int sox_datstartread(sox_format_t * ft)
     if (ft->signal.channels == 0)
        ft->signal.channels = 1;
 
-    ft->signal.size = SOX_SIZE_64BIT;
-    ft->signal.encoding = SOX_ENCODING_FLOAT;
+    ft->encoding.encoding = SOX_ENCODING_FLOAT_TEXT;
 
     return (SOX_SUCCESS);
 }
@@ -63,8 +62,6 @@ static int sox_datstartwrite(sox_format_t * ft)
     dat_t dat = (dat_t) ft->priv;
     char s[LINEWIDTH];
 
-    ft->signal.size = SOX_SIZE_64BIT;
-    ft->signal.encoding = SOX_ENCODING_FLOAT;
     dat->timevalue = 0.0;
     dat->deltat = 1.0 / (double)ft->signal.rate;
     /* Write format comments to start of file */
@@ -144,34 +141,22 @@ static sox_size_t sox_datwrite(sox_format_t * ft, const sox_sample_t *buf, sox_s
         sox_writes(ft, s);
         done++;
       }
-      sprintf(s," \015\n");
+      sprintf(s," \r\n");
       sox_writes(ft, s);
       dat->timevalue += dat->deltat;
     }
     return done;
 }
 
-/* Text data samples */
-static const char *datnames[] = {
-  "dat",
-  NULL
-};
-
-static sox_format_handler_t sox_dat_format = {
-  datnames,
-  0,
-  sox_datstartread,
-  sox_datread,
-  NULL,
-  sox_datstartwrite,
-  sox_datwrite,
-  NULL,
-  NULL
-};
-
-const sox_format_handler_t *sox_dat_format_fn(void);
-
-const sox_format_handler_t *sox_dat_format_fn(void)
+SOX_FORMAT_HANDLER(dat)
 {
-    return &sox_dat_format;
+  static char const * const names[] = {"dat", NULL};
+  static unsigned const write_encodings[] = {SOX_ENCODING_FLOAT_TEXT, 0, 0};
+  static sox_format_handler_t const handler = {
+    names, 0,
+    sox_datstartread, sox_datread, NULL,
+    sox_datstartwrite, sox_datwrite, NULL,
+    NULL, write_encodings, NULL
+  };
+  return &handler;
 }

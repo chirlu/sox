@@ -141,7 +141,7 @@ static int deemph_getopts(sox_effect_t * effp, int n, char **argv) {
 static int start(sox_effect_t * effp)
 {
   biquad_t p = (biquad_t) effp->priv;
-  double w0 = 2 * M_PI * p->fc / effp->ininfo.rate;
+  double w0 = 2 * M_PI * p->fc / effp->in_signal.rate;
   double A  = exp(p->gain / 40 * log(10.));
   double alpha = 0;
 
@@ -172,7 +172,7 @@ static int start(sox_effect_t * effp)
       break;
 
     case width_bw_old:
-      alpha = tan(M_PI * p->width / effp->ininfo.rate);
+      alpha = tan(M_PI * p->width / effp->in_signal.rate);
       break;
   }
   switch (p->filter_type) {
@@ -253,7 +253,7 @@ static int start(sox_effect_t * effp)
       break;
 
     case filter_deemph:  /* See deemph.plt for documentation */
-      if (effp->ininfo.rate != 44100) {
+      if (effp->in_signal.rate != 44100) {
         sox_fail("Sample rate must be 44100 (audio-CD)");
         return SOX_EOF;
       }

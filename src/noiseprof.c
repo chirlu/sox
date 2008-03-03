@@ -56,7 +56,7 @@ static int sox_noiseprof_getopts(sox_effect_t * effp, int n, char **argv)
 static int sox_noiseprof_start(sox_effect_t * effp)
 {
   profdata_t data = (profdata_t) effp->priv;
-  unsigned channels = effp->ininfo.channels;
+  unsigned channels = effp->in_signal.channels;
   unsigned i;
    
   /* Note: don't fall back to stderr if stdout is unavailable
@@ -111,13 +111,13 @@ static int sox_noiseprof_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox
 {
     profdata_t data = (profdata_t) effp->priv;
     sox_size_t samp = min(*isamp, *osamp);
-    sox_size_t tracks = effp->ininfo.channels;
+    sox_size_t tracks = effp->in_signal.channels;
     sox_size_t track_samples = samp / tracks;
     int ncopy = 0;
     sox_size_t i;
 
     /* FIXME: Make this automatic for all effects */
-    assert(effp->ininfo.channels == effp->outinfo.channels);
+    assert(effp->in_signal.channels == effp->out_signal.channels);
 
     /* How many samples per track to analyze? */
     ncopy = min(track_samples, WINDOWSIZE-data->bufdata);
@@ -152,7 +152,7 @@ static int sox_noiseprof_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox
 static int sox_noiseprof_drain(sox_effect_t * effp, sox_sample_t *obuf UNUSED, sox_size_t *osamp)
 {
     profdata_t data = (profdata_t) effp->priv;
-    int tracks = effp->ininfo.channels;
+    int tracks = effp->in_signal.channels;
     int i;
 
     *osamp = 0;
@@ -183,7 +183,7 @@ static int sox_noiseprof_stop(sox_effect_t * effp)
     profdata_t data = (profdata_t) effp->priv;
     sox_size_t i;
 
-    for (i = 0; i < effp->ininfo.channels; i ++) {
+    for (i = 0; i < effp->in_signal.channels; i ++) {
         int j;
         chandata_t* chan = &(data->chandata[i]);
 

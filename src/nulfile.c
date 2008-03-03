@@ -26,39 +26,34 @@ static int startread(sox_format_t * ft)
     ft->signal.rate = SOX_DEFAULT_RATE;
     sox_report("sample rate not specified; using %g", ft->signal.rate);
   }
-  if (!ft->signal.size) {
-    ft->signal.size = SOX_DEFAULT_SIZE;
-    sox_report("precision not specified; using %s", sox_size_bits_str[ft->signal.size]);
-  }
-  if (ft->signal.encoding == SOX_ENCODING_UNKNOWN) {
-    ft->signal.encoding = SOX_DEFAULT_ENCODING;
-    sox_report("encoding not specified; using %s", sox_encodings_str[ft->signal.encoding]);
-  }
+  ft->signal.precision =
+      ft->encoding.bits_per_sample? ft->encoding.bits_per_sample: SOX_SAMPLE_PRECISION;
   /* Default number of channels is application-dependent */
   return SOX_SUCCESS;
 }
 
-static sox_size_t read(sox_format_t * ft UNUSED, sox_sample_t *buf, sox_size_t len)
+static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
 {
   /* Reading from null generates silence i.e. (sox_sample_t)0. */
+  (void)ft;
   memset(buf, 0, sizeof(sox_sample_t) * len);
   return len; /* Return number of samples "read". */
 }
 
-static sox_size_t write(sox_format_t * ft UNUSED, const sox_sample_t *buf UNUSED, sox_size_t len)
+static sox_size_t write_samples(
+    sox_format_t * ft, sox_sample_t const * buf, sox_size_t len)
 {
   /* Writing to null just discards the samples */
+  (void)ft, (void)buf;
   return len; /* Return number of samples "written". */
 }
 
-const sox_format_handler_t *sox_nul_format_fn(void);
-
-const sox_format_handler_t *sox_nul_format_fn(void)
+SOX_FORMAT_HANDLER(nul)
 {
-  static const char *names[] = {"null", NULL};
-  static sox_format_handler_t handler = {
+  static const char * const names[] = {"null", NULL};
+  static sox_format_handler_t const handler = {
     names, SOX_FILE_DEVICE | SOX_FILE_PHONY | SOX_FILE_NOSTDIO,
-    startread, read, 0, 0, write, 0, 0
+    startread, read_samples, NULL, NULL, write_samples, NULL, NULL, NULL, NULL
   };
   return &handler;
 }

@@ -118,8 +118,7 @@ static void cvsdstartcommon(sox_format_t * ft)
         p->cvsd_rate = (ft->signal.rate <= 24000) ? 16000 : 32000;
         ft->signal.rate = 8000;
         ft->signal.channels = 1;
-        ft->signal.size = SOX_SIZE_16BIT; /* make output format default to words */
-        ft->signal.encoding = SOX_ENCODING_SIGN2;
+        sox_rawstart(ft, sox_true, sox_false, sox_true, SOX_ENCODING_CVSD, 1);
         /*
          * initialize the decoder
          */
@@ -146,7 +145,7 @@ static void cvsdstartcommon(sox_format_t * ft)
         p->com.v_min = 1;
         p->com.v_max = -1;
         sox_report("cvsd: bit rate %dbit/s, bits from %s", p->cvsd_rate,
-               ft->signal.reverse_bits ? "msb to lsb" : "lsb to msb");
+               ft->encoding.reverse_bits ? "msb to lsb" : "lsb to msb");
 }
 
 /* ---------------------------------------------------------------------- */
@@ -465,7 +464,7 @@ static void make_dvms_hdr(sox_format_t * ft, struct dvms_header *hdr)
                 len = sizeof(hdr->Filename)-1;
         memcpy(hdr->Filename, ft->filename, len);
         hdr->Id = hdr->State = 0;
-        hdr->Unixtime = time(NULL);
+        hdr->Unixtime = sox_globals.repeatable? 0 : time(NULL);
         hdr->Usender = hdr->Ureceiver = 0;
         hdr->Length = p->bytes_written;
         hdr->Srate = p->cvsd_rate/100;

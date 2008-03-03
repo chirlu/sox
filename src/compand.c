@@ -11,6 +11,8 @@
  * the consequences of using this software.
  */
 
+#include "sox_i.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include "compandt.h"
@@ -130,7 +132,7 @@ static int start(sox_effect_t * effp)
   unsigned i, j;
 
   sox_debug("%i input channel(s) expected: actually %i",
-      l->expectedChannels, effp->outinfo.channels);
+      l->expectedChannels, effp->out_signal.channels);
   for (i = 0; i < l->expectedChannels; ++i)
     sox_debug("Channel %i: attack = %g decay = %g", i,
         l->channels[i].attack_times[0], l->channels[i].attack_times[1]);
@@ -140,14 +142,14 @@ static int start(sox_effect_t * effp)
   /* Convert attack and decay rates using number of samples */
   for (i = 0; i < l->expectedChannels; ++i)
     for (j = 0; j < 2; ++j)
-      if (l->channels[i].attack_times[j] > 1.0/effp->outinfo.rate)
+      if (l->channels[i].attack_times[j] > 1.0/effp->out_signal.rate)
         l->channels[i].attack_times[j] = 1.0 -
-          exp(-1.0/(effp->outinfo.rate * l->channels[i].attack_times[j]));
+          exp(-1.0/(effp->out_signal.rate * l->channels[i].attack_times[j]));
       else
         l->channels[i].attack_times[j] = 1.0;
 
   /* Allocate the delay buffer */
-  l->delay_buf_size = l->delay * effp->outinfo.rate * effp->outinfo.channels;
+  l->delay_buf_size = l->delay * effp->out_signal.rate * effp->out_signal.channels;
   if (l->delay_buf_size > 0)
     l->delay_buf = xcalloc((sox_size_t)l->delay_buf_size, sizeof(*l->delay_buf));
   l->delay_buf_index = 0;
@@ -177,7 +179,7 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
 {
   compand_t l = (compand_t) effp->priv;
   int len =  (*isamp > *osamp) ? *osamp : *isamp;
-  int filechans = effp->outinfo.channels;
+  int filechans = effp->out_signal.channels;
   int idone,odone;
 
   for (idone = 0,odone = 0; idone < len; ibuf += filechans) {
@@ -241,7 +243,7 @@ static int drain(sox_effect_t * effp, sox_sample_t *obuf, sox_size_t *osamp)
   if (l->delay_buf_full == 0)
     l->delay_buf_index = 0;
   while (done < *osamp && l->delay_buf_cnt > 0)
-    for (chan = 0; chan < effp->outinfo.channels; ++chan) {
+    for (chan = 0; chan < effp->out_signal.channels; ++chan) {
       int c = l->expectedChannels > 1 ? chan : 0;
       double level_in_lin = l->channels[c].volume;
       double level_out_lin = sox_compandt(&l->transfer_fn, level_in_lin);

@@ -237,8 +237,8 @@ static int start(sox_effect_t * effp)
   if (p->factor == 1)
     return SOX_EFF_NULL;
 
-  p->tempo = tempo_create(effp->ininfo.channels);
-  tempo_setup(p->tempo, effp->ininfo.rate, p->quick_search, p->factor,
+  p->tempo = tempo_create(effp->in_signal.channels);
+  tempo_setup(p->tempo, effp->in_signal.rate, p->quick_search, p->factor,
       p->segment_ms, p->search_ms, p->overlap_ms);
   return SOX_SUCCESS;
 }
@@ -249,21 +249,21 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf,
   priv_t * p = (priv_t *) effp->priv;
   sox_size_t i;
   /* odone must be size_t 'cos tempo_output arg. is. (!= sox_size_t on amd64) */
-  size_t odone = *osamp /= effp->ininfo.channels;
+  size_t odone = *osamp /= effp->in_signal.channels;
   float const * s = tempo_output(p->tempo, NULL, &odone);
 
-  for (i = 0; i < odone * effp->ininfo.channels; ++i)
+  for (i = 0; i < odone * effp->in_signal.channels; ++i)
     *obuf++ = SOX_FLOAT_32BIT_TO_SAMPLE(*s++, effp->clips);
 
   if (*isamp && odone < *osamp) {
-    float * t = tempo_input(p->tempo, NULL, *isamp / effp->ininfo.channels);
+    float * t = tempo_input(p->tempo, NULL, *isamp / effp->in_signal.channels);
     for (i = *isamp; i; --i)
       *t++ = SOX_SAMPLE_TO_FLOAT_32BIT(*ibuf++, effp->clips);
     tempo_process(p->tempo);
   }
   else *isamp = 0;
 
-  *osamp = odone * effp->ininfo.channels;
+  *osamp = odone * effp->in_signal.channels;
   return SOX_SUCCESS;
 }
 

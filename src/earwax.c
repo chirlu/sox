@@ -67,7 +67,7 @@ static int start(sox_effect_t * effp)
 {
   assert_static(EARWAX_NUMTAPS * sizeof(*taps) <= SOX_MAX_EFFECT_PRIVSIZE,
                 /* else */ earwax_PRIVSIZE_too_big);
-  if (effp->ininfo.rate != 44100 || effp->ininfo.channels != 2) {
+  if (effp->in_signal.rate != 44100 || effp->in_signal.channels != 2) {
     sox_fail("works only with stereo audio sampled at 44100Hz (i.e. CDDA)");
     return SOX_EOF;
   }

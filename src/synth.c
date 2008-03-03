@@ -9,10 +9,11 @@
  * for the consequences of using this software.
  */
 
+#include "sox_i.h"
+
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
-#include "sox_i.h"
 
 typedef enum {
   synth_sine,
@@ -373,8 +374,8 @@ static int getopts(sox_effect_t * effp, int argc, char **argv)
     create_channel(&synth->getopts_channels[synth->getopts_nchannels++]);
   }
 
-  if (!effp->ininfo.channels)
-    effp->ininfo.channels = synth->getopts_nchannels;
+  if (!effp->in_signal.channels)
+    effp->in_signal.channels = synth->getopts_nchannels;
 
   return SOX_SUCCESS;
 }
@@ -385,16 +386,15 @@ static int start(sox_effect_t * effp)
 {
   synth_t synth = (synth_t) effp->priv;
   size_t i;
-  int shift_for_max = (4 - min(effp->outinfo.size, 4)) << 3;
 
-  synth->max = (SOX_SAMPLE_MAX >> shift_for_max) << shift_for_max;
+  synth->max = sox_sample_max(effp->out_encoding);
   synth->samples_done = 0;
 
   if (synth->length_str)
-    if (sox_parsesamples(effp->ininfo.rate, synth->length_str, &synth->samples_to_do, 't') == NULL)
+    if (sox_parsesamples(effp->in_signal.rate, synth->length_str, &synth->samples_to_do, 't') == NULL)
       return sox_usage(effp);
 
-  synth->number_of_channels = effp->ininfo.channels;
+  synth->number_of_channels = effp->in_signal.channels;
   synth->channels = xcalloc(synth->number_of_channels, sizeof(*synth->channels));
   for (i = 0; i < synth->number_of_channels; ++i) {
     channel_t chan = &synth->channels[i];
@@ -558,17 +558,17 @@ static int flow(sox_effect_t * effp, const sox_sample_t * ibuf, sox_sample_t * o
     sox_size_t * isamp, sox_size_t * osamp)
 {
   synth_t synth = (synth_t) effp->priv;
-  unsigned len = min(*isamp, *osamp) / effp->ininfo.channels;
+  unsigned len = min(*isamp, *osamp) / effp->in_signal.channels;
   unsigned c, done;
   int result = SOX_SUCCESS;
 
   for (done = 0; done < len && result == SOX_SUCCESS; ++done) {
-    for (c = 0; c < effp->ininfo.channels; c++)
-      *obuf++ = do_synth(*ibuf++, synth, c, effp->ininfo.rate);
+    for (c = 0; c < effp->in_signal.channels; c++)
+      *obuf++ = do_synth(*ibuf++, synth, c, effp->in_signal.rate);
     if (++synth->samples_done == synth->samples_to_do)
       result = SOX_EOF;
   }
-  *isamp = *osamp = done * effp->ininfo.channels;
+  *isamp = *osamp = done * effp->in_signal.channels;
   return result;
 }
 
@@ -596,9 +596,9 @@ static int kill(sox_effect_t * effp)
 const sox_effect_handler_t *sox_synth_effect_fn(void)
 {
   static sox_effect_handler_t handler = {
-    "synth",
-    "[len] {type [combine] [freq[-freq2] [off [ph [p1 [p2 [p3]]]]]]}",
-    SOX_EFF_MCHAN | SOX_EFF_PREC, getopts, start, flow, 0, stop, kill
+    "synth", "[len] {type [combine] [freq[-freq2] [off [ph [p1 [p2 [p3]]]]]]}",
+    SOX_EFF_MCHAN | SOX_EFF_PREC |SOX_EFF_LENGTH,
+    getopts, start, flow, 0, stop, kill
   };
   return &handler;
 }

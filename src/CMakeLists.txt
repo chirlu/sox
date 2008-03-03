@@ -4,6 +4,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 if(CMAKE_COMPILER_IS_GNUCC)
   add_definitions(-Wconversion -Werror)
+  #add_definitions(-Wno-missing-field-initializers)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 if (NOT EXTERNAL_GSM)
@@ -29,17 +30,17 @@ set(effects_srcs
   echo            mixer           remix           stat
 )
 set(formats_srcs
-  8svx            cvsd            hcom            s1-fmt          u2-fmt
-  adpcm           cvsd-fmt        ima-fmt         s2-fmt          u3-fmt
-  adpcms          dat             ima_rw          s3-fmt          u4-fmt
-  aifc-fmt        dvms-fmt        la-fmt          s4-fmt          ul-fmt
-  aiff            formats         lpc10.c         sf              voc
-  aiff-fmt        g711            lu-fmt          skelform        vox
-  al-fmt          g721            maud            smp             vox-fmt
-  au              g723_24         nulfile         sndrtool        wav
-  auto            g723_40         prc             sphere          wve
-  avr             g72x            raw             tx16w           xa
-  cdr             gsm.c           raw-fmt         u1-fmt
+  8svx            cvsd            hcom            raw-fmt         u1-fmt
+  adpcm           cvsd-fmt        htk             s1-fmt          u2-fmt
+  adpcms          dat             ima-fmt         s2-fmt          u3-fmt
+  aifc-fmt        dvms-fmt        ima_rw          s3-fmt          u4-fmt
+  aiff            formats         la-fmt          s4-fmt          ul-fmt
+  aiff-fmt        g711            lpc10.c         sf              voc
+  al-fmt          g721            lu-fmt          skelform        vox
+  au              g723_24         maud            smp             vox-fmt
+  auto            g723_40         nulfile         sndrtool        wav
+  avr             g72x            prc             sphere          wve
+  cdr             gsm.c           raw             tx16w           xa
 )
 add_library(lib${PROJECT_NAME}
   ${effects_srcs}         misc                    util

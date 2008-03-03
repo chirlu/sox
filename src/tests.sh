@@ -2,18 +2,22 @@
 #
 # SoX Regression Test script: Lossless file conversion
 
-# Options:
-#verbose=-V
-#all=all
-
 bindir="."
 builddir="."
 srcdir="."
 
-# Allow user to override paths.  Useful for testing an installed
-# sox.
+# Set options & allow user to override paths.  Useful for testing an
+# installed sox.
 while [ $# -ne 0 ]; do
     case "$1" in
+        -V)
+        verbose=$1
+        ;;
+
+        -a)      # Perform each test up to 3 times with different #s of
+        all=all  # channels; probably enough coverage without this though.
+        ;;
+
         --bindir=*)
         bindir=`echo $1 | sed 's/.*=//'`
         ;;
@@ -60,14 +64,22 @@ getFormat () {
     u2 ) formatText="unsigned word" ;;
     raw) formatText="float"; formatFlags="-f -4" ;;
     Raw) formatText="double"; formatFlags="-f -8" ;;
-    au ) formatFlags="-s" ;;
-    Wav) formatFlags="-u -1" ;;
+    wav1u) formatFlags="-1 -u"; formatExt="wav"  ;;
     s1X ) formatText="signed byte (swap bits)"; formatExt="s1"; formatFlags="-X" ;;
     s1N ) formatText="signed byte (swap nibbles)"; formatExt="s1"; formatFlags="-N" ;;
     s1XN ) formatText="signed byte (swap nibbles and bits)"; formatExt="s1"; formatFlags="-X -N" ;;
   esac
 }
   
+execute() {
+  if [ "${verbose}x" != "x" ] ; then
+    echo $*
+  fi
+  cmd=$1
+  shift
+  echo $* | xargs $cmd
+}
+
 convertToAndFrom () {
   while [ $# != 0 ]; do
       if [ "${skip}x" != "x" ] ; then
@@ -77,12 +89,9 @@ convertToAndFrom () {
       if [ "${format1_skip}x" = "x" -a "${from_skip}x" = "x" ] ; then
         getFormat ${format1}; format1Ext=$formatExt; format1Text=$formatText; format1Flags=$formatFlags
         getFormat         $1; format2Ext=$formatExt; format2Text=$formatText; format2Flags=$formatFlags
-        echo ${bindir}/sox -c $channels -r $rate -n $format1Flags input.$format1Ext synth $samples's' sin 300-3300 noise trapezium
-        echo ${bindir}/sox $verbose -r $rate -c $channels $format1Flags input.$format1Ext $format2Flags intermediate.$format2Ext
-        echo ${bindir}/sox $verbose -r $rate -c $channels $format2Flags intermediate.$format2Ext $format1Flags output.$format1Ext
-        ${bindir}/sox -R -c $channels -r $rate -n $format1Flags input.$format1Ext synth $samples's' sin 300-3300 noise trapezium
-        ${bindir}/sox $verbose -r $rate -c $channels $format1Flags input.$format1Ext $format2Flags intermediate.$format2Ext
-        ${bindir}/sox $verbose -r $rate -c $channels $format2Flags intermediate.$format2Ext $format1Flags output.$format1Ext
+        execute ${bindir}/sox $verbose -R -r $rate -c $channels -n $format1Flags input.$format1Ext synth $samples's' sin 300-3300 noise trapezium
+        execute ${bindir}/sox $verbose -R -r $rate -c $channels $format1Flags input.$format1Ext $format2Flags intermediate.$format2Ext
+        execute ${bindir}/sox $verbose -R -r $rate -c $channels $format2Flags intermediate.$format2Ext $format1Flags output.$format1Ext
         intermediateReference=intermediate`echo "$channels $rate $format1Flags $format1Ext $format2Flags"|tr " " "_"`.$format2Ext
 
 	# Uncomment to generate new reference files
@@ -91,14 +100,14 @@ convertToAndFrom () {
 
         if test -f $intermediateReference
         then
-          if ! cmp -s $intermediateReference intermediate.$format2Ext
+          if ! execute cmp -s $intermediateReference intermediate.$format2Ext
           then
             echo "*FAIL* channels=$channels \"$format1Text\" ---> \"$format2Text\"."
             exit 1    # This allows failure inspection.
           fi
         fi
 
-        if cmp -s input.$format1Ext output.$format1Ext
+        if execute cmp -s input.$format1Ext output.$format1Ext
         then
           echo "ok     channels=$channels \"$format1Text\" <--> \"$format2Text\"."
         else
@@ -130,12 +139,12 @@ do_multichannel_formats () {
   format1=ul
   convertToAndFrom ul s2 u2 s4 raw Raw dat aiff aifc flac caf sph
 
-  format1=Wav
-  convertToAndFrom Wav aiff aifc au dat sf flac caf sph
+  format1=wav1u
+  convertToAndFrom wav1u aiff aifc au dat sf flac caf sph
 }
 
 do_twochannel_formats () {
-  format1=Wav
+  format1=wav1u
   convertToAndFrom avr maud
   (rate=8000; convertToAndFrom voc) || exit 1      # Fixed rate
   (samples=23492; convertToAndFrom 8svx) || exit 1 # Even number of samples only
@@ -148,7 +157,7 @@ do_singlechannel_formats () {
   format1=ima
   convertToAndFrom ima s2 u2 s3 u3 s4 u4 raw Raw dat au aiff aifc flac caf # FIXME: vox wav
 
-  format1=Wav
+  format1=wav1u
   convertToAndFrom smp s1 s1X s1N s1XN sndt
   (rate=5512; convertToAndFrom hcom) || exit 1     # Fixed rate
 
@@ -183,9 +192,9 @@ timeIO () {
 
 ${builddir}/sox_sample_test || exit 1
 
-# Don't test unsupported stuff
-${bindir}/sox --help | grep -q "^AUDIO FILE.*\<flac\>" || skip="flac $skip"
-${bindir}/sox --help | grep -q "^AUDIO FILE.*\<caf\>" || skip="caf $skip"
+# Don't try to test unsupported stuff
+${bindir}/sox --help|grep "^AUDIO FILE.*\<flac\>">/dev/null || skip="flac $skip"
+${bindir}/sox --help|grep "^AUDIO FILE.*\<caf\>" >/dev/null || skip="caf $skip"
 
 rate=44100
 samples=23493

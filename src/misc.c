@@ -29,55 +29,118 @@
 #include <byteswap.h>
 #endif
 
-const char * const sox_sizes_str[] = {
-        "NONSENSE!",
-        "1 byte",
-        "2 bytes",
-        "3 bytes",
-        "4 bytes",
-        "NONSENSE",
-        "NONSENSE",
-        "NONSENSE",
-        "8 bytes"
-};
-
-const char * const sox_size_bits_str[] = {
-        "NONSENSE!",
-        "8-bit",
-        "16-bit",
-        "24-bit",
-        "32-bit",
-        "NONSENSE",
-        "NONSENSE",
-        "NONSENSE",
-        "64-bit"
-};
-
 const char * const sox_encodings_str[] = {
-        "NONSENSE!",
-
-        "u-law",
-        "A-law",
-        "G72x-ADPCM",
-        "MS-ADPCM",
-        "IMA-ADPCM",
-        "OKI-ADPCM",
-
-        "",   /* FIXME, see sox.h */
-
-        "unsigned",
-        "signed (2's complement)",
-        "floating point",
-        "GSM",
-        "MPEG audio (layer I, II or III)",
-        "Vorbis",
-        "FLAC",
-        "AMR-WB",
-        "AMR-NB",
+  "?",
+  "Signed Integer PCM",
+  "Unsigned Integer PCM",
+  "Floating Point PCM",
+  "Floating Point (text) PCM",
+  "FLAC",
+  "HCOM",
+  "", /* Lossless above, lossy below */
+  "u-law",
+  "A-law",
+  "G.721 ADPCM",
+  "G.723 ADPCM",
+  "MS ADPCM",
+  "IMA ADPCM",
+  "OKI ADPCM",
+  "GSM",
+  "MPEG audio (layer I, II or III)",
+  "Vorbis",
+  "AMR-WB",
+  "AMR-NB",
+  "CVSD",
+  "LPC10",
 };
 
 assert_static(array_length(sox_encodings_str) == SOX_ENCODINGS,
     SIZE_MISMATCH_BETWEEN_sox_encodings_t_AND_sox_encodings_str);
+
+void sox_init_encodinginfo(sox_encodinginfo_t * e)
+{
+  e->reverse_bytes = SOX_OPTION_DEFAULT;
+  e->reverse_nibbles = SOX_OPTION_DEFAULT;
+  e->reverse_bits = SOX_OPTION_DEFAULT;
+  e->compression = HUGE_VAL;
+}
+
+unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample)
+{
+  switch (encoding) {
+    case SOX_ENCODING_HCOM:       return !(bits_per_sample & 7) && (bits_per_sample >> 3) - 1 < 1? bits_per_sample: 0;
+    case SOX_ENCODING_FLAC:       return !(bits_per_sample & 7) && (bits_per_sample >> 3) - 1 < 3? bits_per_sample: 0;
+    case SOX_ENCODING_SIGN2:
+    case SOX_ENCODING_UNSIGNED:   return !(bits_per_sample & 7) && (bits_per_sample >> 3) - 1 < 4? bits_per_sample: 0;
+
+    case SOX_ENCODING_ALAW:       return bits_per_sample == 8? 13: 0;
+    case SOX_ENCODING_ULAW:       return bits_per_sample == 8? 14: 0;
+
+    case SOX_ENCODING_MS_ADPCM:   return bits_per_sample == 4? 14: 0;
+    case SOX_ENCODING_IMA_ADPCM:  return bits_per_sample == 4? 13: 0;
+    case SOX_ENCODING_OKI_ADPCM:  return bits_per_sample == 4? 12: 0;
+    case SOX_ENCODING_G721:       return bits_per_sample == 4? 12: 0;
+    case SOX_ENCODING_G723:       return bits_per_sample == 3? 8:
+                                         bits_per_sample == 5? 14: 0;
+    case SOX_ENCODING_CVSD:       return bits_per_sample == 1? 16: 0;
+
+    case SOX_ENCODING_GSM:
+    case SOX_ENCODING_MP3:
+    case SOX_ENCODING_VORBIS:
+    case SOX_ENCODING_AMR_WB:
+    case SOX_ENCODING_AMR_NB:
+    case SOX_ENCODING_LPC10:      return !bits_per_sample? 16: 0;
+
+    case SOX_ENCODING_FLOAT:      return bits_per_sample == 32 ? 24: bits_per_sample == 64 ? 53: 0;
+    case SOX_ENCODING_FLOAT_TEXT: return !bits_per_sample? 53: 0;
+
+    case SOX_ENCODINGS:
+    case SOX_ENCODING_LOSSLESS:
+    case SOX_ENCODING_UNKNOWN:    break;
+  }
+  return 0;
+}
+
+int sox_check_read_params(sox_format_t * ft, unsigned channels,
+    sox_rate_t rate, sox_encoding_t encoding, unsigned bits_per_sample, off_t length)
+{
+  ft->length = length;
+
+  if (ft->seekable)
+    ft->data_start = sox_tell(ft);
+
+  if (channels && ft->signal.channels && ft->signal.channels != channels)
+    sox_warn("'%s': overriding number of channels", ft->filename);
+  else ft->signal.channels = channels;
+
+  if (rate && ft->signal.rate && ft->signal.rate != rate)
+    sox_warn("'%s': overriding sample rate", ft->filename);
+  else ft->signal.rate = rate;
+
+  if (encoding && ft->encoding.encoding && ft->encoding.encoding != encoding)
+    sox_warn("'%s': overriding encoding type", ft->filename);
+  else ft->encoding.encoding = encoding;
+
+  if (bits_per_sample && ft->encoding.bits_per_sample && ft->encoding.bits_per_sample != bits_per_sample)
+    sox_warn("'%s': overriding encoding size", ft->filename);
+  ft->encoding.bits_per_sample = bits_per_sample;
+
+  if (!ft->length && ft->encoding.bits_per_sample && sox_filelength(ft))
+    ft->length = div_bits(sox_filelength(ft) - ft->data_start, ft->encoding.bits_per_sample);
+
+  if ( sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample))
+    return SOX_SUCCESS;
+  sox_fail_errno(ft, EINVAL, "invalid format for this file type");
+  return SOX_EOF;
+}
+
+sox_sample_t sox_sample_max(sox_encodinginfo_t const * encoding)
+{
+  unsigned precision = encoding->encoding == SOX_ENCODING_FLOAT?
+    SOX_SAMPLE_PRECISION : sox_precision(encoding->encoding, encoding->bits_per_sample);
+  unsigned shift = SOX_SAMPLE_PRECISION - min(precision, SOX_SAMPLE_PRECISION);
+  return (SOX_SAMPLE_MAX >> shift) << shift;
+}
 
 const char sox_readerr[] = "Premature EOF while reading sample file.";
 const char sox_writerr[] = "Error writing sample file.  You are probably out of disk space.";
@@ -154,10 +217,9 @@ size_t sox_writebuf(sox_format_t * ft, void const *buf, sox_size_t len)
 sox_size_t sox_filelength(sox_format_t * ft)
 {
   struct stat st;
+  int ret = fstat(fileno(ft->fp), &st);
 
-  fstat(fileno(ft->fp), &st);
-
-  return (sox_size_t)st.st_size;
+  return ret? 0 : (sox_size_t)st.st_size;
 }
 
 int sox_flush(sox_format_t * ft)
@@ -500,6 +562,14 @@ int sox_seeki(sox_format_t * ft, sox_ssize_t offset, int whence)
             ft->sox_errno = SOX_SUCCESS;
     }
     return ft->sox_errno;
+}
+
+int sox_offset_seek(sox_format_t * ft, off_t byte_offset, sox_size_t to_sample)
+{
+  double wide_sample = to_sample - (to_sample % ft->signal.channels);
+  double to_d = wide_sample * ft->encoding.bits_per_sample / 8;
+  off_t to = to_d;
+  return (to != to_d)? SOX_EOF : sox_seeki(ft, byte_offset + to, SEEK_SET);
 }
 
 enum_item const * find_enum_text(char const * text, enum_item const * enum_items)

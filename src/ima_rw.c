@@ -19,12 +19,13 @@
 
 */
 
+#include "sox_i.h"
+#include "ima_rw.h"
+
 #include <sys/types.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "sox_i.h"
-#include "ima_rw.h"
 /*
  *
  * Lookup tables for IMA ADPCM format

@@ -1,5 +1,5 @@
 /*
- * SOX file format handler for Dialogic/Oki ADPCM VOX files.
+ * SoX file format handler for Dialogic/Oki ADPCM VOX files.
  *
  * Copyright 1991-2007 Tony Seebregts And Sundry Contributors
  *

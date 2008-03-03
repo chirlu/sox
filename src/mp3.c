@@ -158,7 +158,7 @@ static int sox_mp3_inputtag(sox_format_t * ft)
     return rc;
 }
 
-static int sox_mp3startread(sox_format_t * ft) 
+static int startread(sox_format_t * ft) 
 {
     struct mp3priv *p = (struct mp3priv *) ft->priv;
     size_t ReadSize;
@@ -183,8 +183,7 @@ static int sox_mp3startread(sox_format_t * ft)
     mad_synth_init(p->Synth);
     mad_timer_reset(p->Timer);
 
-    ft->signal.encoding = SOX_ENCODING_MP3;
-    ft->signal.size = SOX_SIZE_16BIT;
+    ft->encoding.encoding = SOX_ENCODING_MP3;
 
     /* Decode at least one valid frame to find out the input
      * format.  The decoded frame will be saved off so that it
@@ -330,7 +329,7 @@ static sox_size_t sox_mp3read(sox_format_t * ft, sox_sample_t *buf, sox_size_t l
     return done;
 }
 
-static int sox_mp3stopread(sox_format_t * ft)
+static int stopread(sox_format_t * ft)
 {
   struct mp3priv *p=(struct mp3priv*) ft->priv;
 
@@ -347,13 +346,13 @@ static int sox_mp3stopread(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 #else /*HAVE_MAD_H*/
-static int sox_mp3startread(sox_format_t * ft)
+static int startread(sox_format_t * ft)
 {
   sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 decoding support");
   return SOX_EOF;
 }
 #define sox_mp3read NULL
-#define sox_mp3stopread NULL
+#define stopread NULL
 #endif /*HAVE_MAD_H*/
 
 #ifdef HAVE_LAME_LAME_H
@@ -362,14 +361,14 @@ static void null_error_func(const char* string UNUSED, va_list va UNUSED)
   return;
 }
 
-static int sox_mp3startwrite(sox_format_t * ft)
+static int startwrite(sox_format_t * ft)
 {
   struct mp3priv *p = (struct mp3priv *) ft->priv;
   
-  if (ft->signal.encoding != SOX_ENCODING_MP3) {
-    if(ft->signal.encoding != SOX_ENCODING_UNKNOWN)
+  if (ft->encoding.encoding != SOX_ENCODING_MP3) {
+    if(ft->encoding.encoding != SOX_ENCODING_UNKNOWN)
       sox_report("Encoding forced to MP3");
-    ft->signal.encoding = SOX_ENCODING_MP3;
+    ft->encoding.encoding = SOX_ENCODING_MP3;
   }
 
   p->gfp = lame_init();
@@ -397,7 +396,7 @@ static int sox_mp3startwrite(sox_format_t * ft)
   /* FIXME: Someone who knows about lame could implement adjustable compression
      here.  E.g. by using the -C value as an index into a table of params or
      as a compressed bit-rate. */
-  if (ft->signal.compression != HUGE_VAL)
+  if (ft->encoding.compression != HUGE_VAL)
       sox_warn("-C option not supported for mp3; using default compression rate");
   if (lame_init_params(p->gfp) < 0){
         sox_fail_errno(ft,SOX_EOF,"LAME initialization failed");
@@ -501,14 +500,14 @@ end3:
     return done;
 }
 
-static int sox_mp3stopwrite(sox_format_t * ft)
+static int stopwrite(sox_format_t * ft)
 {
   struct mp3priv *p = (struct mp3priv *) ft->priv;
   char mp3buffer[7200];
   int written;
   size_t written2;
   
-  if ( (written=lame_encode_flush(p->gfp, (unsigned char *)mp3buffer, 7200)) <0){
+  if ((written=lame_encode_flush(p->gfp, (unsigned char *)mp3buffer, 7200)) <0){
     sox_fail_errno(ft,SOX_EOF,"Encoding failed");
   }
   else if (sox_writebuf(ft, mp3buffer, written2 = written) < written2){
@@ -520,37 +519,25 @@ static int sox_mp3stopwrite(sox_format_t * ft)
 }
 
 #else /* HAVE_LAME_LAME_H */
-static int sox_mp3startwrite(sox_format_t * ft UNUSED)
+static int startwrite(sox_format_t * ft UNUSED)
 {
   sox_fail_errno(ft,SOX_EOF,"SoX was compiled without MP3 encoding support");
   return SOX_EOF;
 }
 #define sox_mp3write NULL
-#define sox_mp3stopwrite NULL
+#define stopwrite NULL
 #endif /* HAVE_LAME_LAME_H */
 
-/* MP3 */
-static const char *mp3names[] = {
-  "mp3",
-  "mp2",
-  NULL,
-};
-
-static sox_format_handler_t sox_mp3_format = {
-  mp3names,
-  0,
-  sox_mp3startread,
-  sox_mp3read,
-  sox_mp3stopread,
-  sox_mp3startwrite,
-  sox_mp3write,
-  sox_mp3stopwrite,
-  NULL
-};
-
-const sox_format_handler_t *sox_mp3_format_fn(void);
-
-const sox_format_handler_t *sox_mp3_format_fn(void)
+SOX_FORMAT_HANDLER(mp3)
 {
-    return &sox_mp3_format;
+  static char const * const names[] = {"mp3", "mp2", NULL};
+  static unsigned const write_encodings[] = {
+    SOX_ENCODING_GSM, 0, 0};
+  static sox_format_handler_t const handler = {
+    names, 0,
+    startread, sox_mp3read, stopread,
+    startwrite, sox_mp3write, stopwrite,
+    NULL, write_encodings, NULL
+  };
+  return &handler;
 }

@@ -43,7 +43,8 @@ pkglib_LTLIBRARIES = libsox_fmt_auto.la libsox_fmt_raw.la libsox_fmt_s1.la \
 	  libsox_fmt_sf.la libsox_fmt_smp.la libsox_fmt_sndrtool.la	\
 	  libsox_fmt_sphere.la libsox_fmt_txw.la libsox_fmt_voc.la	\
 	  libsox_fmt_vox.la libsox_fmt_ima.la libsox_fmt_wav.la		\
-	  libsox_fmt_wve.la libsox_fmt_xa.la libsox_fmt_nul.la
+	  libsox_fmt_wve.la libsox_fmt_xa.la libsox_fmt_nul.la \
+	  libsox_fmt_htk.la
 
 # File format detection
 libsox_fmt_auto_la_SOURCES = auto.c
@@ -98,6 +99,8 @@ libsox_fmt_gsm_la_SOURCES = gsm.c
 libsox_fmt_gsm_la_LIBADD = libsox.la @GSM_LIBS@ @LIBGSM_LIBADD@
 libsox_fmt_hcom_la_SOURCES = hcom.c
 libsox_fmt_hcom_la_LIBADD = libsox.la
+libsox_fmt_htk_la_SOURCES = htk.c
+libsox_fmt_htk_la_LIBADD = libsox.la
 libsox_fmt_lpc10_la_SOURCES = lpc10.c
 libsox_fmt_lpc10_la_LIBADD = ../lpc10/liblpc10.la libsox.la
 libsox_fmt_maud_la_SOURCES = maud.c
@@ -219,7 +222,7 @@ else
   libsox_la_SOURCES += auto.c raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
     s4-fmt.c u1-fmt.c u2-fmt.c u3-fmt.c u4-fmt.c al-fmt.c la-fmt.c ul-fmt.c \
     lu-fmt.c 8svx.c aiff-fmt.c aifc-fmt.c au.c avr.c cdr.c cvsd-fmt.c \
-    dvms-fmt.c dat.c gsm.c hcom.c lpc10.c maud.c prc.c sf.c sfircam.h smp.c \
+    dvms-fmt.c dat.c gsm.c hcom.c htk.c lpc10.c maud.c prc.c sf.c sfircam.h smp.c \
     sndrtool.c sphere.c tx16w.c voc.c vox-fmt.c ima-fmt.c adpcm.c adpcm.h \
     ima_rw.c ima_rw.h wav.c wav.h wve.c xa.c nulfile.c
 libsox_la_LIBADD = @GSM_LIBS@ @LIBGSM_LIBADD@

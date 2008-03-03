@@ -2,7 +2,7 @@
  * libSoX Macintosh HCOM format.
  * These are really FSSD type files with Huffman compression,
  * in MacBinary format.
- * To do: make the MacBinary format optional (so that .data files
+ * TODO: make the MacBinary format optional (so that .data files
  * are also acceptable).  (How to do this on output?)
  *
  * September 25, 1991
@@ -54,7 +54,7 @@ struct readpriv {
         int32_t curword;
 };
 
-static int sox_hcomstartread(sox_format_t * ft)
+static int startread(sox_format_t * ft)
 {
         struct readpriv *p = (struct readpriv *) ft->priv;
         int i;
@@ -116,8 +116,8 @@ static int sox_hcomstartread(sox_format_t * ft)
         sox_readw(ft, &dictsize);
 
         /* Translate to sox parameters */
-        ft->signal.encoding = SOX_ENCODING_UNSIGNED;
-        ft->signal.size = SOX_SIZE_BYTE;
+        ft->encoding.encoding = SOX_ENCODING_HCOM;
+        ft->encoding.bits_per_sample = 8;
         ft->signal.rate = 22050 / divisor;
         ft->signal.channels = 1;
 
@@ -149,7 +149,7 @@ static int sox_hcomstartread(sox_format_t * ft)
         return (SOX_SUCCESS);
 }
 
-static sox_size_t sox_hcomread(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
         register struct readpriv *p = (struct readpriv *) ft->priv;
         int done = 0;
@@ -213,7 +213,7 @@ static sox_size_t sox_hcomread(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
         return done;
 }
 
-static int sox_hcomstopread(sox_format_t * ft)
+static int stopread(sox_format_t * ft)
 {
         register struct readpriv *p = (struct readpriv *) ft->priv;
 
@@ -240,31 +240,17 @@ struct writepriv {
 
 #define BUFINCR (10*BUFSIZ)
 
-static int sox_hcomstartwrite(sox_format_t * ft)
+static int startwrite(sox_format_t * ft)
 {
-        register struct writepriv *p = (struct writepriv *) ft->priv;
+  struct writepriv * p = (struct writepriv *) ft->priv;
 
-        switch ((int)ft->signal.rate) {
-        case 22050:
-        case 22050/2:
-        case 22050/3:
-        case 22050/4:
-                break;
-        default:
-                sox_fail_errno(ft,SOX_EFMT,"unacceptable output rate for HCOM: try 5512, 7350, 11025 or 22050 hertz");
-                return (SOX_EOF);
-        }
-        ft->signal.size = SOX_SIZE_BYTE;
-        ft->signal.encoding = SOX_ENCODING_UNSIGNED;
-        ft->signal.channels = 1;
-
-        p->size = BUFINCR;
-        p->pos = 0;
-        p->data = (unsigned char *) xmalloc(p->size);
-        return (SOX_SUCCESS);
+  p->size = BUFINCR;
+  p->pos = 0;
+  p->data = xmalloc(p->size);
+  return SOX_SUCCESS;
 }
 
-static sox_size_t sox_hcomwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
   struct writepriv *p = (struct writepriv *) ft->priv;
   sox_sample_t datum;
@@ -321,10 +307,10 @@ static void putcode(sox_format_t * ft, long codes[256], long codesize[256], unsi
   }
 }
 
-static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl, sox_rate_t fr)
+static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl)
 {
   struct readpriv *p = (struct readpriv *) ft->priv;
-  int32_t samplerate;
+  int samplerate;
   unsigned char *datafork = *df;
   unsigned char *ddf, *dfp;
   short dictsize;
@@ -416,7 +402,7 @@ static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl, sox_rat
   put32_be(&dfp, *dl);
   put32_be(&dfp, p->new_checksum);
   put32_be(&dfp, 1);
-  samplerate = 22050 / fr;
+  samplerate = 22050 / ft->signal.rate + .5;
   put32_be(&dfp, samplerate);
   put16_be(&dfp, dictsize);
   *df = datafork;               /* reassign passed pointer to new datafork */
@@ -425,7 +411,7 @@ static void compress(sox_format_t * ft, unsigned char **df, int32_t *dl, sox_rat
 
 /* End of hcom utility routines */
 
-static int sox_hcomstopwrite(sox_format_t * ft)
+static int stopwrite(sox_format_t * ft)
 {
   struct writepriv *p = (struct writepriv *) ft->priv;
   unsigned char *compressed_data = p->data;
@@ -434,7 +420,7 @@ static int sox_hcomstopwrite(sox_format_t * ft)
 
   /* Compress it all at once */
   if (compressed_len)
-    compress(ft, &compressed_data, (int32_t *)&compressed_len, ft->signal.rate);
+    compress(ft, &compressed_data, (int32_t *)&compressed_len);
   free((char *)p->data);
 
   /* Write the header */
@@ -462,27 +448,17 @@ static int sox_hcomstopwrite(sox_format_t * ft)
   return rc;
 }
 
-/* Mac FSSD/HCOM */
-static const char *hcomnames[] = {
-  "hcom",
-  NULL
-};
-
-static sox_format_handler_t sox_hcom_format = {
-  hcomnames,
-  SOX_FILE_BIG_END,
-  sox_hcomstartread,
-  sox_hcomread,
-  sox_hcomstopread,
-  sox_hcomstartwrite,
-  sox_hcomwrite,
-  sox_hcomstopwrite,
-  NULL
-};
-
-const sox_format_handler_t *sox_hcom_format_fn(void);
-
-const sox_format_handler_t *sox_hcom_format_fn(void)
+SOX_FORMAT_HANDLER(hcom)
 {
-    return &sox_hcom_format;
+  static char const * const names[]       = {"hcom", NULL};
+  static sox_rate_t   const write_rates[] = {22050,22050/2,22050/3,22050/4, 0};
+  static unsigned     const write_encodings[] = {
+    SOX_ENCODING_HCOM, 8, 0, 0};
+  static sox_format_handler_t handler   = {
+    names, SOX_FILE_BIG_END|SOX_FILE_MONO,
+    startread, read_samples, stopread,
+    startwrite, write_samples, stopwrite,
+    NULL, write_encodings, write_rates
+  };
+  return &handler;
 }

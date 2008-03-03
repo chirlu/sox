@@ -1,32 +1,33 @@
 /*
- * SOX file format handler for Dialogic/Oki ADPCM VOX files.
+ * File format: raw IMA ADPCM           (c) 2007-8 SoX contributors
  *
- * Copyright 1991-2007 Tony Seebregts And Sundry Contributors
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
  *
- * This source code is freely redistributable and may be used for any
- * purpose.  This copyright notice must be maintained.
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
  *
- * Tony Seebregts And Sundry Contributors are not responsible for the
- * consequences of using this software.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, write to the Free Software Foundation,
+ * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
  */
 
 #include "sox_i.h"
 #include "vox.h"
 
-const sox_format_handler_t *sox_ima_format_fn(void);
-
-const sox_format_handler_t *sox_ima_format_fn(void)
+SOX_FORMAT_HANDLER(ima)
 {
-  static char const * names[] = {"ima", NULL};
+  static char const * const names[] = {"ima", NULL};
+  static unsigned const write_encodings[] = {SOX_ENCODING_IMA_ADPCM, 4, 0, 0};
   static sox_format_handler_t handler = {
-    names, 0,
-    sox_ima_start,
-    sox_vox_read,
-    sox_vox_stopread,
-    sox_ima_start,
-    sox_vox_write,
-    sox_vox_stopwrite,
-    NULL
+    names, SOX_FILE_MONO,
+    sox_ima_start, sox_vox_read, sox_vox_stopread,
+    sox_ima_start, sox_vox_write, sox_vox_stopwrite,
+    sox_rawseek, write_encodings, NULL
   };
   return &handler;
 }

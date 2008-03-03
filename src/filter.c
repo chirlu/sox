@@ -21,11 +21,11 @@
  *
  */
 
+#include "sox_i.h"
+
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "sox_i.h"
 
 #define ISCALE 0x10000
 #define BUFFSIZE 8192
@@ -100,7 +100,7 @@ static int sox_filter_start(sox_effect_t * effp)
         long Xh0, Xh1, Xh;
         int i;
 
-        f->rate = effp->ininfo.rate;
+        f->rate = effp->in_signal.rate;
 
         /* adjust upper frequency to Nyquist if necessary */
         if (f->freq1 > (sox_sample_t)f->rate/2 || f->freq1 <= 0)

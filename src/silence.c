@@ -13,10 +13,10 @@
  * Thesholds can be given as either a percentage or in decibels.
  */
 
+#include "sox_i.h"
 
 #include <string.h>
 #include <math.h>
-#include "sox_i.h"
 
 /* Private data for silence effect. */
 
@@ -228,8 +228,8 @@ static int sox_silence_start(sox_effect_t * effp)
          * better or else RMS will look like non-silence at
          * aburpt changes from load to silence.
          */
-        silence->window_size = (effp->ininfo.rate / 50) * 
-                               effp->ininfo.channels;
+        silence->window_size = (effp->in_signal.rate / 50) * 
+                               effp->in_signal.channels;
         silence->window = (double *)xmalloc(silence->window_size *
                                            sizeof(double));
 
@@ -238,13 +238,13 @@ static int sox_silence_start(sox_effect_t * effp)
         /* Now that we know sample rate, reparse duration. */
         if (silence->start)
         {
-            if (sox_parsesamples(effp->ininfo.rate, silence->start_duration_str,
+            if (sox_parsesamples(effp->in_signal.rate, silence->start_duration_str,
                                 &silence->start_duration, 's') == NULL)
               return sox_usage(effp);
         }
         if (silence->stop)
         {
-            if (sox_parsesamples(effp->ininfo.rate,silence->stop_duration_str,
+            if (sox_parsesamples(effp->in_signal.rate,silence->stop_duration_str,
                                 &silence->stop_duration,'s') == NULL)
               return sox_usage(effp);
         }
@@ -275,21 +275,21 @@ static int aboveThreshold(sox_effect_t * effp, sox_sample_t value, double thresh
 
     /* When scaling low bit data, noise values got scaled way up */
     /* Only consider the original bits when looking for silence */
-    switch(effp->ininfo.size)
+    switch(effp->in_signal.precision)
     {
-        case SOX_SIZE_BYTE:
+        case 8:
             value = SOX_SAMPLE_TO_SIGNED_8BIT(value, dummy_clipped_count);
             ratio = (double)abs(value) / (double)SOX_INT8_MAX;
             break;
-        case SOX_SIZE_16BIT:
+        case 16:
             value = SOX_SAMPLE_TO_SIGNED_16BIT(value, dummy_clipped_count);
             ratio = (double)abs(value) / (double)SOX_INT16_MAX;
             break;
-        case SOX_SIZE_24BIT:
+        case 24:
             value = SOX_SAMPLE_TO_SIGNED_24BIT(value, dummy_clipped_count);
             ratio = (double)abs(value) / (double)SOX_INT24_MAX;
             break;
-        case SOX_SIZE_32BIT:
+        case 32:
             value = SOX_SAMPLE_TO_SIGNED_32BIT(value,);
             ratio = (double)labs(value) / (double)SOX_INT32_MAX;
             break;
@@ -359,11 +359,11 @@ static int sox_silence_flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_s
 silence_trim:
             nrOfTicks = min((*isamp-nrOfInSamplesRead), 
                             (*osamp-nrOfOutSamplesWritten)) / 
-                           effp->ininfo.channels;
+                           effp->in_signal.channels;
             for(i = 0; i < nrOfTicks; i++)
             {
                 threshold = 0;
-                for (j = 0; j < effp->ininfo.channels; j++)
+                for (j = 0; j < effp->in_signal.channels; j++)
                 {
                     threshold |= aboveThreshold(effp,
                                                 compute_rms(effp, ibuf[j]),
@@ -374,7 +374,7 @@ silence_trim:
                 if (threshold)
                 {
                     /* Add to holdoff buffer */
-                    for (j = 0; j < effp->ininfo.channels; j++)
+                    for (j = 0; j < effp->in_signal.channels; j++)
                     {
                         update_rms(effp, *ibuf);
                         silence->start_holdoff[
@@ -401,12 +401,12 @@ silence_trim:
                 else /* !above Threshold */
                 {
                     silence->start_holdoff_end = 0;
-                    for (j = 0; j < effp->ininfo.channels; j++)
+                    for (j = 0; j < effp->in_signal.channels; j++)
                     {
                         update_rms(effp, ibuf[j]);
                     }
-                    ibuf += effp->ininfo.channels; 
-                    nrOfInSamplesRead += effp->ininfo.channels;
+                    ibuf += effp->in_signal.channels; 
+                    nrOfInSamplesRead += effp->in_signal.channels;
                 }
             } /* for nrOfTicks */
             break;
@@ -474,14 +474,14 @@ silence_trim_flush:
 silence_copy:
             nrOfTicks = min((*isamp-nrOfInSamplesRead), 
                             (*osamp-nrOfOutSamplesWritten)) / 
-                           effp->ininfo.channels;
+                           effp->in_signal.channels;
             if (silence->stop)
             {
                 /* Case A */
                 for(i = 0; i < nrOfTicks; i++)
                 {
                     threshold = 1;
-                    for (j = 0; j < effp->ininfo.channels; j++)
+                    for (j = 0; j < effp->in_signal.channels; j++)
                     {
                         threshold &= aboveThreshold(effp, 
                                                     compute_rms(effp, ibuf[j]),
@@ -510,7 +510,7 @@ silence_copy:
                     else if (threshold)
                     {
                         /* Not holding off so copy into output buffer */
-                        for (j = 0; j < effp->ininfo.channels; j++)
+                        for (j = 0; j < effp->in_signal.channels; j++)
                         {
                             update_rms(effp, *ibuf);
                             *obuf++ = *ibuf++;
@@ -522,7 +522,7 @@ silence_copy:
                     else if (!threshold)
                     {
                         /* Add to holdoff buffer */
-                        for (j = 0; j < effp->ininfo.channels; j++)
+                        for (j = 0; j < effp->in_signal.channels; j++)
                         {
                             update_rms(effp, *ibuf);
                             if (silence->leave_silence) {
@@ -584,9 +584,9 @@ silence_copy:
             {
                 /* Case B */
                 memcpy(obuf, ibuf, sizeof(sox_sample_t)*nrOfTicks*
-                                   effp->ininfo.channels);
-                nrOfInSamplesRead += (nrOfTicks*effp->ininfo.channels);
-                nrOfOutSamplesWritten += (nrOfTicks*effp->ininfo.channels);
+                                   effp->in_signal.channels);
+                nrOfInSamplesRead += (nrOfTicks*effp->in_signal.channels);
+                nrOfOutSamplesWritten += (nrOfTicks*effp->in_signal.channels);
             }
             break;
 

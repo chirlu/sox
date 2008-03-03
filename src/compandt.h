@@ -16,7 +16,6 @@
  * Compander Transfer Function: (c) 2007 robs@users.sourceforge.net
  */
 
-#include "sox_i.h"
 #include <math.h>
 
 typedef struct {

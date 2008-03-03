@@ -22,39 +22,12 @@
 
 int sox_rawseek(sox_format_t * ft, sox_size_t offset)
 {
-    sox_size_t new_offset, channel_block, alignment;
-
-    switch(ft->signal.size) {
-        case SOX_SIZE_BYTE:
-        case SOX_SIZE_16BIT:
-        case SOX_SIZE_24BIT:
-        case SOX_SIZE_32BIT:
-        case SOX_SIZE_64BIT:
-            break;
-        default:
-            sox_fail_errno(ft,SOX_ENOTSUP,"Can't seek this data size");
-            return ft->sox_errno;
-    }
-
-    new_offset = offset * ft->signal.size;
-    /* Make sure request aligns to a channel block (ie left+right) */
-    channel_block = ft->signal.channels * ft->signal.size;
-    alignment = new_offset % channel_block;
-    /* Most common mistaken is to compute something like
-     * "skip everthing upto and including this sample" so
-     * advance to next sample block in this case.
-     */
-    if (alignment != 0)
-        new_offset += (channel_block - alignment);
-
-    ft->sox_errno = sox_seeki(ft, (sox_ssize_t)new_offset, SEEK_SET);
-
-    return ft->sox_errno;
+  return sox_offset_seek(ft, ft->data_start, offset);
 }
 
 /* Works nicely for starting read and write; sox_rawstart{read,write}
    are #defined in sox_i.h */
-int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_encoding_t encoding, unsigned size)
+int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_channels, sox_bool default_length, sox_encoding_t encoding, unsigned size)
 {
   if (default_rate && ft->signal.rate == 0) {
     sox_warn("'%s': sample rate not specified; trying 8kHz", ft->filename);
@@ -68,17 +41,20 @@ int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_chan
 
   if (encoding != SOX_ENCODING_UNKNOWN) {
     if (ft->mode == 'r' &&
-        ft->signal.encoding != SOX_ENCODING_UNKNOWN &&
-        ft->signal.encoding != encoding)
+        ft->encoding.encoding != SOX_ENCODING_UNKNOWN &&
+        ft->encoding.encoding != encoding)
       sox_report("'%s': Format options overriding file-type encoding", ft->filename);
-    else ft->signal.encoding = encoding;
+    else ft->encoding.encoding = encoding;
   }
 
   if (size != 0) {
-    if (ft->mode == 'r' && ft->signal.size != 0 && ft->signal.size != size)
+    if (ft->mode == 'r' && ft->encoding.bits_per_sample != 0 && ft->encoding.bits_per_sample != size)
       sox_report("'%s': Format options overriding file-type sample-size", ft->filename);
-    else ft->signal.size = size;
+    else ft->encoding.bits_per_sample = size;
   }
+
+  if (ft->mode == 'r' && default_length && ft->encoding.bits_per_sample)
+    ft->length = div_bits(sox_filelength(ft), ft->encoding.bits_per_sample);
 
   return SOX_SUCCESS;
 }
@@ -141,9 +117,9 @@ typedef sox_size_t (ft_io_fun)(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
 
 static ft_io_fun *check_format(sox_format_t * ft, sox_bool write)
 {
-    switch (ft->signal.size) {
-    case SOX_SIZE_BYTE:
-      switch (ft->signal.encoding) {
+    switch (ft->encoding.bits_per_sample) {
+    case 8:
+      switch (ft->encoding.encoding) {
       case SOX_ENCODING_SIGN2:
         return write ? sox_write_sb_samples : sox_read_sb_samples;
       case SOX_ENCODING_UNSIGNED:
@@ -157,8 +133,8 @@ static ft_io_fun *check_format(sox_format_t * ft, sox_bool write)
       }
       break;
       
-    case SOX_SIZE_16BIT: 
-      switch (ft->signal.encoding) {
+    case 16: 
+      switch (ft->encoding.encoding) {
       case SOX_ENCODING_SIGN2:
         return write ? sox_write_sw_samples : sox_read_sw_samples;
       case SOX_ENCODING_UNSIGNED:
@@ -168,8 +144,8 @@ static ft_io_fun *check_format(sox_format_t * ft, sox_bool write)
       }
       break;
 
-    case SOX_SIZE_24BIT:
-      switch (ft->signal.encoding) {
+    case 24:
+      switch (ft->encoding.encoding) {
       case SOX_ENCODING_SIGN2:
         return write ? sox_write_s3_samples : sox_read_s3_samples;
       case SOX_ENCODING_UNSIGNED:
@@ -179,8 +155,8 @@ static ft_io_fun *check_format(sox_format_t * ft, sox_bool write)
       }
       break;
       
-    case SOX_SIZE_32BIT:
-      switch (ft->signal.encoding) {
+    case 32:
+      switch (ft->encoding.encoding) {
       case SOX_ENCODING_SIGN2:
         return write ? sox_write_sdw_samples : sox_read_sdw_samples;
       case SOX_ENCODING_UNSIGNED:
@@ -192,8 +168,8 @@ static ft_io_fun *check_format(sox_format_t * ft, sox_bool write)
       }
       break;
       
-    case SOX_SIZE_64BIT:
-      switch (ft->signal.encoding) {
+    case 64:
+      switch (ft->encoding.encoding) {
       case SOX_ENCODING_FLOAT:
         return write ? sox_write_sudf_samples : sox_read_sudf_samples;
       default:

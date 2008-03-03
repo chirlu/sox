@@ -179,16 +179,16 @@ static int start_read(sox_format_t * const ft)
     return SOX_EOF;
   }
 
-  ft->signal.encoding = SOX_ENCODING_FLAC;
+  ft->encoding.encoding = SOX_ENCODING_FLAC;
   ft->signal.rate = decoder->sample_rate;
-  ft->signal.size = decoder->bits_per_sample >> 3;
+  ft->encoding.bits_per_sample = decoder->bits_per_sample;
   ft->signal.channels = decoder->channels;
   ft->length = decoder->total_samples * decoder->channels;
   return SOX_SUCCESS;
 }
 
 
-static sox_size_t read(sox_format_t * const ft, sox_sample_t * sampleBuffer, sox_size_t const requested)
+static sox_size_t read_samples(sox_format_t * const ft, sox_sample_t * sampleBuffer, sox_size_t const requested)
 {
   Decoder * decoder = (Decoder *) ft->priv;
   size_t actual = 0;
@@ -305,9 +305,9 @@ static int start_write(sox_format_t * const ft)
   FLAC__StreamEncoderState status;
   unsigned compression_level = MAX_COMPRESSION; /* Default to "best" */
 
-  if (ft->signal.compression != HUGE_VAL) {
-    compression_level = ft->signal.compression;
-    if (compression_level != ft->signal.compression || 
+  if (ft->encoding.compression != HUGE_VAL) {
+    compression_level = ft->encoding.compression;
+    if (compression_level != ft->encoding.compression || 
         compression_level > MAX_COMPRESSION) {
       sox_fail_errno(ft, SOX_EINVAL,
                  "FLAC compression level must be a whole number from 0 to %i",
@@ -324,12 +324,7 @@ static int start_write(sox_format_t * const ft)
   }
   encoder->decoded_samples = xmalloc(sox_globals.bufsiz * sizeof(FLAC__int32));
 
-  /* FIXME: FLAC should not need to know about this oddity */
-  if (ft->signal.encoding < SOX_ENCODING_SIZE_IS_WORD)
-    ft->signal.size = SOX_SIZE_16BIT;
-  ft->signal.encoding = SOX_ENCODING_FLAC;
-
-  encoder->bits_per_sample = (ft->signal.size > 4 ? 4 : ft->signal.size) << 3;
+  encoder->bits_per_sample = ft->encoding.bits_per_sample;
 
   sox_report("encoding at %i bits per sample", encoder->bits_per_sample);
 
@@ -455,7 +450,7 @@ static int start_write(sox_format_t * const ft)
 
 
 
-static sox_size_t write(sox_format_t * const ft, sox_sample_t const * const sampleBuffer, sox_size_t const len)
+static sox_size_t write_samples(sox_format_t * const ft, sox_sample_t const * const sampleBuffer, sox_size_t const len)
 {
   Encoder * encoder = (Encoder *) ft->priv;
   unsigned i;
@@ -519,16 +514,15 @@ static int seek(sox_format_t * ft, sox_size_t offset)
 }
 
 
-const sox_format_handler_t *sox_flac_format_fn(void);
-
-const sox_format_handler_t *sox_flac_format_fn(void)
+SOX_FORMAT_HANDLER(flac)
 {
   static char const * const names[] = {"flac", NULL};
-  static sox_format_handler_t handler = {
+  static unsigned const encodings[] = {SOX_ENCODING_FLAC, 8, 16, 24, 0, 0};
+  static sox_format_handler_t const handler = {
     names, 0,
-    start_read, read, stop_read,
-    start_write, write, stop_write,
-    seek
+    start_read, read_samples, stop_read,
+    start_write, write_samples, stop_write,
+    seek, encodings, NULL
   };
   return &handler;
 }

@@ -117,8 +117,7 @@ static int startread(sox_format_t * ft)
 
   /* Record audio info */
   ft->signal.rate = vi->rate;
-  ft->signal.size = SOX_SIZE_16BIT;
-  ft->signal.encoding = SOX_ENCODING_VORBIS;
+  ft->encoding.encoding = SOX_ENCODING_VORBIS;
   ft->signal.channels = vi->channels;
 
   /* ov_pcm_total doesn't work on non-seekable files so
@@ -178,7 +177,7 @@ static int refill_buffer(vorbis_t vb)
  * Return number of samples read.
  */
 
-static sox_size_t read(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
+static sox_size_t read_samples(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
 {
   vorbis_t vb = (vorbis_t) ft->priv;
   sox_size_t i;
@@ -281,8 +280,7 @@ static int startwrite(sox_format_t * ft)
   long rate;
   double quality = 3;           /* Default compression quality gives ~112kbps */
 
-  ft->signal.size = SOX_SIZE_16BIT;
-  ft->signal.encoding = SOX_ENCODING_VORBIS;
+  ft->encoding.encoding = SOX_ENCODING_VORBIS;
 
   /* Allocate memory for all of the structures */
   ve = vb->vorbis_enc_data = (vorbis_enc_t *) xmalloc(sizeof(vorbis_enc_t));
@@ -296,13 +294,13 @@ static int startwrite(sox_format_t * ft)
       "Error setting-up Ogg Vorbis encoder; check sample-rate & # of channels");
 
   /* Use encoding to average bit rate of VBR as specified by the -C option */
-  if (ft->signal.compression != HUGE_VAL) {
-    if (ft->signal.compression < -1 || ft->signal.compression > 10) {
+  if (ft->encoding.compression != HUGE_VAL) {
+    if (ft->encoding.compression < -1 || ft->encoding.compression > 10) {
       sox_fail_errno(ft, SOX_EINVAL,
                      "Vorbis compression quality nust be between -1 and 10");
       return SOX_EOF;
     }
-    quality = ft->signal.compression;
+    quality = ft->encoding.compression;
   }
 #include "vorbis1.h"
 
@@ -320,7 +318,7 @@ static int startwrite(sox_format_t * ft)
   return (SOX_SUCCESS);
 }
 
-static sox_size_t write(sox_format_t * ft, const sox_sample_t * buf,
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t * buf,
                         sox_size_t len)
 {
   vorbis_t vb = (vorbis_t) ft->priv;
@@ -377,7 +375,7 @@ static int stopwrite(sox_format_t * ft)
   vorbis_enc_t *ve = vb->vorbis_enc_data;
 
   /* Close out the remaining data */
-  write(ft, NULL, 0);
+  write_samples(ft, NULL, 0);
 
   ogg_stream_clear(&ve->os);
   vorbis_block_clear(&ve->vb);
@@ -394,16 +392,15 @@ static int seek(sox_format_t * ft, sox_size_t offset)
   return ov_pcm_seek(vb->vf, (ogg_int64_t)(offset / ft->signal.channels))? SOX_EOF:SOX_SUCCESS;
 }
 
-const sox_format_handler_t *sox_vorbis_format_fn(void);
-
-const sox_format_handler_t *sox_vorbis_format_fn(void)
+SOX_FORMAT_HANDLER(vorbis)
 {
   static const char *names[] = {"vorbis", "ogg", NULL};
+  static unsigned encodings[] = {SOX_ENCODING_VORBIS, 0, 0};
   static sox_format_handler_t handler = {
     names, 0,
-    startread, read, stopread,
-    startwrite, write, stopwrite,
-    seek
+    startread, read_samples, stopread,
+    startwrite, write_samples, stopwrite,
+    seek, encodings, NULL
   };
   return &handler;
 }

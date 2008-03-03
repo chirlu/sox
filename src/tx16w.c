@@ -33,11 +33,11 @@
  *
  */
 
-#define TXMAXLEN 0x3FF80
-
+#include "sox_i.h"
 #include <stdio.h>
 #include <string.h>
-#include "sox_i.h"
+
+#define TXMAXLEN 0x3FF80
 
 /* Private data for TX16 file */
 typedef struct txwstuff {
@@ -59,7 +59,7 @@ struct WaveHeader_ {
 static const unsigned char magic1[4] = {0, 0x06, 0x10, 0xF6};
 static const unsigned char magic2[4] = {0, 0x52, 0x00, 0x52};
 
-/* SJB: dangerous static variables */
+/* FIXME SJB: dangerous static variables */
 static sox_size_t tx16w_len=0;
 static sox_size_t writedone=0;
 
@@ -70,7 +70,7 @@ static sox_size_t writedone=0;
  *      size and encoding of samples,
  *      mono/stereo/quad.
  */
-static int sox_txwstartread(sox_format_t * ft)
+static int startread(sox_format_t * ft)
 {
     int c;
     char filetype[7];
@@ -169,8 +169,8 @@ static int sox_txwstartread(sox_format_t * ft)
     sox_debug("Sample rate = %g", ft->signal.rate);
 
     ft->signal.channels = 1 ; /* not sure about stereo sample data yet ??? */
-    ft->signal.size = SOX_SIZE_16BIT; /* this is close enough */
-    ft->signal.encoding = SOX_ENCODING_SIGN2;
+    ft->encoding.bits_per_sample = 16; /* this is close enough */
+    ft->encoding.encoding = SOX_ENCODING_SIGN2;
 
     return(SOX_SUCCESS);
 }
@@ -182,7 +182,7 @@ static int sox_txwstartread(sox_format_t * ft)
  * Return number of samples read.
  */
 
-static sox_size_t sox_txwread(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
+static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t len)
 {
     txw_t sk = (txw_t) ft->priv;
     sox_size_t done = 0;
@@ -232,7 +232,7 @@ static sox_size_t sox_txwread(sox_format_t * ft, sox_sample_t *buf, sox_size_t l
     return done;
 }
 
-static int sox_txwstartwrite(sox_format_t * ft)
+static int startwrite(sox_format_t * ft)
 {
     struct WaveHeader_ WH;
 
@@ -243,10 +243,6 @@ static int sox_txwstartwrite(sox_format_t * ft)
     if (ft->signal.channels != 1)
         sox_report("tx16w is overriding output format to 1 channel.");
     ft->signal.channels = 1 ; /* not sure about stereo sample data yet ??? */
-    if (ft->signal.size != SOX_SIZE_16BIT || ft->signal.encoding != SOX_ENCODING_SIGN2)
-        sox_report("tx16w is overriding output format to size Signed Word format.");
-    ft->signal.size = SOX_SIZE_16BIT; /* this is close enough */
-    ft->signal.encoding = SOX_ENCODING_SIGN2;
 
     /* If you have to seek around the output file */
     if (! ft->seekable)
@@ -263,30 +259,32 @@ static int sox_txwstartwrite(sox_format_t * ft)
     return(SOX_SUCCESS);
 }
 
-static sox_size_t sox_txwwrite(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
-    sox_size_t i;
-    sox_sample_t w1,w2;
+  sox_size_t i;
+  sox_sample_t w1,w2;
 
-    tx16w_len += len;
-    if (tx16w_len > TXMAXLEN) return 0;
-
-    for (i=0;i<len;i+=2) {
-        w1 =  *buf++ >> 20;
-        if (i+1==len)
-            w2 = 0;
-        else {
-            w2 =  *buf++ >> 20;
-        }
-        sox_writesb(ft, (w1 >> 4) & 0xFF);
-        sox_writesb(ft, (((w1 & 0x0F) << 4) | (w2 & 0x0F)) & 0xFF);
-        sox_writesb(ft, (w2 >> 4) & 0xFF);
-        writedone += 3;
-    }
-    return(len);
+  tx16w_len += len;
+  if (tx16w_len > TXMAXLEN) {
+    sox_fail_errno(ft, SOX_EOF, "Audio too long for TX16W file");
+    return 0;
+  }
+  for (i=0;i<len;i+=2) {
+      w1 =  *buf++ >> 20;
+      if (i+1==len)
+          w2 = 0;
+      else {
+          w2 =  *buf++ >> 20;
+      }
+      sox_writesb(ft, (w1 >> 4) & 0xFF);
+      sox_writesb(ft, (((w1 & 0x0F) << 4) | (w2 & 0x0F)) & 0xFF);
+      sox_writesb(ft, (w2 >> 4) & 0xFF);
+      writedone += 3;
+  }
+  return(len);
 }
 
-static int sox_txwstopwrite(sox_format_t * ft)
+static int stopwrite(sox_format_t * ft)
 {
     struct WaveHeader_ WH;
     int AttackLength, LoopLength, i;
@@ -363,27 +361,15 @@ static int sox_txwstopwrite(sox_format_t * ft)
     return(SOX_SUCCESS);
 }
 
-/* Yamaha TX16W and SY99 waves */
-static const char *txwnames[] = {
-  "txw",
-  NULL
-};
-
-static sox_format_handler_t sox_txw_format = {
-   txwnames,
-   0,
-   sox_txwstartread,
-   sox_txwread,
-   NULL,
-   sox_txwstartwrite,
-   sox_txwwrite,
-   sox_txwstopwrite,
-   NULL
-};
-
-const sox_format_handler_t *sox_txw_format_fn(void);
-
-const sox_format_handler_t *sox_txw_format_fn(void)
+SOX_FORMAT_HANDLER(txw)
 {
-    return &sox_txw_format;
+  static char const * const names[] = {"txw", NULL};
+  static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
+  static sox_format_handler_t const handler = {
+    names, 0,
+    startread, read_samples, NULL,
+    startwrite, write_samples, stopwrite,
+    NULL, write_encodings, NULL
+  };
+  return &handler;
 }

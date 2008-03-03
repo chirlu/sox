@@ -167,8 +167,8 @@ static int start(sox_effect_t * effp)
      for (i = 0;  i < 16;  i++)
          pans[i] = ((double*)&mixer->sources[0][0])[i];
 
-     ichan = effp->ininfo.channels;
-     ochan = effp->outinfo.channels;
+     ichan = effp->in_signal.channels;
+     ochan = effp->out_signal.channels;
      if (ochan == -1) {
          sox_fail("Output must have known number of channels");
          return(SOX_EOF);
@@ -485,11 +485,11 @@ static int start(sox_effect_t * effp)
          }
      }
 
-     if (effp->ininfo.channels != effp->outinfo.channels)
+     if (effp->in_signal.channels != effp->out_signal.channels)
        return SOX_SUCCESS;
 
-     for (i = 0; i < (int)effp->ininfo.channels; ++i)
-       for (j = 0; j < (int)effp->outinfo.channels; ++j)
+     for (i = 0; i < (int)effp->in_signal.channels; ++i)
+       for (j = 0; j < (int)effp->out_signal.channels; ++j)
          if (mixer->sources[i][j] != (i == j))
            return SOX_SUCCESS;
 
@@ -509,8 +509,8 @@ static int flow(sox_effect_t * effp, const sox_sample_t *ibuf, sox_sample_t *obu
     int i, j;
     double samp;
 
-    ichan = effp->ininfo.channels;
-    ochan = effp->outinfo.channels;
+    ichan = effp->in_signal.channels;
+    ochan = effp->out_signal.channels;
     len = *isamp / ichan;
     if (len > *osamp / ochan)
         len = *osamp / ochan;
