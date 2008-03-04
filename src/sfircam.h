@@ -80,6 +80,10 @@
  * sf_magic is for backward compatibility; it should be SF_MAGIC as defined
  * above.
  */
+
+/* Define this value to get around by padding issues. */
+#define SF_INFO_LEN 16
+
 struct sfinfo {
     union magic_union {
         struct {

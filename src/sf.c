@@ -197,7 +197,7 @@ static int startwrite(sox_format_t * ft)
         /* between different coverts and not rely on memory contents */
         memset (&sfhead, 0, sizeof(SFHEADER));
         memcpy(&sfhead.sfinfo, &sf->info, sizeof(struct sfinfo));
-        sfcodep = (SFCODE *) (&sfhead.sfinfo + 1);
+        sfcodep = (SFCODE *) (&sfhead.filler[SF_INFO_LEN+1]);
         sfcodep->code = SF_COMMENT;
         sfcodep->bsize = strlen(comment) + sizeof(SFCODE);
         while (sfcodep->bsize % 4)
@@ -209,8 +209,6 @@ static int startwrite(sox_format_t * ft)
         sfcodep->code = SF_END;
         sfcodep->bsize = sizeof(SFCODE);
         sfcharp = (char *) sfcodep + sizeof(SFCODE);
-        while(sfcharp < (char *) &sfhead + SIZEOF_HEADER)
-                *sfcharp++ = '\0';
         sox_writebuf(ft, &sfhead, sizeof(SFHEADER));
 
         return(SOX_SUCCESS);
