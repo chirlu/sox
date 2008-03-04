@@ -30,11 +30,12 @@ File formats:
   o Fix wve seek accuracy.  (robs)
   o Fix lpc10 not working.  (robs)
   o For wav & au, fix [548256] size in header wrong when piping out.  (robs)
-  o Writing aiff, aifc & cvsd now repeatable with -R.  (robs)
+  o Writing aiff, aifc & dvms now repeatable with -R.  (robs)
   o Writing hcom no longer fails with unsupported rate--chooses
     best match.  (robs)
   o Au/snd: added support for 32-bit integer and 64-bit float PCM
     encoding/decoding; display name of unsupported encoding.  (robs)
+  o Can now write .amb (.wav variant) files [FR 1902232].  (robs)
 
 Effects:
 
@@ -54,6 +55,8 @@ Other new features:
     the default replay-gain mode to `album'.  (robs)
   o More intelligent choice of output file format parameters when
     type is different to that of input file.  (robs)
+  o SoX now treats (and displays) encoding size & signal precision
+    separately.  (robs)
 
 Other bug fixes:
 

@@ -40,36 +40,38 @@ File types
 that require an external library, such as ffmpeg or libsndfile, are
 marked e.g. `\fB(ffmpeg)\fR'. File types that can be handled by an
 external library via its pseudo file type (currently libsndfile or
-ffmpeg) are marked e.g. `\fB(also with \-t sndfile)\fR'. This might be
+ffmpeg) are marked e.g. `(also with \fB\-t sndfile\fR)'. This might be
 useful if you have a file that doesn't work with SoX's default format
 readers and writers, and there's an external reader or writer for that
 format.
 .SP
 .TP
-.B .raw (also with \-t sndfile)
-Raw (headerless) audio files.  The sample rate, sample size, and data
-encoding must be given using command-line format options; the number of
-channels defaults to 1.
-.TP
-\&\fB.ub\fR, \fB.sb\fR, \fB.uw\fR, \fB.sw\fR, \fB.ul\fR, \fB.al\fR, \fB.lu\fR, \fB.la\fR, \fB.sl\fR \fB(also with \-t sndfile)\fR
-These filename extensions serve as shorthand for identifying the format
-of headerless audio files.  Thus, \fBub\fR, \fBsb\fR, \fBuw\fR,
-\fBsw\fR, \fBul\fR, \fBal\fR, \fBlu\fR, \fBla\fR and \fBsl\fR indicate a
-file with a single audio channel, sample rate of 8000\ Hz, and samples
-encoded as `unsigned byte', `signed byte', `unsigned word', `signed
-word', `\(*m-law' (byte), `A-law' (byte), inverse bit order `\(*m-law',
-inverse bit order `A-law', or `signed long' respectively.  Command-line
-format options can also be given to modify the selected format if it
-does not provide an exact match for a particular file.
+\&\fB.raw\fR (also with \fB\-t sndfile\fR), \fB.s1\fR, \fB.s2\fR, \fB.s3\fR, \fB.s4\fR, \fB.u1\fR, \fB.u2\fR, \fB.u3\fR, \fB.u4\fR, \fB.ul\fR, \fB.al\fR, \fB.lu\fR, \fB.la\fR
+Raw (headerless) audio files.  For
+.BR raw ,
+the sample rate and the data encoding must be given using command-line
+format options; for all other types, the sample rate defaults to 8kHz (but
+may be overridden), and the data encoding is defined by the given suffix.
+Thus \fBs1\fR, \fBs2\fR, \fBs3\fR, and \fBs4\fR indicate files encoded
+as 1, 2, 3, and 4-byte signed integer PCM respectively; \fBu1\fR,
+\fBu2\fR, \fBu3\fR, and \fBu4\fR indicate files encoded as 1, 2, 3, and
+4-byte unsigned integer PCM respectively; \fBul\fR indicates `\(*m-law'
+(byte), \fBal\fR indicates `A-law' (byte), and \fBlu\fR and \fBla\fR are
+inverse bit order `\(*m-law' and inverse bit order `A-law'i respectively.
+\fBsb\fR, \fBsw\fR, \fBub\fR, \fBuw\fR, and \fBsl\fR are
+aliases for
+\fBs1\fR, \fBs2\fR, \fBu1\fR, \fBu2\fR, and \fBs4\fR respectively.
+For all raw formats, the number of channels defaults to 1 (but
+may be overridden).
 .SP
 Headerless audio files on a SPARC computer are likely to be of format
 \fBul\fR;  on a Mac, they're likely to be \fBub\fR but with a
 sample rate of 11025 or 22050\ Hz.
 .TP
-.B .8svx (also with \-t sndfile)
+\&\fB.8svx\fR (also with \fB\-t sndfile\fR)
 Amiga 8SVX musical instrument description format.
 .TP
-\&\fB.aiff\fR, \fB.aif\fR \fB(also with \-t sndfile)\fR
+\&\fB.aiff\fR, \fB.aif\fR (also with \fB\-t sndfile\fR)
 AIFF files used on Apple IIc/IIgs and SGI.
 Note: the AIFF format supports only one SSND chunk.
 It does not support multiple audio chunks,
@@ -78,7 +80,7 @@ AIFF files are multimedia archives and
 can have multiple audio and picture chunks.
 You may need a separate archiver to work with them.
 .TP
-\&\fB.aiffc\fR, \fB.aifc\fR \fB(also with \-t sndfile)\fR
+\&\fB.aiffc\fR, \fB.aifc\fR (also with \fB\-t sndfile\fR)
 AIFF-C (not compressed, linear), defined in DAVIC 1.4 Part 9 Annex B.
 This format is referred from ARIB STD-B24, which is specified for
 Japanese data broadcasting.  Any private chunks are not supported.
@@ -104,6 +106,14 @@ the highest quality format your ALSA system can handle.  Examples:
 	sox infile -t alsa hw:0
 	sox -t alsa hw:1 outfile
 .EE
+.TP
+.B .amb
+Ambisonic B-Format: a specialisation of
+.B .wav
+with between 3 and 16 channels of audio for use with an Ambisonic decoder.
+See http://www.ambisonia.com/Members/mleese/file-format-for-b-format for
+details.  It is up to the user to get the channels together in the right
+order and at the correct amplitude.
 .TP
 \&\fB.amr\-nb\fR
 Adaptive Multi Rate\*mNarrow Band speech codec; a lossy format used in 3rd
@@ -160,7 +170,7 @@ us.  Normally, you should specify "default" as the filename.  If that
 doesn't give the desired behavior then you can specify the short name
 for a given plugin (such as \fBpulse\fR for pulse audio plugin).
 .TP
-\&\fB.au\fR, \fB.snd\fR \fB(also with \-t sndfile)\fR
+\&\fB.au\fR, \fB.snd\fR (also with \fB\-t sndfile\fR)
 Sun Microsystems AU files.
 There are many types of AU file;
 DEC has invented its own with a different magic number
@@ -184,7 +194,7 @@ Audio Visual Research.
 The AVR format is produced by a number of commercial packages
 on the Mac.
 .TP
-.B .caf (libsndfile)
+\&\fB.caf\fR (libsndfile)
 Core Audio File format.
 .TP
 \&\fB.cdda\fR, \fB.cdr\fR
@@ -220,7 +230,7 @@ Used in Germany to compress speech audio for voice mail.
 A self-describing variant of
 .BR cvsd .
 .TP
-.B .fap (libsndfile)
+\&\fB.fap\fR (libsndfile)
 See
 .BR .paf .
 .TP
@@ -233,7 +243,7 @@ documented here, and also the audio track of many video files
 (including AVI, WMV and MPEG). At present only the first audio track
 of a file can be read.
 .TP
-.B .flac (also with \-t sndfile)
+\&\fB.flac\fR (also with \fB\-t sndfile\fR)
 Free Lossless Audio CODEC compressed audio.
 FLAC is an open, patent-free CODEC designed for compressing
 music.  It is similar to MP3 and Ogg Vorbis, but lossless,
@@ -269,7 +279,7 @@ An alias for the
 .B .ub
 format.
 .TP
-.B .gsm (also with \-t sndfile)
+\&\fB.gsm\fR (also with \fB\-t sndfile\fR)
 GSM 06.10 Lossy Speech Compression.
 A lossy format for compressing speech which is used in the
 Global Standard for Mobile telecommunications (GSM).  It's good
@@ -299,11 +309,11 @@ to deal with an HCOM file on other systems.
 Single channel 16-bit PCM format used by HTK,
 a toolkit for building Hidden Markov Model speech processing tools.
 .TP
-.B .ircam (also with \-t sndfile)
+\&\fB.ircam\fR (also with \fB\-t sndfile\fR)
 Another name for
 .BR .sf .
 .TP
-.B .ima (also with \-t sndfile)
+\&\fB.ima\fR (also with \fB\-t sndfile\fR)
 A headerless file of IMA ADPCM audio data. IMA ADPCM claims 16-bit precision
 packed into only 4 bits, but in fact sounds no better than
 .BR .vox .
@@ -346,7 +356,7 @@ libmad and libmp3lame libraries. To see if there is support for MP3 run
 and look for it under the list of supported file formats as `mp3'.
 .SP
 .TP
-\&\fB.mp4\fR, \fB.m4a\fR \fB(ffmpeg)\fR
+\&\fB.mp4\fR, \fB.m4a\fR (ffmpeg)
 MP4 compressed audio.  MP3 (MPEG 4) is part of the
 MPEG standards for audio and video compression.  See
 .B mp3
@@ -355,7 +365,7 @@ for more information.
 MP4 support in SoX is optional and requires access to the external
 ffmpeg libraries.
 .TP
-.B .nist (also with \-t sndfile)
+\&\fB.nist\fR (also with \fB\-t sndfile\fR)
 See \fB.sph\fR.
 .TP
 \&\fB.ogg\fR, \fB.vorbis\fR
@@ -401,7 +411,7 @@ to use the highest quality format your OSS system can handle. Example:
 	sox infile -t oss -2 -s /dev/dsp
 .EE
 .TP
-\&\fB.paf\fR, \fB.fap\fR \fB(libsndfile)\fR
+\&\fB.paf\fR, \fB.fap\fR (libsndfile)
 Ensoniq PARIS file format (big and little-endian respectively).
 .TP
 .B .pls
@@ -429,21 +439,21 @@ because Psion Record seems to insist on frames of 800 samples or
 fewer, so that the ADPCM CODEC has to be reset at every 800 frames,
 which causes the sound to glitch every tenth of a second.
 .TP
-.B .pvf (libsndfile)
+\&\fB.pvf\fR (libsndfile)
 Portable Voice Format.
 .TP
-.B .sd2 (libsndfile)
+\&\fB.sd2\fR (libsndfile)
 Sound Designer 2 format.
 .TP
-.B .sds (libsndfile)
+\&\fB.sds\fR (libsndfile)
 MIDI Sample Dump Standard.
 .TP
-.B .sf (also with \-t sndfile)
+\&\fB.sf\fR (also with \fB\-t sndfile\fR)
 IRCAM SDIF (Institut de Recherche et Coordination Acoustique/Musique
 Sound Description Interchange Format). Used by academic music software
 such as the CSound package, and the MixView sound sample editor.
 .TP
-\&\fB.sph\fR, \fB.nist\fR \fB(also with \-t sndfile)\fR
+\&\fB.sph\fR, \fB.nist\fR (also with \fB\-t sndfile\fR)
 SPHERE (SPeech HEader Resources) is a file format defined by NIST
 (National Institute of Standards and Technology) and is used with
 speech audio.  SoX can read these files when they contain
@@ -515,7 +525,7 @@ other bytes in the attack/loop length fields, and defaulting to
 See
 .BR .dvms .
 .TP
-.B .voc (also with \-t sndfile)
+\&\fB.voc\fR (also with \fB\-t sndfile\fR)
 Sound Blaster VOC files.
 VOC files are multi-part and contain silence parts, looping, and
 different sample rates for different chunks.
@@ -530,7 +540,7 @@ blocks and supports playing files containing \(*m-law and A-law samples.
 See
 .BR .ogg .
 .TP
-.B .vox (also with \-t sndfile)
+\&\fB.vox\fR (also with \fB\-t sndfile\fR)
 A headerless file of Dialogic/OKI ADPCM audio data commonly comes with the
 extension .vox.  This ADPCM data has 12-bit precision packed into only 4-bits.
 .SP
@@ -543,10 +553,10 @@ passing the decoded audio through a high-pass filter, e.g.:
 	sox input.vox output.au highpass 10
 .EE
 .TP
-.B .w64 (libsndfile)
+\&\fB.w64\fR (libsndfile)
 Sonic Foundry's 64-bit RIFF/WAV format.
 .TP
-.B .wav \fB(also with \-t sndfile)\fR
+\&\fB.wav\fR (also with \fB\-t sndfile\fR)
 Microsoft .WAV RIFF files.
 This is the native audio file format of Windows, and widely used for uncompressed audio.
 .SP
@@ -577,7 +587,7 @@ format can be used to create files with the non-standard header that
 should work with these applications.  (Note that SoX will automatically
 detect and read WAV files with the non-standard header.)
 .TP
-.B .wve \fB(also with \-t sndfile)\fR
+\&\fB.wve\fR (also with \fB\-t sndfile\fR)
 Psion 8-bit A-law.  Used on Psion SIBO PDAs (Series 3 and similar).
 This format is deprecated in SoX, but will continue to be used in
 libsndfile.
@@ -588,7 +598,7 @@ These are 16-bit ADPCM audio files used by Maxis games.  Writing .xa files is
 currently not supported, although adding write support should not be very
 difficult.
 .TP
-.B .xi (libsndfile)
+\&\fB.xi\fR (libsndfile)
 Fasttracker 2 Extended Instrument format.
 .SH SEE ALSO
 .BR sox (1),

@@ -1352,18 +1352,15 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
     sox_writew(ft, wBlockAlign);
     sox_writew(ft, wBitsPerSample); /* end info common to all fmts */
 
-    if (isExtensible)
-    {
-      size_t i;
-      static const unsigned char guid[14] = "\x00\x00\x00\x00\x10\x00\x80\x00\x00\xAA\x00\x38\x9B\x71";
+    if (isExtensible) {
+      static unsigned char const guids[][14] = {
+        "\x00\x00\x00\x00\x10\x00\x80\x00\x00\xAA\x00\x38\x9B\x71",  /* wav */
+        "\x00\x00\x21\x07\xd3\x11\x86\x44\xc8\xc1\xca\x00\x00\x00"}; /* amb */
       sox_writew(ft, 22);
       sox_writew(ft, wBitsPerSample); /* No padding in container */
       sox_writedw(ft, 0);             /* Speaker mapping not specified */
       sox_writew(ft, wFormatTag);
-      for (i = 0; i < array_length(guid); ++i)
-      {
-        sox_writeb(ft, guid[i]);
-      }
+      sox_writebuf(ft, guids[!strcmp(ft->filetype, "amb")], 14);
     }
     else 
     /* if not PCM, we need to write out wExtSize even if wExtSize=0 */
@@ -1614,7 +1611,7 @@ static int seek(sox_format_t * ft, sox_size_t offset)
 
 SOX_FORMAT_HANDLER(wav)
 {
-  static char const * const names[] = {"wav", "wavpcm", NULL};
+  static char const * const names[] = {"wav", "wavpcm", "amb", NULL};
   static unsigned const write_encodings[] = {
     SOX_ENCODING_SIGN2, 16, 24, 32, 0,
     SOX_ENCODING_UNSIGNED, 8, 0,
