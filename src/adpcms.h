@@ -16,18 +16,28 @@
 
 /* ADPCM CODECs: IMA, OKI.   (c) 2007 robs@users.sourceforge.net */
 
-typedef struct adpcm_struct
-{
+typedef struct {
+  int max_step_index;
+  int sign;
+  int shift;
+  int const * steps;
+  int const * changes;
+  int mask;
+} adpcm_setup_t;
+
+typedef struct {
+  adpcm_setup_t setup;
   int last_output;
   int step_index;
-  int max_step_index;
-  int const * steps;
-  int mask;
   int errors;
-} * adpcm_t;
+} adpcm_t;
+
+void adpcm_init(adpcm_t * p, int type, int first_sample);
+int adpcm_decode(int code, adpcm_t * p);
+int adpcm_encode(int sample, adpcm_t * p);
 
 typedef struct adpcm_io {
-  struct adpcm_struct encoder;
+  adpcm_t encoder;
   struct {
     uint8_t byte;               /* write store */
     uint8_t flag;

@@ -188,6 +188,8 @@ typedef enum {
   SOX_ENCODING_ALAW      , /* A-law signed logs: non-US telephony */
   SOX_ENCODING_G721      , /* G.721 4-bit ADPCM */
   SOX_ENCODING_G723      , /* G.723 3 or 5 bit ADPCM */
+  SOX_ENCODING_CL_ADPCM  , /* Creative Labs 8 --> 2,3,4 bit Compressed PCM */
+  SOX_ENCODING_CL_ADPCM16, /* Creative Labs 16 --> 4 bit Compressed PCM */
   SOX_ENCODING_MS_ADPCM  , /* Microsoft Compressed PCM */
   SOX_ENCODING_IMA_ADPCM , /* IMA Compressed PCM */
   SOX_ENCODING_OKI_ADPCM , /* Dialogic/OKI Compressed PCM */

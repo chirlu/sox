@@ -42,6 +42,8 @@ const char * const sox_encodings_str[] = {
   "A-law",
   "G.721 ADPCM",
   "G.723 ADPCM",
+  "CL ADPCM (from 8-bit)",
+  "CL ADPCM (from 16-bit)",
   "MS ADPCM",
   "IMA ADPCM",
   "OKI ADPCM",
@@ -76,6 +78,8 @@ unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample)
     case SOX_ENCODING_ALAW:       return bits_per_sample == 8? 13: 0;
     case SOX_ENCODING_ULAW:       return bits_per_sample == 8? 14: 0;
 
+    case SOX_ENCODING_CL_ADPCM:   return bits_per_sample? 8: 0;
+    case SOX_ENCODING_CL_ADPCM16: return bits_per_sample == 4? 13: 0;
     case SOX_ENCODING_MS_ADPCM:   return bits_per_sample == 4? 14: 0;
     case SOX_ENCODING_IMA_ADPCM:  return bits_per_sample == 4? 13: 0;
     case SOX_ENCODING_OKI_ADPCM:  return bits_per_sample == 4? 12: 0;
