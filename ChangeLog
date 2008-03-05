@@ -36,7 +36,7 @@ File formats:
   o Au/snd: added support for 32-bit integer and 64-bit float PCM
     encoding/decoding; display name of unsupported encoding.  (robs)
   o Can now write .amb (.wav variant) files [FR 1902232].  (robs)
-  o Can now read 2,3,4 bit ADPCM .voc files.  (robs)
+  o Can now read 2,3,4 bit ADPCM .voc files [FR 1714991].  (robs)
 
 Effects:
 
