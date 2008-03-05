@@ -1296,18 +1296,8 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
         dwSamplesWritten = blocksWritten * wSamplesPerBlock;
     } else {    /* fixup with real length */
         dwSamplesWritten = second_header? wav->numSamples : ft->length;
-        switch(wFormatTag)
-        {
-            case WAVE_FORMAT_ADPCM:
-            case WAVE_FORMAT_IMA_ADPCM:
-                dwDataLength = wav->dataLength;
-                break;
-            case WAVE_FORMAT_GSM610:
-                /* intentional case fallthrough! */
-            default:
-                blocksWritten = (dwSamplesWritten+wSamplesPerBlock-1)/wSamplesPerBlock;
-                dwDataLength = blocksWritten * wBlockAlign;
-        }
+        blocksWritten = (dwSamplesWritten+wSamplesPerBlock-1)/wSamplesPerBlock;
+        dwDataLength = blocksWritten * wBlockAlign;
     }
 
     if (wFormatTag == WAVE_FORMAT_GSM610)
