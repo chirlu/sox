@@ -644,36 +644,18 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
 
 static int stopwrite(sox_format_t * ft)
 {
-    alsa_priv_t alsa = (alsa_priv_t)ft->priv;
+  alsa_priv_t alsa = (alsa_priv_t)ft->priv;
 
-    /* Append silence to fill the rest of the period, because alsa provides
-     * whole periods to the hardware */
-    snd_pcm_uframes_t frames_of_silence = alsa->period_size - alsa->frames_this_period;
+  /* Pad to hardware period: */
+  sox_size_t npad = (alsa->period_size - alsa->frames_this_period) * ft->signal.channels;
+  sox_sample_t * buf = xcalloc(npad, sizeof(*buf)); /* silent samples */
+  write_samples(ft, buf, npad);
+  free(buf);
 
-    memset(alsa->buf, 0, frames_of_silence * (ft->encoding.bits_per_sample >> 3) * ft->signal.channels);
-
-    sox_debug("padding output with %u silent samples", (unsigned)frames_of_silence);
-    while (frames_of_silence > 0) {
-      int err;
-      err = snd_pcm_writei(alsa->pcm_handle, 
-                           alsa->buf,
-                           frames_of_silence);
-      if (err < 0) {
-        if (xrun_recovery(alsa->pcm_handle, err) < 0) {
-          sox_fail_errno(ft, SOX_EPERM, "ALSA write error");
-          /* FIXME: return a more suitable error code */
-          return SOX_EOF;
-        }
-      } else
-        frames_of_silence -= err;
-    }
-
-    snd_pcm_drain(alsa->pcm_handle);
-    snd_pcm_close(alsa->pcm_handle);
-
-    free(alsa->buf);
-
-    return SOX_SUCCESS;
+  snd_pcm_drain(alsa->pcm_handle);
+  snd_pcm_close(alsa->pcm_handle);
+  free(alsa->buf);
+  return SOX_SUCCESS;
 }
 
 SOX_FORMAT_HANDLER(alsa)
