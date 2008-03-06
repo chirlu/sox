@@ -311,7 +311,7 @@ void AdpcmBlockMashI(
         unsigned ch;
         unsigned char *p;
 
-        sox_debug("AdpcmMashI(chans %d, ip %p, n %d, st %p, obuff %p, bA %d)\n",
+        sox_debug_more("AdpcmMashI(chans %d, ip %p, n %d, st %p, obuff %p, bA %d)\n",
             chans, (void *)ip, n, (void *)st, obuff, blockAlign);
 
         for (p=obuff+7*chans; p<obuff+blockAlign; p++) *p=0;

@@ -30,6 +30,7 @@ File formats:
   o Fix short noise at end of alsa playback.  (Morita Sho/Tim Munro/robs)
   o Fix wve seek accuracy.  (robs)
   o Fix lpc10 not working.  (robs)
+  o Fix [1187257] wav MS-ADPCM block-align size incorrect.  (robs)
   o For wav & au, fix [548256] size in header wrong when piping out.  (robs)
   o Writing aiff, aifc & dvms now repeatable with -R.  (robs)
   o Writing hcom no longer fails with unsupported rate--chooses

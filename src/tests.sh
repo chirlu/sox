@@ -159,7 +159,7 @@ do_singlechannel_formats () {
 
   format1=wav1u
   convertToAndFrom smp s1 s1X s1N s1XN sndt
-  (rate=5512; convertToAndFrom hcom) || exit 1     # Fixed rate
+  (rate=11025; convertToAndFrom hcom) || exit 1     # Fixed rates
 
   format1=wve
   (rate=8000; convertToAndFrom al s2 u2 s4 raw Raw dat) || exit 1 # Fixed rate

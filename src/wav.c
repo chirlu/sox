@@ -1263,7 +1263,8 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
                 return SOX_EOF;
             }
             wFormatTag = WAVE_FORMAT_ADPCM;
-            wBlockAlign = wChannels * 128; /* reasonable default */
+            wBlockAlign = ft->signal.rate / 11008;
+            wBlockAlign = max(wBlockAlign, 1) * wChannels * 256;
             wBitsPerSample = 4;
             wExtSize = 4+4*7;      /* Ext fmt data length */
             wSamplesPerBlock = AdpcmSamplesIn(0, wChannels, wBlockAlign, 0);
