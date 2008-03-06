@@ -1,8 +1,10 @@
-sox (14.0.1+cvs-1) unstable; urgency=low
+sox (14.0.1+cvs-1) UNRELEASED; urgency=low
 
   * CVS version.
+    - Add support for for the 2, 2.6 and 4-bit ADPCM .voc (closes: #103479).
+    - Add pkgconfig support (closes: #462704).
 
- -- Pascal Giard <evilynux@gmail.com>  Sat, 09 Feb 2008 09:48:31 -0500
+ -- Pascal Giard <evilynux@gmail.com>  Thu, 06 Mar 2008 13:05:45 -0500
 
 sox (14.0.1-1) unstable; urgency=low
 
