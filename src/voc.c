@@ -789,6 +789,7 @@ SOX_FORMAT_HANDLER(voc)
     0
   };
   static sox_format_handler_t const handler = {
+    "Creative Technology Sound Blaster format",
     names, SOX_FILE_LIT_END | SOX_FILE_MONO | SOX_FILE_STEREO,
     startread, read_samples, NULL,
     startwrite, write_samples, stopwrite,

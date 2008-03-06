@@ -222,6 +222,7 @@ SOX_FORMAT_HANDLER(sf)
     SOX_ENCODING_FLOAT, 32, 0,
     0};
   static sox_format_handler_t const handler = {
+    "Institut de Recherche et Coordination Acoustique/Musique Sound Description Interchange Format",
     names, 0,
     startread, sox_rawread, sox_rawstopread,
     startwrite, sox_rawwrite, sox_rawstopwrite,

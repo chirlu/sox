@@ -165,6 +165,7 @@ SOX_FORMAT_HANDLER(auto)
 {
   static const char *autonames[] = {"magic", NULL};
   static sox_format_handler_t sox_auto_format = {
+    NULL,
     autonames, SOX_FILE_DEVICE | SOX_FILE_PHONY,
     sox_autostartread, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
   };

@@ -24,6 +24,7 @@ SOX_FORMAT_HANDLER(ima)
   static char const * const names[] = {"ima", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_IMA_ADPCM, 4, 0, 0};
   static sox_format_handler_t handler = {
+    "Raw IMA ADPCM",
     names, SOX_FILE_MONO,
     sox_ima_start, sox_vox_read, sox_vox_stopread,
     sox_ima_start, sox_vox_write, sox_vox_stopwrite,

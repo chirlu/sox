@@ -390,6 +390,7 @@ SOX_FORMAT_HANDLER(prc)
     SOX_ENCODING_IMA_ADPCM, 4, 0,
     0};
   static sox_format_handler_t const handler = {
+    "Psion Record; used in EPOC devices (Series 5, Revo and similar)",
     names, SOX_FILE_LIT_END | SOX_FILE_MONO,
     startread, read_samples, stopread,
     startwrite, write_samples, stopwrite,

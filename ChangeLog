@@ -24,9 +24,10 @@ Deprecated features removed in this release:
 
 File formats:
 
+  o New option --help-format shows info about supported formats.  (robs)
   o New htk format.  (robs)
   o Fix [1864216] comments mangled when writing ogg-vorbis.  (robs)
-  o Fix short noise at end of alsa playback.  (Morita Sho)
+  o Fix short noise at end of alsa playback.  (Morita Sho/Tim Munro/robs)
   o Fix wve seek accuracy.  (robs)
   o Fix lpc10 not working.  (robs)
   o For wav & au, fix [548256] size in header wrong when piping out.  (robs)
@@ -36,7 +37,7 @@ File formats:
   o Au/snd: added support for 32-bit integer and 64-bit float PCM
     encoding/decoding; display name of unsupported encoding.  (robs)
   o Can now write .amb (.wav variant) files [FR 1902232].  (robs)
-  o Can now read 2,3,4 bit ADPCM .voc files [FR 1714991].  (robs)
+  o Can now read 2,3(2.6),4 bit ADPCM .voc files [FR 1714991].  (robs)
 
 Effects:
 
@@ -54,7 +55,7 @@ Other new features:
   o Basic VU meter.  (robs)
   o Simple heuristic to detect when playing an album and set
     the default replay-gain mode to `album'.  (robs)
-  o More intelligent choice of output file format parameters when
+  o Better auto-choice of output file format parameters when
     type is different to that of input file.  (robs)
   o SoX now treats (and displays) encoding size & signal precision
     separately.  (robs)

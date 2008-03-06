@@ -666,6 +666,7 @@ SOX_FORMAT_HANDLER(alsa)
     SOX_ENCODING_UNSIGNED, 16, 8, 0,
     0};
   static sox_format_handler_t const handler = {
+    "Advanced Linux Sound Architecture device driver",
     names, SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
     startread, read_samples, stopread,
     startwrite, write_samples, stopwrite,

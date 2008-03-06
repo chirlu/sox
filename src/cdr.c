@@ -40,6 +40,7 @@ SOX_FORMAT_HANDLER(cdr)
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
   static sox_rate_t const write_rates[] = {44100, 0};
   static sox_format_handler_t handler = {
+    "Red Book Compact Disc Digital Audio",
     names, SOX_FILE_BIG_END|SOX_FILE_STEREO,
     start, sox_rawread, NULL,
     NULL, sox_rawwrite, stopwrite,

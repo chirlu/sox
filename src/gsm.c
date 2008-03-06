@@ -239,6 +239,7 @@ SOX_FORMAT_HANDLER(gsm)
   static char const * const names[] = {"gsm", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_GSM, 0, 0};
   static sox_format_handler_t handler = {
+    "GSM 06.10 (full-rate) lossy speech compression",
     names, 0,
     sox_gsmstartread, sox_gsmread, sox_gsmstopread,
     sox_gsmstartwrite, sox_gsmwrite, sox_gsmstopwrite,

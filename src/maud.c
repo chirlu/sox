@@ -326,6 +326,7 @@ SOX_FORMAT_HANDLER(maud)
     SOX_ENCODING_ALAW, 8, 0,
     0};
   static sox_format_handler_t const handler = {
+    "Used with the ‘Toccata’ sound-card on the Amiga",
     names, SOX_FILE_BIG_END | SOX_FILE_MONO | SOX_FILE_STEREO,
     startread, sox_rawread, sox_rawstopread,
     startwrite, write_samples, stopwrite,

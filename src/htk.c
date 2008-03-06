@@ -65,6 +65,7 @@ SOX_FORMAT_HANDLER(htk)
   static char const * const names[] = {"htk", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
   static sox_format_handler_t handler = {
+    "PCM format used for Hidden Markov Model speech processing",
     names, SOX_FILE_BIG_END | SOX_FILE_MONO | SOX_FILE_REWIND,
     start_read, sox_rawread, NULL,
     write_header, sox_rawwrite, NULL,

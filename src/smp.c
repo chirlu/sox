@@ -401,6 +401,7 @@ SOX_FORMAT_HANDLER(smp)
   static char const * const names[] = {"smp", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
   static sox_format_handler_t handler = {
+    "Turtle Beach SampleVision",
     names, SOX_FILE_LOOPS | SOX_FILE_LIT_END | SOX_FILE_MONO,
     sox_smpstartread, sox_smpread, NULL,
     sox_smpstartwrite, sox_smpwrite, sox_smpstopwrite,

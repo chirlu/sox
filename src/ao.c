@@ -127,6 +127,7 @@ SOX_FORMAT_HANDLER(ao)
   static char const * const names[] = {"ao", NULL};
   static unsigned const encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
   static sox_format_handler_t const handler = {
+    "Xiph's libao device driver",
     names, SOX_FILE_DEVICE | SOX_FILE_NOSTDIO,
     NULL, NULL, NULL,
     startwrite, write_samples, stopwrite,

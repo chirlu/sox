@@ -167,6 +167,7 @@ SOX_FORMAT_HANDLER(sndrtool)
   static char const * const names[] = {"sndt", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_UNSIGNED, 8, 0, 0};
   static sox_format_handler_t const handler = {
+    "Handles Sndtool and Sounder files",
     names, SOX_FILE_LIT_END | SOX_FILE_MONO,
     startread, sox_rawread, sox_rawstopread,
     startwrite, write_samples, stopwrite,

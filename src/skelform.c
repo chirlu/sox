@@ -213,6 +213,7 @@ SOX_FORMAT_HANDLER(skel)
    * and NULL used in place of the its name below.
    */
   static sox_format_handler_t handler = {
+    "My first SoX format!",
     names, 0,
     startread, read_samples, stopread,
     startwrite, write_samples, stopwrite,

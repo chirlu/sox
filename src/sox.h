@@ -291,7 +291,8 @@ typedef struct sox_fileinfo
 typedef struct sox_format sox_format_t;
 
 typedef struct {
-    const char   * const *names;
+    char         const * description;
+    char         const * const * names;
     unsigned int flags;
     int          (*startread)(sox_format_t * ft);
     sox_size_t   (*read)(sox_format_t * ft, sox_sample_t *buf, sox_size_t len);

@@ -366,6 +366,7 @@ SOX_FORMAT_HANDLER(txw)
   static char const * const names[] = {"txw", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
   static sox_format_handler_t const handler = {
+    "Yamaha TX-16W sampler",
     names, 0,
     startread, read_samples, NULL,
     startwrite, write_samples, stopwrite,

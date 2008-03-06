@@ -316,6 +316,7 @@ SOX_FORMAT_HANDLER(sunau)
     SOX_ENCODING_SIGN2, 8, 16, 0,
     0};
   static sox_format_handler_t const handler = {
+    "Sun audio device driver",
     names, SOX_FILE_DEVICE,
     sox_sunstartread, sox_rawread, sox_rawstopread,
     sox_sunstartwrite, sox_rawwrite, sox_rawstopwrite,

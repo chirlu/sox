@@ -1613,6 +1613,7 @@ SOX_FORMAT_HANDLER(wav)
     SOX_ENCODING_FLOAT, 32, 0,
     0};
   static sox_format_handler_t const handler = {
+    "Microsoft audio format",
     names, SOX_FILE_LIT_END,
     startread, read_samples, stopread,
     startwrite, write_samples, stopwrite,

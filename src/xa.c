@@ -284,6 +284,7 @@ SOX_FORMAT_HANDLER(xa)
 {
   static char const * const names[] = {"xa", NULL };
   static sox_format_handler_t const handler = {
+    "16-bit ADPCM audio files used by Maxis games",
     names, SOX_FILE_LIT_END,
     startread, read_samples, stopread,
     NULL, NULL, NULL,

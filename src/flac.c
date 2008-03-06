@@ -519,6 +519,7 @@ SOX_FORMAT_HANDLER(flac)
   static char const * const names[] = {"flac", NULL};
   static unsigned const encodings[] = {SOX_ENCODING_FLAC, 8, 16, 24, 0, 0};
   static sox_format_handler_t const handler = {
+    "Free Lossless Audio CODEC compressed audio",
     names, 0,
     start_read, read_samples, stop_read,
     start_write, write_samples, stop_write,

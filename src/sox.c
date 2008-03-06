@@ -933,6 +933,7 @@ static void usage(char const * message)
 "--combine sequence  sequence multiple input files (default for play)",
 "-h, --help      display version number and usage information",
 "--help-effect NAME  display usage of specified effect; use `all' to display all",
+"--help-format NAME  display info on specified format; use `all' to display all",
 "--interactive   prompt to overwrite output file",
 "-m, --combine mix  mix multiple input files (instead of concatenating)",
 "-M, --combine merge  merge multiple input files (instead of concatenating)",
@@ -995,7 +996,7 @@ static void usage_effect(char const * name)
   putchar('\n');
 
   if (strcmp("all", name) && !sox_find_effect(name)) {
-    printf("Cannot find an effect called `%s'.", name);
+    printf("Cannot find an effect called `%s'.\n", name);
     display_supported_effects();
   }
   else {
@@ -1005,6 +1006,80 @@ static void usage_effect(char const * name)
       const sox_effect_handler_t *e = sox_effect_fns[i]();
       if (e && e->name && (!strcmp("all", name) || !strcmp(e->name, name)))
         printf("%s %s\n\n", e->name, e->usage? e->usage : "");
+    }
+  }
+  exit(1);
+}
+
+static void usage_format1(sox_format_handler_t const * f)
+{
+  char const * const * names;
+
+  printf("\nFormat: %s\n", f->names[0]);
+  printf("Description: %s\n", f->description);
+  if (f->names[1]) {
+    printf("Also handles:");
+    for (names = f->names + 1; *names; ++names)
+      printf(" %s", *names);
+    putchar('\n');
+  }
+  if (f->flags & SOX_FILE_CHANS) {
+    printf("Channels restricted to:");
+    if (f->flags & SOX_FILE_MONO) printf(" mono");
+    if (f->flags & SOX_FILE_STEREO) printf(" stereo");
+    if (f->flags & SOX_FILE_QUAD) printf(" quad");
+    putchar('\n');
+  }
+  if (f->write_rates) {
+    sox_rate_t const * p = f->write_rates;
+    printf("Sample-rate restricted to:");
+    while (*p)
+      printf(" %g", *p++);
+    putchar('\n');
+  }
+  printf("Reads: %s\n", f->startread || f->read? "yes" : "no");
+  if (f->startwrite || f->write) {
+    if (f->write_formats) {
+      sox_encoding_t e;
+      unsigned i, s;
+#define enc_arg(T) (T)f->write_formats[i++]
+      i = 0;
+      puts("Writes:");
+      while ((e = enc_arg(sox_encoding_t)))
+        do {
+          s = enc_arg(unsigned);
+          if (sox_precision(e, s)) {
+            printf("  ");
+            if (s)
+              printf("%2u-bit ", s);
+            printf("%s (%u-bit precision)\n", sox_encodings_str[e], sox_precision(e, s));
+          }
+        } while (s);
+      }
+      else puts("Writes: yes");
+    }
+  else puts("Writes: no");
+}
+
+static void usage_format(char const * name)
+{
+  sox_format_handler_t const * f;
+  unsigned i;
+
+  display_SoX_version(stdout);
+
+  if (strcmp("all", name)) {
+    if (!(f = sox_find_format(name, sox_false))) {
+      printf("Cannot find a format called `%s'.\n", name);
+      display_supported_formats();
+    }
+    else usage_format1(f);
+  }
+  else {
+    for (i = 0; i < sox_formats; ++i) {
+      sox_format_handler_t const * f = sox_format_fns[i].fn();
+      if (!(f->flags & SOX_FILE_PHONY))
+        usage_format1(f);
     }
   }
   exit(1);
@@ -1055,6 +1130,7 @@ static struct option long_options[] =
     {"endian"          , required_argument, NULL, 0},
     {"interactive"     ,       no_argument, NULL, 0},
     {"help-effect"     , required_argument, NULL, 0},
+    {"help-format"     , required_argument, NULL, 0},
     {"plot"            , required_argument, NULL, 0},
     {"replay-gain"     , required_argument, NULL, 0},
     {"version"         ,       no_argument, NULL, 0},
@@ -1171,14 +1247,18 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
         break;
 
       case 8:
-        sox_effects_globals.plot = enum_option(option_index, plot_methods);
+        usage_format(optarg);
         break;
 
       case 9:
-        replay_gain_mode = enum_option(option_index, rg_modes);
+        sox_effects_globals.plot = enum_option(option_index, plot_methods);
         break;
 
       case 10:
+        replay_gain_mode = enum_option(option_index, rg_modes);
+        break;
+
+      case 11:
         display_SoX_version(stdout);
         exit(0);
         break;

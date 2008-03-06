@@ -534,6 +534,7 @@ SOX_FORMAT_HANDLER(mp3)
   static unsigned const write_encodings[] = {
     SOX_ENCODING_GSM, 0, 0};
   static sox_format_handler_t const handler = {
+    "MPEG Layer 3 lossy audio compression",
     names, 0,
     startread, sox_mp3read, stopread,
     startwrite, sox_mp3write, stopwrite,
