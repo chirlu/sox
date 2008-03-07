@@ -288,8 +288,8 @@ if test "$with_ffmpeg" != "no"; then
     using_ffmpeg=yes
     AC_CHECK_HEADER(ffmpeg/avformat.h,
         [AC_CHECK_LIB(avutil, av_rescale_q, FFMPEG_LIBS="-lavutil $FFMPEG_LIBS", using_ffmpeg=no)
-        AC_CHECK_LIB(avcodec, avcodec_decode_audio2, FFMPEG_LIBS="-lavcodec $FFMPEG_LIBS", using_ffmpeg=no)
-        AC_CHECK_LIB(avformat, av_open_input_file, FFMPEG_LIBS="-lavformat $FFMPEG_LIBS", using_ffmpeg=no)],
+        AC_CHECK_LIB(avcodec, avcodec_decode_audio2, FFMPEG_LIBS="-lavcodec $FFMPEG_LIBS", using_ffmpeg=no, $FFMPEG_LIBS)
+        AC_CHECK_LIB(avformat, av_open_input_file, FFMPEG_LIBS="-lavformat $FFMPEG_LIBS", using_ffmpeg=no, $FFMPEG_LIBS)],
         using_ffmpeg=no)
     if test "$with_ffmpeg" = "yes" -a "$using_ffmpeg" = "no"; then
         AC_MSG_FAILURE([cannot find ffmpeg])
