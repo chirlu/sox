@@ -70,7 +70,7 @@ static enum {sox_sox, sox_play, sox_rec, sox_soxi} sox_mode;
 
 /* gopts */
 
-static enum {sox_sequence, sox_concatenate, sox_mix, sox_merge}
+static enum {sox_sequence, sox_concatenate, sox_mix, sox_merge, sox_multiply}
     combine_method = sox_concatenate;
 static sox_bool interactive = sox_false;
 static sox_bool uservolume = sox_false;
@@ -384,6 +384,16 @@ static int combiner_drain(sox_effect_t *effp, sox_sample_t * obuf, sox_size_t * 
               /* Cast to double prevents integer overflow */
               double sample = *p + (double)z->ibuf[i][ws * files[i]->ft->signal.channels + s];
               *p = SOX_ROUND_CLIP_COUNT(sample, mixing_clips);
+          }
+        }
+      } else if (combine_method == sox_multiply) {    /* multiply samples */
+        for (s = 0; s < effp->in_signal.channels; ++s, ++p) {
+          i = 0;
+          *p = ws < ilen[i] && s < files[i]->ft->signal.channels?
+            z->ibuf[i][ws * files[i]->ft->signal.channels + s] : 0;
+          for (++i; i < input_count; ++i) {
+            double sample = *p * (-1. / SOX_SAMPLE_MIN) * (ws < ilen[i] && s < files[i]->ft->signal.channels? z->ibuf[i][ws * files[i]->ft->signal.channels + s] : 0);
+            *p = SOX_ROUND_CLIP_COUNT(sample, mixing_clips);
           }
         }
       } else { /* sox_merge: like a multi-track recorder */
@@ -796,7 +806,7 @@ static int process(void) {
       if (combine_method == sox_concatenate) {
         sox_fail("Input files must have the same # channels");
         exit(1);
-      } else if (combine_method == sox_mix)
+      } else if (combine_method == sox_mix || combine_method == sox_multiply)
         sox_warn("Input files don't have the same # channels");
     }
     if (min_rate != max_rate)
@@ -1118,7 +1128,7 @@ static void read_comment_file(comments_t * comments, char const * const filename
   free(text);
 }
 
-static char *getoptstr = "+ac:fghimnoqr:st:uv:xABC:LMNRSUV::X12348";
+static char *getoptstr = "+ac:fghimnoqr:st:uv:xABC:LMNRSTUV::X12348";
 
 static struct option long_options[] =
   {
@@ -1154,6 +1164,7 @@ static enum_item const combine_methods[] = {
   ENUM_ITEM(sox_,concatenate)
   ENUM_ITEM(sox_,mix)
   ENUM_ITEM(sox_,merge)
+  ENUM_ITEM(sox_,multiply)
   {0, 0}};
 
 enum {ENDIAN_little, ENDIAN_big, ENDIAN_swap};
@@ -1265,13 +1276,9 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
       }
       break;
 
-    case 'm':
-      combine_method = sox_mix;
-      break;
-
-    case 'M':
-      combine_method = sox_merge;
-      break;
+    case 'm': combine_method = sox_mix; break;
+    case 'M': combine_method = sox_merge; break;
+    case 'T': combine_method = sox_multiply; break;
 
     case 'R':                   /* Useful for regression testing. */
       sox_globals.repeatable = sox_true;
