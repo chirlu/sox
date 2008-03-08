@@ -4,7 +4,6 @@
   FORMAT(aiff)
   FORMAT(al)
   FORMAT(au)
-  FORMAT(auto)
   FORMAT(avr)
   FORMAT(cdr)
   FORMAT(cvsd)

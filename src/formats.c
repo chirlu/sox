@@ -34,7 +34,7 @@ sox_format_handler_t const * sox_find_format(char const * name, sox_bool no_dev)
 {
   sox_size_t f, n;
 
-  for (f = 0; f < sox_formats; ++f) {
+  if (name) for (f = 0; f < sox_formats; ++f) {
     sox_format_handler_t const * fh = sox_format_fns[f].fn();
 
     if (!(no_dev && (fh->flags & SOX_FILE_DEVICE)))

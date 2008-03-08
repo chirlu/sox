@@ -24,7 +24,7 @@ Deprecated features removed in this release:
 
 File formats:
 
-  o New option --help-format shows info about supported formats.  (robs)
+  o New option --help-format shows info about supported format(s).  (robs)
   o New htk format.  (robs)
   o Fix [1864216] comments mangled when writing ogg-vorbis.  (robs)
   o Fix short noise at end of alsa playback.  (Morita Sho/Tim Munro/robs)
@@ -39,6 +39,8 @@ File formats:
     encoding/decoding; display name of unsupported encoding.  (robs)
   o Can now write .amb (.wav variant) files [FR 1902232].  (robs)
   o Can now read 2,3(2.6),4 bit ADPCM .voc files [FR 1714991].  (robs)
+  o Fix auto-detect of hcom files.  (robs)
+  o Added auto-detect for caf, txw & sf files.  (robs)
 
 Effects:
 
@@ -60,6 +62,9 @@ Other new features:
     type is different to that of input file.  (robs)
   o SoX now treats (and displays) encoding size & signal precision
     separately.  (robs)
+  o Default audio devices (sox), and allow environment variables to
+    be used to override the default audio device driver (rec/play)
+    and default audio device (all).  (robs)
 
 Other bug fixes:
 

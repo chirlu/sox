@@ -1,3 +1,21 @@
+/*
+ * libSoX IO routines       (c) 2005-8 Chris Bagwell and SoX contributors
+ *
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or (at
+ * your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library.  If not, write to the Free Software Foundation,
+ * Fifth Floor, 51 Franklin Street, Boston, MA 02111-1301, USA.
+ */
+
 #include "sox_i.h"
 
 #include <assert.h>
@@ -84,6 +102,21 @@ int sox_format_init(void)
 }
 
 /*
+ * Cleanup things.
+ */
+void sox_format_quit(void)
+{
+#ifdef HAVE_LIBLTDL
+  {
+    int ret;
+    if (plugins_initted && (ret = lt_dlexit()) != 0) {
+      sox_fail("lt_dlexit failed with %d error(s): %s", ret, lt_dlerror());
+    }
+  }
+#endif
+}
+
+/*
  * Check that we have a known format suffix string.
  */
 int sox_gettype(sox_format_t * ft, sox_bool is_file_extension)
@@ -100,30 +133,11 @@ int sox_gettype(sox_format_t * ft, sox_bool is_file_extension)
     return SOX_EFMT;
   }
   ft->handler = *handler;
-  if (ft->mode == 'r' && !ft->handler.startread && !ft->handler.read) {
-    sox_fail_errno(ft, SOX_EFMT, "file type `%s' isn't readable", ft->filetype);
-    return SOX_EFMT;
-  }
   if (ft->mode == 'w' && !ft->handler.startwrite && !ft->handler.write) {
     sox_fail_errno(ft, SOX_EFMT, "file type `%s' isn't writable", ft->filetype);
     return SOX_EFMT;
   }
   return SOX_SUCCESS;
-}
-
-/*
- * Cleanup things.
- */
-void sox_format_quit(void)
-{
-#ifdef HAVE_LIBLTDL
-  {
-    int ret;
-    if (plugins_initted && (ret = lt_dlexit()) != 0) {
-      sox_fail("lt_dlexit failed with %d error(s): %s", ret, lt_dlerror());
-    }
-  }
-#endif
 }
 
 void set_signal_defaults(sox_signalinfo_t * signal)
@@ -133,7 +147,7 @@ void set_signal_defaults(sox_signalinfo_t * signal)
   if (!signal->channels) signal->channels = SOX_DEFAULT_CHANNELS;
 }
 
-void set_endianness_if_not_already_set(sox_format_t * ft)
+static void set_endianness_if_not_already_set(sox_format_t * ft)
 {
   if (ft->encoding.reverse_bytes == SOX_OPTION_DEFAULT) {
     if (ft->handler.flags & SOX_FILE_ENDIAN)
@@ -162,11 +176,10 @@ void set_endianness_if_not_already_set(sox_format_t * ft)
 
 static int is_seekable(sox_format_t * ft)
 {
-        struct stat st;
+  struct stat st;
 
-        fstat(fileno(ft->fp), &st);
-
-        return ((st.st_mode & S_IFMT) == S_IFREG);
+  fstat(fileno(ft->fp), &st);
+  return ((st.st_mode & S_IFMT) == S_IFREG);
 }
 
 /* check that all settings have been given */
@@ -185,92 +198,143 @@ static int sox_checkformat(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
+static char const * detect_magic(sox_format_t * ft)
+{
+  char data[256];
+  size_t len = sox_readbuf(ft, data, sizeof(data));
+  #define MAGIC(type, p2, l2, d2, p1, l1, d1) if (len >= p1 + l1 && \
+      !memcmp(data + p1, d1, l1) && !memcmp(data + p2, d2, l2)) return #type;
+  MAGIC(voc   , 0, 0, ""     , 0, 20, "Creative Voice File\x1a")
+  MAGIC(smp   , 0, 0, ""     , 0, 17, "SOUND SAMPLE DATA")
+  MAGIC(wve   , 0, 0, ""     , 0, 15, "ALawSoundFile**")
+  MAGIC(amr-wb, 0, 0, ""     , 0,  9, "#!AMR-WB\n")
+  MAGIC(prc   , 0, 0, ""     , 0,  8, prc_header)
+  MAGIC(sph   , 0, 0, ""     , 0,  7, "NIST_1A")
+  MAGIC(amr-nb, 0, 0, ""     , 0,  6, "#!AMR\n")
+  MAGIC(txw   , 0, 0, ""     , 0,  6, "LM8953")
+  MAGIC(sndt  , 0, 0, ""     , 0,  5, "SOUND")
+  MAGIC(vorbis, 0, 4, "OggS" , 29, 6, "vorbis")
+  MAGIC(speex , 0, 4, "OggS" , 28, 6, "Speex")
+  MAGIC(hcom  ,65, 4, "FSSD" , 128,4, "HCOM")
+  MAGIC(wav   , 0, 4, "RIFF" , 8,  4, "WAVE")
+  MAGIC(wav   , 0, 4, "RIFX" , 8,  4, "WAVE")
+  MAGIC(aiff  , 0, 4, "FORM" , 8,  4, "AIFF")
+  MAGIC(aifc  , 0, 4, "FORM" , 8,  4, "AIFC")
+  MAGIC(8svx  , 0, 4, "FORM" , 8,  4, "8SVX")
+  MAGIC(maud  , 0, 4, "FORM" , 8,  4, "MAUD")
+  MAGIC(xa    , 0, 0, ""     , 0,  4, "XA\0\0")
+  MAGIC(xa    , 0, 0, ""     , 0,  4, "XAI\0")
+  MAGIC(xa    , 0, 0, ""     , 0,  4, "XAJ\0")
+  MAGIC(au    , 0, 0, ""     , 0,  4, "\0ds.")
+  MAGIC(au    , 0, 0, ""     , 0,  4, ".snd")
+  MAGIC(flac  , 0, 0, ""     , 0,  4, "fLaC")
+  MAGIC(avr   , 0, 0, ""     , 0,  4, "2BIT")
+  MAGIC(caf   , 0, 0, ""     , 0,  4, "caff")
+  MAGIC(paf   , 0, 0, ""     , 0,  4, " paf")
+  MAGIC(sf    , 3, 1, ""     , 0,  2, "\144\243")
+  #undef MAGIC
+  return NULL;
+}
+
 sox_format_t * sox_open_read(
     char               const * path,
     sox_signalinfo_t   const * signal,
     sox_encodinginfo_t const * encoding,
     char               const * filetype)
 {
-    sox_format_t * ft = xcalloc(sizeof(*ft), 1);
+  sox_format_t * ft = xcalloc(1, sizeof(*ft));
+  sox_format_handler_t const * handler;
 
-    ft->filename = xstrdup(path);
-
-    /* Let auto type do the work if user is not overriding. */
-    if (!filetype)
-        ft->filetype = xstrdup("magic");
-    else
-        ft->filetype = xstrdup(filetype);
-
-    ft->mode = 'r';
-    if (sox_gettype(ft, sox_false) != SOX_SUCCESS) {
-      sox_fail("Can't open input file `%s': %s", ft->filename, ft->sox_errstr);
-      goto input_error;
+  if (filetype) {
+    if (!(handler = sox_find_format(filetype, sox_false))) {
+      sox_fail("no handler for given file type `%s'", filetype);
+      goto error;
     }
-    if (signal)
-      ft->signal = *signal;
-    if (encoding)
-      ft->encoding = *encoding;
-    else sox_init_encodinginfo(&ft->encoding);
+    ft->handler = *handler;
+  }
 
-    if (!(ft->handler.flags & SOX_FILE_NOSTDIO))
-    {
-        /* Open file handler based on input name.  Used stdin file handler
-         * if the filename is "-"
-         */
-        if (!strcmp(ft->filename, "-")) {
-          if (sox_globals.stdin_in_use_by) {
-            sox_fail("'-' (stdin) already in use by '%s'", sox_globals.stdin_in_use_by);
-            goto input_error;
-          }
-          sox_globals.stdin_in_use_by = "audio input";
-          SET_BINARY_MODE(stdin);
-          ft->fp = stdin;
-        }
-        else if ((ft->fp = xfopen(ft->filename, "rb")) == NULL)
-        {
-            sox_fail("Can't open input file `%s': %s", ft->filename,
-                    strerror(errno));
-            goto input_error;
-        }
-
-        /* See if this file is seekable or not */
-        ft->seekable = is_seekable(ft);
+  if (!(ft->handler.flags & SOX_FILE_NOSTDIO)) {
+    if (!strcmp(path, "-")) { /* Use stdin if the filename is "-" */
+      if (sox_globals.stdin_in_use_by) {
+        sox_fail("`-' (stdin) already in use by `%s'", sox_globals.stdin_in_use_by);
+        goto error;
+      }
+      sox_globals.stdin_in_use_by = "audio input";
+      SET_BINARY_MODE(stdin);
+      ft->fp = stdin;
     }
-
-    if (filetype)
-      set_endianness_if_not_already_set(ft);
-
-    /* Read and write starters can change their formats. */
-    if (ft->handler.startread && (*ft->handler.startread)(ft) != SOX_SUCCESS)
-    {
-        sox_fail("Can't open input file `%s': %s", ft->filename, ft->sox_errstr);
-        goto input_error;
+    else if ((ft->fp = xfopen(path, "rb")) == NULL) {
+      sox_fail("can't open input file `%s': %s", path, strerror(errno));
+      goto error;
     }
+    ft->seekable = is_seekable(ft);
+  }
 
-    if (!ft->signal.precision)
-      ft->signal.precision = sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample);
-
-    /* Go ahead and assume 1 channel audio if nothing is detected.
-     * This is because libsox usually doesn't set this for mono file
-     * formats (for historical reasons).
-     */
-    if (!(ft->handler.flags & SOX_FILE_PHONY) && !ft->signal.channels)
-      ft->signal.channels = 1;
-
-    if (sox_checkformat(ft) )
-    {
-        sox_fail("bad input format for file %s: %s", ft->filename,
-                ft->sox_errstr);
-        goto input_error;
+  if (!filetype) {
+    if (ft->seekable) {
+      filetype = detect_magic(ft);
+      sox_rewind(ft);
     }
+    if (filetype) {
+      sox_report("detected file format type `%s'", filetype);
+      if (!(handler = sox_find_format(filetype, sox_false))) {
+        sox_fail("no handler for detected file type `%s'", filetype);
+        goto error;
+      }
+    }
+    else {
+      if (!(filetype = find_file_extension(path))) {
+        sox_fail("can't determine type of `%s'", path);
+        goto error;
+      }
+      if (!(handler = sox_find_format(filetype, sox_true))) {
+        sox_fail("no handler for file extension `%s'", filetype);
+        goto error;
+      }
+    }
+    ft->handler = *handler;
+  }
+  if (!ft->handler.startread && !ft->handler.read) {
+    sox_fail("file type `%s' isn't readable", filetype);
+    goto error;
+  }
+  
+  ft->mode = 'r';
+  
+  if (signal)
+    ft->signal = *signal;
+  
+  if (encoding)
+    ft->encoding = *encoding;
+  else sox_init_encodinginfo(&ft->encoding);
+  set_endianness_if_not_already_set(ft);
+
+  ft->filetype = xstrdup(filetype);
+  ft->filename = xstrdup(path);
+
+  /* Read and write starters can change their formats. */
+  if (ft->handler.startread && (*ft->handler.startread)(ft) != SOX_SUCCESS) {
+    sox_fail("can't open input file `%s': %s", ft->filename, ft->sox_errstr);
+    goto error;
+  }
+
+  /* Fill in some defaults: */
+  if (!ft->signal.precision)
+    ft->signal.precision = sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample);
+  if (!(ft->handler.flags & SOX_FILE_PHONY) && !ft->signal.channels)
+    ft->signal.channels = 1;
+
+  if (sox_checkformat(ft) == SOX_SUCCESS)
     return ft;
+  sox_fail("bad input format for file `%s': %s", ft->filename, ft->sox_errstr);
 
-input_error:
-
-    free(ft->filename);
-    free(ft->filetype);
-    free(ft);
-    return NULL;
+error:
+  if (ft->fp && ft->fp != stdin)
+    fclose(ft->fp);
+  free(ft->filename);
+  free(ft->filetype);
+  free(ft);
+  return NULL;
 }
 
 static void set_output_format(sox_format_t * ft)
@@ -485,51 +549,43 @@ sox_format_t * sox_open_write(
   ft->mode = 'w';
   if (sox_gettype(ft, no_filetype_given) != SOX_SUCCESS) {
     sox_fail("Can't open output file `%s': %s", ft->filename, ft->sox_errstr);
-    goto output_error;
+    goto error;
   }
   ft->signal = *signal;
   if (encoding)
     ft->encoding = *encoding;
   else sox_init_encodinginfo(&ft->encoding);
 
-  if (!(ft->handler.flags & SOX_FILE_NOSTDIO))
-  {
-      /* Open file handler based on output name.  Used stdout file handler
-       * if the filename is "-"
-       */
-      if (!strcmp(ft->filename, "-")) {
-        if (sox_globals.stdout_in_use_by) {
-          sox_fail("'-' (stdout) already in use by '%s'", sox_globals.stdout_in_use_by);
-          goto output_error;
-        }
-        sox_globals.stdout_in_use_by = "audio output";
-          SET_BINARY_MODE(stdout);
-          ft->fp = stdout;
+  if (!(ft->handler.flags & SOX_FILE_NOSTDIO)) {
+    if (!strcmp(ft->filename, "-")) { /* Use stdout if the filename is "-" */
+      if (sox_globals.stdout_in_use_by) {
+        sox_fail("`-' (stdout) already in use by `%s'", sox_globals.stdout_in_use_by);
+        goto error;
       }
-      else {
-        struct stat st;
-        if (!stat(ft->filename, &st) && (st.st_mode & S_IFMT) == S_IFREG &&
-            (overwrite_permitted && !overwrite_permitted(ft->filename))) {
-          sox_fail("Permission to overwrite '%s' denied", ft->filename);
-          goto output_error;
-        }
-        if ((ft->fp = fopen(ft->filename, "wb")) == NULL) {
-          sox_fail("Can't open output file `%s': %s", ft->filename,
-                  strerror(errno));
-          goto output_error;
-        }
+      sox_globals.stdout_in_use_by = "audio output";
+      SET_BINARY_MODE(stdout);
+      ft->fp = stdout;
+    }
+    else {
+      struct stat st;
+      if (!stat(ft->filename, &st) && (st.st_mode & S_IFMT) == S_IFREG &&
+          (overwrite_permitted && !overwrite_permitted(ft->filename))) {
+        sox_fail("Permission to overwrite '%s' denied", ft->filename);
+        goto error;
       }
+      if ((ft->fp = fopen(ft->filename, "wb")) == NULL) {
+        sox_fail("can't open output file `%s': %s", ft->filename, strerror(errno));
+        goto error;
+      }
+    }
 
-      /* stdout tends to be line-buffered.  Override this */
-      /* to be Full Buffering. */
-      if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char) * sox_globals.bufsiz))
-      {
-          sox_fail("Can't set write buffer");
-          goto output_error;
-      }
-
-      /* See if this file is seekable or not */
-      ft->seekable = is_seekable(ft);
+    /* stdout tends to be line-buffered.  Override this */
+    /* to be Full Buffering. */
+    if (setvbuf (ft->fp, NULL, _IOFBF, sizeof(char) * sox_globals.bufsiz)) {
+      sox_fail("Can't set write buffer");
+      goto error;
+    }
+    ft->seekable = is_seekable(ft);
   }
 
   ft->comments = copy_comments(comments);
@@ -557,14 +613,16 @@ sox_format_t * sox_open_write(
   /* Read and write starters can change their formats. */
   if (ft->handler.startwrite && (ft->handler.startwrite)(ft) != SOX_SUCCESS){
     sox_fail("can't open output file `%s': %s", ft->filename, ft->sox_errstr);
-    goto output_error;
+    goto error;
   }
 
   if (sox_checkformat(ft) == SOX_SUCCESS)
     return ft;
   sox_fail("bad format for output file `%s': %s", ft->filename, ft->sox_errstr);
 
-output_error:
+error:
+  if (ft->fp && ft->fp != stdout)
+    fclose(ft->fp);
   free(ft->filename);
   free(ft->filetype);
   free(ft);

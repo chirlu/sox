@@ -31,7 +31,7 @@ AM_CFLAGS += $(LTDLINCL)
 AM_LDFLAGS = $(LIBLTDL)
 
 # Format modules; listed first so optional ones can be added later
-pkglib_LTLIBRARIES = libsox_fmt_auto.la libsox_fmt_raw.la libsox_fmt_s1.la \
+pkglib_LTLIBRARIES = libsox_fmt_raw.la libsox_fmt_s1.la \
 	  libsox_fmt_s2.la libsox_fmt_s3.la libsox_fmt_s4.la libsox_fmt_u1.la \
 	  libsox_fmt_u2.la libsox_fmt_u3.la libsox_fmt_u4.la		\
 	  libsox_fmt_al.la libsox_fmt_la.la libsox_fmt_ul.la		\
@@ -45,10 +45,6 @@ pkglib_LTLIBRARIES = libsox_fmt_auto.la libsox_fmt_raw.la libsox_fmt_s1.la \
 	  libsox_fmt_vox.la libsox_fmt_ima.la libsox_fmt_wav.la		\
 	  libsox_fmt_wve.la libsox_fmt_xa.la libsox_fmt_nul.la \
 	  libsox_fmt_htk.la
-
-# File format detection
-libsox_fmt_auto_la_SOURCES = auto.c
-libsox_fmt_auto_la_LIBADD = libsox.la
 
 # File formats
 libsox_fmt_raw_la_SOURCES = raw-fmt.c
@@ -219,7 +215,7 @@ libsox_la_CFLAGS =
 
 if HAVE_LIBLTDL
 else
-  libsox_la_SOURCES += auto.c raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
+  libsox_la_SOURCES += raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
     s4-fmt.c u1-fmt.c u2-fmt.c u3-fmt.c u4-fmt.c al-fmt.c la-fmt.c ul-fmt.c \
     lu-fmt.c 8svx.c aiff-fmt.c aifc-fmt.c au.c avr.c cdr.c cvsd-fmt.c \
     dvms-fmt.c dat.c gsm.c hcom.c htk.c lpc10.c maud.c prc.c sf.c sfircam.h smp.c \

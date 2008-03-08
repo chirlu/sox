@@ -147,7 +147,6 @@ size_t sox_writebuf(sox_format_t * ft, void const *buf, sox_size_t len);
 int sox_reads(sox_format_t * ft, char *c, sox_size_t len);
 int sox_writes(sox_format_t * ft, char const * c);
 void set_signal_defaults(sox_signalinfo_t * signal);
-void set_endianness_if_not_already_set(sox_format_t * ft);
 
 sox_size_t sox_read_b_buf(sox_format_t * ft, uint8_t *buf, sox_size_t len);
 sox_size_t sox_read_w_buf(sox_format_t * ft, uint16_t *buf, sox_size_t len);
