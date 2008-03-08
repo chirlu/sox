@@ -254,6 +254,22 @@ This effect supports the \fB\-\-plot\fR global option.
 .SP
 See also the \fBbass\fR and \fBtreble\fR shelving equalisation effects.
 .TP
+\fBdelay\fR {\fIlength\fR}
+Delay one or more audio channels.
+.I length
+can specify a time or, if appended with an `s', a number of samples.
+For example,
+.B delay 1\*d5 0 0\*d5
+delays the first channel by 1\*d5 seconds, the third channel by 0\*d5
+seconds, and leaves the second channel (and any other channels that may be
+present) un-delayed.
+The following (one long) command plays a chime sound:
+.EX
+	play -n synth sin %-21.5 sin %-14.5 sin %-9.5 sin %-5.5 \\
+	  sin %-2.5 sin %2.5 gain -5.4 fade h 0.008 2 1.5 \\
+	  delay 0 .27 .54 .76 1.01 1.3 remix - fade h 0.1 2.72 2.5
+.EE
+.TP
 \fBdither\fR [\fIdepth\fR]
 Apply dithering to the audio.
 Dithering deliberately adds digital white noise to the signal
@@ -624,7 +640,7 @@ a specified position is not less that the previous one.
 .I position
 is optional for the first and last lengths specified and
 if omitted correspond to the beginning and the end of the audio respectively.
-For example:
+For example,
 .B pad 1\*d5 1\*d5
 adds 1\*d5 seconds of silence padding at each end of the audio, whilst
 .B pad 4000s@3:00

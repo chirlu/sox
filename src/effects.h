@@ -9,6 +9,7 @@
   EFFECT(compand)
   EFFECT(dcshift)
   EFFECT(deemph)
+  EFFECT(delay)
   EFFECT(dither)
   EFFECT(earwax)
   EFFECT(echo)

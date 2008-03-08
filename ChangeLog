@@ -39,14 +39,13 @@ File formats:
     encoding/decoding; display name of unsupported encoding.  (robs)
   o Can now write .amb (.wav variant) files [FR 1902232].  (robs)
   o Can now read 2,3(2.6),4 bit ADPCM .voc files [FR 1714991].  (robs)
-  o Fix auto-detect of hcom files.  (robs)
-  o Added auto-detect for caf, txw & sf files.  (robs)
 
 Effects:
 
   o New `splice' effect; splice together audio sections.  (robs)
   o New `remix' effect; complements the mixer effect.  (robs)
   o New `norm' (normalise) effect.  (robs)
+  o New `delay' effect; delay one or more channels.  (robs)
   o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)
   o Fix synth max. level setting for some output encodings.  (robs)
 
@@ -70,6 +69,8 @@ Other bug fixes:
 
   o Fix [1890983] rec shortcut should apply bit depth (8-bit,
     16-bit, etc.) to input handler.  (robs)
+  o Fix auto-detect of hcom files.  (robs)
+  o Added auto-detect for caf, txw & sf files.  (robs)
 
 Internal improvements:
 
