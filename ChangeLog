@@ -71,6 +71,8 @@ Other bug fixes:
     16-bit, etc.) to input handler.  (robs)
   o Fix auto-detect of hcom files.  (robs)
   o Added auto-detect for caf, txw & sf files.  (robs)
+  o Fix ungraceful handling of out of disc space and other write
+    errors (bug was introduced in 14.0.0).  (robs)
 
 Internal improvements:
 

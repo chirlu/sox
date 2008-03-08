@@ -321,6 +321,8 @@ int sox_flow_effects(sox_effects_chain_t * chain, int (* callback)(sox_bool all_
       }
     } else if (have_imin && flow_effect(chain, e) == SOX_EOF) {
       flow_status = SOX_EOF;
+      if (e == chain->length - 1)
+        break;
       source_e = e;
       draining = sox_true;
     }

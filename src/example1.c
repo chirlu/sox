@@ -40,8 +40,9 @@ static int input_drain(sox_effect_t *effp, sox_sample_t * obuf, sox_size_t * osa
 static int output_flow(sox_effect_t *effp UNUSED, sox_sample_t const * ibuf,
     sox_sample_t * obuf UNUSED, sox_size_t * isamp, sox_size_t * osamp)
 {
-  size_t len = sox_write(out, ibuf, *osamp);
+  size_t len = sox_write(out, ibuf, *isamp);
 
+  *osamp = 0;
   if (len != *isamp) {
     fprintf(stderr, "%s: %s\n", out->filename, out->sox_errstr);
     return SOX_EOF;

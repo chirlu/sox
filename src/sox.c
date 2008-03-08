@@ -271,7 +271,7 @@ static void display_error(sox_format_t * ft)
     "Invalid argument",
     "Unsupported file format",
   };
-  sox_fail("%s: %s (%s)", ft->filename, ft->sox_errstr,
+  sox_fail("%s: %s: %s", ft->filename, ft->sox_errstr,
       ft->sox_errno < SOX_EHDR?
       strerror(ft->sox_errno) : sox_strerror[ft->sox_errno - SOX_EHDR]);
 }
@@ -430,11 +430,12 @@ static sox_effect_handler_t const * input_combiner_effect_fn(void)
   return &handler;
 }
 
-static int output_flow(sox_effect_t *effp UNUSED, sox_sample_t const * ibuf,
-    sox_sample_t * obuf UNUSED, sox_size_t * isamp, sox_size_t * osamp)
+static int output_flow(sox_effect_t *effp, sox_sample_t const * ibuf,
+    sox_sample_t * obuf, sox_size_t * isamp, sox_size_t * osamp)
 {
   size_t len;
 
+  (void)effp, (void)obuf;
   if (show_progress) for (len = 0; len < *isamp; len += effp->in_signal.channels) {
     omax[0] = max(omax[0], ibuf[len]);
     omin[0] = min(omin[0], ibuf[len]);
@@ -447,16 +448,13 @@ static int output_flow(sox_effect_t *effp UNUSED, sox_sample_t const * ibuf,
       omin[1] = omin[0];
     }
   }
-  for (*osamp = *isamp; *osamp; ibuf += len, *osamp -= len) {
-    len = sox_write(ofile->ft, ibuf, *osamp);
-    if (len == 0) {
-      sox_warn("Error writing: %s", ofile->ft->sox_errstr);
-      return SOX_EOF;
-    }
-    if (user_abort) /* Don't get stuck in this loop. */
-      return SOX_EOF;
+  *osamp = 0;
+  len = sox_write(ofile->ft, ibuf, *isamp);
+  output_samples += len / ofile->ft->signal.channels;
+  if (len != *isamp) {
+    display_error(ofile->ft);
+    return SOX_EOF;
   }
-  output_samples += *isamp / ofile->ft->signal.channels;
   return SOX_SUCCESS;
 }
 

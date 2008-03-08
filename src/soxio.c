@@ -637,8 +637,9 @@ sox_size_t sox_read(sox_format_t * ft, sox_sample_t * buf, sox_size_t len)
 
 sox_size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
-  ft->olength += len;
-  return ft->handler.write? (*ft->handler.write)(ft, buf, len) : 0;
+  sox_size_t ret = ft->handler.write? (*ft->handler.write)(ft, buf, len) : 0;
+  ft->olength += ret;
+  return ret;
 }
 
 #define TWIDDLE_BYTE(ub, type) \
@@ -711,8 +712,7 @@ READ_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
     sox_size_t n, nwritten; \
     for (n = 0; n < len; n++) \
       twiddle(buf[n], type); \
-    if ((nwritten = sox_writebuf(ft, buf, len * size)) != len * size) \
-      sox_fail_errno(ft, errno, sox_writerr); \
+    nwritten = sox_writebuf(ft, buf, len * size); \
     return nwritten / size; \
   }
 
@@ -735,8 +735,7 @@ READ_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
       twiddle(datum, type); \
       sox_pack ## size(data + n * size, datum); \
     } \
-    if ((nwritten = sox_writebuf(ft, data, len * size)) != len * size) \
-      sox_fail_errno(ft, errno, sox_writerr); \
+    nwritten = sox_writebuf(ft, data, len * size); \
     free(data); \
     return nwritten / size; \
   }

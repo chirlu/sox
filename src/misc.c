@@ -146,8 +146,7 @@ sox_sample_t sox_sample_max(sox_encodinginfo_t const * encoding)
   return (SOX_SAMPLE_MAX >> shift) << shift;
 }
 
-const char sox_readerr[] = "Premature EOF while reading sample file.";
-const char sox_writerr[] = "Error writing sample file.  You are probably out of disk space.";
+const char sox_readerr[] = "Premature EOF while reading sample file";
 
 /* Lookup table to reverse the bit order of a byte. ie MSB become LSB */
 uint8_t const cswap[256] = {
@@ -215,7 +214,11 @@ int sox_padbytes(sox_format_t * ft, sox_size_t n)
 size_t sox_writebuf(sox_format_t * ft, void const *buf, sox_size_t len)
 {
   size_t ret = fwrite(buf, 1, len, ft->fp);
-  return (ferror(ft->fp) || (feof(ft->fp) && ret == 0)) ? 0 : ret;
+  if (ret != len) {
+    sox_fail_errno(ft, errno, "error writing output file");
+    clearerr(ft->fp); /* Allows us to seek back to write header */
+  }
+  return ret;
 }
 
 sox_size_t sox_filelength(sox_format_t * ft)
@@ -291,10 +294,7 @@ int sox_reads(sox_format_t * ft, char *c, sox_size_t len)
 int sox_writes(sox_format_t * ft, char const * c)
 {
         if (sox_writebuf(ft, c, strlen(c)) != strlen(c))
-        {
-                sox_fail_errno(ft,errno,sox_writerr);
                 return(SOX_EOF);
-        }
         return(SOX_SUCCESS);
 }
 

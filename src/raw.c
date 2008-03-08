@@ -94,8 +94,7 @@ static READ_SAMPLES_FUNC(df, sizeof(double), su, double, double, SOX_FLOAT_64BIT
     ctype *data = xmalloc(sizeof(ctype) * len); \
     for (n = 0; n < len; n++) \
       data[n] = cast(buf[n], ft->clips); \
-    if ((nwritten = sox_write_ ## type ## _buf(ft, (uctype *)data, len)) != len) \
-      sox_fail_errno(ft, errno, sox_writerr); \
+    nwritten = sox_write_ ## type ## _buf(ft, (uctype *)data, len); \
     free(data); \
     return nwritten; \
   }

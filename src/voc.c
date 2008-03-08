@@ -485,7 +485,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t * buf,
   int16_t sw;
   sox_size_t done = 0;
 
-  if (v->samples == 0) {
+  if (len && v->samples == 0) {
     /* No silence packing yet. */
     v->silent = 0;
     blockstart(ft);

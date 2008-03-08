@@ -296,7 +296,6 @@ extern sox_globals_t sox_globals;
 extern sox_effects_globals_t sox_effects_globals;
 
 extern const char sox_readerr[];
-extern const char sox_writerr[];
 extern uint8_t const cswap[256];
 
 
