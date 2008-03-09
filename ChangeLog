@@ -49,6 +49,7 @@ Effects:
   o New `delay' effect; delay one or more channels.  (robs)
   o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)
   o Fix synth max. level setting for some output encodings.  (robs)
+  o `gain' alias for the vol effect.  (robs)
 
 Other new features:
 
@@ -66,6 +67,7 @@ Other new features:
     be used to override the default audio device driver (rec/play)
     and default audio device (all).  (robs)
   o Simpler file info display for `play'.  (robs)
+  o New `multiply' method for the input file combiner.  (robs)
 
 Other bug fixes:
 

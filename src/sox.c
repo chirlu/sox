@@ -1015,6 +1015,7 @@ static void usage(char const * message)
 "--replay-gain track|album|off  default: off (sox, rec), track (play)",
 "-R              use default random numbers (same on each run of SoX)",
 "-S, --show-progress  display progress while processing audio data",
+"-T, --combine multiply  multiply multiple input files (instead of concatenating)",
 "--version       display version number of SoX and exit",
 "-V[LEVEL]       increment or set verbosity level (default 2); levels are:",
 "                  1: failure messages",

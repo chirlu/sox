@@ -90,9 +90,9 @@ the \fBvol\fR and \fBdither\fR effects.
 .EE
 adds a header to a raw audio file,
 .EX
-	sox slow.aiff fixed.aiff speed 1.027 rabbit -c0
+	sox slow.aiff fixed.aiff speed 1.027 rabbit
 .EE
-adjusts audio speed using the most accurate
+adjusts audio speed using the
 .B rabbit
 algorithm,
 .EX
@@ -329,19 +329,21 @@ range available, as this will avoid the majority of clipping problems.
 SoX's
 .B stat
 effect can assist in determining the signal level in an audio file; the
+.B gain
+or
 .B vol
 effect can be used to prevent clipping, e.g.
 .EX
-	sox dull.au bright.au vol -6 dB treble +6
+	sox dull.au bright.au gain -6 treble +6
 .EE
 guarantees that the treble boost will not clip.
 .SP
 If clipping occurs at any point during processing, then
 SoX will display a warning message to that effect.
 .SS Input File Combining 
-SoX's input combiner can combine multiple files using one of four
-different methods: `concatenate', `sequence', `mix', or `merge'.  The
-default method is `sequence' for
+SoX's input combiner can combine multiple files using one of five
+different methods: `concatenate', `sequence', `mix', `merge', or `multiply'.
+The default method is `sequence' for
 .BR play ,
 and `concatenate' for
 .B rec
@@ -371,7 +373,8 @@ more input files must be given and will be mixed together to form the
 output file.  The number of channels in each input file need not be the
 same, however, SoX will issue a warning if they are not and some
 channels in the output file will not contain audio from every input
-file.  A mixed audio file cannot be un-mixed.
+file.  A mixed audio file cannot be un-mixed (without reference to the
+orignal input files).
 .SP
 If the `merge' combining method is selected (with \fB-M\fR), then two or
 more input files must be given and will be merged together to form the
@@ -384,6 +387,11 @@ effect.
 For example, two mono files could be merged to form one stereo file; the
 first and second mono files would become the left and right channels of
 the stereo file.
+.SP
+The `multiply' combining method (selected with \fB-T\fR) works in the
+same way as mix combining except that the audio signals are multiplied
+instead of added together.  This can be useful for applications such as
+F.M. synthesis.
 .SP
 When combining input files, SoX applies any specified effects
 (including, for example, the
