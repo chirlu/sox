@@ -33,7 +33,7 @@ static int start_read(sox_format_t * ft)
       sox_readdw(ft, &num_samples) || sox_skipbytes(ft, sizeof(ID2)))
     return SOX_EOF;
   if (memcmp(ID1, buf, sizeof(buf))) {
-    sox_fail_errno(ft,SOX_EHDR,"wve: can't find Psion identifier");
+    sox_fail_errno(ft, SOX_EHDR, "wve: can't find Psion identifier");
     return SOX_EOF;
   }
   return sox_check_read_params(ft, 1, 8000., SOX_ENCODING_ALAW, 8, (off_t)num_samples);

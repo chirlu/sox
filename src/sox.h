@@ -360,6 +360,7 @@ struct sox_format {
 
 /* declared in misc.c */
 extern const char * const sox_encodings_str[];
+extern const char * const sox_encodings_short_str[];
 
 int sox_format_init(void);
 sox_format_t * sox_open_read(

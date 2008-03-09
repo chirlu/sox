@@ -107,11 +107,10 @@ static int startread(sox_format_t * ft)
                 sf->info.sf_chans = sox_swapdw(sf->info.sf_chans);
         }
         if ((sfmagic1(&sfhead) != SF_MAGIC1) ||
-            (sfmagic2(&sfhead) != SF_MAGIC2))
-                sox_fail(
-"SF %s file: can't read, it is byte-swapped or it is not an IRCAM SoundFile",
-                        ft->filename);
-
+            (sfmagic2(&sfhead) != SF_MAGIC2)) {
+          sox_fail_errno(ft, SOX_EHDR, "sf: can't find IRCAM identifier");
+          return SOX_EOF;
+        }
 
         /*
          * If your format specifies or your file header contains

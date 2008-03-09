@@ -38,25 +38,44 @@ static id3_utf8_t * utf8_id3tag_findframe(
   return NULL;
 }
 
-static sox_size_t id3tag_duration_ms(FILE * fp)
+static void read_comments(sox_format_t * ft)
 {
+  static char const * list[][2] = {
+    {ID3_FRAME_TITLE,   "Title"},
+    {ID3_FRAME_ARTIST,  "Artist"},
+    {ID3_FRAME_ALBUM,   "Album"},
+    {ID3_FRAME_TRACK,   "Tracknumber"},
+    {ID3_FRAME_YEAR,    "Year"},
+    {ID3_FRAME_GENRE,   "Genre"},
+    {ID3_FRAME_COMMENT, "Comment"},
+    {"TPOS",            "Discnumber"},
+    {NULL, NULL}
+  };
   struct id3_file   * id3struct;
   struct id3_tag    * tag;
   id3_utf8_t        * utf8;
-  sox_size_t        duration_ms = 0;
-  int               fd = dup(fileno(fp));
+  int               i, fd = dup(fileno(ft->fp));
 
   if ((id3struct = id3_file_fdopen(fd, ID3_FILE_MODE_READONLY))) {
     if ((tag = id3_file_tag(id3struct)) && tag->frames)
+      for (i = 0; list[i][0]; ++i) 
+        if ((utf8 = utf8_id3tag_findframe(tag, list[i][0], 0))) {
+          char * comment = xmalloc(strlen(list[i][1]) + 1 + strlen((char *)utf8) + 1);
+          sprintf(comment, "%s=%s", list[i][1], utf8);
+          append_comment(&ft->comments, comment);
+          free(comment);
+          free(utf8);
+        }
       if ((utf8 = utf8_id3tag_findframe(tag, "TLEN", 0))) {
-        if (atoi((char *)utf8) > 0)
-          duration_ms = atoi((char *)utf8);
+        if (atoi((char *)utf8) > 0) {
+          ft->length = atoi((char *)utf8); /* In ms; convert to samples later */
+          sox_debug("got exact duration from ID3 TLEN");
+        }
         free(utf8);
       }
     id3_file_close(id3struct);
   }
   else close(fd);
-  return duration_ms;
 }
 
 #endif
@@ -85,14 +104,6 @@ static sox_size_t mp3_duration_ms(FILE * fp, unsigned char *buffer)
   sox_size_t          initial_bitrate = 0; /* Initialised to prevent warning */
   sox_size_t          tagsize = 0, consumed = 0, frames = 0;
   sox_bool            vbr = sox_false, depadded = sox_false;
-
-#if HAVE_ID3TAG && HAVE_UNISTD_H
-  sox_size_t duration_ms = id3tag_duration_ms(fp);
-  if (duration_ms) {
-    sox_debug("got exact duration from ID3 TLEN");
-    return duration_ms;
-  }
-#endif
 
   mad_stream_init(&mad_stream);
   mad_header_init(&mad_header);

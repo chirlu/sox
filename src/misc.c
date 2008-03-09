@@ -56,6 +56,33 @@ const char * const sox_encodings_str[] = {
   "LPC10",
 };
 
+const char * const sox_encodings_short_str[] = {
+  "n/a",
+  "Signed PCM",
+  "Unsigned PCM",
+  "F.P. PCM",
+  "F.P. PCM",
+  "FLAC",
+  "HCOM",
+  "", /* Lossless above, lossy below */
+  "u-law",
+  "A-law",
+  "G.721 ADPCM",
+  "G.723 ADPCM",
+  "CL ADPCM (8)",
+  "CL ADPCM (16)",
+  "MS ADPCM",
+  "IMA ADPCM",
+  "OKI ADPCM",
+  "GSM",
+  "MPEG audio",
+  "Vorbis",
+  "AMR-WB",
+  "AMR-NB",
+  "CVSD",
+  "LPC10",
+};
+
 assert_static(array_length(sox_encodings_str) == SOX_ENCODINGS,
     SIZE_MISMATCH_BETWEEN_sox_encodings_t_AND_sox_encodings_str);
 

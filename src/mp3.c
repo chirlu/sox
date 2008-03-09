@@ -175,8 +175,13 @@ static int startread(sox_format_t * ft)
     p->Timer=(mad_timer_t *)xmalloc(sizeof(mad_timer_t));
     p->InputBuffer=(unsigned char *)xmalloc(INPUT_BUFFER_SIZE);
 
-    if (ft->seekable)
-      ft->length = mp3_duration_ms(ft->fp, p->InputBuffer);
+    if (ft->seekable) {
+#if HAVE_ID3TAG && HAVE_UNISTD_H
+      read_comments(ft);
+      if (!ft->length)
+#endif 
+        ft->length = mp3_duration_ms(ft->fp, p->InputBuffer);
+    }
 
     mad_stream_init(p->Stream);
     mad_frame_init(p->Frame);
@@ -189,14 +194,13 @@ static int startread(sox_format_t * ft)
      * format.  The decoded frame will be saved off so that it
      * can be processed later.
      */
-    ReadSize=sox_readbuf(ft, p->InputBuffer, INPUT_BUFFER_SIZE);
-    if(ReadSize<=0)
-    {
-        if(sox_error(ft))
-            sox_fail_errno(ft,SOX_EOF,"read error on bitstream");
-        if(sox_eof(ft))
-            sox_fail_errno(ft,SOX_EOF,"end of input stream");
-        return(SOX_EOF);
+    ReadSize = sox_readbuf(ft, p->InputBuffer, INPUT_BUFFER_SIZE);
+    if (ReadSize < INPUT_BUFFER_SIZE) {
+      if (sox_error(ft))
+        sox_fail_errno(ft, SOX_EOF, "error reading input file");
+      else if (sox_eof(ft))
+        sox_fail_errno(ft, SOX_EOF, "input file too short");
+      return SOX_EOF;
     }
 
     mad_stream_buffer(p->Stream, p->InputBuffer, ReadSize);

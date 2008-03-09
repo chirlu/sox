@@ -320,7 +320,7 @@ SOX_FORMAT_HANDLER(sunau)
     names, SOX_FILE_DEVICE,
     sox_sunstartread, sox_rawread, sox_rawstopread,
     sox_sunstartwrite, sox_rawwrite, sox_rawstopwrite,
-    NULL, write_encodings
+    NULL, write_encodings, NULL
   };
   return &handler;
 }

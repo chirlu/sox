@@ -187,10 +187,71 @@ static char const * str_time(double duration)
   return string[i];
 }
 
+static void play_file_info(sox_format_t * ft, file_t f, sox_bool full)
+{
+  FILE * const output = sox_mode == sox_soxi? stdout : stderr;
+  char const * text;
+  char buffer[30];
+  sox_size_t ws = ft->length / ft->signal.channels;
+  (void)full;
+
+  fprintf(output, "\n%s\n\n", ft->filename);
+
+  fprintf(output, "  Encoding: %-14s", sox_encodings_short_str[ft->encoding.encoding]);
+  text = find_comment(f->ft->comments, "Comment");
+  if (!text)
+    text = find_comment(f->ft->comments, "Description");
+  if (!text)
+    text = find_comment(f->ft->comments, "Year");
+  if (text)
+    fprintf(output, "Info: %s", text);
+  fprintf(output, "\n");
+
+  sprintf(buffer, "  Channels: %u @ %u-bit", ft->signal.channels, ft->signal.precision);
+  fprintf(output, "%-25s", buffer);
+  text = find_comment(f->ft->comments, "Tracknumber");
+  if (text) {
+    fprintf(output, "Track: %s", text);
+    text = find_comment(f->ft->comments, "Tracktotal");
+    if (text)
+      fprintf(output, " of %s", text);
+  }
+  fprintf(output, "\n");
+
+  sprintf(buffer, "Samplerate: %gHz", ft->signal.rate);
+  fprintf(output, "%-25s", buffer);
+  text = find_comment(f->ft->comments, "Album");
+  if (text)
+    fprintf(output, "Album: %s", text);
+  fprintf(output, "\n");
+
+  if (f && f->replay_gain != HUGE_VAL){
+    sprintf(buffer, "%s gain: %+.1fdB", find_enum_value(f->replay_gain_mode, rg_modes)->text, f->replay_gain);
+    buffer[0] += 'A' - 'a';
+    fprintf(output, "%-24s", buffer);
+  } else
+    fprintf(output, "%-24s", "Replaygain: off");
+  text = find_comment(f->ft->comments, "Artist");
+  if (text)
+    fprintf(output, "Artist: %s", text);
+  fprintf(output, "\n");
+
+  fprintf(output, "  Duration: %-13s", ft->length? str_time((double)ws / ft->signal.rate) : "unknown");
+  text = find_comment(f->ft->comments, "Title");
+  if (text)
+    fprintf(output, "Title: %s", text);
+  fprintf(output, "\n\n");
+}
+
 static void display_file_info(sox_format_t * ft, file_t f, sox_bool full)
 {
   static char const * const no_yes[] = {"no", "yes"};
   FILE * const output = sox_mode == sox_soxi? stdout : stderr;
+
+  if (sox_mode == sox_play) {
+    play_file_info(ft, f, full);
+    return;
+  }
 
   fprintf(output, "\n%s: '%s'",
     ft->mode == 'r'? "Input File     " : "Output File    ", ft->filename);

@@ -39,6 +39,7 @@ File formats:
     encoding/decoding; display name of unsupported encoding.  (robs)
   o Can now write .amb (.wav variant) files [FR 1902232].  (robs)
   o Can now read 2,3(2.6),4 bit ADPCM .voc files [FR 1714991].  (robs)
+  o Can now read some MP3 ID3 tags.  (robs)
 
 Effects:
 
@@ -64,6 +65,7 @@ Other new features:
   o Default audio devices (sox), and allow environment variables to
     be used to override the default audio device driver (rec/play)
     and default audio device (all).  (robs)
+  o Simpler file info display for `play'.  (robs)
 
 Other bug fixes:
 
