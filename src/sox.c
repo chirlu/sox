@@ -195,7 +195,10 @@ static void play_file_info(sox_format_t * ft, file_t f, sox_bool full)
   sox_size_t ws = ft->length / ft->signal.channels;
   (void)full;
 
-  fprintf(output, "\n%s\n\n", ft->filename);
+  fprintf(output, "\n%s:", ft->filename);
+  if (strcmp(ft->filename, "-") == 0 || (ft->handler.flags & SOX_FILE_DEVICE))
+    fprintf(output, " (%s)", ft->handler.names[0]);
+  fprintf(output, "\n\n");
 
   fprintf(output, "  Encoding: %-14s", sox_encodings_short_str[ft->encoding.encoding]);
   text = find_comment(f->ft->comments, "Comment");
@@ -248,7 +251,7 @@ static void display_file_info(sox_format_t * ft, file_t f, sox_bool full)
   static char const * const no_yes[] = {"no", "yes"};
   FILE * const output = sox_mode == sox_soxi? stdout : stderr;
 
-  if (sox_mode == sox_play) {
+  if (sox_mode == sox_play && sox_globals.verbosity < 3) {
     play_file_info(ft, f, full);
     return;
   }
@@ -513,7 +516,8 @@ static int output_flow(sox_effect_t *effp, sox_sample_t const * ibuf,
   len = sox_write(ofile->ft, ibuf, *isamp);
   output_samples += len / ofile->ft->signal.channels;
   if (len != *isamp) {
-    display_error(ofile->ft);
+    if (ofile->ft->sox_errno)
+      display_error(ofile->ft);
     return SOX_EOF;
   }
   return SOX_SUCCESS;
@@ -1575,14 +1579,27 @@ static int soxi1(soxi_t * type, char * filename)
 
 static int soxi(int argc, char * const * argv)
 {
-  static char const opts[] = "rcsdbea?";
+  static char const opts[] = "rcsdbea?V::";
   soxi_t type = full;
   int opt, num_errors = 0;
 
   while ((opt = getopt(argc, argv, opts)) > 0) /* act only on last option */
-    type = 1 + (strchr(opts, opt) - opts);
+    if (opt == 'V') {
+      int i; /* sscanf silently accepts negative numbers for %u :( */
+      char dummy;     /* To check for extraneous chars in optarg. */
+      if (optarg == NULL)
+        ++sox_globals.verbosity;
+      else {
+        if (sscanf(optarg, "%i %c", &i, &dummy) != 1 || i < 0) {
+          sox_globals.verbosity = 2;
+          sox_fail("Verbosity value `%s' is not a non-negative integer", optarg);
+          exit(1);
+        }
+        sox_globals.verbosity = (unsigned)i;
+      }
+    } else type = 1 + (strchr(opts, opt) - opts);
   if (type > annotation)
-    printf("Usage: soxi [-r|-c|-s|-d|-b|-e|-a] infile1 ...\n");
+    printf("Usage: soxi [-V] [-r|-c|-s|-d|-b|-e|-a] infile1 ...\n");
   else for (; optind < argc; ++optind) {
     if (sox_is_playlist(argv[optind]))
       num_errors += (sox_parse_playlist((sox_playlist_callback_t)soxi1, &type, argv[optind]) != SOX_SUCCESS);

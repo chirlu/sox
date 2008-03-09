@@ -249,6 +249,7 @@ SOX_FORMAT_HANDLER(sphere)
     SOX_ENCODING_ULAW, 8, 0,
     0};
   static sox_format_handler_t const handler = {
+    SOX_LIB_VERSION_CODE,
     "SPeech HEader Resources; defined by NIST",
     names, 0,
     startread, sox_rawread, sox_rawstopread,

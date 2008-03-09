@@ -52,6 +52,7 @@ SOX_FORMAT_HANDLER(wve)
   static sox_rate_t   const write_rates[] = {8000, 0};
   static unsigned     const write_encodings[] = {SOX_ENCODING_ALAW, 8, 0, 0};
   static sox_format_handler_t const handler = {
+    SOX_LIB_VERSION_CODE,
     "Psion 3 audio format",
     names, SOX_FILE_BIG_END | SOX_FILE_MONO | SOX_FILE_REWIND,
     start_read, sox_rawread, NULL,

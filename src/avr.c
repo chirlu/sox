@@ -280,6 +280,7 @@ SOX_FORMAT_HANDLER(avr)
     SOX_ENCODING_UNSIGNED, 16, 8, 0,
     0};
   static sox_format_handler_t handler = {
+    SOX_LIB_VERSION_CODE,
     "Audio Visual Research format; used on the Mac",
     names,
     SOX_FILE_BIG_END|SOX_FILE_MONO|SOX_FILE_STEREO,

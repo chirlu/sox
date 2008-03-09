@@ -23,6 +23,7 @@ SOX_FORMAT_HANDLER(cvsd)
   static char const * const names[] = {"cvsd", "cvs", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_CVSD, 1, 0, 0};
   static sox_format_handler_t const handler = {
+    SOX_LIB_VERSION_CODE,
     "Headerless Continuously Variable Slope Delta modulation",
     names, SOX_FILE_MONO,
     sox_cvsdstartread, sox_cvsdread, sox_cvsdstopread,

@@ -157,6 +157,7 @@ sox_format_handler_t const * AMR_FORMAT_FN(void)
   static sox_rate_t   const write_rates[] = {AMR_RATE, 0};
   static unsigned const write_encodings[] = {AMR_ENCODING, 0, 0};
   static sox_format_handler_t handler = {
+    SOX_LIB_VERSION_CODE,
     "3GPP Adaptive Multi Rate lossy speech compressor",
     names, SOX_FILE_MONO,
     startread, read, stopread,

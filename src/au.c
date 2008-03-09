@@ -235,6 +235,7 @@ SOX_FORMAT_HANDLER(au)
     SOX_ENCODING_FLOAT, 32, 64, 0,
     0};
   static sox_format_handler_t const handler = {
+    SOX_LIB_VERSION_CODE,
     "PCM file format used widely on Sun systems",
     names, SOX_FILE_BIG_END | SOX_FILE_REWIND,
     startread, sox_rawread, NULL,

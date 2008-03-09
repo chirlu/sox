@@ -53,7 +53,7 @@ int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_chan
     else ft->encoding.bits_per_sample = size;
   }
 
-  if (ft->mode == 'r' && default_length && ft->encoding.bits_per_sample)
+  if (!ft->length && ft->mode == 'r' && default_length && ft->encoding.bits_per_sample)
     ft->length = div_bits(sox_filelength(ft), ft->encoding.bits_per_sample);
 
   return SOX_SUCCESS;

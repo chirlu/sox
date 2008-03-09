@@ -25,6 +25,7 @@ SOX_FORMAT_HANDLER(aifc)
   static unsigned const write_encodings[] = {
     SOX_ENCODING_SIGN2, 32, 24, 16, 8, 0, 0};
   static sox_format_handler_t const sox_aifc_format = {
+    SOX_LIB_VERSION_CODE,
     "AIFF-C (not compressed, linear), defined in DAVIC 1.4 Part 9 Annex B",
     names, SOX_FILE_LOOPS | SOX_FILE_BIG_END,
     sox_aiffstartread, sox_aiffread, sox_aiffstopread,

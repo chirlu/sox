@@ -489,6 +489,7 @@ SOX_FORMAT_HANDLER(ffmpeg)
   static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
 
   static sox_format_handler_t handler = {
+    SOX_LIB_VERSION_CODE,
     "Pseudo format to use libffmpeg",
     names,
     SOX_FILE_NOSTDIO,

@@ -459,6 +459,7 @@ SOX_FORMAT_HANDLER(sndfile)
     0};
 
   static sox_format_handler_t const format = {
+    SOX_LIB_VERSION_CODE,
     "Pseudo format to use libsndfile",
     names, SOX_FILE_NOSTDIO,
     startread, read_samples, stopread,

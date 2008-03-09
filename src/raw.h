@@ -25,7 +25,7 @@ const sox_format_handler_t *sox_ ## id ## _format_fn(void) { \
   static unsigned const write_encodings[] = { \
     SOX_ENCODING_ ## encoding, size, 0, 0}; \
   static sox_format_handler_t handler = { \
-    "Raw audio", \
+    SOX_LIB_VERSION_CODE, "Raw audio", \
     names, flags, \
     id ## _start, sox_rawread , NULL, \
     id ## _start, sox_rawwrite, NULL, \

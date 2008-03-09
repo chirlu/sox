@@ -313,10 +313,6 @@ sox_format_handler_t const * sox_##name##_format_fn(void); \
 sox_format_handler_t const * sox_##name##_format_fn(void)
 #define div_bits(size, bits) (off_t)((double)(size) * 8 / bits)
 
-/* Psion record header check, defined in misc.c and used in prc.c and auto.c */
-extern const char prc_header[41];
-int prc_checkheader(sox_format_t * ft, char *head);
-
 typedef const sox_format_handler_t *(*sox_format_fn_t)(void);
 
 typedef struct {

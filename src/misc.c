@@ -99,7 +99,7 @@ unsigned sox_precision(sox_encoding_t encoding, unsigned bits_per_sample)
   switch (encoding) {
     case SOX_ENCODING_HCOM:       return !(bits_per_sample & 7) && (bits_per_sample >> 3) - 1 < 1? bits_per_sample: 0;
     case SOX_ENCODING_FLAC:       return !(bits_per_sample & 7) && (bits_per_sample >> 3) - 1 < 3? bits_per_sample: 0;
-    case SOX_ENCODING_SIGN2:
+    case SOX_ENCODING_SIGN2:      return bits_per_sample <= 32? bits_per_sample : 0;
     case SOX_ENCODING_UNSIGNED:   return !(bits_per_sample & 7) && (bits_per_sample >> 3) - 1 < 4? bits_per_sample: 0;
 
     case SOX_ENCODING_ALAW:       return bits_per_sample == 8? 13: 0;
@@ -661,49 +661,3 @@ FILE * xfopen(char const * identifier, char const * mode)
   }
   return fopen(identifier, mode);
 } 
-
-/* PRC detection code is here rather than in prc.c because the
-   latter is a plug-in, and prc_checkheader is called from auto.c too */
-
-/* File header. The first 4 words are fixed; the rest of the header
-   could theoretically be different, and this is the first place to
-   check with apparently invalid files.
-
-   N.B. All offsets are from start of file. */
-const char prc_header[41] = {
-  /* Header section */
-  '\x37','\x00','\x00','\x10', /* 0x00: File type (UID 1) */
-  '\x6d','\x00','\x00','\x10', /* 0x04: File kind (UID 2) */
-  '\x7e','\x00','\x00','\x10', /* 0x08: Application ID (UID 3) */
-  '\xcf','\xac','\x08','\x55', /* 0x0c: Checksum of UIDs 1-3 */
-  '\x14','\x00','\x00','\x00', /* 0x10: File offset of Section Table Section */
-  /* Section Table Section: a BListL, i.e. a list of longs preceded by
-     length byte.
-     The longs are in (ID, offset) pairs, each pair identifying a
-     section. */
-  '\x04',                      /* 0x14: List has 4 bytes, i.e. 2 pairs */
-  '\x52','\x00','\x00','\x10', /* 0x15: ID: Record Section */
-  '\x34','\x00','\x00','\x00', /* 0x19: Offset to Record Section */
-  '\x89','\x00','\x00','\x10', /* 0x1d: ID: Application ID Section */
-  '\x25','\x00','\x00','\x00', /* 0x21: Offset to Application ID Section */
-  '\x7e','\x00','\x00','\x10', /* 0x25: Application ID Section:
-                                  Record.app identifier */
-  /* Next comes the string, which can be either case. */
-};
-
-/* Format of the Record Section (offset 0x34):
-
-00 L Uncompressed data length
-04 ID a1 01 00 10 for ADPCM, 00 00 00 00 for A-law
-08 W number of times sound will be repeated (0 = played once)
-0a B Volume setting (01-05)
-0b B Always 00 (?)
-0c L Time between repeats in usec
-10 LListB (i.e. long giving number of bytes followed by bytes) Sound Data
-*/
-
-int prc_checkheader(sox_format_t * ft, char *head)
-{
-  sox_readbuf(ft, head, sizeof(prc_header));
-  return memcmp(head, prc_header, sizeof(prc_header)) == 0;
-}

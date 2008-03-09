@@ -41,8 +41,12 @@
 
 /* Private data for TX16 file */
 typedef struct txwstuff {
-        sox_size_t rest;                 /* bytes remaining in sample file */
-} *txw_t;
+  sox_size_t   samples_out;
+  sox_size_t   bytes_out;
+  sox_size_t   rest;                 /* bytes remaining in sample file */
+  sox_sample_t odd;
+  sox_bool     odd_flag;
+} * txw_t;
 
 struct WaveHeader_ {
   char filetype[6]; /* = "LM8953", */
@@ -54,14 +58,10 @@ struct WaveHeader_ {
     atc_length[3],   /* I'll get to this... */
     rpt_length[3],
     unused[2];       /* set these to null, to be on the safe side */
-} ;
+};
 
 static const unsigned char magic1[4] = {0, 0x06, 0x10, 0xF6};
 static const unsigned char magic2[4] = {0, 0x52, 0x00, 0x52};
-
-/* FIXME SJB: dangerous static variables */
-static sox_size_t tx16w_len=0;
-static sox_size_t writedone=0;
 
 /*
  * Do anything required before you start reading samples.
@@ -131,13 +131,13 @@ static int startread(sox_format_t * ft)
 
     switch( sample_rate ) {
         case 1:
-            ft->signal.rate = 33333;
+            ft->signal.rate = 1e5 / 3;
             break;
         case 2:
-            ft->signal.rate = 50000;
+            ft->signal.rate = 1e5 / 2;
             break;
         case 3:
-            ft->signal.rate = 16667;
+            ft->signal.rate = 1e5 / 6;
             break;
         default:
             blewIt = 1;
@@ -145,31 +145,31 @@ static int startread(sox_format_t * ft)
                 case 0x06:
                     if ( (gunk[5] & 0xFE) == 0x52 ) {
                         blewIt = 0;
-                        ft->signal.rate = 33333;
+                        ft->signal.rate = 1e5 / 3;
                     }
                     break;
                 case 0x10:
                     if ( (gunk[5] & 0xFE) == 0x00 ) {
                         blewIt = 0;
-                        ft->signal.rate = 50000;
+                        ft->signal.rate = 1e5 / 2;
                     }
                     break;
                 case 0xF6:
                     if ( (gunk[5] & 0xFE) == 0x52 ) {
                         blewIt = 0;
-                        ft->signal.rate = 16667;
+                        ft->signal.rate = 1e5 / 6;
                     }
                     break;
             }
             if ( blewIt ) {
                 sox_debug("Invalid sample rate identifier found %d", (int)sample_rate);
-                ft->signal.rate = 33333;
+                ft->signal.rate = 1e5 / 3;
             }
     }
     sox_debug("Sample rate = %g", ft->signal.rate);
 
     ft->signal.channels = 1 ; /* not sure about stereo sample data yet ??? */
-    ft->encoding.bits_per_sample = 16; /* this is close enough */
+    ft->encoding.bits_per_sample = 12;
     ft->encoding.encoding = SOX_ENCODING_SIGN2;
 
     return(SOX_SUCCESS);
@@ -234,15 +234,12 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
 
 static int startwrite(sox_format_t * ft)
 {
+  txw_t sk = (txw_t) ft->priv;
     struct WaveHeader_ WH;
 
     sox_debug("tx16w selected output");
 
     memset(&WH, 0, sizeof(struct WaveHeader_));
-
-    if (ft->signal.channels != 1)
-        sox_report("tx16w is overriding output format to 1 channel.");
-    ft->signal.channels = 1 ; /* not sure about stereo sample data yet ??? */
 
     /* If you have to seek around the output file */
     if (! ft->seekable)
@@ -255,39 +252,53 @@ static int startwrite(sox_format_t * ft)
        at end of processing, since byte count is needed */
 
     sox_writebuf(ft, &WH, 32);
-    writedone = 32;
+    sk->bytes_out = 32;
     return(SOX_SUCCESS);
 }
 
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len0)
 {
-  sox_size_t i;
-  sox_sample_t w1,w2;
+  txw_t sk = (txw_t) ft->priv;
+  sox_size_t last_i, i = 0, len = min(len0, TXMAXLEN - sk->samples_out);
+  sox_sample_t w1, w2;
 
-  tx16w_len += len;
-  if (tx16w_len > TXMAXLEN) {
-    sox_fail_errno(ft, SOX_EOF, "Audio too long for TX16W file");
-    return 0;
-  }
-  for (i=0;i<len;i+=2) {
-      w1 =  *buf++ >> 20;
-      if (i+1==len)
-          w2 = 0;
-      else {
-          w2 =  *buf++ >> 20;
+  while (i < len) {
+    last_i = i;
+    if (sk->odd_flag) {
+      w1 = sk->odd;
+      sk->odd_flag = sox_false;
+    }
+    else w1 = *buf++ >> 20, ++i;
+
+    if (i < len) {
+      w2 = *buf++ >> 20, ++i;
+      if (sox_writesb(ft, (w1 >> 4) & 0xFF) ||
+          sox_writesb(ft, (((w1 & 0x0F) << 4) | (w2 & 0x0F)) & 0xFF) ||
+          sox_writesb(ft, (w2 >> 4) & 0xFF)) {
+        i = last_i;
+        break;
       }
-      sox_writesb(ft, (w1 >> 4) & 0xFF);
-      sox_writesb(ft, (((w1 & 0x0F) << 4) | (w2 & 0x0F)) & 0xFF);
-      sox_writesb(ft, (w2 >> 4) & 0xFF);
-      writedone += 3;
+      sk->samples_out += 2;
+      sk->bytes_out += 3;
+    }
+    else {
+      sk->odd = w1;
+      sk->odd_flag = sox_true;
+    }
   }
-  return(len);
+  return i;
 }
 
 static int stopwrite(sox_format_t * ft)
 {
+  txw_t sk = (txw_t) ft->priv;
     struct WaveHeader_ WH;
     int AttackLength, LoopLength, i;
+
+    if (sk->odd_flag) {
+      sox_sample_t pad = 0;
+      write_samples(ft, &pad, 1);
+    }
 
     /* All samples are already written out. */
     /* If file header needs fixing up, for example it needs the */
@@ -310,39 +321,39 @@ static int stopwrite(sox_format_t * ft)
     else if (ft->signal.rate < 41000) WH.sample_rate = 1;
     else                            WH.sample_rate = 2;
 
-    if (tx16w_len >= TXMAXLEN) {
+    if (sk->samples_out >= TXMAXLEN) {
         sox_warn("Sound too large for TX16W. Truncating, Loop Off");
         AttackLength       = TXMAXLEN/2;
         LoopLength         = TXMAXLEN/2;
     }
-    else if (tx16w_len >=TXMAXLEN/2) {
+    else if (sk->samples_out >=TXMAXLEN/2) {
         AttackLength       = TXMAXLEN/2;
-        LoopLength         = tx16w_len - TXMAXLEN/2;
+        LoopLength         = sk->samples_out - TXMAXLEN/2;
         if (LoopLength < 0x40) {
             LoopLength   +=0x40;
             AttackLength -= 0x40;
         }
     }    
-    else if (tx16w_len >= 0x80) {
-        AttackLength                       = tx16w_len -0x40;
+    else if (sk->samples_out >= 0x80) {
+        AttackLength                       = sk->samples_out -0x40;
         LoopLength                         = 0x40;
     }
     else {
         AttackLength                       = 0x40;
         LoopLength                         = 0x40;
-        for(i=tx16w_len;i<0x80;i++) {
+        for(i=sk->samples_out;i<0x80;i++) {
             sox_writeb(ft, 0);
             sox_writeb(ft, 0);
             sox_writeb(ft, 0);
-            writedone += 3;
+            sk->bytes_out += 3;
         }
     }
 
     /* Fill up to 256 byte blocks; the TX16W seems to like that */
 
-    while ((writedone % 0x100) != 0) {
+    while ((sk->bytes_out % 0x100) != 0) {
         sox_writeb(ft, 0);
-        writedone++;
+        sk->bytes_out++;
     }
 
     WH.atc_length[0] = 0xFF & AttackLength;
@@ -364,13 +375,15 @@ static int stopwrite(sox_format_t * ft)
 SOX_FORMAT_HANDLER(txw)
 {
   static char const * const names[] = {"txw", NULL};
-  static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 16, 0, 0};
+  static sox_rate_t   const write_rates[] = {1e5/6, 1e5/3, 1e5/2, 0};
+  static unsigned const write_encodings[] = {SOX_ENCODING_SIGN2, 12, 0, 0};
   static sox_format_handler_t const handler = {
+    SOX_LIB_VERSION_CODE,
     "Yamaha TX-16W sampler",
-    names, 0,
+    names, SOX_FILE_MONO,
     startread, read_samples, NULL,
     startwrite, write_samples, stopwrite,
-    NULL, write_encodings, NULL
+    NULL, write_encodings, write_rates
   };
   return &handler;
 }

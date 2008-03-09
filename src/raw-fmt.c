@@ -33,6 +33,7 @@ SOX_FORMAT_HANDLER(raw)
     SOX_ENCODING_FLOAT, 64, 32, 0,
     0};
   static sox_format_handler_t const handler = {
+    SOX_LIB_VERSION_CODE,
     "Raw PCM, mu-law, or A-law",
     names, 0,
     raw_start, sox_rawread , NULL,

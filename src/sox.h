@@ -30,7 +30,7 @@
  * Please do not count on these numbers being in sync.
  * The following is at 14.0.1
  */
-#define SOX_LIB_VERSION_CODE 0x0e0001
+#define SOX_LIB_VERSION_CODE 0x0e0100
 #define SOX_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 const char *sox_version(void);   /* Returns version number */
@@ -291,18 +291,19 @@ typedef struct sox_fileinfo
 typedef struct sox_format sox_format_t;
 
 typedef struct {
-    char         const * description;
-    char         const * const * names;
-    unsigned int flags;
-    int          (*startread)(sox_format_t * ft);
-    sox_size_t   (*read)(sox_format_t * ft, sox_sample_t *buf, sox_size_t len);
-    int          (*stopread)(sox_format_t * ft);
-    int          (*startwrite)(sox_format_t * ft);
-    sox_size_t   (*write)(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len);
-    int          (*stopwrite)(sox_format_t * ft);
-    int          (*seek)(sox_format_t * ft, sox_size_t offset);
-    unsigned     const * write_formats;
-    sox_rate_t   const * write_rates;
+  unsigned     sox_lib_version_code; /* Checked on load; must be 1st in struct*/
+  char         const * description;
+  char         const * const * names;
+  unsigned int flags;
+  int          (*startread)(sox_format_t * ft);
+  sox_size_t   (*read)(sox_format_t * ft, sox_sample_t *buf, sox_size_t len);
+  int          (*stopread)(sox_format_t * ft);
+  int          (*startwrite)(sox_format_t * ft);
+  sox_size_t   (*write)(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len);
+  int          (*stopwrite)(sox_format_t * ft);
+  int          (*seek)(sox_format_t * ft, sox_size_t offset);
+  unsigned     const * write_formats;
+  sox_rate_t   const * write_rates;
 } sox_format_handler_t;
 
 /*

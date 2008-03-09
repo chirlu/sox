@@ -214,6 +214,7 @@ SOX_FORMAT_HANDLER(lpc10)
   static sox_rate_t   const write_rates[] = {8000, 0};
   static unsigned     const write_encodings[] = {SOX_ENCODING_LPC10, 0, 0};
   static sox_format_handler_t handler = {
+    SOX_LIB_VERSION_CODE,
     "Low bandwidth, robotic sounding speech compression",
     names, SOX_FILE_MONO,
     startread, read_samples, stopread,

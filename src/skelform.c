@@ -157,17 +157,16 @@ static int startwrite(sox_format_t * ft)
  */
 static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
 {
-  skelform_t UNUSED sk = (skelform_t)ft->priv;
+  skelform_t sk = (skelform_t)ft->priv;
+  sox_size_t done = 0;
 
+  (void)sk;
   switch (ft->encoding.bits_per_sample) {
   case 8:
     switch (ft->encoding.encoding) {
     case SOX_ENCODING_UNSIGNED:
-      while (len--) {
-        len = sox_writeb(ft, SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++, ft->clips));
-        if (len == 0)
-          break;
-      }
+      while (done < len && sox_writeb(ft, SOX_SAMPLE_TO_UNSIGNED_8BIT(*buf++, ft->clips)) == SOX_SUCCESS)
+        ++done;
       break;
     default:
       sox_fail("Undetected bad sample encoding in write!");
@@ -178,8 +177,7 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
     sox_fail("Undetected bad sample size in write!");
     exit(2);
   }
-
-  return len;
+  return done;
 }
 
 static int stopwrite(sox_format_t UNUSED * ft)
@@ -213,6 +211,7 @@ SOX_FORMAT_HANDLER(skel)
    * and NULL used in place of the its name below.
    */
   static sox_format_handler_t handler = {
+    SOX_LIB_VERSION_CODE,
     "My first SoX format!",
     names, 0,
     startread, read_samples, stopread,

@@ -71,10 +71,11 @@ static int init_format(const char *file, lt_ptr data)
     if (ret > 0 && ret < MAX_NAME_LEN) {
       union {sox_format_fn_t fn; lt_ptr ptr;} ltptr;
       ltptr.ptr = lt_dlsym(lth, fnname);
-      sox_format_fns[sox_formats].fn = ltptr.fn;
       sox_debug("opening format plugin `%s': library %p, entry point %p\n", fnname, (void *)lth, ltptr.ptr);
-      if (sox_format_fns[sox_formats].fn)
+      if (ltptr.fn && (ltptr.fn()->sox_lib_version_code & ~255) == (SOX_LIB_VERSION_CODE & ~255)){
+        sox_format_fns[sox_formats].fn = ltptr.fn;
         sox_formats++;
+      }
     }
   }
 
@@ -208,7 +209,7 @@ static char const * detect_magic(sox_format_t * ft)
   MAGIC(smp   , 0, 0, ""     , 0, 17, "SOUND SAMPLE DATA")
   MAGIC(wve   , 0, 0, ""     , 0, 15, "ALawSoundFile**")
   MAGIC(amr-wb, 0, 0, ""     , 0,  9, "#!AMR-WB\n")
-  MAGIC(prc   , 0, 0, ""     , 0,  8, prc_header)
+  MAGIC(prc   , 0, 0, ""     , 0,  8, "\x37\x00\x00\x10\x6d\x00\x00\x10")
   MAGIC(sph   , 0, 0, ""     , 0,  7, "NIST_1A")
   MAGIC(amr-nb, 0, 0, ""     , 0,  6, "#!AMR\n")
   MAGIC(txw   , 0, 0, ""     , 0,  6, "LM8953")
@@ -899,4 +900,3 @@ int sox_parse_playlist(sox_playlist_callback_t callback, void * p, char const * 
   free(dirname);
   return result;
 }
-

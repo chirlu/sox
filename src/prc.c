@@ -73,7 +73,52 @@ static void prcwriteheader(sox_format_t * ft);
 static int seek(sox_format_t * ft, sox_size_t offset)
 {
   prc_t p = (prc_t)ft->priv;
-  return sox_offset_seek(ft, p->data_start, offset);
+  if (ft->encoding.encoding == SOX_ENCODING_ALAW)
+    return sox_offset_seek(ft, p->data_start, offset);
+  return SOX_EOF;
+}
+
+/* File header. The first 4 words are fixed; the rest of the header
+   could theoretically be different, and this is the first place to
+   check with apparently invalid files.
+
+   N.B. All offsets are from start of file. */
+static const char prc_header[41] = {
+  /* Header section */
+  '\x37','\x00','\x00','\x10', /* 0x00: File type (UID 1) */
+  '\x6d','\x00','\x00','\x10', /* 0x04: File kind (UID 2) */
+  '\x7e','\x00','\x00','\x10', /* 0x08: Application ID (UID 3) */
+  '\xcf','\xac','\x08','\x55', /* 0x0c: Checksum of UIDs 1-3 */
+  '\x14','\x00','\x00','\x00', /* 0x10: File offset of Section Table Section */
+  /* Section Table Section: a BListL, i.e. a list of longs preceded by
+     length byte.
+     The longs are in (ID, offset) pairs, each pair identifying a
+     section. */
+  '\x04',                      /* 0x14: List has 4 bytes, i.e. 2 pairs */
+  '\x52','\x00','\x00','\x10', /* 0x15: ID: Record Section */
+  '\x34','\x00','\x00','\x00', /* 0x19: Offset to Record Section */
+  '\x89','\x00','\x00','\x10', /* 0x1d: ID: Application ID Section */
+  '\x25','\x00','\x00','\x00', /* 0x21: Offset to Application ID Section */
+  '\x7e','\x00','\x00','\x10', /* 0x25: Application ID Section:
+                                  Record.app identifier */
+  /* Next comes the string, which can be either case. */
+};
+
+/* Format of the Record Section (offset 0x34):
+
+00 L Uncompressed data length
+04 ID a1 01 00 10 for ADPCM, 00 00 00 00 for A-law
+08 W number of times sound will be repeated (0 = played once)
+0a B Volume setting (01-05)
+0b B Always 00 (?)
+0c L Time between repeats in usec
+10 LListB (i.e. long giving number of bytes followed by bytes) Sound Data
+*/
+
+static int prc_checkheader(sox_format_t * ft, char *head)
+{
+  sox_readbuf(ft, head, sizeof(prc_header));
+  return memcmp(head, prc_header, sizeof(prc_header)) == 0;
 }
 
 static int startread(sox_format_t * ft)
@@ -314,15 +359,14 @@ static void write_cardinal(sox_format_t * ft, unsigned a)
   }
 }
 
-static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t samp)
+static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_size_t nsamp)
 {
   prc_t p = (prc_t)ft->priv;
   /* Psion Record seems not to be able to handle frames > 800 samples */
-  samp = min(samp, 800);
-  p->nsamp += samp;
+  sox_size_t written = 0;
   sox_debug_more("length now = %d", p->nsamp);
-  if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) {
-    sox_size_t written;
+  if (ft->encoding.encoding == SOX_ENCODING_IMA_ADPCM) while (written < nsamp) {
+    sox_size_t written1, samp = min(nsamp - written, 800);
 
     write_cardinal(ft, samp);
     /* Write compressed length */
@@ -331,11 +375,15 @@ static sox_size_t write_samples(sox_format_t * ft, const sox_sample_t *buf, sox_
     sox_debug_more("list length %d", samp);
     sox_writedw(ft, samp);
     sox_adpcm_reset(&p->adpcm, ft->encoding.encoding);
-    written = sox_adpcm_write(ft, &p->adpcm, buf, samp);
+    written1 = sox_adpcm_write(ft, &p->adpcm, buf, samp);
+    if (written1 != samp)
+      break;
     sox_adpcm_flush(ft, &p->adpcm);
-    return written;
+    written += written1;
   } else
-    return sox_rawwrite(ft, buf, samp);
+    written = sox_rawwrite(ft, buf, nsamp);
+  p->nsamp += written;
+  return written;
 }
 
 static int stopwrite(sox_format_t * ft)
@@ -390,6 +438,7 @@ SOX_FORMAT_HANDLER(prc)
     SOX_ENCODING_IMA_ADPCM, 4, 0,
     0};
   static sox_format_handler_t const handler = {
+    SOX_LIB_VERSION_CODE,
     "Psion Record; used in EPOC devices (Series 5, Revo and similar)",
     names, SOX_FILE_LIT_END | SOX_FILE_MONO,
     startread, read_samples, stopread,

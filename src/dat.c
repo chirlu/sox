@@ -153,6 +153,7 @@ SOX_FORMAT_HANDLER(dat)
   static char const * const names[] = {"dat", NULL};
   static unsigned const write_encodings[] = {SOX_ENCODING_FLOAT_TEXT, 0, 0};
   static sox_format_handler_t const handler = {
+    SOX_LIB_VERSION_CODE,
     "Textual representation of the sampled audio",
     names, 0,
     sox_datstartread, sox_datread, NULL,

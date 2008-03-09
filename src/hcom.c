@@ -455,6 +455,7 @@ SOX_FORMAT_HANDLER(hcom)
   static unsigned     const write_encodings[] = {
     SOX_ENCODING_HCOM, 8, 0, 0};
   static sox_format_handler_t handler   = {
+    SOX_LIB_VERSION_CODE,
     "Mac FSSD files with Huffman compression",
     names, SOX_FILE_BIG_END|SOX_FILE_MONO,
     startread, read_samples, stopread,
