@@ -230,6 +230,22 @@ See also
 .B mcompand
 for a multiple-band companding effect.
 .TP
+\fBcontrast [\fIenhancement-amount\fR]
+Comparable to compression, this effect modifies an audio signal to 
+make it sound louder.
+.I enhancement-amount
+controls the amount of the enhancement and is a number in the range 0\-100.
+Note that
+.I enhancement-amount
+= 0 still gives a significant contrast enhancement.
+.B contrast
+is often used in conjunction with the
+.B norm
+effect as follows:
+.EX
+	sox infile outfile norm -i contrast
+.EE
+.TP
 \fBdcshift \fIshift\fR [\fIlimitergain\fR]
 DC Shift the audio, with basic linear amplitude formula.
 This is most useful if your audio tends to not be centered around

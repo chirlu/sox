@@ -47,6 +47,7 @@ Effects:
   o New `remix' effect; complements the mixer effect.  (robs)
   o New `norm' (normalise) effect.  (robs)
   o New `delay' effect; delay one or more channels.  (robs)
+  o New `contrast' enhancement effect [FR 708923].  (robs)
   o Fix crash on 64-bit arch. with tempo & key effects.  (Sami Liedes)
   o Fix synth max. level setting for some output encodings.  (robs)
   o `gain' alias for the vol effect.  (robs)

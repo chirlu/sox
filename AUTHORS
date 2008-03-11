@@ -19,7 +19,8 @@ Mantainers:
                 24bit support for popular formats, MP3 tags & duration support.
 		Effects: key, tempo, pad, bass, treble, delay, new reverb, new
 		flanger, soft-knee companding, speed via resampling, filters
-		makeover inc. gnuplot & octave plotting, splice, remix, norm;
+		makeover inc. gnuplot & octave plotting, splice, remix, norm,
+		contrast;
 		new effects chain with buffering and any # channels.
                 Others: open input files via URL, file multiply/merge, play
                 multiple files with mixed format types, play with replay-gain,

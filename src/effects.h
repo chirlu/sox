@@ -7,6 +7,7 @@
   EFFECT(bass)
   EFFECT(chorus)
   EFFECT(compand)
+  EFFECT(contrast)
   EFFECT(dcshift)
   EFFECT(deemph)
   EFFECT(delay)

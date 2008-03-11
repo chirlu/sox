@@ -52,11 +52,8 @@ static void output_message(unsigned level, const char *filename, const char *fmt
 
 #ifdef HAVE_LIBLTDL
 static sox_bool plugins_initted = sox_false;
-#endif
 
-/* FIXME: Use vasprintf */
-#ifdef HAVE_LIBLTDL
-#define MAX_NAME_LEN 1024
+#define MAX_NAME_LEN 1024 /* FIXME: Use vasprintf */
 static int init_format(const char *file, lt_ptr data)
 {
   lt_dlhandle lth = lt_dlopenext(file);
@@ -78,7 +75,6 @@ static int init_format(const char *file, lt_ptr data)
       }
     }
   }
-
   return 0;
 }
 #endif
@@ -603,7 +599,7 @@ sox_format_t * sox_open_write(
   set_output_format(ft);
 
   /* FIXME: doesn't cover the situation where
-   * codec changes audio length (e.g. 8svx, gsm): */
+   * codec changes audio length due to block alignment (e.g. 8svx, gsm): */
   if (signal->rate && signal->channels)
     ft->length = ft->length * ft->signal.rate / signal->rate *
       ft->signal.channels / signal->channels + .5;
