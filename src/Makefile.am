@@ -300,6 +300,11 @@ install-exec-hook:
 		cd $(DESTDIR)$(bindir); $(RM) play rec soxi; $(LN_S) sox play; $(LN_S) sox rec; $(LN_S) sox soxi; \
 	fi
 
+uninstall-hook:
+	if test "$(PLAYRECLINKS)" = "yes"; then	\
+		cd $(DESTDIR)$(bindir); $(RM) play rec soxi \
+	fi
+
 clean-local:
 	$(RM) play rec soxi
 	$(RM) sox_sample_test

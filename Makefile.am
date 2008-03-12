@@ -36,6 +36,10 @@ install-data-hook:
 	cd $(DESTDIR)$(mandir)/man1 && $(RM) play.1 && $(LN_S) sox.1 play.1
 	cd $(DESTDIR)$(mandir)/man1 && $(RM) rec.1 && $(LN_S) sox.1 rec.1
 
+uninstall-hook:
+	$(RM) $(DESTDIR)$(mandir)/man1/play.1
+	$(RM) $(DESTDIR)$(mandir)/man1/rec.1
+
 # Automatically update libtool script if it gets out-of-date
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
