@@ -36,4 +36,3 @@
 #cmakedefine HAVE_UNISTD_H            1
 #cmakedefine HAVE_VSNPRINTF           1
 #cmakedefine WORDS_BIGENDIAN          1
-#define _FILE_OFFSET_BITS 32

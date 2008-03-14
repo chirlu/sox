@@ -104,7 +104,9 @@ char *strrstr(const char *s, const char *t);
 #define ftello ftell
 #define off_t long
 #endif
+#ifdef _FILE_OFFSET_BITS
 assert_static(sizeof(off_t) == _FILE_OFFSET_BITS >> 3, OFF_T_BUILD_PROBLEM);
+#endif
 
 /* Digitise one cycle of a wave and store it as
  * a table of samples of a specified data-type.
