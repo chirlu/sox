@@ -8,6 +8,7 @@ debian/tmp/usr/lib/sox/libsox_fmt_cvsd.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_dat.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_dvms.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_hcom.so* usr/lib/sox/
+debian/tmp/usr/lib/sox/libsox_fmt_htk.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_ima.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_la.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_lpc10.so* usr/lib/sox/

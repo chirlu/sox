@@ -1,12 +1,15 @@
 sox (14.0.1+cvs-1) UNRELEASED; urgency=low
 
   * CVS version.
-    - Add support for for the 2, 2.6 and 4-bit ADPCM .voc (closes: #103479).
-    - Add pkgconfig support (closes: #462704).
+    - Adds support for for the 2, 2.6 and 4-bit ADPCM .voc (closes: #103479).
+    - Adds pkgconfig support (closes: #462704).
   * [debian/libsox-fmt-base.install]:
     - Removed auto library, no longer exists upstream.
+    - Added htk format library.
   * [debian/libsox-dev.install]:
     - Added pkgconfig file.
+  * [debian/sox.install]:
+    - Added soxi, a utility to extract/display file header fields.
   * [debian/patches/00-fix-segfault-64bit.diff]:
     - Removed, fixed upstream.
   * [debian/rules]:

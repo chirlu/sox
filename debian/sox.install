@@ -1,2 +1,2 @@
-debian/tmp/usr/bin/{play,rec,sox} usr/bin/
+debian/tmp/usr/bin/{play,rec,sox,soxi} usr/bin/
 debian/tmp/usr/share/man/man{1,7} usr/share/man/
