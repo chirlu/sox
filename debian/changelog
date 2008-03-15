@@ -7,8 +7,25 @@ sox (14.0.1+cvs-1) UNRELEASED; urgency=low
     - Removed auto library, no longer exists upstream.
   * [debian/libsox-dev.install]:
     - Added pkgconfig file.
+  * [debian/patches/00-fix-segfault-64bit.diff]:
+    - Removed, fixed upstream.
+  * [debian/rules]:
+    - Disabled patch system.
 
  -- Pascal Giard <evilynux@gmail.com>  Fri, 14 Mar 2008 16:02:58 -0400
+
+sox (14.0.1-2) unstable; urgency=low
+
+  * [debian/libsox-dev.install]:
+    - Added libsfx.a and libsfx.so symlinks to libsox-dev (closes: #463800).
+    - Removed *.la files.
+  * [debian/patches/00-fix-segfault-64bit.diff]:
+    - Fixed segfault on 64bit cpus with tempo and key effects
+      (closes: #461300). Thanks to Sami Liedes <sliedes@cc.hut.fi>.
+  * [debian/rules]:
+    - Enabled patch system.
+
+ -- Pascal Giard <pascal@debian.org>  Wed, 13 Feb 2008 10:41:29 -0500
 
 sox (14.0.1-1) unstable; urgency=low
 
