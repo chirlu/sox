@@ -2,7 +2,6 @@ debian/tmp/usr/lib/sox/libsox_fmt_aifc.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_aiff.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_al.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_au.so* usr/lib/sox/
-debian/tmp/usr/lib/sox/libsox_fmt_auto.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_avr.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_cdr.so* usr/lib/sox/
 debian/tmp/usr/lib/sox/libsox_fmt_cvsd.so* usr/lib/sox/

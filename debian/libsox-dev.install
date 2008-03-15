@@ -2,3 +2,4 @@ debian/tmp/usr/lib/libsox.{a,la,so} usr/lib/
 debian/tmp/usr/lib/sox/libsox*.{a,la} usr/lib/sox/
 debian/tmp/usr/include/* usr/include/
 debian/tmp/usr/share/man/man3 usr/share/man/
+debian/tmp/usr/lib/pkgconfig/sox.pc usr/lib/pkgconfig/
