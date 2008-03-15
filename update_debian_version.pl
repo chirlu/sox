@@ -33,7 +33,7 @@ open( FH, $changelog );
 @content = <FH>;
 close( FH );
 die "Can't modify $changelog!\n"
-  unless $content[0] =~ s/^(sox \()\d+\.\d+\.\d+(\.cvs-1\).*)$/$1$version$2/;
+  unless $content[0] =~ s/^(sox \()\d+\.\d+\.\d+(\+cvs-1\).*)$/$1$version$2/;
 
 open( FH, "> $changelog" );
 print FH @content;
