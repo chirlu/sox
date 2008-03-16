@@ -139,27 +139,19 @@ int sox_gettype(sox_format_t * ft, sox_bool is_file_extension)
 
 void set_signal_defaults(sox_signalinfo_t * signal)
 {
-  if (!signal->rate    ) signal->rate     = SOX_DEFAULT_RATE;
-  if (!signal->precision    ) signal->precision     = SOX_DEFAULT_PRECISION;
-  if (!signal->channels) signal->channels = SOX_DEFAULT_CHANNELS;
+  if (!signal->rate     ) signal->rate      = SOX_DEFAULT_RATE;
+  if (!signal->precision) signal->precision = SOX_DEFAULT_PRECISION;
+  if (!signal->channels ) signal->channels  = SOX_DEFAULT_CHANNELS;
 }
 
 static void set_endianness_if_not_already_set(sox_format_t * ft)
 {
-  if (ft->encoding.reverse_bytes == SOX_OPTION_DEFAULT) {
-    if (ft->handler.flags & SOX_FILE_ENDIAN)
-    {
-        /* Set revere_bytes if we are running on opposite endian
-         * machine compared to file format.
-         */
-        if (ft->handler.flags & SOX_FILE_ENDBIG)
-            ft->encoding.reverse_bytes = SOX_IS_LITTLEENDIAN;
-        else
-            ft->encoding.reverse_bytes = SOX_IS_BIGENDIAN;
-    }
-    else
-      ft->encoding.reverse_bytes = SOX_OPTION_NO;
-  }
+  if (ft->encoding.opposite_endian)
+    ft->encoding.reverse_bytes = (ft->handler.flags & SOX_FILE_ENDIAN)?
+      !(ft->handler.flags & SOX_FILE_ENDBIG) != SOX_IS_BIGENDIAN : sox_true;
+  if (ft->encoding.reverse_bytes == SOX_OPTION_DEFAULT)
+    ft->encoding.reverse_bytes = (ft->handler.flags & SOX_FILE_ENDIAN)?
+      !(ft->handler.flags & SOX_FILE_ENDBIG) == SOX_IS_BIGENDIAN : sox_false;
   if (ft->encoding.reverse_bits == SOX_OPTION_DEFAULT)
     ft->encoding.reverse_bits = !!(ft->handler.flags & SOX_FILE_BIT_REV);
   else if (ft->encoding.reverse_bits != !!(ft->handler.flags & SOX_FILE_BIT_REV))
@@ -195,7 +187,7 @@ static int sox_checkformat(sox_format_t * ft)
   return SOX_SUCCESS;
 }
 
-static char const * detect_magic(sox_format_t * ft)
+static char const * detect_magic(sox_format_t * ft, char const * ext)
 {
   char data[256];
   size_t len = sox_readbuf(ft, data, sizeof(data));
@@ -209,7 +201,7 @@ static char const * detect_magic(sox_format_t * ft)
   MAGIC(sph   , 0, 0, ""     , 0,  7, "NIST_1A")
   MAGIC(amr-nb, 0, 0, ""     , 0,  6, "#!AMR\n")
   MAGIC(txw   , 0, 0, ""     , 0,  6, "LM8953")
-  MAGIC(sndt  , 0, 0, ""     , 0,  5, "SOUND")
+  MAGIC(sndt  , 0, 0, ""     , 0,  6, "SOUND\x1a")
   MAGIC(vorbis, 0, 4, "OggS" , 29, 6, "vorbis")
   MAGIC(speex , 0, 4, "OggS" , 28, 6, "Speex")
   MAGIC(hcom  ,65, 4, "FSSD" , 128,4, "HCOM")
@@ -222,13 +214,24 @@ static char const * detect_magic(sox_format_t * ft)
   MAGIC(xa    , 0, 0, ""     , 0,  4, "XA\0\0")
   MAGIC(xa    , 0, 0, ""     , 0,  4, "XAI\0")
   MAGIC(xa    , 0, 0, ""     , 0,  4, "XAJ\0")
-  MAGIC(au    , 0, 0, ""     , 0,  4, "\0ds.")
   MAGIC(au    , 0, 0, ""     , 0,  4, ".snd")
+  MAGIC(au    , 0, 0, ""     , 0,  4, "dns.")
+  MAGIC(au    , 0, 0, ""     , 0,  4, "\0ds.")
+  MAGIC(au    , 0, 0, ""     , 0,  4, ".sd\0")
   MAGIC(flac  , 0, 0, ""     , 0,  4, "fLaC")
   MAGIC(avr   , 0, 0, ""     , 0,  4, "2BIT")
   MAGIC(caf   , 0, 0, ""     , 0,  4, "caff")
   MAGIC(paf   , 0, 0, ""     , 0,  4, " paf")
-  MAGIC(sf    , 3, 1, ""     , 0,  2, "\144\243")
+  MAGIC(sf    , 0, 0, ""     , 0,  4, "\144\243\001\0")
+  MAGIC(sf    , 0, 0, ""     , 0,  4, "\0\001\243\144")
+  MAGIC(sf    , 0, 0, ""     , 0,  4, "\144\243\002\0")
+  MAGIC(sf    , 0, 0, ""     , 0,  4, "\0\002\243\144")
+  MAGIC(sf    , 0, 0, ""     , 0,  4, "\144\243\003\0")
+  MAGIC(sf    , 0, 0, ""     , 0,  4, "\0\003\243\144")
+  MAGIC(sf    , 0, 0, ""     , 0,  4, "\144\243\004\0")
+
+  if (ext && !strcasecmp(ext, "snd"))
+  MAGIC(sndr  , 7, 1, ""     , 0,  2, "\0")
   #undef MAGIC
   return NULL;
 }
@@ -269,7 +272,7 @@ sox_format_t * sox_open_read(
 
   if (!filetype) {
     if (ft->seekable) {
-      filetype = detect_magic(ft);
+      filetype = detect_magic(ft, find_file_extension(path));
       sox_rewind(ft);
     }
     if (filetype) {
@@ -662,16 +665,16 @@ sox_size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
       sox_format_t * ft, ctype *buf, sox_size_t len) \
   { \
     sox_size_t n, nread; \
-    if ((nread = sox_readbuf(ft, buf, len * size)) != len * size && sox_error(ft)) \
-      sox_fail_errno(ft, errno, sox_readerr); \
-    nread /= size; \
+    nread = sox_readbuf(ft, buf, len * size) / size; \
     for (n = 0; n < nread; n++) \
       twiddle(buf[n], type); \
     return nread; \
   }
 
 /* Unpack a 3-byte value from a uint8_t * */
-#define sox_unpack3(p) ((p)[0] | ((p)[1] << 8) | ((p)[2] << 16))
+#define sox_unpack3(p) (ft->encoding.reverse_bytes == SOX_IS_BIGENDIAN? \
+  ((p)[0] | ((p)[1] << 8) | ((p)[2] << 16)) : \
+  ((p)[2] | ((p)[1] << 8) | ((p)[0] << 16)))
 
 /* This (slower) macro works for unaligned types (e.g. 3-byte types)
    that need to be unpacked. */
@@ -681,14 +684,9 @@ sox_size_t sox_write(sox_format_t * ft, const sox_sample_t *buf, sox_size_t len)
   { \
     sox_size_t n, nread; \
     uint8_t *data = xmalloc(size * len); \
-    if ((nread = sox_readbuf(ft, data, len * size)) != len * size && sox_error(ft)) \
-      sox_fail_errno(ft, errno, sox_readerr); \
-    nread /= size; \
-    for (n = 0; n < nread; n++) { \
-      ctype datum = sox_unpack ## size(data + n * size); \
-      twiddle(datum, type); \
-      buf[n] = datum; \
-    } \
+    nread = sox_readbuf(ft, data, len * size) / size; \
+    for (n = 0; n < nread; n++) \
+      buf[n] = sox_unpack ## size(data + n * size); \
     free(data); \
     return n; \
   }
@@ -699,6 +697,34 @@ READ_FUNC_UNPACK(3, 3, uint24_t, TWIDDLE_WORD)
 READ_FUNC(dw, 4, uint32_t, TWIDDLE_WORD)
 READ_FUNC(f, sizeof(float), float, TWIDDLE_FLOAT)
 READ_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
+
+#define READ1_FUNC(type, ctype) \
+int sox_read ## type(sox_format_t * ft, ctype * datum) { \
+  if (sox_read_ ## type ## _buf(ft, datum, 1) == 1) \
+    return SOX_SUCCESS; \
+  if (!sox_error(ft)) \
+    sox_fail_errno(ft, errno, premature_eof); \
+  return SOX_EOF; \
+}
+
+static char const premature_eof[] = "premature EOF";
+
+READ1_FUNC(b,  uint8_t)
+READ1_FUNC(w,  uint16_t)
+READ1_FUNC(3,  uint24_t)
+READ1_FUNC(dw, uint32_t)
+READ1_FUNC(f,  float)
+READ1_FUNC(df, double)
+
+int sox_readchars(sox_format_t * ft, char * chars, sox_size_t len)
+{
+  size_t ret = sox_readbuf(ft, chars, len);
+  if (ret == len)
+    return SOX_SUCCESS;
+  if (!sox_error(ft))
+    sox_fail_errno(ft, errno, premature_eof);
+  return SOX_EOF;
+}
 
 /* N.B. This macro doesn't work for unaligned types (e.g. 3-byte
    types). */
@@ -714,10 +740,10 @@ READ_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
   }
 
 /* Pack a 3-byte value to a uint8_t * */
-#define sox_pack3(p, v) \
-  (p)[0] = v & 0xff; \
-  (p)[1] = (v >> 8) & 0xff; \
-  (p)[2] = (v >> 16) & 0xff;
+#define sox_pack3(p, v) do {if (ft->encoding.reverse_bytes == SOX_IS_BIGENDIAN)\
+{(p)[0] = v & 0xff; (p)[1] = (v >> 8) & 0xff; (p)[2] = (v >> 16) & 0xff;} else \
+{(p)[2] = v & 0xff; (p)[1] = (v >> 8) & 0xff; (p)[0] = (v >> 16) & 0xff;} \
+} while (0)
 
 /* This (slower) macro works for unaligned types (e.g. 3-byte types)
    that need to be packed. */
@@ -727,11 +753,8 @@ READ_FUNC(df, sizeof(double), double, TWIDDLE_WORD)
   { \
     sox_size_t n, nwritten; \
     uint8_t *data = xmalloc(size * len); \
-    for (n = 0; n < len; n++) { \
-      ctype datum = buf[n]; \
-      twiddle(datum, type); \
-      sox_pack ## size(data + n * size, datum); \
-    } \
+    for (n = 0; n < len; n++) \
+      sox_pack ## size(data + n * size, buf[n]); \
     nwritten = sox_writebuf(ft, data, len * size); \
     free(data); \
     return nwritten / size; \
@@ -768,8 +791,13 @@ WRITE1U_FUNC(3, uint24_t)
 WRITE1U_FUNC(dw, uint32_t)
 WRITE1S_FUNC(b, uint8_t)
 WRITE1S_FUNC(w, uint16_t)
-WRITE1_FUNC(f, float)
 WRITE1_FUNC(df, double)
+
+int sox_writef(sox_format_t * ft, double datum)
+{
+  float f = datum;
+  return sox_write_f_buf(ft, &f, 1) == 1 ? SOX_SUCCESS : SOX_EOF;
+}
 
 /* N.B. The file (if any) may already have been deleted. */
 int sox_close(sox_format_t * ft)
