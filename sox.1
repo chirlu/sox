@@ -80,13 +80,13 @@ SoX might be used.  The simple:
 .EE
 translates an audio file in Sun AU format to a Microsoft WAV file, whilst:
 .EX
-	sox recital.au -r 12000 -1 -c 1 recital.wav vol 0.7 dither
+	sox recital.au -r 12k -1 -c 1 recital.wav vol 0.7 dither
 .EE
 performs the same format translation, but also changes the audio
 sampling rate & sample size, down-mixes to mono, and applies
 the \fBvol\fR and \fBdither\fR effects.
 .EX
-	sox -r 8000 -u -1 -c 1 voice-memo.raw voice-memo.wav
+	sox -r 8k -u -1 -c 1 voice-memo.raw voice-memo.wav
 .EE
 adds a header to a raw audio file,
 .EX
@@ -679,8 +679,9 @@ effect must be used.  If the
 effect is not specified on the
 command line it will be invoked internally with default parameters.
 .TP
-\fB\-r, \fB\-\-rate\fR \fIRATE\fR
-Gives the sample rate in Hz of the file.  To cause the output file to have
+\fB\-r, \fB\-\-rate\fR \fIRATE\fR[\fBk\fR]
+Gives the sample rate in Hz (or kHz if appended with `k') of the file.
+To cause the output file to have
 a different sample rate than the input file, include this option with
 the output file format options.
 .SP
