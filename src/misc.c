@@ -141,19 +141,19 @@ int sox_check_read_params(sox_format_t * ft, unsigned channels,
     ft->data_start = sox_tell(ft);
 
   if (channels && ft->signal.channels && ft->signal.channels != channels)
-    sox_warn("'%s': overriding number of channels", ft->filename);
+    sox_warn("`%s': overriding number of channels", ft->filename);
   else ft->signal.channels = channels;
 
   if (rate && ft->signal.rate && ft->signal.rate != rate)
-    sox_warn("'%s': overriding sample rate", ft->filename);
+    sox_warn("`%s': overriding sample rate", ft->filename);
   else ft->signal.rate = rate;
 
   if (encoding && ft->encoding.encoding && ft->encoding.encoding != encoding)
-    sox_warn("'%s': overriding encoding type", ft->filename);
+    sox_warn("`%s': overriding encoding type", ft->filename);
   else ft->encoding.encoding = encoding;
 
   if (bits_per_sample && ft->encoding.bits_per_sample && ft->encoding.bits_per_sample != bits_per_sample)
-    sox_warn("'%s': overriding encoding size", ft->filename);
+    sox_warn("`%s': overriding encoding size", ft->filename);
   ft->encoding.bits_per_sample = bits_per_sample;
 
   if (ft->encoding.bits_per_sample && sox_filelength(ft)) {
@@ -161,10 +161,10 @@ int sox_check_read_params(sox_format_t * ft, unsigned channels,
     if (!ft->length)
       ft->length = calculated_length;
     else if (length != calculated_length)
-      sox_warn("file header gives the total number of samples as %u but file length indicates the number is in fact %u", (unsigned)length, (unsigned)calculated_length); /* FIXME: casts */
+      sox_warn("`%s': file header gives the total number of samples as %u but file length indicates the number is in fact %u", ft->filename, (unsigned)length, (unsigned)calculated_length); /* FIXME: casts */
   }
 
-  if ( sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample))
+  if (sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample))
     return SOX_SUCCESS;
   sox_fail_errno(ft, EINVAL, "invalid format for this file type");
   return SOX_EOF;
@@ -214,6 +214,7 @@ size_t sox_readbuf(sox_format_t * ft, void *buf, sox_size_t len)
   size_t ret = fread(buf, 1, len, ft->fp);
   if (ret != len && ferror(ft->fp))
     sox_fail_errno(ft, errno, "sox_readbuf");
+  ft->tell += ret;
   return ret;
 }
 
@@ -250,6 +251,7 @@ size_t sox_writebuf(sox_format_t * ft, void const * buf, sox_size_t len)
     sox_fail_errno(ft, errno, "error writing output file");
     clearerr(ft->fp); /* Allows us to seek back to write header */
   }
+  ft->tell += ret;
   return ret;
 }
 
@@ -268,7 +270,7 @@ int sox_flush(sox_format_t * ft)
 
 sox_ssize_t sox_tell(sox_format_t * ft)
 {
-  return (sox_ssize_t)ftello(ft->fp);
+  return ft->seekable? (sox_ssize_t)ftello(ft->fp) : ft->tell;
 }
 
 int sox_eof(sox_format_t * ft)
@@ -582,6 +584,7 @@ int sox_seeki(sox_format_t * ft, sox_ssize_t offset, int whence)
             while (offset > 0 && !feof(ft->fp)) {
                 getc(ft->fp);
                 offset--;
+                ++ft->tell;
             }
             if (offset)
                 sox_fail_errno(ft,SOX_EOF, "offset past EOF");

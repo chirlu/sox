@@ -336,6 +336,7 @@ struct sox_format {
   FILE             *fp;                  /* File stream pointer */
   int              sox_errno;            /* Failure error codes */
   char             sox_errstr[256];      /* Extend Failure text */
+  off_t            tell;
   off_t            data_start;
   sox_format_handler_t handler;  /* format struct for this file */
 };
