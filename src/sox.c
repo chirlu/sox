@@ -195,10 +195,13 @@ static void play_file_info(sox_format_t * ft, file_t f, sox_bool full)
   sox_size_t ws = ft->length / ft->signal.channels;
   (void)full;
 
-  fprintf(output, "\n%s:", ft->filename);
-  if (strcmp(ft->filename, "-") == 0 || (ft->handler.flags & SOX_FILE_DEVICE))
-    fprintf(output, " (%s)", ft->handler.names[0]);
-  fprintf(output, "\n\n");
+  fprintf(output, "\n");
+  if (ft->filename[0]) {
+    fprintf(output, "%s:", ft->filename);
+    if (strcmp(ft->filename, "-") == 0 || (ft->handler.flags & SOX_FILE_DEVICE))
+      fprintf(output, " (%s)", ft->handler.names[0]);
+    fprintf(output, "\n\n");
+  }
 
   fprintf(output, "  Encoding: %-14s", sox_encodings_short_str[ft->encoding.encoding]);
   text = find_comment(f->ft->comments, "Comment");
