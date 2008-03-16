@@ -1367,12 +1367,16 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
         f->filetype++;
       break;
 
-    case 'r':
-      if (sscanf(optarg, "%lf %c", &f->signal.rate, &dummy) != 1 || f->signal.rate <= 0) {
+    case 'r': {
+      char k = 0;
+      size_t n = sscanf(optarg, "%lf %c %c", &f->signal.rate, &k, &dummy);
+      if (n < 1 || f->signal.rate <= 0 || (n > 1 && k != 'k') || n > 2) {
         sox_fail("Rate value `%s' is not a positive number", optarg);
         exit(1);
       }
+      f->signal.rate *= k == 'k'? 1000. : 1.;
       break;
+    }
 
     case 'v':
       if (sscanf(optarg, "%lf %c", &f->volume, &dummy) != 1) {
