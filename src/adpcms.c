@@ -194,7 +194,7 @@ sox_size_t sox_adpcm_read(sox_format_t * ft, adpcm_io_t state, sox_sample_t * bu
     state->store.flag = 0;
     ++n;
   }
-  while (n < len && sox_readb(ft, &byte) == SOX_SUCCESS) {
+  while (n < len && sox_read_b_buf(ft, &byte, 1) == 1) {
     word = adpcm_decode(byte >> 4, &state->encoder);
     *buffer++ = SOX_SIGNED_16BIT_TO_SAMPLE(word, ft->clips);
 

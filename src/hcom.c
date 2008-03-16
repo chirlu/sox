@@ -161,7 +161,6 @@ static sox_size_t read_samples(sox_format_t * ft, sox_sample_t *buf, sox_size_t 
                         return 0; /* Don't know if this can happen... */
                 if (sox_readb(ft, &sample_rate) == SOX_EOF)
                 {
-                        sox_fail_errno(ft,SOX_EOF,"unexpected EOF at start of HCOM data");
                         return (0);
                 }
                 p->sample = sample_rate;

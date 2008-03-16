@@ -234,7 +234,7 @@ sox_size_t sox_cvsdread(sox_format_t * ft, sox_sample_t *buf, sox_size_t nsamp)
         
         while (done < nsamp) {
                 if (!p->bit.cnt) {
-                        if (sox_readb(ft, &(p->bit.shreg)) == SOX_EOF)
+                        if (sox_read_b_buf(ft, &(p->bit.shreg), 1) != 1)
                                 return done;
                         p->bit.cnt = 8;
                         p->bit.mask = 1;

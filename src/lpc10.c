@@ -104,7 +104,7 @@ static int read_bits(sox_format_t * ft, INT32 *bits, int len)
   /* Unpack the array bits into coded_frame. */
   for (i = 0; i < len; i++) {
     if (i % 8 == 0) {
-      sox_readb(ft, &c);
+      sox_read_b_buf(ft, &c, 1);
       if (sox_eof(ft)) {
         return (i);
       }

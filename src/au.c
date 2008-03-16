@@ -97,7 +97,7 @@ static int unpack_input(sox_format_t * ft, unsigned char *code)
   unsigned char           in_byte;
 
   if (p->in_bits < (int)ft->encoding.bits_per_sample) {
-    if (sox_readb(ft, &in_byte) == SOX_EOF) {
+    if (sox_read_b_buf(ft, &in_byte, 1) != 1) {
       *code = 0;
       return -1;
     }

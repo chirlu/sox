@@ -90,7 +90,7 @@ static int startread(sox_format_t * ft)
     }
 
     /* This is dumb but portable, just count the bytes til EOF */
-    while (sox_readb(ft, (unsigned char *)&trash) != SOX_EOF)
+    while (sox_read_b_buf(ft, (unsigned char *)&trash, 1) == 1)
         num_samp_bytes++; 
     num_samp_bytes -= 32;         /* calculate num samples by sub header size */
     sox_seeki(ft, 0, 0);           /* rewind file */
