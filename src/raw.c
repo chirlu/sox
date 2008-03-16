@@ -65,8 +65,7 @@ int sox_rawstart(sox_format_t * ft, sox_bool default_rate, sox_bool default_chan
   { \
     sox_size_t n, nread; \
     ctype *data = xmalloc(sizeof(ctype) * len); \
-    if ((nread = sox_read_ ## type ## _buf(ft, (uctype *)data, len)) != len && sox_error(ft)) \
-      sox_fail_errno(ft, errno, sox_readerr); \
+    nread = sox_read_ ## type ## _buf(ft, (uctype *)data, len); \
     for (n = 0; n < nread; n++) \
       *buf++ = cast(data[n], ft->clips); \
     free(data); \

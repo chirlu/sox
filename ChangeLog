@@ -26,12 +26,6 @@ File formats:
 
   o New option --help-format shows info about supported format(s).  (robs)
   o New htk format.  (robs)
-  o Fix [1864216] comments mangled when writing ogg-vorbis.  (robs)
-  o Fix short noise at end of alsa playback.  (Morita Sho/Tim Munro/robs)
-  o Fix wve seek accuracy.  (robs)
-  o Fix lpc10 not working.  (robs)
-  o Fix [1187257] wav MS-ADPCM block-align size incorrect.  (robs)
-  o For wav & au, fix [548256] size in header wrong when piping out.  (robs)
   o Writing aiff, aifc & dvms now repeatable with -R.  (robs)
   o Writing hcom no longer fails with unsupported rate--chooses
     best match.  (robs)
@@ -40,6 +34,17 @@ File formats:
   o Can now write .amb (.wav variant) files [FR 1902232].  (robs)
   o Can now read 2,3(2.6),4 bit ADPCM .voc files [FR 1714991].  (robs)
   o Can now read some MP3 ID3 tags.  (robs)
+  o Can now write Sounder files.  (robs)
+  o Can now write DEC-variant au files (with -x).  (robs)
+  o Comments support for SoundTool files.  (robs)
+  o Fix [1864216] comments mangled when writing ogg-vorbis.  (robs)
+  o Fix short noise at end of alsa playback.  (Morita Sho/Tim Munro/robs)
+  o Fix wve seek accuracy.  (robs)
+  o Fix lpc10 not working.  (robs)
+  o Fix [1187257] wav MS-ADPCM block-align size incorrect.  (robs)
+  o For wav & au, fix [548256] size in header wrong when piping out.  (robs)
+  o Fix IRCAM SF header processing; support all (modern) variants.  (robs)
+  o Fix 24-bit read/write on big-endian systems.  (robs)
 
 Effects:
 
@@ -69,20 +74,23 @@ Other new features:
     and default audio device (all).  (robs)
   o Simpler file info display for `play'.  (robs)
   o New `multiply' method for the input file combiner.  (robs)
+  o For some file-types, warn if file size seems too short.  (robs)
+  o Added auto-detect for caf, sndr, txw & sf files.  (robs)
 
 Other bug fixes:
 
   o Fix [1890983] rec shortcut should apply bit depth (8-bit,
     16-bit, etc.) to input handler.  (robs)
   o Fix auto-detect of hcom files.  (robs)
-  o Added auto-detect for caf, txw & sf files.  (robs)
   o Fix ungraceful handling of out of disc space and other write
     errors (bug was introduced in 14.0.0).  (robs)
+  o Fix endian selection (-B, -L, -x) in some circumstances.  (robs)
 
 Internal improvements:
 
   o Use FORTIFY_SOURCE with gcc.  (robs)
   o Fixed all compiler warnings (AFAICT).  (robs)
+  o Reimplement (separately) SoundTool & Sounder format handlers.  (robs)
 
 Deprecated features to be removed in future:
 

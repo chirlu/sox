@@ -288,7 +288,7 @@ static void display_file_info(sox_format_t * ft, file_t f, sox_bool full)
   }
 
   if (full) {
-    if (ft->encoding.bits_per_sample > 8)
+    if (ft->encoding.bits_per_sample > 8 || (ft->handler.flags & SOX_FILE_ENDIAN))
       fprintf(output, "Endian Type    : %s\n",
           ft->encoding.reverse_bytes != SOX_IS_BIGENDIAN ? "big" : "little");
     if (ft->encoding.bits_per_sample)
@@ -1266,11 +1266,11 @@ static int enum_option(int option_index, enum_item const * items)
 static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
 {
   while (sox_true) {
-    int option_index;
+    int c, option_index;
     int i; /* sscanf silently accepts negative numbers for %u :( */
     char dummy;     /* To check for extraneous chars in optarg. */
 
-    switch (getopt_long(argc, argv, getoptstr, long_options, &option_index)) {
+    switch (c=getopt_long(argc, argv, getoptstr, long_options, &option_index)) {
     case -1:        /* @ one of: file-name, effect name, end of arg-list. */
       return sox_false; /* i.e. not null file. */
 
@@ -1306,10 +1306,12 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
         break;
 
       case 5:
+        if (f->encoding.reverse_bytes != SOX_OPTION_DEFAULT || f->encoding.opposite_endian)
+          usage("only one endian option per file is allowed");
         switch (enum_option(option_index, endian_options)) {
           case ENDIAN_little: f->encoding.reverse_bytes = SOX_IS_BIGENDIAN; break;
           case ENDIAN_big: f->encoding.reverse_bytes = SOX_IS_LITTLEENDIAN; break;
-          case ENDIAN_swap: f->encoding.reverse_bytes = sox_true; break;
+          case ENDIAN_swap: f->encoding.opposite_endian = sox_true; break;
         }
         break;
 
@@ -1419,9 +1421,15 @@ static sox_bool parse_gopts_and_fopts(file_t f, int argc, char **argv)
         f->encoding.bits_per_sample = 8;
       break;
 
-    case 'L': f->encoding.reverse_bytes   = SOX_IS_BIGENDIAN;    break;
-    case 'B': f->encoding.reverse_bytes   = SOX_IS_LITTLEENDIAN; break;
-    case 'x': f->encoding.reverse_bytes   = SOX_OPTION_YES;      break;
+    case 'L': case 'B': case 'x':
+      if (f->encoding.reverse_bytes != SOX_OPTION_DEFAULT || f->encoding.opposite_endian)
+        usage("only one endian option per file is allowed");
+      switch (c) {
+        case 'L': f->encoding.reverse_bytes   = SOX_IS_BIGENDIAN;    break;
+        case 'B': f->encoding.reverse_bytes   = SOX_IS_LITTLEENDIAN; break;
+        case 'x': f->encoding.opposite_endian = sox_true;            break;
+      }
+      break;
     case 'X': f->encoding.reverse_bits    = SOX_OPTION_YES;      break;
     case 'N': f->encoding.reverse_nibbles = SOX_OPTION_YES;      break;
 

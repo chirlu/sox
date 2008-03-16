@@ -158,7 +158,7 @@ do_singlechannel_formats () {
   convertToAndFrom ima s2 u2 s3 u3 s4 u4 raw Raw dat au aiff aifc flac caf # FIXME: vox wav
 
   format1=wav1u
-  convertToAndFrom smp s1 s1X s1N s1XN sndt
+  convertToAndFrom smp s1 s1X s1N s1XN sndt sndr
   #(rate=50000; convertToAndFrom txw) || exit 1     # FIXME
   (rate=11025; convertToAndFrom hcom) || exit 1     # Fixed rates
 

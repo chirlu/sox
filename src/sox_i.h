@@ -149,6 +149,7 @@ size_t sox_writebuf(sox_format_t * ft, void const *buf, sox_size_t len);
 int sox_reads(sox_format_t * ft, char *c, sox_size_t len);
 int sox_writes(sox_format_t * ft, char const * c);
 void set_signal_defaults(sox_signalinfo_t * signal);
+#define sox_writechars(ft, chars, len) (sox_writebuf(ft, chars, len) == len? SOX_SUCCESS : SOX_EOF)
 
 sox_size_t sox_read_b_buf(sox_format_t * ft, uint8_t *buf, sox_size_t len);
 sox_size_t sox_read_w_buf(sox_format_t * ft, uint16_t *buf, sox_size_t len);
@@ -164,20 +165,23 @@ sox_size_t sox_write_dw_buf(sox_format_t * ft, uint32_t *buf, sox_size_t len);
 sox_size_t sox_write_f_buf(sox_format_t * ft, float *buf, sox_size_t len);
 sox_size_t sox_write_df_buf(sox_format_t * ft, double *buf, sox_size_t len);
 
-#define sox_readb(ft, ub) (sox_read_b_buf(ft, ub, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
+int sox_read3(sox_format_t * ft, uint24_t * u3);
+int sox_readb(sox_format_t * ft, uint8_t * ub);
+int sox_readdf(sox_format_t * ft, double * d);
+int sox_readdw(sox_format_t * ft, uint32_t * udw);
+int sox_readf(sox_format_t * ft, float * f);
+int sox_readw(sox_format_t * ft, uint16_t * uw);
+int sox_readchars(sox_format_t * ft, char * chars, sox_size_t len);
+
+int sox_write3(sox_format_t * ft, unsigned u3);
 int sox_writeb(sox_format_t * ft, unsigned ub);
-#define sox_readw(ft, uw) (sox_read_w_buf(ft, uw, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
-int sox_writew(sox_format_t * ft, unsigned uw);
+int sox_writedw(sox_format_t * ft, unsigned udw);
+int sox_writef(sox_format_t * ft, double f);
 int sox_writesb(sox_format_t * ft, signed);
 int sox_writesw(sox_format_t * ft, signed);
-#define sox_read3(ft, u3) (sox_read_3_buf(ft, u3, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
-int sox_write3(sox_format_t * ft, unsigned u3);
-#define sox_readdw(ft, udw) (sox_read_dw_buf(ft, udw, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
-int sox_writedw(sox_format_t * ft, unsigned udw);
-#define sox_readf(ft, f) (sox_read_f_buf(ft, f, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
-int sox_writef(sox_format_t * ft, float f);
-#define sox_readdf(ft, d) (sox_read_df_buf(ft, d, 1) == 1 ? SOX_SUCCESS : SOX_EOF)
+int sox_writew(sox_format_t * ft, unsigned uw);
 int sox_writedf(sox_format_t * ft, double d);
+
 int sox_seeki(sox_format_t * ft, sox_ssize_t to_sample, int whence);
 int sox_offset_seek(sox_format_t * ft, off_t byte_offset, sox_size_t to_sample);
 sox_size_t sox_filelength(sox_format_t * ft);
@@ -296,8 +300,6 @@ typedef struct sox_formats_globals /* Global parameters (for formats) */
 
 extern sox_globals_t sox_globals;
 extern sox_effects_globals_t sox_effects_globals;
-
-extern const char sox_readerr[];
 extern uint8_t const cswap[256];
 
 

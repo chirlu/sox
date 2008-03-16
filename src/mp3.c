@@ -196,9 +196,7 @@ static int startread(sox_format_t * ft)
      */
     ReadSize = sox_readbuf(ft, p->InputBuffer, INPUT_BUFFER_SIZE);
     if (ReadSize < INPUT_BUFFER_SIZE) {
-      if (sox_error(ft))
-        sox_fail_errno(ft, SOX_EOF, "error reading input file");
-      else if (sox_eof(ft))
+      if (sox_eof(ft))
         sox_fail_errno(ft, SOX_EOF, "input file too short");
       return SOX_EOF;
     }

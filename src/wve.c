@@ -29,8 +29,8 @@ static int start_read(sox_format_t * ft)
   char buf[sizeof(ID1)];
   uint32_t num_samples;
 
-  if (sox_readbuf(ft, buf, sizeof(buf)) != sizeof(buf) ||
-      sox_readdw(ft, &num_samples) || sox_skipbytes(ft, sizeof(ID2)))
+  if (sox_readchars(ft, buf, sizeof(buf)) || sox_readdw(ft, &num_samples) ||
+      sox_skipbytes(ft, sizeof(ID2)))
     return SOX_EOF;
   if (memcmp(ID1, buf, sizeof(buf))) {
     sox_fail_errno(ft, SOX_EHDR, "wve: can't find Psion identifier");
@@ -41,9 +41,9 @@ static int start_read(sox_format_t * ft)
 
 static int write_header(sox_format_t * ft)
 {
-  return sox_writebuf(ft, ID1, sizeof(ID1)) != sizeof(ID1)
+  return sox_writechars(ft, ID1, sizeof(ID1))
       || sox_writedw(ft, ft->olength? ft->olength:ft->length)
-      || sox_writebuf(ft, ID2, sizeof(ID2)) != sizeof(ID2)? SOX_EOF:SOX_SUCCESS;
+      || sox_writechars(ft, ID2, sizeof(ID2))? SOX_EOF:SOX_SUCCESS;
 }
 
 SOX_FORMAT_HANDLER(wve)

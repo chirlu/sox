@@ -1324,7 +1324,7 @@ static int wavwritehdr(sox_format_t * ft, int second_header)
     /* If user specified opposite swap than we think, assume they are
      * asking to write a RIFX file.
      */
-    if (ft->encoding.reverse_bytes && SOX_IS_LITTLEENDIAN)
+    if (ft->encoding.reverse_bytes == SOX_IS_LITTLEENDIAN)
     {
         if (!second_header)
             sox_report("Requested to swap bytes so writing RIFX header");

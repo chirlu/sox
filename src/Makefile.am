@@ -40,11 +40,11 @@ pkglib_LTLIBRARIES = libsox_fmt_raw.la libsox_fmt_s1.la \
 	  libsox_fmt_cdr.la libsox_fmt_cvsd.la libsox_fmt_dvms.la	\
 	  libsox_fmt_dat.la libsox_fmt_gsm.la libsox_fmt_hcom.la	\
 	  libsox_fmt_lpc10.la libsox_fmt_maud.la libsox_fmt_prc.la	\
-	  libsox_fmt_sf.la libsox_fmt_smp.la libsox_fmt_sndrtool.la	\
+	  libsox_fmt_sf.la libsox_fmt_smp.la	\
 	  libsox_fmt_sphere.la libsox_fmt_txw.la libsox_fmt_voc.la	\
 	  libsox_fmt_vox.la libsox_fmt_ima.la libsox_fmt_wav.la		\
 	  libsox_fmt_wve.la libsox_fmt_xa.la libsox_fmt_nul.la \
-	  libsox_fmt_htk.la
+	  libsox_fmt_htk.la libsox_fmt_sounder.la libsox_fmt_soundtool.la
 
 # File formats
 libsox_fmt_raw_la_SOURCES = raw-fmt.c
@@ -103,12 +103,14 @@ libsox_fmt_maud_la_SOURCES = maud.c
 libsox_fmt_maud_la_LIBADD = libsox.la
 libsox_fmt_prc_la_SOURCES = prc.c
 libsox_fmt_prc_la_LIBADD = libsox.la
-libsox_fmt_sf_la_SOURCES = sf.c sfircam.h
+libsox_fmt_sf_la_SOURCES = sf.c
 libsox_fmt_sf_la_LIBADD = libsox.la
 libsox_fmt_smp_la_SOURCES = smp.c
 libsox_fmt_smp_la_LIBADD = libsox.la
-libsox_fmt_sndrtool_la_SOURCES = sndrtool.c
-libsox_fmt_sndrtool_la_LIBADD = libsox.la
+libsox_fmt_sounder_la_SOURCES = sounder.c
+libsox_fmt_sounder_la_LIBADD = libsox.la
+libsox_fmt_soundtool_la_SOURCES = soundtool.c
+libsox_fmt_soundtool_la_LIBADD = libsox.la
 libsox_fmt_sphere_la_SOURCES = sphere.c
 libsox_fmt_sphere_la_LIBADD = libsox.la
 libsox_fmt_txw_la_SOURCES = tx16w.c
@@ -218,8 +220,8 @@ else
   libsox_la_SOURCES += raw-fmt.c s1-fmt.c s2-fmt.c s3-fmt.c \
     s4-fmt.c u1-fmt.c u2-fmt.c u3-fmt.c u4-fmt.c al-fmt.c la-fmt.c ul-fmt.c \
     lu-fmt.c 8svx.c aiff-fmt.c aifc-fmt.c au.c avr.c cdr.c cvsd-fmt.c \
-    dvms-fmt.c dat.c gsm.c hcom.c htk.c lpc10.c maud.c prc.c sf.c sfircam.h smp.c \
-    sndrtool.c sphere.c tx16w.c voc.c vox-fmt.c ima-fmt.c adpcm.c adpcm.h \
+    dvms-fmt.c dat.c gsm.c hcom.c htk.c lpc10.c maud.c prc.c sf.c smp.c \
+    sounder.c soundtool.c sphere.c tx16w.c voc.c vox-fmt.c ima-fmt.c adpcm.c adpcm.h \
     ima_rw.c ima_rw.h wav.c wav.h wve.c xa.c nulfile.c
 libsox_la_LIBADD = @GSM_LIBS@ @LIBGSM_LIBADD@
 libsox_la_LIBADD += ../lpc10/liblpc10.la

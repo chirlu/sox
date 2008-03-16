@@ -30,17 +30,17 @@ set(effects_srcs
   dither          key             pitch           speed           vol
 )
 set(formats_srcs
-  8svx            cvsd-fmt        htk             s1-fmt          u2-fmt
-  adpcm           dat             ima-fmt         s2-fmt          u3-fmt
-  adpcms          dvms-fmt        ima_rw          s3-fmt          u4-fmt
-  aifc-fmt        formats         la-fmt          s4-fmt          ul-fmt
-  aiff            g711            lpc10.c         sf              voc
-  aiff-fmt        g721            lu-fmt          skelform        vox
-  al-fmt          g723_24         maud            smp             vox-fmt
-  au              g723_40         nulfile         sndrtool        wav
-  avr             g72x            prc             sphere          wve
-  cdr             gsm.c           raw             tx16w           xa
-  cvsd            hcom            raw-fmt         u1-fmt
+  8svx            cvsd-fmt        htk             s1-fmt          u1-fmt
+  adpcm           dat             ima-fmt         s2-fmt          u2-fmt
+  adpcms          dvms-fmt        ima_rw          s3-fmt          u3-fmt
+  aifc-fmt        formats         la-fmt          s4-fmt          u4-fmt
+  aiff            g711            lpc10.c         sf              ul-fmt
+  aiff-fmt        g721            lu-fmt          skelform        voc
+  al-fmt          g723_24         maud            smp             vox
+  au              g723_40         nulfile         sounder         vox-fmt
+  avr             g72x            prc             soundtool       wav
+  cdr             gsm.c           raw             sphere          wve
+  cvsd            hcom            raw-fmt         tx16w           xa
 )
 add_library(lib${PROJECT_NAME}
   ${effects_srcs}         misc                    util

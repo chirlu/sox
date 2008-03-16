@@ -156,8 +156,13 @@ int sox_check_read_params(sox_format_t * ft, unsigned channels,
     sox_warn("'%s': overriding encoding size", ft->filename);
   ft->encoding.bits_per_sample = bits_per_sample;
 
-  if (!ft->length && ft->encoding.bits_per_sample && sox_filelength(ft))
-    ft->length = div_bits(sox_filelength(ft) - ft->data_start, ft->encoding.bits_per_sample);
+  if (ft->encoding.bits_per_sample && sox_filelength(ft)) {
+    off_t calculated_length = div_bits(sox_filelength(ft) - ft->data_start, ft->encoding.bits_per_sample);
+    if (!ft->length)
+      ft->length = calculated_length;
+    else if (length != calculated_length)
+      sox_warn("file header gives the total number of samples as %u but file length indicates the number is in fact %u", (unsigned)length, (unsigned)calculated_length); /* FIXME: casts */
+  }
 
   if ( sox_precision(ft->encoding.encoding, ft->encoding.bits_per_sample))
     return SOX_SUCCESS;
@@ -172,8 +177,6 @@ sox_sample_t sox_sample_max(sox_encodinginfo_t const * encoding)
   unsigned shift = SOX_SAMPLE_PRECISION - min(precision, SOX_SAMPLE_PRECISION);
   return (SOX_SAMPLE_MAX >> shift) << shift;
 }
-
-const char sox_readerr[] = "Premature EOF while reading sample file";
 
 /* Lookup table to reverse the bit order of a byte. ie MSB become LSB */
 uint8_t const cswap[256] = {
@@ -209,7 +212,9 @@ uint8_t const cswap[256] = {
 size_t sox_readbuf(sox_format_t * ft, void *buf, sox_size_t len)
 {
   size_t ret = fread(buf, 1, len, ft->fp);
-  return (ferror(ft->fp) || (feof(ft->fp) && ret == 0)) ? 0 : ret;
+  if (ret != len && ferror(ft->fp))
+    sox_fail_errno(ft, errno, "sox_readbuf");
+  return ret;
 }
 
 /* Skip input without seeking. */
@@ -238,7 +243,7 @@ int sox_padbytes(sox_format_t * ft, sox_size_t n)
  * Returns number of bytes written.
  */
 
-size_t sox_writebuf(sox_format_t * ft, void const *buf, sox_size_t len)
+size_t sox_writebuf(sox_format_t * ft, void const * buf, sox_size_t len)
 {
   size_t ret = fwrite(buf, 1, len, ft->fp);
   if (ret != len) {
@@ -303,8 +308,6 @@ int sox_reads(sox_format_t * ft, char *c, sox_size_t len)
         if (sox_readbuf(ft, &in, 1) != 1)
         {
             *sc = 0;
-            if (sox_error(ft))
-              sox_fail_errno(ft, errno, sox_readerr);
             return (SOX_EOF);
         }
         if (in == 0 || in == '\n')

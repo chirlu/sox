@@ -232,6 +232,7 @@ typedef struct { /* Encoding parameters */
    * indicate to the libSoX core if they have a preference using
    * SOX_FILE_xxx flags.
    */
+  sox_bool opposite_endian;
   sox_option_t reverse_bytes;    /* endiannesses... */
   sox_option_t reverse_nibbles;
   sox_option_t reverse_bits;
