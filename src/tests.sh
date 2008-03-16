@@ -10,8 +10,13 @@ srcdir="."
 # installed sox.
 while [ $# -ne 0 ]; do
     case "$1" in
+        -e)
+        echo=$1
+        ;;
+
         -V)
         verbose=$1
+        echo=$1
         ;;
 
         -a)      # Perform each test up to 3 times with different #s of
@@ -55,24 +60,19 @@ done
 getFormat () {
   formatExt=$1; formatText=$1; formatFlags=""
   case $1 in
-    al ) formatText="alaw byte" ;;
-    s1 ) formatText="signed byte" ;;
-    s4 ) formatText="signed long" ;;
-    s2 ) formatText="signed word" ;;
-    ul ) formatText="ulaw byte" ;;
-    u1 ) formatText="unsigned byte" ;;
-    u2 ) formatText="unsigned word" ;;
-    raw) formatText="float"; formatFlags="-f -4" ;;
-    Raw) formatText="double"; formatFlags="-f -8" ;;
-    wav1u) formatFlags="-1 -u"; formatExt="wav"  ;;
-    s1X ) formatText="signed byte (swap bits)"; formatExt="s1"; formatFlags="-X" ;;
-    s1N ) formatText="signed byte (swap nibbles)"; formatExt="s1"; formatFlags="-N" ;;
-    s1XN ) formatText="signed byte (swap nibbles and bits)"; formatExt="s1"; formatFlags="-X -N" ;;
+    al )  formatText="alaw" ;;
+    ul )  formatText="ulaw" ;;
+    raw)  formatText="float"; formatFlags="-f -4" ;;
+    Raw)  formatText="double"; formatFlags="-f -8" ;;
+    wavu1)formatText="u1 in wav";  formatFlags="-u -1"; formatExt="wav" ;;
+    s1X ) formatText="s1 (swap bits)"; formatExt="s1"; formatFlags="-X" ;;
+    s1N ) formatText="s1 (swap nibbles)"; formatExt="s1"; formatFlags="-N" ;;
+    s1XN) formatText="s1 (swap nibbles & bits)"; formatExt="s1"; formatFlags="-X -N" ;;
   esac
 }
   
 execute() {
-  if [ "${verbose}x" != "x" ] ; then
+  if [ "${echo}x" != "x" ] ; then
     echo $*
   fi
   cmd=$1
@@ -92,7 +92,7 @@ convertToAndFrom () {
         execute ${bindir}/sox $verbose -R -r $rate -c $channels -n $format1Flags input.$format1Ext synth $samples's' sin 300-3300 noise trapezium
         execute ${bindir}/sox $verbose -R -r $rate -c $channels $format1Flags input.$format1Ext $format2Flags intermediate.$format2Ext
         execute ${bindir}/sox $verbose -R -r $rate -c $channels $format2Flags intermediate.$format2Ext $format1Flags output.$format1Ext
-        intermediateReference=intermediate`echo "$channels $rate $format1Flags $format1Ext $format2Flags"|tr " " "_"`.$format2Ext
+        intermediateReference=vectors/intermediate`echo "$channels $rate $format1Flags $format1Ext $format2Flags"|tr " " "_"`.$format2Ext
 
 	# Uncomment to generate new reference files
 	# N.B. new reference files must be manually checked for correctness
@@ -105,6 +105,7 @@ convertToAndFrom () {
             echo "*FAIL* channels=$channels \"$format1Text\" ---> \"$format2Text\"."
             exit 1    # This allows failure inspection.
           fi
+	  vectors=$(expr $vectors + 1)
         fi
 
         if execute cmp -s input.$format1Ext output.$format1Ext
@@ -128,23 +129,23 @@ do_multichannel_formats () {
   convertToAndFrom s2 u2 s3 u3 s4 u4 raw Raw dat au wav aiff aifc flac caf sph
 
   format1=u3
-  convertToAndFrom s3 u3 s4 u4 raw Raw wav aiff aifc flac # FIXME: sph
+  convertToAndFrom s3 u3 s4 u4 raw Raw wav aiff aifc flac sph
 
   format1=s4
   convertToAndFrom s4 u4 Raw wav aiff aifc caf sph
 
   format1=al
-  convertToAndFrom al s2 u2 s4 raw Raw dat aiff aifc flac caf # FIXME: sph
+  convertToAndFrom al s2 u2 s4 raw Raw dat aiff aifc flac caf
 
   format1=ul
   convertToAndFrom ul s2 u2 s4 raw Raw dat aiff aifc flac caf sph
 
-  format1=wav1u
-  convertToAndFrom wav1u aiff aifc au dat sf flac caf sph
+  format1=wavu1
+  convertToAndFrom wavu1 aiff aifc au dat sf flac caf sph
 }
 
 do_twochannel_formats () {
-  format1=wav1u
+  format1=wavu1
   convertToAndFrom avr maud
   (rate=8000; convertToAndFrom voc) || exit 1      # Fixed rate
   (samples=23492; convertToAndFrom 8svx) || exit 1 # Even number of samples only
@@ -152,12 +153,12 @@ do_twochannel_formats () {
 
 do_singlechannel_formats () {
   format1=vox
-  convertToAndFrom vox s2 u2 s3 u3 s4 u4 raw Raw dat au wav aiff aifc flac caf # FIXME: ima
+  convertToAndFrom vox s2 u2 s3 u3 s4 u4 raw Raw dat au wav aiff aifc flac caf
 
   format1=ima
-  convertToAndFrom ima s2 u2 s3 u3 s4 u4 raw Raw dat au aiff aifc flac caf # FIXME: vox wav
+  convertToAndFrom ima s2 u2 s3 u3 s4 u4 raw Raw dat au aiff aifc flac caf # FIXME: wav
 
-  format1=wav1u
+  format1=wavu1
   convertToAndFrom smp s1 s1X s1N s1XN sndt sndr
   #(rate=50000; convertToAndFrom txw) || exit 1     # FIXME
   (rate=11025; convertToAndFrom hcom) || exit 1     # Fixed rates
@@ -197,6 +198,8 @@ ${builddir}/sox_sample_test || exit 1
 ${bindir}/sox --help|grep "^AUDIO FILE.*\<flac\>">/dev/null || skip="flac $skip"
 ${bindir}/sox --help|grep "^AUDIO FILE.*\<caf\>" >/dev/null || skip="caf $skip"
 
+vectors=0
+
 rate=44100
 samples=23493
 
@@ -235,6 +238,8 @@ else
   echo "*FAIL* synth size"
 fi
 rm output.u1
+
+echo "Checked $vectors vectors"
 
 channels=2
 samples=10000000

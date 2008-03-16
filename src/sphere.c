@@ -94,7 +94,7 @@ static int start_read(sox_format_t * ft)
     bytes_per_sample = encoding == SOX_ENCODING_ULAW? 1 : 2;
 
   if (encoding == SOX_ENCODING_SIGN2 && bytes_per_sample == 1)
-    ft->encoding.encoding = SOX_ENCODING_UNSIGNED;
+    encoding = SOX_ENCODING_UNSIGNED;
 
   while (header_size) {
     bytes_read = sox_readbuf(ft, buf, header_size);
