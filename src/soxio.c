@@ -149,18 +149,27 @@ static void set_endianness_if_not_already_set(sox_format_t * ft)
   if (ft->encoding.opposite_endian)
     ft->encoding.reverse_bytes = (ft->handler.flags & SOX_FILE_ENDIAN)?
       !(ft->handler.flags & SOX_FILE_ENDBIG) != SOX_IS_BIGENDIAN : sox_true;
-  if (ft->encoding.reverse_bytes == SOX_OPTION_DEFAULT)
+  else if (ft->encoding.reverse_bytes == SOX_OPTION_DEFAULT)
     ft->encoding.reverse_bytes = (ft->handler.flags & SOX_FILE_ENDIAN)?
       !(ft->handler.flags & SOX_FILE_ENDBIG) == SOX_IS_BIGENDIAN : sox_false;
+
+  if (ft->handler.flags & SOX_FILE_ENDIAN) {
+    if (ft->encoding.reverse_bytes ==
+        (!(ft->handler.flags & SOX_FILE_ENDBIG) != SOX_IS_BIGENDIAN))
+      sox_report("`%s': overriding file-type byte-order", ft->filename);
+  } else if (ft->encoding.reverse_bytes == sox_true)
+    sox_report("`%s': overriding machine byte-order", ft->filename);
+
   if (ft->encoding.reverse_bits == SOX_OPTION_DEFAULT)
     ft->encoding.reverse_bits = !!(ft->handler.flags & SOX_FILE_BIT_REV);
-  else if (ft->encoding.reverse_bits != !!(ft->handler.flags & SOX_FILE_BIT_REV))
-      sox_report("'%s': Format options overriding file-type bit-order", ft->filename);
+  else if (ft->encoding.reverse_bits == !(ft->handler.flags & SOX_FILE_BIT_REV))
+      sox_report("`%s': overriding file-type bit-order", ft->filename);
 
   if (ft->encoding.reverse_nibbles == SOX_OPTION_DEFAULT)
     ft->encoding.reverse_nibbles = !!(ft->handler.flags & SOX_FILE_NIB_REV);
-  else if (ft->encoding.reverse_nibbles != !!(ft->handler.flags & SOX_FILE_NIB_REV))
-      sox_report("'%s': Format options overriding file-type nibble-order", ft->filename);
+  else
+    if (ft->encoding.reverse_nibbles == !(ft->handler.flags & SOX_FILE_NIB_REV))
+      sox_report("`%s': overriding file-type nibble-order", ft->filename);
 }
 
 static int is_seekable(sox_format_t * ft)

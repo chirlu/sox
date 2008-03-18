@@ -91,7 +91,7 @@ int main(int argc, char * argv[])
   assert(e.handler.getopts(&e, 1, vol) == SOX_SUCCESS);
   assert(sox_add_effect(chain, &e, &in->signal, &in->signal) == SOX_SUCCESS);
 
-  sox_create_effect(&e, sox_find_effect("reverb"));
+  sox_create_effect(&e, sox_find_effect("flanger"));
   assert(e.handler.getopts(&e, 0, NULL) == SOX_SUCCESS);
   assert(sox_add_effect(chain, &e, &in->signal, &in->signal) == SOX_SUCCESS);
 

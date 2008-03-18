@@ -28,7 +28,7 @@
 /* The following is the API version of libSoX.  It is not meant
  * to follow the version number of SoX but it has historically.
  * Please do not count on these numbers being in sync.
- * The following is at 14.0.1
+ * The following is at 14.1.0
  */
 #define SOX_LIB_VERSION_CODE 0x0e0100
 #define SOX_LIB_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
@@ -63,7 +63,6 @@ typedef uint32_t uint24_t;   /* ditto */
 #define SOX_INT16_MAX SOX_INT_MAX(16)
 #define SOX_INT24_MAX SOX_INT_MAX(24)
 #define SOX_INT32_MAX SOX_INT_MAX(32)
-#define SOX_INT64_MAX 0x7fffffffffffffffLL /* Not in use yet */
 
 typedef int32_t sox_sample_t;
 
@@ -172,6 +171,12 @@ typedef ptrdiff_t sox_ssize_t;
 
 typedef double sox_rate_t;
 
+typedef struct { /* Signal parameters; 0 if unknown */
+  sox_rate_t rate;         /* sampling rate */
+  unsigned channels;       /* number of sound channels */
+  unsigned precision;      /* in bits */
+} sox_signalinfo_t;
+
 typedef enum {
   SOX_ENCODING_UNKNOWN   ,
   
@@ -203,16 +208,10 @@ typedef enum {
   SOX_ENCODINGS            /* End of list marker */
 } sox_encoding_t;
 
-typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot} sox_plot_t;
+extern const char * const sox_encodings_str[];
+extern const char * const sox_encodings_short_str[];
+
 typedef enum {SOX_OPTION_NO, SOX_OPTION_YES, SOX_OPTION_DEFAULT} sox_option_t;
-
-
-typedef struct { /* Signal parameters; 0 if unknown */
-  sox_rate_t rate;         /* sampling rate */
-  unsigned channels;       /* number of sound channels */
-  unsigned precision;      /* in bits */
-} sox_signalinfo_t;
-
 
 typedef struct { /* Encoding parameters */
   sox_encoding_t encoding; /* format of sample numbers */
@@ -321,49 +320,42 @@ struct sox_format {
    * in memory in the optimal way for any structure to be cast over it. */
   char   priv[SOX_MAX_FILE_PRIVSIZE];    /* format's private data area */
 
-  sox_signalinfo_t signal;               /* signal specifications */
-  sox_encodinginfo_t encoding;               /* encoding specifications */
-  sox_instrinfo_t  instr;                /* instrument specification */
+  sox_signalinfo_t signal;          /* signal specifications */
+  sox_encodinginfo_t encoding;      /* encoding specifications */
+  sox_instrinfo_t  instr;           /* instrument specification */
   sox_loopinfo_t   loops[SOX_MAX_NLOOPS];/* Looping specification */
-  sox_bool         seekable;             /* can seek on this file */
-  char             mode;                 /* read or write mode */
-  sox_size_t       length;        /* samples * channels in file; 0 if unknown */
-  sox_size_t       olength;       /* samples * channels in file; 0 if unknown */
-  sox_size_t       clips;                /* increment if clipping occurs */
-  char             *filename;            /* file name */
-  char             *filetype;            /* type of file */
-  comments_t       comments;             /* comment strings */
-  FILE             *fp;                  /* File stream pointer */
-  int              sox_errno;            /* Failure error codes */
-  char             sox_errstr[256];      /* Extend Failure text */
+  sox_bool         seekable;        /* can seek on this file */
+  char             mode;            /* read or write mode */
+  sox_size_t       length;          /* samples * chans in file; 0 if unknown */
+  sox_size_t       olength;         /* samples * chans in file; 0 if unknown */
+  sox_size_t       clips;           /* increment if clipping occurs */
+  char             *filename;       /* file name */
+  char             *filetype;       /* type of file */
+  comments_t       comments;        /* comment strings */
+  FILE             *fp;             /* File stream pointer */
+  int              sox_errno;       /* Failure error codes */
+  char             sox_errstr[256]; /* Extend Failure text */
   off_t            tell;
   off_t            data_start;
   sox_format_handler_t handler;  /* format struct for this file */
 };
 
-/* file flags field */
-#define SOX_FILE_LOOPS   1  /* does file format support loops? */
-#define SOX_FILE_INSTR   2  /* does file format support instrument specs? */
-#define SOX_FILE_NOSTDIO 8  /* does not use stdio routines */
-#define SOX_FILE_DEVICE  16 /* file is an audio device */
-#define SOX_FILE_PHONY   32 /* phony file/device */
-/* These two for use by the libSoX core or libSoX clients: */
-#define SOX_FILE_ENDIAN  64 /* is file format endian? */
-#define SOX_FILE_ENDBIG  128/* if so, is it big endian? */
-/* These two for use by libSoX handlers: */
-#define SOX_FILE_LIT_END  (0   + 64)
-#define SOX_FILE_BIG_END  (128 + 64)
-#define SOX_FILE_BIT_REV 0x0100
-#define SOX_FILE_NIB_REV 0x0200
-#define SOX_FILE_CHANS   0x1C00
-#define SOX_FILE_MONO    0x0400
-#define SOX_FILE_STEREO  0x0800
-#define SOX_FILE_QUAD    0x1000
-#define SOX_FILE_REWIND  0x2000
+/* File flags field */
+#define SOX_FILE_NOSTDIO 0x0001 /* Does not use stdio routines */
+#define SOX_FILE_DEVICE  0x0002 /* File is an audio device */
+#define SOX_FILE_PHONY   0x0004 /* Phony file/device */
+#define SOX_FILE_REWIND  0x0008 /* File should be rewound to write header */
+#define SOX_FILE_BIT_REV 0x0010 /* Is file bit-reversed? */
+#define SOX_FILE_NIB_REV 0x0020 /* Is file nibble-reversed? */
+#define SOX_FILE_ENDIAN  0x0040 /* Is file format endian? */
+#define SOX_FILE_ENDBIG  0x0080 /* If so, is it big endian? */
+#define SOX_FILE_MONO    0x0100 /* Do channel restrictions allow mono? */
+#define SOX_FILE_STEREO  0x0200 /* Do channel restrictions allow stereo? */
+#define SOX_FILE_QUAD    0x0400 /* Do channel restrictions allow quad? */
 
-/* declared in misc.c */
-extern const char * const sox_encodings_str[];
-extern const char * const sox_encodings_short_str[];
+#define SOX_FILE_CHANS   (SOX_FILE_MONO | SOX_FILE_STEREO | SOX_FILE_QUAD)
+#define SOX_FILE_LIT_END (SOX_FILE_ENDIAN | 0)
+#define SOX_FILE_BIG_END (SOX_FILE_ENDIAN | SOX_FILE_ENDBIG)
 
 int sox_format_init(void);
 sox_format_t * sox_open_read(
@@ -412,6 +404,7 @@ void sox_format_quit(void);
 
 typedef struct sox_effect sox_effect_t;
 typedef struct sox_effects_globals sox_effects_globals_t;
+typedef enum {sox_plot_off, sox_plot_octave, sox_plot_gnuplot} sox_plot_t;
 
 typedef struct {
   char const * name;

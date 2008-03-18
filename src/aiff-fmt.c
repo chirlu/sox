@@ -27,7 +27,7 @@ SOX_FORMAT_HANDLER(aiff)
   static sox_format_handler_t const sox_aiff_format = {
     SOX_LIB_VERSION_CODE,
     "AIFF files used on Apple IIc/IIgs and SGI",
-    names, SOX_FILE_LOOPS | SOX_FILE_BIG_END,
+    names, SOX_FILE_BIG_END,
     sox_aiffstartread, sox_aiffread, sox_aiffstopread,
     sox_aiffstartwrite, sox_aiffwrite, sox_aiffstopwrite,
     sox_aiffseek, write_encodings, NULL

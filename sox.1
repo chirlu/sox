@@ -51,14 +51,14 @@ optionally apply effects to them; it can combine multiple input
 sources, synthesise audio, and, on many systems, act as a general
 purpose audio player or a multi-track audio recorder.
 .SP
-Almost all SoX functionality is available using just the `sox' command,
+Almost all SoX functionality is available using just the \fBsox\fR command,
 however, to simplify playing and recording audio, if SoX is invoked as
-`play', the output file is automatically set to be the default sound
-device and if invoked as `rec', the default sound device is used as an
+\fBplay\fR the output file is automatically set to be the default sound
+device and if invoked as \fBrec\fR the default sound device is used as an
 input source.
 The
 .BR soxi (1)
-command provides a convenient way to query audio file header information.
+command provides a convenient way to just query audio file header information.
 .SP
 The heart of SoX is a library called libSoX.  Those interested in
 extending SoX or using it in other programs should refer to the libSoX
@@ -341,8 +341,8 @@ guarantees that the treble boost will not clip.
 If clipping occurs at any point during processing, then
 SoX will display a warning message to that effect.
 .SS Input File Combining 
-SoX's input combiner can combine multiple files using one of five
-different methods: `concatenate', `sequence', `mix', `merge', or `multiply'.
+SoX's input combiner can combine multiple files using any of the
+following methods: `concatenate', `sequence', `mix', or `merge'.
 The default method is `sequence' for
 .BR play ,
 and `concatenate' for
@@ -387,11 +387,6 @@ effect.
 For example, two mono files could be merged to form one stereo file; the
 first and second mono files would become the left and right channels of
 the stereo file.
-.SP
-The `multiply' combining method (selected with \fB-T\fR) works in the
-same way as mix combining except that the audio signals are multiplied
-instead of added together.  This can be useful for applications such as
-F.M. synthesis.
 .SP
 When combining input files, SoX applies any specified effects
 (including, for example, the
@@ -729,11 +724,11 @@ Unlike normal format characteristics, the endianness (byte, nibble, &
 bit ordering) of the input file is not automatically used for the output
 file; so, for example, when the following is run on a little-endian system:
 .EX
-	sox -B audio.uw trimmed.uw trim 2
+	sox -B audio.s2 trimmed.s2 trim 2
 .EE
-trimmed.uw will be created as little-endian;
+trimmed.s2 will be created as little-endian;
 .EX
-	sox -B audio.uw -B trimmed.uw trim 2
+	sox -B audio.s2 -B trimmed.s2 trim 2
 .EE
 must be used to preserve big-endianness in the output file.
 .SP

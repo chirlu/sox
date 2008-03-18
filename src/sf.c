@@ -23,13 +23,13 @@
 
 /* Magic numbers used in IRCAM audio files */
 static struct {char str[4]; sox_bool reverse_bytes; char const * desc;} id[] = {
-  {"\144\243\001\0", SOX_IS_BIGENDIAN   , "Little-endian VAX (native)"},
-  {"\0\001\243\144", SOX_IS_LITTLEENDIAN, "Big-endian VAX"},
-  {"\144\243\002\0", SOX_IS_LITTLEENDIAN, "Big-endian Sun (native)"},
-  {"\0\002\243\144", SOX_IS_BIGENDIAN   , "Little-endian Sun"},
-  {"\144\243\003\0", SOX_IS_BIGENDIAN   , "Little-endian MIPS (DEC)"},
-  {"\0\003\243\144", SOX_IS_LITTLEENDIAN, "Big-endian MIPS (SGI)"},
-  {"\144\243\004\0", SOX_IS_LITTLEENDIAN, "Big-endian NeXT"},
+  {"\144\243\001\0", SOX_IS_BIGENDIAN   , "little-endian VAX (native)"},
+  {"\0\001\243\144", SOX_IS_LITTLEENDIAN, "big-endian VAX"},
+  {"\144\243\002\0", SOX_IS_LITTLEENDIAN, "big-endian Sun (native)"},
+  {"\0\002\243\144", SOX_IS_BIGENDIAN   , "little-endian Sun"},
+  {"\144\243\003\0", SOX_IS_BIGENDIAN   , "little-endian MIPS (DEC)"},
+  {"\0\003\243\144", SOX_IS_LITTLEENDIAN, "big-endian MIPS (SGI)"},
+  {"\144\243\004\0", SOX_IS_LITTLEENDIAN, "big-endian NeXT"},
   {"    ", 0, NULL}
 };
 #define FIXED_HDR     1024

@@ -32,13 +32,13 @@ assert_static(sizeof(struct amr) <= SOX_MAX_FILE_PRIVSIZE, AMR_PRIV_TOO_BIG);
 static sox_size_t decode_1_frame(sox_format_t * ft)
 {
   amr_t amr = (amr_t) ft->priv;
-  size_t block_size_1;
+  size_t n_1;
   UWord8 coded[AMR_CODED_MAX];
 
-  if (fread(coded, sizeof(coded[0]), 1, ft->fp) != 1)
+  if (sox_readbuf(ft, &coded[0], 1) != 1)
     return AMR_FRAME;
-  block_size_1 = block_size[(coded[0] >> 3) & 0x0F] - 1;
-  if (fread(&coded[1], sizeof(coded[1]), block_size_1, ft->fp) != block_size_1)
+  n_1 = block_size[(coded[0] >> 3) & 0x0F] - 1;
+  if (sox_readbuf(ft, &coded[1], n_1) != n_1)
     return AMR_FRAME;
   D_IF_decode(amr->state, coded, amr->pcm, 0);
   return 0;
@@ -49,7 +49,7 @@ static sox_bool encode_1_frame(sox_format_t * ft)
   amr_t amr = (amr_t) ft->priv;
   UWord8 coded[AMR_CODED_MAX];
 #include "amr1.h"
-  sox_bool result = fwrite(coded, (unsigned)n, 1, ft->fp) == 1;
+  sox_bool result = sox_writebuf(ft, coded, (unsigned)n) == (unsigned)n;
   if (!result)
     sox_fail_errno(ft, errno, "write error");
   return result;
@@ -63,10 +63,8 @@ static int startread(sox_format_t * ft)
   amr->pcm_index = AMR_FRAME;
   amr->state = D_IF_init();
 
-  if (fread(buffer, sizeof(buffer), 1, ft->fp) != 1) {
-    sox_fail_errno(ft, errno, "read error");
+  if (sox_readchars(ft, buffer, sizeof(buffer)))
     return SOX_EOF;
-  }
   if (memcmp(buffer, magic, sizeof(buffer))) {
     sox_fail_errno(ft, SOX_EHDR, "invalid magic number");
     return SOX_EOF;
